@@ -20,34 +20,34 @@ extern "C" {
   /// Structure that holds the GUI figure for each model
   typedef struct
   {
-    rtk_fig_t* top;
-    rtk_fig_t* geom;
-    rtk_fig_t* grid;
-    rtk_fig_t* data;
-    rtk_fig_t* data_extra; // a bit of a hack, but some models need another fig
-    rtk_fig_t* cmd;
-    rtk_fig_t* cfg;
-    rtk_fig_t* data_bg; // background (used e.g for laser scan fill)
-    rtk_fig_t* cmd_bg; 
-    rtk_fig_t* cfg_bg; 
+    stk_fig_t* top;
+    stk_fig_t* geom;
+    stk_fig_t* grid;
+    stk_fig_t* data;
+    stk_fig_t* data_extra; // a bit of a hack, but some models need another fig
+    stk_fig_t* cmd;
+    stk_fig_t* cfg;
+    stk_fig_t* data_bg; // background (used e.g for laser scan fill)
+    stk_fig_t* cmd_bg; 
+    stk_fig_t* cfg_bg; 
   } gui_model_t;
   
   
   typedef struct 
   {
-    rtk_canvas_t* canvas;
+    stk_canvas_t* canvas;
   
     struct _stg_world* world; // every window shows a single world
     
-    // rtk doesn't support status bars, so we'll use gtk directly
+    // stk doesn't support status bars, so we'll use gtk directly
     GtkStatusbar* statusbar;
     GtkLabel* timelabel;
     
     int wf_section; // worldfile section for load/save
 
-    rtk_fig_t* bg; // background
-    rtk_fig_t* matrix;
-    rtk_fig_t* poses;
+    stk_fig_t* bg; // background
+    stk_fig_t* matrix;
+    stk_fig_t* poses;
 
     gboolean show_matrix;  
     gboolean fill_polygons;
@@ -59,12 +59,12 @@ extern "C" {
     int frame_interval;
     int frame_format;
 
-    rtk_menu_t** menus;
-    rtk_menuitem_t** mitems;
+    stk_menu_t** menus;
+    stk_menuitem_t** mitems;
     int menu_count;
     int mitem_count;
   
-    rtk_menuitem_t** mitems_mspeed;
+    stk_menuitem_t** mitems_mspeed;
     int mitems_mspeed_count;
   
     struct _stg_model* selection_active;
@@ -109,7 +109,7 @@ extern "C" {
   void gui_model_display_pose( stg_model_t* mod, char* verb );
   void gui_model_features( stg_model_t* mod );
   void gui_model_geom( stg_model_t* model );
-  void gui_model_mouse(rtk_fig_t *fig, int event, int mode);
+  void gui_model_mouse(stk_fig_t *fig, int event, int mode);
   void gui_model_move( stg_model_t* mod );
   void gui_model_nose( stg_model_t* model );
   void gui_model_polygons( stg_model_t* model );
@@ -237,10 +237,10 @@ extern "C" {
   void stg_model_map( stg_model_t* mod, gboolean render );
   void stg_model_map_with_children( stg_model_t* mod, gboolean render );
   
-  rtk_fig_t* stg_model_prop_fig_create( stg_model_t* mod, 
-				    rtk_fig_t* array[],
+  stk_fig_t* stg_model_prop_fig_create( stg_model_t* mod, 
+				    stk_fig_t* array[],
 				    stg_id_t propid, 
-				    rtk_fig_t* parent,
+				    stk_fig_t* parent,
 				    int layer );
 
   void stg_model_render_geom( stg_model_t* mod );

@@ -1,5 +1,5 @@
 /*
- *  RTK2 : A GUI toolkit for robotics
+ *  STK2 : A GUI toolkit for robotics
  *  Copyright (C) 2001  Andrew Howard  ahoward@usc.edu
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,9 +19,9 @@
  */
 
 /*
- * Desc: Rtk canvas functions
+ * Desc: Stk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.11 2005-03-09 22:13:49 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.12 2005-03-11 20:50:44 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -45,14 +45,14 @@
 #include "rtkprivate.h"
 
 // Declare some local functions
-static gboolean rtk_on_destroy(GtkWidget *widget, rtk_canvas_t *canvas);
-static void rtk_on_configure(GtkWidget *widget, GdkEventConfigure *event, rtk_canvas_t *canvas);
-static void rtk_on_expose(GtkWidget *widget, GdkEventExpose *event, rtk_canvas_t *canvas);
-static void rtk_on_press(GtkWidget *widget, GdkEventButton *event, rtk_canvas_t *canvas);
-static void rtk_on_motion(GtkWidget *widget, GdkEventMotion *event, rtk_canvas_t *canvas);
-static void rtk_on_release(GtkWidget *widget, GdkEventButton *event, rtk_canvas_t *canvas);
-static void rtk_on_key_press(GtkWidget *widget, GdkEventKey *event, rtk_canvas_t *canvas);
-static void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y);
+static gboolean stk_on_destroy(GtkWidget *widget, stk_canvas_t *canvas);
+static void stk_on_configure(GtkWidget *widget, GdkEventConfigure *event, stk_canvas_t *canvas);
+static void stk_on_expose(GtkWidget *widget, GdkEventExpose *event, stk_canvas_t *canvas);
+static void stk_on_press(GtkWidget *widget, GdkEventButton *event, stk_canvas_t *canvas);
+static void stk_on_motion(GtkWidget *widget, GdkEventMotion *event, stk_canvas_t *canvas);
+static void stk_on_release(GtkWidget *widget, GdkEventButton *event, stk_canvas_t *canvas);
+static void stk_on_key_press(GtkWidget *widget, GdkEventKey *event, stk_canvas_t *canvas);
+static void stk_canvas_mouse(stk_canvas_t *canvas, int event, int button, int x, int y);
 
 // Mouse modes 
 enum {MOUSE_NONE, MOUSE_PAN, MOUSE_ZOOM, MOUSE_TRANS, MOUSE_ROT, MOUSE_SCALE};
@@ -70,16 +70,16 @@ enum {EVENT_PRESS, EVENT_MOTION, EVENT_RELEASE};
 
 
 // Create a canvas
-rtk_canvas_t *rtk_canvas_create(rtk_app_t *app)
+stk_canvas_t *stk_canvas_create(stk_app_t *app)
 {
   int l;
-  rtk_canvas_t *canvas;
+  stk_canvas_t *canvas;
 
   // Create canvas
-  canvas = calloc(1, sizeof(rtk_canvas_t));
+  canvas = calloc(1, sizeof(stk_canvas_t));
 
   // Append canvas to linked list
-  RTK_LIST_APPEND(app->canvas, canvas);
+  STK_LIST_APPEND(app->canvas, canvas);
     
   canvas->app = app;
   canvas->sizex = 0;
@@ -91,9 +91,9 @@ rtk_canvas_t *rtk_canvas_create(rtk_app_t *app)
   canvas->destroyed = FALSE;
   canvas->bg_dirty = TRUE;
   canvas->fg_dirty = TRUE;
-  canvas->fg_dirty_region = rtk_region_create();
+  canvas->fg_dirty_region = stk_region_create();
   canvas->calc_deferred = 0;
-  canvas->movemask = RTK_MOVE_PAN | RTK_MOVE_ZOOM;
+  canvas->movemask = STK_MOVE_PAN | STK_MOVE_ZOOM;
 
   canvas->fig = NULL;
   canvas->layer_fig = NULL;
@@ -171,19 +171,19 @@ rtk_canvas_t *rtk_canvas_create(rtk_app_t *app)
 
   // Connect gtk signal handlers
   gtk_signal_connect(GTK_OBJECT(canvas->frame), "destroy",
-                     GTK_SIGNAL_FUNC(rtk_on_destroy), canvas);
+                     GTK_SIGNAL_FUNC(stk_on_destroy), canvas);
   gtk_signal_connect(GTK_OBJECT(canvas->canvas), "configure_event", 
-                     GTK_SIGNAL_FUNC(rtk_on_configure), canvas);
+                     GTK_SIGNAL_FUNC(stk_on_configure), canvas);
   gtk_signal_connect(GTK_OBJECT(canvas->canvas), "expose_event", 
-                     GTK_SIGNAL_FUNC(rtk_on_expose), canvas);
+                     GTK_SIGNAL_FUNC(stk_on_expose), canvas);
   gtk_signal_connect(GTK_OBJECT(canvas->canvas), "button_press_event", 
-                     GTK_SIGNAL_FUNC(rtk_on_press), canvas);
+                     GTK_SIGNAL_FUNC(stk_on_press), canvas);
   gtk_signal_connect(GTK_OBJECT(canvas->canvas), "motion_notify_event", 
-                     GTK_SIGNAL_FUNC(rtk_on_motion), canvas);
+                     GTK_SIGNAL_FUNC(stk_on_motion), canvas);
   gtk_signal_connect(GTK_OBJECT(canvas->canvas), "button_release_event", 
-                     GTK_SIGNAL_FUNC(rtk_on_release), canvas);
+                     GTK_SIGNAL_FUNC(stk_on_release), canvas);
   //gtk_signal_connect(GTK_OBJECT(canvas->frame), "key-press-event", 
-  //                 GTK_SIGNAL_FUNC(rtk_on_key_press), canvas);
+  //                 GTK_SIGNAL_FUNC(stk_on_key_press), canvas);
 
   // Set the event mask
   //gtk_widget_set_events(canvas->frame,
@@ -198,14 +198,14 @@ rtk_canvas_t *rtk_canvas_create(rtk_app_t *app)
   //GDK_POINTER_MOTION_HINT_MASK);
 
   // show all layers by default
-  for( l=0; l<RTK_CANVAS_LAYERS; l++ )
+  for( l=0; l<STK_CANVAS_LAYERS; l++ )
     canvas->layer_show[l] = 1;
 
   return canvas;
 }
 
 // Delete the canvas
-void rtk_canvas_destroy(rtk_canvas_t *canvas)
+void stk_canvas_destroy(stk_canvas_t *canvas)
 {
   int count;
 
@@ -213,17 +213,17 @@ void rtk_canvas_destroy(rtk_canvas_t *canvas)
   count = 0;
   while (canvas->fig)
   {
-    rtk_fig_destroy(canvas->fig);
+    stk_fig_destroy(canvas->fig);
     count++;
   }
   if (count > 0)
     PRINT_WARN1("garbage collected %d figures", count);
 
   // Clear the dirty regions
-  rtk_region_destroy(canvas->fg_dirty_region);
+  stk_region_destroy(canvas->fg_dirty_region);
   
   // Remove ourself from the linked list in the app
-  RTK_LIST_REMOVE(canvas->app->canvas, canvas);
+  STK_LIST_REMOVE(canvas->app->canvas, canvas);
 
   // Destroy the frame
   gtk_widget_hide(GTK_WIDGET(canvas->frame));
@@ -240,14 +240,14 @@ void rtk_canvas_destroy(rtk_canvas_t *canvas)
 }
 
 // See if the canvas has been closed
-int rtk_canvas_isclosed(rtk_canvas_t *canvas)
+int stk_canvas_isclosed(stk_canvas_t *canvas)
 {
   return canvas->destroyed;
 }
 
 
 // Set the canvas title
-void rtk_canvas_title(rtk_canvas_t *canvas, const char *title)
+void stk_canvas_title(stk_canvas_t *canvas, const char *title)
 {
   gtk_window_set_title(GTK_WINDOW(canvas->frame), title);
 }
@@ -255,7 +255,7 @@ void rtk_canvas_title(rtk_canvas_t *canvas, const char *title)
 
 // Set the size of a canvas
 // (sizex, sizey) is the width and height of the canvas, in pixels.
-void rtk_canvas_size(rtk_canvas_t *canvas, int sizex, int sizey)
+void stk_canvas_size(stk_canvas_t *canvas, int sizex, int sizey)
 {
   gtk_window_set_default_size(GTK_WINDOW(canvas->frame), sizex, sizey);
   return;
@@ -263,7 +263,7 @@ void rtk_canvas_size(rtk_canvas_t *canvas, int sizex, int sizey)
 
 // Get the canvas size.
 // (sizex, sizey) is the width and height of the canvas, in pixels.
-void rtk_canvas_get_size(rtk_canvas_t *canvas, int *sizex, int *sizey)
+void stk_canvas_get_size(stk_canvas_t *canvas, int *sizex, int *sizey)
 {
   *sizex = canvas->sizex;
   *sizey = canvas->sizey;
@@ -273,20 +273,20 @@ void rtk_canvas_get_size(rtk_canvas_t *canvas, int *sizex, int *sizey)
 // Set the origin of a canvas
 // (ox, oy) specifies the logical point that maps to the center of the
 // canvas.
-void rtk_canvas_origin(rtk_canvas_t *canvas, double ox, double oy)
+void stk_canvas_origin(stk_canvas_t *canvas, double ox, double oy)
 {
   canvas->ox = ox;
   canvas->oy = oy;
 
   // Re-calculate all the figures.
-  rtk_canvas_calc(canvas);
+  stk_canvas_calc(canvas);
 }
 
 
 // Get the origin of a canvas
 // (ox, oy) specifies the logical point that maps to the center of the
 // canvas.
-void rtk_canvas_get_origin(rtk_canvas_t *canvas, double *ox, double *oy)
+void stk_canvas_get_origin(stk_canvas_t *canvas, double *ox, double *oy)
 {
   *ox = canvas->ox;
   *oy = canvas->oy;
@@ -295,19 +295,19 @@ void rtk_canvas_get_origin(rtk_canvas_t *canvas, double *ox, double *oy)
 
 // Scale a canvas
 // Sets the pixel width and height in logical units
-void rtk_canvas_scale(rtk_canvas_t *canvas, double sx, double sy)
+void stk_canvas_scale(stk_canvas_t *canvas, double sx, double sy)
 {
   canvas->sx = sx;
   canvas->sy = sy;
   
   // Re-calculate all the figures.
-  rtk_canvas_calc(canvas);
+  stk_canvas_calc(canvas);
 }
 
 
 // Get the scale of the canvas
 // (sx, sy) are the pixel with and height in logical units
-void rtk_canvas_get_scale(rtk_canvas_t *canvas, double *sx, double *sy)
+void stk_canvas_get_scale(stk_canvas_t *canvas, double *sx, double *sy)
 {
   *sx = canvas->sx;
   *sy = canvas->sy;
@@ -315,16 +315,16 @@ void rtk_canvas_get_scale(rtk_canvas_t *canvas, double *sx, double *sy)
 
 
 // Set the movement mask
-// Set the mask to a bitwise combination of RTK_MOVE_TRANS, RTK_MOVE_SCALE.
+// Set the mask to a bitwise combination of STK_MOVE_TRANS, STK_MOVE_SCALE.
 // to enable user manipulation of the canvas.
-void rtk_canvas_movemask(rtk_canvas_t *canvas, int mask)
+void stk_canvas_movemask(stk_canvas_t *canvas, int mask)
 {
   canvas->movemask = mask;
 }
 
 
 // Set the default font for text strokes
-void rtk_canvas_font(rtk_canvas_t *canvas, const char *fontname)
+void stk_canvas_font(stk_canvas_t *canvas, const char *fontname)
 {
   if (canvas->font)
   {
@@ -343,12 +343,12 @@ void rtk_canvas_font(rtk_canvas_t *canvas, const char *fontname)
     canvas->font = gdk_font_load(canvas->fontname);
 
   // Text extents will have changed, so recalc everything.
-  rtk_canvas_calc(canvas);
+  stk_canvas_calc(canvas);
 }
 
 
 // Set the canvas backround color
-void rtk_canvas_bgcolor(rtk_canvas_t *canvas, double r, double g, double b)
+void stk_canvas_bgcolor(stk_canvas_t *canvas, double r, double g, double b)
 {
   canvas->bgcolor.red = (int) (r * 0xFFFF);
   canvas->bgcolor.green = (int) (g * 0xFFFF);
@@ -358,7 +358,7 @@ void rtk_canvas_bgcolor(rtk_canvas_t *canvas, double r, double g, double b)
 
 
 // Set the default line width.
-void rtk_canvas_linewidth(rtk_canvas_t *canvas, int width)
+void stk_canvas_linewidth(stk_canvas_t *canvas, int width)
 {
   canvas->linewidth = width;
 }
@@ -367,46 +367,46 @@ void rtk_canvas_linewidth(rtk_canvas_t *canvas, int width)
 // rtv experimental feature
 //
 
-// the figure will be shown until rtk_canvas_flash_update() is called
+// the figure will be shown until stk_canvas_flash_update() is called
 // [duration] times. if [kill] is non-zero, the fig will
 // also be destroyed when its counter expires.
-void rtk_canvas_flash( rtk_canvas_t* canvas, rtk_fig_t* fig, int duration, 
+void stk_canvas_flash( stk_canvas_t* canvas, stk_fig_t* fig, int duration, 
 		       int kill )
 {
-  rtk_flasher_t* flasher = malloc( sizeof(rtk_flasher_t) );
+  stk_flasher_t* flasher = malloc( sizeof(stk_flasher_t) );
   
   // force the fig visible
-  rtk_fig_show( fig, 1 );
+  stk_fig_show( fig, 1 );
   
   flasher->fig = fig;
   flasher->duration = duration;
   flasher->kill = kill;
   
-  RTK_LIST_APPEND( canvas->flashers, flasher );
+  STK_LIST_APPEND( canvas->flashers, flasher );
 }
 
-void rtk_canvas_flash_update( rtk_canvas_t* canvas )
+void stk_canvas_flash_update( stk_canvas_t* canvas )
 {
-  rtk_flasher_t* flasher = canvas->flashers; 
+  stk_flasher_t* flasher = canvas->flashers; 
   
   while( flasher != NULL )
     {
-      //rtk_fig_t* fig = flasher->fig;      
+      //stk_fig_t* fig = flasher->fig;      
       flasher->duration--;
       
       // if it's time to flip, flip
       if( flasher->duration < 1 )
 	{
-	  rtk_flasher_t* doomed = flasher;
+	  stk_flasher_t* doomed = flasher;
 	  
 	  // force the fig invisible
 	  if( doomed->kill )
-	    rtk_fig_and_descendents_destroy( doomed->fig );
+	    stk_fig_and_descendents_destroy( doomed->fig );
 	  else
-	    rtk_fig_show( doomed->fig, 0);
+	    stk_fig_show( doomed->fig, 0);
 	  
 	  flasher = flasher->next;	  
-	  RTK_LIST_REMOVE( canvas->flashers, doomed );
+	  STK_LIST_REMOVE( canvas->flashers, doomed );
 	  continue;
 	}
       
@@ -414,41 +414,41 @@ void rtk_canvas_flash_update( rtk_canvas_t* canvas )
     }
 }
 
-void rtk_canvas_layer_show( rtk_canvas_t* canvas, int layer, char show )
+void stk_canvas_layer_show( stk_canvas_t* canvas, int layer, char show )
 {
   canvas->layer_show[layer] = show;
   
   // invalidate the whole window 
-  rtk_canvas_calc( canvas );
+  stk_canvas_calc( canvas );
 } 
 
 // end rtv experimental
 
 // Re-calculate all the figures (private).
-void rtk_canvas_calc(rtk_canvas_t *canvas)
+void stk_canvas_calc(stk_canvas_t *canvas)
 {
-  rtk_fig_t *fig;
+  stk_fig_t *fig;
   
   // The whole window is dirty
   canvas->bg_dirty = TRUE;
   canvas->fg_dirty = TRUE;
 
   // Add the whole window to the dirty region
-  rtk_region_set_union_rect(canvas->fg_dirty_region, 0, 0, canvas->sizex, canvas->sizey);
+  stk_region_set_union_rect(canvas->fg_dirty_region, 0, 0, canvas->sizex, canvas->sizey);
 
   // Update all the figures
   for (fig = canvas->fig; fig != NULL; fig = fig->sibling_next)
-    rtk_fig_calc(fig);
+    stk_fig_calc(fig);
  
   return;
 }
 
 
 // Render the figures in the canvas
-void rtk_canvas_render(rtk_canvas_t *canvas)
+void stk_canvas_render(stk_canvas_t *canvas)
 {
   int bg_count;
-  rtk_fig_t *fig;
+  stk_fig_t *fig;
   GdkColor color;
 
   int rcount;
@@ -460,7 +460,7 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
   // If there where deferred computations, do them now.
   if (canvas->calc_deferred)
   {
-    rtk_canvas_calc(canvas);
+    stk_canvas_calc(canvas);
     canvas->calc_deferred = 0;
   }
   
@@ -491,7 +491,7 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
     for (fig = canvas->layer_fig; fig != NULL; fig = fig->layer_next)
     {
       if (fig->layer < 0)
-        rtk_fig_render(fig);
+        stk_fig_render(fig);
     }
 
     // Copy background pixmap to foreground pixmap
@@ -499,7 +499,7 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
                     0, 0, 0, 0, canvas->sizex, canvas->sizey);
 
     // The entire forground needs redrawing
-    rtk_region_set_union_rect(canvas->fg_dirty_region,
+    stk_region_set_union_rect(canvas->fg_dirty_region,
                              0, 0, canvas->sizex, canvas->sizey);
   }
 
@@ -507,7 +507,7 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
   if (canvas->bg_dirty || canvas->fg_dirty)
   {
     // Clip drawing to the dirty region
-    rtk_region_get_brect(canvas->fg_dirty_region, &clipbox);
+    stk_region_get_brect(canvas->fg_dirty_region, &clipbox);
     gdk_gc_set_clip_rectangle(canvas->gc, &clipbox);
 
     // Copy background pixmap to foreground pixmap
@@ -524,10 +524,10 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
       if (fig->layer >= 0 && canvas->layer_show[fig->layer] > 0 )
       {
         // Only draw figures in the dirty region
-        if (rtk_region_test_intersect(canvas->fg_dirty_region, fig->region))
+        if (stk_region_test_intersect(canvas->fg_dirty_region, fig->region))
         {
           rcount++;
-          rtk_fig_render(fig);
+          stk_fig_render(fig);
         }
       }
     }
@@ -542,7 +542,7 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
   // Reset the dirty regions
   canvas->bg_dirty = FALSE;
   canvas->fg_dirty = FALSE;
-  rtk_region_set_empty(canvas->fg_dirty_region);
+  stk_region_set_empty(canvas->fg_dirty_region);
 
   gdk_colormap_free_colors(canvas->colormap, &canvas->bgcolor, 1);
 }
@@ -550,8 +550,8 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
 
 // Export an image.
 // [filename] is the name of the file to save.
-// [format] is the image file format (RTK_IMAGE_FORMAT_JPEG, RTK_IMAGE_FORMAT_PPM).
-void rtk_canvas_export_image(rtk_canvas_t *canvas, const char *filename, int format)
+// [format] is the image file format (STK_IMAGE_FORMAT_JPEG, STK_IMAGE_FORMAT_PPM).
+void stk_canvas_export_image(stk_canvas_t *canvas, const char *filename, int format)
 {
   GdkPixbuf* buf = gdk_pixbuf_get_from_drawable( NULL, 
 						  canvas->fg_pixmap,
@@ -562,19 +562,19 @@ void rtk_canvas_export_image(rtk_canvas_t *canvas, const char *filename, int for
   
   switch( format )
     {
-    case RTK_IMAGE_FORMAT_JPEG:
+    case STK_IMAGE_FORMAT_JPEG:
       gdk_pixbuf_save( buf, filename, "jpeg", NULL,
 		       "quality", "100", NULL );
       break;
 
-    case RTK_IMAGE_FORMAT_PPM:
+    case STK_IMAGE_FORMAT_PPM:
       gdk_pixbuf_save( buf, filename, "ppm", NULL, NULL );
       break;
 
-    case RTK_IMAGE_FORMAT_PNG:
+    case STK_IMAGE_FORMAT_PNG:
       gdk_pixbuf_save( buf, filename, "png", NULL, NULL );
       break;
-    case RTK_IMAGE_FORMAT_PNM:
+    case STK_IMAGE_FORMAT_PNM:
       gdk_pixbuf_save( buf, filename, "pnm", NULL, NULL );
       break;
 
@@ -589,10 +589,10 @@ void rtk_canvas_export_image(rtk_canvas_t *canvas, const char *filename, int for
 #define TOL_MOVE 15
 
 // See if there is a moveable figure close to the given device point.
-rtk_fig_t *rtk_canvas_pick_fig(rtk_canvas_t *canvas, int x, int y)
+stk_fig_t *stk_canvas_pick_fig(stk_canvas_t *canvas, int x, int y)
 {
   int maxlayer;
-  rtk_fig_t *fig, *maxfig;
+  stk_fig_t *fig, *maxfig;
 
   maxfig = NULL;
   maxlayer = INT_MIN;
@@ -604,7 +604,7 @@ rtk_fig_t *rtk_canvas_pick_fig(rtk_canvas_t *canvas, int x, int y)
       continue;
     if (fig->movemask == 0)
       continue;
-    if (rtk_fig_hittest(fig, x, y))
+    if (stk_fig_hittest(fig, x, y))
     {
       if (fig->layer >= maxlayer)
       {
@@ -617,54 +617,54 @@ rtk_fig_t *rtk_canvas_pick_fig(rtk_canvas_t *canvas, int x, int y)
 }
 
 // Do mouse stuff
-void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
+void stk_canvas_mouse(stk_canvas_t *canvas, int event, int button, int x, int y)
 {
   double px, py, pa, rd, rl;
-  rtk_fig_t *fig;
+  stk_fig_t *fig;
     
   if (event == EVENT_PRESS)
   {        
     // See of there are any moveable figures at this point
-    fig = rtk_canvas_pick_fig(canvas, x, y);
+    fig = stk_canvas_pick_fig(canvas, x, y);
 
     // If there are moveable figures...
     if (fig)
     {
-      if (button == 1 && (fig->movemask & RTK_MOVE_TRANS))
+      if (button == 1 && (fig->movemask & STK_MOVE_TRANS))
       {
         canvas->mouse_mode = MOUSE_TRANS;
         canvas->mouse_start_x = LX(x) - fig->dox;
         canvas->mouse_start_y = LY(y) - fig->doy;
         canvas->mouse_selected_fig = fig;
-        rtk_fig_dirty(fig);
-        rtk_fig_on_mouse(canvas->mouse_selected_fig, RTK_EVENT_PRESS, canvas->mouse_mode);
+        stk_fig_dirty(fig);
+        stk_fig_on_mouse(canvas->mouse_selected_fig, STK_EVENT_PRESS, canvas->mouse_mode);
       }
-      else if (button == 3 && (fig->movemask & RTK_MOVE_ROT))
+      else if (button == 3 && (fig->movemask & STK_MOVE_ROT))
       {
         canvas->mouse_mode = MOUSE_ROT;
         px = LX(x) - fig->dox;
         py = LY(y) - fig->doy;
         canvas->mouse_start_a = atan2(py, px) - fig->doa;
         canvas->mouse_selected_fig = fig;
-        rtk_fig_dirty(fig);
-        rtk_fig_on_mouse(canvas->mouse_selected_fig, RTK_EVENT_PRESS, canvas->mouse_mode);
+        stk_fig_dirty(fig);
+        stk_fig_on_mouse(canvas->mouse_selected_fig, STK_EVENT_PRESS, canvas->mouse_mode);
       }
 
       // rtv - fixed and reinstated scroll wheel support 1/7/03
       // rtv - handle the mouse scroll wheel for rotating objects 
-      else if( button == 4 && (fig->movemask & RTK_MOVE_ROT))
+      else if( button == 4 && (fig->movemask & STK_MOVE_ROT))
 	{
-	  rtk_fig_dirty(fig);
-	  rtk_fig_origin_global(fig, fig->dox, fig->doy, fig->doa + 0.2 );
-	  rtk_fig_on_mouse(fig, RTK_EVENT_PRESS, canvas->mouse_mode);
+	  stk_fig_dirty(fig);
+	  stk_fig_origin_global(fig, fig->dox, fig->doy, fig->doa + 0.2 );
+	  stk_fig_on_mouse(fig, STK_EVENT_PRESS, canvas->mouse_mode);
 	  
 	  return;
 	}
-      else if( button == 5 && (fig->movemask & RTK_MOVE_ROT))
+      else if( button == 5 && (fig->movemask & STK_MOVE_ROT))
 	{
-	  rtk_fig_dirty(fig);
-	  rtk_fig_origin_global(fig, fig->dox, fig->doy, fig->doa - 0.2 );
-	  rtk_fig_on_mouse(fig, RTK_EVENT_PRESS, canvas->mouse_mode);
+	  stk_fig_dirty(fig);
+	  stk_fig_origin_global(fig, fig->dox, fig->doy, fig->doa - 0.2 );
+	  stk_fig_on_mouse(fig, STK_EVENT_PRESS, canvas->mouse_mode);
 	  return;
 	}
       
@@ -673,14 +673,14 @@ void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
     // Else translate and scale the canvas...
     else
     {
-      if (button == 1 && (canvas->movemask & RTK_MOVE_PAN))
+      if (button == 1 && (canvas->movemask & STK_MOVE_PAN))
       {
         // Store the logical coordinate of the start point
         canvas->mouse_mode = MOUSE_PAN;
         canvas->mouse_start_x = LX(x);
         canvas->mouse_start_y = LY(y);
       }
-      else if (button == 3 && (canvas->movemask & RTK_MOVE_ZOOM))
+      else if (button == 3 && (canvas->movemask & STK_MOVE_ZOOM))
       {
 	if( canvas->zoom_fig == NULL )
 	  {
@@ -692,23 +692,23 @@ void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
 	    // Create a figure for showing the zoom
 	    //assert(canvas->zoom_fig == NULL);
 	   	    
-	    canvas->zoom_fig = rtk_fig_create(canvas, NULL, RTK_CANVAS_LAYERS-1);
+	    canvas->zoom_fig = stk_fig_create(canvas, NULL, STK_CANVAS_LAYERS-1);
 	    px = LX(canvas->sizex / 2);
 	    py = LY(canvas->sizey / 2);
 	    rl = 2 * sqrt((LX(x) - px) * (LX(x) - px) + (LY(y) - py) * (LY(y) - py));
-	    rtk_fig_ellipse(canvas->zoom_fig, px, py, 0, rl, rl, 0);
+	    stk_fig_ellipse(canvas->zoom_fig, px, py, 0, rl, rl, 0);
 	  }
       }
 
       /* BROKEN
       // handle the mouse scroll wheel for cancas zooming
-      else if (button == 4 && (canvas->movemask & RTK_MOVE_ZOOM))
+      else if (button == 4 && (canvas->movemask & STK_MOVE_ZOOM))
       {
         canvas->mouse_mode = MOUSE_ZOOM;
         canvas->sx *= 0.9;
         canvas->sy *= 0.9;
       }
-      else if (button == 5 && (canvas->movemask & RTK_MOVE_ZOOM))
+      else if (button == 5 && (canvas->movemask & STK_MOVE_ZOOM))
       {
         canvas->mouse_mode = MOUSE_ZOOM;
         canvas->sx *= 1.1;
@@ -726,9 +726,9 @@ void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
       fig = canvas->mouse_selected_fig;
       px = LX(x) - canvas->mouse_start_x;
       py = LY(y) - canvas->mouse_start_y;
-      rtk_fig_dirty(fig);
-      rtk_fig_origin_global(fig, px, py, fig->doa);
-      rtk_fig_on_mouse(canvas->mouse_selected_fig, RTK_EVENT_MOTION, canvas->mouse_mode);
+      stk_fig_dirty(fig);
+      stk_fig_origin_global(fig, px, py, fig->doa);
+      stk_fig_on_mouse(canvas->mouse_selected_fig, STK_EVENT_MOTION, canvas->mouse_mode);
     }
     else if (canvas->mouse_mode == MOUSE_ROT)
     {
@@ -737,9 +737,9 @@ void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
       px = LX(x) - fig->dox;
       py = LY(y) - fig->doy;
       pa = atan2(py, px) - canvas->mouse_start_a;
-      rtk_fig_dirty(fig);
-      rtk_fig_origin_global(fig, fig->dox, fig->doy, pa);
-      rtk_fig_on_mouse(canvas->mouse_selected_fig, RTK_EVENT_MOTION, canvas->mouse_mode);
+      stk_fig_dirty(fig);
+      stk_fig_origin_global(fig, fig->dox, fig->doy, pa);
+      stk_fig_on_mouse(canvas->mouse_selected_fig, STK_EVENT_MOTION, canvas->mouse_mode);
     }
     else if (canvas->mouse_mode == MOUSE_PAN)
     {
@@ -766,17 +766,17 @@ void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
     else if (canvas->mouse_mode == MOUSE_NONE)
     {
       // See of there are any moveable figures at this point
-      fig = rtk_canvas_pick_fig(canvas, x, y);
+      fig = stk_canvas_pick_fig(canvas, x, y);
       if (fig)
-        rtk_fig_dirty(fig);
+        stk_fig_dirty(fig);
       if (canvas->mouse_over_fig)
-        rtk_fig_dirty(canvas->mouse_over_fig);
+        stk_fig_dirty(canvas->mouse_over_fig);
       if (fig != canvas->mouse_over_fig)
       {
         if (canvas->mouse_over_fig)
-          rtk_fig_on_mouse(canvas->mouse_over_fig, RTK_EVENT_MOUSE_NOT_OVER, canvas->mouse_mode);
+          stk_fig_on_mouse(canvas->mouse_over_fig, STK_EVENT_MOUSE_NOT_OVER, canvas->mouse_mode);
         if (fig)
-          rtk_fig_on_mouse(fig, RTK_EVENT_MOUSE_OVER, canvas->mouse_mode);
+          stk_fig_on_mouse(fig, STK_EVENT_MOUSE_OVER, canvas->mouse_mode);
       }
       canvas->mouse_over_fig = fig;
     }
@@ -798,7 +798,7 @@ void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
       // Delete zoom figure
       if (canvas->zoom_fig != NULL)
       {
-        rtk_fig_destroy(canvas->zoom_fig);
+        stk_fig_destroy(canvas->zoom_fig);
         canvas->zoom_fig = NULL;
       }
   
@@ -817,8 +817,8 @@ void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
       // Do callbacks
       if (fig)
       {
-        rtk_fig_dirty(fig);
-        rtk_fig_on_mouse(fig, RTK_EVENT_RELEASE, canvas->mouse_mode);
+        stk_fig_dirty(fig);
+        stk_fig_on_mouse(fig, STK_EVENT_RELEASE, canvas->mouse_mode);
       }
     }
   }
@@ -826,7 +826,7 @@ void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
 
 
 // Handle destroy events
-gboolean rtk_on_destroy(GtkWidget *widget, rtk_canvas_t *canvas)
+gboolean stk_on_destroy(GtkWidget *widget, stk_canvas_t *canvas)
 {
   canvas->destroyed = TRUE;
   return FALSE;
@@ -834,7 +834,7 @@ gboolean rtk_on_destroy(GtkWidget *widget, rtk_canvas_t *canvas)
 
 
 // Process configure events
-void rtk_on_configure(GtkWidget *widget, GdkEventConfigure *event, rtk_canvas_t *canvas)
+void stk_on_configure(GtkWidget *widget, GdkEventConfigure *event, stk_canvas_t *canvas)
 {
   GdkColor color;
   
@@ -874,7 +874,7 @@ void rtk_on_configure(GtkWidget *widget, GdkEventConfigure *event, rtk_canvas_t 
 
 
 // Process expose events
-void rtk_on_expose(GtkWidget *widget, GdkEventExpose *event, rtk_canvas_t *canvas)
+void stk_on_expose(GtkWidget *widget, GdkEventExpose *event, stk_canvas_t *canvas)
 {
  if (canvas->fg_pixmap)
   {
@@ -886,7 +886,7 @@ void rtk_on_expose(GtkWidget *widget, GdkEventExpose *event, rtk_canvas_t *canva
 
 
 // Process keyboard events
-void rtk_on_key_press(GtkWidget *widget, GdkEventKey *event, rtk_canvas_t *canvas)
+void stk_on_key_press(GtkWidget *widget, GdkEventKey *event, stk_canvas_t *canvas)
 {
   double scale, dx, dy;
   //PRINT_DEBUG3("key: %d %d %s", event->keyval, event->state, gdk_keyval_name(event->keyval));
@@ -899,54 +899,54 @@ void rtk_on_key_press(GtkWidget *widget, GdkEventKey *event, rtk_canvas_t *canva
   {
     case GDK_Left:
       if (event->state == 0)
-        rtk_canvas_origin(canvas, canvas->ox - 0.05 * dx, canvas->oy);
+        stk_canvas_origin(canvas, canvas->ox - 0.05 * dx, canvas->oy);
       else if (event->state == 4)
-        rtk_canvas_origin(canvas, canvas->ox - 0.5 * dx, canvas->oy);
+        stk_canvas_origin(canvas, canvas->ox - 0.5 * dx, canvas->oy);
       break;
     case GDK_Right:
       if (event->state == 0)
-        rtk_canvas_origin(canvas, canvas->ox + 0.05 * dx, canvas->oy);
+        stk_canvas_origin(canvas, canvas->ox + 0.05 * dx, canvas->oy);
       else if (event->state == 4)
-        rtk_canvas_origin(canvas, canvas->ox + 0.5 * dx, canvas->oy);
+        stk_canvas_origin(canvas, canvas->ox + 0.5 * dx, canvas->oy);
       break;
     case GDK_Up:
       if (event->state == 0)
-        rtk_canvas_origin(canvas, canvas->ox, canvas->oy + 0.05 * dy);
+        stk_canvas_origin(canvas, canvas->ox, canvas->oy + 0.05 * dy);
       else if (event->state == 4)
-        rtk_canvas_origin(canvas, canvas->ox, canvas->oy + 0.5 * dy);
+        stk_canvas_origin(canvas, canvas->ox, canvas->oy + 0.5 * dy);
       else if (event->state == 1)
-        rtk_canvas_scale(canvas, canvas->sx / scale, canvas->sy / scale);
+        stk_canvas_scale(canvas, canvas->sx / scale, canvas->sy / scale);
       break;
     case GDK_Down:
       if (event->state == 0)
-        rtk_canvas_origin(canvas, canvas->ox, canvas->oy - 0.05 * dy);
+        stk_canvas_origin(canvas, canvas->ox, canvas->oy - 0.05 * dy);
       else if (event->state == 4)
-        rtk_canvas_origin(canvas, canvas->ox, canvas->oy - 0.5 * dy);
+        stk_canvas_origin(canvas, canvas->ox, canvas->oy - 0.5 * dy);
       else if (event->state == 1)
-        rtk_canvas_scale(canvas, canvas->sx * scale, canvas->sy * scale);
+        stk_canvas_scale(canvas, canvas->sx * scale, canvas->sy * scale);
       break;
   }
 }
 
 
 // Process mouse press events
-void rtk_on_press(GtkWidget *widget, GdkEventButton *event, rtk_canvas_t *canvas)
+void stk_on_press(GtkWidget *widget, GdkEventButton *event, stk_canvas_t *canvas)
 {
-  rtk_canvas_mouse(canvas, EVENT_PRESS, event->button, event->x, event->y);
+  stk_canvas_mouse(canvas, EVENT_PRESS, event->button, event->x, event->y);
 }
 
 
 // Process mouse motion events
-void rtk_on_motion(GtkWidget *widget, GdkEventMotion *event, rtk_canvas_t *canvas)
+void stk_on_motion(GtkWidget *widget, GdkEventMotion *event, stk_canvas_t *canvas)
 {
-  rtk_canvas_mouse(canvas, EVENT_MOTION, 0, event->x, event->y);
+  stk_canvas_mouse(canvas, EVENT_MOTION, 0, event->x, event->y);
 }
 
 
 // Process mouse release events
-void rtk_on_release(GtkWidget *widget, GdkEventButton *event, rtk_canvas_t *canvas)
+void stk_on_release(GtkWidget *widget, GdkEventButton *event, stk_canvas_t *canvas)
 {
-  rtk_canvas_mouse(canvas, EVENT_RELEASE, event->button, event->x, event->y);
+  stk_canvas_mouse(canvas, EVENT_RELEASE, event->button, event->x, event->y);
 }
 
 

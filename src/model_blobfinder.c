@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.37 2005-02-08 07:04:47 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.38 2005-03-11 20:50:44 rtv Exp $
  */
 
 #include <math.h>
@@ -31,7 +31,7 @@
 #include "stage_internal.h"
 #include "gui.h"
 
-extern rtk_fig_t* fig_debug_rays;
+extern stk_fig_t* fig_debug_rays;
 
 #define STG_DEFAULT_BLOB_CHANNELCOUNT 6
 #define STG_DEFAULT_BLOB_SCANWIDTH 80
@@ -281,7 +281,7 @@ int blobfinder_update( stg_model_t* mod )
   //int num_blobs = 0;
   stg_color_t col;
 
-  if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
+  if( fig_debug_rays ) stk_fig_clear( fig_debug_rays );
 
   int s;
   for( s = 0; s < cfg.scan_width; s++)
@@ -454,9 +454,9 @@ void blobfinder_render_data( stg_model_t* mod )
   PRINT_DEBUG( "blobfinder render" );  
   
   if( mod->gui.data  )
-    rtk_fig_clear(mod->gui.data);
+    stk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
-    mod->gui.data = rtk_fig_create(  mod->world->win->canvas, 
+    mod->gui.data = stk_fig_create(  mod->world->win->canvas, 
 				     NULL, 
 				     STG_LAYER_BLOBDATA );
   
@@ -468,7 +468,7 @@ void blobfinder_render_data( stg_model_t* mod )
   if( len < sizeof(stg_blobfinder_blob_t) )
     return; // no data to render
 
-  rtk_fig_t* fig = mod->gui.data;  
+  stk_fig_t* fig = mod->gui.data;  
   
   // place the visualization a little away from the device
   stg_pose_t pose;
@@ -477,7 +477,7 @@ void blobfinder_render_data( stg_model_t* mod )
   pose.x -= 1.0;
   pose.y += 1.0;
   pose.a = 0.0;
-  rtk_fig_origin( fig, pose.x, pose.y, pose.a );
+  stk_fig_origin( fig, pose.x, pose.y, pose.a );
   
   double scale = 0.01; // shrink from pixels to meters for display
     
@@ -492,10 +492,10 @@ void blobfinder_render_data( stg_model_t* mod )
   double mheight = height * scale;
   
   // the view outline rectangle
-  rtk_fig_color_rgb32(fig, 0xFFFFFF);
-  rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
-  rtk_fig_color_rgb32(fig, 0x000000);
-  rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
+  stk_fig_color_rgb32(fig, 0xFFFFFF);
+  stk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
+  stk_fig_color_rgb32(fig, 0x000000);
+  stk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
   
   int c;
   for( c=0; c<num_blobs; c++)
@@ -503,7 +503,7 @@ void blobfinder_render_data( stg_model_t* mod )
       stg_blobfinder_blob_t* blob = &blobs[c];
       
       // set the color from the blob data
-      rtk_fig_color_rgb32( fig, blob->color ); 
+      stk_fig_color_rgb32( fig, blob->color ); 
       
       short top =   blob->top;
       short bot =   blob->bottom;
@@ -518,7 +518,7 @@ void blobfinder_render_data( stg_model_t* mod )
       // get the range in meters
       //double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
       
-      rtk_fig_rectangle(fig, 
+      stk_fig_rectangle(fig, 
 			-mwidth/2.0 + (mleft+mright)/2.0, 
 			-mheight/2.0 +  (mtop+mbot)/2.0,
 			0.0, 
@@ -534,15 +534,15 @@ void blobfinder_render_cfg( stg_model_t* mod )
   
   
   if( mod->gui.cfg  )
-    rtk_fig_clear(mod->gui.cfg);
+    stk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
-    mod->gui.cfg = rtk_fig_create( mod->world->win->canvas,
+    mod->gui.cfg = stk_fig_create( mod->world->win->canvas,
 				   mod->gui.top, STG_LAYER_BLOBCONFIG );
   
-  rtk_fig_t* fig = mod->gui.cfg;  
+  stk_fig_t* fig = mod->gui.cfg;  
   
   
-  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
+  stk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
   
   stg_blobfinder_config_t cfg;
   blobfinder_get_cfg(mod,&cfg);
@@ -561,9 +561,9 @@ void blobfinder_render_cfg( stg_model_t* mod )
   double ddx = cfg.range_max * cos(maxa);
   double ddy = cfg.range_max * sin(maxa);
   
-  rtk_fig_line( fig, ox,oy, dx, dy );
-  rtk_fig_line( fig, ox,oy, ddx, ddy );
-  rtk_fig_ellipse_arc( fig, 0,0,0,
+  stk_fig_line( fig, ox,oy, dx, dy );
+  stk_fig_line( fig, ox,oy, ddx, ddy );
+  stk_fig_ellipse_arc( fig, 0,0,0,
 		       2.0*cfg.range_max,
 		       2.0*cfg.range_max, 
 		       mina, maxa );      

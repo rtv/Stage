@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,7 +20,7 @@
 
 #include "stage_internal.h"
 #include "gui.h"
-extern rtk_fig_t* fig_debug;
+extern stk_fig_t* fig_debug;
 
 #define TIMING 0
 #define ENERGY_FILLED 1
@@ -310,25 +310,25 @@ void energy_render_data( stg_model_t* mod )
   PRINT_DEBUG( "energy data render" );
   
   if( mod->gui.data  )
-    rtk_fig_clear(mod->gui.data);
+    stk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
     {
-      mod->gui.data = rtk_fig_create( mod->world->win->canvas, 
+      mod->gui.data = stk_fig_create( mod->world->win->canvas, 
 				      mod->gui.top, 
 				      //NULL,
 				      STG_LAYER_ENERGYDATA );      
     }
   
   if( mod->gui.data_extra  )
-    rtk_fig_clear(mod->gui.data_extra);
+    stk_fig_clear(mod->gui.data_extra);
   else // create the figure, store it in the model and keep a local pointer
     {
-      mod->gui.data_extra = rtk_fig_create( mod->world->win->canvas, 
+      mod->gui.data_extra = stk_fig_create( mod->world->win->canvas, 
 					    NULL,
 					    STG_LAYER_ENERGYDATA );      
     }
   
-  //rtk_fig_t* fig = mod->gui.data;  
+  //stk_fig_t* fig = mod->gui.data;  
   
   // if this model has a energy subscription
   // and some data, we'll draw the data
@@ -339,7 +339,7 @@ void energy_render_data( stg_model_t* mod )
       // place the visualization a little away from the device
       stg_pose_t pose;
       stg_model_get_global_pose( mod, &pose );
-      rtk_fig_origin( mod->gui.data_extra, pose.x-0.3, pose.y-0.3, 0 );
+      stk_fig_origin( mod->gui.data_extra, pose.x-0.3, pose.y-0.3, 0 );
       
       stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
       stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;;
@@ -352,21 +352,21 @@ void energy_render_data( stg_model_t* mod )
       double bar_height = box_height * fraction;
       double bar_width = box_width;
 
-      rtk_fig_color_rgb32(mod->gui.data_extra, 0xFFFFFF ); // white
+      stk_fig_color_rgb32(mod->gui.data_extra, 0xFFFFFF ); // white
 
-      rtk_fig_rectangle( mod->gui.data_extra, 
+      stk_fig_rectangle( mod->gui.data_extra, 
 			 0,0,0, 
 			 box_width, box_height,
 			 TRUE );
       
       if( fraction > 0.5 )
-	rtk_fig_color_rgb32(mod->gui.data_extra, 0x00FF00 ); // green
+	stk_fig_color_rgb32(mod->gui.data_extra, 0x00FF00 ); // green
       else if( fraction > 0.1 )
-	rtk_fig_color_rgb32(mod->gui.data_extra, 0xFFFF00 ); // yellow
+	stk_fig_color_rgb32(mod->gui.data_extra, 0xFFFF00 ); // yellow
       else
-	rtk_fig_color_rgb32(mod->gui.data_extra, 0xFF0000 ); // red      
+	stk_fig_color_rgb32(mod->gui.data_extra, 0xFF0000 ); // red      
 
-      rtk_fig_rectangle( mod->gui.data_extra, 
+      stk_fig_rectangle( mod->gui.data_extra, 
 			 0,
 			 bar_height/2.0 - box_height/2.0,
 			 0, 
@@ -374,9 +374,9 @@ void energy_render_data( stg_model_t* mod )
 			 bar_height,
 			 TRUE );
 
-      rtk_fig_color_rgb32(mod->gui.data_extra, 0x0 ); // black
+      stk_fig_color_rgb32(mod->gui.data_extra, 0x0 ); // black
 
-      rtk_fig_rectangle( mod->gui.data_extra, 
+      stk_fig_rectangle( mod->gui.data_extra, 
 			 0,
 			 bar_height/2.0 - box_height/2.0,
 			 0, 
@@ -384,7 +384,7 @@ void energy_render_data( stg_model_t* mod )
 			 bar_height,
 			 FALSE );
 
-      rtk_fig_rectangle( mod->gui.data_extra, 
+      stk_fig_rectangle( mod->gui.data_extra, 
 			 0,0,0, 
 			 box_width,
 			 box_height,
@@ -397,17 +397,17 @@ void energy_render_data( stg_model_t* mod )
       //pose.x += 0.0;
       //pose.y -= 0.5;
       //pose.a = 0.0;
-      //rtk_fig_origin( fig, pose.x, pose.y, pose.a );
+      //stk_fig_origin( fig, pose.x, pose.y, pose.a );
 
-      //rtk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_ENERGY_COLOR) );
+      //stk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_ENERGY_COLOR) );
 
       if( data->charging ) 
 	{
-	  rtk_fig_color_rgb32(mod->gui.data, 0x00BB00 ); // green
-	  rtk_fig_arrow_fancy( mod->gui.data, 0,0,0, data->range, 0.25, 0.10, 1 );
+	  stk_fig_color_rgb32(mod->gui.data, 0x00BB00 ); // green
+	  stk_fig_arrow_fancy( mod->gui.data, 0,0,0, data->range, 0.25, 0.10, 1 );
 
-	  //rtk_fig_color_rgb32(mod->gui.data, 0 ); // black
-	  //rtk_fig_arrow_fancy( mod->gui.data, 0,0,0, data->range, 0.25, 0.10, 0 );
+	  //stk_fig_color_rgb32(mod->gui.data, 0 ); // black
+	  //stk_fig_arrow_fancy( mod->gui.data, 0,0,0, data->range, 0.25, 0.10, 0 );
 	}
 
       if( 0 )
@@ -424,7 +424,7 @@ void energy_render_data( stg_model_t* mod )
 		    data->input_joules,
 		    data->charging ? "charging" : "" );
 	  
-	  //rtk_fig_text( mod->gui.data, 0.6,0.0,0, buf ); 
+	  //stk_fig_text( mod->gui.data, 0.6,0.0,0, buf ); 
 	}
 	//else
 	//{
@@ -432,7 +432,7 @@ void energy_render_data( stg_model_t* mod )
 	//snprintf( buf, 128, "mains supply\noutput %.2fW\n", 
 	//    data->output );
 	  
-	// rtk_fig_text( fig, 0.6,0,0, buf ); 	  
+	// stk_fig_text( fig, 0.6,0,0, buf ); 	  
 	//}
 
     }
@@ -445,21 +445,21 @@ void energy_render_config( stg_model_t* mod )
   
   
   if( mod->gui.cfg  )
-    rtk_fig_clear(mod->gui.cfg);
+    stk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
     {
-      mod->gui.cfg = rtk_fig_create( mod->world->win->canvas, 
+      mod->gui.cfg = stk_fig_create( mod->world->win->canvas, 
 				   mod->gui.top, STG_LAYER_ENERGYCONFIG );
 
-      rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color( STG_ENERGY_CFG_COLOR ));
+      stk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color( STG_ENERGY_CFG_COLOR ));
     }
 
   stg_energy_config_t cfg;
   stg_model_get_config(mod, &cfg, sizeof(cfg) );
 
   if( cfg.take > 0 )
-    //rtk_fig_arrow_fancy( mod->gui.cfg, 0,0,0, cfg.probe_range, 0.25, 0.10, 1 );
-    rtk_fig_arrow( mod->gui.cfg, 0,0,0, cfg.probe_range, 0.25  );
+    //stk_fig_arrow_fancy( mod->gui.cfg, 0,0,0, cfg.probe_range, 0.25, 0.10, 1 );
+    stk_fig_arrow( mod->gui.cfg, 0,0,0, cfg.probe_range, 0.25  );
   
 }
 

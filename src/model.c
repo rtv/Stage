@@ -352,13 +352,14 @@ stg_model_t* stg_model_create( stg_world_t* world,
   g_datalist_init( &mod->props);
 	
   // install the default functions
-  mod->f_startup = _model_startup;
-  mod->f_shutdown = _model_shutdown;
-  mod->f_update = _model_update;
+  mod->f_startup = NULL;
+  mod->f_shutdown = NULL;
   mod->f_render_data = NULL;
   mod->f_render_cmd = NULL;
   mod->f_render_cfg = NULL;
+  mod->f_update = _model_update;
 
+  // possible extensions?
   //mod->f_set_data = _model_set_data;
   //mod->f_get_data =  _model_get_data;
   //mod->f_set_command = _model_set_cmd;
@@ -718,6 +719,7 @@ int stg_model_set_config( stg_model_t* mod, void* cfg, size_t len )
   return 0; //ok
 }
 
+// default update function that implements velocities for all objects
 int _model_update( stg_model_t* mod )
 {
   mod->interval_elapsed = 0;
@@ -729,25 +731,11 @@ int _model_update( stg_model_t* mod )
   return 0; //ok
 }
 
-int _model_startup( stg_model_t* mod )
-{
-  PRINT_DEBUG( "default startup proc" );
-  return 0; //ok
-}
-
-int _model_shutdown( stg_model_t* mod )
-{
-  PRINT_DEBUG( "default shutdown proc" );
-  return 0; //ok
-}
-
 int stg_model_update( stg_model_t* mod )
 {
   assert( mod->f_update );
-  int val = mod->f_update(mod);
-  return val;
+  return mod->f_update(mod);
 }
-
 
 int stg_model_startup( stg_model_t* mod )
 {
@@ -874,7 +862,7 @@ int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
       // render in the matrix
       stg_model_map_with_children( mod, 1 );
       
-      // move the rtk figure to match
+      // move the stk figure to match
       gui_model_move( mod );      
     }
   
@@ -1024,7 +1012,7 @@ int stg_model_set_fiducialreturn( stg_model_t* mod, stg_fiducial_return_t* val )
 }
 
 
-extern rtk_fig_t* fig_debug_rays; 
+extern stk_fig_t* fig_debug_rays; 
 
 int lines_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
@@ -1059,7 +1047,7 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
   if( count < 1 )
     return NULL;
 
-  if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
+  if( fig_debug_rays ) stk_fig_clear( fig_debug_rays );
 
   // loop over all polygons
   int q;

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.46 $
+//  $Revision: 1.47 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,7 +20,7 @@
 #include "stage_internal.h"
 #include "gui.h"
 
-extern rtk_fig_t* fig_debug_rays;
+extern stk_fig_t* fig_debug_rays;
 
 #define STG_RANGER_DATA_MAX 64
 
@@ -241,7 +241,7 @@ int ranger_update( stg_model_t* mod )
   stg_ranger_sample_t* ranges = (stg_ranger_sample_t*)
     calloc( sizeof(stg_ranger_sample_t), rcount );
   
-  if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
+  if( fig_debug_rays ) stk_fig_clear( fig_debug_rays );
 
   int t;
   for( t=0; t<rcount; t++ )
@@ -292,12 +292,12 @@ int ranger_update( stg_model_t* mod )
 void ranger_render_cfg( stg_model_t* mod )
 {
   if( mod->gui.cfg  )
-    rtk_fig_clear(mod->gui.cfg);
+    stk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
     {
-      mod->gui.cfg = rtk_fig_create( mod->world->win->canvas,
+      mod->gui.cfg = stk_fig_create( mod->world->win->canvas,
 				     mod->gui.top, STG_LAYER_RANGERCONFIG );
-      rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
+      stk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
     }
   
   stg_ranger_config_t cfg[STG_RANGER_DATA_MAX];
@@ -312,7 +312,7 @@ void ranger_render_cfg( stg_model_t* mod )
   stg_geom_t geom;
   stg_model_get_geom(mod,&geom);
 
-  rtk_fig_origin( mod->gui.cfg, geom.pose.x, geom.pose.y, geom.pose.a );  
+  stk_fig_origin( mod->gui.cfg, geom.pose.x, geom.pose.y, geom.pose.a );  
 
   
   // add rects showing ranger positions
@@ -322,7 +322,7 @@ void ranger_render_cfg( stg_model_t* mod )
       stg_ranger_config_t* rngr = &cfg[s];
 
       // sensor pose
-      rtk_fig_rectangle( mod->gui.cfg, 
+      stk_fig_rectangle( mod->gui.cfg, 
 			 rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			 rngr->size.x, rngr->size.y, 
 			 mod->world->win->fill_polygons ); 
@@ -338,10 +338,10 @@ void ranger_render_cfg( stg_model_t* mod )
       double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da );
       double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da );
       
-      rtk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x1, y1 );
-      rtk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x2, y2 );	
+      stk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x1, y1 );
+      stk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x2, y2 );	
       
-      rtk_fig_ellipse_arc( mod->gui.cfg, 
+      stk_fig_ellipse_arc( mod->gui.cfg, 
 			   rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			   2.0*cfg->bounds_range.max,
 			   2.0*cfg->bounds_range.max, 
@@ -358,9 +358,9 @@ void ranger_render_data( stg_model_t* mod)
     {
 
   if( mod->gui.data  )
-    rtk_fig_clear(mod->gui.data);
+    stk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
-    mod->gui.data = rtk_fig_create( mod->world->win->canvas, 
+    mod->gui.data = stk_fig_create( mod->world->win->canvas, 
 				    mod->gui.top, STG_LAYER_RANGERDATA );
   
   stg_ranger_config_t cfg[STG_RANGER_DATA_MAX];
@@ -385,8 +385,8 @@ void ranger_render_data( stg_model_t* mod)
       stg_geom_t geom;
       stg_model_get_geom(mod,&geom);
       
-      rtk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_RANGER_COLOR) );
-      rtk_fig_origin( mod->gui.data, geom.pose.x, geom.pose.y, geom.pose.a );	  
+      stk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_RANGER_COLOR) );
+      stk_fig_origin( mod->gui.data, geom.pose.x, geom.pose.y, geom.pose.a );	  
       // draw the range  beams
       int s;
       for( s=0; s<rcount; s++ )
@@ -395,7 +395,7 @@ void ranger_render_data( stg_model_t* mod)
 	    {
 	      stg_ranger_config_t* rngr = &cfg[s];
 	      
-	      rtk_fig_arrow( mod->gui.data, 
+	      stk_fig_arrow( mod->gui.data, 
 			     rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
 	    }
 	}

@@ -1,5 +1,5 @@
 /*
- *  RTK2 : A GUI toolkit for robotics
+ *  STK2 : A GUI toolkit for robotics
  *  Copyright (C) 2001  Andrew Howard  ahoward@usc.edu
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,10 +19,10 @@
  */
 
 /*
- * Desc: Rtk fig functions
+ * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.7 2005-02-28 23:10:47 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.8 2005-03-11 20:50:44 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -37,20 +37,20 @@
 #include "rtkprivate.h"
 
 // Draw the selection
-void rtk_fig_render_selection(rtk_fig_t *fig);
+void stk_fig_render_selection(stk_fig_t *fig);
 
 // Create a point stroke
-void rtk_fig_point_alloc(rtk_fig_t *fig, double ox, double oy);
+void stk_fig_point_alloc(stk_fig_t *fig, double ox, double oy);
 
 // Create a polygon
-void rtk_fig_polygon_alloc(rtk_fig_t *fig, double ox, double oy, double oa,
-                           int closed, int filled, int point_count, rtk_point_t *points);
+void stk_fig_polygon_alloc(stk_fig_t *fig, double ox, double oy, double oa,
+                           int closed, int filled, int point_count, stk_point_t *points);
 
 // Create a text stroke
-void rtk_fig_text_alloc(rtk_fig_t *fig, double ox, double oy, double oa, const char *text);
+void stk_fig_text_alloc(stk_fig_t *fig, double ox, double oy, double oa, const char *text);
 
 // Create an image stroke.
-void rtk_fig_image_alloc(rtk_fig_t *fig, double ox, double oy, double oa,
+void stk_fig_image_alloc(stk_fig_t *fig, double ox, double oy, double oa,
                          double scale, int width, int height, int bpp,
                          const void *image, const void *mask);
 
@@ -108,23 +108,23 @@ gboolean test_callback( void* data )
 
 
 // Create a figure
-rtk_fig_t *rtk_fig_create(rtk_canvas_t *canvas, rtk_fig_t *parent, int layer ) 
+stk_fig_t *stk_fig_create(stk_canvas_t *canvas, stk_fig_t *parent, int layer ) 
 {
-  rtk_fig_t *fig;
-  rtk_fig_t *nfig;
+  stk_fig_t *fig;
+  stk_fig_t *nfig;
 
   // Make sure the layer is valid
-  if (layer <= -RTK_CANVAS_LAYERS || layer >= RTK_CANVAS_LAYERS)
+  if (layer <= -STK_CANVAS_LAYERS || layer >= STK_CANVAS_LAYERS)
     return NULL;
 
   // Create fig
-  fig = calloc(1,sizeof(rtk_fig_t));
+  fig = calloc(1,sizeof(stk_fig_t));
 
   fig->canvas = canvas;
   fig->parent = parent;
   fig->layer = layer;
   fig->show = TRUE;
-  fig->region = rtk_region_create();
+  fig->region = stk_region_create();
   fig->movemask = 0;
   fig->ox = fig->oy = fig->oa = 0.0;
   fig->cos = 1.0;
@@ -146,11 +146,11 @@ rtk_fig_t *rtk_fig_create(rtk_canvas_t *canvas, rtk_fig_t *parent, int layer )
   // parent's list
   if (parent == NULL)
   {
-    RTK_LIST_APPENDX(canvas->fig, sibling, fig);
+    STK_LIST_APPENDX(canvas->fig, sibling, fig);
   }
   else
   {
-    RTK_LIST_APPENDX(parent->child, sibling, fig);
+    STK_LIST_APPENDX(parent->child, sibling, fig);
   }
 
   // Insert figure into layer list.  Figures appear in list in
@@ -171,26 +171,26 @@ rtk_fig_t *rtk_fig_create(rtk_canvas_t *canvas, rtk_fig_t *parent, int layer )
   }
   if (nfig == NULL)
   {
-    RTK_LIST_APPENDX(canvas->layer_fig, layer, fig);
+    STK_LIST_APPENDX(canvas->layer_fig, layer, fig);
   }
 
   // Determine global coords for fig
-  rtk_fig_calc(fig);
+  stk_fig_calc(fig);
   
   return fig;
 }
 
 // Create a figure, setting the user data (rtv)
-rtk_fig_t *rtk_fig_create_ex(rtk_canvas_t *canvas, rtk_fig_t *parent, 
+stk_fig_t *stk_fig_create_ex(stk_canvas_t *canvas, stk_fig_t *parent, 
 			     int layer, void* userdata )
 {
-  rtk_fig_t* fig = rtk_fig_create(canvas, parent, layer );
+  stk_fig_t* fig = stk_fig_create(canvas, parent, layer );
   fig->userdata = userdata;
   return fig;
 }
 
 // Destroy a figure
-void rtk_fig_destroy(rtk_fig_t *fig)
+void stk_fig_destroy(stk_fig_t *fig)
 {
   //printf( "destroying fig %p\n", fig );
   
@@ -204,38 +204,38 @@ void rtk_fig_destroy(rtk_fig_t *fig)
   // of figures.
   if (fig->parent == NULL)
   {
-    RTK_LIST_REMOVEX(fig->canvas->fig, sibling, fig);
+    STK_LIST_REMOVEX(fig->canvas->fig, sibling, fig);
   }
   else
   {
-    RTK_LIST_REMOVEX(fig->parent->child, sibling, fig);
+    STK_LIST_REMOVEX(fig->parent->child, sibling, fig);
   }
 
   // Remove from the layer list.
-  RTK_LIST_REMOVEX(fig->canvas->layer_fig, layer, fig);
+  STK_LIST_REMOVEX(fig->canvas->layer_fig, layer, fig);
 
     // Free the strokes
-  rtk_fig_clear(fig);
+  stk_fig_clear(fig);
   free(fig->strokes);
   
   // Clear the dirty regions
-  rtk_region_destroy(fig->region);
+  stk_region_destroy(fig->region);
   
   free(fig);
 }
 
 // Recursively free a whole tree of figures (rtv)
-void rtk_fig_and_descendents_destroy( rtk_fig_t* fig )
+void stk_fig_and_descendents_destroy( stk_fig_t* fig )
 {
   while( fig->child )
-    rtk_fig_and_descendents_destroy( fig->child );
+    stk_fig_and_descendents_destroy( fig->child );
 
-  rtk_fig_destroy( fig );
+  stk_fig_destroy( fig );
 }
 
 
 // Set the mouse event callback function.
-void rtk_fig_add_mouse_handler(rtk_fig_t *fig, rtk_mouse_fn_t callback)
+void stk_fig_add_mouse_handler(stk_fig_t *fig, stk_mouse_fn_t callback)
 {
   // TODO: have a list of callbacks
   fig->mouse_fn = callback;
@@ -244,7 +244,7 @@ void rtk_fig_add_mouse_handler(rtk_fig_t *fig, rtk_mouse_fn_t callback)
 
 
 // Unset the mouse event callback function.
-void rtk_fig_remove_mouse_handler(rtk_fig_t *fig, rtk_mouse_fn_t callback)
+void stk_fig_remove_mouse_handler(stk_fig_t *fig, stk_mouse_fn_t callback)
 {
   // TODO: have a list of callbacks
   fig->mouse_fn = NULL;
@@ -253,13 +253,13 @@ void rtk_fig_remove_mouse_handler(rtk_fig_t *fig, rtk_mouse_fn_t callback)
 
 
 // Clear all strokes from the figure
-void rtk_fig_clear(rtk_fig_t *fig)
+void stk_fig_clear(stk_fig_t *fig)
 {
   int i;
-  rtk_stroke_t *stroke;
+  stk_stroke_t *stroke;
 
   // Add the old region to the canvas dirty region.
-  rtk_fig_dirty(fig);
+  stk_fig_dirty(fig);
 
   // Free all the strokes
   for (i = 0; i < fig->stroke_count; i++)
@@ -271,28 +271,28 @@ void rtk_fig_clear(rtk_fig_t *fig)
   fig->stroke_count = 0;
 
   // Reset the figure region
-  rtk_region_set_empty(fig->region);
+  stk_region_set_empty(fig->region);
 }
 
 // Show or hide the figure
-void rtk_fig_show(rtk_fig_t *fig, int show)
+void stk_fig_show(stk_fig_t *fig, int show)
 {
   if (show != fig->show)
   {
     fig->show = show;
-    rtk_fig_calc(fig);
+    stk_fig_calc(fig);
   }
 }
 
 // Set the movement mask
-void rtk_fig_movemask(rtk_fig_t *fig, int mask)
+void stk_fig_movemask(stk_fig_t *fig, int mask)
 {
   fig->movemask = mask;
 }
 
 
 // See if the mouse is over this figure
-int rtk_fig_mouse_over(rtk_fig_t *fig)
+int stk_fig_mouse_over(stk_fig_t *fig)
 {
   if (fig->canvas->mouse_over_fig == fig)
     return TRUE;
@@ -301,7 +301,7 @@ int rtk_fig_mouse_over(rtk_fig_t *fig)
 
 
 // See if the figure has been selected
-int rtk_fig_mouse_selected(rtk_fig_t *fig)
+int stk_fig_mouse_selected(stk_fig_t *fig)
 {
   if (fig->canvas->mouse_selected_fig == fig)
     return TRUE;
@@ -311,7 +311,7 @@ int rtk_fig_mouse_selected(rtk_fig_t *fig)
 
 // Change the origin of a figure
 // Coords are relative to parent
-void rtk_fig_origin(rtk_fig_t *fig, double ox, double oy, double oa)
+void stk_fig_origin(stk_fig_t *fig, double ox, double oy, double oa)
 {    
   if (fig->ox != ox || fig->oy != oy || fig->oa != oa)
   {
@@ -323,14 +323,14 @@ void rtk_fig_origin(rtk_fig_t *fig, double ox, double oy, double oa)
     fig->sin = sin(oa);
 
     // Determine global coords for fig
-    rtk_fig_calc(fig);
+    stk_fig_calc(fig);
   }
 }
 
 
 // Change the origin of a figure
 // Coords are global
-void rtk_fig_origin_global(rtk_fig_t *fig, double ox, double oy, double oa)
+void stk_fig_origin_global(stk_fig_t *fig, double ox, double oy, double oa)
 {    
   if (fig->parent)
   {
@@ -355,13 +355,13 @@ void rtk_fig_origin_global(rtk_fig_t *fig, double ox, double oy, double oa)
   }
 
   // Determine global coords for fig
-  rtk_fig_calc(fig);  
+  stk_fig_calc(fig);  
   return;
 }
 
 
 // Get the current figure origin
-void rtk_fig_get_origin(rtk_fig_t *fig, double *ox, double *oy, double *oa)
+void stk_fig_get_origin(stk_fig_t *fig, double *ox, double *oy, double *oa)
 {
   *ox = fig->ox;
   *oy = fig->oy;
@@ -370,7 +370,7 @@ void rtk_fig_get_origin(rtk_fig_t *fig, double *ox, double *oy, double *oa)
 
 
 // Change the scale of a figure
-void rtk_fig_scale(rtk_fig_t *fig, double scale)
+void stk_fig_scale(stk_fig_t *fig, double scale)
 {
   // Set scale
   fig->sy = scale * fig->sy / fig->sx;
@@ -378,12 +378,12 @@ void rtk_fig_scale(rtk_fig_t *fig, double scale)
 
   // Recompute global coords
   // (for child figures in particular)
-  rtk_fig_calc(fig);
+  stk_fig_calc(fig);
 }
 
 
 // Set the color
-void rtk_fig_color(rtk_fig_t *fig, double r, double g, double b)
+void stk_fig_color(stk_fig_t *fig, double r, double g, double b)
 { 
   fig->dc_color.red = (int) (r * 0xFFFF);
   fig->dc_color.green = (int) (g * 0xFFFF);
@@ -393,7 +393,7 @@ void rtk_fig_color(rtk_fig_t *fig, double r, double g, double b)
 
 // Set the color for strokes.
 // Color is specified as an RGB32 value (8 bits per color).
-void rtk_fig_color_rgb32(rtk_fig_t *fig, int color)
+void stk_fig_color_rgb32(stk_fig_t *fig, int color)
 {
   fig->dc_color.red = (((color >> 16) & 0xFF) << 8);
   fig->dc_color.green = (((color >> 8) & 0xFF) << 8);
@@ -402,21 +402,21 @@ void rtk_fig_color_rgb32(rtk_fig_t *fig, int color)
 
 
  // Set the color for strokes.  Color is specified as an xfig color.
-void rtk_fig_color_xfig(rtk_fig_t *fig, int color)
+void stk_fig_color_xfig(stk_fig_t *fig, int color)
 {
   fig->dc_xfig_color = color;
 }
 
 
 // Set the line width.
-void rtk_fig_linewidth(rtk_fig_t *fig, int width)
+void stk_fig_linewidth(stk_fig_t *fig, int width)
 {
   fig->dc_linewidth = width;
 }
 
 
 // Mark the figure as dirty
-void rtk_fig_dirty(rtk_fig_t *fig)
+void stk_fig_dirty(stk_fig_t *fig)
 {
   if (fig->layer < 0)
   {
@@ -425,18 +425,18 @@ void rtk_fig_dirty(rtk_fig_t *fig)
   else
   {
     fig->canvas->fg_dirty = TRUE;
-    rtk_region_set_union(fig->canvas->fg_dirty_region, fig->region);
+    stk_region_set_union(fig->canvas->fg_dirty_region, fig->region);
   }
   return;
 }
 
 
 // Recalculate global coords for figure
-void rtk_fig_calc(rtk_fig_t *fig)
+void stk_fig_calc(stk_fig_t *fig)
 {
   int i;
-  rtk_fig_t *child;
-  rtk_stroke_t *stroke;
+  stk_fig_t *child;
+  stk_stroke_t *stroke;
 
   if (fig->parent)
   {        
@@ -464,10 +464,10 @@ void rtk_fig_calc(rtk_fig_t *fig)
   }
   
   // Add the old region to the canvas dirty region.
-  rtk_region_set_union(fig->canvas->fg_dirty_region, fig->region);
+  stk_region_set_union(fig->canvas->fg_dirty_region, fig->region);
 
   // Reset the figure region
-  rtk_region_set_empty(fig->region);
+  stk_region_set_empty(fig->region);
 
   // Reset the figure bounding box.
   fig->min_x = +DBL_MAX/2;
@@ -483,27 +483,27 @@ void rtk_fig_calc(rtk_fig_t *fig)
   }
 
   // Add the new region to the canvas dirty region.
-  rtk_region_set_union(fig->canvas->fg_dirty_region, fig->region);
+  stk_region_set_union(fig->canvas->fg_dirty_region, fig->region);
 
   // Update all our children.
   for (child = fig->child; child != NULL; child = child->sibling_next)
   {
     assert(child->parent == fig);
-    rtk_fig_calc(child);
+    stk_fig_calc(child);
   }
 
   // The modified fig has not been rendered
-  rtk_fig_dirty(fig);
+  stk_fig_dirty(fig);
 
   return;
 }
 
 
 // Render the figure
-void rtk_fig_render(rtk_fig_t *fig)
+void stk_fig_render(stk_fig_t *fig)
 {
   int i;
-  rtk_stroke_t *stroke;
+  stk_stroke_t *stroke;
   GdkDrawable *drawable;
   GdkGC *gc;
   GdkColormap *colormap;
@@ -563,8 +563,8 @@ void rtk_fig_render(rtk_fig_t *fig)
   gdk_colormap_free_colors(colormap, &color, 1);
 
   // Draw the selection box
-  if (rtk_fig_mouse_over(fig) || rtk_fig_mouse_selected(fig))
-    rtk_fig_render_selection(fig);
+  if (stk_fig_mouse_over(fig) || stk_fig_mouse_selected(fig))
+    stk_fig_render_selection(fig);
     
 
   return;
@@ -572,7 +572,7 @@ void rtk_fig_render(rtk_fig_t *fig)
 
 
 // Draw the selection
-void rtk_fig_render_selection(rtk_fig_t *fig)
+void stk_fig_render_selection(stk_fig_t *fig)
 {
   GdkDrawable *drawable;
   GdkGC *gc;
@@ -619,10 +619,10 @@ void rtk_fig_render_selection(rtk_fig_t *fig)
 
 
 // Render the figure to xfig
-void rtk_fig_render_xfig(rtk_fig_t *fig)
+void stk_fig_render_xfig(stk_fig_t *fig)
 {
   int i;
-  rtk_stroke_t *stroke;
+  stk_stroke_t *stroke;
 
   for (i = 0; i < fig->stroke_count; i++)
   {
@@ -634,7 +634,7 @@ void rtk_fig_render_xfig(rtk_fig_t *fig)
 
 
 // Test to see if the given device point lies within the figure
-int rtk_fig_hittest(rtk_fig_t *fig, int dx, int dy)
+int stk_fig_hittest(stk_fig_t *fig, int dx, int dy)
 {
   double gx, gy, lx, ly;
   
@@ -659,7 +659,7 @@ int rtk_fig_hittest(rtk_fig_t *fig, int dx, int dy)
 
 
 // Process mouse events
-void rtk_fig_on_mouse(rtk_fig_t *fig, int event, int mode)
+void stk_fig_on_mouse(stk_fig_t *fig, int event, int mode)
 {
   if (fig->mouse_fn)
     (*fig->mouse_fn) (fig, event, mode);
@@ -674,29 +674,29 @@ void rtk_fig_on_mouse(rtk_fig_t *fig, int event, int mode)
 
 
 // Create a point
-void rtk_fig_point(rtk_fig_t *fig, double ox, double oy)
+void stk_fig_point(stk_fig_t *fig, double ox, double oy)
 {
-  rtk_fig_point_alloc(fig, ox, oy);
+  stk_fig_point_alloc(fig, ox, oy);
 }
 
 
 // Create a line
-void rtk_fig_line(rtk_fig_t *fig, double ax, double ay, double bx, double by)
+void stk_fig_line(stk_fig_t *fig, double ax, double ay, double bx, double by)
 {
-  rtk_point_t points[2];
+  stk_point_t points[2];
 
   points[0].x = ax;
   points[0].y = ay;
   points[1].x = bx;
   points[1].y = by;
 
-  rtk_fig_polygon_alloc(fig, 0, 0, 0, 0, 0, 2, points);
+  stk_fig_polygon_alloc(fig, 0, 0, 0, 0, 0, 2, points);
   return;
 }
 
 
 // Draw a line centered on the given point.
-void rtk_fig_line_ex(rtk_fig_t *fig, double ox, double oy, double oa, double size)
+void stk_fig_line_ex(stk_fig_t *fig, double ox, double oy, double oa, double size)
 {
   double ax, ay, bx, by;
 
@@ -705,16 +705,16 @@ void rtk_fig_line_ex(rtk_fig_t *fig, double ox, double oy, double oa, double siz
   bx = ox + size / 2 * cos(oa);
   by = oy + size / 2 * sin(oa);
   
-  rtk_fig_line(fig, ax, ay, bx, by);
+  stk_fig_line(fig, ax, ay, bx, by);
   return;
 }
 
 
 // create a fancy arrow that can be filled
-void rtk_fig_arrow_fancy(rtk_fig_t *fig, double ox, double oy, double oa,
+void stk_fig_arrow_fancy(stk_fig_t *fig, double ox, double oy, double oa,
 			 double len, double head, double thickness, int filled )
 {
-  rtk_point_t points[5];
+  stk_point_t points[5];
   
   double t = thickness/2.0;
 
@@ -733,15 +733,15 @@ void rtk_fig_arrow_fancy(rtk_fig_t *fig, double ox, double oy, double oa,
   points[6].x = 0;
   points[6].y = -t;
 
-  rtk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, 7, points);
+  stk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, 7, points);
   return;
 }
 
 // Create an arrow
-void rtk_fig_arrow(rtk_fig_t *fig, double ox, double oy, double oa,
+void stk_fig_arrow(stk_fig_t *fig, double ox, double oy, double oa,
                    double len, double head)
 {
-  rtk_point_t points[5];
+  stk_point_t points[5];
   
   points[0].x = 0;
   points[0].y = 0;
@@ -754,13 +754,13 @@ void rtk_fig_arrow(rtk_fig_t *fig, double ox, double oy, double oa,
   points[4].x = len;
   points[4].y = 0;
 
-  rtk_fig_polygon_alloc(fig, ox, oy, oa, 0, 0, 5, points);
+  stk_fig_polygon_alloc(fig, ox, oy, oa, 0, 0, 5, points);
   return;
 }
 
 
 // Create an arrow
-void rtk_fig_arrow_ex(rtk_fig_t *fig, double ax, double ay,
+void stk_fig_arrow_ex(stk_fig_t *fig, double ax, double ay,
                       double bx, double by, double head)
 {
   double dx, dy, oa, len;
@@ -770,16 +770,16 @@ void rtk_fig_arrow_ex(rtk_fig_t *fig, double ax, double ay,
   oa = atan2(dy, dx);
   len = sqrt((dx * dx) + (dy * dy));
 
-  rtk_fig_arrow(fig, ax, ay, oa, len, head);
+  stk_fig_arrow(fig, ax, ay, oa, len, head);
   return;
 }
 
 
 // Draw a rectangle.
-void rtk_fig_rectangle(rtk_fig_t *fig, double ox, double oy, double oa,
+void stk_fig_rectangle(stk_fig_t *fig, double ox, double oy, double oa,
                        double sx, double sy, int filled)
 {
-  rtk_point_t points[4];
+  stk_point_t points[4];
 
   points[0].x = -sx / 2;
   points[0].y = -sy / 2;
@@ -790,17 +790,17 @@ void rtk_fig_rectangle(rtk_fig_t *fig, double ox, double oy, double oa,
   points[3].x = -sx / 2;
   points[3].y = +sy / 2;
 
-  rtk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, 4, points);
+  stk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, 4, points);
   return;
 }
 
 
 // Create an ellipse
-void rtk_fig_ellipse(rtk_fig_t *fig, double ox, double oy, double oa,
+void stk_fig_ellipse(stk_fig_t *fig, double ox, double oy, double oa,
                      double sx, double sy, int filled)
 {
   int i;
-  rtk_point_t points[32];
+  stk_point_t points[32];
   
   for (i = 0; i < 32; i++)
   {
@@ -808,16 +808,16 @@ void rtk_fig_ellipse(rtk_fig_t *fig, double ox, double oy, double oa,
     points[i].y = sy / 2 * sin(i * M_PI / 16);
   }
 
-  rtk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, 32, points);
+  stk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, 32, points);
   return;
 }
 
 // Create an arc on an ellipse
-void rtk_fig_ellipse_arc( rtk_fig_t *fig, double ox, double oy, double oa,
+void stk_fig_ellipse_arc( stk_fig_t *fig, double ox, double oy, double oa,
 			  double sx, double sy, double min_th, double max_th)
 {
   int i;
-  rtk_point_t points[33];
+  stk_point_t points[33];
   
   double dth = (max_th - min_th) / 32;
 
@@ -827,19 +827,19 @@ void rtk_fig_ellipse_arc( rtk_fig_t *fig, double ox, double oy, double oa,
     points[i].y = sy/2.0 * sin( min_th + i * dth );
   }
 
-  rtk_fig_polygon_alloc(fig, ox, oy, oa, 0, 0, 33, points);
+  stk_fig_polygon_alloc(fig, ox, oy, oa, 0, 0, 33, points);
   return;
 }
 
 
 // Create a polygon
-void rtk_fig_polygon(rtk_fig_t *fig, double ox, double oy, double oa,
+void stk_fig_polygon(stk_fig_t *fig, double ox, double oy, double oa,
                      int point_count, double points[][2], int filled)
 {
   int i;
-  rtk_point_t *npoints;
+  stk_point_t *npoints;
 
-  npoints = malloc(point_count * sizeof(rtk_point_t));
+  npoints = malloc(point_count * sizeof(stk_point_t));
   
   //printf( "created a polygon of %d points: ", point_count );
 
@@ -853,7 +853,7 @@ void rtk_fig_polygon(rtk_fig_t *fig, double ox, double oy, double oa,
 
   //
 
-  rtk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, point_count, npoints);
+  stk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, point_count, npoints);
   free(npoints);
   return;
 }
@@ -861,7 +861,7 @@ void rtk_fig_polygon(rtk_fig_t *fig, double ox, double oy, double oa,
 
 // Draw a grid.  Grid is centered on (ox, oy) with size (dx, dy) with
 // spacing (sp).
-void rtk_fig_grid(rtk_fig_t *fig, double ox, double oy,
+void stk_fig_grid(stk_fig_t *fig, double ox, double oy,
                   double dx, double dy, double sp)
 {
   int i, nx, ny;
@@ -874,22 +874,22 @@ void rtk_fig_grid(rtk_fig_t *fig, double ox, double oy,
 
 
   // draw the bounding box first
-  rtk_fig_rectangle( fig, ox,oy,0, dx, dy, 0 );
+  stk_fig_rectangle( fig, ox,oy,0, dx, dy, 0 );
 
   char str[64];
 
   for (i = -nx+1; i < nx; i++)
   {
-    //rtk_fig_line(fig, ox - dx/2 + i * sp, oy - dy/2,
+    //stk_fig_line(fig, ox - dx/2 + i * sp, oy - dy/2,
     //           ox - dx/2 + i * sp, oy - dy/2 + ny * sp);
 
-    rtk_fig_line( fig, 
+    stk_fig_line( fig, 
 		  ox + i * sp, 
 		  oy - dy/2,
                   ox + i * sp,
 		  oy + dy/2 );
 
-    //rtk_fig_line( fig, 
+    //stk_fig_line( fig, 
     //	  ox - i * sp, 
     //	  oy - dy/2,
     //            ox - i * sp,
@@ -897,43 +897,43 @@ void rtk_fig_grid(rtk_fig_t *fig, double ox, double oy,
 
     
     snprintf( str, 64, "%d", (int)i );
-    rtk_fig_text( fig, -0.2 + (ox + i * sp), -0.2 , 0, str );
+    stk_fig_text( fig, -0.2 + (ox + i * sp), -0.2 , 0, str );
   }
 
   for (i = -ny+1; i < ny; i++)
     {
-      rtk_fig_line( fig, 
+      stk_fig_line( fig, 
 		    ox - dx/2, 
 		    oy + i * sp,
 		    ox + dx/2,
 		    oy + i * sp );
       
       snprintf( str, 64, "%d", (int)i );
-      rtk_fig_text( fig, -0.2, -0.2 + (oy + i * sp) , 0, str );
+      stk_fig_text( fig, -0.2, -0.2 + (oy + i * sp) , 0, str );
     }
   
   // draw the axis origin lines
-  //rtk_fig_color_rgb32( fig, 0 );
-  //rtk_fig_line( fig, ox-dx/2, 0, ox+dx/2, 0 );
-  //rtk_fig_line( fig, 0, oy-dy/2, 0, oy+dy/2 );
+  //stk_fig_color_rgb32( fig, 0 );
+  //stk_fig_line( fig, ox-dx/2, 0, ox+dx/2, 0 );
+  //stk_fig_line( fig, 0, oy-dy/2, 0, oy+dy/2 );
 
   return;
 }
 
 
 // Create a text stroke
-void rtk_fig_text(rtk_fig_t *fig, double ox, double oy, double oa, const char *text)
+void stk_fig_text(stk_fig_t *fig, double ox, double oy, double oa, const char *text)
 {
-  rtk_fig_text_alloc(fig, ox, oy, oa, text);
+  stk_fig_text_alloc(fig, ox, oy, oa, text);
   return;
 }
 
 
 // Create an image stroke.
-void rtk_fig_image(rtk_fig_t *fig, double ox, double oy, double oa,
+void stk_fig_image(stk_fig_t *fig, double ox, double oy, double oa,
                    double scale, int width, int height, int bpp, void *image, void *mask)
 {
-  rtk_fig_image_alloc(fig, ox, oy, oa, scale, width, height, bpp, image, mask);
+  stk_fig_image_alloc(fig, ox, oy, oa, scale, width, height, bpp, image, mask);
   return;
 }
 
@@ -944,7 +944,7 @@ void rtk_fig_image(rtk_fig_t *fig, double ox, double oy, double oa,
  **************************************************************************/
 
 // Add a stroke to the figure.
-void rtk_fig_stroke_add(rtk_fig_t *fig, rtk_stroke_t *stroke)
+void stk_fig_stroke_add(stk_fig_t *fig, stk_stroke_t *stroke)
 {
   // Increase size of stroke list if necessary
   if (fig->stroke_count == fig->stroke_size)
@@ -973,36 +973,36 @@ void rtk_fig_stroke_add(rtk_fig_t *fig, rtk_stroke_t *stroke)
 
 
 // Function prototypes
-void rtk_fig_point_free(rtk_fig_t *fig, rtk_point_stroke_t *data);
-void rtk_fig_point_calc(rtk_fig_t *fig, rtk_point_stroke_t *data);
-void rtk_fig_point_draw(rtk_fig_t *fig, rtk_point_stroke_t *data);
-void rtk_fig_point_xfig(rtk_fig_t *fig, rtk_point_stroke_t *data);
+void stk_fig_point_free(stk_fig_t *fig, stk_point_stroke_t *data);
+void stk_fig_point_calc(stk_fig_t *fig, stk_point_stroke_t *data);
+void stk_fig_point_draw(stk_fig_t *fig, stk_point_stroke_t *data);
+void stk_fig_point_xfig(stk_fig_t *fig, stk_point_stroke_t *data);
 
 
 // Create a point stroke
-void rtk_fig_point_alloc(rtk_fig_t *fig, double ox, double oy)
+void stk_fig_point_alloc(stk_fig_t *fig, double ox, double oy)
 {
-  rtk_point_stroke_t *data;
+  stk_point_stroke_t *data;
 
-  data = calloc(1, sizeof(rtk_point_stroke_t));
-  rtk_fig_stroke_add(fig, (rtk_stroke_t*) data);
-  data->stroke.freefn = (rtk_stroke_fn_t) rtk_fig_point_free;
-  data->stroke.calcfn = (rtk_stroke_fn_t) rtk_fig_point_calc;
-  data->stroke.drawfn = (rtk_stroke_fn_t) rtk_fig_point_draw;
-  data->stroke.xfigfn = (rtk_stroke_fn_t) rtk_fig_point_xfig;
+  data = calloc(1, sizeof(stk_point_stroke_t));
+  stk_fig_stroke_add(fig, (stk_stroke_t*) data);
+  data->stroke.freefn = (stk_stroke_fn_t) stk_fig_point_free;
+  data->stroke.calcfn = (stk_stroke_fn_t) stk_fig_point_calc;
+  data->stroke.drawfn = (stk_stroke_fn_t) stk_fig_point_draw;
+  data->stroke.xfigfn = (stk_stroke_fn_t) stk_fig_point_xfig;
 
   data->ox = ox;
   data->oy = oy;
-  (*data->stroke.calcfn) (fig, (rtk_stroke_t*) data);
+  (*data->stroke.calcfn) (fig, (stk_stroke_t*) data);
 
   // This will make sure the new stroke gets drawn
-  rtk_fig_dirty(fig);
+  stk_fig_dirty(fig);
 
   return;
 }
 
 
-void rtk_fig_point_free(rtk_fig_t *fig, rtk_point_stroke_t *data)
+void stk_fig_point_free(stk_fig_t *fig, stk_point_stroke_t *data)
 {
   free(data);
   return;
@@ -1010,12 +1010,12 @@ void rtk_fig_point_free(rtk_fig_t *fig, rtk_point_stroke_t *data)
 
 
 // Update a point
-void rtk_fig_point_calc(rtk_fig_t *fig, rtk_point_stroke_t *data)
+void stk_fig_point_calc(stk_fig_t *fig, stk_point_stroke_t *data)
 {
   LTOD(data->point, data->ox, data->oy);
 
   // Update the figure's bounding region.
-  rtk_region_set_union_rect(fig->region, data->point.x - 1, data->point.y - 1,
+  stk_region_set_union_rect(fig->region, data->point.x - 1, data->point.y - 1,
                             data->point.x + 1, data->point.y + 1);
   
   return;
@@ -1023,7 +1023,7 @@ void rtk_fig_point_calc(rtk_fig_t *fig, rtk_point_stroke_t *data)
 
 
 // Render a point
-void rtk_fig_point_draw(rtk_fig_t *fig, rtk_point_stroke_t *data)
+void stk_fig_point_draw(stk_fig_t *fig, stk_point_stroke_t *data)
 {
   GdkDrawable *drawable;    
 
@@ -1034,7 +1034,7 @@ void rtk_fig_point_draw(rtk_fig_t *fig, rtk_point_stroke_t *data)
 
 
 // Render stroke to xfig
-void rtk_fig_point_xfig(rtk_fig_t *fig, rtk_point_stroke_t *data)
+void stk_fig_point_xfig(stk_fig_t *fig, stk_point_stroke_t *data)
 {
   // TODO
   return;
@@ -1047,27 +1047,27 @@ void rtk_fig_point_xfig(rtk_fig_t *fig, rtk_point_stroke_t *data)
 
 
 // Function prototypes
-void rtk_fig_polygon_free(rtk_fig_t *fig, rtk_polygon_stroke_t *data);
-void rtk_fig_polygon_calc(rtk_fig_t *fig, rtk_polygon_stroke_t *data);
-void rtk_fig_polygon_draw(rtk_fig_t *fig, rtk_polygon_stroke_t *data);
-void rtk_fig_polygon_xfig(rtk_fig_t *fig, rtk_polygon_stroke_t *data);
+void stk_fig_polygon_free(stk_fig_t *fig, stk_polygon_stroke_t *data);
+void stk_fig_polygon_calc(stk_fig_t *fig, stk_polygon_stroke_t *data);
+void stk_fig_polygon_draw(stk_fig_t *fig, stk_polygon_stroke_t *data);
+void stk_fig_polygon_xfig(stk_fig_t *fig, stk_polygon_stroke_t *data);
 
 
 // Create a polygon
-void rtk_fig_polygon_alloc(rtk_fig_t *fig,
+void stk_fig_polygon_alloc(stk_fig_t *fig,
                            double ox, double oy, double oa,
                            int closed, int filled,
-                           int point_count, rtk_point_t *points)
+                           int point_count, stk_point_t *points)
 {
-  rtk_polygon_stroke_t *data;
+  stk_polygon_stroke_t *data;
   int i;
 
-  data = calloc(1, sizeof(rtk_polygon_stroke_t));
-  rtk_fig_stroke_add(fig, (rtk_stroke_t*) data);
-  data->stroke.freefn = (rtk_stroke_fn_t) rtk_fig_polygon_free;
-  data->stroke.calcfn = (rtk_stroke_fn_t) rtk_fig_polygon_calc;
-  data->stroke.drawfn = (rtk_stroke_fn_t) rtk_fig_polygon_draw;
-  data->stroke.xfigfn = (rtk_stroke_fn_t) rtk_fig_polygon_xfig;
+  data = calloc(1, sizeof(stk_polygon_stroke_t));
+  stk_fig_stroke_add(fig, (stk_stroke_t*) data);
+  data->stroke.freefn = (stk_stroke_fn_t) stk_fig_polygon_free;
+  data->stroke.calcfn = (stk_stroke_fn_t) stk_fig_polygon_calc;
+  data->stroke.drawfn = (stk_stroke_fn_t) stk_fig_polygon_draw;
+  data->stroke.xfigfn = (stk_stroke_fn_t) stk_fig_polygon_xfig;
     
   data->ox = ox;
   data->oy = oy;
@@ -1082,17 +1082,17 @@ void rtk_fig_polygon_alloc(rtk_fig_t *fig,
   data->ppoints = calloc(point_count, sizeof(data->ppoints[0]));
 
   // Call the calculation function just for this stroke
-  (*data->stroke.calcfn) (fig, (rtk_stroke_t*) data);
+  (*data->stroke.calcfn) (fig, (stk_stroke_t*) data);
   
   // This will make sure the new stroke gets drawn  
-  rtk_fig_dirty(fig);
+  stk_fig_dirty(fig);
     
   return;
 }
 
 
 // Free a polygon
-void rtk_fig_polygon_free(rtk_fig_t *fig, rtk_polygon_stroke_t *data)
+void stk_fig_polygon_free(stk_fig_t *fig, stk_polygon_stroke_t *data)
 {
   free(data->lpoints);
   free(data->ppoints);
@@ -1102,12 +1102,12 @@ void rtk_fig_polygon_free(rtk_fig_t *fig, rtk_polygon_stroke_t *data)
 
 
 // Update a polygon
-void rtk_fig_polygon_calc(rtk_fig_t *fig, rtk_polygon_stroke_t *data)
+void stk_fig_polygon_calc(stk_fig_t *fig, stk_polygon_stroke_t *data)
 {
   int i;
   double cosa, sina;
   double lx, ly, gx, gy;
-  rtk_point_t *lpoint;
+  stk_point_t *lpoint;
   GdkPoint *ppoint;
   int minx, miny, maxx, maxy;
 
@@ -1154,14 +1154,14 @@ void rtk_fig_polygon_calc(rtk_fig_t *fig, rtk_polygon_stroke_t *data)
   maxy += 1;
 
   // Update the figure's bounding region.
-  rtk_region_set_union_rect(fig->region, minx, miny, maxx, maxy);
+  stk_region_set_union_rect(fig->region, minx, miny, maxx, maxy);
 
   return;
 }
 
 
 // Render a polygon
-void rtk_fig_polygon_draw(rtk_fig_t *fig, rtk_polygon_stroke_t *data)
+void stk_fig_polygon_draw(stk_fig_t *fig, stk_polygon_stroke_t *data)
 {
   GdkDrawable *drawable;
   drawable = (fig->layer < 0 ? fig->canvas->bg_pixmap : fig->canvas->fg_pixmap);
@@ -1186,11 +1186,11 @@ void rtk_fig_polygon_draw(rtk_fig_t *fig, rtk_polygon_stroke_t *data)
 
 
 // Render stroke to xfig
-void rtk_fig_polygon_xfig(rtk_fig_t *fig, rtk_polygon_stroke_t *data)
+void stk_fig_polygon_xfig(stk_fig_t *fig, stk_polygon_stroke_t *data)
 {
   int i;
   int fill;
-  rtk_point_t *lpoint;
+  stk_point_t *lpoint;
   double cosa, sina;
   double ax, ay, bx, by;
   int px, py;
@@ -1235,23 +1235,23 @@ void rtk_fig_polygon_xfig(rtk_fig_t *fig, rtk_polygon_stroke_t *data)
 
 
 // Function prototypes
-void rtk_fig_text_free(rtk_fig_t *fig, rtk_text_stroke_t *data);
-void rtk_fig_text_calc(rtk_fig_t *fig, rtk_text_stroke_t *data);
-void rtk_fig_text_draw(rtk_fig_t *fig, rtk_text_stroke_t *data);
-void rtk_fig_text_xfig(rtk_fig_t *fig, rtk_text_stroke_t *data);
+void stk_fig_text_free(stk_fig_t *fig, stk_text_stroke_t *data);
+void stk_fig_text_calc(stk_fig_t *fig, stk_text_stroke_t *data);
+void stk_fig_text_draw(stk_fig_t *fig, stk_text_stroke_t *data);
+void stk_fig_text_xfig(stk_fig_t *fig, stk_text_stroke_t *data);
 
 
 // Create a text stroke
-void rtk_fig_text_alloc(rtk_fig_t *fig, double ox, double oy, double oa, const char *text)
+void stk_fig_text_alloc(stk_fig_t *fig, double ox, double oy, double oa, const char *text)
 {
-  rtk_text_stroke_t *data;
+  stk_text_stroke_t *data;
 
-  data = calloc(1, sizeof(rtk_text_stroke_t));
-  rtk_fig_stroke_add(fig, (rtk_stroke_t*) data);
-  data->stroke.freefn = (rtk_stroke_fn_t) rtk_fig_text_free;
-  data->stroke.calcfn = (rtk_stroke_fn_t) rtk_fig_text_calc;
-  data->stroke.drawfn = (rtk_stroke_fn_t) rtk_fig_text_draw;
-  data->stroke.xfigfn = (rtk_stroke_fn_t) rtk_fig_text_xfig;
+  data = calloc(1, sizeof(stk_text_stroke_t));
+  stk_fig_stroke_add(fig, (stk_stroke_t*) data);
+  data->stroke.freefn = (stk_stroke_fn_t) stk_fig_text_free;
+  data->stroke.calcfn = (stk_stroke_fn_t) stk_fig_text_calc;
+  data->stroke.drawfn = (stk_stroke_fn_t) stk_fig_text_draw;
+  data->stroke.xfigfn = (stk_stroke_fn_t) stk_fig_text_xfig;
 
   data->ox = ox;
   data->oy = oy;
@@ -1262,14 +1262,14 @@ void rtk_fig_text_alloc(rtk_fig_t *fig, double ox, double oy, double oa, const c
   (*data->stroke.calcfn) (fig, data);
 
   // This will make sure the new stroke gets drawn
-  rtk_fig_dirty(fig);
+  stk_fig_dirty(fig);
     
   return;
 }
 
 
 // Cleanup text stroke
-void rtk_fig_text_free(rtk_fig_t *fig, rtk_text_stroke_t *data)
+void stk_fig_text_free(stk_fig_t *fig, stk_text_stroke_t *data)
 {
   assert(data->text);
   free(data->text);
@@ -1279,7 +1279,7 @@ void rtk_fig_text_free(rtk_fig_t *fig, rtk_text_stroke_t *data)
 
 
 // Update text
-void rtk_fig_text_calc(rtk_fig_t *fig, rtk_text_stroke_t *data)
+void stk_fig_text_calc(stk_fig_t *fig, stk_text_stroke_t *data)
 {
   int i, len, baseline;
   int width, ascent, descent;
@@ -1298,7 +1298,7 @@ void rtk_fig_text_calc(rtk_fig_t *fig, rtk_text_stroke_t *data)
                      NULL, NULL, &width, &ascent, &descent);
 
     // Update the figure's bounding region.
-    rtk_region_set_union_rect(fig->region, data->point.x, baseline - ascent,
+    stk_region_set_union_rect(fig->region, data->point.x, baseline - ascent,
                               data->point.x + width, baseline + descent);
 
     // Compute the baseline for the next line of text
@@ -1311,7 +1311,7 @@ void rtk_fig_text_calc(rtk_fig_t *fig, rtk_text_stroke_t *data)
 
 
 // Render text
-void rtk_fig_text_draw(rtk_fig_t *fig, rtk_text_stroke_t *data)
+void stk_fig_text_draw(stk_fig_t *fig, stk_text_stroke_t *data)
 {
   int i, len, baseline;
   int width, ascent, descent;
@@ -1344,7 +1344,7 @@ void rtk_fig_text_draw(rtk_fig_t *fig, rtk_text_stroke_t *data)
 
 
 // Render stroke to xfig
-void rtk_fig_text_xfig(rtk_fig_t *fig, rtk_text_stroke_t *data)
+void stk_fig_text_xfig(stk_fig_t *fig, stk_text_stroke_t *data)
 {
   int ox, oy, sx, sy;
   int fontsize;
@@ -1377,26 +1377,26 @@ void rtk_fig_text_xfig(rtk_fig_t *fig, rtk_text_stroke_t *data)
 
 
 // Function prototypes
-void rtk_fig_image_free(rtk_fig_t *fig, rtk_image_stroke_t *data);
-void rtk_fig_image_calc(rtk_fig_t *fig, rtk_image_stroke_t *data);
-void rtk_fig_image_draw(rtk_fig_t *fig, rtk_image_stroke_t *data);
-void rtk_fig_image_xfig(rtk_fig_t *fig, rtk_image_stroke_t *data);
+void stk_fig_image_free(stk_fig_t *fig, stk_image_stroke_t *data);
+void stk_fig_image_calc(stk_fig_t *fig, stk_image_stroke_t *data);
+void stk_fig_image_draw(stk_fig_t *fig, stk_image_stroke_t *data);
+void stk_fig_image_xfig(stk_fig_t *fig, stk_image_stroke_t *data);
 
 
 // Create a image stroke
-void rtk_fig_image_alloc(rtk_fig_t *fig, double ox, double oy, double oa,
+void stk_fig_image_alloc(stk_fig_t *fig, double ox, double oy, double oa,
                          double scale, int width, int height, int bpp,
                          const void *image, const void *mask)
 {
   int bytes;
-  rtk_image_stroke_t *data;
+  stk_image_stroke_t *data;
 
-  data = calloc(1, sizeof(rtk_image_stroke_t));
-  rtk_fig_stroke_add(fig, (rtk_stroke_t*) data);
-  data->stroke.freefn = (rtk_stroke_fn_t) rtk_fig_image_free;
-  data->stroke.calcfn = (rtk_stroke_fn_t) rtk_fig_image_calc;
-  data->stroke.drawfn = (rtk_stroke_fn_t) rtk_fig_image_draw;
-  data->stroke.xfigfn = (rtk_stroke_fn_t) rtk_fig_image_xfig;
+  data = calloc(1, sizeof(stk_image_stroke_t));
+  stk_fig_stroke_add(fig, (stk_stroke_t*) data);
+  data->stroke.freefn = (stk_stroke_fn_t) stk_fig_image_free;
+  data->stroke.calcfn = (stk_stroke_fn_t) stk_fig_image_calc;
+  data->stroke.drawfn = (stk_stroke_fn_t) stk_fig_image_draw;
+  data->stroke.xfigfn = (stk_stroke_fn_t) stk_fig_image_xfig;
 
   data->ox = ox;
   data->oy = oy;
@@ -1424,14 +1424,14 @@ void rtk_fig_image_alloc(rtk_fig_t *fig, double ox, double oy, double oa,
   (*data->stroke.calcfn) (fig, data);
 
   // This will make sure the new stroke gets drawn
-  rtk_fig_dirty(fig);
+  stk_fig_dirty(fig);
     
   return;
 }
 
 
 // Cleanup image stroke
-void rtk_fig_image_free(rtk_fig_t *fig, rtk_image_stroke_t *data)
+void stk_fig_image_free(stk_fig_t *fig, stk_image_stroke_t *data)
 {
   if (data->mask)
     free(data->mask);
@@ -1441,7 +1441,7 @@ void rtk_fig_image_free(rtk_fig_t *fig, rtk_image_stroke_t *data)
 
 
 // Update image
-void rtk_fig_image_calc(rtk_fig_t *fig, rtk_image_stroke_t *data)
+void stk_fig_image_calc(stk_fig_t *fig, stk_image_stroke_t *data)
 {
   int i;//, j;
   int minx, miny, maxx, maxy;
@@ -1496,13 +1496,13 @@ void rtk_fig_image_calc(rtk_fig_t *fig, rtk_image_stroke_t *data)
   //       fig->min_x, fig->min_y, fig->max_x, fig->max_y);
   //printf("%d %d %d %d\n", minx, miny, maxx, maxy);
   
-  rtk_region_set_union_rect(fig->region, minx, miny, maxx, maxy);
+  stk_region_set_union_rect(fig->region, minx, miny, maxx, maxy);
   return;
 }
 
 
 // Render image
-void rtk_fig_image_draw(rtk_fig_t *fig, rtk_image_stroke_t *data)
+void stk_fig_image_draw(stk_fig_t *fig, stk_image_stroke_t *data)
 {
   int i, j;//, k;
   int fill;
@@ -1577,9 +1577,9 @@ void rtk_fig_image_draw(rtk_fig_t *fig, rtk_image_stroke_t *data)
         if (!mask || *mask > 0)
         {
         // Set polygon color
-        color.red = RTK_R_RGB16(*pixel) << 8;
-        color.green = RTK_G_RGB16(*pixel) << 8;
-        color.blue = RTK_B_RGB16(*pixel) << 8;
+        color.red = STK_R_RGB16(*pixel) << 8;
+        color.green = STK_G_RGB16(*pixel) << 8;
+        color.blue = STK_B_RGB16(*pixel) << 8;
         gdk_color_alloc(colormap, &color);
         gdk_gc_set_foreground(fig->canvas->gc, &color);
 
@@ -1605,9 +1605,9 @@ void rtk_fig_image_draw(rtk_fig_t *fig, rtk_image_stroke_t *data)
         if (!mask || *mask > 0)
         {
           // Set polygon color
-          color.red = RTK_R_RGB16(*pixel) << 8;
-          color.green = RTK_G_RGB16(*pixel) << 8;
-          color.blue = RTK_B_RGB16(*pixel) << 8;
+          color.red = STK_R_RGB16(*pixel) << 8;
+          color.green = STK_G_RGB16(*pixel) << 8;
+          color.blue = STK_B_RGB16(*pixel) << 8;
           gdk_color_alloc(colormap, &color);
           gdk_gc_set_foreground(fig->canvas->gc, &color);
 
@@ -1642,9 +1642,9 @@ void rtk_fig_image_draw(rtk_fig_t *fig, rtk_image_stroke_t *data)
             gdk_draw_polygon(drawable, fig->canvas->gc, fill, points, 4);
 
             // Set new polygon color
-            color.red = RTK_R_RGB16(*pixel) << 8;
-            color.green = RTK_G_RGB16(*pixel) << 8;
-            color.blue = RTK_B_RGB16(*pixel) << 8;
+            color.red = STK_R_RGB16(*pixel) << 8;
+            color.green = STK_G_RGB16(*pixel) << 8;
+            color.blue = STK_B_RGB16(*pixel) << 8;
             gdk_color_alloc(colormap, &color);
             gdk_gc_set_foreground(fig->canvas->gc, &color);
 
@@ -1712,32 +1712,32 @@ void rtk_fig_image_draw(rtk_fig_t *fig, rtk_image_stroke_t *data)
 
 
 // Render stroke to xfig
-void rtk_fig_image_xfig(rtk_fig_t *fig, rtk_image_stroke_t *data)
+void stk_fig_image_xfig(stk_fig_t *fig, stk_image_stroke_t *data)
 {
   return;
 }
 
 
-gboolean rtk_fig_blink_callback( void* data )
+gboolean stk_fig_blink_callback( void* data )
 {
-  rtk_fig_t* fig;
+  stk_fig_t* fig;
   
   if( data == NULL )
     return FALSE;
   
-  fig = (rtk_fig_t*)data;
-  rtk_fig_show( fig, !fig->show );
+  fig = (stk_fig_t*)data;
+  stk_fig_show( fig, !fig->show );
 
   return TRUE;
 }
 
 
-void rtk_fig_blink( rtk_fig_t* fig, int interval_ms, int flag )
+void stk_fig_blink( stk_fig_t* fig, int interval_ms, int flag )
 {
   assert( fig );  
   
   if( flag )
-    g_timeout_add( (guint)interval_ms, rtk_fig_blink_callback, fig );
+    g_timeout_add( (guint)interval_ms, stk_fig_blink_callback, fig );
   else
     g_source_remove_by_user_data( fig );
 }

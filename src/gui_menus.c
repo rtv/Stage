@@ -4,8 +4,8 @@
 #include "stage_internal.h"
 #include "gui.h"
 
-extern rtk_fig_t* fig_debug_geom;
-extern rtk_fig_t* fig_debug_rays;
+extern stk_fig_t* fig_debug_geom;
+extern stk_fig_t* fig_debug_rays;
 extern int _stg_quit;
 
 enum {
@@ -56,11 +56,11 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/File/Export/10.0 seconds", NULL, gui_menu_file_export_interval, 100, "/File/Export/0.1 seconds" },
   { "/File/Export/sep2",     NULL,      NULL, 0, "<Separator>" },
   { "/File/Export/Frame export format",     NULL,      NULL, 0, "<Title>" },
-  { "/File/Export/PNG", NULL, gui_menu_file_export_format, RTK_IMAGE_FORMAT_PNG,  "<RadioItem>" },
-  { "/File/Export/JPEG", NULL,  gui_menu_file_export_format, RTK_IMAGE_FORMAT_JPEG, "/File/Export/PNG"},
+  { "/File/Export/PNG", NULL, gui_menu_file_export_format, STK_IMAGE_FORMAT_PNG,  "<RadioItem>" },
+  { "/File/Export/JPEG", NULL,  gui_menu_file_export_format, STK_IMAGE_FORMAT_JPEG, "/File/Export/PNG"},
   // PPM and PNM don't seem to work. why?
-  // { "/File/Export/PPM", NULL, gui_menu_file_export_format,  RTK_IMAGE_FORMAT_PPM, "/File/Export/JPEG" },
-  // { "/File/Export/PNM", NULL, gui_menu_file_export_format, RTK_IMAGE_FORMAT_PNM, "/File/Export/JPEG" },
+  // { "/File/Export/PPM", NULL, gui_menu_file_export_format,  STK_IMAGE_FORMAT_PPM, "/File/Export/JPEG" },
+  // { "/File/Export/PNM", NULL, gui_menu_file_export_format, STK_IMAGE_FORMAT_PNM, "/File/Export/JPEG" },
   { "/File/sep1",     NULL,      NULL, 0, "<Separator>" },
   { "/File/_Quit",    "<CTRL>Q", gui_menu_file_exit_cb, 0, "<StockItem>", GTK_STOCK_QUIT },
   { "/_View",         NULL,      NULL, 0, "<Branch>" },
@@ -217,7 +217,7 @@ void gui_menu_file_exit_cb( void )
 
 /// save a frame as a jpeg, with incremental index numbers. if series
 /// is greater than 0, its value is incorporated into the filename
-void export_window( gui_window_t* win  ) //rtk_canvas_t* canvas, int series )
+void export_window( gui_window_t* win  ) //stk_canvas_t* canvas, int series )
 {
   char filename[128];
 
@@ -226,10 +226,10 @@ void export_window( gui_window_t* win  ) //rtk_canvas_t* canvas, int series )
   char* suffix;
   switch( win->frame_format )
     {
-    case RTK_IMAGE_FORMAT_JPEG: suffix = "jpg"; break;
-    case RTK_IMAGE_FORMAT_PNM: suffix = "pnm"; break;
-    case RTK_IMAGE_FORMAT_PNG: suffix = "png"; break;
-    case RTK_IMAGE_FORMAT_PPM: suffix = "ppm"; break;
+    case STK_IMAGE_FORMAT_JPEG: suffix = "jpg"; break;
+    case STK_IMAGE_FORMAT_PNM: suffix = "pnm"; break;
+    case STK_IMAGE_FORMAT_PNG: suffix = "png"; break;
+    case STK_IMAGE_FORMAT_PPM: suffix = "ppm"; break;
     default:
       suffix = ".png";
     }
@@ -242,7 +242,7 @@ void export_window( gui_window_t* win  ) //rtk_canvas_t* canvas, int series )
 
   printf("Stage: saving [%s]\n", filename);
   
-  rtk_canvas_export_image( win->canvas, filename, win->frame_format );
+  stk_canvas_export_image( win->canvas, filename, win->frame_format );
 }
 
 void gui_menu_file_export_frame_cb( gpointer data, 
@@ -295,7 +295,7 @@ void gui_menu_layer_cb( gpointer data,
 			GtkWidget* mitem )    
 {
   // show or hide the layer depending on the state of the menu item
-  rtk_canvas_layer_show( ((gui_window_t*)data)->canvas, 
+  stk_canvas_layer_show( ((gui_window_t*)data)->canvas, 
 			 action, // action is the layer number
 			 GTK_CHECK_MENU_ITEM(mitem)->active );
 }
@@ -325,31 +325,31 @@ void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem )
     case 1: // raytrace
       if(GTK_CHECK_MENU_ITEM(mitem)->active)
 	{
-	  fig_debug_rays = rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
-	  rtk_fig_color_rgb32( fig_debug_rays, stg_lookup_color(STG_DEBUG_COLOR) );
+	  fig_debug_rays = stk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
+	  stk_fig_color_rgb32( fig_debug_rays, stg_lookup_color(STG_DEBUG_COLOR) );
 	}
       else if( fig_debug_rays )
 	{ 
-	  rtk_fig_destroy( fig_debug_rays );
+	  stk_fig_destroy( fig_debug_rays );
 	  fig_debug_rays = NULL;
 	}
       break;
     case 2: // geometry
       if(GTK_CHECK_MENU_ITEM(mitem)->active)
 	{
-	  fig_debug_geom = rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
-	  rtk_fig_color_rgb32( fig_debug_geom, stg_lookup_color(STG_DEBUG_COLOR) );
+	  fig_debug_geom = stk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
+	  stk_fig_color_rgb32( fig_debug_geom, stg_lookup_color(STG_DEBUG_COLOR) );
 	}
       else if( fig_debug_geom )
 	{ 
-	  rtk_fig_destroy( fig_debug_geom );
+	  stk_fig_destroy( fig_debug_geom );
 	  fig_debug_geom = NULL;
 	}
       break;
 
     case 3: // matrix
       win->show_matrix = GTK_CHECK_MENU_ITEM(mitem)->active;
-      if( win->matrix ) rtk_fig_clear( win->matrix );     
+      if( win->matrix ) stk_fig_clear( win->matrix );     
       break;
       
     default:

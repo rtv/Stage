@@ -1,5 +1,5 @@
 /*
- *  RTK2 : A GUI toolkit for robotics
+ *  STK2 : A GUI toolkit for robotics
  *  Copyright (C) 2001  Andrew Howard  ahoward@usc.edu
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,9 +19,9 @@
  */
 
 /*
- * Desc: Rtk application functions
+ * Desc: Stk application functions
  * Author: Andrew Howard
- * CVS: $Id: rtk.c,v 1.3 2004-09-25 02:15:00 rtv Exp $
+ * CVS: $Id: rtk.c,v 1.4 2005-03-11 20:50:44 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -47,14 +47,14 @@
 
 // Dummy symbol so that autoconf can verify the library version number
 // using AC_CHECK_LIB.
-int LIBRTK_VERSION_2_2(void) { return(0); }
+int LIBSTK_VERSION_2_2(void) { return(0); }
 
 // Declare some local functions
-static int rtk_app_on_timer(rtk_app_t *app);
+static int stk_app_on_timer(stk_app_t *app);
 
 // Initialise the library.
 
-int rtk_initxx(int *argc, char ***argv)
+int stk_initxx(int *argc, char ***argv)
 {
   // Initialise the gtk lib
   gtk_init(argc, argv);
@@ -73,11 +73,11 @@ int rtk_initxx(int *argc, char ***argv)
 
 
 // Create an app
-rtk_app_t *rtk_app_create()
+stk_app_t *stk_app_create()
 {
-  rtk_app_t *app;
+  stk_app_t *app;
 
-  app = malloc(sizeof(rtk_app_t));
+  app = malloc(sizeof(stk_app_t));
   app->must_quit = FALSE;
   app->has_quit = FALSE;
   app->canvas = NULL;
@@ -88,7 +88,7 @@ rtk_app_t *rtk_app_create()
 
 
 // Destroy the app
-void rtk_app_destroy(rtk_app_t *app)
+void stk_app_destroy(stk_app_t *app)
 {
   int count;
 
@@ -96,7 +96,7 @@ void rtk_app_destroy(rtk_app_t *app)
   count = 0;
   while (app->canvas)
   {
-    rtk_canvas_destroy(app->canvas);
+    stk_canvas_destroy(app->canvas);
     count++;
   }
   if (count > 0)
@@ -106,7 +106,7 @@ void rtk_app_destroy(rtk_app_t *app)
   //count = 0;
   //while (app->table)
   //{
-  //rtk_table_destroy(app->table);
+  //stk_table_destroy(app->table);
   //count++;
   //}
   //if (count > 0)
@@ -118,21 +118,21 @@ void rtk_app_destroy(rtk_app_t *app)
 
 
 // Check to see if its time to quit
-int rtk_app_quit(rtk_app_t *app)
+int stk_app_quit(stk_app_t *app)
 {
   return (app->has_quit);
 }
 
 // Handle timer events
-int rtk_app_on_timer(rtk_app_t *app)
+int stk_app_on_timer(stk_app_t *app)
 {
   /* REMOVE
-  rtk_canvas_t *canvas;
-  rtk_table_t *table;
+  stk_canvas_t *canvas;
+  stk_table_t *table;
 
   // Update the display
   for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-    rtk_canvas_update(canvas);
+    stk_canvas_update(canvas);
   
   // Quit the app if we have been told we should
   // We first destroy in windows that are still open.
@@ -151,21 +151,21 @@ int rtk_app_on_timer(rtk_app_t *app)
 }
 
 // Main loop -- run in own thread
-int rtk_app_main(rtk_app_t *app)
+int stk_app_main(stk_app_t *app)
 {
-  rtk_app_main_init(app);
+  stk_app_main_init(app);
 	gtk_main();
-  rtk_app_main_term(app);
+  stk_app_main_term(app);
   
   return 0;
 }
 
 
 // Do the initial main loop stuff
-void rtk_app_main_init(rtk_app_t *app)
+void stk_app_main_init(stk_app_t *app)
 {
-  rtk_canvas_t *canvas;
-  //rtk_table_t *table;
+  stk_canvas_t *canvas;
+  //stk_table_t *table;
   
   // Display everything
   for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
@@ -178,7 +178,7 @@ void rtk_app_main_init(rtk_app_t *app)
 
 
 // Do the final main loop stuff
-void rtk_app_main_term(rtk_app_t *app)
+void stk_app_main_term(stk_app_t *app)
 {
   // Process remaining events
   while (gtk_events_pending())
@@ -192,11 +192,11 @@ void rtk_app_main_term(rtk_app_t *app)
 
 
 // Event processing function.  Returns non-zero if the app should quit.
-int rtk_app_main_loop(rtk_app_t *app)
+int stk_app_main_loop(stk_app_t *app)
 {
   int ret;
-  rtk_canvas_t *canvas;
-  //rtk_table_t *table;
+  stk_canvas_t *canvas;
+  //stk_table_t *table;
   
   while (gtk_events_pending())
     ret = gtk_main_iteration();

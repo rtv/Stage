@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.64 $
+//  $Revision: 1.65 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +19,7 @@
 //#define DEBUG
 
 #include "stage_internal.h"
-extern rtk_fig_t* fig_debug_rays;
+extern stk_fig_t* fig_debug_rays;
 
 #define TIMING 0
 #define LASER_FILLED 1
@@ -177,7 +177,7 @@ int laser_update( stg_model_t* mod )
   gettimeofday( &tv1, NULL );
 #endif
       
-  if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
+  if( fig_debug_rays ) stk_fig_clear( fig_debug_rays );
 
   // make a scan buffer (static for speed, so we only have to allocate
   // memory when the number of samples changes).
@@ -250,22 +250,22 @@ void laser_render_data(  stg_model_t* mod )
     samples = (stg_laser_sample_t*)malloc( max_len );
   
   if( mod->gui.data  )
-    rtk_fig_clear(mod->gui.data);
+    stk_fig_clear(mod->gui.data);
   else 
     {
-      mod->gui.data = rtk_fig_create( mod->world->win->canvas,
+      mod->gui.data = stk_fig_create( mod->world->win->canvas,
 				      NULL, STG_LAYER_LASERDATA );
       
-      rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_COLOR) );
+      stk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_COLOR) );
     }
   
   if( mod->gui.data_bg )
-    rtk_fig_clear( mod->gui.data_bg );
+    stk_fig_clear( mod->gui.data_bg );
   else // create the data background
     {
-      mod->gui.data_bg = rtk_fig_create( mod->world->win->canvas,
+      mod->gui.data_bg = stk_fig_create( mod->world->win->canvas,
 					 mod->gui.data, STG_LAYER_BACKGROUND );      
-      rtk_fig_color_rgb32( mod->gui.data_bg, 
+      stk_fig_color_rgb32( mod->gui.data_bg, 
 			   stg_lookup_color( STG_LASER_FILL_COLOR ));
     }
   
@@ -289,13 +289,13 @@ void laser_render_data(  stg_model_t* mod )
   double bearing = geom.pose.a - cfg.fov/2.0;
   stg_point_t* points = calloc( sizeof(stg_point_t), sample_count + 1 );
   
-  rtk_fig_origin( mod->gui.data, pose.x, pose.y, pose.a );  
-  rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );  
+  stk_fig_origin( mod->gui.data, pose.x, pose.y, pose.a );  
+  stk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );  
   int s;
   for( s=0; s<sample_count; s++ )
     {
       // useful debug
-      //rtk_fig_arrow( fig, 0, 0, bearing, (sample->range/1000.0), 0.01 );
+      //stk_fig_arrow( fig, 0, 0, bearing, (sample->range/1000.0), 0.01 );
       
       points[1+s].x = (samples[s].range/1000.0) * cos(bearing);
       points[1+s].y = (samples[s].range/1000.0) * sin(bearing);
@@ -306,9 +306,9 @@ void laser_render_data(  stg_model_t* mod )
   // for the points argument? the function expects a double[][2] type. 
   
   if( mod->world->win->fill_polygons )
-    rtk_fig_polygon( mod->gui.data_bg, 0,0,0, sample_count+1, points, TRUE );
+    stk_fig_polygon( mod->gui.data_bg, 0,0,0, sample_count+1, points, TRUE );
   
-  rtk_fig_polygon( mod->gui.data, 0,0,0, sample_count+1, points, FALSE ); 	
+  stk_fig_polygon( mod->gui.data, 0,0,0, sample_count+1, points, FALSE ); 	
   
   // loop through again, drawing bright boxes on top of the polygon
   for( s=0; s<sample_count; s++ )
@@ -316,11 +316,11 @@ void laser_render_data(  stg_model_t* mod )
       // if this hit point is bright, we draw a little box
       if( samples[s].reflectance > 0 )
 	{
-	  rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
-	  rtk_fig_rectangle( mod->gui.data, 
+	  stk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
+	  stk_fig_rectangle( mod->gui.data, 
 			     points[1+s].x, points[1+s].y, 0,
 			     0.04, 0.04, 1 );
-	  rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_COLOR) );
+	  stk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_COLOR) );
 	}
     }
   
@@ -330,13 +330,13 @@ void laser_render_data(  stg_model_t* mod )
 void laser_render_cfg( stg_model_t* mod )
 { 
   if( mod->gui.cfg  )
-    rtk_fig_clear(mod->gui.cfg);
+    stk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
-    mod->gui.cfg = rtk_fig_create( mod->world->win->canvas, 
+    mod->gui.cfg = stk_fig_create( mod->world->win->canvas, 
 				   mod->gui.top, STG_LAYER_LASERCONFIG );
   
   // draw the FOV and range lines
-  rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color( STG_LASER_CFG_COLOR ));
+  stk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color( STG_LASER_CFG_COLOR ));
   
   // get the config and make sure it's the right size
   stg_laser_config_t cfg;
@@ -355,15 +355,15 @@ void laser_render_cfg( stg_model_t* mod )
   double rightnearx = cfg.range_min * cos(maxa);
   double rightneary = cfg.range_min * sin(maxa);
   
-  rtk_fig_line( mod->gui.cfg, leftnearx, leftneary, leftfarx, leftfary );
-  rtk_fig_line( mod->gui.cfg, rightnearx, rightneary, rightfarx, rightfary );
+  stk_fig_line( mod->gui.cfg, leftnearx, leftneary, leftfarx, leftfary );
+  stk_fig_line( mod->gui.cfg, rightnearx, rightneary, rightfarx, rightfary );
   
-  rtk_fig_ellipse_arc( mod->gui.cfg,0,0,0, 
+  stk_fig_ellipse_arc( mod->gui.cfg,0,0,0, 
 		       2.0*cfg.range_max,
 		       2.0*cfg.range_max, 
 		       mina, maxa );      
   
-  rtk_fig_ellipse_arc( mod->gui.cfg,0,0,0, 
+  stk_fig_ellipse_arc( mod->gui.cfg,0,0,0, 
 		       2.0*cfg.range_min,
 		       2.0*cfg.range_min, 
 		       mina, maxa );      

@@ -23,11 +23,11 @@
 #define BOUNDINGBOX 0
 
 // single static application visible to all funcs in this file
-static rtk_app_t *app = NULL; 
+static stk_app_t *app = NULL; 
 
 // some global figures anyone can draw in for debug purposes
-rtk_fig_t* fig_debug_rays = NULL;
-rtk_fig_t* fig_debug_geom = NULL;
+stk_fig_t* fig_debug_rays = NULL;
+stk_fig_t* fig_debug_geom = NULL;
 
 
 /** @defgroup window GUI Window
@@ -150,8 +150,8 @@ void gui_load( gui_window_t* win, int section )
   
   // ask the canvas to comply
   gtk_window_resize( GTK_WINDOW(win->canvas->frame), window_width, window_height );
-  rtk_canvas_scale( win->canvas, window_scale, window_scale );
-  rtk_canvas_origin( win->canvas, window_center_x, window_center_y );
+  stk_canvas_scale( win->canvas, window_scale, window_scale );
+  stk_canvas_origin( win->canvas, window_center_x, window_center_y );
 
   // load the flags that control showing of data and configs
   win->render_data_flag[STG_MODEL_LASER] = wf_read_int(section, "laser_data", 1 );
@@ -197,30 +197,30 @@ void gui_startup( int* argc, char** argv[] )
 {
   PRINT_DEBUG( "gui startup" );
 
-  rtk_initxx(argc, argv);
+  stk_initxx(argc, argv);
   
-  app = rtk_app_create();
-  rtk_app_main_init( app );
+  app = stk_app_create();
+  stk_app_main_init( app );
 }
 
 void gui_poll( void )
 {
   //PRINT_DEBUG( "gui poll" );
-  if( rtk_app_main_loop( app ) )
+  if( stk_app_main_loop( app ) )
     stg_quit_request();
 }
 
 void gui_shutdown( void )
 {
   PRINT_DEBUG( "gui shutdown" );
-  rtk_app_main_term( app );  
+  stk_app_main_term( app );  
 }
 
 gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 {
   gui_window_t* win = calloc( sizeof(gui_window_t), 1 );
 
-  win->canvas = rtk_canvas_create( app );
+  win->canvas = stk_canvas_create( app );
   
   win->world = world;
   
@@ -233,39 +233,39 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   snprintf( txt, 256, "Stage v%s", VERSION );
   gtk_statusbar_push( win->canvas->status_bar, 0, txt ); 
 
-  rtk_canvas_size( win->canvas, xdim, ydim );
+  stk_canvas_size( win->canvas, xdim, ydim );
   
   GString* titlestr = g_string_new( "Stage: " );
   g_string_append_printf( titlestr, "%s", world->token );
   
-  rtk_canvas_title( win->canvas, titlestr->str );
+  stk_canvas_title( win->canvas, titlestr->str );
   g_string_free( titlestr, TRUE );
   
   double width = 10;//world->size.x;
   //double height = 10;//world->size.y;
 
-  win->bg = rtk_fig_create( win->canvas, NULL, STG_LAYER_GRID );
+  win->bg = stk_fig_create( win->canvas, NULL, STG_LAYER_GRID );
   
   // draw a mark for the origin
-  rtk_fig_color_rgb32( win->bg, stg_lookup_color(STG_GRID_MAJOR_COLOR) );    
+  stk_fig_color_rgb32( win->bg, stg_lookup_color(STG_GRID_MAJOR_COLOR) );    
   double mark_sz = 0.4;
-  rtk_fig_ellipse( win->bg, 0,0,0, mark_sz/3, mark_sz/3, 0 );
-  rtk_fig_arrow( win->bg, -mark_sz/2, 0, 0, mark_sz, mark_sz/4 );
-  rtk_fig_arrow( win->bg, 0, -mark_sz/2, M_PI/2, mark_sz, mark_sz/4 );
-  //rtk_fig_grid( win->bg, 0,0, 100.0, 100.0, 1.0 );
+  stk_fig_ellipse( win->bg, 0,0,0, mark_sz/3, mark_sz/3, 0 );
+  stk_fig_arrow( win->bg, -mark_sz/2, 0, 0, mark_sz, mark_sz/4 );
+  stk_fig_arrow( win->bg, 0, -mark_sz/2, M_PI/2, mark_sz, mark_sz/4 );
+  //stk_fig_grid( win->bg, 0,0, 100.0, 100.0, 1.0 );
   
 
   win->show_geom = TRUE;
   win->show_matrix = FALSE;
   win->fill_polygons = TRUE;
   win->frame_interval = 500; // ms
-  win->frame_format = RTK_IMAGE_FORMAT_PNG;
+  win->frame_format = STK_IMAGE_FORMAT_PNG;
 
-  win->poses = rtk_fig_create( win->canvas, NULL, 0 );
+  win->poses = stk_fig_create( win->canvas, NULL, 0 );
 
   // start in the center, fully zoomed out
-  rtk_canvas_scale( win->canvas, 1.1*width/xdim, 1.1*width/xdim );
-  //rtk_canvas_origin( win->canvas, width/2.0, height/2.0 );
+  stk_canvas_scale( win->canvas, 1.1*width/xdim, 1.1*width/xdim );
+  //stk_canvas_origin( win->canvas, width/2.0, height/2.0 );
 
   win->selection_active = NULL;
   
@@ -290,9 +290,9 @@ void gui_window_destroy( gui_window_t* win )
 
   //g_hash_table_destroy( win->guimods );
 
-  rtk_canvas_destroy( win->canvas );
-  rtk_fig_destroy( win->bg );
-  rtk_fig_destroy( win->poses );
+  stk_canvas_destroy( win->canvas );
+  stk_fig_destroy( win->bg );
+  stk_fig_destroy( win->poses );
 }
 
 gui_window_t* gui_world_create( stg_world_t* world )
@@ -314,14 +314,14 @@ gui_window_t* gui_world_create( stg_world_t* world )
 typedef struct
 {
   double ppm;
-  rtk_fig_t* fig;
+  stk_fig_t* fig;
 } gui_mf_t;
 
 
 void render_matrix_cell( gui_mf_t*mf, stg_matrix_coord_t* coord )
 {
   double pixel_size = 1.0 / mf->ppm;  
-  rtk_fig_rectangle( mf->fig, 
+  stk_fig_rectangle( mf->fig, 
 		     (double)coord->x * pixel_size + pixel_size/2.0, 
 		     (double)coord->y * pixel_size + pixel_size/2.0, 0, 
 		     pixel_size, pixel_size, 0 );
@@ -332,7 +332,7 @@ void render_matrix_cell( gui_mf_t*mf, stg_matrix_coord_t* coord )
 	    (double)coord->x * pixel_size,
 	    (double)coord->y * pixel_size );
 
-  rtk_fig_text( mf->fig, 
+  stk_fig_text( mf->fig, 
 		(double)coord->x * pixel_size,
 		(double)coord->y * pixel_size,
 		0, str );
@@ -358,12 +358,12 @@ void gui_world_matrix( stg_world_t* world, gui_window_t* win )
 {
   if( win->matrix == NULL )
     {
-      win->matrix = rtk_fig_create(win->canvas,win->bg,STG_LAYER_MATRIX);
-      rtk_fig_color_rgb32(win->matrix, stg_lookup_color(STG_MATRIX_COLOR));
+      win->matrix = stk_fig_create(win->canvas,win->bg,STG_LAYER_MATRIX);
+      stk_fig_color_rgb32(win->matrix, stg_lookup_color(STG_MATRIX_COLOR));
       
     }
   else
-    rtk_fig_clear( win->matrix );
+    stk_fig_clear( win->matrix );
   
   gui_mf_t mf;
   mf.fig = win->matrix;
@@ -411,17 +411,17 @@ void gui_world_matrix( stg_world_t* world, gui_window_t* win )
 }
 
 
-void gui_pose( rtk_fig_t* fig, stg_model_t* mod )
+void gui_pose( stk_fig_t* fig, stg_model_t* mod )
 {
   stg_pose_t pose;
   stg_model_get_pose( mod, &pose );
-  rtk_fig_arrow_ex( fig, 0,0, pose.x, pose.y, 0.05 );
+  stk_fig_arrow_ex( fig, 0,0, pose.x, pose.y, 0.05 );
 }
 
 
 void gui_pose_cb( gpointer key, gpointer value, gpointer user )
 {
-  gui_pose( (rtk_fig_t*)user, (stg_model_t*)value );
+  gui_pose( (stk_fig_t*)user, (stg_model_t*)value );
 }
 
 
@@ -432,7 +432,7 @@ int gui_world_update( stg_world_t* world )
   
   gui_window_t* win = world->win;
   
-  if( rtk_canvas_isclosed( win->canvas ) )
+  if( stk_canvas_isclosed( win->canvas ) )
     {
       puts( "<window closed>" );
       //stg_world_destroy( world );
@@ -466,7 +466,7 @@ int gui_world_update( stg_world_t* world )
   if( win->show_geom )
     gui_world_geom( world );
   
-  rtk_canvas_render( win->canvas );      
+  stk_canvas_render( win->canvas );      
 
   return 0;
 }
@@ -476,7 +476,7 @@ void gui_world_destroy( stg_world_t* world )
   PRINT_DEBUG( "gui world destroy" );
   
   if( world->win && world->win->canvas ) 
-    rtk_canvas_destroy( world->win->canvas );
+    stk_canvas_destroy( world->win->canvas );
   else
     PRINT_WARN1( "can't find a window for world %d", world->id );
 }
@@ -514,7 +514,7 @@ void gui_model_display_pose( stg_model_t* mod, char* verb )
 }
 
 // Process mouse events 
-void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
+void gui_model_mouse(stk_fig_t *fig, int event, int mode)
 {
   //PRINT_DEBUG2( "ON MOUSE CALLED BACK for %p with userdata %p", fig, fig->userdata );
     // each fig links back to the Entity that owns it
@@ -533,11 +533,11 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
 
   switch (event)
     {
-    case RTK_EVENT_MOUSE_OVER:
+    case STK_EVENT_MOUSE_OVER:
       win->selection_active = mod;      
       break;
 
-    case RTK_EVENT_MOUSE_NOT_OVER:
+    case STK_EVENT_MOUSE_NOT_OVER:
       win->selection_active = NULL;      
       
       // get rid of the selection info
@@ -545,15 +545,15 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       gtk_statusbar_pop( win->canvas->status_bar, cid ); 
       break;
       
-    case RTK_EVENT_PRESS:
+    case STK_EVENT_PRESS:
       // store the velocity at which we grabbed the model
       stg_model_get_velocity(mod, &capture_vel );
       stg_model_set_velocity( mod, &zero_vel );
       // DELIBERATE NO-BREAK      
 
-    case RTK_EVENT_MOTION:       
+    case STK_EVENT_MOTION:       
       // move the object to follow the mouse
-      rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
+      stk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
       
       // TODO - if there are more motion events pending, do nothing.
       //if( !gtk_events_pending() )
@@ -566,9 +566,9 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       //gui_model_display_pose( mod, "Dragging:" );
       break;
       
-    case RTK_EVENT_RELEASE:
+    case STK_EVENT_RELEASE:
       // move the entity to its final position
-      rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
+      stk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
       stg_model_set_pose( mod, &pose );
       
       // and restore the velocity at which we grabbed it
@@ -588,7 +588,7 @@ void gui_model_create( stg_model_t* mod )
   PRINT_DEBUG( "gui model create" );
   
   gui_window_t* win = mod->world->win;  
-  rtk_fig_t* parent_fig = win->bg; // default parent
+  stk_fig_t* parent_fig = win->bg; // default parent
   
   // attach instead to our parent's fig if there is one
   if( mod->parent )
@@ -598,10 +598,10 @@ void gui_model_create( stg_model_t* mod )
   memset( &mod->gui, 0, sizeof(gui_model_t) );
   
   mod->gui.top = 
-    rtk_fig_create( mod->world->win->canvas, parent_fig, STG_LAYER_BODY );
+    stk_fig_create( mod->world->win->canvas, parent_fig, STG_LAYER_BODY );
 
   mod->gui.geom = 
-    rtk_fig_create( mod->world->win->canvas, mod->gui.top, STG_LAYER_GEOM );
+    stk_fig_create( mod->world->win->canvas, mod->gui.top, STG_LAYER_GEOM );
 
   mod->gui.top->userdata = mod;
   
@@ -619,9 +619,9 @@ void gui_model_destroy( stg_model_t* model )
 
   // TODO - It's too late to kill the figs - the canvas is gone! fix this?
 
-  if( model->gui.top ) rtk_fig_destroy( model->gui.top );
-  if( model->gui.grid ) rtk_fig_destroy( model->gui.grid );
-  if( model->gui.geom ) rtk_fig_destroy( model->gui.geom );
+  if( model->gui.top ) stk_fig_destroy( model->gui.top );
+  if( model->gui.grid ) stk_fig_destroy( model->gui.grid );
+  if( model->gui.geom ) stk_fig_destroy( model->gui.geom );
   // todo - erase the property figs
 }
 
@@ -644,34 +644,34 @@ void gui_model_features( stg_model_t* mod )
   // if we need a nose, draw one
   if( gf.nose )
     { 
-      rtk_fig_t* fig = gui_model_figs(mod)->top;      
+      stk_fig_t* fig = gui_model_figs(mod)->top;      
 
       stg_color_t col;
       stg_model_get_color( mod, &col);
-      rtk_fig_color_rgb32( fig,col );
+      stk_fig_color_rgb32( fig,col );
             
       // draw an arrow from the center to the front of the model
-      rtk_fig_arrow( fig, geom.pose.x, geom.pose.y, geom.pose.a, 
+      stk_fig_arrow( fig, geom.pose.x, geom.pose.y, geom.pose.a, 
 		     geom.size.x/2.0, 0.05 );
     }
 
-  rtk_fig_movemask( gui_model_figs(mod)->top, gf.movemask);  
+  stk_fig_movemask( gui_model_figs(mod)->top, gf.movemask);  
   
   // only install a mouse handler if the object needs one
   //(TODO can we remove mouse handlers dynamically?)
   if( gf.movemask )    
-    rtk_fig_add_mouse_handler( gui_model_figs(mod)->top, gui_model_mouse );
+    stk_fig_add_mouse_handler( gui_model_figs(mod)->top, gui_model_mouse );
   
   // if we need a grid and don't have one, make one
   if( gf.grid && gui_model_figs(mod)->grid == NULL )
     {
       gui_model_figs(mod)->grid = 
-	rtk_fig_create( win->canvas, gui_model_figs(mod)->top, STG_LAYER_GRID);
+	stk_fig_create( win->canvas, gui_model_figs(mod)->top, STG_LAYER_GRID);
       
-      rtk_fig_color_rgb32( gui_model_figs(mod)->grid, 
+      stk_fig_color_rgb32( gui_model_figs(mod)->grid, 
 			   stg_lookup_color(STG_GRID_MAJOR_COLOR ) );
       
-      rtk_fig_grid( gui_model_figs(mod)->grid, 
+      stk_fig_grid( gui_model_figs(mod)->grid, 
 		    geom.pose.x, geom.pose.y, 
 		    geom.size.x, geom.size.y, 1.0  ) ;
     }
@@ -680,18 +680,18 @@ void gui_model_features( stg_model_t* mod )
   // if we have a grid and don't need one, destroy it
   if( !gf.grid && gui_model_figs(mod)->grid )
     {
-      rtk_fig_destroy( gui_model_figs(mod)->grid );
+      stk_fig_destroy( gui_model_figs(mod)->grid );
       gui_model_figs(mod)->grid == NULL;
     }
 
   
   if( gf.boundary )
     {
-      rtk_fig_rectangle( gui_model_figs(mod)->top, 
+      stk_fig_rectangle( gui_model_figs(mod)->top, 
 			 geom.pose.x, geom.pose.y, geom.pose.a, 
 			 geom.size.x, geom.size.y, 0 ); 
 			 
-      //rtk_fig_rectangle( gui_model_figs(mod)->top, 
+      //stk_fig_rectangle( gui_model_figs(mod)->top, 
       //		 geom.pose.x, geom.pose.y, geom.pose.a, 
       //		 20, 20, 1 );
     }
@@ -700,15 +700,15 @@ void gui_model_features( stg_model_t* mod )
 
 /* void stg_model_render_lines( stg_model_t* mod ) */
 /* { */
-/*   rtk_fig_t* fig = gui_model_figs(mod)->top; */
+/*   stk_fig_t* fig = gui_model_figs(mod)->top; */
   
-/*   rtk_fig_clear( fig ); */
+/*   stk_fig_clear( fig ); */
   
 /*   // don't draw objects with no size  */
 /*   if( mod->geom.size.x == 0 && mod->geom.size.y == 0 ) */
 /*     return; */
   
-/*   rtk_fig_color_rgb32( fig, stg_model_get_color(mod) ); */
+/*   stk_fig_color_rgb32( fig, stg_model_get_color(mod) ); */
 
 /*   size_t count=0; */
 /*   stg_line_t* lines = stg_model_get_lines(mod,&count); */
@@ -736,7 +736,7 @@ void gui_model_features( stg_model_t* mod )
 /* 	    double x2 = localx + line->x2 * cosla - line->y2 * sinla; */
 /* 	    double y2 = localy + line->x2 * sinla + line->y2 * cosla; */
 	    
-/* 	    rtk_fig_line( fig, x1,y1, x2,y2 ); */
+/* 	    stk_fig_line( fig, x1,y1, x2,y2 ); */
 /* 	  } */
 /*     } */
 /* } */
@@ -745,9 +745,9 @@ void gui_model_features( stg_model_t* mod )
 
 void stg_model_render_polygons( stg_model_t* mod )
 {
-  rtk_fig_t* fig = gui_model_figs(mod)->top;
+  stk_fig_t* fig = gui_model_figs(mod)->top;
   
-  rtk_fig_clear( fig );
+  stk_fig_clear( fig );
 
   // don't draw objects with no size 
   //if( mod->geom.size.x == 0 && mod->geom.size.y == 0 )
@@ -767,11 +767,11 @@ void stg_model_render_polygons( stg_model_t* mod )
     {
       if( ! mod->world->win->fill_polygons )
 	{
-	  rtk_fig_color_rgb32( fig, col );
+	  stk_fig_color_rgb32( fig, col );
 	  
 	  int p;
 	  for( p=0; p<count; p++ )
-	    rtk_fig_polygon( fig,
+	    stk_fig_polygon( fig,
 			     geom.pose.x,
 			     geom.pose.y,
 			     geom.pose.a,
@@ -781,11 +781,11 @@ void stg_model_render_polygons( stg_model_t* mod )
 	}
       else
 	{
-	  rtk_fig_color_rgb32( fig, col );
+	  stk_fig_color_rgb32( fig, col );
 	  
 	  int p;
 	  for( p=0; p<count; p++ )
-	    rtk_fig_polygon( fig,
+	    stk_fig_polygon( fig,
 			     geom.pose.x,
 			     geom.pose.y,
 			     geom.pose.a,
@@ -795,10 +795,10 @@ void stg_model_render_polygons( stg_model_t* mod )
 	  
 	  if( mod->guifeatures.outline )
 	    {
-	      rtk_fig_color_rgb32( fig, 0 ); // black
+	      stk_fig_color_rgb32( fig, 0 ); // black
 	      
 	      for( p=0; p<count; p++ )
-		rtk_fig_polygon( fig,
+		stk_fig_polygon( fig,
 				 geom.pose.x,
 				 geom.pose.y,
 				 geom.pose.a,
@@ -811,7 +811,7 @@ void stg_model_render_polygons( stg_model_t* mod )
   
   if( mod->guifeatures.boundary )
     {      
-      rtk_fig_rectangle( gui_model_figs(mod)->top, 
+      stk_fig_rectangle( gui_model_figs(mod)->top, 
 			 geom.pose.x, geom.pose.y, geom.pose.a, 
 			 geom.size.x, geom.size.y, 0 ); 
     }
@@ -820,26 +820,26 @@ void stg_model_render_polygons( stg_model_t* mod )
 }
 
 /// render a model's global pose vector
-void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
+void gui_model_render_geom_global( stg_model_t* mod, stk_fig_t* fig )
 {
   stg_pose_t glob;
   stg_model_get_global_pose( mod, &glob );
   
-  rtk_fig_color_rgb32( fig, 0x0000FF ); // blue
-  //rtk_fig_line( fig, 0, 0, glob.x, glob.y );
-  rtk_fig_arrow( fig, glob.x, glob.y, glob.a, 0.15, 0.05 );  
+  stk_fig_color_rgb32( fig, 0x0000FF ); // blue
+  //stk_fig_line( fig, 0, 0, glob.x, glob.y );
+  stk_fig_arrow( fig, glob.x, glob.y, glob.a, 0.15, 0.05 );  
   
   if( mod->parent )
     {
       stg_pose_t parentpose;
       stg_model_get_global_pose( mod->parent, &parentpose );
-      rtk_fig_line( fig, parentpose.x, parentpose.y, glob.x, parentpose.y );
-      rtk_fig_line( fig, glob.x, parentpose.y, glob.x, glob.y );
+      stk_fig_line( fig, parentpose.x, parentpose.y, glob.x, parentpose.y );
+      stk_fig_line( fig, glob.x, parentpose.y, glob.x, glob.y );
     }
   else
     {
-      rtk_fig_line( fig, 0, 0, glob.x, 0 );
-      rtk_fig_line( fig, glob.x, 0, glob.x, glob.y );
+      stk_fig_line( fig, 0, 0, glob.x, 0 );
+      stk_fig_line( fig, glob.x, 0, glob.x, glob.y );
     }
   
   stg_pose_t localpose;
@@ -847,11 +847,11 @@ void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
   stg_model_local_to_global( mod, &localpose );
   
   // draw the local offset
-  rtk_fig_line( fig, 
+  stk_fig_line( fig, 
 		glob.x, glob.y, 
 		localpose.x, glob.y );
 
-  rtk_fig_line( fig, 
+  stk_fig_line( fig, 
 		localpose.x, glob.y, 
 		localpose.x, localpose.y );
   
@@ -859,7 +859,7 @@ void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
   stg_pose_t bbox_pose;
   memcpy( &bbox_pose, &mod->geom.pose, sizeof(bbox_pose));
   stg_model_local_to_global( mod, &bbox_pose );
-  rtk_fig_rectangle( fig, 
+  stk_fig_rectangle( fig, 
 		     bbox_pose.x, bbox_pose.y, bbox_pose.a, 
 		     mod->geom.size.x,
 		     mod->geom.size.y, 0 );  
@@ -868,7 +868,7 @@ void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
 /// move a model's figure to the model's current location
 void gui_model_move( stg_model_t* mod )
 { 
-  rtk_fig_origin( gui_model_figs(mod)->top, 
+  stk_fig_origin( gui_model_figs(mod)->top, 
 		  mod->pose.x, mod->pose.y, mod->pose.a );   
 }
 
@@ -890,7 +890,7 @@ void gui_world_geom( stg_world_t* world )
 {
   if( fig_debug_geom )
     {
-      rtk_fig_clear( fig_debug_geom );
+      stk_fig_clear( fig_debug_geom );
       g_hash_table_foreach( world->models, gui_model_render_geom_cb, NULL ); 
     }
 }
@@ -906,10 +906,10 @@ void gui_model_render_data( stg_model_t* mod )
     {
       // remove any graphics that linger
       if( mod->gui.data )
-	rtk_fig_clear( mod->gui.data );
+	stk_fig_clear( mod->gui.data );
       
       if( mod->gui.data_bg )
-	rtk_fig_clear( mod->gui.data_bg );
+	stk_fig_clear( mod->gui.data_bg );
     }
 } 
 
@@ -924,10 +924,10 @@ void gui_model_render_command( stg_model_t* mod )
     {
       // remove any graphics that linger
       if( mod->gui.cmd )
-	rtk_fig_clear( mod->gui.cmd );
+	stk_fig_clear( mod->gui.cmd );
       
       if( mod->gui.cmd_bg )
-	rtk_fig_clear( mod->gui.cmd_bg );
+	stk_fig_clear( mod->gui.cmd_bg );
     }
 }
 
@@ -942,9 +942,9 @@ void gui_model_render_config( stg_model_t* mod )
     {
       // remove any graphics that linger
       if( mod->gui.cfg )
-	rtk_fig_clear( mod->gui.cfg );
+	stk_fig_clear( mod->gui.cfg );
       
       if( mod->gui.cfg_bg )
-	rtk_fig_clear( mod->gui.cfg_bg );
+	stk_fig_clear( mod->gui.cfg_bg );
     } 
 }
