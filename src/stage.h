@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.21 2003-10-13 16:52:51 rtv Exp $
+ * CVS: $Id: stage.h,v 1.22 2003-10-16 02:05:14 rtv Exp $
  */
 
 #ifdef __cplusplus
@@ -66,8 +66,7 @@ typedef struct timeval stg_timeval_t;
    // client specifies type-of-service when connecting to the server
    typedef enum
      {
-       STG_TOS_REQUESTREPLY=0,
-       STG_TOS_SUBSCRIPTION
+       STG_TOS_SUBSCRIPTION=1
      } stg_tos_t;
    
    
@@ -84,6 +83,8 @@ typedef struct timeval stg_timeval_t;
        STG_WORLD_MODEL_COUNT,
        STG_WORLD_CREATE_MODEL,
        STG_WORLD_DESTROY,
+       STG_WORLD_SAVE,
+       STG_WORLD_LOAD,
        // model properties
        STG_MOD_DESTROY,
        STG_MOD_TIME,
@@ -259,7 +260,7 @@ typedef struct
 typedef struct
 {
   double range;
-  double reflectance;
+  char reflectance;
 } stg_laser_sample_t;
 
 #define STG_LASER_SAMPLES_MAX 361
@@ -273,6 +274,7 @@ typedef struct
   double range_max;
   double range_min;
   double sample_count;
+// TODO - remove this static buffer
   stg_laser_sample_t samples[STG_LASER_SAMPLES_MAX];
 } stg_laser_data_t;
 
@@ -400,7 +402,15 @@ typedef struct
 {
   stg_id_t stage_id;
   char name[STG_TOKEN_MAX];
-} stg_name_id_t;  
+  int section; // worldfile section
+
+  stg_property_t* props[STG_MESSAGE_COUNT];
+
+  char subs[STG_MESSAGE_COUNT];   
+  //  0 - not subscribed
+  //  1 - subscribed
+  // -1 - subscription failed
+} stg_model_t;  
 
 
 

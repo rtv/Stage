@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.32 2003-10-13 08:37:00 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.33 2003-10-16 02:05:14 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -42,7 +42,6 @@ typedef struct
   GList *subs;
 } stg_client_data_t;
 
-
 typedef struct stg_world
 {
   int id;
@@ -57,8 +56,6 @@ typedef struct stg_world
   double ppm; // the resolution of the world model in pixels per meter
   stg_gui_window_t* win;   // each world has a GUI window of it's own
   stg_client_data_t* client; // the client that created this world
-  //GList* subscribers; // list of stg_client_data_t* clients that want
-		      // data pushed to them when this world is updated
 } stg_world_t;
 
 
@@ -69,9 +66,8 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
 int stg_world_destroy( stg_world_t* world );
 CMatrix* stg_world_create_matrix( stg_world_t* world );
 void stg_world_destroy_matrix( stg_world_t* world );
-//gboolean stg_world_clock_tick( void* data );
 void stg_world_update( stg_world_t* world );
-
+void stg_world_save( stg_world_t* world );
 
 #ifdef DEBUG
 #define WORLD_DEBUG(W,S) printf("[%d %s %p] "S" (%s %s)\n",W->id,W->name->str,W,__FILE__,__FUNCTION__);

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.27 2003-10-13 08:37:00 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.28 2003-10-16 02:05:14 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -188,8 +188,9 @@ void stg_gui_save( rtk_menuitem_t *item )
     ((stg_gui_window_t*)item->menu->canvas->userdata)->world->client;
   if( client )
     {
-      PRINT_DEBUG1( "signal USR2 to pid %d", client->pid );
-      kill( client->pid, SIGUSR2 );
+      //PRINT_DEBUG1( "signal USR2 to pid %d", client->pid );
+      //kill( client->pid, SIGUSR2 );
+      stg_world_save( ((stg_gui_window_t*)item->menu->canvas->userdata)->world );
     }
 }
 

@@ -26,7 +26,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.c,v 1.21 2003-10-13 08:37:00 rtv Exp $
+ * CVS: $Id: stage.c,v 1.22 2003-10-16 02:05:14 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -61,6 +61,8 @@ const char* stg_property_string( stg_prop_id_t id )
     case STG_WORLD_MODEL_COUNT:  return "STG_WORLD_MODEL_COUNT"; break;  
     case STG_WORLD_CREATE_MODEL: return "STG_WORLD_CREATE_MODEL"; break;
     case STG_WORLD_DESTROY: return "STG_WORLD_DESTROY"; break;
+    case STG_WORLD_SAVE: return "STG_WORLD_SAVE"; break;
+    case STG_WORLD_LOAD: return "STG_WORLD_LOAD"; break;
       
       // model properties
     case STG_MOD_DESTROY: return "STG_MOD_DESTROY"; break;
@@ -448,7 +450,7 @@ stg_client_t* stg_client_create( char* host, int port, stg_tos_t tos )
   if( greeting.code != STG_CLIENT_GREETING ) 
     PRINT_ERR1( "received bad reply from server (%d)", greeting.code );
   else
-    PRINT_MSG1( "received good reply from server (%d)", greeting.code );
+    PRINT_DEBUG1( "received good reply from server (%d)", greeting.code );
 
   return cli;
 }  

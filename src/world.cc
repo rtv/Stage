@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.150 2003-10-13 08:37:00 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.151 2003-10-16 02:05:14 rtv Exp $
  */
 
 
@@ -114,10 +114,26 @@ void stg_model_update( gpointer data, gpointer userdata )
   ent->Update();
 }
 
+void stg_world_save( stg_world_t* world )
+{
+  PRINT_DEBUG1( "sending SAVE message to client %p", world->client );
+  
+  stg_property_t* save = stg_property_create();
+  
+  save->property = STG_WORLD_SAVE;
+  save->action = STG_SET;
+
+  StgPropertyWrite( world->client->channel, save );  
+  stg_property_free( save ); 
+  
+}
+
 void stg_world_update( stg_world_t* world  )
 {  
   world->time += world->interval;
-  printf( " world (%s) time: %.3f   \n", world->name->str, world->time );
+
+  //printf( " world (%s) time: %.3f\n", 
+  //  world->name->str, world->time );
 
   g_list_foreach( world->models, stg_model_update, NULL );
 }

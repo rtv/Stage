@@ -21,8 +21,11 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.20 2003-10-13 08:37:00 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.21 2003-10-16 02:05:14 rtv Exp $
  */
+
+//#undef DEBUG
+//#define DEBUG
 
 #include <assert.h>
 #include <ctype.h>
@@ -201,7 +204,7 @@ bool CWorldFile::WarnUnused()
   for (int i = 0; i < this->property_count; i++)
   {
     CProperty *property = this->properties + i;
-    if (!property->used)
+    if (!property->used )
     {
       unused = true;
       PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
@@ -1806,16 +1809,26 @@ int stg_instances_of_string( char* token )
 //
 // Create a world in the Stage server based on the current data.
 int CWorldFile::Upload( stg_client_t* cli, 
-			stg_name_id_t** models, int* model_count, 
-			stg_id_t* world_id )
+			stg_model_t** models, int* model_count )
 {
-  // first create a world
+  *model_count = this->GetEntityCount();
+  *models = new stg_model_t[ *model_count ];
+  
+  memset( *models, 0, *model_count * sizeof(stg_model_t) );
+
+  // intialize the array with default parents
+  for( int m=0; m<*model_count; m++ )
+    {
+      (*models)[m].stage_id = -1;
+      //strncpy( (*models)[m].name, "root", STG_TOKEN_MAX );
+    }
+
+  // first create a world as the zeroth model
   stg_world_create_t world_cfg;
   strncpy(world_cfg.name, this->ReadString( 0, "name", filename ), STG_TOKEN_MAX );
   world_cfg.width =  this->ReadTupleFloat( 0, "size", 0, 10.0 );
   world_cfg.height =  this->ReadTupleFloat( 0, "size", 1, 10.0 );
   world_cfg.resolution = this->ReadFloat( 0, "resolution", 0.1 );
-  //  *world_id = stg_world_create( cli, &world_cfg );
   
   stg_property_t* reply = 
     stg_send_property( cli, -1,
@@ -1828,24 +1841,16 @@ int CWorldFile::Upload( stg_client_t* cli,
       exit(-1);
     }
   
-  *world_id = reply->id; // remember the id of the world we created
+  // remember the id of the world we created
+  (*models)[0].stage_id = reply->id; 
+  strncpy( (*models)[0].name, filename, STG_TOKEN_MAX );
   stg_property_free( reply );
   
-  // for every worldfile section, we may need to store a model ID in
-  // order to resolve parents
-  // if everything goes smoothly, we return these in the pointer arguments
-  int created_models_count = this->GetEntityCount();
-  stg_name_id_t* created_models = new stg_name_id_t[ created_models_count ];
+  PRINT_DEBUG2( "created world %d (%s)", 
+		(*models)[0].stage_id, (*models)[0].name ); 
   
-  // the default parent of every model is root
-  for( int m=0; m<created_models_count; m++ )
-    {
-      created_models[m].stage_id = -1;
-      strncpy( created_models[m].name, "root", STG_TOKEN_MAX );
-    }
-      
   // Iterate through sections and create entities as required
-  for (int section = 1; section < this->GetEntityCount(); section++)
+  for (int section = 1; section < *model_count; section++)
     {
       if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
 	{
@@ -1854,27 +1859,28 @@ int CWorldFile::Upload( stg_client_t* cli,
       else
 	{
 	  //const int line = this->ReadInt(section, "line", -1);
-	  
-	  stg_id_t parent = created_models[this->GetEntityParent(section)].stage_id;
+
+	  stg_id_t parent = -1; // root
+	  int parent_section = this->GetEntityParent(section);
+	  if( parent_section > 0 )
+	    parent = (*models)[parent_section].stage_id;
 	  
 	  //PRINT_DEBUG1( "creating child of parent %d", parent );
 	  
 	  stg_entity_create_t child;
+	
+	  int parent_index = this->GetEntityParent(section);
 	  
-	  // the model's name is composed from it's parents' name,
-	  // it's type 
-	  char* parent_name = created_models[this->GetEntityParent(section)].name;
-	  
-	  // we don't need the "root" part
-	  if( strcmp(parent_name,"root") == 0 )
-	    snprintf( child.name, STG_TOKEN_MAX, "%s", GetEntityType(section) );
+	  // the model's name is composed from it's parents' name and
+	  // it's type
+	  if( parent_index == 0 ) // top level
+	    snprintf( child.name, STG_TOKEN_MAX, "%s", 
+		      GetEntityType(section) );
 	  else
 	    snprintf( child.name, STG_TOKEN_MAX, "%s:%s", 
-		      parent_name,
+		      (*models)[this->GetEntityParent(section)].name,
 		      GetEntityType(section) );
 	  
-	  //printf( "type name \"%s\"\n", child.name );
-
 	  // if we have more than a single instance of this name, we
 	  // add an instance number onto the end
 	  int instance = stg_instances_of_string( child.name );
@@ -1898,7 +1904,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	  child.parent_id = parent; // make a new entity on the root 
 	  
 	  stg_property_t* reply = 
-	    stg_send_property( cli, *world_id, 
+	    stg_send_property( cli, (*models)[0].stage_id, // world id 
 			       STG_WORLD_CREATE_MODEL, STG_COMMAND,
 			       &child, sizeof(child) );
 
@@ -1912,19 +1918,15 @@ int CWorldFile::Upload( stg_client_t* cli,
 	  stg_property_free( reply );
 	  
 	  // associate the name 
-	  strncpy( created_models[section].name, child.name, STG_TOKEN_MAX );
-	  
-	  PRINT_DEBUG3( "associating section %d name %s "
-			"with stage model %d",
-			section, 
-			created_models[section].name, 
-			created_models[section].stage_id );
+	  strncpy( (*models)[section].name, child.name, STG_TOKEN_MAX );
 	  
 	  // remember the model id for this section
-	  created_models[section].stage_id = anid;
-	
-	PRINT_DEBUG1( "created model %d", anid );
-	
+	  (*models)[section].stage_id = anid;
+	  
+	  PRINT_DEBUG2( "created model %d (%s)", 
+			(*models)[section].stage_id, 
+			(*models)[section].name ); 
+	  
 	char* token = NULL;
 
 	token = "matrix_render";
@@ -2070,7 +2072,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	    free(rangers);
 	  }
 
-	PRINT_DEBUG("Checking for bitmap file" );
+	//PRINT_DEBUG("Checking for bitmap file" );
 
 	token = "bitmap";
 	const char* bitmapfile = this->ReadString(section, token, "" );
@@ -2116,22 +2118,18 @@ int CWorldFile::Upload( stg_client_t* cli,
       }
   }
 
-  // fill in the data we created so the caller can find the model ids
-  *models = created_models;
-  *model_count = created_models_count;
-  
   return 0; // ok
 }
 
 
 int CWorldFile::DownloadAndSave( stg_client_t* cli, 
-				 stg_name_id_t* models, int model_count )
+				 stg_model_t* models, int model_count )
 {
   PRINT_WARN( "SAVE NOT FULLY IMPLEMENTED. ONLY POSES ARE SAVED." );
   
   char *token = NULL;
 
-  // Iterate through sections, downloading the data for each entity
+  // Iterate through sections, requesting pose data for each entity
   for (int section = 1; section < this->GetEntityCount(); section++)
     {
       if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
@@ -2139,43 +2137,46 @@ int CWorldFile::DownloadAndSave( stg_client_t* cli,
 	  PRINT_WARN( "save gui section not implemented" );
 	}
       else
-	{
+	{	  
 	  stg_id_t anid = models[section].stage_id;
+	  char* name = models[section].name;
 	  
 #ifdef DEBUG
-	  char* name = models[section].name
-	    PRINT_DEBUG3( "saving model %d:%s section %d\n", 
-			  anid, name, section );
+	  PRINT_DEBUG3( "saving pose data for model %d \"%s\" section %d\n", 
+			anid, name, section );
 #endif
-	  
-	  token = "pose";
-	  stg_pose_t *pose;
-	  size_t len;
-	  if( stg_get_property( cli, anid, STG_MOD_POSE, (void**)&pose, &len )
-	      < 0 )
-	    PRINT_ERR1( "failed to get pose for model %d", anid );
+	  stg_property_t* prop = models[section].props[STG_MOD_POSE];
+
+	  if( prop == NULL )
+	    {
+	      PRINT_WARN3( "no pose data available for model "
+			   "%d \"%s\" section %d\n", 
+			   anid, name, section );
+	    }
 	  else
 	    {
-	      if( len == sizeof(stg_pose_t) )
-		{
-		  this->WriteTupleFloat( section, token, 0, pose->x );
-		  this->WriteTupleFloat( section, token, 1, pose->y );
-		  this->WriteTupleFloat( section, token, 2, pose->a );
-		}
-	      else
-		PRINT_ERR3( "get pose of model %d returned wrong size"
-			    " (%d/%d bytes)", 
-			    anid, len, sizeof(stg_pose_t) );
-
-	      free( pose );
-	    }	    
-	  
+	      stg_pose_t *pose = (stg_pose_t*)prop->data;
+	      size_t len = prop->len;
+	      
+	      assert(pose);
+	      assert(len == sizeof(stg_pose_t) );
+	      
+	      //if( stg_get_property( cli, anid, STG_MOD_POSE, (void**)&pose, &len )
+	      //  < 0 )
+	      // PRINT_ERR1( "failed to get pose for model %d", anid );
+	      //else
+	      token = "pose";
+	      this->WriteTupleFloat( section, token, 0, pose->x );
+	      this->WriteTupleFloat( section, token, 1, pose->y );
+	      this->WriteTupleFloat( section, token, 2, pose->a );
+	    }
 	}
     }
   
   // TODO - back up old world file, emacs-like
-
+  
   this->Save( NULL ); // save in default filename
-
+  
   return 0; //ok
 }
+

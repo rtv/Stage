@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.123 2003-10-14 00:56:00 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.124 2003-10-16 02:05:14 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -1556,7 +1556,11 @@ void  CEntity::UpdateLaserData( stg_laser_data_t* laser )
 	}
       
       laser->samples[s].range = range;
-      laser->samples[s].reflectance = 1.0;
+      
+      laser->samples[s].reflectance = 0;
+      
+      if( ent && ent->laser_return == LaserBright )
+	laser->samples[s].reflectance = 1;
       
       s++;
     }

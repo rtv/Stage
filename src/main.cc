@@ -23,9 +23,11 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.77 2003-10-14 00:56:02 rtv Exp $
+ * CVS: $Id: main.cc,v 1.78 2003-10-16 02:05:14 rtv Exp $
  */
 
+/* NOTES this file is only C++ because it must create CEntity
+ * objects. Stage is gradually becoming C with glib. */ 
 
 #include <stdlib.h>
 #include <signal.h>
@@ -46,18 +48,10 @@ int quit = 0; // set true by the GUI when it wants to quit
 // globals
 GHashTable* global_model_table = g_hash_table_new(g_int_hash, g_int_equal);
 GHashTable* global_world_table = g_hash_table_new(g_int_hash, g_int_equal);
-
-int global_next_world_id = 1;
-int global_next_model_id = 1;
-
 GList* global_sub_clients = NULL; // list of subscription-based clients
-
+int global_next_id = 1; // used to generate unique id number for all objects
 
 // forward declare
-gboolean StgClientRead( GIOChannel* channel, 
-			GIOCondition condition, 
-			gpointer data );
-
 gboolean StgSubClientRead( GIOChannel* channel, 
 			GIOCondition condition, 
 			gpointer data );
@@ -110,25 +104,6 @@ gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )
   return( !failed );
 }
 
-stg_client_data_t* stg_rr_client_create( pid_t pid, GIOChannel* channel )
-{
-  // store the client's PID to we can send it signals 
-  stg_client_data_t* cli = 
-    (stg_client_data_t*)calloc(1,sizeof(stg_client_data_t) );
-  
-  g_assert( cli );
-  
-  // set up this client
-  cli->pid = pid;
-  cli->channel = channel;  
-  cli->source_in  = g_io_add_watch( channel, G_IO_IN, StgClientRead, cli );
-  cli->source_hup = g_io_add_watch( channel, G_IO_HUP, StgClientHup, cli );
-  
-  //global_num_clients++; 
-  
-  return cli;
-}
-
 stg_client_data_t* stg_sub_client_create( pid_t pid, GIOChannel* channel )
 {
   // store the client's PID to we can send it signals 
@@ -147,7 +122,6 @@ stg_client_data_t* stg_sub_client_create( pid_t pid, GIOChannel* channel )
   
   // add this client to the list of subscribers to this world
   global_sub_clients = g_list_append( global_sub_clients, cli );
-  //global_num_clients++; 
   
   return cli;
 }
@@ -191,194 +165,7 @@ void stg_client_destroy( stg_client_data_t* cli )
   g_list_foreach( cli->subs, foreach_free, NULL );
   g_list_free( cli->subs );
 
-
   free( cli );
-  
-  // one client fewer
-  //global_num_clients--;
-}
-
-
-gboolean StgClientRead( GIOChannel* channel, 
-		     GIOCondition condition, 
-		     gpointer data )
-{
-  PRINT_DEBUG( "client read" );
-  g_assert(channel);
-  g_assert(data);
-  
-  // the data tells us which client number this is
-  stg_client_data_t *cli = (stg_client_data_t*)data;
-  
-  stg_property_t* prop = 
-    stg_property_read_fd( g_io_channel_unix_get_fd(channel) );
-
-  if( prop == NULL )
-    {
-      PRINT_MSG1( "Failed to read from client (fd %d). Shutting it down.",  
-		  g_io_channel_unix_get_fd(channel) );
-      
-      stg_client_destroy( cli );      
-      return FALSE; // cancel this callback (just in case - we
-		    // probably cancelled it already in
-		    // StgClientDestroy() ).
-    }
-  else
-    {
-      PRINT_DEBUG1( "got a property with id %d", prop->id );  
-      
-      if( prop->action == STG_NOOP )
-	{
-	  PRINT_WARN1( "ignoring a NOOP property for model %d", prop->id );
-	}
-      else
-	{
-	  // a property gets created below and returned to the client
-	  stg_property_t* reply = NULL;
-
-	  
-	  switch( prop->property )
-	    {
-	    case STG_SERVER_CREATE_WORLD:
-	      {
-		// check that we have the right size data
-		g_assert( (prop->len == sizeof(stg_world_create_t)) );
-		
-		// create a world object
-		stg_world_t* aworld = 
-		  stg_world_create( cli, 
-				    global_next_world_id++,
-				    (stg_world_create_t*)prop->data );
-		g_assert( aworld );
-		
-		// add the new world to the hash table with its id as
-		// the key (this ID should not already exist)
-		g_assert( g_hash_table_lookup(global_world_table, &aworld->id)
-			  == NULL ); 
-		g_hash_table_insert(global_world_table, &aworld->id, aworld );  
-
-		PRINT_DEBUG2( "Created world %p on channel %p",
-			      aworld, channel );
-		
-		// reply with the id of the world
-		reply = stg_property_create();
-		reply->id = aworld->id; 		
-	      }
-	      break;
-	      
-	    case STG_WORLD_CREATE_MODEL:
-	      {
-		// check that we have the right size data
-		g_assert( (prop->len == sizeof(stg_entity_create_t)) );
-		
-#ifdef DEBUG
-		stg_entity_create_t* create = (stg_entity_create_t*)prop->data;
-		PRINT_DEBUG2( "creating model name \"%s\" parent %d",
-			      create->name, create->parent_id );
-#endif
-		// create a new entity
-		CEntity* ent = NULL;	    
-		g_assert((ent = new CEntity((stg_entity_create_t*)prop->data,
-					    prop->id, // world id
-					    global_next_model_id++ // ent id
-					    )));
-
-		// add the new model to the world's hash table with
-		// its id as the key (this ID should not already
-		// exist)
-		g_assert( g_hash_table_lookup( global_model_table, &ent->id ) 
-			  == NULL ); 
-		g_hash_table_insert( global_model_table, &ent->id, ent );
-		
-		//ent->Startup();
-
-		// reply with the id of the entity
-		reply = stg_property_create();
-		reply->id = ent->id; 
-	      }
-	      break;
-	      
-	    default: // all other props we need to look up an existing object
-	      {	    
-		GNode* node = NULL;
-		//(GNode*)g_hash_table_lookup( global_model_table, &prop->id );
-		
-		if( node == NULL )
-		  {
-		    PRINT_WARN2( "Ignoring unknown model (%d %s).",
-				 prop->id, 
-				 stg_property_string(prop->property) );
-		    
-		    reply = stg_property_create();
-		    reply->id = -1; // indicate failed request
-		  }
-		else 
-		  switch( prop->property )		    
-		    {
-		    case STG_WORLD_DESTROY: 
-		      {
-			puts( "DESTROY WORLD REQUEST" );
-			stg_world_t* world = (stg_world_t*)node->data;	      
-			stg_world_destroy( world );			
-		      }
-		      break;
-		      
-		    case STG_MOD_DESTROY:
-		      {
-			CEntity* ent = (CEntity*)node->data;
-			g_hash_table_remove( global_model_table, &ent->id );
-			delete ent;
-		      }
-		      break;
-		      
-		    default: // it must be a model. 
-		      {
-			CEntity* ent = (CEntity*)node->data;
-			
-			switch( prop->action )
-			  {
-			  case STG_SET:
-			    ent->SetProperty( prop->property,
-					      prop->data, prop->len );
-			    reply = stg_property_create();
-			    reply->id = ent->id; // indicate success 
-			    break;
-			  case STG_GET:
-			    reply = ent->GetProperty( prop->property );
-			    break;
-			  case STG_SETGET:
-			    ent->SetProperty( prop->property, 
-					      prop->data, prop->len );
-			    reply = ent->GetProperty( prop->property );
-			    break;
-			  case STG_GETSET:
-			    reply = ent->GetProperty( prop->property );
-			    ent->SetProperty( prop->property, 
-					      prop->data, prop->len );
-			    break;
-			    
-			  default: PRINT_WARN1( "unknown prop action (%d)",
-						prop->action );
-			 
-			    reply = stg_property_create();
-			    reply->id = -1;  // indicate failed request
-			    break;
-			  }
-		      }
-		      break;
-		    }
-	      }
-	    }
-	  
-	  // write reply
-	  g_assert(reply);
-	  StgPropertyWrite( channel, reply );  
-	  stg_property_free( reply );      
-	}
-    }
-  
-  stg_property_free( prop );    
-  return TRUE;
 }
 
 
@@ -396,7 +183,7 @@ gboolean StgSubClientRead( GIOChannel* channel,
 	   GIOCondition condition, 
 			   gpointer data )
 {
-  PRINT_DEBUG( "sub client read" );
+  //PRINT_DEBUG( "sub client read" );
   g_assert(channel);
   g_assert(data);
   
@@ -418,7 +205,7 @@ gboolean StgSubClientRead( GIOChannel* channel,
     }
   else
     {
-      PRINT_DEBUG1( "got a property with id %d", prop->id );  
+      //PRINT_DEBUG1( "got a property with id %d", prop->id );  
       
       stg_property_t* reply = NULL;
 
@@ -444,15 +231,15 @@ gboolean StgSubClientRead( GIOChannel* channel,
 	    sub->prop = prop->property;
 	    cli->subs = g_list_append( cli->subs, sub );
 	    
-	    PRINT_MSG2( "client %p now has %d subscriptions", 
-			cli, g_list_length(cli->subs) );
+	    PRINT_DEBUG2( "client %p now has %d subscriptions", 
+			  cli, g_list_length(cli->subs) );
 	    
 	    reply = stg_property_create();
 	    reply->id = prop->id;
 	    reply->action = prop->action;
 	    reply->property = prop->property;
-	    char success = 1;
-	    stg_property_attach_data( reply, &success, 1 );
+	    char subres = 1;
+	    stg_property_attach_data( reply, &subres, 1 );
 	  }
 	  break;
 	  
@@ -479,16 +266,21 @@ gboolean StgSubClientRead( GIOChannel* channel,
 	    reply->id = prop->id;
 	    reply->action = prop->action;
 	    reply->property = prop->property;
-	    char fail = 0;
-	    stg_property_attach_data( reply, &fail, 1 );
+	    char unsubres = 0;
+	    stg_property_attach_data( reply, &unsubres, 1 );
+
+	    PRINT_DEBUG4( "replying to unsub with (%d:%s action %d value %d)\n",
+			  reply->id, stg_property_string(reply->property),
+			  reply->action,
+			  *(char*)reply->data );
 	  }
 	  break;
 	  
 	default:
-	  PRINT_WARN3( "default action handler for action %d id %d prop %s",
-		       prop->action, 
-		       prop->id, 
-		       stg_property_string(prop->property) );
+	  //PRINT_WARN3( "default action handler for action %d id %d prop %s",
+	  //       prop->action, 
+	  //       prop->id, 
+	  //       stg_property_string(prop->property) );
 	  
 	  reply = stg_property_create();
 	  reply->action = STG_NACK; // assume it will not work
@@ -506,7 +298,7 @@ gboolean StgSubClientRead( GIOChannel* channel,
 		// create a world object
 		stg_world_t* aworld = 
 		  stg_world_create( cli, 
-				    global_next_world_id++,
+				    global_next_id++,
 				    (stg_world_create_t*)prop->data );
 		g_assert( aworld );
 		
@@ -550,17 +342,11 @@ gboolean StgSubClientRead( GIOChannel* channel,
 		// check that we have the right size data
 		g_assert( (prop->len == sizeof(stg_entity_create_t)) );
 		
-#ifdef DEBUG
-		stg_entity_create_t* create = (stg_entity_create_t*)prop->data;
-		PRINT_DEBUG2( "creating model name \"%s\" xparent %d",
-			      create->name, create->parent_id );
-#endif
-
 		// create a new entity
 		CEntity* ent = NULL;	    
 		g_assert((ent = new CEntity((stg_entity_create_t*)prop->data,
 					    prop->id, // world id
-					    global_next_model_id++ )));
+					    global_next_id++ )));
 		
 		// add the new model to the world's hash table with
 		// its id as the key (this ID should not already
@@ -569,11 +355,13 @@ gboolean StgSubClientRead( GIOChannel* channel,
 			  == NULL ); 
 		g_hash_table_insert( global_model_table, &ent->id, ent );
 		
+		PRINT_DEBUG3( "created model %d \"%s\" child of \"%s\"",
+			      ent->id,
+			      ent->name->str,
+			      ent->parent ? ent->parent->name->str:"<none>" ); 
+		
 		// reply with the id of the entity
 		reply->id = ent->id; 
-
-		
-		//reply->id = 99; 
 		reply->action = STG_ACK;
 	      }
 	      break;
@@ -600,7 +388,7 @@ gboolean StgSubClientRead( GIOChannel* channel,
 	      //	   stg_property_string( prop->property ));
 	      //reply->action = STG_NACK;
 	      
-	      PRINT_WARN( "handling a property change" );
+	      //PRINT_WARN( "handling a property change" );
 	      
 	      CEntity* ent = (CEntity*)
 		g_hash_table_lookup( global_model_table, &prop->id );
@@ -716,12 +504,6 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
 
    switch( tos )
      {
-     case STG_TOS_REQUESTREPLY:
-       PRINT_MSG( "Request/reply connection requested" );
-       PRINT_ERR( "Request/Reply not allowed" );
-       exit(-1);
-       g_assert( stg_rr_client_create( greet.pid, client ) );
-       break;
      case STG_TOS_SUBSCRIPTION:
        PRINT_MSG( "Subscription connection requested" );
        g_assert( stg_sub_client_create( greet.pid, client ) );
@@ -871,8 +653,8 @@ void update_client_subscription(  gpointer data, gpointer userdata )
   stg_subscription_t *sub = (stg_subscription_t*)data;
   stg_client_data_t *cli = (stg_client_data_t*)userdata;
   
-  printf( "   updating subscription [%d:%s] for client %p\n",
-	  sub->id, stg_property_string(sub->prop), cli );
+  //printf( "   updating subscription [%d:%s] for client %p\n",
+  //  sub->id, stg_property_string(sub->prop), cli );
 
   stg_property_t* prop = NULL;
 
