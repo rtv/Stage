@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.20 $
+//  $Revision: 1.11.2.21 $
 //
 // Usage:
 //  (empty)
@@ -65,15 +65,6 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
 #ifdef INCLUDE_RTK 
     m_hit_count = 0;
 #endif
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Initialise the device
-//
-bool CLaserDevice::StartUp()
-{
-    return true;
 }
 
 

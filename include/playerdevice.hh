@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.10 $
+//  $Revision: 1.1.2.11 $
 //
 // Usage:
 //  (empty)
@@ -61,7 +61,7 @@ class CPlayerDevice : public CObject
     // Close the device
     //
     public: virtual void Shutdown();
-
+   
     // See if the device is subscribed
     //
     protected: bool IsSubscribed();

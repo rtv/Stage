@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.25 $
+//  $Revision: 1.4.2.26 $
 //
 // Usage:
 //  (empty)
@@ -115,12 +115,12 @@ bool CWorld::Startup()
 
     // Initialise the message router
     //
-    #ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK
     m_router->add_sink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
     m_router->add_sink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
     m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
     m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
-    #endif
+#endif
 
     // Start all the objects
     //
