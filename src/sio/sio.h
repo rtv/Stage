@@ -21,6 +21,9 @@
    /* maps enum'd property codes to strings */
    const char* SIOPropString( stage_prop_id_t id );
 
+   /* returns the number of active connections */
+   int SIOGetConnectionCount();
+
    /* SERVER-ONLY FUNCTIONS */   
    int SIOInitServer( int argc, char** argv );
    int SIOAcceptConnections( void );

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.17 2003-02-10 01:02:03 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.18 2003-02-10 01:02:53 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -520,7 +520,7 @@ int main(int argc, char **argv)
       // if we have spare time, go to sleep
       
 
-      //usleep( 100000 ); // just stop the powerbook getting hot :)
+      usleep( 100000 ); // just stop the powerbook getting hot :)
     }
   
   // clean up and exit

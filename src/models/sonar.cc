@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.cc,v 1.1.2.2 2003-02-09 00:32:17 rtv Exp $
+ * CVS info: $Id: sonar.cc,v 1.1.2.3 2003-02-10 01:02:03 rtv Exp $
  */
 
 #include <assert.h>
@@ -59,16 +59,22 @@ CSonarModel::CSonarModel( int id, char* token, char* color, CEntity *parent )
 // Update the sonar data
 int CSonarModel::Update() 
 { 
+  //PRINT_WARN( "update" );
+
   CEntity::Update();
   
   // is anyone interested in my data? if not, bail here.
   if( !IsSubscribed( STG_PROP_ENTITY_DATA ) )
     return 0;
 
+  //PRINT_WARN( "subscribed" );
+
   // Check to see if it is time to update
   //  - if not, return right away.
   if( CEntity::simtime - m_last_update < m_interval)
     return 0;
+
+  //PRINT_WARN( "time to upate" );
 
   m_last_update = CEntity::simtime;
   
@@ -77,6 +83,8 @@ int CSonarModel::Update()
   
   if( this->power_on )
     {
+      //PRINT_WARN( "power on" );
+      
       // Do each sonar
       for (int s = 0; s < this->sonar_count; s++)
 	{

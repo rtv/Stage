@@ -48,8 +48,12 @@ static struct pollfd listen_poll;
 
 // the current connection details
 static struct pollfd connection_polls[ STG_MAX_CONNECTIONS ];
-static int connection_count;
+static int sio_connection_count;
 
+int SIOGetConnectionCount()
+{
+  return sio_connection_count;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Print the usage string
@@ -276,7 +280,7 @@ int SIOWriteMessage( int con, double simtime, stage_header_type_t type,
   if( con == -1 ) // if ALL CONNECTIONS was requested
     {
       int c;
-      for( c=0; c < connection_count; c++ )
+      for( c=0; c < sio_connection_count; c++ )
 	{
 	  // then write buffer out on the connection
 	  if( SIOWriteBuffer( c, outbuf ) != outbuf->len )
@@ -443,6 +447,10 @@ int SIOInitClient( int argc, char** argv )
   connection_polls[con].fd = socket(AF_INET, SOCK_STREAM, 0);
   connection_polls[con].events = POLLIN; // notify me when data is available
   
+  // switch on the re-use-address option
+  const char on = 1;
+  setsockopt( connection_polls[con].fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
+
   //  printf( "POLLFD = %d\n", m_pose_connections[con].fd );
   
   if( connection_polls[con].fd < 0 )
@@ -479,7 +487,7 @@ int SIOInitClient( int argc, char** argv )
   }
   
   // a client has just the one connection (for now)
-  connection_count = 1;
+  sio_connection_count = 1;
 
   return con;
 }  
@@ -499,12 +507,12 @@ int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
   
   // we loop on a poll until have a sync from all clients or we run
   // out of connections
-  while(  (connection_count > 0) && (syncs < connection_count) ) 
+  while(  (sio_connection_count > 0) && (syncs < sio_connection_count) ) 
     {
       // use poll to see which pose connections have data
       if((readable = 
 	  poll( connection_polls,
-		connection_count,
+		sio_connection_count,
 		timeout )) == -1) 
 	{
 	  PRINT_ERR( "poll(2) returned error)");
@@ -515,7 +523,7 @@ int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
       if( readable > 0 )
 	{
 	  int t;
-	  for( t=0; t<connection_count; t++ )// all the connections
+	  for( t=0; t<sio_connection_count; t++ )// all the connections
 	    {
 	      short revents = connection_polls[t].revents;
 	      //int confd = connection_polls[t].fd;
@@ -638,11 +646,11 @@ int SIOParseCmdLine( int argc, char** argv )
 
    close( connection_polls[con].fd );
 
-   connection_count--;
+   sio_connection_count--;
 
    // shift the rest of the array 1 place left
    int p;
-   for( p=con; p<connection_count; p++ )
+   for( p=con; p<sio_connection_count; p++ )
      {
        // the pollfd array
        memcpy( &(connection_polls[p]), 
@@ -650,7 +658,7 @@ int SIOParseCmdLine( int argc, char** argv )
 	       sizeof( struct pollfd ) );
      }      
 
-   PRINT_DEBUG1( "remaining connections %d", connection_count );
+   PRINT_DEBUG1( "remaining connections %d", sio_connection_count );
  }
 
 int SIOInitServer( int argc, char** argv )
@@ -749,7 +757,7 @@ int SIOAcceptConnections( void )
       
       
       // set the dirty flag for all entities on this connection
-      //DirtyEntities( m_pose_connection_count );
+      //DirtyEntities( m_pose_sio_connection_count );
       
       
       // determine the type of connection, sync or async, by reading
@@ -771,7 +779,7 @@ int SIOAcceptConnections( void )
 	{
 	case STAGE_HELLO: 
 	  PRINT_MSG2( "connection accepted (id: %d fd: %d)", 
-		      connection_count, connfd );
+		      sio_connection_count, connfd );
 	  fflush( stdout );
 	  
 	  retval = 0; //success
@@ -788,9 +796,9 @@ int SIOAcceptConnections( void )
    
       if( retval != -1 ) // if successful
 	{
-	  connection_polls[ connection_count ].fd = connfd;
-	  connection_polls[ connection_count ].events = POLLIN;
-	  connection_count++;
+	  connection_polls[ sio_connection_count ].fd = connfd;
+	  connection_polls[ sio_connection_count ].events = POLLIN;
+	  sio_connection_count++;
 	}
     }
 

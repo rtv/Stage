@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.11 2003-02-09 22:51:50 rtv Exp $
+  $Id: stest.c,v 1.1.2.12 2003-02-10 01:02:03 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -209,7 +209,7 @@ int main( int argc, char** argv )
 
       stage_model_t sonar;
       sonar.parent_id = box.id;
-      strncpy( sonar.token, "box", STG_TOKEN_MAX );
+      strncpy( sonar.token, "sonar", STG_TOKEN_MAX );
       assert( CreateModel( connection,  &sonar ) == 0 );
       
       // define some properties
@@ -227,7 +227,6 @@ int main( int argc, char** argv )
       SIOBufferProperty( props, box.id, STG_PROP_ENTITY_POSE, 
       	 (char*)&pose, sizeof(pose) );
 
-      
       // subscribe to the sonar's data, pose, size and rects.
       int subs[4];
       subs[0] = STG_PROP_ENTITY_DATA;
@@ -260,31 +259,33 @@ int main( int argc, char** argv )
       
       SIOFreeBuffer( props );
 
-      stage_size_t bitmapsize;
+      SetVelocity( connection, box.id, 0.0, 0.0, 2.0 );
 
+      puts( "looping" );
+      
       int c = 0;
       double x = 0;
       double  y = 0;
       double z = 0;
-      while( c < 10 )
+      while( c < 10000000 )
 	{
-	  printf( "cycle %d\n", c++ );
+	  printf( " cycle %d\r", c++ );
 	  
 	  SIOWriteMessage( connection, timestamp, STG_HDR_CONTINUE, NULL, 0 );
 	  
-	  Resize( connection, bitmap.id,  
-	    0.5 + 3.0 * fabs(sin(x)),  0.5 + 3.0 * fabs(cos(x+=0.05)) );
-	  
-	  SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
-	  
-	  if( c % 100 == 0 )
+	  //Resize( connection, bitmap.id,  
+	  // 0.5 + 3.0 * fabs(sin(x)),  0.5 + 3.0 * fabs(cos(x+=0.05)) );
+	 
+	  //SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
+
+	  if( c % 50 == 0 )
 	    {
 	      
-	      Resize( connection, root.id, 
-	            5.0 + 5.0 * fabs(sin(z)), 
-	            5.0 + 5.0 * fabs(cos(z)) );
+	      //Resize( connection, root.id, 
+	      //    5.0 + 5.0 * fabs(sin(z)), 
+	      //    5.0 + 5.0 * fabs(cos(z)) );
 	      
-	      SetResolution( connection, root.id, 3.0 + fmod( z*10, 10) );
+	      //SetResolution( connection, root.id, 3.0 + fmod( z*10, 10) );
 	      
 	      z += 0.1;
 	    }
@@ -302,8 +303,8 @@ int main( int argc, char** argv )
 	    gui.showgrid = 1;
 	    gui.showdata = 1;
 	    
-	    result = SIOWriteMessage( connection, timestamp, 
-	    STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
+	    //result = SIOWriteMessage( connection, timestamp, 
+	    //STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
 	    }
 	   
 	  SIOServiceConnections( &HandleLostConnection,
