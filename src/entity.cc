@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.71 2002-07-09 03:31:56 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.72 2002-07-10 02:00:34 rtv Exp $
  */
 
 #include <math.h>
@@ -1485,7 +1485,7 @@ void CEntity::RtkUpdate()
     }
   else // we need to show and update this figure
     {
-      //rtk_fig_show( this->fig, true );
+      rtk_fig_show( this->fig, true );
 
       // We need to handle mouse dragging by the user.
       // We can only move top-level entitys.

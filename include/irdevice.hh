@@ -13,7 +13,7 @@
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/irdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +47,7 @@ private:
 public: 
   
   CIDARDevice(CWorld *world, CEntity *parent );
-  ~CIDARDevice( void );
+  //~CIDARDevice( void );
 
   // each sensor must transmit over a wide area (45 degrees on the
   // orginal robots), so we do several ray traces per sensor to make
@@ -71,6 +71,22 @@ public:
 
   virtual void TransmitMessage( idartx_t* transmit );
   
+#ifdef INCLUDE_RTK2
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
+
+  // Finalise the rtk gui
+  protected: virtual void RtkShutdown();
+
+  // Update the rtk gui
+  protected: virtual void RtkUpdate();
+  
+  // For drawing the ir message & beams
+  private: rtk_fig_t *data_fig;
+  private: rtk_fig_t *rays_fig;
+
+#endif
+
 };
 
 

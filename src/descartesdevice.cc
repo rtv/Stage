@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 //
 // File: pioneermobiledevice.cc
 // Author: Richard Vaughan, Andrew Howard
@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/descartesdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -27,12 +27,12 @@
 #include <math.h>
 
 //#define DEBUG
+#undef DEBUG
 
 #include "world.hh"
 #include "descartesdevice.hh"
 #include "raytrace.hh"
 
-#undef DEBUG
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
@@ -44,9 +44,10 @@ CDescartesDevice::CDescartesDevice(CWorld *world, CEntity *parent )
 
   // set the Player IO sizes correctly for this type of Entity
   m_data_len = sizeof( player_descartes_data_t );
-  m_command_len = sizeof( player_descartes_cmd_t );
-  m_config_len = 0;// not configurable
-  
+  m_command_len = 0;//sizeof( player_descartes_cmd_t );
+  m_config_len = 1;// not configurable
+  m_reply_len = 1;
+
   m_player.code = PLAYER_DESCARTES_CODE; // from player's messages.h
   
   stage_type = DescartesType;
@@ -97,39 +98,42 @@ void CDescartesDevice::Update( double sim_time )
   if( sim_time - m_last_update >  m_interval )
     {
       m_last_update = sim_time;
-      
+
       if( Subscribed() > 0 )
-	{  
-	  // Get the latest command
-	  //
-	  if( GetCommand( &m_command, sizeof(m_command)) == sizeof(m_command))
-	    {
-	      // check the timestamp to see if this is a new command
-	      double commandtime = 
-		m_info_io->command_timestamp_sec +
-		m_info_io->command_timestamp_usec / 1000000.0;
-
-	      //#ifdef DEBUG
-	      //printf( "\nDESCARTE commandtime: %.6f last: %.6f\n", 
-	      //      commandtime, lastcommandtime );
-	      //#endif
+	{
+	  void *client;
+	  player_descartes_config_t cfg;
+	  
+	  // Get config
+	  int res = GetConfig( &client, &cfg, sizeof(cfg));
+	  
+	  switch( res )
+	    {   
+	    case -1: // error
+	      PRINT_ERR( "get config failed" );
+	      PutReply(client, PLAYER_MSGTYPE_RESP_NACK ); // not happy
+	      break;
 	      
-	      if( commandtime != lastcommandtime )
-		{
-		  //#ifdef DEBUG
-		  //printf( "DESCARTE new command!\n" );
-		  //#endif
-
-		  lastcommandtime = commandtime;
-		  ParseCommandBuffer();    // find out what to do    
-		}
+	    case 0:
+	      // nothing available - nothing to do
+	      break;
+	      
+	    case sizeof(cfg): // a good-sized config message!
+	      ParseConfig(&cfg);    // find out what to do    
+	      PutReply(client, PLAYER_MSGTYPE_RESP_ACK ); // say thankyou
+	      break;
+	    
+	    default:
+	      PRINT_ERR( "wierd result" );
+	      PutReply(client, PLAYER_MSGTYPE_RESP_NACK ); // not happy
+	      break;
 	    }
 
 	  Servo(); // set speed and turnrate to achieve requested
 	  // speed and heading
-
+	  
 	  Move();      // use CPositionDevice's movement model
-  
+	  
 	  ComposeData();     // report the new state of things
 	  PutData( &m_data, sizeof(m_data)  );     // generic device call
 	}
@@ -234,14 +238,14 @@ CEntity* CDescartesDevice::TestCollision(double px, double py, double pth)
 ///////////////////////////////////////////////////////////////////////////
 // Parse the command buffer to extract commands
 //
-void CDescartesDevice::ParseCommandBuffer()
+void CDescartesDevice::ParseConfig( player_descartes_config_t* cfg )
 {
-  goalspeed = 0.001 * ntohs(m_command.speed); // convert mm to m
-  goaldistance = 0.001 * ntohs(m_command.distance); // convert mm to m
-  goalheading = DTOR(ntohs(m_command.heading)); // convert deg to rad
-
+  goalspeed = 0.001 * ntohs(cfg->speed); // convert mm to m
+  goaldistance = 0.001 * ntohs(cfg->distance); // convert mm to m
+  goalheading = DTOR(ntohs(cfg->heading)); // convert deg to rad
+  
   distance_travelled = 0.0;
-
+  
 #ifdef DEBUG
   printf( "STAGE: Descartes command: speed:%.2f heading:%.2f(%.0f) distance:%.2f\n",
 	  goalspeed, goalheading, RTOD(goalheading), goaldistance );
@@ -292,17 +296,17 @@ void CDescartesDevice::Servo()
 if( distance_travelled >= goaldistance ) speed = 0;
 
 //  #ifdef DEBUG
-//   printf( "CDescartesDevice::Servo() \n"
-//  	 "heading: %.2f (%.2f) "
-//  	 "speed: %.2f (%.2f) "
-//  	 "distance: %.2f (%.2f)\n"
-//  	 "herr = %.2f\n"
-//  	 "v = %.2f, w = %.2f\n",
-//  	 odo_pth, goalheading, 
-//  	 speed, goalspeed, 
-//  	 distance_travelled, goaldistance,
-//  	 heading_error, speed, turnrate);
-//  #endif
+// printf( "CDescartesDevice::Servo() \n"
+//	 "heading: %.2f (%.2f) "
+//	 "speed: %.2f (%.2f) "
+//	 "distance: %.2f (%.2f)\n"
+//	 "herr = %.2f\n"
+//	 "v = %.2f, w = %.2f\n",
+//	 odo_pth, goalheading, 
+//	 speed, goalspeed, 
+//	 distance_travelled, goaldistance,
+//	 heading_error, speed, turnrate);
+//#endif
  
  // set the control variables
  com_vr = speed;

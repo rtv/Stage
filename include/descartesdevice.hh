@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/descartesdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -49,7 +49,7 @@ public: virtual CEntity* TestCollision(double px, double py, double pth);
  // Extract command from the command buffer
  //
  //private: void ParseCommandBuffer(player_position_cmd_t &command );
- private: void ParseCommandBuffer( void );
+ private: void ParseConfig( player_descartes_config_t* cfg );
  
  // Compose the reply packet
  //
@@ -62,7 +62,7 @@ public: virtual CEntity* TestCollision(double px, double py, double pth);
 
  // Current command and data buffers
  // - these hide the positiondevice buffers with the same names
- private: player_descartes_cmd_t m_command;
+  //private: player_descartes_cmd_t m_command;
  private: player_descartes_data_t m_data;
  
 private: double lastxpos, lastypos;

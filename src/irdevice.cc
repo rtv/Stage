@@ -13,7 +13,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 #include <math.h>
@@ -24,15 +24,19 @@
 
 #include <iostream>
 
-#define DEBUG
-
 #include "world.hh"
 #include "irdevice.hh"
 #include "raytrace.hh"
 
-#define IDAR_MAX_RANGE 1.5
+#define DEBUG
 //#undef DEBUG
-// constructor
+
+// control display of player index in device body
+//#define RENDER_INDEX
+
+#define IDAR_FOV        M_PI/7.0
+#define IDAR_SCANLINES        5
+#define IDAR_MAX_RANGE       1.0
 
 // handy circular normalization macros
 #define NORMALIZECIRCULAR_INT(value,max) (((value%max)+max)%max)
@@ -41,7 +45,7 @@
 #define NORMALIZERADIANS(value)  NORMALIZECIRCULAR_DOUBLE(value,TWOPI)
 #define NORMALIZEDEGREES(value)  NORMALIZECIRCULAR_DOUBLE(value,360.0)
 
- 
+// constructor 
 CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
   : CEntity(world, parent )
 {
@@ -66,8 +70,8 @@ CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
 
   m_max_range = IDAR_MAX_RANGE;
     
-  size_x = 0.11; // this is the actual physical size of the robot
-  size_y = 0.11;
+  size_x = 0.03; // this is the actual physical size of the HRL device
+  size_y = 0.02; // but can be changed in the world file to suit
 
   // but i want it to be big enough to be hit in a sparse scan of the sensor
   // chord
@@ -78,21 +82,23 @@ CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
   //m_size_x *= 1.1;
 
   // Set the default shape
-  shape = ShapeCircle;
+  shape = ShapeRect;
 
   m_interval = 0.001; // updates frequently,
   // but only has work to do when it receives a command
   // so it's not a CPU hog unless we send it lots of messages
  
-  m_num_scanlines = 5; // 9 degree intervals with 5 lines in 8 sensors
-  m_angle_per_sensor = M_PI / 4.0;
+  // init the message buffer
+  memset( &recv, 0, sizeof(recv) );
+
+  m_num_scanlines = IDAR_SCANLINES; 
+  m_angle_per_sensor = IDAR_FOV;
   m_angle_per_scanline = m_angle_per_sensor / m_num_scanlines;
 }
 
-CIDARDevice::~CIDARDevice( void )
-{
-
-}
+//CIDARDevice::~CIDARDevice( void )
+//{
+//}
 
 void CIDARDevice::Update( double sim_time ) 
 {
@@ -106,7 +112,13 @@ void CIDARDevice::Update( double sim_time )
   
   // dump out if noone is subscribed
   if(!Subscribed())
-    return;
+    {
+#ifdef INCLUDE_RTK2
+      // unrender the message 
+      rtk_fig_clear(this->rays_fig);
+#endif     
+      return; 
+    }
 
   // Check to see if it is time to update
   //  - if not, return right away.
@@ -135,17 +147,26 @@ void CIDARDevice::Update( double sim_time )
       switch( cfg.instruction )
 	{
 	case IDAR_TRANSMIT:
+	  //puts( "TX" );
 	  TransmitMessage( &(cfg.tx) );
+	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK );
+	
 	  break;
 	  
 	case IDAR_RECEIVE:
+	  //puts( "RX" );
 	  // send back the currently stored message
 	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &recv, sizeof(recv));
-	  // zero the buffer
+	  // and wipe the message (zero the buffer)
 	  memset( &recv, 0, sizeof(recv) );
+#ifdef INCLUDE_RTK2
+	  // unrender the message 
+	  rtk_fig_clear(this->data_fig);
+#endif
 	  break;
 	  
 	case IDAR_RECEIVE_NOFLUSH:
+	  //puts( "RX_NF" );
 	  // send back the currently stored message
 	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &recv, sizeof(recv));
 	  // don't clear the current mesg
@@ -186,7 +207,11 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
   GetGlobalPose( ox, oy, oth ); // start position for the ray trace
 
   double sensor_bearing = oth;
-	
+
+#ifdef INCLUDE_RTK2
+  rtk_fig_clear(this->rays_fig);
+#endif
+  
   for( int scanline=0; scanline < m_num_scanlines; scanline++ )
     {
 	      
@@ -219,20 +244,26 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 		
 	  //printf( "IDARReceive == %d\n", IDARReceive );
 
-	  // if it's not me or my parent, and it's not
-	  // transparent to idar, i'll send a message to it
-	  if( (ent != (CEntity*)this) && (ent != m_parent_entity) 
-	      && ( ent->idar_return != IDARTransparent) )
+	  // if it's not me or my parent or a sibling and it's not
+	  // transparent to idar, i'll try sending a message to it
+	  if( (ent != (CEntity*)this) && 
+	      (ent != this->m_parent_entity) &&
+	      (ent->m_parent_entity != this->m_parent_entity) &&
+	      ( ent->idar_return != IDARTransparent) )
 	    {		    
-	
-	      // idar objects are rendered too big, so the 
-	      // normal range measurements will be too short
-	      range = lit.GetRange();// - m_size_x/2.0;
+	      range = lit.GetRange();
 	      assert( range >= 0 );
 		   
 	      //printf( "s:%d.%d range: %.2f\n",
 	      //    s, scanline, range );
 
+	      //printf( "hit entity %p (%d:%d:%d)\n",
+	      //     ent, ent->m_player.port,  ent->m_player.code,
+	      //     ent->m_player.index );
+
+#ifdef INCLUDE_RTK2
+	      rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
+#endif     
 	      uint8_t intensity;
 		    
 	      switch( ent->idar_return )
@@ -253,7 +284,9 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 				      intensity,
 				      false );
 		  
-		  break;
+		  // continue to next case, since IR receivers are
+		  // also reflectors.
+		  //break;
 		  
 		case IDARReflect: // it's a reflector (ie. an obstacle)
 		  //printf( "REFLECT from %p type %d idar_return %d\n",
@@ -275,7 +308,10 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 		  
 	      break; // out of the while loop because we hit something
 	    }
-	} // !!
+	}
+#ifdef INCLUDE_RTK2
+      rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
+#endif     // !!
       // record the range this ray reached in mm
       //m_data.rx[s].ranges[scanline] = (uint16_t)(range*1000.0);
       //printf( "\n range: %.2f %d\n", 
@@ -298,23 +334,27 @@ bool CIDARDevice::ReceiveMessage( CEntity* sender,
   //  sensor, len, intensity, reflection );
   
   // dump out if noone is subscribed
-  if(!Subscribed())
-    return false;
+  //if(!Subscribed())
+  //return false;
+
+
+  //PRINT_DEBUG( "SUBSCRIBED" );
 
   // get the current accumulated message buffer from the published location
   // it may have been cleared by a reading process since we last looked at it
   //assert( GetData( &m_data, m_data_len );
   
+  //printf( "new int: %d len: %d \t\t current: int: %d len: %d\n",
+  //  intensity, len, recv.intensity, recv.len );
+
   // we only accept this message if it's the most intense thing we've seen
   if( intensity > recv.intensity )
     {
       // store the message
 
-      //printf( "!! Accepted !!" );
-           
       // copy the message into the data buffer
       memcpy( &recv.mesg, mesg, len );
-      
+
       recv.len = len;
       recv.intensity = intensity;
       recv.reflection = (uint8_t)reflection;
@@ -322,6 +362,25 @@ bool CIDARDevice::ReceiveMessage( CEntity* sender,
       // record the time we received this message
       recv.timestamp_sec = m_world->m_sim_timeval.tv_sec;
       recv.timestamp_usec = m_world->m_sim_timeval.tv_usec;
+
+#ifdef INCLUDE_RTK2
+      // render the message we received
+      rtk_fig_clear(this->data_fig);
+      
+      // room for the message in hex text
+      char message[ 3 * IDARBUFLEN + 6];
+
+      // print the message in hex, with a space between each char
+      for( int c=0; c<recv.len; c++ )
+	sprintf( message + 3*c, "%2X ", recv.mesg[c] );
+      message[ 3 * recv.len ] = 0; // terminate
+      
+      // add the intensity
+      sprintf( message, "%s (%d)", message, recv.intensity );
+  
+      
+      rtk_fig_text(this->data_fig, 0,0,0, message);
+#endif
       
       return true;
     }
@@ -441,3 +500,87 @@ uint8_t CIDARDevice::LookupIntensity( uint8_t transmit_intensity,
 
 
 
+#ifdef INCLUDE_RTK2
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CIDARDevice::RtkStartup()
+{
+  CEntity::RtkStartup();
+  
+  // Create a figure representing this object
+  this->data_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+  this->rays_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+  
+  // Set the color
+  rtk_fig_color_rgb32(this->data_fig, this->color);
+  rtk_fig_color_rgb32(this->rays_fig, RGB(200,200,200) );
+  
+#ifdef RENDER_INDEX
+  // render our index number
+  char buf[16];
+  sprintf( buf,"%d", m_player.index );
+  rtk_fig_text(this->fig, 0, 0, 0, buf );
+#endif
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CIDARDevice::RtkShutdown()
+{
+  // Clean up the figure we created
+  if(this->data_fig) rtk_fig_destroy(this->data_fig);
+  if(this->rays_fig) rtk_fig_destroy(this->rays_fig);
+  
+  CEntity::RtkShutdown();
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the rtk gui
+void CIDARDevice::RtkUpdate()
+{
+  CEntity::RtkUpdate();
+   
+  // Get global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
+  rtk_fig_origin(this->data_fig, gx, gy, gth );
+  rtk_fig_origin(this->rays_fig, gx, gy, gth );
+
+  if( m_world->ShowDeviceData( this->stage_type) )
+    {
+      rtk_fig_show( this->data_fig, true );
+      rtk_fig_show( this->rays_fig, true );
+    }
+  else
+    {
+      rtk_fig_show( this->data_fig, false );
+      rtk_fig_show( this->rays_fig, false );
+    }
+  
+  //if( Subscribed() < 1 )
+  //{
+  //  rtk_fig_clear( this->rays_fig );
+  //  rtk_fig_clear( this->data_fig );
+  // }
+
+    // convert from integer mm to double m
+    //    double range = (double)ntohs(data.ranges[s]) / 1000.0;
+
+	//if( range < max_range )
+    // {
+    //    double x1 = ox;
+    //    double y1 = oy;
+    //    double x2 = x1 + range * cos(oth); 
+    //    double y2 = y1 + range * sin(oth);       
+    //    
+    //    rtk_fig_line(this->data_fig, x1, y1, x2, y2 );
+    //  }
+    //}
+  //}  
+}
+
+#endif

@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, sonar and gps
-# CVS: $Id: pherobot.world,v 1.1 2002-07-09 02:59:51 rtv Exp $
+# CVS: $Id: pherobot.world,v 1.2 2002-07-10 02:00:34 rtv Exp $
 
 environment
 (
@@ -10,19 +10,32 @@ environment
 
 gui
 (
-  size [810.000 753.000]
-  origin [5.752 5.191]
-  scale 0.012
+  size [559.000 421.000]
+  origin [4.674 4.075]
+  scale 0.002
   grid [0.2 1]
   showgrid 1
 )
 
-define pherobot descartes( idar() )
 
-pherobot( pose [ 5.870 2.721 0.000 ] port 6665 )
-pherobot( pose [ 4.506 4.293 0.000 ] port 6666 )
-pherobot( pose [ 3.830 3.004 0.000 ] port 6667 )
-pherobot( pose [ 5.869 4.008 0.000 ] port 6668 )
+define pherobot descartes
+( 
+# 8 IDARS arranged radially 3.5cm from center
+
+  idar( index 0 pose [  0.035  0.000   0 ] )
+  idar( index 1 pose [  0.025  0.025  45 ] )
+  idar( index 2 pose [  0.000  0.035  90 ] )
+  idar( index 3 pose [ -0.025  0.025 135 ] )
+  idar( index 4 pose [ -0.035  0.000 180 ] )
+  idar( index 5 pose [ -0.025 -0.025 225 ] )
+  idar( index 6 pose [  0.000 -0.035 270 ] )
+  idar( index 7 pose [  0.025 -0.025 315 ] )
+)
+
+pherobot( pose [ 4.687 3.788 0.000 ] port 6665 )
+pherobot( pose [ 4.689 4.333 0.000 ] port 6666 )
+pherobot( pose [ 4.357 4.191 0.000 ] port 6667 )
+pherobot( pose [ 5.019 4.154 0.000 ] port 6668 )
 
 
 
