@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.7 2002-11-02 02:34:14 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.8 2002-11-02 02:36:11 inspectorg Exp $
  */
 
 
@@ -283,8 +283,8 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // Add some menu items
   this->file_menu = rtk_menu_create(this->canvas, "File");
   this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
-  this->stills_menu = rtk_menu_create_sub(this->file_menu, "Capture /_stills");
-  this->movie_menu = rtk_menu_create_sub(this->file_menu, "Capture /_movie");
+  this->stills_menu = rtk_menu_create_sub(this->file_menu, "Capture stills");
+  this->movie_menu = rtk_menu_create_sub(this->file_menu, "Capture movie");
   this->exit_menuitem = rtk_menuitem_create(this->file_menu, "Exit", 0);
 
   this->stills_jpeg_menuitem = rtk_menuitem_create(this->stills_menu, "JPEG format", 1);
