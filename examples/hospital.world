@@ -1,0 +1,14 @@
+robots = 12
+robot_colors = 0 1 2 3 4 5 0 1 2 3 4 5 
+window_width = 800
+window_height = 450
+window_x_pos = 0
+window_y_pos = 0
+window_x_scroll = 100
+window_y_scroll = 700
+pixels_per_meter = 14
+robot_width = 0.6
+robot_length = 0.6
+environment_file = hospital.pnm
+position_file = hospital.pos
+quit_time = 0
