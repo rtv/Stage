@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -46,7 +46,8 @@ enum EWorldLayer
 {
     layer_obstacle = 0,
     layer_laser = 1,
-    layer_vision = 2
+    layer_beacon = 2,
+    layer_vision = 3,
 };
 
 
@@ -120,9 +121,14 @@ class CWorld : public CObject
     private: Nimage* m_img; //foreground img;
 
     // Laser image
-    // Store laser data (obstacles and beacons
+    // Store laser data (obstacles and beacons)
     //
     private: Nimage *m_laser_img;
+
+    // Laser beacon image
+    // Stores laser beacon id's
+    //
+    private: Nimage *m_beacon_img;
 
     // Vision image
     // Stores vision data

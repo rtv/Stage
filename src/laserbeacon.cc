@@ -8,10 +8,11 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
-//  (empty)
+//  This object acts a both a simple laser reflector and a more complex
+//  laser beacon with an id.
 //
 // Theory of operation:
 //  (empty)
@@ -26,7 +27,6 @@
 
 #define ENABLE_TRACE 1
 
-#include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
 #include "laserbeacon.hh"
 
@@ -37,6 +37,8 @@
 CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
+    m_beacon_id = 0;
+    
     // Set the initial map pose
     //
     m_gx = m_gy = m_gth = 0;
@@ -45,6 +47,26 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
         m_mouse_radius = (m_parent == m_world ? 0.2 : 0.0);
         m_draggable = (m_parent == m_world);
     #endif
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CLaserBeacon::Startup(RtkCfgFile *cfg)
+{
+    if (!CObject::Startup(cfg))
+        return false;
+    
+    cfg->BeginSection(m_id);
+   
+    // Read in our beacon id
+    //   
+    m_beacon_id = cfg->ReadInt("id", 0, "");
+
+    cfg->EndSection();
+
+    return true;
 }
 
 
@@ -59,15 +81,16 @@ void CLaserBeacon::Update()
     // Undraw our old representation
     //
     m_world->SetCell(m_gx, m_gy, layer_laser, 0);
+    m_world->SetCell(m_gx, m_gy, layer_beacon, 0);
     
     // Update our global pose
     //
     GetGlobalPose(m_gx, m_gy, m_gth);
     
     // Draw our new representation
-    // Values > 1 are interpreted as intensities
     //
     m_world->SetCell(m_gx, m_gy, layer_laser, 2);
+    m_world->SetCell(m_gx, m_gy, layer_beacon, m_beacon_id);
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.8 $
+//  $Revision: 1.2.2.9 $
 //
 // Usage:
 //  (empty)
@@ -136,6 +136,29 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
     // Set data flag to indicate data is available
     //
     m_info->data_len = len;
+
+    m_robot->UnlockShmem();
+    
+    return len;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Read from the data buffer
+// Returns the number of bytes copied
+//
+size_t CPlayerDevice::GetData(void *data, size_t len)
+{
+    m_robot->LockShmem();
+    
+    // Take the smallest number of bytes
+    // This avoids an overflow of either buffer
+    //
+    len = min(len, m_data_len);
+
+    // Copy the data (or as much as we were given)
+    //
+    memcpy(data, m_data_buffer, len);
 
     m_robot->UnlockShmem();
     

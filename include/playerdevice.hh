@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -70,6 +70,11 @@ class CPlayerDevice : public CObject
     // Returns the number of bytes copied
     //
     protected: size_t PutData(void *data, size_t len);
+
+    // Read from the data buffer
+    // Returns the number of bytes copied
+    //
+    public: size_t GetData(void *data, size_t len);
 
     // Read from the command buffer
     // Returns the number of bytes copied

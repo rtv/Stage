@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.11 $
+//  $Revision: 1.4.2.12 $
 //
 // Usage:
 //  (empty)
@@ -50,6 +50,7 @@ CWorld::CWorld()
     m_bimg = NULL;
     m_img = NULL;
     m_laser_img = NULL;
+    m_beacon_img = NULL;
     m_vision_img = NULL;
 
     // Initialise clocks
@@ -76,6 +77,8 @@ CWorld::~CWorld()
         delete m_img;
     if (m_laser_img)
         delete m_laser_img;
+    if (m_beacon_img)
+        delete m_beacon_img;
     if (m_vision_img)
         delete m_vision_img;
 }
@@ -252,6 +255,11 @@ bool CWorld::InitGrids(const char *env_file)
         }
     }
 
+    // Clear beacon image
+    //
+    m_beacon_img = new Nimage(width, height);
+    m_beacon_img->clear(0);
+    
     // Clear vision image
     //
     m_vision_img = new Nimage(width, height);
@@ -279,6 +287,8 @@ BYTE CWorld::GetCell(double px, double py, EWorldLayer layer)
             return m_img->get_pixel(ix, iy);
         case layer_laser:
             return m_laser_img->get_pixel(ix, iy);
+        case layer_beacon:
+            return m_beacon_img->get_pixel(ix, iy);
         case layer_vision:
             return m_vision_img->get_pixel(ix, iy);
     }
@@ -305,6 +315,9 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, BYTE value)
             break;
         case layer_laser:
             m_laser_img->set_pixel(ix, iy, value);
+            break;
+        case layer_beacon:
+            m_beacon_img->set_pixel(ix, iy, value);
             break;
         case layer_vision:
             m_vision_img->set_pixel(ix, iy, value);
@@ -361,6 +374,9 @@ void CWorld::SetRectangle(double px, double py, double pth,
             break;
         case layer_laser:
             m_laser_img->draw_rect(rect, value);
+            break;
+        case layer_beacon:
+            m_beacon_img->draw_rect(rect, value);
             break;
         case layer_vision:
             m_vision_img->draw_rect(rect, value);

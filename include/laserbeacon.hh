@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -34,10 +34,18 @@ class CLaserBeacon : public CObject
     // Default constructor
     //
     public: CLaserBeacon(CWorld *world, CObject *parent);
+
+    // Startup routine
+    //
+    public: virtual bool Startup(RtkCfgFile *cfg);
     
     // Update the device
     //
     public: virtual void Update();
+
+    // Beacon id
+    //
+    private: int m_beacon_id;
 
     // Current pose
     //

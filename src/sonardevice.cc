@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.9 $
+//  $Revision: 1.5.2.10 $
 //
 // Usage:
 //  (empty)
@@ -336,6 +336,11 @@ void CSonarDevice::GetSonarPose(int s, double &px, double &py, double &pth)
 	      xx += 0.172 * cos( tangle );
 	      yy += 0.172 * sin( tangle );
 	      break; // -90 deg
+        default:
+          angle = 0;
+          xx = 0;
+          yy = 0;
+          break;
 #endif
 	    }
 

@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.9 2000-12-19 02:01:07 ahoward Exp $
+# $Id: Makefile,v 1.9.2.10 2001-01-16 02:10:56 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -14,7 +14,7 @@ CFLAGS = -I../include -I$(PLAYERSRC)/include -I/usr/lib/g++-include -I/usr/X11R6
 OBS = world.o image.o \
 		object.o objectfactory.o \
 		playerrobot.o playerdevice.o \
-		pioneermobiledevice.o laserdevice.o \
+		pioneermobiledevice.o laserdevice.o beacondevice.o \
 		visiondevice.o ptzdevice.o sonardevice.o \
 		boxobstacle.o \
 		laserbeacon.o visionbeacon.o

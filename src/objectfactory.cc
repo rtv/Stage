@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -35,14 +35,15 @@
 #include "laserbeacon.hh"
 #include "visionbeacon.hh"
 
-// Player objects
+// Player devices
 //
 #include "playerrobot.hh"
 #include "pioneermobiledevice.hh"
+#include "sonardevice.hh"
 #include "laserdevice.hh"
 #include "ptzdevice.hh"
 #include "visiondevice.hh"
-#include "sonardevice.hh"
+#include "beacondevice.hh"
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -91,14 +92,6 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
         return new CPioneerMobileDevice(world, parent, robot);
     }
     
-    // Create laser device
-    //
-    if (strcmp(type, "laser") == 0)
-    {
-        FIND_PLAYER_ROBOT();
-        return new CLaserDevice(world, parent, robot);
-    }
-
     // Create sonar device
     //
     if (strcmp(type, "sonar") == 0)
@@ -107,6 +100,14 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
         return new CSonarDevice(world, parent, robot);
     }
 
+    // Create laser device
+    //
+    if (strcmp(type, "laser") == 0)
+    {
+        FIND_PLAYER_ROBOT();
+        return new CLaserDevice(world, parent, robot);
+    }
+    
     // Create ptz camera device
     //
     if (strcmp(type, "ptzcamera") == 0)
@@ -129,6 +130,20 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
         return new CVisionDevice(world, parent, robot, ptz);
     }
     
+    // Create beacon detector device
+    //
+    if (strcmp(type, "beacon") == 0)
+    {
+        FIND_PLAYER_ROBOT();
+        CLaserDevice *laser = (CLaserDevice*) parent->FindAncestor(typeid(CLaserDevice));
+        if (laser == NULL)
+        {
+            MSG("beacon device requires laser as ancestor; ignoring");
+            return NULL;
+        }      
+        return new CBeaconDevice(world, parent, robot, laser);
+    }
+
     return NULL;
 }
 
