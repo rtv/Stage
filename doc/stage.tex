@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.7 2002-06-11 00:14:40 inspectorg Exp $
+% CVS: $Id: stage.tex,v 1.8 2002-06-11 02:53:55 rtv Exp $
 
 \documentclass[11pt]{report}
 
@@ -27,6 +27,8 @@
 \newenvironment{xarg}[1]{\noindent{\tt #1}\\\hspace*{2em}\begin{minipage}[t]{5in}}{\end{minipage}\vspace*{1em}}
 
 \def\VERSION {1.2}
+\def\HOMEPAGE {{\tt http://playerstage.sourceforge.net}}
+\def\SFPAGE {{\tt http://sourceforge.net/projects/playerstage/}}
 
 \begin{document}
 \setcounter{page}{0}
@@ -34,24 +36,36 @@
 
 \titlepage
 
-\begin{tabular}{lcr}
-  \begin{tabular}{c}
-	Player/Stage project\\
-        \includegraphics{notext_ps_logo}
-   \end{tabular}
-  &
-  \hspace{5cm}
-  &
-  \begin{tabular}{r}
-    {\bf USC Robotics Laboratory}\\
-    University of Southern California\\
-    Los Angeles, California, USA\\
-    \vspace*{2em}\\
+% \begin{tabular}{lcr}
+%   \begin{tabular}{c}
+% 	Player/Stage project\\
+%         \includegraphics{notext_ps_logo}
+%    \end{tabular}
+%   &
+%   \hspace{5cm}
+%   &
+%   \begin{tabular}{r}
+%     {\bf USC Robotics Laboratory}\\
+%     University of Southern California\\
+%     Los Angeles, California, USA\\
+%     \vspace*{2em}\\
+%     {\bf Information Sciences Laboratory}\\
+%     HRL Laboratories\\
+%     Malibu, California, USA\\
+%   \end{tabular}
+% \end{tabular}
+
+\begin{flushright}
+   \begin{tabular}{r}
+     {\bf USC Robotics Laboratory}\\
+     University of Southern California\\
+     Los Angeles, California, USA\\
+     \vspace*{2em}\\
     {\bf Information Sciences Laboratory}\\
-    HRL Laboratories\\
-    Malibu, California, USA\\
-  \end{tabular}
-\end{tabular}
+     HRL Laboratories\\
+     Malibu, California, USA\\
+   \end{tabular}
+\end{flushright}
 
   \vspace{5cm}	
   \centerline{ \Huge{Stage}}
@@ -63,7 +77,7 @@
 
   \centerline{This document may not contain the most current documentation on}
   \centerline{Stage.  For the latest documentation, consult the Player/Stage homepage:}
-  \centerline{{\tt http://playerstage.sourceforge.net}}
+  \centerline{\HOMEPAGE}
 
   \vspace{4cm}
 
@@ -86,44 +100,52 @@
 
   \section{What is Stage?}
 
-    Stage simulates mobile robots and sensors in a two-dimensional
-    bitmapped environment containing a variety of objects. Robots are
-    controlled through Player. Player provides a powerful, flexible
-    interface to the robots; Stage provides virtual devices for
-    Player.  Various sensors and actuators are provided, including
-    sonar, scanning laser rangefinders, vision (color blob detection),
+    Stage simulates a population of mobile robots, sensors and objects
+    in a two-dimensional bitmapped environment. Stage is designed to
+    support research into multi-agent autonomous systems, so it
+    provides fairly simple, computationally cheap models of lots of
+    devices rather than attempting to emulate any device with great
+    fidelity. Several researchers have found this to be a useful
+    approach.
+
+    Stage devices are usually controlled through \emph{Player}; a
+    networked robot server. Player comes with a collection of device
+    drivers for interfacing with real robots and sensors. Stage
+    provides populations of virtual devices for Player. Users write
+    robot controllers and sensor algorithms as 'clients' to the Player
+    'server'. Typically, clients cannot tell the difference between
+    the real robot devices and their simulated Stage equivalents
+    (unless they try very hard). We have found that clients developed
+    using Stage will work with little or no modification with the real
+    robots and vice versa. Thus Stage allows rapid prototyping of
+    controllers destined for real robots. Stage also allows
+    experiments with realistic robot devices you don't happen to have.
+  
+    Various sensors and actuators are provided, including sonar,
+    scanning laser rangefinders, vision (color blob detection),
     odometry, and both differential and omni-drive platforms.
 
-	Stage is designed to support research into multi-agent
-    intelligent autonomous systems.  Stage originated at the USC
-    Robotics Research Labs to . One of the authors (
+  \section{How to get Stage and related software}
 
-  \section{How to get Stage}
+    The primary source for all things Player and Stage is the project
+    homepage:\\\\ \indent \HOMEPAGE\\	
+	
+   \noindent Official source releases, access to the CVS development
+   tree, bug tracking, user mailing lists, etc.~ is available from the
+   Sourceforge project management page:\\\\\indent \SFPAGE\\
 
-    The primary source for all things Player and Stage is:
-      \begin{verbatim}
-      http://playerstage.sourceforge.net
-      \end{verbatim}	
-   Official releases are available as source tarballs at:
-      \begin{verbatim}
-      http://playerstage.sourceforge.net
-      \end{verbatim}
-   The current development source is available by anonymous CVS from:
-      \begin{verbatim}
-      http://playerstage.sourceforge.net
-      \end{verbatim}
-The current release is Stage-\VERSION.
+   \noindent The current release is Stage-\VERSION. A tarball {\tt Stage-\VERSION.src.tgz} should be available at:\\\\ \indent http://sourceforge.net/project/showfiles.php?group\_id=42445\\
+
+	Previous versions were significantly different and this manual
+   does not apply to them.
+
 
   \section{What's in the Package?}
 
     In the release tarball you will find:
       \begin{itemize}    
-      \item stage    - the simulation engine.
-      %\item manager  - a program for synchronizing several Stages distributed across
-      %      multiple hosts. Experimental.
-      %\item truthlog - a utility for logging the positions of all Stage's objects
-      %	    (currently broken).
-      \item Some example environments and setup files.
+      \item C++ source code for 'stage' the simulation engine.
+      \item Example environments and setup files.
       \end{itemize}
 
   \section{Requirements}
@@ -137,30 +159,13 @@ The current release is Stage-\VERSION.
               TCP/IP, POSIX threads.
 	Optional (but highly recommended): X11R6, GTK++.
   
-  \section{Related Packages}
-
-    A number of Player/Stage related packages can be found on the 
-    Player website:
-      \begin{verbatim}
-      http://robotics.usc.edu/player
-      \end{verbatim}
-    Here you will find:
-      \begin{itemize}
-      \item Player : a networked robot device server.
-      \item Stage : a multi-robot simulator.
-      \item PlayerTools : a set of useful tools for interacting with
-            Player/Stage.
-      \item Sample clients for Player in C, Java and Python.
-      \end{itemize}
-
   \section{Ownership}
 
-    \noindent Stage is released under the GNU Public License.
+    Stage is released under the GNU General Public
+    License. Stage programs, images, examples, source code and
+    documentation are copyrighted by their their authors.
 
-    \noindent Stage programs, images, examples, source code and documentation are
-    copyright (c) University of Southern California 1998-2001.
-
-    \noindent Stage was created by:
+\subsection{Authors}
       \begin{itemize}
       \item[] Richard Vaughan [rtv@sourceforge.net]
       \item[] Andrew Howard [inspectorg@sourceforge.net]
@@ -170,20 +175,26 @@ The current release is Stage-\VERSION.
       \item[] Jakob Fredslund [jakobf@robotics.usc.edu]
       \end{itemize}
 
+	See your name here by contributing devices, superior
+	algorithms, bugfixes, examples, etc.
+
   \section{Bugs}
   
-    This is research software, fresh off the presses.  As such, it is
-    bound to contain bugs, despite our diligent testing.  If you
+    This is research software and it is constantly evolving.  As such,
+    it is bound to contain bugs, despite our diligent testing.  If you
     manage to break something, or if some aspect of Stage's behavior
-    seems wrong or non-intuitive, let us know.  Email should be sent
-    to Richard Vaughan {\tt vaughan@hrl.com} or Andrew Howard {\tt
-    ahoward@usc.edu}.  Include as much information as possible,
+    seems wrong or non-intuitive, let us know. If you have a problem,
+    please check the website, bug tracking logs and mailing lists. If
+    you can't find an answer there, use the bug tracker to tell us
+    about the problem.
+
+When submitting bugs, include as much information as possible,
     including the Stage version, OS type and version, and any output
     messages.  A detailed description of what happened will enable us
     (hopefully) to repeat and analyze the problem.  Of course, there
-    is NO WARRANTY on this software, and we are not paid to maintain
-    it, so there is no guarantee that we will fix your problem.  But
-    we will try :).
+    is NO WARRANTY on this software, and no guarantee that we will fix
+    your problem.  But we use Stage for our research and we want it to
+    work properly, so we will do our best.
 
   \section{Names}
     
@@ -206,9 +217,43 @@ The current release is Stage-\VERSION.
 
   \section{Acknowledgements}
 
-    Stage's development is supported at the University of Southern
-    California by DARPA's TMR and MARS programs, and by an NSF grant.
-    Richard Vaughan now works for HRL Laboratories, Malibu, CA.
+Stage originated at the University of Southern California Robotics
+    Labs. Support at USC has come from DARPA grant DABT63-99-1-0015
+    (MARS), NSF grant ANI-9979457 (SCOWR), DARPA contract
+    DAAE07-98-C-L028 (TMR), ONR Grants N00014-00-1-0140 and
+    N0014-99-1-0162, and JPL Contract No. 1216961. Development at HRL
+    Laboratories is supported by a DARPA contract (SDR).
+
+We thank those in the USC Robotics Lab and elsewhere who have
+contributed to the development of the Player server and associated
+utilities and tools: Esben \O{}sterg\aa{}rd, Jakob Fredslund, Boyoon
+Jung, Jason K. Douglas, Kim Jinsuck, Gabe Sibley, and Dave
+Naffin. Contributed tools can be found on the website.
+
+\section{Citations}
+If you find Player useful in your work, we would greatly appreciate your
+mentioning that fact in papers that you publish.  A paper of our own
+on Player has been presented in a respected peer-reviewed conference; this
+paper is the definitive reference when citing Player \cite{GerkeyVaughan01a}:
+\begin{quote}
+Brian~P. Gerkey, Richard~T. Vaughan, Kasper St\o{}y, Andrew Howard,
+Maja~J Matari\'c and Gaurav~S Sukhatme.
+\newblock {Most Valuable Player: A Robot Device Server for Distributed
+  Control}.
+\newblock In {\em Proc. of the IEEE/RSJ Intl. Conf. on Intelligent Robots and
+  Systems (IROS)}, pages 1226--1231, Wailea, Hawaii, October 2001.
+\end{quote}
+If you have space (and are feeling generous), you can also insert a footnote
+similar to the following:
+\begin{quote}
+Player was developed jointly at the USC Robotics Research Lab
+and HRL Labs and is freely available under the GNU General Public License
+from http://playerstage.sourceforge.net.
+\end{quote}
+By including such acknowledgements, you do more than feed our egos and further 
+our academic careers.  You spread the word about Player, which will bring more
+users and developers, as well as please our funders, ensuring that we will
+continue to be allowed to hack on the software.
 
 
 \chapter{Running Stage}
@@ -217,99 +262,69 @@ The current release is Stage-\VERSION.
 
     {\bf You must install Player {\sl before} installing Stage.} 
     See:
-      \begin{verbatim}
-      http://robotics.usc.edu/player
-      \end{verbatim}
-    Once you've downloaded, built and installed Player, download
+	\begin{verbatim}
+	 http://playerstage.sourceforge.net/player
+	\end{verbatim}
+
+    \noindent Once you've downloaded, built and installed Player, download
     the Stage tarball and unpack it with:
       \begin{verbatim}
-      tar xzvf Stage-<version>.tgz
+      tar xzvf Stage-1.2.tgz
       \end{verbatim}
     Now follow the instructions in the top-level README file.
 
   \section{Running Stage}
 
     Before running stage, first make sure the Player executable can be
-    found in your path (Stage will automatically start one or more
-    instances of Player, so it needs to know where to find the Player
-    executable).
+    found in your path (by default, Stage will automatically start an instance of Player, so it needs to know where to find the Player executable).
     For example, try:
       \begin{verbatim}
       which player
       \end{verbatim}
     and make sure it returns a valid Player executable path, such as
       \begin{verbatim}
-      /usr/local/player/bin/player
+      ~/player-1.2/bin/player
       \end{verbatim}
     If not, set your PATH variable to include the Player binary directory. 
     For example, in BASH do:
       \begin{verbatim}  
-      export PATH=$PATH:/usr/local/player/bin
+      export PATH=$PATH:$HOME/player-1.2/bin
       \end{verbatim}  
-    You should also make sure that the external viewer program XS
-    can be found in your path.
-    For example, try:
-      \begin{verbatim}
-      which xs
-      \end{verbatim}
-    and make sure it returns a valid executable path, such as
-      \begin{verbatim}
-      /usr/local/stage/bin/xs
-      \end{verbatim}
-    If not, set your PATH variable to include the XS binary directory;
-    in BASH:
-      \begin{verbatim}  
-      export PATH=$PATH:/usr/local/stage/bin
-      \end{verbatim}  
-    To run stage itself do: 
+
+    To run stage do: 
       \begin{verbatim} 
       stage [options] <filename.world> 
       \end{verbatim} 
-    The `.world' file specifies what stage must simulate. The
-    command-line options are described below. If all is well, Stage
-    will start up, load the world file, and spawn an instance of XS
-    and Player. Each step causes a message on standard output, so a
-    sample invocation and start up would look like this:
-      \begin{verbatim}
-      cd /usr/local/stage/examples
-      stage simple.world 
- 
-      ** Stage v1.0 ** [World simple.world][./simple.pnm]        
-      ** XS v0.4 ** [Env 6602][Truth 6601]
-      ** Player v1.0 **
+
+    By convention, Stage configuration files end with a `.world'
+    extension and are referred to as 'world files'. A world file
+    specifies what stage must simulate. The user can override some of
+    the world file settings at run time using the command-line options
+    described below. If all is well, Stage will start up, load the
+    world file, and spawn an Player. Each step causes a message on
+    standard output, so a sample invocation and start up would look
+    like this:
+
+	\begin{verbatim} 
+	stage examples/simple.world
+
+	 ** Stage  v1.2 ** 
+	[World examples/simple.world]
+	[Server rover:6601]
+	** Player v1.2 ** [Stage /tmp/stageIO.vaughan.0]
       \end{verbatim}
+
     Stage also outputs a status line on stdout at every cycle.  At
     this point you should be able to interact with objects in the
-    world through XS and access sensors and actuators through
-    Player. 
-    Try using the Player example client:
-      \begin{verbatim}
-      viewer.tk
-      \end{verbatim}
-    to check that you can control Stage robots and read from their
-    sensors. 
-    You can also try the player-viewer program that comes as part of the
-    PlayerTools package (available from the Player website).
+    world with the GUI (try dragging things around) and access sensors
+    and actuators through Player. Try using the Player client program
+    (<player1.2>/utils/playerv/playerv) to see the output from some
+    sensors.
 
     %Should probably have a Help! It didnt work section. AH
     %If it didn't work, the first things to check are the
     %settings in Makefile.common and your Player build.
   
-  \section{Running RTKStage}
-
-    RTKStage is a version of Stage compiled with a built-in X11 GUI
-    using Andrew Howard's RTK toolkit. The RTK source is provided in
-    the distribution (stage/rtk). This GUI provides some powerful
-    features not found in XS.  Once you have setr up your paths
-    as described above, you can start RTKStage using:
-      \begin{verbatim} 
-      rtkstage [options] <filename.world> 
-      \end{verbatim} 
-    RTKStage uses the same world files and command line options,
-    but provides an alternative interface to the simulation.
-    See Chapter \ref{sec:rtkstage} for more information on using
-    RTKStage.
-
   \section{The World File}
 
     The world file is a description of the world that Stage
@@ -333,13 +348,22 @@ The current release is Stage-\VERSION.
     header that records information about the run.
     \end{xarg}
 
-    \begin{xarg}{-xs}
-    Prevents Stage spawing an instance of the XS GUI. RTKStage has this
-    option enabled by default.
+    \begin{xarg}{-n} No Player - do not spawn a Player. You can run
+    Player manually in Stage mode with
+    \verb+player -stage <device dir>+. Useful for debugging Player or
+    if you want to use an alternative interface to Stage
+    devices.
+	\end{xarg}
+
+    \begin{xarg}{-g}Disables the Graphical User Interface.
     \end{xarg}
 
-    \begin{xarg}{+xs}
-    Spawn an instance of XS.
+    \begin{xarg}{-q}Quiet mode - disables the status line output
+    \end{xarg}
+
+    \begin{xarg}{-t <timeout in seconds>}Timeout - Stage will quit
+    after simulating the specified amount of time. Useful for batch
+    runs.  
     \end{xarg}
 
     \begin{xarg}{-u <update period in seconds>}
@@ -358,29 +382,15 @@ The current release is Stage-\VERSION.
     slower than, or approximately at real-time.
     \end{xarg}
 
-    \begin{xarg}{-fast}
-    Runs Stage as fast as possible. Stage will not attempt to match
-    real time. Useful for batch runs and in sync mode (see
-    below). This is slightly more efficient than setting the desired
-    update time to zero seconds (-u 0.0).
+    \begin{xarg}{-f} Fast mode - Stage will run as fast as possible;
+    not attempting to match real time. Useful for batch runs. This is
+    slightly more efficient than setting the desired update time to
+    zero seconds (-u 0.0).  
     \end{xarg}
 
-    \begin{xarg}{-tp <port num>}
-    Set the port number for the "truth server" used by external
-    clients such as XS and truthlogger. Default is 6602.
+    \begin{xarg}{-p <port num>}
+    Set the port number for the server used by Stage clients (such as Stage in client mode - see below). Default is 6601.
     \end{xarg}
-
-    \begin{xarg}{-ep <port num>}
-    Set the port number for the "enviornment server" used by external
-    clients such as XS. Default is 6601.
-    \end{xarg}
-
-    %\begin{xarg}{-s}
-    %Enable synchronized mode. If this option is given, Stage will wait
-    %between update cycles for an external sync message. The Stage Manager
-    %(bin/manager) tool uses this mode to connect and sychronize several
-    %copies of Stage distributed over multiple hosts. 
-    %\end{xarg}
 
 \chapter{The World File}
 
