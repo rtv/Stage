@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -152,6 +152,7 @@ void CPositionDevice::Update( double sim_time )
   }
   else  
   {
+    // TODO: this should be an option in the config file
     // the device is not subscribed,
     // so reset odometry to default settings.
     this->odo_px = this->odo_py = this->odo_pa = 0;

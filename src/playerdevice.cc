@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.56 2003-02-04 21:50:35 gerkey Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.57 2003-02-05 03:01:00 gerkey Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -135,9 +135,11 @@ bool CPlayerEntity::Load(CWorldFile *worldfile, int section)
 
   //PRINT_DEBUG2( "port: %d index %d", m_player.port, m_player.index );
 
+  /*
   if( m_player.robot == 0 )
     printf( "\nWarning: Player device (%s:%d:%d) has zero port. Missing 'port' property in world file?\n",
 	    this->lib_entry->token, m_player.robot, m_player.index );
+            */
 
   return true;
 }

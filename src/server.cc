@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.45 2003-02-04 21:50:38 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.46 2003-02-05 03:01:02 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -580,9 +580,11 @@ bool CStageServer::StartupPlayer( void )
     // player will open every file in the device directory
     // and attempt to memory map it as a device. 
 
+    char portbuf[32];
+    sprintf(portbuf,"%d",m_player_port);
     // Player must be in the current path
     if( execlp( "player", "player",
-                "-p", m_player_port,
+                "-p", portbuf,
                 "-s", DeviceDirectory(), 
                 (strlen(m_auth_key)) ? "-k" : NULL,
                 (strlen(m_auth_key)) ? m_auth_key : NULL,
