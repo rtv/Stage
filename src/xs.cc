@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.19 2001-09-23 03:17:01 vaughan Exp $
+ * $Id: xs.cc,v 1.20 2001-09-23 03:39:51 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -677,6 +677,8 @@ void CXGui::HandleIncomingQueue( void )
 
       int stage_id = truth.stage_id = struth.stage_id; // this is the map key
 
+      strncpy( truth.hostname, struth.hostname, HOSTNAME_SIZE );
+
       truth.stage_type = struth.stage_type;
 
       truth.color.red = struth.red;
@@ -901,6 +903,8 @@ void CXGui::MoveObject( xstruth_t* exp, double x, double y, double th )
 
   output.stage_id = exp->stage_id;
   output.stage_type = exp->stage_type;
+
+  strncpy( output.hostname, exp->hostname, HOSTNAME_SIZE );
 
   output.red = exp->color.red;
   output.green = exp->color.red;
@@ -1796,7 +1800,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
   // try to connect to it
   if( ent->id.port )
     {
-      PlayerClient* cli = playerClients.GetClient( stage_host, ent->id.port );
+      PlayerClient* cli = playerClients.GetClient( ent->hostname, ent->id.port );
       
       // if we're connected already 
       if( cli ) 
@@ -1827,11 +1831,11 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	}
       else
 	{ // create a new client and add any supported proxies
-	  cli = new PlayerClient( stage_host, ent->id.port );
+	  cli = new PlayerClient( ent->hostname, ent->id.port );
 	  
 	  if( cli ) // if successful, attach this client to the multiclient
 	    {	     
-	    printf( "XS: Starting Player client on %s port %d\n", stage_host, ent->id.port );
+	    printf( "XS: Starting Player client on %s port %d\n", ent->hostname, ent->id.port );
 	    
 	    xstruth_t sibling;
 	    int previous_num_proxies = num_proxies;
@@ -1841,9 +1845,10 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	      {	      
 		sibling = it->second;
 	      
-		if( sibling.id.port == ent->id.port ) // the port matches
+		if( sibling.id.port == ent->id.port && // port matches
+		    (strcmp( sibling.hostname, ent->hostname ) == 0) ) // hostname matches
 		  {
-		    //printf( "XS: finding proxy for %s (%d:%d:%d)\n", stage_host, 
+		    //printf( "XS: finding proxy for %s (%d:%d:%d)\n", ent->hostname, 
 		    //    sibling.id.port, sibling.id.type, sibling.id.index );
 	  
 		    switch( sibling.id.type )

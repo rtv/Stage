@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -39,6 +39,9 @@
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(x) (int) (sizeof(x) / sizeof(x[0]))
 #endif
+
+// size of char arrays for hostnames
+#define HOSTNAME_SIZE 32
 
 #ifndef M_PI
 	#define M_PI        3.14159265358979323846

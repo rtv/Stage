@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.9 2001-09-22 21:07:38 vaughan Exp $
+ * $Id: xs.hh,v 1.10 2001-09-23 03:39:51 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -31,9 +31,9 @@ typedef struct
 {
   int stage_id;
   StageType stage_type;
-  //int channel;
   StageColor color;
   unsigned long pixel_color;
+  char hostname[ HOSTNAME_SIZE ];
   player_id_t id;
   player_id_t parent;
   double x, y, th, w, h; // pose and extents

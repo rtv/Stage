@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -39,8 +39,6 @@
 #ifdef INCLUDE_RTK
 #include "rtk_ui.hh"
 #endif
-
-#define HOSTNAME_SIZE 64
 
 // Forward declare the world class
 //

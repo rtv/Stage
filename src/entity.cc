@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -735,6 +735,8 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   memset( truth, 0, sizeof(stage_truth_t) ); // just in case
   
   truth->stage_id = index;
+
+  strncpy( truth->hostname, m_hostname, HOSTNAME_SIZE );
 
   truth->id.port = m_player_port;
   truth->id.type = m_player_type;

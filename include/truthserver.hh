@@ -23,6 +23,8 @@ typedef struct
   int stage_id;
   StageType stage_type;
 
+  char hostname[ HOSTNAME_SIZE ];
+  
   player_id_t id;
   player_id_t parent;
   
