@@ -1,5 +1,5 @@
 
-set environment_file = SAL2.pnm
+set environment_file = sal2.pnm
 set pixels_per_meter =  20
 
 create box_obstacle pose 5.89 7.96 1 size 1.00 0.50 
