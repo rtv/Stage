@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +45,9 @@ void laser_init( model_t* mod )
   lconf.fov         = STG_DEFAULT_LASER_FOV;
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;
   
+  stg_color_t col =stg_lookup_color( "blue" ); 
+  model_set_color( mod, &col );
+
   model_set_config( mod, &lconf, sizeof(lconf) );
 }
 
@@ -101,11 +104,10 @@ int laser_update( model_t* mod )
 	  //printf( "model %d %p   hit model %d %p\n",
 	  //  mod->id, mod, hitmod->id, hitmod );
 	  
-	  // Ignore myself, things which are attached to me, and
-	  // things that we are attached to (except root) The latter
-	  // is useful if you want to stack beacons on the laser or
-	  // the laser on somethine else.
-	  if (hitmod == mod )//|| modthis->IsDescendent(ent) )//|| 
+	  // Ignore myself, my children, and my ancestors.
+	  if( hitmod == mod || 
+	      model_is_descendent(mod,hitmod) || 
+	      model_is_antecedent(mod,hitmod) )
 	    continue;
 	  
 	  // Stop looking when we see something
@@ -229,31 +231,31 @@ void laser_render_config( model_t* mod, stg_laser_config_t* cfg )
     rtk_fig_clear(fig);
   else // create the figure, store it in the model and keep a local pointer
     fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_CONFIG,
-				 mod->gui.top, STG_LAYER_LASERGEOM );
+				 mod->gui.top, STG_LAYER_LASERCONFIG );
   
-  rtk_fig_t* geomfig = mod->gui.propgeom[STG_PROP_CONFIG];  
+  //rtk_fig_t* geomfig = mod->gui.propgeom[STG_PROP_CONFIG];  
   
-  if( geomfig  )
-    rtk_fig_clear(geomfig);
-  else // create the figure, store it in the model and keep a local pointer
-    geomfig = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_CONFIG,
-				 mod->gui.top, STG_LAYER_LASERGEOM );
+  //if( geomfig  )
+  //rtk_fig_clear(geomfig);
+  //else // create the figure, store it in the model and keep a local pointer
+  //geomfig = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_CONFIG,
+  //				 mod->gui.top, STG_LAYER_LASERGEOM );
 
-  stg_geom_t* geom = &mod->geom;
+//stg_geom_t* geom = &mod->geom;
   
-  stg_pose_t pose;
-  memcpy( &pose, &geom->pose, sizeof(pose) );
-  model_local_to_global( mod, &pose );
+//stg_pose_t pose;
+//memcpy( &pose, &geom->pose, sizeof(pose) );
+//model_local_to_global( mod, &pose );
   
   // first draw the sensor body
-  rtk_fig_color_rgb32(geomfig, stg_lookup_color(STG_LASER_GEOM_COLOR) );
+  //rtk_fig_color_rgb32(geomfig, stg_lookup_color(STG_LASER_GEOM_COLOR) );
   
-  rtk_fig_rectangle( geomfig, 
-		     geom->pose.x, 
-		     geom->pose.y, 
-		     geom->pose.a,
-		     geom->size.x,
-		     geom->size.y, 0 );
+  //rtk_fig_rectangle( geomfig, 
+  //	     geom->pose.x, 
+  //	     geom->pose.y, 
+  //	     geom->pose.a,
+  //	     geom->size.x,
+  //	     geom->size.y, 0 );
   
   
   // now draw the FOV and range lines

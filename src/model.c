@@ -66,9 +66,12 @@ model_t* model_create(  world_t* world,
   mod->guifeatures.boundary =  STG_DEFAULT_BOUNDARY;
   mod->guifeatures.nose =  STG_DEFAULT_NOSE;
   mod->guifeatures.grid = STG_DEFAULT_GRID;
-  mod->guifeatures.movemask = STG_DEFAULT_MOVEMASK;
   
-  mod->color = stg_lookup_color( "red" );
+  // by default, only top-level objects are draggable
+  if( mod->parent )
+    mod->guifeatures.movemask = 0;
+  else
+    mod->guifeatures.movemask = STG_DEFAULT_MOVEMASK;
 
   // zero velocity
   memset( &mod->velocity, 0, sizeof(mod->velocity) );
@@ -118,6 +121,7 @@ model_t* model_create(  world_t* world,
   mod->energy_data.range = mod->energy_config.probe_range;
 
 
+  mod->color = stg_lookup_color( "red" );
 
   gui_model_create( mod );
 
@@ -153,6 +157,37 @@ void model_destroy_cb( gpointer mod )
   model_destroy( (model_t*)mod );
 }
 
+int model_is_antecedent( model_t* mod, model_t* testmod )
+{
+  if( mod == NULL )
+    return FALSE;
+
+  if( mod == testmod )
+    return TRUE;
+  
+  if( model_is_antecedent( mod->parent, testmod ))
+    return TRUE;
+  
+  // neither mod nor a child of mod matches testmod
+  return FALSE;
+}
+
+int model_is_descendent( model_t* mod, model_t* testmod )
+{
+  if( mod == testmod )
+    return TRUE;
+  
+  int ch;
+  for(ch=0; ch < mod->children->len; ch++ )
+    {
+      model_t* child = g_ptr_array_index( mod->children, ch );
+      if( model_is_descendent( child, testmod ))
+	return TRUE;
+    }
+  
+  // neither mod nor a child of mod matches testmod
+  return FALSE;
+}
 
 rtk_fig_t* model_prop_fig_create( model_t* mod, 
 				  rtk_fig_t* array[],
@@ -271,13 +306,16 @@ void model_map( model_t* mod, gboolean render )
 
 int model_update( model_t* mod )
 {
-  //PRINT_DEBUG2( "updating model %d:%s", model->id, model->token );
+  PRINT_DEBUG2( "updating model %d:%s", mod->id, mod->token );
   
   mod->interval_elapsed = 0;
 
   // if this type of model has an update function, call it.
   if( derived[ mod->type ].update && mod->subs[STG_PROP_DATA] > 0 )
     derived[ mod->type ].update(mod);
+
+  // now move the model if it has any velocity
+  model_update_pose( mod );
 
   return 0;
 }

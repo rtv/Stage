@@ -168,7 +168,9 @@ int model_get_config( model_t* mod, void** cmd, size_t* len );
 int model_update( model_t* model );
 void model_update_cb( gpointer key, gpointer value, gpointer user );
 void model_update_velocity( model_t* model );
-void model_update_pose( model_t* model );
+int model_update_pose( model_t* model );
+
+//int model_pose_update( model_t* model );
 
 void model_print( model_t* mod );
 void model_print_cb( gpointer key, gpointer value, gpointer user );
@@ -219,5 +221,7 @@ rtk_fig_t* model_prop_fig_create( model_t* mod,
 				  rtk_fig_t* parent,
 				  int layer );
 
+int model_is_antecedent( model_t* mod, model_t* testmod );
+int model_is_descendent( model_t* mod, model_t* testmod );
 
 #endif

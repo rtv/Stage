@@ -6,7 +6,7 @@
 //#include <pthread.h>
 #include <signal.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage.h"
 

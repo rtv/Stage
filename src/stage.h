@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.72 2004-08-25 23:34:38 rtv Exp $
+ * CVS: $Id: stage.h,v 1.73 2004-08-26 03:33:51 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -663,8 +663,8 @@ typedef struct
 #define STG_DEFAULT_GEOM_POSEX 0.0
 #define STG_DEFAULT_GEOM_POSEY 0.0
 #define STG_DEFAULT_GEOM_POSEA 0.0
-#define STG_DEFAULT_GEOM_SIZEX 0.4
-#define STG_DEFAULT_GEOM_SIZEY 0.4
+#define STG_DEFAULT_GEOM_SIZEX 0.15
+#define STG_DEFAULT_GEOM_SIZEY 0.15
 #define STG_DEFAULT_OBSTACLERETURN TRUE
 #define STG_DEFAULT_LASERRETURN LaserVisible
 #define STG_DEFAULT_RANGERRETURN TRUE

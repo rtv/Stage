@@ -175,9 +175,11 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       else
 	printf( "no parent\n" );
       
-      stg_model_type_t type = STG_MODEL_BASIC;
+      stg_model_type_t type;
       
-      if( strcmp( typestr, "test" ) == 0 )
+      if( strcmp( typestr, "model" ) == 0 )
+	type = STG_MODEL_BASIC;
+      else if( strcmp( typestr, "test" ) == 0 )
 	type = STG_MODEL_TEST;
       else if( strcmp( typestr, "laser" ) == 0 )
 	type = STG_MODEL_LASER;
@@ -187,7 +189,13 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	type = STG_MODEL_POSITION;
       else if( strcmp( typestr, "blobfinder" ) == 0 )
 	type = STG_MODEL_BLOB;
-      
+      else 
+	{
+	  PRINT_ERR1( "unknown model type \"%s\". Model has not been created.",
+		      typestr ); 
+	  continue;
+	}
+
       PRINT_DEBUG2( "creating model token %s type %d", typestr, type );
 
       stg_model_t* mod = stg_world_createmodel( world, parent, section, 
@@ -227,10 +235,15 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       gf.nose = wf.ReadInt(section, "gui.nose", STG_DEFAULT_NOSE );
       gf.grid = wf.ReadInt(section, "gui.grid", STG_DEFAULT_GRID );
       gf.movemask = wf.ReadInt(section, "gui.movemask", STG_DEFAULT_MOVEMASK );
-      stg_model_prop_with_data(mod, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
       
+      /* if( gf.boundary != STG_DEFAULT_BOUNDARY ||
+	  gf.nose != STG_DEFAULT_NOSE ||
+	  gf.grid != STG_DEFAULT_GRID ||
+	  gf.movemask != STG_DEFAULT_MOVEMASK ) 
+      */
 
-      
+	stg_model_prop_with_data(mod, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
+            
       switch( type )
 	{
 	case STG_MODEL_LASER:

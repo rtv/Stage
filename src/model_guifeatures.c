@@ -7,11 +7,11 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_guifeatures.c,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-//#define DEBUG
+#define DEBUG
 
 #include "model.h"
 #include "gui.h"

@@ -7,22 +7,18 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
 
-//#define DEBUG
+#define DEBUG
 
-#include "stage.h"
 #include "raytrace.h"
 #include "gui.h"
+#include "model.h"
 
-int model_pose_update( model_t* model );
-
-
-stg_energy_data_t* model_energy_data_get( model_t* mod );
 
 // convencience
 stg_bool_t model_get_obstaclereturn( model_t* mod   )
@@ -136,9 +132,9 @@ stg_pose_t* model_get_pose( model_t* model )
   return &model->pose;
 }
 
-int model_pose_update( model_t* model )
+int model_update_pose( model_t* model )
 { 
-  PRINT_DEBUG1( "pose update method model %d", model->id );
+  PRINT_DEBUG1( "pose update model %d", model->id );
  
   stg_velocity_t* vel = model_get_velocity(model);  
 
