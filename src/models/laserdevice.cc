@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.6.4.2 2003-03-07 07:28:15 gerkey Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.6.4.3 2003-03-07 07:31:44 gerkey Exp $
  */
 
 #define DEBUG
@@ -248,6 +248,7 @@ bool CLaserDevice::CheckConfig()
             this->intensity = config.intensity;
             PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           }
+        }
         else
         {
           PRINT_MSG("warning: invalid laser configuration request");
