@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.18 2002-11-02 08:24:58 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.19 2002-11-09 02:32:34 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -60,9 +60,6 @@ class CWorld
   // Destructor
   virtual ~CWorld();
   
-  // experimental - rtv
-  //public: CRTPPlayer* rtp_player;
-  
   // the Library class knows how to create entities given a worldfile
   // token, and can find the token given a StageType number
   public: Library* lib;
@@ -80,6 +77,7 @@ class CWorld
   virtual bool LockByte( int offset );
   virtual bool UnlockByte( int offset );
 
+  // TODO - this should move to the server
   public: char m_device_dir[PATH_MAX]; //device  directory name 
   
   // Properties of the underlying matrix representation
@@ -105,9 +103,6 @@ public: uint32_t m_step_num; // the number of cycles executed, from 0
   // returning the current time in seconds
   virtual double SetClock( double interval, uint32_t step_num );
   
-  // when to shutdown (in seconds)
-private: int m_stoptime;
-public: int GetStopTime( void ){ return m_stoptime; };
 
   // Enable flag -- world only updates while this is set
   protected: bool m_enable;
@@ -119,7 +114,6 @@ public: int GetStopTime( void ){ return m_stoptime; };
   // the IP address of this computer
   public: struct in_addr m_hostaddr;
 
-  double Pause();
   void Output();
   void LogOutputHeader( void );
 
@@ -134,7 +128,6 @@ public: int GetStopTime( void ){ return m_stoptime; };
                       unsigned int bytes_in, unsigned int bytes_out,
                       double avg_data );
     
-  void StartTimer(double interval);
 
   void Ticker( void )
   {
@@ -160,8 +153,8 @@ public: int GetStopTime( void ){ return m_stoptime; };
   // Timing
   // Real time at which simulation started.
   // The time according to the simulator (m_sim_time <= m_start_time).
-  private: double m_start_time, m_last_time;
-  private: double m_sim_time;
+  protected: double m_start_time, m_last_time;
+  protected: double m_sim_time;
   // the same as m_sim_time but in timeval format
   public: struct timeval m_sim_timeval; 
   

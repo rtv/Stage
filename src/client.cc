@@ -54,6 +54,8 @@ CStageClient::CStageClient( int argc, char** argv, Library* lib )
   // we don't have a file if we're a client - we download instead
   worldfile = NULL;
 
+  //m_real_timestep = 0; // clients run in fast mode!
+
   // parse out the hostname - that's all we need just here
   // (the parent stageio object gets the port)
   for( int a=1; a<argc; a++ )
@@ -227,4 +229,32 @@ bool CStageClient::Shutdown( void )
   return res;
 } 
 
+
+///////////////////////////////////////////////////////////////////////////
+// Update the world
+void CStageClient::Update(void)
+{
+  PRINT_DEBUG( "** Client Update **" );
+
+  //if( m_enable )
+    {
+      puts( "CLIENT READ" );
+      // get any changes in world state from the server 
+      Read();
+
+      // let the entities do anything they want to do between clock increments
+      //puts( "CLIENT ROOTSYNC" );
+      root->Sync(); 
+      
+      //puts( "CLIENT UPDATE" );
+      CWorld::Update();
+      
+      // upload our changes to the server
+      //puts( "CLIENT WRITE" );
+      Write();
+
+      //puts( "CLIENT OUTPUT" );
+      Output(); // perform console and log output  
+    }
+}
 

@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.93 2002-11-07 00:02:27 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.94 2002-11-09 02:32:34 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -48,7 +48,7 @@
 
 //#define DEBUG
 //#define VERBOSE
-#undef DEBUG
+//#undef DEBUG
 //#undef VERBOSE
 //#define RENDER_INITIAL_BOUNDING_BOXES
 
@@ -129,7 +129,7 @@ CEntity::CEntity(LibraryItem* libit, CWorld *world, CEntity *parent_entity )
   vision_return = false;
   laser_return = LaserTransparent;
   idar_return = IDARTransparent;
-  visible_id = 0; // no id 
+  fiducial_return = FiducialNone; // not a recognized fiducial
   gripper_return = GripperDisabled;
 
   // Set the initial mapped pose to a dummy value
@@ -306,6 +306,10 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
   // Read the entity color
   this->color = worldfile->ReadColor(section, "color", this->color);
 
+  // read the desired update interval
+  this->m_interval = 
+    worldfile->ReadFloat( section, "interval", this->m_interval );
+ 
   const char *rvalue;
   
   // Obstacle return values
@@ -353,11 +357,12 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
     this->gripper_return = GripperDisabled;
 
   // Read the beacon id
-  this->visible_id = worldfile->ReadInt(section, "id", this->visible_id );
+  this->fiducial_return \
+    = worldfile->ReadInt(section, "fiducial_id", this->fiducial_return );
 
   // Use the beacon id as a name if there is no name set
-  if ( strlen(this->name) == 0 && this->visible_id != 0 )
-    snprintf( this->name, 64, "id %d", this->visible_id);
+  if ( strlen(this->name) == 0 && this->fiducial_return != FiducialNone )
+    snprintf( this->name, 64, "id %d", this->fiducial_return );
   
   // Laser return values
   if (this->laser_return == LaserBright)
@@ -389,6 +394,8 @@ bool CEntity::Save(CWorldFile *worldfile, int section)
   //printf( "pose: %.2f %.2f %.2f   init:  %.2f %.2f %.2f\n",
   //  px, py, pth, init_px, init_py, init_pth );
 
+  // TODO - save out any other changed properties
+
   if (px != this->init_px || py != this->init_py || pth != this->init_pth)
   {
     worldfile->WriteTupleLength(section, "pose", 0, px);
@@ -408,9 +415,9 @@ bool CEntity::Save(CWorldFile *worldfile, int section)
 // everything has been loaded.
 bool CEntity::Startup( void )
 {
-  //PRINT_DEBUG2("STARTUP %s %s", 
-  //       this->token,
-  //       m_parent_entity ? "" : "- ROOT" );
+  PRINT_DEBUG2("ENTITY STARTUP %s %s", 
+         this->lib_entry->token,
+         m_parent_entity ? "" : "- ROOT" );
   
   // use the generic hook
   if( m_world->enable_gui )
@@ -897,6 +904,9 @@ int CEntity::SetProperty( int con, EntityProperty property,
   
   if( move_figure )
     {
+      printf( "-- moving figure to %.2f %.2f %.2f\n",
+	      local_px, local_py, local_pth );
+
 #ifdef INCLUDE_RTK2    
       if( this->fig )
 	rtk_fig_origin(this->fig, local_px, local_py, local_pth );

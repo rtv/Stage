@@ -1,5 +1,35 @@
-#define DEBUG
-#define VERBOSE
+
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Stage client/server IO class
+ * Author: Richard Vaughan
+ * Date: 7 Dec 2000
+ * CVS info: $Id: stageio.cc,v 1.22 2002-11-09 02:32:34 rtv Exp $
+ */
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
+
+//#define DEBUG
+//#define VERBOSE
 
 #include "server.hh"
 #include "entity.hh"
@@ -54,15 +84,6 @@ CStageIO::~CStageIO( void )
     DestroyConnection( i );
 
 //close( m_pose_connections[i].fd );
-}
-
-// Update() does the IO, and inherits the world's Update()
-// hey, it's StageIO, right?
-void CStageIO::Update( void )
-{
-  Read(); // import world state
-  CWorld::Update(); // change the world
-  Write(); // export world state
 }
 
 int CStageIO::WriteHeader( int fd, HeaderType type, uint32_t data )
@@ -520,7 +541,11 @@ void CStageIO::Write( void )
 		}
 	    }
       }
-    }      
+
+      // that's all the state sent - send a continue message
+      
+      WriteHeader( connfd, Continue, 0 );
+    }
 }
 
 int CStageIO::CountDirtyOnConnection( int con )
@@ -655,10 +680,10 @@ int CStageIO::Read( void )
   // in real time-mode, poll blocks until it is interrupted by
   // a timer signal, so we give it a time-out of -1. Otherwise,
   // we give it a zero time-out so it returns quickly.
-  //int timeout;
-  //m_real_timestep > 0 ? timeout = -1 : timeout = 0;
-  
-  int timeout = 0; // always return quickly - experimental 
+  int timeout;
+  m_real_timestep > 0 ? timeout = -1 : timeout = 0;
+
+  // int timeout = 0; // always return quickly - experimental 
 
   int readable = 0;
   int syncs = 0;  
@@ -676,11 +701,14 @@ int CStageIO::Read( void )
   	{
   	  if( errno == EINTR ) // interrupted by the real-time timer
   	    {
-  	      //printf( "EINTR: syncs %d / %d\n",
-	      //    syncs, m_sync_counter );
+  	      printf( "EINTR: syncs %d / %d\n",
+	          syncs, m_sync_counter );
   	      // if we have all our syncs, we;re done
   	      if( syncs >= m_sync_counter )
-  		return 0;
+  		{
+		  puts( "HAVE SYNCS - done reading" );
+		  return 0;
+		}
   	    }
   	  else
   	    {
@@ -731,6 +759,7 @@ int CStageIO::Read( void )
 			  PRINT_DEBUG2( "DOWNLOAD COMPLETE (%d) on %d\n",  
 					hdr.data, m_pose_connections[t].fd );
 			  m_downloading = false;
+			  m_enable = true; // we can start the sim now!  
 			  return 0;
 			  break;
 			  

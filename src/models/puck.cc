@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/puck.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -34,10 +34,8 @@ CPuck::CPuck(LibraryItem* libit,CWorld *world, CEntity *parent)
   this->size_x = 0.08;
   this->size_y = 0.08;
 
-  m_interval = 0.01; // update very fast!
-
-  
-  m_friction = 0.05;
+  this->m_interval = 0.01; // update very fast!
+  this->m_friction = 0.05;
 
   // assume puck is 200g
   this->mass = 0.2;

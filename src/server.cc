@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.41 2002-10-31 02:15:15 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.42 2002-11-09 02:32:34 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -57,7 +57,7 @@
 #include <iomanip>
 
 //using namespace std;
-#define DEBUG
+//#define DEBUG
 //#define VERBOSE
 
 #include "server.hh"
@@ -71,6 +71,24 @@ extern long int g_bytes_input;
 
 const int LISTENQ = 128;
 //const long int MILLION = 1000000L;
+
+int g_timer_events = 0;
+
+// dummy timer signal func
+void TimerHandler( int val )
+{
+  //puts( "TIMER HANDLER" );
+  g_timer_events++;
+
+  // re-install signal handler for timing
+  if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
+    {
+      PRINT_ERR("failed to install signal handler");
+      exit( -1 );
+    }
+
+  //printf( "\ng_timer_expired: %d\n", g_timer_expired );
+}  
 
 void CatchSigPipe( int signo )
 {
@@ -92,6 +110,9 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
 
   m_clock = NULL;  
 
+  // stop time of zero means run forever
+  m_stoptime = 0;
+  
   // create the object that loads and parses the file
   assert( worldfile = new CWorldFile() );
   if(!ParseCmdLine(argc, argv))
@@ -433,6 +454,13 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
       m_real_timestep = 0.0;
       printf( "[Fast]" );
     }
+
+    // set the stop time
+    if(!strcmp(argv[a], "-t"))
+      {
+	m_stoptime = atoi(argv[++a]);
+	printf("[Stop time: %d]",m_stoptime);
+      }
   }
 
   return true;
@@ -494,6 +522,9 @@ bool CStageServer::Startup( void )
     quit = true;
     return false;
   }
+  
+  if( m_real_timestep > 0.0 ) // if we're in real-time mode
+    this->StartTimer( m_real_timestep ); // start the real-time interrupts going
   
   m_enable = true;  
 
@@ -562,6 +593,73 @@ void CStageServer::ShutdownPlayer()
     this->player_pid = 0;
   }
 }
+
+///////////////////////////////////////////////////////////////////////////
+// Update the world
+void CStageServer::Update(void)
+{
+  //PRINT_DEBUG( "** Server Update **" );
+  //assert( arg == 0 );
+  
+  //while( !quit )
+
+  //printf( "update: enable: %d g_timer_events: %d m_real_timestep: %.3f\n",
+  //  m_enable, g_timer_events, m_real_timestep );
+
+  // get and handle any commands and updates from clients
+
+  this->Read();
+
+  // if the sim isn't running, we pause briefly and return
+  //  if( !m_enable )
+  //{
+  //  usleep( 100000 );
+  //  return;
+  //}
+
+  // is it time to stop?
+  if(m_stoptime && m_sim_time >= m_stoptime)
+    {   
+      //system("kill `cat stage.pid`");
+      quit = true;
+      return;
+    }
+      
+
+  // let the entities do anything they want to do between clock increments
+  root->Sync(); 
+      
+  // if the timer has gone off recently or we're in fast mode
+  // we increment the clock and do the time-based updates
+  if( g_timer_events > 0 || m_real_timestep == 0 )
+    {          
+      PRINT_DEBUG( "time to update entities and GUI" );
+      
+      CWorld::Update();
+      
+      if( g_timer_events > 0 )
+	g_timer_events--; // we've handled this timer event
+      
+      // increase the time step counter
+      m_step_num++; 
+
+      Write(); // write any changes back out to clients
+    }
+  
+  Output(); // perform console and log output
+  
+  // if there's nothing pending and we're not in fast mode, we let go
+  // of the processor (on linux gives us around a 10ms cycle time)
+  if( g_timer_events < 1 && m_real_timestep > 0.0 ) 
+    usleep( 0 );
+
+  
+  
+  // dump the contents of the matrix to a file for debugging
+  //world->matrix->dump();
+  //getchar();	
+}
+
 
 // read stuff until we get a continue message on each channel
 int CStageServer::Read( void )
@@ -912,3 +1010,52 @@ bool CStageServer::CreateClockDevice( void )
   
   return true;
 }
+
+// sleep until a signal goes off
+// return the time in seconds we spent asleep
+double CStageServer::Pause()
+{
+  // we're too busy to sleep!
+  if( m_real_timestep == 0 || --g_timer_events > 0  )
+    return 0;
+  
+  // otherwise
+
+  double sleep_start = GetRealTime();
+
+  pause(); // wait for the signal
+
+  return( GetRealTime() - sleep_start );
+}
+
+void CStageServer::StartTimer( double interval )
+{
+  // set up the interval timer
+  //
+  // set a timer to go off every few ms. in realtime mode we'll sleep
+  // in between if there's nothing else to do. 
+
+  //install signal handler for timing
+  if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
+    {
+      PRINT_ERR("failed to install signal handler");
+      exit( -1 );
+    }
+
+  //printf( "interval: %f\n", interval );
+
+  //start timer with chosen interval (specified in milliseconds)
+  struct itimerval tick;
+  // seconds
+  tick.it_value.tv_sec = tick.it_interval.tv_sec = (long)floor(interval);
+  // microseconds
+  tick.it_value.tv_usec = tick.it_interval.tv_usec = 
+    (long)fmod( interval * MILLION, MILLION); 
+  
+  if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
+    {
+      PRINT_ERR("failed to set timer");
+      exit( -1 );
+    }
+}
+

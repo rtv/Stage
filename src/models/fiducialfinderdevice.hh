@@ -6,9 +6,9 @@
 // Desc: Simulates the laser-based beacon detector
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/laserbeacondevice.hh,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.1 $
 //
 // Usage:
 //  (empty)
@@ -46,17 +46,17 @@ typedef struct
   int beaconCount;
 } ExportLaserBeaconDetectorData;
 
-class CLBDDevice : public CPlayerEntity
+class CFiducialFinder : public CPlayerEntity
 {
   // Default constructor
-  public: CLBDDevice( LibraryItem *libit, CWorld *world, CLaserDevice *parent );
+  public: CFiducialFinder( LibraryItem *libit, CWorld *world, CLaserDevice *parent );
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CLBDDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
-  { return( new CLBDDevice( libit, world, (CLaserDevice*)parent ) ); }
+public: static CFiducialFinder* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new CFiducialFinder( libit, world, (CLaserDevice*)parent ) ); }
     
   // Startup routine
   public: virtual bool Startup();

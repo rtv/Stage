@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.5 2002-11-01 19:12:29 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.6 2002-11-09 02:32:34 rtv Exp $
  */
 
 #include "library.hh"
@@ -37,7 +37,7 @@
 #include "models/gripperdevice.hh"
 #include "models/idardevice.hh"
 #include "models/idarturretdevice.hh"
-#include "models/laserbeacondevice.hh"
+#include "models/fiducialfinderdevice.hh"
 #include "models/laserdevice.hh"
 #include "models/motedevice.hh"
 #include "models/omnipositiondevice.hh"
@@ -68,7 +68,8 @@ libitem_t library_items[] = {
   { "gripper", "blue", (CFP)CGripperDevice::Creator},
   { "idar", "DarkRed", (CFP)CIdarDevice::Creator},
   { "idarturret", "DarkRed", (CFP)CIdarTurretDevice::Creator},
-  { "lbd", "gray", (CFP)CLBDDevice::Creator},
+  { "lbd", "gray", (CFP)CFiducialFinder::Creator},
+  { "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
   { "mote", "orange", (CFP)CMoteDevice::Creator},
   { "omniposition", "red", (CFP)COmniPositionDevice::Creator},
   { "power", "wheat", (CFP)CPowerDevice::Creator},
@@ -76,6 +77,7 @@ libitem_t library_items[] = {
   { "puck", "green", (CFP)CPuck::Creator},
   { "truth", "purple", (CFP)CTruthDevice::Creator},
   { "vision", "gray", (CFP)CVisionDevice::Creator},
+  { "blobfinder", "gray", (CFP)CVisionDevice::Creator},
   { "broadcast", "brown", (CFP)CBroadcastDevice::Creator},
   { "bumper", "LightBlue", (CFP)CBumperDevice::Creator},
   // { "bps", BpsType, (CFP)CBpsDevice::Creator},

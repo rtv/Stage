@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.10 2002-11-02 20:06:51 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.11 2002-11-09 02:32:34 rtv Exp $
  */
 
 
@@ -37,7 +37,7 @@
 
 //#undef DEBUG
 //#undef VERBOSE
-//#define DEBUG 
+#define DEBUG 
 //#define VERBOSE
 
 #include <errno.h>
@@ -190,24 +190,41 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   bool showgrid;
   bool subscribedonly;
 
+  // Size of world in pixels
+  sx = (int) this->matrix->width;
+  sy = (int) this->matrix->height;
+  
+  // Grid size in meters
+  gridx = sx / this->ppm;
+  gridy = sy / this->ppm;
+  
+  // Place a hard limit, just to stop it going off the screen
+  // (TODO - we could get the sceen size from X if we tried?)
+  if (sx > 1024)
+    sx = 1024;
+  if (sy > 768)
+    sy = 768;
+  
+  // Grid spacing
+  minor = 0.2;
+  major = 1.0;
+  showgrid = true;
+
+  // Size in meters
+  dx = sx * scale;
+  dy = sy * scale;
+  
+  // Origin of the canvas
+  ox = dx / 2;
+  oy = dy / 2;
+  
+  // only show data for subscribed devices
+  subscribedonly = true;
+  
+  // if there's a worldfile we adjust the window params to the specified values
   if (worldfile != NULL)
   {
     int section = worldfile->LookupEntity("gui");
-
-    // Size of world in pixels
-    sx = (int) this->matrix->width;
-    sy = (int) this->matrix->height;
-
-    // Grid size in meters
-    gridx = sx / this->ppm;
-    gridy = sy / this->ppm;
-
-    // Place a hard limit, just to stop it going off the screen
-    // (TODO - we could get the sceen size from X if we tried?)
-    if (sx > 1024)
-      sx = 1024;
-    if (sy > 768)
-      sy = 768;
 
     // Size of canvas in pixels
     sx = (int) worldfile->ReadTupleFloat(section, "size", 0, sx);
@@ -224,7 +241,6 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
     oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
 
-
     // Grid spacing
     minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
     major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
@@ -232,46 +248,15 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     
     // toggle display of subscribed or all device data
     subscribedonly = worldfile->ReadInt(section, "showsubscribed", false);
-
-    gridx = ceil(gridx / major) * major;
-    gridy = ceil(gridy / major) * major;
   }
   else
-  {
-    // Size of world in pixels
-    sx = (int) this->matrix->width;
-    sy = (int) this->matrix->height;
+    PRINT_DEBUG( "NO WORLDFILE - USING DEFAULT GUI PARAMS" );
+  
+  printf( "sx %d sy %d dx %.2f dy %.2f ox %.2f oy %.2f scale %.2f\n",
+	  sx, sy, dx, dy, ox, oy, scale );
 
-    // Grid size in meters
-    gridx = sx / this->ppm;
-    gridy = sy / this->ppm;
-
-    // Place a hard limit, just to stop it going off the screen
-    if (sx > 1024)
-      sx = 1024;
-    if (sy > 768)
-      sy = 768;
-    
-    // Size in meters
-    dx = sx * scale;
-    dy = sy * scale;
-
-    // Origin of the canvas
-    ox = dx / 2;
-    oy = dy / 2;
-
-
-    // Grid spacing
-    minor = 0.2;
-    major = 1.0;
-    showgrid = true;
-
-    // default
-    subscribedonly = true;
-
-    gridx = ceil(gridx / major) * major;
-    gridy = ceil(gridy / major) * major;
-  }
+  gridx = ceil(gridx / major) * major;
+  gridy = ceil(gridy / major) * major;
   
   this->app = rtk_app_create();
   this->rtk_update_time = 0;
@@ -391,7 +376,8 @@ bool CWorld::RtkStartup()
   
   // Initialise rtk
   rtk_app_main_init(this->app);
-  
+
+  puts( "** RTKSTARTUP **" );
   // this rtkstarts all entities
   root->RtkStartup();
     
@@ -414,13 +400,17 @@ void CWorld::RtkShutdown()
 // Update the GUI
 void CWorld::RtkUpdate()
 {
+  //PRINT_DEBUG( "updating gui" );
+
   // Process events
   rtk_app_main_loop(this->app);
 
   // Run the gui at a fixed rate (in simulator time).
   if (this->m_sim_time < this->rtk_update_time + 1 / this->rtk_update_rate)
     return;
-  this->rtk_update_time = this->m_sim_time - fmod(this->m_sim_time, 1 / this->rtk_update_rate);
+
+  this->rtk_update_time = 
+    this->m_sim_time - fmod(this->m_sim_time, 1 / this->rtk_update_rate);
   
   // Process menus
   RtkMenuHandling();      

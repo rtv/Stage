@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.11 2002-11-01 19:12:29 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.12 2002-11-09 02:32:34 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -237,9 +237,7 @@ public: virtual void FamilyUnsubscribe();
   public: LaserReturn laser_return;
   public: IDARReturn idar_return;
   public: GripperReturn gripper_return;
-  // read by some devices, eg. laser beacon detector if not -1.
-  public: int visible_id; 
-
+  public: int fiducial_return; 
 
   // the full path name of this device in the filesystem
   //public: char device_filename[256]; 

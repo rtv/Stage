@@ -24,6 +24,8 @@ libstgmodels_a_SOURCES = \
                    broadcastdevice.hh \
                    bumperdevice.cc \
                    bumperdevice.hh \
+                   fiducialfinderdevice.cc \
+                   fiducialfinderdevice.hh \
                    gpsdevice.cc \
                    gpsdevice.hh \
                    gripperdevice.cc \
@@ -34,8 +36,6 @@ libstgmodels_a_SOURCES = \
                    idarturretdevice.hh \
                    image.cc \
                    image.hh \
-                   laserbeacondevice.cc \
-                   laserbeacondevice.hh \
                    laserdevice.cc \
                    laserdevice.hh \
                    motedevice.cc \

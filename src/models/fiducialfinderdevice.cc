@@ -1,17 +1,17 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: laserbeacondevice.cc
-// Author: Andrew Howard
+// File: fiducialfinderdevice.cc
+// Author: Richard Vaughan
 // Date: 12 Jan 2000
 // Desc: Simulates the laser-based beacon detector
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/laserbeacondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.cc,v $
+//  $Author: rtv $
+//  $Revision: 1.1 $
 //
 // Usage: detects objects that were laser bright and had non-zero
-// visible_id in a laser scan
+// ficucial_return
 //
 // Theory of operation:
 //  (empty)
@@ -30,12 +30,12 @@
 #include <stage.h>
 #include "world.hh"
 #include "laserdevice.hh"
-#include "laserbeacondevice.hh"
+#include "fiducialfinderdevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CLBDDevice::CLBDDevice(LibraryItem* libit,CWorld *world, CLaserDevice *parent )
+CFiducialFinder::CFiducialFinder(LibraryItem* libit,CWorld *world, CLaserDevice *parent )
   : CPlayerEntity(libit,world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
@@ -94,7 +94,7 @@ CLBDDevice::CLBDDevice(LibraryItem* libit,CWorld *world, CLaserDevice *parent )
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
 //
-bool CLBDDevice::Startup()
+bool CFiducialFinder::Startup()
 {
   if (!CPlayerEntity::Startup())
     return false;
@@ -105,7 +105,7 @@ bool CLBDDevice::Startup()
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the entity from the world file
-bool CLBDDevice::Load(CWorldFile *worldfile, int section)
+bool CFiducialFinder::Load(CWorldFile *worldfile, int section)
 {
   if (!CPlayerEntity::Load(worldfile, section))
     return false;
@@ -126,7 +126,7 @@ bool CLBDDevice::Load(CWorldFile *worldfile, int section)
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
 //
-void CLBDDevice::Update( double sim_time )
+void CFiducialFinder::Update( double sim_time )
 {
   CPlayerEntity::Update( sim_time ); // inherit debug output
 
@@ -241,7 +241,7 @@ void CLBDDevice::Update( double sim_time )
        it != this->laser->visible_beacons.end(); it++ )
   {
     CEntity *nbeacon = (CEntity*)*it;        
-    int id = nbeacon->visible_id;
+    int id = nbeacon->fiducial_return;
     double px, py, pth;   
     nbeacon->GetGlobalPose( px, py, pth );
 
@@ -310,7 +310,7 @@ void CLBDDevice::Update( double sim_time )
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the rtk gui
-void CLBDDevice::RtkStartup()
+void CFiducialFinder::RtkStartup()
 {
   CPlayerEntity::RtkStartup();
   
@@ -324,7 +324,7 @@ void CLBDDevice::RtkStartup()
 
 ///////////////////////////////////////////////////////////////////////////
 // Finalise the rtk gui
-void CLBDDevice::RtkShutdown()
+void CFiducialFinder::RtkShutdown()
 {
   // Clean up the figure we created
   rtk_fig_destroy(this->beacon_fig);
@@ -335,7 +335,7 @@ void CLBDDevice::RtkShutdown()
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the rtk gui
-void CLBDDevice::RtkUpdate()
+void CFiducialFinder::RtkUpdate()
 {
   CPlayerEntity::RtkUpdate();
  

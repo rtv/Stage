@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.3 2002-11-07 00:02:27 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.4 2002-11-09 02:32:34 rtv Exp $
  */
 
 #define DEBUG
@@ -325,7 +325,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 
       // Construct a list of entiities that are laser reflectors with
       // visible ids
-      if( ent->visible_id != 0 )
+      if( ent->fiducial_return != 0 )
         this->visible_beacons.push_front( (int)ent );
 
       // Stop looking when we see something

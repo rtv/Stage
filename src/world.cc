@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.135 2002-11-02 08:24:58 inspectorg Exp $
+ * CVS info: $Id: world.cc,v 1.136 2002-11-09 02:32:34 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -68,26 +68,10 @@ void StageQuit();
 long int g_bytes_output = 0;
 long int g_bytes_input = 0;
 
-int g_timer_events = 0;
 
 // allocate chunks of 32 pointers for entity storage
 const int OBJECT_ALLOC_SIZE = 32;
 
-// dummy timer signal func
-void TimerHandler( int val )
-{
-  //puts( "TIMER HANDLER" );
-  g_timer_events++;
-
-  // re-install signal handler for timing
-  if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
-    {
-      PRINT_ERR("failed to install signal handler");
-      exit( -1 );
-    }
-
-  //printf( "\ng_timer_expired: %d\n", g_timer_expired );
-}  
 
 // static member init
 CEntity* CWorld::root = NULL;
@@ -115,9 +99,6 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   // if we are a server, this gets set in the server's constructor
   this->worldfile = NULL;
 
-  // stop time of zero means run forever
-  m_stoptime = 0;
-  
   // invalid file descriptor initially
   m_log_fd = -1;
 
@@ -136,6 +117,8 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   // if real_timestep is zero, we run as fast as possible
   m_real_timestep = 0.1; //seconds
   m_sim_timestep = 0.1; //seconds; - 10Hz default rate 
+  //m_real_timestep = 0.1; //seconds
+  //m_sim_timestep = 0.1; //seconds; - 10Hz default rate 
   m_step_num = 0;
 
   // start paused
@@ -288,12 +271,6 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
 	  printf( "[Console Output]" );
 	}
       
-      if(!strcmp(argv[a], "-t"))
-	{
-	  m_stoptime = atoi(argv[++a]);
-	  printf("[Stop time: %d]",m_stoptime);
-	}
-
       //else if( strcmp( argv[a], "-id" ) == 0 )
       //{
       //  memset( m_hostname, 0, 64 );
@@ -330,17 +307,13 @@ bool CWorld::Startup()
   // Initialise the rate counter
   m_update_ratio = 1;
   m_update_rate = 0;
-    
-  if( m_real_timestep > 0.0 ) // if we're in real-time mode
-    StartTimer( m_real_timestep ); // start the real-time interrupts going
-  
+      
 #ifdef DEBUG
   //root->Print( "" );
 #endif
 
   // use the generic hook to start the GUI
   if( this->enable_gui ) GuiWorldStartup( this );
-
 
   // Startup all the entities. they will create and initialize their
   // device files and Gui stuff
@@ -373,100 +346,23 @@ bool CWorld::Shutdown()
   return true;
 }
 
-
-
-
-void CWorld::StartTimer( double interval )
-{
-  // set up the interval timer
-  //
-  // set a timer to go off every few ms. in realtime mode we'll sleep
-  // in between if there's nothing else to do. 
-
-  //install signal handler for timing
-  if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
-    {
-      PRINT_ERR("failed to install signal handler");
-      exit( -1 );
-    }
-
-  //printf( "interval: %f\n", interval );
-
-  //start timer with chosen interval (specified in milliseconds)
-  struct itimerval tick;
-  // seconds
-  tick.it_value.tv_sec = tick.it_interval.tv_sec = (long)floor(interval);
-  // microseconds
-  tick.it_value.tv_usec = tick.it_interval.tv_usec = 
-    (long)fmod( interval * MILLION, MILLION); 
-  
-  if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
-    {
-      PRINT_ERR("failed to set timer");
-      exit( -1 );
-    }
-}
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Update the world
 void CWorld::Update(void)
 {
-  //PRINT_DEBUG( "** Update **" );
-  //assert( arg == 0 );
-  
-  //while( !quit )
-    
-  // if the sim isn't running, we pause briefly and return
-  if( !m_enable )
-	{
-	  usleep( 100000 );
-	  return;
-	}
-
-  // is it time to stop?
-  if(m_stoptime && m_sim_time >= m_stoptime)
-	{   
-	  //system("kill `cat stage.pid`");
-	  quit = true;
-	  return;
-	}
-      
-  // otherwise we're running - calculate new world state
+  PRINT_DEBUG( "** Update **" );
       
   // let the entities do anything they want to do between clock increments
-  root->Sync(); 
+  //root->Sync(); 
       
-  // if the timer has gone off recently or we're in fast mode
-  // we increment the clock and do the time-based updates
-  if( g_timer_events > 0 || m_real_timestep == 0 )
-	{          
-	  // set the current time and
-	  // update the entities managed by this host at this time 
-	  root->Update(this->SetClock( m_real_timestep, m_step_num ));
-	  
-	  // all the entities are done, now let's draw the graphics
-	  if( this->enable_gui )
-	    GuiWorldUpdate( this );
-	  
-	  if( g_timer_events > 0 )
-	    g_timer_events--; // we've handled this timer event
-	  
-	  // increase the time step counter
-	  m_step_num++; 
+  // set the current time and update the entities managed by this host
+  root->Update(this->SetClock( m_real_timestep, m_step_num ));
+  
+  // all the entities are done, now let's draw the graphics
+  if( this->enable_gui )  GuiWorldUpdate( this );
 
-	}
-      
-  Output(); // perform console and log output
-      
-  // if there's nothing pending and we're not in fast mode, we let go
-  // of the processor (on linux gives us around a 10ms cycle time)
-  if( g_timer_events < 1 && m_real_timestep > 0.0 ) 
-    usleep( 0 );
-      
-  // dump the contents of the matrix to a file for debugging
-  //world->matrix->dump();
-  //getchar();	
+  // increase the time step counter
+  m_step_num++;    
 }
 
 
@@ -601,24 +497,6 @@ CEntity* CWorld::GetEntity( int id )
 //  }
 
 
-// sleep until a signal goes off
-// return the time in seconds we spent asleep
-double CWorld::Pause()
-{
-  // we're too busy to sleep!
-  if( m_real_timestep == 0 || --g_timer_events > 0  )
-    return 0;
-  
-  // otherwise
-
-  double sleep_start = GetRealTime();
-
-  pause(); // wait for the signal
-
-  return( GetRealTime() - sleep_start );
-}
-
-
 void CWorld::Output()
 {
   // comms used
@@ -686,7 +564,11 @@ bool CWorld::Load( void )
   // we call this *after* the world has loaded, so we can configure the menus
   // correctly
 
+  PRINT_DEBUG( "WORLD LOAD" );
+
   if(this->enable_gui ) GuiLoad( this );
+  else
+    PRINT_DEBUG( "NOT LOADING GUI" );
   
   return true; // success
 }

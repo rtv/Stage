@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.7 2002-11-01 19:12:30 rtv Exp $
+// $Id: server.hh,v 1.8 2002-11-09 02:32:34 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -117,7 +117,7 @@ public:
   // THIS IS THE EXTERNAL INTERFACE TO THE WORLD, SHARED BY ALL WORLD
   // DESCENDANTS
   virtual int Read( void );
-  virtual void Update( void );
+  //virtual void Update( void );
   virtual void Write( void );
   //virtual void Shutdown( void );
 
@@ -215,7 +215,7 @@ class CStageServer : public CStageIO
 
   // check to seee what player has done, then inherits parent's Write()
   virtual void Write( void );
-  //virtual void Update( void );
+  virtual void Update( void );
   //virtual bool Startup( void );
   //virtual void Shutdown( void );
 
@@ -246,6 +246,14 @@ class CStageServer : public CStageIO
 
   bool SetupConnectionServer( void );
   void ListenForConnections( void );
+
+  double Pause();
+  void StartTimer(double interval);
+
+  // when to shutdown (in seconds)
+private: int m_stoptime;
+public: int GetStopTime( void ){ return m_stoptime; };
+  
 
   /////////////////////////////////////////////////////////////////
   // Player & interface
@@ -321,7 +329,7 @@ public:
   // DESCENDANTS
   //virtual int Read( void );
   //virtual void Write( void );
-  //virtual void Update( void );
+  virtual void Update( void );
   //virtual void Shutdown( void );
 
   // Initialise the world

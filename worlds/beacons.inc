@@ -2,10 +2,10 @@
 # Desc: Device definitions for handy beacons
 # Author: Richard Vaughan
 # Date: 29 October 2002
-# CVS: $Id: beacons.inc,v 1.1 2002-11-01 19:25:00 rtv Exp $
+# CVS: $Id: beacons.inc,v 1.2 2002-11-09 02:32:34 rtv Exp $
 
 # vision beacons - bright round circles
-# that show up nicely in the visiondevice
+# that show up nicely in the blobfinder
 
 define visionbeacon box
 (
@@ -20,7 +20,7 @@ define visionbeacon box
 
 define laserbeacon box
 (
-  id 1
+  fiducial_id 1
   size [ 0.05 0.3 ]
   laser_return "bright"
   color "LightBlue"
