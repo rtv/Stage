@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.12 2003-02-10 01:02:02 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.13 2003-02-12 08:48:48 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -308,15 +308,6 @@ public:
   
   void DestroyConnection( int con );
   
-  // these store the last pose we sent out from the pose server
-  // to be tested when setting the dirty flag to see if we really
-  // need to send a new pose
-  //public: int m_last_pixel_x, m_last_pixel_y, m_last_degree;
-  
-  // recursive function that ORs an ent's dirty array with those of
-  // all it's ancestors 
-  //public: void InheritDirtyFromParent( int con_count );
-
   // the IP address of the host that manages this entity
   // replaced the hostname 'cos it's smaller and faster in comparisons
   public: struct in_addr m_hostaddr;
@@ -336,12 +327,6 @@ public:
   // Update the rtk gui
   public: virtual void RtkUpdate();
 
-  // Process mouse events
-  public: virtual void RtkOnMouse(rtk_fig_t *fig, int event, int mode);
-  
-  // Process mouse events (static callback)
-  protected: static void StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode);
-  
   // Default figure handle
   public: rtk_fig_t *fig, *fig_label, *fig_grid;
   
@@ -358,10 +343,6 @@ public:
   static void staticUnselect( void* ent );
   */
 #endif
-
-  // calls the GUI hook to startup this object, then recusively calls
-  // the children's GuiStartup()
-  //public: virtual void GuiStartup( void );
 
 public: void *gui_data; 
 

@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.10 2003-01-21 23:07:32 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.10.2.1 2003-02-12 08:48:48 rtv Exp $
  */
 
 #define DEBUG
@@ -407,7 +407,7 @@ void CLaserDevice::RtkShutdown()
 void CLaserDevice::RtkUpdate()
 {
   CPlayerEntity::RtkUpdate();
- 
+#if 0 
   rtk_fig_clear(this->scan_fig);
    
   // draw a figure from the data in the data buffer
@@ -487,6 +487,7 @@ void CLaserDevice::RtkUpdate()
     //else
     //  puts( "subscribed but no data avail!!!!!!!!!!!!!!" );
   }
+#endif
 }
 #endif
 

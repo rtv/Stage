@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.13 2003-02-10 02:14:04 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.14 2003-02-12 08:48:48 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -473,20 +473,24 @@ void CEntity::MapEx(double px, double py, double pth, bool render)
 // This function is useful for writing position devices.
 CEntity *CEntity::TestCollision(double px, double py, double pth)
 {
-  double qx = px + this->origin_x * cos(pth) - this->origin_y * sin(pth);
-  double qy = py + this->origin_y * sin(pth) + this->origin_y * cos(pth);
-  double qth = pth;
-  double sx = this->size_x;
-  double sy = this->size_y;
-
-
   // TODO - raytrace along our rectangles - more expensive, but most vehicles
   // will just be a single rect, so we're back where we started.
-  /*
-  switch( this->shape ) 
-  {
-    case ShapeRect:
+  
+  /*  for( int r=0; r < rect_count; r++ )
     {
+      double rx = rectangles[r].x;
+      double ry = rectangles[r].y;
+      double ra = rectangles[r].a;
+      double rw = rectangles[r].w;
+      double rh = rectangles[r].h;
+            
+      double qx = rx + origin_x * cos(rth) - this->origin_y * sin(rth);
+      double qy = ry + origin_y * sin(rth) + this->origin_y * cos(rth);
+      double qth = rth;
+      double sx = this->size_x;
+      double sy = this->size_y;
+     
+
       CRectangleIterator rit( qx, qy, qth, sx, sy, matrix );
 
       CEntity* ent;

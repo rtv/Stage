@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.25 2003-02-12 03:02:34 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.26 2003-02-12 08:48:48 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -125,6 +125,8 @@ stage_gui_library_item_t gui_library[] = {
 
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
+
+double update_interval = 0.01; // seconds
 
 // Quit signal
 int quit = 0;
@@ -481,7 +483,6 @@ void PackTimespec( struct timespec *ts, double seconds )
 
 int WaitForWallClock()
 {
-  static double desired_interval = 0.01; // seconds
   static double min_sleep_time = 0.0;
   static double avg_interval = 0.01;
 
@@ -498,17 +499,17 @@ int WaitForWallClock()
   
   double freq = 1.0 / avg_interval;
   
-  //PRINT_DEBUG4( "time %.4f freq %.2f interval %.4f avg %.4f"aa,  
-  //       GetRealTime(), freq, interval, avg_interval );
+  PRINT_DEBUG4( "time %.4f freq %.2f interval %.4f avg %.4f",  
+         GetRealTime(), freq, interval, avg_interval );
 
   PRINT_MSG2( "time %.4f freq %.2fHz", timenow, freq );
   
   // if we have spare time, go to sleep
-  double spare_time = desired_interval - avg_interval;
+  double spare_time = update_interval - avg_interval;
   
   if( spare_time > min_sleep_time )
     {
-      //printf( "sleeping for %.6f seconds\n", spare_time );
+      printf( "sleeping for %.6f seconds\n", spare_time );
       ts.tv_sec = (time_t)spare_time;
       ts.tv_nsec = (long)(fmod( spare_time, 1.0 ) * BILLION );
       
@@ -576,7 +577,7 @@ int main(int argc, char **argv)
 	{
 	  //PRINT_WARN( "update root" );
 	  CEntity::root->Update();
-	  CEntity::simtime+=0.01; 
+	  CEntity::simtime += update_interval; 
 	}
       
       // find all the dirty properties and write them out to subscribers

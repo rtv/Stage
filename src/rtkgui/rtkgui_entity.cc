@@ -23,7 +23,7 @@ void CEntity::RtkStartup()
 
   // Set the mouse handler
   this->fig->userdata = this;
-  rtk_fig_add_mouse_handler(this->fig, StaticRtkOnMouse);
+  rtk_fig_add_mouse_handler(this->fig, RtkOnMouse);
 
   // add this device to the world's device menu 
   //this->m_world->AddToDeviceMenu( this, true); 
@@ -193,36 +193,27 @@ void CEntity::RtkUpdate()
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// Process mouse events
-void CEntity::RtkOnMouse(rtk_fig_t *fig, int event, int mode)
-{
-  double px, py, pth;
 
+///////////////////////////////////////////////////////////////////////////
+// Process mouse events 
+void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
+{
+  CEntity *entity = (CEntity*) fig->userdata;
+  
+  double px, py, pth;
+  
   switch (event)
-  {
+    {
     case RTK_EVENT_PRESS:
     case RTK_EVENT_MOTION:
     case RTK_EVENT_RELEASE:
       rtk_fig_get_origin(fig, &px, &py, &pth);
-      this->SetGlobalPose(px, py, pth);
+      entity->SetGlobalPose(px, py, pth);
       break;
-
+      
     default:
       break;
-  }
-
-  return;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process mouse events (static callback)
-void CEntity::StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode)
-{
-  CEntity *entity;
-  entity = (CEntity*) fig->userdata;
-  entity->RtkOnMouse(fig, event, mode);
+    }
   return;
 }
 

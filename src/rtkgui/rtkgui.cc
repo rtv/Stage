@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.8 2003-02-09 22:51:50 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.9 2003-02-12 08:48:48 rtv Exp $
  */
 
 //
@@ -290,8 +290,6 @@ int RtkGuiUpdate( void )
   rtk_canvas_render( canvas);
   
   return 0; // success
-  
-  //RtkUpdate();
 }
 
 
