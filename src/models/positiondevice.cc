@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.11 $
+//  $Author: inspectorg $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -97,11 +97,16 @@ bool CPositionDevice::Load(CWorldFile *worldfile, int section)
   else if (strcmp(rvalue, "diff") == 0)
     this->drive_mode = DIFF_DRIVE_MODE;
   else
-    {
-      PRINT_WARN1( "Unknown drive mode (%s)in world file. "
-		   "Using differential mode.", rvalue );
-      this->drive_mode = DIFF_DRIVE_MODE;
-    }
+  {
+    PRINT_WARN1( "Unknown drive mode (%s)in world file. "
+                 "Using differential mode.", rvalue );
+    this->drive_mode = DIFF_DRIVE_MODE;
+  }
+
+  // Get odometry biases
+  this->odo_ex = worldfile->ReadTupleFloat(section, "odom_bias", 0, 0.0);
+  this->odo_ey = worldfile->ReadTupleFloat(section, "odom_bias", 1, 0.0);
+  this->odo_ea = worldfile->ReadTupleFloat(section, "odom_bias", 2, 0.0);
      
   return true;
 }
@@ -357,12 +362,12 @@ void CPositionDevice::Move()
     SetGlobalVel(vx, vy, va);
         
     // Compute the new odometric pose
-    // we currently have PERFECT odometry. yum!
-    this->odo_px += 
-      step * vx * cos(this->odo_pa) + step * vy * sin(this->odo_pa);
-    this->odo_py += 
-      step * vx * sin(this->odo_pa) + step * vy * cos(this->odo_pa);
-    this->odo_pa += step * va;
+    // This includes a bias term to simulate real odometry
+    this->odo_px += step * vx * (1 + this->odo_ex) * cos(this->odo_pa)
+      + step * vy * (1 + this->odo_ey) * sin(this->odo_pa);
+    this->odo_py += step * vx * (1 + this->odo_ex) * sin(this->odo_pa)
+      + step * vy * (1 + this->odo_ey) * cos(this->odo_pa);
+    this->odo_pa += step * va * (1 + this->odo_ea);
     
     this->stall = false;
 

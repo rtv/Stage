@@ -8,8 +8,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Author: inspectorg $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -48,8 +48,8 @@ class CPositionDevice : public CPlayerEntity
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CPositionDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
-  { return( new CPositionDevice( libit, world, parent ) ); }
+  public: static CPositionDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+    { return( new CPositionDevice( libit, world, parent ) ); }
 
   // load settings from worldfile
   bool Load(CWorldFile *worldfile, int section);
@@ -85,6 +85,9 @@ public: static CPositionDevice* Creator(  LibraryItem *libit, CWorld *world, CEn
   
   // movement mode - VELOCITY_CONTROL_MODE or POSITION_CONTROL_MODE
   stage_position_control_mode_t control_mode;
+
+  // Odometric biases
+  private: double odo_ex, odo_ey, odo_ea;
   
   // Timings
   private: double last_time;
