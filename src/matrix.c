@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.13 2005-01-05 09:01:52 rtv Exp $
+ * $Id: matrix.c,v 1.14 2005-02-08 04:26:49 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -324,6 +324,9 @@ void stg_matrix_polygons( stg_matrix_t* matrix,
 			  stg_polygon_t* polys, int num_polys,
 			  void* object, int add )
 {
+  //printf( "rendering model %s at %.2f %.2f %d\n",
+  //  ((stg_model_t*)object)->token, x, y, add );
+  
   int p;
   for( p=0; p<num_polys; p++ )
     stg_matrix_polygon( matrix, x,y,a, &polys[p], object, add );

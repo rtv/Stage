@@ -152,9 +152,9 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 	    }
 	  
 	  //PRINT_WARN3( "creating model token %s type %d instance %d", 
-	  //	    typestr, 
-	  //	    type,
-	  //	    parent ? parent->child_type_count[type] : world->child_type_count[type] );
+	  ///       typestr, 
+	  //       type,
+	  //       parent ? parent->child_type_count[type] : world->child_type_count[type] );
 	  
 	  // generate a name and count this type in its parent (or world,
 	  // if it's a top-level object)

@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.22 2005-02-07 02:03:33 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.23 2005-02-08 04:26:50 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -236,9 +236,10 @@ public: virtual int PutConfig(player_device_id_t id, void *client,
   private: void RefreshDataSimulation( device_record_t* device );
 
   // one method for each type of config we accept
-  private: void HandleConfigBlobfinder( device_record_t* device, void* client, 
+  private: void HandleConfigSimulation( player_device_id_t id, void* client, 
 					void* buffer, size_t len);
-  private: void HandleConfigSimulation( device_record_t* device, void* client, 
+
+  private: void HandleConfigBlobfinder( device_record_t* device, void* client, 
 					void* buffer, size_t len);
   private: void HandleConfigPosition( device_record_t* device, void* client, 
 				      void* buffer, size_t len );
@@ -660,19 +661,7 @@ void StgDriver::Main()
     // test if we are supposed to cancel
     pthread_testcancel();
     
-  //   // check for any outstanding commands
-//     for( int i=0; i<(int)this->devices->len; i++ )
-//       {
-// 	device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
-	
-// 	if( device->cmd_dirty )
-// 	  {
-// 	    stg_model_set_command( device->mod, device->cmd, device->cmd_len );
-// 	    device->cmd_dirty = FALSE;
-// 	  }
-//       }
-    
-    // update the world - mustn't sleep inside the lock
+    // update the world
     if( stg_world_update( StgDriver::world, TRUE ) )
       exit( 0 );
 
@@ -687,7 +676,7 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
 			 void* src, size_t len,
 			 struct timeval* timestamp)
 {  
-  puts( "StgDriver::PutConfig");
+  //puts( "StgDriver::PutConfig");
 
   if( len < 1 )
     {
@@ -695,7 +684,7 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
       return 0;
     }
   
-  Device *device;
+  Device *device = NULL;
   //int retval;
   struct timeval ts;
   
@@ -704,68 +693,75 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
   else
     GlobalTime->GetTime(&ts);
   
-  // find this device:  
-  device_record_t* drec = NULL;
-  
-  for( int i=0; i<(int)this->devices->len; i++ )
+  // handle simulation requests directly
+  if( id.code == PLAYER_SIMULATION_CODE )
     {
-      device_record_t* candidate = 
-	(device_record_t*)g_ptr_array_index( this->devices, i );
+      this->HandleConfigSimulation( id, client, src, len );      
+    }
+  else // it's a device
+    {
+      // find this device:  
+      device_record_t* drec = NULL;
       
-      if( candidate->id.port == id.port &&
-	  candidate->id.code == id.code &&
-	  candidate->id.index == id.index )
+      for( int i=0; i<(int)this->devices->len; i++ )
 	{
-	  drec = candidate;
-	  break;
+	  device_record_t* candidate = 
+	    (device_record_t*)g_ptr_array_index( this->devices, i );
+	  
+	  if( candidate->id.port == id.port &&
+	      candidate->id.code == id.code &&
+	      candidate->id.index == id.index )
+	    {
+	      drec = candidate;
+	      break;
+	    }
 	}
-    }
-  
-  // if the device was found, call the appropriate config handler
-  if( drec ) 
-    switch( drec->id.code )
-      {
-      case PLAYER_SIMULATION_CODE:
-	this->HandleConfigSimulation( drec, client, src, len );
-	break;
-	
-      case PLAYER_LASER_CODE:
-	this->HandleConfigLaser( drec, client, src, len  );
-	break;
-	
-      case PLAYER_POSITION_CODE:
-	this->HandleConfigPosition( drec, client, src, len  );
-	break;
-	
-      case PLAYER_FIDUCIAL_CODE:
-	this->HandleConfigFiducial( drec, client, src, len  );
-	break;
-	
-      case PLAYER_BLOBFINDER_CODE:
-	this->HandleConfigFiducial( drec, client, src, len  );
-	break;
-      case PLAYER_SONAR_CODE:
-	this->HandleConfigSonar( drec, client, src, len  );
-	break;
-	
-      default:
-	printf( "Stage driver error: unknown player device code (%d)\n",
-		device->id.code );	     	      
-	
-	// we don't recognize this interface at all, but we'll send
-	// a NACK as a minimum reply
-	if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-	  DRIVER_ERROR("PutReply() failed");	  
-      }      
-  else
-    {
-      PRINT_WARN3( "Failed to find device id (%d:%d:%d)", 
-		   id.port, id.code, id.index );
-
-      if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-	DRIVER_ERROR("PutReply() failed");	  
-    }
-  
+      
+      // if the device was found, call the appropriate config handler
+      if( drec ) 
+	switch( drec->id.code )
+	  {
+	    //	  case PLAYER_SIMULATION_CODE:
+	    //this->HandleConfigSimulation( drec, client, src, len );
+	    //break;
+	    
+	  case PLAYER_LASER_CODE:
+	    this->HandleConfigLaser( drec, client, src, len  );
+	    break;
+	    
+	  case PLAYER_POSITION_CODE:
+	    this->HandleConfigPosition( drec, client, src, len  );
+	    break;
+	    
+	  case PLAYER_FIDUCIAL_CODE:
+	    this->HandleConfigFiducial( drec, client, src, len  );
+	    break;
+	    
+	  case PLAYER_BLOBFINDER_CODE:
+	    this->HandleConfigFiducial( drec, client, src, len  );
+	    break;
+	  case PLAYER_SONAR_CODE:
+	    this->HandleConfigSonar( drec, client, src, len  );
+	    break;
+	    
+	  default:
+	    printf( "Stage driver error: unknown player device code (%d)\n",
+		    device->id.code );	     	      
+	    
+	    // we don't recognize this interface at all, but we'll send
+	    // a NACK as a minimum reply
+	    if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+	      DRIVER_ERROR("PutReply() failed");	  
+	  }      
+      else
+	{
+	  PRINT_WARN3( "Failed to find device id (%d:%d:%d)", 
+		       id.port, id.code, id.index );
+	  
+	  if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+	    DRIVER_ERROR("PutReply() failed");	  
+	}
+    } 
   return(0);
 }
 
@@ -823,13 +819,53 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
 //     }
 // }
 
-
-void StgDriver::HandleConfigSimulation( device_record_t* device, void* client, void* buffer, size_t len )
+void StgDriver::HandleConfigSimulation( player_device_id_t id, 
+					void* client, 
+					void* buffer, size_t len )
 {
-  printf("got simulation request\n");
-  
-  if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-    DRIVER_ERROR("PutReply() failed");  
+  //printf("got simulation request\n");
+
+  // switch on the config type (first byte)
+  uint8_t* buf = (uint8_t*)buffer;
+  switch( buf[0] )
+    {  
+    case PLAYER_SIMULATION_SET_POSE2D:
+      {
+	player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
+	
+	stg_pose_t pose;
+	pose.x = ntohl(req->x) / 1000.0;
+	pose.y = ntohl(req->y) / 1000.0;
+	pose.a = DTOR( ntohl(req->x) );
+
+	printf( "Stage: received request to move object \"%s\" to (%.2f,%.2f,%.2f)\n",
+		req->name, pose.x, pose.y, pose.a );
+	
+	// look up the named model
+	
+	stg_model_t* mod = 
+	  stg_world_model_name_lookup( this->world, req->name );
+ 	
+	if( mod )
+	  {
+	    // move it 
+	    // printf( "moving model \"%s\"", req->name );	    
+	    stg_model_set_pose( mod, &pose );  
+	    this->PutReply( id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
+	  }
+	else
+	  {
+	    PRINT_WARN1( "simulation model \"%s\" not found", req->name );
+	    this->PutReply( id, client, PLAYER_MSGTYPE_RESP_NACK, NULL );
+	  }
+      }      
+      break;
+      
+    default:      
+      if (this->PutReply( id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+	DRIVER_ERROR("PutReply() failed");  
+      break;
+    }
 }
 
 void StgDriver::HandleConfigBlobfinder( device_record_t* device, void* client, void* buffer, size_t len )

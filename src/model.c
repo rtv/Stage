@@ -346,9 +346,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // init the arbitrary datalist structure
   g_datalist_init( &mod->props);
 	
-  // initialize odometry
-  //memset( &mod->odom, 0, sizeof(mod->odom));
-  
   // install the default functions
   mod->f_startup = _model_startup;
   mod->f_shutdown = _model_shutdown;
@@ -548,7 +545,7 @@ void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
   int ch;
   for( ch=0; ch<mod->children->len; ch++ )
     stg_model_map_with_children( (stg_model_t*)g_ptr_array_index(mod->children, ch), 
-			     render);  
+				 render);  
   // now map the model
   stg_model_map( mod, render );
 }
@@ -1339,9 +1336,7 @@ void stg_model_load( stg_model_t* mod )
 	  
       // convert rects to an array of polygons and upload the polygons
       stg_polygon_t* polys = stg_rects_to_polygons( rects, num_rects );
-      stg_model_set_polygons( mod, polys, num_rects );
-     
-      //free( lines );
+      stg_model_set_polygons( mod, polys, num_rects );     
     }
       
   int polycount = wf_read_int( mod->id, "polygons", 0 );

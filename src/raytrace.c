@@ -120,7 +120,11 @@ stg_model_t* itl_first_matching( itl_t* itl,
 	}
       
       //printf( "MATCH in the big cell at %.2f %.2f\n", itl->x, itl->y );
-	
+      //printf( "raytrace found match at %.2fm\n", itl->range );
+      
+      //printf( "found model %s at %.2f %.2f\n",
+      //      ((stg_model_t*)found)->token, itl->x, itl->y );
+
       if( fig_debug_rays ) // draw the big rectangle
 	rtk_fig_rectangle( fig_debug_rays, 
 			   itl->x-fmod(itl->x,itl->big_incr)+itl->big_incr/2.0,
@@ -178,9 +182,7 @@ stg_model_t* itl_first_matching( itl_t* itl,
 			   itl->x-fmod(itl->x,itl->small_incr)+itl->small_incr/2.0,
 			   itl->y-fmod(itl->y,itl->small_incr)+itl->small_incr/2.0,
 			   0, 
-			   itl->small_incr, itl->small_incr, 0 );      
-
-	  //printf( "raytrace found match at %.2fm\n", itl->range );
+			   itl->small_incr, itl->small_incr, 0 );       
 
 	  //printf( "MATCH in the small cell at %.2f %.2f\n", itl->x, itl->y );
 	  // return the current model and increment the index
