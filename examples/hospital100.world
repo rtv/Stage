@@ -15,1100 +15,1100 @@ set pixels_per_meter = 12
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40000)
 
-create position_device pose 112.92 65.79 295 color red port 40000 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 112.92 65.79 295 color red port 40000  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40000 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40000 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40000 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40000  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40000  
+  create gps_device pose 0.00 0.00 0 color gray port 40000  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40001)
 
-create position_device pose 118.93 58.54 306 color red port 40001 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 118.93 58.54 306 color red port 40001  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40001 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40001 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40001 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40001  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40001  
+  create gps_device pose 0.00 0.00 0 color gray port 40001  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40002)
 
-create position_device pose 125.78 91.53 62 color red port 40002 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 125.78 91.53 62 color red port 40002  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40002 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40002 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40002 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40002  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40002  
+  create gps_device pose 0.00 0.00 0 color gray port 40002  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40003)
 
-create position_device pose 115.12 52.07 55 color red port 40003 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 115.12 52.07 55 color red port 40003  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40003 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40003 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40003 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40003  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40003  
+  create gps_device pose 0.00 0.00 0 color gray port 40003  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40004)
 
-create position_device pose 119.93 57.80 342 color red port 40004 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 119.93 57.80 342 color red port 40004  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40004 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40004 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40004 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40004  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40004  
+  create gps_device pose 0.00 0.00 0 color gray port 40004  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40005)
 
-create position_device pose 114.06 75.07 327 color red port 40005 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 114.06 75.07 327 color red port 40005  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40005 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40005 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40005 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40005  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40005  
+  create gps_device pose 0.00 0.00 0 color gray port 40005  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40006)
 
-create position_device pose 120.39 56.46 211 color red port 40006 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 120.39 56.46 211 color red port 40006  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40006 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40006 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40006 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40006  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40006  
+  create gps_device pose 0.00 0.00 0 color gray port 40006  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40007)
 
-create position_device pose 113.04 54.23 333 color red port 40007 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 113.04 54.23 333 color red port 40007  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40007 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40007 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40007 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40007  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40007  
+  create gps_device pose 0.00 0.00 0 color gray port 40007  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40008)
 
-create position_device pose 112.42 62.92 104 color red port 40008 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 112.42 62.92 104 color red port 40008  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40008 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40008 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40008 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40008  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40008  
+  create gps_device pose 0.00 0.00 0 color gray port 40008  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40009)
 
-create position_device pose 126.54 93.20 164 color red port 40009 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 126.54 93.20 164 color red port 40009  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40009 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40009 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40009 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40009  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40009  
+  create gps_device pose 0.00 0.00 0 color gray port 40009  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40010)
 
-create position_device pose 114.31 54.37 173 color red port 40010 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 114.31 54.37 173 color red port 40010  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40010 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40010 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40010 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40010  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40010  
+  create gps_device pose 0.00 0.00 0 color gray port 40010  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40011)
 
-create position_device pose 114.17 57.00 121 color red port 40011 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 114.17 57.00 121 color red port 40011  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40011 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40011 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40011 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40011  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40011  
+  create gps_device pose 0.00 0.00 0 color gray port 40011  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40012)
 
-create position_device pose 129.85 91.73 193 color red port 40012 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.85 91.73 193 color red port 40012  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40012 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40012 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40012 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40012  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40012  
+  create gps_device pose 0.00 0.00 0 color gray port 40012  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40013)
 
-create position_device pose 115.58 74.55 254 color red port 40013 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 115.58 74.55 254 color red port 40013  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40013 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40013 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40013 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40013  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40013  
+  create gps_device pose 0.00 0.00 0 color gray port 40013  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40014)
 
-create position_device pose 130.37 49.43 284 color red port 40014 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 130.37 49.43 284 color red port 40014  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40014 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40014 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40014 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40014  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40014  
+  create gps_device pose 0.00 0.00 0 color gray port 40014  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40015)
 
-create position_device pose 129.04 87.75 7 color red port 40015 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.04 87.75 7 color red port 40015  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40015 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40015 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40015 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40015  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40015  
+  create gps_device pose 0.00 0.00 0 color gray port 40015  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40016)
 
-create position_device pose 117.81 91.28 98 color red port 40016 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 117.81 91.28 98 color red port 40016  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40016 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40016 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40016 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40016  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40016  
+  create gps_device pose 0.00 0.00 0 color gray port 40016  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40017)
 
-create position_device pose 127.79 47.58 123 color red port 40017 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 127.79 47.58 123 color red port 40017  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40017 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40017 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40017 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40017  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40017  
+  create gps_device pose 0.00 0.00 0 color gray port 40017  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40018)
 
-create position_device pose 127.65 86.75 199 color red port 40018 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 127.65 86.75 199 color red port 40018  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40018 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40018 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40018 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40018  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40018  
+  create gps_device pose 0.00 0.00 0 color gray port 40018  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40019)
 
-create position_device pose 112.54 58.80 10 color red port 40019 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 112.54 58.80 10 color red port 40019  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40019 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40019 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40019 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40019  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40019  
+  create gps_device pose 0.00 0.00 0 color gray port 40019  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40020)
 
-create position_device pose 115.32 64.49 52 color red port 40020 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 115.32 64.49 52 color red port 40020  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40020 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40020 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40020 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40020  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40020  
+  create gps_device pose 0.00 0.00 0 color gray port 40020  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40021)
 
-create position_device pose 122.76 91.30 200 color red port 40021 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 122.76 91.30 200 color red port 40021  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40021 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40021 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40021 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40021  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40021  
+  create gps_device pose 0.00 0.00 0 color gray port 40021  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40022)
 
-create position_device pose 116.69 50.44 59 color red port 40022 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 116.69 50.44 59 color red port 40022  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40022 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40022 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40022 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40022  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40022  
+  create gps_device pose 0.00 0.00 0 color gray port 40022  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40023)
 
-create position_device pose 130.44 70.73 351 color red port 40023 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 130.44 70.73 351 color red port 40023  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40023 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40023 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40023 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40023  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40023  
+  create gps_device pose 0.00 0.00 0 color gray port 40023  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40024)
 
-create position_device pose 113.12 48.10 11 color red port 40024 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 113.12 48.10 11 color red port 40024  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40024 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40024 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40024 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40024  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40024  
+  create gps_device pose 0.00 0.00 0 color gray port 40024  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40025)
 
-create position_device pose 113.50 86.35 186 color red port 40025 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 113.50 86.35 186 color red port 40025  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40025 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40025 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40025 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40025  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40025  
+  create gps_device pose 0.00 0.00 0 color gray port 40025  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40026)
 
-create position_device pose 129.87 51.73 269 color red port 40026 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.87 51.73 269 color red port 40026  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40026 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40026 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40026 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40026  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40026  
+  create gps_device pose 0.00 0.00 0 color gray port 40026  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40027)
 
-create position_device pose 117.50 56.02 270 color red port 40027 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 117.50 56.02 270 color red port 40027  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40027 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40027 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40027 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40027  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40027  
+  create gps_device pose 0.00 0.00 0 color gray port 40027  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40028)
 
-create position_device pose 113.34 92.15 276 color red port 40028 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 113.34 92.15 276 color red port 40028  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40028 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40028 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40028 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40028  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40028  
+  create gps_device pose 0.00 0.00 0 color gray port 40028  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40029)
 
-create position_device pose 115.85 51.45 121 color red port 40029 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 115.85 51.45 121 color red port 40029  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40029 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40029 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40029 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40029  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40029  
+  create gps_device pose 0.00 0.00 0 color gray port 40029  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40030)
 
-create position_device pose 119.56 86.38 88 color red port 40030 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 119.56 86.38 88 color red port 40030  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40030 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40030 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40030 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40030  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40030  
+  create gps_device pose 0.00 0.00 0 color gray port 40030  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40031)
 
-create position_device pose 118.35 91.19 220 color red port 40031 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 118.35 91.19 220 color red port 40031  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40031 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40031 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40031 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40031  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40031  
+  create gps_device pose 0.00 0.00 0 color gray port 40031  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40032)
 
-create position_device pose 130.91 54.99 296 color red port 40032 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 130.91 54.99 296 color red port 40032  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40032 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40032 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40032 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40032  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40032  
+  create gps_device pose 0.00 0.00 0 color gray port 40032  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40033)
 
-create position_device pose 129.74 80.49 107 color red port 40033 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.74 80.49 107 color red port 40033  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40033 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40033 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40033 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40033  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40033  
+  create gps_device pose 0.00 0.00 0 color gray port 40033  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40034)
 
-create position_device pose 130.37 51.86 16 color red port 40034 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 130.37 51.86 16 color red port 40034  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40034 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40034 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40034 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40034  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40034  
+  create gps_device pose 0.00 0.00 0 color gray port 40034  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40035)
 
-create position_device pose 129.43 82.55 197 color red port 40035 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.43 82.55 197 color red port 40035  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40035 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40035 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40035 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40035  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40035  
+  create gps_device pose 0.00 0.00 0 color gray port 40035  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40036)
 
-create position_device pose 123.23 55.27 47 color red port 40036 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 123.23 55.27 47 color red port 40036  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40036 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40036 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40036 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40036  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40036  
+  create gps_device pose 0.00 0.00 0 color gray port 40036  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40037)
 
-create position_device pose 127.47 82.12 98 color red port 40037 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 127.47 82.12 98 color red port 40037  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40037 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40037 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40037 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40037  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40037  
+  create gps_device pose 0.00 0.00 0 color gray port 40037  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40038)
 
-create position_device pose 113.39 58.03 37 color red port 40038 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 113.39 58.03 37 color red port 40038  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40038 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40038 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40038 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40038  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40038  
+  create gps_device pose 0.00 0.00 0 color gray port 40038  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40039)
 
-create position_device pose 121.23 91.79 338 color red port 40039 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 121.23 91.79 338 color red port 40039  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40039 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40039 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40039 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40039  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40039  
+  create gps_device pose 0.00 0.00 0 color gray port 40039  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40040)
 
-create position_device pose 128.93 93.53 56 color red port 40040 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 128.93 93.53 56 color red port 40040  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40040 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40040 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40040 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40040  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40040  
+  create gps_device pose 0.00 0.00 0 color gray port 40040  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40041)
 
-create position_device pose 120.61 92.54 86 color red port 40041 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 120.61 92.54 86 color red port 40041  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40041 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40041 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40041 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40041  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40041  
+  create gps_device pose 0.00 0.00 0 color gray port 40041  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40042)
 
-create position_device pose 120.84 88.90 58 color red port 40042 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 120.84 88.90 58 color red port 40042  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40042 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40042 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40042 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40042  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40042  
+  create gps_device pose 0.00 0.00 0 color gray port 40042  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40043)
 
-create position_device pose 120.13 60.69 249 color red port 40043 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 120.13 60.69 249 color red port 40043  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40043 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40043 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40043 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40043  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40043  
+  create gps_device pose 0.00 0.00 0 color gray port 40043  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40044)
 
-create position_device pose 117.92 55.92 36 color red port 40044 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 117.92 55.92 36 color red port 40044  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40044 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40044 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40044 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40044  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40044  
+  create gps_device pose 0.00 0.00 0 color gray port 40044  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40045)
 
-create position_device pose 115.32 89.74 150 color red port 40045 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 115.32 89.74 150 color red port 40045  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40045 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40045 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40045 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40045  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40045  
+  create gps_device pose 0.00 0.00 0 color gray port 40045  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40046)
 
-create position_device pose 117.18 56.49 59 color red port 40046 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 117.18 56.49 59 color red port 40046  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40046 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40046 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40046 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40046  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40046  
+  create gps_device pose 0.00 0.00 0 color gray port 40046  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40047)
 
-create position_device pose 130.59 71.50 299 color red port 40047 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 130.59 71.50 299 color red port 40047  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40047 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40047 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40047 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40047  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40047  
+  create gps_device pose 0.00 0.00 0 color gray port 40047  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40048)
 
-create position_device pose 123.95 83.79 309 color red port 40048 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 123.95 83.79 309 color red port 40048  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40048 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40048 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40048 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40048  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40048  
+  create gps_device pose 0.00 0.00 0 color gray port 40048  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40049)
 
-create position_device pose 115.08 50.54 224 color red port 40049 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 115.08 50.54 224 color red port 40049  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40049 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40049 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40049 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40049  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40049  
+  create gps_device pose 0.00 0.00 0 color gray port 40049  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40050)
 
-create position_device pose 113.20 73.51 315 color red port 40050 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 113.20 73.51 315 color red port 40050  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40050 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40050 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40050 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40050  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40050  
+  create gps_device pose 0.00 0.00 0 color gray port 40050  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40051)
 
-create position_device pose 123.80 78.35 131 color red port 40051 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 123.80 78.35 131 color red port 40051  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40051 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40051 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40051 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40051  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40051  
+  create gps_device pose 0.00 0.00 0 color gray port 40051  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40052)
 
-create position_device pose 130.62 85.83 59 color red port 40052 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 130.62 85.83 59 color red port 40052  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40052 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40052 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40052 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40052  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40052  
+  create gps_device pose 0.00 0.00 0 color gray port 40052  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40053)
 
-create position_device pose 126.34 57.75 248 color red port 40053 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 126.34 57.75 248 color red port 40053  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40053 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40053 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40053 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40053  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40053  
+  create gps_device pose 0.00 0.00 0 color gray port 40053  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40054)
 
-create position_device pose 127.34 57.42 71 color red port 40054 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 127.34 57.42 71 color red port 40054  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40054 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40054 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40054 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40054  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40054  
+  create gps_device pose 0.00 0.00 0 color gray port 40054  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40055)
 
-create position_device pose 128.81 65.61 241 color red port 40055 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 128.81 65.61 241 color red port 40055  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40055 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40055 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40055 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40055  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40055  
+  create gps_device pose 0.00 0.00 0 color gray port 40055  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40056)
 
-create position_device pose 129.66 87.73 358 color red port 40056 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.66 87.73 358 color red port 40056  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40056 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40056 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40056 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40056  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40056  
+  create gps_device pose 0.00 0.00 0 color gray port 40056  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40057)
 
-create position_device pose 127.31 59.32 296 color red port 40057 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 127.31 59.32 296 color red port 40057  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40057 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40057 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40057 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40057  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40057  
+  create gps_device pose 0.00 0.00 0 color gray port 40057  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40058)
 
-create position_device pose 129.47 72.71 136 color red port 40058 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.47 72.71 136 color red port 40058  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40058 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40058 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40058 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40058  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40058  
+  create gps_device pose 0.00 0.00 0 color gray port 40058  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40059)
 
-create position_device pose 125.64 80.06 104 color red port 40059 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 125.64 80.06 104 color red port 40059  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40059 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40059 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40059 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40059  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40059  
+  create gps_device pose 0.00 0.00 0 color gray port 40059  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40060)
 
-create position_device pose 130.60 82.04 332 color red port 40060 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 130.60 82.04 332 color red port 40060  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40060 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40060 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40060 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40060  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40060  
+  create gps_device pose 0.00 0.00 0 color gray port 40060  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40061)
 
-create position_device pose 120.47 88.07 213 color red port 40061 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 120.47 88.07 213 color red port 40061  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40061 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40061 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40061 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40061  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40061  
+  create gps_device pose 0.00 0.00 0 color gray port 40061  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40062)
 
-create position_device pose 116.93 51.89 340 color red port 40062 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 116.93 51.89 340 color red port 40062  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40062 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40062 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40062 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40062  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40062  
+  create gps_device pose 0.00 0.00 0 color gray port 40062  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40063)
 
-create position_device pose 129.90 51.00 39 color red port 40063 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.90 51.00 39 color red port 40063  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40063 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40063 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40063 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40063  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40063  
+  create gps_device pose 0.00 0.00 0 color gray port 40063  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40064)
 
-create position_device pose 127.19 63.09 326 color red port 40064 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 127.19 63.09 326 color red port 40064  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40064 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40064 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40064 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40064  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40064  
+  create gps_device pose 0.00 0.00 0 color gray port 40064  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40065)
 
-create position_device pose 114.47 75.08 60 color red port 40065 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 114.47 75.08 60 color red port 40065  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40065 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40065 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40065 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40065  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40065  
+  create gps_device pose 0.00 0.00 0 color gray port 40065  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40066)
 
-create position_device pose 115.09 93.68 216 color red port 40066 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 115.09 93.68 216 color red port 40066  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40066 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40066 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40066 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40066  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40066  
+  create gps_device pose 0.00 0.00 0 color gray port 40066  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40067)
 
-create position_device pose 128.54 73.94 67 color red port 40067 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 128.54 73.94 67 color red port 40067  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40067 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40067 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40067 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40067  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40067  
+  create gps_device pose 0.00 0.00 0 color gray port 40067  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40068)
 
-create position_device pose 123.42 88.89 92 color red port 40068 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 123.42 88.89 92 color red port 40068  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40068 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40068 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40068 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40068  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40068  
+  create gps_device pose 0.00 0.00 0 color gray port 40068  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40069)
 
-create position_device pose 113.35 70.17 219 color red port 40069 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 113.35 70.17 219 color red port 40069  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40069 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40069 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40069 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40069  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40069  
+  create gps_device pose 0.00 0.00 0 color gray port 40069  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40070)
 
-create position_device pose 113.32 47.26 179 color red port 40070 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 113.32 47.26 179 color red port 40070  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40070 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40070 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40070 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40070  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40070  
+  create gps_device pose 0.00 0.00 0 color gray port 40070  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40071)
 
-create position_device pose 115.60 75.72 344 color red port 40071 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 115.60 75.72 344 color red port 40071  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40071 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40071 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40071 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40071  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40071  
+  create gps_device pose 0.00 0.00 0 color gray port 40071  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40072)
 
-create position_device pose 128.94 49.81 20 color red port 40072 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 128.94 49.81 20 color red port 40072  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40072 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40072 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40072 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40072  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40072  
+  create gps_device pose 0.00 0.00 0 color gray port 40072  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40073)
 
-create position_device pose 116.67 93.70 348 color red port 40073 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 116.67 93.70 348 color red port 40073  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40073 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40073 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40073 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40073  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40073  
+  create gps_device pose 0.00 0.00 0 color gray port 40073  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40074)
 
-create position_device pose 112.13 75.15 264 color red port 40074 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 112.13 75.15 264 color red port 40074  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40074 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40074 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40074 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40074  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40074  
+  create gps_device pose 0.00 0.00 0 color gray port 40074  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40075)
 
-create position_device pose 130.66 89.92 304 color red port 40075 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 130.66 89.92 304 color red port 40075  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40075 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40075 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40075 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40075  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40075  
+  create gps_device pose 0.00 0.00 0 color gray port 40075  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40076)
 
-create position_device pose 127.08 91.63 164 color red port 40076 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 127.08 91.63 164 color red port 40076  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40076 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40076 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40076 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40076  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40076  
+  create gps_device pose 0.00 0.00 0 color gray port 40076  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40077)
 
-create position_device pose 129.29 73.97 152 color red port 40077 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.29 73.97 152 color red port 40077  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40077 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40077 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40077 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40077  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40077  
+  create gps_device pose 0.00 0.00 0 color gray port 40077  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40078)
 
-create position_device pose 128.85 85.62 225 color red port 40078 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 128.85 85.62 225 color red port 40078  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40078 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40078 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40078 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40078  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40078  
+  create gps_device pose 0.00 0.00 0 color gray port 40078  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40079)
 
-create position_device pose 124.22 57.30 160 color red port 40079 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 124.22 57.30 160 color red port 40079  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40079 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40079 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40079 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40079  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40079  
+  create gps_device pose 0.00 0.00 0 color gray port 40079  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40080)
 
-create position_device pose 114.04 53.90 113 color red port 40080 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 114.04 53.90 113 color red port 40080  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40080 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40080 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40080 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40080  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40080  
+  create gps_device pose 0.00 0.00 0 color gray port 40080  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40081)
 
-create position_device pose 122.30 86.19 84 color red port 40081 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 122.30 86.19 84 color red port 40081  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40081 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40081 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40081 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40081  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40081  
+  create gps_device pose 0.00 0.00 0 color gray port 40081  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40082)
 
-create position_device pose 129.59 46.21 21 color red port 40082 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.59 46.21 21 color red port 40082  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40082 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40082 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40082 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40082  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40082  
+  create gps_device pose 0.00 0.00 0 color gray port 40082  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40083)
 
-create position_device pose 116.82 89.34 12 color red port 40083 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 116.82 89.34 12 color red port 40083  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40083 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40083 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40083 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40083  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40083  
+  create gps_device pose 0.00 0.00 0 color gray port 40083  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40084)
 
-create position_device pose 121.38 92.77 33 color red port 40084 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 121.38 92.77 33 color red port 40084  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40084 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40084 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40084 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40084  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40084  
+  create gps_device pose 0.00 0.00 0 color gray port 40084  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40085)
 
-create position_device pose 120.86 58.14 179 color red port 40085 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 120.86 58.14 179 color red port 40085  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40085 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40085 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40085 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40085  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40085  
+  create gps_device pose 0.00 0.00 0 color gray port 40085  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40086)
 
-create position_device pose 117.88 83.99 85 color red port 40086 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 117.88 83.99 85 color red port 40086  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40086 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40086 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40086 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40086  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40086  
+  create gps_device pose 0.00 0.00 0 color gray port 40086  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40087)
 
-create position_device pose 114.62 77.57 344 color red port 40087 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 114.62 77.57 344 color red port 40087  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40087 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40087 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40087 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40087  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40087  
+  create gps_device pose 0.00 0.00 0 color gray port 40087  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40088)
 
-create position_device pose 129.33 48.26 184 color red port 40088 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.33 48.26 184 color red port 40088  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40088 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40088 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40088 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40088  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40088  
+  create gps_device pose 0.00 0.00 0 color gray port 40088  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40089)
 
-create position_device pose 120.87 59.91 78 color red port 40089 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 120.87 59.91 78 color red port 40089  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40089 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40089 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40089 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40089  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40089  
+  create gps_device pose 0.00 0.00 0 color gray port 40089  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40090)
 
-create position_device pose 127.50 70.04 48 color red port 40090 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 127.50 70.04 48 color red port 40090  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40090 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40090 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40090 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40090  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40090  
+  create gps_device pose 0.00 0.00 0 color gray port 40090  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40091)
 
-create position_device pose 115.75 76.25 303 color red port 40091 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 115.75 76.25 303 color red port 40091  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40091 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40091 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40091 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40091  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40091  
+  create gps_device pose 0.00 0.00 0 color gray port 40091  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40092)
 
-create position_device pose 127.33 58.13 8 color red port 40092 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 127.33 58.13 8 color red port 40092  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40092 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40092 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40092 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40092  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40092  
+  create gps_device pose 0.00 0.00 0 color gray port 40092  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40093)
 
-create position_device pose 113.89 93.75 127 color red port 40093 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 113.89 93.75 127 color red port 40093  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40093 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40093 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40093 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40093  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40093  
+  create gps_device pose 0.00 0.00 0 color gray port 40093  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40094)
 
-create position_device pose 114.50 60.05 228 color red port 40094 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 114.50 60.05 228 color red port 40094  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40094 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40094 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40094 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40094  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40094  
+  create gps_device pose 0.00 0.00 0 color gray port 40094  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40095)
 
-create position_device pose 112.80 72.25 190 color red port 40095 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 112.80 72.25 190 color red port 40095  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40095 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40095 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40095 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40095  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40095  
+  create gps_device pose 0.00 0.00 0 color gray port 40095  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40096)
 
-create position_device pose 114.30 65.03 123 color red port 40096 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 114.30 65.03 123 color red port 40096  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40096 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40096 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40096 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40096  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40096  
+  create gps_device pose 0.00 0.00 0 color gray port 40096  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40097)
 
-create position_device pose 129.50 92.25 292 color red port 40097 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 129.50 92.25 292 color red port 40097  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40097 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40097 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40097 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40097  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40097  
+  create gps_device pose 0.00 0.00 0 color gray port 40097  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40098)
 
-create position_device pose 128.69 77.12 152 color red port 40098 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 128.69 77.12 152 color red port 40098  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40098 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40098 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40098 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40098  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40098  
+  create gps_device pose 0.00 0.00 0 color gray port 40098  
 }
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        simplerobot(14,14,0,40099)
 
-create position_device pose 125.00 59.98 308 color red port 40099 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 125.00 59.98 308 color red port 40099  shape circle 
 {
-  create player_device pose 0.00 0.00 0 color white port 40099 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40099 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40099 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device pose 0.00 0.00 0 color white port 40099  
+  create sonar_device pose 0.00 0.00 0 color blue3 port 40099  
+  create gps_device pose 0.00 0.00 0 color gray port 40099  
 }
 
 
