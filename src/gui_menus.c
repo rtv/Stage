@@ -12,7 +12,8 @@ enum {
   STG_MITEM_FILE_LOAD,
   STG_MITEM_FILE_QUIT,
   STG_MITEM_FILE_IMAGE_JPG,
-  STG_MITEM_FILE_IMAGE_PPM,
+  STG_MITEM_FILE_IMAGE_JPG_SEQ,
+  //STG_MITEM_FILE_IMAGE_PPM,
   //STG_MITEM_FILE_MOVIE_START,
   //STG_MITEM_FILE_MOVIE_STOP,
   STG_MITEM_VIEW_MATRIX,
@@ -93,21 +94,6 @@ void gui_menu_file_image_jpg( rtk_menuitem_t *item )
   rtk_canvas_export_image(item->menu->canvas, filename, RTK_IMAGE_FORMAT_JPEG);
 }
 
-void gui_menu_file_image_ppm( rtk_menuitem_t *item )
-{
-  static int index=0;
-
-  PRINT_DEBUG( "File/Image/Jpg menu item" );
-  
-  //snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
-  //   this->stills_series, this->stills_count++);
-  
-  char filename[128];
-  snprintf(filename, sizeof(filename), "stage-%03d.ppm", index++);
-  printf("saving [%s]\n", filename);
-  
-  rtk_canvas_export_image(item->menu->canvas, filename, RTK_IMAGE_FORMAT_PPM);
-}
 
 
 /* // toggle movie exports */
@@ -299,15 +285,19 @@ void gui_window_menus_create( gui_window_t* win )
 
   // create the FILE/STILLS menu items 
   win->mitems[STG_MITEM_FILE_IMAGE_JPG] = 
-    rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "JPEG format", 1);
-  win->mitems[STG_MITEM_FILE_IMAGE_PPM] = 
-    rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "PPM format", 1);
-  
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "JPEG", 0);
+
+  //win->mitems[STG_MITEM_FILE_IMAGE_JPG_SEQ] = 
+  //rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "JPEG sequence", 1);
+
+    
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_JPG], 
 			     gui_menu_file_image_jpg );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_PPM], 
-			     gui_menu_file_image_ppm );
 
+  //rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_JPG_SEQ], 
+  //		     gui_menu_file_image_jpg_seq );
+
+  
   // init the stills data
   //win->stills_series = 0;
   //win->stills_count = 0;

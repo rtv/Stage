@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.74 2004-10-13 22:07:08 rtv Exp $
+# $Id: Makefile.am,v 1.75 2004-11-03 09:28:52 rtv Exp $
 
 # we don't need these right now, but I'll keep this commented out just
 # in case.  
@@ -14,7 +14,7 @@ include_HEADERS = stage.h
 AM_CFLAGS = -Wall -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 
-lib_LTLIBRARIES = libstage.la libstageplugin.la 
+lib_LTLIBRARIES = libstage.la 
 
 # the stage library contains everything you need to build a robot
 # simulation, including a graphics library and and worldfile parser
@@ -49,13 +49,7 @@ libstage_la_SOURCES = \
         rtk_fig.c \
         rtk_menu.c \
         rtk_region.c \
-        rtkprivate.h 
-
-libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0 
-
-# the stageplugin library includes the main stage library, plus Player driver code.
-#
-libstageplugin_la_SOURCES = \
+        rtkprivate.h \
         stg_driver.cc \
         stg_driver.h \
 	stg_time.cc \
@@ -65,11 +59,10 @@ libstageplugin_la_SOURCES = \
 	stg_fiducial.cc \
 	stg_position.cc \
 	stg_sonar.cc \
-	stg_blobfinder.cc 
+	stg_blobfinder.cc
 
-libstageplugin_la_DEPENDENCIES = libstage.la
-libstageplugin_la_LDFLAGS = -module -export-dynamic -version-info 0:0:0 
-libstageplugin_la_LIBADD = @GTK_LIBS@ -lstage
+libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0
+libstage_la_LIBADD = @GTK_LIBS@ 
 
 
 bin_PROGRAMS = stest
@@ -78,7 +71,4 @@ bin_PROGRAMS = stest
 #	
 stest_SOURCES = stest.c
 stest_LDFLAGS =
-stest_LDADD =  @GTK_LIBS@ -lstage -ljpeg
-
-
-
+stest_LDADD =  @GTK_LIBS@ -L.libs -lstage

@@ -22,7 +22,7 @@
  * Desc: Rtk canvas functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.2 2004-09-22 21:04:32 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.3 2004-11-03 09:28:52 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -36,6 +36,9 @@
 #include <string.h>
 #include <math.h>
 #include <gdk/gdkkeysyms.h>
+
+//#include <gdk-pixbuf-xlib/gdk-pixbuf-xlib.h>
+
 
 #if HAVE_JPEGLIB_H
 #include <jpeglib.h>
@@ -593,134 +596,31 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
 // [format] is the image file format (RTK_IMAGE_FORMAT_JPEG, RTK_IMAGE_FORMAT_PPM).
 void rtk_canvas_export_image(rtk_canvas_t *canvas, const char *filename, int format)
 {
-  uint8_t *image;
+  GdkPixbuf* buf = gdk_pixbuf_get_from_drawable( NULL, 
+						  canvas->fg_pixmap,
+						  canvas->colormap,
+						  0,0,0,0,
+						  canvas->sizex,
+						  canvas->sizey );
   
-  // Get an image in canonical 24-bit RGB format
-  image = rtk_canvas_get_image_rgb24(canvas);
-  if (!image)
-    return;
-  
-  switch (format)
-  {
+  switch( format )
+    {
     case RTK_IMAGE_FORMAT_JPEG:
-      rtk_canvas_save_jpeg(canvas, filename, canvas->sizex, canvas->sizey, image);
+      gdk_pixbuf_save( buf, filename, "jpeg", NULL,
+		       "quality", "100", NULL );
       break;
+
     case RTK_IMAGE_FORMAT_PPM:
-      rtk_canvas_save_ppm(canvas, filename, canvas->sizex, canvas->sizey, image);
+      gdk_pixbuf_save( buf, filename, "ppm", NULL, NULL );
       break;
-  }
+
+    default: 
+      puts( "unrecognized image format" );
+      break;
+    }
+      
+}	
   
-  free(image);
-  return;
-}
-
-
-// Grab an image in canonical 16-bit form
-uint16_t *rtk_canvas_get_image_rgb16(rtk_canvas_t *canvas, int sizex, int sizey)
-{
-  GdkImage *im;
-  int ix, iy;
-  guint32 c;
-  uint16_t *pixel;
-  uint16_t *image;
-
-  // Get the image
-  im = gdk_image_get((GdkDrawable*) canvas->fg_pixmap,
-                     0, 0, sizex, sizey);
-  if (!im)
-  {
-    PRINT_ERR("image creation failed; export aborted");
-    return NULL;
-  }
-
-  // We only to 16 bpp
-  if (im->depth != 16 && im->depth != 24)
-  {
-    PRINT_ERR("only 16 and 24 bpp displays are currently supported; export abandoned");
-    return NULL;
-  }
-
-  // Create an image buffer
-  image = malloc(canvas->sizex * canvas->sizey * 2);
-    
-  // Copy the data to an RGB16 buffer.
-  pixel = image;
-  for (iy = 0; iy < sizey; iy++)
-  {
-    for (ix = 0; ix < sizex; ix++)
-    {
-      c = gdk_image_get_pixel(im, ix, iy);
-      if (im->depth == 16)
-        *pixel = c;
-      else if (im->depth == 24) {
-        unsigned char r,g,b;
-        r =  c        & 0xf8;  
-        g = (c >>  8) & 0xfc;
-        b = (c >> 16) & 0xf8;
-        *pixel = (r >> 3 | g << 3 | b << 8);
-      }
-      pixel++;
-    }
-  }
-
-  gdk_image_destroy(im);
-  return image;
-}
-
-
-// Grab an image in canonical 24-bit form
-uint8_t *rtk_canvas_get_image_rgb24(rtk_canvas_t *canvas)
-{
-  GdkImage *im;
-  int ix, iy;
-  char *pixel;
-  guint32 c;
-  unsigned char r, g, b;
-  uint8_t *image;
-
-  // Get the image
-  im = gdk_image_get((GdkDrawable*) canvas->fg_pixmap,
-                     0, 0, canvas->sizex, canvas->sizey);
-  if (!im)
-  {
-    PRINT_ERR("image creation failed; export aborted");
-    return NULL;
-  }
-
-  // We only to 16 bpp
-  if (im->depth != 16)
-  {
-    PRINT_ERR("only 16 bpp displays are currently supported; export abandoned");
-    return NULL;
-  }
-
-  // Create an image buffer
-  image = malloc(canvas->sizex * canvas->sizey * 3);
-    
-  // Copy the data to an RGB32 buffer.
-  pixel = image;
-  for (iy = 0; iy < canvas->sizey; iy++)
-  {
-    for (ix = 0; ix < canvas->sizex; ix++)
-    {
-      c = gdk_image_get_pixel(im, ix, iy);
-
-      // Assumes 16 bit (565) color; byte order has to be correct,
-      // also.
-      r = (c >> 8) & 0xF8;
-      g = (c >> 3) & 0xFC;
-      b = (c << 3) & 0xF8;
-
-      *(pixel++) = r;
-      *(pixel++) = g;
-      *(pixel++) = b;
-    }
-  }
-
-  gdk_image_destroy(im);
-  return image;
-}
-
 
 // Export the canvas as an xfig image.
 int rtk_canvas_export_xfig(rtk_canvas_t *canvas, char *filename)
@@ -762,101 +662,6 @@ int rtk_canvas_export_xfig(rtk_canvas_t *canvas, char *filename)
 
   return 0;
 }
-
-// Save a ppm image.
-int rtk_canvas_save_ppm(rtk_canvas_t *canvas, const char *filename,
-                        int sizex, int sizey, uint8_t *image)
-{
-  FILE *file;
-
-  if (!filename)
-  {
-    PRINT_ERR("export filename is NULL; ignoring");
-    return -1;
-  }
-  
-  file = fopen(filename, "w+");
-  if (!file)
-  {
-    PRINT_ERR2("unable to open [%s] for export: [%s]",
-               filename, strerror(errno));
-    return -1;
-  }
-
-  // Save PPM image
-  fprintf(file, "P6\n%d %d\n255\n", sizex, sizey);
-  fwrite(image, sizex * sizey * 3, 1, file);
-  fclose(file);
-
-  return 0;
-}
-
-
-// Save a jpeg image
-int rtk_canvas_save_jpeg(rtk_canvas_t *canvas, const char *filename,
-                         int sizex, int sizey, uint8_t *image)
-{
-#if HAVE_JPEGLIB_H
-
-  FILE *file;
-  struct jpeg_compress_struct cinfo;
-  struct jpeg_error_mgr jerr;
-  JSAMPROW jrow[1];
-  
-  // Now save it to a file
-  if (!filename)
-  {
-    PRINT_ERR("export filename is NULL; ignoring");
-    return -1;
-  }
-  
-  file = fopen(filename, "w+");
-  if (!file)
-  {
-    PRINT_ERR2("unable to open [%s] for export: [%s]",
-               filename, strerror(errno));
-    return -1;
-  }
-
-  // Initialize jpeg compressor
-  cinfo.err = jpeg_std_error(&jerr);
-  jpeg_create_compress(&cinfo);
-
-  // Point compressor to output file
-  jpeg_stdio_dest(&cinfo, file);
-
-  // Set image parameters
-  cinfo.image_width = sizex;
-  cinfo.image_height = sizey;
-  cinfo.input_components = 3;
-  cinfo.in_color_space = JCS_RGB;
-  jpeg_set_defaults(&cinfo);
-
-  // Compress image
-  jpeg_start_compress(&cinfo, TRUE);
-  while (cinfo.next_scanline < cinfo.image_height)
-  {
-    jrow[0] = image + cinfo.next_scanline * sizex * 3;
-    jpeg_write_scanlines(&cinfo, jrow, 1);
-  }
-  jpeg_finish_compress(&cinfo);
-
-  // Finialize compressor
-  jpeg_destroy_compress(&cinfo);
-
-  // Close the output file
-  fclose(file);
-
-  return 0;
-
-#else
-
-  PRINT_ERR("jpeg support has not been compiled in; export failed.");
-  return -1;
-
-#endif
-}
-
 
 // Pixel tolerances for moving stuff
 #define TOL_MOVE 15

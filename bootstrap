@@ -5,7 +5,7 @@
 
 set -x
 aclocal
-libtoolize
+libtoolize --force
 autoheader
 automake --gnu --add-missing
 autoconf
