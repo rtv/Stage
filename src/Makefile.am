@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.70 2004-10-01 02:03:48 rtv Exp $
+# $Id: Makefile.am,v 1.71 2004-10-02 02:19:32 rtv Exp $
 
 # we don't need these right now, but I'll keep this commented out just
 # in case.  
@@ -25,9 +25,7 @@ libstage_la_SOURCES = \
 	gui.h \
 	gui_menus.c \
 	matrix.c \
-	matrix.h \
 	model.c \
-	model.h \
 	model_blobfinder.c \
 	model_energy.c \
 	model_fiducial.c \
@@ -38,16 +36,13 @@ libstage_la_SOURCES = \
 	model_ranger.c \
 	model_test.c \
 	raytrace.c \
-	raytrace.h \
 	stage.c \
 	stage.h \
 	stagecpp.cc \
 	token.c \
 	world.c \
-	world.h \
 	worldfile.cc \
 	worldfile.hh \
-        colors.h \
         rtk.c \
         rtk.h \
         rtk_canvas.c \

@@ -12,8 +12,8 @@ pkgconfig_DATA = stage.pc stageplugin.pc
 dist-hook:
 	cd $(DOCSRC) && make 
 	mkdir -p $(DOCDIST)
-	cp -p $(DOCSRC)/stage.ps $(DOCDIST)
-	cp -p $(DOCSRC)/stage.pdf $(DOCDIST)
+	cp -r -p $(DOCSRC)/html $(DOCDIST)
+	cp -p $(DOCSRC)/*.txt $(DOCDIST)
 	cp -p stage.xpm $(distdir)
 
 install-data-hook:
