@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtk_main.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -36,6 +36,11 @@
 char *world_file;
 
 CWorld *world = 0;
+
+// HACK!
+// this is a double that gets set on SIGUSR1; if "-time <sec>" was given
+// on the cmdline, this starts the clock running 
+double g_clockstarttime = -1;
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse the command line

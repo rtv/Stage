@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.24 $
+//  $Author: gerkey $
+//  $Revision: 1.25 $
 //
 // Usage:
 //  (empty)
@@ -49,7 +49,17 @@ bool quit = false;
 extern bool usage; // defined in world_load.cc 
 
 
+
 CWorld *world = 0;
+
+// HACK!
+// this is a double that gets set on SIGUSR1; if "-time <sec>" was given
+// on the cmdline, this starts the clock running 
+double g_clockstarttime = -1;
+void sig_usr1(int signum)
+{
+  g_clockstarttime = world->GetTime();
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Handle quit signals
@@ -163,6 +173,8 @@ int main(int argc, char **argv)
   signal(SIGQUIT, sig_quit);
   signal(SIGTERM, sig_quit);
   signal(SIGHUP, sig_quit);
+
+  signal(SIGUSR1, sig_usr1);
   
   // register callback for any call of exit(3) 
   if( atexit( StageQuit ) == -1 )

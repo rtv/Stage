@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.67 $
+//  $Revision: 1.68 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -625,7 +625,7 @@ void* CWorld::Main(void *arg)
 ///////////////////////////////////////////////////////////////////////////
 // Update the world
 //
-extern bool quit;
+extern double g_clockstarttime;
 void CWorld::Update()
 {  
   // Update the simulation time (in both formats)
@@ -635,7 +635,7 @@ void CWorld::Update()
   m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
 
   // is it time to stop?
-  if(m_stoptime && m_sim_time >= m_stoptime)
+  if(g_clockstarttime >= 0 && (m_sim_time - g_clockstarttime) >= m_stoptime)
     system("kill `cat stage.pid`");
 
   // copy the timeval into the player io buffer
