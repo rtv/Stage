@@ -531,18 +531,23 @@ void gui_model_rangers_data( stg_model_t* mod )
 
 void gui_model_laser( stg_model_t* mod )
 {
-  rtk_fig_t* fig = gui_model_figs(mod)->laser;  
-  
-  rtk_fig_clear(fig);
-  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
-  rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );   
-  rtk_fig_rectangle( fig, 
-		     mod->laser_config.pose.x, 
-		     mod->laser_config.pose.y, 
-		     mod->laser_config.pose.a,
-		     mod->laser_config.size.x,
-		     mod->laser_config.size.y, 0 );
-}
+  // only draw the laser gadget if it has a non-zero size
+  if( mod->laser_config.size.x || mod->laser_config.size.y )
+    {
+      
+      rtk_fig_t* fig = gui_model_figs(mod)->laser;  
+      
+      rtk_fig_clear(fig);
+      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
+      rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );   
+      rtk_fig_rectangle( fig, 
+			 mod->laser_config.pose.x, 
+			 mod->laser_config.pose.y, 
+			 mod->laser_config.pose.a,
+			 mod->laser_config.size.x,
+			 mod->laser_config.size.y, 0 );
+    }
+}  
 
 void gui_model_laser_data( stg_model_t* mod )
 {
