@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -89,7 +89,7 @@ private: pthread_t m_thread;
 private: bool m_enable;
   
   // the hostname of this computer
-private: char m_hostname[ HOSTNAME_SIZE ];
+public: char m_hostname[ HOSTNAME_SIZE ];
   
   // Timing
   // Real time at which simulation started.

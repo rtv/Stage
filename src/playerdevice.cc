@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -136,6 +136,9 @@ void CPlayerDevice::Update( double sim_time )
 //
 bool CPlayerDevice::StartupPlayer(int port)
 {
+  // don't start up if we're not managed by this host; succeed but do nowt
+  if( strcmp( m_hostname, m_world->m_hostname ) != 0 ) return true;
+
   if(port < 0)
     port = m_player_port;
 
