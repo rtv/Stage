@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -312,14 +312,14 @@ void CPositionDevice::Move()
   switch( this->drive_mode )
   {
     case OMNI_DRIVE_MODE: // omnidirectional - axes independent
-      dx = step * vx;
-      dy = step * vy;
+      dx = step * vx * cos(pa) - step * vy * sin(pa);
+      dy = step * vx * sin(pa) + step * vy * cos(pa);
       da = step * va;
       break;
       
     case DIFF_DRIVE_MODE: //differential steering - no vy allowed
-      dx = step * vx * cos(pa); // - step * vy * sin(pa);
-      dy = step * vx * sin(pa); // + step * vy * cos(pa);
+      dx = step * vx * cos(pa);
+      dy = step * vx * sin(pa);
       da = step * va;
       break;
       
