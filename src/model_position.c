@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -404,10 +404,6 @@ void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
   memcpy( &pos->odom, odom, sizeof(stg_pose_t));
   
   
-  if( odom->a != 0.0 )
-    printf( "\nStage warning: setting odometric pose with non-zero angle"
-	    " is not yet implemented. Odmetry wierdness may ensue." );
-  
   // TODO
   
   // calculate what the origin of this coord system must be
@@ -419,7 +415,11 @@ void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
   double da = mod->pose.a - odom->a;
   double cosa = cos(da);
   double sina = sin(da);
-
+  
+  if( da != 0.0 )
+    printf( "\nStage warning: currently you have to set the odometric pose to be"
+"the same as the actual pose. You didn't, so odometry wierdness may ensue." );
+  
   // TODO: can't quite get my head around this today - will fix
   // sometime.
   o.x = dx;// * cosa + dy * sina;
@@ -457,7 +457,7 @@ void position_render_data(  stg_model_t* mod )
       rtk_fig_line( mod->gui.data, 0,pos->odom.y, pos->odom.x, pos->odom.y );
       
       char buf[256];
-      snprintf( buf, 255, "x: %.3f\ny: %.3f\na: %.3f", pos->odom.x, pos->odom.y, pos->odom.a  );
+      snprintf( buf, 255, "x: %.3f\ny: %.3f\na: %.1f", pos->odom.x, pos->odom.y, RTOD(pos->odom.a)  );
       rtk_fig_text( mod->gui.data, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );
       
       //rtk_fig_line( mod->gui.data, 0,0, pos->odom.x, pos->odom.y );
