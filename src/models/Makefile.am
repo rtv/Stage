@@ -5,13 +5,7 @@
 # $Id
 #
 
-# we need this while rtk code is still in the device files
-if WITH_RTK
-RTKCPPFLAGS = -I@RTK_DIR@/include `gtk-config --cflags`
-endif
-
-
-AM_CPPFLAGS = 	-Wall -I$(top_srcdir)/src -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS)
+AM_CPPFLAGS = 	-Wall -I$(top_builddir)/src  -I$(top_builddir)/replace @PLAYER_CPPFLAGS@ $(GUI_CPPFLAGS)
 
 noinst_LIBRARIES = libstgmodels.a 
 
@@ -40,8 +34,8 @@ libstgmodels_a_SOURCES = \
                    laserdevice.hh \
                    motedevice.cc \
                    motedevice.hh \
-                   omnipositiondevice.cc \
-                   omnipositiondevice.hh \
+		   omnipositiondevice.cc \
+		   omnipositiondevice.hh \
                    positiondevice.cc \
                    positiondevice.hh \
                    powerdevice.cc \
@@ -57,8 +51,6 @@ libstgmodels_a_SOURCES = \
                    visiondevice.cc \
                    visiondevice.hh \
                    mcomdevice.cc  mcomdevice.hh
-    
 
 # currently broken
 # bpsdevice.cc 
-

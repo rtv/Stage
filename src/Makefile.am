@@ -2,19 +2,14 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.25.2.2 2003-05-24 01:59:04 inspectorg Exp $
+# $Id: Makefile.am,v 1.25.2.3 2003-05-24 22:33:13 gerkey Exp $
 
 
 SUBDIRS = models rtkstage
 
-# we need extra flags as long as RTK code is embedded in the main simulator source
-if WITH_RTK
-RTKCPPFLAGS = -I@RTK_DIR@/include `gtk-config --cflags`
-endif
+stage_DEPENDENCIES = models/libstgmodels.a @GUI_DIR@/@GUI_LIB@ 
 
-stage_DEPENDENCIES = $(NOGUIOBJ) models/libstgmodels.a @LIBOBJS@  @GUI_DIR@/@GUI_LIB@
-
-AM_CPPFLAGS = 	-Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS)
+AM_CPPFLAGS = 	-Wall @PLAYER_CPPFLAGS@ $(GUI_CPPFLAGS)
 
 bin_PROGRAMS = stage
 
@@ -46,5 +41,5 @@ stage_SOURCES = \
          worldfile.hh \
          world.hh
 
-stage_LDFLAGS =
-stage_LDADD = 	-lm -Lmodels -lstgmodels -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue @GUI_LINK@ @LIBOBJS@
+stage_LDADD = 	-lm -Lmodels -lstgmodels @PLAYER_LDADD@ @GUI_DIR@/@GUI_LIB@ @GUI_LDADD@
+

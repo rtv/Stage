@@ -1,11 +1,11 @@
 
 # Automake config to build the rtkstage gui library Makefile
-# $Id: Makefile.am,v 1.7 2002-11-02 00:46:14 gerkey Exp $
+# $Id: Makefile.am,v 1.7.2.1 2003-05-24 22:33:13 gerkey Exp $
 
 if WITH_RTK
 noinst_LIBRARIES = librtkstage.a
 endif
 
-AM_CPPFLAGS = 	-I$(top_srcdir)/src -I$(top_srcdir)/src/models -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage -I@RTK_DIR@/include `gtk-config --cflags`
+AM_CPPFLAGS = 	-I$(top_srcdir)/src -I$(top_srcdir)/replace -I$(top_srcdir)/src/models @PLAYER_CPPFLAGS@ @RTK_CPPFLAGS@
 
 librtkstage_a_SOURCES = rtkgui.cc
