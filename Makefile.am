@@ -7,7 +7,7 @@ DOCINST = $(DESTDIR)$(prefix)/doc
 
 # create the pkg-config entries
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = stage.pc stageplugin.pc
+pkgconfig_DATA = stage.pc
 
 dist-hook:
 	cd $(DOCSRC) && make 

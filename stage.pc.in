@@ -1,8 +1,8 @@
 prefix=@prefix@
 
 Name: stage
-Description: Stage simulation C library - part of the Player/Stage Project
+Description: Stage robot simulation C library and Player plugin - part of the Player/Stage Project
 Version: @VERSION@
-Requires: glib-2.0 librtk2
+Requires: gtk+-2.0 player >= 1.6
 Libs: -L${prefix}/lib -lstage
 Cflags: -I${prefix}/include

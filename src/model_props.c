@@ -8,14 +8,14 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 //#define DEBUG
 
 
-#include "stage.h"
+#include "stage_internal.h"
 
 
 int model_size_error( stg_model_t* mod, stg_id_t pid, 
@@ -157,11 +157,13 @@ int _model_update( stg_model_t* mod )
 int _model_startup( stg_model_t* mod )
 {
   PRINT_DEBUG( "default startup proc" );
+  return 0; //ok
 }
 
 int _model_shutdown( stg_model_t* mod )
 {
   PRINT_DEBUG( "default shutdown proc" );
+  return 0; //ok
 }
 
 /* These functions are wrappers that implement the polymorphic hooks

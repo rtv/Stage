@@ -16,7 +16,7 @@
 //#define DEBUG
 
 #include "replace.h"
-#include "stage.h"
+#include "stage_internal.h"
 
 int _stg_quit = FALSE;
 
@@ -37,52 +37,6 @@ const char* stg_get_version_string( void )
 {
   return PACKAGE_STRING;
 }
-
-
-/* // returns a human readable desciption of the property type [id] */
-/* const char* stg_property_string( stg_id_t id ) */
-/* { */
-/*   switch( id ) */
-/*     { */
-/*     case STG_PROP_COLOR: return "color"; break; */
-/*     case STG_PROP_COMMAND: return "command"; break; */
-/*     case STG_PROP_CONFIG: return "config"; break; */
-/*     case STG_PROP_DATA: return "data"; break; */
-/*     case STG_PROP_ENERGYCONFIG: return "energyconfig"; break;  */
-/*     case STG_PROP_ENERGYDATA: return "energydata"; break; */
-/*     case STG_PROP_GEOM: return "geom"; break; */
-/*     case STG_PROP_GUIFEATURES: return "guifeatures"; break; */
-/*     case STG_PROP_LASERRETURN: return "laser_return"; break; */
-/*     case STG_PROP_LINES: return "lines"; break; */
-/*     case STG_PROP_MASS: return "mass";break; */
-/*     case STG_PROP_OBSTACLERETURN: return "obstacle_return";break; */
-/*     case STG_PROP_PARENT: return "parent"; break; */
-/*     case STG_PROP_PLAYERID: return "player_id"; break; */
-/*     case STG_PROP_POSE: return "pose"; break; */
-/*     case STG_PROP_PUCKRETURN: return "puck_return"; break; */
-/*     case STG_PROP_RANGERRETURN: return "ranger_return"; break; */
-/*     case STG_PROP_TIME: return "time"; break; */
-/*     case STG_PROP_VELOCITY: return "velocity"; break; */
-/*     case STG_PROP_VISIONRETURN: return "vision_return"; break; */
-/*     case STG_PROP_FIDUCIALRETURN: return "fiducial_id";break; */
-/*     case STG_PROP_BLOBRETURN: return "blob_return";break; */
-
-/*       //case STG_PROP_BLINKENLIGHT: return "blinkenlight";break; */
-/*       //case STG_PROP_BLOBCONFIG: return "blobconfig";break; */
-/*       //case STG_PROP_BLOBDATA: return "blobdata";break; */
-/*       //case STG_PROP_FIDUCIALCONFIG: return "fiducialconfig";break; */
-/*       //case STG_PROP_FIDUCIALDATA: return "fiducialdata";break; */
-/*       //case STG_PROP_LASERCONFIG: return "laserconfig";break; */
-/*       //case STG_PROP_LASERDATA: return "laserdata";break; */
-/*       //case STG_PROP_MATRIXRENDER: return "matrix_render";break; */
-/*       //case STG_PROP_POWER: return "sonar_power"; break; */
-/*       //case STG_PROP_RANGERCONFIG: return "rangerconfig";break; */
-/*       //case STG_PROP_RANGERDATA: return "rangerdata";break; */
-/*     default: */
-/*       break; */
-/*     } */
-/*   return "<unknown property>"; */
-/* } */
 
 const char* stg_model_type_string( stg_model_type_t type )
 {
