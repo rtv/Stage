@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/laserbeacondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 // Usage: detects objects that were laser bright and had non-zero
 // visible_id in a laser scan
@@ -291,6 +291,7 @@ void CLBDDevice::Update( double sim_time )
   //
   for (int i = 0; i < beacon.count; i++)
   {
+    beacon.fiducials[i].id = htons(beacon.fiducials[i].id);
     beacon.fiducials[i].pose[0] = htons(beacon.fiducials[i].pose[0]);
     beacon.fiducials[i].pose[1] = htons(beacon.fiducials[i].pose[1]);
     beacon.fiducials[i].pose[2] = htons(beacon.fiducials[i].pose[2]);
@@ -359,7 +360,7 @@ void CLBDDevice::RtkUpdate()
       int beacon_count = (int)ntohs(data.count);
       for( int b=0; b < beacon_count; b++ )
 	{
-	  uint8_t id = data.fiducials[b].id;
+	  int16_t id = ntohs((int16_t)data.fiducials[b].id);
 	  uint16_t range_mm = ntohs(data.fiducials[b].pose[0]);
 	  int16_t bearing_deg = ntohs(data.fiducials[b].pose[1]);
 	  int16_t orient_deg = ntohs(data.fiducials[b].pose[2]);
