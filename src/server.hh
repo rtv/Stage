@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.9 2002-11-11 03:09:46 rtv Exp $
+// $Id: server.hh,v 1.10 2003-02-04 21:50:39 gerkey Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -265,6 +265,7 @@ public: int GetStopTime( void ){ return m_stoptime; };
   private: pid_t player_pid;  
   // flag controls whether Player is spawned - set on the command line
   private: bool m_run_player; 
+  private: int m_player_port;
 
   // shared memory management for interfacing with Player
   public: char* ClockFilename( void ){ return clockName; };

@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.44 2002-11-12 06:22:19 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.45 2003-02-04 21:50:38 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -103,6 +103,9 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
 { 
   // enable player services by default, the command lines may change this
   m_run_player = true;    
+  
+  // Player runs on its default port
+  m_player_port = PLAYER_PORTNUM;    
 
   //  one of our parent's constructors may have failed and set this flag
   if( quit ) return;
@@ -448,6 +451,15 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
       m_run_player = false;
       printf( "[No Player]" );
     }
+    
+    // select player port
+    if((strcmp( argv[a], "-pp" ) == 0 ))
+    {
+      if(++a < argc-1)
+        m_player_port = atoi(argv[a]);
+      else
+        return(false);
+    }
 
     // FAST MODE - run as fast as possible - don't attempt t match real time
     if((strcmp( argv[a], "--fast" ) == 0 ) || 
@@ -570,6 +582,7 @@ bool CStageServer::StartupPlayer( void )
 
     // Player must be in the current path
     if( execlp( "player", "player",
+                "-p", m_player_port,
                 "-s", DeviceDirectory(), 
                 (strlen(m_auth_key)) ? "-k" : NULL,
                 (strlen(m_auth_key)) ? m_auth_key : NULL,
