@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.15.6.8 2003-08-09 01:25:20 rtv Exp $
+ * $Id: matrix.cc,v 1.15.6.9 2003-08-19 01:10:55 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -445,8 +445,6 @@ void CMatrix::SetRectangle(double px, double py, double pth,
 			   double dx, double dy, 
 			   CEntity* ent, bool add)
 {
-  stg_rect_t rect;
-
   dx /= 2.0;
   dy /= 2.0;
 

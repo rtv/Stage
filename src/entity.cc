@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.31 2003-08-19 00:57:19 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.32 2003-08-19 01:10:55 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -466,7 +466,6 @@ int CEntity::Startup( void )
   
   this->SetRects( &rect, 1 );
 
-  // TODO - add and remove timeouts when subscriptions occur
   /* request callbacks into this object */
   // real time
 
@@ -1212,31 +1211,6 @@ void CEntity::NormalizeRects(  stg_rotrect_t* rects, int num )
     }
 }
 
-/*
-void CEntity::Subscribe( int con, stg_subscription_t* subs, int sub_count )  
-{
-  for( int p=0; p<sub_count; p++ )
-    {
-      stg_prop_id_t prop_code = subs[p].property;
-      stg_subscription_flag_t flag = subs[p].flag;
-
-      if( prop_code == -1 )
-	PRINT_WARN( "subscribe to all properties not implemented" );
-      else
-	{
-	  PRINT_DEBUG4( "subscribe %d  to ent %d property %s on connection %d",
-			flag, id, 
-			SIOPropString(prop_code), con );
-
-	  // register the subscription on this channel, for this property
-	  subscriptions[con][prop_code].subscribed = flag;
-	  subscriptions[con][prop_code].dirty = 
-	    (flag == STG_SUBSCRIBED) ? 1 : 0;
-	}
-    }
-}
-
-*/
 
 //////////////////////////////////////////////////////////////////////
 // set the rectangles that make up this ent's body

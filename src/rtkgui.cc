@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.6.2.3 2003-08-19 00:57:19 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.6.2.4 2003-08-19 01:10:55 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -69,8 +69,6 @@ extern int quit;
 #define STG_DEFAULT_WINDOW_YORIGIN (STG_DEFAULT_WINDOW_HEIGHT/2)
 #define STG_DEFAULT_PPM 40
 #define STG_DEFAULT_SHOWGRID 1
-#define STG_DEFAULT_SHOWSUBSONLY 1
-
 
 #define STG_MENUITEM_VIEW_MATRIX  1
 #define STG_MENUITEM_VIEW_BODY  2
@@ -269,8 +267,6 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   // create the action menu
   /*
     win->action_menu = rtk_menu_create(win->canvas, "Action");
-    win->subscribedonly_item = rtk_menuitem_create(win->action_menu, 
-    "Subscribe to all", 1);
   */
 
   win->statusbar = GTK_STATUSBAR(gtk_statusbar_new());
@@ -891,7 +887,6 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
       */
 
       // do nothing for these things
-    case STG_PROP_ENTITY_SUBSCRIPTION:
     case STG_PROP_ENTITY_LASERRETURN:
     case STG_PROP_ENTITY_SONARRETURN:
     case STG_PROP_ENTITY_IDARRETURN:

@@ -54,7 +54,6 @@ const char* stg_property_string( stg_prop_id_t id )
     case STG_PROP_ENTITY_NEIGHBORRETURN: return "STG_PROP_ENTITY_NEIGHBORRETURN"; break;
     case STG_PROP_ENTITY_NEIGHBORBOUNDS: return "STG_PROP_ENTITY_NEIGHBORBOUNDS"; break;
     case STG_PROP_ENTITY_NEIGHBORS: return "STG_PROP_ENTITY_NEIGHBORS"; break;
-    case STG_PROP_ENTITY_SUBSCRIPTION: return "STG_PROP_ENTITY_SUBSCRIPTION"; break;
     case STG_PROP_ENTITY_VELOCITY: return "STG_PROP_ENTITY_VELOCITY"; break;
     case STG_PROP_ENTITY_VISIONRETURN: return "STG_PROP_ENTITY_VISIONRETURN"; break;
     case STG_PROP_ENTITY_VOLTAGE: return "STG_PROP_ENTITY_VOLTAGE"; break;
@@ -777,35 +776,6 @@ stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world )
   
   return returned_id;
 }
-
-int stg_model_subscribe( stg_client_t* cli, stg_id_t id, stg_prop_id_t prop )
-{
-  stg_subscription_t sub;
-  sub.property = prop;
-  sub.action = STG_SUBSCRIBE;
-
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_SUBSCRIPTION, 
-					     STG_SET,
-					     &sub, sizeof(sub) );
-  return 0;
-}
-
-int stg_model_unsubscribe( stg_client_t* cli, stg_id_t id, stg_prop_id_t prop )
-{
-  stg_subscription_t unsub;
-  unsub.property = prop;
-  unsub.action = STG_UNSUBSCRIBE;
-
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_SUBSCRIPTION, 
-					     STG_SET,
-					     &unsub, sizeof(unsub) );
-  return 0;
-}
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Look up the color in a data based (transform color name -> color value).

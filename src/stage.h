@@ -71,7 +71,6 @@
        STG_PROP_ENTITY_RECTS,
        STG_PROP_ENTITY_SIZE,
        STG_PROP_ENTITY_SONARRETURN,
-       STG_PROP_ENTITY_SUBSCRIPTION,
        STG_PROP_ENTITY_VELOCITY,
        STG_PROP_ENTITY_VISIONRETURN,
        STG_PROP_ENTITY_VOLTAGE,
@@ -331,7 +330,6 @@ typedef struct
   double originx, originy;
   char showgrid;
   char showdata;
-  char showsubscribedonly;
 } stg_gui_config_t;
 
 typedef enum {
@@ -355,14 +353,6 @@ typedef struct
   char data[0]; // allows us named entry to the end of the struct
 } stg_property_t;
 
-
-typedef enum { STG_SUBSCRIBE, STG_UNSUBSCRIBE } stg_subscription_action_t;
-
-typedef struct
-{
-  stg_prop_id_t property;
-  stg_subscription_action_t action;
-} stg_subscription_t;
 
 // a client that receives this packet should create a new entity
 // and return a single int identifier
@@ -467,9 +457,6 @@ int stg_model_get_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz );
 
 int stg_model_set_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org );
 int stg_model_get_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org );
-
-int stg_model_subscribe( stg_client_t* cli, stg_id_t id, stg_prop_id_t prop);
-int stg_model_unsubscribe( stg_client_t* cli, stg_id_t id, stg_prop_id_t prop);
 
 int stg_model_set_neighbor_bounds( stg_client_t* cli, stg_id_t id, 
 				   stg_bounds_t* data );
