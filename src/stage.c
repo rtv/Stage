@@ -26,7 +26,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.c,v 1.16 2003-09-03 02:04:15 rtv Exp $
+ * CVS: $Id: stage.c,v 1.17 2003-09-09 23:45:01 gerkey Exp $
  */
 
 #include <stdlib.h>
@@ -430,8 +430,9 @@ stg_client_t* stg_client_create( char* host, int port )
   if( connect( cli->pollfd.fd, 
                (struct sockaddr*)&servaddr, sizeof( servaddr) ) == -1 )
     {
-      PRINT_ERR2( "Connection failed on %s:%d ", 
+      PRINT_ERR2( "Connection failed on %s:%d",
 		  info->h_addr_list[0], port ); 
+      PRINT_ERR( "Did you forget to start Stage?");
       perror( "" );
       fflush( stdout );
     return NULL;

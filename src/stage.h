@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.15 2003-09-03 02:04:15 rtv Exp $
+ * CVS: $Id: stage.h,v 1.16 2003-09-09 23:45:01 gerkey Exp $
  */
 
 #ifdef __cplusplus
@@ -550,13 +550,19 @@ stg_color_t stg_lookup_color(const char *name);
 #define STG_HELLO 'S'
 
 // Convert radians to degrees
-#define RTOD(r) ((r) * 180.0 / M_PI)
+#ifndef RTOD
+  #define RTOD(r) ((r) * 180.0 / M_PI)
+#endif
 
 // Convert degrees to radians
-#define DTOR(d) ((d) * M_PI / 180.0)
+#ifndef DTOR
+  #define DTOR(d) ((d) * M_PI / 180.0)
+#endif
 
 // Normalize angle to domain -pi, pi
-#define NORMALIZE(z) atan2(sin(z), cos(z))
+#ifndef NORMALIZE
+  #define NORMALIZE(z) atan2(sin(z), cos(z))
+#endif
 
 #define ASSERT(m) assert(m)
 
