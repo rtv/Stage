@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.32 $
+//  $Author: gerkey $
+//  $Revision: 1.33 $
 //
 // Usage:
 //  (empty)
@@ -398,8 +398,6 @@ void CLBDDevice::RtkUpdate()
 {
   CEntity::RtkUpdate();
  
-  int style = 0;
-  
   rtk_fig_clear(this->beacon_fig);
   
   // if a client is subscribed to this device

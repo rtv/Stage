@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.26 2002-06-10 06:11:27 inspectorg Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.27 2002-06-11 01:30:15 gerkey Exp $
  */
 
 #include <math.h>
@@ -160,7 +160,6 @@ void CSonarDevice::UpdateConfig()
   int s, len;
   void* client;
   char buffer[PLAYER_MAX_REQREP_SIZE];
-  player_sonar_config_t config;
   player_sonar_geom_t geom;
 
   while (true)

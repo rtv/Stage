@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.65 2002-06-11 00:10:42 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.66 2002-06-11 01:30:15 gerkey Exp $
  */
 
 #include <math.h>
@@ -299,7 +299,7 @@ bool CEntity::Startup( void )
       return false;
     }
       
-    //close( tfd ); // can close fd once mapped
+    close( tfd ); // can close fd once mapped
       
     //PRINT_DEBUG("successfully mapped shared memory");
       
@@ -401,7 +401,7 @@ void CEntity::Shutdown()
   if( this->device_filename[0] )
     // remove our name in the filesystem
     if( unlink( this->device_filename ) == -1 )
-      PRINT_ERR1( "Device failed to unlink it's IO file", strerror(errno) );
+      PRINT_ERR1( "Device failed to unlink it's IO file:%s", strerror(errno) );
 }
 
 
@@ -756,9 +756,11 @@ void CEntity::AnnounceDataViaRTP( void* data, size_t len )
   //printf( "sending %d degrees\n", header.th );
 
   // timestamp is in milliseconds
+  /*
   uint32_t ms = 
     m_info_io->data_timestamp_sec * 1000 + 
     m_info_io->data_timestamp_usec / 1000;
+    */
   
   header.len = len;
   
@@ -1104,7 +1106,7 @@ int CEntity::SetProperty( int con, EntityProperty property,
 {
   assert( value );
   assert( len > 0 );
-  assert( len < MAX_PROPERTY_DATA_LEN );
+  assert( (int)len < MAX_PROPERTY_DATA_LEN );
   
   switch( property )
     {

@@ -177,6 +177,7 @@ void CWorld::SetupEnvServer( void )
   
   if( bind(m_env_listen.fd, (SA *) &servaddr, sizeof(servaddr) )  < 0 )
     {
+      perror("CWorld::SetupEnvServer()");
       cout << "Port " << m_env_port 
 	   << " is in use. Quitting (but try again in a few seconds)." 
 	   <<endl;

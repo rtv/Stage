@@ -21,7 +21,7 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.cc,v 1.7 2002-06-09 18:37:06 inspectorg Exp $
+ * CVS info: $Id: truthdevice.cc,v 1.8 2002-06-11 01:30:15 gerkey Exp $
  */
 
 #include "world.hh"
@@ -80,7 +80,7 @@ void CTruthDevice::UpdateConfig()
 
       case PLAYER_TRUTH_SET_POSE:
 
-        if (len < sizeof(config))
+        if (len < (int)sizeof(config))
         {
           PRINT_WARN2("unexpected packet len (%d < %d)", len, sizeof(config));
           break;

@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.16 2002-06-11 00:10:42 inspectorg Exp $
+ * CVS info: $Id: server.cc,v 1.17 2002-06-11 01:30:15 gerkey Exp $
  */
 
 #include <arpa/inet.h>
@@ -451,6 +451,7 @@ bool CStageServer::SetupConnectionServer( void )
   
   if( bind(m_pose_listen.fd, (SA *) &servaddr, sizeof(servaddr) )  < 0 )
   {
+    perror("CStageServer::SetupConnectionServer()");
     cout << "Port " << m_port 
          << " is in use. Quitting (but try again in a few seconds)." 
          <<endl;
@@ -485,7 +486,7 @@ bool CStageServer::CreateDeviceDirectory( void )
       PRINT_WARN( "Device directory exists. Possible error?" );
     else 
     {
-      PRINT_ERR1( "Failed to make device directory", strerror(errno) );
+      PRINT_ERR1( "Failed to make device directory:%s", strerror(errno) );
       return false;
     }      
   }
@@ -816,7 +817,7 @@ bool CStageServer::CreateClockDevice( void )
   if( (tfd = open( clockName, O_RDWR | O_CREAT | O_TRUNC, 
                    S_IRUSR | S_IWUSR )) < 0 )
   {
-    PRINT_ERR1("Failed to open clock device file", strerror(errno) );
+    PRINT_ERR1("Failed to open clock device file:%s", strerror(errno) );
     return false;
   } 
   
@@ -825,13 +826,13 @@ bool CStageServer::CreateClockDevice( void )
 
   if( ftruncate( tfd, sz ) < 0 )
   {
-    PRINT_ERR1( "Failed to set clock file size", strerror(errno) );
+    PRINT_ERR1( "Failed to set clock file size:%s", strerror(errno) );
     return false;
   }
   
   if( write( tfd, &m_sim_timeval, sizeof(m_sim_timeval)) < 0 )
   {
-    PRINT_ERR1( "Failed to write time into clock device", strerror(errno) );
+    PRINT_ERR1( "Failed to write time into clock device:%s", strerror(errno) );
     return false;
   }
 
@@ -841,7 +842,7 @@ bool CStageServer::CreateClockDevice( void )
   
   if (map == MAP_FAILED )
   {
-    PRINT_ERR1( "Failed to map clock device memory", strerror(errno) );
+    PRINT_ERR1( "Failed to map clock device memory:%s", strerror(errno) );
     return false;
   }
   
@@ -855,7 +856,7 @@ bool CStageServer::CreateClockDevice( void )
   // init the clock's semaphore
   if( sem_init( &m_clock->lock, 0, 1 ) < 0 )
   {
-    PRINT_ERR1( "Failed to initialize record locking semaphore", 
+    PRINT_ERR1( "Failed to initialize record locking semaphore:%s", 
                 strerror(errno) );
     return false;
   }

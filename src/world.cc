@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.101 2002-06-11 00:10:42 inspectorg Exp $
+ * CVS info: $Id: world.cc,v 1.102 2002-06-11 01:30:16 gerkey Exp $
  */
 
 //#undef DEBUG
@@ -486,8 +486,10 @@ void CWorld::Update(void)
       RtkUpdate();      
 #endif
 
-    PRINT_DEBUG( "SLEEPING - DISABLED" );
-    usleep( 100000 ); // stops us hogging the machine while we're paused
+    // now we pause() in the main loop (main.cc) waiting for timer signal
+    //
+    //PRINT_DEBUG( "SLEEPING - DISABLED" );
+    //usleep( 100000 ); // stops us hogging the machine while we're paused
   }
   
   // for logging statistics
@@ -863,7 +865,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   }
   
   this->app = rtk_app_create();
-  rtk_app_refresh_rate(this->app, 10);
+  rtk_app_refresh_rate(this->app, 1);
   
   this->canvas = rtk_canvas_create(this->app);
   rtk_canvas_size(this->canvas, sx, sy);

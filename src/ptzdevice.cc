@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -109,7 +109,7 @@ bool CPtzDevice::Load(CWorldFile *worldfile, int section)
     m_fov_min = normal_lens_fov;
   }
 
-  m_fov_max = m_fov_min / 12.0;
+  m_fov_max = m_fov_min / max_zoom;
   
   return true;
 }
@@ -286,8 +286,8 @@ void CPtzDevice::RtkUpdate()
     { 
       
       short pan_deg = (short)ntohs(data.pan);
-      short tilt_deg = (short)ntohs(data.tilt); // unused..?
-      unsigned short zoom = ntohs(data.zoom);
+      //short tilt_deg = (short)ntohs(data.tilt); // unused..?
+      //unsigned short zoom = ntohs(data.zoom);
 
       double pan = DTOR((double)pan_deg);
       

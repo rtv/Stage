@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.31 2002-06-10 17:14:30 inspectorg Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.32 2002-06-11 01:30:16 gerkey Exp $
  */
 
 #include <math.h>
@@ -136,7 +136,7 @@ void CVisionDevice::Update( double sim_time )
   // Generate ACTS data  
   player_vision_data_t data;
   memset( &data, 0, sizeof(data) );
-  size_t len = UpdateACTS( &data );
+  UpdateACTS( &data );
   
   // Copy data to the output buffer
   PutData( &data, sizeof(data) );
@@ -484,8 +484,8 @@ void CVisionDevice::RtkUpdate()
           rtk_fig_color_rgb32( this->vision_fig, 
                                ntohl(data.blobs[index+b].color) ); 
 
-          short x =  ntohs(data.blobs[index+b].x);
-          short y =  ntohs(data.blobs[index+b].y);
+          //short x =  ntohs(data.blobs[index+b].x);
+          //short y =  ntohs(data.blobs[index+b].y);
           short top =  ntohs(data.blobs[index+b].top);
           short bot =  ntohs(data.blobs[index+b].bottom);
           short left =  ntohs(data.blobs[index+b].left);

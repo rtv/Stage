@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.58 2002-06-10 16:04:04 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.59 2002-06-11 01:30:15 gerkey Exp $
  */
 
 #define DEBUG
@@ -178,7 +178,7 @@ bool CLaserDevice::CheckConfig()
     {
       case PLAYER_LASER_SET_CONFIG:
 
-        if (len < sizeof(config))
+        if (len < (int)sizeof(config))
         {
           PRINT_WARN2("request has unexpected len (%d < %d)", len, sizeof(config));
           break;
@@ -378,8 +378,6 @@ void CLaserDevice::RtkUpdate()
 {
   CEntity::RtkUpdate();
  
-  int style = 0;
-  
   rtk_fig_clear(this->scan_fig);
    
   // draw a figure from the data in the data buffer

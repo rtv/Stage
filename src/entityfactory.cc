@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.27 $
+//  $Author: gerkey $
+//  $Revision: 1.28 $
 //
 // Usage:
 //  (empty)
@@ -145,9 +145,9 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CTruthDevice(this, parent );
     case BpsType:
       return new CBpsDevice(this, parent);
-      
     default:
       PRINT_WARN1("unknown type %d", type);
+      return(NULL);
   }
 
   // case AudioType:

@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.19 2002-06-11 00:10:43 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.20 2002-06-11 01:30:16 gerkey Exp $
  */
 
 #include <assert.h>
@@ -523,7 +523,7 @@ bool CWorldFile::LoadTokenString(FILE *file, int *line, int include)
 
     if (ch == EOF || ch == '\n')
     {
-      TOKEN_ERR("unterminated string constant", line);
+      TOKEN_ERR("unterminated string constant", *line);
       return false;
     }
     else if (ch == '"')
@@ -874,6 +874,8 @@ bool CWorldFile::ParseTokenWord(int entity, int *index, int *line)
         return false;
     }
   }
+  
+  return false;
 }
 
 
