@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.35 2002-01-29 03:25:28 inspectorg Exp $
+//  $Id: entity.cc,v 1.36 2002-01-30 03:33:43 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +42,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   m_parent_object = parent_object;
   m_default_object = this;
 
-  m_name = NULL;
+  this->name = NULL;
   m_stage_type = NullType; // overwritten by subclasses
 
   memset(m_device_filename, 0, sizeof(m_device_filename));
@@ -106,6 +106,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
 
 #ifdef INCLUDE_RTK2
   this->fig = NULL;
+  this->fig_label = NULL;
   // By default, we can both translate and rotate objects
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
 #endif
@@ -123,7 +124,7 @@ CEntity::~CEntity()
 bool CEntity::Load(CWorldFile *worldfile, int section)
 {
   // Read the name
-  m_name = worldfile->ReadString(section, "name", "");
+  this->name = worldfile->ReadString(section, "name", "");
       
   // Read the pose
   this->init_px = worldfile->ReadTupleLength(section, "pose", 0, 0);
@@ -212,33 +213,8 @@ bool CEntity::Save(CWorldFile *worldfile, int section)
 bool CEntity::Startup( void )
 {
 #ifdef INCLUDE_RTK2
-  // Create a figure representing this object
-  if (m_parent_object)
-    this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
-  else
-    this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
-
-  // Set the color
-  double r = this->color.red / 255.0;
-  double g = this->color.green / 255.0;
-  double b = this->color.blue / 255.0;
-  rtk_fig_color(this->fig, r, g, b);
-
-  // Compute geometry
-  double qx = this->origin_x;
-  double qy = this->origin_y;
-  double sx = this->size_x;
-  double sy = this->size_y;
-  
-  switch (this->shape)
-  {
-    case ShapeRect:
-      rtk_fig_rectangle(this->fig, qx, qy, 0, sx, sy, false);
-      break;
-    case ShapeCircle:
-      rtk_fig_ellipse(this->fig, qx, qy, 0, sx, sx, false);
-      break;
-  }
+  // Initialise the rtk gui
+  RtkStartup();
 #endif
 
   // if this is not a player device, we bail right here
@@ -299,8 +275,8 @@ bool CEntity::Startup( void )
 void CEntity::Shutdown()
 {
 #ifdef INCLUDE_RTK2
-  // Clean up the figure we created
-  rtk_fig_destroy(this->fig);
+  // Finalize the rtk gui
+  RtkShutdown();
 #endif
 
   // if this is not a player device, we bail right here
@@ -393,29 +369,8 @@ int CEntity::SharedMemorySize( void )
 void CEntity::Update( double sim_time )
 {
 #ifdef INCLUDE_RTK2
-  // We need to handle mouse dragging by the user.
-  // We can only move top-level objects.
-  // Do the test here, since some objects (eg pucks) may
-  // change their parents.
-  if (m_parent_object != NULL)
-    rtk_fig_set_movemask(this->fig, 0);
-  else
-    rtk_fig_set_movemask(this->fig, this->movemask);
-
-  if (rtk_fig_ismoving(this->fig))
-  {
-    // Update the pose of the object in the world
-    double gx, gy, gth;
-    rtk_fig_get_origin(this->fig, &gx, &gy, &gth);
-    SetGlobalPose(gx, gy, gth);
-  }
-  else
-  {
-    // Update the pose of the figure in the GUI
-    double gx, gy, gth;
-    GetGlobalPose(gx, gy, gth);
-    rtk_fig_origin(this->fig, gx, gy, gth);
-  }
+  // Update the rtk gui
+  RtkUpdate();
 #endif
   
 #ifdef DEBUG
@@ -546,10 +501,10 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
       while( (ent = rit.GetNextEntity()) )
       {
         if( ent != this && ent->obstacle_return )
-	  {
-	    rit.GetPos( hitx, hity );
-	    return ent;
-	  }
+        {
+          rit.GetPos( hitx, hity );
+          return ent;
+        }
       }
       return NULL;
     }
@@ -561,10 +516,10 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
       while( (ent = rit.GetNextEntity()) )
       {
         if( ent != this && ent->obstacle_return )
-	  {
-	    rit.GetPos( hitx, hity );
-	    return ent;
-	  }
+        {
+          rit.GetPos( hitx, hity );
+          return ent;
+        }
       }
       return NULL;
     }
@@ -852,7 +807,6 @@ size_t CEntity::GetConfig( void* config, size_t len )
 
 ///////////////////////////////////////////////////////////////////////////
 // See if the PlayerDevice is subscribed
-//
 int CEntity::Subscribed() 
 {
   //return true;
@@ -949,3 +903,123 @@ void CEntity::MakeDirtyIfPixelChanged( void )
   m_last_degree = degree;
 };
 
+#ifdef INCLUDE_RTK2
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CEntity::RtkStartup()
+{
+  // Create a figure representing this object
+  this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
+
+  // Set the color
+  double r = this->color.red / 255.0;
+  double g = this->color.green / 255.0;
+  double b = this->color.blue / 255.0;
+  rtk_fig_color(this->fig, r, g, b);
+
+  // Compute geometry
+  double qx = this->origin_x;
+  double qy = this->origin_y;
+  double sx = this->size_x;
+  double sy = this->size_y;
+  
+  switch (this->shape)
+  {
+    case ShapeRect:
+      rtk_fig_rectangle(this->fig, qx, qy, 0, sx, sy, false);
+      break;
+    case ShapeCircle:
+      rtk_fig_ellipse(this->fig, qx, qy, 0, sx, sx, false);
+      break;
+  }
+
+  // Create the label
+  // By default, the label is not shown
+  this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
+  rtk_fig_show(this->fig_label, false);    
+  rtk_fig_set_movemask(this->fig_label, 0);
+
+  char label[1024];
+  char tmp[1024];
+
+  label[0] = 0;
+  snprintf(tmp, sizeof(tmp), "name: %s", this->name);
+  strncat(label, tmp, sizeof(label));
+  snprintf(tmp, sizeof(tmp), "\ntype: %s", RtkGetStageType());
+  strncat(label, tmp, sizeof(label));
+  if (m_player_port > 0)
+  {
+    snprintf(tmp, sizeof(tmp), "\nplayer: %d:%d", m_player_port, m_player_index);
+    strncat(label, tmp, sizeof(label));
+  }
+
+  qx = qx + 0.75 * sx;
+  qy = qy + 0.75 * sy;
+  rtk_fig_text(this->fig_label, qx, qy, 0, label);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CEntity::RtkShutdown()
+{
+  // Clean up the figure we created
+  rtk_fig_destroy(this->fig);
+  rtk_fig_destroy(this->fig_label);
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the rtk gui
+void CEntity::RtkUpdate()
+{
+  // We need to handle mouse dragging by the user.
+  // We can only move top-level objects.
+  // Do the test here, since some objects (eg pucks) may
+  // change their parents.
+  if (m_parent_object != NULL)
+    rtk_fig_set_movemask(this->fig, 0);
+  else
+    rtk_fig_set_movemask(this->fig, this->movemask);
+
+  // Make sure the entity and the figure have the same pose.
+  // Either update the pose of the object in the world,
+  // or update the pose of the figure in the GUI.
+  if (rtk_fig_mouse_selected(this->fig))
+  {
+    double gx, gy, gth;
+    rtk_fig_get_origin(this->fig, &gx, &gy, &gth);
+    SetGlobalPose(gx, gy, gth);
+  }
+  else
+  {
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
+    rtk_fig_origin(this->fig, gx, gy, gth);
+  }
+
+  // Show the figure's label if it is selected
+  if (rtk_fig_mouse_over(this->fig))
+    rtk_fig_show(this->fig_label, true);
+  else
+    rtk_fig_show(this->fig_label, false);    
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get a string describing the Stage type of the entity
+const char *CEntity::RtkGetStageType()
+{
+  switch (m_stage_type)
+  {
+    case OmniPositionType:
+      return "OmniPositionDev";
+    case RectRobotType:
+      return "RectRobotDev";
+    default:
+      return "Unknown";
+  }
+}
+
+#endif

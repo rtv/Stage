@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -160,7 +160,7 @@ bool CFixedObstacle::Startup()
 #ifdef INCLUDE_RTK2
   // Draw the image into the GUI
   rtk_fig_clear(this->fig);
-  rtk_fig_layer(this->fig, -50);
+  rtk_fig_layer(this->fig, -48);
   rtk_fig_color(this->fig,
                 this->color.red / 255.0,
                 this->color.green / 255.0,

@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: Class for handling world files
 //
-// $Id: worldfile.hh,v 1.7 2002-01-29 03:25:28 inspectorg Exp $
+// $Id: worldfile.hh,v 1.8 2002-01-30 03:33:43 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -71,6 +71,9 @@ class CWorldFile
   // Read a length (includes unit conversion)
   public: double ReadLength(int section, const char *name, double value);
 
+  // Write a length (includes units conversion)
+  public: void WriteLength(int section, const char *name, double value);
+  
   // Read an angle (includes unit conversion)
   public: double ReadAngle(int section, const char *name, double value);
 

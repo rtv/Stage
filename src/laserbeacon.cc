@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -73,6 +73,15 @@ bool CLaserBeacon::Load(CWorldFile *worldfile, int section)
 
   // Read the beacon id
   this->id = worldfile->ReadInt(section, "id", 0);
+
+  // Use the beacon id as a name if there is none
+  // This will leak memory, but I dont really care.
+  if (!this->name || strlen(this->name) == 0)
+  {
+    char *name = (char*) malloc(64);
+    snprintf(name, 64, "id %d", this->id);
+    this->name = name;
+  }
   
   return true;
 }

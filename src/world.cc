@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.77 $
+//  $Revision: 1.78 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -371,10 +371,12 @@ bool CWorld::Load(const char *filename)
     const char *type = this->worldfile.GetSectionType(section);
     int line = this->worldfile.ReadInt(section, "line", -1);
 
-    // Ignore some types, since we have already dealt with them
+    // Ignore some types, since we already have dealt will deal with them
     if (strcmp(type, "environment") == 0)
       continue;
-
+    if (strcmp(type, "rtk") == 0)
+      continue;
+    
     // Find the parent object
     CEntity *parent = NULL;
     int psection = this->worldfile.GetSectionParent(section);
@@ -444,6 +446,12 @@ bool CWorld::Save(const char *filename)
       return false;
   }
 
+#ifdef INCLUDE_RTK2
+  // Save changes to the GUI
+  if (!SaveGUI(&this->worldfile))
+    return false;
+#endif
+  
   // Save everything
   if (!this->worldfile.Save(filename))
     return false;
@@ -1252,74 +1260,6 @@ void CWorld::DrawDebug(RtkUiDrawData *data, int options)
 }
 
 #endif // INCLUDE_RTK
-
-#ifdef INCLUDE_RTK2
-
-// Initialise the GUI
-bool CWorld::LoadGUI(CWorldFile *worldfile)
-{
-  int section = worldfile->LookupSection("rtk");
-
-  // Size in pixels
-  int sx = (int) worldfile->ReadTupleFloat(section, "size", 0, this->matrix->width);
-  int sy = (int) worldfile->ReadTupleFloat(section, "size", 1, this->matrix->height);
-
-  // Scale of the pixels
-  double scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
-  
-  // Size in meters
-  double dx = sx * scale;
-  double dy = sy * scale;
-  
-  this->app = rtk_app_create();
-  rtk_app_size(this->app, 100, 100);
-  rtk_app_refresh_rate(this->app, 10);
-  
-  this->canvas = rtk_canvas_create(this->app);
-  rtk_canvas_size(this->canvas, sx, sy);
-  rtk_canvas_scale(this->canvas, dx / sx, dy / sy);
-  rtk_canvas_origin(this->canvas, dx / 2, dy / 2);
-
-  // Add some menu items
-  this->save_menuitem = rtk_menuitem_create(this->canvas, "Save");
-  this->export_menuitem = rtk_menuitem_create(this->canvas, "Export");
-
-  this->export_count = 0;
-
-  return true;
-}
-
-// Start the GUI
-bool CWorld::StartupGUI()
-{
-  rtk_app_start(this->app);
-  return true;
-}
-
-// Stop the GUI
-void CWorld::ShutdownGUI()
-{
-  rtk_app_stop(this->app);
-}
-
-// Update the GUI
-void CWorld::UpdateGUI()
-{
-  if (rtk_menuitem_selected(this->save_menuitem))
-  {
-    Save(this->worldfilename);
-  }
-  if (rtk_menuitem_selected(this->export_menuitem))
-  {
-    char filename[128];
-    snprintf(filename, sizeof(filename), "rtkstage-%04d.fig", this->export_count++);
-    PRINT_MSG1("exporting canvas to [%s]", filename);
-    rtk_canvas_export(this->canvas, filename);
-  }
-}
-
-#endif
-
   
 char* CWorld::StringType( StageType t )
 {
@@ -1606,5 +1546,120 @@ void CWorld::LogOutputHeader( void )
   write( m_log_fd, line, strlen(line) );
 }
 
+#ifdef INCLUDE_RTK2
+
+// Initialise the GUI
+bool CWorld::LoadGUI(CWorldFile *worldfile)
+{
+  int section = worldfile->LookupSection("rtk");
+
+  // Size of canvas in pixels
+  int sx = (int) worldfile->ReadTupleFloat(section, "size", 0, this->matrix->width);
+  int sy = (int) worldfile->ReadTupleFloat(section, "size", 1, this->matrix->height);
+  
+  // Scale of the pixels
+  double scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
+  
+  // Size in meters
+  double dx = sx * scale;
+  double dy = sy * scale;
+
+  // Origin of the canvas
+  double ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
+  double oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
+
+  this->app = rtk_app_create();
+  rtk_app_size(this->app, 100, 100);
+  rtk_app_refresh_rate(this->app, 10);
+  
+  this->canvas = rtk_canvas_create(this->app);
+  rtk_canvas_size(this->canvas, sx, sy);
+  rtk_canvas_scale(this->canvas, scale, scale);
+  rtk_canvas_origin(this->canvas, ox, oy);
+
+  // Add some menu items
+  this->save_menuitem = rtk_menuitem_create(this->canvas, "Save");
+  this->export_menuitem = rtk_menuitem_create(this->canvas, "Export");
+  this->export_count = 0;
+
+  // Grid spacing
+  double minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
+  double major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
+  
+  // Create the grid
+  this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
+  if (minor > 0)
+  {
+    rtk_fig_color(this->fig_grid, 0.9, 0.9, 0.9);
+    rtk_fig_grid(this->fig_grid, ox, oy, dx, dy, minor);
+  }
+  if (major > 0)
+  {
+    rtk_fig_color(this->fig_grid, 0.75, 0.75, 0.75);
+    rtk_fig_grid(this->fig_grid, ox, oy, dx, dy, major);
+  }
+
+  return true;
+}
+
+
+// Save the GUI
+bool CWorld::SaveGUI(CWorldFile *worldfile)
+{
+  int section = worldfile->LookupSection("rtk");
+
+  // Size of canvas in pixels
+  int sx, sy;
+  rtk_canvas_get_size(this->canvas, &sx, &sy);
+  worldfile->WriteTupleFloat(section, "size", 0, sx);
+  worldfile->WriteTupleFloat(section, "size", 1, sy);
+
+  // Origin of the canvas
+  double ox, oy;
+  rtk_canvas_get_origin(this->canvas, &ox, &oy);
+  worldfile->WriteTupleLength(section, "origin", 0, ox);
+  worldfile->WriteTupleLength(section, "origin", 1, oy);
+
+  // Scale of the canvas
+  double scale;
+  rtk_canvas_get_scale(this->canvas, &scale, &scale);
+  worldfile->WriteLength(section, "scale", scale);
+  
+  return true;
+}
+
+
+// Start the GUI
+bool CWorld::StartupGUI()
+{
+  rtk_app_start(this->app);
+  return true;
+}
+
+
+// Stop the GUI
+void CWorld::ShutdownGUI()
+{
+  rtk_app_stop(this->app);
+}
+
+// Update the GUI
+void CWorld::UpdateGUI()
+{
+  // Handle save menu item
+  if (rtk_menuitem_selected(this->save_menuitem))
+    Save(this->worldfilename);
+
+  // Handle export menu item
+  if (rtk_menuitem_selected(this->export_menuitem))
+  {
+    char filename[128];
+    snprintf(filename, sizeof(filename), "rtkstage-%04d.fig", this->export_count++);
+    PRINT_MSG1("exporting canvas to [%s]", filename);
+    rtk_canvas_export(this->canvas, filename);
+  }
+}
+
+#endif
 
 

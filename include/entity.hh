@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 // Usage:
 //  (empty)
@@ -96,13 +96,13 @@ class CEntity
 
   // Check to see if the given pose will yield a collision with obstacles.
   // Returns a pointer to the first entity we are in collision with.
-  // Returns NULL if not collisions.
+  // Returns NULL if no collisions.
   // This function is useful for writing position devices.
-protected: virtual CEntity *TestCollision(double px, double py, double pth );
+  protected: virtual CEntity *TestCollision(double px, double py, double pth );
   
   // same; also records the position of the hit
-protected: virtual CEntity *TestCollision(double px, double py, double pth, 
-				    double &hitx, double &hity );
+  protected: virtual CEntity *TestCollision(double px, double py, double pth, 
+                                            double &hitx, double &hity );
 
   // Set the color of the entity
   public: void SetColor(const char *desc);
@@ -158,7 +158,6 @@ protected: virtual CEntity *TestCollision(double px, double py, double pth,
   public: StageType m_stage_type; 
 
   // Our shape and geometry
-  // REMOVE protected: const char *shape_desc;
   public: StageShape shape;
   public: double origin_x, origin_y;
   public: double size_x, size_y;
@@ -167,7 +166,7 @@ protected: virtual CEntity *TestCollision(double px, double py, double pth,
   public: StageColor color;
 
   // Descriptive name for this object
-  public: const char *m_name;
+  public: const char *name;
 
   // Object mass (for collision calculations)
   protected: double m_mass;
@@ -295,8 +294,20 @@ protected: virtual CEntity *TestCollision(double px, double py, double pth,
   protected: size_t m_info_len;
 
 #ifdef INCLUDE_RTK2
+  // Initialise the rtk gui
+  private: void RtkStartup();
+
+  // Finalise the rtk gui
+  private: void RtkShutdown();
+
+  // Update the rtk gui
+  private: void RtkUpdate();
+
+  // Get a string describing the Stage type of the entity
+  private: const char *RtkGetStageType();
+  
   // Default figure handle
-  protected: rtk_fig_t *fig;
+  protected: rtk_fig_t *fig, *fig_label;
 
   // Default movement mask
   protected: int movemask;

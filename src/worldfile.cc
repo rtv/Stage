@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: A property handling class
 //
-// $Id: worldfile.cc,v 1.6 2002-01-29 03:25:29 inspectorg Exp $
+// $Id: worldfile.cc,v 1.7 2002-01-30 03:33:43 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -723,6 +723,17 @@ const char *CWorldFile::ReadString(int section, const char *name, const char *va
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Write a string
+void CWorldFile::WriteString(int section, const char *name, const char *value)
+{
+  int item = GetItem(section, name);
+  if (item < 0)
+    item = InsertItem(section, name);
+  SetItemValue(item, 0, value);  
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Read an int
 int CWorldFile::ReadInt(int section, const char *name, int value)
 {
@@ -752,6 +763,16 @@ double CWorldFile::ReadLength(int section, const char *name, double value)
   if (item < 0)
     return value;
   return atof(GetItemValue(item, 0)) * this->unit_length;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Write a length (includes units conversion)
+void CWorldFile::WriteLength(int section, const char *name, double value)
+{
+  char default_str[64];
+  snprintf(default_str, sizeof(default_str), "%.3f", value / this->unit_length);
+  WriteString(section, name, default_str);
 }
 
 

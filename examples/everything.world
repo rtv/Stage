@@ -1,18 +1,20 @@
 
 # Desc: World containing one instance of everything
-# CVS: $Id: everything.world,v 1.1 2002-01-29 03:25:47 inspectorg Exp $
+# CVS: $Id: everything.world,v 1.2 2002-01-30 03:33:43 inspectorg Exp $
 
 
 
 begin environment
-  file cave.pnm 
+#  file cave.pnm 
+  file hospital.pnm 
   scale 0.02 
   resolution 0.05 
 end 
 
 begin rtk
-  size (640 480) 
-  scale 0.02 
+  size (640.000 508.000) 
+  scale 0.024 
+  origin (7.447 5.837) 
 end 
 
 begin vision_beacon

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.39 $
+//  $Revision: 1.40 $
 //
 // Usage:
 //  (empty)
@@ -404,6 +404,9 @@ class CWorld
   // Initialise the GUI
   private: bool LoadGUI(CWorldFile *worldfile);
 
+  // Save the GUI
+  private: bool SaveGUI(CWorldFile *worldfile);
+  
   // Start the GUI
   private: bool StartupGUI();
 
@@ -417,6 +420,9 @@ class CWorld
   public: rtk_app_t *app;
   public: rtk_canvas_t *canvas;
 
+  // Figure for the grid
+  private: rtk_fig_t *fig_grid;
+  
   // Some menu items
   private: rtk_menuitem_t *save_menuitem;
   private: rtk_menuitem_t *export_menuitem;
