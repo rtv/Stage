@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.29 2002-06-09 18:37:06 inspectorg Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.30 2002-06-10 02:28:21 gerkey Exp $
  */
 
 #include <math.h>
@@ -223,17 +223,17 @@ void CVisionDevice::UpdateScan()
       for( int c=0; c < this->channel_count; c++ )
       {
         if( this->channels[c] == col)
-	      {
+        {
           //printf("color %d is channel %d\n", col, c);
           //printf("m_scan_channel[%d] = %d\n", s, c+1);
 
           m_scan_channel[s] = c + 1; // channel 0 is no-blob
           m_scan_range[s] = range;
           break;
-	      }
+        }
       }
     }
-  }   
+  }
 }
 
 
@@ -254,7 +254,7 @@ size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
   // scan through the samples looking for color blobs
   for( int s=0; s < m_scan_width; s++ )
   {
-    if( m_scan_channel[s] != 0 && m_scan_channel[s] < ACTS_NUM_CHANNELS)
+    if( m_scan_channel[s] != 0 && m_scan_channel[s] < VISION_NUM_CHANNELS)
     {
       blobleft = s;
       blobcol = m_scan_channel[s];
@@ -262,13 +262,21 @@ size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
       // loop until we hit the end of the blob
       // there has to be a gap of >1 pixel to end a blob
       // this avoids getting lots of crappy little blobs
-      while( m_scan_channel[s] == blobcol || m_scan_channel[s+1] == blobcol ) s++;
-      //while( m_scan[s] == blobcol ) s++;
+      while( m_scan_channel[s] == blobcol || m_scan_channel[s+1] == blobcol ) 
+        s++;
 
       blobright = s-1;
       double robotHeight = 0.6; // meters
       int xCenterOfBlob = blobleft + ((blobright - blobleft )/2);
       double rangeToBlobCenter = m_scan_range[ xCenterOfBlob ];
+      if(!rangeToBlobCenter)
+      {
+        // if the range to the "center" is zero, then use the range
+        // to the start.  this can happen, for example, when two 1-pixel
+        // blobs that are 1 pixel apart are grouped into a single blob in 
+        // whose "center" there is really no blob at all
+        rangeToBlobCenter = m_scan_range[ blobleft ];
+      }
       double startyangle = atan2( robotHeight/2.0, rangeToBlobCenter );
       double endyangle = -startyangle;
       blobtop = cameraImageHeight/2 - (int)(startyangle/yRadsPerPixel);
@@ -286,8 +294,10 @@ size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
         << " sees " << (int)blobcol-1
         << " start: " << blobleft
         << " end: " << blobright
+        << " top: " << blobtop
+        << " bottom: " << blobbottom
         << endl << endl;
-      */
+        */
 
       // fill in an arrau entry for this blob
       //

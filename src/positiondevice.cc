@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.28 2002-06-09 21:16:14 gerkey Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.29 2002-06-10 02:28:21 gerkey Exp $
  */
 
 //#define DEBUG
@@ -256,8 +256,8 @@ void CPositionDevice::UpdateData()
     
   // normalized compass heading
   double compass = NORMALIZE(gth);
-  if (gth < 0)
-    gth += TWOPI;
+  if (compass < 0)
+    compass += TWOPI;
   
   // Construct the data packet
   // Basically just changes byte orders and some units

@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.99 2002-06-09 21:16:14 gerkey Exp $
+# $Id: Makefile,v 1.100 2002-06-10 02:28:21 gerkey Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -22,9 +22,9 @@ INCLUDES = -I../include -I$(PLAYER_INC)
 
 # compile flags for Stage
 STAGEFLAGS = -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) $(PLAYER_PLATFORM) \
-             -DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\" \
-				     -DINCLUDE_RTK2 -I../$(RTK_INC) `gtk-config --cflags`\
-	   				  $(HRL_FLAGS) $(CCFLAGS)	
+	-DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\" \
+	-DINCLUDE_RTK2 -I../$(RTK_INC) `gtk-config --cflags`\
+	$(HRL_FLAGS) $(CCFLAGS)	
 
 # Link flags for Stage
 # optional libraries are linked if they were defined in Makefile.common
@@ -46,14 +46,13 @@ OBS = main.o world.o stageio.o server.o client.o worldfile.o \
 all: stage #tools 
 
 # STAGE ####################################################################
-stage: rtk $(OBS)
-	$(LINKER) $(OBS) $(STAGELINK) -o $@
-
-# RTK ######################################################################
-rtk:
+#
+# in order to cut down on unnecessary recompilation, make Stage depend
+# directly on the *.c and *.h files that comprise rtk - BPG
+RTKFILES = $(shell ls -d ../$(RTK_DIR)/*.[ch])
+stage: $(RTKFILES) $(OBS)
 	cd ../$(RTK_DIR) && ${MAKE}
-
-
+	$(LINKER) $(OBS) $(STAGELINK) -o $@
 
 # TOOLS ###################################################################
 

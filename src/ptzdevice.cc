@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Author: gerkey $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -66,16 +66,52 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
   m_zoom_min = 0;
   m_zoom_max = 1024;
   
+  m_pan = m_tilt = m_zoom = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Load the entity from the world file
+bool CPtzDevice::Load(CWorldFile *worldfile, int section)
+{
+  if (!CEntity::Load(worldfile, section))
+    return false;
+
+  char lens_str[32];
+  
   // Field of view (for scaling zoom values)
   //
   // should look in the Sony manual to get these numbers right,
   // but they'll change with the lens, and we have 2 lenses
   // eventually all this stuff'll come from config files
   //
-  m_fov_min = DTOR(100);
-  m_fov_max = DTOR(10);
   
-  m_pan = m_tilt = m_zoom = 0;
+  // these are my guesses, based on a vague memory that the basic Sony 
+  // cameras lens has a 60-degree FOV and 12x zoom (and an assumption of linear
+  // zoom.  note that the normal/wide lens issue is dealt with via a 
+  // .world file option - BPG
+  double normal_lens_fov = DTOR(60.0);
+  double max_zoom = 12.0;
+  double wide_lens_multiplier = 2.0;
+
+  // Read ptz settings
+  strncpy(lens_str, worldfile->ReadString(section, "lens", "normal"),
+          sizeof(lens_str));
+  lens_str[sizeof(lens_str)-1] = '\0';
+
+  if(!strcmp(lens_str, "normal"))
+    m_fov_min = normal_lens_fov;
+  else if(!strcmp(lens_str, "wide"))
+    m_fov_min = normal_lens_fov * wide_lens_multiplier;
+  else
+  {
+    fprintf(stderr, "CPtzDevice: Warning: ignoring unknown lens "
+            "specifier \"%s\"\n", lens_str);
+    m_fov_min = normal_lens_fov;
+  }
+
+  m_fov_max = m_fov_min / 12.0;
+  
+  return true;
 }
 
 
@@ -259,12 +295,10 @@ void CPtzDevice::RtkUpdate()
       
       double ox, oy;
       double fx;
-      
-      // have to figure out the camera field of view based on zoom
-      // for now we show a fixed-angle triangle
 
-      // Camera field of view in x-direction (radians)
-      fx = DTOR(30.0);
+      // Camera field of view in x-direction (radians), based on zoom
+      fx = m_fov_min + (m_zoom - m_zoom_min) * 
+              (m_fov_max - m_fov_min) / (m_zoom_max - m_zoom_min);
       
       ox = 100 * cos(pan);
       oy = 100 * sin(pan);

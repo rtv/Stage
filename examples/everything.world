@@ -2,7 +2,7 @@
 # Desc: Test world file containing examples of everything.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.12 2002-06-09 21:16:14 gerkey Exp $
+# CVS: $Id: everything.world,v 1.13 2002-06-10 02:28:21 gerkey Exp $
 
 environment
 (
@@ -13,7 +13,7 @@ environment
 
 position
 (
-  name "robot1" port 6665 pose [4.270 1.520 -0.993]
+  name "robot1" port 6665 pose [4.481 1.559 353.807]
   player () 
   truth ()
   sonar ()
@@ -25,7 +25,7 @@ position
   laser 
   (
     lbd () 
-    ptz (vision())
+    ptz ( lens "wide" vision())
   )
 )
 

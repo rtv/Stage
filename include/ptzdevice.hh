@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/ptzdevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.8 $
+//  $Author: gerkey $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -36,6 +36,9 @@ class CPtzDevice : public CEntity
     // Default constructor
     //
     public: CPtzDevice(CWorld *world, CEntity *parent );
+  
+    // Load the entity from the worldfile
+    public: virtual bool Load(CWorldFile *worldfile, int section);
     
     // Update the device
     //
