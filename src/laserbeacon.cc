@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -167,7 +167,7 @@ void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
         GetGlobalPose(ox, oy, oth);
         double dx = 2 * r * cos(oth);
         double dy = 2 * r * sin(oth);
-        data->set_color(RTK_RGB(255, 0, 0));
+        data->set_color(m_color);
         data->ellipse(ox - r, oy - r, ox + r, oy + r);
         data->line(ox - dx, oy - dy, ox + dx, oy + dy);
     }

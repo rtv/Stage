@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -143,7 +143,7 @@ void CLaserBeaconDevice::Update()
     laser.min_angle = ntohs(laser.min_angle);
     laser.max_angle = ntohs(laser.max_angle);
     laser.range_count = ntohs(laser.range_count);
-    ASSERT(laser.range_count >= 0 && laser.range_count < ARRAYSIZE(laser.ranges));
+    ASSERT(laser.range_count < ARRAYSIZE(laser.ranges));
     for (int i = 0; i < laser.range_count; i++)
         laser.ranges[i] = ntohs(laser.ranges[i]);
     
@@ -243,12 +243,47 @@ void CLaserBeaconDevice::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *pData)
+void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *event)
 {
-    // Draw our children
+    // Default draw
     //
-    CEntity::OnUiUpdate(pData);    
+    CEntity::OnUiUpdate(event);
+
+    // Draw debugging info
+    //
+    event->begin_section("global", "laser_beacon");
+    
+    if (event->draw_layer("data", true))
+        if (IsSubscribed())
+            DrawData(event);
+    
+    event->end_section();
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw the beacon data
+//
+void CLaserBeaconDevice::DrawData(RtkUiDrawData *event)
+{
+    #define SCAN_COLOR RTK_RGB(0, 0, 255)
+    
+    event->set_color(SCAN_COLOR);
+
+    // Get global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
+
+    for (int i = 0; i < expBeacon.beaconCount; i++)
+    {
+        //int id = expBeacon.beacons[i].id;
+        double px = expBeacon.beacons[i].x;
+        double py = expBeacon.beacons[i].y;
+        event->ex_arrow(gx, gy, px, py, 0, 0.10);
+    }
+}
+
 
 #endif
 

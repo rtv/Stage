@@ -49,8 +49,8 @@ OBJS = world.o world_load.o image.o \
 
 # Flags common to all targets
 #
-CCFLAGS = -g3 -Wall -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
-#CCFLAGS = -O3 -Wall -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
+#CCFLAGS = -g3 -Wall -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
+CCFLAGS = -O2 -Wall -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
 LINKFLAGS = -lm -lstdc++ -lpthread  -L$(PLAYER_LIB) -lplayerclient $(ZLIB_LIBS)
 
 # Standard tools

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -406,7 +406,7 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
     
     if (event->draw_layer("", true))
         DrawTurret(event);
-    if (event->draw_layer("scan", true))
+    if (event->draw_layer("data", true))
         if (IsSubscribed())
             DrawScan(event);
     
