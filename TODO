@@ -1,0 +1,25 @@
+##############################################################################################
+# TODO 
+# $Id: TODO,v 1.1 2001-09-19 01:28:59 vaughan Exp $
+##############################################################################################
+
+## IN PROGRESS ###############################################################################
+
+ - documentation
+
+## URGENT ####################################################################################
+
+ - objects should accept color specification instead of channels once again
+ - enable external servers by default
+ - spawn XS by default in stage
+ - LBD bug: IDs intermitently visible
+
+## NICE ######################################################################################
+
+ - improve configuration file read/write 
+	- save only relevant state
+	- inherit port by default on load
+
+## DONE ######################################################################################
+
+
