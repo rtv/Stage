@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.25 2005-03-11 23:53:11 rtv Exp $
+# CVS: $Id: everything.world,v 1.26 2005-04-06 21:37:43 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -20,14 +20,16 @@ include "pioneer.inc"
 include "map.inc"
 
 
-window( size [ 830.000 556.000 ] center [-9.210 3.086] scale 0.013 )
+window
+( 
+  size [ 830.000 556.000 ] 
+  center [-9.210 3.086] scale 0.013 
+)
 
-map(
-
-  bitmap "bitmaps/hospital_section.png"
-  #bitmap_resolution 0.03
-
-  size [36 18]
+map
+( 
+  bitmap "bitmaps/hospital_section.png" 
+  size [36 18] 
 )
 
 

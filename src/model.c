@@ -1262,14 +1262,6 @@ void stg_model_load( stg_model_t* mod )
     wf_read_int( mod->id, "ranger_return", mod->ranger_return );
   stg_model_set_rangerreturn( mod, &ranger );
   
-  stg_guifeatures_t gf;
-  gf.boundary = wf_read_int(mod->id, "gui_boundary", mod->guifeatures.boundary );
-  gf.nose = wf_read_int(mod->id, "gui_nose", mod->guifeatures.nose );
-  gf.grid = wf_read_int(mod->id, "gui_grid", mod->guifeatures.grid );
-  gf.movemask = wf_read_int(mod->id, "gui_movemask", mod->guifeatures.movemask );
-  gf.outline = wf_read_int(mod->id, "gui_outline", mod->guifeatures.outline );
-  stg_model_set_guifeatures( mod, &gf );
-  
   //stg_friction_t friction;
   //friction = wf_read_float(mod->id, "friction", 0.0 );
   //stg_model_set_friction(mod, &friction );
@@ -1413,6 +1405,18 @@ void stg_model_load( stg_model_t* mod )
   // if a type-specific load callback has been set
   if( mod->f_load )
     mod->f_load( mod ); // call the load function
+
+  // do gui features last so we know exactly what we're supposed to
+  // look like.
+  stg_guifeatures_t gf;
+  gf.boundary = wf_read_int(mod->id, "gui_boundary", mod->guifeatures.boundary );
+  gf.nose = wf_read_int(mod->id, "gui_nose", mod->guifeatures.nose );
+  gf.grid = wf_read_int(mod->id, "gui_grid", mod->guifeatures.grid );
+  gf.movemask = wf_read_int(mod->id, "gui_movemask", mod->guifeatures.movemask );
+  gf.outline = wf_read_int(mod->id, "gui_outline", mod->guifeatures.outline );
+  stg_model_set_guifeatures( mod, &gf );
+  
+
 }
 
 
