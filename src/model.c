@@ -846,8 +846,6 @@ stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
   return (stg_polygon_t*)mod->polygons->data;
 }
 
-/* SET basic model properties
-
 
 /** set the pose of a model in its parent's CS */
 int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
@@ -941,6 +939,8 @@ int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_
   stg_model_render_polygons( mod );
 
   stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
+  
+  return 0;
 } 
 
 int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val )
@@ -1254,9 +1254,9 @@ void stg_model_load( stg_model_t* mod )
   //stg_model_set_friction(mod, &friction );
 
   // laser visibility
-  int laservis = 
+  stg_laser_return_t laservis = 
     wf_read_int(mod->id, "laser_return", STG_DEFAULT_LASERRETURN );      
-  stg_model_set_laserreturn( mod, (stg_laser_return_t*)&laservis );
+  stg_model_set_laserreturn( mod, &laservis );
   
   // blob visibility
   //int blobvis = 

@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.3 2005-02-26 08:50:47 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.4 2005-02-26 09:07:23 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -430,7 +430,7 @@ int StgDriver::InitModel( device_record_t* device,
       printf( "\"%s\"\n", device->mod->token );
       
       // now poke a data callback function into the model					    
-      device->mod->data_notify = NULL;//StgDriver::RefreshDataCallback;
+      device->mod->data_notify = StgDriver::RefreshDataCallback;
       device->mod->data_notify_arg = device;
       
       g_ptr_array_add( this->devices, device );
@@ -575,7 +575,7 @@ int StgDriver::Subscribe(player_device_id_t id)
   if( device )
     {      
       stg_model_subscribe( device->mod );  
-      return 0; // ok
+      return Driver::Subscribe(id);
     }
   else
     return 1; // error
@@ -593,7 +593,7 @@ int StgDriver::Unsubscribe(player_device_id_t id)
   if( device )
     {
       stg_model_unsubscribe( device->mod );  
-      return 0; // ok
+      return Driver::Unsubscribe(id);
     }
   else
     return 1; // error
@@ -638,7 +638,7 @@ int StgDriver::Shutdown()
 // Main function for device thread
 void StgDriver::Main() 
 {
-  puts( "stage driver main" );
+  //puts( "stage driver main" );
 
   assert( StgDriver::world );
 
@@ -677,64 +677,57 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
   else
     GlobalTime->GetTime(&ts);
   
-  // handle simulation requests directly
-  if( id.code == PLAYER_SIMULATION_CODE )
+  // find this device:  
+  device_record_t* drec = NULL;
+  
+  for( int i=0; i<(int)this->devices->len; i++ )
     {
-      //SimulationConfig( id, client, src, len );      
-    }
-  else // it's a device
-    {
-      // find this device:  
-      device_record_t* drec = NULL;
+      device_record_t* candidate = 
+	(device_record_t*)g_ptr_array_index( this->devices, i );
       
-      for( int i=0; i<(int)this->devices->len; i++ )
+      if( candidate->id.port == id.port &&
+	  candidate->id.code == id.code &&
+	  candidate->id.index == id.index )
 	{
-	  device_record_t* candidate = 
-	    (device_record_t*)g_ptr_array_index( this->devices, i );
-	  
-	  if( candidate->id.port == id.port &&
-	      candidate->id.code == id.code &&
-	      candidate->id.index == id.index )
-	    {
-	      drec = candidate;
-	      break;
-	    }
+	  drec = candidate;
+	  break;
 	}
+    }
+  
+  // if the device was found, call the appropriate config handler
+  if( drec && drec->config_callback ) 
+    (*drec->config_callback)( drec, client, src, len );
+  else
+    {	
+      PRINT_WARN3( "Failed to find device id (%d:%d:%d)", 
+		   id.port, id.code, id.index );
       
-      // if the device was found, call the appropriate config handler
-      if( drec && drec->config_callback ) 
-	(*drec->config_callback)( drec, client, src, len );
-      else
-	{	
-	  PRINT_WARN3( "Failed to find device id (%d:%d:%d)", 
-		       id.port, id.code, id.index );
-	  
-	  if (this->PutReply( id, client, 
-			      PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-	    DRIVER_ERROR("PutReply() failed");	  
-	}
-    } 
+      if (this->PutReply( id, client, 
+			  PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+	DRIVER_ERROR("PutReply() failed");	  
+    }
+  
   return(0);
 }
 
 void StgDriver::Update(void)
 {
-  puts( "stgdriver update" );
+  // puts( "stgdriver update" );
 
   // Check for commands
   uint8_t cmd[ PLAYER_MAX_MESSAGE_SIZE ];
   
-  printf( "driver %p has %d devices to inspect\n",
-	  this, (int)this->devices->len );
+  //printf( "driver %p has %d devices to inspect\n",
+  //  this, (int)this->devices->len );
   
   for( int i=0; i<(int)this->devices->len; i++ )
     {
       device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
       
-      printf( "checking command for %d:%d:%d\n",
-	      device->id.port, 
-	      device->id.code, 
-	      device->id.index );
+      //printf( "checking command for %d:%d:%d\n",
+      //      device->id.port, 
+      //      device->id.code, 
+      //      device->id.index );
       
       if( device->cmd_len > 0 )
 	{    
@@ -742,11 +735,11 @@ void StgDriver::Update(void)
 	  size_t cmd_len = 
 	    this->GetCommand( device->id, cmd, device->cmd_len, NULL);
 	  
-	  printf( "command for %d:%d:%d is %d bytes\n",
-		  device->id.port, 
-		  device->id.code, 
-		  device->id.index, 
-		  (int)cmd_len );
+	  //printf( "command for %d:%d:%d is %d bytes\n",
+	  //  device->id.port, 
+	  //  device->id.code, 
+	  //  device->id.index, 
+	  //  (int)cmd_len );
 	    
 	  if( cmd_len && device && device->command_callback )
 	    (*device->command_callback)( device, cmd, cmd_len );	  

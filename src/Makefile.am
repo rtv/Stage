@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.91 2005-02-26 08:39:46 rtv Exp $
+# $Id: Makefile.am,v 1.92 2005-02-26 09:07:22 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
@@ -49,7 +49,4 @@ libstage_la_SOURCES = \
         rtkprivate.h
 
 libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0 
-libstage_la_LIBADD = @GTK_LIBS@ 
-
-
-#	stg_driver.cc 
+libstage_la_LIBADD = @GTK_LIBS@
