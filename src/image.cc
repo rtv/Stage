@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: image.cc,v 1.2 2000-12-01 22:07:54 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -310,6 +310,15 @@ void Nimage::draw_circle(int x,int y,int r,unsigned char c)
     }	
   
   draw_line(x1,y1,x,y+r,c);
+}
+
+
+void Nimage::draw_rect( const Rect t, unsigned char c)
+{
+  draw_line( t.toplx, t.toply, t.toprx, t.topry, c );
+  draw_line( t.toprx, t.topry, t.botlx, t.botly, c );
+  draw_line( t.botlx, t.botly, t.botrx, t.botry, c );
+  draw_line( t.botrx, t.botry, t.toplx, t.toply, c );
 }
 
 

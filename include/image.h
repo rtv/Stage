@@ -8,7 +8,7 @@
 //	General image class, includes data storage, and 
 //	display of image. Also uses stuff for live capture
 //
-// $Id: image.h,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+// $Id: image.h,v 1.2 2000-12-01 22:08:18 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -83,6 +83,10 @@ public:
 	void	draw_box(int,int,int,int,unsigned char);
 	void	draw_circle(int x,int y,int r,unsigned char c);
 	void	draw_line(int x1,int y1,int x2,int y2,unsigned char c);
+
+	// new 1 Dec 2000 - RTV
+	void	draw_rect( const Rect t, unsigned char c);
+
 	//void	draw_line_detect(int x1,int y1,int x2,int y2,int c);	
 	unsigned char line_detect(int x1,int y1,int x2,int y2,
 				  unsigned char c );
