@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.67 2005-02-07 19:16:49 gerkey Exp $
+dnl $Id: configure.in,v 1.68 2005-02-08 15:37:21 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -68,7 +68,7 @@ AC_CHECK_LIB(m, isinf)
 
 dnl build mplementations of these in libreplace.a if these are 
 dnl missing
-AC_REPLACE_FUNCS(poll dirname scandir)
+AC_REPLACE_FUNCS(poll dirname scandir basename)
 
 dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually

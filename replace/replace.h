@@ -1,4 +1,4 @@
-/*  $Id: replace.h,v 1.1 2002-12-05 01:50:22 rtv Exp $
+/*  $Id: replace.h,v 1.2 2005-02-08 15:37:21 gerkey Exp $
  *
  * replacement function prototypes
  */
@@ -89,6 +89,12 @@ int scandir(const char *dir, struct dirent ***namelist,
 #else
   #include <libgen.h> // for dirname(3)
 #endif // !HAVE_DIRNAME
+
+#if !HAVE_BASENAME
+  char * basename (const char* filename);
+#else
+  #include <libgen.h> // for basename(3)
+#endif // !HAVE_BASENAME
 
 #ifdef __cplusplus
 }
