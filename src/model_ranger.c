@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.33 $
+//  $Revision: 1.34 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -143,7 +143,7 @@ int ranger_update( stg_model_t* mod )
   return 0;
 }
 
-void ranger_render_config( stg_model_t* mod )
+void ranger_render_config( stg_model_t* mod, void* data, size_t len )
 {
   //PRINT_DEBUG( "drawing rangers" );
   
@@ -160,17 +160,17 @@ void ranger_render_config( stg_model_t* mod )
   if( mod->gui.cfg  )
     rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
-    mod->gui.cfg = rtk_fig_create( mod->world->win->canvas,
-				 mod->gui.top, STG_LAYER_RANGERCONFIG );
-
+    {
+      mod->gui.cfg = rtk_fig_create( mod->world->win->canvas,
+				     mod->gui.top, STG_LAYER_RANGERCONFIG );
+      rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
+    }
+  
   rtk_fig_t* fig = mod->gui.cfg; 
-
-  rtk_fig_color_rgb32( fig, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
+  
   rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
   
-  //stg_property_t* prop = stg_model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
-  size_t len = 0;
-  stg_ranger_config_t* cfg = (stg_ranger_config_t*)stg_model_get_config(mod,&len);
+  stg_ranger_config_t* cfg = (stg_ranger_config_t*)data;
 
   if( len < sizeof(stg_ranger_config_t) )
     return ; // nothing to render
@@ -221,8 +221,7 @@ void ranger_render_config( stg_model_t* mod )
 void ranger_render_data( stg_model_t* mod, void* data, size_t len ) 
 { 
   PRINT_DEBUG( "ranger render data" );
-  
-  
+    
   if( mod->gui.data  )
     rtk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
@@ -286,5 +285,5 @@ stg_lib_entry_t ranger_entry = {
   NULL,               // get config
   ranger_render_data, // render data
   NULL,              // render cmd
-  NULL               // render cfg
+  ranger_render_config  // render cfg
 };
