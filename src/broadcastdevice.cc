@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.3 $
+//  $Author: ahoward $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -54,16 +54,14 @@ CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent )
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
 //
-bool CBroadcastDevice::StartUp()
+bool CBroadcastDevice::Startup()
 {
-    /*
-    if (!CPlayerDevice::Startup(cfg))
+    if (!CEntity::Startup())
         return false;
 
     // Register ourself as a broadcast device with the world
-    //
     m_world->AddBroadcastDevice(this);
-    */
+
     return true;
 }
 
@@ -74,62 +72,80 @@ bool CBroadcastDevice::StartUp()
 void CBroadcastDevice::Shutdown()
 {
     // Unregister ourself as a broadcast device
-    //
     m_world->RemoveBroadcastDevice(this);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the broadcast data
-//
 void CBroadcastDevice::Update( double sim_time )
 {
     ASSERT(m_world != NULL);
     
     // See if its time to update
-    //
     if( sim_time - m_last_update < m_interval )
         return;
-
     m_last_update = sim_time;
 
-
     // See if there is any data to send
-    //
-    m_cmd_len = GetCommand(&m_cmd, sizeof(m_cmd));
-    if (m_cmd_len > 0)
+    if (GetCommand(&this->cmd, sizeof(this->cmd)) > 0)
     {
-        // Send message to all registered broadcast devices
-        //
-        for (int i = 0; true; i++)
+        // Loop through all messages in the buffer
+        // and send them to other broadcast devices.
+        uint8_t *p = this->cmd.buffer;
+        uint8_t *msg = NULL;
+        uint16_t len = 0;
+        while (true)
         {
-            CBroadcastDevice *device = m_world->GetBroadcastDevice(i);
-            if (device == NULL)
+            msg = p + sizeof(len);
+            len = ntohs(*((uint16_t*) p));
+            if (len == 0)
                 break;
-
-            // Check for overflow
-            //
-            if (device->m_data_len + m_cmd_len + 2 > sizeof(m_data))
-            {
-                printf("Warning: broadcast packet overrun; packets have been discarded\n");
-                break;
-            }
-                
-            memcpy(device->m_data.buffer + device->m_data_len, &m_cmd, m_cmd_len);
-            device->m_data_len += m_cmd_len;
+            this->SendMsg(msg, len);
+            p += len;
         }
     }
 
     // Send back all data that has accumulated
-    //
-    PutData(&m_data, m_data_len + 2);
-    memset(&m_data, 0, sizeof(m_data));
-    m_data_len = 0;
+    // Clear our queue
+    PutData(&this->data, this->data.len + sizeof(this->data.len));
+    memset(&this->data, 0, sizeof(this->data));
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// Send a message
+void CBroadcastDevice::SendMsg(uint8_t *msg, uint16_t len)
+{
+    // Send message to all registered broadcast devices
+    for (int i = 0; true; i++)
+    {
+        CBroadcastDevice *device = m_world->GetBroadcastDevice(i);
+        if (device == NULL)
+            break;
+        device->RecvMsg(msg, len);
+    }
+}
 
 
+///////////////////////////////////////////////////////////////////////////
+// Receive a message
+void CBroadcastDevice::RecvMsg(uint8_t *msg, uint16_t len)
+{
+    // Check for overflow
+    // Need to leave 2 bytes for end-of-list marker
+    if (this->data.len + len + sizeof(len) + sizeof(len) > sizeof(this->data.buffer))
+    {
+        printf("Warning: broadcast packet overrun; packets have been discarded\n");
+        return;
+    }
+    
+    // Write message and message length
+    memcpy(this->data.buffer + this->data.len, &len, sizeof(len));
+    memcpy(this->data.buffer + this->data.len + sizeof(len), msg, len);
+    this->data.len += sizeof(len) + len;
+}
+   
 
 
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/broadcastdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Author: ahoward $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -32,27 +32,26 @@
 class CBroadcastDevice : public CEntity
 {
     // Default constructor
-    //
     public: CBroadcastDevice(CWorld *world, CEntity *parent );
 
     // Startup routine
-    //
-    public: virtual bool StartUp();
+    public: virtual bool Startup();
 
     // Shutdown routine
-    //
     public: virtual void Shutdown();
 
     // Update the device
-    //
     public: virtual void Update( double sim_time );
 
+    // Send a message
+    private: void SendMsg(uint8_t *msg, uint16_t len);
+
+    // Receive a message
+    private: void RecvMsg(uint8_t *msg, uint16_t len);
+    
     // Buffers for storing data
-    //
-    private: size_t m_cmd_len;
-    private: player_broadcast_cmd_t m_cmd;
-    private: size_t m_data_len;
-    private: player_broadcast_data_t m_data;   
+    private: player_broadcast_cmd_t cmd;
+    private: player_broadcast_data_t data;   
 };
 
 #endif

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.18 $
+//  $Author: ahoward $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -39,7 +39,7 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_laserbeacon_data_t );
   m_command_len = 0; //sizeof( player_laserbeacon_command_t );
-  m_config_len  = sizeof( player_laserbeacon_config_t );
+  m_config_len  = 0; //sizeof( player_laserbeacon_config_t );
 
   m_player_type = PLAYER_LASERBEACON_CODE;
  
