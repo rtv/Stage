@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.7 2003-04-01 00:20:54 rtv Exp $
+% CVS: $Id: stage.tex,v 1.8 2003-04-09 02:04:01 rtv Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -1451,11 +1451,10 @@ is not set.
 faster than \verb'threshold' (linear) or \verb'theta_threshold'
 (angular) velocities. The fiducial interface's 'id' field is not set.
 
-\item {\bf Radiation mode: }
-TODO
+\item {\bf Radiation mode: } locates models that are emmitting radiation. Currently
+radiation is emmitted by the active sensors; laser and IDAR models. The \verb'threshold' parameter controls the minimum detected amplitude, which is decreases with the inverse square of distance. The frequency of the radiation is returned in the beacon id field. Frequency is quantized into 255 bins, with IDAR low and laser high. 
 
-\item {\bf Sound mode: }
-TODO
+\item {\bf Sound mode: } locates models that are emmitting sound. Currently sound it emmitted by sonars when powered on, and by position devices when moving. Thresholding and is performed similarly to the radiation mode, and again the frequency is binned 0-254, with sonar high and motor noise low.
 
 \item {\bf Team mode: } locates models with non-zero \verb'team'
 values. The team number is returned in the fiducial interface's 'id'
