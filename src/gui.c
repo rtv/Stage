@@ -216,24 +216,32 @@ void gui_world_update( world_t* world )
   
   gui_window_t* win = world->win;
   
-  if( win->show_matrix ) gui_world_matrix( world, win );
-  
-  char clock[256];
-  snprintf( clock, 255, "%lu:%2lu:%2lu.%3lu\n",
-	    world->sim_time / 3600000, // hours
-	    (world->sim_time % 3600000) / 60000, // minutes
-	    (world->sim_time % 60000) / 1000, // seconds
-	    world->sim_time % 1000 ); // milliseconds
-  
-  gtk_label_set_text( win->timelabel, clock );
-   
-  rtk_canvas_render( win->canvas );
+  if( rtk_canvas_isclosed( win->canvas ) )
+    {
+      //PRINT_WARN( "marking world for destruction" );
+      //world->destroy = TRUE;
+    }
+  else
+    {
+      if( win->show_matrix ) gui_world_matrix( world, win );
+      
+      char clock[256];
+      snprintf( clock, 255, "%lu:%2lu:%2lu.%3lu\n",
+		world->sim_time / 3600000, // hours
+		(world->sim_time % 3600000) / 60000, // minutes
+		(world->sim_time % 60000) / 1000, // seconds
+		world->sim_time % 1000 ); // milliseconds
+      
+      gtk_label_set_text( win->timelabel, clock );
+      
+      rtk_canvas_render( win->canvas );      
+    }
 }
 
 void gui_world_destroy( world_t* world )
 {
   PRINT_DEBUG( "gui world destroy" );
-    
+  
   if( world->win && world->win->canvas ) 
     rtk_canvas_destroy( world->win->canvas );
   else

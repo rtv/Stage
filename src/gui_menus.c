@@ -67,8 +67,13 @@ void gui_menu_exit( rtk_menuitem_t *item )
 {
   //quit = TRUE;
   PRINT_DEBUG( "Exit menu item" );
-}
 
+  world_t* world = (world_t*)item->userdata;
+  stg_id_t wid = world->id;
+  
+  // tell the client to save the world with this server-side id
+  stg_connection_write_msg( world->con, STG_MSG_CLIENT_QUIT, &wid, sizeof(wid) ); 
+}
 
 void gui_menu_file_image_jpg( rtk_menuitem_t *item )
 {
@@ -304,13 +309,13 @@ void gui_window_menus_create( gui_window_t* win )
 
   // create the FILE menu items
   win->mitems[STG_MITEM_FILE_SAVE] = 
-    rtk_menuitem_create(win->menus[STG_MENU_FILE], "Save", 0);
+    rtk_menuitem_create(win->menus[STG_MENU_FILE], "Save world", 0);
   win->mitems[STG_MITEM_FILE_QUIT] = 
-    rtk_menuitem_create(win->menus[STG_MENU_FILE], "Quit", 0);
-
+    rtk_menuitem_create(win->menus[STG_MENU_FILE], "Quit world", 0);
+  
   // attach objects to the FILE menu items
   win->mitems[STG_MITEM_FILE_SAVE]->userdata = (void*)win->world;
-  //win->mitems[STG_MITEM_FILE_QUIT]->userdata = (void*)0;
+  win->mitems[STG_MITEM_FILE_QUIT]->userdata = (void*)win->world;
 
   // create the VIEW menu items
   win->mitems[STG_MITEM_VIEW_OBJECT] = 

@@ -1092,6 +1092,21 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 		    (int)msg->payload_len, (int)sizeof(stg_id_t) );
       
       break;
+
+    case STG_MSG_CLIENT_QUIT:
+      if( msg->payload_len == sizeof(stg_id_t) )
+	{
+	  stg_id_t wid = *(stg_id_t*)msg->payload;
+	  //stg_client_save(cli, wid );
+	  PRINT_WARN( "received QUIT message" );
+	  // send a ctrl-C to the app
+	  raise( SIGINT );
+	}
+      else
+	PRINT_WARN2( "Received malformed QUIT message (%d/%d bytes)",
+		    (int)msg->payload_len, (int)sizeof(stg_id_t) );
+      
+      break;
       
     case STG_MSG_CLIENT_LOAD:
       // TODO

@@ -35,6 +35,8 @@ typedef struct _world
    
    connection_t* con; // the connection that created this world
 
+   gboolean destroy;
+
    struct _gui_window* win; // the gui window associated with this world
 
  } world_t;

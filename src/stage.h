@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.59 2004-06-27 23:59:03 rtv Exp $
+ * CVS: $Id: stage.h,v 1.60 2004-07-07 21:14:10 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -179,6 +179,7 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_CLIENT_CLOCK            (STG_MSG_CLIENT | 3)
 #define STG_MSG_CLIENT_SAVE             (STG_MSG_CLIENT | 4)
 #define STG_MSG_CLIENT_LOAD             (STG_MSG_CLIENT | 5)
+#define STG_MSG_CLIENT_QUIT             (STG_MSG_CLIENT | 6)
 
 #define STG_ACK  1
 #define STG_NACK 0

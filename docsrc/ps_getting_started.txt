@@ -1,5 +1,9 @@
 
+\begin{verbatim}
+
+
 Player/Stage Getting Started
+----------------------------
 
 Author: Richard T. Vaughan (rtv) 
 Created: 2004.02.05
@@ -335,7 +339,7 @@ July 2004.
 
 http://playerstage.sourceforge.net
 
-
+\end{verbatim}
 
 
 

@@ -34,6 +34,8 @@ world_t* world_create( server_t* server, connection_t* con,
   world->matrix = stg_matrix_create( world->ppm, 5, 1 ); 
 
   world->paused = TRUE; // start paused.
+
+  world->destroy = FALSE;
   
   world->win = gui_world_create( world );
 
@@ -67,7 +69,7 @@ void world_update( world_t* world )
 {
   if( world->paused ) // only update if we're not paused
     return;
-
+  
   //{
   stg_msec_t timenow = stg_timenow();
   

@@ -1,7 +1,7 @@
 ****************************************************************************
 * README.stage  - Richard Vaughan - Stage-1.5       
 *                                                                          
-* $Id: README,v 1.10 2004-07-02 01:37:29 rtv Exp $    
+* $Id: README,v 1.11 2004-07-07 21:14:10 rtv Exp $    
 ****************************************************************************
 
 ** Release notes **
@@ -15,8 +15,9 @@ Help is available in several places:
 
 + Here. Please read this document..
 + The Player/Stage web pages at http://playerstage.sourceforge.net
-  - from the web site you can access manuals, FAQ and mailing lists
-
+  - from the web site you can access manuals, FAQ and mailing lists 
++ The Player/Stage Getting Started document, included with the Stage
+distro in <stage>/docsrc/ps_getting_started.txt
 
 * WARNINGS FOR USERS OF PREVIOUS VERSIONS*
 
@@ -170,6 +171,17 @@ export PKG_CONFIG_PATH=<prefix>/lib/pkgconfig
 
 -- Compiling ---------------------------------------------------------------
 
+** NOTE FOR USERS BUILDING OUT OF CVS **
+
+If you pulled the sources from CVS rather than using a released
+package, you need to generate a 'configure' script. This script is
+built automatically when we package up a release, but doesn't actually
+exist in the CVS repository. To create this script, you must run
+'bootstrap' instead of 'configure' on first checkout and after cvs
+updating.
+
+**
+
 ** TODO - WARNING - THIS SECTION IS OUT OF DATE **
 
 
@@ -178,10 +190,7 @@ make install.
 
 0) Obtain and install these packages, on which Stage depends:
 
-- librtk-1.1 (available from http://playerstage.sourceforge.net)
-- player-1.3 (available from http://playerstage.sourceforge.net)
-
-Note that these packages will have their own dependencies, s
+- librtk2 (available from http://playerstage.sourceforge.net)
 
 1) unpack the Stage tarball with
 
@@ -202,6 +211,11 @@ the defaults should work:
 
 $ cd stage-<version>
 $ ./configure
+
+(or, if you're building from CVS:
+
+$ ./bootstrap 
+)
 
 To see all the available configuration options do:
 

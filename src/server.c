@@ -121,9 +121,25 @@ void server_update_subs( server_t* server )
   g_hash_table_foreach( server->clients, stg_connection_sub_update_cb, server );
 }  
 
+gboolean world_destroy_requested( gpointer key, gpointer value, gpointer user )
+{
+  world_t* world = (world_t*)value;
+  
+  if( world->destroy )
+    {
+      stg_connection_destroy( world->con );
+      return TRUE;
+    }
 
+  return FALSE;
+}
+ 
 void server_update_worlds( server_t* server )
 {
+  // delete any worlds that have requested destruction
+  //g_hash_table_foreach_remove( server->worlds, world_destroy_requested, NULL );
+  
+  // update all the remaining worlds
   g_hash_table_foreach( server->worlds, world_update_cb, server );
 }
 
@@ -172,7 +188,7 @@ int server_accept_connection( server_t* server )
   
   g_assert( connfd > 0 );
   
-  char* grt = "Welcome to Stage-1.4";
+  char* grt = "Welcome to Stage";
   write( connfd, grt, strlen(grt)+1 );
  
   // look for a well-formed greeting
