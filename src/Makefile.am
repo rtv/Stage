@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.37 2004-05-10 04:14:33 rtv Exp $
+# $Id: Makefile.am,v 1.38 2004-05-26 08:18:39 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
@@ -12,7 +12,8 @@ AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @RTK_CFLAGS@
 
 lib_LIBRARIES = libstage.a
 
-bin_PROGRAMS = stage stest
+bin_PROGRAMS = stage 
+#stest
 
 # install these headers
 include_HEADERS = stage.h
@@ -49,10 +50,10 @@ stage_LDADD =  -L. @RTK_LIBS@
 #
 # test program
 #
-stest_SOURCES = test2.cc worldfile.cc worldfile.hh
+#stest_SOURCES = test2.cc worldfile.cc worldfile.hh
 
-stest_LDFLAGS =
-stest_LDADD = -L. @RTK_LIBS@ -lstage
+#stest_LDFLAGS =
+#stest_LDADD = -L. @RTK_LIBS@ -lstage
 
 #
 # libstage.a

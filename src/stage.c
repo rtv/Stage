@@ -280,11 +280,20 @@ stg_msg_t* stg_read_msg( int fd )
 }
 */
 
-stg_seconds_t stg_timenow( void )
+stg_msec_t stg_timenow( void )
 {
   struct timeval tv;
+  static stg_msec_t starttime = 0;
+  
   gettimeofday( &tv, NULL );
-  return( (stg_seconds_t)((double)tv.tv_sec + ((double)tv.tv_usec / 1e6 )) );
+  
+  stg_msec_t timenow = (stg_msec_t)( tv.tv_sec*1000 + tv.tv_usec/1000 );
+  
+  
+  if( starttime == 0 )
+    starttime = timenow;
+  
+  return( timenow - starttime );
 }
 
 

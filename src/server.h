@@ -11,8 +11,7 @@ typedef struct
   char* host;
   int port;
   
-  //struct timeval start_time;
-  stg_seconds_t start_time;
+  stg_msec_t start_time;
 
   int quit; // set this to exit the server cleanly
 

@@ -523,7 +523,7 @@ void server_handle_msg( server_t* server, int fd, stg_msg_t* msg )
       {
 	stg_sub_t* sub = (stg_sub_t*)msg->payload;
 	
-	PRINT_DEBUG4( "client subscribed to %d:%d:%s %.2fsecs",
+	PRINT_DEBUG4( "client subscribed to %d:%d:%s interval %lu",
 		      sub->world, sub->model, 
 		      stg_property_string(sub->prop ),
 		      sub->interval );

@@ -247,7 +247,7 @@ int stg_client_write_msg( stg_client_t* cli,
 }
 
 
-int stg_model_subscribe( stg_model_t* mod, int prop, double interval )
+int stg_model_subscribe( stg_model_t* mod, int prop, stg_msec_t interval )
 {
   assert( mod );
   assert( mod->world );
@@ -292,8 +292,8 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
 				     int section, 
 				     stg_token_t* token, 
 				     double ppm, 
-				     double interval_sim, 
-				     double interval_real )
+				     stg_msec_t interval_sim, 
+				     stg_msec_t interval_real )
 {
   stg_world_t* w = calloc( sizeof(stg_world_t), 1 );
 
@@ -503,7 +503,7 @@ int stg_model_prop_set_ack( stg_model_t* mod, stg_id_t prop, void* data, size_t 
   
   stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_ACK );
   
-  printf( "received a %d byte reply\n", reply->payload_len );
+  printf( "received a %d byte reply\n", (int)reply->payload_len );
   
   if( reply == NULL )
     return -1; // error no-reply
@@ -542,7 +542,7 @@ int stg_model_prop_set_reply( stg_model_t* mod, stg_id_t prop,
   
   stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
   
-  printf( "received a %d byte reply\n", reply->payload_len );
+  printf( "received a %d byte reply\n", (int)reply->payload_len );
   
   if( reply == NULL )
     return -1; // error no-reply
@@ -576,7 +576,7 @@ int stg_model_prop_get( stg_model_t* mod, stg_id_t propid, void* data, size_t le
   
   stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
   
-  printf( "received a %d byte reply\n", reply->payload_len );
+  printf( "received a %d byte reply\n", (int)reply->payload_len );
   
   if( reply == NULL )
     return -1; // error no-reply
@@ -627,7 +627,7 @@ stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype )
   
   while(1)
     {
-      putchar( '*' ); fflush(stdout);
+      putchar( '.' ); fflush(stdout);
       
       if( msg )
 	stg_msg_destroy( msg );
@@ -721,7 +721,7 @@ stg_id_t stg_client_model_new(  stg_client_t* cli,
   // read a reply - it contains the model's id
   stg_msg_t* reply = stg_client_read_until( cli,  STG_MSG_CLIENT_MODELCREATEREPLY );
   
-  puts( "!" );
+  putchar( "." ); fflush(stdout);
   
   assert( reply->payload_len == sizeof( stg_id_t ) );
   
@@ -757,8 +757,11 @@ int stg_model_pull(  stg_model_t* mod )
 }
 
 stg_id_t stg_client_world_new(  stg_client_t* cli, char* token, 
-				double width, double height, int ppm, 
-				double interval_sim, double interval_real  )
+				stg_meters_t width, 
+				stg_meters_t height, 
+				int ppm, 
+				stg_msec_t interval_sim, 
+				stg_msec_t interval_real  )
 {
   stg_createworld_t wmsg;
   
@@ -770,9 +773,10 @@ stg_id_t stg_client_world_new(  stg_client_t* cli, char* token,
 
   strncpy( wmsg.token, token, STG_TOKEN_MAX );
   
-  printf( "creating world \"%s\" sim: %.3f real: %.3f ppm %d", 
+  printf( "pushing world \"%s\" (sim: %lu real: %lu ppm: %d) ", 
 	  wmsg.token, wmsg.interval_sim, wmsg.interval_real, wmsg.ppm );
-  
+  fflush(stdout);
+
   stg_client_write_msg( cli, 
 			STG_MSG_SERVER_WORLDCREATE,
 			STG_RESPONSE_REPLY,
@@ -782,13 +786,13 @@ stg_id_t stg_client_world_new(  stg_client_t* cli, char* token,
   
   stg_msg_t* reply = stg_client_read_until( cli,  STG_MSG_CLIENT_WORLDCREATEREPLY );
   
-  puts( "!" );
+  puts( " done." );
 
   assert( reply->payload_len == sizeof( stg_id_t ) );
   
   stg_id_t wid = *((stg_id_t*)reply->payload);
 
-  printf( " received server-side world id %d\n", wid );
+  //printf( " received server-side world id %d\n", wid );
 
   stg_msg_destroy( reply );
 
@@ -836,10 +840,10 @@ void stg_model_print_cb( gpointer key, gpointer value, gpointer user )
 
 void stg_prop_push( stg_property_t* prop, stg_prop_target_t* pt )
 {
-  PRINT_DEBUG4( "  pushing prop %d:%d:%d(%s)\n",
+  PRINT_DEBUG4( "  pushing prop %d:%d:%d(%s)",
 		pt->world_id_server, pt->model_id_server,
 		prop->id, stg_property_string(prop->id) );
-  
+
   stg_client_property_set(  pt->client,
 			    pt->world_id_server,
 			    pt->model_id_server,
@@ -858,21 +862,23 @@ int stg_model_property_set( stg_model_t* mod, stg_id_t prop, void* data, size_t 
 			   prop, data, len );
 }
 
+// create a model
 void stg_model_push( stg_model_t* mod )
 { 
   assert( mod );
   assert( mod->world );
   assert( mod->world->client );
 
-  // create a model
-  printf( "  pushing model \"%s\"\n", mod->token->token );
-
   // take this model out of the server-side id table
   g_hash_table_remove( mod->world->models_id_server, &mod->id_server );
+
+  printf( "  pushing model \"%s\" ", mod->token->token ); fflush(stdout);
   
   mod->id_server = stg_client_model_new(  mod->world->client,
 					  mod->world->id_server,
 					  mod->token->token );
+
+  puts( " done" );
   
   // re-index the model by the newly-discovered server-side id
   g_hash_table_replace( mod->world->models_id_server, &mod->id_server, mod );
@@ -1015,7 +1021,7 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	stg_prop_t* prop = (stg_prop_t*)msg->payload;
 
 #if 1
-	printf( "[%.3f] received property %d:%d:%d(%s) %d/%d bytes\n",
+	printf( "[%lu] received property %d:%d:%d(%s) %d/%d bytes\n",
 		prop->timestamp,
 		prop->world, 
 		prop->model, 
@@ -1026,7 +1032,7 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 #endif	
 
 	cli->stagetime = prop->timestamp;
-	printf( "[%.3f] ", cli->stagetime );
+	//printf( "[%lu] ", cli->stagetime );
 	
 	// don't bother stashing a time
 	if( prop->prop == STG_PROP_TIME )
@@ -1109,7 +1115,7 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	    
 	  case STG_PROP_TIME:
 	    cli->stagetime = prop->timestamp;
-	    printf( "<time packet> [%.3f] ", cli->stagetime );
+	    printf( "<time packet> [%lu] ", cli->stagetime );
 	 
 	    break;
 

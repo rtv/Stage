@@ -71,6 +71,6 @@ void model_update_laser( model_t* mod )
       //printf( "%d ", sample->range );
     }
 
-  puts("");
-  puts("");
+  //puts("");
+  //puts("");
 }

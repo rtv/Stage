@@ -89,9 +89,6 @@ int install_signal_catchers( void )
 
 int main( int argc, char* argv[] )
 {
-  printf( "double %u float %u int %d\n",
-	  sizeof(double), sizeof(float), sizeof(int) );
-
   printf( "%s ", STARTMESSAGE ); fflush(stdout);
 
   int server_port = STG_DEFAULT_SERVER_PORT;
@@ -127,6 +124,8 @@ int main( int argc, char* argv[] )
   
   while( !stg_quit_test() )
     {	  
+      //puts( "Loop start" );
+
 #ifdef DEBUG
       gettimeofday( &tv1, NULL );
 #endif

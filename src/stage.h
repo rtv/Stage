@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.39 2004-05-25 02:33:59 rtv Exp $
+ * CVS: $Id: stage.h,v 1.40 2004-05-26 08:18:40 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -61,7 +61,7 @@
 #define STG_CLIENT_GREETING 44
 
 // TODO - override from command line and world config request
-#define STG_DEFAULT_WORLD_INTERVAL 0.1 // 10Hz
+#define STG_DEFAULT_WORLD_INTERVAL_MS 100 // 10Hz
 
 #define STG_HELLO 'S'
 
@@ -178,10 +178,10 @@ typedef enum
 // measurements are specified in these terms so changing types here
 // should work throughout the code If you change these, be sure to
 // change the byte-ordering macros below accordingly.
-typedef int stg_id_t;
-typedef double stg_meters_t;
-typedef double stg_radians_t;
-typedef double stg_seconds_t;
+   typedef int stg_id_t;
+   typedef double stg_meters_t;
+   typedef double stg_radians_t;
+   typedef unsigned long stg_msec_t;
  
 #define HTON_M(m) htonl(m)   // byte ordering for METERS
 #define NTOH_M(m) ntohl(m)
@@ -204,7 +204,7 @@ typedef struct
 {
   stg_msg_type_t type;
   size_t payload_len;
-  stg_seconds_t timestamp;
+  stg_msec_t timestamp;
   stg_response_t response; // desired response: one of
 			  // STG_RESPONSE_NONE/ _ACK /_REPLY
   char payload[0]; // named access to the end of the struct
@@ -215,7 +215,7 @@ typedef struct
   stg_id_t world;
   stg_id_t model;
   stg_id_t prop;
-  stg_seconds_t timestamp; // the time at which this property was filled
+  stg_msec_t timestamp; // the time at which this property was filled
   size_t datalen; // data size
   char data[]; // the data follows
 } stg_prop_t;
@@ -223,7 +223,7 @@ typedef struct
 typedef struct
 {
   stg_id_t world;
-  stg_seconds_t simtime;
+  stg_msec_t simtime;
 } stg_clock_t;
 
 typedef struct
@@ -231,7 +231,7 @@ typedef struct
   stg_id_t world;
   stg_id_t model;
   stg_id_t prop;
-  stg_seconds_t interval; // requested time between updates in seconds
+  stg_msec_t interval; // requested time between updates in seconds
 } stg_sub_t;
 
 typedef struct
@@ -256,8 +256,8 @@ typedef struct
 typedef struct
 {
   char token[ STG_TOKEN_MAX ];
-  stg_seconds_t interval_sim;
-  stg_seconds_t interval_real;
+  stg_msec_t interval_sim;
+  stg_msec_t interval_real;
   int ppm;
   //stg_size_t size;
 } stg_createworld_t;
@@ -352,7 +352,7 @@ typedef stg_pose_t stg_velocity_t;
 typedef struct
 {
   int enable;
-  stg_seconds_t period;
+  stg_msec_t period;
 } stg_blinkenlight_t;
 
 // GRIPPER ------------------------------------------------------------
@@ -464,14 +464,14 @@ typedef struct
   char token[ STG_TOKEN_MAX ]; // string identifying the GUI library
   double ppm;
   int width, height;
-  double originx, originy;
+  stg_meters_t originx, originy;
   char showgrid;
   char showdata;
 } stg_gui_config_t;
 
 
 // an individual range reading
-typedef double stg_range_t;
+typedef stg_meters_t stg_range_t;
 
 // LASER  ------------------------------------------------------------
 
@@ -520,7 +520,7 @@ void stg_scale_lines( stg_line_t* lines, int num, double xscale, double yscale )
 void stg_translate_lines( stg_line_t* lines, int num, double xtrans, double ytrans );
 
 // returns the real (wall-clock) time in seconds
-stg_seconds_t stg_timenow( void );
+stg_msec_t stg_timenow( void );
 
 // operations on properties -------------------------------------------------
 
@@ -673,7 +673,7 @@ typedef struct
  
   stg_id_t next_id;
   
-  double stagetime;
+  stg_msec_t stagetime;
 
   GHashTable* worlds_id_server; // contains stg_world_ts indexed by server-side id
   GHashTable* worlds_id; // contains stg_world_ts indexed by client-side id
@@ -727,8 +727,8 @@ typedef struct
   stg_id_t id_server; // server-side id
   stg_token_t* token;  
   double ppm;
-  stg_seconds_t interval_sim;
-  stg_seconds_t interval_real;
+  stg_msec_t interval_sim;
+  stg_msec_t interval_real;
   
   int section; // worldfile index
   
@@ -758,8 +758,8 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
 				     int section,
 				     stg_token_t* token,
 				     double ppm, 
-				     double interval_sim, 
-				     double interval_real  );
+				     stg_msec_t interval_sim, 
+				     stg_msec_t interval_real  );
 
 void stg_world_destroy( stg_world_t* world );
 int stg_world_pull( stg_world_t* world );
@@ -809,7 +809,7 @@ int stg_model_prop_set_reply_var( stg_model_t* mod, stg_id_t propid,
 /******************/
 
 
-int stg_model_subscribe( stg_model_t* mod, int prop, double interval );
+int stg_model_subscribe( stg_model_t* mod, int prop, stg_msec_t interval );
 int stg_model_unsubscribe( stg_model_t* mod, int prop );
 
 int stg_model_request_reply( stg_model_t* mod, void* req, size_t req_len,
@@ -826,8 +826,8 @@ int stg_model_property_set( stg_model_t* mod, stg_id_t prop, void* data, size_t 
 
 
 stg_id_t stg_world_new(  stg_client_t* cli, char* token, 
-			 double width, double height, int ppm, 
-			 double interval_sim, double interval_real  );
+			 stg_meters_t width, stg_meters_t height, int ppm, 
+			 stg_msec_t interval_sim, stg_msec_t interval_real  );
 
 stg_id_t stg_model_new(  stg_client_t* cli, 
 			 stg_id_t world,

@@ -1,5 +1,4 @@
 
-
 #include <stdlib.h>
 
 //#define DEBUG
@@ -25,14 +24,21 @@ void subscription_destroy_cb( gpointer sub, gpointer user )
 }
 
 
-int subscription_due( subscription_t* sub, double timenow )
+int subscription_due( subscription_t* sub, stg_msec_t timenow )
 {
-  return( timenow - sub->timestamp > sub->interval );
+  stg_msec_t dif = timenow - sub->timestamp;
+  
+  //printf( "dif is %lu which is %s interval %lu\n",
+  //  dif, 
+  //  (dif < sub->interval) ? "less than" : "greater or equal to",
+  //  sub->interval );
+  
+  return( dif >= sub->interval );
 }
 
 void subscription_print( subscription_t* sub, char* prefix )
 {
-  printf( "%s[%d:%d:%s %.2f]",
+  printf( "%s[%d:%d:%s %lu]",
 	  prefix ? prefix : " ", // use a space if no prefix supplied
 	  sub->target.world, sub->target.model, 
 	  stg_property_string(sub->target.prop),
@@ -47,16 +53,21 @@ void subscription_print_cb( gpointer value, gpointer user )
 void subscription_update( subscription_t* sub )
 {
   //double timenow = stg_timenow();
-  double timenow = server_world_time( sub->server, sub->target.world );
+  stg_msec_t timenow = server_world_time( sub->server, sub->target.world );
   
+  //printf( "subscription interval %lu time now %lu  last stamp %lu  difference %lu\n",
+  //  sub->interval, timenow, sub->timestamp, timenow-sub->timestamp );
+
   // if it's time to send some data for this subscription
   if( subscription_due( sub, timenow ) )
     {
+      //printf( "due\n" );
+
 #ifdef DEBUG      
       printf( "servicing subscription to " ); 
       subscription_print( sub, "" );
 
-      printf( " %.4f  ",
+      printf( " %lu  ",
 	      timenow - sub->timestamp );
       
 #endif
@@ -96,18 +107,14 @@ void subscription_update( subscription_t* sub )
 	  stg_prop_t* mp = calloc( mplen,1  );
 	  
 	  mp->timestamp = timenow;
-	  //server_world_time( sub->server, sub->target.world );
-	  
-	  //printf( "mp->timestamp %.3f\n", mp->timestamp );
-	  
 	  mp->world = sub->target.world;
 	  mp->model = sub->target.model;
 	  mp->prop =  sub->target.prop;
 	  mp->datalen = len;
 	  memcpy( mp->data, data, len );
 	  
-	  //printf( "timestamping prop %d(%s) at %.3f seconds\n",
-	  //      mp->prop, stg_property_string(mp->prop), mp->timestamp );
+	  //printf( "timestamping prop %d(%s) at %lu ms\n",
+	  //  mp->prop, stg_property_string(mp->prop), mp->timestamp );
 	  
 	  stg_msg_t*  msg = stg_msg_create( STG_MSG_CLIENT_PROPERTY, 
 					    STG_RESPONSE_NONE,

@@ -22,16 +22,15 @@ world_t* world_create( server_t* server, stg_id_t id, stg_createworld_t* cw )
   world->server = server; // stash the server pointer
   
   world->sim_time = 0.0;
-  world->sim_interval = cw->interval_sim;//STG_DEFAULT_WORLD_INTERVAL;
+  //world->sim_interval = cw->interval_sim;//STG_DEFAULT_WORLD_INTERVAL;
+  world->sim_interval = STG_DEFAULT_WORLD_INTERVAL_MS;
   world->wall_interval = cw->interval_real;  
-  world->wall_last_update = stg_timenow();
-  
-  //memcpy( &world->size, &cw->size, sizeof(world->size) );
-
+  world->wall_last_update = 0;//stg_timenow();
   world->ppm = cw->ppm;
-  world->paused = TRUE; // start paused.
-  
+
   world->matrix = stg_matrix_create( world->ppm );
+
+  world->paused = TRUE; // start paused.
   
   gui_world_create( world );
 
@@ -65,33 +64,35 @@ void world_update( world_t* world )
     return;
 
   //{
-      stg_seconds_t timenow = stg_timenow();
+  stg_msec_t timenow = stg_timenow();
+  
+ 
+  //PRINT_DEBUG5( "timenow %lu last update %lu interval %lu diff %lu sim_time %lu", 
+  //	timenow, world->wall_last_update, world->wall_interval,  
+  //	timenow - world->wall_last_update, world->sim_time  );
+  
+  // if it's time for an update, update all the models
+  if( timenow - world->wall_last_update > world->wall_interval )
+    {
+      stg_msec_t real_interval = timenow - world->wall_last_update;
+      printf( "[%d %lu] sim:%lu real:%lu  ratio:%.2f\n",
+	      world->id, 
+	      world->sim_time,
+	      world->sim_interval,
+	      real_interval,
+	      (double)world->sim_interval / (double)real_interval  );
       
-      //PRINT_DEBUG5( "timenow %.4f last update %.4f interval %.4f diff %.4f sim_time %.4f", 
-      //	timenow, world->wall_last_update, world->wall_interval,  
-      //	timenow - world->wall_last_update, world->sim_time  );
+      //fflush( stdout );
       
-      // if it's time for an update, update all the models
-      if( timenow - world->wall_last_update > world->wall_interval )
-	{
-	  double real_interval = timenow - world->wall_last_update;
-	  printf( " [%d %.3f] real interval %.3f  sim interval %.3f (ratio %.2f)\r",
-	      world->id, world->sim_time,
-		  real_interval, world->sim_interval,
-		  real_interval / world->sim_interval );
-	     
-	  fflush( stdout );
-	  
-	  //printf( "[%d(%s) %.2f] ", world->id, world->token, world->sim_time );
-	  
-	  g_hash_table_foreach( world->models, model_update_cb, world );
-	  
-	  
-	  world->wall_last_update = timenow;
-	  
-	  world->sim_time += world->sim_interval;
-	}
-      //}
+      g_hash_table_foreach( world->models, model_update_cb, world );
+      
+      
+      world->wall_last_update = timenow;
+      
+      world->sim_time += world->sim_interval;
+      
+    }
+  //}
   
 #if 0 //DEBUG
   struct timeval tv1;
