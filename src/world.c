@@ -43,7 +43,7 @@ world_t* world_create( server_t* server, connection_t* con,
 void world_destroy( world_t* world )
 {
   assert( world );
-  
+		   
   PRINT_DEBUG1( "destroying world %d", world->id );
   
   
@@ -136,8 +136,8 @@ int world_model_create( world_t* world, stg_createmodel_t* cm )
 {
   char* token  = cm->token;
   
-  // find the lowest integer that has not yet been assigned to a world
-  stg_id_t candidate = 0;
+  // find the lowest integer that has not yet been assigned to a world (starting with 1)
+  stg_id_t candidate = 1;
   while( g_hash_table_lookup( world->models, &candidate ) )
     candidate++;
   
