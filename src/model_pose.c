@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.27 $
+//  $Revision: 1.28 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -19,6 +19,17 @@
 #include "gui.h"
 
 extern rtk_fig_t* fig_debug;
+
+int lines_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
+{
+  // Ignore myself, my children, and my ancestors.
+  if( (!stg_model_is_related(mod,hitmod))  &&  
+      hitmod->obstacle_return ) 
+    return 1;
+  
+  return 0; // no match
+}	
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision with obstacles.
@@ -72,25 +83,20 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
       itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
 			       mod->world->matrix, 
 			       PointToPoint );
-      stg_model_t* hitmod;
-      while( (hitmod = itl_next( itl )) ) 
-	{
-	  if( hitmod != mod && 
-	      stg_model_get_obstaclereturn(hitmod) && 
-	      !stg_model_is_related(mod,hitmod) )
-	    {
-	      if( hitx || hity ) // if the caller needs to know hit points
-		{
-		  if( hitx ) *hitx = itl->x; // report them
-		  if( hity ) *hity = itl->y;
 
-		}
-	      return hitmod; // we hit this object! stop raytracing
-	    }
+      stg_model_t* hitmod = itl_first_matching( itl, lines_raytrace_match, mod );
+      
+      if( hitmod )
+	{
+	  if( hitx ) *hitx = itl->x; // report them
+	  if( hity ) *hity = itl->y;	  
 	}
 
       itl_destroy( itl );
+
+      return hitmod; // we hit this object! stop raytracing
     }
+
   return NULL;  // done 
 }
 
