@@ -10,8 +10,33 @@
 #include "stage_internal.h"
 #include "gui.h"
 
+  // basic model
+#define STG_DEFAULT_MASS 10.0  // kg
+#define STG_DEFAULT_POSEX 0.0  // start at the origin by default
+#define STG_DEFAULT_POSEY 0.0
+#define STG_DEFAULT_POSEA 0.0
+#define STG_DEFAULT_GEOM_POSEX 0.0 // no origin offset by default
+#define STG_DEFAULT_GEOM_POSEY 0.0
+#define STG_DEFAULT_GEOM_POSEA 0.0
+#define STG_DEFAULT_GEOM_SIZEX 1.0 // 1m square by default
+#define STG_DEFAULT_GEOM_SIZEY 1.0
+#define STG_DEFAULT_OBSTACLERETURN TRUE
+#define STG_DEFAULT_LASERRETURN LaserVisible
+#define STG_DEFAULT_RANGERRETURN TRUE
+#define STG_DEFAULT_BLOBRETURN TRUE
+#define STG_DEFAULT_COLOR (0xFF0000) // red
+#define STG_DEFAULT_ENERGY_CAPACITY 1000.0
+#define STG_DEFAULT_ENERGY_CHARGEENABLE 1
+#define STG_DEFAULT_ENERGY_PROBERANGE 0.0
+#define STG_DEFAULT_ENERGY_GIVERATE 0.0
+#define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
+#define STG_DEFAULT_GUI_MOVEMASK (STG_MOVE_TRANS | STG_MOVE_ROT)
+#define STG_DEFAULT_GUI_NOSE FALSE
+#define STG_DEFAULT_GUI_GRID FALSE
+#define STG_DEFAULT_GUI_BOUNDARY FALSE
 
-/** @defgroup model_basic Basic model
+
+/** @defgroup basic Basic model
     
 The basic model simulates an object with basic properties; position,
 size, velocity, color, visibility to various sensors, etc. The basic
@@ -31,7 +56,7 @@ model
   origin [0 0 0]
   velocity [0 0 0]
 
-  color "red" # body colorx
+  color "red" # body color
 
   # determine how the model appears in various sensors
   obstacle_return 1
@@ -59,47 +84,41 @@ model
 @endverbatim
 
 @par Details
-- pose [float float float]
-  - [x_position y_position heading_angle]
+- pose [x_pos:float y_pos:float heading:float]
   - specify the pose of the model in its parent's coordinate system
-- size [float float]
-  - [x_size y_size]
+- size [x_size:float ysize:float]
   - specify the size of the model
-- origin [float float float]
-  - [x_position y_position heading_angle]
+- origin [x_pos:float y_pos:float heading:float]
   - specify the position of the object's center, relative to its pose
-- velocity [float float float]
-  - [x_speed y_speed rotation_speed]
+- velocity [x_speed:float y_speed:float rotation_speed:float]
   - specify the initial velocity of the model. Not that if the model hits an obstacle, its velocity will be set to zero.
-- color string
+- color [colorname:string]
   - specify the color of the object using a color name from the X11 database (rgb.txt)
-- line_count int
+- line_count [int]
   - specify the number of lines that make up the model's body
-- line[index] [float float float float]
-  - [x1 y1 x2 y2]
+- line[index] [x1:float y1:float x2:float y2:float]
   - creates a line from (x1,y1) to (x2,y2). A set of line_count lines defines the robot's body for the purposes of collision detection and rendering in the GUI window.
-- bitmap string
-  - filename
+- bitmap [filename:string}
   - alternative way to set the model's line_count and lines. The file must be a bitmap recognized by libgtkpixbuf (most popular formats are supported). The file is opened and parsed into a set of lines. Unless the bitmap_resolution option is used, the lines are scaled to fit inside the rectangle defined by the model's current size.
-- bitmap_resolution float
+- bitmap_resolution [meters:float]
   - alternative way to set the model's size. Used with the bitmap option, this sets the model's size according to the size of the bitmap file, by multiplying the width and height of the bitmap, measured in pixels, by this scaling factor. 
-- gui_nose bool
+- gui_nose [bool]
   - if 1, draw a nose on the model showing its heading (positive X axis)
-- gui_grid bool
+- gui_grid [bool]
   - if 1, draw a scaling grid over the model
-- gui_movemask bool
+- gui_movemask [bool]
   - define how the model can be moved by the mouse in the GUI window
-- gui_boundary bool
+- gui_boundary [bool]
   - if 1, draw a bounding box around the model, indicating its size
-- obstacle_return bool
+- obstacle_return [bool]
   - if 1, this model can collide with other models that have this property set
-- blob_return bool
+- blob_return [bool]
   - if 1, this model can be detected in the blob_finder (depending on its color)
-- ranger_return bool
+- ranger_return [bool]
   - if 1, this model can be detected by ranger sensors
-- laser_return int
+- laser_return [int]
   - if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
-- fiducial_return int
+- fiducial_return [fiducial_id:int]
   - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
 
 */

@@ -12,86 +12,6 @@
 extern "C" {
 #endif 
   
-  // DEFAULT VALUES ---------------------------------------------
-  
-  /** @addtogroup defaults
-      @{ 
-  */
-  
-  // world
-  //#define STG_DEFAULT_WORLD_INTERVAL_MS 100 // 10Hz
-#define STG_DEFAULT_RESOLUTION    0.02  // 2cm pixels
-#define STG_DEFAULT_INTERVAL_REAL 100   // msec between updates
-#define STG_DEFAULT_INTERVAL_SIM  100 
-  
-  // basic model
-#define STG_DEFAULT_MASS 10.0  // kg
-#define STG_DEFAULT_POSEX 0.0  // start at the origin by default
-#define STG_DEFAULT_POSEY 0.0
-#define STG_DEFAULT_POSEA 0.0
-#define STG_DEFAULT_GEOM_POSEX 0.0 // no origin offset by default
-#define STG_DEFAULT_GEOM_POSEY 0.0
-#define STG_DEFAULT_GEOM_POSEA 0.0
-#define STG_DEFAULT_GEOM_SIZEX 1.0 // 1m square by default
-#define STG_DEFAULT_GEOM_SIZEY 1.0
-#define STG_DEFAULT_OBSTACLERETURN TRUE
-#define STG_DEFAULT_LASERRETURN LaserVisible
-#define STG_DEFAULT_RANGERRETURN TRUE
-#define STG_DEFAULT_BLOBRETURN TRUE
-#define STG_DEFAULT_COLOR (0xFF0000) // red
-
-// GUI
-#define STG_DEFAULT_GUI_MOVEMASK (STG_MOVE_TRANS | STG_MOVE_ROT)
-#define STG_DEFAULT_GUI_NOSE FALSE
-#define STG_DEFAULT_GUI_GRID FALSE
-#define STG_DEFAULT_GUI_BOUNDARY FALSE
-#define STG_DEFAULT_WINDOW_WIDTH 700
-#define STG_DEFAULT_WINDOW_HEIGHT 740
-#define STG_DEFAULT_PPM 40
-#define STG_DEFAULT_SHOWGRID 1
-#define STG_DEFAULT_MOVIE_SPEED 1
-// Movement masks for figures
-#define STG_MOVE_TRANS (1 << 0)
-#define STG_MOVE_ROT   (1 << 1)
-#define STG_MOVE_SCALE (1 << 2)
-
-// energy
-#define STG_DEFAULT_ENERGY_CAPACITY 1000.0
-#define STG_DEFAULT_ENERGY_CHARGEENABLE 1
-#define STG_DEFAULT_ENERGY_PROBERANGE 0.0
-#define STG_DEFAULT_ENERGY_GIVERATE 0.0
-#define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
-
-// laser
-#define STG_DEFAULT_LASER_POSEX 0.0
-#define STG_DEFAULT_LASER_POSEY 0.0
-#define STG_DEFAULT_LASER_POSEA 0.0
-#define STG_DEFAULT_LASER_SIZEX 0.15
-#define STG_DEFAULT_LASER_SIZEY 0.15
-#define STG_DEFAULT_LASER_MINRANGE 0.0
-#define STG_DEFAULT_LASER_MAXRANGE 8.0
-#define STG_DEFAULT_LASER_FOV M_PI
-#define STG_DEFAULT_LASER_SAMPLES 180
-#define STG_DEFAULT_LASERRETURN LaserVisible
-
-// blobfinder
-#define STG_DEFAULT_BLOB_CHANNELCOUNT 6
-#define STG_DEFAULT_BLOB_SCANWIDTH 80
-#define STG_DEFAULT_BLOB_SCANHEIGHT 60 
-#define STG_DEFAULT_BLOB_RANGEMAX 8.0 
-#define STG_DEFAULT_BLOB_PAN 0.0
-#define STG_DEFAULT_BLOB_TILT 0.0
-#define STG_DEFAULT_BLOB_ZOOM DTOR(60)
-
-// fiducialfinder
-#define STG_DEFAULT_FIDUCIAL_RANGEMIN 0
-#define STG_DEFAULT_FIDUCIAL_RANGEMAXID 5
-#define STG_DEFAULT_FIDUCIAL_RANGEMAXANON 8
-#define STG_DEFAULT_FIDUCIAL_FOV DTOR(180)
- 
-  /**@}*/
-
-
   /** @defgroup stg_gui GUI Window
       Code for the Stage user interface window.
       @{
@@ -709,65 +629,65 @@ extern "C" {
 /*   // token stuff for parsing worldfiles - this may one day replace
 the worldfile c++ code */
 
-#define CFG_OPEN '('
-#define CFG_CLOSE ')'
-#define STR_OPEN '\"'
-#define STR_CLOSE '\"'
-#define TPL_OPEN '['
-#define TPL_CLOSE ']'
+/* #define CFG_OPEN '(' */
+/* #define CFG_CLOSE ')' */
+/* #define STR_OPEN '\"' */
+/* #define STR_CLOSE '\"' */
+/* #define TPL_OPEN '[' */
+/* #define TPL_CLOSE ']' */
 
-  typedef enum {
-    STG_T_NUM = 0,
-    STG_T_BOOLEAN,
-    STG_T_MODELPROP,
-    STG_T_WORLDPROP,
-    STG_T_NAME,
-    STG_T_STRING,
-    STG_T_KEYWORD,
-    STG_T_CFG_OPEN,
-    STG_T_CFG_CLOSE,
-    STG_T_TPL_OPEN,
-    STG_T_TPL_CLOSE,
-  } stg_token_type_t;
-
-
+/*   typedef enum { */
+/*     STG_T_NUM = 0, */
+/*     STG_T_BOOLEAN, */
+/*     STG_T_MODELPROP, */
+/*     STG_T_WORLDPROP, */
+/*     STG_T_NAME, */
+/*     STG_T_STRING, */
+/*     STG_T_KEYWORD, */
+/*     STG_T_CFG_OPEN, */
+/*     STG_T_CFG_CLOSE, */
+/*     STG_T_TPL_OPEN, */
+/*     STG_T_TPL_CLOSE, */
+/*   } stg_token_type_t; */
 
 
-typedef struct stg_token 
-{
-  char* token; ///< the text of the token
-  stg_token_type_t type; ///< the type of the token
-  unsigned int line; ///< the line on which the token appears
+
+
+/* typedef struct stg_token  */
+/* { */
+/*   char* token; ///< the text of the token */
+/*   stg_token_type_t type; ///< the type of the token */
+/*   unsigned int line; ///< the line on which the token appears */
   
-  struct stg_token* next; ///< linked list support
-  struct stg_token* child; ///< tree support
+/*   struct stg_token* next; ///< linked list support */
+/*   struct stg_token* child; ///< tree support */
   
-} stg_token_t;
+/* } stg_token_t; */
 
-  stg_token_t* stg_token_next( stg_token_t* tokens );
-  /// print [token] formatted for a human reader, with a string [prefix]
-  void stg_token_print( char* prefix,  stg_token_t* token );
+/*   stg_token_t* stg_token_next( stg_token_t* tokens ); */
+/*   /// print [token] formatted for a human reader, with a string [prefix] */
+/*   void stg_token_print( char* prefix,  stg_token_t* token ); */
 
-  /// print a token array suitable for human reader
-  void stg_tokens_print( stg_token_t* tokens );
-  void stg_tokens_free( stg_token_t* tokens );
+/*   /// print a token array suitable for human reader */
+/*   void stg_tokens_print( stg_token_t* tokens ); */
+/*   void stg_tokens_free( stg_token_t* tokens ); */
   
-  /// create a new token structure from the arguments
-  stg_token_t* stg_token_create( const char* token, stg_token_type_t type, int line );
+/*   /// create a new token structure from the arguments */
+/*   stg_token_t* stg_token_create( const char* token, stg_token_type_t type, int line ); */
 
-  /// add a token to a list
-  stg_token_t* stg_token_append( stg_token_t* head,
-				 char* token, stg_token_type_t type, int line );
+/*   /// add a token to a list */
+/*   stg_token_t* stg_token_append( stg_token_t* head, */
+/* 				 char* token, stg_token_type_t type, int line ); */
 
-  const char* stg_token_type_string( stg_token_type_t type );
+/*   const char* stg_token_type_string( stg_token_type_t type ); */
 
-  const char* stg_model_type_string( stg_model_type_t type );
+/*   const char* stg_model_type_string( stg_model_type_t type ); */
   
-  //  functions for parsing worldfiles
-  stg_token_t* stg_tokenize( FILE* wf );
-  //stg_world_t* sc_load_worldblock( stg_client_t* cli, stg_token_t** tokensptr );
-  //stg_model_t* sc_load_modelblock( stg_world_t* world, stg_model_t* parent,
-  //			   stg_token_t** tokensptr );
+/*   //  functions for parsing worldfiles */
+/*   stg_token_t* stg_tokenize( FILE* wf ); */
+/*   //stg_world_t* sc_load_worldblock( stg_client_t* cli, stg_token_t** tokensptr ); */
+/*   //stg_model_t* sc_load_modelblock( stg_world_t* world, stg_model_t* parent, */
+/*   //			   stg_token_t** tokensptr ); */
 
 
 

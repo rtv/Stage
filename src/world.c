@@ -6,6 +6,10 @@
 
 #define STG_TOKEN_MAX 64
 
+#define STG_DEFAULT_RESOLUTION    0.02  // 2cm pixels
+#define STG_DEFAULT_INTERVAL_REAL 100   // msec between updates
+#define STG_DEFAULT_INTERVAL_SIM  100 
+  
 #include "stage_internal.h"
 
 
@@ -226,17 +230,60 @@ void stg_world_save( stg_world_t* world )
   wf_save();
 }
 
+
+
+/** @defgroup world The World
+
+Stage simulates a 'world' composed of models, defined in a 'world
+file'. 
+
+<h2>Worldfile properties</h2>
+
+@par Summary and default values
+
+@verbatim
+world
+(
+   name            "[filename of worldfile]"
+   interval_real   100
+   interval_sim    100
+   resolution      0.01
+   resolution_med  0.01
+   resolution_low  0.01
+)
+@endverbatim
+
+@par Details
+- name [string]
+  - the name of the world, as displayed in the window title bar. Defaults to the worldfile file name.
+- interval_sim [milliseconds]
+  - the length of each simulation update cycle in milliseconds.
+- interval_real [milliseconds]
+  - the amount of real-world (wall-clock) time the siulator will attempt to spend on each simulation cycle.
+- resolution [meters]
+  - specifies the resolution of the underlying bitmap model. Larger values speed up raytracing at the expense of fidelity in collision detection and sensing. 
+
+@par More examples
+
+The Stage source distribution contains several example world files in
+<tt>(stage src)/worlds</tt> along with the worldfile properties
+described on the manual page for each model type.
+
+*/
+
+/* UNDOCUMENTED - don't want to confuse people.
+- resolution_med [meters]
+  - resolution of the medium-level raytrace bitmap.
+- resolution_med [meters]
+  - resolution of the top-level raytrace bitmap.
+*/
+
+
 // create a world containing a passel of Stage models based on the
 // worldfile
 
 stg_world_t* stg_world_create_from_file( char* worldfile_path )
 {
-  // testing!
-  // FILE* f = fopen( worldfile_path, "r" );
-  // stg_token_t* tokens = stg_tokenize( f );
-  // stg_tokens_print( tokens );
-  // end testing
-
   wf_load( worldfile_path );
   
   int section = 0;

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.32 $
+//  $Revision: 1.33 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -21,9 +21,12 @@
 extern rtk_fig_t* fig_debug_rays;
 
 #define STG_FIDUCIALS_MAX 64
+#define STG_DEFAULT_FIDUCIAL_RANGEMIN 0
+#define STG_DEFAULT_FIDUCIAL_RANGEMAXID 5
+#define STG_DEFAULT_FIDUCIAL_RANGEMAXANON 8
+#define STG_DEFAULT_FIDUCIAL_FOV DTOR(180)
 
-
-/** @defgroup model_fiducial Fiducial detector
+/** @defgroup model_fiducial Fiducial detector model
 The fiducial model simulates a fiducial-detecting device.
 
 <h2>Worldfile properties</h2>
@@ -58,16 +61,15 @@ fiducialfinder
 
 void fiducial_load( stg_model_t* mod )
 {
-  puts( "fiducial load" );
-
-  stg_fiducial_config_t fcfg;
-
-  fcfg.min_range = wf_read_length(mod->id, "range_min", STG_DEFAULT_FIDUCIAL_RANGEMIN );
-  fcfg.max_range_anon = wf_read_length(mod->id, "range_max", STG_DEFAULT_FIDUCIAL_RANGEMAXANON );
-  fcfg.fov = wf_read_angle(mod->id, "fov", STG_DEFAULT_FIDUCIAL_FOV );
-  fcfg.max_range_id = wf_read_length(mod->id, "range_max_id", STG_DEFAULT_FIDUCIAL_RANGEMAXID );
+  stg_fiducial_config_t cfg;
+  memset( &cfg, 0, sizeof(cfg) );
   
-  stg_model_set_config( mod, &fcfg, sizeof(fcfg));
+  cfg.min_range = wf_read_length(mod->id, "range_min", STG_DEFAULT_FIDUCIAL_RANGEMIN );
+  cfg.max_range_anon = wf_read_length(mod->id, "range_max", STG_DEFAULT_FIDUCIAL_RANGEMAXANON );
+  cfg.fov = wf_read_angle(mod->id, "fov", STG_DEFAULT_FIDUCIAL_FOV );
+  cfg.max_range_id = wf_read_length(mod->id, "range_max_id", STG_DEFAULT_FIDUCIAL_RANGEMAXID );
+  
+  stg_model_set_config( mod, &cfg, sizeof(cfg));
 }
 
 int fiducial_shutdown( stg_model_t* mod );
@@ -89,11 +91,10 @@ stg_model_t* stg_fiducial_create( stg_world_t* world,
   mod->f_render_cfg = fiducial_render_cfg;
   mod->f_load = fiducial_load;
 
-  // a fraction smaller than a laser by default
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
-  geom.size.x = STG_DEFAULT_LASER_SIZEX * 0.9;
-  geom.size.y = STG_DEFAULT_LASER_SIZEY * 0.9;
+  geom.size.x = 0.0;
+  geom.size.y = 0.0;
   stg_model_set_geom( mod, &geom );  
   
   stg_color_t color = stg_lookup_color( "magenta" );

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.61 $
+//  $Revision: 1.62 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,12 @@ extern rtk_fig_t* fig_debug_rays;
 #define LASER_FILLED 1
 
 #define STG_LASER_SAMPLES_MAX 1024
-
+#define STG_DEFAULT_LASER_SIZEX 0.15
+#define STG_DEFAULT_LASER_SIZEY 0.15
+#define STG_DEFAULT_LASER_MINRANGE 0.0
+#define STG_DEFAULT_LASER_MAXRANGE 8.0
+#define STG_DEFAULT_LASER_FOV M_PI
+#define STG_DEFAULT_LASER_SAMPLES 180
 
 /** 
 @defgroup model_laser Laser model 
@@ -45,7 +50,7 @@ laser
   fov 180.0
 
   # model properties
-  size [0.1 0.1]
+  size [0.15 0.15]
   color "blue"
 )
 @endverbatim
@@ -64,7 +69,6 @@ laser
 
 void laser_load( stg_model_t* mod, int section )
 {
-  puts( "laser load" );
   stg_laser_config_t lconf;
   memset( &lconf, 0, sizeof(lconf) );
   
@@ -98,9 +102,9 @@ stg_model_t* stg_laser_create( stg_world_t* world,
 
   // sensible laser defaults
   stg_geom_t geom;
-  geom.pose.x = STG_DEFAULT_LASER_POSEX;
-  geom.pose.y = STG_DEFAULT_LASER_POSEY;
-  geom.pose.a = STG_DEFAULT_LASER_POSEA;
+  geom.pose.x = 0.0;
+  geom.pose.y = 0.0;
+  geom.pose.a = 0.0;
   geom.size.x = STG_DEFAULT_LASER_SIZEX;
   geom.size.y = STG_DEFAULT_LASER_SIZEY;
   stg_model_set_geom( mod, &geom );

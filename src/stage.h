@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.119 2005-01-03 04:28:22 rtv Exp $
+ * CVS: $Id: stage.h,v 1.120 2005-01-03 05:42:02 rtv Exp $
  */
 
 
@@ -155,6 +155,11 @@ extern "C" {
   //} stg_gripper_return_t;
 
   // GUIFEATURES -------------------------------------------------------
+  
+  // Movement masks for figures
+#define STG_MOVE_TRANS (1 << 0)
+#define STG_MOVE_ROT   (1 << 1)
+#define STG_MOVE_SCALE (1 << 2)
   
   typedef int stg_movemask_t;
   

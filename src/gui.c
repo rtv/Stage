@@ -10,6 +10,13 @@
 #include "stage_internal.h"
 #include "gui.h"
 
+#define STG_DEFAULT_WINDOW_WIDTH 700
+#define STG_DEFAULT_WINDOW_HEIGHT 740
+#define STG_DEFAULT_PPM 40
+#define STG_DEFAULT_SHOWGRID 1
+#define STG_DEFAULT_MOVIE_SPEED 1
+
+
 // models that have fewer rectangles than this get matrix rendered when dragged
 #define STG_POLY_THRESHOLD 10
 #define LASER_FILLED 1
@@ -23,7 +30,17 @@ rtk_fig_t* fig_debug_rays = NULL;
 rtk_fig_t* fig_debug_geom = NULL;
 
 
-/** @defgroup model_window GUI Window
+/** @defgroup window GUI Window
+
+The Stage window consists of a menu bar, a view of the simulated
+world, and a status bar.
+
+The world view shows part of the simulated world. You can zoom the
+view in and out, and scroll it to see more of the world. Simulated
+robot devices, obstacles, etc., are rendered as colored polygons. The
+world view can also show visualizations of the data and configuration
+of various sensor and actuator models. The View menu has options to
+control which data and configurations are rendered.
 
 <h2>Worldfile Properties</h2>
 
@@ -34,22 +51,75 @@ window
 (
   # gui properties
   center [0 0]
-  size [? ?]
-  scale ?
+  size [700 740]
+  scale 1.0
 
   # model properties do not apply to the gui window
 )
 @endverbatim
 
 @par Details
-- size [int int]
-  - [width height] 
+- size [width:int width:int]
   - size of the window in pixels
-- center [float float]
-  - [x y] 
+- center [x:float y:float]
   - location of the center of the window in world coordinates (meters)
-- scale
+  - scale [?:double]
   - ratio of world to pixel coordinates (window zoom)
+
+
+<h2>Using the Stage window</h2>
+
+
+<h3>Scrolling the view</h3>
+
+<p>Left-click and drag on the background to move your view of the world.
+
+<h3>Zooming the view</h3>
+
+<p>Right-click and drag on the background to zoom your view of the
+world. When you press the right mouse button, a circle appears. Moving
+the mouse adjusts the size of the circle; the current view is scaled
+with the circle.
+
+<h3>Saving the world</h3>
+
+<P>You can save the current pose of everything in the world, using the
+File/Save menu item. <b>Warning: the saved poses overwrite the current
+world file.</b> Make a copy of your world file before saving if you
+want to keep the old poses.
+
+
+<h3>Saving a screenshot</h3>
+
+<p> The File/Export menu allows you to export a screenshot of the
+current world view in JPEG or PNG format. The frame is saved in the
+current directory with filename in the format "stage-(frame
+number).(jpg/png)". 
+
+ You can also save sequences of screen shots. To start saving a
+sequence, select the desired time interval from the same menu, then
+select File/Export/Sequence of frames. The frames are saved in the
+current directory with filenames in the format "stage-(sequence
+number)-(frame number).(jpg/png)".
+
+The frame and sequence numbers are reset to zero every time you run
+Stage, so be careful to rename important frames before they are
+overwritten.
+
+<h3>Pausing and resuming the clock</h3>
+
+<p>The Clock/Pause menu item allows you to stop the simulation clock,
+freezing the world. Selecting this item again re-starts the clock.
+
+
+<h3>View options</h3>
+
+<p>The View menu allows you to toggle rendering of a 1m grid, to help
+you line up objects (View/Grid). You can control whether polygons are
+filled (View/Fill polygons); turning this off slightly improves
+graphics performance. The rest of the view menu contains options for
+rendering of data and configuration for each type of model, and a
+debug menu that enables visualization of some of the innards of Stage.
 
 */
 
