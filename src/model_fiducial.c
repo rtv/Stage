@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -59,13 +59,10 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   // is he in my field of view?
   double hisbearing = atan2( dy, dx );
   double dif = mfb->pose.a - hisbearing;
-  //printf( "my heading %f   his bearing %f  dif %f\n", 
-  //  mfb->pose.a, hisbearing, dif );
-  
-  if( fabs(dif) > mfb->cfg->fov/2.0 )
+
+  if( fabs(NORMALIZE(dif)) > mfb->cfg->fov/2.0 )
     return;
-  
- 
+   
   // now check if we have line-of-sight
   itl_t *itl = itl_create( mfb->pose.x, mfb->pose.y,
 			   hispose.x, hispose.y, 
@@ -87,7 +84,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
       // record where we saw him and what he looked like
       stg_fiducial_t fid;      
       fid.range = range;
-      fid.bearing = NORMALIZE(atan2( dy, dx ) - mfb->pose.a);
+      fid.bearing = NORMALIZE( hisbearing - mfb->pose.a);
       fid.id = range < mfb->cfg->max_range_id ? him->id : 0;
       fid.geom.x = him->geom.size.x;
       fid.geom.y = him->geom.size.y;
@@ -95,8 +92,6 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
       
       g_array_append_val( mfb->fiducials, fid );
     }
-  //else
-  //printf( "out of range\n" );
 }
 
 ///////////////////////////////////////////////////////////////////////////
