@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -326,8 +326,6 @@ bool CVisionDevice::Update()
     //
     PutData(actsBuf, buflen);
  
-    delete []colors;
-    delete []ranges;
     return true;
 }
 
