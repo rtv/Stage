@@ -54,11 +54,11 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/File/Export/10.0 seconds", NULL, gui_menu_file_export_interval, 100, "/File/Export/0.1 seconds" },
   { "/File/Export/sep2",     NULL,      NULL, 0, "<Separator>" },
   { "/File/Export/Frame export format",     NULL,      NULL, 0, "<Title>" },
-  { "/File/Export/JPEG", NULL,  gui_menu_file_export_format, 1, "<RadioItem>" },
-  { "/File/Export/PNG", NULL, gui_menu_file_export_format,  2, "/File/Export/JPEG" },
-  { "/File/Export/PPM", NULL, gui_menu_file_export_format,  3, "/File/Export/JPEG" },
-  // PNM doesn't seem to work
-  //  { "/File/Export/PNM", NULL, gui_menu_file_export_format, 4, "/File/Export/JPEG" },
+  { "/File/Export/PNG", NULL, gui_menu_file_export_format, RTK_IMAGE_FORMAT_PNG,  "<RadioItem>" },
+  { "/File/Export/JPEG", NULL,  gui_menu_file_export_format, RTK_IMAGE_FORMAT_JPEG, "/File/Export/PNG"},
+  // PPM and PNM don't seem to work. why?
+  // { "/File/Export/PPM", NULL, gui_menu_file_export_format,  RTK_IMAGE_FORMAT_PPM, "/File/Export/JPEG" },
+  // { "/File/Export/PNM", NULL, gui_menu_file_export_format, RTK_IMAGE_FORMAT_PNM, "/File/Export/JPEG" },
   { "/File/sep1",     NULL,      NULL, 0, "<Separator>" },
   { "/File/_Quit",    "<CTRL>Q", gui_menu_file_exit_cb, 0, "<StockItem>", GTK_STOCK_QUIT },
   { "/_View",         NULL,      NULL, 0, "<Branch>" },
@@ -86,7 +86,7 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
 };
 
-static const int menu_table_count = 45;
+static const int menu_table_count = 44;
 
 /* void gui_menu_file_about( void ) */
 /* { */
@@ -146,14 +146,7 @@ void gui_menu_file_export_interval( gpointer data, guint action, GtkWidget* mite
 // set the graphics file format for window dumps
 void gui_menu_file_export_format( gpointer data, guint action, GtkWidget* mitem )
 {
-  gui_window_t* win = (gui_window_t*)data;
-  switch( action )
-    {
-    case 1: win->frame_format = RTK_IMAGE_FORMAT_JPEG; break;
-    case 2: win->frame_format = RTK_IMAGE_FORMAT_PNG; break;
-    case 3: win->frame_format = RTK_IMAGE_FORMAT_PPM; break;
-    case 4: win->frame_format = RTK_IMAGE_FORMAT_PNM; break;
-    }
+  ((gui_window_t*)data)->frame_format = action;
 }
 
 void gui_menu_file_save_cb( gpointer data, 
@@ -195,7 +188,7 @@ void export_window( gui_window_t* win  ) //rtk_canvas_t* canvas, int series )
     case RTK_IMAGE_FORMAT_PNG: suffix = "png"; break;
     case RTK_IMAGE_FORMAT_PPM: suffix = "ppm"; break;
     default:
-      suffix = ".jpg";
+      suffix = ".png";
     }
 
   if( win->frame_series > 0 )

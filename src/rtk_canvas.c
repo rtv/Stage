@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.7 2004-11-21 10:53:02 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.8 2004-11-22 20:47:26 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -53,13 +53,6 @@ static void rtk_on_motion(GtkWidget *widget, GdkEventMotion *event, rtk_canvas_t
 static void rtk_on_release(GtkWidget *widget, GdkEventButton *event, rtk_canvas_t *canvas);
 static void rtk_on_key_press(GtkWidget *widget, GdkEventKey *event, rtk_canvas_t *canvas);
 static void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y);
-
-// Export functions
-static int rtk_canvas_save_jpeg(rtk_canvas_t *canvas, const char *filename,
-                                int sizex, int sizey, uint8_t *image);
-static int rtk_canvas_save_ppm(rtk_canvas_t *canvas, const char *filename,
-                               int sizex, int sizey, uint8_t *image);
-
 
 // Mouse modes 
 enum {MOUSE_NONE, MOUSE_PAN, MOUSE_ZOOM, MOUSE_TRANS, MOUSE_ROT, MOUSE_SCALE};
@@ -265,20 +258,9 @@ void rtk_canvas_title(rtk_canvas_t *canvas, const char *title)
 // (sizex, sizey) is the width and height of the canvas, in pixels.
 void rtk_canvas_size(rtk_canvas_t *canvas, int sizex, int sizey)
 {
-  GtkRequisition size;
-  
-  // Interpret the given size as the size of the drawing area, and use
-  // this to compute the default window size.  There must be a less hacky way
-  // to do this.
-  //gtk_widget_size_request(GTK_WIDGET(canvas->menu_bar), &size);
-  //sizey += size.height + 4;
   gtk_window_set_default_size(GTK_WINDOW(canvas->frame), sizex, sizey);
-
-  // You can do use the line below, but then you cant shrink the window.
-  //gtk_drawing_area_size(GTK_DRAWING_AREA(canvas->canvas), sizex, sizey);
   return;
 }
-
 
 // Get the canvas size.
 // (sizex, sizey) is the width and height of the canvas, in pixels.
@@ -288,7 +270,6 @@ void rtk_canvas_get_size(rtk_canvas_t *canvas, int *sizex, int *sizey)
   *sizey = canvas->sizey;
   return;
 }
-
 
 // Set the origin of a canvas
 // (ox, oy) specifies the logical point that maps to the center of the
@@ -605,44 +586,6 @@ void rtk_canvas_export_image(rtk_canvas_t *canvas, const char *filename, int for
       
 }	
   
-
-// Export the canvas as an xfig image.
-int rtk_canvas_export_xfig(rtk_canvas_t *canvas, char *filename)
-{
-  int wx, wy;
-  rtk_fig_t *fig;
-    
-  canvas->file = fopen(filename, "w+");
-  if (canvas->file == NULL)
-  {
-    PRINT_ERR2("unable to open [%s] for export; [%s]", filename, strerror(errno));
-    return -1;
-  }
-
-  // Write header info
-  fprintf(canvas->file, "#FIG 3.2\n");
-  fprintf(canvas->file, "Portrait\nCenter\nInches\nLetter\n100.00\nSingle\n");
-  fprintf(canvas->file, "-2\n 1200 2\n");
-
-  // Create a bounding box
-  // Box has line width of zero, so it hopefully wont be visible
-  wx = 1200 * 6;
-  wy = (int) (1200 * 6 * canvas->sizey / canvas->sizex);
-  fprintf(canvas->file, "2 3 0 0 0 7 50 0 -1 0.000 0 0 -1 0 0 5\n");
-  fprintf(canvas->file, "0 0 %d %d %d %d %d %d 0 0\n", wx, 0, wx, wy, 0, wy);
-
-  // Render all figures, in order of layer
-  // TODO: optimize
-  for (fig = canvas->layer_fig; fig != NULL; fig = fig->layer_next)
-    rtk_fig_render_xfig(fig);
-
-  // Clean up
-  fclose(canvas->file);
-  canvas->file = NULL;
-    
-  return 0;
-}
-
 // Pixel tolerances for moving stuff
 #define TOL_MOVE 15
 
@@ -915,14 +858,14 @@ void rtk_on_configure(GtkWidget *widget, GdkEventConfigure *event, rtk_canvas_t 
                                      canvas->sizex, canvas->sizey, -1);
 
   // Make sure we redraw with a white background
-  //gdk_color_white(canvas->colormap, &color);
-  //gdk_gc_set_foreground(canvas->gc, &color);
+  gdk_color_white(canvas->colormap, &color);
+  gdk_gc_set_foreground(canvas->gc, &color);
 
-  // Clear pixmaps
-  //gdk_draw_rectangle(canvas->bg_pixmap, canvas->gc, TRUE,
-  //                 0, 0, canvas->sizex, canvas->sizey);
-  //gdk_draw_rectangle(canvas->fg_pixmap, canvas->gc, TRUE,
-  //                 0, 0, canvas->sizex, canvas->sizey);
+  //Clear pixmaps
+  gdk_draw_rectangle(canvas->bg_pixmap, canvas->gc, TRUE,
+                  0, 0, canvas->sizex, canvas->sizey);
+  gdk_draw_rectangle(canvas->fg_pixmap, canvas->gc, TRUE,
+                  0, 0, canvas->sizex, canvas->sizey);
     
   // Re-calculate all the figures since the coord transform has
   // changed.

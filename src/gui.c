@@ -90,7 +90,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   win->show_matrix = FALSE;
   win->fill_polygons = TRUE;
   win->frame_interval = 500; // ms
-  win->frame_format = RTK_IMAGE_FORMAT_JPEG;
+  win->frame_format = RTK_IMAGE_FORMAT_PNG;
 
   win->poses = rtk_fig_create( win->canvas, NULL, 0 );
 
