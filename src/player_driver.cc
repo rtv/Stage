@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.7 2005-03-09 18:16:38 gerkey Exp $
+ * CVS: $Id: player_driver.cc,v 1.8 2005-03-11 21:56:57 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -631,12 +631,12 @@ int StgDriver::Shutdown()
   // Stop and join the driver thread
   // this->StopThread(); // todo - the thread only runs in the sim instance
 
-  // unsubscribe to data from all the devices
-  for( int i=0; i<(int)this->devices->len; i++ )
-    {
-      device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
-      stg_model_unsubscribe( device->mod );
-    }
+  // shutting unsubscribe to data from all the devices
+  //for( int i=0; i<(int)this->devices->len; i++ )
+  //{
+  //  device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
+  //  stg_model_unsubscribe( device->mod );
+  // }
 
   puts("stage driver has been shutdown");
 

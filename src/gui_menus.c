@@ -4,8 +4,8 @@
 #include "stage_internal.h"
 #include "gui.h"
 
-extern stk_fig_t* fig_debug_geom;
-extern stk_fig_t* fig_debug_rays;
+extern stg_rtk_fig_t* fig_debug_geom;
+extern stg_rtk_fig_t* fig_debug_rays;
 extern int _stg_quit;
 
 enum {
@@ -217,7 +217,7 @@ void gui_menu_file_exit_cb( void )
 
 /// save a frame as a jpeg, with incremental index numbers. if series
 /// is greater than 0, its value is incorporated into the filename
-void export_window( gui_window_t* win  ) //stk_canvas_t* canvas, int series )
+void export_window( gui_window_t* win  ) //stg_rtk_canvas_t* canvas, int series )
 {
   char filename[128];
 
@@ -242,7 +242,7 @@ void export_window( gui_window_t* win  ) //stk_canvas_t* canvas, int series )
 
   printf("Stage: saving [%s]\n", filename);
   
-  stk_canvas_export_image( win->canvas, filename, win->frame_format );
+  stg_rtk_canvas_export_image( win->canvas, filename, win->frame_format );
 }
 
 void gui_menu_file_export_frame_cb( gpointer data, 
@@ -295,7 +295,7 @@ void gui_menu_layer_cb( gpointer data,
 			GtkWidget* mitem )    
 {
   // show or hide the layer depending on the state of the menu item
-  stk_canvas_layer_show( ((gui_window_t*)data)->canvas, 
+  stg_rtk_canvas_layer_show( ((gui_window_t*)data)->canvas, 
 			 action, // action is the layer number
 			 GTK_CHECK_MENU_ITEM(mitem)->active );
 }
@@ -325,31 +325,31 @@ void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem )
     case 1: // raytrace
       if(GTK_CHECK_MENU_ITEM(mitem)->active)
 	{
-	  fig_debug_rays = stk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
-	  stk_fig_color_rgb32( fig_debug_rays, stg_lookup_color(STG_DEBUG_COLOR) );
+	  fig_debug_rays = stg_rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
+	  stg_rtk_fig_color_rgb32( fig_debug_rays, stg_lookup_color(STG_DEBUG_COLOR) );
 	}
       else if( fig_debug_rays )
 	{ 
-	  stk_fig_destroy( fig_debug_rays );
+	  stg_rtk_fig_destroy( fig_debug_rays );
 	  fig_debug_rays = NULL;
 	}
       break;
     case 2: // geometry
       if(GTK_CHECK_MENU_ITEM(mitem)->active)
 	{
-	  fig_debug_geom = stk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
-	  stk_fig_color_rgb32( fig_debug_geom, stg_lookup_color(STG_DEBUG_COLOR) );
+	  fig_debug_geom = stg_rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
+	  stg_rtk_fig_color_rgb32( fig_debug_geom, stg_lookup_color(STG_DEBUG_COLOR) );
 	}
       else if( fig_debug_geom )
 	{ 
-	  stk_fig_destroy( fig_debug_geom );
+	  stg_rtk_fig_destroy( fig_debug_geom );
 	  fig_debug_geom = NULL;
 	}
       break;
 
     case 3: // matrix
       win->show_matrix = GTK_CHECK_MENU_ITEM(mitem)->active;
-      if( win->matrix ) stk_fig_clear( win->matrix );     
+      if( win->matrix ) stg_rtk_fig_clear( win->matrix );     
       break;
       
     default:

@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.18 2005-02-28 08:06:45 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.19 2005-03-11 21:56:58 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -66,6 +66,10 @@ define pioneer2dx position
 
   # differential steering model
   drive "diff"
+
+  # uncomment this line if you want to model real pioneers with SICK
+  # lasers, where the laser is taller than the robot
+  # laser_return 0
 
   # use the sonar array defined above
   p2dx_sonar()  

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.35 $
+//  $Revision: 1.36 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include "stage_internal.h"
 #include "gui.h"
 
-extern stk_fig_t* fig_debug_rays;
+extern stg_rtk_fig_t* fig_debug_rays;
 
 #define STG_FIDUCIALS_MAX 64
 #define STG_DEFAULT_FIDUCIAL_RANGEMIN 0
@@ -233,7 +233,7 @@ int fiducial_update( stg_model_t* mod )
   if( mod->subs < 1 )
     return 0;
 
-  if( fig_debug_rays ) stk_fig_clear( fig_debug_rays );
+  if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
   
   model_fiducial_buffer_t mfb;
   memset( &mfb, 0, sizeof(mfb) );
@@ -263,12 +263,12 @@ int fiducial_update( stg_model_t* mod )
 void fiducial_render_data( stg_model_t* mod )
 { 
   if(  mod->gui.data  )
-    stk_fig_clear( mod->gui.data);
+    stg_rtk_fig_clear( mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
     {
-      mod->gui.data = stk_fig_create( mod->world->win->canvas,
+      mod->gui.data = stg_rtk_fig_create( mod->world->win->canvas,
 				      mod->gui.top, STG_LAYER_NEIGHBORDATA );
-      stk_fig_color_rgb32( mod->gui.data, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
+      stg_rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
     }
   
   stg_fiducial_t fids[ STG_FIDUCIALS_MAX ];
@@ -287,20 +287,20 @@ void fiducial_render_data( stg_model_t* mod )
       double px = fids[b].range * cos(pa); 
       double py = fids[b].range * sin(pa);
       
-      stk_fig_line(  mod->gui.data, 0, 0, px, py );	
+      stg_rtk_fig_line(  mod->gui.data, 0, 0, px, py );	
       
       // the size and heading of the target
       double wx = fids[b].geom.x;
       double wy = fids[b].geom.y;
       double wa = fids[b].geom.a;
       
-      stk_fig_rectangle( mod->gui.data, px, py, wa, wx, wy, 0);
-      stk_fig_arrow( mod->gui.data, px, py, wa, wy, 0.10);
+      stg_rtk_fig_rectangle( mod->gui.data, px, py, wa, wx, wy, 0);
+      stg_rtk_fig_arrow( mod->gui.data, px, py, wa, wy, 0.10);
       
       if( fids[b].id > 0 )
 	{
 	  snprintf(text, sizeof(text), "  %d", fids[b].id);
-	  stk_fig_text( mod->gui.data, px, py, pa, text);
+	  stg_rtk_fig_text( mod->gui.data, px, py, pa, text);
 	}
     }  
 }
@@ -309,12 +309,12 @@ void fiducial_render_cfg( stg_model_t* mod )
 { 
   
   if( mod->gui.cfg  )
-    stk_fig_clear(mod->gui.cfg);
+    stg_rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
     {
-      mod->gui.cfg = stk_fig_create( mod->world->win->canvas,
+      mod->gui.cfg = stg_rtk_fig_create( mod->world->win->canvas,
 				     mod->gui.top, STG_LAYER_NEIGHBORCONFIG );
-      stk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
+      stg_rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
     }
   
   stg_fiducial_config_t cfg;
@@ -329,18 +329,18 @@ void fiducial_render_cfg( stg_model_t* mod )
   double ddx = cfg.max_range_anon * cos(maxa);
   double ddy = cfg.max_range_anon * sin(maxa);
   
-  stk_fig_line( mod->gui.cfg, 0,0, dx, dy );
-  stk_fig_line( mod->gui.cfg, 0,0, ddx, ddy );
+  stg_rtk_fig_line( mod->gui.cfg, 0,0, dx, dy );
+  stg_rtk_fig_line( mod->gui.cfg, 0,0, ddx, ddy );
   
   // max range
-  stk_fig_ellipse_arc( mod->gui.cfg,
+  stg_rtk_fig_ellipse_arc( mod->gui.cfg,
 		       0,0,0,
 		       2.0*cfg.max_range_anon,
 		       2.0*cfg.max_range_anon, 
 		       mina, maxa );      
   
   // max range that IDs can be, er... identified	  
-  stk_fig_ellipse_arc( mod->gui.cfg, 
+  stg_rtk_fig_ellipse_arc( mod->gui.cfg, 
 		       0,0,0,
 		       2.0*cfg.max_range_id,
 		       2.0*cfg.max_range_id, 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +24,7 @@
 void stg_model_position_odom_reset( stg_model_t* mod );
 void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom );
 
-//extern stk_fig_t* fig_debug_rays;
+//extern stg_rtk_fig_t* fig_debug_rays;
 
 /** 
 @defgroup model_position Position model 
@@ -391,7 +391,7 @@ int position_shutdown( stg_model_t* mod )
   stg_model_set_velocity( mod, &vel );
 
   if( mod->gui.data  )
-    stk_fig_clear(mod->gui.data);
+    stg_rtk_fig_clear(mod->gui.data);
   
   return 0; // ok
 }
@@ -460,28 +460,28 @@ void position_render_data(  stg_model_t* mod )
   const double head = 0.1;
 
   if( mod->gui.data  )
-    stk_fig_clear(mod->gui.data);
+    stg_rtk_fig_clear(mod->gui.data);
   else 
     {
-      mod->gui.data = stk_fig_create( mod->world->win->canvas,
+      mod->gui.data = stg_rtk_fig_create( mod->world->win->canvas,
 				      NULL, STG_LAYER_POSITIONDATA );
       
-      stk_fig_color_rgb32( mod->gui.data, 0x9999FF ); // pale blue
+      stg_rtk_fig_color_rgb32( mod->gui.data, 0x9999FF ); // pale blue
     }
   
   if( mod->subs )
     {
       stg_model_position_t *pos =  (stg_model_position_t*)mod->extend;
       
-      stk_fig_origin( mod->gui.data,  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
+      stg_rtk_fig_origin( mod->gui.data,  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
             
-      stk_fig_rectangle(  mod->gui.data, 0,0,0, 0.06, 0.06, 0 );     
-      stk_fig_line( mod->gui.data, 0,0, pos->odom.x, 0);
-      stk_fig_line( mod->gui.data, pos->odom.x, 0, pos->odom.x, pos->odom.y );
+      stg_rtk_fig_rectangle(  mod->gui.data, 0,0,0, 0.06, 0.06, 0 );     
+      stg_rtk_fig_line( mod->gui.data, 0,0, pos->odom.x, 0);
+      stg_rtk_fig_line( mod->gui.data, pos->odom.x, 0, pos->odom.x, pos->odom.y );
       
       char buf[256];
       snprintf( buf, 255, "x: %.3f\ny: %.3f\na: %.1f", pos->odom.x, pos->odom.y, RTOD(pos->odom.a)  );
-      stk_fig_text( mod->gui.data, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );    
-      stk_fig_arrow( mod->gui.data, pos->odom.x, pos->odom.y, pos->odom.a, line, head );
+      stg_rtk_fig_text( mod->gui.data, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );    
+      stg_rtk_fig_arrow( mod->gui.data, pos->odom.x, pos->odom.y, pos->odom.a, line, head );
     }
 }

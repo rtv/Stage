@@ -583,9 +583,12 @@ void model_update_cb( gpointer key, gpointer value, gpointer user )
   stg_model_update( (stg_model_t*)value );
 }
 
+
 void stg_model_subscribe( stg_model_t* mod )
 {
   mod->subs++;
+  
+  //printf( "subscribe %d\n", mod->subs );
   
   // if this is the first sub, call startup
   if( mod->subs == 1 )
@@ -596,10 +599,13 @@ void stg_model_unsubscribe( stg_model_t* mod )
 {
   mod->subs--;
   
+  //printf( "unsubscribe %d\n", mod->subs );
+
   // if this is the last sub, call shutdown
   if( mod->subs < 1 )
     stg_model_shutdown(mod);
 }
+
 
 void pose_invert( stg_pose_t* pose )
 {
@@ -733,8 +739,7 @@ int _model_update( stg_model_t* mod )
 
 int stg_model_update( stg_model_t* mod )
 {
-  assert( mod->f_update );
-  return mod->f_update(mod);
+  return( mod->f_update ? mod->f_update(mod) : 0 );
 }
 
 int stg_model_startup( stg_model_t* mod )
@@ -862,7 +867,7 @@ int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
       // render in the matrix
       stg_model_map_with_children( mod, 1 );
       
-      // move the stk figure to match
+      // move the stg_rtk figure to match
       gui_model_move( mod );      
     }
   
@@ -1012,7 +1017,7 @@ int stg_model_set_fiducialreturn( stg_model_t* mod, stg_fiducial_return_t* val )
 }
 
 
-extern stk_fig_t* fig_debug_rays; 
+extern stg_rtk_fig_t* fig_debug_rays; 
 
 int lines_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
@@ -1047,7 +1052,7 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
   if( count < 1 )
     return NULL;
 
-  if( fig_debug_rays ) stk_fig_clear( fig_debug_rays );
+  if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
 
   // loop over all polygons
   int q;

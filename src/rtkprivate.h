@@ -21,37 +21,37 @@
 #endif
 
 // Error macros
-#define PRINT_ERR(m)         printf("\rstk error : %s %s\n  "m"\n", \
+#define PRINT_ERR(m)         printf("\rstg_rtk error : %s %s\n  "m"\n", \
                                     __FILE__, __FUNCTION__)
-#define PRINT_ERR1(m, a)     printf("\rstk error : %s %s\n  "m"\n", \
+#define PRINT_ERR1(m, a)     printf("\rstg_rtk error : %s %s\n  "m"\n", \
                                     __FILE__, __FUNCTION__, a)
-#define PRINT_ERR2(m, a, b)  printf("\rstk error : %s %s\n  "m"\n", \
+#define PRINT_ERR2(m, a, b)  printf("\rstg_rtk error : %s %s\n  "m"\n", \
                                     __FILE__, __FUNCTION__, a, b)
 
 // Warning macros
-#define PRINT_WARN(m)         printf("\rstk warning : %s %s\n  "m"\n", \
+#define PRINT_WARN(m)         printf("\rstg_rtk warning : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__)
-#define PRINT_WARN1(m, a)     printf("\rstk warning : %s %s\n  "m"\n", \
+#define PRINT_WARN1(m, a)     printf("\rstg_rtk warning : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a)
-#define PRINT_WARN2(m, a, b)  printf("\rstk warning : %s %s\n  "m"\n", \
+#define PRINT_WARN2(m, a, b)  printf("\rstg_rtk warning : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a, b)
-#define PRINT_WARN3(m, a, b, c) printf("\rstk warning : %s %s\n  "m"\n", \
+#define PRINT_WARN3(m, a, b, c) printf("\rstg_rtk warning : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a, b, c)
 
 // Message macros
-#define PRINT_MSG(m) printf("stk msg : %s :\n  "m"\n", __FILE__)
-#define PRINT_MSG1(m, a) printf("stk msg : %s :\n  "m"\n", __FILE__, a)
-#define PRINT_MSG2(m, a, b) printf("stk msg : %s :\n  "m"\n", __FILE__, a, b)
+#define PRINT_MSG(m) printf("stg_rtk msg : %s :\n  "m"\n", __FILE__)
+#define PRINT_MSG1(m, a) printf("stg_rtk msg : %s :\n  "m"\n", __FILE__, a)
+#define PRINT_MSG2(m, a, b) printf("stg_rtk msg : %s :\n  "m"\n", __FILE__, a, b)
 
 // DEBUG macros
 #ifdef DEBUG
-#define PRINT_DEBUG(m)         printf("\rstk debug : %s %s\n  "m"\n", \
+#define PRINT_DEBUG(m)         printf("\rstg_rtk debug : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__)
-#define PRINT_DEBUG1(m, a)     printf("\rstk debug : %s %s\n  "m"\n", \
+#define PRINT_DEBUG1(m, a)     printf("\rstg_rtk debug : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a)
-#define PRINT_DEBUG2(m, a, b)  printf("\rstk debug : %s %s\n  "m"\n", \
+#define PRINT_DEBUG2(m, a, b)  printf("\rstg_rtk debug : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a, b)
-#define PRINT_DEBUG3(m, a, b, c) printf("\rstk debug : %s %s\n  "m"\n", \
+#define PRINT_DEBUG3(m, a, b, c) printf("\rstg_rtk debug : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a, b, c)
 #else
 #define PRINT_DEBUG(m)
@@ -61,25 +61,25 @@
 #endif
 
 // Figures use these functions to add/remove themself from the canvas.
-extern void stk_canvas_add_fig(stk_canvas_t *canvas, stk_fig_t *fig);
-extern void stk_canvas_del_fig(stk_canvas_t *canvas, stk_fig_t *fig);
+extern void stg_rtk_canvas_add_fig(stg_rtk_canvas_t *canvas, stg_rtk_fig_t *fig);
+extern void stg_rtk_canvas_del_fig(stg_rtk_canvas_t *canvas, stg_rtk_fig_t *fig);
 
 // Re-calculate all the figures in a canvas (private).
-extern void stk_canvas_calc(stk_canvas_t *canvas);
+extern void stg_rtk_canvas_calc(stg_rtk_canvas_t *canvas);
 
 // Grab an image from the server
-extern uint16_t *stk_canvas_get_image_rgb16(stk_canvas_t *canvas, int sizex, int sizey);
+extern uint16_t *stg_rtk_canvas_get_image_rgb16(stg_rtk_canvas_t *canvas, int sizex, int sizey);
 
 // Grab an image from the server
-extern uint8_t *stk_canvas_get_image_rgb24(stk_canvas_t *canvas);
+extern uint8_t *stg_rtk_canvas_get_image_rgb24(stg_rtk_canvas_t *canvas);
 
 // Private figure functions
-extern void stk_fig_dirty(stk_fig_t *fig);
-extern void stk_fig_calc(stk_fig_t *fig);
-extern void stk_fig_render(stk_fig_t *fig);
-extern void stk_fig_render_xfig(stk_fig_t *fig);
-extern int stk_fig_hittest(stk_fig_t *fig, int dx, int dy);
-extern void stk_fig_on_mouse(stk_fig_t *fig, int event, int mode);
+extern void stg_rtk_fig_dirty(stg_rtk_fig_t *fig);
+extern void stg_rtk_fig_calc(stg_rtk_fig_t *fig);
+extern void stg_rtk_fig_render(stg_rtk_fig_t *fig);
+extern void stg_rtk_fig_render_xfig(stg_rtk_fig_t *fig);
+extern int stg_rtk_fig_hittest(stg_rtk_fig_t *fig, int dx, int dy);
+extern void stg_rtk_fig_on_mouse(stg_rtk_fig_t *fig, int event, int mode);
 
 
 // Append an item to a linked list

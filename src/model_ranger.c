@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.47 $
+//  $Revision: 1.48 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,9 +20,11 @@
 #include "stage_internal.h"
 #include "gui.h"
 
-extern stk_fig_t* fig_debug_rays;
+extern stg_rtk_fig_t* fig_debug_rays;
 
 #define STG_RANGER_DATA_MAX 64
+
+#define STG_RANGER_WATTS 2.0 // ranger power consumption
 
 /**
 @defgroup model_ranger Ranger model 
@@ -147,6 +149,7 @@ void ranger_load( stg_model_t* mod )
 void ranger_render_cfg( stg_model_t* mod );
 void ranger_render_data( stg_model_t* mod ) ;
 int ranger_update( stg_model_t* mod );
+int ranger_startup( stg_model_t* mod );
 int ranger_shutdown( stg_model_t* mod );
 
 stg_model_t* stg_ranger_create( stg_world_t* world, 
@@ -157,8 +160,9 @@ stg_model_t* stg_ranger_create( stg_world_t* world,
   stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_RANGER, token );
   
   // override the default methods
+  mod->f_startup = ranger_startup;
   mod->f_shutdown = ranger_shutdown;
-  mod->f_update = ranger_update;
+  mod->f_update = NULL; // installed on startup & shutdown
   mod->f_render_data = ranger_render_data;
   mod->f_render_cfg = ranger_render_cfg;
   mod->f_load = ranger_load;
@@ -206,9 +210,23 @@ stg_model_t* stg_ranger_create( stg_world_t* world,
   return mod;
 }
 
+int ranger_startup( stg_model_t* mod )
+{
+  PRINT_DEBUG( "ranger startup" );
+
+  mod->f_update = ranger_update;
+  mod->watts = STG_RANGER_WATTS;
+
+  return 0;
+}
+
+
 int ranger_shutdown( stg_model_t* mod )
 {
   PRINT_DEBUG( "ranger shutdown" );
+
+  mod->f_update = NULL;
+  mod->watts = 0.0; // stop consuming power
 
   // clear the data - this will unrender it too.
   stg_model_set_data( mod, NULL, 0 );
@@ -241,7 +259,7 @@ int ranger_update( stg_model_t* mod )
   stg_ranger_sample_t* ranges = (stg_ranger_sample_t*)
     calloc( sizeof(stg_ranger_sample_t), rcount );
   
-  if( fig_debug_rays ) stk_fig_clear( fig_debug_rays );
+  if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
 
   int t;
   for( t=0; t<rcount; t++ )
@@ -292,12 +310,12 @@ int ranger_update( stg_model_t* mod )
 void ranger_render_cfg( stg_model_t* mod )
 {
   if( mod->gui.cfg  )
-    stk_fig_clear(mod->gui.cfg);
+    stg_rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
     {
-      mod->gui.cfg = stk_fig_create( mod->world->win->canvas,
+      mod->gui.cfg = stg_rtk_fig_create( mod->world->win->canvas,
 				     mod->gui.top, STG_LAYER_RANGERCONFIG );
-      stk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
+      stg_rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
     }
   
   stg_ranger_config_t cfg[STG_RANGER_DATA_MAX];
@@ -312,7 +330,7 @@ void ranger_render_cfg( stg_model_t* mod )
   stg_geom_t geom;
   stg_model_get_geom(mod,&geom);
 
-  stk_fig_origin( mod->gui.cfg, geom.pose.x, geom.pose.y, geom.pose.a );  
+  stg_rtk_fig_origin( mod->gui.cfg, geom.pose.x, geom.pose.y, geom.pose.a );  
 
   
   // add rects showing ranger positions
@@ -322,7 +340,7 @@ void ranger_render_cfg( stg_model_t* mod )
       stg_ranger_config_t* rngr = &cfg[s];
 
       // sensor pose
-      stk_fig_rectangle( mod->gui.cfg, 
+      stg_rtk_fig_rectangle( mod->gui.cfg, 
 			 rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			 rngr->size.x, rngr->size.y, 
 			 mod->world->win->fill_polygons ); 
@@ -338,10 +356,10 @@ void ranger_render_cfg( stg_model_t* mod )
       double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da );
       double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da );
       
-      stk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x1, y1 );
-      stk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x2, y2 );	
+      stg_rtk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x1, y1 );
+      stg_rtk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x2, y2 );	
       
-      stk_fig_ellipse_arc( mod->gui.cfg, 
+      stg_rtk_fig_ellipse_arc( mod->gui.cfg, 
 			   rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			   2.0*cfg->bounds_range.max,
 			   2.0*cfg->bounds_range.max, 
@@ -353,40 +371,38 @@ void ranger_render_cfg( stg_model_t* mod )
 void ranger_render_data( stg_model_t* mod) 
 { 
   PRINT_DEBUG( "ranger render data" );
-    
-  if( mod->subs )
-    {
-
+  
   if( mod->gui.data  )
-    stk_fig_clear(mod->gui.data);
+    stg_rtk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
-    mod->gui.data = stk_fig_create( mod->world->win->canvas, 
-				    mod->gui.top, STG_LAYER_RANGERDATA );
+    mod->gui.data = stg_rtk_fig_create( mod->world->win->canvas, 
+					mod->gui.top, STG_LAYER_RANGERDATA );
   
   stg_ranger_config_t cfg[STG_RANGER_DATA_MAX];
   size_t max_clen = STG_RANGER_DATA_MAX * sizeof(cfg[0]);    
   size_t clen = stg_model_get_config(mod,cfg,max_clen);
-
+  
   // any samples at all?
   if( clen < sizeof(stg_ranger_config_t) )
     return;
   
   int rcount = clen / sizeof( stg_ranger_config_t );
   
+  if( rcount < 1 ) // no samples 
+    return; 
+  
   stg_ranger_sample_t samples[STG_RANGER_DATA_MAX];
   size_t max_dlen = STG_RANGER_DATA_MAX * sizeof(samples[0]);  
   size_t dlen = stg_model_get_data( mod, samples, max_dlen );   
-  //assert( dlen == (rcount * sizeof(stg_ranger_sample_t) ));
-
   
-  // should be ok by now!
-  if( rcount > 0 && samples )
-    {
+  // iff we have the right amount of data
+  if( dlen == rcount * sizeof(stg_ranger_sample_t) )
+    {       
       stg_geom_t geom;
       stg_model_get_geom(mod,&geom);
       
-      stk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_RANGER_COLOR) );
-      stk_fig_origin( mod->gui.data, geom.pose.x, geom.pose.y, geom.pose.a );	  
+      stg_rtk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_RANGER_COLOR) );
+      stg_rtk_fig_origin( mod->gui.data, geom.pose.x, geom.pose.y, geom.pose.a );	  
       // draw the range  beams
       int s;
       for( s=0; s<rcount; s++ )
@@ -395,11 +411,14 @@ void ranger_render_data( stg_model_t* mod)
 	    {
 	      stg_ranger_config_t* rngr = &cfg[s];
 	      
-	      stk_fig_arrow( mod->gui.data, 
-			     rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
+	      stg_rtk_fig_arrow( mod->gui.data, 
+				 rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
 	    }
 	}
     }
-    }
+  else
+    if( dlen > 0 )
+      PRINT_WARN2( "data size doesn't match configuation (%d/%d bytes)",
+		   dlen,  rcount * sizeof(stg_ranger_sample_t) );
 }
 

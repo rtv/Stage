@@ -1,5 +1,5 @@
 /*
- *  STK2 : A GUI toolkit for robotics
+ *  RTK2 : A GUI toolkit for robotics
  *  Copyright (C) 2001  Andrew Howard  ahoward@usc.edu
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 /*
  * Desc: Stk region manipulation
  * Author: Andrew Howard
- * CVS: $Id: rtk_region.c,v 1.3 2005-03-11 20:50:44 rtv Exp $
+ * CVS: $Id: rtk_region.c,v 1.4 2005-03-11 21:56:57 rtv Exp $
  *
  * TODO:
  *  - Use GdkRegions instead of GdkRectangles.
@@ -32,19 +32,19 @@
 
 
 // Create a new region.
-stk_region_t *stk_region_create()
+stg_rtk_region_t *stg_rtk_region_create()
 {
-  stk_region_t *region;
+  stg_rtk_region_t *region;
 
-  region = calloc(1, sizeof(stk_region_t));
-  stk_region_set_empty(region);
+  region = calloc(1, sizeof(stg_rtk_region_t));
+  stg_rtk_region_set_empty(region);
 
   return region;
 }
 
 
 // Destroy a region.
-void stk_region_destroy(stk_region_t *region)
+void stg_rtk_region_destroy(stg_rtk_region_t *region)
 {
   free(region);
   return;
@@ -52,7 +52,7 @@ void stk_region_destroy(stk_region_t *region)
 
 
 // Set a region to empty.
-void stk_region_set_empty(stk_region_t *region)
+void stg_rtk_region_set_empty(stg_rtk_region_t *region)
 {
   region->rect.x = region->rect.y = 0;
   region->rect.width = region->rect.height = 0;
@@ -61,13 +61,13 @@ void stk_region_set_empty(stk_region_t *region)
 
 
 // Set the region to the union of the two given regions.
-void stk_region_set_union(stk_region_t *regiona, stk_region_t *regionb)
+void stg_rtk_region_set_union(stg_rtk_region_t *regiona, stg_rtk_region_t *regionb)
 {
   GdkRectangle rectc;
 
-  if (!stk_region_test_empty(regionb))
+  if (!stg_rtk_region_test_empty(regionb))
   {
-    if (stk_region_test_empty(regiona))
+    if (stg_rtk_region_test_empty(regiona))
       regiona->rect = regionb->rect;
     else 
     {
@@ -80,7 +80,7 @@ void stk_region_set_union(stk_region_t *regiona, stk_region_t *regionb)
 
 
 // Set the region to the union of the region with a rectangle
-void stk_region_set_union_rect(stk_region_t *region, int ax, int ay, int bx, int by)
+void stg_rtk_region_set_union_rect(stg_rtk_region_t *region, int ax, int ay, int bx, int by)
 {
   GdkRectangle rectb, rectc;
 
@@ -106,7 +106,7 @@ void stk_region_set_union_rect(stk_region_t *region, int ax, int ay, int bx, int
 
   if (rectb.width * rectb.height > 0)
   {
-    if (stk_region_test_empty(region))
+    if (stg_rtk_region_test_empty(region))
       region->rect = rectb;
     else
     {
@@ -119,7 +119,7 @@ void stk_region_set_union_rect(stk_region_t *region, int ax, int ay, int bx, int
 
 
 // Get the bounding rectangle for the region.
-void stk_region_get_brect(stk_region_t *region, GdkRectangle *rect)
+void stg_rtk_region_get_brect(stg_rtk_region_t *region, GdkRectangle *rect)
 {
   *rect = region->rect;
   return;
@@ -127,7 +127,7 @@ void stk_region_get_brect(stk_region_t *region, GdkRectangle *rect)
 
 
 // Test to see if a region is empty.
-int stk_region_test_empty(stk_region_t *region)
+int stg_rtk_region_test_empty(stg_rtk_region_t *region)
 {
   if (region->rect.width * region->rect.height == 0)
     return 1;
@@ -136,7 +136,7 @@ int stk_region_test_empty(stk_region_t *region)
 
 
 // Test for intersection betweenr regions.
-int stk_region_test_intersect(stk_region_t *regiona, stk_region_t *regionb)
+int stg_rtk_region_test_intersect(stg_rtk_region_t *regiona, stg_rtk_region_t *regionb)
 {
   GdkRectangle recta, rectb, rectc;
 

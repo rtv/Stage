@@ -21,7 +21,7 @@
 /*
  * Desc: Stk application functions
  * Author: Andrew Howard
- * CVS: $Id: rtk.c,v 1.4 2005-03-11 20:50:44 rtv Exp $
+ * CVS: $Id: rtk.c,v 1.5 2005-03-11 21:56:57 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -37,10 +37,6 @@
 #include <signal.h>
 #include <gdk/gdkkeysyms.h>
 
-#if ENABLE_AVCODEC
-#include "avcodec.h"
-#endif
-
 //#define DEBUG
 #include "rtk.h"
 #include "rtkprivate.h"
@@ -50,11 +46,11 @@
 int LIBSTK_VERSION_2_2(void) { return(0); }
 
 // Declare some local functions
-static int stk_app_on_timer(stk_app_t *app);
+static int stg_rtk_app_on_timer(stg_rtk_app_t *app);
 
 // Initialise the library.
 
-int stk_initxx(int *argc, char ***argv)
+int stg_rtk_initxx(int *argc, char ***argv)
 {
   // Initialise the gtk lib
   gtk_init(argc, argv);
@@ -73,11 +69,11 @@ int stk_initxx(int *argc, char ***argv)
 
 
 // Create an app
-stk_app_t *stk_app_create()
+stg_rtk_app_t *stg_rtk_app_create()
 {
-  stk_app_t *app;
+  stg_rtk_app_t *app;
 
-  app = malloc(sizeof(stk_app_t));
+  app = malloc(sizeof(stg_rtk_app_t));
   app->must_quit = FALSE;
   app->has_quit = FALSE;
   app->canvas = NULL;
@@ -88,7 +84,7 @@ stk_app_t *stk_app_create()
 
 
 // Destroy the app
-void stk_app_destroy(stk_app_t *app)
+void stg_rtk_app_destroy(stg_rtk_app_t *app)
 {
   int count;
 
@@ -96,7 +92,7 @@ void stk_app_destroy(stk_app_t *app)
   count = 0;
   while (app->canvas)
   {
-    stk_canvas_destroy(app->canvas);
+    stg_rtk_canvas_destroy(app->canvas);
     count++;
   }
   if (count > 0)
@@ -106,7 +102,7 @@ void stk_app_destroy(stk_app_t *app)
   //count = 0;
   //while (app->table)
   //{
-  //stk_table_destroy(app->table);
+  //stg_rtk_table_destroy(app->table);
   //count++;
   //}
   //if (count > 0)
@@ -118,21 +114,21 @@ void stk_app_destroy(stk_app_t *app)
 
 
 // Check to see if its time to quit
-int stk_app_quit(stk_app_t *app)
+int stg_rtk_app_quit(stg_rtk_app_t *app)
 {
   return (app->has_quit);
 }
 
 // Handle timer events
-int stk_app_on_timer(stk_app_t *app)
+int stg_rtk_app_on_timer(stg_rtk_app_t *app)
 {
   /* REMOVE
-  stk_canvas_t *canvas;
-  stk_table_t *table;
+  stg_rtk_canvas_t *canvas;
+  stg_rtk_table_t *table;
 
   // Update the display
   for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-    stk_canvas_update(canvas);
+    stg_rtk_canvas_update(canvas);
   
   // Quit the app if we have been told we should
   // We first destroy in windows that are still open.
@@ -151,21 +147,21 @@ int stk_app_on_timer(stk_app_t *app)
 }
 
 // Main loop -- run in own thread
-int stk_app_main(stk_app_t *app)
+int stg_rtk_app_main(stg_rtk_app_t *app)
 {
-  stk_app_main_init(app);
+  stg_rtk_app_main_init(app);
 	gtk_main();
-  stk_app_main_term(app);
+  stg_rtk_app_main_term(app);
   
   return 0;
 }
 
 
 // Do the initial main loop stuff
-void stk_app_main_init(stk_app_t *app)
+void stg_rtk_app_main_init(stg_rtk_app_t *app)
 {
-  stk_canvas_t *canvas;
-  //stk_table_t *table;
+  stg_rtk_canvas_t *canvas;
+  //stg_rtk_table_t *table;
   
   // Display everything
   for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
@@ -178,7 +174,7 @@ void stk_app_main_init(stk_app_t *app)
 
 
 // Do the final main loop stuff
-void stk_app_main_term(stk_app_t *app)
+void stg_rtk_app_main_term(stg_rtk_app_t *app)
 {
   // Process remaining events
   while (gtk_events_pending())
@@ -192,11 +188,11 @@ void stk_app_main_term(stk_app_t *app)
 
 
 // Event processing function.  Returns non-zero if the app should quit.
-int stk_app_main_loop(stk_app_t *app)
+int stg_rtk_app_main_loop(stg_rtk_app_t *app)
 {
   int ret;
-  stk_canvas_t *canvas;
-  //stk_table_t *table;
+  stg_rtk_canvas_t *canvas;
+  //stg_rtk_table_t *table;
   
   while (gtk_events_pending())
     ret = gtk_main_iteration();
