@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.7 2001-08-14 00:19:55 vaughan Exp $
+ * $Id: xs.cc,v 1.8 2001-08-14 00:36:08 gerkey Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -73,7 +73,7 @@ char* pan = 0;
 // provide some sensible defaults for the parameters/resources
 char* default_channels = "red green blue magenta yellow cyan";
 char* default_geometry = "400x400";
-char* default_zoom = "0";
+char* default_zoom = "1.0";
 char* default_pan = "0x0";
 
 queue<stage_truth_t> incoming_queue;
