@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.20 $
+//  $Author: rtv $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -24,6 +24,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+//#define DEBUG
+
 #include <math.h>
 #include "world.hh"
 #include "positiondevice.hh"
@@ -37,7 +39,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   // set the Player IO sizes correctly for this type of Entity
   m_data_len = sizeof( player_position_data_t );
   m_command_len = sizeof( player_position_cmd_t );
-  m_config_len = 1; // configurable!
+  m_config_len = sizeof( player_position_config_t ); // configurable!
   
   m_player_type = PLAYER_POSITION_CODE; // from player's messages.h
   m_stage_type = RectRobotType;
@@ -91,48 +93,43 @@ void CPositionDevice::Update( double sim_time )
     if( Subscribed() > 0 )
     {
       // Get latest config
-      unsigned char cfg[m_config_len];
-      int cfg_size;
-      if((cfg_size = GetConfig(cfg,sizeof(cfg))))
+      player_position_config_t cfg;
+
+      // sanity check that things are set up correctly
+      assert( sizeof(cfg) == m_config_len );
+
+      if( (GetConfig( &cfg, m_config_len) == m_config_len) )
       {
-        switch(cfg[0])
+	PRINT_DEBUG1( "checking config type %x\n", cfg[0] );
+	
+        switch( cfg.request ) // switch on the type of request
         {
           case PLAYER_POSITION_MOTOR_POWER_REQ:
             // motor state change request 
             // 1 = enable motors
             // 0 = disable motors
             // (default)
-            if(cfg_size-1 != 1)
-            {
-              puts("Arg to motor state change request is wrong size; ignoring");
-              break;
-            }
-            // right size, but who cares.
+	    printf( "MOTOR POWER: %d", cfg.value ); 
+	    // CONFIG NOT IMPLEMENTED
             break;
+
           case PLAYER_POSITION_VELOCITY_CONTROL_REQ:
             // velocity control mode:
             //   0 = direct wheel velocity control (default)
             //   1 = separate translational and rotational control
-            if(cfg_size-1 != 1)
-            {
-              puts("Arg to velocity control mode change request is wrong "
-                   "size; ignoring");
-              break;
-            }
-            // right size, but who cares.
+	    printf( "CONTROL MODE: %d\n", cfg.value ); 
+	    // CONFIG NOT IMPLEMENTED
             break;
+
           case PLAYER_POSITION_RESET_ODOM_REQ:
-            // reset position to 0,0,0: no args
-            if(cfg_size-1 != 0)
-            {
-              puts("Arg to reset position request is wrong size; ignoring");
-              break;
-            }
+            // reset position to 0,0,0: ignore value
+	    puts( "RESET ODOMETRY"); 
             m_odo_px = m_odo_py = m_odo_pth = 0.0;
             break;
+
           default:
             printf("Position device got unknown config request \"%c\"\n",
-                   cfg[0]);
+                   cfg.request );
             break;
         }
       }

@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.35 2002-02-02 01:23:44 rtv Exp $
+# $Id: Makefile.common,v 1.36 2002-02-05 22:50:40 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -20,8 +20,6 @@ VERSION = 1.2
 
 ##############################################################################
 # PLAYER CONFIGURATION (required)
-# this is overridden by the top-level Makefile
-# but setting sensible defaults here allows you to build from the src dir.
 
 PLAYER_VERSION = $(VERSION)
 PLAYER_DIR = $(HOME)/player-$(PLAYER_VERSION)
@@ -61,6 +59,7 @@ RTK_LIB = $(RTK_DIR) #/lib
 ##############################################################################
 # X COLOR DATABASE CONFFIGURATION (required)
 # set the path to a X11-format color database, usually rgb.txt from X distro
+# I should get rid of this eventually - RTV
 
 # this is a good guess on Linux systems
 COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt

@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.39 2002-02-02 23:43:27 inspectorg Exp $
+//  $Id: entity.cc,v 1.40 2002-02-05 22:50:40 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -265,7 +265,7 @@ bool CEntity::Startup( void )
   memset(playerIO, 0, mem);
   PRINT_DEBUG("successfully mapped shared memory");
   
-  printf( "S: mmapped %d bytes at %p\n", mem, playerIO );
+  PRINT_DEBUG2( "S: mmapped %d bytes at %p\n", mem, playerIO );
 
   // we use the lock field in the player_stage_info_t structure to
   // control access with a semaphore.
@@ -277,7 +277,7 @@ bool CEntity::Startup( void )
   if( sem_init( m_lock, 0, 1 ) < 0 )
     perror( "sem_init failed" );
   
-  printf( "Stage: device lock at %p\n", m_lock );
+  PRINT_DEBUG1( "Stage: device lock at %p\n", m_lock );
   
   // try a lock
   assert( Lock() );
@@ -317,9 +317,7 @@ bool CEntity::Startup( void )
 	  m_info_io->data_len, m_data_len,
 	  m_info_io->command_len, m_command_len,
 	  m_info_io->config_len, m_config_len );
-
-  fflush( stdout );
-#endif
+#endif  
 
   // try  an unlock
   assert( Unlock() );
@@ -371,12 +369,10 @@ void CEntity::Update( double sim_time )
   // Update the rtk gui
   RtkUpdate();
 #endif
-  
-#ifdef DEBUG
-  //    printf( "S: Entity::Update() (%d,%d,%d) %d subs at %.2f\n",  
-  //  m_player_port, m_player_type, m_player_index, 
-  //    Subscribed(), sim_time ); 
-#endif 
+ 
+  //PRINT_DEBUG( "S: Entity::Update() (%d,%d,%d) %d subs at %.2f\n",  
+  //       m_player_port, m_player_type, m_player_index, 
+  //       Subscribed(), sim_time ); 
 }
 
 
@@ -677,12 +673,10 @@ size_t CEntity::PutData( void* data, size_t len )
 {
   Lock();
   
-#ifdef DEBUG  
-  //  printf( "S: Entity::PutData() (%d,%d,%d) at %p\n", 
+  //PRINT_DEBUG3( "S: Entity::PutData() (%d,%d,%d) at %p\n", 
   //  m_info_io->player_id.port, 
   //  m_info_io->player_id.type, 
   //  m_info_io->player_id.index, data);
-#endif  
  
   // the data mustn't be too big!
   if( len <= m_info_io->data_len )
@@ -716,11 +710,9 @@ size_t CEntity::PutData( void* data, size_t len )
 //
 size_t CEntity::GetData( void* data, size_t len )
 {   
-#ifdef DEBUG
-  printf( "S: getting type %d data at %p - ", 
+  PRINT_DEBUG2( "S: getting type %d data at %p - ", 
           m_player_type, m_data_io );
   fflush( stdout );
-#endif
 
   Lock();
 
@@ -729,11 +721,9 @@ size_t CEntity::GetData( void* data, size_t len )
     memcpy( data, m_data_io, len); // copy the data
   else
   {
-#ifdef DEBUG
-    printf( "error: requested %d data (%d bytes available)\n", 
-            len, m_info_io->data_avail );
-    fflush( stdout );
-#endif
+    PRINT_DEBUG2( "error: requested %d data (%d bytes available)\n", 
+		 len, m_info_io->data_avail );
+    
     len = 0; // set the return value to indicate failure 
   }
   
@@ -749,12 +739,9 @@ size_t CEntity::GetData( void* data, size_t len )
 //
 size_t CEntity::GetCommand( void* cmd, size_t len )
 {   
-#ifdef DEBUG
-  printf( "S: getting type %d cmd at %p - ", 
-          m_player_type, m_command_io );
-  fflush( stdout );
-#endif
-
+  PRINT_DEBUG2( "S: getting type %d cmd at %p - ", 
+	       m_player_type, m_command_io );
+  
   Lock();
 
   // the command must be the right size!
@@ -762,11 +749,9 @@ size_t CEntity::GetCommand( void* cmd, size_t len )
     memcpy( cmd, m_command_io, len); // import device-specific data
   else
   {
-#ifdef DEBUG
-    printf( "no command found (%d bytes available)\n", 
-            m_info_io->command_avail );
-    fflush( stdout );
-#endif
+    PRINT_DEBUG1( "no command found (%d bytes available)\n", 
+		 m_info_io->command_avail );
+    
     len = 0; // set the return value to indicate failure 
   }
   
@@ -782,21 +767,38 @@ size_t CEntity::GetConfig( void* config, size_t len )
 {  
   Lock();
 
-  if (m_info_io->config_avail > 0)
-  {
-    // Copy data out of shared memory,
-    // but check for overflow.
-    if (len >= m_info_io->config_avail)
-      memcpy(config, m_config_io, len);
-    else
+//    if (m_info_io->config_avail > 0)
+//    {
+//      // Copy data out of shared memory,
+//      // but check for overflow.
+//      if (len >= m_info_io->config_avail)
+//        memcpy(config, m_config_io, len);
+//      else
+//      {
+//        PRINT_WARN("config buffer overflow; discarding configuration request");
+//        len = 0;
+//      }
+//      // Consume the configuration request
+//      m_info_io->config_avail = 0;
+//    }
+
+  // made the config logic the same as command and data 
+  // this seems to fix the config bug - why was it different?
+
+  // the config MUST be the right size
+  if (len == m_info_io->config_avail && len == m_info_io->config_len  )
     {
-      PRINT_WARN("config buffer overflow; discarding configuration request");
+      memcpy(config, m_config_io, len);
+      // Consume the configuration request
+      m_info_io->config_avail = 0;
+    }
+  else
+    {
+      PRINT_DEBUG1( "no config found (%d bytes available)\n", 
+		    m_info_io->config_avail ); 
       len = 0;
     }
-    // Consume the configuration request
-    m_info_io->config_avail = 0;
-  }
-    
+  
   Unlock();
   return len;    
 }
@@ -836,8 +838,6 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
     truth->parent_id = -1;
 
   assert( m_hostname );
-
-  //printf( "hostname: %s\n", m_hostname );
 
   strncpy( truth->hostname, m_hostname, HOSTNAME_SIZE );
 
