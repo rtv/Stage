@@ -2,9 +2,11 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.59 2004-08-30 00:19:54 rtv Exp $
+# $Id: Makefile.am,v 1.60 2004-09-11 23:01:47 rtv Exp $
 
-stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
+SUBDIRS = models
+
+stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a models/libmodels.a
 
 AM_CFLAGS = -Wall -I$(top_builddir)/replace @RTK_CFLAGS@
 AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @RTK_CFLAGS@
@@ -33,16 +35,6 @@ stage_SOURCES = \
 	matrix.h \
 	model.c \
 	model.h \
-	model_blobfinder.c \
-	model_energy.c \
-	model_fiducial.c \
-	model_laser.c \
-	model_pose.c \
-	model_position.c \
-	model_props.c \
-	model_ranger.c \
-	model_render.c \
-	model_test.c \
 	raytrace.c \
 	raytrace.h \
 	server.c \
@@ -55,9 +47,8 @@ stage_SOURCES = \
 	world.h
 
 
-
 stage_LDFLAGS =
-stage_LDADD =  -L. @RTK_LIBS@ 
+stage_LDADD =  -L. -Lmodels -lmodels @RTK_LIBS@ 
 
 #
 # test program
@@ -69,6 +60,6 @@ stage_LDADD =  -L. @RTK_LIBS@
 
 #
 # libstage.a
-# this library is useful for clients such as Player's stage1p4 driver
+# this library is useful for clients such as Player's stageclient driver
 #
 libstage_a_SOURCES = stage.h stage.c stageclient.c bitmap.c token.c  worldfile.cc worldfile.hh stagecpp.cc
