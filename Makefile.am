@@ -15,10 +15,12 @@ dist-hook:
 	cp -r -p $(DOCSRC)/stage_user $(DOCDIST)
 
 install-data-hook:
-	cd $(DOCSRC) && make 
 	mkdir -p $(DOCINST)
 	cp -r -p $(DOCSRC)/stage_user $(DOCINST)
 	cp -r -p $(DOCSRC)/stage_reference $(DOCINST)
+
+#cd $(DOCSRC) && make 
+
 
 uninstall-local:
 	rm -f $(DOCINST)/*

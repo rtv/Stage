@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +40,7 @@ position
 (
   # position properties
   drive "diff"
-
+  odom [0 0 0]
   # model properties
 )
 @endverbatim
@@ -48,6 +48,9 @@ position
 @par Details
 - drive "diff" or "omni"
   - select differential-steer mode (like a Pioneer) or omnidirectional mode.
+
+- odom [x y theta]
+  - set the initial odometry value for this device. Tip: if you set this the same as the pose, the odometry will give you the true absolute pose of the position device. 
 
 */
 
@@ -411,29 +414,18 @@ void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
   // copy the odom pose straight in
   memcpy( &pos->odom, odom, sizeof(stg_pose_t));
   
-  
-  // TODO
-  
-  // calculate what the origin of this coord system must be
-  
-  stg_pose_t o;
-  
-  double dx = mod->pose.x - odom->x;
-  double dy = mod->pose.y - odom->y;
-  double da = mod->pose.a - odom->a;
+  // calculate what the origin of this coord system must be 
+  double da = odom->a - mod->pose.a;
   double cosa = cos(da);
   double sina = sin(da);
   
-  if( da != 0.0 )
-    printf( "\nStage warning: currently you have to set the odometric pose to be"
-"the same as the actual pose. You didn't, so odometry wierdness may ensue." );
-  
-  // TODO: can't quite get my head around this today - will fix
-  // sometime.
-  o.x = dx;// * cosa + dy * sina;
-  o.y = dy;// * cosa - dx * sina;
-  o.a = NORMALIZE( da );
-  
+  double xx = odom->x * cosa + odom->y * sina;
+  double yy = odom->y * cosa - odom->x * sina;
+
+  stg_pose_t o;
+  o.x = mod->pose.x - xx;
+  o.y = mod->pose.y - yy;
+  o.a = NORMALIZE( mod->pose.a - odom->a );  
   stg_model_position_set_odom_origin( mod, &o );  
 }
 
@@ -459,16 +451,13 @@ void position_render_data(  stg_model_t* mod )
       
       rtk_fig_origin( mod->gui.data,  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
             
-      rtk_fig_rectangle(  mod->gui.data, 0,0,0, 0.06, 0.06, 0 );
-      
-      rtk_fig_line( mod->gui.data, 0,0, 0, pos->odom.y );
-      rtk_fig_line( mod->gui.data, 0,pos->odom.y, pos->odom.x, pos->odom.y );
+      rtk_fig_rectangle(  mod->gui.data, 0,0,0, 0.06, 0.06, 0 );     
+      rtk_fig_line( mod->gui.data, 0,0, pos->odom.x, 0);
+      rtk_fig_line( mod->gui.data, pos->odom.x, 0, pos->odom.x, pos->odom.y );
       
       char buf[256];
       snprintf( buf, 255, "x: %.3f\ny: %.3f\na: %.1f", pos->odom.x, pos->odom.y, RTOD(pos->odom.a)  );
-      rtk_fig_text( mod->gui.data, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );
-      
-      //rtk_fig_line( mod->gui.data, 0,0, pos->odom.x, pos->odom.y );
+      rtk_fig_text( mod->gui.data, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );    
       rtk_fig_arrow( mod->gui.data, pos->odom.x, pos->odom.y, pos->odom.a, line, head );
     }
 }

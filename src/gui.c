@@ -797,10 +797,14 @@ void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
     {
       stg_pose_t parentpose;
       stg_model_get_global_pose( mod->parent, &parentpose );
-      rtk_fig_line( fig, parentpose.x, parentpose.y, glob.x, glob.y );
+      rtk_fig_line( fig, parentpose.x, parentpose.y, glob.x, parentpose.y );
+      rtk_fig_line( fig, glob.x, parentpose.y, glob.x, glob.y );
     }
   else
-    rtk_fig_line( fig, 0, 0, glob.x, glob.y );
+    {
+      rtk_fig_line( fig, 0, 0, glob.x, 0 );
+      rtk_fig_line( fig, glob.x, 0, glob.x, glob.y );
+    }
   
   stg_pose_t localpose;
   memcpy( &localpose, &mod->geom.pose, sizeof(localpose));
@@ -809,6 +813,10 @@ void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
   // draw the local offset
   rtk_fig_line( fig, 
 		glob.x, glob.y, 
+		localpose.x, glob.y );
+
+  rtk_fig_line( fig, 
+		localpose.x, glob.y, 
 		localpose.x, localpose.y );
   
   // draw the bounding box

@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.23 2005-02-08 04:26:50 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.24 2005-02-08 06:50:01 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -836,7 +836,7 @@ void StgDriver::HandleConfigSimulation( player_device_id_t id,
 	stg_pose_t pose;
 	pose.x = ntohl(req->x) / 1000.0;
 	pose.y = ntohl(req->y) / 1000.0;
-	pose.a = DTOR( ntohl(req->x) );
+	pose.a = DTOR( ntohl(req->a) );
 
 	printf( "Stage: received request to move object \"%s\" to (%.2f,%.2f,%.2f)\n",
 		req->name, pose.x, pose.y, pose.a );
