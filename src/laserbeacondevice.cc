@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -45,7 +45,8 @@ CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CEntity *parent,
 {
     if (laser == NULL)
     {
-        // *** Should check the type here
+        // *** Should fix this somehow
+        ASSERT(strcmp(parent->m_type, "laser_device") == 0);
         m_laser = (CLaserDevice*) parent;
     }
     else
@@ -117,10 +118,10 @@ bool CLaserBeaconDevice::Save(int &argc, char **argv)
 //
 void CLaserBeaconDevice::Update()
 {
+    ASSERT(this != NULL);
     ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
     ASSERT(m_laser != NULL);
-    
    
     // Get the laser range data
     //
@@ -142,6 +143,7 @@ void CLaserBeaconDevice::Update()
     laser.min_angle = ntohs(laser.min_angle);
     laser.max_angle = ntohs(laser.max_angle);
     laser.range_count = ntohs(laser.range_count);
+    ASSERT(laser.range_count >= 0 && laser.range_count < ARRAYSIZE(laser.ranges));
     for (int i = 0; i < laser.range_count; i++)
         laser.ranges[i] = ntohs(laser.ranges[i]);
     
@@ -199,12 +201,12 @@ void CLaserBeaconDevice::Update()
         if (r > m_max_id_range * DTOR(0.50) / scan_res)
             id = 0;
 
-	// pack the beacon data into the export structure
-	expBeacon.beacons[ expBeacon.beaconCount ].x = px;
-	expBeacon.beacons[ expBeacon.beaconCount ].y = py;
-	expBeacon.beacons[ expBeacon.beaconCount ].th = pth;
-	expBeacon.beacons[ expBeacon.beaconCount ].id = id;
-	expBeacon.beaconCount++;
+        // pack the beacon data into the export structure
+        expBeacon.beacons[ expBeacon.beaconCount ].x = px;
+        expBeacon.beacons[ expBeacon.beaconCount ].y = py;
+        expBeacon.beacons[ expBeacon.beaconCount ].th = pth;
+        expBeacon.beacons[ expBeacon.beaconCount ].id = id;
+        expBeacon.beaconCount++;
 
         // Record beacons
         //

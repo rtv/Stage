@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -64,6 +64,11 @@ CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
     //
     if (strcmp(type, "player_server") == 0)
         return new CPlayerServer(world, parent);
+
+    // Create a pioneer
+    //
+    if (strcmp(type, "position_device") == 0)
+        return new CPioneerMobileDevice(world, parent, NULL);
 
     // Create a laser
     //
