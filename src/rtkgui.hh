@@ -89,14 +89,33 @@ typedef struct
   // Number of exported images
   int export_count;
 
+  // a list of figures that should be cleared soon
+  GList* countdowns;
+
   // rtk doesn't support status bars, so we'll use gtk directly
   GtkStatusbar* statusbar;
 
-  guint source_tag;
+  guint tag_refresh;
+  guint tag_countdown;
   
   struct stg_world* world;
 
 } stg_gui_window_t;
+
+typedef struct
+{
+  rtk_fig_t* fig;
+  int timeleft; //milliseconds until the figure must be cleared
+} stg_gui_countdown_t;
+
+typedef enum
+  {
+    STG_DATA_FIG_NEIGHBORS,
+    STG_DATA_FIG_RANGER,
+    STG_DATA_FIG_LASER,
+    STG_DATA_FIG_BLOBFINDER,
+    STG_DATA_FIG_TYPES_COUNT // this should be the last entry
+  } stg_data_fig_types;
 
 typedef struct
 {
@@ -111,6 +130,9 @@ typedef struct
 
   int movemask;
   
+  // a figure for each of our sensor types
+  stg_gui_countdown_t datafigs[STG_DATA_FIG_TYPES_COUNT];
+
   //int type; // the model type
 } stg_gui_model_t;
 
@@ -123,6 +145,10 @@ void stg_gui_window_destroy( stg_gui_window_t* win );
 int stg_gui_window_update( struct stg_world* world, stg_prop_id_t prop );
 
 gboolean stg_gui_window_callback( gpointer win );
+
+// a timeout callback that clears all figures in the countdowns list
+gboolean stg_gui_window_clear_countdowns( gpointer data );
+
 
 // MODELS
 stg_gui_model_t* stg_gui_model_create(CEntity* ent);

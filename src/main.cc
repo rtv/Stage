@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.69 2003-08-30 21:02:22 rtv Exp $
+ * CVS: $Id: main.cc,v 1.70 2003-09-02 05:17:25 rtv Exp $
  */
 
 
@@ -515,6 +515,8 @@ int main( int argc, char** argv )
   // watch for these events on the well-known-port
   g_io_add_watch(channel, G_IO_IN, StgServiceWellKnownPort, global_model_table);
   
+  PRINT_MSG1( "Accepting connections on port %d", STG_DEFAULT_SERVER_PORT );
+
   GMainLoop* mainloop = g_main_loop_new( NULL, TRUE );
   g_main_loop_run( mainloop );
 

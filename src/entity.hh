@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.26 2003-08-30 02:00:37 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.27 2003-09-02 05:17:25 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -265,8 +265,8 @@ public: stg_interval_ms_t blinkenlight;
   // Initial pose in local cs (ie relative to parent)
 protected: stg_pose_t pose_init;
   
-protected: stg_los_msg_t last_received_msg;
-  
+protected: GArray* received_msgs;
+
 protected: void SendLosMessage( stg_los_msg_t* msg );
   
   // Pose in local cs (ie relative to parent)

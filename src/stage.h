@@ -80,6 +80,7 @@
        STG_PROP_BLINKENLIGHT,  // light blinking rate
        STG_PROP_NOSE,
        STG_PROP_LOS_MSG,
+       STG_PROP_LOS_MSG_CONSUME,
        STG_PROP_MOUSE_MODE,
        STG_PROP_BORDER,        // if non-zero, add a bounding rectangle
        STG_PROP_MATRIX_RENDER, // if non-zero, render in the matrix

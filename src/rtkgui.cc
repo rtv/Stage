@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.20 2003-08-30 21:02:22 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.21 2003-09-02 05:17:25 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -81,6 +81,9 @@ extern int global_num_clients;
 #define STG_LAYER_DATA 60
 #define STG_LAYER_LIGHTS 70
 #define STG_LAYER_SENSORS 61
+
+#define STG_GUI_COUNTDOWN_INTERVAL_MS 400
+#define STG_GUI_COUNTDOWN_TIME_DATA 1000 
 
 bool enable_matrix = FALSE;
 bool enable_data = TRUE;
@@ -192,7 +195,7 @@ void stg_gui_exit( rtk_menuitem_t *item )
   puts( "Exit menu item. Destroying world" );
   
   stg_world_t* world = (stg_world_t*)item->userdata;
-  stg_client_data_t* client = world->client; 
+  //stg_client_data_t* client = world->client; 
 
   stg_world_destroy( world );
 
@@ -211,10 +214,10 @@ void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
   if( rtk_menuitem_ischecked( item ) )
     {
       
-      if( win->source_tag > 0 )
+      if( win->tag_refresh > 0 )
 	{      
-	  PRINT_DEBUG1( "removing source %d",  win->source_tag );
-	  g_source_remove( win->source_tag );
+	  PRINT_DEBUG1( "removing source %d",  win->tag_refresh );
+	  g_source_remove( win->tag_refresh );
 	}
 
       // figure out which menuitem this was
@@ -223,10 +226,10 @@ void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
 	  if( win->refresh_items[i] == item ) 
 	    {
 	      PRINT_DEBUG1( "refresh rate set to %d ms", intervals[i] );
-	      win->source_tag = g_timeout_add( intervals[i], 
+	      win->tag_refresh = g_timeout_add( intervals[i], 
 					       stg_gui_window_callback, win );
 	      PRINT_DEBUG2( "added source %d at interval %d",  
-			    win->source_tag, intervals[i] );
+			    win->tag_refresh, intervals[i] );
 	    }
 	  else
 	    // uncheck the other choices
@@ -245,6 +248,9 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
  
   win->canvas = rtk_canvas_create(app);
       
+  win->countdowns = NULL; // a list of figures that should be cleared
+			   // at some point in the future
+  
   // Add some menu items 
   win->file_menu = rtk_menu_create(win->canvas, "File");
   win->save_item = rtk_menuitem_create(win->file_menu, "Save", 0);
@@ -347,9 +353,9 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   rtk_menuitem_check(  win->refresh_items[default_interval], 1 );
   
   // update this window every few ms
-  //win->source_tag = g_timeout_add( intervals[default_interval], 
+  //win->tag_refresh = g_timeout_add( intervals[default_interval], 
   //			   stg_gui_window_callback, win );
-  //PRINT_DEBUG1( "added source %d",  win->source_tag );
+  //PRINT_DEBUG1( "added source %d",  win->tag_refresh );
   
   // refresh menu done ---------------------------------------------------
 
@@ -398,6 +404,10 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
 
   // show the window
   gtk_widget_show_all(win->canvas->frame);
+
+  // start a callback that deletes expired data figures
+  win->tag_countdown = g_timeout_add( STG_GUI_COUNTDOWN_INTERVAL_MS, 
+				     stg_gui_window_clear_countdowns, win );
   
   // return the completed window
   return win;
@@ -468,9 +478,10 @@ void stg_gui_window_destroy( stg_gui_window_t* win )
       return;
     }
   
-  PRINT_DEBUG1( "removing source %d",  win->source_tag );
+  PRINT_DEBUG1( "removing source %d",  win->tag_refresh );
   // cancel the callback for this window
-  g_source_remove( win->source_tag );
+  g_source_remove( win->tag_refresh );
+  g_source_remove( win->tag_countdown );
   
   if( win->fig_grid ) rtk_fig_destroy( win->fig_grid );
   if( win->fig_matrix ) rtk_fig_destroy( win->fig_matrix );
@@ -504,6 +515,41 @@ void stg_gui_window_destroy( stg_gui_window_t* win )
   rtk_canvas_destroy( win->canvas );
   free( win );
 }
+
+
+
+gboolean stg_gui_window_clear_countdowns( gpointer ptr )
+{
+  stg_gui_window_t* win = (stg_gui_window_t*)ptr;
+  
+  // operate on the head of the list of figures we should kill
+
+  GList* lel = win->countdowns;
+  while( lel )
+    {
+      stg_gui_countdown_t* cd = (stg_gui_countdown_t*)lel->data;
+      
+      if( cd->timeleft < 1 )
+	{ 
+	  rtk_fig_clear( cd->fig );
+	  
+	  GList* doomed = lel;
+	  lel = lel->next; // next element before we delete this element
+	  
+	  win->countdowns =  g_list_delete_link( win->countdowns, doomed );
+	}
+      else
+	{
+	  // decrement the timeleft by the interval we were called at
+	  cd->timeleft -= STG_GUI_COUNTDOWN_INTERVAL_MS;
+	  lel = lel->next;
+	}
+	  
+    }
+  
+  return TRUE;
+}
+
 
 rtk_fig_t* stg_gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent, 
 				double origin_x, double origin_y, double origin_a, 
@@ -755,6 +801,23 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   rtk_fig_show( mod->fig, true ); 
   rtk_fig_color_rgb32( mod->fig, ent->color);   
 
+  // create a fig for each of our sensor types
+  for( int i=0; i<STG_DATA_FIG_TYPES_COUNT; i++ )
+    {
+      mod->datafigs[i].fig =
+	rtk_fig_create( mod->win->canvas, NULL, STG_LAYER_DATA ); 
+    }
+
+  // set the appropriate colors here
+  rtk_fig_color_rgb32(  mod->datafigs[STG_DATA_FIG_NEIGHBORS].fig, 
+			stg_lookup_color( STG_FIDUCIAL_COLOR ) );
+  
+  rtk_fig_color_rgb32(  mod->datafigs[STG_DATA_FIG_RANGER].fig, 
+			stg_lookup_color( STG_SONAR_COLOR ) );
+  
+  rtk_fig_color_rgb32(  mod->datafigs[STG_DATA_FIG_LASER].fig, 
+			stg_lookup_color( STG_LASER_COLOR ) );
+  
   return mod;
 }
 
@@ -766,6 +829,9 @@ void stg_gui_model_destroy( stg_gui_model_t* mod )
   if( mod->fig_light ) rtk_fig_destroy( mod->fig_light );
   if( mod->fig_rangers ) rtk_fig_destroy( mod->fig_rangers );
   if( mod->fig_nose ) rtk_fig_destroy( mod->fig_nose );
+  
+  for( int i=0; i<STG_DATA_FIG_TYPES_COUNT; i++ )
+    rtk_fig_destroy( mod->datafigs[i].fig );
   
   if( mod->fig ) rtk_fig_destroy( mod->fig );
 
@@ -847,14 +913,17 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
   stg_gui_model_t* model = ent->guimod;
   rtk_canvas_t* canvas = model->fig->canvas;
 
-  rtk_fig_t* fig = rtk_fig_create( canvas, NULL, STG_LAYER_DATA );
-  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
+  rtk_fig_t* fig = model->datafigs[STG_DATA_FIG_NEIGHBORS].fig;  
+  rtk_fig_clear( fig );
 
   stg_pose_t pz;
   ent->GetGlobalPose( &pz );
   
   rtk_fig_origin( fig, pz.x, pz.y, pz.a );
-  
+
+  stg_gui_countdown_t* cd = &model->datafigs[STG_DATA_FIG_NEIGHBORS];
+  model->win->countdowns = g_list_remove( model->win->countdowns, cd );
+
   char text[65];
   
   for( int n=0; n < (int)neighbors->len; n++ )
@@ -867,19 +936,23 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
       
       rtk_fig_line( fig, 0, 0, px, py );	
       
-      double wx = nbor->size.x;
-      double wy = nbor->size.y;
-      
+      // double wx = nbor->size.x;
+      //double wy = nbor->size.y;
       //rtk_fig_rectangle( fig, px, py, pa, wx, wy, 0);
-      rtk_fig_line( fig, px+wx/2.0, py+wy/2.0, px-wx/2.0, py-wy/2.0 );
-      rtk_fig_line( fig, px+wx/2.0, py-wy/2.0, px-wx/2.0, py+wy/2.0 );
-      rtk_fig_arrow( fig, px, py, pa, wy, 0.10);
+      //rtk_fig_line( fig, px+wx/2.0, py+wy/2.0, px-wx/2.0, py-wy/2.0 );
+      //rtk_fig_line( fig, px+wx/2.0, py-wy/2.0, px-wx/2.0, py+wy/2.0 );
+      //rtk_fig_arrow( fig, px, py, pa, wy, 0.10);
       
       snprintf(text, 64, "  %d", nbor->id );
       rtk_fig_text( fig, px, py, pa, text);
     }
 
-  rtk_canvas_flash( canvas, fig, 2, 1 );
+  // reset the timer on our countdown
+  cd->timeleft = STG_GUI_COUNTDOWN_TIME_DATA;
+  
+  // if our countdown does not appear in the window's list, add it.
+  if( g_list_find( model->win->countdowns, cd ) == NULL  )
+    model->win->countdowns = g_list_append( model->win->countdowns, cd );
 }
 
 // render the entity's laser data
@@ -893,10 +966,14 @@ void stg_gui_laser_render( CEntity* ent )
   rtk_canvas_t* canvas = model->fig->canvas;
   stg_laser_data_t* laser = &ent->laser_data;
   
-  rtk_fig_t *fig = rtk_fig_create( canvas, NULL, STG_LAYER_DATA );
-  
-  rtk_fig_color_rgb32( fig, stg_lookup_color( "light blue" ) ); 
+  rtk_fig_t *fig = model->datafigs[STG_DATA_FIG_LASER].fig;
+  rtk_fig_clear( fig );
 
+  // reset the timer on our countdown
+  stg_gui_countdown_t* cd = &model->datafigs[STG_DATA_FIG_LASER];
+  model->win->countdowns = g_list_remove( model->win->countdowns, cd );
+
+     
   stg_pose_t pz;
   memcpy( &pz, &laser->pose, sizeof(stg_pose_t) );
   ent->LocalToGlobal( &pz );
@@ -930,51 +1007,61 @@ void stg_gui_laser_render( CEntity* ent )
     }
   
   rtk_fig_line( fig, 0.0, 0.0, lx, ly );
-  rtk_canvas_flash( canvas, fig, 2, 1 );
+
+  cd->timeleft = STG_GUI_COUNTDOWN_TIME_DATA;
+  model->win->countdowns = g_list_append( model->win->countdowns, cd );
 }
 
 // render the entity's rangers
 void stg_gui_rangers_render( CEntity* ent )
 {
-   stg_gui_model_t* model = ent->guimod;
-   rtk_canvas_t* canvas = model->fig->canvas;
+  stg_gui_model_t* model = ent->guimod;
+  rtk_canvas_t* canvas = model->fig->canvas;
+  
+  rtk_fig_t* fig = model->datafigs[STG_DATA_FIG_RANGER].fig;
 
-   rtk_fig_t* fig = rtk_fig_create( canvas, NULL, STG_LAYER_DATA );
-   
-   rtk_fig_color_rgb32( fig, stg_lookup_color(STG_SONAR_COLOR) );
+  rtk_fig_clear( fig );
 
-   for( int t=0; t < (int)ent->rangers->len; t++ )
-     {
-       stg_ranger_t* tran = &g_array_index( ent->rangers, 
-						stg_ranger_t, t );
-       stg_pose_t pz;
-       memcpy( &pz, &tran->pose, sizeof(stg_pose_t) );
-       ent->LocalToGlobal( &pz );       
-       
-       rtk_fig_arrow( fig, pz.x, pz.y, pz.a, tran->range, 0.05 );
-       
-       // this code renders triangles indicating the beam width
-       /*
-	 double hitx =  pz.x + tran->range * cos(pz.a); 
-       double hity =  pz.y + tran->range * sin(pz.a);       
-       double sidelen = tran->range / cos(tran->fov/2.0);
-       
-       double x1 = pz.x + sidelen * cos( pz.a - tran->fov/2.0 );
-       double y1 = pz.y + sidelen * sin( pz.a - tran->fov/2.0 );
-       double x2 = pz.x + sidelen * cos( pz.a + tran->fov/2.0 );
-       double y2 = pz.y + sidelen * sin( pz.a + tran->fov/2.0 );
+  // the world will clear this fig in a few ms
+  // so we reset the timer
+  stg_gui_countdown_t* cd = &model->datafigs[STG_DATA_FIG_RANGER];
+  model->win->countdowns = g_list_remove( model->win->countdowns, cd );
 
-       rtk_fig_line( fig, pz.x, pz.y, x1, y1 );
-       rtk_fig_line( fig, pz.x, pz.y, x2, y2 );
-       rtk_fig_line( fig, x1, y1, x2, y2 );
-       */
-
-       // this code renders the ranger's body
-       //rtk_fig_rectangle( fig, pz.x, pz.y, pz.a, 
-       //	  tran->size.x, tran->size.y, 1 );
-     }
-
-   rtk_canvas_flash( canvas, fig, 2, 1 );
+  for( int t=0; t < (int)ent->rangers->len; t++ )
+    {
+      stg_ranger_t* tran = &g_array_index( ent->rangers, 
+					   stg_ranger_t, t );
+      stg_pose_t pz;
+      memcpy( &pz, &tran->pose, sizeof(stg_pose_t) );
+      ent->LocalToGlobal( &pz );       
+      
+      rtk_fig_arrow( fig, pz.x, pz.y, pz.a, tran->range, 0.05 );
+      
+      // this code renders triangles indicating the beam width
+      /*
+	double hitx =  pz.x + tran->range * cos(pz.a); 
+	double hity =  pz.y + tran->range * sin(pz.a);       
+	double sidelen = tran->range / cos(tran->fov/2.0);
+	
+	double x1 = pz.x + sidelen * cos( pz.a - tran->fov/2.0 );
+	double y1 = pz.y + sidelen * sin( pz.a - tran->fov/2.0 );
+	double x2 = pz.x + sidelen * cos( pz.a + tran->fov/2.0 );
+	double y2 = pz.y + sidelen * sin( pz.a + tran->fov/2.0 );
+	
+	rtk_fig_line( fig, pz.x, pz.y, x1, y1 );
+	rtk_fig_line( fig, pz.x, pz.y, x2, y2 );
+	rtk_fig_line( fig, x1, y1, x2, y2 );
+      */
+      
+      // this code renders the ranger's body
+      //rtk_fig_rectangle( fig, pz.x, pz.y, pz.a, 
+      //	  tran->size.x, tran->size.y, 1 );
+    }
+  
+  
+  // if our countdown does not appear in the window's list, add it.
+   cd->timeleft = STG_GUI_COUNTDOWN_TIME_DATA;
+  model->win->countdowns = g_list_append( model->win->countdowns, cd );
 }
 
 int stg_gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg )
@@ -1087,6 +1174,7 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_PROP_NEIGHBORBOUNDS:
     case STG_PROP_NEIGHBORRETURN:
     case STG_PROP_LOS_MSG:
+    case STG_PROP_LOS_MSG_CONSUME:
     case STG_PROP_NAME:
     case STG_PROP_MATRIX_RENDER:
       break;

@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.115 2003-08-30 02:00:35 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.116 2003-09-02 05:17:25 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -51,7 +51,6 @@
 #include "world.hh" 
 #include "entity.hh"
 #include "raytrace.hh"
-
 #include "stage.h"
 
 extern GHashTable* global_model_table;
@@ -175,6 +174,9 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
 
   // we DO render in the matrix by default
   this->matrix_render = 1;
+
+  // an empty array in which to store messages recieved from our neighbors
+  this->received_msgs = g_array_new(FALSE,TRUE,sizeof(stg_los_msg_t) );
   
   // zero pose
   memset( &pose_local, 0, sizeof(pose_local) );
@@ -265,6 +267,8 @@ CEntity::~CEntity()
       ENT_DEBUG( "entity destruction - destroying child complete" );
     }
   
+  g_array_free( this->received_msgs, TRUE );
+
   // detatch myself from my parent
   g_node_unlink( this->node );
   g_node_destroy( this->node );
@@ -741,6 +745,7 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       break;
       
     case STG_PROP_LOS_MSG:
+    case STG_PROP_LOS_MSG_CONSUME:
       g_assert( (len == sizeof(stg_los_msg_t)) );	
       this->SendLosMessage( (stg_los_msg_t*)data );
       break;
@@ -801,8 +806,11 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 
 stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 {    
-//ENT_DEBUG2( "Getting prop %s (%d)", 
-  //       stg_property_string(ptype), ptype );
+  //ENT_DEBUG2( "Getting prop %s (%d)", 
+  //      stg_property_string(ptype), ptype );
+
+  printf( "Getting prop %s (%d)\n", 
+	  stg_property_string(ptype), ptype );
   
   stg_property_t* prop = stg_property_create();
   prop->id = this->id;
@@ -886,11 +894,41 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
       break;
       
     case STG_PROP_LOS_MSG:
-      prop = stg_property_attach_data( prop, 
-				       &this->last_received_msg,
-				       sizeof(this->last_received_msg));
+      puts( "getting los msg" );
+      if( this->received_msgs->len > 0 )
+	{
+	  puts( "getting head" );
+	  // return just the FIRST ITEM in the message array
+	  prop = stg_property_attach_data( prop, 
+					   this->received_msgs->data,
+					   sizeof(stg_los_msg_t) );
+	}
       break;
  
+    case STG_PROP_LOS_MSG_CONSUME:
+      puts( "getting los msg consume" );
+
+      printf( "message array contains %d messages\n", 
+	      this->received_msgs->len );
+
+      if( this->received_msgs->len > 0 )
+	{
+	  puts( "getting head" );
+	  // return just the FIRST ITEM in the message array
+	  prop = stg_property_attach_data( prop, 
+					   this->received_msgs->data,
+					   sizeof(stg_los_msg_t) );
+	  
+	  puts( "attached message" );
+	  
+	  this->received_msgs = g_array_remove_index(this->received_msgs, 0);
+
+	  puts( "consumed message" );
+	}
+      else
+	puts( "received messages too small!" );
+      break;
+      
     case STG_PROP_MOUSE_MODE:
       prop = stg_property_attach_data( prop, 
 				       &this->mouseable,
@@ -955,10 +993,6 @@ CEntity* StgEntityFromId( stg_id_t id )
 
 void CEntity::SendLosMessage( stg_los_msg_t* msg )
 {
-  //memcpy( &this->last_received_msg, msg, sizeof(stg_los_msg_t) );
-
-  PRINT_WARN1( "MESSAGE LENGTH %d", msg->len );
-  
   // sanity checking
   g_assert( msg );
   g_assert( msg->len < STG_LOS_MSG_MAX_LEN );
@@ -996,10 +1030,18 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
 	return;
       
       // ok the message gets through!
-      memcpy( &target->last_received_msg, msg, sizeof(stg_los_msg_t) );
+      stg_los_msg_t recv;
+      memcpy( &recv, msg, sizeof(recv) );
+      recv.id = this->id;
+      target->received_msgs = 
+	g_array_append_vals( target->received_msgs, &recv, 1 );
       
       printf( "target %d received message\n", msg->id ); 
-      stg_los_msg_print( &target->last_received_msg );
+
+      puts( "target's message array:" );
+      for( int i=0; i<(int)target->received_msgs->len; i++ )
+	stg_los_msg_print( &g_array_index( target->received_msgs, 
+					   stg_los_msg_t, i ) );
       
       stg_gui_los_msg_recv( target, this, msg );
     }
@@ -1038,13 +1080,21 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
 	  if( OcclusionTest(target) )
 	    continue;
 	  
-	  // ok the message gets through!
-	  memcpy( &target->last_received_msg, msg, sizeof(stg_los_msg_t) );
+	  // ok the message gets through! add it to the receiver's
+	  // list, with our id poked in.
+	  stg_los_msg_t recv;
+	  memcpy( &recv, msg, sizeof(recv) );
+	  recv.id = this->id;
+	  g_array_append_vals( target->received_msgs, &recv, 1 );
 	  
 	  printf( "target %d received message\n", msg->id ); 
-	  stg_los_msg_print( &target->last_received_msg );
+
+	  puts( "target's message array:" );
+	  for( int i=0; i<(int)target->received_msgs->len; i++ )
+	    stg_los_msg_print( &g_array_index( target->received_msgs, 
+					       stg_los_msg_t, i ) );
 	  
-	  stg_gui_los_msg_recv( target, this, msg ); 
+	  stg_gui_los_msg_recv( target, this, msg );	  
 	}
     }
 }

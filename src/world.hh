@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.27 2003-08-30 02:00:39 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.28 2003-09-02 05:17:26 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -68,6 +68,7 @@ int stg_world_shutdown( stg_world_t* world );
 
 CMatrix* stg_world_create_matrix( stg_world_t* world );
 void stg_world_destroy_matrix( stg_world_t* world );
+
 
 #ifdef DEBUG
 #define WORLD_DEBUG(W,S) printf("[%d %s %p] "S" (%s %s)\n",W->id,W->name->str,W,__FILE__,__FUNCTION__);

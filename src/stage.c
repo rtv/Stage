@@ -65,6 +65,7 @@ const char* stg_property_string( stg_prop_id_t id )
     case STG_PROP_NOSE: return "STG_PROP_NOSE";break;
     case STG_PROP_BORDER: return "STG_PROP_BORDER";break;
     case STG_PROP_LOS_MSG: return "STG_PROP_LOS_MSG";break;
+    case STG_PROP_LOS_MSG_CONSUME: return "STG_PROP_LOS_MSG_CONSUME";break;
     case STG_PROP_MOUSE_MODE: return "STG_PROP_MOUSE_MODE";break;
     case STG_PROP_MATRIX_RENDER: return "STG_PROP_MATRIX_RENDER";break;
 	
@@ -543,8 +544,15 @@ void stg_los_msg_print( stg_los_msg_t* msg )
 int stg_model_send_los_msg(  stg_client_t* cli, stg_id_t id, 
 			     stg_los_msg_t *msg )
 {
+  stg_prop_id_t propid;
+
+  if( msg->consume )
+    propid = STG_PROP_LOS_MSG_CONSUME;
+  else
+    propid = STG_PROP_LOS_MSG;
+
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_LOS_MSG,
+					     propid,
 					     STG_SETGET,
 					     msg,sizeof(stg_los_msg_t));
   
