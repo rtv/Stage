@@ -46,16 +46,13 @@ void CatchSigPipe( int signo )
 
 void CWorld::PrintTruth( stage_truth_t &truth )
 {
-  printf( "[%d] %s ID:(%s:%d,%d,%d)\tPID:(%d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\techo: %d\n",
-	  truth.stage_id,
+  printf( "[%d:%d] %s ID:(%s:%d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\techo: %d\n",
+	  truth.stage_id, truth.parent_id,
 	  StringType( truth.stage_type ),
 	  truth.hostname,
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
-	  truth.parent.port, 
-	  truth.parent.type, 
-	  truth.parent.index,
 	  truth.x, truth.y, truth.th,
 	  truth.w, truth.h,
 	  truth.echo_request );

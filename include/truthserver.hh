@@ -42,7 +42,6 @@ typedef struct
   char hostname[ HOSTNAME_SIZE ];
   
   player_id_t id;
-  player_id_t parent;
   
   // stage will echo these truths if this is true
   bool echo_request; 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -770,19 +770,6 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   truth->green = (uint16_t)m_color.green;
   truth->blue  = (uint16_t)m_color.blue;
 
-  if( m_parent_object )
-    {
-      truth->parent.port = m_parent_object->m_player_port;
-      truth->parent.type = m_parent_object->m_player_type;
-      truth->parent.index = m_parent_object->m_player_index;
-    }
-  else
-    {
-      truth->parent.port = 0;
-      truth->parent.type = 0;
-      truth->parent.index = 0;
-    }
-  
   double x, y, th;
   GetGlobalPose( x,y,th );
   

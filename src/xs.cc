@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.33 2001-09-28 01:47:10 vaughan Exp $
+ * $Id: xs.cc,v 1.34 2001-09-28 18:22:50 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -186,15 +186,12 @@ void PrintSendBuffer( char* send_buf, size_t len )
 
 void PrintStageTruth( stage_truth_t &truth )
 {
-  printf( "ID: %d (%s:%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\t color: [%d,%d,%d]\t echo: %d\n", 
-	  truth.stage_id,
+  printf( "ID: [%d:%d] (%s:%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\t color: [%d,%d,%d]\t echo: %d\n", 
+	  truth.stage_id, truth.parent_id,
 	  truth.hostname,
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
-	  truth.parent.port, 
-	  truth.parent.type, 
-	  truth.parent.index,
 	  truth.x, truth.y, truth.th,
 	  truth.w, truth.h,
 	  truth.red, truth.green, truth.blue,
@@ -205,16 +202,13 @@ void PrintStageTruth( stage_truth_t &truth )
 
 void CXGui::PrintMetricTruth( int stage_id, xstruth_t &truth )
 {
-  printf( "%d:%s\t(%s:%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
-	  stage_id,
+  printf( "[%d:%d] %s\t(%s:%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
+	  stage_id, truth.parent_id,
 	  StageNameOf( truth ),
 	  truth.hostname,
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
-	  truth.parent.port, 
-	  truth.parent.type, 
-	  truth.parent.index,
 	  truth.x, truth.y, truth.th,
 	  truth.w, truth.h );
   
@@ -223,17 +217,14 @@ void CXGui::PrintMetricTruth( int stage_id, xstruth_t &truth )
 
 void CXGui::PrintMetricTruthVerbose( int stage_id, xstruth_t &truth )
 {
-  printf( "stage: %p:%s\tplayer: (%s:%4d,%s,%d)\tparent(%4d,%s,%d)"
+  printf( "stage: [%d:%d] %s\tplayer: (%s:%4d,%s,%d)"
 	  "\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\t\tColor: [%d,%d,%d]\n", 
-	  (int*)stage_id,
+	  stage_id, truth.parent_id,
 	  StageNameOf( truth ),
 	  truth.hostname,
 	  truth.id.port,
 	  PlayerNameOf( truth.id ), 
 	  truth.id.index,
-	  truth.parent.port, 
-	  PlayerNameOf( truth.parent ), 
-	  truth.parent.index,
 	  truth.x, truth.y, truth.th,
 	  truth.w, truth.h,
 	  truth.color.red, truth.color.green, truth.color.blue );
@@ -309,8 +300,6 @@ static void* TruthReader( void*)
       //PrintStagePose( pose );
       //}
 
-     	  
-
       //printf( "XS: received %d poses: \n", num_poses );
       
       for( int p=0; p<num_poses; p++ )
@@ -327,12 +316,6 @@ static void* TruthReader( void*)
 	  //pthread_mutex_unlock( &incoming_mutex );
 	}
     }
-
-    /* shouldn't ever get here, but just to be tidy */
-
-  //     delete[]  buffer;
-      
-    exit(0);
 }
 
 
@@ -598,7 +581,7 @@ bool CXGui::DownloadObjects( int sockfd, int num_objects )
 	    recv += r;
 	}
       
-      //PrintStageTruth( truth );
+      PrintStageTruth( truth );
 
       if( truth.echo_request )
 	{
@@ -820,8 +803,8 @@ void CXGui::ImportTruth( stage_truth_t &struth )
   xstruth_t truth;
   
   int stage_id = truth.stage_id = struth.stage_id; // this is the map key
-  
   truth.parent_id = struth.parent_id;
+
   strncpy( truth.hostname, struth.hostname, HOSTNAME_SIZE );
   
   truth.stage_type = struth.stage_type;
@@ -856,10 +839,6 @@ void CXGui::ImportTruth( stage_truth_t &struth )
   truth.id.type = struth.id.type;
   truth.id.index = struth.id.index;
   
-  truth.parent.port = struth.parent.port;
-  truth.parent.type = struth.parent.type;
-  truth.parent.index = struth.parent.index;
-  
   truth.x = (double)struth.x / 1000.0;
   truth.y = (double)struth.y / 1000.0;
   truth.w = (double)struth.w / 1000.0;
@@ -875,17 +854,6 @@ void CXGui::ImportTruth( stage_truth_t &struth )
   //XFlush( display );// reduces flicker
   
   truth_map[ stage_id ] = truth; // update the database with it
-  
-  //puts( "RESULT: " );
-  //for( TruthMap::iterator it = truth_map.begin();
-  //   it != truth_map.end(); it++ )
-  //  {
-  //    cout << it->first << " -- ";
-  //    PrintMetricTruth( stage_id, it->second );
-  //  }
-  //  puts( "" );
-
-  //pthread_mutex_unlock( &incoming_mutex );
 }
 
 // recursively render this object and any of it's children
@@ -917,6 +885,7 @@ void CXGui::HandleIncomingQueue( void )
       //printf( "POSE ID %d MATCHES: ", pose.stage_id );
       //PrintMetricTruth( pose.stage_id, truth );
 
+      puts( "undraw" );
       RenderFamily( truth ); // undraw it
       
       // update it
@@ -924,9 +893,13 @@ void CXGui::HandleIncomingQueue( void )
       truth.y = pose.y / 1000.0;
       truth.th = DTOR(pose.th);
 
+      puts( "\nredraw" );
+
       RenderFamily( truth ); // redraw it
 
       XFlush( display );// reduces flicker
+
+      puts( "" );
 
       truth_map[ pose.stage_id ] = truth; // update the database with it
     }
@@ -1402,7 +1375,7 @@ xstruth_t* CXGui::NearestEntity( double x, double y )
       //printf( " dist: %.2f\n", dist );
       //fflush( stdout );
  
-      if( dist < nearDist && it->second.parent.type == 0 ) 
+      if( dist < nearDist && it->second.parent_id == -1 ) 
     	{
     	  nearDist = dist;
     	  close = &(it->second); // the id of the closest entity so far
@@ -2078,7 +2051,8 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableLaser )
 			{
 			  CGraphicLaserProxy* glp = 
-			    new CGraphicLaserProxy(this,cli,sibling.id.index,'r' );
+			    new CGraphicLaserProxy(this,ent->stage_id,
+						   cli,sibling.id.index,'r' );
 			
 			  graphicProxies[num_proxies] = glp;
 			  playerProxies[num_proxies++] = glp;
@@ -2089,8 +2063,8 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableSonar )
 			{
 			  CGraphicSonarProxy* gsp =
-			    new CGraphicSonarProxy( this, cli, sibling.id.index, 'r' );   
-			    
+			    new CGraphicSonarProxy( this, ent->stage_id,
+						    cli, sibling.id.index, 'r' );   
 			  graphicProxies[num_proxies] = gsp; 
 			  playerProxies[num_proxies++] = gsp;
 			}
@@ -2100,7 +2074,8 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableGps )
 			{
 			  CGraphicGpsProxy* ggp = 
-			    new CGraphicGpsProxy( this, cli, sibling.id.index, 'r' );
+			    new CGraphicGpsProxy( this, ent->stage_id,
+						  cli, sibling.id.index, 'r' );
 			    
 			  graphicProxies[num_proxies] = ggp;
 			  playerProxies[num_proxies++] = ggp;
@@ -2111,8 +2086,8 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableVision )
 			{
 			  CGraphicVisionProxy* gvp = 
-			    new CGraphicVisionProxy( this, cli, sibling.id.index, 'r' );
-			    
+			    new CGraphicVisionProxy( this, ent->stage_id,
+						     cli, sibling.id.index, 'r' );
 			  graphicProxies[num_proxies] = gvp;
 			  playerProxies[num_proxies++] = gvp;
 			}
@@ -2122,7 +2097,8 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enablePtz )
 			{
 			  CGraphicPtzProxy* gpp = 
-			    new CGraphicPtzProxy( this, cli, sibling.id.index, 'r' );
+			    new CGraphicPtzProxy( this, ent->stage_id,
+						  cli, sibling.id.index, 'r' );
 			    
 			  graphicProxies[num_proxies] = gpp;
 			  playerProxies[num_proxies++] = gpp;
@@ -2133,8 +2109,8 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableLaserBeacon )
 			{
 			  CGraphicLaserBeaconProxy* glbp = 
-			    new CGraphicLaserBeaconProxy(this,cli,sibling.id.index,'r');
-			    
+			    new CGraphicLaserBeaconProxy(this,ent->stage_id,
+							 cli,sibling.id.index,'r');
 			  graphicProxies[num_proxies] = glbp;
 			  playerProxies[num_proxies++] = glbp;
 			}

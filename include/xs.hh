@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.14 2001-09-28 01:47:09 vaughan Exp $
+ * $Id: xs.hh,v 1.15 2001-09-28 18:22:49 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -132,7 +132,7 @@ public:
     return (((r << 8) | g) << 8) | b;
   };
 
-  bool PoseFromId( char* host, int port, int device, int index, 
+  bool PoseFromId( int stage_id,  
 		   double& x, double& y, double& th, unsigned long& col );
     
   void HandlePlayers( void );
@@ -256,11 +256,13 @@ class GraphicProxy
 public:
   unsigned long pixel;
   CXGui* win;
+  int stage_id; // the unique id for this device
 
-  GraphicProxy( CXGui* w )
+  GraphicProxy( CXGui* w, int i )
   {
     win = w;
     pixel = 0;
+    stage_id = i;
   }
 
   // subclasses must provide these functions
@@ -282,9 +284,9 @@ protected:
   int samples;
   
 public:
-  CGraphicLaserProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+  CGraphicLaserProxy( CXGui* w, int id, PlayerClient* pc, unsigned short index, 
 		      unsigned char access='c'):
-    LaserProxy(pc,index,access), GraphicProxy( w ) 
+    LaserProxy(pc,index,access), GraphicProxy( w, id ) 
   {
     samples = 0;
     memset( pts, 0, PLAYER_NUM_LASER_SAMPLES * sizeof( unsigned short ) );
@@ -309,9 +311,9 @@ protected:
   DPoint startpts[ PLAYER_NUM_SONAR_SAMPLES ];
   
 public:
-  CGraphicSonarProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+  CGraphicSonarProxy( CXGui* w, int id, PlayerClient* pc, unsigned short index, 
 		      unsigned char access='c'):
-    SonarProxy(pc,index,access), GraphicProxy( w )
+    SonarProxy(pc,index,access), GraphicProxy( w, id )
   {
     memset( startpts, 0, PLAYER_NUM_SONAR_SAMPLES * sizeof( unsigned short ) );
     memset( endpts, 0, PLAYER_NUM_SONAR_SAMPLES * sizeof( unsigned short ) );
@@ -339,9 +341,9 @@ protected:
     
 public:
   
-  CGraphicGpsProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+  CGraphicGpsProxy( CXGui* w, int id, PlayerClient* pc, unsigned short index, 
 		    unsigned char access='c'):
-    GpsProxy(pc,index,access), GraphicProxy( w )
+    GpsProxy(pc,index,access), GraphicProxy( w, id )
   {
     drawx = drawy = -99999;
     memset( buf, 0, 64 );
@@ -362,9 +364,9 @@ class CGraphicVisionProxy : public VisionProxy, public GraphicProxy
 {
 public:
   
-  CGraphicVisionProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+  CGraphicVisionProxy( CXGui* w, int id, PlayerClient* pc, unsigned short index, 
 		       unsigned char access='c'):
-    VisionProxy(pc,index,access), GraphicProxy( w ) 
+    VisionProxy(pc,index,access), GraphicProxy( w, id ) 
   {
     int foo = 0;
     foo++;
@@ -393,9 +395,9 @@ protected:
 
 public:
   
-  CGraphicPtzProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+  CGraphicPtzProxy( CXGui* w, int id, PlayerClient* pc, unsigned short index, 
 		       unsigned char access='c'):
-    PtzProxy(pc,index,access), GraphicProxy( w ) 
+    PtzProxy(pc,index,access), GraphicProxy( w, id ) 
   {
     memset( pts, 0, 3 * sizeof( DPoint ) );
   };
@@ -422,9 +424,10 @@ protected:
   
 public:
   
-  CGraphicLaserBeaconProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+  CGraphicLaserBeaconProxy( CXGui* w, int id, 
+			    PlayerClient* pc, unsigned short index, 
 			    unsigned char access='c'):
-    LaserbeaconProxy(pc,index,access) , GraphicProxy( w )
+    LaserbeaconProxy(pc,index,access) , GraphicProxy( w, id )
   {
     origin.x = origin.y = 0;
     stored = 0;
