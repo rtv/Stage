@@ -22,7 +22,7 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.8 2002-06-09 06:31:15 rtv Exp $
+ * CVS info: $Id: colors.hh,v 1.9 2002-06-10 04:57:48 rtv Exp $
  */
 
 #ifndef _STAGECOLORS_H
@@ -41,15 +41,16 @@ typedef uint32_t StageColor;
 #define PTZ_COLOR  "magenta"
 #define PUCK_COLOR  "green"
 #define BOX_COLOR  "yellow"
-#define LBD_COLOR  "gray"
+#define LBD_COLOR  "green"
 #define MISC_COLOR  "gray"
 #define GPS_COLOR  "gray"
 #define VISION_COLOR  "gray"
 #define PLAYER_COLOR  "black"
 #define LASERBEACON_COLOR  "cyan"
+#define VISIONBEACON_COLOR  "red"
 #define WALL_COLOR "black"
 #define IDAR_COLOR "DarkRed"
-#define DESCARTES_COLOR "green"
+#define DESCARTES_COLOR "DarkRed"
 
 // Look up the color in a database.  (i.e. transform color name to
 // color value).  If the color is not found in the database, a bright

@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.56 2002-06-09 18:37:06 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.57 2002-06-10 04:57:49 rtv Exp $
  */
 
 #define DEBUG
@@ -394,8 +394,6 @@ void CLaserDevice::RtkUpdate()
   
   //gth -= M_PI / 2.0;
   
-  player_laser_data_t data;
-  
   // if a client is subscribed to this device
   if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
   {
@@ -408,7 +406,6 @@ void CLaserDevice::RtkUpdate()
       double gx, gy, gth;
       GetGlobalPose(gx, gy, gth);
 
-      rtk_fig_origin( this->scan_fig, gx, gy, gth - M_PI/2.0 );
       rtk_fig_origin( this->scan_fig, gx, gy, gth - M_PI/2.0 );
       
       // we got it, so parse out the data and display it

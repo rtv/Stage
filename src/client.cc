@@ -28,6 +28,7 @@
 
 //#include "world.hh"
 //extern CWorld* world;
+void PrintUsage(); // defined in main.cc
 
 void ClientCatchSigPipe( int signo )
 {
@@ -47,16 +48,32 @@ CStageClient::CStageClient( int argc, char** argv )
     // get the  number, overriding the default
     if( strcmp( argv[a], "-c" ) == 0 )
     {
-      // if -c is the last argument, assume localhost
+      // if -c is the last argument the cmd line is bad
       if( a == argc-1 )
-        strcpy( m_remotehost, "localhost" );
-      else // copy in the next argument
-        strcpy( m_remotehost, argv[a+1]);
-	  
-      printf( "[Client of %s]", m_remotehost );
+	{
+	  PrintUsage();
+	  exit(0); // bail
+	}
+     
+      // the next argument is the hostname
+      strcpy( m_remotehost, argv[a+1]);
+      
       a++;
     }
+
+    else if( strcmp( argv[a], "-cl" ) == 0 )
+    {
+      // -cl means client of localhost
+      strcpy( m_remotehost, "localhost" );
+      
+      a++;
+    }
+
   }
+
+  // reassuring console output
+  printf( "[Connecting to %s:%d]", m_remotehost, m_port );
+  puts( "" );
 
   // clients don't use a device directory - nullify the string
   m_device_dir[0] = 0;
@@ -83,7 +100,7 @@ CStageClient::CStageClient( int argc, char** argv )
   m_pose_connections[0].fd = socket(AF_INET, SOCK_STREAM, 0);
   m_pose_connections[0].events = POLLIN; // notify me when data is available
   
-  printf( "POLLFD = %d\n", m_pose_connections[0].fd );
+  //  printf( "POLLFD = %d\n", m_pose_connections[0].fd );
 
   if( m_pose_connections[0].fd < 0 )
   {

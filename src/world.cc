@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.98 2002-06-09 06:31:16 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.99 2002-06-10 04:57:49 rtv Exp $
  */
 
 //#undef DEBUG
@@ -149,9 +149,6 @@ CWorld::CWorld( int argc, char** argv )
                 m_hostname );
   }
   
-  // just to be reassuring, print the host details
-  printf( "[Host %s(%s)]",
-          m_hostname_short, inet_ntoa( m_hostaddr ) );
   
   m_send_idar_packets = false;
 
@@ -173,7 +170,11 @@ CWorld::CWorld( int argc, char** argv )
  
   // give the command line a chance to override the default values
   // we just set
-  ParseCmdLine( argc, argv );
+  if( !ParseCmdLine( argc, argv )) 
+  {
+    quit = true;
+    return;
+  }
 }
 
 
@@ -199,7 +200,7 @@ int CWorld::CountDirtyOnConnection( int con )
   //puts( "Counting dirty properties" );
   // count the number of dirty properties on this connection 
   for( int i=0; i < GetEntityCount(); i++ )
-    for( int p=0; p < MAX_NUM_PROPERTIES; p++ )
+    for( int p=0; p < ENTITY_LAST_PROPERTY; p++ )
     {  
       // is the entity marked dirty for this connection & property?
       if( GetEntity(i)->m_dirty[con][p] ) 
@@ -217,14 +218,14 @@ int CWorld::CountDirtyOnConnection( int con )
 // Parse the command line
 bool CWorld::ParseCmdLine(int argc, char **argv)
 {
-  for( int a=1; a<argc-1; a++ )
-  {
+  for( int a=1; a<argc; a++ )
+  {   
     // USAGE
     if( (strcmp( argv[a], "-?" ) == 0) || 
         (strcmp( argv[a], "--help") == 0) )
     {
       PrintUsage();
-      return false;
+      exit(0); // bail right here
     }
       
     // LOGGING
@@ -255,12 +256,6 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
       this->enable_gui = false;
       printf( "[No GUI]" );
     }
-    else if( strcmp( argv[a], "+g" ) == 0 )
-    {
-      this->enable_gui = true;
-      printf( "[GUI]" );
-    }
-      
       
     // SET GOAL REAL CYCLE TIME
     // Stage will attempt to update at this speed

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.40 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS: $Id: main.cc,v 1.41 2002-06-10 04:57:49 rtv Exp $
  */
 
 #include <unistd.h>
@@ -54,26 +54,27 @@ static CWorld *world = NULL;
 // Print the usage string
 void PrintUsage( void )
 {
-  printf("\nUsage: stage [options] WORLDFILE\n"
+  printf("\nUsage: stage [options] <worldfile>\n"
 	 "Options: <argument> [default]\n"
-	 " -s\t\tRun as a Stage server (default)"
-	 " -c\t\tRun as a client to a Stage server on localhost"
-	 " -c <hostname>\t\tRun as a client to a Stage server on hostname"
-	 " -g\t\tDo not start the X GUI\n"
-	 " +g\t\tDo start the X GUI\n"
-	 " -p\t\tDo not start Player\n"
-	 " +p\t\tDo start Player\n"
+	 " -s\t\tRun as a Stage server (default)\n"
+	 " -p <portnum>\tSet the server port [6601]\n"
+	 " -c <hostname>\tRun as a client to a Stage server on hostname\n"
+	 " -cl\t\tRun as a client to a Stage server on localhost\n"
+	 " -g\t\tDo not start the X11 GUI\n"
+	 " -n \t\tDo not start Player\n"
+	 " -q\t\tDisable console status output\n"
+	 " -l <filename>\tLog the position of all objects into <filename>.\n"
 	 " -v <float>\tSet the simulated time increment per cycle [0.1sec].\n"
 	 " -u <float>\tSet the desired real time per cycle [0.1 sec].\n"
-	 " -l <filename>\tLog the position of all objects into the"
-	 " named file.\n"
-	 " -p <portnum>\tSet the server port\n"
-	 " -f\t\tRun as fast as possible; don't try to match real time\n"
+	 " -f \t\tRun as fast as possible; don't try to match real time\n"
 	 //" -r <IP:port>\tSend sensor data to this address in RTP format\n"
 	 //#ifdef HRL_HEADERS
 	 //" -i\t\tSend IDAR messages to XS (hrlstage only)\n"
 	 //#endif
 	 "Command-line options override any configuration file equivalents.\n"
+	 "\n"
+	 "Richard Vaughan, Andrew Howard, Brian Gerkey and contributors 2000-2002\n"
+	 "Released under the GNU General Public License.\n"
 	 "\n"
 	 );
 }
@@ -109,6 +110,8 @@ int main(int argc, char **argv)
   // hello world
   printf("\n** Stage  v%s ** \n", (char*) VERSION);
 
+  // check the command line for the help request
+
 #ifdef INCLUDE_RTK2
   // Initialise rtk if we are using it
   rtk_init(&argc, &argv);
@@ -118,17 +121,13 @@ int main(int argc, char **argv)
   
   // CStageServer and CStageClient are subclasses of CStageIO and CWorld
   // constructing them does most of the startup work.
-  
   // check the command line for the '-c' option that makes this a client
   for( int a=1; a<argc; a++ )
   {
     PRINT_DEBUG2( "argv[%d] = %s\n", a, argv[a] );
       
-    if( strcmp( argv[a], "-c" ) == 0 )
-    {
-      printf( "[Client]" );
+    if( strcmp( argv[a], "-c" ) == 0 ||  strcmp( argv[a], "-cl" ) == 0)
       assert( world = new CStageClient( argc, argv ) );
-    }
   }
   
   // if we're not a client, we must be a server
@@ -167,7 +166,7 @@ int main(int argc, char **argv)
     world->Update(); // update the simulation
     
     //sleep( 10 );
-    usleep( 500000 );
+    //usleep( 500000 );
   }
 
   // clean up and exit

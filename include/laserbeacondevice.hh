@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.10 $
+//  $Author: rtv $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -74,6 +74,22 @@ class CLBDDevice : public CEntity
   public: void DrawData(RtkUiDrawData *event);
 
 #endif
+
+#ifdef INCLUDE_RTK2
+
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
+
+  // Finalise the rtk gui
+  protected: virtual void RtkShutdown();
+
+  // Update the rtk gui
+  protected: virtual void RtkUpdate();
+  
+  // For drawing the sonar beams
+  private: rtk_fig_t *beacon_fig;
+#endif
+
 };
 
 #endif

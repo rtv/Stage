@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.31 $
+//  $Author: rtv $
+//  $Revision: 1.32 $
 //
 // Usage:
 //  (empty)
@@ -86,6 +86,11 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   m_zero_thresh = m_one_thresh = 60;
 
   m_laser_subscribedp = false;
+
+#ifdef INCLUDE_RTK2
+  this->beacon_fig = NULL;
+#endif
+
 }
 
 
@@ -360,3 +365,89 @@ void CLBDDevice::DrawData(RtkUiDrawData *event)
 
 
 
+#ifdef INCLUDE_RTK2
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CLBDDevice::RtkStartup()
+{
+  CEntity::RtkStartup();
+  
+  // Create a figure representing this object
+  this->beacon_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+
+  // Set the color
+  rtk_fig_color_rgb32(this->beacon_fig, this->color);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CLBDDevice::RtkShutdown()
+{
+  // Clean up the figure we created
+  rtk_fig_destroy(this->beacon_fig);
+
+  CEntity::RtkShutdown();
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the rtk gui
+void CLBDDevice::RtkUpdate()
+{
+  CEntity::RtkUpdate();
+ 
+  int style = 0;
+  
+  rtk_fig_clear(this->beacon_fig);
+  
+  // if a client is subscribed to this device
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
+  {
+    player_laserbeacon_data_t data;
+    
+    // attempt to get the right size chunk of data from the mmapped buffer
+    if( GetData( &data, sizeof(data) ) == sizeof(data) )
+    { 
+      char text[16];
+
+      // Get global pose
+      double gx, gy, gth;
+      GetGlobalPose(gx, gy, gth);
+
+      rtk_fig_origin( this->beacon_fig, gx, gy, gth );
+
+      int beacon_count = (int)ntohs(data.count);
+      for( int b=0; b < beacon_count; b++ )
+	{
+	  uint8_t id = data.beacon[b].id;
+	  uint16_t range_mm = ntohs(data.beacon[b].range);
+	  int16_t bearing_deg = ntohs(data.beacon[b].bearing);
+	  int16_t orient_deg = ntohs(data.beacon[b].orient);
+
+	  double range = (double)range_mm / 1000.0;
+	  double bearing = DTOR((double)bearing_deg);
+
+	  double px = range * cos(bearing);
+	  double py = range * sin(bearing);
+	  double pa = DTOR((double)orient_deg);
+
+	  rtk_fig_line( this->beacon_fig, 0, 0, px, py );	
+
+	  // TODO: use the configuration info to determine beacon size
+	  // for now we use these canned values
+	  double wx = 0.05;
+	  double wy = 0.40;
+	  
+	  rtk_fig_rectangle(this->beacon_fig, px, py, pa, wx, wy, 0);
+	  rtk_fig_arrow(this->beacon_fig, px, py, pa, wy, 0.10);
+	  snprintf(text, sizeof(text), "  %d", id);
+	  rtk_fig_text(this->beacon_fig, px, py, pa, text);
+	}  
+    }
+    //else
+    //  puts( "subscribed but no data avail!!!!!!!!!!!!!!" );
+  }
+}
+#endif

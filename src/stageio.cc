@@ -155,7 +155,7 @@ int CStageIO::WriteProperty( int fd, stage_property_t* prop,
   assert( data );
   assert( len > 0 ); // no point sending a property with no data
   assert( prop->len == len ); // data size should match header len field
-  assert( prop->property < MAX_NUM_PROPERTIES );
+  assert( prop->property < ENTITY_LAST_PROPERTY );
 
   //puts( "attempting to write a property" );
   
@@ -187,7 +187,7 @@ int CStageIO::ReadProperty( int fd, stage_property_t* prop,
   //printf( "expecting %d bytes of data\n", prop->len );
 
   // validity checks 
-  assert( prop->property < MAX_NUM_PROPERTIES );
+  assert( prop->property < ENTITY_LAST_PROPERTY );
   assert( prop->len > 0 );
   assert( prop->len < MAX_PROPERTY_DATA_LEN );
   assert( prop->len < len ); // must be enough space for the data
@@ -478,7 +478,7 @@ void CStageIO::Write( void )
 	    
         // loop through the entities again, this time sending the properties
         for( i=0; i < GetEntityCount(); i++ )
-          for( p=0; p < MAX_NUM_PROPERTIES; p++ )
+          for( p=0; p < ENTITY_LAST_PROPERTY; p++ )
           {  
             //printf( "Inspecting entity %d property %d connection %d\n",
             //  i, p, t );
@@ -494,7 +494,7 @@ void CStageIO::Write( void )
               if( datalen == 0 )
               {
                 PRINT_DEBUG1( "READ EMPTY PROPERTY %d\n",
-                              p );
+		            p );
               }
               else
               {

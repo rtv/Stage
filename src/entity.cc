@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.63 2002-06-09 06:31:16 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.64 2002-06-10 04:57:49 rtv Exp $
  */
 
 #include <math.h>
@@ -355,9 +355,6 @@ bool CEntity::Startup( void )
   m_info_io->player_id.index = m_player.index;
   m_info_io->player_id.code = m_player.code;
   m_info_io->subscribed = 0;
-
-  // we keep a seperate copy of the subs counter.
-  //m_player_subs = 0;
 
   // create the PlayerQueue entitys that we'll use to access requests and
   // replies.  pass in the chunks of memory that are already mmap()ed
@@ -918,6 +915,9 @@ size_t CEntity::GetConfig(void** client, void* config, size_t len )
     return(0);
   }
 
+  // tell the server to export this config to anyone that needs it
+  this->SetDirty( PropConfig, 1 );
+
   Unlock();
   return(size);
 }
@@ -927,6 +927,9 @@ size_t CEntity::PutReply(void* client, unsigned short type,
 {
   double seconds;
   struct timeval curr;
+  
+  // tell the server to export this reply to anyone that needs it
+  this->SetDirty( PropReply, 1 );
 
   if(ts)
     curr = *ts;
@@ -1075,7 +1078,7 @@ bool CEntity::Unlock( void )
 
 void CEntity::SetDirty( int con, char v )
 {
-  for( int i=0; i<MAX_NUM_PROPERTIES; i++ )
+  for( int i=0; i< ENTITY_LAST_PROPERTY; i++ )
     SetDirty( con, (EntityProperty)i, v );
 }
 
@@ -1093,7 +1096,7 @@ void CEntity::SetDirty( int con, EntityProperty prop, char v )
 void CEntity::SetDirty( char v )
 {
   memset( m_dirty, v, 
-	  sizeof(char) * MAX_POSE_CONNECTIONS * MAX_NUM_PROPERTIES );
+	  sizeof(char) * MAX_POSE_CONNECTIONS * ENTITY_LAST_PROPERTY );
 };
 
 int CEntity::SetProperty( int con, EntityProperty property, 
@@ -1104,27 +1107,33 @@ int CEntity::SetProperty( int con, EntityProperty property,
   assert( len < MAX_PROPERTY_DATA_LEN );
   
   switch( property )
-  {
+    {
     case PropPlayerSubscriptions:
       PRINT_DEBUG1( "PLAYER SUBSCRIPTIONS %d", *(int*) value);
       
       if( m_info_io )
-      {
-        Lock();
-        m_info_io->subscribed = *(int*)value;
-        Unlock();
-      }      
+	{
+	  Lock();
+	  m_info_io->subscribed = *(int*)value;
+	  Unlock();
+	}      
       break;
-
+      
     case PropParent:
       // get a pointer to the (*value)'th entity - that's our new parent
       this->m_parent_entity = m_world->GetEntity( *(int*)value );     
       break;
     case PropSizeX:
       memcpy( &size_x, (double*)value, sizeof(size_x) );
+      // force the device to re-render itself
+      RtkShutdown();
+      RtkStartup();
       break;
     case PropSizeY:
       memcpy( &size_y, (double*)value, sizeof(size_y) );
+      // force the device to re-render itself
+      RtkShutdown();
+      RtkStartup();
       break;
     case PropPoseX:
       memcpy( &local_px, (double*)value, sizeof(local_px) );
@@ -1143,12 +1152,21 @@ int CEntity::SetProperty( int con, EntityProperty property,
       break;
     case PropName:
       strcpy( name, (char*)value );
+      // force the device to re-render itself
+      RtkShutdown();
+      RtkStartup();
       break;
     case PropColor:
       memcpy( &color, (StageColor*)value, sizeof(color) );
+      // force the device to re-render itself
+      RtkShutdown();
+      RtkStartup();
       break;
     case PropShape:
       memcpy( &shape, (StageShape*)value, sizeof(shape) );
+      // force the device to re-render itself
+      RtkShutdown();
+      RtkStartup();
       break;
     case PropLaserReturn:
       memcpy( &laser_return, (LaserReturn*)value, sizeof(laser_return) );
@@ -1179,11 +1197,21 @@ int CEntity::SetProperty( int con, EntityProperty property,
     case PropData:
       PutData( value, len );
       break;
-    case PropConfig:
-      //PutConfig( value, len );
+    case PropConfig: // copy the  playerqueue's external memory chunk
+      { 
+	Lock();
+	size_t len = m_config_len * sizeof(playerqueue_elt_t);
+	memcpy( m_config_io, value, len ); 
+	Unlock();
+      }
       break;
     case PropReply:
-      //PutReply( value, len );
+      { 
+	Lock();
+	size_t len = m_reply_len * sizeof(playerqueue_elt_t);
+	memcpy( m_reply_io, value, len ); 
+	Unlock();
+      }
       break;
 
     default:
@@ -1304,10 +1332,22 @@ int CEntity::GetProperty( EntityProperty property, void* value )
       retval = GetData( value, m_data_len );
       break;
     case PropConfig:
-      //retval = GetConfig( value );
+      { 
+	Lock();
+	size_t len = m_config_len * sizeof(playerqueue_elt_t);
+	memcpy( value, m_config_io, len );
+	retval = len; 
+	Unlock();
+      }
       break;
     case PropReply:
-      //retval = GetReply( value );
+      { 
+	Lock();
+	size_t len = m_reply_len * sizeof(playerqueue_elt_t);
+	memcpy( value, m_reply_io, len );
+	retval = len; 
+	Unlock();
+      }
       break;
 
     default:

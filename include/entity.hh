@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.51 2002-06-09 00:33:01 inspectorg Exp $
+ * CVS info: $Id: entity.hh,v 1.52 2002-06-10 04:57:48 rtv Exp $
  */
 
 #ifndef ENTITY_HH
@@ -67,11 +67,13 @@ enum EntityProperty
   PropCommand,
   PropData,
   PropConfig,
-  PropReply
+  PropReply,
+  ENTITY_LAST_PROPERTY // this must be the final property - we use it
+ // as a count of the number of properties.
 };
 
 // (currently) static memory allocation for getting and setting properties
-const int MAX_NUM_PROPERTIES = 30;
+//const int MAX_NUM_PROPERTIES = 30;
 const int MAX_PROPERTY_DATA_LEN = 20000;
 
 ///////////////////////////////////////////////////////////////////////////
@@ -243,7 +245,7 @@ class CEntity
   protected: double m_last_update;
 
   //public: stage_truth_t truth, old_truth;
-  public: char m_dirty[ MAX_POSE_CONNECTIONS ][ MAX_NUM_PROPERTIES ];
+  public: char m_dirty[ MAX_POSE_CONNECTIONS ][ ENTITY_LAST_PROPERTY ];
 
   // set the dirty flag for each property for each connection
   public: void SetDirty( char v);

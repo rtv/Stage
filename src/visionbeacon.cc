@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.20 $
+//  $Author: rtv $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -40,6 +40,8 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
   laser_return = LaserReflect;
   obstacle_return = true;
   sonar_return = true;
+
+  this->color = ::LookupColor(VISIONBEACON_COLOR);
 
   // Set default shape and geometry
   this->shape = ShapeCircle;

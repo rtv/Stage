@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.13 2002-06-09 18:37:06 inspectorg Exp $
+ * CVS info: $Id: server.cc,v 1.14 2002-06-10 04:57:49 rtv Exp $
  */
 
 #include <arpa/inet.h>
@@ -73,6 +73,9 @@ CStageServer::CStageServer( int argc, char** argv )
 { 
   // enable player services by default, the command lines may change this
   m_run_player = true;    
+
+  //  one of our parent's constructors may have failed and set this flag
+  if( quit ) return;
   
   ///////////////////////////////////////////////////////////////////////
   // Set and load the worldfile, creating entitys as we go
@@ -84,9 +87,6 @@ CStageServer::CStageServer( int argc, char** argv )
   
   // reassuring console output
   printf( "[World %s]", this->worldfilename );
-  
-  // reassuring console output
-  // printf( "[Host %s]", m_hostname );
   
   ///////////////////////////////////////////////////////////////////////
   // LOAD THE CONFIGURATION FOR THE GUI 
@@ -159,19 +159,23 @@ CStageServer::CStageServer( int argc, char** argv )
     }
   }
 
+  //////////////////////////////////////////////////////////////////////
+  // SET UP THE SERVER TO ACCEPT INCOMING CONNECTIONS
+  if( !SetupConnectionServer() )
+  {
+    quit = true;
+    return;
+  }
+
+  // just to be reassuring, print the host details
+  printf( "[Server %s:%d]",  m_hostname, m_port );
+  puts( "" ); // end the startup line, flush stdout before starting player
+
   ////////////////////////////////////////////////////////////////////
   // STARTUP PLAYER
   if( m_run_player && !StartupPlayer() )
   {
     PRINT_ERR("Player startup failed");
-    quit = true;
-    return;
-  }
-  
-  //////////////////////////////////////////////////////////////////////
-  // SET UP THE SERVER TO ACCEPT INCOMING CONNECTIONS
-  if( !SetupConnectionServer() )
-  {
     quit = true;
     return;
   }
@@ -493,15 +497,11 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
   for( int a=1; a<argc-1; a++ )
   {
     // DIS/ENABLE Player
-    if( strcmp( argv[a], "-p" ) == 0 )
+    if((strcmp( argv[a], "-n" ) == 0 )|| 
+       (strcmp( argv[a], "--noplayer" ) == 0))
     {
       m_run_player = false;
       printf( "[No Player]" );
-    }
-    else if( strcmp( argv[a], "+p" ) == 0 )
-    {
-      m_run_player = true;
-      printf( "[Player]" );
     }
 
     // FAST MODE - run as fast as possible - don't attempt t match real time
@@ -531,14 +531,12 @@ bool CStageServer::StartupPlayer( void )
     if( GetEntity(i)->stage_type == PlayerType && GetEntity(i)->m_local ) 
       player_count++;
   
-  printf( "DETECTED %d players on this host\n", player_count );
+  //printf( "DETECTED %d players on this host\n", player_count );
 
   // if there is at least 1 player device, we start a copy of Player
   // running.
   if (player_count == 0)
     return true;
-
-  puts( "FORK IT" );
 
   // ----------------------------------------------------------------------
   // fork off a player process to handle robot I/O
