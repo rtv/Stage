@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -49,8 +49,20 @@ CVisionDevice::CVisionDevice(CRobot *robot, CPtzDevice *ptz_device,
     cameraImageWidth = 160 / 2;
     cameraImageHeight = 120 / 2;
 
+    // some working buffers for Update()
+    // we'll allocate them just the once here.
+    colors = new unsigned char[ cameraImageWidth ];
+    ranges = new float[ cameraImageWidth ];
+
     numBlobs = 0;
     memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
+}
+
+CVisionDevice::~CVisionDevice( void )
+{
+  // free the working buffers
+  delete [] colors;
+  delete [] ranges;
 }
 
 
@@ -85,9 +97,6 @@ bool CVisionDevice::Update()
     m_last_update = m_world->timeNow;
     TRACE0("generating new data");
     
-    unsigned char* colors = new unsigned char[ cameraImageWidth ];
-    float* ranges = new float[ cameraImageWidth ];
-
     // Get the ptz settings
     //
     double pan, tilt, zoom;
@@ -316,7 +325,9 @@ bool CVisionDevice::Update()
     // no need to byteswap - this is single-byte data
     //
     PutData(actsBuf, buflen);
-    
+ 
+    delete []colors;
+    delete []ranges;
     return true;
 }
 

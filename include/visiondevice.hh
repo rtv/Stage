@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -42,6 +42,9 @@ class CVisionDevice : public CPlayerDevice
                           void *buffer, size_t data_len,
                           size_t command_len, size_t config_len);
     
+  // destructor explcitly deletes some buffers
+    public: ~CVisionDevice( void );
+
     // Update the device
     //
     public: virtual bool Update();
@@ -63,6 +66,10 @@ class CVisionDevice : public CPlayerDevice
     private: int numBlobs;
     private: ColorBlob blobs[MAXBLOBS];
     private: unsigned char actsBuf[ACTS_TOTAL_MAX_SIZE];
+
+  // working buffers for the update function
+    private: unsigned char* colors;
+    private: float* ranges;
 };
 
 #endif

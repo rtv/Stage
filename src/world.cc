@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.5 2000-12-07 04:30:19 vaughan Exp $
+ * $Id: world.cc,v 1.6 2000-12-07 05:47:33 vaughan Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -24,6 +24,7 @@
 //#undef DEBUG
 //#define DEBUG
 //#define VERBOSE
+//#define DISPLAYFREQ
 
 #define SEMKEY 2000;
 
@@ -227,8 +228,8 @@ CWorld::~CWorld()
   // few hundred runs but here we're OK - RTV.
 
   delete m_laser_img;
-  delete bimg;
-  delete img;
+  //delete bimg;
+  //delete img;
 }
 
 
@@ -278,6 +279,8 @@ void CWorld::Update( void )
 {
   // update is called every approx. 25ms from main using a timer
 
+  static double smoothedTimestep = 0;
+
   if( win ) win->HandleEvent();
 
   if( !paused )
@@ -292,6 +295,13 @@ void CWorld::Update( void )
       //cout << timeStep << endl;
       timeThen = timeNow;
       
+#ifdef DISPLAYFREQ
+      smoothedTimestep = (smoothedTimestep * 0.8) + ( 0.2 * timeStep );
+      
+      printf( "\r%.4f   ", smoothedTimestep );
+      fflush( stdout );
+#endif
+
       // use a simple cludge to fix stutters caused by machine load or I/O
       if( timeStep > 0.1 ) 
 	{
