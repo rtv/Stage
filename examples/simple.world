@@ -1,7 +1,9 @@
+# a robot with a few devices and some objects in the environment
+
 set environment_file = simple.pnm
 set pixels_per_meter =  100
 
-create position_device pose 1.00 4.00 -54 color red port 6665 index 0 invisible laser visible obstacle visible sonar shape rectangle 
+create position_device pose 1.00 4.00 -54 port 6665
 {
   create player_device
   create sonar_device 

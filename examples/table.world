@@ -11,40 +11,40 @@ set channel = 4:green
 #####################################################################
 # Populate the world with some interesting objects (non-player devices)
 
-create puck pose 2.02 1.90 90  color yellow port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 1.82 1.82 94  color yellow  port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 2.40 2.08 151  color yellow port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 1.82 1.61 65403 color yellow port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 2.21 1.79 -86   color yellow port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 1.84 2.24 -90   color yellow port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 2.04 2.31 23  color yellow  port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
+create puck pose 2.02 1.90 0  color yellow 
+create puck pose 1.82 1.82 0  color yellow 
+create puck pose 2.40 2.08 0  color yellow
+create puck pose 1.82 1.61 0  color yellow
+create puck pose 2.21 1.79 0  color yellow 
+create puck pose 1.84 2.24 0  color yellow
+create puck pose 2.04 2.31 0  color yellow  
 
-create puck pose 1.85 2.44 82   color red port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 2.02 1.70 -90  color red  port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 2.02 2.10 19   color red port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 2.59 1.99 65508  color red port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 2.39 1.88 24   color red port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 1.84 2.02 -94  color red port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
-create puck pose 2.21 2.19 90   color red port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
+create puck pose 1.85 2.44 0  color red 
+create puck pose 2.02 1.70 0  color red 
+create puck pose 2.02 2.10 0  color red 
+create puck pose 2.59 1.99 0  color red 
+create puck pose 2.39 1.88 0  color red 
+create puck pose 1.84 2.02 0  color red 
+create puck pose 2.21 2.19 00 color red 
 
-create puck pose 2.20 1.98 23  color blue  port 0 index 0 invisible obstacle invisible laser invisible sonar radius 0.10 
+create puck pose 2.20 1.98 23  color blue 
 
 #####################################################################
 # a tricked-out robot with a Player on the default port
 
-create position_device pose 4.42 1.95 180   port 6665 index 0 invisible laser visible obstacle visible sonar shape circle 
+create position_device pose 4.42 1.95 180 port 6665 shape circle 
 {
-  create player_device pose -0.10 0.00 0   port 6665 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0   port 6665 index 0 invisible obstacle invisible laser invisible sonar 
-  create gripper_device pose 0.15 0.00 0   port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create player_device 
+  create gps_device 
+  create sonar_device 
+  create gripper_device pose 0.15 0.00 0 
 
-  create ptz_device pose 0.07 0.00 0   port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create ptz_device pose 0.07 0.00 0  
   {
      # vision devices MUST be children of cameras
-     create vision_device pose 0.00 0.00 0   port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+     create vision_device 
   } 
-
-  create gps_device pose 0.00 0.00 0   port 6665 index 0 invisible obstacle invisible laser invisible sonar 
 }
+
 
 

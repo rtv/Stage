@@ -1,10 +1,12 @@
+# a very simple demonstration world
 
 set environment_file = cave.pnm
 set pixels_per_meter =  60
-set laser_res = 2
-
-create laser_device pose 1.0 2.0 3.0 port 6667
+set laser_res = 0.5
+	
+create position_device pose 1.0 2.0 0.0 port 6665
 {
-   create player_server pose 0.0 0.0 0.0 port 6667
+   create player_device
+   create sonar_device
 }
 	

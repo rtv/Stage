@@ -1,48 +1,31 @@
+# demonstrates the large, complex hospital bitmap
+# and shows that objects can be placed on top of each other:
+# here each robot can sense the laser beacon placed on the back of the other
 set environment_file = hospital.pnm
 set pixels_per_meter =  20
 
-create position_device name comet pose 12.50 47.59 -91 color red port 6665 index 0 invisible laser visible obstacle visible sonar shape rectangle 
+create position_device name comet pose 12.50 47.59 -91 port 6665
 {
     create sonar_device
-    create player_device pose 0.00 0.00 0 color white port 6665 index 0 invisible obstacle invisible laser invisible sonar 
-    create laser_device pose 0.08 0.00 0 color blue port 6665 index 0 invisible obstacle invisible sonar visible laser 
-{
+    create player_device 
+    create laser_device pose 0.08 0.00 0 
+    {
 	create lbd_device
-}
-    create laser_beacon name 1 pose -0.15 0.00 0 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 1 
+    }
+    
+    create laser_beacon pose -0.15 0.00 0 id 1 name 1 
 }
 
-create position_device name punky pose 15.01 40.51 53 color green port 6666 index 0 invisible laser visible obstacle visible sonar shape rectangle 
+
+create position_device name punky pose 14.50 47.59 0 port 6666 
 {
     create sonar_device
-    create player_device pose 0.00 0.00 0 color white port 6666 index 0 invisible obstacle invisible laser invisible sonar 
-    create laser_device pose 0.08 0.00 0 color blue port 6666 index 0 invisible obstacle invisible sonar visible laser 
-{
+    create player_device 
+    create laser_device pose 0.08 0.00 0 
+    {
 	create lbd_device
+    }
+    
+    create laser_beacon pose -0.15 0.00 0 id 2 name 2 
 }
-    create laser_beacon name 2 pose -0.15 0.00 0 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 2 
-}
-
-create position_device name bug pose 12.65 44.09 0 color blue port 6667 index 0 invisible laser visible obstacle visible sonar shape rectangle 
-{
-    create sonar_device
-    create player_device pose 0.00 0.00 0 color white port 6667 index 0 invisible obstacle invisible laser invisible sonar 
-    create laser_device pose 0.08 0.00 0 color blue port 6667 index 0 invisible obstacle invisible sonar visible laser 
-{
-	create lbd_device
-}
-    create laser_beacon name 3 pose -0.15 0.00 0 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 3 
-}
-
-create position_device pose 15.86 39.37 449 color yellow port 6668 index 0 invisible laser visible obstacle visible sonar shape rectangle 
-{
-    create sonar_device
-    create player_device pose 0.00 0.00 0 color white port 6668 index 0 invisible obstacle invisible laser invisible sonar 
-    create laser_device pose 0.08 0.00 0 color blue port 6668 index 0 invisible obstacle invisible sonar visible laser 
-{
-	create lbd_device
-}
-    create laser_beacon name 3 pose -0.15 0.00 0 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 3 
-}
-
 
