@@ -117,11 +117,6 @@ void CEntity::RtkStartup()
 
   PRINT_DEBUG1( "rendering %d rectangles", this->rect_count );
   
-  double scalex = size_x / rects_max_x;
-  double scaley = size_y / rects_max_y;
-  
-  //rtk_fig_origin( this->fig, local_px, local_py, local_pth );
-  
   // now create GUI rects
   int r;
   for( r=0; r<this->rect_count; r++ )
@@ -129,19 +124,19 @@ void CEntity::RtkStartup()
       stage_rotrect_t* src = &this->rects[r];
       double x,y,a,w,h;
       
-      x = ((src->x + src->w/2.0) * scalex) - size_x/2.0 + origin_x;
-      y = ((src->y + src->h/2.0) * scaley) - size_y/2.0 + origin_y;
+      x = ((src->x + src->w/2.0) * this->size_x) - this->size_x/2.0 + origin_x;
+      y = ((src->y + src->h/2.0) * this->size_y) - this->size_y/2.0 + origin_y;
       a = src->a;
-      w = src->w * scalex;
-      h = src->h * scaley;
+      w = src->w * this->size_x;
+      h = src->h * this->size_y;
       
       rtk_fig_rectangle(this->fig, x,y,a,w,h, 0 ); 
     }
 
   // draw a boundary rectangle around the root device
-  if( this == CEntity::root )
-    rtk_fig_rectangle( this->fig, size_x/2.0, size_y/2.0, 0.0, 
-		       size_x, size_y, 0 );
+  //if( this == CEntity::root )
+  //rtk_fig_rectangle( this->fig, size_x/2.0, size_y/2.0, 0.0, 
+  //	       size_x, size_y, 0 );
   
   // do our children after we're set
   CHILDLOOP( child ) 

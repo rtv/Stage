@@ -1,6 +1,8 @@
 /*
- *  Stage : a multi-robot simulator.
- *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *  Stage : a multi-robot simulator.  
+ *
+ *  Copyright (C) 2001, 2002, 2003 Richard Vaughan, Andrew Howard and
+ *  Brian Gerkey.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,9 +21,9 @@
  */
 /*
  * Desc: Program Entry point
- * Author: Andrew Howard, Richard Vaughan
+ * Author: Richard Vaughan, Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.28 2003-02-14 03:36:33 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.29 2003-02-15 21:15:01 rtv Exp $
  */
 
 #if HAVE_CONFIG_H

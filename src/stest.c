@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.18 2003-02-14 03:36:33 rtv Exp $
+  $Id: stest.c,v 1.1.2.19 2003-02-15 21:15:01 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -342,31 +342,19 @@ int main( int argc, char** argv )
       
       SIOBufferProperty( props, sonar.id, STG_PROP_ENTITY_SUBSCRIBE,
 			 (char*)subs, 4*sizeof(subs[0]) );
-      
-
-      // push some rectangles into the bitmap
-      //stage_rotrect_t rects[10];
-      //int r;
-      //for( r=0; r<10; r++ )
-      //{
-      //  rects[r].x = r/10.0;
-      ///  rects[r].y = r/20.0;
-      // rects[r].a = 0;
-      //  rects[r].w = 0.1;
-      //  rects[r].h = 0.1;
-      //}
+     
       
       int num_rects;
-      stage_rotrect_t* rects = RectsFromPnm( &num_rects, "worlds/test.pnm" );
+      stage_rotrect_t* rects = RectsFromPnm( &num_rects, "worlds/cave.pnm" );
       printf( "attempting to buffer %d rects\n", num_rects );
 
       // send the rectangles to root
       SIOBufferProperty( props, root.id, STG_PROP_ENTITY_RECTS, 
 			 (char*)rects, num_rects * sizeof(rects[0]) );
 
-      //rects = RectsFromPnm( &num_rects, "worlds/pioneer.ppm" );
+      //rects = RectsFromPnm( &num_rects, "worlds/smiley.ppm" );
       //SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_RECTS, 
-      //		 (char*)rects, num_rects * sizeof(rects[0]) );
+      //	 (char*)rects, num_rects * sizeof(rects[0]) );
       
       TEST( "Sending properties" );
       result = SIOWriteMessage( connection, timestamp,
@@ -393,37 +381,23 @@ int main( int argc, char** argv )
 	 
 	  //SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
 
-	  SetVelocity( connection, box.id, 0.1, 0.0, 2.0 );
-	  
-	  if( c % 50 == 0 )
-	    {
-	      
-	      //Resize( connection, root.id, 
-	      //    5.0 + 5.0 * fabs(sin(z)), 
-	      //    5.0 + 5.0 * fabs(cos(z)) );
-	      
-	      //SetResolution( connection, root.id, 3.0 + fmod( z*10, 10) );
-	      
-	      z += 0.1;
-	    }
-	  
 	  if( c == 75 )
 	    {
-	    stage_gui_config_t gui;
-	    strcpy( gui.token, "rtk" );
-	    gui.width = 600;
-	    gui.height = 600;
-	    gui.ppm = 50;
-	    gui.originx = 0;
-	    gui.originy = 0;
-	    gui.showsubscribedonly = 0;
-	    gui.showgrid = 1;
-	    gui.showdata = 1;
-	    
-	    //result = SIOWriteMessage( connection, timestamp, 
-	    //STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
+	      stage_gui_config_t gui;
+	      strcpy( gui.token, "rtk" );
+	      gui.width = 600;
+	      gui.height = 600;
+	      gui.ppm = 50;
+	      gui.originx = 0;
+	      gui.originy = 0;
+	      gui.showsubscribedonly = 0;
+	      gui.showgrid = 1;
+	      gui.showdata = 1;
+	      
+	      //result = SIOWriteMessage( connection, timestamp, 
+	      //STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
 	    }
-	   
+	  
 	  SIOServiceConnections( &HandleLostConnection,
 				 &HandleCommand,
 				 &HandleModel, 

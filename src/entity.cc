@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.18 2003-02-14 03:36:32 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.19 2003-02-15 21:15:01 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -457,15 +457,12 @@ void CEntity::MapEx(double px, double py, double pth, bool render)
 // the entities pose and offset and the rectangle scaling
 void CEntity::GetGlobalRect( stage_rotrect_t* dest, stage_rotrect_t* src )
 {
-  double scalex = size_x / rects_max_x;
-  double scaley = size_y / rects_max_y;
+  dest->x = ((src->x + src->w/2.0) * size_x) - size_x/2.0 + origin_x;
+  dest->y = ((src->y + src->h/2.0) * size_y) - size_y/2.0 + origin_y;
   
-  dest->x = ((src->x + src->w/2.0) * scalex) - size_x/2.0 + origin_x;
-  dest->y = ((src->y + src->h/2.0) * scaley) - size_y/2.0 + origin_y;
-      
   dest->a = src->a;
-  dest->w = src->w * scalex;
-  dest->h = src->h * scaley;
+  dest->w = src->w * size_x;
+  dest->h = src->h * size_y;
   
   LocalToGlobal( dest->x, dest->y, dest->a );    
 }
@@ -689,21 +686,52 @@ void CEntity::SetParent(CEntity* new_parent)
 };
 
 
-// sets our local rectangle bounds members to the extreme values
-// of the rectangle array members
-void CEntity::DetectRectBounds(  stage_rotrect_t* rects, int num, 
-				 double* maxx, double* maxy )
+// scale an array of rectangles so they fit in a unit square
+void CEntity::NormalizeRects(  stage_rotrect_t* rects, int num )
 {
-  *maxx = *maxy = 0.0;
+  // assuming the rectanlges fit in a square +- one billion units
+  double minx, miny, maxx, maxy;
+  minx = miny = BILLION;
+  maxx = maxy = -BILLION;
   
-  int r;
-  for( r=0; r<num; r++ )
+  for( int r=0; r<num; r++ )
     {
-      if( (rects[r].x+rects[r].w)  > *maxx ) 
-	*maxx = (rects[r].x+rects[r].w);
+      // test the origin of the rect
+      if( rects[r].x  < minx ) minx = rects[r].x;
       
-      if( (rects[r].y+rects[r].h)  > *maxy ) 
-	*maxy = (rects[r].y+rects[r].h);
+      if( rects[r].y < miny ) miny = rects[r].y;
+      
+      if( rects[r].x  > maxx ) maxx = rects[r].x;
+      
+      if( rects[r].y > maxy ) maxy = rects[r].y;
+
+      // test the extremes of the rect
+          if( (rects[r].x+rects[r].w)  < minx ) 
+	minx = (rects[r].x+rects[r].w);
+      
+      if( (rects[r].y+rects[r].h)  < miny ) 
+	miny = (rects[r].y+rects[r].h);
+      
+      if( (rects[r].x+rects[r].w)  > maxx ) 
+	maxx = (rects[r].x+rects[r].w);
+      
+      if( (rects[r].y+rects[r].h)  > maxy ) 
+	maxy = (rects[r].y+rects[r].h);
+      
+    }
+  
+  //printf( "xmin %.2f ymin %.2f xmax %.2f ymax %.2f\n", minx, miny, maxx, maxy );
+  
+  // now normalize all lengths so that the rects all fit inside
+  // rectangle from 0,0 to 1,1
+  double scalex = maxx - minx;
+  double scaley = maxy - miny;
+  for( int r=0; r<num; r++ )
+    { 
+      rects[r].x = (rects[r].x - minx) / scalex;
+      rects[r].y = (rects[r].y - miny) / scaley;
+      rects[r].w = rects[r].w / scalex;
+      rects[r].h = rects[r].h / scaley;
     }
 }
 
@@ -770,9 +798,8 @@ void CEntity::SetRects( stage_rotrect_t* rects, int num )
   // we just got this many rectangles
   this->rect_count = num;
   
-  
   if( num > 0 )
-    { // some rects
+    { 
       assert( rects );
       // make space for the new rects
       this->rects = new stage_rotrect_t[ num ];
@@ -780,21 +807,44 @@ void CEntity::SetRects( stage_rotrect_t* rects, int num )
       // copy the rects into our local storage
       memcpy( this->rects, rects, num * sizeof(stage_rotrect_t) );
       
-      this->DetectRectBounds( this->rects, this->rect_count,
-			      &this->rects_max_x, &this->rects_max_y );
+      // scale the rects so they fit in a unit square
+      this->NormalizeRects( this->rects, this->rect_count );      
+      
+      // if this is root, add a unit rectangle outline
+      if( this->m_parent_entity == NULL )
+	{
+	  // make space for all the rects plus 1
+	  stage_rotrect_t* extraone = new stage_rotrect_t[num+1];
+	  
+	  // set the first rect as a unit square
+	  extraone[0].x = 0.0;
+	  extraone[0].y = 0.0;
+	  extraone[0].a = 0.0;
+	  extraone[0].w = 1.0;
+	  extraone[0].h = 1.0;
+	  
+	  // copy the other rects after the unit square
+	  memcpy( &extraone[1], this->rects, num * sizeof(stage_rotrect_t) );
+	  
+	  // free the old rects
+	  delete[] this->rects;
+	  
+	  // point to the new rects
+	  this->rects = extraone;
+	  this->rect_count = num+1; // remember we have 1 more now
+	}
+	  
 
-      RenderRects( true );
-
+      // draw the rects into the matrix
+      this->RenderRects( true );
+      
       PRINT_WARN2( "created %d rects for entity %d", this->rect_count,
 		   this->stage_id );
     }
   else
     { // no rects 
       this->rects = NULL;
-      this->rects_max_x = this->rects_max_y  = 0.0;
     }
-     
-  //PRINT_WARN2( "bounds %.2f %.2f", rects_max_x, rects_max_y );
 }
 
 int CEntity::SetProperty( int con, stage_prop_id_t property, 
@@ -1186,9 +1236,9 @@ void CEntity::RenderRects( bool render )
     }
   
   // draw a boundary rectangle around the root device
-  if( this == CEntity::root )
-    CEntity::matrix->SetRectangle( size_x/2.0, size_y/2.0, 0.0, 
-				   size_x, size_y, this, render );
+  //if( this == CEntity::root )
+  //CEntity::matrix->SetRectangle( size_x/2.0, size_y/2.0, 0.0, 
+  //			   size_x, size_y, this, render );
   
 }
 
