@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.68 2005-02-08 15:37:21 gerkey Exp $
+dnl $Id: configure.in,v 1.69 2005-05-05 20:10:29 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -16,14 +16,6 @@ AC_CANONICAL_SYSTEM
 dnl Initialize automake, requiring version 1.7 or better
 AM_INIT_AUTOMAKE(1.7)
 
-dnl The following macros don't appear to be used.
-dnl
-dnl case $host in	
-dnl *-*-solaris*) AC_DEFINE(PLAYER_SOLARIS,1,[building for Solaris]);;
-dnl *-*-linux*) AC_DEFINE(PLAYER_LINUX,1,[building for Linux]);;
-dnl *-*-darwin*) AC_DEFINE(PLAYER_DARWIN,1,[building for Darwin]);;
-dnl esac
-
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET
 
@@ -31,12 +23,10 @@ dnl Generate a configuration header called <config.h> and put all the C
 dnl preprocessor defines in there
 AC_CONFIG_HEADERS(config.h)
 
-
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
-dnl AC_PROG_RANLIB
 
 dnl tell libtool to enable dynamic-loadable libraries
 AC_LIBTOOL_DLOPEN
@@ -47,28 +37,10 @@ AC_SUBST(LIBTOOL_DEPS)
 dnl Checks for header files of required libraries
 AC_CHECK_HEADERS(stdint.h strings.h)
 
-dnl Check for types that are not defined on some systems
-dnl Test for socklen_t and define it to int if it's not there.
-dnl Note that we can't simply dnl use AC_CHECK_TYPE because socklen_t 
-dnl isn't in the standard headers (autoconf-2.5 has better methods for this)
-AC_MSG_CHECKING(if socklen_t is defined)
-AC_TRY_COMPILE(
-     [#include <sys/types.h>
-      #include <sys/socket.h>],
-     [socklen_t len = 42; return len;],
-        [AC_MSG_RESULT(yes)],
-         [AC_MSG_RESULT(no)
-          AC_DEFINE(socklen_t, int, required on some BSD-based platforms)])
-
-dnl Checks for library functions.
-dnl AC_CHECK_LIB(z, gzopen)
-AC_CHECK_LIB(nsl, gethostbyname)
-AC_CHECK_LIB(socket, connect)
-AC_CHECK_LIB(m, isinf)
-
 dnl build mplementations of these in libreplace.a if these are 
 dnl missing
-AC_REPLACE_FUNCS(poll dirname scandir basename)
+dnl AC_REPLACE_FUNCS(poll dirname scandir basename)
+AC_REPLACE_FUNCS(dirname scandir basename)
 
 dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually
@@ -96,25 +68,6 @@ AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
 AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
 CDB="\"$with_color\"",)
 AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
-
-
-dnl - not currently used, but keeping around just in case - rtv
-
-dnl we use libjpeg to export images.
-dnl AC_CHECK_HEADER(jpeglib.h,
-dnl  AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
-dnl   LIBJPEG="-ljpeg",,)
-dnl AC_SUBST(LIBJPEG)
-
-dnl PKG_CHECK_MODULES(GNOMECANVAS, libgnomecanvas-2.0 >= 2.0,
-dnl AC_DEFINE(INCLUDE_GNOMECANVAS,1,[building GNOMECANVAS components]),
-dnl AC_MSG_WARN([no suitable GNOMECANVAS was found. ])
-dnl )
-
-dnl should tests (e.g., RTK) be built?
-dnl AC_ARG_WITH(tests, [  --with-tests            Build tests],,
-dnl with_tests=yes)
-dnl AM_CONDITIONAL(WITH_TESTS, test x$with_tests = xyes)
 
 AC_OUTPUT(Makefile 
           src/Makefile 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -239,6 +239,7 @@ int energy_update( stg_model_t* mod )
       GPtrArray* a = NULL;
       assert( (a = stg_model_get_prop( mod, "connections" )) );
       
+
       //printf( "Energy model %s\n", mod->token );
       
       // add all the locally connected devices
@@ -275,8 +276,12 @@ int energy_update( stg_model_t* mod )
 	  if( con == mod ) // skip myself
 	    continue;
 	  
-	  //printf( "\tsupplying %s with %.2fW", 
-	  //  con->token, con->watts );
+	  //	  if( con->watts )
+	  //printf( "%s -> %.2fW -> %s\n", 
+	  //    mod->token,
+	  //    con->watts,
+	  //    con->token );
+
 	  
 	  // if the connected unit is an energy device, we poke some
 	  // energy into it. if it's not an energy device, the energy just

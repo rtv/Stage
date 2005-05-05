@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.10 2005-04-06 21:14:18 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.11 2005-05-05 20:10:30 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -137,7 +137,7 @@ stg_rtk_fig_t *stg_rtk_fig_create(stg_rtk_canvas_t *canvas, stg_rtk_fig_t *paren
   fig->dc_color.red = 0;
   fig->dc_color.green = 0;
   fig->dc_color.blue = 0;
-  fig->dc_xfig_color = 0;
+  //fig->dc_xfig_color = 0;
   fig->dc_linewidth = 1;
 
 
@@ -402,10 +402,11 @@ void stg_rtk_fig_color_rgb32(stg_rtk_fig_t *fig, int color)
 
 
  // Set the color for strokes.  Color is specified as an xfig color.
-void stg_rtk_fig_color_xfig(stg_rtk_fig_t *fig, int color)
+/*void stg_rtk_fig_color_xfig(stg_rtk_fig_t *fig, int color)
 {
   fig->dc_xfig_color = color;
 }
+*/
 
 
 // Set the line width.
@@ -617,7 +618,7 @@ void stg_rtk_fig_render_selection(stg_rtk_fig_t *fig)
   return;
 }
 
-
+/*
 // Render the figure to xfig
 void stg_rtk_fig_render_xfig(stg_rtk_fig_t *fig)
 {
@@ -631,6 +632,7 @@ void stg_rtk_fig_render_xfig(stg_rtk_fig_t *fig)
       (*stroke->xfigfn)(fig, stroke);
   }
 }
+*/
 
 
 // Test to see if the given device point lies within the figure
@@ -958,10 +960,10 @@ void stg_rtk_fig_stroke_add(stg_rtk_fig_t *fig, stg_rtk_stroke_t *stroke)
   fig->strokes[fig->stroke_count++] = stroke;
 
   stroke->color = fig->dc_color;
-  stroke->xfig_color = fig->dc_xfig_color;
+  //stroke->xfig_color = fig->dc_xfig_color;
   stroke->linewidth = fig->dc_linewidth;
   stroke->drawfn = NULL;
-  stroke->xfigfn = NULL;
+  //stroke->xfigfn = NULL;
   stroke->calcfn = NULL;
   stroke->freefn = NULL;
 
@@ -978,7 +980,7 @@ void stg_rtk_fig_stroke_add(stg_rtk_fig_t *fig, stg_rtk_stroke_t *stroke)
 void stg_rtk_fig_point_free(stg_rtk_fig_t *fig, stg_rtk_point_stroke_t *data);
 void stg_rtk_fig_point_calc(stg_rtk_fig_t *fig, stg_rtk_point_stroke_t *data);
 void stg_rtk_fig_point_draw(stg_rtk_fig_t *fig, stg_rtk_point_stroke_t *data);
-void stg_rtk_fig_point_xfig(stg_rtk_fig_t *fig, stg_rtk_point_stroke_t *data);
+//void stg_rtk_fig_point_xfig(stg_rtk_fig_t *fig, stg_rtk_point_stroke_t *data);
 
 
 // Create a point stroke
@@ -991,7 +993,7 @@ void stg_rtk_fig_point_alloc(stg_rtk_fig_t *fig, double ox, double oy)
   data->stroke.freefn = (stg_rtk_stroke_fn_t) stg_rtk_fig_point_free;
   data->stroke.calcfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_point_calc;
   data->stroke.drawfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_point_draw;
-  data->stroke.xfigfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_point_xfig;
+  //  data->stroke.xfigfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_point_xfig;
 
   data->ox = ox;
   data->oy = oy;
@@ -1034,13 +1036,14 @@ void stg_rtk_fig_point_draw(stg_rtk_fig_t *fig, stg_rtk_point_stroke_t *data)
   return;
 }
 
-
+/*
 // Render stroke to xfig
 void stg_rtk_fig_point_xfig(stg_rtk_fig_t *fig, stg_rtk_point_stroke_t *data)
 {
   // TODO
   return;
 }
+*/
 
 
 /***************************************************************************
@@ -1052,7 +1055,7 @@ void stg_rtk_fig_point_xfig(stg_rtk_fig_t *fig, stg_rtk_point_stroke_t *data)
 void stg_rtk_fig_polygon_free(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data);
 void stg_rtk_fig_polygon_calc(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data);
 void stg_rtk_fig_polygon_draw(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data);
-void stg_rtk_fig_polygon_xfig(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data);
+//void stg_rtk_fig_polygon_xfig(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data);
 
 
 // Create a polygon
@@ -1069,7 +1072,7 @@ void stg_rtk_fig_polygon_alloc(stg_rtk_fig_t *fig,
   data->stroke.freefn = (stg_rtk_stroke_fn_t) stg_rtk_fig_polygon_free;
   data->stroke.calcfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_polygon_calc;
   data->stroke.drawfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_polygon_draw;
-  data->stroke.xfigfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_polygon_xfig;
+  //data->stroke.xfigfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_polygon_xfig;
     
   data->ox = ox;
   data->oy = oy;
@@ -1186,7 +1189,7 @@ void stg_rtk_fig_polygon_draw(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data
   return;
 }
 
-
+/*
 // Render stroke to xfig
 void stg_rtk_fig_polygon_xfig(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data)
 {
@@ -1230,6 +1233,7 @@ void stg_rtk_fig_polygon_xfig(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data
   return;
 }
 
+*/
 
 /***************************************************************************
  * Text stroke
@@ -1240,7 +1244,7 @@ void stg_rtk_fig_polygon_xfig(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data
 void stg_rtk_fig_text_free(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data);
 void stg_rtk_fig_text_calc(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data);
 void stg_rtk_fig_text_draw(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data);
-void stg_rtk_fig_text_xfig(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data);
+//void stg_rtk_fig_text_xfig(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data);
 
 
 // Create a text stroke
@@ -1253,7 +1257,7 @@ void stg_rtk_fig_text_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa,
   data->stroke.freefn = (stg_rtk_stroke_fn_t) stg_rtk_fig_text_free;
   data->stroke.calcfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_text_calc;
   data->stroke.drawfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_text_draw;
-  data->stroke.xfigfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_text_xfig;
+  //  data->stroke.xfigfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_text_xfig;
 
   data->ox = ox;
   data->oy = oy;
@@ -1344,7 +1348,7 @@ void stg_rtk_fig_text_draw(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
   return;
 }
 
-
+/*
 // Render stroke to xfig
 void stg_rtk_fig_text_xfig(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
 {
@@ -1370,6 +1374,7 @@ void stg_rtk_fig_text_xfig(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
 
   return;
 }
+*/
 
 
 
@@ -1382,7 +1387,7 @@ void stg_rtk_fig_text_xfig(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
 void stg_rtk_fig_image_free(stg_rtk_fig_t *fig, stg_rtk_image_stroke_t *data);
 void stg_rtk_fig_image_calc(stg_rtk_fig_t *fig, stg_rtk_image_stroke_t *data);
 void stg_rtk_fig_image_draw(stg_rtk_fig_t *fig, stg_rtk_image_stroke_t *data);
-void stg_rtk_fig_image_xfig(stg_rtk_fig_t *fig, stg_rtk_image_stroke_t *data);
+//void stg_rtk_fig_image_xfig(stg_rtk_fig_t *fig, stg_rtk_image_stroke_t *data);
 
 
 // Create a image stroke
@@ -1398,7 +1403,7 @@ void stg_rtk_fig_image_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa
   data->stroke.freefn = (stg_rtk_stroke_fn_t) stg_rtk_fig_image_free;
   data->stroke.calcfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_image_calc;
   data->stroke.drawfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_image_draw;
-  data->stroke.xfigfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_image_xfig;
+  //  data->stroke.xfigfn = (stg_rtk_stroke_fn_t) stg_rtk_fig_image_xfig;
 
   data->ox = ox;
   data->oy = oy;
@@ -1712,12 +1717,13 @@ void stg_rtk_fig_image_draw(stg_rtk_fig_t *fig, stg_rtk_image_stroke_t *data)
   return;
 }
 
-
+/*
 // Render stroke to xfig
 void stg_rtk_fig_image_xfig(stg_rtk_fig_t *fig, stg_rtk_image_stroke_t *data)
 {
   return;
 }
+*/
 
 
 gboolean stg_rtk_fig_blink_callback( void* data )

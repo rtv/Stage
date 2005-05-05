@@ -24,7 +24,7 @@
  * Desc: Combined Stk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.8 2005-03-11 21:56:57 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.9 2005-05-05 20:10:30 rtv Exp $
  */
 
 #ifndef STK_H
@@ -412,7 +412,7 @@ typedef struct _stg_rtk_fig_t
   // Drawing context information.  Just a list of default args for
   // drawing primitives.
   stg_rtk_color_t dc_color;
-  int dc_xfig_color;
+  //int dc_xfig_color;
   int dc_linewidth;
 
   // if > 0, the visibility of this figure is toggled with this
@@ -484,7 +484,7 @@ void stg_rtk_fig_color(stg_rtk_fig_t *fig, double r, double g, double b);
 void stg_rtk_fig_color_rgb32(stg_rtk_fig_t *fig, int color);
 
 // Set the color for strokes.  Color is specified as an xfig color.
-void stg_rtk_fig_color_xfig(stg_rtk_fig_t *fig, int color);
+//void stg_rtk_fig_color_xfig(stg_rtk_fig_t *fig, int color);
 
 // Set the line width.
 void stg_rtk_fig_linewidth(stg_rtk_fig_t *fig, int width);
@@ -561,7 +561,7 @@ typedef struct _stg_rtk_stroke_t
   stg_rtk_color_t color;
 
   // Xfig color
-  int xfig_color;
+  //int xfig_color;
 
   // Line width
   int linewidth;
@@ -576,7 +576,7 @@ typedef struct _stg_rtk_stroke_t
   stg_rtk_stroke_fn_t drawfn;
 
   // Function used to render stroke to xfig
-  stg_rtk_stroke_fn_t xfigfn;
+  //stg_rtk_stroke_fn_t xfigfn;
   
 } stg_rtk_stroke_t;
 

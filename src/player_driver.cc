@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.8 2005-03-11 21:56:57 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.9 2005-05-05 20:10:30 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -99,7 +99,7 @@ driver
 (		
   name "stage"
   provides ["simulation:0"]
-  plugin "libstage"
+  plugin "libstageplugin"
 
   # create the simulated world described by this worldfile
   worldfile "example.world"	

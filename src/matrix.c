@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.15 2005-03-09 21:52:49 rtv Exp $
+ * $Id: matrix.c,v 1.16 2005-05-05 20:10:30 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -53,10 +53,11 @@ guint matrix_hash( gconstpointer key )
 // returns TRUE if the two coordinates are the same, else FALSE
 gboolean matrix_equal( gconstpointer c1, gconstpointer c2 )
 {
-  stg_matrix_coord_t* mc1 = (stg_matrix_coord_t*)c1;
-  stg_matrix_coord_t* mc2 = (stg_matrix_coord_t*)c2;
+  //stg_matrix_coord_t* mc1 = (stg_matrix_coord_t*)c1;
+  //stg_matrix_coord_t* mc2 = (stg_matrix_coord_t*)c2;
   
-  return( mc1->x == mc2->x && mc1->y == mc2->y );  
+  return( ((stg_matrix_coord_t*)c1)->x == ((stg_matrix_coord_t*)c2)->x && 
+	  ((stg_matrix_coord_t*)c1)->y == ((stg_matrix_coord_t*)c2)->y );  
 }
 
 stg_matrix_t* stg_matrix_create( double ppm, double medppm, double bigppm )
