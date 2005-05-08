@@ -63,6 +63,7 @@ static GtkItemFactoryEntry menu_table[] = {
   // { "/File/Export/PNM", NULL, gui_menu_file_export_format, STK_IMAGE_FORMAT_PNM, "/File/Export/JPEG" },
   { "/File/sep1",     NULL,      NULL, 0, "<Separator>" },
   { "/File/_Quit",    "<CTRL>Q", gui_menu_file_exit_cb, 0, "<StockItem>", GTK_STOCK_QUIT },
+
   { "/_View",         NULL,      NULL, 0, "<Branch>" },
   { "/View/tear1",    NULL,      NULL, 0, "<Tearoff>" },
   { "/View/Fill polygons", "<CTRL>P", gui_menu_polygons_cb, 1, "<CheckItem>" },
@@ -83,6 +84,7 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/View/Fiducial config", NULL,   gui_menu_view_cfg, STG_MODEL_FIDUCIAL, "<CheckItem>" },
   { "/View/Laser config",    NULL,   gui_menu_view_cfg, STG_MODEL_LASER,    "<CheckItem>" },
   { "/View/Ranger config",   NULL,   gui_menu_view_cfg, STG_MODEL_RANGER ,  "<CheckItem>" },  
+  { "/View/Gripper config",   NULL,   gui_menu_view_cfg, STG_MODEL_GRIPPER,  "<CheckItem>" },  
 
   { "/View/sep2",     NULL,      NULL, 0, "<Separator>" },
   { "/View/Debug", NULL, NULL, 1, "<Branch>" },
@@ -97,7 +99,7 @@ static GtkItemFactoryEntry menu_table[] = {
 };
 
 // SET THIS TO THE NUMBER OF MENU ITEMS IN THE ARRAY ABOVE
-static const int menu_table_count = 51;
+static const int menu_table_count = 52;
 
 // USE THIS WHEN WE FIX ON A RECENT GTK VERSION 
 /* void gui_menu_file_about( void ) */
@@ -442,6 +444,8 @@ void gui_window_menus_create( gui_window_t* win )
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Blobfinder config"));
   gtk_check_menu_item_set_active( mitem, FALSE );
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Energy config"));
+  gtk_check_menu_item_set_active( mitem, FALSE );
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Gripper config"));
   gtk_check_menu_item_set_active( mitem, FALSE );
   
   gtk_box_pack_start(GTK_BOX(win->canvas->layout), 

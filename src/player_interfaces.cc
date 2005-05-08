@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.9 2005-05-08 20:33:09 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.10 2005-05-08 22:57:48 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -890,6 +890,36 @@ void GripperCommand( device_record_t* device, void* src, size_t len )
 void GripperData( device_record_t* device, void* data, size_t len )
 {
   //puts( "publishing gripper data\n" );
+  
+  if( len == sizeof(stg_gripper_data_t) )
+    {
+      stg_gripper_data_t* sdata = (stg_gripper_data_t*)data;
+
+      player_gripper_data_t pdata;
+      memset( &pdata, 0, sizeof(pdata) );
+            
+      // set the proper bits
+      
+      pdata.beams = 0;
+      pdata.beams |=  sdata->outer_break_beam ? 0x04 : 0x00;
+      pdata.beams |=  sdata->inner_break_beam ? 0x08 : 0x00;
+      
+      pdata.state = 0;  
+      pdata.state |= (sdata->paddles == STG_GRIPPER_PADDLE_OPEN) ? 0x01 : 0x00;
+      pdata.state |= (sdata->paddles == STG_GRIPPER_PADDLE_CLOSED) ? 0x02 : 0x00;
+      pdata.state |= ((sdata->paddles == STG_GRIPPER_PADDLE_OPENING) ||
+		      (sdata->paddles == STG_GRIPPER_PADDLE_CLOSING))  ? 0x04 : 0x00;
+      
+      pdata.state |= (sdata->lift == STG_GRIPPER_LIFT_UP) ? 0x10 : 0x00;
+      pdata.state |= (sdata->lift == STG_GRIPPER_LIFT_DOWN) ? 0x20 : 0x00;
+      pdata.state |= ((sdata->lift == STG_GRIPPER_LIFT_UPPING) ||
+		      (sdata->lift == STG_GRIPPER_LIFT_DOWNING))  ? 0x040 : 0x00;
+      
+      //pdata.state |= sdata->lift_error ? 0x80 : 0x00;
+      //pdata.state |= sdata->gripper_error ? 0x08 : 0x00;
+
+      device->driver->PutData( device->id, &pdata, sizeof(pdata), NULL); 
+    }
 }
 
 void GripperConfig( device_record_t* device, void* client, void* buffer, size_t len )

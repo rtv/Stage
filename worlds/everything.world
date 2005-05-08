@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.29 2005-05-08 20:33:09 rtv Exp $
+# CVS: $Id: everything.world,v 1.30 2005-05-08 22:57:48 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -17,13 +17,19 @@ include "pioneer.inc"
 
 
 
+
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
 
+
+
+
 size [40 20 ]
 
-window( size [ 830.000 556.000 ] center [-10.992 2.645] scale 0.003 )
+window( size [ 830.000 556.000 ] center [-9.508 2.202] scale 0.001 )
 
 map( 
   bitmap "bitmaps/hospital_section.png" 
@@ -57,8 +63,9 @@ define laserpioneer pioneer2dx
 laserpioneer
 (
   name "p0"
-  pose [-11.163 2.596 -348.743]
+  pose [-9.622 2.297 -53.365]
   gripper( pose [0.250 0.000 0.000] )
+  #gripper( pose [0.700 0.000 0.000] size [1.0 1.0] )
 )
 
 laserpioneer
@@ -86,7 +93,7 @@ laserpioneer
 (
   color "cyan"
   name "p4"
-  pose [-7.542 3.831 -458.929]
+  pose [-7.926 3.198 -359.434]
 )
 
 laserpioneer
@@ -107,7 +114,7 @@ laserpioneer
 position( 	
   name "invader" 
   size [0.3 0.3]
-  pose [-15.774 -0.172 0.000] 
+  pose [-13.674 -0.172 0.000] 
   color "red"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/space_invader.png"
@@ -119,7 +126,7 @@ position(
 position( 	
   name "ghost" 
   size [0.3 0.3 ]
-  pose [-14.344 -3.174 0.000] 
+  pose [-14.344 8.346 0.000] 
   color "blue"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/ghost.png"
