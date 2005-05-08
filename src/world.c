@@ -6,10 +6,13 @@
 
 #define STG_TOKEN_MAX 64
 
-#define STG_DEFAULT_RESOLUTION    0.02  // 2cm pixels
-#define STG_DEFAULT_INTERVAL_REAL 100   // msec between updates
-#define STG_DEFAULT_INTERVAL_SIM  100 
-  
+const double STG_DEFAULT_RESOLUTION = 0.02;  // 2cm pixels
+const double STG_DEFAULT_INTERVAL_REAL = 100.0; // msec between updates
+const double STG_DEFAULT_INTERVAL_SIM = 100.0;  // duration of a simulation timestep in msec
+const double STG_DEFAULT_WORLD_WIDTH = 20.0; // meters
+const double STG_DEFAULT_WORLD_HEIGHT = 20.0; // meters
+
+
 #include "stage_internal.h"
 
 extern int _stg_quit; // quit flag is returned by stg_world_update()
@@ -79,14 +82,20 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
   stg_msec_t interval_sim = 
     wf_read_int( section, "interval_sim", STG_DEFAULT_INTERVAL_SIM );
       
-  double ppm_high = 
+  double ppm = 
     1.0 / wf_read_float( section, "resolution", STG_DEFAULT_RESOLUTION ); 
-
-  double ppm_med = 
-    1.0 / wf_read_float( section, "resolution_med", 0.2 ); 
   
-  double ppm_low = 
-    1.0 / wf_read_float( section, "resolution_low", 1.0 ); 
+  double width = 
+    wf_read_tuple_float( section, "size", 0, STG_DEFAULT_WORLD_WIDTH ); 
+
+  double height = 
+    wf_read_tuple_float( section, "size", 1, STG_DEFAULT_WORLD_HEIGHT ); 
+
+  int resolution_scale = 
+    wf_read_int( section, "resolution_scale", 4.0 ); 
+  
+  int resolution_count = 
+    wf_read_int( section, "resolution_count", 4 ); 
   
   // create a single world
   stg_world_t* world = 
@@ -94,9 +103,11 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 		      world_name, 
 		      interval_sim, 
 		      interval_real,
-		      ppm_high,
-		      ppm_med,
-		      ppm_low );
+		      ppm,
+		      width,
+		      height,
+		      resolution_scale,
+		      resolution_count );
 
   if( world == NULL )
     return NULL; // failure
@@ -236,9 +247,11 @@ stg_world_t* stg_world_create( stg_id_t id,
 			       const char* token, 
 			       int sim_interval, 
 			       int real_interval,
-			       double ppm_high,
-			       double ppm_med,
-			       double ppm_low )
+			       double ppm,
+			       double width,
+			       double height,
+			       unsigned int array_scaling,
+			       unsigned int array_count )
 {
   PRINT_DEBUG2( "alternate world creator %d (%s)", id, token );
   
@@ -255,9 +268,11 @@ stg_world_t* stg_world_create( stg_id_t id,
   world->wall_interval = real_interval;
   world->wall_last_update = 0;
   
-  world->matrix = stg_matrix_create( ppm_high, ppm_med, ppm_low ); 
+  world->width = width;
+  world->height = height;
+  world->ppm = ppm; // this is the finest resolution of the matrix
+  world->matrix = stg_matrix_create( ppm, width, height, array_scaling, array_count ); 
   
-  world->ppm = ppm_high; // this is the finest resolution of the matrix
   
   world->paused = TRUE; // start paused.
   

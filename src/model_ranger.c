@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.48 $
+//  $Revision: 1.49 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +57,7 @@ ranger
   spose[15] [? ? ?]
    
   ssize [0.01 0.03]
-  sview [? ? ?]
+  sview [0.0 5.0 5.0]
 
   # model properties
 )
@@ -306,6 +306,18 @@ int ranger_update( stg_model_t* mod )
 
   return 0;
 }
+
+/*
+int ranger_noise_test( stg_ranger_sample_t* data, size_t count,  )
+{
+  int s;
+  for( s=0; s<count; s++ )
+    {
+      // add 10mm random error
+      ranges[s].range *= 0.1 * drand48();
+    }
+}
+*/
 
 void ranger_render_cfg( stg_model_t* mod )
 {

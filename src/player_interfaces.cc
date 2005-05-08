@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.6 2005-04-05 04:18:35 gerkey Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.7 2005-05-08 05:07:22 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -40,8 +40,6 @@
 #include "player_interfaces.h"
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
-
-
 
 // 
 // SIMULATION INTERFACE
@@ -298,7 +296,10 @@ void  MapConfigInfo( device_record_t* device,
       
       // we'll use a temporary matrix, as it knows how to render objects
       
-      stg_matrix_t* matrix = stg_matrix_create( minfo->ppm, 1.0, 1.0 );
+      stg_matrix_t* matrix = stg_matrix_create( minfo->ppm, 
+						device->mod->world->matrix->width,
+						device->mod->world->matrix->height,
+						1, 1 );
       
       if( count > 0 ) 
 	{
@@ -308,29 +309,32 @@ void  MapConfigInfo( device_record_t* device,
 			       geom.size.y/2.0,
 			       0,
 			       polys, count, 
-			       device->mod, 1 );  
+			       device->mod );  
 	  
-	  if( device->mod->guifeatures.boundary )    
+	  if( device->mod->boundary )    
 	    stg_matrix_rectangle( matrix,
 				  geom.size.x/2.0,
 				  geom.size.y/2.0,
 				  0,
 				  geom.size.x,
 				  geom.size.y,
-				  device->mod, 1 );
+				  device->mod );
 	}
       
       // Now convert the matrix to a Player occupancy grid. if the
       // matrix contains anything in a cell, we set that map cell to
       // be occupied, else unoccupied
       
+      puts( "**TODO** mapping broken just now." );
+
       for( unsigned int p=0; p<minfo->width; p++ )
 	for( unsigned int q=0; q<minfo->height; q++ )
-	  {
-	    //printf( "%d,%d \n", p,q );
-	    GPtrArray* pa = stg_table_cell( matrix->table, p, q );
-	    minfo->data[ q * minfo->width + p ] =  pa ? 1 : -1;
-	  }
+        {
+	  //printf( "%d,%d \n", p,q );
+	  //GPtrArray* pa = (GPtrArray*)stg_matrix_cell_get( matrix, 0, p, q );
+	  
+	  minfo->data[ q * minfo->width + p ] =  0;//pa ? 1 : -1;
+	}
       
       // we're done with the matrix
       stg_matrix_destroy( matrix );

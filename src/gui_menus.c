@@ -85,16 +85,18 @@ static GtkItemFactoryEntry menu_table[] = {
 
   { "/View/sep2",     NULL,      NULL, 0, "<Separator>" },
   { "/View/Debug", NULL, NULL, 1, "<Branch>" },
-  { "/View/Debug/Raytrace", NULL, gui_menu_debug_cb, 1, "<CheckItem>" },
-  { "/View/Debug/Geometry", NULL, gui_menu_debug_cb, 2, "<CheckItem>" },
-  { "/View/Debug/Matrix", "<CTRL>M",   gui_menu_debug_cb, 3, "<CheckItem>" },
+  { "/View/Debug/Raytrace", "<ALT>T", gui_menu_debug_cb, 1, "<CheckItem>" },
+  { "/View/Debug/Geometry", "<ALT>G", gui_menu_debug_cb, 2, "<CheckItem>" },
+  { "/View/Debug/Matrix tree", "<ALT>M",   gui_menu_debug_cb, 3, "<CheckItem>" },
+  { "/View/Debug/Matrix occupied", "<ALT>O",   gui_menu_debug_cb, 4, "<CheckItem>" },
+  //  { "/View/Debug/Matrix table", "<CTRL>T,   gui_menu_debug_cb, 4, "<CheckItem>" },
   { "/_Clock",         NULL,      NULL, 0, "<Branch>" },
   { "/Clock/tear1",    NULL,      NULL, 0, "<Tearoff>" },
   { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
 };
 
 // SET THIS TO THE NUMBER OF MENU ITEMS IN THE ARRAY ABOVE
-static const int menu_table_count = 49;
+static const int menu_table_count = 50;
 
 // USE THIS WHEN WE FIX ON A RECENT GTK VERSION 
 /* void gui_menu_file_about( void ) */
@@ -347,11 +349,35 @@ void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem )
 	}
       break;
 
-    case 3: // matrix
-      win->show_matrix = GTK_CHECK_MENU_ITEM(mitem)->active;
-      if( win->matrix ) stg_rtk_fig_clear( win->matrix );     
+    case 3: // matrix tree
+      if( win->matrix_tree ) 
+	{
+	  stg_rtk_fig_destroy( win->matrix_tree );     
+	  win->matrix_tree = NULL;
+	}
+      else
+	{
+	  win->matrix_tree = 
+	    stg_rtk_fig_create(win->canvas,win->bg,STG_LAYER_MATRIX_TREE);  
+	  stg_rtk_fig_color_rgb32( win->matrix_tree, 0x00CC00 );
+	}
       break;
       
+    case 4: // matrix occupied
+      if( win->matrix ) 
+	{
+	  stg_rtk_fig_destroy( win->matrix );     
+	  win->matrix = NULL;
+	}
+      else
+	{
+	  win->matrix = 
+	    stg_rtk_fig_create(win->canvas,win->bg,STG_LAYER_MATRIX);	  
+	  
+	  stg_rtk_fig_color_rgb32( win->matrix, 0x008800 );
+	}
+      break;
+
     default:
       PRINT_WARN1( "unknown debug menu item %d", action );
     }

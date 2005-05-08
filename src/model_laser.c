@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.66 $
+//  $Revision: 1.67 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -187,6 +187,10 @@ int laser_update( stg_model_t* mod )
   int t;
   // only compute every second sample, for speed
   //for( t=0; t<cfg.samples-1; t+=2 )
+  
+
+  //memset( scan, 0, sizeof(stg_laser_sample_t) * cfg.samples );
+  //for( t=0; t<1; t++ )
   for( t=0; t<cfg.samples; t++ )
     {
       
@@ -264,8 +268,6 @@ void laser_render_data(  stg_model_t* mod )
     {
       mod->gui.data_bg = stg_rtk_fig_create( mod->world->win->canvas,
 					 mod->gui.data, STG_LAYER_BACKGROUND );      
-      stg_rtk_fig_color_rgb32( mod->gui.data_bg, 
-			   stg_lookup_color( STG_LASER_FILL_COLOR ));
     }
   
   stg_laser_config_t cfg;
@@ -305,7 +307,11 @@ void laser_render_data(  stg_model_t* mod )
   // for the points argument? the function expects a double[][2] type. 
   
   if( mod->world->win->fill_polygons )
-    stg_rtk_fig_polygon( mod->gui.data_bg, 0,0,0, sample_count+1, points, TRUE );
+    {
+      stg_rtk_fig_color_rgb32( mod->gui.data_bg, 
+			       stg_lookup_color( STG_LASER_FILL_COLOR ));
+      stg_rtk_fig_polygon( mod->gui.data_bg, 0,0,0, sample_count+1, points, TRUE );
+    }
   
   stg_rtk_fig_polygon( mod->gui.data, 0,0,0, sample_count+1, points, FALSE ); 	
   

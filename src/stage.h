@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.129 2005-03-01 19:34:33 rtv Exp $
+ * CVS: $Id: stage.h,v 1.130 2005-05-08 05:07:23 rtv Exp $
  */
 
 
@@ -223,7 +223,7 @@ extern "C" {
     
     uint8_t nose;
     uint8_t grid;
-    uint8_t boundary;
+    //uint8_t boundary;
     uint8_t outline;
     stg_movemask_t movemask;
   } stg_guifeatures_t;
@@ -449,9 +449,11 @@ extern "C" {
 				 const char* token, 
 				 int sim_interval, 
 				 int real_interval,
-				 double ppm_high,
-				 double ppm_med,
-				 double ppm_low );
+				 double ppm,
+				 double width,
+				 double height,
+				 unsigned int array_scaling,
+				 unsigned int array_count );
   
   /** Create a new world as described in the worldfile [worldfile_path] 
    */
@@ -564,6 +566,9 @@ extern "C" {
   /** set a model's mass */
   int stg_model_set_mass( stg_model_t* mod, stg_kg_t* mass );
 
+  /** set a model's bounding box */
+  int stg_model_set_boundary( stg_model_t* mod, stg_bool_t* b );
+
   /** set a model's GUI features */
   int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf );
 
@@ -601,10 +606,12 @@ extern "C" {
   void stg_model_get_color( stg_model_t* mod, stg_color_t* dest );
   void stg_model_get_pose( stg_model_t* mod, stg_pose_t* dest );
   void stg_model_get_mass( stg_model_t* mod, stg_kg_t* dest );
+  void stg_model_get_boundary( stg_model_t* mod, stg_bool_t* b );
   void stg_model_get_guifeatures( stg_model_t* mod, stg_guifeatures_t* dest );
   void stg_model_get_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* dest  );
   void stg_model_get_laserreturn( stg_model_t* mod, stg_laser_return_t* dest );
   void stg_model_get_fiducialreturn( stg_model_t* mod,stg_fiducial_return_t* dest );
+
   //void stg_model_get_friction( stg_model_t* mod,stg_friction_t* dest );
 
   //stg_energy_data_t*     stg_model_get_energy_data( stg_model_t* mod );

@@ -7,6 +7,7 @@
 #define STG_LAYER_USER 99
 #define STG_LAYER_GEOM 80
 #define STG_LAYER_MATRIX 40
+#define STG_LAYER_MATRIX_TREE 39
 #define STG_LAYER_DEBUG 98
 
 #define STG_LAYER_BLOBGEOM 51
@@ -35,7 +36,7 @@
 #define STG_ENERGY_COLOR "purple"
 #define STG_ENERGY_CFG_COLOR "magenta"
    
-#define STG_DEBUG_COLOR "green"
+#define STG_DEBUG_COLOR "red"
 #define STG_BLOB_CFG_COLOR "gray75"
 
 
@@ -56,7 +57,7 @@
 #define STG_LAYER_POSITIONCONFIG 46
 
 #define STG_LASER_COLOR "steel blue"
-#define STG_LASER_FILL_COLOR "light blue"
+#define STG_LASER_FILL_COLOR "powder blue"
 #define STG_LASER_GEOM_COLOR "blue"
 #define STG_LASER_CFG_COLOR "light steel blue"
 #define STG_LASER_BRIGHT_COLOR "blue"

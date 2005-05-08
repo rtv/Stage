@@ -244,7 +244,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   double width = 10;//world->size.x;
   //double height = 10;//world->size.y;
 
-  win->bg = stg_rtk_fig_create( win->canvas, NULL, STG_LAYER_GRID );
+  win->bg = stg_rtk_fig_create( win->canvas, NULL, 0 );
   
   // draw a mark for the origin
   stg_rtk_fig_color_rgb32( win->bg, stg_lookup_color(STG_GRID_MAJOR_COLOR) );    
@@ -254,9 +254,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   stg_rtk_fig_arrow( win->bg, 0, -mark_sz/2, M_PI/2, mark_sz, mark_sz/4 );
   //stg_rtk_fig_grid( win->bg, 0,0, 100.0, 100.0, 1.0 );
   
-
   win->show_geom = TRUE;
-  win->show_matrix = FALSE;
   win->fill_polygons = TRUE;
   win->frame_interval = 500; // ms
   win->frame_format = STK_IMAGE_FORMAT_PNG;
@@ -280,7 +278,14 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   // except position
   win->render_data_flag[STG_MODEL_POSITION] = FALSE;
-
+  
+  // show the limits of the world
+  stg_rtk_canvas_bgcolor( win->canvas, 0.9, 0.9, 0.9 );
+  //stg_rtk_fig_color_rgb32( win->bg, 0xFEFEEFF );    
+  //stg_rtk_fig_rectangle( win->bg, 0,0,0, world->width, world->height, 1 );
+  stg_rtk_fig_color_rgb32( win->bg, 0xFFFFFF );    
+  stg_rtk_fig_rectangle( win->bg, 0,0,0, world->width, world->height, 1 );
+  
   return win;
 }
 
@@ -310,103 +315,176 @@ gui_window_t* gui_world_create( stg_world_t* world )
 }
 
 
-// render every occupied matrix pixel as an unfilled rectangle
-typedef struct
+void gui_world_render_cell( stg_rtk_fig_t* fig, stg_cell_t* cell )
 {
-  double ppm;
-  stg_rtk_fig_t* fig;
-} gui_mf_t;
-
-
-void render_matrix_cell( gui_mf_t*mf, stg_matrix_coord_t* coord )
-{
-  double pixel_size = 1.0 / mf->ppm;  
-  stg_rtk_fig_rectangle( mf->fig, 
-		     (double)coord->x * pixel_size + pixel_size/2.0, 
-		     (double)coord->y * pixel_size + pixel_size/2.0, 0, 
-		     pixel_size, pixel_size, 0 );
+  assert( fig );
+  assert( cell );
   
-#if 0 // render coords of matrix cells
-  char str[32];
-  snprintf( str, 32, "%.2f,%.2f",
-	    (double)coord->x * pixel_size,
-	    (double)coord->y * pixel_size );
+  stg_rtk_fig_rectangle( fig,
+			 cell->x, cell->y, 0.0,
+			 cell->size, cell->size, 0 );
+  
+  // if this is a leaf node containing data, draw a little cross
+  if( 0 )//cell->data && g_slist_length( (GSList*)cell->data ) )
+    {
+      stg_rtk_fig_line( fig, 
+			cell->x-0.01, cell->y-0.01,
+			cell->x+0.01, cell->y+0.01 );
 
-  stg_rtk_fig_text( mf->fig, 
-		(double)coord->x * pixel_size,
-		(double)coord->y * pixel_size,
-		0, str );
-#endif
-}
-
-void render_matrix_cell_cb( gpointer key, gpointer value, gpointer user )
-{
-  GPtrArray* arr = (GPtrArray*)value;
-
-  if( arr->len > 0 )
-    {  
-      stg_matrix_coord_t* coord = (stg_matrix_coord_t*)key;
-      gui_mf_t* mf = (gui_mf_t*)user;
+      stg_rtk_fig_line( fig, 
+			cell->x-0.01, cell->y+0.01,
+			cell->x+0.01, cell->y-0.01 );
       
-      render_matrix_cell( mf, coord );
+      
+    }
+  
+  if( cell->children[0] )
+    {
+      int i;
+      for( i=0; i<4; i++ )
+	gui_world_render_cell( fig, cell->children[i] );  
     }
 }
 
+void gui_world_render_cell_occupied( stg_rtk_fig_t* fig, stg_cell_t* cell )
+{
+  assert( fig );
+  assert( cell );
+  
+  // if this is a leaf node containing data, draw a little cross
+  if( cell->data && g_slist_length( (GSList*)cell->data ) )
+    stg_rtk_fig_rectangle( fig,
+			   cell->x, cell->y, 0.0,
+			   cell->size, cell->size, 0 );            
+  
+  if( cell->children[0] )
+    {
+      int i;
+      for( i=0; i<4; i++ )
+	gui_world_render_cell_occupied( fig, cell->children[i] );  
+    }
+}
 
+void gui_world_render_cell_cb( gpointer cell, gpointer fig )
+{
+  gui_world_render_cell( (stg_rtk_fig_t*)fig, (stg_cell_t*)cell );
+}
+
+/*
 // useful debug function allows plotting the matrix
 void gui_world_matrix( stg_world_t* world, gui_window_t* win )
 {
-  if( win->matrix == NULL )
+ if( win->matrix )
+//gui_world_render_cell( win->matrix, world->matrix->root );
+ gui_world_render_cell_occupied( win->matrix, world->matrix->root );
+
+  if( world->matrix->list_cells_added ) 
     {
-      win->matrix = stg_rtk_fig_create(win->canvas,win->bg,STG_LAYER_MATRIX);
-      stg_rtk_fig_color_rgb32(win->matrix, stg_lookup_color(STG_MATRIX_COLOR));
+      printf( "rendering %d cells\n", 
+	      g_slist_length( world->matrix->list_cells_added ) ); 
       
-    }
-  else
-    stg_rtk_fig_clear( win->matrix );
-  
-  gui_mf_t mf;
-  mf.fig = win->matrix;
+      //g_slist_foreach( world->matrix->list_cells_added, 
+      //	       gui_world_render_cell_cb,
+      //	       win->matrix );
 
-
-  if( world->matrix->table )
-    {
-      mf.ppm = world->matrix->ppm;
-      g_hash_table_foreach( world->matrix->table, render_matrix_cell_cb, &mf );
-    }
-  
-  if( world->matrix->table ) 
-    {
-      mf.ppm = world->matrix->medppm;
-      g_hash_table_foreach( world->matrix->medtable, render_matrix_cell_cb, &mf );
-    }
-  
-  if( world->matrix->bigtable ) 
-    {
-      mf.ppm = world->matrix->bigppm;
-      g_hash_table_foreach( world->matrix->bigtable, render_matrix_cell_cb, &mf );
-    }
-  
-  stg_matrix_t* matrix = world->matrix;
-  if( matrix->array )
-    {
-      int i;
-      for( i=0; i<matrix->array_width*matrix->array_height; i++ )
+      stg_rtk_fig_color_rgb32( win->matrix, 0xEEEEEE );
+      
+      while( world->matrix->list_cells_removed )
 	{
-	  GPtrArray* a = g_ptr_array_index( matrix->array, i );
-
-	  assert(a);
-
-	  if( a->len )
+	  // get the cell from the head of the list
+	  stg_cell_t* cell = 
+	    (stg_cell_t*)world->matrix->list_cells_removed->data;
+	  
+	  //printf( "drawing cell at %p\n", cell );
+	  
+	  stg_rtk_fig_rectangle( win->matrix,
+				 cell->x, cell->y, 0.0,
+				 cell->size, cell->size, 0 );
+	  
+	  // if this is a leaf node containing data, draw a little dash
+	  if( 0 )//cell->data && g_slist_length( (GSList*)cell->data ) )
 	    {
-	      stg_matrix_coord_t  coord;
-	      coord.x = (i % matrix->array_width) - matrix->array_width/2;
-	      coord.y = (i / matrix->array_width) - matrix->array_height/2;
-	      mf.ppm = matrix->ppm;
-	      render_matrix_cell( &mf, &coord );
+	      stg_rtk_fig_line( win->matrix, 
+				cell->x-0.006, cell->y,
+				cell->x+0.006, cell->y );
+	      
+	      //stg_rtk_fig_line( win->matrix, 
+	      //		cell->x, cell->y-0.004,
+	      //		cell->x, cell->y+0.004 );
+	      
 	    }
-	    
+	  
+	  // remove the head of the list
+	  world->matrix->list_cells_removed = 
+	    g_slist_delete_link( world->matrix->list_cells_removed,
+				 world->matrix->list_cells_removed );
+	}  
+
+      stg_rtk_fig_color_rgb32( win->matrix, 0x00FF00 );
+
+      while( world->matrix->list_cells_added )
+	{
+	  // get the cell from the head of the list
+	  stg_cell_t* cell = 
+	    (stg_cell_t*)world->matrix->list_cells_added->data;
+	  
+	  //printf( "drawing cell at %p\n", cell );
+	  
+	  stg_rtk_fig_rectangle( win->matrix,
+				 cell->x, cell->y, 0.0,
+				 cell->size, cell->size, 0 );
+	  
+	  // if this is a leaf node containing data, draw a little dash
+	  if( 0 )//cell->data && g_slist_length( (GSList*)cell->data ) )
+	    {
+	      stg_rtk_fig_line( win->matrix, 
+				cell->x-0.006, cell->y,
+				cell->x+0.006, cell->y );
+	      
+	      //stg_rtk_fig_line( win->matrix, 
+	      //		cell->x, cell->y-0.004,
+	      //		cell->x, cell->y+0.004 );
+	      
+	    }
+	  
+	  // remove the head of the list
+	  world->matrix->list_cells_added = 
+	    g_slist_delete_link( world->matrix->list_cells_added,
+				 world->matrix->list_cells_added );
 	}
+    }
+
+  
+  //else
+  //puts( "nothing to render" );
+    }
+*/
+
+void render_matrix_object( gpointer key, gpointer value, gpointer user )
+{
+  // value is a list of cells
+  GSList* list = (GSList*)value;
+  
+  while( list )
+    {
+      stg_cell_t* cell = (stg_cell_t*)list->data;
+      stg_rtk_fig_rectangle( (stg_rtk_fig_t*)user,
+			     cell->x, cell->y, 0.0,
+			     cell->size, cell->size, 0 );
+      
+      list = list->next;
+    }
+}
+
+// useful debug function allows plotting the matrix
+void gui_world_matrix_table( stg_world_t* world, gui_window_t* win )
+{
+  if( win->matrix )
+    {
+      if( world->matrix->ptable )
+	g_hash_table_foreach( world->matrix->ptable, 
+			  render_matrix_object, 
+			      win->matrix );   
     }
 }
 
@@ -439,8 +517,19 @@ int gui_world_update( stg_world_t* world )
       return 1;
     }
 
-  if( win->show_matrix ) gui_world_matrix( world, win );
+  if( win->matrix )
+    {
+      stg_rtk_fig_clear( win->matrix );
+      gui_world_render_cell_occupied( win->matrix, world->matrix->root );
+      //gui_world_matrix_table( world, win );
+    }  
   
+  if( win->matrix_tree )
+    {
+      stg_rtk_fig_clear( win->matrix_tree );
+      gui_world_render_cell( win->matrix_tree, world->matrix->root );
+    }  
+
   char clock[256];
   snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%2lu\t(sim:%3d real:%3d ratio:%2.2f)",
 	    world->sim_time / (24*3600000), // days
@@ -633,8 +722,8 @@ void gui_model_features( stg_model_t* mod )
   stg_model_get_guifeatures( mod, &gf );
 
   
-  PRINT_DEBUG4( "model %d gui features grid %d nose %d boundary mask %d",
-		(int)gf.grid, (int)gf.nose, (int)gf.boundary, (int)gf.movemask );
+  PRINT_DEBUG3( "model %d gui features grid %d nose %d mask %d",
+		(int)gf.grid, (int)gf.nose, (int)gf.movemask );
 
   stg_geom_t geom;
   stg_model_get_geom(mod, &geom);
@@ -682,19 +771,7 @@ void gui_model_features( stg_model_t* mod )
     {
       stg_rtk_fig_destroy( gui_model_figs(mod)->grid );
       gui_model_figs(mod)->grid == NULL;
-    }
-
-  
-  if( gf.boundary )
-    {
-      stg_rtk_fig_rectangle( gui_model_figs(mod)->top, 
-			 geom.pose.x, geom.pose.y, geom.pose.a, 
-			 geom.size.x, geom.size.y, 0 ); 
-			 
-      //stg_rtk_fig_rectangle( gui_model_figs(mod)->top, 
-      //		 geom.pose.x, geom.pose.y, geom.pose.a, 
-      //		 20, 20, 1 );
-    }
+    }  
 }
 
 
@@ -809,7 +886,7 @@ void stg_model_render_polygons( stg_model_t* mod )
 	}
     }
   
-  if( mod->guifeatures.boundary )
+  if( mod->boundary )
     {      
       stg_rtk_fig_rectangle( gui_model_figs(mod)->top, 
 			 geom.pose.x, geom.pose.y, geom.pose.a, 

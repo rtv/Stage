@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.11 2005-05-05 20:10:30 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.12 2005-05-08 05:07:22 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -591,8 +591,9 @@ void stg_rtk_fig_render_selection(stg_rtk_fig_t *fig)
   gdk_color_alloc(colormap, &color);
   gdk_gc_set_foreground(gc, &color);
   gdk_gc_set_function(gc, GDK_XOR);
-  gdk_gc_set_line_attributes(gc, 3,
+  gdk_gc_set_line_attributes(gc, 4,
                              GDK_LINE_ON_OFF_DASH, GDK_CAP_NOT_LAST, GDK_JOIN_MITER);
+                             //GDK_LINE_SOLID, GDK_CAP_NOT_LAST, GDK_JOIN_MITER);
 
   // Draw the bounding box
   LTOD(points[0], fig->min_x, fig->max_y);
@@ -1153,10 +1154,10 @@ void stg_rtk_fig_polygon_calc(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data
   }
 
   // Allow for the selection indicator, which may run over a bit.
-  minx -= 1;
-  miny -= 1;
-  maxx += 1;
-  maxy += 1;
+  minx -= 3;
+  miny -= 3;
+  maxx += 3;
+  maxy += 3;
 
   // Update the figure's bounding region.
   stg_rtk_region_set_union_rect(fig->region, minx, miny, maxx, maxy);

@@ -8,6 +8,20 @@
 
 #include "stage.h"
 
+/** macros for floating point comparisons 
+ */
+#define PRECISION 100000.0
+//#define EQ(A,B) (((int)(A*PRECISION))==((int)(B*PRECISION)))
+//#define LT(A,B) (((int)(A*PRECISION))<((int)(B*PRECISION)))
+//#define GT(A,B) (((int)(A*PRECISION))>((int)(B*PRECISION)))
+//#define GTE(A,B) (((int)(A*PRECISION))>=((int)(B*PRECISION)))
+//#define LTE(A,B) (((int)(A*PRECISION))<=((int)(B*PRECISION)))
+#define EQ(A,B) ((lrint(A*PRECISION))==(lrint(B*PRECISION)))
+#define LT(A,B) ((lrint(A*PRECISION))<(lrint(B*PRECISION)))
+#define GT(A,B) ((lrint(A*PRECISION))>(lrint(B*PRECISION)))
+#define GTE(A,B) ((lrint(A*PRECISION))>=(lrint(B*PRECISION)))
+#define LTE(A,B) ((lrint(A*PRECISION))<=(lrint(B*PRECISION)))
+
 #ifdef __cplusplus
 extern "C" {
 #endif 
@@ -47,6 +61,7 @@ extern "C" {
 
     stg_rtk_fig_t* bg; // background
     stg_rtk_fig_t* matrix;
+    stg_rtk_fig_t* matrix_tree;
     stg_rtk_fig_t* poses;
 
     gboolean show_matrix;  
@@ -193,6 +208,7 @@ extern "C" {
     stg_geom_t geom; // pose and size in local CS
     stg_color_t color; // RGB color 
     stg_kg_t mass; // mass in kg
+    stg_bool_t boundary; // if non-zero, the object has a bounding box
     stg_guifeatures_t guifeatures; // controls how we are rendered in the GUI
 
     // type-dependent functions for this model, implementing simple
@@ -221,7 +237,6 @@ extern "C" {
     stg_watts_t watts;
     
     char extend[0]; // this must be the last field!
-
   };
 
   // internal functions
@@ -260,6 +275,8 @@ extern "C" {
     GHashTable* models; // the models that make up the world, indexed by id
     GHashTable* models_by_name; // the models that make up the world, indexed by name
     
+    double width, height; // the size of the world in meters
+
     // the number of models of each type is counted so we can
     // automatically generate names for them
     int child_type_count[ STG_MODEL_COUNT ];
@@ -306,39 +323,56 @@ extern "C" {
       @{ 
   */
   
+  typedef struct stg_cell
+  {
+    void* data;
+    double x, y;
+    double size;
+    
+    // bounding box
+    double xmin,ymin,xmax,ymax;
+    
+    struct stg_cell* children[4];
+    struct stg_cell* parent;
+  } stg_cell_t;
+  
+  /** in the cell-tree which contains cell, return the smallest cell that contains the point x,y. cell need not be the root of the tree
+   */
+  stg_cell_t* stg_cell_locate( stg_cell_t* cell, double x, double y );
+  
   typedef struct _stg_matrix
   {
     double ppm; // pixels per meter (1/resolution)
-    GHashTable* table;
-  
-    double medppm;
-    GHashTable* medtable;
-
-    double bigppm;
-    GHashTable* bigtable;
+    double width, height;
     
-    long array_width, array_height, array_origin_x, array_origin_y;
-    // faster than hash tables but take up more space
-    GPtrArray* array;
-    GPtrArray* medarray;
-    GPtrArray* bigarray;
+    // A quad tree of cells. Each leaf node contains a list of
+    // pointers to objects located at that cell
+    stg_cell_t* root;
+    
+    // hash table stores all the pointers to objects rendered in the
+    // quad tree, each associated with a list of cells in which it is
+    // rendered. This allows us to remove objects from the tree
+    // without doing the geometry again
+    GHashTable* ptable;
+
+
+    // lists of cells that have changed recently. This is used by the
+    // GUI to render cells very quickly, and could also be used by devices
+    //GSList* cells_changed;
+    
+    // debug figure. if this is non-NULL, debug info is drawn here
+    stg_rtk_fig_t* fig;
 
     // todo - record a timestamp for matrix mods so devices can see if
     //the matrix has changed since they last peeked into it
     // stg_msec_t last_mod_time;
   } stg_matrix_t;
   
-  typedef struct
-  {
-    glong x; // address a very large space of cells
-    glong y;
-    //double x, y;
-  } stg_matrix_coord_t;
-
 
   /** Create a new matrix structure
    */
-  stg_matrix_t* stg_matrix_create( double ppm, double medppm, double bigppm );
+  stg_matrix_t* stg_matrix_create( double ppm, double width, double height, 
+				   unsigned int scale, unsigned int count );
   
   /** Frees all memory allocated by the matrix; first the cells, then the   
       cell array.
@@ -349,44 +383,38 @@ extern "C" {
    */
   void stg_matrix_clear( stg_matrix_t* matrix );
   
-  /** Get the pointer array from the small cell at x,y (in meters).
+  /** Get the pointer from the cell at x,y (in meters).
    */
-  GPtrArray* stg_matrix_cell_get( stg_matrix_t* matrix, double x, double y);
+  void* stg_matrix_cell_get( stg_matrix_t* matrix, int r, double x, double y);
 
-  /** Get the pointer array from the big cell at x,y (in meters).
-   */
-  GPtrArray* stg_matrix_bigcell_get( stg_matrix_t* matrix, double x, double y);
-  
-  /** Get the pointer array from the medium cell at x,y (in meters).
-   */
-  GPtrArray* stg_matrix_medcell_get( stg_matrix_t* matrix, double x, double y);
-  
-  /** append the [object] to the pointer array at the cell
+  /** append the pointer [object] to the list of pointers in the [matrix] cell at location [x,y]
    */
   void stg_matrix_cell_append(  stg_matrix_t* matrix, 
 				double x, double y, void* object );
-
-  /** if [object] appears in the cell's array, remove it
+  
+  /** remove [object] from all cells it occupies in the matrix
+   */
+  void stg_matrix_remove_obect( stg_matrix_t* matrix, void* object );
+  
+  /** if [object] appears in the cell's list, remove it
    */
   void stg_matrix_cell_remove(  stg_matrix_t* matrix,
 				double x, double y, void* object );
   
   /** Append to the [object] pointer to the cells on the edge of a
-      rectangle, described in meters about a center point. Uses
-      the matrix.ppm value to scale from meters to matrix pixels.
+      rectangle, described in meters about a center point.
   */
   void stg_matrix_rectangle( stg_matrix_t* matrix,
 			     double px, double py, double pth,
 			     double dx, double dy, 
-			     void* object, int add );
+			     void* object );
   
-  /** Render/unrender [object] as a line in the matrix. Render if
-      [add] is true, unrender is [add] is false.
+  /** Render [object] as a line in the matrix.
   */
   void stg_matrix_line( stg_matrix_t* matrix, 
 			double x1, double y1, 
 			double x2, double y2,
-			void* object, int add );
+			void* object );
 
   /** specify a line from (x1,y1) to (x2,y2), all in meters
    */
@@ -395,35 +423,24 @@ extern "C" {
     stg_meters_t x1, y1, x2, y2;
   } stg_line_t;
   
-  //typedef struct
-  // {
-  //int toplx, toply, toprx, topry, botlx, botly, botrx, botry;
-  //} stg_corners_t;
-
 
   /** Call stg_matrix_line for each of [num_lines] lines 
    */
   void stg_matrix_lines( stg_matrix_t* matrix, 
 			 stg_line_t* lines, int num_lines,
-			 void* object, int add );
-  
-  /** render a polygon into the matrix
-   */
-  void stg_matrix_polygon( stg_matrix_t* matrix,
-			   double x, double y, double a,
-			   stg_polygon_t* poly,
-			   void* object, int add );
-  
+			 void* object );
+    
   /** render an array of polygons into the matrix
    */
   void stg_matrix_polygons( stg_matrix_t* matrix,
 			    double x, double y, double a,
 			    stg_polygon_t* polys, int num_polys,
-			    void* object, int add );
+			    void* object );
 
-  /** get a single cell by pixel coordinate */
-  GPtrArray* stg_table_cell( GHashTable* table, glong x, glong y);
-  
+  /** remove all reference to an object from the matrix
+   */
+  void stg_matrix_remove_object( stg_matrix_t* matrix, void* object );
+
   /**@}*/
 
   // RAYTRACE ITERATORS -------------------------------------------------------------
@@ -435,14 +452,12 @@ extern "C" {
   typedef struct
   {
     double x, y, a;
-    double cosa, sina;
+    double cosa, sina, tana;
     double range;
     double max_range;
-    double big_incr;
-    double small_incr;
-    double med_incr;
-    
-    GPtrArray* models;
+    double* incr;//[matrix_array_count];
+
+    GSList* models;
     int index;
     stg_matrix_t* matrix;    
   

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.16 2005-05-05 20:10:30 rtv Exp $
+ * $Id: matrix.c,v 1.17 2005-05-08 05:07:20 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -10,72 +10,59 @@
 
 #include "stage_internal.h"
 
+
 //#define DEBUG
 
-// if this is defined, empty matrix cells are deleted, saving memory
-// at the cost of a little time. If you turn this off - Stage may use
-// a LOT of memory if it runs a long time in large worlds.
-#define STG_DELETE_EMPTY_CELLS 1
+const int fastmode = 1;
+extern stg_rtk_fig_t* fig_debug_rays;
 
-// basic integer drawing functions (not intended for external use)
-void draw_line( stg_matrix_t* matrix,
-		int x1, int y1, int x2, int y2, void* object, int add);
-
-void matrix_key_destroy( gpointer key )
+stg_cell_t* stg_cell_create( stg_cell_t* parent, double x, double y, double size )
 {
-  free( key );
+  stg_cell_t* cell = (stg_cell_t*)calloc( sizeof(stg_cell_t), 1);
+  
+  cell->parent = parent;
+  cell->data = NULL;
+  cell->x = x;
+  cell->y = y;
+  cell->size = size;
+ 
+  // store bounds for fast checking
+  cell->xmin = x - size/2.0;
+  cell->xmax = x + size/2.0;
+  cell->ymin = y - size/2.0;
+  cell->ymax = y + size/2.0;
+
+  return cell;
 }
 
-void matrix_value_destroy( gpointer value )
+void stg_cell_delete( stg_cell_t* cell )
 {
-  g_ptr_array_free( (GPtrArray*)value, TRUE );
+  free( cell );
 }
 
-// compress the two (long) coordinates into a single (ulong) value
-guint matrix_hash( gconstpointer key )
+stg_matrix_t* stg_matrix_create( double ppm, double width, double height, 
+				 unsigned int scale, unsigned int count )
 {
-  stg_matrix_coord_t* coord = (stg_matrix_coord_t*)key;
+  stg_matrix_t* matrix = NULL;
+  assert( matrix = (stg_matrix_t*)calloc( sizeof(stg_matrix_t), 1 ));
   
-  long x = coord->x * 73856093; // big prime numbers
-  long y = coord->y * 19349663;  
-  long z = x ^ y; // XOR
+  matrix->ppm = ppm; // base resolution
   
-  return( (guint)z );
+  // grow from the smallest cell size to find a root size that
+  // encompasses the whole world
+  double sz = 1.0/ppm;
+  while( sz < MAX(width,height) )
+    sz *= 2.0;
   
-  //gshort x = ; // ignore overflow
-  //gshort y = (gshort)coord->y; // ignore overflow
+  matrix->width = sz;//width;
+  matrix->height = sz;//height;
   
-  //printf( " %d %d hash %d\n", x, y, ( (x << 16) | y ) );
+  // create the root node of a quadtree
+  matrix->root = stg_cell_create( NULL, 0.0, 0.0, sz );
 
-  //return( (guint)((((gshort)coord->x) << 16) | (gshort)coord->y) );
-}
-
-// returns TRUE if the two coordinates are the same, else FALSE
-gboolean matrix_equal( gconstpointer c1, gconstpointer c2 )
-{
-  //stg_matrix_coord_t* mc1 = (stg_matrix_coord_t*)c1;
-  //stg_matrix_coord_t* mc2 = (stg_matrix_coord_t*)c2;
-  
-  return( ((stg_matrix_coord_t*)c1)->x == ((stg_matrix_coord_t*)c2)->x && 
-	  ((stg_matrix_coord_t*)c1)->y == ((stg_matrix_coord_t*)c2)->y );  
-}
-
-stg_matrix_t* stg_matrix_create( double ppm, double medppm, double bigppm )
-{
-  stg_matrix_t* matrix = (stg_matrix_t*)calloc(1,sizeof(stg_matrix_t));
-  
-  matrix->table = g_hash_table_new_full( matrix_hash, matrix_equal,
-					 matrix_key_destroy, matrix_value_destroy );  
-
-  matrix->medtable = g_hash_table_new_full( matrix_hash, matrix_equal,
-					    matrix_key_destroy, matrix_value_destroy );  
-  
-  matrix->bigtable = g_hash_table_new_full( matrix_hash, matrix_equal,
-					    matrix_key_destroy, matrix_value_destroy );
-  
-  matrix->ppm = ppm;
-  matrix->medppm = medppm;  
-  matrix->bigppm = bigppm;
+  // hash table is indexed by object pointer and a list of the cells
+  // each object is rendered into
+  matrix->ptable = g_hash_table_new( g_direct_hash, g_direct_equal );
 
   return matrix;
 }
@@ -84,270 +71,339 @@ stg_matrix_t* stg_matrix_create( double ppm, double medppm, double bigppm )
 // cell array.
 void stg_matrix_destroy( stg_matrix_t* matrix )
 {
-  g_hash_table_destroy( matrix->table );
-  g_hash_table_destroy( matrix->medtable );
-  g_hash_table_destroy( matrix->bigtable );
+  // TODO - free quadtree
+  g_hash_table_destroy( matrix->ptable );
   free( matrix );
 }
 
 // removes all pointers from every cell in the matrix
 void stg_matrix_clear( stg_matrix_t* matrix )
 {  
-  g_hash_table_destroy( matrix->table );
-  matrix->table = g_hash_table_new_full( matrix_hash, matrix_equal,
-					 matrix_key_destroy, matrix_value_destroy );
+
 }
 
-GPtrArray* stg_table_cell( GHashTable* table, glong x, glong y)
+void stg_cell_print( stg_cell_t* cell, char* prefix )
 {
-  stg_matrix_coord_t coord;
-  coord.x = x;
-  coord.y = y;
- 
-  //printf( "table %p fetching [%ld][%ld]\n", table, x, y );
-  return g_hash_table_lookup( table, &coord );
+  printf( "%s: cell %p at %.4f,%.4f size %.4f [%.4f:%.4f][%.4f:%.4f] children %p %p %p %p data %p\n",
+	  prefix,
+	  cell, 
+	  cell->x, 
+	  cell->y, 
+	  cell->size, 
+	  cell->xmin,
+	  cell->xmax,
+	  cell->ymin,
+	  cell->ymax,
+	  cell->children[0],
+	  cell->children[1],
+	  cell->children[2],
+	  cell->children[3],
+	  cell->data );  
 }
 
-GPtrArray* stg_matrix_table_add_cell( GHashTable* table, glong x, glong y )
+void stg_cell_remove_object( stg_cell_t* cell, void* p )
 {
-  stg_matrix_coord_t* coord = calloc( sizeof(stg_matrix_coord_t), 1 );
-  coord->x = x;
-  coord->y = y;
+  cell->data = g_slist_remove( (GSList*)cell->data, p ); 
   
-  GPtrArray* cell = g_ptr_array_new();
-  g_hash_table_insert( table, coord, cell );
-  
-  return cell;
-}
-
-
-
-// get the array of pointers in cell y*width+x, specified in meters
-GPtrArray* stg_matrix_cell_get( stg_matrix_t* matrix, double x, double y)
-{
-  //printf( "fetching [%ld][%ld]\n", 
-  //  (glong)floor(x * matrix->ppm), 
-  //  (glong)floor(y * matrix->ppm) );
-  
-  return stg_table_cell( matrix->table, 
-			 (glong)(x * matrix->ppm), 
-			 (glong)(y * matrix->ppm) );  
-}
-
-// get the array of pointers in cell y*width+x, specified in meters
-GPtrArray* stg_matrix_bigcell_get( stg_matrix_t* matrix, double x, double y)
-{
-  return stg_table_cell( matrix->bigtable, 
-			 (glong)(x * matrix->bigppm), 
-			 (glong)(y * matrix->bigppm) );  
-}
-
-// get the array of pointers in cell y*width+x, specified in meters
-GPtrArray* stg_matrix_medcell_get( stg_matrix_t* matrix, double x, double y)
-{
-  return stg_table_cell( matrix->medtable, 
-			 (glong)(x * matrix->medppm), 
-			 (glong)(y * matrix->medppm) );  
-}
-
-
-// append the pointer <object> to the pointer array at the cell
-void stg_matrix_cell_append(  stg_matrix_t* matrix, 
-			      double x, double y, void* object )
-{
-  GPtrArray* cell = stg_matrix_cell_get( matrix, x, y );
- 
-  // if the cell is empty we create a new ptr array for it
-  if( cell == NULL )
-    cell = stg_matrix_table_add_cell( matrix->table, 
-				      (glong)(x*matrix->ppm),
-				      (glong)(y*matrix->ppm) );
-  else // make sure we're only in the cell once 
-    g_ptr_array_remove_fast( cell, object );
-  
-  g_ptr_array_add( cell, object );  
-  
-
-  GPtrArray* medcell = stg_matrix_medcell_get( matrix, x, y );
-  
-  // if the cell is empty we create a new ptr array for it
-  if( medcell == NULL )
-    medcell = stg_matrix_table_add_cell( matrix->medtable, 
-					 (glong)(x*matrix->medppm),
-					 (glong)(y*matrix->medppm) );
-  else // make sure we're only in the cell once 
-    g_ptr_array_remove_fast( medcell, object );
-  
-  g_ptr_array_add( medcell, object );  
-  
-
-  GPtrArray* bigcell = stg_matrix_bigcell_get( matrix, x, y );
-  
-  if( bigcell == NULL )
-    bigcell = stg_matrix_table_add_cell( matrix->bigtable, 
-					 (glong)(x*matrix->bigppm), 
-					 (glong)(y*matrix->bigppm) );
-  else // make sure we're only in the cell once 
-    g_ptr_array_remove_fast( bigcell, object );
-  
-  g_ptr_array_add( bigcell, object );  
-
-  // todo - record a timestamp for matrix mods so devices can see if
-  //the matrix has changed since they last peeked into it
-  // matrix->last_mod =
-
-  //printf( "appending %p to matrix at %d %d. %d pointers now cell\n", 
-  //  object, (int)x, (int)y, cell->len );
-}
-
-// if <object> appears in the cell's array, remove it
-void stg_matrix_cell_remove( stg_matrix_t* matrix, 
-			     double x, double y, void* object )
-{ 
-  GPtrArray* cell = stg_matrix_cell_get( matrix, x, y );
-  
-  if( cell )
+  // if the cell is empty and has a parent, we might be able to delete it
+  if( cell->data == NULL && cell->parent )
     {
-      //printf( "removing %p from %d,%d. %d pointers remain here\n", 
-      //      object, x, y, cell->len );
+      // hop up in the tree
+      cell = cell->parent;
       
-      g_ptr_array_remove_fast( cell, object );
-
-#if STG_DELETE_EMPTY_CELLS
-      // if the ptr array is empty, we delete it to save memory.
-      if( cell->len == 0 )
-	{
-	  stg_matrix_coord_t coord;
-	  coord.x = (glong)(x*matrix->ppm);
-	  coord.y = (glong)(y*matrix->ppm);
+      // while all children are empty
+      while( cell && 
+	     !(cell->children[0]->children[0] || cell->children[0]->data ||
+	       cell->children[1]->children[0] || cell->children[1]->data ||
+	       cell->children[2]->children[0] || cell->children[2]->data ||
+	       cell->children[3]->children[0] || cell->children[3]->data) )
+	{	      
+	  // detach siblings from parent and free them
+	  int i;
+	  for(i=0; i<4; i++ )
+	    {
+	      stg_cell_delete( cell->children[i] );
+	      cell->children[i] = NULL; 
+	    }
 	  
-	  g_hash_table_remove( matrix->table, &coord );
-	  //GPtrArray* p = stg_matrix_cell( matrix, x, y );
-	  //printf( "removed cell %d %d now %p\n", x, y, p  );
+	  cell = cell->parent;
 	}
-#endif
-    }
-  
-  // don't bother deleting med cells, there aren't nearly so many of 'em.
-  GPtrArray* medcell = stg_matrix_medcell_get( matrix, x, y );
-  if( medcell )
-    g_ptr_array_remove_fast( medcell, object );
-
-  // don't bother deleting big cells, there aren't nearly so many of 'em.
-  GPtrArray* bigcell = stg_matrix_bigcell_get( matrix, x, y );
-  if( bigcell )
-    g_ptr_array_remove_fast( bigcell, object );
+    }     
 }
 
-// draw or erase a straight line between x1,y1 and x2,y2.
-void stg_matrix_line( stg_matrix_t* matrix,
-		      double x1,double y1,double x2,double y2, 
-		      void* object, int add )
+// remove <object> from the matrix
+void stg_matrix_remove_object( stg_matrix_t* matrix, void* object )
 {
-  double xdiff = x2 - x1;
-  double ydiff = y2 - y1;
-
-  double angle = atan2( ydiff, xdiff );
-  double len = hypot( ydiff, xdiff );
-
-  double cosa = cos(angle);
-  double sina = sin(angle);
+  // get the list of cells in which this object has been drawn
+  GSList* list = g_hash_table_lookup( matrix->ptable, object );
   
-  double xincr = cosa * 1.0 / matrix->ppm;
-  double yincr = sina * 1.0 / matrix->ppm;
-
-  // hack - try to avoid the gappy lines
-  xincr *= 0.99;
-  yincr *= 0.99;
-
-  double xx = 0;
-  double yy = 0;
-  
-  double finalx, finaly;
-
-  while( len > hypot( yy,xx ) )
+  // remove this object from each cell in the list      
+  GSList* it;
+  for( it = list; it; it = it->next )
     {
-      finalx = x1+xx;
-      finaly = y1+yy;
-      
-      // bounds check
-      //if( finalx >= 0 && finaly >= 0 )
-	{
-	  if( add ) 
-	    stg_matrix_cell_append( matrix, finalx, finaly, object ); 
-	  else
-	    stg_matrix_cell_remove( matrix, finalx, finaly, object ); 
-	}
-      
-      xx += xincr;
-      yy += yincr;
-
-
-      //printf( "line cell: %.3f %.3f\n", finalx, finaly );
+      //printf( "removing %p from cell %p\n", 
+      //      object, it->data );
+      stg_cell_remove_object( (stg_cell_t*)it->data, object );
     }
+  
+  // now free the cell list
+  g_slist_free( list );
+  
+  // and remove the object from the hash table
+  g_hash_table_remove( matrix->ptable, object );
 }
+
 
 void stg_matrix_lines( stg_matrix_t* matrix, 
 		       stg_line_t* lines, int num_lines,
-		       void* object, int add )
+		       void* object )
 {
   int l;
   for( l=0; l<num_lines; l++ )
-    stg_matrix_line( matrix, 
-		     lines[l].x1, lines[l].y1, 
-		     lines[l].x2, lines[l].y2, 
-		     object, add );
-}
-
-// render a polygon into [matrix] with origin [x,y,a]
-void stg_matrix_polygon( stg_matrix_t* matrix,
-			 double x, double y, double a,
-			 stg_polygon_t* poly,
-			 void* object, int add )
-{
-  // need at leats three points for a meaningful polygon
-  if( poly->points->len > 2 )
     {
-      int count = poly->points->len;
-      int p;
-      for( p=0; p<count; p++ ) // for
+      double x1 = lines[l].x1;
+      double y1 = lines[l].y1;
+      double x2 = lines[l].x2;
+      double y2 = lines[l].y2;
+      
+      // theta is constant so we compute it outside the loop
+      double theta = atan2( y2-y1, x2-x1 );
+      double m = tan(theta); // line gradient 
+
+      int step = 0;
+
+      stg_cell_t* cell = matrix->root;
+
+      // while the end of the ray is not in the same cell as the goal
+      // point, and we're still inside the quadtree (i.e. we have a
+      // valid cell pointer)
+      //while( hypot( x2-x1, y2-y1 ) >= 1.0/matrix->ppm && cell )
+
+      double res = 1.0/matrix->ppm;
+      
+      while( (GTE(fabs(x2-x1),res) || GTE(fabs(y2-y1),res)) && cell )
 	{
-	  stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	  
-	  stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % count);
+	  double keepx = x1;
+	  double keepy = y1;
 	  
-	  double gx1 = x + pt1->x * cos(a) - pt1->y * sin(a);
-	  double gy1 = y + pt1->x * sin(a) + pt1->y * cos(a); 
+	  /*printf( "step %d angle %.2f start (%.2f,%.2f) now (%.2f,%.2f) end (%.2f,%.2f)\n",
+		  step++,
+		  theta,
+		  lines[l].x1, lines[l].y1, 
+		  x1, y1,
+		  x2, y2 );
+	  */
+
+	  // find out where we leave the leaf node after x1,y1 and adjust
+	  // x1,y1 to point there
 	  
-	  double gx2 = x + pt2->x * cos(a) - pt2->y * sin(a);
-	  double gy2 = y + pt2->x * sin(a) + pt2->y * cos(a); 
+	  // locate the leaf cell at X,Y
+	  cell = stg_cell_locate( cell, x1, y1 );
+	  if( cell == NULL )
+	    break;
 	  
-	  stg_matrix_line( matrix, 
-			   gx1, gy1, gx2, gy2,
-			   object, add );
+	  //stg_cell_print( cell, "" );
+
+	  // if the cell isn't small enough, we need to create children
+	  while( GT(cell->size,res) )
+	    {
+	      assert( cell->children[0] == NULL ); // make sure
+	      
+	      double delta = cell->size/4.0;
+	      
+	      cell->children[0] = stg_cell_create( cell,
+						   cell->x - delta,
+						   cell->y - delta,
+						   cell->size / 2.0 );
+	      cell->children[1] = stg_cell_create( cell,
+						   cell->x + delta,
+						   cell->y - delta,
+						   cell->size / 2.0 );
+	      cell->children[2] = stg_cell_create( cell,
+						   cell->x - delta,
+						   cell->y + delta,
+						   cell->size / 2.0 );	  
+	      cell->children[3] = stg_cell_create( cell,
+						   cell->x + delta,
+						   cell->y + delta,
+						   cell->size / 2.0 ); 	  
+	      
+	      // we have to drop down into a child. but which one?
+	      // which quadrant are we in?
+	      int index;
+	      if( LT(x1,cell->x) )
+		index = LT(y1,cell->y) ? 0 : 2; 
+	      else
+		index = LT(y1,cell->y) ? 1 : 3; 
+	      
+	      // now point to the correct child containing the point, and loop again
+	      cell = cell->children[ index ];           
+	    }
+
+	  // now the cell small enough, we add the object here
+	  cell->data = g_slist_prepend( cell->data, object );  	  
+	  
+	  // add this object the hash table
+	  GSList* list = g_hash_table_lookup( matrix->ptable, object );
+	  list = g_slist_prepend( list, cell );
+	  g_hash_table_insert( matrix->ptable, object, list );      
+	  
+	  // now figure out where we leave this cell
+	  
+	  /*	  printf( "point %.2f,%.2f is in cell %p at (%.2f,%.2f) size %.2f xmin %.2f xmax %.2f ymin %.2f ymax %.2f\n",
+		  x1, y1, cell, cell->x, cell->y, cell->size, cell->xmin, cell->xmax, cell->ymin, cell->ymax );
+	  */
+
+	   
+	  //if( cell == end_cell ) // we're done 
+	  // break;
+
+
+
+
+	  if( EQ(y1,y2) ) // horizontal line
+	    {
+	      //puts( "horizontal line" );
+	      
+	      if( GT(x1,x2) ) // x1 gets smaller
+		x1 = cell->xmin-0.001; // left edge
+	      else
+		x1 = cell->xmax; // right edge		
+	    }
+	  else if( EQ(x1,x2) ) // vertical line
+	    {
+	      //puts( "vertical line" );
+	      
+	      if( GT(y1,y2) ) // y1 gets smaller
+		y1 = cell->ymin-0.001; // bottom edge
+	      else
+		y1 = cell->ymax; // max edge		
+	    }
+	  else
+	    {
+	      //print_thing( "\nbefore calc", cell, x1, y1 );
+
+	      //break;
+	      double c = y1 - m * x1; // line offset
+	      
+	      if( GT(theta,0.0) ) // up
+		{
+		  //puts( "up" );
+
+		  // ray could leave through the top edge
+		  // solve x for known y      
+		  y1 = cell->ymax; // top edge
+		  x1 = (y1 - c) / m;
+		  
+		  // printf( "x1 %.4f = (y1 %.4f - c %.4f) / m %.4f\n", x1, y1, c, m );		  
+		  // if the edge crossing was not in cell bounds     
+		  if( !(GTE(x1,cell->xmin) && LT(x1,cell->xmax)) )
+		    {
+		      // it must have left the cell on the left or right instead 
+		      // solve y for known x
+		      
+		      if( GT(theta,M_PI/2.0) ) // left side
+			x1 = cell->xmin-0.00001;
+			//{ x1 = cell->xmin-0.001; puts( "left side" );}
+		      else // right side
+			x1 = cell->xmax;
+			//{ x1 = cell->xmax; puts( "right side" );}
+
+		      y1 = m * x1 + c;
+		      
+		      //  printf( "%.4f = %.4f * %.4f + %.4f\n",
+		      //      y1, m, x1, c );
+		    }           
+		  //else
+		  //puts( "top" );
+		}	 
+	      else // down 
+		{
+		  //puts( "down" );
+
+		  // ray could leave through the bottom edge
+		  // solve x for known y      
+		  y1 = cell->ymin-0.00001; // bottom edge
+		  x1 = (y1 - c) / m;
+		  
+		  // if the edge crossing was not in cell bounds     
+		  if( !(GTE(x1,cell->xmin) && LT(x1,cell->xmax)) )
+		    {
+		      // it must have left the cell on the left or right instead 
+		      // solve y for known x	  
+		      if( theta < -M_PI/2.0 ) // left side
+			//{ x1 = cell->xmin-0.001; puts( "left side" );}
+			x1 = cell->xmin-0.00001;
+		      else
+			//{ x1 = cell->xmax; puts( "right side"); }
+			x1 = cell->xmax; 
+		      
+		      y1 = m * x1 + c;
+		    }
+		  //else
+		  //puts( "bottom" );
+		}
+	      
+	      //printf( "angle %.3f gradient %.3f entered cell at %.7f,%.7f leaving at %.7f,%.7f\n",
+	      //    theta, m, keepx, keepy, x1, y1 );
+	      
+	      // jump slightly into the next cell
+	      //x1 += 0.0001 * cos(theta);
+	      //y1 += 0.0001 * sin(theta);      
+
+	      //printf( "jumped to %.7f,%.7f\n",
+	      //      x1, y1 );
+
+	    }
 	}
     }
-  else
-    PRINT_WARN( "attempted to matrix render a polygon with less than 3 points" ); 
-}     
+}
 
 // render an array of [num_polys] polygons
 void stg_matrix_polygons( stg_matrix_t* matrix,
 			  double x, double y, double a,
 			  stg_polygon_t* polys, int num_polys,
-			  void* object, int add )
+			  void* object )
 {
-  //printf( "rendering model %s at %.2f %.2f %d\n",
-  //  ((stg_model_t*)object)->token, x, y, add );
-  
   int p;
   for( p=0; p<num_polys; p++ )
-    stg_matrix_polygon( matrix, x,y,a, &polys[p], object, add );
+    {
+      stg_polygon_t* poly =  &polys[p];
+
+      // need at leats three points for a meaningful polygon
+      if( poly->points->len > 2 )
+	{
+	  int count = poly->points->len;
+	  int p;
+	  for( p=0; p<count; p++ ) // for
+	    {
+	      stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	  
+	      stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % count);
+	      
+	      // TODO - could be a little faster - we only really need
+	      // to do the geom for each point once, as the polygon is
+	      // a connected polyline
+
+	      stg_line_t line;
+	      line.x1 = x + pt1->x * cos(a) - pt1->y * sin(a);
+	      line.y1 = y + pt1->x * sin(a) + pt1->y * cos(a); 
+	      
+	      line.x2 = x + pt2->x * cos(a) - pt2->y * sin(a);
+	      line.y2 = y + pt2->x * sin(a) + pt2->y * cos(a); 
+	      
+	      stg_matrix_lines( matrix, &line, 1, object );
+	    }
+	}
+      else
+	PRINT_WARN( "attempted to matrix render a polygon with less than 3 points" ); 
+    }
+      
 }
 
 void stg_matrix_rectangle( stg_matrix_t* matrix, 
 			   double px, double py, double pth,
 			   double dx, double dy, 
-			   void* object, int add )
+			   void* object )
 {
   dx /= 2.0;
   dy /= 2.0;
@@ -368,17 +424,30 @@ void stg_matrix_rectangle( stg_matrix_t* matrix,
 
   double botrx =  px - cx + sy;
   double botry =  py - sx - cy;
-    
-  stg_matrix_line( matrix, toplx, toply, toprx, topry, object, add);
-  stg_matrix_line( matrix, toprx, topry, botrx, botry, object, add);
-  stg_matrix_line( matrix, botrx, botry, botlx, botly, object, add);
-  stg_matrix_line( matrix, botlx, botly, toplx, toply, object, add);
 
-  //printf( "SetRectangle drawing %d,%d %d,%d %d,%d %d,%d\n",
-  //  toplx, toply,
-  //  toprx, topry,
-  //  botlx, botly,
-  //  botrx, botry );
+  stg_line_t lines[4];
+
+  lines[0].x1 = toplx;
+  lines[0].y1 = toply;
+  lines[0].x2 = toprx;
+  lines[0].y2 = topry;
+
+  lines[1].x1 = toplx;
+  lines[1].y1 = toply;
+  lines[1].x2 = botlx;
+  lines[1].y2 = botly;
+
+  lines[2].x1 = toprx;
+  lines[2].y1 = topry;
+  lines[2].x2 = botrx;
+  lines[2].y2 = botry;
+
+  lines[3].x1 = botlx;
+  lines[3].y1 = botly;
+  lines[3].x2 = botrx;
+  lines[3].y2 = botry;
+  
+  stg_matrix_lines( matrix, lines, 4,  object );
 }
 
 

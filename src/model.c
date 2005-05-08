@@ -312,12 +312,13 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->geom.pose.a = STG_DEFAULT_GEOM_POSEA;
   mod->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
   mod->geom.size.y = STG_DEFAULT_GEOM_SIZEY;
+
+  mod->boundary = FALSE;
   
   stg_guifeatures_t gf;
   gf.show_data = 1;
   gf.show_cmd = 0;
   gf.show_cfg = 0;
-  gf.boundary =  STG_DEFAULT_GUI_BOUNDARY;
   gf.nose =  STG_DEFAULT_GUI_NOSE;
   gf.grid = STG_DEFAULT_GUI_GRID;
   gf.outline = 1;
@@ -550,30 +551,30 @@ void stg_model_map( stg_model_t* mod, gboolean render )
   size_t count=0;
   stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
   
-  if( count == 0 ) 
-    return;
-  
-
-  // get model's global pose
-  stg_pose_t org;
-  memcpy( &org, &mod->geom.pose, sizeof(org));
-  stg_model_local_to_global( mod, &org );
-  
-  if( polys )    
-    stg_matrix_polygons( mod->world->matrix, 
-			 org.x, org.y, org.a,
-			 polys, count, 
-			 mod, render );  
+  if( render )
+    {      
+      // get model's global pose
+      stg_pose_t org;
+      memcpy( &org, &mod->geom.pose, sizeof(org));
+      stg_model_local_to_global( mod, &org );
+      
+      if( count && polys )    
+	stg_matrix_polygons( mod->world->matrix, 
+			     org.x, org.y, org.a,
+			     polys, count, 
+			     mod );  
+      else
+	PRINT_ERR1( "expecting %d polygons but have no data", (int)count );
+      
+      if( mod->boundary )    
+	stg_matrix_rectangle( mod->world->matrix,
+			      org.x, org.y, org.a,
+			      mod->geom.size.x,
+			      mod->geom.size.y,
+			      mod ); 
+    }
   else
-    PRINT_ERR1( "expecting %d polygons but have no data", (int)count );
-  
-  
-  if( mod->guifeatures.boundary )    
-    stg_matrix_rectangle( mod->world->matrix,
-			  org.x, org.y, org.a,
-			  mod->geom.size.x,
-			  mod->geom.size.y,
-			  mod, render );  
+    stg_matrix_remove_object( mod->world->matrix, mod );
 }
 
 
@@ -746,8 +747,8 @@ int stg_model_startup( stg_model_t* mod )
 {
   if( mod->f_startup == NULL )
     PRINT_ERR1( "model %s has no startup function registered", mod->token ); 
-
-  assert(mod->f_startup );
+  
+  assert(mod->f_startup);
   return mod->f_startup(mod);
 }
 
@@ -755,7 +756,7 @@ int stg_model_shutdown( stg_model_t* mod )
 {
   if( mod->f_shutdown == NULL )
     PRINT_ERR1( "model %s has no shutdown function registered", mod->token ); 
-
+  
   assert(mod->f_shutdown );
   return mod->f_shutdown(mod);
 }
@@ -798,6 +799,13 @@ void stg_model_get_mass( stg_model_t* mod, stg_kg_t* dest )
   assert(mod);
   assert(dest);
   memcpy( dest, &mod->obstacle_return, sizeof(mod->obstacle_return));
+}
+
+void stg_model_get_boundary( stg_model_t* mod, stg_bool_t* dest )
+{
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->boundary, sizeof(mod->boundary));
 }
 
 void stg_model_get_guifeatures( stg_model_t* mod, stg_guifeatures_t* dest )
@@ -927,7 +935,9 @@ int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
 }
 
 
-int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_count )
+int stg_model_set_polygons( stg_model_t* mod, 
+			    stg_polygon_t* polys, 
+			    size_t poly_count )
 {
   assert(mod);
   if( poly_count > 0 ) assert( polys );
@@ -1001,6 +1011,12 @@ int stg_model_set_mass( stg_model_t* mod, stg_kg_t* mass )
   return 0;
 }
 
+int stg_model_set_boundary( stg_model_t* mod, stg_bool_t* b )
+{
+  memcpy( &mod->boundary, b, sizeof(mod->boundary) );
+  stg_model_map( mod, TRUE );
+  return 0;
+}
 
 int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf )
 {
@@ -1012,7 +1028,6 @@ int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf )
 
   // redraw the fancy features
   gui_model_features( mod );
-
   return 0;
 }
 
@@ -1241,18 +1256,30 @@ void stg_model_reload( stg_model_t* mod )
 void stg_model_load( stg_model_t* mod )
 {
   stg_pose_t pose;
-  pose.x = wf_read_tuple_length(mod->id, "pose", 0, mod->pose.x );
-  pose.y = wf_read_tuple_length(mod->id, "pose", 1, mod->pose.y ); 
-  pose.a = wf_read_tuple_angle(mod->id, "pose", 2,  mod->pose.a );
+  stg_model_get_pose( mod, &pose );
+  pose.x = wf_read_tuple_length(mod->id, "pose", 0, pose.x );
+  pose.y = wf_read_tuple_length(mod->id, "pose", 1, pose.y ); 
+  pose.a = wf_read_tuple_angle(mod->id, "pose", 2, pose.a );
   stg_model_set_pose( mod, &pose );
   
   stg_geom_t geom;
-  geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, mod->geom.pose.x );
-  geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, mod->geom.pose.y );
-  geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, mod->geom.pose.a );
-  geom.size.x = wf_read_tuple_length(mod->id, "size", 0, mod->geom.size.x );
-  geom.size.y = wf_read_tuple_length(mod->id, "size", 1, mod->geom.size.y );
+  stg_model_get_geom( mod, &geom );
+  geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, geom.pose.x );
+  geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, geom.pose.y );
+  geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, geom.pose.a );
+  geom.size.x = wf_read_tuple_length(mod->id, "size", 0, geom.size.x );
+  geom.size.y = wf_read_tuple_length(mod->id, "size", 1, geom.size.y );
   stg_model_set_geom( mod, &geom );
+  
+  stg_velocity_t vel;
+  vel.x = wf_read_tuple_length(mod->id, "velocity", 0, 0 );
+  vel.y = wf_read_tuple_length(mod->id, "velocity", 1, 0 );
+  vel.a = wf_read_tuple_angle(mod->id, "velocity", 2, 0 );      
+  stg_model_set_velocity( mod, &vel );
+    
+  stg_kg_t mass = 
+    wf_read_float(mod->id, "mass", mod->mass );
+  stg_model_set_mass( mod, &mass );
   
   stg_obstacle_return_t obstacle = 
     wf_read_int( mod->id, "obstacle_return", mod->obstacle_return );
@@ -1262,45 +1289,42 @@ void stg_model_load( stg_model_t* mod )
     wf_read_int( mod->id, "ranger_return", mod->ranger_return );
   stg_model_set_rangerreturn( mod, &ranger );
   
-  //stg_friction_t friction;
-  //friction = wf_read_float(mod->id, "friction", 0.0 );
-  //stg_model_set_friction(mod, &friction );
-
   // laser visibility
-  stg_laser_return_t laservis = 
+  stg_laser_return_t laser_return = 
     wf_read_int(mod->id, "laser_return", mod->laser_return );      
-  stg_model_set_laserreturn( mod, &laservis );
-  
-  // blob visibility
-  //int blobvis = 
-  //wf_read_int(mod->id, "blob_return", STG_DEFAULT_BLOBRETURN );      
- 
-  // TODO
-  //stg_model_set_blobreturn( mod, &blobvis );
+  stg_model_set_laserreturn( mod, &laser_return );
   
   // ranger visibility
-  //stg_bool_t rangervis = 
-  //wf_read_int( mod->id, "ranger_return", STG_DEFAULT_RANGERRETURN );
+  stg_ranger_return_t ranger_return = 
+    wf_read_int( mod->id, "ranger_return",mod->ranger_return );
+  stg_model_set_rangerreturn( mod, &ranger_return );
   
-  // TODO
-  //odel_set_ra
-
   // fiducial visibility
-  int fid_return = wf_read_int( mod->id, "fiducial_return", FiducialNone );  
+  int fid_return = 
+    wf_read_int( mod->id, "fiducial_return", mod->fiducial_return );  
   stg_model_set_fiducialreturn( mod, &fid_return );
 
+  // bounding box
+  stg_bool_t boundary = 
+    wf_read_int(mod->id, "boundary", mod->boundary ); 
+  stg_model_set_boundary( mod, &boundary );
+
+  // TODO - blob visibility
+  //int blobvis = 
+  //wf_read_int(mod->id, "blob_return", STG_DEFAULT_BLOBRETURN );        
+  //stg_model_set_blobreturn( mod, &blobvis );
+  
+  // TODO - stg_friction_t friction;
+  //friction = wf_read_float(mod->id, "friction", 0.0 );
+  //stg_model_set_friction(mod, &friction );
+  
   const char* colorstr = wf_read_string( mod->id, "color", NULL );
   if( colorstr )
     {
       stg_color_t color = stg_lookup_color( colorstr );
-      PRINT_DEBUG2( "stage color %s = %X", colorstr, color );
-	  
-      //if( color != STG_DEFAULT_COLOR )
-      //stg_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
-
+      PRINT_DEBUG2( "stage color %s = %X", colorstr, color );	  
       stg_model_set_color( mod, &color );
     }
-
 
   const char* bitmapfile = wf_read_string( mod->id, "bitmap", NULL );
   if( bitmapfile )
@@ -1389,34 +1413,23 @@ void stg_model_load( stg_model_t* mod )
       stg_model_set_polygons( mod, polys, polycount );
     }
 
-
-  stg_velocity_t vel;
-  vel.x = wf_read_tuple_length(mod->id, "velocity", 0, 0 );
-  vel.y = wf_read_tuple_length(mod->id, "velocity", 1, 0 );
-  vel.a = wf_read_tuple_angle(mod->id, "velocity", 2, 0 );      
-  stg_model_set_velocity( mod, &vel );
-    
-
-  stg_kg_t mass;
-  mass = wf_read_float(mod->id, "mass", STG_DEFAULT_MASS );
-  stg_model_set_mass( mod, &mass );
-
-
   // if a type-specific load callback has been set
   if( mod->f_load )
     mod->f_load( mod ); // call the load function
-
+  
   // do gui features last so we know exactly what we're supposed to
   // look like.
   stg_guifeatures_t gf;
-  gf.boundary = wf_read_int(mod->id, "gui_boundary", mod->guifeatures.boundary );
-  gf.nose = wf_read_int(mod->id, "gui_nose", mod->guifeatures.nose );
-  gf.grid = wf_read_int(mod->id, "gui_grid", mod->guifeatures.grid );
-  gf.movemask = wf_read_int(mod->id, "gui_movemask", mod->guifeatures.movemask );
-  gf.outline = wf_read_int(mod->id, "gui_outline", mod->guifeatures.outline );
-  stg_model_set_guifeatures( mod, &gf );
-  
+  stg_model_get_guifeatures( mod, &gf );
 
+  //gf.boundary = wf_read_int(mod->id, "gui_boundary", gf.boundary );
+  gf.nose = wf_read_int(mod->id, "gui_nose", gf.nose );
+  gf.grid = wf_read_int(mod->id, "gui_grid", gf.grid );
+  gf.movemask = wf_read_int(mod->id, "gui_movemask", gf.movemask );
+  gf.outline = wf_read_int(mod->id, "gui_outline", gf.outline );
+
+  // install the new set of features 
+  stg_model_set_guifeatures( mod, &gf );
 }
 
 
