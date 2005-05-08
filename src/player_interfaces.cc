@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.8 2005-05-08 08:01:06 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.9 2005-05-08 20:33:09 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -889,7 +889,7 @@ void GripperCommand( device_record_t* device, void* src, size_t len )
 
 void GripperData( device_record_t* device, void* data, size_t len )
 {
-  puts( "publishing gripper data\n" );
+  //puts( "publishing gripper data\n" );
 }
 
 void GripperConfig( device_record_t* device, void* client, void* buffer, size_t len )

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -100,7 +100,11 @@ stg_model_t* stg_gripper_create( stg_world_t* world,
 
   gconf.paddles = STG_GRIPPER_PADDLE_OPEN;
   gconf.lift = STG_GRIPPER_LIFT_DOWN;
-
+  
+  // place the break beam sensors at 1/4 and 3/4 the length of the paddle 
+  gconf.inner_break_beam_inset = 3.0/4.0 * gconf.paddle_size.x;
+  gconf.outer_break_beam_inset = 1.0/4.0 * gconf.paddle_size.x;
+  
   stg_model_set_config( mod, &gconf, sizeof(gconf) );
   
   // sensible starting command
@@ -110,7 +114,7 @@ stg_model_t* stg_gripper_create( stg_world_t* world,
   stg_model_set_command( mod, &cmd, sizeof(cmd) ) ;
 
   // set default color
-  stg_color_t col = stg_lookup_color( STG_GRIPPER_GEOM_COLOR ); 
+  stg_color_t col = stg_lookup_color( STG_GRIPPER_COLOR ); 
   stg_model_set_color( mod, &col );
 
   // install three polygons for the gripper body;
@@ -189,7 +193,7 @@ int gripper_update( stg_model_t* mod )
     case STG_GRIPPER_CMD_CLOSE:     
       if( cfg.paddles == STG_GRIPPER_PADDLE_OPEN )
 	{
-	  puts( "closing gripper paddles" );
+	  //puts( "closing gripper paddles" );
 	  cfg.paddles = STG_GRIPPER_PADDLE_CLOSING;
 	}
       break;
@@ -197,7 +201,7 @@ int gripper_update( stg_model_t* mod )
     case STG_GRIPPER_CMD_OPEN:
       if( cfg.paddles == STG_GRIPPER_PADDLE_CLOSED )
 	{
-	  puts( "opening gripper paddles" );      
+	  //puts( "opening gripper paddles" );      
 	  cfg.paddles = STG_GRIPPER_PADDLE_OPENING;
 	}
       break;
@@ -205,7 +209,7 @@ int gripper_update( stg_model_t* mod )
     case STG_GRIPPER_CMD_UP:
       if( cfg.lift == STG_GRIPPER_LIFT_DOWN )
 	{
-	  puts( "raising gripper lift" );      
+	  //puts( "raising gripper lift" );      
 	  cfg.lift = STG_GRIPPER_LIFT_UPPING;
 	}
       break;
@@ -213,7 +217,7 @@ int gripper_update( stg_model_t* mod )
     case STG_GRIPPER_CMD_DOWN:
       if( cfg.lift == STG_GRIPPER_LIFT_UP )
 	{
-	  puts( "lowering gripper lift" );      
+	  //puts( "lowering gripper lift" );      
 	  cfg.lift = STG_GRIPPER_LIFT_DOWNING;
 	}      
       break;
@@ -280,7 +284,12 @@ int gripper_update( stg_model_t* mod )
   
   // change the gripper's configuration in response to the commands
   stg_model_set_config( mod, &cfg, sizeof(cfg));
-  stg_print_gripper_config( &cfg );
+  //stg_print_gripper_config( &cfg );
+
+  // also publish the data
+  stg_gripper_data_t data;
+  memcpy( &data, &cfg, sizeof(data));
+  stg_model_set_data( mod, &data, sizeof(data));
 
   _model_update( mod );
 
@@ -304,7 +313,8 @@ int break_beam(stg_model_t* mod, int beam) {
 
 void gripper_render_data(  stg_model_t* mod )
 {
-  puts( "gripper render data" );
+  //puts( "gripper render data" );
+
   if( mod->gui.data  )
     stg_rtk_fig_clear(mod->gui.data);
   else 
@@ -336,6 +346,41 @@ void gripper_render_data(  stg_model_t* mod )
   
   stg_rtk_fig_origin( mod->gui.data, pose.x, pose.y, pose.a );  
   stg_rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_GRIPPER_BRIGHT_COLOR) );  
+  
+  stg_gripper_data_t data;
+  
+  if( stg_model_get_data( mod, &data, sizeof(data)) < sizeof(stg_gripper_data_t) )
+    return; // no data
+  
+  //stg_rtk_fig_rectangle( mod->gui.data, 0,0,0, geom.size.x, geom.size.y, 0 );
+
+  // render the break beam state
+  if( data.inner_break_beam )
+    {
+      // if beam is triggered, draw it red
+      stg_rtk_fig_color_rgb32( mod->gui.data, 0xFF0000 );      
+    }
+  
+  // different x location for each beam
+  double ibbx = (data.inner_break_beam_inset) * geom.size.x;
+  double obbx = (data.outer_break_beam_inset) * geom.size.x;
+  
+  // common y position
+  double bby = 
+    (1.0-data.paddle_position) * ((geom.size.y/2.0)-(geom.size.y*data.paddle_size.y));
+  
+  // common range
+  double bbr = 
+    (1.0-data.paddle_position) * (geom.size.y - (geom.size.y * data.paddle_size.y * 2.0 ));
+  
+  // draw the position of the break beam sensors
+  stg_rtk_fig_color_rgb32( mod->gui.data, 0x00 );      
+  stg_rtk_fig_rectangle( mod->gui.data, ibbx, bby, 0, 0.01, 0.01, 0 );
+  stg_rtk_fig_rectangle( mod->gui.data, obbx, bby, 0, 0.01, 0.01, 0 );
+  
+  stg_rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_GRIPPER_BRIGHT_COLOR));
+  stg_rtk_fig_arrow( mod->gui.data, ibbx, bby, -M_PI/2.0, bbr, 0.01 );
+  stg_rtk_fig_arrow( mod->gui.data, obbx, bby, -M_PI/2.0, bbr, 0.01 );
 }
 
 void gripper_render_cfg( stg_model_t* mod )

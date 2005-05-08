@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.28 2005-05-08 08:01:24 rtv Exp $
+# CVS: $Id: everything.world,v 1.29 2005-05-08 20:33:09 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -16,12 +16,14 @@ interval_real 100 # real-time milliseconds per update step
 include "pioneer.inc"
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
+
 size [40 20 ]
 
-window( size [ 830.000 556.000 ] center [-9.210 3.086] scale 0.013 )
+window( size [ 830.000 556.000 ] center [-10.992 2.645] scale 0.003 )
 
 map( 
   bitmap "bitmaps/hospital_section.png" 
@@ -105,7 +107,7 @@ laserpioneer
 position( 	
   name "invader" 
   size [0.3 0.3]
-  pose [-16.954 -0.172 0.000] 
+  pose [-15.774 -0.172 0.000] 
   color "red"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/space_invader.png"
@@ -117,7 +119,7 @@ position(
 position( 	
   name "ghost" 
   size [0.3 0.3 ]
-  pose [-14.344 -4.354 0.000] 
+  pose [-14.344 -3.174 0.000] 
   color "blue"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/ghost.png"

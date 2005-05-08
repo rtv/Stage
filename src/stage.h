@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.132 2005-05-08 19:19:23 rtv Exp $
+ * CVS: $Id: stage.h,v 1.133 2005-05-08 20:33:09 rtv Exp $
  */
 
 
@@ -799,6 +799,12 @@ extern "C" {
 
     stg_bool_t inner_break_beam; ///< non-zero iff beam is broken
     stg_bool_t outer_break_beam; ///< non-zero iff beam is broken
+    
+    stg_meters_t inner_break_beam_inset; ///< distance from the end of the paddle
+    stg_meters_t outer_break_beam_inset; ///< distance from the end of the paddle
+
+    stg_bool_t left_paddle_contact; ///< non-zero iff left paddle touches something
+    stg_bool_t right_paddle_contact; ///< non-zero iff right paddle touches something
 
     int stack_count; ///< number of objects in stack
 

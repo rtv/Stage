@@ -75,6 +75,7 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/View/Laser data",      NULL,   gui_menu_view_data, STG_MODEL_LASER,    "<CheckItem>" },
   { "/View/Position data",   NULL,   gui_menu_view_data, STG_MODEL_POSITION, "<CheckItem>" },
   { "/View/Ranger data",     NULL,   gui_menu_view_data, STG_MODEL_RANGER,   "<CheckItem>" },
+  { "/View/Gripper data",     NULL,   gui_menu_view_data, STG_MODEL_GRIPPER,   "<CheckItem>" },
   { "/View/sep1",       NULL,   NULL, 0, "<Separator>" },
   { "/View/Config",          NULL,    NULL, 0, "<Title>" },
   { "/View/Blobfinder config",     NULL,   gui_menu_view_cfg, STG_MODEL_BLOB,     "<CheckItem>" },
@@ -96,7 +97,7 @@ static GtkItemFactoryEntry menu_table[] = {
 };
 
 // SET THIS TO THE NUMBER OF MENU ITEMS IN THE ARRAY ABOVE
-static const int menu_table_count = 50;
+static const int menu_table_count = 51;
 
 // USE THIS WHEN WE FIX ON A RECENT GTK VERSION 
 /* void gui_menu_file_about( void ) */
@@ -427,6 +428,8 @@ void gui_window_menus_create( gui_window_t* win )
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Energy data"));
   gtk_check_menu_item_set_active( mitem, FALSE );
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Position data"));
+  gtk_check_menu_item_set_active( mitem, FALSE );
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Gripper data"));
   gtk_check_menu_item_set_active( mitem, FALSE );
 
   // View/Config
