@@ -133,6 +133,11 @@ void BlobfinderConfig( device_record_t* device, void* client, void* buffer, size
 void LaserConfig( device_record_t* device, void* client, void* buffer, size_t len );
 void LaserData( device_record_t* device, void* data, size_t len );  
 
+// GRIPPER INTERFACE
+void GripperCommand( device_record_t* device, void* src, size_t len );
+void GripperConfig( device_record_t* device, void* client, void* buffer, size_t len );
+void GripperData( device_record_t* device, void* data, size_t len );  
+
 // FIDUCIAL INTERFACE
 void FiducialData( device_record_t* device, void* data, size_t len );
 void FiducialConfig( device_record_t* device, void* client, void* buffer, size_t len );

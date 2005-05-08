@@ -147,6 +147,8 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	    type = STG_MODEL_TEST;
 	  else if( strcmp( typestr, "laser" ) == 0 )
 	    type = STG_MODEL_LASER;
+	  else if( strcmp( typestr, "gripper" ) == 0 )
+	    type = STG_MODEL_GRIPPER;
 	  else if( strcmp( typestr, "ranger" ) == 0 )
 	    type = STG_MODEL_RANGER;
 	  else if( strcmp( typestr, "position" ) == 0 )
@@ -208,6 +210,10 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	      	      
 	    case STG_MODEL_LASER:
 	      mod = stg_laser_create( world,  parent_mod, section, namestr );
+	      break;
+	      
+	    case STG_MODEL_GRIPPER:
+	      mod = stg_gripper_create( world,  parent_mod, section, namestr );
 	      break;
 	      
 	    case STG_MODEL_RANGER:

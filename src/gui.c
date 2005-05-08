@@ -156,6 +156,8 @@ void gui_load( gui_window_t* win, int section )
   // load the flags that control showing of data and configs
   win->render_data_flag[STG_MODEL_LASER] = wf_read_int(section, "laser_data", 1 );
   win->render_cfg_flag[STG_MODEL_LASER] = wf_read_int(section, "laser_config", 0 );
+  win->render_data_flag[STG_MODEL_GRIPPER] = wf_read_int(section, "gripper_data", 1 );
+  win->render_cfg_flag[STG_MODEL_GRIPPER] = wf_read_int(section, "gripper_config", 0 );
   win->render_data_flag[STG_MODEL_RANGER] = wf_read_int(section, "ranger_data", 1 );
   win->render_cfg_flag[STG_MODEL_RANGER] = wf_read_int(section, "ranger_config", 0 );
   win->render_data_flag[STG_MODEL_FIDUCIAL] = wf_read_int(section, "fiducial_data", 1 );
@@ -184,6 +186,8 @@ void gui_save( gui_window_t* win )
   // save the flags that control visibility of data and configs
   wf_write_int(win->wf_section, "laser_data", win->render_data_flag[STG_MODEL_LASER]);
   wf_write_int(win->wf_section, "laser_config", win->render_cfg_flag[STG_MODEL_LASER]);
+  wf_write_int(win->wf_section, "gripper_data", win->render_data_flag[STG_MODEL_GRIPPER]);
+  wf_write_int(win->wf_section, "gripper_config", win->render_cfg_flag[STG_MODEL_GRIPPER]);
   wf_write_int(win->wf_section, "ranger_data", win->render_data_flag[STG_MODEL_RANGER]);
   wf_write_int(win->wf_section, "ranger_config", win->render_cfg_flag[STG_MODEL_RANGER]);
   wf_write_int(win->wf_section, "fiducial_data", win->render_data_flag[STG_MODEL_FIDUCIAL]);

@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.10 2005-05-08 05:07:22 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.11 2005-05-08 08:01:06 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -403,6 +403,15 @@ int StgDriver::CreateDeviceModel( player_device_id_t id,
       device->mod = this->LocateModel( model_name, STG_MODEL_LASER );
       break;
       
+    case PLAYER_GRIPPER_CODE:
+      device->data_len = sizeof(player_gripper_data_t);
+      device->cmd_len = sizeof(player_gripper_cmd_t);
+      device->command_callback = GripperCommand;
+      device->data_callback = GripperData;
+      device->config_callback = GripperConfig;
+      device->mod = this->LocateModel( model_name, STG_MODEL_GRIPPER );
+      break;
+
     case PLAYER_FIDUCIAL_CODE:
       device->data_len = sizeof(player_fiducial_data_t);
       device->cmd_len = 0;

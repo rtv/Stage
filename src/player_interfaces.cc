@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.7 2005-05-08 05:07:22 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.8 2005-05-08 08:01:06 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -39,7 +39,11 @@
 
 #include "player_interfaces.h"
 
+#include "playerclient.h"
+
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
+
+
 
 // 
 // SIMULATION INTERFACE
@@ -847,6 +851,52 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
       
     }
 }
+
+
+// GRIPPER INTERFACE
+
+void GripperCommand( device_record_t* device, void* src, size_t len )
+{
+  if( len == sizeof(player_gripper_cmd_t) )
+    {
+      player_gripper_cmd_t* pcmd = (player_gripper_cmd_t*)src;
+      //printf("GripperCommand: %d\n", pcmd->cmd);
+      // Pass it to stage:
+      stg_gripper_cmd_t cmd; 
+      cmd.cmd = STG_GRIPPER_CMD_NOP;
+      cmd.arg = 0;
+
+      switch( pcmd->cmd )
+	{
+	case GRIPclose: cmd.cmd = STG_GRIPPER_CMD_CLOSE; break;
+	case GRIPopen:  cmd.cmd = STG_GRIPPER_CMD_OPEN; break;
+	case LIFTup:    cmd.cmd = STG_GRIPPER_CMD_UP; break;
+	case LIFTdown:  cmd.cmd = STG_GRIPPER_CMD_DOWN; break;
+	  //default:
+	  //printf( "Stage: player gripper command %d is not implemented\n", 
+	  //  pcmd->cmd );
+	}
+
+      //cmd.cmd  = pcmd->cmd;
+      cmd.arg = pcmd->arg;
+
+      stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
+    }
+  else
+    PRINT_ERR2( "wrong size gripper command packet (%d/%d bytes)",
+		(int)len, (int)sizeof(player_position_cmd_t) );
+}
+
+void GripperData( device_record_t* device, void* data, size_t len )
+{
+  puts( "publishing gripper data\n" );
+}
+
+void GripperConfig( device_record_t* device, void* client, void* buffer, size_t len )
+{
+  printf("got gripper request\n");
+}
+
 
 //
 // SONAR INTERFACE

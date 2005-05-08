@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.27 2005-05-08 05:07:26 rtv Exp $
+# CVS: $Id: everything.world,v 1.28 2005-05-08 08:01:24 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -48,7 +48,7 @@ define laserpioneer pioneer2dx
   blobfinder()
 
   fiducial_return 42
-  blobfinder_return 1
+  blobfinder_return 1 
 )
 
 
@@ -56,6 +56,7 @@ laserpioneer
 (
   name "p0"
   pose [-11.163 2.596 -348.743]
+  gripper( pose [0.250 0.000 0.000] )
 )
 
 laserpioneer

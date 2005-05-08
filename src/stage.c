@@ -66,6 +66,7 @@ const char* stg_model_type_string( stg_model_type_t type )
     case STG_MODEL_FIDUCIAL: return "fiducial";
     case STG_MODEL_RANGER: return "ranger";
     case STG_MODEL_TEST: return "test";
+    case STG_MODEL_GRIPPER: return "gripper";
     default:
       break;
     }  
@@ -97,6 +98,7 @@ void stg_print_laser_config( stg_laser_config_t* slc )
 	  slc->range_max,
 	  slc->samples );
 }
+
 
 stg_msec_t stg_timenow( void )
 {

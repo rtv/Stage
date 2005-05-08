@@ -62,6 +62,16 @@
 #define STG_LASER_CFG_COLOR "light steel blue"
 #define STG_LASER_BRIGHT_COLOR "blue"
 
+#define STG_LAYER_GRIPPERGEOM 85
+#define STG_LAYER_GRIPPERDATA 87
+#define STG_LAYER_GRIPPERCONFIG 86
+
+#define STG_GRIPPER_COLOR "steel blue"
+#define STG_GRIPPER_FILL_COLOR "light blue"
+#define STG_GRIPPER_GEOM_COLOR "blue"
+#define STG_GRIPPER_CFG_COLOR "light steel blue"
+#define STG_GRIPPER_BRIGHT_COLOR "blue"
+
   // GUI colors   
 #define STG_GRID_MAJOR_COLOR "gray85"
 #define STG_GRID_MINOR_COLOR "gray95"

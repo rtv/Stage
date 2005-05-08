@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.130 2005-05-08 05:07:23 rtv Exp $
+ * CVS: $Id: stage.h,v 1.131 2005-05-08 08:01:07 rtv Exp $
  */
 
 
@@ -84,6 +84,7 @@ extern "C" {
       STG_MODEL_RANGER,
       STG_MODEL_BLOB,
       STG_MODEL_ENERGY,
+      STG_MODEL_GRIPPER,
       STG_MODEL_COUNT // this must be the last entry - it counts the entries
       
     } stg_model_type_t;
@@ -113,6 +114,7 @@ extern "C" {
   typedef int stg_blob_return_t;
   typedef int stg_fiducial_return_t;
   typedef int stg_ranger_return_t;
+  typedef int stg_gripper_return_t;
 
   /** specify a rectangular size 
    */
@@ -592,6 +594,9 @@ extern "C" {
   /** set a model's laser return value */
   int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val );
 
+  /** set a model's gripper return value */
+  int stg_model_set_gripperreturn( stg_model_t* mod, stg_gripper_return_t* val );
+
   /** set a model's fiducial return value */
   int stg_model_set_fiducialreturn( stg_model_t* mod, stg_fiducial_return_t* val );
 
@@ -610,6 +615,7 @@ extern "C" {
   void stg_model_get_guifeatures( stg_model_t* mod, stg_guifeatures_t* dest );
   void stg_model_get_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* dest  );
   void stg_model_get_laserreturn( stg_model_t* mod, stg_laser_return_t* dest );
+  void stg_model_get_gripperreturn( stg_model_t* mod, stg_gripper_return_t* dest );
   void stg_model_get_fiducialreturn( stg_model_t* mod,stg_fiducial_return_t* dest );
 
   //void stg_model_get_friction( stg_model_t* mod,stg_friction_t* dest );
@@ -745,6 +751,68 @@ extern "C" {
   /** Create a new laser model 
    */
   stg_model_t* stg_laser_create( stg_world_t* world, 
+				 stg_model_t* parent, 
+				 stg_id_t id,
+				 char* token );
+  /**@}*/
+
+  // GRIPPER MODEL --------------------------------------------------------
+  
+  /** @defgroup stg_model_gripper Gripper 
+      Implements the gripper model: emulates a pioneer 2D gripper
+      @{ */
+  
+  typedef enum {
+    STG_GRIPPER_LIFT_DOWN = 0,
+    STG_GRIPPER_LIFT_UP, 
+    STG_GRIPPER_LIFT_MOVING
+  } stg_gripper_lift_state_t;
+
+  typedef enum {
+    STG_GRIPPER_PADDLE_OPEN = 0,
+    STG_GRIPPER_PADDLE_CLOSED, 
+    STG_GRIPPER_PADDLE_MOVING
+  } stg_gripper_paddle_state_t;
+  
+  typedef enum {
+    STG_GRIPPER_CMD_NOP = 0,
+    STG_GRIPPER_CMD_OPEN, 
+    STG_GRIPPER_CMD_CLOSE,
+    STG_GRIPPER_CMD_UP, 
+    STG_GRIPPER_CMD_DOWN    
+  } stg_gripper_cmd_type_t;
+
+  /** gripper configuration packet
+   */
+  typedef struct
+  {
+    //stg_geom_t geom;
+    stg_meters_t paddle_width; ///< paddle width
+    stg_meters_t paddle_height; ///< paddle height
+
+    stg_gripper_paddle_state_t paddles; 
+    stg_gripper_lift_state_t lift;
+
+    stg_bool_t inner_break_beam;
+    stg_bool_t outer_break_beam;
+
+    int stack_count; ///< number of objects in stack
+
+  } stg_gripper_config_t;
+
+  typedef struct
+  {
+    stg_gripper_cmd_type_t cmd;
+    int arg;
+  } stg_gripper_cmd_t;
+
+  /** print human-readable version of the gripper config struct
+   */
+  void stg_print_gripper_config( stg_gripper_config_t* slc );
+  
+  /** Create a new gripper model 
+   */
+  stg_model_t* stg_gripper_create( stg_world_t* world, 
 				 stg_model_t* parent, 
 				 stg_id_t id,
 				 char* token );
