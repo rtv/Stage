@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.131 2005-05-08 08:01:07 rtv Exp $
+ * CVS: $Id: stage.h,v 1.132 2005-05-08 19:19:23 rtv Exp $
  */
 
 
@@ -115,6 +115,7 @@ extern "C" {
   typedef int stg_fiducial_return_t;
   typedef int stg_ranger_return_t;
   typedef int stg_gripper_return_t;
+  
 
   /** specify a rectangular size 
    */
@@ -763,38 +764,41 @@ extern "C" {
       @{ */
   
   typedef enum {
-    STG_GRIPPER_LIFT_DOWN = 0,
-    STG_GRIPPER_LIFT_UP, 
-    STG_GRIPPER_LIFT_MOVING
-  } stg_gripper_lift_state_t;
+    STG_GRIPPER_PADDLE_OPEN = 0, // default state
+    STG_GRIPPER_PADDLE_CLOSED, 
+    STG_GRIPPER_PADDLE_OPENING,
+    STG_GRIPPER_PADDLE_CLOSING,
+  } stg_gripper_paddle_state_t;
 
   typedef enum {
-    STG_GRIPPER_PADDLE_OPEN = 0,
-    STG_GRIPPER_PADDLE_CLOSED, 
-    STG_GRIPPER_PADDLE_MOVING
-  } stg_gripper_paddle_state_t;
+    STG_GRIPPER_LIFT_DOWN = 0, // default state
+    STG_GRIPPER_LIFT_UP, 
+    STG_GRIPPER_LIFT_UPPING, // verbed these to match the paddle state
+    STG_GRIPPER_LIFT_DOWNING, 
+  } stg_gripper_lift_state_t;
   
   typedef enum {
-    STG_GRIPPER_CMD_NOP = 0,
+    STG_GRIPPER_CMD_NOP = 0, // default state
     STG_GRIPPER_CMD_OPEN, 
     STG_GRIPPER_CMD_CLOSE,
     STG_GRIPPER_CMD_UP, 
     STG_GRIPPER_CMD_DOWN    
   } stg_gripper_cmd_type_t;
-
+  
   /** gripper configuration packet
    */
   typedef struct
   {
-    //stg_geom_t geom;
-    stg_meters_t paddle_width; ///< paddle width
-    stg_meters_t paddle_height; ///< paddle height
+    stg_size_t paddle_size; ///< paddle dimensions 
 
     stg_gripper_paddle_state_t paddles; 
     stg_gripper_lift_state_t lift;
+    
+    double paddle_position; ///< 0.0 = full open, 1.0 full closed
+    double lift_position; ///< 0.0 = full down, 1.0 full up
 
-    stg_bool_t inner_break_beam;
-    stg_bool_t outer_break_beam;
+    stg_bool_t inner_break_beam; ///< non-zero iff beam is broken
+    stg_bool_t outer_break_beam; ///< non-zero iff beam is broken
 
     int stack_count; ///< number of objects in stack
 
@@ -805,6 +809,9 @@ extern "C" {
     stg_gripper_cmd_type_t cmd;
     int arg;
   } stg_gripper_cmd_t;
+
+  // data packet is the same as the config packet
+  typedef stg_gripper_config_t stg_gripper_data_t;
 
   /** print human-readable version of the gripper config struct
    */

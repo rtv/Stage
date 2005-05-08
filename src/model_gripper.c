@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -23,13 +23,6 @@
 
 #include "stage_internal.h"
 
-// temporary static definitions of paddle rectangles
-// this will be replaced by nice animated paddles soon enough.
-static stg_point_t body[4] = {{0,0},{0.4,0},{0.4,1},{0,1}};
-static stg_point_t openleft[4] = {{0.4,0.0},{1.0,0.0},{1.0,0.15},{0.4,0.15}};
-static stg_point_t closedleft[4] = {{0.4,0.34},{1.0,0.34},{1.0,0.49},{0.4,0.49}};
-static stg_point_t openright[4] = {{0.4,1.0},{1.0,1.0},{1.0,0.85},{0.4,0.85}};
-static stg_point_t closedright[4] = {{0.4,0.66},{1.0,0.66},{1.0,0.51},{0.4,0.51}};
 void gripper_load( stg_model_t* mod )
 {
   stg_gripper_config_t gconf;
@@ -43,6 +36,33 @@ int gripper_startup( stg_model_t* mod );
 int gripper_shutdown( stg_model_t* mod );
 void gripper_render_data(  stg_model_t* mod );
 void gripper_render_cfg( stg_model_t* mod );
+
+void gripper_generate_paddles( stg_model_t* mod, stg_gripper_config_t* cfg );
+
+void stg_polygon_print( stg_polygon_t* poly )
+{
+  printf( "polygon: %d pts : ", poly->points->len );
+  
+  int i;
+  for(i=0;i<poly->points->len;i++)
+    {
+      stg_point_t* pt = &g_array_index( poly->points, stg_point_t, i );
+      printf( "(%.2f,%.2f) ", pt->x, pt->y );
+    }
+  puts("");
+}
+
+void stg_polygons_print( stg_polygon_t* polys, unsigned int count )
+{
+  printf( "polygon array (%d polys)\n", count );
+  
+  int i;
+  for( i=0; i<count; i++ )
+    {
+      printf( "[%d] ", i ); 
+      stg_polygon_print( &polys[i] );
+    }
+}
 
 stg_model_t* stg_gripper_create( stg_world_t* world, 
 			       stg_model_t* parent, 
@@ -75,6 +95,9 @@ stg_model_t* stg_gripper_create( stg_world_t* world,
   // set up a gripper-specific config structure
   stg_gripper_config_t gconf;
   memset(&gconf,0,sizeof(gconf));  
+  gconf.paddle_size.x = 0.6;
+  gconf.paddle_size.y = 0.1;
+
   gconf.paddles = STG_GRIPPER_PADDLE_OPEN;
   gconf.lift = STG_GRIPPER_LIFT_DOWN;
 
@@ -90,16 +113,56 @@ stg_model_t* stg_gripper_create( stg_world_t* world,
   stg_color_t col = stg_lookup_color( STG_GRIPPER_GEOM_COLOR ); 
   stg_model_set_color( mod, &col );
 
-  stg_polygon_t* polys = stg_polygons_create(3);
-
-  stg_polygon_set_points( &polys[0], body, 4 );
-  stg_polygon_set_points( &polys[1], openleft, 4 );
-  stg_polygon_set_points( &polys[2], openright, 4 );
-
+  // install three polygons for the gripper body;
+  stg_polygon_t* polys = stg_polygons_create( 3 );
   stg_model_set_polygons( mod, polys, 3 );
-  free(polys);
+  //stg_polygons_destroy ?
+  
+  // figure out where the paddles should be
+  gripper_generate_paddles( mod, &gconf );
   
   return mod;
+}
+
+void gripper_generate_paddles( stg_model_t* mod, stg_gripper_config_t* cfg )
+{
+  stg_point_t body[4];
+  body[0].x = 0;
+  body[0].y = 0;
+  body[1].x = 1.0 - cfg->paddle_size.x;
+  body[1].y = 0;
+  body[2].x = body[1].x;
+  body[2].y = 1.0;
+  body[3].x = 0;
+  body[3].y = 1.0;
+
+  stg_point_t l_pad[4];
+  l_pad[0].x = 1.0 - cfg->paddle_size.x;
+  l_pad[0].y = cfg->paddle_position * (0.5 - cfg->paddle_size.y);
+  l_pad[1].x = 1.0;
+  l_pad[1].y = l_pad[0].y;
+  l_pad[2].x = 1.0;
+  l_pad[2].y = l_pad[0].y + cfg->paddle_size.y;
+  l_pad[3].x = l_pad[0].x;
+  l_pad[3].y = l_pad[2].y;
+
+  stg_point_t r_pad[4];
+  r_pad[0].x = 1.0 - cfg->paddle_size.x;
+  r_pad[0].y = 1.0 - cfg->paddle_position * (0.5 - cfg->paddle_size.y);
+  r_pad[1].x = 1.0;
+  r_pad[1].y = r_pad[0].y;
+  r_pad[2].x = 1.0;
+  r_pad[2].y = r_pad[0].y - cfg->paddle_size.y;
+  r_pad[3].x = r_pad[0].x;
+  r_pad[3].y = r_pad[2].y;
+
+  // move the paddle arm polygons
+  size_t count=0;
+  stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
+  stg_polygon_set_points( &polys[0], body, 4 );
+  stg_polygon_set_points( &polys[1], l_pad, 4 );
+  stg_polygon_set_points( &polys[2], r_pad, 4 );	  
+  stg_model_set_polygons( mod, polys, 3 );
 }
 
 int gripper_update( stg_model_t* mod )
@@ -127,14 +190,7 @@ int gripper_update( stg_model_t* mod )
       if( cfg.paddles == STG_GRIPPER_PADDLE_OPEN )
 	{
 	  puts( "closing gripper paddles" );
-	  cfg.paddles = STG_GRIPPER_PADDLE_CLOSED;
-	  
-	  size_t count=0;
-	  stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
-	  stg_polygon_set_points( &polys[0], body, 4 );
-	  stg_polygon_set_points( &polys[1], closedleft, 4 );
-	  stg_polygon_set_points( &polys[2], closedright, 4 );	  
-	  stg_model_set_polygons( mod, polys, 3 );
+	  cfg.paddles = STG_GRIPPER_PADDLE_CLOSING;
 	}
       break;
       
@@ -142,14 +198,7 @@ int gripper_update( stg_model_t* mod )
       if( cfg.paddles == STG_GRIPPER_PADDLE_CLOSED )
 	{
 	  puts( "opening gripper paddles" );      
-	  cfg.paddles = STG_GRIPPER_PADDLE_OPEN;
-	  
-	  size_t count=0;
-	  stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
-	  stg_polygon_set_points( &polys[0], body, 4 );
-	  stg_polygon_set_points( &polys[1], openleft, 4 );
-	  stg_polygon_set_points( &polys[2], openright, 4 );	  
-	  stg_model_set_polygons( mod, polys, 3 );
+	  cfg.paddles = STG_GRIPPER_PADDLE_OPENING;
 	}
       break;
       
@@ -157,7 +206,7 @@ int gripper_update( stg_model_t* mod )
       if( cfg.lift == STG_GRIPPER_LIFT_DOWN )
 	{
 	  puts( "raising gripper lift" );      
-	  cfg.lift = STG_GRIPPER_LIFT_UP;
+	  cfg.lift = STG_GRIPPER_LIFT_UPPING;
 	}
       break;
       
@@ -165,7 +214,7 @@ int gripper_update( stg_model_t* mod )
       if( cfg.lift == STG_GRIPPER_LIFT_UP )
 	{
 	  puts( "lowering gripper lift" );      
-	  cfg.lift = STG_GRIPPER_LIFT_DOWN;
+	  cfg.lift = STG_GRIPPER_LIFT_DOWNING;
 	}      
       break;
       
@@ -180,7 +229,55 @@ int gripper_update( stg_model_t* mod )
 
   // cast the rays of the beams
   // compute beam and arm states
-
+  
+  
+  // move the paddles 
+  if( cfg.paddles == STG_GRIPPER_PADDLE_OPENING )
+    {
+      cfg.paddle_position -= 0.05;
+      
+      if( cfg.paddle_position < 0.0 ) // if we're fully open
+	{
+	  cfg.paddle_position == 0.0;
+	  cfg.paddles = STG_GRIPPER_PADDLE_OPEN; // change state
+	}
+    }
+  else if( cfg.paddles == STG_GRIPPER_PADDLE_CLOSING )
+    {
+      cfg.paddle_position += 0.05;
+      
+      if( cfg.paddle_position > 1.0 ) // if we're fully open
+	{
+	  cfg.paddle_position == 1.0;
+	  cfg.paddles = STG_GRIPPER_PADDLE_CLOSED; // change state
+	}
+    }
+  
+  // move the lift 
+  if( cfg.lift == STG_GRIPPER_LIFT_DOWNING )
+    {
+      cfg.lift_position -= 0.05;
+      
+      if( cfg.lift_position < 0.0 ) // if we're fully down
+	{
+	  cfg.lift_position == 0.0;
+	  cfg.lift = STG_GRIPPER_LIFT_DOWN; // change state
+	}
+    }
+  else if( cfg.lift == STG_GRIPPER_LIFT_UPPING )
+    {
+      cfg.lift_position += 0.05;
+      
+      if( cfg.lift_position > 1.0 ) // if we're fully open
+	{
+	  cfg.lift_position == 1.0;
+	  cfg.lift = STG_GRIPPER_LIFT_UP; // change state
+	}
+    }
+  
+  // figure out where the paddles should be
+  gripper_generate_paddles( mod, &cfg );
+  
   // change the gripper's configuration in response to the commands
   stg_model_set_config( mod, &cfg, sizeof(cfg));
   stg_print_gripper_config( &cfg );
@@ -275,8 +372,9 @@ void stg_print_gripper_config( stg_gripper_config_t* cfg )
     {
     case STG_GRIPPER_PADDLE_OPEN: pstate = "OPEN"; break;
     case STG_GRIPPER_PADDLE_CLOSED: pstate = "CLOSED"; break;
-    case STG_GRIPPER_PADDLE_MOVING: pstate = "MOVING"; break;
-    default: pstate = "*broken*";
+    case STG_GRIPPER_PADDLE_OPENING: pstate = "OPENING"; break;
+    case STG_GRIPPER_PADDLE_CLOSING: pstate = "CLOSING"; break;
+    default: pstate = "*unknown*";
     }
   
   char* lstate;
@@ -284,9 +382,11 @@ void stg_print_gripper_config( stg_gripper_config_t* cfg )
     {
     case STG_GRIPPER_LIFT_UP: lstate = "UP"; break;
     case STG_GRIPPER_LIFT_DOWN: lstate = "DOWN"; break;
-    case STG_GRIPPER_LIFT_MOVING: lstate = "MOVING"; break;
-    default: lstate = "*broken*";
+    case STG_GRIPPER_LIFT_DOWNING: lstate = "DOWNING"; break;
+    case STG_GRIPPER_LIFT_UPPING: lstate = "UPPING"; break;
+    default: lstate = "*unknown*";
     }
   
-  printf("gripper state: paddles(%s) lift(%s)\n", pstate, lstate );
+  printf("gripper state: paddles(%s)[%.2f] lift(%s)[%.2f]\n", 
+	 pstate, lstate, cfg->paddle_position, cfg->lift_position );
 }

@@ -662,7 +662,7 @@ void stg_polygon_set_points( stg_polygon_t* poly, stg_point_t* pts, size_t count
   g_array_append_vals( poly->points, pts, count );
 }
 
-/// Appends [count] points from [pts] to the point list of polygin
+/// Appends [count] points from [pts] to the point list of polygon
 /// [poly], allocating memory if mecessary.
 void stg_polygon_append_points( stg_polygon_t* poly, stg_point_t* pts, size_t count )
 {
