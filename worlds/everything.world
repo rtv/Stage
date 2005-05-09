@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.32 2005-05-09 00:03:37 rtv Exp $
+# CVS: $Id: everything.world,v 1.33 2005-05-09 00:44:26 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -75,7 +75,7 @@ laserpioneer
 (
   name "p0"
   pose [-10.407 3.028 -360.320]
-  gripper( pose [0.250 0.000 0.000] )
+  gripper( pose [0.24 0.000 0.000] )
   #gripper( pose [0.700 0.000 0.000] size [1.0 1.0] )
 )
 

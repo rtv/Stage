@@ -432,7 +432,7 @@ void gui_window_menus_create( gui_window_t* win )
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Position data"));
   gtk_check_menu_item_set_active( mitem, FALSE );
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Gripper data"));
-  gtk_check_menu_item_set_active( mitem, FALSE );
+  gtk_check_menu_item_set_active( mitem, TRUE );
 
   // View/Config
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Laser config"));

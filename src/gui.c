@@ -166,7 +166,7 @@ void gui_load( gui_window_t* win, int section )
   win->render_cfg_flag[STG_MODEL_BLOB] = wf_read_int(section, "blobfinder_config", 0 );
   win->render_data_flag[STG_MODEL_POSITION] = wf_read_int(section, "position_data", 0 );
   win->render_cfg_flag[STG_MODEL_POSITION] = wf_read_int(section, "position_config", 0 );
-  win->render_data_flag[STG_MODEL_GRIPPER] = wf_read_int(section, "gripper_data", 0 );
+  win->render_data_flag[STG_MODEL_GRIPPER] = wf_read_int(section, "gripper_data", 1 );
   win->render_cfg_flag[STG_MODEL_GRIPPER] = wf_read_int(section, "gripper_config", 0 );
   win->render_data_flag[STG_MODEL_ENERGY] = wf_read_int(section, "energy_data", 0 );
   win->render_cfg_flag[STG_MODEL_ENERGY] = wf_read_int(section, "energy_config", 0 );
