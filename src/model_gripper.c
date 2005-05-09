@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -98,8 +98,8 @@ stg_model_t* stg_gripper_create( stg_world_t* world,
   // set up a gripper-specific config structure
   stg_gripper_config_t gconf;
   memset(&gconf,0,sizeof(gconf));  
-  gconf.paddle_size.x = 0.6;
-  gconf.paddle_size.y = 0.1;
+  gconf.paddle_size.x = 0.7; // proportion of body that is paddles
+  gconf.paddle_size.y = 0.1; // the thickness of the paddles as a proportion of total size
 
   gconf.paddles = STG_GRIPPER_PADDLE_OPEN;
   gconf.lift = STG_GRIPPER_LIFT_DOWN;
@@ -331,8 +331,13 @@ int gripper_break_beam(stg_model_t* mod, int beam)
 
   stg_pose_t pz;
 
+  //double ibbx =  (geom.size.x - cfg.inner_break_beam_inset * geom.size.x) - geom.size.x/2.0;
+  //double obbx =  (geom.size.x - cfg.outer_break_beam_inset * geom.size.x) - geom.size.x/2.0;
+ 
+
   // x location of break beam origin
-  pz.x = (beam ? cfg.inner_break_beam_inset : cfg.outer_break_beam_inset) * geom.size.x;
+  double inset = beam ? cfg.inner_break_beam_inset : cfg.outer_break_beam_inset;
+  pz.x = (geom.size.x - inset * geom.size.x) - geom.size.x/2.0;
   
   // y location of break beam origin
   pz.y = (1.0 - cfg.paddle_position) * ((geom.size.y/2.0)-(geom.size.y*cfg.paddle_size.y));
@@ -364,7 +369,45 @@ int gripper_break_beam(stg_model_t* mod, int beam)
 }
 
 int gripper_paddle_contact( stg_model_t* mod, int paddle )
-{
+{ 
+  stg_geom_t geom;
+  stg_model_get_geom( mod, &geom );
+  
+  stg_gripper_config_t cfg;
+  stg_model_get_config( mod, &cfg, sizeof(cfg) );
+  
+  stg_pose_t pz;
+  
+  // x location of contact sensor origin
+  pz.x = ((1.0 - cfg.paddle_size.x) * geom.size.x) - geom.size.x/2.0 ;
+
+  //double inset = beam ? cfg.inner_break_beam_inset : cfg.outer_break_beam_inset;
+  //pz.x = (geom.size.x - inset * geom.size.x) - geom.size.x/2.0;
+
+  // y location of break beam origin
+  pz.y = (1.0 - cfg.paddle_position) * ((geom.size.y/2.0)-(geom.size.y*cfg.paddle_size.y));
+  
+  // break beam local heading
+  pz.a = 0.0;
+
+  // break beam max range
+  double bbr = cfg.paddle_size.x * geom.size.x; 
+  
+  stg_model_local_to_global( mod, &pz );
+  
+  //printf( "ray tracing from (%.2f %.2f %.2f) for %.2f meters\n",
+  //  pz.x, pz.y, pz.a, bbr );
+
+  itl_t* itl = itl_create( pz.x, pz.y, pz.a, 
+			   bbr,
+			   mod->world->matrix, 
+			   PointToBearingRange );
+  
+  // if the breakbeam strikes anything
+  if( itl_first_matching( itl, gripper_raytrace_match, mod ) )
+    return 1;
+  
+  //else
   return 0;
 }
 
@@ -399,8 +442,8 @@ void gripper_render_data(  stg_model_t* mod )
   //stg_rtk_fig_rectangle( mod->gui.data, 0,0,0, geom.size.x, geom.size.y, 0 );
 
   // different x location for each beam
-  double ibbx = (cfg.inner_break_beam_inset) * geom.size.x;
-  double obbx = (cfg.outer_break_beam_inset) * geom.size.x;
+  double ibbx =  (geom.size.x - cfg.inner_break_beam_inset * geom.size.x) - geom.size.x/2.0;
+  double obbx =  (geom.size.x - cfg.outer_break_beam_inset * geom.size.x) - geom.size.x/2.0;
   
   // common y position
   double bby = 
@@ -408,36 +451,71 @@ void gripper_render_data(  stg_model_t* mod )
   
   // draw the position of the break beam sensors
   //stg_rtk_fig_color_rgb32( mod->gui.data, 0x00 );      
-  //stg_rtk_fig_rectangle( mod->gui.data, ibbx, bby, 0, 0.01, 0.01, 0 );
   //stg_rtk_fig_rectangle( mod->gui.data, obbx, bby, 0, 0.01, 0.01, 0 );
+  
+  // size of the paddle indicator lights
+  double led_dx = cfg.paddle_size.y * 0.5 * geom.size.y;
 
   // if the break beam is NOT broken, calculate the range of the beam
   if( data.inner_break_beam )
     {
       // if beam is triggered, draw it red
-      stg_rtk_fig_color_rgb32( mod->gui.data, 0xFF0000 );      
-      stg_rtk_fig_arrow( mod->gui.data, ibbx, bby, -M_PI/2.0, 0.02, 0.02 );
+      stg_rtk_fig_color_rgb32( mod->gui.data, 0x00FF00 );      
+      //stg_rtk_fig_arrow( mod->gui.data, ibbx, bby, -M_PI/2.0, 0.02, 0.02 );
+      stg_rtk_fig_rectangle( mod->gui.data, ibbx, bby+led_dx, 0, led_dx, led_dx, 1 );
+      stg_rtk_fig_rectangle( mod->gui.data, ibbx, -bby-led_dx, 0, led_dx, led_dx, 1 );
       stg_rtk_fig_color_rgb32( mod->gui.data,  stg_lookup_color(STG_GRIPPER_COLOR) );      
     }
   else
     {
       double bbr = (1.0-data.paddle_position) * (geom.size.y - (geom.size.y * cfg.paddle_size.y * 2.0 ));
+      stg_rtk_fig_color_rgb32( mod->gui.data, 0x00FF00 );      
       stg_rtk_fig_arrow( mod->gui.data, ibbx, bby, -M_PI/2.0, bbr, 0.01 );
+      stg_rtk_fig_rectangle( mod->gui.data, ibbx, bby+led_dx, 0, led_dx, led_dx, 0 );
+      stg_rtk_fig_rectangle( mod->gui.data, ibbx, -bby-led_dx, 0, led_dx, led_dx, 0 );
+      stg_rtk_fig_color_rgb32( mod->gui.data,  stg_lookup_color(STG_GRIPPER_COLOR) );      
     }
 
   // if the break beam is NOT broken, calculate the range of the beam
   if( data.outer_break_beam )
     {
       // if beam is triggered, draw it red
-      stg_rtk_fig_color_rgb32( mod->gui.data, 0xFF0000 );      
-      stg_rtk_fig_arrow( mod->gui.data, obbx, bby, -M_PI/2.0, 0.02, 0.02 );
+      stg_rtk_fig_color_rgb32( mod->gui.data, 0x00FF00 );      
+      stg_rtk_fig_rectangle( mod->gui.data, obbx, bby+led_dx, 0, led_dx, led_dx, 1 );
+      stg_rtk_fig_rectangle( mod->gui.data, obbx, -bby-led_dx, 0, led_dx, led_dx, 1 );
+      //stg_rtk_fig_arrow( mod->gui.data, obbx, bby, -M_PI/2.0, 0.02, 0.02 );
       stg_rtk_fig_color_rgb32( mod->gui.data,  stg_lookup_color(STG_GRIPPER_COLOR) );      
     }
   else
     {
       double bbr = (1.0-data.paddle_position) * (geom.size.y - (geom.size.y * cfg.paddle_size.y * 2.0 ));
+      stg_rtk_fig_color_rgb32( mod->gui.data, 0x00FF00 );      
       stg_rtk_fig_arrow( mod->gui.data, obbx, bby, -M_PI/2.0, bbr, 0.01 );
+      stg_rtk_fig_rectangle( mod->gui.data, obbx, bby+led_dx, 0, led_dx, led_dx, 0 );
+      stg_rtk_fig_rectangle( mod->gui.data, obbx, -bby-led_dx, 0, led_dx, led_dx, 0 );
+      stg_rtk_fig_color_rgb32( mod->gui.data,  stg_lookup_color(STG_GRIPPER_COLOR) );      
     }
+
+  // draw contact rectangles. filled if contact is made
+  //pz.x = (1.0 - cfg.paddle_size.x) * geom.size.x;
+  
+  // y location of break beam origin
+
+  //pz.y = (1.0 - cfg.paddle_position) * ((geom.size.y/2.0)-(geom.size.y*cfg.paddle_size.y));
+
+  //pz.x = ((1.0 - cfg.paddle_size.x) * geom.size.x) - geom.size.x/2.0 ;
+
+  stg_rtk_fig_color_rgb32( mod->gui.data, 0x00FF00 );      
+  stg_rtk_fig_rectangle( mod->gui.data, 
+			 ((1.0 - cfg.paddle_size.x/2.0) * geom.size.x) - geom.size.x/2.0,
+			 (1.0 - cfg.paddle_position) * ((geom.size.y/2.0)-(geom.size.y*cfg.paddle_size.y)),
+			 0.0,
+			 cfg.paddle_size.x * geom.size.x,
+			 cfg.paddle_size.y/6.0 * geom.size.y, 
+			 data.left_paddle_contact );
+
+  stg_rtk_fig_color_rgb32( mod->gui.data,  stg_lookup_color(STG_GRIPPER_COLOR) );      
+
 }
 
 void gripper_render_cfg( stg_model_t* mod )
@@ -459,8 +537,8 @@ void gripper_render_cfg( stg_model_t* mod )
   assert( len == sizeof(cfg) );
   
   // different x location for each beam
-  double ibbx = (cfg.inner_break_beam_inset) * geom.size.x;
-  double obbx = (cfg.outer_break_beam_inset) * geom.size.x;
+  double ibbx = (cfg.inner_break_beam_inset) * geom.size.x - geom.size.x/2.0;
+  double obbx = (cfg.outer_break_beam_inset) * geom.size.x - geom.size.x/2.0;
   
   // common y position
   double bby = 

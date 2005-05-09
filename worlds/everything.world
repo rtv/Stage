@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.31 2005-05-08 22:59:31 rtv Exp $
+# CVS: $Id: everything.world,v 1.32 2005-05-09 00:03:37 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -21,6 +21,7 @@ include "pioneer.inc"
 
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
@@ -29,15 +30,23 @@ include "map.inc"
 
 
 
+
 size [40 20 ]
 
-window( size [ 830.000 556.000 ] center [-8.732 2.794] scale 0.015 )
+window( size [ 830.000 556.000 ] center [-10.204 3.047] scale 0.002 )
 
 map( 
   bitmap "bitmaps/hospital_section.png" 
   size [36 18] 
 )
 
+
+# a block for gripping
+model(
+  size [ 0.02 0.02 ]
+  pose [-9.884 3.043 0.000 ]
+  color "green" 
+)
 
 define sicklaser laser
 (
