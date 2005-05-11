@@ -83,7 +83,13 @@ extern "C" {
     int mitems_mspeed_count;
   
     struct _stg_model* selection_active;
-  
+    
+    int disable_data;
+    int disable_polygons;
+    int disable_config;
+    int disable_commands;
+
+    //uint8_t render_poly_flag[STG_MODEL_COUNT];
     uint8_t render_data_flag[STG_MODEL_COUNT];
     uint8_t render_cfg_flag[STG_MODEL_COUNT];
     uint8_t render_cmd_flag[STG_MODEL_COUNT];

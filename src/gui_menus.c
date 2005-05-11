@@ -93,13 +93,20 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/View/Debug/Matrix tree", "<ALT>M",   gui_menu_debug_cb, 3, "<CheckItem>" },
   { "/View/Debug/Matrix occupied", "<ALT>O",   gui_menu_debug_cb, 4, "<CheckItem>" },
   //  { "/View/Debug/Matrix table", "<CTRL>T,   gui_menu_debug_cb, 4, "<CheckItem>" },
+  { "/View/Debug/sep3",     NULL,      NULL, 0, "<Separator>" },
+  { "/View/Debug/Testing",          NULL,    NULL, 0, "<Title>" },
+  { "/View/Debug/Data disable", NULL, gui_menu_debug_cb, 5, "<CheckItem>" },
+  { "/View/Debug/Polygon disable", NULL, gui_menu_debug_cb, 6, "<CheckItem>" },
+  { "/View/Debug/Config disable", NULL, gui_menu_debug_cb, 7, "<CheckItem>" },
+  { "/View/Debug/Command disable", NULL, gui_menu_debug_cb, 8, "<CheckItem>" },
+
   { "/_Clock",         NULL,      NULL, 0, "<Branch>" },
   { "/Clock/tear1",    NULL,      NULL, 0, "<Tearoff>" },
   { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
 };
 
 // SET THIS TO THE NUMBER OF MENU ITEMS IN THE ARRAY ABOVE
-static const int menu_table_count = 52;
+static const int menu_table_count = 58;
 
 // USE THIS WHEN WE FIX ON A RECENT GTK VERSION 
 /* void gui_menu_file_about( void ) */
@@ -379,6 +386,19 @@ void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem )
 	  
 	  stg_rtk_fig_color_rgb32( win->matrix, 0x008800 );
 	}
+      break;
+      
+    case 5: // global data rendering toggle
+      win->disable_data = !win->disable_data;
+      break;
+    case 6: // global data rendering toggle
+      win->disable_polygons = !win->disable_polygons;
+      break;
+    case 7: // global data rendering toggle
+      win->disable_config = !win->disable_config;
+      break;
+    case 8: // global data rendering toggle
+      win->disable_commands = !win->disable_commands;
       break;
 
     default:

@@ -289,6 +289,16 @@ stg_world_t* stg_world_create( stg_id_t id,
   return world;
 }
 
+void stg_world_stop( stg_world_t* world )
+{
+  world->paused = TRUE;
+}
+
+void stg_world_start( stg_world_t* world )
+{
+  world->paused = FALSE;
+}
+
 // calculate the bounding rectangle of everything in the world
 void stg_world_dimensions( stg_world_t* world, 
 			   double* min_x, double * min_y,

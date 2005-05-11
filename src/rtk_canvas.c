@@ -21,7 +21,7 @@
 /*
  * Desc: Stk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.13 2005-03-11 21:56:57 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.14 2005-05-11 23:04:25 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -447,6 +447,10 @@ void stg_rtk_canvas_calc(stg_rtk_canvas_t *canvas)
 // Render the figures in the canvas
 void stg_rtk_canvas_render(stg_rtk_canvas_t *canvas)
 {
+  //static int c=0;  
+  //if( c++ % 20 != 0 )
+  //return;
+
   int bg_count;
   stg_rtk_fig_t *fig;
   GdkColor color;
@@ -457,7 +461,7 @@ void stg_rtk_canvas_render(stg_rtk_canvas_t *canvas)
   if (canvas->destroyed)
     return;
 
-  // If there where deferred computations, do them now.
+  // If there were deferred computations, do them now.
   if (canvas->calc_deferred)
   {
     stg_rtk_canvas_calc(canvas);

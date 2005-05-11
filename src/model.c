@@ -688,7 +688,16 @@ int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
   if( mod->data_notify )
     (*mod->data_notify)(mod->data_notify_arg, data, len );
   
-  gui_model_render_data( mod );
+  if( mod->world->win->render_data_flag[ mod->type ] && 
+      !mod->world->win->disable_data )
+    gui_model_render_data( mod );
+  else
+    if( mod->gui.data  )
+      {
+	stg_rtk_fig_clear(mod->gui.data);
+	stg_rtk_fig_destroy( mod->gui.data);
+	mod->gui.data = NULL;
+      }
   
   PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
 		mod->id, mod->token, (int)mod->data_len);

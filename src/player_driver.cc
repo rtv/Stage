@@ -1,8 +1,7 @@
 /*
- *  Player - One Hell of a Robot Server
- *  Copyright (C) 2004, 2005 Richard Vaughan
+ *  Stage plugin driver for Player
+ *  Copyright (C) 2004-2005 Richard Vaughan
  *                      
- * 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -23,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.11 2005-05-08 08:01:06 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.12 2005-05-11 23:04:25 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -184,7 +183,9 @@ Driver* StgDriver_Init(ConfigFile* cf, int section)
 // driver can support and how to create a driver instance.
 void StgDriver_Register(DriverTable* table)
 {
-  printf( "\n Stage plugin driver %s\n", PACKAGE_VERSION );
+  printf( "\n Stage plugin driver %s.\n"
+	  "Part of the Player/Stage Project [http://playerstage.sourceforge.net]\n"
+	  " Copyright 2000-2005 Richard Vaughan, Andrew Howard, Brian Gerkey and contributors. Released under the GNU GPL. \n", PACKAGE_VERSION );
   table->AddDriver( "stage", StgDriver_Init);
 }
 

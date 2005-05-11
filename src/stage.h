@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.134 2005-05-08 22:57:48 rtv Exp $
+ * CVS: $Id: stage.h,v 1.135 2005-05-11 23:04:26 rtv Exp $
  */
 
 
@@ -466,6 +466,14 @@ extern "C" {
    */
   void stg_world_destroy( stg_world_t* world );
   
+  /** Stop the world clock
+   */
+  void stg_world_stop( stg_world_t* world );
+  
+  /** Start the world clock
+   */
+  void stg_world_start( stg_world_t* world );
+
   /** Run one simulation step. Returns 0 if all is well, or a positive error code 
    */
   int stg_world_update( stg_world_t* world, int sleepflag );
@@ -755,6 +763,12 @@ extern "C" {
 				 stg_model_t* parent, 
 				 stg_id_t id,
 				 char* token );
+
+  /// wrap the generic get_data call to be laser-specific. sizes are
+  /// in terms of samples instead of bytes
+  size_t stg_model_get_data_laser( stg_model_t* mod,
+				   stg_laser_sample_t* data, 
+				   size_t max_samples );
   /**@}*/
 
   // GRIPPER MODEL --------------------------------------------------------

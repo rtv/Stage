@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.67 $
+//  $Revision: 1.68 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -132,7 +132,17 @@ stg_model_t* stg_laser_create( stg_world_t* world,
   return mod;
 }
 
+// wrap the generic get_data call to be laser-specific
+size_t stg_model_get_data_laser( stg_model_t* mod,
+				 stg_laser_sample_t* data, 
+				 size_t max_samples )
+{
+  size_t bytes = stg_model_get_data( mod,
+				     (void*)data, 
+				     max_samples * sizeof(stg_laser_sample_t) );
 
+  return bytes / sizeof(stg_laser_sample_t);
+}
 
 int laser_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
@@ -275,9 +285,13 @@ void laser_render_data(  stg_model_t* mod )
 	  == sizeof(stg_laser_config_t ));
     
   // get the data
-  size_t len = stg_model_get_data( mod, samples, max_len );
+  //size_t len = stg_model_get_data( mod, samples, max_len );
   
-  int sample_count = len / sizeof(stg_laser_sample_t);
+  //int sample_count = len / sizeof(stg_laser_sample_t);
+  
+  size_t sample_count = stg_model_get_data_laser( mod, 
+						  samples, 
+						  STG_LASER_SAMPLES_MAX );
 
   // now get on with rendering the laser data
   stg_pose_t pose;

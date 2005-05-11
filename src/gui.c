@@ -241,6 +241,11 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   // enable all objects on the canvas to find our window object
   win->canvas->userdata = (void*)win; 
 
+  win->disable_data = FALSE;
+  win->disable_polygons = FALSE;
+  win->disable_config = FALSE;
+  win->disable_commands = FALSE;
+
   gui_window_menus_create( win );
 
   char txt[256];
@@ -788,54 +793,14 @@ void gui_model_features( stg_model_t* mod )
     }  
 }
 
-
-/* void stg_model_render_lines( stg_model_t* mod ) */
-/* { */
-/*   stg_rtk_fig_t* fig = gui_model_figs(mod)->top; */
-  
-/*   stg_rtk_fig_clear( fig ); */
-  
-/*   // don't draw objects with no size  */
-/*   if( mod->geom.size.x == 0 && mod->geom.size.y == 0 ) */
-/*     return; */
-  
-/*   stg_rtk_fig_color_rgb32( fig, stg_model_get_color(mod) ); */
-
-/*   size_t count=0; */
-/*   stg_line_t* lines = stg_model_get_lines(mod,&count); */
-
-/*   if( lines ) */
-/*     { */
-/*       PRINT_DEBUG1( "rendering %d lines", (int)count ); */
-      
-/*       stg_geom_t* geom = stg_model_get_geom(mod); */
-      
-/*       double localx = geom.pose.x; */
-/*       double localy = geom.pose.y; */
-/*       double locala = geom.pose.a; */
-      
-/*       double cosla = cos(locala); */
-/*       double sinla = sin(locala); */
-      
-/*       int l; */
-/*       for( l=0; l<count; l++ ) */
-/* 	  { */
-/* 	    stg_line_t* line = &lines[l]; */
-	    
-/* 	    double x1 = localx + line->x1 * cosla - line->y1 * sinla; */
-/* 	    double y1 = localy + line->x1 * sinla + line->y1 * cosla; */
-/* 	    double x2 = localx + line->x2 * cosla - line->y2 * sinla; */
-/* 	    double y2 = localy + line->x2 * sinla + line->y2 * cosla; */
-	    
-/* 	    stg_rtk_fig_line( fig, x1,y1, x2,y2 ); */
-/* 	  } */
-/*     } */
-/* } */
-
-
-
 void stg_model_render_polygons( stg_model_t* mod )
 {
+  if( mod->world->win->disable_polygons )
+    {
+      puts( "polys disabled" );
+      return;
+    }
+
   stg_rtk_fig_t* fig = gui_model_figs(mod)->top;
   
   stg_rtk_fig_clear( fig );
