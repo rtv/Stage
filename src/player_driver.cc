@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.12 2005-05-11 23:04:25 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.13 2005-05-12 01:28:24 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -166,6 +166,8 @@ extern char** global_argv;
 // init static vars
 stg_world_t* StgDriver::world = NULL;
 
+// this is a Player global
+extern bool quiet_startup;
 
 // A factory creation function, declared outside of the class so that it
 // can be invoked without any object context (alternatively, you can
@@ -183,9 +185,15 @@ Driver* StgDriver_Init(ConfigFile* cf, int section)
 // driver can support and how to create a driver instance.
 void StgDriver_Register(DriverTable* table)
 {
-  printf( "\n Stage plugin driver %s.\n"
-	  "Part of the Player/Stage Project [http://playerstage.sourceforge.net]\n"
-	  " Copyright 2000-2005 Richard Vaughan, Andrew Howard, Brian Gerkey and contributors. Released under the GNU GPL. \n", PACKAGE_VERSION );
+  printf( "\n ** Stage plugin v%s **", PACKAGE_VERSION );
+  
+  if( !quiet_startup )
+    {
+      puts( "\n * Part of the Player/Stage Project [http://playerstage.sourceforge.net]\n"
+	    " * Copyright 2000-2005 Richard Vaughan, Andrew Howard, Brian Gerkey\n * and contributors.\n"
+	    " * Released under the GNU GPL." );
+    }
+  
   table->AddDriver( "stage", StgDriver_Init);
 }
 
@@ -303,8 +311,12 @@ int StgDriver::CreateDeviceSimulation( player_device_id_t id,
   
   // create a passel of Stage models in the local cache based on the
   // worldfile
-  printf( "\"%s\" ", fullname );      
-  fflush(stdout);
+  
+  //if( !quiet_startup )
+    {
+      printf( " [%s]", fullname );      
+      fflush(stdout);
+    }
 
   StgDriver::world = stg_world_create_from_file( fullname );
   assert(StgDriver::world);
@@ -473,7 +485,8 @@ int StgDriver::CreateDeviceModel( player_device_id_t id,
       return -1;
     }
   
-  printf( "\"%s\"\n", device->mod->token );
+  if( !quiet_startup )
+    printf( "\"%s\"\n", device->mod->token );
   
   // now poke a data callback function into the model  
   device->mod->data_notify = StgDriver::RefreshDataCallback;
@@ -501,10 +514,13 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
   
   int device_count = cf->GetTupleCount( section, "provides" );
   
-  printf( "  Stage driver creating %d %s\n", 
-	  device_count, 
-	  device_count == 1 ? "device" : "devices" );
-
+  if( !quiet_startup )
+    {  
+      printf( "  Stage driver creating %d %s\n", 
+	      device_count, 
+	      device_count == 1 ? "device" : "devices" );
+    }
+  
   for( int d=0; d<device_count; d++ )
     {
       player_device_id_t player_id;
@@ -515,9 +531,12 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  return;
 	}  
             
-      printf( "    mapping %d.%d.%d => ", 
-	      player_id.port, player_id.code, player_id.index );
-      fflush(stdout);
+      if( !quiet_startup )
+	{
+	  printf( "    mapping %d.%d.%d => ", 
+		  player_id.port, player_id.code, player_id.index );
+	  fflush(stdout);
+	}
       
       if( player_id.code == PLAYER_SIMULATION_CODE )
 	assert( this->CreateDeviceSimulation( player_id, cf, section ) == 0 );
