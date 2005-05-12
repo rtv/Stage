@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.6 2005-05-11 23:04:27 rtv Exp $
+// CVS: $Id: stest.c,v 1.7 2005-05-12 00:43:12 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -58,14 +58,14 @@ int main( int argc, char* argv[] )
   stg_model_print( laser );
 
   
-  sleep(2);
+  //  sleep(2);
 
   puts( "starting clock" );
   // start the clock
   stg_world_start( world );
   puts( "done" );
 
-  sleep(2);
+  //sleep(2);
 
   double newspeed = 0.0;
   double newturnrate = 0.0;
