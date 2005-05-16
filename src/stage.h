@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.135 2005-05-11 23:04:26 rtv Exp $
+ * CVS: $Id: stage.h,v 1.136 2005-05-16 06:05:11 rtv Exp $
  */
 
 
@@ -114,9 +114,9 @@ extern "C" {
   typedef int stg_blob_return_t;
   typedef int stg_fiducial_return_t;
   typedef int stg_ranger_return_t;
-  typedef int stg_gripper_return_t;
   
-
+  typedef enum { STG_GRIP_NO = 0, STG_GRIP_YES } stg_gripper_return_t;
+  
   /** specify a rectangular size 
    */
   typedef struct 
@@ -807,13 +807,15 @@ extern "C" {
 
     stg_gripper_paddle_state_t paddles; 
     stg_gripper_lift_state_t lift;
-    
+
     double paddle_position; ///< 0.0 = full open, 1.0 full closed
     double lift_position; ///< 0.0 = full down, 1.0 full up
 
     stg_meters_t inner_break_beam_inset; ///< distance from the end of the paddle
-    stg_meters_t outer_break_beam_inset; ///< distance from the end of the paddle
-
+    stg_meters_t outer_break_beam_inset; ///< distance from the end of the paddle  
+    stg_bool_t paddles_stalled; // true iff some solid object stopped
+				// the paddles closing or opening
+    
     int stack_count; ///< number of objects in stack
 
   } stg_gripper_config_t;
@@ -840,8 +842,11 @@ extern "C" {
     stg_bool_t inner_break_beam; ///< non-zero iff beam is broken
     stg_bool_t outer_break_beam; ///< non-zero iff beam is broken
     
-    stg_bool_t left_paddle_contact; ///< non-zero iff left paddle touches something
-    stg_bool_t right_paddle_contact; ///< non-zero iff right paddle touches something
+    stg_bool_t left_paddle_contact[3]; ///< non-zero iff left paddle touches something [1] inner, [2] front [3] outer contacts
+    stg_bool_t right_paddle_contact[3]; ///< non-zero iff right paddle touches something[1] inner, [2] front [3] outer contacts
+    
+    stg_bool_t paddles_stalled; // true iff some solid object stopped
+				// the paddles closing or opening
 
     int stack_count; ///< number of objects in stack
 

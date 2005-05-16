@@ -757,8 +757,12 @@ int stg_model_startup( stg_model_t* mod )
   if( mod->f_startup == NULL )
     PRINT_ERR1( "model %s has no startup function registered", mod->token ); 
   
-  assert(mod->f_startup);
-  return mod->f_startup(mod);
+  //assert(mod->f_startup);
+
+  if( mod->f_startup )
+    return mod->f_startup(mod);
+  
+  return 0; //ok
 }
 
 int stg_model_shutdown( stg_model_t* mod )
@@ -766,8 +770,12 @@ int stg_model_shutdown( stg_model_t* mod )
   if( mod->f_shutdown == NULL )
     PRINT_ERR1( "model %s has no shutdown function registered", mod->token ); 
   
-  assert(mod->f_shutdown );
-  return mod->f_shutdown(mod);
+  //assert(mod->f_shutdown );
+  
+  if( mod->f_shutdown )
+    return mod->f_shutdown(mod);
+  
+  return 0; //ok
 }
 
 
@@ -829,6 +837,13 @@ void stg_model_get_laserreturn( stg_model_t* mod, stg_laser_return_t* dest )
   assert(mod);
   assert(dest);
   memcpy( dest, &mod->laser_return, sizeof(mod->laser_return));
+}
+
+void stg_model_get_gripperreturn( stg_model_t* mod, stg_gripper_return_t* dest )
+{
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->gripper_return, sizeof(mod->gripper_return));
 }
 
 void stg_model_get_rangerreturn( stg_model_t* mod, stg_ranger_return_t* dest )
@@ -976,6 +991,12 @@ int stg_model_set_polygons( stg_model_t* mod,
 int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val )
 {
   memcpy( &mod->laser_return, val, sizeof(mod->laser_return));
+  return 0;
+}
+
+int stg_model_set_gripperreturn( stg_model_t* mod, stg_gripper_return_t* val )
+{
+  memcpy( &mod->gripper_return, val, sizeof(mod->gripper_return));
   return 0;
 }
 
@@ -1307,6 +1328,11 @@ void stg_model_load( stg_model_t* mod )
   stg_ranger_return_t ranger_return = 
     wf_read_int( mod->id, "ranger_return",mod->ranger_return );
   stg_model_set_rangerreturn( mod, &ranger_return );
+
+  // grippability
+  stg_gripper_return_t gripper_return = 
+    wf_read_int( mod->id, "gripper_return",mod->gripper_return );
+  stg_model_set_gripperreturn( mod, &gripper_return );
   
   // fiducial visibility
   int fid_return = 

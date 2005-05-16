@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.10 2005-05-08 22:57:48 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.11 2005-05-16 06:05:10 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -329,15 +329,18 @@ void  MapConfigInfo( device_record_t* device,
       // matrix contains anything in a cell, we set that map cell to
       // be occupied, else unoccupied
       
-      puts( "**TODO** mapping broken just now." );
-
       for( unsigned int p=0; p<minfo->width; p++ )
 	for( unsigned int q=0; q<minfo->height; q++ )
-        {
+        {	  
 	  //printf( "%d,%d \n", p,q );
-	  //GPtrArray* pa = (GPtrArray*)stg_matrix_cell_get( matrix, 0, p, q );
-	  
-	  minfo->data[ q * minfo->width + p ] =  0;//pa ? 1 : -1;
+
+	  stg_cell_t* cell = 
+	    stg_cell_locate( matrix->root, p/minfo->ppm, q/minfo->ppm );
+
+	  if( cell && cell->data )
+	    minfo->data[ q * minfo->width + p ] =  1;
+	  else
+	    minfo->data[ q * minfo->width + p ] =  0;
 	}
       
       // we're done with the matrix
