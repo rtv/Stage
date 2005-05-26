@@ -2,7 +2,7 @@
 # Desc: Device definitions for handy beacons
 # Author: Richard Vaughan
 # Date: 29 October 2002
-# CVS: $Id: beacons.inc,v 1.5 2005-03-25 21:08:03 rtv Exp $
+# CVS: $Id: beacons.inc,v 1.6 2005-05-26 21:25:54 rtv Exp $
 
 # laser beacons - flat targets that show up bright in the laser, and
 # in the fiducial finder. It's often useful to redefine the
@@ -28,32 +28,32 @@ define visionbeacon model
 # One version for each primary and secondary color.  These match the
 # default settings for the blobfinder device
 
-define visionbeacon_red visiobnbeacon
+define visionbeacon_red visionbeacon
 (
   color "red"
 )
 
-define visionbeacon_green visiobnbeacon
+define visionbeacon_green visionbeacon
 (
   color "green"
 )
 
-define visionbeacon_blue visiobnbeacon
+define visionbeacon_blue visionbeacon
 (
   color "blue"
 )
 
-define visionbeacon_cyan visiobnbeacon
+define visionbeacon_cyan visionbeacon
 (
   color "cyan"
 )
 
-define visionbeacon_yellow visiobnbeacon
+define visionbeacon_yellow visionbeacon
 (
   color "yellow"
 )
 
-define visionbeacon_magenta visiobnbeacon
+define visionbeacon_magenta visionbeacon
 (
   color "magenta"
 )

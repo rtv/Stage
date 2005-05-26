@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.13 2005-05-12 01:28:24 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.14 2005-05-26 21:25:48 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -144,6 +144,7 @@ Richard Vaughan
 
 #include "player_interfaces.h"
 
+// externs from Player
 extern PlayerTime* GlobalTime;
 extern int global_argc;
 extern char** global_argv;
@@ -262,7 +263,7 @@ int StgDriver::CreateDeviceSimulation( player_device_id_t id,
 				       ConfigFile* cf, int section )
 {
   // boot libstage 
-  stg_init( global_argc, global_argv );
+  //stg_init( global_argc, global_argv );
   
   device_record_t* device = 
     (device_record_t*)calloc(sizeof(device_record_t),1);

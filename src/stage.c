@@ -20,25 +20,17 @@
 #include "stage_internal.h"
 
 int _stg_quit = FALSE;
-
-/* const char* stg_model_type_string( stg_model_type_t t ) */
-/* { */
-/*   switch( t ) */
-/*     { */
-/*     case STG_MODEL_BASIC: return "basic"; */
-/*     case STG_MODEL_LASER: return "laser"; */
-/*     case STG_MODEL_RANGER: return "ranger"; */
-/*     case STG_MODEL_BLOB: return "blob"; */
-/*     case STG_MODEL_FIDUCIAL: return "fiducial"; */
-/*     case STG_MODEL_POSITION: return "position"; */
-/*     default: return NULL; */
-/*     } */
-/* } */
+int _stg_disable_gui = FALSE;
 
 
 int stg_init( int argc, char** argv )
 {
-  gui_startup( &argc, &argv );
+  if( ! _stg_disable_gui )
+    {
+      // TODO - don't start the GUI if it was disabled
+      //puts( "GUI_STARTUP" );
+      gui_startup( &argc, &argv );
+    }
 
   // this forces use of decimal points in the config file rather than
   // euro-style commas. Do this after gui_startup() as GTK messes with

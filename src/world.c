@@ -12,10 +12,12 @@ const double STG_DEFAULT_INTERVAL_SIM = 100.0;  // duration of a simulation time
 const double STG_DEFAULT_WORLD_WIDTH = 20.0; // meters
 const double STG_DEFAULT_WORLD_HEIGHT = 20.0; // meters
 
+static int init_occurred = 0;
 
 #include "stage_internal.h"
 
 extern int _stg_quit; // quit flag is returned by stg_world_update()
+extern int _stg_disable_gui;
 
 /** @defgroup world The World
 
@@ -97,6 +99,8 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
   int resolution_count = 
     wf_read_int( section, "resolution_count", 4 ); 
   
+  _stg_disable_gui = wf_read_int( section, "gui_disable", _stg_disable_gui );
+
   // create a single world
   stg_world_t* world = 
     stg_world_create( 0, 
@@ -122,7 +126,8 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
     {
       if( strcmp( wf_get_section_type(section), "window") == 0 )
 	{
-	  gui_load( world->win, section ); 
+	  if( world->win )
+	    gui_load( world->win, section ); 
 	}
       else
 	{
@@ -259,8 +264,13 @@ stg_world_t* stg_world_create( stg_id_t id,
 			       unsigned int array_scaling,
 			       unsigned int array_count )
 {
-  PRINT_DEBUG2( "alternate world creator %d (%s)", id, token );
-  
+  if( ! init_occurred )
+    {
+      //puts( "STG_INIT" );
+      stg_init( 0, NULL );
+      init_occurred = 1;
+    }
+
   stg_world_t* world = calloc( sizeof(stg_world_t),1 );
   
   world->id = id;
@@ -284,8 +294,11 @@ stg_world_t* stg_world_create( stg_id_t id,
   
   world->destroy = FALSE;
   
-  world->win = gui_world_create( world );
-
+  if( _stg_disable_gui )
+    world->win = NULL;
+  else    
+    world->win = gui_world_create( world );
+  
   return world;
 }
 
@@ -472,9 +485,10 @@ void stg_world_save( stg_world_t* world )
 {
   // ask every model to save itself
   g_hash_table_foreach( world->models, stg_model_save_cb, NULL );
-
-  gui_save( world->win );
-
+  
+  if( world->win )
+    gui_save( world->win );
+  
   wf_save();
 }
 

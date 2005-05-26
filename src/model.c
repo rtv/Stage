@@ -36,6 +36,7 @@
 #define STG_DEFAULT_GUI_GRID FALSE
 #define STG_DEFAULT_GUI_BOUNDARY FALSE
 
+//extern int _stg_disable_gui;
 
 /** @defgroup basic Basic model
     
@@ -221,7 +222,8 @@ stg_model_t* stg_model_extend( stg_model_t* mod, size_t sz )
   mod = realloc( mod, sizeof(stg_model_t)+sz );
 
   // hack! repair our model callback pointer following the realloc
-  mod->gui.top->userdata = mod;
+  if( mod->world->win )
+    mod->gui.top->userdata = mod;
 
   // zero our extension data
   memset( mod->extend, 0, sz );
@@ -281,7 +283,8 @@ stg_model_t* stg_model_create( stg_world_t* world,
   if( parent) g_ptr_array_add( parent->children, mod );       
   
   // having installed the paremt, it's safe to creat the GUI components
-  gui_model_create( mod );
+  if( mod->world->win )
+    gui_model_create( mod );
 
   // create this model's empty list of children
   mod->children = g_ptr_array_new();
@@ -393,7 +396,8 @@ void stg_model_destroy( stg_model_t* mod )
 {
   assert( mod );
   
-  gui_model_destroy( mod );
+  if( mod->world->win )
+    gui_model_destroy( mod );
 
   if( mod->parent && mod->parent->children ) g_ptr_array_remove( mod->parent->children, mod );
   if( mod->children ) g_ptr_array_free( mod->children, FALSE );
@@ -688,16 +692,19 @@ int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
   if( mod->data_notify )
     (*mod->data_notify)(mod->data_notify_arg, data, len );
   
-  if( mod->world->win->render_data_flag[ mod->type ] && 
-      !mod->world->win->disable_data )
-    gui_model_render_data( mod );
-  else
-    if( mod->gui.data  )
-      {
-	stg_rtk_fig_clear(mod->gui.data);
-	stg_rtk_fig_destroy( mod->gui.data);
-	mod->gui.data = NULL;
-      }
+  if( mod->world->win )
+    {
+      if( mod->world->win->render_data_flag[ mod->type ] && 
+	  !mod->world->win->disable_data )
+	gui_model_render_data( mod );
+      else
+	if( mod->gui.data  )
+	  {
+	    stg_rtk_fig_clear(mod->gui.data);
+	    stg_rtk_fig_destroy( mod->gui.data);
+	    mod->gui.data = NULL;
+	  }
+    }
   
   PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
 		mod->id, mod->token, (int)mod->data_len);
@@ -712,7 +719,8 @@ int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len )
   mod->cmd_len = len;  
   pthread_mutex_unlock( &mod->cmd_mutex );
   
-  gui_model_render_command( mod );
+  if( mod->world->win )
+    gui_model_render_command( mod );
   
   PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
 		mod->id, mod->token, (int)mod->cmd_len);
@@ -728,7 +736,8 @@ int stg_model_set_config( stg_model_t* mod, void* cfg, size_t len )
   mod->cfg_len = len;
   pthread_mutex_unlock( &mod->cfg_mutex );  
 
-  gui_model_render_config( mod );
+  if( mod->world->win )
+    gui_model_render_config( mod );
   
   PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
 		mod->id, mod->token, (int)mod->cfg_len);
@@ -906,7 +915,8 @@ int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
       stg_model_map_with_children( mod, 1 );
       
       // move the stg_rtk figure to match
-      gui_model_move( mod );      
+      if( mod->world->win )
+	gui_model_move( mod );      
     }
   
   return 0; // OK
@@ -947,10 +957,12 @@ int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
   stg_normalize_polygons( (stg_polygon_t*)mod->polygons->data, mod->polygons->len, 
 			  mod->geom.size.x, mod->geom.size.y );
   
-  stg_model_render_polygons( mod );
+  if( mod->world->win )
+    stg_model_render_polygons( mod );
   
   // we may need to re-render our nose
-  gui_model_features(mod);
+  if( mod->world->win )
+    gui_model_features(mod);
   
   // re-render int the matrix
   stg_model_map( mod, 1 );
@@ -981,7 +993,8 @@ int stg_model_set_polygons( stg_model_t* mod,
   // append the new polys
   g_array_append_vals( mod->polygons, polys, poly_count );
   
-  stg_model_render_polygons( mod );
+  if( mod->world->win )
+    stg_model_render_polygons( mod );
 
   stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
   
@@ -1030,8 +1043,9 @@ int stg_model_set_color( stg_model_t* mod, stg_color_t* col )
   memcpy( &mod->color, col, sizeof(mod->color) );
 
   // redraw my image
-  stg_model_render_polygons( mod );
-    
+  if( mod->world->win )
+    stg_model_render_polygons( mod );
+  
   return 0; // OK
 }
 
@@ -1057,7 +1071,8 @@ int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf )
     mod->guifeatures.movemask = 0;
 
   // redraw the fancy features
-  gui_model_features( mod );
+  if( mod->world->win )
+    gui_model_features( mod );
   return 0;
 }
 
