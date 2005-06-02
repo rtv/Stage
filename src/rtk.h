@@ -24,7 +24,7 @@
  * Desc: Combined Stk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.9 2005-05-05 20:10:30 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.10 2005-06-02 09:43:28 rtv Exp $
  */
 
 #ifndef STK_H
@@ -220,7 +220,8 @@ typedef struct _stg_rtk_canvas_t
   struct _stg_rtk_fig_t *zoom_fig;
   struct _stg_rtk_fig_t *mouse_over_fig;
   struct _stg_rtk_fig_t *mouse_selected_fig;
-  
+  struct _stg_rtk_fig_t *mouse_selected_fig_last;  
+
   // linked list of figs that are shown for a short period, then
   // hidden or destroyed - rtv experimental
   struct _stg_rtk_flasher_t *flashers;

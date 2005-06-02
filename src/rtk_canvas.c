@@ -21,7 +21,7 @@
 /*
  * Desc: Stk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.14 2005-05-11 23:04:25 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.15 2005-06-02 09:43:28 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -103,6 +103,7 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
   canvas->mouse_mode = MOUSE_NONE;
   canvas->mouse_over_fig = NULL;  
   canvas->mouse_selected_fig = NULL;
+  canvas->mouse_selected_fig_last = NULL;
 
   // Create a top-level window
   canvas->frame = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -182,16 +183,17 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
                      GTK_SIGNAL_FUNC(stg_rtk_on_motion), canvas);
   gtk_signal_connect(GTK_OBJECT(canvas->canvas), "button_release_event", 
                      GTK_SIGNAL_FUNC(stg_rtk_on_release), canvas);
-  //gtk_signal_connect(GTK_OBJECT(canvas->frame), "key-press-event", 
-  //                 GTK_SIGNAL_FUNC(stg_rtk_on_key_press), canvas);
 
+  // this seems not to receive the arrow keys...
+  gtk_signal_connect_after(GTK_OBJECT(canvas->frame), "key-press-event", 
+			   GTK_SIGNAL_FUNC(stg_rtk_on_key_press), canvas);
+  
   // Set the event mask
-  //gtk_widget_set_events(canvas->frame,
-  //                    GDK_KEY_PRESS_MASK);
   gtk_widget_set_events(canvas->canvas,
                         GDK_EXPOSURE_MASK |
                         GDK_BUTTON_PRESS_MASK |
                         GDK_BUTTON_RELEASE_MASK |
+			GDK_KEY_PRESS_MASK |
                         GDK_POINTER_MOTION_MASK );
 
   // rtv - support for motion hints would be handy - todo?
@@ -783,6 +785,9 @@ void stg_rtk_canvas_mouse(stg_rtk_canvas_t *canvas, int event, int button, int x
           stg_rtk_fig_on_mouse(fig, STK_EVENT_MOUSE_OVER, canvas->mouse_mode);
       }
       canvas->mouse_over_fig = fig;
+
+      if( fig )
+	canvas->mouse_selected_fig_last = fig;
     }
 
     if (canvas->mouse_mode == MOUSE_PAN || canvas->mouse_mode == MOUSE_ZOOM)
@@ -898,9 +903,11 @@ void stg_rtk_on_key_press(GtkWidget *widget, GdkEventKey *event, stg_rtk_canvas_
   dx = canvas->sizex * canvas->sx;
   dy = canvas->sizey * canvas->sy;
   scale = 1.5;
+
+  stg_rtk_fig_t *fig = NULL;
   
   switch (event->keyval)
-  {
+    {
     case GDK_Left:
       if (event->state == 0)
         stg_rtk_canvas_origin(canvas, canvas->ox - 0.05 * dx, canvas->oy);
@@ -929,6 +936,65 @@ void stg_rtk_on_key_press(GtkWidget *widget, GdkEventKey *event, stg_rtk_canvas_
       else if (event->state == 1)
         stg_rtk_canvas_scale(canvas, canvas->sx * scale, canvas->sy * scale);
       break;
+      
+      // TODO: add support for moving objects with the keyboard
+    case GDK_w:
+    case GDK_W:
+      fig = canvas->mouse_selected_fig_last;
+
+      if( fig )
+	{
+	  stg_rtk_fig_dirty(fig);
+	  stg_rtk_fig_origin_global(fig, 
+				    fig->dox + 0.04 * cos(fig->doa),
+				    fig->doy + 0.04 * sin(fig->doa), 
+				    fig->doa );
+	}
+      break;
+      
+    case GDK_s:
+    case GDK_S:
+      fig = canvas->mouse_selected_fig_last;
+
+      if( fig )
+	{
+	  stg_rtk_fig_dirty(fig);
+	  stg_rtk_fig_origin_global(fig, 
+				    fig->dox - 0.04 * cos(fig->doa),
+				    fig->doy - 0.04 * sin(fig->doa), 
+				    fig->doa );
+	}
+      break;
+
+    case GDK_a:
+    case GDK_A:
+      fig = canvas->mouse_selected_fig_last;
+
+      if( fig )
+	{
+	  stg_rtk_fig_dirty(fig);
+	  stg_rtk_fig_origin_global(fig, 
+				    fig->dox,
+				    fig->doy, 
+				    fig->doa + 0.1 );
+	}
+      break;
+
+    case GDK_d:
+    case GDK_D:
+      fig = canvas->mouse_selected_fig_last;
+
+      if( fig )
+	{
+	  stg_rtk_fig_dirty(fig);
+	  stg_rtk_fig_origin_global(fig, 
+				    fig->dox,
+				    fig->doy, 
+				    fig->doa - 0.1 );
+	}
+      break;
+
+      
   }
 }
 

@@ -218,6 +218,8 @@ extern "C" {
     stg_bool_t boundary; // if non-zero, the object has a bounding box
     stg_guifeatures_t guifeatures; // controls how we are rendered in the GUI
 
+    int disabled; // if non-zero, the model is disabled
+
     // type-dependent functions for this model, implementing simple
     // polymorphism
     func_startup_t f_startup;

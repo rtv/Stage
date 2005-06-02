@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.136 2005-05-16 06:05:11 rtv Exp $
+ * CVS: $Id: stage.h,v 1.137 2005-06-02 09:43:29 rtv Exp $
  */
 
 
@@ -397,6 +397,12 @@ extern "C" {
   void stg_normalize_polygons( stg_polygon_t* polys, int num, 
 			       double width, double height );
   
+  /// print a human-readable description of a polygon on stdout
+  void stg_polygon_print( stg_polygon_t* poly );
+  
+  /// print a human-readable description of an array of polygons on stdout
+  void stg_polygons_print( stg_polygon_t* polys, unsigned int count );
+
   /**@}*/
 
   // end util documentation group

@@ -264,6 +264,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   
   mod->id = id;
 
+  mod->disabled = FALSE;
   mod->world = world;
   mod->parent = parent; 
   mod->type = type;

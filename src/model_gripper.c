@@ -1,13 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // File: model_gripper.c
-// Author: Doug Blank, Richard Vaughan
+// Authors: Richard Vaughan <vaughan@sfu.ca>
+//          Doug Blank
 // Date: 21 April 2005
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -23,20 +24,15 @@
 
 #include "stage_internal.h"
 
-void gripper_load( stg_model_t* mod )
-{
-  stg_gripper_config_t gconf;
-  stg_model_get_config( mod, &gconf, sizeof(gconf));
-  // 
-  stg_model_set_config( mod, &gconf, sizeof(gconf));
-}
-
+// standard callbacks
 int gripper_update( stg_model_t* mod );
 int gripper_startup( stg_model_t* mod );
 int gripper_shutdown( stg_model_t* mod );
 void gripper_render_data(  stg_model_t* mod );
 void gripper_render_cfg( stg_model_t* mod );
+void gripper_load( stg_model_t* mod );
 
+// special gripper stuff
 void gripper_generate_paddles( stg_model_t* mod, stg_gripper_config_t* cfg );
 
 int gripper_paddle_contact( stg_model_t* mod, int paddle, 
@@ -44,29 +40,14 @@ int gripper_paddle_contact( stg_model_t* mod, int paddle,
 			    double contacts[3] );
 int gripper_break_beam(stg_model_t* mod, int beam);
 
-void stg_polygon_print( stg_polygon_t* poly )
+void gripper_load( stg_model_t* mod )
 {
-  printf( "polygon: %d pts : ", poly->points->len );
-  
-  int i;
-  for(i=0;i<poly->points->len;i++)
-    {
-      stg_point_t* pt = &g_array_index( poly->points, stg_point_t, i );
-      printf( "(%.2f,%.2f) ", pt->x, pt->y );
-    }
-  puts("");
-}
+  stg_gripper_config_t gconf;
+  stg_model_get_config( mod, &gconf, sizeof(gconf));
 
-void stg_polygons_print( stg_polygon_t* polys, unsigned int count )
-{
-  printf( "polygon array (%d polys)\n", count );
-  
-  int i;
-  for( i=0; i<count; i++ )
-    {
-      printf( "[%d] ", i ); 
-      stg_polygon_print( &polys[i] );
-    }
+  // TODO: read gripper params from the world file
+
+  stg_model_set_config( mod, &gconf, sizeof(gconf));
 }
 
 stg_model_t* stg_gripper_create( stg_world_t* world, 
@@ -134,6 +115,7 @@ stg_model_t* stg_gripper_create( stg_world_t* world,
   return mod;
 }
 
+// create three rectangles that are the gripper's body
 void gripper_generate_paddles( stg_model_t* mod, stg_gripper_config_t* cfg )
 {
   stg_point_t body[4];

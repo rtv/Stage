@@ -394,6 +394,30 @@ stg_polygon_t* stg_rects_to_polygons( stg_rotrect_t* rects, size_t count )
   return polys;
 }
 
+void stg_polygon_print( stg_polygon_t* poly )
+{
+  printf( "polygon: %d pts : ", poly->points->len );
+  
+  int i;
+  for(i=0;i<poly->points->len;i++)
+    {
+      stg_point_t* pt = &g_array_index( poly->points, stg_point_t, i );
+      printf( "(%.2f,%.2f) ", pt->x, pt->y );
+    }
+  puts("");
+}
+
+void stg_polygons_print( stg_polygon_t* polys, unsigned int count )
+{
+  printf( "polygon array (%d polys)\n", count );
+  
+  int i;
+  for( i=0; i<count; i++ )
+    {
+      printf( "[%d] ", i ); 
+      stg_polygon_print( &polys[i] );
+    }
+}
 
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
