@@ -1002,6 +1002,28 @@ int stg_model_set_polygons( stg_model_t* mod,
   return 0;
 } 
 
+int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent)
+{
+  // remove the model from its old parent (if it has one)
+  if( mod->parent )
+    g_ptr_array_remove( mod->parent->children, mod );
+
+  if( newparent )
+    g_ptr_array_add( newparent->children, mod );
+
+  // link from the model to its new parent
+  mod->parent = newparent;
+
+  // completely rebuild the GUI elements - it's too complex to patch up the tree herea
+  gui_model_destroy( mod );
+  gui_model_create( mod );
+  stg_model_render_polygons( mod );
+
+
+  return 0; //ok
+}
+
+
 int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val )
 {
   memcpy( &mod->laser_return, val, sizeof(mod->laser_return));

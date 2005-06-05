@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.137 2005-06-02 09:43:29 rtv Exp $
+ * CVS: $Id: stage.h,v 1.138 2005-06-05 11:53:20 rtv Exp $
  */
 
 
@@ -618,6 +618,9 @@ extern "C" {
   /** set a model's friction*/
   // int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp );
 
+  /** Change a model's parent - experimental*/
+  int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent);
+
   // GET properties - use these to get props - don't get them directly
 
   // todo - make all of these copy data into a buffer!
@@ -822,7 +825,8 @@ extern "C" {
     stg_bool_t paddles_stalled; // true iff some solid object stopped
 				// the paddles closing or opening
     
-    int stack_count; ///< number of objects in stack
+    GSList *grip_stack;  ///< stack of items gripped
+    int grip_stack_size; ///< maximum number of objects in stack, or -1 for unlimited
 
   } stg_gripper_config_t;
 

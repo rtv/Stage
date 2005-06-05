@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -232,6 +232,20 @@ int gripper_update( stg_model_t* mod )
 	{
 	  cfg.paddle_position = 0.0;
 	  cfg.paddles = STG_GRIPPER_PADDLE_OPEN; // change state
+
+	  // drop the thing at the head of the stack
+	  if( cfg.grip_stack )
+	    {
+	      stg_model_t* head = cfg.grip_stack->data;
+	      cfg.grip_stack = g_slist_remove( cfg.grip_stack, head );
+	      stg_model_set_parent( head, NULL );
+	      
+	      // move it to the new location
+	      stg_pose_t drop_pose;
+	      stg_model_get_global_pose( mod, &drop_pose );
+	      //drop_pose.x += 0.2;
+	      stg_model_set_global_pose( head, &drop_pose );
+	    }
 	}
     }
   else if( cfg.paddles == STG_GRIPPER_PADDLE_CLOSING && !cfg.paddles_stalled  )
@@ -281,14 +295,21 @@ int gripper_update( stg_model_t* mod )
   data.paddle_position = cfg.paddle_position;
   data.lift = cfg.lift;
   data.lift_position = cfg.lift_position;
-  data.stack_count = cfg.stack_count;
+
+  if( cfg.grip_stack )
+    data.stack_count = g_slist_length( cfg.grip_stack );
+  else
+    data.stack_count = 0;
 
   // calculate the dynamic items
-  //data.inner_break_beam = gripper_break_beam( mod, 1 );
-  //data.outer_break_beam = gripper_break_beam( mod, 0 );
+  data.inner_break_beam = gripper_break_beam( mod, 1 );
+  data.outer_break_beam = gripper_break_beam( mod, 0 );
   
   gripper_paddle_contact( mod, 0, &cfg, &data.left_paddle_contact );
-  gripper_paddle_contact( mod, 1, &cfg, &data.right_paddle_contact );
+
+  // if this paddle stalled, don't try to move the other paddle
+  if( ! cfg.paddles_stalled )
+    gripper_paddle_contact( mod, 1, &cfg, &data.right_paddle_contact );
   
   data.paddles_stalled = cfg.paddles_stalled;
 
@@ -297,7 +318,7 @@ int gripper_update( stg_model_t* mod )
   
   stg_model_set_config( mod, &cfg, sizeof(cfg));
 
-  stg_print_gripper_config( &cfg );
+  //stg_print_gripper_config( &cfg );
 
   // inherit standard update behaviour
   _model_update( mod );
@@ -369,6 +390,7 @@ int gripper_paddle_contact( stg_model_t* mod,
   stg_pose_t pz;
   
   // x location of contact sensor origin
+
   pz.x = ((1.0 - cfg->paddle_size.x) * geom.size.x) - geom.size.x/2.0 ;
 
   //double inset = beam ? cfg->inner_break_beam_inset : cfg->outer_break_beam_inset;
@@ -377,14 +399,23 @@ int gripper_paddle_contact( stg_model_t* mod,
   // y location of paddle beam origin
   if( paddle == 0 )
     pz.y = (1.0 - cfg->paddle_position) * 
-      ((geom.size.y/2.0)-(geom.size.y*cfg->paddle_size.y));
+      ((geom.size.y/2.0) - (geom.size.y*cfg->paddle_size.y));
   else
     pz.y = (1.0 - cfg->paddle_position) * 
-      -((geom.size.y/2.0)-(geom.size.y*cfg->paddle_size.y));
-
+      -((geom.size.y/2.0) - (geom.size.y*cfg->paddle_size.y));
+  
+  // if we're opening, we check the outside of the paddle instead
+  if( cfg->paddles == STG_GRIPPER_PADDLE_OPENING )
+    {
+      if( paddle == 0 )
+	pz.y += geom.size.y * cfg->paddle_size.y;
+      else
+	pz.y -= geom.size.y * cfg->paddle_size.y;
+    }
+  
   // paddle beam local heading
   pz.a = 0.0;
-
+  
   // paddle beam max range
   double bbr = cfg->paddle_size.x * geom.size.x; 
   
@@ -400,8 +431,6 @@ int gripper_paddle_contact( stg_model_t* mod,
   
   stg_model_t* hit = NULL;
 
-  //else
-  
   if( cfg->paddles_stalled )
       cfg->paddles_stalled = FALSE;
 
@@ -410,19 +439,25 @@ int gripper_paddle_contact( stg_model_t* mod,
   // if the breakbeam strikes anything
   if( (hit = itl_first_matching( itl, gripper_raytrace_match, mod )) )
     {
-      puts( "hit something inside" );
+      //puts( "hit something" );
 
       if( hit->gripper_return == STG_GRIP_YES )
 	{
-	  puts( "GRIPPABLE" );
-	  // grab the model we hit - very simple grip model for now
+	  if( cfg->paddles == STG_GRIPPER_PADDLE_CLOSING )
+	    {
+	      // grab the model we hit - very simple grip model for now
+	      stg_model_set_parent( hit, mod );
+	      // add this item to the stack
+	      cfg->grip_stack = g_slist_prepend( cfg->grip_stack, hit );
+	    }
 	}
       else // we hit something solid and ungrippable
 	{
-	  puts( "not grippable" );
-	  if( cfg->paddles == STG_GRIPPER_PADDLE_CLOSING )
+	  //puts( "not grippable" );
+	  if( cfg->paddles == STG_GRIPPER_PADDLE_CLOSING || 
+	      cfg->paddles == STG_GRIPPER_PADDLE_OPENING )
 	    {
-	      puts( "closing: stalled" );
+	      //puts( "stalled!" );
 	      cfg->paddles_stalled = TRUE;
 	    }
 	}
@@ -431,48 +466,6 @@ int gripper_paddle_contact( stg_model_t* mod,
     }
   
   itl_destroy( itl );
-  
-  // if we're opening, need to check if we hit something on the
-  // outside of the paddle
-  if( cfg->paddles == STG_GRIPPER_PADDLE_OPENING )
-    { 
-      pz.x = ((1.0 - cfg->paddle_size.x) * geom.size.x) - geom.size.x/2.0 ;
-      
-      if( paddle == 0 )
-	pz.y = (1.0 - cfg->paddle_position) * (geom.size.y/2.0);
-      else
-	pz.y = (1.0 - cfg->paddle_position) * -(geom.size.y/2.0);
- 
-      stg_model_local_to_global( mod, &pz );
- 
-      printf( "iterator: %.2f %.2f %.2f range %.2f\n",
-	      pz.x, pz.y, pz.a, bbr );
-
-      itl_t* itl = itl_create( pz.x, pz.y, pz.a,
-			       bbr,
-			       mod->world->matrix,
-			       PointToBearingRange );
-
-      if( (hit = itl_first_matching( itl, gripper_raytrace_match, mod )) )
-	{
-	  puts( "hit something outside" );
-	  
-	  if( hit->gripper_return == STG_GRIP_YES )
-	    {
-	      puts( "GRIPPABLE" );
-	      // grab the model we hit - very simple grip model for now
-	    }
-	  else // we hit something solid and ungrippable
-	    {
-	      puts( "opening: stalled" );
-	      cfg->paddles_stalled = TRUE;
-	    }
-	  
-	  contact_made = TRUE;
-	}
-
-      itl_destroy( itl );
-    }
   
   return contact_made;
 }
