@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -59,11 +59,11 @@ stg_model_t* stg_energy_create( stg_world_t* world,
   // add a property to this model
   GPtrArray* a = NULL;
   assert( (a = g_ptr_array_new()) );
-  stg_model_set_prop( mod, "connections", a );
+  stg_model_set_prop( mod, "connections", a, sizeof(GPtrArray*) );
   
   double* d = calloc( sizeof(double), 1 );
   *d = 0.0;
-  stg_model_set_prop( mod, "inputwatts", d );
+  stg_model_set_prop( mod, "inputwatts", d, sizeof(GPtrArray*) );
   
   // override the default methods
   mod->f_startup = energy_startup;

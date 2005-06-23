@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.138 2005-06-05 11:53:20 rtv Exp $
+ * CVS: $Id: stage.h,v 1.139 2005-06-23 15:22:01 rtv Exp $
  */
 
 
@@ -650,9 +650,9 @@ extern "C" {
   int stg_model_get_config( stg_model_t* mod, void* dest, size_t len );
   
   /// associate an arbitrary data item with this model, referenced by the string 'name'.
-  void  stg_model_set_prop( stg_model_t* mod, char* name, void* data );
+  //void  stg_model_set_prop( stg_model_t* mod, char* name, void* data );
   /// retrieve a data item from the model, referenced by the string "name".
-  void* stg_model_get_prop( stg_model_t* mod, char* name );
+  //void* stg_model_get_prop( stg_model_t* mod, char* name );
   
   /** print human-readable information about the model on stdout
    */

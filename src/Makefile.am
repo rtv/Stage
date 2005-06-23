@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.96 2005-06-02 09:43:28 rtv Exp $
+# $Id: Makefile.am,v 1.97 2005-06-23 15:21:59 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
@@ -30,7 +30,6 @@ libstage_la_SOURCES = \
 	matrix.c \
 	model.c \
 	model_blobfinder.c \
-	model_energy.c \
 	model_fiducial.c \
 	model_gripper.c \
 	model_laser.c \
@@ -52,6 +51,9 @@ libstage_la_SOURCES = \
         rtk_fig.c \
         rtk_region.c \
         rtkprivate.h
+
+
+#	model_energy.c
 
 libstage_la_LDFLAGS = -version-info 1:0:0 
 libstage_la_LIBADD = @GTK_LIBS@
