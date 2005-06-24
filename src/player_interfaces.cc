@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.12 2005-06-23 15:22:00 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.13 2005-06-24 08:13:43 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -271,7 +271,8 @@ void  MapConfigInfo( device_record_t* device,
   
   // if we already have a map info for this model, destroy it
   stg_map_info_t* minfo = NULL;
-  assert( stg_model_get_prop( device->mod, "_map", (void**)&minfo) == sizeof(minfo) );
+  assert( stg_model_get_property_data( device->mod, "_map", 
+				       (void**)&minfo) == sizeof(minfo) );
   
   if( minfo )
     {
@@ -352,7 +353,8 @@ void  MapConfigInfo( device_record_t* device,
   puts( "done." );
 
   // store the map as a model property named "_map"
-  stg_model_set_prop( device->mod, "_map", (void*)minfo, sizeof(minfo) );
+  stg_model_add_property( device->mod, "_map", (void*)minfo, sizeof(minfo), NULL );
+  //  stg_model_set_property_data( device->mod, "_map", (void*)minfo, sizeof(minfo) );
 
   //if(this->mapdata == NULL)
   //{
@@ -401,7 +403,7 @@ void MapConfigData( device_record_t* device,
     }
   
   stg_map_info_t* minfo = NULL;
-  assert( stg_model_get_prop( device->mod, "_map", (void**)&minfo ) == sizeof(minfo));
+  assert( stg_model_get_property_data( device->mod, "_map", (void**)&minfo ) == sizeof(minfo));
   assert( minfo );
 
   int8_t* map = NULL;  

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.32 $
+//  $Revision: 1.33 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -58,7 +58,7 @@ const double STG_POSITION_WATTS = 10.0; // base cost of position device
 stg_model_position_t* stg_model_get_position( stg_model_t* mod )
 {
   stg_model_position_t* pos;
-  size_t sz = stg_model_get_prop( mod, "position", &pos );
+  size_t sz = stg_model_get_property_data( mod, "position", &pos );
   assert( pos );
   assert( sz == sizeof(stg_model_position_t) );
   return pos;
@@ -153,7 +153,7 @@ stg_model_t* stg_position_create( stg_world_t* world,
   // type-sepecific extension data 
   stg_model_position_t pos;
   memset( &pos, 0, sizeof(pos));
-  stg_model_set_prop( mod, "position", &pos, sizeof(pos));
+  stg_model_add_property( mod, "position", &pos, sizeof(pos), NULL );
   
   return mod;
 }

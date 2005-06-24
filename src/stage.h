@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.140 2005-06-24 06:11:03 rtv Exp $
+ * CVS: $Id: stage.h,v 1.141 2005-06-24 08:13:43 rtv Exp $
  */
 
 
@@ -642,10 +642,43 @@ extern "C" {
   int stg_model_get_config( stg_model_t* mod, void* dest, size_t len );
   
   /// associate an arbitrary data item with this model, referenced by the string 'name'.
-  //void  stg_model_set_prop( stg_model_t* mod, char* name, void* data );
-  /// retrieve a data item from the model, referenced by the string "name".
-  //void* stg_model_get_prop( stg_model_t* mod, char* name );
+
+  struct stg_property;
+
+  typedef int (*stg_property_callback_t)(stg_model_t* mod, char* prop, 
+  				 void* data, size_t len, void* userdata );
   
+  typedef void (*stg_property_storage_func_t)( stg_model_t* mod, 
+					      struct stg_property* prop,
+					      void* data, size_t len );
+
+  typedef struct stg_property {
+    void* data;
+    size_t len;
+    stg_property_storage_func_t storage_func;
+    GList* callbacks; // functions called when this property is set
+    void* user; // pointer passed into every callback function
+  } stg_property_t;
+  
+  int stg_model_add_property( stg_model_t* mod, char* propname,
+			      void* init_data, size_t init_data_len,
+			      stg_property_storage_func_t func );
+  
+  int stg_model_set_property_data( stg_model_t* mod, char* prop, 
+				   void* data, size_t len );
+  
+  int stg_model_get_property_data( stg_model_t* mod, char* prop,
+				   void** data );
+  
+  int stg_model_add_property_callback( stg_model_t* mod, char* prop, 
+				       stg_property_callback_t, void* user );
+  
+  int stg_model_remove_property_callback( stg_model_t* mod, char* prop, 
+					  stg_property_callback_t );
+  
+  int stg_model_remove_property_callbacks( stg_model_t* mod, char* prop );
+
+
   /** print human-readable information about the model on stdout
    */
   void stg_model_print( stg_model_t* mod );

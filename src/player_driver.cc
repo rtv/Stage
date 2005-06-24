@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.16 2005-06-24 06:11:03 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.17 2005-06-24 08:13:43 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -410,8 +410,8 @@ int StgDriver::CreateDeviceModel( player_device_id_t id,
       // experimental
       
       // add a callback that should happen whenever the robot's pose is changed
-      stg_model_add_prop_callback( device->mod, "pose", test_cb, (void*)32 );
-      stg_model_add_prop_callback( device->mod, "pose", test_cb, (void*)48 );
+      stg_model_add_property_callback( device->mod, "pose", test_cb, (void*)32 );
+      //stg_model_add_prop_callback( device->mod, "pose", test_cb, (void*)48 );
 
       break;
       

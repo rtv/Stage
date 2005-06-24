@@ -8,8 +8,6 @@
 //#define DEBUG
 //#undef DEBUG
 
-#define PPPOSE "pose"
-
 #include "stage_internal.h"
 #include "gui.h"
 
@@ -215,43 +213,6 @@ stg_polygon_t* unit_polygon_create( void )
   return poly;
 }
 
-/*
-/// grow a model by adding [sz] bytes to the end of its struct
-stg_model_t* stg_model_extend( stg_model_t* mod, size_t sz )
-{
-  stg_model_map_with_children( mod, 0 );
-
-  // grow the model to allow for our type-specific extensions
-  mod = realloc( mod, sizeof(stg_model_t)+sz );
-
-  // hack! repair our model callback pointer following the realloc
-  if( mod->world->win )
-    mod->gui.top->userdata = mod;
-
-  // zero our extension data
-  memset( mod->extend, 0, sz );
-
-  stg_model_map_with_children( mod, 1 );
-
-  return mod;
-}
-
-/// create a model with [extra_len] bytes allocated at the end of the
-/// struct, accessible via the 'extend' field.
-stg_model_t* stg_model_create_extended( stg_world_t* world, 
-					stg_model_t* parent,
-					stg_id_t id, 
-					stg_model_type_t type,
-					char* token,
-					size_t extra_len )
-{
-  return stg_model_extend( stg_model_create( world, parent, 
-					     id, type, token ),
-			   extra_len );
-}
-
-*/
-
 void test_storage( stg_model_t* mod, stg_property_t* prop, 
 		   void* data, size_t len )
 {
@@ -323,9 +284,13 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->pose.x = STG_DEFAULT_POSEX;
   mod->pose.y = STG_DEFAULT_POSEY;
   mod->pose.a = STG_DEFAULT_POSEA;
-  
-  stg_model_set_prop_storage( mod, PPPOSE, test_storage );
-  stg_model_set_prop( mod, PPPOSE, &mod->pose, sizeof(stg_pose_t) );
+ 
+
+  stg_model_add_property( mod, "pose", &mod->pose, sizeof(stg_pose_t), test_storage );
+  stg_bool_t b = 1;
+  stg_model_add_property( mod, "ranger_return", &b, sizeof(b), NULL );
+  stg_model_add_property( mod, "laser_return", &b, sizeof(b), NULL );
+  stg_model_add_property( mod, "gripper_return", &b, sizeof(b), NULL );
 
   mod->geom.pose.x = STG_DEFAULT_GEOM_POSEX;
   mod->geom.pose.y = STG_DEFAULT_GEOM_POSEY;
@@ -398,15 +363,18 @@ stg_model_t* stg_model_create( stg_world_t* world,
   return mod;
 }
 
-//void* stg_model_get_prop( stg_model_t* mod, char* name )
-//{
-//return g_datalist_get_data( &mod->props, name );
-//}
+stg_property_t* stg_model_get_property( stg_model_t* mod, const char* propname )
+{
+  printf( "looking up model %s property %s quark %d\n",
+	  mod->token, propname, g_quark_from_string(propname) );
+  return( (stg_property_t*)g_datalist_get_data( &mod->props, propname ));
+}
 
-//void stg_model_set_prop( stg_model_t* mod, char* name, void* data )
-//{
-// g_datalist_set_data( &mod->props, name, data );
-//}
+void stg_model_set_property( stg_model_t* mod, const char* propname, 
+			     stg_property_t* prop )
+{
+  g_datalist_set_data( &mod->props, propname, (void*)prop );
+}
 
 /// free the memory allocated for a model
 void stg_model_destroy( stg_model_t* mod )
@@ -947,7 +915,7 @@ void stg_property_print_cb( GQuark key, gpointer data, gpointer user )
   printf( "%s%s %d bytes\n", 
 	  (char*)user, 
 	  g_quark_to_string(key), 
-	  ((stg_property_t*)data)->len );
+	  (int)((stg_property_t*)data)->len );
 }
 
 //const size_t STG_PROPNAME_MAX = 128;
@@ -982,8 +950,8 @@ void stg_property_callback_cb( gpointer data, gpointer user )
 
 
 // call every property callback listed  in a property
-void stg_property_callback_list( char* propname, 
-				 stg_property_t* prop,
+void stg_property_callback_list( stg_property_t* prop,
+				 char* propname,
 				 stg_property_callback_args_t* args )
 {  
   //printf( "checking callbacks for %s:%s\n", 
@@ -998,45 +966,56 @@ void stg_property_callback_list( char* propname,
 }
 
 // wrapper for stg_property_callback_list()
-void stg_property_callback_list_cb( GQuark key, gpointer data, gpointer user )
+/* void stg_property_callback_list_cb( GQuark key, gpointer data, gpointer user ) */
+/* { */
+/*   stg_property_callback_list( g_quark_to_string(key), */
+/* 			      (stg_property_t*)data, */
+/* 			      (stg_property_callback_args_t*)user ); */
+/* } */
+
+
+
+int stg_model_add_property( stg_model_t* mod, char* propname, 
+			    void* data, size_t len,
+			    stg_property_storage_func_t func )
 {
-  stg_property_callback_list( g_quark_to_string(key),
-			      (stg_property_t*)data,
-			      (stg_property_callback_args_t*)user );
+  if( stg_model_get_property( mod, propname ) )
+    {
+      PRINT_ERR( "attempting to create a property that already exists" );
+      return 1; // fail
+    }
+  
+  // create a property and stash it in the model with the right name
+  printf( "* adding property %s:%s size %d func %p\n", 
+	  mod->token, propname, len, func );
+  
+  stg_property_t* prop = stg_property_create();
+  prop->storage_func = func;
+  prop->data = malloc(len);
+  memcpy( prop->data, data, len );
+  prop->len = len;
+  
+  printf( "creating model %s property %s quark %d\n",
+	  mod->token, propname, g_quark_from_string(propname) );
+  stg_model_set_property( mod, propname, prop );
+
+  return 0; // ok
 }
 
 
-
-int stg_model_set_prop_storage( stg_model_t* mod, char* propname, 
-				stg_property_storage_func_t storage )
+int stg_model_set_property_data( stg_model_t* mod, char* propname, 
+				 void* data, size_t len )
 {
-  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
+  stg_property_t* prop = stg_model_get_property( mod, propname );
   
   if( prop == NULL )
     {
-      // create a property and stash it in the model with the right name
-      printf( "* set_prop_storage creating a new prop %s:%s\n", mod->token, propname );
-      prop = stg_property_create();
-      g_datalist_set_data( &mod->props, propname, prop );
+      PRINT_WARN2( "failed to set data for property %s:%s\n", 
+		   mod->token, propname );
+      return 1; // fail
     }
   
-  prop->storage_func = storage;
-}
 
-
-int stg_model_set_prop( stg_model_t* mod, char* propname, 
-			void* data, size_t len )
-{
-  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
-  
-  if( prop == NULL )
-    {
-      // create a property and stash it in the model with the right name
-      printf( "* set_prop creating a new prop %s:%s\n", mod->token, propname );
-      prop = stg_property_create();
-      g_datalist_set_data( &mod->props, propname, prop );
-    }
-  
   // if there's a special storage function registered, call it
   if( prop->storage_func )
     prop->storage_func( mod, prop, data, len );
@@ -1047,6 +1026,10 @@ int stg_model_set_prop( stg_model_t* mod, char* propname,
       memcpy( prop->data, data, len );
       prop->len = len;
     }
+  
+  
+  PRINT_MSG2( "succeeded setting data for property %s:%s\n", 
+	      mod->token, propname );
   
   // temp
   //printf( "setting %s:%s %d bytes\n", mod->token, propname, len );
@@ -1059,7 +1042,8 @@ int stg_model_set_prop( stg_model_t* mod, char* propname,
   args.data = data;
   args.len = len;
   args.user = prop->user;
-  g_datalist_foreach( &mod->props, stg_property_callback_list_cb, &args );
+  //g_datalist_foreach( &mod->props, stg_property_callback_list_cb, &args );
+  stg_property_callback_list( prop, propname, &args );
 
   return 0; // ok
 }
@@ -1068,9 +1052,9 @@ int stg_model_set_prop( stg_model_t* mod, char* propname,
 // Get the data of the named property. A pointer to the data is set in
 // [data]. returns the size of the data in bytes, or negative error
 // code if failed.
-int stg_model_get_prop( stg_model_t* mod, char* propname, void** data )
+int stg_model_get_property_data( stg_model_t* mod, char* propname, void** data )
 {
-  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
+  stg_property_t* prop = stg_model_get_property( mod, propname );
   
   if( prop )
     {
@@ -1086,13 +1070,13 @@ int stg_model_get_prop( stg_model_t* mod, char* propname, void** data )
   return -1; // error
 }
 
-int stg_model_add_prop_callback( stg_model_t* mod, char* propname, 
-				 stg_property_callback_t callback,
-				 void* user )
+int stg_model_add_property_callback( stg_model_t* mod, char* propname, 
+				     stg_property_callback_t callback,
+				     void* user )
 {
   assert(mod);
   assert(propname);
-  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
+  stg_property_t* prop = stg_model_get_property( mod, propname );
   
   
   if( prop == NULL )
@@ -1108,9 +1092,10 @@ int stg_model_add_prop_callback( stg_model_t* mod, char* propname,
   return 0; //ok
 }
 
-int stg_model_remove_prop_callback( stg_model_t* mod, char* propname, stg_property_callback_t callback )
+int stg_model_remove_property_callback( stg_model_t* mod, char* propname, 
+					stg_property_callback_t callback )
 {
-  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
+  stg_property_t* prop = stg_model_get_property( mod, propname );
   
   if( prop == NULL )
     {
@@ -1126,9 +1111,9 @@ int stg_model_remove_prop_callback( stg_model_t* mod, char* propname, stg_proper
 
 
 
-int stg_model_remove_prop_callbacks( stg_model_t* mod, char* propname )
+int stg_model_remove_property_callbacks( stg_model_t* mod, char* propname )
 {
-  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
+  stg_property_t* prop =  stg_model_get_property( mod, propname );
   
   if( prop == NULL )
     {
@@ -1164,7 +1149,7 @@ int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
     }
   
   
-  stg_model_set_prop( mod, PPPOSE, pose, sizeof(stg_pose_t) );
+  stg_model_set_property_data( mod, "pose", pose, sizeof(stg_pose_t) );
 
   return 0; // OK
 }
@@ -1273,22 +1258,27 @@ int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent)
 int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val )
 {
   memcpy( &mod->laser_return, val, sizeof(mod->laser_return));
-
-  stg_model_set_prop( mod, "laser_return", val, sizeof(stg_laser_return_t) );
+  
+  stg_model_set_property_data( mod, "laser_return", 
+			       val, sizeof(stg_laser_return_t) );
   return 0;
 }
 
 int stg_model_set_gripperreturn( stg_model_t* mod, stg_gripper_return_t* val )
 {
   memcpy( &mod->gripper_return, val, sizeof(mod->gripper_return));
-  stg_model_set_prop( mod, "gripper_return", val, sizeof(stg_gripper_return_t) );
+
+  stg_model_set_property_data( mod, "gripper_return", 
+			       val, sizeof(stg_gripper_return_t) );
   return 0;
 }
 
 int stg_model_set_rangerreturn( stg_model_t* mod, stg_ranger_return_t* val )
 {
   memcpy( &mod->ranger_return, val, sizeof(mod->ranger_return));
-  stg_model_set_prop( mod, "ranger_return", val, sizeof(stg_ranger_return_t));
+
+  stg_model_set_property_data( mod, "ranger_return", 
+			       val, sizeof(stg_ranger_return_t));
   return 0;
 }
 

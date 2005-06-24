@@ -146,7 +146,6 @@ extern "C" {
   /** @addtogroup stg_model
       @{ */
 
-  struct stg_property;
 
   /// Callback functions
 
@@ -170,19 +169,6 @@ extern "C" {
   typedef void(*func_load_t)(struct _stg_model*);
   typedef void(*func_save_t)(struct _stg_model*);
 
-  typedef int (*stg_property_callback_t)(stg_model_t* mod, char* prop, void* data, size_t len, void* userdata );
-  
-  typedef int (*stg_property_storage_func_t)( stg_model_t* mod, 
-					      struct stg_property* prop,
-					      void* data, size_t len );
-
-  typedef struct stg_property {
-    void* data;
-    size_t len;
-    stg_property_storage_func_t storage_func;
-    GList* callbacks; // functions called when this property is set
-    void* user; // pointer passed into every callback function
-  } stg_property_t;
   
   struct _stg_model
   {
@@ -286,22 +272,13 @@ extern "C" {
   void stg_model_render_geom( stg_model_t* mod );
   void stg_model_render_pose( stg_model_t* mod );
   void stg_model_render_polygons( stg_model_t* mod );
-  
-  
-  int stg_model_set_prop_storage( stg_model_t* mod, char* prop,
-				  stg_property_storage_func_t storage );
-  
-  int stg_model_set_prop( stg_model_t* mod, char* prop, void* data, size_t len );
-  
-  int stg_model_get_prop( stg_model_t* mod, char* prop, void** data );
-  
-  int stg_model_add_prop_callback( stg_model_t* mod, char* prop, stg_property_callback_t, void* user );
 
-  int stg_model_remove_prop_callback( stg_model_t* mod, char* prop, stg_property_callback_t );
-
-  int stg_model_remove_prop_callbacks( stg_model_t* mod, char* prop );
-		       
-
+  void stg_model_set_property( stg_model_t* mod, const char* propname, 
+			       stg_property_t* prop );
+  
+  stg_property_t* stg_model_get_property( stg_model_t* mod, const char* propname );
+  
+       
   /**@}*/  
 
   /** @addtogroup stg_world
