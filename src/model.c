@@ -215,6 +215,7 @@ stg_polygon_t* unit_polygon_create( void )
   return poly;
 }
 
+/*
 /// grow a model by adding [sz] bytes to the end of its struct
 stg_model_t* stg_model_extend( stg_model_t* mod, size_t sz )
 {
@@ -235,7 +236,6 @@ stg_model_t* stg_model_extend( stg_model_t* mod, size_t sz )
   return mod;
 }
 
-
 /// create a model with [extra_len] bytes allocated at the end of the
 /// struct, accessible via the 'extend' field.
 stg_model_t* stg_model_create_extended( stg_world_t* world, 
@@ -250,6 +250,7 @@ stg_model_t* stg_model_create_extended( stg_world_t* world,
 			   extra_len );
 }
 
+*/
 
 void test_storage( stg_model_t* mod, stg_property_t* prop, 
 		   void* data, size_t len )
@@ -966,8 +967,8 @@ typedef struct
 void stg_property_callback( stg_property_callback_t cb, 
 			    stg_property_callback_args_t* args )
 {
-  printf( "calling %p(%p, %s, %p, %d, %p )\n",
-	  cb, args->mod, args->propname, args->data, args->len, args->user );
+  //printf( "calling %p(%p, %s, %p, %d, %p )\n",
+  //  cb, args->mod, args->propname, args->data, args->len, args->user );
   
   cb( args->mod, args->propname, args->data, args->len, args->user );
 }
@@ -985,9 +986,9 @@ void stg_property_callback_list( char* propname,
 				 stg_property_t* prop,
 				 stg_property_callback_args_t* args )
 {  
-  printf( "checking callbacks for %s:%s\n", 
-	  args->mod->token, 
-	  propname );
+  //printf( "checking callbacks for %s:%s\n", 
+  //  args->mod->token, 
+  //  propname );
   
   if( prop->callbacks ) 
     {
@@ -1089,6 +1090,8 @@ int stg_model_add_prop_callback( stg_model_t* mod, char* propname,
 				 stg_property_callback_t callback,
 				 void* user )
 {
+  assert(mod);
+  assert(propname);
   stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
   
   

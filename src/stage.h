@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.139 2005-06-23 15:22:01 rtv Exp $
+ * CVS: $Id: stage.h,v 1.140 2005-06-24 06:11:03 rtv Exp $
  */
 
 
@@ -522,14 +522,6 @@ extern "C" {
 				  stg_model_type_t type,
 				  char* token );
 
-  /// create a new model with [extra_len] bytes on the end of the struct.
-  stg_model_t* stg_model_create_extended( stg_world_t* world, 
-					  stg_model_t* parent,
-					  stg_id_t id, 
-					  stg_model_type_t type,
-					  char* token,
-					  size_t extra_len );
-    
   /** destroy a model, freeing its memory */
   void stg_model_destroy( stg_model_t* mod );
 

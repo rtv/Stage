@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -54,6 +54,16 @@ position
 
 const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
 const double STG_POSITION_WATTS = 10.0; // base cost of position device
+
+stg_model_position_t* stg_model_get_position( stg_model_t* mod )
+{
+  stg_model_position_t* pos;
+  size_t sz = stg_model_get_prop( mod, "position", &pos );
+  assert( pos );
+  assert( sz == sizeof(stg_model_position_t) );
+  return pos;
+}
+
 
 void position_load( stg_model_t* mod )
 {
@@ -102,13 +112,9 @@ stg_model_t* stg_position_create( stg_world_t* world,
 {
   PRINT_DEBUG( "created position model" );
   
-  stg_model_t* mod = stg_model_create_extended( world, 
-						parent, 
-						id,		
-						STG_MODEL_POSITION, 
-						token,
-						sizeof(stg_model_position_t) );  
-
+  stg_model_t* mod = 
+    stg_model_create( world, parent, id, STG_MODEL_POSITION, token );
+  
   // no power consumed until we're subscribed
   mod->watts = 0.0; 
 
@@ -143,18 +149,20 @@ stg_model_t* stg_position_create( stg_world_t* world,
    memset( &data, 0, sizeof(data) );
 
   stg_model_set_data( mod, &data, sizeof(data) );
-
-   // (type-sepecific extension data is already zeroed)
-
+  
+  // type-sepecific extension data 
+  stg_model_position_t pos;
+  memset( &pos, 0, sizeof(pos));
+  stg_model_set_prop( mod, "position", &pos, sizeof(pos));
+  
   return mod;
 }
 
 int position_update( stg_model_t* mod )
 { 
   // get the type-sepecific extension we added to the end of the model
-  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
-  
-
+  stg_model_position_t* pos = stg_model_get_position(mod);
+      
   PRINT_DEBUG1( "[%lu] position update", mod->world->sim_time );
 
   if( mod->subs )   // no driving if noone is subscribed
@@ -399,8 +407,9 @@ int position_shutdown( stg_model_t* mod )
 // Set the origin of the odometric coordinate system in world coords
 void stg_model_position_set_odom_origin( stg_model_t* mod, stg_pose_t* org )
 {
-  // get the type-sepecific extension we added to the end of the model
-  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  // get the position data
+  // get the position data
+  stg_model_position_t* pos = stg_model_get_position( mod );
   memcpy( &pos->odom_origin, org, sizeof(stg_pose_t));
   
   //printf( "Stage warning: the odom origin was set to (%.2f,%.2f,%.2f)\n",
@@ -413,7 +422,8 @@ void stg_model_position_odom_reset( stg_model_t* mod )
   //printf( "Stage warning: odom was reset (zeroed)\n" );
 
   // set the current odom measurement to zero
-  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  // get the position data
+  stg_model_position_t* pos = stg_model_get_position( mod );
   memset( &pos->odom, 0, sizeof(pos->odom));
   
   // and set the odom origin is the current pose
@@ -423,17 +433,14 @@ void stg_model_position_odom_reset( stg_model_t* mod )
 
 void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom )
 {
-  // get the type-sepecific extension we added to the end of the model
-  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
-  
+  stg_model_position_t* pos = stg_model_get_position( mod );
   // copy the odom pose straight in
   memcpy( odom, &pos->odom, sizeof(stg_pose_t));
 }
 
 void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
 {
-  // get the type-sepecific extension we added to the end of the model
-  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  stg_model_position_t* pos = stg_model_get_position( mod );
 
   // copy the odom pose straight in
   memcpy( &pos->odom, odom, sizeof(stg_pose_t));
@@ -471,7 +478,7 @@ void position_render_data(  stg_model_t* mod )
   
   if( mod->subs )
     {
-      stg_model_position_t *pos =  (stg_model_position_t*)mod->extend;
+      stg_model_position_t* pos = stg_model_get_position( mod );
       
       stg_rtk_fig_origin( mod->gui.data,  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
             

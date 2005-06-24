@@ -200,7 +200,8 @@ extern "C" {
     int child_type_count[ STG_MODEL_COUNT ];
 
     int subs;     // the number of subscriptions to this model
-    gui_model_t gui; // all the gui stuff    
+    gui_model_t gui; // all the gui stuff        // the device is consuming this much energy
+
     stg_msec_t interval; // time between updates in ms
     stg_msec_t interval_elapsed; // time since last update in ms
 
@@ -210,12 +211,14 @@ extern "C" {
     // the generic buffers used by specialized model types.
     // For speed, these are implemented directly, rather than by datalist.
     void *data, *cmd, *cfg;
-    size_t data_len, cmd_len, cfg_len;
+    size_t data_len, cmd_len, cfg_len;    // the device is consuming this much energy
+
     pthread_mutex_t data_mutex, cmd_mutex, cfg_mutex;
     
     // an array of polygons that make up the model's body. Possibly
     // zero elements.
-    GArray* polygons;
+    GArray* polygons;    // the device is consuming this much energy
+
     
     // basic model properties
     stg_blob_return_t blob_return; 
@@ -233,9 +236,10 @@ extern "C" {
     stg_kg_t mass; // mass in kg
     stg_bool_t boundary; // if non-zero, the object has a bounding box
     stg_guifeatures_t guifeatures; // controls how we are rendered in the GUI
-
-    int disabled; // if non-zero, the model is disabled
-
+    stg_watts_t watts;  // device is consuming this much energy
+    
+    stg_bool_t disabled; // if non-zero, the model is disabled
+    
     // type-dependent functions for this model, implementing simple
     // polymorphism
     func_startup_t f_startup;
@@ -258,10 +262,6 @@ extern "C" {
     func_data_notify_t data_notify;
     void* data_notify_arg;
     
-    // the device is consuming this much energy
-    stg_watts_t watts;
-    
-    char extend[0]; // this must be the last field!
   };
 
   // internal functions
