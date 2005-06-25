@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.40 2005-03-11 22:07:46 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.41 2005-06-25 01:07:58 rtv Exp $
  */
 
 #include <math.h>
@@ -549,13 +549,14 @@ void blobfinder_render_cfg( stg_model_t* mod )
   blobfinder_get_cfg(mod,&cfg);
   
   // Get the camera's global pose
-  stg_pose_t pose;
-  stg_model_get_pose( mod, &pose );
+  stg_pose_t* pose = 
+    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+  //  stg_model_get_pose( mod, &pose );
   
-  double ox = pose.x;
-  double oy = pose.y;
-  double mina = pose.a + (cfg.pan + cfg.zoom / 2.0);
-  double maxa = pose.a - (cfg.pan + cfg.zoom / 2.0);
+  double ox = pose->x;
+  double oy = pose->y;
+  double mina = pose->a + (cfg.pan + cfg.zoom / 2.0);
+  double maxa = pose->a - (cfg.pan + cfg.zoom / 2.0);
   
   double dx = cfg.range_max * cos(mina);
   double dy = cfg.range_max * sin(mina);

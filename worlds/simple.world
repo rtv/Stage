@@ -1,17 +1,15 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.46 2005-05-08 08:01:24 rtv Exp $
+# CVS: $Id: simple.world,v 1.47 2005-06-25 01:07:59 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
 
 
 
-
-
-
 # defines 'map' object used for floorplans
 include "map.inc"
+
 
 
 
@@ -47,11 +45,11 @@ pioneer2dx
   laser()
 )
 
-# create a robot
-#pioneer2dx
-#(
-#  name "robot2"
-#  color "orange"
-#  pose [ -2.904 -0.732 -100.491]
-#  laser()
-#)
+pioneer2dx
+(
+  name "robot2"
+  color "magenta"
+  pose [-3.573 -6.045 436.882]
+  laser()
+)
+

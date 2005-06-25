@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.141 2005-06-24 08:13:43 rtv Exp $
+ * CVS: $Id: stage.h,v 1.142 2005-06-25 01:07:58 rtv Exp $
  */
 
 
@@ -552,7 +552,7 @@ extern "C" {
   // SET properties - use these to set props, don't set them directly
 
   /** set the pose of a model in its parent's coordinate system */
-  int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
+  // int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
   
   /** set the pose of model in global coordinates */
   int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose );
@@ -651,8 +651,11 @@ extern "C" {
   typedef void (*stg_property_storage_func_t)( stg_model_t* mod, 
 					      struct stg_property* prop,
 					      void* data, size_t len );
-
+  
+#define STG_PROPNAME_MAX 128
+  
   typedef struct stg_property {
+    char name[STG_PROPNAME_MAX];
     void* data;
     size_t len;
     stg_property_storage_func_t storage_func;
@@ -660,24 +663,40 @@ extern "C" {
     void* user; // pointer passed into every callback function
   } stg_property_t;
   
-  int stg_model_add_property( stg_model_t* mod, char* propname,
-			      void* init_data, size_t init_data_len,
+  int stg_model_add_property( stg_model_t* mod, 
+			      const char* propname,
+			      void* init_data, 
+			      size_t init_data_len,
 			      stg_property_storage_func_t func );
   
-  int stg_model_set_property_data( stg_model_t* mod, char* prop, 
-				   void* data, size_t len );
+  int stg_model_set_property_data( stg_model_t* mod, 
+				    const char* prop, 
+				    void* data, 
+				    size_t len );
+
+  /** gets the named property data. if len is non-NULL, it is set with
+      the size of the data in bytes */
+  void* stg_model_get_property_data( stg_model_t* mod, 
+				     const char* prop,
+				     size_t* len );
   
-  int stg_model_get_property_data( stg_model_t* mod, char* prop,
-				   void** data );
+  /** gets a property of a known size. Fail assertion if the size isn't right.
+   */
+  void* stg_model_get_property_data_fixed( stg_model_t* mod, 
+					   const char* name,
+					   size_t size );
+
+  // get a copy of the property data - caller must free it
+  //int stg_model_copy_property_data( stg_model_t* mod, const char* prop,
+  //			   void** data );
   
-  int stg_model_add_property_callback( stg_model_t* mod, char* prop, 
+  int stg_model_add_property_callback( stg_model_t* mod, const char* prop, 
 				       stg_property_callback_t, void* user );
   
-  int stg_model_remove_property_callback( stg_model_t* mod, char* prop, 
+  int stg_model_remove_property_callback( stg_model_t* mod, const char* prop, 
 					  stg_property_callback_t );
   
-  int stg_model_remove_property_callbacks( stg_model_t* mod, char* prop );
-
+  int stg_model_remove_property_callbacks( stg_model_t* mod, const char* prop );
 
   /** print human-readable information about the model on stdout
    */

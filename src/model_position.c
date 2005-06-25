@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.33 $
+//  $Revision: 1.34 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -57,10 +57,10 @@ const double STG_POSITION_WATTS = 10.0; // base cost of position device
 
 stg_model_position_t* stg_model_get_position( stg_model_t* mod )
 {
-  stg_model_position_t* pos;
-  size_t sz = stg_model_get_property_data( mod, "position", &pos );
+  stg_model_position_t* pos = 
+    stg_model_get_property_data_fixed( mod, "position", 
+				       sizeof(stg_model_position_t));
   assert( pos );
-  assert( sz == sizeof(stg_model_position_t) );
   return pos;
 }
 
@@ -161,12 +161,14 @@ stg_model_t* stg_position_create( stg_world_t* world,
 int position_update( stg_model_t* mod )
 { 
   // get the type-sepecific extension we added to the end of the model
-  stg_model_position_t* pos = stg_model_get_position(mod);
+  stg_model_position_t* pos = NULL;
       
   PRINT_DEBUG1( "[%lu] position update", mod->world->sim_time );
 
   if( mod->subs )   // no driving if noone is subscribed
     {      
+      pos = stg_model_get_position(mod);
+      assert(pos);
       assert( mod->cfg ); // position_init should have filled these
       assert( mod->cmd );
       
@@ -351,17 +353,23 @@ int position_update( stg_model_t* mod )
   //printf( "updating odom from origin (%.2f,%.2f,%.2f)\n",
   //  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
 
-  // calculate new odometric pose
-  double dx = mod->pose.x - pos->odom_origin.x;
-  double dy = mod->pose.y - pos->odom_origin.y;
-  double da = mod->pose.a - pos->odom_origin.a;
-  double costh = cos(pos->odom_origin.a);
-  double sinth = sin(pos->odom_origin.a);
-  
-  pos->odom.x = dx * costh + dy * sinth;
-  pos->odom.y = dy * costh - dx * sinth;
-  pos->odom.a = NORMALIZE(da);
-  
+  if( pos )
+    {
+      stg_pose_t* pose = 
+	stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+
+      // calculate new odometric pose
+      double dx = pose->x - pos->odom_origin.x;
+      double dy = pose->y - pos->odom_origin.y;
+      double da = pose->a - pos->odom_origin.a;
+      double costh = cos(pos->odom_origin.a);
+      double sinth = sin(pos->odom_origin.a);
+      
+      pos->odom.x = dx * costh + dy * sinth;
+      pos->odom.y = dy * costh - dx * sinth;
+      pos->odom.a = NORMALIZE(da);
+    }
+
   return 0; //ok
 }
 
@@ -427,7 +435,8 @@ void stg_model_position_odom_reset( stg_model_t* mod )
   memset( &pos->odom, 0, sizeof(pos->odom));
   
   // and set the odom origin is the current pose
-  stg_model_position_set_odom_origin( mod, &mod->pose );
+  stg_model_position_set_odom_origin( mod, 
+				      stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t)) );
 }
 
 
@@ -446,7 +455,11 @@ void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
   memcpy( &pos->odom, odom, sizeof(stg_pose_t));
   
   // calculate what the origin of this coord system must be 
-  double da = odom->a - mod->pose.a;
+  
+  stg_pose_t* pose = 
+    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+  
+  double da = odom->a - pose->a;
   double cosa = cos(da);
   double sina = sin(da);
   
@@ -454,9 +467,9 @@ void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
   double yy = odom->y * cosa - odom->x * sina;
 
   stg_pose_t o;
-  o.x = mod->pose.x - xx;
-  o.y = mod->pose.y - yy;
-  o.a = NORMALIZE( mod->pose.a - odom->a );  
+  o.x = pose->x - xx;
+  o.y = pose->y - yy;
+  o.a = NORMALIZE( pose->a - odom->a );  
   stg_model_position_set_odom_origin( mod, &o );  
 }
 

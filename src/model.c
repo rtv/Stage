@@ -222,6 +222,35 @@ void test_storage( stg_model_t* mod, stg_property_t* prop,
   memcpy( prop->data, data, len );
 }
 
+/** set the pose of a model in its parent's CS */
+void pose_storage( stg_model_t* mod, stg_property_t* prop,
+		   void* data, size_t len )
+{
+  printf( "pose storage for model %s\n",
+	  mod->token );
+
+  assert( len == sizeof(stg_pose_t) );  
+  
+  //if( memcmp( prop->data, data, sizeof(stg_pose_t) )) 
+    { 
+      // unrender from the matrix
+      stg_model_map_with_children( mod, 0 );
+      
+      // store the new pose
+      if( prop->len != len )
+	prop->data = realloc( prop->data, len );
+      
+      memcpy( prop->data, data, len );
+      
+      // render in the matrix
+      stg_model_map_with_children( mod, 1 );
+      
+      // move the stg_rtk figure to match
+      if( mod->world->win )
+	gui_model_move( mod );
+    }
+}
+
 
 /// create a new model
 stg_model_t* stg_model_create( stg_world_t* world, 
@@ -281,16 +310,42 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // sensible defaults
   mod->stall = FALSE;
 
-  mod->pose.x = STG_DEFAULT_POSEX;
-  mod->pose.y = STG_DEFAULT_POSEY;
-  mod->pose.a = STG_DEFAULT_POSEA;
+  //mod->pose.x = STG_DEFAULT_POSEX;
+  //mod->pose.y = STG_DEFAULT_POSEY;
+  //mod->pose.a = STG_DEFAULT_POSEA;
  
 
-  stg_model_add_property( mod, "pose", &mod->pose, sizeof(stg_pose_t), test_storage );
-  stg_bool_t b = 1;
-  stg_model_add_property( mod, "ranger_return", &b, sizeof(b), NULL );
-  stg_model_add_property( mod, "laser_return", &b, sizeof(b), NULL );
-  stg_model_add_property( mod, "gripper_return", &b, sizeof(b), NULL );
+  //  stg_model_add_property( mod, "pose", &mod->pose, sizeof(stg_pose_t), test_storage );
+  
+  stg_pose_t pose;
+  memset( &pose, 0, sizeof(pose));
+  stg_model_add_property( mod, "pose", &pose, sizeof(pose), pose_storage );
+
+  //stg_bool_t b = 1;
+  //stg_model_add_property( mod, "ranger_return", &b, sizeof(b), NULL );
+  //stg_model_add_property( mod, "laser_return", &b, sizeof(b), NULL );
+  //stg_model_add_property( mod, "gripper_return", &b, sizeof(b), NULL );
+
+
+/*     // basic model properties */
+/*     stg_blob_return_t blob_return;  */
+/*     stg_laser_return_t laser_return; // value returned to a laser sensor */
+/*     stg_obstacle_return_t obstacle_return; // if non-zero, we are included in obstacle detection */
+/*     stg_fiducial_return_t fiducial_return; // value returned to a fiducial finder */
+/*     stg_ranger_return_t ranger_return; */
+/*     stg_gripper_return_t gripper_return; */
+
+/*     stg_pose_t pose; // current pose in parent's CS */
+/*     stg_velocity_t velocity; // current velocity */
+/*     stg_bool_t stall; // true IFF we hit an obstacle */
+/*     stg_geom_t geom; // pose and size in local CS */
+/*     stg_color_t color; // RGB color  */
+/*     stg_kg_t mass; // mass in kg */
+/*     stg_bool_t boundary; // if non-zero, the object has a bounding box */
+/*     stg_guifeatures_t guifeatures; // controls how we are rendered in the GUI */
+/*     stg_watts_t watts;  // device is consuming this much energy */
+
+
 
   mod->geom.pose.x = STG_DEFAULT_GEOM_POSEX;
   mod->geom.pose.y = STG_DEFAULT_GEOM_POSEY;
@@ -335,8 +390,9 @@ stg_model_t* stg_model_create( stg_world_t* world,
   free(poly);
   
   // init the arbitrary datalist structure
-  g_datalist_init( &mod->props);
-	
+  //g_datalist_init( &mod->props);
+  
+
   // install the default functions
   mod->f_startup = NULL;
   mod->f_shutdown = NULL;
@@ -363,17 +419,56 @@ stg_model_t* stg_model_create( stg_world_t* world,
   return mod;
 }
 
+void stg_property_print_cb( GQuark key, gpointer data, gpointer user )
+{
+  stg_property_t* prop = (stg_property_t*)data;
+  
+  printf( "%s key: %s name: %s len: %d func: %p\n", 
+	  user ? (char*)user : "", 
+	  g_quark_to_string(key), 	  
+	  prop->name,
+	  prop->len,
+	  prop->storage_func );
+}
+
+void stg_model_print_properties( stg_model_t* mod )
+{
+  printf( "Model \"%s\" has  properties:\n",
+	  mod->token );
+  
+  g_datalist_foreach( &mod->props, stg_property_print_cb, "   " );
+  puts( "   <end>" );  
+}
+
 stg_property_t* stg_model_get_property( stg_model_t* mod, const char* propname )
 {
-  printf( "looking up model %s property %s quark %d\n",
-	  mod->token, propname, g_quark_from_string(propname) );
-  return( (stg_property_t*)g_datalist_get_data( &mod->props, propname ));
+  //printf( "looking up model %p \"%s\" datalist %p property \"%s\" quark %d\n",
+  //  mod, mod->token, mod->props, propname, g_quark_from_string(propname) );
+
+  //stg_model_print_properties( mod );
+
+  gpointer thing = g_datalist_get_data( &mod->props, propname );
+  
+  if( ! thing )
+    {
+      PRINT_WARN2( "Failed to get model \"%s\" property \"%s\"\n",
+		   mod->token, propname );
+  
+      //stg_model_print_properties( mod );
+    }
+
+  return (stg_property_t*)thing;					 
 }
+
 
 void stg_model_set_property( stg_model_t* mod, const char* propname, 
 			     stg_property_t* prop )
 {
+  printf( "setting model %p %s datalist %p property %s\n",
+	  mod, mod->token, mod->props, propname );
+
   g_datalist_set_data( &mod->props, propname, (void*)prop );
+  //stg_model_print_properties(mod);  
 }
 
 /// free the memory allocated for a model
@@ -491,19 +586,22 @@ void  stg_model_get_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 { 
   stg_pose_t parent_pose;
   
+  stg_pose_t* pose = 
+    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+  
   // find my parent's pose
   if( mod->parent )
     {
       stg_model_get_global_pose( mod->parent, &parent_pose );
       
-      gpose->x = parent_pose.x + mod->pose.x * cos(parent_pose.a) 
-	- mod->pose.y * sin(parent_pose.a);
-      gpose->y = parent_pose.y + mod->pose.x * sin(parent_pose.a) 
-	+ mod->pose.y * cos(parent_pose.a);
-      gpose->a = NORMALIZE(parent_pose.a + mod->pose.a);
+      gpose->x = parent_pose.x + pose->x * cos(parent_pose.a) 
+	- pose->y * sin(parent_pose.a);
+      gpose->y = parent_pose.y + pose->x * sin(parent_pose.a) 
+	+ pose->y * cos(parent_pose.a);
+      gpose->a = NORMALIZE(parent_pose.a + pose->a);
     }
   else
-    memcpy( gpose, &mod->pose, sizeof(mod->pose));
+    memcpy( gpose, pose, sizeof(stg_pose_t));
 }
     
     
@@ -778,13 +876,19 @@ int stg_model_shutdown( stg_model_t* mod )
 // basic model properties
 
 
-
-void stg_model_get_pose( stg_model_t* model, stg_pose_t* pose )
+/*
+void stg_model_get_pose( stg_model_t* mod, stg_pose_t* pose )
 {
-  assert(model);
+  assert(mod);
   assert(pose);
-  memcpy( pose, &model->pose, sizeof(stg_pose_t));
+  memcpy(pose, &mod->pose, sizeof(mod->pose));
+  
+  //stg_pose_t* p;
+  //size_t len = stg_model_get_property_data( mod, "pose", &p );  
+  //assert( len == sizeof(stg_pose_t));
+  //memcpy( pose, p, len );
 }
+*/
 
 void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest )
 {
@@ -885,11 +989,28 @@ stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
   return (stg_polygon_t*)mod->polygons->data;
 }
 
-// create a new, zeroed property
-stg_property_t* stg_property_create( void )
+// create and initialize a new property
+stg_property_t* stg_property_create( const char* name, void* data, size_t len, 
+				     stg_property_storage_func_t func )
 {
   //puts( "creating new property" );
-  return((stg_property_t*)calloc(sizeof(stg_property_t),1));
+  
+  stg_property_t* prop = (stg_property_t*)calloc(sizeof(stg_property_t),1);
+  
+  strncpy( prop->name, name, STG_PROPNAME_MAX );
+  prop->storage_func = func;
+  prop->data = malloc(len);
+  memcpy( prop->data, data, len );
+  prop->len = len;
+
+  printf( "created property %p name %s quark %d len %d func %p\n",
+	  prop, 
+	  prop->name, 
+	  g_quark_from_string(prop->name), 
+	  prop->len, 
+	  prop->storage_func );
+
+  return prop;
 }
 
 void stg_property_destroy( stg_property_t* prop )
@@ -898,6 +1019,9 @@ void stg_property_destroy( stg_property_t* prop )
   if( prop->callbacks )
     g_list_free( prop->callbacks );
   
+  if( prop->data )
+    free( prop->data );
+
   free( prop );
 }
 
@@ -910,26 +1034,7 @@ int _property_store( stg_model_t* mod, char* propname,
   return 0;
 }
 
-void stg_property_print_cb( GQuark key, gpointer data, gpointer user )
-{
-  printf( "%s%s %d bytes\n", 
-	  (char*)user, 
-	  g_quark_to_string(key), 
-	  (int)((stg_property_t*)data)->len );
-}
 
-//const size_t STG_PROPNAME_MAX = 128;
-#define STG_PROPNAME_MAX 128
-
-typedef struct 
-{
-  stg_model_t* mod;
-  char propname[STG_PROPNAME_MAX];
-  void* data;
-  size_t len;
-  void* user;
-} stg_property_callback_args_t;
-    
 
 // call a property callback
 void stg_property_callback( stg_property_callback_t cb, 
@@ -951,7 +1056,7 @@ void stg_property_callback_cb( gpointer data, gpointer user )
 
 // call every property callback listed  in a property
 void stg_property_callback_list( stg_property_t* prop,
-				 char* propname,
+				 const char* propname,
 				 stg_property_callback_args_t* args )
 {  
   //printf( "checking callbacks for %s:%s\n", 
@@ -960,8 +1065,8 @@ void stg_property_callback_list( stg_property_t* prop,
   
   if( prop->callbacks ) 
     {
-      strncpy( args->propname, propname, STG_PROPNAME_MAX); 
-      g_list_foreach( prop->callbacks, stg_property_callback_cb, args );
+      //strncpy( args->propname, propname, STG_PROPNAME_MAX); 
+      //g_list_foreach( prop->callbacks, stg_property_callback_cb, args );
     }
 }
 
@@ -975,7 +1080,7 @@ void stg_property_callback_list( stg_property_t* prop,
 
 
 
-int stg_model_add_property( stg_model_t* mod, char* propname, 
+int stg_model_add_property( stg_model_t* mod, const char* propname, 
 			    void* data, size_t len,
 			    stg_property_storage_func_t func )
 {
@@ -986,25 +1091,24 @@ int stg_model_add_property( stg_model_t* mod, char* propname,
     }
   
   // create a property and stash it in the model with the right name
-  printf( "* adding property %s:%s size %d func %p\n", 
+  printf( "* adding model %s property %s size %d func %p\n", 
 	  mod->token, propname, len, func );
   
-  stg_property_t* prop = stg_property_create();
-  prop->storage_func = func;
-  prop->data = malloc(len);
-  memcpy( prop->data, data, len );
-  prop->len = len;
-  
-  printf( "creating model %s property %s quark %d\n",
-	  mod->token, propname, g_quark_from_string(propname) );
+  stg_property_t* prop = stg_property_create( propname, data, len, func );  
   stg_model_set_property( mod, propname, prop );
+
+
+  // test to make sure the property is there
+  stg_property_t* find = stg_model_get_property( mod, propname );
+  assert( find );
+  assert( find == prop );
 
   return 0; // ok
 }
 
 
-int stg_model_set_property_data( stg_model_t* mod, char* propname, 
-				 void* data, size_t len )
+int stg_model_set_property_data( stg_model_t* mod, const char* propname, 
+				  void* data, size_t len )
 {
   stg_property_t* prop = stg_model_get_property( mod, propname );
   
@@ -1028,49 +1132,43 @@ int stg_model_set_property_data( stg_model_t* mod, char* propname,
     }
   
   
-  PRINT_MSG2( "succeeded setting data for property %s:%s\n", 
-	      mod->token, propname );
+  //PRINT_MSG2( "succeeded setting data for property %s:%s\n", 
+  //      mod->token, propname );
   
-  // temp
-  //printf( "setting %s:%s %d bytes\n", mod->token, propname, len );
-  //printf( "model %s now has properties:\n", mod->token );
-  //g_datalist_foreach( &mod->props, stg_property_print_cb, "  " );
-	  
   // call any callbacks
   stg_property_callback_args_t args;
   args.mod = mod;
   args.data = data;
   args.len = len;
   args.user = prop->user;
-  //g_datalist_foreach( &mod->props, stg_property_callback_list_cb, &args );
+
   stg_property_callback_list( prop, propname, &args );
 
   return 0; // ok
 }
 
 
-// Get the data of the named property. A pointer to the data is set in
-// [data]. returns the size of the data in bytes, or negative error
-// code if failed.
-int stg_model_get_property_data( stg_model_t* mod, char* propname, void** data )
+void* stg_model_get_property_data( stg_model_t* mod, 
+				   const char* propname, 
+				   size_t* len )
 {
   stg_property_t* prop = stg_model_get_property( mod, propname );
   
   if( prop )
     {
-      *data = prop->data;
-      return prop->len;
+      if( len )
+	*len = prop->len;
+      
+      return prop->data;
     }
   
-  // didn't find the property
-  PRINT_WARN2( "attempting to get a onexistent property (%s:%s)",
-	       mod->token, propname );
-  
-  *data = NULL;
-  return -1; // error
+  PRINT_WARN2( "attempting to get a nonexistent property (%s:%s)",
+	       mod->token, propname );    
+  return NULL;
 }
 
-int stg_model_add_property_callback( stg_model_t* mod, char* propname, 
+int stg_model_add_property_callback( stg_model_t* mod, 
+				     const char* propname, 
 				     stg_property_callback_t callback,
 				     void* user )
 {
@@ -1079,7 +1177,7 @@ int stg_model_add_property_callback( stg_model_t* mod, char* propname,
   stg_property_t* prop = stg_model_get_property( mod, propname );
   
   
-  if( prop == NULL )
+  if( ! prop )
     {
       PRINT_WARN2( "attempting to add a callback to a nonexistent property (%s:%s)",
 		   mod->token, propname );
@@ -1092,12 +1190,13 @@ int stg_model_add_property_callback( stg_model_t* mod, char* propname,
   return 0; //ok
 }
 
-int stg_model_remove_property_callback( stg_model_t* mod, char* propname, 
+int stg_model_remove_property_callback( stg_model_t* mod, 
+					const char* propname, 
 					stg_property_callback_t callback )
 {
   stg_property_t* prop = stg_model_get_property( mod, propname );
   
-  if( prop == NULL )
+  if( ! prop )
     {
       PRINT_WARN2( "attempting to remove a callback from a nonexistent property (%s:%s)",
 		   mod->token, propname );
@@ -1111,11 +1210,12 @@ int stg_model_remove_property_callback( stg_model_t* mod, char* propname,
 
 
 
-int stg_model_remove_property_callbacks( stg_model_t* mod, char* propname )
+int stg_model_remove_property_callbacks( stg_model_t* mod,
+					 const char* propname )
 {
   stg_property_t* prop =  stg_model_get_property( mod, propname );
   
-  if( prop == NULL )
+  if( ! prop )
     {
       PRINT_WARN2( "attempting to remove all callbacks from a nonexistent property (%s:%s)",
 		   mod->token, propname );
@@ -1129,30 +1229,30 @@ int stg_model_remove_property_callbacks( stg_model_t* mod, char* propname )
 }
 
 /** set the pose of a model in its parent's CS */
-int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
-{
-  // if the new pose is different
-  if( memcmp( &mod->pose, pose, sizeof(stg_pose_t) ))
-    {
-      // unrender from the matrix
-      stg_model_map_with_children( mod, 0 );
+/* int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose ) */
+/* { */
+/*   // if the new pose is different */
+/*   if( memcmp( &mod->pose, pose, sizeof(stg_pose_t) )) */
+/*     { */
+/*       // unrender from the matrix */
+/*       stg_model_map_with_children( mod, 0 ); */
       
-      // copy the new pose
-      memcpy( &mod->pose, pose, sizeof(mod->pose) );
+/*       // copy the new pose */
+/*       memcpy( &mod->pose, pose, sizeof(mod->pose) ); */
       
-      // render in the matrix
-      stg_model_map_with_children( mod, 1 );
+/*       // render in the matrix */
+/*       stg_model_map_with_children( mod, 1 ); */
       
-      // move the stg_rtk figure to match
-      if( mod->world->win )
-	gui_model_move( mod );      
-    }
+/*       // move the stg_rtk figure to match */
+/*       if( mod->world->win ) */
+/* 	gui_model_move( mod );       */
+/*     } */
   
   
-  stg_model_set_property_data( mod, "pose", pose, sizeof(stg_pose_t) );
+/*   stg_model_set_property_data( mod, "pose", pose, sizeof(stg_pose_t) ); */
 
-  return 0; // OK
-}
+/*   return 0; // OK */
+/* } */
 
 /** set the pose of model in global coordinates */
 int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
@@ -1161,14 +1261,16 @@ int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
   if( mod->parent == NULL )
     {
       //printf( "setting pose directly\n");
-      stg_model_set_pose( mod, gpose );
+      //stg_model_set_pose( mod, gpose );
+      stg_model_set_property_data( mod, "pose", gpose, sizeof(stg_pose_t));
     }  
   else
     {
       stg_pose_t lpose;
       memcpy( &lpose, gpose, sizeof(lpose) );
       stg_model_global_to_local( mod->parent, &lpose );
-      stg_model_set_pose( mod, &lpose );
+      //stg_model_set_pose( mod, &lpose );
+      stg_model_set_property_data( mod, "pose", &lpose, sizeof(lpose));
     }
 
   //printf( "setting global pose %.2f %.2f %.2f = local pose %.2f %.2f %.2f\n",
@@ -1561,14 +1663,30 @@ void stg_model_reload( stg_model_t* mod )
 }
 */
 
+// get a property of a known size. Fail assertion if the size isn't right.
+void* stg_model_get_property_data_fixed( stg_model_t* mod, 
+					 const char* name,
+					 size_t size )
+{
+  size_t actual_size;
+  void* p = stg_model_get_property_data( mod, name, &actual_size );
+  assert( size == actual_size );
+  return p;
+}
+
 void stg_model_load( stg_model_t* mod )
 {
-  stg_pose_t pose;
-  stg_model_get_pose( mod, &pose );
-  pose.x = wf_read_tuple_length(mod->id, "pose", 0, pose.x );
-  pose.y = wf_read_tuple_length(mod->id, "pose", 1, pose.y ); 
-  pose.a = wf_read_tuple_angle(mod->id, "pose", 2, pose.a );
-  stg_model_set_pose( mod, &pose );
+  stg_pose_t* pose = 
+    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t) );
+  
+  stg_pose_t new_pose;
+  //stg_model_get_pose( mod, &pose );
+  new_pose.x = wf_read_tuple_length(mod->id, "pose", 0, pose->x );
+  new_pose.y = wf_read_tuple_length(mod->id, "pose", 1, pose->y ); 
+  new_pose.a = wf_read_tuple_angle(mod->id, "pose", 2, pose->a );
+
+  stg_model_set_property_data( mod, "pose", &new_pose, sizeof(new_pose));
+  //stg_model_set_pose( mod, &pose );
   
   stg_geom_t geom;
   stg_model_get_geom( mod, &geom );
@@ -1748,19 +1866,19 @@ void stg_model_load( stg_model_t* mod )
 
 void stg_model_save( stg_model_t* model )
 {
-  stg_pose_t pose;
-  stg_model_get_pose(model, &pose);
+  stg_pose_t* pose = 
+    stg_model_get_property_data_fixed( model, "pose", sizeof(stg_pose_t));
   
   PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
 		model->token,
-		pose.x,
-		pose.y,
-		pose.a );
+		pose->x,
+		pose->y,
+		pose->a );
   
   // right now we only save poses
-  wf_write_tuple_length( model->id, "pose", 0, pose.x);
-  wf_write_tuple_length( model->id, "pose", 1, pose.y);
-  wf_write_tuple_angle( model->id, "pose", 2, pose.a);
+  wf_write_tuple_length( model->id, "pose", 0, pose->x);
+  wf_write_tuple_length( model->id, "pose", 1, pose->y);
+  wf_write_tuple_angle( model->id, "pose", 2, pose->a);
 }
 
 // find the top-level model above mod;

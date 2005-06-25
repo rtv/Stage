@@ -233,8 +233,8 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	      mod = stg_position_create( world,  parent_mod, section, namestr );
 	      break;
 
-	    case STG_MODEL_ENERGY:
-	      mod = stg_energy_create( world,  parent_mod, section, namestr );
+	      //case STG_MODEL_ENERGY:
+	      //mod = stg_energy_create( world,  parent_mod, section, namestr );
 	      break;
 
 	    default:

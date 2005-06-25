@@ -510,9 +510,12 @@ void gui_world_matrix_table( stg_world_t* world, gui_window_t* win )
 
 void gui_pose( stg_rtk_fig_t* fig, stg_model_t* mod )
 {
-  stg_pose_t pose;
-  stg_model_get_pose( mod, &pose );
-  stg_rtk_fig_arrow_ex( fig, 0,0, pose.x, pose.y, 0.05 );
+  stg_pose_t* pose = 
+    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+  
+  //stg_model_get_pose( mod, &pose );
+
+  stg_rtk_fig_arrow_ex( fig, 0,0, pose->x, pose->y, 0.05 );
 }
 
 
@@ -594,15 +597,16 @@ const char* gui_model_describe(  stg_model_t* mod )
 {
   static char txt[256];
   
-  stg_pose_t pose;
-  stg_model_get_pose( mod, &pose );
+  stg_pose_t* pose;
+  //stg_model_get_pose( mod, &pose );
+    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
 
   snprintf(txt, sizeof(txt), "%s \"%s\" (%d:%d) pose: [%.2f,%.2f,%.2f]",  
 	   stg_model_type_string(mod->type), 
 	   mod->token, 
 	   mod->world->id, 
 	   mod->id,  
-	   pose.x, pose.y, pose.a  );
+	   pose->x, pose->y, pose->a  );
   
   return txt;
 }
@@ -668,7 +672,8 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
 	
       // only update simple objects on drag
       if( mod->polygons->len < STG_POLY_THRESHOLD )
-	stg_model_set_pose( mod, &pose );
+	//stg_model_set_pose( mod, &pose );
+	stg_model_set_property_data( mod, "pose", &pose, sizeof(pose));
       
       // display the pose
       //gui_model_display_pose( mod, "Dragging:" );
@@ -677,7 +682,8 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
     case STK_EVENT_RELEASE:
       // move the entity to its final position
       stg_rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
-      stg_model_set_pose( mod, &pose );
+      //stg_model_set_pose( mod, &pose );
+      stg_model_set_property_data( mod, "pose", &pose, sizeof(pose));
       
       // and restore the velocity at which we grabbed it
       stg_model_set_velocity( mod, &capture_vel );
@@ -924,8 +930,11 @@ void gui_model_render_geom_global( stg_model_t* mod, stg_rtk_fig_t* fig )
 /// move a model's figure to the model's current location
 void gui_model_move( stg_model_t* mod )
 { 
+  stg_pose_t* pose = 
+    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+
   stg_rtk_fig_origin( gui_model_figs(mod)->top, 
-		  mod->pose.x, mod->pose.y, mod->pose.a );   
+		  pose->x, pose->y, pose->a );   
 }
 
 ///  render a model's geometry if geom viewing is enabled

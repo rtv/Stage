@@ -168,8 +168,17 @@ extern "C" {
 
   typedef void(*func_load_t)(struct _stg_model*);
   typedef void(*func_save_t)(struct _stg_model*);
-
   
+  typedef struct 
+  {
+    stg_model_t* mod;
+    char propname[STG_PROPNAME_MAX];
+    void* data;
+    size_t len;
+    void* user;
+  } stg_property_callback_args_t;
+    
+
   struct _stg_model
   {
     stg_id_t id; // used as hash table key
@@ -180,6 +189,11 @@ extern "C" {
     struct _stg_model *parent; // the model that owns this one, possibly NULL
 
     GPtrArray* children; // the models owned by this model
+
+    // a datalist can contain arbitrary named data items. Used by
+    // derived model types to store properties, and for user code to
+    // associate arbitrary items with a model.
+    GData* props;
 
     // the number of children of each type is counted so we can
     // automatically generate names for them
@@ -214,7 +228,7 @@ extern "C" {
     stg_ranger_return_t ranger_return;
     stg_gripper_return_t gripper_return;
 
-    stg_pose_t pose; // current pose in parent's CS
+    //stg_pose_t pose; // current pose in parent's CS
     stg_velocity_t velocity; // current velocity
     stg_bool_t stall; // true IFF we hit an obstacle
     stg_geom_t geom; // pose and size in local CS
@@ -236,11 +250,6 @@ extern "C" {
     func_render_t f_render_cfg;
     func_load_t f_load;
     func_save_t f_save;
-
-    // a datalist can contain arbitrary named data items. Used by
-    // derived model types to store properties, and for user code to
-    // associate arbitrary items with a model.
-    GData* props;
 
     /// if set, this callback is run when we do model_put_data() -
     /// it's used by the player plugin to notify Player that data is
@@ -272,6 +281,13 @@ extern "C" {
   void stg_model_render_geom( stg_model_t* mod );
   void stg_model_render_pose( stg_model_t* mod );
   void stg_model_render_polygons( stg_model_t* mod );
+  
+  stg_property_t* stg_property_create( const char* name, 
+				       void* data, 
+				       size_t len, 
+				       stg_property_storage_func_t func );
+  
+  void stg_property_destroy( stg_property_t* prop );
 
   void stg_model_set_property( stg_model_t* mod, const char* propname, 
 			       stg_property_t* prop );

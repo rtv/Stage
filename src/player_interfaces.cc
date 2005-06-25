@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.13 2005-06-24 08:13:43 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.14 2005-06-25 01:07:58 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -91,7 +91,8 @@ void SimulationConfig(  device_record_t* device,
 	  {
 	    // move it 
 	    // printf( "moving model \"%s\"", req->name );	    
-	    stg_model_set_pose( mod, &pose );  
+	    //stg_model_set_pose( mod, &pose );  
+	    stg_model_set_property_data( mod, "pose", &pose, sizeof(pose));
 	    device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
 	  }
 	else
@@ -116,9 +117,10 @@ void SimulationConfig(  device_record_t* device,
  	
 	if( mod )
 	  {
-	    stg_pose_t pose;
-	    stg_model_get_pose( mod, &pose );
-	    
+	    stg_pose_t* pose = (stg_pose_t*)
+	      //stg_model_get_pose( mod, &pose );
+	      stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+
             /*
 	    printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
 		    pose.x, pose.y, pose.a );
@@ -126,9 +128,9 @@ void SimulationConfig(  device_record_t* device,
 	    
 	    player_simulation_pose2d_req_t reply;
 	    memcpy( &reply, req, sizeof(reply));
-	    reply.x = htonl((int32_t)(pose.x*1000.0));
-	    reply.y = htonl((int32_t)(pose.y*1000.0));
-	    reply.a = htonl((int32_t)RTOD(pose.a));
+	    reply.x = htonl((int32_t)(pose->x*1000.0));
+	    reply.y = htonl((int32_t)(pose->y*1000.0));
+	    reply.a = htonl((int32_t)RTOD(pose->a));
 	    
             /*
 	    printf( "Stage: returning location (%d %d %d)\n",
@@ -270,9 +272,9 @@ void  MapConfigInfo( device_record_t* device,
   stg_model_get_geom( device->mod, &geom );
   
   // if we already have a map info for this model, destroy it
-  stg_map_info_t* minfo = NULL;
-  assert( stg_model_get_property_data( device->mod, "_map", 
-				       (void**)&minfo) == sizeof(minfo) );
+  stg_map_info_t* minfo = (stg_map_info_t*)
+    stg_model_get_property_data_fixed( device->mod, "_map", 
+				       sizeof(stg_map_info_t) );
   
   if( minfo )
     {
@@ -402,8 +404,9 @@ void MapConfigData( device_record_t* device,
       return;
     }
   
-  stg_map_info_t* minfo = NULL;
-  assert( stg_model_get_property_data( device->mod, "_map", (void**)&minfo ) == sizeof(minfo));
+  stg_map_info_t* minfo = (stg_map_info_t*)
+    stg_model_get_property_data_fixed( device->mod, "_map", sizeof(minfo));
+
   assert( minfo );
 
   int8_t* map = NULL;  

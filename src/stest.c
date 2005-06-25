@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.7 2005-05-12 00:43:12 rtv Exp $
+// CVS: $Id: stest.c,v 1.8 2005-06-25 01:07:59 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -75,14 +75,15 @@ int main( int argc, char* argv[] )
       stg_velocity_t vel;
       stg_model_get_velocity( position, &vel );
       
-      stg_velocity_t pose;
-      stg_model_get_pose( position, &pose );
-      
+      stg_velocity_t* pose = 
+      //stg_model_get_pose( position, &pose );
+      stg_model_get_property_data_fixed( position, "pose", sizeof(pose));
+
       //printf( "position velocity: (%.2f,%.2f,%.2f)\n",
       //      vel.x, vel.y, vel.a );          
       
       //printf( "position pose: (%.2f,%.2f,%.2f)\n",
-      //      pose.x, pose.y, pose.a );          
+      //      pose->x, pose->y, pose->a );          
 
       // get some laser data
       size_t laser_sample_count = 
