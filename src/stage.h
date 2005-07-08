@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.142 2005-06-25 01:07:58 rtv Exp $
+ * CVS: $Id: stage.h,v 1.143 2005-07-08 22:55:13 rtv Exp $
  */
 
 
@@ -371,7 +371,7 @@ extern "C" {
   
   /** creates a unit square polygon
    */
-  stg_polygon_t* unit_polygon_create( void );
+  stg_polygon_t* stg_unit_polygon_create( void );
   
   /** load [filename], an image format understood by gdk-pixbuf, and
       return a set of rectangles that approximate the image. Caller
@@ -564,22 +564,22 @@ extern "C" {
   int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
   
   /** set a model's size */
-  int stg_model_set_size( stg_model_t* mod, stg_size_t* sz );
+  //int stg_model_set_size( stg_model_t* mod, stg_size_t* sz );
 
   /** set a model's  */
-  int stg_model_set_color( stg_model_t* mod, stg_color_t* col );
+  //int stg_model_set_color( stg_model_t* mod, stg_color_t* col );
 
   /** set a model's geometry */
-  int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom );
+  //int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom );
 
   /** set a model's mass */
-  int stg_model_set_mass( stg_model_t* mod, stg_kg_t* mass );
+  //int stg_model_set_mass( stg_model_t* mod, stg_kg_t* mass );
 
   /** set a model's bounding box */
-  int stg_model_set_boundary( stg_model_t* mod, stg_bool_t* b );
+  //int stg_model_set_boundary( stg_model_t* mod, stg_bool_t* b );
 
   /** set a model's GUI features */
-  int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf );
+  //int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf );
 
   // TODO
   /* set a model's energy configuration */
@@ -598,40 +598,11 @@ extern "C" {
   /** set a model's obstacle return value */
   int stg_model_set_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* ret );
 
-  /** set a model's laser return value */
-  int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val );
-
-  /** set a model's gripper return value */
-  int stg_model_set_gripperreturn( stg_model_t* mod, stg_gripper_return_t* val );
-
-  /** set a model's fiducial return value */
-  int stg_model_set_fiducialreturn( stg_model_t* mod, stg_fiducial_return_t* val );
-
-  /** set a model's friction*/
-  // int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp );
-
   /** Change a model's parent - experimental*/
   int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent);
-
-  // GET properties - use these to get props - don't get them directly
-
-  // todo - make all of these copy data into a buffer!
-  void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
+  
   void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest );
-  void stg_model_get_color( stg_model_t* mod, stg_color_t* dest );
-  void stg_model_get_pose( stg_model_t* mod, stg_pose_t* dest );
-  void stg_model_get_mass( stg_model_t* mod, stg_kg_t* dest );
-  void stg_model_get_boundary( stg_model_t* mod, stg_bool_t* b );
-  void stg_model_get_guifeatures( stg_model_t* mod, stg_guifeatures_t* dest );
-  void stg_model_get_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* dest  );
-  void stg_model_get_laserreturn( stg_model_t* mod, stg_laser_return_t* dest );
-  void stg_model_get_gripperreturn( stg_model_t* mod, stg_gripper_return_t* dest );
-  void stg_model_get_fiducialreturn( stg_model_t* mod,stg_fiducial_return_t* dest );
-
-  //void stg_model_get_friction( stg_model_t* mod,stg_friction_t* dest );
-
-  //stg_energy_data_t*     stg_model_get_energy_data( stg_model_t* mod );
-  //stg_energy_config_t*   stg_model_get_energy_config( stg_model_t* mod );
+  void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
 
   // wrappers for polymorphic functions
   int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len );
@@ -644,12 +615,10 @@ extern "C" {
   /// associate an arbitrary data item with this model, referenced by the string 'name'.
 
   struct stg_property;
-
-  typedef int (*stg_property_callback_t)(stg_model_t* mod, char* prop, 
-  				 void* data, size_t len, void* userdata );
   
-  typedef void (*stg_property_storage_func_t)( stg_model_t* mod, 
-					      struct stg_property* prop,
+  typedef int (*stg_property_callback_t)(struct stg_property* prop ); 
+  
+  typedef void (*stg_property_storage_func_t)( struct stg_property* prop,
 					      void* data, size_t len );
   
 #define STG_PROPNAME_MAX 128
@@ -660,31 +629,35 @@ extern "C" {
     size_t len;
     stg_property_storage_func_t storage_func;
     GList* callbacks; // functions called when this property is set
+    stg_model_t* mod; // the model to which this property belongs
     void* user; // pointer passed into every callback function
   } stg_property_t;
   
-  int stg_model_add_property( stg_model_t* mod, 
-			      const char* propname,
-			      void* init_data, 
-			      size_t init_data_len,
-			      stg_property_storage_func_t func );
   
-  int stg_model_set_property_data( stg_model_t* mod, 
-				    const char* prop, 
-				    void* data, 
-				    size_t len );
-
+  stg_property_t* stg_model_set_property( stg_model_t* mod, 
+					  const char* prop, 
+					  void* data, 
+					  size_t len );
+  
+  stg_property_t* stg_model_set_property_ex( stg_model_t* mod, 
+					     const char* prop, 
+					     void* data, 
+					     size_t len,
+					     stg_property_storage_func_t func );
+  
   /** gets the named property data. if len is non-NULL, it is set with
       the size of the data in bytes */
-  void* stg_model_get_property_data( stg_model_t* mod, 
-				     const char* prop,
-				     size_t* len );
+  void* stg_model_get_property( stg_model_t* mod, 
+				const char* prop,
+				size_t* len );
   
   /** gets a property of a known size. Fail assertion if the size isn't right.
    */
-  void* stg_model_get_property_data_fixed( stg_model_t* mod, 
-					   const char* name,
-					   size_t size );
+  void* stg_model_get_property_fixed( stg_model_t* mod, 
+				      const char* name,
+				      size_t size );
+
+  void stg_model_property_refresh( stg_model_t* mod, const char* propname );
 
   // get a copy of the property data - caller must free it
   //int stg_model_copy_property_data( stg_model_t* mod, const char* prop,

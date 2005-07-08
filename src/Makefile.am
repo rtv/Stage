@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.100 2005-07-08 18:30:30 gerkey Exp $
+# $Id: Makefile.am,v 1.101 2005-07-08 22:54:57 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
@@ -31,7 +31,6 @@ libstage_la_SOURCES = \
 	model.c \
 	model_blobfinder.c \
 	model_fiducial.c \
-	model_gripper.c \
 	model_laser.c \
 	model_position.c \
 	model_ranger.c \
@@ -54,11 +53,12 @@ libstage_la_SOURCES = \
 
 
 #	model_energy.c
+#	model_gripper.c
 
 libstage_la_LDFLAGS = -version-info 1:0:0 
 libstage_la_LIBADD = @GTK_LIBS@
 
-# build a stand-alone binary using libstage for testing purposes
+# build a stand-alone test program using libstage
 stest_DEPENDENCIES = libstage.la
 stest_SOURCES = stest.cc
 stest_LDADD = libstage.la

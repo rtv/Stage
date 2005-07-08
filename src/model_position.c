@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.34 $
+//  $Revision: 1.35 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -58,8 +58,8 @@ const double STG_POSITION_WATTS = 10.0; // base cost of position device
 stg_model_position_t* stg_model_get_position( stg_model_t* mod )
 {
   stg_model_position_t* pos = 
-    stg_model_get_property_data_fixed( mod, "position", 
-				       sizeof(stg_model_position_t));
+    stg_model_get_property_fixed( mod, "position", 
+				  sizeof(stg_model_position_t));
   assert( pos );
   return pos;
 }
@@ -116,7 +116,7 @@ stg_model_t* stg_position_create( stg_world_t* world,
     stg_model_create( world, parent, id, STG_MODEL_POSITION, token );
   
   // no power consumed until we're subscribed
-  mod->watts = 0.0; 
+  //mod->watts = 0.0; 
 
   // override the default methods
   mod->f_startup = position_startup;
@@ -129,6 +129,9 @@ stg_model_t* stg_position_create( stg_world_t* world,
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(vel));
   stg_model_set_velocity( mod, &vel );
+
+  stg_blob_return_t blb = 1;
+  stg_model_set_property( mod, "blob_return", &blb, sizeof(blb));
 
   // init the command structure
   stg_position_cmd_t cmd;
@@ -153,7 +156,7 @@ stg_model_t* stg_position_create( stg_world_t* world,
   // type-sepecific extension data 
   stg_model_position_t pos;
   memset( &pos, 0, sizeof(pos));
-  stg_model_add_property( mod, "position", &pos, sizeof(pos), NULL );
+  stg_model_set_property( mod, "position", &pos, sizeof(pos) );
   
   return mod;
 }
@@ -317,16 +320,16 @@ int position_update( stg_model_t* mod )
       stg_model_set_velocity( mod, &vel );
 
       // simple model of power consumption
-      mod->watts = STG_POSITION_WATTS + 
-	fabs(vel.x) * STG_POSITION_WATTS_KGMS * mod->mass + 
-	fabs(vel.y) * STG_POSITION_WATTS_KGMS * mod->mass + 
-	fabs(vel.a) * STG_POSITION_WATTS_KGMS * mod->mass; 
+      // mod->watts = STG_POSITION_WATTS + 
+      //fabs(vel.x) * STG_POSITION_WATTS_KGMS * mod->mass + 
+      //fabs(vel.y) * STG_POSITION_WATTS_KGMS * mod->mass + 
+      //fabs(vel.a) * STG_POSITION_WATTS_KGMS * mod->mass; 
 
-      PRINT_DEBUG4( "model %s velocity (%.2f %.2f %.2f)",
-		    mod->token, 
-		    mod->velocity.x, 
-		    mod->velocity.y,
-		    mod->velocity.a );
+      //PRINT_DEBUG4( "model %s velocity (%.2f %.2f %.2f)",
+      //	    mod->token, 
+      //	    mod->velocity.x, 
+      //	    mod->velocity.y,
+      //	    mod->velocity.a );
       
       //double interval = (double)mod->world->sim_interval / 1000.0;
       
@@ -335,9 +338,11 @@ int position_update( stg_model_t* mod )
       // we export the ODOMETRY as pose data, not the real pose
       stg_position_data_t data;
       memcpy( &data.pose, &pos->odom, sizeof(stg_pose_t));  
-      memcpy( &data.velocity, &mod->velocity, sizeof(stg_velocity_t));
+
+      stg_model_get_velocity( mod, &data.velocity );
+      //memcpy( &data.velocity, &mod->velocity, sizeof(stg_velocity_t));
       
-      data.stall = mod->stall;
+      data.stall = 0;//mod->stall;
       
       //PRINT_WARN3( "data pos %.2f %.2f %.2f",
       //       data.pose.x, data.pose.y, data.pose.a );
@@ -356,7 +361,7 @@ int position_update( stg_model_t* mod )
   if( pos )
     {
       stg_pose_t* pose = 
-	stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+	stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
 
       // calculate new odometric pose
       double dx = pose->x - pos->odom_origin.x;
@@ -377,7 +382,7 @@ int position_startup( stg_model_t* mod )
 {
   PRINT_DEBUG( "position startup" );
 
-  mod->watts = STG_POSITION_WATTS;
+  //mod->watts = STG_POSITION_WATTS;
 
   // set the starting pose as my initial odom position
   //stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
@@ -395,7 +400,7 @@ int position_shutdown( stg_model_t* mod )
   // safety feature!
   //position_init(mod);
 
-  mod->watts = 0.0;
+  //mod->watts = 0.0;
   
   stg_position_cmd_t cmd;
   memset( &cmd, 0, sizeof(cmd) ); 
@@ -406,8 +411,8 @@ int position_shutdown( stg_model_t* mod )
   memset( &vel, 0, sizeof(vel));
   stg_model_set_velocity( mod, &vel );
 
-  if( mod->gui.data  )
-    stg_rtk_fig_clear(mod->gui.data);
+  //if( mod->gui.data  )
+  //stg_rtk_fig_clear(mod->gui.data);
   
   return 0; // ok
 }
@@ -436,7 +441,7 @@ void stg_model_position_odom_reset( stg_model_t* mod )
   
   // and set the odom origin is the current pose
   stg_model_position_set_odom_origin( mod, 
-				      stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t)) );
+				      stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t)) );
 }
 
 
@@ -457,7 +462,7 @@ void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
   // calculate what the origin of this coord system must be 
   
   stg_pose_t* pose = 
-    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+    stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
   
   double da = odom->a - pose->a;
   double cosa = cos(da);
@@ -479,29 +484,35 @@ void position_render_data(  stg_model_t* mod )
   const double line = 0.3;
   const double head = 0.1;
 
-  if( mod->gui.data  )
-    stg_rtk_fig_clear(mod->gui.data);
-  else 
-    {
-      mod->gui.data = stg_rtk_fig_create( mod->world->win->canvas,
-				      NULL, STG_LAYER_POSITIONDATA );
-      
-      stg_rtk_fig_color_rgb32( mod->gui.data, 0x9999FF ); // pale blue
-    }
+  gui_model_t* gui = 
+    stg_model_get_property_fixed( mod, "gui", sizeof(gui_model_t));
   
-  if( mod->subs )
+  if( gui )
     {
-      stg_model_position_t* pos = stg_model_get_position( mod );
+      if( gui->data  )
+	stg_rtk_fig_clear(gui->data);
+      else 
+	{
+	  gui->data = stg_rtk_fig_create( mod->world->win->canvas,
+					  NULL, STG_LAYER_POSITIONDATA );
+	  
+	  stg_rtk_fig_color_rgb32( gui->data, 0x9999FF ); // pale blue
+	}
       
-      stg_rtk_fig_origin( mod->gui.data,  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
-            
-      stg_rtk_fig_rectangle(  mod->gui.data, 0,0,0, 0.06, 0.06, 0 );     
-      stg_rtk_fig_line( mod->gui.data, 0,0, pos->odom.x, 0);
-      stg_rtk_fig_line( mod->gui.data, pos->odom.x, 0, pos->odom.x, pos->odom.y );
-      
-      char buf[256];
-      snprintf( buf, 255, "x: %.3f\ny: %.3f\na: %.1f", pos->odom.x, pos->odom.y, RTOD(pos->odom.a)  );
-      stg_rtk_fig_text( mod->gui.data, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );    
-      stg_rtk_fig_arrow( mod->gui.data, pos->odom.x, pos->odom.y, pos->odom.a, line, head );
+      if( mod->subs )
+	{
+	  stg_model_position_t* pos = stg_model_get_position( mod );
+	  
+	  stg_rtk_fig_origin( gui->data,  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
+	  
+	  stg_rtk_fig_rectangle(  gui->data, 0,0,0, 0.06, 0.06, 0 );     
+	  stg_rtk_fig_line( gui->data, 0,0, pos->odom.x, 0);
+	  stg_rtk_fig_line( gui->data, pos->odom.x, 0, pos->odom.x, pos->odom.y );
+	  
+	  char buf[256];
+	  snprintf( buf, 255, "x: %.3f\ny: %.3f\na: %.1f", pos->odom.x, pos->odom.y, RTOD(pos->odom.a)  );
+	  stg_rtk_fig_text( gui->data, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );    
+	  stg_rtk_fig_arrow( gui->data, pos->odom.x, pos->odom.y, pos->odom.a, line, head );
+	}
     }
 }

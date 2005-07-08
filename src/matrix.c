@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.17 2005-05-08 05:07:20 rtv Exp $
+ * $Id: matrix.c,v 1.18 2005-07-08 22:55:02 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -183,8 +183,8 @@ void stg_matrix_lines( stg_matrix_t* matrix,
       
       while( (GTE(fabs(x2-x1),res) || GTE(fabs(y2-y1),res)) && cell )
 	{
-	  double keepx = x1;
-	  double keepy = y1;
+	  //double keepx = x1;
+	  //double keepy = y1;
 	  
 	  /*printf( "step %d angle %.2f start (%.2f,%.2f) now (%.2f,%.2f) end (%.2f,%.2f)\n",
 		  step++,

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -82,13 +82,13 @@ stg_model_t* stg_energy_create( stg_world_t* world,
   mod->watts = 10.0;
 
   // sensible energy defaults
-  stg_geom_t geom;
-  geom.pose.x = STG_ENERGY_POSEX_DEFAULT;
-  geom.pose.y = STG_ENERGY_POSEY_DEFAULT;
-  geom.pose.a = STG_ENERGY_POSEA_DEFAULT;
-  geom.size.x = STG_ENERGY_SIZEX_DEFAULT;
-  geom.size.y = STG_ENERGY_SIZEY_DEFAULT;
-  stg_model_set_geom( mod, &geom );
+  //stg_geom_t geom;
+  //geom.pose.x = STG_ENERGY_POSEX_DEFAULT;
+  //geom.pose.y = STG_ENERGY_POSEY_DEFAULT;
+  //geom.pose.a = STG_ENERGY_POSEA_DEFAULT;
+  //geom.size.x = STG_ENERGY_SIZEX_DEFAULT;
+  //geom.size.y = STG_ENERGY_SIZEY_DEFAULT;
+  //stg_model_set_geom( mod, &geom );
 
   // set up config structure
   stg_energy_config_t econf;
@@ -112,8 +112,8 @@ stg_model_t* stg_energy_create( stg_world_t* world,
   stg_model_set_data( mod, (void*)&data, sizeof(data));
 
   // set default color
-  stg_color_t col = stg_lookup_color( "orange" ); 
-  stg_model_set_color( mod, &col );
+  //stg_color_t col = stg_lookup_color( "orange" ); 
+  //stg_model_set_color( mod, &col );
 
   return mod;
 }

@@ -70,7 +70,6 @@ stg_model_t* gslist_first_matching( GSList* list,
 				    stg_itl_test_func_t func, 
 				    stg_model_t* finder )
 {
-  int l=0;
   for( ; list ; list=list->next )
     {
       if( (*func)( finder, (stg_model_t*)(list->data) ) )
@@ -154,11 +153,11 @@ stg_model_t* itl_first_matching( itl_t* itl,
 {
   itl->index = 0;
   itl->models = NULL;  
-  stg_model_t* found = NULL;
+  //stg_model_t* found = NULL;
 
   stg_cell_t* cell = itl->matrix->root;
 
-  double xstart, ystart;
+  //double xstart, ystart;
 
   while( LT(itl->range,itl->max_range) )
     {

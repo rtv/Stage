@@ -213,42 +213,122 @@ stg_polygon_t* unit_polygon_create( void )
   return poly;
 }
 
-void test_storage( stg_model_t* mod, stg_property_t* prop, 
-		   void* data, size_t len )
+void storage_ordinary( stg_property_t* prop, 
+		       void* data, size_t len )
 {
-  puts( "override storage" );
   prop->data = realloc( prop->data, len );
   prop->len = len;
   memcpy( prop->data, data, len );
 }
 
+
+
+void storage_guifeatures( stg_property_t* prop, 
+			  void* data, size_t len )
+{
+  stg_guifeatures_t* gf  = (stg_guifeatures_t*)data;
+  
+  storage_ordinary( prop, data, len );
+  
+  // override the movemask flags - only top-level objects are moveable
+  if( prop->mod->parent )
+    gf->movemask = 0;
+  
+  // redraw the fancy features
+  if( prop->mod->world->win )
+    gui_model_features( prop->mod );
+}
+
+
+void storage_polygons( stg_property_t* prop, 
+		       void* data, size_t len ) 
+{
+  assert(prop);
+  if( len > 0 ) assert(data);
+  
+  stg_polygon_t* polys = (stg_polygon_t*)data;
+  size_t count = len / sizeof(stg_polygon_t);
+  
+  stg_geom_t* geom = 
+    stg_model_get_property_fixed( prop->mod, "geom", sizeof(stg_geom_t));
+    
+  //printf( "model %d(%s) received %d polygons\n", 
+  //  prop->mod->id, prop->mod->token, (int)count );
+  
+  // normalize the polygons to fit exactly in the model's body
+  // rectangle (if specified)
+  if( geom )
+    stg_normalize_polygons( polys, count, geom->size.x, geom->size.y );
+  
+  stg_model_map( prop->mod, 0 ); // unmap the model from the matrix
+  
+  storage_ordinary( prop, polys, len );
+  
+  stg_model_map( prop->mod, 1 ); // map the model into the matrix with the new polys
+
+  if( prop->mod->world->win )
+    stg_model_render_polygons( prop->mod );
+
+} 
+
+void storage_geom( stg_property_t* prop, 
+		   void* data, size_t len )
+{ 
+  assert( len == sizeof(stg_geom_t));
+
+  // unrender from the matrix
+  stg_model_map( prop->mod, 0 );
+  
+  storage_ordinary( prop, data, len );
+  
+  // we probably need to scale and re-render our polygons
+  stg_model_property_refresh( prop->mod, "polygons" );
+  
+  // re-render int the matrix
+  stg_model_map( prop->mod, 1 );
+  
+  // we may need to re-render our nose, border, etc.
+  if( prop->mod->world->win )
+    gui_model_features(prop->mod);  
+}
+
+
+
+void storage_color( stg_property_t* prop,
+		    void* data, size_t len )
+{
+  assert( len == sizeof(stg_color_t));
+
+  storage_ordinary( prop, data, len );
+  
+  // redraw my image
+  if( prop->mod->world->win )
+    stg_model_render_polygons( prop->mod );
+}
+
+
 /** set the pose of a model in its parent's CS */
-void pose_storage( stg_model_t* mod, stg_property_t* prop,
+void storage_pose( stg_property_t* prop,
 		   void* data, size_t len )
 {
-  printf( "pose storage for model %s\n",
-	  mod->token );
-
   assert( len == sizeof(stg_pose_t) );  
+  assert( data );
   
   //if( memcmp( prop->data, data, sizeof(stg_pose_t) )) 
-    { 
-      // unrender from the matrix
-      stg_model_map_with_children( mod, 0 );
-      
-      // store the new pose
-      if( prop->len != len )
-	prop->data = realloc( prop->data, len );
-      
-      memcpy( prop->data, data, len );
-      
-      // render in the matrix
-      stg_model_map_with_children( mod, 1 );
-      
-      // move the stg_rtk figure to match
-      if( mod->world->win )
-	gui_model_move( mod );
-    }
+  { 
+
+    // unrender from the matrix
+    stg_model_map_with_children( prop->mod, 0 );
+    
+    storage_ordinary( prop, data, len );
+    
+    // render in the matrix
+    stg_model_map_with_children( prop->mod, 1 );
+    
+    // move the stg_rtk figure to match
+    if( prop->mod->world->win )
+      gui_model_move( prop->mod );
+  }
 }
 
 
@@ -286,10 +366,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // add this model to its parent's list of children (if any)
   if( parent) g_ptr_array_add( parent->children, mod );       
   
-  // having installed the paremt, it's safe to creat the GUI components
-  if( mod->world->win )
-    gui_model_create( mod );
-
   // create this model's empty list of children
   mod->children = g_ptr_array_new();
 
@@ -302,97 +378,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->cfg = NULL;
   mod->cfg_len = 0;
 
-  mod->laser_return = LaserVisible;
-  mod->obstacle_return = TRUE;
-  mod->fiducial_return = FiducialNone;
-  mod->ranger_return = TRUE;
-  
-  // sensible defaults
-  mod->stall = FALSE;
-
-  //mod->pose.x = STG_DEFAULT_POSEX;
-  //mod->pose.y = STG_DEFAULT_POSEY;
-  //mod->pose.a = STG_DEFAULT_POSEA;
- 
-
-  //  stg_model_add_property( mod, "pose", &mod->pose, sizeof(stg_pose_t), test_storage );
-  
-  stg_pose_t pose;
-  memset( &pose, 0, sizeof(pose));
-  stg_model_add_property( mod, "pose", &pose, sizeof(pose), pose_storage );
-
-  //stg_bool_t b = 1;
-  //stg_model_add_property( mod, "ranger_return", &b, sizeof(b), NULL );
-  //stg_model_add_property( mod, "laser_return", &b, sizeof(b), NULL );
-  //stg_model_add_property( mod, "gripper_return", &b, sizeof(b), NULL );
-
-
-/*     // basic model properties */
-/*     stg_blob_return_t blob_return;  */
-/*     stg_laser_return_t laser_return; // value returned to a laser sensor */
-/*     stg_obstacle_return_t obstacle_return; // if non-zero, we are included in obstacle detection */
-/*     stg_fiducial_return_t fiducial_return; // value returned to a fiducial finder */
-/*     stg_ranger_return_t ranger_return; */
-/*     stg_gripper_return_t gripper_return; */
-
-/*     stg_pose_t pose; // current pose in parent's CS */
-/*     stg_velocity_t velocity; // current velocity */
-/*     stg_bool_t stall; // true IFF we hit an obstacle */
-/*     stg_geom_t geom; // pose and size in local CS */
-/*     stg_color_t color; // RGB color  */
-/*     stg_kg_t mass; // mass in kg */
-/*     stg_bool_t boundary; // if non-zero, the object has a bounding box */
-/*     stg_guifeatures_t guifeatures; // controls how we are rendered in the GUI */
-/*     stg_watts_t watts;  // device is consuming this much energy */
-
-
-
-  mod->geom.pose.x = STG_DEFAULT_GEOM_POSEX;
-  mod->geom.pose.y = STG_DEFAULT_GEOM_POSEY;
-  mod->geom.pose.a = STG_DEFAULT_GEOM_POSEA;
-  mod->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
-  mod->geom.size.y = STG_DEFAULT_GEOM_SIZEY;
-
-  mod->boundary = FALSE;
-  
-  stg_guifeatures_t gf;
-  gf.show_data = 1;
-  gf.show_cmd = 0;
-  gf.show_cfg = 0;
-  gf.nose =  STG_DEFAULT_GUI_NOSE;
-  gf.grid = STG_DEFAULT_GUI_GRID;
-  gf.outline = 1;
-  gf.movemask = STG_DEFAULT_GUI_MOVEMASK;  
-  stg_model_set_guifeatures( mod, &gf );
-
-  mod->blob_return = TRUE;
-
-  // zero velocity
-  memset( &mod->velocity, 0, sizeof(mod->velocity) );
-
-  mod->color = stg_lookup_color( "red" );
-  
-  mod->polygons = g_array_new( FALSE, FALSE, sizeof(stg_polygon_t) );
-  
-  stg_point_t pts[4];
-  pts[0].x = 0;
-  pts[0].y = 0;
-  pts[1].x = 1;
-  pts[1].y = 0;
-  pts[2].x = 1;
-  pts[2].y = 1;
-  pts[3].x = 0;
-  pts[3].y = 1;
-  
-  stg_polygon_t* poly = stg_polygon_create();
-  stg_polygon_set_points( poly, pts, 4 );
-  stg_model_set_polygons( mod, poly, 1 );
-  free(poly);
-  
-  // init the arbitrary datalist structure
-  //g_datalist_init( &mod->props);
-  
-
   // install the default functions
   mod->f_startup = NULL;
   mod->f_shutdown = NULL;
@@ -401,17 +386,63 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->f_render_cfg = NULL;
   mod->f_update = _model_update;
 
-  // possible extensions?
-  //mod->f_set_data = _model_set_data;
-  //mod->f_get_data =  _model_get_data;
-  //mod->f_set_command = _model_set_cmd;
-  //mod->f_get_command = _model_get_cmd;
-  //mod->f_set_config = _model_set_cfg;
-  //mod->f_get_config = _model_get_cfg;
-
-  // TODO
-
-  // mod->friction = 0.0;
+  stg_geom_t geom;
+  memset( &geom, 0, sizeof(geom));
+  //geom.size.x = 1.0;
+  //geom.size.y = 1.0;
+  stg_model_set_property_ex( mod, "geom", &geom, sizeof(geom), storage_geom );
+  
+  stg_pose_t pose;
+  memset( &pose, 0, sizeof(pose));
+  stg_model_set_property_ex( mod, "pose", &pose, sizeof(pose), storage_pose );
+  
+  //stg_velocity_t vel;
+  //memset( &vel, 0, sizeof(vel));
+  //stg_model_add_property( mod, "velocity", &vel, sizeof(vel), NULL );
+  
+  //stg_kg_t mass = 0;
+  //stg_model_add_property( mod, "mass", &mass, sizeof(mass), NULL );
+  
+  //stg_fiducial_return_t fid = FiducialNone;
+  //stg_model_add_property( mod, "fiducial_return", &fid, sizeof(fid), NULL );
+  
+  stg_obstacle_return_t obs = 1;
+  stg_model_set_property( mod, "obstacle_return", &obs, sizeof(obs));
+  
+  stg_ranger_return_t rng = 1;
+  stg_model_set_property( mod, "ranger_return", &rng, sizeof(rng));
+  
+  stg_blob_return_t blb = 0;
+  stg_model_set_property( mod, "blob_return", &blb, sizeof(blb));
+  
+  stg_laser_return_t lsr = LaserVisible;
+  stg_model_set_property( mod, "laser_return", &lsr, sizeof(lsr));
+  
+  stg_gripper_return_t grp = 0;
+  stg_model_set_property( mod, "gripper_return", &grp, sizeof(grp));
+  
+  stg_bool_t bdy = 0;
+  stg_model_set_property( mod, "boundary", &bdy, sizeof(bdy));
+  
+  // body color
+  stg_color_t col = 0xFF0000; // red;  
+  stg_model_set_property_ex( mod, "color", &col, sizeof(col), storage_color );
+  
+  //stg_polygon_t* square = stg_unit_polygon_create();
+  //stg_model_set_property_ex( mod, "polygons", square, sizeof(stg_polygon_t), storage_polygons );
+  stg_model_set_property_ex( mod, "polygons", NULL, 0, storage_polygons );
+      
+  // do gui features last so we know what we're supposed to look like.
+  stg_guifeatures_t gf;
+  gf.nose = 0;
+  gf.grid = 0;
+  gf.movemask = mod->parent ? 0 : STG_MOVE_TRANS | STG_MOVE_ROT ;
+  gf.outline = 1;
+  stg_model_set_property_ex( mod, "gui_features", &gf, sizeof(gf), storage_guifeatures );
+  
+  // now it's safe to create the GUI components
+  if( mod->world->win )
+    gui_model_create( mod );
   
   PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
 		mod->world->id, mod->id, 
@@ -427,7 +458,7 @@ void stg_property_print_cb( GQuark key, gpointer data, gpointer user )
 	  user ? (char*)user : "", 
 	  g_quark_to_string(key), 	  
 	  prop->name,
-	  prop->len,
+	  (int)prop->len,
 	  prop->storage_func );
 }
 
@@ -440,36 +471,6 @@ void stg_model_print_properties( stg_model_t* mod )
   puts( "   <end>" );  
 }
 
-stg_property_t* stg_model_get_property( stg_model_t* mod, const char* propname )
-{
-  //printf( "looking up model %p \"%s\" datalist %p property \"%s\" quark %d\n",
-  //  mod, mod->token, mod->props, propname, g_quark_from_string(propname) );
-
-  //stg_model_print_properties( mod );
-
-  gpointer thing = g_datalist_get_data( &mod->props, propname );
-  
-  if( ! thing )
-    {
-      PRINT_WARN2( "Failed to get model \"%s\" property \"%s\"\n",
-		   mod->token, propname );
-  
-      //stg_model_print_properties( mod );
-    }
-
-  return (stg_property_t*)thing;					 
-}
-
-
-void stg_model_set_property( stg_model_t* mod, const char* propname, 
-			     stg_property_t* prop )
-{
-  printf( "setting model %p %s datalist %p property %s\n",
-	  mod, mod->token, mod->props, propname );
-
-  g_datalist_set_data( &mod->props, propname, (void*)prop );
-  //stg_model_print_properties(mod);  
-}
 
 /// free the memory allocated for a model
 void stg_model_destroy( stg_model_t* mod )
@@ -486,9 +487,8 @@ void stg_model_destroy( stg_model_t* mod )
   if( mod->cfg ) free( mod->cfg );
   if( mod->token ) free( mod->token );
 
-  if( mod->polygons->data ) 
-    stg_polygons_destroy( (stg_polygon_t*)mod->polygons->data, mod->polygons->len ); 
-  
+  // TODO - free all property data
+
   free( mod );
 }
 
@@ -557,10 +557,18 @@ void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
   double cosa = cos( gpose.a );
   double sina = sin( gpose.a );
   
-  gvel->x = mod->velocity.x * cosa - mod->velocity.y * sina;
-  gvel->y = mod->velocity.x * sina + mod->velocity.y * cosa;
-  gvel->a = mod->velocity.a;
-
+  stg_velocity_t* lvel = 
+    stg_model_get_property_fixed( mod, "velocity", sizeof(stg_velocity_t));
+  
+  if( lvel )
+    {
+      gvel->x = lvel->x * cosa - lvel->y * sina;
+      gvel->y = lvel->x * sina + lvel->y * cosa;
+      gvel->a = lvel->a;
+    }
+  else // no velocity property - we're not moving anywhere
+    memset( gvel, 0, sizeof(stg_velocity_t));
+      
   //printf( "local velocity %.2f %.2f %.2f\nglobal velocity %.2f %.2f %.2f\n",
   //  mod->velocity.x, mod->velocity.y, mod->velocity.a,
   //  gvel->x, gvel->y, gvel->a );
@@ -587,7 +595,7 @@ void  stg_model_get_global_pose( stg_model_t* mod, stg_pose_t* gpose )
   stg_pose_t parent_pose;
   
   stg_pose_t* pose = 
-    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+    stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
   
   // find my parent's pose
   if( mod->parent )
@@ -638,30 +646,38 @@ void stg_model_map( stg_model_t* mod, gboolean render )
   size_t count=0;
   stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
   
-  if( render )
-    {      
-      // get model's global pose
-      stg_pose_t org;
-      memcpy( &org, &mod->geom.pose, sizeof(org));
-      stg_model_local_to_global( mod, &org );
-      
-      if( count && polys )    
-	stg_matrix_polygons( mod->world->matrix, 
-			     org.x, org.y, org.a,
-			     polys, count, 
-			     mod );  
+  stg_geom_t geom;
+  stg_model_get_geom( mod, &geom );
+  
+  if( polys )
+    {
+      if( render && count )
+	{      
+	  // get model's global pose
+	  stg_pose_t org;
+	  memcpy( &org, &geom.pose, sizeof(org));
+	  stg_model_local_to_global( mod, &org );
+	  
+	  if( count && polys )    
+	    stg_matrix_polygons( mod->world->matrix, 
+				 org.x, org.y, org.a,
+				 polys, count, 
+				 mod );  
+	  else
+	    PRINT_ERR1( "expecting %d polygons but have no data", (int)count );
+	  
+	  stg_bool_t* boundary = 
+	    stg_model_get_property_fixed( mod, "boundary", sizeof(stg_bool_t));
+	  if( *boundary )    
+	    stg_matrix_rectangle( mod->world->matrix,
+				  org.x, org.y, org.a,
+				  geom.size.x,
+				  geom.size.y,
+				  mod ); 
+	}
       else
-	PRINT_ERR1( "expecting %d polygons but have no data", (int)count );
-      
-      if( mod->boundary )    
-	stg_matrix_rectangle( mod->world->matrix,
-			      org.x, org.y, org.a,
-			      mod->geom.size.x,
-			      mod->geom.size.y,
-			      mod ); 
+	stg_matrix_remove_object( mod->world->matrix, mod );
     }
-  else
-    stg_matrix_remove_object( mod->world->matrix, mod );
 }
 
 
@@ -781,12 +797,16 @@ int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
 	  !mod->world->win->disable_data )
 	gui_model_render_data( mod );
       else
-	if( mod->gui.data  )
-	  {
-	    stg_rtk_fig_clear(mod->gui.data);
-	    stg_rtk_fig_destroy( mod->gui.data);
-	    mod->gui.data = NULL;
-	  }
+	{
+	  gui_model_t* gui = stg_model_get_property_fixed( mod, "gui", sizeof(gui_model_t));
+	  
+	  if( gui && gui->data  )
+	    {
+	      stg_rtk_fig_clear(gui->data);
+	      stg_rtk_fig_destroy( gui->data);
+	      gui->data = NULL;
+	    }
+	}
     }
   
   PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
@@ -831,9 +851,12 @@ int stg_model_set_config( stg_model_t* mod, void* cfg, size_t len )
 int _model_update( stg_model_t* mod )
 {
   mod->interval_elapsed = 0;
+
+  stg_velocity_t* vel = 
+    stg_model_get_property_fixed( mod, "velocity", sizeof(stg_velocity_t));
   
   // now move the model if it has any velocity
-  if( (mod->velocity.x || mod->velocity.y || mod->velocity.a ) )
+  if( vel && (vel->x || vel->y || vel->a ) )
     stg_model_update_pose( mod );
 
   return 0; //ok
@@ -890,127 +913,45 @@ void stg_model_get_pose( stg_model_t* mod, stg_pose_t* pose )
 }
 */
 
+
 void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest )
 {
   assert(mod);
   assert(dest);
-  memcpy( dest, &mod->velocity, sizeof(mod->velocity));
+  stg_velocity_t* v = stg_model_get_property_fixed( mod,
+						    "velocity", 
+						    sizeof(stg_velocity_t));
+  memcpy( dest, v, sizeof(stg_velocity_t));
+}
+
+
+int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel )
+{
+  assert(mod);
+  assert(vel);
+  stg_model_set_property( mod, "velocity", vel, sizeof(stg_velocity_t));
+  return 0; //ok
 }
 
 void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest )
 {
   assert(mod);
   assert(dest);
-  memcpy( dest, &mod->geom, sizeof(mod->geom));
+  stg_geom_t* g = stg_model_get_property_fixed( mod,
+						"geom", 
+						sizeof(stg_geom_t));
+  memcpy( dest, g, sizeof(stg_geom_t));
 }
 
-void stg_model_get_color( stg_model_t* mod, stg_color_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->color, sizeof(mod->color));
-}
-
-void stg_model_get_mass( stg_model_t* mod, stg_kg_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->obstacle_return, sizeof(mod->obstacle_return));
-}
-
-void stg_model_get_boundary( stg_model_t* mod, stg_bool_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->boundary, sizeof(mod->boundary));
-}
-
-void stg_model_get_guifeatures( stg_model_t* mod, stg_guifeatures_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->guifeatures, sizeof(mod->guifeatures));
-}
-
-void stg_model_get_laserreturn( stg_model_t* mod, stg_laser_return_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->laser_return, sizeof(mod->laser_return));
-}
-
-void stg_model_get_gripperreturn( stg_model_t* mod, stg_gripper_return_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->gripper_return, sizeof(mod->gripper_return));
-}
-
-void stg_model_get_rangerreturn( stg_model_t* mod, stg_ranger_return_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->ranger_return, sizeof(mod->ranger_return));
-}
-
-void stg_model_get_fiducialreturn( stg_model_t* mod,stg_fiducial_return_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->fiducial_return, sizeof(mod->fiducial_return));
-}
-
-//void stg_model_get_friction( stg_model_t* mod,stg_friction_t* dest )
-//{
-//assert(mod);
-//assert(dest);
-//memcpy( dest, &mod->friction, sizeof(mod->friction));
-//}
-
-
-void stg_model_get_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->obstacle_return, sizeof(mod->obstacle_return));
-}
-
-
-void stg_model_get_blobreturn( stg_model_t* mod, stg_blob_return_t* dest )
-{
-  assert(mod);
-  assert(dest);
-  memcpy( dest, &mod->blob_return, sizeof(mod->blob_return));
-}
 
 stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
 {
-  *poly_count = mod->polygons->len;
-  return (stg_polygon_t*)mod->polygons->data;
-}
-
-// create and initialize a new property
-stg_property_t* stg_property_create( const char* name, void* data, size_t len, 
-				     stg_property_storage_func_t func )
-{
-  //puts( "creating new property" );
+  size_t bytes = 0;
+  stg_polygon_t* polys = (stg_polygon_t*)
+    stg_model_get_property( mod, "polygons", &bytes );
   
-  stg_property_t* prop = (stg_property_t*)calloc(sizeof(stg_property_t),1);
-  
-  strncpy( prop->name, name, STG_PROPNAME_MAX );
-  prop->storage_func = func;
-  prop->data = malloc(len);
-  memcpy( prop->data, data, len );
-  prop->len = len;
-
-  printf( "created property %p name %s quark %d len %d func %p\n",
-	  prop, 
-	  prop->name, 
-	  g_quark_from_string(prop->name), 
-	  prop->len, 
-	  prop->storage_func );
-
-  return prop;
+  *poly_count = bytes / sizeof(stg_polygon_t);
+  return polys;
 }
 
 void stg_property_destroy( stg_property_t* prop )
@@ -1025,147 +966,67 @@ void stg_property_destroy( stg_property_t* prop )
   free( prop );
 }
 
-int _property_store( stg_model_t* mod, char* propname, 
-		     void* data, size_t len, void* user)
-{
-  printf( "model %s property %s changed with %d bytes user %p\n",
-	  mod->token, propname, (int)len, user );
 
-  return 0;
-}
-
-
-
-// call a property callback
-void stg_property_callback( stg_property_callback_t cb, 
-			    stg_property_callback_args_t* args )
-{
-  //printf( "calling %p(%p, %s, %p, %d, %p )\n",
-  //  cb, args->mod, args->propname, args->data, args->len, args->user );
-  
-  cb( args->mod, args->propname, args->data, args->len, args->user );
-}
-
-// wrapper for stg_property_callback
+// call a property's callback func
 void stg_property_callback_cb( gpointer data, gpointer user )
 {
-  stg_property_callback( (stg_property_callback_t)data,
-			 (stg_property_callback_args_t*)user );  
+  ((stg_property_callback_t)data)( (stg_property_t*)user );  
 }
 
-
-// call every property callback listed  in a property
-void stg_property_callback_list( stg_property_t* prop,
-				 const char* propname,
-				 stg_property_callback_args_t* args )
-{  
-  //printf( "checking callbacks for %s:%s\n", 
-  //  args->mod->token, 
-  //  propname );
-  
-  if( prop->callbacks ) 
-    {
-      //strncpy( args->propname, propname, STG_PROPNAME_MAX); 
-      //g_list_foreach( prop->callbacks, stg_property_callback_cb, args );
-    }
-}
-
-// wrapper for stg_property_callback_list()
-/* void stg_property_callback_list_cb( GQuark key, gpointer data, gpointer user ) */
-/* { */
-/*   stg_property_callback_list( g_quark_to_string(key), */
-/* 			      (stg_property_t*)data, */
-/* 			      (stg_property_callback_args_t*)user ); */
-/* } */
-
-
-
-int stg_model_add_property( stg_model_t* mod, const char* propname, 
-			    void* data, size_t len,
-			    stg_property_storage_func_t func )
+stg_property_t* stg_model_set_property_ex( stg_model_t* mod, 
+					   const char* propname, 
+					   void* data, 
+					   size_t len,
+					   stg_property_storage_func_t func )
 {
-  if( stg_model_get_property( mod, propname ) )
-    {
-      PRINT_ERR( "attempting to create a property that already exists" );
-      return 1; // fail
-    }
-  
-  // create a property and stash it in the model with the right name
-  printf( "* adding model %s property %s size %d func %p\n", 
-	  mod->token, propname, len, func );
-  
-  stg_property_t* prop = stg_property_create( propname, data, len, func );  
-  stg_model_set_property( mod, propname, prop );
-
-
-  // test to make sure the property is there
-  stg_property_t* find = stg_model_get_property( mod, propname );
-  assert( find );
-  assert( find == prop );
-
-  return 0; // ok
+  stg_property_t* prop = stg_model_set_property( mod, propname, data, len );
+  prop->storage_func = func;
+  return prop;
 }
 
-
-int stg_model_set_property_data( stg_model_t* mod, const char* propname, 
-				  void* data, size_t len )
+stg_property_t* stg_model_set_property( stg_model_t* mod, 
+					const char* propname, 
+					void* data, 
+					size_t len )
 {
-  stg_property_t* prop = stg_model_get_property( mod, propname );
+  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
   
   if( prop == NULL )
     {
-      PRINT_WARN2( "failed to set data for property %s:%s\n", 
-		   mod->token, propname );
-      return 1; // fail
+      // create a property and stash it in the model with the right name
+      printf( "* adding model %s property %s size %d\n", 
+	      mod->token, propname, (int)len );
+      
+      
+      prop = (stg_property_t*)calloc(sizeof(stg_property_t),1);      
+      strncpy( prop->name, propname, STG_PROPNAME_MAX );
+      prop->mod = mod;
+      
+      g_datalist_set_data( &mod->props, propname, (void*)prop );
+      
+      // test to make sure the property is there
+      stg_property_t* find = g_datalist_get_data( &mod->props, propname );
+      assert( find );
+      assert( find == prop );      
     }
-  
 
   // if there's a special storage function registered, call it
   if( prop->storage_func )
-    prop->storage_func( mod, prop, data, len );
+    {
+      //printf( "calling special storage function for model \"%s\" property \"%s\"\n",
+      //      prop->mod->token,
+      //      prop->name );
+      prop->storage_func( prop, data, len );
+    }
   else
-    {
-      // just stash the data in the property structure
-      prop->data = realloc(prop->data,len);
-      memcpy( prop->data, data, len );
-      prop->len = len;
-    }
+    storage_ordinary( prop, data, len );
   
+  if( prop->callbacks ) 
+    g_list_foreach( prop->callbacks, stg_property_callback_cb, prop );
   
-  //PRINT_MSG2( "succeeded setting data for property %s:%s\n", 
-  //      mod->token, propname );
-  
-  // call any callbacks
-  stg_property_callback_args_t args;
-  args.mod = mod;
-  args.data = data;
-  args.len = len;
-  args.user = prop->user;
-
-  stg_property_callback_list( prop, propname, &args );
-
-  return 0; // ok
+  return prop; // ok
 }
 
-
-void* stg_model_get_property_data( stg_model_t* mod, 
-				   const char* propname, 
-				   size_t* len )
-{
-  stg_property_t* prop = stg_model_get_property( mod, propname );
-  
-  if( prop )
-    {
-      if( len )
-	*len = prop->len;
-      
-      return prop->data;
-    }
-  
-  PRINT_WARN2( "attempting to get a nonexistent property (%s:%s)",
-	       mod->token, propname );    
-  return NULL;
-}
 
 int stg_model_add_property_callback( stg_model_t* mod, 
 				     const char* propname, 
@@ -1174,7 +1035,7 @@ int stg_model_add_property_callback( stg_model_t* mod,
 {
   assert(mod);
   assert(propname);
-  stg_property_t* prop = stg_model_get_property( mod, propname );
+  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
   
   
   if( ! prop )
@@ -1194,7 +1055,7 @@ int stg_model_remove_property_callback( stg_model_t* mod,
 					const char* propname, 
 					stg_property_callback_t callback )
 {
-  stg_property_t* prop = stg_model_get_property( mod, propname );
+  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
   
   if( ! prop )
     {
@@ -1213,7 +1074,7 @@ int stg_model_remove_property_callback( stg_model_t* mod,
 int stg_model_remove_property_callbacks( stg_model_t* mod,
 					 const char* propname )
 {
-  stg_property_t* prop =  stg_model_get_property( mod, propname );
+  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
   
   if( ! prop )
     {
@@ -1228,32 +1089,6 @@ int stg_model_remove_property_callbacks( stg_model_t* mod,
   return 0; //ok
 }
 
-/** set the pose of a model in its parent's CS */
-/* int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose ) */
-/* { */
-/*   // if the new pose is different */
-/*   if( memcmp( &mod->pose, pose, sizeof(stg_pose_t) )) */
-/*     { */
-/*       // unrender from the matrix */
-/*       stg_model_map_with_children( mod, 0 ); */
-      
-/*       // copy the new pose */
-/*       memcpy( &mod->pose, pose, sizeof(mod->pose) ); */
-      
-/*       // render in the matrix */
-/*       stg_model_map_with_children( mod, 1 ); */
-      
-/*       // move the stg_rtk figure to match */
-/*       if( mod->world->win ) */
-/* 	gui_model_move( mod );       */
-/*     } */
-  
-  
-/*   stg_model_set_property_data( mod, "pose", pose, sizeof(stg_pose_t) ); */
-
-/*   return 0; // OK */
-/* } */
-
 /** set the pose of model in global coordinates */
 int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 {
@@ -1261,16 +1096,14 @@ int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
   if( mod->parent == NULL )
     {
       //printf( "setting pose directly\n");
-      //stg_model_set_pose( mod, gpose );
-      stg_model_set_property_data( mod, "pose", gpose, sizeof(stg_pose_t));
+      stg_model_set_property( mod, "pose", gpose, sizeof(stg_pose_t));
     }  
   else
     {
       stg_pose_t lpose;
       memcpy( &lpose, gpose, sizeof(lpose) );
       stg_model_global_to_local( mod->parent, &lpose );
-      //stg_model_set_pose( mod, &lpose );
-      stg_model_set_property_data( mod, "pose", &lpose, sizeof(lpose));
+      stg_model_set_property( mod, "pose", &lpose, sizeof(lpose));
     }
 
   //printf( "setting global pose %.2f %.2f %.2f = local pose %.2f %.2f %.2f\n",
@@ -1279,61 +1112,6 @@ int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
   return 0; //ok
 }
 
-int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
-{ 
-  // unrender from the matrix
-  stg_model_map( mod, 0 );
-  
-  // store the geom
-  memcpy( &mod->geom, geom, sizeof(mod->geom) );
-  
-  // we probably need to scale and re-render our polygons
-  stg_normalize_polygons( (stg_polygon_t*)mod->polygons->data, mod->polygons->len, 
-			  mod->geom.size.x, mod->geom.size.y );
-  
-  if( mod->world->win )
-    stg_model_render_polygons( mod );
-  
-  // we may need to re-render our nose
-  if( mod->world->win )
-    gui_model_features(mod);
-  
-  // re-render int the matrix
-  stg_model_map( mod, 1 );
-
-  return 0;
-}
-
-
-int stg_model_set_polygons( stg_model_t* mod, 
-			    stg_polygon_t* polys, 
-			    size_t poly_count )
-{
-  assert(mod);
-  if( poly_count > 0 ) assert( polys );
-  
-  // background (used e.g for laser scan fill)
-  PRINT_DEBUG3( "model %d(%s) received %d polygons", 
-		mod->id, mod->token, (int)poly_count );
-
-  // normalize the polygons to fit exactly in the model's body rectangle
-  stg_normalize_polygons( polys, poly_count, mod->geom.size.x, mod->geom.size.y );
-  
-  stg_model_map( mod, 0 ); // unmap the model from the matrix
-  
-  // remove the old polygons
-  g_array_set_size( mod->polygons, 0 );
-    
-  // append the new polys
-  g_array_append_vals( mod->polygons, polys, poly_count );
-  
-  if( mod->world->win )
-    stg_model_render_polygons( mod );
-
-  stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
-  
-  return 0;
-} 
 
 int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent)
 {
@@ -1357,104 +1135,17 @@ int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent)
 }
 
 
-int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val )
-{
-  memcpy( &mod->laser_return, val, sizeof(mod->laser_return));
-  
-  stg_model_set_property_data( mod, "laser_return", 
-			       val, sizeof(stg_laser_return_t) );
-  return 0;
-}
-
-int stg_model_set_gripperreturn( stg_model_t* mod, stg_gripper_return_t* val )
-{
-  memcpy( &mod->gripper_return, val, sizeof(mod->gripper_return));
-
-  stg_model_set_property_data( mod, "gripper_return", 
-			       val, sizeof(stg_gripper_return_t) );
-  return 0;
-}
-
-int stg_model_set_rangerreturn( stg_model_t* mod, stg_ranger_return_t* val )
-{
-  memcpy( &mod->ranger_return, val, sizeof(mod->ranger_return));
-
-  stg_model_set_property_data( mod, "ranger_return", 
-			       val, sizeof(stg_ranger_return_t));
-  return 0;
-}
-
-int stg_model_set_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* val )
-{
-  memcpy( &mod->obstacle_return, val, sizeof(mod->obstacle_return));
-  return 0;
-}
-
-
-int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* val )
-{
-  memcpy( &mod->velocity, val, sizeof(mod->velocity) );
-  return 0;
-}
-
-int stg_model_set_blobreturn( stg_model_t* mod, stg_blob_return_t* val )
-{
-  memcpy( &mod->blob_return, val, sizeof(mod->blob_return) );
-  return 0;
-}
-
-int stg_model_set_color( stg_model_t* mod, stg_color_t* col )
-{
-  memcpy( &mod->color, col, sizeof(mod->color) );
-
-  // redraw my image
-  if( mod->world->win )
-    stg_model_render_polygons( mod );
-  
-  return 0; // OK
-}
-
-int stg_model_set_mass( stg_model_t* mod, stg_kg_t* mass )
-{
-  memcpy( &mod->mass, mass, sizeof(mod->mass) );
-  return 0;
-}
-
-int stg_model_set_boundary( stg_model_t* mod, stg_bool_t* b )
-{
-  memcpy( &mod->boundary, b, sizeof(mod->boundary) );
-  stg_model_map( mod, TRUE );
-  return 0;
-}
-
-int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf )
-{
-  memcpy( &mod->guifeatures, gf, sizeof(mod->guifeatures));
-  
-  // override the movemask flags - only top-level objects are moveable
-  if( mod->parent )
-    mod->guifeatures.movemask = 0;
-
-  // redraw the fancy features
-  if( mod->world->win )
-    gui_model_features( mod );
-  return 0;
-}
-
-int stg_model_set_fiducialreturn( stg_model_t* mod, stg_fiducial_return_t* val )     
-{
-  memcpy( &mod->fiducial_return, val, sizeof(mod->fiducial_return) );
-  return 0;
-}
-
-
 extern stg_rtk_fig_t* fig_debug_rays; 
 
 int lines_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
+  stg_obstacle_return_t* obs = 
+    stg_model_get_property_fixed( hitmod, 
+				  "obstacle_return", 
+				  sizeof(stg_obstacle_return_t));
+  
   // Ignore myself, my children, and my ancestors.
-  if( (!stg_model_is_related(mod,hitmod))  &&  
-      hitmod->obstacle_return ) 
+  if(  *obs && (!stg_model_is_related(mod,hitmod)) ) 
     return 1;
   
   return 0; // no match
@@ -1591,11 +1282,11 @@ int stg_model_update_pose( stg_model_t* mod )
       //if( hitthing->friction == 0 ) // hit an immovable thing
 	{
 	  PRINT_DEBUG( "HIT something immovable!" );
-	  mod->stall = 1;
+	  //mod->stall = 1;
 
 	  // set velocity to zero
 	  stg_velocity_t zero_v;
-	  memset( &zero_v, 9, sizeof(zero_v));
+	  memset( &zero_v, 0, sizeof(zero_v));
 	  stg_model_set_velocity( mod, &zero_v );
 	}
       /*
@@ -1641,7 +1332,7 @@ int stg_model_update_pose( stg_model_t* mod )
     }
   else	  
     {
-      mod->stall = 0;
+      //mod->stall = 0;
 
       // now set the new pose
       stg_model_set_global_pose( mod, &gpose );
@@ -1656,107 +1347,205 @@ int stg_model_update_pose( stg_model_t* mod )
 }
 
 
-/*
-void stg_model_reload( stg_model_t* mod )
-{
-  stg_model_load( mod );
-}
-*/
 
-// get a property of a known size. Fail assertion if the size isn't right.
-void* stg_model_get_property_data_fixed( stg_model_t* mod, 
-					 const char* name,
-					 size_t size )
+void* stg_model_get_property( stg_model_t* mod, 
+			      const char* name,
+			      size_t* size )
 {
-  size_t actual_size;
-  void* p = stg_model_get_property_data( mod, name, &actual_size );
-  assert( size == actual_size );
-  return p;
+  stg_property_t* prop = g_datalist_get_data( &mod->props, name );
+  
+  if( prop )
+    {
+      //assert( prop->data && prop->len == 0));
+      //assert( prop->data == NULL && prop->len > 0 );
+
+      *size = prop->len;      
+      return prop->data;
+    }
+
+  *size = 0;
+  return NULL;
 }
+
+// get a property of a known size. gets a valid pointer iff the
+// property exists and contaisn data of the right size, else returns
+// NULL
+void* stg_model_get_property_fixed( stg_model_t* mod, 
+				    const char* name,
+				    size_t size )
+{
+  size_t actual_size=0;
+  void* p = stg_model_get_property( mod, name, &actual_size );
+  
+  if( size == actual_size )
+    return p; // right size: serve up the data
+  else
+    return NULL; // no data if it wasn't the right size
+}
+
+
+
+// set the named property with its
+void stg_model_property_refresh( stg_model_t* mod, const char* propname )
+{
+  //stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
+  //if( prop )
+    
+  size_t len=0;
+  void* data = stg_model_get_property( mod, propname, &len );
+  stg_model_set_property( mod, propname, data, len );
+}
+
 
 void stg_model_load( stg_model_t* mod )
 {
-  stg_pose_t* pose = 
-    stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t) );
-  
-  stg_pose_t new_pose;
-  //stg_model_get_pose( mod, &pose );
-  new_pose.x = wf_read_tuple_length(mod->id, "pose", 0, pose->x );
-  new_pose.y = wf_read_tuple_length(mod->id, "pose", 1, pose->y ); 
-  new_pose.a = wf_read_tuple_angle(mod->id, "pose", 2, pose->a );
+  //const char* typestr = wf_read_string( mod->id, "type", NULL );
+  //PRINT_MSG2( "Model %p is type %s", mod, typestr );
+  assert(mod);
 
-  stg_model_set_property_data( mod, "pose", &new_pose, sizeof(new_pose));
-  //stg_model_set_pose( mod, &pose );
   
-  stg_geom_t geom;
-  stg_model_get_geom( mod, &geom );
-  geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, geom.pose.x );
-  geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, geom.pose.y );
-  geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, geom.pose.a );
-  geom.size.x = wf_read_tuple_length(mod->id, "size", 0, geom.size.x );
-  geom.size.y = wf_read_tuple_length(mod->id, "size", 1, geom.size.y );
-  stg_model_set_geom( mod, &geom );
-  
-  stg_velocity_t vel;
-  vel.x = wf_read_tuple_length(mod->id, "velocity", 0, 0 );
-  vel.y = wf_read_tuple_length(mod->id, "velocity", 1, 0 );
-  vel.a = wf_read_tuple_angle(mod->id, "velocity", 2, 0 );      
-  stg_model_set_velocity( mod, &vel );
-    
-  stg_kg_t mass = 
-    wf_read_float(mod->id, "mass", mod->mass );
-  stg_model_set_mass( mod, &mass );
-  
-  stg_obstacle_return_t obstacle = 
-    wf_read_int( mod->id, "obstacle_return", mod->obstacle_return );
-  stg_model_set_obstaclereturn( mod, &obstacle );
-  
-  stg_ranger_return_t ranger = 
-    wf_read_int( mod->id, "ranger_return", mod->ranger_return );
-  stg_model_set_rangerreturn( mod, &ranger );
-  
-  // laser visibility
-  stg_laser_return_t laser_return = 
-    wf_read_int(mod->id, "laser_return", mod->laser_return );      
-  stg_model_set_laserreturn( mod, &laser_return );
-  
-  // ranger visibility
-  stg_ranger_return_t ranger_return = 
-    wf_read_int( mod->id, "ranger_return",mod->ranger_return );
-  stg_model_set_rangerreturn( mod, &ranger_return );
-
-  // grippability
-  stg_gripper_return_t gripper_return = 
-    wf_read_int( mod->id, "gripper_return",mod->gripper_return );
-  stg_model_set_gripperreturn( mod, &gripper_return );
-  
-  // fiducial visibility
-  int fid_return = 
-    wf_read_int( mod->id, "fiducial_return", mod->fiducial_return );  
-  stg_model_set_fiducialreturn( mod, &fid_return );
-
-  // bounding box
-  stg_bool_t boundary = 
-    wf_read_int(mod->id, "boundary", mod->boundary ); 
-  stg_model_set_boundary( mod, &boundary );
-
-  // TODO - blob visibility
-  //int blobvis = 
-  //wf_read_int(mod->id, "blob_return", STG_DEFAULT_BLOBRETURN );        
-  //stg_model_set_blobreturn( mod, &blobvis );
-  
-  // TODO - stg_friction_t friction;
-  //friction = wf_read_float(mod->id, "friction", 0.0 );
-  //stg_model_set_friction(mod, &friction );
-  
-  const char* colorstr = wf_read_string( mod->id, "color", NULL );
-  if( colorstr )
+  if( wf_property_exists( mod->id, "origin" ) )
     {
-      stg_color_t color = stg_lookup_color( colorstr );
-      PRINT_DEBUG2( "stage color %s = %X", colorstr, color );	  
-      stg_model_set_color( mod, &color );
+      stg_geom_t* now = 
+	stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));      
+      
+      stg_geom_t geom;
+      geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, now ? now->pose.x : 0 );
+      geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, now ? now->pose.y : 0 );
+      geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, now ? now->pose.a : 0 );
+      geom.size.x = now ? now->size.x : 1;
+      geom.size.y = now ? now->size.y : 1;
+      stg_model_set_property( mod, "geom", &geom, sizeof(geom));
     }
 
+  if( wf_property_exists( mod->id, "size" ) )
+    {
+      stg_geom_t* now = 
+	stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));      
+      
+      stg_geom_t geom;
+      geom.pose.x = now ? now->pose.x : 0;
+      geom.pose.y = now ? now->pose.y : 0;
+      geom.pose.a = now ? now->pose.a : 0;
+      geom.size.x = wf_read_tuple_length(mod->id, "size", 0, now ? now->size.x : 1 );
+      geom.size.y = wf_read_tuple_length(mod->id, "size", 1, now ? now->size.y : 1 );
+      stg_model_set_property( mod, "geom", &geom, sizeof(geom));
+    }
+
+  if( wf_property_exists( mod->id, "pose" ))
+    {
+      stg_pose_t* now = 
+	stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
+      
+      stg_pose_t pose;
+      pose.x = wf_read_tuple_length(mod->id, "pose", 0, now ? now->x : 0 );
+      pose.y = wf_read_tuple_length(mod->id, "pose", 1, now ? now->y : 0 ); 
+      pose.a = wf_read_tuple_angle(mod->id, "pose", 2,  now ? now->a : 0 );
+      stg_model_set_property( mod, "pose", &pose, sizeof(pose));
+    }
+  
+  if( wf_property_exists( mod->id, "velocity" ))
+    {
+      stg_velocity_t* now = 
+	stg_model_get_property_fixed( mod, "velocity", sizeof(stg_velocity_t));
+      
+      stg_velocity_t vel;
+      vel.x = wf_read_tuple_length(mod->id, "velocity", 0, now ? now->x : 0 );
+      vel.y = wf_read_tuple_length(mod->id, "velocity", 1, now ? now->y : 0 );
+      vel.a = wf_read_tuple_angle(mod->id, "velocity", 2,  now ? now->a : 0 );      
+      stg_model_set_property( mod, "velocity", &vel, sizeof(vel) );
+    }
+  
+  if( wf_property_exists( mod->id, "mass" ))
+    {
+      stg_kg_t* now = 
+	stg_model_get_property_fixed( mod, "mass", sizeof(stg_kg_t));      
+      stg_kg_t mass = wf_read_float(mod->id, "mass", now ? *now : 0 );      
+      stg_model_set_property( mod, "mass", &mass, sizeof(mass) );
+    }
+  
+  if( wf_property_exists( mod->id, "fiducial_return" ))
+    {
+      stg_fiducial_return_t* now = 
+	stg_model_get_property_fixed( mod, "fiducial_return", sizeof(stg_fiducial_return_t));      
+      stg_fiducial_return_t fid = 
+	wf_read_int( mod->id, "fiducial_return", now ? *now : FiducialNone );     
+      stg_model_set_property( mod, "fiducial_return", &fid, sizeof(fid) );
+    }
+  
+  if( wf_property_exists( mod->id, "obstacle_return" ))
+    {
+      stg_obstacle_return_t* now = 
+	stg_model_get_property_fixed( mod, "obstacle_return", sizeof(stg_obstacle_return_t));      
+      stg_obstacle_return_t obs = 
+	wf_read_int( mod->id, "obstacle_return", now ? *now : 0 );
+      stg_model_set_property( mod, "obstacle_return", &obs, sizeof(obs) );
+    }
+
+  if( wf_property_exists( mod->id, "ranger_return" ))
+    {
+      stg_ranger_return_t* now = 
+	stg_model_get_property_fixed( mod, "ranger_return", sizeof(stg_ranger_return_t));      
+      
+      stg_ranger_return_t rng = 
+	wf_read_int( mod->id, "ranger_return", now ? *now : 0 );
+      stg_model_set_property( mod, "ranger_return", &rng, sizeof(rng));
+    }
+  
+  if( wf_property_exists( mod->id, "blob_return" ))
+    {
+      stg_blob_return_t* now = 
+	stg_model_get_property_fixed( mod, "ranger_return", sizeof(stg_ranger_return_t));      
+      stg_blob_return_t blb = 
+	wf_read_int( mod->id, "blob_return", now ? *now : 0 );
+      stg_model_set_property( mod, "blob_return", &blb, sizeof(blb));
+    }
+  
+  if( wf_property_exists( mod->id, "laser_return" ))
+    {
+      stg_laser_return_t* now = 
+	stg_model_get_property_fixed( mod, "laser_return", sizeof(stg_laser_return_t));      
+      stg_laser_return_t lsr = 
+	wf_read_int(mod->id, "laser_return", now ? *now : LaserVisible );      
+      stg_model_set_property( mod, "laser_return", &lsr, sizeof(lsr));
+    }
+  
+  if( wf_property_exists( mod->id, "gripper_return" ))
+    {
+      stg_blob_return_t* now = 
+	stg_model_get_property_fixed( mod, "gripper_return", sizeof(stg_gripper_return_t));      
+      stg_gripper_return_t grp = 
+	wf_read_int( mod->id, "gripper_return", now ? *now : 0 );
+      stg_model_set_property( mod, "gripper_return", &grp, sizeof(grp));
+    }
+  
+  if( wf_property_exists( mod->id, "boundary" ))
+    {
+      stg_bool_t* now = 
+	stg_model_get_property_fixed( mod, "boundary", sizeof(stg_bool_t));      
+      stg_bool_t bdy =  
+	wf_read_int(mod->id, "boundary", now ? *now : 0  ); 
+      stg_model_set_property( mod, "boundary", &bdy, sizeof(bdy));
+    }
+  
+  if( wf_property_exists( mod->id, "color" ))
+    {
+      stg_color_t* now = 
+	stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));      
+      
+      stg_color_t col = 0xFF0000; // red;  
+      const char* colorstr = wf_read_string( mod->id, "color", NULL );
+      if( colorstr )
+	{
+	  col = stg_lookup_color( colorstr );  
+	  stg_model_set_property( mod, "color", &col, sizeof(col));
+	}
+    }      
+  
+  //size_t polydata = 0;
+  stg_polygon_t* polys = NULL;// = stg_model_get_property( mod, "polygons", &polydata );
+  size_t polycount = -1 ;//polydata / sizeof(stg_polygon_t);;
+  
   const char* bitmapfile = wf_read_string( mod->id, "bitmap", NULL );
   if( bitmapfile )
     {
@@ -1793,28 +1582,33 @@ void stg_model_load( stg_model_t* mod )
       // geometry
       if( bitmap_resolution )
 	{
-	  geom.size.x = image_width *  bitmap_resolution;
-	  geom.size.y = image_height *  bitmap_resolution; 	    
-	  stg_model_set_geom( mod, &geom );	  
-	}
+	  stg_geom_t* geom = 
+	    stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));
+	  assert(geom);
 	  
+	  geom->size.x = image_width *  bitmap_resolution;
+	  geom->size.y = image_height *  bitmap_resolution; 	    
+	  stg_model_set_property( mod, "geom", geom, sizeof(stg_geom_t));
+	}
+      
+      printf( "got %d rectangles from bitmap %s\n", num_rects, full );
+
       // convert rects to an array of polygons and upload the polygons
-      stg_polygon_t* polys = stg_rects_to_polygons( rects, num_rects );
-      stg_model_set_polygons( mod, polys, num_rects );     
+      polys = stg_rects_to_polygons( rects, num_rects );
+      polycount = num_rects;
 
       // free rects, which was realloc()ed in stg_load_image
       free(rects);
-      // free polys, since stg_model_set_polygons copied its contents
-      free(polys);
     }
-      
-  int polycount = wf_read_int( mod->id, "polygons", 0 );
-  if( polycount > 0 )
+  
+  int wf_polycount = wf_read_int( mod->id, "polygons", 0 );
+  if( wf_polycount > 0 )
     {
+      polycount = wf_polycount;
       //printf( "expecting %d polygons\n", polycount );
       
       char key[256];
-      stg_polygon_t* polys = stg_polygons_create( polycount );
+      polys = stg_polygons_create( polycount );
       int l;
       for(l=0; l<polycount; l++ )
 	{	  	  
@@ -1840,34 +1634,55 @@ void stg_model_load( stg_model_t* mod )
 	      stg_polygon_append_points( &polys[l], &pt, 1 );
 	    }
 	}
+    }
+  /* else if( polys == NULL ) // create a unit rectangle by default?
+    {
+      stg_point_t pts[4];
+      pts[0].x = 0;
+      pts[0].y = 0;
+      pts[1].x = 1;
+      pts[1].y = 0;
+      pts[2].x = 1;
+      pts[2].y = 1;
+      pts[3].x = 0;
+      pts[3].y = 1;  
       
-      stg_model_set_polygons( mod, polys, polycount );
+      polys = stg_polygon_create();
+      stg_polygon_set_points( polys, pts, 4 );  
+      polycount = 1;
+    }
+  */
+
+  // if we created any polygons
+  if( polycount != -1 )
+    {
+      stg_model_set_property_ex( mod, "polygons",  
+				 polys, polycount*sizeof(stg_polygon_t), storage_polygons );
+      stg_model_property_refresh( mod, "polygons" );
     }
 
+  stg_guifeatures_t* gf_now = 
+    stg_model_get_property_fixed( mod, "gui_features", sizeof(stg_guifeatures_t));
+  
+  stg_guifeatures_t gf;
+  gf.nose = wf_read_int(mod->id, "gui_nose", gf_now ? gf_now->nose : 0 );
+  gf.grid = wf_read_int(mod->id, "gui_grid", gf_now ? gf_now->grid : 0 );
+  gf.movemask = wf_read_int(mod->id, "gui_movemask", 
+			    mod->parent ? 0 : gf_now ? gf_now->movemask : (STG_MOVE_TRANS | STG_MOVE_ROT)  );
+  gf.outline = wf_read_int(mod->id, "gui_outline", gf_now ? gf_now->outline : 1 );
+  
+  stg_model_set_property( mod, "gui_features", &gf, sizeof(gf) );
+  
   // if a type-specific load callback has been set
   if( mod->f_load )
     mod->f_load( mod ); // call the load function
-  
-  // do gui features last so we know exactly what we're supposed to
-  // look like.
-  stg_guifeatures_t gf;
-  stg_model_get_guifeatures( mod, &gf );
-
-  //gf.boundary = wf_read_int(mod->id, "gui_boundary", gf.boundary );
-  gf.nose = wf_read_int(mod->id, "gui_nose", gf.nose );
-  gf.grid = wf_read_int(mod->id, "gui_grid", gf.grid );
-  gf.movemask = wf_read_int(mod->id, "gui_movemask", gf.movemask );
-  gf.outline = wf_read_int(mod->id, "gui_outline", gf.outline );
-
-  // install the new set of features 
-  stg_model_set_guifeatures( mod, &gf );
 }
 
 
 void stg_model_save( stg_model_t* model )
 {
   stg_pose_t* pose = 
-    stg_model_get_property_data_fixed( model, "pose", sizeof(stg_pose_t));
+    stg_model_get_property_fixed( model, "pose", sizeof(stg_pose_t));
   
   PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
 		model->token,

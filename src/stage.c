@@ -646,6 +646,23 @@ void stg_polygon_destroy( stg_polygon_t* p )
   stg_polygons_destroy( p, 1 );
 }
 
+stg_polygon_t* stg_unit_polygon_create( void )
+{
+  stg_point_t pts[4];
+  pts[0].x = 0;
+  pts[0].y = 0;
+  pts[1].x = 1;
+  pts[1].y = 0;
+  pts[2].x = 1;
+  pts[2].y = 1;
+  pts[3].x = 0;
+  pts[3].y = 1;  
+  
+  stg_polygon_t* poly = stg_polygon_create();
+  stg_polygon_set_points( poly, pts, 4 );  
+  return poly;
+}
+
 stg_point_t* stg_points_create( size_t count )
 {
   return( (stg_point_t*)calloc( count, sizeof(stg_point_t)));

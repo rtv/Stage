@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.8 2005-06-25 01:07:59 rtv Exp $
+// CVS: $Id: stest.c,v 1.9 2005-07-08 22:55:15 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -77,7 +77,7 @@ int main( int argc, char* argv[] )
       
       stg_velocity_t* pose = 
       //stg_model_get_pose( position, &pose );
-      stg_model_get_property_data_fixed( position, "pose", sizeof(pose));
+      stg_model_get_property_fixed( position, "pose", sizeof(pose));
 
       //printf( "position velocity: (%.2f,%.2f,%.2f)\n",
       //      vel.x, vel.y, vel.a );          

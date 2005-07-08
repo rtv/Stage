@@ -217,10 +217,6 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	      mod = stg_laser_create( world,  parent_mod, section, namestr );
 	      break;
 	      
-	    case STG_MODEL_GRIPPER:
-	      mod = stg_gripper_create( world,  parent_mod, section, namestr );
-	      break;
-	      
 	    case STG_MODEL_RANGER:
 	      mod = stg_ranger_create( world,  parent_mod, section, namestr );
 	      break;
@@ -233,6 +229,10 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	      mod = stg_position_create( world,  parent_mod, section, namestr );
 	      break;
 
+	      //case STG_MODEL_GRIPPER:
+	      //mod = stg_gripper_create( world,parent_mod,section,namestr);
+	      //break;
+	      
 	      //case STG_MODEL_ENERGY:
 	      //mod = stg_energy_create( world,  parent_mod, section, namestr );
 	      break;

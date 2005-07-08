@@ -190,9 +190,9 @@ extern "C" {
 
     GPtrArray* children; // the models owned by this model
 
-    // a datalist can contain arbitrary named data items. Used by
-    // derived model types to store properties, and for user code to
-    // associate arbitrary items with a model.
+    // a datalist can contain arbitrary named data items. Can be used
+    // by derived model types to store properties, and for user code
+    // to associate arbitrary items with a model.
     GData* props;
 
     // the number of children of each type is counted so we can
@@ -200,44 +200,10 @@ extern "C" {
     int child_type_count[ STG_MODEL_COUNT ];
 
     int subs;     // the number of subscriptions to this model
-    gui_model_t gui; // all the gui stuff        // the device is consuming this much energy
 
     stg_msec_t interval; // time between updates in ms
     stg_msec_t interval_elapsed; // time since last update in ms
 
-     // todo - thread-safe version
-    // allow exclusive access to this model
-    
-    // the generic buffers used by specialized model types.
-    // For speed, these are implemented directly, rather than by datalist.
-    void *data, *cmd, *cfg;
-    size_t data_len, cmd_len, cfg_len;    // the device is consuming this much energy
-
-    pthread_mutex_t data_mutex, cmd_mutex, cfg_mutex;
-    
-    // an array of polygons that make up the model's body. Possibly
-    // zero elements.
-    GArray* polygons;    // the device is consuming this much energy
-
-    
-    // basic model properties
-    stg_blob_return_t blob_return; 
-    stg_laser_return_t laser_return; // value returned to a laser sensor
-    stg_obstacle_return_t obstacle_return; // if non-zero, we are included in obstacle detection
-    stg_fiducial_return_t fiducial_return; // value returned to a fiducial finder
-    stg_ranger_return_t ranger_return;
-    stg_gripper_return_t gripper_return;
-
-    //stg_pose_t pose; // current pose in parent's CS
-    stg_velocity_t velocity; // current velocity
-    stg_bool_t stall; // true IFF we hit an obstacle
-    stg_geom_t geom; // pose and size in local CS
-    stg_color_t color; // RGB color 
-    stg_kg_t mass; // mass in kg
-    stg_bool_t boundary; // if non-zero, the object has a bounding box
-    stg_guifeatures_t guifeatures; // controls how we are rendered in the GUI
-    stg_watts_t watts;  // device is consuming this much energy
-    
     stg_bool_t disabled; // if non-zero, the model is disabled
     
     // type-dependent functions for this model, implementing simple
@@ -251,12 +217,24 @@ extern "C" {
     func_load_t f_load;
     func_save_t f_save;
 
+    /* TODO: replace all this stuff with properties */
+    
+    // the generic buffers used by specialized model types.
+    // For speed, these are implemented directly, rather than by datalist.
+    void *data, *cmd, *cfg;
+    size_t data_len, cmd_len, cfg_len;  
+
     /// if set, this callback is run when we do model_put_data() -
     /// it's used by the player plugin to notify Player that data is
     /// ready.
     func_data_notify_t data_notify;
     void* data_notify_arg;
+
+     // todo - thread-safe version
+    // allow exclusive access to this model
+    pthread_mutex_t data_mutex, cmd_mutex, cfg_mutex;
     
+    /* END TODO */    
   };
 
   // internal functions
@@ -282,18 +260,9 @@ extern "C" {
   void stg_model_render_pose( stg_model_t* mod );
   void stg_model_render_polygons( stg_model_t* mod );
   
-  stg_property_t* stg_property_create( const char* name, 
-				       void* data, 
-				       size_t len, 
-				       stg_property_storage_func_t func );
   
+  void stg_property_refresh( stg_property_t* prop );
   void stg_property_destroy( stg_property_t* prop );
-
-  void stg_model_set_property( stg_model_t* mod, const char* propname, 
-			       stg_property_t* prop );
-  
-  stg_property_t* stg_model_get_property( stg_model_t* mod, const char* propname );
-  
        
   /**@}*/  
 
@@ -519,6 +488,7 @@ extern "C" {
   */
   
   // C wrappers for C++ worldfile functions
+  int wf_property_exists( int section, char* token );
   int wf_read_int( int section, char* token, int def );
   double wf_read_length( int section, char* token, double def );
   double wf_read_angle( int section, char* token, double def );

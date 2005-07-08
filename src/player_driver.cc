@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.18 2005-06-25 01:07:58 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.19 2005-07-08 22:55:13 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -411,7 +411,7 @@ int StgDriver::CreateDeviceModel( player_device_id_t id,
       // experimental
       
       // add a callback that should happen whenever the robot's pose is changed
-      stg_model_add_property_callback( device->mod, "pose", test_cb, (void*)32 );
+      //stg_model_add_property_callback( device->mod, "pose", test_cb, (void*)32 );
       //stg_model_add_prop_callback( device->mod, "pose", test_cb, (void*)48 );
 
       break;
@@ -463,14 +463,14 @@ int StgDriver::CreateDeviceModel( player_device_id_t id,
       device->mod = this->LocateModel( model_name, STG_MODEL_RANGER );
       break;
       
-    case PLAYER_ENERGY_CODE:
-      device->data_len = sizeof(player_energy_data_t);
-      device->cmd_len = 0;
-      device->command_callback = NULL;
-      device->data_callback = EnergyData;
-      device->config_callback = EnergyConfig;
-      device->mod = this->LocateModel( model_name, STG_MODEL_ENERGY );
-      break;
+//     case PLAYER_ENERGY_CODE:
+//       device->data_len = sizeof(player_energy_data_t);
+//       device->cmd_len = 0;
+//       device->command_callback = NULL;
+//       device->data_callback = EnergyData;
+//       device->config_callback = EnergyConfig;
+//       device->mod = this->LocateModel( model_name, STG_MODEL_ENERGY );
+//       break;
       
     case PLAYER_BLOBFINDER_CODE:
       device->data_len = sizeof(player_blobfinder_data_t);

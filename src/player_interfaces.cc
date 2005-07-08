@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.14 2005-06-25 01:07:58 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.15 2005-07-08 22:55:13 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -92,7 +92,7 @@ void SimulationConfig(  device_record_t* device,
 	    // move it 
 	    // printf( "moving model \"%s\"", req->name );	    
 	    //stg_model_set_pose( mod, &pose );  
-	    stg_model_set_property_data( mod, "pose", &pose, sizeof(pose));
+	    stg_model_set_property( mod, "pose", &pose, sizeof(pose));
 	    device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
 	  }
 	else
@@ -119,7 +119,7 @@ void SimulationConfig(  device_record_t* device,
 	  {
 	    stg_pose_t* pose = (stg_pose_t*)
 	      //stg_model_get_pose( mod, &pose );
-	      stg_model_get_property_data_fixed( mod, "pose", sizeof(stg_pose_t));
+	      stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
 
             /*
 	    printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
@@ -273,7 +273,7 @@ void  MapConfigInfo( device_record_t* device,
   
   // if we already have a map info for this model, destroy it
   stg_map_info_t* minfo = (stg_map_info_t*)
-    stg_model_get_property_data_fixed( device->mod, "_map", 
+    stg_model_get_property_fixed( device->mod, "_map", 
 				       sizeof(stg_map_info_t) );
   
   if( minfo )
@@ -320,7 +320,10 @@ void  MapConfigInfo( device_record_t* device,
 			       polys, count, 
 			       device->mod );  
 	  
-	  if( device->mod->boundary )    
+	  stg_bool_t* boundary = (stg_bool_t*)
+	    stg_model_get_property_fixed( device->mod, 
+					  "boundary", sizeof(stg_bool_t));
+	  if( *boundary )    
 	    stg_matrix_rectangle( matrix,
 				  geom.size.x/2.0,
 				  geom.size.y/2.0,
@@ -355,8 +358,7 @@ void  MapConfigInfo( device_record_t* device,
   puts( "done." );
 
   // store the map as a model property named "_map"
-  stg_model_add_property( device->mod, "_map", (void*)minfo, sizeof(minfo), NULL );
-  //  stg_model_set_property_data( device->mod, "_map", (void*)minfo, sizeof(minfo) );
+  stg_model_set_property( device->mod, "_map", (void*)minfo, sizeof(minfo) );
 
   //if(this->mapdata == NULL)
   //{
@@ -405,7 +407,7 @@ void MapConfigData( device_record_t* device,
     }
   
   stg_map_info_t* minfo = (stg_map_info_t*)
-    stg_model_get_property_data_fixed( device->mod, "_map", sizeof(minfo));
+    stg_model_get_property_fixed( device->mod, "_map", sizeof(minfo));
 
   assert( minfo );
 
@@ -637,8 +639,8 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
       if( len == sizeof(player_fiducial_id_t) )
 	{
 	  int id = ntohl(((player_fiducial_id_t*)src)->id);
-
-	  stg_model_set_fiducialreturn( device->mod, &id );
+	  
+	  stg_model_set_property( device->mod, "fidicial_return", &id, sizeof(id));
 	}
       else
 	PRINT_ERR2("Incorrect packet size setting fiducial ID (%d/%d)",
@@ -648,12 +650,14 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
 
   case PLAYER_FIDUCIAL_GET_ID:
       {
-	stg_fiducial_return_t ret;
-	stg_model_get_fiducialreturn(device->mod,&ret); 
+	stg_fiducial_return_t* ret = (stg_fiducial_return_t*) 
+	  stg_model_get_property_fixed( device->mod, 
+					"fidicial_return",
+					sizeof(stg_fiducial_return_t));
 
 	// fill in the data formatted player-like
 	player_fiducial_id_t pid;
-	pid.id = htonl((int)ret);
+	pid.id = htonl((int)*ret);
 	
 	if( device->driver->PutReply(  device->id, client, PLAYER_MSGTYPE_RESP_ACK, 
 				       &pid, sizeof(pid), NULL ) != 0 )
