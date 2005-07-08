@@ -2,13 +2,13 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.99 2005-06-29 20:45:40 rtv Exp $
+# $Id: Makefile.am,v 1.100 2005-07-08 18:30:30 gerkey Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
 
-AM_CFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
-AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
+AM_CFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_CFLAGS@ @GTK_CFLAGS@
+AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_LIBS@ @GTK_CFLAGS@
 
 # build the stage library and the stage plugin
 lib_LTLIBRARIES = libstage.la libstageplugin.la
