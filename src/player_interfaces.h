@@ -1,3 +1,6 @@
+#ifndef _STAGE_PLAYER_INTERFACES_H
+#define _STAGE_PLAYER_INTERFACES_H
+
 #include <unistd.h>
 #include <string.h>
 #include <netinet/in.h>
@@ -149,3 +152,4 @@ void MapConfigInfo( device_record_t* device, void* client, void* buffer, size_t 
 void MapConfigData( device_record_t* device, void* client, void* buffer, size_t len);
 
 
+#endif

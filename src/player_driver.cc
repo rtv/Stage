@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.19 2005-07-08 22:55:13 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.20 2005-07-14 21:19:55 adam_lein Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -143,6 +143,7 @@ Richard Vaughan
 #include <math.h>
 
 #include "player_interfaces.h"
+#include "zoo_driver.h"
 
 // externs from Player
 extern PlayerTime* GlobalTime;
@@ -212,6 +213,7 @@ extern "C"
   {
     //puts(" Stage driver plugin init");
     StgDriver_Register(table);
+	ZooDriver_Register(table);
     return(0);
   }
 }
