@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.20 2005-07-14 21:19:55 adam_lein Exp $
+ * CVS: $Id: player_driver.cc,v 1.21 2005-07-14 23:37:23 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -62,7 +62,7 @@ is a link to its entry in the Player manual:
 - <a href="http://playerstage.sourceforge.net/doc/Player-1.6-html/player/group__player__interface__sonar.html">sonar</a>
   - PLAYER_SONAR_GET_GEOM_REQ
 
-- <a href="http://playerstage.sourceforge.net/doc/Player-1.6-html/player/group__player__interface__simulation.html">simulation</a>
+s- <a href="http://playerstage.sourceforge.net/doc/Player-1.6-html/player/group__player__interface__simulation.html">simulation</a>
   - (none)
 
 
@@ -141,35 +141,30 @@ Richard Vaughan
 #include <string.h>
 #include <netinet/in.h>
 #include <math.h>
+#include <player/drivertable.h>
 
+#include "player_driver.h"
 #include "player_interfaces.h"
 #include "zoo_driver.h"
-
-// externs from Player
-extern PlayerTime* GlobalTime;
-extern int global_argc;
-extern char** global_argv;
-
-//#define HTON_M(m) htonl(m)   // byte ordering for METERS
-//#define NTOH_M(m) ntohl(m)
-//#define HTON_RAD(r) htonl(r) // byte ordering for RADIANS
-//#define NTOH_RAD(r) ntohl(r)
-//#define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
-//#define NTOH_SEC(s) ntohl(s)
-//#define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
-//#define NTOH_SEC(s) ntohl(s)
-
 
 #define STG_DEFAULT_WORLDFILE "default.world"
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
 
-
+// globals from Player
+extern PlayerTime* GlobalTime;
+extern int global_argc;
+extern char** global_argv;
+extern bool quiet_startup;
 
 // init static vars
 stg_world_t* StgDriver::world = NULL;
 
-// this is a Player global
-extern bool quiet_startup;
+
+/* need the extern to avoid C++ name-mangling  */
+extern "C"
+{
+  int player_driver_init(DriverTable* table);
+}
 
 // A factory creation function, declared outside of the class so that it
 // can be invoked without any object context (alternatively, you can
@@ -180,7 +175,7 @@ Driver* StgDriver_Init(ConfigFile* cf, int section)
   // Create and return a new instance of this driver
   return ((Driver*) (new StgDriver(cf, section)));
 }
-
+  
 // A driver registration function, again declared outside of the class so
 // that it can be invoked without object context.  In this function, we add
 // the driver into the given driver table, indicating which interface the
@@ -188,34 +183,23 @@ Driver* StgDriver_Init(ConfigFile* cf, int section)
 void StgDriver_Register(DriverTable* table)
 {
   printf( "\n ** Stage plugin v%s **", PACKAGE_VERSION );
-  
+    
   if( !quiet_startup )
     {
       puts( "\n * Part of the Player/Stage Project [http://playerstage.sourceforge.net]\n"
 	    " * Copyright 2000-2005 Richard Vaughan, Andrew Howard, Brian Gerkey\n * and contributors.\n"
 	    " * Released under the GNU GPL." );
     }
-  
+    
   table->AddDriver( "stage", StgDriver_Init);
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Extra stuff for building a shared object.
-
-// Need access to the global driver table
-#include <player/drivertable.h>
-
-/* need the extern to avoid C++ name-mangling  */
-extern "C"
+  
+int player_driver_init(DriverTable* table)
 {
-  int player_driver_init(DriverTable* table)
-  {
-    //puts(" Stage driver plugin init");
-    StgDriver_Register(table);
-	ZooDriver_Register(table);
-    return(0);
-  }
+  //puts(" Stage driver plugin init");
+  StgDriver_Register(table);
+  ZooDriver_Register(table);
+  return(0);
 }
 
 // find a model to attach to a Player interface
@@ -240,13 +224,13 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_type_t tp, GPtrArray* devi
 	  //printf( "[inspecting %d devices used already]", devices->len );
 	  for( int i=0; i<(int)devices->len; i++ )
 	    {
-	      device_record_t* record =  
-		(device_record_t*)g_ptr_array_index( devices, i );
+	      Interface* interface = 
+		(Interface*)g_ptr_array_index( devices, i );
 	      
 	      //printf( "comparing %p and %p (%d.%d.%d)\n", mod, record->mod,
 	      //      record->id.port, record->id.code, record->id.index );
 	      
-	      if( match == record->mod )//&& ! tp == STG_MODEL_BASIC )
+	      if( match == interface->mod )//&& ! tp == STG_MODEL_BASIC )
 		{
 		  printf( "[ALREADY USED]" );
 		  return NULL;
@@ -261,271 +245,6 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_type_t tp, GPtrArray* devi
 }
 
 
-int StgDriver::CreateDeviceSimulation( player_device_id_t id, 
-				       ConfigFile* cf, int section )
-{
-  // boot libstage 
-  //stg_init( global_argc, global_argv );
-  
-  device_record_t* device = 
-    (device_record_t*)calloc(sizeof(device_record_t),1);
-  
-  memcpy( &device->id, &id, sizeof(id) );
-  
-  // tell the device which driver created it
-  device->driver = this;
-  
-  device->data_len = sizeof(player_simulation_data_t);
-  device->cmd_len = sizeof(player_simulation_cmd_t);
-  device->command_callback = NULL;
-  device->data_callback = SimulationData;
-  device->config_callback = SimulationConfig;
-  
-  const char* worldfile_name = cf->ReadString(section, "worldfile", NULL );
-  
-  if( worldfile_name == NULL )
-    {
-      PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
-		  "no \"model\" value defined. You must specify a "
-		  "model name that matches one of the models in "
-		  "the worldfile.",
-		  worldfile_name );
-      return 1; // error
-    }
-  
-  char fullname[MAXPATHLEN];
-  
-  if( worldfile_name[0] == '/' )
-    strcpy( fullname, worldfile_name );
-  else
-    {
-      char *tmp = strdup(cf->filename);
-      snprintf( fullname, MAXPATHLEN, 
-		"%s/%s", dirname(tmp), worldfile_name );      
-      free(tmp);
-    }
-  
-  // a little sanity testing
-  if( !g_file_test( fullname, G_FILE_TEST_EXISTS ) )
-    {
-      PRINT_ERR1( "worldfile \"%s\" does not exist", worldfile_name );
-      return -1;
-    }
-  
-  // create a passel of Stage models in the local cache based on the
-  // worldfile
-  
-  //if( !quiet_startup )
-    {
-      printf( " [%s]", fullname );      
-      fflush(stdout);
-    }
-
-  StgDriver::world = stg_world_create_from_file( fullname );
-  assert(StgDriver::world);
-  //printf( " done.\n" );
-  
-  // steal the global clock - a bit aggressive, but a simple approach
-  if( GlobalTime ) delete GlobalTime;
-  assert( (GlobalTime = new StgTime( StgDriver::world ) ));
-  
-  // start the simulation
-  // printf( "  Starting world clock... " ); fflush(stdout);
-  //stg_world_resume( world );
-  
-  world->paused = FALSE;
-  
-  // this causes Driver::Update() to be called even when the device is
-  // not subscribed
-  this->alwayson = TRUE;    
-
-  // Start the device thread; spawns a new thread and executes
-  // StgDriver::Main(), which contains the main loop for the driver.
-  //puts( "\nStarting thread" );
-  this->StartThread();
-
-  puts( "" ); // end the Stage startup line
-
-  // now poke a data callback function into the model  
-  //device->mod->data_notify = StgDriver::RefreshDataCallback;
-  //device->mod->data_notify_arg = device;
-  
-  // and add the device to the driver's list of devices
-  g_ptr_array_add( this->devices, device );
-  
-  // attempt to add this interface and we're done
-  return( this->AddInterface( device->id, 
-			      PLAYER_ALL_MODE, 
-			      device->data_len, 
-			      device->cmd_len,
-			      10, 10) );
-}      
-
-int test_cb( stg_model_t* mod, char* propname, void* data, size_t len, void* user)
-{
-  printf( "model %s property %s changed with %d bytes user %p\n",
-	  mod->token, propname, (int)len, user );
-
-  return 0;
-}
-
-
-int StgDriver::CreateDeviceModel( player_device_id_t id, 
-				  ConfigFile* cf, int section )
-{
-  device_record_t* device = 
-    (device_record_t*)calloc(sizeof(device_record_t),1);
-  
-  memcpy( &device->id, &id, sizeof(id) );
-
-  const char* model_name = cf->ReadString(section, "model", NULL );
-
-  if( model_name == NULL )
-    {
-      PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
-		  "no \"model\" value defined. You must specify a "
-		  "model name that matches one of the models in "
-		  "the worldfile.",
-		  model_name );
-      return 1; // error
-    }
-  
-  // tell the device which driver created it
-  device->driver = this;
-  
-  switch( device->id.code )
-    {	  
-    case PLAYER_SIMULATION_CODE:
-      puts( "Error: attempt to create a simulation device as a model" );
-      return 1;
-      
-    case PLAYER_POSITION_CODE:
-      device->data_len = sizeof(player_position_data_t);
-      device->cmd_len = sizeof(player_position_cmd_t);
-      device->command_callback = PositionCommand;
-      device->data_callback = PositionData;
-      device->config_callback = PositionConfig;
-      device->mod = this->LocateModel( model_name, STG_MODEL_POSITION );
-
-      printf( "created a position model %s %p\n",
-	      model_name, device->mod );
-
-      // experimental
-      
-      // add a callback that should happen whenever the robot's pose is changed
-      //stg_model_add_property_callback( device->mod, "pose", test_cb, (void*)32 );
-      //stg_model_add_prop_callback( device->mod, "pose", test_cb, (void*)48 );
-
-      break;
-      
-      /*
-	case PLAYER_LOCALIZE_CODE:
-	device->data_len = sizeof(player_position_data_t);
-	device->cmd_len = sizeof(player_position_cmd_t);
-	device->command_callback = LocalizeCommand;
-	device->data_callback = LocalizeData;
-	device->config_callback = LocalizeConfig;
-	this->SetError( this->InitModel(device, cf, section, STG_MODEL_POSITION));
-	break;
-      */
-      
-    case PLAYER_LASER_CODE:
-      device->data_len = sizeof(player_laser_data_t);
-      device->cmd_len = 0;
-      device->command_callback = NULL;
-      device->data_callback = LaserData;
-      device->config_callback = LaserConfig;
-      device->mod = this->LocateModel( model_name, STG_MODEL_LASER );
-      break;
-      
-    case PLAYER_GRIPPER_CODE:
-      device->data_len = sizeof(player_gripper_data_t);
-      device->cmd_len = sizeof(player_gripper_cmd_t);
-      device->command_callback = GripperCommand;
-      device->data_callback = GripperData;
-      device->config_callback = GripperConfig;
-      device->mod = this->LocateModel( model_name, STG_MODEL_GRIPPER );
-      break;
-
-    case PLAYER_FIDUCIAL_CODE:
-      device->data_len = sizeof(player_fiducial_data_t);
-      device->cmd_len = 0;
-      device->command_callback = NULL;
-      device->data_callback = FiducialData;
-      device->config_callback = FiducialConfig;
-      device->mod = this->LocateModel( model_name, STG_MODEL_FIDUCIAL );
-      break;
-      
-    case PLAYER_SONAR_CODE:
-      device->data_len = sizeof(player_sonar_data_t);
-      device->cmd_len = 0;
-      device->command_callback = NULL;
-      device->data_callback = SonarData;
-      device->config_callback = SonarConfig;
-      device->mod = this->LocateModel( model_name, STG_MODEL_RANGER );
-      break;
-      
-//     case PLAYER_ENERGY_CODE:
-//       device->data_len = sizeof(player_energy_data_t);
-//       device->cmd_len = 0;
-//       device->command_callback = NULL;
-//       device->data_callback = EnergyData;
-//       device->config_callback = EnergyConfig;
-//       device->mod = this->LocateModel( model_name, STG_MODEL_ENERGY );
-//       break;
-      
-    case PLAYER_BLOBFINDER_CODE:
-      device->data_len = sizeof(player_blobfinder_data_t);
-      device->cmd_len = 0;
-      device->command_callback = NULL;
-      device->data_callback = BlobfinderData;
-      device->config_callback = BlobfinderConfig;
-      device->mod = this->LocateModel( model_name, STG_MODEL_BLOB );
-      break;
-      
-    case PLAYER_MAP_CODE:
-      device->data_len = 0; // no cmds or data for maps
-      device->cmd_len = 0;
-      device->command_callback = NULL;
-      device->data_callback = NULL;
-      device->config_callback = MapConfig;
-      device->mod = stg_world_model_name_lookup( StgDriver::world, model_name );
-      break;
-      
-    default:
-      PRINT_ERR1( "error: stage driver doesn't support interface type %d\n",
-		  device->id.code );
-      this->SetError(-1);
-      return 2; // fail
-    }
-  
-
-  if( !device->mod )
-    {
-      printf( " ERROR! no model available for this device."
-	      " Check your world and config files.\n" );
-      return -1;
-    }
-  
-  if( !quiet_startup )
-    printf( "\"%s\"\n", device->mod->token );
-  
-  // now poke a data callback function into the model  
-  device->mod->data_notify = StgDriver::RefreshDataCallback;
-  device->mod->data_notify_arg = device;
-  
-  // and add the device to the driver's list of devices
-  g_ptr_array_add( this->devices, device );
-  
-  // attempt to add this interface and we're done
-  return( this->AddInterface( device->id, 
-			      PLAYER_ALL_MODE, 
-			      device->data_len, 
-			      device->cmd_len,
-			      10, 10) );
-}      
-
-////////////////////////////////////////////////////////////////////////////////
 // Constructor.  Retrieve options from the configuration file and do any
 // pre-Setup() setup.
 StgDriver::StgDriver(ConfigFile* cf, int section)
@@ -560,12 +279,77 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  fflush(stdout);
 	}
       
-      if( player_id.code == PLAYER_SIMULATION_CODE )
-	assert( this->CreateDeviceSimulation( player_id, cf, section ) == 0 );
+      
+      Interface *ifsrc = NULL;
+
+      switch( player_id.code )
+	{
+	case PLAYER_SIMULATION_CODE:
+	  ifsrc = new InterfaceSimulation( player_id, this, cf, section );
+	  break;
+	  
+	case PLAYER_POSITION_CODE:	  
+	  ifsrc = new InterfacePosition( player_id, this,  cf, section );
+	  break;
+	  
+	case PLAYER_LASER_CODE:	  
+	  ifsrc = new InterfaceLaser( player_id,  this, cf, section );
+	  break;
+
+	case PLAYER_FIDUCIAL_CODE:
+	  ifsrc = new InterfaceFiducial( player_id,  this, cf, section );
+	  break;
+	  
+	case PLAYER_BLOBFINDER_CODE:
+	  ifsrc = new InterfaceBlobfinder( player_id,  this, cf, section );
+	  break;
+	  
+	case PLAYER_SONAR_CODE:
+	  ifsrc = new InterfaceSonar( player_id,  this, cf, section );
+	  break;
+
+	  /*	  
+	case PLAYER_GRIPPER_CODE:
+	  break;
+	  	  	  
+	case PLAYER_MAP_CODE:
+	  break;
+	  */
+
+	default:
+	  PRINT_ERR1( "error: stage driver doesn't support interface type %d\n",
+		      player_id.code );
+	  this->SetError(-1);
+	  return; 
+	}
+      
+      if( ifsrc )
+	{
+	  // attempt to add this interface and we're done
+	  if( this->AddInterface( ifsrc->id, 
+				  PLAYER_ALL_MODE, 
+				  ifsrc->data_len, 
+				  ifsrc->cmd_len,
+				  ifsrc->req_qlen,
+				  ifsrc->req_qlen ) )
+	    {
+	      DRIVER_ERROR( "AddInterface() failed" );
+	      this->SetError(-2);
+	      return;
+	    }
+	  
+	  // store the Interaface in our device list
+	  g_ptr_array_add( this->devices, ifsrc );
+	}
       else
-	assert( this->CreateDeviceModel( player_id, cf, section ) ==0 );
-    } 
-  
+	{
+	  PRINT_ERR3( "No Stage source found for interface %d:%d:%d",
+		      player_id.port, player_id.code, player_id.index );
+	  
+	  this->SetError(-3);
+	  return;
+	} 
+    }
   //puts( "  Stage driver loaded successfully." );
 }
 
@@ -608,12 +392,12 @@ int StgDriver::Setup()
 
 // find the device record with this Player id
 // todo - faster lookup with a better data structure
-device_record_t* StgDriver::LookupDevice( player_device_id_t id )
+Interface* StgDriver::LookupDevice( player_device_id_t id )
 {
   for( int i=0; i<(int)this->devices->len; i++ )
     {
-      device_record_t* candidate = 
-	(device_record_t*)g_ptr_array_index( this->devices, i );
+      Interface* candidate = 
+	(Interface*)g_ptr_array_index( this->devices, i );
       
       if( candidate->id.port == id.port &&
 	  candidate->id.code == id.code &&
@@ -631,15 +415,16 @@ int StgDriver::Subscribe(player_device_id_t id)
   if( id.code == PLAYER_SIMULATION_CODE )
     return 0; // ok
 
-  device_record_t* device = this->LookupDevice( id );
+  Interface* device = this->LookupDevice( id );
   
   if( device )
     {      
       stg_model_subscribe( device->mod );  
       return Driver::Subscribe(id);
     }
-  else
-    return 1; // error
+
+  puts( "failed to find a device" );
+  return 1; // error
 }
 
 
@@ -649,7 +434,7 @@ int StgDriver::Unsubscribe(player_device_id_t id)
   if( id.code == PLAYER_SIMULATION_CODE )
     return 0; // ok
 
-  device_record_t* device = this->LookupDevice( id );
+  Interface* device = this->LookupDevice( id );
   
   if( device )
     {
@@ -660,7 +445,6 @@ int StgDriver::Unsubscribe(player_device_id_t id)
     return 1; // error
 }
 
-
 StgDriver::~StgDriver()
 {
   // todo - when the sim thread exits, destroy the world. It's not
@@ -669,8 +453,6 @@ StgDriver::~StgDriver()
 
   //puts( "Stage driver destroyed" );
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -685,7 +467,7 @@ int StgDriver::Shutdown()
   // shutting unsubscribe to data from all the devices
   //for( int i=0; i<(int)this->devices->len; i++ )
   //{
-  //  device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
+  //  Interface* device = (Interface*)g_ptr_array_index( this->devices, i );
   //  stg_model_unsubscribe( device->mod );
   // }
 
@@ -695,19 +477,15 @@ int StgDriver::Shutdown()
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Main function for device thread
-void StgDriver::Main() 
+void StgDriver::Main( void )
 {
-  //puts( "stage driver main" );
-
-  assert( StgDriver::world );
+  assert( this->world );
 
   // The main loop; interact with the device here
   for(;;)
   {
     // test if we are supposed to cancel
-    pthread_testcancel();
+    //pthread_testcancel();
 
     if( stg_world_update( StgDriver::world, TRUE ) )
       exit( 0 );
@@ -717,126 +495,57 @@ void StgDriver::Main()
   }
 }
 
-
-// override Device::PutConfig()
-int StgDriver::PutConfig(player_device_id_t id, void *client, 
-			 void* src, size_t len,
-			 struct timeval* timestamp)
-{  
-  //puts( "StgDriver::PutConfig");
-
-  if( len < 1 )
-    {
-      PRINT_WARN( "received a config of zero length. Ignoring it." );
-      return 0;
-    }
-  
-  struct timeval ts;
-  
-  if(timestamp)
-    ts = *timestamp;
-  else
-    GlobalTime->GetTime(&ts);
-  
-  // find this device:  
-  device_record_t* drec = NULL;
-  
-  for( int i=0; i<(int)this->devices->len; i++ )
-    {
-      device_record_t* candidate = 
-	(device_record_t*)g_ptr_array_index( this->devices, i );
-      
-      if( candidate->id.port == id.port &&
-	  candidate->id.code == id.code &&
-	  candidate->id.index == id.index )
-	{
-	  drec = candidate;
-	  break;
-	}
-    }
-  
-  // if the device was found, call the appropriate config handler
-  if( drec && drec->config_callback ) 
-    (*drec->config_callback)( drec, client, src, len );
-  else
-    {	
-      PRINT_WARN3( "Failed to find device id (%d:%d:%d)", 
-		   id.port, id.code, id.index );
-      
-      if (this->PutReply( id, client, 
-			  PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-	DRIVER_ERROR("PutReply() failed");	  
-    }
-  
-  return(0);
-}
-
 // Moved this declaration here (and changed its name) because 
 // when it's declared on the stack inside StgDriver::Update below, it 
 // corrupts the stack.  This makes makes valgrind unhappy (errors about
 // invalid reads/writes to another thread's stack.  This may also be related
 // to occasional mysterious crashed with Stage that I've seen.
 //        - BPG
-uint8_t stage_cmd_buffer[ PLAYER_MAX_MESSAGE_SIZE ];
+uint8_t stage_buffer[ PLAYER_MAX_MESSAGE_SIZE ];
 
 void StgDriver::Update(void)
-{
-  // puts( "stgdriver update" );
-
-  // Can't declare objects this big (PLAYER_MAX_MESSAGE_SIZE = 2MB) 
-  // on the stack.  Moved this declaration above - BPG
-  //
-  // Check for commands
-  // uint8_t cmd[ PLAYER_MAX_MESSAGE_SIZE ];
-  
-  //printf( "driver %p has %d devices to inspect\n",
-  //  this, (int)this->devices->len );
-  
+{  
   for( int i=0; i<(int)this->devices->len; i++ )
     {
-      device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
+      Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
       
       //printf( "checking command for %d:%d:%d\n",
       //      device->id.port, 
       //      device->id.code, 
       //      device->id.index );
       
-      if( device->cmd_len > 0 )
+      if( interface && interface->cmd_len > 0 )
 	{    
 	  // copy the command from Player
 	  size_t cmd_len = 
-	    this->GetCommand( device->id, stage_cmd_buffer, device->cmd_len, NULL);
+	    this->GetCommand( interface->id, stage_buffer, 
+			      interface->cmd_len, NULL);
 	  
 	  //printf( "command for %d:%d:%d is %d bytes\n",
-	  //  device->id.port, 
-	  //  device->id.code, 
-	  //  device->id.index, 
+	  //  interface->id.port, 
+	  //  interface->id.code, 
+	  //  interface->id.index, 
 	  //  (int)cmd_len );
-	    
-	  if( cmd_len && device && device->command_callback )
-	    (*device->command_callback)( device, stage_cmd_buffer, cmd_len );	  
+	  
+	  if( cmd_len > 0 )
+	    interface->Command( stage_buffer, cmd_len );
 	}
+      
+      // check for configs
+      if( interface && interface->req_qlen > 0 )
+	{
+	  void* client = NULL;
+	  int cfg_len = 
+	    this->GetConfig( interface->id, &client, 
+			     stage_buffer, PLAYER_MAX_MESSAGE_SIZE, NULL );
+	  
+	  if( cfg_len > 0 )
+	    interface->Configure( client, stage_buffer, cfg_len );
+	}
+      
+      interface->Publish();
     }
   
   // update the world
   return;
-}
-
-
-void StgDriver::RefreshDataCallback( void* user, void* data, size_t len )
-{
-  //puts( "refresh data callback" );
-
-  device_record_t* device = (device_record_t*)user;
-
-  if( device->data_callback )
-    {
-      //printf( "calling data callback for model \"%s\" device %d:%d:%d\n", 
-      //      device->mod->token, device->id.port, device->id.code, device->id.index );
-      
-      (*device->data_callback)( device, data, len );
-    }
-  else
-    printf( "warn: no data callback installed for model \"%s\" device %d:%d:%d\n", 
-	    device->mod->token, device->id.port, device->id.code, device->id.index );
 }

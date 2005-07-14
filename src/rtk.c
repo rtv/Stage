@@ -21,7 +21,7 @@
 /*
  * Desc: Stk application functions
  * Author: Andrew Howard
- * CVS: $Id: rtk.c,v 1.5 2005-03-11 21:56:57 rtv Exp $
+ * CVS: $Id: rtk.c,v 1.6 2005-07-14 23:37:23 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -46,7 +46,7 @@
 int LIBSTK_VERSION_2_2(void) { return(0); }
 
 // Declare some local functions
-static int stg_rtk_app_on_timer(stg_rtk_app_t *app);
+//static int stg_rtk_app_on_timer(stg_rtk_app_t *app);
 
 // Initialise the library.
 
@@ -119,32 +119,6 @@ int stg_rtk_app_quit(stg_rtk_app_t *app)
   return (app->has_quit);
 }
 
-// Handle timer events
-int stg_rtk_app_on_timer(stg_rtk_app_t *app)
-{
-  /* REMOVE
-  stg_rtk_canvas_t *canvas;
-  stg_rtk_table_t *table;
-
-  // Update the display
-  for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-    stg_rtk_canvas_update(canvas);
-  
-  // Quit the app if we have been told we should
-  // We first destroy in windows that are still open.
-  if (app->must_quit)
-  {
-    for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-      if (!canvas->destroyed)
-        gtk_widget_destroy(canvas->frame);
-    for (table = app->table; table != NULL; table = table->next)
-      if (!table->destroyed)
-        gtk_widget_destroy(table->frame);
-    gtk_main_quit();
-  }
-  */
-  return TRUE;
-}
 
 // Main loop -- run in own thread
 int stg_rtk_app_main(stg_rtk_app_t *app)

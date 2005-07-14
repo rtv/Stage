@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.15 2005-07-08 22:55:13 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.16 2005-07-14 23:37:23 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -38,132 +38,74 @@
 #define DEBUG
 
 #include "player_interfaces.h"
+#include "player_driver.h"
 
 #include "playerclient.h"
+
+// this is a Player global
+extern bool quiet_startup;
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
 
 
-
-// 
-// SIMULATION INTERFACE
-//
-
-void SimulationData( device_record_t* device, void* data, size_t len )
+InterfaceModel::InterfaceModel(  player_device_id_t id, 
+				 StgDriver* driver,
+				 ConfigFile* cf, 
+				 int section,
+				 stg_model_type_t modtype )
+  : Interface( id, driver, cf, section )
 {
-  PRINT_WARN( "refresh data requested for simulation device - devices produces no data" );
-  device->driver->PutData( device->id, NULL, 0, NULL); 
-}
-
-void SimulationConfig(  device_record_t* device,
-			void* client, 
-			void* buffer, size_t len )
-{
-  //printf("got simulation request\n");
+  //puts( "InterfaceModel constructor" );
   
-  // switch on the config type (first byte)
-  uint8_t* buf = (uint8_t*)buffer;
-  switch( buf[0] )
-    {  
-      
-      // if Player has defined this config, implement it
-#ifdef PLAYER_SIMULATION_SET_POSE2D
-    case PLAYER_SIMULATION_SET_POSE2D:
-      {
-	player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
-	
-	stg_pose_t pose;
-	pose.x = (int32_t)ntohl(req->x) / 1000.0;
-	pose.y = (int32_t)ntohl(req->y) / 1000.0;
-	pose.a = DTOR( ntohl(req->a) );
-	
-        /*
-	printf( "Stage: received request to move object \"%s\" to (%.2f,%.2f,%.2f)\n",
-		req->name, pose.x, pose.y, pose.a );
-                */
-	
-	// look up the named model
-	
-	stg_model_t* mod = 
-	  stg_world_model_name_lookup( StgDriver::world, req->name );
- 	
-	if( mod )
-	  {
-	    // move it 
-	    // printf( "moving model \"%s\"", req->name );	    
-	    //stg_model_set_pose( mod, &pose );  
-	    stg_model_set_property( mod, "pose", &pose, sizeof(pose));
-	    device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
-	  }
-	else
-	  {
-	    PRINT_WARN1( "simulation model \"%s\" not found", req->name );
-	    device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL );
-	  }
-      }      
-      break;
-#endif
-          // if Player has defined this config, implement it
-#ifdef PLAYER_SIMULATION_GET_POSE2D
-    case PLAYER_SIMULATION_GET_POSE2D:
-      {
-	player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
-	
-	//printf( "Stage: received request for position of object \"%s\"\n", req->name );
-	
-	// look up the named model	
-	stg_model_t* mod = 
-	  stg_world_model_name_lookup( StgDriver::world, req->name );
- 	
-	if( mod )
-	  {
-	    stg_pose_t* pose = (stg_pose_t*)
-	      //stg_model_get_pose( mod, &pose );
-	      stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
-
-            /*
-	    printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
-		    pose.x, pose.y, pose.a );
-                    */
-	    
-	    player_simulation_pose2d_req_t reply;
-	    memcpy( &reply, req, sizeof(reply));
-	    reply.x = htonl((int32_t)(pose->x*1000.0));
-	    reply.y = htonl((int32_t)(pose->y*1000.0));
-	    reply.a = htonl((int32_t)RTOD(pose->a));
-	    
-            /*
-	    printf( "Stage: returning location (%d %d %d)\n",
-		    reply.x, reply.y, reply.a );
-                    */
-
-	    device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, 
-				      &reply, sizeof(reply),  NULL );
-	  }
-	else
-	  {
-	    PRINT_WARN1( "Stage: simulation model \"%s\" not found", req->name );
-	    device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL );
-	  }
-      }      
-      break;
-#endif
-      
-    default:      
-      PRINT_WARN1( "Stage: simulation device doesn't implement config code %d.", buf[0] );
-      if (device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-	DRIVER_ERROR("PutReply() failed");  
-      break;
+  const char* model_name = cf->ReadString(section, "model", NULL );
+  
+  if( model_name == NULL )
+    {
+      PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
+		  "no \"model\" value defined. You must specify a "
+		  "model name that matches one of the models in "
+		  "the worldfile.",
+		  model_name );
+      return; // error
     }
-}
+  
+  this->mod = driver->LocateModel( model_name, modtype );
+  
+  if( !this->mod )
+    {
+      printf( " ERROR! no model available for this device."
+	      " Check your world and config files.\n" );
+      return;
+    }
+  
+  if( !quiet_startup )
+    printf( "\"%s\"\n", this->mod->token );
+}      
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 // 
 // BLOBFINDER INTERFACE
 //
 
-void BlobfinderData( device_record_t* device, void* data, size_t len )
+InterfaceBlobfinder::InterfaceBlobfinder( player_device_id_t id, 
+				StgDriver* driver,
+				ConfigFile* cf,
+				int section )
+  : InterfaceModel( id, driver, cf, section, STG_MODEL_BLOB )
 {
-  stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)data;
+  this->data_len = sizeof(player_blobfinder_data_t);
+  this->cmd_len = 0;
+}
+
+void InterfaceBlobfinder::Publish( void )
+{
+  size_t len=0;
+  stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)
+    stg_model_get_property( this->mod, "blob_data", &len );
   
   size_t bcount = len / sizeof(stg_blobfinder_blob_t);
   
@@ -175,12 +117,13 @@ void BlobfinderData( device_record_t* device, void* data, size_t len )
   memset( &bfd, 0, sizeof(bfd) );
   
   // get the configuration
-  stg_blobfinder_config_t cfg;      
-  assert( stg_model_get_config( device->mod, &cfg, sizeof(cfg) ) == sizeof(cfg) );
+  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)
+    stg_model_get_property_fixed( this->mod, "blob_cfg", sizeof(stg_blobfinder_config_t));
+  assert(cfg);
   
   // and set the image width * height
-  bfd.width = htons((uint16_t)cfg.scan_width);
-  bfd.height = htons((uint16_t)cfg.scan_height);
+  bfd.width = htons((uint16_t)cfg->scan_width);
+  bfd.height = htons((uint16_t)cfg->scan_height);
   bfd.blob_count = htons((uint16_t)bcount);
   
   // now run through the blobs, packing them into the player buffer
@@ -217,14 +160,14 @@ void BlobfinderData( device_record_t* device, void* data, size_t len )
     }
   
   size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);   
-  device->driver->PutData( device->id, &bfd, size, NULL);
+  this->driver->PutData( this->id, &bfd, size, NULL);
 }
 
-void BlobfinderConfig( device_record_t* device, void* client, void* buffer, size_t len )
+void InterfaceBlobfinder::Configure( void* client, void* buffer, size_t len )
 {
   printf("got blobfinder request\n");
   
-  if (device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+  if (this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
     DRIVER_ERROR("PutReply() failed");  
 }
 
@@ -239,7 +182,7 @@ typedef struct
   int8_t* data;
 } stg_map_info_t;
 
-void MapData( device_record_t* device, void* data, size_t len )
+void MapData( Interface* device, void* data, size_t len )
 {
   //PRINT_WARN( "someone subscribed to the map interface, but we don't generate any data" );
   device->driver->PutData( device->id, NULL, 0, NULL); 
@@ -247,7 +190,7 @@ void MapData( device_record_t* device, void* data, size_t len )
 
 // Handle map info request - adapted from Player's mapfile driver by
 // Brian Gerkey
-void  MapConfigInfo( device_record_t* device,  
+void  MapConfigInfo( Interface* device,  
 		     void *client, 
 		     void *request, 
 		     size_t len)
@@ -296,9 +239,11 @@ void  MapConfigInfo( device_record_t* device,
   printf( "Stage: creating map for model \"%s\" of %d by %d cells... ", 
 	  device->mod->token, minfo->width, minfo->height );
   fflush(stdout);
-  
-  size_t count=0;
-  stg_polygon_t* polys = stg_model_get_polygons( device->mod, &count);
+
+  size_t sz=0;
+  stg_polygon_t* polys = (stg_polygon_t*)
+    stg_model_get_property( device->mod, "polygons", &sz);
+  size_t count = sz / sizeof(stg_polygon_t);
   
   if( polys && count ) // if we have something to render
     {
@@ -307,9 +252,7 @@ void  MapConfigInfo( device_record_t* device,
       
       stg_matrix_t* matrix = stg_matrix_create( minfo->ppm, 
 						device->mod->world->matrix->width,
-						device->mod->world->matrix->height,
-						1, 1 );
-      
+						device->mod->world->matrix->height );    
       if( count > 0 ) 
 	{
 	  // render the model into the matrix
@@ -382,7 +325,7 @@ void  MapConfigInfo( device_record_t* device,
 }
 
 // Handle map data request
-void MapConfigData( device_record_t* device,  
+void MapConfigData( Interface* device,  
 		    void *client, 
 		    void *request, 
 		    size_t len)
@@ -495,7 +438,7 @@ void MapConfigData( device_record_t* device,
 }
 
 
-void MapConfig( device_record_t* device, void* client, void* buffer, size_t len )
+void MapConfig( Interface* device, void* client, void* buffer, size_t len )
 {
   switch( ((unsigned char*)buffer)[0])
     {
@@ -517,15 +460,24 @@ void MapConfig( device_record_t* device, void* client, void* buffer, size_t len 
 // FIDUCIAL INTERFACE
 //
 
-void FiducialData( device_record_t* device, void* data, size_t len )
+InterfaceFiducial::InterfaceFiducial(  player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section )
+  : InterfaceModel( id, driver, cf, section, STG_MODEL_FIDUCIAL )
 {
+  this->data_len = sizeof(player_fiducial_data_t);
+  this->cmd_len = 0; // no commands
+}
+
+void InterfaceFiducial::Publish( void )
+{
+  size_t len = 0;
+  stg_fiducial_t* fids = (stg_fiducial_t*)
+    stg_model_get_property( this->mod, "fiducial_data", &len );
+  
   player_fiducial_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
   
   if( len > 0 )
     {
-      stg_fiducial_t* fids = (stg_fiducial_t*)data;
-      
       size_t fcount = len / sizeof(stg_fiducial_t);      
       assert( fcount > 0 );
       
@@ -533,6 +485,13 @@ void FiducialData( device_record_t* device, void* data, size_t len )
       
       //printf( "reporting %d fiducials\n",
       //      fcount );
+
+      if( fcount > PLAYER_FIDUCIAL_MAX_SAMPLES )
+	{
+	  PRINT_WARN2( "A Stage model has detected more fiducials than will fit in Player's buffer (%d/%d)\n",
+		      fcount, PLAYER_FIDUCIAL_MAX_SAMPLES );
+	  fcount = PLAYER_FIDUCIAL_MAX_SAMPLES;
+	}
 
       for( int i=0; i<(int)fcount; i++ )
 	{
@@ -547,21 +506,21 @@ void FiducialData( device_record_t* device, void* data, size_t len )
 	  pdata.fiducials[i].pos[1] = htonl((int32_t)(ypos*1000.0));
 	  
 	  // yaw only
-	  pdata.fiducials[i].rot[2] = htonl((int32_t)(fids[i].geom.a*1000.0));	      
-	  
+	  pdata.fiducials[i].rot[2] = htonl((int32_t)(fids[i].geom.a*1000.0));	      	  
 	  // player can't handle per-fiducial size.
 	  // we leave uncertainty (upose) at zero
 	}
     }
   
   // publish this data
-  device->driver->PutData( device->id, &pdata, sizeof(pdata), NULL);
+  this->driver->PutData( this->id, &pdata, sizeof(pdata), NULL);
 }
 
-void FiducialConfig( device_record_t* device, void* client, void* src, size_t len  )
+void InterfaceFiducial::Configure( void* client, void* src, size_t len  )
 {
-  printf("got fiducial request\n");
-   // switch on the config type (first byte)
+  //printf("got fiducial request\n");
+
+  // switch on the config type (first byte)
   uint8_t* buf = (uint8_t*)src;
   switch( buf[0] )
     {  
@@ -570,7 +529,7 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
 	// just get the model's geom - Stage doesn't have separate
 	// fiducial geom (yet)
 	stg_geom_t geom;
-	stg_model_get_geom(device->mod,&geom);
+	stg_model_get_geom(this->mod,&geom);
 	
 	// fill in the geometry data formatted player-like
 	player_fiducial_geom_t pgeom;
@@ -584,7 +543,7 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
 	pgeom.fiducial_size[0] = ntohs((uint16_t)100); // TODO - get this info
 	pgeom.fiducial_size[1] = ntohs((uint16_t)100);
 	
-	if( device->driver->PutReply(  device->id, client, PLAYER_MSGTYPE_RESP_ACK,  
+	if( this->driver->PutReply(  this->id, client, PLAYER_MSGTYPE_RESP_ACK,  
 				       &pgeom, sizeof(pgeom), NULL ) != 0 )
 	  DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_GEOM");      
       }
@@ -607,7 +566,9 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
 	  //printf( "setting fiducial FOV to min %f max %f fov %f\n",
 	  //  setcfg.min_range, setcfg.max_range_anon, setcfg.fov );
 	  
-	  stg_model_set_config( device->mod, &setcfg, sizeof(setcfg));
+	  //stg_model_set_config( this->mod, &setcfg, sizeof(setcfg));
+	  stg_model_set_property( this->mod, "fiducial_cfg", 
+				  &setcfg, sizeof(setcfg)); 
 	}    
       else
 	PRINT_ERR2("Incorrect packet size setting fiducial FOV (%d/%d)",
@@ -617,17 +578,17 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
       
     case PLAYER_FIDUCIAL_GET_FOV:
       {
-	stg_fiducial_config_t cfg;
-	assert( stg_model_get_config( device->mod, &cfg, sizeof(stg_fiducial_config_t))
-		== sizeof(stg_fiducial_config_t) );
-	
+	stg_fiducial_config_t *cfg = (stg_fiducial_config_t*)
+	  stg_model_get_property_fixed( this->mod, "fiducial_cfg", sizeof(stg_fiducial_config_t));
+	assert(cfg);
+
 	// fill in the geometry data formatted player-like
 	player_fiducial_fov_t pfov;
-	pfov.min_range = htons((uint16_t)(1000.0 * cfg.min_range));
-	pfov.max_range = htons((uint16_t)(1000.0 * cfg.max_range_anon));
-	pfov.view_angle = htons((uint16_t)RTOD(cfg.fov));
+	pfov.min_range = htons((uint16_t)(1000.0 * cfg->min_range));
+	pfov.max_range = htons((uint16_t)(1000.0 * cfg->max_range_anon));
+	pfov.view_angle = htons((uint16_t)RTOD(cfg->fov));
 	
-	if( device->driver->PutReply(  device->id, client, PLAYER_MSGTYPE_RESP_ACK, 
+	if( this->driver->PutReply(  this->id, client, PLAYER_MSGTYPE_RESP_ACK, 
 				       &pfov, sizeof(pfov), NULL ) != 0 )
 	  DRIVER_ERROR("PutReply() failed for "
 		       "PLAYER_FIDUCIAL_GET_FOV or PLAYER_FIDUCIAL_SET_FOV");      
@@ -640,7 +601,7 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
 	{
 	  int id = ntohl(((player_fiducial_id_t*)src)->id);
 	  
-	  stg_model_set_property( device->mod, "fidicial_return", &id, sizeof(id));
+	  stg_model_set_property( this->mod, "fidicial_return", &id, sizeof(id));
 	}
       else
 	PRINT_ERR2("Incorrect packet size setting fiducial ID (%d/%d)",
@@ -651,7 +612,7 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
   case PLAYER_FIDUCIAL_GET_ID:
       {
 	stg_fiducial_return_t* ret = (stg_fiducial_return_t*) 
-	  stg_model_get_property_fixed( device->mod, 
+	  stg_model_get_property_fixed( this->mod, 
 					"fidicial_return",
 					sizeof(stg_fiducial_return_t));
 
@@ -659,7 +620,7 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
 	player_fiducial_id_t pid;
 	pid.id = htonl((int)*ret);
 	
-	if( device->driver->PutReply(  device->id, client, PLAYER_MSGTYPE_RESP_ACK, 
+	if( this->driver->PutReply(  this->id, client, PLAYER_MSGTYPE_RESP_ACK, 
 				       &pid, sizeof(pid), NULL ) != 0 )
 	  DRIVER_ERROR("PutReply() failed for "
 		       "PLAYER_FIDUCIAL_GET_ID or PLAYER_FIDUCIAL_SET_ID");      
@@ -670,20 +631,32 @@ void FiducialConfig( device_record_t* device, void* client, void* src, size_t le
     default:
       {
 	PRINT_WARN1( "Warning: stg_fiducial doesn't support config id %d\n", buf[0] );
-        if ( device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0) 
+        if ( this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0) 
           DRIVER_ERROR("PutReply() failed");
       }
     }  
 }
 
+
 // 
 // LASER INTERFACE
 //
 
-void LaserData( device_record_t* device, void* data, size_t len )
+InterfaceLaser::InterfaceLaser( player_device_id_t id, 
+				StgDriver* driver,
+				ConfigFile* cf,
+				int section )
+  : InterfaceModel( id, driver, cf, section, STG_MODEL_LASER )
 {
-  //puts( "publishing laser data" );
-  
+  this->data_len = sizeof(player_laser_data_t);
+  this->cmd_len = 0;
+}
+
+void InterfaceLaser::Publish( void )
+{
+  size_t len = 0;
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)
+    stg_model_get_property( this->mod, "laser_data", &len );
   
   int sample_count = len / sizeof( stg_laser_sample_t );
   
@@ -693,30 +666,29 @@ void LaserData( device_record_t* device, void* data, size_t len )
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
   
-  stg_laser_config_t cfg;
-  assert( stg_model_get_config( device->mod, &cfg, sizeof(cfg)) == sizeof(cfg));
+  stg_laser_config_t *cfg = (stg_laser_config_t*) 
+    stg_model_get_property_fixed( this->mod, "laser_cfg", sizeof(stg_laser_config_t));
+  assert(cfg);
   
-  if( sample_count != cfg.samples )
+  if( sample_count != cfg->samples )
     {
       //PRINT_ERR2( "bad laser data: got %d/%d samples",
-      //	  sample_count, cfg.samples );
+      //	  sample_count, cfg->samples );
     }
   else
     {      
-      stg_laser_sample_t* samples = (stg_laser_sample_t*)data;
-      
-      double min_angle = -RTOD(cfg.fov/2.0);
-      double max_angle = +RTOD(cfg.fov/2.0);
-      double angular_resolution = RTOD(cfg.fov / cfg.samples);
+      double min_angle = -RTOD(cfg->fov/2.0);
+      double max_angle = +RTOD(cfg->fov/2.0);
+      double angular_resolution = RTOD(cfg->fov / cfg->samples);
       double range_multiplier = 1; // TODO - support multipliers
       
       pdata.min_angle = htons( (int16_t)(min_angle * 100 )); // degrees / 100
       pdata.max_angle = htons( (int16_t)(max_angle * 100 )); // degrees / 100
       pdata.resolution = htons( (uint16_t)(angular_resolution * 100)); // degrees / 100
       pdata.range_res = htons( (uint16_t)range_multiplier);
-      pdata.range_count = htons( (uint16_t)cfg.samples );
+      pdata.range_count = htons( (uint16_t)cfg->samples );
       
-      for( int i=0; i<cfg.samples; i++ )
+      for( int i=0; i<cfg->samples; i++ )
 	{
 	  //printf( "range %d %d\n", i, samples[i].range);
 	  
@@ -725,11 +697,13 @@ void LaserData( device_record_t* device, void* data, size_t len )
 	}
       
       // Write laser data
-      device->driver->PutData( device->id, &pdata, sizeof(pdata), NULL);
+      this->driver->PutData( this->id, &pdata, sizeof(pdata), NULL);
     }
+
+  //return 0;
 }
 
-void LaserConfig( device_record_t* device, void* client, void* buffer, size_t len )
+void InterfaceLaser::Configure( void* client, void* buffer, size_t len )
 {
   printf("got laser request\n");
   
@@ -756,13 +730,14 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
 	    max_a /= 100;
 	    ang_res /= 100;
 	    
-	    stg_laser_config_t current;
-	    assert( stg_model_get_config( device->mod, &current, sizeof(current))
-		     == sizeof(current));
+	    stg_laser_config_t *current = (stg_laser_config_t*)
+	      stg_model_get_property_fixed( this->mod, "laser_cfg", 
+					    sizeof(stg_laser_config_t));
+	    assert( current );
 	    
 	    stg_laser_config_t slc;
 	    // copy the existing config
-	    memcpy( &slc, &current, sizeof(slc));
+	    memcpy( &slc, current, sizeof(slc));
 	    
 	    // tweak the parts that player knows about
 	    slc.fov = DTOR(max_a - min_a);
@@ -771,9 +746,10 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
 	    PRINT_DEBUG2( "setting laser config: fov %.2f samples %d", 
 			  slc.fov, slc.samples );
 	    
-	    stg_model_set_config( device->mod, &slc, sizeof(slc));
+	    stg_model_set_property( this->mod, "laser_cfg", 
+				  &slc, sizeof(slc)); 
 	    
-	    if(device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, plc, len, NULL) != 0)
+	    if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, plc, len, NULL) != 0)
 	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");
 	  }
 	else
@@ -781,7 +757,7 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
 	    PRINT_ERR2("config request len is invalid (%d != %d)", 
 	           (int)len, (int)sizeof(player_laser_config_t));
 
-	    if( device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
+	    if( this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
 	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");
 	  }
       }
@@ -791,15 +767,16 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
       {   
 	if( len == 1 )
 	  {
-	    stg_laser_config_t slc;
-	    assert( stg_model_get_config( device->mod, &slc, sizeof(slc)) 
-		    == sizeof(slc) );
+	    stg_laser_config_t *slc = (stg_laser_config_t*) 
+	      stg_model_get_property_fixed( this->mod, "laser_cfg", 
+					    sizeof(stg_laser_config_t));
+	    assert(slc);
 
 	    // integer angles in degrees/100
-	    int16_t  min_angle = (int16_t)(-RTOD(slc.fov/2.0) * 100);
-	    int16_t  max_angle = (int16_t)(+RTOD(slc.fov/2.0) * 100);
-	    //uint16_t angular_resolution = RTOD(slc.fov / slc.samples) * 100;
-	    uint16_t angular_resolution =(uint16_t)(RTOD(slc.fov / (slc.samples-1)) * 100);
+	    int16_t  min_angle = (int16_t)(-RTOD(slc->fov/2.0) * 100);
+	    int16_t  max_angle = (int16_t)(+RTOD(slc->fov/2.0) * 100);
+	    //uint16_t angular_resolution = RTOD(slc->fov / slc->samples) * 100;
+	    uint16_t angular_resolution =(uint16_t)(RTOD(slc->fov / (slc->samples-1)) * 100);
 	    uint16_t range_multiplier = 1; // TODO - support multipliers
 	    
 	    int intensity = 1; // todo
@@ -815,14 +792,14 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
 	    plc.range_res = htons(range_multiplier);
 	    plc.intensity = intensity;
 
-	    if(device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, &plc, 
+	    if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, &plc, 
 					 sizeof(plc), NULL) != 0)
 	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_CONFIG");      
 	  }
 	else
 	  {
 	    PRINT_ERR2("config request len is invalid (%d != %d)", (int)len, 1);
-	    if( device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
+	    if( this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
 	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_CONFIG");
 	  }
       }
@@ -831,7 +808,7 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
     case PLAYER_LASER_GET_GEOM:
       {	
 	stg_geom_t geom;
-	stg_model_get_geom( device->mod, &geom );
+	stg_model_get_geom( this->mod, &geom );
 	
 	PRINT_DEBUG5( "received laser geom: %.2f %.2f %.2f -  %.2f %.2f",
 		      geom.pose.x, 
@@ -849,8 +826,8 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
 	
 	pgeom.size[0] = htons((uint16_t)(1000.0 * geom.size.x)); 
 	pgeom.size[1] = htons((uint16_t)(1000.0 * geom.size.y)); 
-	
-	if( device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, 
+
+	if( this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, 
 				      &pgeom, sizeof(pgeom), NULL ) != 0 )
 	  DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_GEOM");      
       }
@@ -859,7 +836,7 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
     default:
       {
 	PRINT_WARN1( "stg_laser doesn't support config id %d", buf[0] );
-        if (device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+        if (this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
 	  DRIVER_ERROR("PutReply() failed");
         break;
       }
@@ -867,10 +844,11 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
     }
 }
 
-
+//
 // GRIPPER INTERFACE
+//
 
-void GripperCommand( device_record_t* device, void* src, size_t len )
+void GripperCommand( Interface* device, void* src, size_t len )
 {
   if( len == sizeof(player_gripper_cmd_t) )
     {
@@ -895,14 +873,15 @@ void GripperCommand( device_record_t* device, void* src, size_t len )
       //cmd.cmd  = pcmd->cmd;
       cmd.arg = pcmd->arg;
 
-      stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
+      //stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
+      stg_model_set_property( device->mod, "gripper_cmd", &cmd, sizeof(cmd));
     }
   else
     PRINT_ERR2( "wrong size gripper command packet (%d/%d bytes)",
 		(int)len, (int)sizeof(player_position_cmd_t) );
 }
 
-void GripperData( device_record_t* device, void* data, size_t len )
+void GripperData( Interface* device, void* data, size_t len )
 {
   //puts( "publishing gripper data\n" );
   
@@ -937,7 +916,7 @@ void GripperData( device_record_t* device, void* data, size_t len )
     }
 }
 
-void GripperConfig( device_record_t* device, void* client, void* buffer, size_t len )
+void GripperConfig( Interface* device, void* client, void* buffer, size_t len )
 {
   printf("got gripper request\n");
 }
@@ -947,15 +926,27 @@ void GripperConfig( device_record_t* device, void* client, void* buffer, size_t 
 // SONAR INTERFACE
 //
 
-void SonarData( device_record_t* device, void* data, size_t len )
+InterfaceSonar::InterfaceSonar( player_device_id_t id, 
+				StgDriver* driver,
+				ConfigFile* cf,
+				int section )
+  : InterfaceModel( id, driver, cf, section, STG_MODEL_RANGER )
+{
+  this->data_len = sizeof(player_sonar_data_t);
+  this->cmd_len = 0;
+}
+
+void InterfaceSonar::Publish( void )
 {
   player_sonar_data_t sonar;
   memset( &sonar, 0, sizeof(sonar) );
   
+  size_t len=0;
+  stg_ranger_sample_t* rangers = (stg_ranger_sample_t*)
+    stg_model_get_property( mod, "ranger_data", &len );
+
   if( len > 0 )
-    {
-      stg_ranger_sample_t* rangers = (stg_ranger_sample_t*)data;
-      
+    {      
       size_t rcount = len / sizeof(stg_ranger_sample_t);
       
       // limit the number of samples to Player's maximum
@@ -970,12 +961,12 @@ void SonarData( device_record_t* device, void* data, size_t len )
 	  sonar.ranges[i] = htons((uint16_t)(1000.0*rangers[i].range));
       }
     }
-      
-  device->driver->PutData( device->id, &sonar, sizeof(sonar), NULL); 
+  
+  this->driver->PutData( this->id, &sonar, sizeof(sonar), NULL); 
 }
 
 
-void SonarConfig( device_record_t* device, void* client, void* src, size_t len )
+void InterfaceSonar::Configure( void* client, void* src, size_t len )
 {
   //printf("got sonar request\n");
   
@@ -985,12 +976,11 @@ void SonarConfig( device_record_t* device, void* client, void* src, size_t len )
     {  
     case PLAYER_SONAR_GET_GEOM_REQ:
       { 
-	stg_ranger_config_t cfgs[100];
 	size_t cfglen = 0;
-	cfglen = stg_model_get_config( device->mod, cfgs, sizeof(cfgs[0])*100);
+	stg_ranger_config_t* cfgs = (stg_ranger_config_t*)
+	  stg_model_get_property( this->mod, "ranger_cfg", &cfglen );
+	assert( cfgs );
 	
-	//assert( cfglen == sizeof(cfgs[0])*100 );
-
 	size_t rcount = cfglen / sizeof(stg_ranger_config_t);
 	
 	// convert the ranger data into Player-format sonar poses	
@@ -1018,7 +1008,7 @@ void SonarConfig( device_record_t* device, void* client, void* src, size_t len )
 	      = ntohs((uint16_t)RTOD( cfgs[i].pose.a));	    
 	  }
 
-	  if(device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, 
+	  if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, 
 	  &pgeom, sizeof(pgeom), NULL ) )
 	  DRIVER_ERROR("failed to PutReply");
       }
@@ -1049,11 +1039,10 @@ void SonarConfig( device_record_t* device, void* client, void* src, size_t len )
     default:
       {
 	PRINT_WARN1( "stage sonar model doesn't support config id %d\n", buf[0] );
-	if (device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
+	if (this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
 	  DRIVER_ERROR("PutReply() failed");
 	break;
-      }
-      
+      }      
     }
 }
 
@@ -1061,7 +1050,7 @@ void SonarConfig( device_record_t* device, void* client, void* src, size_t len )
 // ENERGY INTERFACE
 //
 
-void EnergyConfig( device_record_t* device, 
+void EnergyConfig( Interface* device, 
 		   void* client, 
 		   void* src, 
 		   size_t len )
@@ -1083,7 +1072,7 @@ void EnergyConfig( device_record_t* device,
     }
 }
 
-void EnergyData( device_record_t* device, void* data, size_t len )
+void EnergyData( Interface* device, void* data, size_t len )
 {  
   if( len == sizeof(stg_energy_data_t) )
     {
@@ -1099,54 +1088,27 @@ void EnergyData( device_record_t* device, void* data, size_t len )
     }
   else
     PRINT_ERR2( "energy device returned wrong size data (%d/%d)", 
-		len, sizeof(stg_energy_data_t));
+		(int)len, (int)sizeof(stg_energy_data_t));
 }
 
 
-//
-// POSITION INTERFACE 
-//
 
-void PositionCommand( device_record_t* device, void* src, size_t len )
-{
-  if( len == sizeof(player_position_cmd_t) )
-    {
-      // convert from Player to Stage format
-      player_position_cmd_t* pcmd = (player_position_cmd_t*)src;
-      
-      // only velocity control mode works yet
-      stg_position_cmd_t cmd; 
-      cmd.x = ((double)((int32_t)ntohl(pcmd->xspeed))) / 1000.0;
-      cmd.y = ((double)((int32_t)ntohl(pcmd->yspeed))) / 1000.0;
-      cmd.a = DTOR((double)((int32_t)ntohl(pcmd->yawspeed)));
-      cmd.mode = STG_POSITION_CONTROL_VELOCITY;
-      
-      // we only set the command if it's different from the old one
-      // (saves aquiring a mutex lock from the sim thread)
-      
-      char buf[32767];
-      stg_model_get_command( device->mod, buf, 32767 );
-      
-      if( memcmp( &cmd, buf, sizeof(cmd) ))
-	{	  
-	  //static int g=0;
-	  //printf( "setting command %d\n", g++ );
-	  stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
-	}
-    }
-  else
-    PRINT_ERR2( "wrong size position command packet (%d/%d bytes)",
-		(int)len, (int)sizeof(player_position_cmd_t) );
-}
+// POSITION INTERFACE -----------------------------------------------------------------------------
 
-
-void PositionData( device_record_t* device, void* data, size_t len )
+//int PositionData( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+void InterfacePosition::Publish( void )
 {
   //puts( "publishing position data" ); 
   
-  if( len == sizeof(stg_position_data_t) )      
-    {      
-      stg_position_data_t* stgdata = (stg_position_data_t*)data;
+  //Interface* device = (Interface*)userp;
+  
+  stg_position_data_t* stgdata = (stg_position_data_t*)
+    stg_model_get_property_fixed( this->mod, "position_data", 
+				  sizeof(stg_position_data_t ));
+  
+  //if( len == sizeof(stg_position_data_t) )      
+  //  {      
+      //stg_position_data_t* stgdata = (stg_position_data_t*)data;
                   
       //PLAYER_MSG3( "get data data %.2f %.2f %.2f", stgdatax, stgdatay, stgdataa );
       player_position_data_t position_data;
@@ -1166,25 +1128,71 @@ void PositionData( device_record_t* device, void* data, size_t len )
       position_data.stall = stgdata->stall;// ? 1 : 0;
       
       // publish this data
-      device->driver->PutData( device->id, &position_data, sizeof(position_data), NULL);      
-    }
-  else
-    PRINT_ERR2( "wrong size position data (%d/%d bytes)",
-		(int)len, (int)sizeof(player_position_data_t) );
+      this->driver->PutData( this->id, &position_data, sizeof(position_data), NULL);      
+      //}
+      //else
+      //PRINT_ERR2( "wrong size position data (%d/%d bytes)",
+      //	(int)len, (int)sizeof(player_position_data_t) );
 }
 
-void PositionConfig( device_record_t* device, void* client, void* buffer, size_t len  )
+
+InterfacePosition::InterfacePosition(  player_device_id_t id, 
+				       StgDriver* driver,
+				       ConfigFile* cf,
+				       int section )
+						   
+  : InterfaceModel( id, driver, cf, section, STG_MODEL_POSITION )
+{
+  //puts( "InterfacePosition constructor" );
+  this->data_len = sizeof(player_position_data_t);
+  this->cmd_len = sizeof(player_position_cmd_t);  
+  //stg_model_add_property_callback( this->mod, "position_data", PositionData, this );  
+}
+
+void InterfacePosition::Command( void* src, size_t len )
+{
+  if( len == sizeof(player_position_cmd_t) )
+    {
+      // convert from Player to Stage format
+      player_position_cmd_t* pcmd = (player_position_cmd_t*)src;
+      
+      // only velocity control mode works yet
+      stg_position_cmd_t cmd; 
+      cmd.x = ((double)((int32_t)ntohl(pcmd->xspeed))) / 1000.0;
+      cmd.y = ((double)((int32_t)ntohl(pcmd->yspeed))) / 1000.0;
+      cmd.a = DTOR((double)((int32_t)ntohl(pcmd->yawspeed)));
+      cmd.mode = STG_POSITION_CONTROL_VELOCITY;
+      
+      // TODO
+      // only set the command if it's different from the old one
+      // (saves aquiring a mutex lock from the sim thread)
+            
+      //if( memcmp( &cmd, buf, sizeof(cmd) ))
+	{	  
+	  //static int g=0;
+	  //printf( "setting command %d\n", g++ );
+	  //stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
+	  stg_model_set_property( this->mod, "position_cmd", &cmd, sizeof(cmd));
+	}
+    }
+  else
+    PRINT_ERR2( "wrong size position command packet (%d/%d bytes)",
+		(int)len, (int)sizeof(player_position_cmd_t) );
+}
+
+
+void InterfacePosition::Configure( void* client, void* buffer, size_t len  )
 {
   //printf("got position request\n");
   
- // switch on the config type (first byte)
+  // switch on the config type (first byte)
   uint8_t* buf = (uint8_t*)buffer;
   switch( buf[0] )
     {  
     case PLAYER_POSITION_GET_GEOM_REQ:
       {
 	stg_geom_t geom;
-	stg_model_get_geom( device->mod,&geom );
+	stg_model_get_geom( this->mod,&geom );
 
 	// fill in the geometry data formatted player-like
 	player_position_geom_t pgeom;
@@ -1196,9 +1204,9 @@ void PositionConfig( device_record_t* device, void* client, void* buffer, size_t
 	pgeom.size[0] = ntohs((uint16_t)(1000.0 * geom.size.x)); 
 	pgeom.size[1] = ntohs((uint16_t)(1000.0 * geom.size.y)); 
 	
-	device->driver->PutReply( device->id, client, 
-		  PLAYER_MSGTYPE_RESP_ACK, 
-		  &pgeom, sizeof(pgeom), NULL );
+	this->driver->PutReply( this->id, client, 
+				PLAYER_MSGTYPE_RESP_ACK, 
+				&pgeom, sizeof(pgeom), NULL );
       }
       break;
       
@@ -1208,9 +1216,9 @@ void PositionConfig( device_record_t* device, void* client, void* buffer, size_t
 	
 	stg_pose_t origin;
 	memset(&origin,0,sizeof(origin));
-	stg_model_position_set_odom( device->mod, &origin );
+	stg_model_position_set_odom( this->mod, &origin );
 	
-	device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
+	this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
       }
       break;
 
@@ -1229,14 +1237,14 @@ void PositionConfig( device_record_t* device, void* client, void* buffer, size_t
 	pose.y = ((double)(int32_t)ntohl(req->y)) / 1000.0;
 	pose.a = DTOR( (double)(int32_t)ntohl(req->theta) );
 
-	stg_model_position_set_odom( device->mod, &pose );
+	stg_model_position_set_odom( this->mod, &pose );
 	
 	PRINT_DEBUG3( "set odometry to (%.2f,%.2f,%.2f)",
 		      pose.x,
 		      pose.y,
 		      pose.a );
 
-	device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
+	this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
       }
       break;
 
@@ -1249,18 +1257,19 @@ void PositionConfig( device_record_t* device, void* client, void* buffer, size_t
 
 	PRINT_WARN1( "Stage ignores motor power state (%d)",
 		     motors_on );
-	device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
+	this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
       }
       break;
 
     default:
       {
 	PRINT_WARN1( "stg_position doesn't support config id %d", buf[0] );
-        if( device->driver->PutReply( device->id, 
-				      client, 
-				      PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
+        if( this->driver->PutReply( this->id, 
+				    client, 
+				    PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
           DRIVER_ERROR("PutReply() failed");
         break;
       }
     }
 }
+

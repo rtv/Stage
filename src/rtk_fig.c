@@ -22,11 +22,13 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.12 2005-05-08 05:07:22 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.13 2005-07-14 23:37:23 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
  */
+
+#define _GNU_SOURCE
 
 #include <assert.h>
 #include <stdio.h>
@@ -255,6 +257,9 @@ void stg_rtk_fig_remove_mouse_handler(stg_rtk_fig_t *fig, stg_rtk_mouse_fn_t cal
 // Clear all strokes from the figure
 void stg_rtk_fig_clear(stg_rtk_fig_t *fig)
 {
+  if( fig == NULL )
+    return;
+
   int i;
   stg_rtk_stroke_t *stroke;
 
@@ -839,7 +844,7 @@ void stg_rtk_fig_ellipse_arc( stg_rtk_fig_t *fig, double ox, double oy, double o
 
 // Create a polygon
 void stg_rtk_fig_polygon(stg_rtk_fig_t *fig, double ox, double oy, double oa,
-                     int point_count, double points[][2], int filled)
+			 int point_count, double points[][2], int filled)
 {
   int i;
   stg_rtk_point_t *npoints;

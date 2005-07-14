@@ -14,214 +14,373 @@ enum {
   STG_LASER_CFG
 };
 
+static GtkUIManager *ui_manager = NULL;
+
+
 // movies can be saved at these multiples of real time
 //const int STG_MOVIE_SPEEDS[] = {1, 2, 5, 10, 20, 50, 100};
 //const int STG_MOVIE_SPEED_COUNT = 7; // must match the static array length
 
-// declare callbacks for menu items
-void gui_menu_polygons_cb( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_file_export_frame_cb( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_file_export_sequence_cb( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_file_save_cb( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_file_load_cb( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_file_exit_cb( void );
-void gui_menu_layer_cb( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_clock_pause_cb( gpointer data, guint action, GtkWidget* mitem );
-//void gui_menu_file_about( void );
-void gui_menu_file_export_interval( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_file_export_format( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_view_data( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_view_cfg( gpointer data, guint action, GtkWidget* mitem );
-void gui_menu_view_cmd( gpointer data, guint action, GtkWidget* mitem );
+// regular actions
+void gui_action_about( GtkAction *action, gpointer user_data);
+void gui_action_save( GtkAction *action, gpointer user_data);
+void gui_action_reset( GtkAction* action, gpointer userdata );
+void gui_action_exit( GtkAction* action, gpointer userdata );
+void gui_action_exportframe( GtkAction* action, gpointer userdata );
 
+// toggle actions
+void gui_action_exportsequence( GtkToggleAction* action, gpointer userdata );
+void gui_action_pause( GtkToggleAction* action, gpointer userdata );
+void gui_action_polygons( GtkToggleAction* action, gpointer userdata ); 
+void gui_action_disable_polygons( GtkToggleAction* action, gpointer userdata ); 
+void gui_action_grid( GtkToggleAction* action, gpointer userdata ); 
+void gui_action_raytrace( GtkToggleAction* action, gpointer userdata ); 
+void gui_action_geom( GtkToggleAction* action, gpointer userdata ); 
+void gui_action_matrixtree( GtkToggleAction* action, gpointer userdata ); 
+void gui_action_matrixocc( GtkToggleAction* action, gpointer userdata ); 
 
-static GtkItemFactoryEntry menu_table[] = {
-  { "/_File",         NULL,      NULL, 0, "<Branch>" },
-  { "/File/tear1",    NULL,      NULL, 0, "<Tearoff>" },
-  //  { "/File/About", NULL,  gui_menu_file_about, 0, "<Item>" },
-  { "/File/_Save", "<CTRL>S", gui_menu_file_save_cb,  1, "<Item>", GTK_STOCK_SAVE },
-  { "/File/_Reset", "<CTRL>R", gui_menu_file_load_cb,  1, "<Item>", GTK_STOCK_OPEN },
-  { "/File/Export", NULL,   NULL, 1, "<Branch>" },
-  { "/File/Export/Single frame", "<CTRL>J", gui_menu_file_export_frame_cb, 1, "<Item>" },
-  { "/File/Export/Sequence of frames", "<CTRL>K",  gui_menu_file_export_sequence_cb, 1, "<CheckItem>" },
-  { "/File/Export/sep1",     NULL,      NULL, 0, "<Separator>" },
-  { "/File/Export/Frame export interval",     NULL,      NULL, 0, "<Title>" },
-  { "/File/Export/0.1 seconds", NULL,  gui_menu_file_export_interval, 1, "<RadioItem>" },
-  { "/File/Export/0.2 seconds", NULL, gui_menu_file_export_interval,  2, "/File/Export/0.1 seconds" },
-  { "/File/Export/0.5 seconds", NULL, gui_menu_file_export_interval,  5, "/File/Export/0.1 seconds" },
-  { "/File/Export/1.0 seconds", NULL, gui_menu_file_export_interval, 10, "/File/Export/0.1 seconds" },
-  { "/File/Export/2.0 seconds", NULL, gui_menu_file_export_interval, 20, "/File/Export/0.1 seconds" },
-  { "/File/Export/5.0 seconds", NULL, gui_menu_file_export_interval, 50, "/File/Export/0.1 seconds" },
-  { "/File/Export/10.0 seconds", NULL, gui_menu_file_export_interval, 100, "/File/Export/0.1 seconds" },
-  { "/File/Export/sep2",     NULL,      NULL, 0, "<Separator>" },
-  { "/File/Export/Frame export format",     NULL,      NULL, 0, "<Title>" },
-  { "/File/Export/PNG", NULL, gui_menu_file_export_format, STK_IMAGE_FORMAT_PNG,  "<RadioItem>" },
-  { "/File/Export/JPEG", NULL,  gui_menu_file_export_format, STK_IMAGE_FORMAT_JPEG, "/File/Export/PNG"},
-  // PPM and PNM don't seem to work. why?
-  // { "/File/Export/PPM", NULL, gui_menu_file_export_format,  STK_IMAGE_FORMAT_PPM, "/File/Export/JPEG" },
-  // { "/File/Export/PNM", NULL, gui_menu_file_export_format, STK_IMAGE_FORMAT_PNM, "/File/Export/JPEG" },
-  { "/File/sep1",     NULL,      NULL, 0, "<Separator>" },
-  { "/File/_Quit",    "<CTRL>Q", gui_menu_file_exit_cb, 0, "<StockItem>", GTK_STOCK_QUIT },
+// radio actions
+void gui_action_export_interval( GtkRadioAction* action, 
+				 GtkRadioAction *current, 
+				 gpointer userdata );
+void gui_action_export_format( GtkRadioAction* action, 	 
+			       GtkRadioAction *current, 
+			       gpointer userdata );
 
-  { "/_View",         NULL,      NULL, 0, "<Branch>" },
-  { "/View/tear1",    NULL,      NULL, 0, "<Tearoff>" },
-  { "/View/Fill polygons", "<CTRL>P", gui_menu_polygons_cb, 1, "<CheckItem>" },
-  { "/View/Grid", "<CTRL>G",   gui_menu_layer_cb, STG_LAYER_GRID, "<CheckItem>" },
-  { "/View/sep0",     NULL,      NULL, 0, "<Separator>" },
-  { "/View/Data",       NULL,   NULL, 0, "<Title>" },
-  { "/View/Blobfinder data", NULL,   gui_menu_view_data, STG_MODEL_BLOB,     "<CheckItem>" },
-  { "/View/Energy data",   NULL,   gui_menu_view_data, STG_MODEL_ENERGY, "<CheckItem>" },
-  { "/View/Fiducial data",   NULL,   gui_menu_view_data, STG_MODEL_FIDUCIAL, "<CheckItem>" },
-  { "/View/Laser data",      NULL,   gui_menu_view_data, STG_MODEL_LASER,    "<CheckItem>" },
-  { "/View/Position data",   NULL,   gui_menu_view_data, STG_MODEL_POSITION, "<CheckItem>" },
-  { "/View/Ranger data",     NULL,   gui_menu_view_data, STG_MODEL_RANGER,   "<CheckItem>" },
-  { "/View/Gripper data",     NULL,   gui_menu_view_data, STG_MODEL_GRIPPER,   "<CheckItem>" },
-  { "/View/sep1",       NULL,   NULL, 0, "<Separator>" },
-  { "/View/Config",          NULL,    NULL, 0, "<Title>" },
-  { "/View/Blobfinder config",     NULL,   gui_menu_view_cfg, STG_MODEL_BLOB,     "<CheckItem>" },
-  { "/View/Energy config", NULL,   gui_menu_view_cfg, STG_MODEL_ENERGY, "<CheckItem>" },
-  { "/View/Fiducial config", NULL,   gui_menu_view_cfg, STG_MODEL_FIDUCIAL, "<CheckItem>" },
-  { "/View/Laser config",    NULL,   gui_menu_view_cfg, STG_MODEL_LASER,    "<CheckItem>" },
-  { "/View/Ranger config",   NULL,   gui_menu_view_cfg, STG_MODEL_RANGER ,  "<CheckItem>" },  
-  { "/View/Gripper config",   NULL,   gui_menu_view_cfg, STG_MODEL_GRIPPER,  "<CheckItem>" },  
-
-  { "/View/sep2",     NULL,      NULL, 0, "<Separator>" },
-  { "/View/Debug", NULL, NULL, 1, "<Branch>" },
-  { "/View/Debug/Raytrace", "<ALT>T", gui_menu_debug_cb, 1, "<CheckItem>" },
-  { "/View/Debug/Geometry", "<ALT>G", gui_menu_debug_cb, 2, "<CheckItem>" },
-  { "/View/Debug/Matrix tree", "<ALT>M",   gui_menu_debug_cb, 3, "<CheckItem>" },
-  { "/View/Debug/Matrix occupied", "<ALT>O",   gui_menu_debug_cb, 4, "<CheckItem>" },
-  //  { "/View/Debug/Matrix table", "<CTRL>T,   gui_menu_debug_cb, 4, "<CheckItem>" },
-  { "/View/Debug/sep3",     NULL,      NULL, 0, "<Separator>" },
-  { "/View/Debug/Testing",          NULL,    NULL, 0, "<Title>" },
-  { "/View/Debug/Data disable", NULL, gui_menu_debug_cb, 5, "<CheckItem>" },
-  { "/View/Debug/Polygon disable", NULL, gui_menu_debug_cb, 6, "<CheckItem>" },
-  { "/View/Debug/Config disable", NULL, gui_menu_debug_cb, 7, "<CheckItem>" },
-  { "/View/Debug/Command disable", NULL, gui_menu_debug_cb, 8, "<CheckItem>" },
-
-  { "/_Clock",         NULL,      NULL, 0, "<Branch>" },
-  { "/Clock/tear1",    NULL,      NULL, 0, "<Tearoff>" },
-  { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
+/* Normal items */
+static GtkActionEntry entries[] = {
+  { "File", NULL, "_File" },
+  { "View", NULL, "_View" },
+  { "Debug", NULL, "_Debug" },
+  { "Clock", NULL, "_Clock" },
+  { "Help", NULL, "_Help" },
+  { "Model", NULL, "_Models" },
+  { "Export", NULL, "_Export" },
+  { "ExportInterval", NULL, "Export interval" },
+  { "ExportFormat", NULL, "Export bitmap format" },
+  { "ExportFrame", NULL, "Single frame", "<ctrl>f", "Export a screenshot to disk", G_CALLBACK(gui_action_exportframe) },
+  { "About", NULL, "About Stage", NULL, NULL, G_CALLBACK(gui_action_about) },
+  { "Save", GTK_STOCK_SAVE, "_Save", "<control>S", "Save world state", G_CALLBACK(gui_action_save) },
+  { "Reset", GTK_STOCK_OPEN, "_Reset", "<control>R", "Reset to last saved world state", G_CALLBACK(gui_action_reset) },
+  { "Exit", GTK_STOCK_QUIT, "E_xit", "<control>Q", "Exit the program", G_CALLBACK(gui_action_exit) },
 };
 
-// SET THIS TO THE NUMBER OF MENU ITEMS IN THE ARRAY ABOVE
-static const int menu_table_count = 58;
+/* Toggle items */
+static GtkToggleActionEntry toggle_entries[] = {
+  { "Polygons", NULL, "Fill _polygons", "F", "Toggle drawing of filled or outlined polygons", G_CALLBACK(gui_action_polygons), 1 },
+  { "DisablePolygons", NULL, "Show polygons", "D", NULL, G_CALLBACK(gui_action_disable_polygons), 1 },
+  { "Grid", NULL, "_Grid", "G", "Toggle drawing of 1-metre grid", G_CALLBACK(gui_action_grid), 1 },
+  { "Pause", NULL, "_Pause", "P", "Pause the simulation clock", G_CALLBACK(gui_action_pause), 0 },
+  { "DebugRays", NULL, "_Raytrace", "<alt>R", "Draw sensor rays", G_CALLBACK(gui_action_raytrace), 0 },
+  { "DebugGeom", NULL, "_Geometry", "<alt>G", "Draw model geometry", G_CALLBACK(gui_action_geom), 0 },
+  { "DebugMatrixTree", NULL, "Matrix _Tree", "<alt>T", "Show occupancy quadtree", G_CALLBACK(gui_action_matrixtree), 0 },
+  { "DebugMatrixOccupancy", NULL, "Matrix _Occupancy", "<alt>M", "Show occupancy grid", G_CALLBACK(gui_action_matrixocc), 0 },
+  { "ExportSequence", NULL, "Sequence of frames", "<control>G", "Export a sequence of screenshots at regular intervals", G_CALLBACK(gui_action_exportsequence), 0 },
+};
 
-// USE THIS WHEN WE FIX ON A RECENT GTK VERSION 
-/* void gui_menu_file_about( void ) */
-/* { */
-/*   //gtk_show_about_dialog( NULL, NULL ); */
+/* Radio items */
+static GtkRadioActionEntry export_format_entries[] = {
+  { "ExportFormatPNG", NULL, "PNG", NULL, "Portable Network Graphics format", STK_IMAGE_FORMAT_PNG },
+  { "ExportFormatJPEG", NULL, "JPEG", NULL, "JPEG format", STK_IMAGE_FORMAT_JPEG },
+};
+ 
+static GtkRadioActionEntry export_freq_entries[] = {
+  { "ExportInterval1", NULL, "0.1 seconds", NULL, NULL, 100 },
+  { "ExportInterval2", NULL, "0.2 seconds", NULL, NULL, 200 },
+  { "ExportInterval5", NULL, "0.5 seconds", NULL, NULL, 500 },
+  { "ExportInterval10", NULL, "1 second", NULL, NULL, 1000 },
+  { "ExportInterval50", NULL, "5 seconds", NULL, NULL, 5000 },
+  { "ExportInterval100", NULL, "10 seconds", NULL, NULL, 10000 },
+};
+
+static const char *ui_description =
+"<ui>"
+"  <menubar name='Main'>"
+"    <menu action='File'>"
+"      <menuitem action='Save'/>"
+"      <menuitem action='Reset'/>"
+"      <separator/>"
+"        <menu action='Export'>"
+"          <menuitem action='ExportFrame'/>" 
+"          <menuitem action='ExportSequence'/>" 
+"          <separator/>" 
+"          <menuitem action='ExportFormat'/>"
+"          <menuitem action='ExportFormatPNG'/>"
+"          <menuitem action='ExportFormatJPEG'/>"
+"          <separator/>"
+"          <menuitem action='ExportInterval'/>"
+"          <menuitem action='ExportInterval1'/>"
+"          <menuitem action='ExportInterval2'/>"
+"          <menuitem action='ExportInterval5'/>"
+"          <menuitem action='ExportInterval10'/>"
+"          <menuitem action='ExportInterval50'/>"
+"          <menuitem action='ExportInterval100'/>"
+"        </menu>"
+"      <separator/>"
+"      <menuitem action='Exit'/>"
+"    </menu>"
+"    <menu action='View'>"
+"      <menuitem action='DisablePolygons'/>"
+"      <menuitem action='Polygons'/>"
+"      <menuitem action='Grid'/>"
+"      <separator/>"
+"        <menu action='Debug'>"
+"          <menuitem action='DebugRays'/>"
+"          <menuitem action='DebugGeom'/>"
+"          <menuitem action='DebugMatrixTree'/>"
+"          <menuitem action='DebugMatrixOccupancy'/>"
+"          <separator/>"
+"            <menu action='Model'>"
+"              <separator/>"
+"            </menu>"
+"        </menu>"
+"      <separator/>"
+"    </menu>"
+"    <menu action='Clock'>"
+"      <menuitem action='Pause'/>"
+"    </menu>"
+"    <menu action='Help'>"
+"      <menuitem action='About'/>"
+"    </menu>"
+"  </menubar>"
+"</ui>";
+
+
+void gui_action_about( GtkAction *action, gpointer user_data)
+{
+  // USE THIS WHEN WE CAN USED GTK+-2.6
+  //GtkAboutDialog *about = gtk_about_dialog_new();
+  // gtk_show_about_dialog( about );
+
+  GtkMessageDialog* about = (GtkMessageDialog*)
+    gtk_message_dialog_new( NULL, 0, 
+			    GTK_MESSAGE_INFO,
+			    GTK_BUTTONS_CLOSE, 
+			    "Stage" );
   
-/*   GtkDialog *about = gtk_dialog_new(); */
-/*   gtk_window_set_title( about, "About Stage" ); */
-/*   gtk_window_resize( about, 200, 200 ); */
-/*   gtk_window_set_resizable( about, FALSE ); */
-/*   gtk_dialog_run( about ); */
-/* } */
-
-
-// TO-DOUBLE-DO - remove
-// TODO - move this somewhere sensible - so far it's only used here
-//#define STG_DATA_MAX 32767
-//#define STG_CFG_MAX 32767
-//#define STG_CMD_MAX 32767
-
-
-void gui_model_render_data_cb( gpointer key, gpointer value, gpointer user )
-{
-  gui_model_render_data( (stg_model_t*)value );
-}
-
-void gui_model_render_command_cb( gpointer key, gpointer value, gpointer user )
-{
-  gui_model_render_command( (stg_model_t*)value );
-}
-
-void gui_model_render_config_cb( gpointer key, gpointer value, gpointer user )
-{
-  gui_model_render_config( (stg_model_t*)value );
-}
-
-
-void gui_world_render_data( stg_world_t* world )
-{
-  g_hash_table_foreach( world->models, gui_model_render_data_cb, NULL );   
-}
-
-void gui_world_render_cfg( stg_world_t* world )
-{
-  g_hash_table_foreach( world->models, gui_model_render_config_cb, NULL );   
-}
-
-void gui_world_render_cmd( stg_world_t* world )
-{
-  g_hash_table_foreach( world->models, gui_model_render_config_cb, NULL );   
-}
-
-void gui_menu_view_data( gpointer data, guint action, GtkWidget* mitem )
-{
-  ((gui_window_t*)data)->render_data_flag[action] = 
-    GTK_CHECK_MENU_ITEM(mitem)->active;
-
-  gui_world_render_data( ((gui_window_t*)data)->world );
-}
-
-void gui_menu_view_cfg( gpointer data, guint action, GtkWidget* mitem )
-{
-  ((gui_window_t*)data)->render_cfg_flag[action] = 
-    GTK_CHECK_MENU_ITEM(mitem)->active;
+  const char* str =  "Version %s\n"
+    "Part of the Player/Stage Project\n"
+    "[http://playerstage.sourceforge.net]\n\n"
+    "Copyright Richard Vaughan, Andrew Howard, Brian Gerkey\n"
+    " and contributors 2000-2005.\n\n"
+    "Released under the GNU General Public License.";
   
-  gui_world_render_cfg( ((gui_window_t*)data)->world );
+  gtk_message_dialog_format_secondary_text( about, 
+					    str,
+					    PACKAGE_VERSION );
+  
+  g_signal_connect (about, "destroy",
+		    G_CALLBACK(gtk_widget_destroyed), &about);
+  
+  /* Destroy the dialog when the user responds to it (e.g. clicks a button) */
+  g_signal_connect_swapped( about, "response",
+			    G_CALLBACK (gtk_widget_destroy),
+			    about );
+
+  gtk_widget_show(GTK_WIDGET(about));
 }
 
-void gui_menu_view_cmd( gpointer data, guint action, GtkWidget* mitem )
+
+
+void gui_action_export_interval( GtkRadioAction* action, 
+				 GtkRadioAction *current, 
+				 gpointer userdata )
 {
-  ((gui_window_t*)data)->render_cmd_flag[action] = 
-    GTK_CHECK_MENU_ITEM(mitem)->active;
-
-  gui_world_render_cmd( ((gui_window_t*)data)->world );
-}
-
-
-void gui_menu_file_export_interval( gpointer data, guint action, GtkWidget* mitem )
-{
-  ((gui_window_t*)data)->frame_interval = action * 100;
+  // set the frame interval in milliseconds
+  ((gui_window_t*)userdata)->frame_interval = 
+    gtk_radio_action_get_current_value(action);
+  
+  printf("frame export interval now %d ms\n", 
+	 ((gui_window_t*)userdata)->frame_interval );
 }
 
 // set the graphics file format for window dumps
-void gui_menu_file_export_format( gpointer data, guint action, GtkWidget* mitem )
+void gui_action_export_format( GtkRadioAction* action, 
+			       GtkRadioAction *current, 
+			       gpointer userdata )
 {
-  ((gui_window_t*)data)->frame_format = action;
+  ((gui_window_t*)userdata)->frame_format = 
+    gtk_radio_action_get_current_value(action);
 }
 
-void gui_menu_file_save_cb( gpointer data, 
-			    guint action, 
-			    GtkWidget* mitem )
+
+void gui_action_save( GtkAction* action, gpointer userdata )
 {
-  stg_world_t* world = ((gui_window_t*)data)->world;
+  stg_world_t* world = (stg_world_t*)userdata;
   printf( "Saving world \"%s\"\n",  world->token );
   stg_world_save( world );
 }
 
-void gui_menu_file_load_cb( gpointer data, 
-			    guint action, 
-			    GtkWidget* mitem )
+void gui_action_reset( GtkAction* action, gpointer userdata )
 {
-  stg_world_t* world = ((gui_window_t*)data)->world;
+  stg_world_t* world = (stg_world_t*)userdata;
   printf( "Resetting to saved state \"%s\"\n",  world->token );
   stg_world_reload( world );
 }
 
-void gui_menu_clock_pause_cb( gpointer data, 
-			      guint action, 
-			      GtkWidget* mitem )
+
+void gui_action_pause( GtkToggleAction* action, void* userdata )
 {
-  ((gui_window_t*)data)->world->paused = GTK_CHECK_MENU_ITEM(mitem)->active;
+  PRINT_DEBUG( "Pause menu item" );
+  ((stg_world_t*)userdata)->paused = gtk_toggle_action_get_active( action );
+
+}
+
+void gui_action_raytrace( GtkToggleAction* action, gpointer userdata )
+{
+  PRINT_DEBUG( "Raytrace menu item" );  
+  stg_world_t* world = (stg_world_t*)userdata;
+
+  if( gtk_toggle_action_get_active( action ) )
+    {
+      fig_debug_rays = stg_rtk_fig_create( world->win->canvas, NULL, STG_LAYER_DEBUG );
+      stg_rtk_fig_color_rgb32( fig_debug_rays, stg_lookup_color(STG_DEBUG_COLOR) );
+    }
+  else if( fig_debug_rays )
+    { 
+      stg_rtk_fig_destroy( fig_debug_rays );
+      fig_debug_rays = NULL;
+    }
+}
+
+void gui_action_geom( GtkToggleAction* action, gpointer userdata )
+{
+  PRINT_DEBUG( "Geom menu item" );
+  
+  stg_world_t* world = (stg_world_t*)userdata;
+  
+  if( gtk_toggle_action_get_active( action ) )
+    {
+      fig_debug_geom = stg_rtk_fig_create( world->win->canvas, NULL, STG_LAYER_GEOM );
+      stg_rtk_fig_color_rgb32( fig_debug_geom, 0xFF0000 );
+    }
+  else if( fig_debug_geom )
+    { 
+      stg_rtk_fig_destroy( fig_debug_geom );
+      fig_debug_geom = NULL;
+    }
+}
+
+void gui_action_matrixtree( GtkToggleAction* action, gpointer userdata )
+{
+  PRINT_DEBUG( "Matrix tree menu item" );
+
+  stg_world_t* world = (stg_world_t*)userdata;  
+  if( world->win->matrix_tree ) 
+    {
+      stg_rtk_fig_destroy( world->win->matrix_tree );     
+      world->win->matrix_tree = NULL;
+    }
+  else
+    {
+      world->win->matrix_tree = 
+	stg_rtk_fig_create(world->win->canvas,world->win->bg,STG_LAYER_MATRIX_TREE);  
+      stg_rtk_fig_color_rgb32( world->win->matrix_tree, 0x00CC00 );
+    } 
+}
+
+void gui_action_matrixocc( GtkToggleAction* action, gpointer userdata ) 
+{
+  PRINT_DEBUG( "Matrix occupancy menu item" );
+  stg_world_t* world = (stg_world_t*)userdata;
+  
+  if( world->win->matrix ) 
+    {
+      stg_rtk_fig_destroy( world->win->matrix );     
+      world->win->matrix = NULL;
+    }
+  else
+    {
+      world->win->matrix = 
+	stg_rtk_fig_create(world->win->canvas,world->win->bg,STG_LAYER_MATRIX);	  
+      
+      stg_rtk_fig_color_rgb32( world->win->matrix, 0x008800 );
+    }
 }
 
 
-void gui_menu_file_exit_cb( void )
+void gui_add_view_item( const gchar *name,
+			const gchar *label,
+			const gchar *tooltip,
+			GCallback callback,
+			gboolean  is_active,
+			void* userdata )
+{
+  static GtkActionGroup* grp = NULL;  
+  if( grp == NULL )
+    {
+      grp = gtk_action_group_new( "DynamicDataActions" );
+    }
+  
+  GtkToggleActionEntry entry;
+  memset( &entry, 0, sizeof(entry));
+  entry.name = name;
+  entry.label = label;
+  entry.tooltip = tooltip;
+  entry.callback = callback;
+  entry.is_active = is_active;
+
+  gtk_action_group_add_toggle_actions( grp, &entry, 1, userdata   );  
+  gtk_ui_manager_insert_action_group(ui_manager, grp, 0);
+
+  guint merge = gtk_ui_manager_new_merge_id( ui_manager );
+  gtk_ui_manager_add_ui( ui_manager, 
+			 merge,
+			 "/Main/View", 
+			 name, 
+			 name, 
+			 GTK_UI_MANAGER_AUTO, 
+			 FALSE );
+  
+  // send the toggle signal to get the item set up
+  GtkToggleAction *act = (GtkToggleAction*)gtk_action_group_get_action( grp, name );
+  gtk_toggle_action_set_active( act, FALSE );
+  
+  // seems like this ought to work, but it doesn't. :(
+  gtk_toggle_action_toggled( act );
+}
+
+
+void test( GtkMenuItem* item, void* userdata )
+{
+  stg_model_t* mod = (stg_model_t*)userdata;
+  printf( "TEST model %s\n", mod->token );
+
+  // TODO - tree text view of models
+/*   GtkDialog* win = gtk_dialog_new_with_buttons ("Model inspector", */
+/* 						NULL, */
+/* 						0, */
+/* 						GTK_STOCK_CLOSE, */
+/* 						GTK_RESPONSE_CLOSE, */
+/* 						NULL); */
+
+/*   gtk_widget_show( win ); */
+}
+
+void gui_add_tree_item( stg_model_t* mod )
+{
+  GtkWidget* m = 
+    gtk_ui_manager_get_widget( ui_manager, "/Main/View/Debug/Model" );
+  assert(m);
+  
+  GtkWidget* menu = GTK_WIDGET(gtk_menu_item_get_submenu(GTK_MENU_ITEM(m)));
+
+  GtkWidget* item = gtk_menu_item_new_with_label(  mod->token );
+  assert(item);
+
+  gtk_widget_set_sensitive( item, FALSE );
+
+  //GtkWidget* submenu = gtk_menu_new();
+  //gtk_menu_item_set_submenu( item, submenu );
+  
+  //g_signal_connect( item, "activate", test, (void*)mod );
+ 
+  gtk_menu_shell_append( (GtkMenuShell*)menu, item );
+
+  gtk_widget_show(item);
+}
+
+void gui_action_exit( GtkAction* action, void* userdata )
 {
   PRINT_DEBUG( "Exit menu item" );
   _stg_quit = TRUE;
@@ -257,13 +416,6 @@ void export_window( gui_window_t* win  ) //stg_rtk_canvas_t* canvas, int series 
   stg_rtk_canvas_export_image( win->canvas, filename, win->frame_format );
 }
 
-void gui_menu_file_export_frame_cb( gpointer data, 
-				    guint action, 
-				    GtkWidget* mitem )
-{
-  PRINT_DEBUG( "File/Image/Save frame menu item");
-  export_window( (gui_window_t*)data );
-}
 
 gboolean frame_callback( gpointer data )
 {
@@ -271,23 +423,19 @@ gboolean frame_callback( gpointer data )
   return TRUE;
 }
 
-void gui_menu_file_export_sequence_cb( gpointer data, 
-				       guint action, 
-				       GtkWidget* mitem )
+void gui_action_exportsequence( GtkToggleAction* action, void* userdata )
 {
-  PRINT_DEBUG( "File/Export/Sequence menu item" );
+  gui_window_t* win = ((stg_world_t*)userdata)->win;
   
-  gui_window_t* win = (gui_window_t*)data;
-
-  if(GTK_CHECK_MENU_ITEM(mitem)->active)
+  if( gtk_toggle_action_get_active(action) )
     {
-      PRINT_DEBUG( "sequence start" );
+      PRINT_DEBUG1( "Saving frame sequence with interval %d", 
+		    win->frame_interval );
+
       // advance the sequence counter - the first sequence is 1.
       win->frame_series++;
       win->frame_index = 0;
       
-      printf( "callback with interval %d\n", win->frame_interval );
-
       win->frame_callback_tag =
 	g_timeout_add( win->frame_interval,
 		       frame_callback,
@@ -302,178 +450,216 @@ void gui_menu_file_export_sequence_cb( gpointer data,
 }
 
 
-void gui_menu_layer_cb( gpointer data, 
-			guint action, 
-			GtkWidget* mitem )    
-{
-  // show or hide the layer depending on the state of the menu item
-  stg_rtk_canvas_layer_show( ((gui_window_t*)data)->canvas, 
-			 action, // action is the layer number
-			 GTK_CHECK_MENU_ITEM(mitem)->active );
-}
-
 void model_render_polygons_cb( gpointer key, gpointer data, gpointer user )
 {
   stg_model_render_polygons( (stg_model_t*)data );
 }
 
 
-void gui_menu_polygons_cb( gpointer data, guint action, GtkWidget* mitem )
-{
-  gui_window_t* win = (gui_window_t*)data;
-  win->fill_polygons = GTK_CHECK_MENU_ITEM(mitem)->active;
-
-  // redraw everything to see the polygons change 
-  //g_hash_table_foreach( win->world->models, refresh_cb, NULL ); 
-  g_hash_table_foreach( win->world->models, model_render_polygons_cb, NULL ); 
+void gui_action_exportframe( GtkAction* action, void* userdata ) 
+{ 
+  stg_world_t* world = (stg_world_t*)userdata;
+  export_window( world->win );
 }
+
+
+void gui_action_polygons( GtkToggleAction* action, void* userdata )
+{
+  PRINT_DEBUG( "Polygons menu item" );
+  stg_world_t* world = (stg_world_t*)userdata;
   
-void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem )
-{
-  gui_window_t* win = (gui_window_t*)data;
-
-  switch( action )
-    {
-    case 1: // raytrace
-      if(GTK_CHECK_MENU_ITEM(mitem)->active)
-	{
-	  fig_debug_rays = stg_rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
-	  stg_rtk_fig_color_rgb32( fig_debug_rays, stg_lookup_color(STG_DEBUG_COLOR) );
-	}
-      else if( fig_debug_rays )
-	{ 
-	  stg_rtk_fig_destroy( fig_debug_rays );
-	  fig_debug_rays = NULL;
-	}
-      break;
-    case 2: // geometry
-      if(GTK_CHECK_MENU_ITEM(mitem)->active)
-	{
-	  fig_debug_geom = stg_rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
-	  stg_rtk_fig_color_rgb32( fig_debug_geom, stg_lookup_color(STG_DEBUG_COLOR) );
-	}
-      else if( fig_debug_geom )
-	{ 
-	  stg_rtk_fig_destroy( fig_debug_geom );
-	  fig_debug_geom = NULL;
-	}
-      break;
-
-    case 3: // matrix tree
-      if( win->matrix_tree ) 
-	{
-	  stg_rtk_fig_destroy( win->matrix_tree );     
-	  win->matrix_tree = NULL;
-	}
-      else
-	{
-	  win->matrix_tree = 
-	    stg_rtk_fig_create(win->canvas,win->bg,STG_LAYER_MATRIX_TREE);  
-	  stg_rtk_fig_color_rgb32( win->matrix_tree, 0x00CC00 );
-	}
-      break;
-      
-    case 4: // matrix occupied
-      if( win->matrix ) 
-	{
-	  stg_rtk_fig_destroy( win->matrix );     
-	  win->matrix = NULL;
-	}
-      else
-	{
-	  win->matrix = 
-	    stg_rtk_fig_create(win->canvas,win->bg,STG_LAYER_MATRIX);	  
-	  
-	  stg_rtk_fig_color_rgb32( win->matrix, 0x008800 );
-	}
-      break;
-      
-    case 5: // global data rendering toggle
-      win->disable_data = !win->disable_data;
-      break;
-    case 6: // global data rendering toggle
-      win->disable_polygons = !win->disable_polygons;
-      break;
-    case 7: // global data rendering toggle
-      win->disable_config = !win->disable_config;
-      break;
-    case 8: // global data rendering toggle
-      win->disable_commands = !win->disable_commands;
-      break;
-
-    default:
-      PRINT_WARN1( "unknown debug menu item %d", action );
-    }
+  world->win->fill_polygons = gtk_toggle_action_get_active( action );
+  g_hash_table_foreach( world->models, model_render_polygons_cb, NULL ); 
 }
 
+void gui_action_disable_polygons( GtkToggleAction* action, void* userdata )
+{
+  PRINT_DEBUG( "Disable polygons menu item" );
+  stg_world_t* world = (stg_world_t*)userdata;
+  
+  // show or hide the layer depending on the state of the menu item
+  //world->win->show_polygons = ! gtk_toggle_action_get_active( action );
+  // show or hide the layer depending on the state of the menu item
+  stg_rtk_canvas_layer_show( world->win->canvas, 
+			     STG_LAYER_BODY,
+			     gtk_toggle_action_get_active( action ));
+}
+
+void gui_action_grid( GtkToggleAction* action, void* userdata )
+{
+  PRINT_DEBUG( "Grid menu item" );
+  stg_world_t* world = (stg_world_t*)userdata;
+  
+  // show or hide the layer depending on the state of the menu item
+  stg_rtk_canvas_layer_show( world->win->canvas, 
+			     STG_LAYER_GRID,
+			     gtk_toggle_action_get_active( action ));
+}
 
 void gui_window_menus_create( gui_window_t* win )
 {
-  GtkAccelGroup* ag = gtk_accel_group_new();
+  ui_manager = gtk_ui_manager_new ();
   
-  GtkItemFactory* fac = gtk_item_factory_new( GTK_TYPE_MENU_BAR,
-						  "<main>", ag );
+  // actions
+  GtkActionGroup *group = gtk_action_group_new ("MenuActions");
   
-  gtk_item_factory_create_items( fac, 
-				 menu_table_count, 
-				 menu_table, 
-				 (gpointer)win );
-
-  /* Attach the new accelerator group to the window. */
-  gtk_window_add_accel_group (GTK_WINDOW(win->canvas->frame), ag );
-
-  win->canvas->menu_bar = gtk_item_factory_get_widget( fac, "<main>" );
+  gtk_action_group_add_actions( group, entries, 
+				G_N_ELEMENTS (entries),
+				win->world );
   
-  GtkCheckMenuItem* mitem;
-
-  // View
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Grid"));
-  gtk_check_menu_item_set_active( mitem, TRUE );
-
-  //mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Debug"));
-  //gtk_check_menu_item_set_active( mitem, FALSE );
-  //mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Matrix"));
-  //gtk_check_menu_item_set_active( mitem, FALSE );
-
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Fill polygons"));
-  gtk_check_menu_item_set_active( mitem, TRUE );
-
-  // View/Data
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Laser data"));
-  gtk_check_menu_item_set_active( mitem, TRUE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Ranger data"));
-  gtk_check_menu_item_set_active( mitem, TRUE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Fiducial data"));
-  gtk_check_menu_item_set_active( mitem, TRUE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Blobfinder data"));
-  gtk_check_menu_item_set_active( mitem, TRUE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Energy data"));
-  gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Position data"));
-  gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Gripper data"));
-  gtk_check_menu_item_set_active( mitem, TRUE );
-
-  // View/Config
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Laser config"));
-  gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Ranger config"));
-  gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Fiducial config"));
-  gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Blobfinder config"));
-  gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Energy config"));
-  gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Gripper config"));
-  gtk_check_menu_item_set_active( mitem, FALSE );
+  gtk_action_group_add_toggle_actions( group,toggle_entries, 
+				       G_N_ELEMENTS(toggle_entries), 
+				       win->world );
   
-  gtk_box_pack_start(GTK_BOX(win->canvas->layout), 
-		     win->canvas->menu_bar, FALSE, TRUE, 0);
+  gtk_action_group_add_radio_actions( group, export_format_entries, 
+				      G_N_ELEMENTS (export_format_entries), 
+				      win->frame_format, 
+				      gui_action_export_format,
+				      win );
+  
+  gtk_action_group_add_radio_actions( group, export_freq_entries, 
+				      G_N_ELEMENTS (export_freq_entries),
+				      win->frame_interval, 
+				      gui_action_export_interval, 
+				      win );
+  
+  gtk_ui_manager_insert_action_group (ui_manager, group, 0);
+
+  // grey-out the radio list labels
+  gtk_action_set_sensitive(gtk_action_group_get_action( group, "ExportFormat" ), FALSE );
+  gtk_action_set_sensitive(gtk_action_group_get_action( group, "ExportInterval" ), FALSE );
+
+  // accels
+  GtkAccelGroup *accel_group = gtk_ui_manager_get_accel_group (ui_manager);
+  gtk_window_add_accel_group(GTK_WINDOW (win->canvas->frame), accel_group);
+  
+  // menus
+  gtk_ui_manager_set_add_tearoffs( ui_manager, TRUE );
+  
+  GError* error = NULL;
+  if (!gtk_ui_manager_add_ui_from_string (ui_manager, ui_description, -1, &error))
+    {
+      g_message ("building menus failed: %s", error->message);
+      g_error_free (error);
+      exit (EXIT_FAILURE);
+    }
+  
+  // install the widget
+  GtkWidget *menubar = gtk_ui_manager_get_widget (ui_manager, "/Main");
+  gtk_box_pack_start (GTK_BOX(win->canvas->layout), menubar, FALSE, FALSE, 0);
+  
 }
 
 
-void gui_window_menu_destroy( gui_window_t* win )
+void toggle_property_callback( GtkToggleAction* action, void* userdata )
 {
-  // TODO - destroy everything
+  stg_property_toggle_args_t* args = 
+    (stg_property_toggle_args_t*)userdata;  
+  
+  if( gtk_toggle_action_get_active( action ) )
+    {
+      if( args->callback_off )
+	{
+	  //printf( "removing OFF callback\n" );
+	  stg_model_remove_property_callback( args->mod, 
+					    args->propname, 
+					    args->callback_off );
+	}
+      
+      if( args->callback_on )
+	{
+	  //printf( "adding ON callback with args %s\n", (char*)args->arg_on );
+	  stg_model_add_property_callback( args->mod, 
+					 args->propname, 
+					 args->callback_on, 
+					 args->arg_on );
+	}
+    }
+  else
+    {
+      if( args->callback_on )
+	{
+	  //printf( "removing ON callback\n" );
+	  stg_model_remove_property_callback( args->mod, 
+					    args->propname, 
+					    args->callback_on );
+	}
+      
+      if( args->callback_off )
+	{
+	  //printf( "adding OFF callback with args %s\n", (char*)args->arg_off );
+	  stg_model_add_property_callback( args->mod, 
+					   args->propname, 
+					   args->callback_off, 
+					   args->arg_off );
+	}
+      
+    }
 }
+
+void stg_model_add_property_toggles( stg_model_t* mod, 
+				     const char* propname, 
+				     stg_property_callback_t callback_on,
+				     void* arg_on,
+				     stg_property_callback_t callback_off,
+				     void* arg_off,
+				     const char* label,
+				     int enabled )
+{
+  stg_property_toggle_args_t* args = 
+    calloc(sizeof(stg_property_toggle_args_t),1);
+  
+  args->mod = mod;
+  args->propname = propname;
+  args->callback_on = callback_on;
+  args->callback_off = callback_off;
+  args->arg_on = arg_on;
+  args->arg_off = arg_off;
+  
+  static GtkActionGroup* grp = NULL;  
+  if( ! grp )
+    grp = gtk_action_group_new( "DynamicDataActions" );
+  
+  // find the action associated with this propname
+  GtkAction* act = gtk_action_group_get_action( grp, propname );
+  
+  if( act == NULL )
+    {
+      //printf( "creating new action/item for prop %s\n", propname );
+      
+      GtkToggleActionEntry entry;
+      memset( &entry, 0, sizeof(entry));
+      entry.name = propname;
+      entry.label = label;
+      entry.tooltip = NULL;
+      entry.callback = G_CALLBACK(toggle_property_callback);
+      entry.is_active = !enabled; // invert the starting setting - see below
+      
+      gtk_action_group_add_toggle_actions( grp, &entry, 1, args  );  
+
+      gtk_ui_manager_insert_action_group(ui_manager, grp, 0);
+      
+      guint merge = gtk_ui_manager_new_merge_id( ui_manager );
+      gtk_ui_manager_add_ui( ui_manager, 
+			     merge,
+			     "/Main/View", 
+			     propname, 
+			     propname, 
+			     GTK_UI_MANAGER_AUTO, 
+			     FALSE );
+      
+      act = gtk_action_group_get_action( grp, propname );
+    }
+  else
+    {
+      //printf( "connecting to signal for model %s prop %s\n",
+      //      mod->token, propname );
+
+      g_signal_connect( act, "activate",  G_CALLBACK(toggle_property_callback), args );
+    }
+  
+  // causes the callbacks to be called - un-inverts the starting setting!
+  gtk_action_activate( act ); 
+}
+
+

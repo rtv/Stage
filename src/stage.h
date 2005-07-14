@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.143 2005-07-08 22:55:13 rtv Exp $
+ * CVS: $Id: stage.h,v 1.144 2005-07-14 23:37:23 rtv Exp $
  */
 
 
@@ -460,10 +460,8 @@ extern "C" {
 				 int real_interval,
 				 double ppm,
 				 double width,
-				 double height,
-				 unsigned int array_scaling,
-				 unsigned int array_count );
-  
+				 double height );
+
   /** Create a new world as described in the worldfile [worldfile_path] 
    */
   stg_world_t* stg_world_create_from_file( const char* worldfile_path );
@@ -500,6 +498,48 @@ extern "C" {
   /// get a model pointer from its name
   stg_model_t* stg_world_model_name_lookup( stg_world_t* world, const char* name );
   
+
+  struct stg_property;
+  
+  typedef int (*stg_property_callback_t)(stg_model_t* mod, char* name, void* data, size_t len, void* userdata );
+  
+  typedef void (*stg_property_storage_func_t)( struct stg_property* prop,
+					      void* data, size_t len );
+
+
+  /// install a property callback on every model in the world that has this property
+  void stg_world_add_property_callback( stg_world_t* world,
+					char* propname,
+					stg_property_callback_t callback,
+					void* userdata );
+  
+  /// remove a property callback from every model in the world that has this property
+  void stg_world_remove_property_callback( stg_world_t* world,
+					   char* propname,
+					   stg_property_callback_t callback );
+  
+  /// add an item to the View menu that will automatically install and
+  /// remove a callback when the item is toggled
+/*   void stg_world_add_property_toggles( stg_world_t* world,  */
+/* 				       const char* propname,  */
+/* 				       stg_property_callback_t callback_on, */
+/* 				       void* arg_on, */
+/* 				       stg_property_callback_t callback_off, */
+/* 				       void* arg_off, */
+/* 				       const char* label, */
+/* 				       int enabled ); */
+  
+  void stg_model_add_property_toggles( stg_model_t* mod, 
+				       const char* propname, 
+				       stg_property_callback_t callback_on,
+				       void* arg_on,
+				       stg_property_callback_t callback_off,
+				       void* arg_off,
+				       const char* label,
+				       int enabled );
+
+  int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len, 
+			      void* userp );
   /**@}*/
 
 
@@ -589,14 +629,14 @@ extern "C" {
   // int stg_model_set_energy_data( stg_model_t* mod, stg_energy_data_t* gf );
 
   /** set a model's polygon array*/
-  int stg_model_set_polygons( stg_model_t* mod, 
-			      stg_polygon_t* polys, size_t poly_count );
+  //int stg_model_set_polygons( stg_model_t* mod, 
+  //		      stg_polygon_t* polys, size_t poly_count );
   
   /** get a model's polygon array */
-  stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* count);
+  //stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* count);
   
   /** set a model's obstacle return value */
-  int stg_model_set_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* ret );
+  //int stg_model_set_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* ret );
 
   /** Change a model's parent - experimental*/
   int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent);
@@ -605,32 +645,33 @@ extern "C" {
   void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
 
   // wrappers for polymorphic functions
-  int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len );
-  int stg_model_set_data( stg_model_t* mod, void* data, size_t len );
-  int stg_model_set_config( stg_model_t* mod, void* cmd, size_t len );
-  int stg_model_get_command( stg_model_t* mod, void* dest, size_t len );
-  int stg_model_get_data( stg_model_t* mod, void* dest, size_t len );
-  int stg_model_get_config( stg_model_t* mod, void* dest, size_t len );
+  //int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len );
+  //int stg_model_set_data( stg_model_t* mod, void* data, size_t len );
+  //int stg_model_set_config( stg_model_t* mod, void* cmd, size_t len );
+  //int stg_model_get_command( stg_model_t* mod, void* dest, size_t len );
+  //int stg_model_get_data( stg_model_t* mod, void* dest, size_t len );
+  //int stg_model_get_config( stg_model_t* mod, void* dest, size_t len );
   
   /// associate an arbitrary data item with this model, referenced by the string 'name'.
 
-  struct stg_property;
-  
-  typedef int (*stg_property_callback_t)(struct stg_property* prop ); 
-  
-  typedef void (*stg_property_storage_func_t)( struct stg_property* prop,
-					      void* data, size_t len );
   
 #define STG_PROPNAME_MAX 128
   
+  typedef struct
+  {
+    stg_property_callback_t callback;
+    void* arg;
+  } stg_cbarg_t;
+
   typedef struct stg_property {
     char name[STG_PROPNAME_MAX];
     void* data;
     size_t len;
     stg_property_storage_func_t storage_func;
     GList* callbacks; // functions called when this property is set
+    //GList* callbacks_userdata;
     stg_model_t* mod; // the model to which this property belongs
-    void* user; // pointer passed into every callback function
+    //void* user; // pointer passed into every callback function
   } stg_property_t;
   
   
@@ -658,6 +699,11 @@ extern "C" {
 				      size_t size );
 
   void stg_model_property_refresh( stg_model_t* mod, const char* propname );
+
+
+  /// gets a model's "polygons" property and fills poly_count with the
+  /// number of polygons to be found
+  stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count );
 
   // get a copy of the property data - caller must free it
   //int stg_model_copy_property_data( stg_model_t* mod, const char* prop,
@@ -983,7 +1029,7 @@ extern "C" {
   
   typedef enum
     { STG_POSITION_STEER_DIFFERENTIAL, STG_POSITION_STEER_INDEPENDENT }
-    stg_position_steer_mode_t;
+    stg_position_drive_t;
   
   typedef struct
   {
@@ -991,13 +1037,15 @@ extern "C" {
     stg_position_control_mode_t mode; 
   } stg_position_cmd_t;
   
+  /*
   typedef struct
   {
     stg_position_steer_mode_t steer_mode;
     //stg_bool_t motor_disable; // if non-zero, the motors are disabled
     //stg_pose_t odometry
   } stg_position_cfg_t;
-  
+  */
+
   typedef struct
   {
     stg_pose_t pose; // current position estimate

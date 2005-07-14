@@ -24,13 +24,14 @@
  * Desc: Combined Stk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.10 2005-06-02 09:43:28 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.11 2005-07-14 23:37:23 rtv Exp $
  */
 
 #ifndef STK_H
 #define STK_H
 
 #include <stdio.h>
+#include <math.h>
 #include <gtk/gtk.h>
 
 #ifdef __cplusplus
@@ -513,7 +514,8 @@ void stg_rtk_fig_ellipse_arc( stg_rtk_fig_t *fig, double ox, double oy, double o
 
 // Create a polygon
 void stg_rtk_fig_polygon(stg_rtk_fig_t *fig, double ox, double oy, double oa,
-                     int point_count, double points[][2], int filled);
+			 int point_count, double points[][2], int filled);
+			 //int point_count, double* points, int filled);
 
 // Draw an arrow from point (ox, oy) with orientation oa and length len.
 void stg_rtk_fig_arrow(stg_rtk_fig_t *fig, double ox, double oy, double oa,

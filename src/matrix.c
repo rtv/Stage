@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.18 2005-07-08 22:55:02 rtv Exp $
+ * $Id: matrix.c,v 1.19 2005-07-14 23:37:23 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -40,8 +40,7 @@ void stg_cell_delete( stg_cell_t* cell )
   free( cell );
 }
 
-stg_matrix_t* stg_matrix_create( double ppm, double width, double height, 
-				 unsigned int scale, unsigned int count )
+stg_matrix_t* stg_matrix_create( double ppm, double width, double height )
 {
   stg_matrix_t* matrix = NULL;
   assert( matrix = (stg_matrix_t*)calloc( sizeof(stg_matrix_t), 1 ));

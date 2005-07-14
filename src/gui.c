@@ -142,7 +142,7 @@ void gui_load( gui_window_t* win, int section )
     wf_read_float(section, "scale", 1.0 );
   
   win->fill_polygons = wf_read_int(section, "fill_polygons", 1 );
-  //win->show_grid = wf_read_int(section, "show_grid", 1 );
+  win->show_grid = wf_read_int(section, "show_grid", 1 );
   
   PRINT_DEBUG2( "window width %d height %d", window_width, window_height );
   PRINT_DEBUG2( "window center (%.2f,%.2f)", window_center_x, window_center_y );
@@ -152,24 +152,6 @@ void gui_load( gui_window_t* win, int section )
   gtk_window_resize( GTK_WINDOW(win->canvas->frame), window_width, window_height );
   stg_rtk_canvas_scale( win->canvas, window_scale, window_scale );
   stg_rtk_canvas_origin( win->canvas, window_center_x, window_center_y );
-
-  // load the flags that control showing of data and configs
-  win->render_data_flag[STG_MODEL_LASER] = wf_read_int(section, "laser_data", 1 );
-  win->render_cfg_flag[STG_MODEL_LASER] = wf_read_int(section, "laser_config", 0 );
-  win->render_data_flag[STG_MODEL_GRIPPER] = wf_read_int(section, "gripper_data", 1 );
-  win->render_cfg_flag[STG_MODEL_GRIPPER] = wf_read_int(section, "gripper_config", 0 );
-  win->render_data_flag[STG_MODEL_RANGER] = wf_read_int(section, "ranger_data", 1 );
-  win->render_cfg_flag[STG_MODEL_RANGER] = wf_read_int(section, "ranger_config", 0 );
-  win->render_data_flag[STG_MODEL_FIDUCIAL] = wf_read_int(section, "fiducial_data", 1 );
-  win->render_cfg_flag[STG_MODEL_FIDUCIAL] = wf_read_int(section, "fiducial_config", 0 );  
-  win->render_data_flag[STG_MODEL_BLOB] = wf_read_int(section, "blobfinder_data", 1 );
-  win->render_cfg_flag[STG_MODEL_BLOB] = wf_read_int(section, "blobfinder_config", 0 );
-  win->render_data_flag[STG_MODEL_POSITION] = wf_read_int(section, "position_data", 0 );
-  win->render_cfg_flag[STG_MODEL_POSITION] = wf_read_int(section, "position_config", 0 );
-  win->render_data_flag[STG_MODEL_GRIPPER] = wf_read_int(section, "gripper_data", 1 );
-  win->render_cfg_flag[STG_MODEL_GRIPPER] = wf_read_int(section, "gripper_config", 0 );
-  win->render_data_flag[STG_MODEL_ENERGY] = wf_read_int(section, "energy_data", 0 );
-  win->render_cfg_flag[STG_MODEL_ENERGY] = wf_read_int(section, "energy_config", 0 );
 }
 
 void gui_save( gui_window_t* win )
@@ -186,9 +168,10 @@ void gui_save( gui_window_t* win )
   wf_write_float( win->wf_section, "scale", win->canvas->sx );
 
   wf_write_int( win->wf_section, "fill_polygons", win->fill_polygons );
-  //wf_write_int( win->wf_section, "show_grid", win->show_grid );
+  wf_write_int( win->wf_section, "show_grid", win->show_grid );
 
   // save the flags that control visibility of data and configs
+  /*
   wf_write_int(win->wf_section, "laser_data", win->render_data_flag[STG_MODEL_LASER]);
   wf_write_int(win->wf_section, "laser_config", win->render_cfg_flag[STG_MODEL_LASER]);
   wf_write_int(win->wf_section, "gripper_data", win->render_data_flag[STG_MODEL_GRIPPER]);
@@ -205,6 +188,7 @@ void gui_save( gui_window_t* win )
   wf_write_int(win->wf_section, "energy_config", win->render_cfg_flag[STG_MODEL_ENERGY]);
   wf_write_int(win->wf_section, "gripper_data", win->render_data_flag[STG_MODEL_GRIPPER]);
   wf_write_int(win->wf_section, "gripper_config", win->render_cfg_flag[STG_MODEL_GRIPPER]);
+  */
 }
 
 void gui_startup( int* argc, char** argv[] )
@@ -241,13 +225,6 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   // enable all objects on the canvas to find our window object
   win->canvas->userdata = (void*)win; 
 
-  win->disable_data = FALSE;
-  win->disable_polygons = FALSE;
-  win->disable_config = FALSE;
-  win->disable_commands = FALSE;
-
-  gui_window_menus_create( win );
-
   char txt[256];
   snprintf( txt, 256, "Stage v%s", VERSION );
   gtk_statusbar_push( win->canvas->status_bar, 0, txt ); 
@@ -275,6 +252,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   
   win->show_geom = TRUE;
   win->fill_polygons = TRUE;
+  win->show_polygons = TRUE;
   win->frame_interval = 500; // ms
   win->frame_format = STK_IMAGE_FORMAT_PNG;
 
@@ -286,25 +264,13 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   win->selection_active = NULL;
   
-  // show all data by default
-  int f;
-  for( f=0; f<STG_MODEL_COUNT; f++ )
-    {
-      win->render_data_flag[f] = TRUE;
-      win->render_cmd_flag[f] = FALSE;
-      win->render_cfg_flag[f] = FALSE;
-    }
-
-  // except position
-  win->render_data_flag[STG_MODEL_POSITION] = FALSE;
-  
   // show the limits of the world
   stg_rtk_canvas_bgcolor( win->canvas, 0.9, 0.9, 0.9 );
-  //stg_rtk_fig_color_rgb32( win->bg, 0xFEFEEFF );    
-  //stg_rtk_fig_rectangle( win->bg, 0,0,0, world->width, world->height, 1 );
   stg_rtk_fig_color_rgb32( win->bg, 0xFFFFFF );    
   stg_rtk_fig_rectangle( win->bg, 0,0,0, world->width, world->height, 1 );
-  
+ 
+  gui_window_menus_create( win );
+ 
   return win;
 }
 
@@ -552,7 +518,7 @@ int gui_world_update( stg_world_t* world )
     }  
 
   char clock[256];
-  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%2lu\t(sim:%3d real:%3d ratio:%2.2f)",
+  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%2lu\t(sim:%3d real:%3d ratio:%2.2f) %s",
 	    world->sim_time / (24*3600000), // days
 	    world->sim_time / 3600000, // hours
 	    (world->sim_time % 3600000) / 60000, // minutes
@@ -560,8 +526,9 @@ int gui_world_update( stg_world_t* world )
 	    world->sim_time % 1000, // milliseconds
 	    (int)world->sim_interval,
 	    (int)world->real_interval_measured,
-	    (double)world->sim_interval / (double)world->real_interval_measured );
-
+	    (double)world->sim_interval / (double)world->real_interval_measured,
+	    world->paused ? "--PAUSED--" : "" );
+  
   //gtk_label_set_text( win->timelabel, clock );
   
   if( win->selection_active )
@@ -616,7 +583,8 @@ void gui_model_display_pose( stg_model_t* mod, char* verb )
   gui_window_t* win = mod->world->win;
 
   // display the pose
-  snprintf(txt, sizeof(txt), "%s %s", verb, gui_model_describe(mod)); 
+  snprintf(txt, sizeof(txt), "%s %s", 
+	   verb, gui_model_describe(mod)); 
   guint cid = gtk_statusbar_get_context_id( win->canvas->status_bar, "on_mouse" );
   gtk_statusbar_pop( win->canvas->status_bar, cid ); 
   gtk_statusbar_push( win->canvas->status_bar, cid, txt ); 
@@ -639,6 +607,7 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
   static stg_velocity_t capture_vel;
   stg_pose_t pose;  
   stg_velocity_t zero_vel;
+  memset( &capture_vel, 0, sizeof(capture_vel) );
   memset( &zero_vel, 0, sizeof(zero_vel) );
 
   switch (event)
@@ -656,9 +625,15 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
       break;
       
     case STK_EVENT_PRESS:
-      // store the velocity at which we grabbed the model
-      stg_model_get_velocity(mod, &capture_vel );
-      stg_model_set_velocity( mod, &zero_vel );
+      {
+	// store the velocity at which we grabbed the model (if it has a velocity)
+	stg_velocity_t* v = stg_model_get_property_fixed( mod, "velocity", sizeof(stg_velocity_t));
+	if( v )
+	  {
+	    memcpy( &capture_vel, v, sizeof(capture_vel));
+	    stg_model_set_property( mod, "velocity", &zero_vel, sizeof(zero_vel));
+	  }
+      }
       // DELIBERATE NO-BREAK      
 
     case STK_EVENT_MOTION:       
@@ -684,7 +659,7 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
       stg_model_set_property( mod, "pose", &pose, sizeof(pose));
       
       // and restore the velocity at which we grabbed it
-      stg_model_set_velocity( mod, &capture_vel );
+      stg_model_set_property( mod, "velocity", &capture_vel, sizeof(capture_vel) );
       break;      
       
     default:
@@ -694,63 +669,50 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
   return;
 }
 
+int stg_fig_clear_cb(  stg_model_t* mod, char* name, 
+		       void* data, size_t len, void* userp )
+{
+  printf( "clear CB %p\n", userp );
+  
+  if( userp )
+    stg_rtk_fig_clear((stg_rtk_fig_t*)userp);
+  
+  return 1; // cancels callback
+}
+
+
 
 void gui_model_create( stg_model_t* mod )
 {
   PRINT_DEBUG( "gui model create" );
   
   gui_window_t* win = mod->world->win;  
-  stg_rtk_fig_t* parent_fig = win->bg; // default parent
+
+  stg_rtk_fig_t* parent = mod->world->win->bg;
   
- 
-  // attach instead to our parent's fig if there is one
   if( mod->parent )
-    {
-      gui_model_t* parent_gui = 
-	stg_model_get_property_fixed( mod->parent, "gui", sizeof(gui_model_t));
-      
-      if( parent_gui )
-	parent_fig = parent_gui->top;
-    }
-
-  // clean the structure
-  gui_model_t gui;
-  memset( &gui, 0, sizeof(gui_model_t) );
+    parent = stg_model_get_fig( mod->parent, "top" );
   
-  gui.top = 
-    stg_rtk_fig_create( mod->world->win->canvas, parent_fig, STG_LAYER_BODY );
-
-  gui.geom = 
-    stg_rtk_fig_create( mod->world->win->canvas, gui.top, STG_LAYER_GEOM );
-
-  gui.top->userdata = mod;
+  stg_rtk_fig_t* top = stg_rtk_fig_create(  mod->world->win->canvas, parent, STG_LAYER_BODY );
   
-  stg_model_set_property( mod, "gui", &gui, sizeof(gui));
+  top->userdata = mod;
+		     
+  // install the figure 
+  g_datalist_set_data( &mod->figs, "top", top ); 
 
   gui_model_features( mod );
 }
 
-gui_model_t* gui_model_figs( stg_model_t* model )
-{ 
-  return( (gui_model_t*)stg_model_get_property_fixed( model, "gui", sizeof(gui_model_t)));
-}
-
-void gui_model_destroy( stg_model_t* model )
+void gui_model_destroy( stg_model_t* mod )
 {
   PRINT_DEBUG( "gui model destroy" );
-
+  
   // TODO - It's too late to kill the figs - the canvas is gone! fix this?
   
-  gui_model_t* gui = 
-    stg_model_get_property_fixed( model, "gui", sizeof(gui_model_t));
-
-  if( gui )
-    {
-      if( gui->top ) stg_rtk_fig_destroy( gui->top );
-      if( gui->grid ) stg_rtk_fig_destroy( gui->grid );
-      if( gui->geom ) stg_rtk_fig_destroy( gui->geom );
-    }
-  // todo - erase the property figs
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "top" );
+  
+  if( fig ) 
+    stg_rtk_fig_and_descendents_destroy( fig );
 }
 
 
@@ -769,12 +731,10 @@ void gui_model_features( stg_model_t* mod )
   stg_geom_t geom;
   stg_model_get_geom(mod, &geom);
     
-  gui_window_t* win = mod->world->win;
-  
   // if we need a nose, draw one
   if( gf->nose )
     { 
-      stg_rtk_fig_t* fig = gui_model_figs(mod)->top;      
+      stg_rtk_fig_t* fig = stg_model_get_fig(mod,"top");      
       
       stg_color_t *col = 
 	stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
@@ -787,34 +747,30 @@ void gui_model_features( stg_model_t* mod )
 		     geom.size.x/2.0, 0.05 );
     }
 
-  stg_rtk_fig_movemask( gui_model_figs(mod)->top, gf->movemask);  
+  stg_rtk_fig_movemask( stg_model_get_fig(mod,"top"), gf->movemask);  
   
   // only install a mouse handler if the object needs one
   //(TODO can we remove mouse handlers dynamically?)
   if( gf->movemask )    
-    stg_rtk_fig_add_mouse_handler( gui_model_figs(mod)->top, gui_model_mouse );
+    stg_rtk_fig_add_mouse_handler( stg_model_get_fig(mod,"top"), gui_model_mouse );
   
-  // if we need a grid and don't have one, make one
-  if( gf->grid && gui_model_figs(mod)->grid == NULL )
-    {
-      gui_model_figs(mod)->grid = 
-	stg_rtk_fig_create( win->canvas, gui_model_figs(mod)->top, STG_LAYER_GRID);
-      
-      stg_rtk_fig_color_rgb32( gui_model_figs(mod)->grid, 
-			   stg_lookup_color(STG_GRID_MAJOR_COLOR ) );
-      
-      stg_rtk_fig_grid( gui_model_figs(mod)->grid, 
-		    geom.pose.x, geom.pose.y, 
-		    geom.size.x, geom.size.y, 1.0  ) ;
-    }
+  stg_rtk_fig_t* grid = stg_model_get_fig(mod,"grid"); 
 
-  
-  // if we have a grid and don't need one, destroy it
-  if( !gf->grid && gui_model_figs(mod)->grid )
-    {
-      stg_rtk_fig_destroy( gui_model_figs(mod)->grid );
-      gui_model_figs(mod)->grid == NULL;
-    }  
+  // if we need a grid and don't have one, make one
+  if( gf->grid  )
+    {    
+      if( ! grid ) 
+	grid = stg_model_fig_create( mod, "grid", "top", STG_LAYER_GRID); 
+      
+      stg_rtk_fig_clear( grid );
+      stg_rtk_fig_color_rgb32( grid, stg_lookup_color(STG_GRID_MAJOR_COLOR ) );      
+      stg_rtk_fig_grid( grid, 
+			geom.pose.x, geom.pose.y, 
+			geom.size.x, geom.size.y, 1.0  ) ;
+    }
+  else
+    if( grid ) // if we have a grid and don't need one, clear it but keep the fig around      
+      stg_rtk_fig_clear( grid );
 }
 
 void stg_model_render_polygons( stg_model_t* mod )
@@ -822,13 +778,13 @@ void stg_model_render_polygons( stg_model_t* mod )
   //printf( "render polygons for model %s\n",
   //  mod->token );
 
-  if( mod->world->win->disable_polygons )
+  if( ! mod->world->win->show_polygons )
     {
       //puts( "polys disabled" );
       return;
     }
 
-  stg_rtk_fig_t* fig = gui_model_figs(mod)->top;
+  stg_rtk_fig_t* fig = stg_model_get_fig(mod,"top");
   
   if( fig == NULL )
     return;
@@ -906,10 +862,10 @@ void stg_model_render_polygons( stg_model_t* mod )
 
   if( boundary && *boundary )
     {      
-      stg_rtk_fig_rectangle( gui_model_figs(mod)->top, 
+      stg_rtk_fig_rectangle( stg_model_get_fig(mod,"top"), 
 			     geom.pose.x, geom.pose.y, geom.pose.a, 
 			     geom.size.x, geom.size.y, 0 ); 
-    }  
+    } 
 }
 
 /// render a model's global pose vector
@@ -968,7 +924,7 @@ void gui_model_move( stg_model_t* mod )
     stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
   
   if( pose )
-    stg_rtk_fig_origin( gui_model_figs(mod)->top, 
+    stg_rtk_fig_origin( stg_model_get_fig(mod,"top"), 
 			pose->x, pose->y, pose->a );   
 }
 
@@ -995,74 +951,55 @@ void gui_world_geom( stg_world_t* world )
     }
 }
 
-void gui_model_render_data( stg_model_t* mod )
+
+void stg_model_fig_clear( stg_model_t* mod, const char* figname )
 {
-  gui_model_t* gui = 
-    stg_model_get_property_fixed( mod, "gui", sizeof(gui_model_t));
-
-  if( gui )
-    {
-      // if a rendering callback was registered, and the gui wants to
-      // render this type of data, call it
-      if( mod->f_render_data && 
-	  mod->world->win->render_data_flag[mod->type] )
-	(*mod->f_render_data)(mod);
-      else
-	{
-	  // remove any graphics that linger
-	  if( gui->data )
-	    stg_rtk_fig_clear( gui->data );
-	  
-	  if( gui->data_bg )
-	    stg_rtk_fig_clear( gui->data_bg );
-	}
-    }
-} 
-
-void gui_model_render_command( stg_model_t* mod )
-{
-  gui_model_t* gui = 
-    stg_model_get_property_fixed( mod, "gui", sizeof(gui_model_t));
-
-  if( gui )
-    {
-      // if a rendering callback was registered, and the gui wants to
-      // render this type of command, call it
-      if( mod->f_render_cmd && 
-	  mod->world->win->render_cmd_flag[mod->type] )
-	(*mod->f_render_cmd)(mod);
-      else
-	{
-	  // remove any graphics that linger
-	  if( gui->cmd )
-	    stg_rtk_fig_clear( gui->cmd );
-	  
-	  if( gui->cmd_bg )
-	    stg_rtk_fig_clear( gui->cmd_bg );
-	}
-    }
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, figname );
+  if( fig )
+    stg_rtk_fig_clear( fig );
 }
 
-  void gui_model_render_config( stg_model_t* mod )
+int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len, 
+			    void* userp )
 {
-  gui_model_t* gui = 
-    stg_model_get_property_fixed( mod, "gui", sizeof(gui_model_t));
-
-  if( gui )
-    {
-      // if a rendering callback was registered, and the gui wants to
-      // render this type of cfg, call it
-      if( mod->f_render_cfg && 
-	  mod->world->win->render_cfg_flag[mod->type] )
-	(*mod->f_render_cfg)(mod);
-      else
-	{
-	  // remove any graphics that linger
-	  if( gui->cfg )
-	    stg_rtk_fig_clear( gui->cfg );
-	  
-	  if( gui->cfg_bg )
-	    stg_rtk_fig_clear( gui->cfg_bg );
-	} 
-    }
+  if( userp )
+    stg_model_fig_clear( mod, (char*)userp );
+  return 1;  // remove callback
 }
+
+
+stg_rtk_fig_t* stg_model_get_fig( stg_model_t* mod, const char* figname ) 
+{
+  return( (stg_rtk_fig_t*)g_datalist_get_data( &mod->figs, figname ));  
+}
+
+stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod, 
+				     const char* figname, 
+				     const char* parentname, 
+				     int layer )
+{
+  stg_rtk_fig_t* parent = stg_model_get_fig( mod, parentname );
+  
+  //if( ! parent )
+  // {
+  //  parent = g_datalist_get_data( &mod->figs,  parentname );
+  //  assert( parent ); // should succeed!
+  //}
+  
+  //if( ! parent ) // no parent given or found, so this fig attaches the
+		 // the model's parent or the background
+  //{
+      // attach instead to our parent's fig if there is one
+  //  if( mod->parent )
+  //parent = stg_model_get_fig( mod->parent, "top" );
+      //else // fall back to the background figure
+      //parent = mod->world->win->bg; // default parent
+  // }
+  
+  // create and store the figure
+  stg_rtk_fig_t* fig = stg_rtk_fig_create( mod->world->win->canvas, parent, layer );
+  
+  g_datalist_set_data( &mod->figs, figname, (void*)fig );
+  return fig;
+}
+

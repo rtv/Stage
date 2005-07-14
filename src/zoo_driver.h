@@ -3,8 +3,8 @@
 
 #include "player_interfaces.h"
 #include <limits.h>
-#include <vector.h>
-#include <map.h>
+#include <vector>
+#include <map>
 #include <sys/types.h>
 #include <stdio.h>
 

@@ -2,13 +2,15 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.102 2005-07-14 21:19:54 adam_lein Exp $
+# $Id: Makefile.am,v 1.103 2005-07-14 23:37:22 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
 
-AM_CFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_CFLAGS@ @GTK_CFLAGS@
-AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_LIBS@ @GTK_CFLAGS@
+#AM_CFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_CFLAGS@ @GTK_CFLAGS@
+#AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_LIBS@ @GTK_CFLAGS@
+AM_CFLAGS = -std=c99 -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
+AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 
 # build the stage library and the stage plugin
 lib_LTLIBRARIES = libstage.la libstageplugin.la
@@ -24,16 +26,17 @@ bin_PROGRAMS = stest
 # satisfaction.
 #
 libstage_la_SOURCES = \
+	../config.h \
 	gui.c \
 	gui.h \
 	gui_menus.c \
 	matrix.c \
-	model.c \
 	model_blobfinder.c \
 	model_fiducial.c \
 	model_laser.c \
 	model_position.c \
 	model_ranger.c \
+	model.c \
 	raytrace.c \
 	stage.c \
 	stage.h \
@@ -55,16 +58,23 @@ libstage_la_SOURCES = \
 #	model_energy.c
 #	model_gripper.c
 
-libstage_la_LDFLAGS = -version-info 1:0:0 
+libstage_la_LDFLAGS = -version-info 2:0:0 
 libstage_la_LIBADD = @GTK_LIBS@
+
+# build a Player plugin from libstage plus Player driver hooks.
+libstageplugin_la_SOURCES = \
+	player_interfaces.h \
+	player_interfaces.cc \
+	player_simulation.cc \
+	player_driver.h \
+	player_driver.cc \
+	zoo_driver.cc \
+	zoo_driver.h 
+
+libstageplugin_la_LDFLAGS = -export-dynamic -version-info 1:0:0 
+libstageplugin_la_LIBADD = -L.libs -lstage
 
 # build a stand-alone test program using libstage
 stest_DEPENDENCIES = libstage.la
 stest_SOURCES = stest.cc
 stest_LDADD = libstage.la
-
-# build a Player plugin from libstage plus Player driver hooks.
-libstageplugin_la_SOURCES = player_driver.cc player_interfaces.cc \
-	zoo_driver.cc
-libstageplugin_la_LDFLAGS = -export-dynamic -version-info 1:0:0 
-libstageplugin_la_LIBADD = -L.libs -lstage

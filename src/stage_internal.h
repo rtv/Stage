@@ -7,15 +7,11 @@
 */
 
 #include "stage.h"
+#include "math.h" // for lrint() in macros
 
 /** macros for floating point comparisons 
  */
 #define PRECISION 100000.0
-//#define EQ(A,B) (((int)(A*PRECISION))==((int)(B*PRECISION)))
-//#define LT(A,B) (((int)(A*PRECISION))<((int)(B*PRECISION)))
-//#define GT(A,B) (((int)(A*PRECISION))>((int)(B*PRECISION)))
-//#define GTE(A,B) (((int)(A*PRECISION))>=((int)(B*PRECISION)))
-//#define LTE(A,B) (((int)(A*PRECISION))<=((int)(B*PRECISION)))
 #define EQ(A,B) ((lrint(A*PRECISION))==(lrint(B*PRECISION)))
 #define LT(A,B) ((lrint(A*PRECISION))<(lrint(B*PRECISION)))
 #define GT(A,B) ((lrint(A*PRECISION))>(lrint(B*PRECISION)))
@@ -30,22 +26,6 @@ extern "C" {
       Code for the Stage user interface window.
       @{
   */
-  
-  /// Structure that holds the GUI figure for each model
-  typedef struct
-  {
-    stg_rtk_fig_t* top;
-    stg_rtk_fig_t* geom;
-    stg_rtk_fig_t* grid;
-    stg_rtk_fig_t* data;
-    stg_rtk_fig_t* data_extra; // a bit of a hack, but some models need another fig
-    stg_rtk_fig_t* cmd;
-    stg_rtk_fig_t* cfg;
-    stg_rtk_fig_t* data_bg; // background (used e.g for laser scan fill)
-    stg_rtk_fig_t* cmd_bg; 
-    stg_rtk_fig_t* cfg_bg; 
-  } gui_model_t;
-  
   
   typedef struct 
   {
@@ -67,33 +47,17 @@ extern "C" {
     gboolean show_matrix;  
     gboolean fill_polygons;
     gboolean show_geom;
-    
+    gboolean show_polygons;
+    gboolean show_grid;
+
     int frame_series;
     int frame_index;
     int frame_callback_tag;
     int frame_interval;
     int frame_format;
 
-    stg_rtk_menu_t** menus;
-    stg_rtk_menuitem_t** mitems;
-    int menu_count;
-    int mitem_count;
-  
-    stg_rtk_menuitem_t** mitems_mspeed;
-    int mitems_mspeed_count;
-  
     struct _stg_model* selection_active;
-    
-    int disable_data;
-    int disable_polygons;
-    int disable_config;
-    int disable_commands;
-
-    //uint8_t render_poly_flag[STG_MODEL_COUNT];
-    uint8_t render_data_flag[STG_MODEL_COUNT];
-    uint8_t render_cfg_flag[STG_MODEL_COUNT];
-    uint8_t render_cmd_flag[STG_MODEL_COUNT];
-
+   
   } gui_window_t;
 
   void gui_startup( int* argc, char** argv[] ); 
@@ -107,23 +71,11 @@ extern "C" {
   int gui_world_update( stg_world_t* world );
   void stg_world_add_model( stg_world_t* world, stg_model_t* mod  );
 
-  void gui_load( gui_window_t* win, int section );
-  void gui_save( gui_window_t* win );
-
-  /// render the geometry of all models in the world
+  /// render the geometry of all models
   void gui_world_geom( stg_world_t* world );
 
-  /// render the data of all models in the world
-  void gui_world_render_data( stg_world_t* world );
-
-  /// render the configuration of all models in the world
-  void gui_world_render_cfg( stg_world_t* world );
-
-  /// render the commands of all models in the world
-  void gui_world_render_cmd( stg_world_t* world );
-  
-  /// get the structure containing all this model's figures
-  gui_model_t* gui_model_figs( stg_model_t* model );
+  void gui_load( gui_window_t* win, int section );
+  void gui_save( gui_window_t* win );
 
   void gui_model_create( stg_model_t* model );
   void gui_model_destroy( stg_model_t* model );
@@ -140,6 +92,12 @@ extern "C" {
   void gui_window_menus_create( gui_window_t* win );
   void gui_window_menus_destroy( gui_window_t* win );
 
+  void gui_add_view_item( const gchar *name,
+			  const gchar *label,
+			  const gchar *tooltip,
+			  GCallback callback,
+			  gboolean  is_active,
+			  void* userdata );
   /**@}*/
 
 
@@ -153,19 +111,6 @@ extern "C" {
   typedef int(*func_update_t)(struct _stg_model*);
   typedef int(*func_startup_t)(struct _stg_model*);
   typedef int(*func_shutdown_t)(struct _stg_model*);
-
-  typedef int(*func_set_command_t)(struct _stg_model*,void*,size_t);
-  typedef int(*func_set_data_t)(struct _stg_model*,void*,size_t);
-  typedef int(*func_set_config_t)(struct _stg_model*,void*,size_t);
-
-  typedef void*(*func_get_command_t)(struct _stg_model*,size_t*);
-  typedef void*(*func_get_data_t)(struct _stg_model*,size_t*);
-  typedef void*(*func_get_config_t)(struct _stg_model*,size_t*);
-
-  typedef void(*func_data_notify_t)( void* user, void* data, size_t len );
-
-  typedef void(*func_render_t)(struct _stg_model*);
-
   typedef void(*func_load_t)(struct _stg_model*);
   typedef void(*func_save_t)(struct _stg_model*);
   
@@ -177,6 +122,17 @@ extern "C" {
     size_t len;
     void* user;
   } stg_property_callback_args_t;
+  
+  typedef struct 
+  {
+    stg_model_t* mod;
+    //char propname[STG_PROPNAME_MAX];
+    const char *propname;
+    stg_property_callback_t callback_on;
+    stg_property_callback_t callback_off;
+    void* arg_on; // argument to callback_on
+    void* arg_off; // argument to callback_off
+  } stg_property_toggle_args_t;
     
 
   struct _stg_model
@@ -195,6 +151,9 @@ extern "C" {
     // to associate arbitrary items with a model.
     GData* props;
 
+    // a datalist of stg_rtk_figs, indexed by name (string)
+    GData* figs; 
+
     // the number of children of each type is counted so we can
     // automatically generate names for them
     int child_type_count[ STG_MODEL_COUNT ];
@@ -211,26 +170,11 @@ extern "C" {
     func_startup_t f_startup;
     func_shutdown_t f_shutdown;
     func_update_t f_update;
-    func_render_t f_render_data;
-    func_render_t f_render_cmd;
-    func_render_t f_render_cfg;
     func_load_t f_load;
     func_save_t f_save;
 
-    /* TODO: replace all this stuff with properties */
-    
-    // the generic buffers used by specialized model types.
-    // For speed, these are implemented directly, rather than by datalist.
-    void *data, *cmd, *cfg;
-    size_t data_len, cmd_len, cfg_len;  
+    /* TOFO - thread-safe version */
 
-    /// if set, this callback is run when we do model_put_data() -
-    /// it's used by the player plugin to notify Player that data is
-    /// ready.
-    func_data_notify_t data_notify;
-    void* data_notify_arg;
-
-     // todo - thread-safe version
     // allow exclusive access to this model
     pthread_mutex_t data_mutex, cmd_mutex, cfg_mutex;
     
@@ -240,7 +184,6 @@ extern "C" {
   // internal functions
   
   int _model_update( stg_model_t* mod );
-  //int _model_init( stg_model_t* mod );
   int _model_startup( stg_model_t* mod );
   int _model_shutdown( stg_model_t* mod );
 
@@ -260,7 +203,17 @@ extern "C" {
   void stg_model_render_pose( stg_model_t* mod );
   void stg_model_render_polygons( stg_model_t* mod );
   
+  int stg_fig_clear_cb(  stg_model_t* mod, char* name, 
+			 void* data, size_t len, void* userp );
   
+  stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod, 
+				       const char* figname, 
+				       const char* parentname,
+				       int layer );
+  
+  stg_rtk_fig_t* stg_model_get_fig( stg_model_t* mod, const char* figname );
+  void stg_model_fig_clear( stg_model_t* mod, const char* figname );
+
   void stg_property_refresh( stg_property_t* prop );
   void stg_property_destroy( stg_property_t* prop );
        
@@ -307,8 +260,8 @@ extern "C" {
     gboolean destroy;
 
     gui_window_t* win; // the gui window associated with this world
-   
-    ///  a hooks for the user to store things in the world
+    
+    ///  a hook for the user to store things in the world
     void* user;
     size_t user_len;
   };
@@ -316,8 +269,6 @@ extern "C" {
   /**@}*/
 
   
- 
- 
   // MATRIX  -----------------------------------------------------------------------
   
   /** @defgroup stg_matrix Matrix
@@ -357,7 +308,7 @@ extern "C" {
     // without doing the geometry again
     GHashTable* ptable;
 
-
+    /* TODO */
     // lists of cells that have changed recently. This is used by the
     // GUI to render cells very quickly, and could also be used by devices
     //GSList* cells_changed;
@@ -373,8 +324,7 @@ extern "C" {
 
   /** Create a new matrix structure
    */
-  stg_matrix_t* stg_matrix_create( double ppm, double width, double height, 
-				   unsigned int scale, unsigned int count );
+  stg_matrix_t* stg_matrix_create( double ppm, double width, double height );
   
   /** Frees all memory allocated by the matrix; first the cells, then the   
       cell array.
@@ -457,7 +407,7 @@ extern "C" {
     double cosa, sina, tana;
     double range;
     double max_range;
-    double* incr;//[matrix_array_count];
+    double* incr;
 
     GSList* models;
     int index;
@@ -474,9 +424,6 @@ extern "C" {
   
   void itl_destroy( itl_t* itl );
   void itl_raytrace( itl_t* itl );
-
-  // deprecated - remove
-  //stg_model_t* itl_next( itl_t* itl );
   
   stg_model_t* itl_first_matching( itl_t* itl, 
 				   stg_itl_test_func_t func, 

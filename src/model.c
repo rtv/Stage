@@ -1,9 +1,12 @@
 
 #define PACKPOSE(P,X,Y,A) {P->x=X; P->y=Y; P->a=A;}
 
-#include <limits.h> // for PATH_MAX
+#define _GNU_SOURCE
+
+#include <limits.h> 
 #include <assert.h>
 #include <math.h>
+#include <string.h> // for strdup(3)
 
 //#define DEBUG
 //#undef DEBUG
@@ -189,7 +192,7 @@ int stg_model_create_name( stg_model_t* mod )
   
   free( mod->token );
   // return a new string just long enough
-  mod->token = strdup(buf);
+  mod->token = strndup(buf,512);
 
   return 0; //ok
 }
@@ -369,42 +372,20 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // create this model's empty list of children
   mod->children = g_ptr_array_new();
 
-  mod->data = NULL;
-  mod->data_len = 0;
-  
-  mod->cmd = NULL;
-  mod->cmd_len = 0;
-  
-  mod->cfg = NULL;
-  mod->cfg_len = 0;
-
   // install the default functions
   mod->f_startup = NULL;
   mod->f_shutdown = NULL;
-  mod->f_render_data = NULL;
-  mod->f_render_cmd = NULL;
-  mod->f_render_cfg = NULL;
   mod->f_update = _model_update;
 
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
-  //geom.size.x = 1.0;
-  //geom.size.y = 1.0;
+  geom.size.x = 1.0;
+  geom.size.y = 1.0;
   stg_model_set_property_ex( mod, "geom", &geom, sizeof(geom), storage_geom );
   
   stg_pose_t pose;
   memset( &pose, 0, sizeof(pose));
   stg_model_set_property_ex( mod, "pose", &pose, sizeof(pose), storage_pose );
-  
-  //stg_velocity_t vel;
-  //memset( &vel, 0, sizeof(vel));
-  //stg_model_add_property( mod, "velocity", &vel, sizeof(vel), NULL );
-  
-  //stg_kg_t mass = 0;
-  //stg_model_add_property( mod, "mass", &mass, sizeof(mass), NULL );
-  
-  //stg_fiducial_return_t fid = FiducialNone;
-  //stg_model_add_property( mod, "fiducial_return", &fid, sizeof(fid), NULL );
   
   stg_obstacle_return_t obs = 1;
   stg_model_set_property( mod, "obstacle_return", &obs, sizeof(obs));
@@ -412,7 +393,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   stg_ranger_return_t rng = 1;
   stg_model_set_property( mod, "ranger_return", &rng, sizeof(rng));
   
-  stg_blob_return_t blb = 0;
+  stg_blob_return_t blb = 1;
   stg_model_set_property( mod, "blob_return", &blb, sizeof(blb));
   
   stg_laser_return_t lsr = LaserVisible;
@@ -428,9 +409,9 @@ stg_model_t* stg_model_create( stg_world_t* world,
   stg_color_t col = 0xFF0000; // red;  
   stg_model_set_property_ex( mod, "color", &col, sizeof(col), storage_color );
   
-  //stg_polygon_t* square = stg_unit_polygon_create();
-  //stg_model_set_property_ex( mod, "polygons", square, sizeof(stg_polygon_t), storage_polygons );
-  stg_model_set_property_ex( mod, "polygons", NULL, 0, storage_polygons );
+  stg_polygon_t* square = stg_unit_polygon_create();
+  stg_model_set_property_ex( mod, "polygons", square, sizeof(stg_polygon_t), storage_polygons );
+  //stg_model_set_property_ex( mod, "polygons", NULL, 0, storage_polygons );
       
   // do gui features last so we know what we're supposed to look like.
   stg_guifeatures_t gf;
@@ -444,6 +425,10 @@ stg_model_t* stg_model_create( stg_world_t* world,
   if( mod->world->win )
     gui_model_create( mod );
   
+  // exterimental: creates a menu of models
+  gui_add_tree_item( mod )
+
+
   PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
 		mod->world->id, mod->id, 
 		mod->token, stg_model_type_string(mod->type) );
@@ -482,9 +467,9 @@ void stg_model_destroy( stg_model_t* mod )
 
   if( mod->parent && mod->parent->children ) g_ptr_array_remove( mod->parent->children, mod );
   if( mod->children ) g_ptr_array_free( mod->children, FALSE );
-  if( mod->data ) free( mod->data );
-  if( mod->cmd ) free( mod->cmd );
-  if( mod->cfg ) free( mod->cfg );
+  //if( mod->data ) free( mod->data );
+  //if( mod->cmd ) free( mod->cmd );
+  //if( mod->cfg ) free( mod->cfg );
   if( mod->token ) free( mod->token );
 
   // TODO - free all property data
@@ -749,104 +734,6 @@ void stg_get_default_geom( stg_geom_t* geom )
 }
 
 
-// DATA/COMMAND/CONFIG ----------------------------------------------------
-// these set and get the generic buffers for derived types
-//
-
-int _get_something( void* dest, size_t dest_len, 
-		    void* src, size_t src_len, 
-		    pthread_mutex_t* mutex )
-{
-  size_t copy_len = MIN( dest_len, src_len );
-  pthread_mutex_lock( mutex );
-  memcpy( dest, src, copy_len );
-  pthread_mutex_unlock( mutex );
-  return copy_len;
-}
-
-int stg_model_get_data( stg_model_t* mod, void* dest, size_t len )
-{
-  return _get_something( dest, len, mod->data, mod->data_len, &mod->data_mutex );
-}
-
-int stg_model_get_command( stg_model_t* mod, void* dest, size_t len )
-{
-  return _get_something( dest, len, mod->cmd, mod->cmd_len, &mod->cmd_mutex );
-}
-
-int stg_model_get_config( stg_model_t* mod, void* dest, size_t len )
-{
-  return _get_something( dest, len, mod->cfg, mod->cfg_len, &mod->cfg_mutex );
-}
-
-int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
-{
-  pthread_mutex_lock( &mod->data_mutex );
-  mod->data = realloc( mod->data, len );
-  memcpy( mod->data, data, len );    
-  mod->data_len = len;
-  pthread_mutex_unlock( &mod->data_mutex );
-
-  // if a callback was registered, call it
-  if( mod->data_notify )
-    (*mod->data_notify)(mod->data_notify_arg, data, len );
-  
-  if( mod->world->win )
-    {
-      if( mod->world->win->render_data_flag[ mod->type ] && 
-	  !mod->world->win->disable_data )
-	gui_model_render_data( mod );
-      else
-	{
-	  gui_model_t* gui = stg_model_get_property_fixed( mod, "gui", sizeof(gui_model_t));
-	  
-	  if( gui && gui->data  )
-	    {
-	      stg_rtk_fig_clear(gui->data);
-	      stg_rtk_fig_destroy( gui->data);
-	      gui->data = NULL;
-	    }
-	}
-    }
-  
-  PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
-		mod->id, mod->token, (int)mod->data_len);
-  return 0; //ok
-}
-
-int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len )
-{
-  pthread_mutex_lock( &mod->cmd_mutex );  
-  mod->cmd = realloc( mod->cmd, len );
-  memcpy( mod->cmd, cmd, len );    
-  mod->cmd_len = len;  
-  pthread_mutex_unlock( &mod->cmd_mutex );
-  
-  if( mod->world->win )
-    gui_model_render_command( mod );
-  
-  PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
-		mod->id, mod->token, (int)mod->cmd_len);
-  
-  return 0; //ok
-}
-
-int stg_model_set_config( stg_model_t* mod, void* cfg, size_t len )
-{ 
-  pthread_mutex_lock( &mod->cfg_mutex );  
-  mod->cfg = realloc( mod->cfg, len );
-  memcpy( mod->cfg, cfg, len );    
-  mod->cfg_len = len;
-  pthread_mutex_unlock( &mod->cfg_mutex );  
-
-  if( mod->world->win )
-    gui_model_render_config( mod );
-  
-  PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
-		mod->id, mod->token, (int)mod->cfg_len);
-  return 0; //ok
-}
-
 // default update function that implements velocities for all objects
 int _model_update( stg_model_t* mod )
 {
@@ -970,7 +857,15 @@ void stg_property_destroy( stg_property_t* prop )
 // call a property's callback func
 void stg_property_callback_cb( gpointer data, gpointer user )
 {
-  ((stg_property_callback_t)data)( (stg_property_t*)user );  
+  stg_cbarg_t* cba = (stg_cbarg_t*)data;
+  stg_property_t* prop = (stg_property_t*)user;  
+
+  //printf( "calling callback %p data %p (%s)\n",
+  //  cba->callback, cba->arg, (char*)cba->arg );
+ 
+  if( ((stg_property_callback_t)cba->callback)( prop->mod, prop->name, prop->data, prop->len, cba->arg ) )
+    // if the callback returned non-zero, remove it
+    stg_model_remove_property_callback( prop->mod, prop->name, cba->arg );
 }
 
 stg_property_t* stg_model_set_property_ex( stg_model_t* mod, 
@@ -994,8 +889,8 @@ stg_property_t* stg_model_set_property( stg_model_t* mod,
   if( prop == NULL )
     {
       // create a property and stash it in the model with the right name
-      printf( "* adding model %s property %s size %d\n", 
-	      mod->token, propname, (int)len );
+      //printf( "* adding model %s property %s size %d\n", 
+      //      mod->token, propname, (int)len );
       
       
       prop = (stg_property_t*)calloc(sizeof(stg_property_t),1);      
@@ -1022,8 +917,8 @@ stg_property_t* stg_model_set_property( stg_model_t* mod,
     storage_ordinary( prop, data, len );
   
   if( prop->callbacks ) 
-    g_list_foreach( prop->callbacks, stg_property_callback_cb, prop );
-  
+      g_list_foreach( prop->callbacks, stg_property_callback_cb, prop );
+
   return prop; // ok
 }
 
@@ -1044,10 +939,17 @@ int stg_model_add_property_callback( stg_model_t* mod,
 		   mod->token, propname );
       return 1; // error
     }
-  
   // else
-  prop->callbacks = g_list_append( prop->callbacks, callback );
-  prop->user = user;
+  
+  stg_cbarg_t* record = calloc(sizeof(stg_cbarg_t),1);
+  record->callback = callback;
+  record->arg = user;
+  
+  prop->callbacks = g_list_append( prop->callbacks, record );
+  
+  //printf( "added callback %p data %p (%s)\n",
+  //  callback, user, (char*)user );
+
   return 0; //ok
 }
 
@@ -1065,7 +967,25 @@ int stg_model_remove_property_callback( stg_model_t* mod,
     }
   
   // else
-  prop->callbacks = g_list_remove( prop->callbacks, callback );
+
+  // find our callback in the list of stg_cbarg_t
+  GList* el = NULL;
+  
+  // scan the list for the first matching callback
+  for( el = g_list_first( prop->callbacks); 
+       el;
+       el = el->next )
+    {
+      if( ((stg_cbarg_t*)el->data)->callback == callback )
+	break;      
+    }
+
+  if( el ) // if we found the matching callback, remove it
+    prop->callbacks = g_list_remove( prop->callbacks, el->data);
+ 
+  if( el && el->data )
+    free( el->data );
+ 
   return 0; //ok
 }
 
@@ -1530,8 +1450,8 @@ void stg_model_load( stg_model_t* mod )
   
   if( wf_property_exists( mod->id, "color" ))
     {
-      stg_color_t* now = 
-	stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));      
+      //stg_color_t* now = 
+      //stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));      
       
       stg_color_t col = 0xFF0000; // red;  
       const char* colorstr = wf_read_string( mod->id, "color", NULL );
@@ -1554,14 +1474,14 @@ void stg_model_load( stg_model_t* mod )
       
       int image_width=0, image_height=0;
       
-      char full[PATH_MAX];
+      char full[_POSIX_PATH_MAX];
       
       if( bitmapfile[0] == '/' )
 	strcpy( full, bitmapfile );
       else
 	{
 	  char *tmp = strdup(wf_get_filename());
-	  snprintf( full, PATH_MAX,
+	  snprintf( full, _POSIX_PATH_MAX,
 		    "%s/%s",  dirname(tmp), bitmapfile );
           free(tmp);
 	}
@@ -1591,7 +1511,7 @@ void stg_model_load( stg_model_t* mod )
 	  stg_model_set_property( mod, "geom", geom, sizeof(stg_geom_t));
 	}
       
-      printf( "got %d rectangles from bitmap %s\n", num_rects, full );
+      //printf( "got %d rectangles from bitmap %s\n", num_rects, full );
 
       // convert rects to an array of polygons and upload the polygons
       polys = stg_rects_to_polygons( rects, num_rects );

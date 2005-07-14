@@ -1,6 +1,8 @@
 
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h> // for strdup(3)
 
 //#define DEBUG
 
@@ -35,8 +37,6 @@ world
    interval_real   100
    interval_sim    100
    resolution      0.01
-   resolution_med  0.01
-   resolution_low  0.01
 )
 @endverbatim
 
@@ -71,12 +71,12 @@ described on the manual page for each model type.
 
 stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 {
-  wf_load( worldfile_path );
+  wf_load( (char*)worldfile_path );
   
   int section = 0;
   
   const char* world_name =
-    wf_read_string( section, "name", worldfile_path );
+    wf_read_string( section, "name", (char*)worldfile_path );
   
   stg_msec_t interval_real = 
     wf_read_int( section, "interval_real", STG_DEFAULT_INTERVAL_REAL );
@@ -93,12 +93,6 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
   double height = 
     wf_read_tuple_float( section, "size", 1, STG_DEFAULT_WORLD_HEIGHT ); 
 
-  int resolution_scale = 
-    wf_read_int( section, "resolution_scale", 4.0 ); 
-  
-  int resolution_count = 
-    wf_read_int( section, "resolution_count", 4 ); 
-  
   _stg_disable_gui = wf_read_int( section, "gui_disable", _stg_disable_gui );
 
   // create a single world
@@ -109,9 +103,7 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 		      interval_real,
 		      ppm,
 		      width,
-		      height,
-		      resolution_scale,
-		      resolution_count );
+		      height );
 
   if( world == NULL )
     return NULL; // failure
@@ -209,25 +201,27 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	      mod = stg_model_create( world, parent_mod, section, STG_MODEL_BASIC, namestr );
 	      break;
 	      
-	    case STG_MODEL_BLOB:
-	      mod = stg_blobfinder_create( world, parent_mod, section, namestr );
-	      break;
-	      	      
 	    case STG_MODEL_LASER:
 	      mod = stg_laser_create( world,  parent_mod, section, namestr );
 	      break;
-	      
-	    case STG_MODEL_RANGER:
-	      mod = stg_ranger_create( world,  parent_mod, section, namestr );
+
+	    case STG_MODEL_POSITION:
+	      mod = stg_position_create( world,  parent_mod, section, namestr );
 	      break;
-	      
+
 	    case STG_MODEL_FIDUCIAL:
 	      mod = stg_fiducial_create( world,  parent_mod, section, namestr );
 	      break;
 	      
-	    case STG_MODEL_POSITION:
-	      mod = stg_position_create( world,  parent_mod, section, namestr );
+	    case STG_MODEL_BLOB:
+	      mod = stg_blobfinder_create( world, parent_mod, section, namestr );
+	      break;	      	      
+	    
+	    case STG_MODEL_RANGER:
+	      mod = stg_ranger_create( world,  parent_mod, section, namestr );
 	      break;
+	      
+	      /*	      
 
 	      //case STG_MODEL_GRIPPER:
 	      //mod = stg_gripper_create( world,parent_mod,section,namestr);
@@ -237,6 +231,7 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	      //mod = stg_energy_create( world,  parent_mod, section, namestr );
 	      break;
 
+	      */
 	    default:
 	      PRINT_ERR1( "don't know how to configure type %d", type );
 	    }
@@ -260,9 +255,7 @@ stg_world_t* stg_world_create( stg_id_t id,
 			       int real_interval,
 			       double ppm,
 			       double width,
-			       double height,
-			       unsigned int array_scaling,
-			       unsigned int array_count )
+			       double height )
 {
   if( ! init_occurred )
     {
@@ -287,7 +280,7 @@ stg_world_t* stg_world_create( stg_id_t id,
   world->width = width;
   world->height = height;
   world->ppm = ppm; // this is the finest resolution of the matrix
-  world->matrix = stg_matrix_create( ppm, width, height, array_scaling, array_count ); 
+  world->matrix = stg_matrix_create( ppm, width, height ); 
   
   
   world->paused = TRUE; // start paused.
@@ -350,10 +343,6 @@ int stg_world_update( stg_world_t* world, int sleepflag )
 {
   //PRINT_WARN( "World update" );
 
-  //PRINT_WARN( "World update - not paused" );
- 
-
-
 #if 0 //DEBUG
   struct timeval tv1;
   gettimeofday( &tv1, NULL );
@@ -361,11 +350,7 @@ int stg_world_update( stg_world_t* world, int sleepflag )
   
   if( world->win )
     {
-      gui_poll();
-      
-      // if the window was closed, we request a quit
-      if( gui_world_update( world ) )
-	stg_quit_request();
+      gui_poll();      
     }
 
 #if 0// DEBUG
@@ -380,10 +365,6 @@ int stg_world_update( stg_world_t* world, int sleepflag )
 
   //putchar( '.' );
   //fflush( stdout );
-
-  if( world->paused ) // only update if we're not paused
-    return _stg_quit;
-
   
   stg_msec_t timenow = stg_timenow();
    
@@ -409,15 +390,18 @@ int stg_world_update( stg_world_t* world, int sleepflag )
       fflush(stdout);
 #endif
       
-      world->real_interval_measured = real_interval;
-      
-      g_hash_table_foreach( world->models, model_update_cb, world );
-      
-      
-      world->wall_last_update = timenow;
-      
-      world->sim_time += world->sim_interval;
-      
+      if( ! world->paused ) // only update if we're not paused
+	{
+	  world->real_interval_measured = real_interval;	  
+	  g_hash_table_foreach( world->models, model_update_cb, world );	  	  
+	  world->wall_last_update = timenow;	  
+	  world->sim_time += world->sim_interval;
+	}
+
+      // redraw all the action
+      if( world->win )
+	if( gui_world_update( world ) )
+	  stg_quit_request();      
     }
   else
     if( sleepflag )
@@ -447,6 +431,72 @@ int stg_world_model_destroy( stg_world_t* world, stg_id_t model )
   g_hash_table_remove( world->models, &model );
   
   return 0; // ok
+}
+
+
+struct cb_package
+{
+  const char* propname;
+  stg_property_callback_t callback;
+  void* userdata;
+};
+
+void add_callback_wrapper( gpointer key, gpointer value, gpointer user )
+{
+  struct cb_package *pkg = (struct cb_package*)user;  
+  stg_model_t* mod = (stg_model_t*)value;
+  
+  size_t dummy;
+  if( stg_model_get_property( mod, pkg->propname, &dummy ) )
+    stg_model_add_property_callback( mod,
+				     pkg->propname,
+				     pkg->callback,
+				     pkg->userdata );
+}			   
+
+void remove_callback_wrapper( gpointer key, gpointer value, gpointer user )
+{
+  struct cb_package *pkg = (struct cb_package*)user;  
+  stg_model_t* mod = (stg_model_t*)value;
+  
+  size_t dummy;
+  if( stg_model_get_property( mod, pkg->propname, &dummy ) )
+    stg_model_remove_property_callback( (stg_model_t*)value,
+					pkg->propname,
+					pkg->callback );
+}			   
+  
+void stg_world_add_property_callback( stg_world_t* world,
+				      char* propname,
+				      stg_property_callback_t callback,
+				      void* userdata )     
+{  
+  assert( world );
+  assert( propname );
+  assert( callback );
+
+  struct cb_package pkg;
+  pkg.propname = propname;
+  pkg.callback = callback;
+  pkg.userdata = userdata;
+
+  g_hash_table_foreach( world->models, add_callback_wrapper, &pkg );
+}
+
+void stg_world_remove_property_callback( stg_world_t* world,
+					 char* propname,
+					 stg_property_callback_t callback )
+{  
+  assert( world );
+  assert( propname );
+  assert( callback );
+  
+  struct cb_package pkg;
+  pkg.propname = propname;
+  pkg.callback = callback;
+  pkg.userdata = NULL;
+
+  g_hash_table_foreach( world->models, remove_callback_wrapper, &pkg );
 }
 
 
@@ -501,3 +551,29 @@ void stg_world_reload( stg_world_t* world )
   // ask every model to save itself
   g_hash_table_foreach( world->models, stg_model_reload_cb, NULL );
 }
+
+
+/* void stg_world_add_property_toggles( stg_world_t* world,  */
+/* 				     const char* propname,  */
+/* 				     stg_property_callback_t callback_on, */
+/* 				     void* arg_on, */
+/* 				     stg_property_callback_t callback_off, */
+/* 				     void* arg_off, */
+/* 				     const char* label, */
+/* 				     int enabled ) */
+/* { */
+/*   stg_world_property_callback_args_t* args =  */
+/*     calloc(sizeof(stg_world_property_callback_args_t),1); */
+  
+/*   args->world = world; */
+/*   strncpy(args->propname, propname, STG_PROPNAME_MAX ); */
+/*   args->callback_on = callback_on; */
+/*   args->callback_off = callback_off; */
+/*   args->arg_on = arg_on; */
+/*   args->arg_off = arg_off; */
+
+/*   gui_add_view_item( propname, label, NULL,  */
+/* 		     toggle_property_callback, enabled, args ); */
+/* } */
+
+

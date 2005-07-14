@@ -21,12 +21,14 @@
 /*
  * Desc: Stk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.15 2005-06-02 09:43:28 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.16 2005-07-14 23:37:23 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#define _GNU_SOURCE
 
 #include <assert.h>
 #include <errno.h>
