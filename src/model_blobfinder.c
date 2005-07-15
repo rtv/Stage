@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.43 2005-07-14 23:37:23 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.44 2005-07-15 02:28:40 rtv Exp $
  */
 
 #include <math.h>
@@ -92,55 +92,13 @@ blobfinder
 */
 
 
-void blobfinder_load( stg_model_t* mod )
-{
-  // remove the polygon: sensor has no body
-  stg_model_set_property( mod, "polygons", NULL, 0 );
-
-  stg_blobfinder_config_t bcfg;
-  memset( &bcfg, 0, sizeof(bcfg) );
-  
-  bcfg.channel_count = 
-    wf_read_int(mod->id, "channel_count", 6 );
-  
-  bcfg.scan_width = (int)
-    wf_read_tuple_float(mod->id, "image", 0, STG_DEFAULT_BLOB_SCANWIDTH);
-  bcfg.scan_height = (int)
-    wf_read_tuple_float(mod->id, "image", 1, STG_DEFAULT_BLOB_SCANHEIGHT );	    
-  bcfg.range_max = 
-    wf_read_length(mod->id, "range_max", STG_DEFAULT_BLOB_RANGEMAX );
-  bcfg.pan = 
-    wf_read_tuple_angle(mod->id, "ptz", 0, STG_DEFAULT_BLOB_PAN );
-  bcfg.tilt = 
-    wf_read_tuple_angle(mod->id, "ptz", 1, STG_DEFAULT_BLOB_TILT );
-  bcfg.zoom =  
-    wf_read_tuple_angle(mod->id, "ptz", 2, STG_DEFAULT_BLOB_ZOOM );
-  
-  if( bcfg.channel_count > STG_BLOB_CHANNELS_MAX )
-    bcfg.channel_count = STG_BLOB_CHANNELS_MAX;
-  
-  int ch;
-  for( ch = 0; ch<bcfg.channel_count; ch++ )
-    {
-      switch( ch%6 )
-      {
-      case 0:  bcfg.channels[ch] = stg_lookup_color( "red" ); break;
-      case 1:  bcfg.channels[ch] = stg_lookup_color( "green" ); break;
-      case 2:  bcfg.channels[ch] = stg_lookup_color( "blue" ); break;
-      case 3:  bcfg.channels[ch] = stg_lookup_color( "cyan" ); break;
-      case 4:  bcfg.channels[ch] = stg_lookup_color( "yellow" ); break;
-      case 5:  bcfg.channels[ch] = stg_lookup_color( "magenta" ); break;
-      }
-    }    
-  
-  stg_model_set_property( mod, "blob_cfg", &bcfg, sizeof(bcfg));
-}
 
 
 void blobfinder_init( stg_model_t* mod );
 int blobfinder_startup( stg_model_t* mod );
 int blobfinder_shutdown( stg_model_t* mod );
 int blobfinder_update( stg_model_t* mod );
+void blobfinder_load( stg_model_t* mod );
 
 int blobfinder_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 int blobfinder_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
@@ -160,25 +118,12 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
   mod->f_update = NULL;// installed at startup/shutdown
   mod->f_load = blobfinder_load;
   
-  // when data is set, render it to the GUI
-  //stg_model_add_property_callback( mod, "data", blobfinder_render_data, NULL );
-
-
-  // sensible blobfinder defaults
-  stg_geom_t geom;
-  geom.pose.x = 0; //STG_DEFAULT_LASER_POSEX;
-  geom.pose.y = 0; // STG_DEFAULT_LASER_POSEY;
-  geom.pose.a = 0; //STG_DEFAULT_LASER_POSEA;
-  geom.size.x = 0.01; //STG_DEFAULT_LASER_SIZEX;
-  geom.size.y = 0.01; //STG_DEFAULT_LASER_SIZEY;
-  //stg_model_set_geom( mod, &geom );
+  // remove the polygon: sensor has no body
+  stg_model_set_property( mod, "polygons", NULL, 0 );
   
-  // nothing can see a blobfinder
-  //mod->obstacle_return = 0;
-  //mod->laser_return = LaserTransparent;
-  //mod->fiducial_return = FiducialNone;
-  //stg_color_t col = stg_lookup_color("magenta");
-  //stg_model_set_color( mod, &col );
+  stg_geom_t geom;
+  memset( &geom, 0, sizeof(geom));
+  stg_model_set_property( mod, "geom", &geom, sizeof(geom) );
   
   stg_blobfinder_config_t cfg;
   memset(&cfg,0,sizeof(cfg));
@@ -197,12 +142,13 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
   cfg.channels[3] = stg_lookup_color( "cyan" );
   cfg.channels[4] = stg_lookup_color( "yellow" );
   cfg.channels[5] = stg_lookup_color( "magenta" );
+
+  stg_model_set_property( mod, "blob_cfg",  &cfg,sizeof(cfg) );
   
   //int c;
   //for( c=0; c<6; c++ )
   //PRINT_WARN2( "init channel %d has val %X", c, cfg.channels[c] );
   
-  stg_model_set_property( mod, "blob_cfg",  &cfg,sizeof(cfg) );
   stg_model_set_property( mod, "blob_data", NULL, 0 );
   
   stg_model_add_property_toggles( mod, "blob_data", 
@@ -214,6 +160,50 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
 				  TRUE );
 
   return mod;
+}
+
+void blobfinder_load( stg_model_t* mod )
+{
+  stg_blobfinder_config_t* now = 
+    stg_model_get_property_fixed( mod, "blob_cfg", sizeof(stg_blobfinder_config_t));
+  assert(now);
+  
+  stg_blobfinder_config_t bcfg;
+  bcfg.channel_count = 
+    wf_read_int(mod->id, "channel_count", now->channel_count );
+  
+  bcfg.scan_width = (int)
+    wf_read_tuple_float(mod->id, "image", 0, now->scan_width );
+  bcfg.scan_height = (int)
+    wf_read_tuple_float(mod->id, "image", 1, now->scan_height );	    
+  bcfg.range_max = 
+    wf_read_length(mod->id, "range_max", now->range_max );
+  bcfg.pan = 
+    wf_read_tuple_angle(mod->id, "ptz", 0, now->pan );
+  bcfg.tilt = 
+    wf_read_tuple_angle(mod->id, "ptz", 1, now->tilt );
+  bcfg.zoom =  
+    wf_read_tuple_angle(mod->id, "ptz", 2, now->zoom );
+  
+  if( bcfg.channel_count > STG_BLOB_CHANNELS_MAX )
+    bcfg.channel_count = STG_BLOB_CHANNELS_MAX;
+  
+  // TODO - load the channel specification properly
+  int ch;
+  for( ch = 0; ch<bcfg.channel_count; ch++ )
+    {
+      switch( ch%6 )
+	{
+	case 0:  bcfg.channels[ch] = stg_lookup_color( "red" ); break;
+	case 1:  bcfg.channels[ch] = stg_lookup_color( "green" ); break;
+	case 2:  bcfg.channels[ch] = stg_lookup_color( "blue" ); break;
+	case 3:  bcfg.channels[ch] = stg_lookup_color( "cyan" ); break;
+	case 4:  bcfg.channels[ch] = stg_lookup_color( "yellow" ); break;
+	case 5:  bcfg.channels[ch] = stg_lookup_color( "magenta" ); break;
+	}
+    }    
+  
+  stg_model_set_property( mod, "blob_cfg", &bcfg, sizeof(bcfg));
 }
 
 int blobfinder_startup( stg_model_t* mod )
