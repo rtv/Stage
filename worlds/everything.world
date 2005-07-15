@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.41 2005-07-15 02:11:50 rtv Exp $
+# CVS: $Id: everything.world,v 1.42 2005-07-15 02:38:11 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -59,10 +59,18 @@ model(
 
 # extend the pioneer2dx definition from pioneer.inc
 #
-define laserpioneer pioneer2dx
-(
-  sick_laser(  fiducialfinder( obstacle 0 ) )
-  blobfinder()
+define laserpioneer pioneer2dx	
+(	
+  sick_laser
+  (  
+    fiducialfinder() 
+  )
+
+  blobfinder
+  ( 
+    channel_count 6 
+    channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
+  )
 
   fiducial_return 42
   blobfinder_return 1 
