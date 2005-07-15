@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.21 2005-07-14 23:37:23 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.1 2005-07-15 03:41:37 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -143,8 +143,7 @@ Richard Vaughan
 #include <math.h>
 #include <player/drivertable.h>
 
-#include "player_driver.h"
-#include "player_interfaces.h"
+#include "p_driver.h"
 #include "zoo_driver.h"
 
 #define STG_DEFAULT_WORLDFILE "default.world"
@@ -243,6 +242,43 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_type_t tp, GPtrArray* devi
 
   return NULL;
 }
+
+
+
+InterfaceModel::InterfaceModel(  player_device_id_t id, 
+				 StgDriver* driver,
+				 ConfigFile* cf, 
+				 int section,
+				 stg_model_type_t modtype )
+  : Interface( id, driver, cf, section )
+{
+  //puts( "InterfaceModel constructor" );
+  
+  const char* model_name = cf->ReadString(section, "model", NULL );
+  
+  if( model_name == NULL )
+    {
+      PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
+		  "no \"model\" value defined. You must specify a "
+		  "model name that matches one of the models in "
+		  "the worldfile.",
+		  model_name );
+      return; // error
+    }
+  
+  this->mod = driver->LocateModel( model_name, modtype );
+  
+  if( !this->mod )
+    {
+      printf( " ERROR! no model available for this device."
+	      " Check your world and config files.\n" );
+      return;
+    }
+  
+  if( !quiet_startup )
+    printf( "\"%s\"\n", this->mod->token );
+}      
+
 
 
 // Constructor.  Retrieve options from the configuration file and do any
@@ -549,3 +585,4 @@ void StgDriver::Update(void)
   // update the world
   return;
 }
+

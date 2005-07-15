@@ -2,7 +2,7 @@
 #include <features.h>
 
 #include "zoo_driver.h"
-#include "player_interfaces.h"
+
 #include <player/devicetable.h>
 #include <player/error.h>
 #include <string.h>
@@ -398,7 +398,7 @@ ZooSpecies::PrintScore( FILE *fp )
 	size_t siz;
 	char buf[ZOO_SCORE_BUFFER_SIZE];
 	unsigned int i;
-	ZooController *zc;
+	ZooController *zc=NULL;
 
 	for (i = 0; i < controller.size(); ++i) {
 		zc = &controller[i];

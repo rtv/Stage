@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_simulation.cc,v 1.1 2005-07-14 23:37:23 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.1 2005-07-15 03:41:37 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -37,9 +37,7 @@
 
 #define DEBUG
 
-#include "player_interfaces.h"
-
-//#include "playerclient.h"
+#include "p_driver.h"
 
 // these are Player globals
 extern bool quiet_startup;

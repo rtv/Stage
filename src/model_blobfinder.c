@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.45 2005-07-15 02:38:11 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.46 2005-07-15 03:41:37 rtv Exp $
  */
 
 #include <math.h>
@@ -197,10 +197,7 @@ void blobfinder_load( stg_model_t* mod )
       if( ! colorstr )
 	break;
       
-      bcfg.channels[ch] = stg_lookup_color( colorstr );  
-      
-      printf( "blobfinder ch %d colorstr %s color %X\n",
-	      ch, colorstr, bcfg.channels[ch] );
+      bcfg.channels[ch] = stg_lookup_color( colorstr );        
     }    
   
   stg_model_set_property( mod, "blob_cfg", &bcfg, sizeof(bcfg));
