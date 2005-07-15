@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.51 $
+//  $Revision: 1.52 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -155,14 +155,11 @@ int ranger_startup( stg_model_t* mod );
 int ranger_shutdown( stg_model_t* mod );
 
 int ranger_render_data( stg_model_t* mod, char* name, 
-		       void* data, size_t len, void* userp );
-int ranger_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
-
+			void* data, size_t len, void* userp );
+int ranger_unrender_data( stg_model_t* mod, char* name, 
+			  void* data, size_t len, void* userp );
 int ranger_render_cfg( stg_model_t* mod, char* name, 
-		      void* data, size_t len, void* userp );
-
-int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len, void* userp );
-
+		       void* data, size_t len, void* userp );
 
 stg_model_t* stg_ranger_create( stg_world_t* world, 
 				stg_model_t* parent, 
@@ -408,9 +405,6 @@ int ranger_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, voi
 }
 
 
-// stg_rtk_fig_t* stg_model_get_fig( stg_model_t* mod, char* figname );
-//void stg_model_fig_clear( stg_model_t* mod, char* figname );
-
 int ranger_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
 { 
   stg_model_fig_clear( mod, "ranger_data_fig" );
@@ -426,7 +420,9 @@ int ranger_render_data( stg_model_t* mod, char* name, void* data, size_t len, vo
 
   if( !fig )
     fig = stg_model_fig_create( mod, "ranger_data_fig", "top", STG_LAYER_RANGERDATA );
-  
+
+  stg_rtk_fig_clear(fig);
+
   size_t clen=0;
   stg_ranger_config_t* cfg = stg_model_get_property(mod, "ranger_cfg", &clen );
   
@@ -451,7 +447,6 @@ int ranger_render_data( stg_model_t* mod, char* name, void* data, size_t len, vo
       
       stg_rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
       stg_rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );	  
-      stg_rtk_fig_clear(fig);
       
       // draw the range  beams
       int s;

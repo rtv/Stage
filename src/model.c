@@ -34,10 +34,10 @@
 #define STG_DEFAULT_ENERGY_PROBERANGE 0.0
 #define STG_DEFAULT_ENERGY_GIVERATE 0.0
 #define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
-#define STG_DEFAULT_GUI_MOVEMASK (STG_MOVE_TRANS | STG_MOVE_ROT)
-#define STG_DEFAULT_GUI_NOSE FALSE
-#define STG_DEFAULT_GUI_GRID FALSE
-#define STG_DEFAULT_GUI_BOUNDARY FALSE
+#define STG_DEFAULT_MASK (STG_MOVE_TRANS | STG_MOVE_ROT)
+#define STG_DEFAULT_NOSE FALSE
+#define STG_DEFAULT_GRID FALSE
+#define STG_DEFAULT_OUTLINE TRUE
 
 //extern int _stg_disable_gui;
 
@@ -128,16 +128,33 @@ model
 - ranger_return [bool]
    - iff 1, this model can be detected by a ranger.
 */
-
-/*
-TODO
-
-- friction float
-  - [WARNING: Friction model is not yet implemented; details may change] if > 0 the model can be pushed around by other moving objects. The value determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction). 
-*/
-
-
   
+/*
+  TODO
+  
+  - friction float [WARNING: Friction model is not yet implemented;
+  - details may change] if > 0 the model can be pushed around by other
+  - moving objects. The value determines the proportion of velocity
+  - lost per second. For example, 0.1 would mean that the object would
+  - lose 10% of its speed due to friction per second. A value of zero
+  - (the default) means this model can not be pushed around (infinite
+  - friction).
+*/
+  
+  
+  // callback functions that handle property changes, mostly for drawing stuff in the GUI
+  
+  int model_render_polygons( stg_model_t* mod, char* name, 
+			     void* data, size_t len, void* userp );
+int model_handle_mask( stg_model_t* mod, char* name, 
+		       void* data, size_t len, void* userp );
+int model_handle_outline( stg_model_t* mod, char* name, 
+			  void* data, size_t len, void* userp );
+int model_render_nose( stg_model_t* mod, char* name, 
+		       void* data, size_t len, void* userp );
+int model_render_grid( stg_model_t* mod, char* name, 
+		       void* data, size_t len, void* userp );
+
 
 
 
@@ -226,23 +243,6 @@ void storage_ordinary( stg_property_t* prop,
 
 
 
-void storage_guifeatures( stg_property_t* prop, 
-			  void* data, size_t len )
-{
-  stg_guifeatures_t* gf  = (stg_guifeatures_t*)data;
-  
-  storage_ordinary( prop, data, len );
-  
-  // override the movemask flags - only top-level objects are moveable
-  if( prop->mod->parent )
-    gf->movemask = 0;
-  
-  // redraw the fancy features
-  if( prop->mod->world->win )
-    gui_model_features( prop->mod );
-}
-
-
 void storage_polygons( stg_property_t* prop, 
 		       void* data, size_t len ) 
 {
@@ -268,10 +268,6 @@ void storage_polygons( stg_property_t* prop,
   storage_ordinary( prop, polys, len );
   
   stg_model_map( prop->mod, 1 ); // map the model into the matrix with the new polys
-
-  if( prop->mod->world->win )
-    stg_model_render_polygons( prop->mod );
-
 } 
 
 void storage_geom( stg_property_t* prop, 
@@ -286,13 +282,10 @@ void storage_geom( stg_property_t* prop,
   
   // we probably need to scale and re-render our polygons
   stg_model_property_refresh( prop->mod, "polygons" );
+  stg_model_property_refresh( prop->mod, "nose" );
   
   // re-render int the matrix
-  stg_model_map( prop->mod, 1 );
-  
-  // we may need to re-render our nose, border, etc.
-  if( prop->mod->world->win )
-    gui_model_features(prop->mod);  
+  stg_model_map( prop->mod, 1 );  
 }
 
 
@@ -304,9 +297,8 @@ void storage_color( stg_property_t* prop,
 
   storage_ordinary( prop, data, len );
   
-  // redraw my image
-  if( prop->mod->world->win )
-    stg_model_render_polygons( prop->mod );
+  // redraw the polygons in the new color
+  stg_model_property_refresh( prop->mod, "polygons" );
 }
 
 
@@ -413,20 +405,36 @@ stg_model_t* stg_model_create( stg_world_t* world,
   stg_model_set_property_ex( mod, "polygons", square, sizeof(stg_polygon_t), storage_polygons );
   //stg_model_set_property_ex( mod, "polygons", NULL, 0, storage_polygons );
       
-  // do gui features last so we know what we're supposed to look like.
-  stg_guifeatures_t gf;
-  gf.nose = 0;
-  gf.grid = 0;
-  gf.movemask = mod->parent ? 0 : STG_MOVE_TRANS | STG_MOVE_ROT ;
-  gf.outline = 1;
-  stg_model_set_property_ex( mod, "gui_features", &gf, sizeof(gf), storage_guifeatures );
+  int nose = STG_DEFAULT_NOSE;
+  stg_model_set_property( mod, "nose", &nose, sizeof(nose) );
+
+  int grid = STG_DEFAULT_GRID;
+  stg_model_set_property( mod, "grid", &grid, sizeof(grid) );
   
+  int outline = STG_DEFAULT_OUTLINE;
+  stg_model_set_property( mod, "outline", &outline, sizeof(outline) );
+  
+  int mask = mod->parent ? 0 : STG_DEFAULT_MASK;
+  stg_model_set_property( mod, "mask", &mask, sizeof(mask) );
+
   // now it's safe to create the GUI components
   if( mod->world->win )
     gui_model_create( mod );
   
   // exterimental: creates a menu of models
-  gui_add_tree_item( mod )
+  gui_add_tree_item( mod );
+  
+  stg_model_add_property_callback( mod, "polygons", model_render_polygons, NULL );
+  stg_model_add_property_callback( mod, "mask", model_handle_mask, NULL );
+  stg_model_add_property_callback( mod, "nose", model_render_nose, NULL );
+  stg_model_add_property_callback( mod, "grid", model_render_grid, NULL );
+  stg_model_add_property_callback( mod, "outline", model_handle_outline, NULL );
+  
+  // force redraws
+  stg_model_property_refresh( mod, "polygons" ); 
+  stg_model_property_refresh( mod, "mask" ); 
+  stg_model_property_refresh( mod, "nose" ); 
+  stg_model_property_refresh( mod, "grid" ); 
 
 
   PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
@@ -1048,8 +1056,9 @@ int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent)
   // completely rebuild the GUI elements - it's too complex to patch up the tree herea
   gui_model_destroy( mod );
   gui_model_create( mod );
-  stg_model_render_polygons( mod );
-
+  
+  // forces a redraw
+  //stg_model_property_refresh( mod, "polygons" );
 
   return 0; //ok
 }
@@ -1555,24 +1564,7 @@ void stg_model_load( stg_model_t* mod )
 	    }
 	}
     }
-  /* else if( polys == NULL ) // create a unit rectangle by default?
-    {
-      stg_point_t pts[4];
-      pts[0].x = 0;
-      pts[0].y = 0;
-      pts[1].x = 1;
-      pts[1].y = 0;
-      pts[2].x = 1;
-      pts[2].y = 1;
-      pts[3].x = 0;
-      pts[3].y = 1;  
-      
-      polys = stg_polygon_create();
-      stg_polygon_set_points( polys, pts, 4 );  
-      polycount = 1;
-    }
-  */
-
+ 
   // if we created any polygons
   if( polycount != -1 )
     {
@@ -1581,18 +1573,27 @@ void stg_model_load( stg_model_t* mod )
       stg_model_property_refresh( mod, "polygons" );
     }
 
-  stg_guifeatures_t* gf_now = 
-    stg_model_get_property_fixed( mod, "gui_features", sizeof(stg_guifeatures_t));
+  // some simple integer properties
+  int *now = NULL;
+  int val = 0;
   
-  stg_guifeatures_t gf;
-  gf.nose = wf_read_int(mod->id, "gui_nose", gf_now ? gf_now->nose : 0 );
-  gf.grid = wf_read_int(mod->id, "gui_grid", gf_now ? gf_now->grid : 0 );
-  gf.movemask = wf_read_int(mod->id, "gui_movemask", 
-			    mod->parent ? 0 : gf_now ? gf_now->movemask : (STG_MOVE_TRANS | STG_MOVE_ROT)  );
-  gf.outline = wf_read_int(mod->id, "gui_outline", gf_now ? gf_now->outline : 1 );
+  now = stg_model_get_property_fixed( mod, "nose", sizeof(int));
+  val = wf_read_int(mod->id, "gui_nose", now ? *now : STG_DEFAULT_NOSE );  
+  stg_model_set_property( mod, "nose", &val, sizeof(val) );
   
-  stg_model_set_property( mod, "gui_features", &gf, sizeof(gf) );
+  now = stg_model_get_property_fixed( mod, "grid", sizeof(int));
+  val = wf_read_int(mod->id, "gui_grid", now ? *now : STG_DEFAULT_GRID );  
+  stg_model_set_property( mod, "grid", &val, sizeof(val) );
   
+  now = stg_model_get_property_fixed( mod, "mask", sizeof(int));
+  val = wf_read_int(mod->id, "gui_movemask", now ? *now : STG_DEFAULT_MASK);  
+  stg_model_set_property( mod, "mask", &val, sizeof(val) );
+  
+  now = stg_model_get_property_fixed( mod, "outline", sizeof(int));
+  val = wf_read_int(mod->id, "gui_outline", now ? *now : STG_DEFAULT_OUTLINE);  
+  stg_model_set_property( mod, "outline", &val, sizeof(val) );
+  
+
   // if a type-specific load callback has been set
   if( mod->f_load )
     mod->f_load( mod ); // call the load function
@@ -1640,4 +1641,161 @@ int stg_model_tree_to_ptr_array( stg_model_t* root, GPtrArray* array )
     }
   
   return added;
+}
+
+
+int model_render_polygons( stg_model_t* mod, char* name, 
+			   void* data, size_t len, void* userp )
+{
+  
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "top" );
+  assert( fig );
+
+  stg_rtk_fig_clear( fig );
+  
+  stg_color_t *cp = 
+    stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
+  
+  stg_color_t col = cp ? *cp : 0; // black unless we were given a color
+
+  size_t count = len / sizeof(stg_polygon_t);
+  stg_polygon_t* polys = (stg_polygon_t*)data;
+  
+  stg_geom_t geom;
+  stg_model_get_geom(mod, &geom);
+  
+  stg_rtk_fig_color_rgb32( fig, col );
+  
+  if( polys && len > 0 )
+    {
+      
+      if( ! mod->world->win->fill_polygons )
+	{
+	  
+	  int p;
+	  for( p=0; p<count; p++ )
+	    stg_rtk_fig_polygon( fig,
+				 geom.pose.x,
+				 geom.pose.y,
+				 geom.pose.a,
+				 polys[p].points->len,
+				 polys[p].points->data,
+				 0 );
+	}
+      else
+	{
+	  int p;
+	  for( p=0; p<count; p++ )
+	    stg_rtk_fig_polygon( fig,
+				 geom.pose.x,
+				 geom.pose.y,
+				 geom.pose.a,
+				 polys[p].points->len,
+				 polys[p].points->data,
+				 1 );
+	  
+	  int* outline = 
+	    stg_model_get_property_fixed( mod, "outline", sizeof(int) );
+	  if( outline && *outline )
+	    {
+	      stg_rtk_fig_color_rgb32( fig, 0 ); // black
+	      
+	      for( p=0; p<count; p++ )
+		stg_rtk_fig_polygon( fig,
+				     geom.pose.x,
+				     geom.pose.y,
+				     geom.pose.a,
+				     polys[p].points->len,
+				     polys[p].points->data,
+				     0 );
+
+	      stg_rtk_fig_color_rgb32( fig, col ); // change back
+	    }
+	  
+	}
+    }
+  
+  stg_bool_t* boundary = 
+    stg_model_get_property_fixed( mod, "boundary", sizeof(stg_bool_t));
+  
+  if( boundary && *boundary )
+    {      
+      stg_rtk_fig_rectangle( fig, 
+			     geom.pose.x, geom.pose.y, geom.pose.a, 
+			     geom.size.x, geom.size.y, 0 ); 
+    }
+
+  int* nose = 
+    stg_model_get_property_fixed( mod, "nose", sizeof(int) );
+  if( nose && *nose )
+    {       
+      // draw an arrow from the center to the front of the model
+      stg_rtk_fig_arrow( fig, geom.pose.x, geom.pose.y, geom.pose.a, 
+			 geom.size.x/2.0, 0.05 );
+    }
+  
+  
+  return 0;
+}
+
+int model_render_nose( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+{
+  // nose drawing is handled by the polygon handler
+  stg_model_property_refresh( mod, "polygons" );
+  return 0;
+}
+
+int model_handle_mask( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+{
+  assert( len == sizeof(int));
+  int* mask = (int*)data;
+  
+  stg_rtk_fig_t* fig = stg_model_get_fig(mod, "top" );
+  assert(fig);
+  
+  stg_rtk_fig_movemask( fig, *mask);  
+  
+  // only install a mouse handler if the object needs one
+  //(TODO can we remove mouse handlers dynamically?)
+  if( *mask )    
+    stg_rtk_fig_add_mouse_handler( fig, gui_model_mouse );
+  
+  return 0;
+}
+
+int model_handle_outline( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+{
+  // outline drawing is handled by the polygon handler
+  stg_model_property_refresh( mod, "polygons" );
+  return 0;
+}
+  
+
+int model_render_grid( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+{
+  assert( len == sizeof(int));
+  int* usegrid = (int*)data;
+  
+  stg_geom_t geom;
+  stg_model_get_geom(mod, &geom);
+  
+  stg_rtk_fig_t* grid = stg_model_get_fig(mod,"grid"); 
+  
+  // if we need a grid and don't have one, make one
+  if( *usegrid  )
+    {    
+      if( ! grid ) 
+	grid = stg_model_fig_create( mod, "grid", "top", STG_LAYER_GRID); 
+      
+      stg_rtk_fig_clear( grid );
+      stg_rtk_fig_color_rgb32( grid, stg_lookup_color(STG_GRID_MAJOR_COLOR ) );      
+      stg_rtk_fig_grid( grid, 
+			geom.pose.x, geom.pose.y, 
+			geom.size.x, geom.size.y, 1.0  ) ;
+    }
+  else
+    if( grid ) // if we have a grid and don't need one, clear it but keep the fig around      
+      stg_rtk_fig_clear( grid );
+  
+  return 0;
 }

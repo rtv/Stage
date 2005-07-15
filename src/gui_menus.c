@@ -1,4 +1,4 @@
-#define DEBUG
+//#define DEBUG
 
 #include <stdlib.h>
 #include "stage_internal.h"
@@ -8,18 +8,7 @@ extern stg_rtk_fig_t* fig_debug_geom;
 extern stg_rtk_fig_t* fig_debug_rays;
 extern int _stg_quit;
 
-enum {
-  STG_LASER_DATA,
-  STG_LASER_CMD,
-  STG_LASER_CFG
-};
-
 static GtkUIManager *ui_manager = NULL;
-
-
-// movies can be saved at these multiples of real time
-//const int STG_MOVIE_SPEEDS[] = {1, 2, 5, 10, 20, 50, 100};
-//const int STG_MOVIE_SPEED_COUNT = 7; // must match the static array length
 
 // regular actions
 void gui_action_about( GtkAction *action, gpointer user_data);
@@ -398,9 +387,9 @@ void export_window( gui_window_t* win  ) //stg_rtk_canvas_t* canvas, int series 
   switch( win->frame_format )
     {
     case STK_IMAGE_FORMAT_JPEG: suffix = "jpg"; break;
-    case STK_IMAGE_FORMAT_PNM: suffix = "pnm"; break;
     case STK_IMAGE_FORMAT_PNG: suffix = "png"; break;
-    case STK_IMAGE_FORMAT_PPM: suffix = "ppm"; break;
+      //case STK_IMAGE_FORMAT_PNM: suffix = "pnm"; break;
+      //case STK_IMAGE_FORMAT_PPM: suffix = "ppm"; break;
     default:
       suffix = ".png";
     }
@@ -450,9 +439,10 @@ void gui_action_exportsequence( GtkToggleAction* action, void* userdata )
 }
 
 
+
 void model_render_polygons_cb( gpointer key, gpointer data, gpointer user )
 {
-  stg_model_render_polygons( (stg_model_t*)data );
+  stg_model_property_refresh( (stg_model_t*)data, "polygons" );
 }
 
 

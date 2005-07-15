@@ -4,10 +4,12 @@ include "pioneer.inc"
 
 
 
+
 size [100 100]
 
 # defines 'map' object used for floorplans
 include "map.inc"
+
 
 
 
@@ -20,9 +22,9 @@ resolution 0.02
 # configure the GUI window
 window
 ( 
-  size [ 1467.000 945.000 ] 
-  center [-1.639 -2.364] 
-  scale 0.063 
+  size [ 753.000 696.000 ] 
+  center [0.973 0.094] 
+  scale 0.154 
 )
 
 # load an environment bitmap

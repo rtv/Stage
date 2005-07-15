@@ -12,15 +12,10 @@
 
 #define STG_DEFAULT_WINDOW_WIDTH 700
 #define STG_DEFAULT_WINDOW_HEIGHT 740
-#define STG_DEFAULT_PPM 40
-#define STG_DEFAULT_SHOWGRID 1
-#define STG_DEFAULT_MOVIE_SPEED 1
 
-
-// models that have fewer rectangles than this get matrix rendered when dragged
+// only models that have fewer rectangles than this get matrix
+// rendered when dragged
 #define STG_POLY_THRESHOLD 10
-#define LASER_FILLED 1
-#define BOUNDINGBOX 0
 
 // single static application visible to all funcs in this file
 static stg_rtk_app_t *app = NULL; 
@@ -319,8 +314,6 @@ void gui_world_render_cell( stg_rtk_fig_t* fig, stg_cell_t* cell )
       stg_rtk_fig_line( fig, 
 			cell->x-0.01, cell->y+0.01,
 			cell->x+0.01, cell->y-0.01 );
-      
-      
     }
   
   if( cell->children[0] )
@@ -355,95 +348,6 @@ void gui_world_render_cell_cb( gpointer cell, gpointer fig )
   gui_world_render_cell( (stg_rtk_fig_t*)fig, (stg_cell_t*)cell );
 }
 
-/*
-// useful debug function allows plotting the matrix
-void gui_world_matrix( stg_world_t* world, gui_window_t* win )
-{
- if( win->matrix )
-//gui_world_render_cell( win->matrix, world->matrix->root );
- gui_world_render_cell_occupied( win->matrix, world->matrix->root );
-
-  if( world->matrix->list_cells_added ) 
-    {
-      printf( "rendering %d cells\n", 
-	      g_slist_length( world->matrix->list_cells_added ) ); 
-      
-      //g_slist_foreach( world->matrix->list_cells_added, 
-      //	       gui_world_render_cell_cb,
-      //	       win->matrix );
-
-      stg_rtk_fig_color_rgb32( win->matrix, 0xEEEEEE );
-      
-      while( world->matrix->list_cells_removed )
-	{
-	  // get the cell from the head of the list
-	  stg_cell_t* cell = 
-	    (stg_cell_t*)world->matrix->list_cells_removed->data;
-	  
-	  //printf( "drawing cell at %p\n", cell );
-	  
-	  stg_rtk_fig_rectangle( win->matrix,
-				 cell->x, cell->y, 0.0,
-				 cell->size, cell->size, 0 );
-	  
-	  // if this is a leaf node containing data, draw a little dash
-	  if( 0 )//cell->data && g_slist_length( (GSList*)cell->data ) )
-	    {
-	      stg_rtk_fig_line( win->matrix, 
-				cell->x-0.006, cell->y,
-				cell->x+0.006, cell->y );
-	      
-	      //stg_rtk_fig_line( win->matrix, 
-	      //		cell->x, cell->y-0.004,
-	      //		cell->x, cell->y+0.004 );
-	      
-	    }
-	  
-	  // remove the head of the list
-	  world->matrix->list_cells_removed = 
-	    g_slist_delete_link( world->matrix->list_cells_removed,
-				 world->matrix->list_cells_removed );
-	}  
-
-      stg_rtk_fig_color_rgb32( win->matrix, 0x00FF00 );
-
-      while( world->matrix->list_cells_added )
-	{
-	  // get the cell from the head of the list
-	  stg_cell_t* cell = 
-	    (stg_cell_t*)world->matrix->list_cells_added->data;
-	  
-	  //printf( "drawing cell at %p\n", cell );
-	  
-	  stg_rtk_fig_rectangle( win->matrix,
-				 cell->x, cell->y, 0.0,
-				 cell->size, cell->size, 0 );
-	  
-	  // if this is a leaf node containing data, draw a little dash
-	  if( 0 )//cell->data && g_slist_length( (GSList*)cell->data ) )
-	    {
-	      stg_rtk_fig_line( win->matrix, 
-				cell->x-0.006, cell->y,
-				cell->x+0.006, cell->y );
-	      
-	      //stg_rtk_fig_line( win->matrix, 
-	      //		cell->x, cell->y-0.004,
-	      //		cell->x, cell->y+0.004 );
-	      
-	    }
-	  
-	  // remove the head of the list
-	  world->matrix->list_cells_added = 
-	    g_slist_delete_link( world->matrix->list_cells_added,
-				 world->matrix->list_cells_added );
-	}
-    }
-
-  
-  //else
-  //puts( "nothing to render" );
-    }
-*/
 
 void render_matrix_object( gpointer key, gpointer value, gpointer user )
 {
@@ -642,10 +546,11 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
       
       // TODO - if there are more motion events pending, do nothing.
       //if( !gtk_events_pending() )
-	
+      
       // only update simple objects on drag
       //if( mod->polygons->len < STG_POLY_THRESHOLD )
-	//stg_model_set_pose( mod, &pose );
+      //stg_model_set_pose( mod, &pose );
+
       stg_model_set_property( mod, "pose", &pose, sizeof(pose));
       
       // display the pose
@@ -699,8 +604,6 @@ void gui_model_create( stg_model_t* mod )
 		     
   // install the figure 
   g_datalist_set_data( &mod->figs, "top", top ); 
-
-  gui_model_features( mod );
 }
 
 void gui_model_destroy( stg_model_t* mod )
@@ -715,158 +618,6 @@ void gui_model_destroy( stg_model_t* mod )
     stg_rtk_fig_and_descendents_destroy( fig );
 }
 
-
-// add a nose  indicating heading  
-void gui_model_features( stg_model_t* mod )
-{
-  stg_guifeatures_t *gf = 
-    stg_model_get_property_fixed( mod, "gui_features",
-				  sizeof(stg_guifeatures_t) );
-  if( gf == NULL )
-    return;
-  
-  PRINT_DEBUG3( "model %d gui features grid %d nose %d mask %d",
-		(int)gf->grid, (int)gf->nose, (int)gf->movemask );
-
-  stg_geom_t geom;
-  stg_model_get_geom(mod, &geom);
-    
-  // if we need a nose, draw one
-  if( gf->nose )
-    { 
-      stg_rtk_fig_t* fig = stg_model_get_fig(mod,"top");      
-      
-      stg_color_t *col = 
-	stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
-
-      if( col )
-	stg_rtk_fig_color_rgb32( fig, *col );
-      
-      // draw an arrow from the center to the front of the model
-      stg_rtk_fig_arrow( fig, geom.pose.x, geom.pose.y, geom.pose.a, 
-		     geom.size.x/2.0, 0.05 );
-    }
-
-  stg_rtk_fig_movemask( stg_model_get_fig(mod,"top"), gf->movemask);  
-  
-  // only install a mouse handler if the object needs one
-  //(TODO can we remove mouse handlers dynamically?)
-  if( gf->movemask )    
-    stg_rtk_fig_add_mouse_handler( stg_model_get_fig(mod,"top"), gui_model_mouse );
-  
-  stg_rtk_fig_t* grid = stg_model_get_fig(mod,"grid"); 
-
-  // if we need a grid and don't have one, make one
-  if( gf->grid  )
-    {    
-      if( ! grid ) 
-	grid = stg_model_fig_create( mod, "grid", "top", STG_LAYER_GRID); 
-      
-      stg_rtk_fig_clear( grid );
-      stg_rtk_fig_color_rgb32( grid, stg_lookup_color(STG_GRID_MAJOR_COLOR ) );      
-      stg_rtk_fig_grid( grid, 
-			geom.pose.x, geom.pose.y, 
-			geom.size.x, geom.size.y, 1.0  ) ;
-    }
-  else
-    if( grid ) // if we have a grid and don't need one, clear it but keep the fig around      
-      stg_rtk_fig_clear( grid );
-}
-
-void stg_model_render_polygons( stg_model_t* mod )
-{
-  //printf( "render polygons for model %s\n",
-  //  mod->token );
-
-  if( ! mod->world->win->show_polygons )
-    {
-      //puts( "polys disabled" );
-      return;
-    }
-
-  stg_rtk_fig_t* fig = stg_model_get_fig(mod,"top");
-  
-  if( fig == NULL )
-    return;
-  //else
-
-  stg_rtk_fig_clear( fig );
-  
-  // don't draw objects with no size 
-  //if( mod->geom.size.x == 0 && mod->geom.size.y == 0 )
-  //return;
-  
-  stg_color_t *col = 
-    stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
-  
-  size_t count=0;
-  stg_polygon_t* polys = stg_model_get_polygons(mod,&count);
-
-  stg_geom_t geom;
-  stg_model_get_geom(mod, &geom);
-
-
-  if( polys )
-    {
-      if( ! mod->world->win->fill_polygons )
-	{
-	  if( col )
-	    stg_rtk_fig_color_rgb32( fig, *col );
-	  
-	  int p;
-	  for( p=0; p<count; p++ )
-	    stg_rtk_fig_polygon( fig,
-			     geom.pose.x,
-			     geom.pose.y,
-			     geom.pose.a,
-			     polys[p].points->len,
-			     polys[p].points->data,
-			     0 );
-	}
-      else
-	{
-	  if( col )
-	    stg_rtk_fig_color_rgb32( fig, *col );
-	  
-	  int p;
-	  for( p=0; p<count; p++ )
-	    stg_rtk_fig_polygon( fig,
-			     geom.pose.x,
-			     geom.pose.y,
-			     geom.pose.a,
-			     polys[p].points->len,
-			     polys[p].points->data,
-			     1 );
-	  
-	  stg_guifeatures_t* gf = 
-	    stg_model_get_property_fixed( mod, "gui_features", 
-					       sizeof(stg_guifeatures_t) );
-	  if( gf && gf->outline )
-	    {
-	      stg_rtk_fig_color_rgb32( fig, 0 ); // black
-	      
-	      for( p=0; p<count; p++ )
-		stg_rtk_fig_polygon( fig,
-				     geom.pose.x,
-				     geom.pose.y,
-				     geom.pose.a,
-				     polys[p].points->len,
-				     polys[p].points->data,
-				     0 );
-	    }
-	}
-    }
-  
-  stg_bool_t* boundary = 
-    stg_model_get_property_fixed( mod, "boundary", sizeof(stg_bool_t));
-
-  if( boundary && *boundary )
-    {      
-      stg_rtk_fig_rectangle( stg_model_get_fig(mod,"top"), 
-			     geom.pose.x, geom.pose.y, geom.pose.a, 
-			     geom.size.x, geom.size.y, 0 ); 
-    } 
-}
 
 /// render a model's global pose vector
 void gui_model_render_geom_global( stg_model_t* mod, stg_rtk_fig_t* fig )
@@ -979,27 +730,9 @@ stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod,
 				     int layer )
 {
   stg_rtk_fig_t* parent = stg_model_get_fig( mod, parentname );
-  
-  //if( ! parent )
-  // {
-  //  parent = g_datalist_get_data( &mod->figs,  parentname );
-  //  assert( parent ); // should succeed!
-  //}
-  
-  //if( ! parent ) // no parent given or found, so this fig attaches the
-		 // the model's parent or the background
-  //{
-      // attach instead to our parent's fig if there is one
-  //  if( mod->parent )
-  //parent = stg_model_get_fig( mod->parent, "top" );
-      //else // fall back to the background figure
-      //parent = mod->world->win->bg; // default parent
-  // }
-  
-  // create and store the figure
-  stg_rtk_fig_t* fig = stg_rtk_fig_create( mod->world->win->canvas, parent, layer );
-  
+  stg_rtk_fig_t* fig = stg_rtk_fig_create( mod->world->win->canvas, parent, layer );  
   g_datalist_set_data( &mod->figs, figname, (void*)fig );
+
   return fig;
 }
 
