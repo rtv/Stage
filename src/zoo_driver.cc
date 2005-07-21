@@ -100,7 +100,7 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 	for (int i=0; i < cf->GetSectionCount(); ++i)
 		if (!strcmp(cf->GetSectionType(i), ZOO_SPECIES_SECTYPE))
 			++species_count;
-	species = new (ZooSpecies*)[species_count];
+	species = new ZooSpecies*[species_count];
 	int si=0;
 	for (int i=0; i < cf->GetSectionCount(); ++i) {
 		int pi;
