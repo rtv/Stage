@@ -44,7 +44,7 @@
 #define ZOO_SPECIES_SECTYPE "species"
 #define ZOO_CONTROLLER_SECTYPE "controller"
 
-#define ZOOREF_CREATE_SYMBOL "zooref_create"
+#define ZOOREF_CREATE "zooref_create"
 typedef ZooReferee *(*zooref_create_t)(ConfigFile *, int, ZooDriver *);
 
 #define ZOO_BAD_PORTRANGE_STR "Port ranges should be strings of the form " \
@@ -172,10 +172,10 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 
 		/* get the zooref_create function */
 		zooref_create = (zooref_create_t)
-			dlsym(zooref_handle, ZOOREF_CREATE_SYMBOL);
+			dlsym(zooref_handle, ZOOREF_CREATE);
 		if (!zooref_create) {
 			fprintf(stderr, "Zoo: referee must define %s\n",
-				ZOOREF_CREATE_SYMBOL);
+				ZOOREF_CREATE);
 			dlclose(zooref_handle);
 			goto default_referee;
 		}
@@ -211,7 +211,7 @@ ZooDriver::Shutdown( void )
 void
 ZooDriver::Prepare( void )
 {
-	referee->Startup();
+	//referee->Startup();
 }
 
 void
