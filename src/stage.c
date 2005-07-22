@@ -64,7 +64,7 @@ const char* stg_model_type_string( stg_model_type_t type )
   return "<unknown type>";
 }
 
-void stg_err( char* err )
+void stg_err( const char* err )
 {
   printf( "Stage error: %s\n", err );
   _stg_quit = TRUE;

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.144 2005-07-14 23:37:23 rtv Exp $
+ * CVS: $Id: stage.h,v 1.145 2005-07-22 00:41:53 adam_lein Exp $
  */
 
 
@@ -265,7 +265,7 @@ extern "C" {
   void stg_quit_request( void );
 
   /// report an error
-  void stg_err( char* err );
+  void stg_err( const char* err );
 
 
   // UTILITY STUFF ----------------------------------------------------
