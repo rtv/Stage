@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.145 2005-07-22 00:41:53 adam_lein Exp $
+ * CVS: $Id: stage.h,v 1.146 2005-07-22 21:02:03 rtv Exp $
  */
 
 
@@ -89,7 +89,19 @@ extern "C" {
       
     } stg_model_type_t;
   
-  
+
+  /*  
+  stg_typetable_t* stg_typetable_create( void )
+  {
+    stg_typetable_t table = calloc( sizeof(stg_typetable_t), STG_MODEL_COUNT );
+    
+    table[STG_MODEL_POSITION] = 
+      { position_startup, position_shutdown, position_load, position_save };
+
+ 
+  }
+  */
+
   /** any integer value other than this is a valid fiducial ID 
    */
   // TODO - fix this up
@@ -553,8 +565,27 @@ extern "C" {
   /** @defgroup stg_model Basic model
       Implements the basic object
       @{ */
-
   
+#define STG_PROPNAME_MAX 128
+  
+  typedef struct
+  {
+    stg_property_callback_t callback;
+    void* arg;
+  } stg_cbarg_t;
+
+  typedef struct stg_property {
+    char name[STG_PROPNAME_MAX];
+    void* data;
+    size_t len;
+    stg_property_storage_func_t storage_func;
+    GList* callbacks; // functions called when this property is set
+    //GList* callbacks_userdata;
+    stg_model_t* mod; // the model to which this property belongs
+    //void* user; // pointer passed into every callback function
+  } stg_property_t;
+  
+    
   /// create a new model
   stg_model_t* stg_model_create(  stg_world_t* world,
 				  stg_model_t* parent, 
@@ -591,89 +622,24 @@ extern "C" {
 
   // SET properties - use these to set props, don't set them directly
 
-  /** set the pose of a model in its parent's coordinate system */
-  // int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
-  
   /** set the pose of model in global coordinates */
   int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose );
   
-  /** set a model's odometry */
-  //int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose );
-
   /** set a model's velocity in it's parent's coordinate system */
   int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
   
-  /** set a model's size */
-  //int stg_model_set_size( stg_model_t* mod, stg_size_t* sz );
-
-  /** set a model's  */
-  //int stg_model_set_color( stg_model_t* mod, stg_color_t* col );
-
-  /** set a model's geometry */
-  //int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom );
-
-  /** set a model's mass */
-  //int stg_model_set_mass( stg_model_t* mod, stg_kg_t* mass );
-
-  /** set a model's bounding box */
-  //int stg_model_set_boundary( stg_model_t* mod, stg_bool_t* b );
-
-  /** set a model's GUI features */
-  //int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf );
-
-  // TODO
-  /* set a model's energy configuration */
-  // int stg_model_set_energy_config( stg_model_t* mod, stg_energy_config_t* gf );
-
-  /* set a model's energy data*/
-  // int stg_model_set_energy_data( stg_model_t* mod, stg_energy_data_t* gf );
-
-  /** set a model's polygon array*/
-  //int stg_model_set_polygons( stg_model_t* mod, 
-  //		      stg_polygon_t* polys, size_t poly_count );
+  /** Get exclusive access to a model, for threaded
+      applications. Release with stg_model_unlock(). */
+  void stg_model_lock( stg_model_t* mod );
   
-  /** get a model's polygon array */
-  //stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* count);
-  
-  /** set a model's obstacle return value */
-  //int stg_model_set_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* ret );
+  /** Release exclusive access to a model, obtained with stg_model_lock() */
+  void stg_model_unlock( stg_model_t* mod );
 
   /** Change a model's parent - experimental*/
   int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent);
   
   void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest );
   void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
-
-  // wrappers for polymorphic functions
-  //int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len );
-  //int stg_model_set_data( stg_model_t* mod, void* data, size_t len );
-  //int stg_model_set_config( stg_model_t* mod, void* cmd, size_t len );
-  //int stg_model_get_command( stg_model_t* mod, void* dest, size_t len );
-  //int stg_model_get_data( stg_model_t* mod, void* dest, size_t len );
-  //int stg_model_get_config( stg_model_t* mod, void* dest, size_t len );
-  
-  /// associate an arbitrary data item with this model, referenced by the string 'name'.
-
-  
-#define STG_PROPNAME_MAX 128
-  
-  typedef struct
-  {
-    stg_property_callback_t callback;
-    void* arg;
-  } stg_cbarg_t;
-
-  typedef struct stg_property {
-    char name[STG_PROPNAME_MAX];
-    void* data;
-    size_t len;
-    stg_property_storage_func_t storage_func;
-    GList* callbacks; // functions called when this property is set
-    //GList* callbacks_userdata;
-    stg_model_t* mod; // the model to which this property belongs
-    //void* user; // pointer passed into every callback function
-  } stg_property_t;
-  
   
   stg_property_t* stg_model_set_property( stg_model_t* mod, 
 					  const char* prop, 
@@ -704,6 +670,9 @@ extern "C" {
   /// gets a model's "polygons" property and fills poly_count with the
   /// number of polygons to be found
   stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count );
+  void stg_model_set_polygons( stg_model_t* mod,
+			       stg_polygon_t* polys, 
+			       size_t poly_count );
 
   // get a copy of the property data - caller must free it
   //int stg_model_copy_property_data( stg_model_t* mod, const char* prop,

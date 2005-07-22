@@ -23,7 +23,8 @@ static stg_rtk_app_t *app = NULL;
 // some global figures anyone can draw in for debug purposes
 stg_rtk_fig_t* fig_debug_rays = NULL;
 stg_rtk_fig_t* fig_debug_geom = NULL;
-
+stg_rtk_fig_t* fig_debug_matrix = NULL;
+int _render_matrix_deltas = FALSE;
 
 /** @defgroup window GUI Window
 
@@ -329,7 +330,7 @@ void gui_world_render_cell_occupied( stg_rtk_fig_t* fig, stg_cell_t* cell )
   assert( fig );
   assert( cell );
   
-  // if this is a leaf node containing data, draw a little cross
+  // if this is a leaf node containing data, draw a 
   if( cell->data && g_slist_length( (GSList*)cell->data ) )
     stg_rtk_fig_rectangle( fig,
 			   cell->x, cell->y, 0.0,

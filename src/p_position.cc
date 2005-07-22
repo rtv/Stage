@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.1 2005-07-15 03:41:37 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.2 2005-07-22 21:02:02 rtv Exp $
  */
 
 
@@ -34,6 +34,52 @@
 
 
 // POSITION INTERFACE -----------------------------------------------------------------------------
+
+
+
+InterfacePosition::InterfacePosition(  player_device_id_t id, 
+				       StgDriver* driver,
+				       ConfigFile* cf,
+				       int section )
+						   
+  : InterfaceModel( id, driver, cf, section, STG_MODEL_POSITION )
+{
+  //puts( "InterfacePosition constructor" );
+  this->data_len = sizeof(player_position_data_t);
+  this->cmd_len = sizeof(player_position_cmd_t);  
+}
+
+void InterfacePosition::Command( void* src, size_t len )
+{
+  if( len == sizeof(player_position_cmd_t) )
+    {
+      // convert from Player to Stage format
+      player_position_cmd_t* pcmd = (player_position_cmd_t*)src;
+      
+      // only velocity control mode works yet
+      stg_position_cmd_t cmd; 
+      cmd.x = ((double)((int32_t)ntohl(pcmd->xspeed))) / 1000.0;
+      cmd.y = ((double)((int32_t)ntohl(pcmd->yspeed))) / 1000.0;
+      cmd.a = DTOR((double)((int32_t)ntohl(pcmd->yawspeed)));
+      cmd.mode = STG_POSITION_CONTROL_VELOCITY;
+      
+      // TODO
+      // only set the command if it's different from the old one
+      // (saves aquiring a mutex lock from the sim thread)
+            
+      //if( memcmp( &cmd, buf, sizeof(cmd) ))
+	{	  
+	  //static int g=0;
+	  //printf( "setting command %d\n", g++ );
+	  //stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
+	  stg_model_set_property( this->mod, "position_cmd", &cmd, sizeof(cmd));
+	}
+    }
+  else
+    PRINT_ERR2( "wrong size position command packet (%d/%d bytes)",
+		(int)len, (int)sizeof(player_position_cmd_t) );
+}
+
 
 //int PositionData( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
 void InterfacePosition::Publish( void )
@@ -74,52 +120,6 @@ void InterfacePosition::Publish( void )
       //PRINT_ERR2( "wrong size position data (%d/%d bytes)",
       //	(int)len, (int)sizeof(player_position_data_t) );
 }
-
-
-InterfacePosition::InterfacePosition(  player_device_id_t id, 
-				       StgDriver* driver,
-				       ConfigFile* cf,
-				       int section )
-						   
-  : InterfaceModel( id, driver, cf, section, STG_MODEL_POSITION )
-{
-  //puts( "InterfacePosition constructor" );
-  this->data_len = sizeof(player_position_data_t);
-  this->cmd_len = sizeof(player_position_cmd_t);  
-  //stg_model_add_property_callback( this->mod, "position_data", PositionData, this );  
-}
-
-void InterfacePosition::Command( void* src, size_t len )
-{
-  if( len == sizeof(player_position_cmd_t) )
-    {
-      // convert from Player to Stage format
-      player_position_cmd_t* pcmd = (player_position_cmd_t*)src;
-      
-      // only velocity control mode works yet
-      stg_position_cmd_t cmd; 
-      cmd.x = ((double)((int32_t)ntohl(pcmd->xspeed))) / 1000.0;
-      cmd.y = ((double)((int32_t)ntohl(pcmd->yspeed))) / 1000.0;
-      cmd.a = DTOR((double)((int32_t)ntohl(pcmd->yawspeed)));
-      cmd.mode = STG_POSITION_CONTROL_VELOCITY;
-      
-      // TODO
-      // only set the command if it's different from the old one
-      // (saves aquiring a mutex lock from the sim thread)
-            
-      //if( memcmp( &cmd, buf, sizeof(cmd) ))
-	{	  
-	  //static int g=0;
-	  //printf( "setting command %d\n", g++ );
-	  //stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
-	  stg_model_set_property( this->mod, "position_cmd", &cmd, sizeof(cmd));
-	}
-    }
-  else
-    PRINT_ERR2( "wrong size position command packet (%d/%d bytes)",
-		(int)len, (int)sizeof(player_position_cmd_t) );
-}
-
 
 void InterfacePosition::Configure( void* client, void* buffer, size_t len  )
 {

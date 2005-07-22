@@ -327,6 +327,8 @@ void storage_pose( stg_property_t* prop,
 }
 
 
+static _model_init = TRUE;
+
 /// create a new model
 stg_model_t* stg_model_create( stg_world_t* world, 
 			       stg_model_t* parent,
@@ -334,11 +336,21 @@ stg_model_t* stg_model_create( stg_world_t* world,
 			       stg_model_type_t type,
 			       char* token )
 {  
+
   stg_model_t* mod = calloc( sizeof(stg_model_t),1 );
   
-  assert( pthread_mutex_init( &mod->data_mutex, NULL ) == 0 );
-  assert( pthread_mutex_init( &mod->cmd_mutex, NULL ) == 0 );
-  assert( pthread_mutex_init( &mod->cfg_mutex, NULL ) == 0 );
+  //if( _model_init )
+    // {
+      g_datalist_init( &mod->props );
+  //_model_init = FALSE;
+  // }
+
+  int err = pthread_mutex_init( &mod->mutex, NULL );
+  if( err )
+    {
+      PRINT_ERR1( "thread initialization failed with code %d\n", err );
+      exit(-1);
+    }
   
   mod->id = id;
 
@@ -849,6 +861,14 @@ stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
   return polys;
 }
 
+void stg_model_set_polygons( stg_model_t* mod,
+			     stg_polygon_t* polys, 
+			     size_t poly_count )
+{
+  size_t bytes = poly_count * sizeof(stg_polygon_t);
+  stg_model_set_property( mod, "polygons", polys, bytes );
+}
+
 void stg_property_destroy( stg_property_t* prop )
 {
   // empty the list
@@ -884,7 +904,18 @@ stg_property_t* stg_model_set_property_ex( stg_model_t* mod,
 {
   stg_property_t* prop = stg_model_set_property( mod, propname, data, len );
   prop->storage_func = func;
+
   return prop;
+}
+
+void stg_model_lock( stg_model_t* mod )
+{
+  //pthread_mutex_lock(&mod->mutex);
+}
+
+void stg_model_unlock( stg_model_t* mod )
+{
+  //pthread_mutex_unlock(&mod->mutex);
 }
 
 stg_property_t* stg_model_set_property( stg_model_t* mod, 
@@ -892,6 +923,9 @@ stg_property_t* stg_model_set_property( stg_model_t* mod,
 					void* data, 
 					size_t len )
 {
+  stg_model_lock(mod);
+  
+
   stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
   
   if( prop == NULL )
@@ -913,6 +947,8 @@ stg_property_t* stg_model_set_property( stg_model_t* mod,
       assert( find == prop );      
     }
 
+  stg_model_unlock(mod);
+
   // if there's a special storage function registered, call it
   if( prop->storage_func )
     {
@@ -926,6 +962,7 @@ stg_property_t* stg_model_set_property( stg_model_t* mod,
   
   if( prop->callbacks ) 
       g_list_foreach( prop->callbacks, stg_property_callback_cb, prop );
+
 
   return prop; // ok
 }
@@ -1250,7 +1287,7 @@ int stg_model_update_pose( stg_model_t* mod )
 	      //hitthing->velocity.y = vr * sin(pth);		  
 
 	      printf( "gave %.2f %.2f vel\n",
-		      given.x, given.y );
+		      given.x, given.y );x
 
 	      stg_model_set_global_velocity( hitthing, &given );
 	    }
@@ -1281,17 +1318,20 @@ void* stg_model_get_property( stg_model_t* mod,
 			      const char* name,
 			      size_t* size )
 {
+  stg_model_lock(mod);
+
   stg_property_t* prop = g_datalist_get_data( &mod->props, name );
   
   if( prop )
     {
-      //assert( prop->data && prop->len == 0));
-      //assert( prop->data == NULL && prop->len > 0 );
-
       *size = prop->len;      
+
+      stg_model_unlock(mod);
       return prop->data;
     }
-
+  
+  stg_model_unlock(mod);
+  
   *size = 0;
   return NULL;
 }
@@ -1322,7 +1362,13 @@ void stg_model_property_refresh( stg_model_t* mod, const char* propname )
     
   size_t len=0;
   void* data = stg_model_get_property( mod, propname, &len );
-  stg_model_set_property( mod, propname, data, len );
+
+  void* buf = malloc(len);
+  memcpy(buf,data,len);
+
+  stg_model_set_property( mod, propname, buf, len );
+
+  free(buf);
 }
 
 

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.19 2005-07-14 23:37:23 rtv Exp $
+ * $Id: matrix.c,v 1.20 2005-07-22 21:02:01 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -9,12 +9,18 @@
 #include <string.h> // for memcpy(3)
 
 #include "stage_internal.h"
-
+#include "gui.h" // for layer definitions
 
 //#define DEBUG
 
-const int fastmode = 1;
-extern stg_rtk_fig_t* fig_debug_rays;
+extern stg_rtk_fig_t* fig_debug_matrix;
+extern int _render_matrix_deltas;
+
+//stg_rtk_fig_t* fig_monitor_matrix = NULL;
+//GList* doomed = NULL;
+//GList* created = NULL;
+
+extern stg_rtk_fig_t* fig_debug_matrix;
 
 stg_cell_t* stg_cell_create( stg_cell_t* parent, double x, double y, double size )
 {
@@ -32,13 +38,65 @@ stg_cell_t* stg_cell_create( stg_cell_t* parent, double x, double y, double size
   cell->ymin = y - size/2.0;
   cell->ymax = y + size/2.0;
 
+  // taken care of by the calloc()
+  //cell->fig = NULL;
+    
   return cell;
 }
 
 void stg_cell_delete( stg_cell_t* cell )
 {
+  if( cell->fig )
+    stg_rtk_fig_destroy( cell->fig );
+  
   free( cell );
 }
+
+void stg_cell_unrender( stg_cell_t* cell )
+{
+  if( cell->fig )
+    stg_rtk_fig_destroy( cell->fig );
+  cell->fig = NULL;
+}    
+
+void stg_cell_render( stg_cell_t* cell )
+{
+  
+  cell->fig = stg_rtk_fig_create( fig_debug_matrix->canvas,
+				  fig_debug_matrix,
+				  STG_LAYER_MATRIX_TREE );
+  
+  stg_rtk_fig_color_rgb32( cell->fig, 0x00AA00 );
+  
+  stg_rtk_fig_rectangle( cell->fig,
+			 cell->x, cell->y, 0.0,
+			 cell->size, cell->size, 0 );
+}
+
+/* void stg_cell_render_tree( stg_cell_t* cell ) */
+/* { */
+/*   //stg_cell_render( cell ); */
+
+/*   if( cell->children[0] ) */
+/*     { */
+/*       int i; */
+/*       for( i=0; i<4; i++ ) */
+/* 	stg_cell_render_tree( cell->children[i] ); */
+/*     } */
+/* } */
+
+void stg_cell_unrender_tree( stg_cell_t* cell )
+{
+  if( cell->children[0] )
+    {
+      int i;
+      for( i=0; i<4; i++ )
+	stg_cell_unrender_tree( cell->children[i] );
+    }
+
+  stg_cell_unrender( cell );
+}
+
 
 stg_matrix_t* stg_matrix_create( double ppm, double width, double height )
 {
@@ -237,10 +295,18 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 	      
 	      // now point to the correct child containing the point, and loop again
 	      cell = cell->children[ index ];           
+
+	      // debug rendering
+	      if( _render_matrix_deltas && ! cell->fig )
+		stg_cell_render( cell );
 	    }
 
 	  // now the cell small enough, we add the object here
 	  cell->data = g_slist_prepend( cell->data, object );  	  
+	  
+	  // debug rendering
+	  if( _render_matrix_deltas && ! cell->fig )
+	    stg_cell_render( cell );
 	  
 	  // add this object the hash table
 	  GSList* list = g_hash_table_lookup( matrix->ptable, object );

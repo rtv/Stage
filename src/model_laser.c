@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.70 $
+//  $Revision: 1.71 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +118,7 @@ stg_model_t* stg_laser_create( stg_world_t* world,
     {
       laser_color =   stg_lookup_color(STG_LASER_COLOR);
       bright_color = stg_lookup_color(STG_LASER_BRIGHT_COLOR);
-      fill_color = stg_lookup_color(STG_LASER_FILL_COLOR);
+      fill_color = 0xF0F0FF;// stg_lookup_color(STG_LASER_FILL_COLOR);
       geom_color = stg_lookup_color(STG_LASER_GEOM_COLOR);
       cfg_color = stg_lookup_color(STG_LASER_CFG_COLOR);
       init = 1;

@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_gripper.cc,v 1.1 2005-07-15 03:41:37 rtv Exp $
+ * CVS: $Id: p_gripper.cc,v 1.2 2005-07-22 21:02:02 rtv Exp $
  */
 
 
@@ -35,7 +35,19 @@
 // GRIPPER INTERFACE
 //
 
-void GripperCommand( Interface* device, void* src, size_t len )
+InterfaceGripper::InterfaceGripper(  player_device_id_t id, 
+				     StgDriver* driver,
+				     ConfigFile* cf,
+				     int section )
+  
+  : InterfaceModel( id, driver, cf, section, STG_MODEL_GRIPPER )
+{
+  //puts( "InterfacePosition constructor" );
+  this->data_len = sizeof(player_gripper_data_t);
+  this->cmd_len = sizeof(player_gripper_cmd_t);  
+}
+
+void InterfaceGripper::Command( void* src, size_t len )
 {
   if( len == sizeof(player_gripper_cmd_t) )
     {
@@ -61,51 +73,60 @@ void GripperCommand( Interface* device, void* src, size_t len )
       cmd.arg = pcmd->arg;
 
       //stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
-      stg_model_set_property( device->mod, "gripper_cmd", &cmd, sizeof(cmd));
+      stg_model_set_property( this->mod, "gripper_cmd", &cmd, sizeof(cmd));
     }
   else
     PRINT_ERR2( "wrong size gripper command packet (%d/%d bytes)",
 		(int)len, (int)sizeof(player_position_cmd_t) );
 }
 
-void GripperData( Interface* device, void* data, size_t len )
+void InterfaceGripper::Publish( void )
 {
-  //puts( "publishing gripper data\n" );
+  stg_gripper_data_t* sdata = (stg_gripper_data_t*)
+    stg_model_get_property_fixed( this->mod, "gripper_data", 
+				  sizeof(stg_gripper_data_t ));
+  assert(sdata);
+
+  player_gripper_data_t pdata;
+  memset( &pdata, 0, sizeof(pdata) );
   
-  if( len == sizeof(stg_gripper_data_t) )
-    {
-      stg_gripper_data_t* sdata = (stg_gripper_data_t*)data;
-
-      player_gripper_data_t pdata;
-      memset( &pdata, 0, sizeof(pdata) );
-            
-      // set the proper bits
-      
-      pdata.beams = 0;
-      pdata.beams |=  sdata->outer_break_beam ? 0x04 : 0x00;
-      pdata.beams |=  sdata->inner_break_beam ? 0x08 : 0x00;
-      
-      pdata.state = 0;  
-      pdata.state |= (sdata->paddles == STG_GRIPPER_PADDLE_OPEN) ? 0x01 : 0x00;
-      pdata.state |= (sdata->paddles == STG_GRIPPER_PADDLE_CLOSED) ? 0x02 : 0x00;
-      pdata.state |= ((sdata->paddles == STG_GRIPPER_PADDLE_OPENING) ||
-		      (sdata->paddles == STG_GRIPPER_PADDLE_CLOSING))  ? 0x04 : 0x00;
-      
-      pdata.state |= (sdata->lift == STG_GRIPPER_LIFT_UP) ? 0x10 : 0x00;
-      pdata.state |= (sdata->lift == STG_GRIPPER_LIFT_DOWN) ? 0x20 : 0x00;
-      pdata.state |= ((sdata->lift == STG_GRIPPER_LIFT_UPPING) ||
-		      (sdata->lift == STG_GRIPPER_LIFT_DOWNING))  ? 0x040 : 0x00;
-      
-      //pdata.state |= sdata->lift_error ? 0x80 : 0x00;
-      //pdata.state |= sdata->gripper_error ? 0x08 : 0x00;
-
-      device->driver->PutData( device->id, &pdata, sizeof(pdata), NULL); 
-    }
+  // set the proper bits
+  pdata.beams = 0;
+  pdata.beams |=  sdata->outer_break_beam ? 0x04 : 0x00;
+  pdata.beams |=  sdata->inner_break_beam ? 0x08 : 0x00;
+  
+  pdata.state = 0;  
+  pdata.state |= (sdata->paddles == STG_GRIPPER_PADDLE_OPEN) ? 0x01 : 0x00;
+  pdata.state |= (sdata->paddles == STG_GRIPPER_PADDLE_CLOSED) ? 0x02 : 0x00;
+  pdata.state |= ((sdata->paddles == STG_GRIPPER_PADDLE_OPENING) ||
+		  (sdata->paddles == STG_GRIPPER_PADDLE_CLOSING))  ? 0x04 : 0x00;
+  
+  pdata.state |= (sdata->lift == STG_GRIPPER_LIFT_UP) ? 0x10 : 0x00;
+  pdata.state |= (sdata->lift == STG_GRIPPER_LIFT_DOWN) ? 0x20 : 0x00;
+  pdata.state |= ((sdata->lift == STG_GRIPPER_LIFT_UPPING) ||
+		  (sdata->lift == STG_GRIPPER_LIFT_DOWNING))  ? 0x040 : 0x00;
+  
+  //pdata.state |= sdata->lift_error ? 0x80 : 0x00;
+  //pdata.state |= sdata->gripper_error ? 0x08 : 0x00;
+  
+  this->driver->PutData( this->id, &pdata, sizeof(pdata), NULL); 
 }
 
-void GripperConfig( Interface* device, void* client, void* buffer, size_t len )
+void InterfaceGripper::Configure( void* client, void* buffer, size_t len )
 {
   printf("got gripper request\n");
+  
+  uint8_t* buf = (uint8_t*)buffer;
+  switch( buf[0] )
+    {
+    default:
+      PRINT_WARN1( "stg_position doesn't support config id %d", buf[0] );
+      if( this->driver->PutReply( this->id, 
+				  client, 
+				  PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
+	DRIVER_ERROR("PutReply() failed");
+      break;
+    }
 }
 
 

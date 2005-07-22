@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.104 2005-07-15 03:41:27 rtv Exp $
+# $Id: Makefile.am,v 1.105 2005-07-22 21:02:01 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
@@ -33,6 +33,7 @@ libstage_la_SOURCES = \
 	matrix.c \
 	model_blobfinder.c \
 	model_fiducial.c \
+	model_gripper.c \
 	model_laser.c \
 	model_position.c \
 	model_ranger.c \
@@ -42,8 +43,6 @@ libstage_la_SOURCES = \
 	stage.h \
 	stage_internal.h \
 	stagecpp.cc \
-	stg_time.cc \
-	stg_time.h \
 	world.c \
 	worldfile.cc \
 	worldfile.hh \
@@ -56,7 +55,6 @@ libstage_la_SOURCES = \
 
 # TODO
 #	model_energy.c
-#	model_gripper.c
 
 libstage_la_LDFLAGS = -version-info 2:0:0 
 libstage_la_LIBADD = @GTK_LIBS@
@@ -74,8 +72,12 @@ libstageplugin_la_SOURCES = \
 	p_sonar.cc \
 	p_driver.cc \
 	p_driver.h \
-	zoo_driver.cc \
-	zoo_driver.h 
+	stg_time.cc \
+	stg_time.h 
+
+
+#	zoo_driver.cc 
+#	zoo_driver.h 
 
 libstageplugin_la_LDFLAGS = -export-dynamic -version-info 1:0:0 
 libstageplugin_la_LIBADD = -L.libs -lstage

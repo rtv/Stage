@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.42 2005-07-15 02:38:11 rtv Exp $
+# CVS: $Id: everything.world,v 1.43 2005-07-22 21:02:03 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -19,8 +19,10 @@ include "pioneer.inc"
 
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
 
 
 
@@ -34,11 +36,12 @@ include "sick.inc"
 
 
 
+
 size [40 20 ]
 
 gui_disable 0
 
-window( size [ 769.000 592.000 ] center [-9.942 3.461] scale 0.021 )
+window( size [ 769.000 592.000 ] center [-8.750 3.343] scale 0.010 )
 
 map( 
   bitmap "bitmaps/hospital_section.png" 
@@ -59,7 +62,7 @@ model(
 
 # extend the pioneer2dx definition from pioneer.inc
 #
-define laserpioneer pioneer2dx	
+define trickedoutpioneer pioneer2dx	
 (	
   sick_laser
   (  
@@ -72,55 +75,55 @@ define laserpioneer pioneer2dx
     channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
   )
 
+  #gripper( pose [0.200 0.000 0.000] color "gray" )
+
   fiducial_return 42
   blobfinder_return 1 
 )
 
 
-laserpioneer
+trickedoutpioneer
 (
   name "p0"
-  pose [-10.124 2.999 -360.320]
-  #gripper( pose [0.200 0.000 0.000] )
-  #gripper( pose [0.700 0.000 0.000] size [1.0 1.0] )
+  pose [-10.712 3.167 -360.320]
 )
 
-laserpioneer
+trickedoutpioneer
 (
   color "red"
   name "p1"
   pose [-5.645 3.034 -162.098]
 )
 
-laserpioneer
+trickedoutpioneer
 (
   color "blue"
   name "p2"
   pose [-6.009 2.481 -194.220]
 )
 
-laserpioneer
+trickedoutpioneer
 (
   color "green"
   name "p3"
   pose [-6.492 2.156 -199.781]
 )
 
-laserpioneer
+trickedoutpioneer
 (
   color "cyan"
   name "p4"
   pose [-7.641 3.989 -487.216]
 )
 
-laserpioneer
+trickedoutpioneer
 (
   color "yellow"
   name "p5"
   pose [-6.759 3.634 -110.414]
 )
 
-laserpioneer
+trickedoutpioneer
 (
   color "magenta"
   name "p6"
@@ -131,7 +134,7 @@ laserpioneer
 position( 	
   name "invader" 
   size [0.3 0.3]
-  pose [-17.095 -0.065 0.000] 
+  pose [-14.675 -0.065 0.000] 
   color "red"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/space_invader.png"
@@ -144,7 +147,7 @@ position(
 position( 	
   name "ghost" 
   size [0.3 0.3 ]
-  pose [-14.329 -1.591 0.000] 
+  pose [-14.329 0.829 0.000] 
   color "blue"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/ghost.png"

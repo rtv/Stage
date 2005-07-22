@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.13 2005-07-14 23:37:23 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.14 2005-07-22 21:02:02 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -252,7 +252,6 @@ void stg_rtk_fig_remove_mouse_handler(stg_rtk_fig_t *fig, stg_rtk_mouse_fn_t cal
   fig->mouse_fn = NULL;
   return;
 }
-
 
 // Clear all strokes from the figure
 void stg_rtk_fig_clear(stg_rtk_fig_t *fig)

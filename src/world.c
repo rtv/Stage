@@ -221,17 +221,14 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	      mod = stg_ranger_create( world,  parent_mod, section, namestr );
 	      break;
 	      
-	      /*	      
-
-	      //case STG_MODEL_GRIPPER:
-	      //mod = stg_gripper_create( world,parent_mod,section,namestr);
-	      //break;
+	    case STG_MODEL_GRIPPER:
+	      mod = stg_gripper_create( world,parent_mod,section,namestr);
+	      break;
 	      
 	      //case STG_MODEL_ENERGY:
 	      //mod = stg_energy_create( world,  parent_mod, section, namestr );
-	      break;
+	      //break;
 
-	      */
 	    default:
 	      PRINT_ERR1( "don't know how to configure type %d", type );
 	    }

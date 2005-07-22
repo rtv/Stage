@@ -45,7 +45,7 @@ class StgDriver : public Driver
   
   /// The server thread calls this method frequently. We use it to
   /// check for new commands and configs
-  void Update();
+  virtual void Update();
   
   // override the Driver method to grab configs inside the server thread
   //int PutConfig(player_device_id_t id, void *client, 
@@ -125,6 +125,16 @@ class InterfacePosition : public InterfaceModel
   virtual void Publish( void );
 };
  
+class InterfaceGripper : public InterfaceModel
+{
+ public: 
+  InterfaceGripper( player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceGripper( void ){ /* TODO: clean up*/ };
+  virtual void Command( void* buffer, size_t len ); 
+  virtual void Configure( void* client, void* buffer, size_t len );
+  virtual void Publish( void );
+};
+
 class InterfaceLaser : public InterfaceModel
 {
  public: 

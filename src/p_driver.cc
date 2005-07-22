@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.1 2005-07-15 03:41:37 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.2 2005-07-22 21:02:02 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -158,6 +158,7 @@ extern bool quiet_startup;
 // init static vars
 stg_world_t* StgDriver::world = NULL;
 
+int update_request = 0;
 
 /* need the extern to avoid C++ name-mangling  */
 extern "C"
@@ -197,7 +198,7 @@ int player_driver_init(DriverTable* table)
 {
   //puts(" Stage driver plugin init");
   StgDriver_Register(table);
-  ZooDriver_Register(table);
+  //ZooDriver_Register(table);
   return(0);
 }
 
@@ -343,14 +344,13 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	case PLAYER_SONAR_CODE:
 	  ifsrc = new InterfaceSonar( player_id,  this, cf, section );
 	  break;
-
-	  /*	  
+	  
 	case PLAYER_GRIPPER_CODE:
+	  ifsrc = new InterfaceGripper( player_id,  this, cf, section );
 	  break;
-	  	  	  
-	case PLAYER_MAP_CODE:
-	  break;
-	  */
+	  
+	  //case PLAYER_MAP_CODE:
+	  //break;
 
 	default:
 	  PRINT_ERR1( "error: stage driver doesn't support interface type %d\n",
@@ -517,18 +517,45 @@ void StgDriver::Main( void )
 {
   assert( this->world );
 
+  //sleep( 20 );
+
   // The main loop; interact with the device here
   for(;;)
-  {
-    // test if we are supposed to cancel
-    //pthread_testcancel();
-
-    if( stg_world_update( StgDriver::world, TRUE ) )
-      exit( 0 );
-
-    // todo - sleep out here only if we can afford the time
-    //usleep( 10000 ); // 1ms
-  }
+    {
+      // get real time in msec since stg_timenow was first called
+      stg_msec_t timenow = stg_timenow();
+      
+      // time since the world was last updated
+      stg_msec_t elapsed =  timenow - world->wall_last_update;
+      
+      // if it's time for an update, update all the models and remember
+      // the time we did it
+      if( world->wall_interval < elapsed )
+	{
+	  if( ! world->paused )
+	    {
+	      update_request++;
+	      printf( "update requested (%d)\n", update_request );
+	      
+	      this->DataAvailable();
+	      
+	      // 	  stg_msec_t real_interval = timenow - world->wall_last_update;
+	      // 	  world->real_interval_measured = real_interval;      
+	      // 	  g_hash_table_foreach( world->models, model_update_cb, world );            
+	      // 	  world->wall_last_update = timenow;      
+	      // 	  world->sim_time += world->sim_interval;
+	    }
+	}
+      
+      // test if we are supposed to cancel
+      //pthread_testcancel();
+      
+      //if( stg_world_update( StgDriver::world, TRUE ) )
+      // exit( 0 );
+      
+      // todo - sleep out here only if we can afford the time
+      usleep( 10000 ); // 10ms
+    }
 }
 
 // Moved this declaration here (and changed its name) because 
@@ -550,6 +577,17 @@ void StgDriver::Update(void)
       //      device->id.code, 
       //      device->id.index );
       
+      
+      if( interface 
+	  && interface->id.code == PLAYER_SIMULATION_CODE 
+	  )
+	  //&& update_request )
+	{
+	  stg_world_update( this->world, FALSE );
+	  printf( "handling update requests: %d -> 0\n", update_request );
+	  update_request = 0;
+	}
+
       if( interface && interface->cmd_len > 0 )
 	{    
 	  // copy the command from Player
@@ -577,8 +615,8 @@ void StgDriver::Update(void)
 	  
 	  if( cfg_len > 0 )
 	    interface->Configure( client, stage_buffer, cfg_len );
-	}
-      
+	}                 
+
       interface->Publish();
     }
   

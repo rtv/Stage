@@ -1,3 +1,5 @@
+#ifndef _STAGE_INTERNAL_H
+#define _STAGE_INTERNAL_H
 
 // internal function declarations that are not part of the external
 // interface to Stage
@@ -174,9 +176,9 @@ extern "C" {
     func_save_t f_save;
 
     /* TOFO - thread-safe version */
-
-    // allow exclusive access to this model
-    pthread_mutex_t data_mutex, cmd_mutex, cfg_mutex;
+    
+    // allow exclusive access to this model's properties
+    pthread_mutex_t mutex;
     
     /* END TODO */    
   };
@@ -285,6 +287,8 @@ extern "C" {
     // bounding box
     double xmin,ymin,xmax,ymax;
     
+    stg_rtk_fig_t* fig; // for debugging
+
     struct stg_cell* children[4];
     struct stg_cell* parent;
   } stg_cell_t;
@@ -293,6 +297,11 @@ extern "C" {
    */
   stg_cell_t* stg_cell_locate( stg_cell_t* cell, double x, double y );
   
+  void stg_cell_unrender( stg_cell_t* cell );
+  void stg_cell_render( stg_cell_t* cell );
+  void stg_cell_render_tree( stg_cell_t* cell );
+  void stg_cell_unrender_tree( stg_cell_t* cell );
+
   typedef struct _stg_matrix
   {
     double ppm; // pixels per meter (1/resolution)
@@ -663,3 +672,4 @@ the worldfile c++ code */
 }
 #endif 
 
+#endif // _STAGE_INTERNAL_H

@@ -6,6 +6,9 @@
 
 extern stg_rtk_fig_t* fig_debug_geom;
 extern stg_rtk_fig_t* fig_debug_rays;
+extern stg_rtk_fig_t* fig_debug_matrix;
+
+extern int _render_matrix_deltas;
 extern int _stg_quit;
 
 static GtkUIManager *ui_manager = NULL;
@@ -27,6 +30,7 @@ void gui_action_raytrace( GtkToggleAction* action, gpointer userdata );
 void gui_action_geom( GtkToggleAction* action, gpointer userdata ); 
 void gui_action_matrixtree( GtkToggleAction* action, gpointer userdata ); 
 void gui_action_matrixocc( GtkToggleAction* action, gpointer userdata ); 
+void gui_action_matrixdelta( GtkToggleAction* action, gpointer userdata );
 
 // radio actions
 void gui_action_export_interval( GtkRadioAction* action, 
@@ -64,6 +68,7 @@ static GtkToggleActionEntry toggle_entries[] = {
   { "DebugGeom", NULL, "_Geometry", "<alt>G", "Draw model geometry", G_CALLBACK(gui_action_geom), 0 },
   { "DebugMatrixTree", NULL, "Matrix _Tree", "<alt>T", "Show occupancy quadtree", G_CALLBACK(gui_action_matrixtree), 0 },
   { "DebugMatrixOccupancy", NULL, "Matrix _Occupancy", "<alt>M", "Show occupancy grid", G_CALLBACK(gui_action_matrixocc), 0 },
+  { "DebugMatrixDelta", NULL, "Matrix _Delta", "<alt>D", "Show changes to quadtree", G_CALLBACK(gui_action_matrixdelta), 0 },
   { "ExportSequence", NULL, "Sequence of frames", "<control>G", "Export a sequence of screenshots at regular intervals", G_CALLBACK(gui_action_exportsequence), 0 },
 };
 
@@ -118,6 +123,7 @@ static const char *ui_description =
 "          <menuitem action='DebugGeom'/>"
 "          <menuitem action='DebugMatrixTree'/>"
 "          <menuitem action='DebugMatrixOccupancy'/>"
+"          <menuitem action='DebugMatrixDelta'/>"
 "          <separator/>"
 "            <menu action='Model'>"
 "              <separator/>"
@@ -258,13 +264,35 @@ void gui_action_matrixtree( GtkToggleAction* action, gpointer userdata )
   if( world->win->matrix_tree ) 
     {
       stg_rtk_fig_destroy( world->win->matrix_tree );     
-      world->win->matrix_tree = NULL;
+      world->win->matrix_tree = NULL;     
     }
   else
     {
       world->win->matrix_tree = 
 	stg_rtk_fig_create(world->win->canvas,world->win->bg,STG_LAYER_MATRIX_TREE);  
-      stg_rtk_fig_color_rgb32( world->win->matrix_tree, 0x00CC00 );
+      stg_rtk_fig_color_rgb32( world->win->matrix_tree, 0x00CC00 );      
+    } 
+}
+
+void gui_action_matrixdelta( GtkToggleAction* action, gpointer userdata )
+{
+  PRINT_DEBUG( "Matrix delta menu item" );
+
+  stg_world_t* world = (stg_world_t*)userdata;  
+  if( gtk_toggle_action_get_active( action ) ) 
+    {
+      if( ! fig_debug_matrix )
+	fig_debug_matrix = stg_rtk_fig_create(world->win->canvas,world->win->bg,STG_LAYER_MATRIX_TREE);  
+
+      _render_matrix_deltas = TRUE;
+
+      // doesn't work: too many figs?
+      //stg_cell_render_tree( world->matrix->root );
+    }
+  else
+    {
+      _render_matrix_deltas = FALSE;
+      stg_cell_unrender_tree( world->matrix->root );
     } 
 }
 
@@ -286,49 +314,6 @@ void gui_action_matrixocc( GtkToggleAction* action, gpointer userdata )
       stg_rtk_fig_color_rgb32( world->win->matrix, 0x008800 );
     }
 }
-
-
-void gui_add_view_item( const gchar *name,
-			const gchar *label,
-			const gchar *tooltip,
-			GCallback callback,
-			gboolean  is_active,
-			void* userdata )
-{
-  static GtkActionGroup* grp = NULL;  
-  if( grp == NULL )
-    {
-      grp = gtk_action_group_new( "DynamicDataActions" );
-    }
-  
-  GtkToggleActionEntry entry;
-  memset( &entry, 0, sizeof(entry));
-  entry.name = name;
-  entry.label = label;
-  entry.tooltip = tooltip;
-  entry.callback = callback;
-  entry.is_active = is_active;
-
-  gtk_action_group_add_toggle_actions( grp, &entry, 1, userdata   );  
-  gtk_ui_manager_insert_action_group(ui_manager, grp, 0);
-
-  guint merge = gtk_ui_manager_new_merge_id( ui_manager );
-  gtk_ui_manager_add_ui( ui_manager, 
-			 merge,
-			 "/Main/View", 
-			 name, 
-			 name, 
-			 GTK_UI_MANAGER_AUTO, 
-			 FALSE );
-  
-  // send the toggle signal to get the item set up
-  GtkToggleAction *act = (GtkToggleAction*)gtk_action_group_get_action( grp, name );
-  gtk_toggle_action_set_active( act, FALSE );
-  
-  // seems like this ought to work, but it doesn't. :(
-  gtk_toggle_action_toggled( act );
-}
-
 
 void test( GtkMenuItem* item, void* userdata )
 {
@@ -516,8 +501,15 @@ void gui_window_menus_create( gui_window_t* win )
   gtk_ui_manager_insert_action_group (ui_manager, group, 0);
 
   // grey-out the radio list labels
-  gtk_action_set_sensitive(gtk_action_group_get_action( group, "ExportFormat" ), FALSE );
-  gtk_action_set_sensitive(gtk_action_group_get_action( group, "ExportInterval" ), FALSE );
+  
+  // gtk+-2.6 code
+  //gtk_action_set_sensitive(gtk_action_group_get_action( group, "ExportFormat" ), FALSE );
+  //gtk_action_set_sensitive(gtk_action_group_get_action( group, "ExportInterval" ), FALSE );
+
+  // gtk+-2.4 code
+  int sensi = FALSE;
+  gtk_object_set(G_OBJECT(gtk_action_group_get_action( group, "ExportFormat" )), "sensitive", sensi, NULL );
+  gtk_object_set(G_OBJECT(gtk_action_group_get_action( group, "ExportInterval" )), "sensitive", sensi, NULL);
 
   // accels
   GtkAccelGroup *accel_group = gtk_ui_manager_get_accel_group (ui_manager);
@@ -606,50 +598,55 @@ void stg_model_add_property_toggles( stg_model_t* mod,
   args->arg_on = arg_on;
   args->arg_off = arg_off;
   
-  static GtkActionGroup* grp = NULL;  
-  if( ! grp )
-    grp = gtk_action_group_new( "DynamicDataActions" );
-  
-  // find the action associated with this propname
-  GtkAction* act = gtk_action_group_get_action( grp, propname );
-  
-  if( act == NULL )
+  // optionally add ourselves to the GUI
+  if( label )
     {
-      //printf( "creating new action/item for prop %s\n", propname );
-      
-      GtkToggleActionEntry entry;
-      memset( &entry, 0, sizeof(entry));
-      entry.name = propname;
-      entry.label = label;
-      entry.tooltip = NULL;
-      entry.callback = G_CALLBACK(toggle_property_callback);
-      entry.is_active = !enabled; // invert the starting setting - see below
-      
-      gtk_action_group_add_toggle_actions( grp, &entry, 1, args  );  
+      static GtkActionGroup* grp = NULL;  
+      if( ! grp )
+	{
+	  grp = gtk_action_group_new( "DynamicDataActions" );
+	  gtk_ui_manager_insert_action_group(ui_manager, grp, 0);
+	}      
 
-      gtk_ui_manager_insert_action_group(ui_manager, grp, 0);
+      // find the action associated with this propname
+      GtkAction* act = gtk_action_group_get_action( grp, propname );
       
-      guint merge = gtk_ui_manager_new_merge_id( ui_manager );
-      gtk_ui_manager_add_ui( ui_manager, 
-			     merge,
-			     "/Main/View", 
-			     propname, 
-			     propname, 
-			     GTK_UI_MANAGER_AUTO, 
-			     FALSE );
+      if( act == NULL )
+	{
+	  //printf( "creating new action/item for prop %s\n", propname );
+	  
+	  GtkToggleActionEntry entry;
+	  memset( &entry, 0, sizeof(entry));
+	  entry.name = propname;
+	  entry.label = label;
+	  entry.tooltip = NULL;
+	  entry.callback = G_CALLBACK(toggle_property_callback);
+	  entry.is_active = !enabled; // invert the starting setting - see below
+	  
+	  gtk_action_group_add_toggle_actions( grp, &entry, 1, args  );  
+	  	  
+	  guint merge = gtk_ui_manager_new_merge_id( ui_manager );
+	  gtk_ui_manager_add_ui( ui_manager, 
+				 merge,
+				 "/Main/View", 
+				 propname, 
+				 propname, 
+				 GTK_UI_MANAGER_AUTO, 
+				 FALSE );
+	  
+	  act = gtk_action_group_get_action( grp, propname );
+	}
+      else
+	{
+	  //printf( "connecting to signal for model %s prop %s\n",
+	  //      mod->token, propname );
+	  
+	  g_signal_connect( act, "activate",  G_CALLBACK(toggle_property_callback), args );
+	}
       
-      act = gtk_action_group_get_action( grp, propname );
+      // causes the callbacks to be called - un-inverts the starting setting!
+      gtk_action_activate( act ); 
     }
-  else
-    {
-      //printf( "connecting to signal for model %s prop %s\n",
-      //      mod->token, propname );
-
-      g_signal_connect( act, "activate",  G_CALLBACK(toggle_property_callback), args );
-    }
-  
-  // causes the callbacks to be called - un-inverts the starting setting!
-  gtk_action_activate( act ); 
 }
 
 
