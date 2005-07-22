@@ -30,3 +30,12 @@ function:
 This function should, obviously, create a new ZooReferee object and return a
 pointer to it.  Probably you will want to subclass ZooReferee and override
 some of its functions.
+
+---
+
+To load: the config file section that loads Zoo should also contain a line
+
+	referee "fooref.so"
+
+Any other options that your referee will need to know about could also go
+into that section, but you are under no obligation to put them there.
