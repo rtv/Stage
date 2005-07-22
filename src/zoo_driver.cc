@@ -38,10 +38,14 @@
 #include <glib.h>
 #include <wordexp.h>
 #include <stdio.h>
+#include <dlfcn.h>
 
 #define ZOO_DRIVER_NAME "zoo"
 #define ZOO_SPECIES_SECTYPE "species"
 #define ZOO_CONTROLLER_SECTYPE "controller"
+
+#define ZOOREF_CREATE_SYMBOL "zooref_create"
+typedef ZooReferee *(*zooref_create_t)(ConfigFile *, int, ZooDriver *);
 
 #define ZOO_BAD_PORTRANGE_STR "Port ranges should be strings of the form " \
                               "min-max or a single number."
@@ -152,10 +156,35 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 	/* get the path to find controllers in */
 	ZooController::path = cf->ReadString(section, "controllerpath", "");
 
-	/* initialize the referee */
-	/* FIXME: causes a segfault */
-	//zoo_referee_init(cf, section, this);
-	referee = new ZooReferee(cf, section, this);
+	/* see if we should load a referee other than the default */
+	const char *referee_path;
+	referee_path = cf->ReadString(section, "referee", "");
+	if (strcmp(referee_path, "")) {
+		zooref_create_t zooref_create;
+
+		/* load the dynamic library */
+		zooref_handle = dlopen(referee_path, RTLD_LAZY);
+		if (!zooref_handle) {
+			fprintf(stderr, "Zoo: cannot load referee %s: %s\n",
+				referee_path, dlerror());
+			goto default_referee;
+		}
+
+		/* get the zooref_create function */
+		zooref_create = (zooref_create_t)
+			dlsym(zooref_handle, ZOOREF_CREATE_SYMBOL);
+		if (!zooref_create) {
+			fprintf(stderr, "Zoo: referee must define %s\n",
+				ZOOREF_CREATE_SYMBOL);
+			dlclose(zooref_handle);
+			goto default_referee;
+		}
+
+		/* create the referee */
+		referee = zooref_create(cf, section, this);
+	} else
+default_referee:
+		referee = new ZooReferee(cf, section, this);
 }
 
 ZooDriver::~ZooDriver()
@@ -611,6 +640,9 @@ ZooReferee::Startup( void )
 		stg_model_t *mod = zoo->GetModel(i);
 		printf("Zoo: model %s has id %d\n", mod->token, mod->id);
 	}
+	zoo->RunAll();
+#if 0
 	zoo->Run(6665);
 	zoo->Run(6666);
+#endif
 }

@@ -63,6 +63,7 @@ private:
 	std::map<const char *, int> portMap;
 	std::vector<const char *> modelList;
 
+	void *zooref_handle; // for dynamically linked ref
 	ZooReferee *referee;
 };
 
