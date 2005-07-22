@@ -1,4 +1,5 @@
 REFEREES = myref.so
+PREFIX = /home/alem/school/playerstage
 
 ######## probably should leave this unchanged #########
 
@@ -10,7 +11,6 @@ INCLUDE = -I. -I.. -I../.. -I../../replace
 CFLAGS = -g -shared $(STAGE_CFLAGS) $(INCLUDE)
 LIBS = $(STAGE_LIBS) -lstageplugin
 
-PREFIX = /home/alem/school/playerstage
 INSTALL = install
 LIBTOOL = libtool
 
