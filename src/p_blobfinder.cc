@@ -23,18 +23,22 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_blobfinder.cc,v 1.1 2005-07-15 03:41:37 rtv Exp $
+ * CVS: $Id: p_blobfinder.cc,v 1.2 2005-07-23 07:20:39 rtv Exp $
  */
 
 
 #include "p_driver.h"
+
+extern "C" { 
+int blobfinder_init( stg_model_t* mod );
+}
 
 
 InterfaceBlobfinder::InterfaceBlobfinder( player_device_id_t id, 
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( id, driver, cf, section, STG_MODEL_BLOB )
+  : InterfaceModel( id, driver, cf, section, blobfinder_init )
 {
   this->data_len = sizeof(player_blobfinder_data_t);
   this->cmd_len = 0;

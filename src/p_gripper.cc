@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_gripper.cc,v 1.2 2005-07-22 21:02:02 rtv Exp $
+ * CVS: $Id: p_gripper.cc,v 1.3 2005-07-23 07:20:39 rtv Exp $
  */
 
 
@@ -35,12 +35,16 @@
 // GRIPPER INTERFACE
 //
 
+extern "C" { 
+int gripper_init( stg_model_t* mod );
+}
+
 InterfaceGripper::InterfaceGripper(  player_device_id_t id, 
 				     StgDriver* driver,
 				     ConfigFile* cf,
 				     int section )
   
-  : InterfaceModel( id, driver, cf, section, STG_MODEL_GRIPPER )
+  : InterfaceModel( id, driver, cf, section, gripper_init )
 {
   //puts( "InterfacePosition constructor" );
   this->data_len = sizeof(player_gripper_data_t);

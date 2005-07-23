@@ -185,34 +185,34 @@ void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 
 /// generate the default name for a model, based on the name of its
 /// parent, and its type. This can be overridden in the world file.
-int stg_model_create_name( stg_model_t* mod )
-{
-  assert( mod );
-  assert( mod->token );
+/* int stg_model_create_name( stg_model_t* mod ) */
+/* { */
+/*   assert( mod ); */
+/*   assert( mod->token ); */
   
-  PRINT_DEBUG1( "model's default name is %s",
-		mod->token );
-  if( mod->parent )
-    PRINT_DEBUG1( "model's parent's name is %s",
-		  mod->parent->token );
+/*   PRINT_DEBUG1( "model's default name is %s", */
+/* 		mod->token ); */
+/*   if( mod->parent ) */
+/*     PRINT_DEBUG1( "model's parent's name is %s", */
+/* 		  mod->parent->token ); */
 
-  char buf[512];  
-  if( mod->parent == NULL )
-    snprintf( buf, 255, "%s:%d", 
-	      mod->token, 
-	      mod->world->child_type_count[mod->type] );
-  else
-    snprintf( buf, 255, "%s.%s:%d", 
-	      mod->parent->token,
-	      mod->token, 
-	      mod->parent->child_type_count[mod->type] );
+/*   char buf[512];   */
+/*   if( mod->parent == NULL ) */
+/*     snprintf( buf, 255, "%s:%d",  */
+/* 	      mod->token,  */
+/* 	      mod->world->child_type_count[mod->type] ); */
+/*   else */
+/*     snprintf( buf, 255, "%s.%s:%d",  */
+/* 	      mod->parent->token, */
+/* 	      mod->token,  */
+/* 	      mod->parent->child_type_count[mod->type] ); */
   
-  free( mod->token );
-  // return a new string just long enough
-  mod->token = strndup(buf,512);
+/*   free( mod->token ); */
+/*   // return a new string just long enough */
+/*   mod->token = strndup(buf,512); */
 
-  return 0; //ok
-}
+/*   return 0; //ok */
+/* } */
 
 
 stg_polygon_t* unit_polygon_create( void )
@@ -327,17 +327,19 @@ void storage_pose( stg_property_t* prop,
 }
 
 
-static _model_init = TRUE;
+static int _model_init = TRUE;
 
 /// create a new model
 stg_model_t* stg_model_create( stg_world_t* world, 
 			       stg_model_t* parent,
 			       stg_id_t id, 
-			       stg_model_type_t type,
-			       char* token )
+			       char* token,
+			       stg_model_initializer_t initializer )
 {  
 
   stg_model_t* mod = calloc( sizeof(stg_model_t),1 );
+
+  mod->initializer = initializer;
 
   int err = pthread_mutex_init( &mod->mutex, NULL );
   if( err )
@@ -358,16 +360,17 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->disabled = FALSE;
   mod->world = world;
   mod->parent = parent; 
-  mod->type = type;
+  //mod->type = type;
   mod->token = strdup(token); // this will be immediately replaced by
 			      // model_create_name  
   // create a default name for the model that's derived from its
   // ancestors' names and its worldfile token
   //model_create_name( mod );
 
-  PRINT_DEBUG4( "creating model %d.%d(%s) type %s", 
-		mod->world->id, mod->id, 
-		mod->token, stg_model_type_string(mod->type) );
+  PRINT_DEBUG3( "creating model %d.%d(%s)", 
+		mod->world->id,
+		mod->id, 
+		mod->token  );
   
   PRINT_DEBUG1( "original token: %s", token );
 
@@ -449,10 +452,15 @@ stg_model_t* stg_model_create( stg_world_t* world,
   stg_model_property_refresh( mod, "nose" ); 
   stg_model_property_refresh( mod, "grid" ); 
 
-
-  PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
-		mod->world->id, mod->id, 
-		mod->token, stg_model_type_string(mod->type) );
+  
+  PRINT_DEBUG3( "finished model %d.%d(%s)", 
+		mod->world->id, 
+		mod->id, 
+		mod->token );
+  
+  if( mod->initializer )
+    mod->initializer(mod);
+  
   return mod;
 }
 

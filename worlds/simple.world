@@ -1,6 +1,6 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.48 2005-07-08 22:55:16 rtv Exp $
+# CVS: $Id: simple.world,v 1.49 2005-07-23 07:20:39 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -33,6 +33,8 @@ map
   bitmap "bitmaps/cave.png"
   size [16 16]
 )
+
+banana ( pose [ 1 2 3] )
 
 # create a robot
 pioneer2dx

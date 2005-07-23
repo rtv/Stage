@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.146 2005-07-22 21:02:03 rtv Exp $
+ * CVS: $Id: stage.h,v 1.147 2005-07-23 07:20:39 rtv Exp $
  */
 
 
@@ -73,35 +73,22 @@ extern "C" {
   /** @addtogroup stg_model
       @{ */
 
-  typedef enum
-    {
-      STG_MODEL_SIMULATION=0,
-      STG_MODEL_BASIC,
-      STG_MODEL_POSITION,
-      STG_MODEL_TEST,
-      STG_MODEL_LASER,
-      STG_MODEL_FIDUCIAL,
-      STG_MODEL_RANGER,
-      STG_MODEL_BLOB,
-      STG_MODEL_ENERGY,
-      STG_MODEL_GRIPPER,
-      STG_MODEL_COUNT // this must be the last entry - it counts the entries
+/*   typedef enum */
+/*     { */
+/*       STG_MODEL_SIMULATION=0, */
+/*       STG_MODEL_BASIC, */
+/*       STG_MODEL_POSITION, */
+/*       STG_MODEL_LASER, */
+/*       STG_MODEL_FIDUCIAL, */
+/*       STG_MODEL_RANGER, */
+/*       STG_MODEL_BLOB, */
+/*       STG_MODEL_ENERGY, */
+/*       STG_MODEL_GRIPPER, */
+/*       STG_MODEL_COUNT // this must be the last entry - it counts the entries */
       
-    } stg_model_type_t;
+/*     } stg_model_type_t; */
   
-
-  /*  
-  stg_typetable_t* stg_typetable_create( void )
-  {
-    stg_typetable_t table = calloc( sizeof(stg_typetable_t), STG_MODEL_COUNT );
-    
-    table[STG_MODEL_POSITION] = 
-      { position_startup, position_shutdown, position_load, position_save };
-
- 
-  }
-  */
-
+  
   /** any integer value other than this is a valid fiducial ID 
    */
   // TODO - fix this up
@@ -585,13 +572,15 @@ extern "C" {
     //void* user; // pointer passed into every callback function
   } stg_property_t;
   
-    
+  
+  typedef int(*stg_model_initializer_t)(stg_model_t*);
+  
   /// create a new model
   stg_model_t* stg_model_create(  stg_world_t* world,
 				  stg_model_t* parent, 
 				  stg_id_t id, 
-				  stg_model_type_t type,
-				  char* token );
+				  char* token,
+				  stg_model_initializer_t initializer );
 
   /** destroy a model, freeing its memory */
   void stg_model_destroy( stg_model_t* mod );
@@ -618,7 +607,7 @@ extern "C" {
   void stg_model_save( stg_model_t* mod );
 
   /** get a human-readable string for the model's type */
-  const char* stg_model_type_string( stg_model_type_t type );
+  //const char* stg_model_type_string( stg_model_type_t type );
 
   // SET properties - use these to set props, don't set them directly
 

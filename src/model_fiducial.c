@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.39 $
+//  $Revision: 1.40 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -101,13 +101,8 @@ int fiducial_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, v
 int fiducial_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 
 
-stg_model_t* stg_fiducial_create( stg_world_t* world, 
-				  stg_model_t* parent, 
-				  stg_id_t id, 
-				  char* token )
-{
-  stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_FIDUCIAL, token );
-  
+int fiducial_init( stg_model_t* mod )
+{  
   // override the default methods
   mod->f_startup = fiducial_startup;
   mod->f_shutdown = fiducial_shutdown;
@@ -138,8 +133,8 @@ stg_model_t* stg_fiducial_create( stg_world_t* world,
 				  NULL, 
 				  "fiducial data",
 				  TRUE );
-
-  return mod;
+  
+  return 0;
 }
 
 int fiducial_startup( stg_model_t* mod )

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.71 $
+//  $Revision: 1.72 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -105,14 +105,8 @@ int laser_render_cfg( stg_model_t* mod, char* name,
 static int init = 0;
 static stg_color_t laser_color=0, bright_color=0, fill_color=0, cfg_color=0, geom_color=0;
 
-stg_model_t* stg_laser_create( stg_world_t* world, 
-			       stg_model_t* parent, 
-			       stg_id_t id, 
-			       char* token )
+int laser_init( stg_model_t* mod )
 {
-  stg_model_t* mod = 
-    stg_model_create( world, parent, id, STG_MODEL_LASER, token );
-    
   // we do this just the first time a laser is created
   if( init == 0 )
     {
@@ -183,7 +177,7 @@ stg_model_t* stg_laser_create( stg_world_t* world,
 /* 				  "laser config", */
 /* 				  TRUE ); */
   
-  return mod;
+  return 0;
 }
 
 

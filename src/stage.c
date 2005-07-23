@@ -28,7 +28,7 @@ int stg_init( int argc, char** argv )
   if( ! _stg_disable_gui )
     {
       // TODO - don't start the GUI if it was disabled
-      //puts( "GUI_STARTUP" );
+      //puts( "GUI_STARTUP" );x
       gui_startup( &argc, &argv );
     }
 
@@ -46,23 +46,23 @@ const char* stg_get_version_string( void )
   return PACKAGE_STRING;
 }
 
-const char* stg_model_type_string( stg_model_type_t type )
-{
-  switch( type )
-    {
-    case STG_MODEL_BASIC: return "model";
-    case STG_MODEL_LASER: return "laser";
-    case STG_MODEL_POSITION: return "position";
-    case STG_MODEL_BLOB: return "blobfinder";
-    case STG_MODEL_FIDUCIAL: return "fiducial";
-    case STG_MODEL_RANGER: return "ranger";
-    case STG_MODEL_TEST: return "test";
-    case STG_MODEL_GRIPPER: return "gripper";
-    default:
-      break;
-    }  
-  return "<unknown type>";
-}
+/* const char* stg_model_type_string( stg_model_type_t type ) */
+/* { */
+/*   switch( type ) */
+/*     { */
+/*     case STG_MODEL_BASIC: return "model"; */
+/*     case STG_MODEL_LASER: return "laser"; */
+/*     case STG_MODEL_POSITION: return "position"; */
+/*     case STG_MODEL_BLOB: return "blobfinder"; */
+/*     case STG_MODEL_FIDUCIAL: return "fiducial"; */
+/*     case STG_MODEL_RANGER: return "ranger"; */
+/*       //case STG_MODEL_TEST: return "test"; */
+/*     case STG_MODEL_GRIPPER: return "gripper"; */
+/*     default: */
+/*       break; */
+/*     }   */
+/*   return "<unknown type>"; */
+/* } */
 
 void stg_err( const char* err )
 {

@@ -72,7 +72,7 @@ ZooDriver_Register( DriverTable *table )
 	printf("\n ** Zoo plugin v%s **", PACKAGE_VERSION);
 
 	if (!quiet_startup) {
-		printf("\n * Happy Zoo message *\n");
+		printf("\n * Copyright 2005 Adam Lein *\n");
 	}
 
 	table->AddDriver(ZOO_DRIVER_NAME, ZooDriver_Init);

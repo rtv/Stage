@@ -136,7 +136,7 @@ extern "C" {
     void* arg_off; // argument to callback_off
   } stg_property_toggle_args_t;
     
-
+  
   struct _stg_model
   {
     stg_id_t id; // used as hash table key
@@ -158,7 +158,7 @@ extern "C" {
 
     // the number of children of each type is counted so we can
     // automatically generate names for them
-    int child_type_count[ STG_MODEL_COUNT ];
+    int child_type_count[256];
 
     int subs;     // the number of subscriptions to this model
 
@@ -169,6 +169,7 @@ extern "C" {
     
     // type-dependent functions for this model, implementing simple
     // polymorphism
+    stg_model_initializer_t initializer;
     func_startup_t f_startup;
     func_shutdown_t f_shutdown;
     func_update_t f_update;
@@ -182,6 +183,11 @@ extern "C" {
     
     /* END TODO */    
   };
+  
+  typedef struct {
+    const char* keyword;
+    stg_model_initializer_t initializer;
+  } stg_type_record_t;
 
   // internal functions
   
@@ -236,7 +242,7 @@ extern "C" {
 
     // the number of models of each type is counted so we can
     // automatically generate names for them
-    int child_type_count[ STG_MODEL_COUNT ];
+    int child_type_count[256];
     
     struct _stg_matrix* matrix;
 

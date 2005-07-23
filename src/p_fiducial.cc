@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_fiducial.cc,v 1.1 2005-07-15 03:41:37 rtv Exp $
+ * CVS: $Id: p_fiducial.cc,v 1.2 2005-07-23 07:20:39 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -33,8 +33,12 @@
 // FIDUCIAL INTERFACE
 //
 
+extern "C" { 
+int fiducial_init( stg_model_t* mod );
+}
+
 InterfaceFiducial::InterfaceFiducial(  player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section )
-  : InterfaceModel( id, driver, cf, section, STG_MODEL_FIDUCIAL )
+  : InterfaceModel( id, driver, cf, section, fiducial_init )
 {
   this->data_len = sizeof(player_fiducial_data_t);
   this->cmd_len = 0; // no commands

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.105 2005-07-22 21:02:01 rtv Exp $
+# $Id: Makefile.am,v 1.106 2005-07-23 07:20:38 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
@@ -73,11 +73,10 @@ libstageplugin_la_SOURCES = \
 	p_driver.cc \
 	p_driver.h \
 	stg_time.cc \
-	stg_time.h 
-
-
-#	zoo_driver.cc 
-#	zoo_driver.h 
+	stg_time.h \
+	typetable.c \
+	zoo_driver.cc \
+	zoo_driver.h 
 
 libstageplugin_la_LDFLAGS = -export-dynamic -version-info 1:0:0 
 libstageplugin_la_LIBADD = -L.libs -lstage

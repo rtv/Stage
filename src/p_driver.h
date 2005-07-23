@@ -34,36 +34,27 @@ class StgDriver : public Driver
   ~StgDriver(void);
   
   // Must implement the following methods.
-  int Setup();
-  int Shutdown();
-  
-  int Subscribe(player_device_id_t id);
-  int Unsubscribe(player_device_id_t id);
-  
-  /// Main function for device thread.
-  void Main();
-  
+  virtual int Setup();
+  virtual int Shutdown();
+  virtual int Subscribe(player_device_id_t id);
+  virtual int Unsubscribe(player_device_id_t id);
+    
   /// The server thread calls this method frequently. We use it to
   /// check for new commands and configs
   virtual void Update();
   
-  // override the Driver method to grab configs inside the server thread
-  //int PutConfig(player_device_id_t id, void *client, 
-  //		void* src, size_t len,
-  //		struct timeval* timestamp);
-  
-  /// all player devices share the same Stage world
+  /// all player devices share the same Stage world (for now)
   static stg_world_t* world;
   
   /// find the device record with this Player id
   Interface* LookupDevice( player_device_id_t id );
   
   stg_model_t* LocateModel( const char* basename, 
-			    stg_model_type_t mod_type );
+			    stg_model_initializer_t init );
   
  protected: 
   
-  /// an array of pointers to device_record_t structs, defined below
+  /// an array of pointers to Interface objects, defined below
   GPtrArray* devices;  
 };
 
@@ -110,8 +101,8 @@ class InterfaceModel : public Interface
 		  StgDriver* driver,
 		  ConfigFile* cf, 
 		  int section, 
-		  stg_model_type_t modtype );
-
+		  stg_model_initializer_t init );
+  
   virtual ~InterfaceModel( void ){ /* TODO: clean up*/ };
 };
 

@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.3 2005-07-23 02:58:02 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.4 2005-07-23 07:20:39 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -199,14 +199,14 @@ int player_driver_init(DriverTable* table)
 {
   //puts(" Stage driver plugin init");
   StgDriver_Register(table);
-  //ZooDriver_Register(table);
+  ZooDriver_Register(table);
   return(0);
 }
 
 // find a model to attach to a Player interface
-stg_model_t* model_match( stg_model_t* mod, stg_model_type_t tp, GPtrArray* devices )
+stg_model_t* model_match( stg_model_t* mod, stg_model_initializer_t init, GPtrArray* devices )
 {
-  if( mod->type == tp )
+  if( mod->initializer == init )
     return mod;
  
   // else try the children
@@ -218,7 +218,7 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_type_t tp, GPtrArray* devi
       // recurse
       match = 
 	model_match( (stg_model_t*)g_ptr_array_index( mod->children, i ), 
-		     tp, devices );      
+		     init, devices );      
       if( match )
 	{
 	  // if mod appears in devices already, it can not be used now
@@ -251,7 +251,7 @@ InterfaceModel::InterfaceModel(  player_device_id_t id,
 				 StgDriver* driver,
 				 ConfigFile* cf, 
 				 int section,
-				 stg_model_type_t modtype )
+				 stg_model_initializer_t init )
   : Interface( id, driver, cf, section )
 {
   //puts( "InterfaceModel constructor" );
@@ -268,7 +268,7 @@ InterfaceModel::InterfaceModel(  player_device_id_t id,
       return; // error
     }
   
-  this->mod = driver->LocateModel( model_name, modtype );
+  this->mod = driver->LocateModel( model_name, init );
   
   if( !this->mod )
     {
@@ -391,7 +391,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 }
 
 stg_model_t*  StgDriver::LocateModel( const char* basename,  
-				      stg_model_type_t mod_type )
+				      stg_model_initializer_t init )
 {  
   //PLAYER_TRACE1( "attempting to resolve Stage model \"%s\"", model_name );
   //printf( "attempting to resolve Stage model \"%s\"", model_name );
@@ -413,10 +413,10 @@ stg_model_t*  StgDriver::LocateModel( const char* basename,
   //if( device->id.code == PLAYER_MAP_CODE )
   //return base_model;
   
-  // now find the model for this player device
-  // find the first model in the tree that is the right type and
-  // has not been used before
-  return( model_match( base_model, mod_type, this->devices ) );
+  // now find the model for this player device find the first model in
+  // the tree that is the right type (i.e. has the right
+  // initialization function) and has not been used before
+  return( model_match( base_model, init, this->devices ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -513,51 +513,6 @@ int StgDriver::Shutdown()
   return(0);
 }
 
-
-void StgDriver::Main( void )
-{
-  assert( this->world );
-
-  //sleep( 20 );
-
-  // The main loop; interact with the device here
-  for(;;)
-    {
-      // get real time in msec since stg_timenow was first called
-      stg_msec_t timenow = stg_timenow();
-      
-      // time since the world was last updated
-      stg_msec_t elapsed =  timenow - world->wall_last_update;
-      
-      // if it's time for an update, update all the models and remember
-      // the time we did it
-      if( world->wall_interval < elapsed )
-	{
-	  if( ! world->paused )
-	    {
-	      update_request++;
-	      printf( "update requested (%d)\n", update_request );
-	      
-	      this->DataAvailable();
-	      
-	      // 	  stg_msec_t real_interval = timenow - world->wall_last_update;
-	      // 	  world->real_interval_measured = real_interval;      
-	      // 	  g_hash_table_foreach( world->models, model_update_cb, world );            
-	      // 	  world->wall_last_update = timenow;      
-	      // 	  world->sim_time += world->sim_interval;
-	    }
-	}
-      
-      // test if we are supposed to cancel
-      //pthread_testcancel();
-      
-      //if( stg_world_update( StgDriver::world, TRUE ) )
-      // exit( 0 );
-      
-      // todo - sleep out here only if we can afford the time
-      usleep( 10000 ); // 10ms
-    }
-}
 
 // Moved this declaration here (and changed its name) because 
 // when it's declared on the stack inside StgDriver::Update below, it 

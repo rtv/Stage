@@ -66,6 +66,8 @@ described on the manual page for each model type.
 */
 
 
+extern stg_type_record_t typetable[];
+
 // create a world containing a passel of Stage models based on the
 // worldfile
 
@@ -136,32 +138,34 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	    g_hash_table_lookup( world->models, &parent_section );
 	  
 	  // select model type based on the worldfile token
-	  stg_model_type_t type;
+	  //stg_model_type_t type;
 	  
-	  if( strcmp( typestr, "model" ) == 0 ) // basic model
-	    type = STG_MODEL_BASIC;
-	  else if( strcmp( typestr, "test" ) == 0 ) // specialized models
-	    type = STG_MODEL_TEST;
-	  else if( strcmp( typestr, "laser" ) == 0 )
-	    type = STG_MODEL_LASER;
-	  else if( strcmp( typestr, "gripper" ) == 0 )
-	    type = STG_MODEL_GRIPPER;
-	  else if( strcmp( typestr, "ranger" ) == 0 )
-	    type = STG_MODEL_RANGER;
-	  else if( strcmp( typestr, "position" ) == 0 )
-	    type = STG_MODEL_POSITION;
-	  else if( strcmp( typestr, "blobfinder" ) == 0 )
-	    type = STG_MODEL_BLOB;
-	  else if( strcmp( typestr, "fiducialfinder" ) == 0 )
-	    type = STG_MODEL_FIDUCIAL;
-	  else if( strcmp( typestr, "energy" ) == 0 )
-	    type = STG_MODEL_ENERGY;
-	  else 
+	  // lookup the key in the type table
+
+	  stg_type_record_t *rec = typetable; 
+	  int index=0;
+	  while( rec->keyword )
 	    {
-	      PRINT_ERR1( "unknown model type \"%s\". Model has not been created.",
-			  typestr ); 
-	      continue;
+	      if( strcmp( typestr, rec->keyword ) == 0 )
+		break;
+	      rec++;
+	      index++;
 	    }
+
+	  // if we didn't find the keyword, we're left with a NULL
+	  // initializer, which is fine: we'll just get a normal
+	  // model.
+
+	  if( rec->keyword == NULL ) // if we failed to find matching record
+	    {
+	      if( strcmp( typestr, "model" ) ) 		  
+		{
+		  PRINT_ERR1( "model type \"%s\" is not recognized. Check your worldfile.", 
+			      typestr );
+		  exit( -1 );
+		}
+	    }
+	  
 	  
 	  //PRINT_WARN3( "creating model token %s type %d instance %d", 
 	  ///       typestr, 
@@ -174,12 +178,12 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	  if( parent == NULL )
 	    snprintf( namebuf, STG_TOKEN_MAX, "%s:%d", 
 		      typestr, 
-		      world->child_type_count[type]++);
+		      world->child_type_count[index]++);
 	  else
 	    snprintf( namebuf, STG_TOKEN_MAX, "%s.%s:%d", 
 		      parent->token,
 		      typestr, 
-		      parent->child_type_count[type]++ );
+		      parent->child_type_count[index]++ );
 	  
 	  //PRINT_WARN1( "generated name %s", namebuf );
 	  
@@ -195,44 +199,7 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	  stg_model_t* mod = NULL;
 	  stg_model_t* parent_mod = stg_world_get_model( world, parent_section );
 	  
-	  switch( type )
-	    {
-	    case STG_MODEL_BASIC:
-	      mod = stg_model_create( world, parent_mod, section, STG_MODEL_BASIC, namestr );
-	      break;
-	      
-	    case STG_MODEL_LASER:
-	      mod = stg_laser_create( world,  parent_mod, section, namestr );
-	      break;
-
-	    case STG_MODEL_POSITION:
-	      mod = stg_position_create( world,  parent_mod, section, namestr );
-	      break;
-
-	    case STG_MODEL_FIDUCIAL:
-	      mod = stg_fiducial_create( world,  parent_mod, section, namestr );
-	      break;
-	      
-	    case STG_MODEL_BLOB:
-	      mod = stg_blobfinder_create( world, parent_mod, section, namestr );
-	      break;	      	      
-	    
-	    case STG_MODEL_RANGER:
-	      mod = stg_ranger_create( world,  parent_mod, section, namestr );
-	      break;
-	      
-	    case STG_MODEL_GRIPPER:
-	      mod = stg_gripper_create( world,parent_mod,section,namestr);
-	      break;
-	      
-	      //case STG_MODEL_ENERGY:
-	      //mod = stg_energy_create( world,  parent_mod, section, namestr );
-	      //break;
-
-	    default:
-	      PRINT_ERR1( "don't know how to configure type %d", type );
-	    }
-
+	  mod = stg_model_create( world, parent_mod, section, namestr, rec->initializer );
 	  assert( mod );
 	  
 	  // configure the model with properties from the world file
@@ -345,10 +312,10 @@ int stg_world_update( stg_world_t* world, int sleepflag )
   gettimeofday( &tv1, NULL );
 #endif
   
-  if( world->win )
-    {
-      gui_poll();      
-    }
+  if( world->win ) 
+    { 
+      gui_poll();       
+    } 
 
 #if 0// DEBUG
   struct timeval tv2;
@@ -418,6 +385,8 @@ stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid )
 void stg_world_add_model( stg_world_t* world, 
 			  stg_model_t* mod  )
 {
+  //printf( "world added model %s\n", mod->token );
+  
   g_hash_table_replace( world->models, &mod->id, mod );
   g_hash_table_replace( world->models_by_name, mod->token, mod );
 }

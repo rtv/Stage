@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.46 2005-07-15 03:41:37 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.47 2005-07-23 07:20:39 rtv Exp $
  */
 
 #include <math.h>
@@ -94,7 +94,7 @@ blobfinder
 
 
 
-void blobfinder_init( stg_model_t* mod );
+int blobfinder_init( stg_model_t* mod );
 int blobfinder_startup( stg_model_t* mod );
 int blobfinder_shutdown( stg_model_t* mod );
 int blobfinder_update( stg_model_t* mod );
@@ -105,13 +105,8 @@ int blobfinder_render_cfg( stg_model_t* mod, char* name, void* data, size_t len,
 int blobfinder_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 int blobfinder_unrender_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 
-stg_model_t* stg_blobfinder_create( stg_world_t* world, 
-				    stg_model_t* parent, 
-				    stg_id_t id, 
-				    char* token )
+int blobfinder_init( stg_model_t* mod )
 {
-  stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_BLOB, token );
-  
   // override the default methods
   mod->f_startup = blobfinder_startup;
   mod->f_shutdown = blobfinder_shutdown;
@@ -159,7 +154,7 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
 				  "blob data",
 				  TRUE );
 
-  return mod;
+  return 0; //ok
 }
 
 void blobfinder_load( stg_model_t* mod )

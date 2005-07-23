@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.36 $
+//  $Revision: 1.37 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -116,15 +116,9 @@ int position_update( stg_model_t* mod );
 int position_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 int position_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 
-stg_model_t* stg_position_create( stg_world_t* world, 
-				  stg_model_t* parent, 
-				  stg_id_t id, 
-				  char* token )
+int position_init( stg_model_t* mod )
 {
   PRINT_DEBUG( "created position model" );
-  
-  stg_model_t* mod = 
-    stg_model_create( world, parent, id, STG_MODEL_POSITION, token );
   
   // no power consumed until we're subscribed
   //mod->watts = 0.0; 
@@ -178,7 +172,7 @@ stg_model_t* stg_position_create( stg_world_t* world,
 				  FALSE );
 
   
-  return mod;
+  return 0;
 }
 
 int position_update( stg_model_t* mod )

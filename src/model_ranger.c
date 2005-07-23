@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.52 $
+//  $Revision: 1.53 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -161,13 +161,8 @@ int ranger_unrender_data( stg_model_t* mod, char* name,
 int ranger_render_cfg( stg_model_t* mod, char* name, 
 		       void* data, size_t len, void* userp );
 
-stg_model_t* stg_ranger_create( stg_world_t* world, 
-				stg_model_t* parent, 
-				stg_id_t id, 
-				char* token )
+int ranger_init( stg_model_t* mod )
 {
-  stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_RANGER, token );
-  
   // override the default methods
   mod->f_startup = ranger_startup;
   mod->f_shutdown = ranger_shutdown;
@@ -231,7 +226,7 @@ stg_model_t* stg_ranger_create( stg_world_t* world,
   
 
 
-  return mod;
+  return 0;
 }
 
 int ranger_startup( stg_model_t* mod )

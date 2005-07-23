@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -58,14 +58,8 @@ void gripper_load( stg_model_t* mod )
   stg_model_set_property( mod, "gripper_cfg", gconf, sizeof(stg_gripper_config_t));
 }
 
-stg_model_t* stg_gripper_create( stg_world_t* world, 
-			       stg_model_t* parent, 
-			       stg_id_t id, 
-			       char* token )
+int gripper_init( stg_model_t* mod )
 {
-  stg_model_t* mod = 
-    stg_model_create( world, parent, id, STG_MODEL_GRIPPER, token );
-  
   // we don't consume any power until subscribed
   //mod->watts = 0.0; 
   
@@ -130,7 +124,7 @@ stg_model_t* stg_gripper_create( stg_world_t* world,
 
   
 
-  return mod;
+  return 0;
 }
 
 // create three rectangles that are the gripper's body

@@ -471,11 +471,11 @@ const char* gui_model_describe(  stg_model_t* mod )
   stg_pose_t* pose = 
     stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
   
-  snprintf(txt, sizeof(txt), "%s \"%s\" (%d:%d) pose: [%.2f,%.2f,%.2f]",  
-	   stg_model_type_string(mod->type), 
+  snprintf(txt, sizeof(txt), "model \"%s\" pose: [%.2f,%.2f,%.2f]",  
+	   //stg_model_type_string(mod->type), 
 	   mod->token, 
-	   mod->world->id, 
-	   mod->id,  
+	   //mod->world->id, 
+	   //mod->id,  
 	   pose->x, pose->y, pose->a  );
   
   return txt;
