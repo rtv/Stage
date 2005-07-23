@@ -26,7 +26,7 @@
  */
 
 #define _GNU_SOURCE
-//#include <features.h>
+#include <features.h>
 
 #include "zoo_driver.h"
 
@@ -148,7 +148,7 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 		if (!modelname) continue;
 
 		/* add the mapping */
-		printf("MODELMAP %s --> %d\n", modelname, port);
+		printf("Zoo: MODELMAP %s --> %d\n", modelname, port);
 		portMap[modelname] = port;
 		modelList.push_back(modelname);
 	}
@@ -211,7 +211,7 @@ ZooDriver::Shutdown( void )
 void
 ZooDriver::Prepare( void )
 {
-	//referee->Startup();
+	referee->Startup();
 }
 
 void
@@ -474,6 +474,11 @@ ZooController *
 ZooSpecies::Run( int p )
 {
 	ZooController *zc = SelectController();
+	if (!zc) {
+		fprintf(stderr, "Zoo: No controllers available for species %s\n",
+			name);
+		return NULL;
+	}
 	zc->Run(p);
 	return zc;
 }
@@ -485,10 +490,14 @@ void
 ZooSpecies::RunAll( cmap_t &cMap )
 {
 	int r, p;
+	ZooController *zc;
 
 	for (r = 0; r < range_count; ++r)
-		for (p = min_port[r]; p <= max_port[r]; ++p)
-			cMap[p] = Run(p);
+		for (p = min_port[r]; p <= max_port[r]; ++p) {
+			zc = Run(p);
+			if (!zc) return;
+			cMap[p] = zc;
+		}
 }
 
 /**
