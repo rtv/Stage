@@ -508,8 +508,8 @@ void gui_window_menus_create( gui_window_t* win )
 
   // gtk+-2.4 code
   int sensi = FALSE;
-  gtk_object_set(G_OBJECT(gtk_action_group_get_action( group, "ExportFormat" )), "sensitive", sensi, NULL );
-  gtk_object_set(G_OBJECT(gtk_action_group_get_action( group, "ExportInterval" )), "sensitive", sensi, NULL);
+  g_object_set( gtk_action_group_get_action( group, "ExportFormat" ), "sensitive", sensi, NULL );
+  g_object_set( gtk_action_group_get_action( group, "ExportInterval" ), "sensitive", sensi, NULL);
 
   // accels
   GtkAccelGroup *accel_group = gtk_ui_manager_get_accel_group (ui_manager);

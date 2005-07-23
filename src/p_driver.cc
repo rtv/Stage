@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.2 2005-07-22 21:02:02 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.3 2005-07-23 02:58:02 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -154,6 +154,7 @@ extern PlayerTime* GlobalTime;
 extern int global_argc;
 extern char** global_argv;
 extern bool quiet_startup;
+extern bool quit;
 
 // init static vars
 stg_world_t* StgDriver::world = NULL;
@@ -583,9 +584,11 @@ void StgDriver::Update(void)
 	  )
 	  //&& update_request )
 	{
-	  stg_world_update( this->world, FALSE );
-	  printf( "handling update requests: %d -> 0\n", update_request );
-	  update_request = 0;
+	  if( stg_world_update( this->world, FALSE ) )
+	    quit = TRUE; // set Player's global quit flag
+	  
+	  //printf( "handling update requests: %d -> 0\n", update_request );
+	  //update_request = 0;
 	}
 
       if( interface && interface->cmd_len > 0 )

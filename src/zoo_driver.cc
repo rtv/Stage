@@ -26,7 +26,7 @@
  */
 
 #define _GNU_SOURCE
-#include <features.h>
+//#include <features.h>
 
 #include "zoo_driver.h"
 

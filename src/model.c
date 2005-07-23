@@ -338,12 +338,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
 {  
 
   stg_model_t* mod = calloc( sizeof(stg_model_t),1 );
-  
-  //if( _model_init )
-    // {
-      g_datalist_init( &mod->props );
-  //_model_init = FALSE;
-  // }
 
   int err = pthread_mutex_init( &mod->mutex, NULL );
   if( err )
@@ -351,6 +345,13 @@ stg_model_t* stg_model_create( stg_world_t* world,
       PRINT_ERR1( "thread initialization failed with code %d\n", err );
       exit(-1);
     }
+  
+  //if( _model_init )
+    // {
+  //    g_datalist_init( &mod->props );
+  //_model_init = FALSE;
+  // }
+
   
   mod->id = id;
 
