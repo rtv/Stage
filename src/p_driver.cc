@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.4 2005-07-23 07:20:39 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.5 2005-07-23 07:29:18 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -233,12 +233,14 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_initializer_t init, GPtrAr
 	      
 	      if( match == interface->mod )//&& ! tp == STG_MODEL_BASIC )
 		{
-		  printf( "[ALREADY USED]" );
-		  return NULL;
+		  //printf( "[ALREADY USED]" );
+		  //return NULL;
+		  match = NULL;
 		}
 	    }
 	  // if we found a match, we're done searching
-	  return match;
+	  //return match;
+	  if( match ) return match;
 	}
     }
 
