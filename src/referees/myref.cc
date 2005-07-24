@@ -41,23 +41,40 @@ private:
 MyRef::MyRef( ConfigFile *cf, int section, ZooDriver *_zoo )
 	: ZooReferee(cf, section, _zoo)
 {
-	printf("myref_message = %s\n",
-		cf->ReadString(section, "myref_message", ""));
+	/* store a pointer to the driver for later use, such as in loading or
+	 * killing controllers, or changing scores. */
 	zoo = _zoo;
 
+	/* print a message for demonstration purposes */
+	printf("myref_message = %s\n",
+		cf->ReadString(section, "myref_message", ""));
+
+	/* attach the pose_cb callback to the pose property.  The NULL is "user
+	 * data" that MyRef doesn't use.  Note that Stage automatically attaches
+	 * the callback to *every* model in the world; we don't need to do it for
+	 * each individual.  We have to case pose_cb because the parameter list
+	 * doens't exactly match that of a stg_property_callback_t. */
 	stg_world_add_property_callback(StgDriver::world, "pose",
 		(stg_property_callback_t)pose_cb, NULL);
 }
 
 /**
- * MyRef::pose_cb: The pose callback.  Just print the new value.
+ * MyRef::pose_cb: The pose callback.  Just print the new value.  Note that
+ * the formal parameter list doesn't exactly match stg_property_callback_t
+ * in that the user_data pointer is absent.  Doesn't matter, as long as the
+ * formal parameter list is a prefix (w.r.t. types) of that of
+ * stg_property_callback_t.
  */
 int
 MyRef::pose_cb( stg_model_t *mod, const char *prop,
                     double *data, size_t len )
 {
+	/* print out the name of the model that moved, and the new pose as [x, y,
+	 * theta] */
 	printf("Zoo: Model %s now has pose [%.2f, %.2f, %.3f]\n",
 		mod->token, data[0], data[1], data[2]);
+
+	/* continue marshalling callbacks. */
 	return 0;
 }
 
@@ -69,6 +86,7 @@ extern "C" {
 	void *
 	zooref_create( ConfigFile *cf, int section, ZooDriver *_zoo )
 	{
+		/* just pass the arguments along. */
 		return new MyRef(cf, section, _zoo);
 	}
 }
