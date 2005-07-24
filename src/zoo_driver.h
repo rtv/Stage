@@ -50,17 +50,21 @@ public:
 	stg_model_t *GetModel(const char *);
 	stg_model_t *GetModel(int);
 
-	int GetScore(const char *, const char *, void *, size_t *siz=NULL);
-	void SetScore(const char *, const char *, void *, size_t);
+	int GetScore(const char *, void *);
+	int GetScoreSize(const char *);
+	int SetScore(const char *, void *, size_t);
+	int ClearScore(const char *);
 
+#if 0
 	void PrintScore(const char *filename);
 	void SetScorePrintFunction(const char *, zooref_score_printer_t, void *);
+#endif
 private:
 	int species_count;
 	ZooSpecies **species;
 
-	cmap_t controllerMap;
-	std::map<const char *, int> portMap;
+	cmap_t controllerMap; // port --> ZooController
+	std::map<const char *, int> portMap; // stg_model_t.token --> port
 	std::vector<const char *> modelList;
 
 	void *zooref_handle; // for dynamically linked ref
@@ -83,9 +87,11 @@ public:
 	bool Hosts(int);
 	void print(void);
 
+#if 0
 	void SetScorePrintFunction(zooref_score_printer_t, void *);
 	void PrintScore(FILE *fp); /* Print the score for every member of this
 	                            * species. */
+#endif
 	const char *name;
 private:
 	int range_count;
@@ -93,8 +99,10 @@ private:
 	int *max_port;
 	std::vector<ZooController> controller;
 
+#if 0
 	zooref_score_printer_t score_printer;
 	void *score_printer_user_data;
+#endif
 };
 
 class ZooController
@@ -108,11 +116,15 @@ public:
 	inline int GetFrequency(void) { return frequency; }
 	inline const char *GetCommand(void) { return command; }
 
+#if 0
 	/* A controller can be a member of more than one species, and each
 	 * species may have its own way of keeping score, so each controller
 	 * should maintain a map from species names to scores */
 	std::map< const char *, void * > scoreMap;
 	std::map< const char *, size_t > scoreSizeMap;
+#endif
+	void *score_data;
+	int score_size;
 
 	static const char *path;
 private:

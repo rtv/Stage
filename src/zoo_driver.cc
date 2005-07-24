@@ -290,43 +290,101 @@ ZooDriver::GetModel( int k )
 	return GetModel(modelList[k]);
 }
 
+/**
+ * ZooDriver::GetScore: Get the score data for this model.  If no score data
+ * has been set yet (using ::SetScore), return 0.  The caller must provide
+ * enough space to store the data, which is in a format unknown to Zoo.
+ * @param model: a string for the name of the model (the "token" field of a
+ * stg_model_t struct).
+ * @param data: pointer to memory to copy the data to.
+ * @return the number of bytes copied, or -1 if the model is not found.
+ */
 int
-ZooDriver::GetScore( const char *model, const char *species,
-                     void *data, size_t *siz )
+ZooDriver::GetScore( const char *model, void *data )
 {
 	ZooController *zc = controllerMap[portMap[model]];
 	void *sdata;
 	size_t ssize;
 
-	if (!zc) return 0;
+	if (!zc) return -1;
 
+#if 0
 	sdata = zc->scoreMap[species];
 	if (!sdata) return 0;
 	ssize = zc->scoreSizeMap[species];
 
 	memcpy(data, sdata, ssize);
-	if (siz) *siz = ssize;
+#endif
+	if (!zc->score_data) return 0;
+	memcpy(data, zc->score_data, zc->score_size);
 
-	return 1;
+	return zc->score_size;
 }
 
-void
-ZooDriver::SetScore( const char *model, const char *species,
-                     void *score, size_t siz )
+/**
+ * ZooDriver::GetScoreSize: Return the size of the score data for this model.
+ * 0 could mean that no score data has been set yet.
+ * @param model: a string for the name of the model (the "token" field of a
+ * stg_model_t struct).
+ * @return the size of the score data, or -1 if the model is not found.
+ */
+int
+ZooDriver::GetScoreSize( const char *model )
+{
+	ZooController *zc = controllerMap[portMap[model]];
+	return zc->score_size;
+}
+
+/** 
+ * ZooDriver::SetScore: Set the score data for this model.  Reallocates
+ * storage, stored locally, each time the function is called.
+ * @param model: a string for the name of the model (the "token" field of a
+ * stg_model_t struct).
+ * @param score: a pointer to the data to be copied into the local score
+ * buffer.
+ * @param siz: the number of bytes to copy.
+ */
+int
+ZooDriver::SetScore( const char *model, void *score, size_t siz )
 {
 	ZooController *zc = controllerMap[portMap[model]];
 	void *data;
 
-	if (!zc) return;
+	if (!zc) return -1;
 
+#if 0
 	data = zc->scoreMap[species];
 	if (data) realloc(data, siz);
 	memcpy(data, score, siz);
 
 	zc->scoreMap[species] = data;
 	zc->scoreSizeMap[species] = siz;
+#endif
+	if (zc->score_data) zc->score_data = realloc(zc->score_data, siz);
+	else zc->score_data = malloc(siz);
+	memcpy(zc->score_data, score, siz);
+
+	return 1;
 }
 
+/**
+ * ZooDriver::ClearScore: Erase the score data for this model.  Frees any
+ * allocated memory.
+ * @param model: a string for the name of the model (the "token" field of a
+ * stg_model_t struct).
+ * @return -1 if the model is not found, 0 otherwise.
+ */
+int
+ZooDriver::ClearScore( const char *model )
+{
+	ZooController *zc = controllerMap[portMap[model]];
+	if (!zc) return -1;
+	if (zc->score_data) free(zc->score_data);
+	zc->score_size = 0;
+	return 0;
+}
+
+#if 0
 void
 ZooDriver::PrintScore( const char *filename )
 {
@@ -352,6 +410,7 @@ ZooDriver::SetScorePrintFunction( const char *species,
 	ZooSpecies *zs = GetSpeciesByName(species);
 	zs->SetScorePrintFunction(printer, user_data);
 }
+#endif
 
 ZooSpecies *
 ZooDriver::GetSpeciesByName( const char *name )
@@ -439,6 +498,7 @@ ZooSpecies::~ZooSpecies()
 	ZOO_DEBUGMSG("Zoo: Done cleaning up %s\n", name, 0);
 }
 
+#if 0
 void
 ZooSpecies::SetScorePrintFunction( zooref_score_printer_t printer,
 	void *user_data )
@@ -466,6 +526,7 @@ ZooSpecies::PrintScore( FILE *fp )
 	fprintf(fp, "<tr><td>%s</td><td>%s</td></tr>\n",
 		zc->GetCommand(), buf);
 }
+#endif
 
 /**
  * ZooSpecies::Run(p) -- run a controller on port p
