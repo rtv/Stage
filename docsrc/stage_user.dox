@@ -76,7 +76,7 @@ REPEAT_BRIEF           = YES
 # name of the entity): "The $name class" "The $name widget" "The $name file" 
 # "is" "provides" "specifies" "contains" "represents" "a" "an" "the"
 
-ABBREVIATE_BRIEF       = 
+#ABBREVIATE_BRIEF       = 
 
 # If the ALWAYS_DETAILED_SEC and REPEAT_BRIEF tags are both set to YES then 
 # Doxygen will generate a detailed section even if there is only a brief 
@@ -391,7 +391,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT = help.txt ../src ../src/stg_driver.cc
+INPUT = help.txt ../src 
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -401,7 +401,7 @@ INPUT = help.txt ../src ../src/stg_driver.cc
 # *.h++ *.idl *.odl *.cs *.php *.php3 *.inc
 
 # read the docs from each model file
-FILE_PATTERNS          = *.c
+FILE_PATTERNS          = *.c *.cc 
 
 #FILE_PATTERNS          = *.cc *.c *.h
 
