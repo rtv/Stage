@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.2 2005-07-22 21:02:02 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.3 2005-07-27 21:13:28 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -163,91 +163,108 @@ void InterfaceSimulation::Configure( void* client, void* buffer, size_t len )
 {
   //printf("got simulation request\n");
   
+  if( ! buffer )
+    {
+      PRINT_WARN( "configure request has NULL data" );
+      return;
+    }
+
+  if( len == 0 )
+    {
+      PRINT_WARN( "configure request has zero length" );
+      return;
+    }
+    
+  
   // switch on the config type (first byte)
   uint8_t* buf = (uint8_t*)buffer;
   switch( buf[0] )
-    {  
-      
+    {        
       // if Player has defined this config, implement it
 #ifdef PLAYER_SIMULATION_SET_POSE2D
     case PLAYER_SIMULATION_SET_POSE2D:
-      {
-	player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
-	
-	stg_pose_t pose;
-	pose.x = (int32_t)ntohl(req->x) / 1000.0;
-	pose.y = (int32_t)ntohl(req->y) / 1000.0;
-	pose.a = DTOR( ntohl(req->a) );
-	
-        /*
-	printf( "Stage: received request to move object \"%s\" to (%.2f,%.2f,%.2f)\n",
-		req->name, pose.x, pose.y, pose.a );
-                */
-	
-	// look up the named model
-	
-	stg_model_t* mod = 
-	  stg_world_model_name_lookup( StgDriver::world, req->name );
+      if( len != sizeof(player_simulation_pose2d_req_t) )
+	PRINT_WARN2( "POSE2D request is wrong size (%d/%d bytes)\n",
+		     len,sizeof(player_simulation_pose2d_req_t)); 
+      else
+	{
+	  player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
+	  
+	  stg_pose_t pose;
+	  pose.x = (int32_t)ntohl(req->x) / 1000.0;
+	  pose.y = (int32_t)ntohl(req->y) / 1000.0;
+	  pose.a = DTOR( ntohl(req->a) );
+	  
+	  printf( "Stage: received request to move object \"%s\" to (%.2f,%.2f,%.2f)\n",
+		  req->name, pose.x, pose.y, pose.a );
+	  
+	  // look up the named model
+	  
+	  stg_model_t* mod = 
+	    stg_world_model_name_lookup( StgDriver::world, req->name );
  	
-	if( mod )
-	  {
-	    // move it 
-	    // printf( "moving model \"%s\"", req->name );	    
-	    //stg_model_set_pose( mod, &pose );  
-	    stg_model_set_property( mod, "pose", &pose, sizeof(pose));
-	    this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
-	  }
-	else
-	  {
-	    PRINT_WARN1( "simulation model \"%s\" not found", req->name );
-	    this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL );
-	  }
-      }      
+	  if( mod )
+	    {
+	      // move it 
+	      printf( "moving model \"%s\"\n", req->name );	    
+	      stg_model_set_property( mod, "pose", &pose, sizeof(pose));
+	      this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
+	    }
+	  else
+	    {
+	      PRINT_WARN1( "SETPOSE2D request: simulation model \"%s\" not found", req->name );
+	      this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL );
+	    }
+	}         
       break;
 #endif
           // if Player has defined this config, implement it
 #ifdef PLAYER_SIMULATION_GET_POSE2D
     case PLAYER_SIMULATION_GET_POSE2D:
-      {
-	player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
-	
-	//printf( "Stage: received request for position of object \"%s\"\n", req->name );
-	
-	// look up the named model	
-	stg_model_t* mod = 
-	  stg_world_model_name_lookup( StgDriver::world, req->name );
- 	
-	if( mod )
-	  {
-	    stg_pose_t* pose = (stg_pose_t*)
-	      stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
-	    assert(pose);
-	    
-            /*
-	    printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
-		    pose.x, pose.y, pose.a );
-                    */
-	    
-	    player_simulation_pose2d_req_t reply;
-	    memcpy( &reply, req, sizeof(reply));
-	    reply.x = htonl((int32_t)(pose->x*1000.0));
-	    reply.y = htonl((int32_t)(pose->y*1000.0));
-	    reply.a = htonl((int32_t)RTOD(pose->a));
-	    
-            /*
-	    printf( "Stage: returning location (%d %d %d)\n",
-		    reply.x, reply.y, reply.a );
-                    */
+      if( len != sizeof(player_simulation_pose2d_req_t) )
+	PRINT_WARN2( "GET_POSE2D request is wrong size (%d/%d bytes)\n",
+		     len,sizeof(player_simulation_pose2d_req_t)); 
+      else
+	{
+	  player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
 
-	    this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, 
+	  printf( "Stage: received request for position of object \"%s\"\n", req->name );
+	  
+	  // look up the named model	
+	  stg_model_t* mod = 
+	    stg_world_model_name_lookup( StgDriver::world, req->name );
+	  
+	  if( mod )
+	    {
+	      stg_pose_t* pose = (stg_pose_t*)
+		stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
+	      assert(pose);
+	      
+	      
+	      printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
+		      pose->x, pose->y, pose->a );
+	      
+	      
+	      player_simulation_pose2d_req_t reply;
+	      memcpy( &reply, req, sizeof(reply));
+	      reply.x = htonl((int32_t)(pose->x*1000.0));
+	      reply.y = htonl((int32_t)(pose->y*1000.0));
+	      reply.a = htonl((int32_t)RTOD(pose->a));
+	      
+	      /*
+		printf( "Stage: returning location (%d %d %d)\n",
+		reply.x, reply.y, reply.a );
+	      */
+	      
+	      this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, 
 				      &reply, sizeof(reply),  NULL );
-	  }
-	else
-	  {
-	    PRINT_WARN1( "Stage: simulation model \"%s\" not found", req->name );
-	    this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL );
-	  }
-      }      
+	    }
+	  else
+	    {
+	      PRINT_WARN1( "Stage: GETPOSE2D request: simulation model \"%s\" not found", req->name );
+	      this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL );
+	    }
+	}      
       break;
 #endif
       

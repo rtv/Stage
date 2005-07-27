@@ -24,6 +24,8 @@ static stg_rtk_app_t *app = NULL;
 stg_rtk_fig_t* fig_debug_rays = NULL;
 stg_rtk_fig_t* fig_debug_geom = NULL;
 stg_rtk_fig_t* fig_debug_matrix = NULL;
+stg_rtk_fig_t* fig_trails = NULL;
+
 int _render_matrix_deltas = FALSE;
 
 /** @defgroup window GUI Window
@@ -447,6 +449,15 @@ int gui_world_update( stg_world_t* world )
   
   if( win->show_geom )
     gui_world_geom( world );
+
+  static int trail_interval = 5;
+  
+  if( fig_trails )
+    if( trail_interval++ > 4 )
+      {
+	gui_world_trails( world );
+	trail_interval = 0;
+      }
   
   stg_rtk_canvas_render( win->canvas );      
 
@@ -462,6 +473,48 @@ void gui_world_destroy( stg_world_t* world )
   else
     PRINT_WARN1( "can't find a window for world %d", world->id );
 }
+
+
+// draw trails behing moving models
+void gui_model_trail( stg_model_t* mod )
+{ 
+  assert( fig_trails );
+
+  if( mod->parent ) // only trail top-level objects
+    return; 
+
+  stg_color_t* col = 
+    stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
+  
+  stg_rtk_fig_color_rgb32( fig_trails, *col );
+  
+  stg_geom_t* geom = 
+    stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));
+  
+  // draw the bounding box
+  stg_pose_t bbox_pose;
+  memcpy( &bbox_pose, &geom->pose, sizeof(bbox_pose));
+  stg_model_local_to_global( mod, &bbox_pose );
+  stg_rtk_fig_rectangle( fig_trails, 
+			 bbox_pose.x, bbox_pose.y, bbox_pose.a, 
+			 geom->size.x,
+			 geom->size.y, 0 );  
+}
+
+
+/// wrapper 
+void gui_model_trail_cb( gpointer key, gpointer value, gpointer user )
+{
+  gui_model_trail( (stg_model_t*)value );
+}
+
+/// render a trail cell for all models
+void gui_world_trails( stg_world_t* world )
+{
+  assert( fig_trails );
+  g_hash_table_foreach( world->models, gui_model_trail_cb, NULL ); 
+}
+
 
 
 const char* gui_model_describe(  stg_model_t* mod )
@@ -679,6 +732,7 @@ void gui_model_move( stg_model_t* mod )
     stg_rtk_fig_origin( stg_model_get_fig(mod,"top"), 
 			pose->x, pose->y, pose->a );   
 }
+
 
 ///  render a model's geometry if geom viewing is enabled
 void gui_model_render_geom( stg_model_t* mod )

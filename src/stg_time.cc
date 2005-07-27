@@ -22,7 +22,7 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.cc,v 1.8 2005-07-23 02:58:02 rtv Exp $
+// CVS: $Id: stg_time.cc,v 1.9 2005-07-27 21:13:28 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -57,13 +57,13 @@ int StgTime::GetTime(struct timeval* time)
   PRINT_DEBUG( "get time" );
   
   assert( this->driver );
-
-   stg_world_t* world = driver->world;
-   
-   time->tv_sec  = (int)floor(world->sim_time / 1e3);
-   time->tv_usec = (int)rint(fmod(world->sim_time,1e3) * 1e3);
-   
-   PRINT_DEBUG2( "time now %ld sec %ld usec", time->tv_sec, time->tv_usec );
-   
-   return 0;
+  
+  stg_world_t* world = driver->world;
+  
+  time->tv_sec  = (int)floor(world->sim_time / 1e3);
+  time->tv_usec = (int)rint(fmod(world->sim_time,1e3) * 1e3);
+  
+  PRINT_DEBUG2( "time now %ld sec %ld usec", time->tv_sec, time->tv_usec );
+  
+  return 0;
 }

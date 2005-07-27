@@ -902,7 +902,10 @@ void stg_property_callback_cb( gpointer data, gpointer user )
  
   if( ((stg_property_callback_t)cba->callback)( prop->mod, prop->name, prop->data, prop->len, cba->arg ) )
     // if the callback returned non-zero, remove it
-    stg_model_remove_property_callback( prop->mod, prop->name, cba->arg );
+    {
+      //printf( "REMOVING %s callback %p CALLBACK\n", prop->name, cba->callback);
+      stg_model_remove_property_callback( prop->mod, prop->name, cba->callback );
+    }
 }
 
 stg_property_t* stg_model_set_property_ex( stg_model_t* mod, 
@@ -1316,6 +1319,11 @@ int stg_model_update_pose( stg_model_t* mod )
       // something to move.	
       //stg_kg_t mass = *stg_model_get_mass( mod );
       //stg_model_energy_consume( mod, STG_ENERGY_COST_MOTIONKG * mass ); 
+
+      /* trails */
+      //if( fig_trails )
+      //gui_model_trail( mod );
+
     }      
   
   return 0; // ok

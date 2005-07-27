@@ -7,6 +7,7 @@
 extern stg_rtk_fig_t* fig_debug_geom;
 extern stg_rtk_fig_t* fig_debug_rays;
 extern stg_rtk_fig_t* fig_debug_matrix;
+extern stg_rtk_fig_t* fig_trails;
 
 extern int _render_matrix_deltas;
 extern int _stg_quit;
@@ -24,6 +25,7 @@ void gui_action_exportframe( GtkAction* action, gpointer userdata );
 void gui_action_exportsequence( GtkToggleAction* action, gpointer userdata );
 void gui_action_pause( GtkToggleAction* action, gpointer userdata );
 void gui_action_polygons( GtkToggleAction* action, gpointer userdata ); 
+void gui_action_trails( GtkToggleAction* action, gpointer userdata ); 
 void gui_action_disable_polygons( GtkToggleAction* action, gpointer userdata ); 
 void gui_action_grid( GtkToggleAction* action, gpointer userdata ); 
 void gui_action_raytrace( GtkToggleAction* action, gpointer userdata ); 
@@ -62,6 +64,7 @@ static GtkActionEntry entries[] = {
 static GtkToggleActionEntry toggle_entries[] = {
   { "Polygons", NULL, "Fill _polygons", "F", "Toggle drawing of filled or outlined polygons", G_CALLBACK(gui_action_polygons), 1 },
   { "DisablePolygons", NULL, "Show polygons", "D", NULL, G_CALLBACK(gui_action_disable_polygons), 1 },
+  { "Trails", NULL, "Show trails", "T", NULL, G_CALLBACK(gui_action_trails), 0 },
   { "Grid", NULL, "_Grid", "G", "Toggle drawing of 1-metre grid", G_CALLBACK(gui_action_grid), 1 },
   { "Pause", NULL, "_Pause", "P", "Pause the simulation clock", G_CALLBACK(gui_action_pause), 0 },
   { "DebugRays", NULL, "_Raytrace", "<alt>R", "Draw sensor rays", G_CALLBACK(gui_action_raytrace), 0 },
@@ -117,6 +120,7 @@ static const char *ui_description =
 "      <menuitem action='DisablePolygons'/>"
 "      <menuitem action='Polygons'/>"
 "      <menuitem action='Grid'/>"
+"      <menuitem action='Trails'/>"
 "      <separator/>"
 "        <menu action='Debug'>"
 "          <menuitem action='DebugRays'/>"
@@ -435,6 +439,25 @@ void gui_action_exportframe( GtkAction* action, void* userdata )
 { 
   stg_world_t* world = (stg_world_t*)userdata;
   export_window( world->win );
+}
+
+
+void gui_action_trails( GtkToggleAction* action, void* userdata )
+{
+  PRINT_DEBUG( "Trails menu item" );
+  stg_world_t* world = (stg_world_t*)userdata;
+  
+  if( gtk_toggle_action_get_active( action ) )
+    {
+
+      fig_trails = stg_rtk_fig_create( world->win->canvas,
+				       world->win->bg, STG_LAYER_BODY-1 );      
+    }
+  else
+    {
+      stg_rtk_fig_destroy( fig_trails );
+      fig_trails = NULL;
+    }
 }
 
 

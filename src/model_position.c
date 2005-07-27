@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.37 $
+//  $Revision: 1.38 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -494,7 +494,7 @@ void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
 int position_unrender_data( stg_model_t* mod, char* name, 
 			    void* data, size_t len, void* userp )
 {
-   stg_model_fig_clear( mod, "position_data_fig" );
+  stg_model_fig_clear( mod, "position_data_fig" );
   return 1;
 }
 
