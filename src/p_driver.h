@@ -42,7 +42,13 @@ class StgDriver : public Driver
   /// The server thread calls this method frequently. We use it to
   /// check for new commands and configs
   virtual void Update();
-  
+
+  /// override PutConfig to handle config requests as soon as they
+  /// occur
+  virtual int PutConfig(player_device_id_t id, void* cli, 
+			void* src, size_t len,
+			struct timeval* timestamp);
+
   /// all player devices share the same Stage world (for now)
   static stg_world_t* world;
   

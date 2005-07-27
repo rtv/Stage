@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.6 2005-07-27 21:13:28 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.7 2005-07-27 21:29:23 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -524,22 +524,41 @@ int StgDriver::Shutdown()
 //        - BPG
 uint8_t stage_buffer[ PLAYER_MAX_MESSAGE_SIZE ];
 
+int StgDriver::PutConfig(player_device_id_t id, void* cli, 
+			 void* src, size_t len,
+			 struct timeval* timestamp)
+{
+  // inherit normal behaviour, possibly failing
+  if( Driver::PutConfig( id, cli, src,len, timestamp ) < 0 )
+    return -1;
+  
+  // now handle the config right here.
+  void* cfg_client = NULL;
+  int cfg_len = 
+    this->GetConfig( id, &cfg_client, 
+		     stage_buffer, PLAYER_MAX_MESSAGE_SIZE, NULL );
+  
+  if( cfg_len > 0 )
+    {
+      // find the right interface to handle this config
+      Interface* in = this->LookupDevice( id );
+      if( in )
+	in->Configure( cfg_client, stage_buffer, cfg_len );
+      else
+	PRINT_WARN3( "can't find interface for device %d.%d.%d",
+		     id.port, id.code, id.index );
+    }
+  return 0; //ok
+}                 
+
+
 void StgDriver::Update(void)
 {  
   for( int i=0; i<(int)this->devices->len; i++ )
     {
       Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
       
-      //printf( "checking command for %d:%d:%d\n",
-      //      device->id.port, 
-      //      device->id.code, 
-      //      device->id.index );
-      
-      
-      if( interface 
-	  && interface->id.code == PLAYER_SIMULATION_CODE 
-	  )
-	  //&& update_request )
+      if( interface && interface->id.code == PLAYER_SIMULATION_CODE )
 	{
 	  if( stg_world_update( this->world, FALSE ) )
 	    quit = TRUE; // set Player's global quit flag
@@ -552,28 +571,10 @@ void StgDriver::Update(void)
 	    this->GetCommand( interface->id, stage_buffer, 
 			      interface->cmd_len, NULL);
 	  
-	  //printf( "command for %d:%d:%d is %d bytes\n",
-	  //  interface->id.port, 
-	  //  interface->id.code, 
-	  //  interface->id.index, 
-	  //  (int)cmd_len );
-	  
 	  if( cmd_len > 0 )
 	    interface->Command( stage_buffer, cmd_len );
 	}
       
-      // check for configs
-      if( interface && interface->req_qlen > 0 )
-	{
-	  void* client = NULL;
-	  int cfg_len = 
-	    this->GetConfig( interface->id, &client, 
-			     stage_buffer, PLAYER_MAX_MESSAGE_SIZE, NULL );
-	  
-	  if( cfg_len > 0 )
-	    interface->Configure( client, stage_buffer, cfg_len );
-	}                 
-
       interface->Publish();
     }
   
