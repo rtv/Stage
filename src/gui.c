@@ -425,7 +425,7 @@ int gui_world_update( stg_world_t* world )
     }  
 
   char clock[256];
-  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%2lu\t(sim:%3d real:%3d ratio:%2.2f) %s",
+  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%2lu\t(sim:%3d real:%3d ratio:%2.2f) subs: %d  %s",
 	    world->sim_time / (24*3600000), // days
 	    world->sim_time / 3600000, // hours
 	    (world->sim_time % 3600000) / 60000, // minutes
@@ -434,6 +434,7 @@ int gui_world_update( stg_world_t* world )
 	    (int)world->sim_interval,
 	    (int)world->real_interval_measured,
 	    (double)world->sim_interval / (double)world->real_interval_measured,
+	    world->subs,
 	    world->paused ? "--PAUSED--" : "" );
   
   //gtk_label_set_text( win->timelabel, clock );
@@ -486,7 +487,10 @@ void gui_model_trail( stg_model_t* mod )
   stg_color_t* col = 
     stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
   
-  stg_rtk_fig_color_rgb32( fig_trails, *col );
+  stg_rtk_fig_t* spot = stg_rtk_fig_create( mod->world->win->canvas,
+					    fig_trails, STG_LAYER_BODY-1 );      
+  
+  stg_rtk_fig_color_rgb32( spot, *col );
   
   stg_geom_t* geom = 
     stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));
@@ -495,7 +499,7 @@ void gui_model_trail( stg_model_t* mod )
   stg_pose_t bbox_pose;
   memcpy( &bbox_pose, &geom->pose, sizeof(bbox_pose));
   stg_model_local_to_global( mod, &bbox_pose );
-  stg_rtk_fig_rectangle( fig_trails, 
+  stg_rtk_fig_rectangle( spot, 
 			 bbox_pose.x, bbox_pose.y, bbox_pose.a, 
 			 geom->size.x,
 			 geom->size.y, 0 );  

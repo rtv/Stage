@@ -455,7 +455,7 @@ void gui_action_trails( GtkToggleAction* action, void* userdata )
     }
   else
     {
-      stg_rtk_fig_destroy( fig_trails );
+      stg_rtk_fig_and_descendents_destroy( fig_trails );
       fig_trails = NULL;
     }
 }

@@ -705,7 +705,8 @@ void model_update_cb( gpointer key, gpointer value, gpointer user )
 void stg_model_subscribe( stg_model_t* mod )
 {
   mod->subs++;
-  
+  mod->world->subs++;
+
   //printf( "subscribe %d\n", mod->subs );
   
   // if this is the first sub, call startup
@@ -716,7 +717,8 @@ void stg_model_subscribe( stg_model_t* mod )
 void stg_model_unsubscribe( stg_model_t* mod )
 {
   mod->subs--;
-  
+  mod->world->subs--;
+
   //printf( "unsubscribe %d\n", mod->subs );
 
   // if this is the last sub, call shutdown

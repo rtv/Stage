@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.147 2005-07-23 07:20:39 rtv Exp $
+ * CVS: $Id: stage.h,v 1.148 2005-07-27 22:38:54 rtv Exp $
  */
 
 
@@ -450,6 +450,7 @@ extern "C" {
   /** opaque data structure implementing a world
    */
   typedef struct _stg_world stg_world_t;
+  
   
   /** Create a new world, to be configured and populated by user code
    */

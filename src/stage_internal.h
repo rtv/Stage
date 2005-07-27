@@ -268,6 +268,8 @@ extern "C" {
     gboolean destroy;
 
     gui_window_t* win; // the gui window associated with this world
+
+    int subs; // the total number of subscriptions to all models
     
     ///  a hook for the user to store things in the world
     void* user;
