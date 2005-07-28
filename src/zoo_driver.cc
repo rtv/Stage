@@ -26,7 +26,6 @@
  */
 
 #define _GNU_SOURCE
-#include <features.h>
 
 #include "zoo_driver.h"
 
@@ -303,12 +302,13 @@ int
 ZooDriver::GetScore( const char *model, void *data )
 {
 	ZooController *zc = controllerMap[portMap[model]];
-	void *sdata;
-	size_t ssize;
 
 	if (!zc) return -1;
 
 #if 0
+	void *sdata;
+	size_t ssize;
+
 	sdata = zc->scoreMap[species];
 	if (!sdata) return 0;
 	ssize = zc->scoreSizeMap[species];
@@ -348,11 +348,11 @@ int
 ZooDriver::SetScore( const char *model, void *score, size_t siz )
 {
 	ZooController *zc = controllerMap[portMap[model]];
-	void *data;
 
 	if (!zc) return -1;
 
 #if 0
+	void *data;
 	data = zc->scoreMap[species];
 	if (data) realloc(data, siz);
 	memcpy(data, score, siz);
