@@ -225,7 +225,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   win->canvas->userdata = (void*)win; 
 
   char txt[256];
-  snprintf( txt, 256, "Stage v%s", VERSION );
+  snprintf( txt, 256, " Stage v%s", VERSION );
   gtk_statusbar_push( win->canvas->status_bar, 0, txt ); 
 
   //stg_rtk_canvas_size( win->canvas, xdim, ydim );
@@ -428,7 +428,7 @@ int gui_world_update( stg_world_t* world )
 
   char clock[256];
 #ifdef DEBUG
-  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%2lu (sim:%3d real:%3d ratio:%2.2f) subs: %d  %s",
+  snprintf( clock, 255, "Time: %lu:%lu:%02lu:%02lu.%03lu (sim:%3d real:%3d ratio:%2.2f)\tsubs: %d  %s",
 	    world->sim_time / (24*3600000), // days
 	    world->sim_time / 3600000, // hours
 	    (world->sim_time % 3600000) / 60000, // minutes
@@ -441,7 +441,7 @@ int gui_world_update( stg_world_t* world )
 	    world->paused ? "--PAUSED--" : "" );
 #else
 
-  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%3lu\t(sim/real:%2.2f) subs: %d  %s",
+  snprintf( clock, 255, "Time: %lu:%lu:%02lu:%02lu.%03lu\t(sim/real:%2.2f)\tsubs: %d  %s",
 	    world->sim_time / (24*3600000), // days
 	    world->sim_time / 3600000, // hours
 	    (world->sim_time % 3600000) / 60000, // minutes
@@ -451,6 +451,20 @@ int gui_world_update( stg_world_t* world )
 	    world->subs,
 	    world->paused ? "--PAUSED--" : "" );
 #endif
+  
+
+  // smooth the performance avg a little
+/*   static double fraction_avg = 1.0; */
+/*   fraction_avg = fraction_avg * 0.9 + */
+/*     (double)world->wall_interval / (double)world->real_interval_measured * 0.1; */
+/*   gtk_progress_bar_set_fraction( win->canvas->perf_bar, fraction_avg ); */
+  
+/*   static double rt_avg = 1.0; */
+/*   rt_avg = rt_avg * 0.9 + */
+/*     (double)world->real_interval_measured / */
+/*     (double)world->sim_interval * 0.1; */
+/*   gtk_progress_bar_set_fraction( win->canvas->rt_bar,  */
+/* 				 rt_avg ); */
   
   if( win->show_geom )
     gui_world_geom( world );

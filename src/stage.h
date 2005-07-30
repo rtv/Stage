@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.149 2005-07-30 00:04:41 rtv Exp $
+ * CVS: $Id: stage.h,v 1.150 2005-07-30 06:21:10 rtv Exp $
  */
 
 
@@ -990,25 +990,19 @@ extern "C" {
     stg_meters_t x,y,a;
     stg_position_control_mode_t mode;
   } stg_position_cmd_t;
-
-  /** "position_odom" property */
+  
+  /** "position_data" property */
   typedef struct
   {
     stg_pose_t pose;
-    stg_pose_t error;
-  } stg_position_pose_estimate_t;
+    stg_pose_t pose_error;
+    stg_pose_t origin;
+    stg_velocity_t velocity;
+    stg_bool_t stall;
+  } stg_position_data_t;
   
   /** "position_stall" property */
   typedef int stg_position_stall_t;
-
-  /** "position_data" property */
-/*   typedef struct */
-/*   { */
-/*     stg_pose_t pose; // current position estimate */
-/*     stg_pose_t pose_error; // error estimate of the pose estimate */
-/*     stg_velocity_t velocity; // current velocity estimate */
-/*     stg_bool_t stall; // motors stalled flag */
-/*   } stg_position_data_t; */
 
   /// create a new position model
   stg_model_t* stg_position_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );

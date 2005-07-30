@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.107 2005-07-27 21:13:28 rtv Exp $
+# $Id: Makefile.am,v 1.108 2005-07-30 06:21:10 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
@@ -15,8 +15,9 @@ AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 # build the stage library and the stage plugin
 lib_LTLIBRARIES = libstage.la libstageplugin.la
 
-# build a stand-alone test binary using the stage library
-bin_PROGRAMS = stest
+# build stest, a stand-alone test binary using the stage library, 
+# and ptest, a player client for testing the player plugin
+bin_PROGRAMS = stest ptest
 
 
 # The stage library contains everything you need to build a robot
@@ -85,3 +86,9 @@ libstageplugin_la_LIBADD = -L.libs -lstage
 stest_DEPENDENCIES = libstage.la
 stest_SOURCES = stest.cc
 stest_LDADD = libstage.la
+
+# build a stand-alone test program using libstage
+#ptest_DEPENDENCIES = 
+ptest_SOURCES = ptest.c
+ptest_CFLAGS = @PLAYERC_CFLAGS@
+ptest_LDADD = @PLAYERC_LIBS@

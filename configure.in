@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.72 2005-07-15 02:11:48 rtv Exp $
+dnl $Id: configure.in,v 1.73 2005-07-30 06:21:10 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -76,6 +76,12 @@ dnl we need Player 1.6 or higher
 PKG_CHECK_MODULES( PLAYER, player >= 1.6,
 AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
 AC_MSG_WARN([Player was not found. ])
+)
+
+dnl we need libplayerc
+PKG_CHECK_MODULES( PLAYERC, libplayerc >= 1.6,
+AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
+AC_MSG_WARN([libplayercr was not found. ])
 )
 
 dnl where's the X11-style color database?

@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.4 2005-07-30 00:04:41 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.5 2005-07-30 06:21:10 rtv Exp $
  */
 
 
@@ -100,17 +100,18 @@ void InterfacePosition::Publish( void )
   player_position_data_t ppd;
   memset( &ppd, 0, sizeof(ppd) );
   
-  stg_position_pose_estimate_t* pest = (stg_position_pose_estimate_t*)
-    stg_model_get_property_fixed( this->mod, "position_odom",sizeof(stg_position_pose_estimate_t ));
-  //assert(pest);
+  stg_position_data_t* data = (stg_position_data_t*)
+    stg_model_get_property_fixed( this->mod, "position_data",
+				  sizeof(stg_position_data_t ));
+  assert(data);
   
-  if( ! pest )
-    return;
+  //printf( "stage position data: %.2f,%.2f,%.2f\n",
+  //  data->pose.x, data->pose.y, data->pose.a );
 
   // pack the data into player format
-  ppd.xpos = ntohl((int32_t)(1000.0 * pest->pose.x));
-  ppd.ypos = ntohl((int32_t)(1000.0 * pest->pose.y));
-  ppd.yaw = ntohl((int32_t)(RTOD(pest->pose.a)));
+  ppd.xpos = ntohl((int32_t)(1000.0 * data->pose.x));
+  ppd.ypos = ntohl((int32_t)(1000.0 * data->pose.y));
+  ppd.yaw = ntohl((int32_t)(RTOD(data->pose.a)));
   
   // speeds
   stg_velocity_t* vel = (stg_velocity_t*)

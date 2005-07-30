@@ -21,7 +21,7 @@
 /*
  * Desc: Stk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.17 2005-07-30 00:04:41 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.18 2005-07-30 06:21:10 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -123,12 +123,13 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
   // scrolling doesn't work yet, but the widgets are in place - need
   // to change the canvas behaviour quite considerably. May as well
   // wait until a move to a canvas library like gnomecanvas or similar.
-  GtkWidget* scrolled_win = gtk_scrolled_window_new ( NULL, NULL );
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),
-				  GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+  //GtkWidget* scrolled_win = gtk_scrolled_window_new ( NULL, NULL );
+  //gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),
+  //			  GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
   
-  gtk_widget_show( scrolled_win );
+  //gtk_widget_show( scrolled_win );
 
+ 
   GtkHBox* hbox = gtk_hbox_new( FALSE, 3 );
   
   // Create gtk drawing area
@@ -140,20 +141,39 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
 
   canvas->clock_label = GTK_LABEL(gtk_label_new( "clock" ));
 
-  gtk_scrolled_window_add_with_viewport( scrolled_win, canvas->canvas );
+  //gtk_scrolled_window_add_with_viewport( scrolled_win, canvas->canvas );
   gtk_widget_show( canvas->canvas );
+
+  
+  canvas->perf_bar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
+  gtk_progress_bar_set_text( canvas->perf_bar, "speed" );
+
+  canvas->rt_bar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
+  gtk_progress_bar_set_text( canvas->rt_bar, "realtime" );
+
+/*   GtkVBox* vbox = gtk_vbox_new( FALSE, 0 ); */
+/*   gtk_box_pack_start(GTK_BOX(vbox),  */
+/* 		   GTK_WIDGET(canvas->perf_bar), FALSE, FALSE,0); */
+/*   gtk_box_pack_start(GTK_BOX(vbox),  */
+/* 		   GTK_WIDGET(canvas->rt_bar), FALSE, FALSE,0); */
 
 
   // Put it all together
   gtk_container_add(GTK_CONTAINER(canvas->frame), canvas->layout);
 
-  gtk_box_pack_start(GTK_BOX(hbox), canvas->clock_label, FALSE, FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(hbox), 
-		   GTK_WIDGET(canvas->status_bar), TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(hbox), canvas->clock_label, FALSE, FALSE, 5);
 
+/*   gtk_box_pack_start(GTK_BOX(hbox),  */
+/* 		   GTK_WIDGET(vbox), FALSE, FALSE, 5); */
+
+  gtk_box_pack_start(GTK_BOX(hbox), 
+		   GTK_WIDGET(canvas->status_bar), TRUE, TRUE, 5);
+
+ 
   // we'll add these backwards so we can stick the menu in later
   gtk_box_pack_end(GTK_BOX(canvas->layout), hbox, FALSE, TRUE, 0);
-  gtk_box_pack_end(GTK_BOX(canvas->layout), scrolled_win, TRUE, TRUE, 0);
+  //gtk_box_pack_end(GTK_BOX(canvas->layout), scrolled_win, TRUE, TRUE, 0);
+  gtk_box_pack_end(GTK_BOX(canvas->layout),canvas->canvas, TRUE, TRUE, 0);
 
   canvas->bg_pixmap = NULL;
   canvas->fg_pixmap = NULL;
