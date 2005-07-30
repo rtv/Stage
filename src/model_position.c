@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.41 $
+//  $Revision: 1.42 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -41,15 +41,20 @@ position
 (
   drive "diff"
   odom [0 0 0]
+  odom_error [0.03 0.03 0.05]
+  gps_mode 1
 )
 @endverbatim
 
 @par Details
 - drive "diff" or "omni"
   - select differential-steer mode (like a Pioneer) or omnidirectional mode.
+- gps_mode bool
+- if non-zero the position device reports its true global position with perfect accuracy. If zero, a simple odometry model is used. Odometry so position data drifts from the ground truth over time. 
 - odom [x y theta]
-  - set the initial odometry value for this device. Tip: if you set this the same as the pose, the odometry will give you the true absolute pose of the position device. 
-
+  - set the initial odometry value for this device.
+- odom_error [x y theta]
+  - maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2.
 */
 
 const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
@@ -57,9 +62,11 @@ const double STG_POSITION_WATTS = 10.0; // base cost of position device
 
 // simple odometry error model parameters. the error is selected at
 // random in the interval -MAX/2 to +MAX/2 at startup
-const double STG_POSITION_INTEGRATION_ERROR_MAX_X = 0.04;
-const double STG_POSITION_INTEGRATION_ERROR_MAX_Y = 0.04;
-const double STG_POSITION_INTEGRATION_ERROR_MAX_A = 0.06;
+const double STG_POSITION_INTEGRATION_ERROR_MAX_X = 0.03;
+const double STG_POSITION_INTEGRATION_ERROR_MAX_Y = 0.03;
+const double STG_POSITION_INTEGRATION_ERROR_MAX_A = 0.05;
+
+const int STG_DEFAULT_GPS_MODE = TRUE;
 
 int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
@@ -123,6 +130,8 @@ int position_init( stg_model_t* mod )
   data.integration_error.a =  
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
     STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
+
+  data.gps_mode = STG_DEFAULT_GPS_MODE;
 
   stg_model_set_property( mod, "position_data", &data, sizeof(data));
   
@@ -193,6 +202,11 @@ void position_load( stg_model_t* mod )
       data->integration_error.x = wf_read_tuple_length(mod->id, "odom_error", 0, data->integration_error.x );
       data->integration_error.y = wf_read_tuple_length(mod->id, "odom_error", 1, data->integration_error.y );
       data->integration_error.a = wf_read_tuple_angle(mod->id, "odom_error", 2, data->integration_error.a );
+    }
+
+  if( wf_property_exists( mod->id, "gps_mode" ) )
+    {
+      data->gps_mode = wf_read_int(mod->id, "gps_mode", data->gps_mode );
     }
 
   // set the starting pose as my initial odom position
@@ -387,17 +401,25 @@ int position_update( stg_model_t* mod )
   // now  inherit the normal update - this does the actual moving
   _model_update( mod );
   
-  double dt = mod->world->sim_interval/1e3;
-
-  data->pose.a = NORMALIZE( data->pose.a + (vel->a * dt) * (1.0 +data->integration_error.a) );
-  
-  double cosa = cos(data->pose.a);
-  double sina = sin(data->pose.a);
-  double dx = (vel->x * dt) * (1.0 + data->integration_error.x );
-  double dy = (vel->y * dt) * (1.0 + data->integration_error.y );
-
-  data->pose.x += dx * cosa + dy * sina; 
-  data->pose.y -= dy * cosa - dx * sina;
+  if( data->gps_mode )
+    {
+      stg_model_get_global_pose( mod, &data->pose );
+      memset( &data->origin, 0, sizeof(data->origin));      
+    }
+  else // integrate our velocities to get an 'odometry' position estimate.
+    {
+      double dt = mod->world->sim_interval/1e3;
+      
+      data->pose.a = NORMALIZE( data->pose.a + (vel->a * dt) * (1.0 +data->integration_error.a) );
+      
+      double cosa = cos(data->pose.a);
+      double sina = sin(data->pose.a);
+      double dx = (vel->x * dt) * (1.0 + data->integration_error.x );
+      double dy = (vel->y * dt) * (1.0 + data->integration_error.y );
+      
+      data->pose.x += dx * cosa + dy * sina; 
+      data->pose.y -= dy * cosa - dx * sina;
+    }
   
   // we've poked the position data - must refresh 
   stg_model_property_refresh( mod, "position_data" );

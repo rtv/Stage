@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.151 2005-07-30 07:06:07 rtv Exp $
+ * CVS: $Id: stage.h,v 1.152 2005-07-30 07:28:37 rtv Exp $
  */
 
 
@@ -1000,6 +1000,7 @@ extern "C" {
     stg_velocity_t velocity;
     stg_velocity_t integration_error; // for simple odometry error model
     stg_bool_t stall;
+    stg_bool_t gps_mode;
   } stg_position_data_t;
   
   /** "position_stall" property */
