@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_sonar.cc,v 1.2 2005-07-23 07:20:39 rtv Exp $
+ * CVS: $Id: p_sonar.cc,v 1.3 2005-07-30 00:04:41 rtv Exp $
  */
 
 
@@ -124,25 +124,31 @@ void InterfaceSonar::Configure( void* client, void* src, size_t len )
       }
       break;
       
-//     case PLAYER_SONAR_POWER_REQ:
+      /* DON'T SUPPORT SONAR POWER REQUEST: IT'S A STRANGE
+	 PIONEER-SPECIFIC THING THAT DOESN'T BELONG HERE */
+    // case PLAYER_SONAR_POWER_REQ:
 //       /*
-// 	 * 1 = enable sonars
-// 	 * 0 = disable sonar
-// 	 */
-// 	if( len != sizeof(player_sonar_power_config_t))
-// 	  {
-// 	    PRINT_WARN2( "stg_sonar: arg to sonar state change "
-// 			  "request wrong size (%d/%d bytes); ignoring",
-// 			  (int)len,(int)sizeof(player_sonar_power_config_t) );
-	    
-// 	    if(PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL ))
-// 	      DRIVER_ERROR("failed to PutReply");
-// 	  }
-	
-// 	this->power_on = ((player_sonar_power_config_t*)src)->value;
-	
-// 	if(PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL ))
-// 	  DRIVER_ERROR("failed to PutReply");
+//        * 1 = enable sonars
+//        * 0 = disable sonar
+//        */
+//       if( len != sizeof(player_sonar_power_config_t))
+// 	{
+// 	  PRINT_WARN2( "stg_sonar: arg to sonar state change "
+// 		       "request wrong size (%d/%d bytes); ignoring",
+// 		       (int)len,(int)sizeof(player_sonar_power_config_t) );
+	  
+// 	  if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL ))
+// 	    DRIVER_ERROR("failed to PutReply");
+// 	}
+      
+//       //int power_save =  ! ((player_sonar_power_config_t*)src)->value;
+//       //stg_model_set_property( this->mod, "power_save", &power_save, sizeof(power_save));
+      
+//       PRINT_WARN1( "Stage is ignoring a sonar power request (received formodel %s sonar power save: %d\n", 
+// 	      this->mod->token, this->mod->power_save );
+
+//       if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL )) 
+// 	DRIVER_ERROR("failed to PutReply");
 	
 // 	break;
 	

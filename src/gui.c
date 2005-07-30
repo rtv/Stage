@@ -217,6 +217,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   gui_window_t* win = calloc( sizeof(gui_window_t), 1 );
 
   win->canvas = stg_rtk_canvas_create( app );
+  gtk_window_set_default_size( win->canvas->frame, xdim, ydim ); 
   
   win->world = world;
   
@@ -227,7 +228,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   snprintf( txt, 256, "Stage v%s", VERSION );
   gtk_statusbar_push( win->canvas->status_bar, 0, txt ); 
 
-  stg_rtk_canvas_size( win->canvas, xdim, ydim );
+  //stg_rtk_canvas_size( win->canvas, xdim, ydim );
   
   GString* titlestr = g_string_new( "Stage: " );
   g_string_append_printf( titlestr, "%s", world->token );
@@ -256,6 +257,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   win->poses = stg_rtk_fig_create( win->canvas, NULL, 0 );
 
+  
   // start in the center, fully zoomed out
   stg_rtk_canvas_scale( win->canvas, 1.1*width/xdim, 1.1*width/xdim );
   //stg_rtk_canvas_origin( win->canvas, width/2.0, height/2.0 );
@@ -425,7 +427,8 @@ int gui_world_update( stg_world_t* world )
     }  
 
   char clock[256];
-  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%2lu\t(sim:%3d real:%3d ratio:%2.2f) subs: %d  %s",
+#ifdef DEBUG
+  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%2lu (sim:%3d real:%3d ratio:%2.2f) subs: %d  %s",
 	    world->sim_time / (24*3600000), // days
 	    world->sim_time / 3600000, // hours
 	    (world->sim_time % 3600000) / 60000, // minutes
@@ -436,17 +439,18 @@ int gui_world_update( stg_world_t* world )
 	    (double)world->sim_interval / (double)world->real_interval_measured,
 	    world->subs,
 	    world->paused ? "--PAUSED--" : "" );
-  
-  //gtk_label_set_text( win->timelabel, clock );
-  
-  if( win->selection_active )
-    gui_model_display_pose( win->selection_active, "Selection:" );
-  else      
-    {	  
-      guint cid = gtk_statusbar_get_context_id( win->canvas->status_bar, "on_mouse" );
-      gtk_statusbar_pop( win->canvas->status_bar, cid ); 
-      gtk_statusbar_push( win->canvas->status_bar, cid, clock ); 
-    }
+#else
+
+  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%3lu\t(sim/real:%2.2f) subs: %d  %s",
+	    world->sim_time / (24*3600000), // days
+	    world->sim_time / 3600000, // hours
+	    (world->sim_time % 3600000) / 60000, // minutes
+	    (world->sim_time % 60000) / 1000, // seconds
+	    world->sim_time % 1000, // milliseconds
+	    (double)world->sim_interval / (double)world->real_interval_measured,
+	    world->subs,
+	    world->paused ? "--PAUSED--" : "" );
+#endif
   
   if( win->show_geom )
     gui_world_geom( world );
@@ -460,6 +464,11 @@ int gui_world_update( stg_world_t* world )
 	trail_interval = 0;
       }
   
+  if( win->selection_active )
+    gui_model_display_pose( win->selection_active, "Selection:" );
+  
+  gtk_label_set_text( win->canvas->clock_label, clock );
+
   stg_rtk_canvas_render( win->canvas );      
 
   return 0;

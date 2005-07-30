@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.10 2005-07-14 23:37:24 rtv Exp $
+// CVS: $Id: stest.c,v 1.11 2005-07-30 00:04:41 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -46,10 +46,6 @@ int main( int argc, char* argv[] )
   stg_model_t* laser = stg_world_model_name_lookup( world, lasername );
   stg_model_t* sonar = stg_world_model_name_lookup( world, sonarname );
 
-  // allocate enough memory for a chunk of laser data
-  //size_t maxlen =  sizeof(stg_laser_sample_t) * MAX_LASER_SAMPLES;
-  //stg_laser_sample_t* laserdata = malloc( maxlen );
-  
   // subscribe to the laser - starts it collecting data
   stg_model_subscribe( laser );
   stg_model_subscribe( position);
@@ -57,18 +53,16 @@ int main( int argc, char* argv[] )
 
   stg_model_print( laser );
 
-  
-  //  sleep(2);
-
   puts( "starting clock" );
   // start the clock
   stg_world_start( world );
   puts( "done" );
 
-  //sleep(2);
 
   double newspeed = 0.0;
   double newturnrate = 0.0;
+
+  stg_world_set_interval_real( world, 0 );
 
   while( (stg_world_update( world,0 )==0) )
     {
@@ -149,7 +143,6 @@ int main( int argc, char* argv[] )
 	  if(!randcount)
 	    {
 	      /* make random int tween -20 and 20 */
-	      //randint = (1+(int)(40.0*rand()/(RAND_MAX+1.0))) - 20;
 	      randint = rand() % 41 - 20;
 	      
 	      newturnrate = DTOR(randint);
@@ -159,13 +152,12 @@ int main( int argc, char* argv[] )
 	}
       
       stg_position_cmd_t cmd;
-      cmd.mode = STG_POSITION_CONTROL_VELOCITY;
       cmd.x = newspeed;
       cmd.y = 0;
       cmd.a = newturnrate;
 
-      //stg_model_set_command( position, &cmd, sizeof(cmd) );
       stg_model_set_property( position, "position_cmd", &cmd, sizeof(cmd));
+
     }
   
   stg_world_destroy( world );

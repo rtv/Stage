@@ -59,7 +59,7 @@ extern "C" {
     int frame_format;
 
     struct _stg_model* selection_active;
-   
+    
   } gui_window_t;
 
   void gui_startup( int* argc, char** argv[] ); 

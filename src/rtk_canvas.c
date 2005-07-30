@@ -21,7 +21,7 @@
 /*
  * Desc: Stk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.16 2005-07-14 23:37:23 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.17 2005-07-30 00:04:41 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -71,6 +71,15 @@ enum {EVENT_PRESS, EVENT_MOTION, EVENT_RELEASE};
 #define DY(y) (canvas->sizey / 2 - ((y) - canvas->oy) / canvas->sy)
 
 
+gboolean    stest                  (GtkWidget *widget,
+				   GdkEventConfigure *event,
+				   gpointer user_data)
+{
+  printf( "EVENT\n" );
+  return FALSE;
+} 
+
+
 // Create a canvas
 stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
 {
@@ -110,52 +119,42 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
   // Create a top-level window
   canvas->frame = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   canvas->layout = gtk_vbox_new(FALSE, 0);
+  
+  // scrolling doesn't work yet, but the widgets are in place - need
+  // to change the canvas behaviour quite considerably. May as well
+  // wait until a move to a canvas library like gnomecanvas or similar.
+  GtkWidget* scrolled_win = gtk_scrolled_window_new ( NULL, NULL );
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),
+				  GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+  
+  gtk_widget_show( scrolled_win );
 
-  //GtkAdjustment* hadj =  gtk_adjustment_new( 0, 0, 100, 1, 0, 10 );
-  //GtkAdjustment* vadj =  gtk_adjustment_new( 0, 0, 100, 1, 0, 10 );
-  
-  //GtkWidget* scrolled_win = gtk_scrolled_window_new ( hadj, vadj );
-  //GtkWidget* scrolled_win = gtk_scrolled_window_new ( NULL, NULL );
-  //gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),
-  //			  GTK_POLICY_ALWAYS,
-  //			  GTK_POLICY_ALWAYS);
-  
-  //gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW(scrolled_win),
-  //			       GTK_SHADOW_IN);
-  
+  GtkHBox* hbox = gtk_hbox_new( FALSE, 3 );
   
   // Create gtk drawing area
   canvas->canvas = gtk_drawing_area_new();
-  gtk_drawing_area_size(GTK_DRAWING_AREA(canvas->canvas), 100, 100);
-  
+  //gtk_widget_set_size_request( canvas->canvas, 1000,1000 );
+
   canvas->status_bar = GTK_STATUSBAR(gtk_statusbar_new());
-  gtk_statusbar_set_has_resize_grip( canvas->status_bar, FALSE );
+  gtk_statusbar_set_has_resize_grip( canvas->status_bar, TRUE );
+
+  canvas->clock_label = GTK_LABEL(gtk_label_new( "clock" ));
+
+  gtk_scrolled_window_add_with_viewport( scrolled_win, canvas->canvas );
+  gtk_widget_show( canvas->canvas );
+
 
   // Put it all together
   gtk_container_add(GTK_CONTAINER(canvas->frame), canvas->layout);
-  gtk_box_pack_end(GTK_BOX(canvas->layout), 
-		   GTK_WIDGET(canvas->status_bar), FALSE, TRUE, 0);
 
-  gtk_box_pack_end(GTK_BOX(canvas->layout), canvas->canvas, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(hbox), canvas->clock_label, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(hbox), 
+		   GTK_WIDGET(canvas->status_bar), TRUE, TRUE, 0);
 
+  // we'll add these backwards so we can stick the menu in later
+  gtk_box_pack_end(GTK_BOX(canvas->layout), hbox, FALSE, TRUE, 0);
+  gtk_box_pack_end(GTK_BOX(canvas->layout), scrolled_win, TRUE, TRUE, 0);
 
-
-  //gtk_scrolled_window_add_with_viewport( scrolled_win, canvas->canvas );
-  
-
-
-  //gtk_scrolled_window_get_hadjustment(scrolled_win);
-  
-
-
-  //gtk_signal_connect (GTK_OBJECT(hadj),
-  //	      "value_changed",
-  //	      GTK_SIGNAL_FUNC(h_scrollbar_cb), canvas  );
-  
-  //gtk_signal_connect (GTK_OBJECT(vadj),
-  //	      "value_changed",
-  //	      GTK_SIGNAL_FUNC(v_scrollbar_cb), canvas );
-  
   canvas->bg_pixmap = NULL;
   canvas->fg_pixmap = NULL;
   canvas->gc = NULL;
@@ -173,22 +172,22 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
   canvas->movie_context = NULL;
 
   // Connect gtk signal handlers
-  gtk_signal_connect(GTK_OBJECT(canvas->frame), "destroy",
-                     GTK_SIGNAL_FUNC(stg_rtk_on_destroy), canvas);
-  gtk_signal_connect(GTK_OBJECT(canvas->canvas), "configure_event", 
-                     GTK_SIGNAL_FUNC(stg_rtk_on_configure), canvas);
-  gtk_signal_connect(GTK_OBJECT(canvas->canvas), "expose_event", 
-                     GTK_SIGNAL_FUNC(stg_rtk_on_expose), canvas);
-  gtk_signal_connect(GTK_OBJECT(canvas->canvas), "button_press_event", 
-                     GTK_SIGNAL_FUNC(stg_rtk_on_press), canvas);
-  gtk_signal_connect(GTK_OBJECT(canvas->canvas), "motion_notify_event", 
-                     GTK_SIGNAL_FUNC(stg_rtk_on_motion), canvas);
-  gtk_signal_connect(GTK_OBJECT(canvas->canvas), "button_release_event", 
-                     GTK_SIGNAL_FUNC(stg_rtk_on_release), canvas);
+  g_signal_connect(GTK_OBJECT(canvas->frame), "destroy",
+		   GTK_SIGNAL_FUNC(stg_rtk_on_destroy), canvas);
+  g_signal_connect(GTK_OBJECT(canvas->canvas), "configure_event", 
+		   GTK_SIGNAL_FUNC(stg_rtk_on_configure), canvas);
+  g_signal_connect(GTK_OBJECT(canvas->canvas), "expose_event", 
+		   GTK_SIGNAL_FUNC(stg_rtk_on_expose), canvas);
+  g_signal_connect(GTK_OBJECT(canvas->canvas), "button_press_event", 
+		   GTK_SIGNAL_FUNC(stg_rtk_on_press), canvas);
+  g_signal_connect(GTK_OBJECT(canvas->canvas), "motion_notify_event", 
+		   GTK_SIGNAL_FUNC(stg_rtk_on_motion), canvas);
+  g_signal_connect(GTK_OBJECT(canvas->canvas), "button_release_event", 
+		   GTK_SIGNAL_FUNC(stg_rtk_on_release), canvas);
 
   // this seems not to receive the arrow keys...
-  gtk_signal_connect_after(GTK_OBJECT(canvas->frame), "key-press-event", 
-			   GTK_SIGNAL_FUNC(stg_rtk_on_key_press), canvas);
+  g_signal_connect_after(GTK_OBJECT(canvas->frame), "key-press-event", 
+			 GTK_SIGNAL_FUNC(stg_rtk_on_key_press), canvas);
   
   // Set the event mask
   gtk_widget_set_events(canvas->canvas,
@@ -200,6 +199,24 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
 
   // rtv - support for motion hints would be handy - todo?
   //GDK_POINTER_MOTION_HINT_MASK);
+
+  /* canvas->gcanvas = gnome_canvas_new_aa(); */
+/*   gnome_canvas_set_pixels_per_unit( canvas->gcanvas, 100.0 ); */
+/*   gnome_canvas_set_center_scroll_region( canvas->gcanvas, TRUE ); */
+/*   gnome_canvas_set_scroll_region ( canvas->gcanvas, 0,0, 10,10); */
+
+  /* gtk_box_pack_end(GTK_BOX(canvas->layout), canvas->gcanvas, TRUE, TRUE, 0); */
+
+ /* white background */
+/*   gnome_canvas_item_new(gnome_canvas_root(canvas->gcanvas), */
+/*                         gnome_canvas_rect_get_type(), */
+/*                         "x1",1.0, */
+/*                         "y1",1.0, */
+/*                         "x2",100.0, */
+/*                         "y2",100.0, */
+/*                         "fill_color", "white", */
+/*                         NULL); */
+
 
   // show all layers by default
   for( l=0; l<STK_CANVAS_LAYERS; l++ )
@@ -849,8 +866,12 @@ void stg_rtk_on_configure(GtkWidget *widget, GdkEventConfigure *event, stg_rtk_c
 {
   GdkColor color;
   
+  //printf( "event width %d height %d\n", event->width, event->height );
+
   canvas->sizex = event->width;
   canvas->sizey = event->height;
+
+  //printf( "canvas width %d height %d\n", canvas->sizex, canvas->sizey );
 
   if (canvas->gc == NULL)
     canvas->gc = gdk_gc_new(canvas->canvas->window);

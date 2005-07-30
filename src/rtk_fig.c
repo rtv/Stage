@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.14 2005-07-22 21:02:02 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.15 2005-07-30 00:04:41 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -37,6 +37,8 @@
 #include <math.h>
 #include "rtk.h"
 #include "rtkprivate.h"
+
+//#include <libgnomecanvas/libgnomecanvas.h>
 
 // Draw the selection
 void stg_rtk_fig_render_selection(stg_rtk_fig_t *fig);
@@ -864,6 +866,34 @@ void stg_rtk_fig_polygon(stg_rtk_fig_t *fig, double ox, double oy, double oa,
 
   stg_rtk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, point_count, npoints);
   free(npoints);
+  
+/*   // experimental */
+/*   GnomeCanvasPoints* gp = gnome_canvas_points_new( point_count ); */
+  
+/*   for(i=0; i<point_count; i++ ) */
+/*     { */
+/*       gp->coords[i*2] = points[i][0]; */
+/*       gp->coords[i*2+1] = points[i][1]; */
+/*     } */
+  
+/* /\*   GnomeCanvasItem* item =  *\/ */
+/* /\*     gnome_canvas_item_new( gnome_canvas_root(fig->canvas->gcanvas),  *\/ */
+/* /\* 			   gnome_canvas_polygon_get_type(), *\/ */
+/* /\* 			   "points", gp, *\/ */
+/* /\* 			   NULL ); *\/ */
+  
+/*   int col = GNOME_CANVAS_COLOR(255,0,0); */
+
+/*   GnomeCanvasItem* item2 =  */
+/*     gnome_canvas_item_new( gnome_canvas_root(fig->canvas->gcanvas),  */
+/* 			   gnome_canvas_rect_get_type(), */
+/* 			   "x1", ox, */
+/* 			   "y1", oy, */
+/* 			   "x2", 10.0, */
+/* 			   "y2", 10.0, */
+/* 			   "fill_color", "green", */
+/* 			   NULL ); */
+  
   return;
 }
 

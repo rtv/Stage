@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.3 2005-07-23 07:20:39 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.4 2005-07-30 00:04:41 rtv Exp $
  */
 
 
@@ -59,24 +59,32 @@ void InterfacePosition::Command( void* src, size_t len )
       // convert from Player to Stage format
       player_position_cmd_t* pcmd = (player_position_cmd_t*)src;
       
-      // only velocity control mode works yet
-      stg_position_cmd_t cmd; 
-      cmd.x = ((double)((int32_t)ntohl(pcmd->xspeed))) / 1000.0;
-      cmd.y = ((double)((int32_t)ntohl(pcmd->yspeed))) / 1000.0;
-      cmd.a = DTOR((double)((int32_t)ntohl(pcmd->yawspeed)));
-      cmd.mode = STG_POSITION_CONTROL_VELOCITY;
-      
-      // TODO
-      // only set the command if it's different from the old one
-      // (saves aquiring a mutex lock from the sim thread)
-            
-      //if( memcmp( &cmd, buf, sizeof(cmd) ))
-	{	  
-	  //static int g=0;
-	  //printf( "setting command %d\n", g++ );
-	  //stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
-	  stg_model_set_property( this->mod, "position_cmd", &cmd, sizeof(cmd));
-	}
+      stg_position_cmd_t scmd; 
+      memset( &scmd, 0, sizeof(scmd));
+
+      switch( pcmd->type )
+	{
+	case 0: // velocity mode	  
+	  scmd.x = ((double)((int32_t)ntohl(pcmd->xspeed))) / 1000.0;
+	  scmd.y = ((double)((int32_t)ntohl(pcmd->yspeed))) / 1000.0;
+	  scmd.a = DTOR((double)((int32_t)ntohl(pcmd->yawspeed)));
+	  scmd.mode = STG_POSITION_CONTROL_VELOCITY;
+	  break;
+
+	case 1: // position mode
+	  scmd.x = ((double)((int32_t)ntohl(pcmd->xpos))) / 1000.0;
+	  scmd.y = ((double)((int32_t)ntohl(pcmd->ypos))) / 1000.0;
+	  scmd.a = DTOR((double)((int32_t)ntohl(pcmd->yaw)));
+	  scmd.mode = STG_POSITION_CONTROL_POSITION;
+	  break;
+
+	default:
+	  PRINT_WARN1( "unrecognized player position control type %d\n", pcmd->type );
+	  break;
+	}	
+
+      stg_model_set_property( this->mod, "position_cmd", &scmd, sizeof(scmd));
+
     }
   else
     PRINT_ERR2( "wrong size position command packet (%d/%d bytes)",
@@ -89,39 +97,39 @@ void InterfacePosition::Publish( void )
 {
   //puts( "publishing position data" ); 
   
-  //Interface* device = (Interface*)userp;
+  player_position_data_t ppd;
+  memset( &ppd, 0, sizeof(ppd) );
   
-  stg_position_data_t* stgdata = (stg_position_data_t*)
-    stg_model_get_property_fixed( this->mod, "position_data", 
-				  sizeof(stg_position_data_t ));
+  stg_position_pose_estimate_t* pest = (stg_position_pose_estimate_t*)
+    stg_model_get_property_fixed( this->mod, "position_odom",sizeof(stg_position_pose_estimate_t ));
+  //assert(pest);
   
-  //if( len == sizeof(stg_position_data_t) )      
-  //  {      
-      //stg_position_data_t* stgdata = (stg_position_data_t*)data;
-                  
-      //PLAYER_MSG3( "get data data %.2f %.2f %.2f", stgdatax, stgdatay, stgdataa );
-      player_position_data_t position_data;
-      memset( &position_data, 0, sizeof(position_data) );
+  if( ! pest )
+    return;
 
-      // pack the data into player format
-      position_data.xpos = ntohl((int32_t)(1000.0 * stgdata->pose.x));
-      position_data.ypos = ntohl((int32_t)(1000.0 * stgdata->pose.y));
-      position_data.yaw = ntohl((int32_t)(RTOD(stgdata->pose.a)));
-      
-      // speeds
-      position_data.xspeed= ntohl((int32_t)(1000.0 * stgdata->velocity.x)); // mm/sec
-      position_data.yspeed = ntohl((int32_t)(1000.0 * stgdata->velocity.y));// mm/sec
-      position_data.yawspeed = ntohl((int32_t)(RTOD(stgdata->velocity.a))); // deg/sec
-      
-      // etc
-      position_data.stall = stgdata->stall;// ? 1 : 0;
-      
-      // publish this data
-      this->driver->PutData( this->id, &position_data, sizeof(position_data), NULL);      
-      //}
-      //else
-      //PRINT_ERR2( "wrong size position data (%d/%d bytes)",
-      //	(int)len, (int)sizeof(player_position_data_t) );
+  // pack the data into player format
+  ppd.xpos = ntohl((int32_t)(1000.0 * pest->pose.x));
+  ppd.ypos = ntohl((int32_t)(1000.0 * pest->pose.y));
+  ppd.yaw = ntohl((int32_t)(RTOD(pest->pose.a)));
+  
+  // speeds
+  stg_velocity_t* vel = (stg_velocity_t*)
+    stg_model_get_property_fixed( this->mod, "velocity",sizeof(stg_velocity_t));
+  assert(vel);
+  
+  ppd.xspeed= ntohl((int32_t)(1000.0 * vel->x)); // mm/sec
+  ppd.yspeed = ntohl((int32_t)(1000.0 * vel->y));// mm/sec
+  ppd.yawspeed = ntohl((int32_t)(RTOD(vel->a))); // deg/sec
+  
+  stg_position_stall_t* stall= (stg_position_stall_t*)
+    stg_model_get_property_fixed( this->mod, "position_stall",sizeof(stg_position_stall_t));
+  assert(stall);
+  
+  // etc
+  ppd.stall = *stall;
+  
+  // publish this data
+  this->driver->PutData( this->id, &ppd, sizeof(ppd), NULL);      
 }
 
 void InterfacePosition::Configure( void* client, void* buffer, size_t len  )
@@ -200,6 +208,20 @@ void InterfacePosition::Configure( void* client, void* buffer, size_t len  )
 
 	PRINT_WARN1( "Stage ignores motor power state (%d)",
 		     motors_on );
+	this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
+      }
+      break;
+
+    case PLAYER_POSITION_POSITION_MODE_REQ:
+      {
+	player_position_position_mode_req_t* req = 
+	  (player_position_position_mode_req_t*)buffer;
+	
+	stg_position_control_mode_t mode = (stg_position_control_mode_t)req->state;
+	stg_model_set_property( mod, "position_control", &mode, sizeof(mode));
+	
+	PRINT_WARN2( "Put model %s into %s control mode", this->mod->token, mod ? "POSITION" : "VELOCITY" );
+      
 	this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
       }
       break;

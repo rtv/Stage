@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.148 2005-07-27 22:38:54 rtv Exp $
+ * CVS: $Id: stage.h,v 1.149 2005-07-30 00:04:41 rtv Exp $
  */
 
 
@@ -73,22 +73,6 @@ extern "C" {
   /** @addtogroup stg_model
       @{ */
 
-/*   typedef enum */
-/*     { */
-/*       STG_MODEL_SIMULATION=0, */
-/*       STG_MODEL_BASIC, */
-/*       STG_MODEL_POSITION, */
-/*       STG_MODEL_LASER, */
-/*       STG_MODEL_FIDUCIAL, */
-/*       STG_MODEL_RANGER, */
-/*       STG_MODEL_BLOB, */
-/*       STG_MODEL_ENERGY, */
-/*       STG_MODEL_GRIPPER, */
-/*       STG_MODEL_COUNT // this must be the last entry - it counts the entries */
-      
-/*     } stg_model_type_t; */
-  
-  
   /** any integer value other than this is a valid fiducial ID 
    */
   // TODO - fix this up
@@ -491,8 +475,17 @@ extern "C" {
   /** print human-readable information about the world on stdout 
    */
   void stg_world_print( stg_world_t* world );
-    
-  /// get a model pointer from its ID
+
+  /** Set the duration in milliseconds of each simulation update step 
+   */
+  void stg_world_set_interval_real( stg_world_t* world, unsigned int val );
+  
+  /** Set the real time in intervals that Stage should attempt to take
+      for each simulation update step. If Stage has too much
+      computation to do, it might take longer than this. */
+  void stg_world_set_interval_sim( stg_world_t* world, unsigned int val );
+
+ /// get a model pointer from its ID
   stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid );
   
   /// get a model pointer from its name
@@ -986,45 +979,43 @@ extern "C" {
     { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
     stg_position_control_mode_t;
   
+  /** "position_drive" property */
   typedef enum
-    { STG_POSITION_STEER_DIFFERENTIAL, STG_POSITION_STEER_INDEPENDENT }
-    stg_position_drive_t;
+    { STG_POSITION_DRIVE_DIFFERENTIAL, STG_POSITION_DRIVE_OMNI }
+  stg_position_drive_mode_t;
   
+  /** "position_cmd" property */
   typedef struct
   {
     stg_meters_t x,y,a;
-    stg_position_control_mode_t mode; 
+    stg_position_control_mode_t mode;
   } stg_position_cmd_t;
-  
-  /*
-  typedef struct
-  {
-    stg_position_steer_mode_t steer_mode;
-    //stg_bool_t motor_disable; // if non-zero, the motors are disabled
-    //stg_pose_t odometry
-  } stg_position_cfg_t;
-  */
 
+  /** "position_odom" property */
   typedef struct
   {
-    stg_pose_t pose; // current position estimate
-    stg_velocity_t velocity; // current velocity estimate
-    stg_bool_t stall; // motors stalled flag
-  } stg_position_data_t;
-
-  typedef struct
-  {
-    stg_pose_t odom_origin; // odometry origin
-    stg_pose_t odom; // current odom value
-    double x_error, y_error, a_error; // params for odom error model (not yet implemented)
-  } stg_model_position_t;
+    stg_pose_t pose;
+    stg_pose_t error;
+  } stg_position_pose_estimate_t;
   
+  /** "position_stall" property */
+  typedef int stg_position_stall_t;
+
+  /** "position_data" property */
+/*   typedef struct */
+/*   { */
+/*     stg_pose_t pose; // current position estimate */
+/*     stg_pose_t pose_error; // error estimate of the pose estimate */
+/*     stg_velocity_t velocity; // current velocity estimate */
+/*     stg_bool_t stall; // motors stalled flag */
+/*   } stg_position_data_t; */
+
   /// create a new position model
   stg_model_t* stg_position_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );
   
   /// set the current odometry estimate 
-  void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom );
-  
+  void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom ); 
+
   /**@}*/
   
   // end the group of all models

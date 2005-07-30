@@ -58,19 +58,22 @@ described on the manual page for each model type.
 
 */
 
-/* UNDOCUMENTED - don't want to confuse people.
-- resolution_med [meters]
-  - resolution of the medium-level raytrace bitmap.
-- resolution_med [meters]
-  - resolution of the top-level raytrace bitmap.
-*/
-
-
 extern stg_type_record_t typetable[];
+
+
+
+void stg_world_set_interval_real( stg_world_t* world, unsigned int val )
+{
+  world->wall_interval = val;
+}
+
+void stg_world_set_interval_sim( stg_world_t* world, unsigned int val )
+{
+  world->sim_interval = val;
+}
 
 // create a world containing a passel of Stage models based on the
 // worldfile
-
 stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 {
   wf_load( (char*)worldfile_path );
@@ -110,7 +113,6 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
   if( world == NULL )
     return NULL; // failure
   
-  // configure the GUI
   
 
   int section_count = wf_section_count();
@@ -120,6 +122,7 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
     {
       if( strcmp( wf_get_section_type(section), "window") == 0 )
 	{
+	  // configure the GUI
 	  if( world->win )
 	    gui_load( world->win, section ); 
 	}

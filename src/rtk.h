@@ -24,7 +24,7 @@
  * Desc: Combined Stk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.11 2005-07-14 23:37:23 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.12 2005-07-30 00:04:41 rtv Exp $
  */
 
 #ifndef STK_H
@@ -168,6 +168,10 @@ typedef struct _stg_rtk_canvas_t
   
   // The status bar widget
   GtkStatusbar *status_bar;
+
+  GtkLabel *clock_label;
+
+  //GtkWidget* gcanvas;
 
   // File in which to render xfig figures.
   FILE *file;

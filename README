@@ -1,21 +1,12 @@
 ****************************************************************************
 * README.stage  - Richard Vaughan - Stage-1.6.2       
 *                                                                          
-* $Id: README,v 1.14 2005-07-27 22:53:41 rtv Exp $    
+* $Id: README,v 1.15 2005-07-30 00:04:40 rtv Exp $    
 ****************************************************************************
 
 ** NOTES FOR USE OF CVS HEAD VERSION ***
 
-2005.07.27: Currently Stage HEAD requires Player from the player-1-6-4
-CVS branch. It does NOT work with the released Player-1.6.4 or Player
-CVS HEAD. This complexity will be resolved shortly.
-
-To get compatible versions of player and Stage from CVS use these commands:
-
-cvs co -r player-1-6-4 player
-cvs co stage
-
- - rtv.
+2005.07.29: Stage HEAD requires Player-1.6.5. It does NOT work with Player HEAD.
 
 ** Release Notes for 1.6.3 **
  

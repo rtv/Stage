@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.38 $
+//  $Revision: 1.39 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -55,64 +55,11 @@ position
 const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
 const double STG_POSITION_WATTS = 10.0; // base cost of position device
 
-stg_model_position_t* stg_model_get_position( stg_model_t* mod )
-{
-  stg_model_position_t* pos = 
-    stg_model_get_property_fixed( mod, "position", 
-				  sizeof(stg_model_position_t));
-  assert( pos );
-  return pos;
-}
-
-
-void position_load( stg_model_t* mod )
-{
-  
-  // load steering mode
-  if( wf_property_exists( mod->id, "drive" ) )
-    {
-      stg_position_drive_t* now = 
-	stg_model_get_property_fixed( mod, "position_drive", 
-				     sizeof(stg_position_drive_t));
-      
-      stg_position_drive_t drive = 
-	now ? *now : STG_POSITION_STEER_DIFFERENTIAL;
-      
-      const char* mode_str =  
-	wf_read_string( mod->id, "drive", NULL );
-      
-      if( mode_str )
-	{
-	  if( strcmp( mode_str, "diff" ) == 0 )
-	    drive = STG_POSITION_STEER_DIFFERENTIAL;
-	  else if( strcmp( mode_str, "omni" ) == 0 )
-	    drive = STG_POSITION_STEER_INDEPENDENT;
-	  else
-	    {
-	      PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\". Using \"diff\" as default.", mode_str );	      
-	    }	 
-	  stg_model_set_property( mod, "position_drive", &drive, sizeof(drive)); 
-	}
-    }      
-  // load odometry if specified
-  if( wf_property_exists( mod->id, "odom" ) )
-    {
-      stg_pose_t* now = 
-	stg_model_get_property_fixed( mod, "position_odom", sizeof(stg_pose_t));      
-      stg_pose_t odom;
-      memset( &odom, 0, sizeof(odom));      
-      odom.x = wf_read_tuple_length(mod->id, "odom", 0, now ? now->x : 0 );
-      odom.y = wf_read_tuple_length(mod->id, "odom", 1, now ? now->y : 0 );
-      odom.a = wf_read_tuple_angle(mod->id, "odom", 2, now ? now->a : 0 );
-      
-      stg_model_set_property( mod, "position_odom", &odom, sizeof(odom));
-    }
-}
 
 int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
 int position_update( stg_model_t* mod );
-
+void position_load( stg_model_t* mod );
 int position_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 int position_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 
@@ -130,74 +77,111 @@ int position_init( stg_model_t* mod )
   mod->f_load = position_load;
 
   // sensible position defaults
+
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(vel));
-  stg_model_set_velocity( mod, &vel );
-
+  stg_model_set_property( mod, "velocity", &vel, sizeof(vel));
+  
   stg_blob_return_t blb = 1;
   stg_model_set_property( mod, "blob_return", &blb, sizeof(blb));
-
-
-  // init the command structure
-  stg_position_cmd_t cmd;
-  memset( &cmd, 0, sizeof(cmd));
-  cmd.mode = STG_POSITION_CONTROL_VELOCITY; // vel control mode
-  cmd.x = cmd.y = cmd.a = 0; // no speeds to start
   
-  //stg_model_set_command( mod, &cmd, sizeof(cmd));
-  stg_model_set_property( mod, "position_cmd", &cmd, sizeof(cmd));
-
-  // set up a position-specific config structure
-  stg_position_drive_t drive = STG_POSITION_STEER_DIFFERENTIAL;  
+  stg_position_drive_mode_t drive = STG_POSITION_DRIVE_DIFFERENTIAL;  
   stg_model_set_property( mod, "position_drive", &drive, sizeof(drive) );
 
-  stg_position_data_t data;
-   memset( &data, 0, sizeof(data) );
-
-   //stg_model_set_data( mod, &data, sizeof(data) );
-   stg_model_set_property( mod, "position_data", &data, sizeof(data));
- 
-  // type-sepecific extension data 
-  stg_model_position_t pos;
-  memset( &pos, 0, sizeof(pos));
-  stg_model_set_property( mod, "position", &pos, sizeof(pos) );
+  stg_position_stall_t stall = 0;
+  stg_model_set_property( mod, "position_stall", &stall, sizeof(stall));
   
+  stg_position_cmd_t cmd;
+  memset( &cmd, 0, sizeof(cmd));
+  stg_model_set_property( mod, "position_cmd", &cmd, sizeof(cmd));
   
-  stg_model_add_property_toggles( mod, "position_data", 
-				  position_render_data, // called when toggled on
-				  NULL,
-				  position_unrender_data, // called when toggled off
-				  NULL, 
-				  "position data",
-				  FALSE );
+  stg_position_pose_estimate_t odom;
+  memset( &odom, 0, sizeof(odom));
+  stg_model_set_property( mod, "position_odom", &odom, sizeof(odom));
+  
+/*   stg_model_add_property_toggles( mod, "position_data",  */
+/* 				  position_render_data, // called when toggled on */
+/* 				  NULL, */
+/* 				  position_unrender_data, // called when toggled off */
+/* 				  NULL,  */
+/* 				  "position data", */
+/* 				  FALSE ); */
 
   
   return 0;
 }
 
+void position_load( stg_model_t* mod )
+{
+  
+  // load steering mode
+  if( wf_property_exists( mod->id, "drive" ) )
+    {
+      stg_position_drive_mode_t* now = 
+	stg_model_get_property_fixed( mod, "position_drive", 
+				     sizeof(stg_position_drive_mode_t));
+      
+      stg_position_drive_mode_t drive =
+	now ? *now : STG_POSITION_DRIVE_DIFFERENTIAL;
+      
+      const char* mode_str =  
+	wf_read_string( mod->id, "drive", NULL );
+      
+      if( mode_str )
+	{
+	  if( strcmp( mode_str, "diff" ) == 0 )
+	    drive = STG_POSITION_DRIVE_DIFFERENTIAL;
+	  else if( strcmp( mode_str, "omni" ) == 0 )
+	    drive = STG_POSITION_DRIVE_OMNI;
+	  else
+	    {
+	      PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\". Using \"diff\" as default.", mode_str );	      
+	    }	 
+	  stg_model_set_property( mod, "position_drive", &drive, sizeof(drive)); 
+	}
+    }      
+
+
+
+
+
+
+  // load odometry if specified
+  if( wf_property_exists( mod->id, "odom" ) )
+    {
+      stg_position_pose_estimate_t* now = 
+	stg_model_get_property_fixed( mod, "position_odom", sizeof(stg_position_pose_estimate_t));      
+      
+      stg_position_pose_estimate_t odom;
+      memset( &odom, 0, sizeof(odom));      
+      odom.pose.x = wf_read_tuple_length(mod->id, "odom", 0, now ? now->pose.x : 0 );
+      odom.pose.y = wf_read_tuple_length(mod->id, "odom", 1, now ? now->pose.y : 0 );
+      odom.pose.a = wf_read_tuple_angle(mod->id, "odom", 2, now ? now->pose.a : 0 );
+      
+      stg_model_set_property( mod, "position_odom", &odom, sizeof(odom));
+    }
+}
+
+
 int position_update( stg_model_t* mod )
 { 
-  // get the type-sepecific extension we added to the end of the model
-  stg_model_position_t* pos = NULL;
       
   PRINT_DEBUG1( "[%lu] position update", mod->world->sim_time );
 
   if( mod->subs )   // no driving if noone is subscribed
     {      
-      pos = stg_model_get_position(mod);
-      assert(pos);
+      stg_position_pose_estimate_t* odom = 
+	stg_model_get_property_fixed( mod, "position_odom", sizeof(stg_position_pose_estimate_t));
+      assert(odom);
       
-      // set the model's velocity here according to the position command      
       stg_position_cmd_t *cmd = 
-	stg_model_get_property_fixed( mod, "position_cmd", sizeof(stg_position_cmd_t));
-      
+	stg_model_get_property_fixed( mod, "position_cmd", sizeof(stg_position_cmd_t));      
       assert(cmd);
       
-      stg_position_drive_t *drive = 
-	stg_model_get_property_fixed( mod, "position_drive", 
-				      sizeof(stg_position_drive_t));
+      stg_position_drive_mode_t *drive = 
+	stg_model_get_property_fixed( mod, "position_drive", sizeof(stg_position_drive_mode_t));
       assert(drive);
-
+      
       //printf( "cmd mode %d x %.2f y %.2f a %.2f\n",
       //      cmd.mode, cmd.x, cmd.y, cmd.a );
 
@@ -217,14 +201,14 @@ int position_update( stg_model_t* mod )
 	    
 	    switch( *drive )
 	      {
-	      case STG_POSITION_STEER_DIFFERENTIAL:
+	      case STG_POSITION_DRIVE_DIFFERENTIAL:
 		// differential-steering model, like a Pioneer
 		vel.x = cmd->x;
 		vel.y = 0;
 		vel.a = cmd->a;
 		break;
 		
-	      case STG_POSITION_STEER_INDEPENDENT:
+	      case STG_POSITION_DRIVE_OMNI:
 		// direct steering model, like an omnidirectional robot
 		vel.x = cmd->x;
 		vel.y = cmd->y;
@@ -240,9 +224,9 @@ int position_update( stg_model_t* mod )
 	  {
 	    PRINT_DEBUG( "position control mode" );
 	    
-	    double x_error = cmd->x - pos->odom.x;
-	    double y_error = cmd->y - pos->odom.y;
-	    double a_error = NORMALIZE( cmd->a - pos->odom.a );
+	    double x_error = cmd->x - odom->pose.x;
+	    double y_error = cmd->y - odom->pose.y;
+	    double a_error = NORMALIZE( cmd->a - odom->pose.a );
 	    
 	    PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
 	    
@@ -254,7 +238,7 @@ int position_update( stg_model_t* mod )
 	    
 	    switch( *drive )
 	      {
-	      case STG_POSITION_STEER_INDEPENDENT:
+	      case STG_POSITION_DRIVE_OMNI:
 		{
 		  // this is easy - we just reduce the errors in each axis
 		  // independently with a proportional controller, speed
@@ -265,7 +249,7 @@ int position_update( stg_model_t* mod )
 		}
 		break;
 		
-	      case STG_POSITION_STEER_DIFFERENTIAL:
+	      case STG_POSITION_DRIVE_DIFFERENTIAL:
 		{
 		  // axes can not be controlled independently. We have to
 		  // turn towards the desired x,y position, drive there,
@@ -295,7 +279,7 @@ int position_update( stg_model_t* mod )
 		      double goal_angle = atan2( y_error, x_error );
 		      double goal_distance = hypot( y_error, x_error );
 		      
-		      a_error = NORMALIZE( goal_angle - pos->odom.a );
+		      a_error = NORMALIZE( goal_angle - odom->pose.a );
 		      calc.a = MIN( a_error, max_speed_a );
 		      calc.a = MAX( a_error, -max_speed_a );
 		      
@@ -327,7 +311,7 @@ int position_update( stg_model_t* mod )
 	  break;
 	  
 	default:
-	  PRINT_ERR1( "unhandled position command mode %d", cmd->mode );
+	  PRINT_ERR1( "unrecognized position command mode %d", cmd->mode );
 	}
       
       stg_model_set_velocity( mod, &vel );
@@ -349,20 +333,14 @@ int position_update( stg_model_t* mod )
       // set the data here
 
       // we export the ODOMETRY as pose data, not the real pose
-      stg_position_data_t data;
-      memcpy( &data.pose, &pos->odom, sizeof(stg_pose_t));  
+      //stg_position_data_t data;
+      //memcpy( &data.pose, &pos->odom, sizeof(stg_pose_t));  
 
-      stg_model_get_velocity( mod, &data.velocity );
-      //memcpy( &data.velocity, &mod->velocity, sizeof(stg_velocity_t));
-      
-      data.stall = 0;//mod->stall;
-      
+      stg_position_stall_t stall = 0;
+      stg_model_set_property( mod, "position_stall", &stall, sizeof(stall));
+
       //PRINT_WARN3( "data pos %.2f %.2f %.2f",
-      //       data.pose.x, data.pose.y, data.pose.a );
-      
-      // publish the data
-      //stg_model_set_data( mod, &data, sizeof(data));    
-      stg_model_set_property( mod, "position_data", &data, sizeof(data));
+      //       data.pose.x, data.pose.y, data.pose.a );      
     }
   
 
@@ -372,22 +350,22 @@ int position_update( stg_model_t* mod )
   //printf( "updating odom from origin (%.2f,%.2f,%.2f)\n",
   //  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
 
-  if( pos )
-    {
-      stg_pose_t* pose = 
-	stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
+/*   if( pos ) */
+/*     { */
+/*       stg_pose_t* pose =  */
+/* 	stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t)); */
 
-      // calculate new odometric pose
-      double dx = pose->x - pos->odom_origin.x;
-      double dy = pose->y - pos->odom_origin.y;
-      double da = pose->a - pos->odom_origin.a;
-      double costh = cos(pos->odom_origin.a);
-      double sinth = sin(pos->odom_origin.a);
+/*       // calculate new odometric pose */
+/*       double dx = pose->x - pos->odom_origin.x; */
+/*       double dy = pose->y - pos->odom_origin.y; */
+/*       double da = pose->a - pos->odom_origin.a; */
+/*       double costh = cos(pos->odom_origin.a); */
+/*       double sinth = sin(pos->odom_origin.a); */
       
-      pos->odom.x = dx * costh + dy * sinth;
-      pos->odom.y = dy * costh - dx * sinth;
-      pos->odom.a = NORMALIZE(da);
-    }
+/*       pos->odom.x = dx * costh + dy * sinth; */
+/*       pos->odom.y = dy * costh - dx * sinth; */
+/*       pos->odom.a = NORMALIZE(da); */
+/*     } */
 
   return 0; //ok
 }
@@ -423,73 +401,70 @@ int position_shutdown( stg_model_t* mod )
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(vel));
   stg_model_set_velocity( mod, &vel );
-
-  //if( mod->gui.data  )
-  //stg_rtk_fig_clear(mod->gui.data);
   
   return 0; // ok
 }
 
-// Set the origin of the odometric coordinate system in world coords
-void stg_model_position_set_odom_origin( stg_model_t* mod, stg_pose_t* org )
-{
-  // get the position data
-  // get the position data
-  stg_model_position_t* pos = stg_model_get_position( mod );
-  memcpy( &pos->odom_origin, org, sizeof(stg_pose_t));
+/* // Set the origin of the odometric coordinate system in world coords */
+/* void stg_model_position_set_odom_origin( stg_model_t* mod, stg_pose_t* org ) */
+/* { */
+/*   // get the position data */
+/*   // get the position data */
+/*   stg_model_position_t* pos = stg_model_get_position( mod ); */
+/*   memcpy( &pos->odom_origin, org, sizeof(stg_pose_t)); */
   
-  //printf( "Stage warning: the odom origin was set to (%.2f,%.2f,%.2f)\n",
-  //  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
-}
+/*   //printf( "Stage warning: the odom origin was set to (%.2f,%.2f,%.2f)\n", */
+/*   //  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a ); */
+/* } */
 
-// set the current pose to be the origin of the odometry coordinate system
-void stg_model_position_odom_reset( stg_model_t* mod )
-{
-  //printf( "Stage warning: odom was reset (zeroed)\n" );
+/* // set the current pose to be the origin of the odometry coordinate system */
+/* void stg_model_position_odom_reset( stg_model_t* mod ) */
+/* { */
+/*   //printf( "Stage warning: odom was reset (zeroed)\n" ); */
 
-  // set the current odom measurement to zero
-  // get the position data
-  stg_model_position_t* pos = stg_model_get_position( mod );
-  memset( &pos->odom, 0, sizeof(pos->odom));
+/*   // set the current odom measurement to zero */
+/*   // get the position data */
+/*   stg_model_position_t* pos = stg_model_get_position( mod ); */
+/*   memset( &pos->odom, 0, sizeof(pos->odom)); */
   
-  // and set the odom origin is the current pose
-  stg_model_position_set_odom_origin( mod, 
-				      stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t)) );
-}
+/*   // and set the odom origin is the current pose */
+/*   stg_model_position_set_odom_origin( mod,  */
+/* 				      stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t)) ); */
+/* } */
 
 
-void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom )
-{
-  stg_model_position_t* pos = stg_model_get_position( mod );
-  // copy the odom pose straight in
-  memcpy( odom, &pos->odom, sizeof(stg_pose_t));
-}
+/* void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom ) */
+/* { */
+/*   stg_model_position_t* pos = stg_model_get_position( mod ); */
+/*   // copy the odom pose straight in */
+/*   memcpy( odom, &pos->odom, sizeof(stg_pose_t)); */
+/* } */
 
-void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
-{
-  stg_model_position_t* pos = stg_model_get_position( mod );
+/* void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom ) */
+/* { */
+/*   stg_model_position_t* pos = stg_model_get_position( mod ); */
 
-  // copy the odom pose straight in
-  memcpy( &pos->odom, odom, sizeof(stg_pose_t));
+/*   // copy the odom pose straight in */
+/*   memcpy( &pos->odom, odom, sizeof(stg_pose_t)); */
   
-  // calculate what the origin of this coord system must be 
+/*   // calculate what the origin of this coord system must be  */
   
-  stg_pose_t* pose = 
-    stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
+/*   stg_pose_t* pose =  */
+/*     stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t)); */
   
-  double da = odom->a - pose->a;
-  double cosa = cos(da);
-  double sina = sin(da);
+/*   double da = odom->a - pose->a; */
+/*   double cosa = cos(da); */
+/*   double sina = sin(da); */
   
-  double xx = odom->x * cosa + odom->y * sina;
-  double yy = odom->y * cosa - odom->x * sina;
+/*   double xx = odom->x * cosa + odom->y * sina; */
+/*   double yy = odom->y * cosa - odom->x * sina; */
 
-  stg_pose_t o;
-  o.x = pose->x - xx;
-  o.y = pose->y - yy;
-  o.a = NORMALIZE( pose->a - odom->a );  
-  stg_model_position_set_odom_origin( mod, &o );  \
-}
+/*   stg_pose_t o; */
+/*   o.x = pose->x - xx; */
+/*   o.y = pose->y - yy; */
+/*   o.a = NORMALIZE( pose->a - odom->a );   */
+/*   stg_model_position_set_odom_origin( mod, &o );  \ */
+/* } */
 
 int position_unrender_data( stg_model_t* mod, char* name, 
 			    void* data, size_t len, void* userp )
@@ -501,31 +476,31 @@ int position_unrender_data( stg_model_t* mod, char* name,
 int position_render_data( stg_model_t* mod, char* name, 
 			  void* data, size_t len, void* userp )
 {
-  const double line = 0.3;
-  const double head = 0.1;
+/*   const double line = 0.3; */
+/*   const double head = 0.1; */
   
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "position_data_fig" );
+/*   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "position_data_fig" ); */
   
-  if( !fig ) 
-    fig = stg_model_fig_create( mod, "position_data_fig", NULL, STG_LAYER_POSITIONDATA );
+/*   if( !fig )  */
+/*     fig = stg_model_fig_create( mod, "position_data_fig", NULL, STG_LAYER_POSITIONDATA ); */
 
 
-  stg_rtk_fig_clear(fig);
-  stg_rtk_fig_color_rgb32( fig, 0x9999FF ); // pale blue
+/*   stg_rtk_fig_clear(fig); */
+/*   stg_rtk_fig_color_rgb32( fig, 0x9999FF ); // pale blue */
 	  
       
-  stg_model_position_t* pos = (stg_model_position_t*)data;
+/*   stg_model_position_t* pos = (stg_model_position_t*)data; */
   
-  stg_rtk_fig_origin( fig,  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
+/*   stg_rtk_fig_origin( fig,  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a ); */
   
-  stg_rtk_fig_rectangle(  fig, 0,0,0, 0.06, 0.06, 0 );     
-  stg_rtk_fig_line( fig, 0,0, pos->odom.x, 0);
-  stg_rtk_fig_line( fig, pos->odom.x, 0, pos->odom.x, pos->odom.y );
+/*   stg_rtk_fig_rectangle(  fig, 0,0,0, 0.06, 0.06, 0 );      */
+/*   stg_rtk_fig_line( fig, 0,0, pos->odom.x, 0); */
+/*   stg_rtk_fig_line( fig, pos->odom.x, 0, pos->odom.x, pos->odom.y ); */
   
-  char buf[256];
-  snprintf( buf, 255, "x: %.3f\ny: %.3f\na: %.1f", pos->odom.x, pos->odom.y, RTOD(pos->odom.a)  );
-  stg_rtk_fig_text( fig, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );    
-  stg_rtk_fig_arrow( fig, pos->odom.x, pos->odom.y, pos->odom.a, line, head );
+/*   char buf[256]; */
+/*   snprintf( buf, 255, "x: %.3f\ny: %.3f\na: %.1f", pos->odom.x, pos->odom.y, RTOD(pos->odom.a)  ); */
+/*   stg_rtk_fig_text( fig, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );     */
+/*   stg_rtk_fig_arrow( fig, pos->odom.x, pos->odom.y, pos->odom.a, line, head ); */
 
   return 0;
 }
