@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.152 2005-07-30 07:28:37 rtv Exp $
+ * CVS: $Id: stage.h,v 1.153 2005-07-30 20:12:30 rtv Exp $
  */
 
 
@@ -973,16 +973,26 @@ extern "C" {
       Implements the position model: a mobile robot base
       @{ */
   
-#define STG_MM_POSITION_RESETODOM 77
+  //#define STG_MM_POSITION_RESETODOM 77
   
   typedef enum
     { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
-    stg_position_control_mode_t;
+  stg_position_control_mode_t;
+  
+#define STG_POSITION_CONTROL_DEFAULT STG_POSITION_CONTROL_VELOCITY
+  
+  typedef enum
+    { STG_POSITION_LOCALIZATION_GPS, STG_POSITION_LOCALIZATION_ODOM }
+  stg_position_localization_mode_t;
+  
+#define STG_POSITION_LOCALIZATION_DEFAULT STG_POSITION_LOCALIZATION_GPS
   
   /** "position_drive" property */
   typedef enum
     { STG_POSITION_DRIVE_DIFFERENTIAL, STG_POSITION_DRIVE_OMNI }
   stg_position_drive_mode_t;
+  
+#define STG_POSITION_DRIVE_DEFAULT STG_POSITION_DRIVE_DIFFERENTIAL
   
   /** "position_cmd" property */
   typedef struct
@@ -1000,7 +1010,7 @@ extern "C" {
     stg_velocity_t velocity;
     stg_velocity_t integration_error; // for simple odometry error model
     stg_bool_t stall;
-    stg_bool_t gps_mode;
+    stg_position_localization_mode_t localization;
   } stg_position_data_t;
   
   /** "position_stall" property */

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.43 $
+//  $Revision: 1.44 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -44,21 +44,30 @@ independently.
 position
 (
   drive "diff"
-  odom [0 0 0]
+
+  localization "gps"
+
+  # initial position estimate
+  localization_origin [ <defaults to model's start pose> ]
+ 
+  # odometry error model parameters, 
+  # only used if localization is set to "odom"
   odom_error [0.03 0.03 0.05]
-  gps_mode 1
 )
 @endverbatim
+
+@par Note
+Since Stage-1.6.5 the odom property has been removed. Stage will generate a warning if odom is defined in your worldfile. See localization_origin instead.
 
 @par Details
 - drive "diff" or "omni"
   - select differential-steer mode (like a Pioneer) or omnidirectional mode.
-- gps_mode bool
-- if non-zero the position device reports its true global position with perfect accuracy. If zero, a simple odometry model is used. Odometry so position data drifts from the ground truth over time. 
-- odom [x y theta]
-  - set the initial odometry value for this device.
+- localization "gps" or "odom"
+  - if "gps" the position model reports its position with perfect accuracy. If "odom", a simple odometry model is used and position data drifts from the ground truth over time. The odometry model is parameterized by the odom_error property.
+- localization_origin [x y theta]
+  - set the origin of the localization coordinate system. By default, this is copied from the model's initial pose, so the robot reports its position relative to the place it started out. Tip: If localization_origin is set to [0 0 0] and localization is "gps", the model will return its true global position. This is unrealistic, but useful if you want to abstract away the details of localization. Be prepared to justify the use of this mode in your research! 
 - odom_error [x y theta]
-  - maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need gps_mode.
+  - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
 */
 
 const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
@@ -69,8 +78,6 @@ const double STG_POSITION_WATTS = 10.0; // base cost of position device
 const double STG_POSITION_INTEGRATION_ERROR_MAX_X = 0.03;
 const double STG_POSITION_INTEGRATION_ERROR_MAX_Y = 0.03;
 const double STG_POSITION_INTEGRATION_ERROR_MAX_A = 0.05;
-
-const int STG_DEFAULT_GPS_MODE = TRUE;
 
 int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
@@ -110,7 +117,7 @@ int position_init( stg_model_t* mod )
   stg_blob_return_t blb = 1;
   stg_model_set_property( mod, "blob_return", &blb, sizeof(blb));
   
-  stg_position_drive_mode_t drive = STG_POSITION_DRIVE_DIFFERENTIAL;  
+  stg_position_drive_mode_t drive = STG_POSITION_DRIVE_DEFAULT;  
   stg_model_set_property( mod, "position_drive", &drive, sizeof(drive) );
 
   stg_position_stall_t stall = 0;
@@ -118,6 +125,7 @@ int position_init( stg_model_t* mod )
   
   stg_position_cmd_t cmd;
   memset( &cmd, 0, sizeof(cmd));
+  cmd.mode = STG_POSITION_CONTROL_DEFAULT;
   stg_model_set_property( mod, "position_cmd", &cmd, sizeof(cmd));
   
   stg_position_data_t data;
@@ -135,7 +143,7 @@ int position_init( stg_model_t* mod )
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
     STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
 
-  data.gps_mode = STG_DEFAULT_GPS_MODE;
+  data.localization = STG_POSITION_LOCALIZATION_DEFAULT;
 
   stg_model_set_property( mod, "position_data", &data, sizeof(data));
   
@@ -153,7 +161,8 @@ int position_init( stg_model_t* mod )
 
 void position_load( stg_model_t* mod )
 {
-  
+  char* keyword = NULL;
+
   // load steering mode
   if( wf_property_exists( mod->id, "drive" ) )
     {
@@ -188,34 +197,75 @@ void position_load( stg_model_t* mod )
   // load odometry if specified
   if( wf_property_exists( mod->id, "odom" ) )
     {
-      data->pose.x = wf_read_tuple_length(mod->id, "odom", 0, data->pose.x );
-      data->pose.y = wf_read_tuple_length(mod->id, "odom", 1, data->pose.y );
-      data->pose.a = wf_read_tuple_angle(mod->id, "odom", 2, data->pose.a );
+      PRINT_WARN1( "the odom property is specified for model \"%s\","
+		   " but this property is no longer available."
+		   " Use localization_origin instead. See the position"
+		   " entry in the manual or src/model_position.c for details.", 
+		   mod->token );
+    }
+
+  // set the starting pose as my initial odom position. This could be
+  // overwritten below if the localization_origin property is
+  // specified
+  stg_model_get_global_pose( mod, &data->origin );
+
+  keyword = "localization_origin"; 
+  if( wf_property_exists( mod->id, keyword ) )
+    {  
+      data->origin.x = wf_read_tuple_length(mod->id, keyword, 0, data->pose.x );
+      data->origin.y = wf_read_tuple_length(mod->id, keyword, 1, data->pose.y );
+      data->origin.a = wf_read_tuple_angle(mod->id, keyword, 2, data->pose.a );
+
+      // compute our localization pose based on the origin and true pose
+      stg_pose_t gpose;
+      stg_model_get_global_pose( mod, &gpose );
       
-      data->origin.x = data->pose.x;
-      data->origin.y = data->pose.y;
-      data->origin.a = data->pose.a;
-      
-      // zero position error: we have been told exactly where we are
+      data->pose.a = NORMALIZE( gpose.a - data->origin.a );
+      double cosa = cos(data->pose.a);
+      double sina = sin(data->pose.a);
+      double dx = gpose.x - data->origin.x;
+      double dy = gpose.y - data->origin.y; 
+      data->pose.x = dx * cosa + dy * sina; 
+      data->pose.y = dy * cosa - dx * sina;
+
+      // zero position error: assume we know exactly where we are on startup
       memset( &data->pose_error, 0, sizeof(data->pose_error));      
     }
 
-
+  // odometry model parameters
   if( wf_property_exists( mod->id, "odom_error" ) )
     {
-      data->integration_error.x = wf_read_tuple_length(mod->id, "odom_error", 0, data->integration_error.x );
-      data->integration_error.y = wf_read_tuple_length(mod->id, "odom_error", 1, data->integration_error.y );
-      data->integration_error.a = wf_read_tuple_angle(mod->id, "odom_error", 2, data->integration_error.a );
+      data->integration_error.x = 
+	wf_read_tuple_length(mod->id, "odom_error", 0, data->integration_error.x );
+      data->integration_error.y = 
+	wf_read_tuple_length(mod->id, "odom_error", 1, data->integration_error.y );
+      data->integration_error.a 
+	= wf_read_tuple_angle(mod->id, "odom_error", 2, data->integration_error.a );
     }
 
-  if( wf_property_exists( mod->id, "gps_mode" ) )
+  // choose a localization model
+  if( wf_property_exists( mod->id, "localization" ) )
     {
-      data->gps_mode = wf_read_int(mod->id, "gps_mode", data->gps_mode );
+      const char* loc_str =  
+	wf_read_string( mod->id, "localization", NULL );
+   
+      if( loc_str )
+	{
+	  if( strcmp( loc_str, "gps" ) == 0 )
+	    data->localization = STG_POSITION_LOCALIZATION_GPS;
+	  else if( strcmp( loc_str, "odom" ) == 0 )
+	    data->localization = STG_POSITION_LOCALIZATION_ODOM;
+	  else
+	    PRINT_ERR2( "unrecognized localization mode \"%s\" for model \"%s\"."
+			" Valid choices are \"gps\" and \"odom\".", 
+			loc_str, mod->token );
+	}
+      else
+	PRINT_ERR1( "no localization mode string specified for model \"%s\"", 
+		    mod->token );
     }
 
-  // set the starting pose as my initial odom position
-  stg_model_get_global_pose( mod, &data->origin );
-
+  // we've probably poked the localization data, so we must refresh it
   stg_model_property_refresh( mod, "position_data" );
 
 
@@ -405,27 +455,49 @@ int position_update( stg_model_t* mod )
   // now  inherit the normal update - this does the actual moving
   _model_update( mod );
   
-  if( data->gps_mode )
+  switch( data->localization )
     {
-      stg_model_get_global_pose( mod, &data->pose );
-      memset( &data->origin, 0, sizeof(data->origin));      
-    }
-  else // integrate our velocities to get an 'odometry' position estimate.
-    {
-      double dt = mod->world->sim_interval/1e3;
+    case STG_POSITION_LOCALIZATION_GPS:
+      {
+	// compute our localization pose based on the origin and true pose
+	stg_pose_t gpose;
+	stg_model_get_global_pose( mod, &gpose );
+	
+	data->pose.a = NORMALIZE( gpose.a - data->origin.a );
+	//data->pose.a =0;// NORMALIZE( gpose.a - data->origin.a );
+	double cosa = cos(data->origin.a);
+	double sina = sin(data->origin.a);
+	double dx = gpose.x - data->origin.x;
+	double dy = gpose.y - data->origin.y; 
+	data->pose.x = dx * cosa + dy * sina; 
+	data->pose.y = dy * cosa - dx * sina;
+      }
+      break;
       
-      data->pose.a = NORMALIZE( data->pose.a + (vel->a * dt) * (1.0 +data->integration_error.a) );
+    case STG_POSITION_LOCALIZATION_ODOM:
+      {
+	// integrate our velocities to get an 'odometry' position estimate.
+	double dt = mod->world->sim_interval/1e3;
+	
+	data->pose.a = NORMALIZE( data->pose.a + (vel->a * dt) * (1.0 +data->integration_error.a) );
+	
+	double cosa = cos(data->pose.a);
+	double sina = sin(data->pose.a);
+	double dx = (vel->x * dt) * (1.0 + data->integration_error.x );
+	double dy = (vel->y * dt) * (1.0 + data->integration_error.y );
+	
+	data->pose.x += dx * cosa + dy * sina; 
+	data->pose.y -= dy * cosa - dx * sina;
+      }
+      break;
       
-      double cosa = cos(data->pose.a);
-      double sina = sin(data->pose.a);
-      double dx = (vel->x * dt) * (1.0 + data->integration_error.x );
-      double dy = (vel->y * dt) * (1.0 + data->integration_error.y );
-      
-      data->pose.x += dx * cosa + dy * sina; 
-      data->pose.y -= dy * cosa - dx * sina;
+    default:
+      PRINT_ERR2( "unknown localization mode %d for model %s\n",
+		  data->localization, mod->token );
+      break;
     }
   
-  // we've poked the position data - must refresh 
+  // we've probably poked the position data - must refresh 
   stg_model_property_refresh( mod, "position_data" );
  
   return 0; //ok

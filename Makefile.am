@@ -12,15 +12,16 @@ pkgconfig_DATA = stage.pc
 dist-hook:
 	cd $(DOCSRC) && make 
 	mkdir -p $(DOCDIST)
-	cp -r -p $(DOCSRC)/stage_reference $(DOCDIST)
 	cp -r -p $(DOCSRC)/stage_user $(DOCDIST)
 
+#	cp -r -p $(DOCSRC)/stage_reference $(DOCDIST)
+
 install-data-hook:
+	cd $(DOCSRC) && make 
 	mkdir -p $(DOCINST)
 	cp -r -p $(DOCSRC)/stage_user $(DOCINST)
-	cp -r -p $(DOCSRC)/stage_reference $(DOCINST)
 
-#	cd $(DOCSRC) && make 
+#	cp -r -p $(DOCSRC)/stage_reference $(DOCINST)
 
 uninstall-local:
 	rm -f $(DOCINST)/*
