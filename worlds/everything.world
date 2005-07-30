@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.46 2005-07-30 06:21:11 rtv Exp $
+# CVS: $Id: everything.world,v 1.47 2005-07-30 07:06:07 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -66,6 +66,8 @@ trickedoutpioneer
   name "p0"
   pose [-10.712 3.167 -360.320]
   #odom [-10.712 3.167 -360.320]
+
+  odom_error [0 0 0]	
 )
 
 trickedoutpioneer

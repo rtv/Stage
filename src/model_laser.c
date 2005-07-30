@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.72 $
+//  $Revision: 1.73 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -401,7 +401,7 @@ int laser_render_data( stg_model_t* mod, char* name,
 
 int laser_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
 {
-  puts( "laser render cfg" );
+  //puts( "laser render cfg" );
   
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "laser_cfg_fig" );
   

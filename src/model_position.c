@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.40 $
+//  $Revision: 1.41 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -55,6 +55,11 @@ position
 const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
 const double STG_POSITION_WATTS = 10.0; // base cost of position device
 
+// simple odometry error model parameters. the error is selected at
+// random in the interval -MAX/2 to +MAX/2 at startup
+const double STG_POSITION_INTEGRATION_ERROR_MAX_X = 0.04;
+const double STG_POSITION_INTEGRATION_ERROR_MAX_Y = 0.04;
+const double STG_POSITION_INTEGRATION_ERROR_MAX_A = 0.06;
 
 int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
@@ -67,6 +72,15 @@ int position_init( stg_model_t* mod )
 {
   PRINT_DEBUG( "created position model" );
   
+  static int first_time = 1;
+
+  if( first_time )
+    {
+      first_time = 0;
+      // seed the RNG on startup
+      srand48( time(NULL) );
+    }
+
   // no power consumed until we're subscribed
   //mod->watts = 0.0; 
 
@@ -97,6 +111,19 @@ int position_init( stg_model_t* mod )
   
   stg_position_data_t data;
   memset( &data, 0, sizeof(data));
+  
+  data.integration_error.x =  
+    drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_X - 
+    STG_POSITION_INTEGRATION_ERROR_MAX_X/2.0;
+  
+  data.integration_error.y =  
+    drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_Y - 
+    STG_POSITION_INTEGRATION_ERROR_MAX_Y/2.0;
+
+  data.integration_error.a =  
+    drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
+    STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
+
   stg_model_set_property( mod, "position_data", &data, sizeof(data));
   
   stg_model_add_property_toggles( mod, "position_data",  
@@ -158,6 +185,14 @@ void position_load( stg_model_t* mod )
       
       // zero position error: we have been told exactly where we are
       memset( &data->pose_error, 0, sizeof(data->pose_error));      
+    }
+
+
+  if( wf_property_exists( mod->id, "odom_error" ) )
+    {
+      data->integration_error.x = wf_read_tuple_length(mod->id, "odom_error", 0, data->integration_error.x );
+      data->integration_error.y = wf_read_tuple_length(mod->id, "odom_error", 1, data->integration_error.y );
+      data->integration_error.a = wf_read_tuple_angle(mod->id, "odom_error", 2, data->integration_error.a );
     }
 
   // set the starting pose as my initial odom position
@@ -354,14 +389,14 @@ int position_update( stg_model_t* mod )
   
   double dt = mod->world->sim_interval/1e3;
 
-  data->pose.a = NORMALIZE( data->pose.a + vel->a * dt);
+  data->pose.a = NORMALIZE( data->pose.a + (vel->a * dt) * (1.0 +data->integration_error.a) );
   
   double cosa = cos(data->pose.a);
   double sina = sin(data->pose.a);
-  double dx = vel->x * dt;
-  double dy = vel->y * dt;
+  double dx = (vel->x * dt) * (1.0 + data->integration_error.x );
+  double dy = (vel->y * dt) * (1.0 + data->integration_error.y );
 
-  data->pose.x += dx * cosa + dy * sina;
+  data->pose.x += dx * cosa + dy * sina; 
   data->pose.y -= dy * cosa - dx * sina;
   
   // we've poked the position data - must refresh 
@@ -474,7 +509,12 @@ int position_render_data( stg_model_t* mod, char* name,
   if( !fig )
     {
       fig = stg_model_fig_create( mod, "position_data_fig", NULL, STG_LAYER_POSITIONDATA );
-      stg_rtk_fig_color_rgb32( fig, 0x9999FF ); // pale blue
+      //stg_rtk_fig_color_rgb32( fig, 0x9999FF ); // pale blue
+      
+      stg_color_t* col = stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
+      assert(col);
+
+      stg_rtk_fig_color_rgb32( fig, *col ); 
     }
 
   stg_rtk_fig_clear(fig);
@@ -505,10 +545,6 @@ int position_render_data( stg_model_t* mod, char* name,
 	stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));
       assert(geom);
 
-      //stg_rtk_fig_rectangle(  fig, 
-      //		      odom->pose.x, odom->pose.y, odom->pose.a,
-      //		      geom->size.x, geom->size.y, 0 );
-      
       stg_rtk_fig_rectangle(  fig, 
 			      odom->pose.x, odom->pose.y, odom->pose.a,
 			      0.1, 0.1, 0 );
@@ -516,6 +552,10 @@ int position_render_data( stg_model_t* mod, char* name,
       stg_rtk_fig_arrow( fig, 
 			 odom->pose.x, odom->pose.y, odom->pose.a, 
 			 geom->size.x/2.0, geom->size.y/2.0 );
+
+      //stg_pose_t gpose;
+      //stg_model_get_global_pose( mod, &gpose );
+      //stg_rtk_fig_line( fig, gpose.x, gpose.y, odom->pose.x, odom->pose.y );
       
     }
 
