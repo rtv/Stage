@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.48 2005-07-30 07:28:37 rtv Exp $
+# CVS: $Id: everything.world,v 1.49 2005-07-30 07:39:18 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -59,8 +59,8 @@ define trickedoutpioneer pioneer2dx
   fiducial_return 42
   blobfinder_return 1 
 
-  # use magical global localization
-  gps_mode 1
+  # enable (1) or disable (0) magical global localization
+  gps_mode 0
 )
 
 

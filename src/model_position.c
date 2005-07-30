@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.42 $
+//  $Revision: 1.43 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -28,9 +28,13 @@ void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom );
 
 /** 
 @defgroup model_position Position model 
-The position model simulates a mobile robot base. It can drive in one
-of two modes; either <i>differential</i> like a Pioneer robot, or
-<i>omnidirectional</i>.
+
+The position model simulates a
+mobile robot base. It can drive in one of two modes; either
+<i>differential</i>, i.e. able to control its speed and turn rate by
+driving left and roght wheels like a Pioneer robot, or
+<i>omnidirectional</i>, i.e. able to control each of its three axes
+independently.
 
 <h2>Worldfile properties</h2>
 
@@ -54,7 +58,7 @@ position
 - odom [x y theta]
   - set the initial odometry value for this device.
 - odom_error [x y theta]
-  - maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2.
+  - maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need gps_mode.
 */
 
 const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
