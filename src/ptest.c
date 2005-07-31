@@ -7,7 +7,7 @@
  * CVS info:
  *  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptest.c,v $
  *  $Author: rtv $
- *  $Revision: 1.2 $
+ *  $Revision: 1.3 $
  */
 
 #include <stdio.h>
@@ -18,8 +18,8 @@
 const char* USAGE = \
 "Usage: ptest <string>\n"
 " where <string> is comprised of any number of the following characters:\n"
-"  'p' - position model\n"
-"  'l' - laser model";
+"  'p' - position\n"
+"  'l' - laser";
  
 int test_laser( playerc_client_t* client )
 {
