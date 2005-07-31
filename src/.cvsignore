@@ -2,3 +2,4 @@ Makefile
 Makefile.in
 stage
 stest
+.DS_Store

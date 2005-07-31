@@ -13,3 +13,8 @@ Makefile
 Makefile.in
 stage.pc
 libtool
+depcomp
+.gdb_history
+install-sh
+missing
+mkinstalldirs
