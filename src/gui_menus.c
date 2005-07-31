@@ -150,24 +150,21 @@ void gui_action_about( GtkAction *action, gpointer user_data)
   // USE THIS WHEN WE CAN USED GTK+-2.6
   //GtkAboutDialog *about = gtk_about_dialog_new();
   // gtk_show_about_dialog( about );
-
-  GtkMessageDialog* about = (GtkMessageDialog*)
-    gtk_message_dialog_new( NULL, 0, 
-			    GTK_MESSAGE_INFO,
-			    GTK_BUTTONS_CLOSE, 
-			    "Stage" );
   
-  const char* str =  "Version %s\n"
+  const char* str =  "Stage\nVersion %s\n"
     "Part of the Player/Stage Project\n"
     "[http://playerstage.sourceforge.net]\n\n"
     "Copyright Richard Vaughan, Andrew Howard, Brian Gerkey\n"
     " and contributors 2000-2005.\n\n"
     "Released under the GNU General Public License.";
   
-  gtk_message_dialog_format_secondary_text( about, 
-					    str,
-					    PACKAGE_VERSION );
-  
+  GtkMessageDialog* about = (GtkMessageDialog*)
+    gtk_message_dialog_new( NULL, 0, 
+			    GTK_MESSAGE_INFO,
+			    GTK_BUTTONS_CLOSE, 
+			    str,
+			    PACKAGE_VERSION);
+    
   g_signal_connect (about, "destroy",
 		    G_CALLBACK(gtk_widget_destroyed), &about);
   
