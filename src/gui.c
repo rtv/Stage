@@ -811,7 +811,11 @@ stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod,
 				     const char* parentname, 
 				     int layer )
 {
-  stg_rtk_fig_t* parent = stg_model_get_fig( mod, parentname );
+  stg_rtk_fig_t* parent = NULL;
+  
+  if( parentname )
+    parent = stg_model_get_fig( mod, parentname );
+  
   stg_rtk_fig_t* fig = stg_rtk_fig_create( mod->world->win->canvas, parent, layer );  
   g_datalist_set_data( &mod->figs, figname, (void*)fig );
 

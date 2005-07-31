@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.44 $
+//  $Revision: 1.45 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -530,67 +530,6 @@ int position_shutdown( stg_model_t* mod )
   
   return 0; // ok
 }
-
-/* // Set the origin of the odometric coordinate system in world coords */
-/* void stg_model_position_set_odom_origin( stg_model_t* mod, stg_pose_t* org ) */
-/* { */
-/*   // get the position data */
-/*   // get the position data */
-/*   stg_model_position_t* pos = stg_model_get_position( mod ); */
-/*   memcpy( &pos->odom_origin, org, sizeof(stg_pose_t)); */
-  
-/*   //printf( "Stage warning: the odom origin was set to (%.2f,%.2f,%.2f)\n", */
-/*   //  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a ); */
-/* } */
-
-/* // set the current pose to be the origin of the odometry coordinate system */
-/* void stg_model_position_odom_reset( stg_model_t* mod ) */
-/* { */
-/*   //printf( "Stage warning: odom was reset (zeroed)\n" ); */
-
-/*   // set the current odom measurement to zero */
-/*   // get the position data */
-/*   stg_model_position_t* pos = stg_model_get_position( mod ); */
-/*   memset( &pos->odom, 0, sizeof(pos->odom)); */
-  
-/*   // and set the odom origin is the current pose */
-/*   stg_model_position_set_odom_origin( mod,  */
-/* 				      stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t)) ); */
-/* } */
-
-
-/* void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom ) */
-/* { */
-/*   stg_model_position_t* pos = stg_model_get_position( mod ); */
-/*   // copy the odom pose straight in */
-/*   memcpy( odom, &pos->odom, sizeof(stg_pose_t)); */
-/* } */
-
-/* void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom ) */
-/* { */
-/*   stg_model_position_t* pos = stg_model_get_position( mod ); */
-
-/*   // copy the odom pose straight in */
-/*   memcpy( &pos->odom, odom, sizeof(stg_pose_t)); */
-  
-/*   // calculate what the origin of this coord system must be  */
-  
-/*   stg_pose_t* pose =  */
-/*     stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t)); */
-  
-/*   double da = odom->a - pose->a; */
-/*   double cosa = cos(da); */
-/*   double sina = sin(da); */
-  
-/*   double xx = odom->x * cosa + odom->y * sina; */
-/*   double yy = odom->y * cosa - odom->x * sina; */
-
-/*   stg_pose_t o; */
-/*   o.x = pose->x - xx; */
-/*   o.y = pose->y - yy; */
-/*   o.a = NORMALIZE( pose->a - odom->a );   */
-/*   stg_model_position_set_odom_origin( mod, &o );  \ */
-/* } */
 
 int position_unrender_data( stg_model_t* mod, char* name, 
 			    void* data, size_t len, void* userp )

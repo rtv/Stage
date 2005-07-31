@@ -510,15 +510,15 @@ void gui_window_menus_create( gui_window_t* win )
 				       win->world );
   
   gtk_action_group_add_radio_actions( group, export_format_entries, 
-				      G_N_ELEMENTS (export_format_entries), 
+				      G_N_ELEMENTS(export_format_entries), 
 				      win->frame_format, 
-				      gui_action_export_format,
+				      G_CALLBACK(gui_action_export_format),
 				      win );
   
   gtk_action_group_add_radio_actions( group, export_freq_entries, 
-				      G_N_ELEMENTS (export_freq_entries),
+				      G_N_ELEMENTS(export_freq_entries),
 				      win->frame_interval, 
-				      gui_action_export_interval, 
+				      G_CALLBACK(gui_action_export_interval), 
 				      win );
   
   gtk_ui_manager_insert_action_group (ui_manager, group, 0);
@@ -625,14 +625,16 @@ void stg_model_add_property_toggles( stg_model_t* mod,
   if( label )
     {
       static GtkActionGroup* grp = NULL;  
+      GtkAction* act = NULL;
+
       if( ! grp )
 	{
 	  grp = gtk_action_group_new( "DynamicDataActions" );
 	  gtk_ui_manager_insert_action_group(ui_manager, grp, 0);
 	}      
-
-      // find the action associated with this propname
-      GtkAction* act = gtk_action_group_get_action( grp, propname );
+      else
+	// find the action associated with this propname
+	act = gtk_action_group_get_action( grp, propname );
       
       if( act == NULL )
 	{

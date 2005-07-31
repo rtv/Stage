@@ -348,12 +348,12 @@ stg_model_t* stg_model_create( stg_world_t* world,
       exit(-1);
     }
   
-  //if( _model_init )
-    // {
-  //    g_datalist_init( &mod->props );
-  //_model_init = FALSE;
-  // }
-
+  /* if( _model_init ) */
+/*     { */
+/*       g_datalist_init( &mod->props ); */
+/*       _model_init = FALSE; */
+/*     } */
+  
   
   mod->id = id;
 
