@@ -3,8 +3,11 @@
  * File: ptest.c
  * Desc: Player test program for use with libstageplugin
  * Author: Richard Vaughan
- * CVS: $id$
  * License: GPL v2
+ * CVS info:
+ *  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptest.c,v $
+ *  $Author: rtv $
+ *  $Revision: 1.2 $
  */
 
 #include <stdio.h>
