@@ -18,3 +18,4 @@ depcomp
 install-sh
 missing
 mkinstalldirs
+.DS_Store
