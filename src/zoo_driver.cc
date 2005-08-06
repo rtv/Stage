@@ -600,7 +600,14 @@ ZooController::Run( int port )
 	pid = fork();
 	if (pid) return;
 
+#if 0 // asprintf is a GNU nicety
 	asprintf(&newpath, "%s:%s", path, getenv("PATH"));
+#else
+	char *oldpath = getenv("PATH");
+	int len = strlen(path) + strlen(oldpath) + 1;
+	newpath = (char *)calloc(len+1, sizeof(char));
+	sprintf(newpath, "%s:%s", path, oldpath);
+#endif
 	wordexp(newpath, &wex, 0);
 	if (wex.we_wordc > 0)
 		setenv("PATH", wex.we_wordv[0], 1);
@@ -620,7 +627,12 @@ ZooController::Run( int port )
 	for(i=0; cmdline; ++i)
 		argv[i] = strsep(&cmdline, " \t");
 	argv[i++] = "-p";
+#if 0
 	asprintf(argv+i++, "%d", port);
+#else
+	argv[i] = (char *)calloc(6, sizeof(char));
+	sprintf(argv[i++], "%d", port);
+#endif
 	argv[i] = NULL;
 	printf("Zoo: Executing controller ");
 	for (i=0; argv[i]; ++i)
