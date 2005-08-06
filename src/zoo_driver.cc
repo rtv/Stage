@@ -46,9 +46,6 @@
 #define ZOOREF_CREATE "zooref_create"
 typedef ZooReferee *(*zooref_create_t)(ConfigFile *, int, ZooDriver *);
 
-#define ZOO_BAD_PORTRANGE_STR "Port ranges should be strings of the form " \
-                              "min-max or a single number."
-
 #define ZOO_DEFAULT_SPECIES "planktron"
 #define ZOO_DEFAULT_FREQUENCY 1
 
@@ -79,6 +76,21 @@ ZooDriver_Register( DriverTable *table )
 
 /********* General *********/
 
+int
+zoo_err( const char *fmt, ... )
+{
+	va_list va;
+	char fmt2[1024];
+	int r;
+
+	sprintf(fmt2, "Zoo: %s", fmt);
+	va_start(va, fmt);
+	r = vfprintf(stderr, fmt2, va);
+	va_end(va);
+
+	return r;
+}
+
 /********* ZooDriver *********/
 
 
@@ -95,41 +107,8 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 	/* set me up as a valid player interface... or something */
 	player_device_id_t devid;
 	if (cf->ReadDeviceId(&devid, section, "provides", 0, 0, NULL))
-		PLAYER_ERROR("Zoo is confused\n");
+		zoo_err("Zoo is confused\n");
 	AddInterface(devid, PLAYER_ALL_MODE, 0, 0, 0, 0);
-
-	/* find all species in the config file */
-	species_count = 0;
-	for (int i=0; i < cf->GetSectionCount(); ++i)
-		if (!strcmp(cf->GetSectionType(i), ZOO_SPECIES_SECTYPE))
-			++species_count;
-	species = new ZooSpecies*[species_count];
-	int si=0;
-	for (int i=0; i < cf->GetSectionCount(); ++i) {
-		int pi;
-
-		/* only care about species sections */
-		if (strcmp(cf->GetSectionType(i), ZOO_SPECIES_SECTYPE))
-			continue;
-
-		/* only care about children of a zoo driver section */
-		pi = cf->GetSectionParent(i);
-		if (pi < 0
-		 || strcmp(cf->GetSectionType(pi), "driver")
-		 || strcmp(cf->ReadString(pi, "name", ""), ZOO_DRIVER_NAME))
-			continue;
-
-		ZooSpecies *zs = new ZooSpecies(cf, i);
-		species[si++] = zs;
-	}
-	/* FIXME: Something very bad happens here.  The port ranges on species
-	 * are being overwritten somehow.
-	 * Temporary fix: using entirely dynamic memory (i.e.
-	 * "ZooSpecies **species" instead of "ZooSpecies *species")works... why?
-	 */
-
-	/* TODO: Grab sigint? */
-	//signal(SIGINT, sigint_handler);
 
 	/* build a model-to-port mapping */
 	for (int i = 0; i < cf->GetSectionCount(); ++i) {
@@ -152,6 +131,40 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 		modelList.push_back(modelname);
 	}
 
+	/* find all species in the config file: requires a model-to-port mapping
+	 * already exists */
+	species_count = 0;
+	for (int i=0; i < cf->GetSectionCount(); ++i)
+		if (!strcmp(cf->GetSectionType(i), ZOO_SPECIES_SECTYPE))
+			++species_count; /* count the species */
+	species = new ZooSpecies*[species_count];
+	int si=0;
+	for (int i=0; i < cf->GetSectionCount(); ++i) {
+		int pi;
+
+		/* only care about species sections */
+		if (strcmp(cf->GetSectionType(i), ZOO_SPECIES_SECTYPE))
+			continue;
+
+		/* only care about children of a zoo driver section */
+		pi = cf->GetSectionParent(i);
+		if (pi < 0
+		 || strcmp(cf->GetSectionType(pi), "driver")
+		 || strcmp(cf->ReadString(pi, "name", ""), ZOO_DRIVER_NAME))
+			continue;
+
+		ZooSpecies *zs = new ZooSpecies(cf, i, this);
+		species[si++] = zs;
+	}
+	/* FIXME: Something very bad happens here.  The port ranges on species
+	 * are being overwritten somehow.
+	 * Temporary fix: using entirely dynamic memory (i.e.
+	 * "ZooSpecies **species" instead of "ZooSpecies *species")works... why?
+	 */
+
+	/* TODO: Grab sigint? */
+	//signal(SIGINT, sigint_handler);
+
 	/* get the path to find controllers in */
 	ZooController::path = cf->ReadString(section, "controllerpath", "");
 
@@ -164,7 +177,7 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 		/* load the dynamic library */
 		zooref_handle = dlopen(referee_path, RTLD_LAZY);
 		if (!zooref_handle) {
-			fprintf(stderr, "Zoo: cannot load referee %s: %s\n",
+			zoo_err("cannot load referee %s: %s\n",
 				referee_path, dlerror());
 			goto default_referee;
 		}
@@ -173,8 +186,7 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 		zooref_create = (zooref_create_t)
 			dlsym(zooref_handle, ZOOREF_CREATE);
 		if (!zooref_create) {
-			fprintf(stderr, "Zoo: referee must define %s\n",
-				ZOOREF_CREATE);
+			zoo_err("referee must define %s\n", ZOOREF_CREATE);
 			dlclose(zooref_handle);
 			goto default_referee;
 		}
@@ -266,7 +278,7 @@ ZooDriver::KillAll( void )
 }
 
 const char *
-ZooDriver::GetModelName( int k )
+ZooDriver::GetModelNameByIndex( int k )
 {
 	return modelList[k];
 }
@@ -278,15 +290,47 @@ ZooDriver::GetModelCount( void )
 }
 
 stg_model_t *
-ZooDriver::GetModel( const char *name )
+ZooDriver::GetModelByName( const char *name )
 {
 	return stg_world_model_name_lookup(StgDriver::world, name);
 }
 
 stg_model_t *
-ZooDriver::GetModel( int k )
+ZooDriver::GetModelByIndex( int k )
 {
-	return GetModel(modelList[k]);
+	return GetModelByName(modelList[k]);
+}
+
+stg_model_t *
+ZooDriver::GetModelByPort( int p )
+{
+	const char *mname = GetModelNameByPort(p);
+	return mname ? GetModelByName(mname) : NULL;
+}
+
+const char *
+ZooDriver::GetModelNameByPort( int p )
+{
+	std::map<const char *, int>::iterator i;
+
+	for (i=portMap.begin(); i != portMap.end(); ++i)
+		if (i->second == p)
+			return i->first;
+
+	return NULL;
+}
+
+int
+ZooDriver::GetModelPortByName( const char *m )
+{
+	std::map<const char *, int>::iterator i;
+	for (i=portMap.begin(); i!=portMap.end(); ++i)
+		if (!strcmp(i->first, m)) return i->second;
+	return 0;
+#if 0
+	/* FIXME: why doesn't this work?  Man, STL sucks. */
+	return portMap[m];
+#endif
 }
 
 /**
@@ -304,17 +348,6 @@ ZooDriver::GetScore( const char *model, void *data )
 	ZooController *zc = controllerMap[portMap[model]];
 
 	if (!zc) return -1;
-
-#if 0
-	void *sdata;
-	size_t ssize;
-
-	sdata = zc->scoreMap[species];
-	if (!sdata) return 0;
-	ssize = zc->scoreSizeMap[species];
-
-	memcpy(data, sdata, ssize);
-#endif
 	if (!zc->score_data) return 0;
 	memcpy(data, zc->score_data, zc->score_size);
 
@@ -351,15 +384,6 @@ ZooDriver::SetScore( const char *model, void *score, size_t siz )
 
 	if (!zc) return -1;
 
-#if 0
-	void *data;
-	data = zc->scoreMap[species];
-	if (data) realloc(data, siz);
-	memcpy(data, score, siz);
-
-	zc->scoreMap[species] = data;
-	zc->scoreSizeMap[species] = siz;
-#endif
 	if (zc->score_data) zc->score_data = realloc(zc->score_data, siz);
 	else zc->score_data = malloc(siz);
 	memcpy(zc->score_data, score, siz);
@@ -384,34 +408,6 @@ ZooDriver::ClearScore( const char *model )
 	return 0;
 }
 
-#if 0
-void
-ZooDriver::PrintScore( const char *filename )
-{
-	int i;
-	FILE *fp;
-
-	fp = fopen(filename, "w");
-	if (!fp) {
-		perror(filename);
-		return;
-	}
-
-	for (i = 0; i < species_count; ++i)
-		species[i]->PrintScore(fp);
-
-	fclose(fp);
-}
-
-void
-ZooDriver::SetScorePrintFunction( const char *species,
-	zooref_score_printer_t printer, void *user_data )
-{
-	ZooSpecies *zs = GetSpeciesByName(species);
-	zs->SetScorePrintFunction(printer, user_data);
-}
-#endif
-
 ZooSpecies *
 ZooDriver::GetSpeciesByName( const char *name )
 {
@@ -424,47 +420,33 @@ ZooDriver::GetSpeciesByName( const char *name )
 
 /********* ZooSpecies *********/
 
-ZooSpecies::ZooSpecies( void )
-{
-}
-
 /**
- * ZooSpecies constructor.  Parse the port ranges and add controllers.
+ * ZooSpecies constructor.
  */
-ZooSpecies::ZooSpecies( ConfigFile *cf, int section )
+ZooSpecies::ZooSpecies( ConfigFile *cf, int section, ZooDriver *zoo )
 {
-	int err=0;
-
 	/* get the name; this is a const char * and it's not my problem
 	 * to free it. */
 	name = cf->ReadString(section, "name", ZOO_DEFAULT_SPECIES);
 
-	/* parse port ranges */
-	range_count = cf->GetTupleCount(section, "portrange");
-	min_port = new int[range_count];
-	max_port = new int[range_count];
-	controller.clear();
-	for (int i=0; i < range_count; ++i) {
-		const char *prs = cf->ReadTupleString(section, "portrange", i, "");
-		int r = sscanf(prs, "%d-%d", min_port+i, max_port+i);
-		switch(r) {
-		case 0:
-			/* TODO: would be nice if I could get the current line of the
-			 * config file... */
-			PLAYER_ERROR(ZOO_BAD_PORTRANGE_STR);
-			++err;
-			break;
-		case 1:
-			/* singleton range */
-			max_port[i] = min_port[i];
-			break;
-		case 2:
-			/* full range... don't need to do anything */
-			break;
-		}
+	/* get the list of models (and therefore ports) which are members of this
+	 * species */
+	population_size = cf->GetTupleCount(section, "population");
+	port_list = new int[population_size];
+	model_list = new char*[population_size];
+	for (int i=0; i < population_size; ++i) {
+		const char *mname;
+		mname = cf->ReadTupleString(section, "population", i, "");
+		if (!mname || !*mname) break;
+		model_list[i] = strdup(mname);
+		port_list[i] = zoo->GetModelPortByName(mname);
+		if (port_list[i] == 0)
+			zoo_err("Member \"%s\" of species \"%s\" doesn't exist.\n",
+				model_list[i], name);
 	}
 
 	/* find all controllers belonging to me */
+	controller.clear();
 	for (int i=0; i < cf->GetSectionCount(); ++i) {
 		int pi;
 
@@ -472,20 +454,20 @@ ZooSpecies::ZooSpecies( ConfigFile *cf, int section )
 		if (strcmp(cf->GetSectionType(i), ZOO_CONTROLLER_SECTYPE))
 			continue;
 
-		/* should belong to me (the correct species) */
-		if (strcmp(cf->ReadString(i, "species", ""), name))
-			continue;
-
-		/* should be the the child section of a zoo-driver section */
+		/* this should be a child section of my section */
 		pi = cf->GetSectionParent(i);
 		if (pi < 0
-		 || strcmp(cf->GetSectionType(pi), "driver")
-		 || strcmp(cf->ReadString(pi, "name", ""), ZOO_DRIVER_NAME))
+		 || strcmp(cf->GetSectionType(pi), "species")
+		 || strcmp(cf->ReadString(pi, "name", ""), name))
 			continue;
 
 		ZooController zc(cf, i);
 		controller.push_back(zc);
 	}
+
+	/* initialize controller selection */
+	next_controller = 0;
+	controller_instance = 0;
 
 	ZOO_DEBUGMSG("Zoo: Added species %s\n", name, 0);
 }
@@ -493,40 +475,10 @@ ZooSpecies::ZooSpecies( ConfigFile *cf, int section )
 ZooSpecies::~ZooSpecies()
 {
 	ZOO_DEBUGMSG("Zoo: Cleaning up species %s", name, 0);
-	delete min_port;
-	delete max_port;
+	delete port_list;
+	delete model_list;
 	ZOO_DEBUGMSG("Zoo: Done cleaning up %s\n", name, 0);
 }
-
-#if 0
-void
-ZooSpecies::SetScorePrintFunction( zooref_score_printer_t printer,
-	void *user_data )
-{
-	score_printer = printer;
-	score_printer_user_data = user_data;
-}
-
-void
-ZooSpecies::PrintScore( FILE *fp )
-{
-	void *score;
-	size_t siz;
-	char buf[ZOO_SCORE_BUFFER_SIZE];
-	unsigned int i;
-	ZooController *zc=NULL;
-
-	for (i = 0; i < controller.size(); ++i) {
-		zc = &controller[i];
-		score = zc->scoreMap[name];
-		siz = zc->scoreSizeMap[name];
-		score_printer(buf, score, siz, score_printer_user_data);
-	}
-
-	fprintf(fp, "<tr><td>%s</td><td>%s</td></tr>\n",
-		zc->GetCommand(), buf);
-}
-#endif
 
 /**
  * ZooSpecies::Run(p) -- run a controller on port p
@@ -536,8 +488,7 @@ ZooSpecies::Run( int p )
 {
 	ZooController *zc = SelectController();
 	if (!zc) {
-		fprintf(stderr, "Zoo: No controllers available for species %s\n",
-			name);
+		zoo_err("No controllers available for species %s\n", name);
 		return NULL;
 	}
 	zc->Run(p);
@@ -550,15 +501,15 @@ ZooSpecies::Run( int p )
 void
 ZooSpecies::RunAll( cmap_t &cMap )
 {
-	int r, p;
+	int p;
 	ZooController *zc;
 
-	for (r = 0; r < range_count; ++r)
-		for (p = min_port[r]; p <= max_port[r]; ++p) {
-			zc = Run(p);
-			if (!zc) return;
-			cMap[p] = zc;
-		}
+	for (p = 0; p < population_size; ++p) {
+		if (port_list[p] <= 0) continue;
+		zc = Run(port_list[p]);
+		if (!zc) cMap.erase(p);
+		else cMap[p] = zc;
+	}
 }
 
 /**
@@ -567,31 +518,13 @@ ZooSpecies::RunAll( cmap_t &cMap )
 void
 ZooSpecies::KillAll( cmap_t &cMap )
 {
-	int r, p;
+	int p;
 
-	for (r = 0; r < range_count; ++r)
-		for (p = min_port[r]; p <= max_port[r]; ++p) {
-			cMap[p]->Kill();
-			cMap.erase(p);
-		}
+	for (p = 0; p < population_size; ++p) {
+		cMap[port_list[p]]->Kill();
+		cMap.erase(p);
+	}
 }
-
-#if 0
-/**
- * ZooSpecies::Kill(p) -- kill controller on port p
- */
-void
-ZooSpecies::Kill( int p )
-{
-	ZooController *zc;
-
-	zc = portAlloc[p];
-	if (!zc) return;
-
-	zc->Kill();
-	portAlloc.erase(p);
-}
-#endif
 
 /**
  * ZooSpecies::SelectController -- pick a controller from the pool.
@@ -600,7 +533,6 @@ ZooSpecies::Kill( int p )
 ZooController *
 ZooSpecies::SelectController( void )
 {
-	static int next=0, inst=0;
 	int n;
 	ZooController *zc;
 
@@ -608,10 +540,10 @@ ZooSpecies::SelectController( void )
 
 	if (n == 0) return NULL;
 
-	zc = &controller[next];
-	if (inst++ == zc->GetFrequency()) {
-		inst = 0;
-		next = ++next % n;
+	zc = &controller[next_controller];
+	if (controller_instance++ == zc->GetFrequency()) {
+		controller_instance = 0;
+		next_controller = ++next_controller % n;
 	}
 	
 	return zc;
@@ -620,10 +552,8 @@ ZooSpecies::SelectController( void )
 bool
 ZooSpecies::Hosts( int p )
 {
-	int r;
-
-	for (r = 0; r < range_count; ++r)
-		if (min_port[r] <= p && p <= max_port[r])
+	for (int i=0; i < population_size; ++i)
+		if (port_list[i] == p)
 			return true;
 
 	return false;
@@ -632,12 +562,10 @@ ZooSpecies::Hosts( int p )
 void
 ZooSpecies::print( void )
 {
-	int i;
-
-	printf("Zoo species %s ( ", name);
-	for (i = 0; i < range_count; ++i)
-		printf("%d-%d ", min_port[i], max_port[i]);
-	printf(")\n");
+	printf("Zoo species %s = { ", name);
+	for (int i = 0; i < population_size; ++i)
+		printf("%s(%d) ", model_list[i], port_list[i]);
+	printf("}\n");
 }
 
 /********* ZooController *********/
@@ -665,7 +593,8 @@ ZooController::~ZooController()
 void
 ZooController::Run( int port )
 {
-	char *cmdline, *newpath;
+	char *cmdline, *newpath, *argv[256];
+	int i;
 	wordexp_t wex;
 
 	pid = fork();
@@ -678,6 +607,7 @@ ZooController::Run( int port )
 	free(newpath);
 
 	/* the 10 extra bytes are for " -p #####\0" */
+#if 0
 	cmdline = (char *)malloc(strlen(command)+10);
 	sprintf(cmdline, "%s -p %d", command, port);
 	ZOO_DEBUGMSG("executing controller %s\n", cmdline, 0);
@@ -685,6 +615,21 @@ ZooController::Run( int port )
 	system(cmdline); // TODO: Why do I feel like I should be using exec?
 	free(cmdline);
 	exit(0);
+#else
+	cmdline = strdup(command);
+	for(i=0; cmdline; ++i)
+		argv[i] = strsep(&cmdline, " \t");
+	argv[i++] = "-p";
+	asprintf(argv+i++, "%d", port);
+	argv[i] = NULL;
+	printf("Zoo: Executing controller ");
+	for (i=0; argv[i]; ++i)
+		printf("%s ", argv[i]);
+	putchar('\n');
+	execvp(argv[0], argv);
+	perror(argv[0]);
+	exit(1);
+#endif
 
 	return;
 }
@@ -707,7 +652,7 @@ ZooReferee::Startup( void )
 {
 	int i;
 	for (i = 0; i < zoo->GetModelCount(); ++i) {
-		stg_model_t *mod = zoo->GetModel(i);
+		stg_model_t *mod = zoo->GetModelByIndex(i);
 		printf("Zoo: model %s has id %d\n", mod->token, mod->id);
 	}
 	zoo->RunAll();

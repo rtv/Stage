@@ -26,6 +26,9 @@ typedef std::map< int, ZooController * > cmap_t;
 /* for registering the driver */
 void ZooDriver_Register(DriverTable *);
 
+/* general stuff */
+int zoo_err(const char *, int ...);
+
 class ZooDriver : public Driver
 {
 public:
@@ -34,10 +37,12 @@ public:
 
 	ZooSpecies *GetSpeciesByName(const char *);
 
+	/* Player calls these */
 	int Setup(void);
 	int Shutdown(void);
 	void Prepare(void);
 
+	/* Functions for starting and stopping controllers */
 	void Run(int);
 	void Run(const char *);   // accepts a model name
 	void RunAll(void);
@@ -45,20 +50,23 @@ public:
 	void Kill(const char *);  // accepts a model name
 	void KillAll(void);
 
+	/* Model access functions.  Provide a variety of ways of getting a
+	 * variety of representations of a robot: a stg_model_t object, a string
+	 * holding the name, the index in a list kept by Zoo, or port. */
 	int GetModelCount(void);
-	const char *GetModelName(int);
-	stg_model_t *GetModel(const char *);
-	stg_model_t *GetModel(int);
+	const char *GetModelNameByIndex(int);
+	const char *GetModelNameByPort(int);
+	stg_model_t *GetModelByName(const char *);
+	stg_model_t *GetModelByIndex(int);
+	stg_model_t *GetModelByPort(int);
+	int GetModelPortByName(const char *);
 
+	/* Functions for storing and retrieving arbitrary score data */
 	int GetScore(const char *, void *);
 	int GetScoreSize(const char *);
 	int SetScore(const char *, void *, size_t);
 	int ClearScore(const char *);
 
-#if 0
-	void PrintScore(const char *filename);
-	void SetScorePrintFunction(const char *, zooref_score_printer_t, void *);
-#endif
 private:
 	int species_count;
 	ZooSpecies **species;
@@ -75,7 +83,7 @@ class ZooSpecies
 {
 public:
 	ZooSpecies(void);
-	ZooSpecies(ConfigFile *cf, int section);
+	ZooSpecies(ConfigFile *cf, int section, ZooDriver *);
 	~ZooSpecies();
 	ZooController *Run(int);
 	void RunAll(cmap_t &cMap);
@@ -94,10 +102,14 @@ public:
 #endif
 	const char *name;
 private:
-	int range_count;
-	int *min_port;
-	int *max_port;
+	int population_size;
+	int *port_list;
+	char **model_list;
 	std::vector<ZooController> controller;
+
+	/* used by SelectController */
+	int next_controller;
+	int controller_instance; // for frequency > 1
 
 #if 0
 	zooref_score_printer_t score_printer;
