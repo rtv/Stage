@@ -1213,7 +1213,8 @@ int stg_model_update_pose( stg_model_t* mod )
   gpose.x += gvel.x * interval;
   gpose.y += gvel.y * interval;
   gpose.a += gvel.a * interval;
-      
+
+  // check this model and all it's children at the new pose
   double hitx=0, hity=0;
   stg_model_t* hitthing =
     stg_model_test_collision_at_pose( mod, &gpose, &hitx, &hity );
