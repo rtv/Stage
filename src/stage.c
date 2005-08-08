@@ -22,6 +22,16 @@
 int _stg_quit = FALSE;
 int _stg_disable_gui = FALSE;
 
+/** @defgroup stage Stage 
+    A multiple robot simulator.
+    @{
+*/
+
+/**
+Instructions for using Stage and configuring worlds
+*/
+
+/**@}*/
 
 int stg_init( int argc, char** argv )
 {
@@ -41,7 +51,7 @@ int stg_init( int argc, char** argv )
   return 0; // ok
 }
 
-const char* stg_get_version_string( void )
+const char* stg_version_string( void )
 {
   return PACKAGE_STRING;
 }
@@ -182,55 +192,11 @@ stg_color_t stg_lookup_color(const char *name)
   return 0xFF0000;
 }
 
-//////////////////////////////////////////////////////////////////////////
-// scale an array of polygons so they fit in a rectangle of size
-// [width] by [height], with the origin in the center of the rectangle
-void stg_normalize_polygons( stg_polygon_t* polys, int num, 
-			     double width, double height )
-{
-  // assuming the rectangles fit in a square +/- one billion units
-  double minx, miny, maxx, maxy;
-  minx = miny = BILLION;
-  maxx = maxy = -BILLION;
-  
-  int l;
-  for( l=0; l<num; l++ ) // examine all the polygons
-    {
-      // examine all the points in the polygon
-      int p;
-      for( p=0; p<polys[l].points->len; p++ )
-	{
-	  stg_point_t* pt = &g_array_index( polys[l].points, stg_point_t, p);
-	  if( pt->x < minx ) minx = pt->x;
-	  if( pt->y < miny ) miny = pt->y;
-	  if( pt->x > maxx ) maxx = pt->x;
-	  if( pt->y > maxy ) maxy = pt->y;	  
-	}      
-    }
-  
-  // now normalize all lengths so that the lines all fit inside
-  // the specified rectangle
-  double scalex = (maxx - minx);
-  double scaley = (maxy - miny);
-  
-  for( l=0; l<num; l++ ) // scale each polygon
-    { 
-      // scale all the points in the polygon
-      int p;
-      for( p=0; p<polys[l].points->len; p++ )
-	{
-	  stg_point_t* pt = &g_array_index( polys[l].points, stg_point_t, p);
-	  
-	  pt->x = ((pt->x - minx) / scalex * width) - width/2.0;
-	  pt->y = ((pt->y - miny) / scaley * height) - height/2.0;
-	}
-    }
-}
 
 
 //////////////////////////////////////////////////////////////////////////
 // scale an array of rectangles so they fit in a unit square
-void stg_normalize_lines( stg_line_t* lines, int num )
+void stg_lines_normalize( stg_line_t* lines, int num )
 {
   // assuming the rectangles fit in a square +/- one billion units
   double minx, miny, maxx, maxy;
@@ -265,7 +231,7 @@ void stg_normalize_lines( stg_line_t* lines, int num )
     }
 }
 
-void stg_scale_lines( stg_line_t* lines, int num, double xscale, double yscale )
+void stg_lines_scale( stg_line_t* lines, int num, double xscale, double yscale )
 {
   int l;
   for( l=0; l<num; l++ )
@@ -277,7 +243,7 @@ void stg_scale_lines( stg_line_t* lines, int num, double xscale, double yscale )
     }
 }
 
-void stg_translate_lines( stg_line_t* lines, int num, double xtrans, double ytrans )
+void stg_lines_translate( stg_line_t* lines, int num, double xtrans, double ytrans )
 {
   int l;
   for( l=0; l<num; l++ )
@@ -291,7 +257,7 @@ void stg_translate_lines( stg_line_t* lines, int num, double xtrans, double ytra
 
 //////////////////////////////////////////////////////////////////////////
 // scale an array of rectangles so they fit in a unit square
-void stg_normalize_rects( stg_rotrect_t* rects, int num )
+void stg_rotrects_normalize( stg_rotrect_t* rects, int num )
 {
   // assuming the rectangles fit in a square +/- one billion units
   double minx, miny, maxx, maxy;
@@ -336,7 +302,7 @@ void stg_normalize_rects( stg_rotrect_t* rects, int num )
 }	
 
 // returns an array of 4 * num_rects stg_line_t's
-stg_line_t* stg_rects_to_lines( stg_rotrect_t* rects, int num_rects )
+stg_line_t* stg_rotrects_to_lines( stg_rotrect_t* rects, int num_rects )
 {
   // convert rects to an array of lines
   int num_lines = 4 * num_rects;
@@ -370,7 +336,7 @@ stg_line_t* stg_rects_to_lines( stg_rotrect_t* rects, int num_rects )
 }
 
 /// converts an array of rectangles into an array of polygons
-stg_polygon_t* stg_rects_to_polygons( stg_rotrect_t* rects, size_t count )
+stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count )
 {
   stg_polygon_t* polys = stg_polygons_create( count );
   stg_point_t pts[4];
@@ -394,30 +360,6 @@ stg_polygon_t* stg_rects_to_polygons( stg_rotrect_t* rects, size_t count )
   return polys;
 }
 
-void stg_polygon_print( stg_polygon_t* poly )
-{
-  printf( "polygon: %d pts : ", poly->points->len );
-  
-  int i;
-  for(i=0;i<poly->points->len;i++)
-    {
-      stg_point_t* pt = &g_array_index( poly->points, stg_point_t, i );
-      printf( "(%.2f,%.2f) ", pt->x, pt->y );
-    }
-  puts("");
-}
-
-void stg_polygons_print( stg_polygon_t* polys, unsigned int count )
-{
-  printf( "polygon array (%d polys)\n", count );
-  
-  int i;
-  for( i=0; i<count; i++ )
-    {
-      printf( "[%d] ", i ); 
-      stg_polygon_print( &polys[i] );
-    }
-}
 
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
@@ -486,10 +428,10 @@ gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y )
   return FALSE;
 }
 
-int stg_load_image( const char* filename, 
-		    stg_rotrect_t** rects, 
-		    int* rect_count,
-		    int* widthp, int* heightp )
+int stg_rotrects_from_image_file( const char* filename, 
+				  stg_rotrect_t** rects, 
+				  int* rect_count,
+				  int* widthp, int* heightp )
 {
   g_type_init(); // glib GObject initialization
 
@@ -610,6 +552,20 @@ int stg_load_image( const char* filename,
   return 0; // ok
 }
 
+// POINTS -----------------------------------------------------------
+
+stg_point_t* stg_points_create( size_t count )
+{
+  return( (stg_point_t*)calloc( count, sizeof(stg_point_t)));
+}
+
+void stg_points_destroy( stg_point_t* pts )
+{
+  free( pts );
+}
+
+// POLYGONS -----------------------------------------------------------
+
 /// return an array of [count] polygons. Caller must free() the space.
 stg_polygon_t* stg_polygons_create( int count )
 {
@@ -634,18 +590,6 @@ void stg_polygons_destroy( stg_polygon_t* p, size_t count )
   free( p );      
 }
 
-/// return a single polygon structure. Caller  must free() the space.
-stg_polygon_t* stg_polygon_create( void )
-{
-  return stg_polygons_create( 1 );
-}
-
-/// destroy a single polygon
-void stg_polygon_destroy( stg_polygon_t* p )
-{
-  stg_polygons_destroy( p, 1 );
-}
-
 stg_polygon_t* stg_unit_polygon_create( void )
 {
   stg_point_t pts[4];
@@ -658,30 +602,81 @@ stg_polygon_t* stg_unit_polygon_create( void )
   pts[3].x = 0;
   pts[3].y = 1;  
   
-  stg_polygon_t* poly = stg_polygon_create();
+  stg_polygon_t* poly = stg_polygons_create(1);
   stg_polygon_set_points( poly, pts, 4 );  
   return poly;
 }
 
-stg_point_t* stg_points_create( size_t count )
+//////////////////////////////////////////////////////////////////////////
+// scale an array of polygons so they fit in a rectangle of size
+// [width] by [height], with the origin in the center of the rectangle
+void stg_polygons_normalize( stg_polygon_t* polys, int num, 
+			     double width, double height )
 {
-  return( (stg_point_t*)calloc( count, sizeof(stg_point_t)));
+  // assuming the rectangles fit in a square +/- one billion units
+  double minx, miny, maxx, maxy;
+  minx = miny = BILLION;
+  maxx = maxy = -BILLION;
+  
+  int l;
+  for( l=0; l<num; l++ ) // examine all the polygons
+    {
+      // examine all the points in the polygon
+      int p;
+      for( p=0; p<polys[l].points->len; p++ )
+	{
+	  stg_point_t* pt = &g_array_index( polys[l].points, stg_point_t, p);
+	  if( pt->x < minx ) minx = pt->x;
+	  if( pt->y < miny ) miny = pt->y;
+	  if( pt->x > maxx ) maxx = pt->x;
+	  if( pt->y > maxy ) maxy = pt->y;	  
+	}      
+    }
+  
+  // now normalize all lengths so that the lines all fit inside
+  // the specified rectangle
+  double scalex = (maxx - minx);
+  double scaley = (maxy - miny);
+  
+  for( l=0; l<num; l++ ) // scale each polygon
+    { 
+      // scale all the points in the polygon
+      int p;
+      for( p=0; p<polys[l].points->len; p++ )
+	{
+	  stg_point_t* pt = &g_array_index( polys[l].points, stg_point_t, p);
+	  
+	  pt->x = ((pt->x - minx) / scalex * width) - width/2.0;
+	  pt->y = ((pt->y - miny) / scaley * height) - height/2.0;
+	}
+    }
 }
 
-stg_point_t* stg_point_create( void )
+void stg_polygon_print( stg_polygon_t* poly )
 {
-  return stg_points_create(1);
+  printf( "polygon: %d pts : ", poly->points->len );
+  
+  int i;
+  for(i=0;i<poly->points->len;i++)
+    {
+      stg_point_t* pt = &g_array_index( poly->points, stg_point_t, i );
+      printf( "(%.2f,%.2f) ", pt->x, pt->y );
+    }
+  puts("");
 }
 
-void stg_points_destroy( stg_point_t* pts )
+void stg_polygons_print( stg_polygon_t* polys, unsigned int count )
 {
-  free( pts );
+  printf( "polygon array (%d polys)\n", count );
+  
+  int i;
+  for( i=0; i<count; i++ )
+    {
+      printf( "[%d] ", i ); 
+      stg_polygon_print( &polys[i] );
+    }
 }
 
-void stg_point_destroy( stg_point_t* pt )
-{
-  free( pt );
-}
 
 /// Copies [count] points from [pts] into polygon [poly], allocating
 /// memory if mecessary. Any previous points in [poly] are

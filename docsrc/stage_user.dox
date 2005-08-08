@@ -400,8 +400,10 @@ INPUT = help.txt ../src
 # *.c *.cc *.cxx *.cpp *.c++ *.java *.ii *.ixx *.ipp *.i++ *.inl *.h *.hh *.hxx *.hpp 
 # *.h++ *.idl *.odl *.cs *.php *.php3 *.inc
 
-# read the docs from each model file
-FILE_PATTERNS          = *.c *.cc 
+# read the docs from each source file - don't read the header file:
+# that's the job of the reference manual
+
+FILE_PATTERNS = *.c *.cc
 
 #FILE_PATTERNS          = *.cc *.c *.h
 

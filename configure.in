@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.73 2005-07-30 06:21:10 rtv Exp $
+dnl $Id: configure.in,v 1.74 2005-08-08 19:00:30 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -96,6 +96,7 @@ AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
 
 AC_OUTPUT(Makefile 
           src/Makefile 
+	  docsrc/Makefile
           worlds/Makefile 
           worlds/bitmaps/Makefile 
           replace/Makefile

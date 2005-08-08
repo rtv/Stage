@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -179,6 +179,24 @@ int energy_match( stg_model_t* mod, stg_model_t* hitmod )
 }	
 
 
+stg_watts_t energy_connection_sum( stg_model_t* mod, GPtrArray* cons )
+{
+  stg_watts_t watts = 0;
+  
+  // find the total current required, so I can do current limiting
+  for( int i=0; i < cons->len; i++ )
+    {
+      stg_model_t* con = (stg_model_t*)g_ptr_array_index( a, i );
+      
+      if( con == mod ) // skip myself
+	continue;
+      
+      watts += con->watts;
+    }
+
+  return watts;
+}
+
 int energy_update( stg_model_t* mod )
 {     
   PRINT_DEBUG1( "energy service model %d", mod->id  );  
@@ -236,31 +254,16 @@ int energy_update( stg_model_t* mod )
       // add up the power required by all connected devices
       stg_watts_t watts = 0.0;
       
-      GPtrArray* a = NULL;
-      assert( (a = stg_model_get_prop( mod, "connections" )) );
-      
+      // get the connected devices
+      GPtrArray* cons = stg_model_get_prop( mod, "connections" );
 
-      //printf( "Energy model %s\n", mod->token );
+      watts += energy_connection_sum( mod, cons );
       
-      // add all the locally connected devices
-      int added = stg_model_tree_to_ptr_array( stg_model_root(mod),
-					       a );
+      // find all the locally connected devices
+      GPtrArray* locals = stg_model_array_from_tree( stg_model_root(mod));
       
-      //  printf( "added %d models to connected list of %s\n",
-      //  added, mod->token );
-      
-      // find the total current required, so I can do current limiting
-      int i;
-      for( i=0; i < a->len; i++ )
-	{
-	  stg_model_t* con = (stg_model_t*)g_ptr_array_index( a, i );
-	  
-	  if( con == mod ) // skip myself
-	    continue;
-	  
-	  watts += con->watts;
-	}
-      
+      watts += energy_connection_sum( mod, locals );
+						       
       //printf( "total watts required %.2f\n", watts ); 
       
       // todo - current limiting on this line

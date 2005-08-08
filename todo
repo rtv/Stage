@@ -1,5 +1,9 @@
 -- TODO --
 
+ - sell large scale sims to industry?
+ - 0.01M robots
+ - pacman world
+
  - boundary property
 
  - sensible defaults - laser (all devices)
@@ -14,7 +18,8 @@
 
  - gripper 
 
- - collapse all stg_X player drivers into a single driver with
-multiple interfaces. See note in stg_driver.cc
 
 -- DONE --
+
+ - collapse all stg_X player drivers into a single driver with
+multiple interfaces. See note in stg_driver.cc

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.73 $
+//  $Revision: 1.74 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -35,6 +35,10 @@ extern stg_rtk_fig_t* fig_debug_rays;
 #define STG_DEFAULT_LASER_SAMPLES 180
 
 /** 
+@addtogroup model
+@{ */
+
+/**
 @defgroup model_laser Laser model 
 The laser model simulates a scanning laser rangefinder
 

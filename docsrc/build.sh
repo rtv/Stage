@@ -5,8 +5,6 @@ PAGEDIR=stage_user
 
 cat header_top.src > $OUTPUT
 
-#  <li class=menu><a href="group__driver__stage.html">stage</a></li>
-
 # start the list of derived models
 echo "<ul>" >> $OUTPUT
 
@@ -24,19 +22,19 @@ done
 echo "</ul></ul>" >> $OUTPUT
 
 ## start the list of player plugins
-#echo "<hr><li class=menu>Plugins<ul>" >> $OUTPUT
+echo "<hr><li class=menu>Player interfaces<ul>" >> $OUTPUT
 
-#for PAGE in `ls $PAGEDIR/group__driver*.html` ; do
-#
-#   PAGENAME=${PAGE#$PAGEDIR/}
-#   STRIPEND=${PAGE%.html}
-#   STRIPPED=${STRIPEND#$PAGEDIR/group__driver__}
-#   
-#   echo "Adding link for " $STRIPPED
-#   echo "<li class=menu><a href=\""$PAGENAME"\">"$STRIPPED"</a></li>" >> $OUTPUT
-#done
+for PAGE in `ls $PAGEDIR/group__player*.html` ; do
+
+   PAGENAME=${PAGE#$PAGEDIR/}
+   STRIPEND=${PAGE%.html}
+   STRIPPED=${STRIPEND#$PAGEDIR/group__player__}
+   
+   echo "Adding link for " $STRIPPED
+   echo "<li class=menu><a href=\""$PAGENAME"\">"$STRIPPED"</a></li>" >> $OUTPUT
+done
 ## end the list of plugins
-#echo "</ul>" >> $OUTPUT
+echo "</ul>" >> $OUTPUT
 
 echo "<hr><li class=menu><a href=group__driver__stage.html>Plugin</a></li>" >> $OUTPUT
 

@@ -23,9 +23,20 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_sonar.cc,v 1.3 2005-07-30 00:04:41 rtv Exp $
+ * CVS: $Id: p_sonar.cc,v 1.4 2005-08-08 19:00:38 rtv Exp $
  */
 
+// DOCUMENTATION ------------------------------------------------------------
+
+/** @addtogroup player 
+@par Sonar interface
+
+- Data
+- Configs
+ - PLAYER_SONAR_GET_GEOM_REQ
+*/
+
+// CODE ----------------------------------------------------------------------
 
 #include "p_driver.h"
 

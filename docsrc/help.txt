@@ -1,14 +1,16 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: help.txt,v 1.9 2005-02-13 07:37:42 rtv Exp $
+ * $Id: help.txt,v 1.10 2005-08-08 19:00:32 rtv Exp $
 */
 
 /**
-@mainpage Stage - a robot simulator plugin for Player
+@page about The Stage Robot Simulator User Guide
 
-Stage is a robot simulator that works with the Player robot server. It
-provides a virtual world populated by mobile robots and sensors, along
-with various objects for the robots to sense and manipulate. 
+It provides a virtual world populated by
+mobile robots and sensors, along with various objects for the robots
+to sense and manipulate. It is based on the libstage robot simulation
+library and is part of the Player/Stage Project
+[http://playerstage.sf.net].
 
 <h2>Design</h2>
 
@@ -36,18 +38,18 @@ controllers between Stage robots and real robots, while still being
 fast enough to simulate large populations. We also intend Stage to be
 comprehensible to undergraduate students, yet sophisticated enough for
 professional reseachers.
-
   
-<p>Player also contains several useful 'virtual devices'; including some
-sensor pre-processing or sensor-integration algorithms. These were
-tricky to use with previous versions of Stage, but this release makes
-it simple to take full advantage of Player.
+<p>Player also contains several useful 'virtual devices'; including
+some sensor pre-processing or sensor-integration algorithms that help
+you to rapidly build powerful robot controllers. These are easy to use
+with Stage.
 
 <h2>Models</h2>
 
-<p>Stage provides several sensor and actuator models, including sonar or
-infrared rangers, scanning laser rangefinder, color-blob tracking,
-fiducial tracking and mobile robot bases with odometry. 
+<p>Stage provides several sensor and actuator models, including sonar
+or infrared rangers, scanning laser rangefinder, color-blob tracking,
+fiducial tracking and mobile robot bases with odometric or global
+localization.
 
 <i>Note:
 Some models from previous versions may not yet be available in this
@@ -58,7 +60,7 @@ release (e.g. gripper & puck), but we're working on them. Let us know which ones
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.9 2005-02-13 07:37:42 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.10 2005-08-08 19:00:32 rtv Exp $
 </small>
 
 */

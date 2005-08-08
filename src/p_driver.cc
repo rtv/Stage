@@ -22,49 +22,16 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.7 2005-07-27 21:29:23 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.8 2005-08-08 19:00:37 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
 
-/** @defgroup driver_stage Stage plugin driver for Player
+/** @defgroup player Stage plugin driver for Player
 
-This driver gives Player access to Stage's models.
-
-@par Provides
-
-The stage plugin driver provides the following device interfaces and
-configuration requests. The name of each interface
-is a link to its entry in the Player manual:
-
-- <a href="http://playerstage.sourceforge.net/doc/Player-1.6-html/player/group__player__interface__blobfinder.html">blobfinder</a>
- - (none)
-
-- <a href="http://playerstage.sourceforge.net/doc/Player-1.6-html/player/group__player__interface__fiducial.html">fiducial</a>
-  - PLAYER_FIDUCIAL_GET_GEOM_REQ
-  - PLAYER_FIDUCIAL_SET_FOV_REQ
-  - PLAYER_FIDUCIAL_GET_FOV_REQ
-  - PLAYER_FIDUCIAL_SET_ID_REQ
-  - PLAYER_FIDUCIAL_GET_ID_REQ
-
-- <a href="http://playerstage.sourceforge.net/doc/Player-1.6-html/player/group__player__interface__laser.html">laser</a>
- - PLAYER_LASER_SET_CONFIG
- - PLAYER_LASER_SET_CONFIG
- - PLAYER_LASER_GET_GEOM
-
-- <a href="http://playerstage.sourceforge.net/doc/Player-1.6-html/player/group__player__interface__position.html">position</a>
-  - PLAYER_POSITION_SET_ODOM_REQ
-  - PLAYER_POSITION_RESET_ODOM_REQ
-  - PLAYER_POSITION_GET_GEOM_REQ
-  - PLAYER_POSITION_MOTOR_POWER_REQ
-  - PLAYER_POSITION_VELOCITY_MODE_REQ
-
-- <a href="http://playerstage.sourceforge.net/doc/Player-1.6-html/player/group__player__interface__sonar.html">sonar</a>
-  - PLAYER_SONAR_GET_GEOM_REQ
-
-s- <a href="http://playerstage.sourceforge.net/doc/Player-1.6-html/player/group__player__interface__simulation.html">simulation</a>
-  - (none)
-
+<b>libstageplugin</b> is a plugin for Player that allows Player
+clients to access simulated robots as if they were normal Player
+devices.
 
 
 @par Player configuration file options
@@ -127,6 +94,12 @@ More examples can be found in the Stage source tree, in directory
 @par Authors
 
 Richard Vaughan
+
+@par Provides
+
+The stage plugin driver provides the following device interfaces and
+configuration requests. 
+
 */
 
 

@@ -23,13 +23,22 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.5 2005-08-08 18:24:01 gerkey Exp $
+ * CVS: $Id: p_laser.cc,v 1.6 2005-08-08 19:00:37 rtv Exp $
  */
 
+// DOCUMENTATION ------------------------------------------------------------
 
-// 
-// LASER INTERFACE
-//
+/** @addtogroup player 
+@par Laser interface
+
+- Data
+- Configs
+ - PLAYER_LASER_SET_CONFIG
+ - PLAYER_LASER_SET_CONFIG
+ - PLAYER_LASER_GET_GEOM
+*/
+
+// CODE ----------------------------------------------------------------------
 
 #include "p_driver.h" 
 

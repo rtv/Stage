@@ -21,6 +21,9 @@ static int init_occurred = 0;
 extern int _stg_quit; // quit flag is returned by stg_world_update()
 extern int _stg_disable_gui;
 
+/** @addtogroup stage
+    @{ */
+
 /** @defgroup world The World
 
 Stage simulates a 'world' composed of models, defined in a 'world
@@ -57,6 +60,8 @@ The Stage source distribution contains several example world files in
 described on the manual page for each model type.
 
 */
+
+/**@}*/
 
 extern stg_type_record_t typetable[];
 

@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.9 2005-01-03 06:09:32 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.10 2005-08-08 19:00:32 rtv Exp $ -->
 
 <HEAD>
 
@@ -91,16 +91,15 @@ li.menu {
 }
 
 
-#sidebar { position: absolute; left:0px; top:0em; width:9em;}
+#sidebar { position: absolute; left:0px; padding:2em; top:0em; width:9em;}
 
-#content { position: absolute; left:9em; top:0em; padding:0px; margin-top:0px; margin-right:3em;}
+#content { position: absolute; left:10em; top:0em; padding-left:3em; padding-right:3em; padding-bottom:2em; margin-top:1em; margin-right:2em; }
 
 div.box { background-color:#EEE; border: 1px solid #000; padding: 0.5ex 0.6em 0.5ex 0.6em; margin:1em;  }
 div.title { font-weight:bold; background-color:#eee; margin-bottom:2px;}
 
 div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 
-div.stage { font-size:120% }
 </style>
 
 <TITLE>Stage User Guide</TITLE>
@@ -109,9 +108,8 @@ div.stage { font-size:120% }
 
 <div id="sidebar"> 
 
-
-<h2 align=center><div class=stage>Stage</div>v1.6</h2>
-<p align=center><img src="stage_snip.png" alt="P/S logo"></p>
+<h2 align=center><img width=120 src="stage_button.png" alt="Stage logo image"><br>
+v2.0</h2>
 
 <div class="box">
 <div class=title>User Guide</div>
@@ -120,7 +118,6 @@ div.stage { font-size:120% }
 <li class=menu><a href="index.html">Introduction</a><br>
 <li class=menu><a href="release.html">Release</a><br>
 <li class=menu><a href="install.html">Installation</a><br>
-<!-- <li class=menu><a href="refs.html">References</a><br>-->
 <li class=menu><a href="credits.html">Credits</a><br>
 <li class=menu><a href="faq.html">FAQ</a><br>
 <li class=menu><a href="help.html">Help</a><br>
@@ -130,5 +127,5 @@ div.stage { font-size:120% }
 
 <li class=menu><a href="group__world.html">World</a><br>
 <li class=menu><a href="group__window.html">Window</a><br>
-<li class=menu><a href="group__basic.html">Model</a><br>
+<li class=menu><a href="group__model.html">Model</a><br>
 

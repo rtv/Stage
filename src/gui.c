@@ -529,13 +529,13 @@ void gui_model_trail( stg_model_t* mod )
 }
 
 
-/// wrapper 
+// wrapper 
 void gui_model_trail_cb( gpointer key, gpointer value, gpointer user )
 {
   gui_model_trail( (stg_model_t*)value );
 }
 
-/// render a trail cell for all models
+// render a trail cell for all models
 void gui_world_trails( stg_world_t* world )
 {
   assert( fig_trails );

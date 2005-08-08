@@ -41,7 +41,11 @@
 
 //extern int _stg_disable_gui;
 
-/** @defgroup basic Basic model
+/** @addtogroup stage 
+    @{ 
+*/
+
+/** @defgroup model Basic model
     
 The basic model simulates an object with basic properties; position,
 size, velocity, color, visibility to various sensors, etc. The basic
@@ -128,7 +132,9 @@ model
 - ranger_return [bool]
    - iff 1, this model can be detected by a ranger.
 */
-  
+
+/** @} */  
+
 /*
   TODO
   
@@ -158,7 +164,7 @@ int model_render_grid( stg_model_t* mod, char* name,
 
 
 
-/// convert a global pose into the model's local coordinate system
+// convert a global pose into the model's local coordinate system
 void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 {
   //printf( "g2l global pose %.2f %.2f %.2f\n",
@@ -183,8 +189,8 @@ void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 }
 
 
-/// generate the default name for a model, based on the name of its
-/// parent, and its type. This can be overridden in the world file.
+// generate the default name for a model, based on the name of its
+// parent, and its type. This can be overridden in the world file.
 /* int stg_model_create_name( stg_model_t* mod ) */
 /* { */
 /*   assert( mod ); */
@@ -215,23 +221,6 @@ void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 /* } */
 
 
-stg_polygon_t* unit_polygon_create( void )
-{
-  stg_point_t pts[4];
-  pts[0].x = 0;
-  pts[0].y = 0;
-  pts[1].x = 1;
-  pts[1].y = 0;
-  pts[2].x = 1;
-  pts[2].y = 1;
-  pts[3].x = 0;
-  pts[3].y = 1;
-  
-  stg_polygon_t* poly = stg_polygon_create();
-  stg_polygon_set_points( poly, pts, 4 );
-  
-  return poly;
-}
 
 void storage_ordinary( stg_property_t* prop, 
 		       void* data, size_t len )
@@ -261,7 +250,7 @@ void storage_polygons( stg_property_t* prop,
   // normalize the polygons to fit exactly in the model's body
   // rectangle (if specified)
   if( geom )
-    stg_normalize_polygons( polys, count, geom->size.x, geom->size.y );
+    stg_polygons_normalize( polys, count, geom->size.x, geom->size.y );
   
   stg_model_map( prop->mod, 0 ); // unmap the model from the matrix
   
@@ -302,7 +291,7 @@ void storage_color( stg_property_t* prop,
 }
 
 
-/** set the pose of a model in its parent's CS */
+// set the pose of a model in its parent's CS 
 void storage_pose( stg_property_t* prop,
 		   void* data, size_t len )
 {
@@ -327,9 +316,8 @@ void storage_pose( stg_property_t* prop,
 }
 
 
-static int _model_init = TRUE;
+//static int _model_init = TRUE;
 
-/// create a new model
 stg_model_t* stg_model_create( stg_world_t* world, 
 			       stg_model_t* parent,
 			       stg_id_t id, 
@@ -341,28 +329,28 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
   mod->initializer = initializer;
 
-  int err = pthread_mutex_init( &mod->mutex, NULL );
-  if( err )
-    {
-      PRINT_ERR1( "thread initialization failed with code %d\n", err );
-      exit(-1);
-    }
+  // TODO?
+  /*   int err = pthread_mutex_init( &mod->mutex, NULL ); */
+  /*   if( err ) */
+  /*     { */
+  /*       PRINT_ERR1( "thread initialization failed with code %d\n", err ); */
+  /*       exit(-1); */
+  /*     } */
   
   /* if( _model_init ) */
-/*     { */
-/*       g_datalist_init( &mod->props ); */
-/*       _model_init = FALSE; */
-/*     } */
-  
-  
+  /*     { */
+  /*       g_datalist_init( &mod->props ); */
+  /*       _model_init = FALSE; */
+  /*     } */
+    
   mod->id = id;
-
+  
   mod->disabled = FALSE;
   mod->world = world;
   mod->parent = parent; 
-  //mod->type = type;
   mod->token = strdup(token); // this will be immediately replaced by
 			      // model_create_name  
+
   // create a default name for the model that's derived from its
   // ancestors' names and its worldfile token
   //model_create_name( mod );
@@ -486,7 +474,7 @@ void stg_model_print_properties( stg_model_t* mod )
 }
 
 
-/// free the memory allocated for a model
+// free the memory allocated for a model
 void stg_model_destroy( stg_model_t* mod )
 {
   assert( mod );
@@ -527,7 +515,7 @@ int stg_model_is_antecedent( stg_model_t* mod, stg_model_t* testmod )
   return FALSE;
 }
 
-/// returns TRUE if model [testmod] is a descendent of model [mod]
+// returns TRUE if model [testmod] is a descendent of model [mod]
 int stg_model_is_descendent( stg_model_t* mod, stg_model_t* testmod )
 {
   if( mod == testmod )
@@ -547,7 +535,7 @@ int stg_model_is_descendent( stg_model_t* mod, stg_model_t* testmod )
   return FALSE;
 }
 
-/// returns 1 if model [mod1] and [mod2] are in the same model tree
+// returns 1 if model [mod1] and [mod2] are in the same model tree
 int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 )
 {
   if( mod1 == mod2 )
@@ -562,7 +550,7 @@ int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 )
   return stg_model_is_descendent( t, mod2 );
 }
 
-/// get the model's velocity in the global frame
+// get the model's velocity in the global frame
 void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
 {
   stg_pose_t gpose;
@@ -627,10 +615,10 @@ void  stg_model_get_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 }
     
     
-// should one day do all this with affine transforms for neatness
 
-/** convert a pose in this model's local coordinates into global
-    coordinates */
+// convert a pose in this model's local coordinates into global
+// coordinates
+// should one day do all this with affine transforms for neatness?
 void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
 {  
   stg_pose_t origin;   
@@ -639,7 +627,7 @@ void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
 }
 
 
-/// recursively map a model and all it's descendents
+// recursively map a model and all it's descendents
 void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
 {
   // call this function for all the model's children
@@ -651,8 +639,8 @@ void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
   stg_model_map( mod, render );
 }
 
-/// if render is true, render the model into the matrix, else unrender
-/// the model
+// if render is true, render the model into the matrix, else unrender
+// the model
 void stg_model_map( stg_model_t* mod, gboolean render )
 {
   assert( mod );
@@ -899,13 +887,9 @@ void stg_property_callback_cb( gpointer data, gpointer user )
   stg_cbarg_t* cba = (stg_cbarg_t*)data;
   stg_property_t* prop = (stg_property_t*)user;  
 
-  //printf( "calling callback %p data %p (%s)\n",
-  //  cba->callback, cba->arg, (char*)cba->arg );
- 
   if( ((stg_property_callback_t)cba->callback)( prop->mod, prop->name, prop->data, prop->len, cba->arg ) )
-    // if the callback returned non-zero, remove it
     {
-      //printf( "REMOVING %s callback %p CALLBACK\n", prop->name, cba->callback);
+      // the callback returned true, which means we should remove it
       stg_model_remove_property_callback( prop->mod, prop->name, cba->callback );
     }
 }
@@ -922,24 +906,23 @@ stg_property_t* stg_model_set_property_ex( stg_model_t* mod,
   return prop;
 }
 
-void stg_model_lock( stg_model_t* mod )
-{
-  //pthread_mutex_lock(&mod->mutex);
-}
+// TODO?
 
-void stg_model_unlock( stg_model_t* mod )
-{
-  //pthread_mutex_unlock(&mod->mutex);
-}
+/* void stg_model_lock( stg_model_t* mod ) */
+/* { */
+/*   pthread_mutex_lock(&mod->mutex); */
+/* } */
+
+/* void stg_model_unlock( stg_model_t* mod ) */
+/* { */
+/*   pthread_mutex_unlock(&mod->mutex); */
+/* } */
 
 stg_property_t* stg_model_set_property( stg_model_t* mod, 
 					const char* propname, 
 					void* data, 
 					size_t len )
 {
-  stg_model_lock(mod);
-  
-
   stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
   
   if( prop == NULL )
@@ -960,8 +943,6 @@ stg_property_t* stg_model_set_property( stg_model_t* mod,
       assert( find );
       assert( find == prop );      
     }
-
-  stg_model_unlock(mod);
 
   // if there's a special storage function registered, call it
   if( prop->storage_func )
@@ -1068,7 +1049,7 @@ int stg_model_remove_property_callbacks( stg_model_t* mod,
   return 0; //ok
 }
 
-/** set the pose of model in global coordinates */
+// set the pose of model in global coordinates 
 int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 {
 
@@ -1132,7 +1113,7 @@ int lines_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 }	
 
 
-///////////////////////////////////////////////////////////////////////////
+
 // Check to see if the given pose will yield a collision with obstacles.
 // Returns a pointer to the first entity we are in collision with, and stores
 // the location of the hit in hitx,hity (if non-null)
@@ -1337,19 +1318,14 @@ void* stg_model_get_property( stg_model_t* mod,
 			      const char* name,
 			      size_t* size )
 {
-  stg_model_lock(mod);
-
   stg_property_t* prop = g_datalist_get_data( &mod->props, name );
   
   if( prop )
     {
       *size = prop->len;      
 
-      stg_model_unlock(mod);
       return prop->data;
     }
-  
-  stg_model_unlock(mod);
   
   *size = 0;
   return NULL;
@@ -1565,8 +1541,8 @@ void stg_model_load( stg_model_t* mod )
 	      full );
 #endif
       
-      if( stg_load_image( full, &rects, &num_rects, 
-			  &image_width, &image_height ) )
+      if( stg_rotrects_from_image_file( full, &rects, &num_rects, 
+					&image_width, &image_height ) )
 	exit( -1 );
       
       double bitmap_resolution = 
@@ -1588,7 +1564,7 @@ void stg_model_load( stg_model_t* mod )
       //printf( "got %d rectangles from bitmap %s\n", num_rects, full );
 
       // convert rects to an array of polygons and upload the polygons
-      polys = stg_rects_to_polygons( rects, num_rects );
+      polys = stg_polygons_from_rotrects( rects, num_rects );
       polycount = num_rects;
 
       // free rects, which was realloc()ed in stg_load_image

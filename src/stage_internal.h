@@ -4,35 +4,56 @@
 // internal function declarations that are not part of the external
 // interface to Stage
 
-/** @addtogroup libstage
-    @{
+/** defgroup stage_internal libstage internals - for the libstage developer.  
+    @{ 
 */
 
 #include "stage.h"
 #include "math.h" // for lrint() in macros
 
-/** macros for floating point comparisons 
- */
+
+/** defgroup floatcomparison Floating point comparisons
+
+ Macros for comparing floating point numbers. It's a troublesome
+ limitation of C and C++ that floating point comparisons are very
+ inaccurate. These macros multiply their arguments by a large number
+ before comparing them, to improve resolution.  
+ 
+  @{
+*/
+
+/** Precision of comparison. The number of zeros to the left of the
+   decimal point determines the accuracy of the comparison in decimal
+   places to the right of the point. E.g. precision of 100000.0 gives
+   a comparison precision of within 0.000001 */
 #define PRECISION 100000.0
+
+/** TRUE iff A and B are equal to within PRECISION */
 #define EQ(A,B) ((lrint(A*PRECISION))==(lrint(B*PRECISION)))
+
+/** TRUE iff A is less than B, subject to PRECISION */
 #define LT(A,B) ((lrint(A*PRECISION))<(lrint(B*PRECISION)))
+
+/** TRUE iff A is greater than B, subject to PRECISION */
 #define GT(A,B) ((lrint(A*PRECISION))>(lrint(B*PRECISION)))
+
+/** TRUE iff A is greater than or equal B, subject to PRECISION */
 #define GTE(A,B) ((lrint(A*PRECISION))>=(lrint(B*PRECISION)))
+
+/** TRUE iff A is less than or equal to B, subject to PRECISION */
 #define LTE(A,B) ((lrint(A*PRECISION))<=(lrint(B*PRECISION)))
+
+/** @} */
 
 #ifdef __cplusplus
 extern "C" {
 #endif 
   
-  /** @defgroup stg_gui GUI Window
-      Code for the Stage user interface window.
-      @{
-  */
-  
+  /** Defines the GUI window */
   typedef struct 
   {
     stg_rtk_canvas_t* canvas;
-  
+    
     struct _stg_world* world; // every window shows a single world
     
     // stg_rtk doesn't support status bars, so we'll use gtk directly
@@ -40,7 +61,7 @@ extern "C" {
     GtkLabel* timelabel;
     
     int wf_section; // worldfile section for load/save
-
+    
     stg_rtk_fig_t* bg; // background
     stg_rtk_fig_t* matrix;
     stg_rtk_fig_t* matrix_tree;
@@ -65,19 +86,15 @@ extern "C" {
   void gui_startup( int* argc, char** argv[] ); 
   void gui_poll( void );
   void gui_shutdown( void );
-  gui_window_t* gui_world_create( stg_world_t* world );
-  void gui_world_destroy( stg_world_t* world );
-  void stg_world_save( stg_world_t* world );
-  void stg_world_reload( stg_world_t* world );
-
-  int gui_world_update( stg_world_t* world );
-  void stg_world_add_model( stg_world_t* world, stg_model_t* mod  );
-
-  /// render the geometry of all models
-  void gui_world_geom( stg_world_t* world );
 
   void gui_load( gui_window_t* win, int section );
   void gui_save( gui_window_t* win );
+  
+  gui_window_t* gui_world_create( stg_world_t* world );
+  void gui_world_destroy( stg_world_t* world );
+  int gui_world_update( stg_world_t* world );
+  void stg_world_add_model( stg_world_t* world, stg_model_t* mod  );
+  void gui_world_geom( stg_world_t* world );
 
   void gui_model_create( stg_model_t* model );
   void gui_model_destroy( stg_model_t* model );
@@ -100,15 +117,8 @@ extern "C" {
 			  GCallback callback,
 			  gboolean  is_active,
 			  void* userdata );
-  /**@}*/
 
-
-  /** @addtogroup stg_model
-      @{ */
-
-
-  /// Callback functions
-
+  // callback functions
   //typedef void(*func_init_t)(struct _stg_model*);
   typedef int(*func_update_t)(struct _stg_model*);
   typedef int(*func_startup_t)(struct _stg_model*);
@@ -225,12 +235,7 @@ extern "C" {
   void stg_property_refresh( stg_property_t* prop );
   void stg_property_destroy( stg_property_t* prop );
        
-  /**@}*/  
-
-  /** @addtogroup stg_world
-      @{ */
-
-  /// defines a simulated world
+  // defines a simulated world
   struct _stg_world
   {
     stg_id_t id; // Stage's identifier for this world
@@ -276,16 +281,16 @@ extern "C" {
     size_t user_len;
   };
 
-  /**@}*/
 
   
   // MATRIX  -----------------------------------------------------------------------
   
-  /** @defgroup stg_matrix Matrix
-      Underlying bitmap world representation
+  /** @defgroup stg_matrix Matrix occupancy quadtree
+      Occupancy quadtree underlying Stage's sensing and collision models. 
       @{ 
   */
   
+  /** A node in the occupancy quadtree */
   typedef struct stg_cell
   {
     void* data;
@@ -310,6 +315,7 @@ extern "C" {
   void stg_cell_render_tree( stg_cell_t* cell );
   void stg_cell_unrender_tree( stg_cell_t* cell );
 
+  /** Occupancy quadtree structure */
   typedef struct _stg_matrix
   {
     double ppm; // pixels per meter (1/resolution)
@@ -414,7 +420,7 @@ extern "C" {
 
   // RAYTRACE ITERATORS -------------------------------------------------------------
   
-  /** @defgroup stg_itl Raytracing
+  /** @defgroup stg_itl Raytracing in a Matrix occupancy quadtree
       Iterators for raytracing in a matrix
       @{ */
   
@@ -445,6 +451,9 @@ extern "C" {
   stg_model_t* itl_first_matching( itl_t* itl, 
 				   stg_itl_test_func_t func, 
 				   stg_model_t* finder );
+
+  /** @} */
+
   /** @} */  
   
   /** @defgroup worldfile worldfile C wrappers
@@ -484,17 +493,10 @@ extern "C" {
 
   // CALLBACK WRAPPERS ------------------------------------------------------------
 
-  /** @defgroup stg_callbacks Callback wrappers
-      Wrappers used as callback functions for Glib container iterators
-      @{ 
-  */
-  
   // callback wrappers for other functions
   void model_update_cb( gpointer key, gpointer value, gpointer user );
   void model_print_cb( gpointer key, gpointer value, gpointer user );
   void model_destroy_cb( gpointer mod );
-
-  /** @} */
   
   // Error macros - output goes to stderr
 #define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
