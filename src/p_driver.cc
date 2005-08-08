@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.8 2005-08-08 19:00:37 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.9 2005-08-08 22:14:13 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -249,6 +249,8 @@ InterfaceModel::InterfaceModel(  player_device_id_t id,
     {
       printf( " ERROR! no model available for this device."
 	      " Check your world and config files.\n" );
+
+      exit(-1);
       return;
     }
   
