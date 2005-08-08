@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.4 2005-07-31 18:53:06 rtv Exp $
+ * CVS: $Id: p_laser.cc,v 1.5 2005-08-08 18:24:01 gerkey Exp $
  */
 
 
@@ -205,20 +205,26 @@ void InterfaceLaser::Configure( void* client, void* buffer, size_t len )
       {	
 	stg_geom_t geom;
 	stg_model_get_geom( this->mod, &geom );
+
+        // BPG - I think the laser should report its pose, not its origin,
+        // when asked for geometry.
+        stg_pose_t* pose = 
+                (stg_pose_t*)stg_model_get_property_fixed( this->mod, "pose", 
+                                                           sizeof(stg_pose_t));
 	
 	PRINT_DEBUG5( "received laser geom: %.2f %.2f %.2f -  %.2f %.2f",
-		      geom.pose.x, 
-		      geom.pose.y, 
-		      geom.pose.a, 
+		      pose->x, 
+		      pose->y, 
+		      pose->a, 
 		      geom.size.x, 
 		      geom.size.y ); 
 	
 	// fill in the geometry data formatted player-like
 	player_laser_geom_t pgeom;
         pgeom.subtype = PLAYER_LASER_GET_GEOM;
-	pgeom.pose[0] = htons((uint16_t)(1000.0 * geom.pose.x));
-	pgeom.pose[1] = htons((uint16_t)(1000.0 * geom.pose.y));
-	pgeom.pose[2] = htons((uint16_t)RTOD( geom.pose.a));
+	pgeom.pose[0] = htons((uint16_t)(1000.0 * pose->x));
+	pgeom.pose[1] = htons((uint16_t)(1000.0 * pose->y));
+	pgeom.pose[2] = htons((uint16_t)RTOD( pose->a));
 	
 	pgeom.size[0] = htons((uint16_t)(1000.0 * geom.size.x)); 
 	pgeom.size[1] = htons((uint16_t)(1000.0 * geom.size.y)); 
