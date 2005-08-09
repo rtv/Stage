@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.109 2005-07-31 18:53:05 rtv Exp $
+# $Id: Makefile.am,v 1.110 2005-08-09 02:30:28 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
@@ -81,6 +81,7 @@ libstageplugin_la_SOURCES = \
 
 libstageplugin_la_LDFLAGS = -export-dynamic -version-info 1:0:0 
 libstageplugin_la_LIBADD = -L.libs -lstage
+#libstageplugin_la_LIBADD = a-lstage
 
 # build a stand-alone test program using libstage
 stest_DEPENDENCIES = libstage.la

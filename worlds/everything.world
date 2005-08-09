@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.52 2005-08-08 21:29:55 rtv Exp $
+# CVS: $Id: everything.world,v 1.53 2005-08-09 02:30:28 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -45,7 +45,7 @@ define trickedoutpioneer pioneer2dx
 (	
   sick_laser
   (  
-    pose [0.6 0 0 ]
+    #pose [0.3 0 0 ]
     fiducialfinder() 
   )
 
