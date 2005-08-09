@@ -1,9 +1,15 @@
 
-# TODO: fix this so that docs are installed!
+# add these subdirs to the distribution tarball
+EXTRA_DIST = stage
 
-EXTRA_DIST = stage_user/* stage_reference/*
 
-doc: ../src/*.c* 
-	./build.sh
-	doxygen stage_user.dox
-	doxygen stage_reference.dox
+# make docs before building a distro
+dist-hook: doc
+
+# developers must build docs manually with 'make doc'
+doc:
+	doxygen stage.dox
+
+# install the most recent docs built
+install-data-hook:
+	cp -r -p -v stage $(prefix)/doc
