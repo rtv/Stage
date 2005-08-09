@@ -22,7 +22,7 @@
 int _stg_quit = FALSE;
 int _stg_disable_gui = FALSE;
 
-/** @defgroup stage Stage 
+/** @defgroup stage Stage
     A multiple robot simulator.
     @{
 */
@@ -35,6 +35,8 @@ Instructions for using Stage and configuring worlds
 
 int stg_init( int argc, char** argv )
 {
+  g_type_init(); // glib GObject initialization
+
   if( ! _stg_disable_gui )
     {
       // TODO - don't start the GUI if it was disabled
@@ -428,13 +430,35 @@ gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y )
   return FALSE;
 }
 
+
+stg_polygon_t* stg_polygons_from_image_file(  const char* filename, 
+					     size_t* count )
+{
+  stg_rotrect_t* rects = NULL;
+  int rect_count = 0;
+
+  if( stg_rotrects_from_image_file( filename,  
+				    &rects,
+				    &rect_count,
+				    NULL, NULL ) )
+    {
+      PRINT_ERR1( "failed to load rects from image file \"%s\"",
+		  filename );      
+      return NULL;
+    }
+
+  //printf( "found %d rects\n", rect_count );
+  // else
+
+  *count = (size_t)rect_count;
+  return stg_polygons_from_rotrects( rects, rect_count );
+}
+
 int stg_rotrects_from_image_file( const char* filename, 
 				  stg_rotrect_t** rects, 
 				  int* rect_count,
 				  int* widthp, int* heightp )
 {
-  g_type_init(); // glib GObject initialization
-
   GError* err = NULL;
   GdkPixbuf* pb = gdk_pixbuf_new_from_file( filename, &err );
 

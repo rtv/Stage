@@ -4,46 +4,16 @@
 // internal function declarations that are not part of the external
 // interface to Stage
 
-/** defgroup stage_internal libstage internals - for the libstage developer.  
-    @{ 
-*/
-
 #include "stage.h"
 #include "math.h" // for lrint() in macros
 
 
-/** defgroup floatcomparison Floating point comparisons
-
- Macros for comparing floating point numbers. It's a troublesome
- limitation of C and C++ that floating point comparisons are very
- inaccurate. These macros multiply their arguments by a large number
- before comparing them, to improve resolution.  
- 
-  @{
+/** 
+    @ingroup libstage
+    @defgroup libstage_internal Internals - not intended for the libstage end user 
+    @{ 
 */
 
-/** Precision of comparison. The number of zeros to the left of the
-   decimal point determines the accuracy of the comparison in decimal
-   places to the right of the point. E.g. precision of 100000.0 gives
-   a comparison precision of within 0.000001 */
-#define PRECISION 100000.0
-
-/** TRUE iff A and B are equal to within PRECISION */
-#define EQ(A,B) ((lrint(A*PRECISION))==(lrint(B*PRECISION)))
-
-/** TRUE iff A is less than B, subject to PRECISION */
-#define LT(A,B) ((lrint(A*PRECISION))<(lrint(B*PRECISION)))
-
-/** TRUE iff A is greater than B, subject to PRECISION */
-#define GT(A,B) ((lrint(A*PRECISION))>(lrint(B*PRECISION)))
-
-/** TRUE iff A is greater than or equal B, subject to PRECISION */
-#define GTE(A,B) ((lrint(A*PRECISION))>=(lrint(B*PRECISION)))
-
-/** TRUE iff A is less than or equal to B, subject to PRECISION */
-#define LTE(A,B) ((lrint(A*PRECISION))<=(lrint(B*PRECISION)))
-
-/** @} */
 
 #ifdef __cplusplus
 extern "C" {
@@ -281,6 +251,43 @@ extern "C" {
     size_t user_len;
   };
 
+  // ROTATED RECTANGLES -------------------------------------------------
+
+  /** @defgroup rotrect Rotated Rectangles
+      @{ 
+  */
+  
+  /** defines a rectangle of [size] located at [pose] */
+  typedef struct
+  {
+    stg_pose_t pose;
+    stg_size_t size;
+  } stg_rotrect_t; // rotated rectangle
+  
+  /** normalizes the set [rects] of [num] rectangles, so that they fit
+      exactly in a unit square.
+  */
+  void stg_rotrects_normalize( stg_rotrect_t* rects, int num );
+  
+  /** load the image file [filename] and convert it to an array of
+      rectangles, filling in the number of rects, width and
+      height. Memory is allocated for the rectangle array [rects], so
+      the caller must free [rects].
+  */
+  int stg_rotrects_from_image_file( const char* filename, 
+				    stg_rotrect_t** rects,
+				    int* rect_count,
+				    int* widthp, int* heightp );
+  
+
+  /** load [filename], an image format understood by gdk-pixbuf, and
+      return a set of rectangles that approximate the image. Caller
+      must free the array of rectangles. If width and height are
+      non-null, they are filled in with the size of the image in pixels 
+  */
+  stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count );
+
+  /**@}*/
 
   
   // MATRIX  -----------------------------------------------------------------------
@@ -420,7 +427,7 @@ extern "C" {
 
   // RAYTRACE ITERATORS -------------------------------------------------------------
   
-  /** @defgroup stg_itl Raytracing in a Matrix occupancy quadtree
+  /** @defgroup stg_itl Raytracing in a Matrix
       Iterators for raytracing in a matrix
       @{ */
   
@@ -454,8 +461,6 @@ extern "C" {
 
   /** @} */
 
-  /** @} */  
-  
   /** @defgroup worldfile worldfile C wrappers
       @{
   */
@@ -682,4 +687,8 @@ the worldfile c++ code */
 }
 #endif 
 
+/** @} */  
+// end of libstage_internal documentation  
+
 #endif // _STAGE_INTERNAL_H
+

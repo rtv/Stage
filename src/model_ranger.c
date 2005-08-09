@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.53 $
+//  $Revision: 1.54 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +27,7 @@ extern stg_rtk_fig_t* fig_debug_rays;
 #define STG_RANGER_WATTS 2.0 // ranger power consumption
 
 /**
+@ingroup model
 @defgroup model_ranger Ranger model 
 The ranger model simulates an array of sonar or infra-red (IR) range sensors.
 

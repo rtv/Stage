@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.45 $
+//  $Revision: 1.46 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +27,7 @@ void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom );
 //extern stg_rtk_fig_t* fig_debug_rays;
 
 /** 
+@ingroup model
 @defgroup model_position Position model 
 
 The position model simulates a

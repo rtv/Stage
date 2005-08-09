@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.154 2005-08-08 19:00:39 rtv Exp $
+ * CVS: $Id: stage.h,v 1.155 2005-08-09 06:28:57 rtv Exp $
  */
 
 
@@ -38,12 +38,6 @@
 
   This header file contains the external interface for the Stage
   library
-*/
-
-
-/** @defgroup libstage Stage API
-    A C library for creating robot simulations
-    @{
 */
 
 #include <stdlib.h>
@@ -69,9 +63,10 @@ extern "C" {
 #include "config.h"
 #include "replace.h"
 
-
-  /** @addtogroup stg_model
-      @{ */
+/** @defgroup libstage libstage - Stage library API
+    A C library for creating robot simulations
+    @{
+*/
 
   /** any integer value other than this is a valid fiducial ID 
    */
@@ -171,7 +166,7 @@ extern "C" {
   /** @} */
 
   // ENERGY --------------------------------------------------------------
-  
+
   /** energy data packet */
   typedef struct
   {
@@ -269,8 +264,6 @@ extern "C" {
       LaserBright  ////< detected by laser with a reflected intensity of 1 
     } stg_laser_return_t;
 
-  /**@}*/
-  
 
   /** returns the real (wall-clock) time in milliseconds since the
       simulation started. */
@@ -314,36 +307,6 @@ extern "C" {
       copy the result into result. */
   void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 );
 
-  // ROTATED RECTANGLES -------------------------------------------------
-
-  /** @defgroup rotrect Rotated Rectangles
-      @{ 
-  */
-  
-  /** defines a rectangle of [size] located at [pose] */
-  typedef struct
-  {
-    stg_pose_t pose;
-    stg_size_t size;
-  } stg_rotrect_t; // rotated rectangle
-  
-  /** normalizes the set [rects] of [num] rectangles, so that they fit
-      exactly in a unit square.
-  */
-  void stg_rotrects_normalize( stg_rotrect_t* rects, int num );
-  
-  /** load the image file [filename] and convert it to an array of
-      rectangles, filling in the number of rects, width and
-      height. Memory is allocated for the rectangle array [rects], so
-      the caller must free [rects].
-  */
-  int stg_rotrects_from_image_file( const char* filename, 
-				    stg_rotrect_t** rects,
-				    int* rect_count,
-				    int* widthp, int* heightp );
-  
-  /**@}*/
-
   // POINTS ---------------------------------------------------------
 
   /** @defgroup stg_point Points
@@ -365,6 +328,7 @@ extern "C" {
   void stg_points_destroy( stg_point_t* pts );
 
   /**@}*/
+
 
   // POLYGONS ---------------------------------------------------------
 
@@ -397,14 +361,7 @@ extern "C" {
   /** creates a unit square polygon
    */
   stg_polygon_t* stg_unit_polygon_create( void );
-  
-  /** load [filename], an image format understood by gdk-pixbuf, and
-      return a set of rectangles that approximate the image. Caller
-      must free the array of rectangles. If width and height are
-      non-null, they are filled in with the size of the image in pixels 
-  */
-  stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count );
-  
+    
   /// Copies [count] points from [pts] into polygon [poly], allocating
   /// memory if mecessary. Any previous points in [poly] are
   /// overwritten.
@@ -423,7 +380,14 @@ extern "C" {
   
   /// print a human-readable description of an array of polygons on stdout
   void stg_polygons_print( stg_polygon_t* polys, unsigned int count );
-
+  
+  /** interpret a bitmap file as a set of polygons. Returns an array
+      of polygons. On exit [poly_count] is the number of polygons
+      found.
+   */
+  stg_polygon_t* stg_polygons_from_image_file(  const char* filename, 
+						size_t* poly_count );
+       
   /**@}*/
 
   // end util documentation group
@@ -584,10 +548,7 @@ extern "C" {
   //  MODEL --------------------------------------------------------
     
   // group the docs of all the model types
-  /** @defgroup stg_models Models
-      @{ */
-  
-  /** @defgroup stg_model Basic model
+  /** @defgroup stg_model Models
       Implements the basic object
       @{ */
   
@@ -769,9 +730,6 @@ extern "C" {
       world coordinate system. Overwrites [pose] with the new
       coordinate. */
   void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose );
-
- 
-  /**@}*/
 
 
   // BLOBFINDER MODEL --------------------------------------------------------
@@ -1096,6 +1054,42 @@ extern "C" {
 // MACROS ------------------------------------------------------
 // Some useful macros
 
+
+
+/** 
+@ingroup util
+@defgroup floatcomparison Floating point comparisons
+
+ Macros for comparing floating point numbers. It's a troublesome
+ limitation of C and C++ that floating point comparisons are not very
+ accurate. These macros multiply their arguments by a large number
+ before comparing them, to improve resolution.
+
+  @{
+*/
+
+/** Precision of comparison. The number of zeros to the left of the
+   decimal point determines the accuracy of the comparison in decimal
+   places to the right of the point. E.g. precision of 100000.0 gives
+   a comparison precision of within 0.000001 */
+#define PRECISION 100000.0
+
+/** TRUE iff A and B are equal to within PRECISION */
+#define EQ(A,B) ((lrint(A*PRECISION))==(lrint(B*PRECISION)))
+
+/** TRUE iff A is less than B, subject to PRECISION */
+#define LT(A,B) ((lrint(A*PRECISION))<(lrint(B*PRECISION)))
+
+/** TRUE iff A is greater than B, subject to PRECISION */
+#define GT(A,B) ((lrint(A*PRECISION))>(lrint(B*PRECISION)))
+
+/** TRUE iff A is greater than or equal B, subject to PRECISION */
+#define GTE(A,B) ((lrint(A*PRECISION))>=(lrint(B*PRECISION)))
+
+/** TRUE iff A is less than or equal to B, subject to PRECISION */
+#define LTE(A,B) ((lrint(A*PRECISION))<=(lrint(B*PRECISION)))
+
+/** @} */
 
 #ifndef TRUE
 #define TRUE 1

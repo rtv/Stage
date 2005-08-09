@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.40 $
+//  $Revision: 1.41 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +28,10 @@ extern stg_rtk_fig_t* fig_debug_rays;
 
 const double STG_FIDUCIAL_WATTS = 10.0;
 
-/** @defgroup model_fiducial Fiducial detector model
+/** 
+@ingroup model
+@defgroup model_fiducial Fiducial detector model
+
 The fiducial model simulates a fiducial-detecting device.
 
 <h2>Worldfile properties</h2>

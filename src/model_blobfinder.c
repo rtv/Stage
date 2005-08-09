@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.47 2005-07-23 07:20:39 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.48 2005-08-09 06:28:56 rtv Exp $
  */
 
 #include <math.h>
@@ -44,7 +44,10 @@ extern stg_rtk_fig_t* fig_debug_rays;
 const int STG_BLOBFINDER_BLOBS_MAX = 32;
 const double STG_BLOB_WATTS = 10.0; // power consumption
 
-/** @defgroup model_blobfinder Blobfinder model
+
+/** 
+@ingroup model
+@defgroup model_blobfinder Blobfinder model
 
 The blobfinder model simulates a color-blob-finding vision device,
 like a CMUCAM2, or the ACTS image processing software. It can track
@@ -90,7 +93,6 @@ blobfinder
    - maximum range of the sensor in meters.
 
 */
-
 
 
 

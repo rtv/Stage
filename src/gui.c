@@ -28,6 +28,10 @@ stg_rtk_fig_t* fig_trails = NULL;
 
 int _render_matrix_deltas = FALSE;
 
+/** @addtogroup stage 
+    @{
+*/
+
 /** @defgroup window GUI Window
 
 The Stage window consists of a menu bar, a view of the simulated
@@ -120,6 +124,8 @@ rendering of data and configuration for each type of model, and a
 debug menu that enables visualization of some of the innards of Stage.
 
 */
+
+/** @} */
 
 void gui_load( gui_window_t* win, int section )
 {

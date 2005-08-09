@@ -45,7 +45,7 @@
     @{ 
 */
 
-/** @defgroup model Basic model
+/** @defgroup model Models
     
 The basic model simulates an object with basic properties; position,
 size, velocity, color, visibility to various sensors, etc. The basic
@@ -1514,17 +1514,12 @@ void stg_model_load( stg_model_t* mod )
     }      
   
   //size_t polydata = 0;
-  stg_polygon_t* polys = NULL;// = stg_model_get_property( mod, "polygons", &polydata );
+  stg_polygon_t* polys = NULL;
   size_t polycount = -1 ;//polydata / sizeof(stg_polygon_t);;
   
   const char* bitmapfile = wf_read_string( mod->id, "bitmap", NULL );
   if( bitmapfile )
     {
-      stg_rotrect_t* rects = NULL;
-      int num_rects = 0;
-      
-      int image_width=0, image_height=0;
-      
       char full[_POSIX_PATH_MAX];
       
       if( bitmapfile[0] == '/' )
@@ -1542,34 +1537,10 @@ void stg_model_load( stg_model_t* mod )
 	      full );
 #endif
       
-      if( stg_rotrects_from_image_file( full, &rects, &num_rects, 
-					&image_width, &image_height ) )
-	exit( -1 );
+      polys = stg_polygons_from_image_file( full, &polycount );
       
-      double bitmap_resolution = 
-	wf_read_float( mod->id, "bitmap_resolution", 0 );
-      
-      // if a bitmap resolution was specified, we override the object
-      // geometry
-      if( bitmap_resolution )
-	{
-	  stg_geom_t* geom = 
-	    stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));
-	  assert(geom);
-	  
-	  geom->size.x = image_width *  bitmap_resolution;
-	  geom->size.y = image_height *  bitmap_resolution; 	    
-	  stg_model_set_property( mod, "geom", geom, sizeof(stg_geom_t));
-	}
-      
-      //printf( "got %d rectangles from bitmap %s\n", num_rects, full );
-
-      // convert rects to an array of polygons and upload the polygons
-      polys = stg_polygons_from_rotrects( rects, num_rects );
-      polycount = num_rects;
-
-      // free rects, which was realloc()ed in stg_load_image
-      free(rects);
+      if( ! polys )
+	PRINT_ERR1( "Failed to load polygons from image file \"%s\"", full );
     }
   
   int wf_polycount = wf_read_int( mod->id, "polygons", 0 );
