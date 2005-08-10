@@ -891,17 +891,6 @@ void stg_property_callback_cb( gpointer data, gpointer user )
     }
 }
 
-stg_property_t* stg_model_set_property_ex( stg_model_t* mod, 
-					   const char* propname, 
-					   void* data, 
-					   size_t len,
-					   stg_property_storage_func_t func )
-{
-  stg_property_t* prop = stg_model_set_property( mod, propname, data, len );
-  prop->storage_func = func;
-
-  return prop;
-}
 
 // TODO?
 
@@ -915,10 +904,23 @@ stg_property_t* stg_model_set_property_ex( stg_model_t* mod,
 /*   pthread_mutex_unlock(&mod->mutex); */
 /* } */
 
-stg_property_t* stg_model_set_property( stg_model_t* mod, 
-					const char* propname, 
-					void* data, 
-					size_t len )
+void stg_model_set_property_ex( stg_model_t* mod, 
+				const char* propname, 
+				void* data, 
+				size_t len,
+				stg_property_storage_func_t func )
+{
+  stg_model_set_property( mod, propname, data, len );
+  
+  stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
+  assert(prop);
+  prop->storage_func = func;
+}
+
+void stg_model_set_property( stg_model_t* mod, 
+			     const char* propname, 
+			     void* data, 
+			     size_t len )
 {
   stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
   
@@ -940,7 +942,7 @@ stg_property_t* stg_model_set_property( stg_model_t* mod,
       assert( find );
       assert( find == prop );      
     }
-
+  
   // if there's a special storage function registered, call it
   if( prop->storage_func )
     {
@@ -954,9 +956,6 @@ stg_property_t* stg_model_set_property( stg_model_t* mod,
   
   if( prop->callbacks ) 
       g_list_foreach( prop->callbacks, stg_property_callback_cb, prop );
-
-
-  return prop; // ok
 }
 
 

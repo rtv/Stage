@@ -24,7 +24,7 @@ extern "C" {
   {
     stg_rtk_canvas_t* canvas;
     
-    struct _stg_world* world; // every window shows a single world
+    stg_world_t* world; // every window shows a single world
     
     // stg_rtk doesn't support status bars, so we'll use gtk directly
     GtkStatusbar* statusbar;
@@ -49,7 +49,7 @@ extern "C" {
     int frame_interval;
     int frame_format;
 
-    struct _stg_model* selection_active;
+    stg_model_t* selection_active;
     
   } gui_window_t;
 
@@ -96,6 +96,35 @@ extern "C" {
   typedef void(*func_load_t)(struct _stg_model*);
   typedef void(*func_save_t)(struct _stg_model*);
   
+
+  struct _stg_property;
+
+  /** define a callback function type that can be used to override the 
+      default data storage mechanism for a property. This is useful when
+      you want to process some data before storing it, or if changing the
+      property has side effects. For example, a storage callback is
+      attached to the "geom" property: when the property is set the
+      robot's size may change, so this the storage function makes sure the
+      model's polygons are re-normalized and re-rendered. 
+  */
+  typedef void (*stg_property_storage_func_t)( struct _stg_property* prop, 
+					       void* data, size_t len );
+  
+  /** defines a property of a model.The property is uniquely
+      identified by the string [name]. You probably should not access
+      these fields directly - use stg_model_get_property() and
+      stg_model_set_property() instead.
+  */
+  typedef struct _stg_property
+  {
+    char name[STG_PROPNAME_MAX];
+    void* data;
+    size_t len;
+    stg_property_storage_func_t storage_func;
+    GList* callbacks; // functions called when this property is set
+    stg_model_t* mod; // the model to which this property belongs
+  } stg_property_t;
+
   typedef struct 
   {
     stg_model_t* mod;
@@ -204,51 +233,60 @@ extern "C" {
 
   void stg_property_refresh( stg_property_t* prop );
   void stg_property_destroy( stg_property_t* prop );
-       
+
+  /** extended version of stg_model_set_property() which allows you to
+      install a storage function for this property 
+  */
+  void stg_model_set_property_ex( stg_model_t* mod, 
+				  const char* prop, 
+				  void* data, 
+				  size_t len,
+				  stg_property_storage_func_t func );
+         
   // defines a simulated world
   struct _stg_world
   {
-    stg_id_t id; // Stage's identifier for this world
+    stg_id_t id; ///< Stage's unique identifier for this world
     
-    GHashTable* models; // the models that make up the world, indexed by id
-    GHashTable* models_by_name; // the models that make up the world, indexed by name
+    GHashTable* models; ///< the models that make up the world, indexed by id
+    GHashTable* models_by_name; ///< the models that make up the world, indexed by name
     
-    double width, height; // the size of the world in meters
+    stg_meters_t width; ///< x size of the world 
+    stg_meters_t height; ///< y size of the world
 
-    // the number of models of each type is counted so we can
-    // automatically generate names for them
+    /** the number of models of each type is counted so we can
+	automatically generate names for them
+    */
     int child_type_count[256];
     
-    struct _stg_matrix* matrix;
+    struct _stg_matrix* matrix; ///< occupancy quadtree for model raytracing
 
-    char* token;
+    char* token; ///< the name of this world
 
-    stg_msec_t sim_time; // the current time in this world
-    stg_msec_t sim_interval; // this much simulated time elapses each step.
+    stg_msec_t sim_time; ///< the current time in this world
+    stg_msec_t sim_interval; ///< this much simulated time elapses each step.
    
-    stg_msec_t wall_interval; // real-time interval between updates -
-			      // set this to zero for 'as fast as possible'
+    /** real-time interval between updates - set this to zero for 'as fast as possible' 
+     */
+    stg_msec_t wall_interval;
 
-    stg_msec_t wall_last_update; // the wall-clock time of the last update
-
-    // the wallclock-time interval elapsed between the last two
-    // updates - compare this with sim_interval to see the ratio of
-    // sim to real time.
+    stg_msec_t wall_last_update; ///< the wall-clock time of the last update
+    
+    /** the wallclock-time interval elapsed between the last two
+	updates - compare this with sim_interval to see the ratio of
+	sim to real time 
+    */
     stg_msec_t real_interval_measured;
 
-    double ppm; // the resolution of the world model in pixels per meter
+    double ppm; ///< the resolution of the world model in pixels per meter
 
-    int paused; // the world only updates when this is zero
+    gboolean paused; ///< the world only updates when this is zero
    
-    gboolean destroy;
+    gboolean destroy; ///< this world should be destroyed ASAP
 
-    gui_window_t* win; // the gui window associated with this world
+    gui_window_t* win; ///< the gui window associated with this world
 
-    int subs; // the total number of subscriptions to all models
-    
-    ///  a hook for the user to store things in the world
-    void* user;
-    size_t user_len;
+    int subs; ///< the total number of subscriptions to all models
   };
 
   // ROTATED RECTANGLES -------------------------------------------------

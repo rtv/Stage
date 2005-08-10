@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.155 2005-08-09 06:28:57 rtv Exp $
+ * CVS: $Id: stage.h,v 1.156 2005-08-10 22:57:52 rtv Exp $
  */
 
 
@@ -150,6 +150,21 @@ extern "C" {
     stg_size_t size;
   } stg_geom_t;
   
+  /** bound a range of values, from min to max */
+  typedef struct
+  {
+    double min; //< smallest value in range
+    double max; //< largest value in range
+  } stg_bounds_t;
+  
+  /** define a field-of-view: an angle and range bounds */
+  typedef struct
+  {
+    stg_bounds_t range; //< min and max range of sensor
+    stg_radians_t angle; //< width of viewing angle of sensor
+  } stg_fov_t;
+  
+
   // PRETTY PRINTING -------------------------------------------------
   
   /** @defgroup print Pretty-printing: console output functions.
@@ -240,18 +255,18 @@ extern "C" {
   
   typedef int stg_movemask_t;
   
-  typedef struct
-  {
-    uint8_t show_data;
-    uint8_t show_cfg;
-    uint8_t show_cmd;
+/*   typedef struct */
+/*   { */
+/*     uint8_t show_data; */
+/*     uint8_t show_cfg; */
+/*     uint8_t show_cmd; */
     
-    uint8_t nose;
-    uint8_t grid;
-    //uint8_t boundary;
-    uint8_t outline;
-    stg_movemask_t movemask;
-  } stg_guifeatures_t;
+/*     uint8_t nose; */
+/*     uint8_t grid; */
+/*     //uint8_t boundary; */
+/*     uint8_t outline; */
+/*     stg_movemask_t movemask; */
+/*   } stg_guifeatures_t; */
 
 
   // LASER ------------------------------------------------------------
@@ -397,153 +412,23 @@ extern "C" {
   // end property typedefs -------------------------------------------------
 
 
-  // forward declare struct types
-  struct _stg_world; 
+  // forward declare struct types from player_internal.h
   struct _stg_model;
   struct _stg_matrix;
   struct _gui_window;
+  struct _stg_world;
 
-  /** @addtogroup stg_model
-      @{ */
+  /** opaque data structure implementing a world
+   */
+  typedef struct _stg_world stg_world_t;
+
 
   /** opaque data structure implementing a model. You get and set all
       the interesting properties of a model using the
       stg_model_set_property(), stg_model_get_property() and
       stg_model_get_property_fixed() functions.
    */
-  typedef struct _stg_model stg_model_t;
-
-  /**@}*/
-
-  //  WORLD --------------------------------------------------------
-
-  /** @defgroup stg_world Worlds
-     Implements a world - a collection of models and a matrix.   
-     @{
-  */
-  
-  /** opaque data structure implementing a world
-   */
-  typedef struct _stg_world stg_world_t;
-  
-  
-  /** Create a new world, to be configured and populated
-      manually. Usually this function is not used directly; use the
-      function stg_world_create_from_file() to create a world based on
-      a worldfile instead.
-   */
-  stg_world_t* stg_world_create( stg_id_t id, 
-				 const char* token, 
-				 int sim_interval, 
-				 int real_interval,
-				 double ppm,
-				 double width,
-				 double height );
-
-  /** Create a new world as described in the worldfile
-      [worldfile_path]
-   */
-  stg_world_t* stg_world_create_from_file( const char* worldfile_path );
-
-  /** Destroy a world and everything it contains
-   */
-  void stg_world_destroy( stg_world_t* world );
-  
-  /** Stop the world clock
-   */
-  void stg_world_stop( stg_world_t* world );
-  
-  /** Start the world clock
-   */
-  void stg_world_start( stg_world_t* world );
-
-  /** Run one simulation step in world [world]. If [sleepflag] is
-      non-zero, and the simulation update takes less than one
-      real-time step, the simulation will nanosleep() for a while to
-      reduce CPU load. Returns 0 if all is well, or a positive error
-      code.
-   */
-  int stg_world_update( stg_world_t* world, int sleepflag );
-
-  /** configure the world by reading from the current world file */
-  void stg_world_load( stg_world_t* mod );
-
-  /** save the state of the world to the current world file */
-  void stg_world_save( stg_world_t* mod );
-
-  /** print human-readable information about the world on stdout 
-   */
-  void stg_world_print( stg_world_t* world );
-
-  /** Set the duration in milliseconds of each simulation update step 
-   */
-  void stg_world_set_interval_real( stg_world_t* world, unsigned int val );
-  
-  /** Set the real time in intervals that Stage should attempt to take
-      for each simulation update step. If Stage has too much
-      computation to do, it might take longer than this. */
-  void stg_world_set_interval_sim( stg_world_t* world, unsigned int val );
-
-  /** look up a pointer to a model in [world] from the model's unique
-      ID [mid]. */ 
-  stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid );
-  
-  /** look up a pointer to a model from from the model's name. */
-  stg_model_t* stg_world_model_name_lookup( stg_world_t* world, const char* name );
-  
-
-  struct stg_property;
-  
-  /** Define a callback function type that can be attached to a
-      model's property and called whenever the property is set with
-      stg_model_set_property() or stg_model_property_refresh().
-   */
-  typedef int (*stg_property_callback_t)(stg_model_t* mod, char* propname, void* data, size_t len, void* userdata );
-  
-  /** define a callback function type that can be used to override the
-  default data storage mechanism for a property. This is useful when
-  you want to process some data before storing it, or if changing the
-  property has side effects. For example, a storage callback is
-  attached to the "geom" property: when the property is set the
-  robot's size may change, so this the storage function makes sure the
-  model's polygons are re-normalized and re-rendered. */
- typedef void (*stg_property_storage_func_t)( struct stg_property* prop, void*
-  data, size_t len );
-
-  
-  /** install a property callback on every model in the world that
-      CURRENTLY has this property set. Calls
-      stg_model_add_property_callback() on each model in the world.*/
-  void stg_world_add_property_callback( stg_world_t* world, 
-					char* propname, 
-					stg_property_callback_t callback, void*
-					userdata );
-  
-  /** remove a property callback from every model in the world that
-      has this property set. Calls
-      stg_model_remove_property_callback() on each model in the
-      world. */
-  void stg_world_remove_property_callback( stg_world_t* world,
-					   char* propname,
-					   stg_property_callback_t callback );
-  
-  /** add an item to the View menu that will automatically install and
-      remove a callback when the item is toggled. The specialized
-      model types use this call to set up their data visualization. */
-  void stg_model_add_property_toggles( stg_model_t* mod, 
-				       const char* propname, 
-				       stg_property_callback_t callback_on,
-				       void* arg_on,
-				       stg_property_callback_t callback_off,
-				       void* arg_off,
-				       const char* label,
-				       int enabled );
-
-  int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len, 
-			      void* userp );
-  /**@}*/
-
-
+  typedef struct _stg_model stg_model_t; // defined in stage_internal.h
 
   //  MODEL --------------------------------------------------------
     
@@ -554,29 +439,16 @@ extern "C" {
   
   /** the maximum length of a model's name, in characters (bytes). */
 #define STG_PROPNAME_MAX 128
+
+
+
+
   
-   /** container for a callback function and a single argument, so
-       they can be stored together in a list with a single pointer. */
-  typedef struct
-  {
-    stg_property_callback_t callback;
-    void* arg;
-  } stg_cbarg_t;
-  
-  /** defines a property of a model.The property is uniquely
-      identified by the string [name]. You probably should not access
-      these fields directly - use stg_model_get_property() and
-      stg_model_set_property() instead.
+  /** Define a callback function type that can be attached to a
+      model's property and called whenever the property is set with
+      stg_model_set_property() or stg_model_property_refresh().
   */
-  typedef struct stg_property 
-  {
-    char name[STG_PROPNAME_MAX];
-    void* data;
-    size_t len;
-    stg_property_storage_func_t storage_func;
-    GList* callbacks; // functions called when this property is set
-    stg_model_t* mod; // the model to which this property belongs
-  } stg_property_t;
+  typedef int (*stg_property_callback_t)(stg_model_t* mod, char* propname, void* data, size_t len, void* userdata );
   
   
   /** function type for an initialization function that configures a
@@ -587,6 +459,15 @@ extern "C" {
   */
   typedef int(*stg_model_initializer_t)(stg_model_t*);
   
+
+   /** container for a callback function and a single argument, so
+       they can be stored together in a list with a single pointer. */
+  typedef struct
+  {
+    stg_property_callback_t callback;
+    void* arg;
+  } stg_cbarg_t;
+
   /// create a new model
   stg_model_t* stg_model_create(  stg_world_t* world,
 				  stg_model_t* parent, 
@@ -643,16 +524,10 @@ extern "C" {
   void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest );
   void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
   
-  stg_property_t* stg_model_set_property( stg_model_t* mod, 
-					  const char* prop, 
-					  void* data, 
-					  size_t len );
-  
-  stg_property_t* stg_model_set_property_ex( stg_model_t* mod, 
-					     const char* prop, 
-					     void* data, 
-					     size_t len,
-					     stg_property_storage_func_t func );
+  void stg_model_set_property( stg_model_t* mod, 
+			       const char* prop, 
+			       void* data, 
+			       size_t len );  
   
   /** gets the named property data. if len is non-NULL, it is set with
       the size of the data in bytes */
@@ -730,6 +605,115 @@ extern "C" {
       world coordinate system. Overwrites [pose] with the new
       coordinate. */
   void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose );
+
+
+  /** add an item to the View menu that will automatically install and
+      remove a callback when the item is toggled. The specialized
+      model types use this call to set up their data visualization. */
+  void stg_model_add_property_toggles( stg_model_t* mod, 
+				       const char* propname, 
+				       stg_property_callback_t callback_on,
+				       void* arg_on,
+				       stg_property_callback_t callback_off,
+				       void* arg_off,
+				       const char* label,
+				       int enabled );
+
+  int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len, 
+			      void* userp );
+
+  /** @} */   // end model doc group
+
+ //  WORLD --------------------------------------------------------
+
+  /** @defgroup stg_world Worlds
+     Implements a world - a collection of models and a matrix.   
+     @{
+  */
+  
+  /** Create a new world, to be configured and populated
+      manually. Usually this function is not used directly; use the
+      function stg_world_create_from_file() to create a world based on
+      a worldfile instead.
+   */
+  stg_world_t* stg_world_create( stg_id_t id, 
+				 const char* token, 
+				 int sim_interval, 
+				 int real_interval,
+				 double ppm,
+				 double width,
+				 double height );
+
+  /** Create a new world as described in the worldfile
+      [worldfile_path]
+   */
+  stg_world_t* stg_world_create_from_file( const char* worldfile_path );
+
+  /** Destroy a world and everything it contains
+   */
+  void stg_world_destroy( stg_world_t* world );
+  
+  /** Stop the world clock
+   */
+  void stg_world_stop( stg_world_t* world );
+  
+  /** Start the world clock
+   */
+  void stg_world_start( stg_world_t* world );
+
+  /** Run one simulation step in world [world]. If [sleepflag] is
+      non-zero, and the simulation update takes less than one
+      real-time step, the simulation will nanosleep() for a while to
+      reduce CPU load. Returns 0 if all is well, or a positive error
+      code.
+   */
+  int stg_world_update( stg_world_t* world, int sleepflag );
+
+  /** configure the world by reading from the current world file */
+  void stg_world_load( stg_world_t* mod );
+
+  /** save the state of the world to the current world file */
+  void stg_world_save( stg_world_t* mod );
+
+  /** print human-readable information about the world on stdout 
+   */
+  void stg_world_print( stg_world_t* world );
+
+  /** Set the duration in milliseconds of each simulation update step 
+   */
+  void stg_world_set_interval_real( stg_world_t* world, unsigned int val );
+  
+  /** Set the real time in intervals that Stage should attempt to take
+      for each simulation update step. If Stage has too much
+      computation to do, it might take longer than this. */
+  void stg_world_set_interval_sim( stg_world_t* world, unsigned int val );
+
+  /** look up a pointer to a model in [world] from the model's unique
+      ID [mid]. */ 
+  stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid );
+  
+  /** look up a pointer to a model from from the model's name. */
+  stg_model_t* stg_world_model_name_lookup( stg_world_t* world, const char* name );
+  
+
+  
+  /** install a property callback on every model in the world that
+      CURRENTLY has this property set. Calls
+      stg_model_add_property_callback() on each model in the world.*/
+  void stg_world_add_property_callback( stg_world_t* world, 
+					char* propname, 
+					stg_property_callback_t callback, void*
+					userdata );
+  
+  /** remove a property callback from every model in the world that
+      has this property set. Calls
+      stg_model_remove_property_callback() on each model in the
+      world. */
+  void stg_world_remove_property_callback( stg_world_t* world,
+					   char* propname,
+					   stg_property_callback_t callback );
+  
+  /**@}*/
 
 
   // BLOBFINDER MODEL --------------------------------------------------------
@@ -958,17 +942,6 @@ extern "C" {
 
   typedef struct
   {
-    stg_meters_t min, max;
-  } stg_bounds_t;
-  
-  typedef struct
-  {
-    stg_bounds_t range; // min and max range of sensor
-    stg_radians_t angle; // viewing angle of sensor
-  } stg_fov_t;
-  
-  typedef struct
-  {
     stg_pose_t pose;
     stg_size_t size;
     stg_bounds_t bounds_range;
@@ -1026,13 +999,13 @@ extern "C" {
   /** "position_data" property */
   typedef struct
   {
-    stg_pose_t pose;
-    stg_pose_t pose_error;
-    stg_pose_t origin;
-    stg_velocity_t velocity;
-    stg_velocity_t integration_error; // for simple odometry error model
-    stg_bool_t stall;
-    stg_position_localization_mode_t localization;
+    stg_pose_t pose; ///< position estimate in local coordinates
+    stg_pose_t pose_error; ///< estimated error in position estimate
+    stg_pose_t origin; ///< global origin of the local coordinate system
+    stg_velocity_t velocity; ///< current translation and rotaation speeds
+    stg_velocity_t integration_error; ///< errors in simple odometry model
+    stg_bool_t stall; ///< TRUE iff the robot can't move due to a collision
+    stg_position_localization_mode_t localization; ///< global or local mode
   } stg_position_data_t;
   
   /** "position_stall" property */

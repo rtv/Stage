@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.10 2005-08-09 06:28:57 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.11 2005-08-10 22:57:52 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -33,6 +33,18 @@
 clients to access simulated robots as if they were normal Player
 devices.
 
+<p>Stage robots and sensors work like any other Player device: users
+write robot controllers and sensor algorithms as `clients' to the
+Player `server'. Typically, clients cannot tell the difference between
+the real robot devices and their simulated Stage equivalents (unless
+they try very hard). We have found that robot controllers developed as
+Player clients controlling Stage robots will work with little or no
+modification with the real robots and vice versa [1]. With a little
+care, the same binary program can often control Stage robots and real
+robots without even being recompiled [2]. Thus the Player/Stage system
+allows rapid prototyping of controllers destined for real
+robots. Stage can also be very useful by simulating populations of
+realistic robot devices you don't happen to own [3].
 
 @par Player configuration file options
 

@@ -1,71 +1,29 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: help.txt,v 1.10 2005-08-08 19:00:32 rtv Exp $
+ * $Id: help.txt,v 1.11 2005-08-10 22:57:52 rtv Exp $
 */
 
 /**
-@page about The Stage Robot Simulator User Guide
+@mainpage The Stage Robot Simulator
 
-It provides a virtual world populated by
-mobile robots and sensors, along with various objects for the robots
-to sense and manipulate. It is based on the libstage robot simulation
-library and is part of the Player/Stage Project
-[http://playerstage.sf.net].
+<p>$Date: 2005-08-10 22:57:52 $
 
-<h2>Design</h2>
+<p>Copyright Richard Vaughan and contributors 1998-2005.
+<p>Part of the Player/Stage Project [http://playerstage.sourceforge.net]
 
-<p>Stage robots and sensors work like any other Player device: users
-write robot controllers and sensor algorithms as `clients' to the
-Player `server'. Typically, clients cannot tell the difference between
-the real robot devices and their simulated Stage equivalents (unless
-they try very hard). We have found that robot controllers developed as
-Player clients controlling Stage robots will work with little or no
-modification with the real robots and vice versa [1]. With a little
-care, the same binary program can often control Stage robots and real
-robots without even being recompiled [2]. Thus the Player/Stage system
-allows rapid prototyping of controllers destined for real
-robots. Stage can also be very useful by simulating populations of
-realistic robot devices you don't happen to own [3].
+\section License
 
-<p>Stage was designed with multi-agent systems in mind, so it provides
-fairly simple, computationally cheap models of lots of devices rather
-than attempting to emulate any device with great fidelity. This design
-is intended to be useful compromise between conventional high-fidelity
-robot simulations, the minimal simulations described by Jakobi [4], and
-the grid-world simulations common in artificial life research [5]. We
-intend Stage to be just realistic enough to enable users to move
-controllers between Stage robots and real robots, while still being
-fast enough to simulate large populations. We also intend Stage to be
-comprehensible to undergraduate students, yet sophisticated enough for
-professional reseachers.
-  
-<p>Player also contains several useful 'virtual devices'; including
-some sensor pre-processing or sensor-integration algorithms that help
-you to rapidly build powerful robot controllers. These are easy to use
-with Stage.
-
-<h2>Models</h2>
-
-<p>Stage provides several sensor and actuator models, including sonar
-or infrared rangers, scanning laser rangefinder, color-blob tracking,
-fiducial tracking and mobile robot bases with odometric or global
-localization.
-
-<i>Note:
-Some models from previous versions may not yet be available in this
-release (e.g. gripper & puck), but we're working on them. Let us know which ones you need.
-</i>
-
-[@ref refs]
-
-<hr>
-<small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.10 2005-08-08 19:00:32 rtv Exp $
-</small>
+<p>Stage sourcecode and documentation is released under the terms of
+the GNU General Public License v2. A copy of the license is included
+with the sourcecode in the file 'COPYING". Copying and redistribution
+is permitted only under the terms of the license.
 
 */
 
-/** @page help Getting Help
+
+/** 
+@ingroup stage
+@defgroup help Getting Help
 
 If you're having problems and you can't find what you need in this manual, there are several places to find help. 
 
@@ -94,7 +52,9 @@ email.
 */
 
 
-/** @page faq Frequently Asked Questions (FAQ)
+/**
+@ingroup stage
+@defgroup faq FAQ: Frequently Asked Questions
 
 <b>There are no questions about the 1.6 release yet. If you have a question, <a href=help.html>follow the advice here</a></b>.
 
@@ -106,7 +66,8 @@ email.
 
 
 /**
-@page refs References
+@ingroup stage
+@defgroup refs References
 
 [1] Brian Gerkey, Richard Vaughan, Kasper Stoy, Andrew Howard, Gaurav
 Sukhatme, Maja Mataric (2001) "Most Valuable Player: A Robot Device
@@ -134,7 +95,8 @@ and Their Applications.  Hillsdale, New Jersey. pp.16-23.
 */
 
 /**
-@page install Installation
+@ingroup stage
+@defgroup install Installation
 
 <b>Important: Stage is an extension to Player; Player must be properly
 installed before you can install Stage.</b>
@@ -202,7 +164,8 @@ should check the Player instructions just in case.
 
 
 /**
-@page release Release Notes
+@ingroup stage
+@defgroup release Release Notes
 
 <h2>Version 1.6.1</h2>
 
@@ -288,71 +251,5 @@ versions.
 
 */
 
-/**
-@page credits Credits
 
-Stage was written by:
-
-<ul>
-<li>Richard Vaughan <tt>(vaughan@sfu.ca)</tt>
-<li>Andrew Howard  <tt>(ahoward@robotics.usc.edu)</tt>
-<li>Brian Gerkey <tt>(gerkey@robotics.stanford.edu)</tt>
-</ul>
-
-Stage is part of the <a
-href="http://playerstage.sourceforge.net">Player/Stage Project</a>, a
-community effort to develop Free Software tools for robotics
-research. Stage is free to use, modify and redistribute under the
-terms of the <a href=http://www.gnu.org/licenses/licenses.html> GNU
-General Public License</a>.
-
-Funding for Stage has been provided in part by:
-<ul>
- <li>NSERC (Canada)
- <li>Simon Fraser University (Canada)
- <li>DARPA (USA)
- <li>NASA (USA)
- <li>NSF (USA)
-</ul>
-
-
-If you use Stage in your work, we'd appreciate a citation. At the time of writing, the most suitable reference is:
-
-<ul>
-<li>
-Brian Gerkey, Richard T. Vaughan and Andrew Howard. "The
-Player/Stage Project: Tools for Multi-Robot and Distributed Sensor
-Systems"
-Proceedings of the 11th International Conference on Advanced Robotics,
-pages 317-323,
-Coimbra, Portugal, June 2003 <A HREF="http://www.isr.uc.pt/icar03/">(ICAR'03)</A>.
-<br>
-<A HREF="http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.ps.gz">[gzipped
-postscript]</A> <A HREF="http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.pdf">[pdf]</A>  
-</ul>
-
-*/
-
-
-/** 
-@page dev_simulation Simulation Device
-
-The simulation device...
-
-*/
-
-
-/** 
-@page devices Devices
-
-Devices..
-
-*/
-
-/** 
-@page models Models
-
-Introduction to models...
-
-*/
 

@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.10 2005-08-08 19:00:32 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.11 2005-08-10 22:57:52 rtv Exp $ -->
 
 <HEAD>
 
@@ -57,21 +57,29 @@ h2 {
   #padding:3px;
 }
 
+h3 { text-align:left; }
 
 img {
   border: 0;
 }
 
-ul { 
-    position:relative;
-    left:-1.6em;
-    margin-bottom:0px;
-    margin-top:0px;
-}
+#ul { 
+#    position:relative;
+#    left:-1.6em;
+#    margin-bottom:0px;
+#    margin-top:0px;
+#}
 
 ul.menu { 
     position:relative;
     left:-2.5em;
+    margin-bottom:0px;
+    margin-top:0px;
+}
+
+ul.menu1 { 
+    position:relative;
+    left:-1.6em;
     margin-bottom:0px;
     margin-top:0px;
 }
@@ -82,7 +90,7 @@ li.menu {
     #left:-0.5em;
 }
 
-.fragment {
+pre {
 	width: 85%;
 	border: 1px solid #000000;
 	background-color: #EEF;
@@ -95,7 +103,7 @@ li.menu {
 
 #content { position: absolute; left:10em; top:0em; padding-left:3em; padding-right:3em; padding-bottom:2em; margin-top:1em; margin-right:2em; }
 
-div.box { background-color:#EEE; border: 1px solid #000; padding: 0.5ex 0.6em 0.5ex 0.6em; margin:1em;  }
+div.box { background-color:#EEE; border: 1px solid #000; padding: 0.5ex 0.4em 0.5ex 0.6em; margin:1em;  }
 div.title { font-weight:bold; background-color:#eee; margin-bottom:2px;}
 
 div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
@@ -108,19 +116,18 @@ div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 
 <div id="sidebar"> 
 
-<h2 align=center><img width=120 src="stage_button.png" alt="Stage logo image"><br>
-v2.0</h2>
+<h2 align=center><img width=120 src="stage_button.png" alt="Stage logo image">
+</h2>
 
 <div class="box">
-<div class=title>User Guide</div>
+<div class=title><a href="index.html">User Guide</a></div>
 
 <ul class=menu>
-<li class=menu><a href="index.html">Introduction</a><br>
-<li class=menu><a href="release.html">Release</a><br>
-<li class=menu><a href="install.html">Installation</a><br>
-<li class=menu><a href="credits.html">Credits</a><br>
-<li class=menu><a href="faq.html">FAQ</a><br>
-<li class=menu><a href="help.html">Help</a><br>
+<li class=menu><a href="group__stage.html">Stage</a><br>
+<li class=menu><a href="group__release.html">Release</a><br>
+<li class=menu><a href="group__install.html">Installation</a><br>
+<li class=menu><a href="group__faq.html">FAQ</a><br>
+<li class=menu><a href="group__help.html">Help</a><br>
 <hr>
 
 <!-- the lists of plugins and models come next -->

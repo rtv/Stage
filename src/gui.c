@@ -1,3 +1,6 @@
+/*
+CVS: $Id: gui.c,v 1.95 2005-08-10 22:57:52 rtv Exp $
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +35,7 @@ int _render_matrix_deltas = FALSE;
     @{
 */
 
-/** @defgroup window GUI Window
+/** @defgroup window Window
 
 The Stage window consists of a menu bar, a view of the simulated
 world, and a status bar.
