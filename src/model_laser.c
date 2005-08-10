@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.75 $
+//  $Revision: 1.76 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -68,6 +68,15 @@ laser
 - fov float
   - the angular field of view of the scanner, in degrees. 
 
+*/
+
+/** 
+@ingroup stg_model_laser
+@ingroup stg_model_props
+@defgroup stg_model_laser_props Laser Properties
+
+- "laser_cfg" stg_laser_config_t
+- "laser_data" stg_laser_sample_t[]
 */
 
 void laser_load( stg_model_t* mod )

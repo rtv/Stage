@@ -128,9 +128,26 @@ model
   - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
 - ranger_return [bool]
    - iff 1, this model can be detected by a ranger.
-*/
+x*/
 
 /** @} */  
+
+/** 
+@ingroup stg_model
+@defgroup stg_model_props Model Properties
+
+- "pose" stg_pose_t
+- "geom" stg_geom_t
+- "size" stg_size_t
+- "velocity" stg_velocity_t
+- "color" stg_color_t
+- "fiducial_return" stg_fiducial_return_t
+- "laser_return" stg_laser_return_t
+- "obstacle_return" stg_obstacle_return_t
+- "ranger_return" stg_ranger_return_t
+
+*/
+
 
 /*
   TODO
