@@ -76,19 +76,21 @@ ZooDriver_Register( DriverTable *table )
 
 /********* General *********/
 
-int
-zoo_err( const char *fmt, ... )
-{
-	va_list va;
-	char fmt2[1024];
-	int r;
+extern "C" {
+	int
+	zoo_err( const char *fmt, ... )
+	{
+		va_list va;
+		char fmt2[1024];
+		int r;
 
-	sprintf(fmt2, "Zoo: %s", fmt);
-	va_start(va, fmt);
-	r = vfprintf(stderr, fmt2, va);
-	va_end(va);
+		sprintf(fmt2, "Zoo: %s", fmt);
+		va_start(va, fmt);
+		r = vfprintf(stderr, fmt2, va);
+		va_end(va);
 
-	return r;
+		return r;
+	}
 }
 
 /********* ZooDriver *********/
@@ -110,7 +112,18 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 		zoo_err("Zoo is confused\n");
 	AddInterface(devid, PLAYER_ALL_MODE, 0, 0, 0, 0);
 
+	/* count the robots */
+	robot_count = 0;
+	for (int i=0; i < cf->GetSectionCount(); ++i) {
+		if (!strcmp(cf->GetSectionType(i), "driver")
+		 && !strcmp(cf->ReadString(i, "name", ""), "stage")
+		 && strcmp(cf->ReadString(i, "model", ""), ""))
+			++robot_count;
+	}
+	robotMap = (rmap_t *)calloc(robot_count, sizeof(rmap_t));
+
 	/* build a model-to-port mapping */
+	int k=0;
 	for (int i = 0; i < cf->GetSectionCount(); ++i) {
 		/* only care about devices provided by stage */
 		if (strcmp(cf->GetSectionType(i), "driver")
@@ -127,8 +140,8 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 
 		/* add the mapping */
 		printf("Zoo: MODELMAP %s --> %d\n", modelname, port);
-		portMap[modelname] = port;
-		modelList.push_back(modelname);
+		robotMap[k].port = port;
+		robotMap[k++].model_name = strdup(modelname);
 	}
 
 	/* find all species in the config file: requires a model-to-port mapping
@@ -198,11 +211,46 @@ default_referee:
 		referee = new ZooReferee(cf, section, this);
 }
 
+/* ZooDriver destructor */
 ZooDriver::~ZooDriver()
 {
 	for (int i = 0; i < species_count; ++i)
 		delete species[i];
 	delete species;
+
+	for (int i=0; i < robot_count; ++i)
+		free((char *)robotMap[i].model_name);
+	free(robotMap);
+}
+
+rmap_t *
+ZooDriver::FindRobot( const char *modelName )
+{
+	for (int i=0; i < robot_count; ++i)
+		if (!strcmp(robotMap[i].model_name, modelName))
+			return robotMap+i;
+
+	return NULL;
+}
+
+rmap_t *
+ZooDriver::FindRobot( int port )
+{
+	for (int i=0; i < robot_count; ++i)
+		if (robotMap[i].port == port)
+			return robotMap+i;
+
+	return NULL;
+}
+
+rmap_t *
+ZooDriver::FindRobot( ZooController *zc )
+{
+	for (int i=0; i < robot_count; ++i)
+		if (robotMap[i].controller == zc)
+			return robotMap+i;
+
+	return NULL;
 }
 
 int
@@ -225,6 +273,13 @@ ZooDriver::Prepare( void )
 	referee->Startup();
 }
 
+#if 0
+void
+ZooDriver::Update( void )
+{
+}
+#endif
+
 void
 ZooDriver::Run( int p )
 {
@@ -232,14 +287,16 @@ ZooDriver::Run( int p )
 
 	n = species_count;
 	for (i = 0; i < n; ++i)
-		if (species[i]->Hosts(p))
-			controllerMap[p] = species[i]->Run(p);
+		if (species[i]->Hosts(p)) {
+			rmap_t *rp = FindRobot(p);
+			rp->controller = species[i]->Run(p);
+		}
 }
 
 void
 ZooDriver::Run( const char *model )
 {
-	Run(portMap[model]);
+	Run(GetModelPortByName(model));
 }
 
 void
@@ -249,44 +306,49 @@ ZooDriver::RunAll( void )
 
 	n = species_count;
 	for (i = 0; i < n; ++i)
-		species[i]->RunAll(controllerMap);
+		species[i]->RunAll();
 }
 
 void
 ZooDriver::Kill( int p )
 {
-	controllerMap[p]->Kill();
-	controllerMap.erase(p);
+	rmap_t *rp = FindRobot(p);
+	if (!rp || !rp->controller) return;
+	rp->controller->Kill();
+	rp->controller = NULL;
 }
 
 void
 ZooDriver::Kill( const char *model )
 {
-	Kill(portMap[model]);
+	rmap_t *rp = FindRobot(model);
+	if (!rp || !rp->controller) return;
+	rp->controller->Kill();
+	rp->controller = NULL;
 }
 
 void
 ZooDriver::KillAll( void )
 {
-	int i, n;
+	int i;
 
-	n = species_count;
-	for (i = 0; i < n; ++i)
-		species[i]->KillAll(controllerMap);
-
-	controllerMap.clear();
+	for (i = 0; i < robot_count; ++i)
+		if (robotMap[i].controller) {
+			robotMap[i].controller->Kill();
+			robotMap[i].controller = NULL;
+		}
 }
 
 const char *
 ZooDriver::GetModelNameByIndex( int k )
 {
-	return modelList[k];
+	return robotMap[k].model_name;
 }
 
 int
 ZooDriver::GetModelCount( void )
 {
-	return modelList.size();
+	return robot_count;
 }
 
 stg_model_t *
@@ -298,7 +360,7 @@ ZooDriver::GetModelByName( const char *name )
 stg_model_t *
 ZooDriver::GetModelByIndex( int k )
 {
-	return GetModelByName(modelList[k]);
+	return GetModelByName(robotMap[k].model_name);
 }
 
 stg_model_t *
@@ -311,26 +373,16 @@ ZooDriver::GetModelByPort( int p )
 const char *
 ZooDriver::GetModelNameByPort( int p )
 {
-	std::map<const char *, int>::iterator i;
+	rmap_t *rp = FindRobot(p);
 
-	for (i=portMap.begin(); i != portMap.end(); ++i)
-		if (i->second == p)
-			return i->first;
-
-	return NULL;
+	return rp ? rp->model_name : NULL;
 }
 
 int
 ZooDriver::GetModelPortByName( const char *m )
 {
-	std::map<const char *, int>::iterator i;
-	for (i=portMap.begin(); i!=portMap.end(); ++i)
-		if (!strcmp(i->first, m)) return i->second;
-	return 0;
-#if 0
-	/* FIXME: why doesn't this work?  Man, STL sucks. */
-	return portMap[m];
-#endif
+	rmap_t *rp = FindRobot(m);
+	return rp ? rp->port : NULL;
 }
 
 /**
@@ -345,13 +397,14 @@ ZooDriver::GetModelPortByName( const char *m )
 int
 ZooDriver::GetScore( const char *model, void *data )
 {
-	ZooController *zc = controllerMap[portMap[model]];
+	rmap_t *rp = FindRobot(model);
 
-	if (!zc) return -1;
-	if (!zc->score_data) return 0;
-	memcpy(data, zc->score_data, zc->score_size);
+	if (!rp || !rp->controller) return -1;
+	if (!rp->controller->score_data || rp->controller->score_size <= 0)
+		return 0;
+	memcpy(data, rp->controller->score_data, rp->controller->score_size);
 
-	return zc->score_size;
+	return rp->controller->score_size;
 }
 
 /**
@@ -364,8 +417,8 @@ ZooDriver::GetScore( const char *model, void *data )
 int
 ZooDriver::GetScoreSize( const char *model )
 {
-	ZooController *zc = controllerMap[portMap[model]];
-	return zc->score_size;
+	rmap_t *rp = FindRobot(model);
+	return (rp && rp->controller) ? rp->controller->score_size : NULL;
 }
 
 /** 
@@ -380,13 +433,18 @@ ZooDriver::GetScoreSize( const char *model )
 int
 ZooDriver::SetScore( const char *model, void *score, size_t siz )
 {
-	ZooController *zc = controllerMap[portMap[model]];
+	/* set persistent score on controller */
+	rmap_t *rp = FindRobot(model);
+	if (!rp || !rp->controller) return -1;
+	if (rp->controller->score_data)
+		free(rp->controller->score_data);
+	rp->controller->score_data = malloc(siz);
+	memcpy(rp->controller->score_data, score, siz);
+	rp->controller->score_size = siz;
 
-	if (!zc) return -1;
-
-	if (zc->score_data) zc->score_data = realloc(zc->score_data, siz);
-	else zc->score_data = malloc(siz);
-	memcpy(zc->score_data, score, siz);
+	/* set transient score on robot (position model) */
+	stg_model_t *pos = GetModelByName(model);
+	stg_model_set_property(pos, ZOO_SCORE_PROPERTY_NAME, score, siz);
 
 	return 1;
 }
@@ -401,10 +459,16 @@ ZooDriver::SetScore( const char *model, void *score, size_t siz )
 int
 ZooDriver::ClearScore( const char *model )
 {
-	ZooController *zc = controllerMap[portMap[model]];
-	if (!zc) return -1;
-	if (zc->score_data) free(zc->score_data);
-	zc->score_size = 0;
+	/* clear persistent score */
+	rmap_t *rp = FindRobot(model);
+	if (!rp || !rp->controller) return -1;
+	if (rp->controller->score_data) free(rp->controller->score_data);
+	rp->controller->score_size = 0;
+
+	/* clear transient score: */
+	stg_model_t *mod = GetModelByName(model);
+	stg_model_set_property(mod, ZOO_SCORE_PROPERTY_NAME, NULL, 0);
+
 	return 0;
 }
 
@@ -423,8 +487,11 @@ ZooDriver::GetSpeciesByName( const char *name )
 /**
  * ZooSpecies constructor.
  */
-ZooSpecies::ZooSpecies( ConfigFile *cf, int section, ZooDriver *zoo )
+ZooSpecies::ZooSpecies( ConfigFile *cf, int section, ZooDriver *_zoo )
 {
+	/* remember the ZooDriver for later use */
+	zoo = _zoo;
+
 	/* get the name; this is a const char * and it's not my problem
 	 * to free it. */
 	name = cf->ReadString(section, "name", ZOO_DEFAULT_SPECIES);
@@ -461,13 +528,17 @@ ZooSpecies::ZooSpecies( ConfigFile *cf, int section, ZooDriver *zoo )
 		 || strcmp(cf->ReadString(pi, "name", ""), name))
 			continue;
 
-		ZooController zc(cf, i);
+		ZooController zc(cf, i, this);
 		controller.push_back(zc);
 	}
 
 	/* initialize controller selection */
 	next_controller = 0;
 	controller_instance = 0;
+
+	/* default score display setup */
+	score_draw_cb = NULL;
+	score_draw_user_data = NULL;
 
 	ZOO_DEBUGMSG("Zoo: Added species %s\n", name, 0);
 }
@@ -478,6 +549,25 @@ ZooSpecies::~ZooSpecies()
 	delete port_list;
 	delete model_list;
 	ZOO_DEBUGMSG("Zoo: Done cleaning up %s\n", name, 0);
+}
+
+/**
+ * ::SetScoreDrawCB(draw_cb, userdata)
+ */
+void
+ZooSpecies::SetScoreDrawCB( zooref_score_draw_t draw_cb, void *userdata )
+{
+	score_draw_cb = draw_cb;
+	score_draw_user_data = userdata;
+
+	int i, n=zoo->GetModelCount();
+	for (i=0; i<n; ++i) {
+		stg_model_t *mod = zoo->GetModelByIndex(i);
+		if (!mod) continue;
+		stg_model_add_property_toggles(mod, ZOO_SCORE_PROPERTY_NAME,
+			(stg_property_callback_t)draw_cb, userdata,
+			NULL, NULL, ZOO_SCORE_LABEL, 1);
+	}
 }
 
 /**
@@ -499,16 +589,15 @@ ZooSpecies::Run( int p )
  * ZooSpecies::RunAll() -- run a controller on every port
  */
 void
-ZooSpecies::RunAll( cmap_t &cMap )
+ZooSpecies::RunAll( void )
 {
 	int p;
-	ZooController *zc;
 
 	for (p = 0; p < population_size; ++p) {
 		if (port_list[p] <= 0) continue;
-		zc = Run(port_list[p]);
-		if (!zc) cMap.erase(p);
-		else cMap[p] = zc;
+
+		rmap_t *rp = zoo->FindRobot(port_list[p]);
+		rp->controller = Run(port_list[p]);
 	}
 }
 
@@ -516,13 +605,15 @@ ZooSpecies::RunAll( cmap_t &cMap )
  * ZooSpecies::KillAll() -- kill the controller on every port
  */
 void
-ZooSpecies::KillAll( cmap_t &cMap )
+ZooSpecies::KillAll( void )
 {
 	int p;
 
 	for (p = 0; p < population_size; ++p) {
-		cMap[port_list[p]]->Kill();
-		cMap.erase(p);
+		rmap_t *rp = zoo->FindRobot(port_list[p]);
+		if (!rp || !rp->controller) continue;
+		rp->controller->Kill();
+		rp->controller = NULL;
 	}
 }
 
@@ -572,7 +663,7 @@ ZooSpecies::print( void )
 
 const char *ZooController::path = "";
 
-ZooController::ZooController( ConfigFile *cf, int section )
+ZooController::ZooController( ConfigFile *cf, int section, ZooSpecies *sp )
 {
 	/* get the frequency */
 	frequency = cf->ReadInt(section, "frequency", ZOO_DEFAULT_FREQUENCY);
@@ -580,7 +671,12 @@ ZooController::ZooController( ConfigFile *cf, int section )
 	/* get the command-line and parse it into a ready-to-use form. */
 	command = cf->ReadString(section, "command", "");
 
+	/* remember what species I'm in */
+	species = sp;
+
 	/* initially there's no score information */
+	score_data = 0x0;
+	score_size = 0;
 
 	ZOO_DEBUGMSG("Zoo: Added controller \"%s\" with frequency %d.\n",
 		command, frequency);

@@ -9,6 +9,8 @@
 #include <stdio.h>
 
 #define ZOO_SCORE_BUFFER_SIZE	256
+#define ZOO_SCORE_PROPERTY_NAME "zoo_score"
+#define ZOO_SCORE_LABEL "score from Zoo"
 
 /* some forward declarations here */
 class ZooSpecies;
@@ -18,16 +20,21 @@ class ZooReferee;
 
 /* referee stuff */
 typedef int (*zooref_init_t)(ConfigFile *, int, ZooDriver *);
-typedef int (*zooref_score_printer_t)(char *, const void *, size_t, void *);
-
-/* so I don't have to keep typing it */
-typedef std::map< int, ZooController * > cmap_t;
+typedef int (*zooref_score_draw_t)(stg_model_t *, const void *sdata, size_t,
+                                   void *, int mindex);
 
 /* for registering the driver */
 void ZooDriver_Register(DriverTable *);
 
 /* general stuff */
 int zoo_err(const char *, int ...);
+
+/* maps */
+typedef struct {
+	const char *model_name;
+	int port;
+	ZooController *controller;
+} rmap_t;
 
 class ZooDriver : public Driver
 {
@@ -66,13 +73,19 @@ public:
 	int GetScoreSize(const char *);
 	int SetScore(const char *, void *, size_t);
 	int ClearScore(const char *);
+	void SetScoreDrawCB(zooref_score_draw_t, void *userdata);
+		// for every species
+
+	rmap_t *FindRobot(const char *modelName);
+	rmap_t *FindRobot(int port);
+	rmap_t *FindRobot(ZooController *);
 
 private:
 	int species_count;
 	ZooSpecies **species;
 
-	cmap_t controllerMap; // port --> ZooController
-	std::map<const char *, int> portMap; // stg_model_t.token --> port
+	int robot_count; /* could be model_count or port_count */
+	rmap_t *robotMap; // port --> ZooController
 	std::vector<const char *> modelList;
 
 	void *zooref_handle; // for dynamically linked ref
@@ -86,20 +99,19 @@ public:
 	ZooSpecies(ConfigFile *cf, int section, ZooDriver *);
 	~ZooSpecies();
 	ZooController *Run(int);
-	void RunAll(cmap_t &cMap);
+	void RunAll(void);
 #if 0
 	void Kill(int);
 #endif
-	void KillAll(cmap_t &cMap);
+	void KillAll(void);
 	ZooController *SelectController(void);
 	bool Hosts(int);
 	void print(void);
 
-#if 0
-	void SetScorePrintFunction(zooref_score_printer_t, void *);
-	void PrintScore(FILE *fp); /* Print the score for every member of this
-	                            * species. */
-#endif
+	void SetScoreDrawCB(zooref_score_draw_t, void *userdata);
+	zooref_score_draw_t score_draw_cb;
+	void *score_draw_user_data;
+
 	const char *name;
 private:
 	int population_size;
@@ -111,16 +123,13 @@ private:
 	int next_controller;
 	int controller_instance; // for frequency > 1
 
-#if 0
-	zooref_score_printer_t score_printer;
-	void *score_printer_user_data;
-#endif
+	ZooDriver *zoo;
 };
 
 class ZooController
 {
 public:
-	ZooController(ConfigFile *cf, int section);
+	ZooController(ConfigFile *cf, int section, ZooSpecies *sp);
 	~ZooController();
 
 	void Run(int port);
@@ -139,6 +148,7 @@ public:
 	int score_size;
 
 	static const char *path;
+	ZooSpecies *species;
 private:
 	pid_t pid;
 	int frequency;
