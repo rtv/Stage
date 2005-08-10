@@ -223,7 +223,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   gui_window_t* win = calloc( sizeof(gui_window_t), 1 );
 
   win->canvas = stg_rtk_canvas_create( app );
-  gtk_window_set_default_size( win->canvas->frame, xdim, ydim ); 
+  gtk_window_set_default_size( GTK_WINDOW(win->canvas->frame), xdim, ydim ); 
   
   win->world = world;
   
@@ -480,6 +480,7 @@ int gui_world_update( stg_world_t* world )
   if( fig_trails )
     if( trail_interval++ > 4 )
       {
+    void gui_world_trails(stg_world_t *); // forward declaration
 	gui_world_trails( world );
 	trail_interval = 0;
       }
