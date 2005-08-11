@@ -2,13 +2,14 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.13 2005-08-11 19:56:54 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.14 2005-08-11 20:18:14 rtv Exp $ -->
 
 <HEAD>
 
 
 <meta HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=utf-8">
 <meta name="keywords" content="stage, robot, simulation, player, player/stage">
+<link href="doxygen.css" rel="stylesheet" type="text/css">
 
 <style type="text/css">
 
@@ -36,16 +37,6 @@ a:hover { text-decoration: underline; }
 
 .timestamp { text-align:right; background-color: #DDD; font-size:75%;}
 
-th { 
-  text-align:left; 
-  vertical-align:top; 
-}
-
-td { 
-  text-align:left; 
-  vertical-align:top;
-}
-
 h1 { 
   font-size:160%; 
 }
@@ -72,7 +63,7 @@ ul.menu {
 
 ul.menu1 { 
     position:relative;
-    left:-1.6em;
+    left:-2.1em;
     margin-bottom:0px;
     margin-top:0px;
 }
@@ -89,6 +80,10 @@ pre {
 	background-color: #EEF;
 	padding: 6px;
 	margin: 15px;
+}
+
+pre.fragment {
+	background-color:  #EEF;
 }
 
 

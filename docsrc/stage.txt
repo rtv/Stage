@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.8 2005-08-11 19:56:54 rtv Exp $
+ * $Id: stage.txt,v 1.9 2005-08-11 20:18:14 rtv Exp $
 */
 
 /**
@@ -16,10 +16,6 @@ the GNU General Public License v2. A copy of the license is included
 with the sourcecode in the file 'COPYING". Copying and redistribution
 is permitted only under the terms of the license.
 
-<hr>
-<small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.8 2005-08-11 19:56:54 rtv Exp $
-</small>
 */
 
 

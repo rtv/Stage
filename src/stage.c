@@ -127,12 +127,6 @@ Gazebo, it's called Player/Gazebo. Gazebo without Player is just
 
 <p>from <i>"As You Like It"</i> by William Shakespeare.
 
-
-<hr>
-<small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.c,v 1.79 2005-08-11 19:56:54 rtv Exp $
-</small>
-
 */
 
 int stg_init( int argc, char** argv )

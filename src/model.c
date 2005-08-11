@@ -128,7 +128,7 @@ model
   - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
 - ranger_return [bool]
    - iff 1, this model can be detected by a ranger.
-x*/
+*/
 
 /** @} */  
 
