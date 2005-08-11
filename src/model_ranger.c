@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.54 $
+//  $Revision: 1.55 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -87,6 +87,15 @@ The ranger model allows configuration of the pose, size and view parameters of e
 
 */
 
+  
+/** 
+@ingroup stg_model_ranger
+@ingroup stg_model_props
+@defgroup stg_model_ranger_props Ranger Properties
+
+- "ranger_cfg" stg_ranger_config_t
+- "ranger_data" stg_ranger_sample_t[]
+*/
 
 
 void ranger_load( stg_model_t* mod )

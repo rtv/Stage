@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.47 $
+//  $Revision: 1.48 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +76,7 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
 @ingroup stg_model_props
 @defgroup stg_model_position_props Position Properties
 
-- "position_drive" stg_position_drive_mode_t
+- "position_drive" #stg_position_drive_mode_t
 - "position_data" stg_position_data_t
 - "position_cmd" stg_position_cmd_t
 */

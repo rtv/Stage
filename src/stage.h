@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.156 2005-08-10 22:57:52 rtv Exp $
+ * CVS: $Id: stage.h,v 1.157 2005-08-10 23:57:19 rtv Exp $
  */
 
 
@@ -130,7 +130,8 @@ extern "C" {
     stg_meters_t x, y;
   } stg_size_t;
   
-  /** specify a 3 axis position, in x, y and heading.
+  /** \struct stg_pose_t
+      Specify a 3 axis position, in x, y and heading.
    */
   typedef struct
   {
@@ -418,12 +419,12 @@ extern "C" {
   struct _gui_window;
   struct _stg_world;
 
-  /** opaque data structure implementing a world
+  /** \struct opaque data structure implementing a world
    */
   typedef struct _stg_world stg_world_t;
 
 
-  /** opaque data structure implementing a model. You get and set all
+  /** \struct opaque data structure implementing a model. You get and set all
       the interesting properties of a model using the
       stg_model_set_property(), stg_model_get_property() and
       stg_model_get_property_fixed() functions.
@@ -775,12 +776,13 @@ extern "C" {
    */
   typedef struct
   {
-    //stg_geom_t geom;
     stg_radians_t fov; ///< field of view 
     stg_meters_t range_max; ///< the maximum range
     stg_meters_t range_min; ///< the miniimum range
-    int samples; ///< the number of range measurements (and thus the size
-    ///< of the array of stg_laser_sample_t's returned)
+
+    /** the number of range measurements (and thus the size
+    of the array of stg_laser_sample_t's returned) */ 
+    int samples; 
   } stg_laser_config_t;
   
   /** print human-readable version of the laser config struct
