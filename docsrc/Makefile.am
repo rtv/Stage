@@ -21,7 +21,9 @@ install-data-hook:
 clean:
 	rm -rf stage
 
+# copy the current documentation to the web server
+upload: 
+	./upload.sh stage-user-cvs stage_user
+	./upload.sh stage-cvs stage
 
-# TODO
-# upload:
-# copy files to web server	
+
