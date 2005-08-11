@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.11 2005-08-10 22:57:52 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.12 2005-08-11 04:11:39 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -45,6 +45,8 @@ robots without even being recompiled [2]. Thus the Player/Stage system
 allows rapid prototyping of controllers destined for real
 robots. Stage can also be very useful by simulating populations of
 realistic robot devices you don't happen to own [3].
+
+[@ref refs]
 
 @par Player configuration file options
 

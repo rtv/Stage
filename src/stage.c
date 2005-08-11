@@ -49,6 +49,8 @@ some sensor pre-processing or sensor-integration algorithms that help
 you to rapidly build powerful robot controllers. These are easy to use
 with Stage.
 
+[@ref refs]
+
 <h2>Models</h2>
 
 <p>Stage provides several sensor and actuator models, including sonar
@@ -128,7 +130,7 @@ Gazebo, it's called Player/Gazebo. Gazebo without Player is just
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.c,v 1.77 2005-08-11 03:01:19 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.c,v 1.78 2005-08-11 04:11:39 rtv Exp $
 </small>
 
 */
