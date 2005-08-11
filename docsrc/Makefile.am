@@ -20,3 +20,8 @@ install-data-hook:
 
 clean:
 	rm -rf stage
+
+
+# TODO
+# upload:
+# copy files to web server	
