@@ -21,6 +21,7 @@ DEST=$1
 NAME=$2
 
 # Create a tarball with the correct name 
+rm -f $DEST
 ln -s $NAME $DEST
 tar chzf $DEST.tgz $DEST
 

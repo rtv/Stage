@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.157 2005-08-10 23:57:19 rtv Exp $
+ * CVS: $Id: stage.h,v 1.158 2005-08-11 19:56:54 rtv Exp $
  */
 
 
@@ -64,7 +64,38 @@ extern "C" {
 #include "replace.h"
 
 /** @defgroup libstage libstage - Stage library API
-    A C library for creating robot simulations
+
+    libstage (The Stage Library) provides a C code library for
+    simulating a population of mobile robots and sensors. It is
+    usually used as a plugin driver for <a
+    href="http://playerstage.sf.net/player/player.html">Player</a>,
+    but it can also be used directly to build custom simulations.
+
+    libstage is modular and fairly simple to use. The following code is
+    enough to get a complete robot simulation running:
+
+@verbatim
+#include "stage.h"
+
+int main( int argc, char* argv[] )
+{ 
+  stg_init( argc, argv );
+
+  stg_world_t* world = stg_world_create_from_file( argv[1] );
+  
+  while( (stg_world_update( world,TRUE )==0) )
+    {}
+  
+  stg_world_destroy( world );
+  
+  return 0;
+}
+@endverbatim
+
+@par Contact and support
+
+For help with libstage, please use the mailing list playerstage_users@lists.sourceforge.net. 
+
     @{
 */
 

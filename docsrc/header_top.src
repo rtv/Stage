@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.12 2005-08-11 03:01:19 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.13 2005-08-11 19:56:54 rtv Exp $ -->
 
 <HEAD>
 
@@ -103,7 +103,7 @@ div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 
 </style>
 
-<TITLE>Stage User Guide</TITLE>
+<TITLE>Stage Manual</TITLE>
 
 </HEAD>
 
@@ -111,23 +111,35 @@ div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 
 <div id="sidebar"> 
 
-<h2 style="text-align:center;"><img src="stage_button.png" alt="Stage logo image">
+<h2 style="text-align:center;">
+<a href="index.html"><img src="stage_button.png" alt="Stage logo image"></a>
 </h2>
 
+
+
 <div class="box">
-<div class=title><a href="index.html">User Guide</a></div>
+<div class=title>Stage</div>
 
 <ul class=menu>
-<li class=menu><a href="group__stage.html">Stage</a><br>
-<li class=menu><a href="group__release.html">Release</a><br>
-<li class=menu><a href="group__install.html">Installation</a><br>
-<li class=menu><a href="group__faq.html">FAQ</a><br>
-<li class=menu><a href="group__help.html">Help</a><br>
+<li class=menu><a href="index.html">Frontpage</a>
+<li class=menu><a href="modules.html">Contents</a>
+<li class=menu><a href="release.html">Release</a>
+</ul>
+</div>
+
+<div class="box">
+<div class=title>User</div>
+
+<ul class=menu>
+<li class=menu><a href="group__stage.html">Stage</a>
+<li class=menu><a href="group__install.html">Installation</a>
+<li class=menu><a href="group__faq.html">FAQ</a>
+<li class=menu><a href="group__help.html">Help</a>
+
 <hr>
 
 <!-- the lists of plugins and models come next -->
 
-<li class=menu><a href="group__world.html">World</a><br>
-<li class=menu><a href="group__window.html">Window</a><br>
-<li class=menu><a href="group__model.html">Model</a><br>
-
+<li class=menu><a href="group__world.html">World</a>
+<li class=menu><a href="group__window.html">Window</a>
+<li class=menu><a href="group__model.html">Model</a>

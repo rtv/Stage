@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: help.txt,v 1.12 2005-08-11 19:56:54 rtv Exp $
+ * $Id: stage.txt,v 1.8 2005-08-11 19:56:54 rtv Exp $
 */
 
 /**
@@ -18,7 +18,7 @@ is permitted only under the terms of the license.
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.12 2005-08-11 19:56:54 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.8 2005-08-11 19:56:54 rtv Exp $
 </small>
 */
 
@@ -167,6 +167,28 @@ should check the Player instructions just in case.
 
 /**
 @page release Release Notes
+
+<h2>Version 2.0.0a</h2>
+
+This is an experimental pre-release in preparation for
+Stage-2.0.0. There are many changes under the hood, which will lead to
+new features in the near future. However, this release is mainly aimed
+at getting the same functionality as Stage-1.6, but without the
+Player/Stage-1.6 timing issues. Player/Stage should now scale to large
+robot populations, running at less than real-time without causing
+timing problems with Player client robot controllers.
+
+Player-1.6.5 or later is required. This pre-release does NOT work with
+Player CVS HEAD, which has a new network protocol. The main antcipated
+difference between this pre-release and Stage-2.0.0 will
+be a move to the new Player protocol. Stage- and Player-2.0.0 are
+planned for near-simultaneous release this fall.
+
+Please report bugs to the tracker.
+
+Let us know what you do with Stage.
+
+Richard Vaughan (rtv) 2005.8.11
 
 <h2>Version 1.6.1</h2>
 

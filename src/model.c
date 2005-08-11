@@ -145,7 +145,7 @@ x*/
 - "laser_return" stg_laser_return_t
 - "obstacle_return" stg_obstacle_return_t
 - "ranger_return" stg_ranger_return_t
-
+- "gripper_return" stg_gripper_return_t
 */
 
 

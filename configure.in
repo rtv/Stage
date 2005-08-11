@@ -1,10 +1,10 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.75 2005-08-09 05:10:26 rtv Exp $
+dnl $Id: configure.in,v 1.76 2005-08-11 19:56:54 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,2.0.0)
+AC_INIT(stage,2.0.0-a)
 
 AC_CONFIG_SRCDIR(src/stage.c)
 
@@ -65,7 +65,7 @@ if test "$GLIB_LIBS" = " "; then
   AC_MSG_ERROR([glib is required to build Stage.  Install glib, then re-configure.])
 fi
 
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.0,
+PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4,
 dnl PKG_CHECK_MODULES(GTK, libgnomecanvas-2.0 >= 2.0,
 AC_DEFINE(INCLUDE_GTK,1,[building GTK components]),
 AC_MSG_WARN([no suitable GTK was found. ])
@@ -73,13 +73,13 @@ AC_MSG_WARN([no suitable GTK was found. ])
 
 
 dnl we need Player 1.6 or higher
-PKG_CHECK_MODULES( PLAYER, player >= 1.6,
+PKG_CHECK_MODULES( PLAYER, player >= 1.6.5,
 AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
 AC_MSG_WARN([Player was not found. ])
 )
 
 dnl we need libplayerc
-PKG_CHECK_MODULES( PLAYERC, libplayerc >= 1.6,
+PKG_CHECK_MODULES( PLAYERC, libplayerc >= 1.6.5,
 AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
 AC_MSG_WARN([libplayercr was not found. ])
 )

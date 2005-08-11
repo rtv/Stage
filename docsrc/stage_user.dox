@@ -23,7 +23,7 @@ PROJECT_NAME           = Stage
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = 1.6
+PROJECT_NUMBER         = 2.0
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 
@@ -391,7 +391,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT = help.txt ../src 
+INPUT =  stage.txt ../src 
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -403,7 +403,7 @@ INPUT = help.txt ../src
 # read the docs from each source file - don't read the header file:
 # that's the job of the reference manual
 
-FILE_PATTERNS = *.c *.cc
+FILE_PATTERNS = *.c *.cc *.h 
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories 
 # should be searched for input files as well. Possible values are YES and NO. 

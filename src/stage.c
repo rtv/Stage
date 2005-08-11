@@ -22,7 +22,7 @@
 int _stg_quit = FALSE;
 int _stg_disable_gui = FALSE;
 
-/** @defgroup stage Stage
+/** @defgroup stage Stage User Guide
 
 Stage provides a virtual world populated by mobile robots and sensors,
 along with various objects for the robots to sense and manipulate. It
@@ -130,7 +130,7 @@ Gazebo, it's called Player/Gazebo. Gazebo without Player is just
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.c,v 1.78 2005-08-11 04:11:39 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.c,v 1.79 2005-08-11 19:56:54 rtv Exp $
 </small>
 
 */
