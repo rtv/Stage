@@ -19,7 +19,7 @@ for PAGE in `ls $PAGEDIR/group__model__*.html` ; do
 done
 
 # end the list of models
-echo "</ul></ul>" >> $OUTPUT
+echo "</ul>" >> $OUTPUT
 
 ## start the list of player plugins
 #echo "<hr><li class=menu>Player interfaces<ul>" >> $OUTPUT

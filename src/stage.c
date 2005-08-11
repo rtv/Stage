@@ -106,7 +106,8 @@ used together are referred to as "the Player/Stage system" or just
 Gazebo, it's called Player/Gazebo. Gazebo without Player is just
 "Gazebo". All this software is part of the "Player/Stage Project".
 
-Funding for Stage has been provided in part by:
+<p> Funding for Stage has been provided in part by:
+
 <ul>
  <li>NSERC (Canada)
  <li>Simon Fraser University (Canada)
@@ -117,17 +118,17 @@ Funding for Stage has been provided in part by:
 
 <p>The names "Player" and "Stage" were inspired by the lines:
 
-<pre>
-All the world's a stage
-And all the men and women merely players 
-</pre>
+@verbatim
+ "All the world's a stage"
+ "And all the men and women merely players"
+@endverbatim
 
-from <i>"As You Like It"</i> by William Shakespeare.
+<p>from <i>"As You Like It"</i> by William Shakespeare.
 
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.c,v 1.76 2005-08-10 22:57:52 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.c,v 1.77 2005-08-11 03:01:19 rtv Exp $
 </small>
 
 */
