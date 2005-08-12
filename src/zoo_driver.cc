@@ -19,7 +19,10 @@
  *
  */
 
-/*****
+/// \defgroup zoo Zoo
+
+/**
+ * @{
  * Description: An addon to the Stage plugin for Zoo functionality.
  * Author: Adam Lein
  * Date: July 14, 2005
@@ -38,12 +41,14 @@
 #include <wordexp.h>
 #include <stdio.h>
 #include <dlfcn.h>
+#include <gui.h>
 
 #define ZOO_DRIVER_NAME "zoo"
 #define ZOO_SPECIES_SECTYPE "species"
 #define ZOO_CONTROLLER_SECTYPE "controller"
 
 #define ZOOREF_CREATE "zooref_create"
+#define ZOOREF_SCORE_FIG_NAME "zooref_score_fig"
 typedef ZooReferee *(*zooref_create_t)(ConfigFile *, int, ZooDriver *);
 
 #define ZOO_DEFAULT_SPECIES "planktron"
@@ -57,11 +62,24 @@ extern DeviceTable *deviceTable;
 
 /********* Driver ********/
 
-Driver * ZooDriver_Init( ConfigFile *cf, int section )
+/**
+ * Called by player_driver_init, defined in p_driver.cc.  Just creates a new
+ * ZooDriver object.
+ * @param cf the current Player config file
+ * @param section the section that ended up causing this Zoo to be created.
+ * @return a pointer to the Player driver object.
+ */
+Driver *
+ZooDriver_Init( ConfigFile *cf, int section )
 {
 	return (Driver *)(new ZooDriver(cf, section));
 }
 
+/**
+ * Register the name of this driver, along with the function that creates
+ * it, with Player's driver table.;
+ * @param table Player's driver table
+ */
 void
 ZooDriver_Register( DriverTable *table )
 {
@@ -77,6 +95,11 @@ ZooDriver_Register( DriverTable *table )
 /********* General *********/
 
 extern "C" {
+/**
+ * A variable-argument function that Zoo routines should call to report
+ * errors that wouldn't stop the simulation (use stg_err for ones that
+ * would).  The parameters work just like printf.
+ */
 	int
 	zoo_err( const char *fmt, ... )
 	{
@@ -211,7 +234,9 @@ default_referee:
 		referee = new ZooReferee(cf, section, this);
 }
 
-/* ZooDriver destructor */
+/**
+ * ZooDriver destructor.  Deletes the species list and robot map entries.
+ */
 ZooDriver::~ZooDriver()
 {
 	for (int i = 0; i < species_count; ++i)
@@ -223,6 +248,9 @@ ZooDriver::~ZooDriver()
 	free(robotMap);
 }
 
+/**
+ * Find a robot in the robot map, searching by model name.
+ */
 rmap_t *
 ZooDriver::FindRobot( const char *modelName )
 {
@@ -233,6 +261,9 @@ ZooDriver::FindRobot( const char *modelName )
 	return NULL;
 }
 
+/**
+ * Find a robot in the robot map, searching by port number.
+ */
 rmap_t *
 ZooDriver::FindRobot( int port )
 {
@@ -243,6 +274,9 @@ ZooDriver::FindRobot( int port )
 	return NULL;
 }
 
+/**
+ * Find a robot in the robot map, searching by Controller.
+ */
 rmap_t *
 ZooDriver::FindRobot( ZooController *zc )
 {
@@ -253,6 +287,9 @@ ZooDriver::FindRobot( ZooController *zc )
 	return NULL;
 }
 
+/**
+ * Player wants Setup and Shutdown functions; NOOP for now.
+ */
 int
 ZooDriver::Setup( void )
 {
@@ -260,6 +297,9 @@ ZooDriver::Setup( void )
 	return 0;
 }
 
+/**
+ * Player wants Setup and Shutdown functions; NOOP for now.
+ */
 int
 ZooDriver::Shutdown( void )
 {
@@ -267,19 +307,22 @@ ZooDriver::Shutdown( void )
 	return 0;
 }
 
+/**
+ * Player calls this after everything else is ready; Zoo uses it to tell the
+ * referee to start.
+ */
 void
 ZooDriver::Prepare( void )
 {
 	referee->Startup();
 }
 
-#if 0
-void
-ZooDriver::Update( void )
-{
-}
-#endif
-
+/**
+ * Run a controller on a specific port.  If more than one species has a
+ * robot on this port in its population, then more than one controller will
+ * be started.
+ * @param p the port to connect the controller to.
+ */
 void
 ZooDriver::Run( int p )
 {
@@ -293,12 +336,21 @@ ZooDriver::Run( int p )
 		}
 }
 
+/**
+ * Run a controller to control a robot with a given model name.
+ * NOTE: currently uses GetModelPortByName, which I want to deprecate in
+ * favour of FindRobot.
+ * @param model the name of the top-level model of the robot.
+ */
 void
 ZooDriver::Run( const char *model )
 {
 	Run(GetModelPortByName(model));
 }
 
+/** 
+ * Run a controller for every member of the populations of every species.
+ */
 void
 ZooDriver::RunAll( void )
 {
@@ -309,6 +361,10 @@ ZooDriver::RunAll( void )
 		species[i]->RunAll();
 }
 
+/**
+ * Kill the controller for a robot on a given port.
+ * @param p the port whose controller should be killed.
+ */
 void
 ZooDriver::Kill( int p )
 {
@@ -318,6 +374,11 @@ ZooDriver::Kill( int p )
 	rp->controller = NULL;
 }
 
+/**
+ * Kill the controller controlling a robot with a given top-level model
+ * name.
+ * @param model the name of the top-level model
+ */
 void
 ZooDriver::Kill( const char *model )
 {
@@ -327,6 +388,9 @@ ZooDriver::Kill( const char *model )
 	rp->controller = NULL;
 }
 
+/**
+ * Kill all active controllers.
+ */
 void
 ZooDriver::KillAll( void )
 {
@@ -339,30 +403,60 @@ ZooDriver::KillAll( void )
 		}
 }
 
+/**
+ * DEPRECATED: Use ZooDriver::FindRobot instead.
+ * @param k index of a robot in the robot map.
+ * @return the name of the top-level model of the robot.
+ */
 const char *
 ZooDriver::GetModelNameByIndex( int k )
 {
 	return robotMap[k].model_name;
 }
 
+/**
+ * Get the number of top-level models.  FIXME: This should be the number of
+ * top-level models that Zoo cares about; i.e., the ones in the population
+ * of some species.
+ * @return the number of top-level models.
+ */
 int
 ZooDriver::GetModelCount( void )
 {
 	return robot_count;
 }
 
+/**
+ * Get a Stage stg_model_t object for the model with this name (the
+ * stg_model_t.token entry).
+ * @param name the name (token) of the model.
+ * @return a pointer to the model; this is Stage's copy and should not be
+ * freed.
+ */
 stg_model_t *
 ZooDriver::GetModelByName( const char *name )
 {
 	return stg_world_model_name_lookup(StgDriver::world, name);
 }
 
+/**
+ * Get a Stage stg_model_t object for the kth model in the robot map.
+ * @param k the index to the robot map.
+ * @return a pointer to the model; this is Stage's copy and should not be
+ * freed.
+ */
 stg_model_t *
 ZooDriver::GetModelByIndex( int k )
 {
 	return GetModelByName(robotMap[k].model_name);
 }
 
+/**
+ * Get a Stage stg_model_t object for the model on the given port.
+ * @param p the port on which there's a model we're interested in.
+ * @return a pointer to the model; this is Stage's copy and should not be
+ * freed.
+ */
 stg_model_t *
 ZooDriver::GetModelByPort( int p )
 {
@@ -370,6 +464,11 @@ ZooDriver::GetModelByPort( int p )
 	return mname ? GetModelByName(mname) : NULL;
 }
 
+/**
+ * DEPRECATED: Use ZooDriver::FindRobot instead.
+ * @param p the port
+ * @return the name of the top-level model on this port.
+ */
 const char *
 ZooDriver::GetModelNameByPort( int p )
 {
@@ -378,6 +477,11 @@ ZooDriver::GetModelNameByPort( int p )
 	return rp ? rp->model_name : NULL;
 }
 
+/**
+ * DEPRECATED: Use ZooDriver::FindRobot instead.
+ * @param m the name of a top-level model.
+ * @return the port that this model is on.
+ */
 int
 ZooDriver::GetModelPortByName( const char *m )
 {
@@ -386,12 +490,13 @@ ZooDriver::GetModelPortByName( const char *m )
 }
 
 /**
- * ZooDriver::GetScore: Get the score data for this model.  If no score data
- * has been set yet (using ::SetScore), return 0.  The caller must provide
+ * Get the score data for this model.  If no score data
+ * has been set yet (using ZooDriver::SetScore), return 0.
+ * The caller must provide
  * enough space to store the data, which is in a format unknown to Zoo.
- * @param model: a string for the name of the model (the "token" field of a
+ * @param model a string for the name of the model (the "token" field of a
  * stg_model_t struct).
- * @param data: pointer to memory to copy the data to.
+ * @param data pointer to memory to copy the data to.
  * @return the number of bytes copied, or -1 if the model is not found.
  */
 int
@@ -408,9 +513,9 @@ ZooDriver::GetScore( const char *model, void *data )
 }
 
 /**
- * ZooDriver::GetScoreSize: Return the size of the score data for this model.
+ * Get the size of the score data for this model.
  * 0 could mean that no score data has been set yet.
- * @param model: a string for the name of the model (the "token" field of a
+ * @param model a string for the name of the model (the "token" field of a
  * stg_model_t struct).
  * @return the size of the score data, or -1 if the model is not found.
  */
@@ -422,13 +527,13 @@ ZooDriver::GetScoreSize( const char *model )
 }
 
 /** 
- * ZooDriver::SetScore: Set the score data for this model.  Reallocates
+ * Set the score data for this model.  Reallocates
  * storage, stored locally, each time the function is called.
- * @param model: a string for the name of the model (the "token" field of a
+ * @param model a string for the name of the model (the "token" field of a
  * stg_model_t struct).
- * @param score: a pointer to the data to be copied into the local score
+ * @param score a pointer to the data to be copied into the local score
  * buffer.
- * @param siz: the number of bytes to copy.
+ * @param siz the number of bytes to copy.
  */
 int
 ZooDriver::SetScore( const char *model, void *score, size_t siz )
@@ -450,9 +555,8 @@ ZooDriver::SetScore( const char *model, void *score, size_t siz )
 }
 
 /**
- * ZooDriver::ClearScore: Erase the score data for this model.  Frees any
- * allocated memory.
- * @param model: a string for the name of the model (the "token" field of a
+ * Erase the score data for this model.  Frees any allocated memory.
+ * @param model a string for the name of the model (the "token" field of a
  * stg_model_t struct).
  * @return -1 if the model is not found, 0 otherwise.
  */
@@ -472,6 +576,22 @@ ZooDriver::ClearScore( const char *model )
 	return 0;
 }
 
+/**
+ * Set the callback for drawing score data on the GUI, but do so for every
+ * species.
+ */
+void
+ZooDriver::SetScoreDrawCB( zooref_score_draw_t sdcb, void *udata )
+{
+	for (int i=0; i<species_count; ++i)
+		species[i]->SetScoreDrawCB(sdcb, udata);
+}
+
+/**
+ * Locate a species by its name.
+ * @param name the name of the species.
+ * @return a pointer to the ZooSpecies object.
+ */
 ZooSpecies *
 ZooDriver::GetSpeciesByName( const char *name )
 {
@@ -486,6 +606,7 @@ ZooDriver::GetSpeciesByName( const char *name )
 
 /**
  * ZooSpecies constructor.
+ * @param _zoo the ZooDriver object that created me.
  */
 ZooSpecies::ZooSpecies( ConfigFile *cf, int section, ZooDriver *_zoo )
 {
@@ -543,6 +664,9 @@ ZooSpecies::ZooSpecies( ConfigFile *cf, int section, ZooDriver *_zoo )
 	ZOO_DEBUGMSG("Zoo: Added species %s\n", name, 0);
 }
 
+/**
+ * ZooSpecies destructor.  Destroys model list and port list.
+ */
 ZooSpecies::~ZooSpecies()
 {
 	ZOO_DEBUGMSG("Zoo: Cleaning up species %s", name, 0);
@@ -551,8 +675,24 @@ ZooSpecies::~ZooSpecies()
 	ZOO_DEBUGMSG("Zoo: Done cleaning up %s\n", name, 0);
 }
 
+static int
+clear_cb( stg_model_t *mod )
+{
+	stg_rtk_fig_t *fig;
+
+	fig = stg_model_get_fig(mod, ZOOREF_SCORE_FIG_NAME);
+	if (fig)
+		stg_rtk_fig_clear(fig);
+
+	return 0;
+}
+
 /**
- * ::SetScoreDrawCB(draw_cb, userdata)
+ * Set a callback to be called when a robot's score changes.
+ * FIXME: This means that if the score doesn't change, the display doesn't
+ * move with the robot.  Oops.
+ * @param draw_cb the callback.
+ * @param userdata arbitrary data to be passed along.
  */
 void
 ZooSpecies::SetScoreDrawCB( zooref_score_draw_t draw_cb, void *userdata )
@@ -566,12 +706,16 @@ ZooSpecies::SetScoreDrawCB( zooref_score_draw_t draw_cb, void *userdata )
 		if (!mod) continue;
 		stg_model_add_property_toggles(mod, ZOO_SCORE_PROPERTY_NAME,
 			(stg_property_callback_t)draw_cb, userdata,
-			NULL, NULL, ZOO_SCORE_LABEL, 1);
+			(stg_property_callback_t)clear_cb, NULL,
+			ZOO_SCORE_LABEL,
+			0);
 	}
 }
 
 /**
- * ZooSpecies::Run(p) -- run a controller on port p
+ * Run a controller on port a given port.
+ * @param p the port to run on
+ * @return a pointer to the ZooController that was executed.
  */
 ZooController *
 ZooSpecies::Run( int p )
@@ -586,7 +730,7 @@ ZooSpecies::Run( int p )
 }
 
 /**
- * ZooSpecies::RunAll() -- run a controller on every port
+ * Run a controller for every member of my population.
  */
 void
 ZooSpecies::RunAll( void )
@@ -602,7 +746,7 @@ ZooSpecies::RunAll( void )
 }
 
 /**
- * ZooSpecies::KillAll() -- kill the controller on every port
+ * Kill the controller on every member of my population.
  */
 void
 ZooSpecies::KillAll( void )
@@ -618,8 +762,8 @@ ZooSpecies::KillAll( void )
 }
 
 /**
- * ZooSpecies::SelectController -- pick a controller from the pool.
- * Deterministic.
+ * Pick a controller from the pool.
+ * Deterministic; uses a round-robin scheme with priority.
  */
 ZooController *
 ZooSpecies::SelectController( void )
@@ -640,6 +784,10 @@ ZooSpecies::SelectController( void )
 	return zc;
 }
 
+/**
+ * Determine whether the robot on this port is in the population of this
+ * species.
+ */
 bool
 ZooSpecies::Hosts( int p )
 {
@@ -650,6 +798,9 @@ ZooSpecies::Hosts( int p )
 	return false;
 }
 
+/**
+ * Dump out details about this species.
+ */
 void
 ZooSpecies::print( void )
 {
@@ -663,6 +814,10 @@ ZooSpecies::print( void )
 
 const char *ZooController::path = "";
 
+/**
+ * ZooController constructor.
+ * @param sp the species I belong to.
+ */
 ZooController::ZooController( ConfigFile *cf, int section, ZooSpecies *sp )
 {
 	/* get the frequency */
@@ -682,10 +837,19 @@ ZooController::ZooController( ConfigFile *cf, int section, ZooSpecies *sp )
 		command, frequency);
 }
 
+/**
+ * ZooController destructor.  A NOOP.
+ */
 ZooController::~ZooController()
 {
 }
 
+/**
+ * Run this controller on the specified port.  Prepends the controller_path
+ * specified in the config file to the PATH variable before execution.
+ * Controllers should accept a "-p #" option.
+ * @param port the port to connect to.
+ */
 void
 ZooController::Run( int port )
 {
@@ -696,52 +860,40 @@ ZooController::Run( int port )
 	pid = fork();
 	if (pid) return;
 
-#if 0 // asprintf is a GNU nicety
-	asprintf(&newpath, "%s:%s", path, getenv("PATH"));
-#else
+	/* prepend the controller_path to the PATH. */
 	char *oldpath = getenv("PATH");
 	int len = strlen(path) + strlen(oldpath) + 1;
 	newpath = (char *)calloc(len+1, sizeof(char));
 	sprintf(newpath, "%s:%s", path, oldpath);
-#endif
 	wordexp(newpath, &wex, 0);
 	if (wex.we_wordc > 0)
 		setenv("PATH", wex.we_wordv[0], 1);
 	free(newpath);
 
-	/* the 10 extra bytes are for " -p #####\0" */
-#if 0
-	cmdline = (char *)malloc(strlen(command)+10);
-	sprintf(cmdline, "%s -p %d", command, port);
-	ZOO_DEBUGMSG("executing controller %s\n", cmdline, 0);
-
-	system(cmdline); // TODO: Why do I feel like I should be using exec?
-	free(cmdline);
-	exit(0);
-#else
+	/* build a command to execute */
 	cmdline = strdup(command);
 	for(i=0; cmdline; ++i)
 		argv[i] = strsep(&cmdline, " \t");
 	argv[i++] = "-p";
-#if 0
-	asprintf(argv+i++, "%d", port);
-#else
 	argv[i] = (char *)calloc(6, sizeof(char));
 	sprintf(argv[i++], "%d", port);
-#endif
 	argv[i] = NULL;
 	printf("Zoo: Executing controller ");
 	for (i=0; argv[i]; ++i)
 		printf("%s ", argv[i]);
 	putchar('\n');
+
+	/* execute */
 	execvp(argv[0], argv);
 	perror(argv[0]);
 	exit(1);
-#endif
 
 	return;
 }
 
+/**
+ * Kill this controller, if it's currently running.
+ */
 void
 ZooController::Kill( void )
 {
@@ -750,11 +902,19 @@ ZooController::Kill( void )
 
 /************ Referee *************/
 
+/**
+ * ZooReferee constructor.
+ * @param zd the ZooDriver I will be refereeing for.
+ */
 ZooReferee::ZooReferee( ConfigFile *cf, int section, ZooDriver *zd )
 {
 	zoo = zd;
 }
 
+/**
+ * Called by Zoo when everything is ready to start.  I should use this
+ * opportunity to start controllers for the initial batch of robots.
+ */
 void
 ZooReferee::Startup( void )
 {
@@ -764,8 +924,107 @@ ZooReferee::Startup( void )
 		printf("Zoo: model %s has id %d\n", mod->token, mod->id);
 	}
 	zoo->RunAll();
-#if 0
-	zoo->Run(6665);
-	zoo->Run(6666);
-#endif
 }
+
+/**
+ * Some default score-draw callbacks.  The ones for elementary data types
+ * should *all* be implemented for arrays.  The length of the array will be
+ * passed as a struct in the userdata, which will contain its own userdata.
+ */
+
+int
+ZooReferee::draw_int_cb( stg_model_t *mod, const char *propname, 
+                         const int *data, size_t siz )
+{
+	stg_rtk_fig_t *fig;
+
+	/* Get an object to draw the score on, or create one if it doesn't
+	 * exist. */
+	fig = stg_model_get_fig(mod, ZOOREF_SCORE_FIG_NAME);
+	if (!fig) {
+		fig = stg_model_fig_create(mod, ZOOREF_SCORE_FIG_NAME, NULL,
+			STG_LAYER_USER);
+		stg_color_t *color = (stg_color_t *)
+			stg_model_get_property_fixed(mod, "color", sizeof(stg_color_t));
+		stg_rtk_fig_color_rgb32(fig, *color);
+	}
+
+	/* if the robot is uncontrolled, don't print the score */
+	if (!mod->subs) return 0;
+
+	/* what to draw */
+	static char *buf=NULL, *cp;
+	if (buf) free(buf); /* attempt to avoid leaks */
+	buf = (char *)calloc(16*siz/sizeof(int), sizeof(char));
+	strcpy(buf, "[ ");
+	cp = buf+2;
+	for (unsigned int i=0; i < siz/sizeof(int); ++i) {
+		cp += snprintf(cp, 32, "%d", data[i]);
+		if (i == siz/sizeof(int)-1)
+			strcpy(cp, " ]");
+		else
+			strcpy(cp, ",\n  ");
+		cp += 4;
+	}
+
+	/* where to print it */
+	stg_pose_t pose;
+	stg_model_get_global_pose(mod, &pose);
+	stg_rtk_fig_origin(fig, pose.x, pose.y, 0);
+
+	/* draw it, under and to the left of the position model */
+	stg_rtk_fig_text(fig, -0.75, -0.75, 0.0, buf);
+
+	/* keep marshalling callbacks */
+	return 0;
+}
+
+int
+ZooReferee::draw_double_cb( stg_model_t *mod, const char *propname, 
+                         const double *data, size_t siz )
+{
+	stg_rtk_fig_t *fig;
+
+	/* Get an object to draw the score on, or create one if it doesn't
+	 * exist. */
+	fig = stg_model_get_fig(mod, ZOOREF_SCORE_FIG_NAME);
+	if (!fig) {
+		fig = stg_model_fig_create(mod, ZOOREF_SCORE_FIG_NAME, NULL,
+			STG_LAYER_USER);
+		stg_color_t *color = (stg_color_t *)
+			stg_model_get_property_fixed(mod, "color", sizeof(stg_color_t));
+		stg_rtk_fig_color_rgb32(fig, *color);
+	}
+
+	/* if the robot is uncontrolled, don't print the score */
+	if (!mod->subs) return 0;
+
+	/* what to draw */
+	static char *buf=NULL, *cp;
+	if (buf) free(buf); /* attempt to avoid leaks */
+	buf = (char *)calloc(16*siz/sizeof(double), sizeof(char));
+	strcpy(buf, "[ ");
+	cp = buf+2;
+	for (unsigned int i=0; i < siz/sizeof(double); ++i) {
+		cp += snprintf(cp, 32, "%g", data[i]);
+		if (i == siz/sizeof(double)-1)
+			strcpy(cp, " ]");
+		else
+			strcpy(cp, ",\n  ");
+		cp += 4;
+	}
+
+	/* where to print it */
+	stg_pose_t pose;
+	stg_model_get_global_pose(mod, &pose);
+	stg_rtk_fig_origin(fig, pose.x, pose.y, 0);
+
+	/* draw it, under and to the left of the position model */
+	stg_rtk_fig_clear(fig);
+	stg_rtk_fig_text(fig, -0.75, -0.75, 0.0, buf);
+
+	/* keep marshalling callbacks */
+	return 0;
+}
+
+/// @}

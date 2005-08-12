@@ -20,8 +20,8 @@ class ZooReferee;
 
 /* referee stuff */
 typedef int (*zooref_init_t)(ConfigFile *, int, ZooDriver *);
-typedef int (*zooref_score_draw_t)(stg_model_t *, const void *sdata, size_t,
-                                   void *, int mindex);
+typedef int (*zooref_score_draw_t)(stg_model_t *, const char *propname,
+                         const void *sdata, size_t, void *, int mindex);
 
 /* for registering the driver */
 void ZooDriver_Register(DriverTable *);
@@ -160,6 +160,10 @@ class ZooReferee
 public:
 	ZooReferee(ConfigFile *, int, ZooDriver *);
 	void Startup(void);
+	static int draw_int_cb(stg_model_t *, const char *pname,
+		const int *sdata, size_t siz );
+	static int draw_double_cb(stg_model_t *, const char *pname,
+		const double *sdata, size_t siz );
 private:
 	ZooDriver *zoo;
 };
