@@ -118,7 +118,6 @@ extern "C" {
 
 /********* ZooDriver *********/
 
-
 /**
  * ZooDriver constructor.  Load all the species.
  * TODO: The Player config-file reader should really have a way of getting
@@ -138,11 +137,27 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 	/* count the robots */
 	robot_count = 0;
 	for (int i=0; i < cf->GetSectionCount(); ++i) {
-		if (!strcmp(cf->GetSectionType(i), "driver")
-		 && !strcmp(cf->ReadString(i, "name", ""), "stage")
-		 && strcmp(cf->ReadString(i, "model", ""), ""))
-			++robot_count;
-	}
+		/* must be a model provided by the stage driver */
+		if (strcmp(cf->GetSectionType(i), "driver")
+		 || strcmp(cf->ReadString(i, "name", ""), "stage"))
+			continue;
+
+		/* must have a name */
+		const char *name = cf->ReadString(i, "model", "");
+		if (!name[0]) continue;
+
+		/* must be included in the population of some species known to
+		 * this Zoo. */
+		for (int j=0; j < cf->GetSectionCount(); ++j) {
+			if ((cf->GetSectionParent(j) != section)
+			 || strcmp(cf->GetSectionType(j), ZOO_SPECIES_SECTYPE))
+				continue;
+			for (int k=0; k < cf->GetTupleCount(j, "population"); ++k)
+				if (!strcmp(cf->ReadTupleString(j, "population", k, ""),
+				            name))
+					++robot_count;
+			} /* for(all sections) - search for robot in pop'ns */
+	} /* for(all sections) -- count the robots */
 	robotMap = (rmap_t *)calloc(robot_count, sizeof(rmap_t));
 
 	/* build a model-to-port mapping */
@@ -161,11 +176,26 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 		const char *modelname = cf->ReadString(i, "model", NULL);
 		if (!modelname) continue;
 
+		/* must be included in the population of some species known to
+		 * this Zoo. */
+		int is_in_a_pop=0;
+		for (int j=0; j < cf->GetSectionCount(); ++j) {
+			if ((cf->GetSectionParent(j) != section)
+			 || strcmp(cf->GetSectionType(j), "species"))
+				continue;
+			for (int k=0; k < cf->GetTupleCount(j, "population"); ++k)
+				if (!strcmp(cf->ReadTupleString(j, "population", k, ""),
+				            modelname))
+					is_in_a_pop = 1;
+		}
+		if (!is_in_a_pop)
+			continue;
+
 		/* add the mapping */
 		printf("Zoo: MODELMAP %s --> %d\n", modelname, port);
 		robotMap[k].port = port;
 		robotMap[k++].model_name = strdup(modelname);
-	}
+	} /* for(all sections) */
 
 	/* find all species in the config file: requires a model-to-port mapping
 	 * already exists */
@@ -229,7 +259,7 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 
 		/* create the referee */
 		referee = zooref_create(cf, section, this);
-	} else
+	} else /* no referee_path */
 default_referee:
 		referee = new ZooReferee(cf, section, this);
 }
@@ -901,6 +931,8 @@ ZooController::Kill( void )
 }
 
 /************ Referee *************/
+
+ZooDriver *ZooReferee::zoo = NULL;
 
 /**
  * ZooReferee constructor.

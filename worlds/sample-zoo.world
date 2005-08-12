@@ -1,6 +1,6 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: sample-zoo.world,v 1.2 2005-07-30 00:04:41 rtv Exp $
+# CVS: $Id: sample-zoo.world,v 1.3 2005-08-12 21:38:20 adam_lein Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -8,8 +8,10 @@ include "pioneer.inc"
 
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
 
 
 
@@ -53,5 +55,12 @@ pioneer2dx
   color "magenta"
   pose [-3.559 -5.987 436.882]
   laser()
+)
+
+pioneer2dx
+(
+  name "robotX"
+  color "black"
+  pose [-2.960 -1.680 -131.382]
 )
 
