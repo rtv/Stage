@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.14 2005-08-11 20:18:14 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.15 2005-08-12 01:27:36 rtv Exp $ -->
 
 <HEAD>
 
@@ -74,16 +74,13 @@ li.menu {
     #left:-0.5em;
 }
 
-pre {
-	width: 85%;
-	border: 1px solid #000000;
-	background-color: #EEF;
-	padding: 6px;
-	margin: 15px;
-}
+pre { background-color: #EEF; }
 
-pre.fragment {
-	background-color:  #EEF;
+DIV.fragment {
+	border: 1px solid #CCCCCC;
+	background-color: #EEF;
+	padding-left: 1em;
+	margin: 4px;
 }
 
 
