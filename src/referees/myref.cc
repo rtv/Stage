@@ -66,22 +66,16 @@ MyRef::MyRef( ConfigFile *cf, int section, ZooDriver *_zoo )
 	stg_world_add_property_callback(StgDriver::world, "pose",
 		(stg_property_callback_t)pose_cb, NULL);
 
-	/* set the default score-drawing callback.  Maybe this should be done in
-	 * Prepare? */
-/* FIXME: goddamned name mangling... */
-#if 0
-	zoo->SetScoreDrawCB((zooref_score_draw_t)score_draw_cb, NULL);
-#else
-	int x=0;
-	for (int i=0; i < zoo->GetModelCount(); ++i) {
+	/* set the default score-drawing callback. */
+	int n = zoo->GetModelCount();
+	double x[2]={0.0,0.0};
+	for (int i=0; i < n; ++i) {
 		stg_model_t *mod = zoo->GetModelByIndex(i);
-		if (!mod) continue;
-		stg_model_set_property(mod, ZOO_SCORE_PROPERTY_NAME, &x, sizeof(int));
-		stg_model_add_property_toggles(mod, ZOO_SCORE_PROPERTY_NAME,
-			(stg_property_callback_t)score_draw_cb, (char *)"foo",
-			NULL, NULL, ZOO_SCORE_LABEL, 0);
+		stg_model_set_property(mod, ZOO_SCORE_PROPERTY_NAME,
+			&x, 2*sizeof(double));
 	}
-#endif
+	//zoo->SetScoreDrawCB((zooref_score_draw_t)score_draw_cb, NULL);
+	zoo->SetScoreDrawCB((zooref_score_draw_t)draw_double_cb, NULL);
 }
 
 /**
@@ -94,55 +88,15 @@ MyRef::pose_cb( stg_model_t *mod, const char *prop,
 {
 	/* set the score of the robot to be the distance from the absolute
 	 * origin. */
-	double s = sqrt(data[0]*data[0] + data[1]*data[1]);
+	double s[2];
 	double olds;
 
-	zoo->SetScore(mod->token, &s, sizeof(double));
+	s[0] = sqrt(data[0]*data[0] + data[1]*data[1]);
+	s[1] = M_PI;
+
+	zoo->SetScore(mod->token, &s, 2*sizeof(double));
 
 	/* continue marshalling callbacks. */
-	return 0;
-}
-
-/**
- * MyRef::score_draw_cb: Draw the score on the GUI.  Note the other
- * parameters aren't there because we don't need them.  That's okay, because
- * when we attach the callback, we can just cast the function pointer.
- *
- * Note: the framework for this subroutine was taken from model_position.c,
- * the position_render_data() function, and model_laser.c, the
- * laser_render_data() function.  The latter was for figuring out where to
- * draw the data.
- */
-int
-MyRef::score_draw_cb( stg_model_t *mod, const char *prop, const double *score )
-{
-	stg_rtk_fig_t *fig = stg_model_get_fig(mod, MYREF_SCORE_FIG_NAME);
-
-	if (!fig) {
-		fig = stg_model_fig_create(mod, MYREF_SCORE_FIG_NAME, NULL,
-			STG_LAYER_USER);
-		stg_color_t *color = (stg_color_t *)stg_model_get_property_fixed(mod,
-			"color", sizeof(stg_color_t));
-		stg_rtk_fig_color_rgb32(fig, *color);
-	}
-
-	/* if the robot is uncontrolled, don't print the score */
-	stg_rtk_fig_clear(fig);
-	if (!mod->subs) return 0;
-
-	/* what to draw */
-	char buf[256];
-	snprintf(buf, sizeof(buf), "<%.2f>", *score);
-
-	/* where to print it */
-	stg_pose_t pose;
-	stg_model_get_global_pose(mod, &pose);
-	stg_rtk_fig_origin(fig, pose.x, pose.y, 0);
-
-	/* draw it, over and to the left of the position model */
-	stg_rtk_fig_text(fig, -0.75, -0.75, 0.0, buf);
-
-	/* keep marshalling callbacks */
 	return 0;
 }
 
