@@ -156,6 +156,7 @@ private:
 	const char *command;
 	const char *outfilename, *outfilemode;
 	const char *errfilename, *errfilemode;
+	void cpathprintf(char *, const char *fmt, const rmap_t *);
 };
 
 class ZooReferee

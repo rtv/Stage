@@ -928,12 +928,12 @@ ZooController::Run( int port )
 	char fullname[PATH_MAX];
 	rmap_t *rp = zoo->FindRobot(port);
 	if (outfilename) {
-		snprintf(fullname, PATH_MAX, "%s.%s", outfilename, rp->model_name);
+		cpathprintf(fullname, outfilename, rp);
 		my_stdout = freopen(fullname, outfilemode?outfilemode:"w", stdout);
 		if (!my_stdout) perror(outfilename);
 	}
 	if (errfilename) {
-		snprintf(fullname, PATH_MAX, "%s.%s", errfilename, rp->model_name);
+		cpathprintf(fullname, errfilename, rp);
 		my_stderr = freopen(fullname, errfilemode?errfilemode:"w", stderr);
 		if (!my_stderr) perror(errfilename);
 	}
@@ -944,6 +944,39 @@ ZooController::Run( int port )
 	exit(1);
 
 	return;
+}
+
+/**
+ * Generate a filename for a controller to redirect stdout or stderr to
+ */
+void
+ZooController::cpathprintf( char *str, const char *fmt, const rmap_t *rp )
+{
+	const char *fmtp;
+
+	for(fmtp=fmt; *fmtp; fmtp++)
+		if (*fmtp == '%')
+			switch(*++fmtp) {
+			default:
+				zoo_err("Controller outfilename/errfilename \"%s\" "
+				        "contains a bad format argument '%c'.\n",
+					fmt, *fmtp);
+				break;
+			case '%':
+				*str++ = '%';
+				break;
+			case 'p':
+				str += sprintf(str, "%d", rp->port);
+				break;
+			case 'm': case 'n':
+				str += sprintf(str, "%s", rp->model_name);
+				break;
+			case 'c':
+				str += sprintf(str, "%s", path);
+				break;
+			}
+		else /* *fmtp == '%' */
+			*str++ = *fmtp;
 }
 
 /**
