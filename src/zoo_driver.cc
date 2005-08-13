@@ -679,7 +679,7 @@ ZooSpecies::ZooSpecies( ConfigFile *cf, int section, ZooDriver *_zoo )
 		 || strcmp(cf->ReadString(pi, "name", ""), name))
 			continue;
 
-		ZooController zc(cf, i, this);
+		ZooController zc(cf, i, zoo, this);
 		controller.push_back(zc);
 	}
 
@@ -848,7 +848,8 @@ const char *ZooController::path = "";
  * ZooController constructor.
  * @param sp the species I belong to.
  */
-ZooController::ZooController( ConfigFile *cf, int section, ZooSpecies *sp )
+ZooController::ZooController( ConfigFile *cf, int section,
+                              ZooDriver *zd, ZooSpecies *sp )
 {
 	/* get the frequency */
 	frequency = cf->ReadInt(section, "frequency", ZOO_DEFAULT_FREQUENCY);
@@ -856,8 +857,17 @@ ZooController::ZooController( ConfigFile *cf, int section, ZooSpecies *sp )
 	/* get the command-line and parse it into a ready-to-use form. */
 	command = cf->ReadString(section, "command", "");
 
+	/* get information for redirecting stdout/stderr */
+	outfilename = cf->ReadString(section, "outfilename", NULL);
+	outfilemode = cf->ReadString(section, "outfilemode", NULL);
+	errfilename = cf->ReadString(section, "errfilename", NULL);
+	errfilemode = cf->ReadString(section, "errfilemode", NULL);
+
 	/* remember what species I'm in */
 	species = sp;
+
+	/* remember what Zoo i'm in */
+	zoo = zd;
 
 	/* initially there's no score information */
 	score_data = 0x0;
@@ -912,6 +922,21 @@ ZooController::Run( int port )
 	for (i=0; argv[i]; ++i)
 		printf("%s ", argv[i]);
 	putchar('\n');
+
+	/* Redirect stdout and stderr */
+	FILE *my_stdout, *my_stderr;
+	char fullname[PATH_MAX];
+	rmap_t *rp = zoo->FindRobot(port);
+	if (outfilename) {
+		snprintf(fullname, PATH_MAX, "%s.%s", outfilename, rp->model_name);
+		my_stdout = freopen(fullname, outfilemode?outfilemode:"w", stdout);
+		if (!my_stdout) perror(outfilename);
+	}
+	if (errfilename) {
+		snprintf(fullname, PATH_MAX, "%s.%s", errfilename, rp->model_name);
+		my_stderr = freopen(fullname, errfilemode?errfilemode:"w", stderr);
+		if (!my_stderr) perror(errfilename);
+	}
 
 	/* execute */
 	execvp(argv[0], argv);

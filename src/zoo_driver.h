@@ -129,7 +129,7 @@ private:
 class ZooController
 {
 public:
-	ZooController(ConfigFile *cf, int section, ZooSpecies *sp);
+	ZooController(ConfigFile *cf, int section, ZooDriver *zd, ZooSpecies *sp);
 	~ZooController();
 
 	void Run(int port);
@@ -149,10 +149,13 @@ public:
 
 	static const char *path;
 	ZooSpecies *species;
+	ZooDriver *zoo;
 private:
 	pid_t pid;
 	int frequency;
 	const char *command;
+	const char *outfilename, *outfilemode;
+	const char *errfilename, *errfilemode;
 };
 
 class ZooReferee
@@ -164,8 +167,8 @@ public:
 		const int *sdata, size_t siz );
 	static int draw_double_cb(stg_model_t *, const char *pname,
 		const double *sdata, size_t siz );
-private:
-	ZooDriver *zoo;
+protected:
+	static ZooDriver *zoo;
 };
 
 #endif
