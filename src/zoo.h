@@ -20,7 +20,7 @@ class ZooReferee;
 #define ZOO_DEBUGMSG(f, a, b) PLAYER_MSG2(ZOO_DIAGNOSTIC_LEVEL, f, a, b)
 
 /* general stuff */
-int zoo_err(const char *, ...);
+extern "C" { int zoo_err(const char *, ...); }
 
 extern bool quiet_startup;
 

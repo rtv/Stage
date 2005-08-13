@@ -133,12 +133,14 @@ ZooController::Run( int port )
 	if (outfilename) {
 		cpathprintf(fullname, outfilename, rp);
 		my_stdout = freopen(fullname, outfilemode?outfilemode:"w", stdout);
-		if (!my_stdout) perror(outfilename);
+		if (!my_stdout) zoo_err("Cannot redirect stdout to \"%s\": %s\n",
+			fullname, strerror(errno));
 	}
 	if (errfilename) {
 		cpathprintf(fullname, errfilename, rp);
 		my_stderr = freopen(fullname, errfilemode?errfilemode:"w", stderr);
-		if (!my_stderr) perror(errfilename);
+		if (!my_stderr) zoo_err("Cannot redirect stderr to \"%s\": %s\n",
+			fullname, strerror(errno));
 	}
 
 	/* execute */
@@ -180,6 +182,8 @@ ZooController::cpathprintf( char *str, const char *fmt, const rmap_t *rp )
 			}
 		else /* *fmtp == '%' */
 			*str++ = *fmtp;
+
+	*str = '\0';
 }
 
 /**
