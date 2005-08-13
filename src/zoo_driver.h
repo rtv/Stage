@@ -7,6 +7,7 @@
 #include <map>
 #include <sys/types.h>
 #include <stdio.h>
+#include "zoo.h"
 
 #define ZOO_SCORE_BUFFER_SIZE	256
 #define ZOO_SCORE_PROPERTY_NAME "zoo_score"
@@ -18,23 +19,8 @@ class ZooController;
 class ZooDriver;
 class ZooReferee;
 
-/* referee stuff */
-typedef int (*zooref_init_t)(ConfigFile *, int, ZooDriver *);
-typedef int (*zooref_score_draw_t)(stg_model_t *, const char *propname,
-                         const void *sdata, size_t, void *, int mindex);
-
 /* for registering the driver */
 void ZooDriver_Register(DriverTable *);
-
-/* general stuff */
-int zoo_err(const char *, int ...);
-
-/* maps */
-typedef struct {
-	const char *model_name;
-	int port;
-	ZooController *controller;
-} rmap_t;
 
 class ZooDriver : public Driver
 {
@@ -90,86 +76,6 @@ private:
 
 	void *zooref_handle; // for dynamically linked ref
 	ZooReferee *referee;
-};
-
-class ZooSpecies
-{
-public:
-	ZooSpecies(void);
-	ZooSpecies(ConfigFile *cf, int section, ZooDriver *);
-	~ZooSpecies();
-	ZooController *Run(int);
-	void RunAll(void);
-#if 0
-	void Kill(int);
-#endif
-	void KillAll(void);
-	ZooController *SelectController(void);
-	bool Hosts(int);
-	void print(void);
-
-	void SetScoreDrawCB(zooref_score_draw_t, void *userdata);
-	zooref_score_draw_t score_draw_cb;
-	void *score_draw_user_data;
-
-	const char *name;
-private:
-	int population_size;
-	int *port_list;
-	char **model_list;
-	std::vector<ZooController> controller;
-
-	/* used by SelectController */
-	int next_controller;
-	int controller_instance; // for frequency > 1
-
-	ZooDriver *zoo;
-};
-
-class ZooController
-{
-public:
-	ZooController(ConfigFile *cf, int section, ZooDriver *zd, ZooSpecies *sp);
-	~ZooController();
-
-	void Run(int port);
-	void Kill(void);
-	inline int GetFrequency(void) { return frequency; }
-	inline const char *GetCommand(void) { return command; }
-
-#if 0
-	/* A controller can be a member of more than one species, and each
-	 * species may have its own way of keeping score, so each controller
-	 * should maintain a map from species names to scores */
-	std::map< const char *, void * > scoreMap;
-	std::map< const char *, size_t > scoreSizeMap;
-#endif
-	void *score_data;
-	int score_size;
-
-	static const char *path;
-	ZooSpecies *species;
-	ZooDriver *zoo;
-private:
-	pid_t pid;
-	int frequency;
-	const char *command;
-	const char *outfilename, *outfilemode;
-	const char *errfilename, *errfilemode;
-	void cpathprintf(char *, const char *fmt, const rmap_t *);
-};
-
-class ZooReferee
-{
-public:
-	ZooReferee(ConfigFile *, int, ZooDriver *);
-	void Startup(void);
-	static int draw_int_cb(stg_model_t *, const char *pname,
-		const int *sdata, size_t siz );
-	static int draw_double_cb(stg_model_t *, const char *pname,
-		const double *sdata, size_t siz );
-protected:
-	static ZooDriver *zoo;
 };
 
 #endif
