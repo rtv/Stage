@@ -99,7 +99,21 @@ ZooController::Run( int port )
 	char *cmdline, *newpath, *argv[256];
 	int i;
 	wordexp_t wex;
+	rmap_t *rp;
 
+	rp = zoo->FindRobot(port);
+
+	/* draw a RUN indicator on the robot */
+	stg_model_t *mod = zoo->GetModelByName(rp->model_name);
+	stg_msec_t starttime=stg_timenow();
+	stg_model_set_property(mod, ZOO_RUN_IND_PROP,
+		&starttime, sizeof(stg_msec_t));
+	int zero=0;
+	stg_model_set_property(mod, "zoo_killed",
+		&zero, sizeof(int));
+
+	/* TODO: check whether forking this early might cause
+	 * threading issues. */
 	pid = fork();
 	if (pid) return;
 
@@ -129,7 +143,6 @@ ZooController::Run( int port )
 	/* Redirect stdout and stderr */
 	FILE *my_stdout, *my_stderr;
 	char fullname[PATH_MAX];
-	rmap_t *rp = zoo->FindRobot(port);
 	if (outfilename) {
 		cpathprintf(fullname, outfilename, rp);
 		my_stdout = freopen(fullname, outfilemode?outfilemode:"w", stdout);
@@ -193,4 +206,11 @@ void
 ZooController::Kill( void )
 {
 	kill(pid, SIGTERM);
+
+	rmap_t *rp = zoo->FindRobot(this);
+	if (!rp) return;
+	stg_model_t *mod = zoo->GetModelByName(rp->model_name);
+
+	int one=1;
+	stg_model_set_property(mod, "zoo_killed", &one, sizeof(int));
 }

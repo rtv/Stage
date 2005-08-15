@@ -19,6 +19,9 @@ class ZooReferee;
 #define ZOO_DIAGNOSTIC_LEVEL 5
 #define ZOO_DEBUGMSG(f, a, b) PLAYER_MSG2(ZOO_DIAGNOSTIC_LEVEL, f, a, b)
 
+#define ZOO_RUN_IND_PROP "zoo_run"
+#define ZOO_RUN_IND_TIME 5000 /* milliseconds */
+
 /* general stuff */
 extern "C" { int zoo_err(const char *, ...); }
 

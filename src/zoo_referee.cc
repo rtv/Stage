@@ -64,6 +64,9 @@ ZooReferee::ZooReferee( ConfigFile *cf, int section, ZooDriver *zd )
 /**
  * Called by Zoo when everything is ready to start.  I should use this
  * opportunity to start controllers for the initial batch of robots.
+ *
+ * I also like to draw little green circles around robots when a controller
+ * is connected; attach a callback for this purpose here.
  */
 void
 ZooReferee::Startup( void )
@@ -72,6 +75,12 @@ ZooReferee::Startup( void )
 	for (i = 0; i < zoo->GetModelCount(); ++i) {
 		stg_model_t *mod = zoo->GetModelByIndex(i);
 		printf("Zoo: model %s has id %d\n", mod->token, mod->id);
+
+		static stg_msec_t zero=0;
+		stg_model_set_property(mod, ZOO_RUN_IND_PROP,
+			&zero, sizeof(stg_msec_t));
+		stg_model_add_property_callback(mod, "pose",
+			(stg_property_callback_t)draw_run_ind_cb, NULL);
 	}
 	zoo->RunAll();
 }
@@ -174,5 +183,57 @@ ZooReferee::draw_double_cb( stg_model_t *mod, const char *propname,
 	stg_rtk_fig_text(fig, -0.75, -0.75, 0.0, buf);
 
 	/* keep marshalling callbacks */
+	return 0;
+}
+
+int
+ZooReferee::draw_run_ind_cb( stg_model_t *mod, const char *propname,
+                             const stg_msec_t *datum )
+{
+	stg_rtk_fig_t *fig;
+
+	/* Get something to draw the score on, or create one if it doesn't
+	 * exist. */
+	fig = stg_model_get_fig(mod, "zooref_run_ind_fig");
+	if (!fig) {
+		fig = stg_model_fig_create(mod, "zooref_run_ind_fig", NULL,
+			STG_LAYER_USER-1);
+
+		/* properties */
+		stg_rtk_fig_linewidth(fig, 2);
+	}
+
+	int *killed =
+		(int *)stg_model_get_property_fixed(mod, "zoo_killed", sizeof(int));
+	if (*killed)
+		stg_rtk_fig_color(fig, 1, 0, 0); /* red */
+	else
+		stg_rtk_fig_color(fig, 0, 1, 0); /* green */
+	stg_rtk_fig_clear(fig);
+
+	/* if the robot is uncontrolled, don't draw */
+	if (!*killed && !mod->subs) return 0;
+
+	/* if the robot was started/stopped too long ago, don't draw */
+	stg_msec_t *starttime = (stg_msec_t *)stg_model_get_property_fixed(mod,
+		ZOO_RUN_IND_PROP, sizeof(stg_msec_t));
+	if (!starttime || (stg_timenow() - *starttime > ZOO_RUN_IND_TIME))
+		return 0;
+
+	/* where to draw */
+	stg_pose_t pose;
+	stg_model_get_global_pose(mod, &pose);
+
+	/* size of robot */
+	stg_geom_t *geom = (stg_geom_t *)stg_model_get_property_fixed(mod,
+		"geom", sizeof(stg_geom_t));
+
+	/* draw */
+	double m = geom->size.x > geom->size.y ? geom->size.x : geom->size.y;
+	stg_rtk_fig_ellipse(fig,
+		pose.x, pose.y, 0.0, /* center */
+		1.2 * m, 1.2 * m,    /* bounding rectangle */
+		0);                  /* (not) filled */
+
 	return 0;
 }

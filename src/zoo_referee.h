@@ -24,6 +24,8 @@ public:
 		const int *sdata, size_t siz );
 	static int draw_double_cb(stg_model_t *, const char *pname,
 		const double *sdata, size_t siz );
+	static int draw_run_ind_cb(stg_model_t *, const char *pname,
+		const stg_msec_t *data);
 protected:
 	static ZooDriver *zoo;
 };
