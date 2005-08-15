@@ -19,16 +19,15 @@
  *
  */
 
-/// \defgroup zoo Zoo
-
 /**
+ * \addtogroup zoo
  * @{
+ *  \defgroup ZooSpecies
+ *  @{
  * Description: An addon to the Stage plugin for Zoo functionality.
  * Author: Adam Lein
  * Date: July 14, 2005
  */
-
-#define _GNU_SOURCE
 
 #include "zoo_driver.h"
 #include "zoo_species.h"
@@ -251,3 +250,8 @@ ZooSpecies::print( void )
 		printf("%s(%d) ", model_list[i], port_list[i]);
 	printf("}\n");
 }
+
+/**
+ *  @}
+ * @}
+ */

@@ -19,16 +19,15 @@
  *
  */
 
-/// \defgroup zoo Zoo
-
 /**
+ * \addtogroup zoo
  * @{
+ *  \defgroup ZooReferee
+ *  @{
  * Description: An addon to the Stage plugin for Zoo functionality.
  * Author: Adam Lein
  * Date: July 14, 2005
  */
-
-#define _GNU_SOURCE
 
 #include "zoo_referee.h"
 #include "zoo_driver.h"
@@ -86,11 +85,9 @@ ZooReferee::Startup( void )
 }
 
 /**
- * Some default score-draw callbacks.  The ones for elementary data types
- * should *all* be implemented for arrays.  The length of the array will be
- * passed as a struct in the userdata, which will contain its own userdata.
+ * Stock callback for drawing (arrays of) ints.
+ * @param siz (number of elements) * sizeof(int)
  */
-
 int
 ZooReferee::draw_int_cb( stg_model_t *mod, const char *propname, 
                          const int *data, size_t siz )
@@ -138,6 +135,10 @@ ZooReferee::draw_int_cb( stg_model_t *mod, const char *propname,
 	return 0;
 }
 
+/**
+ * Stock callback for drawing (arrays of) doubles.
+ * @param siz (number of elements) * sizeof(double)
+ */
 int
 ZooReferee::draw_double_cb( stg_model_t *mod, const char *propname, 
                          const double *data, size_t siz )
@@ -186,6 +187,10 @@ ZooReferee::draw_double_cb( stg_model_t *mod, const char *propname,
 	return 0;
 }
 
+/**
+ * Callback to draw an indicator that a robot's controller has been run or
+ * stopped.
+ */
 int
 ZooReferee::draw_run_ind_cb( stg_model_t *mod, const char *propname,
                              const stg_msec_t *datum )
@@ -237,3 +242,8 @@ ZooReferee::draw_run_ind_cb( stg_model_t *mod, const char *propname,
 
 	return 0;
 }
+
+/**
+ *  @}
+ * @}
+ */

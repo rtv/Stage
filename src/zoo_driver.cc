@@ -19,16 +19,18 @@
  *
  */
 
-/// \defgroup zoo Zoo
+/**
+ * \addtogroup zoo
+ * @{
+ *  \defgroup ZooDriver
+ *  @{
+ */
 
 /**
- * @{
  * Description: An addon to the Stage plugin for Zoo functionality.
  * Author: Adam Lein
  * Date: July 14, 2005
  */
-
-#define _GNU_SOURCE
 
 #include <player/devicetable.h>
 #include <player/error.h>
@@ -596,3 +598,8 @@ ZooDriver::GetSpeciesByName( const char *name )
 			return species[i];
 	return NULL;
 }
+
+/**
+ *  @}
+ * @}
+ */

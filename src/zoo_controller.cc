@@ -19,16 +19,15 @@
  *
  */
 
-/// \defgroup zoo Zoo
-
 /**
+ * \addtogroup zoo
  * @{
+ *  \defgroup ZooController
+ *  @{
  * Description: An addon to the Stage plugin for Zoo functionality.
  * Author: Adam Lein
  * Date: July 14, 2005
  */
-
-#define _GNU_SOURCE
 
 #include <player/devicetable.h>
 #include <player/error.h>
@@ -214,3 +213,8 @@ ZooController::Kill( void )
 	int one=1;
 	stg_model_set_property(mod, "zoo_killed", &one, sizeof(int));
 }
+
+/**
+ *  @}
+ * @}
+ */
