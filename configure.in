@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.76 2005-08-11 19:56:54 rtv Exp $
+dnl $Id: configure.in,v 1.77 2005-08-20 22:27:01 adam_lein Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -100,6 +100,7 @@ AC_OUTPUT(Makefile
           worlds/Makefile 
           worlds/bitmaps/Makefile 
           replace/Makefile
+          src/referees/Makefile
 	  stage.pc )
 
 dnl should use AC_MSG_NOTICE(), but that's apparently not defined in

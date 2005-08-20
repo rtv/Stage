@@ -2,7 +2,10 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.112 2005-08-13 19:51:13 adam_lein Exp $
+# $Id: Makefile.am,v 1.113 2005-08-20 22:27:01 adam_lein Exp $
+
+# also build Zoo referees
+SUBDIRS = referees
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
@@ -19,7 +22,6 @@ lib_LTLIBRARIES = libstage.la libstageplugin.la
 # and ptest, a player client for testing the player plugin
 bin_PROGRAMS = stest ptest
 
-
 # The stage library contains everything you need to build a robot
 # simulation, including graphics and a world description file
 # parser. It does NOT contain a Player interface, so it can not be
@@ -27,7 +29,7 @@ bin_PROGRAMS = stest ptest
 # satisfaction.
 #
 libstage_la_SOURCES = \
-	../config.h \
+ 	../config.h \
 	gui.c \
 	gui.h \
 	gui_menus.c \
@@ -76,6 +78,7 @@ libstageplugin_la_SOURCES = \
 	p_sonar.cc \
 	stg_time.cc \
 	stg_time.h \
+	zoo.c \
 	zoo_driver.cc \
 	zoo_driver.h \
 	zoo_species.cc \
