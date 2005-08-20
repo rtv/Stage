@@ -208,7 +208,16 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 		zooref_create_t zooref_create;
 
 		/* load the dynamic library */
-		zooref_handle = dlopen(referee_path, RTLD_LAZY);
+		char rpath_tmp[PATH_MAX], *rpath_fmt[] = {
+			"%s", "lib%s", "%s.so", "lib%s.so", NULL };
+		int i;
+		zooref_handle=NULL;
+		/* try a variety of names, by prepending or appending "lib" or
+		 * ".so", respectively. */
+		for (i = 0; !zooref_handle && rpath_fmt[i]; ++i) {
+			sprintf(rpath_tmp, rpath_fmt[i], referee_path);
+			zooref_handle = dlopen(rpath_tmp, RTLD_LAZY);
+		}
 		if (!zooref_handle) {
 			zoo_err("cannot load referee %s: %s\n",
 				referee_path, dlerror());
