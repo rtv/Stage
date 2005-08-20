@@ -1,31 +1,22 @@
-This directory should contain sources for Zoo referees.  At the moment, I
-would please ask that all code for a referee be placed in a single C++ file
-with extension .cc.  For example, there is already a "myref" referee to be
-built: its source file is "myref.cc" and it builds to a "myref.so".
+This directory should contain sources for Zoo referees.
 
 ---
 
-To configure: you will need to change the PREFIX variable in the Makefile to
-match Stage's PREFIX.  For example, if your player/stage share and lib
-directories are
+To configure: if you write a referee called "fooref", then update
+Makefile.am as follows:
+1) Add "libfooref.so" to lib_LTLIBRARIES.
+2) Add a line "libfooref_so_SOURCES = A B C ...", where "A B C ..." are the
+list of source files needed to build your referee.
 
-	/usr/local/share
-and
-	/usr/local/lib,
-
-then PREFIX = /usr/local.
-
----
-
-To build: if your ref is called "fooref", simply add "fooref.so" to the
-REFEREES variable in the Makefile.  Then make / make install.
+Then rerun "bootstrap" and "configure" in the top level directory of the
+Stage source tree.
 
 ---
 
 To write: the only requirement is that your program provides the following
 function:
 
-	ZooReferee *zooref_create( ConfigFile *, int, ZooDriver )
+	ZooReferee *zooref_create( ConfigFile *, int, ZooDriver * )
 
 This function should, obviously, create a new ZooReferee object and return a
 pointer to it.  Probably you will want to subclass ZooReferee and override
@@ -35,7 +26,10 @@ some of its functions.
 
 To load: the config file section that loads Zoo should also contain a line
 
-	referee "fooref.so"
+	referee "libfooref.so"
+
+Alternatively, "libfooref", "fooref.so", and simply "fooref" should all
+succeed.
 
 Any other options that your referee will need to know about could also go
 into that section, but you are under no obligation to put them there.
