@@ -129,6 +129,7 @@ ZooReferee::draw_int_cb( stg_model_t *mod, const char *propname,
 	stg_rtk_fig_origin(fig, pose.x, pose.y, 0);
 
 	/* draw it, under and to the left of the position model */
+	stg_rtk_fig_clear(fig);
 	stg_rtk_fig_text(fig, -0.75, -0.75, 0.0, buf);
 
 	/* keep marshalling callbacks */

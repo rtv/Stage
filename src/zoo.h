@@ -32,11 +32,15 @@ typedef struct {
 	const char *model_name;
 	int port;
 	ZooController *controller;
+	stg_model_t *model;
 } rmap_t;
 
 /* referee stuff */
 #define ZOOREF_CREATE "zooref_create"
 #define ZOOREF_SCORE_FIG_NAME "zooref_score_fig"
+#define ZOO_SCORE_BUFFER_SIZE	256
+#define ZOO_SCORE_PROPERTY_NAME "zoo_score"
+#define ZOO_SCORE_LABEL "score from Zoo"
 typedef int (*zooref_init_t)(ConfigFile *, int, ZooDriver *);
 typedef int (*zooref_score_draw_t)(stg_model_t *, const char *propname,
                          const void *sdata, size_t, void *, int mindex);

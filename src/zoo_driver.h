@@ -9,10 +9,6 @@
 #include <stdio.h>
 #include "zoo.h"
 
-#define ZOO_SCORE_BUFFER_SIZE	256
-#define ZOO_SCORE_PROPERTY_NAME "zoo_score"
-#define ZOO_SCORE_LABEL "score from Zoo"
-
 /* some forward declarations here */
 class ZooSpecies;
 class ZooController;
@@ -62,9 +58,11 @@ public:
 	void SetScoreDrawCB(zooref_score_draw_t, void *userdata);
 		// for every species
 
+	/* New interface for looking up robots */
 	rmap_t *FindRobot(const char *modelName);
 	rmap_t *FindRobot(int port);
 	rmap_t *FindRobot(ZooController *);
+	rmap_t *FindRobot(stg_model_t *);
 
 private:
 	int species_count;

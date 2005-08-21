@@ -161,6 +161,7 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 		/* add the mapping */
 		printf("Zoo: MODELMAP %s --> %d\n", modelname, port);
 		robotMap[k].port = port;
+		robotMap[k].model = NULL;
 		robotMap[k++].model_name = strdup(modelname);
 	} /* for(all sections) */
 
@@ -217,11 +218,10 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 		for (i = 0; !zooref_handle && rpath_fmt[i]; ++i) {
 			sprintf(rpath_tmp, rpath_fmt[i], referee_path);
 			zooref_handle = dlopen(rpath_tmp, RTLD_LAZY);
-		}
-		if (!zooref_handle) {
-			zoo_err("cannot load referee %s: %s\n",
-				referee_path, dlerror());
-			goto default_referee;
+			if (!zooref_handle) {
+				zoo_err("cannot load referee: %s\n", dlerror());
+				goto default_referee;
+			}
 		}
 
 		/* get the zooref_create function */
@@ -261,8 +261,12 @@ rmap_t *
 ZooDriver::FindRobot( const char *modelName )
 {
 	for (int i=0; i < robot_count; ++i)
-		if (!strcmp(robotMap[i].model_name, modelName))
+		if (!strcmp(robotMap[i].model_name, modelName)) {
+			if (!robotMap[i].model)
+				robotMap[i].model = stg_world_model_name_lookup(
+					StgDriver::world, modelName);
 			return robotMap+i;
+		}
 
 	return NULL;
 }
@@ -291,6 +295,15 @@ ZooDriver::FindRobot( ZooController *zc )
 			return robotMap+i;
 
 	return NULL;
+}
+
+/**
+ * Find a robot in the robot map, searching by model.
+ */
+rmap_t *
+ZooDriver::FindRobot( stg_model_t *mod )
+{
+	return FindRobot(mod->token);
 }
 
 /**

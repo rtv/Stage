@@ -9,4 +9,6 @@ AM_CPPFLAGS = \
 LIBS = -lstageplugin
 
 libmyref_la_SOURCES = myref.cc
+
 libtransref1_la_SOURCES = transref1.cc
+libtransref1_la_LIBADD = @PLAYER_LIBS@

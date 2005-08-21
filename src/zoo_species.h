@@ -10,10 +10,6 @@
 
 #include "zoo.h"
 
-#define ZOO_SCORE_BUFFER_SIZE	256
-#define ZOO_SCORE_PROPERTY_NAME "zoo_score"
-#define ZOO_SCORE_LABEL "score from Zoo"
-
 /* some forward declarations here */
 class ZooSpecies;
 class ZooController;
