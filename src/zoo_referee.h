@@ -19,7 +19,7 @@ class ZooReferee
 {
 public:
 	ZooReferee(ConfigFile *, int, ZooDriver *);
-	void Startup(void);
+	virtual void Startup(void);
 	static int draw_int_cb(stg_model_t *, const char *pname,
 		const int *sdata, size_t siz );
 	static int draw_double_cb(stg_model_t *, const char *pname,
