@@ -1,0 +1,90 @@
+
+# Desc: 1 pioneer robot with laser	
+# CVS: $Id: trans-task.world,v 1.1 2005-08-22 22:03:23 adam_lein Exp $
+
+include "pioneer.inc"
+
+
+
+
+
+
+
+
+
+
+
+
+
+		# defines Pioneer-like robots
+include "map.inc"
+
+
+
+
+
+
+
+
+
+
+
+
+
+			# defines 'map' object used for floorplans
+include "pucktarget.inc"
+
+
+
+
+
+
+
+
+
+
+
+
+
+	# defines beacon objects which robots must navigate to/from
+
+
+
+resolution 0.02				# set the size of a pixel in meters
+interval_sim 150			# simulated milliseconds per update
+interval_real 100			# real milliseconds per update
+
+
+
+# configure the GUI window
+window
+( 
+  #size [ 512 512 ] scale 0.04
+  #size [ 256 256 ] scale 0.08
+  size [ 715.000 617.000 ] scale 0.029
+  center [-0.004 0.002] 
+)
+
+# load an environment bitmap
+map
+( 
+  bitmap "bitmaps/cave.png"
+  size [16 16]
+)
+
+# create some robots
+pioneer2dx ( name "robot1" color "red" pose [2.568 3.512 59.809]
+	laser( fiducialfinder() ) )
+pioneer2dx ( name "robot2" color "orange" pose [-7.039 -5.720 1897.882]
+	laser( fiducialfinder() ) )
+pioneer2dx ( name "robot3" color "yellow" pose [-2.592 2.062 928.200]
+	laser( fiducialfinder() ) )
+
+# put the dang beacons in
+pucktarget ( name "site00"      pose [ 6.000 -3.000 0.000]      fiducial_return 64)
+pucktarget ( name "site01"      pose [-1.000  6.500 0.000]      fiducial_return 64)
+pucktarget ( name "site02"      pose [ 6.000  2.000 0.000]      fiducial_return 64)
+pucktarget ( name "site03"      pose [-6.700  3.000 0.000]      fiducial_return 64)
+pucktarget ( name "site04"      pose [-7.000 -3.500 0.000]      fiducial_return 64)
+pucktarget ( name "site05"      pose [ 0.500 -0.500 0.000]      fiducial_return 64)
+pucktarget ( name "site06"      pose [-0.000 -4.500 0.000]      fiducial_return 64)
