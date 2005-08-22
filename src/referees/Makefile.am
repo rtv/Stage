@@ -1,4 +1,4 @@
-lib_LTLIBRARIES = libmyref.la libtransref1.la
+lib_LTLIBRARIES = libmyref.la libtransref.la
 
 AM_CPPFLAGS = \
 	-Wall \
@@ -10,5 +10,5 @@ LIBS = -lstageplugin
 
 libmyref_la_SOURCES = myref.cc
 
-libtransref1_la_SOURCES = transref1.cc
-libtransref1_la_LIBADD = @PLAYER_LIBS@
+libtransref_la_SOURCES = transref.cc
+libtransref_la_LIBADD = @PLAYER_LIBS@
