@@ -81,9 +81,9 @@ class InterfaceSimulation : public Interface
  public: 
   InterfaceSimulation( player_devaddr_t addr,  StgDriver* driver,ConfigFile* cf, int section );
   virtual ~InterfaceSimulation( void ){ /* TODO: clean up*/ };
-
-  //virtual void Command( void* buffer, size_t len ); 
-  virtual void Configure( void* client, void* buffer, size_t len );
+  virtual int ProcessMessage(MessageQueue* resp_queue,
+                             player_msghdr_t* hdr,
+                             void* data);
 };
 
 
