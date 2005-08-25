@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.77 2005-08-20 22:27:01 adam_lein Exp $
+dnl $Id: configure.in,v 1.78 2005-08-25 18:11:45 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -72,14 +72,14 @@ AC_MSG_WARN([no suitable GTK was found. ])
 )
 
 
-dnl we need Player 1.6 or higher
-PKG_CHECK_MODULES( PLAYER, player >= 1.6.5,
+dnl we need Player 2.0 or higher
+PKG_CHECK_MODULES( PLAYER, playercore >= 2.0,
 AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
 AC_MSG_WARN([Player was not found. ])
 )
 
 dnl we need libplayerc
-PKG_CHECK_MODULES( PLAYERC, libplayerc >= 1.6.5,
+PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0,
 AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
 AC_MSG_WARN([libplayercr was not found. ])
 )

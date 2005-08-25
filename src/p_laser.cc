@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.6 2005-08-08 19:00:37 rtv Exp $
+ * CVS: $Id: p_laser.cc,v 1.7 2005-08-25 18:11:45 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -47,14 +47,12 @@ int laser_init( stg_model_t* mod );
 }
 
 
-InterfaceLaser::InterfaceLaser( player_device_id_t id, 
+InterfaceLaser::InterfaceLaser( player_devaddr_t addr, 
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( id, driver, cf, section, laser_init )
+  : InterfaceModel( addr, driver, cf, section, laser_init )
 {
-  this->data_len = sizeof(player_laser_data_t);
-  this->cmd_len = 0;
 }
 
 void InterfaceLaser::Publish( void )
@@ -82,176 +80,170 @@ void InterfaceLaser::Publish( void )
     }
   else
     {      
-      double min_angle = -RTOD(cfg->fov/2.0);
-      double max_angle = +RTOD(cfg->fov/2.0);
-      double angular_resolution = RTOD(cfg->fov / cfg->samples);
-      double range_multiplier = 1; // TODO - support multipliers
-      
-      pdata.min_angle = htons( (int16_t)(min_angle * 100 )); // degrees / 100
-      pdata.max_angle = htons( (int16_t)(max_angle * 100 )); // degrees / 100
-      pdata.resolution = htons( (uint16_t)(angular_resolution * 100)); // degrees / 100
-      pdata.range_res = htons( (uint16_t)range_multiplier);
-      pdata.range_count = htons( (uint16_t)cfg->samples );
+      pdata.min_angle = -cfg->fov/2.0;
+      pdata.max_angle = +cfg->fov/2.0;
+      pdata.resolution = cfg->fov / cfg->samples;
+      pdata.ranges_count = pdata.intensity_count = cfg->samples;
       
       for( int i=0; i<cfg->samples; i++ )
 	{
 	  //printf( "range %d %d\n", i, samples[i].range);
 	  
-	  pdata.ranges[i] = htons( (uint16_t)(samples[i].range) );
+	  pdata.ranges[i] = samples[i].range;
 	  pdata.intensity[i] = (uint8_t)samples[i].reflectance;
 	}
       
       // Write laser data
-      this->driver->PutData( this->id, &pdata, sizeof(pdata), NULL);
+      this->driver->Publish(this->addr, NULL,
+                            PLAYER_MSGTYPE_DATA,
+                            PLAYER_LASER_DATA_SCAN,
+                            (void*)&pdata, sizeof(pdata), NULL);
     }
 
   //return 0;
 }
 
-void InterfaceLaser::Configure( void* client, void* buffer, size_t len )
+int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
+				   player_msghdr_t* hdr,
+				   void* data)
 {
-  //printf("got laser request\n");
-  
-  // switch on the config type (first byte)
-  uint8_t* buf = (uint8_t*)buffer;
-  switch( buf[0] )
-    {  
-     case PLAYER_LASER_SET_CONFIG:
-      {
-	player_laser_config_t* plc = (player_laser_config_t*)buffer;
-	
-        if( len == sizeof(player_laser_config_t) )
-	  {
-	    int min_a = (int16_t)ntohs(plc->min_angle);
-	    int max_a = (int16_t)ntohs(plc->max_angle);
-	    int ang_res = (int16_t)ntohs(plc->resolution);
-	    // TODO
-	    // int intensity = plc->intensity;
-	    
-	    PRINT_DEBUG3( "requested laser config:\n %d %d %d",
-	    	  min_a, max_a, ang_res  );
-	    
-	    min_a /= 100;
-	    max_a /= 100;
-	    ang_res /= 100;
-	    
-	    stg_laser_config_t *current = (stg_laser_config_t*)
+  // Is it a request to set the laser's config?
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+                           PLAYER_LASER_REQ_SET_CONFIG, 
+                           this->addr))
+  {
+
+    player_laser_config_t* plc = (player_laser_config_t*)data;
+
+    if( hdr->size == sizeof(player_laser_config_t) )
+    {
+      // TODO
+      // int intensity = plc->intensity;
+
+      PRINT_DEBUG3( "requested laser config:\n %f %f %f",
+		    RTOD(plc->min_angle), RTOD(plc->max_angle), 
+		    plc->resolution/1e2);
+
+      stg_laser_config_t *current = (stg_laser_config_t*)
 	      stg_model_get_property_fixed( this->mod, "laser_cfg", 
 					    sizeof(stg_laser_config_t));
-	    assert( current );
-	    
-	    stg_laser_config_t slc;
-	    // copy the existing config
-	    memcpy( &slc, current, sizeof(slc));
-	    
-	    // tweak the parts that player knows about
-	    slc.fov = DTOR(max_a - min_a);
-	    slc.samples = (int)(slc.fov / DTOR(ang_res));
-	    
-	    PRINT_DEBUG2( "setting laser config: fov %.2f samples %d", 
-			  slc.fov, slc.samples );
-	    
-	    stg_model_set_property( this->mod, "laser_cfg", 
-				  &slc, sizeof(slc)); 
-	    
-	    if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, plc, len, NULL) != 0)
-	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");
-	  }
-	else
-	  {
-	    PRINT_ERR2("config request len is invalid (%d != %d)", 
-	           (int)len, (int)sizeof(player_laser_config_t));
+      assert( current );
 
-	    if( this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
-	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");
-	  }
-      }
-      break;
-      
-    case PLAYER_LASER_GET_CONFIG:
-      {   
-	if( len == 1 )
-	  {
-	    stg_laser_config_t *slc = (stg_laser_config_t*) 
-	      stg_model_get_property_fixed( this->mod, "laser_cfg", 
-					    sizeof(stg_laser_config_t));
-	    assert(slc);
+      stg_laser_config_t slc;
+      // copy the existing config
+      memcpy( &slc, current, sizeof(slc));
 
-	    // integer angles in degrees/100
-	    int16_t  min_angle = (int16_t)(-RTOD(slc->fov/2.0) * 100);
-	    int16_t  max_angle = (int16_t)(+RTOD(slc->fov/2.0) * 100);
-	    //uint16_t angular_resolution = RTOD(slc->fov / slc->samples) * 100;
-	    uint16_t angular_resolution =(uint16_t)(RTOD(slc->fov / (slc->samples-1)) * 100);
-	    uint16_t range_multiplier = 1; // TODO - support multipliers
-	    
-	    int intensity = 1; // todo
-	    
-	    //printf( "laser config:\n %d %d %d %d\n",
-	    //	    min_angle, max_angle, angular_resolution, intensity );
-	    
-	    player_laser_config_t plc;
-	    memset(&plc,0,sizeof(plc));
-	    plc.min_angle = htons(min_angle); 
-	    plc.max_angle = htons(max_angle); 
-	    plc.resolution = htons(angular_resolution);
-	    plc.range_res = htons(range_multiplier);
-	    plc.intensity = intensity;
+      // tweak the parts that player knows about
+      slc.fov = plc->max_angle - plc->min_angle;
+      slc.samples = (int)(slc.fov / DTOR(plc->resolution/1e2));
 
-	    if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, &plc, 
-					 sizeof(plc), NULL) != 0)
-	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_CONFIG");      
-	  }
-	else
-	  {
-	    PRINT_ERR2("config request len is invalid (%d != %d)", (int)len, 1);
-	    if( this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
-	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_CONFIG");
-	  }
-      }
-      break;
+      PRINT_DEBUG2( "setting laser config: fov %.2f samples %d", 
+		    slc.fov, slc.samples );
 
-    case PLAYER_LASER_GET_GEOM:
-      {	
-	stg_geom_t geom;
-	stg_model_get_geom( this->mod, &geom );
+      stg_model_set_property( this->mod, "laser_cfg", 
+			      &slc, sizeof(slc)); 
 
-        // BPG - I think the laser should report its pose, not its origin,
-        // when asked for geometry.
-        stg_pose_t* pose = 
-                (stg_pose_t*)stg_model_get_property_fixed( this->mod, "pose", 
-                                                           sizeof(stg_pose_t));
-	
-	PRINT_DEBUG5( "received laser geom: %.2f %.2f %.2f -  %.2f %.2f",
-		      pose->x, 
-		      pose->y, 
-		      pose->a, 
-		      geom.size.x, 
-		      geom.size.y ); 
-	
-	// fill in the geometry data formatted player-like
-	player_laser_geom_t pgeom;
-        pgeom.subtype = PLAYER_LASER_GET_GEOM;
-	pgeom.pose[0] = htons((uint16_t)(1000.0 * pose->x));
-	pgeom.pose[1] = htons((uint16_t)(1000.0 * pose->y));
-	pgeom.pose[2] = htons((uint16_t)RTOD( pose->a));
-	
-	pgeom.size[0] = htons((uint16_t)(1000.0 * geom.size.x)); 
-	pgeom.size[1] = htons((uint16_t)(1000.0 * geom.size.y)); 
-
-	if( this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, 
-				      &pgeom, sizeof(pgeom), NULL ) != 0 )
-	  DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_GEOM");      
-      }
-      break;
-      
-    default:
-      {
-	PRINT_WARN1( "stg_laser doesn't support config id %d", buf[0] );
-        if (this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-	  DRIVER_ERROR("PutReply() failed");
-        break;
-      }
-      
+      this->driver->Publish(this->addr, resp_queue,
+			    PLAYER_MSGTYPE_RESP_ACK, 
+			    PLAYER_LASER_REQ_SET_CONFIG);
+      return(0);
     }
+    else
+    {
+      PRINT_ERR2("config request len is invalid (%d != %d)", 
+		 (int)hdr->size, (int)sizeof(player_laser_config_t));
+
+      return(-1);
+    }
+  }
+  // Is it a request to get the laser's config?
+  else if (Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+                                 PLAYER_LASER_REQ_GET_CONFIG,
+                                 this->addr))
+  {   
+    if( hdr->size == 0 )
+    {
+      stg_laser_config_t *slc = (stg_laser_config_t*) 
+	      stg_model_get_property_fixed( this->mod, "laser_cfg", 
+					    sizeof(stg_laser_config_t));
+      assert(slc);
+
+      uint8_t angular_resolution = (uint8_t)(RTOD(slc->fov / (slc->samples-1)) * 100);
+      int intensity = 1; // todo
+
+      //printf( "laser config:\n %d %d %d %d\n",
+      //	    min_angle, max_angle, angular_resolution, intensity );
+
+      player_laser_config_t plc;
+      memset(&plc,0,sizeof(plc));
+      plc.min_angle = -slc->fov/2.0;
+      plc.max_angle = +slc->fov/2.0;
+      plc.resolution = angular_resolution;
+      plc.intensity = intensity;
+
+      this->driver->Publish(this->addr, resp_queue,
+			    PLAYER_MSGTYPE_RESP_ACK, 
+			    PLAYER_LASER_REQ_GET_CONFIG,
+			    (void*)&plc, sizeof(plc), NULL);
+      return(0);
+    }
+    else
+    {
+      PRINT_ERR2("config request len is invalid (%d != %d)", (int)hdr->size,0);
+      return(-1);
+    }
+  }
+  // Is it a request to get the laser's geom?
+  else if (Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+                                 PLAYER_LASER_REQ_GET_GEOM,
+                                 this->addr))
+  {	
+    if(hdr->size == 0)
+    {
+      stg_geom_t geom;
+      stg_model_get_geom( this->mod, &geom );
+
+      // BPG - I think the laser should report its pose, not its origin,
+      // when asked for geometry.
+      stg_pose_t* pose = 
+	      (stg_pose_t*)stg_model_get_property_fixed( this->mod, "pose", 
+	  						 sizeof(stg_pose_t));
+
+      PRINT_DEBUG5( "received laser geom: %.2f %.2f %.2f -  %.2f %.2f",
+  		    pose->x, 
+  		    pose->y, 
+  		    pose->a, 
+  		    geom.size.x, 
+  		    geom.size.y ); 
+
+      // fill in the geometry data formatted player-like
+      player_laser_geom_t pgeom;
+      pgeom.pose.px = pose->x;
+      pgeom.pose.py = pose->y;
+      pgeom.pose.pa = pose->a;
+
+      pgeom.size.sl = geom.size.x;
+      pgeom.size.sw = geom.size.y;
+
+      this->driver->Publish(this->addr, resp_queue,
+			    PLAYER_MSGTYPE_RESP_ACK, 
+			    PLAYER_LASER_REQ_GET_GEOM,
+			    (void*)&pgeom, sizeof(pgeom), NULL);
+      return(0);
+    }
+    else
+    {
+      PRINT_ERR2("config request len is invalid (%d != %d)", (int)hdr->size,0);
+      return(-1);
+    }
+  }
+  else
+  {
+    // Don't know how to handle this message.
+    PRINT_WARN2( "stg_laser doesn't support laser msg with type/subtype %d/%d",
+		 hdr->type, hdr->subtype);
+    return(-1);
+  }
 }
+
 

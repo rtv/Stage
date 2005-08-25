@@ -1,7 +1,7 @@
 #ifndef _STAGE_ZOO_H
 #define _STAGE_ZOO_H
 
-#include <player/configfile.h>
+#include <libplayercore/playercore.h>
 #include <stage.h>
 
 class ZooDriver;

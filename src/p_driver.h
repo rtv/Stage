@@ -3,18 +3,9 @@
 
 #include <unistd.h>
 #include <string.h>
-#include <netinet/in.h>
 #include <math.h>
 
-#include "player.h"
-#include "player/device.h"
-#include "player/driver.h"
-#include "player/configfile.h"
-#include "player/drivertable.h"
-#include <player/drivertable.h>
-#include <player/driver.h>
-#include <player/error.h>
-#include "playercommon.h"
+#include <libplayercore/playercore.h>
 
 #include "stage_internal.h"
 #include "stg_time.h"
@@ -36,8 +27,11 @@ class StgDriver : public Driver
   // Must implement the following methods.
   virtual int Setup();
   virtual int Shutdown();
-  virtual int Subscribe(player_device_id_t id);
-  virtual int Unsubscribe(player_device_id_t id);
+  virtual int ProcessMessage(MessageQueue* resp_queue, 
+			     player_msghdr * hdr, 
+			     void * data);
+  virtual int Subscribe(player_devaddr_t addr);
+  virtual int Unsubscribe(player_devaddr_t addr);
     
   /// The server thread calls this method frequently. We use it to
   /// check for new commands and configs
@@ -45,15 +39,17 @@ class StgDriver : public Driver
 
   /// override PutConfig to handle config requests as soon as they
   /// occur
+#if 0
   virtual int PutConfig(player_device_id_t id, void* cli, 
 			void* src, size_t len,
 			struct timeval* timestamp);
+#endif
 
   /// all player devices share the same Stage world (for now)
   static stg_world_t* world;
   
   /// find the device record with this Player id
-  Interface* LookupDevice( player_device_id_t id );
+  Interface* LookupDevice( player_devaddr_t addr );
   
   stg_model_t* LocateModel( const char* basename, 
 			    stg_model_initializer_t init );
@@ -68,23 +64,22 @@ class StgDriver : public Driver
 class Interface
 {
  public:
-  Interface( player_device_id_t id,  StgDriver* driver,ConfigFile* cf, int section );
+  Interface( player_devaddr_t addr,  StgDriver* driver,ConfigFile* cf, int section );
   
   virtual ~Interface( void ){ /* TODO: clean up*/ };
 
-  player_device_id_t id;
+  player_devaddr_t addr;
   stg_model_t* mod;
   
   StgDriver* driver; // the driver instance that created this device
   
-  size_t data_len;
-  size_t cmd_len;
-  size_t req_qlen;
-  size_t rep_qlen;
-
   // pure virtual methods
+#if 0
   virtual void Command( void* buffer, size_t len ){}; // empty implementation
-  virtual void Configure( void* client, void* buffer, size_t len ){}; // empty implementation
+#endif
+  virtual int ProcessMessage(MessageQueue* resp_queue,
+       			     player_msghdr_t* hdr,
+			     void* data) { return(-1); } // empty implementation
   virtual void Publish( void ){}; // empty implementation
 };
 
@@ -92,7 +87,7 @@ class Interface
 class InterfaceSimulation : public Interface
 {
  public: 
-  InterfaceSimulation( player_device_id_t id,  StgDriver* driver,ConfigFile* cf, int section );
+  InterfaceSimulation( player_devaddr_t addr,  StgDriver* driver,ConfigFile* cf, int section );
   virtual ~InterfaceSimulation( void ){ /* TODO: clean up*/ };
 
   //virtual void Command( void* buffer, size_t len ); 
@@ -103,7 +98,7 @@ class InterfaceSimulation : public Interface
 class InterfaceModel : public Interface
 {
  public: 
-  InterfaceModel( player_device_id_t id,  
+  InterfaceModel( player_devaddr_t addr,  
 		  StgDriver* driver,
 		  ConfigFile* cf, 
 		  int section, 
@@ -115,7 +110,7 @@ class InterfaceModel : public Interface
 class InterfacePosition : public InterfaceModel
 {
  public: 
-  InterfacePosition( player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section );
+  InterfacePosition( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfacePosition( void ){ /* TODO: clean up*/ };
   virtual void Command( void* buffer, size_t len ); 
   virtual void Configure( void* client, void* buffer, size_t len );
@@ -125,7 +120,7 @@ class InterfacePosition : public InterfaceModel
 class InterfaceGripper : public InterfaceModel
 {
  public: 
-  InterfaceGripper( player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section );
+  InterfaceGripper( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceGripper( void ){ /* TODO: clean up*/ };
   virtual void Command( void* buffer, size_t len ); 
   virtual void Configure( void* client, void* buffer, size_t len );
@@ -135,17 +130,18 @@ class InterfaceGripper : public InterfaceModel
 class InterfaceLaser : public InterfaceModel
 {
  public: 
-  InterfaceLaser( player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section );
+  InterfaceLaser( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceLaser( void ){ /* TODO: clean up*/ };
-  //virtual void Command( void* buffer, size_t len ); 
-  virtual void Configure( void* client, void* buffer, size_t len );
+  virtual int ProcessMessage(MessageQueue* resp_queue,
+			      player_msghdr_t* hdr,
+			      void* data);
   virtual void Publish( void );
 };
 
 class InterfaceFiducial : public InterfaceModel
 {
  public: 
-  InterfaceFiducial( player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section );
+  InterfaceFiducial( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceFiducial( void ){ /* TODO: clean up*/ };
   //virtual void Command( void* buffer, size_t len ); 
   virtual void Configure( void* client, void* buffer, size_t len );
@@ -155,7 +151,7 @@ class InterfaceFiducial : public InterfaceModel
 class InterfaceBlobfinder : public InterfaceModel
 {
  public: 
-  InterfaceBlobfinder( player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section );
+  InterfaceBlobfinder( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceBlobfinder( void ){ /* TODO: clean up*/ };
   //virtual void Command( void* buffer, size_t len ); 
   virtual void Configure( void* client, void* buffer, size_t len );
@@ -165,7 +161,7 @@ class InterfaceBlobfinder : public InterfaceModel
 class InterfaceSonar : public InterfaceModel
 {
  public: 
-  InterfaceSonar( player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section );
+  InterfaceSonar( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceSonar( void ){ /* TODO: clean up*/ };
   //virtual void Command( void* buffer, size_t len ); 
   virtual void Configure( void* client, void* buffer, size_t len );

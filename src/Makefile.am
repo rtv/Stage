@@ -2,10 +2,10 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.113 2005-08-20 22:27:01 adam_lein Exp $
+# $Id: Makefile.am,v 1.114 2005-08-25 18:11:45 gerkey Exp $
 
 # also build Zoo referees
-SUBDIRS = referees
+#SUBDIRS = referees
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
@@ -65,28 +65,29 @@ libstage_la_LIBADD = @GTK_LIBS@
 
 # build a Player plugin from libstage plus Player driver hooks.
 libstageplugin_la_SOURCES = \
-	p_blobfinder.cc \
 	p_driver.cc \
 	p_driver.h \
-	p_energy.cc \
-	p_fiducial.cc \
-	p_gripper.cc \
-	p_laser.cc \
-	p_map.cc \
-	p_position.cc \
-	p_simulation.cc \
-	p_sonar.cc \
 	stg_time.cc \
 	stg_time.h \
-	zoo.c \
-	zoo_driver.cc \
-	zoo_driver.h \
-	zoo_species.cc \
-	zoo_species.h \
-	zoo_controller.cc \
-	zoo_controller.h \
-	zoo_referee.cc \
-	zoo_referee.h
+        p_simulation.cc \
+        p_laser.cc
+#zoo.c \
+#zoo_driver.cc \
+#zoo_driver.h \
+#zoo_species.cc \
+#zoo_species.h \
+#zoo_controller.cc \
+#zoo_controller.h \
+#zoo_referee.cc \
+#zoo_referee.h
+
+#p_blobfinder.cc \
+#p_energy.cc \
+#p_fiducial.cc \
+#p_gripper.cc \
+#p_map.cc \
+#p_position.cc \
+#p_sonar.cc
 
 libstageplugin_la_LDFLAGS = -export-dynamic -version-info 1:0:0 
 libstageplugin_la_LIBADD = -L.libs -lstage

@@ -22,14 +22,14 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.h,v 1.4 2005-07-22 21:02:03 rtv Exp $
+// CVS: $Id: stg_time.h,v 1.5 2005-08-25 18:11:45 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #ifndef STG_TIME_H
 #define STG_TIME_H
 
-#include "player/playertime.h"
+#include <libplayercore/playercore.h>
 //#include "stage.h"
 //#include "p_driver.h"
 
@@ -45,6 +45,7 @@ class StgTime : public PlayerTime
  
  // Get the simulator time
  public: int GetTime(struct timeval* time);
+ public: int GetTimeDouble(double* time);
  
  //private: stg_world_t* world;
  private: StgDriver* driver;

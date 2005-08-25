@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.4 2005-08-08 19:00:37 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.5 2005-08-25 18:11:45 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -43,25 +43,20 @@
 #include "p_driver.h"
 
 // these are Player globals
-extern bool quiet_startup;
+extern bool player_quiet_startup;
 extern PlayerTime* GlobalTime;
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-Interface::Interface(  player_device_id_t id, 
+Interface::Interface(  player_devaddr_t addr, 
 		       StgDriver* driver,
 		       ConfigFile* cf, 
 		       int section )
 {
-  this->id = id;
+  this->addr = addr;
   this->driver = driver;
-
-  this->cmd_len = 0;
-  this->data_len = 0;
-  this->req_qlen = 10;
-  this->rep_qlen = 10;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -70,11 +65,11 @@ Interface::Interface(  player_device_id_t id,
 // 
 // SIMULATION INTERFACE
 //
-InterfaceSimulation::InterfaceSimulation( player_device_id_t id, 
+InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr, 
 					  StgDriver* driver,
 					  ConfigFile* cf, 
 					  int section )
-  : Interface( id, driver, cf, section )
+  : Interface( addr, driver, cf, section )
 {
   printf( "Simulated world" ); fflush(stdout);
   //puts( "InterfaceSimulation constructor" );
@@ -82,10 +77,6 @@ InterfaceSimulation::InterfaceSimulation( player_device_id_t id,
   // boot libstage 
   //stg_init( global_argc, global_argv );
   
-  
-  this->data_len = sizeof(player_simulation_data_t);
-  this->cmd_len = sizeof(player_simulation_cmd_t);
-
   const char* worldfile_name = cf->ReadString(section, "worldfile", NULL );
   
   if( worldfile_name == NULL )
@@ -152,12 +143,10 @@ InterfaceSimulation::InterfaceSimulation( player_device_id_t id,
   puts( "" ); // end the Stage startup line
 }      
 
-void SimulationData( Interface* device, void* data, size_t len )
-{
-  PRINT_WARN( "refresh data requested for simulation device - devices produces no data" );
-  device->driver->PutData( device->id, NULL, 0, NULL); 
-}
+void InterfaceSimulation::Configure( void* client, void* buffer, size_t len )
+{}
 
+#if 0
 void InterfaceSimulation::Configure( void* client, void* buffer, size_t len )
 {
   //printf("got simulation request\n");
@@ -274,4 +263,5 @@ void InterfaceSimulation::Configure( void* client, void* buffer, size_t len )
       break;
     }
 }
+#endif
 

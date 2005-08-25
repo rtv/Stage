@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.12 2005-08-11 04:11:39 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.13 2005-08-25 18:11:45 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -126,9 +126,7 @@ configuration requests.
 
 #include <unistd.h>
 #include <string.h>
-#include <netinet/in.h>
 #include <math.h>
-#include <player/drivertable.h>
 
 #include "p_driver.h"
 #include "zoo_driver.h"
@@ -138,10 +136,10 @@ configuration requests.
 
 // globals from Player
 extern PlayerTime* GlobalTime;
-extern int global_argc;
-extern char** global_argv;
-extern bool quiet_startup;
-extern bool quit;
+//extern int global_argc;
+//extern char** global_argv;
+extern bool player_quiet_startup;
+extern bool player_quit;
 
 // init static vars
 stg_world_t* StgDriver::world = NULL;
@@ -172,7 +170,7 @@ void StgDriver_Register(DriverTable* table)
 {
   printf( "\n ** Stage plugin v%s **", PACKAGE_VERSION );
     
-  if( !quiet_startup )
+  if( !player_quiet_startup )
     {
       puts( "\n * Part of the Player/Stage Project [http://playerstage.sourceforge.net]\n"
 	    " * Copyright 2000-2005 Richard Vaughan, Andrew Howard, Brian Gerkey\n * and contributors.\n"
@@ -186,7 +184,7 @@ int player_driver_init(DriverTable* table)
 {
   //puts(" Stage driver plugin init");
   StgDriver_Register(table);
-  ZooDriver_Register(table);
+  //ZooDriver_Register(table);
   return(0);
 }
 
@@ -236,12 +234,12 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_initializer_t init, GPtrAr
 
 
 
-InterfaceModel::InterfaceModel(  player_device_id_t id, 
+InterfaceModel::InterfaceModel(  player_devaddr_t addr, 
 				 StgDriver* driver,
 				 ConfigFile* cf, 
 				 int section,
 				 stg_model_initializer_t init )
-  : Interface( id, driver, cf, section )
+  : Interface( addr, driver, cf, section )
 {
   //puts( "InterfaceModel constructor" );
   
@@ -268,7 +266,7 @@ InterfaceModel::InterfaceModel(  player_device_id_t id,
       return;
     }
   
-  if( !quiet_startup )
+  if( !player_quiet_startup )
     printf( "\"%s\"\n", this->mod->token );
 }      
 
@@ -277,14 +275,14 @@ InterfaceModel::InterfaceModel(  player_device_id_t id,
 // Constructor.  Retrieve options from the configuration file and do any
 // pre-Setup() setup.
 StgDriver::StgDriver(ConfigFile* cf, int section)
-    : Driver(cf, section)
+    : Driver(cf, section, false, PLAYER_MSGQUEUE_DEFAULT_MAXLEN)
 {  
   // init the array of device ids
   this->devices = g_ptr_array_new();
   
   int device_count = cf->GetTupleCount( section, "provides" );
   
-  if( !quiet_startup )
+  if( !player_quiet_startup )
     {  
       printf( "  Stage driver creating %d %s\n", 
 	      device_count, 
@@ -293,60 +291,63 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
   
   for( int d=0; d<device_count; d++ )
     {
-      player_device_id_t player_id;
+      player_devaddr_t player_addr;
       
-      if (cf->ReadDeviceId( &player_id, section, "provides", 0, d, NULL) != 0)
+      if (cf->ReadDeviceAddr( &player_addr, section, 
+                              "provides", 0, d, NULL) != 0)
 	{
 	  this->SetError(-1);
 	  return;
 	}  
             
-      if( !quiet_startup )
+      if( !player_quiet_startup )
 	{
 	  printf( "    mapping %d.%d.%d => ", 
-		  player_id.port, player_id.code, player_id.index );
+		  player_addr.robot, player_addr.interf, player_addr.index );
 	  fflush(stdout);
 	}
       
       
       Interface *ifsrc = NULL;
 
-      switch( player_id.code )
-	{
-	case PLAYER_SIMULATION_CODE:
-	  ifsrc = new InterfaceSimulation( player_id, this, cf, section );
-	  break;
-	  
-	case PLAYER_POSITION_CODE:	  
-	  ifsrc = new InterfacePosition( player_id, this,  cf, section );
-	  break;
-	  
-	case PLAYER_LASER_CODE:	  
-	  ifsrc = new InterfaceLaser( player_id,  this, cf, section );
-	  break;
+      switch( player_addr.interf )
+      {
+        case PLAYER_SIMULATION_CODE:
+          ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
+          break;
 
+	case PLAYER_LASER_CODE:	  
+	  ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
+	  break;
+	  
+#if 0
+	case PLAYER_POSITION2D_CODE:	  
+	  ifsrc = new InterfacePosition( player_addr, this,  cf, section );
+	  break;
+	  
 	case PLAYER_FIDUCIAL_CODE:
-	  ifsrc = new InterfaceFiducial( player_id,  this, cf, section );
+	  ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
 	  break;
 	  
 	case PLAYER_BLOBFINDER_CODE:
-	  ifsrc = new InterfaceBlobfinder( player_id,  this, cf, section );
+	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
 	  break;
 	  
 	case PLAYER_SONAR_CODE:
-	  ifsrc = new InterfaceSonar( player_id,  this, cf, section );
+	  ifsrc = new InterfaceSonar( player_addr,  this, cf, section );
 	  break;
 	  
 	case PLAYER_GRIPPER_CODE:
-	  ifsrc = new InterfaceGripper( player_id,  this, cf, section );
+	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
 	  break;
 	  
 	  //case PLAYER_MAP_CODE:
 	  //break;
+#endif
 
 	default:
 	  PRINT_ERR1( "error: stage driver doesn't support interface type %d\n",
-		      player_id.code );
+		      player_addr.interf );
 	  this->SetError(-1);
 	  return; 
 	}
@@ -354,12 +355,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
       if( ifsrc )
 	{
 	  // attempt to add this interface and we're done
-	  if( this->AddInterface( ifsrc->id, 
-				  PLAYER_ALL_MODE, 
-				  ifsrc->data_len, 
-				  ifsrc->cmd_len,
-				  ifsrc->req_qlen,
-				  ifsrc->req_qlen ) )
+	  if( this->AddInterface( ifsrc->addr))
 	    {
 	      DRIVER_ERROR( "AddInterface() failed" );
 	      this->SetError(-2);
@@ -372,7 +368,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
       else
 	{
 	  PRINT_ERR3( "No Stage source found for interface %d:%d:%d",
-		      player_id.port, player_id.code, player_id.index );
+		      player_addr.robot, 
+                      player_addr.interf, 
+                      player_addr.index );
 	  
 	  this->SetError(-3);
 	  return;
@@ -420,16 +418,16 @@ int StgDriver::Setup()
 
 // find the device record with this Player id
 // todo - faster lookup with a better data structure
-Interface* StgDriver::LookupDevice( player_device_id_t id )
+Interface* StgDriver::LookupDevice( player_devaddr_t addr )
 {
   for( int i=0; i<(int)this->devices->len; i++ )
     {
       Interface* candidate = 
 	(Interface*)g_ptr_array_index( this->devices, i );
       
-      if( candidate->id.port == id.port &&
-	  candidate->id.code == id.code &&
-	  candidate->id.index == id.index )
+      if( candidate->addr.robot == addr.robot &&
+	  candidate->addr.interf == addr.interf &&
+	  candidate->addr.index == addr.index )
 	return candidate; // found
     }
 
@@ -438,17 +436,17 @@ Interface* StgDriver::LookupDevice( player_device_id_t id )
 
 
 // subscribe to a device
-int StgDriver::Subscribe(player_device_id_t id)
+int StgDriver::Subscribe(player_devaddr_t addr)
 {
-  if( id.code == PLAYER_SIMULATION_CODE )
+  if( addr.interf == PLAYER_SIMULATION_CODE )
     return 0; // ok
 
-  Interface* device = this->LookupDevice( id );
+  Interface* device = this->LookupDevice( addr );
   
   if( device )
     {      
       stg_model_subscribe( device->mod );  
-      return Driver::Subscribe(id);
+      return Driver::Subscribe(addr);
     }
 
   puts( "failed to find a device" );
@@ -457,17 +455,17 @@ int StgDriver::Subscribe(player_device_id_t id)
 
 
 // unsubscribe to a device
-int StgDriver::Unsubscribe(player_device_id_t id)
+int StgDriver::Unsubscribe(player_devaddr_t addr)
 {
-  if( id.code == PLAYER_SIMULATION_CODE )
+  if( addr.interf == PLAYER_SIMULATION_CODE )
     return 0; // ok
 
-  Interface* device = this->LookupDevice( id );
+  Interface* device = this->LookupDevice( addr );
   
   if( device )
     {
       stg_model_unsubscribe( device->mod );  
-      return Driver::Unsubscribe(id);
+      return Driver::Unsubscribe(addr);
     }
   else
     return 1; // error
@@ -505,69 +503,48 @@ int StgDriver::Shutdown()
 }
 
 
-// Moved this declaration here (and changed its name) because 
-// when it's declared on the stack inside StgDriver::Update below, it 
-// corrupts the stack.  This makes makes valgrind unhappy (errors about
-// invalid reads/writes to another thread's stack.  This may also be related
-// to occasional mysterious crashed with Stage that I've seen.
-//        - BPG
-uint8_t stage_buffer[ PLAYER_MAX_MESSAGE_SIZE ];
-
-int StgDriver::PutConfig(player_device_id_t id, void* cli, 
-			 void* src, size_t len,
-			 struct timeval* timestamp)
+// All incoming messages get processed here.  This method is called by
+// Driver::ProcessMessages() once for each message.
+// Driver::ProcessMessages() is called by ???
+int 
+StgDriver::ProcessMessage(MessageQueue* resp_queue, 
+			  player_msghdr * hdr, 
+			  void * data)
 {
-  // inherit normal behaviour, possibly failing
-  if( Driver::PutConfig( id, cli, src,len, timestamp ) < 0 )
-    return -1;
-  
-  // now handle the config right here.
-  void* cfg_client = NULL;
-  int cfg_len = 
-    this->GetConfig( id, &cfg_client, 
-		     stage_buffer, PLAYER_MAX_MESSAGE_SIZE, NULL );
-  
-  if( cfg_len > 0 )
-    {
-      // find the right interface to handle this config
-      Interface* in = this->LookupDevice( id );
-      if( in )
-	in->Configure( cfg_client, stage_buffer, cfg_len );
-      else
-	PRINT_WARN3( "can't find interface for device %d.%d.%d",
-		     id.port, id.code, id.index );
-    }
-  return 0; //ok
-}                 
-
+  // find the right interface to handle this config
+  Interface* in = this->LookupDevice( this->device_addr );
+  if( in )
+  {
+    return(in->ProcessMessage( resp_queue, hdr, data));
+  }
+  else
+  {
+    PRINT_WARN3( "can't find interface for device %d.%d.%d",
+		 this->device_addr.robot, 
+		 this->device_addr.interf, 
+		 this->device_addr.index );
+    return(-1);
+  }
+}
 
 void StgDriver::Update(void)
-{  
-  for( int i=0; i<(int)this->devices->len; i++ )
-    {
-      Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
-      
-      if( interface && interface->id.code == PLAYER_SIMULATION_CODE )
-	{
-	  if( stg_world_update( this->world, FALSE ) )
-	    quit = TRUE; // set Player's global quit flag
-	}
+{
+  Driver::ProcessMessages();
 
-      if( interface && interface->cmd_len > 0 )
-	{    
-	  // copy the command from Player
-	  size_t cmd_len = 
-	    this->GetCommand( interface->id, stage_buffer, 
-			      interface->cmd_len, NULL);
-	  
-	  if( cmd_len > 0 )
-	    interface->Command( stage_buffer, cmd_len );
-	}
-      
-      interface->Publish();
+  for( int i=0; i<(int)this->devices->len; i++ )
+  {
+    Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
+
+    if( interface && interface->addr.interf == PLAYER_SIMULATION_CODE )
+    {
+      if( stg_world_update( this->world, FALSE ) )
+	player_quit = TRUE; // set Player's global quit flag
     }
-  
+    interface->Publish();
+  }
+
   // update the world
   return;
 }
+
 

@@ -6,14 +6,13 @@
  * License: GPL v2
  * CVS info:
  *  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptest.c,v $
- *  $Author: rtv $
- *  $Revision: 1.3 $
+ *  $Author: gerkey $
+ *  $Revision: 1.4 $
  */
 
 #include <stdio.h>
 #include <string.h>
-#include "playerc.h"
-#include "playercommon.h"
+#include <libplayerc/playerc.h>
 
 const char* USAGE = \
 "Usage: ptest <string>\n"
@@ -26,7 +25,7 @@ int test_laser( playerc_client_t* client )
   // Create and subscribe to a laser device.
   playerc_laser_t *laser = 
     playerc_laser_create(client, 0);
-  if (playerc_laser_subscribe(laser, PLAYER_ALL_MODE))
+  if (playerc_laser_subscribe(laser, PLAYER_OPEN_MODE))
     return -1;
   
   for(int i = 0; i < 100; i++)
@@ -44,13 +43,13 @@ int test_laser( playerc_client_t* client )
 int test_position( playerc_client_t* client )
 {
   // Create and subscribe to a position device.
-  playerc_position_t *position = 
-    playerc_position_create(client, 0);
-  if (playerc_position_subscribe(position, PLAYER_ALL_MODE))
+  playerc_position2d_t *position = 
+    playerc_position2d_create(client, 0);
+  if (playerc_position2d_subscribe(position, PLAYER_OPEN_MODE))
     return -1;
   
   // Make the robot spin!
-  if (playerc_position_set_cmd_vel(position, 0, 0, DTOR(40.0), 1) != 0)
+  if (playerc_position2d_set_cmd_vel(position, 0, 0, DTOR(40.0), 1) != 0)
     return -1;
   
   for( int i = 0; i < 100; i++)
@@ -63,8 +62,8 @@ int test_position( playerc_client_t* client )
 	     position->px, position->py, position->pa);
     } 
   
-  playerc_position_unsubscribe(position);
-  playerc_position_destroy(position);
+  playerc_position2d_unsubscribe(position);
+  playerc_position2d_destroy(position);
 
   return 0;
 }
