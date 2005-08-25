@@ -37,14 +37,6 @@ class StgDriver : public Driver
   /// check for new commands and configs
   virtual void Update();
 
-  /// override PutConfig to handle config requests as soon as they
-  /// occur
-#if 0
-  virtual int PutConfig(player_device_id_t id, void* cli, 
-			void* src, size_t len,
-			struct timeval* timestamp);
-#endif
-
   /// all player devices share the same Stage world (for now)
   static stg_world_t* world;
   
@@ -64,19 +56,19 @@ class StgDriver : public Driver
 class Interface
 {
  public:
-  Interface( player_devaddr_t addr,  StgDriver* driver,ConfigFile* cf, int section );
+  Interface(player_devaddr_t addr,  
+            StgDriver* driver,
+            ConfigFile* cf, 
+            int section );
   
   virtual ~Interface( void ){ /* TODO: clean up*/ };
 
   player_devaddr_t addr;
   stg_model_t* mod;
+  double last_publish_time;
   
   StgDriver* driver; // the driver instance that created this device
   
-  // pure virtual methods
-#if 0
-  virtual void Command( void* buffer, size_t len ){}; // empty implementation
-#endif
   virtual int ProcessMessage(MessageQueue* resp_queue,
        			     player_msghdr_t* hdr,
 			     void* data) { return(-1); } // empty implementation
@@ -112,9 +104,10 @@ class InterfacePosition : public InterfaceModel
  public: 
   InterfacePosition( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfacePosition( void ){ /* TODO: clean up*/ };
-  virtual void Command( void* buffer, size_t len ); 
-  virtual void Configure( void* client, void* buffer, size_t len );
   virtual void Publish( void );
+  virtual int ProcessMessage(MessageQueue* resp_queue,
+                             player_msghdr_t* hdr,
+                             void* data);
 };
  
 class InterfaceGripper : public InterfaceModel

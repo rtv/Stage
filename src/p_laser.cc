@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.7 2005-08-25 18:11:45 gerkey Exp $
+ * CVS: $Id: p_laser.cc,v 1.8 2005-08-25 19:15:24 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -89,7 +89,7 @@ void InterfaceLaser::Publish( void )
 	{
 	  //printf( "range %d %d\n", i, samples[i].range);
 	  
-	  pdata.ranges[i] = samples[i].range;
+	  pdata.ranges[i] = samples[i].range / 1e3;
 	  pdata.intensity[i] = (uint8_t)samples[i].reflectance;
 	}
       
@@ -240,7 +240,7 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
   else
   {
     // Don't know how to handle this message.
-    PRINT_WARN2( "stg_laser doesn't support laser msg with type/subtype %d/%d",
+    PRINT_WARN2( "stg_laser doesn't support msg with type/subtype %d/%d",
 		 hdr->type, hdr->subtype);
     return(-1);
   }

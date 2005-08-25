@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.13 2005-08-25 18:11:45 gerkey Exp $
+ * CVS: $Id: p_driver.cc,v 1.14 2005-08-25 19:15:23 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -319,12 +319,12 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	case PLAYER_LASER_CODE:	  
 	  ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
 	  break;
-	  
-#if 0
+
 	case PLAYER_POSITION2D_CODE:	  
 	  ifsrc = new InterfacePosition( player_addr, this,  cf, section );
 	  break;
-	  
+
+#if 0
 	case PLAYER_FIDUCIAL_CODE:
 	  ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
 	  break;
@@ -505,14 +505,15 @@ int StgDriver::Shutdown()
 
 // All incoming messages get processed here.  This method is called by
 // Driver::ProcessMessages() once for each message.
-// Driver::ProcessMessages() is called by ???
+// Driver::ProcessMessages() is called by StgDriver::Update(), which is
+// called periodically by player.
 int 
 StgDriver::ProcessMessage(MessageQueue* resp_queue, 
 			  player_msghdr * hdr, 
 			  void * data)
 {
   // find the right interface to handle this config
-  Interface* in = this->LookupDevice( this->device_addr );
+  Interface* in = this->LookupDevice( hdr->addr );
   if( in )
   {
     return(in->ProcessMessage( resp_queue, hdr, data));
@@ -535,12 +536,30 @@ void StgDriver::Update(void)
   {
     Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
 
-    if( interface && interface->addr.interf == PLAYER_SIMULATION_CODE )
+    // Should this be an assertion? - BPG
+    if(!interface)
+      continue;
+
+    if( interface->addr.interf == PLAYER_SIMULATION_CODE )
     {
       if( stg_world_update( this->world, FALSE ) )
 	player_quit = TRUE; // set Player's global quit flag
     }
-    interface->Publish();
+    else
+    {
+      // Has enough time elapsed since the last time we published on this
+      // interface?  This really needs some thought, as each model/interface
+      // should have a configurable publishing rate. For now, I'm using the
+      // world's update rate (which appears to be stored as msec).  - BPG
+      double currtime;
+      GlobalTime->GetTimeDouble(&currtime);
+      if((currtime - interface->last_publish_time) >= 
+         (interface->mod->world->sim_interval / 1e3))
+      {
+        interface->Publish();
+        interface->last_publish_time = currtime;
+      }
+    }
   }
 
   // update the world
