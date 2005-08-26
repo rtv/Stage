@@ -6,8 +6,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
-//  $Author: rtv $
-//  $Revision: 1.76 $
+//  $Author: gerkey $
+//  $Revision: 1.77 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -234,7 +234,7 @@ int laser_update( stg_model_t* mod )
 
   PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", pz.x, pz.y, pz.a );
 
-  double sample_incr = cfg->fov / (double)cfg->samples;
+  double sample_incr = cfg->fov / (double)(cfg->samples-1);
   
   double bearing = pz.a - cfg->fov/2.0;
   
@@ -361,7 +361,7 @@ int laser_render_data( stg_model_t* mod, char* name,
       stg_geom_t geom;
       stg_model_get_geom( mod, &geom );
       
-      double sample_incr = cfg->fov / sample_count;
+      double sample_incr = cfg->fov / (sample_count-1.0);
       double bearing = geom.pose.a - cfg->fov/2.0;
       stg_point_t* points = calloc( sizeof(stg_point_t), sample_count + 1 );
       
