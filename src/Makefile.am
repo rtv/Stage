@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.115 2005-08-25 19:15:23 gerkey Exp $
+# $Id: Makefile.am,v 1.116 2005-08-28 01:54:14 rtv Exp $
 
 # also build Zoo referees
 #SUBDIRS = referees
@@ -29,7 +29,7 @@ bin_PROGRAMS = stest ptest
 # satisfaction.
 #
 libstage_la_SOURCES = \
- 	../config.h \
+	../config.h \
 	gui.c \
 	gui.h \
 	gui_menus.c \
@@ -71,7 +71,9 @@ libstageplugin_la_SOURCES = \
 	stg_time.h \
         p_simulation.cc \
         p_laser.cc \
-        p_position.cc
+        p_position.cc \
+	p_sonar.cc
+
 #zoo.c \
 #zoo_driver.cc \
 #zoo_driver.h \
@@ -86,8 +88,7 @@ libstageplugin_la_SOURCES = \
 #p_energy.cc \
 #p_fiducial.cc \
 #p_gripper.cc \
-#p_map.cc \
-#p_sonar.cc
+#p_map.cc 
 
 libstageplugin_la_LDFLAGS = -export-dynamic -version-info 1:0:0 
 libstageplugin_la_LIBADD = -L.libs -lstage

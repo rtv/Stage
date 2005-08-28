@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_sonar.cc,v 1.4 2005-08-08 19:00:38 rtv Exp $
+ * CVS: $Id: p_sonar.cc,v 1.5 2005-08-28 01:54:14 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -47,14 +47,14 @@ extern "C" {
 int ranger_init( stg_model_t* mod );
 }
 
-InterfaceSonar::InterfaceSonar( player_device_id_t id, 
+InterfaceSonar::InterfaceSonar( player_devaddr_t id, 
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
   : InterfaceModel( id, driver, cf, section, ranger_init )
 {
-  this->data_len = sizeof(player_sonar_data_t);
-  this->cmd_len = 0;
+  //this->data_len = sizeof(player_sonar_data_t);
+  //this->cmd_len = 0;
 }
 
 void InterfaceSonar::Publish( void )
@@ -76,100 +76,66 @@ void InterfaceSonar::Publish( void )
       
       //if( son->power_on ) // set with a sonar config
       {
-	sonar.range_count = htons((uint16_t)rcount);
+	sonar.ranges_count = rcount;
 	
 	for( int i=0; i<(int)rcount; i++ )
-	  sonar.ranges[i] = htons((uint16_t)(1000.0*rangers[i].range));
+	  sonar.ranges[i] = rangers[i].range;
       }
     }
   
-  this->driver->PutData( this->id, &sonar, sizeof(sonar), NULL); 
+  this->driver->Publish( this->addr, NULL,
+			 PLAYER_MSGTYPE_DATA,
+			 PLAYER_SONAR_DATA_RANGES,
+			 &sonar, sizeof(sonar), NULL); 
 }
 
 
-void InterfaceSonar::Configure( void* client, void* src, size_t len )
-{
-  //printf("got sonar request\n");
-  
- // switch on the config type (first byte)
-  uint8_t* buf = (uint8_t*)src;
-  switch( buf[0] )
-    {  
-    case PLAYER_SONAR_GET_GEOM_REQ:
-      { 
-	size_t cfglen = 0;
-	stg_ranger_config_t* cfgs = (stg_ranger_config_t*)
-	  stg_model_get_property( this->mod, "ranger_cfg", &cfglen );
-	assert( cfgs );
-	
-	size_t rcount = cfglen / sizeof(stg_ranger_config_t);
-	
-	// convert the ranger data into Player-format sonar poses	
-	player_sonar_geom_t pgeom;
-	memset( &pgeom, 0, sizeof(pgeom) );
-	
-	pgeom.subtype = PLAYER_SONAR_GET_GEOM_REQ;
-	
-	// limit the number of samples to Player's maximum
-	if( rcount > PLAYER_SONAR_MAX_SAMPLES )
-	  rcount = PLAYER_SONAR_MAX_SAMPLES;
-
-	pgeom.pose_count = htons((uint16_t)rcount);
-
-	for( int i=0; i<(int)rcount; i++ )
-	  {
-	    // fill in the geometry data formatted player-like
-	    pgeom.poses[i][0] = 
-	      ntohs((uint16_t)(1000.0 * cfgs[i].pose.x));
-	    
-	    pgeom.poses[i][1] = 
-	      ntohs((uint16_t)(1000.0 * cfgs[i].pose.y));
-	    
-	    pgeom.poses[i][2] 
-	      = ntohs((uint16_t)RTOD( cfgs[i].pose.a));	    
-	  }
-
-	  if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, 
-	  &pgeom, sizeof(pgeom), NULL ) )
-	  DRIVER_ERROR("failed to PutReply");
-      }
-      break;
+int InterfaceSonar::ProcessMessage( MessageQueue* resp_queue,
+				     player_msghdr_t* hdr,
+				     void* data )
+{  
+  if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+			    PLAYER_SONAR_REQ_GET_GEOM, 
+			    this->addr) )
+    {
+      size_t cfglen = 0;
+      stg_ranger_config_t* cfgs = (stg_ranger_config_t*)
+	stg_model_get_property( this->mod, "ranger_cfg", &cfglen );
+      assert( cfgs );
       
-      /* DON'T SUPPORT SONAR POWER REQUEST: IT'S A STRANGE
-	 PIONEER-SPECIFIC THING THAT DOESN'T BELONG HERE */
-    // case PLAYER_SONAR_POWER_REQ:
-//       /*
-//        * 1 = enable sonars
-//        * 0 = disable sonar
-//        */
-//       if( len != sizeof(player_sonar_power_config_t))
-// 	{
-// 	  PRINT_WARN2( "stg_sonar: arg to sonar state change "
-// 		       "request wrong size (%d/%d bytes); ignoring",
-// 		       (int)len,(int)sizeof(player_sonar_power_config_t) );
-	  
-// 	  if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL ))
-// 	    DRIVER_ERROR("failed to PutReply");
-// 	}
+      size_t rcount = cfglen / sizeof(stg_ranger_config_t);
       
-//       //int power_save =  ! ((player_sonar_power_config_t*)src)->value;
-//       //stg_model_set_property( this->mod, "power_save", &power_save, sizeof(power_save));
+      // convert the ranger data into Player-format sonar poses	
+      player_sonar_geom_t pgeom;
+      memset( &pgeom, 0, sizeof(pgeom) );
       
-//       PRINT_WARN1( "Stage is ignoring a sonar power request (received formodel %s sonar power save: %d\n", 
-// 	      this->mod->token, this->mod->power_save );
-
-//       if(this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL )) 
-// 	DRIVER_ERROR("failed to PutReply");
-	
-// 	break;
-	
-    default:
-      {
-	PRINT_WARN1( "stage sonar model doesn't support config id %d\n", buf[0] );
-	if (this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
-	  DRIVER_ERROR("PutReply() failed");
-	break;
-      }      
+      // limit the number of samples to Player's maximum
+      if( rcount > PLAYER_SONAR_MAX_SAMPLES )
+	rcount = PLAYER_SONAR_MAX_SAMPLES;
+      
+      pgeom.poses_count = htons((uint16_t)rcount);
+      
+      for( int i=0; i<(int)rcount; i++ )
+	{
+	  // fill in the geometry data formatted player-like
+	  pgeom.poses[i].px = cfgs[i].pose.x;	  
+	  pgeom.poses[i].py = cfgs[i].pose.y;	  
+	  pgeom.poses[i].pa = cfgs[i].pose.a;	    
+	}
+      
+      this->driver->Publish( this->addr, resp_queue, 
+			     PLAYER_MSGTYPE_RESP_ACK, 
+			     PLAYER_SONAR_REQ_GET_GEOM,
+			     (void*)&pgeom, sizeof(pgeom), NULL );
+      
+      return 0; // ok
     }
+  else
+    {
+      // Don't know how to handle this message.
+      PRINT_WARN2( "stg_sonar doesn't support msg with type/subtype %d/%d",
+		   hdr->type, hdr->subtype);
+      return(-1);
+    }    
 }
 

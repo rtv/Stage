@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.15 2005-08-12 01:27:36 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.16 2005-08-28 01:54:14 rtv Exp $ -->
 
 <HEAD>
 
@@ -81,6 +81,7 @@ DIV.fragment {
 	background-color: #EEF;
 	padding-left: 1em;
 	margin: 4px;
+	width:85%;
 }
 
 

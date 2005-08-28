@@ -156,8 +156,10 @@ class InterfaceSonar : public InterfaceModel
  public: 
   InterfaceSonar( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceSonar( void ){ /* TODO: clean up*/ };
-  //virtual void Command( void* buffer, size_t len ); 
-  virtual void Configure( void* client, void* buffer, size_t len );
+  
+  virtual int ProcessMessage( MessageQueue* resp_queue, 
+			      player_msghdr * hdr, 
+			      void * data );
   virtual void Publish( void );
 };
 
