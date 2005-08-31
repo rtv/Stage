@@ -122,6 +122,8 @@ class InterfaceGripper : public InterfaceModel
 
 class InterfaceLaser : public InterfaceModel
 {
+  private:
+    int scan_id;
  public: 
   InterfaceLaser( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceLaser( void ){ /* TODO: clean up*/ };
