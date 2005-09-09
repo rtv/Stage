@@ -1,10 +1,10 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.78 2005-08-25 18:11:45 gerkey Exp $
+dnl $Id: configure.in,v 1.79 2005-09-09 03:04:09 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,2.0.0-a)
+AC_INIT(stage,2.0.0-b)
 
 AC_CONFIG_SRCDIR(src/stage.c)
 
