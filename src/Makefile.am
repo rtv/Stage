@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.116 2005-08-28 01:54:14 rtv Exp $
+# $Id: Makefile.am,v 1.117 2005-09-10 00:41:52 gerkey Exp $
 
 # also build Zoo referees
 #SUBDIRS = referees
@@ -12,8 +12,8 @@ include_HEADERS = stage.h
 
 #AM_CFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_CFLAGS@ @GTK_CFLAGS@
 #AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_LIBS@ @GTK_CFLAGS@
-AM_CFLAGS = -std=c99 -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
-AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
+AM_CFLAGS = -std=c99 -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_CFLAGS@ @GTK_CFLAGS@
+AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_CFLAGS@ @GTK_CFLAGS@
 
 # build the stage library and the stage plugin
 lib_LTLIBRARIES = libstage.la libstageplugin.la
@@ -72,11 +72,15 @@ libstageplugin_la_SOURCES = \
         p_simulation.cc \
         p_laser.cc \
         p_position.cc \
-	p_sonar.cc
+	p_sonar.cc \
+        zoo_driver.h \
+        zoo.h \
+        zoo_species.h \
+        zoo_controller.h \
+        zoo_referee.h
 
 #zoo.c \
 #zoo_driver.cc \
-#zoo_driver.h \
 #zoo_species.cc \
 #zoo_species.h \
 #zoo_controller.cc \
