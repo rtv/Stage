@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.158 2005-08-11 19:56:54 rtv Exp $
+ * CVS: $Id: stage.h,v 1.159 2005-09-11 21:13:26 rtv Exp $
  */
 
 
@@ -39,6 +39,9 @@
   This header file contains the external interface for the Stage
   library
 */
+
+#include "config.h" // results of autoconf's system configuration tests
+#include "replace.h" // Stage's implementations of missing system calls
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -60,8 +63,6 @@
 extern "C" {
 #endif 
 
-#include "config.h"
-#include "replace.h"
 
 /** @defgroup libstage libstage - Stage library API
 
@@ -396,6 +397,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     
     /// render color of this polygon - TODO  - implement color rendering
     stg_color_t color;
+
+    void* _data; // temporary internal use only
   } stg_polygon_t; 
 
   

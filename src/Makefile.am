@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.117 2005-09-10 00:41:52 gerkey Exp $
+# $Id: Makefile.am,v 1.118 2005-09-11 21:13:26 rtv Exp $
 
 # also build Zoo referees
 #SUBDIRS = referees
@@ -10,17 +10,17 @@
 # install the header file for the Stage library
 include_HEADERS = stage.h 
 
-#AM_CFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_CFLAGS@ @GTK_CFLAGS@
-#AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_LIBS@ @GTK_CFLAGS@
-AM_CFLAGS = -std=c99 -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_CFLAGS@ @GTK_CFLAGS@
-AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GLIB_CFLAGS@ @GTK_CFLAGS@
+# system-wide compile flags - target-specific flags are added to each target below
+AM_CFLAGS =   -Wall -I. -I$(top_builddir)/replace @GTK_CFLAGS@ @GNOME_CFLAGS@ -std=c99 
+AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @GTK_CFLAGS@ @GNOME_CFLAGS@
 
 # build the stage library and the stage plugin
 lib_LTLIBRARIES = libstage.la libstageplugin.la
 
 # build stest, a stand-alone test binary using the stage library, 
 # and ptest, a player client for testing the player plugin
-bin_PROGRAMS = stest ptest
+bin_PROGRAMS = stest 
+#ptest
 
 # The stage library contains everything you need to build a robot
 # simulation, including graphics and a world description file
@@ -30,6 +30,7 @@ bin_PROGRAMS = stest ptest
 #
 libstage_la_SOURCES = \
 	../config.h \
+	gnome.c \
 	gui.c \
 	gui.h \
 	gui_menus.c \
@@ -60,8 +61,10 @@ libstage_la_SOURCES = \
 # TODO
 #	model_energy.c
 
+#libstage_la_CFLAGS = $(AM_CFLAGS) 
+#libstage_la_CPPFLAGS = $(AM_CPPFLAGS) 
 libstage_la_LDFLAGS = -version-info 2:0:0 
-libstage_la_LIBADD = @GTK_LIBS@
+libstage_la_LIBADD = @GTK_LIBS@ @GNOME_LIBS@
 
 # build a Player plugin from libstage plus Player driver hooks.
 libstageplugin_la_SOURCES = \
@@ -73,11 +76,7 @@ libstageplugin_la_SOURCES = \
         p_laser.cc \
         p_position.cc \
 	p_sonar.cc \
-        zoo_driver.h \
-        zoo.h \
-        zoo_species.h \
-        zoo_controller.h \
-        zoo_referee.h
+	p_blobfinder.cc 
 
 #zoo.c \
 #zoo_driver.cc \
@@ -88,12 +87,12 @@ libstageplugin_la_SOURCES = \
 #zoo_referee.cc \
 #zoo_referee.h
 
-#p_blobfinder.cc \
 #p_energy.cc \
 #p_fiducial.cc \
 #p_gripper.cc \
 #p_map.cc 
 
+libstageplugin_la_CPPFLAGS = $(AM_CPPFLAGS) @PLAYER_CFLAGS@  
 libstageplugin_la_LDFLAGS = -export-dynamic -version-info 1:0:0 
 libstageplugin_la_LIBADD = -L.libs -lstage
 
@@ -105,5 +104,5 @@ stest_LDADD = libstage.la
 # build a stand-alone test program using libstage
 #ptest_DEPENDENCIES = 
 ptest_SOURCES = ptest.c
-ptest_CFLAGS = @PLAYERC_CFLAGS@ -std=c99
+ptest_CFLAGS = $(AM_CFLAGS) @PLAYER_CFLAGS@ 
 ptest_LDADD = @PLAYERC_LIBS@

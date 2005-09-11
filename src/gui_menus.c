@@ -533,7 +533,7 @@ void gui_window_menus_create( gui_window_t* win )
 
   // accels
   GtkAccelGroup *accel_group = gtk_ui_manager_get_accel_group (ui_manager);
-  gtk_window_add_accel_group(GTK_WINDOW (win->canvas->frame), accel_group);
+  //gtk_window_add_accel_group(GTK_WINDOW (win->canvas->frame), accel_group);
   
   // menus
   gtk_ui_manager_set_add_tearoffs( ui_manager, TRUE );
@@ -548,7 +548,8 @@ void gui_window_menus_create( gui_window_t* win )
   
   // install the widget
   GtkWidget *menubar = gtk_ui_manager_get_widget (ui_manager, "/Main");
-  gtk_box_pack_start (GTK_BOX(win->canvas->layout), menubar, FALSE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX(win->layout), menubar, FALSE, FALSE, 0);
+  //gtk_layout_put(GTK_LAYOUT(win->canvas->layout), menubar, 0,300 );
   
 }
 

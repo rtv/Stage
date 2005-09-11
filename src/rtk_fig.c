@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.15 2005-07-30 00:04:41 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.16 2005-09-11 21:13:26 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -277,7 +277,7 @@ void stg_rtk_fig_clear(stg_rtk_fig_t *fig)
   fig->stroke_count = 0;
 
   // Reset the figure region
-  stg_rtk_region_set_empty(fig->region);
+  stg_rtk_region_set_empty(fig->region);  
 }
 
 // Show or hide the figure
@@ -867,32 +867,6 @@ void stg_rtk_fig_polygon(stg_rtk_fig_t *fig, double ox, double oy, double oa,
   stg_rtk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, point_count, npoints);
   free(npoints);
   
-/*   // experimental */
-/*   GnomeCanvasPoints* gp = gnome_canvas_points_new( point_count ); */
-  
-/*   for(i=0; i<point_count; i++ ) */
-/*     { */
-/*       gp->coords[i*2] = points[i][0]; */
-/*       gp->coords[i*2+1] = points[i][1]; */
-/*     } */
-  
-/* /\*   GnomeCanvasItem* item =  *\/ */
-/* /\*     gnome_canvas_item_new( gnome_canvas_root(fig->canvas->gcanvas),  *\/ */
-/* /\* 			   gnome_canvas_polygon_get_type(), *\/ */
-/* /\* 			   "points", gp, *\/ */
-/* /\* 			   NULL ); *\/ */
-  
-/*   int col = GNOME_CANVAS_COLOR(255,0,0); */
-
-/*   GnomeCanvasItem* item2 =  */
-/*     gnome_canvas_item_new( gnome_canvas_root(fig->canvas->gcanvas),  */
-/* 			   gnome_canvas_rect_get_type(), */
-/* 			   "x1", ox, */
-/* 			   "y1", oy, */
-/* 			   "x2", 10.0, */
-/* 			   "y2", 10.0, */
-/* 			   "fill_color", "green", */
-/* 			   NULL ); */
   
   return;
 }
@@ -1127,6 +1101,7 @@ void stg_rtk_fig_polygon_alloc(stg_rtk_fig_t *fig,
   // This will make sure the new stroke gets drawn  
   stg_rtk_fig_dirty(fig);
     
+
   return;
 }
 
@@ -1221,54 +1196,12 @@ void stg_rtk_fig_polygon_draw(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data
   {
     gdk_draw_lines(drawable, fig->canvas->gc, data->ppoints, data->point_count);    
   }
-  return;
-}
 
-/*
-// Render stroke to xfig
-void stg_rtk_fig_polygon_xfig(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data)
-{
-  int i;
-  int fill;
-  stg_rtk_point_t *lpoint;
-  double cosa, sina;
-  double ax, ay, bx, by;
-  int px, py;
   
-  // Compute area fill value
-  if (data->filled)
-    fill = ((20 * (unsigned int) data->stroke.color.green) / 0xFFFF);
-  else
-    fill = -1;
-
-  // This is a polygon
-  fprintf(fig->canvas->file, "2 3 0 %d %d 7 50 0 %d 0.000 0 0 -1 0 0 %d\n",
-          data->stroke.linewidth, data->stroke.xfig_color, fill, data->point_count + 1);
-
-  cosa = cos(data->oa);
-  sina = sin(data->oa);
-  
-  for (i = 0; i < data->point_count + 1; i++)
-  {
-    lpoint = data->lpoints + (i % data->point_count);
-    
-    // Compute paper coordinates
-    ax = data->ox + lpoint->x * cosa - lpoint->y * sina;
-    ay = data->oy + lpoint->x * sina + lpoint->y * cosa;
-    bx = GX(ax, ay);
-    by = GY(ax, ay);
-    px = PX(bx);
-    py = PY(by);
-
-    fprintf(fig->canvas->file, "%d %d ", px, py);
-  }
-  
-  fprintf(fig->canvas->file, "\n");
 
   return;
 }
 
-*/
 
 /***************************************************************************
  * Text stroke

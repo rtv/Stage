@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_blobfinder.cc,v 1.3 2005-08-08 19:00:37 rtv Exp $
+ * CVS: $Id: p_blobfinder.cc,v 1.4 2005-09-11 21:13:26 rtv Exp $
  */
 
 // DOCUMENTATION
@@ -45,14 +45,13 @@ int blobfinder_init( stg_model_t* mod );
 }
 
 
-InterfaceBlobfinder::InterfaceBlobfinder( player_device_id_t id, 
+InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr, 
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( id, driver, cf, section, blobfinder_init )
+  : InterfaceModel( addr, driver, cf, section, blobfinder_init )
 {
-  this->data_len = sizeof(player_blobfinder_data_t);
-  this->cmd_len = 0;
+  // nothing to do for now
 }
 
 
@@ -77,9 +76,9 @@ void InterfaceBlobfinder::Publish( void )
   assert(cfg);
   
   // and set the image width * height
-  bfd.width = htons((uint16_t)cfg->scan_width);
-  bfd.height = htons((uint16_t)cfg->scan_height);
-  bfd.blob_count = htons((uint16_t)bcount);
+  bfd.width = cfg->scan_width;
+  bfd.height = cfg->scan_height;
+  bfd.blobs_count = bcount;
   
   // now run through the blobs, packing them into the player buffer
   // counting the number of blobs in each channel and making entries
@@ -103,26 +102,40 @@ void InterfaceBlobfinder::Publish( void )
 	<< endl;
       */
       
-      bfd.blobs[b].x      = htons((uint16_t)blobs[b].xpos);
-      bfd.blobs[b].y      = htons((uint16_t)blobs[b].ypos);
-      bfd.blobs[b].left   = htons((uint16_t)blobs[b].left);
-      bfd.blobs[b].right  = htons((uint16_t)blobs[b].right);
-      bfd.blobs[b].top    = htons((uint16_t)blobs[b].top);
-      bfd.blobs[b].bottom = htons((uint16_t)blobs[b].bottom);
+      bfd.blobs[b].x      = blobs[b].xpos;
+      bfd.blobs[b].y      = blobs[b].ypos;
+      bfd.blobs[b].left   = blobs[b].left;
+      bfd.blobs[b].right  = blobs[b].right;
+      bfd.blobs[b].top    = blobs[b].top;
+      bfd.blobs[b].bottom = blobs[b].bottom;
       
-      bfd.blobs[b].color = htonl(blobs[b].color);
-      bfd.blobs[b].area  = htonl(blobs[b].area);          
+      bfd.blobs[b].color = blobs[b].color;
+      bfd.blobs[b].area  = blobs[b].area;          
+      
+      bfd.blobs[b].range = blobs[b].range;          
     }
   
-  size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);   
-  this->driver->PutData( this->id, &bfd, size, NULL);
+  // should change player interface to support variable-lenght blob data
+  // size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);   
+
+  this->driver->Publish( this->addr, NULL, 
+			 PLAYER_MSGTYPE_DATA,
+			 PLAYER_BLOBFINDER_DATA_STATE,
+			 &bfd, sizeof(bfd), NULL);
 }
 
-void InterfaceBlobfinder::Configure( void* client, void* buffer, size_t len )
+int InterfaceBlobfinder::ProcessMessage( MessageQueue* resp_queue,
+					 player_msghdr_t* hdr,
+					 void* data )
 {
-  printf("got blobfinder request\n");
+  // todo: handle configuration requests
   
-  if (this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-    DRIVER_ERROR("PutReply() failed");  
+  //else
+  {
+    // Don't know how to handle this message.
+    PRINT_WARN2( "stg_blobfindeerr doesn't support msg with type/subtype %d/%d",
+		 hdr->type, hdr->subtype);
+    return(-1);
+  }
 }
 

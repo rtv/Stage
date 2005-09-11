@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.95 2005-08-10 22:57:52 rtv Exp $
+CVS: $Id: gui.c,v 1.96 2005-09-11 21:13:26 rtv Exp $
 */
 
 #include <stdio.h>
@@ -10,8 +10,13 @@ CVS: $Id: gui.c,v 1.95 2005-08-10 22:57:52 rtv Exp $
 //#define DEBUG
 //#undef DEBUG
 
+// new canvas layer
 #include "stage_internal.h"
 #include "gui.h"
+
+#if INCLUDE_GNOME
+#include "gnome.h"
+#endif
 
 #define STG_DEFAULT_WINDOW_WIDTH 700
 #define STG_DEFAULT_WINDOW_HEIGHT 740
@@ -156,7 +161,7 @@ void gui_load( gui_window_t* win, int section )
   PRINT_DEBUG1( "window scale %.2f", window_scale );
   
   // ask the canvas to comply
-  gtk_window_resize( GTK_WINDOW(win->canvas->frame), window_width, window_height );
+  gtk_window_resize( GTK_WINDOW(win->frame), window_width, window_height );
   stg_rtk_canvas_scale( win->canvas, window_scale, window_scale );
   stg_rtk_canvas_origin( win->canvas, window_center_x, window_center_y );
 }
@@ -164,7 +169,7 @@ void gui_load( gui_window_t* win, int section )
 void gui_save( gui_window_t* win )
 {
   int width, height;
-  gtk_window_get_size(  GTK_WINDOW(win->canvas->frame), &width, &height );
+  gtk_window_get_size(  GTK_WINDOW(win->frame), &width, &height );
   
   wf_write_tuple_float( win->wf_section, "size", 0, width );
   wf_write_tuple_float( win->wf_section, "size", 1, height );
@@ -206,6 +211,8 @@ void gui_startup( int* argc, char** argv[] )
   
   app = stg_rtk_app_create();
   stg_rtk_app_main_init( app );
+
+  
 }
 
 void gui_poll( void )
@@ -225,29 +232,117 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 {
   gui_window_t* win = calloc( sizeof(gui_window_t), 1 );
 
+  // Create a top-level window
+  win->frame = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_default_size( GTK_WINDOW(win->frame), xdim, ydim ); 
+
+  win->layout = gtk_vbox_new(FALSE, 0);
+
+  GtkHBox* hbox = GTK_HBOX(gtk_hbox_new( FALSE, 3 ));
+
   win->canvas = stg_rtk_canvas_create( app );
-  gtk_window_set_default_size( GTK_WINDOW(win->canvas->frame), xdim, ydim ); 
+
+  win->status_bar = GTK_STATUSBAR(gtk_statusbar_new());
+  gtk_statusbar_set_has_resize_grip( win->status_bar, FALSE );
+  win->clock_label = GTK_LABEL(gtk_label_new( "clock" ));
+
+  GtkWidget* contents = NULL;
+
+#if INCLUDE_GNOME
+
+  contents = gtk_scrolled_window_new( NULL, NULL );
   
+  win->gcanvas = gnome_canvas_new_aa();
+  gtk_container_add( GTK_CONTAINER(contents), 
+		     GTK_WIDGET(win->gcanvas) );
+
+  GnomeCanvasItem* bg = 
+    gnome_canvas_item_new(gnome_canvas_root(win->gcanvas),
+			  gnome_canvas_rect_get_type(),
+			  "x1",-world->width/2.0,
+			  "y1",-world->height/2.0,
+			  "x2", world->width/2.0,
+			  "y2", world->height/2.0,
+			  "fill_color", "white",
+			  NULL);
+  
+  g_signal_connect( bg, 
+		    "event", 
+		    G_CALLBACK(background_event_callback), 
+		    world );
+  
+  GnomeCanvasGroup* grp = 
+    gnome_canvas_item_new( gnome_canvas_root(win->gcanvas),
+			   gnome_canvas_group_get_type(),
+			   NULL );
+  
+  gnome_canvas_item_lower_to_bottom( grp );
+  gnome_canvas_item_move( grp, world->width, 0 );
+
+
+  GnomeCanvasItem *it = 
+    gnome_canvas_item_new( grp,
+			   gnome_canvas_widget_get_type(),
+			   "width", world->width,
+			   "height", world->height,
+			   "anchor", GTK_ANCHOR_CENTER,
+			   "widget", win->canvas->canvas,
+			   NULL);
+  
+
+  // flip the vertical axis for the root group
+  double flip[6];  
+  art_affine_identity( flip );
+  art_affine_flip( flip, flip, FALSE, TRUE );
+  gnome_canvas_item_affine_relative( gnome_canvas_root(win->gcanvas),
+				     flip );
+
+  win->zoom = 50.0;
+
+  gnome_canvas_set_pixels_per_unit( win->gcanvas, win->zoom  );
+  gnome_canvas_set_center_scroll_region( win->gcanvas, TRUE ); 
+  gnome_canvas_set_scroll_region ( win->gcanvas, 
+				   1.1 * -world->width/2.0, 
+				   1.1 * -world->height/2.0, 
+				   1.1 * world->width + world->width/2.0, 
+				   1.1 * world->height/2.0  );
+
+#else
+  // no GnomeCanvas, so add the RTK window directly into the frame
+  //gtk_container_add( GTK_WINDOW(win->scrolled_win), 
+  //				 GTK_WIDGET(win->canvas->canvas) );  
+
+  contents = win->canvas->canvas;
+#endif
+
+  // Put it all together
+  gtk_container_add(GTK_CONTAINER(win->frame), win->layout);
+
+  gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(win->clock_label), FALSE, FALSE, 5);
+
+  gtk_box_pack_start(GTK_BOX(hbox), 
+  	   GTK_WIDGET(win->status_bar), TRUE, TRUE, 5);
+
+ 
+  // we'll add these backwards so we can stick the menu in later
+  gtk_box_pack_end(GTK_BOX(win->layout), 
+		   GTK_WIDGET(hbox), FALSE, TRUE, 0);
+  gtk_box_pack_end( GTK_BOX(win->layout),
+		    contents, TRUE, TRUE, 0);
+  
+
   win->world = world;
   
   // enable all objects on the canvas to find our window object
   win->canvas->userdata = (void*)win; 
-
+  
   char txt[256];
   snprintf( txt, 256, " Stage v%s", VERSION );
-  gtk_statusbar_push( win->canvas->status_bar, 0, txt ); 
+  gtk_statusbar_push( win->status_bar, 0, txt ); 
 
-  //stg_rtk_canvas_size( win->canvas, xdim, ydim );
+  snprintf( txt, 256, " Stage: %s", world->token );
+  gtk_window_set_title( GTK_WINDOW(win->frame), txt );
   
-  GString* titlestr = g_string_new( "Stage: " );
-  g_string_append_printf( titlestr, "%s", world->token );
-  
-  stg_rtk_canvas_title( win->canvas, titlestr->str );
-  g_string_free( titlestr, TRUE );
-  
-  double width = 10;//world->size.x;
-  //double height = 10;//world->size.y;
-
   win->bg = stg_rtk_fig_create( win->canvas, NULL, 0 );
   
   // draw a mark for the origin
@@ -267,8 +362,26 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   win->poses = stg_rtk_fig_create( win->canvas, NULL, 0 );
 
   
+  //gint canvas_w, canvas_h;
+  //gtk_layout_get_size( GTK_LAYOUT(win->gcanvas), &canvas_w, &canvas_h );
+
+  /* g_object_get( win->gcanvas,  */
+/* 		"width", &canvas_w,  */
+/* 		"height", &canvas_h,  */
+/* 		NULL ); */
+
+/*   stg_rtk_canvas_size( win->canvas, canvas_w, canvas_h ); */
+  
+/*   printf( "canvas_w %d xdim %d world->width %.2f\n",  */
+/* 	  canvas_w, xdim, world->width ); */
+
+  //gnome_canvas_set_pixels_per_unit( win->gcanvas, 1.0 );//world->width /  canvas_w   );
+  
   // start in the center, fully zoomed out
-  stg_rtk_canvas_scale( win->canvas, 1.1*width/xdim, 1.1*width/xdim );
+  stg_rtk_canvas_scale( win->canvas, 
+  		0.02,
+  		0.02 );
+
   //stg_rtk_canvas_origin( win->canvas, width/2.0, height/2.0 );
 
   win->selection_active = NULL;
@@ -280,6 +393,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
  
   gui_window_menus_create( win );
  
+
   return win;
 }
 
@@ -303,7 +417,7 @@ gui_window_t* gui_world_create( stg_world_t* world )
 					 STG_DEFAULT_WINDOW_HEIGHT );
   
   // show the window
-  gtk_widget_show_all(win->canvas->frame);
+  gtk_widget_show_all(win->frame);
 
   return win;
 }
@@ -491,7 +605,7 @@ int gui_world_update( stg_world_t* world )
   if( win->selection_active )
     gui_model_display_pose( win->selection_active, "Selection:" );
   
-  gtk_label_set_text( win->canvas->clock_label, clock );
+  gtk_label_set_text( win->clock_label, clock );
 
   stg_rtk_canvas_render( win->canvas );      
 
@@ -580,9 +694,9 @@ void gui_model_display_pose( stg_model_t* mod, char* verb )
   // display the pose
   snprintf(txt, sizeof(txt), "%s %s", 
 	   verb, gui_model_describe(mod)); 
-  guint cid = gtk_statusbar_get_context_id( win->canvas->status_bar, "on_mouse" );
-  gtk_statusbar_pop( win->canvas->status_bar, cid ); 
-  gtk_statusbar_push( win->canvas->status_bar, cid, txt ); 
+  guint cid = gtk_statusbar_get_context_id( win->status_bar, "on_mouse" );
+  gtk_statusbar_pop( win->status_bar, cid ); 
+  gtk_statusbar_push( win->status_bar, cid, txt ); 
   //printf( "STATUSBAR: %s\n", txt );
 }
 
@@ -615,8 +729,8 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
       win->selection_active = NULL;      
       
       // get rid of the selection info
-      cid = gtk_statusbar_get_context_id( win->canvas->status_bar, "on_mouse" );
-      gtk_statusbar_pop( win->canvas->status_bar, cid ); 
+      cid = gtk_statusbar_get_context_id( win->status_bar, "on_mouse" );
+      gtk_statusbar_pop( win->status_bar, cid ); 
       break;
       
     case STK_EVENT_PRESS:
@@ -766,10 +880,22 @@ void gui_model_move( stg_model_t* mod )
     stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
   
   if( pose )
-    stg_rtk_fig_origin( stg_model_get_fig(mod,"top"), 
-			pose->x, pose->y, pose->a );   
+    {
+      stg_rtk_fig_origin( stg_model_get_fig(mod,"top"), 
+			  pose->x, pose->y, pose->a );   
+      
+#if INCLUDE_GNOME
+      double r[6], t[6];
+      art_affine_rotate(r,RTOD(pose->a));
+      gnome_canvas_item_affine_absolute( mod->grp, r );
+      gnome_canvas_item_set( mod->grp,
+			     "x", pose->x,
+			     "y", pose->y,
+			     NULL );
+#endif			
+      
+    }
 }
-
 
 ///  render a model's geometry if geom viewing is enabled
 void gui_model_render_geom( stg_model_t* mod )

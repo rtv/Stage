@@ -24,7 +24,7 @@
  * Desc: Combined Stk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.13 2005-07-30 06:21:10 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.14 2005-09-11 21:13:26 rtv Exp $
  */
 
 #ifndef STK_H
@@ -145,8 +145,8 @@ typedef struct _stg_rtk_canvas_t
   struct _stg_rtk_app_t *app;
 
   // Gtk stuff
-  GtkWidget *frame;
-  GtkWidget *layout;
+  //GtkWidget *frame;
+  //GtkWidget *layout;
   GtkWidget *canvas;
   // GDK stuff
   GdkPixmap *bg_pixmap, *fg_pixmap;
@@ -162,21 +162,6 @@ typedef struct _stg_rtk_canvas_t
   
   // Default line width
   int linewidth;
-
-  // The menu bar widget
-  GtkWidget *menu_bar;
-  
-  // The status bar widget
-  GtkStatusbar *status_bar;
-  GtkProgressBar *perf_bar;
-  GtkProgressBar *rt_bar;
-
-  GtkLabel *clock_label;
-
-  //GtkWidget* gcanvas;
-
-  // File in which to render xfig figures.
-  FILE *file;
 
   // Physical size of window
   int sizex, sizey;
@@ -202,15 +187,6 @@ typedef struct _stg_rtk_canvas_t
 
   // Movement mask for the canvas
   int movemask;
-
-  // Movie capture stuff
-  FILE *movie_file;
-  double movie_fps, movie_speed;
-  int movie_frame;
-  double movie_time, mpeg_time;
-  unsigned char movie_lut[0x10000][3];
-  struct AVCodec *movie_codec;
-  struct AVCodecContext *movie_context;
 
   // Head of linked-list of top-level (parentless) figures.
   struct _stg_rtk_fig_t *fig;
@@ -430,8 +406,6 @@ typedef struct _stg_rtk_fig_t
 
   // Event callback functions.
   stg_rtk_mouse_fn_t mouse_fn;
-
-  
 
 } stg_rtk_fig_t;
 

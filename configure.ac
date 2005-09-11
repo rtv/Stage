@@ -1,10 +1,10 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.80 2005-09-10 00:41:52 gerkey Exp $
+dnl $Id: configure.ac,v 1.1 2005-09-11 21:13:26 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,2.0.0-b)
+AC_INIT(stage,2.0.0-a)
 
 AC_CONFIG_SRCDIR(src/stage.c)
 
@@ -65,26 +65,40 @@ if test "$GLIB_LIBS" = " "; then
   AC_MSG_ERROR([glib is required to build Stage.  Install glib, then re-configure.])
 fi
 
+dnl check for GTK stuff - we need it for the GUI
 PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4,
-dnl PKG_CHECK_MODULES(GTK, libgnomecanvas-2.0 >= 2.0,
-AC_DEFINE(INCLUDE_GTK,1,[building GTK components]),
-AC_MSG_WARN([no suitable GTK was found. ])
+ AC_DEFINE(INCLUDE_GTK,1,[building GTK components]),
+ AC_MSG_WARN([no suitable GTK was found. ])
+)
+	
+dnl if GNOMECANVAS is requested and available, we use that for graphics
+AC_ARG_ENABLE(gnomecanvas,
+	      AC_HELP_STRING([--enable-gnomecanvas],[Use GnomeCanvas if available *EXPERIMENTAL (rtv)*]),
+	      [ if test "x$enableval" = "xyes"; then
+	        AC_MSG_RESULT([GnomeCanvas requested. Looking for libgnomecanvas...])
+                PKG_CHECK_MODULES(GNOME, libgnomecanvas-2.0 >= 2.0,
+                  AC_DEFINE(INCLUDE_GNOME,1,[building GnomeCanvas components]),
+                  AC_MSG_WARN([no suitable GnomeCanvas library was found. ])
+                )
+ 	        AC_MSG_RESULT([GnomeCanvas graphics will be used.])
+              else
+	        AC_MSG_RESULT([GnomeCanvas graphics disabled by user])
+              fi ],
 )
 
-
-dnl we need Player 2.0 or higher
+dnl for libstageplugin, we need Player 2.0 or higher
 PKG_CHECK_MODULES( PLAYER, playercore >= 2.0,
-AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
-AC_MSG_WARN([Player was not found. ])
+ AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
+ AC_MSG_WARN([Player was not found. ])
 )
 
-dnl we need libplayerc
+dnl for ptest, we need libplayerc
 PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0,
-AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
-AC_MSG_WARN([libplayercr was not found. ])
+ AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
+ AC_MSG_WARN([libplayercr was not found. ])
 )
 
-dnl where's the X11-style color database?
+dnl where's the X11 color database?
 AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
   CDB="\"/usr/X11R6/lib/X11/rgb.txt\"",
   AC_CHECK_FILE([/usr/openwin/lib/X11/rgb.txt],
@@ -100,7 +114,7 @@ AC_OUTPUT(Makefile
           worlds/Makefile 
           worlds/bitmaps/Makefile 
           replace/Makefile
-          dnl src/referees/Makefile
+          src/referees/Makefile
 	  stage.pc )
 
 dnl should use AC_MSG_NOTICE(), but that's apparently not defined in

@@ -19,9 +19,9 @@
  */
 
 /*
- * Desc: Stk canvas functions
+ * Desc: Rtk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.18 2005-07-30 06:21:10 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.19 2005-09-11 21:13:26 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -116,64 +116,25 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
   canvas->mouse_selected_fig = NULL;
   canvas->mouse_selected_fig_last = NULL;
 
-  // Create a top-level window
-  canvas->frame = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  canvas->layout = gtk_vbox_new(FALSE, 0);
-  
-  // scrolling doesn't work yet, but the widgets are in place - need
-  // to change the canvas behaviour quite considerably. May as well
-  // wait until a move to a canvas library like gnomecanvas or similar.
-  //GtkWidget* scrolled_win = gtk_scrolled_window_new ( NULL, NULL );
-  //gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),
-  //			  GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-  
-  //gtk_widget_show( scrolled_win );
-
- 
-  GtkHBox* hbox = gtk_hbox_new( FALSE, 3 );
   
   // Create gtk drawing area
   canvas->canvas = gtk_drawing_area_new();
   //gtk_widget_set_size_request( canvas->canvas, 1000,1000 );
 
-  canvas->status_bar = GTK_STATUSBAR(gtk_statusbar_new());
-  gtk_statusbar_set_has_resize_grip( canvas->status_bar, TRUE );
+  //gtk_layout_put( GTK_LAYOUT(canvas->gcanvas), canvas->canvas, 0,0 );
 
-  canvas->clock_label = GTK_LABEL(gtk_label_new( "clock" ));
-
-  //gtk_scrolled_window_add_with_viewport( scrolled_win, canvas->canvas );
-  gtk_widget_show( canvas->canvas );
-
+  //  gtk_widget_show( canvas->canvas );
+  //gtk_widget_show( canvas->gcanvas );
   
-  canvas->perf_bar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
-  gtk_progress_bar_set_text( canvas->perf_bar, "speed" );
 
-  canvas->rt_bar = GTK_PROGRESS_BAR(gtk_progress_bar_new());
-  gtk_progress_bar_set_text( canvas->rt_bar, "realtime" );
-
-/*   GtkVBox* vbox = gtk_vbox_new( FALSE, 0 ); */
-/*   gtk_box_pack_start(GTK_BOX(vbox),  */
-/* 		   GTK_WIDGET(canvas->perf_bar), FALSE, FALSE,0); */
-/*   gtk_box_pack_start(GTK_BOX(vbox),  */
-/* 		   GTK_WIDGET(canvas->rt_bar), FALSE, FALSE,0); */
+  //gtk_layout_put( GTK_LAYOUT(canvas->layout), GTK_WIDGET(hbox), 0,0 );
+  //gtk_layout_put( GTK_LAYOUT(canvas->layout), canvas->canvas, 0,200 );
+  //gtk_container_add( GTK_CONTAINER(canvas->layout), GTK_WIDGET(hbox) );
+  //gtk_container_add( GTK_CONTAINER(canvas->layout), canvas->canvas );
 
 
-  // Put it all together
-  gtk_container_add(GTK_CONTAINER(canvas->frame), canvas->layout);
 
-  gtk_box_pack_start(GTK_BOX(hbox), canvas->clock_label, FALSE, FALSE, 5);
-
-/*   gtk_box_pack_start(GTK_BOX(hbox),  */
-/* 		   GTK_WIDGET(vbox), FALSE, FALSE, 5); */
-
-  gtk_box_pack_start(GTK_BOX(hbox), 
-		   GTK_WIDGET(canvas->status_bar), TRUE, TRUE, 5);
-
- 
-  // we'll add these backwards so we can stick the menu in later
-  gtk_box_pack_end(GTK_BOX(canvas->layout), hbox, FALSE, TRUE, 0);
   //gtk_box_pack_end(GTK_BOX(canvas->layout), scrolled_win, TRUE, TRUE, 0);
-  gtk_box_pack_end(GTK_BOX(canvas->layout),canvas->canvas, TRUE, TRUE, 0);
 
   canvas->bg_pixmap = NULL;
   canvas->fg_pixmap = NULL;
@@ -189,11 +150,9 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
   canvas->linewidth = 0;
 
   // Movie stuff
-  canvas->movie_context = NULL;
+  //canvas->movie_context = NULL;
 
   // Connect gtk signal handlers
-  g_signal_connect(GTK_OBJECT(canvas->frame), "destroy",
-		   GTK_SIGNAL_FUNC(stg_rtk_on_destroy), canvas);
   g_signal_connect(GTK_OBJECT(canvas->canvas), "configure_event", 
 		   GTK_SIGNAL_FUNC(stg_rtk_on_configure), canvas);
   g_signal_connect(GTK_OBJECT(canvas->canvas), "expose_event", 
@@ -206,8 +165,8 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
 		   GTK_SIGNAL_FUNC(stg_rtk_on_release), canvas);
 
   // this seems not to receive the arrow keys...
-  g_signal_connect_after(GTK_OBJECT(canvas->frame), "key-press-event", 
-			 GTK_SIGNAL_FUNC(stg_rtk_on_key_press), canvas);
+  //g_signal_connect_after(GTK_OBJECT(canvas->frame), "key-press-event", 
+  //		 GTK_SIGNAL_FUNC(stg_rtk_on_key_press), canvas);
   
   // Set the event mask
   gtk_widget_set_events(canvas->canvas,
@@ -219,24 +178,6 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
 
   // rtv - support for motion hints would be handy - todo?
   //GDK_POINTER_MOTION_HINT_MASK);
-
-  /* canvas->gcanvas = gnome_canvas_new_aa(); */
-/*   gnome_canvas_set_pixels_per_unit( canvas->gcanvas, 100.0 ); */
-/*   gnome_canvas_set_center_scroll_region( canvas->gcanvas, TRUE ); */
-/*   gnome_canvas_set_scroll_region ( canvas->gcanvas, 0,0, 10,10); */
-
-  /* gtk_box_pack_end(GTK_BOX(canvas->layout), canvas->gcanvas, TRUE, TRUE, 0); */
-
- /* white background */
-/*   gnome_canvas_item_new(gnome_canvas_root(canvas->gcanvas), */
-/*                         gnome_canvas_rect_get_type(), */
-/*                         "x1",1.0, */
-/*                         "y1",1.0, */
-/*                         "x2",100.0, */
-/*                         "y2",100.0, */
-/*                         "fill_color", "white", */
-/*                         NULL); */
-
 
   // show all layers by default
   for( l=0; l<STK_CANVAS_LAYERS; l++ )
@@ -267,8 +208,8 @@ void stg_rtk_canvas_destroy(stg_rtk_canvas_t *canvas)
   STK_LIST_REMOVE(canvas->app->canvas, canvas);
 
   // Destroy the frame
-  gtk_widget_hide(GTK_WIDGET(canvas->frame));
-  gtk_widget_destroy(GTK_WIDGET(canvas->frame));
+  gtk_widget_hide(GTK_WIDGET(canvas->canvas));
+  gtk_widget_destroy(GTK_WIDGET(canvas->canvas));
   
   // fontname was strdup()ed 
   if (canvas->fontname)
@@ -290,7 +231,7 @@ int stg_rtk_canvas_isclosed(stg_rtk_canvas_t *canvas)
 // Set the canvas title
 void stg_rtk_canvas_title(stg_rtk_canvas_t *canvas, const char *title)
 {
-  gtk_window_set_title(GTK_WINDOW(canvas->frame), title);
+  //gtk_window_set_title(GTK_WINDOW(canvas->frame), title);
 }
 
 
@@ -298,7 +239,7 @@ void stg_rtk_canvas_title(stg_rtk_canvas_t *canvas, const char *title)
 // (sizex, sizey) is the width and height of the canvas, in pixels.
 void stg_rtk_canvas_size(stg_rtk_canvas_t *canvas, int sizex, int sizey)
 {
-  gtk_window_set_default_size(GTK_WINDOW(canvas->frame), sizex, sizey);
+  //gtk_window_set_default_size(GTK_WINDOW(canvas->frame), sizex, sizey);
   return;
 }
 

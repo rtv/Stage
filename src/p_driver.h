@@ -138,7 +138,6 @@ class InterfaceFiducial : public InterfaceModel
  public: 
   InterfaceFiducial( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceFiducial( void ){ /* TODO: clean up*/ };
-  //virtual void Command( void* buffer, size_t len ); 
   virtual void Configure( void* client, void* buffer, size_t len );
   virtual void Publish( void );
 };
@@ -148,8 +147,10 @@ class InterfaceBlobfinder : public InterfaceModel
  public: 
   InterfaceBlobfinder( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceBlobfinder( void ){ /* TODO: clean up*/ };
-  //virtual void Command( void* buffer, size_t len ); 
-  virtual void Configure( void* client, void* buffer, size_t len );
+  
+  virtual int ProcessMessage( MessageQueue* resp_queue, 
+			      player_msghdr * hdr, 
+			      void * data );
   virtual void Publish( void );
 };
 

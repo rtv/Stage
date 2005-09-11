@@ -14,6 +14,10 @@
 #include "stage_internal.h"
 #include "gui.h"
 
+#if INCLUDE_GNOME
+#include "gnome.h"
+#endif
+
   // basic model
 #define STG_DEFAULT_MASS 10.0  // kg
 #define STG_DEFAULT_POSEX 0.0  // start at the origin by default
@@ -162,7 +166,7 @@ model
 */
   
   
-  // callback functions that handle property changes, mostly for drawing stuff in the GUI
+// callback functions that handle property changes, mostly for drawing stuff in the GUI
   
   int model_render_polygons( stg_model_t* mod, char* name, 
 			     void* data, size_t len, void* userp );
@@ -174,9 +178,6 @@ int model_render_nose( stg_model_t* mod, char* name,
 		       void* data, size_t len, void* userp );
 int model_render_grid( stg_model_t* mod, char* name, 
 		       void* data, size_t len, void* userp );
-
-
-
 
 // convert a global pose into the model's local coordinate system
 void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
@@ -250,27 +251,37 @@ void storage_polygons( stg_property_t* prop,
 		       void* data, size_t len ) 
 {
   assert(prop);
-  if( len > 0 ) assert(data);
   
-  stg_polygon_t* polys = (stg_polygon_t*)data;
-  size_t count = len / sizeof(stg_polygon_t);
+  //printf( "model %d(%s) received %d bytes (%d polygons)\n", 
+  //  prop->mod->id, prop->mod->token, (int)len, (int)(len / sizeof(stg_polygon_t)));
   
-  stg_geom_t* geom = 
-    stg_model_get_property_fixed( prop->mod, "geom", sizeof(stg_geom_t));
-    
-  //printf( "model %d(%s) received %d polygons\n", 
-  //  prop->mod->id, prop->mod->token, (int)count );
-  
-  // normalize the polygons to fit exactly in the model's body
-  // rectangle (if specified)
-  if( geom )
-    stg_polygons_normalize( polys, count, geom->size.x, geom->size.y );
-  
-  stg_model_map( prop->mod, 0 ); // unmap the model from the matrix
-  
-  storage_ordinary( prop, polys, len );
-  
-  stg_model_map( prop->mod, 1 ); // map the model into the matrix with the new polys
+  if( len == 0 )
+    {
+      stg_model_map( prop->mod, 0 ); // unmap the model from the matrix
+      storage_ordinary( prop, data, len );
+    }
+  else
+    {
+      assert(data);
+      
+      stg_polygon_t* polys = (stg_polygon_t*)data;
+      size_t count = len / sizeof(stg_polygon_t);
+      
+      stg_geom_t* geom = 
+	stg_model_get_property_fixed( prop->mod, "geom", sizeof(stg_geom_t));
+      
+      
+      // normalize the polygons to fit exactly in the model's body
+      // rectangle (if specified)
+      if( geom )
+	stg_polygons_normalize( polys, count, geom->size.x, geom->size.y );
+      
+      stg_model_map( prop->mod, 0 ); // unmap the model from the matrix
+      
+      storage_ordinary( prop, polys, len );
+      
+      stg_model_map( prop->mod, 1 ); // map the model into the matrix with the new polys
+    }
 } 
 
 void storage_geom( stg_property_t* prop, 
@@ -387,6 +398,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->f_shutdown = NULL;
   mod->f_update = _model_update;
 
+
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
   geom.size.x = 1.0;
@@ -438,11 +450,30 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // now it's safe to create the GUI components
   if( mod->world->win )
     gui_model_create( mod );
+
+#if INCLUDE_GNOME
+  GnomeCanvasGroup* parent_grp =
+    mod->parent ? mod->parent->grp : gnome_canvas_root( mod->world->win->gcanvas );
   
+  mod->grp =
+    gnome_canvas_item_new( parent_grp,
+			   gnome_canvas_group_get_type(),
+			   "x", pose.x,
+			   "y", pose.y,
+			   NULL );
+
+  gnome_canvas_item_raise_to_top( mod->grp );
+#endif
+
   // exterimental: creates a menu of models
   gui_add_tree_item( mod );
   
+#if INCLUDE_GNOME
+  stg_model_add_property_callback( mod, "polygons", model_render_polygons_gc, NULL );
+#else
   stg_model_add_property_callback( mod, "polygons", model_render_polygons, NULL );
+#endif
+
   stg_model_add_property_callback( mod, "mask", model_handle_mask, NULL );
   stg_model_add_property_callback( mod, "nose", model_render_nose, NULL );
   stg_model_add_property_callback( mod, "grid", model_render_grid, NULL );
@@ -1673,12 +1704,11 @@ int stg_model_tree_to_ptr_array( stg_model_t* root, GPtrArray* array )
 int model_render_polygons( stg_model_t* mod, char* name, 
 			   void* data, size_t len, void* userp )
 {
-  
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "top" );
   assert( fig );
 
   stg_rtk_fig_clear( fig );
-  
+    
   stg_color_t *cp = 
     stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
   
@@ -1692,10 +1722,14 @@ int model_render_polygons( stg_model_t* mod, char* name,
   
   stg_rtk_fig_color_rgb32( fig, col );
   
+  stg_pose_t* pose = 
+    stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
+
   if( polys && len > 0 )
     {
       
-      if( ! mod->world->win->fill_polygons )
+
+	if( ! mod->world->win->fill_polygons )
 	{
 	  
 	  int p;
@@ -1759,8 +1793,7 @@ int model_render_polygons( stg_model_t* mod, char* name,
       stg_rtk_fig_arrow( fig, geom.pose.x, geom.pose.y, geom.pose.a, 
 			 geom.size.x/2.0, 0.05 );
     }
-  
-  
+    
   return 0;
 }
 

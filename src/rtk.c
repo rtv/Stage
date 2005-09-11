@@ -21,7 +21,7 @@
 /*
  * Desc: Stk application functions
  * Author: Andrew Howard
- * CVS: $Id: rtk.c,v 1.6 2005-07-14 23:37:23 rtv Exp $
+ * CVS: $Id: rtk.c,v 1.7 2005-09-11 21:13:26 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -57,12 +57,6 @@ int stg_rtk_initxx(int *argc, char ***argv)
 
   // Allow rgb image handling
   gdk_rgb_init();
-
-#ifdef ENABLE_AVCODEC
-  // Allow movie capture
-  avcodec_init();
-  avcodec_register_all();
-#endif
 
   return 0;
 }
@@ -138,8 +132,9 @@ void stg_rtk_app_main_init(stg_rtk_app_t *app)
   //stg_rtk_table_t *table;
   
   // Display everything
-  for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-    gtk_widget_show_all(canvas->frame);
+  //for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
+  //gtk_widget_show_all(canvas->frame);
+
   //for (table = app->table; table != NULL; table = table->next)
   //gtk_widget_show_all(table->frame);
 
@@ -177,7 +172,8 @@ int stg_rtk_app_main_loop(stg_rtk_app_t *app)
   {
     for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
       if (!canvas->destroyed)
-        gtk_widget_destroy(canvas->frame);
+        gtk_widget_destroy(canvas->canvas);
+
     //for (table = app->table; table != NULL; table = table->next)
     //if (!table->destroyed)
     //  gtk_widget_destroy(table->frame);
@@ -186,4 +182,3 @@ int stg_rtk_app_main_loop(stg_rtk_app_t *app)
 
   return app->must_quit;
 }
-

@@ -129,6 +129,8 @@ Gazebo, it's called Player/Gazebo. Gazebo without Player is just
 
 */
 
+
+
 int stg_init( int argc, char** argv )
 {
   g_type_init(); // glib GObject initialization
@@ -136,8 +138,14 @@ int stg_init( int argc, char** argv )
   if( ! _stg_disable_gui )
     {
       // TODO - don't start the GUI if it was disabled
-      //puts( "GUI_STARTUP" );x
+      //puts( "GUI_STARTUP" );
       gui_startup( &argc, &argv );
+
+      //int debug_gtk_argc = 2;
+      //char* debug_gtk_argv[2];
+      //debug_gtk_argv[0] = argv[0];
+      //debug_gtk_argv[1] = "--g-fatal-warnings";
+      //gui_startup( &debug_gtk_argc, &debug_gtk_argv );
     }
 
   // this forces use of decimal points in the config file rather than
@@ -750,6 +758,9 @@ void stg_polygons_normalize( stg_polygon_t* polys, int num,
 	  if( pt->y < miny ) miny = pt->y;
 	  if( pt->x > maxx ) maxx = pt->x;
 	  if( pt->y > maxy ) maxy = pt->y;	  
+
+	  assert( ! isnan( pt->x ) );
+	  assert( ! isnan( pt->y ) );
 	}      
     }
   
@@ -768,6 +779,9 @@ void stg_polygons_normalize( stg_polygon_t* polys, int num,
 	  
 	  pt->x = ((pt->x - minx) / scalex * width) - width/2.0;
 	  pt->y = ((pt->y - miny) / scaley * height) - height/2.0;
+
+	  assert( ! isnan( pt->x ) );
+	  assert( ! isnan( pt->y ) );
 	}
     }
 }

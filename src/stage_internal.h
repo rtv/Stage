@@ -7,6 +7,10 @@
 #include "stage.h"
 #include "math.h" // for lrint() in macros
 
+#if INCLUDE_GNOME
+#include "gnome.h"
+#endif
+
 
 /** 
     @ingroup libstage
@@ -14,6 +18,7 @@
     @{ 
 */
 
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +29,24 @@ extern "C" {
   {
     stg_rtk_canvas_t* canvas;
     
+    // Gtk stuff
+    GtkWidget* frame;    
+    GtkWidget *layout;
+    GtkWidget *menu_bar;
+    //GtkWidget* scrolled_win;
+  
+    // The status bar widget
+    GtkStatusbar *status_bar;
+    GtkProgressBar *perf_bar;
+    GtkProgressBar *rt_bar;
+    GtkLabel *clock_label;
+
+#if INCLUDE_GNOME
+    // temporary and experimnental - will get moved away from here soon - rtv
+    GnomeCanvas* gcanvas;
+    double zoom;
+#endif
+
     stg_world_t* world; // every window shows a single world
     
     // stg_rtk doesn't support status bars, so we'll use gtk directly
@@ -164,6 +187,14 @@ extern "C" {
 
     // a datalist of stg_rtk_figs, indexed by name (string)
     GData* figs; 
+
+    // a datalist of gnomecanvasitems, indexed by name (string)
+    //GData* gcitems;
+    
+#if INCLUDE_GNOME
+    GnomeCanvasGroup* grp;
+    GnomeCanvasGroup* cgrp;
+#endif
 
     // the number of children of each type is counted so we can
     // automatically generate names for them

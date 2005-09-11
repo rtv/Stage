@@ -6,8 +6,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
-//  $Author: gerkey $
-//  $Revision: 1.77 $
+//  $Author: rtv $
+//  $Revision: 1.78 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +33,16 @@ extern stg_rtk_fig_t* fig_debug_rays;
 #define STG_DEFAULT_LASER_MAXRANGE 8.0
 #define STG_DEFAULT_LASER_FOV M_PI
 #define STG_DEFAULT_LASER_SAMPLES 180
+
+// use gnomecanvas graphics callbacks if requested
+#if INCLUDE_GNOME
+ #include "gnome.h"
+ #define LASER_DATA_RENDER_CALLBACK laser_render_data_gc
+ #define LASER_DATA_UNRENDER_CALLBACK laser_unrender_data_gc
+#else
+ #define LASER_DATA_RENDER_CALLBACK laser_render_data
+ #define LASER_DATA_UNRENDER_CALLBACK laser_unrender_data
+#endif
 
 /**
 @ingroup model
@@ -171,9 +181,9 @@ int laser_init( stg_model_t* mod )
 
   // adds a menu item and associated on-and-off callbacks
   stg_model_add_property_toggles( mod, "laser_data", 
-				  laser_render_data, // called when toggled on
+				  LASER_DATA_RENDER_CALLBACK, // called when toggled on
 				  NULL, 
-				  laser_unrender_data, // called when toggled off
+				  LASER_DATA_UNRENDER_CALLBACK, // called when toggled off
 				  NULL, 
 				  "laser data",
 				  TRUE );
@@ -324,6 +334,7 @@ int laser_unrender_data( stg_model_t* mod, char* name,
 {
   stg_model_fig_clear( mod, "laser_data_fig" );
   stg_model_fig_clear( mod, "laser_data_bg_fig" );  
+  
   return 1; // callback just runs one time
 }
 
@@ -375,7 +386,7 @@ int laser_render_data( stg_model_t* mod, char* name,
 	  
 	  points[1+s].x = (samples[s].range/1000.0) * cos(bearing);
 	  points[1+s].y = (samples[s].range/1000.0) * sin(bearing);
-	  bearing += sample_incr;
+	  bearing += sample_incr;	  
 	}
       
       // hmm, what's the right cast to get rid of the compiler warning
@@ -403,9 +414,12 @@ int laser_render_data( stg_model_t* mod, char* name,
 	      stg_rtk_fig_color_rgb32( fg, laser_color );
 	    }
 	}
+
       
       free( points );
     }
+  
+  
   return 0; // callback runs until removed
 }
 
