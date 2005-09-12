@@ -15,7 +15,10 @@
 #include "gui.h"
 
 #if INCLUDE_GNOME
-#include "gnome.h"
+ #include "gnome.h"
+ #define POLYGON_RENDER_CALLBACK model_render_polygons_gc
+#else
+ #define POLYGON_RENDER_CALLBACK model_render_polygons
 #endif
 
   // basic model
@@ -240,7 +243,14 @@ void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 void storage_ordinary( stg_property_t* prop, 
 		       void* data, size_t len )
 {
-  prop->data = realloc( prop->data, len );
+  if( len > 0 )
+    prop->data = realloc( prop->data, len );
+  else
+    {
+      free( prop->data );
+      prop->data = NULL;
+    }
+  
   prop->len = len;
   memcpy( prop->data, data, len );
 }
@@ -252,6 +262,15 @@ void storage_polygons( stg_property_t* prop,
 {
   assert(prop);
   
+  if( data == NULL )
+    assert( len == 0 );
+  
+  if( len == 0 )
+    assert( data == NULL );
+  
+  if( data )
+    assert( len > 0 );
+
   //printf( "model %d(%s) received %d bytes (%d polygons)\n", 
   //  prop->mod->id, prop->mod->token, (int)len, (int)(len / sizeof(stg_polygon_t)));
   
@@ -264,22 +283,26 @@ void storage_polygons( stg_property_t* prop,
     {
       assert(data);
       
+      stg_model_map( prop->mod, 0 ); // unmap the model from the matrix
+
+      stg_geom_t geom;
+      stg_model_get_geom( prop->mod, &geom );
+      
       stg_polygon_t* polys = (stg_polygon_t*)data;
       size_t count = len / sizeof(stg_polygon_t);
       
-      stg_geom_t* geom = 
-	stg_model_get_property_fixed( prop->mod, "geom", sizeof(stg_geom_t));
-      
-      
       // normalize the polygons to fit exactly in the model's body
-      // rectangle (if specified)
-      if( geom )
-	stg_polygons_normalize( polys, count, geom->size.x, geom->size.y );
-      
-      stg_model_map( prop->mod, 0 ); // unmap the model from the matrix
-      
+      // rectangle (if the model has some non-zero size)
+      if( geom.size.x > 0.0 && geom.size.y > 0.0 )
+	stg_polygons_normalize( polys, count, geom.size.x, geom.size.y );
+      else
+	PRINT_WARN3( "setting polygons for model %s which has non-positive area (%.2f,%.2f)",
+		     prop->mod->token, geom.size.x, geom.size.y );
+
+      // store the polygons as a property
       storage_ordinary( prop, polys, len );
       
+      // if the model has some non-zero
       stg_model_map( prop->mod, 1 ); // map the model into the matrix with the new polys
     }
 } 
@@ -296,7 +319,7 @@ void storage_geom( stg_property_t* prop,
   
   // we probably need to scale and re-render our polygons
   stg_model_property_refresh( prop->mod, "polygons" );
-  stg_model_property_refresh( prop->mod, "nose" );
+  //stg_model_property_refresh( prop->mod, "nose" );
   
   // re-render int the matrix
   stg_model_map( prop->mod, 1 );  
@@ -455,25 +478,20 @@ stg_model_t* stg_model_create( stg_world_t* world,
   GnomeCanvasGroup* parent_grp =
     mod->parent ? mod->parent->grp : gnome_canvas_root( mod->world->win->gcanvas );
   
-  mod->grp =
+  mod->grp = GNOME_CANVAS_GROUP(
     gnome_canvas_item_new( parent_grp,
 			   gnome_canvas_group_get_type(),
 			   "x", pose.x,
 			   "y", pose.y,
-			   NULL );
+			   NULL ));
 
-  gnome_canvas_item_raise_to_top( mod->grp );
+  gnome_canvas_item_raise_to_top( GNOME_CANVAS_ITEM(mod->grp) );
 #endif
 
   // exterimental: creates a menu of models
   gui_add_tree_item( mod );
   
-#if INCLUDE_GNOME
-  stg_model_add_property_callback( mod, "polygons", model_render_polygons_gc, NULL );
-#else
-  stg_model_add_property_callback( mod, "polygons", model_render_polygons, NULL );
-#endif
-
+  stg_model_add_property_callback( mod, "polygons", POLYGON_RENDER_CALLBACK, NULL );
   stg_model_add_property_callback( mod, "mask", model_handle_mask, NULL );
   stg_model_add_property_callback( mod, "nose", model_render_nose, NULL );
   stg_model_add_property_callback( mod, "grid", model_render_grid, NULL );
@@ -696,7 +714,8 @@ void stg_model_map( stg_model_t* mod, gboolean render )
   stg_geom_t geom;
   stg_model_get_geom( mod, &geom );
   
-  if( polys )
+  // to be drawn, we must have a body and some extent greater than zero
+  if( polys && geom.size.x > 0.0 && geom.size.y > 0.0 )
     {
       if( render && count )
 	{      
@@ -894,6 +913,16 @@ void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest )
   memcpy( dest, g, sizeof(stg_geom_t));
 }
 
+void stg_model_get_pose( stg_model_t* mod, stg_pose_t* dest )
+{
+  assert(mod);
+  assert(dest);
+  stg_pose_t* p = stg_model_get_property_fixed( mod,
+						"pose", 
+						sizeof(stg_pose_t));
+  memcpy( dest, p, sizeof(stg_pose_t));
+}
+
 
 stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
 {
@@ -958,6 +987,13 @@ void stg_model_set_property_ex( stg_model_t* mod,
 				size_t len,
 				stg_property_storage_func_t func )
 {
+  assert(mod);
+  assert(propname);
+  
+  // make sure the data and len fields agree
+  if( data == NULL ){ assert( len == 0 ); }
+  if( len == 0 )    { assert( data == NULL ); }
+  
   stg_model_set_property( mod, propname, data, len );
   
   stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
@@ -970,6 +1006,13 @@ void stg_model_set_property( stg_model_t* mod,
 			     void* data, 
 			     size_t len )
 {
+  assert(mod);
+  assert(propname);
+  
+  // make sure the data and len fields agree
+  if( data == NULL ){ assert( len == 0 ); }
+  if( len == 0 )    { assert( data == NULL ); }
+     
   stg_property_t* prop = g_datalist_get_data( &mod->props, propname );
   
   if( prop == NULL )
@@ -1403,12 +1446,24 @@ void stg_model_property_refresh( stg_model_t* mod, const char* propname )
   size_t len=0;
   void* data = stg_model_get_property( mod, propname, &len );
 
-  void* buf = malloc(len);
-  memcpy(buf,data,len);
+  void* buf = NULL;
+  
+  if( data == NULL )
+    { assert( len == 0 ); }
 
+  if( len == 0 )
+    { assert( data == NULL ); }
+
+  if( len > 0 )
+    {
+      buf = malloc(len);
+      memcpy(buf,data,len);
+    }
+  
   stg_model_set_property( mod, propname, buf, len );
 
-  free(buf);
+  if( buf ) 
+    free(buf);
 }
 
 
@@ -1625,6 +1680,8 @@ void stg_model_load( stg_model_t* mod )
   // if we created any polygons
   if( polycount != -1 )
     {
+      if( polycount == 0 )
+	PRINT_WARN1( "model \"%s\" has zero polygons", mod->token );
       stg_model_set_property_ex( mod, "polygons",  
 				 polys, polycount*sizeof(stg_polygon_t), storage_polygons );
       stg_model_property_refresh( mod, "polygons" );

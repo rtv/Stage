@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.159 2005-09-11 21:13:26 rtv Exp $
+ * CVS: $Id: stage.h,v 1.160 2005-09-12 06:17:31 rtv Exp $
  */
 
 
@@ -556,9 +556,17 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /** Change a model's parent - experimental*/
   int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent);
   
+  /** Get a model's geometry - it's size and local pose (offset from
+      origin in local coords) */
   void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest );
+
+  /** Get the pose of a model in its parent's coordinate system  */
+  void stg_model_get_pose( stg_model_t* mod, stg_pose_t* dest );
+
+  /** Get a model's velocity (in its local reference frame) */
   void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
   
+  /** Set a named property of a model */
   void stg_model_set_property( stg_model_t* mod, 
 			       const char* prop, 
 			       void* data, 

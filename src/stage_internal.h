@@ -111,6 +111,9 @@ extern "C" {
 			  gboolean  is_active,
 			  void* userdata );
 
+  void gui_add_tree_item( stg_model_t* mod );
+
+
   // callback functions
   //typedef void(*func_init_t)(struct _stg_model*);
   typedef int(*func_update_t)(struct _stg_model*);

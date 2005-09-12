@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.11 2005-09-11 21:13:26 rtv Exp $
+ * CVS: $Id: p_laser.cc,v 1.12 2005-09-12 06:17:31 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -205,25 +205,14 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
       stg_geom_t geom;
       stg_model_get_geom( this->mod, &geom );
 
-      // BPG - I think the laser should report its pose, not its origin,
-      // when asked for geometry.
-      stg_pose_t* pose = 
-	      (stg_pose_t*)stg_model_get_property_fixed( this->mod, "pose", 
-	  						 sizeof(stg_pose_t));
-
-      PRINT_DEBUG5( "received laser geom: %.2f %.2f %.2f -  %.2f %.2f",
-  		    pose->x, 
-  		    pose->y, 
-  		    pose->a, 
-  		    geom.size.x, 
-  		    geom.size.y ); 
+      stg_pose_t pose;
+      stg_model_get_pose( this->mod, &pose);
 
       // fill in the geometry data formatted player-like
       player_laser_geom_t pgeom;
-      pgeom.pose.px = pose->x;
-      pgeom.pose.py = pose->y;
-      pgeom.pose.pa = pose->a;
-
+      pgeom.pose.px = pose.x;
+      pgeom.pose.py = pose.y;
+      pgeom.pose.pa = pose.a;
       pgeom.size.sl = geom.size.x;
       pgeom.size.sw = geom.size.y;
 

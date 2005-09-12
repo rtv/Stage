@@ -741,6 +741,9 @@ stg_polygon_t* stg_unit_polygon_create( void )
 void stg_polygons_normalize( stg_polygon_t* polys, int num, 
 			     double width, double height )
 {
+  if( num == 0 )
+    return;
+
   // assuming the rectangles fit in a square +/- one billion units
   double minx, miny, maxx, maxy;
   minx = miny = BILLION;

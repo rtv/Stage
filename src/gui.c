@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.96 2005-09-11 21:13:26 rtv Exp $
+CVS: $Id: gui.c,v 1.97 2005-09-12 06:17:31 rtv Exp $
 */
 
 #include <stdio.h>
@@ -252,7 +252,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   contents = gtk_scrolled_window_new( NULL, NULL );
   
-  win->gcanvas = gnome_canvas_new_aa();
+  win->gcanvas = GNOME_CANVAS(gnome_canvas_new_aa());
   gtk_container_add( GTK_CONTAINER(contents), 
 		     GTK_WIDGET(win->gcanvas) );
 
@@ -271,7 +271,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 		    G_CALLBACK(background_event_callback), 
 		    world );
   
-  GnomeCanvasGroup* grp = 
+  GnomeCanvasItem* grp = 
     gnome_canvas_item_new( gnome_canvas_root(win->gcanvas),
 			   gnome_canvas_group_get_type(),
 			   NULL );
@@ -280,8 +280,8 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   gnome_canvas_item_move( grp, world->width, 0 );
 
 
-  GnomeCanvasItem *it = 
-    gnome_canvas_item_new( grp,
+  //GnomeCanvasItem *it = 
+    gnome_canvas_item_new( GNOME_CANVAS_GROUP(grp),
 			   gnome_canvas_widget_get_type(),
 			   "width", world->width,
 			   "height", world->height,
@@ -294,7 +294,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   double flip[6];  
   art_affine_identity( flip );
   art_affine_flip( flip, flip, FALSE, TRUE );
-  gnome_canvas_item_affine_relative( gnome_canvas_root(win->gcanvas),
+  gnome_canvas_item_affine_relative( GNOME_CANVAS_ITEM(gnome_canvas_root(win->gcanvas)),
 				     flip );
 
   win->zoom = 50.0;
@@ -796,7 +796,7 @@ void gui_model_create( stg_model_t* mod )
 {
   PRINT_DEBUG( "gui model create" );
   
-  gui_window_t* win = mod->world->win;  
+  //gui_window_t* win = mod->world->win;  
 
   stg_rtk_fig_t* parent = mod->world->win->bg;
   
@@ -887,8 +887,8 @@ void gui_model_move( stg_model_t* mod )
 #if INCLUDE_GNOME
       double r[6], t[6];
       art_affine_rotate(r,RTOD(pose->a));
-      gnome_canvas_item_affine_absolute( mod->grp, r );
-      gnome_canvas_item_set( mod->grp,
+      gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(mod->grp), r );
+      gnome_canvas_item_set( GNOME_CANVAS_ITEM(mod->grp),
 			     "x", pose->x,
 			     "y", pose->y,
 			     NULL );

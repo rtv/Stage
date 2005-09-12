@@ -46,7 +46,7 @@ background_event_callback(GnomeCanvasItem* item,
 	case 3:
 	  cursor = gdk_cursor_new(GDK_SIZING);
 	  zoom = TRUE;
-	  gtk_widget_get_pointer( world->win->gcanvas, 
+	  gtk_widget_get_pointer( GTK_WIDGET(world->win->gcanvas), 
 				  &pixel_start_x,
 				  &pixel_start_y );
 	  
@@ -70,11 +70,11 @@ background_event_callback(GnomeCanvasItem* item,
     case GDK_MOTION_NOTIFY:
       if (dragging && (event->motion.state & GDK_BUTTON1_MASK)) 
         {
-	  GnomeCanvasItem* root = gnome_canvas_root(world->win->gcanvas);
-	  gnome_canvas_item_w2i( root, 
+	  GnomeCanvasGroup* root = gnome_canvas_root(world->win->gcanvas);
+	  gnome_canvas_item_w2i( GNOME_CANVAS_ITEM(root), 
 				 &item_x, &item_y );
 
-	  static double x=50.0, y=0;
+	  static double x=50.0;
 	  //gnome_canvas_set_scroll_region( world->win->gcanvas, 
 	  //			  x, y, 10.0, 10.0 );
 	  
@@ -90,7 +90,8 @@ background_event_callback(GnomeCanvasItem* item,
       if( zoom && (event->motion.state & GDK_BUTTON3_MASK)) 
 	{
 	  int px, py;
-	  gtk_widget_get_pointer(  world->win->gcanvas, &px, &py );
+	  gtk_widget_get_pointer( GTK_WIDGET(world->win->gcanvas), 
+				  &px, &py );
 
 	  printf( "px: %d %d  \n", px, py );
 
@@ -102,7 +103,7 @@ background_event_callback(GnomeCanvasItem* item,
 	  
 	  // cx, cy is the dimension of the whole canvas in pixels
 	  int cx, cy;
-	  gtk_layout_get_size( world->win->gcanvas, &cx, &cy );
+	  gtk_layout_get_size( GTK_LAYOUT(world->win->gcanvas), &cx, &cy );
 	  printf( "layout cx: %d cy: %d\n", cx, cy );
 
 	  
@@ -152,7 +153,7 @@ gint model_event_callback(GnomeCanvasItem* item,
   double item_x = event->button.x;
   double item_y = event->button.y;
   
-  double start_item_x, start_item_y;
+  double start_item_x=0.0, start_item_y=0.0;
   
   static GnomeCanvasItem* hilite = NULL;
   
@@ -214,7 +215,7 @@ gint model_event_callback(GnomeCanvasItem* item,
     case GDK_LEAVE_NOTIFY:
       puts( "leave" );
       
-      gtk_object_destroy( hilite );
+      gtk_object_destroy( GTK_OBJECT(hilite) );
       
       // get rid of the selection info
       mod->world->win->selection_active = NULL;     
@@ -275,6 +276,25 @@ int model_render_polygons_gc(  stg_model_t* mod, char* name,
 {
   //printf( "render polygons for model %s\n", mod->token );
 
+  if( len == 0 )
+    //printf( "len %d data %p\n", (int)len, data );
+    assert( data == NULL );
+
+  if( data == NULL )
+    assert( len == 0 );
+
+  //if( ! data ) 
+  //{
+  //  PRINT_WARN1( "no polys for model %s", mod->token );
+  //  return 0;
+  //}
+
+ /*  if( len == 0  )  */
+/*     { */
+/*       PRINT_WARN1( "poly data len is zero for model %s", mod->token ); */
+/*       return 0; */
+/*     } */
+
   stg_color_t *cp = 
     stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
   
@@ -283,35 +303,37 @@ int model_render_polygons_gc(  stg_model_t* mod, char* name,
   size_t count = len / sizeof(stg_polygon_t);
   stg_polygon_t* polys = (stg_polygon_t*)data;
   
-  if( ! polys ) PRINT_WARN1( "no polys for model %s", mod->token );
 
   stg_geom_t geom;
   stg_model_get_geom(mod, &geom);
   
-  stg_pose_t* pose = 
-    stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
-  
-  
   // fetch our group of gnome canvas polygons
   GnomeCanvasGroup* pgrp = NULL;
   
+  size_t pp_len = 0;
   void** pp = (void**)
-    stg_model_get_property_fixed( mod, "model_gpolygroup", sizeof(void**) );	       		  
-  if( pp )
+    stg_model_get_property( mod, "model_gpolygroup", &pp_len );	       		  
+  if( pp && pp_len == sizeof(GnomeCanvasGroup*) )
     pgrp = *(GnomeCanvasGroup**)pp;
   
+  //printf( "model %s pgrp %p\n", mod->token, pgrp );
+
   // and destroy it - deleting all the drawing items inside the group
   if( pgrp )
-    gtk_object_destroy( GTK_OBJECT(pgrp) );
-  
+    {
+      gtk_object_destroy( GTK_OBJECT(pgrp) );
+      // don't have a group anymore
+      stg_model_set_property( mod, "model_gpolygroup", NULL, 0 );      
+    }
+
   if( polys && len > 0 )
     {
       //printf( "rendering %d polygons\n", count );
 
       // create a new group
-      pgrp = gnome_canvas_item_new( mod->grp,
-				    gnome_canvas_group_get_type(),
-				    NULL );
+      pgrp = GNOME_CANVAS_GROUP(gnome_canvas_item_new( mod->grp,
+						       gnome_canvas_group_get_type(),
+						       NULL ));
       
       stg_movemask_t* mask = 
 	stg_model_get_property_fixed( mod, "mask", sizeof(stg_movemask_t));
@@ -364,7 +386,7 @@ int model_render_polygons_gc(  stg_model_t* mod, char* name,
 	      art_affine_translate( local_trans, geom.pose.x, geom.pose.y );
 	      art_affine_rotate( local_rot, RTOD(geom.pose.a) );
 	      art_affine_multiply( local_trans, local_trans, local_rot );
-	      gnome_canvas_item_affine_relative( pgrp, local_trans );
+	      gnome_canvas_item_affine_relative( GNOME_CANVAS_ITEM(pgrp), local_trans );
 	    }
 	}
     }
@@ -409,10 +431,10 @@ int laser_render_data_gc( stg_model_t* mod, char* name,
   stg_laser_sample_t* samples = (stg_laser_sample_t*)data; 
   size_t sample_count = len / sizeof(stg_laser_sample_t);
   
-  GnomeCanvasPolygon* gp = NULL;
+  GnomeCanvasItem* gp = NULL;
   void** gpp = stg_model_get_property_fixed( mod, "laser_data_gpolygon", sizeof(void**));
   if( gpp )
-    gp = *(GnomeCanvasPolygon**)gpp;
+    gp = *(GnomeCanvasItem**)gpp;
   
   // create a poly and a points structure if they don't exist already
   if( ! gp )
@@ -424,7 +446,7 @@ int laser_render_data_gc( stg_model_t* mod, char* name,
 				  "width-pixels", 1,
 				  NULL );
       gnome_canvas_item_lower_to_bottom( gp );
-
+      
       stg_model_set_property( mod, "laser_data_gpolygon", &gp, sizeof(gp));
     }
   
@@ -461,12 +483,12 @@ int laser_render_data_gc( stg_model_t* mod, char* name,
 int laser_unrender_data_gc( stg_model_t* mod, char* name, 
 			 void* data, size_t len, void* userp )
 {
-  GnomeCanvasPolygon* gp = NULL;
+  GnomeCanvasItem* gp = NULL;
   void** gpp = stg_model_get_property_fixed( mod, "laser_data_gpolygon", sizeof(void**));
   if( gpp )
-    gp = *(GnomeCanvasPolygon**)gpp;
+    gp = *(GnomeCanvasItem**)gpp;
 
-  gtk_object_destroy( gp );
+  gtk_object_destroy( GTK_OBJECT(gp) );
 
   stg_model_set_property( mod, "laser_data_gpolygon", NULL, 0 );
 

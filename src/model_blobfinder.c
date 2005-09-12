@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.49 2005-08-10 23:57:19 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.50 2005-09-12 06:17:31 rtv Exp $
  */
 
 #include <math.h>
@@ -122,8 +122,6 @@ int blobfinder_init( stg_model_t* mod )
   mod->f_update = NULL;// installed at startup/shutdown
   mod->f_load = blobfinder_load;
   
-  // remove the polygon: sensor has no body
-  stg_model_set_property( mod, "polygons", NULL, 0 );
   
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
@@ -154,6 +152,8 @@ int blobfinder_init( stg_model_t* mod )
   //PRINT_WARN2( "init channel %d has val %X", c, cfg.channels[c] );
   
   stg_model_set_property( mod, "blob_data", NULL, 0 );
+
+  stg_model_set_property( mod, "polygons", NULL, 0 );
   
   stg_model_add_property_toggles( mod, "blob_data", 
 				  blobfinder_render_data, // called when toggled on

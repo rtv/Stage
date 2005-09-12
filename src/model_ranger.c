@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.55 $
+//  $Revision: 1.56 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -221,7 +221,7 @@ int ranger_init( stg_model_t* mod )
   stg_model_add_property_toggles( mod, "ranger_data", 
 				  ranger_render_data, // called when toggled on
 				  NULL,
-				  ranger_unrender_data,
+				  ranger_unrender_data, // called when toggled off
 				  NULL,
 				  "ranger data",
 				  TRUE );

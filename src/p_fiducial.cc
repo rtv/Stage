@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_fiducial.cc,v 1.3 2005-08-08 19:00:37 rtv Exp $
+ * CVS: $Id: p_fiducial.cc,v 1.4 2005-09-12 06:17:31 rtv Exp $
  */
 
 // DOCUMENTATION
@@ -33,12 +33,16 @@
 @par Fiducial interface
 
 - Data
+  - PLAYER_FIDUCIAL_DATA_SCAN
 - Configs
-  - PLAYER_FIDUCIAL_GET_GEOM_REQ
+  - PLAYER_FIDUCIAL_GET_GEOM
+  - PLAYER_FIDUCIAL_SET_ID
+  - PLAYER_FIDUCIAL_GET_ID
+*/
+
+/* TODO
   - PLAYER_FIDUCIAL_SET_FOV_REQ
   - PLAYER_FIDUCIAL_GET_FOV_REQ
-  - PLAYER_FIDUCIAL_SET_ID_REQ
-  - PLAYER_FIDUCIAL_GET_ID_REQ
 */
 
 // CODE
@@ -49,11 +53,13 @@ extern "C" {
 int fiducial_init( stg_model_t* mod );
 }
 
-InterfaceFiducial::InterfaceFiducial(  player_device_id_t id, StgDriver* driver, ConfigFile* cf, int section )
-  : InterfaceModel( id, driver, cf, section, fiducial_init )
+InterfaceFiducial::InterfaceFiducial(  player_devaddr_t addr, 
+				       StgDriver* driver, 
+				       ConfigFile* cf, 
+				       int section )
+  : InterfaceModel( addr, driver, cf, section, fiducial_init )
 {
-  this->data_len = sizeof(player_fiducial_data_t);
-  this->cmd_len = 0; // no commands
+  // nothing to do...
 }
 
 void InterfaceFiducial::Publish( void )
@@ -70,14 +76,15 @@ void InterfaceFiducial::Publish( void )
       size_t fcount = len / sizeof(stg_fiducial_t);      
       assert( fcount > 0 );
       
-      pdata.count = htons((uint16_t)fcount);
+      pdata.fiducials_count = htons((uint16_t)fcount);
       
       //printf( "reporting %d fiducials\n",
       //      fcount );
 
       if( fcount > PLAYER_FIDUCIAL_MAX_SAMPLES )
 	{
-	  PRINT_WARN2( "A Stage model has detected more fiducials than will fit in Player's buffer (%d/%d)\n",
+	  PRINT_WARN2( "A Stage model has detected more fiducials than"
+		       " will fit in Player's buffer (%d/%d)\n",
 		      fcount, PLAYER_FIDUCIAL_MAX_SAMPLES );
 	  fcount = PLAYER_FIDUCIAL_MAX_SAMPLES;
 	}
@@ -102,43 +109,93 @@ void InterfaceFiducial::Publish( void )
     }
   
   // publish this data
-  this->driver->PutData( this->id, &pdata, sizeof(pdata), NULL);
+  this->driver->Publish( this->addr, NULL,
+			 PLAYER_MSGTYPE_DATA,
+			 PLAYER_FIDUCIAL_DATA_SCAN,
+			 &pdata, sizeof(pdata), NULL);
 }
 
-void InterfaceFiducial::Configure( void* client, void* src, size_t len  )
+int InterfaceFiducial::ProcessMessage(MessageQueue* resp_queue,
+				      player_msghdr_t* hdr,
+				      void* data )
 {
   //printf("got fiducial request\n");
-
-  // switch on the config type (first byte)
-  uint8_t* buf = (uint8_t*)src;
-  switch( buf[0] )
-    {  
-    case PLAYER_FIDUCIAL_GET_GEOM:
-      {	
-	// just get the model's geom - Stage doesn't have separate
-	// fiducial geom (yet)
-	stg_geom_t geom;
-	stg_model_get_geom(this->mod,&geom);
-	
-	// fill in the geometry data formatted player-like
-	player_fiducial_geom_t pgeom;
-	pgeom.pose[0] = htons((uint16_t)(1000.0 * geom.pose.x));
-	pgeom.pose[1] = htons((uint16_t)(1000.0 * geom.pose.y));
-	pgeom.pose[2] = htons((uint16_t)RTOD( geom.pose.a));
-	
-	pgeom.size[0] = htons((uint16_t)(1000.0 * geom.size.x)); 
-	pgeom.size[1] = htons((uint16_t)(1000.0 * geom.size.y)); 
-	
-	pgeom.fiducial_size[0] = ntohs((uint16_t)100); // TODO - get this info
-	pgeom.fiducial_size[1] = ntohs((uint16_t)100);
-	
-	if( this->driver->PutReply(  this->id, client, PLAYER_MSGTYPE_RESP_ACK,  
-				       &pgeom, sizeof(pgeom), NULL ) != 0 )
-	  DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_GEOM");      
-      }
-      break;
+  
+  // Is it a request to get the geometry?
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+                           PLAYER_FIDUCIAL_GET_GEOM, 
+                           this->addr))
+    {
+      stg_geom_t geom;
+      stg_model_get_geom( this->mod, &geom );
       
-    case PLAYER_FIDUCIAL_SET_FOV:
+      stg_pose_t pose;
+      stg_model_get_pose( this->mod, &pose );
+      
+      // fill in the geometry data formatted player-like
+      player_laser_geom_t pgeom;
+      pgeom.pose.px = pose.x;
+      pgeom.pose.py = pose.y;
+      pgeom.pose.pa = pose.a;      
+      pgeom.size.sl = geom.size.x;
+      pgeom.size.sw = geom.size.y;
+      
+      this->driver->Publish(this->addr, resp_queue,
+			    PLAYER_MSGTYPE_RESP_ACK, 
+			    PLAYER_FIDUCIAL_GET_GEOM,
+			    (void*)&pgeom, sizeof(pgeom), NULL);
+      return(0);
+    }
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+				PLAYER_FIDUCIAL_SET_ID, 
+				this->addr))
+    {  
+      if( hdr->size == sizeof(player_fiducial_id_t) )
+	{
+	  // copy the new ID 
+	  player_fiducial_id_t* incoming = (player_fiducial_id_t*)data;
+	  
+	  // Stage uses a simple int for IDs.
+	  stg_fiducial_return_t id = incoming->id;
+	  
+	  stg_model_set_property( this->mod, "fidicial_return", &id, sizeof(id));
+	  
+	  player_fiducial_id_t pid;
+	  pid.id = id;
+
+	  // acknowledge, including the new ID
+	  this->driver->Publish(this->addr, resp_queue,
+				PLAYER_MSGTYPE_RESP_ACK, 
+				PLAYER_FIDUCIAL_SET_ID,
+				(void*)&pid, sizeof(pid) );
+	}
+      else
+	{
+	  PRINT_ERR2("Incorrect packet size setting fiducial ID (%d/%d)",
+		     (int)hdr->size, (int)sizeof(player_fiducial_id_t) );      
+	  return(-1); // error - NACK is sent automatically
+	}
+    }  
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+				PLAYER_FIDUCIAL_GET_ID, 
+				this->addr))
+    {
+      stg_fiducial_return_t* ret = (stg_fiducial_return_t*) 
+	stg_model_get_property_fixed( this->mod, 
+				      "fidicial_return",
+				      sizeof(stg_fiducial_return_t));
+      
+      // fill in the data formatted player-like
+      player_fiducial_id_t pid;
+      pid.id = *ret;
+      
+      // acknowledge, including the new ID
+      this->driver->Publish(this->addr, resp_queue,
+			    PLAYER_MSGTYPE_RESP_ACK, 
+			    PLAYER_FIDUCIAL_GET_ID,
+			    (void*)&pid, sizeof(pid) );      
+    }      
+  /*    case PLAYER_FIDUCIAL_SET_FOV:
       
       if( len == sizeof(player_fiducial_fov_t) )
 	{
@@ -183,46 +240,16 @@ void InterfaceFiducial::Configure( void* client, void* src, size_t len  )
 		       "PLAYER_FIDUCIAL_GET_FOV or PLAYER_FIDUCIAL_SET_FOV");      
       }
       break;
-      
-    case PLAYER_FIDUCIAL_SET_ID:
-      
-      if( len == sizeof(player_fiducial_id_t) )
-	{
-	  int id = ntohl(((player_fiducial_id_t*)src)->id);
-	  
-	  stg_model_set_property( this->mod, "fidicial_return", &id, sizeof(id));
-	}
-      else
-	PRINT_ERR2("Incorrect packet size setting fiducial ID (%d/%d)",
-		     (int)len, (int)sizeof(player_fiducial_id_t) );      
-      
-      // deliberate no-break - SET_ID needs the current ID as a reply
-
-  case PLAYER_FIDUCIAL_GET_ID:
-      {
-	stg_fiducial_return_t* ret = (stg_fiducial_return_t*) 
-	  stg_model_get_property_fixed( this->mod, 
-					"fidicial_return",
-					sizeof(stg_fiducial_return_t));
-
-	// fill in the data formatted player-like
-	player_fiducial_id_t pid;
-	pid.id = htonl((int)*ret);
-	
-	if( this->driver->PutReply(  this->id, client, PLAYER_MSGTYPE_RESP_ACK, 
-				       &pid, sizeof(pid), NULL ) != 0 )
-	  DRIVER_ERROR("PutReply() failed for "
-		       "PLAYER_FIDUCIAL_GET_ID or PLAYER_FIDUCIAL_SET_ID");      
-      }
-      break;
-      
-      
-    default:
-      {
-	PRINT_WARN1( "Warning: stg_fiducial doesn't support config id %d\n", buf[0] );
-        if ( this->driver->PutReply( this->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0) 
-          DRIVER_ERROR("PutReply() failed");
-      }
+  */
+ 
+  else
+    {
+      // Don't know how to handle this message.
+      PRINT_WARN2( "stg_fiducial doesn't support msg with type/subtype %d/%d",
+		   hdr->type, hdr->subtype);
+      return(-1);
     }  
+
+  return 0;
 }
 
