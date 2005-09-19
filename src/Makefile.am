@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.119 2005-09-12 06:17:30 rtv Exp $
+# $Id: Makefile.am,v 1.120 2005-09-19 23:35:47 gerkey Exp $
 
 # also build Zoo referees
 #SUBDIRS = referees
@@ -63,7 +63,7 @@ libstage_la_SOURCES = \
 
 #libstage_la_CFLAGS = $(AM_CFLAGS) 
 #libstage_la_CPPFLAGS = $(AM_CPPFLAGS) 
-libstage_la_LDFLAGS = -version-info 2:0:0 
+libstage_la_LDFLAGS = -version-info 2:0:0 -rpath $(libdir)
 libstage_la_LIBADD = @GTK_LIBS@ @GNOME_LIBS@
 
 # build a Player plugin from libstage plus Player driver hooks.
@@ -93,8 +93,8 @@ libstageplugin_la_SOURCES = \
 #p_map.cc 
 
 libstageplugin_la_CPPFLAGS = $(AM_CPPFLAGS) @PLAYER_CFLAGS@  
-libstageplugin_la_LDFLAGS = -export-dynamic -version-info 1:0:0 
-libstageplugin_la_LIBADD = -L.libs -lstage
+libstageplugin_la_LDFLAGS = -version-info 1:0:0 -rpath $(libdir)
+libstageplugin_la_LIBADD = libstage.la @PLAYER_LIBS@
 
 # build a stand-alone test program using libstage
 stest_DEPENDENCIES = libstage.la
