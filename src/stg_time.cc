@@ -22,7 +22,7 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.cc,v 1.10 2005-08-25 18:11:45 gerkey Exp $
+// CVS: $Id: stg_time.cc,v 1.11 2005-09-20 00:36:24 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +76,7 @@ int StgTime::GetTimeDouble(double* time)
   
   stg_world_t* world = driver->world;
   
-  *time = world->sim_time;
+  *time = world->sim_time / 1e3;
   
   PRINT_DEBUG1( "time now %f sec ", *time);
   

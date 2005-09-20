@@ -6,14 +6,15 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
-//  $Author: rtv $
-//  $Revision: 1.48 $
+//  $Author: gerkey $
+//  $Revision: 1.49 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 
 #include <sys/time.h>
 #include <math.h>
+#include <stdlib.h>
 
 //#define DEBUG
 

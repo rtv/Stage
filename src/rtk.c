@@ -21,7 +21,7 @@
 /*
  * Desc: Stk application functions
  * Author: Andrew Howard
- * CVS: $Id: rtk.c,v 1.7 2005-09-11 21:13:26 rtv Exp $
+ * CVS: $Id: rtk.c,v 1.8 2005-09-20 00:36:24 gerkey Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -53,6 +53,8 @@ int LIBSTK_VERSION_2_2(void) { return(0); }
 int stg_rtk_initxx(int *argc, char ***argv)
 {
   // Initialise the gtk lib
+  g_thread_init(NULL);
+  gdk_threads_init();
   gtk_init(argc, argv);
 
   // Allow rgb image handling

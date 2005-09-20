@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.1 2005-09-11 21:13:26 rtv Exp $
+dnl $Id: configure.ac,v 1.2 2005-09-20 00:36:24 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -53,7 +53,7 @@ dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
 dnl We need glib
-PKG_CHECK_MODULES(GLIB, glib-2.0, have_glib=yes, have_glib=no)
+PKG_CHECK_MODULES(GLIB, gthread-2.0, have_glib=yes, have_glib=no)
 if test "x$have_glib" = "xno"; then
   AC_MSG_ERROR([glib is required to build Stage.  Install glib, then re-configure.])
 fi
