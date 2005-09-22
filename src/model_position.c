@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: gerkey $
-//  $Revision: 1.49 $
+//  $Revision: 1.50 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +24,11 @@
 // move into header
 void stg_model_position_odom_reset( stg_model_t* mod );
 void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom );
+
+// HACK - BPG
+stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod, 
+                                               stg_pose_t* pose, 
+                                               double* hitx, double* hity );
 
 //extern stg_rtk_fig_t* fig_debug_rays;
 
@@ -305,6 +310,12 @@ int position_update( stg_model_t* mod )
   
   if( mod->subs )   // no driving if noone is subscribed
     {            
+      // HACK - BPG
+      double hitx=0, hity=0;
+      stg_pose_t gpose;
+      stg_model_t* hitthing;
+      stg_position_stall_t stall;
+
       stg_position_cmd_t *cmd = 
 	stg_model_get_property_fixed( mod, "position_cmd", sizeof(stg_position_cmd_t));      
       assert(cmd);
@@ -456,7 +467,13 @@ int position_update( stg_model_t* mod )
       //	    mod->velocity.a );
       
 
-      stg_position_stall_t stall = 0;
+      // HACK: don't know if this is the right way to do this - BPG
+      stg_model_get_global_pose( mod, &gpose );
+      hitthing = stg_model_test_collision_at_pose( mod, &gpose, &hitx, &hity );
+      if(hitthing)
+        stall = 1;
+      else
+        stall = 0;
       stg_model_set_property( mod, "position_stall", &stall, sizeof(stall));
 
 
