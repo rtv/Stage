@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.97 2005-09-12 06:17:31 rtv Exp $
+CVS: $Id: gui.c,v 1.98 2005-09-25 04:06:10 rtv Exp $
 */
 
 #include <stdio.h>
@@ -228,6 +228,51 @@ void gui_shutdown( void )
   stg_rtk_app_main_term( app );  
 }
 
+void  signal_destroy( GtkObject *object,
+		      gpointer user_data )
+{
+  PRINT_MSG( "Window destroyed." );
+  stg_quit_request();
+}
+
+gboolean quit_dialog( GtkWindow* parent )
+{
+  GtkMessageDialog *dlg = 
+    gtk_message_dialog_new( parent,
+			    GTK_DIALOG_DESTROY_WITH_PARENT,
+			    GTK_MESSAGE_QUESTION,
+			    GTK_BUTTONS_YES_NO,
+			    "Are you sure you want to quit Stage?" );
+			    
+  
+  gint result = gtk_dialog_run( GTK_DIALOG(dlg));
+  gtk_widget_destroy(dlg);
+  
+  // return TRUE if use clicked YES
+  return( result == GTK_RESPONSE_YES );
+}
+
+
+gboolean  signal_delete( GtkWidget *widget,
+		     GdkEvent *event,
+		     gpointer user_data )
+{
+  PRINT_MSG( "Request close window." );
+
+
+  gboolean confirm = quit_dialog( widget );
+
+  if( confirm )
+    {
+      PRINT_MSG( "Confirmed" );
+      stg_quit_request();
+    }
+  else
+      PRINT_MSG( "Cancelled" );
+  
+  return TRUE;
+}
+
 gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 {
   gui_window_t* win = calloc( sizeof(gui_window_t), 1 );
@@ -317,6 +362,17 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   // Put it all together
   gtk_container_add(GTK_CONTAINER(win->frame), win->layout);
+
+  
+  g_signal_connect(GTK_OBJECT(win->frame),
+		   "destroy",
+		   GTK_SIGNAL_FUNC(signal_destroy),
+		   NULL);
+
+  g_signal_connect(GTK_OBJECT(win->frame),
+		   "delete-event",
+		   GTK_SIGNAL_FUNC(signal_delete),
+		   NULL);
 
   gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(win->clock_label), FALSE, FALSE, 5);
 

@@ -593,19 +593,19 @@ extern "C" {
 
   // Message macros
 #ifdef DEBUG
-#define PRINT_MSG(m) printf( "stage: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_MSG1(m,a) printf( "stage: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_MSG2(m,a,b) printf( "stage: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_MSG3(m,a,b,c) printf( "stage: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_MSG4(m,a,b,c,d) printf( "stage: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_MSG5(m,a,b,c,d,e) printf( "stage: "m" (%s %s)\n", a, b, c, d, e,__FILE__, __FUNCTION__)
+#define PRINT_MSG(m) printf( "Stage: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_MSG1(m,a) printf( "Stage: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_MSG2(m,a,b) printf( "Stage: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m" (%s %s)\n", a, b, c, d, e,__FILE__, __FUNCTION__)
 #else
-#define PRINT_MSG(m) printf( "stage: "m"\n" )
-#define PRINT_MSG1(m,a) printf( "stage: "m"\n", a)
-#define PRINT_MSG2(m,a,b) printf( "stage: "m"\n,", a, b )
-#define PRINT_MSG3(m,a,b,c) printf( "stage: "m"\n", a, b, c )
-#define PRINT_MSG4(m,a,b,c,d) printf( "stage: "m"\n", a, b, c, d )
-#define PRINT_MSG5(m,a,b,c,d,e) printf( "stage: "m"\n", a, b, c, d, e )
+#define PRINT_MSG(m) printf( "Stage: "m"\n" )
+#define PRINT_MSG1(m,a) printf( "Stage: "m"\n", a)
+#define PRINT_MSG2(m,a,b) printf( "Stage: "m"\n,", a, b )
+#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m"\n", a, b, c )
+#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m"\n", a, b, c, d )
+#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m"\n", a, b, c, d, e )
 #endif
 
   // DEBUG macros

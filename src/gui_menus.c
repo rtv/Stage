@@ -147,7 +147,7 @@ static const char *ui_description =
 
 void gui_action_about( GtkAction *action, gpointer user_data)
 {
-  // USE THIS WHEN WE CAN USED GTK+-2.6
+  // USE THIS WHEN WE CAN USE GTK+-2.6
   //GtkAboutDialog *about = gtk_about_dialog_new();
   // gtk_show_about_dialog( about );
   
@@ -357,9 +357,19 @@ void gui_add_tree_item( stg_model_t* mod )
 
 void gui_action_exit( GtkAction* action, void* userdata )
 {
-  PRINT_DEBUG( "Exit menu item" );
-  _stg_quit = TRUE;
+  PRINT_MSG( "Exit menu item selected" );
+  
+  gboolean confirm = quit_dialog( NULL );
+  
+  if( confirm )
+    {
+      PRINT_MSG( "Confirmed" );
+      stg_quit_request();
+    }
+  else
+      PRINT_MSG( "Cancelled" );
 }
+
 
 /// save a frame as a jpeg, with incremental index numbers. if series
 /// is greater than 0, its value is incorporated into the filename
