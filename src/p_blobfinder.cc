@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_blobfinder.cc,v 1.4 2005-09-11 21:13:26 rtv Exp $
+ * CVS: $Id: p_blobfinder.cc,v 1.5 2005-09-25 07:35:06 rtv Exp $
  */
 
 // DOCUMENTATION
@@ -32,6 +32,7 @@
 @par Blobfinder interface
 
 - Data
+ - PLAYER_BLOBFINDER_DATA_BLOBS
 - Configs
  - (none)
 */
@@ -120,7 +121,7 @@ void InterfaceBlobfinder::Publish( void )
 
   this->driver->Publish( this->addr, NULL, 
 			 PLAYER_MSGTYPE_DATA,
-			 PLAYER_BLOBFINDER_DATA_STATE,
+			 PLAYER_BLOBFINDER_DATA_BLOBS,
 			 &bfd, sizeof(bfd), NULL);
 }
 
@@ -133,7 +134,7 @@ int InterfaceBlobfinder::ProcessMessage( MessageQueue* resp_queue,
   //else
   {
     // Don't know how to handle this message.
-    PRINT_WARN2( "stg_blobfindeerr doesn't support msg with type/subtype %d/%d",
+    PRINT_WARN2( "stg_blobfindeer doesn't support msg with type/subtype %d/%d",
 		 hdr->type, hdr->subtype);
     return(-1);
   }

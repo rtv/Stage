@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_fiducial.cc,v 1.4 2005-09-12 06:17:31 rtv Exp $
+ * CVS: $Id: p_fiducial.cc,v 1.5 2005-09-25 07:35:06 rtv Exp $
  */
 
 // DOCUMENTATION
@@ -35,14 +35,14 @@
 - Data
   - PLAYER_FIDUCIAL_DATA_SCAN
 - Configs
-  - PLAYER_FIDUCIAL_GET_GEOM
-  - PLAYER_FIDUCIAL_SET_ID
-  - PLAYER_FIDUCIAL_GET_ID
+  - PLAYER_FIDUCIAL_REQ_GET_GEOM
+  - PLAYER_FIDUCIAL_REQ_SET_ID
+  - PLAYER_FIDUCIAL_REQ_GET_ID
 */
 
 /* TODO
-  - PLAYER_FIDUCIAL_SET_FOV_REQ
-  - PLAYER_FIDUCIAL_GET_FOV_REQ
+  - PLAYER_FIDUCIAL_REQ_SET_FOV
+  - PLAYER_FIDUCIAL_REQ_GET_FOV
 */
 
 // CODE
@@ -76,7 +76,7 @@ void InterfaceFiducial::Publish( void )
       size_t fcount = len / sizeof(stg_fiducial_t);      
       assert( fcount > 0 );
       
-      pdata.fiducials_count = htons((uint16_t)fcount);
+      pdata.fiducials_count = fcount;
       
       //printf( "reporting %d fiducials\n",
       //      fcount );
@@ -91,18 +91,17 @@ void InterfaceFiducial::Publish( void )
 
       for( int i=0; i<(int)fcount; i++ )
 	{
-	  pdata.fiducials[i].id = htons((int16_t)fids[i].id);
+	  pdata.fiducials[i].id = fids[i].id;
 	  
-	  // 2D x,y only
-	  
+	  // 2D x,y only	  
 	  double xpos = fids[i].range * cos(fids[i].bearing);
 	  double ypos = fids[i].range * sin(fids[i].bearing);
 	  
-	  pdata.fiducials[i].pos[0] = htonl((int32_t)(xpos*1000.0));
-	  pdata.fiducials[i].pos[1] = htonl((int32_t)(ypos*1000.0));
+	  pdata.fiducials[i].pos[0] = xpos;
+	  pdata.fiducials[i].pos[1] = ypos;
 	  
 	  // yaw only
-	  pdata.fiducials[i].rot[2] = htonl((int32_t)(fids[i].geom.a*1000.0));	      	  
+	  pdata.fiducials[i].rot[2] = fids[i].geom.a;	      	  
 	  // player can't handle per-fiducial size.
 	  // we leave uncertainty (upose) at zero
 	}
@@ -123,7 +122,7 @@ int InterfaceFiducial::ProcessMessage(MessageQueue* resp_queue,
   
   // Is it a request to get the geometry?
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                           PLAYER_FIDUCIAL_GET_GEOM, 
+                           PLAYER_FIDUCIAL_REQ_GET_GEOM, 
                            this->addr))
     {
       stg_geom_t geom;
@@ -142,12 +141,12 @@ int InterfaceFiducial::ProcessMessage(MessageQueue* resp_queue,
       
       this->driver->Publish(this->addr, resp_queue,
 			    PLAYER_MSGTYPE_RESP_ACK, 
-			    PLAYER_FIDUCIAL_GET_GEOM,
+			    PLAYER_FIDUCIAL_REQ_GET_GEOM,
 			    (void*)&pgeom, sizeof(pgeom), NULL);
       return(0);
     }
   else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-				PLAYER_FIDUCIAL_SET_ID, 
+				PLAYER_FIDUCIAL_REQ_SET_ID, 
 				this->addr))
     {  
       if( hdr->size == sizeof(player_fiducial_id_t) )
@@ -166,7 +165,7 @@ int InterfaceFiducial::ProcessMessage(MessageQueue* resp_queue,
 	  // acknowledge, including the new ID
 	  this->driver->Publish(this->addr, resp_queue,
 				PLAYER_MSGTYPE_RESP_ACK, 
-				PLAYER_FIDUCIAL_SET_ID,
+				PLAYER_FIDUCIAL_REQ_SET_ID,
 				(void*)&pid, sizeof(pid) );
 	}
       else
@@ -177,7 +176,7 @@ int InterfaceFiducial::ProcessMessage(MessageQueue* resp_queue,
 	}
     }  
   else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-				PLAYER_FIDUCIAL_GET_ID, 
+				PLAYER_FIDUCIAL_REQ_GET_ID, 
 				this->addr))
     {
       stg_fiducial_return_t* ret = (stg_fiducial_return_t*) 
@@ -192,7 +191,7 @@ int InterfaceFiducial::ProcessMessage(MessageQueue* resp_queue,
       // acknowledge, including the new ID
       this->driver->Publish(this->addr, resp_queue,
 			    PLAYER_MSGTYPE_RESP_ACK, 
-			    PLAYER_FIDUCIAL_GET_ID,
+			    PLAYER_FIDUCIAL_REQ_GET_ID,
 			    (void*)&pid, sizeof(pid) );      
     }      
   /*    case PLAYER_FIDUCIAL_SET_FOV:
