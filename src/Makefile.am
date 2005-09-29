@@ -2,10 +2,10 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.121 2005-09-20 00:36:24 gerkey Exp $
+# $Id: Makefile.am,v 1.122 2005-09-29 23:46:09 gerkey Exp $
 
 # also build Zoo referees
-#SUBDIRS = referees
+SUBDIRS = referees
 
 # install the header file for the Stage library
 include_HEADERS = stage.h 
@@ -77,17 +77,18 @@ libstageplugin_la_SOURCES = \
 	p_simulation.cc \
 	p_sonar.cc \
 	stg_time.cc \
-	stg_time.h 
+	stg_time.h \
+	zoo_driver.h \
+        zoo_referee.h \
+        zoo_species.h \
+        zoo_controller.h \
+	zoo.h
 
 #zoo.c \
 #zoo_driver.cc \
 #zoo_species.cc \
-#zoo_species.h \
 #zoo_controller.cc \
-#zoo_controller.h \
 #zoo_referee.cc \
-#zoo_referee.h
-
 #p_energy.cc \
 #p_gripper.cc \
 #p_map.cc 

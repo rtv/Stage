@@ -1,4 +1,4 @@
-lib_LTLIBRARIES = libmyref.la libtransref.la
+#lib_LTLIBRARIES = libmyref.la libtransref.la
 
 AM_CPPFLAGS = \
 	-Wall \
@@ -11,7 +11,7 @@ AM_CPPFLAGS = \
 # loaded?  Oh well.
 LIBS = -L$(prefix)/lib -lstageplugin
 
-libmyref_la_SOURCES = myref.cc
+#libmyref_la_SOURCES = myref.cc
 
-libtransref_la_SOURCES = transref.cc
-libtransref_la_LIBADD = @PLAYER_LIBS@
+#libtransref_la_SOURCES = transref.cc
+#libtransref_la_LIBADD = @PLAYER_LIBS@
