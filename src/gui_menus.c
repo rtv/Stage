@@ -610,6 +610,8 @@ void toggle_property_callback( GtkToggleAction* action, void* userdata )
     }
 }
 
+#define TOGGLE_PATH "/Main/View"
+
 void stg_model_add_property_toggles( stg_model_t* mod, 
 				     const char* propname, 
 				     stg_property_callback_t callback_on,
@@ -622,13 +624,15 @@ void stg_model_add_property_toggles( stg_model_t* mod,
   stg_property_toggle_args_t* args = 
     calloc(sizeof(stg_property_toggle_args_t),1);
   
+  
   args->mod = mod;
   args->propname = propname;
   args->callback_on = callback_on;
   args->callback_off = callback_off;
   args->arg_on = arg_on;
   args->arg_off = arg_off;
-  
+  args->default_state = enabled;
+
   // optionally add ourselves to the GUI
   if( label )
     {
@@ -654,20 +658,51 @@ void stg_model_add_property_toggles( stg_model_t* mod,
 	  entry.label = label;
 	  entry.tooltip = NULL;
 	  entry.callback = G_CALLBACK(toggle_property_callback);
-	  entry.is_active = !enabled; // invert the starting setting - see below
+	  //entry.is_active = !enabled; // invert the starting setting - see below
 	  
+	  //override setting with value in worldfile, if one exists
+	  int state = wf_read_int( mod->world->win->wf_section, 
+				   propname,
+				   args->default_state );
+	  
+	  printf( "name %s state %d default %d\n", 
+		  args->propname, 
+		  state, 
+		  args->default_state );
+	  
+	  entry.is_active = state ? 0 : 1;
+
+	  //gtk_toggle_action_set_active(  GTK_TOGGLE_ACTION(tog->action), state );
+
+
 	  gtk_action_group_add_toggle_actions( grp, &entry, 1, args  );  
 	  	  
 	  guint merge = gtk_ui_manager_new_merge_id( ui_manager );
 	  gtk_ui_manager_add_ui( ui_manager, 
 				 merge,
-				 "/Main/View", 
+				 TOGGLE_PATH, 
 				 propname, 
 				 propname, 
 				 GTK_UI_MANAGER_AUTO, 
 				 FALSE );
 	  
 	  act = gtk_action_group_get_action( grp, propname );
+	  
+	  // store the action in the toggle structure for recall
+	  args->action = act;
+	  
+	  //size_t len = strlen(TOGGLE_PATH) + strlen(propname) + 5;
+	  //args->path = (char*)malloc( len );
+	  //snprintf( args->path, len, "%s/%s", TOGGLE_PATH, propname );
+	  args->path = strdup(propname);
+
+	  //printf( "toggle item: %s\n", gtk_action_get_name( act ));
+	  //printf( "toggle path: %s\n", args->path );
+	  
+	  // stash this structure in the window's pointer list
+	  mod->world->win->toggle_list = 
+	    g_list_append( mod->world->win->toggle_list, args );
+	  
 	}
       else
 	{

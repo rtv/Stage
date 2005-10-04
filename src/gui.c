@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.98 2005-09-25 04:06:10 rtv Exp $
+CVS: $Id: gui.c,v 1.99 2005-10-04 05:24:33 rtv Exp $
 */
 
 #include <stdio.h>
@@ -164,6 +164,7 @@ void gui_load( gui_window_t* win, int section )
   gtk_window_resize( GTK_WINDOW(win->frame), window_width, window_height );
   stg_rtk_canvas_scale( win->canvas, window_scale, window_scale );
   stg_rtk_canvas_origin( win->canvas, window_center_x, window_center_y );
+
 }
 
 void gui_save( gui_window_t* win )
@@ -182,25 +183,17 @@ void gui_save( gui_window_t* win )
   wf_write_int( win->wf_section, "fill_polygons", win->fill_polygons );
   wf_write_int( win->wf_section, "show_grid", win->show_grid );
 
-  // save the flags that control visibility of data and configs
-  /*
-  wf_write_int(win->wf_section, "laser_data", win->render_data_flag[STG_MODEL_LASER]);
-  wf_write_int(win->wf_section, "laser_config", win->render_cfg_flag[STG_MODEL_LASER]);
-  wf_write_int(win->wf_section, "gripper_data", win->render_data_flag[STG_MODEL_GRIPPER]);
-  wf_write_int(win->wf_section, "gripper_config", win->render_cfg_flag[STG_MODEL_GRIPPER]);
-  wf_write_int(win->wf_section, "ranger_data", win->render_data_flag[STG_MODEL_RANGER]);
-  wf_write_int(win->wf_section, "ranger_config", win->render_cfg_flag[STG_MODEL_RANGER]);
-  wf_write_int(win->wf_section, "fiducial_data", win->render_data_flag[STG_MODEL_FIDUCIAL]);
-  wf_write_int(win->wf_section, "fiducial_config", win->render_cfg_flag[STG_MODEL_FIDUCIAL]);
-  wf_write_int(win->wf_section, "blobfinder_data", win->render_data_flag[STG_MODEL_BLOB]);
-  wf_write_int(win->wf_section, "blobfinder_config", win->render_cfg_flag[STG_MODEL_BLOB]);
-  wf_write_int(win->wf_section, "position_data", win->render_data_flag[STG_MODEL_POSITION]);
-  wf_write_int(win->wf_section, "position_config", win->render_cfg_flag[STG_MODEL_POSITION]);
-  wf_write_int(win->wf_section, "energy_data", win->render_data_flag[STG_MODEL_ENERGY]);
-  wf_write_int(win->wf_section, "energy_config", win->render_cfg_flag[STG_MODEL_ENERGY]);
-  wf_write_int(win->wf_section, "gripper_data", win->render_data_flag[STG_MODEL_GRIPPER]);
-  wf_write_int(win->wf_section, "gripper_config", win->render_cfg_flag[STG_MODEL_GRIPPER]);
-  */
+  // save the state of the property toggles
+  for( GList* list = win->toggle_list; list; list = g_list_next( list ) )
+    {
+      stg_property_toggle_args_t* tog = 
+	(stg_property_toggle_args_t*)list->data;
+      assert( tog );
+      printf( "toggle item path: %s\n", tog->path );
+
+      wf_write_int( win->wf_section, tog->path, 
+		   gtk_toggle_action_get_active(  GTK_TOGGLE_ACTION(tog->action) ));
+    }
 }
 
 void gui_startup( int* argc, char** argv[] )
@@ -449,6 +442,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
  
   gui_window_menus_create( win );
  
+  win->toggle_list = NULL;
 
   return win;
 }

@@ -73,6 +73,8 @@ extern "C" {
     int frame_format;
 
     stg_model_t* selection_active;
+
+    GList* toggle_list;
     
   } gui_window_t;
 
@@ -163,12 +165,14 @@ extern "C" {
   typedef struct 
   {
     stg_model_t* mod;
-    //char propname[STG_PROPNAME_MAX];
     const char *propname;
     stg_property_callback_t callback_on;
     stg_property_callback_t callback_off;
     void* arg_on; // argument to callback_on
     void* arg_off; // argument to callback_off
+    int default_state; // disabled = 0 
+    GtkAction* action; // action associated with this toggle, may be NULL
+    char* path;
   } stg_property_toggle_args_t;
     
   

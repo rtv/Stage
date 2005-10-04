@@ -295,9 +295,9 @@ void storage_polygons( stg_property_t* prop,
       // rectangle (if the model has some non-zero size)
       if( geom.size.x > 0.0 && geom.size.y > 0.0 )
 	stg_polygons_normalize( polys, count, geom.size.x, geom.size.y );
-      else
-	PRINT_WARN3( "setting polygons for model %s which has non-positive area (%.2f,%.2f)",
-		     prop->mod->token, geom.size.x, geom.size.y );
+      //else
+      //PRINT_WARN3( "setting polygons for model %s which has non-positive area (%.2f,%.2f)",
+      //	     prop->mod->token, geom.size.x, geom.size.y );
 
       // store the polygons as a property
       storage_ordinary( prop, polys, len );
