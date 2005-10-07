@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_fiducial.cc,v 1.5 2005-09-25 07:35:06 rtv Exp $
+ * CVS: $Id: p_fiducial.cc,v 1.6 2005-10-07 18:09:42 gerkey Exp $
  */
 
 // DOCUMENTATION
@@ -97,6 +97,7 @@ void InterfaceFiducial::Publish( void )
 	  double xpos = fids[i].range * cos(fids[i].bearing);
 	  double ypos = fids[i].range * sin(fids[i].bearing);
 	  
+          /*
 	  pdata.fiducials[i].pos[0] = xpos;
 	  pdata.fiducials[i].pos[1] = ypos;
 	  
@@ -104,6 +105,16 @@ void InterfaceFiducial::Publish( void )
 	  pdata.fiducials[i].rot[2] = fids[i].geom.a;	      	  
 	  // player can't handle per-fiducial size.
 	  // we leave uncertainty (upose) at zero
+          */
+
+          // I'm guessing at this, but the above doesn't compile, because
+          // there's no 'pos' or 'rot' fields - BPG
+	  pdata.fiducials[i].pose.px = xpos;
+	  pdata.fiducials[i].pose.py = ypos;
+	  pdata.fiducials[i].pose.pz = 0.0;
+	  pdata.fiducials[i].pose.proll = 0.0;
+	  pdata.fiducials[i].pose.ppitch = 0.0;
+	  pdata.fiducials[i].pose.pyaw = fids[i].geom.a;
 	}
     }
   
