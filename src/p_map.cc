@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.3 2005-10-09 20:48:17 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.4 2005-10-09 20:59:46 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -174,15 +174,8 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   stg_model_set_property( this->mod, "_map", (void*)minfo, sizeof(stg_map_info_t) );
   
   // minfo data was copied, so we can safely delete the original
-  //delete minfo;
+  delete minfo;
 
-  //if(this->mapdata == NULL)
-  //{
-  //PLAYER_ERROR("NULL map data");
-  //if(PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
-  //  PLAYER_ERROR("PutReply() failed");
-  // return;
-  
   // prepare the map info for the client
   player_map_info_t info;  
 
@@ -193,19 +186,19 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   info.width = minfo->width;
   info.height = minfo->height;
   
-  info.origin.px = 0.0;
-  info.origin.py = 0.0;
-  info.origin.pa = 0.0;
-   
-  // Send map info to the client
-  //if (device->driver->PutReply(client, PLAYER_MSGTYPE_RESP_ACK, &info, sizeof(info), NULL) != 0)
-  //PLAYER_ERROR("PutReply() failed");
-  
+  // origin of map center in global coords
+  stg_pose_t global;
+  memcpy( &global, &geom.pose, sizeof(global)); 
+  stg_model_local_to_global( this->mod, &global );
+ 
+  info.origin.px = geom.pose.x;
+  info.origin.py = geom.pose.y;
+  info.origin.pa = geom.pose.a;
+     
   this->driver->Publish(this->addr, resp_queue,
 			PLAYER_MSGTYPE_RESP_ACK, 
 			PLAYER_MAP_REQ_GET_INFO,
 			(void*)&info, sizeof(info), NULL);
-
   return 0;
 }
 
@@ -244,32 +237,8 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
   
   printf( "Stage map driver fetching tile from (%d,%d) of size (%d,%d) from map of (%d,%d) pixels.\n",
 	  oi, oj, si, sj, minfo->width, minfo->height  );
-  
-  // // print an activity spinner - now the tile sizes are so big we
-  // // don't really need this.
-
-//   const char* spin = "|/-\\";
-//   static int spini = 0;
-
-//   if( spini == 0 )
-//     printf( "Stage: downloading map... " );
-  
-//   putchar( 8 ); // backspace
-  
-//   if( oi+si == minfo->width && oj+sj == minfo->height )
-//     {
-//       puts( " done." );
-//       spini = 0;
-//     }
-//   else
-//     {
-//       putchar( spin[spini++%4] );
-//       fflush(stdout);
-//     }
-
-//   fflush(stdout);
-  
-   //   // Grab the pixels from the map
+    
+   // Grab the pixels from the map
    for( unsigned int j = 0; j < sj; j++)
      {       
        for( unsigned int i = 0; i < si; i++)
@@ -340,3 +309,49 @@ int InterfaceMap::ProcessMessage(MessageQueue* resp_queue,
   return -1;
 }
 
+
+  // // print an activity spinner - now the tile sizes are so big we
+  // // don't really need this.
+
+//   const char* spin = "|/-\\";
+//   static int spini = 0;
+
+//   if( spini == 0 )
+//     printf( "Stage: downloading map... " );
+  
+//   putchar( 8 ); // backspace
+  
+//   if( oi+si == minfo->width && oj+sj == minfo->height )
+//     {
+//       puts( " done." );
+//       spini = 0;
+//     }
+//   else
+//     {
+//       putchar( spin[spini++%4] );
+//       fflush(stdout);
+//     }
+
+//   fflush(stdout);  // // print an activity spinner - now the tile sizes are so big we
+  // // don't really need this.
+
+//   const char* spin = "|/-\\";
+//   static int spini = 0;
+
+//   if( spini == 0 )
+//     printf( "Stage: downloading map... " );
+  
+//   putchar( 8 ); // backspace
+  
+//   if( oi+si == minfo->width && oj+sj == minfo->height )
+//     {
+//       puts( " done." );
+//       spini = 0;
+//     }
+//   else
+//     {
+//       putchar( spin[spini++%4] );
+//       fflush(stdout);
+//     }
+
+//   fflush(stdout);
