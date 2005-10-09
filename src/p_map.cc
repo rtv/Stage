@@ -23,12 +23,21 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.1 2005-07-15 03:41:37 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.2 2005-10-09 19:46:27 rtv Exp $
  */
 
 #include "p_driver.h"
 
 // DOCUMENTATION ------------------------------------------------------------
+
+/** @addtogroup player 
+@par Map interface
+
+- Data 
+ - (none)
+- Configs
+
+*/
 
 //
 // MAP INTERFACE
@@ -41,42 +50,44 @@ typedef struct
   int8_t* data;
 } stg_map_info_t;
 
-void MapData( Interface* device, void* data, size_t len )
-{
-  //PRINT_WARN( "someone subscribed to the map interface, but we don't generate any data" );
-  device->driver->PutData( device->id, NULL, 0, NULL); 
+InterfaceMap::InterfaceMap( player_devaddr_t addr, 
+			    StgDriver* driver,
+			    ConfigFile* cf,
+			    int section )
+  : InterfaceModel( addr, driver, cf, section, NULL )
+{ 
+  // nothing to do...
 }
 
 // Handle map info request - adapted from Player's mapfile driver by
 // Brian Gerkey
-void  MapConfigInfo( Interface* device,  
-		     void *client, 
-		     void *request, 
-		     size_t len)
+int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
+				      player_msghdr_t* hdr,
+				      void* data)
 {
-  printf( "Stage: device \"%s\" received map info request\n", device->mod->token );
+  printf( "Stage: device \"%s\" received map info request\n", 
+	  this->mod->token );
   
-  // prepare the map info for the client
-  player_map_info_t info;  
-  size_t reqlen =  sizeof(info.subtype); // Expected length of request
+
+//   size_t reqlen =  sizeof(info.subtype); // Expected length of request
   
-  // check if the config request is valid
-  if(len != reqlen)
-    {
-      PLAYER_ERROR2("config request len is invalid (%d != %d)", len, reqlen);
-      if (device->driver->PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
-	PLAYER_ERROR("PutReply() failed");
-      return;
-    }
+//   // check if the config request is valid
+//   if(len != reqlen)
+//     {
+//       PLAYER_ERROR2("config request len is invalid (%d != %d)", len, reqlen);
+//       if (device->driver->PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
+// 	PLAYER_ERROR("PutReply() failed");
+//       return;
+//     }
   
   // create and render a map for this model
   stg_geom_t geom;
-  stg_model_get_geom( device->mod, &geom );
+  stg_model_get_geom( this->mod, &geom );
   
   // if we already have a map info for this model, destroy it
   stg_map_info_t* minfo = (stg_map_info_t*)
-    stg_model_get_property_fixed( device->mod, "_map", 
-				       sizeof(stg_map_info_t) );
+    stg_model_get_property_fixed( this->mod, "_map", 
+				  sizeof(stg_map_info_t) );
   
   if( minfo )
     {
@@ -85,7 +96,7 @@ void  MapConfigInfo( Interface* device,
     }
   
   minfo = new stg_map_info_t();
-  minfo->ppm = device->mod->world->ppm;  
+  minfo->ppm = this->mod->world->ppm;  
   minfo->width = (unsigned int)( geom.size.x * minfo->ppm );
   minfo->height = (unsigned int)( geom.size.y * minfo->ppm );
   
@@ -96,12 +107,12 @@ void  MapConfigInfo( Interface* device,
   memset( minfo->data, 0, minfo->width * minfo->height );
   
   printf( "Stage: creating map for model \"%s\" of %d by %d cells... ", 
-	  device->mod->token, minfo->width, minfo->height );
+	  this->mod->token, minfo->width, minfo->height );
   fflush(stdout);
 
   size_t sz=0;
   stg_polygon_t* polys = (stg_polygon_t*)
-    stg_model_get_property( device->mod, "polygons", &sz);
+    stg_model_get_property( this->mod, "polygons", &sz);
   size_t count = sz / sizeof(stg_polygon_t);
   
   if( polys && count ) // if we have something to render
@@ -110,8 +121,8 @@ void  MapConfigInfo( Interface* device,
       // we'll use a temporary matrix, as it knows how to render objects
       
       stg_matrix_t* matrix = stg_matrix_create( minfo->ppm, 
-						device->mod->world->matrix->width,
-						device->mod->world->matrix->height );    
+						this->mod->world->matrix->width,
+						this->mod->world->matrix->height );    
       if( count > 0 ) 
 	{
 	  // render the model into the matrix
@@ -120,10 +131,10 @@ void  MapConfigInfo( Interface* device,
 			       geom.size.y/2.0,
 			       0,
 			       polys, count, 
-			       device->mod );  
+			       this->mod );  
 	  
 	  stg_bool_t* boundary = (stg_bool_t*)
-	    stg_model_get_property_fixed( device->mod, 
+	    stg_model_get_property_fixed( this->mod, 
 					  "boundary", sizeof(stg_bool_t));
 	  if( *boundary )    
 	    stg_matrix_rectangle( matrix,
@@ -132,7 +143,7 @@ void  MapConfigInfo( Interface* device,
 				  0,
 				  geom.size.x,
 				  geom.size.y,
-				  device->mod );
+				  this->mod );
 	}
       
       // Now convert the matrix to a Player occupancy grid. if the
@@ -160,7 +171,7 @@ void  MapConfigInfo( Interface* device,
   puts( "done." );
 
   // store the map as a model property named "_map"
-  stg_model_set_property( device->mod, "_map", (void*)minfo, sizeof(minfo) );
+  stg_model_set_property( this->mod, "_map", (void*)minfo, sizeof(minfo) );
 
   //if(this->mapdata == NULL)
   //{
@@ -169,61 +180,65 @@ void  MapConfigInfo( Interface* device,
   //  PLAYER_ERROR("PutReply() failed");
   // return;
   
+  // prepare the map info for the client
+  player_map_info_t info;  
+
   // pixels per kilometer
-  info.scale = htonl((uint32_t)rint(minfo->ppm * 1e3 ));
+  info.scale = 1.0 / minfo->ppm;
   
   // size in pixels
-  info.width = htonl((uint32_t)minfo->width);
-  info.height = htonl((uint32_t)minfo->height);
+  info.width = minfo->width;
+  info.height = minfo->height;
   
+  info.origin.px = 0.0;
+  info.origin.py = 0.0;
+  info.origin.pa = 0.0;
+   
   // Send map info to the client
-  if (device->driver->PutReply(client, PLAYER_MSGTYPE_RESP_ACK, &info, sizeof(info), NULL) != 0)
-    PLAYER_ERROR("PutReply() failed");
+  //if (device->driver->PutReply(client, PLAYER_MSGTYPE_RESP_ACK, &info, sizeof(info), NULL) != 0)
+  //PLAYER_ERROR("PutReply() failed");
   
-  return;
+  this->driver->Publish(this->addr, resp_queue,
+			PLAYER_MSGTYPE_RESP_ACK, 
+			PLAYER_MAP_REQ_GET_INFO,
+			(void*)&info, sizeof(info), NULL);
+
+  return 0;
 }
 
 // Handle map data request
-void MapConfigData( Interface* device,  
-		    void *client, 
-		    void *request, 
-		    size_t len)
+int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
+				     player_msghdr_t* hdr,
+				     void* data)
 {
-  //printf( "device %s received map data request\n", device->mod->token );
+  printf( "device %s received map data request\n", this->mod->token );
 
-  //int i, j;
-  unsigned int oi, oj, si, sj;
-  size_t reqlen;
-  player_map_data_t data;
-  
-  // Expected length of request
-  reqlen = sizeof(data) - sizeof(data.data);
-  
-  // check if the config request is valid
-  if(len != reqlen)
-    {
-      PLAYER_ERROR2("config request len is invalid (%d != %d)", len, reqlen);
-      if( device->driver->PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
-      PLAYER_ERROR("PutReply() failed");
-      return;
-    }
   
   stg_map_info_t* minfo = (stg_map_info_t*)
-    stg_model_get_property_fixed( device->mod, "_map", sizeof(minfo));
+    stg_model_get_property_fixed( this->mod, "_map", sizeof(minfo));
 
   assert( minfo );
 
   int8_t* map = NULL;  
   assert( (map = minfo->data ) );
 
-  // Construct reply
-  memcpy(&data, request, len);
+  // request packet
+  player_map_data_t* mapreq = (player_map_data_t*)data;
   
-   oi = ntohl(data.col);
-   oj = ntohl(data.row);
-   si = ntohl(data.width);
-   sj = ntohl(data.height);
-      
+
+  size_t mapsize = (sizeof(player_map_data_t) - PLAYER_MAP_MAX_TILE_SIZE + 
+		    (mapreq->width * mapreq->height));
+
+  // response packet
+  player_map_data_t* mapresp = (player_map_data_t*)calloc(1,mapsize);
+  assert(mapresp);
+  
+  unsigned int oi, oj, si, sj;
+  oi = mapreq->col;
+  oj = mapreq->row;
+  si = mapreq->width;
+  sj = mapreq->height;
+  
   const char* spin = "|/-\\";
   static int spini = 0;
 
@@ -250,17 +265,17 @@ void MapConfigData( Interface* device,
      {
        for( unsigned int i = 0; i < si; i++)
 	 {
-	   if((i * j) <= PLAYER_MAP_MAX_CELLS_PER_TILE)
+	   if((i * j) <= PLAYER_MAP_MAX_TILE_SIZE)
 	     {
 	       if( i+oi >= 0 &&
 		   i+oi < minfo->width &&
 		   j+oj >= 0 &&
 		   j+oj < minfo->height )
-		 data.data[i + j * si] = map[ i+oi + (minfo->width * (j+oj)) ];
+		 mapresp->data[i + j * si] = map[ i+oi + (minfo->width * (j+oj)) ];
 	       else
 		 {
 		   PLAYER_WARN2("requested cell (%d,%d) is offmap", i+oi, j+oj);
-		   data.data[i + j * si] = 0;
+		   mapresp->data[i + j * si] = 0;
 		 }
 	     }
 	   else
@@ -268,50 +283,51 @@ void MapConfigData( Interface* device,
 	       PLAYER_WARN("requested tile is too large; truncating");
 	       if(i == 0)
 		 {
-		   data.width = htonl(si-1);
-		   data.height = htonl(j-1);
+		   mapresp->width = si-1;
+		   mapresp->height = j-1;
 		 }
 	       else
 		 {
-		   data.width = htonl(i);
-		   data.height = htonl(j);
+		   mapresp->width = i;
+		   mapresp->height = j;
 		 }
 	     }
 	 }
      }
-      
+         
+   printf( "Stage driver: providing map data %d/%d %d/%d\n",
+	   oi+si, minfo->width, oj+si, minfo->height );
    
-   //printf( "Stage driver: providing map data %d/%d %d/%d\n",
-   // oi+si, minfo->width, oj+si, minfo->height );
+   // recompute size, in case the tile got truncated
+   mapsize = (sizeof(player_map_data_t) - PLAYER_MAP_MAX_TILE_SIZE + 
+	      (mapresp->width * mapresp->height));
+   mapresp->data_count = mapresp->width * mapresp->height;
 
-
-   //fflush(stdout);
-     
-
-  // Send map info to the client
-  if(device->driver->PutReply(client, PLAYER_MSGTYPE_RESP_ACK, &data, 
-              sizeof(data) - sizeof(data.data) + 
-              ntohl(data.width) * ntohl(data.height),NULL) != 0)
-    PLAYER_ERROR("PutReply() failed");
-  return;
+   this->driver->Publish(this->addr, resp_queue,
+			 PLAYER_MSGTYPE_RESP_ACK,
+			 PLAYER_MAP_REQ_GET_DATA,
+			 (void*)mapresp, mapsize, NULL);
+   free(mapresp);   
+   return(0);
 }
 
-
-void MapConfig( Interface* device, void* client, void* buffer, size_t len )
+int InterfaceMap::ProcessMessage(MessageQueue* resp_queue,
+				 player_msghdr_t* hdr,
+				 void* data)
 {
-  switch( ((unsigned char*)buffer)[0])
-    {
-    case PLAYER_MAP_GET_INFO_REQ:
-      MapConfigInfo( device, client, buffer, len);
-      break;
-    case PLAYER_MAP_GET_DATA_REQ:
-      MapConfigData( device, client, buffer, len);
-      break;
-    default:
-      PLAYER_ERROR("got unknown map config request; ignoring");
-      if(device->driver->PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
-        PLAYER_ERROR("PutReply() failed");
-      break;
-    }
+  
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+                           PLAYER_MAP_REQ_GET_DATA, 
+                           this->addr))
+    return( this->HandleMsgReqData( resp_queue, hdr, data ));
+  
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+			   PLAYER_MAP_REQ_GET_INFO, 
+			   this->addr))
+    return( this->HandleMsgReqInfo( resp_queue, hdr, data ));
+  
+  PLAYER_WARN2("stage map doesn't support message %d:%d.", 
+	       hdr->type, hdr->subtype );
+  return -1;
 }
 

@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.59 2005-10-04 05:30:31 rtv Exp $
+# CVS: $Id: everything.world,v 1.60 2005-10-09 19:46:27 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -68,7 +68,6 @@ define trickedoutpioneer pioneer2dx
     channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
   )
 
-  gripper( pose [0.200 0.000 0.000] color "gray" )
 
   fiducial_return 42
   blobfinder_return 1 
@@ -82,6 +81,8 @@ trickedoutpioneer
   name "p0"
   pose [-10.712 3.167 -360.320]
   localization_origin [ 0 0 0 ]
+
+  gripper( pose [0.200 0.000 0.000] color "gray" )
 )
 
 trickedoutpioneer

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.122 2005-09-29 23:46:09 gerkey Exp $
+# $Id: Makefile.am,v 1.123 2005-10-09 19:46:27 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -73,6 +73,7 @@ libstageplugin_la_SOURCES = \
 	p_driver.h \
 	p_fiducial.cc \
 	p_laser.cc \
+	p_map.cc \
 	p_position.cc \
 	p_simulation.cc \
 	p_sonar.cc \
@@ -84,14 +85,13 @@ libstageplugin_la_SOURCES = \
         zoo_controller.h \
 	zoo.h
 
-#zoo.c \
-#zoo_driver.cc \
-#zoo_species.cc \
-#zoo_controller.cc \
-#zoo_referee.cc \
-#p_energy.cc \
-#p_gripper.cc \
-#p_map.cc 
+#zoo.c 
+#zoo_driver.cc 
+#zoo_species.cc 
+#zoo_controller.cc 
+#zoo_referee.cc 
+#p_energy.cc 
+#p_gripper.cc
 
 libstageplugin_la_CPPFLAGS = $(AM_CPPFLAGS) @PLAYER_CFLAGS@  
 libstageplugin_la_LDFLAGS = -version-info 1:0:0 -rpath $(libdir)

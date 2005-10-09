@@ -169,6 +169,27 @@ class InterfaceSonar : public InterfaceModel
   virtual void Publish( void );
 };
 
+class InterfaceMap : public InterfaceModel
+{
+ public: 
+  InterfaceMap( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceMap( void ){ /* TODO: clean up*/ };
+  
+  virtual int ProcessMessage( MessageQueue* resp_queue, 
+			      player_msghdr * hdr, 
+			      void * data );
+  //virtual void Publish( void );
+  
+  // called by ProcessMessage to handle individual messages
+
+  int HandleMsgReqInfo( MessageQueue* resp_queue, 
+			player_msghdr * hdr, 
+			void * data );
+  int HandleMsgReqData( MessageQueue* resp_queue, 
+			player_msghdr * hdr, 
+			void * data );
+};
+
 
 
 #endif
