@@ -1,9 +1,9 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.60 2005-10-09 19:46:27 rtv Exp $
+# CVS: $Id: everything.world,v 1.61 2005-10-09 20:48:17 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
-resolution     0.02 
+resolution     0.02
 
 interval_sim 100  # milliseconds per update step
 interval_real 100 # real-time milliseconds per update step
@@ -17,6 +17,7 @@ include "map.inc"
 include "sick.inc"
 
 size [40 20 ]
+
 
 gui_disable 0
 
@@ -38,6 +39,10 @@ window(
 map( 
   bitmap "bitmaps/hospital_section.png" 
   size [36 18] 
+
+  #bitmap "bitmaps/cave.png" 
+  #size [10 10]	
+
   name "hospital"
 )
 

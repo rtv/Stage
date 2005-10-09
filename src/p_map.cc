@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.2 2005-10-09 19:46:27 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.3 2005-10-09 20:48:17 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -106,8 +106,8 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   assert( (minfo->data = new int8_t[minfo->width*minfo->height] ));
   memset( minfo->data, 0, minfo->width * minfo->height );
   
-  printf( "Stage: creating map for model \"%s\" of %d by %d cells... ", 
-	  this->mod->token, minfo->width, minfo->height );
+  printf( "Stage: creating map for model \"%s\" of %d by %d cells at %.2f ppm", 
+	  this->mod->token, minfo->width, minfo->height, minfo->ppm );
   fflush(stdout);
 
   size_t sz=0;
@@ -153,7 +153,7 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
       for( unsigned int p=0; p<minfo->width; p++ )
 	for( unsigned int q=0; q<minfo->height; q++ )
         {	  
-	  //printf( "%d,%d \n", p,q );
+	  //printf( "{%d,%d}", p,q );
 
 	  stg_cell_t* cell = 
 	    stg_cell_locate( matrix->root, p/minfo->ppm, q/minfo->ppm );
@@ -171,7 +171,10 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   puts( "done." );
 
   // store the map as a model property named "_map"
-  stg_model_set_property( this->mod, "_map", (void*)minfo, sizeof(minfo) );
+  stg_model_set_property( this->mod, "_map", (void*)minfo, sizeof(stg_map_info_t) );
+  
+  // minfo data was copied, so we can safely delete the original
+  //delete minfo;
 
   //if(this->mapdata == NULL)
   //{
@@ -215,7 +218,7 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
 
   
   stg_map_info_t* minfo = (stg_map_info_t*)
-    stg_model_get_property_fixed( this->mod, "_map", sizeof(minfo));
+    stg_model_get_property_fixed( this->mod, "_map", sizeof(stg_map_info_t));
 
   assert( minfo );
 
@@ -234,35 +237,41 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
   assert(mapresp);
   
   unsigned int oi, oj, si, sj;
-  oi = mapreq->col;
-  oj = mapreq->row;
-  si = mapreq->width;
-  sj = mapreq->height;
+  oi = mapresp->col = mapreq->col;
+  oj = mapresp->row = mapreq->row;
+  si = mapresp->width = mapreq->width;
+  sj = mapresp->height =  mapreq->height;
   
-  const char* spin = "|/-\\";
-  static int spini = 0;
+  printf( "Stage map driver fetching tile from (%d,%d) of size (%d,%d) from map of (%d,%d) pixels.\n",
+	  oi, oj, si, sj, minfo->width, minfo->height  );
+  
+  // // print an activity spinner - now the tile sizes are so big we
+  // // don't really need this.
 
-  if( spini == 0 )
-    printf( "Stage: downloading map... " );
-  
-  putchar( 8 ); // backspace
-  
-  if( oi+si == minfo->width && oj+sj == minfo->height )
-    {
-      puts( " done." );
-      spini = 0;
-    }
-  else
-    {
-      putchar( spin[spini++%4] );
-      fflush(stdout);
-    }
+//   const char* spin = "|/-\\";
+//   static int spini = 0;
 
-  fflush(stdout);
+//   if( spini == 0 )
+//     printf( "Stage: downloading map... " );
+  
+//   putchar( 8 ); // backspace
+  
+//   if( oi+si == minfo->width && oj+sj == minfo->height )
+//     {
+//       puts( " done." );
+//       spini = 0;
+//     }
+//   else
+//     {
+//       putchar( spin[spini++%4] );
+//       fflush(stdout);
+//     }
+
+//   fflush(stdout);
   
    //   // Grab the pixels from the map
    for( unsigned int j = 0; j < sj; j++)
-     {
+     {       
        for( unsigned int i = 0; i < si; i++)
 	 {
 	   if((i * j) <= PLAYER_MAP_MAX_TILE_SIZE)
@@ -295,13 +304,13 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
 	 }
      }
          
-   printf( "Stage driver: providing map data %d/%d %d/%d\n",
-	   oi+si, minfo->width, oj+si, minfo->height );
-   
    // recompute size, in case the tile got truncated
    mapsize = (sizeof(player_map_data_t) - PLAYER_MAP_MAX_TILE_SIZE + 
 	      (mapresp->width * mapresp->height));
    mapresp->data_count = mapresp->width * mapresp->height;
+   
+   printf( "Stage publishing map data %d bytes\n",
+	   mapsize );
 
    this->driver->Publish(this->addr, resp_queue,
 			 PLAYER_MSGTYPE_RESP_ACK,
