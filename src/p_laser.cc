@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.14 2005-10-09 19:46:27 rtv Exp $
+ * CVS: $Id: p_laser.cc,v 1.15 2005-10-11 22:36:12 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -84,6 +84,7 @@ void InterfaceLaser::Publish( void )
     {      
       pdata.min_angle = -cfg->fov/2.0;
       pdata.max_angle = +cfg->fov/2.0;
+      pdata.max_range = cfg->range_max;
       pdata.resolution = cfg->fov / (double)(cfg->samples-1);
       pdata.ranges_count = pdata.intensity_count = cfg->samples;
       pdata.id = this->scan_id++;
@@ -181,6 +182,7 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
       memset(&plc,0,sizeof(plc));
       plc.min_angle = -slc->fov/2.0;
       plc.max_angle = +slc->fov/2.0;
+      plc.max_range = slc->range_max;
       plc.resolution = angular_resolution;
       plc.intensity = intensity;
 
