@@ -45,6 +45,7 @@
 #define STG_DEFAULT_NOSE FALSE
 #define STG_DEFAULT_GRID FALSE
 #define STG_DEFAULT_OUTLINE TRUE
+#define STG_DEFAULT_MAP_RESOLUTION 0.1
 
 //extern int _stg_disable_gui;
 
@@ -472,6 +473,9 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
   int stall = 0;
   stg_model_set_property( mod, "stall", &stall, sizeof(stall));
+  
+  double mres = 0.1; // meters
+  stg_model_set_property( mod, "map_resolution", &mres, sizeof(mres));
   
   // now it's safe to create the GUI components
   if( mod->world->win )
@@ -1677,22 +1681,31 @@ void stg_model_load( stg_model_t* mod )
   int *now = NULL;
   int val = 0;
   
-  now = stg_model_get_property_fixed( mod, "nose", sizeof(int));
+  now = stg_model_get_property_fixed( mod, "nose", sizeof(val));
   val = wf_read_int(mod->id, "gui_nose", now ? *now : STG_DEFAULT_NOSE );  
   stg_model_set_property( mod, "nose", &val, sizeof(val) );
   
-  now = stg_model_get_property_fixed( mod, "grid", sizeof(int));
+  now = stg_model_get_property_fixed( mod, "grid", sizeof(val));
   val = wf_read_int(mod->id, "gui_grid", now ? *now : STG_DEFAULT_GRID );  
   stg_model_set_property( mod, "grid", &val, sizeof(val) );
   
-  now = stg_model_get_property_fixed( mod, "mask", sizeof(int));
+  now = stg_model_get_property_fixed( mod, "mask", sizeof(val));
   val = wf_read_int(mod->id, "gui_movemask", now ? *now : STG_DEFAULT_MASK);  
   stg_model_set_property( mod, "mask", &val, sizeof(val) );
   
-  now = stg_model_get_property_fixed( mod, "outline", sizeof(int));
+  now = stg_model_get_property_fixed( mod, "outline", sizeof(val));
   val = wf_read_int(mod->id, "gui_outline", now ? *now : STG_DEFAULT_OUTLINE);  
   stg_model_set_property( mod, "outline", &val, sizeof(val) );
-  
+
+  double* dnow = NULL;
+  double dval = 0.0;
+  dnow = stg_model_get_property_fixed( mod, "map_resolution", sizeof(dval));
+  dval = wf_read_float(mod->id, "map_resolution", dnow ? *dnow : STG_DEFAULT_MAP_RESOLUTION );  
+
+  //dval = STG_DEFAULT_MAP_RESOLUTION;
+
+  printf( "map resolution: %.2f\n", dval );
+  stg_model_set_property( mod, "map_resolution", &dval, sizeof(dval) );
 
   // if a type-specific load callback has been set
   if( mod->f_load )

@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.4 2005-10-09 20:59:46 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.5 2005-10-16 19:06:44 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -95,8 +95,16 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
       delete minfo;
     }
   
-  minfo = new stg_map_info_t();
-  minfo->ppm = this->mod->world->ppm;  
+  minfo = (stg_map_info_t*)calloc(sizeof(stg_map_info_t),1);
+
+  double *mres = (double*)
+    stg_model_get_property_fixed( this->mod, "map_resolution", sizeof(double));
+  assert(mres);
+
+  minfo->ppm = 1.0/(*mres);
+
+  printf( "minfo ppm %.3f\n", minfo->ppm);
+
   minfo->width = (unsigned int)( geom.size.x * minfo->ppm );
   minfo->height = (unsigned int)( geom.size.y * minfo->ppm );
   
@@ -174,7 +182,7 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   stg_model_set_property( this->mod, "_map", (void*)minfo, sizeof(stg_map_info_t) );
   
   // minfo data was copied, so we can safely delete the original
-  delete minfo;
+  free(minfo);
 
   // prepare the map info for the client
   player_map_info_t info;  
@@ -279,7 +287,7 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
    mapresp->data_count = mapresp->width * mapresp->height;
    
    printf( "Stage publishing map data %d bytes\n",
-	   mapsize );
+	   (int)mapsize );
 
    this->driver->Publish(this->addr, resp_queue,
 			 PLAYER_MSGTYPE_RESP_ACK,
@@ -293,7 +301,8 @@ int InterfaceMap::ProcessMessage(MessageQueue* resp_queue,
 				 player_msghdr_t* hdr,
 				 void* data)
 {
-  
+  printf( "Stage map interface processing message\n" );
+
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
                            PLAYER_MAP_REQ_GET_DATA, 
                            this->addr))

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -81,7 +81,7 @@ int gripper_init( stg_model_t* mod )
 
   // sensible gripper defaults
   stg_geom_t geom;
-  geom.pose.x = 0;//-STG_DEFAULT_GRIPPER_SIZEX/2.0;
+  geom.pose.x = 0.0;
   geom.pose.y = 0.0;
   geom.pose.a = 0.0;
   geom.size.x = STG_DEFAULT_GRIPPER_SIZEX;

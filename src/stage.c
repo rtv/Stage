@@ -493,7 +493,7 @@ guchar* pb_get_pixel( GdkPixbuf* pb, int x, int y )
   return( pixels + y * rs + x * ch );
 }
 
-void pb_zero_pixel( GdkPixbuf* pb, int x, int y )
+void pb_set_pixel( GdkPixbuf* pb, int x, int y, uint8_t val )
 {
   // bounds checking
   int width = gdk_pixbuf_get_width(pb);
@@ -504,20 +504,20 @@ void pb_zero_pixel( GdkPixbuf* pb, int x, int y )
       guchar* pix = pb_get_pixel( pb, x, y );
       int bytes_per_sample = gdk_pixbuf_get_bits_per_sample (pb) / 8;
       int num_samples = gdk_pixbuf_get_n_channels(pb);
-      memset( pix, 0, num_samples * bytes_per_sample );
+      memset( pix, val, num_samples * bytes_per_sample );
     }
   else
-    PRINT_WARN4( "zero pixel %d,%d out of range (image dimensions %d by %d)", x, y, width, height );
+    PRINT_WARN4( "pb_set_pixel coordinate %d,%d out of range (image dimensions %d by %d)", x, y, width, height );
 }
 
-// zero all the pixels in a rectangle 
-void pb_zero_rect( GdkPixbuf* pb, int x, int y, int width, int height )
+// set all the pixels in a rectangle 
+void pb_set_rect( GdkPixbuf* pb, int x, int y, int width, int height, uint8_t val )
 {
   //todo - this could be faster - improve it if it gets used a lot)
   int a, b;
   for( a = y; a < y+height; a++ )
     for( b = x; b < x+width; b++ )
-      pb_zero_pixel( pb,b,a );
+      pb_set_pixel( pb,b,a, val );
 }  
 
 // returns TRUE if any channel in the pixel is non-zero
@@ -605,8 +605,8 @@ int stg_rotrects_from_image_file( const char* filename,
     {
       for(x = 0; x < img_width; x++)
 	{
-	  // skip blank pixels
-	  if( ! pb_pixel_is_set( pb,x,y) )
+	  // skip blank (white) pixels
+	  if(  pb_pixel_is_set( pb,x,y) )
 	    continue;
 	  
 	  // a rectangle starts from this point
@@ -614,8 +614,8 @@ int stg_rotrects_from_image_file( const char* filename,
 	  int starty = y;
 	  int height = img_height; // assume full height for starters
 	  
-	  // grow the width - scan along the line until we hit an empty pixel
-	  for( ; x < img_width &&  pb_pixel_is_set(pb,x,y); x++ )
+	  // grow the width - scan along the line until we hit an empty (white) pixel
+	  for( ; x < img_width &&  ! pb_pixel_is_set(pb,x,y); x++ )
 	    {
 	      // handle horizontal cropping
 	      //double ppx = x * sx; 
@@ -624,7 +624,7 @@ int stg_rotrects_from_image_file( const char* filename,
 	      
 	      // look down to see how large a rectangle below we can make
 	      int yy  = y;
-	      while( pb_pixel_is_set(pb,x,yy) && (yy < img_height-1) )
+	      while( ! pb_pixel_is_set(pb,x,yy) && (yy < img_height-1) )
 		{ 
 		  // handle vertical cropping
 		  //double ppy = (this->image->height - yy) * sy;
@@ -640,8 +640,8 @@ int stg_rotrects_from_image_file( const char* filename,
 	      if( yy-y < height ) height = yy-y; // shrink the height to fit
 	    } 
 	  
-	  // delete the pixels we have used in this rect
-	  pb_zero_rect( pb, startx, starty, x-startx, height );
+	  // whiten the pixels we have used in this rect
+	  pb_set_rect( pb, startx, starty, x-startx, height, 0xFF );
 	  
 	  // add this rectangle to the array
 	  (*rect_count)++;
