@@ -23,13 +23,13 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_gripper.cc,v 1.3 2005-07-23 07:20:39 rtv Exp $
+ * CVS: $Id: p_gripper.cc,v 1.4 2005-10-16 02:07:35 rtv Exp $
  */
 
 
 #include "p_driver.h"
 
-#include "playerclient.h" // for the dumb pioneer gripper command defines
+//#include "playerclient.h" // for the dumb pioneer gripper command defines
 
 //
 // GRIPPER INTERFACE
@@ -39,49 +39,14 @@ extern "C" {
 int gripper_init( stg_model_t* mod );
 }
 
-InterfaceGripper::InterfaceGripper(  player_device_id_t id, 
-				     StgDriver* driver,
-				     ConfigFile* cf,
-				     int section )
+InterfaceGripper::InterfaceGripper( player_devaddr_t addr, 
+				    StgDriver* driver,
+				    ConfigFile* cf,
+				    int section )
   
-  : InterfaceModel( id, driver, cf, section, gripper_init )
+  : InterfaceModel( addr, driver, cf, section, gripper_init )
 {
-  //puts( "InterfacePosition constructor" );
-  this->data_len = sizeof(player_gripper_data_t);
-  this->cmd_len = sizeof(player_gripper_cmd_t);  
-}
-
-void InterfaceGripper::Command( void* src, size_t len )
-{
-  if( len == sizeof(player_gripper_cmd_t) )
-    {
-      player_gripper_cmd_t* pcmd = (player_gripper_cmd_t*)src;
-      //printf("GripperCommand: %d\n", pcmd->cmd);
-      // Pass it to stage:
-      stg_gripper_cmd_t cmd; 
-      cmd.cmd = STG_GRIPPER_CMD_NOP;
-      cmd.arg = 0;
-
-      switch( pcmd->cmd )
-	{
-	case GRIPclose: cmd.cmd = STG_GRIPPER_CMD_CLOSE; break;
-	case GRIPopen:  cmd.cmd = STG_GRIPPER_CMD_OPEN; break;
-	case LIFTup:    cmd.cmd = STG_GRIPPER_CMD_UP; break;
-	case LIFTdown:  cmd.cmd = STG_GRIPPER_CMD_DOWN; break;
-	  //default:
-	  //printf( "Stage: player gripper command %d is not implemented\n", 
-	  //  pcmd->cmd );
-	}
-
-      //cmd.cmd  = pcmd->cmd;
-      cmd.arg = pcmd->arg;
-
-      //stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
-      stg_model_set_property( this->mod, "gripper_cmd", &cmd, sizeof(cmd));
-    }
-  else
-    PRINT_ERR2( "wrong size gripper command packet (%d/%d bytes)",
-		(int)len, (int)sizeof(player_position_cmd_t) );
+  // nothing to do
 }
 
 void InterfaceGripper::Publish( void )
@@ -113,24 +78,90 @@ void InterfaceGripper::Publish( void )
   //pdata.state |= sdata->lift_error ? 0x80 : 0x00;
   //pdata.state |= sdata->gripper_error ? 0x08 : 0x00;
   
-  this->driver->PutData( this->id, &pdata, sizeof(pdata), NULL); 
-}
-
-void InterfaceGripper::Configure( void* client, void* buffer, size_t len )
-{
-  printf("got gripper request\n");
+  //this->driver->PutData( this->id, &pdata, sizeof(pdata), NULL); 
   
-  uint8_t* buf = (uint8_t*)buffer;
-  switch( buf[0] )
-    {
-    default:
-      PRINT_WARN1( "stg_position doesn't support config id %d", buf[0] );
-      if( this->driver->PutReply( this->id, 
-				  client, 
-				  PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
-	DRIVER_ERROR("PutReply() failed");
-      break;
-    }
+  // Write data
+  this->driver->Publish(this->addr, NULL,
+			PLAYER_MSGTYPE_DATA,
+			PLAYER_GRIPPER_DATA_STATE,
+			(void*)&pdata, sizeof(pdata), NULL);
+  
 }
 
+int InterfaceGripper::ProcessMessage(MessageQueue* resp_queue,
+				     player_msghdr_t* hdr,				     
+                                      void* data)
+{
+  // Is it a new motor command?
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+                           PLAYER_GRIPPER_CMD_STATE, 
+                           this->addr))
+    {
+      if( hdr->size == sizeof(player_gripper_cmd_t) )
+	{
+	  player_gripper_cmd_t* pcmd = (player_gripper_cmd_t*)data;
+
+	  // Pass it to stage:
+	  stg_gripper_cmd_t cmd; 
+	  cmd.cmd = STG_GRIPPER_CMD_NOP;
+	  cmd.arg = 0;
+	  
+	  switch( pcmd->cmd )
+	    {
+	    case GRIPclose: cmd.cmd = STG_GRIPPER_CMD_CLOSE; break;
+	    case GRIPopen:  cmd.cmd = STG_GRIPPER_CMD_OPEN; break;
+	    case LIFTup:    cmd.cmd = STG_GRIPPER_CMD_UP; break;
+	    case LIFTdown:  cmd.cmd = STG_GRIPPER_CMD_DOWN; break;
+
+	    default:
+	      PRINT_WARN1( "Stage: player gripper command %d is not implemented\n", 
+			   pcmd->cmd );
+	    }
+	  
+	  //cmd.cmd  = pcmd->cmd;
+	  cmd.arg = pcmd->arg;
+	  
+	  //stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
+	  stg_model_set_property( this->mod, "gripper_cmd", &cmd, sizeof(cmd));
+	}
+      else
+	PRINT_ERR2( "wrong size gripper command packet (%d/%d bytes)",
+		    (int)hdr->size, (int)sizeof(player_gripper_cmd_t) );
+
+      return 0;
+    }
+
+  // is it a geometry request?  
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+                           PLAYER_GRIPPER_REQ_GET_GEOM,
+                           this->addr))
+    {
+      // TODO: get pose in top-level model's CS instead.
+      
+      stg_geom_t geom;
+      stg_model_get_geom( this->mod, &geom );
+      
+      stg_pose_t pose;
+      stg_model_get_pose( this->mod, &pose);
+      
+      player_gripper_geom_t pgeom;
+      pgeom.pose.px = pose.x;
+      pgeom.pose.py = pose.y;
+      pgeom.pose.pa = pose.a;      
+      pgeom.size.sw = geom.size.y;
+      pgeom.size.sl = geom.size.x;
+      
+      this->driver->Publish(this->addr, resp_queue,
+			    PLAYER_MSGTYPE_RESP_ACK, 
+			    PLAYER_GRIPPER_REQ_GET_GEOM,
+			    (void*)&pgeom, sizeof(pgeom), NULL);
+      return(0);
+
+      
+    }
+
+  PRINT_WARN2( "stage gripper doesn't support message id:%d",
+	       hdr->type, hdr->subtype );
+  return -1;
+}
 

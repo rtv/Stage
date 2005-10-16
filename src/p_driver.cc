@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.20 2005-10-09 19:46:27 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.21 2005-10-16 02:07:35 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -340,12 +340,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  ifsrc = new InterfaceMap( player_addr,  this, cf, section );
 	  break;	  
 	  
-#if 0
-	  
 	case PLAYER_GRIPPER_CODE:
 	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
 	  break;	  
-#endif
 
 	default:
 	  PRINT_ERR1( "error: stage driver doesn't support interface type %d\n",

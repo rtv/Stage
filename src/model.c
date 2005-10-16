@@ -470,6 +470,9 @@ stg_model_t* stg_model_create( stg_world_t* world,
   int mask = mod->parent ? 0 : STG_DEFAULT_MASK;
   stg_model_set_property( mod, "mask", &mask, sizeof(mask) );
 
+  int stall = 0;
+  stg_model_set_property( mod, "stall", &stall, sizeof(stall));
+  
   // now it's safe to create the GUI components
   if( mod->world->win )
     gui_model_create( mod );
@@ -839,50 +842,27 @@ int stg_model_update( stg_model_t* mod )
 
 int stg_model_startup( stg_model_t* mod )
 {
-  if( mod->f_startup == NULL )
-    PRINT_ERR1( "model %s has no startup function registered", mod->token ); 
-  
-  //assert(mod->f_startup);
-
   if( mod->f_startup )
     return mod->f_startup(mod);
+  else
+    PRINT_WARN1( "model %s has no startup function registered (TODO: remove this warning before release)", mod->token ); 
   
   return 0; //ok
 }
 
 int stg_model_shutdown( stg_model_t* mod )
 {
-  if( mod->f_shutdown == NULL )
-    PRINT_ERR1( "model %s has no shutdown function registered", mod->token ); 
-  
-  //assert(mod->f_shutdown );
-  
   if( mod->f_shutdown )
     return mod->f_shutdown(mod);
+  else
+    PRINT_WARN1( "model %s has no shutdown function registered (TODO: remove this warning before release)", mod->token ); 
   
   return 0; //ok
 }
 
 
-
 //------------------------------------------------------------------------
 // basic model properties
-
-
-/*
-void stg_model_get_pose( stg_model_t* mod, stg_pose_t* pose )
-{
-  assert(mod);
-  assert(pose);
-  memcpy(pose, &mod->pose, sizeof(mod->pose));
-  
-  //stg_pose_t* p;
-  //size_t len = stg_model_get_property_data( mod, "pose", &p );  
-  //assert( len == sizeof(stg_pose_t));
-  //memcpy( pose, p, len );
-}
-*/
-
 
 void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest )
 {
@@ -1331,7 +1311,10 @@ int stg_model_update_pose( stg_model_t* mod )
       //if( hitthing->friction == 0 ) // hit an immovable thing
 	{
 	  PRINT_DEBUG( "HIT something immovable!" );
-	  //mod->stall = 1;
+	  
+	  int stall = 1;
+	  stg_model_set_property( mod, "stall", &stall, sizeof(stall));
+
 
 	  // set velocity to zero
 	  stg_velocity_t zero_v;
@@ -1385,7 +1368,10 @@ int stg_model_update_pose( stg_model_t* mod )
 
       // now set the new pose
       stg_model_set_global_pose( mod, &gpose );
-  
+      
+      int stall = 0;
+      stg_model_set_property( mod, "stall", &stall, sizeof(stall));
+        
       // ignore acceleration in energy model for now, we just pay
       // something to move.	
       //stg_kg_t mass = *stg_model_get_mass( mod );

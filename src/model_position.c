@@ -6,8 +6,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
-//  $Author: gerkey $
-//  $Revision: 1.50 $
+//  $Author: rtv $
+//  $Revision: 1.51 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -139,7 +139,7 @@ int position_init( stg_model_t* mod )
   stg_model_set_property( mod, "position_drive", &drive, sizeof(drive) );
 
   stg_position_stall_t stall = 0;
-  stg_model_set_property( mod, "position_stall", &stall, sizeof(stall));
+  stg_model_set_property( mod, "stall", &stall, sizeof(stall));
   
   stg_position_cmd_t cmd;
   memset( &cmd, 0, sizeof(cmd));
@@ -311,10 +311,10 @@ int position_update( stg_model_t* mod )
   if( mod->subs )   // no driving if noone is subscribed
     {            
       // HACK - BPG
-      double hitx=0, hity=0;
-      stg_pose_t gpose;
-      stg_model_t* hitthing;
-      stg_position_stall_t stall;
+      //double hitx=0, hity=0;
+      //stg_pose_t gpose;
+      //stg_model_t* hitthing;
+      //stg_position_stall_t stall;
 
       stg_position_cmd_t *cmd = 
 	stg_model_get_property_fixed( mod, "position_cmd", sizeof(stg_position_cmd_t));      
@@ -436,8 +436,6 @@ int position_update( stg_model_t* mod )
 		  
 		  // now set the underlying velocities using the normal
 		  // diff-steer model
-		  //vel->x = (calc.x * cos(mod->pose.a) - calc.y * sin(mod->pose.a));
-		  //vel->y = (calc.x * sin(mod->pose.a) + calc.y * cos(mod->pose.a));
 		  vel->x = calc.x;
 		  vel->y = 0;
 		  vel->a = calc.a;
@@ -468,16 +466,16 @@ int position_update( stg_model_t* mod )
       
 
       // HACK: don't know if this is the right way to do this - BPG
-      stg_model_get_global_pose( mod, &gpose );
-      hitthing = stg_model_test_collision_at_pose( mod, &gpose, &hitx, &hity );
-      if(hitthing)
-        stall = 1;
-      else
-        stall = 0;
-      stg_model_set_property( mod, "position_stall", &stall, sizeof(stall));
+/*       stg_model_get_global_pose( mod, &gpose ); */
+/*       hitthing = stg_model_test_collision_at_pose( mod, &gpose, &hitx, &hity ); */
+/*       if(hitthing) */
+/*         stall = 1; */
+/*       else */
+/*         stall = 0; */
+/*       stg_model_set_property( mod, "position_stall", &stall, sizeof(stall)); */
 
 
-      // we've poked the velocity - muts refresh it so others notice
+      // we've poked the velocity - must refresh it so others notice
       // the change
       stg_model_property_refresh( mod, "velocity" );
     }
