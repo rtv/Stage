@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.7 2005-10-17 04:58:17 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.8 2005-10-17 22:54:52 gerkey Exp $
  */
 
 #include "p_driver.h"
@@ -166,7 +166,7 @@ void render_line( int8_t* buf,
   //  x1, y1, x2, y2, w, h );
 
   double length = hypot( x2-x1, y2-y1 );
-  double angle = atan2( y2-y1, x2-x1 );
+  double angle = atan2( (double)(y2-y1), (double)(x2-x1) );
   double cosa = cos(angle);
   double sina = sin(angle);
   
