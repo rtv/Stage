@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.6 2005-10-17 04:55:04 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.7 2005-10-17 04:58:17 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -190,9 +190,7 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
 				     player_msghdr_t* hdr,
 				     void* data)
 {
-  printf( "device %s received map data request\n", this->mod->token );
-
-
+  // printf( "device %s received map data request\n", this->mod->token );
   
   stg_geom_t geom;
   stg_model_get_geom( this->mod, &geom );
@@ -218,10 +216,11 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
   // initiall all cells are 'empty'
   memset( mapresp->data, -1, sizeof(uint8_t) * PLAYER_MAP_MAX_TILE_SIZE );
 
-  printf( "Stage map driver fetching tile from (%d,%d) of size (%d,%d) from map of (%d,%d) pixels.\n",
-	  oi, oj, si, sj, 
-	  (int)(geom.size.x*mres), 
-	  (int)(geom.size.y*mres)  );
+  // printf( "Stage map driver fetching tile from (%d,%d) of size
+  //(%d,%d) from map of (%d,%d) pixels.\n",
+  // 	  oi, oj, si, sj, 
+  // 	  (int)(geom.size.x*mres), 
+  // 	  (int)(geom.size.y*mres)  );
   
   
   // render the polygons directly into the outgoing message buffer. fast! outrageous!
@@ -273,8 +272,8 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
 
    mapresp->data_count = mapresp->width * mapresp->height;
    
-   printf( "Stage publishing map data %d bytes\n",
-	   (int)mapsize );
+   //printf( "Stage publishing map data %d bytes\n",
+   //   (int)mapsize );
 
    this->driver->Publish(this->addr, resp_queue,
 			 PLAYER_MSGTYPE_RESP_ACK,
@@ -289,7 +288,7 @@ int InterfaceMap::ProcessMessage(MessageQueue* resp_queue,
 				 player_msghdr_t* hdr,
 				 void* data)
 {
-  printf( "Stage map interface processing message\n" );
+  // printf( "Stage map interface processing message\n" );
 
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
                            PLAYER_MAP_REQ_GET_DATA, 
