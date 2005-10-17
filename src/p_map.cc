@@ -23,10 +23,13 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.5 2005-10-16 19:06:44 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.6 2005-10-17 04:55:04 rtv Exp $
  */
 
 #include "p_driver.h"
+
+#include <iostream>
+using namespace std;
 
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -42,13 +45,6 @@
 //
 // MAP INTERFACE
 // 
-
-typedef struct
-{
-  double ppm;
-  unsigned int width, height;
-  int8_t* data;
-} stg_map_info_t;
 
 InterfaceMap::InterfaceMap( player_devaddr_t addr, 
 			    StgDriver* driver,
@@ -68,131 +64,80 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   printf( "Stage: device \"%s\" received map info request\n", 
 	  this->mod->token );
   
-
-//   size_t reqlen =  sizeof(info.subtype); // Expected length of request
-  
-//   // check if the config request is valid
-//   if(len != reqlen)
-//     {
-//       PLAYER_ERROR2("config request len is invalid (%d != %d)", len, reqlen);
-//       if (device->driver->PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
-// 	PLAYER_ERROR("PutReply() failed");
-//       return;
-//     }
-  
   // create and render a map for this model
   stg_geom_t geom;
   stg_model_get_geom( this->mod, &geom );
   
-  // if we already have a map info for this model, destroy it
-  stg_map_info_t* minfo = (stg_map_info_t*)
-    stg_model_get_property_fixed( this->mod, "_map", 
-				  sizeof(stg_map_info_t) );
-  
-  if( minfo )
-    {
-      if( minfo->data ) delete [] minfo->data;
-      delete minfo;
-    }
-  
-  minfo = (stg_map_info_t*)calloc(sizeof(stg_map_info_t),1);
+  // if we already have a map for this model, destroy it
+  stg_matrix_t* old_matrix = (stg_matrix_t*)
+    stg_model_get_property_fixed( this->mod, "map_matrix", 
+				  sizeof(stg_matrix_t) );  
+  if( old_matrix )
+    stg_matrix_destroy( old_matrix );
 
   double *mres = (double*)
     stg_model_get_property_fixed( this->mod, "map_resolution", sizeof(double));
   assert(mres);
-
-  minfo->ppm = 1.0/(*mres);
-
-  printf( "minfo ppm %.3f\n", minfo->ppm);
-
-  minfo->width = (unsigned int)( geom.size.x * minfo->ppm );
-  minfo->height = (unsigned int)( geom.size.y * minfo->ppm );
-  
-  // create an occupancy grid of the correct size, initially full of
-  // unknown cells
-  //int8_t* map = NULL; 
-  assert( (minfo->data = new int8_t[minfo->width*minfo->height] ));
-  memset( minfo->data, 0, minfo->width * minfo->height );
-  
-  printf( "Stage: creating map for model \"%s\" of %d by %d cells at %.2f ppm", 
-	  this->mod->token, minfo->width, minfo->height, minfo->ppm );
-  fflush(stdout);
 
   size_t sz=0;
   stg_polygon_t* polys = (stg_polygon_t*)
     stg_model_get_property( this->mod, "polygons", &sz);
   size_t count = sz / sizeof(stg_polygon_t);
   
+  stg_matrix_t* matrix = stg_matrix_create( 1.0/(*mres), 
+					    geom.size.x,
+					    geom.size.y );
+  
+  printf( "Stage: creating map for model \"%s\" of %f by %f cells at %.2f ppm\n", 
+	  this->mod->token, 
+	  matrix->width * matrix->ppm, 
+	  matrix->height * matrix->ppm, 
+	  matrix->ppm );
+  
   if( polys && count ) // if we have something to render
-    {
+    {      
+      // render the model into the matrix
+      stg_matrix_polygons( matrix, 
+			   geom.size.x/2.0,
+			   geom.size.y/2.0,
+			   0,
+			   polys, count, 
+			   this->mod );  
       
-      // we'll use a temporary matrix, as it knows how to render objects
+      stg_bool_t* boundary = (stg_bool_t*)
+	stg_model_get_property_fixed( this->mod, 
+				      "boundary", sizeof(stg_bool_t));
+      if( *boundary )    
+	stg_matrix_rectangle( matrix,
+			      geom.size.x/2.0,
+			      geom.size.y/2.0,
+			      0,
+			      geom.size.x,
+			      geom.size.y,
+			      this->mod );
       
-      stg_matrix_t* matrix = stg_matrix_create( minfo->ppm, 
-						this->mod->world->matrix->width,
-						this->mod->world->matrix->height );    
-      if( count > 0 ) 
-	{
-	  // render the model into the matrix
-	  stg_matrix_polygons( matrix, 
-			       geom.size.x/2.0,
-			       geom.size.y/2.0,
-			       0,
-			       polys, count, 
-			       this->mod );  
-	  
-	  stg_bool_t* boundary = (stg_bool_t*)
-	    stg_model_get_property_fixed( this->mod, 
-					  "boundary", sizeof(stg_bool_t));
-	  if( *boundary )    
-	    stg_matrix_rectangle( matrix,
-				  geom.size.x/2.0,
-				  geom.size.y/2.0,
-				  0,
-				  geom.size.x,
-				  geom.size.y,
-				  this->mod );
-	}
+      // add this matrix as a property
+      stg_model_set_property( this->mod, "map_matrix", 
+			      (void*) matrix, sizeof(stg_matrix_t));
       
-      // Now convert the matrix to a Player occupancy grid. if the
-      // matrix contains anything in a cell, we set that map cell to
-      // be occupied, else unoccupied
-      
-      for( unsigned int p=0; p<minfo->width; p++ )
-	for( unsigned int q=0; q<minfo->height; q++ )
-        {	  
-	  //printf( "{%d,%d}", p,q );
-
-	  stg_cell_t* cell = 
-	    stg_cell_locate( matrix->root, p/minfo->ppm, q/minfo->ppm );
-
-	  if( cell && cell->data )
-	    minfo->data[ q * minfo->width + p ] =  1;
-	  else
-	    minfo->data[ q * minfo->width + p ] =  0;
-	}
-      
+      // TODO: fix leak of  matrix structure. no big deal.
       // we're done with the matrix
-      stg_matrix_destroy( matrix );
+      //stg_matrix_destroy( matrix );
     }
 
   puts( "done." );
-
-  // store the map as a model property named "_map"
-  stg_model_set_property( this->mod, "_map", (void*)minfo, sizeof(stg_map_info_t) );
   
-  // minfo data was copied, so we can safely delete the original
-  free(minfo);
-
   // prepare the map info for the client
   player_map_info_t info;  
 
   // pixels per kilometer
-  info.scale = 1.0 / minfo->ppm;
+  info.scale = 1.0 / matrix->ppm;
   
   // size in pixels
-  info.width = minfo->width;
-  info.height = minfo->height;
+  //info.width = (uint32_t)(matrix->width * matrix->ppm);
+  //info.height = (uint32_t)(matrix->height * matrix->ppm);
+  info.width = (uint32_t)(geom.size.x * matrix->ppm);
+  info.height = (uint32_t)(geom.size.y * matrix->ppm);
   
   // origin of map center in global coords
   stg_pose_t global;
@@ -210,6 +155,36 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   return 0;
 }
 
+
+void render_line( int8_t* buf, 
+		  int w, int h, 
+		  int x1, int y1, 
+		  int x2, int y2, 
+		  int8_t val )
+{
+  //printf( "render line: from %d,%d to %d,%d in image size %d,%d\n",
+  //  x1, y1, x2, y2, w, h );
+
+  double length = hypot( x2-x1, y2-y1 );
+  double angle = atan2( y2-y1, x2-x1 );
+  double cosa = cos(angle);
+  double sina = sin(angle);
+  
+  int p,q;
+  for( double i=0; i<=length; i++ )
+    {
+      p = x1 + (int)(i*cosa);
+      q = y1 + (int)(i*sina);
+      
+      //printf( "(%d,%d)", p,q );
+
+      if( p >= 0 && p < w && q >=0 && q < h )
+	buf[ q * w + p ] = val;      
+    }
+  //puts("");
+}
+
+
 // Handle map data request
 int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
 				     player_msghdr_t* hdr,
@@ -217,21 +192,18 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
 {
   printf( "device %s received map data request\n", this->mod->token );
 
+
   
-  stg_map_info_t* minfo = (stg_map_info_t*)
-    stg_model_get_property_fixed( this->mod, "_map", sizeof(stg_map_info_t));
-
-  assert( minfo );
-
-  int8_t* map = NULL;  
-  assert( (map = minfo->data ) );
-
+  stg_geom_t geom;
+  stg_model_get_geom( this->mod, &geom );
+  
+  double mres = *(double*)
+    stg_model_get_property_fixed( this->mod, 
+				  "map_resolution", sizeof(double));
+  
   // request packet
-  player_map_data_t* mapreq = (player_map_data_t*)data;
-  
-
-  size_t mapsize = (sizeof(player_map_data_t) - PLAYER_MAP_MAX_TILE_SIZE + 
-		    (mapreq->width * mapreq->height));
+  player_map_data_t* mapreq = (player_map_data_t*)data;  
+  size_t mapsize = sizeof(player_map_data_t);
 
   // response packet
   player_map_data_t* mapresp = (player_map_data_t*)calloc(1,mapsize);
@@ -243,47 +215,62 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
   si = mapresp->width = mapreq->width;
   sj = mapresp->height =  mapreq->height;
   
+  // initiall all cells are 'empty'
+  memset( mapresp->data, -1, sizeof(uint8_t) * PLAYER_MAP_MAX_TILE_SIZE );
+
   printf( "Stage map driver fetching tile from (%d,%d) of size (%d,%d) from map of (%d,%d) pixels.\n",
-	  oi, oj, si, sj, minfo->width, minfo->height  );
-    
-   // Grab the pixels from the map
-   for( unsigned int j = 0; j < sj; j++)
-     {       
-       for( unsigned int i = 0; i < si; i++)
-	 {
-	   if((i * j) <= PLAYER_MAP_MAX_TILE_SIZE)
-	     {
-	       if( i+oi >= 0 &&
-		   i+oi < minfo->width &&
-		   j+oj >= 0 &&
-		   j+oj < minfo->height )
-		 mapresp->data[i + j * si] = map[ i+oi + (minfo->width * (j+oj)) ];
-	       else
-		 {
-		   PLAYER_WARN2("requested cell (%d,%d) is offmap", i+oi, j+oj);
-		   mapresp->data[i + j * si] = 0;
-		 }
-	     }
-	   else
-	     {
-	       PLAYER_WARN("requested tile is too large; truncating");
-	       if(i == 0)
-		 {
-		   mapresp->width = si-1;
-		   mapresp->height = j-1;
-		 }
-	       else
-		 {
-		   mapresp->width = i;
-		   mapresp->height = j;
-		 }
-	     }
-	 }
-     }
-         
-   // recompute size, in case the tile got truncated
-   mapsize = (sizeof(player_map_data_t) - PLAYER_MAP_MAX_TILE_SIZE + 
-	      (mapresp->width * mapresp->height));
+	  oi, oj, si, sj, 
+	  (int)(geom.size.x*mres), 
+	  (int)(geom.size.y*mres)  );
+  
+  
+  // render the polygons directly into the outgoing message buffer. fast! outrageous!
+  size_t sz=0;
+  stg_polygon_t* polys = (stg_polygon_t*)
+    stg_model_get_property( this->mod, "polygons", &sz);
+  size_t polycount = sz / sizeof(stg_polygon_t);
+  
+  for( int p=0; p<polycount; p++ )
+    {       
+      // draw each line in the poly
+      for( int l=0; l<polys[p].points->len; l++ )
+	{
+	  stg_point_t* pt1 = &g_array_index( polys[p].points, stg_point_t, l );	  
+	  stg_point_t* pt2 = &g_array_index( polys[p].points, stg_point_t, (l+1) % l);	   
+	  
+	  render_line( mapresp->data, 
+		       mapresp->width, mapresp->height,
+		       (int)((pt1->x+geom.size.x/2.0) / mres), 
+		       (int)((pt1->y+geom.size.y/2.0) / mres),
+		       (int)((pt2->x+geom.size.x/2.0) / mres), 
+		       (int)((pt2->y+geom.size.y/2.0) / mres),
+		       1 ); 	  	  
+	}	  
+    }
+  
+  // if the model has a boundary, that's in the map too
+  stg_bool_t* boundary = (stg_bool_t*)
+    stg_model_get_property_fixed( mod, "boundary", sizeof(stg_bool_t));
+  
+  if( boundary && *boundary )
+    {      
+      render_line( mapresp->data, 
+		   mapresp->width, mapresp->height,
+		   0,0, mapresp->width-1,0, 1 );
+
+      render_line( mapresp->data, 
+		   mapresp->width, mapresp->height,
+		   mapresp->width-1,0, mapresp->width-1,mapresp->height-1, 1 );
+      
+      render_line( mapresp->data, 
+		   mapresp->width, mapresp->height,
+		   mapresp->width-1,mapresp->height-1,0, mapresp->height-1, 1 );
+      
+      render_line( mapresp->data, 
+		   mapresp->width, mapresp->height,
+		   0, mapresp->height-1, 0,0, 1 );
+    }
+
    mapresp->data_count = mapresp->width * mapresp->height;
    
    printf( "Stage publishing map data %d bytes\n",
@@ -294,6 +281,7 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
 			 PLAYER_MAP_REQ_GET_DATA,
 			 (void*)mapresp, mapsize, NULL);
    free(mapresp);   
+   
    return(0);
 }
 
@@ -317,50 +305,3 @@ int InterfaceMap::ProcessMessage(MessageQueue* resp_queue,
 	       hdr->type, hdr->subtype );
   return -1;
 }
-
-
-  // // print an activity spinner - now the tile sizes are so big we
-  // // don't really need this.
-
-//   const char* spin = "|/-\\";
-//   static int spini = 0;
-
-//   if( spini == 0 )
-//     printf( "Stage: downloading map... " );
-  
-//   putchar( 8 ); // backspace
-  
-//   if( oi+si == minfo->width && oj+sj == minfo->height )
-//     {
-//       puts( " done." );
-//       spini = 0;
-//     }
-//   else
-//     {
-//       putchar( spin[spini++%4] );
-//       fflush(stdout);
-//     }
-
-//   fflush(stdout);  // // print an activity spinner - now the tile sizes are so big we
-  // // don't really need this.
-
-//   const char* spin = "|/-\\";
-//   static int spini = 0;
-
-//   if( spini == 0 )
-//     printf( "Stage: downloading map... " );
-  
-//   putchar( 8 ); // backspace
-  
-//   if( oi+si == minfo->width && oj+sj == minfo->height )
-//     {
-//       puts( " done." );
-//       spini = 0;
-//     }
-//   else
-//     {
-//       putchar( spin[spini++%4] );
-//       fflush(stdout);
-//     }
-
-//   fflush(stdout);

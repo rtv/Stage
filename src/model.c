@@ -1697,14 +1697,11 @@ void stg_model_load( stg_model_t* mod )
   val = wf_read_int(mod->id, "gui_outline", now ? *now : STG_DEFAULT_OUTLINE);  
   stg_model_set_property( mod, "outline", &val, sizeof(val) );
 
+  // float properties
   double* dnow = NULL;
   double dval = 0.0;
   dnow = stg_model_get_property_fixed( mod, "map_resolution", sizeof(dval));
   dval = wf_read_float(mod->id, "map_resolution", dnow ? *dnow : STG_DEFAULT_MAP_RESOLUTION );  
-
-  //dval = STG_DEFAULT_MAP_RESOLUTION;
-
-  printf( "map resolution: %.2f\n", dval );
   stg_model_set_property( mod, "map_resolution", &dval, sizeof(dval) );
 
   // if a type-specific load callback has been set
