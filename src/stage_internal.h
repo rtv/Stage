@@ -356,12 +356,11 @@ extern "C" {
 				    int* widthp, int* heightp );
   
 
-  /** load [filename], an image format understood by gdk-pixbuf, and
-      return a set of rectangles that approximate the image. Caller
-      must free the array of rectangles. If width and height are
-      non-null, they are filled in with the size of the image in pixels 
+  /** convert a rotrect array into polygons. All polys are given the
+      size (width,height). Caller must free the returned array of polygons
   */
-  stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count );
+  stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count,
+					     double width, double height );
 
   /**@}*/
 

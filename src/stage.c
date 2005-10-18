@@ -442,7 +442,8 @@ stg_line_t* stg_rotrects_to_lines( stg_rotrect_t* rects, int num_rects )
 }
 
 /// converts an array of rectangles into an array of polygons
-stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count )
+stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count,
+					   double width, double height )
 {
   stg_polygon_t* polys = stg_polygons_create( count );
   stg_point_t pts[4];
@@ -461,6 +462,10 @@ stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count )
       
       // copy these points in the polygon
       stg_polygon_set_points( &polys[r], pts, 4 );
+
+      // store the bounding box of this polygon
+      polys[r].bbox.x = width;
+      polys[r].bbox.y = height;
     }
   
   return polys;
@@ -521,7 +526,7 @@ void pb_set_rect( GdkPixbuf* pb, int x, int y, int width, int height, uint8_t va
 }  
 
 // returns TRUE if any channel in the pixel is non-zero
-gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y )
+gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y, int threshold )
 {
   guchar* pixel = pb_get_pixel( pb,x,y );
   //int channels = gdk_pixbuf_get_n_channels(pb);
@@ -529,7 +534,7 @@ gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y )
   //int i;
   //for( i=0; i<channels; i++ )
   //if( pixel[i] ) return TRUE;
-  if( pixel[0] ) return TRUE; // just use the red channel for now
+  if( pixel[0] > threshold ) return TRUE; // just use the red channel for now
 
   return FALSE;
 }
@@ -541,10 +546,11 @@ stg_polygon_t* stg_polygons_from_image_file(  const char* filename,
   stg_rotrect_t* rects = NULL;
   int rect_count = 0;
 
+  int width, height;
   if( stg_rotrects_from_image_file( filename,  
 				    &rects,
 				    &rect_count,
-				    NULL, NULL ) )
+				    &width, &height ) )
     {
       PRINT_ERR1( "failed to load rects from image file \"%s\"",
 		  filename );      
@@ -555,7 +561,7 @@ stg_polygon_t* stg_polygons_from_image_file(  const char* filename,
   // else
 
   *count = (size_t)rect_count;
-  return stg_polygons_from_rotrects( rects, rect_count );
+  return stg_polygons_from_rotrects( rects, rect_count, (double)width, (double)height );
 }
 
 int stg_rotrects_from_image_file( const char* filename, 
@@ -563,6 +569,9 @@ int stg_rotrects_from_image_file( const char* filename,
 				  int* rect_count,
 				  int* widthp, int* heightp )
 {
+  // TODO: make this a parameter
+  const int threshold = 127;
+
   GError* err = NULL;
   GdkPixbuf* pb = gdk_pixbuf_new_from_file( filename, &err );
 
@@ -606,7 +615,7 @@ int stg_rotrects_from_image_file( const char* filename,
       for(x = 0; x < img_width; x++)
 	{
 	  // skip blank (white) pixels
-	  if(  pb_pixel_is_set( pb,x,y) )
+	  if(  pb_pixel_is_set( pb,x,y, threshold) )
 	    continue;
 	  
 	  // a rectangle starts from this point
@@ -615,7 +624,7 @@ int stg_rotrects_from_image_file( const char* filename,
 	  int height = img_height; // assume full height for starters
 	  
 	  // grow the width - scan along the line until we hit an empty (white) pixel
-	  for( ; x < img_width &&  ! pb_pixel_is_set(pb,x,y); x++ )
+	  for( ; x < img_width &&  ! pb_pixel_is_set(pb,x,y,threshold); x++ )
 	    {
 	      // handle horizontal cropping
 	      //double ppx = x * sx; 
@@ -624,7 +633,7 @@ int stg_rotrects_from_image_file( const char* filename,
 	      
 	      // look down to see how large a rectangle below we can make
 	      int yy  = y;
-	      while( ! pb_pixel_is_set(pb,x,yy) && (yy < img_height-1) )
+	      while( ! pb_pixel_is_set(pb,x,yy,threshold) && (yy < img_height-1) )
 		{ 
 		  // handle vertical cropping
 		  //double ppy = (this->image->height - yy) * sy;
@@ -760,19 +769,27 @@ void stg_polygons_normalize( stg_polygon_t* polys, int num,
 	  if( pt->x < minx ) minx = pt->x;
 	  if( pt->y < miny ) miny = pt->y;
 	  if( pt->x > maxx ) maxx = pt->x;
-	  if( pt->y > maxy ) maxy = pt->y;	  
+	  if( pt->y > maxy ) maxy = pt->y;
 
 	  assert( ! isnan( pt->x ) );
 	  assert( ! isnan( pt->y ) );
-	}      
+	}
     }
   
+  //minx = 0;
+  //miny = 0;
+  // maxx = polys[0].bbox.x;
+  //maxy = polys[0].bbox.y;
+
   // now normalize all lengths so that the lines all fit inside
   // the specified rectangle
   double scalex = (maxx - minx);
   double scaley = (maxy - miny);
+
+  //double scalex = polys[0].bbox.x;
+  //double scaley = polys[0].bbox.y;
   
-  for( l=0; l<num; l++ ) // scale each polygon
+  for( int l=0; l<num; l++ ) // scale each polygon
     { 
       // scale all the points in the polygon
       int p;
@@ -814,6 +831,20 @@ void stg_polygons_print( stg_polygon_t* polys, unsigned int count )
     }
 }
 
+
+/* void stg_polygons_bbox_calc( stg_polygon_t* polys, size_t count ) */
+/* { */
+/*   for( int i=0; i<count; i++ ) */
+/*     { */
+/*       for( int l=0; l<polys[i].points->len; l++ ) */
+/* 	{ */
+/* 	  // run through the points to calculate the bounding rectangle */
+/* 	  stg_polygon_t* p = &g_array_index( polys[i].points, stg_polygon_t, l ); */
+/* 	  p->bbox.x = -BILLION; */
+/* 	  p->bbox.y = +BILLION; */
+
+
+/* } */
 
 /// Copies [count] points from [pts] into polygon [poly], allocating
 /// memory if mecessary. Any previous points in [poly] are

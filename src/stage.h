@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.160 2005-09-12 06:17:31 rtv Exp $
+ * CVS: $Id: stage.h,v 1.161 2005-10-18 03:03:00 rtv Exp $
  */
 
 
@@ -397,6 +397,9 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     
     /// render color of this polygon - TODO  - implement color rendering
     stg_color_t color;
+
+    /// bounding box: width and height of the polygon
+    stg_size_t bbox;
 
     void* _data; // temporary internal use only
   } stg_polygon_t; 
