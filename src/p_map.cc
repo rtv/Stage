@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.8 2005-10-17 22:54:52 gerkey Exp $
+ * CVS: $Id: p_map.cc,v 1.9 2005-10-18 06:27:32 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -68,76 +68,24 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   stg_geom_t geom;
   stg_model_get_geom( this->mod, &geom );
   
-  // if we already have a map for this model, destroy it
-  stg_matrix_t* old_matrix = (stg_matrix_t*)
-    stg_model_get_property_fixed( this->mod, "map_matrix", 
-				  sizeof(stg_matrix_t) );  
-  if( old_matrix )
-    stg_matrix_destroy( old_matrix );
-
-  double *mres = (double*)
+  
+  double mres = *(double*)
     stg_model_get_property_fixed( this->mod, "map_resolution", sizeof(double));
-  assert(mres);
 
-  size_t sz=0;
-  stg_polygon_t* polys = (stg_polygon_t*)
-    stg_model_get_property( this->mod, "polygons", &sz);
-  size_t count = sz / sizeof(stg_polygon_t);
+  // size_t sz=0;
+//   stg_polygon_t* polys = (stg_polygon_t*)
+//     stg_model_get_property( this->mod, "polygons", &sz);
+//   size_t count = sz / sizeof(stg_polygon_t);
   
-  stg_matrix_t* matrix = stg_matrix_create( 1.0/(*mres), 
-					    geom.size.x,
-					    geom.size.y );
-  
-  printf( "Stage: creating map for model \"%s\" of %f by %f cells at %.2f ppm\n", 
-	  this->mod->token, 
-	  matrix->width * matrix->ppm, 
-	  matrix->height * matrix->ppm, 
-	  matrix->ppm );
-  
-  if( polys && count ) // if we have something to render
-    {      
-      // render the model into the matrix
-      stg_matrix_polygons( matrix, 
-			   geom.size.x/2.0,
-			   geom.size.y/2.0,
-			   0,
-			   polys, count, 
-			   this->mod );  
-      
-      stg_bool_t* boundary = (stg_bool_t*)
-	stg_model_get_property_fixed( this->mod, 
-				      "boundary", sizeof(stg_bool_t));
-      if( *boundary )    
-	stg_matrix_rectangle( matrix,
-			      geom.size.x/2.0,
-			      geom.size.y/2.0,
-			      0,
-			      geom.size.x,
-			      geom.size.y,
-			      this->mod );
-      
-      // add this matrix as a property
-      stg_model_set_property( this->mod, "map_matrix", 
-			      (void*) matrix, sizeof(stg_matrix_t));
-      
-      // TODO: fix leak of  matrix structure. no big deal.
-      // we're done with the matrix
-      //stg_matrix_destroy( matrix );
-    }
-
-  puts( "done." );
   
   // prepare the map info for the client
   player_map_info_t info;  
 
-  // pixels per kilometer
-  info.scale = 1.0 / matrix->ppm;
+  info.scale = mres;;
   
   // size in pixels
-  //info.width = (uint32_t)(matrix->width * matrix->ppm);
-  //info.height = (uint32_t)(matrix->height * matrix->ppm);
-  info.width = (uint32_t)(geom.size.x * matrix->ppm);
-  info.height = (uint32_t)(geom.size.y * matrix->ppm);
+  info.width = (uint32_t)(geom.size.x / mres);
+  info.height = (uint32_t)(geom.size.y / mres);
   
   // origin of map center in global coords
   stg_pose_t global;
@@ -147,7 +95,11 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   info.origin.px = geom.pose.x;
   info.origin.py = geom.pose.y;
   info.origin.pa = geom.pose.a;
-     
+
+  printf( "Stage: creating map for model \"%s\" of %d by %d cells at res %.2f\n", 
+	  this->mod->token, 
+	  info.width, info.height, info.scale );
+       
   this->driver->Publish(this->addr, resp_queue,
 			PLAYER_MSGTYPE_RESP_ACK, 
 			PLAYER_MAP_REQ_GET_INFO,
@@ -162,26 +114,38 @@ void render_line( int8_t* buf,
 		  int x2, int y2, 
 		  int8_t val )
 {
-  //printf( "render line: from %d,%d to %d,%d in image size %d,%d\n",
-  //  x1, y1, x2, y2, w, h );
-
-  double length = hypot( x2-x1, y2-y1 );
-  double angle = atan2( (double)(y2-y1), (double)(x2-x1) );
-  double cosa = cos(angle);
-  double sina = sin(angle);
-  
-  int p,q;
-  for( double i=0; i<=length; i++ )
+  // if both ends of the line are out of bounds, there's nothing to do
+  if( x1<0 && x1>w && y1<0 && y1>h &&
+      x2<0 && x2>w && y2<0 && y2>h ) 
+    return;
+    
+  // if the two ends are adjacent, fill in the pixels
+  if( abs(x2-x1) <= 1 && abs(y2-y1) <= 1 )
     {
-      p = x1 + (int)(i*cosa);
-      q = y1 + (int)(i*sina);
-      
-      //printf( "(%d,%d)", p,q );
+      if( x1 >= 0 && x1 < w && y1 >=0 && y1 < h )
+	{
+	  if( x1 == w ) x1 = w-1;
+	  if( y1 == h ) y1 = h-1;
 
-      if( p >= 0 && p < w && q >=0 && q < h )
-	buf[ q * w + p ] = val;      
+	  buf[ y1 * w + x1] = val; 
+	}
+
+      
+      if( x2 >= 0 && x2 <= w && y2 >=0 && y2 <= h )
+	{
+	  if( x2 == w ) x2 = w-1;
+	  if( y2 == h ) y2 = h-1;
+
+	  buf[ y2 * w + x2] = val; 
+	}
     }
-  //puts("");
+  else // recursively draw two half-lines
+    {
+      int xm = x1+(x2-x1)/2;
+      int ym = y1+(y2-y1)/2;
+      render_line( buf, w, h, x1, y1, xm, ym, val );
+      render_line( buf, w, h, xm, ym, x2, y2, val );
+    }
 }
 
 
@@ -216,12 +180,9 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
   // initiall all cells are 'empty'
   memset( mapresp->data, -1, sizeof(uint8_t) * PLAYER_MAP_MAX_TILE_SIZE );
 
-  // printf( "Stage map driver fetching tile from (%d,%d) of size
-  //(%d,%d) from map of (%d,%d) pixels.\n",
-  // 	  oi, oj, si, sj, 
-  // 	  (int)(geom.size.x*mres), 
-  // 	  (int)(geom.size.y*mres)  );
-  
+  printf( "Stage computing map tile (%d,%d)(%d,%d)...",
+   	  oi, oj, si, sj);
+  fflush(stdout);
   
   // render the polygons directly into the outgoing message buffer. fast! outrageous!
   size_t sz=0;
@@ -229,46 +190,46 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
     stg_model_get_property( this->mod, "polygons", &sz);
   size_t polycount = sz / sizeof(stg_polygon_t);
   
-  for( int p=0; p<polycount; p++ )
+  for( int p=0; p<(int)polycount; p++ )
     {       
       // draw each line in the poly
-      for( int l=0; l<polys[p].points->len; l++ )
+      int line_count = (int)polys[p].points->len;
+      for( int l=0; l<line_count; l++ )
 	{
 	  stg_point_t* pt1 = &g_array_index( polys[p].points, stg_point_t, l );	  
-	  stg_point_t* pt2 = &g_array_index( polys[p].points, stg_point_t, (l+1) % l);	   
+	  stg_point_t* pt2 = &g_array_index( polys[p].points, stg_point_t, (l+1) % line_count );	   
 	  
 	  render_line( mapresp->data, 
 		       mapresp->width, mapresp->height,
-		       (int)((pt1->x+geom.size.x/2.0) / mres), 
-		       (int)((pt1->y+geom.size.y/2.0) / mres),
-		       (int)((pt2->x+geom.size.x/2.0) / mres), 
-		       (int)((pt2->y+geom.size.y/2.0) / mres),
+		       (int)((pt1->x+geom.size.x/2.0) / mres) -oi, 
+		       (int)((pt1->y+geom.size.y/2.0) / mres) -oj,
+		       (int)((pt2->x+geom.size.x/2.0) / mres) -oi, 
+		       (int)((pt2->y+geom.size.y/2.0) / mres) -oj,
 		       1 ); 	  	  
 	}	  
     }
   
   // if the model has a boundary, that's in the map too
-  stg_bool_t* boundary = (stg_bool_t*)
-    stg_model_get_property_fixed( mod, "boundary", sizeof(stg_bool_t));
-  
-  if( boundary && *boundary )
-    {      
-      render_line( mapresp->data, 
-		   mapresp->width, mapresp->height,
-		   0,0, mapresp->width-1,0, 1 );
 
-      render_line( mapresp->data, 
-		   mapresp->width, mapresp->height,
-		   mapresp->width-1,0, mapresp->width-1,mapresp->height-1, 1 );
+  // TODO: need to think about this a little. not vital for now....
+
+//   stg_bool_t* boundary = (stg_bool_t*)
+//     stg_model_get_property_fixed( mod, "boundary", sizeof(stg_bool_t));
+  
+//   if( boundary && *boundary )
+//     {      
+//       int right =  (int)(geom.size.x/mres - oi);
+//       int top   =  (int)(geom.size.y/mres - oj);
       
-      render_line( mapresp->data, 
-		   mapresp->width, mapresp->height,
-		   mapresp->width-1,mapresp->height-1,0, mapresp->height-1, 1 );
-      
-      render_line( mapresp->data, 
-		   mapresp->width, mapresp->height,
-		   0, mapresp->height-1, 0,0, 1 );
-    }
+//       render_line( mapresp->data, mapresp->width, mapresp->height,
+// 		   0,0, 0, top, 1 );
+//       render_line( mapresp->data, mapresp->width, mapresp->height,
+// 		   0, top, right, top, 1 );
+//       render_line( mapresp->data, mapresp->width, mapresp->height,
+// 		   right, top, right, 0, 1 );
+//       render_line( mapresp->data, mapresp->width, mapresp->height,
+// 		   right, 0, 0,0, 1 );
+//     }
 
    mapresp->data_count = mapresp->width * mapresp->height;
    
@@ -280,6 +241,8 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
 			 PLAYER_MAP_REQ_GET_DATA,
 			 (void*)mapresp, mapsize, NULL);
    free(mapresp);   
+
+   puts( " done." );
    
    return(0);
 }
