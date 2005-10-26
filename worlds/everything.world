@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.67 2005-10-18 06:27:32 rtv Exp $
+# CVS: $Id: everything.world,v 1.68 2005-10-26 01:02:28 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -12,9 +12,15 @@ interval_real 100 # real-time milliseconds per update step
 include "pioneer.inc"
 
 
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
+
 include "sick.inc"
+
+
 
 size [40 20 ]
 
@@ -23,8 +29,8 @@ gui_disable 0
 
 window( 
   size [ 769.000 592.000 ] 
-  center [-8.750 3.343] 
-  scale 0.010 
+  center [-9.115 3.274] 
+  scale 0.004 
 
   # Store the state of the visualizations
   # Change these in the View menu
@@ -37,14 +43,14 @@ window(
 )
 
 map( 
-  #bitmap "bitmaps/hospital_section.png" 
-  #xsize [40 18] 
+  bitmap "bitmaps/hospital_section.png" 
+  size [40 18] 
 
   #bitmap "bitmaps/rink.png" 
   #size [20 20] 
 
-  bitmap "bitmaps/hospital.png" 
-  size [120 40] 
+  #bitmap "bitmaps/hospital.png" 
+  #size [120 40] 
 
   #bitmap "bitmaps/kwing.png" 
   #size [154.5 165.5] 
@@ -60,13 +66,20 @@ map(
 
 
 # a block for gripping
-model(
+define puck model(
   size [ 0.08 0.08 ]
-  pose [-9.884 3.043 0.000 ]
   color "green" 
 
   gripper_return 1
+ 
+  gui_movemask 3
 )
+
+
+puck( pose [-9.654 2.804 -105.501 ] color "red" )
+puck( pose [-9.315 2.952 -37.717 ] color "purple" )
+puck( pose [-9.402 3.195 -1.533 ] color "orange" )
+
 
 
 # extend the pioneer2dx definition from pioneer.inc
@@ -96,7 +109,7 @@ define trickedoutpioneer pioneer2dx
 trickedoutpioneer
 (
   name "p0"
-  pose [-10.712 3.167 -360.320]
+  pose [-10.281 3.323 -394.744]
   localization_origin [ 0 0 0 ]
 
   gripper( pose [0.200 0.000 0.000] color "gray" )

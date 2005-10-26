@@ -887,6 +887,14 @@ int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel )
   return 0; //ok
 }
 
+int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
+{
+  assert(mod);
+  assert(pose);
+  stg_model_set_property( mod, "pose", pose, sizeof(stg_pose_t));
+  return 0; //ok
+}
+
 void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest )
 {
   assert(mod);
@@ -1161,7 +1169,7 @@ int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent)
   gui_model_create( mod );
   
   // forces a redraw
-  //stg_model_property_refresh( mod, "polygons" );
+  stg_model_property_refresh( mod, "polygons" );
 
   return 0; //ok
 }

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.161 2005-10-18 03:03:00 rtv Exp $
+ * CVS: $Id: stage.h,v 1.162 2005-10-26 01:02:28 rtv Exp $
  */
 
 
@@ -545,9 +545,12 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /** set the pose of model in global coordinates */
   int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose );
   
-  /** set a model's velocity in it's parent's coordinate system */
+  /** set a model's velocity in its parent's coordinate system */
   int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
  
+  /** set a model's pose in its parent's coordinate system */
+  int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
+
   // TODO?
   /** Get exclusive access to a model, for threaded
       applications. Release with stg_model_unlock(). */
@@ -896,6 +899,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     GSList *grip_stack;  ///< stack of items gripped
     int grip_stack_size; ///< maximum number of objects in stack, or -1 for unlimited
 
+    double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.
   } stg_gripper_config_t;
 
   /** gripper command packet

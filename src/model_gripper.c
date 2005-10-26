@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -102,6 +102,8 @@ int gripper_init( stg_model_t* mod )
   gconf.inner_break_beam_inset = 3.0/4.0 * gconf.paddle_size.x;
   gconf.outer_break_beam_inset = 1.0/4.0 * gconf.paddle_size.x;
   
+  gconf.close_limit = 1.0;
+
   stg_model_set_property( mod, "gripper_cfg", &gconf, sizeof(gconf) );
   
   // sensible starting command
@@ -264,23 +266,28 @@ int gripper_update( stg_model_t* mod )
 	    {
 	      stg_model_t* head = cfg.grip_stack->data;
 	      cfg.grip_stack = g_slist_remove( cfg.grip_stack, head );
-	      stg_model_set_parent( head, NULL );
-	      
-	      // move it to the new location
+
+ 	      // move it to the new location
 	      stg_pose_t drop_pose;
-	      stg_model_get_global_pose( mod, &drop_pose );
-	      //drop_pose.x += 0.2;
+	      stg_model_get_global_pose( head, &drop_pose );
+	      stg_model_set_parent( head, NULL );	      
 	      stg_model_set_global_pose( head, &drop_pose );
+
+	      cfg.close_limit = 1.0;
+
+	      // need to repair the rtk movemask - this is enough
+	      stg_model_property_refresh( head, "mask" );
 	    }
+
 	}
     }
   else if( cfg.paddles == STG_GRIPPER_PADDLE_CLOSING && !cfg.paddles_stalled  )
     {
       cfg.paddle_position += 0.05;
       
-      if( cfg.paddle_position > 1.0 ) // if we're fully open
+      if( cfg.paddle_position > cfg.close_limit ) // if we're fully closed
 	{
-	  cfg.paddle_position = 1.0;
+	  cfg.paddle_position = cfg.close_limit;
 	  cfg.paddles = STG_GRIPPER_PADDLE_CLOSED; // change state
 	}
     }
@@ -479,8 +486,27 @@ int gripper_paddle_contact( stg_model_t* mod,
 	    {
 	      // grab the model we hit - very simple grip model for now
 	      stg_model_set_parent( hit, mod );
+	      
+	      // and move it to be right between the paddles
+	      stg_geom_t hitgeom;
+	      stg_model_get_geom( hit, &hitgeom );
+
+	      stg_pose_t pose;
+	      pose.x = hitgeom.size.x/2.0;
+	      pose.y = 0;
+	      pose.a = 0;
+
+	      stg_model_set_pose( hit, &pose );	      
+
 	      // add this item to the stack
 	      cfg->grip_stack = g_slist_prepend( cfg->grip_stack, hit );
+
+	      // calculate how far closed we can get the paddles now
+	      double puckw = hitgeom.size.y;
+	      double gripperw = geom.size.y;	      
+
+	      cfg->close_limit = puckw/(gripperw - cfg->paddle_size.y);
+	      
 	    }
 	}
       else // we hit something solid and ungrippable
