@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -505,7 +505,9 @@ int gripper_paddle_contact( stg_model_t* mod,
 	      double puckw = hitgeom.size.y;
 	      double gripperw = geom.size.y;	      
 
-	      cfg->close_limit = puckw/(gripperw - cfg->paddle_size.y);
+	      cfg->close_limit = 
+		MIN( 0, 1.0 - puckw/(gripperw - cfg->paddle_size.y));
+	     
 	      
 	    }
 	}

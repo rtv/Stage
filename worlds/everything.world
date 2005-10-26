@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.68 2005-10-26 01:02:28 rtv Exp $
+# CVS: $Id: everything.world,v 1.69 2005-10-26 01:23:18 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -103,6 +103,8 @@ define trickedoutpioneer pioneer2dx
   blobfinder_return 1 
 
   localization "gps"
+
+  gripper_return 1
 )
 
 
@@ -112,7 +114,7 @@ trickedoutpioneer
   pose [-10.281 3.323 -394.744]
   localization_origin [ 0 0 0 ]
 
-  gripper( pose [0.200 0.000 0.000] color "gray" )
+  gripper( size [0.4 0.6] pose [0.300 0.000 0.000] color "gray" )
 )
 
 trickedoutpioneer
@@ -160,7 +162,7 @@ trickedoutpioneer
 # a silly object to look at
 position( 	
   name "invader" 
-  size [0.3 0.3]
+  size [0.3 0.1]
   pose [-14.675 -0.065 0.000] 
   color "red"  
   # loads a bitmap for the model's body
@@ -169,6 +171,8 @@ position(
   velocity [0.2 0 0]
   laser_return 2
   gui_outline 0
+
+  gripper_return 1
 )
 
 position( 	
@@ -184,4 +188,6 @@ position(
   gui_outline 0
   gui_nose 0
   gui_grid 0	
+
+  gripper_return 1
 )

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.162 2005-10-26 01:02:28 rtv Exp $
+ * CVS: $Id: stage.h,v 1.163 2005-10-26 01:23:18 rtv Exp $
  */
 
 
@@ -900,6 +900,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     int grip_stack_size; ///< maximum number of objects in stack, or -1 for unlimited
 
     double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.
+
   } stg_gripper_config_t;
 
   /** gripper command packet
@@ -931,6 +932,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 				// the paddles closing or opening
 
     int stack_count; ///< number of objects in stack
+
 
   } stg_gripper_data_t;
 
