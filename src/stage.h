@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.163 2005-10-26 01:23:18 rtv Exp $
+ * CVS: $Id: stage.h,v 1.164 2005-10-30 01:26:30 rtv Exp $
  */
 
 
@@ -925,9 +925,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_bool_t inner_break_beam; ///< non-zero iff beam is broken
     stg_bool_t outer_break_beam; ///< non-zero iff beam is broken
     
-    stg_bool_t left_paddle_contact[3]; ///< non-zero iff left paddle touches something [1] inner, [2] front [3] outer contacts
-    stg_bool_t right_paddle_contact[3]; ///< non-zero iff right paddle touches something[1] inner, [2] front [3] outer contacts
-    
+    stg_bool_t paddle_contacts[2]; ///< non-zero iff paddles touch something
+
     stg_bool_t paddles_stalled; // true iff some solid object stopped
 				// the paddles closing or opening
 

@@ -1254,7 +1254,7 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
 				   mod->world->matrix, 
 				   PointToPoint );
 	  
-	  stg_model_t* hitmod = itl_first_matching( itl, lines_raytrace_match, mod );
+	  stg_model_t* hitmod = il_first_matching( itl, lines_raytrace_match, mod );
 	  
 	  
 	  if( hitmod )
@@ -1319,6 +1319,27 @@ int stg_model_update_pose( stg_model_t* mod )
 
   if( hitthing )
     {
+      //if( hitthing )
+
+
+      if( 0 )
+	{
+	  // HACK!
+	  stg_gripper_return_t grip = *(stg_gripper_return_t*)
+	    stg_model_get_property_fixed( hitthing, 
+					  "gripper_return", 
+					  sizeof(stg_gripper_return_t));   
+	  if( grip )
+	    {
+	      stg_velocity_t vel;
+	      vel.x = 0.05;
+	      vel.y = 0;
+	      vel.a = 0.05;
+	      
+	      stg_model_set_velocity( hitthing, &vel );
+	    }
+	  
+	}
       // TODO - friction simulation
       //if( hitthing->friction == 0 ) // hit an immovable thing
 	{
@@ -1331,7 +1352,7 @@ int stg_model_update_pose( stg_model_t* mod )
 	  // set velocity to zero
 	  stg_velocity_t zero_v;
 	  memset( &zero_v, 0, sizeof(zero_v));
-	  stg_model_set_velocity( mod, &zero_v );
+	  //stg_model_set_velocity( mod, &zero_v );
 	}
       /*
 	  else

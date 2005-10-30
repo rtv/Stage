@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.69 2005-10-26 01:23:18 rtv Exp $
+# CVS: $Id: everything.world,v 1.70 2005-10-30 01:26:30 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -14,11 +14,14 @@ include "pioneer.inc"
 
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
 
+
 include "sick.inc"
+
 
 
 
@@ -29,8 +32,8 @@ gui_disable 0
 
 window( 
   size [ 769.000 592.000 ] 
-  center [-9.115 3.274] 
-  scale 0.004 
+  center [-8.060 3.217] 
+  scale 0.008 
 
   # Store the state of the visualizations
   # Change these in the View menu
@@ -114,7 +117,8 @@ trickedoutpioneer
   pose [-10.281 3.323 -394.744]
   localization_origin [ 0 0 0 ]
 
-  gripper( size [0.4 0.6] pose [0.300 0.000 0.000] color "gray" )
+  gripper( pose [0.200 0.000 0.000] color "gray" )
+  #gripper( size [0.4 0.6] pose [0.300 0.000 0.000] color "gray" )
 )
 
 trickedoutpioneer
@@ -162,7 +166,7 @@ trickedoutpioneer
 # a silly object to look at
 position( 	
   name "invader" 
-  size [0.3 0.1]
+  size [0.3 0.3]
   pose [-14.675 -0.065 0.000] 
   color "red"  
   # loads a bitmap for the model's body

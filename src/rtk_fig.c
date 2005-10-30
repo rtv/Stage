@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.16 2005-09-11 21:13:26 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.17 2005-10-30 01:26:30 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -608,6 +608,7 @@ void stg_rtk_fig_render_selection(stg_rtk_fig_t *fig)
   LTOD(points[3], fig->min_x, fig->min_y);
   gdk_draw_polygon(drawable, fig->canvas->gc, FALSE, points, 4);
 
+
   // Draw cross-hairs
   /* This doesnt really work, since the figure origin may
     lie outside the figure bounding box.
@@ -624,23 +625,6 @@ void stg_rtk_fig_render_selection(stg_rtk_fig_t *fig)
   gdk_gc_set_function(gc, GDK_COPY);
   return;
 }
-
-/*
-// Render the figure to xfig
-void stg_rtk_fig_render_xfig(stg_rtk_fig_t *fig)
-{
-  int i;
-  stg_rtk_stroke_t *stroke;
-
-  for (i = 0; i < fig->stroke_count; i++)
-  {
-    stroke = fig->strokes[i];
-    if (stroke->xfigfn)
-      (*stroke->xfigfn)(fig, stroke);
-  }
-}
-*/
-
 
 // Test to see if the given device point lies within the figure
 int stg_rtk_fig_hittest(stg_rtk_fig_t *fig, int dx, int dy)

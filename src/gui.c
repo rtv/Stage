@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.99 2005-10-04 05:24:33 rtv Exp $
+CVS: $Id: gui.c,v 1.100 2005-10-30 01:26:30 rtv Exp $
 */
 
 #include <stdio.h>
@@ -859,6 +859,13 @@ void gui_model_create( stg_model_t* mod )
 		     
   // install the figure 
   g_datalist_set_data( &mod->figs, "top", top ); 
+
+  int ch;
+  for(ch=0; ch < mod->children->len; ch++ )
+    {
+      stg_model_t* child = g_ptr_array_index( mod->children, ch );
+      gui_model_create( child );
+    }
 }
 
 void gui_model_destroy( stg_model_t* mod )
@@ -871,6 +878,8 @@ void gui_model_destroy( stg_model_t* mod )
   
   if( fig ) 
     stg_rtk_fig_and_descendents_destroy( fig );
+
+  fig = NULL;
 }
 
 
