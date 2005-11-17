@@ -1254,7 +1254,7 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
 				   mod->world->matrix, 
 				   PointToPoint );
 	  
-	  stg_model_t* hitmod = il_first_matching( itl, lines_raytrace_match, mod );
+	  stg_model_t* hitmod = itl_first_matching( itl, lines_raytrace_match, mod );
 	  
 	  
 	  if( hitmod )
