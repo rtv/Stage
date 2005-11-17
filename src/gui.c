@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.100 2005-10-30 01:26:30 rtv Exp $
+CVS: $Id: gui.c,v 1.101 2005-11-17 19:52:37 rtv Exp $
 */
 
 #include <stdio.h>
@@ -866,6 +866,8 @@ void gui_model_create( stg_model_t* mod )
       stg_model_t* child = g_ptr_array_index( mod->children, ch );
       gui_model_create( child );
     }
+
+  stg_model_property_refresh( mod, "polygons" );
 }
 
 void gui_model_destroy( stg_model_t* mod )
