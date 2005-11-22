@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OUTPUT=header.html
-PAGEDIR=stage_user
+PAGEDIR=stage
 
 cat header_top.src > $OUTPUT
 
