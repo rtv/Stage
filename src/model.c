@@ -365,6 +365,9 @@ void storage_pose( stg_property_t* prop,
 }
 
 
+//model_add_callback( stg_model_t* mod, int key, 
+
+
 //static int _model_init = TRUE;
 
 stg_model_t* stg_model_create( stg_world_t* world, 
@@ -403,6 +406,10 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // create a default name for the model that's derived from its
   // ancestors' names and its worldfile token
   //model_create_name( mod );
+
+  /* experimental */
+  mod->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
+  /* experimental end */
 
   PRINT_DEBUG3( "creating model %d.%d(%s)", 
 		mod->world->id,
@@ -865,6 +872,19 @@ int stg_model_shutdown( stg_model_t* mod )
 }
 
 
+// experimental
+
+void model_change( stg_model_t* mod, void* address, size_t size )
+{
+  int offset = address - (void*)mod;
+  
+  //printf( "model %s at %p change at address %p offset %d size %d\n",
+  //  mod->token, mod, address, offset, (int)size );
+  
+  //printf( "would call callbacks in model's hash table with key $%d\n",
+  //  offset );
+}
+
 //------------------------------------------------------------------------
 // basic model properties
 
@@ -884,6 +904,10 @@ int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel )
   assert(mod);
   assert(vel);
   stg_model_set_property( mod, "velocity", vel, sizeof(stg_velocity_t));
+
+  // experimental
+  model_change( mod, &mod->velocity, sizeof(mod->pose));
+
   return 0; //ok
 }
 
@@ -892,6 +916,9 @@ int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
   assert(mod);
   assert(pose);
   stg_model_set_property( mod, "pose", pose, sizeof(stg_pose_t));
+
+  // experimental
+  model_change( mod, &mod->pose, sizeof(mod->pose));
   return 0; //ok
 }
 
@@ -940,6 +967,9 @@ void stg_model_set_polygons( stg_model_t* mod,
 {
   size_t bytes = poly_count * sizeof(stg_polygon_t);
   stg_model_set_property( mod, "polygons", polys, bytes );
+  
+  // experimental
+  model_change( mod, &mod->polygons, sizeof(stg_polygon_t) * poly_count );
 }
 
 void stg_property_destroy( stg_property_t* prop )
@@ -1143,14 +1173,16 @@ int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
   if( mod->parent == NULL )
     {
       //printf( "setting pose directly\n");
-      stg_model_set_property( mod, "pose", gpose, sizeof(stg_pose_t));
+      //stg_model_set_property( mod, "pose", gpose, sizeof(stg_pose_t));
+      stg_model_set_pose( mod, gpose );
     }  
   else
     {
       stg_pose_t lpose;
       memcpy( &lpose, gpose, sizeof(lpose) );
       stg_model_global_to_local( mod->parent, &lpose );
-      stg_model_set_property( mod, "pose", &lpose, sizeof(lpose));
+      //stg_model_set_property( mod, "pose", &lpose, sizeof(lpose));
+      stg_model_set_pose( mod, &lpose );
     }
 
   //printf( "setting global pose %.2f %.2f %.2f = local pose %.2f %.2f %.2f\n",

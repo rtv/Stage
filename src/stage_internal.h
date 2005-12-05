@@ -205,6 +205,13 @@ extern "C" {
     GnomeCanvasGroup* cgrp;
 #endif
 
+    /* experimental */
+    stg_pose_t pose;
+    stg_velocity_t velocity;
+    stg_polygon_t* polygons;
+    GHashTable* callbacks;
+    /* end experimental */
+       
     // the number of children of each type is counted so we can
     // automatically generate names for them
     int child_type_count[256];
