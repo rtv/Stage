@@ -50,9 +50,9 @@ static GtkActionEntry entries[] = {
   { "Clock", NULL, "_Clock" },
   { "Help", NULL, "_Help" },
   { "Model", NULL, "_Models" },
-  { "Export", NULL, "_Export" },
-  { "ExportInterval", NULL, "Export interval" },
-  { "ExportFormat", NULL, "Export bitmap format" },
+  { "Screenshot", NULL, "Scr_eenshot" },
+  { "ExportInterval", NULL, "Screenshot interval" },
+  { "ExportFormat", NULL, "Screenshot bitmap format" },
   { "ExportFrame", NULL, "Single frame", "<ctrl>f", "Export a screenshot to disk", G_CALLBACK(gui_action_exportframe) },
   { "About", NULL, "About Stage", NULL, NULL, G_CALLBACK(gui_action_about) },
   { "Save", GTK_STOCK_SAVE, "_Save", "<control>S", "Save world state", G_CALLBACK(gui_action_save) },
@@ -97,7 +97,7 @@ static const char *ui_description =
 "      <menuitem action='Save'/>"
 "      <menuitem action='Reset'/>"
 "      <separator/>"
-"        <menu action='Export'>"
+"        <menu action='Screenshot'>"
 "          <menuitem action='ExportFrame'/>" 
 "          <menuitem action='ExportSequence'/>" 
 "          <separator/>" 

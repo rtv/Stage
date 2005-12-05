@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.70 2005-10-30 01:26:30 rtv Exp $
+# CVS: $Id: everything.world,v 1.71 2005-12-05 08:11:16 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -15,12 +15,21 @@ include "pioneer.inc"
 
 
 
+
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
 
 
+
+
+
 include "sick.inc"
+
+
+
 
 
 
@@ -32,8 +41,8 @@ gui_disable 0
 
 window( 
   size [ 769.000 592.000 ] 
-  center [-8.060 3.217] 
-  scale 0.008 
+  center [-9.683 3.836] 
+  scale 0.015 
 
   # Store the state of the visualizations
   # Change these in the View menu
@@ -85,10 +94,24 @@ puck( pose [-9.402 3.195 -1.533 ] color "orange" )
 
 
 
+
+#power
+#(
+#  fiducial_return 255
+#  pose [ -11.643 3.604 0.000 ]
+#  size [ 0.5 0.5 ]
+#  give 200
+#  take 0
+#  capacity -1 # infinite
+#)
+
+
 # extend the pioneer2dx definition from pioneer.inc
 #
-define trickedoutpioneer pioneer2dx	
-(	
+#define trickedoutpioneer pioneer2dx_battery
+define trickedoutpioneer pioneer2dx
+(
+
   sick_laser
   (  
     pose [0.030 0.000 0.000 ]
@@ -114,7 +137,7 @@ define trickedoutpioneer pioneer2dx
 trickedoutpioneer
 (
   name "p0"
-  pose [-10.281 3.323 -394.744]
+  pose [-10.182 3.290 -402.689]
   localization_origin [ 0 0 0 ]
 
   gripper( pose [0.200 0.000 0.000] color "gray" )

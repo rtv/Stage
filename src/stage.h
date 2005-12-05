@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.164 2005-10-30 01:26:30 rtv Exp $
+ * CVS: $Id: stage.h,v 1.165 2005-12-05 08:11:16 rtv Exp $
  */
 
 
@@ -550,6 +550,9 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
  
   /** set a model's pose in its parent's coordinate system */
   int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
+
+  /** set a model's geometry (size and center offsets) */
+  int stg_model_set_geom( stg_model_t* mod, stg_geom_t* src );
 
   // TODO?
   /** Get exclusive access to a model, for threaded

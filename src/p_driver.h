@@ -134,6 +134,19 @@ class InterfaceLaser : public InterfaceModel
   virtual void Publish( void );
 };
 
+class InterfacePower : public InterfaceModel
+{
+ public: 
+  InterfacePower( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfacePower( void ){ /* TODO: clean up*/ };
+  
+  virtual int ProcessMessage( MessageQueue* resp_queue, 
+			      player_msghdr * hdr, 
+			      void * data );
+  
+  virtual void Publish( void );
+};
+
 class InterfaceFiducial : public InterfaceModel
 {
  public: 

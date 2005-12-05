@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.56 $
+//  $Revision: 1.57 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -417,7 +417,11 @@ int ranger_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, 
 }
 
 
-int ranger_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+int ranger_render_data( stg_model_t* mod, 
+			char* name, 
+			void* data, 
+			size_t len, 
+			void* userp )
 { 
   PRINT_DEBUG( "ranger render data" );
   

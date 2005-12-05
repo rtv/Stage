@@ -183,6 +183,8 @@ extern "C" {
     char* token; // automatically-generated unique ID string
     int type; // what kind of a model am I?
 
+    stg_watts_t watts; //< power consumed by this model
+
     struct _stg_model *parent; // the model that owns this one, possibly NULL
 
     GPtrArray* children; // the models owned by this model

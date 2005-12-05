@@ -905,6 +905,14 @@ void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest )
   memcpy( dest, g, sizeof(stg_geom_t));
 }
 
+int stg_model_set_geom( stg_model_t* mod, stg_geom_t* src )
+{
+  assert(mod);
+  assert(src);
+  stg_model_set_property( mod, "geom", src, sizeof(stg_geom_t));
+  return 0;
+}
+
 void stg_model_get_pose( stg_model_t* mod, stg_pose_t* dest )
 {
   assert(mod);
@@ -1429,12 +1437,12 @@ void* stg_model_get_property( stg_model_t* mod,
   
   if( prop )
     {
-      *size = prop->len;      
+      if( size ) *size = prop->len;      
 
       return prop->data;
     }
   
-  *size = 0;
+  if(size) *size = 0;
   return NULL;
 }
 

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.124 2005-10-16 02:07:35 rtv Exp $
+# $Id: Makefile.am,v 1.125 2005-12-05 08:11:16 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -42,6 +42,7 @@ libstage_la_SOURCES = \
 	model_laser.c \
 	model_position.c \
 	model_ranger.c \
+	model_energy.c \
 	raytrace.c \
 	stage.c \
 	stage.h \
@@ -58,11 +59,7 @@ libstage_la_SOURCES = \
         rtk_region.c \
         rtkprivate.h
 
-# TODO
-#	model_energy.c
 
-#libstage_la_CFLAGS = $(AM_CFLAGS) 
-#libstage_la_CPPFLAGS = $(AM_CPPFLAGS) 
 libstage_la_LDFLAGS = -version-info 2:0:0 -rpath $(libdir)
 libstage_la_LIBADD = @GTK_LIBS@ @GLIB_LIBS@ @GNOME_LIBS@
 
@@ -76,22 +73,22 @@ libstageplugin_la_SOURCES = \
 	p_laser.cc \
 	p_map.cc \
 	p_position.cc \
+	p_power.cc \
 	p_simulation.cc \
 	p_sonar.cc \
 	stg_time.cc \
 	stg_time.h \
+	zoo.h \
 	zoo_driver.h \
-        zoo_referee.h \
-        zoo_species.h \
         zoo_controller.h \
-	zoo.h
+        zoo_referee.h \
+        zoo_species.h
 
 #zoo.c 
 #zoo_driver.cc 
 #zoo_species.cc 
 #zoo_controller.cc 
 #zoo_referee.cc 
-#p_energy.cc 
 
 libstageplugin_la_CPPFLAGS = $(AM_CPPFLAGS) @PLAYER_CFLAGS@  
 libstageplugin_la_LDFLAGS = -version-info 1:0:0 -rpath $(libdir)
