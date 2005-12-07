@@ -438,7 +438,8 @@ void gui_action_exportsequence( GtkToggleAction* action, void* userdata )
 
 void model_render_polygons_cb( gpointer key, gpointer data, gpointer user )
 {
-  stg_model_property_refresh( (stg_model_t*)data, "polygons" );
+  // XX
+  //stg_model_property_refresh( (stg_model_t*)data, "polygons" );
 }
 
 
@@ -574,18 +575,18 @@ void toggle_property_callback( GtkToggleAction* action, void* userdata )
       if( args->callback_off )
 	{
 	  //printf( "removing OFF callback\n" );
-	  stg_model_remove_property_callback( args->mod, 
-					    args->propname, 
-					    args->callback_off );
+	  //stg_model_remove_property_callback( args->mod, 
+	  //			    args->propname, 
+	  //			    args->callback_off );
 	}
       
       if( args->callback_on )
 	{
 	  //printf( "adding ON callback with args %s\n", (char*)args->arg_on );
-	  stg_model_add_property_callback( args->mod, 
-					 args->propname, 
-					 args->callback_on, 
-					 args->arg_on );
+	  //stg_model_add_callback( args->mod, 
+	  //		  args->propname, 
+	  //		  args->callback_on, 
+	  //		  args->arg_on );
 	}
     }
   else
@@ -593,18 +594,18 @@ void toggle_property_callback( GtkToggleAction* action, void* userdata )
       if( args->callback_on )
 	{
 	  //printf( "removing ON callback\n" );
-	  stg_model_remove_property_callback( args->mod, 
-					    args->propname, 
-					    args->callback_on );
+	  //stg_model_remove_property_callback( args->mod, 
+	  //			    args->propname, 
+	  //			    args->callback_on );
 	}
       
       if( args->callback_off )
 	{
 	  //printf( "adding OFF callback with args %s\n", (char*)args->arg_off );
-	  stg_model_add_property_callback( args->mod, 
-					   args->propname, 
-					   args->callback_off, 
-					   args->arg_off );
+	  //stg_model_add_property_callback( args->mod, 
+	  //			   args->propname, 
+	  //			   args->callback_off, 
+	  //			   args->arg_off );
 	}
       
     }

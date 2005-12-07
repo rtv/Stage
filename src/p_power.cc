@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_power.cc,v 1.1 2005-12-05 08:11:16 rtv Exp $
+ * CVS: $Id: p_power.cc,v 1.2 2005-12-07 10:04:28 rtv Exp $
  */
 
 
@@ -49,14 +49,10 @@ InterfacePower::InterfacePower( player_devaddr_t addr,
 
 void InterfacePower::Publish( void )
 {
-  size_t len = 0;
-  stg_energy_data_t* data = (stg_energy_data_t*)
-    stg_model_get_property_fixed( this->mod, "energy_data", 
-				  sizeof(stg_energy_data_t) );
+  size_t len = mod->data_len;
+  stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
   
-  stg_energy_config_t* cfg = (stg_energy_config_t*)
-    stg_model_get_property_fixed( this->mod, "energy_config", 
-				  sizeof(stg_energy_config_t) );
+  stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;
   
   // translate stage data to player data packet
   player_power_data_t pen;
@@ -65,17 +61,14 @@ void InterfacePower::Publish( void )
   pen.valid |= PLAYER_POWER_MASK_VOLTS;
   pen.joules = data->stored;
 
-  pen.valid |= PLAYER_POWER_MASK_WATTS;
-  pen.watts  = data->output_watts;
-
   pen.valid |= PLAYER_POWER_MASK_CHARGING;
   pen.charging = data->charging;
 
   pen.valid |= PLAYER_POWER_MASK_PERCENT;
   pen.percent = 100.0 * data->stored / cfg->capacity;
   
-  printf( "player power data: valid %d joules %.2f watts %.2f percent %.2f charging %d\n",
-	  pen.valid, pen.joules, pen.watts, pen.percent, pen.charging );
+  //printf( "player power data: valid %d joules %.2f watts %.2f percent %.2f charging %d\n",
+  //  pen.valid, pen.joules, pen.watts, pen.percent, pen.charging );
  
   this->driver->Publish(this->addr, NULL,
 			PLAYER_MSGTYPE_DATA,
@@ -88,60 +81,11 @@ int InterfacePower::ProcessMessage(MessageQueue* resp_queue,
 				    void* data)
 {
   // Is it a request to set the laser's config?
-  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                           PLAYER_LASER_REQ_SET_CONFIG, 
-                           this->addr))
-  {
+//   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+//                            PLAYER_LASER_REQ_SET_CONFIG, 
+//                            this->addr))
+//   {
 
-  }
- //    player_laser_config_t* plc = (player_laser_config_t*)data;
-
-//     if( hdr->size == sizeof(player_laser_config_t) )
-//     {
-//       // TODO
-//       // int intensity = plc->intensity;
-
-//       PRINT_DEBUG3( "requested laser config:\n %f %f %f",
-// 		    RTOD(plc->min_angle), RTOD(plc->max_angle), 
-// 		    plc->resolution/1e2);
-
-//       stg_laser_config_t *current = (stg_laser_config_t*)
-// 	      stg_model_get_property_fixed( this->mod, "laser_cfg", 
-// 					    sizeof(stg_laser_config_t));
-//       assert( current );
-
-//       stg_laser_config_t slc;
-//       // copy the existing config
-//       memcpy( &slc, current, sizeof(slc));
-
-//       // tweak the parts that player knows about
-//       slc.fov = plc->max_angle - plc->min_angle;
-//       slc.samples = (int)(slc.fov / DTOR(plc->resolution/1e2));
-
-//       PRINT_DEBUG2( "setting laser config: fov %.2f samples %d", 
-// 		    slc.fov, slc.samples );
-
-//       stg_model_set_property( this->mod, "laser_cfg", 
-// 			      &slc, sizeof(slc)); 
-
-//       this->driver->Publish(this->addr, resp_queue,
-// 			    PLAYER_MSGTYPE_RESP_ACK, 
-// 			    PLAYER_LASER_REQ_SET_CONFIG);
-//       return(0);
-//     }
-//     else
-//     {
-//       PRINT_ERR2("config request len is invalid (%d != %d)", 
-// 		 (int)hdr->size, (int)sizeof(player_laser_config_t));
-
-//       return(-1);
-//     }
-//   }
-//   else
-//     {
-//       PRINT_ERR2("config request len is invalid (%d != %d)", (int)hdr->size,0);
-//       return(-1);
-//     }
 //   }
 
   // Don't know how to handle this message.

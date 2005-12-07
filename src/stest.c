@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.11 2005-07-30 00:04:41 rtv Exp $
+// CVS: $Id: stest.c,v 1.12 2005-12-07 10:04:28 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -44,12 +44,12 @@ int main( int argc, char* argv[] )
   
   stg_model_t* position = stg_world_model_name_lookup( world, robotname );  
   stg_model_t* laser = stg_world_model_name_lookup( world, lasername );
-  stg_model_t* sonar = stg_world_model_name_lookup( world, sonarname );
+  //stg_model_t* sonar = stg_world_model_name_lookup( world, sonarname );
 
   // subscribe to the laser - starts it collecting data
   stg_model_subscribe( laser );
   stg_model_subscribe( position);
-  stg_model_subscribe( sonar );
+  //stg_model_subscribe( sonar );
 
   stg_model_print( laser );
 
@@ -69,9 +69,8 @@ int main( int argc, char* argv[] )
       stg_velocity_t vel;
       stg_model_get_velocity( position, &vel );
       
-      stg_velocity_t* pose = 
+      //stg_pose_t pose; 
       //stg_model_get_pose( position, &pose );
-      stg_model_get_property_fixed( position, "pose", sizeof(pose));
 
       //printf( "position velocity: (%.2f,%.2f,%.2f)\n",
       //      vel.x, vel.y, vel.a );          
@@ -81,8 +80,9 @@ int main( int argc, char* argv[] )
 
       // get some laser data
       size_t laser_sample_count = 0;
+
       stg_laser_sample_t* laserdata = 
-	stg_model_get_property( laser, "laser_data", &laser_sample_count );
+	stg_model_get_data( laser, &laser_sample_count );
       laser_sample_count /= sizeof(stg_laser_sample_t);
       
       //printf( "obtained %d laser samples\n", laser_sample_count );
@@ -156,7 +156,7 @@ int main( int argc, char* argv[] )
       cmd.y = 0;
       cmd.a = newturnrate;
 
-      stg_model_set_property( position, "position_cmd", &cmd, sizeof(cmd));
+      stg_model_set_cmd( position, &cmd, sizeof(cmd));
 
     }
   

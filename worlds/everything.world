@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.71 2005-12-05 08:11:16 rtv Exp $
+# CVS: $Id: everything.world,v 1.72 2005-12-07 10:04:28 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -93,22 +93,33 @@ puck( pose [-9.315 2.952 -37.717 ] color "purple" )
 puck( pose [-9.402 3.195 -1.533 ] color "orange" )
 
 
+power
+(
+  fiducial_return 255
+  pose [ -11.643 3.604 0.000 ]
+  size [ 0.5 0.5 ]
+  give 200
+  take 0
+  capacity 10000 # infinite
+  probe_range 0	
+)
 
+define chatterbox position
+(
+  color "gray"
+  size [0.13 0.13]		
+  power( size [0.05 0.1] capacity 100 probe_range 0  give 0   )
+)
 
-#power
-#(
-#  fiducial_return 255
-#  pose [ -11.643 3.604 0.000 ]
-#  size [ 0.5 0.5 ]
-#  give 200
-#  take 0
-#  capacity -1 # infinite
-#)
+chatterbox
+(
+  name "cb0"
+  pose [ -10 5 0 ]
+)
 
 
 # extend the pioneer2dx definition from pioneer.inc
 #
-#define trickedoutpioneer pioneer2dx_battery
 define trickedoutpioneer pioneer2dx
 (
 
@@ -142,6 +153,9 @@ trickedoutpioneer
 
   gripper( pose [0.200 0.000 0.000] color "gray" )
   #gripper( size [0.4 0.6] pose [0.300 0.000 0.000] color "gray" )
+
+  power( pose [-0.14 0 0] capacity 1000 range 0.50  give 0  )
+
 )
 
 trickedoutpioneer

@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_fiducial.cc,v 1.6 2005-10-07 18:09:42 gerkey Exp $
+ * CVS: $Id: p_fiducial.cc,v 1.7 2005-12-07 10:04:27 rtv Exp $
  */
 
 // DOCUMENTATION
@@ -64,9 +64,8 @@ InterfaceFiducial::InterfaceFiducial(  player_devaddr_t addr,
 
 void InterfaceFiducial::Publish( void )
 {
-  size_t len = 0;
-  stg_fiducial_t* fids = (stg_fiducial_t*)
-    stg_model_get_property( this->mod, "fiducial_data", &len );
+  size_t len = mod->data_len;
+  stg_fiducial_t* fids = (stg_fiducial_t*)mod->data;
   
   player_fiducial_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
@@ -166,9 +165,9 @@ int InterfaceFiducial::ProcessMessage(MessageQueue* resp_queue,
 	  player_fiducial_id_t* incoming = (player_fiducial_id_t*)data;
 	  
 	  // Stage uses a simple int for IDs.
-	  stg_fiducial_return_t id = incoming->id;
+	  int id = incoming->id;
 	  
-	  stg_model_set_property( this->mod, "fidicial_return", &id, sizeof(id));
+	  stg_model_set_fiducial_return( this->mod, id );
 	  
 	  player_fiducial_id_t pid;
 	  pid.id = id;
@@ -190,14 +189,9 @@ int InterfaceFiducial::ProcessMessage(MessageQueue* resp_queue,
 				PLAYER_FIDUCIAL_REQ_GET_ID, 
 				this->addr))
     {
-      stg_fiducial_return_t* ret = (stg_fiducial_return_t*) 
-	stg_model_get_property_fixed( this->mod, 
-				      "fidicial_return",
-				      sizeof(stg_fiducial_return_t));
-      
       // fill in the data formatted player-like
       player_fiducial_id_t pid;
-      pid.id = *ret;
+      pid.id = mod->fiducial_return;
       
       // acknowledge, including the new ID
       this->driver->Publish(this->addr, resp_queue,

@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.15 2005-10-11 22:36:12 gerkey Exp $
+ * CVS: $Id: p_laser.cc,v 1.16 2005-12-07 10:04:27 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -60,10 +60,9 @@ InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 void InterfaceLaser::Publish( void )
 {
   size_t len = 0;
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)
-    stg_model_get_property( this->mod, "laser_data", &len );
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data;
   
-  int sample_count = len / sizeof( stg_laser_sample_t );
+  int sample_count = mod->data_len / sizeof( stg_laser_sample_t );
   
   //for( int i=0; i<sample_count; i++ )
   //  printf( "rrrange %d %d\n", i, samples[i].range);
@@ -71,8 +70,7 @@ void InterfaceLaser::Publish( void )
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
   
-  stg_laser_config_t *cfg = (stg_laser_config_t*) 
-    stg_model_get_property_fixed( this->mod, "laser_cfg", sizeof(stg_laser_config_t));
+  stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg;
   assert(cfg);
   
   if( sample_count != cfg->samples )
@@ -128,9 +126,7 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
 		    RTOD(plc->min_angle), RTOD(plc->max_angle), 
 		    plc->resolution/1e2);
 
-      stg_laser_config_t *current = (stg_laser_config_t*)
-	      stg_model_get_property_fixed( this->mod, "laser_cfg", 
-					    sizeof(stg_laser_config_t));
+      stg_laser_config_t *current = (stg_laser_config_t*)mod->cfg;
       assert( current );
 
       stg_laser_config_t slc;
@@ -143,10 +139,9 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
 
       PRINT_DEBUG2( "setting laser config: fov %.2f samples %d", 
 		    slc.fov, slc.samples );
-
-      stg_model_set_property( this->mod, "laser_cfg", 
-			      &slc, sizeof(slc)); 
-
+      
+      stg_model_set_cfg( this->mod, &slc, sizeof(slc)); 
+      
       this->driver->Publish(this->addr, resp_queue,
 			    PLAYER_MSGTYPE_RESP_ACK, 
 			    PLAYER_LASER_REQ_SET_CONFIG);
@@ -167,9 +162,7 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
   {   
     if( hdr->size == 0 )
     {
-      stg_laser_config_t *slc = (stg_laser_config_t*) 
-	      stg_model_get_property_fixed( this->mod, "laser_cfg", 
-					    sizeof(stg_laser_config_t));
+      stg_laser_config_t *slc = (stg_laser_config_t*)mod->cfg;
       assert(slc);
 
       uint8_t angular_resolution = (uint8_t)(RTOD(slc->fov / (slc->samples-1)) * 100);

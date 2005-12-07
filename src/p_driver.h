@@ -43,7 +43,7 @@ class StgDriver : public Driver
   /// find the device record with this Player id
   Interface* LookupDevice( player_devaddr_t addr );
   
-  stg_model_t* LocateModel( const char* basename, 
+  stg_model_t* LocateModel( char* basename, 
 			    stg_model_initializer_t init );
   
  protected: 

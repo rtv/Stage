@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.42 $
+//  $Revision: 1.43 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -81,25 +81,24 @@ void fiducial_load( stg_model_t* mod )
       wf_property_exists( mod->id, "range_max_id") ||
       wf_property_exists( mod->id, "fov" ) )
     {
-      stg_fiducial_config_t* now = 
-	stg_model_get_property_fixed( mod, "fiducial_cfg", sizeof(stg_fiducial_config_t));
+      stg_fiducial_config_t* now = (stg_fiducial_config_t*)mod->cfg; 
       
       stg_fiducial_config_t cfg;
       memset( &cfg, 0, sizeof(cfg) );
       
       cfg.fov = 
-	wf_read_angle(mod->id, "fov", now ? now->fov :STG_DEFAULT_FIDUCIAL_FOV );
+	wf_read_angle(mod->id, "fov", now->fov );
       
       cfg.min_range = 
-	wf_read_length(mod->id, "range_min", now ? now->min_range : STG_DEFAULT_FIDUCIAL_RANGEMIN );
+	wf_read_length(mod->id, "range_min", now->min_range );
       
       cfg.max_range_anon = 
-	wf_read_length(mod->id, "range_max", now ? now->max_range_anon :STG_DEFAULT_FIDUCIAL_RANGEMAXANON );
+	wf_read_length(mod->id, "range_max", now->max_range_anon );
       
       cfg.max_range_id = 
-	wf_read_length(mod->id, "range_max_id", now ? now->max_range_id :STG_DEFAULT_FIDUCIAL_RANGEMAXID );
+	wf_read_length(mod->id, "range_max_id", now->max_range_id );
       
-      stg_model_set_property( mod, "fiducial_cfg", &cfg, sizeof(cfg));
+      stg_model_set_cfg( mod, &cfg, sizeof(cfg));
     }
 }  
 
@@ -107,7 +106,8 @@ int fiducial_startup( stg_model_t* mod );
 int fiducial_shutdown( stg_model_t* mod );
 int fiducial_update( stg_model_t* mod );
 
-int fiducial_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
+//int fiducial_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
+int fiducial_render_data( stg_model_t* mod, void* userp );
 int fiducial_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 
 int fiducial_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
@@ -124,11 +124,11 @@ int fiducial_init( stg_model_t* mod )
   // no body
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
-  stg_model_set_property( mod, "geom", &geom, sizeof(geom) );    
-  stg_model_set_property( mod, "polygons", NULL, 0 );
+  stg_model_set_geom( mod, &geom );    
+  stg_model_set_polygons( mod, NULL, 0 );
 
   // start with no data
-  stg_model_set_property( mod, "fiducial_data", NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
 
   // default parameters
   stg_fiducial_config_t cfg; 
@@ -136,15 +136,17 @@ int fiducial_init( stg_model_t* mod )
   cfg.max_range_anon = STG_DEFAULT_FIDUCIAL_RANGEMAXANON;
   cfg.max_range_id = STG_DEFAULT_FIDUCIAL_RANGEMAXID;
   cfg.fov = STG_DEFAULT_FIDUCIAL_FOV;  
-  stg_model_set_property( mod, "fiducial_cfg", &cfg, sizeof(cfg) );
+  stg_model_set_cfg( mod, &cfg, sizeof(cfg) );
   
-  stg_model_add_property_toggles( mod, "fiducial_data", 
-				  fiducial_render_data, // called when toggled on
-				  NULL,
-				  fiducial_unrender_data, // called when toggled off
-				  NULL, 
-				  "fiducial data",
-				  TRUE );
+  stg_model_add_callback( mod, &mod->data, fiducial_render_data, NULL );
+
+/*   stg_model_add_property_toggles( mod, "fiducial_data",  */
+/* 				  fiducial_render_data, // called when toggled on */
+/* 				  NULL, */
+/* 				  fiducial_unrender_data, // called when toggled off */
+/* 				  NULL,  */
+/* 				  "fiducial data", */
+/* 				  TRUE ); */
   
   return 0;
 }
@@ -165,7 +167,7 @@ int fiducial_shutdown( stg_model_t* mod )
   //mod->watts = 0.0;
 
   // this will undrender the data
-  stg_model_set_property( mod, "fiducial_data", NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
   
   return 0;
 }
@@ -192,11 +194,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   model_fiducial_buffer_t* mfb = (model_fiducial_buffer_t*)user;
   stg_model_t* him = (stg_model_t*)value;
   
-  
-
-  stg_fiducial_return_t* his_fid = 
-    stg_model_get_property_fixed( him, "fiducial_return", sizeof(stg_fiducial_return_t));
-  
+  int* his_fid = &him->fiducial_return; 
 
   // dont' compare a model with itself, and don't consider models with
   // invalid returns
@@ -291,8 +289,7 @@ int fiducial_update( stg_model_t* mod )
   
   mfb.mod = mod;
 
-  stg_fiducial_config_t* cfg = 
-    stg_model_get_property_fixed( mod, "fiducial_cfg", sizeof(stg_fiducial_config_t));
+  stg_fiducial_config_t* cfg = (stg_fiducial_config_t*)mod->cfg;
   assert(cfg);
 
   memcpy( &mfb.cfg, cfg, sizeof(mfb.cfg));
@@ -303,11 +300,10 @@ int fiducial_update( stg_model_t* mod )
   // for all the objects in the world
   g_hash_table_foreach( mod->world->models, model_fiducial_check_neighbor, &mfb );
 
-  //PRINT_DEBUG2( "model %s saw %d fiducials", mod->token, mfb.fiducials->len );
+  PRINT_DEBUG2( "model %s saw %d fiducials", mod->token, mfb.fiducials->len );
   
-  stg_model_set_property( mod, "fiducial_data", 
-			  mfb.fiducials->data, 
-			  mfb.fiducials->len * sizeof(stg_fiducial_t) );
+  stg_model_set_data( mod, mfb.fiducials->data, 
+		      mfb.fiducials->len * sizeof(stg_fiducial_t) );
   
   g_array_free( mfb.fiducials, TRUE );
 
@@ -321,8 +317,10 @@ int fiducial_unrender_data( stg_model_t* mod, char* name, void* data, size_t len
   return 1; // cancel callback
 }
 
-int fiducial_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+//int fiducial_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+int fiducial_render_data( stg_model_t* mod, void* userp )
 {  
+  
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "fiducial_data_fig" );
   
   if( ! fig )
@@ -331,8 +329,8 @@ int fiducial_render_data( stg_model_t* mod, char* name, void* data, size_t len, 
    stg_rtk_fig_clear( fig );
   stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
   
-  stg_fiducial_t *fids = (stg_fiducial_t*)data;
-  int bcount = len / sizeof(stg_fiducial_t);  
+  stg_fiducial_t *fids = (stg_fiducial_t*)mod->data;
+  int bcount = mod->data_len / sizeof(stg_fiducial_t);  
   char text[32];
   
   int b;
@@ -363,41 +361,41 @@ int fiducial_render_data( stg_model_t* mod, char* name, void* data, size_t len, 
 return 0;
 }
 
-int fiducial_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
-{   
-  stg_fiducial_config_t *cfg = data;
-  assert(cfg);
+/* int fiducial_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
+/* {    */
+/*   stg_fiducial_config_t *cfg = data; */
+/*   assert(cfg); */
   
-  double mina = -cfg->fov / 2.0;
-  double maxa = +cfg->fov / 2.0;
+/*   double mina = -cfg->fov / 2.0; */
+/*   double maxa = +cfg->fov / 2.0; */
   
-  double dx =  cfg->max_range_anon * cos(mina);
-  double dy =  cfg->max_range_anon * sin(mina);
-  double ddx = cfg->max_range_anon * cos(maxa);
-  double ddy = cfg->max_range_anon * sin(maxa);
+/*   double dx =  cfg->max_range_anon * cos(mina); */
+/*   double dy =  cfg->max_range_anon * sin(mina); */
+/*   double ddx = cfg->max_range_anon * cos(maxa); */
+/*   double ddy = cfg->max_range_anon * sin(maxa); */
   
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "fiducial_cfg_fig" );
+/*   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "fiducial_cfg_fig" ); */
   
-  if( ! fig )
-    stg_model_fig_create( mod, "fiducial_cfg_fig", "top", STG_LAYER_NEIGHBORCONFIG );
+/*   if( ! fig ) */
+/*     stg_model_fig_create( mod, "fiducial_cfg_fig", "top", STG_LAYER_NEIGHBORCONFIG ); */
   
-  stg_rtk_fig_clear(fig);  
-  stg_rtk_fig_line( fig, 0,0, dx, dy );
-  stg_rtk_fig_line( fig, 0,0, ddx, ddy );
+/*   stg_rtk_fig_clear(fig);   */
+/*   stg_rtk_fig_line( fig, 0,0, dx, dy ); */
+/*   stg_rtk_fig_line( fig, 0,0, ddx, ddy ); */
   
-  // max range
-  stg_rtk_fig_ellipse_arc( fig,
-			   0,0,0,
-			   2.0*cfg->max_range_anon,
-			   2.0*cfg->max_range_anon, 
-			   mina, maxa );      
+/*   // max range */
+/*   stg_rtk_fig_ellipse_arc( fig, */
+/* 			   0,0,0, */
+/* 			   2.0*cfg->max_range_anon, */
+/* 			   2.0*cfg->max_range_anon,  */
+/* 			   mina, maxa );       */
   
-  // max range that IDs can be, er... identified	  
-  stg_rtk_fig_ellipse_arc( fig, 
-			   0,0,0,
-			   2.0*cfg->max_range_id,
-			   2.0*cfg->max_range_id, 
-			   mina, maxa );      
-  return 0;
-}
+/*   // max range that IDs can be, er... identified	   */
+/*   stg_rtk_fig_ellipse_arc( fig,  */
+/* 			   0,0,0, */
+/* 			   2.0*cfg->max_range_id, */
+/* 			   2.0*cfg->max_range_id,  */
+/* 			   mina, maxa );       */
+/*   return 0; */
+/* } */
 

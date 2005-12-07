@@ -6,7 +6,6 @@
 
 //#define DEBUG
 
-#define STG_TOKEN_MAX 64
 
 const double STG_DEFAULT_RESOLUTION = 0.02;  // 2cm pixels
 const double STG_DEFAULT_INTERVAL_REAL = 100.0; // msec between updates
@@ -145,69 +144,13 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	  parent = (stg_model_t*)
 	    g_hash_table_lookup( world->models, &parent_section );
 	  
-	  // select model type based on the worldfile token
-	  //stg_model_type_t type;
-	  
-	  // lookup the key in the type table
-
-	  stg_type_record_t *rec = typetable; 
-	  int index=0;
-	  while( rec->keyword )
-	    {
-	      if( strcmp( typestr, rec->keyword ) == 0 )
-		break;
-	      rec++;
-	      index++;
-	    }
-
-	  // if we didn't find the keyword, we're left with a NULL
-	  // initializer, which is fine: we'll just get a normal
-	  // model.
-
-	  if( rec->keyword == NULL ) // if we failed to find matching record
-	    {
-	      if( strcmp( typestr, "model" ) ) 		  
-		{
-		  PRINT_ERR1( "model type \"%s\" is not recognized. Check your worldfile.", 
-			      typestr );
-		  exit( -1 );
-		}
-	    }
-	  
-	  
-	  //PRINT_WARN3( "creating model token %s type %d instance %d", 
-	  ///       typestr, 
-	  //       type,
-	  //       parent ? parent->child_type_count[type] : world->child_type_count[type] );
-	  
-	  // generate a name and count this type in its parent (or world,
-	  // if it's a top-level object)
-	  char namebuf[STG_TOKEN_MAX];  
-	  if( parent == NULL )
-	    snprintf( namebuf, STG_TOKEN_MAX, "%s:%d", 
-		      typestr, 
-		      world->child_type_count[index]++);
-	  else
-	    snprintf( namebuf, STG_TOKEN_MAX, "%s.%s:%d", 
-		      parent->token,
-		      typestr, 
-		      parent->child_type_count[index]++ );
-	  
-	  //PRINT_WARN1( "generated name %s", namebuf );
-	  
-	  // having done all that, allow the user to specify a name instead
-	  char *namestr = (char*)wf_read_string(section, "name", namebuf );
-	  
-	  //PRINT_WARN2( "loading model name %s for type %s", namebuf, typestr );
-	  
-	  
-	  PRINT_DEBUG2( "creating model from section %d parent section %d",
-			section, parent_section );
+	  PRINT_DEBUG3( "creating model from section %d parent section %d type %s\n",
+			section, parent_section, typestr );
 	  
 	  stg_model_t* mod = NULL;
 	  stg_model_t* parent_mod = stg_world_get_model( world, parent_section );
 	  
-	  mod = stg_model_create( world, parent_mod, section, namestr, rec->initializer );
+	  mod = stg_model_create( world, parent_mod, section, typestr );
 	  assert( mod );
 	  
 	  // configure the model with properties from the world file
@@ -242,8 +185,7 @@ stg_world_t* stg_world_create( stg_id_t id,
   world->token = strdup( token );
   world->models = g_hash_table_new_full( g_int_hash, g_int_equal,
 					 NULL, model_destroy_cb );
-  world->models_by_name = g_hash_table_new_full( g_str_hash, g_str_equal,
-						 NULL, NULL );  
+  world->models_by_name = g_hash_table_new( g_str_hash, g_str_equal );
   world->sim_time = 0.0;
   world->sim_interval = sim_interval;
   world->wall_interval = real_interval;
@@ -390,11 +332,12 @@ stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid )
   return( world ? g_hash_table_lookup( (gpointer)world->models, &mid ) : NULL );
 }
 
+
+
 void stg_world_add_model( stg_world_t* world, 
 			  stg_model_t* mod  )
 {
-  //printf( "world added model %s\n", mod->token );
-  
+  //printf( "world added model %d %s\n", mod->id, mod->token );  
   g_hash_table_replace( world->models, &mod->id, mod );
   g_hash_table_replace( world->models_by_name, mod->token, mod );
 }
@@ -415,65 +358,6 @@ struct cb_package
   void* userdata;
 };
 
-void add_callback_wrapper( gpointer key, gpointer value, gpointer user )
-{
-  struct cb_package *pkg = (struct cb_package*)user;  
-  stg_model_t* mod = (stg_model_t*)value;
-  
-  size_t dummy;
-  if( stg_model_get_property( mod, pkg->propname, &dummy ) )
-    stg_model_add_property_callback( mod,
-				     pkg->propname,
-				     pkg->callback,
-				     pkg->userdata );
-}			   
-
-void remove_callback_wrapper( gpointer key, gpointer value, gpointer user )
-{
-  struct cb_package *pkg = (struct cb_package*)user;  
-  stg_model_t* mod = (stg_model_t*)value;
-  
-  size_t dummy;
-  if( stg_model_get_property( mod, pkg->propname, &dummy ) )
-    stg_model_remove_property_callback( (stg_model_t*)value,
-					pkg->propname,
-					pkg->callback );
-}			   
-  
-void stg_world_add_property_callback( stg_world_t* world,
-				      char* propname,
-				      stg_property_callback_t callback,
-				      void* userdata )     
-{  
-  assert( world );
-  assert( propname );
-  assert( callback );
-
-  struct cb_package pkg;
-  pkg.propname = propname;
-  pkg.callback = callback;
-  pkg.userdata = userdata;
-
-  g_hash_table_foreach( world->models, add_callback_wrapper, &pkg );
-}
-
-void stg_world_remove_property_callback( stg_world_t* world,
-					 char* propname,
-					 stg_property_callback_t callback )
-{  
-  assert( world );
-  assert( propname );
-  assert( callback );
-  
-  struct cb_package pkg;
-  pkg.propname = propname;
-  pkg.callback = callback;
-  pkg.userdata = NULL;
-
-  g_hash_table_foreach( world->models, remove_callback_wrapper, &pkg );
-}
-
-
 void stg_world_print( stg_world_t* world )
 {
   printf( " world %d:%s (%d models)\n", 
@@ -491,6 +375,7 @@ void world_print_cb( gpointer key, gpointer value, gpointer user )
 
 stg_model_t* stg_world_model_name_lookup( stg_world_t* world, const char* name )
 {
+  //printf( "looking up model name %s in models_by_name\n", name );
   return (stg_model_t*)g_hash_table_lookup( world->models_by_name, name );
 }
 
@@ -525,29 +410,4 @@ void stg_world_reload( stg_world_t* world )
   // ask every model to save itself
   g_hash_table_foreach( world->models, stg_model_reload_cb, NULL );
 }
-
-
-/* void stg_world_add_property_toggles( stg_world_t* world,  */
-/* 				     const char* propname,  */
-/* 				     stg_property_callback_t callback_on, */
-/* 				     void* arg_on, */
-/* 				     stg_property_callback_t callback_off, */
-/* 				     void* arg_off, */
-/* 				     const char* label, */
-/* 				     int enabled ) */
-/* { */
-/*   stg_world_property_callback_args_t* args =  */
-/*     calloc(sizeof(stg_world_property_callback_args_t),1); */
-  
-/*   args->world = world; */
-/*   strncpy(args->propname, propname, STG_PROPNAME_MAX ); */
-/*   args->callback_on = callback_on; */
-/*   args->callback_off = callback_off; */
-/*   args->arg_on = arg_on; */
-/*   args->arg_off = arg_off; */
-
-/*   gui_add_view_item( propname, label, NULL,  */
-/* 		     toggle_property_callback, enabled, args ); */
-/* } */
-
 

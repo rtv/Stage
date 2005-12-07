@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.101 2005-11-17 19:52:37 rtv Exp $
+CVS: $Id: gui.c,v 1.102 2005-12-07 10:04:27 rtv Exp $
 */
 
 #include <stdio.h>
@@ -231,12 +231,12 @@ void  signal_destroy( GtkObject *object,
 gboolean quit_dialog( GtkWindow* parent )
 {
   GtkMessageDialog *dlg = 
-    gtk_message_dialog_new( parent,
-			    GTK_DIALOG_DESTROY_WITH_PARENT,
-			    GTK_MESSAGE_QUESTION,
-			    GTK_BUTTONS_YES_NO,
-			    "Are you sure you want to quit Stage?" );
-			    
+    (GtkMessageDialog*)gtk_message_dialog_new( parent,
+					       GTK_DIALOG_DESTROY_WITH_PARENT,
+					       GTK_MESSAGE_QUESTION,
+					       GTK_BUTTONS_YES_NO,
+					       "Are you sure you want to quit Stage?" );
+  
   
   gint result = gtk_dialog_run( GTK_DIALOG(dlg));
   gtk_widget_destroy(dlg);
@@ -558,11 +558,7 @@ void gui_world_matrix_table( stg_world_t* world, gui_window_t* win )
 
 void gui_pose( stg_rtk_fig_t* fig, stg_model_t* mod )
 {
-  stg_pose_t* pose = 
-    stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
-  
-  if( pose )
-    stg_rtk_fig_arrow_ex( fig, 0,0, pose->x, pose->y, 0.05 );
+  stg_rtk_fig_arrow_ex( fig, 0,0, mod->pose.x, mod->pose.y, 0.05 );
 }
 
 
@@ -681,25 +677,20 @@ void gui_model_trail( stg_model_t* mod )
   if( mod->parent ) // only trail top-level objects
     return; 
 
-  stg_color_t* col = 
-    stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
-  
   stg_rtk_fig_t* spot = stg_rtk_fig_create( mod->world->win->canvas,
 					    fig_trails, STG_LAYER_BODY-1 );      
   
-  stg_rtk_fig_color_rgb32( spot, *col );
+  stg_rtk_fig_color_rgb32( spot, mod->color );
   
-  stg_geom_t* geom = 
-    stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));
   
   // draw the bounding box
   stg_pose_t bbox_pose;
-  memcpy( &bbox_pose, &geom->pose, sizeof(bbox_pose));
+  memcpy( &bbox_pose, &mod->geom.pose, sizeof(bbox_pose));
   stg_model_local_to_global( mod, &bbox_pose );
   stg_rtk_fig_rectangle( spot, 
 			 bbox_pose.x, bbox_pose.y, bbox_pose.a, 
-			 geom->size.x,
-			 geom->size.y, 0 );  
+			 mod->geom.size.x,
+			 mod->geom.size.y, 0 );  
 }
 
 
@@ -722,15 +713,12 @@ const char* gui_model_describe(  stg_model_t* mod )
 {
   static char txt[256];
   
-  stg_pose_t* pose = 
-    stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
-  
   snprintf(txt, sizeof(txt), "model \"%s\" pose: [%.2f,%.2f,%.2f]",  
 	   //stg_model_type_string(mod->type), 
 	   mod->token, 
 	   //mod->world->id, 
 	   //mod->id,  
-	   pose->x, pose->y, pose->a  );
+	   mod->pose.x, mod->pose.y, mod->pose.a  );
   
   return txt;
 }
@@ -750,13 +738,17 @@ void gui_model_display_pose( stg_model_t* mod, char* verb )
   //printf( "STATUSBAR: %s\n", txt );
 }
 
+#define DEBUG 1
+
 // Process mouse events 
 void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
-{
-  //PRINT_DEBUG2( "ON MOUSE CALLED BACK for %p with userdata %p", fig, fig->userdata );
-    // each fig links back to the Entity that owns it
+{  
+  // each fig links back to the model that owns it
   stg_model_t* mod = (stg_model_t*)fig->userdata;
   assert( mod );
+
+  //printf( "ON MOUSE CALLED BACK for model %s fig %p with userdata %p mask %d\n", 
+  //	mod->token, fig, fig->userdata, mod->gui_mask );
 
   gui_window_t* win = mod->world->win;
   assert(win);
@@ -786,12 +778,11 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
     case STK_EVENT_PRESS:
       {
 	// store the velocity at which we grabbed the model (if it has a velocity)
-	stg_velocity_t* v = stg_model_get_property_fixed( mod, "velocity", sizeof(stg_velocity_t));
-	if( v )
-	  {
-	    memcpy( &capture_vel, v, sizeof(capture_vel));
-	    stg_model_set_property( mod, "velocity", &zero_vel, sizeof(zero_vel));
-	  }
+	stg_model_get_velocity( mod, &capture_vel );
+
+	stg_velocity_t zv;
+	memset( &zv, 0, sizeof(zv));
+	stg_model_set_velocity( mod, &zv );     
       }
       // DELIBERATE NO-BREAK      
 
@@ -806,7 +797,7 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
       //if( mod->polygons->len < STG_POLY_THRESHOLD )
       //stg_model_set_pose( mod, &pose );
 
-      stg_model_set_property( mod, "pose", &pose, sizeof(pose));
+      stg_model_set_pose( mod, &pose );
       
       // display the pose
       //gui_model_display_pose( mod, "Dragging:" );
@@ -815,11 +806,10 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
     case STK_EVENT_RELEASE:
       // move the entity to its final position
       stg_rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
-      //stg_model_set_pose( mod, &pose );
-      stg_model_set_property( mod, "pose", &pose, sizeof(pose));
+      stg_model_set_pose( mod, &pose );
       
       // and restore the velocity at which we grabbed it
-      stg_model_set_property( mod, "velocity", &capture_vel, sizeof(capture_vel) );
+      stg_model_set_velocity( mod, &capture_vel );
       break;      
       
     default:
@@ -867,7 +857,8 @@ void gui_model_create( stg_model_t* mod )
       gui_model_create( child );
     }
 
-  stg_model_property_refresh( mod, "polygons" );
+  // XX
+  //stg_model_property_refresh( mod, "polygons" );
 }
 
 void gui_model_destroy( stg_model_t* mod )
@@ -935,27 +926,23 @@ void gui_model_render_geom_global( stg_model_t* mod, stg_rtk_fig_t* fig )
 }
 
 /// move a model's figure to the model's current location
-void gui_model_move( stg_model_t* mod )
+int gui_model_move( stg_model_t* mod, void* userp )
 { 
-  stg_pose_t* pose = 
-    stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
   
-  if( pose )
-    {
-      stg_rtk_fig_origin( stg_model_get_fig(mod,"top"), 
-			  pose->x, pose->y, pose->a );   
-      
+  stg_rtk_fig_origin( stg_model_get_fig(mod,"top"), 
+		      mod->pose.x, mod->pose.y, mod->pose.a );   
+  
 #if INCLUDE_GNOME
-      double r[6], t[6];
-      art_affine_rotate(r,RTOD(pose->a));
-      gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(mod->grp), r );
-      gnome_canvas_item_set( GNOME_CANVAS_ITEM(mod->grp),
-			     "x", pose->x,
-			     "y", pose->y,
-			     NULL );
+  double r[6], t[6];
+  art_affine_rotate(r,RTOD(pose->a));
+  gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(mod->grp), r );
+  gnome_canvas_item_set( GNOME_CANVAS_ITEM(mod->grp),
+			 "x", mod->pose.x,
+			 "y", mod->pose.y,
+			 NULL );
 #endif			
-      
-    }
+
+  return 0;
 }
 
 ///  render a model's geometry if geom viewing is enabled
@@ -1019,3 +1006,131 @@ stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod,
   return fig;
 }
 
+
+
+int gui_model_polygons( stg_model_t* mod, void* userp )
+{
+  //puts( "model render polygons" );
+
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "top" );
+  assert( fig );
+  
+  stg_rtk_fig_clear( fig );
+  
+  size_t count = mod->polygons_count;
+  stg_polygon_t* polys = mod->polygons;
+  
+  stg_geom_t geom;
+  stg_model_get_geom(mod, &geom);
+  
+  stg_rtk_fig_color_rgb32( fig, mod->color );
+
+  if( polys && count > 0 )
+    {
+      
+
+	if( ! mod->world->win->fill_polygons )
+	{
+	  
+	  int p;
+	  for( p=0; p<count; p++ )
+	    stg_rtk_fig_polygon( fig,
+				 geom.pose.x,
+				 geom.pose.y,
+				 geom.pose.a,
+				 polys[p].points->len,
+				 polys[p].points->data,
+				 0 );
+	}
+      else
+	{
+	  int p;
+	  for( p=0; p<count; p++ )
+	    stg_rtk_fig_polygon( fig,
+				 geom.pose.x,
+				 geom.pose.y,
+				 geom.pose.a,
+				 polys[p].points->len,
+				 polys[p].points->data,
+				 1 );
+	  
+	  if( mod->gui_outline )
+	    {
+	      stg_rtk_fig_color_rgb32( fig, 0 ); // black
+	      
+	      for( p=0; p<count; p++ )
+		stg_rtk_fig_polygon( fig,
+				     geom.pose.x,
+				     geom.pose.y,
+				     geom.pose.a,
+				     polys[p].points->len,
+				     polys[p].points->data,
+				     0 );
+
+	      stg_rtk_fig_color_rgb32( fig, mod->color ); // change back
+	    }
+	  
+	}
+    }
+  
+  if( mod->boundary )
+    {      
+      stg_rtk_fig_rectangle( fig, 
+			     geom.pose.x, geom.pose.y, geom.pose.a, 
+			     geom.size.x, geom.size.y, 0 ); 
+    }
+
+  if( mod->gui_nose )
+    {       
+      // draw an arrow from the center to the front of the model
+      stg_rtk_fig_arrow( fig, geom.pose.x, geom.pose.y, geom.pose.a, 
+			 geom.size.x/2.0, 0.05 );
+    }
+    
+  return 0;
+}
+
+
+int gui_model_mask( stg_model_t* mod, void* userp )
+{
+  
+  stg_rtk_fig_t* fig = stg_model_get_fig(mod, "top" );
+  assert(fig);
+  
+  stg_rtk_fig_movemask( fig, mod->gui_mask );  
+  
+  // only install a mouse handler if the object needs one
+  //(TODO can we remove mouse handlers dynamically?)
+  if( mod->gui_mask )    
+    {
+      //printf( "adding mouse handler for model %s\n", mod->token );
+      stg_rtk_fig_add_mouse_handler( fig, gui_model_mouse );
+    }
+  return 0;
+}
+  
+int gui_model_grid( stg_model_t* mod, void* userp )
+{
+  stg_geom_t geom;
+  stg_model_get_geom(mod, &geom);
+  
+  stg_rtk_fig_t* grid = stg_model_get_fig(mod,"grid"); 
+  
+  // if we need a grid and don't have one, make one
+  if( mod->gui_grid  )
+    {    
+      if( ! grid ) 
+	grid = stg_model_fig_create( mod, "grid", "top", STG_LAYER_GRID); 
+      
+      stg_rtk_fig_clear( grid );
+      stg_rtk_fig_color_rgb32( grid, stg_lookup_color(STG_GRID_MAJOR_COLOR ) );      
+      stg_rtk_fig_grid( grid, 
+			geom.pose.x, geom.pose.y, 
+			geom.size.x, geom.size.y, 1.0  ) ;
+    }
+  else
+    if( grid ) // if we have a grid and don't need one, clear it but keep the fig around      
+      stg_rtk_fig_clear( grid );
+  
+  return 0;
+}

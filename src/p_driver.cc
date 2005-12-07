@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.22 2005-12-05 08:11:16 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.23 2005-12-07 10:04:27 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -191,7 +191,7 @@ int player_driver_init(DriverTable* table)
 // find a model to attach to a Player interface
 stg_model_t* model_match( stg_model_t* mod, stg_model_initializer_t init, GPtrArray* devices )
 {
-  if( mod->initializer == init )
+  if( mod->typerec->initializer == init )
     return mod;
  
   // else try the children
@@ -214,7 +214,7 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_initializer_t init, GPtrAr
 		(Interface*)g_ptr_array_index( devices, i );
 	      
 	      //printf( "comparing %p and %p (%d.%d.%d)\n", mod, record->mod,
-	      //      record->id.port, record->id.code, record->id.index );
+	      //    record->id.port, record->id.code, record->id.index );
 	      
 	      if( match == interface->mod )//&& ! tp == STG_MODEL_BASIC )
 		{
@@ -243,7 +243,7 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 {
   //puts( "InterfaceModel constructor" );
   
-  const char* model_name = cf->ReadString(section, "model", NULL );
+  char* model_name = (char*)cf->ReadString(section, "model", NULL );
   
   if( model_name == NULL )
     {
@@ -382,10 +382,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
   //puts( "  Stage driver loaded successfully." );
 }
 
-stg_model_t*  StgDriver::LocateModel( const char* basename,  
+stg_model_t*  StgDriver::LocateModel( char* basename,  
 				      stg_model_initializer_t init )
 {  
-  //PLAYER_TRACE1( "attempting to resolve Stage model \"%s\"", model_name );
   //printf( "attempting to resolve Stage model \"%s\"", model_name );
   
   stg_model_t* base_model = 
@@ -398,7 +397,7 @@ stg_model_t*  StgDriver::LocateModel( const char* basename,
       return NULL;
     }
   
-  // printf( "found base model %s\n", base_model->token );
+  //printf( "found base model %s\n", base_model->token );
   
   // now find the model for this player device find the first model in
   // the tree that is the right type (i.e. has the right

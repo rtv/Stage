@@ -97,14 +97,19 @@ extern "C" {
   void gui_model_features( stg_model_t* mod );
   void gui_model_geom( stg_model_t* model );
   void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode);
-  void gui_model_move( stg_model_t* mod );
   void gui_model_nose( stg_model_t* model );
-  void gui_model_polygons( stg_model_t* model );
-  void gui_model_render_command( stg_model_t* mod );
-  void gui_model_render_config( stg_model_t* mod );
-  void gui_model_render_data( stg_model_t* mod );
+  //void gui_model_render_command( stg_model_t* mod );
+  //void gui_model_render_config( stg_model_t* mod );
+  //void gui_model_render_data( stg_model_t* mod );
   void gui_window_menus_create( gui_window_t* win );
   void gui_window_menus_destroy( gui_window_t* win );
+
+  // callback functions that handle property changes, mostly for drawing stuff in the GUI  
+  int gui_model_polygons( stg_model_t* mod, void* userp );
+  int gui_model_grid( stg_model_t* mod, void* userp );
+  int gui_model_move( stg_model_t* mod, void* userp );
+  int gui_model_mask( stg_model_t* mod, void* userp );
+
 
   void gui_add_view_item( const gchar *name,
 			  const gchar *label,
@@ -176,14 +181,17 @@ extern "C" {
   } stg_property_toggle_args_t;
     
   
+  typedef struct {
+    const char* keyword;
+    stg_model_initializer_t initializer;
+  } stg_type_record_t;
+
   struct _stg_model
   {
     stg_id_t id; // used as hash table key
     stg_world_t* world; // pointer to the world in which this model exists
-    char* token; // automatically-generated unique ID string
-    int type; // what kind of a model am I?
-
-    stg_watts_t watts; //< power consumed by this model
+    char token[STG_TOKEN_MAX]; // automatically-generated unique ID string
+    stg_type_record_t* typerec;
 
     struct _stg_model *parent; // the model that owns this one, possibly NULL
 
@@ -192,7 +200,7 @@ extern "C" {
     // a datalist can contain arbitrary named data items. Can be used
     // by derived model types to store properties, and for user code
     // to associate arbitrary items with a model.
-    GData* props;
+    //GData* props;
 
     // a datalist of stg_rtk_figs, indexed by name (string)
     GData* figs; 
@@ -205,10 +213,29 @@ extern "C" {
     GnomeCanvasGroup* cgrp;
 #endif
 
-    /* experimental */
     stg_pose_t pose;
     stg_velocity_t velocity;
     stg_polygon_t* polygons;
+    size_t polygons_count;
+    stg_watts_t watts; //< power consumed by this model
+    stg_color_t color;
+    stg_kg_t mass;
+    stg_geom_t geom;
+    int laser_return;
+    int obstacle_return;
+    int blob_return;
+    int gripper_return;
+    int ranger_return;
+    int fiducial_return;
+    int boundary;
+    stg_meters_t map_resolution;
+    stg_bool_t stall;
+
+    int gui_nose;
+    int gui_grid;
+    int gui_outline;
+    int gui_mask;
+
     GHashTable* callbacks;
     /* end experimental */
        
@@ -225,31 +252,32 @@ extern "C" {
     
     // type-dependent functions for this model, implementing simple
     // polymorphism
-    stg_model_initializer_t initializer;
+    //stg_model_initializer_t initializer;
     func_startup_t f_startup;
     func_shutdown_t f_shutdown;
     func_update_t f_update;
     func_load_t f_load;
     func_save_t f_save;
 
-    /* TOFO - thread-safe version */
+    void *data, *cmd, *cfg;
+    size_t data_len, cmd_len, cfg_len;
+
+    /* TODO - thread-safe version */
     
-    // allow exclusive access to this model's properties
+    // allow exclusive access to this model
     pthread_mutex_t mutex;
     
     /* END TODO */    
   };
   
-  typedef struct {
-    const char* keyword;
-    stg_model_initializer_t initializer;
-  } stg_type_record_t;
 
   // internal functions
   
   int _model_update( stg_model_t* mod );
   int _model_startup( stg_model_t* mod );
   int _model_shutdown( stg_model_t* mod );
+
+  void model_change( stg_model_t* mod, void* address );
 
   void stg_model_update_velocity( stg_model_t* model );
   int stg_model_update_pose( stg_model_t* model );

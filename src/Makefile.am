@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.125 2005-12-05 08:11:16 rtv Exp $
+# $Id: Makefile.am,v 1.126 2005-12-07 10:04:27 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -37,11 +37,12 @@ libstage_la_SOURCES = \
 	matrix.c \
 	model.c \
 	model_blobfinder.c \
-	model_fiducial.c \
-	model_gripper.c \
 	model_laser.c \
+	model_load.c \
 	model_position.c \
+	model_fiducial.c \
 	model_ranger.c \
+	model_gripper.c \
 	model_energy.c \
 	raytrace.c \
 	stage.c \
@@ -65,24 +66,27 @@ libstage_la_LIBADD = @GTK_LIBS@ @GLIB_LIBS@ @GNOME_LIBS@
 
 # build a Player plugin from libstage plus Player driver hooks.
 libstageplugin_la_SOURCES = \
-	p_blobfinder.cc \
+	p_fiducial.cc \
 	p_driver.cc \
 	p_driver.h \
-	p_fiducial.cc \
-	p_gripper.cc \
 	p_laser.cc \
-	p_map.cc \
+	p_sonar.cc \
+	p_gripper.cc \
 	p_position.cc \
 	p_power.cc \
+	p_map.cc \
 	p_simulation.cc \
-	p_sonar.cc \
+	p_blobfinder.cc \
 	stg_time.cc \
-	stg_time.h \
+	stg_time.h 
+
+# broken?
 	zoo.h \
 	zoo_driver.h \
         zoo_controller.h \
         zoo_referee.h \
         zoo_species.h
+
 
 #zoo.c 
 #zoo_driver.cc 

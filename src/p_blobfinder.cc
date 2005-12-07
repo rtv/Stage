@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_blobfinder.cc,v 1.5 2005-09-25 07:35:06 rtv Exp $
+ * CVS: $Id: p_blobfinder.cc,v 1.6 2005-12-07 10:04:27 rtv Exp $
  */
 
 // DOCUMENTATION
@@ -59,10 +59,9 @@ InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr,
 void InterfaceBlobfinder::Publish( void )
 {
   size_t len=0;
-  stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)
-    stg_model_get_property( this->mod, "blob_data", &len );
+  stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)mod->data;
   
-  size_t bcount = len / sizeof(stg_blobfinder_blob_t);
+  size_t bcount = mod->data_len / sizeof(stg_blobfinder_blob_t);
   
   // limit the number of samples to Player's maximum
   if( bcount > PLAYER_BLOBFINDER_MAX_BLOBS )
@@ -72,8 +71,7 @@ void InterfaceBlobfinder::Publish( void )
   memset( &bfd, 0, sizeof(bfd) );
   
   // get the configuration
-  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)
-    stg_model_get_property_fixed( this->mod, "blob_cfg", sizeof(stg_blobfinder_config_t));
+  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg;
   assert(cfg);
   
   // and set the image width * height

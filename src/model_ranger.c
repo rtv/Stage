@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.57 $
+//  $Revision: 1.58 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -151,7 +151,7 @@ void ranger_load( stg_model_t* mod )
       
       PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
 
-      stg_model_set_property( mod, "ranger_cfg", configs, scount * sizeof(stg_ranger_config_t) );
+      stg_model_set_cfg( mod, configs, scount * sizeof(stg_ranger_config_t) );
       
       free( configs );
     }
@@ -164,8 +164,10 @@ int ranger_update( stg_model_t* mod );
 int ranger_startup( stg_model_t* mod );
 int ranger_shutdown( stg_model_t* mod );
 
-int ranger_render_data( stg_model_t* mod, char* name, 
-			void* data, size_t len, void* userp );
+//int ranger_render_data( stg_model_t* mod, char* name, 
+//		void* data, size_t len, void* userp );
+int ranger_render_data( stg_model_t* mod, void* userp );
+
 int ranger_unrender_data( stg_model_t* mod, char* name, 
 			  void* data, size_t len, void* userp );
 int ranger_render_cfg( stg_model_t* mod, char* name, 
@@ -179,19 +181,18 @@ int ranger_init( stg_model_t* mod )
   mod->f_update = NULL; // installed on startup & shutdown
   mod->f_load = ranger_load;
   
-  stg_model_set_property( mod, "ranger_data", NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
   
   // Set up sensible defaults
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom)); // no size
-  stg_model_set_property( mod, "geom", &geom, sizeof(geom) );
+  stg_model_set_geom( mod, &geom );
   
   stg_color_t col = stg_lookup_color( STG_RANGER_CONFIG_COLOR );
-  stg_model_set_property( mod, "color", &col, sizeof(col) );
+  stg_model_set_color( mod, col );
   
   // remove the polygon: ranger has no body
-  stg_model_set_property( mod, "polygons", NULL, 0 );
-
+  stg_model_set_polygons( mod, NULL, 0 );
 
   stg_ranger_config_t cfg[16];
   size_t cfglen = 16*sizeof(cfg[0]);
@@ -215,16 +216,18 @@ int ranger_init( stg_model_t* mod )
       cfg[c].bounds_range.max = 5.0;
       cfg[c].fov = M_PI/6.0;
     }
-  stg_model_set_property( mod, "ranger_cfg", cfg, cfglen );
+  stg_model_set_cfg( mod, cfg, cfglen );
   
+  stg_model_add_callback( mod, &mod->data, ranger_render_data, NULL );
+
   // adds a menu item and associated on-and-off callbacks
-  stg_model_add_property_toggles( mod, "ranger_data", 
-				  ranger_render_data, // called when toggled on
-				  NULL,
-				  ranger_unrender_data, // called when toggled off
-				  NULL,
-				  "ranger data",
-				  TRUE );
+/*   stg_model_add_property_toggles( mod, "ranger_data",  */
+/* 				  ranger_render_data, // called when toggled on */
+/* 				  NULL, */
+/* 				  ranger_unrender_data, // called when toggled off */
+/* 				  NULL, */
+/* 				  "ranger data", */
+/* 				  TRUE ); */
   
 /*   stg_model_add_property_toggles( mod, "ranger_cfg",  */
 /* 				  ranger_render_cfg, // called when toggled on */
@@ -258,20 +261,15 @@ int ranger_shutdown( stg_model_t* mod )
   //mod->watts = 0.0; // stop consuming power
   
   // clear the data - this will unrender it too.
-  stg_model_set_property( mod, "ranger_data", NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
 
   return 0;
 }
 
 int ranger_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
-  stg_ranger_return_t* rr = 
-    stg_model_get_property_fixed( hitmod, 
-				  "ranger_return", 
-				  sizeof(stg_ranger_return_t));
-  
   // Ignore myself, my children, and my ancestors.
-  return( *rr && !stg_model_is_related(mod,hitmod) );
+  return( hitmod->ranger_return && !stg_model_is_related(mod,hitmod) );
 }	
 
 
@@ -282,10 +280,9 @@ int ranger_update( stg_model_t* mod )
 
   //PRINT_DEBUG1( "[%d] updating rangers", mod->world->sim_time );
   
-  size_t len = 0;
-  stg_ranger_config_t *cfg = 
-    stg_model_get_property( mod, "ranger_cfg", &len );
-  
+  size_t len = mod->cfg_len;
+  stg_ranger_config_t *cfg = (stg_ranger_config_t*)mod->cfg;
+
   if( len < sizeof(stg_ranger_config_t) )
     return 0; // nothing to see here
   
@@ -335,7 +332,7 @@ int ranger_update( stg_model_t* mod )
       itl_destroy( itl );
     }
   
-  stg_model_set_property( mod, "ranger_data", ranges, sizeof(stg_ranger_sample_t) * rcount );
+  stg_model_set_data( mod, ranges, sizeof(stg_ranger_sample_t) * rcount );
   
   free( ranges );
 
@@ -354,75 +351,71 @@ int ranger_noise_test( stg_ranger_sample_t* data, size_t count,  )
 }
 */
 
-int ranger_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+/* int ranger_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
+/* { */
+/*   stg_ranger_config_t *cfg = (stg_ranger_config_t*)data; */
+/*   int rcount = len / sizeof( stg_ranger_config_t ); */
+
+/*   if( cfg == NULL || rcount < 1 ) */
+/*     return 0; // nothing to draw */
+  
+/*   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "ranger_cfg_fig" ); */
+
+/*   if( !fig ) */
+/*     fig = stg_model_fig_create( mod, "ranger_cfg_fig", "top", STG_LAYER_RANGERCONFIG ); */
+  
+/*   stg_geom_t geom; */
+/*   stg_model_get_geom(mod,&geom); */
+  
+/*   stg_rtk_fig_clear(fig); */
+/*   stg_rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );   */
+  
+/*   // add rects showing ranger positions */
+/*   int s; */
+/*   for( s=0; s<rcount; s++ ) */
+/*     { */
+/*       stg_ranger_config_t* rngr = &cfg[s]; */
+      
+/*       // sensor pose */
+/*       stg_rtk_fig_rectangle( fig,  */
+/* 			     rngr->pose.x, rngr->pose.y, rngr->pose.a, */
+/* 			     rngr->size.x, rngr->size.y,  */
+/* 			     mod->world->win->fill_polygons );  */
+      
+/*       // TODO - FIX THIS */
+      
+/*       // sensor FOV */
+/*       double sidelen = rngr->bounds_range.max; */
+/*       double da = rngr->fov/2.0; */
+      
+/*       double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - da ); */
+/*       double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - da ); */
+/*       double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da ); */
+/*       double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da ); */
+      
+/*       stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 ); */
+/*       stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );	 */
+      
+/*       stg_rtk_fig_ellipse_arc( fig,  */
+/* 			       rngr->pose.x, rngr->pose.y, rngr->pose.a, */
+/* 			       2.0*cfg->bounds_range.max, */
+/* 			       2.0*cfg->bounds_range.max,  */
+/* 			       -da, da ); */
+/*     } */
+
+/*   return 0; */
+/* } */
+
+
+/* int ranger_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
+/* {  */
+/*   stg_model_fig_clear( mod, "ranger_data_fig" ); */
+/*   return 1; // quit callback */
+/* } */
+
+
+int ranger_render_data( stg_model_t* mod, void* userp )
 {
-  stg_ranger_config_t *cfg = (stg_ranger_config_t*)data;
-  int rcount = len / sizeof( stg_ranger_config_t );
-
-  if( cfg == NULL || rcount < 1 )
-    return 0; // nothing to draw
-  
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "ranger_cfg_fig" );
-
-  if( !fig )
-    fig = stg_model_fig_create( mod, "ranger_cfg_fig", "top", STG_LAYER_RANGERCONFIG );
-  
-  stg_geom_t geom;
-  stg_model_get_geom(mod,&geom);
-  
-  stg_rtk_fig_clear(fig);
-  stg_rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );  
-  
-  // add rects showing ranger positions
-  int s;
-  for( s=0; s<rcount; s++ )
-    {
-      stg_ranger_config_t* rngr = &cfg[s];
-      
-      // sensor pose
-      stg_rtk_fig_rectangle( fig, 
-			     rngr->pose.x, rngr->pose.y, rngr->pose.a,
-			     rngr->size.x, rngr->size.y, 
-			     mod->world->win->fill_polygons ); 
-      
-      // TODO - FIX THIS
-      
-      // sensor FOV
-      double sidelen = rngr->bounds_range.max;
-      double da = rngr->fov/2.0;
-      
-      double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - da );
-      double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - da );
-      double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da );
-      double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da );
-      
-      stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 );
-      stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );	
-      
-      stg_rtk_fig_ellipse_arc( fig, 
-			       rngr->pose.x, rngr->pose.y, rngr->pose.a,
-			       2.0*cfg->bounds_range.max,
-			       2.0*cfg->bounds_range.max, 
-			       -da, da );
-    }
-
-  return 0;
-}
-
-
-int ranger_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
-{ 
-  stg_model_fig_clear( mod, "ranger_data_fig" );
-  return 1; // quit callback
-}
-
-
-int ranger_render_data( stg_model_t* mod, 
-			char* name, 
-			void* data, 
-			size_t len, 
-			void* userp )
-{ 
   PRINT_DEBUG( "ranger render data" );
   
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "ranger_data_fig" );
@@ -432,8 +425,8 @@ int ranger_render_data( stg_model_t* mod,
 
   stg_rtk_fig_clear(fig);
 
-  size_t clen=0;
-  stg_ranger_config_t* cfg = stg_model_get_property(mod, "ranger_cfg", &clen );
+  size_t clen = mod->cfg_len;
+  stg_ranger_config_t* cfg = (stg_ranger_config_t*)mod->cfg;
   
   // any samples at all?
   if( clen < sizeof(stg_ranger_config_t) )
@@ -441,21 +434,20 @@ int ranger_render_data( stg_model_t* mod,
   
   int rcount = clen / sizeof( stg_ranger_config_t );
   
-  if( rcount < 1 ) // no samples 
-    return 0; 
+  if( rcount < 1 ) // no samples
+    return 0;
   
-  size_t dlen = 0;
-  stg_ranger_sample_t *samples = 
-    stg_model_get_property( mod, "ranger_data", &dlen );
+  size_t dlen = mod->data_len;
+  stg_ranger_sample_t *samples = (stg_ranger_sample_t*)mod->data;
   
   // iff we have the right amount of data
   if( dlen == rcount * sizeof(stg_ranger_sample_t) )
-    {       
+    {
       stg_geom_t geom;
       stg_model_get_geom(mod,&geom);
       
       stg_rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
-      stg_rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );	  
+      stg_rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );
       
       // draw the range  beams
       int s;
@@ -465,8 +457,8 @@ int ranger_render_data( stg_model_t* mod,
 	    {
 	      stg_ranger_config_t* rngr = &cfg[s];
 	      
-	      stg_rtk_fig_arrow( fig, 
-				 rngr->pose.x, rngr->pose.y, rngr->pose.a, 	
+	      stg_rtk_fig_arrow( fig,
+				 rngr->pose.x, rngr->pose.y, rngr->pose.a,
 				 samples[s].range, 0.02 );
 	    }
 	}

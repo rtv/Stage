@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.165 2005-12-05 08:11:16 rtv Exp $
+ * CVS: $Id: stage.h,v 1.166 2005-12-07 10:04:28 rtv Exp $
  */
 
 
@@ -105,6 +105,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   // TODO - fix this up
 #define FiducialNone 0
   
+#define STG_TOKEN_MAX 64
 
   // Basic self-describing measurement types. All packets with real
   // measurements are specified in these terms so changing types here
@@ -142,18 +143,18 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
   /** obstacle value. 0 means the model does not behave, or is sensed,
       as an obstacle */
-  typedef int stg_obstacle_return_t;
+  //typedef int stg_obstacle_return_t;
 
   /** blobfinder return value. 0 means not detected by the
       blobfinder */
-  typedef int stg_blob_return_t;
+  //typedef int stg_blob_return_t;
 
   /** fiducial return value. 0 means not detected as a fiducial */
-  typedef int stg_fiducial_return_t;
+  //typedef int stg_fiducial_return_t;
 
-  typedef int stg_ranger_return_t;
+  //typedef int stg_ranger_return_t;
   
-  typedef enum { STG_GRIP_NO = 0, STG_GRIP_YES } stg_gripper_return_t;
+  //typedef enum { STG_GRIP_NO = 0, STG_GRIP_YES } stg_gripper_return_t;
   
   /** specify a rectangular size 
    */
@@ -222,25 +223,16 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_joules_t stored;
 
     /** maximum storage capacity */
-    stg_joules_t capacity;
-
-    /** total joules received */
-    stg_joules_t input_joules;
-
-    /** total joules supplied */
-    stg_joules_t output_joules;
-
-    /** estimate of current energy output */
-    stg_watts_t input_watts;
-
-    /** estimate of current energy input */
-    stg_watts_t output_watts;
+    //stg_joules_t capacity;
 
     /** TRUE iff the device is receiving energy from a charger */
     stg_bool_t charging;
 
-    /** the range to the charger, if attached, in meters */
+    /** the range to the nearest connected object */
     stg_meters_t range;
+
+    /** an array of pointers to connected models */
+    GPtrArray* connections;
   } stg_energy_data_t;
 
   /** energy config packet (use this to set or get energy configuration)*/
@@ -250,14 +242,18 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_joules_t capacity;
 
     /** when charging another device, supply this many joules/sec at most*/
-    stg_watts_t give;
+    stg_watts_t give_rate;
 
     /** when charging from another device, receive this many
 	joules/sec at most*/
-    stg_watts_t take;
+    stg_watts_t take_rate;
 
     /** length of the charging probe */
     stg_meters_t probe_range;
+    
+    /**  iff TRUE, this device will supply power to connected devices */
+    stg_bool_t give;
+
   } stg_energy_config_t;
 
   // there is currently no energy command packet
@@ -441,6 +437,52 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   stg_polygon_t* stg_polygons_from_image_file(  const char* filename, 
 						size_t* poly_count );
        
+  /** add an item to the View menu that will automatically install and
+      remove a callback when the item is toggled. The specialized
+      model types use this call to set up their data visualization. */
+ /*  void stg_model_add_property_toggles( stg_model_t* mod,  */
+/* 				       const char* propname,  */
+/* 				       stg_property_callback_t callback_on, */
+/* 				       void* arg_on, */
+/* 				       stg_property_callback_t callback_off, */
+/* 				       void* arg_off, */
+/* 				       const char* label, */
+/* 				       int enabled ); */
+
+  /** Set a named property of a model */
+/*   void stg_model_set_property( stg_model_t* mod,  */
+/* 			       const char* prop,  */
+/* 			       void* data,  */
+/* 			       size_t len );   */
+  
+  /** gets the named property data. if len is non-NULL, it is set with
+      the size of the data in bytes */
+/*   void* stg_model_get_property( stg_model_t* mod,  */
+/* 				const char* prop, */
+/* 				size_t* len ); */
+  
+  /** gets a property of a known size. Fail assertion if the size isn't right.
+   */
+/*   void* stg_model_get_property_fixed( stg_model_t* mod,  */
+/* 				      const char* name, */
+/* 				      size_t size ); */
+  // TODO?
+  /** Get exclusive access to a model, for threaded
+      applications. Release with stg_model_unlock(). */
+  //void stg_model_lock( stg_model_t* mod );
+  
+  /** Release exclusive access to a model, obtained with stg_model_lock() */
+  //void stg_model_unlock( stg_model_t* mod );
+
+
+ /*  int stg_model_add_property_callback( stg_model_t* mod, const char* prop,  */
+/* 				       stg_property_callback_t, void* user ); */
+  
+/*   int stg_model_remove_property_callback( stg_model_t* mod, const char* prop,  */
+/* 					  stg_property_callback_t ); */
+  
+/*   int stg_model_remove_property_callbacks( stg_model_t* mod, const char* prop ); */
+
   /**@}*/
 
   // end util documentation group
@@ -505,14 +547,13 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_property_callback_t callback;
     void* arg;
   } stg_cbarg_t;
-
+  
   /// create a new model
   stg_model_t* stg_model_create(  stg_world_t* world,
 				  stg_model_t* parent, 
 				  stg_id_t id, 
-				  char* token,
-				  stg_model_initializer_t initializer );
-
+				  char* typestr );
+  
   /** destroy a model, freeing its memory */
   void stg_model_destroy( stg_model_t* mod );
 
@@ -543,24 +584,19 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   // SET properties - use these to set props, don't set them directly
 
   /** set the pose of model in global coordinates */
-  int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose );
+  void stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose );
   
   /** set a model's velocity in its parent's coordinate system */
-  int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
+  void stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
  
   /** set a model's pose in its parent's coordinate system */
-  int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
+  void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
 
   /** set a model's geometry (size and center offsets) */
-  int stg_model_set_geom( stg_model_t* mod, stg_geom_t* src );
+  void stg_model_set_geom( stg_model_t* mod, stg_geom_t* src );
 
-  // TODO?
-  /** Get exclusive access to a model, for threaded
-      applications. Release with stg_model_unlock(). */
-  //void stg_model_lock( stg_model_t* mod );
-  
-  /** Release exclusive access to a model, obtained with stg_model_lock() */
-  //void stg_model_unlock( stg_model_t* mod );
+  /** set a model's geometry (size and center offsets) */
+  void stg_model_set_fiducial_return( stg_model_t* mod, int fid );
 
   /** Change a model's parent - experimental*/
   int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent);
@@ -575,45 +611,36 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /** Get a model's velocity (in its local reference frame) */
   void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
   
-  /** Set a named property of a model */
-  void stg_model_set_property( stg_model_t* mod, 
-			       const char* prop, 
-			       void* data, 
-			       size_t len );  
-  
-  /** gets the named property data. if len is non-NULL, it is set with
-      the size of the data in bytes */
-  void* stg_model_get_property( stg_model_t* mod, 
-				const char* prop,
-				size_t* len );
-  
-  /** gets a property of a known size. Fail assertion if the size isn't right.
-   */
-  void* stg_model_get_property_fixed( stg_model_t* mod, 
-				      const char* name,
-				      size_t size );
-
-  void stg_model_property_refresh( stg_model_t* mod, const char* propname );
-
-
-  /// gets a model's "polygons" property and fills poly_count with the
-  /// number of polygons to be found
+  /** gets a model's "polygons" property and fills poly_count with the
+      number of polygons to be found */
   stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count );
   void stg_model_set_polygons( stg_model_t* mod,
 			       stg_polygon_t* polys, 
 			       size_t poly_count );
+  
+  // guess what these do?
+  void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
+  void stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
+  void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
+  void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest );
+  void stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom );
+  void stg_model_set_color( stg_model_t* mod, stg_color_t col );
+  void stg_model_set_mass( stg_model_t* mod, stg_kg_t mass );
+  void stg_model_set_stall( stg_model_t* mod, stg_bool_t stall );
+  void stg_model_set_gripper_return( stg_model_t* mod, int val );
+  void stg_model_set_fiducial_return( stg_model_t* mod, int val );
+  void stg_model_set_laser_return( stg_model_t* mod, int val );
+  void stg_model_set_obstacle_return( stg_model_t* mod, int val );
+  void stg_model_set_blob_return( stg_model_t* mod, int val );
+  void stg_model_set_ranger_return( stg_model_t* mod, int val );
+  void stg_model_set_boundary( stg_model_t* mod, int val );
+  void stg_model_set_gui_nose( stg_model_t* mod, int val );
+  void stg_model_set_gui_mask( stg_model_t* mod, int val );
+  void stg_model_set_gui_grid( stg_model_t* mod, int val );
+  void stg_model_set_gui_outline( stg_model_t* mod, int val );
+  void stg_model_set_watts( stg_model_t* mod, stg_watts_t watts );
+  void stg_model_set_map_resolution( stg_model_t* mod, stg_meters_t res );
 
-  // get a copy of the property data - caller must free it
-  //int stg_model_copy_property_data( stg_model_t* mod, const char* prop,
-  //			   void** data );
-  
-  int stg_model_add_property_callback( stg_model_t* mod, const char* prop, 
-				       stg_property_callback_t, void* user );
-  
-  int stg_model_remove_property_callback( stg_model_t* mod, const char* prop, 
-					  stg_property_callback_t );
-  
-  int stg_model_remove_property_callbacks( stg_model_t* mod, const char* prop );
 
   /** print human-readable information about the model on stdout
    */
@@ -658,21 +685,62 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
       coordinate. */
   void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose );
 
+  int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len, 
+			      void* userp );
+
+  void stg_model_set_data( stg_model_t* mod, void* data, size_t len );
+  void stg_model_set_cmd( stg_model_t* mod, void* cmd, size_t len );
+  void stg_model_set_cfg( stg_model_t* mod, void* cfg, size_t len );
+  void* stg_model_get_cfg( stg_model_t* mod, size_t* lenp );
+  void* stg_model_get_data( stg_model_t* mod, size_t* lenp );
+  void* stg_model_get_cmd( stg_model_t* mod, size_t* lenp );
+  
 
   /** add an item to the View menu that will automatically install and
       remove a callback when the item is toggled. The specialized
       model types use this call to set up their data visualization. */
-  void stg_model_add_property_toggles( stg_model_t* mod, 
-				       const char* propname, 
-				       stg_property_callback_t callback_on,
-				       void* arg_on,
-				       stg_property_callback_t callback_off,
-				       void* arg_off,
-				       const char* label,
-				       int enabled );
+ /*  void stg_model_add_property_toggles( stg_model_t* mod,  */
+/* 				       const char* propname,  */
+/* 				       stg_property_callback_t callback_on, */
+/* 				       void* arg_on, */
+/* 				       stg_property_callback_t callback_off, */
+/* 				       void* arg_off, */
+/* 				       const char* label, */
+/* 				       int enabled ); */
 
-  int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len, 
-			      void* userp );
+  /** Set a named property of a model */
+/*   void stg_model_set_property( stg_model_t* mod,  */
+/* 			       const char* prop,  */
+/* 			       void* data,  */
+/* 			       size_t len );   */
+  
+  /** gets the named property data. if len is non-NULL, it is set with
+      the size of the data in bytes */
+/*   void* stg_model_get_property( stg_model_t* mod,  */
+/* 				const char* prop, */
+/* 				size_t* len ); */
+  
+  /** gets a property of a known size. Fail assertion if the size isn't right.
+   */
+/*   void* stg_model_get_property_fixed( stg_model_t* mod,  */
+/* 				      const char* name, */
+/* 				      size_t size ); */
+  // TODO?
+  /** Get exclusive access to a model, for threaded
+      applications. Release with stg_model_unlock(). */
+  //void stg_model_lock( stg_model_t* mod );
+  
+  /** Release exclusive access to a model, obtained with stg_model_lock() */
+  //void stg_model_unlock( stg_model_t* mod );
+
+
+ /*  int stg_model_add_property_callback( stg_model_t* mod, const char* prop,  */
+/* 				       stg_property_callback_t, void* user ); */
+  
+/*   int stg_model_remove_property_callback( stg_model_t* mod, const char* prop,  */
+/* 					  stg_property_callback_t ); */
+  
+/*   int stg_model_remove_property_callbacks( stg_model_t* mod, const char* prop ); */
 
   /** @} */   // end model doc group
 
@@ -1059,12 +1127,19 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_pose_t origin; ///< global origin of the local coordinate system
     stg_velocity_t velocity; ///< current translation and rotaation speeds
     stg_velocity_t integration_error; ///< errors in simple odometry model
-    stg_bool_t stall; ///< TRUE iff the robot can't move due to a collision
+    //stg_bool_t stall; ///< TRUE iff the robot can't move due to a collision
     stg_position_localization_mode_t localization; ///< global or local mode
   } stg_position_data_t;
   
   /** "position_stall" property */
   typedef int stg_position_stall_t;
+
+  /** position_cfg" property */
+  typedef struct
+  {
+    stg_position_drive_mode_t drive_mode;
+    stg_position_localization_mode_t localization_mode;
+  } stg_position_cfg_t;
 
   /// create a new position model
   stg_model_t* stg_position_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );

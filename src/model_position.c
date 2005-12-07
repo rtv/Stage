@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.51 $
+//  $Revision: 1.52 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -104,21 +104,20 @@ void position_load( stg_model_t* mod );
 int position_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 int position_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 
-int position_init( stg_model_t* mod )
+
+void position_init( stg_model_t* mod )
 {
-  PRINT_DEBUG( "created position model" );
   
   static int first_time = 1;
-
   if( first_time )
     {
       first_time = 0;
       // seed the RNG on startup
       srand48( time(NULL) );
     }
-
+ 
   // no power consumed until we're subscribed
-  //mod->watts = 0.0; 
+  mod->watts = 0.0; 
 
   // override the default methods
   mod->f_startup = position_startup;
@@ -130,21 +129,22 @@ int position_init( stg_model_t* mod )
 
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(vel));
-  stg_model_set_property( mod, "velocity", &vel, sizeof(vel));
+  stg_model_set_velocity( mod, &vel );
   
-  stg_blob_return_t blb = 1;
-  stg_model_set_property( mod, "blob_return", &blb, sizeof(blb));
+  stg_model_set_blob_return( mod, TRUE );
   
-  stg_position_drive_mode_t drive = STG_POSITION_DRIVE_DEFAULT;  
-  stg_model_set_property( mod, "position_drive", &drive, sizeof(drive) );
+  
+  // configure the position-specific stuff
 
-  stg_position_stall_t stall = 0;
-  stg_model_set_property( mod, "stall", &stall, sizeof(stall));
+  stg_position_cfg_t cfg;
+  memset( &cfg, 0, sizeof(cfg));
+  cfg.drive_mode = STG_POSITION_DRIVE_DEFAULT;
+  stg_model_set_cfg( mod, &cfg, sizeof(cfg));
   
   stg_position_cmd_t cmd;
-  memset( &cmd, 0, sizeof(cmd));
+  memset( &cmd, 0, sizeof(cmd));  
   cmd.mode = STG_POSITION_CONTROL_DEFAULT;
-  stg_model_set_property( mod, "position_cmd", &cmd, sizeof(cmd));
+  stg_model_set_cmd( mod, &cmd, sizeof(cmd));
   
   stg_position_data_t data;
   memset( &data, 0, sizeof(data));
@@ -156,61 +156,70 @@ int position_init( stg_model_t* mod )
   data.integration_error.y =  
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_Y - 
     STG_POSITION_INTEGRATION_ERROR_MAX_Y/2.0;
-
+  
   data.integration_error.a =  
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
     STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
-
+  
   data.localization = STG_POSITION_LOCALIZATION_DEFAULT;
+  
+  stg_model_set_data( mod, &data, sizeof(data));
 
-  stg_model_set_property( mod, "position_data", &data, sizeof(data));
   
-  stg_model_add_property_toggles( mod, "position_data",  
- 				  position_render_data, // called when toggled on
- 				  NULL, 
- 				  position_unrender_data, // called when toggled off 
- 				  NULL,  
- 				  "position data", 
-				  FALSE ); 
+  // XX
+  /* stg_model_add_property_toggles( mod, "position_data",   */
+/*  				  position_render_data, // called when toggled on */
+/*  				  NULL,  */
+/*  				  position_unrender_data, // called when toggled off  */
+/*  				  NULL,   */
+/*  				  "position data",  */
+/* 				  FALSE );  */
     
-  
-  return 0;
 }
+
+
+/* void position_get_cfg( stg_model_t* mod, stg_position_cfg_t* cfg ) */
+/* { */
+/*   assert( mod ); */
+/*   assert( cfg ); */
+/*   assert( mod->cfg ); */
+/*   assert( mod->cfg_len == sizeof(stg_position_cfg_t)); */
+
+/*   memcpy( cfg, mod->cfg, sizeof(stg_position_cfg_t)); */
+/* } */
 
 void position_load( stg_model_t* mod )
 {
+  return;
+
   char* keyword = NULL;
+  
+  stg_position_data_t* data = (stg_position_data_t*)mod->data;
+  stg_position_cfg_t* cfg = (stg_position_cfg_t*)mod->cfg;
+
 
   // load steering mode
   if( wf_property_exists( mod->id, "drive" ) )
     {
-      stg_position_drive_mode_t* now = 
-	stg_model_get_property_fixed( mod, "position_drive", 
-				     sizeof(stg_position_drive_mode_t));
-      
-      stg_position_drive_mode_t drive =
-	now ? *now : STG_POSITION_DRIVE_DIFFERENTIAL;
-      
       const char* mode_str =  
 	wf_read_string( mod->id, "drive", NULL );
       
       if( mode_str )
 	{
 	  if( strcmp( mode_str, "diff" ) == 0 )
-	    drive = STG_POSITION_DRIVE_DIFFERENTIAL;
+	    cfg->drive_mode = STG_POSITION_DRIVE_DIFFERENTIAL;
 	  else if( strcmp( mode_str, "omni" ) == 0 )
-	    drive = STG_POSITION_DRIVE_OMNI;
+	    cfg->drive_mode = STG_POSITION_DRIVE_OMNI;
 	  else
 	    {
 	      PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\". Using \"diff\" as default.", mode_str );	      
-	    }	 
-	  stg_model_set_property( mod, "position_drive", &drive, sizeof(drive)); 
+	    }
+
+	  // let people know we changed the cfg
+	  model_change( mod, &mod->cfg );
 	}
     }      
   
-  stg_position_data_t* data = 
-    stg_model_get_property_fixed( mod, "position_data", sizeof(stg_position_data_t));
-  assert( data );
   
   // load odometry if specified
   if( wf_property_exists( mod->id, "odom" ) )
@@ -282,52 +291,31 @@ void position_load( stg_model_t* mod )
 	PRINT_ERR1( "no localization mode string specified for model \"%s\"", 
 		    mod->token );
     }
-
-  // we've probably poked the localization data, so we must refresh it
-  stg_model_property_refresh( mod, "position_data" );
-
-
+  
+  // we've probably poked the localization data, so we must let people know
+  model_change( mod, &mod->data );
+  // XX
 }
 
 
 int position_update( stg_model_t* mod )
 { 
+
+  //return 0;
       
   PRINT_DEBUG1( "[%lu] position update", mod->world->sim_time );
   
-  stg_position_data_t* data = 
-    stg_model_get_property_fixed( mod, "position_data", 
-				  sizeof(stg_position_data_t));
-  assert(data);
+  stg_position_data_t* data = (stg_position_data_t*)mod->data;
+  stg_position_cmd_t* cmd = (stg_position_cmd_t*)mod->cmd;
+  stg_position_cfg_t* cfg = (stg_position_cfg_t*)mod->cfg;
   
-  stg_velocity_t* vel = 
-    stg_model_get_property_fixed( mod, "velocity", 
-				  sizeof(stg_velocity_t));
-  assert(vel);
-  
+  stg_velocity_t* vel = &mod->velocity;
+
   // stop by default
   memset( vel, 0, sizeof(stg_velocity_t) );
   
   if( mod->subs )   // no driving if noone is subscribed
     {            
-      // HACK - BPG
-      //double hitx=0, hity=0;
-      //stg_pose_t gpose;
-      //stg_model_t* hitthing;
-      //stg_position_stall_t stall;
-
-      stg_position_cmd_t *cmd = 
-	stg_model_get_property_fixed( mod, "position_cmd", sizeof(stg_position_cmd_t));      
-      assert(cmd);
-      
-      stg_position_drive_mode_t *drive = 
-	stg_model_get_property_fixed( mod, "position_drive", sizeof(stg_position_drive_mode_t));
-      assert(drive);
-      
-      //printf( "cmd mode %d x %.2f y %.2f a %.2f\n",
-      //      cmd.mode, cmd.x, cmd.y, cmd.a );
-
-      
       switch( cmd->mode )
 	{
 	case STG_POSITION_CONTROL_VELOCITY :
@@ -335,11 +323,12 @@ int position_update( stg_model_t* mod )
 	    PRINT_DEBUG( "velocity control mode" );
 	    PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
 			  mod->token, 
-			  cmd->x, 
-			  cmd->y, 
-			  cmd->a );
+			  mod->cmd.x, 
+			  mod->cmd.y, 
+			  mod->cmd.a );
 	    
-	    switch( *drive )
+
+	    switch( cfg->drive_mode )
 	      {
 	      case STG_POSITION_DRIVE_DIFFERENTIAL:
 		// differential-steering model, like a Pioneer
@@ -356,7 +345,7 @@ int position_update( stg_model_t* mod )
 		break;
 		
 	      default:
-		PRINT_ERR1( "unknown steering mode %d", *drive );
+		PRINT_ERR1( "unknown steering mode %d", cfg->drive_mode );
 	      }
 	  } break;
 	  
@@ -376,7 +365,7 @@ int position_update( stg_model_t* mod )
 	    double max_speed_y = 0.4;
 	    double max_speed_a = 1.0;	      
 	    
-	    switch( *drive )
+	    switch( cfg->drive_mode )
 	      {
 	      case STG_POSITION_DRIVE_OMNI:
 		{
@@ -443,7 +432,7 @@ int position_update( stg_model_t* mod )
 		break;
 		
 	      default:
-		PRINT_ERR1( "unknown steering mode %d", (int)drive );
+		PRINT_ERR1( "unknown steering mode %d", (int)cfg->drive_mode );
 	      }
 	  }
 	  break;
@@ -465,19 +454,8 @@ int position_update( stg_model_t* mod )
       //	    mod->velocity.a );
       
 
-      // HACK: don't know if this is the right way to do this - BPG
-/*       stg_model_get_global_pose( mod, &gpose ); */
-/*       hitthing = stg_model_test_collision_at_pose( mod, &gpose, &hitx, &hity ); */
-/*       if(hitthing) */
-/*         stall = 1; */
-/*       else */
-/*         stall = 0; */
-/*       stg_model_set_property( mod, "position_stall", &stall, sizeof(stall)); */
-
-
-      // we've poked the velocity - must refresh it so others notice
-      // the change
-      stg_model_property_refresh( mod, "velocity" );
+      // we've poked the velocity 
+      model_change( mod, &mod->velocity );
     }
   
   // now  inherit the normal update - this does the actual moving
@@ -525,8 +503,8 @@ int position_update( stg_model_t* mod )
       break;
     }
   
-  // we've probably poked the position data - must refresh 
-  stg_model_property_refresh( mod, "position_data" );
+  // we've probably poked the position data
+  model_change( mod, &mod->pose );
  
   return 0; //ok
 }
@@ -535,9 +513,8 @@ int position_startup( stg_model_t* mod )
 {
   PRINT_DEBUG( "position startup" );
 
-  //mod->watts = STG_POSITION_WATTS;
+  stg_model_set_watts( mod, STG_POSITION_WATTS );
 
-  
   //stg_model_position_odom_reset( mod );
 
   return 0; // ok
@@ -550,12 +527,14 @@ int position_shutdown( stg_model_t* mod )
   // safety features!
   stg_position_cmd_t cmd;
   memset( &cmd, 0, sizeof(cmd) ); 
-  stg_model_set_property( mod, "position_cmd", &cmd, sizeof(cmd));
-   
+  stg_model_set_cmd( mod, &cmd, sizeof(cmd) );
+  
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(vel));
-  stg_model_set_property( mod, "velocity", &vel, sizeof(vel) );
+  stg_model_set_velocity( mod, &vel );
   
+  stg_model_set_watts( mod, 0 );
+
   return 0; // ok
 }
 
@@ -576,10 +555,7 @@ int position_render_data( stg_model_t* mod, char* name,
       fig = stg_model_fig_create( mod, "position_data_fig", NULL, STG_LAYER_POSITIONDATA );
       //stg_rtk_fig_color_rgb32( fig, 0x9999FF ); // pale blue
       
-      stg_color_t* col = stg_model_get_property_fixed( mod, "color", sizeof(stg_color_t));
-      assert(col);
-
-      stg_rtk_fig_color_rgb32( fig, *col ); 
+      stg_rtk_fig_color_rgb32( fig, mod->color ); 
     }
 
   stg_rtk_fig_clear(fig);
@@ -588,8 +564,7 @@ int position_render_data( stg_model_t* mod, char* name,
     {  
       stg_position_data_t* odom = (stg_position_data_t*)data;
       
-      stg_velocity_t* vel = 
-	stg_model_get_property_fixed( mod, "velocity", sizeof(stg_velocity_t));
+      stg_velocity_t* vel = &mod->velocity;
       
       //stg_rtk_fig_origin( fig,  odom->pose.x, odom->pose.y, odom->.a );
       stg_rtk_fig_origin( fig,  odom->origin.x, odom->origin.y, odom->origin.a );
@@ -606,9 +581,7 @@ int position_render_data( stg_model_t* mod, char* name,
       stg_rtk_fig_text( fig, odom->pose.x + 0.4, odom->pose.y + 0.2, 0, buf );
 
       // draw an outline of the position model
-      stg_geom_t *geom = 
-	stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));
-      assert(geom);
+      stg_geom_t *geom = &mod->geom;
 
       stg_rtk_fig_rectangle(  fig, 
 			      odom->pose.x, odom->pose.y, odom->pose.a,

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.78 $
+//  $Revision: 1.79 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -91,34 +91,31 @@ laser
 
 void laser_load( stg_model_t* mod )
 {
-  //if( wf_property_exists( mod->id, "
-
-  stg_laser_config_t* now = 
-    stg_model_get_property_fixed( mod, "laser_cfg", sizeof(stg_laser_config_t)); 
-
-  stg_laser_config_t lconf;
-  memset( &lconf, 0, sizeof(lconf));
-
-  lconf.samples   = wf_read_int( mod->id, "samples", now ? now->samples : 361 );
-  lconf.range_min = wf_read_length( mod->id, "range_min", now ? now->range_min : 0.0 );
-  lconf.range_max = wf_read_length( mod->id, "range_max", now ? now->range_max : 8.0 );
-  lconf.fov       = wf_read_angle( mod->id, "fov",  now ? now->fov : M_PI );
   
-  stg_model_set_property( mod, "laser_cfg", &lconf, sizeof(lconf));
+  stg_laser_config_t* cfg = (stg_laser_config_t*)mod->cfg;
+  
+  cfg->samples   = wf_read_int( mod->id, "samples", cfg->samples );
+  cfg->range_min = wf_read_length( mod->id, "range_min", cfg->range_min);
+  cfg->range_max = wf_read_length( mod->id, "range_max", cfg->range_max );
+  cfg->fov       = wf_read_angle( mod->id, "fov",  cfg->fov );
+  
+  model_change( mod, &mod->cfg );
 }
 
 int laser_update( stg_model_t* mod );
 int laser_startup( stg_model_t* mod );
 int laser_shutdown( stg_model_t* mod );
 
-int laser_render_data( stg_model_t* mod, char* name, 
-		       void* data, size_t len, void* userp );
+//int laser_render_data( stg_model_t* mod, char* name, 
+//	       void* data, size_t len, void* userp );
 int laser_unrender_data( stg_model_t* mod, char* name,
 			 void* data, size_t len, void* userp );
 int laser_render_cfg( stg_model_t* mod, char* name, 
 		      void* data, size_t len, void* userp );
 //int laser_unrender_cfg( stg_model_t* mod, char* name,
 //		void* data, size_t len, void* userp );
+
+int laser_render_data( stg_model_t* mod, void* userp );
 
 
 // not looking up color strings every redraw makes Stage 6% faster! (scanf is slow)
@@ -154,12 +151,12 @@ int laser_init( stg_model_t* mod )
   geom.pose.a = 0.0;
   geom.size.x = STG_DEFAULT_LASER_SIZEX;
   geom.size.y = STG_DEFAULT_LASER_SIZEY;
-  stg_model_set_property( mod, "geom", &geom, sizeof(geom) );
+  stg_model_set_geom( mod, &geom );
       
   
   // create a single rectangle body 
   stg_polygon_t* square = stg_unit_polygon_create();
-  stg_model_set_property( mod, "polygons", square, sizeof(stg_polygon_t));
+  stg_model_set_polygons( mod, square, 1 );
 
 
   // set up a laser-specific config structure
@@ -169,24 +166,26 @@ int laser_init( stg_model_t* mod )
   lconf.range_max   = STG_DEFAULT_LASER_MAXRANGE;
   lconf.fov         = STG_DEFAULT_LASER_FOV;
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;  
-  stg_model_set_property( mod, "laser_cfg", &lconf, sizeof(lconf) );
+  stg_model_set_cfg( mod, &lconf, sizeof(lconf) );
   
   
   // set default color
-  stg_model_set_property( mod, "color", &geom_color, sizeof(geom_color));
+  stg_model_set_color( mod, geom_color );
   
   // when data is set, render it to the GUI
   // clear the data - this will unrender it too
-  stg_model_set_property( mod, "laser_data", NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
+
+  stg_model_add_callback( mod, &mod->data, laser_render_data, NULL );
 
   // adds a menu item and associated on-and-off callbacks
-  stg_model_add_property_toggles( mod, "laser_data", 
-				  LASER_DATA_RENDER_CALLBACK, // called when toggled on
-				  NULL, 
-				  LASER_DATA_UNRENDER_CALLBACK, // called when toggled off
-				  NULL, 
-				  "laser data",
-				  TRUE );
+/*   stg_model_add_property_toggles( mod, "laser_data",  */
+/* 				  LASER_DATA_RENDER_CALLBACK, // called when toggled on */
+/* 				  NULL,  */
+/* 				  LASER_DATA_UNRENDER_CALLBACK, // called when toggled off */
+/* 				  NULL,  */
+/* 				  "laser data", */
+/* 				  TRUE ); */
 
   // TODO
   /* stg_model_add_property_toggles( mod, "laser_cfg",  */
@@ -203,15 +202,10 @@ int laser_init( stg_model_t* mod )
 
 int laser_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {           
-  stg_laser_return_t* lr = 
-    stg_model_get_property_fixed( hitmod, 
-				       "laser_return", 
-				       sizeof(stg_laser_return_t));
-  
   
   // Ignore myself, my children, and my ancestors.
   if( (!stg_model_is_related(mod,hitmod))  &&  
-      *lr != LaserTransparent) 
+      mod->laser_return != LaserTransparent) 
     return 1;
   
   // Stop looking when we see something
@@ -230,8 +224,7 @@ int laser_update( stg_model_t* mod )
   if( mod->subs < 1 )
     return 0;
   
-  stg_laser_config_t* cfg = 
-    stg_model_get_property_fixed( mod, "laser_cfg", sizeof(stg_laser_config_t));
+  stg_laser_config_t* cfg = (stg_laser_config_t*)mod->cfg;
   assert(cfg);
 
   stg_geom_t geom;
@@ -264,9 +257,6 @@ int laser_update( stg_model_t* mod )
   // only compute every second sample, for speed
   //for( t=0; t<cfg.samples-1; t+=2 )
   
-
-  //memset( scan, 0, sizeof(stg_laser_sample_t) * cfg.samples );
-  //for( t=0; t<1; t++ )
   for( t=0; t<cfg->samples; t++ )
     {
       
@@ -299,13 +289,8 @@ int laser_update( stg_model_t* mod )
 	
 	if( hitmod )
 	  {
-	    stg_laser_return_t* lr = 
-	      stg_model_get_property_fixed( hitmod, 
-					    "laser_return", 
-					    sizeof(stg_laser_return_t));
-	    
 	    scan[t].reflectance = 
-	      (*lr >= LaserBright) ? 1 : 0;
+	      (mod->laser_return >= LaserBright) ? 1 : 0;
 	  }
 	else
 	  scan[t].reflectance = 0;
@@ -315,7 +300,7 @@ int laser_update( stg_model_t* mod )
     }
   
   // new style
-  stg_model_set_property( mod, "laser_data", scan, sizeof(stg_laser_sample_t) * cfg->samples);
+  stg_model_set_data( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples);
   
 
 #if TIMING
@@ -338,9 +323,11 @@ int laser_unrender_data( stg_model_t* mod, char* name,
   return 1; // callback just runs one time
 }
 
-int laser_render_data( stg_model_t* mod, char* name, 
-		       void* data, size_t len, void* userp )
-{
+
+int laser_render_data( stg_model_t* mod, void* userp )
+{  
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data; 
+  size_t sample_count = mod->data_len / sizeof(stg_laser_sample_t);
   
   stg_rtk_fig_t* bg = stg_model_get_fig( mod, "laser_data_bg_fig" );
   stg_rtk_fig_t* fg = stg_model_get_fig( mod, "laser_data_fig" );  
@@ -355,13 +342,9 @@ int laser_render_data( stg_model_t* mod, char* name,
   stg_rtk_fig_clear( fg );
 
   
-  stg_laser_config_t *cfg = 
-    stg_model_get_property_fixed( mod, "laser_cfg", sizeof(stg_laser_config_t));
+  stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg;
   assert( cfg );
-  
-  
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)data; 
-  size_t sample_count = len / sizeof(stg_laser_sample_t);
+    
   
   if( samples && sample_count )
     {
@@ -468,25 +451,13 @@ int laser_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void
 }
 
 
-/* int stg_model_unrender_cfg( stg_model_t* mod, char* name,  */
-/* 			    void* data, size_t len, void* userp ) */
-/* { */
-/*   gui_model_t* gui =  */
-/*     stg_model_get_property_fixed( mod, "gui", sizeof(gui_model_t)); */
-  
-/*   if( gui && gui->cfg  ) */
-/*     stg_rtk_fig_clear(gui->cfg); */
-  
-/*   return 1; // callback just runs one time */
-/* } */
-
 int laser_startup( stg_model_t* mod )
 { 
   PRINT_DEBUG( "laser startup" );
   
   // start consuming power
-  //mod->watts = STG_LASER_WATTS;
-  
+  stg_model_set_watts( mod, STG_LASER_WATTS );
+
   // install the update function
   mod->f_update = laser_update;
 
@@ -501,10 +472,11 @@ int laser_shutdown( stg_model_t* mod )
   mod->f_update = NULL;
 
   // stop consuming power
-  //mod->watts = 0.0;
+  stg_model_set_watts( mod, 0 );
   
+
   // clear the data - this will unrender it too
-  stg_model_set_property( mod, "laser_data", NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
 
   return 0; // ok
 }

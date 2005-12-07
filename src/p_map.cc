@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.9 2005-10-18 06:27:32 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.10 2005-12-07 10:04:28 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -69,8 +69,7 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   stg_model_get_geom( this->mod, &geom );
   
   
-  double mres = *(double*)
-    stg_model_get_property_fixed( this->mod, "map_resolution", sizeof(double));
+  double mres = this->mod->map_resolution;
 
   // size_t sz=0;
 //   stg_polygon_t* polys = (stg_polygon_t*)
@@ -159,9 +158,7 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
   stg_geom_t geom;
   stg_model_get_geom( this->mod, &geom );
   
-  double mres = *(double*)
-    stg_model_get_property_fixed( this->mod, 
-				  "map_resolution", sizeof(double));
+  double mres = this->mod->map_resolution;
   
   // request packet
   player_map_data_t* mapreq = (player_map_data_t*)data;  
@@ -185,10 +182,8 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
   fflush(stdout);
   
   // render the polygons directly into the outgoing message buffer. fast! outrageous!
-  size_t sz=0;
-  stg_polygon_t* polys = (stg_polygon_t*)
-    stg_model_get_property( this->mod, "polygons", &sz);
-  size_t polycount = sz / sizeof(stg_polygon_t);
+  size_t polycount = 0;
+  stg_polygon_t* polys = stg_model_get_polygons( mod, &polycount );
   
   for( int p=0; p<(int)polycount; p++ )
     {       

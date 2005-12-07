@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.8 2005-10-16 02:07:35 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.9 2005-12-07 10:04:28 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -64,6 +64,9 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
                                       player_msghdr_t* hdr,
                                       void* data)
 {
+  stg_position_cmd_t* cmd = (stg_position_cmd_t*)this->mod->cmd;
+  stg_position_cfg_t* cfg = (stg_position_cfg_t*)this->mod->cfg;
+
   // Is it a new motor command?
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
                            PLAYER_POSITION2D_CMD_STATE, 
@@ -98,7 +101,8 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
           break;
       }
 
-      stg_model_set_property( this->mod, "position_cmd", &scmd, sizeof(scmd));
+      //stg_model_set_property( this->mod, "position_cmd", &scmd, sizeof(scmd));
+      stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
 
     }
     else
@@ -234,7 +238,12 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
               (player_position2d_position_mode_req_t*)data;
 
       stg_position_control_mode_t mode = (stg_position_control_mode_t)req->state;
-      stg_model_set_property( mod, "position_control", &mode, sizeof(mode));
+
+      // XX should this be in cfg instead?
+      cmd->mode = mode;
+      model_change( mod, &mod->cmd );
+
+      //stg_model_set_property( mod, "position_control", &mode, sizeof(mode));
 
       PRINT_WARN2( "Put model %s into %s control mode", this->mod->token, mod ? "POSITION" : "VELOCITY" );
 
@@ -264,40 +273,37 @@ void InterfacePosition::Publish( void )
 {
   //puts( "publishing position data" ); 
   
-  player_position2d_data_t ppd;
-  memset( &ppd, 0, sizeof(ppd) );
   
-  stg_position_data_t* data = (stg_position_data_t*)
-    stg_model_get_property_fixed( this->mod, "position_data",
-				  sizeof(stg_position_data_t ));
-  assert(data);
-  
-  //printf( "stage position data: %.2f,%.2f,%.2f\n",
-  //  data->pose.x, data->pose.y, data->pose.a );
+  stg_position_data_t* data = (stg_position_data_t*)this->mod->data;
 
-  // pack the data into player format
-  ppd.pos.px = data->pose.x;
-  ppd.pos.py = data->pose.y;
-  ppd.pos.pa = data->pose.a;
-  
-  // speeds
-  stg_velocity_t* vel = (stg_velocity_t*)
-    stg_model_get_property_fixed( this->mod, "velocity",sizeof(stg_velocity_t));
-  assert(vel);
-  
-  ppd.vel.px= vel->x;
-  ppd.vel.py = vel->y;
-  ppd.vel.pa = vel->a;
-  
-  int* stall= (int*)
-    stg_model_get_property_fixed( this->mod,"stall",sizeof(int));
-  assert(stall);
-  
-  // etc
-  ppd.stall = *stall;
-  
-  // publish this data
-  this->driver->Publish( this->addr, NULL,
-                         PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,
-                         (void*)&ppd, sizeof(ppd), NULL);
+  if( data )
+    {
+      assert(this->mod->data_len == sizeof(stg_position_data_t));
+      
+      //printf( "stage position data: %.2f,%.2f,%.2f\n",
+      //  data->pose.x, data->pose.y, data->pose.a );
+
+      player_position2d_data_t ppd;
+      memset( &ppd, 0, sizeof(ppd) );
+      
+      // pack the data into player format
+      ppd.pos.px = data->pose.x;
+      ppd.pos.py = data->pose.y;
+      ppd.pos.pa = data->pose.a;
+      
+      // speeds
+      stg_velocity_t* vel = &this->mod->velocity;
+      
+      ppd.vel.px = vel->x;
+      ppd.vel.py = vel->y;
+      ppd.vel.pa = vel->a;
+      
+      // etc
+      ppd.stall = this->mod->stall;
+      
+      // publish this data
+      this->driver->Publish( this->addr, NULL,
+			     PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,
+			     (void*)&ppd, sizeof(ppd), NULL);
+    }
 }

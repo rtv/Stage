@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.50 2005-09-12 06:17:31 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.51 2005-12-07 10:04:27 rtv Exp $
  */
 
 #include <math.h>
@@ -109,7 +109,8 @@ int blobfinder_shutdown( stg_model_t* mod );
 int blobfinder_update( stg_model_t* mod );
 void blobfinder_load( stg_model_t* mod );
 
-int blobfinder_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
+int blobfinder_render_data( stg_model_t* mod, void* userp );
+//int blobfinder_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 int blobfinder_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 int blobfinder_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 int blobfinder_unrender_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
@@ -125,7 +126,7 @@ int blobfinder_init( stg_model_t* mod )
   
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
-  stg_model_set_property( mod, "geom", &geom, sizeof(geom) );
+  stg_model_set_geom( mod, &geom );
   
   stg_blobfinder_config_t cfg;
   memset(&cfg,0,sizeof(cfg));
@@ -144,32 +145,32 @@ int blobfinder_init( stg_model_t* mod )
   cfg.channels[3] = stg_lookup_color( "cyan" );
   cfg.channels[4] = stg_lookup_color( "yellow" );
   cfg.channels[5] = stg_lookup_color( "magenta" );
-
-  stg_model_set_property( mod, "blob_cfg",  &cfg,sizeof(cfg) );
+  
+  stg_model_set_cfg( mod, &cfg, sizeof(cfg) );
   
   //int c;
   //for( c=0; c<6; c++ )
   //PRINT_WARN2( "init channel %d has val %X", c, cfg.channels[c] );
   
-  stg_model_set_property( mod, "blob_data", NULL, 0 );
-
-  stg_model_set_property( mod, "polygons", NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
+  stg_model_set_polygons( mod, NULL, 0 );
   
-  stg_model_add_property_toggles( mod, "blob_data", 
-				  blobfinder_render_data, // called when toggled on
-				  NULL,
-				  blobfinder_unrender_data, // called when toggled off
-				  NULL, 
-				  "blob data",
-				  TRUE );
+  stg_model_add_callback( mod, &mod->data, blobfinder_render_data, NULL );
+
+ /*  stg_model_add_property_toggles( mod, "blob_data",  */
+/* 				  blobfinder_render_data, // called when toggled on */
+/* 				  NULL, */
+/* 				  blobfinder_unrender_data, // called when toggled off */
+/* 				  NULL,  */
+/* 				  "blob data", */
+/* 				  TRUE ); */
 
   return 0; //ok
 }
 
 void blobfinder_load( stg_model_t* mod )
 {
-  stg_blobfinder_config_t* now = 
-    stg_model_get_property_fixed( mod, "blob_cfg", sizeof(stg_blobfinder_config_t));
+  stg_blobfinder_config_t* now = (stg_blobfinder_config_t*)mod->cfg; 
   assert(now);
   
   stg_blobfinder_config_t bcfg;
@@ -204,7 +205,7 @@ void blobfinder_load( stg_model_t* mod )
       bcfg.channels[ch] = stg_lookup_color( colorstr );        
     }    
   
-  stg_model_set_property( mod, "blob_cfg", &bcfg, sizeof(bcfg));
+  stg_model_set_cfg( mod, &bcfg, sizeof(bcfg));
 }
 
 int blobfinder_startup( stg_model_t* mod )
@@ -225,20 +226,15 @@ int blobfinder_shutdown( stg_model_t* mod )
   //mod->watts = 0.0;
   
   // clear the data - this will unrender it too
-  stg_model_set_property( mod, "blob_data", NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
   return 0;
 }
 
 
 int blobfinder_raytrace_filter( stg_model_t* finder, stg_model_t* found )
 {
-  stg_blob_return_t* br = 
-    stg_model_get_property_fixed( found, 
-				  "blob_return", sizeof(stg_blob_return_t));
-  
-  if( br && *br && !stg_model_is_related( finder, found ))
-    return 1;
-  
+  if( found->blob_return && !stg_model_is_related( finder, found ))
+    return 1;  
   return 0;
 }
 
@@ -247,8 +243,7 @@ int blobfinder_update( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder update" );  
   
-  stg_blobfinder_config_t *cfg = 
-    stg_model_get_property_fixed( mod, "blob_cfg", sizeof(stg_blobfinder_config_t));
+  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg; 
   
   // Generate the scan-line image
   
@@ -313,12 +308,8 @@ int blobfinder_update( stg_model_t* mod )
 
       if( ent )
 	{
-	  range = itl->range; // it's this far away
-	  
-	  // get the color of the entity	  
-	  stg_color_t *hiscol = 
-	    stg_model_get_property_fixed( ent, "color", sizeof(stg_color_t));
-	  memcpy( &col, hiscol, sizeof( stg_color_t ) );
+	  range = itl->range; // it's this far away	
+	  col = ent->color; // it's this color
 	}
     
       itl_destroy( itl );
@@ -438,10 +429,9 @@ int blobfinder_update( stg_model_t* mod )
   //       blobs->len * sizeof(stg_blobfinder_blob_t) );
   
   
-  stg_model_set_property( mod, 
-			  "blob_data",
-			  blobs->data, 
-			  blobs->len * sizeof(stg_blobfinder_blob_t) );
+  stg_model_set_data( mod, 
+		      blobs->data, 
+		      blobs->len * sizeof(stg_blobfinder_blob_t) );
   
   g_array_free( blobs, TRUE );
 
@@ -453,28 +443,28 @@ int blobfinder_update( stg_model_t* mod )
   return 0; //OK
 }
 
-int blobfinder_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
-{
-  stg_model_fig_clear( mod, "blob_data_fig" );
-  return 1;
-}
+/* int blobfinder_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
+/* { */
+/*   stg_model_fig_clear( mod, "blob_data_fig" ); */
+/*   return 1; */
+/* } */
 
-int blobfinder_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+int blobfinder_render_data( stg_model_t* mod, void* userp )
 { 
   PRINT_DEBUG( "blobfinder render" );  
   
-  stg_blobfinder_blob_t *blobs = (stg_blobfinder_blob_t*)data;
-  
-  
+  stg_blobfinder_blob_t *blobs = (stg_blobfinder_blob_t*)mod->data;
+  int num_blobs = mod->data_len / sizeof(stg_blobfinder_blob_t);
+
+  if( num_blobs < 1 )
+    return 0;
+    
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "blob_data_fig" );
   
   if( fig == NULL )
     fig = stg_model_fig_create( mod, "blob_data_fig", NULL, STG_LAYER_BLOBDATA );
   
   stg_rtk_fig_clear( fig );
-
-  if( len < sizeof(stg_blobfinder_blob_t) )
-    return 0; // no data to render
 
   // place the visualization a little away from the device
   stg_pose_t pose;
@@ -488,10 +478,8 @@ int blobfinder_render_data( stg_model_t* mod, char* name, void* data, size_t len
   
   double scale = 0.01; // shrink from pixels to meters for display
   
-  stg_blobfinder_config_t *cfg = 
-    stg_model_get_property_fixed( mod, "blob_cfg", sizeof(stg_blobfinder_config_t));
-  
-  int num_blobs = len / sizeof(stg_blobfinder_blob_t);
+  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg;  
+
   
   short width = cfg->scan_width;
   short height = cfg->scan_height;
@@ -537,41 +525,41 @@ int blobfinder_render_data( stg_model_t* mod, char* name, void* data, size_t len
   return 0;
 }
 
-int blobfinder_unrender_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
-{
-  stg_rtk_fig_clear( stg_model_get_fig( mod, "blob_cfg_fig" ));
-  return 1;
-}
+/* int blobfinder_unrender_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
+/* { */
+/*   stg_rtk_fig_clear( stg_model_get_fig( mod, "blob_cfg_fig" )); */
+/*   return 1; */
+/* } */
 
-int blobfinder_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
-{ 
-  PRINT_DEBUG( "blobfinder render config" );  
+/* int blobfinder_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
+/* {  */
+/*   PRINT_DEBUG( "blobfinder render config" );   */
     
-  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)data;
-  assert(cfg);
+/*   stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)data; */
+/*   assert(cfg); */
   
-  stg_pose_t* pose = 
-    stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t));
+/*   stg_pose_t* pose =  */
+/*     stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t)); */
   
-  double ox = pose->x;
-  double oy = pose->y;
-  double mina = pose->a + (cfg->pan + cfg->zoom / 2.0);
-  double maxa = pose->a - (cfg->pan + cfg->zoom / 2.0);
+/*   double ox = pose->x; */
+/*   double oy = pose->y; */
+/*   double mina = pose->a + (cfg->pan + cfg->zoom / 2.0); */
+/*   double maxa = pose->a - (cfg->pan + cfg->zoom / 2.0); */
   
-  double dx = cfg->range_max * cos(mina);
-  double dy = cfg->range_max * sin(mina);
-  double ddx = cfg->range_max * cos(maxa);
-  double ddy = cfg->range_max * sin(maxa);
+/*   double dx = cfg->range_max * cos(mina); */
+/*   double dy = cfg->range_max * sin(mina); */
+/*   double ddx = cfg->range_max * cos(maxa); */
+/*   double ddy = cfg->range_max * sin(maxa); */
   
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "blob_cfg_fig" );
+/*   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "blob_cfg_fig" ); */
 
-  stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
-  stg_rtk_fig_line( fig, ox,oy, dx, dy );
-  stg_rtk_fig_line( fig, ox,oy, ddx, ddy );
-  stg_rtk_fig_ellipse_arc( fig, 0,0,0,
-			   2.0*cfg->range_max,
-			   2.0*cfg->range_max, 
-			   mina, maxa );      
+/*   stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR )); */
+/*   stg_rtk_fig_line( fig, ox,oy, dx, dy ); */
+/*   stg_rtk_fig_line( fig, ox,oy, ddx, ddy ); */
+/*   stg_rtk_fig_ellipse_arc( fig, 0,0,0, */
+/* 			   2.0*cfg->range_max, */
+/* 			   2.0*cfg->range_max,  */
+/* 			   mina, maxa );       */
 
-  return 0;
-}
+/*   return 0; */
+/* } */

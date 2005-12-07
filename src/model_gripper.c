@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -41,8 +41,9 @@ int gripper_shutdown( stg_model_t* mod );
 void gripper_load( stg_model_t* mod );
 
 // special gripper stuff
-int gripper_render_data( stg_model_t* mod, char* name, 
-			 void* data, size_t len, void* userp );
+//int gripper_render_data( stg_model_t* mod, char* name, 
+//		 void* data, size_t len, void* userp );
+int gripper_render_data( stg_model_t* mod, void* userp );
 
 int gripper_unrender_data( stg_model_t* mod, char* name,
 			   void* data, size_t len, void* userp );
@@ -59,13 +60,11 @@ int gripper_break_beam(stg_model_t* mod, stg_gripper_config_t* cfg, int beam);
 
 void gripper_load( stg_model_t* mod )
 {
-  stg_gripper_config_t *gconf =
-    stg_model_get_property_fixed( mod, "gripper_cfg", sizeof(stg_gripper_config_t));
-  assert(gconf);
+  //stg_gripper_config_t cfg;
 
   // TODO: read gripper params from the world file
   
-  stg_model_set_property( mod, "gripper_cfg", gconf, sizeof(stg_gripper_config_t));
+  //stg_model_set_cfg( mod, gconf, sizeof(stg_gripper_config_t));
 }
 
 int gripper_init( stg_model_t* mod )
@@ -86,7 +85,7 @@ int gripper_init( stg_model_t* mod )
   geom.pose.a = 0.0;
   geom.size.x = STG_DEFAULT_GRIPPER_SIZEX;
   geom.size.y = STG_DEFAULT_GRIPPER_SIZEY;
-  stg_model_set_property( mod, "geom", &geom, sizeof(geom) );
+  stg_model_set_geom( mod, &geom );
   
   // set up a gripper-specific config structure
   stg_gripper_config_t gconf;
@@ -104,13 +103,13 @@ int gripper_init( stg_model_t* mod )
   
   gconf.close_limit = 1.0;
 
-  stg_model_set_property( mod, "gripper_cfg", &gconf, sizeof(gconf) );
+  stg_model_set_cfg( mod, &gconf, sizeof(gconf) );
   
   // sensible starting command
   stg_gripper_cmd_t cmd; 
   cmd.cmd = STG_GRIPPER_CMD_NOP;
   cmd.arg = 0;  
-  stg_model_set_property( mod, "gripper_cmd", &cmd, sizeof(cmd) ) ;
+  stg_model_set_cmd( mod, &cmd, sizeof(cmd) ) ;
   
   gripper_col = stg_lookup_color(STG_GRIPPER_COLOR);
 
@@ -123,16 +122,18 @@ int gripper_init( stg_model_t* mod )
 
   stg_gripper_data_t data;
   memset(&data,0,sizeof(data));
-  stg_model_set_property( mod, "gripper_data", &data, sizeof(data));
+  stg_model_set_data( mod, &data, sizeof(data));
+  
+  stg_model_add_callback( mod, &mod->data, gripper_render_data, NULL );
   
   // adds a menu item and associated on-and-off callbacks
-  stg_model_add_property_toggles( mod, "gripper_data", 
-				  gripper_render_data, // called when toggled on
-				  NULL, 
-				  gripper_unrender_data, // called when toggled off
-				  NULL, 
-				  "gripper data",
-				  TRUE );
+/*   stg_model_add_property_toggles( mod, "gripper_data",  */
+/* 				  gripper_render_data, // called when toggled on */
+/* 				  NULL,  */
+/* 				  gripper_unrender_data, // called when toggled off */
+/* 				  NULL,  */
+/* 				  "gripper data", */
+/* 				  TRUE ); */
 
   
 
@@ -171,14 +172,22 @@ void gripper_generate_paddles( stg_model_t* mod, stg_gripper_config_t* cfg )
   r_pad[2].y = r_pad[0].y - cfg->paddle_size.y;
   r_pad[3].x = r_pad[0].x;
   r_pad[3].y = r_pad[2].y;
-
-  // move the paddle arm polygons
-  size_t count=0;
-  stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
+  
+  // move the paddle arm polygons 
+  
+  // TODO - this could be much more
+  // efficient if we didn't do the scaling every time
+  assert( mod->polygons_count == 3 );
+  assert( mod->polygons );
+  stg_polygon_t* polys = mod->polygons;
   stg_polygon_set_points( &polys[0], body, 4 );
   stg_polygon_set_points( &polys[1], l_pad, 4 );
   stg_polygon_set_points( &polys[2], r_pad, 4 );	  
-  stg_model_set_polygons( mod, polys, 3 );
+  
+  stg_polygons_normalize( mod->polygons, mod->polygons_count,
+			  mod->geom.size.x, mod->geom.size.y );
+  
+  model_change( mod, mod->polygons );
 }
 
 int gripper_update( stg_model_t* mod )
@@ -187,18 +196,13 @@ int gripper_update( stg_model_t* mod )
   if( mod->subs < 1 )
     return 0;
     
-  stg_gripper_config_t *nowcfg = 
-    stg_model_get_property_fixed( mod, "gripper_cfg", sizeof(stg_gripper_config_t));
-  assert(nowcfg);
-  
   stg_gripper_config_t cfg;
-  memcpy(&cfg, nowcfg, sizeof(cfg));
+  memcpy(&cfg, mod->cfg, sizeof(cfg));
 
   stg_geom_t geom;
   stg_model_get_geom( mod, &geom );
   
-  stg_gripper_cmd_t* cmd = 
-    stg_model_get_property_fixed( mod, "gripper_cmd", sizeof(stg_gripper_cmd_t));
+  stg_gripper_cmd_t* cmd = (stg_gripper_cmd_t*)mod->cmd;
   
   switch( cmd->cmd )
     {
@@ -277,8 +281,9 @@ int gripper_update( stg_model_t* mod )
 	  
 	  cfg.close_limit = 1.0;
 	  
+	  // XX
 	  // need to repair the rtk movemask - this is enough
-	  stg_model_property_refresh( head, "mask" );
+	  //stg_model_property_refresh( head, "mask" );
 	}
     }
   else if( cfg.paddles == STG_GRIPPER_PADDLE_CLOSING && !cfg.paddles_stalled  )
@@ -318,7 +323,7 @@ int gripper_update( stg_model_t* mod )
   gripper_generate_paddles( mod, &cfg );
   
   // change the gripper's configuration in response to the commands
-  stg_model_set_property( mod, "gripper_cfg", &cfg, sizeof(stg_gripper_config_t));
+  stg_model_set_cfg( mod, &cfg, sizeof(stg_gripper_config_t));
   
   // also publish the data
   stg_gripper_data_t data;
@@ -343,8 +348,8 @@ int gripper_update( stg_model_t* mod )
   data.paddles_stalled = cfg.paddles_stalled;
 
   // publish the new stuff
-  stg_model_set_property( mod, "gripper_data", &data, sizeof(data));
-  stg_model_set_property( mod, "gripper_cfg", &cfg, sizeof(cfg));
+  stg_model_set_data( mod, &data, sizeof(data));
+  stg_model_set_cfg( mod,  &cfg, sizeof(cfg));
 
   //stg_print_gripper_config( &cfg );
 
@@ -356,13 +361,8 @@ int gripper_update( stg_model_t* mod )
 
 int gripper_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
-  stg_gripper_return_t* gr = 
-    stg_model_get_property_fixed( hitmod, 
-				  "gripper_return", 
-				  sizeof(stg_gripper_return_t));
-  
   // Ignore myself, my children, and my ancestors.
-  return( *gr && !stg_model_is_related(mod,hitmod));
+  return( mod->gripper_return && !stg_model_is_related(mod,hitmod));
 }	
 
 int gripper_break_beam(stg_model_t* mod, stg_gripper_config_t* cfg, int beam) 
@@ -534,7 +534,7 @@ int gripper_paddle_contact( stg_model_t* mod,
   return 0;
 }
 
-int gripper_render_data(  stg_model_t* mod, char* name, void* vdata, size_t len, void* userp )
+int gripper_render_data(  stg_model_t* mod, void* userp )
 {
   //puts( "gripper render data" );
 
@@ -548,17 +548,15 @@ int gripper_render_data(  stg_model_t* mod, char* name, void* vdata, size_t len,
   else
     stg_rtk_fig_clear( fig );
 
-  if( ! vdata ) // no data to render
-    return 0;
 
-  stg_gripper_data_t* data = (stg_gripper_data_t*)vdata;
+  stg_gripper_data_t* data = (stg_gripper_data_t*)mod->data;
+
+  if( data ) // no data to render
+    return 0;
   
-  stg_geom_t *geom = 
-    stg_model_get_property_fixed( mod, "geom", sizeof(stg_geom_t));
-  assert(geom);
+  stg_geom_t *geom = &mod->geom;
   
-  stg_gripper_config_t *cfg = 
-    stg_model_get_property_fixed( mod, "gripper_cfg", sizeof(stg_gripper_config_t));
+  stg_gripper_config_t *cfg = (stg_gripper_config_t*)mod->cfg;
   assert(cfg);
   
   //stg_rtk_fig_rectangle( gui->data, 0,0,0, geom.size.x, geom.size.y, 0 );

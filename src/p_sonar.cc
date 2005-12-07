@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_sonar.cc,v 1.6 2005-08-29 17:50:25 gerkey Exp $
+ * CVS: $Id: p_sonar.cc,v 1.7 2005-12-07 10:04:28 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -59,13 +59,13 @@ InterfaceSonar::InterfaceSonar( player_devaddr_t id,
 
 void InterfaceSonar::Publish( void )
 {
+  
+  size_t len = mod->data_len;
+  stg_ranger_sample_t* rangers = (stg_ranger_sample_t*)mod->data;
+
   player_sonar_data_t sonar;
   memset( &sonar, 0, sizeof(sonar) );
   
-  size_t len=0;
-  stg_ranger_sample_t* rangers = (stg_ranger_sample_t*)
-    stg_model_get_property( mod, "ranger_data", &len );
-
   if( len > 0 )
     {      
       size_t rcount = len / sizeof(stg_ranger_sample_t);
@@ -80,7 +80,7 @@ void InterfaceSonar::Publish( void )
 	
 	for( int i=0; i<(int)rcount; i++ )
 	  sonar.ranges[i] = rangers[i].range;
-      }
+      } 
     }
   
   this->driver->Publish( this->addr, NULL,
@@ -98,9 +98,8 @@ int InterfaceSonar::ProcessMessage( MessageQueue* resp_queue,
 			    PLAYER_SONAR_REQ_GET_GEOM, 
 			    this->addr) )
     {
-      size_t cfglen = 0;
-      stg_ranger_config_t* cfgs = (stg_ranger_config_t*)
-	stg_model_get_property( this->mod, "ranger_cfg", &cfglen );
+      size_t cfglen = mod->cfg_len;
+      stg_ranger_config_t* cfgs = (stg_ranger_config_t*)mod->cfg;
       assert( cfgs );
       
       size_t rcount = cfglen / sizeof(stg_ranger_config_t);

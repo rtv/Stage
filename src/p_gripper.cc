@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_gripper.cc,v 1.4 2005-10-16 02:07:35 rtv Exp $
+ * CVS: $Id: p_gripper.cc,v 1.5 2005-12-07 10:04:27 rtv Exp $
  */
 
 
@@ -51,9 +51,7 @@ InterfaceGripper::InterfaceGripper( player_devaddr_t addr,
 
 void InterfaceGripper::Publish( void )
 {
-  stg_gripper_data_t* sdata = (stg_gripper_data_t*)
-    stg_model_get_property_fixed( this->mod, "gripper_data", 
-				  sizeof(stg_gripper_data_t ));
+  stg_gripper_data_t* sdata = (stg_gripper_data_t*)mod->data;
   assert(sdata);
 
   player_gripper_data_t pdata;
@@ -121,8 +119,7 @@ int InterfaceGripper::ProcessMessage(MessageQueue* resp_queue,
 	  //cmd.cmd  = pcmd->cmd;
 	  cmd.arg = pcmd->arg;
 	  
-	  //stg_model_set_command( device->mod, &cmd, sizeof(cmd) ) ;
-	  stg_model_set_property( this->mod, "gripper_cmd", &cmd, sizeof(cmd));
+	  stg_model_set_cmd( this->mod, &cmd, sizeof(cmd));
 	}
       else
 	PRINT_ERR2( "wrong size gripper command packet (%d/%d bytes)",
