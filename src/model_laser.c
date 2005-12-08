@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.79 $
+//  $Revision: 1.80 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -106,16 +106,10 @@ int laser_update( stg_model_t* mod );
 int laser_startup( stg_model_t* mod );
 int laser_shutdown( stg_model_t* mod );
 
-//int laser_render_data( stg_model_t* mod, char* name, 
-//	       void* data, size_t len, void* userp );
-int laser_unrender_data( stg_model_t* mod, char* name,
-			 void* data, size_t len, void* userp );
-int laser_render_cfg( stg_model_t* mod, char* name, 
-		      void* data, size_t len, void* userp );
-//int laser_unrender_cfg( stg_model_t* mod, char* name,
-//		void* data, size_t len, void* userp );
-
 int laser_render_data( stg_model_t* mod, void* userp );
+int laser_unrender_data( stg_model_t* mod, void* userp );
+int laser_render_cfg( stg_model_t* mod, void* userp );
+int laser_unrender_cfg( stg_model_t* mod, void* userp );
 
 
 // not looking up color strings every redraw makes Stage 6% faster! (scanf is slow)
@@ -176,26 +170,26 @@ int laser_init( stg_model_t* mod )
   // clear the data - this will unrender it too
   stg_model_set_data( mod, NULL, 0 );
 
-  stg_model_add_callback( mod, &mod->data, laser_render_data, NULL );
-
   // adds a menu item and associated on-and-off callbacks
-/*   stg_model_add_property_toggles( mod, "laser_data",  */
-/* 				  LASER_DATA_RENDER_CALLBACK, // called when toggled on */
-/* 				  NULL,  */
-/* 				  LASER_DATA_UNRENDER_CALLBACK, // called when toggled off */
-/* 				  NULL,  */
-/* 				  "laser data", */
-/* 				  TRUE ); */
+  stg_model_add_property_toggles( mod, 
+				  &mod->data,
+				  laser_render_data, // called when toggled on
+				  NULL,
+				  laser_unrender_data, // called when toggled off
+				  NULL,
+				  "laserdata",
+				  "laser data",
+				  TRUE );  
 
-  // TODO
-  /* stg_model_add_property_toggles( mod, "laser_cfg",  */
-/* 				  laser_render_cfg, // called when toggled on */
-/* 				  NULL, */
-/* 				  NULL,//stg_fig_clear_cb, */
-/* 				  NULL, //gui->cfg,  */
-/* 				  "laser config", */
-/* 				  TRUE ); */
-  
+  stg_model_add_property_toggles( mod, 
+				  &mod->cfg,
+				  laser_render_cfg, // called when toggled on
+				  NULL,
+				  laser_unrender_cfg, // called when toggled off
+				  NULL,
+				  "lasercfg",
+				  "laser config",
+				  FALSE );  
   return 0;
 }
 
@@ -314,9 +308,9 @@ int laser_update( stg_model_t* mod )
 }
 
 
-int laser_unrender_data( stg_model_t* mod, char* name, 
-			 void* data, size_t len, void* userp )
+int laser_unrender_data( stg_model_t* mod, void* userp )
 {
+  //puts( "LASER UNRENDER" );
   stg_model_fig_clear( mod, "laser_data_fig" );
   stg_model_fig_clear( mod, "laser_data_bg_fig" );  
   
@@ -326,6 +320,8 @@ int laser_unrender_data( stg_model_t* mod, char* name,
 
 int laser_render_data( stg_model_t* mod, void* userp )
 {  
+  //puts( "LASER RENDER" );
+
   stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data; 
   size_t sample_count = mod->data_len / sizeof(stg_laser_sample_t);
   
@@ -406,21 +402,28 @@ int laser_render_data( stg_model_t* mod, void* userp )
   return 0; // callback runs until removed
 }
 
-int laser_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+int laser_unrender_cfg( stg_model_t* mod, void* userp )
+{
+  //puts( "LASER UNRENDER CONFIG" );
+  stg_model_fig_clear( mod, "laser_cfg_fig" );
+  return 1; // callback just runs one time
+}
+
+int laser_render_cfg( stg_model_t* mod, void* userp )
 {
   //puts( "laser render cfg" );
   
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "laser_cfg_fig" );
   
   if( !fig )
-    fig = stg_model_fig_create( mod, "laser_config_fig", "top", STG_LAYER_LASERCONFIG );
+    fig = stg_model_fig_create( mod, "laser_cfg_fig", "top", STG_LAYER_LASERCONFIG );
   
   stg_rtk_fig_clear(fig);
   
   // draw the FOV and range lines
   stg_rtk_fig_color_rgb32( fig, cfg_color );
   
-  stg_laser_config_t *cfg = (stg_laser_config_t*)data;
+  stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg;
   assert( cfg );
   
   double mina = cfg->fov / 2.0;

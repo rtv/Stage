@@ -170,9 +170,10 @@ extern "C" {
   typedef struct 
   {
     stg_model_t* mod;
-    const char *propname;
-    stg_property_callback_t callback_on;
-    stg_property_callback_t callback_off;
+    void* member;
+    char* name;
+    stg_model_callback_t callback_on;
+    stg_model_callback_t callback_off;
     void* arg_on; // argument to callback_on
     void* arg_off; // argument to callback_off
     int default_state; // disabled = 0 

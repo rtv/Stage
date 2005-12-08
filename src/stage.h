@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.166 2005-12-07 10:04:28 rtv Exp $
+ * CVS: $Id: stage.h,v 1.167 2005-12-08 07:05:07 rtv Exp $
  */
 
 
@@ -436,7 +436,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
    */
   stg_polygon_t* stg_polygons_from_image_file(  const char* filename, 
 						size_t* poly_count );
-       
+  
+
   /** add an item to the View menu that will automatically install and
       remove a callback when the item is toggled. The specialized
       model types use this call to set up their data visualization. */
@@ -529,7 +530,17 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
       stg_model_set_property() or stg_model_property_refresh().
   */
   typedef int (*stg_property_callback_t)(stg_model_t* mod, char* propname, void* data, size_t len, void* userdata );
-  
+
+  typedef int (*stg_model_callback_t)(stg_model_t* mod, void* user );
+  void stg_model_add_callback( stg_model_t* mod, 
+			       void* address, 
+			       stg_model_callback_t cb, 
+			       void* user );
+
+  int stg_model_remove_callback( stg_model_t* mod,
+				 void* member,
+				 stg_model_callback_t callback );
+
   
   /** function type for an initialization function that configures a
       specialized model. Each special model type (laser, position,
@@ -699,14 +710,15 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /** add an item to the View menu that will automatically install and
       remove a callback when the item is toggled. The specialized
       model types use this call to set up their data visualization. */
- /*  void stg_model_add_property_toggles( stg_model_t* mod,  */
-/* 				       const char* propname,  */
-/* 				       stg_property_callback_t callback_on, */
-/* 				       void* arg_on, */
-/* 				       stg_property_callback_t callback_off, */
-/* 				       void* arg_off, */
-/* 				       const char* label, */
-/* 				       int enabled ); */
+  void stg_model_add_property_toggles( stg_model_t* mod,
+				       void* member,
+				       stg_model_callback_t callback_on,
+				       void* arg_on,
+				       stg_model_callback_t callback_off,
+				       void* arg_off,
+				       const char* name,
+				       const char* label,
+				       int enabled );
 
   /** Set a named property of a model */
 /*   void stg_model_set_property( stg_model_t* mod,  */

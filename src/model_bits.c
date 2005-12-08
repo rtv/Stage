@@ -110,42 +110,6 @@
 /*   return 0; //ok */
 /* } */
 
-/* int stg_model_remove_property_callback( stg_model_t* mod,  */
-/* 					const char* propname,  */
-/* 					stg_property_callback_t callback ) */
-/* { */
-/*   stg_property_t* prop = g_datalist_get_data( &mod->props, propname ); */
-  
-/*   if( ! prop ) */
-/*     { */
-/*       PRINT_WARN2( "attempting to remove a callback from a nonexistent property (%s:%s)", */
-/* 		   mod->token, propname ); */
-/*       return 1; // error */
-/*     } */
-  
-/*   // else */
-
-/*   // find our callback in the list of stg_cbarg_t */
-/*   GList* el = NULL; */
-  
-/*   // scan the list for the first matching callback */
-/*   for( el = g_list_first( prop->callbacks);  */
-/*        el; */
-/*        el = el->next ) */
-/*     { */
-/*       if( ((stg_cbarg_t*)el->data)->callback == callback ) */
-/* 	break;       */
-/*     } */
-
-/*   if( el ) // if we found the matching callback, remove it */
-/*     prop->callbacks = g_list_remove( prop->callbacks, el->data); */
- 
-/*   if( el && el->data ) */
-/*     free( el->data ); */
- 
-/*   return 0; //ok */
-/* } */
-
 
 
 /* int stg_model_remove_property_callbacks( stg_model_t* mod, */

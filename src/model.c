@@ -200,10 +200,6 @@ void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 }
 
 
-
-typedef int (*stg_model_callback_t)(stg_model_t* mod, 
-				    void* user );
-
 /** container for a callback function and a single argument, so
     they can be stored together in a list with a single pointer. */
 typedef struct
@@ -237,6 +233,47 @@ void stg_model_add_callback( stg_model_t* mod,
   g_hash_table_insert( mod->callbacks, key, cb_list );
 }
 
+int stg_model_remove_callback( stg_model_t* mod,
+			       void* member,
+			       stg_model_callback_t callback )
+{
+  int key = member - (void*)mod;
+
+  GList* cb_list = g_hash_table_lookup( mod->callbacks, &key );
+ 
+  // find our callback in the list of stg_cbarg_t
+  GList* el = NULL;
+  
+  // scan the list for the first matching callback
+  for( el = g_list_first( cb_list );
+       el;
+       el = el->next )
+    {
+      if( ((stg_cbarg_t*)el->data)->callback == callback )
+	break;
+    }
+
+  if( el ) // if we found the matching callback, remove it
+    {
+      //puts( "removed callback" );
+
+      cb_list = g_list_remove( cb_list, el->data);
+      
+      // store the new, shorter, list of callbacks
+      g_hash_table_insert( mod->callbacks, &key, cb_list );
+
+      // we're done with that
+      //free( el->data );
+    }
+  else
+    {
+      //puts( "callback was not installed" );
+    }
+ 
+  return 0; //ok
+}
+
+
 void model_call_callbacks( stg_model_t* mod, void* address )
 {
   assert( mod );
@@ -254,7 +291,10 @@ void model_call_callbacks( stg_model_t* mod, void* address )
   //printf( "key %d has %d callbacks registered\n",
   //  key, g_list_length( cbs ) );
   
-  // for each stg_cbarg_t in the list
+  // maintain a list of callbacks that should be cancelled
+  GList* doomed = NULL;
+
+  // for each callback in the list
   while( cbs )
     {  
       stg_cb_t* cba = (stg_cb_t*)cbs->data;
@@ -263,7 +303,8 @@ void model_call_callbacks( stg_model_t* mod, void* address )
       
       if( (cba->callback)( mod, cba->arg ) )
 	{
-	  //printf( "callback returned TRUE - remove from list\n" );
+	  //printf( "callback returned TRUE - schedule removal from list\n" );
+	  doomed = g_list_prepend( doomed, cba->callback );
 	}
       else
 	{
@@ -272,6 +313,17 @@ void model_call_callbacks( stg_model_t* mod, void* address )
       
       cbs = cbs->next;
     }      
+
+  if( doomed ) 	// delete all the callbacks that returned TRUE    
+    {
+      //printf( "removing %d doomed callbacks\n", g_list_length( doomed ) );
+      
+      for( ; doomed ; doomed = doomed->next )
+	stg_model_remove_callback( mod, address, (stg_model_callback_t*)doomed->data );
+      
+      g_list_free( doomed );      
+    }
+
 }
 
 stg_model_t* stg_model_create( stg_world_t* world, 

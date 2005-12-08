@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.58 $
+//  $Revision: 1.59 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -157,21 +157,14 @@ void ranger_load( stg_model_t* mod )
     }
 }
 
-//void ranger_render_cfg( stg_model_t* mod );
-//void ranger_render_data( stg_model_t* mod ) ;
-
 int ranger_update( stg_model_t* mod );
 int ranger_startup( stg_model_t* mod );
 int ranger_shutdown( stg_model_t* mod );
 
-//int ranger_render_data( stg_model_t* mod, char* name, 
-//		void* data, size_t len, void* userp );
 int ranger_render_data( stg_model_t* mod, void* userp );
-
-int ranger_unrender_data( stg_model_t* mod, char* name, 
-			  void* data, size_t len, void* userp );
-int ranger_render_cfg( stg_model_t* mod, char* name, 
-		       void* data, size_t len, void* userp );
+int ranger_unrender_data( stg_model_t* mod,void* userp );
+int ranger_render_cfg( stg_model_t* mod, void* userp );
+int ranger_unrender_cfg( stg_model_t* mod, void* userp );
 
 int ranger_init( stg_model_t* mod )
 {
@@ -218,26 +211,28 @@ int ranger_init( stg_model_t* mod )
     }
   stg_model_set_cfg( mod, cfg, cfglen );
   
-  stg_model_add_callback( mod, &mod->data, ranger_render_data, NULL );
+  //stg_model_add_callback( mod, &mod->data, ranger_render_data, NULL );
 
   // adds a menu item and associated on-and-off callbacks
-/*   stg_model_add_property_toggles( mod, "ranger_data",  */
-/* 				  ranger_render_data, // called when toggled on */
-/* 				  NULL, */
-/* 				  ranger_unrender_data, // called when toggled off */
-/* 				  NULL, */
-/* 				  "ranger data", */
-/* 				  TRUE ); */
-  
-/*   stg_model_add_property_toggles( mod, "ranger_cfg",  */
-/* 				  ranger_render_cfg, // called when toggled on */
-/* 				  NULL, */
-/* 				  stg_model_fig_clear_cb, // called when toggled off */
-/* 				  gui->cfg, // arg to stg_fig_clear_cb */
-/* 				  "ranger config", */
-/* 				  TRUE ); */
-  
+  stg_model_add_property_toggles( mod, 
+				  &mod->data,
+				  ranger_render_data, // called when toggled on
+				  NULL,
+				  ranger_unrender_data, // called when toggled off
+				  NULL,
+				  "ranger_data",
+				  "ranger data",
+				  TRUE );  // initial state
 
+  stg_model_add_property_toggles( mod, 
+				  &mod->cfg,
+				  ranger_render_cfg, // called when toggled on
+				  NULL,
+				  ranger_unrender_cfg, // called when toggled off
+				  NULL,
+				  "ranger_cfg",
+				  "ranger config",
+				  FALSE );  // initial state
 
   return 0;
 }
@@ -351,67 +346,77 @@ int ranger_noise_test( stg_ranger_sample_t* data, size_t count,  )
 }
 */
 
-/* int ranger_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
-/* { */
-/*   stg_ranger_config_t *cfg = (stg_ranger_config_t*)data; */
-/*   int rcount = len / sizeof( stg_ranger_config_t ); */
+int ranger_unrender_cfg( stg_model_t* mod, void* userp )
+{
+  stg_model_fig_clear( mod, "ranger_cfg_fig" );
+  return 1; // quit callback
+}
 
-/*   if( cfg == NULL || rcount < 1 ) */
-/*     return 0; // nothing to draw */
+int ranger_render_cfg( stg_model_t* mod, void* userp )
+{
+  stg_ranger_config_t *cfg = (stg_ranger_config_t*)mod->cfg;
+  int rcount = mod->cfg_len / sizeof( stg_ranger_config_t );
+
+  if( cfg == NULL || rcount < 1 )
+    return 0; // nothing to draw
   
-/*   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "ranger_cfg_fig" ); */
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "ranger_cfg_fig" );
 
-/*   if( !fig ) */
-/*     fig = stg_model_fig_create( mod, "ranger_cfg_fig", "top", STG_LAYER_RANGERCONFIG ); */
+  if( !fig )
+    {
+      fig = stg_model_fig_create( mod, "ranger_cfg_fig", "top", STG_LAYER_RANGERCONFIG );
+      stg_rtk_fig_color_rgb32( fig, 0x00AA00 ); // green
+    }
+
+  stg_geom_t geom;
+  stg_model_get_geom(mod,&geom);
   
-/*   stg_geom_t geom; */
-/*   stg_model_get_geom(mod,&geom); */
+  stg_rtk_fig_clear(fig);
+  stg_rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );
+
   
-/*   stg_rtk_fig_clear(fig); */
-/*   stg_rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );   */
-  
-/*   // add rects showing ranger positions */
-/*   int s; */
-/*   for( s=0; s<rcount; s++ ) */
-/*     { */
-/*       stg_ranger_config_t* rngr = &cfg[s]; */
+  // add rects showing ranger positions
+  int s;
+  for( s=0; s<rcount; s++ )
+    {
+      stg_ranger_config_t* rngr = &cfg[s];
       
-/*       // sensor pose */
-/*       stg_rtk_fig_rectangle( fig,  */
-/* 			     rngr->pose.x, rngr->pose.y, rngr->pose.a, */
-/* 			     rngr->size.x, rngr->size.y,  */
-/* 			     mod->world->win->fill_polygons );  */
+      // sensor pose
+      stg_rtk_fig_rectangle( fig,
+			     rngr->pose.x, rngr->pose.y, rngr->pose.a,
+			     rngr->size.x, rngr->size.y,
+			     mod->world->win->fill_polygons );
       
-/*       // TODO - FIX THIS */
+      // TODO - FIX THIS
       
-/*       // sensor FOV */
-/*       double sidelen = rngr->bounds_range.max; */
-/*       double da = rngr->fov/2.0; */
+      // sensor FOV
+      double sidelen = rngr->bounds_range.max;
+      double da = rngr->fov/2.0;
       
-/*       double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - da ); */
-/*       double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - da ); */
-/*       double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da ); */
-/*       double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da ); */
+      double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - da );
+      double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - da );
+      double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da );
+      double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da );
       
-/*       stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 ); */
-/*       stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );	 */
+      stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 );
+      stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );
       
-/*       stg_rtk_fig_ellipse_arc( fig,  */
-/* 			       rngr->pose.x, rngr->pose.y, rngr->pose.a, */
-/* 			       2.0*cfg->bounds_range.max, */
-/* 			       2.0*cfg->bounds_range.max,  */
-/* 			       -da, da ); */
-/*     } */
+      stg_rtk_fig_ellipse_arc( fig,
+			       rngr->pose.x, rngr->pose.y, rngr->pose.a,
+			       2.0*cfg->bounds_range.max,
+			       2.0*cfg->bounds_range.max,
+			       -da, da );
+    }
 
-/*   return 0; */
-/* } */
+  return 0;
+}
 
 
-/* int ranger_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
-/* {  */
-/*   stg_model_fig_clear( mod, "ranger_data_fig" ); */
-/*   return 1; // quit callback */
-/* } */
+int ranger_unrender_data( stg_model_t* mod, void* userp )
+{
+  stg_model_fig_clear( mod, "ranger_data_fig" );
+  return 1; // quit callback
+}
 
 
 int ranger_render_data( stg_model_t* mod, void* userp )

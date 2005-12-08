@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.27 $
+//  $Revision: 1.28 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -278,7 +278,7 @@ int energy_update( stg_model_t* mod )
       stg_model_tree_to_ptr_array( stg_model_root(mod), locals);
       
       double watts_out = energy_connection_sum( mod, locals );
-      printf( "local devices consumed %.2fW\n", watts_out ); 
+      //printf( "local devices consumed %.2fW\n", watts_out ); 
       
       data->stored -= watts_out * timeslice;
             

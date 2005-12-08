@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.43 $
+//  $Revision: 1.44 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -106,11 +106,11 @@ int fiducial_startup( stg_model_t* mod );
 int fiducial_shutdown( stg_model_t* mod );
 int fiducial_update( stg_model_t* mod );
 
-//int fiducial_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
-int fiducial_render_data( stg_model_t* mod, void* userp );
-int fiducial_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
 
-int fiducial_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
+int fiducial_render_data( stg_model_t* mod, void* userp );
+int fiducial_render_cfg( stg_model_t* mod, void* userp );
+int fiducial_unrender_data( stg_model_t* mod, void* userp );
+int fiducial_unrender_cfg( stg_model_t* mod, void* userp );
 
 
 int fiducial_init( stg_model_t* mod )
@@ -140,13 +140,26 @@ int fiducial_init( stg_model_t* mod )
   
   stg_model_add_callback( mod, &mod->data, fiducial_render_data, NULL );
 
-/*   stg_model_add_property_toggles( mod, "fiducial_data",  */
-/* 				  fiducial_render_data, // called when toggled on */
-/* 				  NULL, */
-/* 				  fiducial_unrender_data, // called when toggled off */
-/* 				  NULL,  */
-/* 				  "fiducial data", */
-/* 				  TRUE ); */
+  // adds a menu item and associated on-and-off callbacks
+  stg_model_add_property_toggles( mod, 
+				  &mod->data,
+				  fiducial_render_data, // called when toggled on
+				  NULL,
+				  fiducial_unrender_data, // called when toggled off
+				  NULL,
+				  "fiducial_data",
+				  "fiducial data",
+				  TRUE );  // initial state
+
+  stg_model_add_property_toggles( mod, 
+				  &mod->cfg,
+				  fiducial_render_cfg, // called when toggled on
+				  NULL,
+				  fiducial_unrender_cfg, // called when toggled off
+				  NULL,
+				  "fiducial_cfg",
+				  "fiducial config",
+				  FALSE );  // initial state
   
   return 0;
 }
@@ -310,7 +323,7 @@ int fiducial_update( stg_model_t* mod )
   return 0;
 }
 
-int fiducial_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+int fiducial_unrender_data( stg_model_t* mod, void* userp )
 {
   //printf( "fid unrender userp %s\n", (char*)userp );
   stg_model_fig_clear( mod, "fiducial_data_fig" );
@@ -361,41 +374,48 @@ int fiducial_render_data( stg_model_t* mod, void* userp )
 return 0;
 }
 
-/* int fiducial_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
-/* {    */
-/*   stg_fiducial_config_t *cfg = data; */
-/*   assert(cfg); */
+int fiducial_unrender_cfg( stg_model_t* mod, void* userp )
+{
+  //printf( "fid unrender userp %s\n", (char*)userp );
+  stg_model_fig_clear( mod, "fiducial_cfg_fig" );
+  return 1; // cancel callback
+}
+
+int fiducial_render_cfg( stg_model_t* mod, void* userp )
+{
+  stg_fiducial_config_t *cfg = (stg_fiducial_config_t*)mod->cfg;
+  assert(cfg);
   
-/*   double mina = -cfg->fov / 2.0; */
-/*   double maxa = +cfg->fov / 2.0; */
+  double mina = -cfg->fov / 2.0;
+  double maxa = +cfg->fov / 2.0;
   
-/*   double dx =  cfg->max_range_anon * cos(mina); */
-/*   double dy =  cfg->max_range_anon * sin(mina); */
-/*   double ddx = cfg->max_range_anon * cos(maxa); */
-/*   double ddy = cfg->max_range_anon * sin(maxa); */
+  double dx =  cfg->max_range_anon * cos(mina);
+  double dy =  cfg->max_range_anon * sin(mina);
+  double ddx = cfg->max_range_anon * cos(maxa);
+  double ddy = cfg->max_range_anon * sin(maxa);
   
-/*   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "fiducial_cfg_fig" ); */
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "fiducial_cfg_fig" );
   
-/*   if( ! fig ) */
-/*     stg_model_fig_create( mod, "fiducial_cfg_fig", "top", STG_LAYER_NEIGHBORCONFIG ); */
+  if( ! fig )
+    fig = stg_model_fig_create( mod, "fiducial_cfg_fig", "top", STG_LAYER_NEIGHBORCONFIG );
   
-/*   stg_rtk_fig_clear(fig);   */
-/*   stg_rtk_fig_line( fig, 0,0, dx, dy ); */
-/*   stg_rtk_fig_line( fig, 0,0, ddx, ddy ); */
+  stg_rtk_fig_clear(fig);
+  stg_rtk_fig_line( fig, 0,0, dx, dy );
+  stg_rtk_fig_line( fig, 0,0, ddx, ddy );
   
-/*   // max range */
-/*   stg_rtk_fig_ellipse_arc( fig, */
-/* 			   0,0,0, */
-/* 			   2.0*cfg->max_range_anon, */
-/* 			   2.0*cfg->max_range_anon,  */
-/* 			   mina, maxa );       */
+  // max range
+  stg_rtk_fig_ellipse_arc( fig,
+			   0,0,0,
+			   2.0*cfg->max_range_anon,
+			   2.0*cfg->max_range_anon,
+			   mina, maxa );
   
-/*   // max range that IDs can be, er... identified	   */
-/*   stg_rtk_fig_ellipse_arc( fig,  */
-/* 			   0,0,0, */
-/* 			   2.0*cfg->max_range_id, */
-/* 			   2.0*cfg->max_range_id,  */
-/* 			   mina, maxa );       */
-/*   return 0; */
-/* } */
+  // max range that IDs can be, er... identified
+  stg_rtk_fig_ellipse_arc( fig,
+			   0,0,0,
+			   2.0*cfg->max_range_id,
+			   2.0*cfg->max_range_id,
+			   mina, maxa );
+  return 0;
+}
 

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.51 2005-12-07 10:04:27 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.52 2005-12-08 07:05:07 rtv Exp $
  */
 
 #include <math.h>
@@ -110,10 +110,9 @@ int blobfinder_update( stg_model_t* mod );
 void blobfinder_load( stg_model_t* mod );
 
 int blobfinder_render_data( stg_model_t* mod, void* userp );
-//int blobfinder_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
-int blobfinder_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
-int blobfinder_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
-int blobfinder_unrender_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
+int blobfinder_unrender_data( stg_model_t* mod, void* userp );
+int blobfinder_render_cfg( stg_model_t* mod, void* userp );
+int blobfinder_unrender_cfg( stg_model_t* mod, void* userp );
 
 int blobfinder_init( stg_model_t* mod )
 {
@@ -157,13 +156,23 @@ int blobfinder_init( stg_model_t* mod )
   
   stg_model_add_callback( mod, &mod->data, blobfinder_render_data, NULL );
 
- /*  stg_model_add_property_toggles( mod, "blob_data",  */
-/* 				  blobfinder_render_data, // called when toggled on */
-/* 				  NULL, */
-/* 				  blobfinder_unrender_data, // called when toggled off */
-/* 				  NULL,  */
-/* 				  "blob data", */
-/* 				  TRUE ); */
+  stg_model_add_property_toggles( mod, &mod->data,
+				  blobfinder_render_data, // called when toggled on
+				  NULL,
+				  blobfinder_unrender_data, // called when toggled off
+				  NULL,
+				  "blob_data",
+				  "blob data",
+				  TRUE );
+
+  stg_model_add_property_toggles( mod, &mod->cfg,
+				  blobfinder_render_cfg, // called when toggled on
+				  NULL,
+				  blobfinder_unrender_cfg, // called when toggled off
+				  NULL,
+				  "blob_cfg",
+				  "blob config",
+				  FALSE );
 
   return 0; //ok
 }
@@ -443,11 +452,11 @@ int blobfinder_update( stg_model_t* mod )
   return 0; //OK
 }
 
-/* int blobfinder_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
-/* { */
-/*   stg_model_fig_clear( mod, "blob_data_fig" ); */
-/*   return 1; */
-/* } */
+int blobfinder_unrender_data( stg_model_t* mod, void* userp )
+{
+  stg_model_fig_clear( mod, "blob_data_fig" );
+  return 1;
+}
 
 int blobfinder_render_data( stg_model_t* mod, void* userp )
 { 
@@ -525,41 +534,45 @@ int blobfinder_render_data( stg_model_t* mod, void* userp )
   return 0;
 }
 
-/* int blobfinder_unrender_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
-/* { */
-/*   stg_rtk_fig_clear( stg_model_get_fig( mod, "blob_cfg_fig" )); */
-/*   return 1; */
-/* } */
+int blobfinder_unrender_cfg( stg_model_t* mod, void* userp )
+{
+  stg_rtk_fig_clear( stg_model_get_fig( mod, "blob_cfg_fig" ));
+  return 1;
+}
 
-/* int blobfinder_render_cfg( stg_model_t* mod, char* name, void* data, size_t len, void* userp ) */
-/* {  */
-/*   PRINT_DEBUG( "blobfinder render config" );   */
+int blobfinder_render_cfg( stg_model_t* mod, void* userp )
+{
+  PRINT_DEBUG( "blobfinder render config" );
     
-/*   stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)data; */
-/*   assert(cfg); */
+  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg;
+  assert(cfg);
   
-/*   stg_pose_t* pose =  */
-/*     stg_model_get_property_fixed( mod, "pose", sizeof(stg_pose_t)); */
+  stg_pose_t* pose = &mod->pose;
   
-/*   double ox = pose->x; */
-/*   double oy = pose->y; */
-/*   double mina = pose->a + (cfg->pan + cfg->zoom / 2.0); */
-/*   double maxa = pose->a - (cfg->pan + cfg->zoom / 2.0); */
+  double ox = pose->x;
+  double oy = pose->y;
+  double mina = pose->a + (cfg->pan + cfg->zoom / 2.0);
+  double maxa = pose->a - (cfg->pan + cfg->zoom / 2.0);
   
-/*   double dx = cfg->range_max * cos(mina); */
-/*   double dy = cfg->range_max * sin(mina); */
-/*   double ddx = cfg->range_max * cos(maxa); */
-/*   double ddy = cfg->range_max * sin(maxa); */
+  double dx = cfg->range_max * cos(mina);
+  double dy = cfg->range_max * sin(mina);
+  double ddx = cfg->range_max * cos(maxa);
+  double ddy = cfg->range_max * sin(maxa);
   
-/*   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "blob_cfg_fig" ); */
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "blob_cfg_fig" );
+  
+  if( fig == NULL )
+    fig = stg_model_fig_create( mod, "blob_cfg_fig", "top", STG_LAYER_BLOBDATA );
+  
+  stg_rtk_fig_clear( fig );
 
-/*   stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR )); */
-/*   stg_rtk_fig_line( fig, ox,oy, dx, dy ); */
-/*   stg_rtk_fig_line( fig, ox,oy, ddx, ddy ); */
-/*   stg_rtk_fig_ellipse_arc( fig, 0,0,0, */
-/* 			   2.0*cfg->range_max, */
-/* 			   2.0*cfg->range_max,  */
-/* 			   mina, maxa );       */
+  stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
+  stg_rtk_fig_line( fig, ox,oy, dx, dy );
+  stg_rtk_fig_line( fig, ox,oy, ddx, ddy );
+  stg_rtk_fig_ellipse_arc( fig, 0,0,0,
+			   2.0*cfg->range_max,
+			   2.0*cfg->range_max,
+			   mina, maxa );
 
-/*   return 0; */
-/* } */
+  return 0;
+}

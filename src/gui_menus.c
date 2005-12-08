@@ -570,23 +570,28 @@ void toggle_property_callback( GtkToggleAction* action, void* userdata )
   stg_property_toggle_args_t* args = 
     (stg_property_toggle_args_t*)userdata;  
   
+  //puts( "TOGGLE!" );
+
   if( gtk_toggle_action_get_active( action ) )
     {
       if( args->callback_off )
 	{
 	  //printf( "removing OFF callback\n" );
-	  //stg_model_remove_property_callback( args->mod, 
-	  //			    args->propname, 
-	  //			    args->callback_off );
+	  stg_model_remove_callback( args->mod, 
+				     args->member, 
+				     args->callback_off );
 	}
       
       if( args->callback_on )
 	{
 	  //printf( "adding ON callback with args %s\n", (char*)args->arg_on );
-	  //stg_model_add_callback( args->mod, 
-	  //		  args->propname, 
-	  //		  args->callback_on, 
-	  //		  args->arg_on );
+	  stg_model_add_callback( args->mod, 
+				  args->member,
+				  args->callback_on, 
+				  args->arg_on );
+
+	  // trigger the callback
+	  model_change( args->mod, args->member );
 	}
     }
   else
@@ -594,18 +599,21 @@ void toggle_property_callback( GtkToggleAction* action, void* userdata )
       if( args->callback_on )
 	{
 	  //printf( "removing ON callback\n" );
-	  //stg_model_remove_property_callback( args->mod, 
-	  //			    args->propname, 
-	  //			    args->callback_on );
+	  stg_model_remove_callback( args->mod, 
+				     args->member, 
+				     args->callback_on );
 	}
       
       if( args->callback_off )
 	{
 	  //printf( "adding OFF callback with args %s\n", (char*)args->arg_off );
-	  //stg_model_add_property_callback( args->mod, 
-	  //			   args->propname, 
-	  //			   args->callback_off, 
-	  //			   args->arg_off );
+	  stg_model_add_callback( args->mod, 
+				  args->member, 
+				  args->callback_off, 
+				  args->arg_off );
+
+	  // trigger the callback
+	  model_change( args->mod, args->member );
 	}
       
     }
@@ -614,11 +622,12 @@ void toggle_property_callback( GtkToggleAction* action, void* userdata )
 #define TOGGLE_PATH "/Main/View"
 
 void stg_model_add_property_toggles( stg_model_t* mod, 
-				     const char* propname, 
-				     stg_property_callback_t callback_on,
+				     void* member, 
+				     stg_model_callback_t callback_on,
 				     void* arg_on,
-				     stg_property_callback_t callback_off,
+				     stg_model_callback_t callback_off,
 				     void* arg_off,
+				     const char* name,
 				     const char* label,
 				     int enabled )
 {
@@ -627,7 +636,8 @@ void stg_model_add_property_toggles( stg_model_t* mod,
   
   
   args->mod = mod;
-  args->propname = propname;
+  args->name = name;
+  args->member = member; 
   args->callback_on = callback_on;
   args->callback_off = callback_off;
   args->arg_on = arg_on;
@@ -646,8 +656,8 @@ void stg_model_add_property_toggles( stg_model_t* mod,
 	  gtk_ui_manager_insert_action_group(ui_manager, grp, 0);
 	}      
       else
-	// find the action associated with this propname
-	act = gtk_action_group_get_action( grp, propname );
+	// find the action associated with this label
+	act = gtk_action_group_get_action( grp, name );
       
       if( act == NULL )
 	{
@@ -655,7 +665,7 @@ void stg_model_add_property_toggles( stg_model_t* mod,
 	  
 	  GtkToggleActionEntry entry;
 	  memset( &entry, 0, sizeof(entry));
-	  entry.name = propname;
+	  entry.name = name;
 	  entry.label = label;
 	  entry.tooltip = NULL;
 	  entry.callback = G_CALLBACK(toggle_property_callback);
@@ -663,13 +673,14 @@ void stg_model_add_property_toggles( stg_model_t* mod,
 	  
 	  //override setting with value in worldfile, if one exists
 	  int state = wf_read_int( mod->world->win->wf_section, 
-				   propname,
+				   name,
 				   args->default_state );
 	  
-	  printf( "name %s state %d default %d\n", 
-		  args->propname, 
-		  state, 
-		  args->default_state );
+	  /*printf( "name %s state %d default %d\n", 
+	    args->name, 
+	    state, 
+	    args->default_state );
+	  */
 	  
 	  entry.is_active = state ? 0 : 1;
 
@@ -682,12 +693,12 @@ void stg_model_add_property_toggles( stg_model_t* mod,
 	  gtk_ui_manager_add_ui( ui_manager, 
 				 merge,
 				 TOGGLE_PATH, 
-				 propname, 
-				 propname, 
+				 name, 
+				 name, 
 				 GTK_UI_MANAGER_AUTO, 
 				 FALSE );
 	  
-	  act = gtk_action_group_get_action( grp, propname );
+	  act = gtk_action_group_get_action( grp, name );
 	  
 	  // store the action in the toggle structure for recall
 	  args->action = act;
@@ -695,7 +706,7 @@ void stg_model_add_property_toggles( stg_model_t* mod,
 	  //size_t len = strlen(TOGGLE_PATH) + strlen(propname) + 5;
 	  //args->path = (char*)malloc( len );
 	  //snprintf( args->path, len, "%s/%s", TOGGLE_PATH, propname );
-	  args->path = strdup(propname);
+	  args->path = strdup(name);
 
 	  //printf( "toggle item: %s\n", gtk_action_get_name( act ));
 	  //printf( "toggle path: %s\n", args->path );
