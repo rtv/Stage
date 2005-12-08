@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -32,17 +32,12 @@ int energy_update( stg_model_t* mod );
 
 void energy_load( stg_model_t* mod );
 
-//int energy_render_data( stg_model_t* mod, char* name, 
-//		void* data, size_t len, void* userp );
 int energy_render_data( stg_model_t* mod, void* userp );
-int energy_render_data_text( stg_model_t* mod, char* name, 
-			     void* data, size_t len, void* userp );
-int energy_unrender_data( stg_model_t* mod, char* name, 
-			  void* data, size_t len, void* userp );
-int energy_unrender_data_text( stg_model_t* mod, char* name, 
-			  void* data, size_t len, void* userp );
-int energy_render_cfg( stg_model_t* mod, char* name, 
-		       void* data, size_t len, void* userp );
+int energy_render_data_text( stg_model_t* mod, void* userp );
+int energy_unrender_data( stg_model_t* mod, void* userp );
+int energy_unrender_data_text( stg_model_t* mod, void* userp );
+int energy_render_cfg( stg_model_t* mod, void* userp );
+int energy_unrender_cfg( stg_model_t* mod, void* userp );
 
 const double STG_ENERGY_PROBE_RANGE_DEFAULT = 0.5;
 const double STG_ENERGY_GIVE_RATE_DEFAULT = 100.0;
@@ -110,8 +105,28 @@ int energy_init( stg_model_t* mod )
   stg_color_t col = stg_lookup_color( "orange" ); 
   stg_model_set_color( mod, col );
 
-  stg_model_add_callback( mod, &mod->data, energy_render_data, NULL );
-  
+  //stg_model_add_callback( mod, &mod->data, energy_render_data, NULL );
+
+  // adds a menu item and associated on-and-off callbacks
+  stg_model_add_property_toggles( mod, 
+				  &mod->data,
+				  energy_render_data, // called when toggled on
+				  NULL,
+				  energy_unrender_data, // called when toggled off
+				  NULL,
+				  "energy_bar",
+				  "energy bar",
+				  TRUE );  
+  stg_model_add_property_toggles( mod, 
+				  &mod->data,
+				  energy_render_data_text, // called when toggled on
+				  NULL,
+				  energy_unrender_data_text, // called when toggled off
+				  NULL,
+				  "energy_text",
+				  "energy text",
+				  FALSE );  
+
   return 0;
 }
 
@@ -310,14 +325,14 @@ int energy_update( stg_model_t* mod )
   return 0; // ok
 }
 
-int energy_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+int energy_unrender_data( stg_model_t* mod, void* userp )
 { 
   stg_model_fig_clear( mod, "energy_data_fig" );
   stg_model_fig_clear( mod, "energy_data_figx" );
   return 1; // quit callback
 }
 
-int energy_unrender_data_text( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
+int energy_unrender_data_text( stg_model_t* mod, void* userp )
 { 
   stg_model_fig_clear( mod, "energy_data_text_fig" );
   return 1; // quit callback
@@ -366,10 +381,12 @@ int energy_render_data( stg_model_t* mod,
 			   TRUE );
     
     stg_color_t col;
-    if( fraction > 0.6 )
+    if( fraction > 0.75 )
       col = 0x00FF00; //  green
-    else if( fraction > 0.3 )
+    else if( fraction > 0.5 )
       col = 0xFFFF00; // yellow
+    else if( fraction > 0.25 )
+      col = 0xFF9000; // orange
     else
       col = 0xFF0000; // red      
     
@@ -412,40 +429,12 @@ int energy_render_data( stg_model_t* mod,
 	stg_rtk_fig_color_rgb32(figx, 0 ); // black
 	stg_rtk_fig_arrow_fancy( figx, 0,0,0, data->range, 0.15, 0.05, 0 );
       }
-
-    /*       if( 1 ) */
-    /*       //if( cfg->capacity > 0 ) */
-    /* 	{ */
-    
-    char buf[256];
-    snprintf( buf, 128, "%.0f/%.0fJ (%.0f%%)\n%s",
-	      data->stored,
-	      cfg->capacity,
-	      data->stored/cfg->capacity * 100,
-	      data->charging ? "charging" : "" );
-    
-    stg_rtk_fig_text( figx, 0.6,0.0,0, buf );
-    
-    /* 	} */
-    //else
-    //{
-    //char buf[128];
-    //snprintf( buf, 128, "mains supply\noutput %.2fW\n", 
-    //    data->output );
-    
-    // stg_rtk_fig_text( fig, 0.6,0,0, buf ); 	  
-    //}
-    
   }
   
   return 0;
 }
 
-int energy_render_data_text( stg_model_t* mod,
-			     char* name,
-			     void* vdata, 
-			     size_t len,
-			     void* userp )
+int energy_render_data_text( stg_model_t* mod, void* userp )
 {
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "energy_data_text_fig" );  
   
@@ -454,9 +443,7 @@ int energy_render_data_text( stg_model_t* mod,
   else
     stg_rtk_fig_clear( fig );
   
-  
-  stg_energy_data_t* data = (stg_energy_data_t*)vdata;
-
+  stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
   stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;
   
   char buf[256];
