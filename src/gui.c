@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.102 2005-12-07 10:04:27 rtv Exp $
+CVS: $Id: gui.c,v 1.103 2005-12-20 21:30:22 rtv Exp $
 */
 
 #include <stdio.h>
@@ -1006,7 +1006,47 @@ stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod,
   return fig;
 }
 
+int gui_model_lines( stg_model_t* mod, void* userp )
+{
+  puts( "GUI MODEL LINES" );
 
+  printf( "mod %s rendering %d lines at %p\n",
+	  mod->token, mod->lines_count, mod->lines);
+
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "model_lines_fig" );  
+  
+  if( ! fig )
+    {
+      fig = stg_model_fig_create( mod, "model_lines_fig", "top", 40 );  
+      stg_rtk_fig_color_rgb32( fig, mod->color );
+    }
+  
+  stg_rtk_fig_clear( fig );
+  
+  int p,q;
+  if( mod->lines && mod->lines_count > 0 )
+    for( p=0; p<mod->lines_count; p++ )
+      {
+	stg_polyline_t* polyline = &mod->lines[p];
+	
+	if( polyline->points_count > 1 )
+	  for( q=0; q<polyline->points_count-1; q++ )
+	    {
+	      printf( "drawing line from %.2f,%.2f to %.2f,%.2f\n",
+				polyline->points[q].x,
+				polyline->points[q].y,
+				polyline->points[q+1].x,
+				polyline->points[q+1].y );
+		      
+	      stg_rtk_fig_line( fig, 
+				polyline->points[q].x,
+				polyline->points[q].y,
+				polyline->points[q+1].x,
+				polyline->points[q+1].y );
+	    }
+      }
+  return 0;
+}
 
 int gui_model_polygons( stg_model_t* mod, void* userp )
 {

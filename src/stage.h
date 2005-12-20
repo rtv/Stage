@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.167 2005-12-08 07:05:07 rtv Exp $
+ * CVS: $Id: stage.h,v 1.168 2005-12-20 21:30:23 rtv Exp $
  */
 
 
@@ -374,6 +374,21 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /**@}*/
 
 
+  // POLYLINES ---------------------------------------------------------
+
+  /** @defgroup stg_polyline Polylines
+      Creating and manipulating polylines
+      @{
+  */
+  
+  /** define a polyline: a set of connected vertices */
+  typedef struct
+  {
+    /// pointer to an array of points
+    stg_point_t* points;
+    size_t points_count;    
+  } stg_polyline_t; 
+
   // POLYGONS ---------------------------------------------------------
 
   /** @defgroup stg_polygon Polygons
@@ -530,8 +545,13 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
       stg_model_set_property() or stg_model_property_refresh().
   */
   typedef int (*stg_property_callback_t)(stg_model_t* mod, char* propname, void* data, size_t len, void* userdata );
+  
 
+  /** Define a callback function type that can be attached to a
+      record within a model and called whenever the record is set.
+  */
   typedef int (*stg_model_callback_t)(stg_model_t* mod, void* user );
+
   void stg_model_add_callback( stg_model_t* mod, 
 			       void* address, 
 			       stg_model_callback_t cb, 
@@ -629,6 +649,11 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 			       stg_polygon_t* polys, 
 			       size_t poly_count );
   
+  /** set an array oflines to be drawn for the model */
+  void stg_model_set_lines( stg_model_t* mod,
+			    stg_polyline_t* lines, 
+			    size_t lines_count );
+  
   // guess what these do?
   void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
   void stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
@@ -719,6 +744,19 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 				       const char* name,
 				       const char* label,
 				       int enabled );
+
+  /** define a function type used for callbacks from the menu toggle items */
+/*   typedef int (*stg_model_toggle_callback_t) */
+/*        (stg_model_t* mod, int state, void* userdata ); */
+
+/*   void stg_model_add_toggle( stg_model_t* mod,  */
+/* 			     void* member,  */
+/* 			     stg_model_toggle_callback_t callback, */
+/* 			     void* arg, */
+/* 			     const char* name, */
+/* 			     const char* label, */
+/* 			     int enabled ); */
+
 
   /** Set a named property of a model */
 /*   void stg_model_set_property( stg_model_t* mod,  */

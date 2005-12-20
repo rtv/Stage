@@ -471,7 +471,6 @@ stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count,
   return polys;
 }
 
-
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
 {
@@ -518,11 +517,19 @@ void pb_set_pixel( GdkPixbuf* pb, int x, int y, uint8_t val )
 // set all the pixels in a rectangle 
 void pb_set_rect( GdkPixbuf* pb, int x, int y, int width, int height, uint8_t val )
 {
-  //todo - this could be faster - improve it if it gets used a lot)
+  int pbwidth = gdk_pixbuf_get_width(pb);
+  int pbheight = gdk_pixbuf_get_height(pb);
+  int bytes_per_sample = gdk_pixbuf_get_bits_per_sample (pb) / 8;
+  int num_samples = gdk_pixbuf_get_n_channels(pb);
+
   int a, b;
   for( a = y; a < y+height; a++ )
     for( b = x; b < x+width; b++ )
-      pb_set_pixel( pb,b,a, val );
+      {	
+	// zeroing
+	guchar* pix = pb_get_pixel( pb, b, a );
+	memset( pix, val, num_samples * bytes_per_sample );
+      }
 }  
 
 // returns TRUE if any channel in the pixel is non-zero
@@ -530,7 +537,6 @@ gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y, int threshold )
 {
   guchar* pixel = pb_get_pixel( pb,x,y );
   //int channels = gdk_pixbuf_get_n_channels(pb);
-
   //int i;
   //for( i=0; i<channels; i++ )
   //if( pixel[i] ) return TRUE;
@@ -563,6 +569,44 @@ stg_polygon_t* stg_polygons_from_image_file(  const char* filename,
   *count = (size_t)rect_count;
   return stg_polygons_from_rotrects( rects, rect_count, (double)width, (double)height );
 }
+
+stg_polyline_t* stg_polylines_from_image_file( const char* filename, 
+					       size_t* num )
+{
+  // TODO: make this a parameter
+  const int threshold = 127;
+
+  GError* err = NULL;
+  GdkPixbuf* pb = gdk_pixbuf_new_from_file( filename, &err );
+
+  if( err )
+    {
+      fprintf( stderr, "\nError loading bitmap: %s\n", err->message );
+      return 1; // error
+    }
+  
+  // this should be ok as no error was reported
+  assert( pb );
+
+  stg_polyline_t* lines = NULL;
+  size_t lines_count = 0;
+  
+  int img_width = gdk_pixbuf_get_width(pb);
+  int img_height = gdk_pixbuf_get_height(pb);
+  
+  int y, x;
+  for(y = 0; y < img_height; y++)
+    for(x = 0; x < img_width; x++)
+      {
+	// TODO!
+      }	
+  
+  // free the image data
+  gdk_pixbuf_unref( pb );
+  
+  if( num ) *num = lines_count;
+  return lines;
+}				   
 
 int stg_rotrects_from_image_file( const char* filename, 
 				  stg_rotrect_t** rects, 

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.20 2005-07-22 21:02:01 rtv Exp $
+ * $Id: matrix.c,v 1.21 2005-12-20 21:30:22 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -419,6 +419,38 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 	      //printf( "jumped to %.7f,%.7f\n",
 	      //      x1, y1 );
 
+	    }
+	}
+    }
+}
+
+// render an array of [num_polylines] polylines
+void stg_matrix_polylines( stg_matrix_t* matrix,
+			   double x, double y, double a,
+			   stg_polyline_t* polylines, int num_polylines,
+			   void* object )
+{
+  int l;
+  for( l=0; l<num_polylines; l++ )
+    {
+      int pcount = polylines[l].points_count;
+      
+      if( pcount > 1 )
+	{
+	  int p;
+	  for( p=0; p < pcount-1; p++ )
+	    {
+	      stg_point_t *pt1 = &polylines[l].points[p];
+	      stg_point_t *pt2 = &polylines[l].points[p+1];
+	      
+	      stg_line_t line;
+	      line.x1 = x + pt1->x * cos(a) - pt1->y * sin(a);
+	      line.y1 = y + pt1->x * sin(a) + pt1->y * cos(a); 
+	      
+	      line.x2 = x + pt2->x * cos(a) - pt2->y * sin(a);
+	      line.y2 = y + pt2->x * sin(a) + pt2->y * cos(a); 
+	      
+	      stg_matrix_lines( matrix, &line, 1, object );
 	    }
 	}
     }

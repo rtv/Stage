@@ -158,6 +158,7 @@ class InterfaceFiducial : public InterfaceModel
                              player_msghdr_t* hdr,
                              void* data);
 };
+
  
 class InterfaceBlobfinder : public InterfaceModel
 {
@@ -181,6 +182,22 @@ class InterfaceSonar : public InterfaceModel
 			      player_msghdr * hdr, 
 			      void * data );
   virtual void Publish( void );
+};
+
+class InterfaceLocalize : public InterfaceModel
+{
+ public: 
+  InterfaceLocalize( player_devaddr_t addr, 
+		     StgDriver* driver, 
+		     ConfigFile* cf, 
+		     int section );
+
+  virtual ~InterfaceLocalize( void ){ /* TODO: clean up*/ };
+
+  virtual void Publish( void );
+  virtual int ProcessMessage(MessageQueue* resp_queue,
+                             player_msghdr_t* hdr,
+                             void* data);
 };
 
 class InterfaceMap : public InterfaceModel

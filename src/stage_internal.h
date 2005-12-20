@@ -109,6 +109,7 @@ extern "C" {
   int gui_model_grid( stg_model_t* mod, void* userp );
   int gui_model_move( stg_model_t* mod, void* userp );
   int gui_model_mask( stg_model_t* mod, void* userp );
+  int gui_model_lines( stg_model_t* mod, void* userp );
 
 
   void gui_add_view_item( const gchar *name,
@@ -206,9 +207,6 @@ extern "C" {
     // a datalist of stg_rtk_figs, indexed by name (string)
     GData* figs; 
 
-    // a datalist of gnomecanvasitems, indexed by name (string)
-    //GData* gcitems;
-    
 #if INCLUDE_GNOME
     GnomeCanvasGroup* grp;
     GnomeCanvasGroup* cgrp;
@@ -238,7 +236,6 @@ extern "C" {
     int gui_mask;
 
     GHashTable* callbacks;
-    /* end experimental */
        
     // the number of children of each type is counted so we can
     // automatically generate names for them
@@ -262,13 +259,16 @@ extern "C" {
 
     void *data, *cmd, *cfg;
     size_t data_len, cmd_len, cfg_len;
-
-    /* TODO - thread-safe version */
     
+    // XX experimental
+    stg_polyline_t* lines;
+    size_t lines_count;
+    
+    /// TODO - thread-safe version    
     // allow exclusive access to this model
-    pthread_mutex_t mutex;
-    
-    /* END TODO */    
+    // pthread_mutex_t mutex;
+
+    // end experimental    
   };
   
 
@@ -531,6 +531,12 @@ extern "C" {
 			    double x, double y, double a,
 			    stg_polygon_t* polys, int num_polys,
 			    void* object );
+  
+  /** render an array of polylines into the matrix */
+  void stg_matrix_polylines( stg_matrix_t* matrix,
+			     double x, double y, double a,
+			     stg_polyline_t* polylines, int num_polylines,
+			     void* object );
 
   /** remove all reference to an object from the matrix
    */
@@ -579,6 +585,7 @@ extern "C" {
   */
   
   // C wrappers for C++ worldfile functions
+  void wf_warn_unused( void );
   int wf_property_exists( int section, char* token );
   int wf_read_int( int section, char* token, int def );
   double wf_read_length( int section, char* token, double def );

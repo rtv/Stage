@@ -200,6 +200,52 @@ void stg_model_load( stg_model_t* mod )
       stg_model_set_polygons( mod, polys, polycount );
     }
 
+  int wf_linecount = wf_read_int( mod->id, "polylines", 0 );
+  if( wf_linecount > 0 )
+    {
+      char key[256];
+      stg_polyline_t *lines = calloc( sizeof(stg_polyline_t), wf_linecount );
+      int l;
+
+      stg_polyline_print( &lines[0] );
+
+      for(l=0; l<wf_linecount; l++ )
+	{	  	  
+	  stg_polyline_print( &lines[l] );
+
+	  snprintf(key, sizeof(key), "polyline[%d].points", l);
+	  int pointcount = wf_read_int(mod->id,key,0);
+	  
+	  printf( "expecting %d points in polyline %d\n",
+		  pointcount, l );
+	  
+	  lines[l].points = calloc( sizeof(stg_point_t), pointcount );
+	  lines[l].points_count = pointcount;
+	  
+	  int p;
+	  for( p=0; p<pointcount; p++ )
+	    {
+	      snprintf(key, sizeof(key), "polyline[%d].point[%d]", l, p );
+	      
+	      stg_point_t pt;	      
+	      pt.x = wf_read_tuple_length(mod->id, key, 0, 0);
+	      pt.y = wf_read_tuple_length(mod->id, key, 1, 0);
+	      
+	      printf( "key %s x: %.2f y: %.2f\n",
+		      key, pt.x, pt.y );
+	      
+	      lines[l].points[p].x = wf_read_tuple_length(mod->id, key, 0, 0);
+	      lines[l].points[p].y = wf_read_tuple_length(mod->id, key, 1, 0);
+	      
+	      puts( "after read" );
+	      stg_polyline_print( &lines[l] );
+	    }
+	}
+
+      stg_model_set_polylines( mod, lines, wf_linecount );
+    }
+
+
   int gui_nose = wf_read_int(mod->id, "gui_nose", mod->gui_nose );  
   stg_model_set_gui_nose( mod, gui_nose );
   
@@ -218,6 +264,9 @@ void stg_model_load( stg_model_t* mod )
   // if a type-specific load callback has been set
   if( mod->f_load )
     mod->f_load( mod ); // call the load function
+
+  // warn about unused WF linesa
+  //wf_warn_unused();
 }
 
 

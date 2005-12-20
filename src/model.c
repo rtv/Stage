@@ -411,6 +411,22 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->gui_outline = STG_DEFAULT_OUTLINE;
   mod->gui_mask = mod->parent ? 0 : STG_DEFAULT_MASK;
 
+  
+/*   stg_point_t *pts = calloc( sizeof(stg_point_t), 3); */
+/*   pts[0].x = 0.0; */
+/*   pts[0].y = 0.0; */
+/*   pts[1].x = 1.0; */
+/*   pts[1].y = 0.0; */
+/*   pts[2].x = 1.0; */
+/*   pts[2].y = 1.0; */
+  
+/*   stg_polyline_t* pline = calloc( sizeof(stg_polyline_t),1 ); */
+/*   pline->points = pts; */
+/*   pline->points_count = 3; */
+
+/*   mod->lines = pline; */
+/*   mod->lines_count = 1; */
+
   // now it's safe to create the GUI components
   if( mod->world->win )
     gui_model_create( mod );
@@ -424,6 +440,8 @@ stg_model_t* stg_model_create( stg_world_t* world,
   stg_model_add_callback( mod, &mod->gui_outline, gui_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->parent, gui_model_polygons, NULL );
   
+  stg_model_add_callback( mod, &mod->lines, gui_model_lines, NULL );
+
   // these changes can be handled without a complete redraw
   stg_model_add_callback( mod, &mod->gui_grid, gui_model_grid, NULL );
   stg_model_add_callback( mod, &mod->pose, gui_model_move, NULL );
@@ -633,35 +651,34 @@ void stg_model_map( stg_model_t* mod, gboolean render )
 {
   assert( mod );
   
-  size_t count=0;
-  stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
-  
-  stg_geom_t geom;
-  stg_model_get_geom( mod, &geom );
-  
   // to be drawn, we must have a body and some extent greater than zero
-  if( polys && geom.size.x > 0.0 && geom.size.y > 0.0 )
+  if( (mod->lines || mod->polygons) && 
+      mod->geom.size.x > 0.0 && mod->geom.size.y > 0.0 )
     {
-      if( render && count )
+      if( render )
 	{      
 	  // get model's global pose
 	  stg_pose_t org;
-	  memcpy( &org, &geom.pose, sizeof(org));
+	  memcpy( &org, &mod->geom.pose, sizeof(org));
 	  stg_model_local_to_global( mod, &org );
 	  
-	  if( count && polys )    
+	  if( mod->polygons && mod->polygons_count )    
 	    stg_matrix_polygons( mod->world->matrix, 
 				 org.x, org.y, org.a,
-				 polys, count, 
+				 mod->polygons, mod->polygons_count, 
 				 mod );  
-	  else
-	    PRINT_ERR1( "expecting %d polygons but have no data", (int)count );
+	  
+	  if( mod->lines && mod->lines_count )    
+	    stg_matrix_polylines( mod->world->matrix, 
+				  org.x, org.y, org.a,
+				  mod->lines, mod->lines_count, 
+				  mod );  
 	  
 	  if( mod->boundary )    
 	    stg_matrix_rectangle( mod->world->matrix,
 				  org.x, org.y, org.a,
-				  geom.size.x,
-				  geom.size.y,
+				  mod->geom.size.x,
+				  mod->geom.size.y,
 				  mod ); 
 	}
       else
@@ -684,6 +701,8 @@ void stg_model_subscribe( stg_model_t* mod )
 
   //printf( "subscribe %d\n", mod->subs );
   
+  //model_change( mod, &mod->lines );
+
   // if this is the first sub, call startup
   if( mod->subs == 1 )
     stg_model_startup(mod);
@@ -1074,6 +1093,76 @@ void stg_model_set_polygons( stg_model_t* mod,
   model_change( mod, &mod->polygons );
 }
 
+
+
+void stg_polyline_print( stg_polyline_t* l )
+{
+  assert(l);
+
+  printf( "Polyline %p contains %d points [",
+	  l, l->points_count );
+  int p;
+  for( p=0; p<l->points_count; p++ )
+    printf( "[%.2f,%.2f] ", l->points[p].x, l->points[p].y );
+  
+  puts( "]" );
+}
+
+void stg_polylines_print( stg_polyline_t* l, size_t p_count )
+{
+  assert( l );
+  printf( "Polyline array %p contains %d polylines\n",
+	  l, p_count );
+
+  int a;
+  for( a=0; a<p_count; a++ )
+    stg_polyline_print( &l[a] );
+}
+
+void stg_model_set_polylines( stg_model_t* mod,
+			      stg_polyline_t* lines, 
+			      size_t lines_count )
+{
+  stg_polylines_print( lines, lines_count );
+  
+  if( lines_count == 0 )
+    {
+      stg_model_map( mod, 0 ); // unmap the model from the matrix
+      
+      free( mod->lines );
+      mod->lines_count = 0;      
+    }
+  else
+    {
+      assert(lines);
+      
+      stg_model_map( mod, 0 ); // unmap the model from the matrix
+      
+      // normalize the polygons to fit exactly in the model's body
+      // rectangle (if the model has some non-zero size)
+      //if( mod->geom.size.x > 0.0 && mod->geom.size.y > 0.0 )
+      //stg_polygons_normalize( polys, poly_count, 
+      //			mod->geom.size.x, 
+      //			mod->geom.size.y );
+      //else
+      //PRINT_WARN3( "setting polygons for model %s which has non-positive area (%.2f,%.2f)",
+      //	     prop->mod->token, geom.size.x, geom.size.y );
+      
+      // zap our old polygons
+      //stg_polygons_destroy( mod->polygons, mod->polygons_count );
+      
+      free( mod->lines );
+      
+      mod->lines = lines;
+      mod->lines_count = lines_count;
+      
+      // if the model has some non-zero
+      stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
+    }
+  
+  model_change( mod, &mod->lines );
+  model_change( mod, &mod->lines_count );
+}
 
 
 // set the pose of model in global coordinates 

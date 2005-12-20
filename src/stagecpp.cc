@@ -1,6 +1,6 @@
 // Thin-as-possible C Wrappers for C++ worldfile calls, using a single static worldfile.
 // This is a hacky use of the old C++ worldfile code.
-// $Id: stagecpp.cc,v 1.78 2005-07-08 22:55:14 rtv Exp $
+// $Id: stagecpp.cc,v 1.79 2005-12-20 21:30:23 rtv Exp $
 
 #include "stage_internal.h"
 #include "gui.h"
@@ -8,6 +8,11 @@
 
 
 static CWorldFile wf;
+
+void wf_warn_unused( void )
+{
+  wf.WarnUnused();
+}
 
 int wf_property_exists( int section, char* token )
 {

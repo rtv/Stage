@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.80 $
+//  $Revision: 1.81 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -318,7 +318,7 @@ int laser_unrender_data( stg_model_t* mod, void* userp )
 }
 
 
-int laser_render_data( stg_model_t* mod, void* userp )
+int laser_render_data( stg_model_t* mod, void* enabled )
 {  
   //puts( "LASER RENDER" );
 

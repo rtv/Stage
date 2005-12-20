@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.72 2005-12-07 10:04:28 rtv Exp $
+# CVS: $Id: everything.world,v 1.73 2005-12-20 21:30:23 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -46,12 +46,20 @@ window(
 
   # Store the state of the visualizations
   # Change these in the View menu
-  position_data 0
-  ranger_data 0
-  laser_data 1
-  fiducial_data 1
-  blob_data 1
-  gripper_data 0
+  #position_data 1
+  #ranger_data 1
+  #laser_data 1
+  #fiducial_data 1
+  #blob_data 1
+  #gripper_data 1
+  energy_data 0
+
+  #position_cfg 1
+  #ranger_cfg 1
+  #laser_cfg 1
+  #fiducial_cfg 1
+  #blob_cfg 1
+  #gripper_cfg 1
 )
 
 map( 
