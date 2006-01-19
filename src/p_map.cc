@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.10 2005-12-07 10:04:28 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.11 2006-01-19 19:16:20 gerkey Exp $
  */
 
 #include "p_driver.h"
@@ -91,8 +91,10 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   memcpy( &global, &geom.pose, sizeof(global)); 
   stg_model_local_to_global( this->mod, &global );
  
-  info.origin.px = geom.pose.x;
-  info.origin.py = geom.pose.y;
+  // get real-world pose of lower-left corner of map (this is what Player
+  // calls the 'origin'
+  info.origin.px = geom.pose.x - geom.size.x / 2.0;
+  info.origin.py = geom.pose.y - geom.size.y / 2.0;
   info.origin.pa = geom.pose.a;
 
   printf( "Stage: creating map for model \"%s\" of %d by %d cells at res %.2f\n", 
