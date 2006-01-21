@@ -207,17 +207,17 @@ void stg_model_load( stg_model_t* mod )
       stg_polyline_t *lines = calloc( sizeof(stg_polyline_t), wf_linecount );
       int l;
 
-      stg_polyline_print( &lines[0] );
+      //stg_polyline_print( &lines[0] );
 
       for(l=0; l<wf_linecount; l++ )
 	{	  	  
-	  stg_polyline_print( &lines[l] );
+	  //stg_polyline_print( &lines[l] );
 
 	  snprintf(key, sizeof(key), "polyline[%d].points", l);
 	  int pointcount = wf_read_int(mod->id,key,0);
 	  
-	  printf( "expecting %d points in polyline %d\n",
-		  pointcount, l );
+	  //printf( "expecting %d points in polyline %d\n",
+	  //  pointcount, l );
 	  
 	  lines[l].points = calloc( sizeof(stg_point_t), pointcount );
 	  lines[l].points_count = pointcount;
@@ -231,14 +231,14 @@ void stg_model_load( stg_model_t* mod )
 	      pt.x = wf_read_tuple_length(mod->id, key, 0, 0);
 	      pt.y = wf_read_tuple_length(mod->id, key, 1, 0);
 	      
-	      printf( "key %s x: %.2f y: %.2f\n",
-		      key, pt.x, pt.y );
+	      //printf( "key %s x: %.2f y: %.2f\n",
+	      //      key, pt.x, pt.y );
 	      
 	      lines[l].points[p].x = wf_read_tuple_length(mod->id, key, 0, 0);
 	      lines[l].points[p].y = wf_read_tuple_length(mod->id, key, 1, 0);
 	      
-	      puts( "after read" );
-	      stg_polyline_print( &lines[l] );
+	      //puts( "after read" );
+	      //stg_polyline_print( &lines[l] );
 	    }
 	}
 

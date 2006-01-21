@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.127 2005-12-20 21:30:22 rtv Exp $
+# $Id: Makefile.am,v 1.128 2006-01-21 09:35:06 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -11,8 +11,8 @@ SUBDIRS = referees
 include_HEADERS = stage.h 
 
 # system-wide compile flags - target-specific flags are added to each target below
-AM_CFLAGS =   -Wall -I. -I$(top_builddir)/replace @GTK_CFLAGS@ @GLIB_CFLAGS@ @GNOME_CFLAGS@ -std=c99 
-AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @GTK_CFLAGS@ @GLIB_CFLAGS@ @GNOME_CFLAGS@
+AM_CFLAGS =   -Wall -I. -I$(top_builddir)/replace @GTK_CFLAGS@ @GNOME_CFLAGS@ -std=c99 
+AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @GTK_CFLAGS@ @GNOME_CFLAGS@
 
 # build the stage library and the stage plugin
 lib_LTLIBRARIES = libstage.la libstageplugin.la
@@ -62,7 +62,7 @@ libstage_la_SOURCES = \
 
 
 libstage_la_LDFLAGS = -version-info 2:0:0 -rpath $(libdir)
-libstage_la_LIBADD = @GTK_LIBS@ @GLIB_LIBS@ @GNOME_LIBS@
+libstage_la_LIBADD = @GTK_LIBS@ @GNOME_LIBS@
 
 # build a Player plugin from libstage plus Player driver hooks.
 libstageplugin_la_SOURCES = \
@@ -81,14 +81,12 @@ libstageplugin_la_SOURCES = \
 	stg_time.cc \
 	stg_time.h 
 
-# broken?
-	zoo.h \
-	zoo_driver.h \
-        zoo_controller.h \
-        zoo_referee.h \
-        zoo_species.h
-
-
+# TODO fix these and move them to a separate tree?
+#zoo.h \
+#zoo_driver.h \
+#zoo_controller.h \
+#zoo_referee.h \
+#zoo_species.h
 #zoo.c 
 #zoo_driver.cc 
 #zoo_species.cc 
@@ -104,6 +102,7 @@ stest_DEPENDENCIES = libstage.la
 stest_SOURCES = stest.c
 stest_LDADD = libstage.la
 
+# TODO - fix this
 # build a stand-alone test program using libstage
 #ptest_DEPENDENCIES = 
 #ptest_SOURCES = ptest.c

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.21 2005-12-20 21:30:22 rtv Exp $
+ * $Id: matrix.c,v 1.22 2006-01-21 09:35:06 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -491,8 +491,8 @@ void stg_matrix_polygons( stg_matrix_t* matrix,
 	      stg_matrix_lines( matrix, &line, 1, object );
 	    }
 	}
-      else
-	PRINT_WARN( "attempted to matrix render a polygon with less than 3 points" ); 
+      //else
+      //PRINT_WARN( "attempted to matrix render a polygon with less than 3 points" ); 
     }
       
 }

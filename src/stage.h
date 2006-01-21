@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.168 2005-12-20 21:30:23 rtv Exp $
+ * CVS: $Id: stage.h,v 1.169 2006-01-21 09:35:06 rtv Exp $
  */
 
 
@@ -452,53 +452,6 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   stg_polygon_t* stg_polygons_from_image_file(  const char* filename, 
 						size_t* poly_count );
   
-
-  /** add an item to the View menu that will automatically install and
-      remove a callback when the item is toggled. The specialized
-      model types use this call to set up their data visualization. */
- /*  void stg_model_add_property_toggles( stg_model_t* mod,  */
-/* 				       const char* propname,  */
-/* 				       stg_property_callback_t callback_on, */
-/* 				       void* arg_on, */
-/* 				       stg_property_callback_t callback_off, */
-/* 				       void* arg_off, */
-/* 				       const char* label, */
-/* 				       int enabled ); */
-
-  /** Set a named property of a model */
-/*   void stg_model_set_property( stg_model_t* mod,  */
-/* 			       const char* prop,  */
-/* 			       void* data,  */
-/* 			       size_t len );   */
-  
-  /** gets the named property data. if len is non-NULL, it is set with
-      the size of the data in bytes */
-/*   void* stg_model_get_property( stg_model_t* mod,  */
-/* 				const char* prop, */
-/* 				size_t* len ); */
-  
-  /** gets a property of a known size. Fail assertion if the size isn't right.
-   */
-/*   void* stg_model_get_property_fixed( stg_model_t* mod,  */
-/* 				      const char* name, */
-/* 				      size_t size ); */
-  // TODO?
-  /** Get exclusive access to a model, for threaded
-      applications. Release with stg_model_unlock(). */
-  //void stg_model_lock( stg_model_t* mod );
-  
-  /** Release exclusive access to a model, obtained with stg_model_lock() */
-  //void stg_model_unlock( stg_model_t* mod );
-
-
- /*  int stg_model_add_property_callback( stg_model_t* mod, const char* prop,  */
-/* 				       stg_property_callback_t, void* user ); */
-  
-/*   int stg_model_remove_property_callback( stg_model_t* mod, const char* prop,  */
-/* 					  stg_property_callback_t ); */
-  
-/*   int stg_model_remove_property_callbacks( stg_model_t* mod, const char* prop ); */
-
   /**@}*/
 
   // end util documentation group
@@ -519,12 +472,9 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   typedef struct _stg_world stg_world_t;
 
 
-  /** \struct opaque data structure implementing a model. You get and set all
-      the interesting properties of a model using the
-      stg_model_set_property(), stg_model_get_property() and
-      stg_model_get_property_fixed() functions.
+  /** \struct opaque data structure implementing a model.
    */
-  typedef struct _stg_model stg_model_t; // defined in stage_internal.h
+  typedef struct _stg_model stg_model_t; //  defined in stage_internal.h
 
   //  MODEL --------------------------------------------------------
     
@@ -537,23 +487,13 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 #define STG_PROPNAME_MAX 128
 
 
-
-
-  
-  /** Define a callback function type that can be attached to a
-      model's property and called whenever the property is set with
-      stg_model_set_property() or stg_model_property_refresh().
-  */
-  typedef int (*stg_property_callback_t)(stg_model_t* mod, char* propname, void* data, size_t len, void* userdata );
-  
-
   /** Define a callback function type that can be attached to a
       record within a model and called whenever the record is set.
   */
   typedef int (*stg_model_callback_t)(stg_model_t* mod, void* user );
 
   void stg_model_add_callback( stg_model_t* mod, 
-			       void* address, 
+			       void* member, 
 			       stg_model_callback_t cb, 
 			       void* user );
 
@@ -575,7 +515,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
        they can be stored together in a list with a single pointer. */
   typedef struct
   {
-    stg_property_callback_t callback;
+    stg_model_callback_t callback;
     void* arg;
   } stg_cbarg_t;
   
@@ -870,18 +810,18 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /** install a property callback on every model in the world that
       CURRENTLY has this property set. Calls
       stg_model_add_property_callback() on each model in the world.*/
-  void stg_world_add_property_callback( stg_world_t* world, 
-					char* propname, 
-					stg_property_callback_t callback, void*
-					userdata );
+  // void stg_world_add_property_callback( stg_world_t* world, 
+  //				char* propname, 
+  //				stg_property_callback_t callback, void*
+  //				userdata );
   
   /** remove a property callback from every model in the world that
       has this property set. Calls
       stg_model_remove_property_callback() on each model in the
       world. */
-  void stg_world_remove_property_callback( stg_world_t* world,
-					   char* propname,
-					   stg_property_callback_t callback );
+  // void stg_world_remove_property_callback( stg_world_t* world,
+  //				   char* propname,
+  //				   stg_property_callback_t callback );
   
   /**@}*/
 

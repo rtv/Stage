@@ -1,10 +1,10 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.5 2005-10-09 19:46:27 rtv Exp $
+dnl $Id: configure.ac,v 1.6 2006-01-21 09:35:06 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,2.0.0-d)
+AC_INIT(stage,2.0.0)
 
 AC_CONFIG_SRCDIR(src/stage.c)
 
@@ -37,38 +37,23 @@ AC_SUBST(LIBTOOL_DEPS)
 dnl Checks for header files of required libraries
 AC_CHECK_HEADERS(stdint.h strings.h)
 
-dnl build mplementations of these in libreplace.a if these are 
-dnl missing
-dnl AC_REPLACE_FUNCS(poll dirname scandir basename)
+dnl build mplementations of these in libreplace.a if these are missing
 AC_REPLACE_FUNCS(dirname scandir basename)
 
 dnl Do we have pkg-config?
 AC_CHECK_PROG(have_pkg_config,pkg-config,yes,no)
 if test "x$have_pkg_config" = "xno"; then
-  AC_MSG_ERROR([pkg-config is required to build Stage.  Install pkg-config, then-reconfigure.])
+  AC_MSG_ERROR([pkg-config is required to build Stage.  Install pkg-config, then run configure again.])
 fi
 
 dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
-dnl We need glib
-PKG_CHECK_MODULES(GLIB, glib-2.0, have_glib=yes, have_glib=no)
-if test "x$have_glib" = "xno"; then
-  AC_MSG_ERROR([glib is required to build Stage.  Install glib, then re-configure.])
-fi
-dnl pkg-config is too clever by half: if glib.pc isn't found, it tries to run 
-dnl glib-config, but interprets the resulting failure of exec as a success (!).
-dnl So we'll double-check here by seeing if GLIB_LIBS is empty (actually, a single 
-dnl space character).
-if test "$GLIB_LIBS" = " "; then
-  AC_MSG_ERROR([glib is required to build Stage.  Install glib, then re-configure.])
-fi
-
 dnl check for GTK stuff - we need it for the GUI
 PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4,
- AC_DEFINE(INCLUDE_GTK,1,[building GTK components]),
- AC_MSG_WARN([no suitable GTK was found. ])
+ AC_DEFINE(INCLUDE_GTK,1,),
+ AC_MSG_WARN([A suitable GTK+ was not found. GTK+-2.4 or later is required. ])
 )
 	
 dnl if GNOMECANVAS is requested and available, we use that for graphics

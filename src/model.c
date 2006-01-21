@@ -1100,7 +1100,7 @@ void stg_polyline_print( stg_polyline_t* l )
   assert(l);
 
   printf( "Polyline %p contains %d points [",
-	  l, l->points_count );
+	  l, (int)l->points_count );
   int p;
   for( p=0; p<l->points_count; p++ )
     printf( "[%.2f,%.2f] ", l->points[p].x, l->points[p].y );
@@ -1112,7 +1112,7 @@ void stg_polylines_print( stg_polyline_t* l, size_t p_count )
 {
   assert( l );
   printf( "Polyline array %p contains %d polylines\n",
-	  l, p_count );
+	  l, (int)p_count );
 
   int a;
   for( a=0; a<p_count; a++ )
@@ -1123,7 +1123,7 @@ void stg_model_set_polylines( stg_model_t* mod,
 			      stg_polyline_t* lines, 
 			      size_t lines_count )
 {
-  stg_polylines_print( lines, lines_count );
+  //stg_polylines_print( lines, lines_count );
   
   if( lines_count == 0 )
     {

@@ -130,45 +130,7 @@ extern "C" {
   typedef void(*func_load_t)(struct _stg_model*);
   typedef void(*func_save_t)(struct _stg_model*);
   
-
-  struct _stg_property;
-
-  /** define a callback function type that can be used to override the 
-      default data storage mechanism for a property. This is useful when
-      you want to process some data before storing it, or if changing the
-      property has side effects. For example, a storage callback is
-      attached to the "geom" property: when the property is set the
-      robot's size may change, so this the storage function makes sure the
-      model's polygons are re-normalized and re-rendered. 
-  */
-  typedef void (*stg_property_storage_func_t)( struct _stg_property* prop, 
-					       void* data, size_t len );
-  
-  /** defines a property of a model.The property is uniquely
-      identified by the string [name]. You probably should not access
-      these fields directly - use stg_model_get_property() and
-      stg_model_set_property() instead.
-  */
-  typedef struct _stg_property
-  {
-    char name[STG_PROPNAME_MAX];
-    void* data;
-    size_t len;
-    stg_property_storage_func_t storage_func;
-    GList* callbacks; // functions called when this property is set
-    stg_model_t* mod; // the model to which this property belongs
-  } stg_property_t;
-
-  typedef struct 
-  {
-    stg_model_t* mod;
-    char propname[STG_PROPNAME_MAX];
-    void* data;
-    size_t len;
-    void* user;
-  } stg_property_callback_args_t;
-  
-  typedef struct 
+  typedef struct
   {
     stg_model_t* mod;
     void* member;
@@ -177,7 +139,7 @@ extern "C" {
     stg_model_callback_t callback_off;
     void* arg_on; // argument to callback_on
     void* arg_off; // argument to callback_off
-    int default_state; // disabled = 0 
+    int default_state; // disabled = 0
     GtkAction* action; // action associated with this toggle, may be NULL
     char* path;
   } stg_property_toggle_args_t;
@@ -306,18 +268,6 @@ extern "C" {
   
   stg_rtk_fig_t* stg_model_get_fig( stg_model_t* mod, const char* figname );
   void stg_model_fig_clear( stg_model_t* mod, const char* figname );
-
-  void stg_property_refresh( stg_property_t* prop );
-  void stg_property_destroy( stg_property_t* prop );
-
-  /** extended version of stg_model_set_property() which allows you to
-      install a storage function for this property 
-  */
-  void stg_model_set_property_ex( stg_model_t* mod, 
-				  const char* prop, 
-				  void* data, 
-				  size_t len,
-				  stg_property_storage_func_t func );
          
   // defines a simulated world
   struct _stg_world

@@ -350,14 +350,6 @@ int stg_world_model_destroy( stg_world_t* world, stg_id_t model )
   return 0; // ok
 }
 
-
-struct cb_package
-{
-  const char* propname;
-  stg_property_callback_t callback;
-  void* userdata;
-};
-
 void stg_world_print( stg_world_t* world )
 {
   printf( " world %d:%s (%d models)\n", 
@@ -407,7 +399,7 @@ void stg_world_reload( stg_world_t* world )
   // can't reload the file yet - need to hack on the worldfile class. 
   //wf_load( NULL ); 
 
-  // ask every model to save itself
+  // ask every model to load itself from the file database
   g_hash_table_foreach( world->models, stg_model_reload_cb, NULL );
 }
 
