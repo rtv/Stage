@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.103 2005-12-20 21:30:22 rtv Exp $
+CVS: $Id: gui.c,v 1.104 2006-01-21 05:29:50 rtv Exp $
 */
 
 #include <stdio.h>
@@ -462,10 +462,12 @@ gui_window_t* gui_world_create( stg_world_t* world )
 {
   PRINT_DEBUG( "gui world create" );
   
+  assert(world);
   gui_window_t* win = gui_window_create( world, 
 					 STG_DEFAULT_WINDOW_WIDTH,
 					 STG_DEFAULT_WINDOW_HEIGHT );
-  
+  assert(win);
+
   // show the window
   gtk_widget_show_all(win->frame);
 

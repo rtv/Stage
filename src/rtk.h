@@ -24,7 +24,7 @@
  * Desc: Combined Stk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.14 2005-09-11 21:13:26 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.15 2006-01-21 05:29:50 rtv Exp $
  */
 
 #ifndef STK_H
@@ -152,10 +152,10 @@ typedef struct _stg_rtk_canvas_t
   GdkPixmap *bg_pixmap, *fg_pixmap;
   GdkGC *gc;
   GdkColormap *colormap;
-  GdkFont *font;
+  //GdkFont *font;
 
   // Default font name
-  char *fontname;
+  //char *fontname;
 
   // Canvas background color
   GdkColor bgcolor;
@@ -262,7 +262,7 @@ void stg_rtk_canvas_get_scale(stg_rtk_canvas_t *canvas, double *sx, double *sy);
 void stg_rtk_canvas_movemask(stg_rtk_canvas_t *canvas, int mask);
 
 // Set the default font for text strokes
-void stg_rtk_canvas_font(stg_rtk_canvas_t *canvas, const char *fontname);
+// void stg_rtk_canvas_font(stg_rtk_canvas_t *canvas, const char *fontname);
 
 // Set the canvas backround color
 void stg_rtk_canvas_bgcolor(stg_rtk_canvas_t *canvas, double r, double g, double b);
@@ -618,6 +618,9 @@ typedef struct
 
   // Origin of the text in absolute physical coordinates.
   GdkPoint point;
+  
+  // Pango layout
+  PangoLayout *layout;
 
   // The text
   char *text;

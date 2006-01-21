@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.19 2005-09-11 21:13:26 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.20 2006-01-21 05:29:50 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -142,8 +142,8 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
   canvas->colormap = NULL;
 
   // Set default drawing attributes
-  canvas->fontname = strdup("-adobe-helvetica-medium-r-*-*-*-120-*-*-*-*-*-*");
-  canvas->font = gdk_font_load(canvas->fontname);
+  //canvas->fontname = strdup("-adobe-helvetica-medium-r-*-*-*-120-*-*-*-*-*-*");
+  //canvas->font = gdk_font_load(canvas->fontname);
   canvas->bgcolor.red = 0xFFFF;
   canvas->bgcolor.green = 0xFFFF;
   canvas->bgcolor.blue = 0xFFFF;
@@ -212,8 +212,8 @@ void stg_rtk_canvas_destroy(stg_rtk_canvas_t *canvas)
   gtk_widget_destroy(GTK_WIDGET(canvas->canvas));
   
   // fontname was strdup()ed 
-  if (canvas->fontname)
-    free(canvas->fontname);
+  //if (canvas->fontname)
+  //free(canvas->fontname);
 
   // Free ourself
   free(canvas);
@@ -302,30 +302,6 @@ void stg_rtk_canvas_get_scale(stg_rtk_canvas_t *canvas, double *sx, double *sy)
 void stg_rtk_canvas_movemask(stg_rtk_canvas_t *canvas, int mask)
 {
   canvas->movemask = mask;
-}
-
-
-// Set the default font for text strokes
-void stg_rtk_canvas_font(stg_rtk_canvas_t *canvas, const char *fontname)
-{
-  if (canvas->font)
-  {
-    gdk_font_unref(canvas->font);
-    canvas->font = NULL;
-  }
-
-  if (canvas->fontname)
-  {
-    free(canvas->fontname);
-    canvas->fontname = strdup(fontname);
-  }
-
-  // Load the default font
-  if (canvas->font == NULL)
-    canvas->font = gdk_font_load(canvas->fontname);
-
-  // Text extents will have changed, so recalc everything.
-  stg_rtk_canvas_calc(canvas);
 }
 
 

@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.17 2005-10-30 01:26:30 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.18 2006-01-21 05:29:50 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -1217,8 +1217,12 @@ void stg_rtk_fig_text_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa,
   assert(text);
   data->text = strdup(text);
 
-  (*data->stroke.calcfn) (fig, data);
+  data->layout = 
+    gtk_widget_create_pango_layout( fig->canvas->canvas, text ); 
 
+  (*data->stroke.calcfn) (fig, data);
+  
+  
   // This will make sure the new stroke gets drawn
   stg_rtk_fig_dirty(fig);
     
@@ -1229,8 +1233,12 @@ void stg_rtk_fig_text_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa,
 // Cleanup text stroke
 void stg_rtk_fig_text_free(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
 {
+  assert( data->layout );
+  g_object_unref( data->layout );
+  
   assert(data->text);
   free(data->text);
+  
   free(data);
   return;
 }
@@ -1238,96 +1246,34 @@ void stg_rtk_fig_text_free(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
 
 // Update text
 void stg_rtk_fig_text_calc(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
-{
-  int i, len, baseline;
-  int width, ascent, descent;
-  
+{  
   LTOD(data->point, data->ox, data->oy);
-
-  // Find the line-breaks compute the bounding box
-  i = 0;
-  baseline = data->point.y;
-  while (i < strlen(data->text))
-  {
-    len = strcspn(data->text + i, "\n");
   
-    // Compute the bounding box for the text
-    gdk_text_extents(fig->canvas->font, data->text + i, len,
-                     NULL, NULL, &width, &ascent, &descent);
-
-    // Update the figure's bounding region.
-    stg_rtk_region_set_union_rect(fig->region, data->point.x, baseline - ascent,
-                              data->point.x + width, baseline + descent);
-
-    // Compute the baseline for the next line of text
-    baseline += 14 * (ascent + descent) / 10;
-    i += len + 1;
-  }
-
-  return;
+  assert( data->layout );
+  
+  int width=0,height=0;
+  pango_layout_get_pixel_size( data->layout, &width, &height );
+  
+  stg_rtk_region_set_union_rect(fig->region, 
+				data->point.x, 
+				data->point.y, 				
+				data->point.x + width, 
+				data->point.y + height );
 }
 
 
 // Render text
 void stg_rtk_fig_text_draw(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
-{
-  int i, len, baseline;
-  int width, ascent, descent;
-  GdkDrawable *drawable;
-
-  drawable = (fig->layer < 0 ? fig->canvas->bg_pixmap : fig->canvas->fg_pixmap);
-
-  // Find the line-breaks compute the bounding box
-  i = 0;
-  baseline = data->point.y;
-  while (i < strlen(data->text))
-  {
-    len = strcspn(data->text + i, "\n");
-    
-    // Compute the bounding box for the text
-    gdk_text_extents(fig->canvas->font, data->text + i, len,
-                     NULL, NULL, &width, &ascent, &descent);
-
-    // Draw the text
-    gdk_draw_text(drawable, fig->canvas->font, fig->canvas->gc,
-                data->point.x, baseline, data->text + i, len);
-
-    // Compute the baseline for the next line of text
-    baseline += 14 * (ascent + descent) / 10;
-    i += len + 1;
-  }
-
-  return;
-}
-
-/*
-// Render stroke to xfig
-void stg_rtk_fig_text_xfig(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
-{
-  int ox, oy, sx, sy;
-  int fontsize;
-
-  // Compute origin
-  ox = PX(GX(data->ox, data->oy));
-  oy = PY(GY(data->ox, data->oy));
-
-  // Compute extent
-  sx = 0;
-  sy = 0;
+{  
+  assert( data->layout );
   
-  // Compute font size
-  // HACK
-  fontsize = 12; // * 6 * 1200 / fig->canvas->sizex;
-
-  fprintf(fig->canvas->file, "4 0 0 50 0 0 %d 0 4 ", fontsize);
-  fprintf(fig->canvas->file, "%d %d ", sx, sy);
-  fprintf(fig->canvas->file, "%d %d ", ox, oy);
-  fprintf(fig->canvas->file, "%s\\001\n", data->text);
-
-  return;
+  gdk_draw_layout(  fig->layer < 0 ? 
+		    fig->canvas->bg_pixmap : fig->canvas->fg_pixmap,
+		    fig->canvas->gc, 
+		    data->point.x, 
+		    data->point.y, 
+		    data->layout );
 }
-*/
-
 
 
 /***************************************************************************

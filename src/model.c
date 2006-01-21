@@ -1308,6 +1308,10 @@ int stg_model_update_pose( stg_model_t* mod )
   PRINT_DEBUG4( "pose update model %d (vel %.2f, %.2f %.2f)", 
 		mod->id, mod->velocity.x, mod->velocity.y, mod->velocity.a );
  
+
+  // if I'm puck-enabled, I need to see if anyone's touching me.
+
+
   stg_velocity_t gvel;
   stg_model_global_velocity( mod, &gvel );
       
