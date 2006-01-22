@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.52 $
+//  $Revision: 1.53 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -75,16 +75,6 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
   - set the origin of the localization coordinate system. By default, this is copied from the model's initial pose, so the robot reports its position relative to the place it started out. Tip: If localization_origin is set to [0 0 0] and localization is "gps", the model will return its true global position. This is unrealistic, but useful if you want to abstract away the details of localization. Be prepared to justify the use of this mode in your research! 
 - odom_error [x y theta]
   - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
-*/
-
-/** 
-@ingroup stg_model_position
-@ingroup stg_model_props
-@defgroup stg_model_position_props Position Properties
-
-- "position_drive" #stg_position_drive_mode_t
-- "position_data" stg_position_data_t
-- "position_cmd" stg_position_cmd_t
 */
 
 

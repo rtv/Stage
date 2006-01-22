@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.24 2005-12-20 21:30:22 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.25 2006-01-22 04:16:57 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -46,46 +46,59 @@ allows rapid prototyping of controllers destined for real
 robots. Stage can also be very useful by simulating populations of
 realistic robot devices you don't happen to own [3].
 
+@par Authors
+
+Richard Vaughan
+
 [@ref refs]
-
-@par Player configuration file options
-
-- model (string)
-  - where (string) is the name of a Stage position model that will be controlled by this interface. Stage will search the tree of models below the named model to find a device of the right type.
   
 @par Configuration file examples:
 
-Creating models in a Stage worldfile, saved as "example.world":
+Creating two models in a Stage worldfile, saved as "example.world":
 
 @verbatim
 # create a position model - it can drive around like a robot
 position
 (
-  pose [ 1 1 0 ]
-  color "red"
   name "marvin"
+  color "red"
+
+  pose [ 1 1 0 ]
 
   # add a laser scanner on top of the robot
   laser() 
 )
+
+# create a position model with a gripper attached to each side
+position
+(
+  name "gort"
+  color "silver"
+  pose [ 6 1 0 ]
+  size [ 1 2 ]
+
+  gripper( pose [0  1  90] )
+  gripper( pose [0 -1 -90] )
+)
 @endverbatim
 
 
-Using Stage models in a Player config (.cfg) file:
+Attaching Player interfaces to the Stage models "marvin" and "gort" in a Player config (.cfg) file:
 
 @verbatim
-# load the Stage plugin and create a world from a worldfile
+# Present a simulation interface on the default port (6665).
+# Load the Stage plugin driver and create the world described
+# in the worldfile "example.world" 
 driver
 (		
   name "stage"
   provides ["simulation:0"]
   plugin "libstageplugin"
-
-  # create the simulated world described by this worldfile
   worldfile "example.world"	
 )
 
-# create a position device, connected to a Stage position model 
+# Present a position interface on the default port (6665), connected
+# to the Stage position model "marvin".
 driver
 (
   name "stage"
@@ -93,26 +106,39 @@ driver
   model "marvin"
 )
 
-# create a laser device, connected to a Stage laser model
+# Present a laser interface on the default port, connected to the
+# laser model attached to "marvin".
 driver
 (
   name "stage"
   provides ["laser:0" ]
   model "marvin"
 )
+
+# Present three interfaces on port 6666, connected to the Stage 
+# position model "gort" and its two grippers.
+driver
+(
+  name "stage"
+  provides ["6666:position:0" "6666:gripper:0" "6666:gripper:1"]
+  model "gort"
+)
 @endverbatim
 
 More examples can be found in the Stage source tree, in directory
 <stage-version>/worlds.
 
-@par Authors
+@par Player configuration file options
 
-Richard Vaughan
+- worldfile \<string\>
+  - where \<string\> is the filename of a Stage worldfile. Player will attempt to load the worldfile and attach interfaces to Stage models specified by the "model" keyword
+- model \<string\>
+  - where \<string\> is the name of a Stage position model that will be controlled by this interface. Stage will search down the tree of models starting at the named model to find a device of the right type.
+
 
 @par Provides
 
-The stage plugin driver provides the following device interfaces and
-configuration requests. 
+The stage plugin driver provides the following device interfaces:
 
 */
 

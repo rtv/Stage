@@ -23,18 +23,14 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_blobfinder.cc,v 1.6 2005-12-07 10:04:27 rtv Exp $
+ * CVS: $Id: p_blobfinder.cc,v 1.7 2006-01-22 04:16:57 rtv Exp $
  */
 
 // DOCUMENTATION
 
 /** @addtogroup player 
 @par Blobfinder interface
-
-- Data
- - PLAYER_BLOBFINDER_DATA_BLOBS
-- Configs
- - (none)
+- PLAYER_BLOBFINDER_DATA_BLOBS
 */
 
 // CODE

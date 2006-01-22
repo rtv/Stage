@@ -23,15 +23,16 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_power.cc,v 1.2 2005-12-07 10:04:28 rtv Exp $
+ * CVS: $Id: p_power.cc,v 1.3 2006-01-22 04:16:57 rtv Exp $
  */
 
 
 #include "p_driver.h"
 
-//
-// POWER INTERFACE
-//
+/** @addtogroup player 
+@par Power interface
+- PLAYER_POWER_DATA_STATE
+*/
 
 extern "C" { 
   int energy_init( stg_model_t* mod );

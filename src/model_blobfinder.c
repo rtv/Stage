@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.53 2005-12-20 21:30:22 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.54 2006-01-22 04:16:57 rtv Exp $
  */
 
 #include <math.h>
@@ -92,15 +92,6 @@ blobfinder
 - range_max float
    - maximum range of the sensor in meters.
 
-*/
-
-/** 
-@ingroup stg_model_blobfinder
-@ingroup stg_model_props
-@defgroup stg_model_blobfinder_props Blobfinder Properties
-
-- "blob_cfg" stg_blobfinder_config_t
-- "blob_data" stg_blobfinder_blob_t[]
 */
 
 int blobfinder_init( stg_model_t* mod );

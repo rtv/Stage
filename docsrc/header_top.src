@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.16 2005-08-28 01:54:14 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.17 2006-01-22 04:16:57 rtv Exp $ -->
 
 <HEAD>
 
@@ -115,7 +115,6 @@ div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 
 <ul class=menu>
 <li class=menu><a href="index.html">Frontpage</a>
-<li class=menu><a href="modules.html">Contents</a>
 <li class=menu><a href="release.html">Release</a>
 </ul>
 </div>

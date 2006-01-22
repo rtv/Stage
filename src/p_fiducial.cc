@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_fiducial.cc,v 1.7 2005-12-07 10:04:27 rtv Exp $
+ * CVS: $Id: p_fiducial.cc,v 1.8 2006-01-22 04:16:57 rtv Exp $
  */
 
 // DOCUMENTATION
@@ -31,18 +31,15 @@
 /** 
 @addtogroup player
 @par Fiducial interface
-
-- Data
-  - PLAYER_FIDUCIAL_DATA_SCAN
-- Configs
-  - PLAYER_FIDUCIAL_REQ_GET_GEOM
-  - PLAYER_FIDUCIAL_REQ_SET_ID
-  - PLAYER_FIDUCIAL_REQ_GET_ID
+- PLAYER_FIDUCIAL_DATA_SCAN
+- PLAYER_FIDUCIAL_REQ_GET_GEOM
+- PLAYER_FIDUCIAL_REQ_SET_ID
+- PLAYER_FIDUCIAL_REQ_GET_ID
 */
 
 /* TODO
-  - PLAYER_FIDUCIAL_REQ_SET_FOV
-  - PLAYER_FIDUCIAL_REQ_GET_FOV
+- PLAYER_FIDUCIAL_REQ_SET_FOV
+- PLAYER_FIDUCIAL_REQ_GET_FOV
 */
 
 // CODE

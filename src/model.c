@@ -73,7 +73,8 @@ model
   origin [0 0 0]
   velocity [0 0 0]
 
-  color "red" # body color
+  # body color
+  color "red" 
 
   # determine how the model appears in various sensors
   obstacle_return 1
@@ -139,25 +140,6 @@ model
 */
 
 /** @} */  
-
-/** 
-@ingroup stg_model
-@defgroup stg_model_props Model Properties
-
-- "pose" stg_pose_t
-- "geom" stg_geom_t
-- "size" stg_size_t
-- "velocity" stg_velocity_t
-- "color" stg_color_t
-- "fiducial_return" stg_fiducial_return_t
-- "laser_return" stg_laser_return_t
-- "obstacle_return" stg_obstacle_return_t
-- "ranger_return" stg_ranger_return_t
-- "gripper_return" stg_gripper_return_t
-*/
-
-
-  
 
 /*
   TODO

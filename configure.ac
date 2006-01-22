@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.6 2006-01-21 09:35:06 rtv Exp $
+dnl $Id: configure.ac,v 1.7 2006-01-22 04:16:57 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -51,8 +51,7 @@ dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
 dnl check for GTK stuff - we need it for the GUI
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4,
- AC_DEFINE(INCLUDE_GTK,1,),
+PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4, ,
  AC_MSG_WARN([A suitable GTK+ was not found. GTK+-2.4 or later is required. ])
 )
 	

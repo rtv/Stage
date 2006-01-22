@@ -277,14 +277,14 @@ INLINE_INFO            = YES
 # alphabetically by member name. If set to NO the members will appear in 
 # declaration order.
 
-SORT_MEMBER_DOCS       = NO
+SORT_MEMBER_DOCS       = YES
 
 # If the SORT_BRIEF_DOCS tag is set to YES then doxygen will sort the 
 # brief documentation of file, namespace and class members alphabetically 
 # by member name. If set to NO (the default) the members will appear in 
 # declaration order.
 
-SORT_BRIEF_DOCS        = NO
+SORT_BRIEF_DOCS        = YES
 
 # If the SORT_BY_SCOPE_NAME tag is set to YES, the class list will be 
 # sorted by fully-qualified names, including namespaces. If set to 
@@ -294,7 +294,7 @@ SORT_BRIEF_DOCS        = NO
 # Note: This option applies only to the class list, not to the 
 # alphabetical list.
 
-SORT_BY_SCOPE_NAME     = NO
+SORT_BY_SCOPE_NAME     = YES
 
 # The GENERATE_TODOLIST tag can be used to enable (YES) or 
 # disable (NO) the todo list. This list is created by putting \todo 
@@ -416,7 +416,7 @@ RECURSIVE              = YES
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
 # these drivers are deprecated - remove these when the files disappear
-# EXCLUDE                = ../src/stg_position.cc ../src/stg_fiducial.cc ../src/stg_blobfinder.cc ../src/stg_sonar.cc
+# EXCLUDE                =
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or directories 
 # that are symbolic links (a Unix filesystem feature) are excluded from the input.
@@ -518,7 +518,7 @@ VERBATIM_HEADERS       = YES
 # of all compounds will be generated. Enable this if the project 
 # contains a lot of classes, structs, unions or interfaces.
 
-ALPHABETICAL_INDEX     = NO
+ALPHABETICAL_INDEX     = YES
 
 # If the alphabetical index is enabled (see ALPHABETICAL_INDEX) then 
 # the COLS_IN_ALPHA_INDEX tag can be used to specify the number of columns 
@@ -564,7 +564,7 @@ HTML_FILE_EXTENSION    = .html
 # each generated HTML page. If it is left blank doxygen will generate a 
 # standard footer.
 
-HTML_FOOTER            = footer.html
+ HTML_FOOTER            = footer.html
 
 # The HTML_STYLESHEET tag can be used to specify a user-defined cascading 
 # style sheet that is used by each HTML page. It can be used to 

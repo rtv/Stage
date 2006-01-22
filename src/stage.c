@@ -180,7 +180,7 @@ const char* stg_version_string( void )
 /*   return "<unknown type>"; */
 /* } */
 
-void stg_err( const char* err )
+void stg_print_err( const char* err )
 {
   printf( "Stage error: %s\n", err );
   _stg_quit = TRUE;
@@ -197,15 +197,18 @@ void stg_print_geom( stg_geom_t* geom )
 	  geom->size.y );
 }
 
-void stg_print_laser_config( stg_laser_config_t* slc )
+
+void stg_print_pose( stg_pose_t* pose )
 {
-  printf( "slc fov: %.2f  range_min: %.2f range_max: %.2f samples: %d\n",
-	  slc->fov,
-	  slc->range_min,
-	  slc->range_max,
-	  slc->samples );
+  printf( "pose [x:%.3f y:%.3f a:%.3f]\n",
+	  pose->x, pose->y, pose->a );
 }
 
+void stg_print_velocity( stg_velocity_t* vel )
+{
+  printf( "velocity [x:%.3f y:%.3f a:%.3f]\n",
+	  vel->x, vel->y, vel->a );
+}
 
 stg_msec_t stg_timenow( void )
 {

@@ -23,17 +23,15 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.9 2005-12-07 10:04:28 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.10 2006-01-22 04:16:57 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
 
 /** @addtogroup player 
 @par Simulation interface
-
-- Configs
-  - PLAYER_SIMULATION_SET_POSE2D_REQ
-  - PLAYER_SIMULATION_GET_POSE2D_REQ
+- PLAYER_SIMULATION_REQ_SET_POSE2D
+- PLAYER_SIMULATION_REQ_GET_POSE2D
 */
 
 // CODE ------------------------------------------------------------

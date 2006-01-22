@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -23,16 +23,6 @@
 #define STG_DEFAULT_GRIPPER_SIZEY 0.28
 
 #include "stage_internal.h"
-
-/** 
-@ingroup stg_model_gripper
-@ingroup stg_model_props
-@defgroup stg_model_gripper_props Gripper Properties
-
-- "gripper_cfg" stg_gripper_config_t
-- "gripper_data" stg_gripper_data_t
-- "gripper_cmd" stg_gripper_cmd_t
-*/
 
 // standard callbacks
 int gripper_update( stg_model_t* mod );

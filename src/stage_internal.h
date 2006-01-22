@@ -14,7 +14,12 @@
 
 /** 
     @ingroup libstage
-    @defgroup libstage_internal Internals - not intended for the libstage end user 
+    @defgroup libstage_internal Internals
+
+    These are internal docs. Don't use these functions in user
+    code. Let us know if there is anything useful here that should be
+    exposed in the external interface.
+
     @{ 
 */
 
@@ -42,7 +47,7 @@ extern "C" {
     GtkLabel *clock_label;
 
 #if INCLUDE_GNOME
-    // temporary and experimnental - will get moved away from here soon - rtv
+    // temporary and experimental - will get moved away from here soon - rtv
     GnomeCanvas* gcanvas;
     double zoom;
 #endif

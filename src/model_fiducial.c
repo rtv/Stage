@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.44 $
+//  $Revision: 1.45 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -64,14 +64,6 @@ fiducialfinder
 
 */
 
-/** 
-@ingroup stg_model_fiducial
-@ingroup stg_model_props
-@defgroup stg_model_fiducial_props Fiducial Properties
-
-- "fiducial_cfg" stg_fiducial_config_t
-- "fiducial_data" stg_fiducial_t[]
-*/
 
 void fiducial_load( stg_model_t* mod )
 {

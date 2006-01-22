@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.81 $
+//  $Revision: 1.82 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -78,15 +78,6 @@ laser
 - fov float
   - the angular field of view of the scanner, in degrees. 
 
-*/
-
-/** 
-@ingroup stg_model_laser
-@ingroup stg_model_props
-@defgroup stg_model_laser_props Laser Properties
-
-- "laser_cfg" stg_laser_config_t
-- "laser_data" stg_laser_sample_t[]
 */
 
 void laser_load( stg_model_t* mod )
@@ -193,6 +184,14 @@ int laser_init( stg_model_t* mod )
   return 0;
 }
 
+void stg_laser_config_print( stg_laser_config_t* slc )
+{
+  printf( "slc fov: %.2f  range_min: %.2f range_max: %.2f samples: %d\n",
+	  slc->fov,
+	  slc->range_min,
+	  slc->range_max,
+	  slc->samples );
+}
 
 int laser_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {           

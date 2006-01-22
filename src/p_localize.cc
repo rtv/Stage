@@ -23,20 +23,14 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_localize.cc,v 1.1 2006-01-03 21:20:32 rtv Exp $
+ * CVS: $Id: p_localize.cc,v 1.2 2006-01-22 04:16:57 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
 
 /** @addtogroup player 
-@par Laser interface
-
-- Data 
- - PLAYER_LASER_DATA_SCAN
-- Configs
- - PLAYER_LASER_SET_CONFIG
- - PLAYER_LASER_SET_CONFIG
- - PLAYER_LASER_GET_GEOM
+@par Localize interface
+- PLAYER_LOCALIZE_DATA_HYPOTHS
 */
 
 // CODE ----------------------------------------------------------------------
