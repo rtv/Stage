@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.54 2006-01-22 04:16:57 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.55 2006-01-24 08:08:25 rtv Exp $
  */
 
 #include <math.h>
@@ -124,9 +124,13 @@ int blobfinder_init( stg_model_t* mod )
   cfg.scan_width = STG_DEFAULT_BLOB_SCANWIDTH;
   cfg.scan_height = STG_DEFAULT_BLOB_SCANHEIGHT;  
   cfg.range_max = STG_DEFAULT_BLOB_RANGEMAX;  
-  cfg.pan = STG_DEFAULT_BLOB_PAN;
-  cfg.tilt =STG_DEFAULT_BLOB_TILT;
-  cfg.zoom = STG_DEFAULT_BLOB_ZOOM;
+  cfg.pan = cfg.pangoal = STG_DEFAULT_BLOB_PAN;
+  cfg.tilt = cfg.tiltgoal = STG_DEFAULT_BLOB_TILT;
+  cfg.zoom = cfg.zoomgoal = STG_DEFAULT_BLOB_ZOOM;
+  
+  cfg.zoomspeed = 0.3;
+  cfg.panspeed = 1.0;
+  cfg.tiltspeed = 0.0;
   
   cfg.channel_count = 6; 
   cfg.channels[0] = stg_lookup_color( "red" );
@@ -174,6 +178,8 @@ void blobfinder_load( stg_model_t* mod )
   assert(now);
   
   stg_blobfinder_config_t bcfg;
+  memcpy( &bcfg, now, sizeof(bcfg));
+
   bcfg.channel_count = 
     wf_read_int(mod->id, "channel_count", now->channel_count );
   
@@ -189,7 +195,7 @@ void blobfinder_load( stg_model_t* mod )
     wf_read_tuple_angle(mod->id, "ptz", 1, now->tilt );
   bcfg.zoom =  
     wf_read_tuple_angle(mod->id, "ptz", 2, now->zoom );
-  
+
   if( bcfg.channel_count > STG_BLOB_CHANNELS_MAX )
     bcfg.channel_count = STG_BLOB_CHANNELS_MAX;
   
@@ -238,15 +244,36 @@ int blobfinder_raytrace_filter( stg_model_t* finder, stg_model_t* found )
   return 0;
 }
 
+int blobfinder_ptz( stg_model_t* mod )
+{
+  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg; 
+  
+  double pandist = cfg->panspeed * mod->world->sim_interval/1e3;
+  double panerror = cfg->pangoal - cfg->pan;
+  if( panerror < pandist ) pandist = panerror;
+  cfg->pan += pandist; 
+
+  double zoomdist = cfg->zoomspeed * mod->world->sim_interval/1e3;
+  double zoomerror = cfg->zoomgoal - cfg->zoom;
+  if( zoomerror < zoomdist ) zoomdist = zoomerror;
+  cfg->zoom += zoomdist; 
+
+  //printf( "PAN: %.2f\n", cfg->pan );
+  //printf( "ZOOM: %.2f\n", cfg->zoom );
+
+  return 0;
+}
+  
 
 int blobfinder_update( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder update" );  
   
+  blobfinder_ptz( mod );
+
   stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg; 
   
   // Generate the scan-line image
-  
   // Get the camera's global pose
   stg_pose_t pose;  
   stg_model_get_global_pose( mod, &pose );

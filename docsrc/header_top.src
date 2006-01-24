@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.17 2006-01-22 04:16:57 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.18 2006-01-24 08:08:25 rtv Exp $ -->
 
 <HEAD>
 
@@ -105,19 +105,19 @@ div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 <div id="sidebar"> 
 
 <h2 style="text-align:center;">
-<a href="index.html"><img src="stage_button.png" alt="Stage logo image"></a>
+<a href="index.html"><img src="stage_button.png" alt="Stage logo image"><br>2.0.0</a>
 </h2>
 
-
-
+<!--
 <div class="box">
 <div class=title>Stage</div>
 
 <ul class=menu>
-<li class=menu><a href="index.html">Frontpage</a>
+<li class=menu><a href="index.html">V. 2.0.0</a>
 <li class=menu><a href="release.html">Release</a>
 </ul>
 </div>
+-->
 
 <div class="box">
 <div class=title>User</div>

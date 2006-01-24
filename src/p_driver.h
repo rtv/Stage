@@ -44,6 +44,7 @@ class StgDriver : public Driver
   Interface* LookupDevice( player_devaddr_t addr );
   
   stg_model_t* LocateModel( char* basename, 
+			    player_devaddr_t* addr,
 			    stg_model_initializer_t init );
   
  protected: 
@@ -165,6 +166,18 @@ class InterfaceBlobfinder : public InterfaceModel
  public: 
   InterfaceBlobfinder( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceBlobfinder( void ){ /* TODO: clean up*/ };
+  
+  virtual int ProcessMessage( MessageQueue* resp_queue, 
+			      player_msghdr * hdr, 
+			      void * data );
+  virtual void Publish( void );
+};
+
+class InterfacePtz : public InterfaceModel
+{
+ public: 
+  InterfacePtz( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfacePtz( void ){ /* TODO: clean up*/ };
   
   virtual int ProcessMessage( MessageQueue* resp_queue, 
 			      player_msghdr * hdr, 

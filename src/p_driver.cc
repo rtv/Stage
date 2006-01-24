@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.25 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.26 2006-01-24 08:08:25 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -208,14 +208,17 @@ void StgDriver_Register(DriverTable* table)
   
 int player_driver_init(DriverTable* table)
 {
-  //puts(" Stage driver plugin init");
+  puts(" Stage driver plugin init");
   StgDriver_Register(table);
   //ZooDriver_Register(table);
   return(0);
 }
 
 // find a model to attach to a Player interface
-stg_model_t* model_match( stg_model_t* mod, stg_model_initializer_t init, GPtrArray* devices )
+stg_model_t* model_match( stg_model_t* mod, 
+			  player_devaddr_t *addr, 
+			  stg_model_initializer_t init, 
+			  GPtrArray* devices )
 {
   if( mod->typerec->initializer == init )
     return mod;
@@ -229,7 +232,7 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_initializer_t init, GPtrAr
       // recurse
       match = 
 	model_match( (stg_model_t*)g_ptr_array_index( mod->children, i ), 
-		     init, devices );      
+		     addr, init, devices );      
       if( match )
 	{
 	  // if mod appears in devices already, it can not be used now
@@ -240,11 +243,12 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_initializer_t init, GPtrAr
 		(Interface*)g_ptr_array_index( devices, i );
 	      
 	      //printf( "comparing %p and %p (%d.%d.%d)\n", mod, record->mod,
-	      //    record->id.port, record->id.code, record->id.index );
+	      //      record->id.port, record->id.code, record->id.index );
 	      
-	      if( match == interface->mod )//&& ! tp == STG_MODEL_BASIC )
+	      // if we have this type of interface on this model already, it's no-go.
+	      if( match == interface->mod && interface->addr.interf == addr->interf )
 		{
-		  //printf( "[ALREADY USED]" );
+		  printf( "[MODEL ALREADY HAS AN INTERFACE]" );
 		  //return NULL;
 		  match = NULL;
 		}
@@ -281,7 +285,8 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
       return; // error
     }
   
-  this->mod = driver->LocateModel( model_name, init );
+  // find an appropriate model for this interface and model type
+  this->mod = driver->LocateModel( model_name, &addr, init );
   
   if( !this->mod )
     {
@@ -362,6 +367,10 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
 	  break;
 	  
+ 	case PLAYER_PTZ_CODE:
+ 	  ifsrc = new InterfacePtz( player_addr,  this, cf, section );
+ 	  break;
+	  
 	case PLAYER_FIDUCIAL_CODE:
 	  ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
 	  break;	  
@@ -413,9 +422,10 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 }
 
 stg_model_t*  StgDriver::LocateModel( char* basename,  
+				      player_devaddr_t* addr,
 				      stg_model_initializer_t init )
 {  
-  //printf( "attempting to resolve Stage model \"%s\"", model_name );
+  //printf( "attempting to resolve Stage model \"%s\"", basename );
   
   stg_model_t* base_model = 
     stg_world_model_name_lookup( StgDriver::world, basename );
@@ -437,7 +447,7 @@ stg_model_t*  StgDriver::LocateModel( char* basename,
   // now find the model for this player device find the first model in
   // the tree that is the right type (i.e. has the right
   // initialization function) and has not been used before
-  return( model_match( base_model, init, this->devices ) );
+  return( model_match( base_model, addr, init, this->devices ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

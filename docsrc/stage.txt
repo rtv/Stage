@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.9 2005-08-11 20:18:14 rtv Exp $
+ * $Id: stage.txt,v 1.10 2006-01-24 08:08:25 rtv Exp $
 */
 
 /**
@@ -9,6 +9,7 @@
 <p>Copyright Richard Vaughan and contributors 1998-2005.
 <p>Part of the Player/Stage Project [http://playerstage.sourceforge.net]
 
+
 \section License
 
 <p>Stage sourcecode and documentation is released under the terms of
@@ -16,6 +17,117 @@ the GNU General Public License v2. A copy of the license is included
 with the sourcecode in the file 'COPYING". Copying and redistribution
 is permitted only under the terms of the license.
 
+\section Release Release Notes
+
+<h2>Version 2.0.0</h2>
+
+This is a major new release of Stage.
+
+rtv 2006.1.XX
+
+<h2>Version 2.0.0a</h2>
+
+This is an experimental pre-release in preparation for
+Stage-2.0.0. There are many changes under the hood, which will lead to
+new features in the near future. However, this release is mainly aimed
+at getting the same functionality as Stage-1.6, but without the
+Player/Stage-1.6 timing issues. Player/Stage should now scale to large
+robot populations, running at less than real-time without causing
+timing problems with Player client robot controllers.
+
+Player-1.6.5 or later is required. This pre-release does NOT work with
+Player CVS HEAD, which has a new network protocol. The main antcipated
+difference between this pre-release and Stage-2.0.0 will
+be a move to the new Player protocol. Stage- and Player-2.0.0 are
+planned for near-simultaneous release this fall.
+
+Please report bugs to the tracker.
+
+Let us know what you do with Stage.
+
+Richard Vaughan (rtv) 2005.8.11
+
+<h2>Version 1.6.1</h2>
+
+This is a bug-fix release that replaces 1.6.0. 
+
+- Fixes several GUI bugs, including the [View/Fill Polygons] menu item.
+
+- Some code clean-up and thread-safety fixes
+
+<h2>Version 1.6.0</h2>
+
+This release of Stage is the first after a major rewrite. There are
+bound to be bugs and teething troubles, but the <a
+href=http://www.cs.sfu.ca/research/groups/autonomy>Autonomy Lab</a>
+has been using this code for serious work for a few months now and we
+think it's useful and usable.
+
+<h3>Significant changes visible to the user</h3>
+
+<ol>
+
+<li>Stage is now a Player plugin, instead of an executable. The key
+benefit of this is that <b>all Player drivers are now available for
+use directly with Stage</b>, including sophisticated drivers like
+AMCL, without needing passthrough drivers.
+
+<li>Stage depends on Player 1.6 or newer.
+
+<li>Worldfile syntax has a changed, so you need to edit your existing
+worlds to get them to work. Look at the example worlds in <tt>(stage
+src)/worlds</tt> to get the idea.
+
+<li>Any object can now have its shape specified by a bitmap file
+
+<li>Several bitmap file formats are supported, using a third-party
+library. Load maps and robot bodies from JPG, PNG, etc. No more PNM
+troubles.
+
+<li>Worlds can now be very large (thousands of meters square).
+
+<li>Several models are missing from this release - notably the gripper
+and puck. These will be available soon. Meanwhile, enjoy the full
+power of Player with the basic laser, sonar, position, fiducial and
+blobfinder models.
+
+<li>Stage no longer depends on libRTK.
+
+<li>Some models from previous versions may not yet be available in
+this release (e.g. gripper & puck), but we're working on them. Let us
+know which ones you need.
+
+</ol>
+
+\section Significant changes under the hood</h3>
+
+<ol>
+
+<li>The Stage simulation engine is now a library rather than an
+application. The library can be used to write custom robot
+simulations. This is very useful if you need to do synchronous control
+of robots (e.g for perfectly repeatable experiments), or dynamically
+create and destroy robots or other objects. You can't (yet) do this
+though Player. Refer to the <a
+href=http://playerstage.sf.net/doc/stage_reference>libstage reference
+manual</a> for the API and developer docs.</a>.
+
+<li>Stage is now mostly written in C. A simple object-oriented system
+allows one level of inheritance for writing polymorphic model code.
+
+<li>The underlying occupancy grid model has changed from a simple
+fixed-size array to a sparse array of (almost) unlimited size
+(implemented with a hash table). To compensate for the performance hit
+of raytracing in the hash table, a three-level multiple-resolution
+approach is used. Raytracing is now usually <i>much</i> faster than in
+Stage-1.3. To get an idea how this works, select the
+View/Debug/Raytrace menu item while a laser or ranger is producing
+data.
+
+<li>Most home-rolled data structures have been replaced by glib
+versions.
+
+</ol>
 */
 
 
@@ -96,8 +208,8 @@ and Their Applications.  Hillsdale, New Jersey. pp.16-23.
 @ingroup stage
 @defgroup install Installation
 
-<b>Important: Stage is an extension to Player; Player must be properly
-installed before you can install Stage.</b>
+<b>Important: If you plan to use Stage with Player, Player must be
+properly installed before you install Stage.</b>
 
 <h2>Quick start</h2>
 
@@ -111,8 +223,8 @@ build system: download and extract the tarballs, then <tt>./configure
 
 <ol>
 
-<li>Make sure Player is installed and working. See the Player
- documentation for instructions.
+<li>If you plan to use Player with Stage, make sure Player is
+ installed and working. See the Player documentation for instructions.
 
 <li>Download the latest Stage source tarball (stage-src-\<version\>.tgz)
 from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
@@ -136,6 +248,20 @@ to return to your normal user ID afterwards. <br>
 
 </ol>
 
+<h2>Using Player/Stage</h2>
+
+Unlike some earlier versions, this version of Stage is not a program
+that you run standalone, and there is no binary called
+"Stage". Instead, Stage provides a Player extension, or "plugin",
+which adds simulated robots to Player. To use the Player/Stage system,
+you run the "player" program with appropriate configuration files.
+See the documentation [@ref player] for details and
+examples.
+
+You can also create your own custom robot simulations independently of
+Player by using the libstage C library directly in your code. See the
+documentation [@ref libstage] for details.
+
 <h2>Customized installations</h2>
 
 <p>Stage follows the standard GNU autotools conventions for build and
@@ -154,121 +280,12 @@ because you don't have root access:
 
 <p><tt>$./configure --prefix=/home/harrison/PS</tt>
 
-<p><b>Remember: these instructions assume that Player was configured with the
+<p><b>These instructions assume that Player was configured with the
 same prefix.</b> The command line to do this is probably the same, but you
 should check the Player instructions just in case.
 
 */
 
-
-/**
-@page release Release Notes
-
-<h2>Version 2.0.0a</h2>
-
-This is an experimental pre-release in preparation for
-Stage-2.0.0. There are many changes under the hood, which will lead to
-new features in the near future. However, this release is mainly aimed
-at getting the same functionality as Stage-1.6, but without the
-Player/Stage-1.6 timing issues. Player/Stage should now scale to large
-robot populations, running at less than real-time without causing
-timing problems with Player client robot controllers.
-
-Player-1.6.5 or later is required. This pre-release does NOT work with
-Player CVS HEAD, which has a new network protocol. The main antcipated
-difference between this pre-release and Stage-2.0.0 will
-be a move to the new Player protocol. Stage- and Player-2.0.0 are
-planned for near-simultaneous release this fall.
-
-Please report bugs to the tracker.
-
-Let us know what you do with Stage.
-
-Richard Vaughan (rtv) 2005.8.11
-
-<h2>Version 1.6.1</h2>
-
-This is a bug-fix release that replaces 1.6.0. 
-
-- Fixes several GUI bugs, including the [View/Fill Polygons] menu item.
-
-- Some code clean-up and thread-safety fixes
-
-<h2>Version 1.6.0</h2>
-
-This release of Stage is the first after a major rewrite. There are
-bound to be bugs and teething troubles, but the <a
-href=http://www.cs.sfu.ca/research/groups/autonomy>Autonomy Lab</a>
-has been using this code for serious work for a few months now and we
-think it's useful and usable.
-
-<h3>Significant changes visible to the user</h3>
-
-<ol>
-
-<li>Stage is now a Player plugin, instead of an executable. The key
-benefit of this is that <b>all Player drivers are now available for
-use directly with Stage</b>, including sophisticated drivers like
-AMCL, without needing passthrough drivers.
-
-<li>Stage depends on Player 1.6 or newer.
-
-<li>Worldfile syntax has a changed, so you need to edit your existing
-worlds to get them to work. Look at the example worlds in <tt>(stage
-src)/worlds</tt> to get the idea.
-
-<li>Any object can now have its shape specified by a bitmap file
-
-<li>Several bitmap file formats are supported, using a third-party
-library. Load maps and robot bodies from JPG, PNG, etc. No more PNM
-troubles.
-
-<li>Worlds can now be very large (thousands of meters square).
-
-<li>Several models are missing from this release - notably the gripper
-and puck. These will be available soon. Meanwhile, enjoy the full
-power of Player with the basic laser, sonar, position, fiducial and
-blobfinder models.
-
-<li>Stage no longer depends on libRTK.
-
-<li>Some models from previous versions may not yet be available in
-this release (e.g. gripper & puck), but we're working on them. Let us
-know which ones you need.
-
-</ol>
-
-<h3>Significant changes under the hood</h3>
-
-<ol>
-
-<li>The Stage simulation engine is now a library rather than an
-application. The library can be used to write custom robot
-simulations. This is very useful if you need to do synchronous control
-of robots (e.g for perfectly repeatable experiments), or dynamically
-create and destroy robots or other objects. You can't (yet) do this
-though Player. Refer to the <a
-href=http://playerstage.sf.net/doc/stage_reference>libstage reference
-manual</a> for the API and developer docs.</a>.
-
-<li>Stage is now mostly written in C. A simple object-oriented system
-allows one level of inheritance for writing polymorphic model code.
-
-<li>The underlying occupancy grid model has changed from a simple
-fixed-size array to a sparse array of (almost) unlimited size
-(implemented with a hash table). To compensate for the performance hit
-of raytracing in the hash table, a three-level multiple-resolution
-approach is used. Raytracing is now usually <i>much</i> faster than in
-Stage-1.3. To get an idea how this works, select the
-View/Debug/Raytrace menu item while a laser or ranger is producing
-data.
-
-<li>Most home-rolled data structures have been replaced by glib
-versions.
-
-</ol>
-
-*/
 
 
 

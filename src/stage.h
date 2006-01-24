@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.170 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: stage.h,v 1.171 2006-01-24 08:08:25 rtv Exp $
  */
 
 
@@ -755,6 +755,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     int scan_height;
     stg_meters_t range_max;
     stg_radians_t pan, tilt, zoom;
+    stg_radians_t pangoal, tiltgoal, zoomgoal;
+    stg_radians_t panspeed, tiltspeed, zoomspeed;
   } stg_blobfinder_config_t;
   
   /** blobfinder data packet 
