@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.128 2006-01-21 09:35:06 rtv Exp $
+# $Id: Makefile.am,v 1.129 2006-01-24 01:29:15 gerkey Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -11,8 +11,8 @@ SUBDIRS = referees
 include_HEADERS = stage.h 
 
 # system-wide compile flags - target-specific flags are added to each target below
-AM_CFLAGS =   -Wall -I. -I$(top_builddir)/replace @GTK_CFLAGS@ @GNOME_CFLAGS@ -std=c99 
-AM_CPPFLAGS = -Wall -I. -I$(top_builddir)/replace @GTK_CFLAGS@ @GNOME_CFLAGS@
+AM_CFLAGS =   -Wall -I. -I$(top_srcdir)/replace @GTK_CFLAGS@ @GNOME_CFLAGS@ -std=c99 
+AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace @GTK_CFLAGS@ @GNOME_CFLAGS@
 
 # build the stage library and the stage plugin
 lib_LTLIBRARIES = libstage.la libstageplugin.la
