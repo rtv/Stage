@@ -552,6 +552,7 @@ gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y, int threshold )
 stg_polygon_t* stg_polygons_from_image_file(  const char* filename, 
 					     size_t* count )
 {
+  stg_polygon_t* polys;
   stg_rotrect_t* rects = NULL;
   int rect_count = 0;
 
@@ -570,7 +571,9 @@ stg_polygon_t* stg_polygons_from_image_file(  const char* filename,
   // else
 
   *count = (size_t)rect_count;
-  return stg_polygons_from_rotrects( rects, rect_count, (double)width, (double)height );
+  polys = stg_polygons_from_rotrects( rects, rect_count, (double)width, (double)height );
+  free(rects);
+  return(polys);
 }
 
 stg_polyline_t* stg_polylines_from_image_file( const char* filename, 
