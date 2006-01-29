@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.25 2005-12-07 10:04:28 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.26 2006-01-29 04:06:41 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -46,7 +46,6 @@ define pioneer2dx position
 
   # draw a nose on the robot so we can see which way it points
   gui_nose 1
-  gui_boundary 0	
 
   # estimated mass in KG
   mass 15.0 
@@ -62,7 +61,6 @@ define pioneer2dx position
   polygon[0].point[5] [ -0.15 -0.15 ]
   polygon[0].point[6] [  0.15 -0.15 ]
   polygon[0].point[7] [  0.23 -0.05 ]
-  polygon[0].filled 1
 
   # differential steering model
   drive "diff"

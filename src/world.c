@@ -160,6 +160,10 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	  stg_world_add_model( world, mod );
 	}
     }
+
+  // warn about unused WF linesa
+  wf_warn_unused();
+
   return world;
 }
 

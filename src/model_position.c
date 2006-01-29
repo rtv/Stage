@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.54 $
+//  $Revision: 1.55 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -91,8 +91,8 @@ int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
 int position_update( stg_model_t* mod );
 void position_load( stg_model_t* mod );
-int position_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
-int position_unrender_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp );
+int position_render_data( stg_model_t* mod, void* userp );
+int position_unrender_data( stg_model_t* mod, void* userp );
 
 
 void position_init( stg_model_t* mod )
@@ -154,27 +154,17 @@ void position_init( stg_model_t* mod )
   
   stg_model_set_data( mod, &data, sizeof(data));
   
-  // XX
-  /* stg_model_add_property_toggles( mod, "position_data",   */
-/*  				  position_render_data, // called when toggled on */
-/*  				  NULL,  */
-/*  				  position_unrender_data, // called when toggled off  */
-/*  				  NULL,   */
-/*  				  "position data",  */
-/* 				  FALSE );  */
-    
+  stg_model_add_property_toggles( mod, 
+				  &mod->data,
+ 				  position_render_data, // called when toggled on
+ 				  NULL,
+ 				  position_unrender_data, // called when toggled off
+ 				  NULL,
+				  "positiondata",
+ 				  "position data",
+				  FALSE );
 }
 
-
-/* void position_get_cfg( stg_model_t* mod, stg_position_cfg_t* cfg ) */
-/* { */
-/*   assert( mod ); */
-/*   assert( cfg ); */
-/*   assert( mod->cfg ); */
-/*   assert( mod->cfg_len == sizeof(stg_position_cfg_t)); */
-
-/*   memcpy( cfg, mod->cfg, sizeof(stg_position_cfg_t)); */
-/* } */
 
 void position_load( stg_model_t* mod )
 {
@@ -283,7 +273,6 @@ void position_load( stg_model_t* mod )
   
   // we've probably poked the localization data, so we must let people know
   model_change( mod, &mod->data );
-  // XX
 }
 
 
@@ -473,6 +462,7 @@ int position_update( stg_model_t* mod )
 	double dy = gpose.y - data->origin.y; 
 	data->pose.x = dx * cosa + dy * sina; 
 	data->pose.y = dy * cosa - dx * sina;
+	model_change( mod, &mod->data );
       }
       break;
       
@@ -490,6 +480,7 @@ int position_update( stg_model_t* mod )
 	
 	data->pose.x += dx * cosa + dy * sina; 
 	data->pose.y -= dy * cosa - dx * sina;
+	model_change( mod, &mod->data );
       }
       break;
       
@@ -534,23 +525,20 @@ int position_shutdown( stg_model_t* mod )
   return 0; // ok
 }
 
-int position_unrender_data( stg_model_t* mod, char* name, 
-			    void* data, size_t len, void* userp )
+int position_unrender_data( stg_model_t* mod, void* userp )
 {
   stg_model_fig_clear( mod, "position_data_fig" );
   return 1;
 }
 
-int position_render_data( stg_model_t* mod, char* name, 
-			  void* data, size_t len, void* userp )
+int position_render_data( stg_model_t* mod, void* enabled )
 {
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "position_data_fig" );
   
   if( !fig )
     {
-      fig = stg_model_fig_create( mod, "position_data_fig", NULL, STG_LAYER_POSITIONDATA );
-      //stg_rtk_fig_color_rgb32( fig, 0x9999FF ); // pale blue
-      
+      fig = stg_model_fig_create( mod, "position_data_fig", 
+				  NULL, STG_LAYER_POSITIONDATA );      
       stg_rtk_fig_color_rgb32( fig, mod->color ); 
     }
 
@@ -558,39 +546,45 @@ int position_render_data( stg_model_t* mod, char* name,
 	  
   if( mod->subs )
     {  
-      stg_position_data_t* odom = (stg_position_data_t*)data;
-      
+      stg_position_data_t* odom = (stg_position_data_t*)mod->data;      
       stg_velocity_t* vel = &mod->velocity;
-      
-      //stg_rtk_fig_origin( fig,  odom->pose.x, odom->pose.y, odom->.a );
-      stg_rtk_fig_origin( fig,  odom->origin.x, odom->origin.y, odom->origin.a );
-      
-      stg_rtk_fig_rectangle(  fig, 0,0,0, 0.06, 0.06, 0 );
+      stg_geom_t *geom = &mod->geom;
+
+      //printf( "odom pose [%.2f %.2f %.2f] origin [%.2f %.2f %.2f]\n",
+      //      odom->pose.x,
+      //      odom->pose.y,
+      //      odom->pose.a,
+      //      odom->origin.x,
+      //      odom->origin.y,
+      //      odom->origin.a );
+
+      // draw the coordinate system origin
+      stg_rtk_fig_origin( fig,  odom->origin.x, odom->origin.y, odom->origin.a );      
+
+      stg_rtk_fig_rectangle(  fig, 0,0,0, geom->size.x,geom->size.y, 0 );
+      stg_rtk_fig_arrow( fig, 0,0,0, 
+			 geom->size.x/2.0, geom->size.y/2.0 );      
+
+      // connect the origin to the estimated location
       stg_rtk_fig_line( fig, 0,0, odom->pose.x, 0);
       stg_rtk_fig_line( fig, odom->pose.x, 0, odom->pose.x, odom->pose.y );
       
+      // draw an outline of the position model at it's estimated location
+      stg_rtk_fig_rectangle(  fig, 
+			      odom->pose.x, odom->pose.y, odom->pose.a,
+			      geom->size.x, geom->size.y, 0 );
+      stg_rtk_fig_arrow( fig, 
+			 odom->pose.x, odom->pose.y, odom->pose.a, 
+			 geom->size.x/2.0, geom->size.y/2.0 );        
+
       char buf[256];
-      snprintf( buf, 255, "vel(%.3f,%.3f,%.1f)\npos(%.3f,%.3f,%.1f)", 
-		vel->x, vel->y, vel->a,
-		odom->pose.x, odom->pose.y, odom->pose.a ); 
+      snprintf( buf, 255, "%s[%.2f, %.2f, %.1f]\nv[%.2f,%.2f,%.1f]\n", 
+		odom->localization == STG_POSITION_LOCALIZATION_GPS ? "GPS" : "odom",
+		odom->pose.x, odom->pose.y, odom->pose.a,
+		vel->x, vel->y, vel->a );
       
       stg_rtk_fig_text( fig, odom->pose.x + 0.4, odom->pose.y + 0.2, 0, buf );
 
-      // draw an outline of the position model
-      stg_geom_t *geom = &mod->geom;
-
-      stg_rtk_fig_rectangle(  fig, 
-			      odom->pose.x, odom->pose.y, odom->pose.a,
-			      0.1, 0.1, 0 );
-
-      stg_rtk_fig_arrow( fig, 
-			 odom->pose.x, odom->pose.y, odom->pose.a, 
-			 geom->size.x/2.0, geom->size.y/2.0 );
-
-      //stg_pose_t gpose;
-      //stg_model_get_global_pose( mod, &gpose );
-      //stg_rtk_fig_line( fig, gpose.x, gpose.y, odom->pose.x, odom->pose.y );
-      
     }
 
   return 0;

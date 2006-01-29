@@ -264,9 +264,6 @@ void stg_model_load( stg_model_t* mod )
   // if a type-specific load callback has been set
   if( mod->f_load )
     mod->f_load( mod ); // call the load function
-
-  // warn about unused WF linesa
-  //wf_warn_unused();
 }
 
 

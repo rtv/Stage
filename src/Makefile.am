@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.130 2006-01-24 08:08:25 rtv Exp $
+# $Id: Makefile.am,v 1.131 2006-01-29 04:06:40 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -44,6 +44,7 @@ libstage_la_SOURCES = \
 	model_ranger.c \
 	model_gripper.c \
 	model_energy.c \
+	model_ptz.c \
 	raytrace.c \
 	stage.c \
 	stage.h \

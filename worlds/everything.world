@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.74 2006-01-24 08:08:25 rtv Exp $
+# CVS: $Id: everything.world,v 1.75 2006-01-29 04:06:41 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -28,14 +28,13 @@ window(
 
   # Store the state of the visualizations
   # Change these in the View menu
-  #position_data 1
+  #positiondata 0
   #ranger_data 1
   #laser_data 1
   #fiducial_data 1
   #blob_data 1
   #gripper_data 1
-  energy_data 0
-
+  #energy_data 0
   #position_cfg 1
   #ranger_cfg 1
   #laser_cfg 1
@@ -113,25 +112,23 @@ chatterbox
 define trickedoutpioneer pioneer2dx
 (
 
-  sick_laser
-  (  
+  sick_laser(  
     pose [0.030 0.000 0.000 ]
     fiducialfinder() 
-  )
 
- blobfinder
-  ( 
-    channel_count 6 
-    channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
+    ptz(
+      blobfinder( 
+        channel_count 6 
+        channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
+      )
+    )
   )
-
 
   fiducial_return 42
-  blobfinder_return 1 
+  gripper_return 1
 
   localization "gps"
-
-  gripper_return 1
+  localization_origin [ 0 0 0 ]
 )
 
 
@@ -139,12 +136,11 @@ trickedoutpioneer
 (
   name "p0"
   pose [-10.182 3.290 -402.689]
-  localization_origin [ 0 0 0 ]
 
   gripper( pose [0.200 0.000 0.000] color "gray" )
   #gripper( size [0.4 0.6] pose [0.300 0.000 0.000] color "gray" )
 
-  power( pose [-0.14 0 0] capacity 1000 range 0.50  give 0  )
+  #power( pose [-0.14 0 0] capacity 1000 range 0.50  give 0  )
 
 )
 

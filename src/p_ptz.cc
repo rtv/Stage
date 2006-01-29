@@ -23,13 +23,13 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_ptz.cc,v 1.1 2006-01-24 08:08:25 rtv Exp $
+ * CVS: $Id: p_ptz.cc,v 1.2 2006-01-29 04:06:41 rtv Exp $
  */
 
 // DOCUMENTATION
 
 /** @addtogroup player 
-@par Ptz interface (blobfinder)
+@par Ptz interface 
 - PLAYER_PTZ_DATA_STATE
 - PLAYER_PTZ_REQ_GEOM
 */
@@ -39,7 +39,7 @@
 #include "p_driver.h"
 
 extern "C" { 
-int blobfinder_init( stg_model_t* mod );
+int ptz_init( stg_model_t* mod );
 }
 
 
@@ -47,7 +47,7 @@ InterfacePtz::InterfacePtz( player_devaddr_t addr,
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( addr, driver, cf, section, blobfinder_init )
+  : InterfaceModel( addr, driver, cf, section, ptz_init )
 {
   // nothing to do for now
 }
@@ -56,16 +56,17 @@ InterfacePtz::InterfacePtz( player_devaddr_t addr,
 void InterfacePtz::Publish( void )
 {
   assert( this->mod->cfg );
-  assert( this->mod->cfg_len == sizeof(stg_blobfinder_config_t) );
+  assert( this->mod->cfg_len == sizeof(stg_ptz_config_t) );
   
-  stg_blobfinder_config_t *scfg = (stg_blobfinder_config_t*)this->mod->cfg;
+  stg_ptz_config_t *scfg = (stg_ptz_config_t*)this->mod->cfg;
+  stg_ptz_data_t *sdata = (stg_ptz_data_t*)this->mod->data;
 
   player_ptz_data_t pdata;
-  pdata.pan = scfg->pan;
-  pdata.tilt = scfg->tilt;
-  pdata.zoom = scfg->zoom;
-  pdata.panspeed = scfg->panspeed;
-  pdata.tiltspeed = scfg->tiltspeed;
+  pdata.pan = sdata->pan;
+  pdata.tilt = sdata->tilt;
+  pdata.zoom = sdata->zoom;
+  pdata.panspeed = scfg->speed.pan;
+  pdata.tiltspeed = scfg->speed.tilt;
   //pdata.zoomspeed = scfg->zoomspeed; // Player doesn't have this field
   
   this->driver->Publish( this->addr, NULL, 
@@ -79,11 +80,11 @@ int InterfacePtz::ProcessMessage( MessageQueue* resp_queue,
 					 void* data )
 {
   assert( this->mod->cfg );
-  assert( this->mod->cfg_len == sizeof(stg_blobfinder_config_t) );
+  assert( this->mod->cfg_len == sizeof(stg_ptz_config_t) );
 
-  //stg_blobfinder_cmd_t* cmd = (stg_blobfinder_cmd_t*)this->mod->cmd;
+  //stg_ptz_cmd_t* cmd = (stg_ptz_cmd_t*)this->mod->cmd;
 
-  stg_blobfinder_config_t scfg;  
+  stg_ptz_config_t scfg;  
   memcpy( &scfg, this->mod->cfg, sizeof(scfg));
 
   // Is it a new motor command?
@@ -96,12 +97,12 @@ int InterfacePtz::ProcessMessage( MessageQueue* resp_queue,
 	  // convert from Player to Stage format
 	  player_ptz_cmd_t* pcmd = (player_ptz_cmd_t*)data;
 	  
-	  scfg.pangoal = pcmd->pan;
-	  scfg.tiltgoal = pcmd->tilt;
-	  scfg.zoomgoal = pcmd->zoom;
-	  scfg.panspeed = pcmd->panspeed;
-	  scfg.tiltspeed = pcmd->tiltspeed;
-	  //scfg.zoomgoal = pcmd->zoomspeed; // not i player
+	  scfg.goal.pan = pcmd->pan;
+	  scfg.goal.tilt = pcmd->tilt;
+	  scfg.goal.zoom = pcmd->zoom;
+	  scfg.speed.pan = pcmd->panspeed;
+	  scfg.speed.tilt = pcmd->tiltspeed;
+	  //scfg.zoomgoal = pcmd->zoomspeed; // not in player
 
 	  //printf( "setting goals: p%.2f t%.2f z %.2f\n",
 	  //  scfg.pangoal,

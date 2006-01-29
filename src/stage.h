@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.172 2006-01-29 00:09:19 rtv Exp $
+ * CVS: $Id: stage.h,v 1.173 2006-01-29 04:06:41 rtv Exp $
  */
 
 
@@ -754,9 +754,6 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     int scan_width;
     int scan_height;
     stg_meters_t range_max;
-    stg_radians_t pan, tilt, zoom;
-    stg_radians_t pangoal, tiltgoal, zoomgoal;
-    stg_radians_t panspeed, tiltspeed, zoomspeed;
   } stg_blobfinder_config_t;
   
   /** blobfinder data packet 
@@ -778,6 +775,45 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 				      stg_model_t* parent, 
 				      stg_id_t id,  
 				      char* token );   
+  /**@}*/
+// PTZ MODEL --------------------------------------------------------
+  
+  /** @defgroup stg_model_ptz Ptz
+      Implements the ptz  model.
+      @{ */
+  
+  /** A handy triple for PTZ angles */
+  typedef struct 
+  {
+    stg_radians_t pan;
+    stg_radians_t tilt;
+    stg_radians_t zoom;
+  } stg_ptz_t;
+
+  /** ptz command: specify desired PTZ angles. Tilt has no effect.
+   */
+  typedef stg_ptz_t stg_ptz_cmd_t;
+
+  /** ptz data: specifies actual PTZ angles. 
+   */
+  typedef stg_ptz_t stg_ptz_data_t;
+
+  /** ptz config structure
+   */
+  typedef struct
+  {
+    stg_ptz_t min; ///< Minimum PTZ angles.
+    stg_ptz_t max; ///< Maximum PTZ angles.
+    stg_ptz_t goal; ///< The current desired angles. The device servos towards these values.
+    stg_ptz_t speed; ///< The PTZ servo speeds.
+  } stg_ptz_config_t;
+
+  /** Create a new ptz model 
+   */
+  stg_model_t* stg_ptz_create( stg_world_t* world,	
+			       stg_model_t* parent, 
+			       stg_id_t id,  
+			       char* token );   
   /**@}*/
 
   // LASER MODEL --------------------------------------------------------

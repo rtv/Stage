@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.56 2006-01-24 08:18:11 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.57 2006-01-29 04:06:41 rtv Exp $
  */
 
 #include <math.h>
@@ -37,9 +37,6 @@ extern stg_rtk_fig_t* fig_debug_rays;
 #define STG_DEFAULT_BLOB_SCANWIDTH 80
 #define STG_DEFAULT_BLOB_SCANHEIGHT 60 
 #define STG_DEFAULT_BLOB_RANGEMAX 8.0 
-#define STG_DEFAULT_BLOB_PAN 0.0
-#define STG_DEFAULT_BLOB_TILT 0.0
-#define STG_DEFAULT_BLOB_ZOOM DTOR(60)
 
 const int STG_BLOBFINDER_BLOBS_MAX = 32;
 const double STG_BLOB_WATTS = 10.0; // power consumption
@@ -124,13 +121,6 @@ int blobfinder_init( stg_model_t* mod )
   cfg.scan_width = STG_DEFAULT_BLOB_SCANWIDTH;
   cfg.scan_height = STG_DEFAULT_BLOB_SCANHEIGHT;  
   cfg.range_max = STG_DEFAULT_BLOB_RANGEMAX;  
-  cfg.pan = cfg.pangoal = STG_DEFAULT_BLOB_PAN;
-  cfg.tilt = cfg.tiltgoal = STG_DEFAULT_BLOB_TILT;
-  cfg.zoom = cfg.zoomgoal = STG_DEFAULT_BLOB_ZOOM;
-  
-  cfg.zoomspeed = 0.3;
-  cfg.panspeed = 1.0;
-  cfg.tiltspeed = 0.0;
   
   cfg.channel_count = 6; 
   cfg.channels[0] = stg_lookup_color( "red" );
@@ -189,12 +179,6 @@ void blobfinder_load( stg_model_t* mod )
     wf_read_tuple_float(mod->id, "image", 1, now->scan_height );	    
   bcfg.range_max = 
     wf_read_length(mod->id, "range_max", now->range_max );
-  bcfg.pan = 
-    wf_read_tuple_angle(mod->id, "ptz", 0, now->pan );
-  bcfg.tilt = 
-    wf_read_tuple_angle(mod->id, "ptz", 1, now->tilt );
-  bcfg.zoom =  
-    wf_read_tuple_angle(mod->id, "ptz", 2, now->zoom );
 
   if( bcfg.channel_count > STG_BLOB_CHANNELS_MAX )
     bcfg.channel_count = STG_BLOB_CHANNELS_MAX;
@@ -244,32 +228,19 @@ int blobfinder_raytrace_filter( stg_model_t* finder, stg_model_t* found )
   return 0;
 }
 
-int blobfinder_ptz( stg_model_t* mod )
-{
-  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg; 
-  
-  double pandist = cfg->panspeed * mod->world->sim_interval/1e3;
-  double panerror = cfg->pangoal - cfg->pan;
-  if( panerror < pandist ) pandist = panerror;
-  cfg->pan += pandist; 
 
-  double zoomdist = cfg->zoomspeed * mod->world->sim_interval/1e3;
-  double zoomerror = cfg->zoomgoal - cfg->zoom;
-  if( zoomerror < zoomdist ) zoomdist = zoomerror;
-  cfg->zoom += zoomdist; 
-
-  //printf( "PAN: %.2f\n", cfg->pan );
-  //printf( "ZOOM: %.2f\n", cfg->zoom );
-
-  return 0;
-}
-  
+// we check that our parent is a PTZ model by making sure it's startup
+// method is this one
+int ptz_startup( stg_model_t* mod );
 
 int blobfinder_update( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder update" );  
-  
-  blobfinder_ptz( mod );
+
+  // we MUST have a PTZ parent model
+  assert( mod->parent );
+  assert( mod->parent->f_startup == ptz_startup );
+  stg_ptz_data_t* ptz = (stg_ptz_data_t*)mod->parent->data;
 
   stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg; 
   
@@ -283,10 +254,10 @@ int blobfinder_update( stg_model_t* mod )
   double oth = pose.a;
 
   // Compute starting angle
-  oth = oth + cfg->pan + cfg->zoom / 2.0;
+  oth = oth + ptz->pan + ptz->zoom / 2.0;
   
   // Compute fov, range, etc
-  double dth = cfg->zoom / cfg->scan_width;
+  double dth = ptz->zoom / cfg->scan_width;
 
   // Make sure the data buffer is big enough
   //ASSERT((size_t)m_scan_width<=sizeof(m_scan_channel)/sizeof(m_scan_channel[0]));
@@ -376,7 +347,7 @@ int blobfinder_update( stg_model_t* mod )
   // puts("");
 
   // now the colors and ranges are filled in - time to do blob detection
-  float yRadsPerPixel = cfg->zoom / cfg->scan_height;
+  float yRadsPerPixel = ptz->zoom / cfg->scan_height;
 
   int blobleft = 0, blobright = 0;
   unsigned char blobcol = 0;
@@ -562,7 +533,12 @@ int blobfinder_unrender_cfg( stg_model_t* mod, void* userp )
 int blobfinder_render_cfg( stg_model_t* mod, void* userp )
 {
   PRINT_DEBUG( "blobfinder render config" );
-    
+
+  // we MUST have a PTZ parent model
+  assert( mod->parent );
+  assert( mod->parent->f_startup == ptz_startup );
+  stg_ptz_data_t* ptz = (stg_ptz_data_t*)mod->parent->data;
+
   stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg;
   assert(cfg);
   
@@ -570,8 +546,8 @@ int blobfinder_render_cfg( stg_model_t* mod, void* userp )
   
   double ox = pose->x;
   double oy = pose->y;
-  double mina = pose->a + (cfg->pan + cfg->zoom / 2.0);
-  double maxa = pose->a + (cfg->pan - cfg->zoom / 2.0);
+  double mina = pose->a + (ptz->pan + ptz->zoom / 2.0);
+  double maxa = pose->a + (ptz->pan - ptz->zoom / 2.0);
   
   double dx = cfg->range_max * cos(mina);
   double dy = cfg->range_max * sin(mina);
