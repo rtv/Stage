@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.10 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.11 2006-01-29 00:09:19 rtv Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -66,47 +66,58 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
 
   // Is it a new motor command?
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
-                           PLAYER_POSITION2D_CMD_STATE, 
+                           PLAYER_POSITION2D_CMD_VEL, 
                            this->addr))
   {
-    if( hdr->size == sizeof(player_position2d_cmd_t) )
-    {
-      // convert from Player to Stage format
-      player_position2d_cmd_t* pcmd = (player_position2d_cmd_t*)data;
+    // convert from Player to Stage format
+    player_position2d_cmd_vel_t* pcmd = (player_position2d_cmd_vel_t*)data;
 
-      stg_position_cmd_t scmd; 
-      memset( &scmd, 0, sizeof(scmd));
+    stg_position_cmd_t scmd; 
+    memset( &scmd, 0, sizeof(scmd));
 
-      switch( pcmd->type )
-      {
-        case 0: // velocity mode	  
-          scmd.x = pcmd->vel.px;
-          scmd.y = pcmd->vel.py;
-          scmd.a = pcmd->vel.pa;
-          scmd.mode = STG_POSITION_CONTROL_VELOCITY;
-          break;
-
-        case 1: // position mode
-          scmd.x = pcmd->pos.px;
-          scmd.y = pcmd->pos.py;
-          scmd.a = pcmd->pos.pa;
-          scmd.mode = STG_POSITION_CONTROL_POSITION;
-          break;
-
-        default:
-          PRINT_WARN1( "unrecognized player position control type %d\n", pcmd->type );
-          break;
-      }
-
-      //stg_model_set_property( this->mod, "position_cmd", &scmd, sizeof(scmd));
-      stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
-
-    }
-    else
-      PRINT_ERR2( "wrong size position command packet (%d/%d bytes)",
-                  (int)hdr->size, (int)sizeof(player_position2d_cmd_t) );
-    return(0);
+    scmd.x = pcmd->vel.px;
+    scmd.y = pcmd->vel.py;
+    scmd.a = pcmd->vel.pa;
+    scmd.mode = STG_POSITION_CONTROL_VELOCITY;
+    stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
   }
+
+  // Is it a new motor command?
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+                           PLAYER_POSITION2D_CMD_POS, 
+                           this->addr))
+  {
+    // convert from Player to Stage format
+    player_position2d_cmd_pos_t* pcmd = (player_position2d_cmd_pos_t*)data;
+
+    stg_position_cmd_t scmd; 
+    memset( &scmd, 0, sizeof(scmd));
+
+    scmd.x = pcmd->pos.px;
+    scmd.y = pcmd->pos.py;
+    scmd.a = pcmd->pos.pa;
+    scmd.mode = STG_POSITION_CONTROL_POSITION;
+    stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+  }
+
+  // Is it a new motor command?
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+                           PLAYER_POSITION2D_CMD_CAR, 
+                           this->addr))
+  {
+    // convert from Player to Stage format
+    player_position2d_cmd_car_t* pcmd = (player_position2d_cmd_car_t*)data;
+
+    stg_position_cmd_t scmd; 
+    memset( &scmd, 0, sizeof(scmd));
+
+    scmd.x = pcmd->velocity;
+    scmd.y = 0;
+    scmd.a = pcmd->angle;
+    scmd.mode = STG_POSITION_CONTROL_VELOCITY;
+    stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+  }
+ 
   // Is it a request for position geometry?
   else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
                                 PLAYER_POSITION2D_REQ_GET_GEOM, 

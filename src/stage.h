@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.171 2006-01-24 08:08:25 rtv Exp $
+ * CVS: $Id: stage.h,v 1.172 2006-01-29 00:09:19 rtv Exp $
  */
 
 
@@ -1013,7 +1013,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   
   /** "position_drive" property */
   typedef enum
-    { STG_POSITION_DRIVE_DIFFERENTIAL, STG_POSITION_DRIVE_OMNI }
+    { STG_POSITION_DRIVE_DIFFERENTIAL, STG_POSITION_DRIVE_OMNI, STG_POSITION_DRIVE_CAR }
   stg_position_drive_mode_t;
   
 #define STG_POSITION_DRIVE_DEFAULT STG_POSITION_DRIVE_DIFFERENTIAL

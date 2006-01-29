@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.53 $
+//  $Revision: 1.54 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -67,8 +67,8 @@ position
 Since Stage-1.6.5 the odom property has been removed. Stage will generate a warning if odom is defined in your worldfile. See localization_origin instead.
 
 @par Details
-- drive "diff" or "omni"
-  - select differential-steer mode (like a Pioneer) or omnidirectional mode.
+- drive "diff", "omni" or "car"
+  - select differential-steer mode (like a Pioneer), omnidirectional mode or carlike (velocity and steering angle).
 - localization "gps" or "odom"
   - if "gps" the position model reports its position with perfect accuracy. If "odom", a simple odometry model is used and position data drifts from the ground truth over time. The odometry model is parameterized by the odom_error property.
 - localization_origin [x y theta]
@@ -97,7 +97,6 @@ int position_unrender_data( stg_model_t* mod, char* name, void* data, size_t len
 
 void position_init( stg_model_t* mod )
 {
-  
   static int first_time = 1;
   if( first_time )
     {
@@ -154,7 +153,6 @@ void position_init( stg_model_t* mod )
   data.localization = STG_POSITION_LOCALIZATION_DEFAULT;
   
   stg_model_set_data( mod, &data, sizeof(data));
-
   
   // XX
   /* stg_model_add_property_toggles( mod, "position_data",   */
@@ -180,13 +178,12 @@ void position_init( stg_model_t* mod )
 
 void position_load( stg_model_t* mod )
 {
-  return;
+//  return;
 
   char* keyword = NULL;
   
   stg_position_data_t* data = (stg_position_data_t*)mod->data;
   stg_position_cfg_t* cfg = (stg_position_cfg_t*)mod->cfg;
-
 
   // load steering mode
   if( wf_property_exists( mod->id, "drive" ) )
@@ -200,9 +197,11 @@ void position_load( stg_model_t* mod )
 	    cfg->drive_mode = STG_POSITION_DRIVE_DIFFERENTIAL;
 	  else if( strcmp( mode_str, "omni" ) == 0 )
 	    cfg->drive_mode = STG_POSITION_DRIVE_OMNI;
+	  else if( strcmp( mode_str, "car" ) == 0 )
+	    cfg->drive_mode = STG_POSITION_DRIVE_CAR;
 	  else
 	    {
-	      PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\". Using \"diff\" as default.", mode_str );	      
+	      PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\" or \"car\". Using \"diff\" as default.", mode_str );	      
 	    }
 
 	  // let people know we changed the cfg
@@ -332,6 +331,13 @@ int position_update( stg_model_t* mod )
 		vel->x = cmd->x;
 		vel->y = cmd->y;
 		vel->a = cmd->a;
+		break;
+
+	      case STG_POSITION_DRIVE_CAR:
+		// car like steering model based on speed and turning angle
+		vel->x = cmd->x * cos(cmd->a);
+		vel->y = 0;
+		vel->a = cmd->x * sin(cmd->a)/1.0; // here 1.0 is the wheel base, this should be a config option
 		break;
 		
 	      default:
