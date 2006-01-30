@@ -1361,8 +1361,8 @@ int stg_model_update_pose( stg_model_t* mod )
 	  stg_pose_t hitpose;
 	  stg_model_get_global_pose( hitthing, &hitpose );
 	  double hita = atan2( hitpose.y - hity, hitpose.x - hitx );
-	  double mag = hypot( mod->velocity.x, mod->velocity.y );
-	  hitvel.x = mag * cos(hita);
+	  double mag = 0.3;
+	  hitvel.x =  mag * cos(hita);
 	  hitvel.y = mag * sin(hita);
 	  hitvel.a = 0;
 
@@ -1421,7 +1421,7 @@ int stg_model_update_pose( stg_model_t* mod )
   // if I'm a pucky thing, slow down for next time - simulates friction
   if( mod->gripper_return )
     {
-      double slow = 0.05;
+      double slow = 0.08;
 
       if( mod->velocity.x > 0 )
 	{
@@ -1480,7 +1480,7 @@ int stg_model_tree_to_ptr_array( stg_model_t* root, GPtrArray* array )
 }
 
 
-#define GLOBAL_VECTORS 1
+#define GLOBAL_VECTORS 0
 
 int model_unrender_velocity( stg_model_t* mod, void* userp )
 {

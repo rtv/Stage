@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.76 2006-01-30 06:58:15 rtv Exp $
+# CVS: $Id: everything.world,v 1.77 2006-01-30 07:23:07 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -74,7 +74,7 @@ define puck model(
   size [ 0.08 0.08 ]
   gripper_return 1
   gui_movemask 3
-  gui_nose 1
+  gui_nose 0
 )
 
 
