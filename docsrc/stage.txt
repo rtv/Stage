@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.10 2006-01-24 08:08:25 rtv Exp $
+ * $Id: stage.txt,v 1.11 2006-01-30 07:31:37 rtv Exp $
 */
 
 /**
@@ -22,6 +22,10 @@ is permitted only under the terms of the license.
 <h2>Version 2.0.0</h2>
 
 This is a major new release of Stage.
+
+Significant new features for the user include:
+
+ - gripper model. Any object can be grippable/pushable.
 
 rtv 2006.1.XX
 

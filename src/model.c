@@ -82,6 +82,7 @@ model
   ranger_return 1
   blobfinder_return 1
   fiducial_return 1
+  gripper_return 0
 
   # GUI properties
   gui_nose 0
@@ -138,6 +139,9 @@ model
   - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
 - ranger_return [bool]
    - iff 1, this model can be detected by a ranger.
+- gripper_return [bool]
+   - iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has a non-zero obstacle_return.
+
 */
 
 /** @} */  
