@@ -8,9 +8,37 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
+
+/**
+@ingroup model
+@defgroup model_gripper Gripper model 
+
+The ranger model simulates a simple two-fingered gripper with two
+internal break-beams, similar to the the Pioneer gripper.
+
+<h2>Worldfile properties</h2>
+
+@par Summary and default values
+
+@verbatim
+gripper
+(
+  # gripper properties
+  <none>
+
+  # model properties
+  size [0.12 0.28]
+)
+@endverbatim
+
+@par Notes
+
+@par Details
+
+*/
 
 
 #include <sys/time.h>
@@ -74,6 +102,8 @@ int gripper_init( stg_model_t* mod )
   geom.size.y = STG_DEFAULT_GRIPPER_SIZEY;
   stg_model_set_geom( mod, &geom );
   
+  stg_model_set_gripper_return( mod, 0 );
+
   // set up a gripper-specific config structure
   stg_gripper_config_t gconf;
   memset(&gconf,0,sizeof(gconf));  

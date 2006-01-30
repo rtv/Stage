@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.173 2006-01-29 04:06:41 rtv Exp $
+ * CVS: $Id: stage.h,v 1.174 2006-01-30 06:58:15 rtv Exp $
  */
 
 
@@ -583,10 +583,10 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   void stg_model_get_global_pose( stg_model_t* mod, stg_pose_t* pose );
 
   /** get the velocity of a model in the global CS */
-  //void stg_model_get_global_velocity( stg_model_t* mod, stg_velocity_t* gvel );
+  void stg_model_get_global_velocity( stg_model_t* mod, stg_velocity_t* gvel );
 
   /* set the velocity of a model in the global coordinate system */
-  //void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel );
+  void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel );
 
   /** subscribe to a model's data */
   void stg_model_subscribe( stg_model_t* mod );

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_ptz.c,v 1.1 2006-01-29 04:06:41 rtv Exp $
+ * CVS info: $Id: model_ptz.c,v 1.2 2006-01-30 06:58:15 rtv Exp $
  */
 
 #include <math.h>
@@ -57,10 +57,14 @@ The ptz model simulates a pan-tilt-zoom camera head.
 @verbatim
 ptz
 (
+  # ptz properties
   ptz[0 0 60.0]
   ptz_speed[ 1.0 0.0 0.3]
 
+  # model properties
   size [0.1 0.1]
+  color "navy blue"
+  watts 1.0
 )
 @endverbatim
 

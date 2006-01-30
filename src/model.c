@@ -69,7 +69,7 @@ the basic model to simulate environmental objects.
 model
 (
   pose [0 0 0]
-  size [0 0]
+  size [1.0 1.0]
   origin [0 0 0]
   velocity [0 0 0]
 
@@ -89,12 +89,13 @@ model
   gui_boundary 0
   gui_movemask ?
 
-  # body shape
-  line_count 4
-  line[0][0 0 1 0]
-  line[1][1 0 1 1]
-  line[2][1 1 0 1]
-  line[3][0 1 0 0]
+  # unit square body shape
+  polygons 1
+  polygon[0].points 4
+  polygon[0].point[0] [0 0]
+  polygon[0].point[1] [0 1]
+  polygon[0].point[2] [1 1]
+  polygon[0].point[3] [1 0]
 
   bitmap ""
 )
@@ -153,7 +154,8 @@ model
   - friction).
 */
   
- 
+int model_unrender_velocity( stg_model_t* mod, void* userp );
+int model_render_velocity( stg_model_t* mod, void* enabled );
 
 // convert a global pose into the model's local coordinate system
 void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
@@ -384,7 +386,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->ranger_return = 1;
   mod->blob_return = 1;
   mod->laser_return = LaserVisible;
-  mod->gripper_return = 1;
+  mod->gripper_return = 0;
   mod->boundary = 0;
   mod->color = 0xFF0000; // red;  
   mod->map_resolution = 0.1; // meters
@@ -463,6 +465,18 @@ stg_model_t* stg_model_create( stg_world_t* world,
   if( mod->typerec->initializer )
     mod->typerec->initializer(mod);
   
+  stg_model_add_property_toggles( mod, 
+				  &mod->velocity,
+ 				  model_render_velocity, // called when toggled on
+ 				  NULL,
+ 				  model_unrender_velocity, // called when toggled off
+ 				  NULL,
+				  "velocityvector",
+ 				  "velocity vector",
+				  FALSE );
+
+
+
   return mod;
 }
 
@@ -543,7 +557,7 @@ int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 )
 }
 
 // get the model's velocity in the global frame
-void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
+void stg_model_get_global_velocity( stg_model_t* mod, stg_velocity_t* gv )
 {
   stg_pose_t gpose;
   stg_model_get_global_pose( mod, &gpose );
@@ -552,15 +566,9 @@ void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
   double sina = sin( gpose.a );
   
   stg_velocity_t* lvel = &mod->velocity;
-  
-  if( lvel )
-    {
-      gvel->x = lvel->x * cosa - lvel->y * sina;
-      gvel->y = lvel->x * sina + lvel->y * cosa;
-      gvel->a = lvel->a;
-    }
-  else // no velocity property - we're not moving anywhere
-    memset( gvel, 0, sizeof(stg_velocity_t));
+  gv->x = lvel->x * cosa - lvel->y * sina;
+  gv->y = lvel->x * sina + lvel->y * cosa;
+  gv->a = lvel->a;
       
   //printf( "local velocity %.2f %.2f %.2f\nglobal velocity %.2f %.2f %.2f\n",
   //  mod->velocity.x, mod->velocity.y, mod->velocity.a,
@@ -568,19 +576,21 @@ void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
 }
 
 // set the model's velocity in the global frame
-/* void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel ) */
-/* { */
-/*   // TODO - do this properly */
-
-/*   //stg_pose_t gpose; */
+void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gv )
+{
+  stg_pose_t gpose;
+  stg_model_get_global_pose( mod, &gpose );
   
-/*   stg_velocity_t lvel; */
-/*   lvel.x = gvel->x; */
-/*   lvel.y = gvel->y; */
-/*   lvel.a = gvel->a; */
+  double cosa = cos( gpose.a );
+  double sina = sin( gpose.a );
 
-/*   stg_model_set_velocity( mod, &lvel ); */
-/* } */
+  stg_velocity_t lv;
+  lv.x = gv->x * cosa + gv->y * sina; 
+  lv.y = -gv->x * sina + gv->y * cosa; 
+  lv.a = gv->a;
+
+  stg_model_set_velocity( mod, &lv );
+}
 
 // get the model's position in the global frame
 void  stg_model_get_global_pose( stg_model_t* mod, stg_pose_t* gpose )
@@ -1209,10 +1219,25 @@ int lines_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 // the location of the hit in hitx,hity (if non-null)
 // Returns NULL if not collisions.
 // This function is useful for writing position devices.
-stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod, 
-					   stg_pose_t* pose, 
-					   double* hitx, double* hity )
+stg_model_t* stg_model_test_collision( stg_model_t* mod, 
+				       //stg_pose_t* pose, 
+				       double* hitx, double* hity )
 {
+  int ch;
+  stg_model_t* child_hit = NULL;
+  for(ch=0; ch < mod->children->len; ch++ )
+    {
+      stg_model_t* child = g_ptr_array_index( mod->children, ch );
+      child_hit = stg_model_test_collision( child, hitx, hity );
+      if( child_hit )
+	return child_hit;
+    }
+  
+
+  stg_pose_t pose;
+  memcpy( &pose, &mod->geom.pose, sizeof(pose));
+  stg_model_local_to_global( mod, &pose );
+  
   //return NULL;
   
   // raytrace along all our rectangles. expensive, but most vehicles
@@ -1256,14 +1281,17 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
 	  stg_pose_t p2;
 	  
 	  // shift the line points into the global coordinate system
-	  stg_pose_sum( &p1, pose, &pp1 );
-	  stg_pose_sum( &p2, pose, &pp2 );
+	  stg_pose_sum( &p1, &pose, &pp1 );
+	  stg_pose_sum( &p2, &pose, &pp2 );
 	  
 	  //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y );
 	  
 	  itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
 				   mod->world->matrix, 
 				   PointToPoint );
+	  
+	  //stg_rtk_fig_t* fig = stg_model_fig_create( mod, "foo", NULL, STG_LAYER_POSITIONDATA );
+	  //stg_rtk_fig_line( fig, p1.x, p1.y, p2.x, p2.y );
 	  
 	  stg_model_t* hitmod = itl_first_matching( itl, lines_raytrace_match, mod );
 	  
@@ -1290,12 +1318,8 @@ int stg_model_update_pose( stg_model_t* mod )
   PRINT_DEBUG4( "pose update model %d (vel %.2f, %.2f %.2f)", 
 		mod->id, mod->velocity.x, mod->velocity.y, mod->velocity.a );
  
-
-  // if I'm puck-enabled, I need to see if anyone's touching me.
-
-
   stg_velocity_t gvel;
-  stg_model_global_velocity( mod, &gvel );
+  stg_model_get_global_velocity( mod, &gvel );
       
   stg_pose_t gpose;
   stg_model_get_global_pose( mod, &gpose );
@@ -1303,130 +1327,126 @@ int stg_model_update_pose( stg_model_t* mod )
   // convert msec to sec
   double interval = (double)mod->world->sim_interval / 1000.0;
   
-  // compute new global position
-  gpose.x += gvel.x * interval;
-  gpose.y += gvel.y * interval;
-  gpose.a += gvel.a * interval;
+
+  stg_pose_t old_pose;
+  memcpy( &old_pose, &mod->pose, sizeof(old_pose));
+
+  // compute new pose
+  //gpose.x += gvel.x * interval;
+  //gpose.y += gvel.y * interval;
+  //gpose.a += gvel.a * interval;
+  mod->pose.x += (mod->velocity.x * cos(mod->pose.a) - mod->velocity.y * sin(mod->pose.a)) * interval;
+  mod->pose.y += (mod->velocity.x * sin(mod->pose.a) + mod->velocity.y * cos(mod->pose.a)) * interval;
+  mod->pose.a += mod->velocity.a * interval;
 
   // check this model and all it's children at the new pose
-  double hitx=0, hity=0;
+  double hitx=0, hity=0, hita=0;
   stg_model_t* hitthing =
-    stg_model_test_collision_at_pose( mod, &gpose, &hitx, &hity );
+    stg_model_test_collision( mod, &hitx, &hity );
+
+  int stall = 0;
       
-  /*
-   if( mod->friction )
-    {
-      // compute a new velocity, based on "friction"
-      double vr = hypot( gvel.x, gvel.y );
-      double va = atan2( gvel.y, gvel.x );
-      vr -= vr * mod->friction;
-      gvel.x = vr * cos(va);
-      gvel.y = vr * sin(va);
-      gvel.a -= gvel.a * mod->friction; 
-
-      // lower bounds
-      if( fabs(gvel.x) < 0.001 ) gvel.x = 0.0;
-      if( fabs(gvel.y) < 0.001 ) gvel.y = 0.0;
-      if( fabs(gvel.a) < 0.01 ) gvel.a = 0.0;
-	  
-    }
-  */
-
   if( hitthing )
     {
-      //if( hitthing )
-
-
-      if( 0 )
+      // grippable objects move when we hit them
+      if(  hitthing->gripper_return ) 
 	{
-	  // HACK!
-	  if(  mod->gripper_return )
-	    {
-	      stg_velocity_t vel;
-	      vel.x = 0.05;
-	      vel.y = 0;
-	      vel.a = 0.05;
-	      
-	      stg_model_set_velocity( hitthing, &vel );
-	    }
+	  //PRINT_WARN( "HIT something grippable!" );
 	  
+	  stg_velocity_t hitvel;
+	  //hitvel.x = gvel.x;
+	  //hitvel.y = gvel.y;
+	  //hitvel.a = 0.0;
+
+	  stg_pose_t hitpose;
+	  stg_model_get_global_pose( hitthing, &hitpose );
+	  double hita = atan2( hitpose.y - hity, hitpose.x - hitx );
+	  double mag = hypot( mod->velocity.x, mod->velocity.y );
+	  hitvel.x = mag * cos(hita);
+	  hitvel.y = mag * sin(hita);
+	  hitvel.a = 0;
+
+	  stg_model_set_global_velocity( hitthing, &hitvel );
+	  
+	  stall = 0;
+	  // don't make the move - reset the pose
+	  //memcpy( &mod->pose, &old_pose, sizeof(mod->pose));
 	}
-      // TODO - friction simulation
-      //if( hitthing->friction == 0 ) // hit an immovable thing
+      else // other objects block us totally
 	{
-	  PRINT_DEBUG( "HIT something immovable!" );
+	  hitthing = NULL;
+	  // move back to where we started
+	  memcpy( &mod->pose, &old_pose, sizeof(mod->pose));
+	  interval = 0.2 * interval; // slow down time
 	  
-	  stg_model_set_stall( mod, 1 );
-
-
+	  // inch forward until we collide
+	  do
+	    {
+	      memcpy( &old_pose, &mod->pose, sizeof(old_pose));
+	      
+	      mod->pose.x += 
+		(mod->velocity.x * cos(mod->pose.a) - mod->velocity.y * sin(mod->pose.a)) * interval;
+	      mod->pose.y += 
+		(mod->velocity.x * sin(mod->pose.a) + mod->velocity.y * cos(mod->pose.a)) * interval;
+	      mod->pose.a += mod->velocity.a * interval;
+	      
+	      hitthing = stg_model_test_collision( mod, &hitx, &hity );
+	      
+	    } while( hitthing == NULL );
+	  
+	  //PRINT_WARN( "HIT something immovable!" );
+	  
+	  stall = 1;
+	  
 	  // set velocity to zero
 	  stg_velocity_t zero_v;
 	  memset( &zero_v, 0, sizeof(zero_v));
-	  //stg_model_set_velocity( mod, &zero_v );
+	  stg_model_set_velocity( mod, &zero_v );
+
+	  // don't make the move - reset the pose
+	  memcpy( &mod->pose, &old_pose, sizeof(mod->pose));
+
 	}
-      /*
-	  else
-	{
-	  puts( "hit something with non-zero friction" );
-
-	  // Get the velocity of the thing we hit
-	  //stg_velocity_t* vel = stg_model_get_velocity( hitthing );
-	  double impact_vel = hypot( gvel.x, gvel.y );
-	      
-	  // TODO - use relative mass and velocity properly
-	  //stg_kg_t* mass = stg_model_get_mass( hitthing );
-	     
-	  // Compute bearing from my center of mass to the impact point
-	  double pth = atan2( hity-gpose.y, hitx-gpose.x );
-	      
-	  // Compute bearing TO impacted ent
-	  //double pth2 = atan2( o.y-pose.y, o.x-pose.x );
-	      
-	  if( impact_vel )
-	    {
-	      double vr =  fabs(impact_vel);
-
-	      stg_velocity_t given;
-	      given.x = vr * cos(pth);
-	      given.y = vr * sin(pth);
-	      given.a = 0;//vr * sin(pth2);
-		  
-	      // get some velocity from the impact
-	      //hitthing->velocity.x = vr * cos(pth);
-	      //hitthing->velocity.y = vr * sin(pth);		  
-
-	      printf( "gave %.2f %.2f vel\n",
-		      given.x, given.y );x
-
-	      stg_model_set_global_velocity( hitthing, &given );
-	    }
-	      
-	}
-      */
-	  
     }
-  else	  
+
+  
+  stg_model_set_pose( mod, &mod->pose );
+  stg_model_set_stall( mod, stall );
+  
+  /* trails */
+  //if( fig_trails )
+  //gui_model_trail()
+
+
+  // if I'm a pucky thing, slow down for next time - simulates friction
+  if( mod->gripper_return )
     {
-      //mod->stall = 0;
+      double slow = 0.05;
 
-      // now set the new pose
-      stg_model_set_global_pose( mod, &gpose );
+      if( mod->velocity.x > 0 )
+	{
+	  mod->velocity.x -= slow;
+	  mod->velocity.x = MAX( 0, mod->velocity.x );
+	}
+      else if ( mod->velocity.x < 0 )
+	{
+	  mod->velocity.x += slow;
+	  mod->velocity.x = MIN( 0, mod->velocity.x );
+	}
       
-      //int stall = 0;
-      //stg_model_set_property( mod, "stall", &stall, sizeof(stall));
-        
-      stg_model_set_stall( mod, 0 );
+      if( mod->velocity.y > 0 )
+	{
+	  mod->velocity.y -= slow;
+	  mod->velocity.y = MAX( 0, mod->velocity.y );
+	}
+      else if( mod->velocity.y < 0 )
+	{
+	  mod->velocity.y += slow;
+	  mod->velocity.y = MIN( 0, mod->velocity.y );
+	}
 
-      // ignore acceleration in energy model for now, we just pay
-      // something to move.	
-      //stg_kg_t mass = *stg_model_get_mass( mod );
-      //stg_model_energy_consume( mod, STG_ENERGY_COST_MOTIONKG * mass ); 
-
-      /* trails */
-      //if( fig_trails )
-      //gui_model_trail( mod );
-
-    }      
+      model_change( mod, &mod->velocity );
+    }
   
   return 0; // ok
 }
@@ -1459,3 +1479,68 @@ int stg_model_tree_to_ptr_array( stg_model_t* root, GPtrArray* array )
   return added;
 }
 
+
+#define GLOBAL_VECTORS 1
+
+int model_unrender_velocity( stg_model_t* mod, void* userp )
+{
+  stg_model_fig_clear( mod, "model_velocity_fig" );
+
+#if GLOBAL_VECTORS
+  stg_model_fig_clear( mod, "global_velocity_fig" );
+#endif
+  return 1;
+}
+
+int model_render_velocity( stg_model_t* mod, void* enabled )
+{
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "model_velocity_fig" );
+  
+  if( !fig )
+    {
+      fig = stg_model_fig_create( mod, "model_velocity_fig", 
+				  "top", STG_LAYER_POSITIONDATA );      
+      stg_rtk_fig_color_rgb32( fig, mod->color ); 
+    }
+  
+  stg_rtk_fig_clear(fig);
+  
+  stg_velocity_t* v = &mod->velocity;
+
+  if( v->x != 0 || v->y != 0 || v->a != 0 )
+    {
+      stg_rtk_fig_arrow( fig, 0,0,0, v->x, 0.05 );
+      stg_rtk_fig_arrow( fig, 0,0,M_PI/2.0, v->y, 0.05 );
+      
+      // how to do the turn speed?
+      //stg_rtk_fig_arrow( fig, 0,0,M_PI/2.0, vel->a, 0.05 );
+
+#if GLOBAL_VECTORS
+      stg_rtk_fig_t* fig = stg_model_get_fig( mod, "global_velocity_fig" );
+      
+      if( !fig )
+	{
+	  fig = stg_model_fig_create( mod, "global_velocity_fig", 
+				      NULL, STG_LAYER_POSITIONDATA );      
+	  stg_rtk_fig_color_rgb32( fig, 0 ); 
+	}
+      
+      stg_rtk_fig_clear(fig);
+      
+      stg_velocity_t gv;
+      stg_model_get_global_velocity( mod, &gv );
+      stg_pose_t gp;
+      stg_model_get_global_pose( mod, &gp );
+      
+      stg_rtk_fig_arrow( fig, gp.x, gp.y, 0, 
+			 gv.x, 0.05 );
+      stg_rtk_fig_arrow( fig, gp.x, gp.y, M_PI/2.0, 
+			 gv.y, 0.05 );
+      
+      stg_rtk_fig_line( fig, gp.x+gv.x, gp.y, gp.x+gv.x, gp.y+gv.y );
+      stg_rtk_fig_line( fig, gp.x, gp.y+gv.y, gp.x+gv.x, gp.y+gv.y );
+#endif      
+    }
+
+  return 0;
+}

@@ -1,17 +1,23 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.58 2006-01-24 08:08:25 rtv Exp $
+# CVS: $Id: simple.world,v 1.59 2006-01-30 06:58:15 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
+
+
 
 
 # defines 'map' object used for floorplans
 include "map.inc"
 
 
+
+
 # defines sick laser
 include "sick.inc"
+
+
 
 
 # size of the world in meters
@@ -24,8 +30,8 @@ resolution 0.02
 window
 ( 
   size [ 680.000 715.000 ] 
-  center [0.072 -0.031] 
-  scale 0.024 
+  center [-3.262 0.638] 
+  scale 0.004 
 )
 
 # load an environment bitmap
@@ -41,8 +47,21 @@ pioneer2dx
 (
   name "robot1"
   color "red"
-  pose [-3.548 -0.179 103.302]
+  pose [-3.762 0.872 -5.029]
   sick_laser()
 )
 
 
+
+define puck model
+(
+  gripper_return 1
+  size [ 0.1 0.1 ]
+  color "blue"
+)
+
+puck( pose [ -2.646 0.931 0.000  ] )
+puck( pose [ -2.922 0.971 -22.346  ] )
+puck( pose [ -2.874 0.611 -57.384  ] )
+puck( pose [ -2.850 0.803 -44.119  ] )
+puck( pose [ -3.082 0.647 0.000  ] )

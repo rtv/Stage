@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.57 2006-01-29 04:06:41 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.58 2006-01-30 06:58:15 rtv Exp $
  */
 
 #include <math.h>
@@ -59,17 +59,20 @@ with each channel is configurable.
 @par Summary and default values
 
 @verbatim
-blobfinder
-(
-  # blobfinder properties
-  channel_count 6
-  channels ["red" "green" "blue" "cyan" "yellow" "magenta" ]
-  range_max 8.0
-  ptz[0 0 60.0]
-  image[80 60]
+ptz(
+  # blobfinder MUST be a child of a PTZ model
+  blobfinder
+  (
+    # blobfinder properties
+    channel_count 6
+    channels ["red" "green" "blue" "cyan" "yellow" "magenta" ]
+    range_max 8.0
+    ptz[0 0 60.0]
+    image[80 60]
 
-  # model properties
-  size [0.01 0.01]
+    # model properties
+    size [0.01 0.01]
+  )
 )
 @endverbatim
 

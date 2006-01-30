@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.55 $
+//  $Revision: 1.56 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -50,16 +50,16 @@ independently.
 @verbatim
 position
 (
+  # position properties
   drive "diff"
-
   localization "gps"
-
-  # initial position estimate
   localization_origin [ <defaults to model's start pose> ]
  
   # odometry error model parameters, 
   # only used if localization is set to "odom"
   odom_error [0.03 0.03 0.05]
+
+  # model properties
 )
 @endverbatim
 
@@ -93,7 +93,8 @@ int position_update( stg_model_t* mod );
 void position_load( stg_model_t* mod );
 int position_render_data( stg_model_t* mod, void* userp );
 int position_unrender_data( stg_model_t* mod, void* userp );
-
+int position_render_text( stg_model_t* mod, void* userp );
+int position_unrender_text( stg_model_t* mod, void* userp );
 
 void position_init( stg_model_t* mod )
 {
@@ -160,8 +161,18 @@ void position_init( stg_model_t* mod )
  				  NULL,
  				  position_unrender_data, // called when toggled off
  				  NULL,
-				  "positiondata",
- 				  "position data",
+				  "positionlines",
+ 				  "position lines",
+				  FALSE );
+
+  stg_model_add_property_toggles( mod, 
+				  &mod->data,
+ 				  position_render_text, // called when toggled on
+ 				  NULL,
+ 				  position_unrender_text, // called when toggled off
+ 				  NULL,
+				  "positiontext",
+ 				  "position text",
 				  FALSE );
 }
 
@@ -577,11 +588,50 @@ int position_render_data( stg_model_t* mod, void* enabled )
 			 odom->pose.x, odom->pose.y, odom->pose.a, 
 			 geom->size.x/2.0, geom->size.y/2.0 );        
 
+/*       char buf[256]; */
+/*       snprintf( buf, 255, "%s[%.2f, %.2f, %.1f]\nv[%.2f,%.2f,%.1f] %s\n",  */
+/* 		odom->localization == STG_POSITION_LOCALIZATION_GPS ? "GPS" : "odom", */
+/* 		odom->pose.x, odom->pose.y, odom->pose.a, */
+/* 		vel->x, vel->y, vel->a, */
+/* 		mod->stall ? "STALL" : "" ); */
+      
+/*       stg_rtk_fig_text( fig, odom->pose.x + 0.4, odom->pose.y + 0.2, 0, buf ); */
+
+    }
+
+  return 0;
+}
+
+int position_unrender_text( stg_model_t* mod, void* userp )
+{
+  stg_model_fig_clear( mod, "position_text_fig" );
+  return 1;
+}
+
+int position_render_text( stg_model_t* mod, void* enabled )
+{
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "position_text_fig" );
+  
+  if( !fig )
+    {
+      fig = stg_model_fig_create( mod, "position_text_fig", 
+				  NULL, STG_LAYER_POSITIONDATA );      
+      stg_rtk_fig_color_rgb32( fig, mod->color ); 
+    }
+
+  stg_rtk_fig_clear(fig);
+	  
+  if( mod->subs )
+    {  
+      stg_position_data_t* odom = (stg_position_data_t*)mod->data;      
+      stg_velocity_t* vel = &mod->velocity;
+
       char buf[256];
-      snprintf( buf, 255, "%s[%.2f, %.2f, %.1f]\nv[%.2f,%.2f,%.1f]\n", 
+      snprintf( buf, 255, "%s[%.2f, %.2f, %.1f]\nv[%.2f,%.2f,%.1f] %s\n", 
 		odom->localization == STG_POSITION_LOCALIZATION_GPS ? "GPS" : "odom",
 		odom->pose.x, odom->pose.y, odom->pose.a,
-		vel->x, vel->y, vel->a );
+		vel->x, vel->y, vel->a,
+		mod->stall ? "STALL" : "" );
       
       stg_rtk_fig_text( fig, odom->pose.x + 0.4, odom->pose.y + 0.2, 0, buf );
 

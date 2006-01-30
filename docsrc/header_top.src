@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.18 2006-01-24 08:08:25 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.19 2006-01-30 06:58:14 rtv Exp $ -->
 
 <HEAD>
 
@@ -72,16 +72,6 @@ li.menu {
     list-style-type: none;
     position:relative;
     #left:-0.5em;
-}
-
-pre { background-color: #EEF; }
-
-DIV.fragment {
-	border: 1px solid #CCCCCC;
-	background-color: #EEF;
-	padding-left: 1em;
-	margin: 4px;
-	width:85%;
 }
 
 

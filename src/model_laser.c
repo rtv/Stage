@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.82 $
+//  $Revision: 1.83 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +65,7 @@ laser
   # model properties
   size [0.15 0.15]
   color "blue"
+  watts 17.5 # approximately correct for SICK LMS200
 )
 @endverbatim
 

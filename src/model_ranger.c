@@ -7,24 +7,9 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.60 $
+//  $Revision: 1.61 $
 //
 ///////////////////////////////////////////////////////////////////////////
-
-
-#include <math.h>
-
-//#define DEBUG
-
-
-#include "stage_internal.h"
-#include "gui.h"
-
-extern stg_rtk_fig_t* fig_debug_rays;
-
-#define STG_RANGER_DATA_MAX 64
-
-#define STG_RANGER_WATTS 2.0 // ranger power consumption
 
 /**
 @ingroup model
@@ -61,6 +46,7 @@ ranger
   sview [0.0 5.0 5.0]
 
   # model properties
+  watts 2.0
 )
 @endverbatim
 
@@ -87,69 +73,18 @@ The ranger model allows configuration of the pose, size and view parameters of e
 
 */
 
- 
-void ranger_load( stg_model_t* mod )
-{
-  // Load the geometry of a ranger array
-  int scount = wf_read_int( mod->id, "scount", 0);
-  if (scount > 0)
-    {
-      char key[256];
-      stg_ranger_config_t* configs = (stg_ranger_config_t*)
-	calloc( sizeof(stg_ranger_config_t), scount );
-      
-      stg_size_t common_size;
-      common_size.x = wf_read_tuple_length(mod->id, "ssize", 0, 0.01 );
-      common_size.y = wf_read_tuple_length(mod->id, "ssize", 1, 0.03 );
-      
-      double common_min = wf_read_tuple_length(mod->id, "sview", 0, 0.0);
-      double common_max = wf_read_tuple_length(mod->id, "sview", 1, 5.0);
-      double common_fov = wf_read_tuple_angle(mod->id, "sview", 2, 5.0);
+#include <math.h>
+#include "stage_internal.h"
+#include "gui.h"
 
-      // set all transducers with the common settings
-      int i;
-      for(i = 0; i < scount; i++)
-	{
-	  configs[i].size.x = common_size.x;
-	  configs[i].size.y = common_size.y;
-	  configs[i].bounds_range.min = common_min;
-	  configs[i].bounds_range.max = common_max;
-	  configs[i].fov = common_fov;
-	}
+extern stg_rtk_fig_t* fig_debug_rays;
 
-      // allow individual configuration of transducers
-      for(i = 0; i < scount; i++)
-	{
-	  snprintf(key, sizeof(key), "spose[%d]", i);
-	  configs[i].pose.x = wf_read_tuple_length(mod->id, key, 0, 0);
-	  configs[i].pose.y = wf_read_tuple_length(mod->id, key, 1, 0);
-	  configs[i].pose.a = wf_read_tuple_angle(mod->id, key, 2, 0);
-	  
-	  snprintf(key, sizeof(key), "ssize[%d]", i);
-	  configs[i].size.x = wf_read_tuple_length(mod->id, key, 0, 0.01);
-	  configs[i].size.y = wf_read_tuple_length(mod->id, key, 1, 0.05);
-	  
-	  snprintf(key, sizeof(key), "sview[%d]", i);
-	  configs[i].bounds_range.min = 
-	    wf_read_tuple_length(mod->id, key, 0, 0);
-	  configs[i].bounds_range.max =   // set up sensible defaults
-
-	    wf_read_tuple_length(mod->id, key, 1, 5.0);
-	  configs[i].fov 
-	    = DTOR(wf_read_tuple_angle(mod->id, key, 2, 5.0 ));
-	}
-      
-      PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
-
-      stg_model_set_cfg( mod, configs, scount * sizeof(stg_ranger_config_t) );
-      
-      free( configs );
-    }
-}
+#define STG_RANGER_WATTS 2.0 // ranger power consumption
 
 int ranger_update( stg_model_t* mod );
 int ranger_startup( stg_model_t* mod );
 int ranger_shutdown( stg_model_t* mod );
+void ranger_load( stg_model_t* mod );
 
 int ranger_render_data( stg_model_t* mod, void* userp );
 int ranger_unrender_data( stg_model_t* mod,void* userp );
@@ -249,6 +184,65 @@ int ranger_shutdown( stg_model_t* mod )
   stg_model_set_data( mod, NULL, 0 );
 
   return 0;
+}
+
+void ranger_load( stg_model_t* mod )
+{
+  // Load the geometry of a ranger array
+  int scount = wf_read_int( mod->id, "scount", 0);
+  if (scount > 0)
+    {
+      char key[256];
+      stg_ranger_config_t* configs = (stg_ranger_config_t*)
+	calloc( sizeof(stg_ranger_config_t), scount );
+      
+      stg_size_t common_size;
+      common_size.x = wf_read_tuple_length(mod->id, "ssize", 0, 0.01 );
+      common_size.y = wf_read_tuple_length(mod->id, "ssize", 1, 0.03 );
+      
+      double common_min = wf_read_tuple_length(mod->id, "sview", 0, 0.0);
+      double common_max = wf_read_tuple_length(mod->id, "sview", 1, 5.0);
+      double common_fov = wf_read_tuple_angle(mod->id, "sview", 2, 5.0);
+
+      // set all transducers with the common settings
+      int i;
+      for(i = 0; i < scount; i++)
+	{
+	  configs[i].size.x = common_size.x;
+	  configs[i].size.y = common_size.y;
+	  configs[i].bounds_range.min = common_min;
+	  configs[i].bounds_range.max = common_max;
+	  configs[i].fov = common_fov;
+	}
+
+      // allow individual configuration of transducers
+      for(i = 0; i < scount; i++)
+	{
+	  snprintf(key, sizeof(key), "spose[%d]", i);
+	  configs[i].pose.x = wf_read_tuple_length(mod->id, key, 0, 0);
+	  configs[i].pose.y = wf_read_tuple_length(mod->id, key, 1, 0);
+	  configs[i].pose.a = wf_read_tuple_angle(mod->id, key, 2, 0);
+	  
+	  snprintf(key, sizeof(key), "ssize[%d]", i);
+	  configs[i].size.x = wf_read_tuple_length(mod->id, key, 0, 0.01);
+	  configs[i].size.y = wf_read_tuple_length(mod->id, key, 1, 0.05);
+	  
+	  snprintf(key, sizeof(key), "sview[%d]", i);
+	  configs[i].bounds_range.min = 
+	    wf_read_tuple_length(mod->id, key, 0, 0);
+	  configs[i].bounds_range.max =   // set up sensible defaults
+
+	    wf_read_tuple_length(mod->id, key, 1, 5.0);
+	  configs[i].fov 
+	    = DTOR(wf_read_tuple_angle(mod->id, key, 2, 5.0 ));
+	}
+      
+      PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
+
+      stg_model_set_cfg( mod, configs, scount * sizeof(stg_ranger_config_t) );
+      
+      free( configs );
+    }
 }
 
 int ranger_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
@@ -452,9 +446,29 @@ int ranger_render_data( stg_model_t* mod, void* userp )
 	    {
 	      stg_ranger_config_t* rngr = &cfg[s];
 	      
-	      stg_rtk_fig_arrow( fig,
-				 rngr->pose.x, rngr->pose.y, rngr->pose.a,
-				 samples[s].range, 0.02 );
+	      //stg_rtk_fig_arrow( fig,
+	      //		 rngr->pose.x, rngr->pose.y, rngr->pose.a,
+	      //		 samples[s].range, 0.02 );
+	      	      
+	      // sensor FOV
+	      double sidelen = samples[s].range;
+	      double da = rngr->fov/2.0;
+	      
+	      double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - da );
+	      double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - da );
+	      double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da );
+	      double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da );
+	      
+	      stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 );
+	      stg_rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );
+	      
+	      stg_rtk_fig_ellipse_arc( fig,
+				       rngr->pose.x, rngr->pose.y, rngr->pose.a,
+				       2.0*sidelen,
+				       2.0*sidelen,
+				       -da, da );
+
+
 	    }
 	}
     }

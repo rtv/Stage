@@ -25,7 +25,7 @@ extern int _stg_disable_gui;
 
 /** @defgroup world Worlds
 
-Stage simulates a 'world' composed of models, defined in a 'world
+Stage simulates a 'world' composed of `models', defined in a `world
 file'. 
 
 <h2>Worldfile properties</h2>

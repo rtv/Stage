@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.26 2006-01-24 08:08:25 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.27 2006-01-30 06:58:15 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -89,6 +89,8 @@ Attaching Player interfaces to the Stage models "marvin" and "gort" in a Player 
 # Present a simulation interface on the default port (6665).
 # Load the Stage plugin driver and create the world described
 # in the worldfile "example.world" 
+# The simulation interface MUST be created before any simulated devices 
+# models can be used.
 driver
 (		
   name "stage"
@@ -98,20 +100,12 @@ driver
 )
 
 # Present a position interface on the default port (6665), connected
-# to the Stage position model "marvin".
+# to the Stage position model "marvin", and a laser interface connected to
+# the laser child of "marvin".
 driver
 (
   name "stage"
-  provides ["position:0" ]
-  model "marvin"
-)
-
-# Present a laser interface on the default port, connected to the
-# laser model attached to "marvin".
-driver
-(
-  name "stage"
-  provides ["laser:0" ]
+  provides ["position:0" "laser:0"]
   model "marvin"
 )
 

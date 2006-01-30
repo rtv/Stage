@@ -23,19 +23,21 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.11 2006-01-29 00:09:19 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.12 2006-01-30 06:58:15 rtv Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
 /** @addtogroup player 
 @par Position interface
-- PLAYER_POSITION2D_CMD_STATE
+- PLAYER_POSITION2D_CMD_POS
+- PLAYER_POSITION2D_CMD_VEL
+- PLAYER_POSITION2D_CMD_CAR
 - PLAYER_POSITION2D_DATA_STATE
 - PLAYER_POSITION2D_REQ_GET_GEOM
 - PLAYER_POSITION2D_REQ_MOTOR_POWER
 - PLAYER_POSITION2D_REQ_RESET_ODOM
 - PLAYER_POSITION2D_REQ_SET_ODOM
-- PLAYER_POSITION2D_REQ_VELOCITY_MODE
+- PLAYER_POSITION2D_REQ_POSITION_MODE
 */
 
 // CODE ----------------------------------------------------------------------

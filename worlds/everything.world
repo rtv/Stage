@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.75 2006-01-29 04:06:41 rtv Exp $
+# CVS: $Id: everything.world,v 1.76 2006-01-30 06:58:15 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -11,10 +11,13 @@ interval_real 100 # real-time milliseconds per update step
 # defines Pioneer-like robots
 include "pioneer.inc"
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
+
 include "sick.inc"
+
 
 size [40 20 ]
 
@@ -23,8 +26,8 @@ gui_disable 0
 
 window( 
   size [ 769.000 592.000 ] 
-  center [-9.683 3.836] 
-  scale 0.015 
+  center [-10.366 3.451] 
+  scale 0.004 
 
   # Store the state of the visualizations
   # Change these in the View menu
@@ -69,11 +72,9 @@ map(
 # a block for gripping
 define puck model(
   size [ 0.08 0.08 ]
-  color "green" 
-
   gripper_return 1
- 
   gui_movemask 3
+  gui_nose 1
 )
 
 
@@ -103,7 +104,7 @@ define chatterbox position
 chatterbox
 (
   name "cb0"
-  pose [ -10 5 0 ]
+  pose [ -10.000 5.000 0.000 ]
 )
 
 
