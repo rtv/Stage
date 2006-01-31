@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.56 $
+//  $Revision: 1.57 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -79,7 +79,7 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
 
 
 const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
-const double STG_POSITION_WATTS = 10.0; // base cost of position device
+const double STG_POSITION_WATTS = 2.0; // base cost of position device
 
 // simple odometry error model parameters. the error is selected at
 // random in the interval -MAX/2 to +MAX/2 at startup

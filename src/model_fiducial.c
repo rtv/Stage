@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.45 $
+//  $Revision: 1.46 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -161,7 +161,7 @@ int fiducial_startup( stg_model_t* mod )
   PRINT_DEBUG( "fiducial startup" );  
   
   mod->f_update = fiducial_update;
-  //mod->watts = STG_FIDUCIAL_WATTS;
+  stg_model_set_watts( mod, STG_FIDUCIAL_WATTS );
   
   return 0;
 }
@@ -169,11 +169,10 @@ int fiducial_startup( stg_model_t* mod )
 int fiducial_shutdown( stg_model_t* mod )
 {
   mod->f_update = NULL;
-  //mod->watts = 0.0;
+  stg_model_set_watts( mod, 0);
 
   // this will undrender the data
-  stg_model_set_data( mod, NULL, 0 );
-  
+  stg_model_set_data( mod, NULL, 0 ); 
   return 0;
 }
 

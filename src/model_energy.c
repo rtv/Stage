@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -49,11 +49,29 @@ const double STG_ENERGY_POSEY_DEFAULT = 0.0;
 const double STG_ENERGY_POSEA_DEFAULT = 0.0;
 const int STG_ENERGY_FIDUCIAL_DEFAULT = 255;
 
-typedef struct
-{
-} stg_energy_model_t;
+/**
+@ingroup model
+@defgroup model_energy Energy model 
+The energy model simulates a rechargable energy storage device.
 
+<h2>Worldfile properties</h2>
 
+@par Summary and default values
+
+@verbatim
+energy
+(
+  # energy properties
+
+  # model properties
+  size [0.08 0.18]
+  color "orange"
+)
+@endverbatim
+
+@par Details
+TODO
+*/
 
 int energy_init( stg_model_t* mod ) 
 {
@@ -70,7 +88,7 @@ int energy_init( stg_model_t* mod )
   stg_model_set_fiducial_return( mod, FiducialNone );
 
   // XX ? does this make sense?
-  stg_model_set_watts( mod, 10.0 );
+  stg_model_set_watts( mod, 0.0 );
   
   // sensible energy defaults
   stg_geom_t geom;
@@ -104,8 +122,6 @@ int energy_init( stg_model_t* mod )
   stg_color_t col = stg_lookup_color( "orange" ); 
   stg_model_set_color( mod, col );
 
-  //stg_model_add_callback( mod, &mod->data, energy_render_data, NULL );
-
   // adds a menu item and associated on-and-off callbacks
   stg_model_add_property_toggles( mod, 
 				  &mod->data,
@@ -116,6 +132,7 @@ int energy_init( stg_model_t* mod )
 				  "energy_bar",
 				  "energy bar",
 				  TRUE );  
+
   stg_model_add_property_toggles( mod, 
 				  &mod->data,
 				  energy_render_data_text, // called when toggled on

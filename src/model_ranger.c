@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.61 $
+//  $Revision: 1.62 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -167,7 +167,8 @@ int ranger_startup( stg_model_t* mod )
   PRINT_DEBUG( "ranger startup" );
 
   mod->f_update = ranger_update;
-  //mod->watts = STG_RANGER_WATTS;
+
+  stg_model_set_watts( mod, STG_RANGER_WATTS );
 
   return 0;
 }
@@ -178,7 +179,7 @@ int ranger_shutdown( stg_model_t* mod )
   PRINT_DEBUG( "ranger shutdown" );
 
   mod->f_update = NULL;
-  //mod->watts = 0.0; // stop consuming power
+  stg_model_set_watts( mod, 0 );
   
   // clear the data - this will unrender it too.
   stg_model_set_data( mod, NULL, 0 );

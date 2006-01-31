@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.58 2006-01-30 06:58:15 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.59 2006-01-31 07:32:30 rtv Exp $
  */
 
 #include <math.h>
@@ -239,10 +239,24 @@ int ptz_startup( stg_model_t* mod );
 int blobfinder_update( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder update" );  
-
+  
   // we MUST have a PTZ parent model
-  assert( mod->parent );
-  assert( mod->parent->f_startup == ptz_startup );
+  if( mod->parent == NULL )
+    {
+      printf( "Model %s is a blobfinder but has no parent.\n"
+	      "A blobfinder MUST be a child of a PTZ model. Fix your worldfile.\n",
+	      mod->token );
+      exit(-1);
+    }
+
+  if( mod->parent->f_startup != ptz_startup )
+    {
+      printf( "Model %s is a blobfinder but it's parent is not a PTZ model.\n"
+	      "A blobfinder MUST be a child of a PTZ model. Fix your worldfile.\n", 
+	      mod->token );
+      exit(-1);
+    }
+  
   stg_ptz_data_t* ptz = (stg_ptz_data_t*)mod->parent->data;
 
   stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg; 

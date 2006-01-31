@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -49,6 +49,9 @@ gripper
 
 #define STG_DEFAULT_GRIPPER_SIZEX 0.12
 #define STG_DEFAULT_GRIPPER_SIZEY 0.28
+#define STG_GRIPPER_WATTS 1.0
+
+// TODO - simulate energy use when moving grippers
 
 #include "stage_internal.h"
 
@@ -688,13 +691,14 @@ int gripper_render_cfg( stg_model_t* mod, void* user )
 int gripper_startup( stg_model_t* mod )
 { 
   PRINT_DEBUG( "gripper startup" );
+  stg_model_set_watts( mod, STG_GRIPPER_WATTS );
   return 0; // ok
 }
 
 int gripper_shutdown( stg_model_t* mod )
 { 
   PRINT_DEBUG( "gripper shutdown" );
-  //stg_model_set_property( mod, "gripper_data", NULL, 0 );
+  stg_model_set_watts( mod, 0 );
   
   // unrender the break beams & lights
   stg_model_fig_clear( mod, "gripper_data_fig" );
