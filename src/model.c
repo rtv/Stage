@@ -77,6 +77,7 @@ model
   color "red" 
 
   # determine how the model appears in various sensors
+
   obstacle_return 1
   laser_return 1
   ranger_return 1

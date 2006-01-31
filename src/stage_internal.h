@@ -12,8 +12,7 @@
 #endif
 
 
-/** 
-    @ingroup libstage
+/** @ingroup libstage
     @defgroup libstage_internal Internals
 
     These are internal docs. Don't use these functions in user
@@ -103,9 +102,6 @@ extern "C" {
   void gui_model_geom( stg_model_t* model );
   void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode);
   void gui_model_nose( stg_model_t* model );
-  //void gui_model_render_command( stg_model_t* mod );
-  //void gui_model_render_config( stg_model_t* mod );
-  //void gui_model_render_data( stg_model_t* mod );
   void gui_window_menus_create( gui_window_t* win );
   void gui_window_menus_destroy( gui_window_t* win );
 
@@ -126,6 +122,14 @@ extern "C" {
 
   void gui_add_tree_item( stg_model_t* mod );
 
+
+   /** container for a callback function and a single argument, so
+       they can be stored together in a list with a single pointer. */
+  typedef struct
+  {
+    stg_model_callback_t callback;
+    void* arg;
+  } stg_cbarg_t;
 
   // callback functions
   //typedef void(*func_init_t)(struct _stg_model*);
@@ -322,7 +326,8 @@ extern "C" {
 
   // ROTATED RECTANGLES -------------------------------------------------
 
-  /** @defgroup rotrect Rotated Rectangles
+  /** @ingroup libstage_internal
+      @defgroup rotrect Rotated Rectangles
       @{ 
   */
   
@@ -360,7 +365,8 @@ extern "C" {
   
   // MATRIX  -----------------------------------------------------------------------
   
-  /** @defgroup stg_matrix Matrix occupancy quadtree
+  /** @ingroup libstage_internal
+      @defgroup stg_matrix Matrix occupancy quadtree
       Occupancy quadtree underlying Stage's sensing and collision models. 
       @{ 
   */
@@ -497,14 +503,9 @@ extern "C" {
    */
   void stg_matrix_remove_object( stg_matrix_t* matrix, void* object );
 
-  /**@}*/
 
   // RAYTRACE ITERATORS -------------------------------------------------------------
-  
-  /** @defgroup stg_itl Raytracing in a Matrix
-      Iterators for raytracing in a matrix
-      @{ */
-  
+    
   typedef struct
   {
     double x, y, a;
@@ -535,7 +536,8 @@ extern "C" {
 
   /** @} */
 
-  /** @defgroup worldfile worldfile C wrappers
+  /** @ingroup libstage_internal
+      @defgroup worldfile worldfile C wrappers
       @{
   */
   
@@ -578,55 +580,9 @@ extern "C" {
   void model_print_cb( gpointer key, gpointer value, gpointer user );
   void model_destroy_cb( gpointer mod );
   
-  // Error macros - output goes to stderr
-#define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_ERR1(m,a) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_ERR2(m,a,b) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_ERR3(m,a,b,c) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_ERR4(m,a,b,c,d) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_ERR5(m,a,b,c,d,e) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
 
-  // Warning macros
-#define PRINT_WARN(m) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_WARN1(m,a) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_WARN2(m,a,b) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_WARN3(m,a,b,c) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_WARN4(m,a,b,c,d) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_WARN5(m,a,b,c,d,e) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
-
-  // Message macros
-#ifdef DEBUG
-#define PRINT_MSG(m) printf( "Stage: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_MSG1(m,a) printf( "Stage: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_MSG2(m,a,b) printf( "Stage: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m" (%s %s)\n", a, b, c, d, e,__FILE__, __FUNCTION__)
-#else
-#define PRINT_MSG(m) printf( "Stage: "m"\n" )
-#define PRINT_MSG1(m,a) printf( "Stage: "m"\n", a)
-#define PRINT_MSG2(m,a,b) printf( "Stage: "m"\n,", a, b )
-#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m"\n", a, b, c )
-#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m"\n", a, b, c, d )
-#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m"\n", a, b, c, d, e )
-#endif
-
-  // DEBUG macros
-#ifdef DEBUG
-#define PRINT_DEBUG(m) printf( "debug: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_DEBUG1(m,a) printf( "debug: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_DEBUG2(m,a,b) printf( "debug: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_DEBUG3(m,a,b,c) printf( "debug: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_DEBUG4(m,a,b,c,d) printf( "debug: "m" (%s %s)\n", a, b, c ,d, __FILE__, __FUNCTION__)
-#define PRINT_DEBUG5(m,a,b,c,d,e) printf( "debug: "m" (%s %s)\n", a, b, c ,d, e, __FILE__, __FUNCTION__)
-#else
-#define PRINT_DEBUG(m)
-#define PRINT_DEBUG1(m,a)
-#define PRINT_DEBUG2(m,a,b)
-#define PRINT_DEBUG3(m,a,b,c)
-#define PRINT_DEBUG4(m,a,b,c,d)
-#define PRINT_DEBUG5(m,a,b,c,d,e)
-#endif
+/** @} */  
+// end of libstage_internal documentation  
 
 
 // end documentation group stage
@@ -762,8 +718,6 @@ the worldfile c++ code */
 }
 #endif 
 
-/** @} */  
-// end of libstage_internal documentation  
 
 #endif // _STAGE_INTERNAL_H
 

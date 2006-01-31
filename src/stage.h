@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.174 2006-01-30 06:58:15 rtv Exp $
+ * CVS: $Id: stage.h,v 1.175 2006-01-31 07:12:36 rtv Exp $
  */
 
 
@@ -63,8 +63,7 @@
 extern "C" {
 #endif 
 
-
-/** @defgroup libstage libstage - Stage library API
+/** @defgroup libstage libstage API reference
 
     libstage (The Stage Library) provides a C code library for
     simulating a population of mobile robots and sensors. It is
@@ -96,45 +95,42 @@ int main( int argc, char* argv[] )
 @par Contact and support
 
 For help with libstage, please use the mailing list playerstage_users@lists.sourceforge.net. 
-
-    @{
+@{
 */
 
 
-/** @addtogroup stg_model
-  @{
-*/
-
-  /** any integer value other than this is a valid fiducial ID 
-   */
+/** any integer value other than this is a valid fiducial ID 
+ */
 #define FiducialNone 0
-  
+
 #define STG_TOKEN_MAX 64
 
-  // Basic self-describing measurement types. All packets with real
-  // measurements are specified in these terms so changing types here
-  // should work throughout the code If you change these, be sure to
-  // change the byte-ordering macros below accordingly.
+/** @defgroup types Measurement Types
+    Basic self-describing measurement types. All packets with real
+    measurements are specified in these terms so changing types here
+    should work throughout the code.
+  @{
+*/    
 
   /** uniquely identify a model */
   typedef int stg_id_t;
-
-  /** unit of distance */
+  
+  /** Metres: unit of distance */
   typedef double stg_meters_t;
-
-  /** unit of angle */
+  
+  /** Radians: unit of angle */
   typedef double stg_radians_t;
   
-  /** unit of (short) time */
+  /** Milliseconds: unit of (short) time */
   typedef unsigned long stg_msec_t;
 
-  /** unit of mass */
+  /** Kilograms: unit of mass */
   typedef double stg_kg_t; // Kilograms (mass)
 
-  /** unit of energy */
+  /** Joules: unit of energy */
   typedef double stg_joules_t;
 
-  /** unit of power (energy/time) */
+  /** Watts: unit of power (energy/time) */
   typedef double stg_watts_t; 
 
   /** boolean */
@@ -201,93 +197,30 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_bounds_t range; //< min and max range of sensor
     stg_radians_t angle; //< width of viewing angle of sensor
   } stg_fov_t;
-  
 
-  // ENERGY --------------------------------------------------------------
-
-  /** energy data packet */
-  typedef struct
+  /** A handy triple for PTZ angles */
+  typedef struct 
   {
-    /** estimate of current energy stored */
-    stg_joules_t stored;
+    stg_radians_t pan;
+    stg_radians_t tilt;
+    stg_radians_t zoom;
+  } stg_ptz_t;
 
-    /** maximum storage capacity */
-    //stg_joules_t capacity;
+  /*@}*/ // end types
 
-    /** TRUE iff the device is receiving energy from a charger */
-    stg_bool_t charging;
-
-    /** the range to the nearest connected object */
-    stg_meters_t range;
-
-    /** an array of pointers to connected models */
-    GPtrArray* connections;
-  } stg_energy_data_t;
-
-  /** energy config packet (use this to set or get energy configuration)*/
-  typedef struct
-  {
-    /** maximum storage capacity */
-    stg_joules_t capacity;
-
-    /** when charging another device, supply this many joules/sec at most*/
-    stg_watts_t give_rate;
-
-    /** when charging from another device, receive this many
-	joules/sec at most*/
-    stg_watts_t take_rate;
-
-    /** length of the charging probe */
-    stg_meters_t probe_range;
-    
-    /**  iff TRUE, this device will supply power to connected devices */
-    stg_bool_t give;
-
-  } stg_energy_config_t;
-
-  // there is currently no energy command packet
-
-  // BLINKENLIGHT -------------------------------------------------------
-
-  //typedef struct
-  //{
-  //int enable;
-  //stg_msec_t period;
-  //} stg_blinkenlight_t;
-
-  // GRIPPER ------------------------------------------------------------
-
-  // Possible Gripper return values
-  //typedef enum 
-  //{
-  //  GripperDisabled = 0,
-  //  GripperEnabled
-  //} stg_gripper_return_t;
 
   // GUIFEATURES -------------------------------------------------------
   
-  // Movement masks for figures
-#define STG_MOVE_TRANS (1 << 0)
-#define STG_MOVE_ROT   (1 << 1)
-#define STG_MOVE_SCALE (1 << 2)
   
-  typedef int stg_movemask_t;
-  
-/*   typedef struct */
-/*   { */
-/*     uint8_t show_data; */
-/*     uint8_t show_cfg; */
-/*     uint8_t show_cmd; */
-    
-/*     uint8_t nose; */
-/*     uint8_t grid; */
-/*     //uint8_t boundary; */
-/*     uint8_t outline; */
-/*     stg_movemask_t movemask; */
-/*   } stg_guifeatures_t; */
+ // forward declare struct types from player_internal.h
+  struct _stg_model;
+  struct _stg_matrix;
+  struct _gui_window;
+  struct _stg_world;
 
+  typedef struct _stg_model stg_model_t; //  defined in stage_internal.
+  typedef struct _stg_world stg_world_t; 
 
-/** @} */
 
 
   /** Returns the real (wall-clock) time in milliseconds since the
@@ -317,10 +250,10 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
 
   // POINTS ---------------------------------------------------------
-
-  /** @defgroup stg_point Points
-      Creating and manipulating points
-      @{
+  /** @ingroup libstage
+      @defgroup stg_points Points
+      Defines a point on the 2D plane.
+      @{ 
   */
 
   /** define a point on the plane */
@@ -333,32 +266,32 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
       pointer, preferably with stg_points_destroy(). */
   stg_point_t* stg_points_create( size_t count );
 
-  /// frees a point array
+  /** frees a point array */
   void stg_points_destroy( stg_point_t* pts );
 
-  /**@}*/
-
+  /*@}*/
 
   // POLYLINES ---------------------------------------------------------
 
-  /** @defgroup stg_polyline Polylines
-      Creating and manipulating polylines
-      @{
+  /** @ingroup libstage
+      @defgroup stg_polyline Polylines
+      Defines a line defined by multiple points.
+      @{ 
   */
-  
+
   /** define a polyline: a set of connected vertices */
   typedef struct
   {
-    /// pointer to an array of points
-    stg_point_t* points;
-    size_t points_count;    
+    stg_point_t* points; ///< Pointer to an array of points
+    size_t points_count; ///< Number of points in array   
   } stg_polyline_t; 
 
-  /**@}*/
+  /*@}*/
 
   // POLYGONS ---------------------------------------------------------
-
-  /** @defgroup stg_polygon Polygons
+  
+  /** @ingroup libstage
+      @defgroup stg_polygon Polygons
       Creating and manipulating polygons
       @{
   */
@@ -389,8 +322,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /// destroy an array of [count] polygons
   void stg_polygons_destroy( stg_polygon_t* p, size_t count );
   
-  /** creates a unit square polygon
-   */
+  /// creates a unit square polygon
   stg_polygon_t* stg_unit_polygon_create( void );
     
   /// Copies [count] points from [pts] into polygon [poly], allocating
@@ -412,7 +344,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /// print a human-readable description of an array of polygons on stdout
   void stg_polygons_print( stg_polygon_t* polys, unsigned int count );
   
-  /** interpret a bitmap file as a set of polygons. Returns an array
+  /** Interpret a bitmap file as a set of polygons. Returns an array
       of polygons. On exit [poly_count] is the number of polygons
       found.
    */
@@ -424,19 +356,10 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   // end property typedefs -------------------------------------------------
 
 
-  // forward declare struct types from player_internal.h
-  struct _stg_model;
-  struct _stg_matrix;
-  struct _gui_window;
-  struct _stg_world;
-
-  typedef struct _stg_model stg_model_t; //  defined in stage_internal.
-  typedef struct _stg_world stg_world_t;
-
-
  //  WORLD --------------------------------------------------------
 
-  /** @defgroup stg_world Worlds
+  /** @ingroup libstage
+      @defgroup stg_world Worlds
      Implements a world - a collection of models and a matrix.   
      @{
   */
@@ -517,11 +440,18 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   //  MODEL --------------------------------------------------------
     
   // group the docs of all the model types
-  /** @defgroup stg_model Models
+  /** @ingroup libstage
+      @defgroup stg_model Models
       Implements the basic object
-      @{ */
+      @{ 
+  */
   
-  //#define STG_PROPNAME_MAX 128
+  // Movement masks for figures
+#define STG_MOVE_TRANS (1 << 0)
+#define STG_MOVE_ROT   (1 << 1)
+#define STG_MOVE_SCALE (1 << 2)
+  
+  typedef int stg_movemask_t;
 
   /** \struct stg_model_t 
       Opaque data structure implementing a model.
@@ -554,13 +484,6 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   typedef int(*stg_model_initializer_t)(stg_model_t*);
   
 
-   /** container for a callback function and a single argument, so
-       they can be stored together in a list with a single pointer. */
-  typedef struct
-  {
-    stg_model_callback_t callback;
-    void* arg;
-  } stg_cbarg_t;
   
   /// laser return value
   typedef enum 
@@ -739,10 +662,6 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
   // BLOBFINDER MODEL --------------------------------------------------------
   
-  /** @defgroup stg_model_blobfinder Blobfinder
-      Implements the blobfinder  model.
-      @{ */
-  
 #define STG_BLOB_CHANNELS_MAX 16
   
   /** blobfinder config packet
@@ -769,27 +688,71 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_meters_t range;
   } stg_blobfinder_blob_t;
 
-  /** Create a new blobfinder model 
-   */
-  stg_model_t* stg_blobfinder_create( stg_world_t* world,	
-				      stg_model_t* parent, 
-				      stg_id_t id,  
-				      char* token );   
-  /**@}*/
+
+  // ENERGY model --------------------------------------------------------------
+
+  /** energy data packet */
+  typedef struct
+  {
+    /** estimate of current energy stored */
+    stg_joules_t stored;
+
+    /** maximum storage capacity */
+    //stg_joules_t capacity;
+
+    /** TRUE iff the device is receiving energy from a charger */
+    stg_bool_t charging;
+
+    /** the range to the nearest connected object */
+    stg_meters_t range;
+
+    /** an array of pointers to connected models */
+    GPtrArray* connections;
+  } stg_energy_data_t;
+
+  /** energy config packet (use this to set or get energy configuration)*/
+  typedef struct
+  {
+    /** maximum storage capacity */
+    stg_joules_t capacity;
+
+    /** when charging another device, supply this many joules/sec at most*/
+    stg_watts_t give_rate;
+
+    /** when charging from another device, receive this many
+	joules/sec at most*/
+    stg_watts_t take_rate;
+
+    /** length of the charging probe */
+    stg_meters_t probe_range;
+    
+    /**  iff TRUE, this device will supply power to connected devices */
+    stg_bool_t give;
+
+  } stg_energy_config_t;
+
+  // there is currently no energy command packet
+
+  // BLINKENLIGHT -------------------------------------------------------
+
+  //typedef struct
+  //{
+  //int enable;
+  //stg_msec_t period;
+  //} stg_blinkenlight_t;
+
+  // GRIPPER ------------------------------------------------------------
+
+  // Possible Gripper return values
+  //typedef enum 
+  //{
+  //  GripperDisabled = 0,
+  //  GripperEnabled
+  //} stg_gripper_return_t;
+
+
 // PTZ MODEL --------------------------------------------------------
   
-  /** @defgroup stg_model_ptz Ptz
-      Implements the ptz  model.
-      @{ */
-  
-  /** A handy triple for PTZ angles */
-  typedef struct 
-  {
-    stg_radians_t pan;
-    stg_radians_t tilt;
-    stg_radians_t zoom;
-  } stg_ptz_t;
-
   /** ptz command: specify desired PTZ angles. Tilt has no effect.
    */
   typedef stg_ptz_t stg_ptz_cmd_t;
@@ -808,23 +771,9 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_ptz_t speed; ///< The PTZ servo speeds.
   } stg_ptz_config_t;
 
-  /** Create a new ptz model 
-   */
-  stg_model_t* stg_ptz_create( stg_world_t* world,	
-			       stg_model_t* parent, 
-			       stg_id_t id,  
-			       char* token );   
-  /**@}*/
 
   // LASER MODEL --------------------------------------------------------
   
-  /** @defgroup stg_model_laser Laser
-
-      Implements the laser model: emulates a scanning laser rangefinder
-      @{ */
-  
-  // LASER ------------------------------------------------------------
-
   /** laser sample packet
    */
   typedef struct
@@ -846,29 +795,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     int samples; 
   } stg_laser_config_t;
   
-  /** print human-readable version of the laser config struct
-   */
-  void stg_print_laser_config( stg_laser_config_t* slc );
-  
-  /** Create a new laser model 
-   */
-  stg_model_t* stg_laser_create( stg_world_t* world, 
-				 stg_model_t* parent, 
-				 stg_id_t id,
-				 char* token );
-
-  /// wrap the generic get_data call to be laser-specific. sizes are
-  /// in terms of samples instead of bytes
-  size_t stg_model_get_data_laser( stg_model_t* mod,
-				   stg_laser_sample_t* data, 
-				   size_t max_samples );
-  /**@}*/
-
   // GRIPPER MODEL --------------------------------------------------------
-  
-  /** @defgroup stg_model_gripper Gripper 
-      Implements the gripper model: emulates a pioneer 2D gripper
-      @{ */
   
   typedef enum {
     STG_GRIPPER_PADDLE_OPEN = 0, // default state
@@ -949,24 +876,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   } stg_gripper_data_t;
 
 
-  /** print human-readable version of the gripper config struct
-   */
-  void stg_print_gripper_config( stg_gripper_config_t* slc );
-  
-  /** Create a new gripper model 
-   */
-  stg_model_t* stg_gripper_create( stg_world_t* world, 
-				 stg_model_t* parent, 
-				 stg_id_t id,
-				 char* token );
-  /**@}*/
-
   // FIDUCIAL MODEL --------------------------------------------------------
   
-  /** @defgroup stg_model_fiducial Fidicial 
-      Implements the fiducial detector model
-      @{ */
-
   /** fiducial config packet 
    */
   typedef struct
@@ -990,20 +901,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     
   } stg_fiducial_t;
 
-  /** Create a new fiducial model 
-   */
-  stg_model_t* stg_fiducial_create( stg_world_t* world,  
-				    stg_model_t* parent,  
-				    stg_id_t id, 
-				    char* token );  
-  /**@}*/
-  
   // RANGER MODEL --------------------------------------------------------
-  
-  /** @defgroup stg_model_ranger Ranger
-      Implements the ranger model: emulates
-      sonar, IR, and non-scanning laser range sensors 
-      @{ */
 
   typedef struct
   {
@@ -1019,21 +917,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     //double error; // TODO
   } stg_ranger_sample_t;
   
-  /** Create a new ranger model 
-   */
-  stg_model_t* stg_ranger_create( stg_world_t* world,  
-				  stg_model_t* parent, 
-				  stg_id_t id, 
-				  char* token );
-  /**@}*/
   
   // POSITION MODEL --------------------------------------------------------
-  
-  /** @defgroup stg_model_position Position
-      Implements the position model: a mobile robot base
-      @{ */
-  
-  //#define STG_MM_POSITION_RESETODOM 77
   
   typedef enum
     { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
@@ -1073,9 +958,6 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_position_localization_mode_t localization; ///< global or local mode
   } stg_position_data_t;
   
-  /** "position_stall" property */
-  typedef int stg_position_stall_t;
-
   /** position_cfg" property */
   typedef struct
   {
@@ -1083,14 +965,9 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_position_localization_mode_t localization_mode;
   } stg_position_cfg_t;
 
-  /// create a new position model
-  stg_model_t* stg_position_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );
-  
   /// set the current odometry estimate 
   void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom ); 
 
-  /**@}*/
-  
   // end the group of all models
   /**@}*/
   
@@ -1098,12 +975,13 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
 // MACROS ------------------------------------------------------
 // Some useful macros
-
-/** @defgroup util Utilities
+  
+/** @ingroup libstage
+    @defgroup libstage_util Utilities
     Various useful macros and functions that don't belong anywhere else.
-  @{
+    @{
 */
-
+  
   /** Look up the color in the X11 database.  (i.e. transform color
       name to color value).  If the color is not found in the
       database, a bright red color (0xF00) will be returned instead.
@@ -1116,23 +994,74 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
   // PRETTY PRINTING -------------------------------------------------
   
-  /** @defgroup print Printing: text output functions.
-      @{ 
-  */
-  
-  /** report an error, with a standard, friendly message header */
+  /** Report an error, with a standard, friendly message header */
   void stg_print_err( const char* err );
-
-  /** print human-readable geometry on stdout */
+  /** Print human-readable geometry on stdout */
   void stg_print_geom( stg_geom_t* geom );
-  /** print human-readable pose on stdout */
+  /** Print human-readable pose on stdout */
   void stg_print_pose( stg_pose_t* pose );
-  /** print human-readable velocity on stdout */
+  /** Print human-readable velocity on stdout */
   void stg_print_velocity( stg_velocity_t* vel );
+  /** Print human-readable version of the gripper config struct */
+  void stg_print_gripper_config( stg_gripper_config_t* slc );
+  /** Print human-readable version of the laser config struct */
+  void stg_print_laser_config( stg_laser_config_t* slc );
+  
 
-  /** @} */
 
-/** @defgroup floatcomparison Floating point comparisons
+  // Error macros - output goes to stderr
+#define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_ERR1(m,a) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_ERR2(m,a,b) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_ERR3(m,a,b,c) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_ERR4(m,a,b,c,d) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_ERR5(m,a,b,c,d,e) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
+
+  // Warning macros
+#define PRINT_WARN(m) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_WARN1(m,a) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_WARN2(m,a,b) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_WARN3(m,a,b,c) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_WARN4(m,a,b,c,d) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_WARN5(m,a,b,c,d,e) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
+
+  // Message macros
+#ifdef DEBUG
+#define PRINT_MSG(m) printf( "Stage: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_MSG1(m,a) printf( "Stage: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_MSG2(m,a,b) printf( "Stage: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m" (%s %s)\n", a, b, c, d, e,__FILE__, __FUNCTION__)
+#else
+#define PRINT_MSG(m) printf( "Stage: "m"\n" )
+#define PRINT_MSG1(m,a) printf( "Stage: "m"\n", a)
+#define PRINT_MSG2(m,a,b) printf( "Stage: "m"\n,", a, b )
+#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m"\n", a, b, c )
+#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m"\n", a, b, c, d )
+#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m"\n", a, b, c, d, e )
+#endif
+
+  // DEBUG macros
+#ifdef DEBUG
+#define PRINT_DEBUG(m) printf( "debug: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_DEBUG1(m,a) printf( "debug: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_DEBUG2(m,a,b) printf( "debug: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_DEBUG3(m,a,b,c) printf( "debug: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_DEBUG4(m,a,b,c,d) printf( "debug: "m" (%s %s)\n", a, b, c ,d, __FILE__, __FUNCTION__)
+#define PRINT_DEBUG5(m,a,b,c,d,e) printf( "debug: "m" (%s %s)\n", a, b, c ,d, e, __FILE__, __FUNCTION__)
+#else
+#define PRINT_DEBUG(m)
+#define PRINT_DEBUG1(m,a)
+#define PRINT_DEBUG2(m,a,b)
+#define PRINT_DEBUG3(m,a,b,c)
+#define PRINT_DEBUG4(m,a,b,c,d)
+#define PRINT_DEBUG5(m,a,b,c,d,e)
+#endif
+
+
+/** @ingroup libstage_util
+    @defgroup floatcomparison Floating point comparisons
 
  Macros for comparing floating point numbers. It's a troublesome
  limitation of C and C++ that floating point comparisons are not very
@@ -1162,6 +1091,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
 /** TRUE iff A is less than or equal to B, subject to PRECISION */
 #define LTE(A,B) ((lrint(A*PRECISION))<=(lrint(B*PRECISION)))
+
+
 
 /** @} */
 
@@ -1199,7 +1130,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 #define NORMALIZE(z) atan2(sin(z), cos(z))
 #endif
 
-/** @} */
+// end doc group libstage_utilities
+/** @} */ 
 
 #ifdef __cplusplus
 }
