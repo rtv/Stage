@@ -32,8 +32,7 @@
 #include "zoo_driver.h"
 #include "zoo_species.h"
 
-#include <player/devicetable.h>
-#include <player/error.h>
+#include <libplayercore/playercore.h>
 #include <string.h>
 #include <stdarg.h>
 #include <signal.h>
@@ -146,8 +145,8 @@ ZooSpecies::SetScoreDrawCB( zooref_score_draw_t draw_cb, void *userdata )
 		stg_model_t *mod = zoo->GetModelByIndex(i);
 		if (!mod) continue;
 		stg_model_add_property_toggles(mod, ZOO_SCORE_PROPERTY_NAME,
-			(stg_property_callback_t)draw_cb, userdata,
-			(stg_property_callback_t)clear_cb, NULL,
+			(stg_model_callback_t)draw_cb, userdata,
+			(stg_model_callback_t)clear_cb, NULL,
 			ZOO_SCORE_LABEL,
 			0);
 	}

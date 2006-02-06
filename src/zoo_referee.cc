@@ -32,8 +32,7 @@
 #include "zoo_referee.h"
 #include "zoo_driver.h"
 
-#include <player/devicetable.h>
-#include <player/error.h>
+#include <libplayercore/playercore.h>
 #include <string.h>
 #include <stdarg.h>
 #include <signal.h>
@@ -102,6 +101,7 @@ ZooReferee::draw_int_cb( stg_model_t *mod, const char *propname,
 			STG_LAYER_USER);
 		stg_color_t *color = (stg_color_t *)
 			stg_model_get_property_fixed(mod, "color", sizeof(stg_color_t));
+		assert(color);
 		stg_rtk_fig_color_rgb32(fig, *color);
 	}
 

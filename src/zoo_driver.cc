@@ -32,8 +32,6 @@
  * Date: July 14, 2005
  */
 
-#include <player/devicetable.h>
-#include <player/error.h>
 #include <string.h>
 #include <stdarg.h>
 #include <signal.h>
@@ -41,8 +39,10 @@
 #include <wordexp.h>
 #include <stdio.h>
 #include <dlfcn.h>
-#include <gui.h>
 
+#include <libplayercore/playercore.h>
+
+#include "gui.h"
 #include "zoo_driver.h"
 #include "zoo_species.h"
 #include "zoo_controller.h"
@@ -76,7 +76,7 @@ ZooDriver_Register( DriverTable *table )
 {
 	printf("\n ** Zoo plugin v%s **", PACKAGE_VERSION);
 
-	if (!quiet_startup) {
+	if (!player_quiet_startup) {
 		printf("\n * Copyright 2005 Adam Lein *\n");
 	}
 
@@ -96,10 +96,11 @@ ZooDriver::ZooDriver( ConfigFile *cf, int section )
 	: Driver(cf, section)
 {
 	/* set me up as a valid player interface... or something */
-	player_device_id_t devid;
-	if (cf->ReadDeviceId(&devid, section, "provides", 0, 0, NULL))
+	player_devaddr_t devaddr;
+	if (cf->ReadDeviceAddr(&devaddr, section, "provides", 0, 0, NULL))
 		zoo_err("Zoo is confused\n");
-	AddInterface(devid, PLAYER_ALL_MODE, 0, 0, 0, 0);
+	if (AddInterface(devaddr))
+		DRIVER_ERROR("AddInterface() failed");
 
 	/* count the robots */
 	robot_count = 0;
@@ -568,7 +569,10 @@ ZooDriver::SetScore( const char *model, void *score, size_t siz )
 
 	/* set transient score on robot (position model) */
 	stg_model_t *pos = GetModelByName(model);
+/* FIXME no more stg_model_set_property? */
+#if 0
 	stg_model_set_property(pos, ZOO_SCORE_PROPERTY_NAME, score, siz);
+#endif
 
 	return 1;
 }
@@ -590,7 +594,10 @@ ZooDriver::ClearScore( const char *model )
 
 	/* clear transient score: */
 	stg_model_t *mod = GetModelByName(model);
+/* FIXME no more stg_model_set_property? */
+#if 0
 	stg_model_set_property(mod, ZOO_SCORE_PROPERTY_NAME, NULL, 0);
+#endif
 
 	return 0;
 }

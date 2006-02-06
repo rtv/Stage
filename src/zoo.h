@@ -25,7 +25,7 @@ class ZooReferee;
 /* general stuff */
 extern "C" { int zoo_err(const char *, ...); }
 
-extern bool quiet_startup;
+extern bool player_quiet_startup;
 
 /* maps */
 typedef struct {
@@ -50,5 +50,12 @@ typedef ZooReferee *(*zooref_create_t)(ConfigFile *, int, ZooDriver *);
 #include "zoo_species.h"
 #include "zoo_controller.h"
 #include "zoo_referee.h"
+
+/* FIXME: what happened to properties? */
+#define stg_model_set_property(a,b,c,d)
+#define stg_model_get_property_fixed(a,b,c) (0)
+#define stg_model_add_property_toggles(a,b,c,d,e,f,g,h)
+#define stg_model_add_property_callback(a,b,c,d)
+typedef stg_model_callback_t stg_property_callback_t;
 
 #endif

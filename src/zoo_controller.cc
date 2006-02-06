@@ -29,8 +29,7 @@
  * Date: July 14, 2005
  */
 
-#include <player/devicetable.h>
-#include <player/error.h>
+#include <libplayercore/playercore.h>
 #include <string.h>
 #include <stdarg.h>
 #include <signal.h>
