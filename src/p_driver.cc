@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.28 2006-02-08 08:53:29 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.29 2006-02-08 21:17:12 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -299,8 +299,11 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 
 // Constructor.  Retrieve options from the configuration file and do any
 // pre-Setup() setup.
+
+// configure the underlying driver to queue incoming commands and use a very long queue.
+
 StgDriver::StgDriver(ConfigFile* cf, int section)
-    : Driver(cf, section, false, PLAYER_MSGQUEUE_DEFAULT_MAXLEN)
+    : Driver(cf, section, false, 4096 )
 {  
   // init the array of device ids
   this->devices = g_ptr_array_new();

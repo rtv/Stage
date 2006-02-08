@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics2d.cc,v 1.1 2006-02-08 08:53:54 rtv Exp $
+ * CVS: $Id: p_graphics2d.cc,v 1.2 2006-02-08 21:17:13 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -39,6 +39,14 @@ using namespace std;
 - PLAYER_GRAPHICS2D_CMD_POINTS
 */
 
+static unsigned int rgb32_pack( player_color_t *pcol )
+{
+  unsigned int col=0;
+  col = pcol->red << 16;
+  col += pcol->green << 8;
+  col += pcol->blue;
+  return col;
+}
 
 InterfaceGraphics2d::InterfaceGraphics2d( player_devaddr_t addr, 
 			    StgDriver* driver,
@@ -71,6 +79,7 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
                            PLAYER_GRAPHICS2D_CMD_CLEAR, 
                            this->addr))
     {
+      puts( "g2d: clearing figure" );
       stg_rtk_fig_clear( this->fig );
       
       return 0; //ok
@@ -83,16 +92,11 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
       player_graphics2d_cmd_points_t* pcmd = 
 	(player_graphics2d_cmd_points_t*)data;
       
-      unsigned int col=0;
-      col = pcmd->color.red << 16;
-      col += pcmd->color.green << 8;
-      col += pcmd->color.blue;
-
-      stg_rtk_fig_color_rgb32( this->fig, col );
+      stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
       
       for( int p=0; p<pcmd->count; p++ )	
 	{
-	  //printf( "Drawing point %.2f %.2f\n", pcmd->points[p].px, pcmd->points[p].py );
+	  //printf( "g2d: Drawing point %.2f %.2f\n", pcmd->points[p].px, pcmd->points[p].py );
 	  stg_rtk_fig_point( this->fig, 
 			     pcmd->points[p].px, 
 			     pcmd->points[p].py );      
@@ -100,6 +104,42 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
       return 0; //ok
     }
 
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+                           PLAYER_GRAPHICS2D_CMD_POLYGON, 
+                           this->addr))
+    {
+      player_graphics2d_cmd_polygon_t* pcmd = 
+	(player_graphics2d_cmd_polygon_t*)data;
+      
+      
+      double pts[PLAYER_GRAPHICS2D_MAX_POINTS][2];
+      
+      for( int p=0; p<pcmd->count; p++ )	
+	{
+	  pts[p][0] = pcmd->points[p].px;
+	  pts[p][1] = pcmd->points[p].py;
+	}
+      
+      //printf( "g2d: Drawing polygon of %d points\n", pcmd->count ); 
+      
+      if( pcmd->filled )
+	{
+	  stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->fill_color));
+	  stg_rtk_fig_polygon( this->fig, 
+			       0,0,0,			   
+			       pcmd->count,
+			       pts,
+			       TRUE );
+	}
+      
+      stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
+      stg_rtk_fig_polygon( this->fig, 
+			   0,0,0,			   
+			   pcmd->count,
+			   pts,
+			   FALSE );
+      return 0; //ok
+    }
   
   PLAYER_WARN2("stage graphics2d doesn't support message %d:%d.", 
 	       hdr->type, hdr->subtype );
