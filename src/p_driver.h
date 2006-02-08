@@ -234,6 +234,19 @@ class InterfaceMap : public InterfaceModel
 			void * data );
 };
 
+class InterfaceGraphics2d : public InterfaceModel
+{
+ public: 
+  InterfaceGraphics2d( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceGraphics2d( void );
+  
+  virtual int ProcessMessage( MessageQueue* resp_queue, 
+			      player_msghdr * hdr, 
+			      void * data );
+ private:
+  stg_rtk_fig_t* fig; // a figure we can draw in
+};
+
 
 
 #endif

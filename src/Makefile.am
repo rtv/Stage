@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.131 2006-01-29 04:06:40 rtv Exp $
+# $Id: Makefile.am,v 1.132 2006-02-08 08:53:29 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -73,6 +73,7 @@ libstageplugin_la_SOURCES = \
 	p_laser.cc \
 	p_ptz.cc \
 	p_sonar.cc \
+	p_graphics2d.cc \
 	p_gripper.cc \
 	p_localize.cc \
 	p_position.cc \
