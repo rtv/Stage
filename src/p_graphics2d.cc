@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics2d.cc,v 1.2 2006-02-08 21:17:13 rtv Exp $
+ * CVS: $Id: p_graphics2d.cc,v 1.3 2006-02-09 02:21:39 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -79,9 +79,8 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
                            PLAYER_GRAPHICS2D_CMD_CLEAR, 
                            this->addr))
     {
-      puts( "g2d: clearing figure" );
-      stg_rtk_fig_clear( this->fig );
-      
+      //puts( "g2d: clearing figure" );
+      stg_rtk_fig_clear( this->fig );      
       return 0; //ok
     }
   
@@ -101,6 +100,34 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
 			     pcmd->points[p].px, 
 			     pcmd->points[p].py );      
 	}
+      return 0; //ok
+    }
+  
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+                           PLAYER_GRAPHICS2D_CMD_POLYLINE, 
+                           this->addr))
+    {
+      player_graphics2d_cmd_polyline_t* pcmd = 
+	(player_graphics2d_cmd_polyline_t*)data;
+      
+      stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
+      
+      if( pcmd->count > 1 )
+	for( int p=0; p<pcmd->count-1; p++ )	
+	  {
+	    //printf( "g2d: Drawing polyline section from [%.2f,%.2f] to [%.2f,%.2f]\n", 
+	    //    pcmd->points[p].px, pcmd->points[p].py, 
+	    //    pcmd->points[p+1].px, pcmd->points[p+1].py );
+	    
+	    stg_rtk_fig_line( this->fig, 
+			      pcmd->points[p].px, 
+			      pcmd->points[p].py,
+			      pcmd->points[p+1].px, 
+			      pcmd->points[p+1].py );      
+	  }
+      else
+	PRINT_WARN( "refusing to draw a polyline with < 2 points" );
+      
       return 0; //ok
     }
 
