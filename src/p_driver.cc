@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.29 2006-02-08 21:17:12 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.30 2006-02-10 20:54:59 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -193,8 +193,8 @@ void StgDriver_Register(DriverTable* table)
   if( !player_quiet_startup )
     {
       puts( "\n * Part of the Player/Stage Project [http://playerstage.sourceforge.net]\n"
-	    " * Copyright 2000-2005 Richard Vaughan, Andrew Howard, Brian Gerkey\n * and contributors.\n"
-	    " * Released under the GNU GPL." );
+	    " * Copyright 2000-2006 Richard Vaughan, Andrew Howard, Brian Gerkey\n"
+	    " * and contributors. Released under the GNU General Public License v2." );
     }
     
   table->AddDriver( "stage", StgDriver_Init);

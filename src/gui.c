@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.105 2006-01-21 09:35:06 rtv Exp $
+CVS: $Id: gui.c,v 1.106 2006-02-10 20:54:59 rtv Exp $
 */
 
 #include <stdio.h>
@@ -1094,7 +1094,7 @@ int gui_model_polygons( stg_model_t* mod, void* userp )
 				 geom.pose.a,
 				 polys[p].points->len,
 				 polys[p].points->data,
-				 1 );
+				 polys[p].filled );
 	  
 	  if( mod->gui_outline )
 	    {

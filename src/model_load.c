@@ -191,6 +191,20 @@ void stg_model_load( stg_model_t* mod )
 	}
     }
  
+  // load properties of any polygons that we have
+  for( int p=0; p<mod->polygons_count; p++ )
+    {  
+      char key[256];
+      snprintf(key, sizeof(key), "polygon[%d].fill", p);
+      
+      if( wf_property_exists( mod->id, key ) )
+	{
+	  mod->polygons[p].filled = wf_read_int(mod->id, key, 1 );
+	  printf( "Set fill state of polygon[%d] to %d\n",
+		  p, mod->polygons[p].filled );
+	}
+    }
+
   // if we created any polygons
   if( polycount != -1 )
     {

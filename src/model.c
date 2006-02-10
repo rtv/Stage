@@ -1520,6 +1520,11 @@ int model_render_velocity( stg_model_t* mod, void* enabled )
       // how to do the turn speed?
       //stg_rtk_fig_arrow( fig, 0,0,M_PI/2.0, vel->a, 0.05 );
 
+      stg_rtk_fig_ellipse_arc( fig, 0,0,0,
+			       mod->geom.size.x, mod->geom.size.y, 
+			       0, v->a );
+
+
 #if GLOBAL_VECTORS
       stg_rtk_fig_t* fig = stg_model_get_fig( mod, "global_velocity_fig" );
       

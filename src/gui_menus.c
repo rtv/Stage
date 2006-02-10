@@ -157,8 +157,8 @@ void gui_action_about( GtkAction *action, gpointer user_data)
     "Part of the Player/Stage Project\n"
     "[http://playerstage.sourceforge.net]\n\n"
     "Copyright Richard Vaughan, Andrew Howard, Brian Gerkey\n"
-    " and contributors 2000-2005.\n\n"
-    "Released under the GNU General Public License.";
+    " and contributors 2000-2006.\n\n"
+    "Released under the GNU General Public License v2.";
   
   GtkMessageDialog* about = (GtkMessageDialog*)
     gtk_message_dialog_new( NULL, 0, 
