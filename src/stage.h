@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.175 2006-01-31 07:12:36 rtv Exp $
+ * CVS: $Id: stage.h,v 1.176 2006-02-12 22:48:14 rtv Exp $
  */
 
 
@@ -303,8 +303,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     /// pointer to an array of points
     GArray* points;
     
-    /// if TRUE, this polygon is drawn filled
-    stg_bool_t filled; 
+    /// if TRUE, this polygon is NOT drawn filled
+    stg_bool_t unfilled; 
     
     /// render color of this polygon - TODO  - implement color rendering
     stg_color_t color;

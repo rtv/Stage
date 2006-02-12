@@ -199,9 +199,9 @@ void stg_model_load( stg_model_t* mod )
       
       if( wf_property_exists( mod->id, key ) )
 	{
-	  mod->polygons[p].filled = wf_read_int(mod->id, key, 1 );
-	  printf( "Set fill state of polygon[%d] to %d\n",
-		  p, mod->polygons[p].filled );
+	  mod->polygons[p].unfilled = ! wf_read_int(mod->id, key, 1 );
+	  printf( "Set unfilled state of polygon[%d] to %d\n",
+		  p, mod->polygons[p].unfilled );
 	}
     }
 
