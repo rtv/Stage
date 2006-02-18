@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.132 2006-02-08 08:53:29 rtv Exp $
+# $Id: Makefile.am,v 1.133 2006-02-18 01:12:15 gerkey Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -82,14 +82,14 @@ libstageplugin_la_SOURCES = \
 	p_simulation.cc \
 	p_blobfinder.cc \
 	stg_time.cc \
-	stg_time.h 
+	stg_time.h \
+        zoo_driver.h \
+        zoo.h \
+        zoo_controller.h \
+        zoo_referee.h \
+        zoo_species.h
 
 # TODO fix these and move them to a separate tree?
-#zoo.h \
-#zoo_driver.h \
-#zoo_controller.h \
-#zoo_referee.h \
-#zoo_species.h
 #zoo.c 
 #zoo_driver.cc 
 #zoo_species.cc 
