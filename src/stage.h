@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.177 2006-02-27 01:06:47 rtv Exp $
+ * CVS: $Id: stage.h,v 1.178 2006-02-27 03:20:13 rtv Exp $
  */
 
 
@@ -657,7 +657,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 				       void* arg_off,
 				       const char* name,
 				       const char* label,
-				       int enabled );
+				       gboolean enabled );
 
 
   // BLOBFINDER MODEL --------------------------------------------------------

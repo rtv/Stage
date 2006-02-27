@@ -148,7 +148,7 @@ extern "C" {
     stg_model_callback_t callback_off;
     void* arg_on; // argument to callback_on
     void* arg_off; // argument to callback_off
-    int default_state; // disabled = 0
+    //int default_state; // disabled = 0
     GtkAction* action; // action associated with this toggle, may be NULL
     char* path;
   } stg_property_toggle_args_t;

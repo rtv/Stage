@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.30 2006-02-10 20:54:59 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.31 2006-02-27 03:20:13 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -330,7 +330,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
             
       if( !player_quiet_startup )
 	{
-	  printf( "    mapping %d.%d.%d => ", 
+	  printf( "   %d.%d.%d is ", 
 		  player_addr.robot, player_addr.interf, player_addr.index );
 	  fflush(stdout);
 	}
@@ -382,7 +382,6 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  
 	case PLAYER_GRAPHICS2D_CODE:
 	  ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
-	  puts( "** DONE **" );
 	  break;	  
 
 	case PLAYER_GRIPPER_CODE:

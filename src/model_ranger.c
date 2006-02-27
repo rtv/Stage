@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.62 $
+//  $Revision: 1.63 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -145,7 +145,7 @@ int ranger_init( stg_model_t* mod )
 				  NULL,
 				  ranger_unrender_data, // called when toggled off
 				  NULL,
-				  "ranger_data",
+				  "rangerdata",
 				  "ranger data",
 				  TRUE );  // initial state
 
@@ -155,7 +155,7 @@ int ranger_init( stg_model_t* mod )
 				  NULL,
 				  ranger_unrender_cfg, // called when toggled off
 				  NULL,
-				  "ranger_cfg",
+				  "rangercfg",
 				  "ranger config",
 				  FALSE );  // initial state
 

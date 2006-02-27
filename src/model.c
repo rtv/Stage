@@ -49,11 +49,11 @@ extern stg_type_record_t typetable[];
 
 //extern int _stg_disable_gui;
 
-/** @addtogroup stage 
+/** @ingroup stage 
     @{ 
 */
 
-/** @defgroup model Models
+/** @defgroup model Model
     
 The basic model simulates an object with basic properties; position,
 size, velocity, color, visibility to various sensors, etc. The basic

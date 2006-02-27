@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.10 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.11 2006-02-27 03:20:13 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -73,7 +73,7 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
 					  int section )
   : Interface( addr, driver, cf, section )
 {
-  printf( "Simulated world" ); fflush(stdout);
+  printf( "a Stage world" ); fflush(stdout);
   //puts( "InterfaceSimulation constructor" );
   
   // boot libstage, requesting halt on any glib/gtk/gnome problem
