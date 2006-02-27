@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -389,7 +389,7 @@ int gripper_update( stg_model_t* mod )
 int gripper_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
   // Ignore myself, my children, and my ancestors.
-  return( mod->gripper_return && !stg_model_is_related(mod,hitmod));
+  return( hitmod->gripper_return && !stg_model_is_related(mod,hitmod));
 }	
 
 int gripper_break_beam(stg_model_t* mod, stg_gripper_config_t* cfg, int beam) 
