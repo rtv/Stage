@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.134 2006-02-27 01:06:47 rtv Exp $
+# $Id: Makefile.am,v 1.135 2006-02-27 21:35:14 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -43,7 +43,6 @@ libstage_la_SOURCES = \
 	model_fiducial.c \
 	model_ranger.c \
 	model_gripper.c \
-	model_power.c \
 	model_ptz.c \
 	raytrace.c \
 	stage.c \
@@ -61,6 +60,9 @@ libstage_la_SOURCES = \
         rtk_region.c \
         rtkprivate.h
 
+# TODO
+# model_power.c
+
 
 libstage_la_LDFLAGS = -version-info 2:0:0 -rpath $(libdir)
 libstage_la_LIBADD = @GTK_LIBS@ @GNOME_LIBS@
@@ -77,7 +79,6 @@ libstageplugin_la_SOURCES = \
 	p_gripper.cc \
 	p_localize.cc \
 	p_position.cc \
-	p_power.cc \
 	p_map.cc \
 	p_simulation.cc \
 	p_blobfinder.cc \
@@ -88,6 +89,10 @@ libstageplugin_la_SOURCES = \
         zoo_controller.h \
         zoo_referee.h \
         zoo_species.h
+
+# TODO
+# p_power.cc 
+
 
 # TODO fix these and move them to a separate tree?
 #zoo.c 
