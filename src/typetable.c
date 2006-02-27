@@ -9,7 +9,7 @@ int gripper_init( stg_model_t* mod );
 int laser_init( stg_model_t* mod );
 int position_init( stg_model_t* mod );
 int ranger_init( stg_model_t* mod );
-int energy_init( stg_model_t* mod );
+//int energy_init( stg_model_t* mod );
 int ptz_init( stg_model_t* mod );
 
 // map worldfile keywords onto initialization functions
@@ -22,7 +22,7 @@ stg_type_record_t typetable[] =
     { "blobfinder", blobfinder_init },
     { "fiducialfinder", fiducial_init },
     { "gripper", gripper_init },       
-    { "power", energy_init },      
+    //{ "power", energy_init },      
     { "ptz", ptz_init },       
     { NULL, 0, NULL } // this must be the last entry
   };
