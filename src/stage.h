@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.176 2006-02-12 22:48:14 rtv Exp $
+ * CVS: $Id: stage.h,v 1.177 2006-02-27 01:06:47 rtv Exp $
  */
 
 
@@ -689,21 +689,18 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   } stg_blobfinder_blob_t;
 
 
-  // ENERGY model --------------------------------------------------------------
-
+// ENERGY model --------------------------------------------------------------
+  
   /** energy data packet */
   typedef struct
   {
     /** estimate of current energy stored */
     stg_joules_t stored;
 
-    /** maximum storage capacity */
-    //stg_joules_t capacity;
-
     /** TRUE iff the device is receiving energy from a charger */
     stg_bool_t charging;
 
-    /** the range to the nearest connected object */
+    /** diatance to charging device */
     stg_meters_t range;
 
     /** an array of pointers to connected models */
@@ -716,11 +713,10 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     /** maximum storage capacity */
     stg_joules_t capacity;
 
-    /** when charging another device, supply this many joules/sec at most*/
+    /** When charging another device, supply this many Joules/sec at most*/
     stg_watts_t give_rate;
 
-    /** when charging from another device, receive this many
-	joules/sec at most*/
+    /** When charging from another device, receive this many Joules/sec at most*/
     stg_watts_t take_rate;
 
     /** length of the charging probe */
@@ -733,23 +729,13 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
   // there is currently no energy command packet
 
-  // BLINKENLIGHT -------------------------------------------------------
+// BLINKENLIGHT -------------------------------------------------------
 
   //typedef struct
   //{
   //int enable;
   //stg_msec_t period;
   //} stg_blinkenlight_t;
-
-  // GRIPPER ------------------------------------------------------------
-
-  // Possible Gripper return values
-  //typedef enum 
-  //{
-  //  GripperDisabled = 0,
-  //  GripperEnabled
-  //} stg_gripper_return_t;
-
 
 // PTZ MODEL --------------------------------------------------------
   

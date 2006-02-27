@@ -9,11 +9,10 @@
 <div class=box>
 <div class="title">Developer</div>
 <a href="group__libstage.html">libstage</a>
-<a href="modules.html">Contents</a>
 <a href="globals.html">Index</a>
 </div>
 
-<div class=box>
+<div class=box_light>
 <!-- <a href="http://sourceforge.net"><img border=0 src="http://sourceforge.net/sflogo.php?group_id=42445&type=1"></a> -->
 <div class="title">Online</div>
 <a href="http://playerstage.sourceforge.net">Homepage</a><br>

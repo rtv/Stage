@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,6 +18,7 @@
 //#define DEBUG
 
 #include "stage_internal.h"
+
 #include "gui.h"
 extern stg_rtk_fig_t* fig_debug;
 
@@ -114,7 +115,7 @@ int energy_init( stg_model_t* mod )
   memset(&data, 0, sizeof(data));
   data.stored = STG_ENERGY_CAPACITY_DEFAULT;
   data.charging = FALSE;
-  data.range = STG_ENERGY_PROBE_RANGE_DEFAULT;
+  //data.range = STG_ENERGY_PROBE_RANGE_DEFAULT;
   data.connections = g_ptr_array_new();  
   stg_model_set_data( mod, &data, sizeof(data));
 
@@ -276,7 +277,7 @@ int energy_update( stg_model_t* mod )
   double timeslice =  mod->world->sim_interval/1000.0;
   
   //  max range until we know we hit something
-  data->range = cfg->probe_range;
+  //data->range = cfg->probe_range;
   data->charging = FALSE;
 
   if( cfg->probe_range > 0 )
@@ -295,7 +296,7 @@ int energy_update( stg_model_t* mod )
       if( hitmod )
 	{
 	  printf( "CONNECTING to %s\n", hitmod->token );
-	  data->range = itl->range;
+	  //data->range = itl->range;
 	  //data->charging = TRUE;
 	  energy_connect( mod, hitmod );
 	}

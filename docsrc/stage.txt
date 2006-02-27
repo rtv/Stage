@@ -1,23 +1,149 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.11 2006-01-30 07:31:37 rtv Exp $
+ * $Id: stage.txt,v 1.12 2006-02-27 01:06:47 rtv Exp $
 */
 
 /**
 @mainpage The Stage Robot Simulator
 
-<p>Copyright Richard Vaughan and contributors 1998-2005.
+<p>Copyright Richard Vaughan and contributors 1998-2006 and beyond.
 <p>Part of the Player/Stage Project [http://playerstage.sourceforge.net]
-
 
 \section License
 
-<p>Stage sourcecode and documentation is released under the terms of
-the GNU General Public License v2. A copy of the license is included
-with the sourcecode in the file 'COPYING". Copying and redistribution
-is permitted only under the terms of the license.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 2 as published by
+   the Free Software Foundation.
+ 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-\section Release Release Notes
+A copy of the license is included with the sourcecode in the file
+'COPYING". Copying and redistribution is permitted only under the
+terms of the license.
+
+*/
+
+
+
+/** @defgroup stage Stage User Guide 
+
+Stage is a provides a virtual world populated by
+mobile robots and sensors, along with various objects for the robots
+to sense and manipulate. It is usually used to provide simulated
+devices to the Player robot server, but it can also be used as a
+stand-alone robot simulation library.
+
+\section Models
+
+<p>Stage provides several sensor and actuator models, including sonar
+or infrared rangers, scanning laser rangefinder, color-blob tracking,
+fiducial tracking and mobile robot bases with odometric or global
+localization.
+
+<i>Note: Some models from previous versions may not yet be available
+in this release (e.g. bumpers), but we're working on them. Let us know
+which ones you need.  </i>
+
+\section Design
+
+<p>Stage was designed with multi-agent systems in mind, so it provides
+fairly simple, computationally cheap models of lots of devices rather
+than attempting to emulate any device with great fidelity. This design
+is intended to be useful compromise between conventional high-fidelity
+robot simulations, the minimal simulations described by Jakobi [4], and
+the grid-world simulations common in artificial life research [5]. We
+intend Stage to be just realistic enough to enable users to move
+controllers between Stage robots and real robots, while still being
+fast enough to simulate large populations. We also intend Stage to be
+comprehensible to undergraduate students, yet sophisticated enough for
+professional reseachers.
+  
+<p>Player also contains several useful 'virtual devices'; including
+some sensor pre-processing or sensor-integration algorithms that help
+you to rapidly build powerful robot controllers. These are easy to use
+with Stage.
+
+[@ref refs]
+
+
+\section Authors
+
+Stage was written by:
+
+<ul>
+<li>Richard Vaughan <tt>(vaughan@sfu.ca)</tt>
+<li>Andrew Howard  <tt>(ahoward@robotics.usc.edu)</tt>
+<li>Brian Gerkey <tt>(gerkey@robotics.stanford.edu)</tt>
+<li>Reed Hedges <tt>(hedges@mobilerobots.com)</tt>
+</ul>
+
+Many patches and bug reports have been contributed by users around the
+world.
+
+Stage is part of the <a
+href="http://playerstage.sourceforge.net">Player/Stage Project</a>, a
+community effort to develop Free Software tools for robotics
+research. Stage is free to use, modify and redistribute under the
+terms of the <a href=http://www.gnu.org/licenses/licenses.html> GNU
+General Public License</a>.
+
+\section Citations
+
+If you use Stage in your work, we'd appreciate a citation. At the time of writing, the most suitable reference is:
+
+<ul>
+<li>
+Brian Gerkey, Richard T. Vaughan and Andrew Howard. "The
+Player/Stage Project: Tools for Multi-Robot and Distributed Sensor
+Systems"
+Proceedings of the 11th International Conference on Advanced Robotics,
+pages 317-323,
+Coimbra, Portugal, June 2003 <A HREF="http://www.isr.uc.pt/icar03/">(ICAR'03)</A>.
+<br>
+<A HREF="http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.ps.gz">[gzipped
+postscript]</A> <A HREF="http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.pdf">[pdf]</A>  
+</ul>
+
+<p>Please help us keep track of what's being used out there by
+correctly naming the Player/Stage components you use. Player used on
+its own is called "Player". Player and Stage
+used together are referred to as "the Player/Stage system" or just
+"Player/Stage". When libstage is used without Player, it's just called
+"Stage". When Player is used with its 3D ODE-based simulation backend,
+Gazebo, it's called Player/Gazebo. Gazebo without Player is just
+"Gazebo". All this software is part of the "Player/Stage Project".
+
+\section Support
+
+<p> Funding for Stage has been provided in part by:
+
+<ul>
+ <li>NSERC (Canada)
+ <li>Simon Fraser University (Canada)
+ <li>DARPA (USA)
+ <li>NASA (USA)
+ <li>NSF (USA)
+</ul>
+
+\section Names
+
+The names "Player" and "Stage" were inspired by the lines:
+
+@verbatim
+ "All the world's a stage"
+ "And all the men and women merely players"
+@endverbatim
+
+<p>from <i>"As You Like It"</i> by William Shakespeare.
+
+*/
+
+
+/** 
+\page release Release Notes
 
 <h2>Version 2.0.0</h2>
 
@@ -103,7 +229,7 @@ know which ones you need.
 
 </ol>
 
-\section Significant changes under the hood</h3>
+<h3>Significant changes under the hood</h3>
 
 <ol>
 
@@ -132,11 +258,12 @@ data.
 versions.
 
 </ol>
+
+
 */
 
-
-/** 
-@ingroup stage
+/**
+@ingroup stage 
 @defgroup help Getting Help
 
 If you're having problems and you can't find what you need in this manual, there are several places to find help. 
@@ -167,10 +294,10 @@ email.
 
 
 /**
-@ingroup stage
+@ingroup stage 
 @defgroup faq FAQ: Frequently Asked Questions
 
-<b>There are no questions about the 1.6 release yet. If you have a question, <a href=help.html>follow the advice here</a></b>.
+<b>There are no questions about the 2.0 release yet. If you have a question, <a href="group__help.html">follow the advice here</a></b>.
 
 <ol>
 <li> [none]
@@ -180,7 +307,7 @@ email.
 
 
 /**
-@ingroup stage
+@ingroup stage 
 @defgroup refs References
 
 [1] Brian Gerkey, Richard Vaughan, Kasper Stoy, Andrew Howard, Gaurav
@@ -209,7 +336,7 @@ and Their Applications.  Hillsdale, New Jersey. pp.16-23.
 */
 
 /**
-@ingroup stage
+@ingroup stage 
 @defgroup install Installation
 
 <b>Important: If you plan to use Stage with Player, Player must be

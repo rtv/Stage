@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.19 2006-01-30 06:58:14 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.20 2006-02-27 01:06:47 rtv Exp $ -->
 
 <HEAD>
 
@@ -80,7 +80,8 @@ li.menu {
 #content { position: absolute; left:10em; top:0em; padding-left:3em; padding-right:3em; padding-bottom:2em; margin-top:1em; margin-right:2em; }
 
 div.box { background-color:#EEE; border: 1px solid #000; padding: 0.5ex 0.4em 0.5ex 0.6em; margin:1em;  }
-div.title { font-weight:bold; background-color:#eee; margin-bottom:2px;}
+div.box_light { background-color:#FFF; border: 1px solid #000; padding: 0.5ex 0.4em 0.5ex 0.6em; margin:1em;  }
+div.title { font-weight:bold;  margin-bottom:2px;}
 
 div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 
@@ -95,28 +96,26 @@ div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 <div id="sidebar"> 
 
 <h2 style="text-align:center;">
-<a href="index.html"><img src="stage_button.png" alt="Stage logo image"><br>2.0.0</a>
+<a href="index.html"><img src="stage_button.png" alt="Stage logo image"></a>
 </h2>
 
-<!--
 <div class="box">
 <div class=title>Stage</div>
 
 <ul class=menu>
-<li class=menu><a href="index.html">V. 2.0.0</a>
+<li class=menu><a href="index.html">Frontpage</a>
+<li class=menu><a href="modules.html">Contents</a>
 <li class=menu><a href="release.html">Release</a>
-</ul>
 </div>
--->
+
 
 <div class="box">
 <div class=title>User</div>
-
 <ul class=menu>
-<li class=menu><a href="group__stage.html">Stage</a>
+<li class=menu><a href="group__stage.html">Introduction</a>
 <li class=menu><a href="group__install.html">Installation</a>
-<li class=menu><a href="group__faq.html">FAQ</a>
 <li class=menu><a href="group__help.html">Help</a>
+<li class=menu><a href="group__faq.html">FAQ</a>
 
 <hr>
 
