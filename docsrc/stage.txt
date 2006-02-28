@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.13 2006-02-27 03:20:13 rtv Exp $
+ * $Id: stage.txt,v 1.14 2006-02-28 05:35:59 rtv Exp $
 */
 
 /**
@@ -299,6 +299,12 @@ from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
 
 <li>Compile Stage:<br>
 <tt>$ make</tt>
+
+<li>Test to see if Stage works by running the stest program:<br>
+<tt>src/stest worlds/simple.world robot1</tt><br>
+If you see a robot running around, your build was successful. If not,
+you need to debug. See the <a href="http://playerstage.sf.net">website
+and user groups for debugging help</a>.
 
 <li>Install Stage. By default, Stage will be installed in
 <tt>/usr/local</tt> so you need to become root for this step. Remember
