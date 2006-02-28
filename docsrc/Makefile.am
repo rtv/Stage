@@ -1,26 +1,33 @@
 
-DOCDIR = stage
 
 # add these subdirs to the distribution tarball
-EXTRA_DIST = $(DOCDIR)
+EXTRA_DIST = \
+README \
+stage.txt \
+header_top.src \
+header_bottom.src \
+stage.dox \
+stage_button.png 
 
-# make docs before building a distro
-dist-hook: doc
 
-# developers must build docs manually with 'make doc'
+DOCDIR = $(prefix)/share/doc
+
+
+# build docs manually with 'make doc'
 doc:
-	./build.sh
-	doxygen stage.dox
-	cp stage_button.png $(DOCDIR)
+	$(srcdir)/build.sh
+	doxygen $(srcdir)/stage.dox
+	cp stage_button.png stage
 
-# install the most recent docs built
-install-data-hook:
-	cp -r -p -v $(DOCDIR) $(prefix)/doc
+# build and install the docs
+doc-install: doc 
+	cp -r -p -v stage $(DOCDIR) 
 
 
+# zap the built docs
 clean:
-	rm -rf $(DOCDIR)
+	rm -rf stage
 
-# copy the current documentation to the web server
-upload: 
-	./upload.sh stage-cvs $(DOCDIR)
+# build and copy the docs to the web server
+upload: doc
+	./upload.sh stage-cvs stage
