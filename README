@@ -1,12 +1,43 @@
 ****************************************************************************
 * README.stage  - Richard Vaughan - Stage-1.6.2       
 *                                                                          
-* $Id: README,v 1.15 2005-07-30 00:04:40 rtv Exp $    
+* $Id: README,v 1.16 2006-02-28 05:23:17 rtv Exp $    
 ****************************************************************************
 
-** NOTES FOR USE OF CVS HEAD VERSION ***
+** Release Notes for 2.0.0 **
 
-2005.07.29: Stage HEAD requires Player-1.6.5. It does NOT work with Player HEAD.
+This is a major new release of Stage, and is intended to replace all
+previous versions. It requires Player-2.0.0 or later.
+
+Significant user-level changes include:
+
+ - Stage is now implemented as the C library libstage. Using libstage, 
+   your programs can include a sophisticated robot simulator with a
+   few lines of code. The Player plugin libstageplugin is a wrapper for
+   libstage that provides simulation services to Player. Player with
+   libstageplugin is the Player/Stage system.
+
+ - Player clients can draw directly in the Stage window using the
+   graphics2d interface. libstage programs can use the internal
+   user graphics API.
+
+ - Configurable odometry error in position model
+
+ - Gripper model that can pick up anything. Any object can be made
+   grippable/pushable by setting the the gripper_return property.
+ 
+ - Pan-tilt-zoom (PTZ) model.
+
+ - More and improved visualizations, including models leaving trails
+   over time
+
+ - Worldfile syntax has changed slightly, so you may need to edit your 
+   existing worlds to get them to work. Look at the example worlds in 
+   <stagesrc>/worlds to get the idea.
+
+Please report bugs to the tracker and let us know what you do with Stage.
+
+Richard Vaughan (rtv) vaughan@sfu.ca 2006.2.26
 
 ** Release Notes for 1.6.3 **
  
