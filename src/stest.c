@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.13 2006-02-28 05:11:57 rtv Exp $
+// CVS: $Id: stest.c,v 1.14 2006-02-28 05:17:20 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -12,9 +12,8 @@
 const size_t MAX_LASER_SAMPLES = 361;
 
 double minfrontdistance = 0.750;
-double speed = 0.200;
-double avoidspeed = 0; // -150;
-double turnrate = DTOR(40);
+double speed = 0.400;
+double turnrate = DTOR(60);
 
 int randint;
 int randcount = 0;
@@ -26,8 +25,11 @@ int main( int argc, char* argv[] )
   printf( "Stage v%s test program.\n", VERSION );
 
   if( argc < 3 )
-    puts( "Usage: stest [gtk args] worldfile robotname" );
-
+    {
+      puts( "Usage: stest <worldfile> <robotname>" );
+      exit(0);
+    }
+      
   // initialize libstage
   stg_init( argc, argv );
 
@@ -85,7 +87,7 @@ int main( int argc, char* argv[] )
       
       if(obs || avoidcount )
 	{
-	  newspeed = avoidspeed; 
+	  newspeed = 0;
 	  
 	  /* once we start avoiding, continue avoiding for 2 seconds */
 	  /* (we run at about 10Hz, so 20 loop iterations is about 2 sec) */
