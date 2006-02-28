@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.178 2006-02-27 03:20:13 rtv Exp $
+ * CVS: $Id: stage.h,v 1.179 2006-02-28 05:11:57 rtv Exp $
  */
 
 
@@ -592,9 +592,10 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   void stg_model_set_map_resolution( stg_model_t* mod, stg_meters_t res );
 
 
-  /** print human-readable information about the model on stdout
+  /** print human-readable information about the model on stdout. If
+      prefix is non-null, it is printed first.
    */
-  void stg_model_print( stg_model_t* mod );
+  void stg_model_print( stg_model_t* mod, char* prefix );
   
   /** returns TRUE iff [testmod] exists above [mod] in a model tree 
    */

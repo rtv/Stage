@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.12 2005-12-07 10:04:28 rtv Exp $
+// CVS: $Id: stest.c,v 1.13 2006-02-28 05:11:57 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -23,7 +23,7 @@ int obs = FALSE;
 
 int main( int argc, char* argv[] )
 { 
-  printf( "Stage v%s test program.", VERSION );
+  printf( "Stage v%s test program.\n", VERSION );
 
   if( argc < 3 )
     puts( "Usage: stest [gtk args] worldfile robotname" );
@@ -44,16 +44,15 @@ int main( int argc, char* argv[] )
   
   stg_model_t* position = stg_world_model_name_lookup( world, robotname );  
   stg_model_t* laser = stg_world_model_name_lookup( world, lasername );
-  //stg_model_t* sonar = stg_world_model_name_lookup( world, sonarname );
 
   // subscribe to the laser - starts it collecting data
   stg_model_subscribe( laser );
   stg_model_subscribe( position);
-  //stg_model_subscribe( sonar );
 
-  stg_model_print( laser );
+  stg_model_print( position, "Subscribed to model" );
+  stg_model_print( laser, "Subscribed to model" );
 
-  puts( "starting clock" );
+  printf( "Starting world clock..." ); fflush(stdout);
   // start the clock
   stg_world_start( world );
   puts( "done" );
@@ -66,18 +65,6 @@ int main( int argc, char* argv[] )
 
   while( (stg_world_update( world,0 )==0) )
     {
-      stg_velocity_t vel;
-      stg_model_get_velocity( position, &vel );
-      
-      //stg_pose_t pose; 
-      //stg_model_get_pose( position, &pose );
-
-      //printf( "position velocity: (%.2f,%.2f,%.2f)\n",
-      //      vel.x, vel.y, vel.a );          
-      
-      //printf( "position pose: (%.2f,%.2f,%.2f)\n",
-      //      pose->x, pose->y, pose->a );          
-
       // get some laser data
       size_t laser_sample_count = 0;
 
@@ -85,12 +72,6 @@ int main( int argc, char* argv[] )
 	stg_model_get_data( laser, &laser_sample_count );
       laser_sample_count /= sizeof(stg_laser_sample_t);
       
-      //printf( "obtained %d laser samples\n", laser_sample_count );
-
-      //int i;
-      //for( i=0; i<laser_sample_count; i++ )
-      //printf( "[%d %d]", i, laserdata[i].range );
-
       // THIS IS ADAPTED FROM PLAYER'S RANDOMWALK C++ EXAMPLE
 
       /* See if there is an obstacle in front */
@@ -152,6 +133,7 @@ int main( int argc, char* argv[] )
 	}
       
       stg_position_cmd_t cmd;
+      memset(&cmd,0,sizeof(cmd));
       cmd.x = newspeed;
       cmd.y = 0;
       cmd.a = newturnrate;

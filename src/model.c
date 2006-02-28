@@ -725,14 +725,18 @@ void pose_invert( stg_pose_t* pose )
   pose->a = pose->a;
 }
 
-void stg_model_print( stg_model_t* mod )
+void stg_model_print( stg_model_t* mod, char* prefix )
 {
-  printf( "   model %d:%d:%s\n", mod->world->id, mod->id, mod->token );
+  printf( "%s model %d:%d:%s\n", 
+	  prefix ? prefix : "", 
+	  mod->world->id, 
+	  mod->id, 
+	  mod->token );
 }
 
 void model_print_cb( gpointer key, gpointer value, gpointer user )
 {
-  stg_model_print( (stg_model_t*)value );
+  stg_model_print( (stg_model_t*)value, NULL );
 }
 
 

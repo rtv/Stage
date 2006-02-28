@@ -80,8 +80,14 @@ void stg_world_set_interval_sim( stg_world_t* world, unsigned int val )
 // worldfile
 stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 {
+  printf( " [Loading %s]", worldfile_path );      
+  fflush(stdout);
+
   wf_load( (char*)worldfile_path );
   
+  // end the output line of worldile components
+  puts("");
+
   int section = 0;
   
   const char* world_name =
