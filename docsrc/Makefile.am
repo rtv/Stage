@@ -4,30 +4,26 @@
 EXTRA_DIST = \
 README \
 stage.txt \
-header_top.src \
-header_bottom.src \
+header.html \
 stage.dox \
 stage_button.png 
 
-
 DOCDIR = $(prefix)/share/doc
-
 
 # build docs manually with 'make doc'
 doc:
-	$(srcdir)/build.sh
 	doxygen $(srcdir)/stage.dox
 	cp stage_button.png stage
 
-# build and install the docs
+# install the latest docs
 doc-install: doc 
-	cp -r -p -v stage $(DOCDIR) 
-
+	install -d stage $(DOCDIR)
+	cp -r -p -v stage $(DOCDIR)/stage
 
 # zap the built docs
 clean:
 	rm -rf stage
 
-# build and copy the docs to the web server
-upload: doc
+# copy the latest docs to the web server
+upload: 
 	./upload.sh stage-cvs stage
