@@ -85,6 +85,8 @@ model
   fiducial_return 1
   gripper_return 0
 
+  fiducial_key 0
+
   # GUI properties
   gui_nose 0
   gui_grid 0
@@ -138,6 +140,8 @@ model
   - if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
 - fiducial_return [fiducial_id:int]
   - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
+- fiducial_key [int]
+  - models are only detected by fiducialfinders if the fiducial_key values of model and fiducialfinder match. This allows you to have several independent types of fiducial in the same environment, each type only showing up in fiducialfinders that are "tuned" for it.
 - ranger_return [bool]
    - iff 1, this model can be detected by a ranger.
 - gripper_return [bool]
@@ -958,6 +962,14 @@ void stg_model_set_fiducial_return( stg_model_t* mod, int val )
   mod->fiducial_return = val;
   model_change( mod, &mod->fiducial_return );
 }
+
+void stg_model_set_fiducial_key( stg_model_t* mod, int key )
+{
+  assert(mod);
+  mod->fiducial_key = key;
+  model_change( mod, &mod->fiducial_key );
+}
+
 
 void stg_model_set_laser_return( stg_model_t* mod, int val )
 {

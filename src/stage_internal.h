@@ -197,6 +197,7 @@ extern "C" {
     int gripper_return;
     int ranger_return;
     int fiducial_return;
+    int fiducial_key;
     int boundary;
     stg_meters_t map_resolution;
     stg_bool_t stall;

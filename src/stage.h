@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.179 2006-02-28 05:11:57 rtv Exp $
+ * CVS: $Id: stage.h,v 1.180 2006-03-01 05:28:10 rtv Exp $
  */
 
 
@@ -543,6 +543,10 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /** set a model's geometry (size and center offsets) */
   void stg_model_set_fiducial_return( stg_model_t* mod, int fid );
 
+  /** set a model's fiducial key: only fiducial finders with a
+      matching key can detect this model as a fiducial. */
+  void stg_model_set_fiducial_key( stg_model_t* mod, int key );
+
   /** Change a model's parent - experimental*/
   int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent);
   
@@ -578,7 +582,6 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   void stg_model_set_mass( stg_model_t* mod, stg_kg_t mass );
   void stg_model_set_stall( stg_model_t* mod, stg_bool_t stall );
   void stg_model_set_gripper_return( stg_model_t* mod, int val );
-  void stg_model_set_fiducial_return( stg_model_t* mod, int val );
   void stg_model_set_laser_return( stg_model_t* mod, int val );
   void stg_model_set_obstacle_return( stg_model_t* mod, int val );
   void stg_model_set_blob_return( stg_model_t* mod, int val );
@@ -869,22 +872,25 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
    */
   typedef struct
   {
-    stg_meters_t max_range_anon;
-    stg_meters_t max_range_id;
-    stg_meters_t min_range;
-    stg_radians_t fov; // field of view 
-    stg_radians_t heading; // center of field of view
-
+    stg_meters_t max_range_anon; //< maximum detection range
+    stg_meters_t max_range_id; ///< maximum range at which the ID can be read
+    stg_meters_t min_range; ///< minimum detection range
+    stg_radians_t fov; ///< field of view 
+    stg_radians_t heading; ///< center of field of view
+    
+    /// only detects fiducials with a key string that matches this one
+    /// (defaults to NULL)
+    char* key;
   } stg_fiducial_config_t;
   
   /** fiducial data packet 
    */
   typedef struct
   {
-    stg_meters_t range; // range to the target
-    stg_radians_t bearing; // bearing to the target 
-    stg_pose_t geom; // size and relative angle of the target
-    int id; // the identifier of the target, or -1 if none can be detected.
+    stg_meters_t range; ///< range to the target
+    stg_radians_t bearing; ///< bearing to the target 
+    stg_pose_t geom; ///< size and relative angle of the target
+    int id; ///< the identifier of the target, or -1 if none can be detected.
     
   } stg_fiducial_t;
 

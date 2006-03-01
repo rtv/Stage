@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.7 2006-03-01 05:23:53 rtv Exp $
+# CVS: $Id: 889.world,v 1.8 2006-03-01 05:28:10 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 resolution 0.02 
@@ -105,8 +105,13 @@ define big_robot pioneer2dx
 (
   laser()
   ptz( blobfinder() )
-  fiducialfinder()
   gripper( pose [0.200 0.000 0.000] color "gray" )
+
+  fiducialfinder( 
+     # set to match the fiducial_key of objects you want to 
+     # in this example, we match the chargers
+     fiducial_key 1 
+  )
 )
 
 big_robot
@@ -180,6 +185,7 @@ define charger model
 
  obstacle_return 0
  laser_return 0
+ fiducial_key 1
 )
 
 charger( pose [ 14.585 14.592 0.000 ] fiducial_return 1 )

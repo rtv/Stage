@@ -72,6 +72,13 @@ void stg_model_load( stg_model_t* mod )
 	wf_read_int( mod->id, "fiducial_return", mod->fiducial_return );     
       stg_model_set_fiducial_return( mod, fid  );
     }
+
+  if( wf_property_exists( mod->id, "fiducial_key" ))
+    {
+      int fkey = 
+	wf_read_int( mod->id, "fiducial_key", mod->fiducial_key );     
+      stg_model_set_fiducial_key( mod, fkey );
+    }
   
   if( wf_property_exists( mod->id, "obstacle_return" ))
     {

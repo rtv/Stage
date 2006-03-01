@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.46 $
+//  $Revision: 1.47 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +89,7 @@ void fiducial_load( stg_model_t* mod )
       
       cfg.max_range_id = 
 	wf_read_length(mod->id, "range_max_id", now->max_range_id );
-      
+
       stg_model_set_cfg( mod, &cfg, sizeof(cfg));
     }
 }  
@@ -198,6 +198,10 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   model_fiducial_buffer_t* mfb = (model_fiducial_buffer_t*)user;
   stg_model_t* him = (stg_model_t*)value;
   
+  // check to see if this neighbor has the right fiducial key
+  if( him->fiducial_key != mfb->mod->fiducial_key )
+    return;
+
   int* his_fid = &him->fiducial_return; 
 
   // dont' compare a model with itself, and don't consider models with
