@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.6 2006-03-01 00:25:56 rtv Exp $
+# CVS: $Id: 889.world,v 1.7 2006-03-01 05:23:53 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 resolution 0.02 
@@ -14,8 +14,10 @@ include "pioneer.inc"
 
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
 
 
 
@@ -30,7 +32,7 @@ window
 ( 
   size [ 641.000 668.000 ] 
   center [0.125 -0.071] 
-  scale 0.070 
+  scale 0.049 
 )
 
 # load an environment bitmap
@@ -40,6 +42,7 @@ map
   size [30 30]
   boundary 1
   gui_grid 1
+  name "cave"
 )
 
 # define and place some grippable objects
@@ -47,7 +50,7 @@ map
 define widget model
 (
   size [0.1 0.1]
-  color "orange"
+  color "red"
   fiducial_return 10
   laser_return 0
   obstacle_return 0
