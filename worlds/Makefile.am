@@ -4,7 +4,7 @@ worldsdir = $(prefix)/share/stage/worlds
 
 EXAMPLES =  everything.world everything.cfg simple.world simple.cfg \
 	pioneer.inc sick.inc beacons.inc map.inc \
-	pucktarget.inc wavefront.cfg
+	pucktarget.inc wavefront.cfg vfh.cfg
 
 worlds_DATA = $(EXAMPLES)
 
