@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.5 2005-03-25 02:45:07 rtv Exp $
+# CVS: $Id: 889.world,v 1.6 2006-03-01 00:25:56 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 resolution 0.02 
@@ -11,40 +11,130 @@ interval_real 100 # real-time milliseconds per update step
 # defines a several robot types from the ActivMedia Pioneer family
 include "pioneer.inc"
 
+
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
+
+
 
 # set the size of a pixel in meters
 resolution 0.02
 
+size [30 30]
+
 # configure the GUI window
 window
 ( 
-  size [ 1218.000 509.000 ] 
-  center [17.891 6.108] 
-  scale 0.031 
+  size [ 641.000 668.000 ] 
+  center [0.125 -0.071] 
+  scale 0.070 
 )
 
 # load an environment bitmap
 map
 (
-  bitmap "bitmaps/hospital_section.png"
-  size [36 12]
-  pose [18.000 6.000 0.000]
+  bitmap "bitmaps/cave.png"
+  size [30 30]
   boundary 1
   gui_grid 1
 )
 
-# create a robot
-pioneer2dx
+# define and place some grippable objects
+
+define widget model
 (
-  name "robot1"
-  pose [12.574 9.691 -91.308]
-  laser()
-  blobfinder()
-  fiducialfinder()
+  size [0.1 0.1]
+  color "orange"
+  fiducial_return 10
+  laser_return 0
+  obstacle_return 0
+  gripper_return 1
 )
 
+widget( pose [14.800 -2.700 0.000] )
+widget( pose [14.600 -2.700 0.000] )
+widget( pose [14.400 -2.700 0.000] )
+widget( pose [14.200 -2.700 0.000] )
+widget( pose [14.000 -2.700 0.000] )
+widget( pose [13.800 -2.700 0.000] )
+widget( pose [13.600 -2.700 0.000] )
+widget( pose [13.400 -2.700 0.000] )
+widget( pose [13.200 -2.700 0.000] )
+widget( pose [13.000 -2.700 0.000] )
+widget( pose [12.800 -2.700 0.000] )
+widget( pose [12.600 -2.700 0.000] )
+widget( pose [12.400 -2.700 0.000] )
+widget( pose [12.200 -2.700 0.000] )
+widget( pose [12.000 -2.700 0.000] )
+widget( pose [11.800 -2.700 0.000] )
+widget( pose [11.600 -2.700 0.000] )
+widget( pose [11.400 -2.700 0.000] )
+widget( pose [11.200 -2.700 0.000] )
+widget( pose [11.000 -2.700 0.000] )
+
+widget( pose [14.800 -3.000 0.000] )
+widget( pose [14.600 -3.000 0.000] )
+widget( pose [14.400 -3.000 0.000] )
+widget( pose [14.200 -3.000 0.000] )
+widget( pose [14.000 -3.000 0.000] )
+widget( pose [13.800 -3.000 0.000] )
+widget( pose [13.600 -3.000 0.000] )
+widget( pose [13.400 -3.000 0.000] )
+widget( pose [13.200 -3.000 0.000] )
+widget( pose [13.000 -3.000 0.000] )
+widget( pose [12.800 -3.000 0.000] )
+widget( pose [12.600 -3.000 0.000] )
+widget( pose [12.400 -3.000 0.000] )
+widget( pose [12.200 -3.000 0.000] )
+widget( pose [12.000 -3.000 0.000] )
+widget( pose [11.800 -3.000 0.000] )
+widget( pose [11.600 -3.000 0.000] )
+widget( pose [11.400 -3.000 0.000] )
+widget( pose [11.200 -3.000 0.000] )
+widget( pose [11.000 -3.000 0.000] )
+
+# define and place some big, capable robots
+
+define big_robot pioneer2dx 
+(
+  laser()
+  ptz( blobfinder() )
+  fiducialfinder()
+  gripper( pose [0.200 0.000 0.000] color "gray" )
+)
+
+big_robot
+(
+  name "red_robot"
+  pose [11.480 11.320 -325.994]
+  color "red"
+)
+
+big_robot
+(
+  name "blue_robot"
+  pose [13.363 9.125 -143.072]
+  color "blue"
+)
+
+big_robot
+(
+  name "green_robot"
+  pose [7.540 8.657 -311.552]
+  color "green"
+)
+
+big_robot
+(
+  name "purple_robot"
+  pose [8.697 -2.958 -44.554]
+  color "purple"
+)
+
+# define and place some little robots
 
 define chatterbox position
 (
@@ -62,18 +152,19 @@ define redchatterbox chatterbox
   color "red"
 )
 
-bluechatterbox( name "bch0" pose [11.973 5.272 0.000] )
-bluechatterbox( name "bch1" pose [12.076 5.798 -171.141] )
-bluechatterbox( name "bch2" pose [11.042 4.941 -159.523] )
-bluechatterbox( name "bch3" pose [12.492 5.506 -28.297] )
-bluechatterbox( name "bch4" pose [11.546 5.881 -108.654] )
+bluechatterbox( name "cbb0" pose [11.973 5.272 0.000] )
+bluechatterbox( name "cbb1" pose [12.076 5.798 -171.141] )
+bluechatterbox( name "cbb2" pose [11.042 4.941 -159.523] )
+bluechatterbox( name "cbb3" pose [12.492 5.506 -28.297] )
+bluechatterbox( name "cbb4" pose [11.546 5.881 -108.654] )
 
-redchatterbox( name "rch0" pose [12.348 4.704 0.000] )
-redchatterbox( name "rch1" pose [12.524 6.117 0.000] )
-redchatterbox( name "rch2" pose [11.694 4.624 -53.892] )
-redchatterbox( name "rch3" pose [12.278 4.403 -28.297] )
-redchatterbox( name "rch4" pose [11.202 5.402 -54.883] )
+redchatterbox( name "cbr0" pose [12.348 4.704 0.000] )
+redchatterbox( name "cbr1" pose [12.524 6.117 0.000] )
+redchatterbox( name "cbr2" pose [11.694 4.624 -53.892] )
+redchatterbox( name "cbr3" pose [12.278 4.403 -28.297] )
+redchatterbox( name "cbr4" pose [11.202 5.402 -54.883] )
 
+# define and place some charging stations
 
 define charger model
 (
@@ -85,8 +176,9 @@ define charger model
  #energy.range 0.0
 
  obstacle_return 0
- fiducial_return 45
  laser_return 0
 )
 
-charger( pose [ 12.585 10.592 0.000 ] )
+charger( pose [ 14.585 14.592 0.000 ] fiducial_return 1 )
+charger( pose [ -14.615 -14.608 0.000 ] fiducial_return 2 )
+charger( pose [ -14.665 14.642 0.000 ] fiducial_return 3 )

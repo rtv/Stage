@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.7 2006-01-22 04:16:57 rtv Exp $
+dnl $Id: configure.ac,v 1.8 2006-03-01 00:25:56 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -14,7 +14,7 @@ dnl upgrade to newer Autotools, this can probably go away.
 AC_CANONICAL_SYSTEM
 
 dnl Initialize automake, requiring version 1.7 or better
-AM_INIT_AUTOMAKE(1.7)
+AM_INIT_AUTOMAKE([dist-bzip2 1.9])
 
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET
