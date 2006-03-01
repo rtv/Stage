@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.180 2006-03-01 05:28:10 rtv Exp $
+ * CVS: $Id: stage.h,v 1.181 2006-03-01 19:24:43 rtv Exp $
  */
 
 
@@ -902,6 +902,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_size_t size;
     stg_bounds_t bounds_range;
     stg_radians_t fov;
+    int ray_count;
   } stg_ranger_config_t;
   
   typedef struct

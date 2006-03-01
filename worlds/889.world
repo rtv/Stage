@@ -1,24 +1,18 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.8 2006-03-01 05:28:10 rtv Exp $
+# CVS: $Id: 889.world,v 1.9 2006-03-01 19:24:43 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 resolution 0.02 
 
-interval_sim 100  # milliseconds per update step
+interval_sim 200  # milliseconds per update step
 interval_real 100 # real-time milliseconds per update step
 
-# defines a several robot types from the ActivMedia Pioneer family
 include "pioneer.inc"
 
+include "chatterbox.inc"
 
-
-
-
-# defines 'map' object used for floorplans
 include "map.inc"
-
-
 
 
 
@@ -31,8 +25,8 @@ size [30 30]
 window
 ( 
   size [ 641.000 668.000 ] 
-  center [0.125 -0.071] 
-  scale 0.049 
+  center [8.685 6.222] 
+  scale 0.020 
 )
 
 # load an environment bitmap
@@ -143,12 +137,6 @@ big_robot
 )
 
 # define and place some little robots
-
-define chatterbox position
-(
-  size [0.12 0.12]
-)
-
 
 define bluechatterbox chatterbox
 (

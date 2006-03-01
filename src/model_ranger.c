@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.63 $
+//  $Revision: 1.64 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -133,6 +133,7 @@ int ranger_init( stg_model_t* mod )
       cfg[c].bounds_range.min = 0;
       cfg[c].bounds_range.max = 5.0;
       cfg[c].fov = M_PI/6.0;
+      cfg[c].ray_count = 3;
     }
   stg_model_set_cfg( mod, cfg, cfglen );
   
@@ -197,13 +198,17 @@ void ranger_load( stg_model_t* mod )
       stg_ranger_config_t* configs = (stg_ranger_config_t*)
 	calloc( sizeof(stg_ranger_config_t), scount );
       
-      stg_size_t common_size;
-      common_size.x = wf_read_tuple_length(mod->id, "ssize", 0, 0.01 );
-      common_size.y = wf_read_tuple_length(mod->id, "ssize", 1, 0.03 );
+      stg_ranger_config_t* now = (stg_ranger_config_t*)mod->cfg;
       
-      double common_min = wf_read_tuple_length(mod->id, "sview", 0, 0.0);
-      double common_max = wf_read_tuple_length(mod->id, "sview", 1, 5.0);
-      double common_fov = wf_read_tuple_angle(mod->id, "sview", 2, 5.0);
+      stg_size_t common_size;
+      common_size.x = wf_read_tuple_length(mod->id, "ssize", 0, now->size.x );
+      common_size.y = wf_read_tuple_length(mod->id, "ssize", 1, now->size.y );
+      
+      double common_min = wf_read_tuple_length(mod->id, "sview", 0, now->bounds_range.min );
+      double common_max = wf_read_tuple_length(mod->id, "sview", 1, now->bounds_range.max );
+      double common_fov = wf_read_tuple_angle(mod->id, "sview", 2, now->fov);
+
+      int common_ray_count = wf_read_int(mod->id, "sraycount", now->ray_count );
 
       // set all transducers with the common settings
       int i;
@@ -214,8 +219,10 @@ void ranger_load( stg_model_t* mod )
 	  configs[i].bounds_range.min = common_min;
 	  configs[i].bounds_range.max = common_max;
 	  configs[i].fov = common_fov;
+	  configs[i].ray_count = common_ray_count;	  
 	}
 
+      // TODO - do this properly, without the hard-coded defaults
       // allow individual configuration of transducers
       for(i = 0; i < scount; i++)
 	{
@@ -224,18 +231,22 @@ void ranger_load( stg_model_t* mod )
 	  configs[i].pose.y = wf_read_tuple_length(mod->id, key, 1, 0);
 	  configs[i].pose.a = wf_read_tuple_angle(mod->id, key, 2, 0);
 	  
-	  snprintf(key, sizeof(key), "ssize[%d]", i);
-	  configs[i].size.x = wf_read_tuple_length(mod->id, key, 0, 0.01);
-	  configs[i].size.y = wf_read_tuple_length(mod->id, key, 1, 0.05);
+/* 	  snprintf(key, sizeof(key), "ssize[%d]", i); */
+/* 	  configs[i].size.x = wf_read_tuple_length(mod->id, key, 0, 0.01); */
+/* 	  configs[i].size.y = wf_read_tuple_length(mod->id, key, 1, 0.05); */
 	  
-	  snprintf(key, sizeof(key), "sview[%d]", i);
-	  configs[i].bounds_range.min = 
-	    wf_read_tuple_length(mod->id, key, 0, 0);
-	  configs[i].bounds_range.max =   // set up sensible defaults
+/* 	  snprintf(key, sizeof(key), "sview[%d]", i); */
+/* 	  configs[i].bounds_range.min = */
+/* 	    wf_read_tuple_length(mod->id, key, 0, 0); */
+/* 	  configs[i].bounds_range.max =   // set up sensible defaults */
 
-	    wf_read_tuple_length(mod->id, key, 1, 5.0);
-	  configs[i].fov 
-	    = DTOR(wf_read_tuple_angle(mod->id, key, 2, 5.0 ));
+/* 	    wf_read_tuple_length(mod->id, key, 1, 5.0); */
+/* 	  configs[i].fov */
+/* 	    = DTOR(wf_read_tuple_angle(mod->id, key, 2, 5.0 )); */
+
+
+/* 	  configs[i].ray_count = common_ray_count; */
+
 	}
       
       PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
@@ -259,7 +270,6 @@ int ranger_update( stg_model_t* mod )
     return 0;
 
   //PRINT_DEBUG1( "[%d] updating rangers", mod->world->sim_time );
-  
   size_t len = mod->cfg_len;
   stg_ranger_config_t *cfg = (stg_ranger_config_t*)mod->cfg;
 
@@ -281,41 +291,49 @@ int ranger_update( stg_model_t* mod )
       memcpy( &pz, &cfg[t].pose, sizeof(pz) ); 
       stg_model_local_to_global( mod, &pz );
       
-      // todo - use bounds_range.min
-
-      itl_t* itl = itl_create( pz.x, pz.y, pz.a, 
-			       cfg[t].bounds_range.max, 
-			       mod->world->matrix, 
-			       PointToBearingRange );
-      
-      stg_model_t * hitmod;
       double range = cfg[t].bounds_range.max;
       
-      hitmod = itl_first_matching( itl, ranger_raytrace_match, mod );
-      
-      if( hitmod )
-	{
-	  //printf( "model %d %p   hit model %d %p\n",
-	  //  mod->id, mod, hitmod->id, hitmod );
+      int r;
+      for( r=0; r<cfg[t].ray_count; r++ )
+	{	  
+	  double angle_per_ray = cfg[t].fov / cfg[t].ray_count;
+	  double ray_angle = -cfg[t].fov/2.0 + angle_per_ray * r + angle_per_ray/2.0
+	    ;
 	  
-	  range = itl->range;
+	  itl_t* itl = itl_create( pz.x, pz.y, pz.a + ray_angle, 
+				   cfg[t].bounds_range.max, 
+				   mod->world->matrix, 
+				   PointToBearingRange );
 	  
-	  // low-threshold the range
-	  if( range < cfg[t].bounds_range.min )
-	    range = cfg[t].bounds_range.min;	
-	}
-      
+	  stg_model_t * hitmod;
+	  
+	  hitmod = itl_first_matching( itl, ranger_raytrace_match, mod );
+	  
+	  if( hitmod )
+	    {
+	      //printf( "model %d %p   hit model %d %p\n",
+	      //  mod->id, mod, hitmod->id, hitmod );
+	      
+	      if( itl->range < range )
+		range = itl->range;
+	    }
+	     
+	  itl_destroy( itl );
+	} 
+	  
+      // low-threshold the range
+      if( range < cfg[t].bounds_range.min )
+	range = cfg[t].bounds_range.min;	
       
       ranges[t].range = range;
       //ranges[t].error = TODO;
-
-      itl_destroy( itl );
-    }
+    } 
+  
   
   stg_model_set_data( mod, ranges, sizeof(stg_ranger_sample_t) * rcount );
   
   free( ranges );
-
+  
   return 0;
 }
 
@@ -476,7 +494,7 @@ int ranger_render_data( stg_model_t* mod, void* userp )
   else
     if( dlen > 0 )
       PRINT_WARN2( "data size doesn't match configuation (%d/%d bytes)",
-		   dlen,  rcount * sizeof(stg_ranger_sample_t) );
+		   (int)dlen,  (int)rcount * sizeof(stg_ranger_sample_t) );
   
   return 0; // keep running
 }
