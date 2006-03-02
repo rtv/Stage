@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.181 2006-03-01 19:24:43 rtv Exp $
+ * CVS: $Id: stage.h,v 1.182 2006-03-02 07:52:30 rtv Exp $
  */
 
 
@@ -782,9 +782,14 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
     /** the number of range measurements (and thus the size
     of the array of stg_laser_sample_t's returned) */ 
-    int samples; 
-  } stg_laser_config_t;
-  
+    int samples;
+
+    /** To save time, only calculate every <resolution> samples 
+    and linearly interpolate the samples in between. Defaults to 
+    zero for best accuracy but worst performance */ 
+    int resolution;
+    } stg_laser_config_t;
+    
   // GRIPPER MODEL --------------------------------------------------------
   
   typedef enum {

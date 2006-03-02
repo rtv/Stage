@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.9 2006-03-01 05:28:06 rtv Exp $
+dnl $Id: configure.ac,v 1.10 2006-03-02 07:52:30 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -13,8 +13,9 @@ dnl types of arguments to some networking library functions.  if/when we
 dnl upgrade to newer Autotools, this can probably go away.
 AC_CANONICAL_SYSTEM
 
-dnl Initialize automake, requiring version 1.7 or better
-AM_INIT_AUTOMAKE([dist-bzip2 1.9])
+dnl Initialize automake, requiring version 1.9 or better,
+dnl using modern tar format and generate bzip tarballs
+AM_INIT_AUTOMAKE([tar-ustar dist-bzip2 1.9])
 
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET

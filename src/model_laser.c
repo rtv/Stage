@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.83 $
+//  $Revision: 1.84 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +78,8 @@ laser
   - the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
 - fov float
   - the angular field of view of the scanner, in degrees. 
-
+- laser_sample_skip
+  - Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
 */
 
 void laser_load( stg_model_t* mod )
@@ -90,7 +91,15 @@ void laser_load( stg_model_t* mod )
   cfg->range_min = wf_read_length( mod->id, "range_min", cfg->range_min);
   cfg->range_max = wf_read_length( mod->id, "range_max", cfg->range_max );
   cfg->fov       = wf_read_angle( mod->id, "fov",  cfg->fov );
-  
+
+  cfg->resolution = wf_read_int( mod->id, "laser_resolution",  cfg->resolution );
+ 
+  if( cfg->resolution < 1 )
+    {
+      PRINT_WARN( "laser resolution set < 1. Forcing to 1" );
+      cfg->resolution = 1;
+    }
+ 
   model_change( mod, &mod->cfg );
 }
 
@@ -152,6 +161,7 @@ int laser_init( stg_model_t* mod )
   lconf.range_max   = STG_DEFAULT_LASER_MAXRANGE;
   lconf.fov         = STG_DEFAULT_LASER_FOV;
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;  
+  lconf.resolution = 1;
   stg_model_set_cfg( mod, &lconf, sizeof(lconf) );
   
   
@@ -233,7 +243,7 @@ int laser_update( stg_model_t* mod )
 
   double sample_incr = cfg->fov / (double)(cfg->samples-1);
   
-  double bearing = pz.a - cfg->fov/2.0;
+  //double bearing = pz.a - cfg->fov/2.0;
   
 #if TIMING
   struct timeval tv1, tv2;
@@ -247,56 +257,71 @@ int laser_update( stg_model_t* mod )
   static stg_laser_sample_t* scan = 0;
   scan = realloc( scan, sizeof(stg_laser_sample_t) * cfg->samples );
   
-  int t;
-  // only compute every second sample, for speed
-  //for( t=0; t<cfg.samples-1; t+=2 )
-  
-  for( t=0; t<cfg->samples; t++ )
-    {
-      
+  memset( scan, 0, sizeof(stg_laser_sample_t) *  cfg->samples );
+
+  for( int t=0; t<cfg->samples; t += cfg->resolution )
+    {      
+      //if( t>cfg->samples ) break;
+
+      double bearing =  pz.a - cfg->fov/2.0 + sample_incr * t;
+
       itl_t* itl = itl_create( pz.x, pz.y, bearing, 
 			       cfg->range_max, 
 			       mod->world->matrix, 
 			       PointToBearingRange );
       
-      bearing += sample_incr;
-      
-      stg_model_t* hitmod;
       double range = cfg->range_max;
-      //stg_laser_return_t hisreturn = LaserVisible;
       
-      hitmod = itl_first_matching( itl, laser_raytrace_match, mod );
-
-      if( hitmod )
-	range = itl->range;
-
+      stg_model_t* hitmod;      
+      if((hitmod = itl_first_matching( itl, laser_raytrace_match, mod ) ))
+	  range = itl->range;
+	  
+      itl_destroy( itl );
+      
       //printf( "%d:%.2f  ", t, range );
-
+      
       if( range < cfg->range_min )
 	range = cfg->range_min;
-            
-      // record the range in mm
-      //scan[t+1].range = 
-	scan[t].range = (uint32_t)( range * 1000.0 );
-      // if the object is bright, it has a non-zero reflectance
-      //scan[t+1].reflectance = 
-	
-	if( hitmod )
-	  {
-	    scan[t].reflectance = 
-	      (mod->laser_return >= LaserBright) ? 1 : 0;
-	  }
-	else
-	  scan[t].reflectance = 0;
-	    
 
-      itl_destroy( itl );
+      // record the range in mm
+      scan[t].range = (uint32_t)( range * 1000.0 );
+      
+      // if the object is bright, it has a non-zero reflectance
+      if( hitmod )
+	{
+	  scan[t].reflectance = 
+	    (mod->laser_return >= LaserBright) ? 1 : 0;
+	}
+      else
+	scan[t].reflectance = 0;
+      
     }
   
-  // new style
+  /*  we may need to resolution the samples we skipped */
+  if( cfg->resolution > 1 ) 
+    {
+      for( int t=cfg->resolution; t<cfg->samples; t+=cfg->resolution ) 
+	for( int g=1; g<cfg->resolution; g++ )
+	  {
+	    if( t >= cfg->samples ) 
+	      break;
+	    
+	    // copy the rightmost sample data into this point
+	    memcpy( &scan[t-g], 
+		    &scan[t-cfg->resolution], 
+		    sizeof(stg_laser_sample_t));
+	    
+	    double left = (double)scan[t].range;
+	    double right = (double)scan[t-cfg->resolution].range;
+	    
+	    // linear range interpolation between the left and right samples
+	    scan[t-g].range = (uint32_t)(left-g*(left-right)/cfg->resolution);
+	  }
+    }
+  
   stg_model_set_data( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples);
   
-
+  
 #if TIMING
   gettimeofday( &tv2, NULL );
   printf( " laser data update time %.6f\n",
