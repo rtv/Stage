@@ -272,10 +272,10 @@ int stg_world_update( stg_world_t* world, int sleepflag )
   gettimeofday( &tv1, NULL );
 #endif
   
-  if( world->win ) 
-    { 
-      gui_poll();       
-    } 
+/*   if( world->win )  */
+/*     {  */
+/*       gui_poll();        */
+/*     }  */
 
 #if 0// DEBUG
   struct timeval tv2;
@@ -301,6 +301,11 @@ int stg_world_update( stg_world_t* world, int sleepflag )
 
   if( world->wall_interval < elapsed )
     {
+      if( world->win ) 
+	{ 
+	  gui_poll();       
+	} 
+
       stg_msec_t real_interval = timenow - world->wall_last_update;
 
 #if 0      
