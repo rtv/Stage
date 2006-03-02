@@ -10,6 +10,8 @@
 const double STG_DEFAULT_RESOLUTION = 0.02;  // 2cm pixels
 const double STG_DEFAULT_INTERVAL_REAL = 100.0; // msec between updates
 const double STG_DEFAULT_INTERVAL_SIM = 100.0;  // duration of a simulation timestep in msec
+const double STG_DEFAULT_INTERVAL_GUI = 100.0; // msec between GUI updates
+const double STG_DEFAULT_INTERVAL_MENU = 20.0; // msec between GUI updates
 const double STG_DEFAULT_WORLD_WIDTH = 20.0; // meters
 const double STG_DEFAULT_WORLD_HEIGHT = 20.0; // meters
 
@@ -38,6 +40,7 @@ world
    name            "[filename of worldfile]"
    interval_real   100
    interval_sim    100
+   gui_interval    100
    resolution      0.01
 )
 @endverbatim
@@ -49,6 +52,8 @@ world
   - the length of each simulation update cycle in milliseconds.
 - interval_real [milliseconds]
   - the amount of real-world (wall-clock) time the siulator will attempt to spend on each simulation cycle.
+- gui_interval [milliseconds]
+  - the amount of real-world time between GUI updates
 - resolution [meters]
   - specifies the resolution of the underlying bitmap model. Larger values speed up raytracing at the expense of fidelity in collision detection and sensing. 
 
@@ -107,6 +112,12 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 
   double height = 
     wf_read_tuple_float( section, "size", 1, STG_DEFAULT_WORLD_HEIGHT ); 
+  
+  stg_msec_t gui_interval = 
+    wf_read_int( section, "gui_interval", STG_DEFAULT_INTERVAL_GUI );
+  
+  stg_msec_t gui_menu_interval = 
+    wf_read_int( section, "gui_menu_interval", STG_DEFAULT_INTERVAL_MENU );
 
   _stg_disable_gui = wf_read_int( section, "gui_disable", _stg_disable_gui );
 
@@ -123,7 +134,9 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
   if( world == NULL )
     return NULL; // failure
   
-  
+  // poke this in there
+  world->gui_interval = gui_interval;
+  world->gui_menu_interval = gui_menu_interval;
 
   int section_count = wf_section_count();
   
@@ -200,7 +213,8 @@ stg_world_t* stg_world_create( stg_id_t id,
   world->sim_interval = sim_interval;
   world->wall_interval = real_interval;
   world->wall_last_update = 0;
-  
+  world->gui_interval = 100;
+
   world->width = width;
   world->height = height;
   world->ppm = ppm; // this is the finest resolution of the matrix
@@ -267,47 +281,28 @@ int stg_world_update( stg_world_t* world, int sleepflag )
 {
   //PRINT_WARN( "World update" );
 
-#if 0 //DEBUG
-  struct timeval tv1;
-  gettimeofday( &tv1, NULL );
-#endif
-  
-/*   if( world->win )  */
-/*     {  */
-/*       gui_poll();        */
-/*     }  */
-
-#if 0// DEBUG
-  struct timeval tv2;
-  gettimeofday( &tv2, NULL );
-  
-  double guitime = (tv2.tv_sec + tv2.tv_usec / 1e6) - 
-    (tv1.tv_sec + tv1.tv_usec / 1e6);
-  
-  printf( " guitime %.4f\n", guitime );
-#endif
-
-  //putchar( '.' );
-  //fflush( stdout );
-  
   stg_msec_t timenow = stg_timenow();
-   
+  
+ 
+  // is it time to look for GUI events?
+  if( world->win && 
+      world->gui_menu_interval < timenow - world->gui_menu_last_update )
+    {	  
+      gui_poll();       
+      world->gui_menu_last_update = timenow;	  
+    } 
+  
   //PRINT_DEBUG5( "timenow %lu last update %lu interval %lu diff %lu sim_time %lu", 
   //	timenow, world->wall_last_update, world->wall_interval,  
   //	timenow - world->wall_last_update, world->sim_time  );
   
   // if it's time for an update, update all the models
   stg_msec_t elapsed =  timenow - world->wall_last_update;
-
+  
   if( world->wall_interval < elapsed )
     {
-      if( world->win ) 
-	{ 
-	  gui_poll();       
-	} 
-
       stg_msec_t real_interval = timenow - world->wall_last_update;
-
+      
 #if 0      
       printf( " [%d %lu] sim:%lu real:%lu  ratio:%.2f\n",
 	      world->id, 
@@ -327,10 +322,16 @@ int stg_world_update( stg_world_t* world, int sleepflag )
 	  world->sim_time += world->sim_interval;
 	}
 
-      // redraw all the action
-      if( world->win )
-	if( gui_world_update( world ) )
-	  stg_quit_request();      
+      // is it time to redraw all the action?
+      if( world->win && 
+	  world->gui_interval < timenow - world->gui_last_update )
+	{
+	  
+	  if( gui_world_update( world ) )
+	    stg_quit_request();      
+	  
+	  world->gui_last_update = timenow;	  
+	} 
     }
   else
     if( sleepflag )

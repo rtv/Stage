@@ -305,8 +305,14 @@ extern "C" {
     /** real-time interval between updates - set this to zero for 'as fast as possible' 
      */
     stg_msec_t wall_interval;
+    stg_msec_t wall_last_update; ///< the wall-clock time of the last world update
 
-    stg_msec_t wall_last_update; ///< the wall-clock time of the last update
+    stg_msec_t gui_interval; ///< real-time interval between GUI canvas updates
+    stg_msec_t gui_last_update; ///< the wall-clock time of the last gui canvas update
+
+    stg_msec_t gui_menu_interval; ///< real-time interval between GUI menu updates
+    stg_msec_t gui_menu_last_update; ///< the wall-clock time of the last gui menu update
+
     
     /** the wallclock-time interval elapsed between the last two
 	updates - compare this with sim_interval to see the ratio of

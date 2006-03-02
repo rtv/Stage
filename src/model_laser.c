@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.84 $
+//  $Revision: 1.85 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -92,7 +92,7 @@ void laser_load( stg_model_t* mod )
   cfg->range_max = wf_read_length( mod->id, "range_max", cfg->range_max );
   cfg->fov       = wf_read_angle( mod->id, "fov",  cfg->fov );
 
-  cfg->resolution = wf_read_int( mod->id, "laser_resolution",  cfg->resolution );
+  cfg->resolution = wf_read_int( mod->id, "laser_sample_skip",  cfg->resolution );
  
   if( cfg->resolution < 1 )
     {
