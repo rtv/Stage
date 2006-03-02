@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.182 2006-03-02 07:52:30 rtv Exp $
+ * CVS: $Id: stage.h,v 1.183 2006-03-02 23:19:03 gerkey Exp $
  */
 
 
@@ -966,6 +966,24 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
   /// set the current odometry estimate 
   void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom ); 
+
+  // WIFI MODEL --------------------------------------------------------
+
+  /** wifi config packet 
+   */
+  typedef struct
+  {
+    // Configuration for the wifi model goes here.  E.g., power, range of
+    // propagation.
+  } stg_wifi_config_t;
+
+  /** wifi data packet 
+   */
+  typedef struct
+  {
+    // Simulated wifi data goes here.  E.g., for each neighbor within
+    // range, record the corresponding signal strength.
+  } stg_wifi_data_t;
 
   // end the group of all models
   /**@}*/
