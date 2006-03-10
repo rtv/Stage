@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.15 2006-03-02 03:42:15 rtv Exp $
+ * $Id: stage.txt,v 1.16 2006-03-10 06:41:00 rtv Exp $
 */
 
 /**
@@ -30,7 +30,7 @@ terms of the license.
 
 /** @defgroup stage Stage User Guide 
 
-Stage is a provides a virtual world populated by
+Stage is a robot simulator. It provides a virtual world populated by
 mobile robots and sensors, along with various objects for the robots
 to sense and manipulate. It is usually used to provide simulated
 devices to the Player robot server, but it can also be used as a

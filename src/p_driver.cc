@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.32 2006-03-02 23:19:03 gerkey Exp $
+ * CVS: $Id: p_driver.cc,v 1.33 2006-03-10 06:41:00 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -57,6 +57,7 @@ Richard Vaughan
 Creating two models in a Stage worldfile, saved as "example.world":
 
 @verbatim
+# this is a comment
 # create a position model - it can drive around like a robot
 position
 (
@@ -127,7 +128,7 @@ More examples can be found in the Stage source tree, in directory
 - worldfile \<string\>
   - where \<string\> is the filename of a Stage worldfile. Player will attempt to load the worldfile and attach interfaces to Stage models specified by the "model" keyword
 - model \<string\>
-  - where \<string\> is the name of a Stage position model that will be controlled by this interface. Stage will search down the tree of models starting at the named model to find a device of the right type.
+  - where \<string\> is the name of a Stage position model that will be controlled by this interface. Stage will search down the tree of models starting at the named model to find a previously-unassigned device of the right type.
 
 
 @par Provides

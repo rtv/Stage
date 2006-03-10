@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.12 2006-01-30 06:58:15 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.13 2006-03-10 06:41:00 rtv Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -129,6 +129,9 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     {
       stg_geom_t geom;
       stg_model_get_geom( this->mod,&geom );
+
+      //stg_pose_t pose;
+      //stg_model_get_pose( this->mod, &pose );
 
       // fill in the geometry data formatted player-like
       player_position2d_geom_t pgeom;

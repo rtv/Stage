@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics2d.cc,v 1.3 2006-02-09 02:21:39 rtv Exp $
+ * CVS: $Id: p_graphics2d.cc,v 1.4 2006-03-10 06:41:00 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -37,6 +37,8 @@ using namespace std;
 @par Graphics2d interface
 - PLAYER_GRAPHICS2D_CMD_CLEAR
 - PLAYER_GRAPHICS2D_CMD_POINTS
+- PLAYER_GRAPHICS2D_CMD_POLYLINE
+- PLAYER_GRAPHICS2D_CMD_POLYGON
 */
 
 static unsigned int rgb32_pack( player_color_t *pcol )
