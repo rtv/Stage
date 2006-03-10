@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.136 2006-03-02 23:19:00 gerkey Exp $
+# $Id: Makefile.am,v 1.137 2006-03-10 00:03:23 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -33,6 +33,7 @@ libstage_la_SOURCES = \
 	gnome.c \
 	gui.c \
 	gui.h \
+	gui_prefs.c \
 	gui_menus.c \
 	matrix.c \
 	model.c \

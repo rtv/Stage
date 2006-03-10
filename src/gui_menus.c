@@ -18,6 +18,7 @@ static GtkUIManager *ui_manager = NULL;
 
 // regular actions
 void gui_action_about( GtkAction *action, gpointer user_data);
+void gui_action_prefs( GtkAction *action, gpointer user_data);
 void gui_action_save( GtkAction *action, gpointer user_data);
 void gui_action_reset( GtkAction* action, gpointer userdata );
 void gui_action_exit( GtkAction* action, gpointer userdata );
@@ -49,6 +50,7 @@ static GtkActionEntry entries[] = {
   { "File", NULL, "_File" },
   { "View", NULL, "_View" },
   { "Debug", NULL, "_Debug" },
+  { "Edit", NULL, "_Edit" },
   { "Clock", NULL, "_Clock" },
   { "Help", NULL, "_Help" },
   { "Model", NULL, "_Models" },
@@ -57,6 +59,7 @@ static GtkActionEntry entries[] = {
   { "ExportFormat", NULL, "Screenshot bitmap format" },
   { "ExportFrame", NULL, "Single frame", "<ctrl>f", "Export a screenshot to disk", G_CALLBACK(gui_action_exportframe) },
   { "About", NULL, "About Stage", NULL, NULL, G_CALLBACK(gui_action_about) },
+  { "Preferences", NULL, "Preferences...", NULL, NULL, G_CALLBACK(gui_action_prefs) },
   { "Save", GTK_STOCK_SAVE, "_Save", "<control>S", "Save world state", G_CALLBACK(gui_action_save) },
   { "Reset", GTK_STOCK_OPEN, "_Reset", "<control>R", "Reset to last saved world state", G_CALLBACK(gui_action_reset) },
   { "Exit", GTK_STOCK_QUIT, "E_xit", "<control>Q", "Exit the program", G_CALLBACK(gui_action_exit) },
@@ -118,6 +121,9 @@ static const char *ui_description =
 "      <separator/>"
 "      <menuitem action='Exit'/>"
 "    </menu>"
+"    <menu action='Edit'>"
+"      <menuitem action='Preferences'/>"
+"    </menu>"
 "    <menu action='View'>"
 "      <menuitem action='DisablePolygons'/>"
 "      <menuitem action='Polygons'/>"
@@ -176,6 +182,26 @@ void gui_action_about( GtkAction *action, gpointer user_data)
 			    about );
 
   gtk_widget_show(GTK_WIDGET(about));
+}
+
+
+// defined in gui_prefs.c
+GtkWidget* create_prefsdialog( void );
+
+void gui_action_prefs( GtkAction *action, gpointer user_data)
+{
+  GtkWidget* dlg = create_prefsdialog();
+
+    
+    //g_signal_connect (about, "destroy",
+    //	    G_CALLBACK(gtk_widget_destroyed), &about);
+  
+  /* Destroy the dialog when the user responds to it (e.g. clicks a button) */
+  //g_signal_connect_swapped( about, "response",
+    //		    G_CALLBACK (gtk_widget_destroy),
+    //		    about );
+
+  gtk_widget_show(dlg);
 }
 
 
