@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.57 $
+//  $Revision: 1.58 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -77,6 +77,19 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
   - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
 */
 
+
+/* External interface */
+
+/// set the current odometry estimate 
+void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
+{
+  assert(mod->data);
+  stg_position_data_t* data = (stg_position_data_t*)mod->data;
+  memcpy( &data->pose, odom, sizeof(stg_pose_t));
+  model_change( mod, &mod->data );
+} 
+
+/* Internal */
 
 const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
 const double STG_POSITION_WATTS = 2.0; // base cost of position device

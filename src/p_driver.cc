@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.33 2006-03-10 06:41:00 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.34 2006-03-14 20:03:53 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -106,7 +106,7 @@ driver
 driver
 (
   name "stage"
-  provides ["position:0" "laser:0"]
+  provides ["position2d:0" "laser:0"]
   model "marvin"
 )
 
@@ -115,7 +115,7 @@ driver
 driver
 (
   name "stage"
-  provides ["6666:position:0" "6666:gripper:0" "6666:gripper:1"]
+  provides ["6666:position2d:0" "6666:gripper:0" "6666:gripper:1"]
   model "gort"
 )
 @endverbatim
