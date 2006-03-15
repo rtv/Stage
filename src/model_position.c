@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.58 $
+//  $Revision: 1.59 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -86,6 +86,22 @@ void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
   assert(mod->data);
   stg_position_data_t* data = (stg_position_data_t*)mod->data;
   memcpy( &data->pose, odom, sizeof(stg_pose_t));
+
+  // figure out where the implied origin is in global coords
+  stg_pose_t gp;
+  stg_model_get_global_pose( mod, &gp );
+			
+  double da = -odom->a + gp.a;
+  double dx = -odom->x * cos(da) + odom->y * sin(da);
+  double dy = -odom->y * cos(da) - odom->x * sin(da);
+
+  stg_pose_t origin;
+  origin.x = gp.x + dx;
+  origin.y = gp.y + dy;
+  origin.a = da;
+
+  memcpy( &data->origin, &origin, sizeof(stg_pose_t));
+  
   model_change( mod, &mod->data );
 } 
 
