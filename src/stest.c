@@ -3,11 +3,14 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.14 2006-02-28 05:17:20 rtv Exp $
+// CVS: $Id: stest.c,v 1.15 2006-03-15 00:11:58 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
+#include <stdio.h>
+
 #include "stage.h"
+#include "config.h" // results of autoconf's system configuration tests
 
 const size_t MAX_LASER_SAMPLES = 361;
 

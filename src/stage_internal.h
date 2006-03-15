@@ -4,8 +4,21 @@
 // internal function declarations that are not part of the external
 // interface to Stage
 
+
+#include <assert.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <math.h> // for lrint() in macros
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <string.h>
+
 #include "stage.h"
-#include "math.h" // for lrint() in macros
+#include "config.h" // results of autoconf's system configuration tests
+#include "replace.h" // Stage's implementations of missing system calls
+#include "rtk.h" // and graphics stuff pulled from Andrew Howard's RTK2 library
 
 #if INCLUDE_GNOME
 #include "gnome.h"

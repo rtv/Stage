@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.183 2006-03-02 23:19:03 gerkey Exp $
+ * CVS: $Id: stage.h,v 1.184 2006-03-15 00:11:58 rtv Exp $
  */
 
 
@@ -40,24 +40,11 @@
   library
 */
 
-#include "config.h" // results of autoconf's system configuration tests
-#include "replace.h" // Stage's implementations of missing system calls
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <string.h>
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
 #include <sys/types.h>
 #include <sys/time.h>
-#include <assert.h>
-#include <pthread.h>
-#include <semaphore.h>
-
 #include <glib.h> // we use GLib's data structures extensively
-#include <rtk.h> // and graphics stuff pulled from Andrew Howard's RTK2 library
 
 #ifdef __cplusplus
 extern "C" {
