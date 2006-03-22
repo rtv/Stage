@@ -439,10 +439,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   stg_model_add_callback( mod, &mod->gui_grid, gui_model_grid, NULL );
   stg_model_add_callback( mod, &mod->pose, gui_model_move, NULL );
   stg_model_add_callback( mod, &mod->gui_mask, gui_model_mask, NULL );
-
-  // force refresh
-  //model_change( mod, &mod->gui_mask );
-
+  stg_model_add_callback( mod, &mod->parent, gui_model_mask, NULL );
 
   // now we can add the basic square shape
   stg_polygon_t* square = stg_unit_polygon_create();
@@ -1215,7 +1212,6 @@ int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent)
   // HACK - completely rebuild the GUI elements - it's too complex to patch up the tree
   gui_model_destroy( mod );
   gui_model_create( mod );
-  
   model_change( mod, &mod->parent );
 
   return 0; //ok

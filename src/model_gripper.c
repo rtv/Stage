@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -144,8 +144,7 @@ int gripper_init( stg_model_t* mod )
   memset(&data,0,sizeof(data));
   stg_model_set_data( mod, &data, sizeof(data));
   
-  //stg_model_add_callback( mod, &mod->data, gripper_render_data, NULL );
-  
+
   // adds a menu item and associated on-and-off callbacks
   stg_model_add_property_toggles( mod, &mod->data,
 				  gripper_render_data, NULL,
@@ -306,11 +305,6 @@ int gripper_update( stg_model_t* mod )
 	  stg_model_set_global_pose( head, &drop_pose );
 	  
 	  cfg.close_limit = 1.0;
-	  
-	  // XX
-	  // need to repair the rtk movemask - this is enough
-	  //stg_model_property_refresh( head, "mask" );
-	  //model_change ?
 	}
     }
   else if( cfg.paddles == STG_GRIPPER_PADDLE_CLOSING && !cfg.paddles_stalled  )
