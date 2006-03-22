@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.82 2006-03-15 00:00:49 rtv Exp $
+# CVS: $Id: everything.world,v 1.83 2006-03-22 08:46:30 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -68,7 +68,7 @@ define trickedoutpioneer pioneer2dx
     )
   )
 
-  fiducial_return 42
+  fiducial_return 1
   gripper_return 0
 
   localization "gps"
@@ -78,7 +78,7 @@ define trickedoutpioneer pioneer2dx
 
 trickedoutpioneer
 (
-  name "p0"
+  name "robot1"
   pose [-10.071 3.186 -722.333]
 
   gripper( pose [0.200 0.000 0.000] color "gray" )

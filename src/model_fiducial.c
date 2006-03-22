@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.47 $
+//  $Revision: 1.48 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -209,10 +209,6 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   if( his_fid == NULL || him == mfb->mod || *his_fid == FiducialNone ) 
     return; 
 
-  //printf( "checking model %s - he has fiducial value %d\n",
-  //  him->token, *his_fid );
-
-
   stg_pose_t hispose;
   stg_model_get_global_pose( him, &hispose );
   
@@ -243,13 +239,11 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 			   hispose.x, hispose.y, 
 			   him->world->matrix, PointToPoint );
   
-  stg_model_t* hitmod = itl_first_matching( itl, fiducial_raytrace_match, mfb->mod );
+  stg_model_t* hitmod = 
+    itl_first_matching( itl, fiducial_raytrace_match, mfb->mod );
   
   itl_destroy( itl );
 
-
-  //PRINT_DEBUG( "finished raytracing" );
-  
   //if( hitmod )
   //PRINT_DEBUG2( "I saw %s with fid %d",
   //	 hitmod->token, hitmod->fiducial_return );

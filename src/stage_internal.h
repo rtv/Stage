@@ -289,6 +289,14 @@ extern "C" {
 				       const char* parentname,
 				       int layer );
   
+  /** Get the figure named figname, or, if it doesn't exist, create
+      and return a new figure. A convenience wrapper around
+      stg_model_fig_get() and stg_model_fig_create(). */
+  stg_rtk_fig_t* stg_model_fig_get_or_create( stg_model_t* mod, 
+					      const char* figname, 
+					      const char* parentname,
+					      int layer );
+  
   stg_rtk_fig_t* stg_model_get_fig( stg_model_t* mod, const char* figname );
   void stg_model_fig_clear( stg_model_t* mod, const char* figname );
          

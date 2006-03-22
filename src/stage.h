@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.184 2006-03-15 00:11:58 rtv Exp $
+ * CVS: $Id: stage.h,v 1.185 2006-03-22 08:46:29 rtv Exp $
  */
 
 
@@ -581,6 +581,31 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   void stg_model_set_watts( stg_model_t* mod, stg_watts_t watts );
   void stg_model_set_map_resolution( stg_model_t* mod, stg_meters_t res );
 
+  /** @brief Set an integer property of a Stage model.
+      
+      Set an integer property of a Stage model. The property is
+      identified by the same string used in the world file. Warning:
+      only a subset of a model's properties are supported. Check the
+      function definition in src/model.c to see them. TODO: use this
+      mechanism to load properties from the worldfile?
+  */ 
+  int stg_model_set_named_property_int( stg_model_t* mod, 
+					char* name, 
+					size_t len, 
+					int value );
+  
+  /** @brief Set a floating-point property of a Stage model.
+      
+      Set a floating-point property of a Stage model. The property is
+      identified by the same string used in the world file. Warning:
+      only a subset of a model's properties are supported. Check the
+      function definition in src/model.c to see them. TODO: use this
+      mechanism to load properties from the worldfile?
+  */ 
+  int stg_model_set_named_property_double( stg_model_t* mod, 
+					   char* name, 
+					   size_t len, 
+					   double value );
 
   /** print human-readable information about the model on stdout. If
       prefix is non-null, it is printed first.
@@ -755,8 +780,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
    */
   typedef struct
   {
-    uint32_t range; ///< range to laser hit in mm
-    char reflectance; ///< intensity of the reflection 0-4
+    stg_meters_t range; ///< range to laser hit in meters
+    double reflectance; ///< intensity of the reflection 0.0 to 1.0
   } stg_laser_sample_t;
   
   /** laser configuration packet

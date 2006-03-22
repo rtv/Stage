@@ -5,16 +5,35 @@
 
 extern stg_rtk_fig_t* fig_debug_rays;
 
-void itl_destroy( itl_t* itl )
-{
-  if( itl )
-    {
-      if( itl->incr ) 
-	free( itl->incr );
 
-      free( itl );
-    }
+/* useful debug */
+static void print_thing( char* prefix, stg_cell_t* cell, double x, double y )
+{
+  printf( "%s %p x[%.7f %.7f %.7f] y[%.7f %.7f %.7f] (x %s xmin  x %s xmax) (y %s ymin  y %s ymax)\n", 
+	  prefix,
+	  cell,	   
+	  cell->xmin, x, cell->xmax,
+	  cell->ymin, y, cell->ymax,
+	  GTE(x,cell->xmin) ? ">=" : "<",
+	  LT(x,cell->xmax) ? "<" : ">=",
+	  GTE(y,cell->ymin) ? ">=" : "<",
+	  LT(y,cell->ymax) ? "<" : ">=" );
 }
+
+/* useful debug */
+static void PrintArray( GPtrArray* arr )
+{
+  if( arr )
+    {
+      printf( "model array %p len %d\n", arr, arr->len );
+      int i;
+      for( i=0; i<arr->len; i++ )
+	printf( " (model %s)", ((stg_model_t*)g_ptr_array_index( arr, i ))->token );
+    }
+  else
+    printf( "null array\n" );
+}
+
 
 
 itl_t* itl_create( double x, double y, double a, double b, 
@@ -62,11 +81,18 @@ itl_t* itl_create( double x, double y, double a, double b,
   return itl;
 };
 
-
-
+void itl_destroy( itl_t* itl )
+{
+  if( itl )
+    {
+      if( itl->incr ) 
+	free( itl->incr );
+      free( itl );
+    }
+}
 
 // returns the first model in the array that matches, else NULL.
-stg_model_t* gslist_first_matching( GSList* list, 
+static stg_model_t* gslist_first_matching( GSList* list, 
 				    stg_itl_test_func_t func, 
 				    stg_model_t* finder )
 {
@@ -79,29 +105,10 @@ stg_model_t* gslist_first_matching( GSList* list,
   return NULL; // nothing in the array matched
 }
 
-
-void print_thing( char* prefix, stg_cell_t* cell, double x, double y )
-{
-  printf( "%s %p x[%.7f %.7f %.7f] y[%.7f %.7f %.7f] (x %s xmin  x %s xmax) (y %s ymin  y %s ymax)\n", 
-	  prefix,
-	  cell,	   
-	  cell->xmin, x, cell->xmax,
-	  cell->ymin, y, cell->ymax,
-	  GTE(x,cell->xmin) ? ">=" : "<",
-	  LT(x,cell->xmax) ? "<" : ">=",
-	  GTE(y,cell->ymin) ? ">=" : "<",
-	  LT(y,cell->ymax) ? "<" : ">=" );
-}
-
 // in the tree that contains cell, find the smallest node at x,y. cell
 // does not have to be the root. non-recursive for speed.
 stg_cell_t* stg_cell_locate( stg_cell_t* cell, double x, double y )
 {
-  //printf( "\nlocate %.5f, %.5f\n",
-  //  x,y );
-
-  //print_thing( "start", cell, x, y );
-
   // start by going up the tree until the cell contains the point
 
   // if x,y is NOT contained in the cell we jump to its parent
@@ -118,16 +125,12 @@ stg_cell_t* stg_cell_locate( stg_cell_t* cell, double x, double y )
 	return NULL; // the point is outside the root node!
     }
   
-  //print_thing( "after ascending", cell, x, y );
-
   // now we know that the point is contained in this cell, we go down
   // the tree to the leaf node that contains the point
   
   // if we have children, we must jump down into the child
   while( cell->children[0] )
     {
-      //print_thing( "descending", cell, x, y );
-
       // choose the right quadrant 
       int index;
       if( LT(x,cell->x) )
@@ -135,13 +138,8 @@ stg_cell_t* stg_cell_locate( stg_cell_t* cell, double x, double y )
       else
 	index = LT(y,cell->y) ? 1 : 3; 
 
-      //printf( "descent index %d {%.5f < %.5f}%d {%.5f < %.5f}%d\n",
-      //      index, x, cell->x, LT(x,cell->x), y, cell->y, LT(y,cell->y));
-      
       cell = cell->children[index];
     }
-
-  //print_thing( "after descending", cell, x, y );
 
   // the cell has no children and contains the point - we're done.
   return cell;
@@ -153,11 +151,8 @@ stg_model_t* itl_first_matching( itl_t* itl,
 {
   itl->index = 0;
   itl->models = NULL;  
-  //stg_model_t* found = NULL;
 
   stg_cell_t* cell = itl->matrix->root;
-
-  //double xstart, ystart;
 
   while( LT(itl->range,itl->max_range) )
     {
@@ -173,8 +168,8 @@ stg_model_t* itl_first_matching( itl_t* itl,
       
       if( fig_debug_rays ) // draw the cell rectangle
 	stg_rtk_fig_rectangle( fig_debug_rays,
-			       cell->x, cell->y, 0, cell->size, cell->size, 0 );
-            
+			       cell->x, cell->y, 0, 
+			       cell->size, cell->size, 0 );            
       if( cell->data ) 
 	{ 
 	  stg_model_t* hitmod = 
@@ -241,14 +236,11 @@ stg_model_t* itl_first_matching( itl_t* itl,
 	    yleave-=0.00001;
 	}
       
-      // jump slightly into the next cell
-      //xleave += 0.0001 * itl->cosa;
-      //yleave += 0.0001 * itl->sina;
-      
       if( fig_debug_rays ) // draw the cell rectangle
 	{
 	  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFFBBBB );
-	  stg_rtk_fig_arrow_ex( fig_debug_rays, itl->x, itl->y, xleave, yleave, 0.01 );
+	  stg_rtk_fig_arrow_ex( fig_debug_rays, 
+				itl->x, itl->y, xleave, yleave, 0.01 );
 	  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFF0000 );
 	}
 
@@ -256,27 +248,11 @@ stg_model_t* itl_first_matching( itl_t* itl,
       itl->range += hypot( yleave - itl->y, xleave - itl->x );
       
       itl->x = xleave;
-      itl->y = yleave;
-     
-      
+      itl->y = yleave;      
     }
 
   return NULL; // we didn't find anything
 }
 
-
-
-void PrintArray( GPtrArray* arr )
-{
-  if( arr )
-    {
-      printf( "model array %p len %d\n", arr, arr->len );
-      int i;
-      for( i=0; i<arr->len; i++ )
-	printf( " (model %s)", ((stg_model_t*)g_ptr_array_index( arr, i ))->token );
-    }
-  else
-    printf( "null array\n" );
-}
 
 

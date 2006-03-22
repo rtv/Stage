@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.85 $
+//  $Revision: 1.86 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -206,23 +206,15 @@ void stg_laser_config_print( stg_laser_config_t* slc )
 
 int laser_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {           
-  
-  // Ignore myself, my children, and my ancestors.
-  if( (!stg_model_is_related(mod,hitmod))  &&  
-      mod->laser_return != LaserTransparent) 
-    return 1;
-  
-  // Stop looking when we see something
-  //hisreturn = hitmdmodel_laser_return(hitmod);
-  
-  return 0; // no match
+  // Ignore my relatives and thiings that are invisible to lasers
+  return( (!stg_model_is_related(mod,hitmod)) && 
+	  (hitmod->laser_return > 0) );
 }	
 
 int laser_update( stg_model_t* mod )
 {   
-  //puts( "laser update" );
-
-  PRINT_DEBUG2( "[%lu] laser update (%d subs)", mod->world->sim_time, mod->subs );
+  PRINT_DEBUG2( "[%lu] laser update (%d subs)", 
+		mod->world->sim_time, mod->subs );
   
   // no work to do if we're unsubscribed
   if( mod->subs < 1 )
@@ -255,16 +247,13 @@ int laser_update( stg_model_t* mod )
   // make a scan buffer (static for speed, so we only have to allocate
   // memory when the number of samples changes).
   static stg_laser_sample_t* scan = 0;
-  scan = realloc( scan, sizeof(stg_laser_sample_t) * cfg->samples );
-  
-  memset( scan, 0, sizeof(stg_laser_sample_t) *  cfg->samples );
+  scan = realloc( scan, sizeof(stg_laser_sample_t)*cfg->samples );
+  memset( scan, 0, sizeof(stg_laser_sample_t)*cfg->samples );
 
   for( int t=0; t<cfg->samples; t += cfg->resolution )
     {      
-      //if( t>cfg->samples ) break;
-
       double bearing =  pz.a - cfg->fov/2.0 + sample_incr * t;
-
+      
       itl_t* itl = itl_create( pz.x, pz.y, bearing, 
 			       cfg->range_max, 
 			       mod->world->matrix, 
@@ -273,9 +262,11 @@ int laser_update( stg_model_t* mod )
       double range = cfg->range_max;
       
       stg_model_t* hitmod;      
-      if((hitmod = itl_first_matching( itl, laser_raytrace_match, mod ) ))
-	  range = itl->range;
-	  
+      if((hitmod = itl_first_matching( itl, 
+				       laser_raytrace_match, 
+				       mod ) ))
+	range = itl->range;
+      
       itl_destroy( itl );
       
       //printf( "%d:%.2f  ", t, range );
@@ -284,16 +275,16 @@ int laser_update( stg_model_t* mod )
 	range = cfg->range_min;
 
       // record the range in mm
-      scan[t].range = (uint32_t)( range * 1000.0 );
+      scan[t].range = range;
       
       // if the object is bright, it has a non-zero reflectance
       if( hitmod )
 	{
 	  scan[t].reflectance = 
-	    (mod->laser_return >= LaserBright) ? 1 : 0;
+	    (mod->laser_return >= LaserBright) ? 1.0 : 0.0;
 	}
       else
-	scan[t].reflectance = 0;
+	scan[t].reflectance = 0.0;
       
     }
   
@@ -344,86 +335,77 @@ int laser_unrender_data( stg_model_t* mod, void* userp )
 
 
 int laser_render_data( stg_model_t* mod, void* enabled )
-{  
-  //puts( "LASER RENDER" );
-
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data; 
-  size_t sample_count = mod->data_len / sizeof(stg_laser_sample_t);
-  
-  stg_rtk_fig_t* bg = stg_model_get_fig( mod, "laser_data_bg_fig" );
-  stg_rtk_fig_t* fg = stg_model_get_fig( mod, "laser_data_fig" );  
-  
-  if( ! bg )
-    bg = stg_model_fig_create( mod, "laser_data_bg_fig", "top", STG_LAYER_BACKGROUND );
-  
-  if( ! fg )
-    fg = stg_model_fig_create( mod, "laser_data_fig", "top", STG_LAYER_LASERDATA );  
+{    
+  stg_rtk_fig_t* fg = 
+    stg_model_fig_get_or_create( mod, "laser_data_fig", "top", 
+				 STG_LAYER_LASERDATA );
+  stg_rtk_fig_t* bg = 
+    stg_model_fig_get_or_create( mod, "laser_data_bg_fig", "top", 
+				 STG_LAYER_BACKGROUND );
   
   stg_rtk_fig_clear( bg );
   stg_rtk_fig_clear( fg );
-
   
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data; 
+  size_t sample_count = mod->data_len / sizeof(stg_laser_sample_t);
   stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg;
-  assert( cfg );
-    
   
-  if( samples && sample_count )
-    {
-      // now get on with rendering the laser data
-      stg_pose_t pose;
-      stg_model_get_global_pose( mod, &pose );
-      
-      stg_geom_t geom;
-      stg_model_get_geom( mod, &geom );
-      
-      double sample_incr = cfg->fov / (sample_count-1.0);
-      double bearing = geom.pose.a - cfg->fov/2.0;
-      stg_point_t* points = calloc( sizeof(stg_point_t), sample_count + 1 );
-      
-      //stg_rtk_fig_origin( fg, pose.x, pose.y, pose.a );  
-      stg_rtk_fig_color_rgb32( fg, bright_color );
-      int s;
-      for( s=0; s<sample_count; s++ )
-	{
-	  // useful debug
-	  //stg_rtk_fig_arrow( fig, 0, 0, bearing, (sample->range/1000.0), 0.01 );
-	  
-	  points[1+s].x = (samples[s].range/1000.0) * cos(bearing);
-	  points[1+s].y = (samples[s].range/1000.0) * sin(bearing);
-	  bearing += sample_incr;	  
-	}
-      
-      // hmm, what's the right cast to get rid of the compiler warning
-      // for the points argument? the function expects a double[][2] type. 
-      
-      if( mod->world->win->fill_polygons )
-	{
-	  stg_rtk_fig_color_rgb32( bg, fill_color );
-	  stg_rtk_fig_polygon( bg, 0,0,0, sample_count+1, (double*)points, TRUE );
-	}
-      
-      stg_rtk_fig_color_rgb32( fg, laser_color );
-      stg_rtk_fig_polygon( fg, 0,0,0, sample_count+1, (double*)points, FALSE ); 	
-      
-      // loop through again, drawing bright boxes on top of the polygon
-      for( s=0; s<sample_count; s++ )
-	{      
-	  // if this hit point is bright, we draw a little box
-	  if( samples[s].reflectance > 0 )
-	    {
-	      stg_rtk_fig_color_rgb32( fg, bright_color );
-	      stg_rtk_fig_rectangle( fg, 
-				     points[1+s].x, points[1+s].y, 0,
-				     0.04, 0.04, 1 );
-	      stg_rtk_fig_color_rgb32( fg, laser_color );
-	    }
-	}
+  if( samples == NULL | sample_count < 1 )
+    return 0;
 
+  assert( cfg );
       
-      free( points );
+  // now get on with rendering the laser data
+  stg_pose_t pose;
+  stg_model_get_global_pose( mod, &pose );
+      
+  stg_geom_t geom;
+  stg_model_get_geom( mod, &geom );
+      
+  double sample_incr = cfg->fov / (sample_count-1.0);
+  double bearing = geom.pose.a - cfg->fov/2.0;
+      
+  static stg_point_t* points = NULL;
+  points = realloc( points, sizeof(stg_point_t)*(sample_count+1) );
+      
+  stg_rtk_fig_color_rgb32( fg, bright_color );
+      
+  int s;
+  for( s=0; s<sample_count; s++ )
+    {
+      // useful debug
+      //stg_rtk_fig_arrow( fig, 0, 0, bearing, (sample->range/1000.0), 0.01 );	  
+      points[1+s].x = samples[s].range * cos(bearing);
+      points[1+s].y = samples[s].range * sin(bearing);
+      bearing += sample_incr;	  
     }
-  
-  
+      
+  // hmm, what's the right cast to get rid of the compiler warning
+  // for the points argument? the function expects a double[][2] type. 
+      
+  if( mod->world->win->fill_polygons )
+    {
+      stg_rtk_fig_color_rgb32( bg, fill_color );
+      stg_rtk_fig_polygon( bg, 0,0,0, sample_count+1, (double*)points, TRUE );
+    }
+      
+  stg_rtk_fig_color_rgb32( fg, laser_color );
+  stg_rtk_fig_polygon( fg, 0,0,0, sample_count+1, (double*)points, FALSE ); 	
+      
+  // loop through again, drawing bright boxes on top of the polygon
+  for( s=0; s<sample_count; s++ )
+    {      
+      // if this hit point is bright, we draw a little box
+      if( samples[s].reflectance > 0 )
+	{
+	  stg_rtk_fig_color_rgb32( fg, bright_color );
+	  stg_rtk_fig_rectangle( fg, 
+				 points[1+s].x, points[1+s].y, 0,
+				 0.04, 0.04, 1 );
+	  stg_rtk_fig_color_rgb32( fg, laser_color );
+	}
+    }
+      
   return 0; // callback runs until removed
 }
 

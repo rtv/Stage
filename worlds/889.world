@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.9 2006-03-01 19:24:43 rtv Exp $
+# CVS: $Id: 889.world,v 1.10 2006-03-22 08:46:30 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 resolution 0.02 
@@ -45,10 +45,10 @@ define widget model
 (
   size [0.1 0.1]
   color "red"
-  fiducial_return 10
+  #fiducial_return 10
   laser_return 0
   obstacle_return 0
-  gripper_return 1
+  gripper_return 0
 )
 
 widget( pose [14.800 -2.700 0.000] )
@@ -141,6 +141,7 @@ big_robot
 define bluechatterbox chatterbox
 (
   color "blue"
+  laser_return 0
 )
 
 define redchatterbox chatterbox

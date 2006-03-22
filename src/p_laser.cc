@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.17 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_laser.cc,v 1.18 2006-03-22 08:46:29 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -57,12 +57,8 @@ InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 void InterfaceLaser::Publish( void )
 {
   size_t len = 0;
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data;
-  
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data;  
   int sample_count = mod->data_len / sizeof( stg_laser_sample_t );
-  
-  //for( int i=0; i<sample_count; i++ )
-  //  printf( "rrrange %d %d\n", i, samples[i].range);
   
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
@@ -88,7 +84,7 @@ void InterfaceLaser::Publish( void )
 	{
 	  //printf( "range %d %d\n", i, samples[i].range);
 	  
-	  pdata.ranges[i] = samples[i].range / 1e3;
+	  pdata.ranges[i] = samples[i].range;
 	  pdata.intensity[i] = (uint8_t)samples[i].reflectance;
 	}
       
@@ -98,8 +94,6 @@ void InterfaceLaser::Publish( void )
                             PLAYER_LASER_DATA_SCAN,
                             (void*)&pdata, sizeof(pdata), NULL);
     }
-
-  //return 0;
 }
 
 int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,

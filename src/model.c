@@ -967,7 +967,6 @@ void stg_model_set_fiducial_key( stg_model_t* mod, int key )
   model_change( mod, &mod->fiducial_key );
 }
 
-
 void stg_model_set_laser_return( stg_model_t* mod, int val )
 {
   assert(mod);
@@ -1565,4 +1564,74 @@ int model_render_velocity( stg_model_t* mod, void* enabled )
     }
 
   return 0;
+}
+
+
+int stg_model_set_named_property_int( stg_model_t* mod, 
+				      char* name, 
+				      size_t len, 
+				      int value )
+{
+  int ack = FALSE;
+  
+  if( strncmp( name, "fiducial_return", len) == 0 )
+    {
+      stg_model_set_fiducial_return( mod, value );
+      ack = TRUE;
+    }
+  else if( strncmp( name, "laser_return", len) == 0 )
+    {
+      stg_model_set_laser_return( mod, value );
+      ack = TRUE;
+    }
+  else if( strncmp( name, "obstacle_return", len) == 0 )
+    {
+      stg_model_set_obstacle_return( mod, value );
+	      ack = TRUE;
+    }
+  else if( strncmp( name, "ranger_return", len) == 0 )
+    {
+      stg_model_set_ranger_return( mod, value );
+      ack = TRUE;
+    }
+  else if( strncmp( name, "gripper_return", len) == 0 )
+    {
+      stg_model_set_gripper_return( mod, value );
+      ack = TRUE;
+    }
+  else if( strncmp( name, "color", len) == 0 )
+    {
+      stg_model_set_color( mod, value );
+      ack = TRUE;
+    }
+  else
+    printf( "Stage: failed to set unknown integer property \"%s\"\n",
+	    name );
+  
+  return ack;
+}
+
+
+int stg_model_set_named_property_double( stg_model_t* mod, 
+					 char* name, 
+					 size_t len, 
+					 double value )
+{
+  int ack = FALSE;
+  
+  if( strncmp( name, "mass", len) == 0 )
+    {
+      stg_model_set_mass( mod, value );
+      ack = TRUE;
+    }
+  else if( strncmp( name, "watts", len) == 0 )
+    {
+      stg_model_set_watts( mod, value );
+      ack = TRUE;
+    }
+  else
+    printf( "Stage: failed to set unknown floating-point property \"%s\"\n",
+	    name );
+  
+  return ack;
 }

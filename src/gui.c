@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.107 2006-02-12 22:48:14 rtv Exp $
+CVS: $Id: gui.c,v 1.108 2006-03-22 08:46:29 rtv Exp $
 */
 
 #include <stdio.h>
@@ -990,6 +990,20 @@ int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len,
 stg_rtk_fig_t* stg_model_get_fig( stg_model_t* mod, const char* figname ) 
 {
   return( (stg_rtk_fig_t*)g_datalist_get_data( &mod->figs, figname ));  
+}
+
+
+stg_rtk_fig_t* stg_model_fig_get_or_create( stg_model_t* mod, 
+					    const char* figname, 
+					    const char* parentname, 
+					    int layer )
+{
+  stg_rtk_fig_t* fig = stg_model_get_fig( mod, figname );
+  
+  if( fig ) 
+    return fig;
+  else
+    return stg_model_fig_create( mod, figname, parentname, layer );
 }
 
 stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod, 
