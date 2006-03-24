@@ -6,8 +6,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_speech.c,v $
-//  $Author: pooya $
-//  $Revision: 1.2 $
+//  $Author: rtv $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +22,8 @@ This can be used for debugging purposes.
 <h2>Worldfile properties</h2>
 none
 
+<h2>Author</h2>
+Pooya Karimian
 */
 
 

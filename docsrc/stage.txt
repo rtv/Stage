@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.16 2006-03-10 06:41:00 rtv Exp $
+ * $Id: stage.txt,v 1.17 2006-03-24 23:38:42 rtv Exp $
 */
 
 /**
@@ -145,6 +145,19 @@ The names "Player" and "Stage" were inspired by the lines:
 /** 
 \page release Release Notes
 
+\section v201 Version 2.0.1
+
+This is mainly a bugfix and performance-enhancement release. This
+release requires Player-2.0.1, released simultaneously.
+
+The only major new feature is the addition of support for Player's
+speech interface: speech bubbles show the text being "spoken" by each
+robot. The text is rendered using Pango, so non-Roman alphabets are
+supported.
+
+Richard Vaughan (rtv) vaughan@sfu.ca 2006.3.24
+
+
 \section v2 Version 2.0.0
 
 This is a major new release of Stage, and is intended to replace all
@@ -152,7 +165,7 @@ previous versions. It requires Player-2.0.0 or later.
 
 Please report bugs to the tracker and let us know what you do with Stage.
 
-Richard Vaughan (rtv)<br><tt>vaughan@sfu.ca</tt><br>2006.2.26
+Richard Vaughan (rtv) vaughan@sfu.ca 2006.2.26
 
 \subsection features New Features
 

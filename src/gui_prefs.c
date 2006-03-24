@@ -104,7 +104,7 @@ create_prefsdialog (void)
   gtk_widget_show (spinbutton7);
   gtk_box_pack_start (GTK_BOX (vbox6), spinbutton7, FALSE, FALSE, 0);
 
-  label6 = gtk_label_new (_("Update intervals *NOT WORKING YET*"));
+  label6 = gtk_label_new (_("TODO: Update intervals *NOT WORKING YET*"));
   gtk_widget_show (label6);
   gtk_notebook_set_tab_label (GTK_NOTEBOOK (notebook1), gtk_notebook_get_nth_page (GTK_NOTEBOOK (notebook1), 0), label6);
 
