@@ -87,3 +87,5 @@
 #define STG_WALL_COLOR "dark blue"
 #define STG_SONAR_COLOR "gray70"
 
+#define STG_LAYER_SPEECHDATA 88
+#define STG_SPEECH_COLOR "navy"

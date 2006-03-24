@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.18 2006-01-21 05:29:50 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.19 2006-03-24 20:12:42 pooya Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -51,7 +51,7 @@ void stg_rtk_fig_polygon_alloc(stg_rtk_fig_t *fig, double ox, double oy, double 
                            int closed, int filled, int point_count, stg_rtk_point_t *points);
 
 // Create a text stroke
-void stg_rtk_fig_text_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa, const char *text);
+void stg_rtk_fig_text_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa, const char *text, double *width, double *height);
 
 // Create an image stroke.
 void stg_rtk_fig_image_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa,
@@ -608,6 +608,9 @@ void stg_rtk_fig_render_selection(stg_rtk_fig_t *fig)
   LTOD(points[3], fig->min_x, fig->min_y);
   gdk_draw_polygon(drawable, fig->canvas->gc, FALSE, points, 4);
 
+  // TODO: Update the figure's bounding region. 
+  // TODO: maybe sth like this here instead of having it in "stg_rtk_fig_polygon_calc"
+  //  stg_rtk_region_set_union_rect(fig->region, fig->min_x-6, fig->min_y-6, fig->max_x+6, fig->max_y+6);
 
   // Draw cross-hairs
   /* This doesnt really work, since the figure origin may
@@ -921,7 +924,57 @@ void stg_rtk_fig_grid(stg_rtk_fig_t *fig, double ox, double oy,
 // Create a text stroke
 void stg_rtk_fig_text(stg_rtk_fig_t *fig, double ox, double oy, double oa, const char *text)
 {
-  stg_rtk_fig_text_alloc(fig, ox, oy, oa, text);
+  double width, height;
+  stg_rtk_fig_text_alloc(fig, ox, oy, oa, text, &width, &height);
+  return;
+}
+
+// Create a text bubble stroke
+void stg_rtk_fig_text_bubble(stg_rtk_fig_t *fig, double ox, double oy, double oa, const char *text, double bx, double by)
+{
+  
+  double width, height;
+
+  double gx, gy, lx, ly;
+  
+  // Compute local coords of device point
+  gx = 2.0 * bx + fig->dox; //DX_TO_GX(dx);
+  gy = -2.0 * by + fig->doy; //DY_TO_GY(dy);
+  lx = GX_TO_LX(gx, gy);
+  ly = GY_TO_LY(gx, gy);
+
+  // draw the text
+  stg_rtk_fig_text_alloc(fig, lx , ly , oa, text, &width, &height);
+
+  // draw the bubble
+  stg_rtk_point_t points[30];
+  double tx = width  * fig->canvas->sx;
+  double ty = height * fig->canvas->sy;
+
+  for (int i = 1; i <= 24 ; i++)
+  {
+    points[i+(i-1)/8+2].x = ( (i<17)? tx : 0.0) + 2.0 * bx + bx * sin(i * M_PI / 16);
+    points[i+(i-1)/8+2].y = ( (i>8) ? -ty: 0.0) - 2.0 * by + by * cos(i * M_PI / 16);
+  }
+
+  points[0].x =  0.0; 
+  points[0].y =  0.0;
+  points[1].x =  2.0 * bx; 
+  points[1].y = -by;
+  points[2].x =  tx + 2.0 * bx;
+  points[2].y = -by;
+  
+  points[11].x =  tx + 3.0 * bx;
+  points[11].y = -ty - 2.0 * by;
+  
+  points[20].x =  2.0 * bx;
+  points[20].y = -ty - 3.0 * by;
+  
+  points[29].x =  bx;
+  points[29].y = -2.0 * by;
+
+  stg_rtk_fig_polygon_alloc(fig, ox, oy, oa-fig->doa, 1, 0, 30, points);
+
   return;
 }
 
@@ -1147,10 +1200,12 @@ void stg_rtk_fig_polygon_calc(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data
   }
 
   // Allow for the selection indicator, which may run over a bit.
-  minx -= 3;
-  miny -= 3;
-  maxx += 3;
-  maxy += 3;
+  // TODO: is this the right way?
+  // TODO: this should probably go in "stg_rtk_fig_render_selection"
+  minx -= 6;
+  miny -= 6;
+  maxx += 6;
+  maxy += 6;
 
   // Update the figure's bounding region.
   stg_rtk_region_set_union_rect(fig->region, minx, miny, maxx, maxy);
@@ -1200,7 +1255,7 @@ void stg_rtk_fig_text_draw(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data);
 
 
 // Create a text stroke
-void stg_rtk_fig_text_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa, const char *text)
+void stg_rtk_fig_text_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa, const char *text, double *width, double *height)
 {
   stg_rtk_text_stroke_t *data;
 
@@ -1222,6 +1277,8 @@ void stg_rtk_fig_text_alloc(stg_rtk_fig_t *fig, double ox, double oy, double oa,
 
   (*data->stroke.calcfn) (fig, data);
   
+  *width=data->width;
+  *height=data->height;
   
   // This will make sure the new stroke gets drawn
   stg_rtk_fig_dirty(fig);
@@ -1253,6 +1310,9 @@ void stg_rtk_fig_text_calc(stg_rtk_fig_t *fig, stg_rtk_text_stroke_t *data)
   
   int width=0,height=0;
   pango_layout_get_pixel_size( data->layout, &width, &height );
+
+  data->width=width;
+  data->height=height;
   
   stg_rtk_region_set_union_rect(fig->region, 
 				data->point.x, 

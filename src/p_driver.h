@@ -133,6 +133,17 @@ class InterfaceWifi : public InterfaceModel
   virtual void Publish( void );
 };
 
+class InterfaceSpeech : public InterfaceModel
+{
+ public: 
+  InterfaceSpeech( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceSpeech( void ){ /* TODO: clean up*/ };
+  virtual int ProcessMessage(MessageQueue* resp_queue,
+                             player_msghdr_t* hdr,
+                             void* data);
+  virtual void Publish( void );
+};
+
 class InterfaceLaser : public InterfaceModel
 {
   private:

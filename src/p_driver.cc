@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.34 2006-03-14 20:03:53 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.35 2006-03-24 20:12:42 pooya Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -391,6 +391,10 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 
 	case PLAYER_WIFI_CODE:
 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
+	  break;	  
+
+	case PLAYER_SPEECH_CODE:
+	  ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );
 	  break;	  
 
 	default:

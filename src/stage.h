@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.185 2006-03-22 08:46:29 rtv Exp $
+ * CVS: $Id: stage.h,v 1.186 2006-03-24 20:12:42 pooya Exp $
  */
 
 
@@ -996,6 +996,37 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     // Simulated wifi data goes here.  E.g., for each neighbor within
     // range, record the corresponding signal strength.
   } stg_wifi_data_t;
+
+  // SPEECH MODEL --------------------------------------------------------
+
+#define STG_SPEECH_MAX_STRING_LEN 256
+
+  typedef enum {
+    STG_SPEECH_CMD_NOP = 0, // default state
+    STG_SPEECH_CMD_SAY
+  } stg_speech_cmd_type_t;
+
+  /** speech configuration packet
+   */
+  typedef struct
+  {
+    char string[STG_SPEECH_MAX_STRING_LEN];
+  } stg_speech_config_t;
+
+  /** speech data packet
+   */
+  typedef struct
+  {
+    char string[STG_SPEECH_MAX_STRING_LEN];
+  } stg_speech_data_t;
+
+  /** speech command packet
+   */
+  typedef struct
+  {
+    stg_speech_cmd_type_t cmd;
+    char string[STG_SPEECH_MAX_STRING_LEN];
+  } stg_speech_cmd_t;
 
   // end the group of all models
   /**@}*/

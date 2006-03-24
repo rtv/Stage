@@ -24,7 +24,7 @@
  * Desc: Combined Stk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.15 2006-01-21 05:29:50 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.16 2006-03-24 20:12:42 pooya Exp $
  */
 
 #ifndef STK_H
@@ -514,6 +514,11 @@ void stg_rtk_fig_arrow_fancy(stg_rtk_fig_t *fig, double ox, double oy, double oa
 void stg_rtk_fig_text(stg_rtk_fig_t *fig, double ox, double oy, double oa,
                   const char *text);
 
+// Draw single or multiple lines of text in a bubble.  Lines are deliminted with
+// '\n'.
+void stg_rtk_fig_text_bubble(stg_rtk_fig_t *fig, double ox, double oy, double oa,
+                  const char *text, double bx, double by);
+
 // Draw a grid.  Grid is centered on (ox, oy) with size (dx, dy) with
 // spacing (sp).
 void stg_rtk_fig_grid(stg_rtk_fig_t *fig, double ox, double oy,
@@ -616,6 +621,9 @@ typedef struct
   // Origin of the text in logical local coordinates.
   double ox, oy, oa;
 
+  // Text width and height calculated by Pango
+  double width, height;
+  
   // Origin of the text in absolute physical coordinates.
   GdkPoint point;
   

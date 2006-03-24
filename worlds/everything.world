@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.83 2006-03-22 08:46:30 rtv Exp $
+# CVS: $Id: everything.world,v 1.84 2006-03-24 20:12:42 pooya Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -82,6 +82,7 @@ trickedoutpioneer
   pose [-10.071 3.186 -722.333]
 
   gripper( pose [0.200 0.000 0.000] color "gray" )
+  speech()
 )
 
 trickedoutpioneer
