@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.86 $
+//  $Revision: 1.87 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -302,11 +302,11 @@ int laser_update( stg_model_t* mod )
 		    &scan[t-cfg->resolution], 
 		    sizeof(stg_laser_sample_t));
 	    
-	    double left = (double)scan[t].range;
-	    double right = (double)scan[t-cfg->resolution].range;
+	    double left = scan[t].range;
+	    double right = scan[t-cfg->resolution].range;
 	    
 	    // linear range interpolation between the left and right samples
-	    scan[t-g].range = (uint32_t)(left-g*(left-right)/cfg->resolution);
+	    scan[t-g].range = (left-g*(left-right)/cfg->resolution);
 	  }
     }
   
