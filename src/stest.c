@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.15 2006-03-15 00:11:58 rtv Exp $
+// CVS: $Id: stest.c,v 1.16 2006-03-24 23:47:53 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -84,7 +84,7 @@ int main( int argc, char* argv[] )
       int i;
       for(i = 0; i < laser_sample_count; i++)
 	{
-	  if(laserdata[i].range/1000.0 < minfrontdistance)
+	  if(laserdata[i].range < minfrontdistance)
 	    obs = TRUE;
 	}
       
