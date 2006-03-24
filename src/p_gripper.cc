@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_gripper.cc,v 1.6 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_gripper.cc,v 1.7 2006-03-24 20:25:40 pooya Exp $
  */
 
 
@@ -160,7 +160,7 @@ int InterfaceGripper::ProcessMessage(MessageQueue* resp_queue,
       
     }
 
-  PRINT_WARN2( "stage gripper doesn't support message id:%d",
+  PRINT_WARN2( "stage gripper doesn't support message id:%d/%d",
 	       hdr->type, hdr->subtype );
   return -1;
 }
