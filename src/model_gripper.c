@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -382,8 +382,10 @@ int gripper_update( stg_model_t* mod )
 
 int gripper_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
-  // Ignore myself, my children, and my ancestors.
-  return( hitmod->gripper_return && !stg_model_is_related(mod,hitmod));
+  return( (hitmod != mod) && hitmod->gripper_return );
+
+  // can't use the normal relation check, because we may pick things
+  // up and we must still see them.
 }	
 
 int gripper_break_beam(stg_model_t* mod, stg_gripper_config_t* cfg, int beam) 
@@ -679,6 +681,8 @@ int gripper_render_cfg( stg_model_t* mod, void* user )
   // draw the position of the break beam sensors
   stg_rtk_fig_rectangle( fig, ibbx, bby, 0, 0.01, 0.01, 0 );
   stg_rtk_fig_rectangle( fig, obbx, bby, 0, 0.01, 0.01, 0 );
+
+  return 0; //ok
 }
 
 
