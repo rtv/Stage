@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_speech.c,v $
 //  $Author: pooya $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,14 +15,12 @@
 @ingroup model
 @defgroup model_speech Speech model 
 
-@todo revise
 The speech model draws a speech bubble on the robot whenever 
 a robot say a message. The bubble will go away with an empty message.
 This can be used for debugging purposes.
 
 <h2>Worldfile properties</h2>
-
-@todo Fill this in
+none
 
 */
 
