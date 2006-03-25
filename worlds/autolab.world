@@ -1,6 +1,6 @@
 
 # Desc: Autonomy Lab 
-# CVS: $Id: autolab.world,v 1.1 2006-03-25 01:02:35 rtv Exp $
+# CVS: $Id: autolab.world,v 1.2 2006-03-25 01:07:38 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 resolution 0.02 
@@ -34,7 +34,7 @@ window
 # load an environment bitmap
 map
 (
-  #bitmap "bitmaps/cave.png"
+  #bitmap "bitmaps/autolab.png"
   size [10 10]
   boundary 1
   gui_grid 1

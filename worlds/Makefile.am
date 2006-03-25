@@ -2,9 +2,21 @@ SUBDIRS = bitmaps
 
 worldsdir = $(prefix)/share/stage/worlds
 
-EXAMPLES =  everything.world everything.cfg simple.world simple.cfg \
-	pioneer.inc sick.inc beacons.inc map.inc \
-	pucktarget.inc wavefront.cfg vfh.cfg
+EXAMPLES =  \
+	autolab.cfg \
+	autolab.world \
+	beacons.inc \
+	chatterbox.inc \
+	everything.cfg \
+	everything.world \
+	map.inc \
+	pioneer.inc \
+	pucktarget.inc \
+	sick.inc \
+	simple.cfg \
+	simple.world  \
+	vfh.cfg \
+	wavefront.cfg 
 
 worlds_DATA = $(EXAMPLES)
 
