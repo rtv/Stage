@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.10 2006-03-02 07:52:30 rtv Exp $
+dnl $Id: configure.ac,v 1.11 2006-03-25 01:47:44 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -72,16 +72,16 @@ AC_ARG_ENABLE(gnomecanvas,
 )
 
 dnl for libstageplugin, we need Player 2.0 or higher
-PKG_CHECK_MODULES( PLAYER, playercore >= 2.0,
+PKG_CHECK_MODULES( PLAYER, playercore >= 2.0.1,
  AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
- AC_MSG_WARN([Player was not found. ])
+ AC_MSG_ERROR([Stage 2.0.1 requires Player-2.0.1 to be installed first. Available at http://playerstage.sourceforge.net.])
 )
 
 dnl for ptest, we need libplayerc
-PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0,
- AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
- AC_MSG_WARN([libplayercr was not found. ])
-)
+dnl PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0,
+dnl  AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
+dnl  AC_MSG_WARN([libplayercr was not found. ])
+dnl )
 
 dnl where's the X11 color database?
 AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
