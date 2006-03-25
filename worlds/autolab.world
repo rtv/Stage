@@ -1,6 +1,6 @@
 
 # Desc: Autonomy Lab 
-# CVS: $Id: autolab.world,v 1.2 2006-03-25 01:07:38 rtv Exp $
+# CVS: $Id: autolab.world,v 1.3 2006-03-25 01:15:47 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 resolution 0.02 
@@ -9,17 +9,8 @@ interval_sim 100  # milliseconds per update step
 interval_real 100 # real-time milliseconds per update step
 
 include "pioneer.inc"
-
-
-
 include "chatterbox.inc"
-
-
-
 include "map.inc"
-
-
-
 
 size [10 10]
 
