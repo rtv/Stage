@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.35 2006-03-24 20:12:42 pooya Exp $
+ * CVS: $Id: p_driver.cc,v 1.36 2006-03-25 01:02:35 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -243,7 +243,7 @@ stg_model_t* model_match( stg_model_t* mod,
 	      // if we have this type of interface on this model already, it's no-go.
 	      if( match == interface->mod && interface->addr.interf == addr->interf )
 		{
-		  printf( "[MODEL ALREADY HAS AN INTERFACE]" );
+		  //printf( "[MODEL ALREADY HAS AN INTERFACE]" );
 		  //return NULL;
 		  match = NULL;
 		}

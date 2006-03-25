@@ -1,0 +1,120 @@
+
+# Desc: Autonomy Lab 
+# CVS: $Id: autolab.world,v 1.1 2006-03-25 01:02:35 rtv Exp $
+
+# the resolution of Stage's raytrace model in meters
+resolution 0.02 
+
+interval_sim 100  # milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
+
+include "pioneer.inc"
+
+
+
+include "chatterbox.inc"
+
+
+
+include "map.inc"
+
+
+
+
+size [10 10]
+
+# configure the GUI window
+window
+( 
+  size [ 678.000 730.000 ] 
+  center [-0.039 -0.134] 
+  scale 0.015 
+)
+
+# load an environment bitmap
+map
+(
+  #bitmap "bitmaps/cave.png"
+  size [10 10]
+  boundary 1
+  gui_grid 1
+  name "lab"
+	
+  polygon[0].fill 0
+)
+
+# define and place some grippable objects
+
+
+define mother pioneer2dx 
+(	
+  laser()
+  ptz( blobfinder() )
+  gripper( pose [0.200 0.000 0.000] color "gray" )
+
+  fiducialfinder( 
+     # set to match the fiducial_key of objects you want to 
+     # in this example, we match the chargers
+     fiducial_key 1 
+  )
+)
+
+mother
+(
+  name "mother0"
+  pose [-4.029 -3.369 -325.994]
+  color "red"
+)
+
+mother
+(
+  name "mother1"
+  pose [-3.220 -4.179 -313.105]
+  color "blue"
+)
+
+# define and place some little robots
+
+define bluechatterbox chatterbox ( color "blue" )
+define redchatterbox chatterbox ( color "red" )
+
+bluechatterbox( name "cbb0" pose [3.321 3.012 0.000] )
+bluechatterbox( name "cbb1" pose [3.022 4.003 -171.141] )
+bluechatterbox( name "cbb2" pose [3.144 2.468 -159.523] )
+bluechatterbox( name "cbb3" pose [1.477 3.816 -28.297] )
+bluechatterbox( name "cbb4" pose [2.323 3.390 -108.654] )
+bluechatterbox( name "cbb5" pose [2.443 3.750 -108.654] )
+bluechatterbox( name "cbb6" pose [2.638 3.435 -108.654] )
+bluechatterbox( name "cbb7" pose [2.668 3.660 -108.654] )
+bluechatterbox( name "cbb8" pose [2.263 4.020 -108.654] )
+bluechatterbox( name "cbb9" pose [2.188 3.630 -108.654] )
+
+
+redchatterbox( name "cbr0" pose [2.653 4.152 0.000] )
+redchatterbox( name "cbr1" pose [2.659 3.053 0.000] )
+redchatterbox( name "cbr2" pose [3.326 3.593 -53.892] )
+redchatterbox( name "cbr3" pose [3.691 3.061 -28.297] )
+redchatterbox( name "cbr4" pose [1.632 3.232 -54.883] )
+redchatterbox( name "cbr5" pose [2.157 2.902 -54.883] )
+redchatterbox( name "cbr6" pose [2.382 2.452 -54.883] )
+redchatterbox( name "cbr7" pose [2.112 2.137 -54.883] )
+redchatterbox( name "cbr8" pose [1.827 2.347 -54.883] )
+redchatterbox( name "cbr9" pose [1.647 2.737 -54.883] )
+
+# define and place some charging stations
+
+define charger model
+(
+ size [ 0.5 0.5 ]
+
+ color "green"
+ #energy.capacity -1.0  # infinite
+ #energy.return 30.0 # will transfer 30 Joules per second (Watts)
+ #energy.range 0.0
+
+ obstacle_return 0
+ laser_return 0
+ fiducial_key 1
+)
+
+charger( pose [ -4.522 -4.546 0.000 ] fiducial_return 1 )
