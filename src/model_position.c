@@ -6,8 +6,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
-//  $Author: rtv $
-//  $Revision: 1.59 $
+//  $Author: gerkey $
+//  $Revision: 1.60 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -267,8 +267,10 @@ void position_load( stg_model_t* mod )
       stg_model_get_global_pose( mod, &gpose );
       
       data->pose.a = NORMALIZE( gpose.a - data->origin.a );
-      double cosa = cos(data->pose.a);
-      double sina = sin(data->pose.a);
+      //double cosa = cos(data->pose.a);
+      //double sina = sin(data->pose.a);
+      double cosa = cos(data->origin.a);
+      double sina = sin(data->origin.a);
       double dx = gpose.x - data->origin.x;
       double dy = gpose.y - data->origin.y; 
       data->pose.x = dx * cosa + dy * sina; 
