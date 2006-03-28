@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.87 $
+//  $Revision: 1.88 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -243,12 +243,22 @@ int laser_update( stg_model_t* mod )
 #endif
       
   if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
-
-  // make a scan buffer (static for speed, so we only have to allocate
-  // memory when the number of samples changes).
+  
+  // make a static scan buffer, so we only have to allocate memory
+  // when the number of samples changes between calls - probably
+  // unusual.
   static stg_laser_sample_t* scan = 0;
-  scan = realloc( scan, sizeof(stg_laser_sample_t)*cfg->samples );
-  memset( scan, 0, sizeof(stg_laser_sample_t)*cfg->samples );
+  static size_t old_len = 0;
+  
+  size_t data_len = sizeof(stg_laser_sample_t)*cfg->samples;
+  
+  if( old_len != data_len )
+    {
+      scan = realloc( scan, data_len );
+      old_len = data_len;
+    }
+  
+  memset( scan, 0, data_len );
 
   for( int t=0; t<cfg->samples; t += cfg->resolution )
     {      

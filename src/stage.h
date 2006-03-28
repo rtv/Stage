@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.186 2006-03-24 20:12:42 pooya Exp $
+ * CVS: $Id: stage.h,v 1.187 2006-03-28 23:27:59 rtv Exp $
  */
 
 
@@ -607,6 +607,25 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 					   size_t len, 
 					   double value );
 
+  
+  /** @TODO @brief Attach arbitrary data to a model
+      
+      Attach arbitrary data to a model using a string for
+      lookup. Callbacks can be attached to the key and called when the
+      data is set, using stg_model_set_property_callback(). 
+  */
+/*   void stg_model_set_property( stg_model_t* mod, */
+/* 			       char* key, */
+/* 			       void* data, */
+/* 			       size_t len ); */
+  
+/*   /\** @TODO The callback cb will be called with argument arg when the */
+/*       property identified by key is set. *\/ */
+/*   void stg_model_set_property_callback( stg_model_t* mod, */
+/* 					char* key, */
+/* 					stg_property_callback cb, */
+/* 					void* argn ); */
+ 
   /** print human-readable information about the model on stdout. If
       prefix is non-null, it is printed first.
    */
@@ -928,6 +947,18 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     //double error; // TODO
   } stg_ranger_sample_t;
   
+  // BUMPER MODEL --------------------------------------------------------
+
+  typedef struct
+  {
+    stg_pose_t pose;
+    stg_meters_t length;
+  } stg_bumper_config_t;
+  
+  typedef struct
+  {
+    int contact;
+  } stg_bumper_sample_t;
   
   // POSITION MODEL --------------------------------------------------------
   

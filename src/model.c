@@ -1635,3 +1635,13 @@ int stg_model_set_named_property_double( stg_model_t* mod,
   
   return ack;
 }
+
+
+void stg_model_set_property( stg_model_t* mod,
+			     char* key,
+			     void* data,
+			     size_t len )
+{
+}
+
+

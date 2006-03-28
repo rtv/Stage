@@ -186,7 +186,7 @@ extern "C" {
     // a datalist can contain arbitrary named data items. Can be used
     // by derived model types to store properties, and for user code
     // to associate arbitrary items with a model.
-    //GData* props;
+    GData* props;
 
     // a datalist of stg_rtk_figs, indexed by name (string)
     GData* figs; 

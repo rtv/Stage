@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.64 $
+//  $Revision: 1.65 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -278,9 +278,19 @@ int ranger_update( stg_model_t* mod )
   
   int rcount = len / sizeof(stg_ranger_config_t);
   
-  stg_ranger_sample_t* ranges = (stg_ranger_sample_t*)
-    calloc( sizeof(stg_ranger_sample_t), rcount );
+  static stg_ranger_sample_t* ranges = NULL;
+  static size_t old_len = 0;
+  size_t data_len = sizeof(stg_ranger_sample_t) * rcount;
   
+  if( old_len != data_len )
+    {
+      ranges = (stg_ranger_sample_t*)
+	realloc( ranges, sizeof(stg_ranger_sample_t) * rcount );
+      old_len = data_len;
+    }
+    
+  memset( ranges, 0, data_len );
+
   if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
 
   int t;
@@ -331,8 +341,6 @@ int ranger_update( stg_model_t* mod )
   
   
   stg_model_set_data( mod, ranges, sizeof(stg_ranger_sample_t) * rcount );
-  
-  free( ranges );
   
   return 0;
 }
@@ -429,7 +437,10 @@ int ranger_render_data( stg_model_t* mod, void* userp )
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "ranger_data_fig" );
 
   if( !fig )
-    fig = stg_model_fig_create( mod, "ranger_data_fig", "top", STG_LAYER_RANGERDATA );
+    {
+      fig = stg_model_fig_create( mod, "ranger_data_fig", "top", STG_LAYER_RANGERDATA);
+      stg_rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
+    }
 
   stg_rtk_fig_clear(fig);
 
@@ -454,7 +465,6 @@ int ranger_render_data( stg_model_t* mod, void* userp )
       stg_geom_t geom;
       stg_model_get_geom(mod,&geom);
       
-      stg_rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
       stg_rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );
       
       // draw the range  beams
@@ -486,8 +496,6 @@ int ranger_render_data( stg_model_t* mod, void* userp )
 				       2.0*sidelen,
 				       2.0*sidelen,
 				       -da, da );
-
-
 	    }
 	}
     }

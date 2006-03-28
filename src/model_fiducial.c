@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.48 $
+//  $Revision: 1.49 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -326,10 +326,12 @@ int fiducial_render_data( stg_model_t* mod, void* userp )
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "fiducial_data_fig" );
   
   if( ! fig )
-    fig = stg_model_fig_create( mod, "fiducial_data_fig", "top", STG_LAYER_NEIGHBORDATA );
-
+    {
+      fig = stg_model_fig_create( mod, "fiducial_data_fig", "top", STG_LAYER_NEIGHBORDATA );
+      stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
+    }
+  
    stg_rtk_fig_clear( fig );
-  stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
   
   stg_fiducial_t *fids = (stg_fiducial_t*)mod->data;
   int bcount = mod->data_len / sizeof(stg_fiducial_t);  
