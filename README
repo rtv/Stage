@@ -1,8 +1,17 @@
 ****************************************************************************
 * README.stage  - Richard Vaughan - Stage-2.0.1       
 *                                                                          
-* $Id: README,v 1.17 2006-03-24 23:38:42 rtv Exp $    
+* $Id: README,v 1.18 2006-03-29 05:13:44 rtv Exp $    
 ****************************************************************************
+
+** Release Notes for 2.0.2 **
+
+New features:
+
+* bumper model
+
+Richard Vaughan (rtv) vaughan@sfu.ca 2006.3.24
+
 
 ** Release Notes for 2.0.1 **
 

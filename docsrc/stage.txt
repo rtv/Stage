@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.17 2006-03-24 23:38:42 rtv Exp $
+ * $Id: stage.txt,v 1.18 2006-03-29 05:14:35 rtv Exp $
 */
 
 /**
@@ -40,12 +40,8 @@ stand-alone robot simulation library.
 
 <p>Stage provides several sensor and actuator models, including sonar
 or infrared rangers, scanning laser rangefinder, color-blob tracking,
-fiducial tracking and mobile robot bases with odometric or global
-localization.
-
-<i>Note: Some models from previous versions may not yet be available
-in this release (e.g. bumpers), but we're working on them. Let us know
-which ones you need.  </i>
+fiducial tracking, bumpers, grippers and mobile robot bases with
+odometric or global localization.
 
 \section Design
 
