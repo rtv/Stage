@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.138 2006-03-24 20:12:42 pooya Exp $
+# $Id: Makefile.am,v 1.139 2006-03-29 05:11:00 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -38,6 +38,7 @@ libstage_la_SOURCES = \
 	matrix.c \
 	model.c \
 	model_blobfinder.c \
+	model_bumper.c \
 	model_laser.c \
 	model_load.c \
 	model_position.c \
@@ -72,6 +73,7 @@ libstage_la_LIBADD = @GTK_LIBS@ @GNOME_LIBS@
 
 # build a Player plugin from libstage plus Player driver hooks.
 libstageplugin_la_SOURCES = \
+	p_bumper.cc \
 	p_fiducial.cc \
 	p_driver.cc \
 	p_driver.h \

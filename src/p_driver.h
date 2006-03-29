@@ -218,7 +218,20 @@ class InterfaceSonar : public InterfaceModel
 			      void * data );
   virtual void Publish( void );
 };
+ 
 
+class InterfaceBumper : public InterfaceModel
+{
+ public: 
+  InterfaceBumper( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceBumper( void ){ /* TODO: clean up*/ };
+  
+  virtual int ProcessMessage( MessageQueue* resp_queue, 
+			      player_msghdr * hdr, 
+			      void * data );
+  virtual void Publish( void );
+};
+ 
 class InterfaceLocalize : public InterfaceModel
 {
  public: 

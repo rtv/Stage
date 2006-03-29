@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.187 2006-03-28 23:27:59 rtv Exp $
+ * CVS: $Id: stage.h,v 1.188 2006-03-29 05:11:00 rtv Exp $
  */
 
 
@@ -957,7 +957,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   
   typedef struct
   {
-    int contact;
+    stg_model_t* hit;
+    stg_point_t hit_point;
   } stg_bumper_sample_t;
   
   // POSITION MODEL --------------------------------------------------------

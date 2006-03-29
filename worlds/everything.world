@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.84 2006-03-24 20:12:42 pooya Exp $
+# CVS: $Id: everything.world,v 1.85 2006-03-29 05:11:00 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -73,6 +73,15 @@ define trickedoutpioneer pioneer2dx
 
   localization "gps"
   localization_origin [ 0 0 0 ]
+
+  bumper( bcount 3  
+	  blength 0.2
+          bpose[0] [0 -0.165  90]
+          bpose[1] [0  0.165 -90] 
+          bpose[2] [-0.26  0 0] 
+
+	  blength[2] 0.1 # set the length of a single bumper
+        )
 )
 
 
