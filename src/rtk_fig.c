@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.19 2006-03-24 20:12:42 pooya Exp $
+ * CVS: $Id: rtk_fig.c,v 1.20 2006-04-04 22:11:15 pooya Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -488,6 +488,10 @@ void stg_rtk_fig_calc(stg_rtk_fig_t *fig)
     stroke = fig->strokes[i];
     (*stroke->calcfn) (fig, stroke);
   }
+  
+  // TODO: Confirm that this is the right place to do this (pooya)
+  // calculated the boundary with selection indicator on
+  stg_rtk_fig_calc_selection(fig);  
 
   // Add the new region to the canvas dirty region.
   stg_rtk_region_set_union(fig->canvas->fg_dirty_region, fig->region);
@@ -500,6 +504,40 @@ void stg_rtk_fig_calc(stg_rtk_fig_t *fig)
   }
 
   // The modified fig has not been rendered
+  stg_rtk_fig_dirty(fig);
+
+  return;
+}
+
+void stg_rtk_fig_calc_selection(stg_rtk_fig_t *fig)
+{
+  GdkPoint points[4];
+  
+  // Calculate the bounding box
+  LTOD(points[0], fig->min_x, fig->max_y);
+  LTOD(points[1], fig->max_x, fig->max_y);
+  LTOD(points[2], fig->max_x, fig->min_y);
+  LTOD(points[3], fig->min_x, fig->min_y);
+
+  int minx, miny, maxx, maxy;
+  minx = miny = INT_MAX / 2;
+  maxx = maxy = -1;
+  for (int i=0; i<4; i++) {
+    if (points[i].x < minx)
+      minx = points[i].x;
+    if (points[i].y < miny)
+      miny = points[i].y;
+    if (points[i].x > maxx)
+      maxx = points[i].x;
+    if (points[i].y > maxy)
+      maxy = points[i].y;
+  }
+  
+  // TODO: confirm that this is the right thing to do (pooya)
+  // Line width is 4 pixels, so the boundary can be 2 pixels wider on each side
+  // and on the corners it will be sqrt(2*2+2*2)=2.8<3pixel larger
+  stg_rtk_region_set_union_rect(fig->region, minx-3, miny-3, maxx+3, maxy+3);
+
   stg_rtk_fig_dirty(fig);
 
   return;
@@ -597,6 +635,10 @@ void stg_rtk_fig_render_selection(stg_rtk_fig_t *fig)
   gdk_color_alloc(colormap, &color);
   gdk_gc_set_foreground(gc, &color);
   gdk_gc_set_function(gc, GDK_XOR);
+  
+  // TODO: double check (pooya)
+  // if you changed the line width, you should change the corresponding value
+  // in stg_rtk_fig_calc_selection
   gdk_gc_set_line_attributes(gc, 4,
                              GDK_LINE_ON_OFF_DASH, GDK_CAP_NOT_LAST, GDK_JOIN_MITER);
                              //GDK_LINE_SOLID, GDK_CAP_NOT_LAST, GDK_JOIN_MITER);
@@ -1199,13 +1241,14 @@ void stg_rtk_fig_polygon_calc(stg_rtk_fig_t *fig, stg_rtk_polygon_stroke_t *data
       maxy = ppoint->y;
   }
 
-  // Allow for the selection indicator, which may run over a bit.
-  // TODO: is this the right way?
-  // TODO: this should probably go in "stg_rtk_fig_render_selection"
-  minx -= 6;
-  miny -= 6;
-  maxx += 6;
-  maxy += 6;
+  // TODO: changed the way selection indicator is handled, is that right? (pooya)
+  // this is now calculated in stg_rtk_fig_calc_selection
+  //// Allow for the selection indicator, which may run over a bit.
+  // minx -= 6;
+  // miny -= 6;
+  // maxx += 6;
+  // maxy += 6;
+  
 
   // Update the figure's bounding region.
   stg_rtk_region_set_union_rect(fig->region, minx, miny, maxx, maxy);
@@ -1451,11 +1494,13 @@ void stg_rtk_fig_image_calc(stg_rtk_fig_t *fig, stg_rtk_image_stroke_t *data)
       maxy = py;
   }
 
-  // Allow for the selection indicator, which may run over a bit.
-  minx -= 1;
-  miny -= 1;
-  maxx += 1;
-  maxy += 1;
+  // TODO: changed the way selection indicator is handled, is that right? (pooya)
+  // this is now calculated in stg_rtk_fig_calc_selection
+  //// Allow for the selection indicator, which may run over a bit.
+  //minx -= 1;
+  //miny -= 1;
+  //maxx += 1;
+  //maxy += 1;
 
   //printf("%.3f %.3f %.3f %.3f\n",
   //       fig->min_x, fig->min_y, fig->max_x, fig->max_y);
