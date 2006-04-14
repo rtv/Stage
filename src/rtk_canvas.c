@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.20 2006-01-21 05:29:50 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.21 2006-04-14 22:00:26 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -521,30 +521,33 @@ void stg_rtk_canvas_export_image(stg_rtk_canvas_t *canvas, const char *filename,
 						  0,0,0,0,
 						  canvas->sizex,
 						  canvas->sizey );
-  
-  switch( format )
-    {
-    case STK_IMAGE_FORMAT_JPEG:
-      gdk_pixbuf_save( buf, filename, "jpeg", NULL,
-		       "quality", "100", NULL );
-      break;
+  if( buf )
+    { 
+      switch( format )
+	{
+	case STK_IMAGE_FORMAT_JPEG:
+	  gdk_pixbuf_save( buf, filename, "jpeg", NULL,
+			   "quality", "100", NULL );
+	  break;
+	  
+	case STK_IMAGE_FORMAT_PPM:
+	  gdk_pixbuf_save( buf, filename, "ppm", NULL, NULL );
+	  break;
+	  
+	case STK_IMAGE_FORMAT_PNG:
+	  gdk_pixbuf_save( buf, filename, "png", NULL, NULL );
+	  break;
+	case STK_IMAGE_FORMAT_PNM:
+	  gdk_pixbuf_save( buf, filename, "pnm", NULL, NULL );
+	  break;
+	  
+	default: 
+	  puts( "unrecognized image format" );
+	  break;
+	}
 
-    case STK_IMAGE_FORMAT_PPM:
-      gdk_pixbuf_save( buf, filename, "ppm", NULL, NULL );
-      break;
-
-    case STK_IMAGE_FORMAT_PNG:
-      gdk_pixbuf_save( buf, filename, "png", NULL, NULL );
-      break;
-    case STK_IMAGE_FORMAT_PNM:
-      gdk_pixbuf_save( buf, filename, "pnm", NULL, NULL );
-      break;
-
-    default: 
-      puts( "unrecognized image format" );
-      break;
+      gdk_pixbuf_unref( buf );
     }
-      
 }	
   
 // Pixel tolerances for moving stuff
