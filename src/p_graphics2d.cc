@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics2d.cc,v 1.4 2006-03-10 06:41:00 rtv Exp $
+ * CVS: $Id: p_graphics2d.cc,v 1.5 2006-04-19 19:32:35 gerkey Exp $
  */
 
 #include "p_driver.h"
@@ -95,7 +95,7 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
       
       stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
       
-      for( int p=0; p<pcmd->count; p++ )	
+      for(unsigned int p=0; p<pcmd->points_count; p++ )        
 	{
 	  //printf( "g2d: Drawing point %.2f %.2f\n", pcmd->points[p].px, pcmd->points[p].py );
 	  stg_rtk_fig_point( this->fig, 
@@ -114,8 +114,8 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
       
       stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
       
-      if( pcmd->count > 1 )
-	for( int p=0; p<pcmd->count-1; p++ )	
+      if( pcmd->points_count > 1 )
+       for(unsigned int p=0; p<pcmd->points_count-1; p++ )     
 	  {
 	    //printf( "g2d: Drawing polyline section from [%.2f,%.2f] to [%.2f,%.2f]\n", 
 	    //    pcmd->points[p].px, pcmd->points[p].py, 
@@ -143,7 +143,7 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
       
       double pts[PLAYER_GRAPHICS2D_MAX_POINTS][2];
       
-      for( int p=0; p<pcmd->count; p++ )	
+      for(unsigned int p=0; p<pcmd->points_count; p++ )        
 	{
 	  pts[p][0] = pcmd->points[p].px;
 	  pts[p][1] = pcmd->points[p].py;
@@ -156,7 +156,7 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
 	  stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->fill_color));
 	  stg_rtk_fig_polygon( this->fig, 
 			       0,0,0,			   
-			       pcmd->count,
+                              pcmd->points_count,
 			       pts,
 			       TRUE );
 	}
@@ -164,7 +164,7 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
       stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
       stg_rtk_fig_polygon( this->fig, 
 			   0,0,0,			   
-			   pcmd->count,
+                          pcmd->points_count,
 			   pts,
 			   FALSE );
       return 0; //ok

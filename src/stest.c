@@ -3,11 +3,13 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.16 2006-03-24 23:47:53 rtv Exp $
+// CVS: $Id: stest.c,v 1.17 2006-04-19 19:32:35 gerkey Exp $
 // License: GPL
 /////////////////////////////////
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "stage.h"
 #include "config.h" // results of autoconf's system configuration tests
