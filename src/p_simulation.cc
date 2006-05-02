@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.13 2006-03-22 08:46:29 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.14 2006-05-02 20:11:42 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -203,7 +203,7 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
       
       printf( "Stage: received request to set integer property:\n"
 	      "\t\"%s\":\"%s\" to %d\n",
-	      req->name, req->property, req->value );
+	      req->name, req->prop, req->value );
       
       // look up the named model      
       stg_model_t* mod = 
@@ -213,8 +213,8 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
 	{
 	  int ack = 
 	    stg_model_set_named_property_int( mod, 
-					      req->property, 
-					      req->property_count, 
+					      req->prop, 
+					      req->prop_count, 
 					      req->value );
 	  
 	  this->driver->Publish(this->addr, resp_queue,
@@ -238,7 +238,7 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
       
       printf( "Stage: received request to set floating-point property:\n"
 	      "\t\"%s\":\"%s\" to %f\n",
-	      req->name, req->property, req->value );
+	      req->name, req->prop, req->value );
       
       // look up the named model      
       stg_model_t* mod = 
@@ -248,8 +248,8 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
 	{
 	  int ack = 
 	    stg_model_set_named_property_double( mod, 
-						 req->property, 
-						 req->property_count, 
+						 req->prop, 
+						 req->prop_count, 
 						 req->value );
 	  
 	  this->driver->Publish(this->addr, resp_queue,
