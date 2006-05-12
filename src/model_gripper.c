@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
-//  $Author: rtv $
-//  $Revision: 1.25 $
+//  $Author: gerkey $
+//  $Revision: 1.26 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -390,6 +390,7 @@ int gripper_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 
 int gripper_break_beam(stg_model_t* mod, stg_gripper_config_t* cfg, int beam) 
 {
+  int result;
   stg_geom_t geom;
   stg_model_get_geom( mod, &geom );
   
@@ -426,10 +427,13 @@ int gripper_break_beam(stg_model_t* mod, stg_gripper_config_t* cfg, int beam)
   
   // if the breakbeam strikes anything
   if( itl_first_matching( itl, gripper_raytrace_match, mod ) )
-    return 1;
-  
-  //else
-  return 0;
+    result = 1;
+  else
+    result = 0;
+
+  itl_destroy(itl);
+
+  return(result);
 }
 
 int gripper_paddle_contact( stg_model_t* mod, 
