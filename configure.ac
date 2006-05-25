@@ -1,10 +1,10 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.12 2006-03-29 05:13:44 rtv Exp $
+dnl $Id: configure.ac,v 1.13 2006-05-25 21:35:01 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,2.0.2)
+AC_INIT(stage,2.1.0)
 
 AC_CONFIG_SRCDIR(src/stage.c)
 
@@ -55,27 +55,37 @@ dnl check for GTK stuff - we need it for the GUI
 PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4, ,
  AC_MSG_WARN([A suitable GTK+ was not found. GTK+-2.4 or later is required. ])
 )
+
 	
 dnl if GNOMECANVAS is requested and available, we use that for graphics
 AC_ARG_ENABLE(gnomecanvas,
 	      AC_HELP_STRING([--enable-gnomecanvas],[Use GnomeCanvas if available *EXPERIMENTAL (rtv)*]),
 	      [ if test "x$enableval" = "xyes"; then
-	        AC_MSG_RESULT([GnomeCanvas requested. Looking for libgnomecanvas...])
-                PKG_CHECK_MODULES(GNOME, libgnomecanvas-2.0 >= 2.0,
-                  AC_DEFINE(INCLUDE_GNOME,1,[building GnomeCanvas components]),
-                  AC_MSG_WARN([no suitable GnomeCanvas library was found. ])
-                )
+	      PKG_CHECK_MODULES(GNOME, libgnomecanvas-2.0 >= 2.0,
+	        gnome=true
+                AC_DEFINE(INCLUDE_GNOME,1,[building GnomeCanvas components]),
+	        AC_MSG_WARN([no suitable GnomeCanvas library was found. ])
+	        )
  	        AC_MSG_RESULT([GnomeCanvas graphics will be used.])
               else
+                gnome=false
 	        AC_MSG_RESULT([GnomeCanvas graphics disabled by user])
               fi ],
 )
 
+AM_CONDITIONAL(GNOME, test x$gnome = xtrue)
+
 dnl for libstageplugin, we need Player 2.0 or higher
 PKG_CHECK_MODULES( PLAYER, playercore >= 2.0.1,
- AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
- AC_MSG_ERROR([Stage 2.0.1 requires Player-2.0.1 to be installed first. Available at http://playerstage.sourceforge.net.])
+ AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin])
+ have_player=yes
+ ,
+ AC_MSG_WARN([No suitable Player installation detected.])
+ have_player=no
 )
+
+AM_CONDITIONAL(HAVE_PLAYER, [test $have_player = yes])
+
 
 dnl for ptest, we need libplayerc
 dnl PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0,
@@ -112,6 +122,16 @@ AC_MSG_RESULT([  C   compiler: $CC $CFLAGS])
 AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS])
 AC_MSG_RESULT([])
 
+if test "x$have_player" = "xyes"; then
+  AC_MSG_RESULT([The Player plugin (libstageplugin) will be built using the following flags: ])
+  AC_MSG_RESULT([  compiler: $PLAYER_CFLAGS])
+  AC_MSG_RESULT([    linker: $PLAYER_LIBS])
+else
+  AC_MSG_RESULT([Player was not found, so the Stage plugin for Player will NOT be built.])
+  AC_MSG_RESULT([If you want the Player/Stage system, you must install Player and configure Stage again.])
+fi
+
+AC_MSG_RESULT([])
 AC_MSG_RESULT([Stage will be installed in:])
 AC_MSG_RESULT([    $prefix/])
 AC_MSG_RESULT([])

@@ -657,6 +657,8 @@ stg_polygon_t* stg_polygons_create( int count )
   for( p=0; p<count; p++ )
     polys[p].points = g_array_new( FALSE, TRUE, sizeof(stg_point_t));
 
+  //polys[p].color = 0xAA00FF00;
+
   return polys;
 }
 

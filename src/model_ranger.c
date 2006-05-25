@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.65 $
+//  $Revision: 1.66 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +138,9 @@ int ranger_init( stg_model_t* mod )
   stg_model_set_cfg( mod, cfg, cfglen );
   
   //stg_model_add_callback( mod, &mod->data, ranger_render_data, NULL );
-
+#if INCLUDE_GNOME
+  gc_ranger_init( mod );
+#else
   // adds a menu item and associated on-and-off callbacks
   stg_model_add_property_toggles( mod, 
 				  &mod->data,
@@ -159,6 +161,7 @@ int ranger_init( stg_model_t* mod )
 				  "rangercfg",
 				  "ranger config",
 				  FALSE );  // initial state
+#endif
 
   return 0;
 }

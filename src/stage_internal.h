@@ -21,7 +21,7 @@
 #include "rtk.h" // and graphics stuff pulled from Andrew Howard's RTK2 library
 
 #if INCLUDE_GNOME
-#include "gnome.h"
+#include <libgnomecanvas/libgnomecanvas.h>
 #endif
 
 
@@ -44,7 +44,6 @@ extern "C" {
   /** Defines the GUI window */
   typedef struct 
   {
-    stg_rtk_canvas_t* canvas;
     
     // Gtk stuff
     GtkWidget* frame;    
@@ -59,24 +58,25 @@ extern "C" {
     GtkLabel *clock_label;
 
 #if INCLUDE_GNOME
-    // temporary and experimental - will get moved away from here soon - rtv
+    // modern GNOMECANVAS style
     GnomeCanvas* gcanvas;
     double zoom;
+#else
+    // vintage RTK style
+    stg_rtk_canvas_t* canvas;
+    stg_rtk_fig_t* bg; // background
+    stg_rtk_fig_t* matrix;
+    stg_rtk_fig_t* matrix_tree;
+    stg_rtk_fig_t* poses;
 #endif
 
     stg_world_t* world; // every window shows a single world
     
-    // stg_rtk doesn't support status bars, so we'll use gtk directly
     GtkStatusbar* statusbar;
     GtkLabel* timelabel;
     
     int wf_section; // worldfile section for load/save
     
-    stg_rtk_fig_t* bg; // background
-    stg_rtk_fig_t* matrix;
-    stg_rtk_fig_t* matrix_tree;
-    stg_rtk_fig_t* poses;
-
     gboolean show_matrix;  
     gboolean fill_polygons;
     gboolean show_geom;
@@ -191,10 +191,10 @@ extern "C" {
     // a datalist of stg_rtk_figs, indexed by name (string)
     GData* figs; 
 
-#if INCLUDE_GNOME
-    GnomeCanvasGroup* grp;
-    GnomeCanvasGroup* cgrp;
-#endif
+    //#if INCLUDE_GNOME
+    //GnomeCanvasGroup* grp;
+    //GnomeCanvasGroup* cgrp;
+    //#endif
 
     stg_pose_t pose;
     stg_velocity_t velocity;
@@ -307,7 +307,10 @@ extern "C" {
     
     GHashTable* models; ///< the models that make up the world, indexed by id
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
-    
+    /** a list of models that are currently selected by the user */
+    GList* selected_models;
+
+
     stg_meters_t width; ///< x size of the world 
     stg_meters_t height; ///< y size of the world
 
@@ -745,6 +748,57 @@ the worldfile c++ code */
 #ifdef __cplusplus
 }
 #endif 
+
+  // Error macros - output goes to stderr
+#define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_ERR1(m,a) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_ERR2(m,a,b) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_ERR3(m,a,b,c) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_ERR4(m,a,b,c,d) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_ERR5(m,a,b,c,d,e) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
+
+  // Warning macros
+#define PRINT_WARN(m) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_WARN1(m,a) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_WARN2(m,a,b) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_WARN3(m,a,b,c) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_WARN4(m,a,b,c,d) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_WARN5(m,a,b,c,d,e) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
+
+  // Message macros
+#ifdef DEBUG
+#define PRINT_MSG(m) printf( "Stage: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_MSG1(m,a) printf( "Stage: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_MSG2(m,a,b) printf( "Stage: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
+#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m" (%s %s)\n", a, b, c, d, e,__FILE__, __FUNCTION__)
+#else
+#define PRINT_MSG(m) printf( "Stage: "m"\n" )
+#define PRINT_MSG1(m,a) printf( "Stage: "m"\n", a)
+#define PRINT_MSG2(m,a,b) printf( "Stage: "m"\n,", a, b )
+#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m"\n", a, b, c )
+#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m"\n", a, b, c, d )
+#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m"\n", a, b, c, d, e )
+#endif
+
+  // DEBUG macros
+#ifdef DEBUG
+#define PRINT_DEBUG(m) printf( "debug: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_DEBUG1(m,a) printf( "debug: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_DEBUG2(m,a,b) printf( "debug: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_DEBUG3(m,a,b,c) printf( "debug: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_DEBUG4(m,a,b,c,d) printf( "debug: "m" (%s %s)\n", a, b, c ,d, __FILE__, __FUNCTION__)
+#define PRINT_DEBUG5(m,a,b,c,d,e) printf( "debug: "m" (%s %s)\n", a, b, c ,d, e, __FILE__, __FUNCTION__)
+#else
+#define PRINT_DEBUG(m)
+#define PRINT_DEBUG1(m,a)
+#define PRINT_DEBUG2(m,a,b)
+#define PRINT_DEBUG3(m,a,b,c)
+#define PRINT_DEBUG4(m,a,b,c,d)
+#define PRINT_DEBUG5(m,a,b,c,d,e)
+#endif
+
 
 
 #endif // _STAGE_INTERNAL_H

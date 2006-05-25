@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.88 $
+//  $Revision: 1.89 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -33,16 +33,6 @@ extern stg_rtk_fig_t* fig_debug_rays;
 #define STG_DEFAULT_LASER_MAXRANGE 8.0
 #define STG_DEFAULT_LASER_FOV M_PI
 #define STG_DEFAULT_LASER_SAMPLES 180
-
-// use gnomecanvas graphics callbacks if requested
-#if INCLUDE_GNOME
- #include "gnome.h"
- #define LASER_DATA_RENDER_CALLBACK laser_render_data_gc
- #define LASER_DATA_UNRENDER_CALLBACK laser_unrender_data_gc
-#else
- #define LASER_DATA_RENDER_CALLBACK laser_render_data
- #define LASER_DATA_UNRENDER_CALLBACK laser_unrender_data
-#endif
 
 /**
 @ingroup model
@@ -172,6 +162,9 @@ int laser_init( stg_model_t* mod )
   // clear the data - this will unrender it too
   stg_model_set_data( mod, NULL, 0 );
 
+#if INCLUDE_GNOME
+  gc_laser_init( mod );
+#else
   // adds a menu item and associated on-and-off callbacks
   stg_model_add_property_toggles( mod, 
 				  &mod->data,
@@ -192,6 +185,8 @@ int laser_init( stg_model_t* mod )
 				  "lasercfg",
 				  "laser config",
 				  FALSE );  
+#endif
+
   return 0;
 }
 

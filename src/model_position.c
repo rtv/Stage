@@ -6,8 +6,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
-//  $Author: gerkey $
-//  $Revision: 1.60 $
+//  $Author: rtv $
+//  $Revision: 1.61 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -184,6 +184,7 @@ void position_init( stg_model_t* mod )
   
   stg_model_set_data( mod, &data, sizeof(data));
   
+#if ! INCLUDE_GNOME
   stg_model_add_property_toggles( mod, 
 				  &mod->data,
  				  position_render_data, // called when toggled on
@@ -203,6 +204,7 @@ void position_init( stg_model_t* mod )
 				  "positiontext",
  				  "position text",
 				  FALSE );
+#endif
 }
 
 

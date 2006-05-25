@@ -67,17 +67,20 @@ static GtkActionEntry entries[] = {
 
 /* Toggle items */
 static GtkToggleActionEntry toggle_entries[] = {
-  { "Polygons", NULL, "Fill _polygons", "F", "Toggle drawing of filled or outlined polygons", G_CALLBACK(gui_action_polygons), 1 },
+  { "Pause", NULL, "_Pause", "P", "Pause the simulation clock", G_CALLBACK(gui_action_pause), 0 },
+  { "Polygons", NULL, "Fill polygons", NULL, "Toggle drawing of filled or outlined polygons", G_CALLBACK(gui_action_polygons), 1 },
+  { "ExportSequence", NULL, "Sequence of frames", "<control>G", "Export a sequence of screenshots at regular intervals", G_CALLBACK(gui_action_exportsequence), 0 },
+
+#if ! INCLUDE_GNOME
   { "DisablePolygons", NULL, "Show polygons", "D", NULL, G_CALLBACK(gui_action_disable_polygons), 1 },
   { "Trails", NULL, "Show trails", "T", NULL, G_CALLBACK(gui_action_trails), 0 },
   { "Grid", NULL, "_Grid", "G", "Toggle drawing of 1-metre grid", G_CALLBACK(gui_action_grid), 1 },
-  { "Pause", NULL, "_Pause", "P", "Pause the simulation clock", G_CALLBACK(gui_action_pause), 0 },
   { "DebugRays", NULL, "_Raytrace", "<alt>R", "Draw sensor rays", G_CALLBACK(gui_action_raytrace), 0 },
   { "DebugGeom", NULL, "_Geometry", "<alt>G", "Draw model geometry", G_CALLBACK(gui_action_geom), 0 },
   { "DebugMatrixTree", NULL, "Matrix _Tree", "<alt>T", "Show occupancy quadtree", G_CALLBACK(gui_action_matrixtree), 0 },
   { "DebugMatrixOccupancy", NULL, "Matrix _Occupancy", "<alt>M", "Show occupancy grid", G_CALLBACK(gui_action_matrixocc), 0 },
   { "DebugMatrixDelta", NULL, "Matrix _Delta", "<alt>D", "Show changes to quadtree", G_CALLBACK(gui_action_matrixdelta), 0 },
-  { "ExportSequence", NULL, "Sequence of frames", "<control>G", "Export a sequence of screenshots at regular intervals", G_CALLBACK(gui_action_exportsequence), 0 },
+#endif
 };
 
 /* Radio items */
@@ -125,8 +128,9 @@ static const char *ui_description =
 "      <menuitem action='Preferences'/>"
 "    </menu>"
 "    <menu action='View'>"
-"      <menuitem action='DisablePolygons'/>"
 "      <menuitem action='Polygons'/>"
+#if ! INCLUDE_GNOME
+"      <menuitem action='DisablePolygons'/>"
 "      <menuitem action='Grid'/>"
 "      <menuitem action='Trails'/>"
 "      <separator/>"
@@ -141,6 +145,7 @@ static const char *ui_description =
 "              <separator/>"
 "            </menu>"
 "        </menu>"
+#endif
 "      <separator/>"
 "    </menu>"
 "    <menu action='Clock'>"
@@ -250,6 +255,8 @@ void gui_action_pause( GtkToggleAction* action, void* userdata )
 
 }
 
+#if ! INCLUDE_GNOME
+
 void gui_action_raytrace( GtkToggleAction* action, gpointer userdata )
 {
   PRINT_DEBUG( "Raytrace menu item" );  
@@ -344,6 +351,8 @@ void gui_action_matrixocc( GtkToggleAction* action, gpointer userdata )
     }
 }
 
+#endif
+
 void test( GtkMenuItem* item, void* userdata )
 {
   stg_model_t* mod = (stg_model_t*)userdata;
@@ -364,7 +373,12 @@ void gui_add_tree_item( stg_model_t* mod )
 {
   GtkWidget* m = 
     gtk_ui_manager_get_widget( ui_manager, "/Main/View/Debug/Model" );
-  assert(m);
+
+  if( m == NULL )
+    {
+      puts( "Warning: debug model menu not found" );
+      return;
+    }
   
   GtkWidget* menu = GTK_WIDGET(gtk_menu_item_get_submenu(GTK_MENU_ITEM(m)));
 
@@ -426,7 +440,12 @@ void export_window( gui_window_t* win  ) //stg_rtk_canvas_t* canvas, int series 
 
   printf("Stage: saving [%s]\n", filename);
   
+#if INCLUDE_GNOME
+  // TODO
+#else
   stg_rtk_canvas_export_image( win->canvas, filename, win->frame_format );
+#endif
+
 }
 
 
@@ -483,13 +502,17 @@ void gui_action_trails( GtkToggleAction* action, void* userdata )
   if( gtk_toggle_action_get_active( action ) )
     {
 
+#if ! INCLUDE_GNOME
       fig_trails = stg_rtk_fig_create( world->win->canvas,
 				       world->win->bg, STG_LAYER_BODY-1 );      
+#endif
     }
   else
     {
+#if ! INCLUDE_GNOME
       stg_rtk_fig_and_descendents_destroy( fig_trails );
       fig_trails = NULL;
+#endif
     }
 }
 
@@ -502,6 +525,9 @@ void gui_action_polygons( GtkToggleAction* action, void* userdata )
   world->win->fill_polygons = gtk_toggle_action_get_active( action );
   g_hash_table_foreach( world->models, model_render_polygons_cb, NULL ); 
 }
+
+
+#if ! INCLUDE_GNOME
 
 void gui_action_disable_polygons( GtkToggleAction* action, void* userdata )
 {
@@ -526,6 +552,7 @@ void gui_action_grid( GtkToggleAction* action, void* userdata )
 			     STG_LAYER_GRID,
 			     gtk_toggle_action_get_active( action ));
 }
+#endif
 
 void gui_window_menus_create( gui_window_t* win )
 {

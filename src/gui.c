@@ -1,6 +1,10 @@
 /*
-CVS: $Id: gui.c,v 1.108 2006-03-22 08:46:29 rtv Exp $
+CVS: $Id: gui.c,v 1.109 2006-05-25 21:35:01 rtv Exp $
 */
+
+// NOTE: this code is a mess right now as Stage moves to a new GUI
+// model. The RTK-based code works fine, but this file will be untidy
+// for a while.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +20,7 @@ CVS: $Id: gui.c,v 1.108 2006-03-22 08:46:29 rtv Exp $
 
 #if INCLUDE_GNOME
 #include "gnome.h"
+#include "gnome-canvas-acetate.h"
 #endif
 
 #define STG_DEFAULT_WINDOW_WIDTH 700
@@ -159,11 +164,15 @@ void gui_load( gui_window_t* win, int section )
   PRINT_DEBUG2( "window width %d height %d", window_width, window_height );
   PRINT_DEBUG2( "window center (%.2f,%.2f)", window_center_x, window_center_y );
   PRINT_DEBUG1( "window scale %.2f", window_scale );
-  
+
+#if INCLUDE_GNOME  
+  // TODO
+#else
   // ask the canvas to comply
   gtk_window_resize( GTK_WINDOW(win->frame), window_width, window_height );
   stg_rtk_canvas_scale( win->canvas, window_scale, window_scale );
   stg_rtk_canvas_origin( win->canvas, window_center_x, window_center_y );
+#endif
 
 }
 
@@ -175,10 +184,14 @@ void gui_save( gui_window_t* win )
   wf_write_tuple_float( win->wf_section, "size", 0, width );
   wf_write_tuple_float( win->wf_section, "size", 1, height );
 
+
+#if INCLUDE_GNOME
+  // TODO
+#else
   wf_write_tuple_float( win->wf_section, "center", 0, win->canvas->ox );
   wf_write_tuple_float( win->wf_section, "center", 1, win->canvas->oy );
-
   wf_write_float( win->wf_section, "scale", win->canvas->sx );
+#endif
 
   wf_write_int( win->wf_section, "fill_polygons", win->fill_polygons );
   wf_write_int( win->wf_section, "show_grid", win->show_grid );
@@ -266,6 +279,140 @@ gboolean  signal_delete( GtkWidget *widget,
   return TRUE;
 }
 
+
+//  static double xstart, ystart;
+
+// Process mouse press events
+gboolean gc_on_motion(GtkWidget *widget, GdkEventButton *event, stg_model_t* model )
+{
+  printf( "received motion %f %f\n", event->x, event->y ); 
+
+  //double winx=0, winy=0;
+
+  //gnome_canvas_world_to_window( world->win->gcanvas,  event->x, event->y, &winx, &winy );
+  
+  //printf( "MOTION button %d X %.2f Y %.2f   wX %.2f wY%.2f\n",  
+  //  event->button, event->x, event->y );
+
+  //if( event->x != xstart || event->y != ystart )
+    {
+/*       if( event->x > xstart ) */
+/* 	world->win->zoom *= 1.05; */
+      
+/*       if( event->x < xstart ) */
+/* 	world->win->zoom -= 1.05; */
+      
+/*       xstart = event->x; */
+      
+/*       gnome_canvas_set_pixels_per_unit( world->win->gcanvas,   */
+/*       				world->win->zoom );	   */
+
+      
+
+    }
+
+  return TRUE;
+}
+
+
+typedef struct 
+{
+  double x,y;
+  stg_model_t* closest_model;
+  stg_meters_t closest_range;
+} find_close_t;
+
+void find_close_func( gpointer key,
+		      gpointer value,
+		      gpointer user_data )
+{
+  stg_model_t* mod = (stg_model_t*)value;
+  find_close_t* f = (find_close_t*)user_data;
+
+  double range = hypot( f->y - mod->pose.y, f->x - mod->pose.x );
+
+  if( range < f->closest_range )
+    {
+      f->closest_range = range;
+      f->closest_model = mod;
+    }
+}
+
+stg_model_t* stg_world_nearest_model( stg_world_t* world, double wx, double wy )
+{
+  find_close_t f;
+  f.closest_range = 3.0;
+  f.closest_model = NULL;
+  f.x = wx;
+  f.y = wy;
+
+  g_hash_table_foreach( world->models, find_close_func, &f );
+
+  printf( "closest model %s\n", f.closest_model ? f.closest_model->token : "none found" );
+
+  return f.closest_model;
+}
+
+
+
+/* GnomeCanvasItem* gc_model_highlight( stg_model_t* mod ); */
+
+/* // Process mouse press events */
+/* gboolean gc_on_press(GtkWidget *widget, GdkEventButton *event, stg_world_t* world ) */
+/* { */
+  
+/*   printf( "button %d X %.2f Y %.2f\n",  event->button, event->x, event->y ); */
+
+/*   if( event->button == 1 ) */
+/*     { */
+/*       puts( "zoom" ); */
+
+/*       //xstart = event->x; */
+/*       //ystart = event->y; */
+
+/*       // find the nearest model that allows movement */
+
+/*       double wx,wy; */
+/*       gnome_canvas_window_to_world( world->win->gcanvas, event->x, event->y, &wx, &wy ); */
+
+/*       printf( "world2 X %.2f Y %.2f\n",  wx, wy ); */
+
+/*       stg_model_t* near = stg_world_nearest_model( world, wx, -wy ); */
+      
+/*       if( near ) */
+/* 	{ */
+/* 	  gc_model_highlight( near ); */
+/* 	  near->world->win->selection_active = near; */
+	  
+/* 	  // send mouse motion events to the model's base group */
+/* 	  g_signal_connect( stg_model_get_property( near, "_gc_polys"),  */
+/* 			    "event",  */
+/* 			    GTK_SIGNAL_FUNC(gc_on_motion),  */
+/* 			    near );	   */
+/* 	} */
+
+/*     } */
+      
+
+/*   return FALSE; */
+/* } */
+
+/* // Process mouse press events */
+/* gboolean gc_on_release(GtkWidget *widget, GdkEventButton *event, stg_world_t* world ) */
+/* { */
+/*   static double xstart, ystart; */
+  
+/*   printf( "button %d X %.2f Y %.2f\n",  event->button, event->x, event->y ); */
+
+/*   if( event->button == 3 ) */
+/*     { */
+/*       g_signal_handlers_disconnect_by_func(GTK_OBJECT(world->win->gcanvas),   */
+/* 					    GTK_SIGNAL_FUNC(gc_on_motion), world );       */
+/*     } */
+      
+/*   return FALSE; */
+/* } */
+
 gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 {
   gui_window_t* win = calloc( sizeof(gui_window_t), 1 );
@@ -278,7 +425,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   GtkHBox* hbox = GTK_HBOX(gtk_hbox_new( FALSE, 3 ));
 
-  win->canvas = stg_rtk_canvas_create( app );
+
 
   win->status_bar = GTK_STATUSBAR(gtk_statusbar_new());
   gtk_statusbar_set_has_resize_grip( win->status_bar, FALSE );
@@ -294,7 +441,17 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   gtk_container_add( GTK_CONTAINER(contents), 
 		     GTK_WIDGET(win->gcanvas) );
 
-  GnomeCanvasItem* bg = 
+  //GnomeCanvasItem* bg =
+    /* me_canvas_item_new(gnome_canvas_root(win->gcanvas), */
+/* 			  gnome_canvas_rect_get_type(), */
+/* 			  "x1", 0, */
+/* 			  "y1", 0, */
+/* 			  "x2", world->width, */
+/* 			  "y2", world->height, */
+/* 			  "fill_color", "green", */
+/* 			  NULL); */
+
+  GnomeCanvasItem* bg =
     gnome_canvas_item_new(gnome_canvas_root(win->gcanvas),
 			  gnome_canvas_rect_get_type(),
 			  "x1",-world->width/2.0,
@@ -304,11 +461,49 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 			  "fill_color", "white",
 			  NULL);
   
-  g_signal_connect( bg, 
-		    "event", 
-		    G_CALLBACK(background_event_callback), 
-		    world );
+  GnomeCanvasItem* acetate = 
+    gnome_canvas_item_new( gnome_canvas_root(win->gcanvas),
+			   gnome_canvas_acetate_get_type(),
+			   NULL );
   
+  g_signal_connect( acetate,
+		    "event",
+		    G_CALLBACK(background_event_callback),
+		    world );
+
+  
+  //g_signal_connect(GTK_OBJECT(win->gcanvas), "button_press_event", 
+  //	   GTK_SIGNAL_FUNC(gc_on_press), world );
+
+  //g_signal_connect(GTK_OBJECT(win->gcanvas), "button_release_event", 
+  //	   GTK_SIGNAL_FUNC(gc_on_release), world );
+
+
+ /*  g_signal_connect(GTK_OBJECT(canvas->canvas), "motion_notify_event",  */
+/* 		   GTK_SIGNAL_FUNC(stg_rtk_on_motion), canvas); */
+/*   g_signal_connect(GTK_OBJECT(canvas->canvas), "button_release_event",  */
+/* 		   GTK_SIGNAL_FUNC(stg_rtk_on_release), canvas); */
+
+  // this seems not to receive the arrow keys...
+  //g_signal_connect_after(GTK_OBJECT(canvas->frame), "key-press-event", 
+  //		 GTK_SIGNAL_FUNC(stg_rtk_on_key_press), canvas);
+  
+  //* / Set the event mask */
+/*   gtk_widget_set_events(win->gcanvas, */
+/* /\*                         GDK_EXPOSURE_MASK | *\/ */
+/* /\*                         GDK_BUTTON_PRESS_MASK | *\/ */
+/* /\*                         GDK_BUTTON_RELEASE_MASK | *\/ */
+/* /\* 			GDK_KEY_PRESS_MASK | *\/ */
+/* 			//GDK_POINTER_MOTION_MASK | */
+/* 			GDK_BUTTON3_MOTION_MASK */
+/* 			); */
+
+
+
+
+
+
+
   GnomeCanvasItem* grp = 
     gnome_canvas_item_new( gnome_canvas_root(win->gcanvas),
 			   gnome_canvas_group_get_type(),
@@ -319,14 +514,14 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
 
   //GnomeCanvasItem *it = 
-    gnome_canvas_item_new( GNOME_CANVAS_GROUP(grp),
+  /*    gnome_canvas_item_new( GNOME_CANVAS_GROUP(grp),
 			   gnome_canvas_widget_get_type(),
 			   "width", world->width,
 			   "height", world->height,
 			   "anchor", GTK_ANCHOR_CENTER,
 			   "widget", win->canvas->canvas,
 			   NULL);
-  
+  */
 
   // flip the vertical axis for the root group
   double flip[6];  
@@ -335,21 +530,21 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   gnome_canvas_item_affine_relative( GNOME_CANVAS_ITEM(gnome_canvas_root(win->gcanvas)),
 				     flip );
 
-  win->zoom = 50.0;
+  win->zoom = 40.0;
 
   gnome_canvas_set_pixels_per_unit( win->gcanvas, win->zoom  );
   gnome_canvas_set_center_scroll_region( win->gcanvas, TRUE ); 
   gnome_canvas_set_scroll_region ( win->gcanvas, 
-				   1.1 * -world->width/2.0, 
-				   1.1 * -world->height/2.0, 
-				   1.1 * world->width + world->width/2.0, 
-				   1.1 * world->height/2.0  );
-
+				   1.05 * -world->width/2.0, 
+				   1.05 * -world->height/2.0, 
+				   1.05 * world->width/2.0, 
+				   1.05 * world->height/2.0  );
 #else
   // no GnomeCanvas, so add the RTK window directly into the frame
   //gtk_container_add( GTK_WINDOW(win->scrolled_win), 
   //				 GTK_WIDGET(win->canvas->canvas) );  
 
+  win->canvas = stg_rtk_canvas_create( app );
   contents = win->canvas->canvas;
 #endif
 
@@ -382,8 +577,6 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   win->world = world;
   
-  // enable all objects on the canvas to find our window object
-  win->canvas->userdata = (void*)win; 
   
   char txt[256];
   snprintf( txt, 256, " Stage v%s", VERSION );
@@ -391,6 +584,19 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   snprintf( txt, 256, " Stage: %s", world->token );
   gtk_window_set_title( GTK_WINDOW(win->frame), txt );
+  
+  win->show_geom = TRUE;
+  win->fill_polygons = TRUE;
+  win->show_polygons = TRUE;
+  win->frame_interval = 500; // ms
+  win->frame_format = STK_IMAGE_FORMAT_PNG;
+  //win->selection_active = NULL;
+
+#if INCLUDE_GNOME
+
+#else
+  // enable all objects on the canvas to find our window object
+  win->canvas->userdata = (void*)win; 
   
   win->bg = stg_rtk_fig_create( win->canvas, NULL, 0 );
   
@@ -401,12 +607,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   stg_rtk_fig_arrow( win->bg, -mark_sz/2, 0, 0, mark_sz, mark_sz/4 );
   stg_rtk_fig_arrow( win->bg, 0, -mark_sz/2, M_PI/2, mark_sz, mark_sz/4 );
   //stg_rtk_fig_grid( win->bg, 0,0, 100.0, 100.0, 1.0 );
-  
-  win->show_geom = TRUE;
-  win->fill_polygons = TRUE;
-  win->show_polygons = TRUE;
-  win->frame_interval = 500; // ms
-  win->frame_format = STK_IMAGE_FORMAT_PNG;
+
 
   win->poses = stg_rtk_fig_create( win->canvas, NULL, 0 );
 
@@ -432,14 +633,14 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   		0.02 );
 
   //stg_rtk_canvas_origin( win->canvas, width/2.0, height/2.0 );
-
-  win->selection_active = NULL;
   
   // show the limits of the world
   stg_rtk_canvas_bgcolor( win->canvas, 0.9, 0.9, 0.9 );
   stg_rtk_fig_color_rgb32( win->bg, 0xFFFFFF );    
   stg_rtk_fig_rectangle( win->bg, 0,0,0, world->width, world->height, 1 );
  
+#endif  
+
   gui_window_menus_create( win );
  
   win->toggle_list = NULL;
@@ -453,9 +654,13 @@ void gui_window_destroy( gui_window_t* win )
 
   //g_hash_table_destroy( win->guimods );
 
+#if INCLUDE_GNOME
+
+#else
   stg_rtk_canvas_destroy( win->canvas );
   stg_rtk_fig_destroy( win->bg );
   stg_rtk_fig_destroy( win->poses );
+#endif
 }
 
 gui_window_t* gui_world_create( stg_world_t* world )
@@ -548,6 +753,9 @@ void render_matrix_object( gpointer key, gpointer value, gpointer user )
 // useful debug function allows plotting the matrix
 void gui_world_matrix_table( stg_world_t* world, gui_window_t* win )
 {
+#if INCLUDE_GNOME
+
+#else
   if( win->matrix )
     {
       if( world->matrix->ptable )
@@ -555,6 +763,7 @@ void gui_world_matrix_table( stg_world_t* world, gui_window_t* win )
 			  render_matrix_object, 
 			      win->matrix );   
     }
+#endif
 }
 
 
@@ -576,7 +785,10 @@ int gui_world_update( stg_world_t* world )
   //PRINT_DEBUG( "gui world update" );
   
   gui_window_t* win = world->win;
-  
+
+#if INCLUDE_GNOME
+  // TODO
+#else  
   if( stg_rtk_canvas_isclosed( win->canvas ) )
     {
       puts( "<window closed>" );
@@ -596,6 +808,7 @@ int gui_world_update( stg_world_t* world )
       stg_rtk_fig_clear( win->matrix_tree );
       gui_world_render_cell( win->matrix_tree, world->matrix->root );
     }  
+#endif
 
   char clock[256];
 #ifdef DEBUG
@@ -637,8 +850,6 @@ int gui_world_update( stg_world_t* world )
 /*   gtk_progress_bar_set_fraction( win->canvas->rt_bar,  */
 /* 				 rt_avg ); */
   
-  if( win->show_geom )
-    gui_world_geom( world );
 
   static int trail_interval = 5;
   
@@ -650,12 +861,24 @@ int gui_world_update( stg_world_t* world )
 	trail_interval = 0;
       }
   
-  if( win->selection_active )
-    gui_model_display_pose( win->selection_active, "Selection:" );
+  // if there's at least one selected model, show it's pose 
+  if( g_list_length( world->selected_models ) > 0 )
+    gui_model_display_pose( g_list_nth_data( world->selected_models, 0), "Selection:" );
   
   gtk_label_set_text( win->clock_label, clock );
 
+
+#if INCLUDE_GNOME
+  // TODO?
+
+  //puts( "test the mouse!" );
+
+#else
+  if( win->show_geom )
+    gui_world_geom( world );
+
   stg_rtk_canvas_render( win->canvas );      
+#endif
 
   return 0;
 }
@@ -664,10 +887,16 @@ void gui_world_destroy( stg_world_t* world )
 {
   PRINT_DEBUG( "gui world destroy" );
   
+#if INCLUDE_GNOME
+
+  // TODO
+
+#else
   if( world->win && world->win->canvas ) 
     stg_rtk_canvas_destroy( world->win->canvas );
   else
     PRINT_WARN1( "can't find a window for world %d", world->id );
+#endif
 }
 
 
@@ -679,6 +908,9 @@ void gui_model_trail( stg_model_t* mod )
   if( mod->parent ) // only trail top-level objects
     return; 
 
+#if INCLUDE_GNOME
+
+#else
   stg_rtk_fig_t* spot = stg_rtk_fig_create( mod->world->win->canvas,
 					    fig_trails, STG_LAYER_BODY-1 );      
   
@@ -693,6 +925,7 @@ void gui_model_trail( stg_model_t* mod )
 			 bbox_pose.x, bbox_pose.y, bbox_pose.a, 
 			 mod->geom.size.x,
 			 mod->geom.size.y, 0 );  
+#endif
 }
 
 
@@ -821,6 +1054,7 @@ void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode)
   return;
 }
 
+#if ! INCLUDE_GNOME
 int stg_fig_clear_cb(  stg_model_t* mod, char* name, 
 		       void* data, size_t len, void* userp )
 {
@@ -831,6 +1065,7 @@ int stg_fig_clear_cb(  stg_model_t* mod, char* name,
   
   return 1; // cancels callback
 }
+#endif
 
 
 
@@ -840,6 +1075,7 @@ void gui_model_create( stg_model_t* mod )
   
   //gui_window_t* win = mod->world->win;  
 
+#if ! INCLUDE_GNOME
   stg_rtk_fig_t* parent = mod->world->win->bg;
   
   if( mod->parent )
@@ -858,15 +1094,14 @@ void gui_model_create( stg_model_t* mod )
       stg_model_t* child = g_ptr_array_index( mod->children, ch );
       gui_model_create( child );
     }
-
-  // XX
-  //stg_model_property_refresh( mod, "polygons" );
+#endif
 }
 
 void gui_model_destroy( stg_model_t* mod )
 {
   PRINT_DEBUG( "gui model destroy" );
   
+#if ! INCLUDE_GNOME
   // TODO - It's too late to kill the figs - the canvas is gone! fix this?
   
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "top" );
@@ -875,8 +1110,10 @@ void gui_model_destroy( stg_model_t* mod )
     stg_rtk_fig_and_descendents_destroy( fig );
 
   fig = NULL;
+#endif
 }
 
+#if ! INCLUDE_GNOME
 
 /// render a model's global pose vector
 void gui_model_render_geom_global( stg_model_t* mod, stg_rtk_fig_t* fig )
@@ -934,18 +1171,10 @@ int gui_model_move( stg_model_t* mod, void* userp )
   stg_rtk_fig_origin( stg_model_get_fig(mod,"top"), 
 		      mod->pose.x, mod->pose.y, mod->pose.a );   
   
-#if INCLUDE_GNOME
-  double r[6], t[6];
-  art_affine_rotate(r,RTOD(pose->a));
-  gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(mod->grp), r );
-  gnome_canvas_item_set( GNOME_CANVAS_ITEM(mod->grp),
-			 "x", mod->pose.x,
-			 "y", mod->pose.y,
-			 NULL );
-#endif			
-
   return 0;
 }
+
+
 
 ///  render a model's geometry if geom viewing is enabled
 void gui_model_render_geom( stg_model_t* mod )
@@ -970,12 +1199,15 @@ void gui_world_geom( stg_world_t* world )
     }
 }
 
+#endif
 
 void stg_model_fig_clear( stg_model_t* mod, const char* figname )
 {
+#if ! INCLUDE_GNOME
   stg_rtk_fig_t* fig = stg_model_get_fig( mod, figname );
   if( fig )
     stg_rtk_fig_clear( fig );
+#endif
 }
 
 int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len, 
@@ -989,7 +1221,11 @@ int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len,
 
 stg_rtk_fig_t* stg_model_get_fig( stg_model_t* mod, const char* figname ) 
 {
+#if INCLUDE_GNOME
+  return NULL;
+#else
   return( (stg_rtk_fig_t*)g_datalist_get_data( &mod->figs, figname ));  
+#endif
 }
 
 
@@ -1011,16 +1247,24 @@ stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod,
 				     const char* parentname, 
 				     int layer )
 {
+
   stg_rtk_fig_t* parent = NULL;
+  stg_rtk_fig_t* fig = NULL;
   
+#if ! INCLUDE_GNOME
+
   if( parentname )
     parent = stg_model_get_fig( mod, parentname );
   
-  stg_rtk_fig_t* fig = stg_rtk_fig_create( mod->world->win->canvas, parent, layer );  
+  fig = stg_rtk_fig_create( mod->world->win->canvas, parent, layer );  
   g_datalist_set_data( &mod->figs, figname, (void*)fig );
+
+#endif
 
   return fig;
 }
+
+#if ! INCLUDE_GNOME
 
 int gui_model_lines( stg_model_t* mod, void* userp )
 {
@@ -1190,3 +1434,5 @@ int gui_model_grid( stg_model_t* mod, void* userp )
   
   return 0;
 }
+
+#endif

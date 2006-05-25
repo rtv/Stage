@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.14 2006-05-02 20:11:42 gerkey Exp $
+ * CVS: $Id: p_simulation.cc,v 1.15 2006-05-25 21:35:01 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -131,6 +131,14 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
   assert(StgDriver::world);
   //printf( " done.\n" );
   
+  // poke the P/S name into the window title bar
+  if( StgDriver::world && StgDriver::world->win && StgDriver::world->win->frame )
+    {
+      char txt[128];
+      snprintf( txt, 128, "Player/Stage: %s", StgDriver::world->token );
+      gtk_window_set_title( GTK_WINDOW(StgDriver::world->win->frame), txt );
+    }
+
   // steal the global clock - a bit aggressive, but a simple approach
   if( GlobalTime ) delete GlobalTime;
   assert( (GlobalTime = new StgTime( driver ) ));
@@ -195,15 +203,12 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
   }
   // Is it a request to set a model's pose?
   else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-				PLAYER_SIMULATION_REQ_SET_PROPERTY_INT, 
+				PLAYER_SIMULATION_REQ_SET_PROPERTY, 
 				this->addr))
     {
-      player_simulation_property_int_req_t* req = 
-	(player_simulation_property_int_req_t*)data;
-      
-      printf( "Stage: received request to set integer property:\n"
-	      "\t\"%s\":\"%s\" to %d\n",
-	      req->name, req->prop, req->value );
+
+      player_simulation_property_req_t* req = 
+	(player_simulation_property_req_t*)data;
       
       // look up the named model      
       stg_model_t* mod = 
@@ -212,49 +217,13 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
       if( mod )
 	{
 	  int ack = 
-	    stg_model_set_named_property_int( mod, 
-					      req->prop, 
-					      req->prop_count, 
-					      req->value );
+	    stg_model_set_property( mod, 
+				    req->property, 
+				    (void*)req->value );
 	  
 	  this->driver->Publish(this->addr, resp_queue,
-				ack ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
-				PLAYER_SIMULATION_REQ_SET_PROPERTY_INT);
-	  return(0);
-	}
-      else
-	{
-	  PRINT_WARN1( "SET_PROPERTY_INT request: simulation model \"%s\" not found", req->name );
-	  return(-1);
-	}
-    }
-  // Is it a request to set a model's pose?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-				PLAYER_SIMULATION_REQ_SET_PROPERTY_FLOAT, 
-				this->addr))
-    {
-      player_simulation_property_float_req_t* req = 
-	(player_simulation_property_float_req_t*)data;
-      
-      printf( "Stage: received request to set floating-point property:\n"
-	      "\t\"%s\":\"%s\" to %f\n",
-	      req->name, req->prop, req->value );
-      
-      // look up the named model      
-      stg_model_t* mod = 
-	stg_world_model_name_lookup( StgDriver::world, req->name );
-      
-      if( mod )
-	{
-	  int ack = 
-	    stg_model_set_named_property_double( mod, 
-						 req->prop, 
-						 req->prop_count, 
-						 req->value );
-	  
-	  this->driver->Publish(this->addr, resp_queue,
-				ack ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
-				PLAYER_SIMULATION_REQ_SET_PROPERTY_FLOAT);
+				ack==0 ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
+				PLAYER_SIMULATION_REQ_SET_PROPERTY);
 	  return(0);
 	}
       else

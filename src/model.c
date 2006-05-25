@@ -14,9 +14,6 @@
 
 #if INCLUDE_GNOME
  #include "gnome.h"
- #define POLYGON_RENDER_CALLBACK model_render_polygons_gc
-#else
- #define POLYGON_RENDER_CALLBACK model_render_polygons
 #endif
 
   // basic model
@@ -426,6 +423,14 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
   // GUI callbacks - draw changes
 
+
+#if INCLUDE_GNOME
+  gc_model_init( mod );
+
+
+#else
+  stg_model_add_callback( mod, &mod->pose, gui_model_move, NULL );
+
   // changes in any of these properties require a redraw of the model
   stg_model_add_callback( mod, &mod->polygons, gui_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->color, gui_model_polygons, NULL );
@@ -437,30 +442,30 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
   // these changes can be handled without a complete redraw
   stg_model_add_callback( mod, &mod->gui_grid, gui_model_grid, NULL );
-  stg_model_add_callback( mod, &mod->pose, gui_model_move, NULL );
   stg_model_add_callback( mod, &mod->gui_mask, gui_model_mask, NULL );
   stg_model_add_callback( mod, &mod->parent, gui_model_mask, NULL );
+#endif
 
   // now we can add the basic square shape
   stg_polygon_t* square = stg_unit_polygon_create();
   stg_model_set_polygons( mod, square, 1 );
 
-#if INCLUDE_GNOME
-  GnomeCanvasGroup* parent_grp =
-    mod->parent ? mod->parent->grp : gnome_canvas_root( mod->world->win->gcanvas );
+/* #if INCLUDE_GNOME */
+/*   GnomeCanvasGroup* parent_grp = */
+/*     mod->parent ? mod->parent->grp : gnome_canvas_root( mod->world->win->gcanvas ); */
   
-  mod->grp = GNOME_CANVAS_GROUP(
-    gnome_canvas_item_new( parent_grp,
-			   gnome_canvas_group_get_type(),
-			   "x", pose.x,
-			   "y", pose.y,
-			   NULL ));
+/*   mod->grp = GNOME_CANVAS_GROUP( */
+/*     gnome_canvas_item_new( parent_grp, */
+/* 			   gnome_canvas_group_get_type(), */
+/* 			   "x", mod->pose.x, */
+/* 			   "y", mod->pose.y, */
+/* 			   NULL )); */
 
-  gnome_canvas_item_raise_to_top( GNOME_CANVAS_ITEM(mod->grp) );
-#endif
+/*   gnome_canvas_item_raise_to_top( GNOME_CANVAS_ITEM(mod->grp) ); */
+/* #endif */
 
   // exterimental: creates a menu of models
-  gui_add_tree_item( mod );
+  // gui_add_tree_item( mod );
   
   PRINT_DEBUG3( "finished model %d.%d(%s)", 
 		mod->world->id, 
@@ -471,6 +476,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   if( mod->typerec->initializer )
     mod->typerec->initializer(mod);
   
+#if ! INCLUDE_GNOME
   stg_model_add_property_toggles( mod, 
 				  &mod->velocity,
  				  model_render_velocity, // called when toggled on
@@ -480,7 +486,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
 				  "velocityvector",
  				  "velocity vector",
 				  FALSE );
-
+#endif
 
 
   return mod;
@@ -1425,8 +1431,10 @@ int stg_model_update_pose( stg_model_t* mod )
 	}
     }
 
-  
-  stg_model_set_pose( mod, &mod->pose );
+  // if the pose changed, we need to set it.
+  if( memcmp( &old_pose, &mod->pose, sizeof(old_pose) ))
+      stg_model_set_pose( mod, &mod->pose );
+
   stg_model_set_stall( mod, stall );
   
   /* trails */
@@ -1567,81 +1575,85 @@ int model_render_velocity( stg_model_t* mod, void* enabled )
 }
 
 
-int stg_model_set_named_property_int( stg_model_t* mod, 
-				      char* name, 
-				      size_t len, 
-				      int value )
+//#define ISPROP(A,B) (strncmp( A, B, strlen(B) == 0 ))
+
+int ISPROP( char* name, char* match )
 {
-  int ack = FALSE;
+  return( strcmp( name, match ) == 0 );
+}
+
+int stg_model_set_property_named( stg_model_t* mod, 
+				  char* name, 
+				  void* value )
+{
+  PRINT_MSG1( "Looking up named property \"%s\"\n", name );
   
-  if( strncmp( name, "fiducial_return", len) == 0 )
+  if( ISPROP(name,STG_MP_FIDUCIAL_RETURN) )
     {
-      stg_model_set_fiducial_return( mod, value );
-      ack = TRUE;
+      stg_model_set_fiducial_return( mod, *(int*)value );
+      return 0;
     }
-  else if( strncmp( name, "laser_return", len) == 0 )
+  if( ISPROP( name, STG_MP_LASER_RETURN ) )
     {
-      stg_model_set_laser_return( mod, value );
-      ack = TRUE;
+      stg_model_set_laser_return( mod, *(int*)value );
+      return 0;
     }
-  else if( strncmp( name, "obstacle_return", len) == 0 )
+  if( ISPROP( name, STG_MP_OBSTACLE_RETURN ) )
     {
-      stg_model_set_obstacle_return( mod, value );
-	      ack = TRUE;
+      stg_model_set_obstacle_return( mod, *(int*)value );
+      return 0;
     }
-  else if( strncmp( name, "ranger_return", len) == 0 )
+  if( ISPROP( name, STG_MP_RANGER_RETURN ) )
     {
-      stg_model_set_ranger_return( mod, value );
-      ack = TRUE;
+      stg_model_set_ranger_return( mod, *(int*)value );
+      return 0;
     }
-  else if( strncmp( name, "gripper_return", len) == 0 )
+  if( ISPROP( name, STG_MP_GRIPPER_RETURN ) )
     {
-      stg_model_set_gripper_return( mod, value );
-      ack = TRUE;
+      stg_model_set_gripper_return( mod, *(int*)value );
+      return 0;
     }
-  else if( strncmp( name, "color", len) == 0 )
+  if( ISPROP( name, STG_MP_COLOR ) )
     {
-      stg_model_set_color( mod, value );
-      ack = TRUE;
+      stg_model_set_color( mod, *(int*)value );
+      return 0;
     }
-  else
-    printf( "Stage: failed to set unknown integer property \"%s\"\n",
-	    name );
+  if( ISPROP( name, STG_MP_MASS ) )
+    {
+      stg_model_set_mass( mod, *(double*)value );
+      return 0;
+    }
+  if( ISPROP( name, STG_MP_WATTS ) )
+    {
+      stg_model_set_watts( mod, *(double*)value );
+      return 0;
+    }
   
-  return ack;
+  PRINT_ERR1( "Unknown property name with system prefix \"%s\"\n", name );
+  return 1; // error code
 }
 
 
-int stg_model_set_named_property_double( stg_model_t* mod, 
-					 char* name, 
-					 size_t len, 
-					 double value )
-{
-  int ack = FALSE;
-  
-  if( strncmp( name, "mass", len) == 0 )
-    {
-      stg_model_set_mass( mod, value );
-      ack = TRUE;
-    }
-  else if( strncmp( name, "watts", len) == 0 )
-    {
-      stg_model_set_watts( mod, value );
-      ack = TRUE;
-    }
-  else
-    printf( "Stage: failed to set unknown floating-point property \"%s\"\n",
-	    name );
-  
-  return ack;
-}
-
-
-void stg_model_set_property( stg_model_t* mod,
+int stg_model_set_property( stg_model_t* mod,
 			     char* key,
-			     void* data,
-			     size_t len )
+			    void* data )
 {
+  // see if the key has the predefined-property prefix
+  if( strncmp( key, STG_MP_PREFIX, strlen(STG_MP_PREFIX)) == 0 )
+    return stg_model_set_property_named( mod, key, data );
+  else
+    g_datalist_set_data( &mod->props, key, data );
+  
+  return 0; // ok
 }
 
 
+void stg_model_unset_property( stg_model_t* mod, char* key )
+{
+  g_datalist_remove_data( &mod->props, key );
+}
+
+void* stg_model_get_property( stg_model_t* mod, char* key )
+{
+  return g_datalist_get_data( &mod->props, key );
+}

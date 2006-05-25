@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.188 2006-03-29 05:11:00 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189 2006-05-25 21:35:01 rtv Exp $
  */
 
 
@@ -90,6 +90,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
  */
 #define FiducialNone 0
 
+/** Limit the length of the character strings that identify models */
 #define STG_TOKEN_MAX 64
 
 /** @defgroup types Measurement Types
@@ -125,7 +126,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
   //typedef double stg_friction_t;
   
-  /** 24-bit RGB color packed 0x00RRGGBB */
+  /** 32-bit ARGB color packed 0xAARRGGBB */
   typedef uint32_t stg_color_t;
 
   /** obstacle value. 0 means the model does not behave, or is sensed,
@@ -581,44 +582,70 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   void stg_model_set_watts( stg_model_t* mod, stg_watts_t watts );
   void stg_model_set_map_resolution( stg_model_t* mod, stg_meters_t res );
 
-  /** @brief Set an integer property of a Stage model.
-      
-      Set an integer property of a Stage model. The property is
-      identified by the same string used in the world file. Warning:
-      only a subset of a model's properties are supported. Check the
-      function definition in src/model.c to see them. TODO: use this
-      mechanism to load properties from the worldfile?
-  */ 
-  int stg_model_set_named_property_int( stg_model_t* mod, 
-					char* name, 
-					size_t len, 
-					int value );
-  
-  /** @brief Set a floating-point property of a Stage model.
-      
-      Set a floating-point property of a Stage model. The property is
-      identified by the same string used in the world file. Warning:
-      only a subset of a model's properties are supported. Check the
-      function definition in src/model.c to see them. TODO: use this
-      mechanism to load properties from the worldfile?
-  */ 
-  int stg_model_set_named_property_double( stg_model_t* mod, 
-					   char* name, 
-					   size_t len, 
-					   double value );
+#define STG_MP_PREFIX          "_mp_"
 
+#define STG_MP_POSE                     "_mp_pose"
+#define STG_MP_VELOCITY                 "_mp_velocity"
+#define STG_MP_GEOM                     "_mp_geom"
+#define STG_MP_COLOR                    "_mp_color"
+#define STG_MP_WATTS                    "_mp_watts"
+#define STG_MP_FIDUCIAL_RETURN          "_mp_fiducial_return"
+#define STG_MP_LASER_RETURN             "_mp_laser_return"
+#define STG_MP_OBSTACLE_RETURN          "_mp_obstacle_return"
+#define STG_MP_RANGER_RETURN            "_mp_ranger_return"
+#define STG_MP_GRIPPER_RETURN           "_mp_gripper_return"
+#define STG_MP_MASS                     "_mp_mass"
   
-  /** @TODO @brief Attach arbitrary data to a model
+  /* TODO - complete the set of named properties */
+
+  /** @brief Set a named property of a Stage model.
       
-      Attach arbitrary data to a model using a string for
-      lookup. Callbacks can be attached to the key and called when the
-      data is set, using stg_model_set_property_callback(). 
-  */
-/*   void stg_model_set_property( stg_model_t* mod, */
-/* 			       char* key, */
-/* 			       void* data, */
-/* 			       size_t len ); */
+      Set a property of a Stage model. 
+
+      This function can set both predefined and user-defined
+      properties of a model. Predefined properties are intrinsic to
+      every model, such as pose and color. Every supported predefined
+      properties has its identifying string defined as a preprocessor
+      macro in stage.h. Users should use the macro instead of a
+      hard-coded string, so that the compiler can help you to avoid
+      mis-naming properties.
+
+      User-defined properties allow the user to attach arbitrary data
+      pointers to a model. User-defined property data is not copied,
+      so the original pointer must remain valid. User-defined property
+      names are simple strings. Names beginning with an underscore
+      ('_') are reserved for internal libstage use: users should not
+      use names beginning with underscore (at risk of causing very
+      weird behaviour).
+
+      Any callbacks registered for the named property will be called.      
+
+      Returns 0 on success, or a positive error code on failure.
+
+      *CAUTION* The caller is responsible for making sure the pointer
+      points to data of the correct type for the property, so use
+      carefully. Check the docs or the equivalent
+      stg_model_set_<property>() function definition to see the type
+      of data required for each property.
+  */ 
+  int stg_model_set_property( stg_model_t* mod, 
+			      char* propname, 
+			      void* data );
   
+  /** @brief Remove a property from a model
+      
+     Removes a data item previously associated with the model using
+     stg_model_set_property(). No memory is freed, so the user should
+     take care to free the memory.
+  */
+  void stg_model_unset_property( stg_model_t* mod,
+				 char* propname );
+
+  /** Get a named property associated with a model 
+   */
+  void* stg_model_get_property( stg_model_t* mod, char* key );
+  
+
 /*   /\** @TODO The callback cb will be called with argument arg when the */
 /*       property identified by key is set. *\/ */
 /*   void stg_model_set_property_callback( stg_model_t* mod, */
@@ -680,8 +707,22 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   void* stg_model_get_data( stg_model_t* mod, size_t* lenp );
   void* stg_model_get_cmd( stg_model_t* mod, size_t* lenp );
   
+  void stg_model_draw_polygons( stg_model_t* mod, const char* group,
+				double x, double y, double a, 
+				stg_polygon_t* polys, size_t polycount );
+  
+  void stg_model_draw_polylines( stg_model_t* mod, const char* group, 
+				 double x, double y, double a, 
+				 stg_polyline_t* lines, size_t linecount,
+				 double thickness, stg_color_t colot );
+  
+  void stg_model_draw_points( stg_model_t* mod, const char* group,
+			      double x, double y, double a, 
+			      stg_point_t* points, size_t point, 
+			      double size, stg_color_t color );
+  
 
-  /** add an item to the View menu that will automatically install and
+  /** Add an item to the View menu that will automatically install and
       remove a callback when the item is toggled. The specialized
       model types use this call to set up their data visualization. */
   void stg_model_add_property_toggles( stg_model_t* mod,
@@ -1099,57 +1140,6 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /** Print human-readable version of the laser config struct */
   void stg_print_laser_config( stg_laser_config_t* slc );
   
-
-
-  // Error macros - output goes to stderr
-#define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_ERR1(m,a) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_ERR2(m,a,b) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_ERR3(m,a,b,c) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_ERR4(m,a,b,c,d) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_ERR5(m,a,b,c,d,e) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
-
-  // Warning macros
-#define PRINT_WARN(m) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_WARN1(m,a) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_WARN2(m,a,b) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_WARN3(m,a,b,c) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_WARN4(m,a,b,c,d) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_WARN5(m,a,b,c,d,e) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, d, e, __FILE__, __FUNCTION__)
-
-  // Message macros
-#ifdef DEBUG
-#define PRINT_MSG(m) printf( "Stage: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_MSG1(m,a) printf( "Stage: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_MSG2(m,a,b) printf( "Stage: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m" (%s %s)\n", a, b, c, d, __FILE__, __FUNCTION__)
-#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m" (%s %s)\n", a, b, c, d, e,__FILE__, __FUNCTION__)
-#else
-#define PRINT_MSG(m) printf( "Stage: "m"\n" )
-#define PRINT_MSG1(m,a) printf( "Stage: "m"\n", a)
-#define PRINT_MSG2(m,a,b) printf( "Stage: "m"\n,", a, b )
-#define PRINT_MSG3(m,a,b,c) printf( "Stage: "m"\n", a, b, c )
-#define PRINT_MSG4(m,a,b,c,d) printf( "Stage: "m"\n", a, b, c, d )
-#define PRINT_MSG5(m,a,b,c,d,e) printf( "Stage: "m"\n", a, b, c, d, e )
-#endif
-
-  // DEBUG macros
-#ifdef DEBUG
-#define PRINT_DEBUG(m) printf( "debug: "m" (%s %s)\n", __FILE__, __FUNCTION__)
-#define PRINT_DEBUG1(m,a) printf( "debug: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
-#define PRINT_DEBUG2(m,a,b) printf( "debug: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
-#define PRINT_DEBUG3(m,a,b,c) printf( "debug: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
-#define PRINT_DEBUG4(m,a,b,c,d) printf( "debug: "m" (%s %s)\n", a, b, c ,d, __FILE__, __FUNCTION__)
-#define PRINT_DEBUG5(m,a,b,c,d,e) printf( "debug: "m" (%s %s)\n", a, b, c ,d, e, __FILE__, __FUNCTION__)
-#else
-#define PRINT_DEBUG(m)
-#define PRINT_DEBUG1(m,a)
-#define PRINT_DEBUG2(m,a,b)
-#define PRINT_DEBUG3(m,a,b,c)
-#define PRINT_DEBUG4(m,a,b,c,d)
-#define PRINT_DEBUG5(m,a,b,c,d,e)
-#endif
 
 
 /** @ingroup libstage_util
