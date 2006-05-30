@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.15 2006-05-25 21:35:01 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.16 2006-05-30 20:10:00 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -203,12 +203,12 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
   }
   // Is it a request to set a model's pose?
   else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-				PLAYER_SIMULATION_REQ_SET_PROPERTY, 
+				PLAYER_SIMULATION_REQ_SET_PROPERTY_INT, 
 				this->addr))
     {
 
-      player_simulation_property_req_t* req = 
-	(player_simulation_property_req_t*)data;
+      player_simulation_property_int_req_t* req = 
+	(player_simulation_property_int_req_t*)data;
       
       // look up the named model      
       stg_model_t* mod = 
@@ -218,12 +218,12 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
 	{
 	  int ack = 
 	    stg_model_set_property( mod, 
-				    req->property, 
+				    req->prop, 
 				    (void*)req->value );
 	  
 	  this->driver->Publish(this->addr, resp_queue,
 				ack==0 ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
-				PLAYER_SIMULATION_REQ_SET_PROPERTY);
+				PLAYER_SIMULATION_REQ_SET_PROPERTY_INT);
 	  return(0);
 	}
       else
