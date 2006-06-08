@@ -4,9 +4,10 @@
 EXTRA_DIST = \
 README \
 stage.txt \
-header.html \
 stage.dox \
 stage_button.png 
+
+#header.html
 
 DOCDIR = $(prefix)/share/doc
 
