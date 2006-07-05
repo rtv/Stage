@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.12 2006-03-29 05:13:44 rtv Exp $
+dnl $Id: configure.ac,v 1.12.2.1 2006-07-05 22:42:54 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -72,9 +72,9 @@ AC_ARG_ENABLE(gnomecanvas,
 )
 
 dnl for libstageplugin, we need Player 2.0 or higher
-PKG_CHECK_MODULES( PLAYER, playercore >= 2.0.1,
+PKG_CHECK_MODULES( PLAYER, playercore >= 2.0.2,
  AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
- AC_MSG_ERROR([Stage 2.0.1 requires Player-2.0.1 to be installed first. Available at http://playerstage.sourceforge.net.])
+ AC_MSG_ERROR([Stage 2.0.2 requires Player 2.0.2 to be installed first. Available at http://playerstage.sourceforge.net.])
 )
 
 dnl for ptest, we need libplayerc
