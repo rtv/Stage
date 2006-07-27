@@ -114,6 +114,13 @@ void stg_model_load( stg_model_t* mod )
 	wf_read_int( mod->id, "gripper_return", mod->gripper_return );
       stg_model_set_gripper_return( mod, grp );
     }
+
+  if( wf_property_exists( mod->id, "audio_return" ))
+    {
+      int aud = 
+	wf_read_int( mod->id, "audio_return", mod->audio_return );
+      stg_model_set_audio_return( mod, aud );
+    }
   
   if( wf_property_exists( mod->id, "boundary" ))
     {

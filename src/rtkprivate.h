@@ -76,6 +76,7 @@ extern uint8_t *stg_rtk_canvas_get_image_rgb24(stg_rtk_canvas_t *canvas);
 // Private figure functions
 extern void stg_rtk_fig_dirty(stg_rtk_fig_t *fig);
 extern void stg_rtk_fig_calc(stg_rtk_fig_t *fig);
+extern void stg_rtk_fig_calc_selection(stg_rtk_fig_t *fig);
 extern void stg_rtk_fig_render(stg_rtk_fig_t *fig);
 extern void stg_rtk_fig_render_xfig(stg_rtk_fig_t *fig);
 extern int stg_rtk_fig_hittest(stg_rtk_fig_t *fig, int dx, int dy);

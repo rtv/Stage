@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.20 2006-04-04 22:11:15 pooya Exp $
+ * CVS: $Id: rtk_fig.c,v 1.21 2006-07-27 02:33:02 pooya Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -197,7 +197,7 @@ stg_rtk_fig_t *stg_rtk_fig_create_ex(stg_rtk_canvas_t *canvas, stg_rtk_fig_t *pa
 void stg_rtk_fig_destroy(stg_rtk_fig_t *fig)
 {
   //printf( "destroying fig %p\n", fig );
-  
+
 
   // remove any glib sources that might access this figure (such as
   // a blink timer) - rtv
@@ -218,13 +218,16 @@ void stg_rtk_fig_destroy(stg_rtk_fig_t *fig)
   // Remove from the layer list.
   STK_LIST_REMOVEX(fig->canvas->layer_fig, layer, fig);
 
-    // Free the strokes
+  // Free the strokes
   stg_rtk_fig_clear(fig);
+
+  //TODO: causing seg faults? run stest then close stage window. (pooya) 
   free(fig->strokes);
   
   // Clear the dirty regions
   stg_rtk_region_destroy(fig->region);
-  
+
+  // TODO: freeing figures twice?! (pooya)
   free(fig);
 }
 
@@ -986,12 +989,13 @@ void stg_rtk_fig_text_bubble(stg_rtk_fig_t *fig, double ox, double oy, double oa
   ly = GY_TO_LY(gx, gy);
 
   // draw the text
-  stg_rtk_fig_text_alloc(fig, lx , ly , oa, text, &width, &height);
+  // TODO: make it change direction if bx<0 or by<0 (pooya)
+  stg_rtk_fig_text_alloc(fig, lx+ox , ly+oy , oa, text, &width, &height);
 
   // draw the bubble
   stg_rtk_point_t points[30];
-  double tx = width  * fig->canvas->sx;
-  double ty = height * fig->canvas->sy;
+  double tx = width  * fig->canvas->sx * (bx<0?-1.0:1.0);
+  double ty = height * fig->canvas->sy * (by<0?-1.0:1.0);
 
   for (int i = 1; i <= 24 ; i++)
   {
@@ -1751,4 +1755,20 @@ void stg_rtk_fig_blink( stg_rtk_fig_t* fig, int interval_ms, int flag )
     g_timeout_add( (guint)interval_ms, stg_rtk_fig_blink_callback, fig );
   else
     g_source_remove_by_user_data( fig );
+}
+
+
+int stg_rtk_fig_destroy_later_callback( stg_rtk_fig_t* fig )
+{
+ assert( fig );
+ stg_rtk_fig_destroy( fig );
+
+ return FALSE;
+}
+
+
+void stg_rtk_fig_destroy_later( stg_rtk_fig_t* fig, int life_ms )
+{
+  assert( fig );
+  g_timeout_add( (guint)life_ms, (GSourceFunc) (stg_rtk_fig_destroy_later_callback), fig );
 }

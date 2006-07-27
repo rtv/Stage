@@ -144,6 +144,17 @@ class InterfaceSpeech : public InterfaceModel
   virtual void Publish( void );
 };
 
+class InterfaceAudio : public InterfaceModel
+{
+ public: 
+  InterfaceAudio( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceAudio( void ){ /* TODO: clean up*/ };
+  virtual int ProcessMessage(MessageQueue* resp_queue,
+                             player_msghdr_t* hdr,
+                             void* data);
+  virtual void Publish( void );
+};
+
 class InterfaceLaser : public InterfaceModel
 {
   private:

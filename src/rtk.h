@@ -24,7 +24,7 @@
  * Desc: Combined Stk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.16 2006-03-24 20:12:42 pooya Exp $
+ * CVS: $Id: rtk.h,v 1.17 2006-07-27 02:33:02 pooya Exp $
  */
 
 #ifndef STK_H
@@ -414,6 +414,10 @@ typedef struct _stg_rtk_fig_t
 //stg_rtk_fig_t *stg_rtk_fig_create(stg_rtk_canvas_t *canvas, stg_rtk_fig_t *parent, int layer);
 stg_rtk_fig_t *stg_rtk_fig_create(stg_rtk_canvas_t *canvas, stg_rtk_fig_t *parent, int layer );
 void stg_rtk_fig_destroy(stg_rtk_fig_t *fig);
+
+// destroy figure after at least life_ms milliseconds
+void stg_rtk_fig_destroy_later( stg_rtk_fig_t* fig, int life_ms );
+
 
 // Recursively free a whole tree of figures (rtv)
 void stg_rtk_fig_and_descendents_destroy( stg_rtk_fig_t* fig );

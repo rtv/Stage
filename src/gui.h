@@ -93,3 +93,7 @@
 
 #define STG_LAYER_SPEECHDATA 88
 #define STG_SPEECH_COLOR "navy"
+
+#define STG_LAYER_AUDIODATA 84
+#define STG_AUDIO_COLOR "orange3"
+#define STG_AUDIO_BUBBLE_COLOR "orange4"

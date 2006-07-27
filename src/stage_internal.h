@@ -208,6 +208,7 @@ extern "C" {
     int obstacle_return;
     int blob_return;
     int gripper_return;
+    int audio_return;
     int ranger_return;
     int fiducial_return;
     int fiducial_key;

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189 2006-05-25 21:35:01 rtv Exp $
+ * CVS: $Id: stage.h,v 1.190 2006-07-27 02:33:02 pooya Exp $
  */
 
 
@@ -570,6 +570,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   void stg_model_set_mass( stg_model_t* mod, stg_kg_t mass );
   void stg_model_set_stall( stg_model_t* mod, stg_bool_t stall );
   void stg_model_set_gripper_return( stg_model_t* mod, int val );
+  void stg_model_set_audio_return( stg_model_t* mod, int val );
   void stg_model_set_laser_return( stg_model_t* mod, int val );
   void stg_model_set_obstacle_return( stg_model_t* mod, int val );
   void stg_model_set_blob_return( stg_model_t* mod, int val );
@@ -594,6 +595,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 #define STG_MP_OBSTACLE_RETURN          "_mp_obstacle_return"
 #define STG_MP_RANGER_RETURN            "_mp_ranger_return"
 #define STG_MP_GRIPPER_RETURN           "_mp_gripper_return"
+#define STG_MP_AUDIO_RETURN             "_mp_audio_return"
 #define STG_MP_MASS                     "_mp_mass"
   
   /* TODO - complete the set of named properties */
@@ -1100,6 +1102,42 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_speech_cmd_type_t cmd;
     char string[STG_SPEECH_MAX_STRING_LEN];
   } stg_speech_cmd_t;
+
+  // AUDIO MODEL --------------------------------------------------------
+
+#define STG_AUDIO_MAX_STRING_LEN 256
+
+  typedef enum {
+    STG_AUDIO_CMD_NOP = 0, // default state
+    STG_AUDIO_CMD_SAY
+  } stg_audio_cmd_type_t;
+
+  /** audio configuration packet
+   */
+  typedef struct
+  {
+    char string[STG_AUDIO_MAX_STRING_LEN];
+    char say_string[STG_AUDIO_MAX_STRING_LEN];
+    stg_msec_t say_period;
+    stg_msec_t say_last_time;
+  } stg_audio_config_t;
+
+  /** audio data packet
+   */
+  typedef struct
+  {
+    char string[STG_AUDIO_MAX_STRING_LEN];
+    char recv[STG_AUDIO_MAX_STRING_LEN];
+    GList *audio_paths;
+  } stg_audio_data_t;
+
+  /** audio command packet
+   */
+  typedef struct
+  {
+    stg_audio_cmd_type_t cmd;
+    char string[STG_AUDIO_MAX_STRING_LEN];
+  } stg_audio_cmd_t;
 
   // end the group of all models
   /**@}*/

@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.16 2006-05-30 20:10:00 gerkey Exp $
+ * CVS: $Id: p_simulation.cc,v 1.17 2006-07-27 02:33:02 pooya Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -36,6 +36,7 @@
   - "fiducial_return" 0-32767
   - "laser_return" 0-2
   - "gripper_return" 0-1
+  - "audio_return" 0-1
   - "ranger_return" 0-1
   - "obstacle_return" 0-1
   - "color" 0xRRGGBB

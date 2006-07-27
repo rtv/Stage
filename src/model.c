@@ -81,6 +81,7 @@ model
   blobfinder_return 1
   fiducial_return 1
   gripper_return 0
+  audio_return 0
 
   fiducial_key 0
 
@@ -143,6 +144,9 @@ model
    - iff 1, this model can be detected by a ranger.
 - gripper_return [bool]
    - iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has a non-zero obstacle_return.
+- audio_return [bool]
+   - if 1, this model will be an obstacle to audio and will be used to precalculate the audio paths.
+     <b>warning: don't use this for moving objects</b>
 
 */
 
@@ -204,6 +208,7 @@ void stg_model_add_callback( stg_model_t* mod,
 			     stg_model_callback_t cb, 
 			     void* user )
 {
+  // TODO: free it somewhere or don't allocate it (pooya)
   int* key = malloc(sizeof(int));
   *key = address - (void*)mod;
 
@@ -393,6 +398,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->blob_return = 1;
   mod->laser_return = LaserVisible;
   mod->gripper_return = 0;
+  mod->audio_return = 0;
   mod->boundary = 0;
   mod->color = 0xFF0000; // red;  
   mod->map_resolution = 0.1; // meters
@@ -957,6 +963,13 @@ void stg_model_set_gripper_return( stg_model_t* mod, int val )
   assert(mod);
   mod->gripper_return = val;
   model_change( mod, &mod->gripper_return );
+}
+
+void stg_model_set_audio_return( stg_model_t* mod, int val )
+{
+  assert(mod);
+  mod->audio_return = val;
+  model_change( mod, &mod->audio_return );
 }
 
 void stg_model_set_fiducial_return( stg_model_t* mod, int val )
@@ -1611,6 +1624,11 @@ int stg_model_set_property_named( stg_model_t* mod,
   if( ISPROP( name, STG_MP_GRIPPER_RETURN ) )
     {
       stg_model_set_gripper_return( mod, *(int*)value );
+      return 0;
+    }
+  if( ISPROP( name, STG_MP_AUDIO_RETURN ) )
+    {
+      stg_model_set_audio_return( mod, *(int*)value );
       return 0;
     }
   if( ISPROP( name, STG_MP_COLOR ) )
