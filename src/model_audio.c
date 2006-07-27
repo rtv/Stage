@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_audio.c,v $
 //  $Author: pooya $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1127,7 +1127,7 @@ int audio_update(stg_model_t * mod)
 			 trg_mod->token, dists[i], RTOD(recvangle),
 			 data->string);
 
-	    sprintf(trg_data->recv, "%s,%f,%f,%s", mod->token,
+	    sprintf(trg_data->recv, "%s,%5.2f,%5.2f,%s", mod->token,
 		    dists[i], recvangle, data->string);
 	    //TODO: call model_change?!
 	}
