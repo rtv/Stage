@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.141 2006-07-27 02:33:02 pooya Exp $
+# $Id: Makefile.am,v 1.142 2006-07-28 22:04:01 pooya Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -17,16 +17,10 @@ AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace @GTK_CFLAGS@
 # build the stage library
 lib_LTLIBRARIES = libstage.la 
 
-# build stest, a stand-alone test binary using the stage library, 
-bin_PROGRAMS = stest 
-
 # if Player is present, build the plugin and the test program
 if HAVE_PLAYER
   lib_LTLIBRARIES += libstageplugin.la
-  # bin_PROGRAMS += ptest                  #currently broken
 endif
-
-
 
 # The stage library contains everything you need to build a robot
 # simulation, including graphics and a world description file
@@ -63,12 +57,12 @@ libstage_la_SOURCES = \
 	world.c \
 	worldfile.cc \
 	worldfile.hh \
-        rtk.c \
-        rtk.h \
-        rtk_canvas.c \
-        rtk_fig.c \
-        rtk_region.c \
-        rtkprivate.h \
+	rtk.c \
+	rtk.h \
+	rtk_canvas.c \
+	rtk_fig.c \
+	rtk_region.c \
+	rtkprivate.h \
 	gui_menus.c gui.c 
 
 # TODO
@@ -107,11 +101,11 @@ libstageplugin_la_SOURCES = \
 	p_blobfinder.cc \
 	stg_time.cc \
 	stg_time.h \
-        zoo_driver.h \
-        zoo.h \
-        zoo_controller.h \
-        zoo_referee.h \
-        zoo_species.h
+	zoo_driver.h \
+	zoo.h \
+	zoo_controller.h \
+	zoo_referee.h \
+	zoo_species.h
 
 # TODO
 # p_power.cc 
@@ -128,14 +122,3 @@ libstageplugin_la_CPPFLAGS = $(AM_CPPFLAGS) @PLAYER_CFLAGS@
 libstageplugin_la_LDFLAGS = -version-info 1:0:0 -rpath $(libdir)
 libstageplugin_la_LIBADD = libstage.la @PLAYER_LIBS@
 
-# build a stand-alone test program using libstage
-stest_DEPENDENCIES = libstage.la
-stest_SOURCES = stest.c
-stest_LDADD = libstage.la
-
-# TODO - fix this
-# build a stand-alone test program using libstage
-#ptest_DEPENDENCIES = 
-#ptest_SOURCES = ptest.c
-#ptest_CFLAGS = $(AM_CFLAGS) @PLAYER_CFLAGS@ 
-#ptest_LDADD = @PLAYERC_LIBS@

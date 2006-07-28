@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_audio.c,v $
 //  $Author: pooya $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1167,13 +1167,15 @@ int audio_render_data(stg_model_t * mod, void *userp)
     // only draw if someone is using the audio
     if (mod->subs < 1)
 	return 0;
-    {
-	stg_rtk_fig_t *fig =
-	    stg_rtk_fig_create(mod->world->win->canvas, NULL,
-			       STG_LAYER_AUDIODATA);
-	stg_rtk_fig_destroy(fig);
 
-    }
+//    {
+//	stg_rtk_fig_t *fig =
+//	    stg_rtk_fig_create(mod->world->win->canvas, NULL,
+//			       STG_LAYER_AUDIODATA);
+//	stg_rtk_fig_destroy(fig);
+//
+//    }
+
 
 #ifdef AUDIO_FIG_DESTROY_LATER
     //stg_model_fig_create(mod, "audio_data_fig", "top",

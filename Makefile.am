@@ -1,4 +1,4 @@
-SUBDIRS = replace src worlds docsrc
+SUBDIRS = replace src worlds docsrc examples
 
 # create the pkg-config entries
 pkgconfigdir = $(libdir)/pkgconfig

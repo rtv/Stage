@@ -1,5 +1,3 @@
 Makefile
 Makefile.in
-stest
-ptest
 .DS_Store

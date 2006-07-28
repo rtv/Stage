@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.14 2006-07-05 22:36:56 gerkey Exp $
+dnl $Id: configure.ac,v 1.15 2006-07-28 22:04:01 pooya Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -87,11 +87,16 @@ PKG_CHECK_MODULES( PLAYER, playercore >= 2.0.1,
 AM_CONDITIONAL(HAVE_PLAYER, [test $have_player = yes])
 
 
-dnl for ptest, we need libplayerc
-dnl PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0,
-dnl  AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
-dnl  AC_MSG_WARN([libplayercr was not found. ])
-dnl )
+dnl for libplayerc examples, we need libplayerc
+PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0.1,
+ AC_DEFINE(INCLUDE_PLAYERC,1,[building libplayerc examples])
+ have_playerc=yes
+ ,
+ AC_MSG_WARN([libplayerc was not found. ])
+ have_playerc=no
+)
+
+AM_CONDITIONAL(HAVE_PLAYERC, [test $have_playerc = yes])
 
 dnl where's the X11 color database?
 AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
@@ -112,6 +117,9 @@ AC_OUTPUT(Makefile
           worlds/bitmaps/Makefile 
           replace/Makefile
           src/referees/Makefile
+          examples/Makefile
+          examples/libstage/Makefile
+          examples/libplayerc/Makefile
 	  stage.pc )
 
 dnl should use AC_MSG_NOTICE(), but that's apparently not defined in
@@ -128,9 +136,21 @@ if test "x$have_player" = "xyes"; then
   AC_MSG_RESULT([The Player plugin (libstageplugin) will be built using the following flags: ])
   AC_MSG_RESULT([  compiler: $PLAYER_CFLAGS])
   AC_MSG_RESULT([    linker: $PLAYER_LIBS])
+  AC_MSG_RESULT([])
 else
   AC_MSG_RESULT([Player was not found, so the Stage plugin for Player will NOT be built.])
   AC_MSG_RESULT([If you want the Player/Stage system, you must install Player and configure Stage again.])
+  AC_MSG_RESULT([])
+fi
+
+if test "x$have_playerc" = "xyes"; then
+  AC_MSG_RESULT([libplayerc examples will be built using the following flags: ])
+dnl  AC_MSG_RESULT([  compiler: $PLAYERC_CFLAGS])
+dnl  AC_MSG_RESULT([    linker: $PLAYERC_LIBS])
+  AC_MSG_RESULT([])
+else
+  AC_MSG_RESULT([libplayerc was not found, so the the examples will NOT be built.])
+  AC_MSG_RESULT([])
 fi
 
 AC_MSG_RESULT([])
