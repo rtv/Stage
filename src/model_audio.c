@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_audio.c,v $
 //  $Author: pooya $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -59,11 +59,12 @@ Pooya Karimian
 //#define AUDIO_CACHE_STATS
 
 #define AUDIO_FIG_DESTROY_LATER
+#define AUDIO_FIG_DESTROY_LIFEMS (100)
 
 //#define AUDIO_DEBUG_ALLOC(...) {printf("Audio:memcheck:"); printf(__VA_ARGS__); fflush(stdout);} 
 #define AUDIO_DEBUG_ALLOC(...) {}
 
-#define AUDIO_DEBUG1(...) {printf("Audio: "); printf(__VA_ARGS__); fflush(stdout);}
+#define AUDIO_DEBUG1(...) { printf(__VA_ARGS__); fflush(stdout);}
 
 //#define AUDIO_DEBUG2(...) {printf("Audio debug2: "); printf(__VA_ARGS__); fflush(stdout);} 
 #define AUDIO_DEBUG2(...) {}
@@ -1243,7 +1244,7 @@ int audio_render_data(stg_model_t * mod, void *userp)
 #endif
 
 #ifdef AUDIO_FIG_DESTROY_LATER
-    stg_rtk_fig_destroy_later(fig, 10);
+    stg_rtk_fig_destroy_later(fig, AUDIO_FIG_DESTROY_LIFEMS);
 //    stg_rtk_fig_destroy(fig);
 #endif
 
