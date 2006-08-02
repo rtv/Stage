@@ -29,9 +29,8 @@
 
 #include "p_driver.h"
 
-typedef struct {
-    char string[STG_AUDIO_MAX_STRING_LEN];
-} audio_msg_t;
+typedef char audio_msg_t[STG_AUDIO_MAX_STRING_LEN];
+
 
 /** @addtogroup player
 @par Audio interface
@@ -62,12 +61,14 @@ void InterfaceAudio::Publish(void)
 
     // Translate the Stage-formatted sdata into the Player-formatted pdata
 
-    audio_msg_t *audioMsgStruct;
-    pdata.data_count = sizeof(audio_msg_t);
-    audioMsgStruct = reinterpret_cast < audio_msg_t * >(pdata.data);
+    audio_msg_t *audio_msg;
+//    pdata.data_count = sizeof(audio_msg_t);
+    pdata.data_count = strlen(sdata->recv)+1;
+    audio_msg = reinterpret_cast < audio_msg_t * >(pdata.data);
 
-    sprintf(audioMsgStruct->string, "%s", sdata->recv);
-    
+    //sprintf(audioMsgStruct, "%s", sdata->recv);
+    strncpy((char *)audio_msg, sdata->recv, STG_AUDIO_MAX_STRING_LEN);
+
     // clear received message once sent to the client
     sdata->recv[0]=0;
 //  uint size = sizeof(pdata) - sizeof(pdata.data) + pdata.data_count;
