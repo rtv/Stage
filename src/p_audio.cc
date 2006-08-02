@@ -56,9 +56,12 @@ void InterfaceAudio::Publish(void)
     stg_audio_data_t *sdata = (stg_audio_data_t *) mod->data;
     assert(sdata);
 
+    // check if there's new data to publish
+    if (sdata->recv[0]==0)
+	return ;
+	
     player_opaque_data_t pdata;
     memset(&pdata, 0, sizeof(pdata));
-
     // Translate the Stage-formatted sdata into the Player-formatted pdata
 
     audio_msg_t *audio_msg;
