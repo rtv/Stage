@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.17 2006-07-27 02:33:02 pooya Exp $
+ * CVS: $Id: p_simulation.cc,v 1.18 2006-09-07 03:18:30 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -36,7 +36,6 @@
   - "fiducial_return" 0-32767
   - "laser_return" 0-2
   - "gripper_return" 0-1
-  - "audio_return" 0-1
   - "ranger_return" 0-1
   - "obstacle_return" 0-1
   - "color" 0xRRGGBB
@@ -133,7 +132,7 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
   //printf( " done.\n" );
   
   // poke the P/S name into the window title bar
-  if( StgDriver::world && StgDriver::world->win && StgDriver::world->win->frame )
+  if( StgDriver::world && StgDriver::world->win )
     {
       char txt[128];
       snprintf( txt, 128, "Player/Stage: %s", StgDriver::world->token );
@@ -204,12 +203,12 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
   }
   // Is it a request to set a model's pose?
   else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-				PLAYER_SIMULATION_REQ_SET_PROPERTY_INT, 
+				PLAYER_SIMULATION_REQ_SET_PROPERTY, 
 				this->addr))
     {
 
-      player_simulation_property_int_req_t* req = 
-	(player_simulation_property_int_req_t*)data;
+      player_simulation_property_req_t* req = 
+	(player_simulation_property_req_t*)data;
       
       // look up the named model      
       stg_model_t* mod = 
@@ -219,12 +218,12 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
 	{
 	  int ack = 
 	    stg_model_set_property( mod, 
-				    req->prop, 
+				    req->property, 
 				    (void*)req->value );
 	  
 	  this->driver->Publish(this->addr, resp_queue,
 				ack==0 ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
-				PLAYER_SIMULATION_REQ_SET_PROPERTY_INT);
+				PLAYER_SIMULATION_REQ_SET_PROPERTY);
 	  return(0);
 	}
       else

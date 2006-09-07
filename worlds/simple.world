@@ -1,6 +1,6 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64 2006-05-25 21:35:01 rtv Exp $
+# CVS: $Id: simple.world,v 1.65 2006-09-07 03:18:30 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -10,7 +10,7 @@ include "pioneer.inc"
 include "map.inc"
 
 
-# defines sick laser
+# defines sick laser scanner
 include "sick.inc"
 
 
@@ -20,16 +20,13 @@ size [16 16]
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02
 
-# update the screen every 10ms (we need fast update for the stest demo)
-gui_interval 100
-
 interval_sim 100
-interval_real 0
+interval_real 100
 
 # configure the GUI window
 window
 ( 
-  size [ 1280.000 949.000 ] 
+  size [ 695.000 693.000 ] 
   center [-0.010 -0.040] 
   scale 0.028 
 )
@@ -38,42 +35,17 @@ window
 map
 ( 
   bitmap "bitmaps/cave.png"
-  #bitmap "bitmaps/hospital.png"
   size [16 16]
   name "cave"
 )
 
-model( pose [ 4.000 4.000 0.000 ] color "blue" )
 
 # create a robot
 pioneer2dx
 (
   name "robot1"
   color "red"
-  pose [-6.675 -5.850 45.000]
-  sick_laser( samples 361 laser_sample_skip 4 )
+  pose [-7 -7 45]
+  sick_laser()
 )
 
-pioneer2dx
-(
-  name "robot2"
-  color "red"
-  pose [-2.275 -6.350 45.000]
-  sick_laser( samples 361 laser_sample_skip 4 )
-)
-
-pioneer2dx
-(
-  name "robot3"
-  color "red"
-  pose [-5.100 1.125 -33.750]
-  sick_laser( samples 361 laser_sample_skip 4 )
-)
-
-pioneer2dx
-(
-  name "robot4"
-  color "red"
-  pose [6.975 6.950 206.250]
-  sick_laser( samples 361 laser_sample_skip 4 )
-)

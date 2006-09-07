@@ -28,6 +28,10 @@
 
 #include "dijkstra.h"
 
+GHashTable *dijkstra_adjacency;
+GHashTable *dijkstra_previous;
+GHashTable *dijkstra_d;
+
 typedef struct {
     int node;
     double weight;

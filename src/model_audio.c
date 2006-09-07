@@ -6,8 +6,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_audio.c,v $
-//  $Author: pooya $
-//  $Revision: 1.5 $
+//  $Author: rtv $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +48,11 @@ Pooya Karimian
 #include <math.h>
 #include "gui.h"
 #include "dijkstra.h"
+
+/* declared global in dijkstra.c */
+extern GHashTable *dijkstra_adjacency;
+extern GHashTable *dijkstra_previous;
+extern GHashTable *dijkstra_d;
 
 //#define DEBUG
 
