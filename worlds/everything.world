@@ -1,39 +1,49 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.85 2006-03-29 05:11:00 rtv Exp $
+# CVS: $Id: everything.world,v 1.85.4.1 2006-09-14 07:11:55 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
 
 interval_sim 100  # milliseconds per update step
-interval_real 100 # real-time milliseconds per update step
+interval_real 0 # real-time milliseconds per update step
 
 # defines Pioneer-like robots
 include "pioneer.inc"
 
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
+
 
 # defines the laser model `sick_laser' configured like a Sick LMS-200
 include "sick.inc"
 
-size [40 20 ]
+
+
+#size [160 60 ]
+size [42 20 ]
 
 gui_disable 0
-gui_interval 100
-gui_menu_interval 20
 
 window( 
-  size [ 755.000 684.000 ] 
-  center [-7.707 2.553] 
-  scale 0.009 
+  size [ 1059.000 541.000 ] 
+  center [-3.707 -1.447] 
+  scale 25.877 # pixels per meter
 )
 
 map( 
   bitmap "bitmaps/hospital_section.png" 
+  #bitmap "bitmaps/hospital.png" 
   map_resolution 0.02
-  size [40 18] 
+  size3d [40 18 0.5] 
+
+  #size [160 60] 
   name "hospital"
+  color "gray50"
+  gui_outline 1
 )
 
 
@@ -68,7 +78,7 @@ define trickedoutpioneer pioneer2dx
     )
   )
 
-  fiducial_return 1
+  fiducial_return 17
   gripper_return 0
 
   localization "gps"
@@ -90,7 +100,7 @@ trickedoutpioneer
   name "robot1"
   pose [-10.071 3.186 -722.333]
 
-  gripper( pose [0.200 0.000 0.000] color "gray" )
+  #gripper( pose [0.23 0.000 0.000] color "gray" )
   speech()
 )
 
@@ -103,6 +113,7 @@ trickedoutpioneer
 
 trickedoutpioneer
 (
+  fiducial_return 18	
   color "blue"
   name "p2"
   pose [-6.009 2.481 -194.220]
@@ -136,35 +147,29 @@ trickedoutpioneer
   pose [-6.232 3.440 -135.449]
 )
 
-# a silly object to look at
-position( 	
-  name "invader" 
-  size [0.3 0.3]
-  pose [-6.754 0.791 0.000] 
-  color "red"  
-  # loads a bitmap for the model's body
-  bitmap "bitmaps/space_invader.png"
-  fiducial_return 22
-  velocity [0.2 0 0]
-  laser_return 2
-  gui_outline 0
 
+
+# a silly object to look at
+define silly position ( 	
+  size3d [0.3 0.3 0.5]
+  fiducial_return 22
+  laser_return 2
+  gui_outline 1
   gripper_return 1
 )
 
-position( 	
-  name "ghost" 
-  size [0.3 0.3 ]
-  pose [-6.060 0.794 0.000] 
-  color "blue"  
-  # loads a bitmap for the model's body
-  bitmap "bitmaps/ghost.png"
-  fiducial_return 22
-  velocity [0 0.2 0]
-  laser_return 2
-  gui_outline 0
-  gui_nose 0
-  gui_grid 0	
 
-  gripper_return 1
+silly( 	
+  name "invader" 
+  pose3d [-6.754 0.791 0.3 0] 
+  color "green"  
+  bitmap "bitmaps/space_invader.png"
+)
+
+
+silly( 	
+  name "ghost" 
+  pose3d [-6.060 0.794 0.6 0] 
+  color "blue"  
+  bitmap "bitmaps/ghost.png"
 )

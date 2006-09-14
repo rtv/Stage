@@ -12,8 +12,8 @@ include "map.inc"
 
 
 
-
-
+interval_sim 100  # simulation timestep in milliseconds
+interval_real 100  # real-time interval between simulation updates in milliseconds 
 
 
 # set the size of a pixel in meters
@@ -36,7 +36,7 @@ map
   #bitmap "bitmaps/hospital.png"
   #size [143 59]
   boundary 1
-  name "hospital"
+  #name "hospital"
 )
 
 pioneer2dx( name "robot0" pose [12.829 13.723 -37.600] laser() blobfinder() )

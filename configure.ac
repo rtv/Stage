@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.13 2006-05-25 21:35:01 rtv Exp $
+dnl $Id: configure.ac,v 1.13.2.1 2006-09-14 07:11:55 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -51,41 +51,30 @@ dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
-dnl check for GTK stuff - we need it for the GUI
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4, ,
- AC_MSG_WARN([A suitable GTK+ was not found. GTK+-2.4 or later is required. ])
-)
-
-	
-dnl if GNOMECANVAS is requested and available, we use that for graphics
-AC_ARG_ENABLE(gnomecanvas,
-	      AC_HELP_STRING([--enable-gnomecanvas],[Use GnomeCanvas if available *EXPERIMENTAL (rtv)*]),
-	      [ if test "x$enableval" = "xyes"; then
-	      PKG_CHECK_MODULES(GNOME, libgnomecanvas-2.0 >= 2.0,
-	        gnome=true
-                AC_DEFINE(INCLUDE_GNOME,1,[building GnomeCanvas components]),
-	        AC_MSG_WARN([no suitable GnomeCanvas library was found. ])
-	        )
- 	        AC_MSG_RESULT([GnomeCanvas graphics will be used.])
-              else
-                gnome=false
-	        AC_MSG_RESULT([GnomeCanvas graphics disabled by user])
-              fi ],
-)
-
-AM_CONDITIONAL(GNOME, test x$gnome = xtrue)
-
 dnl for libstageplugin, we need Player 2.0 or higher
 PKG_CHECK_MODULES( PLAYER, playercore >= 2.0.1,
  AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin])
- have_player=yes
- ,
+ have_player=yes,
  AC_MSG_WARN([No suitable Player installation detected.])
  have_player=no
 )
 
-AM_CONDITIONAL(HAVE_PLAYER, [test $have_player = yes])
+AM_CONDITIONAL(HAVE_PLAYER, [test $have_player=yes])
 
+dnl check for glib
+dnl PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.4, ,
+dnl  AC_MSG_ERROR([A suitable GLib was not found. GLib-2.4 or later is required. ])
+dnl )
+
+PKG_CHECK_MODULES(GUI, gtkglext-1.0 >= 1.0, , 
+ AC_MSG_ERROR([Required library GtkGLExt not found. Install it and try again.]) 
+)
+
+dnl check for GTK - we need it for the GUI
+dnl PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4, ,
+dnl  AC_MSG_WARN([A suitable GTK+ was not found. GTK+-2.4 or later is required. ])
+dnl )
+	
 
 dnl for ptest, we need libplayerc
 dnl PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0,
@@ -118,11 +107,11 @@ AC_MSG_RESULT([])
 AC_MSG_RESULT([*************************************************************])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([Stage will be built for a $host system, with the following tools and options:])
-AC_MSG_RESULT([  C   compiler: $CC $CFLAGS])
-AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS])
+AC_MSG_RESULT([  C   compiler: $CC $CFLAGS ])
+AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS ])
 AC_MSG_RESULT([])
 
-if test "x$have_player" = "xyes"; then
+if test $have_player = yes; then
   AC_MSG_RESULT([The Player plugin (libstageplugin) will be built using the following flags: ])
   AC_MSG_RESULT([  compiler: $PLAYER_CFLAGS])
   AC_MSG_RESULT([    linker: $PLAYER_LIBS])
