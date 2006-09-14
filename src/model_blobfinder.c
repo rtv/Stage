@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.59 2006-01-31 07:32:30 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.59.4.1 2006-09-14 07:03:25 rtv Exp $
  */
 
 #include <math.h>
@@ -31,7 +31,6 @@
 #include "stage_internal.h"
 #include "gui.h"
 
-extern stg_rtk_fig_t* fig_debug_rays;
 
 #define STG_DEFAULT_BLOB_CHANNELCOUNT 6
 #define STG_DEFAULT_BLOB_SCANWIDTH 80
@@ -100,10 +99,8 @@ int blobfinder_shutdown( stg_model_t* mod );
 int blobfinder_update( stg_model_t* mod );
 void blobfinder_load( stg_model_t* mod );
 
-int blobfinder_render_data( stg_model_t* mod, void* userp );
-int blobfinder_unrender_data( stg_model_t* mod, void* userp );
-int blobfinder_render_cfg( stg_model_t* mod, void* userp );
-int blobfinder_unrender_cfg( stg_model_t* mod, void* userp );
+// implented by the gui in some other file
+void gui_blobfinder_init( stg_model_t* mod );
 
 int blobfinder_init( stg_model_t* mod )
 {
@@ -141,27 +138,9 @@ int blobfinder_init( stg_model_t* mod )
   
   stg_model_set_data( mod, NULL, 0 );
   stg_model_set_polygons( mod, NULL, 0 );
+
+  gui_blobfinder_init( mod );
   
-  stg_model_add_callback( mod, &mod->data, blobfinder_render_data, NULL );
-
-  stg_model_add_property_toggles( mod, &mod->data,
-				  blobfinder_render_data, // called when toggled on
-				  NULL,
-				  blobfinder_unrender_data, // called when toggled off
-				  NULL,
-				  "blob_data",
-				  "blob data",
-				  TRUE );
-
-  stg_model_add_property_toggles( mod, &mod->cfg,
-				  blobfinder_render_cfg, // called when toggled on
-				  NULL,
-				  blobfinder_unrender_cfg, // called when toggled off
-				  NULL,
-				  "blob_cfg",
-				  "blob config",
-				  FALSE );
-
   return 0; //ok
 }
 
@@ -295,8 +274,6 @@ int blobfinder_update( stg_model_t* mod )
 
   //int num_blobs = 0;
   stg_color_t col;
-
-  if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
 
   int s;
   for( s = 0; s < cfg->scan_width; s++)
@@ -456,135 +433,4 @@ int blobfinder_update( stg_model_t* mod )
   PRINT_DEBUG( "blobfinder data service done" );  
 
   return 0; //OK
-}
-
-int blobfinder_unrender_data( stg_model_t* mod, void* userp )
-{
-  stg_model_fig_clear( mod, "blob_data_fig" );
-  return 1;
-}
-
-int blobfinder_render_data( stg_model_t* mod, void* userp )
-{ 
-  PRINT_DEBUG( "blobfinder render" );  
-  
-  stg_blobfinder_blob_t *blobs = (stg_blobfinder_blob_t*)mod->data;
-  int num_blobs = mod->data_len / sizeof(stg_blobfinder_blob_t);
-
-    
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "blob_data_fig" );
-  
-  if( fig == NULL )
-    fig = stg_model_fig_create( mod, "blob_data_fig", NULL, STG_LAYER_BLOBDATA );
-  
-  stg_rtk_fig_clear( fig );
-
-  if( num_blobs < 1 )
-    return 0;
-
-  // place the visualization a little away from the device
-  stg_pose_t pose;
-  //memset(&pose, 0, sizeof(pose));
-  stg_model_get_global_pose( mod, &pose );
-  
-  pose.x -= 1.0;
-  pose.y += 1.0;
-  pose.a = 0.0;
-  stg_rtk_fig_origin( fig, pose.x, pose.y, pose.a );
-  
-  double scale = 0.01; // shrink from pixels to meters for display
-  
-  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg;  
-
-  
-  short width = cfg->scan_width;
-  short height = cfg->scan_height;
-  double mwidth = width * scale;
-  double mheight = height * scale;
-  
-  // the view outline rectangle
-  stg_rtk_fig_color_rgb32(fig, 0xFFFFFF);
-  stg_rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
-  stg_rtk_fig_color_rgb32(fig, 0x000000);
-  stg_rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
-  
-  int c;
-  for( c=0; c<num_blobs; c++)
-    {
-      stg_blobfinder_blob_t* blob = &blobs[c];
-      
-      // set the color from the blob data
-      stg_rtk_fig_color_rgb32( fig, blob->color ); 
-      
-      short top =   blob->top;
-      short bot =   blob->bottom;
-      short left =   blob->left;
-      short right =   blob->right;
-      
-      double mtop = top * scale;
-      double mbot = bot * scale;
-      double mleft = left * scale;
-      double mright = right * scale;
-      
-      // get the range in meters
-      //double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
-      
-      stg_rtk_fig_rectangle(fig, 
-			    -mwidth/2.0 + (mleft+mright)/2.0, 
-			    -mheight/2.0 +  (mtop+mbot)/2.0,
-			    0.0, 
-			    mright-mleft, 
-			    mbot-mtop, 
-			    1 );
-    }
-
-  return 0;
-}
-
-int blobfinder_unrender_cfg( stg_model_t* mod, void* userp )
-{
-  stg_rtk_fig_clear( stg_model_get_fig( mod, "blob_cfg_fig" ));
-  return 1;
-}
-
-int blobfinder_render_cfg( stg_model_t* mod, void* userp )
-{
-  PRINT_DEBUG( "blobfinder render config" );
-
-  // we MUST have a PTZ parent model
-  assert( mod->parent );
-  assert( mod->parent->f_startup == ptz_startup );
-  stg_ptz_data_t* ptz = (stg_ptz_data_t*)mod->parent->data;
-
-  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg;
-  assert(cfg);
-  
-  stg_pose_t* pose = &mod->pose;
-  
-  double ox = pose->x;
-  double oy = pose->y;
-  double mina = pose->a + (ptz->pan + ptz->zoom / 2.0);
-  double maxa = pose->a + (ptz->pan - ptz->zoom / 2.0);
-  
-  double dx = cfg->range_max * cos(mina);
-  double dy = cfg->range_max * sin(mina);
-  double ddx = cfg->range_max * cos(maxa);
-  double ddy = cfg->range_max * sin(maxa);
-  
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "blob_cfg_fig" );
-  
-  if( fig == NULL )
-    fig = stg_model_fig_create( mod, "blob_cfg_fig", "top", STG_LAYER_BLOBDATA );
-  
-  stg_rtk_fig_clear( fig );
-
-  stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
-  stg_rtk_fig_line( fig, ox,oy, dx, dy );
-  stg_rtk_fig_line( fig, ox,oy, ddx, ddy );
-  stg_rtk_fig_ellipse_arc( fig, 0,0,0,
-			   2.0*cfg->range_max,
-			   2.0*cfg->range_max,
-			   mina, maxa );
-
-  return 0;
 }

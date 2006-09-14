@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.61 $
+//  $Revision: 1.61.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,8 +29,6 @@ void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom );
 stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod, 
                                                stg_pose_t* pose, 
                                                double* hitx, double* hity );
-
-//extern stg_rtk_fig_t* fig_debug_rays;
 
 /** 
 @ingroup model
@@ -120,10 +118,9 @@ int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
 int position_update( stg_model_t* mod );
 void position_load( stg_model_t* mod );
-int position_render_data( stg_model_t* mod, void* userp );
-int position_unrender_data( stg_model_t* mod, void* userp );
-int position_render_text( stg_model_t* mod, void* userp );
-int position_unrender_text( stg_model_t* mod, void* userp );
+
+// implemented by the the GUI code
+void gui_position_init( stg_model_t* mod );
 
 void position_init( stg_model_t* mod )
 {
@@ -184,27 +181,8 @@ void position_init( stg_model_t* mod )
   
   stg_model_set_data( mod, &data, sizeof(data));
   
-#if ! INCLUDE_GNOME
-  stg_model_add_property_toggles( mod, 
-				  &mod->data,
- 				  position_render_data, // called when toggled on
- 				  NULL,
- 				  position_unrender_data, // called when toggled off
- 				  NULL,
-				  "positionlines",
- 				  "position lines",
-				  FALSE );
-
-  stg_model_add_property_toggles( mod, 
-				  &mod->data,
- 				  position_render_text, // called when toggled on
- 				  NULL,
- 				  position_unrender_text, // called when toggled off
- 				  NULL,
-				  "positiontext",
- 				  "position text",
-				  FALSE );
-#endif
+  gui_position_init( mod );
+  
 }
 
 
@@ -569,106 +547,3 @@ int position_shutdown( stg_model_t* mod )
   return 0; // ok
 }
 
-int position_unrender_data( stg_model_t* mod, void* userp )
-{
-  stg_model_fig_clear( mod, "position_data_fig" );
-  return 1;
-}
-
-int position_render_data( stg_model_t* mod, void* enabled )
-{
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "position_data_fig" );
-  
-  if( !fig )
-    {
-      fig = stg_model_fig_create( mod, "position_data_fig", 
-				  NULL, STG_LAYER_POSITIONDATA );      
-      stg_rtk_fig_color_rgb32( fig, mod->color ); 
-    }
-
-  stg_rtk_fig_clear(fig);
-	  
-  if( mod->subs )
-    {  
-      stg_position_data_t* odom = (stg_position_data_t*)mod->data;      
-      stg_velocity_t* vel = &mod->velocity;
-      stg_geom_t *geom = &mod->geom;
-
-      //printf( "odom pose [%.2f %.2f %.2f] origin [%.2f %.2f %.2f]\n",
-      //      odom->pose.x,
-      //      odom->pose.y,
-      //      odom->pose.a,
-      //      odom->origin.x,
-      //      odom->origin.y,
-      //      odom->origin.a );
-
-      // draw the coordinate system origin
-      stg_rtk_fig_origin( fig,  odom->origin.x, odom->origin.y, odom->origin.a );      
-
-      stg_rtk_fig_rectangle(  fig, 0,0,0, geom->size.x,geom->size.y, 0 );
-      stg_rtk_fig_arrow( fig, 0,0,0, 
-			 geom->size.x/2.0, geom->size.y/2.0 );      
-
-      // connect the origin to the estimated location
-      stg_rtk_fig_line( fig, 0,0, odom->pose.x, 0);
-      stg_rtk_fig_line( fig, odom->pose.x, 0, odom->pose.x, odom->pose.y );
-      
-      // draw an outline of the position model at it's estimated location
-      stg_rtk_fig_rectangle(  fig, 
-			      odom->pose.x, odom->pose.y, odom->pose.a,
-			      geom->size.x, geom->size.y, 0 );
-      stg_rtk_fig_arrow( fig, 
-			 odom->pose.x, odom->pose.y, odom->pose.a, 
-			 geom->size.x/2.0, geom->size.y/2.0 );        
-
-/*       char buf[256]; */
-/*       snprintf( buf, 255, "%s[%.2f, %.2f, %.1f]\nv[%.2f,%.2f,%.1f] %s\n",  */
-/* 		odom->localization == STG_POSITION_LOCALIZATION_GPS ? "GPS" : "odom", */
-/* 		odom->pose.x, odom->pose.y, odom->pose.a, */
-/* 		vel->x, vel->y, vel->a, */
-/* 		mod->stall ? "STALL" : "" ); */
-      
-/*       stg_rtk_fig_text( fig, odom->pose.x + 0.4, odom->pose.y + 0.2, 0, buf ); */
-
-    }
-
-  return 0;
-}
-
-int position_unrender_text( stg_model_t* mod, void* userp )
-{
-  stg_model_fig_clear( mod, "position_text_fig" );
-  return 1;
-}
-
-int position_render_text( stg_model_t* mod, void* enabled )
-{
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "position_text_fig" );
-  
-  if( !fig )
-    {
-      fig = stg_model_fig_create( mod, "position_text_fig", 
-				  NULL, STG_LAYER_POSITIONDATA );      
-      stg_rtk_fig_color_rgb32( fig, mod->color ); 
-    }
-
-  stg_rtk_fig_clear(fig);
-	  
-  if( mod->subs )
-    {  
-      stg_position_data_t* odom = (stg_position_data_t*)mod->data;      
-      stg_velocity_t* vel = &mod->velocity;
-
-      char buf[256];
-      snprintf( buf, 255, "%s[%.2f, %.2f, %.1f]\nv[%.2f,%.2f,%.1f] %s\n", 
-		odom->localization == STG_POSITION_LOCALIZATION_GPS ? "GPS" : "odom",
-		odom->pose.x, odom->pose.y, odom->pose.a,
-		vel->x, vel->y, vel->a,
-		mod->stall ? "STALL" : "" );
-      
-      stg_rtk_fig_text( fig, odom->pose.x + 0.4, odom->pose.y + 0.2, 0, buf );
-
-    }
-
-  return 0;
-}

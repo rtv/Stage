@@ -1,4 +1,5 @@
-
+#ifndef GUI_H
+#define GUI_H
 // GUI constants
 
 #define STG_LAYER_BACKGROUND 10
@@ -93,3 +94,107 @@
 
 #define STG_LAYER_SPEECHDATA 88
 #define STG_SPEECH_COLOR "navy"
+
+//#include "config.h"
+
+
+//#include <gtk/gtk.h>
+/* #include <gtk/gtkgl.h> */
+/* #include <gdk/gdkglglext.h> */
+/* #include <GL/gl.h> */
+/* #include <GL/glu.h> */
+
+#include "stage_internal.h"
+
+// default GUI window refresh interval in milliseconds
+#define STG_DEFAULT_REDRAW_INTERVAL 100
+
+/// Define a point in 3D space
+typedef struct
+{
+  double x,y,z;
+} stg_point_3d_t;
+
+  /** Defines the GUI window */
+struct _gui_window
+{
+  // the interval between window redraws, in milliseconds
+  //int redraw_interval;
+  //guint timeout_id; // identifier of the glib timeout signal source
+  
+  // Gtk stuff
+  GtkWidget* frame;    
+  GtkWidget *layout;
+  GtkWidget *menu_bar;
+  //GtkWidget* scrolled_win;
+  
+  // The status bar widget
+  GtkStatusbar *status_bar;
+  GtkProgressBar *perf_bar;
+  GtkProgressBar *rt_bar;
+  GtkLabel *clock_label;
+  
+  // the main drawing widget
+  GtkWidget* canvas;
+  int dirty;
+  
+  int draw_list;
+  
+  stg_radians_t stheta; ///< view rotation about x axis
+  stg_radians_t sphi; ///< view rotation about x y axis
+  double scale; ///< view scale
+  double panx; ///< pan along x axis in meters
+  double pany; ///< pan along y axis in meters
+  
+  stg_point_t click_point; ///< The place where the most recent
+  ///< mouse click happened, in world coords
+    
+  // fall back to vintage RTK style
+  /*     stg_rtk_canvas_t* canvas; */
+  /*     stg_rtk_fig_t* bg; // background */
+  /*     stg_rtk_fig_t* matrix; */
+  /*     stg_rtk_fig_t* matrix_tree; */
+  /*     stg_rtk_fig_t* poses; */
+  
+  stg_world_t* world; // every window shows a single world
+  
+  GtkStatusbar* statusbar;
+  GtkLabel* timelabel;
+  
+  int wf_section; // worldfile section for load/save
+  
+  gboolean follow_selection;
+  gboolean show_matrix;  
+  gboolean fill_polygons;
+  gboolean show_geom;
+  gboolean show_polygons;
+  gboolean show_grid;
+  gboolean show_data;
+  gboolean show_cfg;
+  gboolean show_cmd;
+  gboolean show_alpha;
+  gboolean show_thumbnail;
+  
+  gboolean dragging;
+  
+  int frame_series;
+  int frame_index;
+  int frame_callback_tag;
+  int frame_interval;
+  int frame_format;
+  
+  stg_model_t* selection_active;
+  stg_model_t* selection_last;
+  stg_pose_t selection_pose_start;
+  stg_point_3d_t selection_pointer_start;
+  
+  GList* toggle_list;  
+};
+
+void  signal_destroy( GtkObject *object, gpointer user_data );
+gboolean  signal_delete( GtkWidget *widget, GdkEvent *event, gpointer user_data );
+
+void gui_enable_alpha( stg_world_t* world, int enable );
+GtkWidget* gui_create_canvas( stg_world_t* world );
+
+#endif // GUI_H

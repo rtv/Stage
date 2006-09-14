@@ -104,19 +104,22 @@ void stg_print_velocity( stg_velocity_t* vel )
 	  vel->x, vel->y, vel->a );
 }
 
-stg_msec_t stg_timenow( void )
+stg_msec_t stg_realtime( void )
 {
   struct timeval tv;
-  static stg_msec_t starttime = 0;
-  
-  gettimeofday( &tv, NULL );
-  
+  gettimeofday( &tv, NULL );  
   stg_msec_t timenow = (stg_msec_t)( tv.tv_sec*1000 + tv.tv_usec/1000 );
-  
+  return timenow;
+}
+
+stg_msec_t stg_realtime_since_start( void )
+{
+  static stg_msec_t starttime = 0;  
+  stg_msec_t timenow = stg_realtime();
   
   if( starttime == 0 )
     starttime = timenow;
-  
+    
   return( timenow - starttime );
 }
 
@@ -338,6 +341,33 @@ stg_line_t* stg_rotrects_to_lines( stg_rotrect_t* rects, int num_rects )
   return lines;
 }
 
+/* /// Converts an array of rectangles to an array of the same number of */
+/* /// polylines of the same length */
+/* stg_polyline_t* stg_polylines_from_polygons( stg_polygon_t* polygons, int polygon_count ) */
+/* { */
+/*   stg_polyline_t* lines = (stg_polyline_t*)calloc( sizeof(stg_polyline_t), num_lines ); */
+  
+/*   int r; */
+/*   for( r=0; r<num_rects; r++ ) */
+/*     { */
+/*       lines[r] = (stg_point_t*)calloc( sizeof(stg_point), 5 ); */
+/*       lines[r].points_count = 5; */
+
+/*       lines[r].points[0].x = rects[r].pose.x; */
+/*       lines[r].points[0].y = rects[r].pose.y; */
+/*       lines[r].points[1].x = rects[r].pose.x + rects[r].size.x; */
+/*       lines[r].points[1].y = rects[r].pose.y; */
+/*       lines[r].points[2].x = rects[r].pose.x + rects[r].size.x; */
+/*       lines[r].points[2].y = rects[r].pose.y + rects[r].size.y; */
+/*       lines[r].points[3].x = rects[r].pose.x; */
+/*       lines[r].points[3].y = rects[r].pose.y + rects[r].size.y; */
+/*       lines[r].points[4].x = rects[r].pose.x; */
+/*       lines[r].points[4].y = rects[r].pose.y; */
+/*     } */
+  
+/*   return lines; */
+/* } */
+
 /// converts an array of rectangles into an array of polygons
 stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count,
 					   double width, double height )
@@ -367,6 +397,7 @@ stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count,
   
   return polys;
 }
+
 
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
@@ -542,9 +573,11 @@ int stg_rotrects_from_image_file( const char* filename,
 	  gdk_pixbuf_get_rowstride(pb),
 	  gdk_pixbuf_get_pixels(pb) );
 #endif
-
+  
   *rect_count = 0;
-  *rects = NULL;
+  size_t allocation_unit = 1000;
+  size_t rects_allocated = allocation_unit;
+  *rects = malloc( rects_allocated * sizeof(stg_rotrect_t) );
   
   int img_width = gdk_pixbuf_get_width(pb);
   int img_height = gdk_pixbuf_get_height(pb);
@@ -598,12 +631,21 @@ int stg_rotrects_from_image_file( const char* filename,
 	  
 	  // add this rectangle to the array
 	  (*rect_count)++;
-	  *rects = (stg_rotrect_t*)
-	    realloc( *rects, *rect_count * sizeof(stg_rotrect_t) );
 	  
+	  if( (*rect_count) > rects_allocated )
+	    {
+	      rects_allocated = (*rect_count) + allocation_unit;
+	      
+	      *rects = (stg_rotrect_t*)
+		realloc( *rects, rects_allocated * sizeof(stg_rotrect_t) );
+	    }
+
+	  //  y-invert all the rectangles because we're using conventional
+	  // rather than graphics coordinates. this is much faster than
+	  // inverting the original image.
 	  stg_rotrect_t *latest = &(*rects)[(*rect_count)-1];
 	  latest->pose.x = startx;
-	  latest->pose.y = starty;
+	  latest->pose.y = img_height - (starty + height);
 	  latest->pose.a = 0.0;
 	  latest->size.x = x - startx;
 	  latest->size.y = height;
@@ -617,21 +659,9 @@ int stg_rotrects_from_image_file( const char* filename,
   
   // free the image data
   gdk_pixbuf_unref( pb );
-
-  // now y-invert all the rectangles because we're using conventional
-  // rather than graphics coordinates. this is much faster than
-  // inverting the original image.
-  int r;
-  for( r=0; r< *rect_count; r++ )
-    {
-      stg_rotrect_t *rect = &(*rects)[r]; 
-      rect->pose.y = img_height - rect->pose.y;
-      rect->size.y = -rect->size.y;
-    }
-  
-
   return 0; // ok
 }
+
 
 // POINTS -----------------------------------------------------------
 

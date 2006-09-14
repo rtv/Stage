@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_puck.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.1.4.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,12 +20,9 @@
 
 #include "stage_internal.h"
 
-void puck_load( stg_model_t* mod )
-{
-
-}
-
-int puck_update( stg_model_t* mod );
+// declare functions used as callbacks
+static void puck_load( stg_model_t* mod );
+static int puck_update( stg_model_t* mod );
 
 int puck_init( stg_model_t* mod )
 {
@@ -49,7 +46,14 @@ int puck_init( stg_model_t* mod )
   // set default color
   stg_model_set_color( mod, 0x00FF00 ); // green
   
+  // we don't need special gui elements for a puck, so there's no gui_puck_init()
+
    return 0;
+}
+
+void puck_load( stg_model_t* mod )
+{
+  // nothing to do
 }
 
 int puck_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
@@ -99,8 +103,6 @@ int puck_update( stg_model_t* mod )
   gettimeofday( &tv1, NULL );
 #endif
       
-  if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
-
   // make a scan buffer (static for speed, so we only have to allocate
   // memory when the number of samples changes).
   static stg_puck_sample_t* scan = 0;

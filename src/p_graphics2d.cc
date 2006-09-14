@@ -23,13 +23,20 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics2d.cc,v 1.5 2006-04-19 19:32:35 gerkey Exp $
+ * CVS: $Id: p_graphics2d.cc,v 1.5.2.1 2006-09-14 07:03:25 rtv Exp $
  */
 
 #include "p_driver.h"
 
 #include <iostream>
 using namespace std;
+
+stg_rtk_fig_t* stg_model_get_fig( stg_model_t* mod, const char* figname );
+stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod, 
+				     const char* figname, 
+				     const char* parentname, 
+				     int layer );
+
 
 // DOCUMENTATION ------------------------------------------------------------
 

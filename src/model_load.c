@@ -2,6 +2,7 @@
 #include <limits.h> 
 #include "stage_internal.h"
 
+
 void stg_model_load( stg_model_t* mod )
 {
   //const char* typestr = wf_read_string( mod->id, "type", NULL );
@@ -23,40 +24,86 @@ void stg_model_load( stg_model_t* mod )
   if( wf_property_exists( mod->id, "origin" ) )
     {
       stg_geom_t geom;
-      geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, mod->geom.pose.x );
-      geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, mod->geom.pose.y );
-      geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, mod->geom.pose.a );
-      geom.size.x = mod->geom.size.x;
-      geom.size.y = mod->geom.size.y;
+      stg_model_get_geom( mod, &geom );
+
+      geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, geom.pose.x );
+      geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, geom.pose.y );
+      geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, geom.pose.a );
+
+      stg_model_set_geom( mod, &geom );
+    }
+
+  if( wf_property_exists( mod->id, "origin3d" ) )
+    {
+      stg_geom_t geom;
+      stg_model_get_geom( mod, &geom );
+
+      geom.pose.x = wf_read_tuple_length(mod->id, "origin3d", 0, geom.pose.x );
+      geom.pose.y = wf_read_tuple_length(mod->id, "origin3d", 1, geom.pose.y );
+      geom.pose.z = wf_read_tuple_length(mod->id, "origin3d", 2, geom.pose.z );
+      geom.pose.a = wf_read_tuple_length(mod->id, "origin3d", 3, geom.pose.a );
+
       stg_model_set_geom( mod, &geom );
     }
   
   if( wf_property_exists( mod->id, "size" ) )
     {
       stg_geom_t geom;
-      geom.pose.x = mod->geom.pose.x;
-      geom.pose.y = mod->geom.pose.y;
-      geom.pose.a = mod->geom.pose.a;
+      stg_model_get_geom( mod, &geom );
+      
       geom.size.x = wf_read_tuple_length(mod->id, "size", 0, mod->geom.size.x );
       geom.size.y = wf_read_tuple_length(mod->id, "size", 1, mod->geom.size.y );
+
       stg_model_set_geom( mod, &geom );
     }
-  
+    
+  if( wf_property_exists( mod->id, "size3d" ) )
+    {
+      stg_geom_t geom;
+      stg_model_get_geom( mod, &geom );
+      
+      geom.size.x = wf_read_tuple_length(mod->id, "size3d", 0, mod->geom.size.x );
+      geom.size.y = wf_read_tuple_length(mod->id, "size3d", 1, mod->geom.size.y );
+      geom.size.z = wf_read_tuple_length(mod->id, "size3d", 2, mod->geom.size.z );
+      
+      stg_model_set_geom( mod, &geom );
+    }
+
   if( wf_property_exists( mod->id, "pose" ))
     {
       stg_pose_t pose;
-      pose.x = wf_read_tuple_length(mod->id, "pose", 0, mod->pose.x );
-      pose.y = wf_read_tuple_length(mod->id, "pose", 1, mod->pose.y ); 
-      pose.a = wf_read_tuple_angle(mod->id, "pose", 2,  mod->pose.a );
+      stg_model_get_pose( mod, &pose );
+      
+      pose.x = wf_read_tuple_length(mod->id, "pose", 0, pose.x );
+      pose.y = wf_read_tuple_length(mod->id, "pose", 1, pose.y ); 
+      pose.a = wf_read_tuple_angle(mod->id, "pose", 2,  pose.a );
+
       stg_model_set_pose( mod, &pose );
     }
+
+  if( wf_property_exists( mod->id, "pose3d" ))
+    {
+      stg_pose_t pose;
+      stg_model_get_pose( mod, &pose );
+      
+      pose.x = wf_read_tuple_length(mod->id, "pose3d", 0, pose.x );
+      pose.y = wf_read_tuple_length(mod->id, "pose3d", 1, pose.y ); 
+      pose.z = wf_read_tuple_angle(mod->id, "pose3d", 2,  pose.z );
+      pose.a = wf_read_tuple_angle(mod->id, "pose3d", 3,  pose.a );
+      
+      stg_model_set_pose( mod, &pose );
+    }
+
   
   if( wf_property_exists( mod->id, "velocity" ))
     {
       stg_velocity_t vel;
-      vel.x = wf_read_tuple_length(mod->id, "velocity", 0, mod->velocity.x );
-      vel.y = wf_read_tuple_length(mod->id, "velocity", 1, mod->velocity.y );
-      vel.a = wf_read_tuple_angle(mod->id, "velocity", 2,  mod->velocity.a );      
+      stg_model_get_velocity( mod, &vel );
+      
+      vel.x = wf_read_tuple_length(mod->id, "velocity", 0, vel.x );
+      vel.y = wf_read_tuple_length(mod->id, "velocity", 1, vel.y );
+      vel.a = wf_read_tuple_angle(mod->id, "velocity", 2,  vel.a );      
+
       stg_model_set_velocity( mod, &vel );
     }
   
@@ -157,14 +204,21 @@ void stg_model_load( stg_model_t* mod )
 	      full );
 #endif
       
-      polys = stg_polygons_from_image_file( full, &polycount );
-      
+      polys = stg_polygons_from_image_file( full, &polycount );      
       if( ! polys )
 	PRINT_ERR1( "Failed to load polygons from image file \"%s\"", full );
+      
+      /* stg_line_t* lines = NULL; */
+/*       size_t linecount = 0; */
+/*       plines = stg_polylines_from_rotrects( full, &linecount );       */
+/*       printf( "%d rectangles created %d lines\n", */
+/* 	      polycount, linecount ); */
+/*       stg_model_set_lines( mod, lines, linecount ); */
+
     }
   
-  int wf_polycount = wf_read_int( mod->id, "polygons", 0 );
-  if( wf_polycount > 0 )
+  int wf_polycount = wf_read_int( mod->id, "polygons", -1 );
+  if( wf_polycount != -1 )
     {
       polycount = wf_polycount;
       //printf( "expecting %d polygons\n", polycount );

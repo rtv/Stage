@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.c,v 1.17 2006-04-19 19:32:35 gerkey Exp $
+// CVS: $Id: stest.c,v 1.17.2.1 2006-09-14 07:03:25 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -38,7 +38,7 @@ int main( int argc, char* argv[] )
   // initialize libstage
   stg_init( argc, argv );
 
-  stg_world_t* world = stg_world_create_from_file( argv[1] );
+  stg_world_t* world = stg_world_create_from_file( 0, argv[1] );
   
   char* robotname = argv[2];
 
@@ -68,7 +68,7 @@ int main( int argc, char* argv[] )
   double newspeed = 0.0;
   double newturnrate = 0.0;
 
-  stg_world_set_interval_real( world, 0 );
+  //stg_world_set_interval_real( world, 0 );
 
   while( (stg_world_update( world,0 )==0) )
     {

@@ -6,8 +6,8 @@
  * License: GPL v2
  * CVS info:
  *  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptest.c,v $
- *  $Author: gerkey $
- *  $Revision: 1.4 $
+ *  $Author: rtv $
+ *  $Revision: 1.4.6.1 $
  */
 
 #include <stdio.h>

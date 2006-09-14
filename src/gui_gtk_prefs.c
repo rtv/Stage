@@ -12,7 +12,7 @@
 #include <gtk/gtk.h>
 
 //#include "callbacks.h"
-//#include "interface.h"x
+//#include "interface.h"
 //#include "support.h"
 
 #define _(X) (X)

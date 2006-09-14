@@ -12,20 +12,11 @@
 #include "stage_internal.h"
 #include "gui.h"
 
-#if INCLUDE_GNOME
- #include "gnome.h"
-#endif
-
   // basic model
 #define STG_DEFAULT_MASS 10.0  // kg
-#define STG_DEFAULT_POSEX 0.0  // start at the origin by default
-#define STG_DEFAULT_POSEY 0.0
-#define STG_DEFAULT_POSEA 0.0
-#define STG_DEFAULT_GEOM_POSEX 0.0 // no origin offset by default
-#define STG_DEFAULT_GEOM_POSEY 0.0
-#define STG_DEFAULT_GEOM_POSEA 0.0
 #define STG_DEFAULT_GEOM_SIZEX 1.0 // 1m square by default
 #define STG_DEFAULT_GEOM_SIZEY 1.0
+#define STG_DEFAULT_GEOM_SIZEZ 1.0
 #define STG_DEFAULT_OBSTACLERETURN TRUE
 #define STG_DEFAULT_LASERRETURN LaserVisible
 #define STG_DEFAULT_RANGERRETURN TRUE
@@ -385,9 +376,10 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->f_shutdown = NULL;
   mod->f_update = _model_update;
 
-  mod->geom.size.x = 1.0;
-  mod->geom.size.y = 1.0;
-
+  mod->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
+  mod->geom.size.y = STG_DEFAULT_GEOM_SIZEX;
+  mod->geom.size.z = STG_DEFAULT_GEOM_SIZEX;
+  
   mod->obstacle_return = 1;
   mod->ranger_return = 1;
   mod->blob_return = 1;
@@ -401,68 +393,14 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->gui_outline = STG_DEFAULT_OUTLINE;
   mod->gui_mask = mod->parent ? 0 : STG_DEFAULT_MASK;
 
-  
-/*   stg_point_t *pts = calloc( sizeof(stg_point_t), 3); */
-/*   pts[0].x = 0.0; */
-/*   pts[0].y = 0.0; */
-/*   pts[1].x = 1.0; */
-/*   pts[1].y = 0.0; */
-/*   pts[2].x = 1.0; */
-/*   pts[2].y = 1.0; */
-  
-/*   stg_polyline_t* pline = calloc( sizeof(stg_polyline_t),1 ); */
-/*   pline->points = pts; */
-/*   pline->points_count = 3; */
-
-/*   mod->lines = pline; */
-/*   mod->lines_count = 1; */
-
   // now it's safe to create the GUI components
   if( mod->world->win )
-    gui_model_create( mod );
+    gui_model_init( mod );
 
-  // GUI callbacks - draw changes
-
-
-#if INCLUDE_GNOME
-  gc_model_init( mod );
-
-
-#else
-  stg_model_add_callback( mod, &mod->pose, gui_model_move, NULL );
-
-  // changes in any of these properties require a redraw of the model
-  stg_model_add_callback( mod, &mod->polygons, gui_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->color, gui_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->gui_nose, gui_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->gui_outline, gui_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->parent, gui_model_polygons, NULL );
-  
-  stg_model_add_callback( mod, &mod->lines, gui_model_lines, NULL );
-
-  // these changes can be handled without a complete redraw
-  stg_model_add_callback( mod, &mod->gui_grid, gui_model_grid, NULL );
-  stg_model_add_callback( mod, &mod->gui_mask, gui_model_mask, NULL );
-  stg_model_add_callback( mod, &mod->parent, gui_model_mask, NULL );
-#endif
 
   // now we can add the basic square shape
   stg_polygon_t* square = stg_unit_polygon_create();
   stg_model_set_polygons( mod, square, 1 );
-
-/* #if INCLUDE_GNOME */
-/*   GnomeCanvasGroup* parent_grp = */
-/*     mod->parent ? mod->parent->grp : gnome_canvas_root( mod->world->win->gcanvas ); */
-  
-/*   mod->grp = GNOME_CANVAS_GROUP( */
-/*     gnome_canvas_item_new( parent_grp, */
-/* 			   gnome_canvas_group_get_type(), */
-/* 			   "x", mod->pose.x, */
-/* 			   "y", mod->pose.y, */
-/* 			   NULL )); */
-
-/*   gnome_canvas_item_raise_to_top( GNOME_CANVAS_ITEM(mod->grp) ); */
-/* #endif */
 
   // exterimental: creates a menu of models
   // gui_add_tree_item( mod );
@@ -476,18 +414,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
   if( mod->typerec->initializer )
     mod->typerec->initializer(mod);
   
-#if ! INCLUDE_GNOME
-  stg_model_add_property_toggles( mod, 
-				  &mod->velocity,
- 				  model_render_velocity, // called when toggled on
- 				  NULL,
- 				  model_unrender_velocity, // called when toggled off
- 				  NULL,
-				  "velocityvector",
- 				  "velocity vector",
-				  FALSE );
-#endif
-
 
   return mod;
 }
@@ -500,7 +426,8 @@ void stg_model_destroy( stg_model_t* mod )
   // remove from parent, if there is one
   if( mod->parent && mod->parent->children ) g_ptr_array_remove( mod->parent->children, mod );
   
-  // free all local stuff
+  // free all local stuff 
+  // TODO - make sure this is up to date - check leaks with valgrind
   if( mod->world->win ) gui_model_destroy( mod );
   if( mod->children ) g_ptr_array_free( mod->children, FALSE );
   if( mod->callbacks ) g_hash_table_destroy( mod->callbacks );
@@ -620,6 +547,9 @@ void  stg_model_get_global_pose( stg_model_t* mod, stg_pose_t* gpose )
       gpose->y = parent_pose.y + pose->x * sin(parent_pose.a) 
 	+ pose->y * cos(parent_pose.a);
       gpose->a = NORMALIZE(parent_pose.a + pose->a);
+
+      // no 3Dg geometry, as we can only rotate about the z axis (yaw)
+      gpose->z = parent_pose.z + mod->parent->geom.size.z + pose->z;
     }
   else
     memcpy( gpose, pose, sizeof(stg_pose_t));
@@ -744,26 +674,6 @@ void stg_model_print( stg_model_t* mod, char* prefix )
 void model_print_cb( gpointer key, gpointer value, gpointer user )
 {
   stg_model_print( (stg_model_t*)value, NULL );
-}
-
-
-
-void stg_get_default_pose( stg_pose_t* pose )
-{
-  assert(pose);
-  pose->x = STG_DEFAULT_GEOM_POSEX;
-  pose->y = STG_DEFAULT_GEOM_POSEY;
-  pose->a = STG_DEFAULT_GEOM_POSEA;
-}
-
-void stg_get_default_geom( stg_geom_t* geom )
-{
-  assert(geom);
-  geom->pose.x = STG_DEFAULT_GEOM_POSEX;
-  geom->pose.y = STG_DEFAULT_GEOM_POSEY;
-  geom->pose.a = STG_DEFAULT_GEOM_POSEA;  
-  geom->size.x = STG_DEFAULT_GEOM_SIZEX;
-  geom->size.y = STG_DEFAULT_GEOM_SIZEY;
 }
 
 
@@ -1223,7 +1133,6 @@ int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent)
 }
 
 
-extern stg_rtk_fig_t* fig_debug_rays; 
 
 int lines_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
@@ -1271,8 +1180,6 @@ stg_model_t* stg_model_test_collision( stg_model_t* mod,
   // no body? no collision
   if( count < 1 )
     return NULL;
-
-  if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
 
   // loop over all polygons
   int q;
@@ -1364,7 +1271,7 @@ int stg_model_update_pose( stg_model_t* mod )
   // check this model and all it's children at the new pose
   double hitx=0, hity=0, hita=0;
   stg_model_t* hitthing =
-    stg_model_test_collision( mod, &hitx, &hity );
+    NULL; //stg_model_test_collision( mod, &hitx, &hity );
 
   int stall = 0;
       
@@ -1506,154 +1413,102 @@ int stg_model_tree_to_ptr_array( stg_model_t* root, GPtrArray* array )
 
 #define GLOBAL_VECTORS 0
 
-int model_unrender_velocity( stg_model_t* mod, void* userp )
-{
-  stg_model_fig_clear( mod, "model_velocity_fig" );
 
-#if GLOBAL_VECTORS
-  stg_model_fig_clear( mod, "global_velocity_fig" );
-#endif
-  return 1;
-}
+#define MATCH(A,B) (strcmp(A,B)== 0)
 
-int model_render_velocity( stg_model_t* mod, void* enabled )
-{
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "model_velocity_fig" );
-  
-  if( !fig )
-    {
-      fig = stg_model_fig_create( mod, "model_velocity_fig", 
-				  "top", STG_LAYER_POSITIONDATA );      
-      stg_rtk_fig_color_rgb32( fig, mod->color ); 
-    }
-  
-  stg_rtk_fig_clear(fig);
-  
-  stg_velocity_t* v = &mod->velocity;
-
-  if( v->x != 0 || v->y != 0 || v->a != 0 )
-    {
-      stg_rtk_fig_arrow( fig, 0,0,0, v->x, 0.05 );
-      stg_rtk_fig_arrow( fig, 0,0,M_PI/2.0, v->y, 0.05 );
-      
-      // how to do the turn speed?
-      //stg_rtk_fig_arrow( fig, 0,0,M_PI/2.0, vel->a, 0.05 );
-
-      stg_rtk_fig_ellipse_arc( fig, 0,0,0,
-			       mod->geom.size.x, mod->geom.size.y, 
-			       0, v->a );
-
-
-#if GLOBAL_VECTORS
-      stg_rtk_fig_t* fig = stg_model_get_fig( mod, "global_velocity_fig" );
-      
-      if( !fig )
-	{
-	  fig = stg_model_fig_create( mod, "global_velocity_fig", 
-				      NULL, STG_LAYER_POSITIONDATA );      
-	  stg_rtk_fig_color_rgb32( fig, 0 ); 
-	}
-      
-      stg_rtk_fig_clear(fig);
-      
-      stg_velocity_t gv;
-      stg_model_get_global_velocity( mod, &gv );
-      stg_pose_t gp;
-      stg_model_get_global_pose( mod, &gp );
-      
-      stg_rtk_fig_arrow( fig, gp.x, gp.y, 0, 
-			 gv.x, 0.05 );
-      stg_rtk_fig_arrow( fig, gp.x, gp.y, M_PI/2.0, 
-			 gv.y, 0.05 );
-      
-      stg_rtk_fig_line( fig, gp.x+gv.x, gp.y, gp.x+gv.x, gp.y+gv.y );
-      stg_rtk_fig_line( fig, gp.x, gp.y+gv.y, gp.x+gv.x, gp.y+gv.y );
-#endif      
-    }
-
-  return 0;
-}
-
-
-//#define ISPROP(A,B) (strncmp( A, B, strlen(B) == 0 ))
-
-int ISPROP( char* name, char* match )
+/*int ISPROP( char* name, char* match )
 {
   return( strcmp( name, match ) == 0 );
 }
-
-int stg_model_set_property_named( stg_model_t* mod, 
-				  char* name, 
-				  void* value )
-{
-  PRINT_MSG1( "Looking up named property \"%s\"\n", name );
-  
-  if( ISPROP(name,STG_MP_FIDUCIAL_RETURN) )
-    {
-      stg_model_set_fiducial_return( mod, *(int*)value );
-      return 0;
-    }
-  if( ISPROP( name, STG_MP_LASER_RETURN ) )
-    {
-      stg_model_set_laser_return( mod, *(int*)value );
-      return 0;
-    }
-  if( ISPROP( name, STG_MP_OBSTACLE_RETURN ) )
-    {
-      stg_model_set_obstacle_return( mod, *(int*)value );
-      return 0;
-    }
-  if( ISPROP( name, STG_MP_RANGER_RETURN ) )
-    {
-      stg_model_set_ranger_return( mod, *(int*)value );
-      return 0;
-    }
-  if( ISPROP( name, STG_MP_GRIPPER_RETURN ) )
-    {
-      stg_model_set_gripper_return( mod, *(int*)value );
-      return 0;
-    }
-  if( ISPROP( name, STG_MP_COLOR ) )
-    {
-      stg_model_set_color( mod, *(int*)value );
-      return 0;
-    }
-  if( ISPROP( name, STG_MP_MASS ) )
-    {
-      stg_model_set_mass( mod, *(double*)value );
-      return 0;
-    }
-  if( ISPROP( name, STG_MP_WATTS ) )
-    {
-      stg_model_set_watts( mod, *(double*)value );
-      return 0;
-    }
-  
-  PRINT_ERR1( "Unknown property name with system prefix \"%s\"\n", name );
-  return 1; // error code
-}
+*/
 
 
 int stg_model_set_property( stg_model_t* mod,
-			     char* key,
+			    char* key,
 			    void* data )
 {
   // see if the key has the predefined-property prefix
   if( strncmp( key, STG_MP_PREFIX, strlen(STG_MP_PREFIX)) == 0 )
-    return stg_model_set_property_named( mod, key, data );
-  else
-    g_datalist_set_data( &mod->props, key, data );
-  
+    {
+      PRINT_DEBUG1( "Looking up model core property \"%s\"\n", key );
+      
+      if( MATCH(key,STG_MP_FIDUCIAL_RETURN) )
+	{
+	  stg_model_set_fiducial_return( mod, *(int*)data );
+	  return 0;
+	}
+      if( MATCH( key, STG_MP_LASER_RETURN ) )
+	{
+	  stg_model_set_laser_return( mod, *(int*)data );
+	  return 0;
+	}
+      if( MATCH( key, STG_MP_OBSTACLE_RETURN ) )
+	{
+	  stg_model_set_obstacle_return( mod, *(int*)data );
+	  return 0;
+	}
+      if( MATCH( key, STG_MP_RANGER_RETURN ) )
+	{
+	  stg_model_set_ranger_return( mod, *(int*)data );
+	  return 0;
+	}
+      if( MATCH( key, STG_MP_GRIPPER_RETURN ) )
+	{
+	  stg_model_set_gripper_return( mod, *(int*)data );
+	  return 0;
+	}
+      if( MATCH( key, STG_MP_COLOR ) )
+	{
+	  stg_model_set_color( mod, *(int*)data );
+	  return 0;
+	}
+      if( MATCH( key, STG_MP_MASS ) )
+	{
+	  stg_model_set_mass( mod, *(double*)data );
+	  return 0;
+	}
+      if( MATCH( key, STG_MP_WATTS ) )
+	{
+	  stg_model_set_watts( mod, *(double*)data );
+	  return 0;
+	}
+      
+      PRINT_ERR1( "Attempt to set non-existent model core property \"%s\"", key );
+      return 1; // error code
+    }
+
+  // otherwise it's an arbitary property and we store the pointer
+  g_datalist_set_data( &mod->props, key, data ); 
   return 0; // ok
-}
-
-
-void stg_model_unset_property( stg_model_t* mod, char* key )
-{
-  g_datalist_remove_data( &mod->props, key );
 }
 
 void* stg_model_get_property( stg_model_t* mod, char* key )
 {
+  // see if the key has the predefined-property prefix
+  if( strncmp( key, STG_MP_PREFIX, strlen(STG_MP_PREFIX)) == 0 )
+    {
+      if( MATCH( key, STG_MP_COLOR))            return (void*)&mod->color;
+      if( MATCH( key, STG_MP_MASS))             return (void*)&mod->mass;
+      if( MATCH( key, STG_MP_WATTS))            return (void*)&mod->watts;
+      if( MATCH( key, STG_MP_FIDUCIAL_RETURN))  return (void*)&mod->fiducial_return;
+      if( MATCH( key, STG_MP_LASER_RETURN))     return (void*)&mod->laser_return;
+      if( MATCH( key, STG_MP_OBSTACLE_RETURN))  return (void*)&mod->obstacle_return;
+      if( MATCH( key, STG_MP_RANGER_RETURN))    return (void*)&mod->ranger_return;
+      if( MATCH( key, STG_MP_GRIPPER_RETURN))   return (void*)&mod->gripper_return;
+
+      PRINT_WARN1( "Requested non-existent model core property \"%s\"", key );
+      return NULL;
+    }
+  
+  // otherwise it may be an arbitrary named property
   return g_datalist_get_data( &mod->props, key );
 }
+
+void stg_model_unset_property( stg_model_t* mod, char* key )
+{
+  if( strncmp( key, STG_MP_PREFIX, strlen(STG_MP_PREFIX)) == 0 )
+    PRINT_WARN1( "Attempt to unset a model core property \"%s\" has no effect", key );
+  else
+    g_datalist_remove_data( &mod->props, key );
+}
+

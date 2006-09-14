@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.15 2006-05-25 21:35:01 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.15.2.1 2006-09-14 07:03:25 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -127,16 +127,16 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
   // create a passel of Stage models in the local cache based on the
   // worldfile
   
-  StgDriver::world = stg_world_create_from_file( fullname );
+  StgDriver::world = stg_world_create_from_file( 0, fullname );
   assert(StgDriver::world);
   //printf( " done.\n" );
   
   // poke the P/S name into the window title bar
-  if( StgDriver::world && StgDriver::world->win && StgDriver::world->win->frame )
+  if( StgDriver::world && StgDriver::world->win )
     {
       char txt[128];
       snprintf( txt, 128, "Player/Stage: %s", StgDriver::world->token );
-      gtk_window_set_title( GTK_WINDOW(StgDriver::world->win->frame), txt );
+      stg_world_set_title(StgDriver::world, txt ); 
     }
 
   // steal the global clock - a bit aggressive, but a simple approach

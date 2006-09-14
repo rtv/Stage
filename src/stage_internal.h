@@ -14,16 +14,14 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+
+#include <rtk.h> // TODO - remove this
 
 #include "stage.h"
 #include "config.h" // results of autoconf's system configuration tests
 #include "replace.h" // Stage's implementations of missing system calls
-#include "rtk.h" // and graphics stuff pulled from Andrew Howard's RTK2 library
-
-#if INCLUDE_GNOME
-#include <libgnomecanvas/libgnomecanvas.h>
-#endif
-
 
 /** @ingroup libstage
     @defgroup libstage_internal Internals
@@ -35,88 +33,44 @@
     @{ 
 */
 
-#include <glib.h>
+
+#define STG_DEFAULT_WINDOW_WIDTH 400
+#define STG_DEFAULT_WINDOW_HEIGHT 440
 
 #ifdef __cplusplus
 extern "C" {
 #endif 
   
-  /** Defines the GUI window */
-  typedef struct 
-  {
-    
-    // Gtk stuff
-    GtkWidget* frame;    
-    GtkWidget *layout;
-    GtkWidget *menu_bar;
-    //GtkWidget* scrolled_win;
-  
-    // The status bar widget
-    GtkStatusbar *status_bar;
-    GtkProgressBar *perf_bar;
-    GtkProgressBar *rt_bar;
-    GtkLabel *clock_label;
-
-#if INCLUDE_GNOME
-    // modern GNOMECANVAS style
-    GnomeCanvas* gcanvas;
-    double zoom;
-#else
-    // vintage RTK style
-    stg_rtk_canvas_t* canvas;
-    stg_rtk_fig_t* bg; // background
-    stg_rtk_fig_t* matrix;
-    stg_rtk_fig_t* matrix_tree;
-    stg_rtk_fig_t* poses;
-#endif
-
-    stg_world_t* world; // every window shows a single world
-    
-    GtkStatusbar* statusbar;
-    GtkLabel* timelabel;
-    
-    int wf_section; // worldfile section for load/save
-    
-    gboolean show_matrix;  
-    gboolean fill_polygons;
-    gboolean show_geom;
-    gboolean show_polygons;
-    gboolean show_grid;
-
-    int frame_series;
-    int frame_index;
-    int frame_callback_tag;
-    int frame_interval;
-    int frame_format;
-
-    stg_model_t* selection_active;
-
-    GList* toggle_list;
-    
-  } gui_window_t;
 
   void gui_startup( int* argc, char** argv[] ); 
-  void gui_poll( void );
   void gui_shutdown( void );
+  void gui_configure( stg_world_t* world, 
+		      int width, 
+		      int height, 
+		      double xscale, 
+		      double yscale, 
+		      double xcenter, 
+		      double ycenter );
 
-  void gui_load( gui_window_t* win, int section );
-  void gui_save( gui_window_t* win );
+  void gui_load( stg_world_t* world, int section );
+  void gui_save( stg_world_t* world );
   
-  gui_window_t* gui_world_create( stg_world_t* world );
+  void* gui_world_create( stg_world_t* world );
   void gui_world_destroy( stg_world_t* world );
   int gui_world_update( stg_world_t* world );
   void stg_world_add_model( stg_world_t* world, stg_model_t* mod  );
   void gui_world_geom( stg_world_t* world );
 
-  void gui_model_create( stg_model_t* model );
+  void gui_model_init( stg_model_t* model );
   void gui_model_destroy( stg_model_t* model );
+
   void gui_model_display_pose( stg_model_t* mod, char* verb );
   void gui_model_features( stg_model_t* mod );
   void gui_model_geom( stg_model_t* model );
-  void gui_model_mouse(stg_rtk_fig_t *fig, int event, int mode);
   void gui_model_nose( stg_model_t* model );
-  void gui_window_menus_create( gui_window_t* win );
-  void gui_window_menus_destroy( gui_window_t* win );
+
+  //void gui_window_menus_create( gui_window_t* win );
+  //void gui_window_menus_destroy( gui_window_t* win );
 
   // callback functions that handle property changes, mostly for drawing stuff in the GUI  
   int gui_model_polygons( stg_model_t* mod, void* userp );
@@ -125,6 +79,13 @@ extern "C" {
   int gui_model_mask( stg_model_t* mod, void* userp );
   int gui_model_lines( stg_model_t* mod, void* userp );
 
+  //< Get the display list ID associated with this name. If the list
+  //does not exist, a new one is created. 
+  int gui_model_get_displaylist( stg_model_t* mod, char* list_name );
+
+  //< Destroy the display list identified by the string. If no such
+  //list exists, no action is taken.
+  void gui_model_free_displaylist( stg_model_t* mod, char* list_name );
 
   void gui_add_view_item( const gchar *name,
 			  const gchar *label,
@@ -189,12 +150,7 @@ extern "C" {
     GData* props;
 
     // a datalist of stg_rtk_figs, indexed by name (string)
-    GData* figs; 
-
-    //#if INCLUDE_GNOME
-    //GnomeCanvasGroup* grp;
-    //GnomeCanvasGroup* cgrp;
-    //#endif
+    //GData* figs; 
 
     stg_pose_t pose;
     stg_velocity_t velocity;
@@ -219,7 +175,7 @@ extern "C" {
     int gui_grid;
     int gui_outline;
     int gui_mask;
-
+    
     GHashTable* callbacks;
        
     // the number of children of each type is counted so we can
@@ -271,34 +227,14 @@ extern "C" {
   void stg_model_map( stg_model_t* mod, gboolean render );
   void stg_model_map_with_children( stg_model_t* mod, gboolean render );
   
-  stg_rtk_fig_t* stg_model_prop_fig_create( stg_model_t* mod, 
-				    stg_rtk_fig_t* array[],
-				    stg_id_t propid, 
-				    stg_rtk_fig_t* parent,
-				    int layer );
 
   void stg_model_render_geom( stg_model_t* mod );
   void stg_model_render_pose( stg_model_t* mod );
   void stg_model_render_polygons( stg_model_t* mod );
   
-  int stg_fig_clear_cb(  stg_model_t* mod, char* name, 
-			 void* data, size_t len, void* userp );
-  
-  stg_rtk_fig_t* stg_model_fig_create( stg_model_t* mod, 
-				       const char* figname, 
-				       const char* parentname,
-				       int layer );
-  
-  /** Get the figure named figname, or, if it doesn't exist, create
-      and return a new figure. A convenience wrapper around
-      stg_model_fig_get() and stg_model_fig_create(). */
-  stg_rtk_fig_t* stg_model_fig_get_or_create( stg_model_t* mod, 
-					      const char* figname, 
-					      const char* parentname,
-					      int layer );
-  
-  stg_rtk_fig_t* stg_model_get_fig( stg_model_t* mod, const char* figname );
-  void stg_model_fig_clear( stg_model_t* mod, const char* figname );
+  // the struct is defined in gui.h so that the sim engine and GUI
+  // code are separated.
+  typedef struct _gui_window gui_window_t;
          
   // defines a simulated world
   struct _stg_world
@@ -325,7 +261,8 @@ extern "C" {
 
     stg_msec_t sim_time; ///< the current time in this world
     stg_msec_t sim_interval; ///< this much simulated time elapses each step.
-   
+    long unsigned int updates; ///< the number of simulaticuted
+    
     /** real-time interval between updates - set this to zero for 'as fast as possible' 
      */
     stg_msec_t wall_interval;
@@ -334,10 +271,6 @@ extern "C" {
     stg_msec_t gui_interval; ///< real-time interval between GUI canvas updates
     stg_msec_t gui_last_update; ///< the wall-clock time of the last gui canvas update
 
-    stg_msec_t gui_menu_interval; ///< real-time interval between GUI menu updates
-    stg_msec_t gui_menu_last_update; ///< the wall-clock time of the last gui menu update
-
-    
     /** the wallclock-time interval elapsed between the last two
 	updates - compare this with sim_interval to see the ratio of
 	sim to real time 
@@ -412,7 +345,7 @@ extern "C" {
     // bounding box
     double xmin,ymin,xmax,ymax;
     
-    stg_rtk_fig_t* fig; // for debugging
+    //stg_rtk_fig_t* fig; // for debugging
 
     struct stg_cell* children[4];
     struct stg_cell* parent;
@@ -449,7 +382,7 @@ extern "C" {
     //GSList* cells_changed;
     
     // debug figure. if this is non-NULL, debug info is drawn here
-    stg_rtk_fig_t* fig;
+    //stg_rtk_fig_t* fig;
 
     // todo - record a timestamp for matrix mods so devices can see if
     //the matrix has changed since they last peeked into it

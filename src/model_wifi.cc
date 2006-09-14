@@ -6,8 +6,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_wifi.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.1 $
+//  $Author: rtv $
+//  $Revision: 1.1.4.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -38,14 +38,15 @@
 // standard callbacks
 extern "C" {
 
+// declare functions used as callbacks
 int wifi_update( stg_model_t* mod );
 int wifi_startup( stg_model_t* mod );
 int wifi_shutdown( stg_model_t* mod );
 void wifi_load( stg_model_t* mod );
 
-int wifi_render_data( stg_model_t* mod, void* userp );
-int wifi_unrender_data( stg_model_t* mod, void* userp );
-
+// implented by the gui in some other file
+void gui_wifi_init( stg_model_t* mod );
+  
 void 
 wifi_load( stg_model_t* mod )
 {
@@ -84,13 +85,8 @@ wifi_init( stg_model_t* mod )
   stg_model_set_blob_return( mod, 0 );
   stg_model_set_color( mod, (stg_color_t)0 );
 
-  // adds a menu item and associated on-and-off callbacks
-  stg_model_add_property_toggles( mod, &mod->data,
-				  wifi_render_data, NULL,
-				  wifi_unrender_data, NULL,
-				  "wifi_data",
-				  "wifi data",
-				  TRUE );
+  gui_wifi_init(mod);
+
   return 0;
 }
 
@@ -132,20 +128,6 @@ wifi_update( stg_model_t* mod )
 }
 
 int 
-wifi_render_data(  stg_model_t* mod, void* userp )
-{
-  //puts( "wifi render data" );
-
-  // only draw if someone is using the gripper
-  if( mod->subs < 1 )
-    return 0;
-
-  // DRAW WIFI DATA HERE.  Look at other models for examples.
-
-  return 0; 
-}
-
-int 
 wifi_startup( stg_model_t* mod )
 { 
   PRINT_DEBUG( "wifi startup" );
@@ -164,13 +146,5 @@ wifi_shutdown( stg_model_t* mod )
   return 0; // ok
 }
 
-int 
-wifi_unrender_data( stg_model_t* mod, void* userp )
-{
-  // CLEAR STUFF THAT YOU DREW
-  //stg_model_fig_clear( mod, "wifi_data_fig" );
-  return 1; // callback just runs one time
-}
 
 }
-

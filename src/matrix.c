@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.22 2006-01-21 09:35:06 rtv Exp $
+ * $Id: matrix.c,v 1.22.4.1 2006-09-14 07:03:25 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -13,14 +13,6 @@
 
 //#define DEBUG
 
-extern stg_rtk_fig_t* fig_debug_matrix;
-extern int _render_matrix_deltas;
-
-//stg_rtk_fig_t* fig_monitor_matrix = NULL;
-//GList* doomed = NULL;
-//GList* created = NULL;
-
-extern stg_rtk_fig_t* fig_debug_matrix;
 
 stg_cell_t* stg_cell_create( stg_cell_t* parent, double x, double y, double size )
 {
@@ -46,31 +38,25 @@ stg_cell_t* stg_cell_create( stg_cell_t* parent, double x, double y, double size
 
 void stg_cell_delete( stg_cell_t* cell )
 {
-  if( cell->fig )
-    stg_rtk_fig_destroy( cell->fig );
-  
   free( cell );
 }
 
 void stg_cell_unrender( stg_cell_t* cell )
 {
-  if( cell->fig )
-    stg_rtk_fig_destroy( cell->fig );
-  cell->fig = NULL;
 }    
 
 void stg_cell_render( stg_cell_t* cell )
 {
+  puts( "CELL RENDERING NOT IMPLEMENTED" );
+ /*  cell->fig = stg_rtk_fig_create( fig_debug_matrix->canvas, */
+/* 				  fig_debug_matrix, */
+/* 				  STG_LAYER_MATRIX_TREE ); */
   
-  cell->fig = stg_rtk_fig_create( fig_debug_matrix->canvas,
-				  fig_debug_matrix,
-				  STG_LAYER_MATRIX_TREE );
+/*   stg_rtk_fig_color_rgb32( cell->fig, 0x00AA00 ); */
   
-  stg_rtk_fig_color_rgb32( cell->fig, 0x00AA00 );
-  
-  stg_rtk_fig_rectangle( cell->fig,
-			 cell->x, cell->y, 0.0,
-			 cell->size, cell->size, 0 );
+/*   stg_rtk_fig_rectangle( cell->fig, */
+/* 			 cell->x, cell->y, 0.0, */
+/* 			 cell->size, cell->size, 0 ); */
 }
 
 /* void stg_cell_render_tree( stg_cell_t* cell ) */
@@ -297,16 +283,16 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 	      cell = cell->children[ index ];           
 
 	      // debug rendering
-	      if( _render_matrix_deltas && ! cell->fig )
-		stg_cell_render( cell );
+	      //if( _render_matrix_deltas && ! cell->fig )
+	      //stg_cell_render( cell );
 	    }
 
 	  // now the cell small enough, we add the object here
 	  cell->data = g_slist_prepend( cell->data, object );  	  
 	  
 	  // debug rendering
-	  if( _render_matrix_deltas && ! cell->fig )
-	    stg_cell_render( cell );
+	  //if( _render_matrix_deltas && ! cell->fig )
+	  //stg_cell_render( cell );
 	  
 	  // add this object the hash table
 	  GSList* list = g_hash_table_lookup( matrix->ptable, object );

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_speech.c,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.3.4.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -41,10 +41,9 @@ int speech_startup( stg_model_t* mod );
 int speech_shutdown( stg_model_t* mod );
 void speech_load( stg_model_t* mod );
 
-int speech_render_data( stg_model_t* mod, void* userp );
-int speech_render_cfg( stg_model_t* mod, void* userp );
-int speech_unrender_data( stg_model_t* mod, void* userp );
-int speech_unrender_cfg( stg_model_t* mod, void* userp );
+
+// implented by the gui in some other file
+void gui_speech_init( stg_model_t* mod );
 
 void speech_load( stg_model_t* mod )
 {
@@ -95,15 +94,8 @@ speech_init( stg_model_t* mod )
   stg_speech_data_t data;
   memset(&data,0,sizeof(data));
   stg_model_set_data( mod, &data, sizeof(data));
-
-  // adds a menu item and associated on-and-off callbacks
-//  stg_model_add_property_toggles( mod, &mod->cmd,
-  stg_model_add_property_toggles( mod, &mod->data,
-				  speech_render_data, NULL,
-				  speech_unrender_data, NULL,
-				  "speech_data",
-				  "speech data",
-				  TRUE );
+  
+  gui_speech_init(mod);
 
   return 0;
 }
@@ -159,47 +151,6 @@ int speech_update( stg_model_t* mod )
   return 0; //ok
 }
 
-int speech_render_data(  stg_model_t* mod, void* userp )
-{
-//  puts( "speech render data" );
-
-  // only draw if someone is using the speech
-  if( mod->subs < 1 )
-    return 0;
-
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "speech_data_fig" );
-  
-  if( ! fig ) {
-    fig = stg_model_fig_create( mod, "speech_data_fig", "top", STG_LAYER_SPEECHDATA );
-    stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_SPEECH_COLOR ) );
-  }
-  else 
-    stg_rtk_fig_clear( fig );
-
-  stg_speech_data_t* data = (stg_speech_data_t*)mod->data;
-  assert(data);
-  
-  stg_speech_config_t *cfg = (stg_speech_config_t*)mod->cfg;
-  assert(cfg);
-
-//  stg_geom_t *geom = &mod->geom;  
-
-  // only draw if the string is not empty
-  if ( data->string[0]==0 ) 
-    return 0;
-  
-  stg_rtk_fig_text_bubble( fig, 0.0, 0.0, 0, data->string, 0.15, 0.15);
-
-  return 0; 
-}
-
-int speech_render_cfg(  stg_model_t* mod, void* userp )
-{
-  puts( "speech render cfg" );
-
-
-  return 0; 
-}
 
 int speech_startup( stg_model_t* mod )
 { 
@@ -217,22 +168,8 @@ int speech_shutdown( stg_model_t* mod )
   stg_model_set_watts( mod, 0 );
 */
   
-  // unrender the data
-  stg_model_fig_clear( mod, "speech_data_fig" );
+  // clear the data - this will unrender it too
+  stg_model_set_data( mod, NULL, 0 );
+
   return 0; // ok
 }
-
-int speech_unrender_data( stg_model_t* mod, void* userp )
-{
-  // CLEAR STUFF THAT YOU DREW
-  stg_model_fig_clear( mod, "speech_data_fig" );
-  return 1; // callback just runs one time
-}
-
-int speech_unrender_cfg( stg_model_t* mod, void* userp )
-{
-//
-  return 1; // callback just runs one time
-}
-
-

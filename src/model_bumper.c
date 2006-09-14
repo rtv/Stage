@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_bumper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.1.4.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -51,21 +51,16 @@ The bumper model allows configuration of the pose and length parameters of each 
 #include "stage_internal.h"
 #include "gui.h"
 
-extern stg_rtk_fig_t* fig_debug_rays;
-
 static const stg_watts_t STG_BUMPER_WATTS = 0.1; // bumper power consumption
-
-static const stg_color_t STG_BUMPER_HIT_RGB = 0xFF0000; // red
-static const stg_color_t STG_BUMPER_NOHIT_RGB = 0x00FF00; // green
-static const stg_meters_t STG_BUMPER_HIT_THICKNESS = 0.02;
-static const stg_meters_t STG_BUMPER_NOHIT_THICKNESS = 0.01;
 
 static int bumper_update( stg_model_t* mod );
 static int bumper_startup( stg_model_t* mod );
 static int bumper_shutdown( stg_model_t* mod );
 static void bumper_load( stg_model_t* mod );
-static int bumper_render_data( stg_model_t* mod, void* userp );
-static int bumper_unrender_data( stg_model_t* mod,void* userp );
+
+// implented by the gui in some other file
+void gui_speech_init( stg_model_t* mod );
+
 
 int bumper_init( stg_model_t* mod )
 {
@@ -90,16 +85,7 @@ int bumper_init( stg_model_t* mod )
   cfg.length = 0.1;
   stg_model_set_cfg( mod, &cfg, sizeof(cfg) );
   
-  // adds a menu item and associated on-and-off callbacks
-  stg_model_add_property_toggles( mod, 
-				  &mod->data,
-				  bumper_render_data, // called when toggled on
-				  NULL,
-				  bumper_unrender_data, // called when toggled off
-				  NULL,
-				  "bumperdata",
-				  "bumper data",
-				  TRUE );  // initial state
+  gui_bumper_init(mod);
 
   return 0;
 }
@@ -201,8 +187,6 @@ int bumper_update( stg_model_t* mod )
 
   memset( data, 0, datalen );
 
-  if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
-  
   int t;
   for( t=0; t<rcount; t++ )
     {
@@ -237,75 +221,5 @@ int bumper_update( stg_model_t* mod )
   stg_model_set_data( mod, data, datalen );
 
   return 0;
-}
-
-int bumper_unrender_data( stg_model_t* mod, void* userp )
-{
-  stg_model_fig_clear( mod, "bumper_data_fig" );
-  return 1; // quit callback
-}
-
-int bumper_render_data( stg_model_t* mod, void* userp )
-{
-  PRINT_DEBUG( "bumper render data" );
-  
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "bumper_data_fig" );
-
-  if( !fig )
-    {
-      fig = stg_model_fig_create( mod, "bumper_data_fig", "top", STG_LAYER_BUMPERDATA );
-    }
-
-  stg_rtk_fig_clear(fig);
-  
-  stg_bumper_config_t* cfg = (stg_bumper_config_t*)mod->cfg;  
-  int rcount =  mod->cfg_len / sizeof( stg_bumper_config_t );
-  if( rcount < 1 ) // no samples
-    return 0;
-  
-  size_t dlen = mod->data_len;
-  stg_bumper_sample_t *data = (stg_bumper_sample_t*)mod->data;
-  
-  // iff we have the right amount of data
-  if( dlen == rcount * sizeof(stg_bumper_sample_t) )
-    {
-      int s;
-      for( s=0; s<rcount; s++ )
-	{
-	  stg_meters_t thick = STG_BUMPER_NOHIT_THICKNESS;
-	  stg_color_t col = STG_BUMPER_NOHIT_RGB;
-	  
-	  if( data[s].hit )
-	    {
-	      col = STG_BUMPER_HIT_RGB;
-	      thick = STG_BUMPER_HIT_THICKNESS;
-	    }
-	  
-	  stg_rtk_fig_color_rgb32(fig, col );	      
-	  stg_rtk_fig_rectangle( fig,
-				 cfg[s].pose.x,
-				 cfg[s].pose.y,
-				 cfg[s].pose.a - M_PI/2.0,
-				 cfg[s].length,
-				 thick,
-				 1 );
-	  
-	  stg_rtk_fig_color_rgb32(fig, 0 ); //black	      
-	  stg_rtk_fig_rectangle( fig,
-				 cfg[s].pose.x,
-				 cfg[s].pose.y,
-				 cfg[s].pose.a - M_PI/2.0,
-				 cfg[s].length,
-				 thick,
-				 0 );
-	  
-	}
-    }
-  else
-    if( dlen > 0 )
-      PRINT_WARN2( "data size doesn't match configuation (%d/%d bytes)",
-		   (int)dlen,  (int)rcount * sizeof(stg_bumper_sample_t) );
-  
-  return 0; // keep running
 }
 

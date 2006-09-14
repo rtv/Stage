@@ -3,7 +3,7 @@
 
 #include "stage_internal.h"
 
-extern stg_rtk_fig_t* fig_debug_rays;
+//extern stg_rtk_fig_t* fig_debug_rays;
 
 
 /* useful debug */
@@ -91,6 +91,29 @@ void itl_destroy( itl_t* itl )
     }
 }
 
+
+
+/** Returns TRUE iff the vertical center of the first model falls
+    within the height of the second model. Used for testing ray hits.
+*/
+int stg_model_height_check( stg_model_t* mod1, stg_model_t* mod2 ) 
+{
+  // TODO - optimize this - it's very slow and gets called a
+  // LOT. probably should cache the global extents of each model to
+  // avoid the get_global_pose()..
+
+  stg_pose_t gpose1, gpose2;  
+  stg_model_get_global_pose( mod1, &gpose1 );
+  stg_model_get_global_pose( mod2, &gpose2 );
+  
+  stg_meters_t look_height = gpose1.z + mod1->geom.size.z/2.0;
+
+  stg_meters_t mod2_bottom = gpose2.z;
+  stg_meters_t mod2_top = gpose2.z + mod2->geom.size.z;
+
+  return( (look_height >= mod2_bottom) && (look_height <= mod2_top ) );
+}
+
 // returns the first model in the array that matches, else NULL.
 static stg_model_t* gslist_first_matching( GSList* list, 
 				    stg_itl_test_func_t func, 
@@ -98,7 +121,9 @@ static stg_model_t* gslist_first_matching( GSList* list,
 {
   for( ; list ; list=list->next )
     {
-      if( (*func)( finder, (stg_model_t*)(list->data) ) )
+      // height check
+      if( stg_model_height_check( finder, (stg_model_t*)(list->data) ) &&
+	  (*func)( finder, (stg_model_t*)(list->data) ) )
 	return (stg_model_t*)(list->data);
     }
   
@@ -166,10 +191,10 @@ stg_model_t* itl_first_matching( itl_t* itl,
 	  return NULL;
 	}
       
-      if( fig_debug_rays ) // draw the cell rectangle
-	stg_rtk_fig_rectangle( fig_debug_rays,
-			       cell->x, cell->y, 0, 
-			       cell->size, cell->size, 0 );            
+/*       if( fig_debug_rays ) // draw the cell rectangle */
+/* 	stg_rtk_fig_rectangle( fig_debug_rays, */
+/* 			       cell->x, cell->y, 0,  */
+/* 			       cell->size, cell->size, 0 );             */
       if( cell->data ) 
 	{ 
 	  stg_model_t* hitmod = 
@@ -236,13 +261,13 @@ stg_model_t* itl_first_matching( itl_t* itl,
 	    yleave-=0.00001;
 	}
       
-      if( fig_debug_rays ) // draw the cell rectangle
-	{
-	  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFFBBBB );
-	  stg_rtk_fig_arrow_ex( fig_debug_rays, 
-				itl->x, itl->y, xleave, yleave, 0.01 );
-	  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFF0000 );
-	}
+/*       if( fig_debug_rays ) // draw the cell rectangle */
+/* 	{ */
+/* 	  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFFBBBB ); */
+/* 	  stg_rtk_fig_arrow_ex( fig_debug_rays,  */
+/* 				itl->x, itl->y, xleave, yleave, 0.01 ); */
+/* 	  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFF0000 ); */
+/* 	} */
 
       // jump to the leave point
       itl->range += hypot( yleave - itl->y, xleave - itl->x );

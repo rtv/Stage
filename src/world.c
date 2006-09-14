@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h> // for strdup(3)
 
-//#define DEBUG
+#define DEBUG 0
 
 
 const double STG_DEFAULT_RESOLUTION = 0.02;  // 2cm pixels
@@ -70,6 +70,39 @@ described on the manual page for each model type.
 extern stg_type_record_t typetable[];
 
 
+char* stg_world_clockstring( stg_world_t* world )
+{
+  char* clock = malloc(256);
+#ifdef DEBUG
+  snprintf( clock, 255, "Ticks %lu Time: %lu:%lu:%02lu:%02lu.%03lu (sim:%3d real:%3d ratio:%2.2f)\tsubs: %d  %s",
+	    world->updates,
+	    world->sim_time / (24*3600000), // days
+	    world->sim_time / 3600000, // hours
+	    (world->sim_time % 3600000) / 60000, // minutes
+	    (world->sim_time % 60000) / 1000, // seconds
+	    world->sim_time % 1000, // milliseconds
+	    (int)world->sim_interval,
+	    (int)world->real_interval_measured,
+	    (double)world->sim_interval / (double)world->real_interval_measured,
+	    world->subs,
+	    world->paused ? "--PAUSED--" : "" );
+#else
+
+  snprintf( clock, 255, "Ticks %lu Time: %lu:%lu:%02lu:%02lu.%03lu\t(sim/real:%2.2f)\tsubs: %d  %s",
+	    world->updates,
+	    world->sim_time / (24*3600000), // days
+	    world->sim_time / 3600000, // hours
+	    (world->sim_time % 3600000) / 60000, // minutes
+	    (world->sim_time % 60000) / 1000, // seconds
+	    world->sim_time % 1000, // milliseconds
+	    (double)world->sim_interval / (double)world->real_interval_measured,
+	    world->subs,
+	    world->paused ? "--PAUSED--" : "" );
+#endif
+
+  return clock;
+}
+
 
 void stg_world_set_interval_real( stg_world_t* world, unsigned int val )
 {
@@ -83,7 +116,7 @@ void stg_world_set_interval_sim( stg_world_t* world, unsigned int val )
 
 // create a world containing a passel of Stage models based on the
 // worldfile
-stg_world_t* stg_world_create_from_file( const char* worldfile_path )
+stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path )
 {
   printf( " [Loading %s]", worldfile_path );      
   fflush(stdout);
@@ -104,6 +137,9 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
   stg_msec_t interval_sim = 
     wf_read_int( section, "interval_sim", STG_DEFAULT_INTERVAL_SIM );
       
+  stg_msec_t interval_gui = 
+    wf_read_int( section, "gui_interval", STG_DEFAULT_INTERVAL_GUI );
+
   double ppm = 
     1.0 / wf_read_float( section, "resolution", STG_DEFAULT_RESOLUTION ); 
   
@@ -113,20 +149,19 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
   double height = 
     wf_read_tuple_float( section, "size", 1, STG_DEFAULT_WORLD_HEIGHT ); 
   
-  stg_msec_t gui_interval = 
-    wf_read_int( section, "gui_interval", STG_DEFAULT_INTERVAL_GUI );
   
-  stg_msec_t gui_menu_interval = 
-    wf_read_int( section, "gui_menu_interval", STG_DEFAULT_INTERVAL_MENU );
+  //stg_msec_t gui_menu_interval = 
+  //wf_read_int( section, "gui_menu_interval", STG_DEFAULT_INTERVAL_MENU );
 
   _stg_disable_gui = wf_read_int( section, "gui_disable", _stg_disable_gui );
 
   // create a single world
   stg_world_t* world = 
-    stg_world_create( 0, 
+    stg_world_create( id, 
 		      world_name, 
 		      interval_sim, 
 		      interval_real,
+		      interval_gui,
 		      ppm,
 		      width,
 		      height );
@@ -134,10 +169,6 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
   if( world == NULL )
     return NULL; // failure
   
-  // poke this in there
-  world->gui_interval = gui_interval;
-  world->gui_menu_interval = gui_menu_interval;
-
   int section_count = wf_section_count();
   
   // Iterate through sections and create client-side models
@@ -147,7 +178,7 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	{
 	  // configure the GUI
 	  if( world->win )
-	    gui_load( world->win, section ); 
+	    gui_load( world, section ); 
 	}
       else
 	{
@@ -155,8 +186,8 @@ stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 	  
 	  int parent_section = wf_get_parent_section( section );
 	  
-	  PRINT_DEBUG2( "section %d parent section %d\n", 
-			section, parent_section );
+	  //PRINT_DEBUG2( "section %d parent section %d\n", 
+	  //	section, parent_section );
 	  
 	  stg_model_t* parent = NULL;
 	  
@@ -191,6 +222,7 @@ stg_world_t* stg_world_create( stg_id_t id,
 			       const char* token, 
 			       int sim_interval, 
 			       int real_interval,
+			       int gui_interval,
 			       double ppm,
 			       double width,
 			       double height )
@@ -212,8 +244,8 @@ stg_world_t* stg_world_create( stg_id_t id,
   world->sim_time = 0.0;
   world->sim_interval = sim_interval;
   world->wall_interval = real_interval;
+  world->gui_interval = gui_interval;
   world->wall_last_update = 0;
-  world->gui_interval = 100;
 
   world->width = width;
   world->height = height;
@@ -229,7 +261,7 @@ stg_world_t* stg_world_create( stg_id_t id,
     world->win = NULL;
   else    
     world->win = gui_world_create( world );
-  
+
   return world;
 }
 
@@ -241,6 +273,11 @@ void stg_world_stop( stg_world_t* world )
 void stg_world_start( stg_world_t* world )
 {
   world->paused = FALSE;
+}
+
+void stg_world_set_title( stg_world_t* world, char* txt )
+{
+  gui_world_set_title( world, txt );
 }
 
 // calculate the bounding rectangle of everything in the world
@@ -277,20 +314,21 @@ void world_destroy_cb( gpointer world )
 }
 
 
+
 int stg_world_update( stg_world_t* world, int sleepflag )
 {
   //PRINT_WARN( "World update" );
 
-  stg_msec_t timenow = stg_timenow();
-  
- 
-  // is it time to look for GUI events?
-  if( world->win && 
-      world->gui_menu_interval < timenow - world->gui_menu_last_update )
-    {	  
-      gui_poll();       
-      world->gui_menu_last_update = timenow;	  
-    } 
+  stg_msec_t timenow = stg_realtime_since_start();
+
+#if DEBUG  
+  double t = stg_realtime_since_start() / 1e3;
+
+  static double calls = 0;
+  calls++;  
+  printf( "STG_WORLD_UPDATE: time %.2f calls: %.2f  %.2f/sec\n", t, calls, calls/t );
+#endif
+
   
   //PRINT_DEBUG5( "timenow %lu last update %lu interval %lu diff %lu sim_time %lu", 
   //	timenow, world->wall_last_update, world->wall_interval,  
@@ -299,46 +337,48 @@ int stg_world_update( stg_world_t* world, int sleepflag )
   // if it's time for an update, update all the models
   stg_msec_t elapsed =  timenow - world->wall_last_update;
   
-  if( world->wall_interval < elapsed )
+  if( (!world->paused) && (world->wall_interval <= elapsed) )
     {
-      stg_msec_t real_interval = timenow - world->wall_last_update;
-      
-#if 0      
-      printf( " [%d %lu] sim:%lu real:%lu  ratio:%.2f\n",
+      world->real_interval_measured = timenow - world->wall_last_update;
+      world->updates++;
+
+#if DEBUG     
+      printf( " [%d %lu %f] sim:%lu real:%lu  ratio:%.2f freq:%.2f \n",
 	      world->id, 
 	      world->sim_time,
+	      world->updates,
 	      world->sim_interval,
-	      real_interval,
-	      (double)world->sim_interval / (double)real_interval  );
+	      world->real_interval_measured,
+	      (double)world->sim_interval / (double)real_interval,
+	      world->updates/t );
       
       fflush(stdout);
 #endif
       
-      if( ! world->paused ) // only update if we're not paused
-	{
-	  world->real_interval_measured = real_interval;	  
-	  g_hash_table_foreach( world->models, model_update_cb, world );	  	  
-	  world->wall_last_update = timenow;	  
-	  world->sim_time += world->sim_interval;
-	}
+      g_hash_table_foreach( world->models, model_update_cb, world );	  	  
+      world->wall_last_update = timenow;	  
+      world->sim_time += world->sim_interval;
 
-      // is it time to redraw all the action?
-      if( world->win && 
-	  world->gui_interval < timenow - world->gui_last_update )
-	{
-	  
-	  if( gui_world_update( world ) )
-	    stg_quit_request();      
-	  
-	  world->gui_last_update = timenow;	  
-	} 
+      if( gui_world_update( world ) )
+	stg_quit_request();
+      
     }
-  else
-    if( sleepflag )
-      {
-	//puts( "sleeping" );
-	usleep( 10000 ); // sleep a little
-      }
+
+/*   // is it time to redraw all the action? */
+/*   if( world->win && world->gui_interval <= (timenow - world->gui_last_update) ) */
+/*     { */
+      
+      
+/*       world->gui_last_update = timenow; */
+/*     } */
+    
+
+  //else
+  //if( sleepflag )
+  //  {
+  ////puts( "sleeping" );
+  //usleep( 10000 ); // sleep a little
+  //  }
 
   return _stg_quit; // may have been set TRUE by the GUI or someone else
 }
@@ -404,7 +444,7 @@ void stg_world_save( stg_world_t* world )
   g_hash_table_foreach( world->models, stg_model_save_cb, NULL );
   
   if( world->win )
-    gui_save( world->win );
+    gui_save( world );
   
   wf_save();
 }

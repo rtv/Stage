@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189 2006-05-25 21:35:01 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.1 2006-09-14 07:03:25 rtv Exp $
  */
 
 
@@ -85,6 +85,11 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 @{
 */
 
+
+typedef enum {
+  STG_IMAGE_FORMAT_PNG,
+  STG_IMAGE_FORMAT_JPEG
+} stg_image_type_t;
 
 /** any integer value other than this is a valid fiducial ID 
  */
@@ -148,7 +153,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
    */
   typedef struct 
   {
-    stg_meters_t x, y;
+    stg_meters_t x, y, z;
   } stg_size_t;
   
   /** \struct stg_pose_t
@@ -156,7 +161,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
    */
   typedef struct
   {
-    stg_meters_t x, y, a;
+    stg_meters_t x, y, z;
+    stg_radians_t a; // rotation about the z axis only
   } stg_pose_t;
   
   /** specify a 3 axis velocity in x, y and heading.
@@ -212,8 +218,12 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 
 
   /** Returns the real (wall-clock) time in milliseconds since the
+      epoch. */
+  stg_msec_t stg_realtime_since_start( void );
+
+  /** Returns the real (wall-clock) time in milliseconds since the
       simulation started. */
-  stg_msec_t stg_timenow( void );
+  stg_msec_t stg_realtime_since_start( void );
   
   /** Initialize the stage library. Optionally pass in the arguments
       from main(), so Stage can read cmdline options. Stage then
@@ -368,6 +378,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 				 const char* token, 
 				 int sim_interval, 
 				 int real_interval,
+				 int gui_interval,
 				 double ppm,
 				 double width,
 				 double height );
@@ -375,7 +386,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /** Create a new world as described in the worldfile
       [worldfile_path]
    */
-  stg_world_t* stg_world_create_from_file( const char* worldfile_path );
+  stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path );
 
   /** Destroy a world and everything it contains
    */
@@ -397,15 +408,28 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
    */
   int stg_world_update( stg_world_t* world, int sleepflag );
 
-  /** configure the world by reading from the current world file */
-  void stg_world_load( stg_world_t* mod );
-
-  /** save the state of the world to the current world file */
-  void stg_world_save( stg_world_t* mod );
+  /** Configure the world by reading from the current world file */
+  void stg_world_load( stg_world_t* world );
+  
+  /** Save the state of the world to the current world file */
+  void stg_world_save( stg_world_t* world );
+  
+  /** Reload the state of the world as saved in the current world
+      file */
+  void stg_world_reload( stg_world_t* world );
 
   /** print human-readable information about the world on stdout 
    */
   void stg_world_print( stg_world_t* world );
+  
+  /** Returns a string containing human-readable simulation time. The
+      string should be free()ed by the caller. 
+  */
+  char* stg_world_clockstring( stg_world_t* world );
+
+  /** Set the title of the world, usually  displayed by the GUI in the window titlebar.
+   */
+  void stg_world_set_title( stg_world_t* world, char* txt );
 
   /** Set the duration in milliseconds of each simulation update step 
    */
@@ -842,6 +866,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   {
     stg_meters_t range; ///< range to laser hit in meters
     double reflectance; ///< intensity of the reflection 0.0 to 1.0
+    stg_point_t hitpoint; ///< the location of the laser hit in local coordinates
   } stg_laser_sample_t;
   
   /** laser configuration packet
@@ -967,6 +992,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_meters_t range; ///< range to the target
     stg_radians_t bearing; ///< bearing to the target 
     stg_pose_t geom; ///< size and relative angle of the target
+    stg_pose_t pose; ///< Absolute accurate position of the target in world coordinates (it's cheating to use this in robot controllers!)
     int id; ///< the identifier of the target, or -1 if none can be detected.
     
   } stg_fiducial_t;

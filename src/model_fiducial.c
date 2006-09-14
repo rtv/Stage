@@ -7,18 +7,16 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.49 $
+//  $Revision: 1.49.4.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-//#define DEBUG
+//#define DEBUG 
 
 #include <assert.h>
 #include <math.h>
 #include "stage_internal.h"
 #include "gui.h"
-
-extern stg_rtk_fig_t* fig_debug_rays;
 
 #define STG_FIDUCIALS_MAX 64
 #define STG_DEFAULT_FIDUCIAL_RANGEMIN 0
@@ -98,12 +96,8 @@ int fiducial_startup( stg_model_t* mod );
 int fiducial_shutdown( stg_model_t* mod );
 int fiducial_update( stg_model_t* mod );
 
-
-int fiducial_render_data( stg_model_t* mod, void* userp );
-int fiducial_render_cfg( stg_model_t* mod, void* userp );
-int fiducial_unrender_data( stg_model_t* mod, void* userp );
-int fiducial_unrender_cfg( stg_model_t* mod, void* userp );
-
+// implemented by the GUI code elsewhere
+void gui_fiducial_init( stg_model_t* mod );
 
 int fiducial_init( stg_model_t* mod )
 {  
@@ -130,29 +124,8 @@ int fiducial_init( stg_model_t* mod )
   cfg.fov = STG_DEFAULT_FIDUCIAL_FOV;  
   stg_model_set_cfg( mod, &cfg, sizeof(cfg) );
   
-  stg_model_add_callback( mod, &mod->data, fiducial_render_data, NULL );
-
-  // adds a menu item and associated on-and-off callbacks
-  stg_model_add_property_toggles( mod, 
-				  &mod->data,
-				  fiducial_render_data, // called when toggled on
-				  NULL,
-				  fiducial_unrender_data, // called when toggled off
-				  NULL,
-				  "fiducial_data",
-				  "fiducial data",
-				  TRUE );  // initial state
-
-  stg_model_add_property_toggles( mod, 
-				  &mod->cfg,
-				  fiducial_render_cfg, // called when toggled on
-				  NULL,
-				  fiducial_unrender_cfg, // called when toggled off
-				  NULL,
-				  "fiducial_cfg",
-				  "fiducial config",
-				  FALSE );  // initial state
-  
+  gui_fiducial_init( mod );
+ 
   return 0;
 }
 
@@ -193,36 +166,45 @@ int fiducial_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 }	
 
 
-void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user )
+void model_fiducial_check_neighbor( gpointer key, 
+				    stg_model_t* him,  
+				    model_fiducial_buffer_t* mfb )
 {
-  model_fiducial_buffer_t* mfb = (model_fiducial_buffer_t*)user;
-  stg_model_t* him = (stg_model_t*)value;
+  PRINT_DEBUG2( "Model %s inspected model %s", 
+		mfb->mod->token, him->token );
   
-  // check to see if this neighbor has the right fiducial key
-  if( him->fiducial_key != mfb->mod->fiducial_key )
-    return;
-
-  int* his_fid = &him->fiducial_return; 
-
-  // dont' compare a model with itself, and don't consider models with
-  // invalid returns
-  if( his_fid == NULL || him == mfb->mod || *his_fid == FiducialNone ) 
-    return; 
-
-  stg_pose_t hispose;
-  stg_model_get_global_pose( him, &hispose );
-  
-  double dx = hispose.x - mfb->pose.x;
-  double dy = hispose.y - mfb->pose.y;
-  
-  // are we within range?
-  double range = hypot( dy, dx );
-  if( range > mfb->cfg.max_range_anon )
+  // dont' compare a model with itself
+  if( him == mfb->mod )
     {
-      //PRINT_DEBUG1( "  but model %s is outside my range", him->token);
+      PRINT_DEBUG1( "  but model %s is itself", him->token);
       return;
     }
 
+  // and don't consider models with invalid returns  
+  if( him->fiducial_return == 0 )
+    {
+      PRINT_DEBUG1( "  but model %s has a zero fiducial ID", him->token);
+      return;
+    }
+
+  // check to see if this neighbor has the right fiducial key
+  if( him->fiducial_key != mfb->mod->fiducial_key )
+    {
+      PRINT_DEBUG1( "  but model %s doesn't match the fiducial key", him->token);
+      return;
+    }
+
+  // are we within range?
+  stg_pose_t hispose;
+  stg_model_get_global_pose( him, &hispose );  
+  double dx = hispose.x - mfb->pose.x;
+  double dy = hispose.y - mfb->pose.y;  
+  double range = hypot( dy, dx );
+  if( range > mfb->cfg.max_range_anon )
+    {
+      PRINT_DEBUG1( "  but model %s is outside my range", him->token);
+      return;
+    }
   
   // is he in my field of view?
   double hisbearing = atan2( dy, dx );
@@ -230,7 +212,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 
   if( fabs(NORMALIZE(dif)) > mfb->cfg.fov/2.0 )
     {
-      //PRINT_DEBUG1( "  but model %s is outside my FOV", him->token);
+      PRINT_DEBUG1( "  but model %s is outside my FOV", him->token);
       return;
     }
    
@@ -244,10 +226,10 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   
   itl_destroy( itl );
 
-  //if( hitmod )
-  //PRINT_DEBUG2( "I saw %s with fid %d",
-  //	 hitmod->token, hitmod->fiducial_return );
-
+  if( hitmod )
+    PRINT_DEBUG2( "I saw %s with fid %d",
+		  hitmod->token, hitmod->fiducial_return );
+  
   // if it was him, we can see him
   if( hitmod == him )
     {
@@ -261,13 +243,16 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
       fid.geom.x = hisgeom.size.x;
       fid.geom.y = hisgeom.size.y;
       fid.geom.a = NORMALIZE( hispose.a - mfb->pose.a);
+
+      // store the global pose of the fiducial (mainly for the GUI)
+      memcpy( &fid.pose, &hispose, sizeof(fid.pose));
       
       // if he's within ID range, get his fiducial.return value, else
       // we see value 0
-      fid.id = range < mfb->cfg.max_range_id ? *his_fid: 0;
+      fid.id = range < mfb->cfg.max_range_id ? hitmod->fiducial_return : 0;
 
-      //PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
-      //	    him->token, him->fiducial_return );
+      PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
+      	    him->token, him->fiducial_return );
 
       g_array_append_val( mfb->fiducials, fid );
     }
@@ -284,8 +269,6 @@ int fiducial_update( stg_model_t* mod )
   if( mod->subs < 1 )
     return 0;
 
-  if( fig_debug_rays ) stg_rtk_fig_clear( fig_debug_rays );
-  
   model_fiducial_buffer_t mfb;
   memset( &mfb, 0, sizeof(mfb) );
   
@@ -300,7 +283,8 @@ int fiducial_update( stg_model_t* mod )
   stg_model_get_global_pose( mod, &mfb.pose );
   
   // for all the objects in the world
-  g_hash_table_foreach( mod->world->models, model_fiducial_check_neighbor, &mfb );
+  g_hash_table_foreach( mod->world->models, 
+			(GHFunc)(model_fiducial_check_neighbor), &mfb );
 
   PRINT_DEBUG2( "model %s saw %d fiducials", mod->token, mfb.fiducials->len );
   
@@ -309,104 +293,6 @@ int fiducial_update( stg_model_t* mod )
   
   g_array_free( mfb.fiducials, TRUE );
 
-  return 0;
-}
-
-int fiducial_unrender_data( stg_model_t* mod, void* userp )
-{
-  //printf( "fid unrender userp %s\n", (char*)userp );
-  stg_model_fig_clear( mod, "fiducial_data_fig" );
-  return 1; // cancel callback
-}
-
-//int fiducial_render_data( stg_model_t* mod, char* name, void* data, size_t len, void* userp )
-int fiducial_render_data( stg_model_t* mod, void* userp )
-{  
-  
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "fiducial_data_fig" );
-  
-  if( ! fig )
-    {
-      fig = stg_model_fig_create( mod, "fiducial_data_fig", "top", STG_LAYER_NEIGHBORDATA );
-      stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
-    }
-  
-   stg_rtk_fig_clear( fig );
-  
-  stg_fiducial_t *fids = (stg_fiducial_t*)mod->data;
-  int bcount = mod->data_len / sizeof(stg_fiducial_t);  
-  char text[32];
-  
-  int b;
-  for( b=0; b < bcount; b++ )
-    {
-      // the location of the target
-      double pa = fids[b].bearing;
-      double px = fids[b].range * cos(pa); 
-      double py = fids[b].range * sin(pa);
-      
-      stg_rtk_fig_line(  fig, 0, 0, px, py );	
-      
-      // the size and heading of the target
-      double wx = fids[b].geom.x;
-      double wy = fids[b].geom.y;
-      double wa = fids[b].geom.a;
-      
-      stg_rtk_fig_rectangle( fig, px, py, wa, wx, wy, 0);
-      stg_rtk_fig_arrow( fig, px, py, wa, wy, 0.10);
-      
-      if( fids[b].id > 0 )
-	{
-	  snprintf(text, sizeof(text), "  %d", fids[b].id);
-	  stg_rtk_fig_text( fig, px, py, pa, text);
-	}
-    }  
-  
-return 0;
-}
-
-int fiducial_unrender_cfg( stg_model_t* mod, void* userp )
-{
-  //printf( "fid unrender userp %s\n", (char*)userp );
-  stg_model_fig_clear( mod, "fiducial_cfg_fig" );
-  return 1; // cancel callback
-}
-
-int fiducial_render_cfg( stg_model_t* mod, void* userp )
-{
-  stg_fiducial_config_t *cfg = (stg_fiducial_config_t*)mod->cfg;
-  assert(cfg);
-  
-  double mina = -cfg->fov / 2.0;
-  double maxa = +cfg->fov / 2.0;
-  
-  double dx =  cfg->max_range_anon * cos(mina);
-  double dy =  cfg->max_range_anon * sin(mina);
-  double ddx = cfg->max_range_anon * cos(maxa);
-  double ddy = cfg->max_range_anon * sin(maxa);
-  
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "fiducial_cfg_fig" );
-  
-  if( ! fig )
-    fig = stg_model_fig_create( mod, "fiducial_cfg_fig", "top", STG_LAYER_NEIGHBORCONFIG );
-  
-  stg_rtk_fig_clear(fig);
-  stg_rtk_fig_line( fig, 0,0, dx, dy );
-  stg_rtk_fig_line( fig, 0,0, ddx, ddy );
-  
-  // max range
-  stg_rtk_fig_ellipse_arc( fig,
-			   0,0,0,
-			   2.0*cfg->max_range_anon,
-			   2.0*cfg->max_range_anon,
-			   mina, maxa );
-  
-  // max range that IDs can be, er... identified
-  stg_rtk_fig_ellipse_arc( fig,
-			   0,0,0,
-			   2.0*cfg->max_range_id,
-			   2.0*cfg->max_range_id,
-			   mina, maxa );
   return 0;
 }
 

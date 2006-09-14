@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_ptz.c,v 1.2 2006-01-30 06:58:15 rtv Exp $
+ * CVS info: $Id: model_ptz.c,v 1.2.4.1 2006-09-14 07:03:25 rtv Exp $
  */
 
 #include <math.h>
@@ -30,8 +30,6 @@
 
 #include "stage_internal.h"
 #include "gui.h"
-
-extern stg_rtk_fig_t* fig_debug_rays;
 
 const double STG_DEFAULT_PTZ_PAN = 0.0;
 const double STG_DEFAULT_PTZ_TILT = 0.0;
@@ -121,7 +119,7 @@ int ptz_init( stg_model_t* mod )
   stg_model_set_cfg( mod, &cfg, sizeof(cfg) );
   stg_model_set_data( mod, &data, sizeof(data) );
   
-  stg_model_add_callback( mod, &mod->data, ptz_render_data, NULL );
+  gui_ptz_init( mod );
 
   return 0; //ok
 }
@@ -214,57 +212,57 @@ int ptz_update( stg_model_t* mod )
 }
 
 
-int ptz_unrender_data( stg_model_t* mod, void* userp )
-{
-  stg_model_fig_clear( mod, "blob_data_fig" );
-  return 1;
-}
+/* int ptz_unrender_data( stg_model_t* mod, void* userp ) */
+/* { */
+/*   stg_model_fig_clear( mod, "blob_data_fig" ); */
+/*   return 1; */
+/* } */
 
-int ptz_render_data( stg_model_t* mod, void* userp )
-{ 
-  PRINT_DEBUG( "ptz render" );  
+/* int ptz_render_data( stg_model_t* mod, void* userp ) */
+/* {  */
+/*   PRINT_DEBUG( "ptz render" );   */
   
-  stg_ptz_data_t *data = (stg_ptz_data_t*)mod->data;
-  stg_ptz_config_t *cfg = (stg_ptz_config_t*)mod->cfg;
+/*   stg_ptz_data_t *data = (stg_ptz_data_t*)mod->data; */
+/*   stg_ptz_config_t *cfg = (stg_ptz_config_t*)mod->cfg; */
     
-  stg_rtk_fig_t* fig = stg_model_get_fig( mod, "ptz_data_fig" );
+/*   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "ptz_data_fig" ); */
   
-  if( fig == NULL )
-    {
-      fig = stg_model_fig_create( mod, "ptz_data_fig", "top", STG_LAYER_PTZDATA );
-      stg_rtk_fig_color_rgb32( fig, 0x909090); // grey
-    }
+/*   if( fig == NULL ) */
+/*     { */
+/*       fig = stg_model_fig_create( mod, "ptz_data_fig", "top", STG_LAYER_PTZDATA ); */
+/*       stg_rtk_fig_color_rgb32( fig, 0x909090); // grey */
+/*     } */
 
-  stg_rtk_fig_clear( fig );
+/*   stg_rtk_fig_clear( fig ); */
 
-  double mina = data->pan + data->zoom / 2.0;
-  double maxa = data->pan - data->zoom / 2.0;
-  double delta = mod->geom.size.x/2.0;
-  double dx = delta * cos(mina);
-  double dy = delta * sin(mina);
-  double ddx = delta * cos(maxa);
-  double ddy = delta * sin(maxa);
+/*   double mina = data->pan + data->zoom / 2.0; */
+/*   double maxa = data->pan - data->zoom / 2.0; */
+/*   double delta = mod->geom.size.x/2.0; */
+/*   double dx = delta * cos(mina); */
+/*   double dy = delta * sin(mina); */
+/*   double ddx = delta * cos(maxa); */
+/*   double ddy = delta * sin(maxa); */
     
-  if( fig == NULL )
-    fig = stg_model_fig_create( mod, "ptz_cfg_fig", "top", STG_LAYER_PTZDATA );
+/*   if( fig == NULL ) */
+/*     fig = stg_model_fig_create( mod, "ptz_cfg_fig", "top", STG_LAYER_PTZDATA ); */
   
-  stg_rtk_fig_line( fig, 0,0, dx, dy );
-  stg_rtk_fig_line( fig, 0,0, ddx, ddy );
-  stg_rtk_fig_line( fig, dx,dy, ddx, ddy );
+/*   stg_rtk_fig_line( fig, 0,0, dx, dy ); */
+/*   stg_rtk_fig_line( fig, 0,0, ddx, ddy ); */
+/*   stg_rtk_fig_line( fig, dx,dy, ddx, ddy ); */
 
- /*  double pts[3][2]; */
-/*   pts[0][0] = 0.0; */
-/*   pts[0][1] = 0.0; */
-/*   pts[1][0] = dx; */
-/*   pts[1][1] = dy; */
-/*   pts[2][0] = ddx; */
-/*   pts[2][1] = ddy; */
-/*   stg_rtk_fig_polygon( fig, 0,0,0, 3, pts, 1 ); */
+/*  /\*  double pts[3][2]; *\/ */
+/* /\*   pts[0][0] = 0.0; *\/ */
+/* /\*   pts[0][1] = 0.0; *\/ */
+/* /\*   pts[1][0] = dx; *\/ */
+/* /\*   pts[1][1] = dy; *\/ */
+/* /\*   pts[2][0] = ddx; *\/ */
+/* /\*   pts[2][1] = ddy; *\/ */
+/* /\*   stg_rtk_fig_polygon( fig, 0,0,0, 3, pts, 1 ); *\/ */
 
-  /* stg_rtk_fig_ellipse_arc( fig, 0,0,0, */
-/* 			   2.0*delta, */
-/* 			   2.0*delta, */
-/* 			   mina, maxa ); */
+/*   /\* stg_rtk_fig_ellipse_arc( fig, 0,0,0, *\/ */
+/* /\* 			   2.0*delta, *\/ */
+/* /\* 			   2.0*delta, *\/ */
+/* /\* 			   mina, maxa ); *\/ */
 
-  return 0;
-}
+/*   return 0; */
+/* } */
