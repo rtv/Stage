@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.13.2.1 2006-09-14 07:11:55 rtv Exp $
+dnl $Id: configure.ac,v 1.13.2.2 2006-09-14 07:20:28 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -47,6 +47,8 @@ if test "x$have_pkg_config" = "xno"; then
   AC_MSG_ERROR([pkg-config is required to build Stage.  Install pkg-config, then run configure again.])
 fi
 
+dnl ==== PLAYER ====
+
 dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
@@ -61,27 +63,20 @@ PKG_CHECK_MODULES( PLAYER, playercore >= 2.0.1,
 
 AM_CONDITIONAL(HAVE_PLAYER, [test $have_player=yes])
 
-dnl check for glib
-dnl PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.4, ,
-dnl  AC_MSG_ERROR([A suitable GLib was not found. GLib-2.4 or later is required. ])
-dnl )
-
-PKG_CHECK_MODULES(GUI, gtkglext-1.0 >= 1.0, , 
- AC_MSG_ERROR([Required library GtkGLExt not found. Install it and try again.]) 
-)
-
-dnl check for GTK - we need it for the GUI
-dnl PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4, ,
-dnl  AC_MSG_WARN([A suitable GTK+ was not found. GTK+-2.4 or later is required. ])
-dnl )
-	
-
 dnl for ptest, we need libplayerc
 dnl PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0,
 dnl  AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
 dnl  AC_MSG_WARN([libplayercr was not found. ])
 dnl )
 
+dnl ==== GUI/GRAPHICS ====
+
+dnl gtkglext brings in all dependencies on GTK, glib, etc. Almost too easy!
+PKG_CHECK_MODULES(GUI, gtkglext-1.0 >= 1.0, , 
+ AC_MSG_ERROR([Required library GtkGLExt not found. Install it and try again.]) 
+)
+
+dnl TODO - use Reed Hedges' MobileSim patch to improve on this
 dnl where's the X11 color database?
 AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
   CDB="\"/usr/X11R6/lib/X11/rgb.txt\"",
@@ -91,6 +86,8 @@ AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
 AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
 CDB="\"$with_color\"",)
 AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
+
+dnl ==== FINISH UP =====
 
 AC_OUTPUT(Makefile 
           src/Makefile 
