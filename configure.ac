@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.15 2006-07-28 22:04:01 pooya Exp $
+dnl $Id: configure.ac,v 1.16 2006-09-20 01:45:08 adam_lein Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -116,7 +116,6 @@ AC_OUTPUT(Makefile
           worlds/Makefile 
           worlds/bitmaps/Makefile 
           replace/Makefile
-          src/referees/Makefile
           examples/Makefile
           examples/libstage/Makefile
           examples/libplayerc/Makefile

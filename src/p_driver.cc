@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.38 2006-07-27 02:33:02 pooya Exp $
+ * CVS: $Id: p_driver.cc,v 1.39 2006-09-20 01:45:08 adam_lein Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -150,7 +150,6 @@ The stage plugin driver provides the following device interfaces:
 #include <math.h>
 
 #include "p_driver.h"
-#include "zoo_driver.h"
 
 #define STG_DEFAULT_WORLDFILE "default.world"
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
@@ -205,7 +204,6 @@ int player_driver_init(DriverTable* table)
 {
   puts(" Stage driver plugin init");
   StgDriver_Register(table);
-  //ZooDriver_Register(table);
   return(0);
 }
 
