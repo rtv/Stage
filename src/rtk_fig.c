@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.20 2006-04-04 22:11:15 pooya Exp $
+ * CVS: $Id: rtk_fig.c,v 1.20.2.1 2006-09-25 17:39:12 gerkey Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -42,6 +42,8 @@
 
 // Draw the selection
 void stg_rtk_fig_render_selection(stg_rtk_fig_t *fig);
+
+void stg_rtk_fig_calc_selection(stg_rtk_fig_t *fig);
 
 // Create a point stroke
 void stg_rtk_fig_point_alloc(stg_rtk_fig_t *fig, double ox, double oy);
