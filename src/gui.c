@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.108 2006-03-22 08:46:29 rtv Exp $
+CVS: $Id: gui.c,v 1.108.2.1 2006-09-25 17:49:49 gerkey Exp $
 */
 
 #include <stdio.h>
@@ -239,7 +239,7 @@ gboolean quit_dialog( GtkWindow* parent )
   
   
   gint result = gtk_dialog_run( GTK_DIALOG(dlg));
-  gtk_widget_destroy(dlg);
+  gtk_widget_destroy(GTK_WIDGET(dlg));
   
   // return TRUE if use clicked YES
   return( result == GTK_RESPONSE_YES );
@@ -253,7 +253,7 @@ gboolean  signal_delete( GtkWidget *widget,
   PRINT_MSG( "Request close window." );
 
 
-  gboolean confirm = quit_dialog( widget );
+  gboolean confirm = quit_dialog( GTK_WINDOW(widget) );
 
   if( confirm )
     {
