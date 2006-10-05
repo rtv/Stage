@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.14 2006-03-14 20:03:53 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.14.2.1 2006-10-05 22:37:18 gerkey Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -56,6 +56,8 @@ InterfacePosition::InterfacePosition(  player_devaddr_t addr,
 						   
   : InterfaceModel( addr, driver, cf, section, position_init )
 {
+  this->stopped = true;
+  this->last_cmd_time = -1;
   //puts( "InterfacePosition constructor" );
 }
 
@@ -82,6 +84,8 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     scmd.a = pcmd->vel.pa;
     scmd.mode = STG_POSITION_CONTROL_VELOCITY;
     stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+    this->stopped = false;
+    this->last_cmd_time = this->mod->world->sim_time;
   }
 
   // Is it a new motor command?
@@ -100,6 +104,8 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     scmd.a = pcmd->pos.pa;
     scmd.mode = STG_POSITION_CONTROL_POSITION;
     stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+    this->stopped = false;
+    this->last_cmd_time = this->mod->world->sim_time;
   }
 
   // Is it a new motor command?
@@ -118,6 +124,8 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     scmd.a = pcmd->angle;
     scmd.mode = STG_POSITION_CONTROL_VELOCITY;
     stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+    this->stopped = false;
+    this->last_cmd_time = this->mod->world->sim_time;
   }
  
   // Is it a request for position geometry?
@@ -283,8 +291,20 @@ void InterfacePosition::Publish( void )
 {
   //puts( "publishing position data" ); 
   
-  
   stg_position_data_t* data = (stg_position_data_t*)this->mod->data;
+
+  // Check watchdog timer, if enabled
+  if((data->watchdog_timeout > 0) && (this->last_cmd_time > 0) && 
+     (!this->stopped) &&
+     ((this->mod->world->sim_time - this->last_cmd_time) >= data->watchdog_timeout))
+  {
+    PRINT_WARN("Stage watchdog timer stopping robot");
+    stg_position_cmd_t scmd; 
+    memset( &scmd, 0, sizeof(scmd));
+    scmd.mode = STG_POSITION_CONTROL_VELOCITY;
+    stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+    this->stopped = true;
+  }
 
   if( data )
     {

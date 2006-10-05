@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.188 2006-03-29 05:11:00 rtv Exp $
+ * CVS: $Id: stage.h,v 1.188.2.1 2006-10-05 22:37:18 gerkey Exp $
  */
 
 
@@ -999,6 +999,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_velocity_t integration_error; ///< errors in simple odometry model
     //stg_bool_t stall; ///< TRUE iff the robot can't move due to a collision
     stg_position_localization_mode_t localization; ///< global or local mode
+    stg_msec_t watchdog_timeout; ///< time since last command after which we stop
   } stg_position_data_t;
   
   /** position_cfg" property */

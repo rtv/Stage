@@ -102,6 +102,9 @@ class InterfaceModel : public Interface
 
 class InterfacePosition : public InterfaceModel
 {
+ private:
+  bool stopped;
+  int last_cmd_time;
  public: 
   InterfacePosition( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfacePosition( void ){ /* TODO: clean up*/ };

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: gerkey $
-//  $Revision: 1.60 $
+//  $Revision: 1.60.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -54,6 +54,7 @@ position
   drive "diff"
   localization "gps"
   localization_origin [ <defaults to model's start pose> ]
+  watchdog_timeout -1.0
  
   # odometry error model parameters, 
   # only used if localization is set to "odom"
@@ -75,6 +76,8 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
   - set the origin of the localization coordinate system. By default, this is copied from the model's initial pose, so the robot reports its position relative to the place it started out. Tip: If localization_origin is set to [0 0 0] and localization is "gps", the model will return its true global position. This is unrealistic, but useful if you want to abstract away the details of localization. Be prepared to justify the use of this mode in your research! 
 - odom_error [x y theta]
   - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
+- watchdog_timeout [float]
+  - time, in seconds, since the last command was received after which the robot will be stopped.  Set to -1.0 for no timeout (this is the default).
 */
 
 
@@ -181,6 +184,8 @@ void position_init( stg_model_t* mod )
     STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
   
   data.localization = STG_POSITION_LOCALIZATION_DEFAULT;
+
+  data.watchdog_timeout = -1;
   
   stg_model_set_data( mod, &data, sizeof(data));
   
@@ -311,6 +316,13 @@ void position_load( stg_model_t* mod )
       else
 	PRINT_ERR1( "no localization mode string specified for model \"%s\"", 
 		    mod->token );
+    }
+  
+  // did the user specify a watchdog timeout?
+  if( wf_property_exists( mod->id, "watchdog_timeout" ) )
+    {
+      data->watchdog_timeout = 
+              (int)rint(1e3 * wf_read_float( mod->id, "watchdog_timeout", -1.0 ));
     }
   
   // we've probably poked the localization data, so we must let people know
