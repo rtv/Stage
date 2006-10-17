@@ -576,6 +576,7 @@ extern "C" {
   double wf_read_length( int section, char* token, double def );
   double wf_read_angle( int section, char* token, double def );
   double wf_read_float( int section, char* token, double def );
+  int wf_tuple_count( int section, char * token );
   const char* wf_read_tuple_string( int section, char* token, int index, char* def );
   double wf_read_tuple_float( int section, char* token, int index, double def );
   double wf_read_tuple_length( int section, char* token, int index, double def );

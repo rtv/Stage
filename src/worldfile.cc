@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.33 2005-03-10 00:41:11 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.33.4.1 2006-10-17 00:07:09 gerkey Exp $
  */
 
 #include <assert.h>
@@ -1386,6 +1386,17 @@ int CWorldFile::GetProperty(int entity, const char *name)
       return i;
   }
   return -1;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get the count of a tuple property
+const int CWorldFile::GetPropertyCount(int entity, const char *name)
+{
+  int property = GetProperty(entity, name);
+  if (property < 0) return -1;
+  CProperty *pproperty = this->properties + property;
+  return pproperty->value_count;
 }
 
 

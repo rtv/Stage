@@ -1,6 +1,6 @@
 // Thin-as-possible C Wrappers for C++ worldfile calls, using a single static worldfile.
 // This is a hacky use of the old C++ worldfile code.
-// $Id: stagecpp.cc,v 1.79 2005-12-20 21:30:23 rtv Exp $
+// $Id: stagecpp.cc,v 1.79.2.1 2006-10-17 00:07:09 gerkey Exp $
 
 #include "stage_internal.h"
 #include "gui.h"
@@ -18,6 +18,12 @@ int wf_property_exists( int section, char* token )
 {
   return( wf.GetProperty( section, token ) > -1 );
 }
+
+int wf_tuple_count( int section, char* token )
+{
+  return wf.GetPropertyCount( section, token );
+}
+
 
 // read wrappers
 int wf_read_int( int section, char* token, int def )

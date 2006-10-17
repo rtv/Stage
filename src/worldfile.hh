@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.6 2005-07-08 22:55:15 rtv Exp $
+ * CVS info: $Id: worldfile.hh,v 1.6.4.1 2006-10-17 00:07:09 gerkey Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -236,6 +236,9 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   
   // Get an property
   public: int GetProperty(int entity, const char *name);
+
+  // Get the number of values in a property
+  public: const int GetPropertyCount(int entity, const char *name);
 
   // Set the value of an property.
   private: void SetPropertyValue(int property, int index, const char *value);
