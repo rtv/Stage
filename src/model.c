@@ -454,6 +454,10 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
   // now we can add the basic square shape
   stg_polygon_t* square = stg_unit_polygon_create();
+  
+  mod->polygons = NULL; /* initialize to NULL to prevent incidental delete by stg_model_set_polygons() below. */
+  mod->polygons_count = 0;
+
   stg_model_set_polygons( mod, square, 1 );
 
 /* #if INCLUDE_GNOME */
@@ -501,7 +505,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
 // free the memory allocated for a model
 void stg_model_destroy( stg_model_t* mod )
 {
-  assert( mod );
+  assert( mod != NULL );
   
   // remove from parent, if there is one
   if( mod->parent && mod->parent->children ) g_ptr_array_remove( mod->parent->children, mod );
@@ -1087,14 +1091,18 @@ void stg_model_set_polygons( stg_model_t* mod,
   if( poly_count == 0 )
     {
       stg_model_map( mod, 0 ); // unmap the model from the matrix
-      
-      free( mod->polygons );
-      mod->polygons_count = 0;      
+
+      if ( mod->polygons != NULL )
+      {      
+	stg_polygons_destroy( mod->polygons, mod->polygons_count );
+	mod->polygons = NULL;
+	mod->polygons_count = 0;
+      }
     }
   else
     {
-      assert(polys);
-      
+      assert(polys != NULL);
+
       stg_model_map( mod, 0 ); // unmap the model from the matrix
       
       // normalize the polygons to fit exactly in the model's body
@@ -1106,18 +1114,18 @@ void stg_model_set_polygons( stg_model_t* mod,
       //else
       //PRINT_WARN3( "setting polygons for model %s which has non-positive area (%.2f,%.2f)",
       //	     prop->mod->token, geom.size.x, geom.size.y );
-      
+
       // zap our old polygons
-      stg_polygons_destroy( mod->polygons, mod->polygons_count );
-      
+      if ( mod->polygons != NULL )
+	stg_polygons_destroy( mod->polygons, mod->polygons_count );
+
       mod->polygons = polys;
       mod->polygons_count = poly_count;
-      
+     
       // if the model has some non-zero
       stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
     }
 
-  
   model_change( mod, &mod->polygons );
 }
 

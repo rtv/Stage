@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.21 2006-04-14 22:00:26 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.22 2006-11-21 01:30:47 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -190,6 +190,8 @@ stg_rtk_canvas_t *stg_rtk_canvas_create(stg_rtk_app_t *app)
 void stg_rtk_canvas_destroy(stg_rtk_canvas_t *canvas)
 {
   int count;
+
+  assert( canvas != NULL );
 
   // Get rid of any figures we still have
   count = 0;

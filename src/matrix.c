@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.22 2006-01-21 09:35:06 rtv Exp $
+ * $Id: matrix.c,v 1.23 2006-11-21 01:30:47 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -129,6 +129,9 @@ stg_matrix_t* stg_matrix_create( double ppm, double width, double height )
 void stg_matrix_destroy( stg_matrix_t* matrix )
 {
   // TODO - free quadtree
+
+  assert( matrix != NULL );
+
   g_hash_table_destroy( matrix->ptable );
   free( matrix );
 }

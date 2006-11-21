@@ -256,7 +256,7 @@ void stg_world_dimensions( stg_world_t* world,
 
 void stg_world_destroy( stg_world_t* world )
 {
-  assert( world );
+  assert( world != NULL );
 		   
   PRINT_DEBUG1( "destroying world %d", world->id );
   

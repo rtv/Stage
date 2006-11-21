@@ -205,6 +205,15 @@ void stg_model_load( stg_model_t* mod )
 	}
     }
  
+  // if we created any polygons
+  if( polycount != -1 )
+    {
+      if( polycount == 0 )
+	PRINT_WARN1( "model \"%s\" has zero polygons", mod->token );
+      
+      stg_model_set_polygons( mod, polys, polycount );
+    }
+
   // load properties of any polygons that we have
   for( int p=0; p<mod->polygons_count; p++ )
     {  
@@ -217,15 +226,6 @@ void stg_model_load( stg_model_t* mod )
 	  //printf( "Set unfilled state of polygon[%d] to %d\n",
 	  //  p, mod->polygons[p].unfilled );
 	}
-    }
-
-  // if we created any polygons
-  if( polycount != -1 )
-    {
-      if( polycount == 0 )
-	PRINT_WARN1( "model \"%s\" has zero polygons", mod->token );
-      
-      stg_model_set_polygons( mod, polys, polycount );
     }
 
   int wf_linecount = wf_read_int( mod->id, "polylines", 0 );

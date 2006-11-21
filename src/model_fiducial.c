@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.49 $
+//  $Revision: 1.50 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +63,6 @@ fiducialfinder
   - the angular field of view of the scanner, in degrees. 
 
 */
-
 
 void fiducial_load( stg_model_t* mod )
 {
@@ -188,10 +187,10 @@ typedef struct
 
 int fiducial_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
-  // Ignore myself, my children, and my ancestors.
-  return( !stg_model_is_related(mod,hitmod) );
+  // Ignore objects that have fiducial_return set to zero,
+  // myself, my children, and my ancestors.
+  return( hitmod->fiducial_return && !stg_model_is_related(mod,hitmod) );
 }	
-
 
 void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user )
 {
@@ -202,11 +201,11 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   if( him->fiducial_key != mfb->mod->fiducial_key )
     return;
 
-  int* his_fid = &him->fiducial_return; 
+  int his_fid = him->fiducial_return; 
 
   // dont' compare a model with itself, and don't consider models with
   // invalid returns
-  if( his_fid == NULL || him == mfb->mod || *his_fid == FiducialNone ) 
+  if( him == mfb->mod || his_fid == FiducialNone ) 
     return; 
 
   stg_pose_t hispose;
@@ -263,8 +262,8 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
       fid.geom.a = NORMALIZE( hispose.a - mfb->pose.a);
       
       // if he's within ID range, get his fiducial.return value, else
-      // we see value 0
-      fid.id = range < mfb->cfg.max_range_id ? *his_fid: 0;
+      // we see value FiducialNone (zero)
+      fid.id = range < mfb->cfg.max_range_id ? his_fid : FiducialNone;
 
       //PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
       //	    him->token, him->fiducial_return );

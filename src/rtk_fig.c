@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.21 2006-07-27 02:33:02 pooya Exp $
+ * CVS: $Id: rtk_fig.c,v 1.22 2006-11-21 01:30:47 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -196,6 +196,8 @@ stg_rtk_fig_t *stg_rtk_fig_create_ex(stg_rtk_canvas_t *canvas, stg_rtk_fig_t *pa
 // Destroy a figure
 void stg_rtk_fig_destroy(stg_rtk_fig_t *fig)
 {
+    assert( fig != NULL );
+
   //printf( "destroying fig %p\n", fig );
 
 
@@ -234,6 +236,8 @@ void stg_rtk_fig_destroy(stg_rtk_fig_t *fig)
 // Recursively free a whole tree of figures (rtv)
 void stg_rtk_fig_and_descendents_destroy( stg_rtk_fig_t* fig )
 {
+    assert( fig != NULL);
+
   while( fig->child )
     stg_rtk_fig_and_descendents_destroy( fig->child );
 

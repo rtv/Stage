@@ -21,7 +21,7 @@
 /*
  * Desc: Stk application functions
  * Author: Andrew Howard
- * CVS: $Id: rtk.c,v 1.9 2005-09-20 00:51:01 gerkey Exp $
+ * CVS: $Id: rtk.c,v 1.10 2006-11-21 01:30:47 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -81,6 +81,8 @@ stg_rtk_app_t *stg_rtk_app_create()
 void stg_rtk_app_destroy(stg_rtk_app_t *app)
 {
   int count;
+
+  assert(app != NULL);
 
   // Get rid of any canvases we still have
   count = 0;

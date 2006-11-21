@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui.c,v 1.109 2006-05-25 21:35:01 rtv Exp $
+CVS: $Id: gui.c,v 1.110 2006-11-21 01:30:47 rtv Exp $
 */
 
 // NOTE: this code is a mess right now as Stage moves to a new GUI
@@ -651,6 +651,8 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 void gui_window_destroy( gui_window_t* win )
 {
   PRINT_DEBUG( "gui window destroy" );
+
+  assert( win != NULL );
 
   //g_hash_table_destroy( win->guimods );
 

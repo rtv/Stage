@@ -666,6 +666,9 @@ stg_polygon_t* stg_polygons_create( int count )
 void stg_polygons_destroy( stg_polygon_t* p, size_t count )
 {
   int c;
+
+  assert(p != NULL);
+
   for( c=0; c<count; c++ )
     if( p[c].points )
       g_array_free( p[c].points, TRUE );
