@@ -25,7 +25,7 @@ void stg_model_load( stg_model_t* mod )
       stg_geom_t geom;
       geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, mod->geom.pose.x );
       geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, mod->geom.pose.y );
-      geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, mod->geom.pose.a );
+      geom.pose.a = wf_read_tuple_angle(mod->id, "origin", 2,  mod->geom.pose.a );
       geom.size.x = mod->geom.size.x;
       geom.size.y = mod->geom.size.y;
       stg_model_set_geom( mod, &geom );
