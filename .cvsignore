@@ -1,3 +1,6 @@
+config.guess
+config.sub
+ltmain.sh
 stamp-h1
 autom4te.cache
 config.h

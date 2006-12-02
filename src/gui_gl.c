@@ -23,6 +23,7 @@
 #include <GL/glx.h> // for XFont for drawing text from X fonts
  
 static GdkGLConfig *glconfig = NULL;
+static GdkGLConfig *gllaser = NULL;
 
 #include "stage_internal.h"
 #include "gui.h"
@@ -1747,6 +1748,7 @@ GdkGLConfig* gl_init( void )
   glconfig = gdk_gl_config_new_by_mode (GDK_GL_MODE_RGBA   |
 					GDK_GL_MODE_DEPTH |
 					GDK_GL_MODE_DOUBLE);
+
   if (glconfig == NULL)
     {
       g_print ("\n*** Cannot find the double-buffered visual.\n");
@@ -1761,6 +1763,11 @@ GdkGLConfig* gl_init( void )
 	  exit (1);
 	}
     }
+
+  // experimental
+  assert( gllaser = gdk_gl_config_new_by_mode (GDK_GL_MODE_RGBA   |
+					       GDK_GL_MODE_DEPTH |
+					       GDK_GL_MODE_DOUBLE));
   
   return glconfig;
 }
