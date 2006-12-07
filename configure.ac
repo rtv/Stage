@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.12.2.3 2006-09-25 18:18:06 gerkey Exp $
+dnl $Id: configure.ac,v 1.12.2.4 2006-12-07 19:28:45 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -88,7 +88,9 @@ AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
   CDB="\"/usr/X11R6/lib/X11/rgb.txt\"",
   AC_CHECK_FILE([/usr/openwin/lib/X11/rgb.txt],
     CDB="\"/usr/openwin/lib/X11/rgb.txt\"",
-    CDB="\"/usr/X11R6/lib/X11/rgb.txt\""))
+    AC_CHECK_FILE([/usr/share/X11/rgb.txt],
+      CDB="\"/usr/share/X11/rgb.txt\"",
+      CDB="\"/usr/X11R6/lib/X11/rgb.txt\"")))
 AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
 CDB="\"$with_color\"",)
 AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
