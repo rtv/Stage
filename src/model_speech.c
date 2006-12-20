@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // File: model_speech.cc
-// Authors: Pooya Karimian
+// Authors: Pooya Karimian, Richard Vaughan
 // Date: 16 March 2006
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_speech.c,v $
 //  $Author: rtv $
-//  $Revision: 1.3.4.1 $
+//  $Revision: 1.3.4.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -22,12 +22,12 @@ This can be used for debugging purposes.
 <h2>Worldfile properties</h2>
 none
 
-<h2>Author</h2>
-Pooya Karimian
+<h2>Authors</h2>
+Pooya Karimian, Richard Vaughan
 */
 
+const double STG_SPEECH_WATTS = 1.0;
 
-//#include <sys/time.h>
 #include <math.h>
 #include "gui.h"
 
@@ -36,34 +36,29 @@ Pooya Karimian
 #include "stage_internal.h"
 
 // standard callbacks
-int speech_update( stg_model_t* mod );
-int speech_startup( stg_model_t* mod );
-int speech_shutdown( stg_model_t* mod );
-void speech_load( stg_model_t* mod );
+int speech_update( stg_model_t* mod, void* unused );
+int speech_startup( stg_model_t* mod, void* unused );
+int speech_shutdown( stg_model_t* mod, void* unused );
+int speech_load( stg_model_t* mod, void* unused );
 
 
 // implented by the gui in some other file
 void gui_speech_init( stg_model_t* mod );
 
-void speech_load( stg_model_t* mod )
+int speech_load( stg_model_t* mod, void* unused )
 {
-
   // TODO: read speech params from the world file
   //  stg_model_set_cfg( mod, &cfg, sizeof(cfg));
+  return 0;
 }
 
-int 
-speech_init( stg_model_t* mod )
+int speech_init( stg_model_t* mod, void* unused )
 {
-  // we don't consume any power until subscribed
-  // mod->watts = 0.0; 
-  
-  // override the default methods; these will be called by the simualtion
+  // override the default methods; these will be called by the simulation
   // engine
-  mod->f_startup = speech_startup;
-  mod->f_shutdown = speech_shutdown;
-  mod->f_update =  speech_update;
-  mod->f_load = speech_load;
+  stg_model_add_callback( mod, &mod->startup, speech_startup, NULL );
+  stg_model_add_callback( mod, &mod->shutdown, speech_shutdown, NULL );
+  stg_model_add_callback( mod, &mod->load, speech_load, NULL );
 
   // sensible speech defaults; it doesn't take up any physical space
   stg_geom_t geom;
@@ -100,7 +95,7 @@ speech_init( stg_model_t* mod )
   return 0;
 }
 
-int speech_update( stg_model_t* mod )
+int speech_update( stg_model_t* mod, void* unused )
 {   
   // no work to do if we're unsubscribed
   if( mod->subs < 1 )
@@ -145,31 +140,22 @@ int speech_update( stg_model_t* mod )
   stg_model_set_data( mod, &data, sizeof(data));
   stg_model_set_cfg( mod,  &cfg, sizeof(cfg));
 
-  // inherit standard update behaviour
-  _model_update( mod );
-
   return 0; //ok
 }
 
-
-int speech_startup( stg_model_t* mod )
+int speech_startup( stg_model_t* mod, void* unused )
 { 
   PRINT_DEBUG( "speech startup" );
-/*
-  stg_model_set_watts( mod, STG_WIFI_WATTS );
-*/  
+  stg_model_add_callback( mod, &mod->update, speech_update, NULL );
+  stg_model_set_watts( mod, STG_SPEECH_WATTS );  
   return 0; // ok
 }
 
-int speech_shutdown( stg_model_t* mod )
+int speech_shutdown( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "speech shutdown" );
-/*
-  stg_model_set_watts( mod, 0 );
-*/
-  
-  // clear the data - this will unrender it too
+  stg_model_set_watts( mod, 0 );  
+  stg_model_remove_callback( mod, &mod->update, speech_update );
   stg_model_set_data( mod, NULL, 0 );
-
   return 0; // ok
 }

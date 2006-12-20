@@ -34,7 +34,21 @@ static void PrintArray( GPtrArray* arr )
     printf( "null array\n" );
 }
 
+extern stg_world_t* global_world;
 
+void box3d_wireframe( stg_bbox3d_t* bbox );
+void push_color( double col[4] );
+void pop_color( void );
+
+int stg_model_ray_intersect( stg_model_t* mod, 
+			     double x1, double y1,
+			     double x2, double y2,
+			     double *hitx, double* hity )
+{
+  *hitx = mod->pose.x;
+  *hity = mod->pose.y;
+  return TRUE;
+}
 
 itl_t* itl_create( double x, double y, double a, double b, 
 		   stg_matrix_t* matrix, itl_mode_t pmode )
@@ -42,12 +56,16 @@ itl_t* itl_create( double x, double y, double a, double b,
   itl_t* itl = calloc( sizeof(itl_t), 1 );
   
   itl->matrix = matrix;
+  itl->x1 = x;
+  itl->y1 = y;
   itl->x = x;
   itl->y = y;
   itl->models = NULL;
   itl->index = 0;
   itl->range = 0;  
   itl->incr = NULL;
+
+  stg_bbox3d_t bbox;
 
   switch( pmode )
     {
@@ -56,23 +74,37 @@ itl_t* itl_create( double x, double y, double a, double b,
 	double range = b;
 	double bearing = a;	
 	itl->a = NORMALIZE(bearing);
-	itl->max_range = range;
+	itl->max_range = range;	
+	itl->x2 = x + range * cos( bearing ); 
+	itl->y2 = y + range * sin( bearing );		  
       }
       break;
     case PointToPoint:
       {
-	double x1 = a;
-	double y1 = b;           
-	itl->a = atan2( y1-y, x1-x );
-	itl->max_range = hypot( x1-x, y1-y );
+	itl->x2 = a;
+	itl->y2 = b;
+	itl->a = atan2( b-y, a-x );
+	itl->max_range = hypot( a-x, b-y );       
       }
       break;
     default:
       puts( "Stage Warning: unknown LineIterator mode" );
     }
   
+  bbox.x.min = MIN( itl->x1, itl->x2 );
+  bbox.x.max = MAX( itl->x1, itl->x2 );
+  bbox.y.min = MIN( itl->y1, itl->y2 );
+  bbox.y.max = MAX( itl->y1, itl->y2 );
+  bbox.z.min = 0.0;
+  bbox.z.max = 1.0;
+  
+
   //printf( "a = %.2f remaining_range = %.2f\n", itl->a,
   //remaining_range ); fflush( stdout );
+  
+  // find all the models that overlap with this bbox
+
+
   
   itl->cosa = cos( itl->a );
   itl->sina = sin( itl->a );
@@ -81,10 +113,143 @@ itl_t* itl_create( double x, double y, double a, double b,
   return itl;
 };
 
+int hit_range_compare( stg_hit_t* a, stg_hit_t* b )
+{
+  if( a->range > b->range )
+    return 1;
+
+  if( a->range < b->range )
+    return -1;
+
+  return 0;
+}
+
+itl_t* itl_create2( stg_model_t* mod, 
+		    double x, double y, double a, double b, 
+		    stg_matrix_t* matrix, itl_mode_t pmode,
+		    stg_itl_test_func_t func )
+{   
+  itl_t* itl = calloc( sizeof(itl_t), 1 );
+  
+  itl->matrix = matrix;
+  itl->x1 = x;
+  itl->y1 = y;
+  itl->x = x;
+  itl->y = y;
+  itl->models = NULL;
+  itl->index = 0;
+  itl->range = 0;  
+  itl->incr = NULL;
+
+  stg_bbox3d_t bbox;
+
+  switch( pmode )
+    {
+    case PointToBearingRange:
+      {
+	double range = b;
+	double bearing = a;	
+	itl->a = NORMALIZE(bearing);
+	itl->max_range = range;	
+	itl->x2 = x + range * cos( bearing ); 
+	itl->y2 = y + range * sin( bearing );		  
+      }
+      break;
+    case PointToPoint:
+      {
+	itl->x2 = a;
+	itl->y2 = b;
+	itl->a = atan2( b-y, a-x );
+	itl->max_range = hypot( a-x, b-y );       
+      }
+      break;
+    default:
+      puts( "Stage Warning: unknown LineIterator mode" );
+    }
+  
+  bbox.x.min = MIN( itl->x1, itl->x2 );
+  bbox.x.max = MAX( itl->x1, itl->x2 );
+  bbox.y.min = MIN( itl->y1, itl->y2 );
+  bbox.y.max = MAX( itl->y1, itl->y2 );
+  bbox.z.min = 0.0;
+  bbox.z.max = 1.0;
+  
+
+  //printf( "a = %.2f remaining_range = %.2f\n", itl->a,
+  //remaining_range ); fflush( stdout );
+  
+  // find all the models that overlap with this bbox
+
+  GList* candidates = mod->intersectors;
+  itl->hits = NULL;
+
+  printf( "ray from %.2f,%.2f hitlist:\n", x, y );
+  
+  GList* it;
+  for( it=candidates; it; it=it->next )
+    {
+      stg_model_t* him = (stg_model_t*)it->data;
+
+      printf( " %s\t", him->token ); 
+      
+      if( (*func)( him, mod ) )
+	{
+	  double xs,ys;
+	  
+	  if( stg_model_ray_intersect( him, 
+				       itl->x1, itl->y1,
+				       itl->x2, itl->y2,
+				       &xs, &ys ) )
+	    {
+	      stg_hit_t* hit = calloc(sizeof(stg_hit_t),1);
+	      hit->x = xs;
+	      hit->y = ys;
+	      hit->range = hypot( xs-x, ys-y );
+	      hit->mod = him;	
+	      itl->hits = g_list_prepend( itl->hits, hit );
+	      
+	      printf( " \n" );
+	    }
+	}
+      else
+	printf( "  (failed the filter)\n" );
+    }
+  puts("");
+  
+  itl->hits = g_list_sort( itl->hits, hit_range_compare );
+  itl->current = itl->hits;
+  
+  //GList* it;
+  printf( "Sorted hit list:\n" );
+  for( it=itl->current; it; it=it->next )
+    {
+      stg_hit_t* hit = (stg_hit_t*)it->data;
+      printf( "%s @ %.2f\n", hit->mod->token, hit->range );
+    }
+
+  itl->cosa = cos( itl->a );
+  itl->sina = sin( itl->a );
+  itl->tana = tan( itl->a );
+  
+  puts("");
+  puts("");
+
+  return itl;
+};
+
 void itl_destroy( itl_t* itl )
 {
   if( itl )
     {
+      if( itl->hits )
+	{
+	  GList* it;
+	  for( it=itl->hits; it; it=it->next )
+	    free( it->data );
+	      
+	  g_list_free( itl->hits );
+	}
+
       if( itl->incr ) 
 	free( itl->incr );
       free( itl );
@@ -170,10 +335,64 @@ stg_cell_t* stg_cell_locate( stg_cell_t* cell, double x, double y )
   return cell;
 }
 
+stg_model_t* itl_next2( itl_t* itl )
+{
+  if( itl->current )
+    {
+      stg_hit_t* hit = (stg_hit_t*)itl->current->data;
+      stg_model_t* mod = hit->mod;
+      itl->range = hit->range;
+      itl->x = hit->x;
+      itl->y = hit->y;
+      itl->current = itl->current->next;
+      return mod;
+    }
+  else
+    return NULL;
+}
+
+stg_model_t* itl_next( itl_t* itl )
+{
+  if( itl->current )
+    {
+      stg_hit_t* hit = (stg_hit_t*)itl->current->data;      
+      itl->range = hit->range;
+      itl->x = hit->x;
+      itl->y = hit->y;      
+      
+      // shift to the next hit
+      itl->current=itl->current->next;      
+
+      return hit->mod;
+    }  
+  
+  return NULL; // we ran out of models
+}
+
 stg_model_t* itl_first_matching( itl_t* itl, 
 				 stg_itl_test_func_t func, 
 				 stg_model_t* finder )
 {
+  for( ; itl->current; itl->current=itl->current->next )
+    {
+      stg_hit_t* hit = (stg_hit_t*)itl->current->data;
+      
+      printf( "testing model %s against matching func\n", hit->mod->token );
+
+      if( (*func)( hit->mod, finder ) )
+	{
+	  itl->range = hit->range;
+	  itl->x = hit->x;
+	  itl->y = hit->y;
+
+	  return hit->mod;
+	}
+    }
+
+  return NULL; // didn't find a model
+
+  //!
+
   itl->index = 0;
   itl->models = NULL;  
 

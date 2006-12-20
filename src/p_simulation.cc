@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.15.2.2 2006-12-02 00:20:52 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.15.2.3 2006-12-20 03:01:13 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -228,7 +228,7 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
 	}
       else
 	{
-	  PRINT_WARN1( "SET_PROPERTY_INT request: simulation model \"%s\" not found", req->name );
+	  PRINT_WARN1( "SET_PROPERTY request: simulation model \"%s\" not found", req->name );
 	  return(-1);
 	}
     }
@@ -273,7 +273,7 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
     }
     else
     {
-      PRINT_WARN1( "Stage: GETPOSE2D request: simulation model \"%s\" not found", req->name );
+      PRINT_WARN1( "Stage: GET_POSE2D request: simulation model \"%s\" not found", req->name );
       return(-1);
     }
   }

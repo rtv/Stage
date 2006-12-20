@@ -35,6 +35,11 @@
 
 extern stg_type_record_t typetable[];
 
+// RV tmp
+stg_model_t* stg_model_test_collision2( stg_model_t* mod, 
+					double* hitx, double* hity );
+
+
 //extern int _stg_disable_gui;
 
 /** @ingroup stage 
@@ -180,133 +185,118 @@ void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
   //  pose->x, pose->y, pose->a );
 }
 
-
-/** container for a callback function and a single argument, so
-    they can be stored together in a list with a single pointer. */
-typedef struct
+// default update function that implements velocities for all objects
+void model_move_due_to_velocity( stg_model_t* mod )
 {
-  stg_model_callback_t callback;
-  void* arg;
-} stg_cb_t;
-
-
-void stg_model_add_callback( stg_model_t* mod, 
-			     void* address, 
-			     stg_model_callback_t cb, 
-			     void* user )
-{
-  int* key = malloc(sizeof(int));
-  *key = address - (void*)mod;
-
-  GList* cb_list = g_hash_table_lookup( mod->callbacks, key );
+  stg_velocity_t* vel = &mod->velocity;
   
-  stg_cb_t* cba = calloc(sizeof(stg_cb_t),1);
-  cba->callback = cb;
-  cba->arg = user;
-  
-  //printf( "installing callback in model %s with key %d\n",
-  //  mod->token, *key );
-
-  // add the callback & argument to the list
-  cb_list = g_list_prepend( cb_list, cba );
-  
-  // and replace the list in the hash table
-  g_hash_table_insert( mod->callbacks, key, cb_list );
+  // now move the model if it has any velocity
+  if( vel && (vel->x || vel->y || vel->a ) )
+    stg_model_update_pose( mod );
 }
 
-int stg_model_remove_callback( stg_model_t* mod,
-			       void* member,
-			       stg_model_callback_t callback )
-{
-  int key = member - (void*)mod;
 
-  GList* cb_list = g_hash_table_lookup( mod->callbacks, &key );
+int endpoint_sort( stg_endpoint_t* a, stg_endpoint_t* b )
+{
+  if( a->value > b->value ) return 1;
+  if( b->value < a->value ) return -1;
+  return 0;
+}
+
+/* GList* add_endpoint_to_list( GList* list, stg_endpoint_t* ep ) */
+/* { */
+/*   // add the endpoint to the list, while stashing a pointer to the new */
+/*   // list element inside the endpoint for fast access to its neighbors */
+/*   // later. */
+/*   list = ep->list = g_list_prepend( list, ep ); */
+/*   return g_list_sort( list, (GCompareFunc)endpoint_sort ); */
+/* } */
+
+// careful: no error checking - this must be fast
+static inline stg_endpoint_t* endpoint_left( stg_endpoint_t* head, stg_endpoint_t* link )
+{
+  assert( head );
+  assert( link );
+  assert( link->prev );
+  
+  stg_endpoint_t *a = link->prev->prev;
+  stg_endpoint_t *b = link->prev;
+  stg_endpoint_t *c = link;
+  stg_endpoint_t *d = link->next;
+
+  if( a ) a->next = c; else head = c;
+  if( d ) d->prev = b;
+
+  b->prev = c;
+  b->next = d;
+  c->prev = a;
+  c->next = b;
+
+  return head;
+}
+
+  // careful: no error checking - this must be fast
+static inline stg_endpoint_t* endpoint_right( stg_endpoint_t* head, stg_endpoint_t* link )
+{
+  assert( head );
+  assert( link );
+  assert( link->next );
+
+  stg_endpoint_t *a = link->prev;
+  stg_endpoint_t *b = link;
+  stg_endpoint_t *c = link->next;
+  stg_endpoint_t *d = link->next->next;
+
+  if( a ) a->next = c; else head = c;
+  if( d ) d->prev = b;
+
+  b->prev = c;
+  b->next = d;
+  c->prev = a;
+  c->next = b;
  
-  // find our callback in the list of stg_cbarg_t
-  GList* el = NULL;
-  
-  // scan the list for the first matching callback
-  for( el = g_list_first( cb_list );
-       el;
-       el = el->next )
-    {
-      if( ((stg_cbarg_t*)el->data)->callback == callback )
-	break;
-    }
-
-  if( el ) // if we found the matching callback, remove it
-    {
-      //puts( "removed callback" );
-
-      cb_list = g_list_remove( cb_list, el->data);
-      
-      // store the new, shorter, list of callbacks
-      g_hash_table_insert( mod->callbacks, &key, cb_list );
-
-      // we're done with that
-      //free( el->data );
-    }
-  else
-    {
-      //puts( "callback was not installed" );
-    }
- 
-  return 0; //ok
+  return head;
 }
 
 
-void model_call_callbacks( stg_model_t* mod, void* address )
+
+stg_endpoint_t* prepend_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
 {
-  assert( mod );
-  assert( address );
-  assert( address > (void*)mod );
-  assert( address < (void*)( mod + sizeof(stg_model_t)));
-  
-  int key = address - (void*)mod;
-  
-  //printf( "Model %s has %d callbacks. Checking key %d\n", 
-  //  mod->token, g_hash_table_size( mod->callbacks ), key );
-  
-  GList* cbs = g_hash_table_lookup( mod->callbacks, &key ); 
-  
-  //printf( "key %d has %d callbacks registered\n",
-  //  key, g_list_length( cbs ) );
-  
-  // maintain a list of callbacks that should be cancelled
-  GList* doomed = NULL;
+  if( head )
+    head->prev = ep;
 
-  // for each callback in the list
-  while( cbs )
-    {  
-      stg_cb_t* cba = (stg_cb_t*)cbs->data;
-      
-      //puts( "calling..." );
-      
-      if( (cba->callback)( mod, cba->arg ) )
-	{
-	  //printf( "callback returned TRUE - schedule removal from list\n" );
-	  doomed = g_list_prepend( doomed, cba->callback );
-	}
-      else
-	{
-	  //printf( "callback returned FALSE - keep in list\n" );
-	}
-      
-      cbs = cbs->next;
-    }      
-
-  if( doomed ) 	// delete all the callbacks that returned TRUE    
-    {
-      //printf( "removing %d doomed callbacks\n", g_list_length( doomed ) );
-      
-      for( ; doomed ; doomed = doomed->next )
-	stg_model_remove_callback( mod, address, (stg_model_callback_t*)doomed->data );
-      
-      g_list_free( doomed );      
-    }
-
+  ep->next = head;
+  return ep;
 }
 
+stg_endpoint_t* insert_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
+{
+  // add the endpoint to the front of the list
+  head = prepend_endpoint( head, ep );
+  
+  // now shift the endpoint right until it's in correct sorted position
+  while( ep->next && (ep->value < ep->next->value) )
+    head = endpoint_right( head, ep ); 
+    
+  return head;
+}
+
+/* stg_endpoint_t* append_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep ) */
+/* { */
+/*   stg_endpoint_t* tail = head; */
+  
+/*   // run down to the end of the list */
+/*   if( tail ) */
+/*     { */
+/*       while( tail->next ) */
+/* 	tail = tail->next;       */
+/*       tail->next = ep; */
+/*     } */
+
+/*   ep->prev = tail; */
+/*   return head; */
+/* } */
+   
 stg_model_t* stg_model_create( stg_world_t* world, 
 			       stg_model_t* parent,
 			       stg_id_t id,
@@ -348,12 +338,12 @@ stg_model_t* stg_model_create( stg_world_t* world,
   //  mod->token  );
   
   //PRINT_DEBUG1( "original token: %s", token );
-
-  // add this model to its parent's list of children (if any)
-  if( parent) g_ptr_array_add( parent->children, mod );       
   
+  // add this model to its parent's list of children (if any)
+  if( parent) parent->children = g_list_append( parent->children, mod );      
+
   // create this model's empty list of children
-  mod->children = g_ptr_array_new();
+  mod->children = NULL;
   
   // generate a name and count this type in its parent (or world,
   // if it's a top-level object)
@@ -366,15 +356,19 @@ stg_model_t* stg_model_create( stg_world_t* world,
 	      parent->token,
 	      typestr, 
 	      parent->child_type_count[index]++ );
+
+  printf( "created model %s.\n", mod->token );
   
   // initialize the table of callbacks that are triggered when a
   // model's fields change
   mod->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
 
-  // install the default functions
-  mod->f_startup = NULL;
-  mod->f_shutdown = NULL;
-  mod->f_update = _model_update;
+  // install the default callback functions
+  //mod->f_startup = NULL;
+  //mod->f_shutdown = NULL;
+  // mod->f_update = _model_update;
+
+  //stg_model_add_callback( mod, &mod->update, _model_update, NULL );
 
   mod->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
   mod->geom.size.y = STG_DEFAULT_GEOM_SIZEX;
@@ -392,6 +386,30 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->gui_grid = STG_DEFAULT_GRID;
   mod->gui_outline = STG_DEFAULT_OUTLINE;
   mod->gui_mask = mod->parent ? 0 : STG_DEFAULT_MASK;
+
+  int i;
+  for( i=0; i<6; i++ )
+    {
+      mod->endpts[i].mod = mod;
+      mod->endpts[i].type = i % 2; // 0 is STG_BEGIN, 1 is STG_END
+      mod->endpts[i].value = 0.0;
+      mod->endpts[i].prev = NULL;
+      mod->endpts[i].next = NULL;
+    }
+
+  // add this model's endpoints to the world's lists
+  world->endpts.x = prepend_endpoint( world->endpts.x, &mod->endpts[0]);
+  world->endpts.x = prepend_endpoint( world->endpts.x, &mod->endpts[1]);
+  world->endpts.y = prepend_endpoint( world->endpts.y, &mod->endpts[2]);
+  world->endpts.y = prepend_endpoint( world->endpts.y, &mod->endpts[3]);
+  world->endpts.z = prepend_endpoint( world->endpts.z, &mod->endpts[4]);
+  world->endpts.z = prepend_endpoint( world->endpts.z, &mod->endpts[5]);
+
+
+  //print_endpoint_list( "XLIST", world->endpts.x  );
+  //print_endpoint_list(  "YLIST" , world->endpts.y );
+  //print_endpoint_list( "ZLIST", world->endpts.z  );
+  //mod->intersectors = NULL;
 
   // now it's safe to create the GUI components
   if( mod->world->win )
@@ -424,12 +442,13 @@ void stg_model_destroy( stg_model_t* mod )
   assert( mod );
   
   // remove from parent, if there is one
-  if( mod->parent && mod->parent->children ) g_ptr_array_remove( mod->parent->children, mod );
+  if( mod->parent && mod->parent->children ) 
+    mod->parent->children = g_list_remove( mod->parent->children, mod );
   
   // free all local stuff 
   // TODO - make sure this is up to date - check leaks with valgrind
   if( mod->world->win ) gui_model_destroy( mod );
-  if( mod->children ) g_ptr_array_free( mod->children, FALSE );
+  if( mod->children ) g_list_free( mod->children );
   if( mod->callbacks ) g_hash_table_destroy( mod->callbacks );
   if( mod->data ) free( mod->data );
   if( mod->cmd ) free( mod->cmd );
@@ -439,10 +458,15 @@ void stg_model_destroy( stg_model_t* mod )
   free( mod );
 }
 
-
-void model_destroy_cb( gpointer mod )
+// DO NOT USE THIS FUNCTION!
+// copy a model and all it's properties safely
+stg_model_t* stg_model_duplicate( stg_model_t* mod )
 {
-  stg_model_destroy( (stg_model_t*)mod );
+  // TODO - this is NOT safe! do it properly
+  stg_model_t* dupe = NULL;
+  assert( malloc( sizeof(stg_model_t) ));
+  memcpy( dupe, mod, sizeof(stg_model_t));
+  return dupe;
 }
 
 int stg_model_is_antecedent( stg_model_t* mod, stg_model_t* testmod )
@@ -466,13 +490,12 @@ int stg_model_is_descendent( stg_model_t* mod, stg_model_t* testmod )
   if( mod == testmod )
     return TRUE;
 
-  assert( mod->children );
+  //assert( mod->children );
 
-  int ch;
-  for(ch=0; ch < mod->children->len; ch++ )
+  GList* it;
+  for(it=mod->children; it; it=it->next )
     {
-      stg_model_t* child = g_ptr_array_index( mod->children, ch );
-      if( stg_model_is_descendent( child, testmod ))
+      if( stg_model_is_descendent(  (stg_model_t*)it->data, testmod ))
 	return TRUE;
     }
   
@@ -571,9 +594,9 @@ void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
 void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
 {
   // call this function for all the model's children
-  int ch;
-  for( ch=0; ch<mod->children->len; ch++ )
-    stg_model_map_with_children( (stg_model_t*)g_ptr_array_index(mod->children, ch), 
+  GList* it;
+  for( it=mod->children; it; it=it->next )
+    stg_model_map_with_children( (stg_model_t*)it->data, 
 				 render);  
   // now map the model
   stg_model_map( mod, render );
@@ -622,18 +645,12 @@ void stg_model_map( stg_model_t* mod, gboolean render )
 
 
 
-void model_update_cb( gpointer key, gpointer value, gpointer user )
-{
-  stg_model_update( (stg_model_t*)value );
-}
-
-
 void stg_model_subscribe( stg_model_t* mod )
 {
   mod->subs++;
   mod->world->subs++;
 
-  //printf( "subscribe %d\n", mod->subs );
+  printf( "subscribe to %s %d\n", mod->token, mod->subs );
   
   //model_change( mod, &mod->lines );
 
@@ -647,7 +664,7 @@ void stg_model_unsubscribe( stg_model_t* mod )
   mod->subs--;
   mod->world->subs--;
 
-  //printf( "unsubscribe %d\n", mod->subs );
+  printf( "unsubscribe from %s %d\n", mod->token, mod->subs );
 
   // if this is the last sub, call shutdown
   if( mod->subs < 1 )
@@ -676,53 +693,34 @@ void model_print_cb( gpointer key, gpointer value, gpointer user )
   stg_model_print( (stg_model_t*)value, NULL );
 }
 
+// stg_model_load() is implemented in model_load.c
+// stg_model_save() is implemented in model_load.c
 
-// default update function that implements velocities for all objects
-int _model_update( stg_model_t* mod )
+void stg_model_update( stg_model_t* mod )
 {
-  mod->interval_elapsed = 0;
+  //printf( "Updating model %s\n", mod->token );
+  model_call_callbacks( mod, &mod->update );
 
-  stg_velocity_t* vel = &mod->velocity;
-  
-  // now move the model if it has any velocity
-  if( vel && (vel->x || vel->y || vel->a ) )
-    stg_model_update_pose( mod );
-
-  return 0; //ok
+  //GList* it;
+  //for( it=mod->children; it; it=it->next )
+  //stg_model_update( (stg_model_t*)it->data ); 
 }
 
-int stg_model_update( stg_model_t* mod )
+void stg_model_startup( stg_model_t* mod )
 {
-  return( mod->f_update ? mod->f_update(mod) : 0 );
+  //printf( "Startup model %s\n", mod->token );
+  model_call_callbacks( mod, &mod->startup );
 }
 
-int stg_model_startup( stg_model_t* mod )
+void stg_model_shutdown( stg_model_t* mod )
 {
-  if( mod->f_startup )
-    return mod->f_startup(mod);
-  else
-    PRINT_WARN1( "model %s has no startup function registered (TODO: remove this warning before release)", mod->token ); 
-  
-  return 0; //ok
+  //printf( "Shutdown model %s\n", mod->token );
+  model_call_callbacks( mod, &mod->shutdown );
 }
-
-int stg_model_shutdown( stg_model_t* mod )
-{
-  if( mod->f_shutdown )
-    return mod->f_shutdown(mod);
-  else
-    PRINT_WARN1( "model %s has no shutdown function registered (TODO: remove this warning before release)", mod->token ); 
-  
-  return 0; //ok
-}
-
-
-// experimental
 
 void model_change( stg_model_t* mod, void* address )
 {
-  int offset = address - (void*)mod;
-  
+  //int offset = address - (void*)mod;
   //printf( "model %s at %p change at address %p offset %d \n",
   //  mod->token, mod, address, offset );
   
@@ -795,19 +793,193 @@ void stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel )
   model_change( mod, &mod->velocity );
 }
 
+
+/** Given the end points of the two line segments (p1x,p1y) to
+    (p2x,p2y) and (p3x,p3y) to (p4x,p4y), compute the intersection
+    point of the lines. If the intersection point lies within both
+    line segments return TRUE else FALSE.
+ */
+int line_segment_intersect( double p1x, double p1y,
+			    double p2x, double p2y,
+			    double p3x, double p3y,
+			    double p4x, double p4y,
+			    double *hitx, double *hity )
+{
+  double denom = (p4y-p3y)*(p2x-p1x) - (p4x-p3x)*(p2y-p1y);
+
+  double ua = ((p4x-p3x)*(p1y-p3y)-(p4y-p3y)*(p1x-p3x)) / denom;
+  double ub = ((p2x-p1x)*(p1y-p3y)-(p2y-p1y)*(p1x-p3x)) / denom;
+  
+  // store the point at which the lines intersect
+  *hitx = p1x + ua * (p2x - p1x );
+  *hity = p1y + ua * (p2y - p1y );
+  
+  // TRUE iff the point is within the specified line segments
+  return( ua > 0 && ua <= 1 && ub > 0 && ub <= 1 );
+}
+
+
+void print_endpoint_list( char* prefix, stg_endpoint_t* ep )
+{
+  printf( "%s (list at %p)\n", prefix, ep );
+  
+  int i=0;
+
+  for( ; ep; ep=ep->next )
+    {
+      assert( i < 30 );
+
+      printf( "\t%d %.4f %s %s\n", 
+	      i++, 
+	      ep->value,
+	      ep->type == STG_BEGIN ? "BEGIN" : "END",
+	      ep->mod->token );
+      
+    }
+  puts(""); 
+}
+
+// careful: no error checking - this must be fast
+GList* list_link_left( GList* head, GList* link )
+{
+  assert( head );
+  assert( link );
+  assert( link->prev );
+  
+  GList *a = link->prev->prev;
+  GList *b = link->prev;
+  GList *c = link;
+  GList *d = link->next;
+
+  if( a ) a->next = c; else head = c;
+  if( d ) d->prev = b;
+
+  b->prev = c;
+  b->next = d;
+  c->prev = a;
+  c->next = b;
+
+  return head;
+}
+
+  // careful: no error checking - this must be fast
+GList* list_link_right( GList* head, GList* link )
+{
+  assert( head );
+  assert( link );
+  assert( link->next );
+
+  GList *a = link->prev;
+  GList *b = link;
+  GList *c = link->next;
+  GList *d = link->next->next;
+
+  if( a ) a->next = c; else head = c;
+  if( d ) d->prev = b;
+
+  b->prev = c;
+  b->next = d;
+  c->prev = a;
+  c->next = b;
+ 
+  return head;
+}
+
+static inline stg_endpoint_t* endpoint_right_intersect( stg_endpoint_t* head,  stg_endpoint_t* ep )
+{
+  stg_endpoint_t* r_ep = ep->next;
+  
+  if( r_ep->mod != ep->mod )
+    {
+      if( (ep->type == STG_END) && (r_ep->type == STG_BEGIN) )
+	world_intersect_incr( ep->mod->world, ep->mod, r_ep->mod );
+      else if( (ep->type == STG_BEGIN) && (r_ep->type == STG_END) )
+	  world_intersect_decr( ep->mod->world, ep->mod, r_ep->mod );
+    }
+  
+  return endpoint_right( head, ep );
+}    
+
+// locally shifts the endpoint into order in its list. returns the
+// head of the list, which may have changed
+static inline stg_endpoint_t* bubble( stg_endpoint_t* head, stg_endpoint_t* ep )
+{
+  while( ep->next && (ep->next->value < ep->value) )
+    head = endpoint_right_intersect( head, ep );
+  
+  while( ep->prev && (ep->prev->value > ep->value) )
+    head = endpoint_right_intersect( head, ep->prev );
+  
+  return head;
+}
+
+void model_update_bbox( stg_model_t* mod )
+{
+  //printf( "UPDATE BBOX for model %s\n", mod->token );
+
+  stg_pose_t gpose;
+  stg_model_get_global_pose( mod, &gpose );
+
+  double dx_x =  fabs(mod->geom.size.x * cos(gpose.a)); 
+  double dx_y =  fabs(mod->geom.size.y * sin(gpose.a));
+  double dx = dx_x + dx_y;
+
+  double dy_x = fabs(mod->geom.size.x * sin(gpose.a));
+  double dy_y = fabs(mod->geom.size.y * cos(gpose.a));
+  double dy = dy_x + dy_y;
+
+  double dz = mod->geom.size.z;
+
+  // stuff these data into the endpoint structures
+  mod->endpts[0].value = gpose.x - dx/2.0;
+  mod->endpts[1].value = gpose.x + dx/2.0;
+  mod->endpts[2].value = gpose.y - dy/2.0;
+  mod->endpts[3].value = gpose.y + dy/2.0;
+  mod->endpts[4].value = gpose.z;
+  mod->endpts[5].value = gpose.z + dz;
+
+  // bubble sort the end points of the bounding box in the lists along
+  // each axis - bubble sort is VERY fast because we usually don't
+  // move, but occasionally move 1 place left or right
+  
+  mod->world->endpts.x = bubble( mod->world->endpts.x, &mod->endpts[0] );
+  mod->world->endpts.x = bubble( mod->world->endpts.x, &mod->endpts[1] );
+  mod->world->endpts.y = bubble( mod->world->endpts.y, &mod->endpts[2] );
+  mod->world->endpts.y = bubble( mod->world->endpts.y, &mod->endpts[3] );
+  mod->world->endpts.z = bubble( mod->world->endpts.z, &mod->endpts[4] );
+  mod->world->endpts.z = bubble( mod->world->endpts.z, &mod->endpts[5] );
+
+  //world_intercept_array_print( mod->world );
+}
+
 void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
 {
   assert(mod);
   assert(pose);
-  
-  // unrender from the matrix
-  stg_model_map_with_children( mod, 0 );
-    
-  memcpy( &mod->pose, pose, sizeof(stg_pose_t));
 
-  // render in the matrix
-  stg_model_map_with_children( mod, 1 );
-  
+  // if the pose has changed, we need to do some work
+  if( memcmp( &mod->pose, pose, sizeof(stg_pose_t) ) != 0 )
+    {
+      // unrender from the matrix
+      stg_model_map_with_children( mod, 0 );
+      
+      memcpy( &mod->pose, pose, sizeof(stg_pose_t));
+      
+      model_update_bbox( mod );
+
+      // TODO - can we do this less frequently? maybe not...
+      GList *it;
+      for( it=mod->children; it; it=it->next )
+	model_update_bbox( (stg_model_t*)it->data );
+
+      double hitx, hity;
+      stg_model_test_collision2( mod, &hitx, &hity );
+
+      // render in the matrix
+      stg_model_map_with_children( mod, 1 );
+    }
+
+  // register a model change even if the pose didn't actually change
   model_change( mod, &mod->pose );
 }
 
@@ -833,8 +1005,10 @@ void stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
   // we can do it in-place
   stg_polygons_normalize( mod->polygons, mod->polygons_count, 
 			  geom->size.x, geom->size.y );
+  model_update_bbox( mod );
+  
   model_change( mod, &mod->polygons );
-    
+  
   // re-render int the matrix
   stg_model_map( mod, 1 );  
   
@@ -1111,15 +1285,14 @@ void stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
   //      gpose->x, gpose->y, gpose->a, lpose.x, lpose.y, lpose.a );
 }
 
-
 int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent)
 {
   // remove the model from its old parent (if it has one)
   if( mod->parent )
-    g_ptr_array_remove( mod->parent->children, mod );
+    mod->parent->children = g_list_remove( mod->parent->children, mod );
 
   if( newparent )
-    g_ptr_array_add( newparent->children, mod );
+    newparent->children = g_list_append( newparent->children, mod );
 
   // link from the model to its new parent
   mod->parent = newparent;
@@ -1154,11 +1327,12 @@ stg_model_t* stg_model_test_collision( stg_model_t* mod,
 				       //stg_pose_t* pose, 
 				       double* hitx, double* hity )
 {
-  int ch;
   stg_model_t* child_hit = NULL;
-  for(ch=0; ch < mod->children->len; ch++ )
+
+  GList* it;
+  for(it=mod->children; it; it=it->next )
     {
-      stg_model_t* child = g_ptr_array_index( mod->children, ch );
+      stg_model_t* child = (stg_model_t*)it->data;
       child_hit = stg_model_test_collision( child, hitx, hity );
       if( child_hit )
 	return child_hit;
@@ -1242,6 +1416,165 @@ stg_model_t* stg_model_test_collision( stg_model_t* mod,
 
 
 
+/* typedef struct */
+/* { */
+/*   stg_model_t* mod; */
+/*   GList** list; */
+/* } _modlist_t; */
+
+
+/* int bboxes_overlap( stg_bbox3d_t* box1, stg_bbox3d_t* box2 ) */
+/* { */
+/*   // return TRUE iff any corner of box 2 is contained within box 1 */
+/*   return( box1->x.min <= box2->x.max && */
+/* 	  box2->x.min <= box1->x.max && */
+/* 	  box1->y.min <= box2->y.max && */
+/* 	  box2->y.min <= box1->y.max ); */
+/* } */
+
+
+/* GList* stg_model_overlappers( stg_model_t* mod, GList* models ) */
+/* { */
+/*   GList *it; */
+/*   stg_model_t* candidate; */
+/*   GList *overlappers = NULL; */
+
+/*   //printf( "\nfinding overlappers of %s\n", mod->token ); */
+
+/*   for( it=models; it; it=it->next ) */
+/*     { */
+/*       candidate = (stg_model_t*)it->data; */
+
+/*       if( candidate == mod ) */
+/* 	continue; */
+
+/*       printf( "model %s tested against %s...", mod->token, candidate->token ); */
+      
+/*       if( bboxes_overlap( &mod->bbox, &candidate->bbox ) ) */
+/* 	{ */
+/* 	  overlappers = g_list_append( overlappers, candidate ); */
+/* 	  puts(" OVERLAP!" ); */
+/* 	} */
+/*       else */
+/* 	puts( "" ); */
+
+/*       if( candidate->children ) */
+/* 	overlappers = g_list_concat( overlappers,  */
+/* 				     stg_model_overlappers( mod, candidate->children )); */
+/*     } */
+  
+/*   return overlappers; */
+/* } */
+
+
+// add any line segments contained by this model to the list of line
+// segments in world coordinates.
+/* GList* model_append_segments( stg_model_t* mod, GList* segments ) */
+/* { */
+/*   stg_pose_t gpose; */
+/*   stg_model_get_global_pose( mod, &gpose ); */
+/*   double x = gpose.x; */
+/*   double y = gpose.y; */
+/*   double a = gpose.a; */
+
+/*   int p; */
+/*   for( p=0; p<mod->polygons_count; p++ ) */
+/*     { */
+/*       stg_polygon_t* poly =  &mod->polygons[p]; */
+
+/*       // need at least three points for a meaningful polygon */
+/*       if( poly->points->len > 2 ) */
+/* 	{ */
+/* 	  int count = poly->points->len; */
+/* 	  int p; */
+/* 	  for( p=0; p<count; p++ ) // for */
+/* 	    { */
+/* 	      stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	   */
+/* 	      stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % count); */
+
+/* 	      stg_line_t *line = malloc(sizeof */
+/* 	      line.x1 = x + pt1->x * cos(a) - pt1->y * sin(a); */
+/* 	      line.y1 = y + pt1->x * sin(a) + pt1->y * cos(a);  */
+	      
+/* 	      line.x2 = x + pt2->x * cos(a) - pt2->y * sin(a); */
+/* 	      line.y2 = y + pt2->x * sin(a) + pt2->y * cos(a);  */
+	      
+/* 	      //stg_matrix_lines( matrix, &line, 1, object ); */
+/* 	    } */
+/* 	} */
+/*       //else */
+/*       //PRINT_WARN( "attempted to matrix render a polygon with less than 3 points" );  */
+/*     } */
+      
+
+
+
+/* } */
+
+stg_model_t* stg_model_test_collision2( stg_model_t* mod, 
+					//stg_pose_t* pose, 
+					double* hitx, double* hity )
+{
+ /*  int ch; */
+/*   stg_model_t* child_hit = NULL; */
+/*   for(ch=0; ch < mod->children->len; ch++ ) */
+/*     { */
+/*       stg_model_t* child = g_ptr_array_index( mod->children, ch ); */
+/*       child_hit = stg_model_test_collision2( child, hitx, hity ); */
+/*       if( child_hit ) */
+/* 	return child_hit; */
+/*     } */
+  
+
+  stg_pose_t pose;
+  memcpy( &pose, &mod->geom.pose, sizeof(pose));
+  stg_model_local_to_global( mod, &pose );
+  
+  //return NULL;
+  
+  // raytrace along all our rectangles. expensive, but most vehicles
+  // will just be a single rect, grippers 3 rects, etc. not too bad.
+  
+  size_t count=0;
+  //stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
+
+  // no body? no collision
+  if( count < 1 )
+    return NULL;
+
+  // first find the models whose bounding box overlaps with this one
+
+/*   printf ("COLLISION TESTING MODEL %s\n", mod->token ); */
+  GList* candidates = NULL;//stg_model_overlappers( mod, mod->world->children ); */
+
+/*   if( candidates ) */
+/*     printf( "mod %s overlappers: %d\n", mod->token, g_list_length( candidates )); */
+/*   else */
+/*     printf( "mod %s has NO overlappers\n", mod->token ); */
+
+
+  // now test every line segment in the candidates for intersection
+  // and record the closest hitpoint
+/*   GList* model_segments = model_append_segments( mod, NULL ); */
+  
+/*   GList* obstacle_segments = NULL; */
+  
+/*   GList* it; */
+/*   for( it=candidates; it; it=it->next ) */
+/*     obstacle_segments =  */
+/*       model_append_segments( (stg_model_t*)it->data, obstacle_segments ); */
+ 
+
+  if( candidates )
+    g_list_free( candidates );
+	  
+
+
+  return NULL;  // done 
+}
+
+
+
 int stg_model_update_pose( stg_model_t* mod )
 { 
   PRINT_DEBUG4( "pose update model %d (vel %.2f, %.2f %.2f)", 
@@ -1271,7 +1604,8 @@ int stg_model_update_pose( stg_model_t* mod )
   // check this model and all it's children at the new pose
   double hitx=0, hity=0, hita=0;
   stg_model_t* hitthing =
-    NULL; //stg_model_test_collision( mod, &hitx, &hity );
+    //NULL; //stg_model_test_collision( mod, &hitx, &hity );
+    stg_model_test_collision2( mod, &hitx, &hity );
 
   int stall = 0;
       
@@ -1400,10 +1734,10 @@ int stg_model_tree_to_ptr_array( stg_model_t* root, GPtrArray* array )
 
   int added = 1;
   
-  int ch;
-  for(ch=0; ch < root->children->len; ch++ )
+  GList* it;
+  for(it=root->children; it; it=it->next )
     {
-      stg_model_t* child = g_ptr_array_index( root->children, ch );
+      stg_model_t* child = (stg_model_t*)it->data;
       added += stg_model_tree_to_ptr_array( child, array );
     }
   

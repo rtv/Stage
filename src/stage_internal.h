@@ -95,23 +95,17 @@ extern "C" {
 			  void* userdata );
 
   void gui_add_tree_item( stg_model_t* mod );
-
-
-   /** container for a callback function and a single argument, so
-       they can be stored together in a list with a single pointer. */
+  
+  /** container for a callback function and a single argument, so
+      they can be stored together in a list with a single pointer. */
   typedef struct
   {
     stg_model_callback_t callback;
     void* arg;
-  } stg_cbarg_t;
-
-  // callback functions
-  //typedef void(*func_init_t)(struct _stg_model*);
-  typedef int(*func_update_t)(struct _stg_model*);
-  typedef int(*func_startup_t)(struct _stg_model*);
-  typedef int(*func_shutdown_t)(struct _stg_model*);
-  typedef void(*func_load_t)(struct _stg_model*);
-  typedef void(*func_save_t)(struct _stg_model*);
+  } stg_cb_t;
+  
+  stg_cb_t* cb_create( stg_model_callback_t callback, void* arg );
+  void cb_destroy( stg_cb_t* cb );
   
   typedef struct
   {
@@ -133,24 +127,54 @@ extern "C" {
     stg_model_initializer_t initializer;
   } stg_type_record_t;
 
+  typedef enum {
+    STG_BEGIN=0,
+    STG_END
+  } stg_endpoint_type_t;
+
+  typedef struct stg_endpoint {
+    stg_endpoint_type_t type;
+    stg_meters_t value;
+    stg_model_t* mod;
+
+    //GList* list; // endpoints are usually stored in a list. this can
+		 // be used to access the endpoint in the list
+		 // directly 
+
+    // endpoints are stored in linked lists
+    struct stg_endpoint *next, *prev; 
+
+  } stg_endpoint_t;
+  
+  typedef struct {
+    double x, y, z;
+  } stg_point3_t;
+  
+  typedef struct {
+    stg_point3_t min, max;
+  } stg_bounds3_t;
+
+  typedef struct {
+    GList *x, *y, *z;
+  } stg_list3_t;
+  
+  typedef struct {
+    stg_endpoint_t *x, *y, *z;
+  } stg_endpoint3_t;
+  
+
+  typedef struct {
+    GPtrArray *x, *y, *z;
+  } stg_ptr_array_3d_t;
+
+  typedef int (*foo_t)(stg_model_t* mod );
+    
   struct _stg_model
   {
     stg_id_t id; // used as hash table key
     stg_world_t* world; // pointer to the world in which this model exists
     char token[STG_TOKEN_MAX]; // automatically-generated unique ID string
     stg_type_record_t* typerec;
-
-    struct _stg_model *parent; // the model that owns this one, possibly NULL
-
-    GPtrArray* children; // the models owned by this model
-
-    // a datalist can contain arbitrary named data items. Can be used
-    // by derived model types to store properties, and for user code
-    // to associate arbitrary items with a model.
-    GData* props;
-
-    // a datalist of stg_rtk_figs, indexed by name (string)
-    //GData* figs; 
 
     stg_pose_t pose;
     stg_velocity_t velocity;
@@ -176,6 +200,21 @@ extern "C" {
     int gui_outline;
     int gui_mask;
     
+    struct _stg_model *parent; //< the model that owns this one, possibly NULL
+    GList* children; //< the models owned by this model
+
+    /** A list of pointers to the models whose aabboxes overlap with
+	this one */
+    GList* intersectors;
+    
+    /** GData datalist can contain arbitrary named data items. Can be used
+	by derived model types to store properties, and for user code
+	to associate arbitrary items with a model. */
+    GData* props;
+
+    /** callback functions can be attached to any field in this
+    structure. When the internal function model_change(<mod>,<field>)
+    is called, the callback is triggered */
     GHashTable* callbacks;
        
     // the number of children of each type is counted so we can
@@ -184,20 +223,17 @@ extern "C" {
 
     int subs;     // the number of subscriptions to this model
 
-    stg_msec_t interval; // time between updates in ms
-    stg_msec_t interval_elapsed; // time since last update in ms
+    stg_msec_t interval; //< time between updates in ms
+    stg_msec_t interval_elapsed; //< time since last update in ms
 
-    stg_bool_t disabled; // if non-zero, the model is disabled
-    
-    // type-dependent functions for this model, implementing simple
-    // polymorphism
-    //stg_model_initializer_t initializer;
-    func_startup_t f_startup;
-    func_shutdown_t f_shutdown;
-    func_update_t f_update;
-    func_load_t f_load;
-    func_save_t f_save;
+    stg_bool_t disabled; //< if non-zero, the model is disabled
+        
+    // hooks for attaching special callback functions (not used as
+    // variables).
+    char startup, shutdown, load, save, update;
 
+    // hooks for data, command and configuration structures for
+    // derived types
     void *data, *cmd, *cfg;
     size_t data_len, cmd_len, cfg_len;
     
@@ -205,19 +241,17 @@ extern "C" {
     stg_polyline_t* lines;
     size_t lines_count;
     
-    /// TODO - thread-safe version    
-    // allow exclusive access to this model
+    /** specify an axis-aligned 3d bounding box in global
+	coordinates */
+    stg_endpoint_t endpts[6]; // in order {xmin,xmax,ymin,ymax,zmin,zmax}
+
+    // TODO - optionally thread-safe version allow exclusive access
+    // to this model 
     // pthread_mutex_t mutex;
 
     // end experimental    
   };
   
-
-  // internal functions
-  
-  int _model_update( stg_model_t* mod );
-  int _model_startup( stg_model_t* mod );
-  int _model_shutdown( stg_model_t* mod );
 
   void model_change( stg_model_t* mod, void* address );
 
@@ -231,11 +265,19 @@ extern "C" {
   void stg_model_render_geom( stg_model_t* mod );
   void stg_model_render_pose( stg_model_t* mod );
   void stg_model_render_polygons( stg_model_t* mod );
-  
+
+
+  int endpoint_sort( stg_endpoint_t* a, stg_endpoint_t* b );
+
   // the struct is defined in gui.h so that the sim engine and GUI
   // code are separated.
   typedef struct _gui_window gui_window_t;
-         
+             
+  typedef struct {
+    int count;
+    stg_model_t* mod;
+  } stg_intersection_t;
+    
   // defines a simulated world
   struct _stg_world
   {
@@ -246,6 +288,21 @@ extern "C" {
     /** a list of models that are currently selected by the user */
     GList* selected_models;
 
+    /** a list of top-level models, i.e. models who have the world as
+    their parent and whose position is therefore specified in world
+    coordinates */
+    GList* children;
+
+    /** a list of models that should be updated with a call to
+	stg_model_udpate(); */
+    GList* update_list;
+
+    // lists of pointers to non-empty bounding boxes, sorted by their
+    // position along the axis
+    stg_endpoint3_t endpts;
+    
+    // an array that stores the intersection state between all models
+    unsigned short* intersections;
 
     stg_meters_t width; ///< x size of the world 
     stg_meters_t height; ///< y size of the world
@@ -286,7 +343,14 @@ extern "C" {
     gui_window_t* win; ///< the gui window associated with this world
 
     int subs; ///< the total number of subscriptions to all models
+
+    int section_count;
   };
+
+  // rtv - experimental world functions not ready for external use
+  GList* stg_world_models_in_bbox3d( stg_world_t* world, stg_bbox3d_t* bbox );
+  void stg_world_start_updating_model( stg_world_t* world, stg_model_t* mod );
+  void stg_world_stop_updating_model( stg_world_t* world, stg_model_t* mod );
 
   // ROTATED RECTANGLES -------------------------------------------------
 
@@ -472,16 +536,27 @@ extern "C" {
     
   typedef struct
   {
+    double x,y,z; // hit location
+    double range; // range to hit location
+    stg_model_t* mod; // hit model
+  } stg_hit_t;
+
+  typedef struct
+  {
     double x, y, a;
     double cosa, sina, tana;
     double range;
     double max_range;
     double* incr;
+    double x1,y1,x2,y2; // end points of the ray from x1,y1 to x2,y2
 
     GSList* models;
     int index;
     stg_matrix_t* matrix;    
   
+    GList* hits;
+    GList* current;
+
   } itl_t;
   
   typedef enum { PointToPoint=0, PointToBearingRange } itl_mode_t;
@@ -544,6 +619,8 @@ extern "C" {
   void model_print_cb( gpointer key, gpointer value, gpointer user );
   void model_destroy_cb( gpointer mod );
   
+  void model_call_callbacks( stg_model_t* mod, void* address );
+
 
 /** @} */  
 // end of libstage_internal documentation  

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_bumper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1.4.1 $
+//  $Revision: 1.1.4.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -53,23 +53,25 @@ The bumper model allows configuration of the pose and length parameters of each 
 
 static const stg_watts_t STG_BUMPER_WATTS = 0.1; // bumper power consumption
 
-static int bumper_update( stg_model_t* mod );
-static int bumper_startup( stg_model_t* mod );
-static int bumper_shutdown( stg_model_t* mod );
-static void bumper_load( stg_model_t* mod );
+static int bumper_update( stg_model_t* mod, void* unused );
+static int bumper_startup( stg_model_t* mod, void* unused );
+static int bumper_shutdown( stg_model_t* mod, void* unused );
+static int bumper_load( stg_model_t* mod, void* unused );
 
 // implented by the gui in some other file
 void gui_speech_init( stg_model_t* mod );
 
 
 int bumper_init( stg_model_t* mod )
-{
-  // override the default methods
-  mod->f_startup = bumper_startup;
-  mod->f_shutdown = bumper_shutdown;
-  mod->f_update = NULL; // installed on startup & shutdown
-  mod->f_load = bumper_load;
-  
+{  
+  stg_model_add_callback( mod, &mod->startup, bumper_startup, NULL );
+  stg_model_add_callback( mod, &mod->shutdown, bumper_shutdown, NULL );
+  stg_model_add_callback( mod, &mod->load, bumper_load, NULL );
+
+  // update is added/removed in startup/shutdown
+  //stg_model_add_callback( mod, &mod->update, bumper_update, NULL );
+
+
   stg_model_set_data( mod, NULL, 0 );
   
   // Set up sensible defaults
@@ -90,32 +92,25 @@ int bumper_init( stg_model_t* mod )
   return 0;
 }
 
-int bumper_startup( stg_model_t* mod )
+int bumper_startup( stg_model_t* mod, void* unused )
 {
-  PRINT_DEBUG( "bumper startup" );
-
-  mod->f_update = bumper_update;
-
+  PRINT_DEBUG( "bumper startup" ); 
+  stg_model_add_callback( mod, &mod->update, bumper_update, NULL );
   stg_model_set_watts( mod, STG_BUMPER_WATTS );
-
   return 0;
 }
 
 
-int bumper_shutdown( stg_model_t* mod )
+int bumper_shutdown( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "bumper shutdown" );
-
-  mod->f_update = NULL;
+  stg_model_remove_callback( mod, &mod->update, bumper_update );
   stg_model_set_watts( mod, 0 );
-  
-  // clear the data - this will unrender it too.
   stg_model_set_data( mod, NULL, 0 );
-
   return 0;
 }
 
-void bumper_load( stg_model_t* mod )
+int bumper_load( stg_model_t* mod, void* unused )
 {
   // Load the geometry of a bumper array
   int bcount = wf_read_int( mod->id, "bcount", 0);
@@ -151,6 +146,7 @@ void bumper_load( stg_model_t* mod )
       stg_model_set_cfg( mod, cfg, cfglen );      
       free( cfg );
     }
+  return 0;
 }
 
 int bumper_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
@@ -160,7 +156,7 @@ int bumper_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 }	
 
 
-int bumper_update( stg_model_t* mod )
+int bumper_update( stg_model_t* mod, void* unused )
 {     
   //if( mod->subs < 1 )
   //return 0;

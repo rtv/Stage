@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // File: model_wifi.cc
-// Authors: Benoit Morisset
+// Authors: Benoit Morisset, Richard Vaughan
 // Date: 2 March 2006
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_wifi.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.4.1 $
+//  $Revision: 1.1.4.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -35,27 +35,21 @@
 
 #include "stage_internal.h"
 
+// defined in model.c
+int _model_update( stg_model_t* mod, void* unused );
+
 // standard callbacks
 extern "C" {
 
 // declare functions used as callbacks
-int wifi_update( stg_model_t* mod );
-int wifi_startup( stg_model_t* mod );
-int wifi_shutdown( stg_model_t* mod );
-void wifi_load( stg_model_t* mod );
+static int wifi_update( stg_model_t* mod, void* unused );
+static int wifi_startup( stg_model_t* mod, void* unused );
+static int wifi_shutdown( stg_model_t* mod, void* unused );
+static int wifi_load( stg_model_t* mod, void* unused );
 
 // implented by the gui in some other file
 void gui_wifi_init( stg_model_t* mod );
   
-void 
-wifi_load( stg_model_t* mod )
-{
-  stg_wifi_config_t cfg;
-
-  // TODO: read wifi params from the world file
-  
-  stg_model_set_cfg( mod, &cfg, sizeof(cfg));
-}
 
 int 
 wifi_init( stg_model_t* mod )
@@ -65,10 +59,9 @@ wifi_init( stg_model_t* mod )
   
   // override the default methods; these will be called by the simualtion
   // engine
-  mod->f_startup = wifi_startup;
-  mod->f_shutdown = wifi_shutdown;
-  mod->f_update =  wifi_update;
-  mod->f_load = wifi_load;
+  stg_model_add_callback( mod, &mod->startup, wifi_startup, NULL );
+  stg_model_add_callback( mod, &mod->shutdown, wifi_shutdown, NULL );
+  stg_model_add_callback( mod, &mod->load, wifi_load, NULL );
 
   // sensible wifi defaults; it doesn't take up any physical space
   stg_geom_t geom;
@@ -91,7 +84,7 @@ wifi_init( stg_model_t* mod )
 }
 
 int 
-wifi_update( stg_model_t* mod )
+wifi_update( stg_model_t* mod, void* unused )
 {   
   // no work to do if we're unsubscribed
   if( mod->subs < 1 )
@@ -122,29 +115,39 @@ wifi_update( stg_model_t* mod )
   stg_model_set_data( mod, &data, sizeof(data));
 
   // inherit standard update behaviour
-  _model_update( mod );
+  _model_update( mod, NULL );
 
   return 0; //ok
 }
 
 int 
-wifi_startup( stg_model_t* mod )
+wifi_startup( stg_model_t* mod, void* unused )
 { 
   PRINT_DEBUG( "wifi startup" );
+  stg_model_add_callback( mod, &mod->startup, wifi_startup, NULL );
   stg_model_set_watts( mod, STG_WIFI_WATTS );
   return 0; // ok
 }
 
 int 
-wifi_shutdown( stg_model_t* mod )
+wifi_shutdown( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "wifi shutdown" );
+  stg_model_remove_callback( mod, &mod->startup, wifi_startup );
   stg_model_set_watts( mod, 0 );
-  
-  // unrender the data
-  //stg_model_fig_clear( mod, "wifi_data_fig" );
   return 0; // ok
 }
 
+int
+wifi_load( stg_model_t* mod, void* unused )
+{
+  stg_wifi_config_t cfg;
 
+  // TODO: read wifi params from the world file
+  
+  stg_model_set_cfg( mod, &cfg, sizeof(cfg));
+
+  return 0;
 }
+
+} // ends extern "C"

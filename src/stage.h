@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.1 2006-09-14 07:03:25 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.2 2006-12-20 03:01:13 rtv Exp $
  */
 
 
@@ -185,6 +185,12 @@ typedef enum {
     double max; //< largest value in range
   } stg_bounds_t;
   
+  /** define a three-dimensional bounding box */
+  typedef struct
+  {
+    stg_bounds_t x, y, z;
+  } stg_bbox3d_t;
+
   /** define a field-of-view: an angle and range bounds */
   typedef struct
   {
@@ -304,11 +310,17 @@ typedef enum {
     /// if TRUE, this polygon is NOT drawn filled
     stg_bool_t unfilled; 
     
-    /// render color of this polygon - TODO  - implement color rendering
+    /// render color of this polygon - TODO: not yet implemented
     stg_color_t color;
 
-    /// bounding box: width and height of the polygon
-    stg_size_t bbox;
+    /// width and height of the polygon
+    stg_size_t size;
+
+    /// pointer to the model that owns this polygon
+    stg_model_t* mod;
+
+    /// axis-aligned bounding volume
+    stg_bbox3d_t bbox;
 
     void* _data; // temporary internal use only
   } stg_polygon_t; 
@@ -476,7 +488,7 @@ typedef enum {
       record within a model and called whenever the record is set.
   */
   typedef int (*stg_model_callback_t)(stg_model_t* mod, void* user );
-
+  
   void stg_model_add_callback( stg_model_t* mod, 
 			       void* member, 
 			       stg_model_callback_t cb, 
@@ -484,9 +496,46 @@ typedef enum {
 
   int stg_model_remove_callback( stg_model_t* mod,
 				 void* member,
-				 stg_model_callback_t callback );
+				 stg_model_callback_t callback );  
 
+  // wrappers for the generic add/remove callback functions that hide
+  // some implementatio detail 
   
+  void stg_model_add_update_callback( stg_model_t* mod, 
+				      stg_model_callback_t cb, 
+				      void* user );
+  
+  void stg_model_remove_update_callback( stg_model_t* mod, 
+					 stg_model_callback_t cb );
+  
+  void stg_model_add_load_callback( stg_model_t* mod, 
+				    stg_model_callback_t cb, 
+				    void* user );
+  
+  void stg_model_remove_load_callback( stg_model_t* mod, 
+				       stg_model_callback_t cb );
+  
+  void stg_model_add_save_callback( stg_model_t* mod, 
+				    stg_model_callback_t cb, 
+				    void* user );
+  
+  void stg_model_remove_save_callback( stg_model_t* mod, 
+				       stg_model_callback_t cb );
+  
+  void stg_model_add_startup_callback( stg_model_t* mod, 
+				       stg_model_callback_t cb, 
+				       void* user );
+  void stg_model_remove_startup_callback( stg_model_t* mod, 
+					  
+					  stg_model_callback_t cb );
+  void stg_model_add_shutdown_callback( stg_model_t* mod, 
+					stg_model_callback_t cb, 
+					void* user );
+  
+  void stg_model_remove_shutdown_callback( stg_model_t* mod, 
+					   stg_model_callback_t cb );
+
+
   /** function type for an initialization function that configures a
       specialized model. Each special model type (laser, position,
       etc) has a single initializer function that is called when the
@@ -702,14 +751,14 @@ typedef enum {
   GPtrArray* stg_model_array_from_tree( stg_model_t* root );
   
   /** initialize a model - called when a model goes from zero to one subscriptions */
-  int stg_model_startup( stg_model_t* mod );
-
+  void stg_model_startup( stg_model_t* mod );
+  
   /** finalize a model - called when a model goes from one to zero subscriptions */
-  int stg_model_shutdown( stg_model_t* mod );
+  void stg_model_shutdown( stg_model_t* mod );
 
   /** Update a model by one simulation timestep. This is called by
       stg_world_update(), so users don't usually need to call this. */
-  int stg_model_update( stg_model_t* model );
+  void stg_model_update( stg_model_t* model );
   
   /** Convert a pose in the world coordinate system into a model's
       local coordinate system. Overwrites [pose] with the new

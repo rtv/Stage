@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.49.4.1 $
+//  $Revision: 1.49.4.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -63,49 +63,19 @@ fiducialfinder
 */
 
 
-void fiducial_load( stg_model_t* mod )
-{
-  
-  if( wf_property_exists( mod->id, "range_min" ) ||
-      wf_property_exists( mod->id, "range_max" ) ||
-      wf_property_exists( mod->id, "range_max_id") ||
-      wf_property_exists( mod->id, "fov" ) )
-    {
-      stg_fiducial_config_t* now = (stg_fiducial_config_t*)mod->cfg; 
-      
-      stg_fiducial_config_t cfg;
-      memset( &cfg, 0, sizeof(cfg) );
-      
-      cfg.fov = 
-	wf_read_angle(mod->id, "fov", now->fov );
-      
-      cfg.min_range = 
-	wf_read_length(mod->id, "range_min", now->min_range );
-      
-      cfg.max_range_anon = 
-	wf_read_length(mod->id, "range_max", now->max_range_anon );
-      
-      cfg.max_range_id = 
-	wf_read_length(mod->id, "range_max_id", now->max_range_id );
-
-      stg_model_set_cfg( mod, &cfg, sizeof(cfg));
-    }
-}  
-
-int fiducial_startup( stg_model_t* mod );
-int fiducial_shutdown( stg_model_t* mod );
-int fiducial_update( stg_model_t* mod );
+static int fiducial_load( stg_model_t* mod, void* unused  );
+static int fiducial_startup( stg_model_t* mod, void* unused );
+static int fiducial_shutdown( stg_model_t* mod, void* unused );
+static int fiducial_update( stg_model_t* mod, void* unused );
 
 // implemented by the GUI code elsewhere
 void gui_fiducial_init( stg_model_t* mod );
 
 int fiducial_init( stg_model_t* mod )
 {  
-  // override the default methods
-  mod->f_startup = fiducial_startup;
-  mod->f_shutdown = fiducial_shutdown;
-  mod->f_update = NULL; // installed at startup/shutdown
-  mod->f_load = fiducial_load;
+  stg_model_add_callback( mod, &mod->startup, fiducial_startup, NULL );
+  stg_model_add_callback( mod, &mod->shutdown, fiducial_shutdown, NULL );
+  stg_model_add_callback( mod, &mod->load, fiducial_load, NULL );
 
   // no body
   stg_geom_t geom;
@@ -129,22 +99,17 @@ int fiducial_init( stg_model_t* mod )
   return 0;
 }
 
-int fiducial_startup( stg_model_t* mod )
+int fiducial_startup( stg_model_t* mod, void* unused  )
 {
-  PRINT_DEBUG( "fiducial startup" );  
-  
-  mod->f_update = fiducial_update;
+  stg_model_add_callback( mod, &mod->update, fiducial_update, NULL );
   stg_model_set_watts( mod, STG_FIDUCIAL_WATTS );
-  
   return 0;
 }
 
-int fiducial_shutdown( stg_model_t* mod )
+int fiducial_shutdown( stg_model_t* mod, void* unused  )
 {
-  mod->f_update = NULL;
+  stg_model_remove_callback( mod, &mod->update, fiducial_update );
   stg_model_set_watts( mod, 0);
-
-  // this will undrender the data
   stg_model_set_data( mod, NULL, 0 ); 
   return 0;
 }
@@ -262,7 +227,7 @@ void model_fiducial_check_neighbor( gpointer key,
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
 //
-int fiducial_update( stg_model_t* mod )
+int fiducial_update( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "fiducial update" );
 
@@ -296,3 +261,32 @@ int fiducial_update( stg_model_t* mod )
   return 0;
 }
 
+int fiducial_load( stg_model_t* mod, void* unused  )
+{
+  
+  if( wf_property_exists( mod->id, "range_min" ) ||
+      wf_property_exists( mod->id, "range_max" ) ||
+      wf_property_exists( mod->id, "range_max_id") ||
+      wf_property_exists( mod->id, "fov" ) )
+    {
+      stg_fiducial_config_t* now = (stg_fiducial_config_t*)mod->cfg; 
+      
+      stg_fiducial_config_t cfg;
+      memset( &cfg, 0, sizeof(cfg) );
+      
+      cfg.fov = 
+	wf_read_angle(mod->id, "fov", now->fov );
+      
+      cfg.min_range = 
+	wf_read_length(mod->id, "range_min", now->min_range );
+      
+      cfg.max_range_anon = 
+	wf_read_length(mod->id, "range_max", now->max_range_anon );
+      
+      cfg.max_range_id = 
+	wf_read_length(mod->id, "range_max_id", now->max_range_id );
+
+      stg_model_set_cfg( mod, &cfg, sizeof(cfg));
+    }
+  return 0;
+}  

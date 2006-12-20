@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.37.4.1 2006-09-14 07:03:25 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.37.4.2 2006-12-20 03:01:13 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -222,11 +222,13 @@ stg_model_t* model_match( stg_model_t* mod,
   stg_model_t* match=NULL;
 
   // for each model in the child list
-  for(int i=0; i<(int)mod->children->len; i++ )
+  GList* it;
+  int i=0;
+  for( it=mod->children; it; it=it->next )
     {
       // recurse
       match = 
-	model_match( (stg_model_t*)g_ptr_array_index( mod->children, i ), 
+	model_match( (stg_model_t*)it->data, 
 		     addr, init, devices );      
       if( match )
 	{
@@ -252,6 +254,7 @@ stg_model_t* model_match( stg_model_t* mod,
 	  //return match;
 	  if( match ) return match;
 	}
+      i++;
     }
 
   return NULL;
@@ -341,14 +344,14 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
       
       switch( player_addr.interf )
 	{
+	case PLAYER_BLOBFINDER_CODE:
+	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
+	  break;
+
         case PLAYER_SIMULATION_CODE:
           ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
           break;
 	  
-	case PLAYER_POWER_CODE:	  
-	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
-	  break;
-
 	case PLAYER_LASER_CODE:	  
 	  ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
 	  break;
@@ -361,8 +364,8 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  ifsrc = new InterfaceSonar( player_addr,  this, cf, section );
 	  break;
 	  
-	case PLAYER_BLOBFINDER_CODE:
-	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
+	case PLAYER_POWER_CODE:	  
+	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
 	  break;
 	  
  	case PLAYER_PTZ_CODE:

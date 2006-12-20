@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.140.2.1 2006-09-14 07:03:25 rtv Exp $
+# $Id: Makefile.am,v 1.140.2.2 2006-12-20 03:01:13 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -11,7 +11,7 @@ SUBDIRS = referees
 include_HEADERS = stage.h 
 
 # system-wide compile flags - target-specific flags are added to each target below
-AM_CFLAGS =   -Wall -I. -I$(top_srcdir)/replace -std=c99 @GUI_CFLAGS@
+AM_CFLAGS =   -Wall -I. -I$(top_srcdir)/replace -std=c99 @GUI_CFLAGS@ 
 AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  @GUI_CFLAGS@
 
 # build the stage library
@@ -35,6 +35,7 @@ libstage_la_SOURCES =  \
 	matrix.c \
 	model.c \
 	model_blobfinder.c \
+	model_callbacks.c \
 	model_bumper.c \
 	model_fiducial.c \
 	model_gripper.c \
@@ -112,10 +113,11 @@ libstageplugin_la_LIBADD = libstage.la @PLAYER_LIBS@ @GUI_LIBS@
 # build a stand-alone test program using libstage
 stest_DEPENDENCIES = libstage.la
 stest_SOURCES = stest.c
-stest_LDADD = libstage.la
+stest_LDADD = libstage.la 
+#stest_LDFLAGS = 
 
 # TODO - fix this
-# build a stand-alone test program using libstage
+# build a player client that tests the plugin
 #ptest_DEPENDENCIES = 
 #ptest_SOURCES = ptest.c
 #ptest_CFLAGS = $(AM_CFLAGS) @PLAYER_CFLAGS@ 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: rtv $
-//  $Revision: 1.26.2.1 $
+//  $Revision: 1.26.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -57,10 +57,10 @@ gripper
 #include "stage_internal.h"
 
 // standard callbacks
-int gripper_update( stg_model_t* mod );
-int gripper_startup( stg_model_t* mod );
-int gripper_shutdown( stg_model_t* mod );
-void gripper_load( stg_model_t* mod );
+int gripper_update( stg_model_t* mod, void* unused  );
+int gripper_startup( stg_model_t* mod, void* unused  );
+int gripper_shutdown( stg_model_t* mod, void* unused  );
+int gripper_load( stg_model_t* mod, void* unused  );
 
 // implented by the gui in some other file
 void gui_speech_init( stg_model_t* mod );
@@ -75,26 +75,14 @@ int gripper_paddle_contact( stg_model_t* mod,
 			    stg_bool_t contacts[2] );
 int gripper_break_beam(stg_model_t* mod, stg_gripper_config_t* cfg, int beam);
 
-void gripper_load( stg_model_t* mod )
-{
-  //stg_gripper_config_t cfg;
-
-  // TODO: read gripper params from the world file
-  
-  //stg_model_set_cfg( mod, gconf, sizeof(stg_gripper_config_t));
-}
 
 int gripper_init( stg_model_t* mod )
 {
-  // we don't consume any power until subscribed
-  //mod->watts = 0.0; 
-  
-  // override the default methods
-  mod->f_startup = gripper_startup;
-  mod->f_shutdown = gripper_shutdown;
-  mod->f_update =  gripper_update;
-  mod->f_load = gripper_load;
-
+  stg_model_add_callback( mod, &mod->update, gripper_update, NULL );
+  stg_model_add_callback( mod, &mod->startup, gripper_startup, NULL );
+  stg_model_add_callback( mod, &mod->shutdown, gripper_shutdown, NULL );
+  stg_model_add_callback( mod, &mod->load, gripper_load, NULL );
+    
   // sensible gripper defaults
   stg_geom_t geom;
   stg_model_get_geom( mod, &geom ); // inherit
@@ -203,7 +191,7 @@ void gripper_generate_paddles( stg_model_t* mod, stg_gripper_config_t* cfg )
   model_change( mod, &mod->polygons );
 }
 
-int gripper_update( stg_model_t* mod )
+int gripper_update( stg_model_t* mod, void* unused  )
 {   
   // no work to do if we're unsubscribed
   if( mod->subs < 1 )
@@ -550,14 +538,14 @@ int gripper_paddle_contact( stg_model_t* mod,
 }
 
 
-int gripper_startup( stg_model_t* mod )
+int gripper_startup( stg_model_t* mod, void* unused )
 { 
   PRINT_DEBUG( "gripper startup" );
   stg_model_set_watts( mod, STG_GRIPPER_WATTS );
   return 0; // ok
 }
 
-int gripper_shutdown( stg_model_t* mod )
+int gripper_shutdown( stg_model_t* mod, void* unused )
 { 
   PRINT_DEBUG( "gripper shutdown" );
   stg_model_set_watts( mod, 0 );
@@ -595,3 +583,11 @@ void stg_print_gripper_config( stg_gripper_config_t* cfg )
 }
 
 
+int gripper_load( stg_model_t* mod, void* unused )
+{
+  //stg_gripper_config_t cfg;
+  // TODO: read gripper params from the world file  
+  //stg_model_set_cfg( mod, gconf, sizeof(stg_gripper_config_t));
+
+  return 0;
+}

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.66.2.1 $
+//  $Revision: 1.66.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -80,22 +80,21 @@ The ranger model allows configuration of the pose, size and view parameters of e
 
 #define STG_RANGER_WATTS 2.0 // ranger power consumption
 
-int ranger_update( stg_model_t* mod );
-int ranger_startup( stg_model_t* mod );
-int ranger_shutdown( stg_model_t* mod );
-void ranger_load( stg_model_t* mod );
+static int ranger_update( stg_model_t* mod, void* unused  );
+static int ranger_startup( stg_model_t* mod, void* unused  );
+static int ranger_shutdown( stg_model_t* mod, void* unused  );
+static int ranger_load( stg_model_t* mod, void* unused  );
 
 // implented by the gui in some other file
 void gui_ranger_init( stg_model_t* mod );
 
 int ranger_init( stg_model_t* mod )
-{
-  // override the default methods
-  mod->f_startup = ranger_startup;
-  mod->f_shutdown = ranger_shutdown;
-  mod->f_update = NULL; // installed on startup & shutdown
-  mod->f_load = ranger_load;
-  
+{  
+  stg_model_add_callback( mod, &mod->startup, ranger_startup, NULL );
+  stg_model_add_callback( mod, &mod->shutdown, ranger_shutdown, NULL );
+  stg_model_add_callback( mod, &mod->load, ranger_load, NULL );
+  // update callback is installed on startup & shutdown
+
   stg_model_set_data( mod, NULL, 0 );
   
   // Set up sensible defaults
@@ -139,32 +138,25 @@ int ranger_init( stg_model_t* mod )
   return 0;
 }
 
-int ranger_startup( stg_model_t* mod )
+int ranger_startup( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "ranger startup" );
-
-  mod->f_update = ranger_update;
-
+  stg_model_add_callback( mod, &mod->update, ranger_update, NULL );
   stg_model_set_watts( mod, STG_RANGER_WATTS );
-
   return 0;
 }
 
 
-int ranger_shutdown( stg_model_t* mod )
+int ranger_shutdown( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "ranger shutdown" );
-
-  mod->f_update = NULL;
-  stg_model_set_watts( mod, 0 );
-  
-  // clear the data - this will unrender it too.
-  stg_model_set_data( mod, NULL, 0 );
-
+  stg_model_remove_callback( mod, &mod->update, ranger_update );
+  stg_model_set_watts( mod, 0 ); 
+  stg_model_set_data( mod, NULL, 0 ); // this will unrender data too.
   return 0;
 }
 
-void ranger_load( stg_model_t* mod )
+int ranger_load( stg_model_t* mod, void* unused  )
 {
   // Load the geometry of a ranger array
   int scount = wf_read_int( mod->id, "scount", 0);
@@ -240,7 +232,7 @@ int ranger_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 }	
 
 
-int ranger_update( stg_model_t* mod )
+int ranger_update( stg_model_t* mod, void* unused  )
 {     
   if( mod->subs < 1 )
     return 0;
@@ -284,14 +276,15 @@ int ranger_update( stg_model_t* mod )
 	  double ray_angle = -cfg[t].fov/2.0 + angle_per_ray * r + angle_per_ray/2.0
 	    ;
 	  
-	  itl_t* itl = itl_create( pz.x, pz.y, pz.a + ray_angle, 
+	  itl_t* itl = itl_create2( mod,
+				    pz.x, pz.y, pz.a + ray_angle, 
 				   cfg[t].bounds_range.max, 
 				   mod->world->matrix, 
-				   PointToBearingRange );
+				   PointToBearingRange, ranger_raytrace_match );
 	  
 	  stg_model_t * hitmod;
 	  
-	  hitmod = itl_first_matching( itl, ranger_raytrace_match, mod );
+	  hitmod = itl_next2( itl );
 	  
 	  if( hitmod )
 	    {

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.61.2.1 $
+//  $Revision: 1.61.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -114,10 +114,10 @@ const double STG_POSITION_INTEGRATION_ERROR_MAX_X = 0.03;
 const double STG_POSITION_INTEGRATION_ERROR_MAX_Y = 0.03;
 const double STG_POSITION_INTEGRATION_ERROR_MAX_A = 0.05;
 
-int position_startup( stg_model_t* mod );
-int position_shutdown( stg_model_t* mod );
-int position_update( stg_model_t* mod );
-void position_load( stg_model_t* mod );
+int position_startup( stg_model_t* mod, void* unused );
+int position_shutdown( stg_model_t* mod, void* unused );
+int position_update( stg_model_t* mod, void* unused );
+int position_load( stg_model_t* mod, void* unused );
 
 // implemented by the the GUI code
 void gui_position_init( stg_model_t* mod );
@@ -135,11 +135,10 @@ void position_init( stg_model_t* mod )
   // no power consumed until we're subscribed
   mod->watts = 0.0; 
 
-  // override the default methods
-  mod->f_startup = position_startup;
-  mod->f_shutdown = position_shutdown;
-  mod->f_update = position_update;
-  mod->f_load = position_load;
+  stg_model_add_callback( mod, &mod->startup, position_startup, NULL );
+  stg_model_add_callback( mod, &mod->shutdown, position_shutdown, NULL );
+  stg_model_add_callback( mod, &mod->load, position_load, NULL );
+  stg_model_add_callback( mod, &mod->update, position_update, NULL );
 
   // sensible position defaults
 
@@ -185,8 +184,7 @@ void position_init( stg_model_t* mod )
   
 }
 
-
-void position_load( stg_model_t* mod )
+int position_load( stg_model_t* mod, void* unused )
 {
 //  return;
 
@@ -295,14 +293,12 @@ void position_load( stg_model_t* mod )
   
   // we've probably poked the localization data, so we must let people know
   model_change( mod, &mod->data );
+
+  return 0;
 }
 
-
-int position_update( stg_model_t* mod )
+int position_update( stg_model_t* mod, void* unused )
 { 
-
-  //return 0;
-      
   PRINT_DEBUG1( "[%lu] position update", mod->world->sim_time );
   
   stg_position_data_t* data = (stg_position_data_t*)mod->data;
@@ -465,9 +461,6 @@ int position_update( stg_model_t* mod )
       model_change( mod, &mod->velocity );
     }
   
-  // now  inherit the normal update - this does the actual moving
-  _model_update( mod );
-  
   switch( data->localization )
     {
     case STG_POSITION_LOCALIZATION_GPS:
@@ -512,13 +505,15 @@ int position_update( stg_model_t* mod )
       break;
     }
   
+  model_move_due_to_velocity( mod );
+ 
   // we've probably poked the position data
-  model_change( mod, &mod->pose );
+  //model_change( mod, &mod->pose );
  
   return 0; //ok
 }
 
-int position_startup( stg_model_t* mod )
+int position_startup( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "position startup" );
 
@@ -529,7 +524,7 @@ int position_startup( stg_model_t* mod )
   return 0; // ok
 }
 
-int position_shutdown( stg_model_t* mod )
+int position_shutdown( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "position shutdown" );
   

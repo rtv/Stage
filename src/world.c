@@ -22,6 +22,10 @@ static int init_occurred = 0;
 extern int _stg_quit; // quit flag is returned by stg_world_update()
 extern int _stg_disable_gui;
 
+
+// HACK
+stg_world_t* global_world = NULL;
+
 /** @addtogroup stage
     @{ */
 
@@ -114,6 +118,169 @@ void stg_world_set_interval_sim( stg_world_t* world, unsigned int val )
   world->sim_interval = val;
 }
 
+/* void model_clear_intersectors( gpointer key, stg_model_t* mod, gpointer user ) */
+/* { */
+/*   g_list_free( mod->intersectors ); */
+/*   mod->intersectors = NULL; */
+/* } */
+
+void world_intercept_array_print( stg_world_t* world )
+{
+  int i,j;
+ /*  printf( "  " ); */
+/*   for( j=0; j<world->section_count; j++ ) */
+/*     printf( "%d", j); */
+/*   puts(""); */
+  
+/*   for( i=0; i<world->section_count; i++ ) */
+/*     { */
+/*       printf( "%d ", i ); */
+/*       for( j=0; j<world->section_count; j++ ) */
+/* 	printf( "%d", world->intersections[i][j] ); */
+/*       puts(""); */
+/*     } */
+/*   puts(""); */
+
+  printf( "  " );
+  for( j=0; j<world->section_count; j++ )
+    printf( "%d", j);
+  puts("");
+
+  for( i=0; i<world->section_count; i++ )
+    {
+      printf( "%d ", i );
+      for( j=0; j<world->section_count; j++ )
+	printf( "%c", world->intersections[i * world->section_count + j] > 2 ? 'X' : ' ' );
+      puts("");
+    }
+  puts("");
+
+  for( i=0; i<world->section_count; i++ )
+    {
+      stg_model_t* mod = stg_world_get_model( world, i );
+
+      if( mod )
+	{
+	  printf( "%s intersects with ", mod->token );
+	  	 
+	  for( j=0; j<world->section_count; j++ )
+	    {
+	      if( world->intersections[i* world->section_count + j ] > 2 )
+		{
+		  stg_model_t* hit =  stg_world_get_model( world, j );
+		  if( hit )
+		    printf( "%s ", hit->token );
+		  else
+		    printf( "<bad pointer> " );
+		}
+	    }
+	  puts( "" );
+	}
+    }
+}
+
+void world_intersect_incr( stg_world_t* world, 
+			   stg_model_t* a, 
+			   stg_model_t* b )
+{
+  int a_index = a->id * world->section_count + b->id;
+  int b_index = b->id * world->section_count + a->id;
+  
+  world->intersections[ a_index ]++;
+  world->intersections[ b_index ]++;
+  
+  if( world->intersections[ a_index ] == 3 )
+    {
+      a->intersectors = g_list_prepend( a->intersectors, b );
+      b->intersectors = g_list_prepend( b->intersectors, a );
+    }
+// print_intercept_array( world );
+}
+
+void world_intersect_decr( stg_world_t* world,
+			   stg_model_t* a, 
+			   stg_model_t* b )
+{
+  int a_index = a->id * world->section_count + b->id;
+  int b_index = b->id * world->section_count + a->id;
+  
+  world->intersections[ a_index ]--;
+  world->intersections[ b_index ]--;
+  
+  if( world->intersections[ a_index ] == 2 )
+    {
+      a->intersectors = g_list_remove( a->intersectors, b );
+      b->intersectors = g_list_remove( b->intersectors, a );
+    }
+  
+  //print_intercept_array( world );
+}
+
+static void compute_intersections( stg_endpoint_t* endpoint_list )
+{
+  // compute the initial set of interections
+  GList* started = NULL;
+  stg_endpoint_t* it;
+  for( it=endpoint_list; it; it=it->next )
+    {
+      // if this is the start of a model
+      switch( it->type )
+	{
+	case STG_BEGIN:
+	  {
+	    GList* it2;
+	    for( it2=started; it2; it2=it2->next )
+	      world_intersect_incr( it->mod->world, 
+				    it->mod,  (stg_model_t*)it2->data );
+	    started = g_list_prepend( started, it->mod );
+	  }
+	  break;
+	  
+	case STG_END:
+	  started = g_list_remove( started, it->mod );
+	  break;
+	  
+	default: 
+	  PRINT_ERR1( "invalid endpoint type %d\n", it->type );
+	}    
+    }      
+  g_list_free( started );
+}
+
+
+/* static void compute_intersections( GList* endpoint_list ) */
+/* { */
+/*   // compute the initial set of interections */
+/*   GList* started = NULL; */
+/*   GList* it; */
+/*   for( it=endpoint_list; it; it=it->next ) */
+/*     { */
+/*       stg_endpoint_t* ep = (stg_endpoint_t*)it->data; */
+	  
+/*       // if this is the start of a model */
+/*       switch( ep->type ) */
+/* 	{ */
+/* 	case STG_BEGIN: */
+/* 	  { */
+/* 	    GList* it2; */
+/* 	    for( it2=started; it2; it2=it2->next ) */
+/* 	      world_intersect_incr( ep->mod->world,  */
+/* 				    ep->mod,  (stg_model_t*)it2->data ); */
+/* 	    started = g_list_prepend( started, ep->mod ); */
+/* 	  } */
+/* 	  break; */
+	  
+/* 	case STG_END: */
+/* 	  started = g_list_remove( started, ep->mod ); */
+/* 	  break; */
+	  
+/* 	default:  */
+/* 	  PRINT_ERR1( "invalid endpoint type %d\n", ep->type ); */
+/* 	}     */
+/*     }       */
+/*   g_list_free( started ); */
+/* } */
+
 // create a world containing a passel of Stage models based on the
 // worldfile
 stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path )
@@ -171,6 +338,12 @@ stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path
   
   int section_count = wf_section_count();
   
+  // there can't be more models than sections, so we'll use the number
+  // of sections to build an intersection test array
+  world->intersections = calloc( section_count*section_count, sizeof(unsigned short) );
+  
+  world->section_count = section_count;
+
   // Iterate through sections and create client-side models
   for( section = 1; section < section_count; section++ )
     {
@@ -194,8 +367,8 @@ stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path
 	  parent = (stg_model_t*)
 	    g_hash_table_lookup( world->models, &parent_section );
 	  
-	  PRINT_DEBUG3( "creating model from section %d parent section %d type %s\n",
-			section, parent_section, typestr );
+	  //PRINT_DEBUG3( "creating model from section %d parent section %d type %s\n",
+	  //	section, parent_section, typestr );
 	  
 	  stg_model_t* mod = NULL;
 	  stg_model_t* parent_mod = stg_world_get_model( world, parent_section );
@@ -213,6 +386,21 @@ stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path
 
   // warn about unused WF linesa
   wf_warn_unused();
+
+
+  // clear the intersection table (TODO - speed this up)
+  memset( world->intersections, 0, 
+	  world->section_count * world->section_count * sizeof(unsigned short));
+
+  compute_intersections( world->endpts.x );
+  compute_intersections( world->endpts.y );
+  compute_intersections( world->endpts.z );
+
+  //puts( "FINISHED CREATING WORLD. ARRAY IS:" );
+  //print_intercept_array( world );
+  //print_endpoint_list( "Z lIST", world->endpts.z );
+
+  global_world = world;
 
   return world;
 }
@@ -239,7 +427,7 @@ stg_world_t* stg_world_create( stg_id_t id,
   world->id = id;
   world->token = strdup( token );
   world->models = g_hash_table_new_full( g_int_hash, g_int_equal,
-					 NULL, model_destroy_cb );
+					 NULL, stg_model_destroy );
   world->models_by_name = g_hash_table_new( g_str_hash, g_str_equal );
   world->sim_time = 0.0;
   world->sim_interval = sim_interval;
@@ -252,6 +440,9 @@ stg_world_t* stg_world_create( stg_id_t id,
   world->ppm = ppm; // this is the finest resolution of the matrix
   world->matrix = stg_matrix_create( ppm, width, height ); 
   
+  world->endpts.x = NULL; 
+  world->endpts.y = NULL;
+  world->endpts.z = NULL; 
   
   world->paused = TRUE; // start paused.
   
@@ -355,7 +546,10 @@ int stg_world_update( stg_world_t* world, int sleepflag )
       fflush(stdout);
 #endif
       
-      g_hash_table_foreach( world->models, model_update_cb, world );	  	  
+      GList* it;
+      for( it=world->update_list; it; it=it->next )
+	stg_model_update( (stg_model_t*)it->data );
+      
       world->wall_last_update = timenow;	  
       world->sim_time += world->sim_interval;
 
@@ -396,6 +590,60 @@ void stg_world_add_model( stg_world_t* world,
   //printf( "world added model %d %s\n", mod->id, mod->token );  
   g_hash_table_replace( world->models, &mod->id, mod );
   g_hash_table_replace( world->models_by_name, mod->token, mod );
+  
+  // if this is a top level model, it's a child of the world
+  if( mod->parent == NULL )
+    world->children = g_list_append( world->children, mod );
+  
+  // TODO - do this just once, when the world has finished
+  // loading? else it'll be slow for large numbers of models.
+  //world->endpts.x = g_list_sort( world->endpts.x, (GCompareFunc)endpoint_sort );
+  //world->endpts.y = g_list_sort( world->endpts.y, (GCompareFunc)endpoint_sort );
+  //world->endpts.z = g_list_sort( world->endpts.z, (GCompareFunc)endpoint_sort );
+}
+
+
+
+
+// return a list of pointers to all the models who have bounds that
+// intersect the given bbox.
+GList* stg_world_models_in_bbox3d( stg_world_t* world, stg_bbox3d_t* bbox )
+{
+  // TODO - this just does the X axis for now, and very inefficiently
+  // at that :)
+
+  /* GList* x_intersectors = NULL; */
+/*   GList* it; */
+/*   for( it=world->endpts.x; it; it=it->next ) */
+/*     { */
+/*       stg_endpoint_t* ep = (stg_endpoint_t*)it->data; */
+
+/*       if( ep->value > bbox->x.min &&  */
+/* 	  ep->value < bbox->x.max &&  */
+/* 	  ep->mod */
+
+/* ) */
+/* 	intersectors = g_list_prepend( intersectors, ep->mod ); */
+/*     } */
+  
+  /* GList* intersectors = NULL;  */
+/*   GList* it; */
+/*   for( it=world->children; it; it=it->next )  */
+/*     { */
+/*       stg_model_t* mod = (stg_model_t*)it->data; */
+
+/*       if( mod->endpts[0].value < bbox->x.max && */
+/* 	  mod->endpts[1].value > bbox->x.min &&  */
+/* 	  mod->endpts[2].value < bbox->y.max && */
+/* 	  mod->endpts[3].value > bbox->y.min &&  */
+/* 	  mod->endpts[4].value < bbox->z.max && */
+/* 	  mod->endpts[5].value > bbox->z.min ) */
+
+/* 	intersectors = g_list_prepend( intersectors, mod );  */
+/*     } */
+
+/*   return intersectors; */
+  return NULL;
 }
 
 int stg_world_model_destroy( stg_world_t* world, stg_id_t model )
@@ -459,3 +707,14 @@ void stg_world_reload( stg_world_t* world )
   g_hash_table_foreach( world->models, stg_model_reload_cb, NULL );
 }
 
+void stg_world_start_updating_model( stg_world_t* world, stg_model_t* mod )
+{
+  if( g_list_find( world->update_list, mod ) == NULL )
+    world->update_list = 
+      g_list_append( world->update_list, mod ); 
+}
+
+void stg_world_stop_updating_model( stg_world_t* world, stg_model_t* mod )
+{
+  world->update_list = g_list_remove( world->update_list, mod ); 
+}

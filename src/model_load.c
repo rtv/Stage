@@ -336,9 +336,8 @@ void stg_model_load( stg_model_t* mod )
   stg_meters_t mres = wf_read_float(mod->id, "map_resolution", mod->map_resolution );  
   stg_model_set_map_resolution( mod, mres );
   
-  // if a type-specific load callback has been set
-  if( mod->f_load )
-    mod->f_load( mod ); // call the load function
+  // call any type-specific load callbacks
+  model_call_callbacks( mod, &mod->load );
 }
 
 
@@ -355,4 +354,7 @@ void stg_model_save( stg_model_t* mod )
   wf_write_tuple_length( mod->id, "pose", 0, mod->pose.x);
   wf_write_tuple_length( mod->id, "pose", 1, mod->pose.y);
   wf_write_tuple_angle( mod->id, "pose", 2, mod->pose.a);
+
+  // call any type-specific save callbacks
+  model_call_callbacks( mod, &mod->save );
 }

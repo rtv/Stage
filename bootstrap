@@ -3,9 +3,4 @@
 # Generic bootstrap file. 
 # If this fails for you, check for a bootstrap file for your platform.
 
-set -x
-aclocal
-libtoolize --force
-autoheader
-automake --gnu --add-missing
-autoconf
+autoreconf -i -f

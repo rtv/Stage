@@ -129,7 +129,7 @@ GLvoid buildFont( GLvoid )
     /* close the display now that we're done with it */
     XCloseDisplay( dpy );
 
-    puts( "FINISHED BUILDING FONT" );
+    //puts( "FINISHED BUILDING FONT" );
 
     return;
 }
@@ -298,6 +298,39 @@ void widget_to_world( GtkWidget* widget, int px, int py,
   //printf( "Z: %.2f\n", pz );
   //printf( "FINAL: x:%.2f y:%.2f z:%.2f\n",
   //  *wx,*wy,zz );
+}
+
+void box3d_wireframe( stg_bbox3d_t* bbox )
+{
+  // TODO - this would be more efficient with a point array
+  
+  // bottom rectangle
+  glBegin(GL_LINE_LOOP );
+  glVertex3f( bbox->x.min, bbox->y.min, bbox->z.min );
+  glVertex3f( bbox->x.min, bbox->y.max, bbox->z.min );
+  glVertex3f( bbox->x.max, bbox->y.max, bbox->z.min );
+  glVertex3f( bbox->x.max, bbox->y.min, bbox->z.min );
+  glEnd();
+
+  // top rectangle
+  glBegin(GL_LINE_LOOP );
+  glVertex3f( bbox->x.min, bbox->y.min, bbox->z.max );
+  glVertex3f( bbox->x.min, bbox->y.max, bbox->z.max );
+  glVertex3f( bbox->x.max, bbox->y.max, bbox->z.max );
+  glVertex3f( bbox->x.max, bbox->y.min, bbox->z.max );
+  glEnd();
+
+  // verticals
+  glBegin( GL_LINES );
+  glVertex3f( bbox->x.min, bbox->y.min, bbox->z.min );
+  glVertex3f( bbox->x.min, bbox->y.min, bbox->z.max );
+  glVertex3f( bbox->x.max, bbox->y.min, bbox->z.min );
+  glVertex3f( bbox->x.max, bbox->y.min, bbox->z.max );
+  glVertex3f( bbox->x.min, bbox->y.max, bbox->z.min );
+  glVertex3f( bbox->x.min, bbox->y.max, bbox->z.max );
+  glVertex3f( bbox->x.max, bbox->y.max, bbox->z.min );
+  glVertex3f( bbox->x.max, bbox->y.max, bbox->z.max );
+  glEnd();
 }
 
 static void polygon3d( double* pts, size_t pt_count, 
@@ -744,11 +777,12 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
 
   gui_window_t* win = (gui_window_t*)mod->world->win;
 
+  // 2D RENDERING
   // get the display list associated with this model
   int list = gui_model_get_displaylist( mod, LIST_POLYS_2D );
   
   glNewList( list, GL_COMPILE );
-
+  
   glPushMatrix();
   
   // go into model's geometry coordframe
@@ -760,30 +794,13 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
     polygon2d( (double*)mod->polygons[p].points->data, 
 	       mod->polygons[p].points->len );  
 
-  if( mod->boundary ) 
-    {
-      double boundary[8];
-      double dx = mod->geom.size.x/2.0;
-      double dy = mod->geom.size.y/2.0;
-
-      boundary[0] = -dx;
-      boundary[1] = -dy;
-      boundary[2] = +dx;
-      boundary[3] = -dy;
-      boundary[4] = +dx;
-      boundary[5] = +dy;
-      boundary[6] = -dx;
-      boundary[7] = +dy;
-
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );      
-      polygon2d( boundary, 4 );
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );      
-
-    }
+  //if( 1 )// mod->boundary ) 
+  //  box3d_wireframe( &mod->bbox );
 
   glPopMatrix(); // drop out of local coords
   glEndList();
 
+  // 3D RENDERING
   // get the display list associated with this model
   list = gui_model_get_displaylist( mod, LIST_POLYS_3D );
   
@@ -801,23 +818,9 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
 	       0, mod->geom.size.z,
 	       TRUE );  
   
-  if( mod->boundary ) 
-    {
-      double boundary[8];
-      double dx = mod->geom.size.x/2.0;
-      double dy = mod->geom.size.y/2.0;
-
-      boundary[0] = -dx;
-      boundary[1] = -dy;
-      boundary[2] = +dx;
-      boundary[3] = -dy;
-      boundary[4] = +dx;
-      boundary[5] = +dy;
-      boundary[6] = -dx;
-      boundary[7] = +dy;
-
-      polygon3d( boundary, 4, 0, mod->geom.size.z, FALSE );
-    }
+  //if( 1 )// mod->boundary ) 
+  //  box3d_wireframe( &mod->bbox );
+  
 
   glPopMatrix(); // drop out of local coords
   glEndList();
@@ -944,10 +947,10 @@ int gl_model_draw( stg_model_t* mod, void* userp )
       glTranslatef( 0,0, mod->geom.size.z );
 
       // recursively draw the tree below this model
-      int ch;
-      for(ch=0; ch < mod->children->len; ch++ )
+      GList *it;;
+      for( it=mod->children; it; it=it->next )
 	{
-	  gl_model_draw(  g_ptr_array_index( mod->children, ch ), NULL );
+	  gl_model_draw(  (stg_model_t*)it->data, NULL );
 	}
     }
   
@@ -955,6 +958,12 @@ int gl_model_draw( stg_model_t* mod, void* userp )
   pop_color();
   glEndList();
   
+  // opengl.org recommends not using compile-and-execute, but explitly
+  // compiling and calling the display list seperately - need to think
+  // about how to do this, as it messes up the logic/geometry of
+  // drawing above.  
+  //glCallList( list );
+
   make_dirty(mod);
   
   return 0;
@@ -1061,7 +1070,7 @@ void model_draw_data_cb( gpointer key, stg_model_t* mod, void* user )
 
 void model_draw_cb( gpointer key, stg_model_t* mod, void* user )
 {
-  // TODO - fix this properly
+  // TODO - fix this - this gets called way too much.
   // the models draw their children recursively, so only draw root models
   if( mod->parent == NULL )
     gl_model_draw( mod, user );
@@ -1154,6 +1163,160 @@ void draw_thumbnail( stg_world_t* world )
 
   glPopAttrib();      
 }
+
+void model_draw_bbox( stg_model_t* mod, gpointer callback_dummy )
+{
+  int p;
+  //for( p=0; p<mod->polygons_count; p++ )
+    {
+      
+      stg_endpoint_t* endpts = mod->endpts;
+      
+      // model's body color
+      push_color_stgcolor( mod->color );
+      
+      // draw rectangles on the axes indicating the extent of bboxes.
+      glBegin(GL_LINE_LOOP );
+      glVertex3f( endpts[0].value, 0, endpts[4].value);
+      glVertex3f( endpts[0].value, 0, endpts[5].value);
+      glVertex3f( endpts[1].value, 0, endpts[5].value);
+      glVertex3f( endpts[1].value, 0, endpts[4].value);
+      glEnd();
+      
+      glBegin(GL_LINE_LOOP );
+      glVertex3f( 0, endpts[2].value, endpts[4].value);
+      glVertex3f( 0, endpts[2].value, endpts[5].value);
+      glVertex3f( 0, endpts[3].value, endpts[5].value);
+      glVertex3f( 0, endpts[3].value, endpts[4].value);
+      glEnd();
+
+      // bottom rectangle
+      glBegin(GL_LINE_LOOP );
+      glVertex3f( endpts[0].value, endpts[2].value, endpts[4].value );
+      glVertex3f( endpts[0].value, endpts[3].value, endpts[4].value );
+      glVertex3f( endpts[1].value, endpts[3].value, endpts[4].value );
+      glVertex3f( endpts[1].value, endpts[2].value, endpts[4].value );
+      glEnd();
+      
+      // top rectangle
+      glBegin(GL_LINE_LOOP );
+      glVertex3f( endpts[0].value, endpts[2].value, endpts[5].value );
+      glVertex3f( endpts[0].value, endpts[3].value, endpts[5].value );
+      glVertex3f( endpts[1].value, endpts[3].value, endpts[5].value );
+      glVertex3f( endpts[1].value, endpts[2].value, endpts[5].value );
+      glEnd();
+      
+      // verticals
+      glBegin( GL_LINES );
+      glVertex3f( endpts[0].value, endpts[2].value, endpts[4].value );
+      glVertex3f( endpts[0].value, endpts[2].value, endpts[5].value );
+      glVertex3f( endpts[1].value, endpts[2].value, endpts[4].value );
+      glVertex3f( endpts[1].value, endpts[2].value, endpts[5].value );
+      glVertex3f( endpts[0].value, endpts[3].value, endpts[4].value );
+      glVertex3f( endpts[0].value, endpts[3].value, endpts[5].value );
+      glVertex3f( endpts[1].value, endpts[3].value, endpts[4].value );
+      glVertex3f( endpts[1].value, endpts[3].value, endpts[5].value );
+      glEnd();
+
+      pop_color();
+    }
+}
+
+
+void draw_endpoints( stg_world_t* world )
+{
+  double epsilon = 0.2;
+  double hepsilon = epsilon / 2.0;
+
+  int i=0;
+  stg_endpoint_t* ep;
+  //puts( "X List:" ); 
+  for( ep = world->endpts.x; ep; ep=ep->next )
+    {
+      //printf( "\t%.2f %d %s\n",  ep->value, ep->type, ep->mod->token );
+      
+      push_color_stgcolor( ep->mod->color );
+
+      glBegin( GL_POLYGON );
+      glVertex3f( ep->value, 0, 0 );
+
+      if( ep->type == 0 )
+	{	
+	  glVertex3f( ep->value, -epsilon, 0 );
+	  glVertex3f( ep->value+hepsilon, -hepsilon, 0 );
+	}
+      else
+	{	
+	  glVertex3f( ep->value-hepsilon, -hepsilon, 0 );
+	  glVertex3f( ep->value, -epsilon, 0 );
+	}
+	
+      glEnd();
+
+      glRasterPos2f( ep->value, -0.5 );
+      glPrint( "%d", (int)i++ );      
+      pop_color();
+    }
+
+  i=0;
+  //puts( "Y List:" ); 
+  for( ep = world->endpts.y; ep; ep=ep->next )
+    {
+      push_color_stgcolor( ep->mod->color );
+
+      glBegin( GL_POLYGON );
+      glVertex3f( 0, ep->value, 0 );
+
+      if( ep->type == 0 )
+	{	
+	  glVertex3f( -hepsilon, ep->value+hepsilon,  0 );
+	  glVertex3f( -epsilon, ep->value, 0 );
+	}
+      else
+	{	
+	  glVertex3f( -epsilon, ep->value, 0 );
+	  glVertex3f( -hepsilon, ep->value-hepsilon,  0 );
+	}
+	
+      glEnd();
+
+      glRasterPos2f( -0.5, ep->value );
+      glPrint( "%d", (int)i++ );      
+      pop_color();
+    }
+
+  i=0;
+  //puts( "Z List:" ); 
+  for( ep = world->endpts.z; ep; ep=ep->next )
+    {
+      //printf( "\t%s at %.2f\n", ep->mod->token, ep->value );
+
+      push_color_stgcolor( ep->mod->color );
+
+      glBegin( GL_POLYGON );
+      glVertex3f( 0, 0, ep->value );
+
+      if( ep->type == 0 )
+	{	
+	  glVertex3f( -hepsilon, 0, ep->value+hepsilon );
+	  glVertex3f( -epsilon, 0, ep->value  );
+	}
+      else
+	{	
+	  glVertex3f(  -epsilon, 0, ep->value );
+	  glVertex3f( -hepsilon, 0,  ep->value-hepsilon );
+	}
+	
+      glEnd();
+
+      glRasterPos3f( -0.5, 0, ep->value );
+      glPrint( "%d", (int)i++ );      
+      pop_color();   
+    }
+
+  //puts( "\n" );
+}
+
 
 void draw_world(  stg_world_t* world )
 {
@@ -1266,10 +1429,24 @@ void draw_world(  stg_world_t* world )
 	   world->width/2.0, world->height/2.0 ); 
   glDisable(GL_POLYGON_OFFSET_FILL);
 
-  
+  // draw the model bounding boxes
+   g_hash_table_foreach( world->models, (GHFunc)model_draw_bbox, NULL);
+
   // draw the models
   g_hash_table_foreach( world->models, (GHFunc)model_draw_cb, NULL );
   
+  // draw the bbox lists
+  draw_endpoints( world );
+
+/*   push_color_rgba( 0,0,0,1 );  */
+  
+/*   GList* it; */
+/*   for( it=world->debug_bboxes; it; it=it->next ) */
+/*     box3d_wireframe( ((stg_bbox3d_t*)it->data) ); */
+  
+/*   pop_color(); */
+
+
 
   // get the display list associated with this model
   //int slist = gui_model_get_displaylist( mod, LIST_SELECTED );
@@ -1470,11 +1647,11 @@ motion_notify_event (GtkWidget      *widget,
     }
   else if( event->state & GDK_BUTTON1_MASK && world->win->dragging )
     {
-      printf( "dragging an object\n" );
+      //printf( "dragging an object\n" );
 
       if( world->win->selection_active )
 	{
-	  printf( "moving model to %f %f\n", obx, oby );
+	  //printf( "moving model to %f %f\n", obx, oby );
 	  
 	  double dx = obx - world->win->selection_pointer_start.x; 
 	  double dy = oby - world->win->selection_pointer_start.y; 
@@ -1490,11 +1667,11 @@ motion_notify_event (GtkWidget      *widget,
     }  
   else if( event->state & GDK_BUTTON3_MASK && world->win->dragging ) 
     {
-      printf( "rotating an object\n" );
+      //printf( "rotating an object\n" );
       
       if( world->win->selection_active )
 	{
-	  printf( "rotating model to %f %f\n", obx, oby );
+	  //printf( "rotating model to %f %f\n", obx, oby );
 	  
 	  stg_pose_t pose;
 	  stg_model_get_pose(  world->win->selection_active, &pose );
@@ -1551,7 +1728,7 @@ button_release_event (GtkWidget      *widget,
 		      GdkEventButton *event,
 		      stg_world_t*  world )
 {
-  puts( "RELEASE" );
+  //puts( "RELEASE" );
 
   // stop dragging models when mouse 1 is released
   if( event->button == 1 || event->button == 3 )
@@ -1610,7 +1787,7 @@ button_press_event (GtkWidget      *widget,
 		   world, &obx, &oby, &obz );
   
   // ctrl is pressed - choose this point as the center of rotation
-  printf( "mouse click at (%.2f %.2f %.2f)\n", obx, oby, obz );
+  //printf( "mouse click at (%.2f %.2f %.2f)\n", obx, oby, obz );
   
   world->win->click_point.x = obx;
   world->win->click_point.y = oby;
@@ -1627,11 +1804,11 @@ button_press_event (GtkWidget      *widget,
       if( (event->state & modifiers) == GDK_CONTROL_MASK)
 	{
 	  // ctrl is pressed 
-	  printf( "CTRL-click\n" );
+	  //printf( "CTRL-click\n" );
 	}
       else
 	{
-	  puts( "SELECT" );
+	  //puts( "SELECT" );
 	  select_model_if_close( world, obx, oby, obz ); 
 	}
     }
@@ -1738,12 +1915,9 @@ unrealize (GtkWidget *widget,
 
 GdkGLConfig* gl_init( void )
 {
-  puts( "GL_INIT()" );
-  
   gtk_gl_init (NULL,NULL);
+
   /* Configure OpenGL framebuffer. */
-
-
   /* Try double-buffered visual */
   glconfig = gdk_gl_config_new_by_mode (GDK_GL_MODE_RGBA   |
 					GDK_GL_MODE_DEPTH |
@@ -1841,7 +2015,9 @@ gui_create_canvas( stg_world_t* world )
   // allocate a drawing list for everything in the world
   world->win->draw_list = glGenLists(1);
 
-  
+  // allocate a drawing list for debug info
+  world->win->debug_list = glGenLists(1);
+
   return drawing_area;
 }
 
@@ -1854,12 +2030,9 @@ gui_create_canvas( stg_world_t* world )
 
 void gui_model_init( stg_model_t* mod )
 {
-  int ch;
-  for(ch=0; ch < mod->children->len; ch++ )
-    {
-      stg_model_t* child = g_ptr_array_index( mod->children, ch );
-      gui_model_init( child );
-    }
+  GList* it;
+  for( it=mod->children; it; it=it->next )
+      gui_model_init( (stg_model_t*)it->data );
 
   // GL CALLBACKS
 

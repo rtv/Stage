@@ -139,7 +139,8 @@ struct _gui_window
   int dirty;
   
   int draw_list;
-  
+  int debug_list;
+
   stg_radians_t stheta; ///< view rotation about x axis
   stg_radians_t sphi; ///< view rotation about x y axis
   double scale; ///< view scale
@@ -196,5 +197,6 @@ gboolean  signal_delete( GtkWidget *widget, GdkEvent *event, gpointer user_data 
 
 void gui_enable_alpha( stg_world_t* world, int enable );
 GtkWidget* gui_create_canvas( stg_world_t* world );
+int gui_model_create( stg_model_t* mod );
 
 #endif // GUI_H

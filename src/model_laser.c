@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.89.2.1 $
+//  $Revision: 1.89.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,6 @@
 #include <math.h>
 #include "gui.h"
 
-//#define DEBUG
 
 #include "stage_internal.h"
 
@@ -33,6 +32,9 @@
 #define STG_DEFAULT_LASER_MAXRANGE 8.0
 #define STG_DEFAULT_LASER_FOV M_PI
 #define STG_DEFAULT_LASER_SAMPLES 180
+
+#define DEBUG 1
+
 
 /**
 @ingroup model
@@ -72,7 +74,7 @@ laser
   - Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
 */
 
-void laser_load( stg_model_t* mod )
+void laser_load( stg_model_t* mod, void* unused )
 {
   
   stg_laser_config_t* cfg = (stg_laser_config_t*)mod->cfg;
@@ -93,25 +95,15 @@ void laser_load( stg_model_t* mod )
   model_change( mod, &mod->cfg );
 }
 
-int laser_update( stg_model_t* mod );
-int laser_startup( stg_model_t* mod );
-int laser_shutdown( stg_model_t* mod );
+int laser_update( stg_model_t* mod, void* unused );
+int laser_startup( stg_model_t* mod, void* unused );
+int laser_shutdown( stg_model_t* mod, void* unused );
 
 // implented by the gui in some other file
 void gui_laser_init( stg_model_t* mod );
 
 int laser_init( stg_model_t* mod )
 {
-
-  // we don't consume any power until subscribed
-  //mod->watts = 0.0; 
-  
-  // override the default methods
-  mod->f_startup = laser_startup;
-  mod->f_shutdown = laser_shutdown;
-  mod->f_update =  NULL; // laser_update is installed startup, removed on shutdown
-  mod->f_load = laser_load;
-
   // sensible laser defaults 
   stg_geom_t geom; 
   memset( &geom, 0, sizeof(geom));
@@ -136,11 +128,13 @@ int laser_init( stg_model_t* mod )
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;  
   lconf.resolution = 1;
   stg_model_set_cfg( mod, &lconf, sizeof(lconf) );
-    
-  
-  // when data is set, render it to the GUI
-  // clear the data - this will unrender it too
+      
   stg_model_set_data( mod, NULL, 0 );
+
+  // install the laser model functionality
+  stg_model_add_startup_callback( mod, laser_startup, NULL );
+  stg_model_add_shutdown_callback( mod, laser_shutdown, NULL );
+  stg_model_add_load_callback( mod, laser_load, NULL );
 
   gui_laser_init( mod );
 
@@ -159,14 +153,18 @@ void stg_laser_config_print( stg_laser_config_t* slc )
 int laser_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {           
   // Ignore my relatives and thiings that are invisible to lasers
-  return( (!stg_model_is_related(mod,hitmod)) && 
-	  (hitmod->laser_return > 0) );
+  //return( (!stg_model_is_related(mod,hitmod)) && 
+  //  (hitmod->laser_return > 0) );
+
+  return(  1 );//hitmod == mod->parent ); 
 }	
 
-int laser_update( stg_model_t* mod )
+int laser_update( stg_model_t* mod, void* unused )
 {   
   PRINT_DEBUG2( "[%lu] laser update (%d subs)", 
 		mod->world->sim_time, mod->subs );
+  printf( "[%lu] laser update (%d subs)\n", 
+	  mod->world->sim_time, mod->subs );
   
   // no work to do if we're unsubscribed
   if( mod->subs < 1 )
@@ -215,16 +213,17 @@ int laser_update( stg_model_t* mod )
     {      
       double bearing =  pz.a - cfg->fov/2.0 + sample_incr * t;
       
-      itl_t* itl = itl_create( pz.x, pz.y, bearing, 
+      itl_t* itl = itl_create2( mod, pz.x, pz.y, 
+				bearing, 
 			       cfg->range_max, 
 			       mod->world->matrix, 
-			       PointToBearingRange );
+			       PointToBearingRange,
+				laser_raytrace_match );
       
       //double range = cfg->range_max;
       
-    stg_model_t* hitmod = itl_first_matching( itl, 
-						laser_raytrace_match, 
-						mod );
+      stg_model_t* hitmod = itl_next( itl );
+  
       if( hitmod )
 	{       
 	  scan[t].range = MAX( itl->range, cfg->range_min );
@@ -246,7 +245,7 @@ int laser_update( stg_model_t* mod )
       if( hitmod )
 	{
 	  scan[t].reflectance = 
-	    (mod->laser_return >= LaserBright) ? 1.0 : 0.0;
+	    (hitmod->laser_return >= LaserBright) ? 1.0 : 0.0;
 	}
       else
 	scan[t].reflectance = 0.0;
@@ -288,30 +287,54 @@ int laser_update( stg_model_t* mod )
 }
 
 
-int laser_startup( stg_model_t* mod )
+int laser_startup( stg_model_t* mod, void* unused )
 { 
   PRINT_DEBUG( "laser startup" );
+  puts( "laser startup" );
   
   // start consuming power
   stg_model_set_watts( mod, STG_LASER_WATTS );
 
   // install the update function
-  mod->f_update = laser_update;
+  stg_model_add_update_callback( mod, laser_update, NULL );
 
+  stg_pose_t gpose;
+  stg_model_get_global_pose( mod, &gpose );
+  
+  stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg;
+
+  // add an AABB to keep track of the things I can see
+
+/*   stg_endpoint_t* aabb = calloc( sizeof(stg_endpoint_t), 6 ); */
+  
+/*   int i; */
+/*   for( i=0; i<6; i++ ) */
+/*     { */
+/*       aabb[i].mod = mod; */
+/*       aabb[i].type = i % 2; // 0 is STG_BEGIN, 1 is STG_END */
+/*       aabb[i].value = 0.0; */
+/*     } */
+
+/*   aabb[0].value = gpose.x - cfg->range_max; */
+/*   aabb[1].value = gpose.x + cfg->range_max; */
+
+/*   mod->world->endpts.x = add_endpoint_to_list( mod->world->endpts.x, &aabb[0]); */
+/*   mod->world->endpts.x = add_endpoint_to_list( mod->world->endpts.x, &aabb[1]); */
+
+  
   return 0; // ok
 }
 
-int laser_shutdown( stg_model_t* mod )
+int laser_shutdown( stg_model_t* mod, void* unused )
 { 
   PRINT_DEBUG( "laser shutdown" );
   
-  // uninstall the update function
-  mod->f_update = NULL;
+  // remove the update function
+  stg_model_remove_update_callback( mod, laser_update );
 
   // stop consuming power
   stg_model_set_watts( mod, 0 );
   
-
   // clear the data - this will unrender it too
   stg_model_set_data( mod, NULL, 0 );
 

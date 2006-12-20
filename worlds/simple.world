@@ -1,15 +1,51 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.1 2006-09-14 07:11:55 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.2 2006-12-20 03:01:14 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
 
+
+
+
+
+
+
+
+
+
+
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
+
+
+
+
+
+
+
+
+
+
+
+
 # defines sick laser
 include "sick.inc"
+
+
+
+
+
+
+
+
+
+
+
+
 
 # size of the world in meters
 size [16 16]
@@ -22,24 +58,45 @@ interval_real 100  # real-time interval between simulation updates in millisecon
 # configure the GUI window
 window
 ( 
-  size [ 500.000 537.000 ] 
-  center [-0.010 -0.040] 
+  size [ 627.000 531.000 ] 
+  center [-231.010 -121.040] 
   rotate [ 0.000 0.000 ]
-  scale 30.000 
+  scale 77.960 
 )
 
 # load an environment bitmap
-map
-( 
-  size [16 16]
-  bitmap "bitmaps/cave.png"
-)
+#map
+#( 
+#  size [16 16]
+#  bitmap "bitmaps/cave.png"
+#)
+
+
+
 
 # create a robot
 pioneer2dx
 (
   name "robot1"
   color "red"
-  pose [-6 -6 45]
+  pose [2.105 0.961 45.000]
   sick_laser()
 )
+
+#pioneer2dx
+#(
+#  name "robot2"
+#  color "green"
+#  pose [2.304 3.428 27.811]
+#  #sick_laser()
+#)
+
+model
+(
+  color "orange"
+  pose [4.211 2.518 27.811]
+  size [1 1]
+)
+
+#box( pose [1 2 0] )
+#box( pose [1 2 0] )

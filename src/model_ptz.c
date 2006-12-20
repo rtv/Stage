@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_ptz.c,v 1.2.4.1 2006-09-14 07:03:25 rtv Exp $
+ * CVS info: $Id: model_ptz.c,v 1.2.4.2 2006-12-20 03:01:13 rtv Exp $
  */
 
 #include <math.h>
@@ -75,25 +75,22 @@ ptz
    - Controls the speed at which the device servos to the desired angles, in radians per second.
 */
 
-int ptz_init( stg_model_t* mod );
-int ptz_startup( stg_model_t* mod );
-int ptz_shutdown( stg_model_t* mod );
-int ptz_update( stg_model_t* mod );
-void ptz_load( stg_model_t* mod );
+int ptz_startup( stg_model_t* mod, void* unused );
+int ptz_shutdown( stg_model_t* mod, void* unused );
+int ptz_update( stg_model_t* mod, void* unused );
+int ptz_load( stg_model_t* mod, void* unused );
 
-int ptz_render_data( stg_model_t* mod, void* userp );
-int ptz_unrender_data( stg_model_t* mod, void* userp );
-int ptz_render_cfg( stg_model_t* mod, void* userp );
-int ptz_unrender_cfg( stg_model_t* mod, void* userp );
+/* int ptz_render_data( stg_model_t* mod, void* userp ); */
+/* int ptz_unrender_data( stg_model_t* mod, void* userp ); */
+/* int ptz_render_cfg( stg_model_t* mod, void* userp ); */
+/* int ptz_unrender_cfg( stg_model_t* mod, void* userp ); */
 
 int ptz_init( stg_model_t* mod )
 {
-  // override the default methods
-  mod->f_startup = ptz_startup;
-  mod->f_shutdown = ptz_shutdown;
-  mod->f_update = NULL;// installed at startup/shutdown
-  mod->f_load = ptz_load;
-  
+  stg_model_add_callback( mod, &mod->startup, ptz_startup, NULL );
+  stg_model_add_callback( mod, &mod->shutdown, ptz_shutdown, NULL );
+  stg_model_add_callback( mod, &mod->load, ptz_load, NULL );
+
   stg_geom_t geom;
   memcpy( &geom, &mod->geom, sizeof(geom));
   geom.size.x = STG_PTZ_SIZE_X;
@@ -124,9 +121,9 @@ int ptz_init( stg_model_t* mod )
   return 0; //ok
 }
 
-void ptz_load( stg_model_t* mod )
+int ptz_load( stg_model_t* mod, void* unused  )
 {
-  stg_ptz_data_t* data = (stg_ptz_config_t*)mod->data;
+  stg_ptz_data_t* data = (stg_ptz_data_t*)mod->data;
   
   data->pan = 
     wf_read_tuple_angle(mod->id, "ptz", 0, data->pan );
@@ -161,32 +158,28 @@ void ptz_load( stg_model_t* mod )
     wf_read_tuple_angle(mod->id, "ptz_max", 2, cfg->max.zoom );
   
   model_change( mod, &mod->cfg );
-}
 
-int ptz_startup( stg_model_t* mod )
-{
-  PRINT_DEBUG( "ptz startup" );  
-  
-  mod->f_update = ptz_update;
-  mod->watts = STG_PTZ_WATTS;
-  
   return 0;
 }
 
-int ptz_shutdown( stg_model_t* mod )
+int ptz_startup( stg_model_t* mod, void* unused  )
+{
+  PRINT_DEBUG( "ptz startup" );    
+  stg_model_add_callback( mod, &mod->update, ptz_update, NULL );
+  mod->watts = STG_PTZ_WATTS;
+  return 0;
+}
+
+int ptz_shutdown( stg_model_t* mod, void* unused  )
 {
   PRINT_DEBUG( "ptz shutdown" );  
-  
-  mod->f_update = NULL;
-  mod->watts = 0.0;
-  
+  stg_model_remove_callback( mod, &mod->update, ptz_update );
+  mod->watts = 0.0;  
   return 0;
 }
 
-
- 
 // servo to the PTZ goal angles
-int ptz_update( stg_model_t* mod )
+int ptz_update( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "ptz update" );  
   

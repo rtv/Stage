@@ -391,8 +391,11 @@ stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count,
       stg_polygon_set_points( &polys[r], pts, 4 );
 
       // store the bounding box of this polygon
-      polys[r].bbox.x = width;
-      polys[r].bbox.y = height;
+      polys[r].size.x = width;
+      polys[r].size.y = height;
+
+      //polys[r].bbox.x.min = height;
+      
     }
   
   return polys;
@@ -840,3 +843,28 @@ void stg_polygon_append_points( stg_polygon_t* poly, stg_point_t* pts, size_t co
   assert( poly );
   g_array_append_vals( poly->points, pts, count );
 }
+
+
+// calculate the axis-aligned bounding volume of the polygon in world
+// coordinates, given the polygon origin [pose] in world
+// coordinates. The bbox is stored in the polygon and a pointer to it
+// returned. Caller should NOT free() the bbox pointer
+stg_bbox3d_t* stg_polygon_bbox_calc( stg_polygon_t* poly, stg_pose_t* pose )
+{
+
+
+}
+
+stg_cb_t* cb_create( stg_model_callback_t callback, void* arg )
+{
+  stg_cb_t* cb = malloc(sizeof(stg_cb_t));
+  cb->callback = callback;
+  cb->arg = arg;
+  return cb;
+}
+
+void cb_destroy( stg_cb_t* cb )
+{
+  free( cb );
+}
+

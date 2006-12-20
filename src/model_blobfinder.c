@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.59.4.1 2006-09-14 07:03:25 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.59.4.2 2006-12-20 03:01:13 rtv Exp $
  */
 
 #include <math.h>
@@ -93,23 +93,20 @@ ptz(
 
 */
 
-int blobfinder_init( stg_model_t* mod );
-int blobfinder_startup( stg_model_t* mod );
-int blobfinder_shutdown( stg_model_t* mod );
-int blobfinder_update( stg_model_t* mod );
-void blobfinder_load( stg_model_t* mod );
+int blobfinder_startup( stg_model_t* mod, void* unused );
+int blobfinder_shutdown( stg_model_t* mod, void* unused );
+int blobfinder_update( stg_model_t* mod, void* unused );
+int blobfinder_load( stg_model_t* mod, void* unused );
 
 // implented by the gui in some other file
 void gui_blobfinder_init( stg_model_t* mod );
 
 int blobfinder_init( stg_model_t* mod )
-{
-  // override the default methods
-  mod->f_startup = blobfinder_startup;
-  mod->f_shutdown = blobfinder_shutdown;
-  mod->f_update = NULL;// installed at startup/shutdown
-  mod->f_load = blobfinder_load;
-  
+{  
+  // update callback is added/removed at startup/shutdown
+  stg_model_add_callback( mod, &mod->startup, blobfinder_startup, NULL );
+  stg_model_add_callback( mod, &mod->shutdown, blobfinder_shutdown, NULL );
+  stg_model_add_callback( mod, &mod->load, blobfinder_load, NULL );
   
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
@@ -144,7 +141,7 @@ int blobfinder_init( stg_model_t* mod )
   return 0; //ok
 }
 
-void blobfinder_load( stg_model_t* mod )
+int blobfinder_load( stg_model_t* mod, void* unused )
 {
   stg_blobfinder_config_t* now = (stg_blobfinder_config_t*)mod->cfg; 
   assert(now);
@@ -178,26 +175,23 @@ void blobfinder_load( stg_model_t* mod )
     }    
   
   stg_model_set_cfg( mod, &bcfg, sizeof(bcfg));
-}
 
-int blobfinder_startup( stg_model_t* mod )
-{
-  PRINT_DEBUG( "blobfinder startup" );  
-  
-  mod->f_update = blobfinder_update;
-  //mod->watts = STG_BLOB_WATTS;
-  
   return 0;
 }
 
-int blobfinder_shutdown( stg_model_t* mod )
+int blobfinder_startup( stg_model_t* mod, void* unused )
+{
+  PRINT_DEBUG( "blobfinder startup" );  
+  stg_model_add_callback( mod, &mod->update, blobfinder_update, NULL );
+  stg_model_set_watts( mod, STG_BLOB_WATTS );  
+  return 0;
+}
+
+int blobfinder_shutdown( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "blobfinder shutdown" );  
-  
-  mod->f_update = NULL;
-  //mod->watts = 0.0;
-  
-  // clear the data - this will unrender it too
+  stg_model_remove_callback( mod, &mod->update, blobfinder_update );
+  stg_model_set_watts( mod, 0 );  
   stg_model_set_data( mod, NULL, 0 );
   return 0;
 }
@@ -213,9 +207,9 @@ int blobfinder_raytrace_filter( stg_model_t* finder, stg_model_t* found )
 
 // we check that our parent is a PTZ model by making sure it's startup
 // method is this one
-int ptz_startup( stg_model_t* mod );
+int ptz_startup( stg_model_t* mod, void* unused );
 
-int blobfinder_update( stg_model_t* mod )
+int blobfinder_update( stg_model_t* mod, void* unused )
 {
   PRINT_DEBUG( "blobfinder update" );  
   
@@ -228,7 +222,8 @@ int blobfinder_update( stg_model_t* mod )
       exit(-1);
     }
 
-  if( mod->parent->f_startup != ptz_startup )
+  //if( mod->parent->f_startup != ptz_startup )
+  PRINT_WARN( "PTZ PARENT CHECKING IS CURRENTLY BROKEN - FIX!" );
     {
       printf( "Model %s is a blobfinder but it's parent is not a PTZ model.\n"
 	      "A blobfinder MUST be a child of a PTZ model. Fix your worldfile.\n", 
@@ -237,7 +232,6 @@ int blobfinder_update( stg_model_t* mod )
     }
   
   stg_ptz_data_t* ptz = (stg_ptz_data_t*)mod->parent->data;
-
   stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg; 
   
   // Generate the scan-line image
