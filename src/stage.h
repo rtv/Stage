@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.2 2006-12-20 03:01:13 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.3 2006-12-22 23:56:57 rtv Exp $
  */
 
 
@@ -300,9 +300,43 @@ typedef enum {
       @{
   */
   
+  typedef enum {
+    STG_BEGIN=0,
+    STG_END
+  } stg_endpoint_type_t;
+  
+  
+  // forward declaration
+  typedef struct stg_polygon stg_polygon_t;
+
+  typedef struct stg_endpoint {
+    stg_endpoint_type_t type;
+    stg_meters_t value;
+    stg_model_t* mod;
+    stg_polygon_t* polygon; //< the polygon that contains this endpoint
+    
+    //GList* list; // endpoints are usually stored in a list. this can
+    // be used to access the endpoint in the list
+    // directly 
+    
+    // endpoints are stored in linked lists
+    struct stg_endpoint *next, *prev; 
+    
+  } stg_endpoint_t;
+  
+  typedef struct {
+    stg_endpoint_t min, max;
+  } stg_endpoint_pair_t;
+  
+  typedef struct
+  {
+    stg_endpoint_pair_t x,y,z;
+  } stg_endpoint_bbox_t;
+    
+
   /** define a polygon: a set of connected vertices drawn with a
       color. Can be drawn filled or unfilled. */
-  typedef struct
+  typedef struct stg_polygon
   {
     /// pointer to an array of points
     GArray* points;
@@ -322,8 +356,10 @@ typedef enum {
     /// axis-aligned bounding volume
     stg_bbox3d_t bbox;
 
+    stg_endpoint_bbox_t epbbox;
+
     void* _data; // temporary internal use only
-  } stg_polygon_t; 
+  };// stg_polygon_t; 
 
   
   /// return an array of [count] polygons. Caller must free() the space.

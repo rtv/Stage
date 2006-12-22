@@ -127,24 +127,6 @@ extern "C" {
     stg_model_initializer_t initializer;
   } stg_type_record_t;
 
-  typedef enum {
-    STG_BEGIN=0,
-    STG_END
-  } stg_endpoint_type_t;
-
-  typedef struct stg_endpoint {
-    stg_endpoint_type_t type;
-    stg_meters_t value;
-    stg_model_t* mod;
-
-    //GList* list; // endpoints are usually stored in a list. this can
-		 // be used to access the endpoint in the list
-		 // directly 
-
-    // endpoints are stored in linked lists
-    struct stg_endpoint *next, *prev; 
-
-  } stg_endpoint_t;
   
   typedef struct {
     double x, y, z;
@@ -243,7 +225,9 @@ extern "C" {
     
     /** specify an axis-aligned 3d bounding box in global
 	coordinates */
-    stg_endpoint_t endpts[6]; // in order {xmin,xmax,ymin,ymax,zmin,zmax}
+    //stg_endpoint_t endpts[6]; // in order {xmin,xmax,ymin,ymax,zmin,zmax}
+    stg_endpoint_bbox_t epbbox;
+
 
     // TODO - optionally thread-safe version allow exclusive access
     // to this model 

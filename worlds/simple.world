@@ -1,51 +1,15 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.2 2006-12-20 03:01:14 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.3 2006-12-22 23:56:57 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
 
-
-
-
-
-
-
-
-
-
-
-
-
 # defines 'map' object used for floorplans
 include "map.inc"
 
-
-
-
-
-
-
-
-
-
-
-
-
 # defines sick laser
 include "sick.inc"
-
-
-
-
-
-
-
-
-
-
-
-
 
 # size of the world in meters
 size [16 16]
@@ -65,11 +29,11 @@ window
 )
 
 # load an environment bitmap
-#map
-#( 
-#  size [16 16]
-#  bitmap "bitmaps/cave.png"
-#)
+map
+( 
+  size [16 16]
+  bitmap "bitmaps/cave.png"
+)
 
 
 

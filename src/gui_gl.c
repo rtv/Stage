@@ -1169,53 +1169,57 @@ void model_draw_bbox( stg_model_t* mod, gpointer callback_dummy )
   int p;
   //for( p=0; p<mod->polygons_count; p++ )
     {
-      
-      stg_endpoint_t* endpts = mod->endpts;
+      double xmin = mod->epbbox.x.min.value;
+      double xmax = mod->epbbox.x.max.value;
+      double ymin = mod->epbbox.y.min.value;
+      double ymax = mod->epbbox.y.max.value;
+      double zmin = mod->epbbox.z.min.value;
+      double zmax = mod->epbbox.z.max.value;
       
       // model's body color
       push_color_stgcolor( mod->color );
       
       // draw rectangles on the axes indicating the extent of bboxes.
       glBegin(GL_LINE_LOOP );
-      glVertex3f( endpts[0].value, 0, endpts[4].value);
-      glVertex3f( endpts[0].value, 0, endpts[5].value);
-      glVertex3f( endpts[1].value, 0, endpts[5].value);
-      glVertex3f( endpts[1].value, 0, endpts[4].value);
+      glVertex3f( xmin, 0, zmin);
+      glVertex3f( xmin, 0, zmax);
+      glVertex3f( xmax, 0, zmax);
+      glVertex3f( xmax, 0, zmin);
       glEnd();
       
       glBegin(GL_LINE_LOOP );
-      glVertex3f( 0, endpts[2].value, endpts[4].value);
-      glVertex3f( 0, endpts[2].value, endpts[5].value);
-      glVertex3f( 0, endpts[3].value, endpts[5].value);
-      glVertex3f( 0, endpts[3].value, endpts[4].value);
+      glVertex3f( 0, ymin, zmin);
+      glVertex3f( 0, ymin, zmax);
+      glVertex3f( 0, ymax, zmax);
+      glVertex3f( 0, ymax, zmin);
       glEnd();
 
       // bottom rectangle
       glBegin(GL_LINE_LOOP );
-      glVertex3f( endpts[0].value, endpts[2].value, endpts[4].value );
-      glVertex3f( endpts[0].value, endpts[3].value, endpts[4].value );
-      glVertex3f( endpts[1].value, endpts[3].value, endpts[4].value );
-      glVertex3f( endpts[1].value, endpts[2].value, endpts[4].value );
+      glVertex3f( xmin, ymin, zmin );
+      glVertex3f( xmin, ymax, zmin );
+      glVertex3f( xmax, ymax, zmin );
+      glVertex3f( xmax, ymin, zmin );
       glEnd();
       
       // top rectangle
       glBegin(GL_LINE_LOOP );
-      glVertex3f( endpts[0].value, endpts[2].value, endpts[5].value );
-      glVertex3f( endpts[0].value, endpts[3].value, endpts[5].value );
-      glVertex3f( endpts[1].value, endpts[3].value, endpts[5].value );
-      glVertex3f( endpts[1].value, endpts[2].value, endpts[5].value );
+      glVertex3f( xmin, ymin, zmax );
+      glVertex3f( xmin, ymax, zmax );
+      glVertex3f( xmax, ymax, zmax );
+      glVertex3f( xmax, ymin, zmax );
       glEnd();
       
       // verticals
       glBegin( GL_LINES );
-      glVertex3f( endpts[0].value, endpts[2].value, endpts[4].value );
-      glVertex3f( endpts[0].value, endpts[2].value, endpts[5].value );
-      glVertex3f( endpts[1].value, endpts[2].value, endpts[4].value );
-      glVertex3f( endpts[1].value, endpts[2].value, endpts[5].value );
-      glVertex3f( endpts[0].value, endpts[3].value, endpts[4].value );
-      glVertex3f( endpts[0].value, endpts[3].value, endpts[5].value );
-      glVertex3f( endpts[1].value, endpts[3].value, endpts[4].value );
-      glVertex3f( endpts[1].value, endpts[3].value, endpts[5].value );
+      glVertex3f( xmin, ymin, zmin );
+      glVertex3f( xmin, ymin, zmax );
+      glVertex3f( xmax, ymin, zmin );
+      glVertex3f( xmax, ymin, zmax );
+      glVertex3f( xmin, ymax, zmin );
+      glVertex3f( xmin, ymax, zmax );
+      glVertex3f( xmax, ymax, zmin );
+      glVertex3f( xmax, ymax, zmax );
       glEnd();
 
       pop_color();
