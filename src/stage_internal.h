@@ -226,7 +226,7 @@ extern "C" {
     /** specify an axis-aligned 3d bounding box in global
 	coordinates */
     //stg_endpoint_t endpts[6]; // in order {xmin,xmax,ymin,ymax,zmin,zmax}
-    stg_endpoint_bbox_t epbbox;
+    //stg_endpoint_bbox_t epbbox;
 
 
     // TODO - optionally thread-safe version allow exclusive access

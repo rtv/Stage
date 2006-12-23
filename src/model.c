@@ -298,30 +298,47 @@ stg_endpoint_t* insert_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
 /* } */
    
 
-void endpoint_pair_set_bounds(  stg_endpoint_pair_t* pair, double min, double max )
+
+// add a polygon in world coordinates
+stg_endpoint_t* world_polygon_register( stg_world_t* world, 
+					stg_polygon_t* poly )
 {
-  pair->min.value = min;
-  pair->max.value = max;
+  // create the 6 endpoints that represent the global bounding box of
+  // this polygon
+  stg_endpoint_t* epts = calloc( sizeof(stg_endpoint_bbox_t), 6 );
+  
+  int i;
+  for( i=0; i<6; i++ )
+    {
+      epts[i].type = i % 2; // 0 == STG_BEGIN, 1 == STG_END
+      epts[i].poly = poly;
+      epts[i].value = poly->bounds[i];
+    }
+  
+  // add this model's endpoints to the world's lists
+  world->endpts.x = insert_endpoint( world->endpts.x, &epts[0] );
+  world->endpts.x = insert_endpoint( world->endpts.x, &epts[1] );
+  world->endpts.y = insert_endpoint( world->endpts.y, &epts[2] );
+  world->endpts.y = insert_endpoint( world->endpts.y, &epts[3] );
+  world->endpts.z = insert_endpoint( world->endpts.z, &epts[4] );
+  world->endpts.z = insert_endpoint( world->endpts.z, &epts[5] );  
+  
+  return epts;
 }
 
-void endpoint_pair_init( stg_endpoint_pair_t* pair, stg_model_t* mod, double min, double max )
+void world_polygon_unregister( stg_world_t* world, 
+			       stg_polygon_t* poly )
 {
-  memset( pair, 0, sizeof(stg_endpoint_pair_t));
-  
-  pair->min.type = STG_BEGIN; 
-  pair->min.mod = mod;
-  
-  pair->max.type = STG_BEGIN; 
-  pair->max.mod = mod;
-
-  endpoint_pair_set_bounds( pair, min, max );
+  // TODO
 }
 
-void endpoint_bbox_set_bounds( stg_endpoint_bbox_t* bbox, 
-			       double xmin, double xmax,
-			       double ymin, double ymax,
-			       double zmin, double zmax )
+// the polygon must have previously been registered
+void world_polygon_update( stg_world_t* world, stg_polygon_t* polygon )
+     
 {
+  // recalcuate the global bounding box of the polygon
+  
+
   bbox->x.min.value = xmin;
   bbox->x.max.value = xmax;
   bbox->y.min.value = ymin;
@@ -329,6 +346,7 @@ void endpoint_bbox_set_bounds( stg_endpoint_bbox_t* bbox,
   bbox->z.min.value = zmin;
   bbox->z.max.value = zmax;
 }
+
 
 
 stg_model_t* stg_model_create( stg_world_t* world, 
@@ -422,25 +440,10 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->gui_mask = mod->parent ? 0 : STG_DEFAULT_MASK;
 
 
-
-  int i;
-  for( i=0; i<6; i++ )
-    {
-      mod->endpts[i].mod = mod;
-      mod->endpts[i].type = i % 2; // 0 is STG_BEGIN, 1 is STG_END
-      mod->endpts[i].value = 0.0;
-      mod->endpts[i].prev = NULL;
-      mod->endpts[i].next = NULL;
-    }
+  endpoint_bbox_init( &mod->epbbox, mod, 0,0,0,0,0,0 );
 
   // add this model's endpoints to the world's lists
-  world->endpts.x = prepend_endpoint( world->endpts.x, &mod->endpts.x.min );
-  world->endpts.x = prepend_endpoint( world->endpts.x, &mod->endpts.x.max );
-  world->endpts.y = prepend_endpoint( world->endpts.y, &mod->endpts.y.min );
-  world->endpts.y = prepend_endpoint( world->endpts.y, &mod->endpts.y.max );
-  world->endpts.z = prepend_endpoint( world->endpts.z, &mod->endpts.z.min );
-  world->endpts.z = prepend_endpoint( world->endpts.z, &mod->endpts.z.max );
-
+  world_add_endpoint_bbox( mod->world, &mod->epbbox );
 
   //print_endpoint_list( "XLIST", world->endpts.x  );
   //print_endpoint_list(  "YLIST" , world->endpts.y );
@@ -875,51 +878,51 @@ void print_endpoint_list( char* prefix, stg_endpoint_t* ep )
   puts(""); 
 }
 
-// careful: no error checking - this must be fast
-GList* list_link_left( GList* head, GList* link )
-{
-  assert( head );
-  assert( link );
-  assert( link->prev );
+/* // careful: no error checking - this must be fast */
+/* GList* list_link_left( GList* head, GList* link ) */
+/* { */
+/*   assert( head ); */
+/*   assert( link ); */
+/*   assert( link->prev ); */
   
-  GList *a = link->prev->prev;
-  GList *b = link->prev;
-  GList *c = link;
-  GList *d = link->next;
+/*   GList *a = link->prev->prev; */
+/*   GList *b = link->prev; */
+/*   GList *c = link; */
+/*   GList *d = link->next; */
 
-  if( a ) a->next = c; else head = c;
-  if( d ) d->prev = b;
+/*   if( a ) a->next = c; else head = c; */
+/*   if( d ) d->prev = b; */
 
-  b->prev = c;
-  b->next = d;
-  c->prev = a;
-  c->next = b;
+/*   b->prev = c; */
+/*   b->next = d; */
+/*   c->prev = a; */
+/*   c->next = b; */
 
-  return head;
-}
+/*   return head; */
+/* } */
 
-  // careful: no error checking - this must be fast
-GList* list_link_right( GList* head, GList* link )
-{
-  assert( head );
-  assert( link );
-  assert( link->next );
+/*   // careful: no error checking - this must be fast */
+/* GList* list_link_right( GList* head, GList* link ) */
+/* { */
+/*   assert( head ); */
+/*   assert( link ); */
+/*   assert( link->next ); */
 
-  GList *a = link->prev;
-  GList *b = link;
-  GList *c = link->next;
-  GList *d = link->next->next;
+/*   GList *a = link->prev; */
+/*   GList *b = link; */
+/*   GList *c = link->next; */
+/*   GList *d = link->next->next; */
 
-  if( a ) a->next = c; else head = c;
-  if( d ) d->prev = b;
+/*   if( a ) a->next = c; else head = c; */
+/*   if( d ) d->prev = b; */
 
-  b->prev = c;
-  b->next = d;
-  c->prev = a;
-  c->next = b;
+/*   b->prev = c; */
+/*   b->next = d; */
+/*   c->prev = a; */
+/*   c->next = b; */
  
-  return head;
-}
+/*   return head; */
+/* } */
 
 static inline stg_endpoint_t* endpoint_right_intersect( stg_endpoint_t* head,  stg_endpoint_t* ep )
 {
@@ -936,22 +939,6 @@ static inline stg_endpoint_t* endpoint_right_intersect( stg_endpoint_t* head,  s
   return endpoint_right( head, ep );
 }    
 
-static inline stg_endpoint_t* move_endpoint_pair( stg_endpoint_t* list, 
-						  stg_endpoint_pair_t* pair )
-{
-  list = bubble( list, &pair.min );
-  list = bubble( list, &pair.max );
-  return list;
-}
-
-
-static inline void world_move_endpoint_bbox( stg_world_t* world, stg_endpoint_bbox_t* epbbox )
-{
-  world->endpts.x = move_endpoint_pair( world->endpts.x, &epbbox.x );
-  world->endpts.y = move_endpoint_pair( world->endpts.y, &epbbox.y );
-  world->endpts.z = move_endpoint_pair( world->endpts.y, &epbbox.z );
-}
-
 // locally shifts the endpoint into order in its list. returns the
 // head of the list, which may have changed
 static inline stg_endpoint_t* bubble( stg_endpoint_t* head, stg_endpoint_t* ep )
@@ -965,46 +952,52 @@ static inline stg_endpoint_t* bubble( stg_endpoint_t* head, stg_endpoint_t* ep )
   return head;
 }
 
-void model_update_bbox( stg_model_t* mod )
+
+static inline void world_move_endpoint( stg_world_t* world, stg_endpoint_t* epts )
 {
-  //printf( "UPDATE BBOX for model %s\n", mod->token );
-
-  stg_pose_t gpose;
-  stg_model_get_global_pose( mod, &gpose );
-
-  double dx_x =  fabs(mod->geom.size.x * cos(gpose.a)); 
-  double dx_y =  fabs(mod->geom.size.y * sin(gpose.a));
-  double dx = dx_x + dx_y;
-
-  double dy_x = fabs(mod->geom.size.x * sin(gpose.a));
-  double dy_y = fabs(mod->geom.size.y * cos(gpose.a));
-  double dy = dy_x + dy_y;
-
-  double dz = mod->geom.size.z;
-
-  // stuff these data into the endpoint structures
-  mod->epbbox.x.min.value = gpose.x - dx/2.0;
-  mod->epbbox.x.max..value = gpose.x + dx/2.0;
-  mod->epbbox.y.min.value = gpose.y - dy/2.0;
-  mod->epbbox.y.max.value = gpose.y + dy/2.0;
-  mod->epbbox.z.min.value = gpose.z;
-  mod->epbbox.z.max.value = gpose.z + dz;
-
   // bubble sort the end points of the bounding box in the lists along
   // each axis - bubble sort is VERY fast because we usually don't
   // move, but occasionally move 1 place left or right
-  
-  world_move_endpoint_bbox( mod->world, &mod->epbbox );
 
-/*   mod->world->endpts.x = bubble( mod->world->endpts.x, &mod->endpts.x.min ); */
-/*   mod->world->endpts.x = bubble( mod->world->endpts.x, &mod->endpts.x.max ); */
-/*   mod->world->endpts.y = bubble( mod->world->endpts.y, &mod->endpts[2] ); */
-/*   mod->world->endpts.y = bubble( mod->world->endpts.y, &mod->endpts[3] ); */
-/*   mod->world->endpts.z = bubble( mod->world->endpts.z, &mod->endpts[4] ); */
-/*   mod->world->endpts.z = bubble( mod->world->endpts.z, &mod->endpts[5] ); */
-
-  //world_intercept_array_print( mod->world );
+  world->endpts.x = bubble( world->endpts.x, &epts[0] );
+  world->endpts.x = bubble( world->endpts.x, &epts[1] );
+  world->endpts.y = bubble( world->endpts.y, &epts[2] );
+  world->endpts.y = bubble( world->endpts.y, &epts[3] );
+  world->endpts.z = bubble( world->endpts.z, &epts[4] );
+  world->endpts.z = bubble( world->endpts.z, &epts[5] );
 }
+
+
+/* void model_update_bbox( stg_model_t* mod ) */
+/* { */
+/*   //printf( "UPDATE BBOX for model %s\n", mod->token ); */
+
+/*   stg_pose_t gpose; */
+/*   stg_model_get_global_pose( mod, &gpose ); */
+
+/*   double dx_x =  fabs(mod->geom.size.x * cos(gpose.a));  */
+/*   double dx_y =  fabs(mod->geom.size.y * sin(gpose.a)); */
+/*   double dx = dx_x + dx_y; */
+
+/*   double dy_x = fabs(mod->geom.size.x * sin(gpose.a)); */
+/*   double dy_y = fabs(mod->geom.size.y * cos(gpose.a)); */
+/*   double dy = dy_x + dy_y; */
+
+/*   double dz = mod->geom.size.z; */
+
+/*   // stuff these data into the endpoint structures */
+/* /\*   mod->epbbox.x.min.value = gpose.x - dx/2.0; *\/ */
+/* /\*   mod->epbbox.x.max.value = gpose.x + dx/2.0; *\/ */
+/* /\*   mod->epbbox.y.min.value = gpose.y - dy/2.0; *\/ */
+/* /\*   mod->epbbox.y.max.value = gpose.y + dy/2.0; *\/ */
+/* /\*   mod->epbbox.z.min.value = gpose.z; *\/ */
+/* /\*   mod->epbbox.z.max.value = gpose.z + dz; *\/ */
+  
+/* /\*   world_move_endpoint_bbox( mod->world, &mod->epbbox ); *\/ */
+
+
+/*   //world_intercept_array_print( mod->world ); */
+/* } */
 
 void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
 {
@@ -1019,12 +1012,12 @@ void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
       
       memcpy( &mod->pose, pose, sizeof(stg_pose_t));
       
-      model_update_bbox( mod );
+      //model_update_bbox( mod );
 
       // TODO - can we do this less frequently? maybe not...
-      GList *it;
-      for( it=mod->children; it; it=it->next )
-	model_update_bbox( (stg_model_t*)it->data );
+      //GList *it;
+      //for( it=mod->children; it; it=it->next )
+      //model_update_bbox( (stg_model_t*)it->data );
 
       double hitx, hity;
       stg_model_test_collision2( mod, &hitx, &hity );
@@ -1059,7 +1052,7 @@ void stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
   // we can do it in-place
   stg_polygons_normalize( mod->polygons, mod->polygons_count, 
 			  geom->size.x, geom->size.y );
-  model_update_bbox( mod );
+  //model_update_bbox( mod );
   
   model_change( mod, &mod->polygons );
   
@@ -1242,6 +1235,13 @@ void stg_model_set_polygons( stg_model_t* mod,
       stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
 
       // add the polys to the endpoint lists
+
+      int p;
+      for ( p=0; p<poly_count; p++ )
+	{
+	  endpoint_bbox_init( &polys[p].epbbox, mod, 0,1,0,1,0,1 );
+	  world_add_endpoint_bbox( mod->world, &polys[p].epbbox );
+	}      
 
     }
 

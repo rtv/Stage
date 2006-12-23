@@ -340,7 +340,8 @@ stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path
   
   // there can't be more models than sections, so we'll use the number
   // of sections to build an intersection test array
-  world->intersections = calloc( section_count*section_count, sizeof(unsigned short) );
+  //world->intersections = calloc( section_count*section_count, sizeof(unsigned short) );
+  world->intersections = calloc( 1024*1024, sizeof(unsigned short) );
   
   world->section_count = section_count;
 

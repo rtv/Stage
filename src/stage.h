@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.3 2006-12-22 23:56:57 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.4 2006-12-23 01:45:54 rtv Exp $
  */
 
 
@@ -312,7 +312,6 @@ typedef enum {
   typedef struct stg_endpoint {
     stg_endpoint_type_t type;
     stg_meters_t value;
-    stg_model_t* mod;
     stg_polygon_t* polygon; //< the polygon that contains this endpoint
     
     //GList* list; // endpoints are usually stored in a list. this can
@@ -323,20 +322,11 @@ typedef enum {
     struct stg_endpoint *next, *prev; 
     
   } stg_endpoint_t;
-  
-  typedef struct {
-    stg_endpoint_t min, max;
-  } stg_endpoint_pair_t;
-  
-  typedef struct
-  {
-    stg_endpoint_pair_t x,y,z;
-  } stg_endpoint_bbox_t;
-    
+      
 
   /** define a polygon: a set of connected vertices drawn with a
       color. Can be drawn filled or unfilled. */
-  typedef struct stg_polygon
+  struct stg_polygon
   {
     /// pointer to an array of points
     GArray* points;
@@ -353,13 +343,11 @@ typedef enum {
     /// pointer to the model that owns this polygon
     stg_model_t* mod;
 
-    /// axis-aligned bounding volume
-    stg_bbox3d_t bbox;
-
-    stg_endpoint_bbox_t epbbox;
+    /// 3D axis-aligned global bounding volume
+    double bounds[6]; 
 
     void* _data; // temporary internal use only
-  };// stg_polygon_t; 
+  }; 
 
   
   /// return an array of [count] polygons. Caller must free() the space.
