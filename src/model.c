@@ -305,13 +305,13 @@ stg_endpoint_t* world_polygon_register( stg_world_t* world,
 {
   // create the 6 endpoints that represent the global bounding box of
   // this polygon
-  stg_endpoint_t* epts = calloc( sizeof(stg_endpoint_bbox_t), 6 );
+  stg_endpoint_t* epts = calloc( sizeof(stg_endpoint_t), 6 );
   
   int i;
   for( i=0; i<6; i++ )
     {
       epts[i].type = i % 2; // 0 == STG_BEGIN, 1 == STG_END
-      epts[i].poly = poly;
+      epts[i].polygon = poly;
       epts[i].value = poly->bounds[i];
     }
   

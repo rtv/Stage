@@ -1164,67 +1164,68 @@ void draw_thumbnail( stg_world_t* world )
   glPopAttrib();      
 }
 
-void model_draw_bbox( stg_model_t* mod, gpointer callback_dummy )
-{
-  int p;
-  //for( p=0; p<mod->polygons_count; p++ )
-    {
-      double xmin = mod->epbbox.x.min.value;
-      double xmax = mod->epbbox.x.max.value;
-      double ymin = mod->epbbox.y.min.value;
-      double ymax = mod->epbbox.y.max.value;
-      double zmin = mod->epbbox.z.min.value;
-      double zmax = mod->epbbox.z.max.value;
-      
-      // model's body color
-      push_color_stgcolor( mod->color );
-      
-      // draw rectangles on the axes indicating the extent of bboxes.
-      glBegin(GL_LINE_LOOP );
-      glVertex3f( xmin, 0, zmin);
-      glVertex3f( xmin, 0, zmax);
-      glVertex3f( xmax, 0, zmax);
-      glVertex3f( xmax, 0, zmin);
-      glEnd();
-      
-      glBegin(GL_LINE_LOOP );
-      glVertex3f( 0, ymin, zmin);
-      glVertex3f( 0, ymin, zmax);
-      glVertex3f( 0, ymax, zmax);
-      glVertex3f( 0, ymax, zmin);
-      glEnd();
+/* void model_draw_bbox( stg_model_t* mod, gpointer dummy ) */
+/* { */
+/*   if( mod->polygons_count ) */
+/*     { */
+/*       stg_endpoint_t *epts = mod->polygons[0].epts; */
 
-      // bottom rectangle
-      glBegin(GL_LINE_LOOP );
-      glVertex3f( xmin, ymin, zmin );
-      glVertex3f( xmin, ymax, zmin );
-      glVertex3f( xmax, ymax, zmin );
-      glVertex3f( xmax, ymin, zmin );
-      glEnd();
+/*       double xmin = epts[0].value; */
+/*       double xmax = epts[1].value; */
+/*       double ymin = epts[2].value; */
+/*       double ymax = epts[3].value; */
+/*       double zmin = epts[4].value; */
+/*       double zmax = epts[5].value; */
       
-      // top rectangle
-      glBegin(GL_LINE_LOOP );
-      glVertex3f( xmin, ymin, zmax );
-      glVertex3f( xmin, ymax, zmax );
-      glVertex3f( xmax, ymax, zmax );
-      glVertex3f( xmax, ymin, zmax );
-      glEnd();
+/*       // model's body color */
+/*       push_color_stgcolor( mod->color ); */
       
-      // verticals
-      glBegin( GL_LINES );
-      glVertex3f( xmin, ymin, zmin );
-      glVertex3f( xmin, ymin, zmax );
-      glVertex3f( xmax, ymin, zmin );
-      glVertex3f( xmax, ymin, zmax );
-      glVertex3f( xmin, ymax, zmin );
-      glVertex3f( xmin, ymax, zmax );
-      glVertex3f( xmax, ymax, zmin );
-      glVertex3f( xmax, ymax, zmax );
-      glEnd();
+/*       // draw rectangles on the axes indicating the extent of bboxes. */
+/*       glBegin(GL_LINE_LOOP ); */
+/*       glVertex3f( xmin, 0, zmin); */
+/*       glVertex3f( xmin, 0, zmax); */
+/*       glVertex3f( xmax, 0, zmax); */
+/*       glVertex3f( xmax, 0, zmin); */
+/*       glEnd(); */
+      
+/*       glBegin(GL_LINE_LOOP ); */
+/*       glVertex3f( 0, ymin, zmin); */
+/*       glVertex3f( 0, ymin, zmax); */
+/*       glVertex3f( 0, ymax, zmax); */
+/*       glVertex3f( 0, ymax, zmin); */
+/*       glEnd(); */
 
-      pop_color();
-    }
-}
+/*       // bottom rectangle */
+/*       glBegin(GL_LINE_LOOP ); */
+/*       glVertex3f( xmin, ymin, zmin ); */
+/*       glVertex3f( xmin, ymax, zmin ); */
+/*       glVertex3f( xmax, ymax, zmin ); */
+/*       glVertex3f( xmax, ymin, zmin ); */
+/*       glEnd(); */
+      
+/*       // top rectangle */
+/*       glBegin(GL_LINE_LOOP ); */
+/*       glVertex3f( xmin, ymin, zmax ); */
+/*       glVertex3f( xmin, ymax, zmax ); */
+/*       glVertex3f( xmax, ymax, zmax ); */
+/*       glVertex3f( xmax, ymin, zmax ); */
+/*       glEnd(); */
+      
+/*       // verticals */
+/*       glBegin( GL_LINES ); */
+/*       glVertex3f( xmin, ymin, zmin ); */
+/*       glVertex3f( xmin, ymin, zmax ); */
+/*       glVertex3f( xmax, ymin, zmin ); */
+/*       glVertex3f( xmax, ymin, zmax ); */
+/*       glVertex3f( xmin, ymax, zmin ); */
+/*       glVertex3f( xmin, ymax, zmax ); */
+/*       glVertex3f( xmax, ymax, zmin ); */
+/*       glVertex3f( xmax, ymax, zmax ); */
+/*       glEnd(); */
+
+/*       pop_color(); */
+/*     } */
+/* } */
 
 
 void draw_endpoints( stg_world_t* world )
@@ -1239,7 +1240,7 @@ void draw_endpoints( stg_world_t* world )
     {
       //printf( "\t%.2f %d %s\n",  ep->value, ep->type, ep->mod->token );
       
-      push_color_stgcolor( ep->mod->color );
+      push_color_stgcolor( ep->polygon->color );
 
       glBegin( GL_POLYGON );
       glVertex3f( ep->value, 0, 0 );
@@ -1266,7 +1267,7 @@ void draw_endpoints( stg_world_t* world )
   //puts( "Y List:" ); 
   for( ep = world->endpts.y; ep; ep=ep->next )
     {
-      push_color_stgcolor( ep->mod->color );
+      push_color_stgcolor( ep->polygon->color );
 
       glBegin( GL_POLYGON );
       glVertex3f( 0, ep->value, 0 );
@@ -1295,7 +1296,7 @@ void draw_endpoints( stg_world_t* world )
     {
       //printf( "\t%s at %.2f\n", ep->mod->token, ep->value );
 
-      push_color_stgcolor( ep->mod->color );
+      push_color_stgcolor( ep->polygon->color );
 
       glBegin( GL_POLYGON );
       glVertex3f( 0, 0, ep->value );
@@ -1434,7 +1435,7 @@ void draw_world(  stg_world_t* world )
   glDisable(GL_POLYGON_OFFSET_FILL);
 
   // draw the model bounding boxes
-   g_hash_table_foreach( world->models, (GHFunc)model_draw_bbox, NULL);
+  //g_hash_table_foreach( world->models, (GHFunc)model_draw_bbox, NULL);
 
   // draw the models
   g_hash_table_foreach( world->models, (GHFunc)model_draw_cb, NULL );

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.4 2006-12-23 01:45:54 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.5 2007-01-02 08:37:49 rtv Exp $
  */
 
 
@@ -338,13 +338,13 @@ typedef enum {
     stg_color_t color;
 
     /// width and height of the polygon
-    stg_size_t size;
+    //stg_size_t size;
 
     /// pointer to the model that owns this polygon
     stg_model_t* mod;
 
     /// 3D axis-aligned global bounding volume
-    double bounds[6]; 
+    stg_endpoint_t epts[6];
 
     void* _data; // temporary internal use only
   }; 
