@@ -275,78 +275,11 @@ stg_endpoint_t* insert_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
   head = prepend_endpoint( head, ep );
   
   // now shift the endpoint right until it's in correct sorted position
-  while( ep->next && (ep->value < ep->next->value) )
-    head = endpoint_right( head, ep ); 
+  //while( ep->next && (ep->value < ep->next->value) )
+  //head = endpoint_right( head, ep ); 
   
   return head;
 }
-
-/* stg_endpoint_t* append_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep ) */
-/* { */
-/*   stg_endpoint_t* tail = head; */
-  
-/*   // run down to the end of the list */
-/*   if( tail ) */
-/*     { */
-/*       while( tail->next ) */
-/* 	tail = tail->next;       */
-/*       tail->next = ep; */
-/*     } */
-
-/*   ep->prev = tail; */
-/*   return head; */
-/* } */
-   
-
-
-/* // add a polygon in world coordinates */
-/* stg_endpoint_t* world_polygon_register( stg_world_t* world,  */
-/* 					stg_polygon_t* poly ) */
-/* { */
-/*   // create the 6 endpoints that represent the global bounding box of */
-/*   // this polygon */
-/*   stg_endpoint_t* epts = calloc( sizeof(stg_endpoint_t), 6 ); */
-  
-/*   int i; */
-/*   for( i=0; i<6; i++ ) */
-/*     { */
-/*       epts[i].type = i % 2; // 0 == STG_BEGIN, 1 == STG_END */
-/*       epts[i].polygon = poly; */
-/*       epts[i].value = poly->bounds[i]; */
-/*     } */
-  
-/*   // add this model's endpoints to the world's lists */
-/*   world->endpts.x = insert_endpoint( world->endpts.x, &epts[0] ); */
-/*   world->endpts.x = insert_endpoint( world->endpts.x, &epts[1] ); */
-/*   world->endpts.y = insert_endpoint( world->endpts.y, &epts[2] ); */
-/*   world->endpts.y = insert_endpoint( world->endpts.y, &epts[3] ); */
-/*   world->endpts.z = insert_endpoint( world->endpts.z, &epts[4] ); */
-/*   world->endpts.z = insert_endpoint( world->endpts.z, &epts[5] );   */
-  
-/*   return epts; */
-/* } */
-
-/* void world_polygon_unregister( stg_world_t* world,  */
-/* 			       stg_polygon_t* poly ) */
-/* { */
-/*   // TODO */
-/* } */
-
-/* // the polygon must have previously been registered */
-/* void world_polygon_update( stg_world_t* world, stg_polygon_t* polygon ) */
-     
-/* { */
-/*   // recalcuate the global bounding box of the polygon */
-  
-
-/*   bbox->x.min.value = xmin; */
-/*   bbox->x.max.value = xmax; */
-/*   bbox->y.min.value = ymin; */
-/*   bbox->y.max.value = ymax; */
-/*   bbox->z.min.value = zmin; */
-/*   bbox->z.max.value = zmax; */
-/* } */
-
 
 
 stg_model_t* stg_model_create( stg_world_t* world, 
@@ -985,11 +918,8 @@ stg_polygon_t* stg_model_add_polygon( stg_model_t* mod,
       
   // add this model's endpoints to the world's lists
   stg_world_t* w = mod->world;
-  ///w->endpts.x = insert_endpoint( w->endpts.x, &poly->epts[0] );
-    w->endpts.x = prepend_endpoint( w->endpts.x, &poly->epts[0] ); 
-
-
-/*   w->endpts.x = insert_endpoint( w->endpts.x, &poly->epts[1] ); */
+   w->endpts.x = insert_endpoint( w->endpts.x, &poly->epts[0] ); 
+/*   w->endpts.x = insert_endpoint( w->endpts.x, &poly->epts[1] );  */
 /*   w->endpts.y = insert_endpoint( w->endpts.y, &poly->epts[2] ); */
 /*   w->endpts.y = insert_endpoint( w->endpts.y, &poly->epts[3] ); */
 /*   w->endpts.z = insert_endpoint( w->endpts.z, &poly->epts[4] ); */
@@ -1013,6 +943,14 @@ void stg_model_clear_polygons( stg_model_t* mod )
 	g_list_free( p->intersectors );
       
       g_array_remove_index_fast( mod->polys, 0 );
+
+      // remove the endpoints
+      //mod->world->endpts.x = g_list_remove( mod->world->endpts.x, &p->epts[0] );
+/*       mod->world->endpts.x = g_list_remove( mod->world->endpts.x, &p->epts[1] ); */
+/*       mod->world->endpts.y = g_list_remove( mod->world->endpts.y, &p->epts[2] ); */
+/*       mod->world->endpts.y = g_list_remove( mod->world->endpts.y, &p->epts[3] ); */
+/*       mod->world->endpts.z = g_list_remove( mod->world->endpts.z, &p->epts[4] ); */
+/*       mod->world->endpts.z = g_list_remove( mod->world->endpts.z, &p->epts[5] ); */
     }
 }
 
