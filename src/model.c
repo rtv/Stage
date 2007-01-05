@@ -277,7 +277,7 @@ stg_endpoint_t* insert_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
   // now shift the endpoint right until it's in correct sorted position
   while( ep->next && (ep->value < ep->next->value) )
     head = endpoint_right( head, ep ); 
-    
+  
   return head;
 }
 
@@ -299,53 +299,53 @@ stg_endpoint_t* insert_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
    
 
 
-// add a polygon in world coordinates
-stg_endpoint_t* world_polygon_register( stg_world_t* world, 
-					stg_polygon_t* poly )
-{
-  // create the 6 endpoints that represent the global bounding box of
-  // this polygon
-  stg_endpoint_t* epts = calloc( sizeof(stg_endpoint_t), 6 );
+/* // add a polygon in world coordinates */
+/* stg_endpoint_t* world_polygon_register( stg_world_t* world,  */
+/* 					stg_polygon_t* poly ) */
+/* { */
+/*   // create the 6 endpoints that represent the global bounding box of */
+/*   // this polygon */
+/*   stg_endpoint_t* epts = calloc( sizeof(stg_endpoint_t), 6 ); */
   
-  int i;
-  for( i=0; i<6; i++ )
-    {
-      epts[i].type = i % 2; // 0 == STG_BEGIN, 1 == STG_END
-      epts[i].polygon = poly;
-      epts[i].value = poly->bounds[i];
-    }
+/*   int i; */
+/*   for( i=0; i<6; i++ ) */
+/*     { */
+/*       epts[i].type = i % 2; // 0 == STG_BEGIN, 1 == STG_END */
+/*       epts[i].polygon = poly; */
+/*       epts[i].value = poly->bounds[i]; */
+/*     } */
   
-  // add this model's endpoints to the world's lists
-  world->endpts.x = insert_endpoint( world->endpts.x, &epts[0] );
-  world->endpts.x = insert_endpoint( world->endpts.x, &epts[1] );
-  world->endpts.y = insert_endpoint( world->endpts.y, &epts[2] );
-  world->endpts.y = insert_endpoint( world->endpts.y, &epts[3] );
-  world->endpts.z = insert_endpoint( world->endpts.z, &epts[4] );
-  world->endpts.z = insert_endpoint( world->endpts.z, &epts[5] );  
+/*   // add this model's endpoints to the world's lists */
+/*   world->endpts.x = insert_endpoint( world->endpts.x, &epts[0] ); */
+/*   world->endpts.x = insert_endpoint( world->endpts.x, &epts[1] ); */
+/*   world->endpts.y = insert_endpoint( world->endpts.y, &epts[2] ); */
+/*   world->endpts.y = insert_endpoint( world->endpts.y, &epts[3] ); */
+/*   world->endpts.z = insert_endpoint( world->endpts.z, &epts[4] ); */
+/*   world->endpts.z = insert_endpoint( world->endpts.z, &epts[5] );   */
   
-  return epts;
-}
+/*   return epts; */
+/* } */
 
-void world_polygon_unregister( stg_world_t* world, 
-			       stg_polygon_t* poly )
-{
-  // TODO
-}
+/* void world_polygon_unregister( stg_world_t* world,  */
+/* 			       stg_polygon_t* poly ) */
+/* { */
+/*   // TODO */
+/* } */
 
-// the polygon must have previously been registered
-void world_polygon_update( stg_world_t* world, stg_polygon_t* polygon )
+/* // the polygon must have previously been registered */
+/* void world_polygon_update( stg_world_t* world, stg_polygon_t* polygon ) */
      
-{
-  // recalcuate the global bounding box of the polygon
+/* { */
+/*   // recalcuate the global bounding box of the polygon */
   
 
-  bbox->x.min.value = xmin;
-  bbox->x.max.value = xmax;
-  bbox->y.min.value = ymin;
-  bbox->y.max.value = ymax;
-  bbox->z.min.value = zmin;
-  bbox->z.max.value = zmax;
-}
+/*   bbox->x.min.value = xmin; */
+/*   bbox->x.max.value = xmax; */
+/*   bbox->y.min.value = ymin; */
+/*   bbox->y.max.value = ymax; */
+/*   bbox->z.min.value = zmin; */
+/*   bbox->z.max.value = zmax; */
+/* } */
 
 
 
@@ -415,11 +415,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // model's fields change
   mod->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
 
-  // install the default callback functions
-  //mod->f_startup = NULL;
-  //mod->f_shutdown = NULL;
-  // mod->f_update = _model_update;
-
   //stg_model_add_callback( mod, &mod->update, _model_update, NULL );
 
   mod->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
@@ -439,25 +434,16 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->gui_outline = STG_DEFAULT_OUTLINE;
   mod->gui_mask = mod->parent ? 0 : STG_DEFAULT_MASK;
 
-
-  endpoint_bbox_init( &mod->epbbox, mod, 0,0,0,0,0,0 );
-
-  // add this model's endpoints to the world's lists
-  world_add_endpoint_bbox( mod->world, &mod->epbbox );
-
-  //print_endpoint_list( "XLIST", world->endpts.x  );
-  //print_endpoint_list(  "YLIST" , world->endpts.y );
-  //print_endpoint_list( "ZLIST", world->endpts.z  );
-  //mod->intersectors = NULL;
+  // most models are a single polygon
+  mod->polys = g_array_sized_new( FALSE, TRUE, sizeof(stg_polygon_t), 0 );
 
   // now it's safe to create the GUI components
   if( mod->world->win )
     gui_model_init( mod );
 
-
   // now we can add the basic square shape
-  stg_polygon_t* square = stg_unit_polygon_create();
-  stg_model_set_polygons( mod, square, 1 );
+  stg_point_t* square = stg_unit_square_points_create();
+  stg_model_add_polygon( mod, square, 4, mod->color, FALSE );
 
   // exterimental: creates a menu of models
   // gui_add_tree_item( mod );
@@ -647,39 +633,39 @@ void stg_model_map( stg_model_t* mod, gboolean render )
 {
   assert( mod );
   
-  // to be drawn, we must have a body and some extent greater than zero
-  if( (mod->lines || mod->polygons) && 
-      mod->geom.size.x > 0.0 && mod->geom.size.y > 0.0 )
-    {
-      if( render )
-	{      
-	  // get model's global pose
-	  stg_pose_t org;
-	  memcpy( &org, &mod->geom.pose, sizeof(org));
-	  stg_model_local_to_global( mod, &org );
+ /*  // to be drawn, we must have a body and some extent greater than zero */
+/*   if( (mod->lines || mod->polygons) &&  */
+/*       mod->geom.size.x > 0.0 && mod->geom.size.y > 0.0 ) */
+/*     { */
+/*       if( render ) */
+/* 	{       */
+/* 	  // get model's global pose */
+/* 	  stg_pose_t org; */
+/* 	  memcpy( &org, &mod->geom.pose, sizeof(org)); */
+/* 	  stg_model_local_to_global( mod, &org ); */
 	  
-	  if( mod->polygons && mod->polygons_count )    
-	    stg_matrix_polygons( mod->world->matrix, 
-				 org.x, org.y, org.a,
-				 mod->polygons, mod->polygons_count, 
-				 mod );  
+/* 	  if( mod->polygons && mod->polygons_count )     */
+/* 	    stg_matrix_polygons( mod->world->matrix,  */
+/* 				 org.x, org.y, org.a, */
+/* 				 mod->polygons, mod->polygons_count,  */
+/* 				 mod );   */
 	  
-	  if( mod->lines && mod->lines_count )    
-	    stg_matrix_polylines( mod->world->matrix, 
-				  org.x, org.y, org.a,
-				  mod->lines, mod->lines_count, 
-				  mod );  
+/* 	  if( mod->lines && mod->lines_count )     */
+/* 	    stg_matrix_polylines( mod->world->matrix,  */
+/* 				  org.x, org.y, org.a, */
+/* 				  mod->lines, mod->lines_count,  */
+/* 				  mod );   */
 	  
-	  if( mod->boundary )    
-	    stg_matrix_rectangle( mod->world->matrix,
-				  org.x, org.y, org.a,
-				  mod->geom.size.x,
-				  mod->geom.size.y,
-				  mod ); 
-	}
-      else
-	stg_matrix_remove_object( mod->world->matrix, mod );
-    }
+/* 	  if( mod->boundary )     */
+/* 	    stg_matrix_rectangle( mod->world->matrix, */
+/* 				  org.x, org.y, org.a, */
+/* 				  mod->geom.size.x, */
+/* 				  mod->geom.size.y, */
+/* 				  mod );  */
+/* 	} */
+/*       else */
+/* 	stg_matrix_remove_object( mod->world->matrix, mod ); */
+/*     } */
 }
 
 
@@ -872,7 +858,7 @@ void print_endpoint_list( char* prefix, stg_endpoint_t* ep )
 	      i++, 
 	      ep->value,
 	      ep->type == STG_BEGIN ? "BEGIN" : "END",
-	      ep->mod->token );
+	      ep->polygon->mod->token );
       
     }
   puts(""); 
@@ -924,16 +910,164 @@ void print_endpoint_list( char* prefix, stg_endpoint_t* ep )
 /*   return head; */
 /* } */
 
+
+
+//////////////////////////////////////////////////////////////////////////
+// scale an array of rectangles so they fit in a unit square
+void polygon_bounds_calc( stg_polygon_t* poly )
+{
+  // assuming the polygon fits in a square +/- one billion units
+  //double minx, miny, maxx, maxy;
+  poly->minx = poly->miny = BILLION;
+  poly->maxx = poly->maxy = -BILLION;
+  
+  stg_point_t *pt;
+
+  int r;
+  for( r=0; r<poly->points->len; r++ )
+    {
+      pt = & g_array_index( poly->points, stg_point_t, r );
+
+      // test the origin of the rect
+      if( pt->x < poly->minx ) poly->minx = pt->x;
+      if( pt->y < poly->miny ) poly->miny = pt->y;      
+      if( pt->x > poly->maxx ) poly->maxx = pt->x;      
+      if( pt->y > poly->maxy ) poly->maxy = pt->y;
+    }
+}  
+
+
+
+
+
+stg_polygon_t* stg_model_add_polygon( stg_model_t* mod, 
+				      stg_point_t* pts, 
+				      size_t pt_count, 
+				      stg_color_t color,
+				      stg_bool_t unfilled )
+{
+  //printf( "adding polygon of %d points to %s\n", pt_count, mod->token );
+
+
+  // make the array one slot larger
+  g_array_set_size( mod->polys, mod->polys->len+1 );
+  
+  // get a pointer to the last (i.e. new) item in the array
+  stg_polygon_t* poly = & g_array_index( mod->polys, stg_polygon_t, mod->polys->len-1 );
+  
+  poly->mod = mod;
+  poly->color = color;
+  poly->unfilled = unfilled;
+  poly->intersectors = NULL; 
+  
+  // create a hash table using pointers directly as keys
+  poly->accumulator = g_hash_table_new( g_direct_hash, NULL );
+  
+  // copy the points into the poly
+  poly->points = g_array_new( FALSE, TRUE, sizeof(stg_point_t));
+  g_array_append_vals( poly->points, pts, pt_count );
+
+  polygon_bounds_calc( poly );
+  // todo - calculate the global 
+  // vertices
+
+  // endpoints
+  // this is clunky
+  int e;
+  for( e=0; e<6; e++ )
+    {
+      poly->epts[e].polygon = poly;
+      poly->epts[e].type = e % 2; // STG_BEGIN or STG_END
+      poly->epts[e].value = 0;
+      poly->epts[e].next = NULL;      
+      poly->epts[e].prev = NULL;      
+    }
+      
+  // add this model's endpoints to the world's lists
+  stg_world_t* w = mod->world;
+  ///w->endpts.x = insert_endpoint( w->endpts.x, &poly->epts[0] );
+    w->endpts.x = prepend_endpoint( w->endpts.x, &poly->epts[0] ); 
+
+
+/*   w->endpts.x = insert_endpoint( w->endpts.x, &poly->epts[1] ); */
+/*   w->endpts.y = insert_endpoint( w->endpts.y, &poly->epts[2] ); */
+/*   w->endpts.y = insert_endpoint( w->endpts.y, &poly->epts[3] ); */
+/*   w->endpts.z = insert_endpoint( w->endpts.z, &poly->epts[4] ); */
+/*   w->endpts.z = insert_endpoint( w->endpts.z, &poly->epts[5] ); */
+
+  // TODO - update intersections?
+ 
+  return poly;
+}
+
+void stg_model_clear_polygons( stg_model_t* mod )
+{
+  while( mod->polys->len > 0 )
+    {
+      stg_polygon_t* p = & g_array_index( mod->polys, stg_polygon_t, 0 );
+
+      if( p->points )
+	g_array_free( p->points, TRUE );
+      
+      if( p->intersectors )
+	g_list_free( p->intersectors );
+      
+      g_array_remove_index_fast( mod->polys, 0 );
+    }
+}
+
+
+static inline 
+void stg_polygons_intersect_incr( stg_polygon_t* poly1, stg_polygon_t* poly2 )
+{
+  // increment mod's accumulator for the hit model, and see if we
+  // freshly overlap with it
+  
+  int* val = g_hash_table_lookup( poly1->accumulator, poly2 );
+  
+  if( val == NULL )
+    {
+      val = malloc( sizeof(int) );
+      *val = 1;
+      g_hash_table_insert( poly1->accumulator, poly2, val );
+      g_hash_table_insert( poly2->accumulator, poly1, val );
+    }
+  else
+    *val++;
+
+  if( *val == 3 ) // a new 3-axis overlap!
+    {
+      poly1->intersectors = g_list_prepend( poly1->intersectors, poly2 );
+      poly2->intersectors = g_list_prepend( poly2->intersectors, poly1 );
+    }
+}
+
+static inline 
+void stg_polygons_intersect_decr( stg_polygon_t* poly1, stg_polygon_t* poly2 )
+{
+  int* val = g_hash_table_lookup( poly1->accumulator, poly2 );
+  assert( val ); // it really should be there already
+  
+  *val--;
+
+  if( *val == 2 ) // the polys no longer overlap in 3 axes
+    {
+      poly1->intersectors = g_list_remove( poly1->intersectors, poly2 );
+      poly2->intersectors = g_list_remove( poly2->intersectors, poly1 );
+    }
+}
+
+
 static inline stg_endpoint_t* endpoint_right_intersect( stg_endpoint_t* head,  stg_endpoint_t* ep )
 {
   stg_endpoint_t* r_ep = ep->next;
   
-  if( r_ep->mod != ep->mod )
+  if( r_ep->polygon != ep->polygon ) // TODO - remove this test?
     {
       if( (ep->type == STG_END) && (r_ep->type == STG_BEGIN) )
-	world_intersect_incr( ep->mod->world, ep->mod, r_ep->mod );
+	  stg_polygons_intersect_incr( ep->polygon, r_ep->polygon );
       else if( (ep->type == STG_BEGIN) && (r_ep->type == STG_END) )
-	  world_intersect_decr( ep->mod->world, ep->mod, r_ep->mod );
+	  stg_polygons_intersect_decr( ep->polygon, r_ep->polygon );
     }
   
   return endpoint_right( head, ep );
@@ -953,19 +1087,19 @@ static inline stg_endpoint_t* bubble( stg_endpoint_t* head, stg_endpoint_t* ep )
 }
 
 
-static inline void world_move_endpoint( stg_world_t* world, stg_endpoint_t* epts )
-{
-  // bubble sort the end points of the bounding box in the lists along
-  // each axis - bubble sort is VERY fast because we usually don't
-  // move, but occasionally move 1 place left or right
+/* static inline void world_move_endpoint( stg_world_t* world, stg_endpoint_t* epts ) */
+/* { */
+/*   // bubble sort the end points of the bounding box in the lists along */
+/*   // each axis - bubble sort is VERY fast because we usually don't */
+/*   // move, but occasionally move 1 place left or right */
 
-  world->endpts.x = bubble( world->endpts.x, &epts[0] );
-  world->endpts.x = bubble( world->endpts.x, &epts[1] );
-  world->endpts.y = bubble( world->endpts.y, &epts[2] );
-  world->endpts.y = bubble( world->endpts.y, &epts[3] );
-  world->endpts.z = bubble( world->endpts.z, &epts[4] );
-  world->endpts.z = bubble( world->endpts.z, &epts[5] );
-}
+/*   world->endpts.x = bubble( world->endpts.x, &epts[0] ); */
+/*   world->endpts.x = bubble( world->endpts.x, &epts[1] ); */
+/*   world->endpts.y = bubble( world->endpts.y, &epts[2] ); */
+/*   world->endpts.y = bubble( world->endpts.y, &epts[3] ); */
+/*   world->endpts.z = bubble( world->endpts.z, &epts[4] ); */
+/*   world->endpts.z = bubble( world->endpts.z, &epts[5] ); */
+/* } */
 
 
 /* void model_update_bbox( stg_model_t* mod ) */
@@ -1050,11 +1184,13 @@ void stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
   // we probably need to scale and re-render our polygons
 
   // we can do it in-place
-  stg_polygons_normalize( mod->polygons, mod->polygons_count, 
-			  geom->size.x, geom->size.y );
+  if( mod->polys && mod->polys->len > 0 )
+    stg_polygons_normalize( (stg_polygon_t*)mod->polys->data, 
+			    mod->polys->len, 
+			    geom->size.x, geom->size.y );
   //model_update_bbox( mod );
   
-  model_change( mod, &mod->polygons );
+  model_change( mod, &mod->polys );
   
   // re-render int the matrix
   stg_model_map( mod, 1 );  
@@ -1194,60 +1330,60 @@ stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
 {
   assert(mod);
   assert(poly_count);
-  *poly_count = mod->polygons_count;
-  return mod->polygons;
+  *poly_count = mod->polys->len;
+  return (stg_polygon_t*)mod->polys->data;
 }
 
-void stg_model_set_polygons( stg_model_t* mod,
-			     stg_polygon_t* polys, 
-			     size_t poly_count )
-{
-  if( poly_count == 0 )
-    {
-      stg_model_map( mod, 0 ); // unmap the model from the matrix
+/* void stg_model_set_polygons( stg_model_t* mod, */
+/* 			     stg_polygon_t* polys,  */
+/* 			     size_t poly_count ) */
+/* { */
+/*   if( poly_count == 0 ) */
+/*     { */
+/*       stg_model_map( mod, 0 ); // unmap the model from the matrix */
       
-      free( mod->polygons );
-      mod->polygons_count = 0;      
-    }
-  else
-    {
-      assert(polys);
+/*       free( mod->polygons ); */
+/*       mod->polygons_count = 0;       */
+/*     } */
+/*   else */
+/*     { */
+/*       assert(polys); */
       
-      stg_model_map( mod, 0 ); // unmap the model from the matrix
+/*       stg_model_map( mod, 0 ); // unmap the model from the matrix */
       
-      // normalize the polygons to fit exactly in the model's body
-      // rectangle (if the model has some non-zero size)
-      if( mod->geom.size.x > 0.0 && mod->geom.size.y > 0.0 )
-	stg_polygons_normalize( polys, poly_count, 
-				mod->geom.size.x, 
-				mod->geom.size.y );
-      //else
-      //PRINT_WARN3( "setting polygons for model %s which has non-positive area (%.2f,%.2f)",
-      //	     prop->mod->token, geom.size.x, geom.size.y );
+/*       // normalize the polygons to fit exactly in the model's body */
+/*       // rectangle (if the model has some non-zero size) */
+/*       if( mod->geom.size.x > 0.0 && mod->geom.size.y > 0.0 ) */
+/* 	stg_polygons_normalize( polys, poly_count,  */
+/* 				mod->geom.size.x,  */
+/* 				mod->geom.size.y ); */
+/*       //else */
+/*       //PRINT_WARN3( "setting polygons for model %s which has non-positive area (%.2f,%.2f)", */
+/*       //	     prop->mod->token, geom.size.x, geom.size.y ); */
       
-      // zap our old polygons
-      stg_polygons_destroy( mod->polygons, mod->polygons_count );
+/*       // zap our old polygons */
+/*       stg_polygons_destroy( mod->polygons, mod->polygons_count ); */
       
-      mod->polygons = polys;
-      mod->polygons_count = poly_count;
+/*       mod->polygons = polys; */
+/*       mod->polygons_count = poly_count; */
       
-      // if the model has some non-zero
-      stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
+/*       // if the model has some non-zero */
+/*       stg_model_map( mod, 1 ); // map the model into the matrix with the new polys */
 
-      // add the polys to the endpoint lists
+/*       // add the polys to the endpoint lists */
 
-      int p;
-      for ( p=0; p<poly_count; p++ )
-	{
-	  endpoint_bbox_init( &polys[p].epbbox, mod, 0,1,0,1,0,1 );
-	  world_add_endpoint_bbox( mod->world, &polys[p].epbbox );
-	}      
+/*       int p; */
+/*       for ( p=0; p<poly_count; p++ ) */
+/* 	{ */
+/* 	  endpoint_bbox_init( &polys[p].epbbox, mod, 0,1,0,1,0,1 ); */
+/* 	  world_add_endpoint_bbox( mod->world, &polys[p].epbbox ); */
+/* 	}       */
 
-    }
+/*     } */
 
   
-  model_change( mod, &mod->polygons );
-}
+/*   model_change( mod, &mod->polygons ); */
+/* } */
 
 
 
@@ -1384,91 +1520,93 @@ stg_model_t* stg_model_test_collision( stg_model_t* mod,
 				       //stg_pose_t* pose, 
 				       double* hitx, double* hity )
 {
-  stg_model_t* child_hit = NULL;
+  return 0;
+  
+/*  stg_model_t* child_hit = NULL; */
 
-  GList* it;
-  for(it=mod->children; it; it=it->next )
-    {
-      stg_model_t* child = (stg_model_t*)it->data;
-      child_hit = stg_model_test_collision( child, hitx, hity );
-      if( child_hit )
-	return child_hit;
-    }
+/*   GList* it; */
+/*   for(it=mod->children; it; it=it->next ) */
+/*     { */
+/*       stg_model_t* child = (stg_model_t*)it->data; */
+/*       child_hit = stg_model_test_collision( child, hitx, hity ); */
+/*       if( child_hit ) */
+/* 	return child_hit; */
+/*     } */
   
 
-  stg_pose_t pose;
-  memcpy( &pose, &mod->geom.pose, sizeof(pose));
-  stg_model_local_to_global( mod, &pose );
+/*   stg_pose_t pose; */
+/*   memcpy( &pose, &mod->geom.pose, sizeof(pose)); */
+/*   stg_model_local_to_global( mod, &pose ); */
   
-  //return NULL;
+/*   //return NULL; */
   
-  // raytrace along all our rectangles. expensive, but most vehicles
-  // will just be a single rect, grippers 3 rects, etc. not too bad.
+/*   // raytrace along all our rectangles. expensive, but most vehicles */
+/*   // will just be a single rect, grippers 3 rects, etc. not too bad. */
   
-  size_t count=0;
-  stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
+/*   size_t count=0; */
+/*   stg_polygon_t* polys = stg_model_get_polygons(mod, &count); */
 
-  // no body? no collision
-  if( count < 1 )
-    return NULL;
+/*   // no body? no collision */
+/*   if( count < 1 ) */
+/*     return NULL; */
 
-  // loop over all polygons
-  int q;
-  for( q=0; q<count; q++ )
-    {
-      stg_polygon_t* poly = &polys[q];
+/*   // loop over all polygons */
+/*   int q; */
+/*   for( q=0; q<count; q++ ) */
+/*     { */
+/*       stg_polygon_t* poly = &polys[q]; */
       
-      int point_count = poly->points->len;
+/*       int point_count = poly->points->len; */
 
-      // loop over all points in this polygon
-      int p;
-      for( p=0; p<point_count; p++ )
-	{
-	  stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	  
-	  stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % point_count);
+/*       // loop over all points in this polygon */
+/*       int p; */
+/*       for( p=0; p<point_count; p++ ) */
+/* 	{ */
+/* 	  stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	   */
+/* 	  stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % point_count); */
 	  
-	  stg_pose_t pp1;
-	  pp1.x = pt1->x;
-	  pp1.y = pt1->y;
-	  pp1.a = 0;
+/* 	  stg_pose_t pp1; */
+/* 	  pp1.x = pt1->x; */
+/* 	  pp1.y = pt1->y; */
+/* 	  pp1.a = 0; */
 	  
-	  stg_pose_t pp2;
-	  pp2.x = pt2->x;
-	  pp2.y = pt2->y;
-	  pp2.a = 0;
+/* 	  stg_pose_t pp2; */
+/* 	  pp2.x = pt2->x; */
+/* 	  pp2.y = pt2->y; */
+/* 	  pp2.a = 0; */
 	  
-	  stg_pose_t p1;
-	  stg_pose_t p2;
+/* 	  stg_pose_t p1; */
+/* 	  stg_pose_t p2; */
 	  
-	  // shift the line points into the global coordinate system
-	  stg_pose_sum( &p1, &pose, &pp1 );
-	  stg_pose_sum( &p2, &pose, &pp2 );
+/* 	  // shift the line points into the global coordinate system */
+/* 	  stg_pose_sum( &p1, &pose, &pp1 ); */
+/* 	  stg_pose_sum( &p2, &pose, &pp2 ); */
 	  
-	  //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y );
+/* 	  //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y ); */
 	  
-	  itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
-				   mod->world->matrix, 
-				   PointToPoint );
+/* 	  itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y,  */
+/* 				   mod->world->matrix,  */
+/* 				   PointToPoint ); */
 	  
-	  //stg_rtk_fig_t* fig = stg_model_fig_create( mod, "foo", NULL, STG_LAYER_POSITIONDATA );
-	  //stg_rtk_fig_line( fig, p1.x, p1.y, p2.x, p2.y );
+/* 	  //stg_rtk_fig_t* fig = stg_model_fig_create( mod, "foo", NULL, STG_LAYER_POSITIONDATA ); */
+/* 	  //stg_rtk_fig_line( fig, p1.x, p1.y, p2.x, p2.y ); */
 	  
-	  stg_model_t* hitmod = itl_first_matching( itl, lines_raytrace_match, mod );
+/* 	  stg_model_t* hitmod = itl_first_matching( itl, lines_raytrace_match, mod ); */
 	  
 	  
-	  if( hitmod )
-	    {
-	      if( hitx ) *hitx = itl->x; // report them
-	      if( hity ) *hity = itl->y;	  
-	      itl_destroy( itl );
-	      return hitmod; // we hit this object! stop raytracing
-	    }
+/* 	  if( hitmod ) */
+/* 	    { */
+/* 	      if( hitx ) *hitx = itl->x; // report them */
+/* 	      if( hity ) *hity = itl->y;	   */
+/* 	      itl_destroy( itl ); */
+/* 	      return hitmod; // we hit this object! stop raytracing */
+/* 	    } */
 
-	  itl_destroy( itl );
-	}
-    }
+/* 	  itl_destroy( itl ); */
+/* 	} */
+/*     } */
 
-  return NULL;  // done 
+/*   return NULL;  // done  */
 }
 
 

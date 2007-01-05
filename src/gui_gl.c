@@ -789,11 +789,15 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
   glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
   glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
 
-  int p;
-  for( p=0; p<mod->polygons_count; p++ )
-    polygon2d( (double*)mod->polygons[p].points->data, 
-	       mod->polygons[p].points->len );  
+  
+  int pcount=0;
+  stg_polygon_t* polys = stg_model_get_polygons( mod, &pcount );
 
+  int p;
+  for( p=0; p<pcount; p++ )
+    polygon2d( (double*)polys[p].points->data, 
+	       polys[p].points->len );  
+  
   //if( 1 )// mod->boundary ) 
   //  box3d_wireframe( &mod->bbox );
 
@@ -812,9 +816,9 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
   glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
   glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
 
-  for( p=0; p<mod->polygons_count; p++ )
-    polygon3d( (double*)mod->polygons[p].points->data, 
-	       mod->polygons[p].points->len,
+  for( p=0; p<pcount; p++ )
+    polygon3d( (double*)polys[p].points->data, 
+	       polys[p].points->len,
 	       0, mod->geom.size.z,
 	       TRUE );  
   
@@ -2042,7 +2046,7 @@ void gui_model_init( stg_model_t* mod )
   // GL CALLBACKS
 
   // recompile display lists
-  stg_model_add_callback( mod, &mod->polygons, gl_model_polygons, NULL );
+  stg_model_add_callback( mod, &mod->polys, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->gui_outline, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->boundary, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->gui_grid, gl_model_grid, NULL );

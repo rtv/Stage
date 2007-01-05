@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.5 2007-01-02 08:37:49 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.6 2007-01-05 04:30:10 rtv Exp $
  */
 
 
@@ -314,10 +314,6 @@ typedef enum {
     stg_meters_t value;
     stg_polygon_t* polygon; //< the polygon that contains this endpoint
     
-    //GList* list; // endpoints are usually stored in a list. this can
-    // be used to access the endpoint in the list
-    // directly 
-    
     // endpoints are stored in linked lists
     struct stg_endpoint *next, *prev; 
     
@@ -328,7 +324,7 @@ typedef enum {
       color. Can be drawn filled or unfilled. */
   struct stg_polygon
   {
-    /// pointer to an array of points
+    /// pointer to an array of points in the local CS
     GArray* points;
     
     /// if TRUE, this polygon is NOT drawn filled
@@ -343,10 +339,23 @@ typedef enum {
     /// pointer to the model that owns this polygon
     stg_model_t* mod;
 
+    /* experimental */
+    int vertex_index; //< the index of the first vertex of this
+		      //polygon in the world's global CS vertex array
+    int vertex_count;  //< the number of vertices in this polygon
+
     /// 3D axis-aligned global bounding volume
     stg_endpoint_t epts[6];
 
-    void* _data; // temporary internal use only
+    /// array of pointers to those stg_polygon_t that have aabboxes
+    /// that overlap with this one.
+    GList* intersectors;
+
+    // hash table that records the number of axes 
+    GHashTable* accumulator;
+
+    // tmp hack
+    stg_meters_t minx, miny, maxx, maxy;
   }; 
 
   
@@ -652,6 +661,13 @@ typedef enum {
 			       stg_polygon_t* polys, 
 			       size_t poly_count );
   
+  stg_polygon_t* stg_model_add_polygon( stg_model_t* mod,
+					stg_point_t* pts, 
+					size_t pt_count,
+					stg_color_t color,
+					stg_bool_t unfilled );
+  
+
   /** set an array oflines to be drawn for the model */
   void stg_model_set_lines( stg_model_t* mod,
 			    stg_polyline_t* lines, 

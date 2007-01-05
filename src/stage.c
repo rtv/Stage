@@ -369,37 +369,37 @@ stg_line_t* stg_rotrects_to_lines( stg_rotrect_t* rects, int num_rects )
 /* } */
 
 /// converts an array of rectangles into an array of polygons
-stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count,
-					   double width, double height )
-{
-  stg_polygon_t* polys = stg_polygons_create( count );
-  stg_point_t pts[4];
+/* void  stg_rotrects_to_polygons( stg_rotrect_t* rects, size_t count, */
+/* 				double width, double height ) */
+/* { */
+/*   stg_polygon_t* polys = stg_polygons_create( count ); */
+/*   stg_point_t pts[4]; */
   
-  size_t r;
-  for( r=0; r<count; r++ )
-    {  
-      pts[0].x = rects[r].pose.x;
-      pts[0].y = rects[r].pose.y;
-      pts[1].x = rects[r].pose.x + rects[r].size.x;
-      pts[1].y = rects[r].pose.y;
-      pts[2].x = rects[r].pose.x + rects[r].size.x;
-      pts[2].y = rects[r].pose.y + rects[r].size.y;
-      pts[3].x = rects[r].pose.x;
-      pts[3].y = rects[r].pose.y + rects[r].size.y;
+/*   size_t r; */
+/*   for( r=0; r<count; r++ ) */
+/*     {   */
+/*       pts[0].x = rects[r].pose.x; */
+/*       pts[0].y = rects[r].pose.y; */
+/*       pts[1].x = rects[r].pose.x + rects[r].size.x; */
+/*       pts[1].y = rects[r].pose.y; */
+/*       pts[2].x = rects[r].pose.x + rects[r].size.x; */
+/*       pts[2].y = rects[r].pose.y + rects[r].size.y; */
+/*       pts[3].x = rects[r].pose.x; */
+/*       pts[3].y = rects[r].pose.y + rects[r].size.y; */
       
-      // copy these points in the polygon
-      stg_polygon_set_points( &polys[r], pts, 4 );
+/*       // copy these points in the polygon */
+/*       stg_polygon_set_points( &polys[r], pts, 4 ); */
 
-      // store the bounding box of this polygon
-      polys[r].size.x = width;
-      polys[r].size.y = height;
+/*       // store the bounding box of this polygon */
+/*       //polys[r].size.x = width; */
+/*       //polys[r].size.y = height; */
 
-      //polys[r].bbox.x.min = height;
+/*       //polys[r].bbox.x.min = height; */
       
-    }
+/*     } */
   
-  return polys;
-}
+/*   return polys; */
+/* } */
 
 
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
@@ -477,32 +477,32 @@ gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y, int threshold )
 }
 
 
-stg_polygon_t* stg_polygons_from_image_file(  const char* filename, 
-					     size_t* count )
-{
-  stg_polygon_t* polys;
-  stg_rotrect_t* rects = NULL;
-  int rect_count = 0;
+/* stg_polygon_t* stg_polygons_from_image_file(  const char* filename,  */
+/* 					     size_t* count ) */
+/* { */
+/*   stg_polygon_t* polys; */
+/*   stg_rotrect_t* rects = NULL; */
+/*   int rect_count = 0; */
 
-  int width, height;
-  if( stg_rotrects_from_image_file( filename,  
-				    &rects,
-				    &rect_count,
-				    &width, &height ) )
-    {
-      PRINT_ERR1( "failed to load rects from image file \"%s\"",
-		  filename );      
-      return NULL;
-    }
+/*   int width, height; */
+/*   if( stg_rotrects_from_image_file( filename,   */
+/* 				    &rects, */
+/* 				    &rect_count, */
+/* 				    &width, &height ) ) */
+/*     { */
+/*       PRINT_ERR1( "failed to load rects from image file \"%s\"", */
+/* 		  filename );       */
+/*       return NULL; */
+/*     } */
 
-  //printf( "found %d rects\n", rect_count );
-  // else
+/*   //printf( "found %d rects\n", rect_count ); */
+/*   // else */
 
-  *count = (size_t)rect_count;
-  polys = stg_polygons_from_rotrects( rects, rect_count, (double)width, (double)height );
-  free(rects);
-  return(polys);
-}
+/*   *count = (size_t)rect_count; */
+/*   polys = stg_polygons_from_rotrects( rects, rect_count, (double)width, (double)height ); */
+/*   free(rects); */
+/*   return(polys); */
+/* } */
 
 stg_polyline_t* stg_polylines_from_image_file( const char* filename, 
 					       size_t* num )
@@ -680,48 +680,25 @@ void stg_points_destroy( stg_point_t* pts )
 
 // POLYGONS -----------------------------------------------------------
 
-/// return an array of [count] polygons. Caller must free() the space.
-stg_polygon_t* stg_polygons_create( int count )
-{
-  stg_polygon_t* polys = (stg_polygon_t*)calloc( count, sizeof(stg_polygon_t));
+/// Return an array of [count] polygons. Use stg_polygons_destroy() to
+/// free the memory.
+/* stg_polygon_t* stg_polygons_create( int count ) */
+/* { */
+/*   stg_polygon_t* polys = (stg_polygon_t*)calloc( count, sizeof(stg_polygon_t)); */
   
-  // each polygon contains an array of points
-  int p;
-  for( p=0; p<count; p++ )
-    polys[p].points = g_array_new( FALSE, TRUE, sizeof(stg_point_t));
+/*   // each polygon contains an array of points */
+/*   int p; */
+/*   for( p=0; p<count; p++ ) */
+/*     polys[p].points = g_array_new( FALSE, TRUE, sizeof(stg_point_t)); */
 
-  //polys[p].color = 0xAA00FF00;
+/*   //polys[p].color = 0xAA00FF00; */
 
-  return polys;
-}
+/*   return polys; */
+/* } */
 
 /// destroy an array of polygons
-void stg_polygons_destroy( stg_polygon_t* p, size_t count )
-{
-  int c;
-  for( c=0; c<count; c++ )
-    if( p[c].points )
-      g_array_free( p[c].points, TRUE );
-  
-  free( p );      
-}
 
-stg_polygon_t* stg_unit_polygon_create( void )
-{
-  stg_point_t pts[4];
-  pts[0].x = 0;
-  pts[0].y = 0;
-  pts[1].x = 1;
-  pts[1].y = 0;
-  pts[2].x = 1;
-  pts[2].y = 1;
-  pts[3].x = 0;
-  pts[3].y = 1;  
-  
-  stg_polygon_t* poly = stg_polygons_create(1);
-  stg_polygon_set_points( poly, pts, 4 );  
-  return poly;
-}
+
 
 //////////////////////////////////////////////////////////////////////////
 // scale an array of polygons so they fit in a rectangle of size
@@ -824,6 +801,23 @@ void stg_polygons_print( stg_polygon_t* polys, unsigned int count )
 
 
 /* } */
+
+stg_point_t* stg_unit_square_points_create( void )
+{
+  stg_point_t * pts = stg_points_create( 4 );
+  
+  pts[0].x = 0;
+  pts[0].y = 0;
+  pts[1].x = 1;
+  pts[1].y = 0;
+  pts[2].x = 1;
+  pts[2].y = 1;
+  pts[3].x = 0;
+  pts[3].y = 1;  
+  
+  return pts;
+}
+
 
 /// Copies [count] points from [pts] into polygon [poly], allocating
 /// memory if mecessary. Any previous points in [poly] are

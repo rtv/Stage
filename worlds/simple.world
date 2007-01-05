@@ -1,6 +1,6 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.3 2006-12-22 23:56:57 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.4 2007-01-05 04:30:12 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -47,19 +47,27 @@ pioneer2dx
   sick_laser()
 )
 
-#pioneer2dx
-#(
-#  name "robot2"
-#  color "green"
-#  pose [2.304 3.428 27.811]
-#  #sick_laser()
-#)
+pioneer2dx
+(
+  name "robot2"
+  color "green"
+  pose [2.304 3.428 27.811]
+  #sick_laser()
+)
 
 model
 (
   color "orange"
   pose [4.211 2.518 27.811]
   size [1 1]
+)
+
+model
+(
+  color "orange"
+  bitmap "bitmaps/cave.png"
+  pose [0 0 0]
+  size [3 3]
 )
 
 #box( pose [1 2 0] )

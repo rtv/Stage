@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.140.2.2 2006-12-20 03:01:13 rtv Exp $
+# $Id: Makefile.am,v 1.140.2.3 2007-01-05 04:30:10 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -38,7 +38,6 @@ libstage_la_SOURCES =  \
 	model_callbacks.c \
 	model_bumper.c \
 	model_fiducial.c \
-	model_gripper.c \
 	model_laser.c \
 	model_load.c \
 	model_position.c \
@@ -59,6 +58,7 @@ libstage_la_SOURCES =  \
 
 # TODO
 # model_power.c # needs lots of work
+#	model_gripper.c 
 
 libstage_la_LDFLAGS = -version-info 2:1:0 -rpath $(libdir)  
 libstage_la_LIBADD = @GUI_LIBS@

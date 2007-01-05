@@ -160,8 +160,12 @@ extern "C" {
 
     stg_pose_t pose;
     stg_velocity_t velocity;
-    stg_polygon_t* polygons;
-    size_t polygons_count;
+
+    //stg_polygon_t* polygons;
+    //size_t polygons_count;
+
+    GArray* polys;
+
     stg_watts_t watts; //< power consumed by this model
     stg_color_t color;
     stg_kg_t mass;
@@ -286,7 +290,7 @@ extern "C" {
     stg_endpoint3_t endpts;
     
     // an array that stores the intersection state between all models
-    unsigned short* intersections;
+    //unsigned short* intersections;
 
     stg_meters_t width; ///< x size of the world 
     stg_meters_t height; ///< y size of the world

@@ -24,7 +24,7 @@ stg_type_record_t typetable[] =
     { "laser", laser_init },
     { "blobfinder", blobfinder_init },
     { "fiducialfinder", fiducial_init },
-    { "gripper", gripper_init },       
+    // { "gripper", gripper_init },       
     //{ "power", energy_init },      
     { "ptz", ptz_init },       
     { "wifi", wifi_init },       

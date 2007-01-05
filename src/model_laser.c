@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.89.2.2 $
+//  $Revision: 1.89.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -116,8 +116,8 @@ int laser_init( stg_model_t* mod )
   stg_model_set_color( mod, stg_lookup_color(STG_LASER_GEOM_COLOR));
 
   // create a single rectangle body 
-  stg_polygon_t* square = stg_unit_polygon_create();
-  stg_model_set_polygons( mod, square, 1 );
+  //stg_polygon_t* square = stg_unit_polygon_create();
+  //stg_model_set_polygons( mod, square, 1 );
 
   // set up a laser-specific config structure
   stg_laser_config_t lconf;

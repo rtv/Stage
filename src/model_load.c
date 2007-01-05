@@ -181,12 +181,14 @@ void stg_model_load( stg_model_t* mod )
     }      
   
   //size_t polydata = 0;
-  stg_polygon_t* polys = NULL;
-  size_t polycount = -1 ;//polydata / sizeof(stg_polygon_t);;
+  //stg_polygon_t* polys = NULL;
+  //size_t polycount = -1 ;//polydata / sizeof(stg_polygon_t);;
   
   const char* bitmapfile = wf_read_string( mod->id, "bitmap", NULL );
   if( bitmapfile )
     {
+      stg_model_clear_polygons( mod );
+
       char full[_POSIX_PATH_MAX];
       
       if( bitmapfile[0] == '/' )
@@ -204,9 +206,48 @@ void stg_model_load( stg_model_t* mod )
 	      full );
 #endif
       
-      polys = stg_polygons_from_image_file( full, &polycount );      
-      if( ! polys )
-	PRINT_ERR1( "Failed to load polygons from image file \"%s\"", full );
+      stg_rotrect_t* rects = NULL;
+      int rect_count = 0;      
+      int width, height;
+      if( stg_rotrects_from_image_file( full,
+					&rects,
+					&rect_count,
+					&width, &height ) )
+	{
+	  PRINT_ERR1( "failed to load rects from image file \"%s\"",
+		      full );
+	  return;
+	}
+      
+      printf( "found %d rects\n", rect_count );
+      
+      if( rects && (rect_count > 0) )
+	{
+	  puts( "loading rects" );
+
+	  stg_point_t pts[4];	  
+	  size_t r;
+	  for( r=0; r<rect_count; r++ )
+	    {  
+	      pts[0].x = rects[r].pose.x;
+	      pts[0].y = rects[r].pose.y;
+	      pts[1].x = rects[r].pose.x + rects[r].size.x;
+	      pts[1].y = rects[r].pose.y;
+	      pts[2].x = rects[r].pose.x + rects[r].size.x;
+	      pts[2].y = rects[r].pose.y + rects[r].size.y;
+	      pts[3].x = rects[r].pose.x;
+	      pts[3].y = rects[r].pose.y + rects[r].size.y;
+	      
+	      // copy these points in the polygon
+	      stg_model_add_polygon( mod, pts, 4, mod->color, FALSE );	      
+	    }
+
+	  // scale all the polys to fit the model's geometry
+	  stg_polygons_normalize( (stg_polygon_t*)mod->polys->data,
+				  mod->polys->len, 
+				  mod->geom.size.x, 
+				  mod->geom.size.y );	  
+	}
       
       /* stg_line_t* lines = NULL; */
 /*       size_t linecount = 0; */
@@ -217,14 +258,15 @@ void stg_model_load( stg_model_t* mod )
 
     }
   
-  int wf_polycount = wf_read_int( mod->id, "polygons", -1 );
-  if( wf_polycount != -1 )
+  int polycount = wf_read_int( mod->id, "polygons", -1 );
+  if( polycount != -1 )
     {
-      polycount = wf_polycount;
+      stg_model_clear_polygons( mod );
+
       //printf( "expecting %d polygons\n", polycount );
       
       char key[256];
-      polys = stg_polygons_create( polycount );
+      //polys = stg_polygons_create( polycount );
       int l;
       for(l=0; l<polycount; l++ )
 	{	  	  
@@ -233,92 +275,91 @@ void stg_model_load( stg_model_t* mod )
 	  
 	  //printf( "expecting %d points in polygon %d\n",
 	  //  pointcount, l );
-	  
+	
+	  stg_point_t* pts = stg_points_create( pointcount );
+  
 	  int p;
 	  for( p=0; p<pointcount; p++ )
 	    {
 	      snprintf(key, sizeof(key), "polygon[%d].point[%d]", l, p );
 	      
-	      stg_point_t pt;	      
-	      pt.x = wf_read_tuple_length(mod->id, key, 0, 0);
-	      pt.y = wf_read_tuple_length(mod->id, key, 1, 0);
+	      pts[p].x = wf_read_tuple_length(mod->id, key, 0, 0);
+	      pts[p].y = wf_read_tuple_length(mod->id, key, 1, 0);
 
 	      //printf( "key %s x: %.2f y: %.2f\n",
 	      //      key, pt.x, pt.y );
 	      
-	      // append the point to the polygon
-	      stg_polygon_append_points( &polys[l], &pt, 1 );
 	    }
+
+	  // TODO - fix to use strings
+	  // polygon color
+	  stg_color_t color = 0;
+	  snprintf(key, sizeof(key), "polygon[%d].color", p);
+	  if( wf_property_exists( mod->id, key ) )
+	    color = ! wf_read_int(mod->id, key, 1 );
+
+	  // polygon fill state
+	  int unfilled = 0;
+	  snprintf(key, sizeof(key), "polygon[%d].fill", p);
+	  if( wf_property_exists( mod->id, key ) )
+	    unfilled = ! wf_read_int(mod->id, key, 1 );
+	  
+	  // create a new polygon in the model
+	  stg_model_add_polygon( mod, pts, pointcount, color, unfilled );
+	  stg_points_destroy( pts );
 	}
-    }
- 
-  // load properties of any polygons that we have
-  for( int p=0; p<mod->polygons_count; p++ )
-    {  
-      char key[256];
-      snprintf(key, sizeof(key), "polygon[%d].fill", p);
       
-      if( wf_property_exists( mod->id, key ) )
-	{
-	  mod->polygons[p].unfilled = ! wf_read_int(mod->id, key, 1 );
-	  //printf( "Set unfilled state of polygon[%d] to %d\n",
-	  //  p, mod->polygons[p].unfilled );
-	}
+      // scale all the polys to fit the model's geometry
+      stg_polygons_normalize( (stg_polygon_t*)mod->polys->data,
+			      mod->polys->len, 
+			      mod->geom.size.x, 
+			      mod->geom.size.y );
     }
+  
+/*   int wf_linecount = wf_read_int( mod->id, "polylines", 0 ); */
+/*   if( wf_linecount > 0 ) */
+/*     { */
+/*       char key[256]; */
+/*       stg_polyline_t *lines = calloc( sizeof(stg_polyline_t), wf_linecount ); */
+/*       int l; */
 
-  // if we created any polygons
-  if( polycount != -1 )
-    {
-      if( polycount == 0 )
-	PRINT_WARN1( "model \"%s\" has zero polygons", mod->token );
-      
-      stg_model_set_polygons( mod, polys, polycount );
-    }
+/*       //stg_polyline_print( &lines[0] ); */
 
-  int wf_linecount = wf_read_int( mod->id, "polylines", 0 );
-  if( wf_linecount > 0 )
-    {
-      char key[256];
-      stg_polyline_t *lines = calloc( sizeof(stg_polyline_t), wf_linecount );
-      int l;
+/*       for(l=0; l<wf_linecount; l++ ) */
+/* 	{	  	   */
+/* 	  //stg_polyline_print( &lines[l] ); */
 
-      //stg_polyline_print( &lines[0] );
-
-      for(l=0; l<wf_linecount; l++ )
-	{	  	  
-	  //stg_polyline_print( &lines[l] );
-
-	  snprintf(key, sizeof(key), "polyline[%d].points", l);
-	  int pointcount = wf_read_int(mod->id,key,0);
+/* 	  snprintf(key, sizeof(key), "polyline[%d].points", l); */
+/* 	  int pointcount = wf_read_int(mod->id,key,0); */
 	  
-	  //printf( "expecting %d points in polyline %d\n",
-	  //  pointcount, l );
+/* 	  //printf( "expecting %d points in polyline %d\n", */
+/* 	  //  pointcount, l ); */
 	  
-	  lines[l].points = calloc( sizeof(stg_point_t), pointcount );
-	  lines[l].points_count = pointcount;
+/* 	  lines[l].points = calloc( sizeof(stg_point_t), pointcount ); */
+/* 	  lines[l].points_count = pointcount; */
 	  
-	  int p;
-	  for( p=0; p<pointcount; p++ )
-	    {
-	      snprintf(key, sizeof(key), "polyline[%d].point[%d]", l, p );
+/* 	  int p; */
+/* 	  for( p=0; p<pointcount; p++ ) */
+/* 	    { */
+/* 	      snprintf(key, sizeof(key), "polyline[%d].point[%d]", l, p ); */
 	      
-	      stg_point_t pt;	      
-	      pt.x = wf_read_tuple_length(mod->id, key, 0, 0);
-	      pt.y = wf_read_tuple_length(mod->id, key, 1, 0);
+/* 	      stg_point_t pt;	       */
+/* 	      pt.x = wf_read_tuple_length(mod->id, key, 0, 0); */
+/* 	      pt.y = wf_read_tuple_length(mod->id, key, 1, 0); */
 	      
-	      //printf( "key %s x: %.2f y: %.2f\n",
-	      //      key, pt.x, pt.y );
+/* 	      //printf( "key %s x: %.2f y: %.2f\n", */
+/* 	      //      key, pt.x, pt.y ); */
 	      
-	      lines[l].points[p].x = wf_read_tuple_length(mod->id, key, 0, 0);
-	      lines[l].points[p].y = wf_read_tuple_length(mod->id, key, 1, 0);
+/* 	      lines[l].points[p].x = wf_read_tuple_length(mod->id, key, 0, 0); */
+/* 	      lines[l].points[p].y = wf_read_tuple_length(mod->id, key, 1, 0); */
 	      
-	      //puts( "after read" );
-	      //stg_polyline_print( &lines[l] );
-	    }
-	}
+/* 	      //puts( "after read" ); */
+/* 	      //stg_polyline_print( &lines[l] ); */
+/* 	    } */
+/* 	} */
 
-      stg_model_set_polylines( mod, lines, wf_linecount );
-    }
+/*       stg_model_set_polylines( mod, lines, wf_linecount ); */
+/*     } */
 
 
   int gui_nose = wf_read_int(mod->id, "gui_nose", mod->gui_nose );  

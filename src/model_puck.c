@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_puck.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1.4.1 $
+//  $Revision: 1.1.4.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,9 +26,8 @@ static int puck_update( stg_model_t* mod );
 
 int puck_init( stg_model_t* mod )
 {
-  // override the default methods
-  mod->f_update = puck_update;
-  mod->f_load = puck_load;
+  stg_model_add_update_callback( mod, puck_update );
+  stg_model_add_load_callback( mod, puck_load );
   
   // sensible puck defaults 
   stg_geom_t geom; 
@@ -40,8 +39,8 @@ int puck_init( stg_model_t* mod )
   stg_model_set_geom( mod, &geom );
   
   // create a single rectangle body 
-  stg_polygon_t* square = stg_unit_polygon_create();
-  stg_model_set_polygons( mod, square, 1 );
+  //stg_polygon_t* square = stg_unit_polygon_create();
+  //stg_model_set_polygons( mod, square, 1 );
   
   // set default color
   stg_model_set_color( mod, 0x00FF00 ); // green
