@@ -1,6 +1,6 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.5 2007-01-05 05:53:54 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.6 2007-01-06 02:21:29 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -29,11 +29,11 @@ window
 )
 
 # load an environment bitmap
-map
-( 
-  size [16 16]
-  bitmap "bitmaps/cave.png"
-)
+#map
+#( 
+#  size [16 16]
+#  bitmap "bitmaps/cave.png"
+#)
 
 
 
@@ -60,6 +60,24 @@ model
   color "orange"
   pose [4.211 2.518 27.811]
   size [1 1]
+
+  polygons 2
+  polygon[0].points 8
+  polygon[0].point[0] [  0.23  0.05 ]
+  polygon[0].point[1] [  0.15  0.15 ]
+  polygon[0].point[2] [ -0.15  0.15 ]
+  polygon[0].point[3] [ -0.23  0.05 ]
+  polygon[0].point[4] [ -0.23 -0.05 ]
+  polygon[0].point[5] [ -0.15 -0.15 ]
+  polygon[0].point[6] [  0.15 -0.15 ]
+  polygon[0].point[7] [  0.23 -0.05 ]
+
+  polygon[1].points 4
+  polygon[1].point[0] [  1.23  0.05 ]
+  polygon[1].point[1] [  1.15  0.15 ]
+  polygon[1].point[2] [ -1.15  0.15 ]
+  polygon[1].point[3] [ -1.23  0.05 ]
+
 )
 
 #model

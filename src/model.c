@@ -259,13 +259,27 @@ static inline stg_endpoint_t* endpoint_right( stg_endpoint_t* head, stg_endpoint
 }
 
 
+/* void print_endpoint_list( stg_endpoint_t* head, char* prefix ) */
+/* { */
+/*   puts( prefix ); */
+/*   for( ; head; head=head->next ) */
+/*     printf( "\ttype:%d poly:%p value:%.2f\n",  */
+/* 	    head->type, */
+/* 	    head->polygon, */
+/* 	    head->value ); */
+/* } */
 
 stg_endpoint_t* prepend_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
 {
+  //print_endpoint_list( head, "before prepend" );
+
   if( head )
     head->prev = ep;
 
   ep->next = head;
+
+  //print_endpoint_list( ep, "after prepend" );
+
   return ep;
 }
 
@@ -275,11 +289,27 @@ stg_endpoint_t* insert_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
   head = prepend_endpoint( head, ep );
   
   // now shift the endpoint right until it's in correct sorted position
-  //while( ep->next && (ep->value < ep->next->value) )
-  //head = endpoint_right( head, ep ); 
+  while( ep->next && (ep->value < ep->next->value) )
+    head = endpoint_right( head, ep ); 
+  
+  //print_endpoint_list( ep, "inserted new endpoint. List now:" );
   
   return head;
 }
+
+stg_endpoint_t* remove_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
+{
+  if( ep->next )
+    ep->next->prev = ep->prev;
+
+  if( ep->prev )
+    ep->prev->next = ep->next;
+  
+  if( head == ep ) // if we were at the head, there's a new head;
+    return ep->next;
+  else
+    return head;
+} 
 
 
 stg_model_t* stg_model_create( stg_world_t* world, 
@@ -368,7 +398,8 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->gui_mask = mod->parent ? 0 : STG_DEFAULT_MASK;
 
   // most models are a single polygon
-  mod->polys = g_array_sized_new( FALSE, TRUE, sizeof(stg_polygon_t), 0 );
+  mod->polygons = NULL;
+  mod->polygons_count = 0;
 
   // now it's safe to create the GUI components
   if( mod->world->win )
@@ -418,14 +449,14 @@ void stg_model_destroy( stg_model_t* mod )
 
 // DO NOT USE THIS FUNCTION!
 // copy a model and all it's properties safely
-stg_model_t* stg_model_duplicate( stg_model_t* mod )
-{
-  // TODO - this is NOT safe! do it properly
-  stg_model_t* dupe = NULL;
-  assert( malloc( sizeof(stg_model_t) ));
-  memcpy( dupe, mod, sizeof(stg_model_t));
-  return dupe;
-}
+/* stg_model_t* stg_model_duplicate( stg_model_t* mod ) */
+/* { */
+/*   // TODO - this is NOT safe! do it properly */
+/*   stg_model_t* dupe = NULL; */
+/*   assert( malloc( sizeof(stg_model_t) )); */
+/*   memcpy( dupe, mod, sizeof(stg_model_t)); */
+/*   return dupe; */
+/* } */
 
 int stg_model_is_antecedent( stg_model_t* mod, stg_model_t* testmod )
 {
@@ -777,7 +808,7 @@ int line_segment_intersect( double p1x, double p1y,
 }
 
 
-void print_endpoint_list( char* prefix, stg_endpoint_t* ep )
+void print_endpoint_list( stg_endpoint_t* ep, char* prefix )
 {
   printf( "%s (list at %p)\n", prefix, ep );
   
@@ -787,10 +818,13 @@ void print_endpoint_list( char* prefix, stg_endpoint_t* ep )
     {
       assert( i < 30 );
 
-      printf( "\t%d %.4f %s %s\n", 
+      printf( "\t%d %p %.4f %s %p %d %s\n", 
 	      i++, 
+	      ep,
 	      ep->value,
-	      ep->type == STG_BEGIN ? "BEGIN" : "END",
+	      ep->type == STG_BEGIN ? "BGN" : "END",
+	      ep->polygon,
+	      ep->polygon->points->len,
 	      ep->polygon->mod->token );
       
     }
@@ -880,14 +914,21 @@ stg_polygon_t* stg_model_add_polygon( stg_model_t* mod,
 				      stg_bool_t unfilled )
 {
   //printf( "adding polygon of %d points to %s\n", pt_count, mod->token );
-
-
+  
+  printf( "adding a polygon to the %d polygons of model %s\n",  
+	  (int)mod->polygons_count, mod->token );
+  
   // make the array one slot larger
-  g_array_set_size( mod->polys, mod->polys->len+1 );
+  //g_array_set_size( mod->polys, mod->polys->len+1 );
   
   // get a pointer to the last (i.e. new) item in the array
-  stg_polygon_t* poly = & g_array_index( mod->polys, stg_polygon_t, mod->polys->len-1 );
+  //stg_polygon_t* poly = & g_array_index( mod->polys, stg_polygon_t, mod->polys->len-1 );
   
+  mod->polygons_count++;
+  mod->polygons = realloc( mod->polygons, sizeof(stg_polygon_t) * mod->polygons_count );
+
+  stg_polygon_t* poly = & mod->polygons[ mod->polygons_count-1];
+
   poly->mod = mod;
   poly->color = color;
   poly->unfilled = unfilled;
@@ -917,41 +958,54 @@ stg_polygon_t* stg_model_add_polygon( stg_model_t* mod,
     }
       
   // add this model's endpoints to the world's lists
-  stg_world_t* w = mod->world;
-   w->endpts.x = insert_endpoint( w->endpts.x, &poly->epts[0] ); 
-/*   w->endpts.x = insert_endpoint( w->endpts.x, &poly->epts[1] );  */
-/*   w->endpts.y = insert_endpoint( w->endpts.y, &poly->epts[2] ); */
-/*   w->endpts.y = insert_endpoint( w->endpts.y, &poly->epts[3] ); */
-/*   w->endpts.z = insert_endpoint( w->endpts.z, &poly->epts[4] ); */
-/*   w->endpts.z = insert_endpoint( w->endpts.z, &poly->epts[5] ); */
+  stg_endpoint3_t* ep3 = &mod->world->endpts;
+  ep3->x = insert_endpoint( ep3->x, &poly->epts[0] ); 
+  ep3->x = insert_endpoint( ep3->x, &poly->epts[1] );  
+/*   ep3->y = insert_endpoint( ep3->y, &poly->epts[2] ); */
+/*   ep3->y = insert_endpoint( ep3->y, &poly->epts[3] ); */
+/*   ep3->z = insert_endpoint( ep3->z, &poly->epts[4] ); */
+/*   ep3->z = insert_endpoint( ep3->z, &poly->epts[5] ); */
+
+  print_endpoint_list( ep3->x, "inserted new endpoint pair. List now:" );
+
 
   // TODO - update intersections?
  
   return poly;
 }
 
+
 void stg_model_clear_polygons( stg_model_t* mod )
 {
-  while( mod->polys->len > 0 )
+  int i;
+  for( i=0; i<mod->polygons_count; i++ )
     {
-      stg_polygon_t* p = & g_array_index( mod->polys, stg_polygon_t, 0 );
-
+      printf( "removing %d/%d polygons from model %s\n",  
+	      i, (int)mod->polygons_count, mod->token );
+      
+      stg_polygon_t* p = & mod->polygons[i];
+      
       if( p->points )
 	g_array_free( p->points, TRUE );
       
       if( p->intersectors )
 	g_list_free( p->intersectors );
       
-      g_array_remove_index_fast( mod->polys, 0 );
-
       // remove the endpoints
-      //mod->world->endpts.x = g_list_remove( mod->world->endpts.x, &p->epts[0] );
-/*       mod->world->endpts.x = g_list_remove( mod->world->endpts.x, &p->epts[1] ); */
-/*       mod->world->endpts.y = g_list_remove( mod->world->endpts.y, &p->epts[2] ); */
-/*       mod->world->endpts.y = g_list_remove( mod->world->endpts.y, &p->epts[3] ); */
-/*       mod->world->endpts.z = g_list_remove( mod->world->endpts.z, &p->epts[4] ); */
-/*       mod->world->endpts.z = g_list_remove( mod->world->endpts.z, &p->epts[5] ); */
+      stg_endpoint3_t* ep3 = &mod->world->endpts;
+      ep3->x = remove_endpoint( ep3->x, &p->epts[0] );
+      ep3->x = remove_endpoint( ep3->x, &p->epts[1] ); 
+      /*       ep3->y = remove_endpoint( ep3->y, &p->epts[2] ); */
+      /*       ep3->y = remove_endpoint( ep3->y, &p->epts[3] ); */
+      /*       ep3->z = remove_endpoint( ep3->z, &p->epts[4] ); */
+      /*       ep3->z = remove_endpoint( ep3->z, &p->epts[5] ); */
+      
+      print_endpoint_list( ep3->x, "removed endpoint pair. List now:" );
+      
     }
+  free(mod->polygons);
+  mod->polygons = NULL;
+  mod->polygons_count = 0;
 }
 
 
@@ -1122,13 +1176,13 @@ void stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
   // we probably need to scale and re-render our polygons
 
   // we can do it in-place
-  if( mod->polys && mod->polys->len > 0 )
-    stg_polygons_normalize( (stg_polygon_t*)mod->polys->data, 
-			    mod->polys->len, 
+  if( mod->polygons && mod->polygons_count > 0 )
+    stg_polygons_normalize( mod->polygons, 
+			    mod->polygons_count, 
 			    geom->size.x, geom->size.y );
   //model_update_bbox( mod );
   
-  model_change( mod, &mod->polys );
+  model_change( mod, &mod->polygons );
   
   // re-render int the matrix
   stg_model_map( mod, 1 );  
@@ -1268,8 +1322,8 @@ stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
 {
   assert(mod);
   assert(poly_count);
-  *poly_count = mod->polys->len;
-  return (stg_polygon_t*)mod->polys->data;
+  *poly_count = mod->polygons_count;
+  return mod->polygons;
 }
 
 /* void stg_model_set_polygons( stg_model_t* mod, */

@@ -1239,10 +1239,17 @@ void draw_endpoints( stg_world_t* world )
 
   int i=0;
   stg_endpoint_t* ep;
-  //puts( "X List:" ); 
+
+  print_endpoint_list( world->endpts.x, "DRAW ENDPOINTS: X LIST" );
+
+  puts( "X List:" ); 
   for( ep = world->endpts.x; ep; ep=ep->next )
     {
-      //printf( "\t%.2f %d %s\n",  ep->value, ep->type, ep->mod->token );
+      assert( ep );
+      assert( ep->polygon);
+      assert( ep->polygon->mod );
+
+      printf( "\t%.2f %d %s\n",  ep->value, ep->type, ep->polygon->mod->token );
       
       push_color_stgcolor( ep->polygon->color );
 
@@ -1268,9 +1275,11 @@ void draw_endpoints( stg_world_t* world )
     }
 
   i=0;
-  //puts( "Y List:" ); 
+  puts( "Y List:" ); 
   for( ep = world->endpts.y; ep; ep=ep->next )
     {
+      printf( "\t%s at %.2f\n", ep->polygon->mod->token, ep->value );
+
       push_color_stgcolor( ep->polygon->color );
 
       glBegin( GL_POLYGON );
@@ -1295,10 +1304,10 @@ void draw_endpoints( stg_world_t* world )
     }
 
   i=0;
-  //puts( "Z List:" ); 
+  puts( "Z List:" ); 
   for( ep = world->endpts.z; ep; ep=ep->next )
     {
-      //printf( "\t%s at %.2f\n", ep->mod->token, ep->value );
+      printf( "\t%s at %.2f\n", ep->polygon->mod->token, ep->value );
 
       push_color_stgcolor( ep->polygon->color );
 
@@ -2046,7 +2055,7 @@ void gui_model_init( stg_model_t* mod )
   // GL CALLBACKS
 
   // recompile display lists
-  stg_model_add_callback( mod, &mod->polys, gl_model_polygons, NULL );
+  stg_model_add_callback( mod, &mod->polygons, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->gui_outline, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->boundary, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->gui_grid, gl_model_grid, NULL );

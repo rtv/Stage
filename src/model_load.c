@@ -243,8 +243,8 @@ void stg_model_load( stg_model_t* mod )
 	    }
 
 	  // scale all the polys to fit the model's geometry
-	  stg_polygons_normalize( (stg_polygon_t*)mod->polys->data,
-				  mod->polys->len, 
+	  stg_polygons_normalize( mod->polygons,
+				  mod->polygons_count, 
 				  mod->geom.size.x, 
 				  mod->geom.size.y );	  
 	}
@@ -310,8 +310,8 @@ void stg_model_load( stg_model_t* mod )
 	}
       
       // scale all the polys to fit the model's geometry
-      stg_polygons_normalize( (stg_polygon_t*)mod->polys->data,
-			      mod->polys->len, 
+      stg_polygons_normalize( mod->polygons,
+			      mod->polygons_count, 
 			      mod->geom.size.x, 
 			      mod->geom.size.y );
     }

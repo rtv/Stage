@@ -30,6 +30,6 @@ stg_type_record_t typetable[] =
     { "wifi", wifi_init },       
     { "speech", speech_init },       
     { "bumper", bumper_init },       
-    { NULL, 0, NULL } // this must be the last entry
+    { NULL, NULL } // this must be the last entry
   };
 

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.6 2007-01-05 04:30:10 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.7 2007-01-06 02:21:28 rtv Exp $
  */
 
 
@@ -273,6 +273,9 @@ typedef enum {
   /** frees a point array */
   void stg_points_destroy( stg_point_t* pts );
 
+  /** create an array of 4 points containing the corners of a unit
+      square.*/
+  stg_point_t* stg_unit_square_points_create( void );
   /*@}*/
 
   // POLYLINES ---------------------------------------------------------
