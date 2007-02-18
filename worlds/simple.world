@@ -1,9 +1,10 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.7 2007-02-18 01:53:16 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.8 2007-02-18 02:39:26 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
+
 
 
 
@@ -16,8 +17,10 @@ include "map.inc"
 
 
 
+
 # defines sick laser
 include "sick.inc"
+
 
 
 
@@ -35,10 +38,10 @@ interval_real 100  # real-time interval between simulation updates in millisecon
 window
 ( 
   size [ 767.000 804.000 ] 
-  center [2.990 -0.040] 
+  center [-168.010 -137.040] 
   rotate [ 0.000 0.000 ]
-  scale 44.258 
-  show_bboxes 0
+  scale 122.379 
+  show_bboxes 1
   show_grid 1
 )
 
@@ -58,8 +61,8 @@ pioneer2dx
   size [1 1] 
   name "robot1"
   color "red"
-  pose [2.625 4.192 0.000]
-  sick_laser()
+  pose [0.958 1.133 0.000]
+  #sick_laser()
 )
 
 #pioneer2dx
@@ -73,10 +76,10 @@ pioneer2dx
 model
 (
   color "violet"
-  pose [4.527 5.252 0.000]
+  pose [2.982 2.300 0.000]
   size [1 1]
 
-  polygons 2
+  polygons 1
   polygon[0].points 8
   polygon[0].point[0] [  0.23  0.05 ]
   polygon[0].point[1] [  0.15  0.15 ]
@@ -94,19 +97,19 @@ model
   polygon[1].point[3] [ -1.23  0.05 ]
 )
 
-model
-(
-  color "orange"
-  #bitmap "bitmaps/cave.png"
-  bitmap "bitmaps/space_invader.png"
-  pose [1.294 2.943 0.000]
-  size [1 1]
-)
+#model
+#(
+#  color "orange"
+#  #bitmap "bitmaps/cave.png"
+#  bitmap "bitmaps/space_invader.png"
+#  pose [1.294 2.943 0.000]
+#  size [1 1]
+#)
 
-model
-(
-  color "wheat"
-  bitmap "bitmaps/cave.png"
-  pose [0.000 0.000 0.000]
-  size [16 16]
-)
+#model
+#(
+#  color "wheat"
+#  bitmap "bitmaps/cave.png"
+#  pose [0.000 0.000 0.000]
+#  size [16 16]
+#)

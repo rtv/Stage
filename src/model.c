@@ -951,8 +951,8 @@ void polygon_global_bounds_calc( stg_polygon_t* poly )
 
   // we might need to shift endpoints to a new position in the list
   stg_world_t* world = poly->mod->world;
-  //world->endpts.x = bubble( world->endpts.x, &poly->epts[0] );
-  //world->endpts.x = bubble( world->endpts.x, &poly->epts[1] );
+  world->endpts.x = bubble( world->endpts.x, &poly->epts[0] );
+  world->endpts.x = bubble( world->endpts.x, &poly->epts[1] );
   //world->endpts.y = bubble( world->endpts.y, &poly->epts[2] );
   //world->endpts.y = bubble( world->endpts.y, &poly->epts[3] );
   //world->endpts.z = bubble( world->endpts.z, &poly->epts[4] );
@@ -1031,12 +1031,6 @@ void stg_model_add_polygon( stg_model_t* mod,
   //print_endpoint_list( ep3->y, "inserted new endpoints pair into Y list. List now:" );
   //print_endpoint_list( ep3->z, "inserted new endpoints pair into Z list. List now:" );
   
-  // compute the values for the endpoints, and shuffle them into
-  // position
-  //polygon_local_bounds_calc( poly );
-  //polygon_global_bounds_calc( poly );
-
-
   mod->polys = g_list_prepend( mod->polys, poly );  
 }
 
@@ -1075,6 +1069,20 @@ void stg_model_clear_polygons( stg_model_t* mod )
 }
 
 
+void print_intersector( stg_polygon_t* poly, char* separator )
+{
+  printf( "%s:%p:(%.2f,%.2f)(%.2f,%.2f)(%.2f,%.2f)%s",
+	  poly->mod->token,
+	  poly,
+	  poly->epts[0].value,
+	  poly->epts[1].value,
+	  poly->epts[2].value,
+	  poly->epts[3].value,
+	  poly->epts[4].value,
+	  poly->epts[5].value,
+	  separator );
+}
+
 //static inline 
 void stg_polygons_intersect_incr( stg_polygon_t* poly1, stg_polygon_t* poly2 )
 {
@@ -1091,28 +1099,70 @@ void stg_polygons_intersect_incr( stg_polygon_t* poly1, stg_polygon_t* poly2 )
       g_hash_table_insert( poly2->accumulator, poly1, val );
     }
   else
-    *val++;
+      *val++;
 
-  if( *val == 3 ) // a new 3-axis overlap!
+  printf( "OVERLAPS INC %d  %s:%p and %s:%p\n",
+	  *val,
+	  poly1->mod->token, poly1,
+	  poly2->mod->token, poly2 );
+
+  //if( *val == 3 ) // a new 3-axis overlap!
+  if( *val == 1 ) // a new 3-axis overlap!
     {
       poly1->intersectors = g_list_prepend( poly1->intersectors, poly2 );
       poly2->intersectors = g_list_prepend( poly2->intersectors, poly1 );
+
+      printf( "INTERSECT START! %s:%p and %s:%p\n",
+	      poly1->mod->token, poly1,
+	      poly2->mod->token, poly2 );
     }
+
+  printf( "INTERSECTORS for poly %s:%p\n", poly1->mod->token, poly1 );
+  g_list_foreach( poly1->intersectors, print_intersector, "\n" );
+  
+  //stg_world_t* world = poly1->mod->world;
+  //print_endpoint_list( world->endpts.x, "X LIST" );
+  //print_endpoint_list( world->endpts.y, "Y LIST" );
+  //print_endpoint_list( world->endpts.z, "Z LIST" );
+
 }
 
 //static inline 
 void stg_polygons_intersect_decr( stg_polygon_t* poly1, stg_polygon_t* poly2 )
 {
   int* val = g_hash_table_lookup( poly1->accumulator, poly2 );
-  assert( val ); // it really should be there already
+  //assert( val ); // it really should be there already
   
+  if( val == NULL )
+    {
+      printf( "warning: null value for %s:%p leaving %s:%p\n",
+	      poly1->mod->token, poly1,
+	      poly2->mod->token, poly2 );
+      return;
+    }      
+
   *val--;
 
-  if( *val == 2 ) // the polys no longer overlap in 3 axes
+  printf( "OVERLAPS DEC %d  %s:%p and %s:%p\n",
+	  *val,
+	  poly1->mod->token, poly1,
+	  poly2->mod->token, poly2 );
+
+  //if( *val == 2 ) // the polys no longer overlap in 3 axes
+  if( *val < 1 ) // the polys no longer overlap in 3 axes
     {
       poly1->intersectors = g_list_remove( poly1->intersectors, poly2 );
       poly2->intersectors = g_list_remove( poly2->intersectors, poly1 );
+
+      printf( "INTERSECT STOP %s:%p and %s:%p\n",
+	      poly1->mod->token, poly1,
+	      poly2->mod->token, poly2 );
     }
+
+  //stg_world_t* world = poly1->mod->world;
+  //print_endpoint_list( world->endpts.x, "X LIST" );
+  //print_endpoint_list( world->endpts.y, "Y LIST" );
+  //print_endpoint_list( world->endpts.z, "Z LIST" );
 }
 
 

@@ -1320,9 +1320,9 @@ void draw_endpoints( stg_world_t* world )
   int i=0;
   stg_endpoint_t* ep;
 
-  //print_endpoint_list( world->endpts.x, "X LIST" );
-  //print_endpoint_list( world->endpts.y, "Y LIST" );
-  //print_endpoint_list( world->endpts.z, "Z LIST" );
+/*   print_endpoint_list( world->endpts.x, "X LIST" ); */
+/*   print_endpoint_list( world->endpts.y, "Y LIST" ); */
+/*   print_endpoint_list( world->endpts.z, "Z LIST" ); */
 
   for( ep = world->endpts.x; ep; ep=ep->next )
     {
@@ -1350,6 +1350,9 @@ void draw_endpoints( stg_world_t* world )
 
       glRasterPos2f( ep->value, -0.5 );
       glPrint( "%d", (int)i++ );      
+
+      glRasterPos2f( ep->value, -0.8 );
+      glPrint( "%.2f", ep->value );      
       pop_color();
     }
 
@@ -1376,6 +1379,9 @@ void draw_endpoints( stg_world_t* world )
 
       glRasterPos2f( -0.5, ep->value );
       glPrint( "%d", (int)i++ );      
+
+      glRasterPos2f( -0.8, ep->value );
+      glPrint( "%.2f", ep->value );      
       pop_color();
     }
 
@@ -1402,6 +1408,10 @@ void draw_endpoints( stg_world_t* world )
 
       glRasterPos3f( -0.5, 0, ep->value );
       glPrint( "%d", (int)i++ );      
+
+      glRasterPos3f( -0.8, 0, ep->value );
+      glPrint( "%.2f", ep->value );      
+
       pop_color();   
     }
 
