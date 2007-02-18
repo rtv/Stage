@@ -133,7 +133,8 @@ struct _gui_window
   GtkProgressBar *perf_bar;
   GtkProgressBar *rt_bar;
   GtkLabel *clock_label;
-  
+  GtkActionGroup *action_group;
+
   // the main drawing widget
   GtkWidget* canvas;
   int dirty;
@@ -175,7 +176,8 @@ struct _gui_window
   gboolean show_cmd;
   gboolean show_alpha;
   gboolean show_thumbnail;
-  
+  gboolean show_bboxes;
+   
   gboolean dragging;
   
   int frame_series;

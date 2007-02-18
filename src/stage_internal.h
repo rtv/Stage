@@ -161,10 +161,9 @@ extern "C" {
     stg_pose_t pose;
     stg_velocity_t velocity;
 
-    stg_polygon_t* polygons;
-    size_t polygons_count;
-
-    //GArray* polys;
+    //stg_polygon_t* polygons;
+    //size_t polygons_count;
+    GList* polys;
 
     stg_watts_t watts; //< power consumed by this model
     stg_color_t color;

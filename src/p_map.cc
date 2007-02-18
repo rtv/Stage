@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.12 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.12.4.1 2007-02-18 01:53:16 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -178,17 +178,20 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
   fflush(stdout);
   
   // render the polygons directly into the outgoing message buffer. fast! outrageous!
-  size_t polycount = 0;
-  stg_polygon_t* polys = stg_model_get_polygons( mod, &polycount );
   
-  for( int p=0; p<(int)polycount; p++ )
+  GList* plist;
+  for( plist = stg_model_get_polygons( mod ); 
+       plist; 
+       plist = plist->next )
     {       
+      stg_polygon_t* p = (stg_polygon_t*)plist->data;
+
       // draw each line in the poly
-      int line_count = (int)polys[p].points->len;
+      int line_count = (int)p->points->len;
       for( int l=0; l<line_count; l++ )
 	{
-	  stg_point_t* pt1 = &g_array_index( polys[p].points, stg_point_t, l );	  
-	  stg_point_t* pt2 = &g_array_index( polys[p].points, stg_point_t, (l+1) % line_count );	   
+	  stg_point_t* pt1 = &g_array_index( p->points, stg_point_t, l ); 
+	  stg_point_t* pt2 = &g_array_index( p->points, stg_point_t, (l+1) % line_count );	   
 	  
 	  render_line( mapresp->data, 
 		       mapresp->width, mapresp->height,

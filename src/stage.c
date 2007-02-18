@@ -516,7 +516,7 @@ stg_polyline_t* stg_polylines_from_image_file( const char* filename,
   if( err )
     {
       fprintf( stderr, "\nError loading bitmap: %s\n", err->message );
-      return 1; // error
+      return NULL; // error
     }
   
   // this should be ok as no error was reported
@@ -703,10 +703,11 @@ void stg_points_destroy( stg_point_t* pts )
 //////////////////////////////////////////////////////////////////////////
 // scale an array of polygons so they fit in a rectangle of size
 // [width] by [height], with the origin in the center of the rectangle
-void stg_polygons_normalize( stg_polygon_t* polys, int num, 
-			     double width, double height )
+void stg_polygons_normalize( GList* polys, 
+			     double width, 
+			     double height )
 {
-  if( num == 0 )
+  if( g_list_length( polys ) < 1 )
     return;
 
   // assuming the rectangles fit in a square +/- one billion units
@@ -714,14 +715,16 @@ void stg_polygons_normalize( stg_polygon_t* polys, int num,
   minx = miny = BILLION;
   maxx = maxy = -BILLION;
   
-  int l;
-  for( l=0; l<num; l++ ) // examine all the polygons
+  GList* it;
+  for( it=polys; it; it=it->next ) // examine all the polygons
     {
       // examine all the points in the polygon
+      stg_polygon_t* poly = (stg_polygon_t*)it->data;
+      
       int p;
-      for( p=0; p<polys[l].points->len; p++ )
+      for( p=0; p < poly->points->len; p++ )
 	{
-	  stg_point_t* pt = &g_array_index( polys[l].points, stg_point_t, p);
+	  stg_point_t* pt = &g_array_index( poly->points, stg_point_t, p);
 	  if( pt->x < minx ) minx = pt->x;
 	  if( pt->y < miny ) miny = pt->y;
 	  if( pt->x > maxx ) maxx = pt->x;
@@ -745,13 +748,15 @@ void stg_polygons_normalize( stg_polygon_t* polys, int num,
   //double scalex = polys[0].bbox.x;
   //double scaley = polys[0].bbox.y;
   
-  for( int l=0; l<num; l++ ) // scale each polygon
+  for( it=polys; it; it=it->next ) // examine all the polygons
     { 
+      stg_polygon_t* poly = (stg_polygon_t*)it->data;
+      
       // scale all the points in the polygon
       int p;
-      for( p=0; p<polys[l].points->len; p++ )
+      for( p=0; p < poly->points->len; p++ )
 	{
-	  stg_point_t* pt = &g_array_index( polys[l].points, stg_point_t, p);
+	  stg_point_t* pt = &g_array_index( poly->points, stg_point_t, p);
 	  
 	  pt->x = ((pt->x - minx) / scalex * width) - width/2.0;
 	  pt->y = ((pt->y - miny) / scaley * height) - height/2.0;

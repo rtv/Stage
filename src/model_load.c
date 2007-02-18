@@ -2,6 +2,9 @@
 #include <limits.h> 
 #include "stage_internal.h"
 
+// defined in model.c
+void polygon_local_bounds_calc_cb( stg_polygon_t* poly, gpointer unused );
+void polygon_global_bounds_calc_cb( stg_polygon_t* poly, gpointer unused );
 
 void stg_model_load( stg_model_t* mod )
 {
@@ -243,10 +246,12 @@ void stg_model_load( stg_model_t* mod )
 	    }
 
 	  // scale all the polys to fit the model's geometry
-	  stg_polygons_normalize( mod->polygons,
-				  mod->polygons_count, 
+	  stg_polygons_normalize( mod->polys, 
 				  mod->geom.size.x, 
-				  mod->geom.size.y );	  
+				  mod->geom.size.y ); 
+
+	  g_list_foreach( mod->polys, polygon_local_bounds_calc_cb, NULL );
+	  g_list_foreach( mod->polys, polygon_global_bounds_calc_cb, NULL );	  
 	}
       
       /* stg_line_t* lines = NULL; */
@@ -310,10 +315,12 @@ void stg_model_load( stg_model_t* mod )
 	}
       
       // scale all the polys to fit the model's geometry
-      stg_polygons_normalize( mod->polygons,
-			      mod->polygons_count, 
+      stg_polygons_normalize( mod->polys, 
 			      mod->geom.size.x, 
 			      mod->geom.size.y );
+
+      g_list_foreach( mod->polys, polygon_local_bounds_calc_cb, NULL );
+      g_list_foreach( mod->polys, polygon_global_bounds_calc_cb, NULL );
     }
   
 /*   int wf_linecount = wf_read_int( mod->id, "polylines", 0 ); */

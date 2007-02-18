@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui_gtk.c,v 1.1.2.1 2006-09-14 07:03:25 rtv Exp $
+CVS: $Id: gui_gtk.c,v 1.1.2.2 2007-02-18 01:53:16 rtv Exp $
 */
 
 #include <stdio.h>
@@ -144,6 +144,7 @@ void gui_action_fill( GtkToggleAction* action, stg_world_t* world );
 void gui_action_grid( GtkToggleAction* action, stg_world_t* world ); 
 void gui_action_alpha( GtkToggleAction* action, stg_world_t* world ); 
 void gui_action_thumbnail( GtkToggleAction* action, stg_world_t* world );
+void gui_action_bboxes( GtkToggleAction* action, stg_world_t* world );
 void gui_action_trails( GtkToggleAction* action, stg_world_t* world ); 
 void gui_action_follow( GtkToggleAction* action, stg_world_t* world ); 
 
@@ -195,6 +196,7 @@ static GtkToggleActionEntry toggle_entries[] = {
   { "Polygons", NULL, "Show polygons", "D", NULL, G_CALLBACK(gui_action_polygons), 1 },
   { "Alpha", NULL, "Alpha channel", "A", NULL, G_CALLBACK(gui_action_alpha), 1 },
   { "Thumbnail", NULL, "Thumbnail", "T", NULL, G_CALLBACK(gui_action_thumbnail), 0 },
+  { "Bboxes", NULL, "Bounding _boxes", "B", NULL, G_CALLBACK(gui_action_bboxes), 1 },
     { "Trails", NULL, "Trails", NULL, NULL, G_CALLBACK(gui_action_trails), 0 },
     { "Follow", NULL, "Follow selection", NULL, NULL, G_CALLBACK(gui_action_follow), 0 },
   { "Grid", NULL, "_Grid", "G", "Toggle drawing of 1-metre grid", G_CALLBACK(gui_action_grid), 1 },
@@ -254,6 +256,7 @@ static const char *ui_description =
 "      <menuitem action='Fill'/>"
 "      <menuitem action='Polygons'/>"
 "      <menuitem action='Grid'/>"
+"      <menuitem action='Bboxes'/>"
 "      <menuitem action='Follow'/>"
 "      <menuitem action='Alpha'/>"
 "      <menuitem action='Trails'/>"
@@ -476,40 +479,40 @@ void gui_window_menus_create( gui_window_t* win )
   ui_manager = gtk_ui_manager_new ();
   
   // actions
-  GtkActionGroup *group = gtk_action_group_new ("MenuActions");
+  win->action_group = gtk_action_group_new ("MenuActions");
   
-  gtk_action_group_add_actions( group, entries, 
+  gtk_action_group_add_actions( win->action_group, entries, 
 				G_N_ELEMENTS (entries),
 				win->world );
   
-  gtk_action_group_add_toggle_actions( group,toggle_entries, 
+  gtk_action_group_add_toggle_actions( win->action_group,toggle_entries, 
 				       G_N_ELEMENTS(toggle_entries), 
 				       win->world );
   
-  gtk_action_group_add_radio_actions( group, export_format_entries, 
+  gtk_action_group_add_radio_actions( win->action_group, export_format_entries, 
 				      G_N_ELEMENTS(export_format_entries), 
 				      win->frame_format, 
 				      G_CALLBACK(gui_action_export_format),
 				      win );
   
-  gtk_action_group_add_radio_actions( group, export_freq_entries, 
+  gtk_action_group_add_radio_actions( win->action_group, export_freq_entries, 
 				      G_N_ELEMENTS(export_freq_entries),
 				      win->frame_interval, 
 				      G_CALLBACK(gui_action_export_interval), 
 				      win );
   
-  gtk_ui_manager_insert_action_group (ui_manager, group, 0);
+  gtk_ui_manager_insert_action_group (ui_manager, win->action_group, 0);
 
   // grey-out the radio list labels
   
   // gtk+-2.6 code
-  //gtk_action_set_sensitive(gtk_action_group_get_action( group, "ExportFormat" ), FALSE );
-  //gtk_action_set_sensitive(gtk_action_group_get_action( group, "ExportInterval" ), FALSE );
+  //gtk_action_set_sensitive(gtk_action_group_get_action( win->action_group, "ExportFormat" ), FALSE );
+  //gtk_action_set_sensitive(gtk_action_group_get_action( win->action_group, "ExportInterval" ), FALSE );
 
   // gtk+-2.4 code
   int sensi = FALSE;
-  g_object_set( gtk_action_group_get_action( group, "ExportFormat" ), "sensitive", sensi, NULL );
-  g_object_set( gtk_action_group_get_action( group, "ExportInterval" ), "sensitive", sensi, NULL);
+  g_object_set( gtk_action_group_get_action( win->action_group, "ExportFormat" ), "sensitive", sensi, NULL );
+  g_object_set( gtk_action_group_get_action( win->action_group, "ExportInterval" ), "sensitive", sensi, NULL);
 
   // accels
   GtkAccelGroup *accel_group = gtk_ui_manager_get_accel_group (ui_manager);
@@ -703,6 +706,27 @@ void stg_model_add_property_toggles( stg_model_t* mod,
 /* } */
 
 
+void gui_load_toggle( gui_window_t* win, 
+		      int section,
+		      int* var, 
+		      const char* action_name, 
+		      const char* keyword )
+{
+  if( wf_property_exists( section, keyword ) )
+    {
+      *var = wf_read_int(section, keyword, *var );
+      
+      GtkToggleAction* action = 
+	gtk_action_group_get_action( win->action_group, action_name );
+      
+      if( action )      
+	gtk_toggle_action_set_active( action, *var );
+      else
+	PRINT_ERR1( "Failed to get menu action name \"%s\"", action_name );
+    }
+}
+
+
 void gui_load( stg_world_t* world, int section )
 {
   gui_window_t* win = (gui_window_t*)world->win;
@@ -724,12 +748,28 @@ void gui_load( stg_world_t* world, int section )
   win->stheta = wf_read_tuple_float( section, "rotate", 0, win->stheta );
   win->sphi = wf_read_tuple_float( section, "rotate", 1, win->sphi );
   win->scale = wf_read_float(section, "scale", win->scale );
-  win->fill_polygons = wf_read_int(section, "fill_polygons", win->fill_polygons );
-  win->show_grid = wf_read_int(section, "show_grid", win->show_grid );
-  win->show_alpha = wf_read_int(section, "show_alpha", win->show_alpha );
-  win->show_data = wf_read_int(section, "show_data", win->show_data );
-  win->show_thumbnail = wf_read_int(section, "show_thumbnail", win ->show_thumbnail );
-  
+
+ /*  win->fill_polygons = wf_read_int(section, "fill_polygons", win->fill_polygons ); */
+/*   win->show_grid = wf_read_int(section, "show_grid", win->show_grid ); */
+/*   win->show_alpha = wf_read_int(section, "show_alpha", win->show_alpha ); */
+/*   win->show_data = wf_read_int(section, "show_data", win->show_data ); */
+/*   win->show_thumbnail = wf_read_int(section, "show_thumbnail", win ->show_thumbnail ); */
+
+  gui_load_toggle( win, section, &win->show_bboxes, "Bboxes", "show_bboxes" );
+  gui_load_toggle( win, section, &win->show_alpha, "Alpha", "show_alpha" );
+  gui_load_toggle( win, section, &win->show_grid, "Grid", "show_grid" );
+  gui_load_toggle( win, section, &win->show_bboxes, "Thumbnail", "show_thumbnail" );
+  gui_load_toggle( win, section, &win->show_data, "Data", "show_data" );
+  gui_load_toggle( win, section, &win->follow_selection, "Follow", "show_follow" );
+
+/*   if( wf_property_exists( section, "show_bboxes" ) ) */
+/*     { */
+/*       win->show_bboxes = wf_read_int(section, "show_bboxes", win->show_bboxes ); */
+      
+/*       GtkToggleAction* action = gtk_action_group_get_action( win->action_group, "Bboxes" ); */
+/*       gtk_toggle_action_set_active( action, win->show_bboxes ); */
+/*     } */
+
   int width, height;
   gtk_window_get_size(  GTK_WINDOW(win->frame), &width, &height );
   width = (int)wf_read_tuple_float(section, "size", 0, width );
@@ -766,6 +806,7 @@ void gui_save( stg_world_t* world )
 
   wf_write_int( win->wf_section, "fill_polygons", win->fill_polygons );
   wf_write_int( win->wf_section, "show_grid", win->show_grid );
+  wf_write_int( win->wf_section, "show_bboxes", win->show_bboxes );
 
   // save the state of the property toggles
   for( GList* list = win->toggle_list; list; list = g_list_next( list ) )
@@ -969,6 +1010,7 @@ void* gui_world_create( stg_world_t* world )
   win->fill_polygons = TRUE;
   win->show_polygons = TRUE;
   win->show_thumbnail = FALSE;
+  win->show_bboxes = TRUE;
   win->frame_interval = 500; // ms
   win->frame_format = STG_IMAGE_FORMAT_PNG;
   //win->selection_active = NULL;
@@ -1071,6 +1113,11 @@ void gui_action_thumbnail( GtkToggleAction* action, stg_world_t* world )
   world->win->show_thumbnail = gtk_toggle_action_get_active( action );
 }
 
+void gui_action_bboxes( GtkToggleAction* action, stg_world_t* world )
+{
+  PRINT_DEBUG( "BBox menu item" );
+  world->win->show_bboxes = gtk_toggle_action_get_active( action );
+}
 
 
 /// save a frame as a jpeg, with incremental index numbers. if series

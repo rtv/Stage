@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.89.2.3 $
+//  $Revision: 1.89.2.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -199,15 +199,16 @@ int laser_update( stg_model_t* mod, void* unused )
   static stg_laser_sample_t* scan = 0;
   static size_t old_len = 0;
   
-  size_t data_len = sizeof(stg_laser_sample_t)*cfg->samples;
+/*   size_t data_len = sizeof(stg_laser_sample_t)*cfg->samples; */
   
-  if( old_len != data_len )
-    {
-      scan = realloc( scan, data_len );
-      old_len = data_len;
-    }
+/*   if( old_len != data_len ) */
+/*     { */
+/*       scan = realloc( scan, data_len ); */
+/*       old_len = data_len; */
+/*     } */
   
-  memset( scan, 0, data_len );
+  scan = g_renew( stg_laser_sample_t, scan, cfg->samples );
+  //memset( scan, 0, data_len );
 
   for( int t=0; t<cfg->samples; t += cfg->resolution )
     {      

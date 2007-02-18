@@ -374,6 +374,7 @@ static void polygon3d( double* pts, size_t pt_count,
 }
 
 
+
 static void polygon2d( double* pts, size_t pt_count  )
 { 
   glBegin(GL_POLYGON);
@@ -770,6 +771,87 @@ void gl_model_selected( stg_model_t* mod, void* user )
   glEndList();
 }
 
+void gl_draw_polygon_bbox( stg_polygon_t* p )
+{
+  // no need to optimize this, it's debug visualization mainly.
+
+  push_color_rgba( 1, 0, 1, 1 );
+
+  // bottom plane
+  glBegin(GL_LINE_LOOP );
+  glVertex3f( p->epts[0].value, p->epts[2].value, p->epts[4].value );
+  glVertex3f( p->epts[1].value, p->epts[2].value, p->epts[4].value );
+  glVertex3f( p->epts[1].value, p->epts[3].value, p->epts[4].value );
+  glVertex3f( p->epts[0].value, p->epts[3].value, p->epts[4].value );
+  glEnd();
+
+  // top plane
+  glBegin(GL_LINE_LOOP );
+  glVertex3f( p->epts[0].value, p->epts[2].value, p->epts[5].value );
+  glVertex3f( p->epts[1].value, p->epts[2].value, p->epts[5].value );
+  glVertex3f( p->epts[1].value, p->epts[3].value, p->epts[5].value );
+  glVertex3f( p->epts[0].value, p->epts[3].value, p->epts[5].value );
+  glEnd();
+
+  // verticals joining corners
+  glBegin(GL_LINES );
+  glVertex3f( p->epts[0].value, p->epts[2].value, p->epts[4].value );
+  glVertex3f( p->epts[0].value, p->epts[2].value, p->epts[5].value );
+  glVertex3f( p->epts[1].value, p->epts[2].value, p->epts[4].value );
+  glVertex3f( p->epts[1].value, p->epts[2].value, p->epts[5].value );
+  glVertex3f( p->epts[1].value, p->epts[3].value, p->epts[4].value );
+  glVertex3f( p->epts[1].value, p->epts[3].value, p->epts[5].value );
+  glVertex3f( p->epts[0].value, p->epts[3].value, p->epts[4].value );
+  glVertex3f( p->epts[0].value, p->epts[3].value, p->epts[5].value );
+  glEnd();
+
+  pop_color();
+}
+
+void gl_draw_polygon_bbox_cb( stg_polygon_t* p, gpointer unused )
+{
+  gl_draw_polygon_bbox( p );
+}
+
+
+void gl_draw_polygon2d( stg_polygon_t* p )
+{
+  polygon2d( (double*)p->points->data, p->points->len );
+
+  // bbox in local coords
+/*   push_color_rgba( 0, 1, 0, 1 ); */
+
+/*   glBegin(GL_LINE_LOOP ); */
+/*   glVertex2f( p->minx, p->miny ); */
+/*   glVertex2f( p->maxx, p->miny ); */
+/*   glVertex2f( p->maxx, p->maxy ); */
+/*   glVertex2f( p->minx, p->maxy ); */
+/*   glEnd(); */
+
+/*   printf( "drawing polygon local bbox (%.2f,%.2f)(%.2f,%.2f)\n", */
+/* 	  p->minx, p->maxx,  */
+/* 	  p->miny, p->maxy ); */
+
+/*   pop_color(); */
+}
+
+void gl_draw_polygon2d_cb( stg_polygon_t* p, gpointer unused )
+{
+  gl_draw_polygon2d( p );
+}
+
+void gl_draw_polygon3d( stg_polygon_t* p )
+{
+  polygon3d( (double*)p->points->data, p->points->len,
+	     0, p->mod->geom.size.z, 
+	     TRUE );
+}
+
+void gl_draw_polygon3d_cb( stg_polygon_t* p, gpointer unused )
+{
+  gl_draw_polygon3d( p );
+}
+
 
 int gl_model_polygons( stg_model_t* mod, void* userp )
 {
@@ -789,15 +871,9 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
   glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
   glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
 
-  
-  int pcount=0;
-  stg_polygon_t* polys = stg_model_get_polygons( mod, &pcount );
+  // draw each poly
+  g_list_foreach( mod->polys, gl_draw_polygon2d_cb, NULL );
 
-  int p;
-  for( p=0; p<pcount; p++ )
-    polygon2d( (double*)polys[p].points->data, 
-	       polys[p].points->len );  
-  
   //if( 1 )// mod->boundary ) 
   //  box3d_wireframe( &mod->bbox );
 
@@ -816,11 +892,9 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
   glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
   glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
 
-  for( p=0; p<pcount; p++ )
-    polygon3d( (double*)polys[p].points->data, 
-	       polys[p].points->len,
-	       0, mod->geom.size.z,
-	       TRUE );  
+  // draw each poly
+  g_list_foreach( mod->polys, gl_draw_polygon3d_cb, NULL );
+
   
   //if( 1 )// mod->boundary ) 
   //  box3d_wireframe( &mod->bbox );
@@ -872,7 +946,6 @@ void gl_model_grid_axes( stg_model_t* mod )
     }
 }
 
-
 int gl_model_draw( stg_model_t* mod, void* userp )
 {
   //puts( "model render polygons" );
@@ -888,8 +961,12 @@ int gl_model_draw( stg_model_t* mod, void* userp )
   //stg_model_get_global_pose( mod, &gp );
   
   glPushMatrix();
-
+  
   // move into this model's coordinate frame
+  
+  //if( mod->parent )
+  //   glTranslatef( 0,0, mod->parent->geom.pose.a );
+
   glTranslatef( mod->pose.x, mod->pose.y, mod->pose.z );
   glRotatef( RTOD(mod->pose.a), 0,0,1 );
 
@@ -947,8 +1024,6 @@ int gl_model_draw( stg_model_t* mod, void* userp )
 
   if( mod->children )
     {
-      // children are on top of this model
-      glTranslatef( 0,0, mod->geom.size.z );
 
       // recursively draw the tree below this model
       GList *it;;
@@ -1078,6 +1153,11 @@ void model_draw_cb( gpointer key, stg_model_t* mod, void* user )
   // the models draw their children recursively, so only draw root models
   if( mod->parent == NULL )
     gl_model_draw( mod, user );
+}
+
+void model_bbox_cb( gpointer key, stg_model_t* mod, void* user )
+{
+  g_list_foreach( mod->polys, gl_draw_polygon_bbox_cb, NULL );
 }
 
 
@@ -1240,17 +1320,16 @@ void draw_endpoints( stg_world_t* world )
   int i=0;
   stg_endpoint_t* ep;
 
-  print_endpoint_list( world->endpts.x, "DRAW ENDPOINTS: X LIST" );
+  //print_endpoint_list( world->endpts.x, "X LIST" );
+  //print_endpoint_list( world->endpts.y, "Y LIST" );
+  //print_endpoint_list( world->endpts.z, "Z LIST" );
 
-  puts( "X List:" ); 
   for( ep = world->endpts.x; ep; ep=ep->next )
     {
       assert( ep );
       assert( ep->polygon);
       assert( ep->polygon->mod );
 
-      printf( "\t%.2f %d %s\n",  ep->value, ep->type, ep->polygon->mod->token );
-      
       push_color_stgcolor( ep->polygon->color );
 
       glBegin( GL_POLYGON );
@@ -1275,11 +1354,8 @@ void draw_endpoints( stg_world_t* world )
     }
 
   i=0;
-  puts( "Y List:" ); 
   for( ep = world->endpts.y; ep; ep=ep->next )
     {
-      printf( "\t%s at %.2f\n", ep->polygon->mod->token, ep->value );
-
       push_color_stgcolor( ep->polygon->color );
 
       glBegin( GL_POLYGON );
@@ -1304,11 +1380,8 @@ void draw_endpoints( stg_world_t* world )
     }
 
   i=0;
-  puts( "Z List:" ); 
   for( ep = world->endpts.z; ep; ep=ep->next )
     {
-      printf( "\t%s at %.2f\n", ep->polygon->mod->token, ep->value );
-
       push_color_stgcolor( ep->polygon->color );
 
       glBegin( GL_POLYGON );
@@ -1452,20 +1525,14 @@ void draw_world(  stg_world_t* world )
 
   // draw the models
   g_hash_table_foreach( world->models, (GHFunc)model_draw_cb, NULL );
+
+  if( win->show_bboxes )   // draw bounding boxes
+    {
+      g_hash_table_foreach( world->models, (GHFunc)model_bbox_cb, NULL );
+      // draw the bbox lists
+      draw_endpoints( world );
+    }
   
-  // draw the bbox lists
-  draw_endpoints( world );
-
-/*   push_color_rgba( 0,0,0,1 );  */
-  
-/*   GList* it; */
-/*   for( it=world->debug_bboxes; it; it=it->next ) */
-/*     box3d_wireframe( ((stg_bbox3d_t*)it->data) ); */
-  
-/*   pop_color(); */
-
-
-
   // get the display list associated with this model
   //int slist = gui_model_get_displaylist( mod, LIST_SELECTED );
   if( recticle_list )
@@ -1478,51 +1545,6 @@ void draw_world(  stg_world_t* world )
 
   if( win->show_thumbnail ) // if drawing the whole world mini-view
     draw_thumbnail( world );
-
-  if( 0 ) // if drawing the matrix
-    {
-      double boxwidth = world->ppm * world->width;
-      double boxheight = world->ppm * world->height;
-
-      glPushAttrib( GL_ALL_ATTRIB_BITS );
-
-      glMatrixMode (GL_MODELVIEW);
-      glPushMatrix();
-
-      glLoadIdentity ();
-      glViewport(0,0,boxwidth, boxheight );
-      
-      glMatrixMode (GL_PROJECTION);
-      glPushMatrix();
-      glLoadIdentity();
-
-      glDisable(GL_LINE_SMOOTH); // TODO - make this optional for speed
-      glDisable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-      glDepthMask(GL_FALSE);
-
-      glColor3f( 1,1,1 );      
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      glRecti( -1,-1,1,1 ); // fill the viewport
-
-      //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
-
-      glScalef( 2.0/world->width, 2.0/world->height, 1.0); 
-
-      // don't render grids in the matrix
-      int keep_grid = win->show_grid;
-      int keep_data = win->show_data;
-      win->show_grid = 0;
-      win->show_data = 0;
-      g_hash_table_foreach( world->models, (GHFunc)model_draw_cb, NULL );
-      win->show_grid = keep_grid;
-      win->show_data = keep_data;
-
-      glPopAttrib();      
-      glPopMatrix();
-      glMatrixMode (GL_MODELVIEW);
-      glPopMatrix();
-    }
 
   /* Swap buffers */
   if (gdk_gl_drawable_is_double_buffered (gldrawable))
@@ -2054,13 +2076,13 @@ void gui_model_init( stg_model_t* mod )
 
   // GL CALLBACKS
 
-  // recompile display lists
-  stg_model_add_callback( mod, &mod->polygons, gl_model_polygons, NULL );
+  // recompile display lists when these properties change
+  stg_model_add_callback( mod, &mod->polys, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->gui_outline, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->boundary, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->gui_grid, gl_model_grid, NULL );
 
-  // complete redraw
+  // complete redraw when these change
   stg_model_add_callback( mod, &mod->pose, gl_model_redraw, NULL );
   stg_model_add_callback( mod, &mod->color, gl_model_redraw, NULL );
   stg_model_add_callback( mod, &mod->parent, gl_model_redraw, NULL );

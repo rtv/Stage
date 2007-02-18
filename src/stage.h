@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.7 2007-01-06 02:21:28 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.8 2007-02-18 01:53:16 rtv Exp $
  */
 
 
@@ -342,16 +342,11 @@ typedef enum {
     /// pointer to the model that owns this polygon
     stg_model_t* mod;
 
-    /* experimental */
-    int vertex_index; //< the index of the first vertex of this
-		      //polygon in the world's global CS vertex array
-    int vertex_count;  //< the number of vertices in this polygon
-
     /// 3D axis-aligned global bounding volume
     stg_endpoint_t epts[6];
 
-    /// array of pointers to those stg_polygon_t that have aabboxes
-    /// that overlap with this one.
+    /// list of pointers to stg_polygon_ts that may overlap with this
+    /// one.
     GList* intersectors;
 
     // hash table that records the number of axes 
@@ -381,8 +376,9 @@ typedef enum {
   
   /// scale the array of [num] polygons so that all its points fit
   /// exactly in a rectagle of pwidth] by [height] units
-  void stg_polygons_normalize( stg_polygon_t* polys, int num, 
-			       double width, double height );
+  void stg_polygons_normalize( GList* polylist, 
+			       double width, 
+			       double height );
   
   /// print a human-readable description of a polygon on stdout
   void stg_polygon_print( stg_polygon_t* poly );
@@ -657,20 +653,19 @@ typedef enum {
   /** Get a model's velocity (in its local reference frame) */
   void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
   
-  /** gets a model's "polygons" property and fills poly_count with the
-      number of polygons to be found */
-  stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count );
+  /** gets a list of polygons belonging a model */
+  GList* stg_model_get_polygons( stg_model_t* mod );
+  
   void stg_model_set_polygons( stg_model_t* mod,
 			       stg_polygon_t* polys, 
 			       size_t poly_count );
   
-  stg_polygon_t* stg_model_add_polygon( stg_model_t* mod,
-					stg_point_t* pts, 
-					size_t pt_count,
-					stg_color_t color,
-					stg_bool_t unfilled );
+  void stg_model_add_polygon( stg_model_t* mod,
+			      stg_point_t* pts, 
+			      size_t pt_count,
+			      stg_color_t color,
+			      stg_bool_t unfilled );
   
-
   /** set an array oflines to be drawn for the model */
   void stg_model_set_lines( stg_model_t* mod,
 			    stg_polyline_t* lines, 
