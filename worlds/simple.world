@@ -1,9 +1,11 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.8 2007-02-18 02:39:26 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.9 2007-02-27 02:54:08 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
+
+
 
 
 
@@ -14,16 +16,8 @@ include "pioneer.inc"
 include "map.inc"
 
 
-
-
-
-
 # defines sick laser
 include "sick.inc"
-
-
-
-
 
 
 # size of the world in meters
@@ -38,10 +32,10 @@ interval_real 100  # real-time interval between simulation updates in millisecon
 window
 ( 
   size [ 767.000 804.000 ] 
-  center [-168.010 -137.040] 
-  rotate [ 0.000 0.000 ]
-  scale 122.379 
-  show_bboxes 1
+  center [-3.010 1.960] 
+  rotate [ 0.480 -0.170 ]
+  scale 38.401 
+  show_bboxes 0
   show_grid 1
 )
 
@@ -56,12 +50,12 @@ window
 
 
 # create a robot
-pioneer2dx
+sick_laser
 (
   size [1 1] 
   name "robot1"
-  color "red"
-  pose [0.958 1.133 0.000]
+  #color "red"
+  pose [-2.198 -3.938 60.161]
   #sick_laser()
 )
 
@@ -75,11 +69,19 @@ pioneer2dx
 
 model
 (
+  color "yellow"
+  pose [5.075 4.964 0.000]
+  size [0.5 0.3]
+)
+
+model
+(
   color "violet"
-  pose [2.982 2.300 0.000]
+  pose [3.101 4.137 85.944]
   size [1 1]
 
-  polygons 1
+  polygons 2
+  polygon[0].color "green"
   polygon[0].points 8
   polygon[0].point[0] [  0.23  0.05 ]
   polygon[0].point[1] [  0.15  0.15 ]
@@ -90,12 +92,16 @@ model
   polygon[0].point[6] [  0.15 -0.15 ]
   polygon[0].point[7] [  0.23 -0.05 ]
 
+  polygon[1].color "brown"
+  polygon[1].fill 1
   polygon[1].points 4
   polygon[1].point[0] [  1.23  0.05 ]
   polygon[1].point[1] [  1.15  0.15 ]
   polygon[1].point[2] [ -1.15  0.15 ]
   polygon[1].point[3] [ -1.23  0.05 ]
 )
+
+
 
 #model
 #(
@@ -106,10 +112,12 @@ model
 #  size [1 1]
 #)
 
-#model
-#(
-#  color "wheat"
-#  bitmap "bitmaps/cave.png"
-#  pose [0.000 0.000 0.000]
-#  size [16 16]
-#)
+map
+(
+  color "wheat"
+  bitmap "bitmaps/cave.png"
+#  bitmap "bitmaps/hospital.png"
+#  bitmap "bitmaps/hospital_section.png"
+  pose [0.000 0.000 0.000]
+  size [16 16]
+)

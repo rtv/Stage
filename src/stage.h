@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.8 2007-02-18 01:53:16 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.9 2007-02-27 02:54:08 rtv Exp $
  */
 
 
@@ -305,7 +305,9 @@ typedef enum {
   
   typedef enum {
     STG_BEGIN=0,
-    STG_END
+    STG_END,
+    STG_SENSE_BEGIN,
+    STG_SENSE_END
   } stg_endpoint_type_t;
   
   
@@ -319,7 +321,7 @@ typedef enum {
     
     // endpoints are stored in linked lists
     struct stg_endpoint *next, *prev; 
-    
+
   } stg_endpoint_t;
       
 
@@ -345,13 +347,12 @@ typedef enum {
     /// 3D axis-aligned global bounding volume
     stg_endpoint_t epts[6];
 
-    /// list of pointers to stg_polygon_ts that may overlap with this
-    /// one.
+    /// list of stg_polygon_t*s whos axis-aligned bounding boxes
+    // overlap with this one.
     GList* intersectors;
-
-    // hash table that records the number of axes 
-    GHashTable* accumulator;
-
+    //GTree* acc_tree;
+    GHashTable* accum;
+    
     // tmp hack
     stg_meters_t minx, miny, maxx, maxy;
   }; 

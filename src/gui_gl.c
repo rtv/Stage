@@ -375,13 +375,17 @@ static void polygon3d( double* pts, size_t pt_count,
 
 
 
-static void polygon2d( double* pts, size_t pt_count  )
+static void polygon2d( double* pts, size_t pt_count, stg_color_t color  )
 { 
+  //push_color_stgcolor( color );
+  
   glBegin(GL_POLYGON);
   int p;
   for( p=0; p<pt_count; p++)
     glVertex2f( pts[p*2], pts[p*2+1]  );
   glEnd();
+
+  //pop_color();
 }
 
 
@@ -775,7 +779,8 @@ void gl_draw_polygon_bbox( stg_polygon_t* p )
 {
   // no need to optimize this, it's debug visualization mainly.
 
-  push_color_rgba( 1, 0, 1, 1 );
+  //  stg_color_t col = stg_lookup_color( "purple" );
+  //push_color_stgcolor( col );
 
   // bottom plane
   glBegin(GL_LINE_LOOP );
@@ -805,7 +810,7 @@ void gl_draw_polygon_bbox( stg_polygon_t* p )
   glVertex3f( p->epts[0].value, p->epts[3].value, p->epts[5].value );
   glEnd();
 
-  pop_color();
+  //pop_color();
 }
 
 void gl_draw_polygon_bbox_cb( stg_polygon_t* p, gpointer unused )
@@ -816,7 +821,7 @@ void gl_draw_polygon_bbox_cb( stg_polygon_t* p, gpointer unused )
 
 void gl_draw_polygon2d( stg_polygon_t* p )
 {
-  polygon2d( (double*)p->points->data, p->points->len );
+  polygon2d( (double*)p->points->data, p->points->len, p->color );
 
   // bbox in local coords
 /*   push_color_rgba( 0, 1, 0, 1 ); */
@@ -1034,6 +1039,42 @@ int gl_model_draw( stg_model_t* mod, void* userp )
     }
   
   glPopMatrix(); // drop out of local coords
+
+  if( mod->sense_poly  && (mod->world->win->selection_active == mod ))
+    {
+      push_color_stgcolor( stg_lookup_color( "green" ));
+
+      gl_draw_polygon_bbox( mod->sense_poly );
+      pop_color();
+
+      // outline the polgons that the selected robot intersects with      
+      push_color_stgcolor( stg_lookup_color( "blue" ));
+      
+      GList *a, *b;
+      //for( a=mod->polys ; a; a=a->next )
+      //for( b = ((stg_polygon_t*)a->data)->intersectors; b; b=b->next )
+      for( b = mod->sense_poly->intersectors; b; b=b->next )      
+	{
+	  stg_polygon_t* p = (stg_polygon_t*)b->data;
+	  
+	  glPushMatrix();
+	  
+	  stg_pose_t pose;
+	    stg_model_get_global_pose( p->mod, &pose );
+	    
+	    // move into this model's coordinate frame
+	    glTranslatef( pose.x, pose.y, pose.z );
+	    glRotatef( RTOD(pose.a), 0,0,1 );
+	    
+	    //gl_draw_polygon_bbox( p );
+	    gl_draw_polygon3d( p );
+	    
+	    glPopMatrix();
+	}
+
+      pop_color();	   
+    }
+
   pop_color();
   glEndList();
   
@@ -1538,7 +1579,7 @@ void draw_world(  stg_world_t* world )
 
   if( win->show_bboxes )   // draw bounding boxes
     {
-      g_hash_table_foreach( world->models, (GHFunc)model_bbox_cb, NULL );
+      //g_hash_table_foreach( world->models, (GHFunc)model_bbox_cb, NULL );
       // draw the bbox lists
       draw_endpoints( world );
     }

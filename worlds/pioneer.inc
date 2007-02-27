@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.2 2006-12-20 03:01:14 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.3 2007-02-27 02:54:08 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -52,7 +52,7 @@ define pioneer2dx position
   # estimated mass in KG
   mass 15.0 
 	
-  # this polygon approximates the shape of a pioneer
+ # this polygon approximates the shape of a pioneer
   polygons 1
   polygon[0].points 8
   polygon[0].point[0] [  0.23  0.05 ]
