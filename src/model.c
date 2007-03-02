@@ -204,14 +204,6 @@ int endpoint_sort( stg_endpoint_t* a, stg_endpoint_t* b )
   return 0;
 }
 
-/* GList* add_endpoint_to_list( GList* list, stg_endpoint_t* ep ) */
-/* { */
-/*   // add the endpoint to the list, while stashing a pointer to the new */
-/*   // list element inside the endpoint for fast access to its neighbors */
-/*   // later. */
-/*   list = ep->list = g_list_prepend( list, ep ); */
-/*   return g_list_sort( list, (GCompareFunc)endpoint_sort ); */
-/* } */
 
   // careful: no error checking - this must be fast
 //static inline 
@@ -374,8 +366,7 @@ void stg_model_set_sense_volume( stg_model_t* mod, double vol[6] )
   
   // endpoints
   // this is clunky
-  int e;
-  for( e=0; e<6; e++ )
+  for( int e=0; e<6; e++ )
     {
       mod->sense_poly->epts[e].polygon = mod->sense_poly;
       mod->sense_poly->epts[e].type = (e % 2);// + 2; // STG_SENSOR_BEGIN or STG_SENSOR_END
@@ -546,10 +537,7 @@ int stg_model_is_descendent( stg_model_t* mod, stg_model_t* testmod )
   if( mod == testmod )
     return TRUE;
 
-  //assert( mod->children );
-
-  GList* it;
-  for(it=mod->children; it; it=it->next )
+  for( GList* it=mod->children; it; it=it->next )
     {
       if( stg_model_is_descendent(  (stg_model_t*)it->data, testmod ))
 	return TRUE;
@@ -650,8 +638,7 @@ void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
 void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
 {
   // call this function for all the model's children
-  GList* it;
-  for( it=mod->children; it; it=it->next )
+  for( GList* it=mod->children; it; it=it->next )
     stg_model_map_with_children( (stg_model_t*)it->data, 
 				 render);  
   // now map the model
@@ -879,9 +866,9 @@ void print_endpoint_list( stg_endpoint_t* ep, char* prefix )
 {
   printf( "%s (list at %p)\n", prefix, ep );
   
-  int i=0;
+  //  int i=0;
 
-  for( ; ep; ep=ep->next )
+  for( int i=0; ep; ep=ep->next )
     {
       //assert( i < 30 );
 
@@ -958,8 +945,7 @@ void polygon_local_bounds_calc( stg_polygon_t* poly )
   //printf( "  local polygon bbox %p in model %s\n", 
   //  poly, poly->mod->token );
 
-  int r;
-  for( r=0; r<poly->points->len; r++ )
+  for( int r=0; r<poly->points->len; r++ )
     {
       pt = & g_array_index( poly->points, stg_point_t, r );
 
@@ -1121,8 +1107,7 @@ void stg_model_add_polygon( stg_model_t* mod,
   
   // endpoints
   // this is clunky
-  int e;
-  for( e=0; e<6; e++ )
+  for( int e=0; e<6; e++ )
     {
       poly->epts[e].polygon = poly;
       poly->epts[e].type = e % 2; // STG_BEGIN or STG_END
@@ -1231,8 +1216,7 @@ void stg_polygon_destroy( stg_polygon_t* p )
 
 void stg_model_clear_polygons( stg_model_t* mod )
 {
-  GList* it;
-  for( it=mod->polys; it; it=it->next )
+  for( GList* it=mod->polys; it; it=it->next )
     stg_polygon_destroy( (stg_polygon_t*)it->data );
   
   g_list_free( mod->polys );
@@ -1408,14 +1392,12 @@ void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
       stg_model_map_with_children( mod, 0 );
       
       memcpy( &mod->pose, pose, sizeof(stg_pose_t));
-
       
       // TODO - can we do this less frequently? maybe not...
-      GList *it;
-      for( it=mod->children; it; it=it->next )
+      for( GList* it=mod->children; it; it=it->next )
 	//model_update_bbox( (stg_model_t*)it->data );
 	g_list_foreach( ((stg_model_t*)it->data)->polys, 
-			polygon_global_bounds_calc_cb, NULL );
+			(GFunc)polygon_global_bounds_calc_cb, NULL );
 
       double hitx, hity;
       stg_model_test_collision2( mod, &hitx, &hity );
@@ -1424,7 +1406,7 @@ void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
       stg_model_map_with_children( mod, 1 );
     }
 
-  g_list_foreach( mod->polys, polygon_global_bounds_calc_cb, NULL );
+  g_list_foreach( mod->polys, (GFunc)polygon_global_bounds_calc_cb, NULL );
   
   // also deal with the sensor volume
   if( mod->sense_poly )
@@ -1469,8 +1451,8 @@ void stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
 			    geom->size.x, 
 			    geom->size.y );
   
-  g_list_foreach( mod->polys, polygon_local_bounds_calc_cb, NULL );
-  g_list_foreach( mod->polys, polygon_global_bounds_calc_cb, NULL );
+  g_list_foreach( mod->polys, (GFunc)polygon_local_bounds_calc_cb, NULL );
+  g_list_foreach( mod->polys, (GFunc)polygon_global_bounds_calc_cb, NULL );
   
   // re-render int the matrix
   stg_model_map( mod, 1 );  
@@ -1671,8 +1653,8 @@ void stg_polyline_print( stg_polyline_t* l )
 
   printf( "Polyline %p contains %d points [",
 	  l, (int)l->points_count );
-  int p;
-  for( p=0; p<l->points_count; p++ )
+
+  for( int p=0; p<l->points_count; p++ )
     printf( "[%.2f,%.2f] ", l->points[p].x, l->points[p].y );
   
   puts( "]" );
@@ -1684,8 +1666,7 @@ void stg_polylines_print( stg_polyline_t* l, size_t p_count )
   printf( "Polyline array %p contains %d polylines\n",
 	  l, (int)p_count );
 
-  int a;
-  for( a=0; a<p_count; a++ )
+  for( int a=0; a<p_count; a++ )
     stg_polyline_print( &l[a] );
 }
 

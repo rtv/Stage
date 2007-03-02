@@ -73,6 +73,10 @@ static GtkWidget   *create_popup_menu (GtkWidget   *drawing_area);
 
 stg_model_t* stg_world_nearest_root_model( stg_world_t* world, double wx, double wy );
 
+// foward-declare some callbacks
+void model_draw_cb( stg_model_t* mod, void* user );
+void model_bbox_cb( gpointer key, stg_model_t* mod, void* user );
+
 
 static int recticle_list = 0;
 
@@ -94,32 +98,19 @@ GLvoid buildFont( GLvoid )
 
     /* Storage for 96 characters */
     base = glGenLists( 96 );
-
-    //if( base == 0 )
-    //perror( "attempting to generate 96 displaylists" );
     assert( base > 0 );
-
-    
-
+   
     /* Get our current display long enough to get the fonts */
     dpy = XOpenDisplay( NULL );
-
+    
     /* Get the font information */
-    //fontInfo = XLoadQueryFont( dpy, "-adobe-helvetica-medium-r-normal--18-*-*-*-p-*-iso8859-1" );
-    fontInfo = XLoadQueryFont( dpy, "fixed" );
-
-    /* If the above font didn't exist try one that should */
-    if ( fontInfo == NULL )
-        {
-            fontInfo = XLoadQueryFont( dpy, "fixed" );
-            /* If that font doesn't exist, something is wrong */
-            if ( fontInfo == NULL )
-                {
-                    fprintf( stderr, "no X font available?\n" );
-                    Quit( 1 );
-                }
-        }
-
+    if( (fontInfo = XLoadQueryFont( dpy, "fixed" )) ==  NULL )
+      {   
+	/* If that font doesn't exist, something is wrong */
+	PRINT_ERR( "no X font \"fixed\" available. Giving up." );
+	Quit( 1 );
+      }
+    
     /* generate the list */
     glXUseXFont( fontInfo->fid, 32, 96, base );
 
@@ -211,6 +202,19 @@ void push_color( GLdouble col[4] )
   glColor4dv( col );
 
   //print_color_stack( "push" );
+}
+
+
+// a convenience wrapper around push_color(), with a=1
+void push_color_rgb( double r, double g, double b )
+{
+  GLdouble col[4];
+  col[0] = r;
+  col[1] = g;
+  col[2] = b;
+  col[3] = 1.0;
+  
+  push_color( col );
 }
 
 // a convenience wrapper around push_color()
@@ -662,7 +666,7 @@ int gl_ranger_render_data( stg_model_t* mod, void* enabled )
 }
 
 
-void gl_model_grid( stg_model_t* mod, void* user )
+int gl_model_grid( stg_model_t* mod, void* user )
 {  
   // get the display list associated with this model
   int list = gui_model_get_displaylist( mod, LIST_GRID );
@@ -717,6 +721,8 @@ void gl_model_grid( stg_model_t* mod, void* user )
   
   pop_color();
   glEndList();
+
+  return 0; // callback runs until removed
 }
 
 void gl_model_select( stg_model_t* mod, void* user )
@@ -877,7 +883,7 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
   glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
 
   // draw each poly
-  g_list_foreach( mod->polys, gl_draw_polygon2d_cb, NULL );
+  g_list_foreach( mod->polys, (GFunc)gl_draw_polygon2d_cb, NULL );
 
   //if( 1 )// mod->boundary ) 
   //  box3d_wireframe( &mod->bbox );
@@ -898,7 +904,7 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
   glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
 
   // draw each poly
-  g_list_foreach( mod->polys, gl_draw_polygon3d_cb, NULL );
+  g_list_foreach( mod->polys, (GFunc)gl_draw_polygon3d_cb, NULL );
 
   
   //if( 1 )// mod->boundary ) 
@@ -951,7 +957,7 @@ void gl_model_grid_axes( stg_model_t* mod )
     }
 }
 
-int gl_model_draw( stg_model_t* mod, void* userp )
+void gl_model_draw( stg_model_t* mod )
 {
   //puts( "model render polygons" );
 
@@ -1026,54 +1032,17 @@ int gl_model_draw( stg_model_t* mod, void* userp )
       int selectedlist = (int)stg_model_get_property( mod, LIST_SELECTED );
       glCallList( selectedlist );
     }
+  
+  
+  g_list_foreach( mod->children, (GFunc)model_draw_cb, NULL );
 
-  if( mod->children )
-    {
-
-      // recursively draw the tree below this model
-      GList *it;;
-      for( it=mod->children; it; it=it->next )
-	{
-	  gl_model_draw(  (stg_model_t*)it->data, NULL );
-	}
-    }
+/*       // recursively draw the tree below this model */
+/*       GList *it;; */
+/*       for( it=mod->children; it; it=it->next ) */
+/* 	  gl_model_draw(  (stg_model_t*)it->data ); */
+/*     } */
   
   glPopMatrix(); // drop out of local coords
-
-  if( mod->sense_poly  && (mod->world->win->selection_active == mod ))
-    {
-      push_color_stgcolor( stg_lookup_color( "green" ));
-
-      gl_draw_polygon_bbox( mod->sense_poly );
-      pop_color();
-
-      // outline the polgons that the selected robot intersects with      
-      push_color_stgcolor( stg_lookup_color( "blue" ));
-      
-      GList *a, *b;
-      //for( a=mod->polys ; a; a=a->next )
-      //for( b = ((stg_polygon_t*)a->data)->intersectors; b; b=b->next )
-      for( b = mod->sense_poly->intersectors; b; b=b->next )      
-	{
-	  stg_polygon_t* p = (stg_polygon_t*)b->data;
-	  
-	  glPushMatrix();
-	  
-	  stg_pose_t pose;
-	    stg_model_get_global_pose( p->mod, &pose );
-	    
-	    // move into this model's coordinate frame
-	    glTranslatef( pose.x, pose.y, pose.z );
-	    glRotatef( RTOD(pose.a), 0,0,1 );
-	    
-	    //gl_draw_polygon_bbox( p );
-	    gl_draw_polygon3d( p );
-	    
-	    glPopMatrix();
-	}
-
-      pop_color();	   
-    }
 
   pop_color();
   glEndList();
@@ -1085,8 +1054,6 @@ int gl_model_draw( stg_model_t* mod, void* userp )
   //glCallList( list );
 
   make_dirty(mod);
-  
-  return 0;
 }
 
 
@@ -1188,17 +1155,14 @@ void model_draw_data_cb( gpointer key, stg_model_t* mod, void* user )
     }
 }
 
-void model_draw_cb( gpointer key, stg_model_t* mod, void* user )
+void model_draw_cb( stg_model_t* mod, void* user )
 {
-  // TODO - fix this - this gets called way too much.
-  // the models draw their children recursively, so only draw root models
-  if( mod->parent == NULL )
-    gl_model_draw( mod, user );
+  gl_model_draw( mod );
 }
 
 void model_bbox_cb( gpointer key, stg_model_t* mod, void* user )
 {
-  g_list_foreach( mod->polys, gl_draw_polygon_bbox_cb, NULL );
+  g_list_foreach( mod->polys, (GFunc)gl_draw_polygon_bbox_cb, NULL );
 }
 
 
@@ -1240,10 +1204,15 @@ void draw_thumbnail( stg_world_t* world )
   int keep_data = world->win->show_data;
   world->win->show_data = 0;
   world->win->show_grid = 0;
-  //g_hash_table_foreach( world->models, (GHFunc)model_draw_cb, NULL );
+
+  g_list_foreach( world->children, (GFunc)model_draw_cb, NULL );
+
   world->win->show_grid = keep_grid;
   world->win->show_data = keep_data;
   
+  
+  // if we're in 2d mode - show the visble region
+
   
   double left = -seex/2.0 * world->width - world->win->panx;
   double top = -seey/2.0 * world->height - world->win->pany;
@@ -1278,7 +1247,7 @@ void draw_thumbnail( stg_world_t* world )
     }
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glColor3f( 1.0,0,0 );
+  glColor3f( 1.0,0,0.1 );
   glRectf( left, top, right, bottom );
   
   glPopMatrix(); // restore GL_PROJECTION
@@ -1288,70 +1257,6 @@ void draw_thumbnail( stg_world_t* world )
 
   glPopAttrib();      
 }
-
-/* void model_draw_bbox( stg_model_t* mod, gpointer dummy ) */
-/* { */
-/*   if( mod->polygons_count ) */
-/*     { */
-/*       stg_endpoint_t *epts = mod->polygons[0].epts; */
-
-/*       double xmin = epts[0].value; */
-/*       double xmax = epts[1].value; */
-/*       double ymin = epts[2].value; */
-/*       double ymax = epts[3].value; */
-/*       double zmin = epts[4].value; */
-/*       double zmax = epts[5].value; */
-      
-/*       // model's body color */
-/*       push_color_stgcolor( mod->color ); */
-      
-/*       // draw rectangles on the axes indicating the extent of bboxes. */
-/*       glBegin(GL_LINE_LOOP ); */
-/*       glVertex3f( xmin, 0, zmin); */
-/*       glVertex3f( xmin, 0, zmax); */
-/*       glVertex3f( xmax, 0, zmax); */
-/*       glVertex3f( xmax, 0, zmin); */
-/*       glEnd(); */
-      
-/*       glBegin(GL_LINE_LOOP ); */
-/*       glVertex3f( 0, ymin, zmin); */
-/*       glVertex3f( 0, ymin, zmax); */
-/*       glVertex3f( 0, ymax, zmax); */
-/*       glVertex3f( 0, ymax, zmin); */
-/*       glEnd(); */
-
-/*       // bottom rectangle */
-/*       glBegin(GL_LINE_LOOP ); */
-/*       glVertex3f( xmin, ymin, zmin ); */
-/*       glVertex3f( xmin, ymax, zmin ); */
-/*       glVertex3f( xmax, ymax, zmin ); */
-/*       glVertex3f( xmax, ymin, zmin ); */
-/*       glEnd(); */
-      
-/*       // top rectangle */
-/*       glBegin(GL_LINE_LOOP ); */
-/*       glVertex3f( xmin, ymin, zmax ); */
-/*       glVertex3f( xmin, ymax, zmax ); */
-/*       glVertex3f( xmax, ymax, zmax ); */
-/*       glVertex3f( xmax, ymin, zmax ); */
-/*       glEnd(); */
-      
-/*       // verticals */
-/*       glBegin( GL_LINES ); */
-/*       glVertex3f( xmin, ymin, zmin ); */
-/*       glVertex3f( xmin, ymin, zmax ); */
-/*       glVertex3f( xmax, ymin, zmin ); */
-/*       glVertex3f( xmax, ymin, zmax ); */
-/*       glVertex3f( xmin, ymax, zmin ); */
-/*       glVertex3f( xmin, ymax, zmax ); */
-/*       glVertex3f( xmax, ymax, zmin ); */
-/*       glVertex3f( xmax, ymax, zmax ); */
-/*       glEnd(); */
-
-/*       pop_color(); */
-/*     } */
-/* } */
-
 
 void draw_endpoints( stg_world_t* world )
 {
@@ -1470,14 +1375,12 @@ void draw_world(  stg_world_t* world )
   
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-  int perspective = 0; // perspective is a little distorted, so leave this zero until fixed
-
-  if( perspective || world->win->sphi || world->win->stheta )
+  if( world->win->sphi || world->win->stheta )
     {
       glEnable(GL_DEPTH_TEST);
       glDepthMask(GL_TRUE);
     }
-  else // orthographic with zero rotation allows a speed-up
+  else // zero rotation allows a speed-up
     {
       glDisable(GL_DEPTH_TEST);
       glDepthMask(GL_FALSE);
@@ -1504,24 +1407,30 @@ void draw_world(  stg_world_t* world )
   glLoadIdentity ();
 
   // map the viewport to pixel units by scaling it the same as the window
-  if( perspective )
-    {
-      glFrustum( 0, pixels_width,
-		 0, pixels_height,
-		 zclip, 2*zclip );
-    }
-  else
-    {
-      glOrtho( 0, pixels_width,
-	       0, pixels_height,
-	       0, zclip );
-    }
+  //  glOrtho( 0, pixels_width,
+  //   0, pixels_height,
+  glOrtho( -pixels_width/2.0, pixels_width/2.0,
+	   -pixels_height/2.0, pixels_height/2.0,
+	   0, MAX(pixels_width,pixels_height) );
 
+/*   glFrustum( 0, pixels_width, */
+/* 	     0, pixels_height, */
+/* 	     0.1, zclip ); */
+  
   glMatrixMode (GL_MODELVIEW);
 
   glLoadIdentity ();
-  
+  //gluLookAt( 0,0,10,
+  //   0,0,0,
+  //   0,1,0 );
 
+  gluLookAt( win->panx + pixels_width * cos(win->stheta), win->pany + pixels_height * sin( win->sphi), 10,
+    	     win->panx, win->pany,  0,
+	     0,1,0 );
+
+  //glTranslatef( win->click_point.x, win->click_point.y, 0 ); // shift to rotation point
+  //glTranslatef( -win->click_point.x, -win->click_point.y, 0 ); // shift to rotation point
+  
   if( world->win->follow_selection && world->win->selection_last )
     {
       glScalef ( win->scale, win->scale, 1.0 ); // zoom
@@ -1534,26 +1443,38 @@ void draw_world(  stg_world_t* world )
     }
   else
     {
-      if( perspective )
-	glTranslatef( pixels_width / 2 + win->panx, 
-		      pixels_height / 2 + win->pany, 
-		      -1.5*zclip ); // x,y in pixel coords, z in 0-1 depth
-      else
-	glTranslatef(  pixels_width / 2 + win->panx, 
-		       pixels_height / 2 + win->pany, 
-		       -zclip/2.0 ); // x,y in pixel coords, z in 0-1 depth
-      
+      push_color_rgb( 1,0,0 );
+      glRecti( 0,0,1,1 );
+      pop_color();
+
+      // still in pixelcoords
+      glTranslatef(  win->panx*win->scale, 
+		     win->pany*win->scale, 
+		     0 );//-zclip ); // x,y in pixel coords, z in 0-1 depth     
+
+      push_color_rgb( 0,1,0 );
+      glRecti( 0,0,1,1 );
+      pop_color();
+
+      // shift into meters
       glScalef ( win->scale, win->scale, 1.0 ); // zoom
 
       //  rotate about x - roll
-      glRotatef( RTOD(-win->stheta), 1.0, 0.0, 0.0);  
+      //glRotatef( RTOD(-win->stheta), 1.0, 0.0, 0.0);  
+
+      push_color_rgb( 0,0,1 );
+      glRecti( 0,0,1,1 );
+      pop_color();
+
       
       
       // TODO - rotate around the mouse pointer or window center, not the
       //origin  - the commented code is close, but not quite right
       
-      //glTranslatef( win->click_point.x, win->click_point.y, 0 ); // shift to rotation point
-      glRotatef( RTOD(win->sphi), 0.0, 0.0, 1.0);   // rotate about z - pitch
+
+      //glRotatef( RTOD(win->sphi), 0.0, 0.0, 1.0);   // rotate about z - pitch
+      
+
       //glTranslatef( -win->click_point.x, -win->click_point.y, 0 ); // shift back      
       //printf( "panx %f pany %f scale %.2f stheta %.2f sphi %.2f\n",
       //  panx, pany, scale, stheta, sphi );
@@ -1575,7 +1496,9 @@ void draw_world(  stg_world_t* world )
   //g_hash_table_foreach( world->models, (GHFunc)model_draw_bbox, NULL);
 
   // draw the models
-  g_hash_table_foreach( world->models, (GHFunc)model_draw_cb, NULL );
+  //g_hash_table_foreach( world->models, (GHFunc)model_draw_cb, NULL );
+
+  g_list_foreach( world->children, (GFunc)model_draw_cb, NULL );
 
   if( win->show_bboxes )   // draw bounding boxes
     {
@@ -1591,6 +1514,98 @@ void draw_world(  stg_world_t* world )
 
   // draw the model's data
   g_hash_table_foreach( world->models, (GHFunc)model_draw_data_cb, NULL );
+
+  if( world->win->selection_active 
+      &&  world->win->selection_active->sense_poly )
+    {
+      stg_model_t* mod = world->win->selection_active;
+
+      push_color_stgcolor( stg_lookup_color( "green" ));
+
+      gl_draw_polygon_bbox( mod->sense_poly );
+      pop_color();
+
+      // outline the polgons that the selected robot intersects with      
+      push_color_stgcolor( stg_lookup_color( "blue" ));
+      
+      GList *a, *b;
+      //for( a=mod->polys ; a; a=a->next )
+      //for( b = ((stg_polygon_t*)a->data)->intersectors; b; b=b->next )
+      for( b = mod->sense_poly->intersectors; b; b=b->next )      
+	{
+	  stg_polygon_t* p = (stg_polygon_t*)b->data;
+	  
+	  glPushMatrix();
+	  
+	  stg_pose_t pose;
+	  stg_model_get_global_pose( p->mod, &pose );
+	  
+	  // move into this model's coordinate frame
+	  glTranslatef( pose.x, pose.y, pose.z );
+	  glRotatef( RTOD(pose.a), 0,0,1 );
+	  
+	  //gl_draw_polygon_bbox( p );
+	  gl_draw_polygon3d( p );
+	  
+	  glPopMatrix();       
+	}
+
+
+      //glMatrixMode( GL_PROJECTION );
+/*       glPushMatrix(); */
+      
+/*       glLoadIdentity(); */
+/*       glFrustum( 0, 361, */
+/* 		 0, 100, */
+/* 		 zclip, 2*zclip ); */
+      
+/*       glScalef ( 1, 1, 1.0 ); // zoom */
+
+
+      // 1 pixel-per unit
+    }
+ /*  else */
+/*     { */
+/*       push_color_rgb( 1,0,0 ); */
+/*       glRecti( 0,0,1,1 ); */
+/*       pop_color(); */
+
+/*       for( GList* b = mod->sense_poly->intersectors; b; b=b->next )       */
+/* 	{ */
+/* 	  stg_polygon_t* p = (stg_polygon_t*)b->data; */
+	  
+/* 	  glPushMatrix(); */
+	  
+/* 	  //stg_pose_t gpose; */
+/* 	  //stg_model_get_global_pose( world->win->selection_last, &gpose ); */
+
+/* 	  //glTranslatef( -gpose.x + (pixels_width/2.0)/win->scale,  */
+/* 	  //    -gpose.y + (pixels_height/2.0)/win->scale, */
+/* 	  //    -zclip/2.0 );       */
+
+
+/* 	  /\* stg_pose_t pose; *\/ */
+/* /\* 	  stg_model_get_global_pose( p->mod, &pose ); *\/ */
+	  
+/* /\* 	  // move into this model's coordinate frame *\/ */
+/* /\* 	  glTranslatef( pose.x, pose.y, pose.z ); *\/ */
+/* /\* 	  glRotatef( RTOD(pose.a), 0,0,1 ); *\/ */
+	  
+/* /\* 	  //gl_draw_polygon_bbox( p ); *\/ */
+/* /\* 	  gl_draw_rectpolygon3d( p ); *\/ */
+	  
+/* 	  push_color_rgba( 1,0,0,1 );  */
+/* 	  glRectf( 0, 0, 1, 1 ); */
+/* 	  pop_color(); */
+
+/* 	  glPopMatrix(); */
+/* 	  //glMatrixMode( GL_MODELVIEW ); */
+/* 	} */
+/*       //      glPopMatrix(); */
+
+
+/*       pop_color();	    */
+/*     } */
 
   //glEndList();
 
@@ -1788,8 +1803,8 @@ motion_notify_event (GtkWidget      *widget,
 	  //widget_to_world( widget, beginX, beginY,
 	  //	   world, &lobx, &loby, &lobz );
 
-	  world->win->panx += (event->x - beginX) ;//(obx - lobx);
-	  world->win->pany -= (event->y - beginY); //(oby - loby);
+	  world->win->panx -= (event->x - beginX) ;//(obx - lobx);
+	  world->win->pany += (event->y - beginY); //(oby - loby);
 
 	  redraw = TRUE;
 	}

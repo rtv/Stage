@@ -519,6 +519,13 @@ extern "C" {
   void stg_matrix_remove_object( stg_matrix_t* matrix, void* object );
 
 
+  // bounding box intersection  ----------------------------------------------------=
+  
+  stg_endpoint_t* insert_endpoint_sorted( stg_endpoint_t* head, stg_endpoint_t* ep );
+  stg_endpoint_t* remove_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep );
+  void stg_polygons_intersect_incr( stg_polygon_t* poly1, stg_polygon_t* poly2 );
+  void stg_polygons_intersect_decr( stg_polygon_t* poly1, stg_polygon_t* poly2 );
+
   // RAYTRACE ITERATORS -------------------------------------------------------------
     
   typedef struct

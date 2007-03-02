@@ -118,103 +118,6 @@ void stg_world_set_interval_sim( stg_world_t* world, unsigned int val )
   world->sim_interval = val;
 }
 
-/* void model_clear_intersectors( gpointer key, stg_model_t* mod, gpointer user ) */
-/* { */
-/*   g_list_free( mod->intersectors ); */
-/*   mod->intersectors = NULL; */
-/* } */
-
-/* void world_intercept_array_print( stg_world_t* world ) */
-/* { */
-/*   int i,j; */
-/*  /\*  printf( "  " ); *\/ */
-/* /\*   for( j=0; j<world->section_count; j++ ) *\/ */
-/* /\*     printf( "%d", j); *\/ */
-/* /\*   puts(""); *\/ */
-  
-/* /\*   for( i=0; i<world->section_count; i++ ) *\/ */
-/* /\*     { *\/ */
-/* /\*       printf( "%d ", i ); *\/ */
-/* /\*       for( j=0; j<world->section_count; j++ ) *\/ */
-/* /\* 	printf( "%d", world->intersections[i][j] ); *\/ */
-/* /\*       puts(""); *\/ */
-/* /\*     } *\/ */
-/* /\*   puts(""); *\/ */
-
-/*   printf( "  " ); */
-/*   for( j=0; j<world->section_count; j++ ) */
-/*     printf( "%d", j); */
-/*   puts(""); */
-
-/*   for( i=0; i<world->section_count; i++ ) */
-/*     { */
-/*       printf( "%d ", i ); */
-/*       for( j=0; j<world->section_count; j++ ) */
-/* 	printf( "%c", world->intersections[i * world->section_count + j] > 2 ? 'X' : ' ' ); */
-/*       puts(""); */
-/*     } */
-/*   puts(""); */
-
-/*   for( i=0; i<world->section_count; i++ ) */
-/*     { */
-/*       stg_model_t* mod = stg_world_get_model( world, i ); */
-
-/*       if( mod ) */
-/* 	{ */
-/* 	  printf( "%s intersects with ", mod->token ); */
-	  	 
-/* 	  for( j=0; j<world->section_count; j++ ) */
-/* 	    { */
-/* 	      if( world->intersections[i* world->section_count + j ] > 2 ) */
-/* 		{ */
-/* 		  stg_model_t* hit =  stg_world_get_model( world, j ); */
-/* 		  if( hit ) */
-/* 		    printf( "%s ", hit->token ); */
-/* 		  else */
-/* 		    printf( "<bad pointer> " ); */
-/* 		} */
-/* 	    } */
-/* 	  puts( "" ); */
-/* 	} */
-/*     } */
-/* } */
-
-/* void world_intersect_incr( stg_world_t* world, */
-/* 			   stg_model_t* a, */
-/* 			   stg_model_t* b ) */
-/* { */
-/*   int a_index = a->id * world->section_count + b->id; */
-/*   int b_index = b->id * world->section_count + a->id; */
-  
-/*   world->intersections[ a_index ]++; */
-/*   world->intersections[ b_index ]++; */
-  
-/*   if( world->intersections[ a_index ] == 3 ) */
-/*     { */
-/*       a->intersectors = g_list_prepend( a->intersectors, b ); */
-/*       b->intersectors = g_list_prepend( b->intersectors, a ); */
-/*     } */
-/* // print_intercept_array( world ); */
-/* } */
-
-/* void world_intersect_decr( stg_world_t* world, */
-/* 			   stg_model_t* a, */
-/* 			   stg_model_t* b ) */
-/* { */
-/*   int a_index = a->id * world->section_count + b->id; */
-/*   int b_index = b->id * world->section_count + a->id; */
-  
-/*   world->intersections[ a_index ]--; */
-/*   world->intersections[ b_index ]--; */
-  
-/*   if( world->intersections[ a_index ] == 2 ) */
-/*     { */
-/*       a->intersectors = g_list_remove( a->intersectors, b ); */
-/*       b->intersectors = g_list_remove( b->intersectors, a ); */
-/*     } */
-  
-/*   //print_intercept_array( world ); */
-/* } */
 
 stg_endpoint_t* endpoint_list_sort( stg_endpoint_t* list )
 {
@@ -347,12 +250,7 @@ stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path
     return NULL; // failure
   
   int section_count = wf_section_count();
-  
-  // there can't be more models than sections, so we'll use the number
-  // of sections to build an intersection test array
-  //world->intersections = calloc( section_count*section_count, sizeof(unsigned short) );
-  //world->intersections = calloc( 1024*1024, sizeof(unsigned short) );
-  
+    
   world->section_count = section_count;
 
   // Iterate through sections and create client-side models
@@ -409,19 +307,9 @@ stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path
   
   // then
   // scan axis lists for intersections
-  
-
-  // clear the intersection table (TODO - speed this up)
-  //memset( world->intersections, 0, 
-  //  world->section_count * world->section_count * sizeof(unsigned short));
-
   compute_intersections( world->endpts.x );
   compute_intersections( world->endpts.y );
   compute_intersections( world->endpts.z );
-
-  //puts( "FINISHED CREATING WORLD. ARRAY IS:" );
-  //print_intercept_array( world );
-  //print_endpoint_list( "Z lIST", world->endpts.z );
 
   global_world = world;
 
@@ -449,8 +337,11 @@ stg_world_t* stg_world_create( stg_id_t id,
   
   world->id = id;
   world->token = strdup( token );
-  world->models = g_hash_table_new_full( g_int_hash, g_int_equal,
-					 NULL, stg_model_destroy );
+  world->models = g_hash_table_new_full( g_int_hash, 
+					 g_int_equal,
+					 NULL, 
+					 (GDestroyNotify)stg_model_destroy );
+
   world->models_by_name = g_hash_table_new( g_str_hash, g_str_equal );
   world->sim_time = 0.0;
   world->sim_interval = sim_interval;
@@ -619,49 +510,6 @@ void stg_world_add_model( stg_world_t* world,
     world->children = g_list_append( world->children, mod );  
 }
 
-
-
-
-/* // return a list of pointers to all the models who have bounds that */
-/* // intersect the given bbox. */
-/* GList* stg_world_models_in_bbox3d( stg_world_t* world, stg_bbox3d_t* bbox ) */
-/* { */
-/*   // TODO - this just does the X axis for now, and very inefficiently */
-/*   // at that :) */
-
-/*   /\* GList* x_intersectors = NULL; *\/ */
-/* /\*   GList* it; *\/ */
-/* /\*   for( it=world->endpts.x; it; it=it->next ) *\/ */
-/* /\*     { *\/ */
-/* /\*       stg_endpoint_t* ep = (stg_endpoint_t*)it->data; *\/ */
-
-/* /\*       if( ep->value > bbox->x.min &&  *\/ */
-/* /\* 	  ep->value < bbox->x.max &&  *\/ */
-/* /\* 	  ep->mod *\/ */
-
-/* /\* ) *\/ */
-/* /\* 	intersectors = g_list_prepend( intersectors, ep->mod ); *\/ */
-/* /\*     } *\/ */
-  
-/*   /\* GList* intersectors = NULL;  *\/ */
-/* /\*   GList* it; *\/ */
-/* /\*   for( it=world->children; it; it=it->next )  *\/ */
-/* /\*     { *\/ */
-/* /\*       stg_model_t* mod = (stg_model_t*)it->data; *\/ */
-
-/* /\*       if( mod->endpts[0].value < bbox->x.max && *\/ */
-/* /\* 	  mod->endpts[1].value > bbox->x.min &&  *\/ */
-/* /\* 	  mod->endpts[2].value < bbox->y.max && *\/ */
-/* /\* 	  mod->endpts[3].value > bbox->y.min &&  *\/ */
-/* /\* 	  mod->endpts[4].value < bbox->z.max && *\/ */
-/* /\* 	  mod->endpts[5].value > bbox->z.min ) *\/ */
-
-/* /\* 	intersectors = g_list_prepend( intersectors, mod );  *\/ */
-/* /\*     } *\/ */
-
-/* /\*   return intersectors; *\/ */
-/*   return NULL; */
-/* } */
 
 int stg_world_model_destroy( stg_world_t* world, stg_id_t model )
 {
