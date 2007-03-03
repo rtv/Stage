@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.140.2.3 2007-01-05 04:30:10 rtv Exp $
+# $Id: Makefile.am,v 1.140.2.4 2007-03-03 02:20:52 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -17,8 +17,9 @@ AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  @GUI_CFLAGS@
 # build the stage library
 lib_LTLIBRARIES = libstage.la 
 
+# TODO put this back in before release
 # build stest, a stand-alone test binary using the stage library, 
-bin_PROGRAMS = stest 
+#bin_PROGRAMS = stest 
 
 # The stage library contains everything you need to build a robot
 # simulation, including graphics and a world description file

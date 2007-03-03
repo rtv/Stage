@@ -1,9 +1,11 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.9 2007-02-27 02:54:08 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.10 2007-03-03 02:20:52 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
+
+
 
 
 
@@ -16,12 +18,16 @@ include "pioneer.inc"
 include "map.inc"
 
 
+
+
 # defines sick laser
 include "sick.inc"
 
 
+
+
 # size of the world in meters
-size [16 16]
+size [68 20]
 
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02
@@ -33,7 +39,7 @@ window
 ( 
   size [ 767.000 804.000 ] 
   center [-3.010 1.960] 
-  rotate [ 0.480 -0.170 ]
+  rotate [ 0.000 0.000 ]
   scale 38.401 
   show_bboxes 0
   show_grid 1
@@ -52,11 +58,14 @@ window
 # create a robot
 sick_laser
 (
-  size [1 1] 
+  size [1 0.5]	
   name "robot1"
-  #color "red"
+  color "red"
   pose [-2.198 -3.938 60.161]
   #sick_laser()
+
+  size3d [ 0.556 0.155 0.210 ] # dimensions from LMS200 data sheet	
+
 )
 
 #pioneer2dx
@@ -112,12 +121,12 @@ model
 #  size [1 1]
 #)
 
-map
-(
-  color "wheat"
-  bitmap "bitmaps/cave.png"
+#map
+#(
+#  color "wheat"
+#  bitmap "bitmaps/cave.png"
 #  bitmap "bitmaps/hospital.png"
 #  bitmap "bitmaps/hospital_section.png"
-  pose [0.000 0.000 0.000]
-  size [16 16]
-)
+#  pose [0.000 0.000 0.000]
+#  size [64 16]
+#)
