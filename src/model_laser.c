@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.89.2.5 $
+//  $Revision: 1.89.2.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -112,14 +112,7 @@ int laser_init( stg_model_t* mod )
   geom.size.z = STG_DEFAULT_LASER_SIZEZ;
   stg_model_set_geom( mod, &geom );
 
-  double vol[6];
-  vol[0] = 0;
-  vol[1] = 8;
-  vol[2] = -4;
-  vol[3] =  4;
-  vol[4] =  -0.1;
-  vol[5] =  0.1;
-  stg_model_set_sense_volume( mod, vol );
+
 
   // set default color
   stg_model_set_color( mod, stg_lookup_color(STG_LASER_GEOM_COLOR));
@@ -137,6 +130,17 @@ int laser_init( stg_model_t* mod )
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;  
   lconf.resolution = 1;
   stg_model_set_cfg( mod, &lconf, sizeof(lconf) );
+
+  double vol[6];
+  vol[0] = 0;
+  vol[1] = lconf.range_max;
+  vol[2] = -lconf.range_max;
+  vol[3] =  lconf.range_max;
+  vol[4] =  -0.1;
+  vol[5] =  0.1;
+  stg_model_set_sense_volume( mod, vol );
+
+
       
   stg_model_set_data( mod, NULL, 0 );
 

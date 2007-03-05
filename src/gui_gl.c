@@ -59,8 +59,6 @@ static gboolean animate = TRUE;
 
 static int beginX, beginY;
 
-static float aspect = 5.0/4.0;
-
 static float lightPosition[4] = {0.0, 0.0, 1.0, 1.0};
 
 static GQueue* colorstack = NULL;
@@ -1114,8 +1112,8 @@ realize (GtkWidget *widget,
 
   glEnable (GL_DEPTH_TEST);
   glDepthFunc (GL_LESS);
-  glClearColor ( 0.7, 0.7, 0.8, 1.0);
-  //glClearColor ( 0,0,0, 1.0);
+  //glClearColor ( 0.7, 0.7, 0.8, 1.0);
+  glClearColor ( 0,0,0, 1.0);
   gdk_gl_glPolygonOffsetEXT (proc, 1.0, 1.0);
 
   glEnable (GL_CULL_FACE);
@@ -1158,7 +1156,7 @@ configure_event (GtkWidget         *widget,
   if (!gdk_gl_drawable_gl_begin (gldrawable, glcontext))
     return FALSE;
 
-  aspect = (float)w/(float)h;
+  //aspect = (float)w/(float)h;
   glViewport (0, 0, w, h);
 
   gdk_gl_drawable_gl_end (gldrawable);
@@ -1194,9 +1192,6 @@ void draw_thumbnail( stg_world_t* world )
   double boxheight = THUMBNAILHEIGHT;//boxwidth / (world->width/(double)world->height);
   double boxwidth = boxheight / (world->height/(double)world->width);
 
-/*   double seex =  1.0 / (world->win->scale * world->width); */
-/*   double seey =  1.0 / (world->win->scale*aspect * world->height); */
-  
   glPushAttrib( GL_ALL_ATTRIB_BITS );
 
   glViewport(0,0,boxwidth, boxheight );
@@ -1433,7 +1428,7 @@ void draw_world(  stg_world_t* world )
 
   double zclip = hypot(world->width, world->height) * win->scale;
   double pixels_width =  world->win->canvas->allocation.width;
-  double pixels_height = world->win->canvas->allocation.height;
+  double pixels_height = world->win->canvas->allocation.height ;
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -1586,7 +1581,7 @@ void draw_world(  stg_world_t* world )
   // draw the model's data
   g_hash_table_foreach( world->models, (GHFunc)model_draw_data_cb, NULL );
 
-  if( world->win->selection_active 
+  if( world->win->selection_active
       &&  world->win->selection_active->sense_poly )
     {
       stg_model_t* mod = world->win->selection_active;
@@ -1596,42 +1591,46 @@ void draw_world(  stg_world_t* world )
       gl_draw_polygon_bbox( mod->sense_poly );
       pop_color();
 
-      // outline the polgons that the selected robot intersects with
-      push_color_stgcolor( stg_lookup_color( "blue" ));
+     /*  // outline the polgons that the selected robot intersects with */
+/*       push_color_stgcolor( stg_lookup_color( "blue" )); */
       
-      GList *a, *b;
-      //for( a=mod->polys ; a; a=a->next )
-      //for( b = ((stg_polygon_t*)a->data)->intersectors; b; b=b->next )
-      for( b = mod->sense_poly->intersectors; b; b=b->next )
-	{
-	  stg_polygon_t* p = (stg_polygon_t*)b->data;
+/*       GList *a, *b; */
+/*       //for( a=mod->polys ; a; a=a->next ) */
+/*       //for( b = ((stg_polygon_t*)a->data)->intersectors; b; b=b->next ) */
+/*       for( b = mod->sense_poly->intersectors; b; b=b->next ) */
+/* 	{ */
+/* 	  stg_polygon_t* p = (stg_polygon_t*)b->data; */
 	  
-	  glPushMatrix();
+/* 	  glPushMatrix(); */
 	  
-	  stg_pose_t pose;
-	  stg_model_get_global_pose( p->mod, &pose );
+/* 	  stg_pose_t pose; */
+/* 	  stg_model_get_global_pose( p->mod, &pose ); */
 	  
-	  // move into this model's coordinate frame
-	  glTranslatef( pose.x, pose.y, pose.z );
-	  glRotatef( RTOD(pose.a), 0,0,1 );
+/* 	  // move into this model's coordinate frame */
+/* 	  glTranslatef( pose.x, pose.y, pose.z ); */
+/* 	  glRotatef( RTOD(pose.a), 0,0,1 ); */
 	  
-	  //gl_draw_polygon_bbox( p );
-	  gl_draw_polygon3d( p );
+/* 	  //gl_draw_polygon_bbox( p ); */
+/* 	  gl_draw_polygon3d( p ); */
 	  
-	  glPopMatrix();
-	}   
+/* 	  glPopMatrix(); */
+/* 	}    */
       
-      //glMatrixMode( GL_PROJECTION );
-      //glPushMatrix(); 
-      //glLoadIdentity();
       
       glPushAttrib( GL_ALL_ATTRIB_BITS );
+      // these need to be set
+      glEnable(GL_DEPTH_TEST);
+      glDepthMask(GL_TRUE);
+
       glViewport( 0,0, 361, 100 ); 
 
 
-      //glMatrixMode (GL_PROJECTION);      
-      //glLoadIdentity ();
-      
+      glMatrixMode (GL_PROJECTION);      
+      glPushMatrix(); 
+      glLoadIdentity ();
+      //glScalef( win->scale, win->scale, win->scale );
+      glFrustum( -1,1,-1,1,1,800 );
+
       // map the viewport to pixel units by scaling it the same as the window
       //  glOrtho( 0, pixels_width,
       //   0, pixels_height,
@@ -1641,35 +1640,42 @@ void draw_world(  stg_world_t* world )
       glPushMatrix(); 
       glLoadIdentity();
       
-      glScalef( win->scale, win->scale, 1/100.0 );
-
+      //glScalef( win->scale, win->scale, 1/100.0 );
       
       stg_pose_t gpose; 
       stg_model_get_global_pose( world->win->selection_last, &gpose ); 
 
-      //gluLookAt( gpose.x, gpose.y, 0,
-      //	 pose.
-		
+      //glRotatef( -90, 1,0,0 );
+      //glRotatef( 90, 0,0,1 );
 
-
-      //glTranslatef( 0,0, -2.0 );
-      glRotatef( 90, 1,0,0 );
+      gluLookAt( gpose.x, gpose.y, 0.4, // eye point
+		 gpose.x + cos( gpose.a), // view direction
+		 gpose.y + sin( gpose.a),
+		 0.4,
+		 0,0,1 );// Z is up
+		 
 
       push_color_stgcolor( stg_lookup_color( "gray" ));
 
+      glTranslatef( gpose.x, gpose.y, 0 );
       GLUquadricObj* q = gluNewQuadric();
       gluQuadricDrawStyle( q, GLU_LINE );
       gluSphere( q, 8.0, 20, 20 );
       gluDeleteQuadric( q );
-
-      glRotatef( RTOD( -gpose.a ), 0,0,1 );
       glTranslatef( -gpose.x, -gpose.y, 0 );
 
-      push_color_stgcolor( stg_lookup_color( "black" ));
+      //glRotatef( RTOD( -gpose.a ), 0,0,1 );
+      
+
 
       for( GList* b = mod->sense_poly->intersectors; b; b=b->next )      
 	{
 	  stg_polygon_t* p = (stg_polygon_t*)b->data;
+
+	  if( p->mod == world->win->selection_last )
+	    continue;
+	  
+	  push_color_stgcolor( p->mod->color );
 	  
 	  glPushMatrix();
 	  
@@ -1684,21 +1690,22 @@ void draw_world(  stg_world_t* world )
 	  gl_draw_polygon3d( p );
 	  
 	  glPopMatrix();       
+
+	  pop_color();
 	}
 
       //glFlush();
       
 
       pop_color();
-      pop_color();
+      //pop_color();
       
       glPopMatrix();  
 
       glPopAttrib();
 
-      //glMatrixMode( GL_PROJECTION );
-      //glPopMatrix();     
-
+      glMatrixMode( GL_PROJECTION );
+      glPopMatrix();     
     }
   
 /*       glFrustum( 0, 361, */
