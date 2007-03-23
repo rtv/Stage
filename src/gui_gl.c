@@ -19,6 +19,7 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <GL/glext.h>
 //#include <GLUT/glut.h>
 #include <GL/glx.h> // for XFont for drawing text from X fonts
  
@@ -1391,6 +1392,34 @@ void draw_endpoints( stg_world_t* world )
   //puts( "\n" );
 }
 
+static GLuint VertShader;
+static char * VertSrc = \
+/* "!!ARBvp1.0						\n\ */
+/* PARAM	CTM[4]	= { state.matrix.mvp };			\n\ */
+/* ## Standard transform					\n\ */
+/* DP4  result.position.x, CTM[0], vertex.position;	\n\ */
+/* DP4  result.position.y, CTM[1], vertex.position;	\n\ */
+/* DP4  result.position.z, CTM[2], vertex.position;	\n\ */
+/* DP4  result.position.w, CTM[3], vertex.position;	\n\ */
+/* # Rotate color	values					\n\ */
+/* MOV  result.color, vertex.color.zxyw;			\n\ */
+/* END\n" */
+/* ; */
+"!!ARBvp1.0 \n\
+#This vp is used in zprecision demo for solving the z-precision problem\n\
+#in a perspective projection.\n\
+#AUTHOR: Vrej Melkonian\n\
+#DATE: Monday, June 23, 2003\n\
+PARAM m[4]={state.matrix.modelview}; \n\
+PARAM mvp[4]={state.matrix.mvp}; \n\
+ATTRIB iPos=vertex.position; \n\
+OUTPUT oPos=result.position;\n\
+#Transform the vertex to clip coordinates.\n\
+DP4	r0.x, iPos, mvp[0];\n\
+DP4	r0.y, iPos, mvp[1];\n\
+DP4	r0.z, iPos, mvp[2];\n\
+DP4	r0.w, iPos, mvp[3];\n\
+END\n ";
 
 void draw_world(  stg_world_t* world )
 {
@@ -1615,7 +1644,26 @@ void draw_world(  stg_world_t* world )
 	  
 /* 	  glPopMatrix(); */
 /* 	}    */
+     
+
+      int err;
       
+      //if (! glutExtensionSupported("GL_ARB_vertex_program"))
+      //Fail("GL_ARB_vertex_program not available on this machine");
+      
+      /* Vertex shader */
+      glEnable(GL_VERTEX_PROGRAM_ARB);
+      glGenProgramsARB(1, &VertShader);
+      glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertShader);
+      glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB,
+			 strlen(VertSrc), VertSrc);
+
+      glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &err);
+      if (err >= 0)
+	printf("Error in vertex shader %s\n",
+	       glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+      
+ 
       
       glPushAttrib( GL_ALL_ATTRIB_BITS );
       // these need to be set
@@ -1629,12 +1677,20 @@ void draw_world(  stg_world_t* world )
       glPushMatrix(); 
       glLoadIdentity ();
       //glScalef( win->scale, win->scale, win->scale );
-      glFrustum( -1,1,-1,1,1,800 );
 
-      // map the viewport to pixel units by scaling it the same as the window
-      //  glOrtho( 0, pixels_width,
-      //   0, pixels_height,
-      //glOrtho( -1,1,-1,1,-1,1 );
+      double far = 8.0;
+      double near = 0.1;
+
+      gluPerspective( 45, 361/100, near, far );
+
+      GLdouble projection[16];	
+      glGetDoublev(GL_PROJECTION_MATRIX, projection);	
+
+      // hack the projection matric to simulate a w-buffer
+      projection[10] = -2.0/(far-near);
+      projection[11] = (-far-near) / (far-near);
+
+      glLoadMatrixd( projection );
       
       glMatrixMode( GL_MODELVIEW );
       glPushMatrix(); 
@@ -1705,7 +1761,22 @@ void draw_world(  stg_world_t* world )
       glPopAttrib();
 
       glMatrixMode( GL_PROJECTION );
-      glPopMatrix();     
+      glPopMatrix();  
+
+      
+      GLfloat* depths = calloc( sizeof(GLfloat), 361 );
+      glReadPixels( 0,50, 361, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depths );
+   
+      puts("");
+      for( int c=0; c<361; c++ )
+	printf( "%.3f ", depths[c] );
+      puts("");            
+
+      puts("");
+      for( int c=0; c<361; c++ )
+	printf( "%.3f ", near + depths[c] * (far-near) );
+      puts("");
+
     }
   
 /*       glFrustum( 0, 361, */
