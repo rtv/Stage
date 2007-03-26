@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.85 2006-03-29 05:11:00 rtv Exp $
+# CVS: $Id: everything.world,v 1.86 2007-03-26 19:54:36 gerkey Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -10,6 +10,8 @@ interval_real 100 # real-time milliseconds per update step
 
 # defines Pioneer-like robots
 include "pioneer.inc"
+
+include "roomba.inc"
 
 # defines 'map' object used for floorplans
 include "map.inc"
@@ -167,4 +169,9 @@ position(
   gui_grid 0	
 
   gripper_return 1
+)
+
+roomba(
+  name "roomba1"
+  pose [-9 0.5 0]
 )
