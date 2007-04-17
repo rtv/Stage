@@ -11,6 +11,7 @@ EXAMPLES =  \
 	everything.world \
 	map.inc \
 	pioneer.inc \
+	roomba.inc \
 	pucktarget.inc \
 	sick.inc \
 	simple.cfg \
