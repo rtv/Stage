@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_ptz.c,v 1.2 2006-01-30 06:58:15 rtv Exp $
+ * CVS info: $Id: model_ptz.c,v 1.2.2.1 2007-05-15 00:09:59 gerkey Exp $
  */
 
 #include <math.h>
@@ -195,7 +195,11 @@ int ptz_update( stg_model_t* mod )
   stg_ptz_data_t *data = (stg_ptz_data_t*)mod->data; 
   stg_ptz_config_t *cfg = (stg_ptz_config_t*)mod->cfg; 
   
-  double pandist = cfg->speed.pan * mod->world->sim_interval/1e3;
+  double pandist;
+  if(cfg->speed.pan > 0.0)
+    pandist = cfg->speed.pan * mod->world->sim_interval/1e3;
+  else
+    pandist = STG_PTZ_SPEED_PAN * mod->world->sim_interval/1e3;
   double panerror = cfg->goal.pan - data->pan;
   if( panerror < pandist ) pandist = panerror;
   data->pan += pandist; 
