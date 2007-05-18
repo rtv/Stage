@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.89.2.6 $
+//  $Revision: 1.89.2.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -191,8 +191,7 @@ int laser_update( stg_model_t* mod, void* unused )
 
   // get the sensor's pose in global coords
   stg_pose_t pz;
-  memcpy( &pz, &geom.pose, sizeof(pz) ); 
-  stg_model_local_to_global( mod, &pz );
+  stg_model_get_global_pose( mod, &pz );
 
   PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", pz.x, pz.y, pz.a );
 
@@ -209,83 +208,137 @@ int laser_update( stg_model_t* mod, void* unused )
   // make a static scan buffer, so we only have to allocate memory
   // when the number of samples changes between calls - probably
   // unusual.
-  static stg_laser_sample_t* scan = 0;
-  static size_t old_len = 0;
+  static stg_laser_sample_t* scan = NULL;  
+  scan = g_renew( stg_laser_sample_t, scan, cfg->samples );
+
+
+  stg_endpoint_t* ep = mod->world->endpts.x;
+  assert( ep );
+  // wind along to the first point to the right of the model
+  //while( ep->value <= pz.x )
+  // ep = ep->next;
   
-/*   size_t data_len = sizeof(stg_laser_sample_t)*cfg->samples; */
+  GList* hitlist = NULL;
+
+  while( ep )
+    {
+      //printf( "pz x: %.2f\n", pz.x );
+      //printf( "ep: %s %.2f\n", ep->polygon->mod->token, ep->value );
+      //printf( "ep next: %s %.2f\n", ep->next->polygon->mod->token, ep->next->value );
+      
+      double xmin=0,ymin=0;
+      
+      if( ep->type == STG_BEGIN )
+	{
+	  xmin = ep->polygon->epts[0].value;
+	  ymin = ep->polygon->epts[2].value;	 
+	  
+	  printf( "see polygon of %s starting at (%.2f,%.2f) ",
+		  ep->polygon->mod->token,
+		  xmin, ymin );	  	  
+
+	  hitlist = g_list_prepend( hitlist, ep->polygon );
+	}
+
+      if( ep->type == STG_END )
+	{
+	  xmin = ep->polygon->epts[1].value;
+	  ymin = ep->polygon->epts[3].value;
+	  
+	  printf( "see polygon of %s ending at (%.2f,%.2f) ",
+		  ep->polygon->mod->token,
+		  xmin, ymin );	  
+
+	  hitlist = g_list_remove( hitlist, ep->polygon );
+	}
+      
+      double angle = RTOD(atan2( ymin - pz.y, xmin - pz.x ));
   
-/*   if( old_len != data_len ) */
-/*     { */
-/*       scan = realloc( scan, data_len ); */
-/*       old_len = data_len; */
+      //if( angle > -90 && angle < 180 )
+	{
+	  //ranges[(int)angle] = hypot( ymin - pz.y, xmin - pz.x );
+	  //ranges[(int)angle+1] = 4.0;
+	  //ranges[(int)angle+2] = 4.0;
+	}
+
+    
+      if( xmin )
+      {
+	printf( "angle %.2f hits", angle );
+	GList* it;
+	for( it=hitlist; it; it=it->next )
+	  printf( " %s", ((stg_polygon_t*)it->data)->mod->token );
+	puts("");
+      }
+
+      ep = ep->next;
+    }
+ 
+
+
+ /*  for( int t=0; t<cfg->samples; t += cfg->resolution ) */
+/*     {       */
+/*       double bearing =  pz.a - cfg->fov/2.0 + sample_incr * t; */
+      
+/*       itl_t* itl = itl_create2( mod, pz.x, pz.y,  */
+/* 				bearing,  */
+/* 			       cfg->range_max,  */
+/* 			       mod->world->matrix,  */
+/* 			       PointToBearingRange, */
+/* 				laser_raytrace_match ); */
+      
+/*       //double range = cfg->range_max; */
+      
+/*       stg_model_t* hitmod = itl_next( itl ); */
+  
+/*       if( hitmod ) */
+/* 	{        */
+/* 	  scan[t].range = MAX( itl->range, cfg->range_min ); */
+/* 	  scan[t].hitpoint.x = itl->x; */
+/* 	  scan[t].hitpoint.y = itl->y; */
+/* 	} */
+/*       else */
+/* 	{ */
+/* 	  scan[t].range = cfg->range_max;	   */
+/* 	  scan[t].hitpoint.x = pz.x + scan[t].range * cos(bearing); */
+/* 	  scan[t].hitpoint.y = pz.y + scan[t].range * sin(bearing); */
+/* 	} */
+
+/*       itl_destroy( itl ); */
+
+/*       // lower bound on range */
+      
+/*       // if the object is bright, it has a non-zero reflectance */
+/*       if( hitmod ) */
+/* 	{ */
+/* 	  scan[t].reflectance =  */
+/* 	    (hitmod->laser_return >= LaserBright) ? 1.0 : 0.0; */
+/* 	} */
+/*       else */
+/* 	scan[t].reflectance = 0.0; */
 /*     } */
   
-  scan = g_renew( stg_laser_sample_t, scan, cfg->samples );
-  //memset( scan, 0, data_len );
-
-  for( int t=0; t<cfg->samples; t += cfg->resolution )
-    {      
-      double bearing =  pz.a - cfg->fov/2.0 + sample_incr * t;
-      
-      itl_t* itl = itl_create2( mod, pz.x, pz.y, 
-				bearing, 
-			       cfg->range_max, 
-			       mod->world->matrix, 
-			       PointToBearingRange,
-				laser_raytrace_match );
-      
-      //double range = cfg->range_max;
-      
-      stg_model_t* hitmod = itl_next( itl );
-  
-      if( hitmod )
-	{       
-	  scan[t].range = MAX( itl->range, cfg->range_min );
-	  scan[t].hitpoint.x = itl->x;
-	  scan[t].hitpoint.y = itl->y;
-	}
-      else
-	{
-	  scan[t].range = cfg->range_max;	  
-	  scan[t].hitpoint.x = pz.x + scan[t].range * cos(bearing);
-	  scan[t].hitpoint.y = pz.y + scan[t].range * sin(bearing);
-	}
-
-      itl_destroy( itl );
-
-      // lower bound on range
-      
-      // if the object is bright, it has a non-zero reflectance
-      if( hitmod )
-	{
-	  scan[t].reflectance = 
-	    (hitmod->laser_return >= LaserBright) ? 1.0 : 0.0;
-	}
-      else
-	scan[t].reflectance = 0.0;
-    }
-  
-  /*  we may need to resolution the samples we skipped */
-  if( cfg->resolution > 1 ) 
-    {
-      for( int t=cfg->resolution; t<cfg->samples; t+=cfg->resolution ) 
-	for( int g=1; g<cfg->resolution; g++ )
-	  {
-	    if( t >= cfg->samples ) 
-	      break;
+/*   /\*  we may need to resolution the samples we skipped *\/ */
+/*   if( cfg->resolution > 1 )  */
+/*     { */
+/*       for( int t=cfg->resolution; t<cfg->samples; t+=cfg->resolution )  */
+/* 	for( int g=1; g<cfg->resolution; g++ ) */
+/* 	  { */
+/* 	    if( t >= cfg->samples )  */
+/* 	      break; */
 	    
-	    // copy the rightmost sample data into this point
-	    memcpy( &scan[t-g], 
-		    &scan[t-cfg->resolution], 
-		    sizeof(stg_laser_sample_t));
+/* 	    // copy the rightmost sample data into this point */
+/* 	    memcpy( &scan[t-g],  */
+/* 		    &scan[t-cfg->resolution],  */
+/* 		    sizeof(stg_laser_sample_t)); */
 	    
-	    double left = scan[t].range;
-	    double right = scan[t-cfg->resolution].range;
+/* 	    double left = scan[t].range; */
+/* 	    double right = scan[t-cfg->resolution].range; */
 	    
-	    // linear range interpolation between the left and right samples
-	    scan[t-g].range = (left-g*(left-right)/cfg->resolution);
-	  }
-    }
+/* 	    // linear range interpolation between the left and right samples */
+/* 	    scan[t-g].range = (left-g*(left-right)/cfg->resolution); */
+/* 	  } */
+/*     } */
   
   stg_model_set_data( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples);
   

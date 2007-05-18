@@ -361,6 +361,7 @@ void stg_model_set_sense_volume( stg_model_t* mod, double vol[6] )
   mod->sense_poly->unfilled = 0;
   mod->sense_poly->intersectors = NULL; 
   mod->sense_poly->accum  = g_hash_table_new( NULL, NULL );
+  //mod->sense_poly->accum  = g_tree_new( accum_cmp );
   mod->sense_poly->points = g_array_new( FALSE, TRUE, sizeof(stg_point_t));
   g_array_append_vals( mod->sense_poly->points, pts, 4 );
   
@@ -369,7 +370,7 @@ void stg_model_set_sense_volume( stg_model_t* mod, double vol[6] )
   for( int e=0; e<6; e++ )
     {
       mod->sense_poly->epts[e].polygon = mod->sense_poly;
-      mod->sense_poly->epts[e].type = (e % 2);// + 2; // STG_SENSOR_BEGIN or STG_SENSOR_END
+      mod->sense_poly->epts[e].type = (e % 2) + 2; // STG_SENSOR_BEGIN or STG_SENSOR_END
       mod->sense_poly->epts[e].value = 0;
       mod->sense_poly->epts[e].next = NULL;      
       mod->sense_poly->epts[e].prev = NULL;      

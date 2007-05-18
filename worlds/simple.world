@@ -1,33 +1,21 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.11 2007-03-05 00:42:29 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.12 2007-05-18 05:21:08 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
-
-
-
-
-
-
-
-
 
 
 # defines 'map' object used for floorplans
 include "map.inc"
 
 
-
-
 # defines sick laser
 include "sick.inc"
 
 
-
-
 # size of the world in meters
-size [68 20]
+size [16 16]
 
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02
@@ -40,7 +28,7 @@ window
   size [ 767.000 804.000 ] 
   center [-3.010 1.960] 
   rotate [ 0.000 0.000 ]
-  scale 38.401 
+  scale 43.891 
   show_bboxes 0
   show_grid 1
 )
@@ -52,20 +40,15 @@ window
 #  bitmap "bitmaps/cave.png"
 #)
 
-
-
-
 # create a robot
+#pioneer2dx
 sick_laser
 (
   size [1 0.5]	
   name "robot1"
   color "red"
-  pose [-2.198 -3.938 60.161]
-  #sick_laser()
-
-  size3d [ 0.556 0.155 0.210 ] # dimensions from LMS200 data sheet	
-
+  pose [-7.016 -6.881 0.000]
+  #sick_laser( size3d [ 0.156 0.155 0.210 ] ) # dimensions from LMS200 data sheet
 )
 
 #pioneer2dx
@@ -79,8 +62,15 @@ sick_laser
 model
 (
   color "yellow"
-  pose [5.075 4.964 0.000]
-  size [0.5 0.3]
+  pose [0.071 -6.971 94.538]
+  size [1 1]
+)
+
+model
+(
+  color "green"
+  pose [0.071 6.971 94.538]
+  size [1 1]
 )
 
 model
@@ -89,7 +79,7 @@ model
   pose [3.101 4.137 85.944]
   size [1 1]
 
-  polygons 2
+  polygons 1
   polygon[0].color "green"
   polygon[0].points 8
   polygon[0].point[0] [  0.23  0.05 ]
@@ -121,12 +111,3 @@ model
 #  size [1 1]
 #)
 
-map
-(
-  color "wheat"
-  bitmap "bitmaps/cave.png"
-#  bitmap "bitmaps/hospital.png"
-#  bitmap "bitmaps/hospital_section.png"
-#  pose [0.000 0.000 0.000]
-  size [16 16]
-)

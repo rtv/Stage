@@ -226,6 +226,9 @@ void stg_model_load( stg_model_t* mod )
 
       printf( "found %d rects\n", rect_count );
       
+      //mod->verts_count = rect_count * 4;
+      //mod->verts = g_new( float, mod->verts_count * 3);
+      
       if( rects && (rect_count > 0) )
 	{
 	  puts( "loading rects" );
@@ -284,11 +287,13 @@ void stg_model_load( stg_model_t* mod )
 	    //printf( "expecting %d points in polygon %d\n",
 	    //  pointcount, l );
 	    
+	    mod->verts_count = pointcount * 2;
+	    mod->verts = g_new( float, mod->verts_count * 3);
+
 	    stg_point_t* pts = stg_points_create( pointcount );
 	    
 	    int p;
-	    for( p=0; p<pointcount; p++ )
-	      {
+	    for( p=0; p<pointcount; p++ )	      {
 		snprintf(key, sizeof(key), "polygon[%d].point[%d]", l, p );
 		
 		pts[p].x = wf_read_tuple_length(mod->id, key, 0, 0);
@@ -296,7 +301,16 @@ void stg_model_load( stg_model_t* mod )
 		
 		//printf( "key %s x: %.2f y: %.2f\n",
 		//      key, pt.x, pt.y );
-		
+
+		// original point
+		mod->verts[6*p+0] = pts[p].x;
+		mod->verts[6*p+1] = pts[p].y;
+		mod->verts[6*p+2] = 0;
+
+		// extruded point
+		mod->verts[6*p+3] = pts[p].x;
+		mod->verts[6*p+4] = pts[p].y;
+		mod->verts[6*p+5] = 1;	       
 	      }
 	    
 	    // polygon color

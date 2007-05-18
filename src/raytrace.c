@@ -180,19 +180,20 @@ itl_t* itl_create2( stg_model_t* mod,
   
   // find all the models that overlap with this bbox
 
-  GList* candidates = mod->intersectors;
+  GList* candidates = mod->sense_poly->intersectors;
   itl->hits = NULL;
 
-  printf( "ray from %.2f,%.2f hitlist:\n", x, y );
+  //printf( "ray from %.2f,%.2f hitlist:\n", x, y );
   
   GList* it;
   for( it=candidates; it; it=it->next )
     {
-      stg_model_t* him = (stg_model_t*)it->data;
+      stg_polygon_t* his_poly = (stg_polygon_t*)it->data;
+      stg_model_t* him = his_poly->mod;
 
-      printf( " %s\t", him->token ); 
+      //printf( " %s\t", him->token ); 
       
-      if( (*func)( him, mod ) )
+      if( (him != mod) && (*func)( him, mod ) )
 	{
 	  double xs,ys;
 	  
@@ -208,31 +209,31 @@ itl_t* itl_create2( stg_model_t* mod,
 	      hit->mod = him;	
 	      itl->hits = g_list_prepend( itl->hits, hit );
 	      
-	      printf( " \n" );
+	      //      printf( " \n" );
 	    }
 	}
-      else
-	printf( "  (failed the filter)\n" );
+      //else
+	//printf( "  (failed the filter)\n" );
     }
-  puts("");
+  //puts("");
   
   itl->hits = g_list_sort( itl->hits, hit_range_compare );
   itl->current = itl->hits;
   
   //GList* it;
-  printf( "Sorted hit list:\n" );
-  for( it=itl->current; it; it=it->next )
-    {
-      stg_hit_t* hit = (stg_hit_t*)it->data;
-      printf( "%s @ %.2f\n", hit->mod->token, hit->range );
-    }
+  //printf( "Sorted hit list:\n" );
+  //for( it=itl->current; it; it=it->next )
+  //{
+  //  stg_hit_t* hit = (stg_hit_t*)it->data;
+  //  printf( "%s @ %.2f\n", hit->mod->token, hit->range );
+  // }
 
   itl->cosa = cos( itl->a );
   itl->sina = sin( itl->a );
   itl->tana = tan( itl->a );
   
-  puts("");
-  puts("");
+  // puts("");
+  //puts("");
 
   return itl;
 };

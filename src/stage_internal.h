@@ -164,6 +164,9 @@ extern "C" {
     stg_polygon_t* sense_poly;
 
     GList* polys;
+    
+    float* verts;
+    int verts_count;
 
     stg_watts_t watts; //< power consumed by this model
     stg_color_t color;
