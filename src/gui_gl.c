@@ -435,7 +435,9 @@ int gl_laser_render_data( stg_model_t* mod, void* enabled )
       glTranslatef( 0,0, gpose.z + mod->geom.size.z/2.0 ); // shoot the laser beam out at the right height
       
       // pack the laser hit points into a vertex array for fast rendering
-      float* pts = malloc( 2 * (1+sample_count) * sizeof(float));
+
+      static float* pts = NULL;
+      pts = g_realloc( pts, 2 * (sample_count+1) * sizeof(float));
       
       pts[0] = (float)gpose.x;
       pts[1] = (float)gpose.y;
@@ -443,8 +445,12 @@ int gl_laser_render_data( stg_model_t* mod, void* enabled )
       int s;
       for( s=0; s<sample_count; s++ )
 	{
-	  pts[2*s+2] = (float)samples[s].hitpoint.x;
-	  pts[2*s+3] = (float)samples[s].hitpoint.y;
+	  double ray_angle = gpose.a + (s * (cfg->fov / (sample_count-1))) - cfg->fov/2.0;
+
+	  //pts[2*s+2] = (float)samples[s].hitpoint.x;
+	  //pts[2*s+3] = (float)samples[s].hitpoint.y;
+	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) + gpose.x);
+	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) + gpose.y);
 	}
       
       glEnableClientState( GL_VERTEX_ARRAY );
@@ -461,33 +467,33 @@ int gl_laser_render_data( stg_model_t* mod, void* enabled )
 	  glDrawArrays( GL_LINE_LOOP, 0, sample_count+1 );
 	}
       
-      free(pts);
+      //free(pts);
       glPopMatrix();
       glDepthMask( GL_TRUE ); 
     }
   
-  // outline the polgons that the selected robot intersects with
-  push_color_stgcolor( stg_lookup_color( "orange" ));
+/*   // outline the polgons that the selected robot intersects with */
+/*   push_color_stgcolor( stg_lookup_color( "orange" )); */
   
-  GList *b;
-  for( b = mod->sense_poly->intersectors; b; b=b->next )
-    {
-      stg_polygon_t* p = (stg_polygon_t*)b->data;
+/*   GList *b; */
+/*   for( b = mod->sense_poly->intersectors; b; b=b->next ) */
+/*     { */
+/*       stg_polygon_t* p = (stg_polygon_t*)b->data; */
       
-      glPushMatrix();
+/*       glPushMatrix(); */
       
-      stg_pose_t pose;
-      stg_model_get_global_pose( p->mod, &pose );
+/*       stg_pose_t pose; */
+/*       stg_model_get_global_pose( p->mod, &pose ); */
       
-      // move into this model's coordinate frame
-      glTranslatef( pose.x, pose.y, pose.z );
-      glRotatef( RTOD(pose.a), 0,0,1 );
-      gl_draw_polygon3d( p );
+/*       // move into this model's coordinate frame */
+/*       glTranslatef( pose.x, pose.y, pose.z ); */
+/*       glRotatef( RTOD(pose.a), 0,0,1 ); */
+/*       gl_draw_polygon3d( p ); */
       
-      glPopMatrix();
-    }
+/*       glPopMatrix(); */
+/*     } */
   
-  pop_color();
+/*   pop_color(); */
 
   glEndList();
   
@@ -1207,8 +1213,11 @@ void model_draw_cb( stg_model_t* mod, void* user )
 
 void model_bbox_cb( gpointer key, stg_model_t* mod, void* user )
 {
+  push_color_stgcolor( mod->color );
   g_list_foreach( mod->polys, (GFunc)gl_draw_polygon_bbox_cb, NULL );
+  pop_color();
 }
+
 
 
 
@@ -1329,7 +1338,7 @@ void draw_endpoints( stg_world_t* world )
       assert( ep->polygon);
       assert( ep->polygon->mod );
 
-      push_color_stgcolor( ep->polygon->color );
+      push_color_stgcolor( ep->polygon->mod->color );
 
       glBegin( GL_POLYGON );
       glVertex3f( ep->value, 0, 0 );
@@ -1358,7 +1367,7 @@ void draw_endpoints( stg_world_t* world )
   i=0;
   for( ep = world->endpts.y; ep; ep=ep->next )
     {
-      push_color_stgcolor( ep->polygon->color );
+      push_color_stgcolor( ep->polygon->mod->color );
 
       glBegin( GL_POLYGON );
       glVertex3f( 0, ep->value, 0 );
@@ -1379,40 +1388,40 @@ void draw_endpoints( stg_world_t* world )
       glRasterPos2f( -0.5, ep->value );
       glPrint( "%d", (int)i++ );      
 
-      glRasterPos2f( -0.8, ep->value );
+      glRasterPos2f( -0.8, ep->value - 0.3 );
       glPrint( "%.2f", ep->value );      
       pop_color();
     }
 
-  i=0;
-  for( ep = world->endpts.z; ep; ep=ep->next )
-    {
-      push_color_stgcolor( ep->polygon->color );
+/*   i=0; */
+/*   for( ep = world->endpts.z; ep; ep=ep->next ) */
+/*     { */
+/*       push_color_stgcolor( ep->polygon->color ); */
 
-      glBegin( GL_POLYGON );
-      glVertex3f( 0, 0, ep->value );
+/*       glBegin( GL_POLYGON ); */
+/*       glVertex3f( 0, 0, ep->value ); */
 
-      if( ep->type == 0 )
-	{	
-	  glVertex3f( -hepsilon, 0, ep->value+hepsilon );
-	  glVertex3f( -epsilon, 0, ep->value  );
-	}
-      else
-	{	
-	  glVertex3f(  -epsilon, 0, ep->value );
-	  glVertex3f( -hepsilon, 0,  ep->value-hepsilon );
-	}
+/*       if( ep->type == 0 ) */
+/* 	{	 */
+/* 	  glVertex3f( -hepsilon, 0, ep->value+hepsilon ); */
+/* 	  glVertex3f( -epsilon, 0, ep->value  ); */
+/* 	} */
+/*       else */
+/* 	{	 */
+/* 	  glVertex3f(  -epsilon, 0, ep->value ); */
+/* 	  glVertex3f( -hepsilon, 0,  ep->value-hepsilon ); */
+/* 	} */
 	
-      glEnd();
+/*       glEnd(); */
 
-      glRasterPos3f( -0.5, 0, ep->value );
-      glPrint( "%d", (int)i++ );      
+/*       glRasterPos3f( -0.5, 0, ep->value ); */
+/*       glPrint( "%d", (int)i++ );       */
 
-      glRasterPos3f( -0.8, 0, ep->value );
-      glPrint( "%.2f", ep->value );      
+/*       glRasterPos3f( -0.8, 0, ep->value ); */
+/*       glPrint( "%.2f", ep->value );       */
 
-      pop_color();   
-    }
+/*       pop_color();    */
+/*     } */
 
   //puts( "\n" );
 }
@@ -1611,7 +1620,7 @@ void draw_world(  stg_world_t* world )
 
   if( win->show_bboxes )   // draw bounding boxes
     {
-      //g_hash_table_foreach( world->models, (GHFunc)model_bbox_cb, NULL );
+      g_hash_table_foreach( world->models, (GHFunc)model_bbox_cb, NULL );
       // draw the bbox lists
       draw_endpoints( world );
     }

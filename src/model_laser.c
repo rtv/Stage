@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.89.2.7 $
+//  $Revision: 1.89.2.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -131,14 +131,14 @@ int laser_init( stg_model_t* mod )
   lconf.resolution = 1;
   stg_model_set_cfg( mod, &lconf, sizeof(lconf) );
 
-  double vol[6];
-  vol[0] = 0;
-  vol[1] = lconf.range_max;
-  vol[2] = -lconf.range_max;
-  vol[3] =  lconf.range_max;
-  vol[4] =  -0.1;
-  vol[5] =  0.1;
-  stg_model_set_sense_volume( mod, vol );
+/*   double vol[6]; */
+/*   vol[0] = 0; */
+/*   vol[1] = lconf.range_max; */
+/*   vol[2] = -lconf.range_max; */
+/*   vol[3] =  lconf.range_max; */
+/*   vol[4] =  -0.1; */
+/*   vol[5] =  0.1; */
+/*   stg_model_set_sense_volume( mod, vol ); */
 
 
       
@@ -190,14 +190,14 @@ int laser_update( stg_model_t* mod, void* unused )
   stg_model_get_geom( mod, &geom );
 
   // get the sensor's pose in global coords
-  stg_pose_t pz;
-  stg_model_get_global_pose( mod, &pz );
+  stg_pose_t gpose;
+  stg_model_get_global_pose( mod, &gpose );
 
-  PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", pz.x, pz.y, pz.a );
+  PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", gpose.x, gpose.y, gpose.a );
 
   double sample_incr = cfg->fov / (double)(cfg->samples-1);
   
-  //double bearing = pz.a - cfg->fov/2.0;
+  //double bearing = gpose.a - cfg->fov/2.0;
   
 #if TIMING
   struct timeval tv1, tv2;
@@ -212,75 +212,144 @@ int laser_update( stg_model_t* mod, void* unused )
   scan = g_renew( stg_laser_sample_t, scan, cfg->samples );
 
 
-  stg_endpoint_t* ep = mod->world->endpts.x;
-  assert( ep );
+
+  //stg_endpoint_t* ep = mod->world->endpts.x;
+  //assert( ep );
   // wind along to the first point to the right of the model
-  //while( ep->value <= pz.x )
+  //while( ep->value <= gpose.x )
   // ep = ep->next;
-  
-  GList* hitlist = NULL;
 
-  while( ep )
+  assert( mod->polys );
+
+  stg_endpoint_t* ep = ((stg_polygon_t*)mod->polys->data)->epts[1]; // x max
+
+  
+  
+
+  // initialize the scan to max range
+  double bearing_index0 = gpose.a - cfg->fov/2.0;
+  double bearing = bearing_index0;
+  int t;
+  for( t=0; t<cfg->samples; t++ )
     {
-      //printf( "pz x: %.2f\n", pz.x );
-      //printf( "ep: %s %.2f\n", ep->polygon->mod->token, ep->value );
-      //printf( "ep next: %s %.2f\n", ep->next->polygon->mod->token, ep->next->value );
+      double shortest = cfg->range_max;
+
+
+      // for each model in the world that is not me
+
+      // for each polygon in that model
+
+      // for each line in that polygon
+
+      // see if the ray intersects it
+
+      // if the range is the shortest yet, store the range
+
+
+      scan[t].range = 1.0;
+      scan[t].hitpoint.x = gpose.x + scan[t].range * cos(bearing);
+      scan[t].hitpoint.y = gpose.y + scan[t].range * sin(bearing);
       
-      double xmin=0,ymin=0;
-      
-      if( ep->type == STG_BEGIN )
-	{
-	  xmin = ep->polygon->epts[0].value;
-	  ymin = ep->polygon->epts[2].value;	 
-	  
-	  printf( "see polygon of %s starting at (%.2f,%.2f) ",
-		  ep->polygon->mod->token,
-		  xmin, ymin );	  	  
-
-	  hitlist = g_list_prepend( hitlist, ep->polygon );
-	}
-
-      if( ep->type == STG_END )
-	{
-	  xmin = ep->polygon->epts[1].value;
-	  ymin = ep->polygon->epts[3].value;
-	  
-	  printf( "see polygon of %s ending at (%.2f,%.2f) ",
-		  ep->polygon->mod->token,
-		  xmin, ymin );	  
-
-	  hitlist = g_list_remove( hitlist, ep->polygon );
-	}
-      
-      double angle = RTOD(atan2( ymin - pz.y, xmin - pz.x ));
-  
-      //if( angle > -90 && angle < 180 )
-	{
-	  //ranges[(int)angle] = hypot( ymin - pz.y, xmin - pz.x );
-	  //ranges[(int)angle+1] = 4.0;
-	  //ranges[(int)angle+2] = 4.0;
-	}
-
-    
-      if( xmin )
-      {
-	printf( "angle %.2f hits", angle );
-	GList* it;
-	for( it=hitlist; it; it=it->next )
-	  printf( " %s", ((stg_polygon_t*)it->data)->mod->token );
-	puts("");
-      }
-
-      ep = ep->next;
+      bearing += sample_incr;
     }
+     
+
+
+/*   GList* hitlist = NULL; */
+/*   int index = 0; */
+/*   int hitcount = 0; */
+/*   while( ep ) */
+/*     { */
+/*       //printf( "gpose x: %.2f\n", gpose.x ); */
+/*       //printf( "ep: %s %.2f\n", ep->polygon->mod->token, ep->value ); */
+/*       //printf( "ep next: %s %.2f\n", ep->next->polygon->mod->token, ep->next->value ); */
+      
+/*       double xmin=0,ymin=0; */
+      
+/*       if( ep->type == STG_BEGIN ) */
+/* 	{ */
+/* 	  xmin = ep->polygon->epts[0].value; */
+/* 	  ymin = ep->polygon->epts[2].value;	  */
+	  
+/* 	  printf( "see polygon of %s starting at (%.2f,%.2f) ", */
+/* 		  ep->polygon->mod->token, */
+/* 		  xmin, ymin );	  	   */
+
+	  
+/* 	  double global_angle = atan2( ymin - gpose.y, xmin - gpose.x );  */
+/* 	  double scan_angle =  global_angle - gpose.a + cfg->fov/2.0; */
+/* 	  int next_index = (int)(scan_angle / sample_incr); */
+	  
+/* 	  double range = cfg->range_max; */
+/* 	  if( hitlist ) */
+/* 	    { */
+/* 	      stg_pose_t hispose; */
+/* 	      stg_model_get_global_pose( ((stg_polygon_t*)hitlist->data)->mod, &hispose ); */
+/* 	      range = hypot( hispose.y - gpose.y, hispose.x - gpose.x ); */
+/* 	    } */
+
+/* 	  int i; */
+/* 	  for( i=index; i<next_index; i++ ) */
+/* 	    { */
+/* 	      scan[i].range = range; */
+/* 	      //scan[t].hitpoint.x = gpose.x + scan[t].range * cos(bearing); */
+/* 	      //scan[t].hitpoint.y = gpose.y + scan[t].range * sin(bearing); */
+/* 	    } */
+
+/* 	  index = next_index; */
+
+/* 	  if( index >= cfg->samples ) break; */
+
+/* 	  hitlist = g_list_prepend( hitlist, ep->polygon ); */
+/* 	  hitcount++; */
+/* 	} */
+
+/*       if( ep->type == STG_END ) */
+/* 	{ */
+/* 	  xmin = ep->polygon->epts[1].value; */
+/* 	  ymin = ep->polygon->epts[3].value; */
+	  
+/* 	  printf( "see polygon of %s ending at (%.2f,%.2f) ", */
+/* 		  ep->polygon->mod->token, */
+/* 		  xmin, ymin );	   */
+
+/* 	  hitlist = g_list_remove( hitlist, ep->polygon ); */
+/* 	  hitcount--; */
+/* 	} */
+
+
+
+
+     /*  if( hitcount > 0 ) */
+/* 	{ */
+/* 	  double angle = atan2( ymin - gpose.y, xmin - gpose.x ) - gpose.a + cfg->fov/2.0; */
+	  
+/* 	  int index2 = (int)(angle / sample_incr); */
+
+/* 	  //for( */
+
+	  
+/* 	  scan[index2].range = hypot( ymin - gpose.y, xmin - gpose.x ); */
+/* 	  scan[index2].hitpoint.x = xmin; */
+/* 	  scan[index2].hitpoint.y = ymin; */
+	  
+/* 	  printf( "angle %.2f index % d hits", RTOD(angle), index ); */
+/* 	  GList* it; */
+/* 	  for( it=hitlist; it; it=it->next ) */
+/* 	    printf( " %s", ((stg_polygon_t*)it->data)->mod->token ); */
+/* 	  puts(""); */
+/* 	} */
+
+ /*      ep = ep->next; */
+/*     } */
  
 
 
  /*  for( int t=0; t<cfg->samples; t += cfg->resolution ) */
 /*     {       */
-/*       double bearing =  pz.a - cfg->fov/2.0 + sample_incr * t; */
+/*       double bearing =  gpose.a - cfg->fov/2.0 + sample_incr * t; */
       
-/*       itl_t* itl = itl_create2( mod, pz.x, pz.y,  */
+/*       itl_t* itl = itl_create2( mod, gpose.x, gpose.y,  */
 /* 				bearing,  */
 /* 			       cfg->range_max,  */
 /* 			       mod->world->matrix,  */
@@ -300,8 +369,8 @@ int laser_update( stg_model_t* mod, void* unused )
 /*       else */
 /* 	{ */
 /* 	  scan[t].range = cfg->range_max;	   */
-/* 	  scan[t].hitpoint.x = pz.x + scan[t].range * cos(bearing); */
-/* 	  scan[t].hitpoint.y = pz.y + scan[t].range * sin(bearing); */
+/* 	  scan[t].hitpoint.x = gpose.x + scan[t].range * cos(bearing); */
+/* 	  scan[t].hitpoint.y = gpose.y + scan[t].range * sin(bearing); */
 /* 	} */
 
 /*       itl_destroy( itl ); */

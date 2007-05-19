@@ -1990,12 +1990,12 @@ stg_model_t* stg_model_test_collision2( stg_model_t* mod,
   // raytrace along all our rectangles. expensive, but most vehicles
   // will just be a single rect, grippers 3 rects, etc. not too bad.
   
-  size_t count=0;
+  //size_t count=0;
   //stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
 
   // no body? no collision
-  if( count < 1 )
-    return NULL;
+  //if( count < 1 )
+  //return NULL;
 
   // first find the models whose bounding box overlaps with this one
 
