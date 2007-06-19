@@ -26,6 +26,8 @@
 static GdkGLConfig *glconfig = NULL;
 static GdkGLConfig *gllaser = NULL;
 
+GList* dl_list = NULL;
+
 #include "stage_internal.h"
 #include "gui.h"
 
@@ -1633,6 +1635,16 @@ void draw_world(  stg_world_t* world )
   // draw the model's data
   g_hash_table_foreach( world->models, (GHFunc)model_draw_data_cb, NULL );
 
+  // draw anything in the assorted displaylist list
+  GList* it;
+  for( it = dl_list; it; it=it->next )
+    {
+      int dl = (int)it->data;
+      printf( "Calling dl %d\n", dl );
+      glCallList( (int)it->data );
+    }
+
+
   if( world->win->selection_active
       &&  world->win->selection_active->sense_poly )
     {
@@ -1842,6 +1854,7 @@ void draw_world(  stg_world_t* world )
 
 /*       pop_color();	    */
 /*     } */
+
 
   if( win->show_thumbnail ) // if drawing the whole world mini-view
     draw_thumbnail( world );

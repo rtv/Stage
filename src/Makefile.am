@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.140.2.5 2007-05-18 05:21:07 rtv Exp $
+# $Id: Makefile.am,v 1.140.2.6 2007-06-19 02:00:46 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -57,6 +57,7 @@ libstage_la_SOURCES =  \
 	worldfile.hh 
 
 
+
 # TODO
 # model_power.c # needs lots of work
 #	model_gripper.c 
@@ -68,6 +69,7 @@ libstage_la_LIBADD = @GUI_LIBS@
 # if Player is present, build the plugin and the test program
 if HAVE_PLAYER
   lib_LTLIBRARIES += libstageplugin.la
+  lib_LTLIBRARIES += libglutgraphics.la
   # bin_PROGRAMS += ptest                  #currently broken
 endif
 
@@ -77,6 +79,7 @@ libstageplugin_la_SOURCES = \
 	p_fiducial.cc \
 	p_driver.cc \
 	p_driver.h \
+	p_graphics3d.cc \
 	p_laser.cc \
 	p_ptz.cc \
 	p_wifi.cc \
@@ -110,6 +113,14 @@ libstageplugin_la_SOURCES = \
 libstageplugin_la_CPPFLAGS = $(AM_CPPFLAGS) @PLAYER_CFLAGS@
 libstageplugin_la_LDFLAGS = -version-info 1:0:0 -rpath $(libdir)
 libstageplugin_la_LIBADD = libstage.la @PLAYER_LIBS@ @GUI_LIBS@
+
+# build a Player plugin from libstage plus Player driver hooks.
+libglutgraphics_la_SOURCES = \
+	glutgraphics.cc
+
+libglutgraphics_la_CPPFLAGS = $(AM_CPPFLAGS) @PLAYER_CFLAGS@
+libglutgraphics_la_LDFLAGS = -version-info 1:0:0 -rpath $(libdir) -framework GLUT
+libglutgraphics_la_LIBADD = libstage.la @PLAYER_LIBS@ 
 
 # build a stand-alone test program using libstage
 stest_DEPENDENCIES = libstage.la

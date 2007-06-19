@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.37.4.3 2006-12-22 23:56:57 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.37.4.4 2007-06-19 02:00:46 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -392,6 +392,10 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  //ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
 	  //break;	  
 
+	case PLAYER_GRAPHICS3D_CODE:
+	  ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
+	  break;	  
+	  
 	case PLAYER_GRIPPER_CODE:
 	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
 	  break;	  
@@ -603,28 +607,30 @@ void StgDriver::Update(void)
     if(!interface)
       continue;
 
-    if( interface->addr.interf == PLAYER_SIMULATION_CODE )
-    {
-      if( stg_world_update( this->world, FALSE ) )
-	player_quit = TRUE; // set Player's global quit flag
-    }
-    else
-    {
-      // Has enough time elapsed since the last time we published on this
-      // interface?  This really needs some thought, as each model/interface
-      // should have a configurable publishing rate. For now, I'm using the
-      // world's update rate (which appears to be stored as msec).  - BPG
-      double currtime;
-      GlobalTime->GetTimeDouble(&currtime);
-      if((currtime - interface->last_publish_time) >= 
-         (interface->mod->world->sim_interval / 1e3))
+    switch( interface->addr.interf )
       {
-        interface->Publish();
-        interface->last_publish_time = currtime;
-      }
-    }
-  }
+      case PLAYER_SIMULATION_CODE:
+	if( stg_world_update( this->world, FALSE ) )
+	  player_quit = TRUE; // set Player's global quit flag
+	break;
 
+      default:
+	{
+	  // Has enough time elapsed since the last time we published on this
+	  // interface?  This really needs some thought, as each model/interface
+	  // should have a configurable publishing rate. For now, I'm using the
+	  // world's update rate (which appears to be stored as msec).  - BPG
+	  double currtime;
+	  GlobalTime->GetTimeDouble(&currtime);
+	  if((currtime - interface->last_publish_time) >= 
+	     (interface->mod->world->sim_interval / 1e3))
+	    {
+	      interface->Publish();
+	      interface->last_publish_time = currtime;
+	    }
+	}
+      }
+  }
   // update the world
   return;
 }

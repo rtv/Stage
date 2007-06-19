@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics2d.cc,v 1.5.2.1 2006-09-14 07:03:25 rtv Exp $
+ * CVS: $Id: p_graphics2d.cc,v 1.5.2.2 2007-06-19 02:00:46 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -70,13 +70,23 @@ InterfaceGraphics2d::InterfaceGraphics2d( player_devaddr_t addr,
     this->fig = stg_model_fig_create( mod, "g2d_fig", "top", 99 );
   
   stg_rtk_fig_clear( this->fig );
+
+  list = NULL;
 }
 
 InterfaceGraphics2d::~InterfaceGraphics2d( void )
 { 
-  stg_rtk_fig_clear( this->fig );
-};
+  Clear();
+}
 
+void InterfaceGraphics2d::Clear( void )
+{ 
+  stg_rtk_fig_clear( this->fig );
+
+  // delete all drawlist entries
+  // delete drawlist
+  list = NULL;
+}
 
 int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
 				 player_msghdr_t* hdr,
@@ -88,8 +98,7 @@ int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
                            PLAYER_GRAPHICS2D_CMD_CLEAR, 
                            this->addr))
     {
-      //puts( "g2d: clearing figure" );
-      stg_rtk_fig_clear( this->fig );      
+      Clear();      
       return 0; //ok
     }
   

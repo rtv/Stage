@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.89.2.8 $
+//  $Revision: 1.89.2.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -221,7 +221,7 @@ int laser_update( stg_model_t* mod, void* unused )
 
   assert( mod->polys );
 
-  stg_endpoint_t* ep = ((stg_polygon_t*)mod->polys->data)->epts[1]; // x max
+  //stg_endpoint_t* ep = ((stg_polygon_t*)mod->polys->data)->epts[1]; // x max
 
   
   
