@@ -1640,7 +1640,7 @@ void draw_world(  stg_world_t* world )
   for( it = dl_list; it; it=it->next )
     {
       int dl = (int)it->data;
-      printf( "Calling dl %d\n", dl );
+      //printf( "Calling dl %d\n", dl );
       glCallList( (int)it->data );
     }
 

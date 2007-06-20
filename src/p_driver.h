@@ -300,7 +300,7 @@ class InterfaceGraphics3d : public InterfaceModel
 
  private:
   
-  GArray* commands; // array of drawing commands
+  GList* commands; // array of drawing commands
   bool rebuild_displaylist;
   int displaylist;
   
