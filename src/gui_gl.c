@@ -941,24 +941,6 @@ int gl_model_polygons( stg_model_t* mod, void* userp )
   // draw each poly
   g_list_foreach( mod->polys, (GFunc)gl_draw_polygon3d_cb, NULL );
 
-  // experimental
-  /* glDisable (GL_CULL_FACE); */
-/*   glEnableClientState( GL_VERTEX_ARRAY ); */
-/*   glVertexPointer( 3, GL_FLOAT, 0, mod->verts );   */
-/*   glDrawArrays( GL_QUAD_STRIP, 0, mod->verts_count ); */
-/*   glEnable(GL_CULL_FACE); */
-
-
-/*   glBegin(GL_POLYGON); */
-/*   int i; */
-/*   for( i=0; i<mod->verts_count/2; i++ ) */
-/*     glArrayElement( 2*i+1 ); */
-/*   glEnd(); */
-
-  //if( 1 )// mod->boundary ) 
-  //  box3d_wireframe( &mod->bbox );
-  
-
   glPopMatrix(); // drop out of local coords
   glEndList();
 

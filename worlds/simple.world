@@ -1,9 +1,10 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.14 2007-06-21 01:47:31 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.15 2007-06-21 16:52:36 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
+
 
 
 
@@ -12,8 +13,10 @@ include "map.inc"
 
 
 
+
 # defines sick laser
 include "sick.inc"
+
 
 
 
@@ -28,10 +31,10 @@ interval_real 100  # real-time interval between simulation updates in millisecon
 # configure the GUI window
 window
 ( 
-  size [ 486.000 392.000 ] 
+  size [ 1144.000 803.000 ] 
   center [-3.010 1.960] 
   rotate [ 0.770 -0.540 ]
-  scale 21.614 
+  scale 42.035 
   show_bboxes 0
   show_grid 1
 )
@@ -55,7 +58,8 @@ define octagon position
 map
 ( 
   size [16 16]
-  bitmap "bitmaps/cave.png"
+  #bitmap "bitmaps/cave.png"
+  bitmap "bitmaps/hospital.png"
 )
 
 # create a robot

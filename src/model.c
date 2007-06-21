@@ -690,7 +690,27 @@ void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
 void stg_model_map( stg_model_t* mod, gboolean render )
 {
   assert( mod );
+
+  // bail out if we have no blocks
+  if( mod->blocks == NULL )
+    return;
   
+  if( render )
+    {
+      // get model's global pose
+      stg_pose_t org;
+      memcpy( &org, &mod->geom.pose, sizeof(org));
+      stg_model_local_to_global( mod, &org );
+
+      // render the blocks in the matrix here
+
+    }
+  else 
+    stg_matrix_remove_object( mod->world->matrix, mod ); 
+} 
+
+
+
  /*  // to be drawn, we must have a body and some extent greater than zero */
 /*   if( (mod->lines || mod->polygons) &&  */
 /*       mod->geom.size.x > 0.0 && mod->geom.size.y > 0.0 ) */
@@ -724,8 +744,6 @@ void stg_model_map( stg_model_t* mod, gboolean render )
 /*       else */
 /* 	stg_matrix_remove_object( mod->world->matrix, mod ); */
 /*     } */
-}
-
 
 
 void stg_model_subscribe( stg_model_t* mod )
@@ -1157,16 +1175,6 @@ void stg_model_add_polygon( stg_model_t* mod,
   poly->points = g_array_new( FALSE, TRUE, sizeof(stg_point_t));
   g_array_append_vals( poly->points, pts, pt_count );
   
-  stg_vertex_t* verts = g_new( stg_vertex_t, pt_count );
-
-  int i;
-  for( i=0; i<poly->points->len; i++ )
-    {
-      stg_point_t* pt = &g_array_index( poly->points, stg_point_t, i );
-      verts[i].x = pt->x;
-      verts[i].y = pt->y; 
-      verts[i].z = 0; 
-    }
 
   // endpoints
   // this is clunky
@@ -1179,12 +1187,6 @@ void stg_model_add_polygon( stg_model_t* mod,
       poly->epts[e].prev = NULL;      
     }
   
-  // experimental 
-  mod->d_list = 
-    g_list_append( mod->d_list,  
-		   stg_d_draw_create( STG_D_DRAW_POLYGON, verts, pt_count ) );
-
-  g_free( verts ); // we're done with this now
   
   // add this model's endpoints to the world's lists
 /*   stg_endpoint3_t* ep3 = &mod->world->endpts; */
@@ -1527,6 +1529,10 @@ void stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
 			    geom->size.x, 
 			    geom->size.y );
   
+  stg_block_list_scale( mod->blocks, 	
+			geom->size.x, 
+			geom->size.y ); 
+
   g_list_foreach( mod->polys, (GFunc)polygon_local_bounds_calc_cb, NULL );
   g_list_foreach( mod->polys, (GFunc)polygon_global_bounds_calc_cb, NULL );
   

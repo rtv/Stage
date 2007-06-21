@@ -226,9 +226,6 @@ void stg_model_load( stg_model_t* mod )
 
       printf( "found %d rects\n", rect_count );
       
-      //mod->verts_count = rect_count * 4;
-      //mod->verts = g_new( float, mod->verts_count * 3);
-      
       if( rects && (rect_count > 0) )
 	{
 	  puts( "loading rects" );
@@ -250,6 +247,10 @@ void stg_model_load( stg_model_t* mod )
 	      stg_model_add_polygon( mod, pts, 4, mod->color, FALSE );	      
   	    }
 
+	  stg_block_list_scale( mod->blocks, 	
+				mod->geom.size.x, 
+				mod->geom.size.y ); 
+	  
 	  // scale all the polys to fit the model's geometry
 	  stg_polygons_normalize( mod->polys, 
 				  mod->geom.size.x, 
@@ -257,15 +258,7 @@ void stg_model_load( stg_model_t* mod )
 
 	  g_list_foreach( mod->polys, polygon_local_bounds_calc_cb, NULL );
 	  g_list_foreach( mod->polys, polygon_global_bounds_calc_cb, NULL );
-	}
-      
-      /* stg_line_t* lines = NULL; */
-      /*       size_t linecount = 0; */
-      /*       plines = stg_polylines_from_rotrects( full, &linecount );       */
-      /*       printf( "%d rectangles created %d lines\n", */
-      /* 	      polycount, linecount ); */
-      /*       stg_model_set_lines( mod, lines, linecount ); */
-      
+	}      
     }
     
     if( wf_property_exists( mod->id, "polygons" ) )
@@ -287,9 +280,6 @@ void stg_model_load( stg_model_t* mod )
 	    //printf( "expecting %d points in polygon %d\n",
 	    //  pointcount, l );
 	    
-	    mod->verts_count = pointcount * 2;
-	    mod->verts = g_new( float, mod->verts_count * 3);
-
 	    stg_point_t* pts = stg_points_create( pointcount );
 	    
 	    int p;
@@ -301,16 +291,6 @@ void stg_model_load( stg_model_t* mod )
 		
 		//printf( "key %s x: %.2f y: %.2f\n",
 		//      key, pt.x, pt.y );
-
-		// original point
-		mod->verts[6*p+0] = pts[p].x;
-		mod->verts[6*p+1] = pts[p].y;
-		mod->verts[6*p+2] = 0;
-
-		// extruded point
-		mod->verts[6*p+3] = pts[p].x;
-		mod->verts[6*p+4] = pts[p].y;
-		mod->verts[6*p+5] = 1;	       
 	      }
 	    
 	    // polygon color
@@ -329,6 +309,10 @@ void stg_model_load( stg_model_t* mod )
 	    stg_model_add_polygon( mod, pts, pointcount, color, unfilled );
 	    stg_points_destroy( pts );
 	  }
+	
+	stg_block_list_scale( mod->blocks, 	
+			      mod->geom.size.x, 
+			      mod->geom.size.y ); 
 	
 	// scale all the polys to fit the model's geometry
 	stg_polygons_normalize( mod->polys, 

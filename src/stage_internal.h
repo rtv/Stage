@@ -253,9 +253,6 @@ extern "C" {
 
     GList* polys;
     
-    float* verts;
-    int verts_count;
-
     stg_watts_t watts; //< power consumed by this model
     stg_color_t color;
     stg_kg_t mass;
