@@ -1,17 +1,20 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.13 2007-05-19 02:33:28 rtv Exp $
+# CVS: $Id: simple.world,v 1.64.2.14 2007-06-21 01:47:31 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
+
 
 
 # defines 'map' object used for floorplans
 include "map.inc"
 
 
+
 # defines sick laser
 include "sick.inc"
+
 
 
 # size of the world in meters
@@ -25,10 +28,10 @@ interval_real 100  # real-time interval between simulation updates in millisecon
 # configure the GUI window
 window
 ( 
-  size [ 767.000 804.000 ] 
+  size [ 486.000 392.000 ] 
   center [-3.010 1.960] 
-  rotate [ 0.000 0.000 ]
-  scale 43.891 
+  rotate [ 0.770 -0.540 ]
+  scale 21.614 
   show_bboxes 0
   show_grid 1
 )
@@ -49,30 +52,29 @@ define octagon position
 )
 
 # load an environment bitmap
-#map
-#( 
-#  size [16 16]
-#  bitmap "bitmaps/cave.png"
-#)
+map
+( 
+  size [16 16]
+  bitmap "bitmaps/cave.png"
+)
 
 # create a robot
 pioneer2dx
-#sick_laser
 (
   size [1 0.5]	
   name "robot1"
   color "red"
-  pose [-7.016 -6.881 0.000]
-  #sick_laser( size3d [ 0.156 0.155 0.210 ] ) # dimensions from LMS200 data sheet
+  pose [-1.672 1.503 0.000]
+  sick_laser() 
 )
 
-#pioneer2dx
-#(
-#  name "robot2"
-#  color "green"
-#  pose [2.304 3.428 27.811]
-#  #sick_laser()
-#)
+pioneer2dx
+(
+  name "robot2"
+  color "green"
+  pose [2.304 3.428 27.811]
+  #sick_laser()
+)
 
 octagon
 (

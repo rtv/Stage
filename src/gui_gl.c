@@ -1028,9 +1028,85 @@ void gl_model_draw( stg_model_t* mod )
 
   glTranslatef( mod->pose.x, mod->pose.y, mod->pose.z );
   glRotatef( RTOD(mod->pose.a), 0,0,1 );
-
-  // move to the robot's location
   
+  //draw blocks
+  GList* it;
+  for( it=mod->blocks; it; it=it->next )
+    stg_block_render( (stg_block_t*)it->data );
+
+  // player color elements are uint8_t type
+  glColor4ub( 0,2,0,255 );
+
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );      
+
+  // draw the stg_d list
+  for( it=mod->d_list; it; it=it->next )
+    {
+      stg_d_draw_t* d = (stg_d_draw_t*)it->data;
+      
+      //printf( "STG_D DRAW COMMAND %d\n", d->type );
+      
+      switch( d->type )
+	{
+	case STG_D_DRAW_POINTS:
+	  glPointSize( 3 );
+	  glBegin( GL_POINTS );
+	  break;	      
+	case STG_D_DRAW_LINES:
+	  glBegin( GL_LINES );
+	  break;
+	case STG_D_DRAW_LINE_STRIP:
+	  glBegin( GL_LINE_STRIP );
+	  break;
+	case STG_D_DRAW_LINE_LOOP:
+	  glBegin( GL_LINE_LOOP );
+	  break;
+	case STG_D_DRAW_TRIANGLES:
+	  glBegin( GL_TRIANGLES );
+	  break;
+	case STG_D_DRAW_TRIANGLE_STRIP:
+	  glBegin( GL_TRIANGLE_STRIP );
+	  break;
+	case STG_D_DRAW_TRIANGLE_FAN:
+	  glBegin( GL_TRIANGLE_FAN );
+	  break;
+	case STG_D_DRAW_QUADS:
+	  glBegin( GL_QUADS );
+	  break;
+	case STG_D_DRAW_QUAD_STRIP:
+	  glBegin( GL_QUAD_STRIP );
+	  break;
+	case STG_D_DRAW_POLYGON:
+	  glBegin( GL_POLYGON );
+	  break;
+	  
+	default:
+	  PRINT_WARN1( "drawing mode %d not handled", 
+		       d->type );	 
+	}
+      
+      
+      unsigned int c;
+      for( c=0; c<d->vert_count; c++ )
+	{
+	  glVertex3f( d->verts[c].x,
+		      d->verts[c].y,
+		      d->verts[c].z );
+
+	  //printf( "vertex [%.2f, %.2f, %.2f]\n",
+	  //  d->verts[c].x,
+	  //  d->verts[c].y,
+	  //  d->verts[c].z );
+
+	}
+
+      //puts("");
+
+      glEnd();
+    }
+  
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );      
+
   // go into model's geometry coordframe
   //glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
   //glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
@@ -1559,49 +1635,13 @@ void draw_world(  stg_world_t* world )
       glScalef ( win->scale, win->scale, win->scale ); // zoom
       //glTranslatef( 0,0, -MAX(world->width,world->height) );
 
-
-
-      push_color_rgb( 1,0,0 );
-      glRecti( 0,0,1,1 );
-      pop_color();
-
-      // still in pixelcoords
-      //glTranslatef(  win->panx*win->scale, 
-      //	     win->pany*win->scale, 
-      //	     0 );//-zclip ); // x,y in pixel coords, z in 0-1 depth     
-
-      push_color_rgb( 0,1,0 );
-      glRecti( 0,0,1,1 );
-      pop_color();
-
-      // world coords
-      //glScalef ( win->scale, win->scale, win->scale ); // zoom
-      //glTranslatef(  0,0, -MAX(world->width,world->height) ); // meters
-
-      //  rotate about the screen X-axis - height of viewpoint
-      //glRotatef( RTOD(-win->stheta), cos(win->sphi), sin(win->sphi), 0.0);  
-      //glRotatef( RTOD(-win->stheta), 1,0,0);  
-
-      push_color_rgb( 0,0,1 );
-      glRecti( 0,0,1,1 );
-      pop_color();
-
-      
-      
       // TODO - rotate around the mouse pointer or window center, not the
       //origin  - the commented code is close, but not quite right
-      
-
       //glRotatef( RTOD(win->sphi), 0.0, 0.0, 1.0);   // rotate about z - pitch
-      
-
-      //glTranslatef( -win->click_point.x, -win->click_point.y, 0 ); // shift back      
-      //printf( "panx %f pany %f scale %.2f stheta %.2f sphi %.2f\n",
+      //glTranslatef( -win->click_point.x, -win->click_point.y, 0 ); // shift back            //printf( "panx %f pany %f scale %.2f stheta %.2f sphi %.2f\n",
       //  panx, pany, scale, stheta, sphi );
     }
   
-  //glNewList( win->draw_list, GL_COMPILE_AND_EXECUTE );
-
   // draw the world size rectangle in white
   // draw the floor a little offset so it doesn't z-fight with the
   // models

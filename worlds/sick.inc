@@ -11,4 +11,3 @@ define sick_laser laser
   color "blue"
   size3d [ 0.156 0.155 0.210 ] # dimensions from LMS200 data sheet	
 )
-

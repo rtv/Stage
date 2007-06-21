@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics3d.cc,v 1.1.2.1 2007-06-20 01:41:39 rtv Exp $
+ * CVS: $Id: p_graphics3d.cc,v 1.1.2.2 2007-06-21 01:47:31 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -50,15 +50,6 @@ extern GList* dl_list;
 - PLAYER_GRAPHICS3D_CMD_DRAW
 */
 
-// static unsigned int rgb32_pack( player_color_t *pcol )
-// {
-//   unsigned int col=0;
-//   col = pcol->red << 16;
-//   col += pcol->green << 8;
-//   col += pcol->blue;
-//   return col;
-// }
-
 InterfaceGraphics3d::InterfaceGraphics3d( player_devaddr_t addr, 
 			    StgDriver* driver,
 			    ConfigFile* cf,
@@ -69,7 +60,7 @@ InterfaceGraphics3d::InterfaceGraphics3d( player_devaddr_t addr,
   commands = NULL;
   displaylist = glGenLists( 1 );
 
-  printf( "allocated dl %d\n", displaylist );
+  //printf( "allocated dl %d\n", displaylist );
  
   rebuild_displaylist = FALSE;
 
@@ -100,47 +91,78 @@ void InterfaceGraphics3d::Clear( void )
   commands = NULL;
 
   // empty the display list
-  puts( "CLEARING DISPLAYLIST" );
+  //puts( "CLEARING DISPLAYLIST" );
   glNewList( displaylist, GL_COMPILE );
   glEndList();
+}
+
+void InterfaceGraphics3d::StoreCommand( void* cmd )
+{
+  // store this command
+  commands = g_list_append( commands, cmd );
+  
+  // trigger display list update on next Publish()
+  rebuild_displaylist = TRUE;
 }
 
 int InterfaceGraphics3d::ProcessMessage(MessageQueue* resp_queue,
 				 player_msghdr_t* hdr,
 				 void* data)
 {
-  // printf( "Stage graphics3d interface processing message\n" );
+  // test for drawing commands first because they are the most common
+  // by far and we avoid lots of tests
+  if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+			    PLAYER_GRAPHICS3D_CMD_DRAW, 
+			    this->addr) )
+    {
+      StoreCommand( g_memdup( data, sizeof(player_graphics3d_cmd_draw_t)));;
+      return 0; //ok
+    }
+  
+  if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+			    PLAYER_GRAPHICS3D_CMD_ROTATE, 
+			    this->addr) )
+    {
+      PRINT_WARN( "coord rotation is not yet implemented" );
+      return -1; //not ok
+      //StoreCommand( g_memdup( data, sizeof(player_graphics3d_cmd_rotate_t)));
+      //return 0; //ok
+    }
+  
+  if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+			    PLAYER_GRAPHICS3D_CMD_TRANSLATE, 
+			    this->addr) )
+    {
+      PRINT_WARN( "coord translation is not yet implemented" );
+      return -1; //not ok
+      //StoreCommand( g_memdup( data, sizeof(player_graphics3d_cmd_translate_t)));
+      //return 0; //ok
+    }
+
+  if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+			    PLAYER_GRAPHICS3D_CMD_PUSH, 
+			    this->addr) )
+    {
+      PRINT_WARN( "stack pushing is not yet implemented" );
+      return -1; //not ok
+    }
+  
+  if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+			    PLAYER_GRAPHICS3D_CMD_POP, 
+			    this->addr) )
+    {
+      PRINT_WARN( "stac popping is not yet implemented" );
+      return -1; //not ok
+    }
   
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
                            PLAYER_GRAPHICS3D_CMD_CLEAR, 
-                           this->addr))
+                           this->addr) )
     {
       Clear();      
       return 0; //ok
     }
-  
-  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
-                           PLAYER_GRAPHICS3D_CMD_DRAW, 
-                           this->addr))
-    {
-      // use glib's nice function to allocate memory and duplicate the
-      // data buffer
-      player_graphics3d_cmd_draw_t* cmd = (player_graphics3d_cmd_draw_t*)
-	g_memdup( data, sizeof(player_graphics3d_cmd_draw_t) );
       
-      // store this command
-      commands = g_list_append( commands, cmd );
-      
-      printf( "received a g3d command of type %d and %d points\n\n", 
-	      cmd->draw_mode,
-	      cmd->points_count );
-      
-      // trigger display list update on next Publish()
-      rebuild_displaylist = TRUE;
-
-      return 0; //ok
-    }
-    
   PLAYER_WARN2("stage graphics3d  doesn't support message %d:%d.", 
 	       hdr->type, hdr->subtype );
   return -1;
@@ -152,7 +174,8 @@ void InterfaceGraphics3d::Publish( void )
  
   if( rebuild_displaylist )
     {      
-      printf( "rebuilding display list %d commands\n", g_list_length(commands) );
+      //printf( "rebuilding display list %d commands\n", 
+      // g_list_length(commands) );
       
       // execute the commands
       glNewList( displaylist, GL_COMPILE );
@@ -176,13 +199,12 @@ void InterfaceGraphics3d::Publish( void )
 		      cmd->color.green, 
 		      cmd->color.blue, 
 		      cmd->color.alpha );
-
+	  
 	  //printf( "COMMAND MODE %d\n", cmd->draw_mode );
-
 	  switch( cmd->draw_mode )
 	    {
 	    case PLAYER_DRAW_POINTS:
-	      glPointSize( 2 );
+	      glPointSize( 3 );
 	      glBegin( GL_POINTS );
 	      break;	      
 	    case PLAYER_DRAW_LINES:
@@ -214,21 +236,16 @@ void InterfaceGraphics3d::Publish( void )
 	      break;
 	      
 	    default:
-	      PRINT_WARN1( "drawing mode %d not handled", cmd->draw_mode );	 
+	      PRINT_WARN1( "drawing mode %d not handled", 
+			   cmd->draw_mode );	 
 	    }
 	  
-	  int c;
+	  unsigned int c;
 	  for( c=0; c<cmd->points_count; c++ )
 	    {
 	      glVertex3f( cmd->points[c].px,
 			  cmd->points[c].py,
 			  cmd->points[c].pz );
-
-	      //printf( "vertex [%.2f,%.2f,%.2f]\n",
-	      //      cmd->points[c].px,
-	      //      cmd->points[c].py,
-	      //      cmd->points[c].pz );
-
 	    }
 	  
 	  glEnd();

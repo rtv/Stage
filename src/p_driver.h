@@ -299,7 +299,9 @@ class InterfaceGraphics3d : public InterfaceModel
   virtual void Publish( void );
 
  private:
-  
+
+  void StoreCommand( void* cmd );
+
   GList* commands; // array of drawing commands
   bool rebuild_displaylist;
   int displaylist;

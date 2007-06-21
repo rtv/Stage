@@ -160,6 +160,43 @@ model
 int model_unrender_velocity( stg_model_t* mod, void* userp );
 int model_render_velocity( stg_model_t* mod, void* enabled );
 
+
+stg_d_draw_t* stg_d_draw_create( stg_d_type_t type,
+				 stg_vertex_t* verts,
+				 size_t vert_count )
+{
+  size_t vert_mem_size = vert_count * sizeof(stg_vertex_t);
+  
+  // allocate space for the draw structure and the vertex data behind it
+  stg_d_draw_t* d = 
+    g_malloc( sizeof(stg_d_draw_t) + vert_mem_size );
+  
+  d->type = type;
+  d->vert_count = vert_count;
+  
+  // copy the vertex data behind the draw structure
+  memcpy( d->verts, verts, vert_mem_size );
+	     
+  return d;
+}
+
+void stg_d_draw_destroy( stg_d_draw_t* d )
+{
+  g_free( d );
+}
+
+// utility for g_free()ing everything in a list
+void list_gfree( GList* list )
+{
+  // free all the data in the list
+  GList* it;
+  for( it=list; it; it=it->next )
+    g_free( it->data );
+  
+  // free the list elements themselves
+  g_list_free( list );
+}
+
 // convert a global pose into the model's local coordinate system
 void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 {
@@ -415,6 +452,8 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->world = world;
   mod->parent = parent; 
 
+  mod->d_list = NULL;
+  
   //printf( "creating model %d.%d(%s)\n", 
   //  mod->world->id,
   //  mod->id, 
@@ -1087,6 +1126,18 @@ void stg_model_add_polygon( stg_model_t* mod,
 			    stg_color_t color,
 			    stg_bool_t unfilled )
 {
+  // block experiment
+  mod->blocks = g_list_prepend( mod->blocks, 
+				stg_block_create( 0,
+						  0,
+						  0,
+						  0,
+						  mod->geom.size.y,  
+						  mod->color,
+						  pts,
+						  pt_count ));
+  
+
 /*   printf( "adding a polygon to the %d polygons of model %s\n",   */
 /* 	  g_list_length(mod->polys),  */
 /* 	  mod->token ); */
@@ -1106,6 +1157,17 @@ void stg_model_add_polygon( stg_model_t* mod,
   poly->points = g_array_new( FALSE, TRUE, sizeof(stg_point_t));
   g_array_append_vals( poly->points, pts, pt_count );
   
+  stg_vertex_t* verts = g_new( stg_vertex_t, pt_count );
+
+  int i;
+  for( i=0; i<poly->points->len; i++ )
+    {
+      stg_point_t* pt = &g_array_index( poly->points, stg_point_t, i );
+      verts[i].x = pt->x;
+      verts[i].y = pt->y; 
+      verts[i].z = 0; 
+    }
+
   // endpoints
   // this is clunky
   for( int e=0; e<6; e++ )
@@ -1117,9 +1179,13 @@ void stg_model_add_polygon( stg_model_t* mod,
       poly->epts[e].prev = NULL;      
     }
   
+  // experimental 
+  mod->d_list = 
+    g_list_append( mod->d_list,  
+		   stg_d_draw_create( STG_D_DRAW_POLYGON, verts, pt_count ) );
 
+  g_free( verts ); // we're done with this now
   
-      
   // add this model's endpoints to the world's lists
 /*   stg_endpoint3_t* ep3 = &mod->world->endpts; */
 /*   ep3->x = insert_endpoint( ep3->x, &poly->epts[0] );  */
@@ -1215,12 +1281,21 @@ void stg_polygon_destroy( stg_polygon_t* p )
   g_free( p );
 }
 
+
 void stg_model_clear_polygons( stg_model_t* mod )
 {
   for( GList* it=mod->polys; it; it=it->next )
     stg_polygon_destroy( (stg_polygon_t*)it->data );
   
   g_list_free( mod->polys );
+
+  list_gfree( mod->d_list );
+  mod->d_list = NULL;
+
+  // todo - free the blocks memory
+  mod->blocks = NULL;
+
+
   mod->polys = NULL;
 }
 

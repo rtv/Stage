@@ -41,6 +41,32 @@
 extern "C" {
 #endif 
   
+  
+  typedef struct stg_block
+  {
+    stg_pose_t pose; //< 3d pose and rotation around z in parent's CS
+    stg_point_t* pts; //< points defining a polygon
+    size_t pt_count; //< the number of points
+    stg_color_t color; //< the color of the block
+    double height; //< the z axis extent of the block
+    int display_list; //< id of the OpenGL displaylist to draw this block
+  } stg_block_t;
+  
+  
+  /** Create a new block. A model's body is a list of these
+      blocks. The point data is copied, so pts can safely be freed
+      after calling this.*/
+  stg_block_t* stg_block_create( double x, double y, double z, double a,
+				 double height,
+				 stg_color_t color,
+				 stg_point_t* pts, 
+				 size_t pt_count );
+    
+  /** destroy a block, freeing all memory */
+  void stg_block_destroy( stg_block_t* block );
+  
+  void stg_block_update( stg_block_t* block );
+  void stg_block_render( stg_block_t* block );
 
   void gui_startup( int* argc, char** argv[] ); 
   void gui_shutdown( void );
@@ -131,6 +157,8 @@ extern "C" {
   typedef struct {
     double x, y, z;
   } stg_point3_t;
+
+  typedef stg_point3_t stg_vertex_t; // same thing
   
   typedef struct {
     stg_point3_t min, max;
@@ -148,6 +176,66 @@ extern "C" {
   typedef struct {
     GPtrArray *x, *y, *z;
   } stg_ptr_array_3d_t;
+  
+  typedef enum {
+    STG_D_DRAW_POINTS,
+    STG_D_DRAW_LINES,
+    STG_D_DRAW_LINE_STRIP,
+    STG_D_DRAW_LINE_LOOP,
+    STG_D_DRAW_TRIANGLES,
+    STG_D_DRAW_TRIANGLE_STRIP,
+    STG_D_DRAW_TRIANGLE_FAN,
+    STG_D_DRAW_QUADS,
+    STG_D_DRAW_QUAD_STRIP,
+    STG_D_DRAW_POLYGON,
+    STG_D_PUSH,
+    STG_D_POP,
+    STG_D_ROTATE,
+    STG_D_TRANSLATE,
+  } stg_d_type_t;
+  
+  /** the start of all stg_d structures looks like this */
+  typedef struct stg_d_hdr
+  {
+    stg_d_type_t type;
+  } stg_d_hdr_t;
+
+  /** push is just the header, but we define it for syntax checking */
+  typedef stg_d_hdr_t stg_d_push_t;
+  /** pop is just the header, but we define it for syntax checking */
+  typedef stg_d_hdr_t stg_d_pop_t;
+  
+  /** stg_d draw command */
+  typedef struct stg_d_draw
+  {
+    /** required type field */
+    stg_d_type_t type;
+    /** number of vertices */
+    size_t vert_count;
+    /** array of vertex data follows at the end of this struct*/
+    stg_vertex_t verts[]; 
+  } stg_d_draw_t;
+  
+  /** stg_d translate command */
+  typedef struct stg_d_translate
+  {
+    /** required type field */
+    stg_d_type_t type; 
+    /** distance to translate, in 3 axes */
+    stg_point3_t vector;
+  } stg_d_translate_t;
+  
+  /** stg_d rotate command */
+  typedef struct stg_d_rotate
+  {
+    /** required type field */
+    stg_d_type_t type; 
+    /** vector about which we should rotate */
+    stg_point3_t vector;
+    /** angle to rotate in radians */
+    double angle;
+  } stg_d_rotate_t;
+
 
   typedef int (*foo_t)(stg_model_t* mod );
     
@@ -229,6 +317,10 @@ extern "C" {
     stg_polyline_t* lines;
     size_t lines_count;
     
+    GList* d_list;
+    
+    GList* blocks;
+
     /** specify an axis-aligned 3d bounding box in global
 	coordinates */
     //stg_endpoint_t endpts[6]; // in order {xmin,xmax,ymin,ymax,zmin,zmax}
