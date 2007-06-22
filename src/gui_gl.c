@@ -50,8 +50,6 @@ int pointer_list = 0;
 #define THUMBNAILHEIGHT 100
 //#define LIST_BODY "_gl_body"
 #define LIST_DATA "_gl_data"
-#define LIST_POLYS_2D "_gl_polys_2d"
-#define LIST_POLYS_3D "_gl_polys_3d"
 #define LIST_GRID "_gl_grid"
 #define LIST_SELECTED "_gl_selected"
 
@@ -1431,218 +1429,10 @@ void draw_world(  stg_world_t* world )
       glCallList( (int)it->data );
     }
 
+  // jump 2m into the air for debug
+  gl_coord_shift( 0,0,2,0 );
   glCallList( dl_debug );
-
-  if( world->win->selection_active
-      &&  world->win->selection_active->sense_poly )
-    {
-      stg_model_t* mod = world->win->selection_active;
-
-      push_color_stgcolor( stg_lookup_color( "green" ));
-
-      gl_draw_polygon_bbox( mod->sense_poly );
-      pop_color();
-  //}
- /*      // outline the polgons that the selected robot intersects with */
-/*       push_color_stgcolor( stg_lookup_color( "blue" )); */
-      
-/*       GList *b; */
-/*       for( b = mod->sense_poly->intersectors; b; b=b->next ) */
-/* 	{ */
-/* 	  stg_polygon_t* p = (stg_polygon_t*)b->data; */
-	  
-/* 	  glPushMatrix(); */
-	  
-/* 	  stg_pose_t pose; */
-/* 	  stg_model_get_global_pose( p->mod, &pose ); */
-	  
-/* 	  // move into this model's coordinate frame */
-/* 	  glTranslatef( pose.x, pose.y, pose.z ); */
-/* 	  glRotatef( RTOD(pose.a), 0,0,1 ); */
-/* 	  gl_draw_polygon3d( p ); */
-	  
-/* 	  glPopMatrix(); */
-/* 	} */
-
-/*       pop_color(); */
-    }     
-
-/*       int err; */
-      
-/*       //if (! glutExtensionSupported("GL_ARB_vertex_program")) */
-/*       //Fail("GL_ARB_vertex_program not available on this machine"); */
-      
-/*       /\* Vertex shader *\/ */
-/*       glEnable(GL_VERTEX_PROGRAM_ARB); */
-/*       glGenProgramsARB(1, &VertShader); */
-/*       glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertShader); */
-/*       glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, */
-/* 			 strlen(VertSrc), VertSrc); */
-
-/*       glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &err); */
-/*       if (err >= 0) */
-/* 	printf("Error in vertex shader %s\n", */
-/* 	       glGetString(GL_PROGRAM_ERROR_STRING_ARB)); */
-      
- 
-      
-/*       glPushAttrib( GL_ALL_ATTRIB_BITS ); */
-/*       // these need to be set */
-/*       glEnable(GL_DEPTH_TEST); */
-/*       glDepthMask(GL_TRUE); */
-
-/*       glViewport( 0,0, 361, 100 );  */
-
-
-/*       glMatrixMode (GL_PROJECTION);       */
-/*       glPushMatrix();  */
-/*       glLoadIdentity (); */
-/*       //glScalef( win->scale, win->scale, win->scale ); */
-
-/*       double far = 8.0; */
-/*       double near = 0.1; */
-
-/*       //glScalef( 1,1,1.0/far ); */
-/*       gluPerspective( 45, 361/100, near, far ); */
-
-
-      
-/*       glMatrixMode( GL_MODELVIEW ); */
-/*       glPushMatrix();  */
-/*       glLoadIdentity(); */
-      
-      
-/*       stg_pose_t gpose;  */
-/*       stg_model_get_global_pose( world->win->selection_last, &gpose );  */
-
-/*       gluLookAt( gpose.x, gpose.y, 0.4, // eye point */
-/* 		 gpose.x + cos( gpose.a), // view direction */
-/* 		 gpose.y + sin( gpose.a), */
-/* 		 0.4, */
-/* 		 0,0,1 );// Z is up */
-		 
-
-/*       push_color_stgcolor( stg_lookup_color( "gray" )); */
-
-/*       glTranslatef( gpose.x, gpose.y, 0 ); */
-/*       GLUquadricObj* q = gluNewQuadric(); */
-/*       gluQuadricDrawStyle( q, GLU_LINE ); */
-/*       gluSphere( q, 8.0, 20, 20 ); */
-/*       gluDeleteQuadric( q ); */
-/*       glTranslatef( -gpose.x, -gpose.y, 0 ); */
-
-/*       //glRotatef( RTOD( -gpose.a ), 0,0,1 ); */
-      
-
-
-/*       for( GList* b = mod->sense_poly->intersectors; b; b=b->next )       */
-/* 	{ */
-/* 	  stg_polygon_t* p = (stg_polygon_t*)b->data; */
-
-/* 	  if( p->mod == world->win->selection_last ) */
-/* 	    continue; */
-	  
-/* 	  push_color_stgcolor( p->mod->color ); */
-	  
-/* 	  glPushMatrix(); */
-	  
-/* 	  stg_pose_t pose; */
-/* 	  stg_model_get_global_pose( p->mod, &pose ); */
-	  
-/* 	  // move into this model's coordinate frame */
-/* 	  glTranslatef( pose.x, pose.y, pose.z ); */
-/* 	  glRotatef( RTOD(pose.a), 0,0,1 ); */
-	  
-/* 	  //gl_draw_polygon_bbox( p ); */
-/* 	  gl_draw_polygon3d( p ); */
-	  
-/* 	  glPopMatrix();        */
-
-/* 	  pop_color(); */
-/* 	} */
-
-/*       //glFlush(); */
-      
-
-/*       pop_color(); */
-/*       //pop_color(); */
-      
-/*       glPopMatrix();   */
-
-/*       glPopAttrib(); */
-
-/*       glMatrixMode( GL_PROJECTION ); */
-/*       glPopMatrix();   */
-
-      
-/*       GLfloat* depths = calloc( sizeof(GLfloat), 361 ); */
-/*       glReadPixels( 0,50, 361, 1, GL_DEPTH_COMPONENT, GL_FLOAT, depths ); */
-   
-/* /\*       puts(""); *\/ */
-/* /\*       for( int c=0; c<361; c++ ) *\/ */
-/* /\* 	printf( "%.3f ", depths[c] ); *\/ */
-/* /\*       puts("");             *\/ */
-
-/*       // HACK alert. woop woop. */
-/*       puts(""); */
-/*       for( int c=0; c<361; c++ ) */
-/* 	printf( "%.2f ", 2 * ((depths[c] * (far-near)) -far/2.0) ); */
-/*       puts(""); */
-
-/*     } */
-
-
-  
-/*       glFrustum( 0, 361, */
-/* 		 0, 100, */
-/* 		 zclip, 2*zclip ); */
-      
-/*       glScalef ( 1, 1, 1.0 ); // zoom */
-
-
-      // 1 pixel-per unit
-
- /*  else */
-/*     { */
-/*       push_color_rgb( 1,0,0 ); */
-/*       glRecti( 0,0,1,1 ); */
-/*       pop_color(); */
-
-/*       for( GList* b = mod->sense_poly->intersectors; b; b=b->next )       */
-/* 	{ */
-/* 	  stg_polygon_t* p = (stg_polygon_t*)b->data; */
-	  
-/* 	  glPushMatrix(); */
-	  
-
-/* 	  //glTranslatef( -gpose.x + (pixels_width/2.0)/win->scale,  */
-/* 	  //    -gpose.y + (pixels_height/2.0)/win->scale, */
-/* 	  //    -zclip/2.0 );       */
-
-
-/* 	  /\* stg_pose_t pose; *\/ */
-/* /\* 	  stg_model_get_global_pose( p->mod, &pose ); *\/ */
-	  
-/* /\* 	  // move into this model's coordinate frame *\/ */
-/* /\* 	  glTranslatef( pose.x, pose.y, pose.z ); *\/ */
-/* /\* 	  glRotatef( RTOD(pose.a), 0,0,1 ); *\/ */
-	  
-/* /\* 	  //gl_draw_polygon_bbox( p ); *\/ */
-/* /\* 	  gl_draw_rectpolygon3d( p ); *\/ */
-	  
-/* 	  push_color_rgba( 1,0,0,1 );  */
-/* 	  glRectf( 0, 0, 1, 1 ); */
-/* 	  pop_color(); */
-
-/* 	  glPopMatrix(); */
-/* 	  //glMatrixMode( GL_MODELVIEW ); */
-/* 	} */
-/*       //      glPopMatrix(); */
-
-
-/*       pop_color();	    */
-/*     } */
-
+  gl_coord_shift( 0,0,-2,0 );
 
   if( win->show_thumbnail ) // if drawing the whole world mini-view
     draw_thumbnail( world );
@@ -2182,7 +1972,6 @@ void gui_model_init( stg_model_t* mod )
   // GL CALLBACKS
 
   // recompile display lists when these properties change
-  //stg_model_add_callback( mod, &mod->polys, gl_model_polygons, NULL );
   //stg_model_add_callback( mod, &mod->gui_outline, gl_model_polygons, NULL );
   //stg_model_add_callback( mod, &mod->boundary, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->gui_grid, gl_model_grid, NULL );

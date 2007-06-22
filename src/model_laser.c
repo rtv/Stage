@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.89.2.10 $
+//  $Revision: 1.89.2.11 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -112,14 +112,8 @@ int laser_init( stg_model_t* mod )
   geom.size.z = STG_DEFAULT_LASER_SIZEZ;
   stg_model_set_geom( mod, &geom );
 
-
-
   // set default color
   stg_model_set_color( mod, stg_lookup_color(STG_LASER_GEOM_COLOR));
-
-  // create a single rectangle body 
-  //stg_polygon_t* square = stg_unit_polygon_create();
-  //stg_model_set_polygons( mod, square, 1 );
 
   // set up a laser-specific config structure
   stg_laser_config_t lconf;
@@ -131,17 +125,6 @@ int laser_init( stg_model_t* mod )
   lconf.resolution = 1;
   stg_model_set_cfg( mod, &lconf, sizeof(lconf) );
 
-/*   double vol[6]; */
-/*   vol[0] = 0; */
-/*   vol[1] = lconf.range_max; */
-/*   vol[2] = -lconf.range_max; */
-/*   vol[3] =  lconf.range_max; */
-/*   vol[4] =  -0.1; */
-/*   vol[5] =  0.1; */
-/*   stg_model_set_sense_volume( mod, vol ); */
-
-
-      
   stg_model_set_data( mod, NULL, 0 );
 
   // install the laser model functionality

@@ -39,8 +39,6 @@ extern stg_type_record_t typetable[];
 stg_model_t* stg_model_test_collision2( stg_model_t* mod, 
 					double* hitx, double* hity );
 
-stg_endpoint_t* bubble( stg_endpoint_t* head, stg_endpoint_t* ep );
-
 //extern int _stg_disable_gui;
 
 /** @ingroup stage 
@@ -252,37 +250,6 @@ void model_move_due_to_velocity( stg_model_t* mod )
 }
 
 
-int endpoint_sort( stg_endpoint_t* a, stg_endpoint_t* b )
-{
-  if( a->value > b->value ) return 1;
-  if( b->value < a->value ) return -1;
-  return 0;
-}
-
-
-  // careful: no error checking - this must be fast
-//static inline 
-stg_endpoint_t* endpoint_right( stg_endpoint_t* head, stg_endpoint_t* link )
-{
-  assert( head );
-  assert( link );
-  assert( link->next );
-
-  stg_endpoint_t *a = link->prev;
-  stg_endpoint_t *b = link;
-  stg_endpoint_t *c = link->next;
-  stg_endpoint_t *d = link->next->next;
-
-  if( a ) a->next = c; else head = c;
-  if( d ) d->prev = b;
-
-  b->prev = c;
-  b->next = d;
-  c->prev = a;
-  c->next = b;
- 
-  return head;
-}
 
 stg_model_t* stg_model_create( stg_world_t* world, 
 			       stg_model_t* parent,
@@ -373,8 +340,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
 
   // now we can add the basic square shape
-  mod->polys = NULL;
-
   stg_point_t* square = stg_unit_square_points_create();
   stg_model_add_block( mod, square, 4 );
   stg_points_destroy( square );

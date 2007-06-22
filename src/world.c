@@ -121,80 +121,7 @@ void stg_world_set_interval_sim( stg_world_t* world, unsigned int val )
 }
 
 
-stg_endpoint_t* endpoint_list_sort( stg_endpoint_t* list )
-{
-  // naive bubblesort - we don't do this often and the list may be
-  // quite well sorted already  ( O(n) case for bubblesort)
 
-  // TODO
-}
-
-static void compute_intersections( stg_endpoint_t* endpoint_list )
-{
-  // compute the initial set of interections
-  GList* started = NULL;
-  stg_endpoint_t* it;
-  for( it=endpoint_list; it; it=it->next )
-    {
-      // if this is the start of a model
-      switch( it->type )
-	{
-	case STG_BEGIN:
-	  {
-	    GList* it2;
-	    for( it2=started; it2; it2=it2->next )
-	      stg_polygons_intersect_incr( it->polygon, 
-				       (stg_polygon_t*)it2->data );
-	    started = g_list_prepend( started, it->polygon );
-	  }
-	  break;
-	  
-	case STG_END:
-	  started = g_list_remove( started, it->polygon );
-	  break;
-	  
-	default:
-	  PRINT_ERR1( "invalid endpoint type %d\n", it->type );
-	}
-    }
-  g_list_free( started );
-}
-
-
-void model_insert_endpoints( stg_model_t* mod )
-{
-  stg_endpoint3_t* ep3 = &mod->world->endpts;
- 
-  // first the endpoints of each of he model's polygons
- GList* it;
- for( it=mod->polys; it; it=it->next )
-   {
-     stg_polygon_t* poly = (stg_polygon_t*)it->data;
-     
-     ep3->x = insert_endpoint_sorted( ep3->x, &poly->epts[0] );
-     ep3->x = insert_endpoint_sorted( ep3->x, &poly->epts[1] );
-     ep3->y = insert_endpoint_sorted( ep3->y, &poly->epts[2] );
-     ep3->y = insert_endpoint_sorted( ep3->y, &poly->epts[3] );
-     ep3->z = insert_endpoint_sorted( ep3->z, &poly->epts[4] );
-     ep3->z = insert_endpoint_sorted( ep3->z, &poly->epts[5] );
-   }
- 
- // now the endpoints of the model's sense volume
- if( mod->sense_poly )
-   {
-     ep3->x = insert_endpoint_sorted( ep3->x, &mod->sense_poly->epts[0] );
-     ep3->x = insert_endpoint_sorted( ep3->x, &mod->sense_poly->epts[1] );
-     ep3->y = insert_endpoint_sorted( ep3->y, &mod->sense_poly->epts[2] );
-     ep3->y = insert_endpoint_sorted( ep3->y, &mod->sense_poly->epts[3] );
-     ep3->z = insert_endpoint_sorted( ep3->z, &mod->sense_poly->epts[4] );
-     ep3->z = insert_endpoint_sorted( ep3->z, &mod->sense_poly->epts[5] );
-   }
-}
-
-void model_insert_endpoints_cb( gpointer key, gpointer value, gpointer user )
-{
-  model_insert_endpoints( (stg_model_t*)value );
-}
 
 // create a world containing a passel of Stage models based on the
 // worldfile
@@ -297,21 +224,6 @@ stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path
 
   // warn about unused WF linesa
   wf_warn_unused();
-
-
-  // now we initialize the intersection tables
-  
-  // for each model
-  // for each polygon
-  // for each endpoint
-  // add endpoint to axis list in sorted order
-  g_hash_table_foreach( world->models, model_insert_endpoints_cb, NULL );
-  
-  // then
-  // scan axis lists for intersections
-  compute_intersections( world->endpts.x );
-  compute_intersections( world->endpts.y );
-  compute_intersections( world->endpts.z );
 
   global_world = world;
 

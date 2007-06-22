@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.22.4.2 2007-06-22 01:36:24 rtv Exp $
+ * $Id: matrix.c,v 1.22.4.3 2007-06-22 17:20:50 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -53,8 +53,8 @@ void stg_cell_render( stg_cell_t* cell )
   //puts( "cell render" );
   glRectf( cell->x, cell->y, cell->x+cell->size, cell->y+cell->size );
 
-  printf( "cell %.2f,%.2f size %.2f\n", 
-	  cell->x, cell->y, cell->size );
+  //printf( "cell %.2f,%.2f size %.2f\n", 
+  //  cell->x, cell->y, cell->size );
 }
 
 /* void stg_cell_render_tree( stg_cell_t* cell ) */

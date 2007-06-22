@@ -243,12 +243,7 @@ extern "C" {
     stg_type_record_t* typerec;
 
     stg_pose_t pose;
-    stg_velocity_t velocity;
-    
-    stg_polygon_t* sense_poly;
-
-    GList* polys;
-    
+    stg_velocity_t velocity;    
     stg_watts_t watts; //< power consumed by this model
     stg_color_t color;
     stg_kg_t mass;
@@ -272,10 +267,6 @@ extern "C" {
     struct _stg_model *parent; //< the model that owns this one, possibly NULL
     GList* children; //< the models owned by this model
 
-    /** A list of pointers to the models whose aabboxes overlap with
-	this one */
-    GList* intersectors;
-    
     /** GData datalist can contain arbitrary named data items. Can be used
 	by derived model types to store properties, and for user code
 	to associate arbitrary items with a model. */
@@ -290,7 +281,7 @@ extern "C" {
     // automatically generate names for them
     int child_type_count[256];
 
-    int subs;     // the number of subscriptions to this model
+    int subs;     //< the number of subscriptions to this model
 
     stg_msec_t interval; //< time between updates in ms
     stg_msec_t interval_elapsed; //< time since last update in ms
@@ -306,20 +297,9 @@ extern "C" {
     void *data, *cmd, *cfg;
     size_t data_len, cmd_len, cfg_len;
     
-    // XX experimental
-    stg_polyline_t* lines;
-    size_t lines_count;
+    GList* d_list;    
+    GList* blocks; //< list of stg_block_t structs that comprise a body
     
-    GList* d_list;
-    
-    GList* blocks;
-
-    /** specify an axis-aligned 3d bounding box in global
-	coordinates */
-    //stg_endpoint_t endpts[6]; // in order {xmin,xmax,ymin,ymax,zmin,zmax}
-    //stg_endpoint_bbox_t epbbox;
-
-
     // TODO - optionally thread-safe version allow exclusive access
     // to this model 
     // pthread_mutex_t mutex;
@@ -341,8 +321,6 @@ extern "C" {
   void stg_model_render_pose( stg_model_t* mod );
   void stg_model_render_polygons( stg_model_t* mod );
 
-
-  int endpoint_sort( stg_endpoint_t* a, stg_endpoint_t* b );
 
   // the struct is defined in gui.h so that the sim engine and GUI
   // code are separated.
@@ -574,6 +552,11 @@ extern "C" {
 			double x1, double y1, 
 			double x2, double y2,
 			void* object );
+  /** Render block into the matrix as a series of lines. The block itself
+      is the rendered object */
+  void stg_matrix_block( stg_matrix_t* matrix,
+			 stg_pose_t* origin,
+			 stg_block_t* block );
 
   /** specify a line from (x1,y1) to (x2,y2), all in meters
    */
