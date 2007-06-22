@@ -300,9 +300,9 @@ class InterfaceGraphics3d : public InterfaceModel
 
  private:
 
-  void StoreCommand( void* cmd );
+  void StoreCommand( int type, void* data );
 
-  GList* commands; // array of drawing commands
+  GList* commands; // list of drawing commands received since the last CLEAR
   bool rebuild_displaylist;
   int displaylist;
   

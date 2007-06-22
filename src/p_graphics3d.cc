@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics3d.cc,v 1.1.2.2 2007-06-21 01:47:31 rtv Exp $
+ * CVS: $Id: p_graphics3d.cc,v 1.1.2.3 2007-06-22 20:48:27 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -48,7 +48,16 @@ extern GList* dl_list;
 @par Graphics3d interface
 - PLAYER_GRAPHICS3D_CMD_CLEAR
 - PLAYER_GRAPHICS3D_CMD_DRAW
+- PLAYER_GRAPHICS3D_CMD_TRANSLATE
+- PLAYER_GRAPHICS3D_CMD_ROTATE
 */
+
+typedef struct
+{
+  int type;
+  void* data;
+} cmd_record_t;
+
 
 InterfaceGraphics3d::InterfaceGraphics3d( player_devaddr_t addr, 
 			    StgDriver* driver,
@@ -70,24 +79,26 @@ InterfaceGraphics3d::InterfaceGraphics3d( player_devaddr_t addr,
 InterfaceGraphics3d::~InterfaceGraphics3d( void )
 { 
   Clear();
-}
-
-// utility for g_free()ing everything in a list
-void list_gfree( GList* list )
-{
-  // free all the data in the list
-  GList* it;
-  for( it=list; it; it=it->next )
-    g_free( it->data );
-  
-  // free the list elements themselves
-  g_list_free( list );
+  glDeleteLists( displaylist, 1 );
 }
 
 void InterfaceGraphics3d::Clear( void )
 { 
-  // empty the list safely
-  list_gfree( commands );
+  // empty the list of drawing commands
+  GList* it;
+  for( it=commands; it; it=it->next )
+    {
+      cmd_record_t* rec = (cmd_record_t*)it->data;
+
+      assert(rec);
+
+      if( rec->data )
+	g_free( rec->data );
+      
+      g_free( rec );
+    }
+
+  g_list_free( commands );
   commands = NULL;
 
   // empty the display list
@@ -96,10 +107,14 @@ void InterfaceGraphics3d::Clear( void )
   glEndList();
 }
 
-void InterfaceGraphics3d::StoreCommand( void* cmd )
+void InterfaceGraphics3d::StoreCommand( int type, void* cmd )
 {
+  cmd_record_t* rec = g_new( cmd_record_t, 1 );
+  rec->type = type;
+  rec->data = cmd;
+
   // store this command
-  commands = g_list_append( commands, cmd );
+  commands = g_list_append( commands, rec );
   
   // trigger display list update on next Publish()
   rebuild_displaylist = TRUE;
@@ -109,13 +124,21 @@ int InterfaceGraphics3d::ProcessMessage(MessageQueue* resp_queue,
 				 player_msghdr_t* hdr,
 				 void* data)
 {
+
+  // TODO queue *all* commands so that tranformations and clearing are
+  // done synchronously
+
   // test for drawing commands first because they are the most common
   // by far and we avoid lots of tests
+
+  // THESE COMMANDS HAVE A DATA PAYLOAD
+
   if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
 			    PLAYER_GRAPHICS3D_CMD_DRAW, 
 			    this->addr) )
     {
-      StoreCommand( g_memdup( data, sizeof(player_graphics3d_cmd_draw_t)));;
+      StoreCommand( PLAYER_GRAPHICS3D_CMD_DRAW,
+		    g_memdup( data, sizeof(player_graphics3d_cmd_draw_t)));;
       return 0; //ok
     }
   
@@ -123,43 +146,43 @@ int InterfaceGraphics3d::ProcessMessage(MessageQueue* resp_queue,
 			    PLAYER_GRAPHICS3D_CMD_ROTATE, 
 			    this->addr) )
     {
-      PRINT_WARN( "coord rotation is not yet implemented" );
-      return -1; //not ok
-      //StoreCommand( g_memdup( data, sizeof(player_graphics3d_cmd_rotate_t)));
-      //return 0; //ok
+      StoreCommand( PLAYER_GRAPHICS3D_CMD_ROTATE,
+		    g_memdup( data, sizeof(player_graphics3d_cmd_rotate_t)));;
+      return 0; //ok
     }
   
   if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
 			    PLAYER_GRAPHICS3D_CMD_TRANSLATE, 
 			    this->addr) )
     {
-      PRINT_WARN( "coord translation is not yet implemented" );
-      return -1; //not ok
-      //StoreCommand( g_memdup( data, sizeof(player_graphics3d_cmd_translate_t)));
-      //return 0; //ok
+      StoreCommand( PLAYER_GRAPHICS3D_CMD_TRANSLATE,
+		    g_memdup( data, sizeof(player_graphics3d_cmd_translate_t)));;
+      return 0; //ok
     }
+
+  // THESE COMMANDS HAVE NO DATA ATTACHED
 
   if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
 			    PLAYER_GRAPHICS3D_CMD_PUSH, 
 			    this->addr) )
     {
-      PRINT_WARN( "stack pushing is not yet implemented" );
-      return -1; //not ok
+      StoreCommand( PLAYER_GRAPHICS3D_CMD_PUSH, NULL );
+      return 0; //ok
     }
   
   if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
 			    PLAYER_GRAPHICS3D_CMD_POP, 
 			    this->addr) )
     {
-      PRINT_WARN( "stac popping is not yet implemented" );
-      return -1; //not ok
+      StoreCommand( PLAYER_GRAPHICS3D_CMD_POP, NULL );
+      return 0; //ok
     }
   
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
                            PLAYER_GRAPHICS3D_CMD_CLEAR, 
                            this->addr) )
     {
-      Clear();      
+      Clear(); // empties the display list immediately
       return 0; //ok
     }
       
@@ -175,7 +198,7 @@ void InterfaceGraphics3d::Publish( void )
   if( rebuild_displaylist )
     {      
       //printf( "rebuilding display list %d commands\n", 
-      // g_list_length(commands) );
+      //      g_list_length(commands) );
       
       // execute the commands
       glNewList( displaylist, GL_COMPILE );
@@ -187,75 +210,120 @@ void InterfaceGraphics3d::Publish( void )
       glPushMatrix();
       glTranslatef( gpose.x, gpose.y, 0 ); 
       glRotatef( RTOD(gpose.a), 0,0,1 ); // z-axis rotation 
-
+      
+      // as long as there's anything on the queue
       GList* it;
       for( it=commands; it; it=it->next )
 	{
-	  player_graphics3d_cmd_draw_t* cmd = 
-	    (player_graphics3d_cmd_draw_t*)it->data;
+	  cmd_record_t* rec = (cmd_record_t*)it->data;
 	  
-	  // player color elements are uint8_t type
-	  glColor4ub( cmd->color.red, 
-		      cmd->color.green, 
-		      cmd->color.blue, 
-		      cmd->color.alpha );
-	  
-	  //printf( "COMMAND MODE %d\n", cmd->draw_mode );
-	  switch( cmd->draw_mode )
+	  switch( rec->type )
 	    {
-	    case PLAYER_DRAW_POINTS:
-	      glPointSize( 3 );
-	      glBegin( GL_POINTS );
-	      break;	      
-	    case PLAYER_DRAW_LINES:
-	      glBegin( GL_LINES );
+	    case PLAYER_GRAPHICS3D_CMD_CLEAR:
+	      PRINT_ERR( "clear commands are not supposed to get here" );
 	      break;
-	    case PLAYER_DRAW_LINE_STRIP:
-	      glBegin( GL_LINE_STRIP );
+	      
+	    case PLAYER_GRAPHICS3D_CMD_PUSH:
+	    case PLAYER_GRAPHICS3D_CMD_POP:
+	      puts( "pushing and popping not yet implemented" );
 	      break;
-	    case PLAYER_DRAW_LINE_LOOP:
-	      glBegin( GL_LINE_LOOP );
+	      
+	    case PLAYER_GRAPHICS3D_CMD_TRANSLATE:
+	      {
+		player_graphics3d_cmd_translate_t* cmd = 
+		  (player_graphics3d_cmd_translate_t*)rec->data;	      
+		//printf( "TRANSLATE [%.2f,%.2f,%.2f]n", cmd->x, cmd->y, cmd->z );
+		glTranslatef( cmd->x, cmd->y, cmd->z );
+		g_free( cmd );
+	      }
 	      break;
-	    case PLAYER_DRAW_TRIANGLES:
-	      glBegin( GL_TRIANGLES );
+	      
+	    case PLAYER_GRAPHICS3D_CMD_ROTATE:
+	      {	  
+		player_graphics3d_cmd_rotate_t* cmd = 
+		  (player_graphics3d_cmd_rotate_t*)rec->data;	      
+		//printf( "ROTATE %.2f radians about [%.2f,%.2f,%.2f]n", 
+		//cmd->a, cmd->x, cmd->y, cmd->z );
+		glRotatef( RTOD(cmd->a), cmd->x, cmd->y, cmd->z );
+		g_free( cmd );
+	      }
 	      break;
-	    case PLAYER_DRAW_TRIANGLE_STRIP:
-	      glBegin( GL_TRIANGLE_STRIP );
-	      break;
-	    case PLAYER_DRAW_TRIANGLE_FAN:
-	      glBegin( GL_TRIANGLE_FAN );
-	      break;
-	    case PLAYER_DRAW_QUADS:
-	      glBegin( GL_QUADS );
-	      break;
-	    case PLAYER_DRAW_QUAD_STRIP:
-	      glBegin( GL_QUAD_STRIP );
-	      break;
-	    case PLAYER_DRAW_POLYGON:
-	      glBegin( GL_POLYGON );
+	      
+	    case PLAYER_GRAPHICS3D_CMD_DRAW:
+	      {
+
+		player_graphics3d_cmd_draw_t* cmd = 
+		  (player_graphics3d_cmd_draw_t*)rec->data;
+		
+		//printf( "DRAW mode %d with %d points\n", 
+		//cmd->draw_mode, cmd->points_count );
+
+		// player color elements are uint8_t type
+		glColor4ub( cmd->color.red, 
+			    cmd->color.green, 
+			    cmd->color.blue, 
+			    cmd->color.alpha );
+		
+		switch( cmd->draw_mode )
+		  {
+		  case PLAYER_DRAW_POINTS:
+		    glPointSize( 3 );
+		    glBegin( GL_POINTS );
+		    break;	      
+		  case PLAYER_DRAW_LINES:
+		    glBegin( GL_LINES );
+		    break;
+		  case PLAYER_DRAW_LINE_STRIP:
+		    glBegin( GL_LINE_STRIP );
+		    break;
+		  case PLAYER_DRAW_LINE_LOOP:
+		    glBegin( GL_LINE_LOOP );
+		    break;
+		  case PLAYER_DRAW_TRIANGLES:
+		    glBegin( GL_TRIANGLES );
+		    break;
+		  case PLAYER_DRAW_TRIANGLE_STRIP:
+		    glBegin( GL_TRIANGLE_STRIP );
+		    break;
+		  case PLAYER_DRAW_TRIANGLE_FAN:
+		    glBegin( GL_TRIANGLE_FAN );
+		    break;
+		  case PLAYER_DRAW_QUADS:
+		    glBegin( GL_QUADS );
+		    break;
+		  case PLAYER_DRAW_QUAD_STRIP:
+		    glBegin( GL_QUAD_STRIP );
+		    break;
+		  case PLAYER_DRAW_POLYGON:
+		    glBegin( GL_POLYGON );
+		    break;
+		    
+		  default:
+		    PRINT_WARN1( "drawing mode %d not handled", 
+				 cmd->draw_mode );	 
+		  }
+		
+		unsigned int c;
+		for( c=0; c<cmd->points_count; c++ )
+		  glVertex3f( cmd->points[c].px,
+				cmd->points[c].py,
+				cmd->points[c].pz );
+		
+		glEnd();
+	      }
 	      break;
 	      
 	    default:
-	      PRINT_WARN1( "drawing mode %d not handled", 
-			   cmd->draw_mode );	 
+	      PRINT_WARN1( "Unrecognized graphics command type %d\n", 
+			   rec->type );
 	    }
-	  
-	  unsigned int c;
-	  for( c=0; c<cmd->points_count; c++ )
-	    {
-	      glVertex3f( cmd->points[c].px,
-			  cmd->points[c].py,
-			  cmd->points[c].pz );
-	    }
-	  
-	  glEnd();
 	}
       
       glPopMatrix(); // drop out of the model's CS
       glEndList();
       
-      puts("");
-
+      //puts("");
+      
       rebuild_displaylist = FALSE;
     }
 }
