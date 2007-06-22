@@ -1,23 +1,17 @@
-
-# Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.64.2.15 2007-06-21 16:52:36 rtv Exp $
+# simple.world - basic world file example
+# Authors: Richard Vaughan
+# $id$
 
 # defines Pioneer-like robots
 include "pioneer.inc"
-
-
 
 
 # defines 'map' object used for floorplans
 include "map.inc"
 
 
-
-
 # defines sick laser
 include "sick.inc"
-
-
 
 
 # size of the world in meters
@@ -31,44 +25,39 @@ interval_real 100  # real-time interval between simulation updates in millisecon
 # configure the GUI window
 window
 ( 
-  size [ 1144.000 803.000 ] 
-  center [-3.010 1.960] 
-  rotate [ 0.770 -0.540 ]
-  scale 42.035 
+  size [ 633.000 655.000 ] 
+  center [7.990 -3.040] 
+  rotate [ 0.000 0.000 ]
+  scale 35.361 
   show_bboxes 0
   show_grid 1
 )
 
-define octagon position
+define triangle model
 (
- # this polygon approximates the shape of a pioneer
-  polygons 1
-  polygon[0].points 8
-  polygon[0].point[0] [  0.23  0.05 ]
-  polygon[0].point[1] [  0.15  0.15 ]
-  polygon[0].point[2] [ -0.15  0.15 ]
-  polygon[0].point[3] [ -0.23  0.05 ]
-  polygon[0].point[4] [ -0.23 -0.05 ]
-  polygon[0].point[5] [ -0.15 -0.15 ]
-  polygon[0].point[6] [  0.15 -0.15 ]
-  polygon[0].point[7] [  0.23 -0.05 ]
+  color "purple"
+
+  blocks 1
+  block[0].points 3
+  block[0].point[0] [ 0  0.5 ]
+  block[0].point[1] [ 0  -0.5 ]
+  block[0].point[2] [ 1  0 ]
 )
 
 # load an environment bitmap
-map
+floorplan
 ( 
-  size [16 16]
-  #bitmap "bitmaps/cave.png"
-  bitmap "bitmaps/hospital.png"
+  size [16 16 0.5]
+  bitmap "bitmaps/cave.png"
+  #bitmap "bitmaps/hospital_section.png"
 )
 
 # create a robot
 pioneer2dx
 (
-  size [1 0.5]	
   name "robot1"
   color "red"
-  pose [-1.672 1.503 0.000]
+  pose [-3.670 1.289 0.000 0.000]
   sick_laser() 
 )
 
@@ -76,59 +65,23 @@ pioneer2dx
 (
   name "robot2"
   color "green"
-  pose [2.304 3.428 27.811]
+  pose [4.374 4.689 0.000 27.811]
   #sick_laser()
 )
 
-octagon
+triangle
 (
   color "yellow"
-  pose [0.071 -6.971 94.538]
-  size [1 1]
+  pose [5.775 -2.860 0.000 163.293]
+  size [1 1 1]
 )
 
-octagon
+model
 (
-  color "green"
-  pose [0.071 6.971 94.538]
-  size [1 1]
+  color "orange"
+  #bitmap "bitmaps/cave.png"
+  bitmap "bitmaps/space_invader.png"
+  pose [2.031 5.013 0.000 0.000]
+  size [1 1 0.2]
 )
-
-octagon
-(
-  color "violet"
-  pose [3.101 4.137 85.944]
-  size [1 1]
-
-  polygons 1
-  polygon[0].color "green"
-  polygon[0].points 8
-  polygon[0].point[0] [  0.23  0.05 ]
-  polygon[0].point[1] [  0.15  0.15 ]
-  polygon[0].point[2] [ -0.15  0.15 ]
-  polygon[0].point[3] [ -0.23  0.05 ]
-  polygon[0].point[4] [ -0.23 -0.05 ]
-  polygon[0].point[5] [ -0.15 -0.15 ]
-  polygon[0].point[6] [  0.15 -0.15 ]
-  polygon[0].point[7] [  0.23 -0.05 ]
-
-  polygon[1].color "brown"
-  polygon[1].fill 1
-  polygon[1].points 4
-  polygon[1].point[0] [  1.23  0.05 ]
-  polygon[1].point[1] [  1.15  0.15 ]
-  polygon[1].point[2] [ -1.15  0.15 ]
-  polygon[1].point[3] [ -1.23  0.05 ]
-)
-
-
-
-#model
-#(
-#  color "orange"
-#  #bitmap "bitmaps/cave.png"
-#  bitmap "bitmaps/space_invader.png"
-#  pose [1.294 2.943 0.000]
-#  size [1 1]
-#)
 

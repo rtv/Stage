@@ -6,6 +6,11 @@
 void polygon_local_bounds_calc_cb( stg_polygon_t* poly, gpointer unused );
 void polygon_global_bounds_calc_cb( stg_polygon_t* poly, gpointer unused );
 
+void stg_model_add_block_rect( stg_model_t* mod,  
+			       double x, double y, 
+			       double width, double height );
+
+
 void stg_model_load( stg_model_t* mod )
 {
   //const char* typestr = wf_read_string( mod->id, "type", NULL );
@@ -31,43 +36,20 @@ void stg_model_load( stg_model_t* mod )
 
       geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, geom.pose.x );
       geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, geom.pose.y );
-      geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, geom.pose.a );
+      geom.pose.z = wf_read_tuple_length(mod->id, "origin", 2, geom.pose.z );
+      geom.pose.a = wf_read_tuple_angle(mod->id, "origin", 3, geom.pose.a );
 
       stg_model_set_geom( mod, &geom );
     }
 
-  if( wf_property_exists( mod->id, "origin3d" ) )
-    {
-      stg_geom_t geom;
-      stg_model_get_geom( mod, &geom );
-
-      geom.pose.x = wf_read_tuple_length(mod->id, "origin3d", 0, geom.pose.x );
-      geom.pose.y = wf_read_tuple_length(mod->id, "origin3d", 1, geom.pose.y );
-      geom.pose.z = wf_read_tuple_length(mod->id, "origin3d", 2, geom.pose.z );
-      geom.pose.a = wf_read_tuple_length(mod->id, "origin3d", 3, geom.pose.a );
-
-      stg_model_set_geom( mod, &geom );
-    }
-  
   if( wf_property_exists( mod->id, "size" ) )
     {
       stg_geom_t geom;
       stg_model_get_geom( mod, &geom );
       
-      geom.size.x = wf_read_tuple_length(mod->id, "size", 0, mod->geom.size.x );
-      geom.size.y = wf_read_tuple_length(mod->id, "size", 1, mod->geom.size.y );
-
-      stg_model_set_geom( mod, &geom );
-    }
-    
-  if( wf_property_exists( mod->id, "size3d" ) )
-    {
-      stg_geom_t geom;
-      stg_model_get_geom( mod, &geom );
-      
-      geom.size.x = wf_read_tuple_length(mod->id, "size3d", 0, mod->geom.size.x );
-      geom.size.y = wf_read_tuple_length(mod->id, "size3d", 1, mod->geom.size.y );
-      geom.size.z = wf_read_tuple_length(mod->id, "size3d", 2, mod->geom.size.z );
+      geom.size.x = wf_read_tuple_length(mod->id, "size", 0, geom.size.x );
+      geom.size.y = wf_read_tuple_length(mod->id, "size", 1, geom.size.y );
+      geom.size.z = wf_read_tuple_length(mod->id, "size", 2, geom.size.z );
       
       stg_model_set_geom( mod, &geom );
     }
@@ -79,25 +61,12 @@ void stg_model_load( stg_model_t* mod )
       
       pose.x = wf_read_tuple_length(mod->id, "pose", 0, pose.x );
       pose.y = wf_read_tuple_length(mod->id, "pose", 1, pose.y ); 
-      pose.a = wf_read_tuple_angle(mod->id, "pose", 2,  pose.a );
+      pose.z = wf_read_tuple_length(mod->id, "pose", 2, pose.z ); 
+      pose.a = wf_read_tuple_angle(mod->id, "pose", 3,  pose.a );
 
       stg_model_set_pose( mod, &pose );
     }
 
-  if( wf_property_exists( mod->id, "pose3d" ))
-    {
-      stg_pose_t pose;
-      stg_model_get_pose( mod, &pose );
-      
-      pose.x = wf_read_tuple_length(mod->id, "pose3d", 0, pose.x );
-      pose.y = wf_read_tuple_length(mod->id, "pose3d", 1, pose.y ); 
-      pose.z = wf_read_tuple_angle(mod->id, "pose3d", 2,  pose.z );
-      pose.a = wf_read_tuple_angle(mod->id, "pose3d", 3,  pose.a );
-      
-      stg_model_set_pose( mod, &pose );
-    }
-
-  
   if( wf_property_exists( mod->id, "velocity" ))
     {
       stg_velocity_t vel;
@@ -105,7 +74,8 @@ void stg_model_load( stg_model_t* mod )
       
       vel.x = wf_read_tuple_length(mod->id, "velocity", 0, vel.x );
       vel.y = wf_read_tuple_length(mod->id, "velocity", 1, vel.y );
-      vel.a = wf_read_tuple_angle(mod->id, "velocity", 2,  vel.a );      
+      vel.z = wf_read_tuple_length(mod->id, "velocity", 2, vel.z );
+      vel.a = wf_read_tuple_angle(mod->id, "velocity", 3,  vel.a );      
 
       stg_model_set_velocity( mod, &vel );
     }
@@ -183,10 +153,6 @@ void stg_model_load( stg_model_t* mod )
 	}
     }      
   
-  //size_t polydata = 0;
-  //stg_polygon_t* polys = NULL;
-  //size_t polycount = -1 ;//polydata / sizeof(stg_polygon_t);;
-  
   if( wf_property_exists( mod->id, "bitmap" ) )
     {
       const char* bitmapfile = wf_read_string( mod->id, "bitmap", NULL );
@@ -222,7 +188,8 @@ void stg_model_load( stg_model_t* mod )
 	  return;
 	}
       
-      stg_model_clear_polygons( mod );
+      stg_block_list_destroy( mod->blocks );
+      mod->blocks = NULL;
 
       printf( "found %d rects\n", rect_count );
       
@@ -243,48 +210,47 @@ void stg_model_load( stg_model_t* mod )
 	      pts[3].x = rects[r].pose.x;
 	      pts[3].y = rects[r].pose.y + rects[r].size.y;
 	      
-	      // copy these points in the polygon
-	      stg_model_add_polygon( mod, pts, 4, mod->color, FALSE );	      
+	      stg_model_add_block( mod, pts, 4 );	      
   	    }
 
-	  stg_block_list_scale( mod->blocks, 	
-				mod->geom.size.x, 
-				mod->geom.size.y ); 
+	  if( mod->boundary )
+	    {
+	      // add thin bounding blocks
+	      double epsilon = 0.001;	      
+	      stg_model_add_block_rect( mod, 0,0, epsilon, height );	      
+	      stg_model_add_block_rect( mod, 0,0, width, epsilon );	      
+	      stg_model_add_block_rect( mod, 0, height-epsilon, width, epsilon );      
+	      stg_model_add_block_rect( mod, width-epsilon,0, epsilon, height ); 
+	    }     
 	  
-	  // scale all the polys to fit the model's geometry
-	  stg_polygons_normalize( mod->polys, 
-				  mod->geom.size.x, 
-				  mod->geom.size.y ); 
-
-	  g_list_foreach( mod->polys, polygon_local_bounds_calc_cb, NULL );
-	  g_list_foreach( mod->polys, polygon_global_bounds_calc_cb, NULL );
+	  stg_block_list_scale( mod->blocks, &mod->geom.size );	  
 	}      
     }
     
-    if( wf_property_exists( mod->id, "polygons" ) )
+    if( wf_property_exists( mod->id, "blocks" ) )
       {
-	int polycount = wf_read_int( mod->id, "polygons", -1 );
+	int blockcount = wf_read_int( mod->id, "blocks", -1 );
 	
-	stg_model_clear_polygons( mod );
+	stg_block_list_destroy( mod->blocks );
+	mod->blocks = NULL;
+
+	printf( "expecting %d blocks\n", blockcount );
 	
-	//printf( "expecting %d polygons\n", polycount );
-	
-	char key[256];
-	//polys = stg_polygons_create( polycount );
+	char key[256]; 
 	int l;
-	for(l=0; l<polycount; l++ )
+	for(l=0; l<blockcount; l++ )
 	  {	  	  
-	    snprintf(key, sizeof(key), "polygon[%d].points", l);
+	    snprintf(key, sizeof(key), "block[%d].points", l);
 	    int pointcount = wf_read_int(mod->id,key,0);
 	    
-	    //printf( "expecting %d points in polygon %d\n",
-	    //  pointcount, l );
+	    printf( "expecting %d points in block %d\n",
+	      pointcount, l );
 	    
 	    stg_point_t* pts = stg_points_create( pointcount );
 	    
 	    int p;
 	    for( p=0; p<pointcount; p++ )	      {
-		snprintf(key, sizeof(key), "polygon[%d].point[%d]", l, p );
+		snprintf(key, sizeof(key), "block[%d].point[%d]", l, p );
 		
 		pts[p].x = wf_read_tuple_length(mod->id, key, 0, 0);
 		pts[p].y = wf_read_tuple_length(mod->id, key, 1, 0);
@@ -293,82 +259,29 @@ void stg_model_load( stg_model_t* mod )
 		//      key, pt.x, pt.y );
 	      }
 	    
-	    // polygon color
-	    stg_color_t color = mod->color;
-	    snprintf(key, sizeof(key), "polygon[%d].color", l);
-	    if( wf_property_exists( mod->id, key ) )
-	      color = stg_lookup_color( wf_read_string(mod->id, key, "red" )); 
+/* 	    // block height */
+/* 	    double height = mod->geom.size.z; */
+/* 	    snprintf(key, sizeof(key), "block[%d].height", l); */
+/* 	    if( wf_property_exists( mod->id, key ) ) */
+/* 	      height = wf_read_length(mod->id, key, height); */
 	    
-	    // polygon fill state
-	    int unfilled = 0;
-	    snprintf(key, sizeof(key), "polygon[%d].fill", l);
-	    if( wf_property_exists( mod->id, key ) )
-	      unfilled = ! wf_read_int(mod->id, key, 1 );
+/* 	    // block color */
+/* 	    stg_color_t color = mod->color; */
+/* 	    snprintf(key, sizeof(key), "block[%d].color", l); */
+/* 	    if( wf_property_exists( mod->id, key ) ) */
+/* 	      color = stg_lookup_color( wf_read_string(mod->id, key, NULL ));  */
 	    
-	    // create a new polygon in the model
-	    stg_model_add_polygon( mod, pts, pointcount, color, unfilled );
+	    stg_model_add_block( mod,
+				 pts,
+				 pointcount );	
+	    
 	    stg_points_destroy( pts );
 	  }
 	
-	stg_block_list_scale( mod->blocks, 	
-			      mod->geom.size.x, 
-			      mod->geom.size.y ); 
-	
-	// scale all the polys to fit the model's geometry
-	stg_polygons_normalize( mod->polys, 
-				mod->geom.size.x, 
-				mod->geom.size.y );
-	
-	g_list_foreach( mod->polys, polygon_local_bounds_calc_cb, NULL );
-	g_list_foreach( mod->polys, polygon_global_bounds_calc_cb, NULL );
+	stg_block_list_scale( mod->blocks, &mod->geom.size );
       }
+
     
-/*   int wf_linecount = wf_read_int( mod->id, "polylines", 0 ); */
-/*   if( wf_linecount > 0 ) */
-/*     { */
-/*       char key[256]; */
-/*       stg_polyline_t *lines = calloc( sizeof(stg_polyline_t), wf_linecount ); */
-/*       int l; */
-
-/*       //stg_polyline_print( &lines[0] ); */
-
-/*       for(l=0; l<wf_linecount; l++ ) */
-/* 	{	  	   */
-/* 	  //stg_polyline_print( &lines[l] ); */
-
-/* 	  snprintf(key, sizeof(key), "polyline[%d].points", l); */
-/* 	  int pointcount = wf_read_int(mod->id,key,0); */
-	  
-/* 	  //printf( "expecting %d points in polyline %d\n", */
-/* 	  //  pointcount, l ); */
-	  
-/* 	  lines[l].points = calloc( sizeof(stg_point_t), pointcount ); */
-/* 	  lines[l].points_count = pointcount; */
-	  
-/* 	  int p; */
-/* 	  for( p=0; p<pointcount; p++ ) */
-/* 	    { */
-/* 	      snprintf(key, sizeof(key), "polyline[%d].point[%d]", l, p ); */
-	      
-/* 	      stg_point_t pt;	       */
-/* 	      pt.x = wf_read_tuple_length(mod->id, key, 0, 0); */
-/* 	      pt.y = wf_read_tuple_length(mod->id, key, 1, 0); */
-	      
-/* 	      //printf( "key %s x: %.2f y: %.2f\n", */
-/* 	      //      key, pt.x, pt.y ); */
-	      
-/* 	      lines[l].points[p].x = wf_read_tuple_length(mod->id, key, 0, 0); */
-/* 	      lines[l].points[p].y = wf_read_tuple_length(mod->id, key, 1, 0); */
-	      
-/* 	      //puts( "after read" ); */
-/* 	      //stg_polyline_print( &lines[l] ); */
-/* 	    } */
-/* 	} */
-
-/*       stg_model_set_polylines( mod, lines, wf_linecount ); */
-/*     } */
-
-
   int gui_nose = wf_read_int(mod->id, "gui_nose", mod->gui_nose );  
   stg_model_set_gui_nose( mod, gui_nose );
   
@@ -401,7 +314,8 @@ void stg_model_save( stg_model_t* mod )
   // right now we only save poses
   wf_write_tuple_length( mod->id, "pose", 0, mod->pose.x);
   wf_write_tuple_length( mod->id, "pose", 1, mod->pose.y);
-  wf_write_tuple_angle( mod->id, "pose", 2, mod->pose.a);
+  wf_write_tuple_length( mod->id, "pose", 2, mod->pose.z);
+  wf_write_tuple_angle( mod->id, "pose", 3, mod->pose.a);
 
   // call any type-specific save callbacks
   model_call_callbacks( mod, &mod->save );

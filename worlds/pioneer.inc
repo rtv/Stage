@@ -2,13 +2,13 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.3 2007-02-27 02:54:08 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.4 2007-06-22 01:36:24 rtv Exp $
 
 
 # The Pioneer2DX sonar array
 define p2dx_sonar ranger
 (
-  size [ 0.44 0.38 ] # matches the Pioneer 3-DX dimensions
+  size [ 0.44 0.38 0 ] # matches the Pioneer 2-DX dimensions
 
   scount 16 # the number of transducers
 
@@ -41,10 +41,10 @@ define p2dx_sonar ranger
 define pioneer2dx position
 (
   # actual size
-  size3d [0.44 0.38 0.22] # sizes from MobileRobots' web site
+  size [0.44 0.38 0.25] # sizes from MobileRobots' web site
 
   # the pioneer's center of rotation is offset from its center of area
-  origin [-0.04 0.0 0]
+  origin [-0.04 0 0 0]
 
   # draw a nose on the robot so we can see which way it points
   gui_nose 1
@@ -52,17 +52,17 @@ define pioneer2dx position
   # estimated mass in KG
   mass 15.0 
 	
- # this polygon approximates the shape of a pioneer
-  polygons 1
-  polygon[0].points 8
-  polygon[0].point[0] [  0.23  0.05 ]
-  polygon[0].point[1] [  0.15  0.15 ]
-  polygon[0].point[2] [ -0.15  0.15 ]
-  polygon[0].point[3] [ -0.23  0.05 ]
-  polygon[0].point[4] [ -0.23 -0.05 ]
-  polygon[0].point[5] [ -0.15 -0.15 ]
-  polygon[0].point[6] [  0.15 -0.15 ]
-  polygon[0].point[7] [  0.23 -0.05 ]
+ # this block approximates the shape of a pioneer
+  blocks 1
+  block[0].points 8
+  block[0].point[0] [  0.23  0.05 ]
+  block[0].point[1] [  0.15  0.15 ]
+  block[0].point[2] [ -0.15  0.15 ]
+  block[0].point[3] [ -0.23  0.05 ]
+  block[0].point[4] [ -0.23 -0.05 ]
+  block[0].point[5] [ -0.15 -0.15 ]
+  block[0].point[6] [  0.15 -0.15 ]
+  block[0].point[7] [  0.23 -0.05 ]
 
   # differential steering model
   drive "diff"
@@ -72,7 +72,7 @@ define pioneer2dx position
   # laser_return 0
 
   # use the sonar array defined above
-  #p2dx_sonar( origin3d [0 0 -0.1 0] )  
+  #p2dx_sonar( origin [0 0 -0.1 0] )  
 ) 
 
 #define pioneer2dx_battery pioneer2dx
@@ -96,8 +96,8 @@ define amigo_sonar ranger
 
 define amigobot position
 (
-  size [.330 .280]
-  #origin [0.0 0.0] # what should this value be? send email to vaughan@sfu.ca.
+  size [.330 .280 0.25]
+  origin [0 0 0 0] # what should this value be? send email to vaughan@sfu.ca.
   amigo_sonar()
 )
 

@@ -5,29 +5,20 @@
 /** Create a new block. A model's body is a list of these
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
-stg_block_t* stg_block_create( double x, double y, double z, double a,
-			       double height,
-			       stg_color_t color,
+stg_block_t* stg_block_create( stg_model_t* mod,
 			       stg_point_t* pts, 
 			       size_t pt_count )
 {
   //printf( "Creating block with %d points\n", (int)pt_count );
   
   stg_block_t* block = g_new( stg_block_t, 1 );
-
-  block->pose.x = x;
-  block->pose.y = y;
-  block->pose.a = a;
-  block->height = height;
-  memcpy( &block->color, &color, sizeof(stg_color_t) );
+  
+  block->mod = mod;
   block->pt_count = pt_count;
   block->pts = g_memdup( pts, pt_count * sizeof(stg_point_t));
 
-  // todo - build an OpenGL displaylist to draw this object
-
-  block->display_list = glGenLists( 1 );
-  
-  // generates a displaylist for this block
+  // generate an OpenGL displaylist for this block
+  block->display_list = glGenLists( 1 );  
   stg_block_update( block );
 
   return block;
@@ -43,7 +34,15 @@ void stg_block_destroy( stg_block_t* block )
   g_free( block->pts );
   g_free( block );
 }
-  
+ 
+void stg_block_list_destroy( GList* list )
+{
+  GList* it;
+  for( it=list; it; it=it->next )
+      stg_block_destroy( (stg_block_t*)it->data );
+  g_list_free( list );
+}
+ 
 void stg_block_render( stg_block_t* b )
 {
   //printf( "rendering block @ %p with %d points\n", b, (int)b->pt_count );
@@ -56,7 +55,7 @@ static void block_top( stg_block_t* b )
   glBegin(GL_POLYGON);
   int p;
   for( p=0; p<b->pt_count; p++)
-    glVertex3f( b->pts[p].x, b->pts[p].y, 1.0 );//b->height );
+    glVertex3f( b->pts[p].x, b->pts[p].y, b->mod->geom.size.z );
   glEnd();
 }
 
@@ -67,11 +66,11 @@ static void block_sides( stg_block_t* b )
   int p;
   for( p=0; p<b->pt_count; p++)
     {
-      glVertex3f( b->pts[p].x, b->pts[p].y, 1.0 );//b->height );
+      glVertex3f( b->pts[p].x, b->pts[p].y, b->mod->geom.size.z );
       glVertex3f( b->pts[p].x, b->pts[p].y, 0 );
     }
   // close the strip
-  glVertex3f( b->pts[0].x, b->pts[0].y, 1.0 );//>height );
+  glVertex3f( b->pts[0].x, b->pts[0].y, b->mod->geom.size.z );
   glVertex3f( b->pts[0].x, b->pts[0].y, 0 );
   glEnd();
 }
@@ -80,16 +79,13 @@ void stg_block_update( stg_block_t* b )
 { 
   glNewList( b->display_list, GL_COMPILE );
 
-  glPushMatrix();
-  // move into the block's local CS
-  glTranslatef( b->pose.x, b->pose.y, b->pose.z );
-  glRotatef( RTOD(b->pose.a), 0,0,1 );
-
   // draw filled color polygons
   double gcol[4];	  
-  stg_color_to_glcolor4dv( b->color, gcol );
+  stg_color_to_glcolor4dv( b->mod->color, gcol );
 
-
+  glDisable(GL_BLEND);
+  glDisable(GL_LINE_SMOOTH);
+  
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
   push_color( gcol );
   glEnable(GL_POLYGON_OFFSET_FILL);
@@ -105,29 +101,35 @@ void stg_block_update( stg_block_t* b )
   gcol[1]/=2.0;
   gcol[2]/=2.0;  
   push_color( gcol );
+
+  //glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+
+  glLineWidth( 0 );
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
   block_top( b );
   block_sides( b );  
+
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+
+  glEnable(GL_BLEND);
+  glEnable(GL_LINE_SMOOTH);
+
   pop_color();
 
+  //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  // move back into parent's CS
-  glPopMatrix();
-  
   glEndList();
 }
 
 void stg_block_list_scale( GList* blocks, 
-			   double width, 
-			   double height )
+			   stg_size_t* size )
 {
   if( g_list_length( blocks ) < 1 )
     return;
 
   // assuming the blocks currently fit in a square +/- one billion units
   double minx, miny, maxx, maxy;
-  minx = miny = BILLION;
+  minx = miny =  BILLION;
   maxx = maxy = -BILLION;
   
   GList* it;
@@ -147,7 +149,7 @@ void stg_block_list_scale( GList* blocks,
 
 	  assert( ! isnan( pt->x ) );
 	  assert( ! isnan( pt->y ) );
-	}
+	}      
     }
 
   // now normalize all lengths so that the lines all fit inside
@@ -166,8 +168,8 @@ void stg_block_list_scale( GList* blocks,
 	{
 	  stg_point_t* pt = &block->pts[p];
 	  
-	  pt->x = ((pt->x - minx) / scalex * width) - width/2.0;
-	  pt->y = ((pt->y - miny) / scaley * height) - height/2.0;
+	  pt->x = ((pt->x - minx) / scalex * size->x) - size->x/2.0;
+	  pt->y = ((pt->y - miny) / scaley * size->y) - size->y/2.0;
 
 	  assert( ! isnan( pt->x ) );
 	  assert( ! isnan( pt->y ) );

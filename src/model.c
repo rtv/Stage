@@ -87,14 +87,6 @@ model
   gui_boundary 0
   gui_movemask ?
 
-  # unit square body shape
-  polygons 1
-  polygon[0].points 4
-  polygon[0].point[0] [0 0]
-  polygon[0].point[1] [0 1]
-  polygon[0].point[2] [1 1]
-  polygon[0].point[3] [1 0]
-
   bitmap ""
 )
 @endverbatim
@@ -160,6 +152,32 @@ model
 int model_unrender_velocity( stg_model_t* mod, void* userp );
 int model_render_velocity( stg_model_t* mod, void* enabled );
 
+
+void stg_model_add_block( stg_model_t* mod, 
+			  stg_point_t* pts, 
+			  size_t pt_count )
+{
+  mod->blocks = 
+    g_list_prepend( mod->blocks, 
+		    stg_block_create( mod, pts, pt_count ));  
+}
+
+
+void stg_model_add_block_rect( stg_model_t* mod,  
+			       double x, double y, 
+			       double width, double height )
+{  
+  stg_point_t pts[4];
+  pts[0].x = x;
+  pts[0].y = y;
+  pts[1].x = x + width;
+  pts[1].y = y;
+  pts[2].x = x + width;
+  pts[2].y = y + height;
+  pts[3].x = x;
+  pts[3].y = y + height;
+  stg_model_add_block( mod, pts, 4 );	      
+}
 
 stg_d_draw_t* stg_d_draw_create( stg_d_type_t type,
 				 stg_vertex_t* verts,
@@ -266,157 +284,6 @@ stg_endpoint_t* endpoint_right( stg_endpoint_t* head, stg_endpoint_t* link )
   return head;
 }
 
-// careful: no error checking - this must be fast
-stg_endpoint_t* endpoint_left( stg_endpoint_t* head, stg_endpoint_t* link ) 
-{
-  return( endpoint_right( head, link->prev ) );
-}
-
-
-/* // careful: no error checking - this must be fast */
-/* //static inline  */
-/* GList* list_element_right( GList* head, GList* link ) */
-/* { */
-/*   assert( head ); */
-/*   assert( link ); */
-/*   assert( link->next ); */
-
-/*   GList *a = link->prev; */
-/*   GList *b = link; */
-/*   GList *c = link->next; */
-/*   GList *d = link->next->next; */
-
-/*   if( a ) a->next = c; else head = c; */
-/*   if( d ) d->prev = b; */
-
-/*   b->prev = c; */
-/*   b->next = d; */
-/*   c->prev = a; */
-/*   c->next = b; */
- 
-/*   return head; */
-/* } */
-
-
-
-/* void print_endpoint_list( stg_endpoint_t* head, char* prefix ) */
-/* { */
-/*   puts( prefix ); */
-/*   for( ; head; head=head->next ) */
-/*     printf( "\ttype:%d poly:%p value:%.2f\n",  */
-/* 	    head->type, */
-/* 	    head->polygon, */
-/* 	    head->value ); */
-/* } */
-
-stg_endpoint_t* prepend_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
-{
-  if( head )
-    head->prev = ep;
-  ep->next = head;
-  return ep;
-}
-
-stg_endpoint_t* insert_endpoint_before( stg_endpoint_t* head, 
-					stg_endpoint_t* before, 
-					stg_endpoint_t* inserted )
-{
-  if( before == head ) // case when we're inserting at the head
-    {
-      head = prepend_endpoint( head, inserted );
-    }
-  else if( before == NULL ) // case when we're inserting at the tail    
-    {
-      stg_endpoint_t* last = head;
-      while( last->next ) // spin to the last element
-	last = last->next;
-      
-      last->next = inserted;
-      inserted->prev = last;
-      inserted->next = NULL;
-    }
-  else  // general case
-    {
-      inserted->next = before;
-      inserted->prev = before->prev;
-      inserted->prev->next = inserted;
-      before->prev = inserted;
-    }
-
-  return head;
-}
-
-stg_endpoint_t* insert_endpoint_sorted( stg_endpoint_t* head, 
-					stg_endpoint_t* ep )
-{
-  // zip down the list looking for the first value larger than
-  // ep->value
-  stg_endpoint_t* it;
-  for( it=head; it; it=it->next )
-    if( it->value > ep->value )
-      break;
-  
-  // and insert the new ep before that larger endpoint
-  return insert_endpoint_before( head, it, ep );
-}
-
-      
-stg_endpoint_t* remove_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep )
-{
-  if( ep->next )
-    ep->next->prev = ep->prev;
-
-  if( ep->prev )
-    ep->prev->next = ep->next;
-  
-  if( head == ep ) // if we were at the head, there's a new head;
-    return ep->next;
-  else
-    return head;
-} 
-
-
-// TODO - 3D-enable this
-void stg_model_set_sense_volume( stg_model_t* mod, double vol[6] )
-{
-  assert( mod->sense_poly == NULL );
-  
-  stg_point_t pts[4];
-  pts[0].x = vol[0];
-  pts[1].x = vol[1];
-  pts[2].x = vol[1];
-  pts[3].x = vol[0];
-  pts[0].y = vol[2];
-  pts[1].y = vol[2];
-  pts[2].y = vol[3];
-  pts[3].y = vol[3];
-
-  
-  mod->sense_poly = g_new0( stg_polygon_t, 1 );  
-  mod->sense_poly->mod = mod;
-  mod->sense_poly->color = stg_lookup_color( "orange" );
-  mod->sense_poly->unfilled = 0;
-  mod->sense_poly->intersectors = NULL; 
-  mod->sense_poly->accum  = g_hash_table_new( NULL, NULL );
-  //mod->sense_poly->accum  = g_tree_new( accum_cmp );
-  mod->sense_poly->points = g_array_new( FALSE, TRUE, sizeof(stg_point_t));
-  g_array_append_vals( mod->sense_poly->points, pts, 4 );
-  
-  // endpoints
-  // this is clunky
-  for( int e=0; e<6; e++ )
-    {
-      mod->sense_poly->epts[e].polygon = mod->sense_poly;
-      mod->sense_poly->epts[e].type = (e % 2) + 2; // STG_SENSOR_BEGIN or STG_SENSOR_END
-      mod->sense_poly->epts[e].value = 0;
-      mod->sense_poly->epts[e].next = NULL;      
-      mod->sense_poly->epts[e].prev = NULL;      
-    }  
-
-  polygon_local_bounds_calc( mod->sense_poly );
-  
-}
-
 stg_model_t* stg_model_create( stg_world_t* world, 
 			       stg_model_t* parent,
 			       stg_id_t id,
@@ -507,10 +374,11 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
   // now we can add the basic square shape
   mod->polys = NULL;
+
   stg_point_t* square = stg_unit_square_points_create();
-  stg_model_add_polygon( mod, square, 4, mod->color, FALSE );
-
-
+  stg_model_add_block( mod, square, 4 );
+  stg_points_destroy( square );
+  
   //  stg_model_set_sense_volume( mod, vol );
 
   // now it's safe to create the GUI components
@@ -703,12 +571,16 @@ void stg_model_map( stg_model_t* mod, gboolean render )
       stg_model_local_to_global( mod, &org );
 
       // render the blocks in the matrix here
-
+      GList* it;
+      for( it=mod->blocks; it; it=it->next )
+	stg_matrix_block( mod->world->matrix,
+			  &org,
+			  (stg_block_t*)it->data );
+			  
     }
   else 
     stg_matrix_remove_object( mod->world->matrix, mod ); 
 } 
-
 
 
  /*  // to be drawn, we must have a body and some extent greater than zero */
@@ -920,538 +792,6 @@ int line_segment_intersect( double p1x, double p1y,
 }
 
 
-void print_endpoint_list( stg_endpoint_t* ep, char* prefix )
-{
-  printf( "%s (list at %p)\n", prefix, ep );
-  
-  //  int i=0;
-
-  for( int i=0; ep; ep=ep->next )
-    {
-      //assert( i < 30 );
-
-      printf( "\t%d %p %.4f %d %p %d %s\n", 
-	      i++, 
-	      ep,
-	      ep->value,
-	      ep->type,
-	      ep->polygon,
-	      ep->polygon->points->len,
-	      ep->polygon->mod->token );
-      
-    }
-  puts(""); 
-}
-
-/* // careful: no error checking - this must be fast */
-/* GList* list_link_left( GList* head, GList* link ) */
-/* { */
-/*   assert( head ); */
-/*   assert( link ); */
-/*   assert( link->prev ); */
-  
-/*   GList *a = link->prev->prev; */
-/*   GList *b = link->prev; */
-/*   GList *c = link; */
-/*   GList *d = link->next; */
-
-/*   if( a ) a->next = c; else head = c; */
-/*   if( d ) d->prev = b; */
-
-/*   b->prev = c; */
-/*   b->next = d; */
-/*   c->prev = a; */
-/*   c->next = b; */
-
-/*   return head; */
-/* } */
-
-/*   // careful: no error checking - this must be fast */
-/* GList* list_link_right( GList* head, GList* link ) */
-/* { */
-/*   assert( head ); */
-/*   assert( link ); */
-/*   assert( link->next ); */
-
-/*   GList *a = link->prev; */
-/*   GList *b = link; */
-/*   GList *c = link->next; */
-/*   GList *d = link->next->next; */
-
-/*   if( a ) a->next = c; else head = c; */
-/*   if( d ) d->prev = b; */
-
-/*   b->prev = c; */
-/*   b->next = d; */
-/*   c->prev = a; */
-/*   c->next = b; */
- 
-/*   return head; */
-/* } */
-
-
-void polygon_local_bounds_calc( stg_polygon_t* poly )
-{
-  // assuming the polygon fits in a square +/- one billion units
-  //double minx, miny, maxx, maxy;
-
-  poly->minx = poly->miny = BILLION;
-  poly->maxx = poly->maxy = -BILLION;
-  
-  stg_point_t *pt;
-
-  //printf( "  local polygon bbox %p in model %s\n", 
-  //  poly, poly->mod->token );
-
-  for( int r=0; r<poly->points->len; r++ )
-    {
-      pt = & g_array_index( poly->points, stg_point_t, r );
-
-      //printf( "point %.2f %.2f\n", pt->x, pt->y );
-
-      poly->minx = MIN( poly->minx, pt->x );
-      poly->maxx = MAX( poly->maxx, pt->x );
-      poly->miny = MIN( poly->miny, pt->y );
-      poly->maxy = MAX( poly->maxy, pt->y );
-      //poly->minz = MIN( poly->minz, pt->z );
-      //poly->maxz = MAX( poly->maxz, pt->z );
-    }
-
-  /* printf( "    minx %.2f  maxx %.2f  miny %.2f  maxy %.2f\n",  */
-/* 	  poly->minx, poly->maxx,  */
-/* 	  poly->miny, poly->maxy );  */
-/*   printf( "    size  x %.2f  y %.2f [%.2f %.2f]\n",  */
-/* 	  poly->maxx - poly->minx, */
-/* 	  poly->maxy - poly->miny, */
-/* 	  poly->mod->geom.size.x, */
-/* 	  poly->mod->geom.size.y ); */
-}  
-
-void polygon_local_bounds_calc_cb( stg_polygon_t* poly, gpointer unused )
-{
-  polygon_local_bounds_calc( poly );
-}
-
-void polygon_global_bounds_calc( stg_polygon_t* poly )
-{
-  //printf( "  global polygon bbox %p in model %s\n", 
-  //  poly, poly->mod->token );
-
-  // compute the global positions of the four corners of the local
-  // polygon bounding box
-  stg_pose_t gpose;
-  stg_model_get_global_pose( poly->mod, &gpose );
-
-  double cosa = cos(gpose.a);
-  double sina = sin(gpose.a);
-
-  double dx1 = poly->minx * cosa - poly->miny * sina;
-  double dx2 = poly->maxx * cosa - poly->miny * sina;
-  double dx3 = poly->maxx * cosa - poly->maxy * sina;
-  double dx4 = poly->minx * cosa - poly->maxy * sina;
-
-  double dy1 = poly->minx * sina + poly->miny * cosa;
-  double dy2 = poly->maxx * sina + poly->miny * cosa;
-  double dy3 = poly->maxx * sina + poly->maxy * cosa;
-  double dy4 = poly->minx * sina + poly->maxy * cosa;
-
-  // find the global bounding box of the local bounding box
-  double minx = MIN( dx1, MIN( dx2, MIN( dx3, dx4 )));
-  double maxx = MAX( dx1, MAX( dx2, MAX( dx3, dx4 )));
-  double miny = MIN( dy1, MIN( dy2, MIN( dy3, dy4 )));
-  double maxy = MAX( dy1, MAX( dy2, MAX( dy3, dy4 )));
-
-  // the endpoints store the global bounding box. We keep track of
-  // overlapping global bboxes to prune object intersection tests.
-  poly->epts[0].value = gpose.x + minx;
-  poly->epts[1].value = gpose.x + maxx;
-  poly->epts[2].value = gpose.y + miny;
-  poly->epts[3].value = gpose.y + maxy;
-  poly->epts[4].value = gpose.z;
-  poly->epts[5].value = gpose.z + poly->mod->geom.size.z;
-
-
-
-  // if our endpoints have been listed, we might need to shift
-  // endpoints to a new position in the list
-
-  if( poly->epts[0].next ||  poly->epts[0].prev )
-    {
-      stg_world_t* world = poly->mod->world;
-      world->endpts.x = bubble( world->endpts.x, &poly->epts[0] );
-      world->endpts.x = bubble( world->endpts.x, &poly->epts[1] );
-      world->endpts.y = bubble( world->endpts.y, &poly->epts[2] );
-      world->endpts.y = bubble( world->endpts.y, &poly->epts[3] );
-      world->endpts.z = bubble( world->endpts.z, &poly->epts[4] );
-      world->endpts.z = bubble( world->endpts.z, &poly->epts[5] );
-    }
-
- /*  Printf( "    minx %.2f  maxx %.2f  miny %.2f  maxy %.2f  minz %.2f  maxz %.2f\n",  */
-/* 	  poly->epts[0].value, */
-/* 	  poly->epts[1].value, */
-/* 	  poly->epts[2].value, */
-/* 	  poly->epts[3].value, */
-/* 	  poly->epts[4].value, */
-/* 	  poly->epts[5].value ); */
-
-/*   printf( "    size  x %.2f  y %.2f  z %.2f  [%.2f %.2f]\n",  */
-/* 	  poly->epts[1].value - poly->epts[0].value, */
-/* 	  poly->epts[3].value - poly->epts[2].value, */
-/* 	  poly->epts[5].value - poly->epts[4].value, */
-/* 	  poly->mod->geom.size.x, */
-/* 	  poly->mod->geom.size.y ); */
-}  
-
-void polygon_global_bounds_calc_cb( stg_polygon_t* poly, gpointer unused )
-{
-  polygon_global_bounds_calc( poly );
-}
-
-void polygon_global_bounds_calc_and_bubble( stg_polygon_t* poly )
-{
-  polygon_global_bounds_calc( poly );
-
-  // we might need to shift endpoints to a new position in the list
-  stg_world_t* world = poly->mod->world;
-  world->endpts.x = bubble( world->endpts.x, &poly->epts[0] );
-  world->endpts.x = bubble( world->endpts.x, &poly->epts[1] );
-  world->endpts.y = bubble( world->endpts.y, &poly->epts[2] );
-  world->endpts.y = bubble( world->endpts.y, &poly->epts[3] );
-  world->endpts.z = bubble( world->endpts.z, &poly->epts[4] );
-  world->endpts.z = bubble( world->endpts.z, &poly->epts[5] );
-}
-
-void polygon_global_bounds_calc_and_bubble_cb( stg_polygon_t* poly, 
-					       gpointer unused )
-{
-  polygon_global_bounds_calc( poly );
-}
-
-int polygon_compare( stg_polygon_t* p1, stg_polygon_t* p2 )
-{
-  if( p1 < p2 )
-    return -1;
-
-  if( p1 > p2 )
-    return 1;
-
-  return 0; // same
-}
-
-void stg_model_add_polygon( stg_model_t* mod, 
-			    stg_point_t* pts, 
-			    size_t pt_count, 
-			    stg_color_t color,
-			    stg_bool_t unfilled )
-{
-  // block experiment
-  mod->blocks = g_list_prepend( mod->blocks, 
-				stg_block_create( 0,
-						  0,
-						  0,
-						  0,
-						  mod->geom.size.y,  
-						  mod->color,
-						  pts,
-						  pt_count ));
-  
-
-/*   printf( "adding a polygon to the %d polygons of model %s\n",   */
-/* 	  g_list_length(mod->polys),  */
-/* 	  mod->token ); */
-  
-  stg_polygon_t* poly = g_new0( stg_polygon_t, 1 );
-  
-  poly->mod = mod;
-  poly->color = color;
-  poly->unfilled = unfilled;
-  poly->intersectors = NULL; 
-  
-  // create a hash table using pointers directly as keys
-  //poly->accumulator = g_hash_table_new( NULL, NULL );
-  poly->accum  = g_hash_table_new( NULL, NULL );
-  
-  // copy the points into the poly
-  poly->points = g_array_new( FALSE, TRUE, sizeof(stg_point_t));
-  g_array_append_vals( poly->points, pts, pt_count );
-  
-
-  // endpoints
-  // this is clunky
-  for( int e=0; e<6; e++ )
-    {
-      poly->epts[e].polygon = poly;
-      poly->epts[e].type = e % 2; // STG_BEGIN or STG_END
-      poly->epts[e].value = 0;
-      poly->epts[e].next = NULL;      
-      poly->epts[e].prev = NULL;      
-    }
-  
-  
-  // add this model's endpoints to the world's lists
-/*   stg_endpoint3_t* ep3 = &mod->world->endpts; */
-/*   ep3->x = insert_endpoint( ep3->x, &poly->epts[0] );  */
-/*   ep3->x = insert_endpoint( ep3->x, &poly->epts[1] );   */
-/*   ep3->y = insert_endpoint( ep3->y, &poly->epts[2] );  */
-/*   ep3->y = insert_endpoint( ep3->y, &poly->epts[3] );  */
-/*   ep3->z = insert_endpoint( ep3->z, &poly->epts[4] );  */
-/*   ep3->z = insert_endpoint( ep3->z, &poly->epts[5] );  */
-
-  //print_endpoint_list( ep3->x, "inserted new endpoints pair into X list. List now:" );
-  //print_endpoint_list( ep3->y, "inserted new endpoints pair into Y list. List now:" );
-  //print_endpoint_list( ep3->z, "inserted new endpoints pair into Z list. List now:" );
-  
-  mod->polys = g_list_prepend( mod->polys, poly );  
-}
-
-
-void print_intersector( stg_polygon_t* poly, char* separator )
-{
-  printf( "%s:%p:(%.2f,%.2f)(%.2f,%.2f)(%.2f,%.2f)%s",
-	  poly->mod->token,
-	  poly,
-	  poly->epts[0].value,
-	  poly->epts[1].value,
-	  poly->epts[2].value,
-	  poly->epts[3].value,
-	  poly->epts[4].value,
-	  poly->epts[5].value,
-	  separator );
-}
-
-void print_pointer( gpointer p, char* separator )
-{
-  printf( "%p%s", p, separator) ;
-}
-
-gboolean print_tree( stg_polygon_t* poly, int* val, gpointer unused )
-{
-  printf( "(%s %p %d) ", 
-	  poly->mod->token, 
-	  poly, 
-	  *val );
-  return FALSE;
-}
-
-gboolean untangle( stg_polygon_t* poly, int* val, stg_polygon_t* doomed_poly )
-{
-  // remove doomed from acc_tree
-  g_hash_table_remove( poly->accum, doomed_poly );
-
-  // remove doomed from intercept list
-  poly->intersectors = g_list_remove( poly->intersectors, doomed_poly );
-
-  printf( "untangled [%s %p] accum ", poly->mod->token, poly );
-  g_hash_table_foreach( poly->accum, print_tree, NULL );
-  puts("");
-
-  return FALSE;
-}
-
-
-void stg_polygon_destroy( stg_polygon_t* p )
-{
-  printf( "DESTROY polygon %s %p\n", p->mod->token, p );
-
-  //printf( "polys to untangle from: " );
-  //g_hash_table_foreach( p->accum, print_tree, NULL );
-  //puts("");
-
-  g_hash_table_foreach( p->accum, untangle, p );
-
-  if( p->points )
-    g_array_free( p->points, TRUE );
-  
-  if( p->intersectors )
-    g_list_free( p->intersectors );
-
-  if( p->accum )
-    g_hash_table_destroy( p->accum );
-  
-  // remove the endpoints
-  stg_endpoint3_t* ep3 = &p->mod->world->endpts;
-  ep3->x = remove_endpoint( ep3->x, &p->epts[0] );
-  ep3->x = remove_endpoint( ep3->x, &p->epts[1] ); 
-  ep3->y = remove_endpoint( ep3->y, &p->epts[2] ); 
-  ep3->y = remove_endpoint( ep3->y, &p->epts[3] ); 
-  ep3->z = remove_endpoint( ep3->z, &p->epts[4] ); 
-  ep3->z = remove_endpoint( ep3->z, &p->epts[5] ); 
-  
-  //print_endpoint_list( ep3->x, "removed endpoint pair. X List now:" );      
-  //print_endpoint_list( ep3->y, "removed endpoint pair. Y List now:" );      
-  //print_endpoint_list( ep3->z, "removed endpoint pair. Z List now:" );      
-  g_free( p );
-}
-
-
-void stg_model_clear_polygons( stg_model_t* mod )
-{
-  for( GList* it=mod->polys; it; it=it->next )
-    stg_polygon_destroy( (stg_polygon_t*)it->data );
-  
-  g_list_free( mod->polys );
-
-  list_gfree( mod->d_list );
-  mod->d_list = NULL;
-
-  // todo - free the blocks memory
-  mod->blocks = NULL;
-
-
-  mod->polys = NULL;
-}
-
-
-//static inline 
-void stg_polygons_intersect_incr( stg_polygon_t* poly1, stg_polygon_t* poly2 )
-{
-/*   printf( "* INCR %s:%p - %s:%p\n", */
-/* 	  poly1->mod->token, poly1, */
-/* 	  poly2->mod->token, poly2 ); */
-
-  // increment mod's accumulator for the hit model, and see if we
-  // freshly overlap with it
-  int* val = (int*)g_hash_table_lookup( poly1->accum, poly2 );
-
-  if( val == NULL )
-    {
-      val = g_new0( int, 1 );
-      g_hash_table_insert( poly1->accum, poly2, val );
-      g_hash_table_insert( poly2->accum, poly1, val );
-    }
-  // increment the intersection axis counters for the two polygons
-  (*val)++;
-
-  assert( *val < 4 ); 
-
-  if( *val == 3 ) // a new 3-axis overlap!
-    {
-      poly1->intersectors = g_list_prepend( poly1->intersectors, poly2 );
-      poly2->intersectors = g_list_prepend( poly2->intersectors, poly1 );
-    }
-}
-
-
-
-//static inline 
-void stg_polygons_intersect_decr( stg_polygon_t* poly1, stg_polygon_t* poly2 )
-{
- /*  printf( "* DECR %s:%p - %s:%p\n", */
-/* 	  poly1->mod->token, poly1, */
-/* 	  poly2->mod->token, poly2 ); */
-
-  int* val = (int*)g_hash_table_lookup( poly1->accum, poly2 );
-
-  if( val == NULL )
-    return;
-
-  // val should exist, be symmetrical, and > 0
-  assert( val );
-  assert( val == (int*)g_hash_table_lookup( poly2->accum, poly1 ));
-  assert( *val > 0 ); 
-  
-  // decrement the intersection counter for the two polygons
-  (*val)--;
- 
-  switch( *val )
-    {
-    case 2:
-      // the polys no longer overlap in 3 axes
-      poly1->intersectors = g_list_remove( poly1->intersectors, poly2 );
-      poly2->intersectors = g_list_remove( poly2->intersectors, poly1 );
-      break;
-
-    case 0:
-      g_hash_table_remove( poly1->accum, poly2 );
-      g_hash_table_remove( poly2->accum, poly1 );
-      g_free( val );
-      break;
-
-    default:
-      break;
-    }
-}
-
-
-//static inline 
-stg_endpoint_t* endpoint_right_intersect( stg_endpoint_t* head,  stg_endpoint_t* ep )
-{
-  stg_endpoint_t* r_ep = ep->next;
-  
-  if( r_ep->polygon != ep->polygon ) // TODO - remove this test?
-    {
-      if( (ep->type == STG_END) && (r_ep->type == STG_BEGIN) )
-	  stg_polygons_intersect_incr( ep->polygon, r_ep->polygon );
-      else if( (ep->type == STG_BEGIN) && (r_ep->type == STG_END) )
-	  stg_polygons_intersect_decr( ep->polygon, r_ep->polygon );
-    }
-  
-  return endpoint_right( head, ep );
-}    
-
-// TODO - move loop inside function calls
-// locally shifts the endpoint into order in its list. returns the
-// head of the list, which may have changed
-//static inline 
-stg_endpoint_t* bubble( stg_endpoint_t* head, stg_endpoint_t* ep )
-{
-  while( ep->next && (ep->next->value < ep->value) )
-    head = endpoint_right_intersect( head, ep );
-  
-  while( ep->prev && (ep->prev->value > ep->value) )
-    head = endpoint_right_intersect( head, ep->prev );
-  
-  return head;
-}
-
-
-/* static inline void world_move_endpoint( stg_world_t* world, stg_endpoint_t* epts ) */
-/* { */
-/*   // bubble sort the end points of the bounding box in the lists along */
-/*   // each axis - local bubble sort is VERY fast because the list is
-already almost perfectly sorted, so we usually don't */
-/*   // move, but occasionally move 1 place left or right */
-
-/*   world->endpts.x = bubble( world->endpts.x, &epts[0] ); */
-/*   world->endpts.x = bubble( world->endpts.x, &epts[1] ); */
-/*   world->endpts.y = bubble( world->endpts.y, &epts[2] ); */
-/*   world->endpts.y = bubble( world->endpts.y, &epts[3] ); */
-/*   world->endpts.z = bubble( world->endpts.z, &epts[4] ); */
-/*   world->endpts.z = bubble( world->endpts.z, &epts[5] ); */
-/* } */
-
-
-/* void model_update_bbox( stg_model_t* mod ) */
-/* { */
-/*   //printf( "UPDATE BBOX for model %s\n", mod->token ); */
-
-/*   stg_pose_t gpose; */
-/*   stg_model_get_global_pose( mod, &gpose ); */
-
-/*   double dx_x =  fabs(mod->geom.size.x * cos(gpose.a));  */
-/*   double dx_y =  fabs(mod->geom.size.y * sin(gpose.a)); */
-/*   double dx = dx_x + dx_y; */
-
-/*   double dy_x = fabs(mod->geom.size.x * sin(gpose.a)); */
-/*   double dy_y = fabs(mod->geom.size.y * cos(gpose.a)); */
-/*   double dy = dy_x + dy_y; */
-
-/*   double dz = mod->geom.size.z; */
-
-/*   // stuff these data into the endpoint structures */
-/* /\*   mod->epbbox.x.min.value = gpose.x - dx/2.0; *\/ */
-/* /\*   mod->epbbox.x.max.value = gpose.x + dx/2.0; *\/ */
-/* /\*   mod->epbbox.y.min.value = gpose.y - dy/2.0; *\/ */
-/* /\*   mod->epbbox.y.max.value = gpose.y + dy/2.0; *\/ */
-/* /\*   mod->epbbox.z.min.value = gpose.z; *\/ */
-/* /\*   mod->epbbox.z.max.value = gpose.z + dz; *\/ */
-  
-/* /\*   world_move_endpoint_bbox( mod->world, &mod->epbbox ); *\/ */
-
-
-/*   //world_intercept_array_print( mod->world ); */
-/* } */
-
 
 
 void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
@@ -1471,26 +811,11 @@ void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
       
       memcpy( &mod->pose, pose, sizeof(stg_pose_t));
       
-      // TODO - can we do this less frequently? maybe not...
-      for( GList* it=mod->children; it; it=it->next )
-	//model_update_bbox( (stg_model_t*)it->data );
-	g_list_foreach( ((stg_model_t*)it->data)->polys, 
-			(GFunc)polygon_global_bounds_calc_cb, NULL );
-
       double hitx, hity;
       stg_model_test_collision2( mod, &hitx, &hity );
 
       // render in the matrix
       stg_model_map_with_children( mod, 1 );
-    }
-
-  g_list_foreach( mod->polys, (GFunc)polygon_global_bounds_calc_cb, NULL );
-  
-  // also deal with the sensor volume
-  if( mod->sense_poly )
-    {
-      //      printf( "model %s sense global \n", mod->token );
-      polygon_global_bounds_calc( mod->sense_poly );
     }
 
   // register a model change even if the pose didn't actually change
@@ -1519,33 +844,20 @@ void stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
 
   memcpy( &mod->geom, geom, sizeof(stg_geom_t));
   
+  stg_block_list_scale( mod->blocks,
+			&geom->size );
+  
   model_change( mod, &mod->geom );
 
-  // we probably need to scale and re-render our polygons
-
-  // we can do it in-place
-  if( mod->polys )
-    stg_polygons_normalize( mod->polys,
-			    geom->size.x, 
-			    geom->size.y );
-  
-  stg_block_list_scale( mod->blocks, 	
-			geom->size.x, 
-			geom->size.y ); 
-
-  g_list_foreach( mod->polys, (GFunc)polygon_local_bounds_calc_cb, NULL );
-  g_list_foreach( mod->polys, (GFunc)polygon_global_bounds_calc_cb, NULL );
-  
   // re-render int the matrix
   stg_model_map( mod, 1 );  
-  
-  model_change( mod, &mod->polys );
 }
 
 void stg_model_set_color( stg_model_t* mod, stg_color_t col )
 {
   assert(mod);
   mod->color = col;
+
   model_change( mod, &mod->color );
 }
 
@@ -1667,134 +979,6 @@ void stg_model_get_pose( stg_model_t* mod, stg_pose_t* dest )
   assert(mod);
   assert(dest);
   memcpy( dest, &mod->pose, sizeof(stg_pose_t));
-}
-
-
-GList* stg_model_get_polygons( stg_model_t* mod )
-{
-  assert(mod);
-  return mod->polys;
-}
-
-/* void stg_model_set_polygons( stg_model_t* mod, */
-/* 			     stg_polygon_t* polys,  */
-/* 			     size_t poly_count ) */
-/* { */
-/*   if( poly_count == 0 ) */
-/*     { */
-/*       stg_model_map( mod, 0 ); // unmap the model from the matrix */
-      
-/*       free( mod->polygons ); */
-/*       mod->polygons_count = 0;       */
-/*     } */
-/*   else */
-/*     { */
-/*       assert(polys); */
-      
-/*       stg_model_map( mod, 0 ); // unmap the model from the matrix */
-      
-/*       // normalize the polygons to fit exactly in the model's body */
-/*       // rectangle (if the model has some non-zero size) */
-/*       if( mod->geom.size.x > 0.0 && mod->geom.size.y > 0.0 ) */
-/* 	stg_polygons_normalize( polys, poly_count,  */
-/* 				mod->geom.size.x,  */
-/* 				mod->geom.size.y ); */
-/*       //else */
-/*       //PRINT_WARN3( "setting polygons for model %s which has non-positive area (%.2f,%.2f)", */
-/*       //	     prop->mod->token, geom.size.x, geom.size.y ); */
-      
-/*       // zap our old polygons */
-/*       stg_polygons_destroy( mod->polygons, mod->polygons_count ); */
-      
-/*       mod->polygons = polys; */
-/*       mod->polygons_count = poly_count; */
-      
-/*       // if the model has some non-zero */
-/*       stg_model_map( mod, 1 ); // map the model into the matrix with the new polys */
-
-/*       // add the polys to the endpoint lists */
-
-/*       int p; */
-/*       for ( p=0; p<poly_count; p++ ) */
-/* 	{ */
-/* 	  endpoint_bbox_init( &polys[p].epbbox, mod, 0,1,0,1,0,1 ); */
-/* 	  world_add_endpoint_bbox( mod->world, &polys[p].epbbox ); */
-/* 	}       */
-
-/*     } */
-
-  
-/*   model_change( mod, &mod->polygons ); */
-/* } */
-
-
-
-void stg_polyline_print( stg_polyline_t* l )
-{
-  assert(l);
-
-  printf( "Polyline %p contains %d points [",
-	  l, (int)l->points_count );
-
-  for( int p=0; p<l->points_count; p++ )
-    printf( "[%.2f,%.2f] ", l->points[p].x, l->points[p].y );
-  
-  puts( "]" );
-}
-
-void stg_polylines_print( stg_polyline_t* l, size_t p_count )
-{
-  assert( l );
-  printf( "Polyline array %p contains %d polylines\n",
-	  l, (int)p_count );
-
-  for( int a=0; a<p_count; a++ )
-    stg_polyline_print( &l[a] );
-}
-
-void stg_model_set_polylines( stg_model_t* mod,
-			      stg_polyline_t* lines, 
-			      size_t lines_count )
-{
-  //stg_polylines_print( lines, lines_count );
-  
-  if( lines_count == 0 )
-    {
-      stg_model_map( mod, 0 ); // unmap the model from the matrix
-      
-      free( mod->lines );
-      mod->lines_count = 0;      
-    }
-  else
-    {
-      assert(lines);
-      
-      stg_model_map( mod, 0 ); // unmap the model from the matrix
-      
-      // normalize the polygons to fit exactly in the model's body
-      // rectangle (if the model has some non-zero size)
-      //if( mod->geom.size.x > 0.0 && mod->geom.size.y > 0.0 )
-      //stg_polygons_normalize( polys, poly_count, 
-      //			mod->geom.size.x, 
-      //			mod->geom.size.y );
-      //else
-      //PRINT_WARN3( "setting polygons for model %s which has non-positive area (%.2f,%.2f)",
-      //	     prop->mod->token, geom.size.x, geom.size.y );
-      
-      // zap our old polygons
-      //stg_polygons_destroy( mod->polygons, mod->polygons_count );
-      
-      free( mod->lines );
-      
-      mod->lines = lines;
-      mod->lines_count = lines_count;
-      
-      // if the model has some non-zero
-      stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
-    }
-  
-  model_change( mod, &mod->lines );
-  model_change( mod, &mod->lines_count );
 }
 
 

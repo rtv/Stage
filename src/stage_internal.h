@@ -44,11 +44,9 @@ extern "C" {
   
   typedef struct stg_block
   {
-    stg_pose_t pose; //< 3d pose and rotation around z in parent's CS
+    stg_model_t* mod; //< model to which this block belongs
     stg_point_t* pts; //< points defining a polygon
     size_t pt_count; //< the number of points
-    stg_color_t color; //< the color of the block
-    double height; //< the z axis extent of the block
     int display_list; //< id of the OpenGL displaylist to draw this block
   } stg_block_t;
   
@@ -56,9 +54,7 @@ extern "C" {
   /** Create a new block. A model's body is a list of these
       blocks. The point data is copied, so pts can safely be freed
       after calling this.*/
-  stg_block_t* stg_block_create( double x, double y, double z, double a,
-				 double height,
-				 stg_color_t color,
+  stg_block_t* stg_block_create( stg_model_t* mod,
 				 stg_point_t* pts, 
 				 size_t pt_count );
     

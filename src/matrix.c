@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.22.4.1 2006-09-14 07:03:25 rtv Exp $
+ * $Id: matrix.c,v 1.22.4.2 2007-06-22 01:36:24 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -13,6 +13,9 @@
 
 //#define DEBUG
 
+// a list of displaylists - add debug stuff to the list here
+extern GList* dl_list;
+extern int dl_debug;
 
 stg_cell_t* stg_cell_create( stg_cell_t* parent, double x, double y, double size )
 {
@@ -47,16 +50,11 @@ void stg_cell_unrender( stg_cell_t* cell )
 
 void stg_cell_render( stg_cell_t* cell )
 {
-  puts( "CELL RENDERING NOT IMPLEMENTED" );
- /*  cell->fig = stg_rtk_fig_create( fig_debug_matrix->canvas, */
-/* 				  fig_debug_matrix, */
-/* 				  STG_LAYER_MATRIX_TREE ); */
-  
-/*   stg_rtk_fig_color_rgb32( cell->fig, 0x00AA00 ); */
-  
-/*   stg_rtk_fig_rectangle( cell->fig, */
-/* 			 cell->x, cell->y, 0.0, */
-/* 			 cell->size, cell->size, 0 ); */
+  //puts( "cell render" );
+  glRectf( cell->x, cell->y, cell->x+cell->size, cell->y+cell->size );
+
+  printf( "cell %.2f,%.2f size %.2f\n", 
+	  cell->x, cell->y, cell->size );
 }
 
 /* void stg_cell_render_tree( stg_cell_t* cell ) */
@@ -209,6 +207,9 @@ void stg_matrix_lines( stg_matrix_t* matrix,
       double x2 = lines[l].x2;
       double y2 = lines[l].y2;
       
+      printf( "matrix line %.2f,%.2f to %.2f,%.2f\n",
+	      x1,y1, x2, y2 );
+
       // theta is constant so we compute it outside the loop
       double theta = atan2( y2-y1, x2-x1 );
       double m = tan(theta); // line gradient 
@@ -284,7 +285,7 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 
 	      // debug rendering
 	      //if( _render_matrix_deltas && ! cell->fig )
-	      //stg_cell_render( cell );
+	      stg_cell_render( cell );
 	    }
 
 	  // now the cell small enough, we add the object here
@@ -292,7 +293,7 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 	  
 	  // debug rendering
 	  //if( _render_matrix_deltas && ! cell->fig )
-	  //stg_cell_render( cell );
+	  stg_cell_render( cell );
 	  
 	  // add this object the hash table
 	  GSList* list = g_hash_table_lookup( matrix->ptable, object );
@@ -410,37 +411,36 @@ void stg_matrix_lines( stg_matrix_t* matrix,
     }
 }
 
-// render an array of [num_polylines] polylines
-void stg_matrix_polylines( stg_matrix_t* matrix,
-			   double x, double y, double a,
-			   stg_polyline_t* polylines, int num_polylines,
-			   void* object )
+
+// render an array of [num_polys] polygons
+void stg_matrix_block( stg_matrix_t* matrix,
+		       stg_pose_t* origin,
+		       stg_block_t* block )
 {
-  int l;
-  for( l=0; l<num_polylines; l++ )
+  int p;
+  for( p=0; p<block->pt_count; p++ ) // for
     {
-      int pcount = polylines[l].points_count;
+      stg_point_t* pt1 = &block->pts[p];
+      stg_point_t* pt2 = &block->pts[ (p+1) % block->pt_count];
       
-      if( pcount > 1 )
-	{
-	  int p;
-	  for( p=0; p < pcount-1; p++ )
-	    {
-	      stg_point_t *pt1 = &polylines[l].points[p];
-	      stg_point_t *pt2 = &polylines[l].points[p+1];
-	      
-	      stg_line_t line;
-	      line.x1 = x + pt1->x * cos(a) - pt1->y * sin(a);
-	      line.y1 = y + pt1->x * sin(a) + pt1->y * cos(a); 
-	      
-	      line.x2 = x + pt2->x * cos(a) - pt2->y * sin(a);
-	      line.y2 = y + pt2->x * sin(a) + pt2->y * cos(a); 
-	      
-	      stg_matrix_lines( matrix, &line, 1, object );
-	    }
-	}
+      // TODO - could be a little faster - we only really need
+      // to do the geom for each point once, as the polygon is
+      // a connected polyline
+      
+      double cosa = cos( origin->a );
+      double sina = sin( origin->a );
+  
+      stg_line_t line;
+      line.x1 = origin->x + pt1->x * cosa - pt1->y * sina;
+      line.y1 = origin->y + pt1->x * sina + pt1->y * cosa; 
+      
+      line.x2 = origin->x + pt2->x * cosa - pt2->y * sina;
+      line.y2 = origin->y + pt2->x * sina + pt2->y * cosa; 
+      
+      stg_matrix_lines( matrix, &line, 1, block->mod );
     }
 }
+
 
 // render an array of [num_polys] polygons
 void stg_matrix_polygons( stg_matrix_t* matrix,
@@ -482,6 +482,7 @@ void stg_matrix_polygons( stg_matrix_t* matrix,
     }
       
 }
+
 
 void stg_matrix_rectangle( stg_matrix_t* matrix, 
 			   double px, double py, double pth,

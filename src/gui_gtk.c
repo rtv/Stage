@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui_gtk.c,v 1.1.2.2 2007-02-18 01:53:16 rtv Exp $
+CVS: $Id: gui_gtk.c,v 1.1.2.3 2007-06-22 01:36:24 rtv Exp $
 */
 
 #include <stdio.h>
@@ -1099,11 +1099,15 @@ void gui_action_trails( GtkToggleAction* action, stg_world_t* world )
 }
 
 
+//void stg_model_blocks_update
+
 void gui_action_fill( GtkToggleAction* action, stg_world_t* world )
 {
   PRINT_DEBUG( "Polygons menu item" );
   world->win->fill_polygons = gtk_toggle_action_get_active( action );
 
+  // TODO regenerate all block displaylists to notice this change
+  
   //g_hash_table_foreach( world->models, model_render_polygons_cb, NULL ); 
 }
 

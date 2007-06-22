@@ -341,67 +341,6 @@ stg_line_t* stg_rotrects_to_lines( stg_rotrect_t* rects, int num_rects )
   return lines;
 }
 
-/* /// Converts an array of rectangles to an array of the same number of */
-/* /// polylines of the same length */
-/* stg_polyline_t* stg_polylines_from_polygons( stg_polygon_t* polygons, int polygon_count ) */
-/* { */
-/*   stg_polyline_t* lines = (stg_polyline_t*)calloc( sizeof(stg_polyline_t), num_lines ); */
-  
-/*   int r; */
-/*   for( r=0; r<num_rects; r++ ) */
-/*     { */
-/*       lines[r] = (stg_point_t*)calloc( sizeof(stg_point), 5 ); */
-/*       lines[r].points_count = 5; */
-
-/*       lines[r].points[0].x = rects[r].pose.x; */
-/*       lines[r].points[0].y = rects[r].pose.y; */
-/*       lines[r].points[1].x = rects[r].pose.x + rects[r].size.x; */
-/*       lines[r].points[1].y = rects[r].pose.y; */
-/*       lines[r].points[2].x = rects[r].pose.x + rects[r].size.x; */
-/*       lines[r].points[2].y = rects[r].pose.y + rects[r].size.y; */
-/*       lines[r].points[3].x = rects[r].pose.x; */
-/*       lines[r].points[3].y = rects[r].pose.y + rects[r].size.y; */
-/*       lines[r].points[4].x = rects[r].pose.x; */
-/*       lines[r].points[4].y = rects[r].pose.y; */
-/*     } */
-  
-/*   return lines; */
-/* } */
-
-/// converts an array of rectangles into an array of polygons
-/* void  stg_rotrects_to_polygons( stg_rotrect_t* rects, size_t count, */
-/* 				double width, double height ) */
-/* { */
-/*   stg_polygon_t* polys = stg_polygons_create( count ); */
-/*   stg_point_t pts[4]; */
-  
-/*   size_t r; */
-/*   for( r=0; r<count; r++ ) */
-/*     {   */
-/*       pts[0].x = rects[r].pose.x; */
-/*       pts[0].y = rects[r].pose.y; */
-/*       pts[1].x = rects[r].pose.x + rects[r].size.x; */
-/*       pts[1].y = rects[r].pose.y; */
-/*       pts[2].x = rects[r].pose.x + rects[r].size.x; */
-/*       pts[2].y = rects[r].pose.y + rects[r].size.y; */
-/*       pts[3].x = rects[r].pose.x; */
-/*       pts[3].y = rects[r].pose.y + rects[r].size.y; */
-      
-/*       // copy these points in the polygon */
-/*       stg_polygon_set_points( &polys[r], pts, 4 ); */
-
-/*       // store the bounding box of this polygon */
-/*       //polys[r].size.x = width; */
-/*       //polys[r].size.y = height; */
-
-/*       //polys[r].bbox.x.min = height; */
-      
-/*     } */
-  
-/*   return polys; */
-/* } */
-
-
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
 {
@@ -475,72 +414,6 @@ gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y, int threshold )
 
   return FALSE;
 }
-
-
-/* stg_polygon_t* stg_polygons_from_image_file(  const char* filename,  */
-/* 					     size_t* count ) */
-/* { */
-/*   stg_polygon_t* polys; */
-/*   stg_rotrect_t* rects = NULL; */
-/*   int rect_count = 0; */
-
-/*   int width, height; */
-/*   if( stg_rotrects_from_image_file( filename,   */
-/* 				    &rects, */
-/* 				    &rect_count, */
-/* 				    &width, &height ) ) */
-/*     { */
-/*       PRINT_ERR1( "failed to load rects from image file \"%s\"", */
-/* 		  filename );       */
-/*       return NULL; */
-/*     } */
-
-/*   //printf( "found %d rects\n", rect_count ); */
-/*   // else */
-
-/*   *count = (size_t)rect_count; */
-/*   polys = stg_polygons_from_rotrects( rects, rect_count, (double)width, (double)height ); */
-/*   free(rects); */
-/*   return(polys); */
-/* } */
-
-stg_polyline_t* stg_polylines_from_image_file( const char* filename, 
-					       size_t* num )
-{
-  // TODO: make this a parameter
-  const int threshold = 127;
-
-  GError* err = NULL;
-  GdkPixbuf* pb = gdk_pixbuf_new_from_file( filename, &err );
-
-  if( err )
-    {
-      fprintf( stderr, "\nError loading bitmap: %s\n", err->message );
-      return NULL; // error
-    }
-  
-  // this should be ok as no error was reported
-  assert( pb );
-
-  stg_polyline_t* lines = NULL;
-  size_t lines_count = 0;
-  
-  int img_width = gdk_pixbuf_get_width(pb);
-  int img_height = gdk_pixbuf_get_height(pb);
-  
-  int y, x;
-  for(y = 0; y < img_height; y++)
-    for(x = 0; x < img_width; x++)
-      {
-	// TODO!
-      }	
-  
-  // free the image data
-  gdk_pixbuf_unref( pb );
-  
-  if( num ) *num = lines_count;
-  return lines;
-}				   
 
 int stg_rotrects_from_image_file( const char* filename, 
 				  stg_rotrect_t** rects, 
@@ -666,146 +539,24 @@ int stg_rotrects_from_image_file( const char* filename,
 }
 
 
+void print_pointer( void* p, char* separator )
+{
+  printf( "%p%s", p, separator) ;
+}
+
+
 // POINTS -----------------------------------------------------------
 
 stg_point_t* stg_points_create( size_t count )
 {
-  return( (stg_point_t*)calloc( count, sizeof(stg_point_t)));
+  return( (stg_point_t*)g_new( stg_point_t, count ));
 }
 
 void stg_points_destroy( stg_point_t* pts )
 {
-  free( pts );
+  g_free( pts );
 }
 
-// POLYGONS -----------------------------------------------------------
-
-/// Return an array of [count] polygons. Use stg_polygons_destroy() to
-/// free the memory.
-/* stg_polygon_t* stg_polygons_create( int count ) */
-/* { */
-/*   stg_polygon_t* polys = (stg_polygon_t*)calloc( count, sizeof(stg_polygon_t)); */
-  
-/*   // each polygon contains an array of points */
-/*   int p; */
-/*   for( p=0; p<count; p++ ) */
-/*     polys[p].points = g_array_new( FALSE, TRUE, sizeof(stg_point_t)); */
-
-/*   //polys[p].color = 0xAA00FF00; */
-
-/*   return polys; */
-/* } */
-
-/// destroy an array of polygons
-
-
-
-//////////////////////////////////////////////////////////////////////////
-// scale an array of polygons so they fit in a rectangle of size
-// [width] by [height], with the origin in the center of the rectangle
-void stg_polygons_normalize( GList* polys, 
-			     double width, 
-			     double height )
-{
-  if( g_list_length( polys ) < 1 )
-    return;
-
-  // assuming the rectangles fit in a square +/- one billion units
-  double minx, miny, maxx, maxy;
-  minx = miny = BILLION;
-  maxx = maxy = -BILLION;
-  
-  GList* it;
-  for( it=polys; it; it=it->next ) // examine all the polygons
-    {
-      // examine all the points in the polygon
-      stg_polygon_t* poly = (stg_polygon_t*)it->data;
-      
-      int p;
-      for( p=0; p < poly->points->len; p++ )
-	{
-	  stg_point_t* pt = &g_array_index( poly->points, stg_point_t, p);
-	  if( pt->x < minx ) minx = pt->x;
-	  if( pt->y < miny ) miny = pt->y;
-	  if( pt->x > maxx ) maxx = pt->x;
-	  if( pt->y > maxy ) maxy = pt->y;
-
-	  assert( ! isnan( pt->x ) );
-	  assert( ! isnan( pt->y ) );
-	}
-    }
-  
-  //minx = 0;
-  //miny = 0;
-  // maxx = polys[0].bbox.x;
-  //maxy = polys[0].bbox.y;
-
-  // now normalize all lengths so that the lines all fit inside
-  // the specified rectangle
-  double scalex = (maxx - minx);
-  double scaley = (maxy - miny);
-
-  //double scalex = polys[0].bbox.x;
-  //double scaley = polys[0].bbox.y;
-  
-  for( it=polys; it; it=it->next ) // examine all the polygons
-    { 
-      stg_polygon_t* poly = (stg_polygon_t*)it->data;
-      
-      // scale all the points in the polygon
-      int p;
-      for( p=0; p < poly->points->len; p++ )
-	{
-	  stg_point_t* pt = &g_array_index( poly->points, stg_point_t, p);
-	  
-	  pt->x = ((pt->x - minx) / scalex * width) - width/2.0;
-	  pt->y = ((pt->y - miny) / scaley * height) - height/2.0;
-
-	  assert( ! isnan( pt->x ) );
-	  assert( ! isnan( pt->y ) );
-	}
-    }
-}
-
-void stg_polygon_print( stg_polygon_t* poly )
-{
-  printf( "polygon: %d pts : ", poly->points->len );
-  
-  int i;
-  for(i=0;i<poly->points->len;i++)
-    {
-      stg_point_t* pt = &g_array_index( poly->points, stg_point_t, i );
-      printf( "(%.2f,%.2f) ", pt->x, pt->y );
-    }
-  puts("");
-}
-
-void stg_polygons_print( stg_polygon_t* polys, unsigned int count )
-{
-  printf( "polygon array (%d polys)\n", count );
-  
-  int i;
-  for( i=0; i<count; i++ )
-    {
-      printf( "[%d] ", i ); 
-      stg_polygon_print( &polys[i] );
-    }
-}
-
-
-/* void stg_polygons_bbox_calc( stg_polygon_t* polys, size_t count ) */
-/* { */
-/*   for( int i=0; i<count; i++ ) */
-/*     { */
-/*       for( int l=0; l<polys[i].points->len; l++ ) */
-/* 	{ */
-/* 	  // run through the points to calculate the bounding rectangle */
-/* 	  stg_polygon_t* p = &g_array_index( polys[i].points, stg_polygon_t, l ); */
-/* 	  p->bbox.x = -BILLION; */
-/* 	  p->bbox.y = +BILLION; */
-
-
-/* } */
 
 stg_point_t* stg_unit_square_points_create( void )
 {
@@ -824,35 +575,7 @@ stg_point_t* stg_unit_square_points_create( void )
 }
 
 
-/// Copies [count] points from [pts] into polygon [poly], allocating
-/// memory if mecessary. Any previous points in [poly] are
-/// overwritten.
-void stg_polygon_set_points( stg_polygon_t* poly, stg_point_t* pts, size_t count )
-{
-  assert( poly );
-  
-  g_array_set_size( poly->points, 0 );
-  g_array_append_vals( poly->points, pts, count );
-}
-
-/// Appends [count] points from [pts] to the point list of polygon
-/// [poly], allocating memory if mecessary.
-void stg_polygon_append_points( stg_polygon_t* poly, stg_point_t* pts, size_t count )
-{
-  assert( poly );
-  g_array_append_vals( poly->points, pts, count );
-}
-
-
-// calculate the axis-aligned bounding volume of the polygon in world
-// coordinates, given the polygon origin [pose] in world
-// coordinates. The bbox is stored in the polygon and a pointer to it
-// returned. Caller should NOT free() the bbox pointer
-stg_bbox3d_t* stg_polygon_bbox_calc( stg_polygon_t* poly, stg_pose_t* pose )
-{
-
-
-}
+// CALLBACKS -------------------------------------------------------
 
 stg_cb_t* cb_create( stg_model_callback_t callback, void* arg )
 {

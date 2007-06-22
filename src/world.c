@@ -22,6 +22,8 @@ static int init_occurred = 0;
 extern int _stg_quit; // quit flag is returned by stg_world_update()
 extern int _stg_disable_gui;
 
+#include <GL/gl.h>
+extern int dl_debug;// debugging displaylist
 
 // HACK
 stg_world_t* global_world = NULL;
@@ -460,9 +462,19 @@ int stg_world_update( stg_world_t* world, int sleepflag )
       fflush(stdout);
 #endif
       
+      // TEST DEBUGGING
+      glNewList( dl_debug, GL_COMPILE );
+      push_color_rgb( 0,1,0 );
+
+      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
       GList* it;
       for( it=world->update_list; it; it=it->next )
 	stg_model_update( (stg_model_t*)it->data );
+
+      pop_color();
+      glEndList(); // dl_debug
+
       
       world->wall_last_update = timenow;	  
       world->sim_time += world->sim_interval;

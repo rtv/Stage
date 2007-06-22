@@ -27,6 +27,7 @@ static GdkGLConfig *glconfig = NULL;
 static GdkGLConfig *gllaser = NULL;
 
 GList* dl_list = NULL;
+int dl_debug; // a displaylist used for debugging stuff
 
 #include "stage_internal.h"
 #include "gui.h"
@@ -47,7 +48,7 @@ int pointer_list = 0;
 #define THICKNESS 0.25
 
 #define THUMBNAILHEIGHT 100
-#define LIST_BODY "_gl_body"
+//#define LIST_BODY "_gl_body"
 #define LIST_DATA "_gl_data"
 #define LIST_POLYS_2D "_gl_polys_2d"
 #define LIST_POLYS_3D "_gl_polys_3d"
@@ -76,8 +77,6 @@ stg_model_t* stg_world_nearest_root_model( stg_world_t* world, double wx, double
 
 // foward-declare some callbacks
 void model_draw_cb( stg_model_t* mod, void* user );
-void model_bbox_cb( gpointer key, stg_model_t* mod, void* user );
-
 
 static int recticle_list = 0;
 
@@ -163,6 +162,19 @@ GLvoid glPrint( const char *fmt, ... )
     glPopAttrib( );
 }
 
+
+// transform the current coordinate frame by the given pose
+void gl_coord_shift( double x, double y, double z, double a  )
+{
+  glTranslatef( x,y,z );
+  glRotatef( RTOD(a), 0,0,1 );
+}
+
+// transform the current coordinate frame by the given pose
+void gl_pose_shift( stg_pose_t* pose )
+{
+  gl_coord_shift( pose->x, pose->y, pose->z, pose->a );
+}
 
 void print_color_stack( char* msg )
 {
@@ -254,6 +266,7 @@ void push_color_stgcolor( stg_color_t col )
 void pop_color( void )
 {
   assert( colorstack != NULL );
+  assert( ! g_queue_is_empty( colorstack ) );
 
   GLdouble *col = g_queue_pop_head( colorstack );
   glColor4dv( col ); 
@@ -345,55 +358,6 @@ void box3d_wireframe( stg_bbox3d_t* bbox )
   glEnd();
 }
 
-static void polygon3d( double* pts, size_t pt_count, 
-		       double base, double height, int top  )
-{ 
-  if( pt_count < 3 )
-    {
-      PRINT_WARN1( "failed to render a polygon with %d points\n", (int)pt_count );
-      return;
-    }
-  
-  if( ! top )
-    glDisable (GL_CULL_FACE);
-  
-  // construct a strip that wraps around the polygon
-
-  glBegin(GL_QUAD_STRIP);
-  int p;
-  for( p=0; p<pt_count; p++)
-    {
-      glVertex3f( pts[p*2], pts[p*2+1], base + height );
-      glVertex3f( pts[p*2], pts[p*2+1], base );
-    }
-
-  // close the strip
-  glVertex3f( pts[0], pts[1], base+height );
-  glVertex3f( pts[0], pts[1], base );
-
-  glEnd();
-
-  if( top )
-    {
-      // and draw a top that fits over the stripa
-      glBegin(GL_POLYGON);
-      for( p=0; p<pt_count; p++)
-	glVertex3f( pts[p*2], pts[p*2+1], base+height );
-      glEnd();
-    }
-  else
-    glEnable(GL_CULL_FACE);
-}
-
-
-
-static void polygon2d( double* pts, size_t pt_count, stg_color_t color  )
-{ 
-  glEnableClientState( GL_VERTEX_ARRAY );
-  glVertexPointer( 2, GL_DOUBLE, 0, pts );  
-  glDrawArrays( GL_POLYGON, 0, pt_count );
-}
-
 
 void make_dirty( stg_model_t* mod )
 {
@@ -474,28 +438,6 @@ int gl_laser_render_data( stg_model_t* mod, void* enabled )
       glDepthMask( GL_TRUE ); 
     }
   
-/*   // outline the polgons that the selected robot intersects with */
-/*   push_color_stgcolor( stg_lookup_color( "orange" )); */
-  
-/*   GList *b; */
-/*   for( b = mod->sense_poly->intersectors; b; b=b->next ) */
-/*     { */
-/*       stg_polygon_t* p = (stg_polygon_t*)b->data; */
-      
-/*       glPushMatrix(); */
-      
-/*       stg_pose_t pose; */
-/*       stg_model_get_global_pose( p->mod, &pose ); */
-      
-/*       // move into this model's coordinate frame */
-/*       glTranslatef( pose.x, pose.y, pose.z ); */
-/*       glRotatef( RTOD(pose.a), 0,0,1 ); */
-/*       gl_draw_polygon3d( p ); */
-      
-/*       glPopMatrix(); */
-/*     } */
-  
-/*   pop_color(); */
 
   glEndList();
   
@@ -643,18 +585,20 @@ int gl_ranger_render_data( stg_model_t* mod, void* enabled )
   stg_pose_t gpose;
   stg_model_get_global_pose( mod, &gpose );
   
-  glTranslatef( gpose.x, gpose.y, gpose.z );
-  glRotatef(RTOD(gpose.a), 0,0,1);
+  gl_pose_shift( &gpose );
+  //glTranslatef( gpose.x, gpose.y, gpose.z );
+  //glRotatef(RTOD(gpose.a), 0,0,1);
       
   // local offset coords
-  stg_geom_t geom;
-  stg_model_get_geom( mod, &geom );
+  //stg_geom_t geom;
+  //stg_model_get_geom( mod, &geom );
       
   glDepthMask( GL_FALSE );
   
   // respect the local offsets
-  glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
-  glRotatef(RTOD(mod->geom.pose.a), 0,0,1);
+  gl_pose_shift( &mod->geom.pose );
+  //glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
+  //glRotatef(RTOD(mod->geom.pose.a), 0,0,1);
   
   push_color_rgba( 1, 0, 0, 0.1 ); // transparent red
   
@@ -854,103 +798,6 @@ void gl_draw_polygon_bbox( stg_polygon_t* p )
   //pop_color();
 }
 
-void gl_draw_polygon_bbox_cb( stg_polygon_t* p, gpointer unused )
-{
-  gl_draw_polygon_bbox( p );
-}
-
-
-void gl_draw_polygon2d( stg_polygon_t* p )
-{
-  polygon2d( (double*)p->points->data, p->points->len, p->color );
-
-  // bbox in local coords
-/*   push_color_rgba( 0, 1, 0, 1 ); */
-
-/*   glBegin(GL_LINE_LOOP ); */
-/*   glVertex2f( p->minx, p->miny ); */
-/*   glVertex2f( p->maxx, p->miny ); */
-/*   glVertex2f( p->maxx, p->maxy ); */
-/*   glVertex2f( p->minx, p->maxy ); */
-/*   glEnd(); */
-
-/*   printf( "drawing polygon local bbox (%.2f,%.2f)(%.2f,%.2f)\n", */
-/* 	  p->minx, p->maxx,  */
-/* 	  p->miny, p->maxy ); */
-
-/*   pop_color(); */
-}
-
-void gl_draw_polygon2d_cb( stg_polygon_t* p, gpointer unused )
-{
-  gl_draw_polygon2d( p );
-}
-
-void gl_draw_polygon3d( stg_polygon_t* p )
-{
-  polygon3d( (double*)p->points->data, p->points->len,
-	     0, p->mod->geom.size.z, 
-	     TRUE );
-}
-
-void gl_draw_polygon3d_cb( stg_polygon_t* p, gpointer unused )
-{
-  gl_draw_polygon3d( p );
-}
-
-
-int gl_model_polygons( stg_model_t* mod, void* userp )
-{
-  //puts( "model render polygons" );
-
-  gui_window_t* win = (gui_window_t*)mod->world->win;
-
-  // 2D RENDERING
-  // get the display list associated with this model
-  int list = gui_model_get_displaylist( mod, LIST_POLYS_2D );
-  
-  glNewList( list, GL_COMPILE );
-  
-  glPushMatrix();
-  
-  // go into model's geometry coordframe
-  glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
-  glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
-
-  // draw each poly
-  g_list_foreach( mod->polys, (GFunc)gl_draw_polygon2d_cb, NULL );
-
-  //if( 1 )// mod->boundary ) 
-  //  box3d_wireframe( &mod->bbox );
-
-  glPopMatrix(); // drop out of local coords
-  glEndList();
-
-  // 3D RENDERING
-  // get the display list associated with this model
-  list = gui_model_get_displaylist( mod, LIST_POLYS_3D );
-  
-  glNewList( list, GL_COMPILE );
-
-  glPushMatrix();
-  
-  // go into model's geometry coordframe
-  glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
-  glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
-
-  // draw each poly
-  g_list_foreach( mod->polys, (GFunc)gl_draw_polygon3d_cb, NULL );
-
-  glPopMatrix(); // drop out of local coords
-  glEndList();
-
-  make_dirty(mod);
-  
-  return 0;
-}
-
-
-
 int gl_model_redraw( stg_model_t* mod, void* userp )
 {
   // need to redraw the whole model tree
@@ -987,112 +834,84 @@ void gl_model_grid_axes( stg_model_t* mod )
     }
 }
 
+
+
+void stg_block_render_cb( stg_block_t* block, gpointer dummy )
+{
+  stg_block_render( block );
+}
+
+void stg_d_render_cb( stg_block_t* block, gpointer dummy )
+{
+  stg_d_render( block );
+}
+
+void stg_d_render( stg_d_draw_t* d )
+{
+  //printf( "STG_D DRAW COMMAND %d\n", d->type );
+  
+  switch( d->type )
+    {
+    case STG_D_DRAW_POINTS:
+      glPointSize( 3 );
+      glBegin( GL_POINTS );
+      break;	      
+    case STG_D_DRAW_LINES:
+      glBegin( GL_LINES );
+      break;
+    case STG_D_DRAW_LINE_STRIP:
+      glBegin( GL_LINE_STRIP );
+      break;
+    case STG_D_DRAW_LINE_LOOP:
+      glBegin( GL_LINE_LOOP );
+      break;
+    case STG_D_DRAW_TRIANGLES:
+      glBegin( GL_TRIANGLES );
+      break;
+    case STG_D_DRAW_TRIANGLE_STRIP:
+      glBegin( GL_TRIANGLE_STRIP );
+      break;
+    case STG_D_DRAW_TRIANGLE_FAN:
+      glBegin( GL_TRIANGLE_FAN );
+      break;
+    case STG_D_DRAW_QUADS:
+      glBegin( GL_QUADS );
+      break;
+    case STG_D_DRAW_QUAD_STRIP:
+      glBegin( GL_QUAD_STRIP );
+      break;
+    case STG_D_DRAW_POLYGON:
+      glBegin( GL_POLYGON );
+      break;
+      
+    default:
+      PRINT_WARN1( "drawing mode %d not handled", 
+		   d->type );	 
+    }
+  
+  unsigned int c;
+  for( c=0; c<d->vert_count; c++ )
+    {
+      glVertex3f( d->verts[c].x,
+		  d->verts[c].y,
+		  d->verts[c].z );
+    }
+  glEnd();
+}
+
 void gl_model_draw( stg_model_t* mod )
 {
   //puts( "model render polygons" );
 
   gui_window_t* win = (gui_window_t*)mod->world->win;
-
-  // get the display list associated with this model
-  int list = gui_model_get_displaylist( mod, LIST_BODY );  
-
-  glNewList( list, GL_COMPILE_AND_EXECUTE );
-  
-  //stg_pose_t gp;
-  //stg_model_get_global_pose( mod, &gp );
   
   glPushMatrix();
   
-  // move into this model's coordinate frame
-  
-  //if( mod->parent )
-  //   glTranslatef( 0,0, mod->parent->geom.pose.a );
+  // move into this model's local coordinate frame
+  gl_pose_shift( &mod->pose );
+  gl_pose_shift( &mod->geom.pose );
 
-  glTranslatef( mod->pose.x, mod->pose.y, mod->pose.z );
-  glRotatef( RTOD(mod->pose.a), 0,0,1 );
-  
-  //draw blocks
-  GList* it;
-  for( it=mod->blocks; it; it=it->next )
-    stg_block_render( (stg_block_t*)it->data );
-
-  // player color elements are uint8_t type
-  glColor4ub( 0,2,0,255 );
-
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );      
-
-  // draw the stg_d list
-  for( it=mod->d_list; it; it=it->next )
-    {
-      stg_d_draw_t* d = (stg_d_draw_t*)it->data;
-      
-      //printf( "STG_D DRAW COMMAND %d\n", d->type );
-      
-      switch( d->type )
-	{
-	case STG_D_DRAW_POINTS:
-	  glPointSize( 3 );
-	  glBegin( GL_POINTS );
-	  break;	      
-	case STG_D_DRAW_LINES:
-	  glBegin( GL_LINES );
-	  break;
-	case STG_D_DRAW_LINE_STRIP:
-	  glBegin( GL_LINE_STRIP );
-	  break;
-	case STG_D_DRAW_LINE_LOOP:
-	  glBegin( GL_LINE_LOOP );
-	  break;
-	case STG_D_DRAW_TRIANGLES:
-	  glBegin( GL_TRIANGLES );
-	  break;
-	case STG_D_DRAW_TRIANGLE_STRIP:
-	  glBegin( GL_TRIANGLE_STRIP );
-	  break;
-	case STG_D_DRAW_TRIANGLE_FAN:
-	  glBegin( GL_TRIANGLE_FAN );
-	  break;
-	case STG_D_DRAW_QUADS:
-	  glBegin( GL_QUADS );
-	  break;
-	case STG_D_DRAW_QUAD_STRIP:
-	  glBegin( GL_QUAD_STRIP );
-	  break;
-	case STG_D_DRAW_POLYGON:
-	  glBegin( GL_POLYGON );
-	  break;
-	  
-	default:
-	  PRINT_WARN1( "drawing mode %d not handled", 
-		       d->type );	 
-	}
-      
-      
-      unsigned int c;
-      for( c=0; c<d->vert_count; c++ )
-	{
-	  glVertex3f( d->verts[c].x,
-		      d->verts[c].y,
-		      d->verts[c].z );
-
-	  //printf( "vertex [%.2f, %.2f, %.2f]\n",
-	  //  d->verts[c].x,
-	  //  d->verts[c].y,
-	  //  d->verts[c].z );
-
-	}
-
-      //puts("");
-
-      glEnd();
-    }
-  
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );      
-
-  // go into model's geometry coordframe
-  //glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
-  //glRotatef( RTOD(mod->geom.pose.a), 0,0,1 );
-
+  // draw grid if enabled
   if( win->show_grid && mod->gui_grid )
     {
       int gridlist = (int)stg_model_get_property( mod, LIST_GRID );
@@ -1103,48 +922,15 @@ void gl_model_draw( stg_model_t* mod )
       gl_model_grid_axes( mod );
     }
   
-  // model's body color
-  push_color_stgcolor( mod->color );
-
+  // draw blocks
   if( win->show_polygons )
-    {
-      // choose 2d or 2d drawing
-      char* idstr;
-      if( win->sphi || win->stheta )
-	idstr = LIST_POLYS_3D;
-      else
-	idstr = LIST_POLYS_2D;
+    g_list_foreach( mod->blocks, stg_block_render_cb, NULL );
+  
+  //if( win->show_user )
+    g_list_foreach( mod->d_list, stg_d_render_cb, NULL );
+  
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );      
 
-      int polylist = (int)stg_model_get_property( mod, idstr );
-      
-      if( win->fill_polygons )
-	{
-	  glEnable(GL_POLYGON_OFFSET_FILL);
-	  glPolygonOffset(1.0, 1.0);
-	  glCallList( polylist );
-	  glDisable(GL_POLYGON_OFFSET_FILL);
-	}
-
-      if( mod->gui_outline && win->fill_polygons ) 
-	{
-	  double gcol[4];	  
-	  stg_color_to_glcolor4dv( mod->color, gcol );
-	  
-	  // make a darker version of the same color
-	  gcol[0]/=2.0;
-	  gcol[1]/=2.0;
-	  gcol[2]/=2.0;
-
-	  push_color( gcol );
-
-	}
-      
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );      
-      glCallList( polylist );
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );      
-
-      pop_color();
-    }
 
   if( mod->world->win->selection_active == mod )
     {
@@ -1152,18 +938,15 @@ void gl_model_draw( stg_model_t* mod )
       glCallList( selectedlist );
     }
   
-  
+  // shift up the CS to the top of this model
+  gl_coord_shift(  0,0, mod->geom.size.z, 0 );
+
+  // recursively draw the tree below this model 
   g_list_foreach( mod->children, (GFunc)model_draw_cb, NULL );
 
-/*       // recursively draw the tree below this model */
-/*       GList *it;; */
-/*       for( it=mod->children; it; it=it->next ) */
-/* 	  gl_model_draw(  (stg_model_t*)it->data ); */
-/*     } */
-  
   glPopMatrix(); // drop out of local coords
 
-  pop_color();
+  //pop_color();
   glEndList();
   
   // opengl.org recommends not using compile-and-execute, but explitly
@@ -1270,15 +1053,6 @@ void model_draw_cb( stg_model_t* mod, void* user )
 {
   gl_model_draw( mod );
 }
-
-void model_bbox_cb( gpointer key, stg_model_t* mod, void* user )
-{
-  push_color_stgcolor( mod->color );
-  g_list_foreach( mod->polys, (GFunc)gl_draw_polygon_bbox_cb, NULL );
-  pop_color();
-}
-
-
 
 
 void draw_thumbnail( stg_world_t* world )
@@ -1625,7 +1399,7 @@ void draw_world(  stg_world_t* world )
     }
   
   // draw the world size rectangle in white
-  // draw the floor a little offset so it doesn't z-fight with the
+  // draw the floor a little pushed into the distance so it doesn't z-fight with the
   // models
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1.0, 1.0);
@@ -1638,17 +1412,8 @@ void draw_world(  stg_world_t* world )
   //g_hash_table_foreach( world->models, (GHFunc)model_draw_bbox, NULL);
 
   // draw the models
-  //g_hash_table_foreach( world->models, (GHFunc)model_draw_cb, NULL );
-
   g_list_foreach( world->children, (GFunc)model_draw_cb, NULL );
 
-  if( win->show_bboxes )   // draw bounding boxes
-    {
-      g_hash_table_foreach( world->models, (GHFunc)model_bbox_cb, NULL );
-      // draw the bbox lists
-      draw_endpoints( world );
-    }
-  
   // get the display list associated with this model
   //int slist = gui_model_get_displaylist( mod, LIST_SELECTED );
   if( recticle_list )
@@ -1666,6 +1431,7 @@ void draw_world(  stg_world_t* world )
       glCallList( (int)it->data );
     }
 
+  glCallList( dl_debug );
 
   if( world->win->selection_active
       &&  world->win->selection_active->sense_poly )
@@ -2395,6 +2161,8 @@ gui_create_canvas( stg_world_t* world )
   // allocate a drawing list for debug info
   world->win->debug_list = glGenLists(1);
 
+  dl_debug = glGenLists(1);
+
   return drawing_area;
 }
 
@@ -2414,9 +2182,9 @@ void gui_model_init( stg_model_t* mod )
   // GL CALLBACKS
 
   // recompile display lists when these properties change
-  stg_model_add_callback( mod, &mod->polys, gl_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->gui_outline, gl_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->boundary, gl_model_polygons, NULL );
+  //stg_model_add_callback( mod, &mod->polys, gl_model_polygons, NULL );
+  //stg_model_add_callback( mod, &mod->gui_outline, gl_model_polygons, NULL );
+  //stg_model_add_callback( mod, &mod->boundary, gl_model_polygons, NULL );
   stg_model_add_callback( mod, &mod->gui_grid, gl_model_grid, NULL );
 
   // complete redraw when these change
