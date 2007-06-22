@@ -6,8 +6,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
-//  $Author: rtv $
-//  $Revision: 1.88 $
+//  $Author: gerkey $
+//  $Revision: 1.88.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -291,7 +291,7 @@ int laser_update( stg_model_t* mod )
       if( hitmod )
 	{
 	  scan[t].reflectance = 
-	    (mod->laser_return >= LaserBright) ? 1.0 : 0.0;
+	    (hitmod->laser_return >= LaserBright) ? 1.0 : 0.0;
 	}
       else
 	scan[t].reflectance = 0.0;
