@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.140.2.7 2007-06-21 01:47:31 rtv Exp $
+# $Id: Makefile.am,v 1.140.2.8 2007-07-08 01:44:08 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -10,8 +10,10 @@ SUBDIRS = referees
 # install the header file for the Stage library
 include_HEADERS = stage.h 
 
+CC=g++
+
 # system-wide compile flags - target-specific flags are added to each target below
-AM_CFLAGS =   -Wall -I. -I$(top_srcdir)/replace -std=c99 @GUI_CFLAGS@ 
+AM_CFLAGS =   -Wall -I. -I$(top_srcdir)/replace @GUI_CFLAGS@ -std=c99  
 AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  @GUI_CFLAGS@
 
 # build the stage library
@@ -29,41 +31,44 @@ bin_PROGRAMS = stest
 #
 libstage_la_SOURCES =  \
 	../config.h \
-	block.c \
+	block.cc \
 	gui.h \
 	gui_gl.c \
-	gui_gtk.c \
+	gui_gtk.cc \
 	gui_gtk_prefs.c \
 	matrix.c \
-	model.c \
-	model_blobfinder.c \
-	model_callbacks.c \
-	model_bumper.c \
-	model_fiducial.c \
-	model_laser.c \
-	model_load.c \
-	model_position.c \
-	model_ptz.c \
-	model_ranger.c \
-	model_speech.c \
-	model_wifi.cc \
-	raytrace.c \
+	model.cc \
+	model.hh \
+	model_callbacks.cc \
+	model_laser.cc \
+	model_load.cc \
+	model_position.cc \
+	model_props.cc \
+	raytrace.cc \
 	stage.c \
 	stage.h \
 	stage_internal.h \
-	stagecpp.cc \
-	typetable.c \
-	world.c \
+	typetable.cc \
+	world.cc \
 	worldfile.cc \
 	worldfile.hh 
-
-
 
 # TODO
 # model_power.c # needs lots of work
 #	model_gripper.c 
 
-libstage_la_LDFLAGS = -version-info 2:1:0 -rpath $(libdir)  
+#	model_blobfinder.c 
+#	model_bumper.c 
+#	model_fiducial.c 
+#	model_laser.cc 
+#	model_load.c 
+#	model_ptz.c 
+#	model_ranger.c 
+#	model_speech.c 
+#	model_wifi.cc 
+
+
+libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir)  
 libstage_la_LIBADD = @GUI_LIBS@
 
 
@@ -76,28 +81,29 @@ endif
 
 # build a Player plugin from libstage plus Player driver hooks.
 libstageplugin_la_SOURCES = \
-	p_bumper.cc \
-	p_fiducial.cc \
 	p_driver.cc \
 	p_driver.h \
 	p_graphics3d.cc \
 	p_laser.cc \
-	p_ptz.cc \
-	p_wifi.cc \
-	p_speech.cc \
-	p_sonar.cc \
-	p_localize.cc \
-	p_position.cc \
-	p_map.cc \
 	p_simulation.cc \
-	p_blobfinder.cc \
 	stg_time.cc \
-	stg_time.h \
-        zoo_driver.h \
-        zoo.h \
-        zoo_controller.h \
-        zoo_referee.h \
-        zoo_species.h
+	stg_time.h 
+
+#	p_position.cc 
+#	p_bumper.cc 
+#	p_fiducial.cc 
+#	p_ptz.cc 
+#	p_wifi.cc 
+#	p_speech.cc 
+#	p_sonar.cc 
+#	p_localize.cc 
+#	p_map.cc 
+#	p_blobfinder.cc 
+#        zoo_driver.h 
+#        zoo.h 
+#        zoo_controller.h 
+#        zoo_referee.h 
+#        zoo_species.h
 
 # TODO
 # p_gripper.cc # slightly broken by PADI-2.1 changes
@@ -124,9 +130,10 @@ libglutgraphics_la_LDFLAGS = -version-info 1:0:0 -rpath $(libdir) -framework GLU
 libglutgraphics_la_LIBADD = libstage.la @PLAYER_LIBS@ 
 
 # build a stand-alone test program using libstage
-stest_DEPENDENCIES = libstage.la
-stest_SOURCES = stest.c
-stest_LDADD = libstage.la @GUI_LIBS@
+#stest_DEPENDENCIES = libstage.la
+stest_SOURCES = stest.cc
+
+stest_LDADD = libstage.la @GUI_LIBS@  
 #stest_LDFLAGS = 
 
 # TODO - fix this

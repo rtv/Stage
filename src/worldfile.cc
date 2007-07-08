@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.33 2005-03-10 00:41:11 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.33.6.1 2007-07-08 01:44:09 rtv Exp $
  */
 
 #include <assert.h>
@@ -1388,6 +1388,11 @@ int CWorldFile::GetProperty(int entity, const char *name)
   return -1;
 }
 
+
+bool CWorldFile::PropertyExists( int section, char* token )
+{
+  return( this->GetProperty( section, token ) > -1 );
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Set the value of an property

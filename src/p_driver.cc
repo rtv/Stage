@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.37.4.4 2007-06-19 02:00:46 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.37.4.5 2007-07-08 01:44:09 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -150,7 +150,7 @@ The stage plugin driver provides the following device interfaces:
 #include <math.h>
 
 #include "p_driver.h"
-#include "zoo_driver.h"
+//#include "zoo_driver.h"
 
 const char* copyright_notice = 
 "\n * Part of the Player Project [http://playerstage.sourceforge.net]\n"
@@ -214,34 +214,40 @@ int player_driver_init(DriverTable* table)
 }
 
 // find a model to attach to a Player interface
-stg_model_t* model_match( stg_model_t* mod, 
-			  player_devaddr_t *addr, 
-			  stg_model_initializer_t init, 
-			  GPtrArray* devices )
+StgModel* model_match( StgModel* mod, 
+		       player_devaddr_t *addr, 
+		       char* typestr, 
+		       GPtrArray* devices )
 {
-  if( mod->typerec->initializer == init )
+  //printf( "model_match %s[%s] for [%s]\n",
+  //  mod->Token(), mod->TypeStr(), typestr );
+  
+  if( strcmp( mod->TypeStr(), typestr ) == 0 )
     return mod;
+
+  //printf( "searching children\n" );
  
   // else try the children
-  stg_model_t* match=NULL;
+  StgModel* match=NULL;
 
   // for each model in the child list
   GList* it;
   int i=0;
-  for( it=mod->children; it; it=it->next )
+  for( it=mod->Children(); it; it=it->next )
     {
       // recurse
       match = 
-	model_match( (stg_model_t*)it->data, 
-		     addr, init, devices );      
+	model_match( (StgModel*)it->data, 
+		     addr, typestr, devices );      
       if( match )
 	{
 	  // if mod appears in devices already, it can not be used now
 	  //printf( "[inspecting %d devices used already]", devices->len );
+
 	  for( int i=0; i<(int)devices->len; i++ )
 	    {
-	      Interface* interface = 
-		(Interface*)g_ptr_array_index( devices, i );
+	      InterfaceModel* interface = 
+		(InterfaceModel*)g_ptr_array_index( devices, i );
 	      
 	      //printf( "comparing %p and %p (%d.%d.%d)\n", mod, record->mod,
 	      //      record->id.port, record->id.code, record->id.index );
@@ -266,15 +272,26 @@ stg_model_t* model_match( stg_model_t* mod,
 
 
 
+Interface::Interface(  player_devaddr_t addr, 
+		       StgDriver* driver,
+		       ConfigFile* cf, 
+		       int section )
+{
+  //puts( "Interface constructor" );
+
+  this->last_publish_time = 0;
+  this->addr = addr;
+  this->driver = driver;
+  this->publish_interval_msec = 100; // todo - do this properly
+}      
+
 InterfaceModel::InterfaceModel(  player_devaddr_t addr, 
 				 StgDriver* driver,
 				 ConfigFile* cf, 
 				 int section,
-				 stg_model_initializer_t init )
+				 char* typestr ) 
   : Interface( addr, driver, cf, section )
 {
-  //puts( "InterfaceModel constructor" );
-  
   char* model_name = (char*)cf->ReadString(section, "model", NULL );
   
   if( model_name == NULL )
@@ -286,23 +303,24 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 		  model_name );
       return; // error
     }
-  
-  // find an appropriate model for this interface and model type
-  this->mod = driver->LocateModel( model_name, &addr, init );
+
+  // find a model of the right type
+  this->mod = driver->LocateModel( model_name, 
+				   &addr, 
+				   typestr );
   
   if( !this->mod )
     {
       printf( " ERROR! no model available for this device."
 	      " Check your world and config files.\n" );
-
+      
       exit(-1);
       return;
     }
   
   if( !player_quiet_startup )
-    printf( "\"%s\"\n", this->mod->token );
+    printf( "\"%s\"\n", this->mod->Token() );
 }      
-
 
 
 // Constructor.  Retrieve options from the configuration file and do any
@@ -338,8 +356,10 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
             
       if( !player_quiet_startup )
 	{
-	  printf( "   %d.%d.%d is ", 
-		  player_addr.robot, player_addr.interf, player_addr.index );
+	  printf( "   %d.%s.%d is ", 
+		  player_addr.robot, 
+		  interf_to_str(player_addr.interf), 
+		  player_addr.index );
 	  fflush(stdout);
 	}
       
@@ -348,69 +368,69 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
       
       switch( player_addr.interf )
 	{
-	case PLAYER_BLOBFINDER_CODE:
-	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
-	  break;
+// 	case PLAYER_BLOBFINDER_CODE:
+// 	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
+// 	  break;
 
-        case PLAYER_SIMULATION_CODE:
-          ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
-          break;
+         case PLAYER_SIMULATION_CODE:
+           ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
+           break;
 	  
-	case PLAYER_LASER_CODE:	  
-	  ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
-	  break;
-	  
-	case PLAYER_POSITION2D_CODE:	  
-	  ifsrc = new InterfacePosition( player_addr, this,  cf, section );
-	  break;
-	  
-	case PLAYER_SONAR_CODE:
-	  ifsrc = new InterfaceSonar( player_addr,  this, cf, section );
-	  break;
-	  
-	case PLAYER_POWER_CODE:	  
-	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
-	  break;
-	  
- 	case PLAYER_PTZ_CODE:
- 	  ifsrc = new InterfacePtz( player_addr,  this, cf, section );
+ 	case PLAYER_LASER_CODE:	  
+ 	  ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
  	  break;
 	  
-	case PLAYER_FIDUCIAL_CODE:
-	  ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
-	  break;	  
-
-	case PLAYER_LOCALIZE_CODE:
-	  ifsrc = new InterfaceLocalize( player_addr,  this, cf, section );
-	  break;	  
+	  //case PLAYER_POSITION2D_CODE:	  
+ 	  //ifsrc = new InterfacePosition( player_addr, this,  cf, section );
+	  // 	  break;
 	  
-	case PLAYER_MAP_CODE:
-	  ifsrc = new InterfaceMap( player_addr,  this, cf, section );
-	  break;	  
+// 	case PLAYER_SONAR_CODE:
+// 	  ifsrc = new InterfaceSonar( player_addr,  this, cf, section );
+// 	  break;
 	  
-	  //case PLAYER_GRAPHICS2D_CODE:
-	  //ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
-	  //break;	  
-
-	case PLAYER_GRAPHICS3D_CODE:
-	  ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
-	  break;	  
+// 	case PLAYER_POWER_CODE:	  
+// 	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
+// 	  break;
 	  
-	case PLAYER_GRIPPER_CODE:
-	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
-	  break;	  
+//  	case PLAYER_PTZ_CODE:
+//  	  ifsrc = new InterfacePtz( player_addr,  this, cf, section );
+//  	  break;
+	  
+// 	case PLAYER_FIDUCIAL_CODE:
+// 	  ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
+// 	  break;	  
 
-	case PLAYER_WIFI_CODE:
-	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
-	  break;	  
+// 	case PLAYER_LOCALIZE_CODE:
+// 	  ifsrc = new InterfaceLocalize( player_addr,  this, cf, section );
+// 	  break;	  
+	  
+// 	case PLAYER_MAP_CODE:
+// 	  ifsrc = new InterfaceMap( player_addr,  this, cf, section );
+// 	  break;	  
+	  
+// 	  case PLAYER_GRAPHICS2D_CODE:
+// 	  ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
+// 	  break;	  
 
-	case PLAYER_SPEECH_CODE:
-	  ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );
-	  break;	  
+ 	case PLAYER_GRAPHICS3D_CODE:
+ 	  ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
+ 	  break;	  
+	  
+// 	case PLAYER_GRIPPER_CODE:
+// 	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
+// 	  break;	  
 
-	case PLAYER_BUMPER_CODE:
-	  ifsrc = new InterfaceBumper( player_addr,  this, cf, section );
-	  break;	  
+// 	case PLAYER_WIFI_CODE:
+// 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
+// 	  break;	  
+
+// 	case PLAYER_SPEECH_CODE:
+// 	  ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );
+// 	  break;	  
+
+// 	case PLAYER_BUMPER_CODE:
+// 	  ifsrc = new InterfaceBumper( player_addr,  this, cf, section );
+// 	  break;	  
 
 	default:
 	  PRINT_ERR1( "error: stage driver doesn't support interface type %d\n",
@@ -446,13 +466,14 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
   //puts( "  Stage driver loaded successfully." );
 }
 
-stg_model_t*  StgDriver::LocateModel( char* basename,  
-				      player_devaddr_t* addr,
-				      stg_model_initializer_t init )
+StgModel*  StgDriver::LocateModel( char* basename,  
+				   player_devaddr_t* addr,
+				   char* typestr )
 {  
-  //printf( "attempting to resolve Stage model \"%s\"", basename );
+  //printf( "attempting to find a model under model \"%s\" of type [%s]\n", 
+  //  basename, typestr );
   
-  stg_model_t* base_model = 
+  StgModel* base_model = 
     stg_world_model_name_lookup( StgDriver::world, basename );
   
   if( base_model == NULL )
@@ -461,18 +482,13 @@ stg_model_t*  StgDriver::LocateModel( char* basename,
 		  basename );
       return NULL;
     }
-
-  // if there's no init function specified, we'll just match the named
-  // model
-  if( init == NULL )
-    return base_model;
-
-  //printf( "found base model %s\n", base_model->token );
   
-  // now find the model for this player device find the first model in
-  // the tree that is the right type (i.e. has the right
-  // initialization function) and has not been used before
-  return( model_match( base_model, addr, init, this->devices ) );
+  //printf( "found base model %s\n", base_model->Token() );
+
+  // we find the first model in the tree that is the right
+  // type (i.e. has the right initialization function) and has not
+  // been used before
+  return( model_match( base_model, addr, typestr, this->devices ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -512,7 +528,7 @@ int StgDriver::Subscribe(player_devaddr_t addr)
   
   if( device )
     {      
-      stg_model_subscribe( device->mod );  
+      device->Subscribe();
       return Driver::Subscribe(addr);
     }
 
@@ -531,7 +547,7 @@ int StgDriver::Unsubscribe(player_devaddr_t addr)
   
   if( device )
     {
-      stg_model_unsubscribe( device->mod );  
+      device->Unsubscribe();  
       return Driver::Unsubscribe(addr);
     }
   else
@@ -603,9 +619,10 @@ void StgDriver::Update(void)
   {
     Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
 
+    assert( interface );
     // Should this be an assertion? - BPG
-    if(!interface)
-      continue;
+    //if(!interface)
+    //continue;
 
     switch( interface->addr.interf )
       {
@@ -623,7 +640,7 @@ void StgDriver::Update(void)
 	  double currtime;
 	  GlobalTime->GetTimeDouble(&currtime);
 	  if((currtime - interface->last_publish_time) >= 
-	     (interface->mod->world->sim_interval / 1e3))
+	     (interface->publish_interval_msec / 1e3))
 	    {
 	      interface->Publish();
 	      interface->last_publish_time = currtime;
@@ -631,8 +648,6 @@ void StgDriver::Update(void)
 	}
       }
   }
-  // update the world
-  return;
 }
 
 

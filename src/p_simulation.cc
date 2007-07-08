@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.15.2.3 2006-12-20 03:01:13 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.15.2.4 2007-07-08 01:44:09 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -56,17 +56,6 @@ extern PlayerTime* GlobalTime;
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
 
-////////////////////////////////////////////////////////////////////////////////////
-
-Interface::Interface(  player_devaddr_t addr, 
-		       StgDriver* driver,
-		       ConfigFile* cf, 
-		       int section )
-{
-  this->last_publish_time = 0;
-  this->addr = addr;
-  this->driver = driver;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -180,7 +169,7 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
 
     // look up the named model
 
-    stg_model_t* mod = 
+    StgModel* mod = 
             stg_world_model_name_lookup( StgDriver::world, req->name );
 
     if( mod )
@@ -188,7 +177,7 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
 	printf( "Stage: moving \"%s\" to (%.2f,%.2f,%.2f)\n",
 		req->name, pose.x, pose.y, pose.a );
 	
-	stg_model_set_pose( mod, &pose );
+	mod->SetPose( &pose );
 	
 	this->driver->Publish(this->addr, resp_queue,
 			      PLAYER_MSGTYPE_RESP_ACK,
@@ -211,15 +200,14 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
 	(player_simulation_property_req_t*)data;
       
       // look up the named model      
-      stg_model_t* mod = 
+      StgModel* mod = 
 	stg_world_model_name_lookup( StgDriver::world, req->name );
       
       if( mod )
 	{
 	  int ack = 
-	    stg_model_set_property( mod, 
-				    req->prop, 
-				    (void*)req->value );
+	    mod->SetProperty( req->prop, 
+			      (void*)req->value );
 	  
 	  this->driver->Publish(this->addr, resp_queue,
 				ack==0 ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
@@ -243,22 +231,23 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
       printf( "Stage: received request for position of object \"%s\"\n", req->name );
       
       // look up the named model	
-      stg_model_t* mod = 
+      StgModel* mod = 
 	stg_world_model_name_lookup( StgDriver::world, req->name );
       
       if( mod )
 	{
-      stg_pose_t* pose = &mod->pose;
+	  stg_pose_t pose;
+	  mod->GetPose( &pose );
 
       printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
-              pose->x, pose->y, pose->a );
+              pose.x, pose.y, pose.a );
 
 
       player_simulation_pose2d_req_t reply;
       memcpy( &reply, req, sizeof(reply));
-      reply.pose.px = pose->x;
-      reply.pose.py = pose->y;
-      reply.pose.pa = pose->a;
+      reply.pose.px = pose.x;
+      reply.pose.py = pose.y;
+      reply.pose.pa = pose.a;
 
       /*
          printf( "Stage: returning location (%d %d %d)\n",

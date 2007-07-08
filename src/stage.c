@@ -16,14 +16,14 @@
 
 //#define DEBUG
 
-#include "replace.h"
+//#include "replace.h"
 #include "stage_internal.h"
 
 int _stg_quit = FALSE;
 int _stg_disable_gui = FALSE;
 
-
-
+GHashTable* global_typetable = NULL;
+GHashTable* stg_create_typetable( void );
 
 int stg_init( int argc, char** argv )
 {
@@ -47,6 +47,10 @@ int stg_init( int argc, char** argv )
   // locale.
   if(!setlocale(LC_ALL,"POSIX"))
     fputs("Warning: failed to setlocale(); config file may not be parse correctly\n", stderr);
+
+
+  // load the type table into a hash table
+  global_typetable = stg_create_typetable();
 
   return 0; // ok
 }
@@ -453,7 +457,7 @@ int stg_rotrects_from_image_file( const char* filename,
   *rect_count = 0;
   size_t allocation_unit = 1000;
   size_t rects_allocated = allocation_unit;
-  *rects = malloc( rects_allocated * sizeof(stg_rotrect_t) );
+  *rects = (stg_rotrect_t*)malloc( rects_allocated * sizeof(stg_rotrect_t) );
   
   int img_width = gdk_pixbuf_get_width(pb);
   int img_height = gdk_pixbuf_get_height(pb);
@@ -579,7 +583,7 @@ stg_point_t* stg_unit_square_points_create( void )
 
 stg_cb_t* cb_create( stg_model_callback_t callback, void* arg )
 {
-  stg_cb_t* cb = malloc(sizeof(stg_cb_t));
+  stg_cb_t* cb = (stg_cb_t*)malloc(sizeof(stg_cb_t));
   cb->callback = callback;
   cb->arg = arg;
   return cb;

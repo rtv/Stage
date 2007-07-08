@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.18 2006-03-22 08:46:29 rtv Exp $
+ * CVS: $Id: p_laser.cc,v 1.18.4.1 2007-07-08 01:44:09 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -40,16 +40,11 @@
 
 #include "p_driver.h" 
 
-extern "C" { 
-int laser_init( stg_model_t* mod );
-}
-
-
 InterfaceLaser::InterfaceLaser( player_devaddr_t addr, 
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( addr, driver, cf, section, laser_init )
+  : InterfaceModel( addr, driver, cf, section, "laser" )
 { 
   this->scan_id = 0;
 }
@@ -57,13 +52,13 @@ InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 void InterfaceLaser::Publish( void )
 {
   size_t len = 0;
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data;  
-  int sample_count = mod->data_len / sizeof( stg_laser_sample_t );
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->GetData( &len );  
+  int sample_count = len / sizeof( stg_laser_sample_t );
   
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
   
-  stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg;
+  stg_laser_config_t *cfg = (stg_laser_config_t*)mod->GetCfg( NULL );
   assert(cfg);
   
   if( sample_count != cfg->samples )
@@ -117,7 +112,7 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
 		    RTOD(plc->min_angle), RTOD(plc->max_angle), 
 		    plc->resolution/1e2);
 
-      stg_laser_config_t *current = (stg_laser_config_t*)mod->cfg;
+      stg_laser_config_t *current = (stg_laser_config_t*)mod->GetCfg(NULL);
       assert( current );
 
       stg_laser_config_t slc;
@@ -131,7 +126,7 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
       PRINT_DEBUG2( "setting laser config: fov %.2f samples %d", 
 		    slc.fov, slc.samples );
       
-      stg_model_set_cfg( this->mod, &slc, sizeof(slc)); 
+      mod->SetCfg( &slc, sizeof(slc)); 
       
       this->driver->Publish(this->addr, resp_queue,
 			    PLAYER_MSGTYPE_RESP_ACK, 
@@ -153,7 +148,7 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
   {   
     if( hdr->size == 0 )
     {
-      stg_laser_config_t *slc = (stg_laser_config_t*)mod->cfg;
+      stg_laser_config_t *slc = (stg_laser_config_t*)mod->GetCfg(NULL);
       assert(slc);
 
       uint8_t angular_resolution = (uint8_t)(RTOD(slc->fov / (slc->samples-1)) * 100);
@@ -190,10 +185,10 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
     if(hdr->size == 0)
     {
       stg_geom_t geom;
-      stg_model_get_geom( this->mod, &geom );
+      this->mod->GetGeom( &geom );
 
       stg_pose_t pose;
-      stg_model_get_pose( this->mod, &pose);
+      this->mod->GetPose( &pose);
 
       // fill in the geometry data formatted player-like
       player_laser_geom_t pgeom;

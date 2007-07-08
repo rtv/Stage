@@ -186,8 +186,11 @@ struct _gui_window
   int frame_interval;
   int frame_format;
   
-  stg_model_t* selection_active;
-  stg_model_t* selection_last;
+  //StgModel* selection_active;
+  //StgModel* selection_last;
+
+  GList* selected_models;
+
   stg_pose_t selection_pose_start;
   stg_point_3d_t selection_pointer_start;
   
@@ -199,6 +202,5 @@ gboolean  signal_delete( GtkWidget *widget, GdkEvent *event, gpointer user_data 
 
 void gui_enable_alpha( stg_world_t* world, int enable );
 GtkWidget* gui_create_canvas( stg_world_t* world );
-int gui_model_create( stg_model_t* mod );
 
 #endif // GUI_H

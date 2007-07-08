@@ -3,6 +3,7 @@
  * Header file inclusions.
  **************************************************************************/
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -22,9 +23,11 @@
 #include <GL/glext.h>
 //#include <GLUT/glut.h>
 #include <GL/glx.h> // for XFont for drawing text from X fonts
+
+#include "model.hh"
  
 static GdkGLConfig *glconfig = NULL;
-static GdkGLConfig *gllaser = NULL;
+//static GdkGLConfig *gllaser = NULL;
 
 GList* dl_list = NULL;
 int dl_debug; // a displaylist used for debugging stuff
@@ -71,10 +74,7 @@ static GQueue* colorstack = NULL;
 
 static GtkWidget   *create_popup_menu (GtkWidget   *drawing_area);
 
-stg_model_t* stg_world_nearest_root_model( stg_world_t* world, double wx, double wy );
-
-// foward-declare some callbacks
-void model_draw_cb( stg_model_t* mod, void* user );
+StgModel* stg_world_nearest_root_model( stg_world_t* world, double wx, double wy );
 
 static int recticle_list = 0;
 
@@ -106,7 +106,7 @@ GLvoid buildFont( GLvoid )
       {   
 	/* If that font doesn't exist, something is wrong */
 	PRINT_ERR( "no X font \"fixed\" available. Giving up." );
-	Quit( 1 );
+	exit( 1 );
       }
     
     /* generate the list */
@@ -181,10 +181,10 @@ void print_color_stack( char* msg )
 
   printf( "color stack (%s):\n", msg );
 
-  int c;
+  size_t c;
   for(c=0; c<colorstack->length; c++ )
     {      
-      GLdouble* color = g_queue_peek_nth( colorstack, c );
+      GLdouble* color = (GLdouble*)g_queue_peek_nth( colorstack, c );
       
       printf( "   %.2f %.2f %.2f %.2f\n",
 	      color[0],
@@ -195,7 +195,7 @@ void print_color_stack( char* msg )
 }
 
 
-void stg_color_to_glcolor4dv( stg_color_t scol, GLdouble gcol[4] )
+void stg_color_to_glcolor4dv( stg_color_t scol, double gcol[4] )
 {
   gcol[0] = ((scol & 0x00FF0000) >> 16) / 256.0;
   gcol[1] = ((scol & 0x0000FF00) >> 8)  / 256.0;
@@ -211,7 +211,7 @@ void push_color( GLdouble col[4] )
     colorstack = g_queue_new();
 
   size_t sz =  4 * sizeof(col[0]);  
-  GLdouble *keep = malloc( sz );
+  GLdouble *keep = (GLdouble*)malloc( sz );
   memcpy( keep, col, sz );
 
   g_queue_push_head( colorstack, keep );
@@ -266,7 +266,7 @@ void pop_color( void )
   assert( colorstack != NULL );
   assert( ! g_queue_is_empty( colorstack ) );
 
-  GLdouble *col = g_queue_pop_head( colorstack );
+  GLdouble *col = (GLdouble*)g_queue_pop_head( colorstack );
   glColor4dv( col ); 
   free( col );
 
@@ -357,393 +357,153 @@ void box3d_wireframe( stg_bbox3d_t* bbox )
 }
 
 
-void make_dirty( stg_model_t* mod )
+void make_dirty( StgModel* mod )
 {
-  ((gui_window_t*)mod->world->win)->dirty = TRUE;
+  //((gui_window_t*)mod->world->win)->dirty = TRUE;
 }
 
 
 
-int gl_unrender_list_cb( stg_model_t* mod, void* list_name )
-{
-  gui_model_free_displaylist( mod, (char*)list_name );
-  return 1; // prevents this callback being called again
-}
 
+/* int gl_ranger_render_data( stg_model_t* mod, void* enabled ) */
+/* { */
+/*   //puts ("GL ranger data" ); */
+    
+/*   int list = gui_model_get_displaylist( mod, LIST_DATA ); */
 
-int gl_laser_render_data( stg_model_t* mod, void* enabled )
-{
-  //puts ("GL laser data" );
-  int list = gui_model_get_displaylist( mod, LIST_DATA );
+/*   // replaces any existing list with this ID */
+/*   glNewList( list, GL_COMPILE ); */
+
+/*   stg_ranger_sample_t* samples = (stg_ranger_sample_t*)mod->data;  */
+/*   size_t sample_count = mod->data_len / sizeof(stg_ranger_sample_t); */
+/*   stg_ranger_config_t *cfg = (stg_ranger_config_t*)mod->cfg; */
   
-  glNewList( list, GL_COMPILE );
+/*   if( (samples == NULL) | (sample_count < 1) ) */
+/*     {  */
+/*       glEndList(); */
+/*       return 0; */
+/*     } */
 
+/*   assert( cfg ); */
+      
+/*   // now get on with rendering the laser data */
 
+/*   glPushMatrix(); */
 
-  // end exp
-
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data; 
-  size_t sample_count = mod->data_len / sizeof(stg_laser_sample_t);
-  stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg;
-  assert( cfg );
+/*   // go into model coordinates */
+/*   stg_pose_t gpose; */
+/*   stg_model_get_global_pose( mod, &gpose ); */
   
-  if( samples && sample_count )
-    {    
-      stg_pose_t gpose;
-      stg_model_get_global_pose( mod, &gpose );
-
-  // do alpha properly
-      glDepthMask( GL_FALSE );
+/*   gl_pose_shift( &gpose ); */
+/*   //glTranslatef( gpose.x, gpose.y, gpose.z ); */
+/*   //glRotatef(RTOD(gpose.a), 0,0,1); */
       
-      glPushMatrix();
-      glTranslatef( 0,0, gpose.z + mod->geom.size.z/2.0 ); // shoot the laser beam out at the right height
+/*   // local offset coords */
+/*   //stg_geom_t geom; */
+/*   //stg_model_get_geom( mod, &geom ); */
       
-      // pack the laser hit points into a vertex array for fast rendering
-
-      static float* pts = NULL;
-      pts = g_realloc( pts, 2 * (sample_count+1) * sizeof(float));
-      
-      pts[0] = (float)gpose.x;
-      pts[1] = (float)gpose.y;
-      
-      int s;
-      for( s=0; s<sample_count; s++ )
-	{
-	  double ray_angle = gpose.a + (s * (cfg->fov / (sample_count-1))) - cfg->fov/2.0;
-
-	  //pts[2*s+2] = (float)samples[s].hitpoint.x;
-	  //pts[2*s+3] = (float)samples[s].hitpoint.y;
-	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) + gpose.x);
-	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) + gpose.y);
-	}
-      
-      glEnableClientState( GL_VERTEX_ARRAY );
-      glVertexPointer( 2, GL_FLOAT, 0, pts );
-      
-      if( mod->world->win->show_alpha )
-	{
-	  glColor4f( 0, 0, 1, 0.1 );
-	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-	}
-      else
-	{
-	  glColor3f( 0.5, 0.5, 1.0 );
-	  glDrawArrays( GL_LINE_LOOP, 0, sample_count+1 );
-	}
-      
-      //free(pts);
-      glPopMatrix();
-      glDepthMask( GL_TRUE ); 
-    }
+/*   glDepthMask( GL_FALSE ); */
   
-
-  glEndList();
+/*   // respect the local offsets */
+/*   gl_pose_shift( &mod->geom.pose ); */
+/*   //glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z ); */
+/*   //glRotatef(RTOD(mod->geom.pose.a), 0,0,1); */
   
-  make_dirty(mod);
-
-/*   // loop through again, drawing bright boxes on top of the polygon */
+/*   push_color_rgba( 1, 0, 0, 0.1 ); // transparent red */
+  
+/*   // draw the range  beams */
+/*   int s; */
 /*   for( s=0; s<sample_count; s++ ) */
-/*     {       */
-/*       // if this hit point is bright, we draw a little box */
-/*       if( samples[s].reflectance > 0 ) */
+/*     { */
+/*       if( samples[s].range > 0.0 ) */
 /* 	{ */
-/* 	  stg_rtk_fig_color_rgb32( fg, bright_color ); */
-/* 	  stg_rtk_fig_rectangle( fg,  */
-/* 				 points[1+s].x, points[1+s].y, 0, */
-/* 				 0.04, 0.04, 1 ); */
-/* 	  stg_rtk_fig_color_rgb32( fg, laser_color ); */
+/* 	  stg_ranger_config_t* rngr = &cfg[s]; */
+	  
+/* 	  // sensor FOV */
+/* 	  double sidelen = samples[s].range; */
+/* 	  double da = rngr->fov/2.0; */
+	  
+/* 	  double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - da ); */
+/* 	  double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - da ); */
+/* 	  double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da ); */
+/* 	  double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da ); */
+	  
+/* 	  if( mod->world->win->show_alpha ) */
+/* 	    glBegin(GL_POLYGON); */
+/* 	  else */
+/* 	    glBegin(GL_LINE_LOOP); */
+	    
+/*  	    glVertex2f( rngr->pose.x, rngr->pose.y ); */
+/* 	    glVertex2f( x1, y1 ); */
+/* 	    glVertex2f( x2, y2 ); */
+/* 	  glEnd();	   */
 /* 	} */
 /*     } */
-      
-  return 0; // callback runs until removed
-}
-
-int gl_fiducial_render_data( stg_model_t* mod, void* enabled )
-{
-  int list = gui_model_get_displaylist( mod, LIST_DATA );
   
-  glNewList( list, GL_COMPILE );
+/*   glPopMatrix(); */
 
-  stg_fiducial_t* fids = (stg_fiducial_t*)mod->data; 
-  size_t fids_count = mod->data_len / sizeof(stg_fiducial_t);
-  //stg_fidulaser_config_t *cfg = (stg_laser_config_t*)mod->cfg;
-  //assert( cfg );
+/*   // restore state */
+/*   glDepthMask( GL_TRUE ); */
+/*   pop_color(); */
+
+/*   glEndList(); */
+
+/*   make_dirty(mod); */
+
+/*   return 0; // callback runs until removed */
+/* } */
+
+
+
+/* void gl_model_select( stg_model_t* mod, void* user ) */
+/* {   */
+/*   // get the display list associated with this model */
+/*   int list = gui_model_get_displaylist( mod, LIST_SELECTED ); */
   
-  if( fids && fids_count )
-    {    
-      stg_pose_t gpose;
-      stg_model_get_global_pose( mod, &gpose );
-      
-      // do alpha properly
-      glDepthMask( GL_FALSE );
-      
-      //glPushMatrix();
-      //glTranslatef( 0,0, gpose.z + mod->geom.size.z/2.0 ); // shoot the laser beam out at the right height
-      
-      push_color_rgba( 0.8, 0, 0.8, 0.5 ); 
-      
-      // indicate the fiducial
-      int f;
-      for( f=0; f<fids_count; f++ )
-	{	 
-	  // first draw a box on the fiducial's position
-	  glPushMatrix();
-	  
-	  glTranslatef( fids[f].pose.x, fids[f].pose.y, 0 );
-	  glRotatef( RTOD(gpose.a+fids[f].geom.a), 0,0,1);
-	  
-	  double dx = fids[f].geom.x / 2.0; 
-	  double dy = fids[f].geom.y / 2.0; 
-	  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
-	  glRectf( -dx, -dy, dx, dy );
-	  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+/*   glNewList( list, GL_COMPILE ); */
 
-	  // now draw a little nose line to show heading
-	  glBegin( GL_LINES );
-	  glVertex2d( 0,0 );
-	  glVertex2d( dx+0.1,0);
-	  glEnd();	  
-	  
-	  glPopMatrix();
-	  
-	  // now draw a line from the sensor to the target	  
-	  glBegin( GL_LINES );
-	  glVertex2d( gpose.x, gpose.y );
-	  glVertex2d( fids[f].pose.x, fids[f].pose.y );
-	  glEnd();
-	  
-	  // now print the fiducial ID, if available
-	  if( fids[f].id )	  
-	    {	
-	      glRasterPos2f( fids[f].pose.x + 0.4, 
-			     fids[f].pose.y );
-	      glPrint( "%d", fids[f].id );
-	    }	  
-	}
-      
-      pop_color();
-      glDepthMask( GL_TRUE ); 
-    }
+/*   glPushMatrix(); */
+/*   //glPushAttrib( GL_ALL_ATTRIB_BITS ); */
+
+/*   push_color_rgba( 1, 0, 0, 1 ); */
   
-  glEndList();  
-  make_dirty(mod);
-  return 0; // callback runs until removed
-}
+/*   double dx = mod->geom.size.x / 2.0 * 1.3; */
+/*   double dy = mod->geom.size.y / 2.0 * 1.3; */
 
+/*   //glTranslatef( 0,0,0.1 ); */
 
-int gui_model_get_displaylist( stg_model_t* mod, char* list_name )
+/*   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE ); */
+/*   glRectf( -dx, -dy, dx, dy ); */
+/*   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL ); */
+
+/*   pop_color(); */
+
+/*   glPopMatrix(); */
+/*   //glPopAttrib(); */
+/*   glEndList(); */
+/* } */
+
+void gl_model_selected( StgModel* mod, void* user )
 {
   // get the display list associated with this model
-  int list = (int)stg_model_get_property( mod, list_name );
+  //int list = gui_model_get_displaylist( mod, LIST_SELECTED );
   
-  if( list == 0 ) // no list, get a valid list ID and remember it
-    {
-      list = glGenLists(1);
-      stg_model_set_property( mod, list_name, (void*)list );
-    }
-  
-  return list;
-}
-
-void gui_model_free_displaylist( stg_model_t* mod, char* list_name )
-{
-  // get the display list associated with this model
-  int list = (int)stg_model_get_property( mod, list_name );
-  
-  if( list )
-    glDeleteLists( list, 1 );
-}
-
-int gl_ranger_render_data( stg_model_t* mod, void* enabled )
-{
-  //puts ("GL ranger data" );
-    
-  int list = gui_model_get_displaylist( mod, LIST_DATA );
-
-  // replaces any existing list with this ID
-  glNewList( list, GL_COMPILE );
-
-  stg_ranger_sample_t* samples = (stg_ranger_sample_t*)mod->data; 
-  size_t sample_count = mod->data_len / sizeof(stg_ranger_sample_t);
-  stg_ranger_config_t *cfg = (stg_ranger_config_t*)mod->cfg;
-  
-  if( (samples == NULL) | (sample_count < 1) )
-    { 
-      glEndList();
-      return 0;
-    }
-
-  assert( cfg );
-      
-  // now get on with rendering the laser data
-
-  glPushMatrix();
-
-  // go into model coordinates
-  stg_pose_t gpose;
-  stg_model_get_global_pose( mod, &gpose );
-  
-  gl_pose_shift( &gpose );
-  //glTranslatef( gpose.x, gpose.y, gpose.z );
-  //glRotatef(RTOD(gpose.a), 0,0,1);
-      
-  // local offset coords
-  //stg_geom_t geom;
-  //stg_model_get_geom( mod, &geom );
-      
-  glDepthMask( GL_FALSE );
-  
-  // respect the local offsets
-  gl_pose_shift( &mod->geom.pose );
-  //glTranslatef( mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.z );
-  //glRotatef(RTOD(mod->geom.pose.a), 0,0,1);
-  
-  push_color_rgba( 1, 0, 0, 0.1 ); // transparent red
-  
-  // draw the range  beams
-  int s;
-  for( s=0; s<sample_count; s++ )
-    {
-      if( samples[s].range > 0.0 )
-	{
-	  stg_ranger_config_t* rngr = &cfg[s];
-	  
-	  // sensor FOV
-	  double sidelen = samples[s].range;
-	  double da = rngr->fov/2.0;
-	  
-	  double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - da );
-	  double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - da );
-	  double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da );
-	  double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da );
-	  
-	  if( mod->world->win->show_alpha )
-	    glBegin(GL_POLYGON);
-	  else
-	    glBegin(GL_LINE_LOOP);
-	    
- 	    glVertex2f( rngr->pose.x, rngr->pose.y );
-	    glVertex2f( x1, y1 );
-	    glVertex2f( x2, y2 );
-	  glEnd();	  
-	}
-    }
-  
-  glPopMatrix();
-
-  // restore state
-  glDepthMask( GL_TRUE );
-  pop_color();
-
-  glEndList();
-
-  make_dirty(mod);
-
-  return 0; // callback runs until removed
-}
-
-
-int gl_model_grid( stg_model_t* mod, void* user )
-{  
-  // get the display list associated with this model
-  int list = gui_model_get_displaylist( mod, LIST_GRID );
-  
-  glNewList( list, GL_COMPILE );
-
-  push_color_rgba( 0.8,0.8,0.8,0.8 ); 
-
-  double dx = mod->geom.size.x;
-  double dy = mod->geom.size.y;
-  double sp = 1.0;
- 
-  int nx = (int) ceil((dx/2.0) / sp);
-  int ny = (int) ceil((dy/2.0) / sp);
-  
-  if( nx == 0 ) nx = 1.0;
-  if( ny == 0 ) ny = 1.0;
-  
-  glBegin(GL_LINES);
-
-  // draw the bounding box first
-  glVertex2f( -nx, -ny );
-  glVertex2f(  nx, -ny );
-
-  glVertex2f( -nx, ny );
-  glVertex2f(  nx, ny );
-
-  glVertex2f( nx, -ny );
-  glVertex2f( nx,  ny );
-
-  glVertex2f( -nx,-ny );
-  glVertex2f( -nx, ny );
-
-  int i;
-  for (i = -nx+1; i < nx; i++)
-    {
-      glVertex2f(  i * sp,  - dy/2 );
-      glVertex2f(  i * sp,  + dy/2 );
-      //snprintf( str, 64, "%d", (int)i );
-      //stg_rtk_fig_text( fig, -0.2 + (ox + i * sp), -0.2 , 0, str );
-    }
-  
-  for (i = -ny+1; i < ny; i++)
-    {
-      glVertex2f( - dx/2, i * sp );
-      glVertex2f( + dx/2,  i * sp );      
-      //snprintf( str, 64, "%d", (int)i );
-      //stg_rtk_fig_text( fig, -0.2, -0.2 + (oy + i * sp) , 0, str );
-    }
-  
-  glEnd();
-  
-  pop_color();
-  glEndList();
-
-  return 0; // callback runs until removed
-}
-
-void gl_model_select( stg_model_t* mod, void* user )
-{  
-  // get the display list associated with this model
-  int list = gui_model_get_displaylist( mod, LIST_SELECTED );
-  
-  glNewList( list, GL_COMPILE );
+  //glNewList( list, GL_COMPILE );
 
   glPushMatrix();
   //glPushAttrib( GL_ALL_ATTRIB_BITS );
 
-  push_color_rgba( 1, 0, 0, 1 );
-  
-  double dx = mod->geom.size.x / 2.0 * 1.3;
-  double dy = mod->geom.size.y / 2.0 * 1.3;
+  stg_pose_t pose;
+  mod->GetPose( &pose );
+  stg_geom_t geom;
+  mod->GetGeom( &geom );
 
-  //glTranslatef( 0,0,0.1 );
-
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
-  glRectf( -dx, -dy, dx, dy );
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-
-  pop_color();
-
-  glPopMatrix();
-  //glPopAttrib();
-  glEndList();
-}
-
-void gl_model_selected( stg_model_t* mod, void* user )
-{  
-  // get the display list associated with this model
-  int list = gui_model_get_displaylist( mod, LIST_SELECTED );
-  
-  glNewList( list, GL_COMPILE );
-
-  //glPushMatrix();
-  //glPushAttrib( GL_ALL_ATTRIB_BITS );
+  gl_pose_shift( &pose );
 
   push_color_rgba( 1, 0, 0, 1 );
   
-  double dx = mod->geom.size.x / 2.0 * 1.3;
-  double dy = mod->geom.size.y / 2.0 * 1.3;
+  double dx = geom.size.x / 2.0 * 1.3;
+  double dy = geom.size.y / 2.0 * 1.3;
 
   //glTranslatef( 0,0,0.1 );
 
@@ -753,96 +513,44 @@ void gl_model_selected( stg_model_t* mod, void* user )
 
   pop_color();
 
-  //glPopMatrix();
+  glPopMatrix();
+
   //glPopAttrib();
-  glEndList();
+  //glEndList();
 }
 
-void gl_draw_polygon_bbox( stg_polygon_t* p )
-{
-  // no need to optimize this, it's debug visualization mainly.
 
-  //  stg_color_t col = stg_lookup_color( "purple" );
-  //push_color_stgcolor( col );
-
-  // bottom plane
-  glBegin(GL_LINE_LOOP );
-  glVertex3f( p->epts[0].value, p->epts[2].value, p->epts[4].value );
-  glVertex3f( p->epts[1].value, p->epts[2].value, p->epts[4].value );
-  glVertex3f( p->epts[1].value, p->epts[3].value, p->epts[4].value );
-  glVertex3f( p->epts[0].value, p->epts[3].value, p->epts[4].value );
-  glEnd();
-
-  // top plane
-  glBegin(GL_LINE_LOOP );
-  glVertex3f( p->epts[0].value, p->epts[2].value, p->epts[5].value );
-  glVertex3f( p->epts[1].value, p->epts[2].value, p->epts[5].value );
-  glVertex3f( p->epts[1].value, p->epts[3].value, p->epts[5].value );
-  glVertex3f( p->epts[0].value, p->epts[3].value, p->epts[5].value );
-  glEnd();
-
-  // verticals joining corners
-  glBegin(GL_LINES );
-  glVertex3f( p->epts[0].value, p->epts[2].value, p->epts[4].value );
-  glVertex3f( p->epts[0].value, p->epts[2].value, p->epts[5].value );
-  glVertex3f( p->epts[1].value, p->epts[2].value, p->epts[4].value );
-  glVertex3f( p->epts[1].value, p->epts[2].value, p->epts[5].value );
-  glVertex3f( p->epts[1].value, p->epts[3].value, p->epts[4].value );
-  glVertex3f( p->epts[1].value, p->epts[3].value, p->epts[5].value );
-  glVertex3f( p->epts[0].value, p->epts[3].value, p->epts[4].value );
-  glVertex3f( p->epts[0].value, p->epts[3].value, p->epts[5].value );
-  glEnd();
-
-  //pop_color();
-}
-
-int gl_model_redraw( stg_model_t* mod, void* userp )
-{
-  // need to redraw the whole model tree
-  make_dirty(mod);
-  return 0;
-}
-
-void gl_model_grid_axes( stg_model_t* mod )
-{
-  double dx = mod->geom.size.x;
-  double dy = mod->geom.size.y;
-  double sp = 1.0;
+/* void gl_model_grid_axes( stg_model_t* mod ) */
+/* { */
+/*   double dx = mod->geom.size.x; */
+/*   double dy = mod->geom.size.y; */
+/*   double sp = 1.0; */
   
-  int nx = (int) ceil((dx/2.0) / sp);
-  int ny = (int) ceil((dy/2.0) / sp);
+/*   int nx = (int) ceil((dx/2.0) / sp); */
+/*   int ny = (int) ceil((dy/2.0) / sp); */
   
-  if( nx == 0 ) nx = 1.0;
-  if( ny == 0 ) ny = 1.0;
+/*   if( nx == 0 ) nx = 1.0; */
+/*   if( ny == 0 ) ny = 1.0; */
   
-  int i;
-  for (i = -nx+1; i < nx; i++)
-    {
-      glRasterPos2f( -0.2 + (i*sp), -0.2 );
-      glPrint( "%d", (int)i );      
-    }
+/*   int i; */
+/*   for (i = -nx+1; i < nx; i++) */
+/*     { */
+/*       glRasterPos2f( -0.2 + (i*sp), -0.2 ); */
+/*       glPrint( "%d", (int)i );       */
+/*     } */
   
-  for (i = -ny+1; i < ny; i++)
-    {
-      glRasterPos2f( -0.2, -0.2 + (i * sp) );
-      glPrint( "%d", (int)i );      
+/*   for (i = -ny+1; i < ny; i++) */
+/*     { */
+/*       glRasterPos2f( -0.2, -0.2 + (i * sp) ); */
+/*       glPrint( "%d", (int)i );       */
       
-      //snprintf( str, 64, "%d", (int)i );
-      //stg_rtk_fig_text( fig, -0.2, -0.2 + (oy + i * sp) , 0, str );
-    }
-}
+/*       //snprintf( str, 64, "%d", (int)i ); */
+/*       //stg_rtk_fig_text( fig, -0.2, -0.2 + (oy + i * sp) , 0, str ); */
+/*     } */
+/* } */
 
 
 
-void stg_block_render_cb( stg_block_t* block, gpointer dummy )
-{
-  stg_block_render( block );
-}
-
-void stg_d_render_cb( stg_block_t* block, gpointer dummy )
-{
-  stg_d_render( block );
-}
 
 void stg_d_render( stg_d_draw_t* d )
 {
@@ -897,64 +605,6 @@ void stg_d_render( stg_d_draw_t* d )
   glEnd();
 }
 
-void gl_model_draw( stg_model_t* mod )
-{
-  //puts( "model render polygons" );
-
-  gui_window_t* win = (gui_window_t*)mod->world->win;
-  
-  glPushMatrix();
-  
-  // move into this model's local coordinate frame
-  gl_pose_shift( &mod->pose );
-  gl_pose_shift( &mod->geom.pose );
-
-  // draw grid if enabled
-  if( win->show_grid && mod->gui_grid )
-    {
-      int gridlist = (int)stg_model_get_property( mod, LIST_GRID );
-      glCallList( gridlist );
-      
-      // for some reason, glprint() doesn't work in the grid display
-      // list, so we do it here
-      gl_model_grid_axes( mod );
-    }
-  
-  // draw blocks
-  if( win->show_polygons )
-    g_list_foreach( mod->blocks, stg_block_render_cb, NULL );
-  
-  //if( win->show_user )
-    g_list_foreach( mod->d_list, stg_d_render_cb, NULL );
-  
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );      
-
-
-  if( mod->world->win->selection_active == mod )
-    {
-      int selectedlist = (int)stg_model_get_property( mod, LIST_SELECTED );
-      glCallList( selectedlist );
-    }
-  
-  // shift up the CS to the top of this model
-  gl_coord_shift(  0,0, mod->geom.size.z, 0 );
-
-  // recursively draw the tree below this model 
-  g_list_foreach( mod->children, (GFunc)model_draw_cb, NULL );
-
-  glPopMatrix(); // drop out of local coords
-
-  //pop_color();
-  glEndList();
-  
-  // opengl.org recommends not using compile-and-execute, but explitly
-  // compiling and calling the display list seperately - need to think
-  // about how to do this, as it messes up the logic/geometry of
-  // drawing above.  
-  //glCallList( list );
-
-  make_dirty(mod);
-}
 
 
 
@@ -1038,265 +688,135 @@ configure_event (GtkWidget         *widget,
   return TRUE;
 }
 
-void model_draw_data_cb( gpointer key, stg_model_t* mod, void* user )
-{
-  if( ((gui_window_t*)mod->world->win)->show_data )
-    {
-      int datalist = (int)stg_model_get_property( mod, LIST_DATA );      
-      glCallList( datalist );
-    }
-}
 
-void model_draw_cb( stg_model_t* mod, void* user )
-{
-  gl_model_draw( mod );
-}
+/* void draw_thumbnail( stg_world_t* world ) */
+/* { */
+/*   //double boxwidth = THUMBNAILWIDTH; // pixels */
+/*   double boxheight = THUMBNAILHEIGHT;//boxwidth / (world->width/(double)world->height); */
+/*   double boxwidth = boxheight / (world->height/(double)world->width); */
 
+/*   glPushAttrib( GL_ALL_ATTRIB_BITS ); */
 
-void draw_thumbnail( stg_world_t* world )
-{
-  //double boxwidth = THUMBNAILWIDTH; // pixels
-  double boxheight = THUMBNAILHEIGHT;//boxwidth / (world->width/(double)world->height);
-  double boxwidth = boxheight / (world->height/(double)world->width);
+/*   glViewport(0,0,boxwidth, boxheight ); */
 
-  glPushAttrib( GL_ALL_ATTRIB_BITS );
+/*   glMatrixMode (GL_PROJECTION); */
+/*   glPushMatrix();   */
+/*   glLoadIdentity(); */
 
-  glViewport(0,0,boxwidth, boxheight );
+/*   glOrtho( 0,1,0,1,-1,1); */
 
-  glMatrixMode (GL_PROJECTION);
-  glPushMatrix();  
-  glLoadIdentity();
+/*   glMatrixMode (GL_MODELVIEW); */
+/*   glPushMatrix(); */
+/*   glLoadIdentity (); */
 
-  glOrtho( 0,1,0,1,-1,1);
-
-  glMatrixMode (GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity ();
-
-  glTranslatef( 0,0,-0.9 );
+/*   glTranslatef( 0,0,-0.9 ); */
 
 
 
 
-  glEnable(GL_POLYGON_OFFSET_FILL);
-  glPolygonOffset(1.0, 1.0);
-  glColor3f( 1,1,1 );      
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glRecti( 0,0,1,1 ); // fill the viewport
-  glDisable(GL_POLYGON_OFFSET_FILL);
+/*   glEnable(GL_POLYGON_OFFSET_FILL); */
+/*   glPolygonOffset(1.0, 1.0); */
+/*   glColor3f( 1,1,1 );       */
+/*   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); */
+/*   glRecti( 0,0,1,1 ); // fill the viewport */
+/*   glDisable(GL_POLYGON_OFFSET_FILL); */
   
-  glColor3f( 0,0,0 );      
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glRecti( 0,0,1,1 ); // fill the viewport
-  
-  glTranslatef( 0.5,0.5,0 );
-  glScalef( 1.0/world->width, 1.0/world->height, 1.0);
-  
-  // don't render grids in the thumbnail
-  int keep_grid  = world->win->show_grid;
-  int keep_data = world->win->show_data;
-  world->win->show_data = 0;
-  world->win->show_grid = 0;
-
-  g_list_foreach( world->children, (GFunc)model_draw_cb, NULL );
-
-  world->win->show_grid = keep_grid;
-  world->win->show_data = keep_data;
-  
-  
-/*   // if we're in 2d mode - show the visble region */
-  
-/*   double left = -seex/2.0 * world->width - world->win->panx; */
-/*   double top = -seey/2.0 * world->height - world->win->pany; */
-/*   double right = seex/2.0 * world->width - world->win->panx; */
-/*   double bottom = seey/2.0 * world->height - world->win->pany; */
-  
-  
-/*   if( world->win->show_alpha ) */
-/*     { */
-/*       glColor4f( 0,0,0,0.15 );       */
-/*       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); */
-      
-/*       glRectf( -world->width/2.0,  */
-/* 	       -world->height/2.0,  */
-/* 	       left, */
-/* 	       world->height/2.0 ); */
-      
-/*       glRectf( left, */
-/* 	       -world->height/2.0,  */
-/* 	       world->width/2.0, */
-/* 	       top ); */
-      
-/*       glRectf( left, */
-/* 	       bottom, */
-/* 	       world->width/2.0, */
-/* 	       world->height/2.0 ); */
-      
-/*       glRectf( right, */
-/* 	       top, */
-/* 	       world->width/2.0, */
-/* 	       bottom); */
-/*     } */
-
+/*   glColor3f( 0,0,0 );       */
 /*   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
-/*   glColor3f( 1.0,0,0.1 ); */
-/*   glRectf( left, top, right, bottom ); */
+/*   glRecti( 0,0,1,1 ); // fill the viewport */
+  
+/*   glTranslatef( 0.5,0.5,0 ); */
+/*   glScalef( 1.0/world->width, 1.0/world->height, 1.0); */
+  
+/*   // don't render grids in the thumbnail */
+/*   int keep_grid  = world->win->show_grid; */
+/*   int keep_data = world->win->show_data; */
+/*   world->win->show_data = 0; */
+/*   world->win->show_grid = 0; */
+
+/*   g_list_foreach( world->children, (GFunc)model_draw_cb, NULL ); */
+
+/*   world->win->show_grid = keep_grid; */
+/*   world->win->show_data = keep_data; */
   
   
-  glPopMatrix(); // restore GL_MODELVIEW
+/* /\*   // if we're in 2d mode - show the visble region *\/ */
+  
+/* /\*   double left = -seex/2.0 * world->width - world->win->panx; *\/ */
+/* /\*   double top = -seey/2.0 * world->height - world->win->pany; *\/ */
+/* /\*   double right = seex/2.0 * world->width - world->win->panx; *\/ */
+/* /\*   double bottom = seey/2.0 * world->height - world->win->pany; *\/ */
+  
+  
+/* /\*   if( world->win->show_alpha ) *\/ */
+/* /\*     { *\/ */
+/* /\*       glColor4f( 0,0,0,0.15 );       *\/ */
+/* /\*       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); *\/ */
+      
+/* /\*       glRectf( -world->width/2.0,  *\/ */
+/* /\* 	       -world->height/2.0,  *\/ */
+/* /\* 	       left, *\/ */
+/* /\* 	       world->height/2.0 ); *\/ */
+      
+/* /\*       glRectf( left, *\/ */
+/* /\* 	       -world->height/2.0,  *\/ */
+/* /\* 	       world->width/2.0, *\/ */
+/* /\* 	       top ); *\/ */
+      
+/* /\*       glRectf( left, *\/ */
+/* /\* 	       bottom, *\/ */
+/* /\* 	       world->width/2.0, *\/ */
+/* /\* 	       world->height/2.0 ); *\/ */
+      
+/* /\*       glRectf( right, *\/ */
+/* /\* 	       top, *\/ */
+/* /\* 	       world->width/2.0, *\/ */
+/* /\* 	       bottom); *\/ */
+/* /\*     } *\/ */
 
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix(); // restore GL_PROJECTION
+/* /\*   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); *\/ */
+/* /\*   glColor3f( 1.0,0,0.1 ); *\/ */
+/* /\*   glRectf( left, top, right, bottom ); *\/ */
+  
+  
+/*   glPopMatrix(); // restore GL_MODELVIEW */
+
+/*   glMatrixMode(GL_PROJECTION); */
+/*   glPopMatrix(); // restore GL_PROJECTION */
 
 
-  glPopAttrib();      
-}
+/*   glPopAttrib();       */
+/* } */
 
-void draw_endpoints( stg_world_t* world )
-{
-  double epsilon = 0.2;
-  double hepsilon = epsilon / 2.0;
 
-  int i=0;
-  stg_endpoint_t* ep;
-
-/*   print_endpoint_list( world->endpts.x, "X LIST" ); */
-/*   print_endpoint_list( world->endpts.y, "Y LIST" ); */
-/*   print_endpoint_list( world->endpts.z, "Z LIST" ); */
-
-  for( ep = world->endpts.x; ep; ep=ep->next )
-    {
-      assert( ep );
-      assert( ep->polygon);
-      assert( ep->polygon->mod );
-
-      push_color_stgcolor( ep->polygon->mod->color );
-
-      glBegin( GL_POLYGON );
-      glVertex3f( ep->value, 0, 0 );
-
-      if( ep->type == 0 )
-	{	
-	  glVertex3f( ep->value, -epsilon, 0 );
-	  glVertex3f( ep->value+hepsilon, -hepsilon, 0 );
-	}
-      else
-	{	
-	  glVertex3f( ep->value-hepsilon, -hepsilon, 0 );
-	  glVertex3f( ep->value, -epsilon, 0 );
-	}
-	
-      glEnd();
-
-      glRasterPos2f( ep->value, -0.5 );
-      glPrint( "%d", (int)i++ );      
-
-      glRasterPos2f( ep->value, -0.8 );
-      glPrint( "%.2f", ep->value );      
-      pop_color();
-    }
-
-  i=0;
-  for( ep = world->endpts.y; ep; ep=ep->next )
-    {
-      push_color_stgcolor( ep->polygon->mod->color );
-
-      glBegin( GL_POLYGON );
-      glVertex3f( 0, ep->value, 0 );
-
-      if( ep->type == 0 )
-	{	
-	  glVertex3f( -hepsilon, ep->value+hepsilon,  0 );
-	  glVertex3f( -epsilon, ep->value, 0 );
-	}
-      else
-	{	
-	  glVertex3f( -epsilon, ep->value, 0 );
-	  glVertex3f( -hepsilon, ep->value-hepsilon,  0 );
-	}
-	
-      glEnd();
-
-      glRasterPos2f( -0.5, ep->value );
-      glPrint( "%d", (int)i++ );      
-
-      glRasterPos2f( -0.8, ep->value - 0.3 );
-      glPrint( "%.2f", ep->value );      
-      pop_color();
-    }
-
-/*   i=0; */
-/*   for( ep = world->endpts.z; ep; ep=ep->next ) */
-/*     { */
-/*       push_color_stgcolor( ep->polygon->color ); */
-
-/*       glBegin( GL_POLYGON ); */
-/*       glVertex3f( 0, 0, ep->value ); */
-
-/*       if( ep->type == 0 ) */
-/* 	{	 */
-/* 	  glVertex3f( -hepsilon, 0, ep->value+hepsilon ); */
-/* 	  glVertex3f( -epsilon, 0, ep->value  ); */
-/* 	} */
-/*       else */
-/* 	{	 */
-/* 	  glVertex3f(  -epsilon, 0, ep->value ); */
-/* 	  glVertex3f( -hepsilon, 0,  ep->value-hepsilon ); */
-/* 	} */
-	
-/*       glEnd(); */
-
-/*       glRasterPos3f( -0.5, 0, ep->value ); */
-/*       glPrint( "%d", (int)i++ );       */
-
-/*       glRasterPos3f( -0.8, 0, ep->value ); */
-/*       glPrint( "%.2f", ep->value );       */
-
-/*       pop_color();    */
-/*     } */
-
-  //puts( "\n" );
-}
-
-static GLuint VertShader;
-static char * VertSrc = 
-"!!ARBvp1.0 \n\
-PARAM mvp[4]={state.matrix.mvp}; \n\
-TEMP r0,tmp; \n\
-DP4  r0.x, mvp[0], vertex.position;	\n\
-DP4  r0.y, mvp[1], vertex.position;	\n\
-DP4  r0.z, mvp[2], vertex.position;	\n\
-DP4  r0.w, mvp[3], vertex.position;	\n\
-#RCP  tmp.w, r0.w; \n\
-RCP tmp, 8; \n\
-MUL tmp.w, r0.w, tmp.w; \n\
-#MUL  r0.z, r0.z, r0.w; \n\ 
-MUL  r0.z, r0.z, tmp.w; \n\ 
-MOV  result.position, r0;    \n\
-MOV  result.color, vertex.color;  \n\
-END\n ";
+/* static GLuint VertShader; */
+/* static char * VertSrc =  */
+/* "!!ARBvp1.0 \n\ */
+/* PARAM mvp[4]={state.matrix.mvp}; \n\ */
+/* TEMP r0,tmp; \n\ */
+/* DP4  r0.x, mvp[0], vertex.position;	\n\ */
+/* DP4  r0.y, mvp[1], vertex.position;	\n\ */
+/* DP4  r0.z, mvp[2], vertex.position;	\n\ */
+/* DP4  r0.w, mvp[3], vertex.position;	\n\ */
+/* #RCP  tmp.w, r0.w; \n\ */
+/* RCP tmp, 8; \n\ */
+/* MUL tmp.w, r0.w, tmp.w; \n\ */
+/* #MUL  r0.z, r0.z, r0.w; \n\  */
+/* MUL  r0.z, r0.z, tmp.w; \n\  */
+/* MOV  result.position, r0;    \n\ */
+/* MOV  result.color, vertex.color;  \n\ */
+/* END\n "; */
 
 void draw_world(  stg_world_t* world )
 {
+  puts( "draw_world" );
+
   gui_window_t* win = (gui_window_t*)world->win;
   GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable( win->canvas );
 
   // clear the offscreen buffer
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-  if( world->win->sphi || world->win->stheta )
-    {
-      glEnable(GL_DEPTH_TEST);
-      glDepthMask(GL_TRUE);
-    }
-  else // zero rotation allows a speed-up
-    {
-      glDisable(GL_DEPTH_TEST);
-      glDepthMask(GL_FALSE);
-    }
-
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   if( win->show_alpha )
@@ -1347,19 +867,17 @@ void draw_world(  stg_world_t* world )
 /* 	     //0,1,0 ); */
 
 
-
- //glClear (GL_COLOR_BUFFER_BIT);
-
-
-  if( world->win->follow_selection && world->win->selection_last )
+  if( world->win->follow_selection && world->win->selected_models )
     {      
       glTranslatef(  0,0,-zclip/2.0 );
 
       // meter scale
       glScalef ( win->scale, win->scale, win->scale ); // zoom
 
+      // get the pose of the model at the head of the selected models
+      // list
       stg_pose_t gpose;
-      stg_model_get_global_pose( world->win->selection_last, &gpose );
+      ((StgModel*)world->win->selected_models->data)->GetGlobalPose( &gpose );
 
       //glTranslatef( -gpose.x + (pixels_width/2.0)/win->scale, 
       //	    -gpose.y + (pixels_height/2.0)/win->scale,
@@ -1409,19 +927,15 @@ void draw_world(  stg_world_t* world )
   // draw the model bounding boxes
   //g_hash_table_foreach( world->models, (GHFunc)model_draw_bbox, NULL);
 
+  g_list_foreach( world->win->selected_models, (GFunc)gl_model_selected, NULL );
+
   // draw the models
-  g_list_foreach( world->children, (GFunc)model_draw_cb, NULL );
+  GList* it;
+  for( it=world->children; it; it=it->next )
+    ((StgModel*)it->data)->Draw();
 
-  // get the display list associated with this model
-  //int slist = gui_model_get_displaylist( mod, LIST_SELECTED );
-  if( recticle_list )
-    glCallList( recticle_list );
-
-  // draw the model's data
-  g_hash_table_foreach( world->models, (GHFunc)model_draw_data_cb, NULL );
 
   // draw anything in the assorted displaylist list
-  GList* it;
   for( it = dl_list; it; it=it->next )
     {
       int dl = (int)it->data;
@@ -1429,13 +943,14 @@ void draw_world(  stg_world_t* world )
       glCallList( (int)it->data );
     }
 
-  // jump 2m into the air for debug
-  gl_coord_shift( 0,0,2,0 );
+  
+
+
   glCallList( dl_debug );
   gl_coord_shift( 0,0,-2,0 );
 
-  if( win->show_thumbnail ) // if drawing the whole world mini-view
-    draw_thumbnail( world );
+  //if( win->show_thumbnail ) // if drawing the whole world mini-view
+      //draw_thumbnail( world );
 
   //glEndList();
 
@@ -1513,54 +1028,7 @@ motion_notify_event (GtkWidget      *widget,
 		     GdkEventMotion *event,
 		     stg_world_t* world )
 {
-  gboolean redraw = FALSE;
-
   //printf( "mouse pointer %d %d\n",(int)event->x, (int)event->y );
-
-  // convert from window pixel to world coordinates
-  double obx, oby, obz;
-  widget_to_world( widget, event->x, event->y,
-		   world, &obx, &oby, &obz );
-
-  //printf( "mouse pointer (%d %d) world (%.2f %.2f %.2f)\n",
-  //  (int)event->x, (int)event->y,
-  //  obx, oby, obz );
-
-  if( ! world->win->selection_active )
-    {
-      // if anything's close, draw a selection recticle
-      stg_model_t* near = stg_world_nearest_root_model( world, obx, oby );
-      
-      if( near )
-	{
-	  if( recticle_list == 0 ) // no list, get a valid list ID and remember it
-	    recticle_list = glGenLists(1);
-	  
-	  // draw a recticle around the nearby robot
-	  glNewList( recticle_list, GL_COMPILE );
-	  
-	  //glPushMatrix();
-	  //glPushAttrib( GL_ALL_ATTRIB_BITS );
-	  
-	  
-	  push_color_rgba( 1, 0, 1, 0 );
-	  
-	  double dx = near->geom.size.x / 2.0 * 1.3;
-	  double dy = near->geom.size.y / 2.0 * 1.3;
-	  
-	  //glTranslatef( 0,0,0.1 );
-	  
-	  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	  glRectf( obx-dx, oby-dy, obx+dx, obx+dy );
-	  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	  
-	  pop_color();
-
-	  //glPopMatrix();
-	  //glPopAttrib();
-	  glEndList();
-	}
-    }
 
   // only change the view angle if CTRL is pressed
   guint modifiers = gtk_accelerator_get_default_mod_mask ();
@@ -1574,66 +1042,69 @@ motion_notify_event (GtkWidget      *widget,
 	  
 	  // stop us looking underneath the world
 	  world->win->stheta = constrain( world->win->stheta, 0, M_PI/2.0 );
-
-	  redraw = TRUE;
+	  world->win->dirty = TRUE; 
 	}
     }
   else if( event->state & GDK_BUTTON1_MASK && world->win->dragging )
     {
-      //printf( "dragging an object\n" );
+      printf( "dragging an object\n" );
 
-      if( world->win->selection_active )
+      if( world->win->selected_models )
 	{
-	  //printf( "moving model to %f %f\n", obx, oby );
+	  // convert from window pixel to world coordinates
+	  double obx, oby, obz;
+	  widget_to_world( widget, event->x, event->y,
+			   world, &obx, &oby, &obz );
 	  
 	  double dx = obx - world->win->selection_pointer_start.x; 
 	  double dy = oby - world->win->selection_pointer_start.y; 
 
-	  // move the model by the x,y distance moved since we selected it
-	  stg_pose_t pose;
-	  stg_model_get_pose( world->win->selection_active, &pose );
-	  pose.x = world->win->selection_pose_start.x + dx ;
-	  pose.y = world->win->selection_pose_start.y + dy;
-	  pose.a = world->win->selection_active->pose.a;
-	  stg_model_set_pose(  world->win->selection_active, &pose );
+	  world->win->selection_pointer_start.x = obx;
+	  world->win->selection_pointer_start.y = oby;
+
+	  //printf( "moved mouse %.3f, %.3f meters\n", dx, dy );
+
+	  // move all selected models by dx,dy 
+	  for( GList* it = world->win->selected_models;
+	       it;
+	       it = it->next )
+	    ((StgModel*)it->data)->AddToPose( dx, dy, 0, 0 );
+
+	  world->win->dirty = TRUE; 
 	}
     }  
   else if( event->state & GDK_BUTTON3_MASK && world->win->dragging ) 
     {
-      //printf( "rotating an object\n" );
+      printf( "rotating an object\n" );
       
-      if( world->win->selection_active )
+      if( world->win->selected_models )
 	{
-	  //printf( "rotating model to %f %f\n", obx, oby );
+	  // convert from window pixel to world coordinates
+	  double obx, oby, obz;
+	  widget_to_world( widget, event->x, event->y,
+			   world, &obx, &oby, &obz );
 	  
-	  stg_pose_t pose;
-	  stg_model_get_pose(  world->win->selection_active, &pose );
-
-	  if(event->x > beginX )
-	    pose.a += 0.15;
-
-	  if(event->x < beginX )
-	    pose.a -= 0.15;
-
-	  stg_model_set_pose(  world->win->selection_active, &pose );
+	  printf( "rotating model to %f %f\n", obx, oby );
+	  
+	  for( GList* it = world->win->selected_models;
+	       it;
+	       it = it->next )
+	    {
+	      double da = (event->x < beginX ) ? -0.15 : 0.15;
+	      
+	      ((StgModel*)it->data)->AddToPose( 0,0,0, da );
+	    }
+	  world->win->dirty = TRUE; 
 	}
     }
   else
     {
-
-      //glMatrixMode (GL_MODELVIEW);
-  
       if( event->state & GDK_BUTTON1_MASK ) // PAN
 	{	  
-	  // find how far the mouse has moved in world coordinates
-	  //double lobx, loby, lobz;
-	  //widget_to_world( widget, beginX, beginY,
-	  //	   world, &lobx, &loby, &lobz );
+	  world->win->panx -= (event->x - beginX);
+	  world->win->pany += (event->y - beginY);
+	  world->win->dirty = TRUE; 
 
-	  world->win->panx -= (event->x - beginX) ;//(obx - lobx);
-	  world->win->pany += (event->y - beginY); //(oby - loby);
-
-	  redraw = TRUE;
 	}
       
       if (event->state & GDK_BUTTON3_MASK)
@@ -1641,18 +1112,14 @@ motion_notify_event (GtkWidget      *widget,
 	  if( event->x > beginX ) world->win->scale *= 1.04;
 	  if( event->x < beginX ) world->win->scale *= 0.96;
 	  //printf( "ZOOM scale %f\n", world->win->scale );
-	  redraw = TRUE;
+	  world->win->dirty = TRUE; 
 	}
-
     }
   
   beginX = event->x;
   beginY = event->y;  
 
-  if (redraw)
-    world->win->dirty = TRUE; 
-
-  return TRUE;
+  return true;
 }
 
 
@@ -1661,47 +1128,30 @@ button_release_event (GtkWidget      *widget,
 		      GdkEventButton *event,
 		      stg_world_t*  world )
 {
-  //puts( "RELEASE" );
+  puts( "RELEASE" );
 
   // stop dragging models when mouse 1 is released
   if( event->button == 1 || event->button == 3 )
     {
-      world->win->dragging = FALSE;
-      world->win->selection_active = NULL;
+      // only change the view angle if CTRL is pressed
+      guint modifiers = gtk_accelerator_get_default_mod_mask ();
+      
+      if( ((event->state & modifiers) != GDK_CONTROL_MASK) &&
+	  ((event->state & modifiers) != GDK_SHIFT_MASK) )
+	{
+	  world->win->dragging = FALSE;
+	  
+	  // clicked away from a model - clear selection
+	  g_list_free( world->win->selected_models );
+	  world->win->selected_models = NULL;
+	  world->win->dirty = true;
+	}
     }
-
+  
   return TRUE;
 }
 
 
-void select_model_if_close( stg_world_t* world, 
-			    double x, double y, double z )
-{
-  // find nearest object
-  
-  stg_model_t* sel = stg_world_nearest_root_model( world, x, y );
-  
-  if( sel )
-    {
-      // add a selection visualization to the model
-      gl_model_selected( sel, NULL );
-      
-      world->win->selection_last = world->win->selection_active = sel;
-      world->selected_models = 
-	g_list_append( world->selected_models, sel );
-      
-      // store the pose of the selected object at the moment of
-      // selection
-      stg_model_get_pose( sel, &world->win->selection_pose_start );
-      
-      // and store the 3d pose of the pointer
-      world->win->selection_pointer_start.x = x;
-      world->win->selection_pointer_start.y = y;
-      world->win->selection_pointer_start.z = z;
-      
-      world->win->dragging = TRUE;
-    }  
-}
 
 
 /***
@@ -1720,7 +1170,7 @@ button_press_event (GtkWidget      *widget,
 		   world, &obx, &oby, &obz );
   
   // ctrl is pressed - choose this point as the center of rotation
-  //printf( "mouse click at (%.2f %.2f %.2f)\n", obx, oby, obz );
+  printf( "mouse click at (%.2f %.2f %.2f)\n", obx, oby, obz );
   
   world->win->click_point.x = obx;
   world->win->click_point.y = oby;
@@ -1732,20 +1182,56 @@ button_press_event (GtkWidget      *widget,
     {
       // only change the view angle if CTRL is pressed
       guint modifiers = gtk_accelerator_get_default_mod_mask ();
+      
+      StgModel* sel = stg_world_nearest_root_model( world, obx, oby );
+      
+      if( sel )
+	{
+	  // if model is already selected, unselect it
+	  if( GList* link = g_list_find( world->win->selected_models, sel ) )
+	    {
+	      world->win->selected_models = 
+		g_list_remove_link( world->win->selected_models, link );
 
+	      world->win->dirty = true;
+	      return true;
+	    }			  
+	    
+	  //}	  
+
+	  printf( "selected model %s\n", sel->Token() );
 	  
-      if( (event->state & modifiers) == GDK_CONTROL_MASK)
-	{
-	  // ctrl is pressed 
-	  //printf( "CTRL-click\n" );
-	}
-      else
-	{
-	  //puts( "SELECT" );
-	  select_model_if_close( world, obx, oby, obz ); 
+	  //world->win->selection_active = sel;
+	  
+	  // store the pose of the selected object at the moment of
+	  // selection
+	  sel->GetPose( &world->win->selection_pose_start );
+	  
+	  // and store the 3d pose of the pointer
+	  world->win->selection_pointer_start.x = obx;
+	  world->win->selection_pointer_start.y = oby;
+	  world->win->selection_pointer_start.z = obz;
+	  
+	  world->win->dragging = TRUE;
+	  
+	  // need to redraw to see the selection visualization
+	  world->win->dirty = true;
+	  
+	  // unless shift is held, we empty the list of selected objects
+	  if( (event->state & modifiers) != GDK_SHIFT_MASK)
+	    {
+	      // shift is pressed 
+	      printf( "SHIFT-click\n" );
+	      
+	      g_list_free( world->win->selected_models );
+	      world->win->selected_models = NULL;
+	    }
+	  
+	  world->win->selected_models = 
+	    g_list_prepend( world->win->selected_models, sel );
 	}
     }
-    
+  
   return TRUE;
 }
 
@@ -1852,18 +1338,21 @@ GdkGLConfig* gl_init( void )
 
   /* Configure OpenGL framebuffer. */
   /* Try double-buffered visual */
-  glconfig = gdk_gl_config_new_by_mode (GDK_GL_MODE_RGBA   |
-					GDK_GL_MODE_DEPTH |
-					GDK_GL_MODE_DOUBLE);
-
+  glconfig = 
+    gdk_gl_config_new_by_mode( (GdkGLConfigMode)
+			       (GDK_GL_MODE_RGBA |
+				GDK_GL_MODE_DEPTH |
+				GDK_GL_MODE_DOUBLE) );
+  
   if (glconfig == NULL)
     {
       g_print ("\n*** Cannot find the double-buffered visual.\n");
       g_print ("\n*** Trying single-buffered visual.\n");
       
       /* Try single-buffered visual */
-      glconfig = gdk_gl_config_new_by_mode (GDK_GL_MODE_RGBA   |
-					    GDK_GL_MODE_DEPTH);
+      glconfig = gdk_gl_config_new_by_mode((GdkGLConfigMode)
+					   (GDK_GL_MODE_RGBA |
+					    GDK_GL_MODE_DEPTH));
       if (glconfig == NULL)
 	{
 	  g_print ("*** No appropriate OpenGL-capable visual found.\n");
@@ -1872,20 +1361,16 @@ GdkGLConfig* gl_init( void )
     }
 
   // experimental
-  assert( gllaser = gdk_gl_config_new_by_mode (GDK_GL_MODE_RGBA   |
-					       GDK_GL_MODE_DEPTH |
-					       GDK_GL_MODE_DOUBLE));
+/*   assert( gllaser = gdk_gl_config_new_by_mode( (GdkGLConfigMode) */
+/* 					       (GDK_GL_MODE_RGBA | */
+/* 					       GDK_GL_MODE_DEPTH | */
+/* 						GDK_GL_MODE_DOUBLE))); */
   
   return glconfig;
 }
 
 
-/***
- *** Creates the simple application window with one
- *** drawing area that has an OpenGL-capable visual.
- ***/
-GtkWidget *
-gui_create_canvas( stg_world_t* world )
+GtkWidget * gui_create_canvas( stg_world_t* world )
 {
   if( glconfig == NULL )
     gl_init(); // sets up glconfig static variable used in this
@@ -1941,17 +1426,22 @@ gui_create_canvas( stg_world_t* world )
 
   // set up a reasonable default scaling, so that the world fits
   // neatly into the window.
-  world->win->scale = DEFAULT_WIDTH / (double)world->width; //, world->height );;
+  world->win->scale = DEFAULT_WIDTH / (double)world->width;
 
   memset( &world->win->click_point, 0, sizeof(world->win->click_point));
 
   // allocate a drawing list for everything in the world
-  world->win->draw_list = glGenLists(1);
+  //world->win->draw_list = glGenLists(1);
 
   // allocate a drawing list for debug info
-  world->win->debug_list = glGenLists(1);
+  //world->win->debug_list = glGenLists(1);
 
   dl_debug = glGenLists(1);
+
+  // set gl state that won't change every redraw
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
 
   return drawing_area;
 }
@@ -1963,104 +1453,244 @@ gui_create_canvas( stg_world_t* world )
 
 
 
-void gui_model_init( stg_model_t* mod )
-{
-  GList* it;
-  for( it=mod->children; it; it=it->next )
-      gui_model_init( (stg_model_t*)it->data );
 
-  // GL CALLBACKS
+/* void gui_ranger_init( stg_model_t* mod ) */
+/* { */
+/*   stg_model_add_property_toggles( mod,  */
+/* 				  &mod->data, */
+/* 				  gl_ranger_render_data, // called when toggled on */
+/* 				  NULL, */
+/* 				  gl_unrender_list_cb, // called when toggled off */
+/* 				  (void*)LIST_DATA, */
+/* 				  "rangerdata", */
+/* 				  "ranger data", */
+/* 				  TRUE );  // initial state */
+/* } */
 
-  // recompile display lists when these properties change
-  //stg_model_add_callback( mod, &mod->gui_outline, gl_model_polygons, NULL );
-  //stg_model_add_callback( mod, &mod->boundary, gl_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->gui_grid, gl_model_grid, NULL );
+/* static int init = 0; */
+/* static stg_color_t laser_color=0, bright_color=0, fill_color=0, cfg_color=0, geom_color=0; */
 
-  // complete redraw when these change
-  stg_model_add_callback( mod, &mod->pose, gl_model_redraw, NULL );
-  stg_model_add_callback( mod, &mod->color, gl_model_redraw, NULL );
-  stg_model_add_callback( mod, &mod->parent, gl_model_redraw, NULL );
-}
+/* void gui_laser_init( stg_model_t* mod ) */
+/* { */
+/*   // we do this just the first tie a laser is created */
+/*   if( init == 0 ) */
+/*     { */
+/*       laser_color =   stg_lookup_color(STG_LASER_COLOR); */
+/*       bright_color = stg_lookup_color(STG_LASER_BRIGHT_COLOR); */
+/*       fill_color = stg_lookup_color(STG_LASER_FILL_COLOR); */
+/*       geom_color = stg_lookup_color(STG_LASER_GEOM_COLOR); */
+/*       cfg_color = stg_lookup_color(STG_LASER_CFG_COLOR); */
+/*       init = 1; */
+/*     } */
+
+/*   // adds a menu item and associated on-and-off callbacks */
+/*   stg_model_add_property_toggles( mod,  */
+/* 				  &mod->data, */
+/* 				  gl_laser_render_data, // called when toggled on */
+/* 				  NULL, */
+/* 				  gl_unrender_list_cb, // called when toggled off */
+/* 				  (void*)LIST_DATA, */
+/* 				  "laserdata", */
+/* 				  "laser data", */
+/* 				  TRUE );   */
+/* } */
+
+/* // TODO */
+
+/* void gui_position_init( stg_model_t* mod ) */
+/* {} */
+
+/* void gui_gripper_init( stg_model_t* mod ) */
+/* {} */
+
+/* void gui_bumper_init( stg_model_t* mod ) */
+/* {} */
+
+/* void gui_ptz_init( stg_model_t* mod ) */
+/* {} */
+
+/* void gui_puck_init( stg_model_t* mod ) */
+/* {} */
+
+/* void gui_fiducial_init( stg_model_t* mod ) */
+/* { */
+/*   // adds a menu item and associated on-and-off callbacks */
+/*   stg_model_add_property_toggles( mod, */
+/* 				  &mod->data, */
+/* 				  gl_fiducial_render_data, // called when toggled on */
+/* 				  NULL, */
+/* 				  gl_unrender_list_cb, // called when toggled off */
+/* 				  (void*)LIST_DATA, */
+/* 				  "fiducialdata", */
+/* 				  "fiducial data", */
+/* 				  TRUE ); */
+/* } */
+
+/* void gui_blobfinder_init( stg_model_t* mod ) */
+/* {} */
+
+/* void gui_speech_init( stg_model_t* mod ) */
+/* {} */
 
 
-void gui_ranger_init( stg_model_t* mod )
-{
-  stg_model_add_property_toggles( mod, 
-				  &mod->data,
-				  gl_ranger_render_data, // called when toggled on
-				  NULL,
-				  gl_unrender_list_cb, // called when toggled off
-				  (void*)LIST_DATA,
-				  "rangerdata",
-				  "ranger data",
-				  TRUE );  // initial state
-}
+/* int gl_laser_render_data( stg_model_t* mod, void* enabled ) */
+/* { */
+/*   //puts ("GL laser data" ); */
+/*   int list = gui_model_get_displaylist( mod, LIST_DATA ); */
+  
+/*   glNewList( list, GL_COMPILE ); */
 
-static int init = 0;
-static stg_color_t laser_color=0, bright_color=0, fill_color=0, cfg_color=0, geom_color=0;
 
-void gui_laser_init( stg_model_t* mod )
-{
-  // we do this just the first tie a laser is created
-  if( init == 0 )
-    {
-      laser_color =   stg_lookup_color(STG_LASER_COLOR);
-      bright_color = stg_lookup_color(STG_LASER_BRIGHT_COLOR);
-      fill_color = stg_lookup_color(STG_LASER_FILL_COLOR);
-      geom_color = stg_lookup_color(STG_LASER_GEOM_COLOR);
-      cfg_color = stg_lookup_color(STG_LASER_CFG_COLOR);
-      init = 1;
-    }
 
-  // adds a menu item and associated on-and-off callbacks
-  stg_model_add_property_toggles( mod, 
-				  &mod->data,
-				  gl_laser_render_data, // called when toggled on
-				  NULL,
-				  gl_unrender_list_cb, // called when toggled off
-				  (void*)LIST_DATA,
-				  "laserdata",
-				  "laser data",
-				  TRUE );  
-}
+/*   // end exp */
 
-// TODO
+/*   stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data;  */
+/*   size_t sample_count = mod->data_len / sizeof(stg_laser_sample_t); */
+/*   stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg; */
+/*   assert( cfg ); */
+  
+/*   if( samples && sample_count ) */
+/*     {     */
+/*       stg_pose_t gpose; */
+/*       stg_model_get_global_pose( mod, &gpose ); */
 
-void gui_position_init( stg_model_t* mod )
-{}
+/*   // do alpha properly */
+/*       glDepthMask( GL_FALSE ); */
+      
+/*       glPushMatrix(); */
+/*       glTranslatef( 0,0, gpose.z + mod->geom.size.z/2.0 ); // shoot the laser beam out at the right height */
+      
+/*       // pack the laser hit points into a vertex array for fast rendering */
 
-void gui_gripper_init( stg_model_t* mod )
-{}
+/*       static float* pts = NULL; */
+/*       pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float)); */
+      
+/*       pts[0] = (float)gpose.x; */
+/*       pts[1] = (float)gpose.y; */
+      
+/*       int s; */
+/*       for( s=0; s<sample_count; s++ ) */
+/* 	{ */
+/* 	  double ray_angle = gpose.a + (s * (cfg->fov / (sample_count-1))) - cfg->fov/2.0; */
 
-void gui_bumper_init( stg_model_t* mod )
-{}
+/* 	  //pts[2*s+2] = (float)samples[s].hitpoint.x; */
+/* 	  //pts[2*s+3] = (float)samples[s].hitpoint.y; */
+/* 	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) + gpose.x); */
+/* 	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) + gpose.y); */
+/* 	} */
+      
+/*       glEnableClientState( GL_VERTEX_ARRAY ); */
+/*       glVertexPointer( 2, GL_FLOAT, 0, pts ); */
+      
+/*       if( mod->world->win->show_alpha ) */
+/* 	{ */
+/* 	  glColor4f( 0, 0, 1, 0.1 ); */
+/* 	  glDrawArrays( GL_POLYGON, 0, sample_count+1 ); */
+/* 	} */
+/*       else */
+/* 	{ */
+/* 	  glColor3f( 0.5, 0.5, 1.0 ); */
+/* 	  glDrawArrays( GL_LINE_LOOP, 0, sample_count+1 ); */
+/* 	} */
+      
+/*       //free(pts); */
+/*       glPopMatrix(); */
+/*       glDepthMask( GL_TRUE );  */
+/*     } */
+  
 
-void gui_ptz_init( stg_model_t* mod )
-{}
+/*   glEndList(); */
+  
+/*   make_dirty(mod); */
 
-void gui_puck_init( stg_model_t* mod )
-{}
+/* /\*   // loop through again, drawing bright boxes on top of the polygon *\/ */
+/* /\*   for( s=0; s<sample_count; s++ ) *\/ */
+/* /\*     {       *\/ */
+/* /\*       // if this hit point is bright, we draw a little box *\/ */
+/* /\*       if( samples[s].reflectance > 0 ) *\/ */
+/* /\* 	{ *\/ */
+/* /\* 	  stg_rtk_fig_color_rgb32( fg, bright_color ); *\/ */
+/* /\* 	  stg_rtk_fig_rectangle( fg,  *\/ */
+/* /\* 				 points[1+s].x, points[1+s].y, 0, *\/ */
+/* /\* 				 0.04, 0.04, 1 ); *\/ */
+/* /\* 	  stg_rtk_fig_color_rgb32( fg, laser_color ); *\/ */
+/* /\* 	} *\/ */
+/* /\*     } *\/ */
+      
+/*   return 0; // callback runs until removed */
+/* } */
 
-void gui_fiducial_init( stg_model_t* mod )
-{
-  // adds a menu item and associated on-and-off callbacks
-  stg_model_add_property_toggles( mod,
-				  &mod->data,
-				  gl_fiducial_render_data, // called when toggled on
-				  NULL,
-				  gl_unrender_list_cb, // called when toggled off
-				  (void*)LIST_DATA,
-				  "fiducialdata",
-				  "fiducial data",
-				  TRUE );
-}
+/* int gl_fiducial_render_data( stg_model_t* mod, void* enabled ) */
+/* { */
+/*   int list = gui_model_get_displaylist( mod, LIST_DATA ); */
+  
+/*   glNewList( list, GL_COMPILE ); */
 
-void gui_blobfinder_init( stg_model_t* mod )
-{}
+/*   stg_fiducial_t* fids = (stg_fiducial_t*)mod->data;  */
+/*   size_t fids_count = mod->data_len / sizeof(stg_fiducial_t); */
+/*   //stg_fidulaser_config_t *cfg = (stg_laser_config_t*)mod->cfg; */
+/*   //assert( cfg ); */
+  
+/*   if( fids && fids_count ) */
+/*     {     */
+/*       stg_pose_t gpose; */
+/*       stg_model_get_global_pose( mod, &gpose ); */
+      
+/*       // do alpha properly */
+/*       glDepthMask( GL_FALSE ); */
+      
+/*       //glPushMatrix(); */
+/*       //glTranslatef( 0,0, gpose.z + mod->geom.size.z/2.0 ); // shoot the laser beam out at the right height */
+      
+/*       push_color_rgba( 0.8, 0, 0.8, 0.5 );  */
+      
+/*       // indicate the fiducial */
+/*       int f; */
+/*       for( f=0; f<fids_count; f++ ) */
+/* 	{	  */
+/* 	  // first draw a box on the fiducial's position */
+/* 	  glPushMatrix(); */
+	  
+/* 	  glTranslatef( fids[f].pose.x, fids[f].pose.y, 0 ); */
+/* 	  glRotatef( RTOD(gpose.a+fids[f].geom.a), 0,0,1); */
+	  
+/* 	  double dx = fids[f].geom.x / 2.0;  */
+/* 	  double dy = fids[f].geom.y / 2.0;  */
+/* 	  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE ); */
+/* 	  glRectf( -dx, -dy, dx, dy ); */
+/* 	  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL ); */
 
-void gui_speech_init( stg_model_t* mod )
-{}
-
+/* 	  // now draw a little nose line to show heading */
+/* 	  glBegin( GL_LINES ); */
+/* 	  glVertex2d( 0,0 ); */
+/* 	  glVertex2d( dx+0.1,0); */
+/* 	  glEnd();	   */
+	  
+/* 	  glPopMatrix(); */
+	  
+/* 	  // now draw a line from the sensor to the target	   */
+/* 	  glBegin( GL_LINES ); */
+/* 	  glVertex2d( gpose.x, gpose.y ); */
+/* 	  glVertex2d( fids[f].pose.x, fids[f].pose.y ); */
+/* 	  glEnd(); */
+	  
+/* 	  // now print the fiducial ID, if available */
+/* 	  if( fids[f].id )	   */
+/* 	    {	 */
+/* 	      glRasterPos2f( fids[f].pose.x + 0.4,  */
+/* 			     fids[f].pose.y ); */
+/* 	      glPrint( "%d", fids[f].id ); */
+/* 	    }	   */
+/* 	} */
+      
+/*       pop_color(); */
+/*       glDepthMask( GL_TRUE );  */
+/*     } */
+  
+/*   glEndList();   */
+/*   make_dirty(mod); */
+/*   return 0; // callback runs until removed */
+/* } */
 
 
 /**************************************************************************

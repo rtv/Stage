@@ -7,7 +7,7 @@
 
 #include <libplayercore/playercore.h>
 
-#include "stage_internal.h"
+#include "model.hh"
 #include "stg_time.h"
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
@@ -43,9 +43,9 @@ class StgDriver : public Driver
   /// find the device record with this Player id
   Interface* LookupDevice( player_devaddr_t addr );
   
-  stg_model_t* LocateModel( char* basename, 
-			    player_devaddr_t* addr,
-			    stg_model_initializer_t init );
+  StgModel* LocateModel( char* basename, 
+			 player_devaddr_t* addr,
+			 char* typestr);
   
  protected: 
   
@@ -61,19 +61,22 @@ class Interface
             StgDriver* driver,
             ConfigFile* cf, 
             int section );
-  
+
   virtual ~Interface( void ){ /* TODO: clean up*/ };
 
   player_devaddr_t addr;
-  stg_model_t* mod;
   double last_publish_time;
+  double publish_interval_msec;
   
   StgDriver* driver; // the driver instance that created this device
   
   virtual int ProcessMessage(MessageQueue* resp_queue,
        			     player_msghdr_t* hdr,
 			     void* data) { return(-1); } // empty implementation
-  virtual void Publish( void ){}; // empty implementation
+
+  virtual void Publish( void ){}; // do nothing
+  virtual void Subscribe( void ){}; // do nothing
+  virtual void Unsubscribe( void ){}; // do nothing
 };
 
 
@@ -87,18 +90,24 @@ class InterfaceSimulation : public Interface
                              void* data);
 };
 
-
+// base class for all interfaces that are associated with a model
 class InterfaceModel : public Interface
 {
- public: 
-  InterfaceModel( player_devaddr_t addr,  
+ public:
+  InterfaceModel( player_devaddr_t addr,
 		  StgDriver* driver,
-		  ConfigFile* cf, 
-		  int section, 
-		  stg_model_initializer_t init );
+		  ConfigFile* cf,
+		  int section,
+		  char* typestr );
+
+  StgModel* mod;
   
   virtual ~InterfaceModel( void ){ /* TODO: clean up*/ };
+
+  virtual void Subscribe( void ){ this->mod->Subscribe(); };
+  virtual void Unsubscribe( void ){ this->mod->Unsubscribe(); };
 };
+
 
 class InterfacePosition : public InterfaceModel
 {
@@ -269,23 +278,23 @@ class InterfaceMap : public InterfaceModel
 			void * data );
 };
 
-class InterfaceGraphics2d : public InterfaceModel
-{
- public: 
-  InterfaceGraphics2d( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
-  virtual ~InterfaceGraphics2d( void );
+/* class InterfaceGraphics2d : public InterfaceModelModel */
+/* { */
+/*  public:  */
+/*   InterfaceGraphics2d( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section ); */
+/*   virtual ~InterfaceGraphics2d( void ); */
   
-  virtual int ProcessMessage( MessageQueue* resp_queue, 
-			      player_msghdr * hdr, 
-			      void * data );
- private:
-  stg_rtk_fig_t* fig; // a figure we can draw in
+/*   virtual int ProcessMessage( MessageQueue* resp_queue,  */
+/* 			      player_msghdr * hdr,  */
+/* 			      void * data ); */
+/*  private: */
+/*   stg_rtk_fig_t* fig; // a figure we can draw in */
 
-  GList* drawlist; // list of drawing commands
+/*   GList* drawlist; // list of drawing commands */
 
-  // clear the display
-  void Clear( void );
-};
+/*   // clear the display */
+/*   void Clear( void ); */
+/* }; */
 
 class InterfaceGraphics3d : public InterfaceModel
 {

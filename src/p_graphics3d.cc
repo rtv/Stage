@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics3d.cc,v 1.1.2.3 2007-06-22 20:48:27 rtv Exp $
+ * CVS: $Id: p_graphics3d.cc,v 1.1.2.4 2007-07-08 01:44:09 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -205,7 +205,7 @@ void InterfaceGraphics3d::Publish( void )
 
       // move into the relevant model's coordinate frame
       stg_pose_t gpose;
-      stg_model_get_global_pose( mod, &gpose );
+      mod->GetGlobalPose( &gpose );
       
       glPushMatrix();
       glTranslatef( gpose.x, gpose.y, 0 ); 

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.9 2007-02-27 02:54:08 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.10 2007-07-08 01:44:09 rtv Exp $
  */
 
 
@@ -85,6 +85,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
 @{
 */
 
+// forward declare
+  class StgModel;
 
 typedef enum {
   STG_IMAGE_FORMAT_PNG,
@@ -213,12 +215,13 @@ typedef enum {
   
   
  // forward declare struct types from player_internal.h
-  struct _stg_model;
   struct _stg_matrix;
   struct _gui_window;
   struct _stg_world;
 
-  typedef struct _stg_model stg_model_t; //  defined in stage_internal.
+  
+  //class stg_model_t;
+  //typedef struct _stg_model stg_model_t; //  defined in stage_internal.
   typedef struct _stg_world stg_world_t; 
 
 
@@ -295,107 +298,7 @@ typedef enum {
 
   /*@}*/
 
-  // POLYGONS ---------------------------------------------------------
-  
-  /** @ingroup libstage
-      @defgroup stg_polygon Polygons
-      Creating and manipulating polygons
-      @{
-  */
-  
-  typedef enum {
-    STG_BEGIN=0,
-    STG_END,
-    STG_SENSE_BEGIN,
-    STG_SENSE_END
-  } stg_endpoint_type_t;
-  
-  
-  // forward declaration
-  typedef struct stg_polygon stg_polygon_t;
-
-  typedef struct stg_endpoint {
-    stg_endpoint_type_t type;
-    stg_meters_t value;
-    stg_polygon_t* polygon; //< the polygon that contains this endpoint
-    
-    // endpoints are stored in linked lists
-    struct stg_endpoint *next, *prev; 
-
-  } stg_endpoint_t;
-      
-
-  /** define a polygon: a set of connected vertices drawn with a
-      color. Can be drawn filled or unfilled. */
-  struct stg_polygon
-  {
-    /// pointer to an array of points in the local CS
-    GArray* points;
-    
-    /// if TRUE, this polygon is NOT drawn filled
-    stg_bool_t unfilled; 
-    
-    /// render color of this polygon - TODO: not yet implemented
-    stg_color_t color;
-
-    /// width and height of the polygon
-    //stg_size_t size;
-
-    /// pointer to the model that owns this polygon
-    stg_model_t* mod;
-
-    /// 3D axis-aligned global bounding volume
-    stg_endpoint_t epts[6];
-
-    /// list of stg_polygon_t*s whos axis-aligned bounding boxes
-    // overlap with this one.
-    GList* intersectors;
-    //GTree* acc_tree;
-    GHashTable* accum;
-    
-    // tmp hack
-    stg_meters_t minx, miny, maxx, maxy;
-  }; 
-
-  
-  /// return an array of [count] polygons. Caller must free() the space.
-  stg_polygon_t* stg_polygons_create( int count );
-  
-  /// destroy an array of [count] polygons
-  void stg_polygons_destroy( stg_polygon_t* p, size_t count );
-  
-  /// creates a unit square polygon
-  stg_polygon_t* stg_unit_polygon_create( void );
-    
-  /// Copies [count] points from [pts] into polygon [poly], allocating
-  /// memory if mecessary. Any previous points in [poly] are
-  /// overwritten.
-  void stg_polygon_set_points( stg_polygon_t* poly, stg_point_t* pts, size_t count );			       
-  /// Appends [count] points from [pts] into polygon [poly],
-  /// allocating memory if mecessary.
-  void stg_polygon_append_points( stg_polygon_t* poly, stg_point_t* pts, size_t count );			       
-  
-  /// scale the array of [num] polygons so that all its points fit
-  /// exactly in a rectagle of pwidth] by [height] units
-  void stg_polygons_normalize( GList* polylist, 
-			       double width, 
-			       double height );
-  
-  /// print a human-readable description of a polygon on stdout
-  void stg_polygon_print( stg_polygon_t* poly );
-  
-  /// print a human-readable description of an array of polygons on stdout
-  void stg_polygons_print( stg_polygon_t* polys, unsigned int count );
-  
-  /** Interpret a bitmap file as a set of polygons. Returns an array
-      of polygons. On exit [poly_count] is the number of polygons
-      found.
-   */
-  stg_polygon_t* stg_polygons_from_image_file(  const char* filename, 
-						size_t* poly_count );
-  
-  /**@}*/
-
+ 
   // end property typedefs -------------------------------------------------
 
 
@@ -467,10 +370,11 @@ typedef enum {
    */
   void stg_world_print( stg_world_t* world );
   
-  /** Returns a string containing human-readable simulation time. The
-      string should be free()ed by the caller. 
+  /** Writes a human-readable simulation time into the string, to a
+      maximum number of characters. The string should be preallocated
+      to at least maxlen bytes long.
   */
-  char* stg_world_clockstring( stg_world_t* world );
+  void stg_world_clockstring( stg_world_t* world, char* str, size_t maxlen );
 
   /** Set the title of the world, usually  displayed by the GUI in the window titlebar.
    */
@@ -487,10 +391,10 @@ typedef enum {
 
   /** look up a pointer to a model in [world] from the model's unique
       ID [mid]. */ 
-  stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid );
+  //stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid );
   
   /** look up a pointer to a model from from the model's name. */
-  stg_model_t* stg_world_model_name_lookup( stg_world_t* world, const char* name );
+  //stg_model_t* stg_world_model_name_lookup( stg_world_t* world, const char* name );
   
   /**@}*/
 
@@ -510,189 +414,7 @@ typedef enum {
   
   typedef int stg_movemask_t;
 
-  /** \struct stg_model_t 
-      Opaque data structure implementing a model.
-      Use the documented stg_model_<something> functions to manipulate
-      models. Do not modify the structure directly unless you know
-      what you are doing.
-   */
 
-  /** Define a callback function type that can be attached to a
-      record within a model and called whenever the record is set.
-  */
-  typedef int (*stg_model_callback_t)(stg_model_t* mod, void* user );
-  
-  void stg_model_add_callback( stg_model_t* mod, 
-			       void* member, 
-			       stg_model_callback_t cb, 
-			       void* user );
-
-  int stg_model_remove_callback( stg_model_t* mod,
-				 void* member,
-				 stg_model_callback_t callback );  
-
-  // wrappers for the generic add/remove callback functions that hide
-  // some implementatio detail 
-  
-  void stg_model_add_update_callback( stg_model_t* mod, 
-				      stg_model_callback_t cb, 
-				      void* user );
-  
-  void stg_model_remove_update_callback( stg_model_t* mod, 
-					 stg_model_callback_t cb );
-  
-  void stg_model_add_load_callback( stg_model_t* mod, 
-				    stg_model_callback_t cb, 
-				    void* user );
-  
-  void stg_model_remove_load_callback( stg_model_t* mod, 
-				       stg_model_callback_t cb );
-  
-  void stg_model_add_save_callback( stg_model_t* mod, 
-				    stg_model_callback_t cb, 
-				    void* user );
-  
-  void stg_model_remove_save_callback( stg_model_t* mod, 
-				       stg_model_callback_t cb );
-  
-  void stg_model_add_startup_callback( stg_model_t* mod, 
-				       stg_model_callback_t cb, 
-				       void* user );
-  void stg_model_remove_startup_callback( stg_model_t* mod, 
-					  
-					  stg_model_callback_t cb );
-  void stg_model_add_shutdown_callback( stg_model_t* mod, 
-					stg_model_callback_t cb, 
-					void* user );
-  
-  void stg_model_remove_shutdown_callback( stg_model_t* mod, 
-					   stg_model_callback_t cb );
-
-
-  /** function type for an initialization function that configures a
-      specialized model. Each special model type (laser, position,
-      etc) has a single initializer function that is called when the
-      model type is specified in the worldfile. The mapping is done in
-      a table in typetable.cc.
-  */
-  typedef int(*stg_model_initializer_t)(stg_model_t*);
-  
-
-  
-  /// laser return value
-  typedef enum 
-    {
-      LaserTransparent, ///<not detected by laser model 
-      LaserVisible, ///< detected by laser with a reflected intensity of 0 
-      LaserBright  ////< detected by laser with a reflected intensity of 1 
-    } stg_laser_return_t;
-
-  /// create a new model
-  stg_model_t* stg_model_create(  stg_world_t* world,
-				  stg_model_t* parent, 
-				  stg_id_t id, 
-				  char* typestr );
-  
-  /** destroy a model, freeing its memory */
-  void stg_model_destroy( stg_model_t* mod );
-
-  /** get the pose of a model in the global CS */
-  void stg_model_get_global_pose( stg_model_t* mod, stg_pose_t* pose );
-
-  /** get the velocity of a model in the global CS */
-  void stg_model_get_global_velocity( stg_model_t* mod, stg_velocity_t* gvel );
-
-  /* set the velocity of a model in the global coordinate system */
-  void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel );
-
-  /** subscribe to a model's data */
-  void stg_model_subscribe( stg_model_t* mod );
-
-  /** unsubscribe from a model's data */
-  void stg_model_unsubscribe( stg_model_t* mod );
-
-  /** configure a model by reading from the current world file */
-  void stg_model_load( stg_model_t* mod );
-
-  /** save the state of the model to the current world file */
-  void stg_model_save( stg_model_t* mod );
-
-  /** get a human-readable string for the model's type */
-  //const char* stg_model_type_string( stg_model_type_t type );
-
-  // SET properties - use these to set props, don't set them directly
-
-  /** set the pose of model in global coordinates */
-  void stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose );
-  
-  /** set a model's velocity in its parent's coordinate system */
-  void stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
- 
-  /** set a model's pose in its parent's coordinate system */
-  void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
-
-  /** set a model's geometry (size and center offsets) */
-  void stg_model_set_geom( stg_model_t* mod, stg_geom_t* src );
-
-  /** set a model's geometry (size and center offsets) */
-  void stg_model_set_fiducial_return( stg_model_t* mod, int fid );
-
-  /** set a model's fiducial key: only fiducial finders with a
-      matching key can detect this model as a fiducial. */
-  void stg_model_set_fiducial_key( stg_model_t* mod, int key );
-
-  /** Change a model's parent - experimental*/
-  int stg_model_set_parent( stg_model_t* mod, stg_model_t* newparent);
-  
-  /** Get a model's geometry - it's size and local pose (offset from
-      origin in local coords) */
-  void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest );
-
-  /** Get the pose of a model in its parent's coordinate system  */
-  void stg_model_get_pose( stg_model_t* mod, stg_pose_t* dest );
-
-  /** Get a model's velocity (in its local reference frame) */
-  void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
-  
-  /** gets a list of polygons belonging a model */
-  GList* stg_model_get_polygons( stg_model_t* mod );
-  
-  void stg_model_set_polygons( stg_model_t* mod,
-			       stg_polygon_t* polys, 
-			       size_t poly_count );
-  
-  void stg_model_add_polygon( stg_model_t* mod,
-			      stg_point_t* pts, 
-			      size_t pt_count,
-			      stg_color_t color,
-			      stg_bool_t unfilled );
-  
-  /** set an array oflines to be drawn for the model */
-  void stg_model_set_lines( stg_model_t* mod,
-			    stg_polyline_t* lines, 
-			    size_t lines_count );
-  
-  // guess what these do?
-  void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
-  void stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
-  void stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
-  void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest );
-  void stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom );
-  void stg_model_set_color( stg_model_t* mod, stg_color_t col );
-  void stg_model_set_mass( stg_model_t* mod, stg_kg_t mass );
-  void stg_model_set_stall( stg_model_t* mod, stg_bool_t stall );
-  void stg_model_set_gripper_return( stg_model_t* mod, int val );
-  void stg_model_set_laser_return( stg_model_t* mod, int val );
-  void stg_model_set_obstacle_return( stg_model_t* mod, int val );
-  void stg_model_set_blob_return( stg_model_t* mod, int val );
-  void stg_model_set_ranger_return( stg_model_t* mod, int val );
-  void stg_model_set_boundary( stg_model_t* mod, int val );
-  void stg_model_set_gui_nose( stg_model_t* mod, int val );
-  void stg_model_set_gui_mask( stg_model_t* mod, int val );
-  void stg_model_set_gui_grid( stg_model_t* mod, int val );
-  void stg_model_set_gui_outline( stg_model_t* mod, int val );
-  void stg_model_set_watts( stg_model_t* mod, stg_watts_t watts );
-  void stg_model_set_map_resolution( stg_model_t* mod, stg_meters_t res );
 
 #define STG_MP_PREFIX          "_mp_"
 
@@ -740,112 +462,14 @@ typedef enum {
       stg_model_set_<property>() function definition to see the type
       of data required for each property.
   */ 
-  int stg_model_set_property( stg_model_t* mod, 
-			      char* propname, 
-			      void* data );
-  
-  /** @brief Remove a property from a model
-      
-     Removes a data item previously associated with the model using
-     stg_model_set_property(). No memory is freed, so the user should
-     take care to free the memory.
-  */
-  void stg_model_unset_property( stg_model_t* mod,
-				 char* propname );
 
-  /** Get a named property associated with a model 
-   */
-  void* stg_model_get_property( stg_model_t* mod, char* key );
-  
-
-/*   /\** @TODO The callback cb will be called with argument arg when the */
-/*       property identified by key is set. *\/ */
-/*   void stg_model_set_property_callback( stg_model_t* mod, */
-/* 					char* key, */
-/* 					stg_property_callback cb, */
-/* 					void* argn ); */
- 
-  /** print human-readable information about the model on stdout. If
-      prefix is non-null, it is printed first.
-   */
-  void stg_model_print( stg_model_t* mod, char* prefix );
-  
-  /** returns TRUE iff [testmod] exists above [mod] in a model tree 
-   */
-  int stg_model_is_antecedent( stg_model_t* mod, stg_model_t* testmod );
-  
-  /** returns TRUE iff [testmod] exists below [mod] in a model tree 
-   */
-  int stg_model_is_descendent( stg_model_t* mod, stg_model_t* testmod );
-  
-  /** returns TRUE iff [mod1] and [mod2] both exist in the same model
-      tree 
-  */
-  int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 );
-
-  /** return the top-level model above mod */
-  stg_model_t* stg_model_root( stg_model_t* mod );
-  
-  /** Convert a tree of models into a GPtrArray containing the same models.*/
-  GPtrArray* stg_model_array_from_tree( stg_model_t* root );
-  
-  /** initialize a model - called when a model goes from zero to one subscriptions */
-  void stg_model_startup( stg_model_t* mod );
-  
-  /** finalize a model - called when a model goes from one to zero subscriptions */
-  void stg_model_shutdown( stg_model_t* mod );
-
-  /** Update a model by one simulation timestep. This is called by
-      stg_world_update(), so users don't usually need to call this. */
-  void stg_model_update( stg_model_t* model );
-  
-  /** Convert a pose in the world coordinate system into a model's
-      local coordinate system. Overwrites [pose] with the new
-      coordinate. */
-  void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose );
-  
-  /** Convert a pose in the model's local coordinate system into the
-      world coordinate system. Overwrites [pose] with the new
-      coordinate. */
-  void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose );
-
-  int stg_model_fig_clear_cb( stg_model_t* mod, void* data, size_t len, 
-			      void* userp );
-
-  void stg_model_set_data( stg_model_t* mod, void* data, size_t len );
-  void stg_model_set_cmd( stg_model_t* mod, void* cmd, size_t len );
-  void stg_model_set_cfg( stg_model_t* mod, void* cfg, size_t len );
-  void* stg_model_get_cfg( stg_model_t* mod, size_t* lenp );
-  void* stg_model_get_data( stg_model_t* mod, size_t* lenp );
-  void* stg_model_get_cmd( stg_model_t* mod, size_t* lenp );
-  
-  void stg_model_draw_polygons( stg_model_t* mod, const char* group,
-				double x, double y, double a, 
-				stg_polygon_t* polys, size_t polycount );
-  
-  void stg_model_draw_polylines( stg_model_t* mod, const char* group, 
-				 double x, double y, double a, 
-				 stg_polyline_t* lines, size_t linecount,
-				 double thickness, stg_color_t colot );
-  
-  void stg_model_draw_points( stg_model_t* mod, const char* group,
-			      double x, double y, double a, 
-			      stg_point_t* points, size_t point, 
-			      double size, stg_color_t color );
-  
-
-  /** Add an item to the View menu that will automatically install and
-      remove a callback when the item is toggled. The specialized
-      model types use this call to set up their data visualization. */
-  void stg_model_add_property_toggles( stg_model_t* mod,
-				       void* member,
-				       stg_model_callback_t callback_on,
-				       void* arg_on,
-				       stg_model_callback_t callback_off,
-				       void* arg_off,
-				       const char* name,
-				       const char* label,
-				       gboolean enabled );
+  /// laser return value
+  typedef enum 
+    {
+      LaserTransparent, ///<not detected by laser model 
+      LaserVisible, ///< detected by laser with a reflected intensity of 0 
+      LaserBright  ////< detected by laser with a reflected intensity of 1 
+    } stg_laser_return_t;
 
 
   // BLOBFINDER MODEL --------------------------------------------------------
@@ -1112,7 +736,7 @@ typedef enum {
   
   typedef struct
   {
-    stg_model_t* hit;
+    StgModel* hit;
     stg_point_t hit_point;
   } stg_bumper_sample_t;
   
@@ -1164,7 +788,7 @@ typedef enum {
   } stg_position_cfg_t;
 
   /// set the current odometry estimate 
-  void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom ); 
+  //void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom ); 
 
   // WIFI MODEL --------------------------------------------------------
 

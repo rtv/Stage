@@ -21,13 +21,15 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.6 2005-07-08 22:55:15 rtv Exp $
+ * CVS info: $Id: worldfile.hh,v 1.6.6.1 2007-07-08 01:44:09 rtv Exp $
  */
 
 #ifndef WORLDFILE_HH
 #define WORLDFILE_HH
 
+
 #include <stdint.h> // for portable int types eg. uint32_t
+#include <stdio.h> // for FILE ops
 
 // Class for loading/saving world file.  This class hides the syntax
 // of the world file and provides an 'entity.property = value' style
@@ -236,6 +238,10 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   
   // Get an property
   public: int GetProperty(int entity, const char *name);
+
+  // returns true iff the property exists in the file, so that you can
+  // be sure that GetProperty() will work
+  bool PropertyExists( int section, char* token );
 
   // Set the value of an property.
   private: void SetPropertyValue(int property, int index, const char *value);

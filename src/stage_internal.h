@@ -8,20 +8,23 @@
 #include <assert.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <math.h> // for lrint() in macros
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
 #include <glib.h>
-#include <gtk/gtk.h>
+#include <glib-object.h>
 
-#include <rtk.h> // TODO - remove this
+// TODO - remove these
+#include <gtk/gtk.h>
+//#include <rtk.h> 
+//#include <sys/socket.h>
 
 #include "stage.h"
 #include "config.h" // results of autoconf's system configuration tests
 #include "replace.h" // Stage's implementations of missing system calls
+#include "worldfile.hh"
 
 /** @ingroup libstage
     @defgroup libstage_internal Internals
@@ -37,16 +40,33 @@
 #define STG_DEFAULT_WINDOW_WIDTH 400
 #define STG_DEFAULT_WINDOW_HEIGHT 440
 
-#ifdef __cplusplus
-extern "C" {
-#endif 
+//#ifdef __cplusplus
+//extern "C" {
+//#endif 
   
+void stg_color_to_glcolor4dv( stg_color_t scol, double gcol[4] );
+void push_color( double col[4] );
+void push_color_rgb( double r, double g, double b );
+void push_color_rgba( double r, double g, double b, double a );
+void pop_color( void );
+void gl_pose_shift( stg_pose_t* pose );
+void gl_coord_shift( double x, double y, double z, double a  );
+void stg_block_list_scale( GList* blocks, 
+			   stg_size_t* size );
+void stg_block_list_destroy( GList* list );
+void gui_world_set_title( stg_world_t* world, char* txt );
+StgModel* stg_world_model_name_lookup( stg_world_t* world, const char* name );
+
+
+typedef int(*stg_model_callback_t)(StgModel* mod, void* user );
   
   typedef struct stg_block
   {
-    stg_model_t* mod; //< model to which this block belongs
+    StgModel* mod; //< model to which this block belongs
     stg_point_t* pts; //< points defining a polygon
     size_t pt_count; //< the number of points
+    stg_meters_t height; //<< vertical size of the block
+    stg_meters_t z_offset; //< offset along the z axis
     int display_list; //< id of the OpenGL displaylist to draw this block
   } stg_block_t;
   
@@ -54,9 +74,11 @@ extern "C" {
   /** Create a new block. A model's body is a list of these
       blocks. The point data is copied, so pts can safely be freed
       after calling this.*/
-  stg_block_t* stg_block_create( stg_model_t* mod,
+  stg_block_t* stg_block_create( StgModel* mod,
 				 stg_point_t* pts, 
-				 size_t pt_count );
+				 size_t pt_count,
+				 stg_meters_t height,
+				 stg_meters_t z_offset );
     
   /** destroy a block, freeing all memory */
   void stg_block_destroy( stg_block_t* block );
@@ -80,34 +102,8 @@ extern "C" {
   void* gui_world_create( stg_world_t* world );
   void gui_world_destroy( stg_world_t* world );
   int gui_world_update( stg_world_t* world );
-  void stg_world_add_model( stg_world_t* world, stg_model_t* mod  );
+  void stg_world_add_model( stg_world_t* world, StgModel* mod  );
   void gui_world_geom( stg_world_t* world );
-
-  void gui_model_init( stg_model_t* model );
-  void gui_model_destroy( stg_model_t* model );
-
-  void gui_model_display_pose( stg_model_t* mod, char* verb );
-  void gui_model_features( stg_model_t* mod );
-  void gui_model_geom( stg_model_t* model );
-  void gui_model_nose( stg_model_t* model );
-
-  //void gui_window_menus_create( gui_window_t* win );
-  //void gui_window_menus_destroy( gui_window_t* win );
-
-  // callback functions that handle property changes, mostly for drawing stuff in the GUI  
-  int gui_model_polygons( stg_model_t* mod, void* userp );
-  int gui_model_grid( stg_model_t* mod, void* userp );
-  int gui_model_move( stg_model_t* mod, void* userp );
-  int gui_model_mask( stg_model_t* mod, void* userp );
-  int gui_model_lines( stg_model_t* mod, void* userp );
-
-  //< Get the display list ID associated with this name. If the list
-  //does not exist, a new one is created. 
-  int gui_model_get_displaylist( stg_model_t* mod, char* list_name );
-
-  //< Destroy the display list identified by the string. If no such
-  //list exists, no action is taken.
-  void gui_model_free_displaylist( stg_model_t* mod, char* list_name );
 
   void gui_add_view_item( const gchar *name,
 			  const gchar *label,
@@ -116,7 +112,7 @@ extern "C" {
 			  gboolean  is_active,
 			  void* userdata );
 
-  void gui_add_tree_item( stg_model_t* mod );
+//  void gui_add_tree_item( stg_model_t* mod );
   
   /** container for a callback function and a single argument, so
       they can be stored together in a list with a single pointer. */
@@ -131,7 +127,7 @@ extern "C" {
   
   typedef struct
   {
-    stg_model_t* mod;
+    StgModel* mod;
     void* member;
     char* name;
     stg_model_callback_t callback_on;
@@ -144,11 +140,6 @@ extern "C" {
   } stg_property_toggle_args_t;
     
   
-  typedef struct {
-    const char* keyword;
-    stg_model_initializer_t initializer;
-  } stg_type_record_t;
-
   
   typedef struct {
     double x, y, z;
@@ -160,19 +151,6 @@ extern "C" {
     stg_point3_t min, max;
   } stg_bounds3_t;
 
-  typedef struct {
-    GList *x, *y, *z;
-  } stg_list3_t;
-  
-  typedef struct {
-    stg_endpoint_t *x, *y, *z;
-  } stg_endpoint3_t;
-  
-
-  typedef struct {
-    GPtrArray *x, *y, *z;
-  } stg_ptr_array_3d_t;
-  
   typedef enum {
     STG_D_DRAW_POINTS,
     STG_D_DRAW_LINES,
@@ -232,105 +210,13 @@ extern "C" {
     double angle;
   } stg_d_rotate_t;
 
-
-  typedef int (*foo_t)(stg_model_t* mod );
-    
-  struct _stg_model
-  {
-    stg_id_t id; // used as hash table key
-    stg_world_t* world; // pointer to the world in which this model exists
-    char token[STG_TOKEN_MAX]; // automatically-generated unique ID string
-    stg_type_record_t* typerec;
-
-    stg_pose_t pose;
-    stg_velocity_t velocity;    
-    stg_watts_t watts; //< power consumed by this model
-    stg_color_t color;
-    stg_kg_t mass;
-    stg_geom_t geom;
-    int laser_return;
-    int obstacle_return;
-    int blob_return;
-    int gripper_return;
-    int ranger_return;
-    int fiducial_return;
-    int fiducial_key;
-    int boundary;
-    stg_meters_t map_resolution;
-    stg_bool_t stall;
-
-    int gui_nose;
-    int gui_grid;
-    int gui_outline;
-    int gui_mask;
-    
-    struct _stg_model *parent; //< the model that owns this one, possibly NULL
-    GList* children; //< the models owned by this model
-
-    /** GData datalist can contain arbitrary named data items. Can be used
-	by derived model types to store properties, and for user code
-	to associate arbitrary items with a model. */
-    GData* props;
-
-    /** callback functions can be attached to any field in this
-    structure. When the internal function model_change(<mod>,<field>)
-    is called, the callback is triggered */
-    GHashTable* callbacks;
-       
-    // the number of children of each type is counted so we can
-    // automatically generate names for them
-    int child_type_count[256];
-
-    int subs;     //< the number of subscriptions to this model
-
-    stg_msec_t interval; //< time between updates in ms
-    stg_msec_t interval_elapsed; //< time since last update in ms
-
-    stg_bool_t disabled; //< if non-zero, the model is disabled
-        
-    // hooks for attaching special callback functions (not used as
-    // variables).
-    char startup, shutdown, load, save, update;
-
-    // hooks for data, command and configuration structures for
-    // derived types
-    void *data, *cmd, *cfg;
-    size_t data_len, cmd_len, cfg_len;
-    
-    GList* d_list;    
-    GList* blocks; //< list of stg_block_t structs that comprise a body
-    
-    // TODO - optionally thread-safe version allow exclusive access
-    // to this model 
-    // pthread_mutex_t mutex;
-
-    // end experimental    
-  };
-  
-
-  void model_change( stg_model_t* mod, void* address );
-
-  void stg_model_update_velocity( stg_model_t* model );
-  int stg_model_update_pose( stg_model_t* model );
-  void stg_model_energy_consume( stg_model_t* mod, stg_watts_t rate );
-  void stg_model_map( stg_model_t* mod, gboolean render );
-  void stg_model_map_with_children( stg_model_t* mod, gboolean render );
-  
-
-  void stg_model_render_geom( stg_model_t* mod );
-  void stg_model_render_pose( stg_model_t* mod );
-  void stg_model_render_polygons( stg_model_t* mod );
+void stg_d_render( stg_d_draw_t* d );
 
 
   // the struct is defined in gui.h so that the sim engine and GUI
   // code are separated.
   typedef struct _gui_window gui_window_t;
              
-  typedef struct {
-    int count;
-    stg_model_t* mod;
-  } stg_intersection_t;
-    
   // defines a simulated world
   struct _stg_world
   {
@@ -338,8 +224,8 @@ extern "C" {
     
     GHashTable* models; ///< the models that make up the world, indexed by id
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
-    /** a list of models that are currently selected by the user */
-    GList* selected_models;
+
+    CWorldFile* wf; ///< If set, points to the worldfile used to create this world
 
     /** a list of top-level models, i.e. models who have the world as
     their parent and whose position is therefore specified in world
@@ -350,21 +236,15 @@ extern "C" {
 	stg_model_udpate(); */
     GList* update_list;
 
-    // lists of pointers to non-empty bounding boxes, sorted by their
-    // position along the axis
-    stg_endpoint3_t endpts;
-    
-    // an array that stores the intersection state between all models
-    //unsigned short* intersections;
-
     stg_meters_t width; ///< x size of the world 
     stg_meters_t height; ///< y size of the world
 
     /** the number of models of each type is counted so we can
 	automatically generate names for them
     */
-    int child_type_count[256];
-    
+    //int child_type_count[256];
+    GHashTable* child_type_count;
+
     struct _stg_matrix* matrix; ///< occupancy quadtree for model raytracing
 
     char* token; ///< the name of this world
@@ -400,10 +280,6 @@ extern "C" {
     int section_count;
   };
 
-  // rtv - experimental world functions not ready for external use
-  GList* stg_world_models_in_bbox3d( stg_world_t* world, stg_bbox3d_t* bbox );
-  void stg_world_start_updating_model( stg_world_t* world, stg_model_t* mod );
-  void stg_world_stop_updating_model( stg_world_t* world, stg_model_t* mod );
 
   // ROTATED RECTANGLES -------------------------------------------------
 
@@ -434,13 +310,6 @@ extern "C" {
 				    int* rect_count,
 				    int* widthp, int* heightp );
   
-
-  /** convert a rotrect array into polygons. All polys are given the
-      size (width,height). Caller must free the returned array of polygons
-  */
-  stg_polygon_t* stg_polygons_from_rotrects( stg_rotrect_t* rects, size_t count,
-					     double width, double height );
-
   /**@}*/
 
   
@@ -572,30 +441,11 @@ extern "C" {
 			 stg_line_t* lines, int num_lines,
 			 void* object );
     
-  /** render an array of polygons into the matrix
-   */
-  void stg_matrix_polygons( stg_matrix_t* matrix,
-			    double x, double y, double a,
-			    stg_polygon_t* polys, int num_polys,
-			    void* object );
-  
-  /** render an array of polylines into the matrix */
-  void stg_matrix_polylines( stg_matrix_t* matrix,
-			     double x, double y, double a,
-			     stg_polyline_t* polylines, int num_polylines,
-			     void* object );
 
   /** remove all reference to an object from the matrix
    */
   void stg_matrix_remove_object( stg_matrix_t* matrix, void* object );
 
-
-  // bounding box intersection  ----------------------------------------------------=
-  
-  stg_endpoint_t* insert_endpoint_sorted( stg_endpoint_t* head, stg_endpoint_t* ep );
-  stg_endpoint_t* remove_endpoint( stg_endpoint_t* head, stg_endpoint_t* ep );
-  void stg_polygons_intersect_incr( stg_polygon_t* poly1, stg_polygon_t* poly2 );
-  void stg_polygons_intersect_decr( stg_polygon_t* poly1, stg_polygon_t* poly2 );
 
   // RAYTRACE ITERATORS -------------------------------------------------------------
     
@@ -603,7 +453,7 @@ extern "C" {
   {
     double x,y,z; // hit location
     double range; // range to hit location
-    stg_model_t* mod; // hit model
+    StgModel* mod; // hit model
   } stg_hit_t;
 
   typedef struct
@@ -626,17 +476,18 @@ extern "C" {
   
   typedef enum { PointToPoint=0, PointToBearingRange } itl_mode_t;
   
-  typedef int(*stg_itl_test_func_t)(stg_model_t* finder, stg_model_t* found );
+  typedef int(*stg_itl_test_func_t)(StgModel* finder, StgModel* found );
   
   itl_t* itl_create( double x, double y, double a, double b, 
 		     stg_matrix_t* matrix, itl_mode_t pmode );
   
   void itl_destroy( itl_t* itl );
   void itl_raytrace( itl_t* itl );
-  
-  stg_model_t* itl_first_matching( itl_t* itl, 
+  StgModel* itl_next( itl_t* itl );
+
+  StgModel* itl_first_matching( itl_t* itl, 
 				   stg_itl_test_func_t func, 
-				   stg_model_t* finder );
+				   StgModel* finder );
 
   /** @} */
 
@@ -646,45 +497,36 @@ extern "C" {
   */
   
   // C wrappers for C++ worldfile functions
-  void wf_warn_unused( void );
-  int wf_property_exists( int section, char* token );
-  int wf_read_int( int section, char* token, int def );
-  double wf_read_length( int section, char* token, double def );
-  double wf_read_angle( int section, char* token, double def );
-  double wf_read_float( int section, char* token, double def );
-  const char* wf_read_tuple_string( int section, char* token, int index, char* def );
-  double wf_read_tuple_float( int section, char* token, int index, double def );
-  double wf_read_tuple_length( int section, char* token, int index, double def );
-  double wf_read_tuple_angle( int section, char* token, int index, double def );
-  const char* wf_read_string( int section, char* token, char* def );
+/*   void wf_warn_unused( void ); */
+/*   int wf_property_exists( int section, char* token ); */
+/*   int wf_read_int( int section, char* token, int def ); */
+/*   double wf_read_length( int section, char* token, double def ); */
+/*   double wf_read_angle( int section, char* token, double def ); */
+/*   double wf_read_float( int section, char* token, double def ); */
+/*   const char* wf_read_tuple_string( int section, char* token, int index, char* def ); */
+/*   double wf_read_tuple_float( int section, char* token, int index, double def ); */
+/*   double wf_read_tuple_length( int section, char* token, int index, double def ); */
+/*   double wf_read_tuple_angle( int section, char* token, int index, double def ); */
+/*   const char* wf_read_string( int section, char* token, char* def ); */
 
-  void wf_write_int( int section, char* token, int value );
-  void wf_write_length( int section, char* token, double value );
-  void wf_write_angle( int section, char* token, double value );
-  void wf_write_float( int section, char* token, double value );
-  void wf_write_tuple_string( int section, char* token, int index, char* value );
-  void wf_write_tuple_float( int section, char* token, int index, double value );
-  void wf_write_tuple_length( int section, char* token, int index, double value );
-  void wf_write_tuple_angle( int section, char* token, int index, double value );
-  void wf_write_string( int section, char* token, char* value );
+/*   void wf_write_int( int section, char* token, int value ); */
+/*   void wf_write_length( int section, char* token, double value ); */
+/*   void wf_write_angle( int section, char* token, double value ); */
+/*   void wf_write_float( int section, char* token, double value ); */
+/*   void wf_write_tuple_string( int section, char* token, int index, char* value ); */
+/*   void wf_write_tuple_float( int section, char* token, int index, double value ); */
+/*   void wf_write_tuple_length( int section, char* token, int index, double value ); */
+/*   void wf_write_tuple_angle( int section, char* token, int index, double value ); */
+/*   void wf_write_string( int section, char* token, char* value ); */
 
-  void wf_save( void );
-  void wf_load( char* path );
-  int wf_section_count( void );
-  const char* wf_get_section_type( int section );
-  int wf_get_parent_section( int section );
-  const char* wf_get_filename( void);
+/*   void wf_save( void ); */
+/*   void wf_load( char* path ); */
+/*   int wf_section_count( void ); */
+/*   const char* wf_get_section_type( int section ); */
+/*   int wf_get_parent_section( int section ); */
+/*   const char* wf_get_filename( void); */
 
   /** @} */
-
-  // CALLBACK WRAPPERS ------------------------------------------------------------
-
-  // callback wrappers for other functions
-  void model_update_cb( gpointer key, gpointer value, gpointer user );
-  void model_print_cb( gpointer key, gpointer value, gpointer user );
-  void model_destroy_cb( gpointer mod );
-  
-  void model_call_callbacks( stg_model_t* mod, void* address );
 
 
 /** @} */  
@@ -820,9 +662,20 @@ the worldfile c++ code */
 
 
 
-#ifdef __cplusplus
-}
-#endif 
+//#ifdef __cplusplus
+//}
+//#endif 
+
+
+// list iterator macros
+#define LISTFUNCTION( LIST, TYPE, FUNC ) for( GList* it=LIST; it; it=it->next ) FUNC((TYPE)it->data);
+ 
+#define LISTMETHOD( LIST, TYPE, METHOD ) for( GList* it=LIST; it; it=it->next ) ((TYPE)it->data)->METHOD();
+ 
+#define LISTFUNCTIONARG( LIST, TYPE, FUNC, ARG ) for( GList* it=LIST; it; it=it->next ) FUNC((TYPE)it->data, ARG);
+ 
+#define LISTMETHODARG( LIST, TYPE, METHOD, ARG ) for( GList* it=LIST; it; it=it->next ) ((TYPE)it->data)->METHOD(ARG);
+ 
 
   // Error macros - output goes to stderr
 #define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)

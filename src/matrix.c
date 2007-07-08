@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.22.4.3 2007-06-22 17:20:50 rtv Exp $
+ * $Id: matrix.c,v 1.22.4.4 2007-07-08 01:44:09 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -10,12 +10,13 @@
 
 #include "stage_internal.h"
 #include "gui.h" // for layer definitions
+#include <GL/gl.h>
 
 //#define DEBUG
 
 // a list of displaylists - add debug stuff to the list here
 extern GList* dl_list;
-extern int dl_debug;
+//extern int dl_debug;
 
 stg_cell_t* stg_cell_create( stg_cell_t* parent, double x, double y, double size )
 {
@@ -176,7 +177,7 @@ void stg_cell_remove_object( stg_cell_t* cell, void* p )
 void stg_matrix_remove_object( stg_matrix_t* matrix, void* object )
 {
   // get the list of cells in which this object has been drawn
-  GSList* list = g_hash_table_lookup( matrix->ptable, object );
+  GSList* list = (GSList*)g_hash_table_lookup( matrix->ptable, object );
   
   // remove this object from each cell in the list      
   GSList* it;
@@ -207,8 +208,8 @@ void stg_matrix_lines( stg_matrix_t* matrix,
       double x2 = lines[l].x2;
       double y2 = lines[l].y2;
       
-      printf( "matrix line %.2f,%.2f to %.2f,%.2f\n",
-	      x1,y1, x2, y2 );
+      //printf( "matrix line %.2f,%.2f to %.2f,%.2f\n",
+      //      x1,y1, x2, y2 );
 
       // theta is constant so we compute it outside the loop
       double theta = atan2( y2-y1, x2-x1 );
@@ -289,14 +290,14 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 	    }
 
 	  // now the cell small enough, we add the object here
-	  cell->data = g_slist_prepend( cell->data, object );  	  
+	  cell->data = (GSList*)g_slist_prepend( (GSList*)cell->data, object );  	  
 	  
 	  // debug rendering
 	  //if( _render_matrix_deltas && ! cell->fig )
 	  stg_cell_render( cell );
 	  
 	  // add this object the hash table
-	  GSList* list = g_hash_table_lookup( matrix->ptable, object );
+	  GSList* list = (GSList*)g_hash_table_lookup( matrix->ptable, object );
 	  list = g_slist_prepend( list, cell );
 	  g_hash_table_insert( matrix->ptable, object, list );      
 	  
@@ -437,50 +438,8 @@ void stg_matrix_block( stg_matrix_t* matrix,
       line.x2 = origin->x + pt2->x * cosa - pt2->y * sina;
       line.y2 = origin->y + pt2->x * sina + pt2->y * cosa; 
       
-      stg_matrix_lines( matrix, &line, 1, block->mod );
+      stg_matrix_lines( matrix, &line, 1, block );
     }
-}
-
-
-// render an array of [num_polys] polygons
-void stg_matrix_polygons( stg_matrix_t* matrix,
-			  double x, double y, double a,
-			  stg_polygon_t* polys, int num_polys,
-			  void* object )
-{
-  int p;
-  for( p=0; p<num_polys; p++ )
-    {
-      stg_polygon_t* poly =  &polys[p];
-
-      // need at leats three points for a meaningful polygon
-      if( poly->points->len > 2 )
-	{
-	  int count = poly->points->len;
-	  int p;
-	  for( p=0; p<count; p++ ) // for
-	    {
-	      stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	  
-	      stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % count);
-	      
-	      // TODO - could be a little faster - we only really need
-	      // to do the geom for each point once, as the polygon is
-	      // a connected polyline
-
-	      stg_line_t line;
-	      line.x1 = x + pt1->x * cos(a) - pt1->y * sin(a);
-	      line.y1 = y + pt1->x * sin(a) + pt1->y * cos(a); 
-	      
-	      line.x2 = x + pt2->x * cos(a) - pt2->y * sin(a);
-	      line.y2 = y + pt2->x * sin(a) + pt2->y * cos(a); 
-	      
-	      stg_matrix_lines( matrix, &line, 1, object );
-	    }
-	}
-      //else
-      //PRINT_WARN( "attempted to matrix render a polygon with less than 3 points" ); 
-    }
-      
 }
 
 
