@@ -136,9 +136,11 @@ void stg_block_list_scale( GList* blocks,
     return;
 
   // assuming the blocks currently fit in a square +/- one billion units
-  double minx, miny, maxx, maxy;
+  double minx, miny, maxx, maxy; 
   minx = miny =  BILLION;
   maxx = maxy = -BILLION;
+
+  double maxz = 0;
   
   GList* it;
   for( it=blocks; it; it=it->next ) // examine all the blocks
@@ -157,12 +159,18 @@ void stg_block_list_scale( GList* blocks,
 	  assert( ! isnan( pt->x ) );
 	  assert( ! isnan( pt->y ) );
 	}      
+
+      
+      if( (block->height + block->z_offset) > maxz )
+	maxz = (block->height + block->z_offset);
     }
 
   // now normalize all lengths so that the lines all fit inside
   // the specified rectangle
   double scalex = (maxx - minx);
   double scaley = (maxy - miny);
+
+  double scalez = size->z / maxz;
 
   for( it=blocks; it; it=it->next ) // examine all the blocks again
     { 
@@ -180,6 +188,9 @@ void stg_block_list_scale( GList* blocks,
 	  assert( ! isnan( pt->x ) );
 	  assert( ! isnan( pt->y ) );
 	}
+
+      block->height *= scalez;
+      block->z_offset *= scalez;
 
       // recalculate the GL drawlist
       stg_block_update( block );

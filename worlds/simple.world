@@ -25,10 +25,10 @@ interval_real 100  # real-time interval between simulation updates in millisecon
 # configure the GUI window
 window
 ( 
-  size [ 633.000 655.000 ] 
-  center [7.990 -3.040] 
-  rotate [ 0.000 0.000 ]
-  scale 35.361 
+  size [ 974.000 884.000 ] 
+  center [-514.010 103.960] 
+  rotate [ 1.371 1.110 ]
+  scale 199.855 
   show_bboxes 0
   show_grid 1
 )
@@ -57,31 +57,46 @@ pioneer2dx
 (
   name "robot1"
   color "red"
-  pose [-3.670 1.289 0.000 0.000]
-  sick_laser() 
+  pose [-2.964 1.415 0.000 773.492]
+  sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
 )
 
 pioneer2dx
 (
-  name "robot2"
+  name "greenrobot"
   color "green"
-  pose [4.374 4.689 0.000 27.811]
-  #sick_laser()
+  pose [-1.566 1.866 0.000 -341.747]
+  sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
+)
+
+pioneer2dx
+(
+  name "bluerobot"
+  color "LightBlue"
+  pose [-2.014 1.240 0.000 414.558]
+  sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
 )
 
 triangle
 (
   color "yellow"
-  pose [5.775 -2.860 0.000 163.293]
+  pose [6.342 4.741 0.000 206.265]
   size [1 1 1]
 )
 
-model
+triangle
 (
   color "orange"
-  #bitmap "bitmaps/cave.png"
-  bitmap "bitmaps/space_invader.png"
-  pose [2.031 5.013 0.000 0.000]
-  size [1 1 0.2]
+  pose [4.515 5.393 0.000 240.642]
+  size [1 1 0.5]
 )
+
+#model
+#(
+#  color "orange"
+#  #bitmap "bitmaps/cave.png"
+#  bitmap "bitmaps/space_invader.png"
+#  pose [2.031 5.013 0.000 0.000]
+#  size [1 1 0.2]
+#)
 

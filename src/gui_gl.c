@@ -1047,7 +1047,7 @@ motion_notify_event (GtkWidget      *widget,
     }
   else if( event->state & GDK_BUTTON1_MASK && world->win->dragging )
     {
-      printf( "dragging an object\n" );
+      //printf( "dragging an object\n" );
 
       if( world->win->selected_models )
 	{
@@ -1075,7 +1075,7 @@ motion_notify_event (GtkWidget      *widget,
     }  
   else if( event->state & GDK_BUTTON3_MASK && world->win->dragging ) 
     {
-      printf( "rotating an object\n" );
+      //printf( "rotating an object\n" );
       
       if( world->win->selected_models )
 	{
@@ -1084,7 +1084,7 @@ motion_notify_event (GtkWidget      *widget,
 	  widget_to_world( widget, event->x, event->y,
 			   world, &obx, &oby, &obz );
 	  
-	  printf( "rotating model to %f %f\n", obx, oby );
+	  //printf( "rotating model to %f %f\n", obx, oby );
 	  
 	  for( GList* it = world->win->selected_models;
 	       it;
@@ -1128,7 +1128,7 @@ button_release_event (GtkWidget      *widget,
 		      GdkEventButton *event,
 		      stg_world_t*  world )
 {
-  puts( "RELEASE" );
+  //puts( "RELEASE" );
 
   // stop dragging models when mouse 1 is released
   if( event->button == 1 || event->button == 3 )

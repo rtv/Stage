@@ -1,4 +1,4 @@
-/*  $Id: replace.h,v 1.2 2005-02-08 15:37:21 gerkey Exp $
+/*  $Id: replace.h,v 1.2.6.1 2007-07-08 02:08:53 rtv Exp $
  *
  * replacement function prototypes
  */
@@ -76,13 +76,13 @@ int poll (struct pollfd *fds, unsigned long int nfds, int timeout);
 #include <sys/poll.h>  /* for poll(2) */
 #endif // !HAVE_POLL
 
-#if !HAVE_SCANDIR
-#include <sys/types.h>
-#include <dirent.h>
-int scandir(const char *dir, struct dirent ***namelist,
-            int (*select)(const struct dirent *),
-            int (*compar)(const struct dirent **, const struct dirent **));
-#endif //!HAVE_SCANDIR
+  //#if !HAVE_SCANDIR
+  //#include <sys/types.h>
+  //#include <dirent.h>
+  //int scandir(const char *dir, struct dirent ***namelist,
+  //        int (*select)(const struct dirent *),
+  //        int (*compar)(const struct dirent **, const struct dirent **));
+  //#endif //!HAVE_SCANDIR
 
 #if !HAVE_DIRNAME
   char * dirname (char *path);
