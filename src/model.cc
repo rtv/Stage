@@ -37,6 +37,8 @@
 
 //extern int _stg_disable_gui;
 
+extern int dl_debug;
+
 /** @ingroup stage 
     @{ 
 */
@@ -325,7 +327,11 @@ StgModel::StgModel( stg_world_t* world,
 
   // now we can add the basic square shape
   this->AddBlockRect( 0,0,1,1 );
+
+  this->data = this->cfg = this->cmd = NULL;
   
+  this->subs = 0;
+
   // TODO!
   // now it's safe to create the GUI components
   //this->GuiInit();
@@ -505,11 +511,13 @@ void StgModel::Map( bool render )
       for( GList* it=blocks; it; it=it->next )
 	stg_matrix_block( this->world->matrix,
 			  &org,
-			  (stg_block_t*)it->data );
-			  
+			  (stg_block_t*)it->data );      
     }
   else 
-    stg_matrix_remove_object( this->world->matrix, this ); // BUG - remove blocks, not models
+    // remove all the blcks from the matrix
+    if( blocks )
+      for( GList* it=blocks; it; it=it->next )
+	stg_matrix_remove_object( this->world->matrix, it->data ); 
 } 
 
 
@@ -592,15 +600,14 @@ void StgModel::Update( void )
 
 void StgModel::Draw( void )
 {
-  printf( "%s.Draw()\n",
-	  this->token );
+  //printf( "%s.Draw()\n",
+  //  this->token );
 
   glPushMatrix();
   
   // move into this model's local coordinate frame
   gl_pose_shift( &this->pose );
   gl_pose_shift( &this->geom.pose );
-
 
   // todo - we don't need to do this so often
 

@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui_gtk.cc,v 1.1.2.1 2007-07-08 01:44:09 rtv Exp $
+CVS: $Id: gui_gtk.cc,v 1.1.2.2 2007-07-08 05:24:04 rtv Exp $
 */
 
 
@@ -1252,7 +1252,7 @@ int gui_world_update( stg_world_t* world )
    
   if( world->win->dirty )
     {
-      puts( "Redrawing window" );
+      //puts( "Redrawing window" );
 
       /* Invalidate the whole window to trigger a redraw */
       gdk_window_invalidate_rect( world->win->canvas->window, 

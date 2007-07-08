@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.22.4.4 2007-07-08 01:44:09 rtv Exp $
+ * $Id: matrix.c,v 1.22.4.5 2007-07-08 05:24:04 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -15,8 +15,8 @@
 //#define DEBUG
 
 // a list of displaylists - add debug stuff to the list here
-extern GList* dl_list;
-//extern int dl_debug;
+//extern GList* dl_list;
+extern int dl_debug;
 
 stg_cell_t* stg_cell_create( stg_cell_t* parent, double x, double y, double size )
 {
@@ -52,23 +52,28 @@ void stg_cell_unrender( stg_cell_t* cell )
 void stg_cell_render( stg_cell_t* cell )
 {
   //puts( "cell render" );
-  glRectf( cell->x, cell->y, cell->x+cell->size, cell->y+cell->size );
+
+  //glPolygonMode( GL_FRONT_AND_BACK, GL_LINES );
+
+  double dx = cell->size/2.0;
+
+  glRectf( cell->x-dx , cell->y-dx, cell->x+dx, cell->y+dx );
 
   //printf( "cell %.2f,%.2f size %.2f\n", 
   //  cell->x, cell->y, cell->size );
 }
 
-/* void stg_cell_render_tree( stg_cell_t* cell ) */
-/* { */
-/*   //stg_cell_render( cell ); */
-
-/*   if( cell->children[0] ) */
-/*     { */
-/*       int i; */
-/*       for( i=0; i<4; i++ ) */
-/* 	stg_cell_render_tree( cell->children[i] ); */
-/*     } */
-/* } */
+void stg_cell_render_tree( stg_cell_t* cell )
+{
+  stg_cell_render( cell );
+  
+  if( cell->children[0] )
+    {
+      int i;
+      for( i=0; i<4; i++ )
+	stg_cell_render_tree( cell->children[i] );
+    }
+}
 
 void stg_cell_unrender_tree( stg_cell_t* cell )
 {
@@ -210,7 +215,7 @@ void stg_matrix_lines( stg_matrix_t* matrix,
       
       //printf( "matrix line %.2f,%.2f to %.2f,%.2f\n",
       //      x1,y1, x2, y2 );
-
+      
       // theta is constant so we compute it outside the loop
       double theta = atan2( y2-y1, x2-x1 );
       double m = tan(theta); // line gradient 

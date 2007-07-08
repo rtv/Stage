@@ -185,11 +185,11 @@ void StgModel::Load( void )
       stg_block_list_destroy( this->blocks );
       this->blocks = NULL;
 
-      printf( "found %d rects\n", rect_count );
+      //printf( "found %d rects\n", rect_count );
       
       if( rects && (rect_count > 0) )
 	{
-	  puts( "loading rects" );
+	  //puts( "loading rects" );
 	  for( int r=0; r<rect_count; r++ )
 	    this->AddBlockRect( rects[r].pose.x, rects[r].pose.y, 
 				rects[r].size.x, rects[r].size.y );
@@ -215,7 +215,7 @@ void StgModel::Load( void )
 	stg_block_list_destroy( this->blocks );
 	this->blocks = NULL;
 
-	printf( "expecting %d blocks\n", blockcount );
+	//printf( "expecting %d blocks\n", blockcount );
 	
 	char key[256]; 
 	for( int l=0; l<blockcount; l++ )
@@ -223,8 +223,8 @@ void StgModel::Load( void )
 	    snprintf(key, sizeof(key), "block[%d].points", l);
 	    int pointcount = wf->ReadInt(this->id,key,0);
 	    
-	    printf( "expecting %d points in block %d\n",
-	      pointcount, l );
+	    //printf( "expecting %d points in block %d\n",
+	    //pointcount, l );
 	    
 	    stg_point_t* pts = stg_points_create( pointcount );
 	    

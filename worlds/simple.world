@@ -5,14 +5,11 @@
 # defines Pioneer-like robots
 include "pioneer.inc"
 
-
 # defines 'map' object used for floorplans
 include "map.inc"
 
-
 # defines sick laser
 include "sick.inc"
-
 
 # size of the world in meters
 size [16 16]
@@ -25,10 +22,10 @@ interval_real 100  # real-time interval between simulation updates in millisecon
 # configure the GUI window
 window
 ( 
-  size [ 974.000 884.000 ] 
-  center [-514.010 103.960] 
-  rotate [ 1.371 1.110 ]
-  scale 199.855 
+  size [ 779.000 820.000 ] 
+  center [-0.010 -4.040] 
+  rotate [ 0.000 0.000 ]
+  scale 46.749 
   show_bboxes 0
   show_grid 1
 )
@@ -49,6 +46,7 @@ floorplan
 ( 
   size [16 16 0.5]
   bitmap "bitmaps/cave.png"
+  #size [40 20 0.4]
   #bitmap "bitmaps/hospital_section.png"
 )
 

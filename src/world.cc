@@ -433,17 +433,17 @@ StgModel* stg_world_get_model( stg_world_t* world, stg_id_t mid )
 void stg_world_add_model( stg_world_t* world, 
 			  StgModel*  mod  )
 {
-  printf( "World adding model %d %s to hash tables ", mod->id, mod->Token() );  
+  //printf( "World adding model %d %s to hash tables ", mod->id, mod->Token() );  
   g_hash_table_replace( world->models, &mod->id, mod );
   g_hash_table_replace( world->models_by_name, mod->Token(), mod );
   
   // if this is a top level model, it's a child of the world
   if( mod->Parent() == NULL )
     {
-      printf( "and child list", mod->id, mod->Token() );  
+      //printf( "and child list", mod->id, mod->Token() );  
       world->children = g_list_append( world->children, mod );  
     }
-  puts("");
+  //puts("");
 }
 
 

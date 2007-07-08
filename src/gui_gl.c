@@ -295,6 +295,8 @@ void gui_enable_alpha( stg_world_t* world, int enable )
       glDisable(GL_LINE_SMOOTH); 
       world->win->show_alpha = FALSE;
     }
+
+  world->win->dirty = true;
 }
 
 void widget_to_world( GtkWidget* widget, int px, int py, 
@@ -485,13 +487,7 @@ void make_dirty( StgModel* mod )
 
 void gl_model_selected( StgModel* mod, void* user )
 {
-  // get the display list associated with this model
-  //int list = gui_model_get_displaylist( mod, LIST_SELECTED );
-  
-  //glNewList( list, GL_COMPILE );
-
   glPushMatrix();
-  //glPushAttrib( GL_ALL_ATTRIB_BITS );
 
   stg_pose_t pose;
   mod->GetPose( &pose );
@@ -499,24 +495,26 @@ void gl_model_selected( StgModel* mod, void* user )
   mod->GetGeom( &geom );
 
   gl_pose_shift( &pose );
+  gl_pose_shift( &geom.pose );
 
-  push_color_rgba( 1, 0, 0, 1 );
-  
   double dx = geom.size.x / 2.0 * 1.3;
   double dy = geom.size.y / 2.0 * 1.3;
 
   //glTranslatef( 0,0,0.1 );
 
+  //push_color_rgb( 1, 0.5, 0.5 );
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  //glRectf( -dx, -dy, dx, dy );
+
+  push_color_rgb( 1, 0, 0 );
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glLineWidth( 2 );
   glRectf( -dx, -dy, dx, dy );
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   pop_color();
+  //pop_color();
 
   glPopMatrix();
-
-  //glPopAttrib();
-  //glEndList();
 }
 
 
@@ -809,7 +807,7 @@ configure_event (GtkWidget         *widget,
 
 void draw_world(  stg_world_t* world )
 {
-  puts( "draw_world" );
+  //puts( "draw_world" );
 
   gui_window_t* win = (gui_window_t*)world->win;
   GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable( win->canvas );
@@ -927,6 +925,15 @@ void draw_world(  stg_world_t* world )
   // draw the model bounding boxes
   //g_hash_table_foreach( world->models, (GHFunc)model_draw_bbox, NULL);
 
+  //glCallList( dl_debug );
+
+/*   glTranslatef( 0,0,1 ); */
+/*   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); */
+/*   push_color_rgb( 0,1,0 ); */
+/*   stg_cell_render_tree( world->matrix->root ); */
+/*   glTranslatef( 0,0,-1 ); */
+/*   pop_color(); */
+
   g_list_foreach( world->win->selected_models, (GFunc)gl_model_selected, NULL );
 
   // draw the models
@@ -946,8 +953,7 @@ void draw_world(  stg_world_t* world )
   
 
 
-  glCallList( dl_debug );
-  gl_coord_shift( 0,0,-2,0 );
+  //gl_coord_shift( 0,0,-2,0 );
 
   //if( win->show_thumbnail ) // if drawing the whole world mini-view
       //draw_thumbnail( world );
@@ -1170,7 +1176,7 @@ button_press_event (GtkWidget      *widget,
 		   world, &obx, &oby, &obz );
   
   // ctrl is pressed - choose this point as the center of rotation
-  printf( "mouse click at (%.2f %.2f %.2f)\n", obx, oby, obz );
+  //printf( "mouse click at (%.2f %.2f %.2f)\n", obx, oby, obz );
   
   world->win->click_point.x = obx;
   world->win->click_point.y = oby;
@@ -1220,9 +1226,6 @@ button_press_event (GtkWidget      *widget,
 	  // unless shift is held, we empty the list of selected objects
 	  if( (event->state & modifiers) != GDK_SHIFT_MASK)
 	    {
-	      // shift is pressed 
-	      printf( "SHIFT-click\n" );
-	      
 	      g_list_free( world->win->selected_models );
 	      world->win->selected_models = NULL;
 	    }

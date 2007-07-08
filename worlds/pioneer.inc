@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.5 2007-07-08 02:08:53 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.6 2007-07-08 05:24:05 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -73,20 +73,27 @@ define pioneer2dx position
   # estimated mass in KG
   mass 15.0 
 
- # this set of blocks approximates the shape of a pioneer
 
+
+  # use the sonar array defined above
+  #p2dx_sonar() 
+
+  # differential steering model
+  drive "diff"
+
+  # this set of blocks approximates the shape of a pioneer
   blocks 6
 
   # main body
   block[0].points 8
-  block[0].point[0] [  0.14  0.07 ]
+  block[0].point[0] [  0.14  0.070 ]
   block[0].point[1] [  0.12  0.115 ]
   block[0].point[2] [ -0.18  0.115 ]
-  block[0].point[3] [ -0.20  0.07 ]
-  block[0].point[4] [ -0.20 -0.07 ]
+  block[0].point[3] [ -0.20  0.070 ]
+  block[0].point[4] [ -0.20 -0.070 ]
   block[0].point[5] [ -0.18 -0.115 ]
   block[0].point[6] [  0.12 -0.115 ]
-  block[0].point[7] [  0.14 -0.07 ]
+  block[0].point[7] [  0.14 -0.070 ]
   block[0].height 0.12
   block[0].z_offset 0.04
 
@@ -119,54 +126,41 @@ define pioneer2dx position
  
   # sonar case
   block[5].points 12
-  block[5].point[11] [ 0.115 0.115 ]
-  block[5].point[10] [ 0.150 0.080 ]
-  block[5].point[9] [ 0.170 0.025 ]
-  block[5].point[8] [ 0.170 -0.025  ]
-  block[5].point[7] [ 0.150 -0.080  ]
-  block[5].point[6] [ 0.115 -0.115  ]
-  block[5].point[5] [ -0.195 -0.115  ]
-  block[5].point[4] [ -0.230 -0.080  ]
-  block[5].point[3] [ -0.250 -0.025  ]
-  block[5].point[2] [ -0.250 0.025 ]
-  block[5].point[1] [ -0.230 0.080 ]
-  block[5].point[0] [ -0.195 0.115  ]
+  block[5].point[11] [  0.115  0.115 ]
+  block[5].point[10] [  0.150  0.080 ]
+  block[5].point[9]  [  0.170  0.025 ]
+  block[5].point[8]  [  0.170 -0.025 ]
+  block[5].point[7]  [  0.150 -0.080 ]
+  block[5].point[6]  [  0.115 -0.115 ]
+  block[5].point[5]  [ -0.195 -0.115 ]
+  block[5].point[4]  [ -0.230 -0.080 ]
+  block[5].point[3]  [ -0.250 -0.025 ]
+  block[5].point[2]  [ -0.250  0.025 ]
+  block[5].point[1]  [ -0.230  0.080 ]
+  block[5].point[0]  [ -0.195  0.115 ]
   block[5].height 0.05
   block[5].z_offset 0.16
 
   # lid
   block[4].points 16
-  block[4].point[0] [  0.18  0.0 ]
-  block[4].point[1] [  0.17  0.07 ]
-  block[4].point[2] [  0.14  0.12 ]
-  block[4].point[3] [  0.09  0.16 ]
-  block[4].point[4] [  -0.08 0.16 ]
-  block[4].point[5] [  -0.10  0.14 ]
-  block[4].point[6] [ -0.20  0.14 ]
-  block[4].point[7] [ -0.24  0.09 ]
-
-  block[4].point[8] [ -0.26  0.0 ]
-
-  block[4].point[9] [ -0.24 -0.09 ]
+  block[4].point[0]  [  0.18  0.00 ]
+  block[4].point[1]  [  0.17  0.07 ]
+  block[4].point[2]  [  0.14  0.12 ]
+  block[4].point[3]  [  0.09  0.16 ]
+  block[4].point[4]  [ -0.08  0.16 ]
+  block[4].point[5]  [ -0.10  0.14 ]
+  block[4].point[6]  [ -0.20  0.14 ]
+  block[4].point[7]  [ -0.24  0.09 ]
+  block[4].point[8]  [ -0.26  0.00 ]
+  block[4].point[9]  [ -0.24 -0.09 ]
   block[4].point[10] [ -0.20 -0.14 ]
-  block[4].point[11] [  -0.10  -0.14 ]
-  block[4].point[12] [  -0.08 -0.16 ]
-
-  block[4].point[13] [  0.09  -0.16 ]
-  block[4].point[14] [  0.14  -0.12 ]
-  block[4].point[15] [  0.17  -0.07 ]
-
-
+  block[4].point[11] [ -0.10 -0.14 ]
+  block[4].point[12] [ -0.08 -0.16 ]
+  block[4].point[13] [  0.09 -0.16 ]
+  block[4].point[14] [  0.14 -0.12 ]
+  block[4].point[15] [  0.17 -0.07 ]
   block[4].height 0.01
   block[4].z_offset 0.21
-
-
-  # use the sonar array defined above
-  #p2dx_sonar() 
-
-  # differential steering model
-  drive "diff"
-
 ) 
 
 # The AmigoBot sonar array
