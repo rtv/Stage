@@ -147,12 +147,16 @@ model
   
 void StgModel::AddBlock( stg_point_t* pts, 
 			 size_t pt_count,
-			 stg_meters_t height,
-			 stg_meters_t z_offset )
+			 stg_meters_t zmin,
+			 stg_meters_t zmax,
+			 stg_color_t col,
+			 bool inherit_color )
 {
   this->blocks = 
     g_list_prepend( this->blocks, 
-		    stg_block_create( this, pts, pt_count, height, z_offset ));  
+		    stg_block_create( this, pts, pt_count, 
+				      zmin, zmax, 
+				      col, inherit_color ));  
   
   // force recreation of display lists before drawing
   this->dirty = true;
@@ -173,7 +177,7 @@ void StgModel::AddBlockRect( double x, double y,
   pts[3].y = y + height;
 
   // todo - fix this
-  this->AddBlock( pts, 4, this->geom.size.z, 0 );	      
+  this->AddBlock( pts, 4, 0, 1, 0, true );	      
 }
 
 stg_d_draw_t* stg_d_draw_create( stg_d_type_t type,
@@ -326,7 +330,7 @@ StgModel::StgModel( stg_world_t* world,
   this->gui_mask = this->parent ? 0 : STG_DEFAULT_MASK;
 
   // now we can add the basic square shape
-  this->AddBlockRect( 0,0,1,1 );
+  this->AddBlockRect( -0.5,-0.5,1,1 );
 
   this->data = this->cfg = this->cmd = NULL;
   

@@ -1,5 +1,5 @@
 /*
-CVS: $Id: gui_gtk.cc,v 1.1.2.2 2007-07-08 05:24:04 rtv Exp $
+CVS: $Id: gui_gtk.cc,v 1.1.2.3 2007-07-09 00:03:24 rtv Exp $
 */
 
 
@@ -166,7 +166,7 @@ void gui_action_follow( GtkToggleAction* action, stg_world_t* world );
 // TODO 
 /* void gui_action_raytrace( GtkToggleAction* action, stg_world_t* world );  */
 /* void gui_action_geom( GtkToggleAction* action, stg_world_t* world );  */
-/* void gui_action_matrixtree( GtkToggleAction* action, stg_world_t* world );  */
+void gui_action_matrixtree( GtkToggleAction* action, stg_world_t* world );  
 /* void gui_action_matrixocc( GtkToggleAction* action, stg_world_t* world );  */
 /* void gui_action_matrixdelta( GtkToggleAction* action, stg_world_t* world ); */
 
@@ -218,7 +218,7 @@ static GtkToggleActionEntry toggle_entries[] = {
 
 /*   { "DebugRays", NULL, "_Raytrace", "<alt>R", "Draw sensor rays", G_CALLBACK(gui_action_raytrace), 0 }, */
 /*   { "DebugGeom", NULL, "_Geometry", "<alt>G", "Draw model geometry", G_CALLBACK(gui_action_geom), 0 }, */
-/*   { "DebugMatrixTree", NULL, "Matrix _Tree", "<alt>T", "Show occupancy quadtree", G_CALLBACK(gui_action_matrixtree), 0 }, */
+   { "DebugMatrixTree", NULL, "Matrix _Tree", "<alt>T", "Show occupancy quadtree", G_CALLBACK(gui_action_matrixtree), 0 }, 
 /*   { "DebugMatrixOccupancy", NULL, "Matrix _Occupancy", "<alt>M", "Show occupancy grid", G_CALLBACK(gui_action_matrixocc), 0 }, */
 /*   { "DebugMatrixDelta", NULL, "Matrix _Delta", "<alt>D", "Show changes to quadtree", G_CALLBACK(gui_action_matrixdelta), 0 }, */
 };
@@ -276,13 +276,13 @@ static const char *ui_description =
 "      <menuitem action='Alpha'/>"
 "      <menuitem action='Trails'/>"
 "      <menuitem action='Thumbnail'/>"
+"      <menuitem action='DebugMatrixTree'/>" 
 "      <separator/>"
 "      <menuitem action='Derotate'/>"
 /* "      <separator/>" */
 /* "        <menu action='Debug'>" */
 /* "          <menuitem action='DebugRays'/>" */
 /* "          <menuitem action='DebugGeom'/>" */
-/* "          <menuitem action='DebugMatrixTree'/>" */
 /* "          <menuitem action='DebugMatrixOccupancy'/>" */
 /* "          <menuitem action='DebugMatrixDelta'/>" */
 /* "          <separator/>" */
@@ -427,6 +427,13 @@ void gui_action_pause( GtkToggleAction* action, stg_world_t* world )
 {
   PRINT_DEBUG( "Pause menu item" );
   world->paused = gtk_toggle_action_get_active( action );
+}
+
+void gui_action_matrixtree( GtkToggleAction* action, stg_world_t* world )
+{
+  PRINT_DEBUG( "MatrixTree menu item" );
+  world->win->show_matrix = gtk_toggle_action_get_active( action );
+  world->win->dirty = true;
 }
 
 

@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.6 2007-07-08 05:24:05 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.7 2007-07-09 00:03:24 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -56,13 +56,11 @@ define lid model
   block[0].point[7] [  0.23 -0.08 ]
 )
 
-
-
 # a Pioneer 2 or 3 in standard configuration
 define pioneer2dx position
 (
   # actual size
-  size [0.38 0.33 0.16] # sizes from MobileRobots' web site
+  size [0.44 0.38 0.22] # sizes from MobileRobots' web site
 
   # the pioneer's center of rotation is offset from its center of area
   origin [-0.04 0 0 0]
@@ -73,8 +71,6 @@ define pioneer2dx position
   # estimated mass in KG
   mass 15.0 
 
-
-
   # use the sonar array defined above
   #p2dx_sonar() 
 
@@ -82,85 +78,106 @@ define pioneer2dx position
   drive "diff"
 
   # this set of blocks approximates the shape of a pioneer
-  blocks 6
 
+  #  The geometry is from the Webots v5.3.0 manual. Thanks to Webots
+  #  and Olivier Michel. If Stage or Gazebo do not do what you want,
+  #  take a look at Webots. It's a very nice commercial simulator.
+
+  blocks 7
   # main body
   block[0].points 8
-  block[0].point[0] [  0.14  0.070 ]
-  block[0].point[1] [  0.12  0.115 ]
-  block[0].point[2] [ -0.18  0.115 ]
-  block[0].point[3] [ -0.20  0.070 ]
-  block[0].point[4] [ -0.20 -0.070 ]
-  block[0].point[5] [ -0.18 -0.115 ]
-  block[0].point[6] [  0.12 -0.115 ]
-  block[0].point[7] [  0.14 -0.070 ]
-  block[0].height 0.12
-  block[0].z_offset 0.04
+  block[0].point[7] [ -0.215 -0.1   ] 
+  block[0].point[6] [ -0.215  0.1   ]
+  block[0].point[5] [ -0.185  0.135 ]
+  block[0].point[4] [  0.095  0.135 ] 
+  block[0].point[3] [  0.11   0.08  ] 
+  block[0].point[2] [  0.11  -0.08  ] 
+  block[0].point[1] [  0.095 -0.135 ] 
+  block[0].point[0] [ -0.185 -0.135 ] 
+  block[0].z [ 0.059 0.234 ]
+
+
+  # sonar case
+  block[1].points 9
+  block[1].point[0]  [ -0.135  0.136 ]
+  block[1].point[1]  [ -0.185  0.136 ]
+  block[1].point[2]  [ -0.223  0.101 ]
+  block[1].point[3]  [ -0.248  0.054 ]
+  block[1].point[4]  [ -0.258  0     ]
+  block[1].point[5]  [ -0.248 -0.054 ]
+  block[1].point[6]  [ -0.223 -0.101 ]
+  block[1].point[7]  [ -0.185 -0.136 ]
+  block[1].point[8]  [ -0.135 -0.136 ]
+  block[1].z [ 0.184 0.234 ]
+
+  #sonar case
+  block[2].points 9
+  block[2].point[0]  [ 0.046 -0.136 ]
+  block[2].point[1]  [ 0.096 -0.136 ]
+  block[2].point[2]  [ 0.134 -0.101 ]
+  block[2].point[3]  [ 0.159 -0.054 ]
+  block[2].point[4]  [ 0.168  0     ]
+  block[2].point[5]  [ 0.159  0.054 ]
+  block[2].point[6]  [ 0.134  0.101 ]
+  block[2].point[7]  [ 0.096  0.136 ]
+  block[2].point[8]  [ 0.046  0.136 ]
+  block[2].z [ 0.184 0.234 ]
 
   # left wheel
-  block[1].points 4
-  block[1].point[0] [  0.08  0.16 ]
-  block[1].point[1] [ -0.08  0.16 ]
-  block[1].point[2] [ -0.08  0.12 ]
-  block[1].point[3] [  0.08  0.12 ]
-  block[1].height 0.16
-  block[1].z_offset 0.0
+  block[4].points 4
+  block[4].point[0] [  0.083  0.177 ]
+  block[4].point[1] [ -0.083  0.177 ]
+  block[4].point[2] [ -0.083  0.140 ]
+  block[4].point[3] [  0.083  0.140 ]
+  block[4].z [0 0.165 ]
+  block[4].color "gray10"
 
   # right wheel
-  block[2].points 4
-  block[2].point[0] [  0.08  -0.12 ]
-  block[2].point[1] [ -0.08  -0.12 ]
-  block[2].point[2] [ -0.08  -0.16 ]
-  block[2].point[3] [  0.08  -0.16 ]
-  block[2].height 0.16
-  block[2].z_offset 0.0
+  block[5].points 4
+  block[5].point[0] [  0.083  -0.14 ]
+  block[5].point[1] [ -0.083  -0.14 ]
+  block[5].point[2] [ -0.083  -0.177 ]
+  block[5].point[3] [  0.083  -0.177 ]
+  block[5].z [ 0 0.165 ]
+  block[5].color "gray10"
 
   # castor
-  block[3].points 4
-  block[3].point[3] [ -0.22  0.02 ]
-  block[3].point[2] [ -0.16  0.02 ]
-  block[3].point[1] [ -0.16 -0.02 ]
-  block[3].point[0] [ -0.22 -0.02 ]
-  block[3].height 0.04
-  block[3].z_offset 0.0
- 
-  # sonar case
-  block[5].points 12
-  block[5].point[11] [  0.115  0.115 ]
-  block[5].point[10] [  0.150  0.080 ]
-  block[5].point[9]  [  0.170  0.025 ]
-  block[5].point[8]  [  0.170 -0.025 ]
-  block[5].point[7]  [  0.150 -0.080 ]
-  block[5].point[6]  [  0.115 -0.115 ]
-  block[5].point[5]  [ -0.195 -0.115 ]
-  block[5].point[4]  [ -0.230 -0.080 ]
-  block[5].point[3]  [ -0.250 -0.025 ]
-  block[5].point[2]  [ -0.250  0.025 ]
-  block[5].point[1]  [ -0.230  0.080 ]
-  block[5].point[0]  [ -0.195  0.115 ]
-  block[5].height 0.05
-  block[5].z_offset 0.16
+  block[6].points 4
+  block[6].point[3] [ -0.2475  0.012 ]
+  block[6].point[2] [ -0.1825  0.012 ]
+  block[6].point[1] [ -0.1825 -0.012 ]
+  block[6].point[0] [ -0.2475 -0.012 ]
+  block[6].z [ 0 0.065 ]
+  block[6].color "gray10"
 
   # lid
-  block[4].points 16
-  block[4].point[0]  [  0.18  0.00 ]
-  block[4].point[1]  [  0.17  0.07 ]
-  block[4].point[2]  [  0.14  0.12 ]
-  block[4].point[3]  [  0.09  0.16 ]
-  block[4].point[4]  [ -0.08  0.16 ]
-  block[4].point[5]  [ -0.10  0.14 ]
-  block[4].point[6]  [ -0.20  0.14 ]
-  block[4].point[7]  [ -0.24  0.09 ]
-  block[4].point[8]  [ -0.26  0.00 ]
-  block[4].point[9]  [ -0.24 -0.09 ]
-  block[4].point[10] [ -0.20 -0.14 ]
-  block[4].point[11] [ -0.10 -0.14 ]
-  block[4].point[12] [ -0.08 -0.16 ]
-  block[4].point[13] [  0.09 -0.16 ]
-  block[4].point[14] [  0.14 -0.12 ]
-  block[4].point[15] [  0.17 -0.07 ]
-  block[4].height 0.01
-  block[4].z_offset 0.21
+  block[3].points 22
+  block[3].point[21]  [  0.174 0 ]
+  block[3].point[20]  [  0.166 -0.056 ]
+  block[3].point[19]  [  0.145 -0.107 ]
+  block[3].point[18]  [  0.112 -0.155 ]
+  block[3].point[17]  [  0.064 -0.190 ]
+  block[3].point[16]  [  -0.074 -0.190 ]
+  block[3].point[15]  [  -0.096 -0.160 ]
+  block[3].point[14]  [  -0.151 -0.160 ]
+  block[3].point[13]  [  -0.2   -0.155 ]
+  block[3].point[12]  [  -0.236 -0.107 ]
+  block[3].point[11] [  -0.256 -0.056 ]
+  block[3].point[10] [  -0.264  0     ]
+  block[3].point[9] [  -0.256  0.056 ]
+  block[3].point[8] [ -0.236  0.107 ]
+  block[3].point[7] [ -0.2    0.155 ]
+  block[3].point[6] [ -0.151  0.160 ]
+  block[3].point[5] [ -0.096  0.160 ]
+  block[3].point[4] [ -0.074  0.190 ]
+  block[3].point[3] [  0.064  0.190 ]
+  block[3].point[2] [  0.112  0.155 ]
+  block[3].point[1] [  0.145  0.107 ]
+  block[3].point[0] [  0.166  0.056 ]
+  block[3].z [ 0.234 0.24 ]
+  # a dark top looks more realistic, but isn't very useful 
+  # for a top-down view
+  #block[3].color "gray10"
 ) 
 
 # The AmigoBot sonar array

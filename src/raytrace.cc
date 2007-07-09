@@ -60,14 +60,11 @@ itl_t* itl_create( double x, double y, double a, double b,
   itl_t* itl = (itl_t*)g_new( itl_t, 1 );
   
   itl->matrix = matrix;
-  itl->x1 = x;
-  itl->y1 = y;
   itl->x = x;
   itl->y = y;
   itl->models = NULL;
   itl->index = 0;
   itl->range = 0;  
-  itl->incr = NULL;
 
   stg_bbox3d_t bbox;
 
@@ -79,14 +76,10 @@ itl_t* itl_create( double x, double y, double a, double b,
 	double bearing = a;	
 	itl->a = NORMALIZE(bearing);
 	itl->max_range = range;	
-	itl->x2 = x + range * cos( bearing ); 
-	itl->y2 = y + range * sin( bearing );		  
       }
       break;
     case PointToPoint:
       {
-	itl->x2 = a;
-	itl->y2 = b;
 	itl->a = atan2( b-y, a-x );
 	itl->max_range = hypot( a-x, b-y );       
       }
@@ -94,22 +87,10 @@ itl_t* itl_create( double x, double y, double a, double b,
     default:
       puts( "Stage Warning: unknown LineIterator mode" );
     }
-  
-  bbox.x.min = MIN( itl->x1, itl->x2 );
-  bbox.x.max = MAX( itl->x1, itl->x2 );
-  bbox.y.min = MIN( itl->y1, itl->y2 );
-  bbox.y.max = MAX( itl->y1, itl->y2 );
-  bbox.z.min = 0.0;
-  bbox.z.max = 1.0;
-  
-
   //printf( "a = %.2f remaining_range = %.2f\n", itl->a,
   //remaining_range ); fflush( stdout );
   
   // find all the models that overlap with this bbox
-
-
-  
   itl->cosa = cos( itl->a );
   itl->sina = sin( itl->a );
   itl->tana = tan( itl->a );
@@ -133,17 +114,19 @@ void itl_destroy( itl_t* itl )
 {
   if( itl )
     {
-      if( itl->hits )
-	{
-	  GList* it;
-	  for( it=itl->hits; it; it=it->next )
-	    g_free( it->data );
+//       if( itl->hits )
+// 	{
+// 	  GList* it;
+// 	  for( it=itl->hits; it; it=it->next )
+// 	    if( it->data )
+// 		g_free( it->data );
 	      
-	  g_list_free( itl->hits );
-	}
+// 	  g_list_free( itl->hits );
+// 	}
 
-      if( itl->incr ) 
-	g_free( itl->incr );
+//      if( itl->incr ) 
+      //g_free( itl->incr );
+
       g_free( itl );
     }
 }
@@ -174,21 +157,38 @@ int stg_model_height_check( StgModel* mod1, StgModel* mod2 )
   return( (look_height >= mod2_bottom) && (look_height <= mod2_top ) );
 }
 
+
 // returns the first model in the array that matches, else NULL.
 static StgModel* gslist_first_matching( GSList* list, 
-				    stg_itl_test_func_t func, 
-				    StgModel* finder )
+					stg_itl_test_func_t func, 
+					StgModel* finder )
 {
   for( ; list ; list=list->next )
     {
-      // height check
-      if( stg_model_height_check( finder, (StgModel*)(list->data) ) &&
-	  (*func)( finder, (StgModel*)(list->data) ) )
-	return (StgModel*)(list->data);
+      stg_block_t* block = (stg_block_t*)list->data;
+
+      // test the block's height. It must overlap the origin of the
+      // finding model
+
+      stg_pose_t gpose;
+      finder->GetGlobalPose( &gpose );
+
+      stg_geom_t geom;
+      finder->GetGeom( &geom );
+
+      //if( (block->zmin < gpose.z - geom.size.z/2.0) || 
+      //  (block->zmax > gpose.z + geom.size.z/2.0) )
+      //return NULL; // no overlap
+
+      StgModel* candidate = block->mod;
+
+      if( (*func)( finder, candidate ) )
+	return candidate;
     }
   
   return NULL; // nothing in the array matched
 }
+
 
 // in the tree that contains cell, find the smallest node at x,y. cell
 // does not have to be the root. non-recursive for speed.
@@ -230,64 +230,10 @@ stg_cell_t* stg_cell_locate( stg_cell_t* cell, double x, double y )
   return cell;
 }
 
-StgModel* itl_next2( itl_t* itl )
-{
-  if( itl->current )
-    {
-      stg_hit_t* hit = (stg_hit_t*)itl->current->data;
-      StgModel* mod = hit->mod;
-      itl->range = hit->range;
-      itl->x = hit->x;
-      itl->y = hit->y;
-      itl->current = itl->current->next;
-      return mod;
-    }
-  else
-    return NULL;
-}
-
-StgModel* itl_next( itl_t* itl )
-{
-  if( itl->current )
-    {
-      stg_hit_t* hit = (stg_hit_t*)itl->current->data;      
-      itl->range = hit->range;
-      itl->x = hit->x;
-      itl->y = hit->y;      
-      
-      // shift to the next hit
-      itl->current=itl->current->next;      
-
-      return hit->mod;
-    }  
-  
-  return NULL; // we ran out of models
-}
-
 StgModel* itl_first_matching( itl_t* itl, 
-				 stg_itl_test_func_t func, 
-				 StgModel* finder )
+			      stg_itl_test_func_t func, 
+			      StgModel* finder )
 {
-  for( ; itl->current; itl->current=itl->current->next )
-    {
-      stg_hit_t* hit = (stg_hit_t*)itl->current->data;
-      
-      printf( "testing model %s against matching func\n", hit->mod->Token() );
-
-      if( (*func)( hit->mod, finder ) )
-	{
-	  itl->range = hit->range;
-	  itl->x = hit->x;
-	  itl->y = hit->y;
-
-	  return hit->mod;
-	}
-    }
-
-  return NULL; // didn't find a model
-
-  //!
-
   itl->index = 0;
   itl->models = NULL;  
 
@@ -305,10 +251,11 @@ StgModel* itl_first_matching( itl_t* itl,
 	  return NULL;
 	}
       
-/*       if( fig_debug_rays ) // draw the cell rectangle */
-/* 	stg_rtk_fig_rectangle( fig_debug_rays, */
-/* 			       cell->x, cell->y, 0,  */
-/* 			       cell->size, cell->size, 0 );             */
+      //if( fig_debug_rays ) // draw the cell rectangle
+	  //stg_rtk_fig_rectangle( fig_debug_rays,
+      //	       cell->x, cell->y, 0, 
+      //		       cell->size, cell->size, 0 );            
+
       if( cell->data ) 
 	{ 
 	  StgModel* hitmod = 
@@ -375,13 +322,13 @@ StgModel* itl_first_matching( itl_t* itl,
 	    yleave-=0.00001;
 	}
       
-/*       if( fig_debug_rays ) // draw the cell rectangle */
-/* 	{ */
-/* 	  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFFBBBB ); */
-/* 	  stg_rtk_fig_arrow_ex( fig_debug_rays,  */
-/* 				itl->x, itl->y, xleave, yleave, 0.01 ); */
-/* 	  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFF0000 ); */
-/* 	} */
+      //     if( fig_debug_rays ) // draw the cell rectangle
+      //{
+      //  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFFBBBB );
+      //  stg_rtk_fig_arrow_ex( fig_debug_rays, 
+      //			itl->x, itl->y, xleave, yleave, 0.01 );
+      //  stg_rtk_fig_color_rgb32( fig_debug_rays, 0xFF0000 );
+      //}
 
       // jump to the leave point
       itl->range += hypot( yleave - itl->y, xleave - itl->x );
@@ -392,6 +339,3 @@ StgModel* itl_first_matching( itl_t* itl,
 
   return NULL; // we didn't find anything
 }
-
-
-

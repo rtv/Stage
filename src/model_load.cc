@@ -239,29 +239,29 @@ void StgModel::Load( void )
 		//      key, pt.x, pt.y );
 	      }
 	    
-/* 	    // block height */
-/* 	    double height = this->geom.size.z; */
-/* 	    snprintf(key, sizeof(key), "block[%d].height", l); */
-/* 	    if( wf->PropertyExists( this->id, key ) ) */
-/* 	      height = wf_read_length(this->id, key, height); */
+	    // block Z axis
+	    snprintf(key, sizeof(key), "block[%d].z", l);
 	    
-/* 	    // block color */
-/* 	    stg_color_t color = this->color; */
-/* 	    snprintf(key, sizeof(key), "block[%d].color", l); */
-/* 	    if( wf->PropertyExists( this->id, key ) ) */
-/* 	      color = stg_lookup_color( wf_read_string(this->id, key, NULL ));  */
+	    stg_meters_t zmin = 
+	      wf->ReadTupleLength(this->id, key, 0, 0.0 );
+
+	    stg_meters_t zmax = 
+	      wf->ReadTupleLength(this->id, key, 1, 1.0 );
 	    
-	    snprintf(key, sizeof(key), "block[%d].height", l);
+	    // block color
+	    stg_color_t blockcol = this->color;
+	    bool inherit_color = true;
+
+	    snprintf(key, sizeof(key), "block[%d].color", l);
+
+	    const char* colorstr = wf->ReadString( this->id, key, NULL );
+	    if( colorstr )
+	      {
+		blockcol = stg_lookup_color( colorstr );  
+		inherit_color = false;
+	      }
 	    
-	    stg_meters_t height = 
-	      wf->ReadLength(this->id, key,  this->geom.size.z );
-	    
-	    snprintf(key, sizeof(key), "block[%d].z_offset", l);
-	    
-	    stg_meters_t z_offset = 
-	      wf->ReadLength(this->id, key, 0 );
-	      
-	    this->AddBlock( pts, pointcount, height, z_offset );	
+	    this->AddBlock( pts, pointcount, zmin, zmax, blockcol, inherit_color );	
 	    
 	    stg_points_destroy( pts );
 	  }

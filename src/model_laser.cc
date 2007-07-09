@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -145,11 +145,12 @@ void stg_laser_config_print( stg_laser_config_t* slc )
 
 int laser_raytrace_match( StgModel* mod, StgModel* hitmod )
 {           
-  // Ignore my relatives and thiings that are invisible to lasers
-  //return( (!stg_model_is_related(mod,hitmod)) && 
-  //  (hitmod->laser_return > 0) );
+  stg_laser_return_t ret;
+  hitmod->GetLaserReturn( &ret );
 
-  return(  1 );//hitmod == mod->parent ); 
+  // Ignore my relatives and thiings that are invisible to lasers
+  return( //(! stg_model_is_related(mod,hitmod)) && 
+	 (mod != hitmod) && (ret > 0) );
 }	
 
 void StgModelLaser::Update( void )
@@ -199,10 +200,16 @@ void StgModelLaser::Update( void )
 			       PointToBearingRange );
       //				laser_raytrace_match );
       
-      //double range = cfg->range_max;
+      double range = cfg->range_max;
       
-      StgModel* hitmod = itl_next( itl );
-      
+      StgModel* hitmod;      
+      if((hitmod = itl_first_matching( itl, 
+				       laser_raytrace_match, 
+				       this ) ))
+	{
+	  range = itl->range;
+	}
+          
       if( hitmod )
 	{
 	  printf( "hit model %s\n", hitmod->Token() );
@@ -219,7 +226,7 @@ void StgModelLaser::Update( void )
       
       itl_destroy( itl );
       
-      // lower bound on range
+      // todo - lower bound on range
       
       // if the object is bright, it has a non-zero reflectance
       if( hitmod )

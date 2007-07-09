@@ -9,8 +9,10 @@
 stg_block_t* stg_block_create( StgModel* mod,
 			       stg_point_t* pts, 
 			       size_t pt_count,
-			       stg_meters_t height,
-			       stg_meters_t z_offset )
+			       stg_meters_t zmin,
+			       stg_meters_t zmax,
+			       stg_color_t color,
+			       bool inherit_color )
 {
   //printf( "Creating block with %d points\n", (int)pt_count );
   
@@ -19,8 +21,10 @@ stg_block_t* stg_block_create( StgModel* mod,
   block->mod = mod;
   block->pt_count = pt_count;
   block->pts = (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t));
-  block->z_offset = z_offset;
-  block->height = height;
+  block->zmin = zmin;
+  block->zmax = zmax;
+  block->color = color;
+  block->inherit_color = inherit_color;
 
   // generate an OpenGL displaylist for this block
   block->display_list = glGenLists( 1 );  
@@ -63,7 +67,7 @@ static void block_top( stg_block_t* b )
   glBegin(GL_POLYGON);
   for( unsigned int p=0; p<b->pt_count; p++)
     {
-    glVertex3f( b->pts[p].x, b->pts[p].y, b->z_offset + b->height );
+    glVertex3f( b->pts[p].x, b->pts[p].y, b->zmax );
     }
   glEnd();
 }
@@ -77,23 +81,27 @@ static void block_sides( stg_block_t* b )
   glBegin(GL_QUAD_STRIP);
   for( unsigned int p=0; p<b->pt_count; p++)
     {
-      glVertex3f( b->pts[p].x, b->pts[p].y, b->z_offset + b->height );
-      glVertex3f( b->pts[p].x, b->pts[p].y, b->z_offset );
+      glVertex3f( b->pts[p].x, b->pts[p].y, b->zmax );
+      glVertex3f( b->pts[p].x, b->pts[p].y, b->zmin );
     }
   // close the strip
-  glVertex3f( b->pts[0].x, b->pts[0].y, b->z_offset + b->height );
-  glVertex3f( b->pts[0].x, b->pts[0].y, b->z_offset );
+  glVertex3f( b->pts[0].x, b->pts[0].y, b->zmax );
+  glVertex3f( b->pts[0].x, b->pts[0].y, b->zmin );
   glEnd();
 }
 
 void stg_block_update( stg_block_t* b )
 { 
+  // draw filled color polygons
+
   glNewList( b->display_list, GL_COMPILE );
 
   stg_color_t color;
-  b->mod->GetColor( &color );
-
-  // draw filled color polygons
+  if( b->inherit_color )
+    b->mod->GetColor( &color );
+  else
+    color = b->color;
+    
   double gcol[4];	  
   stg_color_to_glcolor4dv( color, gcol );
 
@@ -108,7 +116,6 @@ void stg_block_update( stg_block_t* b )
   block_top( b );
   glDisable(GL_POLYGON_OFFSET_FILL);
   
-  pop_color();
 
   // draw the block outline in a darker version of the same color
   gcol[0]/=2.0;
@@ -124,6 +131,7 @@ void stg_block_update( stg_block_t* b )
   //glEnable(GL_BLEND);
   //glEnable(GL_LINE_SMOOTH);
 
+  pop_color();
   pop_color();
 
   glEndList();
@@ -161,8 +169,8 @@ void stg_block_list_scale( GList* blocks,
 	}      
 
       
-      if( (block->height + block->z_offset) > maxz )
-	maxz = (block->height + block->z_offset);
+      if( block->zmax > maxz )
+	maxz = block->zmax;
     }
 
   // now normalize all lengths so that the lines all fit inside
@@ -189,8 +197,9 @@ void stg_block_list_scale( GList* blocks,
 	  assert( ! isnan( pt->y ) );
 	}
 
-      block->height *= scalez;
-      block->z_offset *= scalez;
+      // todo - scale min properly
+      block->zmax *= scalez;
+      block->zmin *= scalez;
 
       // recalculate the GL drawlist
       stg_block_update( block );

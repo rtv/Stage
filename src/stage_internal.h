@@ -65,8 +65,10 @@ typedef int(*stg_model_callback_t)(StgModel* mod, void* user );
     StgModel* mod; //< model to which this block belongs
     stg_point_t* pts; //< points defining a polygon
     size_t pt_count; //< the number of points
-    stg_meters_t height; //<< vertical size of the block
-    stg_meters_t z_offset; //< offset along the z axis
+    stg_meters_t zmin; 
+    stg_meters_t zmax; 
+    stg_color_t color;
+    bool inherit_color;
     int display_list; //< id of the OpenGL displaylist to draw this block
   } stg_block_t;
   
@@ -78,7 +80,9 @@ typedef int(*stg_model_callback_t)(StgModel* mod, void* user );
 				 stg_point_t* pts, 
 				 size_t pt_count,
 				 stg_meters_t height,
-				 stg_meters_t z_offset );
+				 stg_meters_t z_offset,
+				 stg_color_t color,
+				 bool inherit_color );
     
   /** destroy a block, freeing all memory */
   void stg_block_destroy( stg_block_t* block );
@@ -454,40 +458,35 @@ void stg_d_render( stg_d_draw_t* d );
     double x,y,z; // hit location
     double range; // range to hit location
     StgModel* mod; // hit model
+    //stg_block_t* block; // hit block
   } stg_hit_t;
 
-  typedef struct
+ typedef struct
   {
     double x, y, a;
     double cosa, sina, tana;
     double range;
     double max_range;
     double* incr;
-    double x1,y1,x2,y2; // end points of the ray from x1,y1 to x2,y2
 
     GSList* models;
     int index;
     stg_matrix_t* matrix;    
-  
-    GList* hits;
-    GList* current;
-
   } itl_t;
-  
-  typedef enum { PointToPoint=0, PointToBearingRange } itl_mode_t;
-  
-  typedef int(*stg_itl_test_func_t)(StgModel* finder, StgModel* found );
-  
-  itl_t* itl_create( double x, double y, double a, double b, 
-		     stg_matrix_t* matrix, itl_mode_t pmode );
-  
-  void itl_destroy( itl_t* itl );
-  void itl_raytrace( itl_t* itl );
-  StgModel* itl_next( itl_t* itl );
 
-  StgModel* itl_first_matching( itl_t* itl, 
-				   stg_itl_test_func_t func, 
-				   StgModel* finder );
+  typedef enum { PointToPoint=0, PointToBearingRange } itl_mode_t;
+
+  typedef int(*stg_itl_test_func_t)(StgModel* finder, StgModel* found );
+
+  itl_t* itl_create( double x, double y, double a, double b, 
+		   stg_matrix_t* matrix, itl_mode_t pmode );
+
+  void itl_destroy( itl_t* itl );
+void itl_raytrace( itl_t* itl );
+
+StgModel* itl_first_matching( itl_t* itl, 
+			      stg_itl_test_func_t func, 
+			      StgModel* finder );
 
   /** @} */
 

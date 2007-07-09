@@ -502,13 +502,6 @@ void gl_model_selected( StgModel* mod, void* user )
 
   //glTranslatef( 0,0,0.1 );
 
-  //push_color_rgb( 1, 0.5, 0.5 );
-  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  //glRectf( -dx, -dy, dx, dy );
-
-  push_color_rgb( 1, 0, 0 );
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glLineWidth( 2 );
   glRectf( -dx, -dy, dx, dy );
 
   pop_color();
@@ -927,14 +920,21 @@ void draw_world(  stg_world_t* world )
 
   //glCallList( dl_debug );
 
-/*   glTranslatef( 0,0,1 ); */
-/*   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); */
-/*   push_color_rgb( 0,1,0 ); */
-/*   stg_cell_render_tree( world->matrix->root ); */
-/*   glTranslatef( 0,0,-1 ); */
-/*   pop_color(); */
+  if( win->show_matrix )
+    {
+      glTranslatef( 0,0,1 );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+      push_color_rgb( 0,1,0 );
+      stg_cell_render_tree( world->matrix->root );
+      glTranslatef( 0,0,-1 );
+      pop_color();
+    }
 
+  push_color_rgb( 1, 0, 0 );
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glLineWidth( 2 );
   g_list_foreach( world->win->selected_models, (GFunc)gl_model_selected, NULL );
+  glLineWidth( 1 );
 
   // draw the models
   GList* it;
