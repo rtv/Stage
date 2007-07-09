@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_fiducial.cc,v 1.8 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_fiducial.cc,v 1.9 2007-07-09 17:18:37 gerkey Exp $
  */
 
 // DOCUMENTATION
@@ -80,8 +80,8 @@ void InterfaceFiducial::Publish( void )
       if( fcount > PLAYER_FIDUCIAL_MAX_SAMPLES )
 	{
 	  PRINT_WARN2( "A Stage model has detected more fiducials than"
-		       " will fit in Player's buffer (%d/%d)\n",
-		      fcount, PLAYER_FIDUCIAL_MAX_SAMPLES );
+		       " will fit in Player's buffer (%u/%u)\n",
+		      (uint) fcount, PLAYER_FIDUCIAL_MAX_SAMPLES );
 	  fcount = PLAYER_FIDUCIAL_MAX_SAMPLES;
 	}
 
@@ -142,7 +142,7 @@ int InterfaceFiducial::ProcessMessage(MessageQueue* resp_queue,
       player_laser_geom_t pgeom;
       pgeom.pose.px = pose.x;
       pgeom.pose.py = pose.y;
-      pgeom.pose.pa = pose.a;      
+      pgeom.pose.pyaw = pose.a;      
       pgeom.size.sl = geom.size.x;
       pgeom.size.sw = geom.size.y;
       

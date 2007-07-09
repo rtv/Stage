@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_bumper.cc,v 1.1 2006-03-30 02:59:04 rtv Exp $
+ * CVS: $Id: p_bumper.cc,v 1.2 2007-07-09 17:18:37 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -112,7 +112,7 @@ int InterfaceBumper::ProcessMessage( MessageQueue* resp_queue,
 	  // fill in the geometry data formatted player-like
 	  pgeom.bumper_def[i].pose.px = cfgs[i].pose.x;	  
 	  pgeom.bumper_def[i].pose.py = cfgs[i].pose.y;	  
-	  pgeom.bumper_def[i].pose.pa = cfgs[i].pose.a;	    
+	  pgeom.bumper_def[i].pose.pyaw = cfgs[i].pose.a;	    
 	  pgeom.bumper_def[i].length = cfgs[i].length;	    
 	  pgeom.bumper_def[i].radius = 0; 
 	}

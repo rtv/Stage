@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_wifi.cc,v 1.1 2006-03-02 23:19:03 gerkey Exp $
+ * CVS: $Id: p_wifi.cc,v 1.2 2007-07-09 17:18:37 gerkey Exp $
  */
 
 
@@ -65,4 +65,5 @@ int InterfaceWifi::ProcessMessage(MessageQueue* resp_queue,
                                   void* data)
 {
   // PROCESS INCOMING REQUESTS HERE
+  return 0;
 }
