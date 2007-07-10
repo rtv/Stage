@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -352,7 +352,7 @@ void StgModelLaser::GuiGenerateData( void )
       glEnableClientState( GL_VERTEX_ARRAY );
       glVertexPointer( 2, GL_FLOAT, 0, pts );
       
-      glColor4f( 0, 0, 1, 0.2 );
+      glColor4f( 0, 0, 1, 0.1 );
       glPolygonMode( GL_FRONT_AND_BACK, world->win->show_alpha ? GL_FILL : GL_LINES );
       glDrawArrays( GL_POLYGON, 0, sample_count+1 );
       
