@@ -69,7 +69,7 @@ typedef int(*stg_model_callback_t)(StgModel* mod, void* user );
     stg_meters_t zmax; 
     stg_color_t color;
     bool inherit_color;
-    int display_list; //< id of the OpenGL displaylist to draw this block
+    //    int display_list; //< id of the OpenGL displaylist to draw this block
   } stg_block_t;
   
   
@@ -253,8 +253,8 @@ void stg_d_render( stg_d_draw_t* d );
 
     char* token; ///< the name of this world
 
-    stg_msec_t sim_time; ///< the current time in this world
-    stg_msec_t sim_interval; ///< this much simulated time elapses each step.
+    stg_msec_t sim_time_ms; ///< the current time in this world
+    stg_msec_t sim_interval_ms; ///< this much simulated time elapses each step.
     long unsigned int updates; ///< the number of simulaticuted
     
     /** real-time interval between updates - set this to zero for 'as fast as possible' 
@@ -284,6 +284,8 @@ void stg_d_render( stg_d_draw_t* d );
     int section_count;
   };
 
+void stg_world_start_updating_model( stg_world_t* world, StgModel* mod );
+void stg_world_stop_updating_model( stg_world_t* world, StgModel* mod );
 
   // ROTATED RECTANGLES -------------------------------------------------
 
@@ -463,7 +465,7 @@ void stg_d_render( stg_d_draw_t* d );
 
  typedef struct
   {
-    double x, y, a;
+    double x, y, z, a;
     double cosa, sina, tana;
     double range;
     double max_range;
@@ -478,7 +480,7 @@ void stg_d_render( stg_d_draw_t* d );
 
   typedef int(*stg_itl_test_func_t)(StgModel* finder, StgModel* found );
 
-  itl_t* itl_create( double x, double y, double a, double b, 
+itl_t* itl_create( double x, double y, double z, double a, double b, 
 		   stg_matrix_t* matrix, itl_mode_t pmode );
 
   void itl_destroy( itl_t* itl );

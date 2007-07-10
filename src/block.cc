@@ -26,20 +26,15 @@ stg_block_t* stg_block_create( StgModel* mod,
   block->color = color;
   block->inherit_color = inherit_color;
 
-  // generate an OpenGL displaylist for this block
-  block->display_list = glGenLists( 1 );  
-  stg_block_update( block );
-
   return block;
 }
 
 /** destroy a block, freeing all memory */
 void stg_block_destroy( stg_block_t* block )
 {
-  assert( block );
   assert( block->pts );
+  assert( block );
 
-  glDeleteLists( block->display_list, 1 );
   g_free( block->pts );
   g_free( block );
 }
@@ -52,31 +47,18 @@ void stg_block_list_destroy( GList* list )
   g_list_free( list );
 }
  
-void stg_block_render( stg_block_t* b )
-{
-  //printf( "rendering block @ %p with %d points\n", b, (int)b->pt_count );
-  glCallList( b->display_list );
-}
 
 static void block_top( stg_block_t* b )
 {
-  //stg_geom_t geom;      
-  //b->mod->GetGeom( &geom );
-
   // draw a top that fits over the stripa
   glBegin(GL_POLYGON);
   for( unsigned int p=0; p<b->pt_count; p++)
-    {
     glVertex3f( b->pts[p].x, b->pts[p].y, b->zmax );
-    }
   glEnd();
 }
 
 static void block_sides( stg_block_t* b )
 {
-  //stg_geom_t geom;      
-  //b->mod->GetGeom( &geom );
-  
   // construct a strip that wraps around the polygon
   glBegin(GL_QUAD_STRIP);
   for( unsigned int p=0; p<b->pt_count; p++)
@@ -90,11 +72,10 @@ static void block_sides( stg_block_t* b )
   glEnd();
 }
 
-void stg_block_update( stg_block_t* b )
-{ 
-  // draw filled color polygons
 
-  glNewList( b->display_list, GL_COMPILE );
+void stg_block_render( stg_block_t* b )
+{
+  // draw filled color polygons
 
   stg_color_t color;
   if( b->inherit_color )
@@ -105,9 +86,6 @@ void stg_block_update( stg_block_t* b )
   double gcol[4];	  
   stg_color_to_glcolor4dv( color, gcol );
 
-  //glDisable(GL_BLEND);
-  //glDisable(GL_LINE_SMOOTH);
-  
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
   push_color( gcol );
   glEnable(GL_POLYGON_OFFSET_FILL);
@@ -117,25 +95,24 @@ void stg_block_update( stg_block_t* b )
   glDisable(GL_POLYGON_OFFSET_FILL);
   
 
+  
   // draw the block outline in a darker version of the same color
   gcol[0]/=2.0;
   gcol[1]/=2.0;
   gcol[2]/=2.0;  
   push_color( gcol );
 
-  glLineWidth( 0 );
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
+  glDepthMask(GL_FALSE); 
   block_top( b );
   block_sides( b );  
+  glDepthMask(GL_TRUE); 
 
-  //glEnable(GL_BLEND);
-  //glEnable(GL_LINE_SMOOTH);
 
+  //pop_color();
   pop_color();
-  pop_color();
-
-  glEndList();
 }
+
 
 void stg_block_list_scale( GList* blocks, 
 			   stg_size_t* size )
@@ -202,6 +179,6 @@ void stg_block_list_scale( GList* blocks,
       block->zmin *= scalez;
 
       // recalculate the GL drawlist
-      stg_block_update( block );
+      //stg_block_update( block );
     }
 }

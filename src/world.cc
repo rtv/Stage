@@ -85,26 +85,26 @@ void stg_world_clockstring( stg_world_t* world, char* str, size_t maxlen )
 #if DEBUG
   snprintf( str, maxlen, "Ticks %lu Time: %lu:%lu:%02lu:%02lu.%03lu (sim:%3d real:%3d ratio:%2.2f)\tsubs: %d  %s",
 	    world->updates,
-	    world->sim_time / (24*3600000), // days
-	    world->sim_time / 3600000, // hours
-	    (world->sim_time % 3600000) / 60000, // minutes
-	    (world->sim_time % 60000) / 1000, // seconds
-	    world->sim_time % 1000, // milliseconds
-	    (int)world->sim_interval,
+	    world->sim_time_ms / (24*3600000), // days
+	    world->sim_time_ms / 3600000, // hours
+	    (world->sim_time_ms % 3600000) / 60000, // minutes
+	    (world->sim_time_ms % 60000) / 1000, // seconds
+	    world->sim_time_ms % 1000, // milliseconds
+	    (int)world->sim_interval_ms,
 	    (int)world->real_interval_measured,
-    (double)world->sim_interval / (double)world->real_interval_measured,
+    (double)world->sim_interval_ms / (double)world->real_interval_measured,
 	    world->subs,
 	    world->paused ? "--PAUSED--" : "" );
 #else
 
   snprintf( str, maxlen, "Ticks %lu Time: %lu:%lu:%02lu:%02lu.%03lu\t(sim/real:%2.2f)\tsubs: %d  %s",
 	    world->updates,
-	    world->sim_time / (24*3600000), // days
-	    world->sim_time / 3600000, // hours
-	    (world->sim_time % 3600000) / 60000, // minutes
-	    (world->sim_time % 60000) / 1000, // seconds
-	    world->sim_time % 1000, // milliseconds
-	    (double)world->sim_interval / (double)world->real_interval_measured,
+	    world->sim_time_ms / (24*3600000), // days
+	    world->sim_time_ms / 3600000, // hours
+	    (world->sim_time_ms % 3600000) / 60000, // minutes
+	    (world->sim_time_ms % 60000) / 1000, // seconds
+	    world->sim_time_ms % 1000, // milliseconds
+	    (double)world->sim_interval_ms / (double)world->real_interval_measured,
 	    world->subs,
 	    world->paused ? "--PAUSED--" : "" );
 #endif
@@ -118,7 +118,7 @@ void stg_world_set_interval_real( stg_world_t* world, unsigned int val )
 
 void stg_world_set_interval_sim( stg_world_t* world, unsigned int val )
 {
-  world->sim_interval = val;
+  world->sim_interval_ms = val;
 }
 
 
@@ -246,7 +246,7 @@ stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path
 
 stg_world_t* stg_world_create( stg_id_t id, 
 			       const char* token, 
-			       int sim_interval, 
+			       int sim_interval_ms, 
 			       int real_interval,
 			       int gui_interval,
 			       double ppm,
@@ -267,8 +267,8 @@ stg_world_t* stg_world_create( stg_id_t id,
   world->wf = NULL;
   world->models = g_hash_table_new( g_int_hash, g_int_equal );
   world->models_by_name = g_hash_table_new( g_str_hash, g_str_equal );
-  world->sim_time = 0.0;
-  world->sim_interval = sim_interval;
+  world->sim_time_ms = 0.0;
+  world->sim_interval_ms = sim_interval_ms;
   world->wall_interval = real_interval;
   world->gui_interval = gui_interval;
   world->wall_last_update = 0;
@@ -371,33 +371,32 @@ int stg_world_update( stg_world_t* world, int sleepflag )
 #if DEBUG     
       printf( " [%d %lu %f] sim:%lu real:%lu  ratio:%.2f freq:%.2f \n",
 	      world->id, 
-	      world->sim_time,
+	      world->sim_time_ms,
 	      world->updates,
-	      world->sim_interval,
+	      world->sim_interval_ms,
 	      world->real_interval_measured,
-	      (double)world->sim_interval / (double)world->real_interval_measured,
+	      (double)world->sim_interval_ms / (double)world->real_interval_measured,
 	      world->updates/t );
       
       fflush(stdout);
 #endif
       
       // TEST DEBUGGING
-      glNewList( dl_debug, GL_COMPILE );
-      push_color_rgb( 0,1,0 );
+      //glNewList( dl_debug, GL_COMPILE );
+      //push_color_rgb( 0,1,0 );
 
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+      //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-      for( GList* it=world->children; it; it=it->next )
-	((StgModel*)it->data)->Update();
+      for( GList* it=world->update_list; it; it=it->next )
+	((StgModel*)it->data)->UpdateTreeIfDue();
 
-      pop_color();
-      glEndList(); // dl_debug
+      //pop_color();
+      //glEndList(); // dl_debug
 
       
       world->wall_last_update = timenow;	  
-      world->sim_time += world->sim_interval;
-
-      
+      world->sim_time_ms += world->sim_interval_ms;
+    
     }
 
   if( gui_world_update( world ) )

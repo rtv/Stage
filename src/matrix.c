@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.22.4.5 2007-07-08 05:24:04 rtv Exp $
+ * $Id: matrix.c,v 1.22.4.6 2007-07-10 02:15:47 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -51,16 +51,8 @@ void stg_cell_unrender( stg_cell_t* cell )
 
 void stg_cell_render( stg_cell_t* cell )
 {
-  //puts( "cell render" );
-
-  //glPolygonMode( GL_FRONT_AND_BACK, GL_LINES );
-
   double dx = cell->size/2.0;
-
   glRectf( cell->x-dx , cell->y-dx, cell->x+dx, cell->y+dx );
-
-  //printf( "cell %.2f,%.2f size %.2f\n", 
-  //  cell->x, cell->y, cell->size );
 }
 
 void stg_cell_render_tree( stg_cell_t* cell )

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,9 +16,11 @@
 
 #include <sys/time.h>
 #include <math.h>
+#include <GL/gl.h>
 
 #include "gui.h"
 #include "model.hh"
+
 
 #define TIMING 0
 #define LASER_FILLED 1
@@ -81,6 +83,8 @@ StgModelLaser::StgModelLaser( stg_world_t* world,
 		id, wf->GetEntityType( id ) );
   
   // sensible laser defaults 
+  this->update_interval_ms = 200; // common for a SICK LMS200
+
   stg_geom_t geom; 
   memset( &geom, 0, sizeof(geom));
   geom.size.x = STG_DEFAULT_LASER_SIZEX;
@@ -154,9 +158,11 @@ int laser_raytrace_match( StgModel* mod, StgModel* hitmod )
 }	
 
 void StgModelLaser::Update( void )
-{   
+{     
   StgModel::Update();
-  
+
+  puts( "LASER UPDATE" );
+
   // no work to do if we're unsubscribed
   if( this->subs < 1 )
     return;
@@ -193,7 +199,7 @@ void StgModelLaser::Update( void )
     {
       double bearing =  gpose.a - cfg->fov/2.0 + sample_incr * t;
       
-      itl_t* itl = itl_create( gpose.x, gpose.y,
+      itl_t* itl = itl_create( gpose.x, gpose.y, gpose.z,
 			       bearing,
 			       cfg->range_max,
 			       this->world->matrix,
@@ -212,7 +218,7 @@ void StgModelLaser::Update( void )
           
       if( hitmod )
 	{
-	  printf( "hit model %s\n", hitmod->Token() );
+	  //printf( "hit model %s\n", hitmod->Token() );
 	  scan[t].range = MAX( itl->range, cfg->range_min );
 	  scan[t].hitpoint.x = itl->x;
 	  scan[t].hitpoint.y = itl->y;
@@ -271,7 +277,6 @@ void StgModelLaser::Update( void )
 	  (tv2.tv_sec + tv2.tv_usec / 1e6) - 
 	  (tv1.tv_sec + tv1.tv_usec / 1e6) );	    
 #endif
-
 }
 
 
@@ -310,3 +315,70 @@ void StgModelLaser::Shutdown( void )
 // { 
 //   StgModel::Draw();
 // }
+
+void StgModelLaser::GuiGenerateData( void )
+{
+  puts ("GL laser data" );
+
+  glNewList( this->dl_data, GL_COMPILE );
+
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)this->data;
+  size_t sample_count = this->data_len / sizeof(stg_laser_sample_t);
+  stg_laser_config_t *cfg = (stg_laser_config_t*)this->cfg;
+  assert( cfg );
+  
+  if( samples && sample_count )
+    {
+      // do alpha properly
+      glDepthMask( GL_FALSE );
+      
+      glPushMatrix();
+      glTranslatef( 0,0, this->geom.size.z/2.0 ); // shoot the laser beam out at the right height
+      
+      // pack the laser hit points into a vertex array for fast rendering
+      static float* pts = NULL;
+      pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float));
+      
+      pts[0] = 0.0;
+      pts[1] = 0.0;
+      
+      for( int s=0; s<sample_count; s++ )
+	{
+	  double ray_angle = (s * (cfg->fov / (sample_count-1))) - cfg->fov/2.0;  
+	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
+	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
+	}
+      
+      glEnableClientState( GL_VERTEX_ARRAY );
+      glVertexPointer( 2, GL_FLOAT, 0, pts );
+      
+      glColor4f( 0, 0, 1, 0.2 );
+      glPolygonMode( GL_FRONT_AND_BACK, world->win->show_alpha ? GL_FILL : GL_LINES );
+      glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+      
+      glPopMatrix();
+      glDepthMask( GL_TRUE );
+    }
+  
+  glEndList();
+  
+  world->win->dirty = true;
+
+  //make_dirty(mod);
+
+/*   // loop through again, drawing bright boxes on top of the polygon */
+/*   for( s=0; s<sample_count; s++ ) */
+/*     {       */
+/*       // if this hit point is bright, we draw a little box */
+/*       if( samples[s].reflectance > 0 ) */
+/* 	{ */
+ /* 	  stg_rtk_fig_color_rgb32( fg, bright_color ); */
+/* 	  stg_rtk_fig_rectangle( fg,  */
+/* 				 points[1+s].x, points[1+s].y, 0, */
+/* 				 0.04, 0.04, 1 ); */
+/* 	  stg_rtk_fig_color_rgb32( fg, laser_color ); */
+/* 	} */
+/*     } */
+}
+
+

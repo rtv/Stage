@@ -22,7 +22,7 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.cc,v 1.11 2005-09-20 00:36:24 gerkey Exp $
+// CVS: $Id: stg_time.cc,v 1.11.6.1 2007-07-10 02:15:47 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,9 +31,6 @@
 #include "stg_time.h"
 #include "math.h"
 #include "p_driver.h"
-
-// Stage's global quit flag
-extern int _stg_quit;
 
 // Constructor
 StgTime::StgTime( StgDriver* driver )
@@ -49,8 +46,6 @@ StgTime::~StgTime()
   return;
 }
 
-extern int update_request;
-
 // Get the simulator time
 int StgTime::GetTime(struct timeval* time)
 {
@@ -60,8 +55,8 @@ int StgTime::GetTime(struct timeval* time)
   
   stg_world_t* world = driver->world;
   
-  time->tv_sec  = (int)floor(world->sim_time / 1e3);
-  time->tv_usec = (int)rint(fmod(world->sim_time,1e3) * 1e3);
+  time->tv_sec  = (int)floor(world->sim_time_ms / 1e3);
+  time->tv_usec = (int)rint(fmod(world->sim_time_ms,1e3) * 1e3);
   
   PRINT_DEBUG2( "time now %ld sec %ld usec", time->tv_sec, time->tv_usec );
   
@@ -76,7 +71,7 @@ int StgTime::GetTimeDouble(double* time)
   
   stg_world_t* world = driver->world;
   
-  *time = world->sim_time / 1e3;
+  *time = world->sim_time_ms / 1e3;
   
   PRINT_DEBUG1( "time now %f sec ", *time);
   

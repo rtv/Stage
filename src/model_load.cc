@@ -5,12 +5,7 @@
 #include "model.hh"
 
 void StgModel::Load( void )
-{
-  
-
-  //const char* typestr = wf_read_string( mod->id, "type", NULL );
-  //PRINT_MSG2( "Model %p is type %s", mod, typestr );
-  
+{  
   if( wf->PropertyExists( this->id, "name" ) )
     {
       char *token = (char*)wf->ReadString(this->id, "name", NULL );
@@ -22,6 +17,8 @@ void StgModel::Load( void )
       else
 	PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token );
     }
+
+  PRINT_WARN1( "%s::Load", token );
 
   if( wf->PropertyExists( this->id, "origin" ) )
     {
@@ -74,67 +71,8 @@ void StgModel::Load( void )
       this->SetVelocity( &vel );
     }
   
-  if( wf->PropertyExists( this->id, "mass" ))
-    {
-      stg_kg_t mass = wf->ReadFloat(this->id, "mass", this->mass );      
-      this->SetMass( mass );
-    }
-  
-  if( wf->PropertyExists( this->id, "fiducial_return" ))
-    {
-      int fid = 
-	wf->ReadInt( this->id, "fiducial_return", this->fiducial_return );     
-      this->SetFiducialReturn( fid  );
-    }
-
-  if( wf->PropertyExists( this->id, "fiducial_key" ))
-    {
-      int fkey = 
-	wf->ReadInt( this->id, "fiducial_key", this->fiducial_key );     
-      this->SetFiducialKey( fkey );
-    }
-  
-  if( wf->PropertyExists( this->id, "obstacle_return" ))
-    {
-      int obs = 
-	wf->ReadInt( this->id, "obstacle_return", this->obstacle_return );
-      this->SetObstacleReturn( obs  );
-    }
-  
-  if( wf->PropertyExists( this->id, "ranger_return" ))
-    {
-      int rng = 
-	wf->ReadInt( this->id, "ranger_return", this->ranger_return );
-      this->SetRangerReturn( rng );
-    }
-  
-  if( wf->PropertyExists( this->id, "blob_return" ))
-    {
-      int blb = 
-	wf->ReadInt( this->id, "blob_return", this->blob_return );      
-      this->SetBlobReturn( blb );
-    }
-  
-  if( wf->PropertyExists( this->id, "laser_return" ))
-    {
-      int lsr = 
-	wf->ReadInt(this->id, "laser_return", this->laser_return );      
-      this->SetLaserReturn( lsr );
-    }
-  
-  if( wf->PropertyExists( this->id, "gripper_return" ))
-    {
-      int grp = 
-	wf->ReadInt( this->id, "gripper_return", this->gripper_return );
-      this->SetGripperReturn( grp );
-    }
-  
   if( wf->PropertyExists( this->id, "boundary" ))
-    {
-      int bdy =  
-	wf->ReadInt(this->id, "boundary", this->boundary  ); 
-      this->SetBoundary( bdy );
-    }
+      this->SetBoundary( wf->ReadInt(this->id, "boundary", this->boundary  ));
   
   if( wf->PropertyExists( this->id, "color" ))
     {      
@@ -267,24 +205,48 @@ void StgModel::Load( void )
 	  }
 	
 	stg_block_list_scale( this->blocks, &this->geom.size );
-      }
 
+      }
     
-    int gui_nose = wf->ReadInt(this->id, "gui_nose", this->gui_nose );  
-    this->SetGuiNose(gui_nose );
-    
-    int gui_grid = wf->ReadInt(this->id, "gui_grid", this->gui_grid );  
-    this->SetGuiGrid( gui_grid );
+ if( wf->PropertyExists( this->id, "mass" ))
+    this->SetMass( wf->ReadFloat(this->id, "mass", this->mass ));
   
-    int gui_outline = wf->ReadInt(this->id, "gui_outline", this->gui_outline );  
-    this->SetGuiOutline( gui_outline );
-    
-    stg_movemask_t gui_movemask = wf->ReadInt(this->id, "gui_movemask", this->gui_mask );  
-    this->SetGuiMask( gui_movemask );
-    
-    stg_meters_t mres = wf->ReadFloat(this->id, "map_resolution", this->map_resolution );  
-    this->SetMapResolution( mres );
-    
+  if( wf->PropertyExists( this->id, "fiducial_return" ))
+    this->SetFiducialReturn( wf->ReadInt( this->id, "fiducial_return", this->fiducial_return ));
+  
+  if( wf->PropertyExists( this->id, "fiducial_key" ))
+      this->SetFiducialKey( wf->ReadInt( this->id, "fiducial_key", this->fiducial_key ));
+  
+  if( wf->PropertyExists( this->id, "obstacle_return" ))
+    this->SetObstacleReturn( wf->ReadInt( this->id, "obstacle_return", this->obstacle_return ));
+  
+  if( wf->PropertyExists( this->id, "ranger_return" ))
+    this->SetRangerReturn( wf->ReadInt( this->id, "ranger_return", this->ranger_return ));
+  
+  if( wf->PropertyExists( this->id, "blob_return" ))
+    this->SetBlobReturn( wf->ReadInt( this->id, "blob_return", this->blob_return ));
+  
+  if( wf->PropertyExists( this->id, "laser_return" ))
+    this->SetLaserReturn( wf->ReadInt(this->id, "laser_return", this->laser_return ));
+  
+  if( wf->PropertyExists( this->id, "gripper_return" ))
+    this->SetGripperReturn( wf->ReadInt( this->id, "gripper_return", this->gripper_return ));
+  
+  if( wf->PropertyExists( this->id, "gui_nose" ))
+    this->SetGuiNose( wf->ReadInt(this->id, "gui_nose", this->gui_nose ));    
+  
+  if( wf->PropertyExists( this->id, "gui_grid" ))
+    this->SetGuiGrid( wf->ReadInt(this->id, "gui_grid", this->gui_grid ));  
+  
+  if( wf->PropertyExists( this->id, "gui_outline" ))
+    this->SetGuiOutline( wf->ReadInt(this->id, "gui_outline", this->gui_outline )); 
+  
+  if( wf->PropertyExists( this->id, "gui_movemask" ))
+    this->SetGuiMask( wf->ReadInt(this->id, "gui_movemask", this->gui_mask ));
+  
+  if( wf->PropertyExists( this->id, "map_resolution" ))
+    this->SetMapResolution( wf->ReadFloat(this->id, "map_resolution", this->map_resolution )); 
+  
     // call any type-specific load callbacks
     this->CallCallbacks( &this->load );
 }

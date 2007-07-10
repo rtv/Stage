@@ -633,17 +633,28 @@ realize (GtkWidget *widget,
 	}
     }
 
+  glDisable (GL_LIGHTING);
+  
   glEnable (GL_DEPTH_TEST);
   glDepthFunc (GL_LESS);
   glClearColor ( 0.7, 0.7, 0.8, 1.0);
-  //glClearColor ( 0,0,0, 1.0);
+
   gdk_gl_glPolygonOffsetEXT (proc, 1.0, 1.0);
 
+  glCullFace( GL_BACK );
   glEnable (GL_CULL_FACE);
-  glHint (GL_LINE_SMOOTH_HINT, GL_NICEST);
-  glHint (GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-  glDisable (GL_LIGHTING);
+
+  //glHint (GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+  //glEnable( GL_POLYGON_SMOOTH );
   
+  // set gl state that won't change every redraw
+  glEnable( GL_BLEND );
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+  glEnable( GL_LINE_SMOOTH );
+  glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
+
   gdk_gl_drawable_gl_end (gldrawable);
 
   return;
@@ -806,20 +817,8 @@ void draw_world(  stg_world_t* world )
   GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable( win->canvas );
 
   // clear the offscreen buffer
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-  if( win->show_alpha )
-    { 
-      glEnable(GL_LINE_SMOOTH); 
-      glEnable(GL_BLEND);
-    }
-  else
-    {
-      glDisable(GL_BLEND);
-      glDisable(GL_LINE_SMOOTH);
-    }
 
   double zclip = hypot(world->width, world->height) * win->scale;
   double pixels_width =  world->win->canvas->allocation.width;
@@ -908,6 +907,7 @@ void draw_world(  stg_world_t* world )
   // draw the world size rectangle in white
   // draw the floor a little pushed into the distance so it doesn't z-fight with the
   // models
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1.0, 1.0);
   glColor3f( 1,1,1 );
@@ -922,17 +922,20 @@ void draw_world(  stg_world_t* world )
 
   if( win->show_matrix )
     {
+      glDisable( GL_LINE_SMOOTH );
+      glLineWidth( 1 );
       glTranslatef( 0,0,1 );
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+      glPolygonMode( GL_FRONT, GL_LINE );
       push_color_rgb( 0,1,0 );
       stg_cell_render_tree( world->matrix->root );
       glTranslatef( 0,0,-1 );
       pop_color();
+      glEnable( GL_LINE_SMOOTH );
     }
 
   push_color_rgb( 1, 0, 0 );
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glLineWidth( 2 );
+  glLineWidth( 4 );
   g_list_foreach( world->win->selected_models, (GFunc)gl_model_selected, NULL );
   glLineWidth( 1 );
 
@@ -940,6 +943,9 @@ void draw_world(  stg_world_t* world )
   GList* it;
   for( it=world->children; it; it=it->next )
     ((StgModel*)it->data)->Draw();
+
+  for( it=world->children; it; it=it->next )
+    ((StgModel*)it->data)->DrawData();
 
 
   // draw anything in the assorted displaylist list
@@ -950,7 +956,16 @@ void draw_world(  stg_world_t* world )
       glCallList( (int)it->data );
     }
 
-  
+
+  glLineWidth( 2.0 );
+  push_color_rgb( 1,0,0 );
+  glBegin( GL_LINE_LOOP );
+     glVertex3f( 0,0,0 );
+     glVertex3f( 1,0,0 );
+     glVertex3f( 1,1,0 );
+     glVertex3f( 0,1,0 );
+  glEnd();
+  pop_color();
 
 
   //gl_coord_shift( 0,0,-2,0 );
@@ -1441,11 +1456,6 @@ GtkWidget * gui_create_canvas( stg_world_t* world )
 
   dl_debug = glGenLists(1);
 
-  // set gl state that won't change every redraw
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_TRUE);
-
   return drawing_area;
 }
 
@@ -1536,92 +1546,7 @@ GtkWidget * gui_create_canvas( stg_world_t* world )
 /* {} */
 
 
-/* int gl_laser_render_data( stg_model_t* mod, void* enabled ) */
-/* { */
-/*   //puts ("GL laser data" ); */
-/*   int list = gui_model_get_displaylist( mod, LIST_DATA ); */
-  
-/*   glNewList( list, GL_COMPILE ); */
 
-
-
-/*   // end exp */
-
-/*   stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->data;  */
-/*   size_t sample_count = mod->data_len / sizeof(stg_laser_sample_t); */
-/*   stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg; */
-/*   assert( cfg ); */
-  
-/*   if( samples && sample_count ) */
-/*     {     */
-/*       stg_pose_t gpose; */
-/*       stg_model_get_global_pose( mod, &gpose ); */
-
-/*   // do alpha properly */
-/*       glDepthMask( GL_FALSE ); */
-      
-/*       glPushMatrix(); */
-/*       glTranslatef( 0,0, gpose.z + mod->geom.size.z/2.0 ); // shoot the laser beam out at the right height */
-      
-/*       // pack the laser hit points into a vertex array for fast rendering */
-
-/*       static float* pts = NULL; */
-/*       pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float)); */
-      
-/*       pts[0] = (float)gpose.x; */
-/*       pts[1] = (float)gpose.y; */
-      
-/*       int s; */
-/*       for( s=0; s<sample_count; s++ ) */
-/* 	{ */
-/* 	  double ray_angle = gpose.a + (s * (cfg->fov / (sample_count-1))) - cfg->fov/2.0; */
-
-/* 	  //pts[2*s+2] = (float)samples[s].hitpoint.x; */
-/* 	  //pts[2*s+3] = (float)samples[s].hitpoint.y; */
-/* 	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) + gpose.x); */
-/* 	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) + gpose.y); */
-/* 	} */
-      
-/*       glEnableClientState( GL_VERTEX_ARRAY ); */
-/*       glVertexPointer( 2, GL_FLOAT, 0, pts ); */
-      
-/*       if( mod->world->win->show_alpha ) */
-/* 	{ */
-/* 	  glColor4f( 0, 0, 1, 0.1 ); */
-/* 	  glDrawArrays( GL_POLYGON, 0, sample_count+1 ); */
-/* 	} */
-/*       else */
-/* 	{ */
-/* 	  glColor3f( 0.5, 0.5, 1.0 ); */
-/* 	  glDrawArrays( GL_LINE_LOOP, 0, sample_count+1 ); */
-/* 	} */
-      
-/*       //free(pts); */
-/*       glPopMatrix(); */
-/*       glDepthMask( GL_TRUE );  */
-/*     } */
-  
-
-/*   glEndList(); */
-  
-/*   make_dirty(mod); */
-
-/* /\*   // loop through again, drawing bright boxes on top of the polygon *\/ */
-/* /\*   for( s=0; s<sample_count; s++ ) *\/ */
-/* /\*     {       *\/ */
-/* /\*       // if this hit point is bright, we draw a little box *\/ */
-/* /\*       if( samples[s].reflectance > 0 ) *\/ */
-/* /\* 	{ *\/ */
-/* /\* 	  stg_rtk_fig_color_rgb32( fg, bright_color ); *\/ */
-/* /\* 	  stg_rtk_fig_rectangle( fg,  *\/ */
-/* /\* 				 points[1+s].x, points[1+s].y, 0, *\/ */
-/* /\* 				 0.04, 0.04, 1 ); *\/ */
-/* /\* 	  stg_rtk_fig_color_rgb32( fg, laser_color ); *\/ */
-/* /\* 	} *\/ */
-/* /\*     } *\/ */
-      
-/*   return 0; // callback runs until removed */
-/* } */
 
 /* int gl_fiducial_render_data( stg_model_t* mod, void* enabled ) */
 /* { */

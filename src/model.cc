@@ -152,6 +152,8 @@ void StgModel::AddBlock( stg_point_t* pts,
 			 stg_color_t col,
 			 bool inherit_color )
 {
+  //Map( 0 );
+  
   this->blocks = 
     g_list_prepend( this->blocks, 
 		    stg_block_create( this, pts, pt_count, 
@@ -160,6 +162,8 @@ void StgModel::AddBlock( stg_point_t* pts,
   
   // force recreation of display lists before drawing
   this->dirty = true;
+
+  //Map( 1 );
 }
 
 
@@ -329,6 +333,9 @@ StgModel::StgModel( stg_world_t* world,
   this->gui_outline = STG_DEFAULT_OUTLINE;
   this->gui_mask = this->parent ? 0 : STG_DEFAULT_MASK;
 
+  this->last_update_ms = -1;
+  this->update_interval_ms = 100;
+  
   // now we can add the basic square shape
   this->AddBlockRect( -0.5,-0.5,1,1 );
 
@@ -566,29 +573,36 @@ void StgModel::Print( char* prefix )
 	  token );
 }
 
-
-// // a virtual method init after the constructor
-// void StgModel::Initialize( void )
-// {
-//   printf( "Initialize model %s\n", this->token );
-
-//   // TODO 
-//   // GUI init
-//   // other init?
-
-// }
-
-
 void StgModel::Startup( void )
 {
   printf( "Startup model %s\n", this->token );
+
+  stg_world_start_updating_model( this->world, this );
+
   CallCallbacks( &startup );
 }
 
 void StgModel::Shutdown( void )
 {
   printf( "Shutdown model %s\n", this->token );
+
+  stg_world_stop_updating_model( this->world, this );
+
   CallCallbacks( &shutdown );
+}
+
+void StgModel::UpdateTreeIfDue( void )
+{
+  if(  this->world->sim_time_ms  >= 
+       (this->last_update_ms + this->update_interval_ms) )
+    this->Update();
+  
+  LISTMETHOD( this->children, StgModel*, UpdateTreeIfDue );
+}
+
+void StgModel::UpdateTree( void )
+{
+  LISTMETHOD( this->children, StgModel*, UpdateTree );
 }
 
 void StgModel::Update( void )
@@ -598,14 +612,33 @@ void StgModel::Update( void )
   
   this->CallCallbacks( &update );
 
-  LISTMETHOD( this->children, StgModel*, Update );
+  this->last_update_ms = this->world->sim_time_ms;
 }
  
 
+void StgModel::DrawData( void )
+{
+  glPushMatrix();
+  
+  // move into this model's local coordinate frame
+  gl_pose_shift( &this->pose );
+  gl_pose_shift( &this->geom.pose );
+  
+  glCallList( this->dl_data );
+  
+  // shift up the CS to the top of this model
+  gl_coord_shift(  0,0, this->geom.size.z, 0 );
+  
+  // recursively draw the tree below this model 
+  LISTMETHOD( this->children, StgModel*, DrawData );
+
+  glPopMatrix(); // drop out of local coords
+}
+
 void StgModel::Draw( void )
 {
-  //printf( "%s.Draw()\n",
-  //  this->token );
+  printf( "%s.Draw()\n",
+    this->token );
 
   glPushMatrix();
   
@@ -626,8 +659,7 @@ void StgModel::Draw( void )
   //glCallList( this->dl_grid );
   
   glCallList( this->dl_body );
-  glCallList( this->dl_data );
-  glCallList( this->dl_data );
+  //glCallList( this->dl_data );
   
   // shift up the CS to the top of this model
   gl_coord_shift(  0,0, this->geom.size.z, 0 );
@@ -715,6 +747,8 @@ void StgModel::SetData( void* data, size_t len )
   this->data = g_realloc( this->data, len );
   memcpy( this->data, data, len );
   this->data_len = len;
+
+  this->GuiGenerateData();
 
   CallCallbacks( &this->data );
 }
@@ -1442,6 +1476,5 @@ int stg_model_tree_to_ptr_array( StgModel* root, GPtrArray* array )
   
   return added;
 }
-
 
 

@@ -54,7 +54,7 @@ int stg_model_ray_intersect( StgModel* mod,
   return TRUE;
 }
 
-itl_t* itl_create( double x, double y, double a, double b, 
+itl_t* itl_create( double x, double y, double z, double a, double b, 
 		   stg_matrix_t* matrix, itl_mode_t pmode )
 {   
   itl_t* itl = (itl_t*)g_new( itl_t, 1 );
@@ -62,6 +62,7 @@ itl_t* itl_create( double x, double y, double a, double b,
   itl->matrix = matrix;
   itl->x = x;
   itl->y = y;
+  itl->z = z;
   itl->models = NULL;
   itl->index = 0;
   itl->range = 0;  
@@ -160,6 +161,7 @@ int stg_model_height_check( StgModel* mod1, StgModel* mod2 )
 
 // returns the first model in the array that matches, else NULL.
 static StgModel* gslist_first_matching( GSList* list, 
+					stg_meters_t z,
 					stg_itl_test_func_t func, 
 					StgModel* finder )
 {
@@ -167,22 +169,18 @@ static StgModel* gslist_first_matching( GSList* list,
     {
       stg_block_t* block = (stg_block_t*)list->data;
 
-      // test the block's height. It must overlap the origin of the
-      // finding model
-
-      stg_pose_t gpose;
-      finder->GetGlobalPose( &gpose );
-
-      stg_geom_t geom;
-      finder->GetGeom( &geom );
-
-      //if( (block->zmin < gpose.z - geom.size.z/2.0) || 
-      //  (block->zmax > gpose.z + geom.size.z/2.0) )
-      //return NULL; // no overlap
-
+      // test to see if the block exists at height z
       StgModel* candidate = block->mod;
 
-      if( (*func)( finder, candidate ) )
+      stg_pose_t gpose;
+      candidate->GetGlobalPose( &gpose );
+
+     double block_min = gpose.z + block->zmin;
+      double block_max = gpose.z + block->zmax;
+      
+      if( block_min < z && 
+	  block_max > z && 
+	  (*func)( finder, candidate ) )
 	return candidate;
     }
   
@@ -259,7 +257,7 @@ StgModel* itl_first_matching( itl_t* itl,
       if( cell->data ) 
 	{ 
 	  StgModel* hitmod = 
-	    gslist_first_matching( (GSList*)cell->data, func, finder );
+	    gslist_first_matching( (GSList*)cell->data, itl->z, func, finder );
 	  
 	  if( hitmod ) 
 	    return hitmod; // done!	  
