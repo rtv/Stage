@@ -120,8 +120,8 @@ void StgModel::Load( void )
 	  return;
 	}
       
-      stg_block_list_destroy( this->blocks );
-      this->blocks = NULL;
+      this->Map(0);
+      this->ClearBlocks();
 
       //printf( "found %d rects\n", rect_count );
       
@@ -143,6 +143,7 @@ void StgModel::Load( void )
 	    }     
 	  
 	  stg_block_list_scale( this->blocks, &this->geom.size );	  
+	  this->Map(1);
 	}      
     }
     
@@ -150,8 +151,8 @@ void StgModel::Load( void )
       {
 	int blockcount = wf->ReadInt( this->id, "blocks", -1 );
 	
-	stg_block_list_destroy( this->blocks );
-	this->blocks = NULL;
+	this->Map(0);
+	this->ClearBlocks();
 
 	//printf( "expecting %d blocks\n", blockcount );
 	
@@ -205,7 +206,7 @@ void StgModel::Load( void )
 	  }
 	
 	stg_block_list_scale( this->blocks, &this->geom.size );
-
+	this->Map(1);
       }
     
  if( wf->PropertyExists( this->id, "mass" ))

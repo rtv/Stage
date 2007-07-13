@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.1 2007-07-08 01:44:09 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.2 2007-07-13 05:48:31 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -46,24 +46,18 @@ int main( int argc, char* argv[] )
   char lasername[64];
   snprintf( lasername, 63, "%s.laser:0", robotname ); 
   
-  char sonarname[64];
-  snprintf( sonarname, 63, "%s.ranger:0", robotname ); 
-
   StgModel* position = stg_world_model_name_lookup( world, robotname );  
   assert(position);
 
   StgModelLaser* laser = (StgModelLaser*)stg_world_model_name_lookup( world, lasername );
   assert(laser);
-  //StgModelL* ranger = stg_world_model_name_lookup( world, sonarname );
 
   // subscribe to the laser - starts it collecting data
   position->Subscribe();
   laser->Subscribe();
-  //ranger->Subscribe();
 
   position->Print( "Subscribed to model" );
   laser->Print( "Subscribed to model" );
-  //ranger->Print( "Subscribed to model" );
 
   printf( "Starting world clock..." ); fflush(stdout);
   // start the clock

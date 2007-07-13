@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.22.4.6 2007-07-10 02:15:47 rtv Exp $
+ * $Id: matrix.c,v 1.22.4.7 2007-07-13 05:48:31 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -49,10 +49,26 @@ void stg_cell_unrender( stg_cell_t* cell )
 {
 }    
 
+#include "model.hh"
+GLvoid glPrint( const char *fmt, ... );
+
 void stg_cell_render( stg_cell_t* cell )
 {
   double dx = cell->size/2.0;
   glRectf( cell->x-dx , cell->y-dx, cell->x+dx, cell->y+dx );
+
+/*   int offset = 0; */
+
+/*   if( cell->data ) */
+/*     { */
+      
+/*       int offset = 0; */
+/*       for( GSList* it = (GSList*)cell->data; it; it=it->next ) */
+/* 	{ */
+/* 	  glRasterPos2f( cell->x, cell->y + 0.02*offset++ ); */
+/* 	  glPrint( "%s", ((stg_block_t*)it->data)->mod->Token()); */
+/* 	}       */
+/*     }   */
 }
 
 void stg_cell_render_tree( stg_cell_t* cell )
@@ -170,6 +186,11 @@ void stg_cell_remove_object( stg_cell_t* cell, void* p )
     }     
 }
 
+void stg_matrix_remove_block( stg_matrix_t* matrix, stg_block_t* block )
+{
+  stg_matrix_remove_object( matrix, (void*)block );
+}
+
 // remove <object> from the matrix
 void stg_matrix_remove_object( stg_matrix_t* matrix, void* object )
 {
@@ -283,15 +304,15 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 
 	      // debug rendering
 	      //if( _render_matrix_deltas && ! cell->fig )
-	      stg_cell_render( cell );
+	      //stg_cell_render( cell );
 	    }
 
 	  // now the cell small enough, we add the object here
-	  cell->data = (GSList*)g_slist_prepend( (GSList*)cell->data, object );  	  
+	  cell->data = g_slist_prepend( (GSList*)cell->data, object );  	  
 	  
 	  // debug rendering
 	  //if( _render_matrix_deltas && ! cell->fig )
-	  stg_cell_render( cell );
+	  //stg_cell_render( cell );
 	  
 	  // add this object the hash table
 	  GSList* list = (GSList*)g_hash_table_lookup( matrix->ptable, object );
@@ -415,6 +436,8 @@ void stg_matrix_block( stg_matrix_t* matrix,
 		       stg_pose_t* origin,
 		       stg_block_t* block )
 {
+  //printf( "matrix block %p\n", block );
+
   int p;
   for( p=0; p<block->pt_count; p++ ) // for
     {

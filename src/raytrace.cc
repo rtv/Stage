@@ -165,12 +165,23 @@ static StgModel* gslist_first_matching( GSList* list,
 					stg_itl_test_func_t func, 
 					StgModel* finder )
 {
+  assert(list);
+
+  //printf( "Finder %s is testing..\n", finder->Token() );
+
   for( ; list ; list=list->next )
     {
+      assert(list->data);
+
+      
       stg_block_t* block = (stg_block_t*)list->data;
 
       // test to see if the block exists at height z
       StgModel* candidate = block->mod;
+
+      assert( candidate );
+
+      //printf( "block of %s\n", candidate->Token() );
 
       stg_pose_t gpose;
       candidate->GetGlobalPose( &gpose );

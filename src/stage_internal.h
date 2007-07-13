@@ -240,6 +240,9 @@ void stg_d_render( stg_d_draw_t* d );
 	stg_model_udpate(); */
     GList* update_list;
 
+    /** a list of models that have non-zero velocity, so need their pose updated */
+    GList* velocity_list;
+
     stg_meters_t width; ///< x size of the world 
     stg_meters_t height; ///< y size of the world
 
@@ -432,6 +435,10 @@ void stg_world_stop_updating_model( stg_world_t* world, StgModel* mod );
   void stg_matrix_block( stg_matrix_t* matrix,
 			 stg_pose_t* origin,
 			 stg_block_t* block );
+
+  /** remove all references to this block from the matrix */
+  void stg_matrix_remove_block( stg_matrix_t* matrix, stg_block_t* block );
+
 
   /** specify a line from (x1,y1) to (x2,y2), all in meters
    */

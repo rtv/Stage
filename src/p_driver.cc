@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.37.4.5 2007-07-08 01:44:09 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.37.4.6 2007-07-13 05:48:31 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -380,9 +380,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
  	  ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
  	  break;
 	  
-	  //case PLAYER_POSITION2D_CODE:	  
- 	  //ifsrc = new InterfacePosition( player_addr, this,  cf, section );
-	  // 	  break;
+	case PLAYER_POSITION2D_CODE:	  
+ 	  ifsrc = new InterfacePosition( player_addr, this,  cf, section );
+	  break;
 	  
 // 	case PLAYER_SONAR_CODE:
 // 	  ifsrc = new InterfaceSonar( player_addr,  this, cf, section );
@@ -615,14 +615,12 @@ void StgDriver::Update(void)
 {
   Driver::ProcessMessages();
 
+  //puts( "STG driver update" );
+
   for( int i=0; i<(int)this->devices->len; i++ )
   {
     Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
-
     assert( interface );
-    // Should this be an assertion? - BPG
-    //if(!interface)
-    //continue;
 
     switch( interface->addr.interf )
       {

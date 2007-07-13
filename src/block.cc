@@ -17,6 +17,7 @@ stg_block_t* stg_block_create( StgModel* mod,
   //printf( "Creating block with %d points\n", (int)pt_count );
   
   stg_block_t* block = g_new( stg_block_t, 1 );
+  //printf( "BLOCK CREATE %p\n", block );
   
   block->mod = mod;
   block->pt_count = pt_count;
@@ -29,11 +30,15 @@ stg_block_t* stg_block_create( StgModel* mod,
   return block;
 }
 
-/** destroy a block, freeing all memory */
+/** destroy a block, freeing all memory, and removing it from it's model's matrix */
 void stg_block_destroy( stg_block_t* block )
 {
+  //printf( "BLOCK DESTROY %p\n", block );
   assert( block->pts );
   assert( block );
+  
+  if( block->mod && block->mod->World() && block->mod->World()->matrix )
+    stg_matrix_remove_block( block->mod->World()->matrix, block );
 
   g_free( block->pts );
   g_free( block );

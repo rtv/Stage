@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.14.4.1 2007-01-06 02:21:28 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.14.4.2 2007-07-13 05:48:31 rtv Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -45,16 +45,13 @@
 #include "p_driver.h"
 //#include "playerclient.h"
 
-extern "C" { 
-int position_init( stg_model_t* mod );
-}
 
 InterfacePosition::InterfacePosition(  player_devaddr_t addr, 
 				       StgDriver* driver,
 				       ConfigFile* cf,
 				       int section )
 						   
-  : InterfaceModel( addr, driver, cf, section, position_init )
+  : InterfaceModel( addr, driver, cf, section, "position" )
 {
   //puts( "InterfacePosition constructor" );
 }
@@ -63,9 +60,6 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
                                       player_msghdr_t* hdr,
                                       void* data)
 {
-  stg_position_cmd_t* cmd = (stg_position_cmd_t*)this->mod->cmd;
-  stg_position_cfg_t* cfg = (stg_position_cfg_t*)this->mod->cfg;
-
   // Is it a new motor command?
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
                            PLAYER_POSITION2D_CMD_VEL, 
@@ -81,7 +75,9 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     scmd.y = pcmd->vel.py;
     scmd.a = pcmd->vel.pa;
     scmd.mode = STG_POSITION_CONTROL_VELOCITY;
-    stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+    this->mod->SetCmd( &scmd, sizeof(scmd) );
+
+    return 0;
   }
 
   // Is it a new motor command?
@@ -99,7 +95,9 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     scmd.y = pcmd->pos.py;
     scmd.a = pcmd->pos.pa;
     scmd.mode = STG_POSITION_CONTROL_POSITION;
-    stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+    this->mod->SetCmd( &scmd, sizeof(scmd) );
+
+    return 0;
   }
 
   // Is it a new motor command?
@@ -117,7 +115,9 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     scmd.y = 0;
     scmd.a = pcmd->angle;
     scmd.mode = STG_POSITION_CONTROL_VELOCITY;
-    stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+    this->mod->SetCmd( &scmd, sizeof(scmd) );
+
+    return 0;
   }
  
   // Is it a request for position geometry?
@@ -128,7 +128,7 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     if(hdr->size == 0)
     {
       stg_geom_t geom;
-      stg_model_get_geom( this->mod,&geom );
+      this->mod->GetGeom( &geom );
 
       // fill in the geometry data formatted player-like
       player_position2d_geom_t pgeom;
@@ -143,7 +143,7 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
                              PLAYER_MSGTYPE_RESP_ACK, 
                              PLAYER_POSITION2D_REQ_GET_GEOM,
                              (void*)&pgeom, sizeof(pgeom), NULL );
-      return(0);
+      return 0;
     }
     else
     {
@@ -159,22 +159,23 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
   {
     if(hdr->size == 0)
     {
+      PRINT_WARN( "reset odom not implemented" );
       PRINT_DEBUG( "resetting odometry" );
 
       stg_pose_t origin;
       memset(&origin,0,sizeof(origin));
-      stg_model_position_set_odom( this->mod, &origin );
+      //stg_model_position_set_odom( this->mod, &origin );
 
       this->driver->Publish( this->addr, resp_queue, 
                              PLAYER_MSGTYPE_RESP_ACK,
                              PLAYER_POSITION2D_REQ_RESET_ODOM );
-      return(0);
+      return 0;
     }
     else
     {
       PRINT_ERR2("config request len is invalid (%d != %d)", 
                  (int)hdr->size, 0);
-      return(-1);
+      return -1;
     }
   }
   // Is it a request to set odometry?
@@ -184,6 +185,8 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
   {
     if(hdr->size == sizeof(player_position2d_set_odom_req_t))
     {
+      PRINT_WARN( "set odom not implemented" );
+
       player_position2d_set_odom_req_t* req = 
               (player_position2d_set_odom_req_t*)data;
 
@@ -192,7 +195,7 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
       pose.y = req->pose.py;
       pose.a = req->pose.pa;
 
-      stg_model_position_set_odom( this->mod, &pose );
+      //stg_model_position_set_odom( this->mod, &pose );
 
       PRINT_DEBUG3( "set odometry to (%.2f,%.2f,%.2f)",
                     pose.x,
@@ -244,18 +247,22 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
   {
     if(hdr->size == sizeof(player_position2d_position_mode_req_t))
     {
+      PRINT_WARN( "set control mode not implemented") ;
+
       player_position2d_position_mode_req_t* req = 
               (player_position2d_position_mode_req_t*)data;
 
       stg_position_control_mode_t mode = (stg_position_control_mode_t)req->state;
 
       // XX should this be in cfg instead?
-      cmd->mode = mode;
-      model_change( mod, &mod->cmd );
+      //cmd->mode = mode;
+      //model_change( mod, &mod->cmd );
+
+      
 
       //stg_model_set_property( mod, "position_control", &mode, sizeof(mode));
 
-      PRINT_WARN2( "Put model %s into %s control mode", this->mod->token, mod ? "POSITION" : "VELOCITY" );
+      PRINT_WARN2( "Put model %s into %s control mode", this->mod->Token(), mod ? "POSITION" : "VELOCITY" );
 
       this->driver->Publish( this->addr, resp_queue, 
                              PLAYER_MSGTYPE_RESP_ACK, 
@@ -274,7 +281,7 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
   //else
   
   // Don't know how to handle this message.
-  PRINT_WARN2( "stg_position doesn't support msg with type/subtype %d/%d",
+  PRINT_WARN2( "stg_position doesn't support msg with type %d subtype %d",
 	       hdr->type, hdr->subtype);
   return(-1);
 }
@@ -284,12 +291,11 @@ void InterfacePosition::Publish( void )
   //puts( "publishing position data" ); 
   
   
-  stg_position_data_t* data = (stg_position_data_t*)this->mod->data;
-
-  if( data )
+  size_t len=0;
+  stg_position_data_t* data = (stg_position_data_t*)this->mod->GetData( &len );
+  
+  if( data && ( len == sizeof(stg_position_data_t)))
     {
-      assert(this->mod->data_len == sizeof(stg_position_data_t));
-      
       //printf( "stage position data: %.2f,%.2f,%.2f\n",
       //  data->pose.x, data->pose.y, data->pose.a );
 
@@ -302,18 +308,24 @@ void InterfacePosition::Publish( void )
       ppd.pos.pa = data->pose.a;
       
       // speeds
-      stg_velocity_t* vel = &this->mod->velocity;
+      stg_velocity_t vel;
+      this->mod->GetVelocity( &vel );
       
-      ppd.vel.px = vel->x;
-      ppd.vel.py = vel->y;
-      ppd.vel.pa = vel->a;
+      // packing by hand allows for type conversions
+      ppd.vel.px = vel.x;
+      ppd.vel.py = vel.y;
+      ppd.vel.pa = vel.a;
       
       // etc
-      ppd.stall = this->mod->stall;
+      ppd.stall = this->mod->Stall();
       
       // publish this data
       this->driver->Publish( this->addr, NULL,
 			     PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,
 			     (void*)&ppd, sizeof(ppd), NULL);
     }
+  else if( len != 0 )
+    PRINT_ERR3( "Bad position data size for model %s (%d/%d bytes)",
+		this->mod->Token(), len, sizeof(stg_position_data_t));
+  
 }

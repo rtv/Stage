@@ -273,6 +273,9 @@ stg_world_t* stg_world_create( stg_id_t id,
   world->gui_interval = gui_interval;
   world->wall_last_update = 0;
 
+  world->update_list = NULL;
+  world->velocity_list = NULL;
+
   world->width = width;
   world->height = height;
   world->ppm = ppm; // this is the finest resolution of the matrix
@@ -381,19 +384,14 @@ int stg_world_update( stg_world_t* world, int sleepflag )
       fflush(stdout);
 #endif
       
-      // TEST DEBUGGING
-      //glNewList( dl_debug, GL_COMPILE );
-      //push_color_rgb( 0,1,0 );
-
-      //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
+      // update any models that are due to be updated
       for( GList* it=world->update_list; it; it=it->next )
-	((StgModel*)it->data)->UpdateTreeIfDue();
-
-      //pop_color();
-      //glEndList(); // dl_debug
-
+	((StgModel*)it->data)->UpdateIfDue();
       
+      // update any models with non-zero velocity
+      for( GList* it=world->velocity_list; it; it=it->next )
+	((StgModel*)it->data)->UpdatePose();
+            
       world->wall_last_update = timenow;	  
       world->sim_time_ms += world->sim_interval_ms;
     

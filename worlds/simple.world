@@ -9,25 +9,21 @@ include "pioneer.inc"
 
 
 
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
-
-
-
 
 
 # defines sick laser
 include "sick.inc"
 
 
-
-
-
 # size of the world in meters
 size [16 16]
 
 # set the resolution of the underlying raytrace model in meters
-resolution 0.02
+resolution 0.05
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 100  # real-time interval between simulation updates in milliseconds 
@@ -42,17 +38,6 @@ window
   show_grid 1
 )
 
-define triangle model
-(
-  color "purple"
-
-  blocks 1
-  block[0].points 3
-  block[0].point[0] [ 0  0.5 ]
-  block[0].point[1] [ 0  -0.5 ]
-  block[0].point[2] [ 1  0 ]
-)
-
 # load an environment bitmap
 floorplan
 ( 
@@ -64,55 +49,44 @@ floorplan
 )
 
 # create a robot
-pioneer2dx
+define laserpioneer pioneer2dx
 (
-  name "redrobot"
-  color "red"
-  pose [ 0.871 2.870 0.000 -146.104 ]
-  sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
+  fancy_sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
 )
 
-pioneer2dx
+#define laserpioneer position 
+#(
+#  size [0.5 0.4 0.4]
+#  sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
+#)
+
+laserpioneer
 (
-  name "greenrobot"
-  color "green"
-  pose [-1.566 1.866 0.000 -341.747]
-  sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
+ name "redrobot"
+ color "red"
+ pose [-2.486 -0.162 0.000 -337.908]
 )
 
-pioneer2dx
+laserpioneer
 (
-  name "bluerobot"
-  color "LightBlue"
-  pose [-2.014 1.240 0.000 414.558]
-  sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
+ name "greenrobot"
+ color "green"
+ pose [-2.109 2.214 0.000 -384.719]
+)
+
+laserpioneer
+(
+ name "bluerobot"
+ color "LightBlue"
+ pose [-2.079 1.479 0.000 414.558]
 )
 
 model
 ( 
   name "little bitmap"
   size [1 1 0.2]
-  bitmap "bitmaps/cave.png"
+  bitmap "bitmaps/space_invader.png"
   color "purple"
-  pose [ 0 0 0 0]
+  pose [ -3.521 -6.347 0.000 0.000]
 )
-
-
-triangle
-(
-  name "orange ningi"
-  color "orange"
-  pose [4.515 5.393 0.000 240.642]
-  size [1 1 0.5]
- boundary 1
-)
-
-triangle
-(
-  name "yellow ningi"
-  color "yellow"
-  pose [2.342 4.741 0.000 0.000 ]
-  size [1 1 0.2]
-)
-
 

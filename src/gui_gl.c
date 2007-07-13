@@ -633,8 +633,8 @@ realize (GtkWidget *widget,
 	}
     }
 
-  glDisable (GL_LIGHTING);
-  
+  glDisable(GL_LIGHTING);
+ 
   glEnable (GL_DEPTH_TEST);
   glDepthFunc (GL_LESS);
   glClearColor ( 0.7, 0.7, 0.8, 1.0);
@@ -819,7 +819,6 @@ void draw_world(  stg_world_t* world )
   // clear the offscreen buffer
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-
   double zclip = hypot(world->width, world->height) * win->scale;
   double pixels_width =  world->win->canvas->allocation.width;
   double pixels_height = world->win->canvas->allocation.height ;
@@ -918,7 +917,6 @@ void draw_world(  stg_world_t* world )
   // draw the model bounding boxes
   //g_hash_table_foreach( world->models, (GHFunc)model_draw_bbox, NULL);
 
-  //glCallList( dl_debug );
 
   if( win->show_matrix )
     {
@@ -952,21 +950,11 @@ void draw_world(  stg_world_t* world )
   for( it = dl_list; it; it=it->next )
     {
       int dl = (int)it->data;
-      //printf( "Calling dl %d\n", dl );
-      glCallList( (int)it->data );
+      printf( "Calling dl %d\n", dl );
+      glCallList( dl );
     }
 
-
-  glLineWidth( 2.0 );
-  push_color_rgb( 1,0,0 );
-  glBegin( GL_LINE_LOOP );
-     glVertex3f( 0,0,0 );
-     glVertex3f( 1,0,0 );
-     glVertex3f( 1,1,0 );
-     glVertex3f( 0,1,0 );
-  glEnd();
-  pop_color();
-
+  glCallList( dl_debug );
 
   //gl_coord_shift( 0,0,-2,0 );
 

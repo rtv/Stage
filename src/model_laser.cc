@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -161,12 +161,8 @@ void StgModelLaser::Update( void )
 {     
   StgModel::Update();
 
-  puts( "LASER UPDATE" );
+  //puts( "LASER UPDATE" );
 
-  // no work to do if we're unsubscribed
-  if( this->subs < 1 )
-    return;
-  
   stg_laser_config_t* cfg = (stg_laser_config_t*)this->cfg;
   assert(cfg);
 
@@ -289,36 +285,26 @@ void StgModelLaser::Startup(  void )
   
   // start consuming power
   this->SetWatts( STG_DEFAULT_LASER_WATTS );
-
-  // install the update function
-  //stg_model_add_update_callback( mod, laser_update, NULL );
 }
 
 void StgModelLaser::Shutdown( void )
 { 
-  StgModel::Shutdown();
 
   PRINT_DEBUG( "laser shutdown" );
   
-  // remove the update function
-  //stg_model_remove_update_callback( mod, laser_update );
-
   // stop consuming power
   this->SetWatts( 0 );
   
   // clear the data - this will unrender it too
   this->SetData( NULL, 0 );
+
+  StgModel::Shutdown();
 }
 
 
-// void StgModelLaser::Draw( void )
-// { 
-//   StgModel::Draw();
-// }
-
 void StgModelLaser::GuiGenerateData( void )
 {
-  puts ("GL laser data" );
+  //puts ("GL laser data" );
 
   glNewList( this->dl_data, GL_COMPILE );
 

@@ -11,7 +11,10 @@ define sick_laser laser
 
   color "blue"
   size [ 0.156 0.155 0.19 ] # dimensions from LMS200 data sheet	
+)
 
+define fancy_sick_laser sick_laser
+(
   blocks 4
 
   # bottom
