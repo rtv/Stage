@@ -1,4 +1,3 @@
-
 #define _GNU_SOURCE
 
 #include <limits.h> 
@@ -155,14 +154,14 @@ void StgModel::AddBlock( stg_point_t* pts,
 {
   //Map( 0 );
   
-  this->blocks = 
-    g_list_prepend( this->blocks, 
+  blocks = 
+    g_list_prepend( blocks, 
 		    stg_block_create( this, pts, pt_count, 
 				      zmin, zmax, 
 				      col, inherit_color ));  
   
   // force recreation of display lists before drawing
-  this->dirty = true;
+  dirty = true;
 
   //Map( 1 );
 }
@@ -170,8 +169,8 @@ void StgModel::AddBlock( stg_point_t* pts,
 
 void StgModel::ClearBlocks( void )
 {
-  stg_block_list_destroy( this->blocks );
-  this->blocks = NULL;
+  stg_block_list_destroy( blocks );
+  blocks = NULL;
 }
 
 void StgModel::AddBlockRect( double x, double y, 
@@ -188,7 +187,7 @@ void StgModel::AddBlockRect( double x, double y,
   pts[3].y = y + height;
 
   // todo - fix this
-  this->AddBlock( pts, 4, 0, 1, 0, true );	      
+  AddBlock( pts, 4, 0, 1, 0, true );	      
 }
 
 stg_d_draw_t* stg_d_draw_create( stg_d_type_t type,
@@ -233,7 +232,7 @@ void StgModel::GlobalToLocal( stg_pose_t* pose )
 
   // get model's global pose
   stg_pose_t org;
-  this->GetGlobalPose( &org );
+  GetGlobalPose( &org );
 
   //printf( "g2l global origin %.2f %.2f %.2f\n",
   //  org.x, org.y, org.a );
@@ -275,6 +274,7 @@ StgModel::StgModel( stg_world_t* world,
   this->d_list = NULL;
   this->blocks = NULL;
   this->dirty = true;
+  this->gpose_dirty = true;
 
   this->typestr = wf->GetEntityType( this->id );
   this->child_type_count = g_hash_table_new( g_str_hash, g_str_equal );
@@ -349,8 +349,8 @@ StgModel::StgModel( stg_world_t* world,
   // now we can add the basic square shape
   this->AddBlockRect( -0.5,-0.5,1,1 );
 
-  this->data = this->cfg = this->cmd = NULL;
-  this->data_len = this->cmd_len = this->cfg_len;
+  //this->data = this->cfg = this->cmd = NULL;
+  //this->data_len = this->cmd_len = this->cfg_len;
   
   this->subs = 0;
 
@@ -362,6 +362,7 @@ StgModel::StgModel( stg_world_t* world,
   this->dl_body = glGenLists( 1 );
   this->dl_data = glGenLists( 1 );
   this->dl_debug = glGenLists( 1 );
+  //  this->raytrace_dl_list = NULL;
 
   // exterimental: creates a menu of models
   // gui_add_tree_item( mod );
@@ -384,9 +385,9 @@ StgModel::~StgModel( void )
   // TODO - make sure this is up to date - check leaks with valgrind
   if( children ) g_list_free( children );
   if( callbacks ) g_hash_table_destroy( callbacks );
-  if( data ) g_free( data );
-  if( cmd ) g_free( cmd );
-  if( cfg ) g_free( cfg );
+  //if( data ) g_free( data );
+  //if( cmd ) g_free( cmd );
+  //if( cfg ) g_free( cfg );
 }
 
 
@@ -472,26 +473,45 @@ void StgModel::SetGlobalVelocity( stg_velocity_t* gv )
 // get the model's position in the global frame
 void  StgModel::GetGlobalPose( stg_pose_t* gpose )
 { 
-  // todo - compute this only once and cache between calls.
+  //printf( "model %s global pose ", token );
 
-  stg_pose_t parent_pose;  
-  
-  // find my parent's pose
-  if( this->parent )
+  if( this->gpose_dirty )
     {
-      parent->GetGlobalPose( &parent_pose );
+      stg_pose_t parent_pose;  
       
-      gpose->x = parent_pose.x + pose.x * cos(parent_pose.a) 
-	- pose.y * sin(parent_pose.a);
-      gpose->y = parent_pose.y + pose.x * sin(parent_pose.a) 
-	+ pose.y * cos(parent_pose.a);
-      gpose->a = NORMALIZE(parent_pose.a + pose.a);
+      // find my parent's pose
+      if( this->parent )
+	{
+	  parent->GetGlobalPose( &parent_pose );
+	  
+	  global_pose.x = parent_pose.x + pose.x * cos(parent_pose.a) 
+	    - pose.y * sin(parent_pose.a);
+	  global_pose.y = parent_pose.y + pose.x * sin(parent_pose.a) 
+	    + pose.y * cos(parent_pose.a);
+	  global_pose.a = NORMALIZE(parent_pose.a + pose.a);
+	  
+	  // no 3Dg geometry, as we can only rotate about the z axis (yaw)
+	  // but we are on top of our parent
+	  global_pose.z = parent_pose.z + this->parent->geom.size.z + pose.z;
+	}
+      else
+	memcpy( &global_pose, &pose, sizeof(stg_pose_t));
+  
+      this->gpose_dirty = false;
+      //printf( " WORK " );
 
-      // no 3Dg geometry, as we can only rotate about the z axis (yaw)
-      gpose->z = parent_pose.z + this->parent->geom.size.z + pose.z;
     }
-  else
-    memcpy( gpose, &pose, sizeof(stg_pose_t));
+  //else
+  //printf( " CACHED " );
+
+
+  //printf( "[%.2f %.2f %.2f, %.2f]\n",
+  //  global_pose.x, 
+  //  global_pose.y, 
+  //  global_pose.z, 
+  //  global_pose.a );
+  
+  memcpy( gpose, &global_pose, sizeof(stg_pose_t));
 }
     
   
@@ -692,6 +712,10 @@ void StgModel::Draw( void )
   glPopMatrix(); // drop out of local coords
 
   glCallList( this->dl_debug );
+
+  //  for( GList* it = this->raytrace_dl_list; it; it=it->next )
+  //glCallList( (int)it->data );
+
 }
 
 // call this when the local physical appearance has changed
@@ -699,22 +723,22 @@ void StgModel::GuiGenerateBody( void )
 {
   printf( "%s::GuiGenerateBody()\n", this->token );
   
-  glNewList( this->dl_body, GL_COMPILE );
+  glNewList( dl_body, GL_COMPILE );
   
   // draw blocks
-  LISTFUNCTION( this->blocks, stg_block_t*, stg_block_render );
+  LISTFUNCTION( blocks, stg_block_t*, stg_block_render );
 
   glEndList();
 }
   
 void StgModel::GuiGenerateGrid( void )
 {
-  glNewList( this->dl_grid, GL_COMPILE );
+  glNewList( dl_grid, GL_COMPILE );
 
   push_color_rgba( 0.8,0.8,0.8,0.8 );
 
-  double dx = this->geom.size.x;
-  double dy = this->geom.size.y;
+  double dx = geom.size.x;
+  double dy = geom.size.y;
   double sp = 1.0;
  
   int nx = (int) ceil((dx/2.0) / sp);
@@ -766,52 +790,52 @@ void StgModel::GuiGenerateGrid( void )
 //------------------------------------------------------------------------
 // basic model properties
 
-void StgModel::SetData( void* data, size_t len )
-{
-  this->data = g_realloc( this->data, len );
-  memcpy( this->data, data, len );
-  this->data_len = len;
+// void StgModel::SetData( void* data, size_t len )
+// {
+//   this->data = g_realloc( this->data, len );
+//   memcpy( this->data, data, len );
+//   this->data_len = len;
 
-  this->GuiGenerateData();
+//   this->GuiGenerateData();
 
-  CallCallbacks( &this->data );
-}
+//   CallCallbacks( &this->data );
+// }
 
-void StgModel::SetCmd( void* cmd, size_t len )
-{
-  this->cmd = g_realloc( this->cmd, len );
-  memcpy( this->cmd, cmd, len );
-  this->cmd_len = len;
+// void StgModel::SetCmd( void* cmd, size_t len )
+// {
+//   this->cmd = g_realloc( this->cmd, len );
+//   memcpy( this->cmd, cmd, len );
+//   this->cmd_len = len;
 
-  CallCallbacks( &this->cmd );
-}
+//   CallCallbacks( &this->cmd );
+// }
 
-void StgModel::SetCfg( void* cfg, size_t len )
-{
-  this->cfg = g_realloc( this->cfg, len );
-  memcpy( this->cfg, cfg, len );
-  this->cfg_len = len;
+// void StgModel::SetCfg( void* cfg, size_t len )
+// {
+//   this->cfg = g_realloc( this->cfg, len );
+//   memcpy( this->cfg, cfg, len );
+//   this->cfg_len = len;
 
-  CallCallbacks( &this->cmd );
-}
+//   CallCallbacks( &this->cmd );
+// }
 
-void* StgModel::GetCfg( size_t* lenp )
-{
-  if(lenp) *lenp = this->cfg_len;
-  return this->cfg;
-}
+// void* StgModel::GetCfg( size_t* lenp )
+// {
+//   if(lenp) *lenp = this->cfg_len;
+//   return this->cfg;
+// }
 
-void* StgModel::GetData( size_t* lenp )
-{
-  if(lenp) *lenp = this->data_len;
-  return this->data;
-}
+// void* StgModel::GetData( size_t* lenp )
+// {
+//   if(lenp) *lenp = this->data_len;
+//   return this->data;
+// }
 
-void* StgModel::GetCmd( size_t* lenp )
-{
-  if(lenp) *lenp = this->cmd_len;
-  return this->cmd;
-}
+// void* StgModel::GetCmd( size_t* lenp )
+// {
+//   if(lenp) *lenp = this->cmd_len;
+//   return this->cmd;
+// }
 
 void StgModel::GetVelocity( stg_velocity_t* dest )
 {
@@ -849,6 +873,14 @@ void StgModel::NeedRedraw( void )
   this->world->win->dirty = true;
 }
 
+void StgModel::GPoseDirtyTree( void )
+{
+  this->gpose_dirty = true; // our global pose may have changed
+  
+  for( GList* it = this->children; it; it=it->next )
+    ((StgModel*)it->data)->GPoseDirtyTree();      
+}
+
 void StgModel::SetPose( stg_pose_t* pose )
 {
 /*   printf( "MODEL \"%s\" SET POSE (%.2f %.2f %.2f)\n", */
@@ -871,6 +903,7 @@ void StgModel::SetPose( stg_pose_t* pose )
       MapWithChildren( 1 );
 
       this->NeedRedraw();
+      this->GPoseDirtyTree(); // global pose may have changed
     }
 
   // register a model change even if the pose didn't actually change
@@ -891,6 +924,7 @@ void StgModel::AddToPose( double dx, double dy, double dz, double da )
 
       // render in the matrix
       MapWithChildren( 1 );
+      this->GPoseDirtyTree(); // global pose may have changed
     }
   
   // register a model change even if the pose didn't actually change
@@ -1087,7 +1121,7 @@ int StgModel::SetParent(  StgModel* newparent)
 int lines_raytrace_match( StgModel* mod, StgModel* hitmod ) 
  { 
    // Ignore invisible things, myself, my children, and my ancestors. 
-   if(  hitmod->ObstacleReturn()  )//&& (!stg_model_is_related(mod,hitmod)) )  
+   if(  hitmod->ObstacleReturn() && !(mod == hitmod) )//&& (!stg_model_is_related(mod,hitmod)) )  
      return 1; 
   
    return 0; // no match 
@@ -1129,20 +1163,19 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
   // no blocks? no hit!
   if( this->blocks == NULL )
     return NULL;
-  
-  glNewList( this->dl_debug, GL_COMPILE );
-  glPushMatrix();
-  glTranslatef( 0,0,1.0 );
 
-  double eps = 0.3;
-  push_color_rgb( 0,1,0 );
-  glBegin( GL_QUADS );
-  glVertex2f( pose->x-eps, pose->y-eps );
-  glVertex2f( pose->x+eps, pose->y-eps );
-  glVertex2f( pose->x+eps, pose->y+eps );
-  glVertex2f( pose->x-eps, pose->y+eps );
-  glEnd();
-  pop_color();
+  // unrender myself - avoids a lot of self-hits
+  this->Map(0);
+
+  // add the local geom offset
+  stg_pose_t local;
+  stg_pose_sum( &local, pose, &this->geom.pose );
+  
+  //glNewList( this->dl_debug, GL_COMPILE );
+  //glPushMatrix();
+  //glTranslatef( 0,0,1.0 );  
+  //push_color_rgb( 0,0,1 );
+  //glBegin( GL_LINES );
 
   // loop over all blocks 
   for( GList* it = this->blocks; it; it=it->next )
@@ -1154,13 +1187,6 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
 	{ 
 	  stg_point_t* pt1 = &b->pts[p];
 	  stg_point_t* pt2 = &b->pts[(p+1) % b->pt_count]; 
-
-	  push_color_rgb( 1,0,0 );
-	  glBegin( GL_LINES );
-	  glVertex2f( pt1->x, pt1->y );
-	  glVertex2f( pt2->x, pt2->y );
-	  glEnd();
-	  pop_color();
 
 	  stg_pose_t pp1; 
  	  pp1.x = pt1->x; 
@@ -1176,35 +1202,23 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
  	  stg_pose_t p2; 
 	  
  	  // shift the line points into the global coordinate system 
- 	  stg_pose_sum( &p1, pose, &pp1 ); 
- 	  stg_pose_sum( &p2, pose, &pp2 ); 
+ 	  stg_pose_sum( &p1, &local, &pp1 ); 
+ 	  stg_pose_sum( &p2, &local, &pp2 ); 
 	  
-	  push_color_rgb( 0,0,1 );
-	  glBegin( GL_LINES );
-	  glVertex2f( p1.x, p1.y );
-	  glVertex2f( p2.x, p2.y );
-	  glEnd();
-	  pop_color();
+	  //glVertex2f( p1.x, p1.y );
+	  //glVertex2f( p2.x, p2.y );
 
  	  //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y ); 
 	  
 	  double dx = p2.x - p1.x;
 	  double dy = p2.y - p1.y;
 
-	  double bearing = atan2( dy, dx );
-	  double range = hypot( dx, dy );
-
- 	  itl_t* itl = itl_create( p1.x, p1.y, 0,
-				   //p2.x, p2.y,  				   
-				   bearing, range,
+ 	  itl_t* itl = itl_create( p1.x, p1.y, 0.2,
+				   p2.x, p2.y,  				   
  				   world->matrix,  
- 				   //PointToPoint ); 
- 				   PointToBearingRange ); 
+ 				   PointToPoint ); 
 	  	  
  	  StgModel* hitmod = itl_first_matching( itl, lines_raytrace_match, this ); 
-	  
-	  if( hitmod )
-	    printf( "hit model %s\n", hitmod->Token() );
 	  
  	  if( hitmod ) 
  	    { 
@@ -1212,9 +1226,12 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
  	      if( hity ) *hity = itl->y;	   
  	      itl_destroy( itl ); 
 
-	      glPopMatrix();
+	      this->Map(1);
+
 	      //pop_color();
-	      glEndList();
+	      //glEnd();
+	      //glPopMatrix();
+	      //glEndList();
 	      
  	      return hitmod; // we hit this object! stop raytracing 
  	    } 
@@ -1223,10 +1240,14 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
  	} 
     } 
   
-  //glEnd();
-  glPopMatrix();
+  // re-render myself
+  this->Map(1);
+
+
   //pop_color();
-  glEndList();
+  //glEnd();
+  //glPopMatrix();
+  //glEndList();
 
 
    return NULL;  // done  
@@ -1431,7 +1452,7 @@ void StgModel::UpdatePose( void )
    StgModel* hitthing = this->TestCollision( &gp, &hitx, &hity );
 
    if( hitthing )
-     printf( "hit %s at %.2f %/2f\n",
+     printf( "hit %s at %.2f %,2f\n",
 	     hitthing->Token(), hitx, hity );
    else
      this->SetPose( &p );

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -73,9 +73,7 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
 /// set the current odometry estimate 
 void StgModelPosition::SetOdom( stg_pose_t* odom )
 {
-  assert(this->data);
-  stg_position_data_t* data = (stg_position_data_t*)this->data;
-  memcpy( &data->pose, odom, sizeof(stg_pose_t));
+  memcpy( &est_pose, odom, sizeof(stg_pose_t));
 
   // figure out where the implied origin is in global coords
   stg_pose_t gp;
@@ -85,15 +83,10 @@ void StgModelPosition::SetOdom( stg_pose_t* odom )
   double dx = -odom->x * cos(da) + odom->y * sin(da);
   double dy = -odom->y * cos(da) - odom->x * sin(da);
 
-  stg_pose_t origin;
-  origin.x = gp.x + dx;
-  origin.y = gp.y + dy;
-  origin.a = da;
-
-  memcpy( &data->origin, &origin, sizeof(stg_pose_t));
-  
-  //model_change( mod, &mod->data );
-  this->SetData( this->data, this->data_len );
+  // origin of our estimated pose
+  est_origin.x = gp.x + dx;
+  est_origin.y = gp.y + dy;
+  est_origin.a = da;
 } 
 
 /* Internal */
@@ -137,37 +130,27 @@ StgModelPosition::StgModelPosition( stg_world_t* world,
   this->SetBlobReturn( TRUE );
     
   // configure the position-specific stuff
+ 
+  // control
+  memset( &goal, 0, sizeof(goal));  
+  drive_mode = STG_POSITION_DRIVE_DEFAULT;
+  control_mode = STG_POSITION_CONTROL_DEFAULT;
 
-  stg_position_cfg_t cfg;
-  memset( &cfg, 0, sizeof(cfg));
-  cfg.drive_mode = STG_POSITION_DRIVE_DEFAULT;
-  this->SetCfg( &cfg, sizeof(cfg));
-  
-  stg_position_cmd_t cmd;
-  memset( &cmd, 0, sizeof(cmd));  
-  cmd.mode = STG_POSITION_CONTROL_DEFAULT;
-  this->SetCmd( &cmd, sizeof(cmd));
-  
-  stg_position_data_t data;
-  memset( &data, 0, sizeof(data));
-  
-  data.integration_error.x =  
+  // localization
+  localization_mode = STG_POSITION_LOCALIZATION_DEFAULT;  
+
+  integration_error.x =  
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_X - 
     STG_POSITION_INTEGRATION_ERROR_MAX_X/2.0;
   
-  data.integration_error.y =  
+  integration_error.y =  
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_Y - 
     STG_POSITION_INTEGRATION_ERROR_MAX_Y/2.0;
   
-  data.integration_error.a =  
+  integration_error.a =  
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
     STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
   
-  data.localization = STG_POSITION_LOCALIZATION_DEFAULT;
-  
-  this->SetData( &data, sizeof(data));
-  
-  //gui_position_init( mod );  
 }
 
  
@@ -182,9 +165,6 @@ void StgModelPosition::Load( void )
   
   char* keyword = NULL;
   
-  stg_position_data_t* data = (stg_position_data_t*)this->data;
-  stg_position_cfg_t* cfg = (stg_position_cfg_t*)this->cfg;
-
   // load steering mode
   if( wf->PropertyExists( this->id, "drive" ) )
     {
@@ -194,23 +174,18 @@ void StgModelPosition::Load( void )
       if( mode_str )
 	{
 	  if( strcmp( mode_str, "diff" ) == 0 )
-	    cfg->drive_mode = STG_POSITION_DRIVE_DIFFERENTIAL;
+	    drive_mode = STG_POSITION_DRIVE_DIFFERENTIAL;
 	  else if( strcmp( mode_str, "omni" ) == 0 )
-	    cfg->drive_mode = STG_POSITION_DRIVE_OMNI;
+	    drive_mode = STG_POSITION_DRIVE_OMNI;
 	  else if( strcmp( mode_str, "car" ) == 0 )
-	    cfg->drive_mode = STG_POSITION_DRIVE_CAR;
+	    drive_mode = STG_POSITION_DRIVE_CAR;
 	  else
 	    {
 	      PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\" or \"car\". Using \"diff\" as default.", mode_str );	      
 	    }
-
-	  // TODO
-	  // let people know we changed the cfg
-	  //model_change( mod, &mod->cfg );
 	}
     }      
-  
-  
+    
   // load odometry if specified
   if( wf->PropertyExists( this->id, "odom" ) )
     {
@@ -224,42 +199,43 @@ void StgModelPosition::Load( void )
   // set the starting pose as my initial odom position. This could be
   // overwritten below if the localization_origin property is
   // specified
-  this->GetGlobalPose( &data->origin );
+  this->GetGlobalPose( &est_origin );
 
   keyword = "localization_origin"; 
   if( wf->PropertyExists( this->id, keyword ) )
     {  
-      data->origin.x = wf->ReadTupleLength( id, keyword, 0, data->pose.x );
-      data->origin.y = wf->ReadTupleLength( id, keyword, 1, data->pose.y );
-      data->origin.a = wf->ReadTupleAngle( id,keyword, 2, data->pose.a );
+      est_origin.x = wf->ReadTupleLength( id, keyword, 0, est_origin.x );
+      est_origin.y = wf->ReadTupleLength( id, keyword, 1, est_origin.y );
+      est_origin.a = wf->ReadTupleAngle( id,keyword, 2, est_origin.a );
 
       // compute our localization pose based on the origin and true pose
       stg_pose_t gpose;
       this->GetGlobalPose( &gpose );
       
-      data->pose.a = NORMALIZE( gpose.a - data->origin.a );
-      //double cosa = cos(data->pose.a);
-      //double sina = sin(data->pose.a);
-      double cosa = cos(data->origin.a);
-      double sina = sin(data->origin.a);
-      double dx = gpose.x - data->origin.x;
-      double dy = gpose.y - data->origin.y; 
-      data->pose.x = dx * cosa + dy * sina; 
-      data->pose.y = dy * cosa - dx * sina;
+      est_pose.a = NORMALIZE( gpose.a - est_origin.a );
+      //double cosa = cos(est_pose.a);
+      //double sina = sin(est_pose.a);
+      double cosa = cos(est_origin.a);
+      double sina = sin(est_origin.a);
+      double dx = gpose.x - est_origin.x;
+      double dy = gpose.y - est_origin.y; 
+      est_pose.x = dx * cosa + dy * sina; 
+      est_pose.y = dy * cosa - dx * sina;
 
       // zero position error: assume we know exactly where we are on startup
-      memset( &data->pose_error, 0, sizeof(data->pose_error));      
+      memset( &est_pose_error, 0, sizeof(est_pose_error));      
     }
 
   // odometry model parameters
-  if( wf->PropertyExists( id, "odom_error" ) )
+  keyword = "odom_error";
+  if( wf->PropertyExists( id, keyword ) )
     {
-      data->integration_error.x = 
-	wf->ReadTupleLength( id, "odom_error", 0, data->integration_error.x );
-      data->integration_error.y = 
-	wf->ReadTupleLength( id, "odom_error", 1, data->integration_error.y );
-      data->integration_error.a 
-	= wf->ReadTupleAngle( id, "odom_error", 2, data->integration_error.a );
+      integration_error.x = 
+	wf->ReadTupleLength( id, keyword, 0, integration_error.x );
+      integration_error.y = 
+	wf->ReadTupleLength( id, keyword, 1, integration_error.y );
+      integration_error.a 
+	= wf->ReadTupleAngle( id, keyword, 2, integration_error.a );
     }
 
   // choose a localization model
@@ -271,9 +247,9 @@ void StgModelPosition::Load( void )
       if( loc_str )
 	{
 	  if( strcmp( loc_str, "gps" ) == 0 )
-	    data->localization = STG_POSITION_LOCALIZATION_GPS;
+	    localization_mode = STG_POSITION_LOCALIZATION_GPS;
 	  else if( strcmp( loc_str, "odom" ) == 0 )
-	    data->localization = STG_POSITION_LOCALIZATION_ODOM;
+	    localization_mode = STG_POSITION_LOCALIZATION_ODOM;
 	  else
 	    PRINT_ERR2( "unrecognized localization mode \"%s\" for model \"%s\"."
 			" Valid choices are \"gps\" and \"odom\".", 
@@ -293,53 +269,49 @@ void StgModelPosition::Load( void )
 { 
   PRINT_DEBUG1( "[%lu] position update", this->world->sim_time );
   
-  stg_position_data_t* data = (stg_position_data_t*)this->data;
-  stg_position_cmd_t* cmd = (stg_position_cmd_t*)this->cmd;
-  stg_position_cfg_t* cfg = (stg_position_cfg_t*)this->cfg;
-  
   // stop by default
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(stg_velocity_t) );
   
   if( this->subs )   // no driving if noone is subscribed
     {            
-      switch( cmd->mode )
+      switch( control_mode )
 	{
 	case STG_POSITION_CONTROL_VELOCITY :
 	  {
 	    PRINT_DEBUG( "velocity control mode" );
 	    PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
 			  this->token, 
-			  this->cmd.x, 
-			  this->cmd.y, 
-			  this->cmd.a );
+			  this->goal.x, 
+			  this->goal.y, 
+			  this->goal.a );
 	    
 
-	    switch( cfg->drive_mode )
+	    switch( drive_mode )
 	      {
 	      case STG_POSITION_DRIVE_DIFFERENTIAL:
 		// differential-steering model, like a Pioneer
-		vel.x = cmd->x;
+		vel.x = goal.x;
 		vel.y = 0;
-		vel.a = cmd->a;
+		vel.a = goal.a;
 		break;
 		
 	      case STG_POSITION_DRIVE_OMNI:
 		// direct steering model, like an omnidirectional robot
-		vel.x = cmd->x;
-		vel.y = cmd->y;
-		vel.a = cmd->a;
+		vel.x = goal.x;
+		vel.y = goal.y;
+		vel.a = goal.a;
 		break;
 
 	      case STG_POSITION_DRIVE_CAR:
 		// car like steering model based on speed and turning angle
-		vel.x = cmd->x * cos(cmd->a);
+		vel.x = goal.x * cos(goal.a);
 		vel.y = 0;
-		vel.a = cmd->x * sin(cmd->a)/1.0; // here 1.0 is the wheel base, this should be a config option
+		vel.a = goal.x * sin(goal.a)/1.0; // here 1.0 is the wheel base, this should be a config option
 		break;
 		
 	      default:
-		PRINT_ERR1( "unknown steering mode %d", cfg->drive_mode );
+		PRINT_ERR1( "unknown steering mode %d", drive_mode );
 	      }
 	  } break;
 	  
@@ -347,9 +319,9 @@ void StgModelPosition::Load( void )
 	  {
 	    PRINT_DEBUG( "position control mode" );
 	    
-	    double x_error = cmd->x - data->pose.x;
-	    double y_error = cmd->y - data->pose.y;
-	    double a_error = NORMALIZE( cmd->a - data->pose.a );
+	    double x_error = goal.x - est_pose.x;
+	    double y_error = goal.y - est_pose.y;
+	    double a_error = NORMALIZE( goal.a - est_pose.a );
 	    
 	    PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
 	    
@@ -359,7 +331,7 @@ void StgModelPosition::Load( void )
 	    double max_speed_y = 0.4;
 	    double max_speed_a = 1.0;	      
 	    
-	    switch( cfg->drive_mode )
+	    switch( drive_mode )
 	      {
 	      case STG_POSITION_DRIVE_OMNI:
 		{
@@ -402,7 +374,7 @@ void StgModelPosition::Load( void )
 		      double goal_angle = atan2( y_error, x_error );
 		      double goal_distance = hypot( y_error, x_error );
 		      
-		      a_error = NORMALIZE( goal_angle - data->pose.a );
+		      a_error = NORMALIZE( goal_angle - est_pose.a );
 		      calc.a = MIN( a_error, max_speed_a );
 		      calc.a = MAX( a_error, -max_speed_a );
 		      
@@ -426,13 +398,13 @@ void StgModelPosition::Load( void )
 		break;
 		
 	      default:
-		PRINT_ERR1( "unknown steering mode %d", (int)cfg->drive_mode );
+		PRINT_ERR1( "unknown steering mode %d", (int)drive_mode );
 	      }
 	  }
 	  break;
 	  
 	default:
-	  PRINT_ERR1( "unrecognized position command mode %d", cmd->mode );
+	  PRINT_ERR1( "unrecognized position command mode %d", control_mode );
 	}
       
       // simple model of power consumption
@@ -450,7 +422,7 @@ void StgModelPosition::Load( void )
       this->SetVelocity( &vel );
     }
   
-  switch( data->localization )
+  switch( localization_mode )
     {
     case STG_POSITION_LOCALIZATION_GPS:
       {
@@ -458,14 +430,14 @@ void StgModelPosition::Load( void )
 	stg_pose_t gpose;
 	this->GetGlobalPose( &gpose );
 	
-	data->pose.a = NORMALIZE( gpose.a - data->origin.a );
-	//data->pose.a =0;// NORMALIZE( gpose.a - data->origin.a );
-	double cosa = cos(data->origin.a);
-	double sina = sin(data->origin.a);
-	double dx = gpose.x - data->origin.x;
-	double dy = gpose.y - data->origin.y; 
-	data->pose.x = dx * cosa + dy * sina; 
-	data->pose.y = dy * cosa - dx * sina;
+	est_pose.a = NORMALIZE( gpose.a - est_origin.a );
+	//est_pose.a =0;// NORMALIZE( gpose.a - est_origin.a );
+	double cosa = cos(est_origin.a);
+	double sina = sin(est_origin.a);
+	double dx = gpose.x - est_origin.x;
+	double dy = gpose.y - est_origin.y; 
+	est_pose.x = dx * cosa + dy * sina; 
+	est_pose.y = dy * cosa - dx * sina;
 
       }
       break;
@@ -475,22 +447,22 @@ void StgModelPosition::Load( void )
 	// integrate our velocities to get an 'odometry' position estimate.
 	double dt = this->world->sim_interval_ms/1e3;
 	
-	data->pose.a = NORMALIZE( data->pose.a + (vel.a * dt) * (1.0 +data->integration_error.a) );
+	est_pose.a = NORMALIZE( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
 	
-	double cosa = cos(data->pose.a);
-	double sina = sin(data->pose.a);
-	double dx = (vel.x * dt) * (1.0 + data->integration_error.x );
-	double dy = (vel.y * dt) * (1.0 + data->integration_error.y );
+	double cosa = cos(est_pose.a);
+	double sina = sin(est_pose.a);
+	double dx = (vel.x * dt) * (1.0 + integration_error.x );
+	double dy = (vel.y * dt) * (1.0 + integration_error.y );
 	
-	data->pose.x += dx * cosa + dy * sina; 
-	data->pose.y -= dy * cosa - dx * sina;
+	est_pose.x += dx * cosa + dy * sina; 
+	est_pose.y -= dy * cosa - dx * sina;
 
       }
       break;
       
     default:
       PRINT_ERR2( "unknown localization mode %d for model %s\n",
-		  data->localization, this->token );
+		  localization_mode, this->token );
       break;
     }
 
@@ -513,13 +485,8 @@ void StgModelPosition::Load( void )
    PRINT_DEBUG( "position shutdown" );
    
    // safety features!
-   stg_position_cmd_t cmd;
-   memset( &cmd, 0, sizeof(cmd) ); 
-   this->SetCmd( &cmd, sizeof(cmd) );
-   
-   stg_velocity_t vel;
-   memset( &vel, 0, sizeof(vel));
-   this->SetVelocity( &vel );
+   bzero( &goal, sizeof(goal) ); 
+   bzero( &velocity, sizeof(velocity) ); 
    
    this->SetWatts( 0 );
    

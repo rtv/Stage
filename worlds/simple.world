@@ -5,28 +5,20 @@
 # defines Pioneer-like robots
 include "pioneer.inc"
 
-
-
-
-
-
-
 # defines 'map' object used for floorplans
 include "map.inc"
 
-
 # defines sick laser
 include "sick.inc"
-
 
 # size of the world in meters
 size [16 16]
 
 # set the resolution of the underlying raytrace model in meters
-resolution 0.05
+resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 100  # real-time interval between simulation updates in milliseconds 
+interval_real 10  # real-time interval between simulation updates in milliseconds 
 # configure the GUI window
 window
 ( 
@@ -52,6 +44,7 @@ floorplan
 define laserpioneer pioneer2dx
 (
   fancy_sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
+  ranger( pose [1 0 0 0])
 )
 
 #define laserpioneer position 

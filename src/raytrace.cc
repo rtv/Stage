@@ -6,6 +6,7 @@
 
 //extern stg_rtk_fig_t* fig_debug_rays;
 
+extern int dl_raytrace;
 
 /* useful debug */
 static void print_thing( char* prefix, stg_cell_t* cell, double x, double y )
@@ -53,6 +54,8 @@ int stg_model_ray_intersect( StgModel* mod,
   *hity = pose.y;
   return TRUE;
 }
+
+
 
 itl_t* itl_create( double x, double y, double z, double a, double b, 
 		   stg_matrix_t* matrix, itl_mode_t pmode )
@@ -110,26 +113,37 @@ int hit_range_compare( stg_hit_t* a, stg_hit_t* b )
   return 0;
 }
 
+StgModel* stg_first_model_on_ray( double x, double y, double z, 
+				  double a, double b, 
+				  stg_matrix_t* matrix, 
+				  itl_mode_t pmode,
+				  stg_itl_test_func_t func, 
+				  StgModel* finder,
+				  stg_meters_t* hitrange,
+				  stg_meters_t* hitx,
+				  stg_meters_t* hity )
+{
+  itl_t* itl = itl_create( x,y,z,a,b,matrix,pmode );
+
+  StgModel* hit = itl_first_matching( itl, func, finder );
+
+  if( hit )
+    {
+      *hitrange = itl->range;
+      *hitx = itl->x;
+      *hity = itl->y;
+    }
+
+  itl_destroy( itl );
+
+  return hit;
+}
+
 
 void itl_destroy( itl_t* itl )
 {
   if( itl )
-    {
-//       if( itl->hits )
-// 	{
-// 	  GList* it;
-// 	  for( it=itl->hits; it; it=it->next )
-// 	    if( it->data )
-// 		g_free( it->data );
-	      
-// 	  g_list_free( itl->hits );
-// 	}
-
-//      if( itl->incr ) 
-      //g_free( itl->incr );
-
       g_free( itl );
-    }
 }
 
 

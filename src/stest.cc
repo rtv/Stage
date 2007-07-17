@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.2 2007-07-13 05:48:31 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.3 2007-07-17 05:26:44 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -45,19 +45,28 @@ int main( int argc, char* argv[] )
   // generate the name of the laser attached to the robot
   char lasername[64];
   snprintf( lasername, 63, "%s.laser:0", robotname ); 
+
+  // generate the name of the sonar attached to the robot
+  char rangername[64];
+  snprintf( rangername, 63, "%s.ranger:0", robotname ); 
   
-  StgModel* position = stg_world_model_name_lookup( world, robotname );  
+  StgModelPosition* position = (StgModelPosition*)stg_world_model_name_lookup( world, robotname );  
   assert(position);
 
   StgModelLaser* laser = (StgModelLaser*)stg_world_model_name_lookup( world, lasername );
   assert(laser);
 
+  StgModelRanger* ranger = (StgModelRanger*)stg_world_model_name_lookup( world, rangername );
+  assert(ranger);
+
   // subscribe to the laser - starts it collecting data
   position->Subscribe();
   laser->Subscribe();
+  ranger->Subscribe();
 
   position->Print( "Subscribed to model" );
   laser->Print( "Subscribed to model" );
+  ranger->Print( "Subscribed to model" );
 
   printf( "Starting world clock..." ); fflush(stdout);
   // start the clock
@@ -72,19 +81,21 @@ int main( int argc, char* argv[] )
 
   while( (stg_world_update( world,0 )==0) )
     {
+      ranger->Print( NULL );
+
       // get some laser data
-      size_t laser_sample_count = 0;
-      
-      stg_laser_sample_t* laserdata = 
-	(stg_laser_sample_t*)laser->GetData( &laser_sample_count );
-      laser_sample_count /= sizeof(stg_laser_sample_t);
+      size_t laser_sample_count = laser->sample_count;      
+      stg_laser_sample_t* laserdata = laser->samples;
+
+      if( laserdata == NULL )
+	continue;
+
       
       // THIS IS ADAPTED FROM PLAYER'S RANDOMWALK C++ EXAMPLE
 
       /* See if there is an obstacle in front */
       obs = FALSE;
-      int i;
-      for(i = 0; i < laser_sample_count; i++)
+      for( unsigned int i = 0; i < laser_sample_count; i++)
 	{
 	  if(laserdata[i].range < minfrontdistance)
 	    obs = TRUE;
@@ -106,7 +117,7 @@ int main( int argc, char* argv[] )
 	      double min_left = 1e9;
 	      double min_right = 1e9;
 	      
-	      for(i=0; i<laser_sample_count; i++ )
+	      for( unsigned int i=0; i<laser_sample_count; i++ )
 		{
 		  if(i>(laser_sample_count/2) && laserdata[i].range < min_left)
 		    min_left = laserdata[i].range;
@@ -139,13 +150,7 @@ int main( int argc, char* argv[] )
 	  randcount--;
 	}
       
-      stg_position_cmd_t cmd;
-      memset(&cmd,0,sizeof(cmd));
-      cmd.x = newspeed;
-      cmd.y = 0;
-      cmd.a = newturnrate;
-
-      position->SetCmd( &cmd, sizeof(cmd));
+      position->Do( newspeed, 0, newturnrate );
 
     }
   

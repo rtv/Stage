@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_sonar.cc,v 1.8 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_sonar.cc,v 1.8.4.1 2007-07-17 05:26:44 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -41,15 +41,12 @@
 //
 // SONAR INTERFACE
 //
-extern "C" { 
-int ranger_init( stg_model_t* mod );
-}
 
 InterfaceSonar::InterfaceSonar( player_devaddr_t id, 
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( id, driver, cf, section, ranger_init )
+  : InterfaceModel( id, driver, cf, section, "ranger" )
 {
   //this->data_len = sizeof(player_sonar_data_t);
   //this->cmd_len = 0;
@@ -57,27 +54,25 @@ InterfaceSonar::InterfaceSonar( player_devaddr_t id,
 
 void InterfaceSonar::Publish( void )
 {
-  
-  size_t len = mod->data_len;
-  stg_ranger_sample_t* rangers = (stg_ranger_sample_t*)mod->data;
+  StgModelRanger* mod = (StgModelRanger*)this->mod;
 
   player_sonar_data_t sonar;
   memset( &sonar, 0, sizeof(sonar) );
   
-  if( len > 0 )
+  size_t sensor_count = mod->sensor_count;
+  
+  if( sensor_count > 0 )
     {      
-      size_t rcount = len / sizeof(stg_ranger_sample_t);
-      
       // limit the number of samples to Player's maximum
-      if( rcount > PLAYER_SONAR_MAX_SAMPLES )
-	rcount = PLAYER_SONAR_MAX_SAMPLES;
+      if( sensor_count > PLAYER_SONAR_MAX_SAMPLES )
+	sensor_count = PLAYER_SONAR_MAX_SAMPLES;
       
       //if( son->power_on ) // set with a sonar config
       {
-	sonar.ranges_count = rcount;
+	sonar.ranges_count = sensor_count;
 	
-	for( int i=0; i<(int)rcount; i++ )
-	  sonar.ranges[i] = rangers[i].range;
+	for( unsigned int i=0; i<sensor_count; i++ )
+	  sonar.ranges[i] = mod->sensors[i].range;
       } 
     }
   
@@ -92,32 +87,31 @@ int InterfaceSonar::ProcessMessage( MessageQueue* resp_queue,
 				     player_msghdr_t* hdr,
 				     void* data )
 {  
+
   if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
 			    PLAYER_SONAR_REQ_GET_GEOM, 
 			    this->addr) )
     {
-      size_t cfglen = mod->cfg_len;
-      stg_ranger_config_t* cfgs = (stg_ranger_config_t*)mod->cfg;
-      assert( cfgs );
-      
-      size_t rcount = cfglen / sizeof(stg_ranger_config_t);
-      
-      // convert the ranger data into Player-format sonar poses	
-      player_sonar_geom_t pgeom;
-      memset( &pgeom, 0, sizeof(pgeom) );
+      StgModelRanger* mod = (StgModelRanger*)this->mod;
+
+      size_t rcount = mod->sensor_count;
       
       // limit the number of samples to Player's maximum
       if( rcount > PLAYER_SONAR_MAX_SAMPLES )
 	rcount = PLAYER_SONAR_MAX_SAMPLES;
-      
+
+      // convert the ranger data into Player-format sonar poses	
+      player_sonar_geom_t pgeom;
+      memset( &pgeom, 0, sizeof(pgeom) );
+            
       pgeom.poses_count = rcount;
       
-      for( int i=0; i<(int)rcount; i++ )
+      for( unsigned int i=0; i<rcount; i++ )
 	{
 	  // fill in the geometry data formatted player-like
-	  pgeom.poses[i].px = cfgs[i].pose.x;	  
-	  pgeom.poses[i].py = cfgs[i].pose.y;	  
-	  pgeom.poses[i].pa = cfgs[i].pose.a;	    
+	  pgeom.poses[i].px = mod->sensors[i].pose.x;	  
+	  pgeom.poses[i].py = mod->sensors[i].pose.y;	  
+	  pgeom.poses[i].pa = mod->sensors[i].pose.a;	    
 	}
       
       this->driver->Publish( this->addr, resp_queue, 

@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.7 2007-07-09 00:03:24 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.8 2007-07-17 05:26:44 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -124,60 +124,60 @@ define pioneer2dx position
   block[2].z [ 0.184 0.234 ]
 
   # left wheel
-  block[4].points 4
-  block[4].point[0] [  0.083  0.177 ]
-  block[4].point[1] [ -0.083  0.177 ]
-  block[4].point[2] [ -0.083  0.140 ]
-  block[4].point[3] [  0.083  0.140 ]
-  block[4].z [0 0.165 ]
-  block[4].color "gray10"
+  block[3].points 4
+  block[3].point[0] [  0.083  0.177 ]
+  block[3].point[1] [ -0.083  0.177 ]
+  block[3].point[2] [ -0.083  0.140 ]
+  block[3].point[3] [  0.083  0.140 ]
+  block[3].z [0 0.165 ]
+  block[3].color "gray10"
 
   # right wheel
-  block[5].points 4
-  block[5].point[0] [  0.083  -0.14 ]
-  block[5].point[1] [ -0.083  -0.14 ]
-  block[5].point[2] [ -0.083  -0.177 ]
-  block[5].point[3] [  0.083  -0.177 ]
-  block[5].z [ 0 0.165 ]
-  block[5].color "gray10"
+  block[4].points 4
+  block[4].point[0] [  0.083  -0.14 ]
+  block[4].point[1] [ -0.083  -0.14 ]
+  block[4].point[2] [ -0.083  -0.177 ]
+  block[4].point[3] [  0.083  -0.177 ]
+  block[4].z [ 0 0.165 ]
+  block[4].color "gray10"
 
   # castor
-  block[6].points 4
-  block[6].point[3] [ -0.2475  0.012 ]
-  block[6].point[2] [ -0.1825  0.012 ]
-  block[6].point[1] [ -0.1825 -0.012 ]
-  block[6].point[0] [ -0.2475 -0.012 ]
-  block[6].z [ 0 0.065 ]
-  block[6].color "gray10"
+  block[5].points 4
+  block[5].point[3] [ -0.2475  0.012 ]
+  block[5].point[2] [ -0.1825  0.012 ]
+  block[5].point[1] [ -0.1825 -0.012 ]
+  block[5].point[0] [ -0.2475 -0.012 ]
+  block[5].z [ 0 0.065 ]
+  block[5].color "gray10"
 
   # lid
-  block[3].points 22
-  block[3].point[21]  [  0.174 0 ]
-  block[3].point[20]  [  0.166 -0.056 ]
-  block[3].point[19]  [  0.145 -0.107 ]
-  block[3].point[18]  [  0.112 -0.155 ]
-  block[3].point[17]  [  0.064 -0.190 ]
-  block[3].point[16]  [  -0.074 -0.190 ]
-  block[3].point[15]  [  -0.096 -0.160 ]
-  block[3].point[14]  [  -0.151 -0.160 ]
-  block[3].point[13]  [  -0.2   -0.155 ]
-  block[3].point[12]  [  -0.236 -0.107 ]
-  block[3].point[11] [  -0.256 -0.056 ]
-  block[3].point[10] [  -0.264  0     ]
-  block[3].point[9] [  -0.256  0.056 ]
-  block[3].point[8] [ -0.236  0.107 ]
-  block[3].point[7] [ -0.2    0.155 ]
-  block[3].point[6] [ -0.151  0.160 ]
-  block[3].point[5] [ -0.096  0.160 ]
-  block[3].point[4] [ -0.074  0.190 ]
-  block[3].point[3] [  0.064  0.190 ]
-  block[3].point[2] [  0.112  0.155 ]
-  block[3].point[1] [  0.145  0.107 ]
-  block[3].point[0] [  0.166  0.056 ]
-  block[3].z [ 0.234 0.24 ]
+  block[6].points 22
+  block[6].point[21]  [  0.174 0 ]
+  block[6].point[20]  [  0.166 -0.056 ]
+  block[6].point[19]  [  0.145 -0.107 ]
+  block[6].point[18]  [  0.112 -0.155 ]
+  block[6].point[17]  [  0.064 -0.190 ]
+  block[6].point[16]  [  -0.074 -0.190 ]
+  block[6].point[15]  [  -0.096 -0.160 ]
+  block[6].point[14]  [  -0.151 -0.160 ]
+  block[6].point[13]  [  -0.2   -0.155 ]
+  block[6].point[12]  [  -0.236 -0.107 ]
+  block[6].point[11] [  -0.256 -0.056 ]
+  block[6].point[10] [  -0.264  0     ]
+  block[6].point[9] [  -0.256  0.056 ]
+  block[6].point[8] [ -0.236  0.107 ]
+  block[6].point[7] [ -0.2    0.155 ]
+  block[6].point[6] [ -0.151  0.160 ]
+  block[6].point[5] [ -0.096  0.160 ]
+  block[6].point[4] [ -0.074  0.190 ]
+  block[6].point[3] [  0.064  0.190 ]
+  block[6].point[2] [  0.112  0.155 ]
+  block[6].point[1] [  0.145  0.107 ]
+  block[6].point[0] [  0.166  0.056 ]
+  block[6].z [ 0.234 0.24 ]
   # a dark top looks more realistic, but isn't very useful 
   # for a top-down view
-  #block[3].color "gray10"
+  #block[6].color "gray10"
 ) 
 
 # The AmigoBot sonar array

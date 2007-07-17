@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.14.4.2 2007-07-13 05:48:31 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.14.4.3 2007-07-17 05:26:44 rtv Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -60,6 +60,8 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
                                       player_msghdr_t* hdr,
                                       void* data)
 {
+  StgModelPosition* mod = (StgModelPosition*)this->mod;
+
   // Is it a new motor command?
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
                            PLAYER_POSITION2D_CMD_VEL, 
@@ -68,14 +70,13 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     // convert from Player to Stage format
     player_position2d_cmd_vel_t* pcmd = (player_position2d_cmd_vel_t*)data;
 
-    stg_position_cmd_t scmd; 
-    memset( &scmd, 0, sizeof(scmd));
+    //stg_position_cmd_t scmd; 
+    //memset( &scmd, 0, sizeof(scmd));
 
-    scmd.x = pcmd->vel.px;
-    scmd.y = pcmd->vel.py;
-    scmd.a = pcmd->vel.pa;
-    scmd.mode = STG_POSITION_CONTROL_VELOCITY;
-    this->mod->SetCmd( &scmd, sizeof(scmd) );
+    mod->goal.x = pcmd->vel.px;
+    mod->goal.y = pcmd->vel.py;
+    mod->goal.a = pcmd->vel.pa;
+    mod->control_mode = STG_POSITION_CONTROL_VELOCITY;
 
     return 0;
   }
@@ -91,11 +92,10 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     stg_position_cmd_t scmd; 
     memset( &scmd, 0, sizeof(scmd));
 
-    scmd.x = pcmd->pos.px;
-    scmd.y = pcmd->pos.py;
-    scmd.a = pcmd->pos.pa;
-    scmd.mode = STG_POSITION_CONTROL_POSITION;
-    this->mod->SetCmd( &scmd, sizeof(scmd) );
+    mod->goal.x = pcmd->pos.px;
+    mod->goal.y = pcmd->pos.py;
+    mod->goal.a = pcmd->pos.pa;
+    mod->control_mode = STG_POSITION_CONTROL_POSITION;
 
     return 0;
   }
@@ -111,11 +111,10 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     stg_position_cmd_t scmd; 
     memset( &scmd, 0, sizeof(scmd));
 
-    scmd.x = pcmd->velocity;
-    scmd.y = 0;
-    scmd.a = pcmd->angle;
-    scmd.mode = STG_POSITION_CONTROL_VELOCITY;
-    this->mod->SetCmd( &scmd, sizeof(scmd) );
+    mod->goal.x = pcmd->velocity;
+    mod->goal.y = 0;
+    mod->goal.a = pcmd->angle;
+    mod->control_mode = STG_POSITION_CONTROL_VELOCITY;
 
     return 0;
   }
@@ -289,43 +288,32 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
 void InterfacePosition::Publish( void )
 {
   //puts( "publishing position data" ); 
-  
-  
-  size_t len=0;
-  stg_position_data_t* data = (stg_position_data_t*)this->mod->GetData( &len );
-  
-  if( data && ( len == sizeof(stg_position_data_t)))
-    {
-      //printf( "stage position data: %.2f,%.2f,%.2f\n",
-      //  data->pose.x, data->pose.y, data->pose.a );
 
-      player_position2d_data_t ppd;
-      memset( &ppd, 0, sizeof(ppd) );
-      
-      // pack the data into player format
-      ppd.pos.px = data->pose.x;
-      ppd.pos.py = data->pose.y;
-      ppd.pos.pa = data->pose.a;
-      
-      // speeds
-      stg_velocity_t vel;
-      this->mod->GetVelocity( &vel );
-      
-      // packing by hand allows for type conversions
-      ppd.vel.px = vel.x;
-      ppd.vel.py = vel.y;
-      ppd.vel.pa = vel.a;
-      
-      // etc
-      ppd.stall = this->mod->Stall();
-      
-      // publish this data
-      this->driver->Publish( this->addr, NULL,
-			     PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,
-			     (void*)&ppd, sizeof(ppd), NULL);
-    }
-  else if( len != 0 )
-    PRINT_ERR3( "Bad position data size for model %s (%d/%d bytes)",
-		this->mod->Token(), len, sizeof(stg_position_data_t));
+  StgModelPosition* mod = (StgModelPosition*)this->mod;
   
+  //printf( "stage position data: %.2f,%.2f,%.2f\n",
+  //  data->pose.x, data->pose.y, data->pose.a );
+  
+  player_position2d_data_t ppd;
+  memset( &ppd, 0, sizeof(ppd) );
+  
+  // pack the data into player format
+  // packing by hand allows for type conversions
+  ppd.pos.px = mod->est_pose.x;
+  ppd.pos.py = mod->est_pose.y;
+  //ppd.pos.pz = mod->est_pose.z;
+  ppd.pos.pa = mod->est_pose.a;
+  
+  ppd.vel.px = mod->velocity.x;
+  ppd.vel.py = mod->velocity.y;
+  //ppd.vel.pz = mod->velocity.z;
+  ppd.vel.pa = mod->velocity.a;
+  
+  // etc
+  ppd.stall = this->mod->Stall();
+  
+  // publish this data
+  this->driver->Publish( this->addr, NULL,
+			 PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,
+			 (void*)&ppd, sizeof(ppd), NULL);
 }

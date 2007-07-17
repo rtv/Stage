@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.189.2.10 2007-07-08 01:44:09 rtv Exp $
+ * CVS: $Id: stage.h,v 1.189.2.11 2007-07-17 05:26:44 rtv Exp $
  */
 
 
@@ -718,13 +718,9 @@ typedef enum {
     stg_bounds_t bounds_range;
     stg_radians_t fov;
     int ray_count;
-  } stg_ranger_config_t;
-  
-  typedef struct
-  {
     stg_meters_t range;
     //double error; // TODO
-  } stg_ranger_sample_t;
+  } stg_ranger_sensor_t;
   
   // BUMPER MODEL --------------------------------------------------------
 

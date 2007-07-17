@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.18.4.1 2007-07-08 01:44:09 rtv Exp $
+ * CVS: $Id: p_laser.cc,v 1.18.4.2 2007-07-17 05:26:44 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -51,50 +51,39 @@ InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 
 void InterfaceLaser::Publish( void )
 {
-  size_t len = 0;
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)mod->GetData( &len );  
-  int sample_count = len / sizeof( stg_laser_sample_t );
-  
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
+
+  StgModelLaser* mod = (StgModelLaser*)this->mod;
   
-  stg_laser_config_t *cfg = (stg_laser_config_t*)mod->GetCfg( NULL );
-  assert(cfg);
+  pdata.min_angle = -mod->fov/2.0;
+  pdata.max_angle = +mod->fov/2.0;
+  pdata.max_range = mod->range_max;
+  pdata.resolution = mod->fov / (double)(mod->sample_count-1);
+  pdata.ranges_count = pdata.intensity_count = mod->sample_count;
+  pdata.id = this->scan_id++;
   
-  if( sample_count != cfg->samples )
+  for( int i=0; i<mod->sample_count; i++ )
     {
-      //PRINT_ERR2( "bad laser data: got %d/%d samples",
-      //	  sample_count, cfg->samples );
-    }
-  else
-    {      
-      pdata.min_angle = -cfg->fov/2.0;
-      pdata.max_angle = +cfg->fov/2.0;
-      pdata.max_range = cfg->range_max;
-      pdata.resolution = cfg->fov / (double)(cfg->samples-1);
-      pdata.ranges_count = pdata.intensity_count = cfg->samples;
-      pdata.id = this->scan_id++;
+      //printf( "range %d %d\n", i, samples[i].range);
       
-      for( int i=0; i<cfg->samples; i++ )
-	{
-	  //printf( "range %d %d\n", i, samples[i].range);
-	  
-	  pdata.ranges[i] = samples[i].range;
-	  pdata.intensity[i] = (uint8_t)samples[i].reflectance;
-	}
-      
-      // Write laser data
-      this->driver->Publish(this->addr, NULL,
-                            PLAYER_MSGTYPE_DATA,
-                            PLAYER_LASER_DATA_SCAN,
-                            (void*)&pdata, sizeof(pdata), NULL);
+      pdata.ranges[i] = mod->samples[i].range;
+      pdata.intensity[i] = (uint8_t)mod->samples[i].reflectance;
     }
+  
+  // Write laser data
+  this->driver->Publish(this->addr, NULL,
+			PLAYER_MSGTYPE_DATA,
+			PLAYER_LASER_DATA_SCAN,
+			(void*)&pdata, sizeof(pdata), NULL);
 }
 
 int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
 				   player_msghdr_t* hdr,
 				   void* data)
 {
+  StgModelLaser* mod = (StgModelLaser*)this->mod;
+
   // Is it a request to set the laser's config?
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
                            PLAYER_LASER_REQ_SET_CONFIG, 
@@ -112,21 +101,15 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
 		    RTOD(plc->min_angle), RTOD(plc->max_angle), 
 		    plc->resolution/1e2);
 
-      stg_laser_config_t *current = (stg_laser_config_t*)mod->GetCfg(NULL);
-      assert( current );
-
-      stg_laser_config_t slc;
-      // copy the existing config
-      memcpy( &slc, current, sizeof(slc));
 
       // tweak the parts that player knows about
-      slc.fov = plc->max_angle - plc->min_angle;
-      slc.samples = (int)(slc.fov / DTOR(plc->resolution/1e2));
+      mod->fov = plc->max_angle - plc->min_angle;
+
+      // TODO
+      //mod->sample_count = (int)(slc.fov / DTOR(plc->resolution/1e2));
 
       PRINT_DEBUG2( "setting laser config: fov %.2f samples %d", 
 		    slc.fov, slc.samples );
-      
-      mod->SetCfg( &slc, sizeof(slc)); 
       
       this->driver->Publish(this->addr, resp_queue,
 			    PLAYER_MSGTYPE_RESP_ACK, 
@@ -148,22 +131,13 @@ int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
   {   
     if( hdr->size == 0 )
     {
-      stg_laser_config_t *slc = (stg_laser_config_t*)mod->GetCfg(NULL);
-      assert(slc);
-
-      uint8_t angular_resolution = (uint8_t)(RTOD(slc->fov / (slc->samples-1)) * 100);
-      int intensity = 1; // todo
-
-      //printf( "laser config:\n %d %d %d %d\n",
-      //	    min_angle, max_angle, angular_resolution, intensity );
-
       player_laser_config_t plc;
       memset(&plc,0,sizeof(plc));
-      plc.min_angle = -slc->fov/2.0;
-      plc.max_angle = +slc->fov/2.0;
-      plc.max_range = slc->range_max;
-      plc.resolution = angular_resolution;
-      plc.intensity = intensity;
+      plc.min_angle = -mod->fov/2.0;
+      plc.max_angle = +mod->fov/2.0;
+      plc.max_range = mod->range_max;
+      plc.resolution = (uint8_t)(RTOD(mod->fov / (mod->sample_count-1)) * 100);
+      plc.intensity = 1; // todo
 
       this->driver->Publish(this->addr, resp_queue,
 			    PLAYER_MSGTYPE_RESP_ACK, 

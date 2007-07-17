@@ -493,6 +493,16 @@ itl_t* itl_create( double x, double y, double z, double a, double b,
   void itl_destroy( itl_t* itl );
 void itl_raytrace( itl_t* itl );
 
+StgModel* stg_first_model_on_ray( double x, double y, double z, 
+				  double a, double b, 
+				  stg_matrix_t* matrix, 
+				  itl_mode_t pmode,
+				  stg_itl_test_func_t func, 
+				  StgModel* finder,
+				  stg_meters_t* hitrange,
+				  stg_meters_t* hitx,
+				  stg_meters_t* hity );
+
 StgModel* itl_first_matching( itl_t* itl, 
 			      stg_itl_test_func_t func, 
 			      StgModel* finder );

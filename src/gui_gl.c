@@ -829,10 +829,11 @@ void draw_world(  stg_world_t* world )
   // map the viewport to pixel units by scaling it the same as the window
   //  glOrtho( 0, pixels_width,
   //   0, pixels_height,
+
   glOrtho( -pixels_width/2.0, pixels_width/2.0,
 	   -pixels_height/2.0, pixels_height/2.0,
 	   0, zclip );
-
+  
 /*   glFrustum( 0, pixels_width, */
 /* 	     0, pixels_height, */
 /* 	     0.1, zclip ); */
@@ -954,6 +955,12 @@ void draw_world(  stg_world_t* world )
       glCallList( dl );
     }
 
+/*   glNewList( dl_debug, GL_COMPILE ); */
+/*   push_color_rgb( 1,0,1 ); */
+/*   glRectf( 0,0,1,1 ); */
+/*   pop_color(); */
+/*   glEndList(); */
+  
   glCallList( dl_debug );
 
   //gl_coord_shift( 0,0,-2,0 );

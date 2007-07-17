@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.140.2.9 2007-07-13 05:48:30 rtv Exp $
+# $Id: Makefile.am,v 1.140.2.10 2007-07-17 05:26:43 rtv Exp $
 
 # also build Zoo referees
 SUBDIRS = referees
@@ -44,6 +44,7 @@ libstage_la_SOURCES =  \
 	model_load.cc \
 	model_position.cc \
 	model_props.cc \
+	model_ranger.cc \
 	raytrace.cc \
 	stage.c \
 	stage.h \
@@ -63,12 +64,11 @@ libstage_la_SOURCES =  \
 #	model_laser.cc 
 #	model_load.c
 #	model_ptz.c 
-#	model_ranger.c 
 #	model_speech.c 
 #	model_wifi.cc 
 
 
-libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir)  
+libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
 libstage_la_LIBADD = @GUI_LIBS@
 
 
@@ -87,6 +87,7 @@ libstageplugin_la_SOURCES = \
 	p_laser.cc \
 	p_position.cc \
 	p_simulation.cc \
+	p_sonar.cc \
 	stg_time.cc \
 	stg_time.h 
 
@@ -95,7 +96,6 @@ libstageplugin_la_SOURCES = \
 #	p_ptz.cc 
 #	p_wifi.cc 
 #	p_speech.cc 
-#	p_sonar.cc 
 #	p_localize.cc 
 #	p_map.cc 
 #	p_blobfinder.cc 

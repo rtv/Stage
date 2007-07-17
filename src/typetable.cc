@@ -12,6 +12,10 @@ StgModel* new_laser( stg_world_t* world, StgModel* parent,
 		     stg_id_t id, CWorldFile* wf )
 { return (StgModel*)new StgModelLaser( world, parent, id, wf ); }
 
+StgModel* new_ranger( stg_world_t* world, StgModel* parent, 
+		     stg_id_t id, CWorldFile* wf )
+{ return (StgModel*)new StgModelRanger( world, parent, id, wf ); }
+
 StgModel* new_position( stg_world_t* world, StgModel* parent, 
 		     stg_id_t id, CWorldFile* wf )
 { return (StgModel*)new StgModelPosition( world, parent, id, wf ); }
@@ -32,6 +36,7 @@ stg_typetable_entry_t typetable[] = {
   { "model",     new_model },
   { "laser",     new_laser },
   { "position",  new_position },
+  { "ranger",  new_ranger },
   { NULL, NULL } // this must be the last entry
 };
 
