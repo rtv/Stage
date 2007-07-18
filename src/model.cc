@@ -1,38 +1,39 @@
 #define _GNU_SOURCE
 
+//#define DEBUG
+
 #include <limits.h> 
 #include <assert.h>
 #include <math.h>
-//#include <string.h> // for strdup(3)
-
-//#define DEBUG
+#include <GL/gl.h>
 
 #include "stage_internal.h"
 #include "model.hh"
 #include "gui.h"
-#include <GL/gl.h>
 
   // basic model
-#define STG_DEFAULT_MASS 10.0  // kg
-#define STG_DEFAULT_GEOM_SIZEX 1.0 // 1m square by default
-#define STG_DEFAULT_GEOM_SIZEY 1.0
-#define STG_DEFAULT_GEOM_SIZEZ 1.0
-#define STG_DEFAULT_OBSTACLERETURN TRUE
-#define STG_DEFAULT_LASERRETURN LaserVisible
-#define STG_DEFAULT_RANGERRETURN TRUE
-#define STG_DEFAULT_BLOBRETURN TRUE
+
+#define STG_DEFAULT_BLOBRETURN true
+#define STG_DEFAULT_BOUNDARY true
 #define STG_DEFAULT_COLOR (0xFF0000) // red
 #define STG_DEFAULT_ENERGY_CAPACITY 1000.0
 #define STG_DEFAULT_ENERGY_CHARGEENABLE 1
-#define STG_DEFAULT_ENERGY_PROBERANGE 0.0
 #define STG_DEFAULT_ENERGY_GIVERATE 0.0
+#define STG_DEFAULT_ENERGY_PROBERANGE 0.0
 #define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
-#define STG_DEFAULT_MASK (STG_MOVE_TRANS | STG_MOVE_ROT)
-#define STG_DEFAULT_NOSE FALSE
-#define STG_DEFAULT_GRID FALSE
-#define STG_DEFAULT_OUTLINE TRUE
+#define STG_DEFAULT_GEOM_SIZEX 1.0 // 1m square by default
+#define STG_DEFAULT_GEOM_SIZEY 1.0
+#define STG_DEFAULT_GEOM_SIZEZ 1.0
+#define STG_DEFAULT_GRID false
+#define STG_DEFAULT_GRIPPERRETURN false
+#define STG_DEFAULT_LASERRETURN LaserVisible
 #define STG_DEFAULT_MAP_RESOLUTION 0.1
-
+#define STG_DEFAULT_MASK (STG_MOVE_TRANS | STG_MOVE_ROT)
+#define STG_DEFAULT_MASS 10.0  // kg
+#define STG_DEFAULT_NOSE false
+#define STG_DEFAULT_OBSTACLERETURN true
+#define STG_DEFAULT_OUTLINE true
+#define STG_DEFAULT_RANGERRETURN true
 
 //extern int _stg_disable_gui;
 
@@ -161,7 +162,7 @@ void StgModel::AddBlock( stg_point_t* pts,
 				      col, inherit_color ));  
   
   // force recreation of display lists before drawing
-  dirty = true;
+  body_dirty = true;
 
   //Map( 1 );
 }
@@ -267,13 +268,14 @@ StgModel::StgModel( stg_world_t* world,
 {    
   this->wf = wf;
   this->id = id; // id is also our worldfile entity number, always unique
-  this->disabled = FALSE;
+  this->disabled = false;
   this->world = world;
   this->parent = parent; 
 
   this->d_list = NULL;
   this->blocks = NULL;
-  this->dirty = true;
+  this->body_dirty = true;
+  this->data_dirty = true;
   this->gpose_dirty = true;
 
   this->typestr = wf->GetEntityType( this->id );
@@ -314,11 +316,9 @@ StgModel::StgModel( stg_world_t* world,
 
   //printf( "model has token \"%s\" and typestr \"%s\"\n", 
   //  this->token, this->typestr );
-	
-      
+     
   g_hash_table_insert( tbl, (gpointer)typestr, (gpointer)++typecnt);
   
-
   // initialize the table of callbacks that are triggered when a
   // model's fields change
   this->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
@@ -327,14 +327,14 @@ StgModel::StgModel( stg_world_t* world,
   this->geom.size.y = STG_DEFAULT_GEOM_SIZEX;
   this->geom.size.z = STG_DEFAULT_GEOM_SIZEX;
   
-  this->obstacle_return = 1;
-  this->ranger_return = 1;
-  this->blob_return = 1;
-  this->laser_return = LaserVisible;
-  this->gripper_return = 0;
-  this->boundary = 0;
-  this->color = 0xFF0000; // red;  
-  this->map_resolution = 0.1; // meters
+  this->obstacle_return = STG_DEFAULT_OBSTACLERETURN;
+  this->ranger_return = STG_DEFAULT_RANGERRETURN;
+  this->blob_return = STG_DEFAULT_BLOBRETURN;
+  this->laser_return = STG_DEFAULT_LASERRETURN;
+  this->gripper_return = STG_DEFAULT_GRIPPERRETURN;
+  this->boundary = STG_DEFAULT_BOUNDARY;
+  this->color = STG_DEFAULT_COLOR;
+  this->map_resolution = STG_DEFAULT_MAP_RESOLUTION; // meters
   this->gui_nose = STG_DEFAULT_NOSE;
   this->gui_grid = STG_DEFAULT_GRID;
   this->gui_outline = STG_DEFAULT_OUTLINE;
@@ -403,7 +403,7 @@ bool StgModel::IsAntecedent( StgModel* testmod )
   return false;
 }
 
-// returns TRUE if model [testmod] is a descendent of model [mod]
+// returns true if model [testmod] is a descendent of model [mod]
 bool StgModel::IsDescendent( StgModel* testmod )
 {
   if( this == testmod )
@@ -600,8 +600,12 @@ void pose_invert( stg_pose_t* pose )
 
 void StgModel::Print( char* prefix )
 {
-  printf( "%s model %d:%d:%s\n", 
-	  prefix ? prefix : "", 
+  if( prefix )
+    printf( "%s model ", prefix );
+  else
+    printf( "Model ");
+  
+  printf( "%d:%d:%s\n", 
 	  world->id, 
 	  id, 
 	  token );
@@ -689,20 +693,26 @@ void StgModel::Draw( void )
 
   // todo - we don't need to do this so often
 
-  if( this->dirty )
+  if( this->body_dirty )
     {
-      this->GuiGenerateBody();
-      this->dirty = false;
+      this->DListBody();
+      this->body_dirty = false;
     }
+  
+  glCallList( this->dl_body );
   
   // Call my various display lists
   //if( win->show_grid ) && this->gui_grid )
   //glCallList( this->dl_grid );
   
-  glCallList( this->dl_body );
-  //glCallList( this->dl_data );
+  glCallList( this->dl_data );
 
-  
+  if( this->data_dirty )
+    {
+      this->DListData();
+      this->data_dirty = false;
+    }
+
   // shift up the CS to the top of this model
   gl_coord_shift(  0,0, this->geom.size.z, 0 );
   
@@ -719,122 +729,75 @@ void StgModel::Draw( void )
 }
 
 // call this when the local physical appearance has changed
-void StgModel::GuiGenerateBody( void )
+void StgModel::DListBody( void )
 {
   printf( "%s::GuiGenerateBody()\n", this->token );
   
-  glNewList( dl_body, GL_COMPILE );
-  
   // draw blocks
+  glNewList( dl_body, GL_COMPILE );  
   LISTFUNCTION( blocks, stg_block_t*, stg_block_render );
-
   glEndList();
 }
   
-void StgModel::GuiGenerateGrid( void )
+void StgModel::DListData( void )
 {
-  glNewList( dl_grid, GL_COMPILE );
-
-  push_color_rgba( 0.8,0.8,0.8,0.8 );
-
-  double dx = geom.size.x;
-  double dy = geom.size.y;
-  double sp = 1.0;
- 
-  int nx = (int) ceil((dx/2.0) / sp);
-  int ny = (int) ceil((dy/2.0) / sp);
-  
-  if( nx == 0 ) nx = 1.0;
-  if( ny == 0 ) ny = 1.0;
-  
-  glBegin(GL_LINES);
-
-  // draw the bounding box first
-  glVertex2f( -nx, -ny );
-  glVertex2f(  nx, -ny );
-
-  glVertex2f( -nx, ny );
-  glVertex2f(  nx, ny );
-
-  glVertex2f( nx, -ny );
-  glVertex2f( nx,  ny );
-
-  glVertex2f( -nx,-ny );
-  glVertex2f( -nx, ny );
-
-  int i;
-  for (i = -nx+1; i < nx; i++)
-    {
-      glVertex2f(  i * sp,  - dy/2 );
-      glVertex2f(  i * sp,  + dy/2 );
-      //snprintf( str, 64, "%d", (int)i );
-      //stg_rtk_fig_text( fig, -0.2 + (ox + i * sp), -0.2 , 0, str );
-    }
-  
-  for (i = -ny+1; i < ny; i++)
-    {
-      glVertex2f( - dx/2, i * sp );
-      glVertex2f( + dx/2,  i * sp );
-      //snprintf( str, 64, "%d", (int)i );
-      //stg_rtk_fig_text( fig, -0.2, -0.2 + (oy + i * sp) , 0, str );
-    }
-  
-  glEnd();
-  
-  pop_color();
-  glEndList();
+  // do nothing
 }
 
 
 
-//------------------------------------------------------------------------
-// basic model properties
-
-// void StgModel::SetData( void* data, size_t len )
+// void StgModel::GuiGenerateGrid( void )
 // {
-//   this->data = g_realloc( this->data, len );
-//   memcpy( this->data, data, len );
-//   this->data_len = len;
+//   glNewList( dl_grid, GL_COMPILE );
 
-//   this->GuiGenerateData();
+//   push_color_rgba( 0.8,0.8,0.8,0.8 );
 
-//   CallCallbacks( &this->data );
-// }
+//   double dx = geom.size.x;
+//   double dy = geom.size.y;
+//   double sp = 1.0;
+ 
+//   int nx = (int) ceil((dx/2.0) / sp);
+//   int ny = (int) ceil((dy/2.0) / sp);
+  
+//   if( nx == 0 ) nx = 1.0;
+//   if( ny == 0 ) ny = 1.0;
+  
+//   glBegin(GL_LINES);
 
-// void StgModel::SetCmd( void* cmd, size_t len )
-// {
-//   this->cmd = g_realloc( this->cmd, len );
-//   memcpy( this->cmd, cmd, len );
-//   this->cmd_len = len;
+//   // draw the bounding box first
+//   glVertex2f( -nx, -ny );
+//   glVertex2f(  nx, -ny );
 
-//   CallCallbacks( &this->cmd );
-// }
+//   glVertex2f( -nx, ny );
+//   glVertex2f(  nx, ny );
 
-// void StgModel::SetCfg( void* cfg, size_t len )
-// {
-//   this->cfg = g_realloc( this->cfg, len );
-//   memcpy( this->cfg, cfg, len );
-//   this->cfg_len = len;
+//   glVertex2f( nx, -ny );
+//   glVertex2f( nx,  ny );
 
-//   CallCallbacks( &this->cmd );
-// }
+//   glVertex2f( -nx,-ny );
+//   glVertex2f( -nx, ny );
 
-// void* StgModel::GetCfg( size_t* lenp )
-// {
-//   if(lenp) *lenp = this->cfg_len;
-//   return this->cfg;
-// }
-
-// void* StgModel::GetData( size_t* lenp )
-// {
-//   if(lenp) *lenp = this->data_len;
-//   return this->data;
-// }
-
-// void* StgModel::GetCmd( size_t* lenp )
-// {
-//   if(lenp) *lenp = this->cmd_len;
-//   return this->cmd;
+//   int i;
+//   for (i = -nx+1; i < nx; i++)
+//     {
+//       glVertex2f(  i * sp,  - dy/2 );
+//       glVertex2f(  i * sp,  + dy/2 );
+//       //snprintf( str, 64, "%d", (int)i );
+//       //stg_rtk_fig_text( fig, -0.2 + (ox + i * sp), -0.2 , 0, str );
+//     }
+  
+//   for (i = -ny+1; i < ny; i++)
+//     {
+//       glVertex2f( - dx/2, i * sp );
+//       glVertex2f( + dx/2,  i * sp );
+//       //snprintf( str, 64, "%d", (int)i );
+//       //stg_rtk_fig_text( fig, -0.2, -0.2 + (oy + i * sp) , 0, str );
+//     }
+  
+//   glEnd();
+  
+//   pop_color();
+//   glEndList();
 // }
 
 void StgModel::GetVelocity( stg_velocity_t* dest )
@@ -1183,7 +1146,7 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
       stg_block_t* b = (stg_block_t*)it->data;
       
       // loop over all edges of the block
-      for( int p=0; p<b->pt_count; p++ ) 
+      for( unsigned int p=0; p<b->pt_count; p++ ) 
 	{ 
 	  stg_point_t* pt1 = &b->pts[p];
 	  stg_point_t* pt2 = &b->pts[(p+1) % b->pt_count]; 
@@ -1210,8 +1173,8 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
 
  	  //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y ); 
 	  
-	  double dx = p2.x - p1.x;
-	  double dy = p2.y - p1.y;
+	  //double dx = p2.x - p1.x;
+	  //double dy = p2.y - p1.y;
 
  	  itl_t* itl = itl_create( p1.x, p1.y, 0.2,
 				   p2.x, p2.y,  				   
@@ -1255,164 +1218,6 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
 
 
 
-/* typedef struct */
-/* { */
-/*   stg_model_t* mod; */
-/*   GList** list; */
-/* } _modlist_t; */
-
-
-/* int bboxes_overlap( stg_bbox3d_t* box1, stg_bbox3d_t* box2 ) */
-/* { */
-/*   // return TRUE iff any corner of box 2 is contained within box 1 */
-/*   return( box1->x.min <= box2->x.max && */
-/* 	  box2->x.min <= box1->x.max && */
-/* 	  box1->y.min <= box2->y.max && */
-/* 	  box2->y.min <= box1->y.max ); */
-/* } */
-
-
-/* GList* stg_model_overlappers( stg_model_t* mod, GList* models ) */
-/* { */
-/*   GList *it; */
-/*   stg_model_t* candidate; */
-/*   GList *overlappers = NULL; */
-
-/*   //printf( "\nfinding overlappers of %s\n", mod->token ); */
-
-/*   for( it=models; it; it=it->next ) */
-/*     { */
-/*       candidate = (stg_model_t*)it->data; */
-
-/*       if( candidate == mod ) */
-/* 	continue; */
-
-/*       printf( "model %s tested against %s...", mod->token, candidate->token ); */
-      
-/*       if( bboxes_overlap( &mod->bbox, &candidate->bbox ) ) */
-/* 	{ */
-/* 	  overlappers = g_list_append( overlappers, candidate ); */
-/* 	  puts(" OVERLAP!" ); */
-/* 	} */
-/*       else */
-/* 	puts( "" ); */
-
-/*       if( candidate->children ) */
-/* 	overlappers = g_list_concat( overlappers,  */
-/* 				     stg_model_overlappers( mod, candidate->children )); */
-/*     } */
-  
-/*   return overlappers; */
-/* } */
-
-
-// add any line segments contained by this model to the list of line
-// segments in world coordinates.
-/* GList* model_append_segments( stg_model_t* mod, GList* segments ) */
-/* { */
-/*   stg_pose_t gpose; */
-/*   stg_model_get_global_pose( mod, &gpose ); */
-/*   double x = gpose.x; */
-/*   double y = gpose.y; */
-/*   double a = gpose.a; */
-
-/*   int p; */
-/*   for( p=0; p<mod->polygons_count; p++ ) */
-/*     { */
-/*       stg_polygon_t* poly =  &mod->polygons[p]; */
-
-/*       // need at least three points for a meaningful polygon */
-/*       if( poly->points->len > 2 ) */
-/* 	{ */
-/* 	  int count = poly->points->len; */
-/* 	  int p; */
-/* 	  for( p=0; p<count; p++ ) // for */
-/* 	    { */
-/* 	      stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	   */
-/* 	      stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % count); */
-
-/* 	      stg_line_t *line = malloc(sizeof */
-/* 	      line.x1 = x + pt1->x * cos(a) - pt1->y * sin(a); */
-/* 	      line.y1 = y + pt1->x * sin(a) + pt1->y * cos(a);  */
-	      
-/* 	      line.x2 = x + pt2->x * cos(a) - pt2->y * sin(a); */
-/* 	      line.y2 = y + pt2->x * sin(a) + pt2->y * cos(a);  */
-	      
-/* 	      //stg_matrix_lines( matrix, &line, 1, object ); */
-/* 	    } */
-/* 	} */
-/*       //else */
-/*       //PRINT_WARN( "attempted to matrix render a polygon with less than 3 points" );  */
-/*     } */
-      
-
-
-
-/* } */
-
-/* stg_model_t* stg_model_test_collision2( stg_model_t* mod,  */
-/* 					//stg_pose_t* pose,  */
-/* 					double* hitx, double* hity ) */
-/* { */
-/*  /\*  int ch; *\/ */
-/* /\*   stg_model_t* child_hit = NULL; *\/ */
-/* /\*   for(ch=0; ch < mod->children->len; ch++ ) *\/ */
-/* /\*     { *\/ */
-/* /\*       stg_model_t* child = g_ptr_array_index( mod->children, ch ); *\/ */
-/* /\*       child_hit = stg_model_test_collision2( child, hitx, hity ); *\/ */
-/* /\*       if( child_hit ) *\/ */
-/* /\* 	return child_hit; *\/ */
-/* /\*     } *\/ */
-  
-
-/*   stg_pose_t pose; */
-/*   memcpy( &pose, &mod->geom.pose, sizeof(pose)); */
-/*   stg_model_local_to_global( mod, &pose ); */
-  
-/*   //return NULL; */
-  
-/*   // raytrace along all our rectangles. expensive, but most vehicles */
-/*   // will just be a single rect, grippers 3 rects, etc. not too bad. */
-  
-/*   //size_t count=0; */
-/*   //stg_polygon_t* polys = stg_model_get_polygons(mod, &count); */
-
-/*   // no body? no collision */
-/*   //if( count < 1 ) */
-/*   //return NULL; */
-
-/*   // first find the models whose bounding box overlaps with this one */
-
-/* /\*   printf ("COLLISION TESTING MODEL %s\n", mod->token ); *\/ */
-/*   GList* candidates = NULL;//stg_model_overlappers( mod, mod->world->children ); *\/ */
-
-/* /\*   if( candidates ) *\/ */
-/* /\*     printf( "mod %s overlappers: %d\n", mod->token, g_list_length( candidates )); *\/ */
-/* /\*   else *\/ */
-/* /\*     printf( "mod %s has NO overlappers\n", mod->token ); *\/ */
-
-
-/*   // now test every line segment in the candidates for intersection */
-/*   // and record the closest hitpoint */
-/* /\*   GList* model_segments = model_append_segments( mod, NULL ); *\/ */
-  
-/* /\*   GList* obstacle_segments = NULL; *\/ */
-  
-/* /\*   GList* it; *\/ */
-/* /\*   for( it=candidates; it; it=it->next ) *\/ */
-/* /\*     obstacle_segments =  *\/ */
-/* /\*       model_append_segments( (stg_model_t*)it->data, obstacle_segments ); *\/ */
- 
-
-/*   if( candidates ) */
-/*     g_list_free( candidates ); */
-	  
-
-
-/*   return NULL;  // done  */
-/* } */
-
-
 void StgModel::UpdatePose( void )
 {
    //stg_velocity_t gvel;
@@ -1448,11 +1253,11 @@ void StgModel::UpdatePose( void )
    //this->LocalToGlobal( &gp );
 
    // check this model and all it's children at the new pose
-   double hitx=0, hity=0, hita=0;
+   double hitx=0, hity=0;
    StgModel* hitthing = this->TestCollision( &gp, &hitx, &hity );
 
    if( hitthing )
-     printf( "hit %s at %.2f %,2f\n",
+     printf( "hit %s at %.2f %.2f\n",
 	     hitthing->Token(), hitx, hity );
    else
      this->SetPose( &p );

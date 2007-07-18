@@ -391,8 +391,8 @@ void pb_set_pixel( GdkPixbuf* pb, int x, int y, uint8_t val )
 // set all the pixels in a rectangle 
 void pb_set_rect( GdkPixbuf* pb, int x, int y, int width, int height, uint8_t val )
 {
-  int pbwidth = gdk_pixbuf_get_width(pb);
-  int pbheight = gdk_pixbuf_get_height(pb);
+  //int pbwidth = gdk_pixbuf_get_width(pb);
+  //int pbheight = gdk_pixbuf_get_height(pb);
   int bytes_per_sample = gdk_pixbuf_get_bits_per_sample (pb) / 8;
   int num_samples = gdk_pixbuf_get_n_channels(pb);
 
@@ -421,8 +421,9 @@ gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y, int threshold )
 
 int stg_rotrects_from_image_file( const char* filename, 
 				  stg_rotrect_t** rects, 
-				  int* rect_count,
-				  int* widthp, int* heightp )
+				  unsigned int* rect_count,
+				  unsigned int* widthp, 
+				  unsigned int* heightp )
 {
   // TODO: make this a parameter
   const int threshold = 127;

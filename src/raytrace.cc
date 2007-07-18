@@ -9,32 +9,31 @@
 extern int dl_raytrace;
 
 /* useful debug */
-static void print_thing( char* prefix, stg_cell_t* cell, double x, double y )
-{
-  printf( "%s %p x[%.7f %.7f %.7f] y[%.7f %.7f %.7f] (x %s xmin  x %s xmax) (y %s ymin  y %s ymax)\n", 
-	  prefix,
-	  cell,	   
-	  cell->xmin, x, cell->xmax,
-	  cell->ymin, y, cell->ymax,
-	  GTE(x,cell->xmin) ? ">=" : "<",
-	  LT(x,cell->xmax) ? "<" : ">=",
-	  GTE(y,cell->ymin) ? ">=" : "<",
-	  LT(y,cell->ymax) ? "<" : ">=" );
-}
+// static void print_thing( char* prefix, stg_cell_t* cell, double x, double y )
+// {
+//   printf( "%s %p x[%.7f %.7f %.7f] y[%.7f %.7f %.7f] (x %s xmin  x %s xmax) (y %s ymin  y %s ymax)\n", 
+// 	  prefix,
+// 	  cell,	   
+// 	  cell->xmin, x, cell->xmax,
+// 	  cell->ymin, y, cell->ymax,
+// 	  GTE(x,cell->xmin) ? ">=" : "<",
+// 	  LT(x,cell->xmax) ? "<" : ">=",
+// 	  GTE(y,cell->ymin) ? ">=" : "<",
+// 	  LT(y,cell->ymax) ? "<" : ">=" );
+// }
 
-/* useful debug */
-static void PrintArray( GPtrArray* arr )
-{
-  if( arr )
-    {
-      printf( "model array %p len %d\n", arr, arr->len );
-      int i;
-      for( i=0; i<arr->len; i++ )
-	printf( " (model %s)", ((StgModel*)g_ptr_array_index( arr, i ))->Token() );
-    }
-  else
-    printf( "null array\n" );
-}
+// /* useful debug */
+// static void PrintArray( GPtrArray* arr )
+// {
+//   if( arr )
+//     {
+//       printf( "model array %p len %d\n", arr, arr->len );
+//       for( unsigned int i=0; i<arr->len; i++ )
+// 	printf( " (model %s)", ((StgModel*)g_ptr_array_index( arr, i ))->Token() );
+//     }
+//   else
+//     printf( "null array\n" );
+// }
 
 extern stg_world_t* global_world;
 
@@ -70,7 +69,7 @@ itl_t* itl_create( double x, double y, double z, double a, double b,
   itl->index = 0;
   itl->range = 0;  
 
-  stg_bbox3d_t bbox;
+  //stg_bbox3d_t bbox;
 
   switch( pmode )
     {

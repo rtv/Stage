@@ -316,8 +316,9 @@ void stg_world_stop_updating_model( stg_world_t* world, StgModel* mod );
   */
   int stg_rotrects_from_image_file( const char* filename, 
 				    stg_rotrect_t** rects,
-				    int* rect_count,
-				    int* widthp, int* heightp );
+				    unsigned int* rect_count,
+				    unsigned int* widthp, 
+				    unsigned int* heightp );
   
   /**@}*/
 

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.22.4.7 2007-07-13 05:48:31 rtv Exp $
+ * $Id: matrix.c,v 1.22.4.8 2007-07-18 06:19:26 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -233,7 +233,7 @@ void stg_matrix_lines( stg_matrix_t* matrix,
       double theta = atan2( y2-y1, x2-x1 );
       double m = tan(theta); // line gradient 
 
-      int step = 0;
+      //int step = 0;
 
       stg_cell_t* cell = matrix->root;
 
@@ -438,8 +438,7 @@ void stg_matrix_block( stg_matrix_t* matrix,
 {
   //printf( "matrix block %p\n", block );
 
-  int p;
-  for( p=0; p<block->pt_count; p++ ) // for
+  for( unsigned int p=0; p<block->pt_count; p++ ) // for
     {
       stg_point_t* pt1 = &block->pts[p];
       stg_point_t* pt2 = &block->pts[ (p+1) % block->pt_count];

@@ -60,11 +60,11 @@ int pointer_list = 0;
  * Global variable declarations.
  **************************************************************************/
 
-static gboolean animate = TRUE;
+//static gboolean animate = TRUE;
 
 static int beginX, beginY;
 
-static float lightPosition[4] = {0.0, 0.0, 1.0, 1.0};
+//static float lightPosition[4] = {0.0, 0.0, 1.0, 1.0};
 
 static GQueue* colorstack = NULL;
 
@@ -72,11 +72,11 @@ static GQueue* colorstack = NULL;
  * The following section contains the function prototype declarations.
  **************************************************************************/
 
-static GtkWidget   *create_popup_menu (GtkWidget   *drawing_area);
+//static GtkWidget   *create_popup_menu (GtkWidget   *drawing_area);
 
 StgModel* stg_world_nearest_root_model( stg_world_t* world, double wx, double wy );
 
-static int recticle_list = 0;
+//static int recticle_list = 0;
 
 GLuint  base=0; /* Base Display List For The Font Set */
 
@@ -303,7 +303,7 @@ void widget_to_world( GtkWidget* widget, int px, int py,
 		      stg_world_t* world, double *wx, double *wy, double* wz )
 {
   // convert from window pixel to world coordinates
-  int width = widget->allocation.width;
+  //int width = widget->allocation.width;
   int height = widget->allocation.height;
 
   int viewport[4];
@@ -943,8 +943,8 @@ void draw_world(  stg_world_t* world )
   for( it=world->children; it; it=it->next )
     ((StgModel*)it->data)->Draw();
 
-  for( it=world->children; it; it=it->next )
-    ((StgModel*)it->data)->DrawData();
+  //for( it=world->children; it; it=it->next )
+  //((StgModel*)it->data)->DrawData();
 
 
   // draw anything in the assorted displaylist list

@@ -1,6 +1,10 @@
-/*
-CVS: $Id: gui_gtk.cc,v 1.1.2.3 2007-07-09 00:03:24 rtv Exp $
-*/
+/***
+ File: gui_gtk.cc: 
+ Desc: Implements GTK-based GUI for Stage
+ Author: Richard Vaughan
+
+ CVS: $Id: gui_gtk.cc,v 1.1.2.4 2007-07-18 06:19:26 rtv Exp $
+***/
 
 
 #include <stdio.h>
@@ -522,7 +526,7 @@ void gui_window_menus_create( gui_window_t* win )
   g_object_set( gtk_action_group_get_action( win->action_group, "ExportInterval" ), "sensitive", sensi, NULL);
 
   // accels
-  GtkAccelGroup *accel_group = gtk_ui_manager_get_accel_group (ui_manager);
+  //GtkAccelGroup *accel_group = gtk_ui_manager_get_accel_group (ui_manager);
   //gtk_window_add_accel_group(GTK_WINDOW (win->canvas->frame), accel_group);
   
   // menus
@@ -971,7 +975,7 @@ void* gui_world_create( stg_world_t* world )
   gtk_statusbar_set_has_resize_grip( win->status_bar, FALSE );
   win->clock_label = GTK_LABEL(gtk_label_new( "clock" ));
 
-  GtkWidget* contents = NULL;
+  //GtkWidget* contents = NULL;
 
   gtk_container_add(GTK_CONTAINER(win->frame), win->layout);
   

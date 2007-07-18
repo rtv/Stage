@@ -108,8 +108,8 @@ void StgModel::Load( void )
 #endif
       
       stg_rotrect_t* rects = NULL;
-      int rect_count = 0;      
-      int width, height;
+      unsigned int rect_count = 0;      
+      unsigned int width, height;
       if( stg_rotrects_from_image_file( full,
 					&rects,
 					&rect_count,
@@ -128,7 +128,7 @@ void StgModel::Load( void )
       if( rects && (rect_count > 0) )
 	{
 	  //puts( "loading rects" );
-	  for( int r=0; r<rect_count; r++ )
+	  for( unsigned int r=0; r<rect_count; r++ )
 	    this->AddBlockRect( rects[r].pose.x, rects[r].pose.y, 
 				rects[r].size.x, rects[r].size.y );
 	      
@@ -144,6 +144,7 @@ void StgModel::Load( void )
 	  
 	  stg_block_list_scale( this->blocks, &this->geom.size );	  
 	  this->Map(1);
+	  this->body_dirty = true;
 	}      
     }
     

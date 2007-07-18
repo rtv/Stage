@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.6 $
+ //  $Revision: 1.1.2.7 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,7 @@
  #define STG_DEFAULT_LASER_MAXRANGE 8.0
  #define STG_DEFAULT_LASER_FOV M_PI
  #define STG_DEFAULT_LASER_SAMPLES 180
- #define STG_DEFAULT_LASER_INTERVAL_MS 200
+ #define STG_DEFAULT_LASER_INTERVAL_MS 100
  #define STG_DEFAULT_LASER_RESOLUTION 1
 
  /**
@@ -120,6 +120,7 @@
      {
        sample_count   = wf->ReadInt( id, "samples", sample_count );       
        samples = g_renew( stg_laser_sample_t, samples, sample_count );
+       bzero( samples, sizeof(stg_laser_sample_t) * sample_count );
 
        range_min = wf->ReadLength( id, "range_min", range_min);
        range_max = wf->ReadLength( id, "range_max", range_max );
@@ -197,8 +198,8 @@
    // we may need to interpolate the samples we skipped 
    if( resolution > 1 )
      {
-       for( int t=resolution; t<sample_count; t+=resolution )
-	 for( int g=1; g<resolution; g++ )
+       for( unsigned int t=resolution; t<sample_count; t+=resolution )
+	 for( unsigned int g=1; g<resolution; g++ )
 	   {
 	     if( t >= sample_count )
 	       break;
@@ -216,45 +217,8 @@
 	   }
      }
 
-   // rebuild the graphics for this data
-   glNewList( dl_data, GL_COMPILE );
-   //     
-   if( samples && sample_count )
-     {
-       // do alpha properly
-       glDepthMask( GL_FALSE );
 
-       glPushMatrix();
-       glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
-
-       // pack the laser hit points into a vertex array for fast rendering
-       static float* pts = NULL;
-       pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float));
-
-       pts[0] = 0.0;
-       pts[1] = 0.0;
-
-       for( int s=0; s<sample_count; s++ )
-	 {
-	   double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;  
-	   pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
-	   pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
-	 }
-
-       glEnableClientState( GL_VERTEX_ARRAY );
-       glVertexPointer( 2, GL_FLOAT, 0, pts );
-
-       glColor4f( 0, 0, 1, 0.1 );
-       glPolygonMode( GL_FRONT_AND_BACK, world->win->show_alpha ? GL_FILL : GL_LINES );
-       glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-
-       glPopMatrix();
-       glDepthMask( GL_TRUE );
-     }
-
-   glEndList();
-
-   world->win->dirty = true;
+   data_dirty = true;
 
  #if TIMING
    gettimeofday( &tv2, NULL );
@@ -291,26 +255,98 @@ void StgModelLaser::Shutdown( void )
   StgModel::Shutdown();
 }
 
+void StgModelLaser::Print( char* prefix )
+{
+  StgModel::Print( prefix );
+    
+  printf( "\tRanges[ " );
+  
+  for( unsigned int i=0; i<sample_count; i++ )
+    printf( "%.2f ", samples[i].range );
+  puts( " ]" );
 
-//void StgModelLaser::GuiGenerateData( void )
-//{
-//puts ("GL laser data" );
+  printf( "\tReflectance[ " );
+  
+  for( unsigned int i=0; i<sample_count; i++ )
+    printf( "%.2f ", samples[i].reflectance );
+  puts( " ]" );
+}
 
 
-//make_dirty(mod);
 
-/*   // loop through again, drawing bright boxes on top of the polygon */
-/*   for( s=0; s<sample_count; s++ ) */
-/*     {       */
-/*       // if this hit point is bright, we draw a little box */
-/*       if( samples[s].reflectance > 0 ) */
-/* 	{ */
-/* 	  stg_rtk_fig_color_rgb32( fg, bright_color ); */
-/* 	  stg_rtk_fig_rectangle( fg,  */
-/* 				 points[1+s].x, points[1+s].y, 0, */
-/* 				 0.04, 0.04, 1 ); */
-/* 	  stg_rtk_fig_color_rgb32( fg, laser_color ); */
-/* 	} */
-/*     } */
+
+void StgModelLaser::DListData( void )
+{
+  // rebuild the graphics for this data
+  glNewList( dl_data, GL_COMPILE );
+  
+  if( samples && sample_count )
+    {
+      
+      glPushMatrix();
+      glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
+      
+      // pack the laser hit points into a vertex array for fast rendering
+      static float* pts = NULL;
+      pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float));
+      
+      pts[0] = 0.0;
+      pts[1] = 0.0;
+      
+      push_color_rgba( 0, 0, 1, 0.5 );
+
+      for( unsigned int s=0; s<sample_count; s++ )
+	{
+	  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;  
+	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
+	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
+	  
+	  // if the sample is unusually bright, draw a little blob
+	  if( samples[s].reflectance > 0 )
+	    {
+	      glPointSize( 4.0 );
+	      glBegin( GL_POINTS );
+	      glVertex2f( pts[2*s+2], pts[2*s+3] );
+	      glEnd();
+	    }
+	    
+	}
+      pop_color();
+
+      glPointSize( 1.0 );
+
+      glEnableClientState( GL_VERTEX_ARRAY );
+      glVertexPointer( 2, GL_FLOAT, 0, pts );   
+
+
+      if( world->win->show_alpha )
+	{   
+	  glDepthMask( GL_FALSE );
+
+	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	  push_color_rgba( 0, 0, 1, 0.1 );
+	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+	  pop_color();
+
+	  push_color_rgba( 0, 0, 0, 1.0 );
+	  glDrawArrays( GL_POINTS, 0, sample_count+1 );
+	  pop_color();
+
+	  glDepthMask( GL_TRUE );
+	}
+      else
+	{
+	  glPolygonMode( GL_FRONT_AND_BACK, GL_LINES );
+	  push_color_rgb( 0, 0, 1 );
+	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+	  pop_color();
+	}
+	  
+      glPopMatrix();      
+    }
+  
+  glEndList();
+}
+
 
 
