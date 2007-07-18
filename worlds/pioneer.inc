@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Richard Vaughan, Andrew Howard
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.9 2007-07-18 06:20:24 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.10 2007-07-18 06:39:10 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -35,27 +35,9 @@ define p2dx_sonar ranger
 
   # define the size of each transducer [xsize ysize] in meters
   ssize [0.01 0.05]
-
- # this block approximates the shape of a pioneer
 )
 
  
-define lid model 
-( 
-  size [0.44 0.38 0.01] # sizes from MobileRobots' web site 	   
-
-  blocks 1
-  block[0].points 8
-  block[0].point[0] [  0.23  0.08 ]
-  block[0].point[1] [  0.18  0.15 ]
-  block[0].point[2] [ -0.18  0.15 ]
-  block[0].point[3] [ -0.23  0.08 ]
-  block[0].point[4] [ -0.23 -0.08 ]
-  block[0].point[5] [ -0.18 -0.15 ]
-  block[0].point[6] [  0.18 -0.15 ]
-  block[0].point[7] [  0.23 -0.08 ]
-)
-
 # a Pioneer 2 or 3 in standard configuration
 define pioneer2dx position
 (

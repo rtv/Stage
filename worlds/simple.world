@@ -46,7 +46,6 @@ floorplan
 define laserpioneer pioneer2dx
 (
   fancy_sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
-  #ranger()
 )
 
 #define laserpioneer position 
