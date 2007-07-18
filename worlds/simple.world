@@ -18,7 +18,7 @@ size [16 16]
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 10  # real-time interval between simulation updates in milliseconds 
+interval_real 100  # real-time interval between simulation updates in milliseconds 
 # configure the GUI window
 window
 ( 
@@ -36,6 +36,8 @@ floorplan
   name "cave"
   size [16 16 0.5]
   bitmap "bitmaps/cave.png"
+
+  laser_return 2
   #size [40 20 0.4]
   #bitmap "bitmaps/hospital_section.png"
 )
@@ -44,7 +46,7 @@ floorplan
 define laserpioneer pioneer2dx
 (
   fancy_sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
-  ranger( pose [1 0 0 0])
+  #ranger()
 )
 
 #define laserpioneer position 
