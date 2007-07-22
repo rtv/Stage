@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.4 2007-07-18 06:19:27 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.5 2007-07-22 22:11:22 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -81,6 +81,8 @@ int main( int argc, char* argv[] )
 
   while( (stg_world_update( world,0 )==0) )
     {
+      usleep( 1000 );
+
       // get some laser data
       size_t laser_sample_count = laser->sample_count;      
       stg_laser_sample_t* laserdata = laser->samples;

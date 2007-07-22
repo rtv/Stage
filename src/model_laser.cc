@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.7 $
+ //  $Revision: 1.1.2.8 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,7 @@
  #define STG_DEFAULT_LASER_MAXRANGE 8.0
  #define STG_DEFAULT_LASER_FOV M_PI
  #define STG_DEFAULT_LASER_SAMPLES 180
- #define STG_DEFAULT_LASER_INTERVAL_MS 100
+ #define STG_DEFAULT_LASER_INTERVAL_MS 200
  #define STG_DEFAULT_LASER_RESOLUTION 1
 
  /**
