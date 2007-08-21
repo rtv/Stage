@@ -10,3 +10,4 @@ define sick_laser laser
   size [ 0.14 0.14 ]	
 )
 
+define sicklms200 sick_laser ()
