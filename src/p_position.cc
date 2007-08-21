@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.16 2007-07-09 17:18:37 gerkey Exp $
+ * CVS: $Id: p_position.cc,v 1.17 2007-08-21 20:28:08 gerkey Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -86,6 +86,7 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
     this->stopped = false;
     this->last_cmd_time = this->mod->world->sim_time;
+    return(0);
   }
 
   // Is it a new motor command?
@@ -106,6 +107,7 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
     this->stopped = false;
     this->last_cmd_time = this->mod->world->sim_time;
+    return(0);
   }
 
   // Is it a new motor command?
@@ -126,6 +128,7 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
     this->stopped = false;
     this->last_cmd_time = this->mod->world->sim_time;
+    return(0);
   }
  
   // Is it a request for position geometry?
@@ -285,7 +288,6 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
 		 hdr->type, hdr->subtype);
     return(-1);
   }
-  return -1;
 }
 
 void InterfacePosition::Publish( void )
