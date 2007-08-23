@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics2d.cc,v 1.5 2006-04-19 19:32:35 gerkey Exp $
+ * CVS: $Id: p_graphics2d.cc,v 1.6 2007-08-23 19:58:49 gerkey Exp $
  */
 
 #include "p_driver.h"
@@ -71,7 +71,7 @@ InterfaceGraphics2d::~InterfaceGraphics2d( void )
 };
 
 
-int InterfaceGraphics2d::ProcessMessage(MessageQueue* resp_queue,
+int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
 				 player_msghdr_t* hdr,
 				 void* data)
 {

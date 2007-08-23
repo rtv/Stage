@@ -77,14 +77,14 @@ void InterfaceAudio::Publish(void)
 //  uint size = sizeof(pdata) - sizeof(pdata.data) + pdata.data_count;
 
     // Publish it
-    this->driver->Publish(this->addr, NULL,
+    this->driver->Publish(this->addr,
 			  PLAYER_MSGTYPE_DATA,
 			  PLAYER_OPAQUE_DATA_STATE,
 			  (void *) &pdata, sizeof(pdata), NULL);
 
 }
 
-int InterfaceAudio::ProcessMessage(MessageQueue * resp_queue,
+int InterfaceAudio::ProcessMessage(QueuePointer &resp_queue,
 				   player_msghdr_t * hdr, void *data)
 {
     // PROCESS INCOMING REQUESTS HERE

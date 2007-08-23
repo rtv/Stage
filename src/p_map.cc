@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.12 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_map.cc,v 1.13 2007-08-23 19:58:49 gerkey Exp $
  */
 
 #include "p_driver.h"
@@ -51,7 +51,7 @@ InterfaceMap::InterfaceMap( player_devaddr_t addr,
 
 // Handle map info request - adapted from Player's mapfile driver by
 // Brian Gerkey
-int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
+int  InterfaceMap::HandleMsgReqInfo( QueuePointer &resp_queue,
 				      player_msghdr_t* hdr,
 				      void* data)
 {
@@ -145,7 +145,7 @@ void render_line( int8_t* buf,
 
 
 // Handle map data request
-int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
+int InterfaceMap::HandleMsgReqData( QueuePointer &resp_queue,
 				     player_msghdr_t* hdr,
 				     void* data)
 {
@@ -238,7 +238,7 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
    return(0);
 }
 
-int InterfaceMap::ProcessMessage(MessageQueue* resp_queue,
+int InterfaceMap::ProcessMessage(QueuePointer &resp_queue,
 				 player_msghdr_t* hdr,
 				 void* data)
 {

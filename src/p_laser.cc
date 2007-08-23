@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.19 2007-07-09 17:18:37 gerkey Exp $
+ * CVS: $Id: p_laser.cc,v 1.20 2007-08-23 19:58:49 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -89,14 +89,14 @@ void InterfaceLaser::Publish( void )
 	}
       
       // Write laser data
-      this->driver->Publish(this->addr, NULL,
+      this->driver->Publish(this->addr,
                             PLAYER_MSGTYPE_DATA,
                             PLAYER_LASER_DATA_SCAN,
                             (void*)&pdata, sizeof(pdata), NULL);
     }
 }
 
-int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
+int InterfaceLaser::ProcessMessage(QueuePointer &resp_queue,
 				   player_msghdr_t* hdr,
 				   void* data)
 {

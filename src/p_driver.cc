@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.39 2006-09-20 01:45:08 adam_lein Exp $
+ * CVS: $Id: p_driver.cc,v 1.40 2007-08-23 19:58:49 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -566,7 +566,7 @@ int StgDriver::Shutdown()
 // Driver::ProcessMessages() is called by StgDriver::Update(), which is
 // called periodically by player.
 int 
-StgDriver::ProcessMessage(MessageQueue* resp_queue, 
+StgDriver::ProcessMessage(QueuePointer &resp_queue, 
 			  player_msghdr * hdr, 
 			  void * data)
 {

@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_power.cc,v 1.3 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_power.cc,v 1.4 2007-08-23 19:58:49 gerkey Exp $
  */
 
 
@@ -71,13 +71,13 @@ void InterfacePower::Publish( void )
   //printf( "player power data: valid %d joules %.2f watts %.2f percent %.2f charging %d\n",
   //  pen.valid, pen.joules, pen.watts, pen.percent, pen.charging );
  
-  this->driver->Publish(this->addr, NULL,
+  this->driver->Publish(this->addr,
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_POWER_DATA_STATE,
 			(void*)&pen, sizeof(pen), NULL);
 }
 
-int InterfacePower::ProcessMessage(MessageQueue* resp_queue,
+int InterfacePower::ProcessMessage(QueuePointer &resp_queue,
 				    player_msghdr_t* hdr,
 				    void* data)
 {

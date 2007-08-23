@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_ptz.cc,v 1.2 2006-01-29 04:06:41 rtv Exp $
+ * CVS: $Id: p_ptz.cc,v 1.3 2007-08-23 19:58:49 gerkey Exp $
  */
 
 // DOCUMENTATION
@@ -69,13 +69,13 @@ void InterfacePtz::Publish( void )
   pdata.tiltspeed = scfg->speed.tilt;
   //pdata.zoomspeed = scfg->zoomspeed; // Player doesn't have this field
   
-  this->driver->Publish( this->addr, NULL, 
+  this->driver->Publish( this->addr, 
 			 PLAYER_MSGTYPE_DATA,
 			 PLAYER_PTZ_DATA_STATE,
 			 &pdata, sizeof(pdata), NULL);
 }
 
-int InterfacePtz::ProcessMessage( MessageQueue* resp_queue,
+int InterfacePtz::ProcessMessage( QueuePointer &resp_queue,
 					 player_msghdr_t* hdr,
 					 void* data )
 {

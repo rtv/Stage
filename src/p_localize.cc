@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_localize.cc,v 1.2 2006-01-22 04:16:57 rtv Exp $
+ * CVS: $Id: p_localize.cc,v 1.3 2007-08-23 19:58:49 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -61,14 +61,14 @@ void InterfaceLocalize::Publish( void )
   loc.hypoths[0].mean.pa = pose.a;
 
   // Write localize data
-  this->driver->Publish(this->addr, NULL,
+  this->driver->Publish(this->addr,
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_LOCALIZE_DATA_HYPOTHS,
 			(void*)&loc, sizeof(loc), NULL);
 }
 
 
-int InterfaceLocalize::ProcessMessage(MessageQueue* resp_queue,
+int InterfaceLocalize::ProcessMessage(QueuePointer &resp_queue,
 				      player_msghdr_t* hdr,
 				      void* data)
 {

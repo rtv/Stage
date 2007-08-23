@@ -23,7 +23,7 @@
  * Desc: Speech player driver
  * Author: Pooya Karimian
  * Date: 21 March 2006
- * CVS: $Id: p_speech.cc,v 1.1 2006-03-24 20:12:42 pooya Exp $
+ * CVS: $Id: p_speech.cc,v 1.2 2007-08-23 19:58:49 gerkey Exp $
  */
 
 
@@ -60,14 +60,14 @@ void InterfaceSpeech::Publish( void )
   // Translate the Stage-formatted sdata into the Player-formatted pdata
   
   // Publish it
-  this->driver->Publish(this->addr, NULL,
+  this->driver->Publish(this->addr,
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_SPEECH_CMD_SAY,
 			(void*)&pdata, sizeof(pdata), NULL);
 */			
 }
 
-int InterfaceSpeech::ProcessMessage(MessageQueue* resp_queue,
+int InterfaceSpeech::ProcessMessage(QueuePointer &resp_queue,
                                   player_msghdr_t* hdr,
                                   void* data)
 {
