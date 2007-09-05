@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_ptz.cc,v 1.3 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_ptz.cc,v 1.4 2007-09-05 19:01:43 gerkey Exp $
  */
 
 // DOCUMENTATION
@@ -82,8 +82,8 @@ int InterfacePtz::ProcessMessage( QueuePointer &resp_queue,
   assert( this->mod->cfg );
   assert( this->mod->cfg_len == sizeof(stg_ptz_config_t) );
 
-  //stg_ptz_cmd_t* cmd = (stg_ptz_cmd_t*)this->mod->cmd;
 
+  //stg_ptz_cmd_t* cmd = (stg_ptz_cmd_t*)this->mod->cmd;
   stg_ptz_config_t scfg;  
   memcpy( &scfg, this->mod->cfg, sizeof(scfg));
 
@@ -92,6 +92,7 @@ int InterfacePtz::ProcessMessage( QueuePointer &resp_queue,
                            PLAYER_PTZ_CMD_STATE, 
                            this->addr))
     {
+
       if( hdr->size == sizeof(player_ptz_cmd_t) )
 	{
 	  // convert from Player to Stage format
@@ -104,10 +105,10 @@ int InterfacePtz::ProcessMessage( QueuePointer &resp_queue,
 	  scfg.speed.tilt = pcmd->tiltspeed;
 	  //scfg.zoomgoal = pcmd->zoomspeed; // not in player
 
-	  //printf( "setting goals: p%.2f t%.2f z %.2f\n",
-	  //  scfg.pangoal,
-	  //  scfg.tiltgoal,
-	  //  scfg.zoomgoal );		  
+//  	  printf( "setting goals: p%.2f t%.2f z %.2f\n",
+//  	    scfg.goal.pan,
+//  	    scfg.goal.tilt,
+//  	    scfg.goal.zoom );		  
 
 	  stg_model_set_cfg( this->mod, &scfg, sizeof(scfg));
 	}
@@ -121,6 +122,8 @@ int InterfacePtz::ProcessMessage( QueuePointer &resp_queue,
                                 PLAYER_PTZ_REQ_GEOM, 
                                 this->addr))
     {
+
+
       if(hdr->size == 0)
 	{
 	  stg_geom_t geom;
@@ -144,8 +147,32 @@ int InterfacePtz::ProcessMessage( QueuePointer &resp_queue,
 				 (void*)&pgeom, sizeof(pgeom), NULL );
 	  return(0);
 	}
-    }
-  
+}
+        else if (Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+                                PLAYER_PTZ_REQ_CONTROL_MODE, 
+                                this->addr))
+	{
+
+   		if( hdr->size == sizeof( player_ptz_req_control_mode_t) )
+		{
+	 	 	// convert from Player to Stage format
+	  		player_ptz_req_control_mode_t* pcntrl = ( player_ptz_req_control_mode_t*)data;
+			
+			if(pcntrl->mode == PLAYER_PTZ_POSITION_CONTROL)
+				  scfg.position_mode=TRUE;
+			else
+				  scfg.position_mode=FALSE;
+
+			stg_model_set_cfg( this->mod, &scfg, sizeof(scfg));
+	  		this->driver->Publish( this->addr, resp_queue,
+				 PLAYER_MSGTYPE_RESP_ACK, 
+				 PLAYER_PTZ_REQ_CONTROL_MODE);
+
+			return 0;
+		}	
+
+	}
+
   // Don't know how to handle this message.
   PRINT_WARN2( "Stage PTZ interface doesn't support msg with type/subtype %d/%d",
 	       hdr->type, hdr->subtype);

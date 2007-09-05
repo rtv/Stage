@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_ptz.c,v 1.3 2007-05-15 00:08:32 gerkey Exp $
+ * CVS info: $Id: model_ptz.c,v 1.4 2007-09-05 19:01:43 gerkey Exp $
  */
 
 #include <math.h>
@@ -117,7 +117,10 @@ int ptz_init( stg_model_t* mod )
   cfg.speed.zoom = STG_PTZ_SPEED_ZOOM;
   cfg.speed.pan = STG_PTZ_SPEED_PAN;
   cfg.speed.tilt = STG_PTZ_SPEED_TILT;
+   
   
+  cfg.position_mode = TRUE;
+
   stg_model_set_cfg( mod, &cfg, sizeof(cfg) );
   stg_model_set_data( mod, &data, sizeof(data) );
   
@@ -194,23 +197,21 @@ int ptz_update( stg_model_t* mod )
   
   stg_ptz_data_t *data = (stg_ptz_data_t*)mod->data; 
   stg_ptz_config_t *cfg = (stg_ptz_config_t*)mod->cfg; 
-  
-  double pandist;
-  if(cfg->speed.pan > 0.0)
-    pandist = cfg->speed.pan * mod->world->sim_interval/1e3;
-  else
-    pandist = STG_PTZ_SPEED_PAN * mod->world->sim_interval/1e3;
+    
+  double pandist = cfg->speed.pan * mod->world->sim_interval/1e3;
   double panerror = cfg->goal.pan - data->pan;
-  if( panerror < pandist ) pandist = panerror;
+  if( panerror < pandist && cfg->position_mode==TRUE)  //ignore goal commands in velocity mode
+	pandist = panerror;		
   data->pan += pandist; 
-
   double zoomdist = cfg->speed.zoom * mod->world->sim_interval/1e3;
   double zoomerror = cfg->goal.zoom - data->zoom;
-  if( zoomerror < zoomdist ) zoomdist = zoomerror;
-  data->zoom += zoomdist; 
+  if( zoomerror < zoomdist ) zoomdist = zoomerror;    
+  if(cfg->position_mode == TRUE)                       //again, ignore goal command in velocity mode
+	data->zoom += zoomdist; 
 
   model_change( mod, &mod->data );
-
+   
+  
   //printf( "PAN: %.2f\n", cfg->pan );
   //printf( "ZOOM: %.2f\n", cfg->zoom );
 

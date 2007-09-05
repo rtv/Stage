@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.191 2006-10-05 22:27:07 gerkey Exp $
+ * CVS: $Id: stage.h,v 1.192 2007-09-05 19:01:43 gerkey Exp $
  */
 
 
@@ -833,6 +833,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_ptz_t max; ///< Maximum PTZ angles.
     stg_ptz_t goal; ///< The current desired angles. The device servos towards these values.
     stg_ptz_t speed; ///< The PTZ servo speeds.
+    stg_bool_t position_mode; ///< PTZ movement mode (position or velocity commands)
   } stg_ptz_config_t;
 
 
