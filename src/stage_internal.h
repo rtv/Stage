@@ -566,6 +566,9 @@ extern "C" {
 				   stg_itl_test_func_t func, 
 				   stg_model_t* finder );
 
+	double itl_wall_distance( itl_t* itl,
+                  stg_itl_test_func_t func,
+                  stg_model_t* finder, stg_model_t* otherrobot);
   /** @} */
 
   /** @ingroup libstage_internal

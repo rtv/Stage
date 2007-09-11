@@ -1,0 +1,65 @@
+resolution     0.02
+
+interval_sim 100  # milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
+
+include "pioneer.inc"
+include "map.inc"
+
+size [40 18 ]
+
+gui_disable 0
+gui_interval 100
+gui_menu_interval 20
+
+window( 
+  size [ 900.000 484.000 ] 
+  center [0 0] 
+  scale 0.045 
+)
+
+map( 
+  bitmap "bitmaps/hospital_section.png" 
+  map_resolution 0.02
+  size [40 18] 
+  name "hospital"
+)
+
+define commbot position
+(
+  size [0.25 0.25]
+)
+
+# create a robot
+commbot
+(
+  name "robot1"
+  color "red"
+  laser()
+  wifi(
+      ip "192.168.0.2"
+      mac "08:00:20:ae:fd:7e"
+      essid "test network"
+      model "raytrace"
+      wall_factor 100
+      range_db -50
+      )
+  pose [-19 5 335]
+)
+
+# create another robot
+commbot
+(
+  name "robot2"
+  color "blue"
+  laser()
+  wifi(
+      ip "192.168.0.4"
+      mac "08:00:20:ae:fd:6b"
+      essid "test network"
+      model "raytrace"
+      wall_factor 100
+      range_db -50
+      )
+  pose [-3.5 -4.5 0]
+)

@@ -51,6 +51,9 @@
 #define STG_LAYER_BUMPERCONFIG 61
 #define STG_LAYER_BUMPERDATA 62
 
+#define STG_LAYER_WIFICONFIG 64
+#define STG_LAYER_WIFIDATA 65
+
 #define STG_RANGER_COLOR "gray75" 
 #define STG_RANGER_GEOM_COLOR "orange"
 #define STG_RANGER_CONFIG_COLOR "gray90"
@@ -68,6 +71,10 @@
 #define STG_LASER_GEOM_COLOR "blue"
 #define STG_LASER_CFG_COLOR "light steel blue"
 #define STG_LASER_BRIGHT_COLOR "blue"
+
+#define STG_WIFI_CFG_COLOR "royal blue"
+#define STG_WIFI_CFG_COLOR_GREEN "DarkGreen"
+
 
 #define STG_LAYER_GRIPPERGEOM 85
 #define STG_LAYER_GRIPPERDATA 87

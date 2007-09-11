@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.192 2007-09-05 19:01:43 gerkey Exp $
+ * CVS: $Id: stage.h,v 1.193 2007-09-11 21:30:09 rtv Exp $
  */
 
 
@@ -1062,9 +1062,34 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
    */
   typedef struct
   {
-    // Configuration for the wifi model goes here.  E.g., power, range of
-    // propagation.
+		char essid[32];
+		char mac[32];
+    char ip[32];
+    double power;
+    double sensitivity;
+		double freq;
+    stg_meters_t range;
+		char model[32];
+		double plc; // distance power loss coefficient
+		double ple; // path loss distance exponent
+		double sigma; // standard derivation of gaussian random variable
+		double range_db; // setting the individual ranges to render in render_cfg 
+		double wall_factor;
   } stg_wifi_config_t;
+
+  /** wifi sample packet
+  */
+  typedef struct
+  {
+    // this is how an entry in neighbours looks like
+    stg_pose_t pose; // global pose of corresponding neighbour
+		char essid[32];
+		char mac[32];    
+		char ip[32]; // IP adress of corresponding card
+		double freq;
+    double db; // signal-strength
+		
+  } stg_wifi_sample_t;
 
   /** wifi data packet 
    */
@@ -1072,6 +1097,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   {
     // Simulated wifi data goes here.  E.g., for each neighbor within
     // range, record the corresponding signal strength.
+  GArray* neighbours;
   } stg_wifi_data_t;
 
   // SPEECH MODEL --------------------------------------------------------
