@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.41 2007-09-11 01:14:19 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.42 2007-09-11 20:39:51 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -615,7 +615,7 @@ void StgDriver::Update(void)
       double currtime;
       GlobalTime->GetTimeDouble(&currtime);
       if((currtime - interface->last_publish_time) >= 
-         (interface->mod->world->sim_interval / 1e3))
+         (interface->mod->world->sim_interval / 1e3 - 1e-9))
       {
         interface->Publish();
         interface->last_publish_time = currtime;
