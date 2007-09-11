@@ -1,0 +1,203 @@
+
+# TODO: fiducual wall hits, >16 robots, 
+
+
+# Desc: 1 pioneer robot with laser	
+# CVS: $Id: pss.world,v 1.1 2007-09-11 01:24:44 rtv Exp $
+
+# size of the world in meters
+size [40 18]
+
+# set the resolution of the underlying raytrace model in meters
+resolution 0.02
+
+# set the ratio of simulation and real time
+interval_sim 100  # milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
+
+
+# configure the GUI window
+window
+( 
+  size [ 705.000 648.000 ] 
+  center [-15.539 4.915] 
+  scale 0.014 
+
+  rangerdata 1
+  fill_polygons 1
+)
+
+define target model
+(
+  fiducial_return 100
+)
+
+# create some instances of our 'erratic' robot model
+define swarmbot position
+(
+  gui_nose 1	
+  gui_outline 0
+
+  size [0.2 0.2]
+
+  # this polygon approximates the shape of a pioneer
+  polygons 1
+  polygon[0].points 8
+  polygon[0].point[0] [  0.23  0.05 ]
+  polygon[0].point[1] [  0.15  0.15 ]
+  polygon[0].point[2] [ -0.15  0.15 ]
+  polygon[0].point[3] [ -0.23  0.05 ]
+  polygon[0].point[4] [ -0.23 -0.05 ]
+  polygon[0].point[5] [ -0.15 -0.15 ]
+  polygon[0].point[6] [  0.15 -0.15 ]
+  polygon[0].point[7] [  0.23 -0.05 ]
+  polygon[0].fill 0
+
+
+
+  ranger(
+  scount 12
+
+  # define the pose of each transducer [xpos ypos heading]
+  spose[0] [ 0 0 -150 ]
+  spose[1] [ 0 0 -120 ]
+  spose[2] [ 0 0  -90 ]
+  spose[3] [ 0 0  -60 ]
+  spose[4] [ 0 0  -30 ]
+  spose[5] [ 0 0   0 ]
+  spose[6] [ 0 0  30 ]
+  spose[7] [ 0 0  60 ]
+  spose[8] [ 0 0  90 ]
+  spose[9] [ 0 0  120 ]
+  spose[10] [ 0 0  150 ]
+  spose[11] [ 0 0  180 ]
+		
+  # define the field of view of each transducer [range_min range_max view_angle]
+  sview [0 2.0 30]
+
+  # define the size of each transducer [xsize ysize] in meters
+  ssize [0.01 0.05]
+  )
+
+  #laser( size [0.1 0.1] samples 40 )
+  #fiducialfinder( fov 360  range_max 8.0 range_max_id 8.0 )
+  #fiducial_return 1
+)
+
+include "../map.inc"
+
+map
+( 
+  bitmap "../bitmaps/hospital_section.png" 
+  size [40 18]  
+)
+
+swarmbot(  name "r00" pose [-17.435 3.229 396.507] )
+swarmbot(  name "r01" pose [-17.653 3.573 -189.465] )
+swarmbot(  name "r02" pose [-17.996 3.780 10.603] )
+swarmbot(  name "r03" pose [-17.334 3.912 392.529] )
+swarmbot(  name "r04" pose [-17.781 4.090 355.371] )
+swarmbot(  name "r05" pose [-18.594 7.413 101.390] )
+swarmbot(  name "r06" pose [-18.195 7.836 93.742] )
+swarmbot(  name "r07" pose [-18.996 5.772 131.222] )
+swarmbot(  name "r08" pose [-17.846 4.879 14.742] )
+swarmbot(  name "r09" pose [-19.219 4.438 164.495] )
+
+swarmbot(  name "r10" pose [-18.802 6.681 104.904] )
+swarmbot(  name "r11" pose [-17.360 7.023 95.884] )
+swarmbot(  name "r12" pose [-18.143 7.366 27.056] )
+swarmbot(  name "r13" pose [-18.219 4.520 52.390] )
+swarmbot(  name "r14" pose [-18.975 4.703 72.929] )
+swarmbot(  name "r15" pose [-18.146 5.558 78.861] )
+swarmbot(  name "r16" pose [-18.636 5.797 2.125] )
+swarmbot(  name "r17" pose [-17.997 6.694 52.524] )
+swarmbot(  name "r18" pose [-18.451 4.992 -8.573] )
+swarmbot(  name "r19" pose [-18.905 2.997 24.453] )
+
+swarmbot(  name "r20" pose [-17.693  6.799 -21.133] )
+swarmbot(  name "r21" pose [-19.064  6.960 21.433] )
+swarmbot(  name "r22" pose [-19.164  6.235 -30.765] )
+swarmbot(  name "r23" pose [-18.816  2.711 161.003] )
+swarmbot(  name "r24" pose [-18.420  5.437 61.576] )
+swarmbot(  name "r25" pose [-17.688  5.332 16.061] )
+swarmbot(  name "r26" pose [-18.148  3.052 147.188] )
+swarmbot(  name "r27" pose [-19.081  5.204 41.821] )
+swarmbot(  name "r28" pose [-18.792  3.722 46.680] )
+swarmbot(  name "r29" pose [-18.068  2.724 32.775] )
+
+swarmbot(  name "r30" pose [-18.485  2.958 -139.821] )
+swarmbot(  name "r31" pose [-17.325 2.603 99.504] )
+swarmbot(  name "r32" pose [-19.330 4.788 7.617] )
+swarmbot(  name "r33" pose [-17.376 4.808 -48.059] )
+swarmbot(  name "r34" pose [-17.744 7.960 -58.906] )
+swarmbot(  name "r35" pose [-18.592 7.880 48.652] )
+swarmbot(  name "r36" pose [-17.504 5.832 -18.437] )
+swarmbot(  name "r37" pose [-18.750 5.240 28.108] )
+swarmbot(  name "r38" pose [-17.364 7.703 -49.004] )
+swarmbot(  name "r39" pose [-17.681 7.370 47.120] )
+
+swarmbot(  name "r40" pose [-18.966 7.511 56.773] )
+swarmbot(  name "r41" pose [-18.293 6.845 -48.646] )
+swarmbot(  name "r42" pose [-17.334 6.309 46.130] )
+swarmbot(  name "r43" pose [-18.569 6.174 14.819] )
+swarmbot(  name "r44" pose [-18.554 4.231 48.111] )
+swarmbot(  name "r45" pose [-19.229 3.007 -31.137] )
+swarmbot(  name "r46" pose [-19.157 3.844 14.206] )
+swarmbot(  name "r47" pose [-18.329 3.562 -74.133] )
+swarmbot(  name "r48" pose [-17.763 6.092 171.925] )
+swarmbot(  name "r49" pose [-18.061 5.258 24.941] )
+
+swarmbot(  name "r50" pose [-18.786 4.945 325.793] )
+swarmbot(  name "r51" pose [-18.194 4.859 69.133] )
+swarmbot(  name "r52" pose [-18.872 6.043 0.000] )
+swarmbot(  name "r53" pose [-18.075 6.302 -123.231] )
+swarmbot(  name "r54" pose [-18.872 3.997 0.000] )
+swarmbot(  name "r55" pose [-18.945 3.394 125.131] )
+swarmbot(  name "r56" pose [-19.508 6.248 -39.194] )
+swarmbot(  name "r57" pose [-18.388 7.605 255.674] )
+swarmbot(  name "r58" pose [-18.355 7.174 113.856] )
+swarmbot(  name "r59" pose [-18.277 5.993 91.531] )
+
+swarmbot(  name "r60" pose [-18.756 5.530 -248.807] )
+swarmbot(  name "r61" pose [-17.653 6.470 241.121] )
+swarmbot(  name "r62" pose [-17.724 2.502 46.705] )
+swarmbot(  name "r63" pose [-17.978 3.296 -50.988] )
+swarmbot(  name "r64" pose [-18.095 4.251 -140.355] )
+swarmbot(  name "r65" pose [-18.449 3.917 0.000] )
+swarmbot(  name "r66" pose [-17.756 2.898 103.805] )
+swarmbot(  name "r67" pose [-17.360 5.552 85.146] )
+swarmbot(  name "r68" pose [-17.461 4.350 29.125] )
+swarmbot(  name "r69" pose [-17.183 4.550 -226.468] )
+
+swarmbot(  name "r70" pose [-17.265 5.163 0.000] )
+swarmbot(  name "r71" pose [-17.632 4.652 -83.676] )
+swarmbot(  name "r72" pose [-18.617 3.277 26.588] )
+swarmbot(  name "r73" pose [-18.531 2.487 117.049] )
+swarmbot(  name "r74" pose [-19.164 2.630 -51.499] )
+swarmbot(  name "r75" pose [-19.450 2.712 36.214] )
+swarmbot(  name "r76" pose [-19.471 3.202 -13.213] )
+swarmbot(  name "r77" pose [-19.368 3.549 222.614] )
+swarmbot(  name "r78" pose [-18.858 6.388 65.240] )
+swarmbot(  name "r79" pose [-18.940 4.305 0.000] )
+
+swarmbot(  name "r80" pose [-19.409 4.182 -101.745] )
+swarmbot(  name "r81" pose [-19.552 4.489 162.306] )
+swarmbot(  name "r82" pose [-19.307 5.571 93.010] )
+swarmbot(  name "r83" pose [-17.898 7.593 4.473] )
+swarmbot(  name "r84" pose [-17.224 7.409 -50.105] )
+swarmbot(  name "r85" pose [-19.287 7.614 275.900] )
+swarmbot(  name "r86" pose [-19.225 7.940 -196.957] )
+swarmbot(  name "r87" pose [-18.899 8.002 -76.085] )
+swarmbot(  name "r88" pose [-18.385 8.185 -158.847] )
+swarmbot(  name "r89" pose [-17.224 5.980 231.280] )
+
+swarmbot(  name "r90" pose [-18.572 4.611 -130.147] )
+swarmbot(  name "r91" pose [-17.939 4.570 -42.054] )
+swarmbot(  name "r92" pose [-19.266 6.592 -152.533] )
+swarmbot(  name "r93" pose [-17.980 7.042 -182.657] )
+swarmbot(  name "r94" pose [-19.266 7.266 289.935] )
+swarmbot(  name "r95" pose [-19.430 5.857 222.443] )
+swarmbot(  name "r96" pose [-17.796 5.673 -254.341] )
+swarmbot(  name "r97" pose [-18.674 7.083 -77.874] )
+swarmbot(  name "r98" pose [-17.346 6.633 218.413] )
+swarmbot(  name "r99" pose [-18.388 6.449 1.974] )
