@@ -718,11 +718,6 @@ void stg_model_add_property_toggles( stg_model_t* mod,
       entry.tooltip = NULL;
       entry.callback = G_CALLBACK(toggle_property_callback);
       
-      //override setting with value in worldfile, if one exists
-      if( wf_property_exists(  mod->world->win->wf_section, name ))
-	enabled = wf_read_int( mod->world->win->wf_section, 
-			       name,
-			       enabled );
       
       entry.is_active = enabled;
             
@@ -749,6 +744,13 @@ void stg_model_add_property_toggles( stg_model_t* mod,
     }
   else
     g_signal_connect( act, "activate",  G_CALLBACK(toggle_property_callback), args );
+
+  //override setting with value in worldfile, if one exists
+  if( wf_property_exists(  mod->world->win->wf_section, name ))
+    enabled = wf_read_int( mod->world->win->wf_section, 
+			   name,
+			   enabled );
+  
   
   // if we start enabled, attach the 'on' callback
   if( enabled )

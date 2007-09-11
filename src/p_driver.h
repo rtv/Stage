@@ -51,6 +51,8 @@ class StgDriver : public Driver
   
   /// an array of pointers to Interface objects, defined below
   GPtrArray* devices;  
+
+  static unsigned int instance_count;
 };
 
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.50 $
+//  $Revision: 1.51 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -129,8 +129,6 @@ int fiducial_init( stg_model_t* mod )
   cfg.fov = STG_DEFAULT_FIDUCIAL_FOV;  
   stg_model_set_cfg( mod, &cfg, sizeof(cfg) );
   
-  stg_model_add_callback( mod, &mod->data, fiducial_render_data, NULL );
-
   // adds a menu item and associated on-and-off callbacks
   stg_model_add_property_toggles( mod, 
 				  &mod->data,
@@ -313,7 +311,6 @@ int fiducial_update( stg_model_t* mod )
 
 int fiducial_unrender_data( stg_model_t* mod, void* userp )
 {
-  //printf( "fid unrender userp %s\n", (char*)userp );
   stg_model_fig_clear( mod, "fiducial_data_fig" );
   return 1; // cancel callback
 }

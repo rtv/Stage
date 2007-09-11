@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.40 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_driver.cc,v 1.41 2007-09-11 01:14:19 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -295,12 +295,13 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 }      
 
 
+// initialize a static member
+unsigned int StgDriver::instance_count = 0;
 
 // Constructor.  Retrieve options from the configuration file and do any
 // pre-Setup() setup.
 
 // configure the underlying driver to queue incoming commands and use a very long queue.
-
 StgDriver::StgDriver(ConfigFile* cf, int section)
     : Driver(cf, section, false, 4096 )
 {  
@@ -470,6 +471,7 @@ stg_model_t*  StgDriver::LocateModel( char* basename,
 // Set up the device.  Return 0 if things go well, and -1 otherwise.
 int StgDriver::Setup()
 {   
+  StgDriver::instance_count++;
   //puts("stage driver setup");  
   return(0);
 }
@@ -543,7 +545,7 @@ StgDriver::~StgDriver()
 // Shutdown the device
 int StgDriver::Shutdown()
 {
-  puts("Shutting stage driver down");
+  //puts("Shutting stage driver down");
 
   // Stop and join the driver thread
   // this->StopThread(); // todo - the thread only runs in the sim instance
@@ -555,7 +557,8 @@ int StgDriver::Shutdown()
   //  stg_model_unsubscribe( device->mod );
   // }
 
-  puts("stage driver has been shutdown");
+  if( --StgDriver::instance_count == 0 )
+    puts("All Stage drivers have been shutdown.");
 
   return(0);
 }

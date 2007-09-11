@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_gripper.cc,v 1.9 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_gripper.cc,v 1.10 2007-09-11 01:14:19 rtv Exp $
  */
 
 
@@ -184,10 +184,10 @@ int InterfaceGripper::ProcessMessage(QueuePointer &resp_queue,
       pgeom.pose.proll = 0.0f;
       pgeom.pose.ppitch = 0.0f;
       pgeom.pose.pyaw = pose.a;
-      pgeom.outer_size.sw = geom.size.y;
-      pgeom.outer_size.sl = geom.size.x;
-      pgeom.inner_size.sw = geom.size.y;
-      pgeom.inner_size.sl = geom.size.x;
+      pgeom.outer_size.sw = geom.size.x;
+      pgeom.outer_size.sl = geom.size.y;
+      pgeom.inner_size.sw = geom.size.x;
+      pgeom.inner_size.sl = geom.size.y;
       pgeom.num_beams = 2;
       pgeom.capacity = 0;
 

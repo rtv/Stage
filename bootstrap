@@ -4,10 +4,3 @@
 # If this fails for you, check for a bootstrap file for your platform.
 
 autoreconf -fi
-
-#set -x
-#aclocal
-#libtoolize --force
-#autoheader
-#automake --gnu --add-missing
-#autoconf
