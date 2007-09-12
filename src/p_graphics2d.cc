@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics2d.cc,v 1.6 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_graphics2d.cc,v 1.6.2.1 2007-09-12 09:51:28 thjc Exp $
  */
 
 #include "p_driver.h"
@@ -141,7 +141,7 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
 	(player_graphics2d_cmd_polygon_t*)data;
       
       
-      double pts[PLAYER_GRAPHICS2D_MAX_POINTS][2];
+      double (*pts)[2] = new double[pcmd->points_count][2];
       
       for(unsigned int p=0; p<pcmd->points_count; p++ )        
 	{
@@ -152,14 +152,14 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
       //printf( "g2d: Drawing polygon of %d points\n", pcmd->count ); 
       
       if( pcmd->filled )
-	{
-	  stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->fill_color));
-	  stg_rtk_fig_polygon( this->fig, 
+      {
+          stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->fill_color));
+          stg_rtk_fig_polygon( this->fig, 
 			       0,0,0,			   
                               pcmd->points_count,
 			       pts,
 			       TRUE );
-	}
+      }
       
       stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
       stg_rtk_fig_polygon( this->fig, 
@@ -167,6 +167,7 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
                           pcmd->points_count,
 			   pts,
 			   FALSE );
+      delete [] pts;
       return 0; //ok
     }
   

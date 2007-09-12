@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_fiducial.cc,v 1.10 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_fiducial.cc,v 1.10.2.1 2007-09-12 09:51:28 thjc Exp $
  */
 
 // DOCUMENTATION
@@ -77,14 +77,7 @@ void InterfaceFiducial::Publish( void )
       //printf( "reporting %d fiducials\n",
       //      fcount );
 
-      if( fcount > PLAYER_FIDUCIAL_MAX_SAMPLES )
-	{
-	  PRINT_WARN2( "A Stage model has detected more fiducials than"
-		       " will fit in Player's buffer (%u/%u)\n",
-		      (uint) fcount, PLAYER_FIDUCIAL_MAX_SAMPLES );
-	  fcount = PLAYER_FIDUCIAL_MAX_SAMPLES;
-	}
-
+      pdata.fiducials = new player_fiducial_item_t[fcount];
       for( int i=0; i<(int)fcount; i++ )
 	{
 	  pdata.fiducials[i].id = fids[i].id;
@@ -119,6 +112,7 @@ void InterfaceFiducial::Publish( void )
 			 PLAYER_MSGTYPE_DATA,
 			 PLAYER_FIDUCIAL_DATA_SCAN,
 			 &pdata, sizeof(pdata), NULL);
+  delete [] pdata.fiducials;
 }
 
 int InterfaceFiducial::ProcessMessage(QueuePointer &resp_queue,

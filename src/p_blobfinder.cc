@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_blobfinder.cc,v 1.10 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_blobfinder.cc,v 1.10.2.1 2007-09-12 09:51:28 thjc Exp $
  */
 
 // DOCUMENTATION
@@ -60,8 +60,6 @@ void InterfaceBlobfinder::Publish( void )
   size_t bcount = mod->data_len / sizeof(stg_blobfinder_blob_t);
   
   // limit the number of samples to Player's maximum
-  if( bcount > PLAYER_BLOBFINDER_MAX_BLOBS )
-    bcount = PLAYER_BLOBFINDER_MAX_BLOBS;      
   
   player_blobfinder_data_t bfd;
   memset( &bfd, 0, sizeof(bfd) );
@@ -74,6 +72,7 @@ void InterfaceBlobfinder::Publish( void )
   bfd.width = cfg->scan_width;
   bfd.height = cfg->scan_height;
   bfd.blobs_count = bcount;
+  bfd.blobs = new player_blobfinder_blob_t[bcount];
   
   // now run through the blobs, packing them into the player buffer
   // counting the number of blobs in each channel and making entries
@@ -118,6 +117,7 @@ void InterfaceBlobfinder::Publish( void )
 			 PLAYER_MSGTYPE_DATA,
 			 PLAYER_BLOBFINDER_DATA_BLOBS,
 			 &bfd, sizeof(bfd), NULL);
+  delete [] bfd.blobs;
 }
 
 int InterfaceBlobfinder::ProcessMessage( QueuePointer &resp_queue,

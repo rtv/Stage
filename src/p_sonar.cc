@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_sonar.cc,v 1.10 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_sonar.cc,v 1.10.2.1 2007-09-12 09:51:28 thjc Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -68,13 +68,10 @@ void InterfaceSonar::Publish( void )
     {      
       size_t rcount = len / sizeof(stg_ranger_sample_t);
       
-      // limit the number of samples to Player's maximum
-      if( rcount > PLAYER_SONAR_MAX_SAMPLES )
-	rcount = PLAYER_SONAR_MAX_SAMPLES;
-      
       //if( son->power_on ) // set with a sonar config
       {
 	sonar.ranges_count = rcount;
+  sonar.ranges = new float[rcount];
 	
 	for( int i=0; i<(int)rcount; i++ )
 	  sonar.ranges[i] = rangers[i].range;
@@ -85,6 +82,7 @@ void InterfaceSonar::Publish( void )
 			 PLAYER_MSGTYPE_DATA,
 			 PLAYER_SONAR_DATA_RANGES,
 			 &sonar, sizeof(sonar), NULL); 
+  delete [] sonar.ranges;
 }
 
 
@@ -106,11 +104,8 @@ int InterfaceSonar::ProcessMessage( QueuePointer &resp_queue,
       player_sonar_geom_t pgeom;
       memset( &pgeom, 0, sizeof(pgeom) );
       
-      // limit the number of samples to Player's maximum
-      if( rcount > PLAYER_SONAR_MAX_SAMPLES )
-	rcount = PLAYER_SONAR_MAX_SAMPLES;
-      
       pgeom.poses_count = rcount;
+      pgeom.poses = new player_pose3d_t[rcount];
       
       for( int i=0; i<(int)rcount; i++ )
 	{
@@ -124,7 +119,7 @@ int InterfaceSonar::ProcessMessage( QueuePointer &resp_queue,
 			     PLAYER_MSGTYPE_RESP_ACK, 
 			     PLAYER_SONAR_REQ_GET_GEOM,
 			     (void*)&pgeom, sizeof(pgeom), NULL );
-      
+      delete [] pgeom.poses;
       return 0; // ok
     }
   else
