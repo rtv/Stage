@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: gerkey $
-//  $Revision: 1.60.2.2 $
+//  $Revision: 1.60.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -405,6 +405,52 @@ int position_update( stg_model_t* mod )
     {            
       switch( cmd->mode )
 	{
+	case STG_POSITION_CONTROL_VELOCITY_HEADING:
+	  // mixed-mode control: translational velocity, rotational heading
+
+	  PRINT_DEBUG( "velocity-heading control mode" );
+	  PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
+			mod->token, 
+			mod->cmd.x, 
+			mod->cmd.y, 
+			mod->cmd.a );
+
+	  double a_error = NORMALIZE( cmd->a - data->pose.a );
+	    
+	  PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
+	    
+	  // speed limits for controllers
+	  // TODO - have these configurable
+	  double max_speed_a = 1.0; // rads/sec
+
+	  switch( cfg->drive_mode )
+	    {
+	    case STG_POSITION_DRIVE_DIFFERENTIAL:
+	      // differential-steering model, like a Pioneer
+		vel->x = cmd->x;
+		vel->y = 0;
+		vel->a = MIN( a_error, max_speed_a );
+		break;
+		
+	      case STG_POSITION_DRIVE_OMNI:
+		// direct steering model, like an omnidirectional robot
+		vel->x = cmd->x;
+		vel->y = cmd->y;
+		vel->a = MIN( a_error, max_speed_a );
+		break;
+
+	      case STG_POSITION_DRIVE_CAR:
+		// car like steering model, same as differential here
+		vel->x = cmd->x * cos(cmd->a);
+		vel->y = 0;
+		vel->a = MIN( a_error, max_speed_a );
+		break;
+
+	      default:
+		PRINT_ERR1( "unknown steering mode %d", cfg->drive_mode );
+	    }
+	  break;
+
 	case STG_POSITION_CONTROL_VELOCITY :
 	  {
 	    PRINT_DEBUG( "velocity control mode" );

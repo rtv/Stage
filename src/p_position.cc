@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.14.2.1 2006-10-05 22:37:18 gerkey Exp $
+ * CVS: $Id: p_position.cc,v 1.14.2.2 2007-10-02 21:04:32 gerkey Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -32,6 +32,7 @@
 - PLAYER_POSITION2D_CMD_POS
 - PLAYER_POSITION2D_CMD_VEL
 - PLAYER_POSITION2D_CMD_CAR
+- PLAYER_POSITION2D_CMD_VEL_HEAD
 - PLAYER_POSITION2D_DATA_STATE
 - PLAYER_POSITION2D_REQ_GET_GEOM
 - PLAYER_POSITION2D_REQ_MOTOR_POWER
@@ -128,6 +129,27 @@ int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
     this->last_cmd_time = this->mod->world->sim_time;
   }
  
+  // Is it a new motor command?
+  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
+                           PLAYER_POSITION2D_CMD_VEL_HEAD, 
+                           this->addr))
+  {
+    // convert from Player to Stage format
+    player_position2d_cmd_vel_head_t* pcmd = (player_position2d_cmd_vel_head_t*)data;
+
+    stg_position_cmd_t scmd; 
+    memset( &scmd, 0, sizeof(scmd));
+
+    scmd.x = pcmd->velocity;
+    scmd.y = 0;
+    scmd.a = pcmd->angle;
+    scmd.mode = STG_POSITION_CONTROL_VELOCITY_HEADING;
+
+    stg_model_set_cmd( this->mod, &scmd, sizeof(scmd));
+    this->stopped = false;
+    this->last_cmd_time = this->mod->world->sim_time;
+  }
+
   // Is it a request for position geometry?
   else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
                                 PLAYER_POSITION2D_REQ_GET_GEOM, 

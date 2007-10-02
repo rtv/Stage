@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.188.2.2 2006-10-17 00:07:09 gerkey Exp $
+ * CVS: $Id: stage.h,v 1.188.2.3 2007-10-02 21:04:32 gerkey Exp $
  */
 
 
@@ -964,7 +964,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   // POSITION MODEL --------------------------------------------------------
   
   typedef enum
-    { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
+    { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION,
+      STG_POSITION_CONTROL_VELOCITY_HEADING }
   stg_position_control_mode_t;
   
 #define STG_POSITION_CONTROL_DEFAULT STG_POSITION_CONTROL_VELOCITY
