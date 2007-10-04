@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.2 2007-10-04 05:36:09 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.3 2007-10-04 07:55:35 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -98,7 +98,7 @@ int main( int argc, char* argv[] )
   while( 1 )
     {
       //while( ! laser->DataIsFresh() )
-	world.RealTimeUpdate();
+      world.RealTimeUpdate();
 
 //       // get some laser data
 //       size_t laser_sample_count = laser->sample_count;      

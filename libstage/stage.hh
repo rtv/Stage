@@ -27,7 +27,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.2 2007-10-04 07:43:21 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.3 2007-10-04 07:55:35 rtv Exp $
  */
 
 
@@ -45,7 +45,6 @@
 #include <sys/time.h>
 #include <glib.h> // we use GLib's data structures extensively
 #include <assert.h>
-#include <pthread.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1238,12 +1237,7 @@ public:
   bool data_fresh; ///< this can be set to indicate that the model has
 		   ///new data that may be of interest to users. This
 		   ///allows polling the model instead of adding a
-		   ///data callback.
-
-  // TODO - optionally thread-safe version allow exclusive access
-  // to this model 
-  // pthread_mutex_t mutex;
-  
+		   ///data callback.  
 public:
   // end experimental    
 
