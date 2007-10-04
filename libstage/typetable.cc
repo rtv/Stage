@@ -1,41 +1,12 @@
 #include "stage.hh"
 
-// declare some factory functions that create model objects. We use
-// pointers to these functions to map constructors to strings in the
-// type table.
-
-StgModel* new_model(  StgWorld* world, StgModel* parent, stg_id_t id, char* typestr )
-{ return (StgModel*)new StgModel( world, parent, id, typestr ); }
-
-// StgModel* new_laser( stg_world_t* world, StgModel* parent, 
-// 		     stg_id_t id, CWorldFile* wf )
-// { return (StgModel*)new StgModelLaser( world, parent, id, wf ); }
-
-// StgModel* new_ranger( stg_world_t* world, StgModel* parent, 
-// 		     stg_id_t id, CWorldFile* wf )
-// { return (StgModel*)new StgModelRanger( world, parent, id, wf ); }
-
-// StgModel* new_position( stg_world_t* world, StgModel* parent, 
-// 		     stg_id_t id, CWorldFile* wf )
-// { return (StgModel*)new StgModelPosition( world, parent, id, wf ); }
-
-
-typedef struct 
-{
-  const char* token;
-  StgModel* (*creator_fn)( StgWorld*, StgModel*, stg_id_t, char* );
-} stg_typetable_entry_t;
-
-
 // ******************************
 // Register new model types here
-// Each entry maps a worldfile keywords onto a model initialization function
+// Each entry maps a worldfile keyword onto a model constructor wrapper
 
 stg_typetable_entry_t typetable[] = {
-  { "model",     new_model },
-  //{ "laser",     new_laser },
-  //{ "position",  new_position },
-  //{ "ranger",  new_ranger },
+  { "model",     StgModel::Create },
+  { "laser",     StgModelLaser::Create },
   { NULL, NULL } // this must be the last entry
 };
 
@@ -53,5 +24,3 @@ GHashTable* stg_create_typetable( void )
   
   return table;
 }
-
-

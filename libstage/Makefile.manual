@@ -4,11 +4,6 @@ HEADERS = \
 	stage.hh \
 	worldfile.hh 
 
-#	model_ranger.hh 
-#	model_position.hh 
-#	model_laser.hh 
-#	model_fiducial.hh 
-
 CC = g++
 
 OBS = \
@@ -20,6 +15,7 @@ OBS = \
     logo.o \
     model.o \
     model_callbacks.o \
+    model_laser.o \
     model_load.o \
     model_props.o \
     stage.o \
@@ -29,12 +25,8 @@ OBS = \
     worldgtk.o \
     worldfile.o 
 
-#    model_laser.o 
 #    model_ranger.o 
 #    model_position.o 
-#    gui_gtk_prefs.o \
-
-
 
 CPPFLAGS= -g -Wall -I.. -I../replace `pkg-config --cflags gtkglext-1.0`
 LIBS= `pkg-config --libs gtkglext-1.0`
@@ -43,5 +35,5 @@ foo : $(OBS) $(HEADERS)
 	g++ -o foo $(CPPFLAGS) $(OBS) $(LIBS)  
 
 clean : 
-	rm *.o
+	rm *.o *.lo
 

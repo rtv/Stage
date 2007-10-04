@@ -25,11 +25,9 @@
 
 /* File: stage.h
  * Desc: External header file for the Stage library
- * Authors: Richard Vaughan vaughan@sfu.ca 
- *          Andrew Howard ahowards@usc.edu
- *          Brian Gerkey gerkey@stanford.edu
+ * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.2 2007-10-04 07:43:21 rtv Exp $
  */
 
 
@@ -40,6 +38,7 @@
   library
 */
 
+// TODO - can we cut the includes down a bit?
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
 #include <sys/types.h>
@@ -55,12 +54,10 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
-// TODO - can we cut the includes down a bit?
-//#include <semaphore.h>
-//#include <netdb.h>
-
 #include "config.h" // results of autoconf's system configuration tests
 #include "replace.h" // Stage's implementations of missing system calls
+
+// todo: consider moving these out
 #include "worldfile.hh"
 #include "colors.h"
 
@@ -134,9 +131,6 @@ typedef double stg_radians_t;
 
 /** Milliseconds: unit of (short) time */
 typedef unsigned long stg_msec_t;
-
-stg_msec_t stg_realtime( void );
-stg_msec_t stg_realtime_since_start( void );
 
 /** Kilograms: unit of mass */
 typedef double stg_kg_t; // Kilograms (mass)
@@ -480,371 +474,6 @@ bool stg_quit_test( void );
     } stg_laser_return_t;
 
 
-  // BLOBFINDER MODEL --------------------------------------------------------
-  
-#define STG_BLOB_CHANNELS_MAX 16
-  
-  /** blobfinder config packet
-   */
-  typedef struct
-  {
-    int channel_count; // 0 to STG_BLOBFINDER_CHANNELS_MAX
-    stg_color_t channels[STG_BLOB_CHANNELS_MAX];
-    int scan_width;
-    int scan_height;
-    stg_meters_t range_max;
-  } stg_blobfinder_config_t;
-  
-  /** blobfinder data packet 
-   */
-  typedef struct
-  {
-    int channel;
-    stg_color_t color;
-    int xpos, ypos;   // all values are in pixels
-    //int width, height;
-    int left, top, right, bottom;
-    int area;
-    stg_meters_t range;
-  } stg_blobfinder_blob_t;
-
-
-// ENERGY model --------------------------------------------------------------
-  
-  /** energy data packet */
-  typedef struct
-  {
-    /** estimate of current energy stored */
-    stg_joules_t stored;
-
-    /** TRUE iff the device is receiving energy from a charger */
-    stg_bool_t charging;
-
-    /** diatance to charging device */
-    stg_meters_t range;
-
-    /** an array of pointers to connected models */
-    GPtrArray* connections;
-  } stg_energy_data_t;
-
-  /** energy config packet (use this to set or get energy configuration)*/
-  typedef struct
-  {
-    /** maximum storage capacity */
-    stg_joules_t capacity;
-
-    /** When charging another device, supply this many Joules/sec at most*/
-    stg_watts_t give_rate;
-
-    /** When charging from another device, receive this many Joules/sec at most*/
-    stg_watts_t take_rate;
-
-    /** length of the charging probe */
-    stg_meters_t probe_range;
-    
-    /**  iff TRUE, this device will supply power to connected devices */
-    stg_bool_t give;
-
-  } stg_energy_config_t;
-
-  // there is currently no energy command packet
-
-// BLINKENLIGHT -------------------------------------------------------
-
-  //typedef struct
-  //{
-  //int enable;
-  //stg_msec_t period;
-  //} stg_blinkenlight_t;
-
-// PTZ MODEL --------------------------------------------------------
-  
-  /** ptz command: specify desired PTZ angles. Tilt has no effect.
-   */
-  typedef stg_ptz_t stg_ptz_cmd_t;
-
-  /** ptz data: specifies actual PTZ angles. 
-   */
-  typedef stg_ptz_t stg_ptz_data_t;
-
-  /** ptz config structure
-   */
-  typedef struct
-  {
-    stg_ptz_t min; ///< Minimum PTZ angles.
-    stg_ptz_t max; ///< Maximum PTZ angles.
-    stg_ptz_t goal; ///< The current desired angles. The device servos towards these values.
-    stg_ptz_t speed; ///< The PTZ servo speeds.
-  } stg_ptz_config_t;
-
-
-  // LASER MODEL --------------------------------------------------------
-  
-  /** laser sample packet
-   */
-  typedef struct
-  {
-    stg_meters_t range; ///< range to laser hit in meters
-    double reflectance; ///< intensity of the reflection 0.0 to 1.0
-    stg_point_t hitpoint; ///< the location of the laser hit in local coordinates
-  } stg_laser_sample_t;
-  
-  /** laser configuration packet
-   */
-  typedef struct
-  {
-    stg_radians_t fov; ///< field of view 
-    stg_meters_t range_max; ///< the maximum range
-    stg_meters_t range_min; ///< the miniimum range
-
-    /** the number of range measurements (and thus the size
-    of the array of stg_laser_sample_t's returned) */ 
-    int samples;
-
-    /** To save time, only calculate every <resolution> samples 
-    and linearly interpolate the samples in between. Defaults to 
-    zero for best accuracy but worst performance */ 
-    int resolution;
-    } stg_laser_config_t;
-    
-  // GRIPPER MODEL --------------------------------------------------------
-  
-  typedef enum {
-    STG_GRIPPER_PADDLE_OPEN = 0, // default state
-    STG_GRIPPER_PADDLE_CLOSED, 
-    STG_GRIPPER_PADDLE_OPENING,
-    STG_GRIPPER_PADDLE_CLOSING,
-  } stg_gripper_paddle_state_t;
-
-  typedef enum {
-    STG_GRIPPER_LIFT_DOWN = 0, // default state
-    STG_GRIPPER_LIFT_UP, 
-    STG_GRIPPER_LIFT_UPPING, // verbed these to match the paddle state
-    STG_GRIPPER_LIFT_DOWNING, 
-  } stg_gripper_lift_state_t;
-  
-  typedef enum {
-    STG_GRIPPER_CMD_NOP = 0, // default state
-    STG_GRIPPER_CMD_OPEN, 
-    STG_GRIPPER_CMD_CLOSE,
-    STG_GRIPPER_CMD_UP, 
-    STG_GRIPPER_CMD_DOWN    
-  } stg_gripper_cmd_type_t;
-  
-  /** gripper configuration packet
-   */
-  typedef struct
-  {
-    stg_size_t paddle_size; ///< paddle dimensions 
-
-    stg_gripper_paddle_state_t paddles; 
-    stg_gripper_lift_state_t lift;
-
-    double paddle_position; ///< 0.0 = full open, 1.0 full closed
-    double lift_position; ///< 0.0 = full down, 1.0 full up
-
-    stg_meters_t inner_break_beam_inset; ///< distance from the end of the paddle
-    stg_meters_t outer_break_beam_inset; ///< distance from the end of the paddle  
-    stg_bool_t paddles_stalled; // true iff some solid object stopped
-				// the paddles closing or opening
-    
-    GSList *grip_stack;  ///< stack of items gripped
-    int grip_stack_size; ///< maximum number of objects in stack, or -1 for unlimited
-
-    double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.
-
-  } stg_gripper_config_t;
-
-  /** gripper command packet
-   */
-  typedef struct
-  {
-    stg_gripper_cmd_type_t cmd;
-    int arg;
-  } stg_gripper_cmd_t;
-
-
-  /** gripper data packet
-   */
-  typedef struct
-  {
-    stg_gripper_paddle_state_t paddles; 
-    stg_gripper_lift_state_t lift;
-    
-    double paddle_position; ///< 0.0 = full open, 1.0 full closed
-    double lift_position; ///< 0.0 = full down, 1.0 full up
-
-    stg_bool_t inner_break_beam; ///< non-zero iff beam is broken
-    stg_bool_t outer_break_beam; ///< non-zero iff beam is broken
-    
-    stg_bool_t paddle_contacts[2]; ///< non-zero iff paddles touch something
-
-    stg_bool_t paddles_stalled; // true iff some solid object stopped
-				// the paddles closing or opening
-
-    int stack_count; ///< number of objects in stack
-
-
-  } stg_gripper_data_t;
-
-
-  // FIDUCIAL MODEL --------------------------------------------------------
-  
-  /** fiducial config packet 
-   */
-  typedef struct
-  {
-    stg_meters_t max_range_anon; //< maximum detection range
-    stg_meters_t max_range_id; ///< maximum range at which the ID can be read
-    stg_meters_t min_range; ///< minimum detection range
-    stg_radians_t fov; ///< field of view 
-    stg_radians_t heading; ///< center of field of view
-    
-    /// only detects fiducials with a key string that matches this one
-    /// (defaults to NULL)
-    char* key;
-  } stg_fiducial_config_t;
-  
-  /** fiducial data packet 
-   */
-  typedef struct
-  {
-    stg_meters_t range; ///< range to the target
-    stg_radians_t bearing; ///< bearing to the target 
-    stg_pose_t geom; ///< size and relative angle of the target
-    stg_pose_t pose; ///< Absolute accurate position of the target in world coordinates (it's cheating to use this in robot controllers!)
-    int id; ///< the identifier of the target, or -1 if none can be detected.
-    
-  } stg_fiducial_t;
-
-  // RANGER MODEL --------------------------------------------------------
-
-  typedef struct
-  {
-    stg_pose_t pose;
-    stg_size_t size;
-    stg_bounds_t bounds_range;
-    stg_radians_t fov;
-    int ray_count;
-    stg_meters_t range;
-    //double error; // TODO
-  } stg_ranger_sensor_t;
-  
-  // BUMPER MODEL --------------------------------------------------------
-
-  typedef struct
-  {
-    stg_pose_t pose;
-    stg_meters_t length;
-  } stg_bumper_config_t;
-  
-  typedef struct
-  {
-    StgModel* hit;
-    stg_point_t hit_point;
-  } stg_bumper_sample_t;
-  
-  // POSITION MODEL --------------------------------------------------------
-  
-  typedef enum
-    { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
-  stg_position_control_mode_t;
-  
-#define STG_POSITION_CONTROL_DEFAULT STG_POSITION_CONTROL_VELOCITY
-  
-  typedef enum
-    { STG_POSITION_LOCALIZATION_GPS, STG_POSITION_LOCALIZATION_ODOM }
-  stg_position_localization_mode_t;
-  
-#define STG_POSITION_LOCALIZATION_DEFAULT STG_POSITION_LOCALIZATION_GPS
-  
-  /** "position_drive" property */
-  typedef enum
-    { STG_POSITION_DRIVE_DIFFERENTIAL, STG_POSITION_DRIVE_OMNI, STG_POSITION_DRIVE_CAR }
-  stg_position_drive_mode_t;
-  
-#define STG_POSITION_DRIVE_DEFAULT STG_POSITION_DRIVE_DIFFERENTIAL
-  
-  /** "position_cmd" property */
-  typedef struct
-  {
-    stg_meters_t x,y,a;
-    stg_position_control_mode_t mode;
-  } stg_position_cmd_t;
-  
-  /** "position_data" property */
-  typedef struct
-  {
-    stg_pose_t pose; ///< position estimate in local coordinates
-    stg_pose_t pose_error; ///< estimated error in position estimate
-    stg_pose_t origin; ///< global origin of the local coordinate system
-    stg_velocity_t velocity; ///< current translation and rotaation speeds
-    stg_velocity_t integration_error; ///< errors in simple odometry model
-    //stg_bool_t stall; ///< TRUE iff the robot can't move due to a collision
-    stg_position_localization_mode_t localization; ///< global or local mode
-  } stg_position_data_t;
-  
-  /** position_cfg" property */
-  typedef struct
-  {
-    stg_position_drive_mode_t drive_mode;
-    stg_position_localization_mode_t localization_mode;
-  } stg_position_cfg_t;
-
-  /// set the current odometry estimate 
-  //void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom ); 
-
-  // WIFI MODEL --------------------------------------------------------
-
-  /** wifi config packet 
-   */
-  typedef struct
-  {
-    // Configuration for the wifi model goes here.  E.g., power, range of
-    // propagation.
-  } stg_wifi_config_t;
-
-  /** wifi data packet 
-   */
-  typedef struct
-  {
-    // Simulated wifi data goes here.  E.g., for each neighbor within
-    // range, record the corresponding signal strength.
-  } stg_wifi_data_t;
-
-  // SPEECH MODEL --------------------------------------------------------
-
-#define STG_SPEECH_MAX_STRING_LEN 256
-
-  typedef enum {
-    STG_SPEECH_CMD_NOP = 0, // default state
-    STG_SPEECH_CMD_SAY
-  } stg_speech_cmd_type_t;
-
-  /** speech configuration packet
-   */
-  typedef struct
-  {
-    char string[STG_SPEECH_MAX_STRING_LEN];
-  } stg_speech_config_t;
-
-  /** speech data packet
-   */
-  typedef struct
-  {
-    char string[STG_SPEECH_MAX_STRING_LEN];
-  } stg_speech_data_t;
-
-  /** speech command packet
-   */
-  typedef struct
-  {
-    stg_speech_cmd_type_t cmd;
-    char string[STG_SPEECH_MAX_STRING_LEN];
-  } stg_speech_cmd_t;
-
-  // end the group of all models
-  /**@}*/
   
 typedef struct {
   double x, y, z;
@@ -949,9 +578,9 @@ void stg_d_render( stg_d_draw_t* d );
   /** Print human-readable velocity on stdout */
   void stg_print_velocity( stg_velocity_t* vel );
   /** Print human-readable version of the gripper config struct */
-  void stg_print_gripper_config( stg_gripper_config_t* slc );
+  //void stg_print_gripper_config( stg_gripper_config_t* slc );
   /** Print human-readable version of the laser config struct */
-  void stg_print_laser_config( stg_laser_config_t* slc );
+  //void stg_print_laser_config( stg_laser_config_t* slc );
   
 
 
@@ -1014,11 +643,13 @@ class StgModel;
   
 GHashTable* stg_create_typetable( void );
 
-void stg_color_to_glcolor4dv( stg_color_t scol, double gcol[4] );
-void push_color( double col[4] );
-void push_color_rgb( double r, double g, double b );
-void push_color_rgba( double r, double g, double b, double a );
-void pop_color( void );
+typedef struct 
+{
+  const char* token;
+  StgModel* (*creator_fn)( StgWorld*, StgModel*, stg_id_t, char* );
+} stg_typetable_entry_t;
+
+
 void gl_pose_shift( stg_pose_t* pose );
 void gl_coord_shift( double x, double y, double z, double a  );
 void stg_block_list_scale( GList* blocks, 
@@ -1375,61 +1006,8 @@ the worldfile c++ code */
 #define PRINT_DEBUG5(m,a,b,c,d,e)
 #endif
 
-
+class StgBlock;
 class StgModel;
-class StgWorld;
-
-// BLOCKS
-class StgBlock
-{
-public:
-  
-  //friend class StgWorld; // StgWorld can access private members
-  //friend class StgModel; // StgModel can access private members
-
-  //friend void stg_block_list_scale( GList* blocks, stg_size_t size );
-  
-  /** Block Constructor. A model's body is a list of these
-      blocks. The point data is copied, so pts can safely be freed
-      after constructing the block.*/
-  StgBlock( StgModel* mod,
-	    stg_point_t* pts, 
-	    size_t pt_count,
-	    stg_meters_t height,
-	    stg_meters_t z_offset,
-	    stg_color_t color,
-	    bool inherit_color );
-  
-  ~StgBlock();
-  
-  void Map();
-  void UnMap(); // draw the block into the world
-
-  void Draw(); // draw the block in OpenGL
-
-  stg_point_t* pts; //< points defining a polygon
-  size_t pt_count; //< the number of points
-  stg_meters_t zmin; 
-  stg_meters_t zmax; 
-
-  StgModel* mod; //< model to which this block belongs
-  
-  void AddCell( StgCell* cell );
-  
-  stg_point_t* pts_global; //< points defining a polygon in global coords
-
-private:
-  stg_color_t color;
-  bool inherit_color;  
-  GList* rendered_cells; //< matrix cells that contain this object, for fast unrendering
-
-  inline void DrawTop();
-  inline void DrawSides();
-  
-  inline void PushColor( stg_color_t col );
-  inline void PopColor();
-};
-
 
 // ANCESTOR CLASS
 
@@ -1445,24 +1023,139 @@ protected:
   GList* children;
   GHashTable* child_types;
   char* token;
-
+  
 public:
   StgAncestor();
   virtual ~StgAncestor();
   
   unsigned int GetNumChildrenOfType( const char* typestr );
   void SetNumChildrenOfType( const char* typestr, unsigned int count );
-
+  
   virtual void AddChild( StgModel* mod );
   virtual void RemoveChild( StgModel* mod );
-
+  
   virtual void GetGlobalPose( stg_pose_t* gpose );  
   
   const char* Token( void )
   { return this->token; }
-
+  
   virtual void PushColor( stg_color_t col ){} // does nothing
+  virtual void PushColor( double r, double g, double b, double a ){} // does nothing
   virtual void PopColor(){} // does nothing
+};
+
+
+/// WORLD CLASS
+class StgWorld : public StgAncestor
+{
+protected:
+  stg_msec_t real_time_next_update;
+  stg_msec_t real_time_start;
+  static bool init_done;
+
+private:
+  
+  static unsigned int next_id; //< initialized to zero, used to
+			       //allocate unique sequential world ids
+  static GHashTable* typetable;  
+
+public:
+
+  StgWorld( void ); 
+  
+  StgWorld( const char* token, 
+	    stg_msec_t interval_sim, 
+	    stg_msec_t interval_real,
+	    double ppm, 
+	    double width,
+	    double height );
+  
+  static void Init( int* argc, char** argv[] );
+  
+  void Initialize( const char* token, 
+		   stg_msec_t interval_sim, 
+		   stg_msec_t interval_real,
+		   double ppm, 
+		   double width,
+		   double height );
+  
+  virtual ~StgWorld( void );
+  
+  stg_msec_t RealTimeNow(void);
+  stg_msec_t RealTimeSinceStart(void);
+  void PauseUntilNextUpdateTime(void);
+
+  virtual void Load( const char* worldfile_path );
+  //virtual void Load( void );
+  virtual void Reload( void );
+  virtual void Save( void );
+  virtual int Update(void);
+  virtual int RealTimeUpdate(void);
+
+  void Start();
+  void Stop();
+
+  bool destroy;
+
+  stg_id_t id;
+  stg_meters_t width, height;
+
+  GHashTable* models_by_id; ///< the models that make up the world, indexed by id
+  GHashTable* models_by_name; ///< the models that make up the world, indexed by name
+  GList* velocity_list; ///< a list of models that have non-zero velocity, for efficient updating
+  CWorldFile* wf; ///< If set, points to the worldfile used to create this world
+
+  stg_msec_t sim_time; ///< the current sim time in this world in ms
+  stg_msec_t wall_last_update; ///< the real time of the last update in ms
+
+  long unsigned int updates; ///< the number of simulated time steps executed so far
+  long unsigned int calls; ///< the number of calls to Update
+  
+  bool dirty; ///< iff true, a gui redraw would be required
+
+  stg_msec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
+  stg_msec_t interval_sleep_max;
+  stg_msec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
+  //stg_msec_t real_interval_measured;
+
+  int total_subs; ///< the total number of subscriptions to all models
+  double ppm; ///< the resolution of the world model in pixels per meter  
+
+  bool paused; ///< the world only updates when this is false
+
+  GList* update_list; //< the descendants that need Update() called
+  
+  StgModel* GetModel( const stg_id_t id );
+  StgModel* GetModel( const char* name );
+  
+  void AddModel( StgModel* mod );
+  void RemoveModel( StgModel* mod );
+  
+  void StartUpdatingModel( StgModel* mod );
+  void StopUpdatingModel( StgModel* mod );
+  
+  // the matrix used to be a separate thing: it has been folded into the world
+  
+  // A quad tree of cells. Each leaf node contains a list of
+  // pointers to objects located at that cell
+  StgCell* root;
+  
+  void MapBlock( StgBlock* block );
+  void MapBlockLine( StgBlock* block, 
+		     double x1, double y1, 
+		     double x2, double y2 );
+
+  stg_meters_t Raytrace( StgModel* finder,
+			 stg_pose_t* pose, 			 
+			 stg_meters_t max_range,
+			 stg_itl_test_func_t func,
+			 StgModel** hit_model );
+			 
+  void ClockString( char* str, size_t maxlen );
+
+ private:
+  // todo - hide some stuff here?
+
 };
 
 // MODEL CLASS
@@ -1571,12 +1264,20 @@ public:
   /** save the state of the model to the current world file */
   virtual void Save( void );
   virtual void Draw( void );
+  virtual void DrawBody( void );
   virtual void DrawData( void );
+  virtual void DataVisualize( void );
   virtual void DrawSelected(void);
   
-  virtual void PushColor( stg_color_t col );
-  virtual void PopColor();
-
+  virtual void PushColor( stg_color_t col )
+  { world->PushColor( col ); }
+  
+  virtual void PushColor( double r, double g, double b, double a )
+  { world->PushColor( r,g,b,a ); }
+    
+  virtual void PopColor()
+  { world->PopColor(); }
+      
   // call this to ensure the GUI window is redrawn
   void NeedRedraw( void );
 
@@ -1800,10 +1501,7 @@ public:
       world coordinate system. Overwrites [pose] with the new
       coordinate. */
   void LocalToGlobal( stg_pose_t* pose );
-
-  virtual void DListBody( void );
-  virtual void DListData( void );
-  
+    
   // this version raytraces from our local origin
   stg_meters_t Raytrace( stg_radians_t angle, 
 			 stg_meters_t range, 
@@ -1815,121 +1513,69 @@ public:
 			 stg_meters_t range, 
 			 stg_itl_test_func_t func,
 			 StgModel** hitmod );
+  
+  // static wrapper for the constructor - all models must implement
+  // this method and add an entry in typetable.cc
+  static StgModel* Create( StgWorld* world,
+			   StgModel* parent, 
+			   stg_id_t id, 
+			   char* typestr )
+  { 
+    return new StgModel( world, parent, id, typestr ); 
+  }    
 
 };
 
-
-/// WORLD CLASS
-class StgWorld : public StgAncestor
+// BLOCKS
+class StgBlock
 {
-protected:
-  stg_msec_t real_time_next_update;
-  stg_msec_t real_time_start;
-  static bool init_done;
+public:
+  
+  /** Block Constructor. A model's body is a list of these
+      blocks. The point data is copied, so pts can safely be freed
+      after constructing the block.*/
+  StgBlock( StgModel* mod,
+	    stg_point_t* pts, 
+	    size_t pt_count,
+	    stg_meters_t height,
+	    stg_meters_t z_offset,
+	    stg_color_t color,
+	    bool inherit_color );
+  
+  ~StgBlock();
+  
+  void Map();
+  void UnMap(); // draw the block into the world
+
+  void Draw(); // draw the block in OpenGL
+
+  stg_point_t* pts; //< points defining a polygon
+  size_t pt_count; //< the number of points
+  stg_meters_t zmin; 
+  stg_meters_t zmax; 
+
+  StgModel* mod; //< model to which this block belongs
+  
+  void AddCell( StgCell* cell );
+  
+  stg_point_t* pts_global; //< points defining a polygon in global coords
 
 private:
+  stg_color_t color;
+  bool inherit_color;  
+  GList* rendered_cells; //< matrix cells that contain this object, for fast unrendering
+
+  inline void DrawTop();
+  inline void DrawSides();
   
-  static unsigned int next_id; //< initialized to zero, used to
-			       //allocate unique sequential world ids
-  static GHashTable* typetable;  
-
-public:
-
-  StgWorld( void ); 
+  inline void PushColor( stg_color_t col )
+  { mod->PushColor( col ); }
   
-  StgWorld( const char* token, 
-	    stg_msec_t interval_sim, 
-	    stg_msec_t interval_real,
-	    double ppm, 
-	    double width,
-	    double height );
-  
-  static void Init( int* argc, char** argv[] );
-  
-  void Initialize( const char* token, 
-		   stg_msec_t interval_sim, 
-		   stg_msec_t interval_real,
-		   double ppm, 
-		   double width,
-		   double height );
-  
-  virtual ~StgWorld( void );
-  
-  stg_msec_t RealTimeNow(void);
-  stg_msec_t RealTimeSinceStart(void);
-  void PauseUntilNextUpdateTime(void);
+  inline void PushColor( double r, double g, double b, double a )
+  { mod->PushColor( r,g,b,a ); }
 
-  virtual void Load( const char* worldfile_path );
-  //virtual void Load( void );
-  virtual void Reload( void );
-  virtual void Save( void );
-  virtual int Update(void);
-  virtual int RealTimeUpdate(void);
-
-  void Start();
-  void Stop();
-
-  bool destroy;
-
-  stg_id_t id;
-  stg_meters_t width, height;
-
-  GHashTable* models_by_id; ///< the models that make up the world, indexed by id
-  GHashTable* models_by_name; ///< the models that make up the world, indexed by name
-  GList* velocity_list; ///< a list of models that have non-zero velocity, for efficient updating
-  CWorldFile* wf; ///< If set, points to the worldfile used to create this world
-
-  stg_msec_t sim_time; ///< the current sim time in this world in ms
-  stg_msec_t wall_last_update; ///< the real time of the last update in ms
-
-  long unsigned int updates; ///< the number of simulated time steps executed so far
-  long unsigned int calls; ///< the number of calls to Update
-  
-  bool dirty; ///< iff true, a gui redraw would be required
-
-  stg_msec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
-  stg_msec_t interval_sleep_max;
-  stg_msec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
-  //stg_msec_t real_interval_measured;
-
-  int total_subs; ///< the total number of subscriptions to all models
-  double ppm; ///< the resolution of the world model in pixels per meter  
-
-  bool paused; ///< the world only updates when this is false
-
-  GList* update_list; //< the descendants that need Update() called
-  
-  StgModel* GetModel( const stg_id_t id );
-  StgModel* GetModel( const char* name );
-  
-  void AddModel( StgModel* mod );
-  void RemoveModel( StgModel* mod );
-  
-  void StartUpdatingModel( StgModel* mod );
-  void StopUpdatingModel( StgModel* mod );
-  
-  // the matrix used to be a separate thing: it has been folded into the world
-  
-  // A quad tree of cells. Each leaf node contains a list of
-  // pointers to objects located at that cell
-  StgCell* root;
-  
-  void MapBlock( StgBlock* block );
-  void MapBlockLine( StgBlock* block, 
-		     double x1, double y1, 
-		     double x2, double y2 );
-
-  stg_meters_t Raytrace( StgModel* finder,
-			 stg_pose_t* pose, 			 
-			 stg_meters_t max_range,
-			 stg_itl_test_func_t func,
-			 StgModel** hit_model );
-			 
-  void ClockString( char* str, size_t maxlen );
-
- private:
-  // todo - hide some stuff here?
-
+  inline void PopColor()
+  { mod->PopColor(); }
 };
 
 
@@ -1988,6 +1634,9 @@ public:
   virtual void PushColor( stg_color_t col )
   { colorstack.Push( col ); } 
   
+  virtual void PushColor( double r, double g, double b, double a )
+  { colorstack.Push( r,g,b,a ); }
+
   virtual void PopColor()
   { colorstack.Pop(); } 
 
@@ -2131,7 +1780,7 @@ public:
 
   StgModel* NearestRootModel( double wx, double wy );
 
-};
+  };
 
 /** @} */
 
@@ -2172,9 +1821,500 @@ public:
 // end doc group libstage_utilities
 /** @} */ 
 
-//#ifdef __cplusplus
-//}
-//#endif 
+
+
+
+  // BLOBFINDER MODEL --------------------------------------------------------
+  
+#define STG_BLOB_CHANNELS_MAX 16
+  
+  /** blobfinder config packet
+   */
+  typedef struct
+  {
+    int channel_count; // 0 to STG_BLOBFINDER_CHANNELS_MAX
+    stg_color_t channels[STG_BLOB_CHANNELS_MAX];
+    int scan_width;
+    int scan_height;
+    stg_meters_t range_max;
+  } stg_blobfinder_config_t;
+  
+  /** blobfinder data packet 
+   */
+  typedef struct
+  {
+    int channel;
+    stg_color_t color;
+    int xpos, ypos;   // all values are in pixels
+    //int width, height;
+    int left, top, right, bottom;
+    int area;
+    stg_meters_t range;
+  } stg_blobfinder_blob_t;
+
+
+// ENERGY model --------------------------------------------------------------
+  
+  /** energy data packet */
+  typedef struct
+  {
+    /** estimate of current energy stored */
+    stg_joules_t stored;
+
+    /** TRUE iff the device is receiving energy from a charger */
+    stg_bool_t charging;
+
+    /** diatance to charging device */
+    stg_meters_t range;
+
+    /** an array of pointers to connected models */
+    GPtrArray* connections;
+  } stg_energy_data_t;
+
+  /** energy config packet (use this to set or get energy configuration)*/
+  typedef struct
+  {
+    /** maximum storage capacity */
+    stg_joules_t capacity;
+
+    /** When charging another device, supply this many Joules/sec at most*/
+    stg_watts_t give_rate;
+
+    /** When charging from another device, receive this many Joules/sec at most*/
+    stg_watts_t take_rate;
+
+    /** length of the charging probe */
+    stg_meters_t probe_range;
+    
+    /**  iff TRUE, this device will supply power to connected devices */
+    stg_bool_t give;
+
+  } stg_energy_config_t;
+
+  // there is currently no energy command packet
+
+// BLINKENLIGHT -------------------------------------------------------
+
+  //typedef struct
+  //{
+  //int enable;
+  //stg_msec_t period;
+  //} stg_blinkenlight_t;
+
+// PTZ MODEL --------------------------------------------------------
+  
+  /** ptz command: specify desired PTZ angles. Tilt has no effect.
+   */
+  typedef stg_ptz_t stg_ptz_cmd_t;
+
+  /** ptz data: specifies actual PTZ angles. 
+   */
+  typedef stg_ptz_t stg_ptz_data_t;
+
+  /** ptz config structure
+   */
+  typedef struct
+  {
+    stg_ptz_t min; ///< Minimum PTZ angles.
+    stg_ptz_t max; ///< Maximum PTZ angles.
+    stg_ptz_t goal; ///< The current desired angles. The device servos towards these values.
+    stg_ptz_t speed; ///< The PTZ servo speeds.
+  } stg_ptz_config_t;
+  
+  
+  // LASER MODEL --------------------------------------------------------
+  
+  /** laser sample packet
+   */
+  typedef struct
+  {
+    stg_meters_t range; ///< range to laser hit in meters
+    double reflectance; ///< intensity of the reflection 0.0 to 1.0
+    stg_point_t hitpoint; ///< the location of the laser hit in local coordinates
+  } stg_laser_sample_t;
+  
+  class StgModelLaser : public StgModel
+  {
+  public:
+    // constructor
+    StgModelLaser( StgWorld* world,
+		   StgModel* parent, 
+		   stg_id_t id, 
+		   char* typestr );
+    
+    // destructor
+    ~StgModelLaser( void );
+    
+    stg_laser_sample_t* samples;
+    size_t sample_count;
+    stg_meters_t range_min, range_max;
+    stg_radians_t fov;
+    unsigned int resolution;
+    
+    virtual void Startup( void );
+    virtual void Shutdown( void );
+    virtual void Update( void );
+    virtual void Load( void );  
+    virtual void Print( char* prefix );
+    virtual void DataVisualize( void );
+
+    // static wrapper for the constructor - all models must implement
+    // this method and add an entry in typetable.cc
+    static StgModel* Create( StgWorld* world,
+			     StgModel* parent, 
+			     stg_id_t id, 
+			     char* typestr )
+    { 
+      return (StgModel*)new StgModelLaser( world, parent, id, typestr ); 
+    }    
+  };
+
+
+  // GRIPPER MODEL --------------------------------------------------------
+  
+  typedef enum {
+    STG_GRIPPER_PADDLE_OPEN = 0, // default state
+    STG_GRIPPER_PADDLE_CLOSED, 
+    STG_GRIPPER_PADDLE_OPENING,
+    STG_GRIPPER_PADDLE_CLOSING,
+  } stg_gripper_paddle_state_t;
+
+  typedef enum {
+    STG_GRIPPER_LIFT_DOWN = 0, // default state
+    STG_GRIPPER_LIFT_UP, 
+    STG_GRIPPER_LIFT_UPPING, // verbed these to match the paddle state
+    STG_GRIPPER_LIFT_DOWNING, 
+  } stg_gripper_lift_state_t;
+  
+  typedef enum {
+    STG_GRIPPER_CMD_NOP = 0, // default state
+    STG_GRIPPER_CMD_OPEN, 
+    STG_GRIPPER_CMD_CLOSE,
+    STG_GRIPPER_CMD_UP, 
+    STG_GRIPPER_CMD_DOWN    
+  } stg_gripper_cmd_type_t;
+  
+  /** gripper configuration packet
+   */
+  typedef struct
+  {
+    stg_size_t paddle_size; ///< paddle dimensions 
+
+    stg_gripper_paddle_state_t paddles; 
+    stg_gripper_lift_state_t lift;
+
+    double paddle_position; ///< 0.0 = full open, 1.0 full closed
+    double lift_position; ///< 0.0 = full down, 1.0 full up
+
+    stg_meters_t inner_break_beam_inset; ///< distance from the end of the paddle
+    stg_meters_t outer_break_beam_inset; ///< distance from the end of the paddle  
+    stg_bool_t paddles_stalled; // true iff some solid object stopped
+				// the paddles closing or opening
+    
+    GSList *grip_stack;  ///< stack of items gripped
+    int grip_stack_size; ///< maximum number of objects in stack, or -1 for unlimited
+
+    double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.
+
+  } stg_gripper_config_t;
+
+  /** gripper command packet
+   */
+  typedef struct
+  {
+    stg_gripper_cmd_type_t cmd;
+    int arg;
+  } stg_gripper_cmd_t;
+
+
+  /** gripper data packet
+   */
+  typedef struct
+  {
+    stg_gripper_paddle_state_t paddles; 
+    stg_gripper_lift_state_t lift;
+    
+    double paddle_position; ///< 0.0 = full open, 1.0 full closed
+    double lift_position; ///< 0.0 = full down, 1.0 full up
+
+    stg_bool_t inner_break_beam; ///< non-zero iff beam is broken
+    stg_bool_t outer_break_beam; ///< non-zero iff beam is broken
+    
+    stg_bool_t paddle_contacts[2]; ///< non-zero iff paddles touch something
+
+    stg_bool_t paddles_stalled; // true iff some solid object stopped
+				// the paddles closing or opening
+
+    int stack_count; ///< number of objects in stack
+
+
+  } stg_gripper_data_t;
+
+
+  // FIDUCIAL MODEL --------------------------------------------------------
+  
+  /** fiducial config packet 
+   */
+  typedef struct
+  {
+    stg_meters_t max_range_anon; //< maximum detection range
+    stg_meters_t max_range_id; ///< maximum range at which the ID can be read
+    stg_meters_t min_range; ///< minimum detection range
+    stg_radians_t fov; ///< field of view 
+    stg_radians_t heading; ///< center of field of view
+    
+    /// only detects fiducials with a key string that matches this one
+    /// (defaults to NULL)
+    char* key;
+  } stg_fiducial_config_t;
+  
+  /** fiducial data packet 
+   */
+  typedef struct
+  {
+    stg_meters_t range; ///< range to the target
+    stg_radians_t bearing; ///< bearing to the target 
+    stg_pose_t geom; ///< size and relative angle of the target
+    stg_pose_t pose; ///< Absolute accurate position of the target in world coordinates (it's cheating to use this in robot controllers!)
+    int id; ///< the identifier of the target, or -1 if none can be detected.
+    
+  } stg_fiducial_t;
+
+class StgModelFiducial : public StgModel
+{
+public:
+  // constructor
+  StgModelFiducial( StgWorld* world,
+		    StgModel* parent, 
+		    stg_id_t id, 
+		    char* typestr );
+  
+  // destructor
+  virtual ~StgModelFiducial( void );
+  
+  //virtual void Startup( void );
+  //virtual void Shutdown( void );
+  virtual void Update( void );
+  virtual void Load( void );
+ 
+  stg_meters_t max_range_anon; //< maximum detection range
+  stg_meters_t max_range_id; ///< maximum range at which the ID can be read
+  stg_meters_t min_range; ///< minimum detection range
+  stg_radians_t fov; ///< field of view 
+  stg_radians_t heading; ///< center of field of view
+  
+  /// only detect fiducials with a key string that matches this one
+  /// (defaults to NULL)
+  char* key;
+  
+  // an array of stg_fiducial_t structs generated by the sensor
+  GArray* data;
+  
+  // if neighbor is visible, add him to the fiducial scan
+  void AddModelIfVisible( StgModelFiducial* him );
+  
+//   // static wrapper function can be used as a function pointer
+//   static void AddModelIfVisibleStatic( gpointer key, 
+// 				       StgModelFiducial* him, 
+// 				       StgModelFiducial* me )
+//   { if( him != me ) me->AddNeighborIfVisible( him ); };
+
+};
+
+
+  // RANGER MODEL --------------------------------------------------------
+
+  typedef struct
+  {
+    stg_pose_t pose;
+    stg_size_t size;
+    stg_bounds_t bounds_range;
+    stg_radians_t fov;
+    int ray_count;
+    stg_meters_t range;
+    //double error; // TODO
+  } stg_ranger_sensor_t;
+  
+class StgModelRanger : public StgModel
+{
+public:
+  // constructor
+  StgModelRanger( StgWorld* world,
+	       StgModel* parent, 
+	       stg_id_t id, CWorldFile* wf );
+  
+  // destructor
+  virtual ~StgModelRanger( void );
+  
+  virtual void Startup( void );
+  virtual void Shutdown( void );
+  virtual void Update( void );
+  virtual void Load( void );
+  virtual void Print( char* prefix );
+  virtual void DListData( void );
+
+  size_t sensor_count;
+  stg_ranger_sensor_t* sensors;
+};
+
+  // BUMPER MODEL --------------------------------------------------------
+
+  typedef struct
+  {
+    stg_pose_t pose;
+    stg_meters_t length;
+  } stg_bumper_config_t;
+  
+  typedef struct
+  {
+    StgModel* hit;
+    stg_point_t hit_point;
+  } stg_bumper_sample_t;
+  
+  // POSITION MODEL --------------------------------------------------------
+  
+  typedef enum
+    { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
+  stg_position_control_mode_t;
+  
+#define STG_POSITION_CONTROL_DEFAULT STG_POSITION_CONTROL_VELOCITY
+  
+  typedef enum
+    { STG_POSITION_LOCALIZATION_GPS, STG_POSITION_LOCALIZATION_ODOM }
+  stg_position_localization_mode_t;
+  
+#define STG_POSITION_LOCALIZATION_DEFAULT STG_POSITION_LOCALIZATION_GPS
+  
+  /** "position_drive" property */
+  typedef enum
+    { STG_POSITION_DRIVE_DIFFERENTIAL, STG_POSITION_DRIVE_OMNI, STG_POSITION_DRIVE_CAR }
+  stg_position_drive_mode_t;
+  
+#define STG_POSITION_DRIVE_DEFAULT STG_POSITION_DRIVE_DIFFERENTIAL
+  
+  /** "position_cmd" property */
+  typedef struct
+  {
+    stg_meters_t x,y,a;
+    stg_position_control_mode_t mode;
+  } stg_position_cmd_t;
+  
+  /** "position_data" property */
+  typedef struct
+  {
+    stg_pose_t pose; ///< position estimate in local coordinates
+    stg_pose_t pose_error; ///< estimated error in position estimate
+    stg_pose_t origin; ///< global origin of the local coordinate system
+    stg_velocity_t velocity; ///< current translation and rotaation speeds
+    stg_velocity_t integration_error; ///< errors in simple odometry model
+    //stg_bool_t stall; ///< TRUE iff the robot can't move due to a collision
+    stg_position_localization_mode_t localization; ///< global or local mode
+  } stg_position_data_t;
+  
+  /** position_cfg" property */
+  typedef struct
+  {
+    stg_position_drive_mode_t drive_mode;
+    stg_position_localization_mode_t localization_mode;
+  } stg_position_cfg_t;
+
+  /// set the current odometry estimate 
+  //void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom ); 
+
+class StgModelPosition : public StgModel
+{
+public:
+  // constructor
+  StgModelPosition( StgWorld* world,
+		    StgModel* parent, 
+		    stg_id_t id, 
+		    char* typestr);
+  
+  // destructor
+  ~StgModelPosition( void );
+  
+  // control state
+  stg_pose_t goal; //< the current velocity or pose to reach,
+		   //depending on the value of control_mode
+  stg_position_control_mode_t control_mode;
+  stg_position_drive_mode_t drive_mode;
+
+  // localization state
+  stg_pose_t est_pose; ///< position estimate in local coordinates
+  stg_pose_t est_pose_error; ///< estimated error in position estimate
+  stg_pose_t est_origin; ///< global origin of the local coordinate system
+
+  stg_position_localization_mode_t localization_mode; ///< global or local mode
+  stg_velocity_t integration_error; ///< errors to apply in simple odometry model
+  
+  virtual void Startup( void );
+  virtual void Shutdown( void );
+  virtual void Update( void );
+  virtual void Load( void );
+
+  /** Set the current pose estimate.*/
+  void SetOdom( stg_pose_t* odom );
+  
+  /** Set the goal for the position device. If member control_mode ==
+      STG_POSITION_CONTROL_VELOCITY, these are x,y, and rotation
+      velocities. If control_mode == STG_POSITION_CONTROL_POSITION,
+      [x,y,a] defines a 2D position and heading goal to achieve. */
+  void Do( double x, double y, double a ) 
+  { goal.x = x; goal.y = y; goal.a = a; }
+};
+
+
+  // WIFI MODEL --------------------------------------------------------
+
+  /** wifi config packet 
+   */
+  typedef struct
+  {
+    // Configuration for the wifi model goes here.  E.g., power, range of
+    // propagation.
+  } stg_wifi_config_t;
+
+  /** wifi data packet 
+   */
+  typedef struct
+  {
+    // Simulated wifi data goes here.  E.g., for each neighbor within
+    // range, record the corresponding signal strength.
+  } stg_wifi_data_t;
+
+  // SPEECH MODEL --------------------------------------------------------
+
+#define STG_SPEECH_MAX_STRING_LEN 256
+
+  typedef enum {
+    STG_SPEECH_CMD_NOP = 0, // default state
+    STG_SPEECH_CMD_SAY
+  } stg_speech_cmd_type_t;
+
+  /** speech configuration packet
+   */
+  typedef struct
+  {
+    char string[STG_SPEECH_MAX_STRING_LEN];
+  } stg_speech_config_t;
+
+  /** speech data packet
+   */
+  typedef struct
+  {
+    char string[STG_SPEECH_MAX_STRING_LEN];
+  } stg_speech_data_t;
+
+  /** speech command packet
+   */
+  typedef struct
+  {
+    stg_speech_cmd_type_t cmd;
+    char string[STG_SPEECH_MAX_STRING_LEN];
+  } stg_speech_cmd_t;
+
+  // end the group of all models
+  /**@}*/
 
 // end documentation group libstage
 /**@}*/

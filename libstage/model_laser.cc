@@ -7,10 +7,9 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.1 $
+ //  $Revision: 1.1.2.2 $
  //
  ///////////////////////////////////////////////////////////////////////////
-
 
  //#define DEBUG 
 
@@ -18,13 +17,10 @@
  #include <math.h>
  #include <GL/gl.h>
 
- #include "gui.h"
- #include "model.hh"
-
+ #include "stage.hh"
 
  #define TIMING 0
  #define LASER_FILLED 1
-
 
  #define STG_DEFAULT_LASER_WATTS 17.5 // laser power consumption
  #define STG_DEFAULT_LASER_SIZEX 0.15
@@ -75,89 +71,91 @@
     - Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
  */
 
- StgModelLaser::StgModelLaser( stg_world_t* world, 
-			       StgModel* parent,
-			       stg_id_t id,
-			       CWorldFile* wf )
-   : StgModel( world, parent, id, wf )
- {
-   PRINT_DEBUG2( "Constructing StgModelLaser %d (%s)\n", 
-		 id, wf->GetEntityType( id ) );
+StgModelLaser::StgModelLaser( StgWorld* world, 
+			      StgModel* parent,
+			      stg_id_t id,
+			      char* typestr )
+  : StgModel( world, parent, id, typestr )
+{
+  PRINT_DEBUG2( "Constructing StgModelLaser %d (%s)\n", 
+		id, typestr );
+  
+  // sensible laser defaults 
+  update_interval_ms = STG_DEFAULT_LASER_INTERVAL_MS; 
+  laser_return = LaserVisible;
+  
+  stg_geom_t geom; 
+  memset( &geom, 0, sizeof(geom));
+  geom.size.x = STG_DEFAULT_LASER_SIZEX;
+  geom.size.y = STG_DEFAULT_LASER_SIZEY;
+  geom.size.z = STG_DEFAULT_LASER_SIZEZ;
+  SetGeom( &geom );
+  
+  // set default color
+  SetColor( stg_lookup_color(STG_LASER_GEOM_COLOR));
+  
+  range_min    = STG_DEFAULT_LASER_MINRANGE;
+  range_max    = STG_DEFAULT_LASER_MAXRANGE;
+  fov          = STG_DEFAULT_LASER_FOV;
+  sample_count = STG_DEFAULT_LASER_SAMPLES;  
+  resolution = STG_DEFAULT_LASER_RESOLUTION;
+  
+  samples = g_new0( stg_laser_sample_t, sample_count );
+}
 
-   // sensible laser defaults 
-   update_interval_ms = STG_DEFAULT_LASER_INTERVAL_MS; 
-   laser_return = LaserVisible;
+StgModelLaser::~StgModelLaser( void )
+{
+  g_free( samples );
+}
 
-    stg_geom_t geom; 
-    memset( &geom, 0, sizeof(geom));
-    geom.size.x = STG_DEFAULT_LASER_SIZEX;
-    geom.size.y = STG_DEFAULT_LASER_SIZEY;
-    geom.size.z = STG_DEFAULT_LASER_SIZEZ;
-    SetGeom( &geom );
+void StgModelLaser::Load( void )
+{  
+  StgModel::Load(); 
 
-   // set default color
-   SetColor( stg_lookup_color(STG_LASER_GEOM_COLOR));
+  CWorldFile* wf = world->wf;
 
-   range_min    = STG_DEFAULT_LASER_MINRANGE;
-   range_max    = STG_DEFAULT_LASER_MAXRANGE;
-   fov          = STG_DEFAULT_LASER_FOV;
-   sample_count = STG_DEFAULT_LASER_SAMPLES;  
-   resolution = STG_DEFAULT_LASER_RESOLUTION;
+  sample_count   = wf->ReadInt( id, "samples", sample_count );       
+  samples = g_renew( stg_laser_sample_t, samples, sample_count );
+  bzero( samples, sizeof(stg_laser_sample_t) * sample_count );
+  
+  range_min = wf->ReadLength( id, "range_min", range_min);
+  range_max = wf->ReadLength( id, "range_max", range_max );
+  fov       = wf->ReadAngle( id, "fov",  fov );      
+  resolution = wf->ReadInt( id, "laser_sample_skip",  resolution );
+  
+  if( resolution < 1 )
+    {
+      PRINT_WARN( "laser resolution set < 1. Forcing to 1" );
+      resolution = 1;
+    }
+}
 
-   samples = g_new0( stg_laser_sample_t, sample_count );
- }
+int laser_raytrace_match( StgModel* mod, StgModel* hitmod )
+{           
+  // Ignore myself and things that are invisible to lasers
+  return( (mod != hitmod) && (hitmod->LaserReturn() > 0) );
+}	
 
- StgModelLaser::~StgModelLaser( void )
- {
-   // empty
- }
-
- void StgModelLaser::Load( void )
- {  
-   StgModel::Load(); 
-
-   sample_count   = wf->ReadInt( id, "samples", sample_count );       
-   samples = g_renew( stg_laser_sample_t, samples, sample_count );
-   bzero( samples, sizeof(stg_laser_sample_t) * sample_count );
-   
-   range_min = wf->ReadLength( id, "range_min", range_min);
-   range_max = wf->ReadLength( id, "range_max", range_max );
-   fov       = wf->ReadAngle( id, "fov",  fov );      
-   resolution = wf->ReadInt( id, "laser_sample_skip",  resolution );
-   
-   if( resolution < 1 )
-     {
-       PRINT_WARN( "laser resolution set < 1. Forcing to 1" );
-       resolution = 1;
-     }
- }
-
- int laser_raytrace_match( StgModel* mod, StgModel* hitmod )
- {           
-   // Ignore myself and things that are invisible to lasers
-   return( (mod != hitmod) && (hitmod->LaserReturn() > 0) );
- }	
-
- void StgModelLaser::Update( void )
- {     
-   StgModel::Update();
-   
-   //PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", gpose.x, gpose.y, gpose.a );
-   
+void StgModelLaser::Update( void )
+{     
+  StgModel::Update();
+  
+  //PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", gpose.x, gpose.y, gpose.a );
+  
 #if TIMING
-   struct timeval tv1, tv2;
-   gettimeofday( &tv1, NULL );
+  struct timeval tv1, tv2;
+  gettimeofday( &tv1, NULL );
 #endif
-   
-   assert(samples);
-   
-   double bearing = -fov/2.0;
-   double sample_incr = fov / (double)(sample_count-1);
-
-   for( unsigned int t=0; t<sample_count; t += resolution )
-     {
-       StgModel* hitmod = NULL;
-       
+  
+  assert(samples);
+  
+  double bearing = -fov/2.0;
+  double sample_incr = fov / (double)(sample_count-1);
+  
+  for( unsigned int t=0; t<sample_count; t += resolution )
+    {
+      StgModel* hitmod = NULL;
+      
        samples[t].range = Raytrace( bearing, 
 				    range_max,
 				    laser_raytrace_match,
@@ -252,7 +250,7 @@ void StgModelLaser::Print( char* prefix )
 
 
 
-void StgModelLaser::DListData( void )
+void StgModelLaser::DataVisualize( void )
 {
   // rebuild the graphics for this data
   glNewList( dl_data, GL_COMPILE );
@@ -270,8 +268,8 @@ void StgModelLaser::DListData( void )
       pts[0] = 0.0;
       pts[1] = 0.0;
       
-      push_color_rgba( 0, 0, 1, 0.5 );
-
+      PushColor( 0, 0, 1, 0.5 );
+      
       for( unsigned int s=0; s<sample_count; s++ )
 	{
 	  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;  
@@ -288,35 +286,36 @@ void StgModelLaser::DListData( void )
 	    }
 	    
 	}
-      pop_color();
+      PopColor();
 
       glPointSize( 1.0 );
 
       glEnableClientState( GL_VERTEX_ARRAY );
       glVertexPointer( 2, GL_FLOAT, 0, pts );   
 
-      if( world->win->show_alpha )
+      // todo
+      //if( world->win->show_alpha )
 	{   
 	  glDepthMask( GL_FALSE );
 
 	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	  push_color_rgba( 0, 0, 1, 0.1 );
+	  PushColor( 0, 0, 1, 0.1 );
 	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-	  pop_color();
+	  PopColor();
 
-	  push_color_rgba( 0, 0, 0, 1.0 );
+	  PushColor( 0, 0, 0, 1.0 );
 	  glDrawArrays( GL_POINTS, 0, sample_count+1 );
-	  pop_color();
+	  PopColor();
 
 	  glDepthMask( GL_TRUE );
 	}
-      else
-	{
-	  glPolygonMode( GL_FRONT_AND_BACK, GL_LINES );
-	  push_color_rgb( 0, 0, 1 );
-	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-	  pop_color();
-	}
+//       else
+// 	{
+// 	  glPolygonMode( GL_FRONT_AND_BACK, GL_LINES );
+// 	  PushColor( 0, 0, 1, 1 );
+// 	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+// 	  PopColor();
+// 	}
 	  
       glPopMatrix();      
     }

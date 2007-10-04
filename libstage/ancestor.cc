@@ -1,8 +1,5 @@
 #include "stage.hh"
 
-//#include "ancestor.hh"
-//#include "model.hh"
-
 StgAncestor::StgAncestor()
 {
   token = NULL;

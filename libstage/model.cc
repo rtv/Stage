@@ -298,6 +298,13 @@ void StgModel::GlobalToLocal( stg_pose_t* pose )
 // }
 
 
+// StgModel* StgModel::Create( stg_world_t* world, StgModel* parent, 
+// 			    stg_id_t id, CWorldFile* wf )
+// { 
+//   return new StgModel( world, parent, id, wf ); 
+// }    
+
+
 // constructor
 StgModel::StgModel( StgWorld* world,
 		    StgModel* parent,
@@ -695,16 +702,6 @@ void StgModel::Update( void )
   last_update_ms = world->sim_time;
 }
  
-void StgModel::PushColor( stg_color_t col )
-{ 
-  world->PushColor( col ); 
-} 
-
-void StgModel::PopColor()
-{
-  world->PopColor(); 
-} 
-
 void StgModel::DrawData( void )
 {
   glPushMatrix();
@@ -756,15 +753,15 @@ void StgModel::Draw( void )
   
   if( this->body_dirty )
     {
-      this->DListBody();
+      this->DrawBody();
       this->body_dirty = false;
     }
   
   glCallList( this->dl_body );
-    
+  
   if( this->data_dirty )
     {
-      this->DListData();
+      this->DataVisualize();
       this->data_dirty = false;
     }
 
@@ -789,7 +786,7 @@ void StgModel::Draw( void )
 }
 
 // call this when the local physical appearance has changed
-void StgModel::DListBody( void )
+void StgModel::DrawBody( void )
 {
   //printf( "%s::GuiGenerateBody()\n", this->token );
   
@@ -799,7 +796,7 @@ void StgModel::DListBody( void )
   glEndList();
 }
   
-void StgModel::DListData( void )
+void StgModel::DataVisualize( void )
 {
   // do nothing
 }

@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.1.2.1 2007-10-04 01:17:02 rtv Exp $
+# $Id: Makefile,v 1.1.2.2 2007-10-04 07:43:21 rtv Exp $
 
 # also build Zoo referees
 #SUBDIRS = referees
@@ -69,8 +69,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libstage_la_DEPENDENCIES =
 am_libstage_la_OBJECTS = ancestor.lo block.lo cell.lo gl.lo \
 	glcolorstack.lo logo.lo model.lo model_callbacks.lo \
-	model_load.lo model_props.lo stage.lo typetable.lo world.lo \
-	worldfile.lo worldgtk.lo
+	model_laser.lo model_load.lo model_props.lo stage.lo \
+	typetable.lo world.lo worldfile.lo worldgtk.lo
 libstage_la_OBJECTS = $(am_libstage_la_OBJECTS)
 libstage_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -235,7 +235,7 @@ RGB = $(datadir)/stage/rgb.txt
 
 # system-wide compile flags - target-specific flags are added to each target below
 #AM_CFLAGS =   -Wall -I. -I$(top_srcdir)/replace -DXTHREADS -I/opt/local/include/gtkglext-1.0 -I/opt/local/lib/gtkglext-1.0/include -I/usr/X11R6/include -I/opt/local/include/gtk-2.0 -I/opt/local/lib/gtk-2.0/include -I/opt/local/include/pango-1.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include -I/opt/local/include/cairo -I/opt/local/include/freetype2 -I/opt/local/include/libpng12 -I/opt/local/include/atk-1.0   -std=c99  
-AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -DXTHREADS -I/opt/local/include/gtkglext-1.0 -I/opt/local/lib/gtkglext-1.0/include -I/usr/X11R6/include -I/opt/local/include/gtk-2.0 -I/opt/local/lib/gtk-2.0/include -I/opt/local/include/pango-1.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include -I/opt/local/include/cairo -I/opt/local/include/freetype2 -I/opt/local/include/libpng12 -I/opt/local/include/atk-1.0   -DRGBFILE="$(RGB)"
+AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -DXTHREADS -I/opt/local/include/gtkglext-1.0 -I/opt/local/lib/gtkglext-1.0/include -I/usr/X11R6/include -I/opt/local/include/gtk-2.0 -I/opt/local/lib/gtk-2.0/include -I/opt/local/include/pango-1.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include -I/opt/local/include/cairo -I/opt/local/include/freetype2 -I/opt/local/include/libpng12 -I/opt/local/include/atk-1.0   -DRGBFILE=\"$(RGB)\"
 
 # build the stage library
 lib_LTLIBRARIES = libstage.la 
@@ -257,6 +257,7 @@ libstage_la_SOURCES = \
 	logo.cc \
 	model.cc \
 	model_callbacks.cc \
+	model_laser.cc \
 	model_load.cc \
 	model_props.cc \
 	stage.c \
@@ -267,23 +268,6 @@ libstage_la_SOURCES = \
 	worldfile.hh \
 	worldgtk.cc 
 
-
-# TODO
-#	gui_gtk_prefs.c
-#	model_blobfinder.c 
-#	model_bumper.c 
-#	model_fiducial.c 
-#	model_fiducial.hh
-#	model_gripper.c 
-#	model_laser.cc
-#	model_laser.hh 
-#	model_position.cc 
-#	model_position.hh 
-#	model_ptz.c 
-#	model_ranger.cc 
-#	model_ranger.hh 
-#	model_wifi.cc 
-# 	model_power.c # needs lots of work
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
 libstage_la_LIBADD = -L/opt/local/lib -L/usr/X11R6/lib -lgtkglext-x11-1.0 -lgdkglext-x11-1.0 -lGLU -lGL -lXmu -lXt -lgtk-x11-2.0 -lpangox-1.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -ltiff -ljpeg -lm -lpangocairo-1.0 -lpango-1.0 -lcairo -lSM -lICE -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv -lfreetype -lz -lfontconfig -lexpat -lpng12 -lXrender -lX11  
 
@@ -406,6 +390,7 @@ include ./$(DEPDIR)/glcolorstack.Plo
 include ./$(DEPDIR)/logo.Plo
 include ./$(DEPDIR)/model.Plo
 include ./$(DEPDIR)/model_callbacks.Plo
+include ./$(DEPDIR)/model_laser.Plo
 include ./$(DEPDIR)/model_load.Plo
 include ./$(DEPDIR)/model_props.Plo
 include ./$(DEPDIR)/stage.Plo

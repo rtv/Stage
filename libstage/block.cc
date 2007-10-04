@@ -71,15 +71,6 @@ void StgBlock::DrawSides()
   glEnd();
 }
 
-void StgBlock::PushColor( stg_color_t col )
-{
-  mod->PushColor( col );
-}
-
-void StgBlock::PopColor()
-{
-  mod->PopColor();
-}
 
 void StgBlock::Draw()
 {

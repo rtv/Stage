@@ -621,3 +621,5 @@ void stg_color_unpack( stg_color_t col,
   if(g) *g = ((col & 0x0000FF00) >> 8)  / 256.0;
   if(b) *b = ((col & 0x000000FF) >> 0)  / 256.0;
 }
+
+
