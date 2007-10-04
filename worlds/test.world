@@ -1,88 +1,267 @@
-
-# Desc: 1 pioneer robot with laser	
-# CVS: $Id: test.world,v 1.45 2005-05-08 05:07:27 rtv Exp $
-
-# defines Pioneer-like robots
-include "pioneer.inc"
+# simple.world - basic world file example
+# Authors: Richard Vaughan
+# $id$
 
 
-size [20 20]
+# size of the world in meters
+size [16 16 10]
 
-# defines 'map' object used for floorplans
-include "map.inc"
+# set the resolution of the underlying raytrace model in meters
+resolution 0.02
 
-
-
-# set the size of a pixel in meters
-resolution 0.05
+interval_sim 100  # simulation timestep in milliseconds
+interval_real 100  # real-time interval between simulation updates in milliseconds 
 
 # configure the GUI window
 window
 ( 
-  size [ 731.000 763.000 ] 
-  center [0.161 -0.057] 
-  scale 0.028 
+  size [ 547.000 543.000 ] 
+  center [0.990 -1.040] 
+  rotate [ 0.000 0.000 ]
+  scale 30.806 
+  #show_bboxes 0
+  #show_grid 1
 )
 
-# load an environment bitmap
-map
+include "map.inc"
+
+floorplan
+( 
+  size [16 16 0.6] 
+  bitmap "bitmaps/cave.png" 
+  #bitmap "bitmaps/hospital_section.png" 
+)
+
+define robot model
+( 
+  size [0.5 0.5 0.3]
+
+  color "red"
+
+  blocks 7
+  # main body
+  block[0].points 8
+  block[0].point[7] [ -0.215 -0.1   ] 
+  block[0].point[6] [ -0.215  0.1   ]
+  block[0].point[5] [ -0.185  0.135 ]
+  block[0].point[4] [  0.095  0.135 ] 
+  block[0].point[3] [  0.11   0.08  ] 
+  block[0].point[2] [  0.11  -0.08  ] 
+  block[0].point[1] [  0.095 -0.135 ] 
+  block[0].point[0] [ -0.185 -0.135 ] 
+  block[0].z [ 0.059 0.234 ]
+
+
+  # sonar case
+  block[1].points 9
+  block[1].point[0]  [ -0.135  0.136 ]
+  block[1].point[1]  [ -0.185  0.136 ]
+  block[1].point[2]  [ -0.223  0.101 ]
+  block[1].point[3]  [ -0.248  0.054 ]
+  block[1].point[4]  [ -0.258  0     ]
+  block[1].point[5]  [ -0.248 -0.054 ]
+  block[1].point[6]  [ -0.223 -0.101 ]
+  block[1].point[7]  [ -0.185 -0.136 ]
+  block[1].point[8]  [ -0.135 -0.136 ]
+  block[1].z [ 0.184 0.234 ]
+
+  #sonar case
+  block[2].points 9
+  block[2].point[0]  [ 0.046 -0.136 ]
+  block[2].point[1]  [ 0.096 -0.136 ]
+  block[2].point[2]  [ 0.134 -0.101 ]
+  block[2].point[3]  [ 0.159 -0.054 ]
+  block[2].point[4]  [ 0.168  0     ]
+  block[2].point[5]  [ 0.159  0.054 ]
+  block[2].point[6]  [ 0.134  0.101 ]
+  block[2].point[7]  [ 0.096  0.136 ]
+  block[2].point[8]  [ 0.046  0.136 ]
+  block[2].z [ 0.184 0.234 ]
+
+  # left wheel
+  block[3].points 4
+  block[3].point[0] [  0.083  0.177 ]
+  block[3].point[1] [ -0.083  0.177 ]
+  block[3].point[2] [ -0.083  0.140 ]
+  block[3].point[3] [  0.083  0.140 ]
+  block[3].z [0 0.165 ]
+  block[3].color "gray10"
+
+  # right wheel
+  block[4].points 4
+  block[4].point[0] [  0.083  -0.14 ]
+  block[4].point[1] [ -0.083  -0.14 ]
+  block[4].point[2] [ -0.083  -0.177 ]
+  block[4].point[3] [  0.083  -0.177 ]
+  block[4].z [ 0 0.165 ]
+  block[4].color "gray10"
+
+  # castor
+  block[5].points 4
+  block[5].point[3] [ -0.2475  0.012 ]
+  block[5].point[2] [ -0.1825  0.012 ]
+  block[5].point[1] [ -0.1825 -0.012 ]
+  block[5].point[0] [ -0.2475 -0.012 ]
+  block[5].z [ 0 0.065 ]
+  block[5].color "gray10"
+
+  # lid
+  block[6].points 22
+  block[6].point[21]  [  0.174 0 ]
+  block[6].point[20]  [  0.166 -0.056 ]
+  block[6].point[19]  [  0.145 -0.107 ]
+  block[6].point[18]  [  0.112 -0.155 ]
+  block[6].point[17]  [  0.064 -0.190 ]
+  block[6].point[16]  [  -0.074 -0.190 ]
+  block[6].point[15]  [  -0.096 -0.160 ]
+  block[6].point[14]  [  -0.151 -0.160 ]
+  block[6].point[13]  [  -0.2   -0.155 ]
+  block[6].point[12]  [  -0.236 -0.107 ]
+  block[6].point[11] [  -0.256 -0.056 ]
+  block[6].point[10] [  -0.264  0     ]
+  block[6].point[9] [  -0.256  0.056 ]
+  block[6].point[8] [ -0.236  0.107 ]
+  block[6].point[7] [ -0.2    0.155 ]
+  block[6].point[6] [ -0.151  0.160 ]
+  block[6].point[5] [ -0.096  0.160 ]
+  block[6].point[4] [ -0.074  0.190 ]
+  block[6].point[3] [  0.064  0.190 ]
+  block[6].point[2] [  0.112  0.155 ]
+  block[6].point[1] [  0.145  0.107 ]
+  block[6].point[0] [  0.166  0.056 ]
+  block[6].z [ 0.234 0.24 ]
+  # a dark top looks more realistic, but isn't very useful 
+  # for a top-down view
+  #block[6].color "gray10"
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+robot( pose [-2.059 0.153 0.000 0.000] )
+robot( pose [1.976 4.378 0.000 0.000] )
+robot( pose [-1.945 -1.030 0.000 0.000] )
+robot( pose [-5.699 0.426 0.000 0.000] )
+robot( pose [-4.504 1.332 0.000 0.000] )
+robot( pose [1.956 2.877 0.000 128.916] )
+robot( pose [-1.462 2.059 0.000 0.000] )
+robot( pose [-7.362 7.323 0.000 0.000] )
+robot( pose [-1.958 -2.313 0.000 0.000] )
+robot( pose [-4.195 0.254 0.000 0.000] )
+robot( pose [0.210 -1.088 0.000 0.000] )
+robot( pose [-2.052 3.998 0.000 0.000] )
+robot( pose [-3.256 5.417 0.000 0.000] )
+robot( pose [-6.366 3.777 0.000 0.000] )
+robot( pose [-0.229 3.038 0.000 0.000] )
+robot( pose [-0.159 -1.879 0.000 0.000] )
+robot( pose [-2.682 -1.602 0.000 0.000] )
+robot( pose [-6.702 1.687 0.000 0.000] )
+robot( pose [-6.132 -0.360 0.000 0.000] )
+robot( pose [-3.241 0.483 0.000 0.000] )
+robot( pose [-2.479 -0.508 0.000 0.000] )
+robot( pose [-1.347 -2.123 0.000 0.000] )
+robot( pose [-2.847 -2.631 0.000 0.000] )
+robot( pose [-7.507 -0.754 0.000 0.000] )
+robot( pose [-1.970 5.467 0.000 0.000] )
+robot( pose [0.877 3.140 0.000 0.000] )
+robot( pose [-6.648 6.973 0.000 0.000] )
+robot( pose [1.438 -1.719 0.000 0.000] )
+robot( pose [2.580 -1.602 0.000 0.000] )
+robot( pose [1.042 -1.003 0.000 0.000] )
+robot( pose [-7.508 -2.877 0.000 0.000] )
+robot( pose [-7.323 -1.881 0.000 0.000] )
+robot( pose [-6.128 -2.014 0.000 0.000] )
+robot( pose [-1.979 -3.322 0.000 0.000] )
+robot( pose [-3.078 -3.810 0.000 0.000] )
+robot( pose [-3.411 -2.010 0.000 0.000] )
+robot( pose [-1.513 1.246 0.000 0.000] )
+robot( pose [-2.669 1.004 0.000 0.000] )
+robot( pose [-2.352 2.479 0.000 0.000] )
+robot( pose [-3.508 -0.191 0.000 0.000] )
+robot( pose [-0.826 -1.360 0.000 0.000] )
+robot( pose [-5.963 -3.587 0.000 0.000] )
+robot( pose [0.127 2.263 0.000 0.000] )
+robot( pose [-2.873 1.780 0.000 0.000] )
+robot( pose [-1.386 3.165 0.000 0.000] )
+robot( pose [-3.369 -0.877 0.000 0.000] )
+robot( pose [-0.750 -0.610 0.000 0.000] )
+robot( pose [-6.570 6.237 0.000 0.000] )
+robot( pose [-6.156 4.985 0.000 0.000] )
+robot( pose [-6.030 1.937 0.000 0.000] )
+robot( pose [-6.762 2.900 0.000 0.000] )
+robot( pose [-5.812 1.137 0.000 0.000] )
+robot( pose [-6.525 0.262 0.000 0.000] )
+robot( pose [-6.075 -1.062 0.000 0.000] )
+robot( pose [-7.425 1.450 0.000 0.000] )
+robot( pose [-7.412 3.025 0.000 0.000] )
+robot( pose [-5.612 3.825 0.000 0.000] )
+robot( pose [-6.425 4.362 0.000 0.000] )
+robot( pose [-1.387 0.537 0.000 0.000] )
+robot( pose [0.787 -1.825 0.000 0.000] )
+robot( pose [0.937 2.287 0.000 0.000] )
+robot( pose [-1.662 4.712 0.000 0.000] )
+robot( pose [-5.300 3.212 0.000 0.000] )
+robot( pose [-5.425 5.225 0.000 0.000] )
+robot( pose [-3.975 5.600 0.000 0.000] )
+robot( pose [-4.712 5.625 0.000 0.000] )
+robot( pose [-2.650 5.612 0.000 0.000] )
+robot( pose [-2.225 6.050 0.000 0.000] )
+robot( pose [-3.000 6.150 0.000 0.000] )
+robot( pose [-5.237 5.912 0.000 0.000] )
+robot( pose [-5.937 5.675 0.000 0.000] )
+robot( pose [-6.550 5.475 0.000 0.000] )
+robot( pose [-3.650 1.374 0.000 0.000] )
+robot( pose [-5.116 1.761 0.000 0.000] )
+robot( pose [-6.745 1.037 0.000 0.000] )
+robot( pose [-6.151 -2.795 0.000 0.000] )
+robot( pose [-6.776 -1.356 0.000 0.000] )
+robot( pose [-6.728 -3.323 0.000 0.000] )
+robot( pose [-6.812 -2.439 0.000 0.000] )
+robot( pose [-7.403 6.744 0.000 0.000] )
+robot( pose [-6.039 3.010 0.000 0.000] )
+robot( pose [-6.607 7.600 0.000 0.000] )
+robot( pose [-4.734 4.907 0.000 0.000] )
+robot( pose [-7.246 5.984 0.000 0.000] )
+robot( pose [-7.296 5.162 0.000 0.000] )
+robot( pose [2.329 3.508 0.000 0.000] )
+robot( pose [-7.062 2.262 0.000 0.000] )
+robot( pose [-4.800 0.637 0.000 0.000] )
+robot( pose [-4.962 -0.125 0.000 0.000] )
+robot( pose [-6.825 -0.475 0.000 0.000] )
+robot( pose [-7.287 0.300 0.000 0.000] )
+robot( pose [-6.962 3.825 0.000 0.000] )
+robot( pose [-5.412 4.600 0.000 0.000] )
+robot( pose [-2.450 4.800 0.000 0.000] )
+robot( pose [-7.162 4.550 0.000 0.000] )
+robot( pose [-1.475 -0.400 0.000 0.000] )
+robot( pose [-0.762 2.225 0.000 0.000] )
+robot( pose [-2.212 3.287 0.000 0.000] )
+robot( pose [-4.012 4.975 0.000 0.000] )
+robot( pose [-5.562 2.462 0.000 0.000] )
+
+model
+( 
+  pose [-4.378 -4.784 0.000 0.000]
+  color "green"
+)
+
+model
+( 
+  pose [3.496 4.521 0.000 0.000]
+  color "blue"
+)
+
+model
 (
-  bitmap "bitmaps/cave.png"
-  #bitmap "bitmaps/hospital.png"
-  size [16 16]
-  boundary 1
-  name "cave"
+  pose [6.000 0.000 0.000 0.000]
+  color "purple"
 )
-
-# create a robot
-pioneer2dx( name "robot01" pose [3.795 3.975 432.010] laser() )
-pioneer2dx( name "robot02" pose [-5.466 -5.832 -304.800] laser() )
-pioneer2dx( name "robot03" pose [-2.395 -0.561 -312.000] laser() )
-pioneer2dx( name "robot04" pose [-3.991 -0.583 148.571] laser() )
-pioneer2dx( name "robot05" pose [-3.169 -0.181 228.800] laser() )
-pioneer2dx( name "robot06" pose [6.354 -1.894 -144.000] laser() )
-pioneer2dx( name "robot07" pose [-4.553 0.426 141.235] laser() )
-pioneer2dx( name "robot08" pose [-5.258 5.431 181.600] laser() )
-pioneer2dx( name "robot09" pose [1.475 -6.854 214.728] laser() )
-pioneer2dx( name "robot10" pose [-1.887 -7.246 6.849] laser() )
-pioneer2dx( name "robot11" pose [-6.582 -6.910 -244.800] laser() )
-pioneer2dx( name "robot12" pose [-7.480 -7.481 272.800] laser() )
-pioneer2dx( name "robot13" pose [-7.480 -3.793 153.600] laser() )
-pioneer2dx( name "robot14" pose [2.320 -2.924 540.000] laser() )
-pioneer2dx( name "robot15" pose [6.271 -4.178 277.600] laser() )
-pioneer2dx( name "robot16" pose [-3.937 -2.403 422.400] laser() )
-pioneer2dx( name "robot17" pose [4.595 -4.246 -106.400] laser() )
-pioneer2dx( name "robot18" pose [-2.618 7.272 211.995] laser() )
-pioneer2dx( name "robot19" pose [-4.390 5.198 475.561] laser() )
-pioneer2dx( name "robot20" pose [0.958 2.753 120.971] laser() )
-pioneer2dx( name "robot21" pose [-1.651 -1.428 189.286] laser() )
-pioneer2dx( name "robot22" pose [3.726 -2.006 -109.606] laser() )
-pioneer2dx( name "robot23" pose [6.573 2.395 13.600] laser() )
-pioneer2dx( name "robot24" pose [3.427 6.696 13.600] laser() )
-pioneer2dx( name "robot25" pose [1.635 6.158 13.600] laser() )
-pioneer2dx( name "robot26" pose [5.080 5.362 13.600] laser() )
-pioneer2dx( name "robot27" pose [6.772 4.426 13.600] laser() )
-pioneer2dx( name "robot28" pose [2.790 5.063 13.600] laser() )
-pioneer2dx( name "robot29" pose [2.252 3.251 13.600] laser() )
-pioneer2dx( name "robot30" pose [-0.615 2.873 13.600] laser() )
-pioneer2dx( name "robot31" pose [-3.139 -2.667 -275.429] laser() )
-pioneer2dx( name "robot32" pose [-4.858 -6.625 384.000] laser() )
-pioneer2dx( name "robot33" pose [-4.122 -3.396 -10.400] laser() )
-pioneer2dx( name "robot34" pose [-4.599 -1.067 287.200] laser() )
-pioneer2dx( name "robot35" pose [-3.005 2.554 -432.745] laser() )
-pioneer2dx( name "robot36" pose [-3.697 1.714 800.800] laser() )
-pioneer2dx( name "robot37" pose [-7.481 0.944 -177.600] laser() )
-pioneer2dx( name "robot38" pose [-3.171 5.515 664.800] laser() )
-pioneer2dx( name "robot39" pose [0.275 -5.701 1155.200] laser() )
-pioneer2dx( name "robot40" pose [0.922 -5.055 917.600] laser() )
-pioneer2dx( name "robot41" pose [-3.537 -3.982 179.398] laser() )
-pioneer2dx( name "robot42" pose [1.787 -5.801 738.593] laser() )
-pioneer2dx( name "robot43" pose [-0.253 -7.069 150.400] laser() )
-pioneer2dx( name "robot44" pose [-4.037 -4.814 860.800] laser() )
-pioneer2dx( name "robot45" pose [-7.359 5.004 297.600] laser() )
-pioneer2dx( name "robot46" pose [-0.177 -1.327 484.000] laser() )
-pioneer2dx( name "robot47" pose [3.256 -5.555 397.355] laser() )
-pioneer2dx( name "robot48" pose [-3.064 4.039 770.400] laser() )
-pioneer2dx( name "robot49" pose [4.827 -1.958 -361.137] laser() )
-pioneer2dx( name "robot50" pose [-6.172 1.182 -229.600] laser() )
-

@@ -1,6 +1,6 @@
 SUBDIRS = bitmaps
 
-worldsdir = $(prefix)/share/stage/worlds
+worldsdir = $(datadir)/$(package)/worlds
 
 EXAMPLES =  \
 	autolab.cfg \

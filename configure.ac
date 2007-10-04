@@ -1,12 +1,14 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.13.2.3 2007-06-21 01:47:31 rtv Exp $
+dnl $Id: configure.ac,v 1.13.2.4 2007-10-04 01:17:02 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,3.0.0)
-
-AC_CONFIG_SRCDIR(src/stage.c)
+AC_INIT(Stage,3.0.0)  
+			
+dnl Check for a source file, to make sure any user-specified source
+dnl dir is correct	 	
+AC_CONFIG_SRCDIR(libstage/model.cc)
 
 dnl determine system type.  this is used in a couple of places to infer the 
 dnl types of arguments to some networking library functions.  if/when we 
@@ -71,31 +73,21 @@ dnl )
 
 dnl ==== GUI/GRAPHICS ====
 
-dnl gtkglext brings in all dependencies on GTK, glib, etc. Almost too easy!
+dnl GTK+ with OpenGL: gtkglext brings in all dependencies on GTK,
+dnl glib, etc. Almost too easy!
 PKG_CHECK_MODULES(GUI, gtkglext-1.0 >= 1.0, , 
  AC_MSG_ERROR([Required library GtkGLExt not found. Install it and try again.]) 
 )
 
-dnl TODO - use Reed Hedges' MobileSim patch to improve on this
-dnl where's the X11 color database?
-AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
-  CDB="\"/usr/X11R6/lib/X11/rgb.txt\"",
-  AC_CHECK_FILE([/usr/openwin/lib/X11/rgb.txt],
-    CDB="\"/usr/openwin/lib/X11/rgb.txt\"",
-    CDB="\"/usr/X11R6/lib/X11/rgb.txt\""))
-AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
-CDB="\"$with_color\"",)
-AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
-
 dnl ==== FINISH UP =====
 
 AC_OUTPUT(Makefile 
-          src/Makefile 
+          libstage/Makefile 
+          libstageplugin/Makefile 
 	  docsrc/Makefile
           worlds/Makefile 
           worlds/bitmaps/Makefile 
           replace/Makefile
-          src/referees/Makefile
 	  stage.pc )
 
 dnl should use AC_MSG_NOTICE(), but that's apparently not defined in
@@ -104,7 +96,6 @@ AC_MSG_RESULT([])
 AC_MSG_RESULT([*************************************************************])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([Stage will be built for a $host system, with the following tools and options:])
-AC_MSG_RESULT([  C   compiler: $CC $CFLAGS ])
 AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS ])
 AC_MSG_RESULT([])
 

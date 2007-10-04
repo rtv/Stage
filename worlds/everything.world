@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.85.4.1 2006-09-14 07:11:55 rtv Exp $
+# CVS: $Id: everything.world,v 1.85.4.2 2007-10-04 01:17:04 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
@@ -107,7 +107,7 @@ trickedoutpioneer
 trickedoutpioneer
 (
   color "red"
-  name "p1"
+  name "redrobot"
   pose [-5.645 3.034 -162.098]
 )
 

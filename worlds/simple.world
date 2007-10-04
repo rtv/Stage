@@ -12,7 +12,7 @@ include "map.inc"
 include "sick.inc"
 
 # size of the world in meters
-size [16 16]
+size [16 16 10]
 
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02
@@ -22,10 +22,10 @@ interval_real 0  # real-time interval between simulation updates in milliseconds
 # configure the GUI window
 window
 ( 
-  size [ 779.000 820.000 ] 
-  center [2.990 2.960] 
+  size [ 547.000 543.000 ] 
+  center [0.990 -1.040] 
   rotate [ 0.000 0.000 ]
-  scale 46.004 
+  scale 30.806 
   show_bboxes 0
   show_grid 1
 )
@@ -37,7 +37,7 @@ floorplan
   size [16 16 0.5]
   bitmap "bitmaps/cave.png"
 
-  laser_return 2
+  #laser_return 2
   #size [40 20 0.4]
   #bitmap "bitmaps/hospital_section.png"
 )
@@ -48,39 +48,33 @@ define laserpioneer pioneer2dx
   fancy_sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
 )
 
-#define laserpioneer position 
-#(
-#  size [0.5 0.4 0.4]
-#  sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
-#)
-
 laserpioneer
 (
  name "redrobot"
  color "red"
- pose [-2.486 -0.162 0.000 -337.908]
+ pose [3.650 -5.994 0.000 -4.708]
 )
 
 laserpioneer
 (
  name "greenrobot"
  color "green"
- pose [-2.109 2.214 0.000 -384.719]
+ pose [-0.783 -4.851 0.000 -384.190]
 )
 
 laserpioneer
 (
  name "bluerobot"
  color "LightBlue"
- pose [-2.079 1.479 0.000 414.558]
+ pose [-1.731 -4.803 0.000 414.558]
 )
 
-model
-( 
-  name "little bitmap"
-  size [1 1 0.2]
-  bitmap "bitmaps/space_invader.png"
-  color "purple"
-  pose [ -3.521 -6.347 0.000 0.000]
-)
+#model
+#( 
+#  name "little bitmap"
+#  size [1 1 0.2]
+#  bitmap "bitmaps/space_invader.png"
+#  color "purple"
+#  pose [ -3.521 -6.347 0.000 0.000]
+#)
 

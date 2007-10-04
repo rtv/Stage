@@ -1,4 +1,4 @@
-SUBDIRS = replace src worlds docsrc
+SUBDIRS = replace libstage libstageplugin worlds docsrc
 
 # create the pkg-config entries
 pkgconfigdir = $(libdir)/pkgconfig
