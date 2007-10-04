@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.2 2007-10-04 05:36:09 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -67,8 +67,8 @@ int main( int argc, char* argv[] )
 //   char rangername[64];
 //   snprintf( rangername, 63, "%s.ranger:0", robotname ); 
   
-   StgModelPosition* position = (StgModelPosition*)world.GetModel( robotname );  
-   assert(position);
+   //StgModelPosition* position = (StgModelPosition*)world.GetModel( robotname );  
+   //assert(position);
 
 //   StgModelLaser* laser = (StgModelLaser*)world.GetModel( lasername );
 //   assert(laser);

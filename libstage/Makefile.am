@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.1.2.1 2007-10-04 05:32:18 rtv Exp $
+# $Id: Makefile.am,v 1.1.2.2 2007-10-04 05:34:50 rtv Exp $
 
 # also build Zoo referees
 #SUBDIRS = referees
@@ -19,7 +19,7 @@ RGB=$(datadir)/@PACKAGE@/rgb.txt
 
 # system-wide compile flags - target-specific flags are added to each target below
 #AM_CFLAGS =   -Wall -I. -I$(top_srcdir)/replace @GUI_CFLAGS@ -std=c99  
-AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  @GUI_CFLAGS@ -DRGBFILE="$(RGB)"
+AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  @GUI_CFLAGS@ -DRGBFILE=\"$(RGB)\"
 
 # build the stage library
 lib_LTLIBRARIES = libstage.la 
