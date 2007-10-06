@@ -4,8 +4,9 @@
 #include <assert.h>
 #include <string.h> // for strdup(3)
 #include <locale.h> 
+//#include <GL/gl.h>
 
-//#define DEBUG 1
+//#define DEBUG 
 
 #include "stage.hh"
 
@@ -13,23 +14,14 @@ const double STG_DEFAULT_WORLD_PPM = 50.0;  // 2cm pixels
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; // msec between updates
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  // duration of a simulation timestep in msec
 const stg_msec_t STG_DEFAULT_MAX_SLEEP = 20;
- 
-//const double STG_DEFAULT_INTERVAL_MENU = 20.0; // msec between GUI updates
-
 const double STG_DEFAULT_WORLD_WIDTH = 20.0; // meters
 const double STG_DEFAULT_WORLD_HEIGHT = 20.0; // meters
-
-extern int _stg_quit; // quit flag is returned by stg_world_update()
-extern int _stg_disable_gui;
-
-#include <GL/gl.h>
-extern int dl_debug;// debugging displaylist
-
 
 // static data members
 bool StgWorld::init_done = false;
 unsigned int StgWorld::next_id = 0;
 GHashTable* StgWorld::typetable = NULL;
+bool StgWorld::quit_all = false;
 
 /** @addtogroup stage
     @{ */
@@ -130,15 +122,15 @@ void StgWorld::Initialize( const char* token,
       PRINT_WARN( "StgWorld::Init() must be called before a StgWorld is created." );
       exit(-1);
     }
-
+  
   this->id = StgWorld::next_id++;
   
   assert(token);
   this->token = (char*)malloc(STG_TOKEN_MAX);
   snprintf( this->token, STG_TOKEN_MAX, "%s:%d", token, this->id );
-  
+
+  this->quit = false;
   this->updates = 0;
-  this->calls = 0;
   this->wf = NULL;
 
   this->models_by_id = g_hash_table_new( g_int_hash, g_int_equal );
@@ -251,7 +243,7 @@ void StgWorld::Load( const char* worldfile_path )
   this->height = 
     wf->ReadTupleFloat( entity, "size", 1, this->height ); 
   
-  _stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
+  //_stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
 
      
   // Iterate through entitys and create client-side models
@@ -341,57 +333,56 @@ void StgWorld::PauseUntilNextUpdateTime( void )
       
       usleep( sleeptime * 1e3 ); // sleep for few microseconds
     }
-
- #if DEBUG     
-       printf( "[%u %lu %lu] ufreq:%.2f cfreq:%.2f \n",
- 	      this->id, 
- 	      this->sim_time,
- 	      this->updates,
-	       //this->interval_sim,
-	       //this->real_interval_measured,
-	       //(double)this->interval_sim / (double)this->real_interval_measured,
- 	      this->updates/(timenow/1e3),
- 	      this->calls/(timenow/1e3));
-       
-       fflush(stdout);
+  
+#if DEBUG     
+  printf( "[%u %lu %lu] ufreq:%.2f\n",
+	  this->id, 
+	  this->sim_time,
+	  this->updates,
+	  //this->interval_sim,
+	  //this->real_interval_measured,
+	  //(double)this->interval_sim / (double)this->real_interval_measured,
+	  this->updates/(timenow/1e3));
+  
+  fflush(stdout);
 #endif
-
+  
   real_time_next_update = timenow + interval_real;      
 }
-  
-int StgWorld::Update()
+
+bool StgWorld::Update()
 {
-  //PRINT_DEBUG( "StgWorld::Update()" );
-  
-  // update any models that are due to be updated
-  for( GList* it=this->update_list; it; it=it->next )
-    ((StgModel*)it->data)->UpdateIfDue();
-  
-  // update any models with non-zero velocity
-  for( GList* it=this->velocity_list; it; it=it->next )
-    ((StgModel*)it->data)->UpdatePose();
-  
-  this->sim_time += this->interval_sim;
-  this->updates++;
-  
-  return _stg_quit;
+  if( !paused )
+    {  
+      //PRINT_DEBUG( "StgWorld::Update()" );
+      
+      // update any models that are due to be updated
+      for( GList* it=this->update_list; it; it=it->next )
+	((StgModel*)it->data)->UpdateIfDue();
+      
+      // update any models with non-zero velocity
+      for( GList* it=this->velocity_list; it; it=it->next )
+	((StgModel*)it->data)->UpdatePose();
+      
+      this->sim_time += this->interval_sim;
+      this->updates++;
+    }
+
+  return !( quit || quit_all );
 }
 
-int StgWorld::RealTimeUpdate()
+bool StgWorld::RealTimeUpdate()
   
 {
-  //PRINT_DEBUG( "StageWorld::RealTimeUpdate()" );
+  //PRINT_DEBUG( "StageWorld::RealTimeUpdate()" );  
+  bool ok = Update();
   
- // now update everything
-  if( !this->paused )
-      Update();
-
-  this->calls++;
-
-  PauseUntilNextUpdateTime();
-	 
-  return _stg_quit; // may have been set TRUE by the GUI or someone else
+  if( ok )
+    PauseUntilNextUpdateTime();
+  
+  return ok;
 }
+
 
 
 void StgWorld::AddModel( StgModel*  mod  )

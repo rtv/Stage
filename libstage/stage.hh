@@ -27,7 +27,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.3 2007-10-04 07:55:35 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.4 2007-10-06 22:51:57 rtv Exp $
  */
 
 
@@ -1052,6 +1052,9 @@ protected:
   stg_msec_t real_time_start;
   static bool init_done;
 
+  bool quit; // quit this world ASAP
+  static bool quit_all; // quit all worlds ASAP
+
 private:
   
   static unsigned int next_id; //< initialized to zero, used to
@@ -1088,8 +1091,10 @@ public:
   //virtual void Load( void );
   virtual void Reload( void );
   virtual void Save( void );
-  virtual int Update(void);
-  virtual int RealTimeUpdate(void);
+  virtual bool Update(void);
+  virtual bool RealTimeUpdate(void);
+  
+  void Quit(){ this->quit = true; }
 
   void Start();
   void Stop();
@@ -1108,7 +1113,6 @@ public:
   stg_msec_t wall_last_update; ///< the real time of the last update in ms
 
   long unsigned int updates; ///< the number of simulated time steps executed so far
-  long unsigned int calls; ///< the number of calls to Update
   
   bool dirty; ///< iff true, a gui redraw would be required
 
@@ -1622,8 +1626,8 @@ public:
   virtual void Load( const char* filename );
   virtual void Save( void );
   virtual void Draw( void );
-  virtual int Update( void );
-  virtual int RealTimeUpdate( void );
+  virtual bool Update( void );
+  virtual bool RealTimeUpdate( void );
   
   virtual void PushColor( stg_color_t col )
   { colorstack.Push( col ); } 

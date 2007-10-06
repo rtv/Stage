@@ -3,7 +3,7 @@
  Desc: Implements GTK-based GUI for Stage
  Author: Richard Vaughan
 
- CVS: $Id: worldgtk.cc,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+ CVS: $Id: worldgtk.cc,v 1.1.2.2 2007-10-06 22:51:57 rtv Exp $
 ***/
 
 
@@ -152,12 +152,12 @@ static void cbRealize( GtkWidget *widget, StgWorldGtk* world )
 static void cbDestroy( GtkObject *object, StgWorldGtk* world )
 {
   PRINT_MSG( "Window destroyed." );
-  stg_quit_request();
+  world->Quit();
 }
 
 static gboolean cbDelete( GtkWidget *widget, GdkEvent *event, StgWorldGtk* world )
 {
-  PRINT_MSG( "Signal delete." );
+  PRINT_MSG( "Signal delete" );
   return world->DialogQuit( (GtkWindow*)widget );
 }
 
@@ -326,7 +326,7 @@ void cbReload( GtkAction* action, StgWorldGtk* world )
 void cbExit( GtkAction* action, StgWorldGtk* world )
 {
   PRINT_DEBUG( "Exit menu item" );
-  stg_quit_request();
+  world->DialogQuit( NULL );
 }
 
 void cbExportSequence( GtkToggleAction* action, StgWorldGtk* world )
@@ -1480,17 +1480,17 @@ gboolean StgWorldGtk::DialogQuit( GtkWindow* parent )
   gtk_widget_destroy( (GtkWidget*)dlg);
   
   // return TRUE if use clicked YES
-  return( result == GTK_RESPONSE_YES );
+  //return( result == GTK_RESPONSE_YES );
 
   if( result == GTK_RESPONSE_YES )
     {
       PRINT_MSG( "Confirmed" );
-      stg_quit_request();
-      return true;
+      this->quit = true;
     }
+  else
+    PRINT_MSG( "Cancelled" );
 
-  PRINT_MSG( "Cancelled" );
-  return false;
+  return true;
 }
 
 
@@ -1649,36 +1649,36 @@ void StgWorldGtk::RenderClock()
 }
 
 // returns 1 if the world should be destroyed
-int StgWorldGtk::Update()
+bool StgWorldGtk::Update()
 {
   //PRINT_DEBUG( "StgWorldGtk::Update()" );
-
-  StgWorld::Update();
-    
+  
+  StgWorld::Update(); // ignore return value
+  
   if( dirty )
     Draw();
   
   while( gtk_events_pending() )
     gtk_main_iteration(); 
-
-  return _stg_quit;
+  
+  return !( quit || quit_all );
 }
 
-int StgWorldGtk::RealTimeUpdate()
-  
+bool StgWorldGtk::RealTimeUpdate()
+ 
 {
   //PRINT_DEBUG( "StageWorldGtk::RealTimeUpdate()" );
   
   if( !paused )
-    StgWorld::Update();
-
+    StgWorld::Update(); // ignore return value
+    
   // handle GUI events and possibly sleep until it's time to update  
   stg_msec_t timenow = 0;
   while( 1 )    
     {    
       RenderClock();
 
-      if( dirty )
+      //if( dirty )
 	Draw();
 
       while( gtk_events_pending() )
@@ -1696,8 +1696,8 @@ int StgWorldGtk::RealTimeUpdate()
     }
 
   real_time_next_update = timenow + interval_real;      
-    
-  return _stg_quit; // may have been set TRUE by the GUI or someone else
+  
+  return !( quit || quit_all );
 }
 
 

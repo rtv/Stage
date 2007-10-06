@@ -381,6 +381,9 @@ StgModel::StgModel( StgWorld* world,
   bzero( &this->velocity, sizeof(velocity));
   this->on_velocity_list = false;
 
+  //this->velocity.a = 0.2;
+  //SetVelocity( &this->velocity );
+
   this->last_update_ms = -1;
   this->update_interval_ms = 10;
   
