@@ -47,7 +47,7 @@
 
 extern stg_type_record_t typetable[];
 
-//extern int _stg_disable_gui;
+extern int _stg_disable_gui;
 
 /** @ingroup stage 
     @{ 
@@ -420,47 +420,51 @@ stg_model_t* stg_model_create( stg_world_t* world,
 /*   mod->lines = pline; */
 /*   mod->lines_count = 1; */
 
-  // now it's safe to create the GUI components
-  if( mod->world->win )
-    gui_model_create( mod );
+  if (!_stg_disable_gui)
+    {
 
-  // GUI callbacks - draw changes
+      // now it's safe to create the GUI components
+      if( mod->world->win )
+	gui_model_create( mod );
 
-  // changes in any of these properties require a redraw of the model
-  stg_model_add_callback( mod, &mod->polygons, gui_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->color, gui_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->gui_nose, gui_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->gui_outline, gui_model_polygons, NULL );
-  stg_model_add_callback( mod, &mod->parent, gui_model_polygons, NULL );
+      // GUI callbacks - draw changes
+
+      // changes in any of these properties require a redraw of the model
+      stg_model_add_callback( mod, &mod->polygons, gui_model_polygons, NULL );
+      stg_model_add_callback( mod, &mod->color, gui_model_polygons, NULL );
+      stg_model_add_callback( mod, &mod->gui_nose, gui_model_polygons, NULL );
+      stg_model_add_callback( mod, &mod->gui_outline, gui_model_polygons, NULL );
+      stg_model_add_callback( mod, &mod->parent, gui_model_polygons, NULL );
   
-  stg_model_add_callback( mod, &mod->lines, gui_model_lines, NULL );
+      stg_model_add_callback( mod, &mod->lines, gui_model_lines, NULL );
 
-  // these changes can be handled without a complete redraw
-  stg_model_add_callback( mod, &mod->gui_grid, gui_model_grid, NULL );
-  stg_model_add_callback( mod, &mod->pose, gui_model_move, NULL );
-  stg_model_add_callback( mod, &mod->gui_mask, gui_model_mask, NULL );
-  stg_model_add_callback( mod, &mod->parent, gui_model_mask, NULL );
+      // these changes can be handled without a complete redraw
+      stg_model_add_callback( mod, &mod->gui_grid, gui_model_grid, NULL );
+      stg_model_add_callback( mod, &mod->pose, gui_model_move, NULL );
+      stg_model_add_callback( mod, &mod->gui_mask, gui_model_mask, NULL );
+      stg_model_add_callback( mod, &mod->parent, gui_model_mask, NULL );
 
-  // now we can add the basic square shape
-  stg_polygon_t* square = stg_unit_polygon_create();
-  stg_model_set_polygons( mod, square, 1 );
+      // now we can add the basic square shape
+      stg_polygon_t* square = stg_unit_polygon_create();
+      stg_model_set_polygons( mod, square, 1 );
 
 #if INCLUDE_GNOME
-  GnomeCanvasGroup* parent_grp =
-    mod->parent ? mod->parent->grp : gnome_canvas_root( mod->world->win->gcanvas );
+      GnomeCanvasGroup* parent_grp =
+	mod->parent ? mod->parent->grp : gnome_canvas_root( mod->world->win->gcanvas );
   
-  mod->grp = GNOME_CANVAS_GROUP(
-    gnome_canvas_item_new( parent_grp,
-			   gnome_canvas_group_get_type(),
-			   "x", pose.x,
-			   "y", pose.y,
-			   NULL ));
+      mod->grp = GNOME_CANVAS_GROUP(
+				    gnome_canvas_item_new( parent_grp,
+							   gnome_canvas_group_get_type(),
+							   "x", pose.x,
+							   "y", pose.y,
+							   NULL ));
 
-  gnome_canvas_item_raise_to_top( GNOME_CANVAS_ITEM(mod->grp) );
+      gnome_canvas_item_raise_to_top( GNOME_CANVAS_ITEM(mod->grp) );
 #endif
 
-  // exterimental: creates a menu of models
-  gui_add_tree_item( mod );
+      // exterimental: creates a menu of models
+      gui_add_tree_item( mod );
+    }
   
   PRINT_DEBUG3( "finished model %d.%d(%s)", 
 		mod->world->id, 
