@@ -1,44 +1,3 @@
-#define _GNU_SOURCE
-
-//#define DEBUG
-
-#include <limits.h> 
-#include <assert.h>
-#include <math.h>
-#include <GL/gl.h>
-#include <glib.h>
-
-#include "stage.hh"
-//#include "stage_internal.h"
-//#include "model.hh"
-//#include "block.hh"
-//#include "world.hh"
-//#include "gui.h"
-
-  // basic model
-
-#define STG_DEFAULT_BLOBRETURN true
-#define STG_DEFAULT_BOUNDARY true
-#define STG_DEFAULT_COLOR (0xFF0000) // red
-#define STG_DEFAULT_ENERGY_CAPACITY 1000.0
-#define STG_DEFAULT_ENERGY_CHARGEENABLE 1
-#define STG_DEFAULT_ENERGY_GIVERATE 0.0
-#define STG_DEFAULT_ENERGY_PROBERANGE 0.0
-#define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
-#define STG_DEFAULT_GEOM_SIZEX 1.0 // 1m square by default
-#define STG_DEFAULT_GEOM_SIZEY 1.0
-#define STG_DEFAULT_GEOM_SIZEZ 1.0
-#define STG_DEFAULT_GRID false
-#define STG_DEFAULT_GRIPPERRETURN false
-#define STG_DEFAULT_LASERRETURN LaserVisible
-#define STG_DEFAULT_MAP_RESOLUTION 0.1
-#define STG_DEFAULT_MASK (STG_MOVE_TRANS | STG_MOVE_ROT)
-#define STG_DEFAULT_MASS 10.0  // kg
-#define STG_DEFAULT_NOSE false
-#define STG_DEFAULT_OBSTACLERETURN true
-#define STG_DEFAULT_OUTLINE true
-#define STG_DEFAULT_RANGERRETURN true
-
 //extern GList* dl_list;
 
 /** @ingroup stage 
@@ -147,6 +106,151 @@ model
   - friction).
 */
   
+#define _GNU_SOURCE
+
+#include <limits.h> 
+#include <assert.h>
+#include <math.h>
+#include <GL/gl.h>
+#include <glib.h>
+
+//#define DEBUG
+
+#include "stage.hh"
+
+// basic model
+#define STG_DEFAULT_BLOBRETURN true
+#define STG_DEFAULT_BOUNDARY true
+#define STG_DEFAULT_COLOR (0xFF0000) // red
+#define STG_DEFAULT_ENERGY_CAPACITY 1000.0
+#define STG_DEFAULT_ENERGY_CHARGEENABLE 1
+#define STG_DEFAULT_ENERGY_GIVERATE 0.0
+#define STG_DEFAULT_ENERGY_PROBERANGE 0.0
+#define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
+#define STG_DEFAULT_GEOM_SIZEX 1.0 // 1m square by default
+#define STG_DEFAULT_GEOM_SIZEY 1.0
+#define STG_DEFAULT_GEOM_SIZEZ 1.0
+#define STG_DEFAULT_GRID false
+#define STG_DEFAULT_GRIPPERRETURN false
+#define STG_DEFAULT_LASERRETURN LaserVisible
+#define STG_DEFAULT_MAP_RESOLUTION 0.1
+#define STG_DEFAULT_MASK (STG_MOVE_TRANS | STG_MOVE_ROT)
+#define STG_DEFAULT_MASS 10.0  // kg
+#define STG_DEFAULT_NOSE false
+#define STG_DEFAULT_OBSTACLERETURN true
+#define STG_DEFAULT_OUTLINE true
+#define STG_DEFAULT_RANGERRETURN true
+
+
+// constructor
+StgModel::StgModel( StgWorld* world,
+		    StgModel* parent,
+		    stg_id_t id,
+		    char* typestr )
+  : StgAncestor()
+{    
+  PRINT_DEBUG4( "Constructing model world: %s parent: %s type: %s id: %d",
+		world->Token(), 
+		parent ? parent->Token() : "(null)",
+		typestr,
+		id );
+
+  this->id = id;
+  this->typestr = typestr;
+  this->parent = parent; 
+  this->world = world;
+
+  // generate a name. This might be overwritten if the "name" property
+  // is set in the worldfile when StgModel::Load() is called
+  
+  StgAncestor* anc = parent ? (StgAncestor*)parent : (StgAncestor*)world;
+
+  unsigned int cnt = anc->GetNumChildrenOfType( typestr );
+  char* buf = new char[STG_TOKEN_MAX];
+
+  snprintf( buf, STG_TOKEN_MAX, "%s.%s:%d", 
+	    anc->Token(), typestr, cnt ); 
+
+  this->token = strdup( buf );
+  delete buf;
+  
+  PRINT_DEBUG2( "model has token \"%s\" and typestr \"%s\"", 
+		this->token, this->typestr );  
+
+  anc->AddChild( this );
+  world->AddModel( this );
+  
+  memset( &pose, 0, sizeof(pose));
+  memset( &global_pose, 0, sizeof(global_pose));
+  
+
+
+  this->data_fresh = false;
+  this->disabled = false;
+  this->d_list = NULL;
+  this->blocks = NULL;
+  this->body_dirty = true;
+  this->data_dirty = true;
+  this->gpose_dirty = true;
+  this->say_string = NULL;
+  this->subs = 0;
+  
+  this->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
+  this->geom.size.y = STG_DEFAULT_GEOM_SIZEX;
+  this->geom.size.z = STG_DEFAULT_GEOM_SIZEX;
+  memset( &this->geom.pose, 0, sizeof(this->geom.pose));
+
+  this->obstacle_return = STG_DEFAULT_OBSTACLERETURN;
+  this->ranger_return = STG_DEFAULT_RANGERRETURN;
+  this->blob_return = STG_DEFAULT_BLOBRETURN;
+  this->laser_return = STG_DEFAULT_LASERRETURN;
+  this->gripper_return = STG_DEFAULT_GRIPPERRETURN;
+  this->boundary = STG_DEFAULT_BOUNDARY;
+  this->color = STG_DEFAULT_COLOR;
+  this->map_resolution = STG_DEFAULT_MAP_RESOLUTION; // meters
+  this->gui_nose = STG_DEFAULT_NOSE;
+  this->gui_grid = STG_DEFAULT_GRID;
+  this->gui_outline = STG_DEFAULT_OUTLINE;
+  this->gui_mask = this->parent ? 0 : STG_DEFAULT_MASK;
+
+  this->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
+
+  bzero( &this->velocity, sizeof(velocity));
+  this->on_velocity_list = false;
+
+  //this->velocity.a = 0.2;
+  //SetVelocity( &this->velocity );
+
+  this->last_update_ms = -1;
+  this->update_interval_ms = 10;
+  
+  // now we can add the basic square shape
+  this->AddBlockRect( -0.5,-0.5,1,1 );
+
+  // GL
+  this->dl_body = glGenLists( 1 );
+  this->dl_data = glGenLists( 1 );
+  //this->dl_debug = glGenLists( 1 );
+  //this->dl_raytrace = glGenLists( 1 );
+  this->dl_grid = glGenLists(1);
+
+  PRINT_DEBUG2( "finished model %s (%d).", 
+		this->token,
+		this->id );
+}
+
+StgModel::~StgModel( void )
+{
+  // remove from parent, if there is one
+  if( parent ) 
+    parent->children = g_list_remove( parent->children, this );
+    
+  if( callbacks ) g_hash_table_destroy( callbacks );
+
+  world->RemoveModel( this );  
+}
+
+
 void StgModel::AddBlock( stg_point_t* pts, 
 			 size_t pt_count,
 			 stg_meters_t zmin,
@@ -304,114 +408,6 @@ void StgModel::GlobalToLocal( stg_pose_t* pose )
 //   return new StgModel( world, parent, id, wf ); 
 // }    
 
-
-// constructor
-StgModel::StgModel( StgWorld* world,
-		    StgModel* parent,
-		    stg_id_t id,
-		    char* typestr )
-  : StgAncestor()
-{    
-  PRINT_DEBUG4( "Constructing model world: %s parent: %s type: %s id: %d",
-		world->Token(), 
-		parent ? parent->Token() : "(null)",
-		typestr,
-		id );
-
-  this->id = id;
-  this->typestr = typestr;
-  this->parent = parent; 
-  this->world = world;
-
-  // generate a name. This might be overwritten if the "name" property
-  // is set in the worldfile when StgModel::Load() is called
-  
-  StgAncestor* anc = parent ? (StgAncestor*)parent : (StgAncestor*)world;
-
-  unsigned int cnt = anc->GetNumChildrenOfType( typestr );
-  char* buf = new char[STG_TOKEN_MAX];
-
-  snprintf( buf, STG_TOKEN_MAX, "%s.%s:%d", 
-	    anc->Token(), typestr, cnt ); 
-
-  this->token = strdup( buf );
-  delete buf;
-  
-  PRINT_DEBUG2( "model has token \"%s\" and typestr \"%s\"", 
-		this->token, this->typestr );  
-
-  anc->AddChild( this );
-  world->AddModel( this );
-  
-  memset( &pose, 0, sizeof(pose));
-  memset( &global_pose, 0, sizeof(global_pose));
-  
-
-
-  this->data_fresh = false;
-  this->disabled = false;
-  this->d_list = NULL;
-  this->blocks = NULL;
-  this->body_dirty = true;
-  this->data_dirty = true;
-  this->gpose_dirty = true;
-  this->say_string = NULL;
-  this->subs = 0;
-  
-  this->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
-  this->geom.size.y = STG_DEFAULT_GEOM_SIZEX;
-  this->geom.size.z = STG_DEFAULT_GEOM_SIZEX;
-  memset( &this->geom.pose, 0, sizeof(this->geom.pose));
-
-  this->obstacle_return = STG_DEFAULT_OBSTACLERETURN;
-  this->ranger_return = STG_DEFAULT_RANGERRETURN;
-  this->blob_return = STG_DEFAULT_BLOBRETURN;
-  this->laser_return = STG_DEFAULT_LASERRETURN;
-  this->gripper_return = STG_DEFAULT_GRIPPERRETURN;
-  this->boundary = STG_DEFAULT_BOUNDARY;
-  this->color = STG_DEFAULT_COLOR;
-  this->map_resolution = STG_DEFAULT_MAP_RESOLUTION; // meters
-  this->gui_nose = STG_DEFAULT_NOSE;
-  this->gui_grid = STG_DEFAULT_GRID;
-  this->gui_outline = STG_DEFAULT_OUTLINE;
-  this->gui_mask = this->parent ? 0 : STG_DEFAULT_MASK;
-
-  this->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
-
-  bzero( &this->velocity, sizeof(velocity));
-  this->on_velocity_list = false;
-
-  //this->velocity.a = 0.2;
-  //SetVelocity( &this->velocity );
-
-  this->last_update_ms = -1;
-  this->update_interval_ms = 10;
-  
-  // now we can add the basic square shape
-  this->AddBlockRect( -0.5,-0.5,1,1 );
-
-  // GL
-  this->dl_body = glGenLists( 1 );
-  this->dl_data = glGenLists( 1 );
-  //this->dl_debug = glGenLists( 1 );
-  //this->dl_raytrace = glGenLists( 1 );
-  this->dl_grid = glGenLists(1);
-
-  PRINT_DEBUG2( "finished model %s (%d).", 
-		this->token,
-		this->id );
-}
-
-StgModel::~StgModel( void )
-{
-  // remove from parent, if there is one
-  if( parent ) 
-    parent->children = g_list_remove( parent->children, this );
-    
-  if( callbacks ) g_hash_table_destroy( callbacks );
-
-  world->RemoveModel( this );  
-}
 
 
 void StgModel::Say( char* str )

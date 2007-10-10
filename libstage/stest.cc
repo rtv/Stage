@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.4 2007-10-06 22:51:57 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.5 2007-10-10 01:08:19 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -27,7 +27,7 @@ int obs = FALSE;
 
 int main( int argc, char* argv[] )
 { 
-  printf( "Stage v%s test program.\n", VERSION );
+  printf( "%s test program.\n", stg_package_string() );
 
   if( argc < 3 )
     {

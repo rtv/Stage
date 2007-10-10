@@ -1,11 +1,10 @@
 #ifndef STG_H
 #define STG_H
 /*
- *  Stage : a multi-robot simulator.  
+ *  Stage : a multi-robot simulator.  Part of the Player Project
  * 
- *  Copyright (C) 2001-2004 Richard Vaughan, Andrew Howard and Brian
- *  Gerkey for the Player/Stage Project
- *  http://playerstage.sourceforge.net
+ *  Copyright (C) 2001-2007 Richard Vaughan, Brian Gerkey, Andrew
+ *  Howard
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,9 +26,8 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.4 2007-10-06 22:51:57 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.5 2007-10-10 01:08:19 rtv Exp $
  */
-
 
 /*! \file stage.h 
   Stage library header file
@@ -38,7 +36,6 @@
   library
 */
 
-// TODO - can we cut the includes down a bit?
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
 #include <sys/types.h>
@@ -53,12 +50,47 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
-#include "config.h" // results of autoconf's system configuration tests
-#include "replace.h" // Stage's implementations of missing system calls
-
 // todo: consider moving these out
 #include "worldfile.hh"
 #include "colors.h"
+
+#define STG_STRING_AUTHORS {			\
+    "Richard Vaughan",				\
+      "Brian Gerkey",				\
+      "Andrew Howard",				\
+      "Reed Hedges",				\
+      "Pooya Karimian",				\
+      "and contributors",                       \
+      NULL }
+  
+#define STG_STRING_COPYRIGHT "Copyright the Authors 2000-2007"
+#define STG_STRING_WEBSITE "http://playerstage.org"
+#define STG_STRING_DESCRIPTION "Robot simulation library\nPart of the Player Project"
+#define STG_STRING_LICENSE "Stage robot simulation library\n"\
+    "Copyright (C) 2000-2007 Richard Vaughan\n"\
+    "Part of the Player Project [http://playerstage.org]\n"\
+    "\n"\
+    "This program is free software; you can redistribute it and/or\n"\
+    "modify it under the terms of the GNU General Public License\n"\
+    "as published by the Free Software Foundation; either version 2\n"\
+    "of the License, or (at your option) any later version.\n"\
+    "\n"\
+    "This program is distributed in the hope that it will be useful,\n"\
+    "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"\
+    "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"\
+    "GNU General Public License for more details.\n"\
+    "\n"\
+    "You should have received a copy of the GNU General Public License\n"\
+    "along with this program; if not, write to the Free Software\n"\
+    "Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.\n"\
+    "\n"\
+    "The text of the license may also be available online at\n"\
+    "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html\n"
+
+/** Returns a string indentifying the package version number, e.g. "3.0.0" */
+const char* stg_version_string( void );
+const char* stg_package_string( void );
+
 
 //#ifdef __cplusplus
 //extern "C" {
@@ -1651,10 +1683,6 @@ protected:
 private:
   GList* selected_models; ///<   a list of models that are currently selected by the user 
 
-  // the interval between window redraws, in milliseconds
-  //int redraw_interval;
-  //guint timeout_id; // identifier of the glib timeout signal source
-  
   // Gtk stuff
   GtkWidget* frame;    
   GtkWidget *layout;
@@ -1741,10 +1769,10 @@ public:
   
   
   // signal handlers
-  gboolean EvDelete( GtkWidget *widget );
-  void EvDestroy( GtkWidget *widget, GdkEvent *event );
-  void EvRealize( GtkWidget *widget );
-  void EvConfigure( GtkWidget *widget );
+  //gboolean EvDelete( GtkWidget *widget );
+  //void EvDestroy( GtkWidget *widget, GdkEvent *event );
+  void Realize( GtkWidget *widget );
+  //void EvConfigure( GtkWidget *widget );
   
   void CanvasMotionNotify( GdkEventMotion *event );
   void CanvasButtonPress( GdkEventButton *event );

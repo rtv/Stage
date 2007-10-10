@@ -3,39 +3,8 @@
  Desc: Implements GTK-based GUI for Stage
  Author: Richard Vaughan
 
- CVS: $Id: worldgtk.cc,v 1.1.2.2 2007-10-06 22:51:57 rtv Exp $
+ CVS: $Id: worldgtk.cc,v 1.1.2.3 2007-10-10 01:08:19 rtv Exp $
 ***/
-
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <math.h>
-#include <gdk/gdkkeysyms.h>
-#include <gdk/gdkglglext.h>
-#include <gdk-pixbuf/gdk-pixdata.h>
-
-#define DEBUG 
-
-//#include "config.h" // need to know which GUI canvas to use
-#include "stage.hh"
-
-//model.hh"
-//#include "gui.h"
-//#include "worldgtk.hh"
-
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION 42.0
-#endif
-
-#ifndef VERSION
-#define VERSION 42.0
-#endif
-
-
-// only models that have fewer rectangles than this get matrix
-// rendered when dragged
-#define STG_POLY_THRESHOLD 10
 
 
 /** @addtogroup stage 
@@ -137,6 +106,32 @@ debug menu that enables visualization of some of the innards of Stage.
 
 /** @} */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <math.h>
+#include <gdk/gdkkeysyms.h>
+#include <gdk/gdkglglext.h>
+#include <gdk-pixbuf/gdk-pixdata.h>
+
+#define DEBUG 
+
+#include "stage.hh"
+#include "config.h" 
+
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION 42.0
+#endif
+
+#ifndef VERSION
+#define VERSION 42.0
+#endif
+
+
+// only models that have fewer rectangles than this get matrix
+// rendered when dragged
+//#define STG_POLY_THRESHOLD 10
+
 // CALLBACKS - most are simple wrappers for methods
 
 static void cbAbout( GtkAction *action, StgWorldGtk* world )
@@ -146,7 +141,7 @@ static void cbAbout( GtkAction *action, StgWorldGtk* world )
 
 static void cbRealize( GtkWidget *widget, StgWorldGtk* world )
 {
-  world->EvRealize( widget );
+  world->Realize( widget );
 }
 
 static void cbDestroy( GtkObject *object, StgWorldGtk* world )
@@ -292,7 +287,7 @@ static gboolean cbScroll( GtkWidget *widget, GdkEventScroll *event, StgWorldGtk*
   return TRUE;
 }
 
-static gboolean cbKeyPress( GtkWidget   *widget, GdkEventKey *event, StgWorldGtk* world )
+static gboolean cbKeyPress( GtkWidget  *widget, GdkEventKey *event, StgWorldGtk* world )
 {
   switch (event->keyval)
     {
@@ -302,6 +297,10 @@ static gboolean cbKeyPress( GtkWidget   *widget, GdkEventKey *event, StgWorldGtk
       
     case GDK_minus:
       world->Zoom( 1.1 );
+      break;
+
+    case GDK_space:
+      world->Derotate();
       break;
 
     default:
@@ -594,6 +593,7 @@ StgWorldGtk::StgWorldGtk()
 			 GDK_BUTTON_PRESS_MASK      |
 			 GDK_BUTTON_RELEASE_MASK    |
 			 GDK_SCROLL_MASK            |
+			 GDK_KEY_PRESS_MASK         |
 			 GDK_VISIBILITY_NOTIFY_MASK);
 
   /* Connect signal handlers to the drawing area */
@@ -608,18 +608,14 @@ StgWorldGtk::StgWorldGtk()
   g_signal_connect (G_OBJECT (canvas), "button_press_event",
 		    G_CALLBACK(cbButtonPress), this );
   g_signal_connect (G_OBJECT (canvas), "button_release_event",
-		    G_CALLBACK(cbButtonRelease), this );
-
-  //g_signal_connect (G_OBJECT (canvas), "unrealize",
-  //	    G_CALLBACK (unrealize), NULL);
-
-  //g_signal_connect (G_OBJECT (canvas), "scroll-event",
-  //	    G_CALLBACK (scroll_event), world );
-
-  /* key_press_event handler for top-level window */
-  //g_signal_connect_swapped (G_OBJECT (canvas), "key_press_event",
-  //		    G_CALLBACK (key_press_event), world );
-
+		    G_CALLBACK(cbButtonRelease), this );  
+  g_signal_connect (G_OBJECT (canvas), "scroll-event",
+		    G_CALLBACK (cbScroll), this );
+  
+  // this doesn't work attached to the canvas, so we use the frame
+  g_signal_connect( G_OBJECT (frame), "key_press_event",
+		    G_CALLBACK(cbKeyPress), this );
+  
   gtk_widget_show (canvas);
 
   // set up a reasonable default scaling, so that the world fits
@@ -744,7 +740,7 @@ StgWorldGtk::StgWorldGtk()
  *** certain states etc.
  ***/
 
-void  StgWorldGtk::EvRealize (GtkWidget *widget )
+void  StgWorldGtk::Realize( GtkWidget *widget )
 {
   GdkGLContext *glcontext = gtk_widget_get_gl_context (widget);
   GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (widget);
@@ -1035,49 +1031,17 @@ extern const GdkPixdata logo_pixbuf;
 
 void StgWorldGtk::AboutBox()
 {
-  // USE THIS WHEN WE CAN USE GTK+-2.6
-  //GtkAboutDialog *about = gtk_about_dialog_new();
-  
-  const char* program_name = "Stage";
+  //const char* program_name = "Stage";
   
   const GdkPixbuf* logo = 
     gdk_pixbuf_from_pixdata( &logo_pixbuf, true, NULL );
   assert(logo);
   
-  const gchar* authors[] = {
-    "Richard Vaughan", 
-    "Brian Gerkey", 
-    "Andrew Howard", 
-    "Reed Hedges",
-    "Pooya Karimian",
-    "and contributors", 
-    NULL };
-  
-  const char* copyright = "Copyright the Authors 2000-2007";
-  const char* website = "http://playerstage.org";
-  const char* comments = "Robot simulation library\nPart of the Player Project";
-
-  const char* license = 
-    "Stage robot simulation library\n"
-    "Copyright (C) 2000-2007 Richard Vaughan\n"
-    "Part of the Player Project [http://playerstage.org]\n"
-    "\n"
-    "This program is free software; you can redistribute it and/or\n"
-    "modify it under the terms of the GNU General Public License\n"
-    "as published by the Free Software Foundation; either version 2\n"
-    "of the License, or (at your option) any later version.\n"
-    "\n"
-    "This program is distributed in the hope that it will be useful,\n"
-    "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-    "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-    "GNU General Public License for more details.\n"
-    "\n"
-    "You should have received a copy of the GNU General Public License\n"
-    "along with this program; if not, write to the Free Software\n"
-    "Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.\n"
-    "\n"
-    "The text of the license may also be available online at\n"
-    "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html\n";
+  const char* authors[] = STG_STRING_AUTHORS;
+  const char* copyright = STG_STRING_COPYRIGHT;
+  const char* website = STG_STRING_WEBSITE;
+  const char* comments = STG_STRING_DESCRIPTION;
+  const char* license = STG_STRING_LICENSE;
 
   gtk_show_about_dialog( NULL,
 			 //"program-name",program_name, // GTK bug?
@@ -1143,9 +1107,9 @@ void StgWorldGtk::SetExportFormat( stg_image_format_t frame_format )
 
 void StgWorldGtk::Derotate()
 {
-  PRINT_DEBUG( "Resetting view rotation." );
-  stheta = 0.0;
-  sphi = 0.0;
+  PRINT_DEBUG1( "World %s Resetting view rotation.", this->token );
+  this->stheta = 0.0;
+  this->sphi = 0.0;
   dirty = true;
 }
 
@@ -1704,6 +1668,7 @@ bool StgWorldGtk::RealTimeUpdate()
 void StgWorldGtk::Zoom( double multiplier )
 {
   scale *= multiplier;
+  dirty = true;
 }
 
 void StgWorldGtk::SetScale( double scale )
@@ -1780,7 +1745,6 @@ void StgWorldGtk::Draw()
 /* 	     sin(win->sphi), */
 /* 	     cos(win->sphi),  */
 /* 	     0 ); */
-/* 	     //0,1,0 ); */
 
 
   if( follow_selection && selected_models )

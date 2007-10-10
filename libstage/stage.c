@@ -17,6 +17,8 @@
 #define DEBUG
 
 #include "stage.hh"
+#include "config.h" // results of autoconf's system configuration tests
+
 
 bool _stg_quit = false;
 bool _stg_disable_gui = false;
@@ -24,9 +26,16 @@ bool _stg_disable_gui = false;
 GHashTable* global_typetable = NULL;
 GHashTable* stg_create_typetable( void );
 
-const char* stg_version_string( void )
+//const char* stg_version
+
+const char* stg_package_string( void )
 {
   return PACKAGE_STRING;
+}
+
+const char* stg_version_string( void )
+{
+  return VERSION;
 }
 
 /* const char* stg_model_type_string( stg_model_type_t type ) */

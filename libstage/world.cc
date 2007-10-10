@@ -1,28 +1,4 @@
 
-#define _GNU_SOURCE
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h> // for strdup(3)
-#include <locale.h> 
-//#include <GL/gl.h>
-
-//#define DEBUG 
-
-#include "stage.hh"
-
-const double STG_DEFAULT_WORLD_PPM = 50.0;  // 2cm pixels
-const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; // msec between updates
-const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  // duration of a simulation timestep in msec
-const stg_msec_t STG_DEFAULT_MAX_SLEEP = 20;
-const double STG_DEFAULT_WORLD_WIDTH = 20.0; // meters
-const double STG_DEFAULT_WORLD_HEIGHT = 20.0; // meters
-
-// static data members
-bool StgWorld::init_done = false;
-unsigned int StgWorld::next_id = 0;
-GHashTable* StgWorld::typetable = NULL;
-bool StgWorld::quit_all = false;
-
 /** @addtogroup stage
     @{ */
 
@@ -67,6 +43,34 @@ described on the manual page for each model type.
 */
 
 /**@}*/
+
+#define _GNU_SOURCE
+
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h> // for strdup(3)
+#include <locale.h> 
+
+//#define DEBUG 
+
+#include "stage.hh"
+
+const double STG_DEFAULT_WORLD_PPM = 50.0;  // 2cm pixels
+const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
+const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
+const stg_msec_t STG_DEFAULT_MAX_SLEEP = 20;
+
+// TODO: fix the quadtree code so we don't need a world size
+const stg_meters_t STG_DEFAULT_WORLD_WIDTH = 20.0;
+const stg_meters_t STG_DEFAULT_WORLD_HEIGHT = 20.0; 
+
+// static data members
+bool StgWorld::init_done = false;
+unsigned int StgWorld::next_id = 0;
+GHashTable* StgWorld::typetable = NULL;
+bool StgWorld::quit_all = false;
+
+
 
 typedef	StgModel* (*stg_creator_t)(StgWorld*, 
 				   StgModel*, 
