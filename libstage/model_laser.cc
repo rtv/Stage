@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.2 $
+ //  $Revision: 1.1.2.3 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -101,7 +101,12 @@ StgModelLaser::StgModelLaser( StgWorld* world,
   resolution = STG_DEFAULT_LASER_RESOLUTION;
   
   samples = g_new0( stg_laser_sample_t, sample_count );
+
+  dl_debug_laser = glGenLists( 1 );
+  glNewList( dl_debug_laser, GL_COMPILE );
+  glEndList();
 }
+
 
 StgModelLaser::~StgModelLaser( void )
 {
@@ -152,6 +157,17 @@ void StgModelLaser::Update( void )
   double bearing = -fov/2.0;
   double sample_incr = fov / (double)(sample_count-1);
   
+
+  glNewList( this->dl_debug_laser, GL_COMPILE );
+  glPushMatrix();
+
+  // go into global coords
+  stg_pose_t gpose;
+  GetGlobalPose( &gpose );
+  //gl_coord_shift( -gpose.x, -gpose.y, 0, -gpose.a );
+  glRotatef( RTOD(-gpose.a), 0,0,1 );
+  glTranslatef( -gpose.x, -gpose.y, 0 );
+
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
       StgModel* hitmod = NULL;
@@ -191,7 +207,10 @@ void StgModelLaser::Update( void )
 	     samples[t-g].range = (left-g*(left-right)/resolution);
 	   }
      }
-   
+
+
+   glPopMatrix();
+   glEndList();
    
    data_dirty = true;
    
@@ -320,6 +339,8 @@ void StgModelLaser::DataVisualize( void )
       glPopMatrix();      
     }
   
+  //glCallList( this->dl_debug_laser );
+
   glEndList();
 }
 

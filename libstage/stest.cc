@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.5 2007-10-10 01:08:19 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.6 2007-10-12 00:41:54 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -60,25 +60,25 @@ int main( int argc, char* argv[] )
    //char* robotname = argv[2];
 
 //   // generate the name of the laser attached to the robot
-//   char lasername[64];
-//   snprintf( lasername, 63, "%s.laser:0", robotname ); 
+   //char lasername[64];
+   //snprintf( lasername, 63, "%s.laser:0", robotname ); 
 
 //   // generate the name of the sonar attached to the robot
 //   char rangername[64];
 //   snprintf( rangername, 63, "%s.ranger:0", robotname ); 
   
-   //StgModelPosition* position = (StgModelPosition*)world.GetModel( robotname );  
+   //StgModelPosition* position = (StgModelPosition*)world.GetModel( "MyWorld:0.model:1" );
    //assert(position);
 
-//   StgModelLaser* laser = (StgModelLaser*)world.GetModel( lasername );
-//   assert(laser);
+   StgModelLaser* laser = (StgModelLaser*)world.GetModel( "MyWorld:0.model:1.laser:0" );
+   assert(laser);
 
 //   StgModelRanger* ranger = (StgModelRanger*)world.GetModel( rangername );
 //   assert(ranger);
 
 //   // subscribe to the laser - starts it collecting data
 //   position->Subscribe();
-//   laser->Subscribe();
+   laser->Subscribe();
 //   ranger->Subscribe();
 
   //position->Print( "Subscribed to model" );
@@ -101,71 +101,71 @@ int main( int argc, char* argv[] )
       //if( ! world.RealTimeUpdate() )
       //break;
       
-//       // get some laser data
-//       size_t laser_sample_count = laser->sample_count;      
-//       stg_laser_sample_t* laserdata = laser->samples;
+      // get some laser data
+      size_t laser_sample_count = laser->sample_count;      
+      stg_laser_sample_t* laserdata = laser->samples;
 
-//       if( laserdata == NULL )
-// 	continue;
+      if( laserdata == NULL )
+	continue;
       
-//       // THIS IS ADAPTED FROM PLAYER'S RANDOMWALK C++ EXAMPLE
+      // THIS IS ADAPTED FROM PLAYER'S RANDOMWALK C++ EXAMPLE
 
-//       /* See if there is an obstacle in front */
-//       obs = FALSE;
-//       for( unsigned int i = 0; i < laser_sample_count; i++)
-// 	{
-// 	  if(laserdata[i].range < minfrontdistance)
-// 	    obs = TRUE;
-// 	}
+      /* See if there is an obstacle in front */
+      obs = FALSE;
+      for( unsigned int i = 0; i < laser_sample_count; i++)
+	{
+	  if(laserdata[i].range < minfrontdistance)
+	    obs = TRUE;
+	}
       
-//       if(obs || avoidcount )
-// 	{
-// 	  newspeed = 0;
+      if(obs || avoidcount )
+	{
+	  newspeed = 0;
 	  
-// 	  /* once we start avoiding, continue avoiding for 2 seconds */
-// 	  /* (we run at about 10Hz, so 20 loop iterations is about 2 sec) */
-// 	  if(!avoidcount)
-// 	    {
-// 	      avoidcount = 15;
-// 	      randcount = 0;
+	  /* once we start avoiding, continue avoiding for 2 seconds */
+	  /* (we run at about 10Hz, so 20 loop iterations is about 2 sec) */
+	  if(!avoidcount)
+	    {
+	      avoidcount = 15;
+	      randcount = 0;
 	      
-// 	      // find the minimum on the left and right
+	      // find the minimum on the left and right
 	      
-// 	      double min_left = 1e9;
-// 	      double min_right = 1e9;
+	      double min_left = 1e9;
+	      double min_right = 1e9;
 	      
-// 	      for( unsigned int i=0; i<laser_sample_count; i++ )
-// 		{
-// 		  if(i>(laser_sample_count/2) && laserdata[i].range < min_left)
-// 		    min_left = laserdata[i].range;
-// 		  else if(i<(laser_sample_count/2) && laserdata[i].range < min_right)
-// 		    min_right = laserdata[i].range;
-// 		}
+	      for( unsigned int i=0; i<laser_sample_count; i++ )
+		{
+		  if(i>(laser_sample_count/2) && laserdata[i].range < min_left)
+		    min_left = laserdata[i].range;
+		  else if(i<(laser_sample_count/2) && laserdata[i].range < min_right)
+		    min_right = laserdata[i].range;
+		}
 
-// 	      if( min_left < min_right)
-// 		newturnrate = -turnrate;
-// 	      else
-// 		newturnrate = turnrate;
-// 	    }
+	      if( min_left < min_right)
+		newturnrate = -turnrate;
+	      else
+		newturnrate = turnrate;
+	    }
 	  
-// 	  avoidcount--;
-// 	}
-//       else
-// 	{
-// 	  avoidcount = 0;
-// 	  newspeed = speed;
+	  avoidcount--;
+	}
+      else
+	{
+	  avoidcount = 0;
+	  newspeed = speed;
 	  
-// 	  /* update turnrate every 3 seconds */
-// 	  if(!randcount)
-// 	    {
-// 	      /* make random int tween -20 and 20 */
-// 	      randint = rand() % 41 - 20;
+	  /* update turnrate every 3 seconds */
+	  if(!randcount)
+	    {
+	      /* make random int tween -20 and 20 */
+	      randint = rand() % 41 - 20;
 	      
-// 	      newturnrate = DTOR(randint);
-// 	      randcount = 50;
-// 	    }
-// 	  randcount--;
-// 	}
+	      newturnrate = DTOR(randint);
+	      randcount = 50;
+	    }
+	  randcount--;
+	}
       
       //position->Do( newspeed, 0, newturnrate );
 

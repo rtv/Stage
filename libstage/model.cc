@@ -221,7 +221,7 @@ StgModel::StgModel( StgWorld* world,
   //this->velocity.a = 0.2;
   //SetVelocity( &this->velocity );
 
-  this->last_update_ms = -1;
+  this->last_update_ms = 0;
   this->update_interval_ms = 10;
   
   // now we can add the basic square shape

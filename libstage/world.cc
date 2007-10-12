@@ -51,7 +51,7 @@ described on the manual page for each model type.
 #include <string.h> // for strdup(3)
 #include <locale.h> 
 
-//#define DEBUG 
+#define DEBUG 
 
 #include "stage.hh"
 
@@ -261,8 +261,8 @@ void StgWorld::Load( const char* worldfile_path )
 
       int parent_entity = wf->GetEntityParent( entity );
       
-      PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
-		    entity, parent_entity );
+      //PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
+      //	    entity, parent_entity );
       
       StgModel *mod, *parent;
       
@@ -335,10 +335,10 @@ void StgWorld::PauseUntilNextUpdateTime( void )
       PRINT_DEBUG3( "timenow %lu nextupdate %lu sleeptime %lu",
 		    timenow, real_time_next_update, sleeptime );
       
-      usleep( sleeptime * 1e3 ); // sleep for few microseconds
+      usleep( sleeptime * 1000 ); // sleep for few microseconds
     }
   
-#if DEBUG     
+#ifdef DEBUG     
   printf( "[%u %lu %lu] ufreq:%.2f\n",
 	  this->id, 
 	  this->sim_time,
@@ -391,7 +391,9 @@ bool StgWorld::RealTimeUpdate()
 
 void StgWorld::AddModel( StgModel*  mod  )
 {
-  //printf( "World adding model %d %s to hash tables ", mod->id, mod->Token() );  
+  //PRINT_DEBUG3( "World %s adding model %d %s to hash tables ", 
+  //        token, mod->id, mod->Token() );  
+
   g_hash_table_insert( this->models_by_id, &mod->id, mod );
   g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
 }
@@ -445,7 +447,7 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
   double range = 0.0;
   StgModel* hit = NULL;
 
-  while( LT(range,max_range) )
+  while( !hit && LT(range,max_range) )
     {
       // locate the leaf cell at X,Y
       cell = StgCell::Locate( cell, x, y );      
@@ -457,15 +459,15 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	  break;//return NULL;
 	}
       
-      //push_color_rgb( 0,1,0 );
-      //double delta = cell->size/2.0;
-      //glBegin(GL_LINE_LOOP);
-      //glVertex3f( cell->x-delta, cell->y-delta, itl->z );
-      //glVertex3f( cell->x+delta, cell->y-delta, itl->z );
-      //glVertex3f( cell->x+delta, cell->y+delta, itl->z );
-      //glVertex3f( cell->x-delta, cell->y+delta, itl->z );
-      //glEnd();
-      //pop_color();
+      PushColor( 1,0,0, 0.3 );
+      double delta = cell->size/2.0;
+      glBegin(GL_LINE_LOOP);
+      glVertex3f( cell->x-delta, cell->y-delta, z );
+      glVertex3f( cell->x+delta, cell->y-delta, z );
+      glVertex3f( cell->x+delta, cell->y+delta, z );
+      glVertex3f( cell->x-delta, cell->y+delta, z );
+      glEnd();
+      PopColor();
 
       if( cell->list ) 
 	{ 
@@ -483,13 +485,26 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	      // test to see if the block exists at height z
 	      double block_min = gpose.z + block->zmin;
 	      double block_max = gpose.z + block->zmax;
+
+	      //printf( "[%.2f %.2f %.2f] %s testing %s (laser return %d)\n",
+	      //      x,y,z,
+	      //      finder->Token(), candidate->Token(), candidate->LaserReturn() );
+
+
 	      
-	      if( block_min < z && 
-		  block_max > z && 
-		  (*func)( finder, candidate ) )
+	      if( LT(block_min,z) && 
+		  GT(block_max,z) && 
+	      //if( 
+	      (*func)( finder, candidate ) )
 		{
 		  hit = candidate;
-		  break;
+		  
+		  //printf( "HIT %s at [%.2f %.2f %.2f]\n",
+		  //  candidate->Token(),
+		  //  x,y,z );
+
+		  return range;
+		  //break;
 		}
 	    }
 	}	    
@@ -553,17 +568,27 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
       
       // jump to the leave point
       range += hypot( yleave - y, xleave - x );
+
+      PushColor( 0,0,0, 0.4 );
+      glBegin( GL_LINES );
+      glVertex3f( x,y, z );
+      glVertex3f( xleave, yleave, z );
+      glEnd();
+      PopColor();
+
+      //PushColor( 0,0,0, 1 );
+      //glBegin( GL_POINTS );
+      //glVertex3f( x,y, 0.2 );
+      //glVertex3f( xleave, yleave, 0.2 );
+      //glEnd();
+      //PopColor();
       
       x = xleave;
       y = yleave;      
     }
   
-  //push_color_rgb( 0,1,0 );
-  //glBegin( GL_LINES );
-  //glVertex3f( x,y,z );
-  //glVertex3f( itl->x, itl->y, z );
-  //glEnd();
-  //pop_color();
+
+  //printf( "leaving raytrace at range %.2f\n", range );
 
   // if the caller supplied a place to store the hit model pointer,
   // give it to 'em.
@@ -571,7 +596,7 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
     *hit_model = hit;
 
   // return the range
-  return MAX( range, max_range );
+  return MIN( range, max_range );
 }
 
 

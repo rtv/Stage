@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.5 2007-10-10 01:08:19 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.6 2007-10-12 00:41:54 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -1961,6 +1961,9 @@ public:
   
   class StgModelLaser : public StgModel
   {
+  private:
+    int dl_debug_laser;
+    
   public:
     // constructor
     StgModelLaser( StgWorld* world,

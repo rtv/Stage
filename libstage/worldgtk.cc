@@ -3,7 +3,7 @@
  Desc: Implements GTK-based GUI for Stage
  Author: Richard Vaughan
 
- CVS: $Id: worldgtk.cc,v 1.1.2.3 2007-10-10 01:08:19 rtv Exp $
+ CVS: $Id: worldgtk.cc,v 1.1.2.4 2007-10-12 00:41:54 rtv Exp $
 ***/
 
 
@@ -114,7 +114,7 @@ debug menu that enables visualization of some of the innards of Stage.
 #include <gdk/gdkglglext.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 
-#define DEBUG 
+//#define DEBUG 
 
 #include "stage.hh"
 #include "config.h" 
@@ -1043,6 +1043,7 @@ void StgWorldGtk::AboutBox()
   const char* comments = STG_STRING_DESCRIPTION;
   const char* license = STG_STRING_LICENSE;
 
+  /* GTK+2 >= version 2.10 */
   gtk_show_about_dialog( NULL,
 			 //"program-name",program_name, // GTK bug?
 			 "version", PACKAGE_VERSION,
@@ -1054,6 +1055,7 @@ void StgWorldGtk::AboutBox()
 			 "comments", comments,
 			 NULL );
   
+  /* GTK+2 < version 2.10 */
 //   const char* str =  "Stage\nVersion %s\n"
 //     "Part of the Player/Stage Project\n"
 //     "[http://playerstage.sourceforge.net]\n\n"
@@ -1708,7 +1710,7 @@ void StgWorldGtk::Draw()
   assert( gdk_gl_drawable_gl_begin(gldrawable, glcontext) );
 
   // clear the offscreen buffer
-  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  //glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
   double zclip = hypot(width, height) * scale;
   double pixels_width =  canvas->allocation.width;
@@ -1884,10 +1886,13 @@ void StgWorldGtk::Draw()
   if (gdk_gl_drawable_is_double_buffered (gldrawable))
     gdk_gl_drawable_swap_buffers (gldrawable);
   else
+  {
+    PRINT_WARN( "not double buffered" );
     glFlush ();
+  }    
 
   // clear the offscreen buffer - new drawing will accumulate in here
-  //glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
   gdk_gl_drawable_gl_end (gldrawable);
   /*** OpenGL END ***/
