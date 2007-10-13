@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.6 2007-10-12 00:41:54 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.7 2007-10-13 07:42:55 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -154,7 +154,7 @@ typedef enum {
 /** uniquely identify a model */
 typedef int stg_id_t;
 
-/** Metres: unit of distance */
+/** Metres: floating point unit of distance */
 typedef double stg_meters_t;
 
 /** Radians: unit of angle */
@@ -647,7 +647,6 @@ void stg_d_render( stg_d_draw_t* d );
 /** TRUE iff A is less than or equal to B, subject to PRECISION */
 #define LTE(A,B) ((lrint(A*PRECISION))<=(lrint(B*PRECISION)))
 
-
 // STAGE INTERNAL
 
 // forward declare
@@ -665,8 +664,10 @@ class StgModel;
 */
 
 
-#define STG_DEFAULT_WINDOW_WIDTH 400
-#define STG_DEFAULT_WINDOW_HEIGHT 440
+//#define STG_DEFAULT_WINDOW_WIDTH 400
+//#define STG_DEFAULT_WINDOW_HEIGHT 440
+#define STG_DEFAULT_WINDOW_WIDTH 800
+#define STG_DEFAULT_WINDOW_HEIGHT 840
 
 //#ifdef __cplusplus
 //extern "C" {
@@ -760,7 +761,21 @@ int stg_rotrects_from_image_file( const char* filename,
     Occupancy quadtree underlying Stage's sensing and collision models. 
     @{ 
 */
-  
+
+typedef enum {
+  STG_SPLIT_NONE=0,
+  STG_SPLIT_X,
+  STG_SPLIT_Y
+} stg_split_t;
+
+typedef enum {
+  STG_EXPAND_LEFT=0, 
+  STG_EXPAND_RIGHT,
+  STG_EXPAND_UP,
+  STG_EXPAND_DOWN
+} stg_expand_t;
+
+
 class StgBlock;
 
 /** A node in the occupancy quadtree */
@@ -769,30 +784,41 @@ class StgCell
 private:
 public:
   GSList* list;
-  double x, y;
-  double size;
-    
+  int32_t width, height;
+  
   // bounding box
-  double xmin,ymin,xmax,ymax;
-    
-  StgCell* children[4];
+  int32_t xmin,ymin,xmax,ymax;
+  
+  stg_split_t split;
+  //stg_expand_t expand;
+
+  StgCell *left, *right;
   StgCell* parent;
   
-  StgCell( StgCell* parent, double x, double y, double sz );
+  StgCell( StgCell* parent, 
+	   int32_t xmin, int32_t xmax, 
+	   int32_t ymin, int32_t ymax );
+
   ~StgCell();
   
   static void RemoveBlock( StgCell* cell, StgBlock* block );
   void AddBlock( StgBlock* block );  
-  //void RenderTree();
   
   void Draw();
   void DrawTree( bool leaf_only );
   void Print( char* prefix );
 
-  void Split(); ///< split the cell into 4 children
-  //void Fold(); ///< unsplit the cell, freeing the children
+  void Split(); ///< split the cell into children
+  StgCell* ExpandLeft(); ///< add a new parent to this cell, twice the size
+  StgCell* ExpandRight(); ///< add a new parent to this cell, twice the size
+  StgCell* ExpandUp(); ///< add a new parent to this cell, twice the size
+  StgCell* ExpandDown(); ///< add a new parent to this cell, twice the size
+
+  bool Atomic();  
+  bool Contains( int32_t x, int32_t y );
   
-  static StgCell* Locate( StgCell* cell, double x, double y );
+  StgCell* Locate( int32_t x, int32_t y );
+  StgCell* LocateAtom( int32_t x, int32_t y );
 };
   
 
@@ -1092,6 +1118,11 @@ private:
   static unsigned int next_id; //< initialized to zero, used to
 			       //allocate unique sequential world ids
   static GHashTable* typetable;  
+  
+  StgModel* TestCandidateList( StgModel* finder, 
+			       stg_itl_test_func_t func,
+			       stg_meters_t z,
+			       GSList* list );
 
 public:
 
@@ -1554,6 +1585,9 @@ public:
     return new StgModel( world, parent, id, typestr ); 
   }    
 
+  // iff true, model may output some debugging visualizations and other info
+  bool debug;
+
 };
 
 // BLOCKS
@@ -1986,6 +2020,8 @@ public:
     virtual void Load( void );  
     virtual void Print( char* prefix );
     virtual void DataVisualize( void );
+
+    void SetSampleCount( unsigned int count );
 
     // static wrapper for the constructor - all models must implement
     // this method and add an entry in typetable.cc

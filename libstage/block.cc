@@ -170,7 +170,9 @@ void stg_block_list_scale( GList* blocks,
     {
       // examine all the points in the polygon
       StgBlock* block = (StgBlock*)it->data;
-      
+     
+      block->UnMap();
+ 
       for( unsigned int p=0; p < block->pt_count; p++ )
 	{
 	  stg_point_t* pt = &block->pts[p];
@@ -216,8 +218,7 @@ void stg_block_list_scale( GList* blocks,
       block->zmax *= scalez;
       block->zmin *= scalez;
 
-      // recalculate the GL drawlist
-      //stg_block_update( block );
+      //block->Map();
     }
 }
 

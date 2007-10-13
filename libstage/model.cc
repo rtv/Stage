@@ -127,9 +127,9 @@ model
 #define STG_DEFAULT_ENERGY_GIVERATE 0.0
 #define STG_DEFAULT_ENERGY_PROBERANGE 0.0
 #define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
-#define STG_DEFAULT_GEOM_SIZEX 1.0 // 1m square by default
-#define STG_DEFAULT_GEOM_SIZEY 1.0
-#define STG_DEFAULT_GEOM_SIZEZ 1.0
+#define STG_DEFAULT_GEOM_SIZEX 0.10 // 1m square by default
+#define STG_DEFAULT_GEOM_SIZEY 0.10
+#define STG_DEFAULT_GEOM_SIZEZ 0.10
 #define STG_DEFAULT_GRID false
 #define STG_DEFAULT_GRIPPERRETURN false
 #define STG_DEFAULT_LASERRETURN LaserVisible
@@ -258,7 +258,7 @@ void StgModel::AddBlock( stg_point_t* pts,
 			 stg_color_t col,
 			 bool inherit_color )
 {
-  UnMap();
+  //UnMap();
   
   blocks = 
     g_list_prepend( blocks, new StgBlock( this, pts, pt_count, 
@@ -268,7 +268,7 @@ void StgModel::AddBlock( stg_point_t* pts,
   // force recreation of display lists before drawing
   body_dirty = true;
 
-  Map();
+  //Map();
 }
 
 

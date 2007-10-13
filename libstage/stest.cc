@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.6 2007-10-12 00:41:54 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.7 2007-10-13 07:42:55 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -78,7 +78,7 @@ int main( int argc, char* argv[] )
 
 //   // subscribe to the laser - starts it collecting data
 //   position->Subscribe();
-   laser->Subscribe();
+   //laser->Subscribe();
 //   ranger->Subscribe();
 
   //position->Print( "Subscribed to model" );
@@ -97,6 +97,11 @@ int main( int argc, char* argv[] )
   
   while( world.RealTimeUpdate() )
     {
+      // nothing
+    }
+
+#ifdef GOBOO
+
       //while( ! laser->DataIsFresh() )
       //if( ! world.RealTimeUpdate() )
       //break;
@@ -171,7 +176,7 @@ int main( int argc, char* argv[] )
 
     }
   
-  
+#endif  
 
   exit( 0 );
 }

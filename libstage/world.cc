@@ -1,4 +1,8 @@
 
+
+
+
+
 /** @addtogroup stage
     @{ */
 
@@ -55,7 +59,7 @@ described on the manual page for each model type.
 
 #include "stage.hh"
 
-const double STG_DEFAULT_WORLD_PPM = 50.0;  // 2cm pixels
+const double STG_DEFAULT_WORLD_PPM = 50;  // 2cm pixels
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
 const stg_msec_t STG_DEFAULT_MAX_SLEEP = 20;
@@ -153,13 +157,9 @@ void StgWorld::Initialize( const char* token,
   this->height = height;
   this->ppm = ppm; // this is the finest resolution of the matrix
 
-
-  //this->matrix = stg_matrix_create( ppm, width, height ); 
-  // new - have matrix implemented directly in the world
-  double sz = 1.0/ppm;
-  while( sz < MAX(width,height) )
-    sz *= 2.0;
-  this->root = new StgCell( NULL, 0.0, 0.0, sz );
+  int32_t dx = width/2.0 * ppm;
+  int32_t dy = height/2.0 * ppm;
+  this->root = new StgCell( NULL, -dx, +dx, -dy, +dy );
 
   this->total_subs = 0;
   this->paused = false; 
@@ -247,6 +247,13 @@ void StgWorld::Load( const char* worldfile_path )
   this->height = 
     wf->ReadTupleFloat( entity, "size", 1, this->height ); 
   
+  if( this->root )
+    delete root;
+  
+  int32_t dx = width/2.0 * ppm;
+  int32_t dy = height/2.0 * ppm;
+  this->root = new StgCell( NULL, -dx, +dx, -dy, +dy );
+
   //_stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
 
      
@@ -430,12 +437,51 @@ StgModel* StgWorld::GetModel( const stg_id_t id )
 //itl->max_range = hypot( a-x, b-y );       
 
 
+
+StgModel* StgWorld::TestCandidateList( StgModel* finder, 
+				       stg_itl_test_func_t func,
+				       stg_meters_t z,
+				       GSList* list )
+{
+  assert(list);
+  
+  for( GSList* it = list; it; it=it->next )
+    {
+      StgBlock* block = (StgBlock*)it->data;		
+      StgModel* candidate = block->mod;		
+      assert( candidate );
+      
+      //printf( "block of %s\n", candidate->Token() );
+      
+      stg_pose_t gpose;
+      candidate->GetGlobalPose( &gpose );
+      
+      // test to see if the block exists at height z
+      double block_min = gpose.z + block->zmin;
+      double block_max = gpose.z + block->zmax;
+      
+      //printf( "[%.2f %.2f %.2f] %s testing %s (laser return %d)\n",
+      //      x,y,z,
+      //      finder->Token(), candidate->Token(), candidate->LaserReturn() );
+      
+      
+      if( LT(block_min,z) && 
+	  GT(block_max,z) && 
+	  (*func)( finder, candidate ) )
+	return candidate;
+    }
+
+  return NULL;
+}
+
 stg_meters_t StgWorld::Raytrace( StgModel* finder,
 				 stg_pose_t* pose,
 				 stg_meters_t max_range,
 				 stg_itl_test_func_t func,
 				 StgModel** hit_model )
 {
+  const double epsilon = 0.0001;
+
   double x = pose->x;
   double y = pose->y;
   double z = pose->z;
@@ -445,68 +491,39 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
   
   StgCell* cell = root;
   double range = 0.0;
+
   StgModel* hit = NULL;
 
-  while( !hit && LT(range,max_range) )
+  while( LT(range,max_range) )
     {
-      // locate the leaf cell at X,Y
-      cell = StgCell::Locate( cell, x, y );      
+      printf( "locating cell at (%.2f %.2f)\n", x, y );
       
+      // locate the leaf cell at X,Y
+      //cell = StgCell::Locate( cell, x, y );      
+      cell = cell->Locate( x*ppm, y*ppm );
+
       // the cell is null iff the point was outside the root
       if( cell == NULL )
 	{
-	  range = max_range; // stop the ray here
-	  break;//return NULL;
+	  printf( "ray at angle %.2f out of bounds at [%d, %d]",
+		  a, x, y );
+
+	  break;
 	}
       
-      PushColor( 1,0,0, 0.3 );
-      double delta = cell->size/2.0;
-      glBegin(GL_LINE_LOOP);
-      glVertex3f( cell->x-delta, cell->y-delta, z );
-      glVertex3f( cell->x+delta, cell->y-delta, z );
-      glVertex3f( cell->x+delta, cell->y+delta, z );
-      glVertex3f( cell->x-delta, cell->y+delta, z );
-      glEnd();
-      PopColor();
-
+      if( finder->debug )
+	{
+	  PushColor( 1,0,0, 0.3 );
+	  glPolygonMode( GL_FRONT, GL_LINE );
+	  cell->Draw();
+	  PopColor();
+	}
+      
       if( cell->list ) 
 	{ 
-	  for( GSList* it = cell->list; it; it=it->next )
-	    {
-	      StgBlock* block = (StgBlock*)it->data;		
-	      StgModel* candidate = block->mod;		
-	      assert( candidate );
-	      
-	      //printf( "block of %s\n", candidate->Token() );
-	      
-	      stg_pose_t gpose;
-	      candidate->GetGlobalPose( &gpose );
-	      
-	      // test to see if the block exists at height z
-	      double block_min = gpose.z + block->zmin;
-	      double block_max = gpose.z + block->zmax;
-
-	      //printf( "[%.2f %.2f %.2f] %s testing %s (laser return %d)\n",
-	      //      x,y,z,
-	      //      finder->Token(), candidate->Token(), candidate->LaserReturn() );
-
-
-	      
-	      if( LT(block_min,z) && 
-		  GT(block_max,z) && 
-	      //if( 
-	      (*func)( finder, candidate ) )
-		{
-		  hit = candidate;
-		  
-		  //printf( "HIT %s at [%.2f %.2f %.2f]\n",
-		  //  candidate->Token(),
-		  //  x,y,z );
-
-		  return range;
-		  //break;
-		}
-	    }
+	  hit = TestCandidateList( finder, func, z, cell->list );
+	  if( hit )
+	    break; // we're done looking	  
 	}	    
       
       double c = y - tana * x; // line offset
@@ -522,14 +539,14 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	  xleave = (yleave - c) / tana;
 	  
 	  // if the edge crossing was not in cell bounds     
-	  if( !(GTE(xleave,cell->xmin) && LT(xleave,cell->xmax)) )
+	  if( !((xleave >= cell->xmin) && (xleave < cell->xmax)) )
 	    {
 	      // it must have left the cell on the left or right instead 
 	      // solve y for known x
 	      
 	      if( GT(a,M_PI/2.0) ) // left side
 		{
-		  xleave = cell->xmin-0.00001;
+		  xleave = cell->xmin-epsilon;
 		}
 	      else // right side
 		{
@@ -547,13 +564,13 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	  xleave = (yleave - c) / tana;
 	  
 	  // if the edge crossing was not in cell bounds     
-	  if( !(GTE(xleave,cell->xmin) && LT(xleave,cell->xmax)) )
+	  if( !((xleave >= cell->xmin) && (xleave < cell->xmax)) )
 	    {
 	      // it must have left the cell on the left or right instead 
 	      // solve y for known x	  
 	      if( LT(a,-M_PI/2.0) ) // left side
 		{
-		  xleave = cell->xmin-0.00001;
+		  xleave = cell->xmin-epsilon;
 		}
 	      else
 		{
@@ -563,38 +580,56 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	      yleave = tana * xleave + c;
 	    }
 	  else
-	    yleave-=0.00001;
+	    yleave-=epsilon;
 	}
+
+      cell->Print( NULL );
+      printf( "(%.2f %.2f)\n", hypot( yleave - y, xleave - x ), range );
       
       // jump to the leave point
       range += hypot( yleave - y, xleave - x );
-
-      PushColor( 0,0,0, 0.4 );
-      glBegin( GL_LINES );
-      glVertex3f( x,y, z );
-      glVertex3f( xleave, yleave, z );
-      glEnd();
-      PopColor();
-
-      //PushColor( 0,0,0, 1 );
-      //glBegin( GL_POINTS );
-      //glVertex3f( x,y, 0.2 );
-      //glVertex3f( xleave, yleave, 0.2 );
-      //glEnd();
-      //PopColor();
       
+      if( finder->debug )
+	{
+	  PushColor( 0,0,0, 0.2 );
+	  glBegin( GL_LINES );
+	  glVertex3f( x,y, z );
+	  glVertex3f( xleave, yleave, z );
+	  glEnd();
+	  PopColor();
+
+	  glPointSize( 4 );
+
+	  PushColor( 1,0,0, 1 );
+	  glBegin( GL_POINTS );
+	  glVertex3f( x,y, z );
+	  glEnd();
+
+	  PushColor( 0,0,1, 1 );
+	  glBegin( GL_POINTS );
+	  glVertex3f( xleave+0.01, yleave+0.01, z );
+	  glEnd();
+	  PopColor();
+
+	  glPointSize( 1 );
+	}
+
       x = xleave;
       y = yleave;      
     }
   
-
-  //printf( "leaving raytrace at range %.2f\n", range );
-
+  if( hit )
+    printf( "HIT %s at [%d %d %.2f] range %.2f\n",
+	    hit->Token(),
+	    x,y,z, range );
+  else
+    printf( "no hit at range %.2f\n", range );
+  
   // if the caller supplied a place to store the hit model pointer,
   // give it to 'em.
   if( hit_model )
     *hit_model = hit;
-
+  
   // return the range
   return MIN( range, max_range );
 }
@@ -658,158 +693,79 @@ void StgWorld::MapBlock( StgBlock* block )
 		pts[pt_count-1].x, pts[pt_count-1].y );
 }
 
-void StgWorld::MapBlockLine( StgBlock* block, 
-			     double x1, double y1, 
-			     double x2, double y2 )
+
+
+StgCell* myPixel( StgCell* cell, StgBlock* block, long int x, long int y) 
 {
-  //printf( "matrix line %.2f,%.2f to %.2f,%.2f\n",
-  //      x1,y1, x2, y2 );
+  StgCell* found = cell->LocateAtom( x, y );
   
-  // theta is constant so we compute it outside the loop
-  double theta = atan2( y2-y1, x2-x1 );
-  double m = tan(theta); // line gradient 
-      
-  StgCell* cell = root;
-  double res = 1.0/ppm;
-      
-  while( (GTE(fabs(x2-x1),res) || GTE(fabs(y2-y1),res)) && cell )
+  if( found ) 
     {
-      /*printf( "step %d angle %.2f start (%.2f,%.2f) now (%.2f,%.2f) end (%.2f,%.2f)\n",
-	step++,
-	theta,
-	lines[l].x1, lines[l].y1, 
-	x1, y1,
-	x2, y2 );
-      */
-
-      // find out where we leave the leaf node after x1,y1 and adjust
-      // x1,y1 to point there
-	  
-      // locate the leaf cell at X,Y
-      cell = StgCell::Locate( cell, x1, y1 );
-      if( cell == NULL )
-	break;
-	  
-      //stg_cell_print( cell, "" );
-
-      // if the cell isn't small enough, we need to create children
-      while( GT(cell->size,res) )
-	{
-	  cell->Split();
-	      
-	  // we have to drop down into a child. but which one?
-	  // which quadrant are we in?
-	  int index;
-	  if( LT(x1,cell->x) )
-	    index = LT(y1,cell->y) ? 0 : 2; 
-	  else
-	    index = LT(y1,cell->y) ? 1 : 3; 
-	      
-	  // now point to the correct child containing the point, and loop again
-	  cell = cell->children[ index ];           
-	}
-
-      // now the cell small enough, we add the block here
-      cell->AddBlock( block );
-	  
-      // now figure out where we leave this cell
-	  
-      /*	  printf( "point %.2f,%.2f is in cell %p at (%.2f,%.2f) size %.2f xmin %.2f xmax %.2f ymin %.2f ymax %.2f\n",
-		  x1, y1, cell, cell->x, cell->y, cell->size, cell->xmin, cell->xmax, cell->ymin, cell->ymax );
-      */
-
-	   
-      if( EQ(y1,y2) ) // horizontal line
-	{
-	  //puts( "horizontal line" );
-	      
-	  if( GT(x1,x2) ) // x1 gets smaller
-	    x1 = cell->xmin-0.001; // left edge
-	  else
-	    x1 = cell->xmax; // right edge		
-	}
-      else if( EQ(x1,x2) ) // vertical line
-	{
-	  //puts( "vertical line" );
-	      
-	  if( GT(y1,y2) ) // y1 gets smaller
-	    y1 = cell->ymin-0.001; // bottom edge
-	  else
-	    y1 = cell->ymax; // max edge		
-	}
-      else
-	{
-	  //print_thing( "\nbefore calc", cell, x1, y1 );
-
-	  //break;
-	  double c = y1 - m * x1; // line offset
-	      
-	  if( GT(theta,0.0) ) // up
-	    {
-	      //puts( "up" );
-
-	      // ray could leave through the top edge
-	      // solve x for known y      
-	      y1 = cell->ymax; // top edge
-	      x1 = (y1 - c) / m;
-		  
-	      // printf( "x1 %.4f = (y1 %.4f - c %.4f) / m %.4f\n", x1, y1, c, m );		  
-	      // if the edge crossing was not in cell bounds     
-	      if( !(GTE(x1,cell->xmin) && LT(x1,cell->xmax)) )
-		{
-		  // it must have left the cell on the left or right instead 
-		  // solve y for known x
-		      
-		  if( GT(theta,M_PI/2.0) ) // left side
-		    x1 = cell->xmin-0.00001;
-		  //{ x1 = cell->xmin-0.001; puts( "left side" );}
-		  else // right side
-		    x1 = cell->xmax;
-		  //{ x1 = cell->xmax; puts( "right side" );}
-
-		  y1 = m * x1 + c;
-		      
-		  //  printf( "%.4f = %.4f * %.4f + %.4f\n",
-		  //      y1, m, x1, c );
-		}           
-	      //else
-	      //puts( "top" );
-	    }	 
-	  else // down 
-	    {
-	      //puts( "down" );
-
-	      // ray could leave through the bottom edge
-	      // solve x for known y      
-	      y1 = cell->ymin-0.00001; // bottom edge
-	      x1 = (y1 - c) / m;
-		  
-	      // if the edge crossing was not in cell bounds     
-	      if( !(GTE(x1,cell->xmin) && LT(x1,cell->xmax)) )
-		{
-		  // it must have left the cell on the left or right instead 
-		  // solve y for known x	  
-		  if( theta < -M_PI/2.0 ) // left side
-		    //{ x1 = cell->xmin-0.001; puts( "left side" );}
-		    x1 = cell->xmin-0.00001;
-		  else
-		    //{ x1 = cell->xmax; puts( "right side"); }
-		    x1 = cell->xmax; 
-		      
-		  y1 = m * x1 + c;
-		}
-	      //else
-	      //puts( "bottom" );
-	    }
-	      
-	  // jump slightly into the next cell
-	  //x1 += 0.0001 * cos(theta);
-	  //y1 += 0.0001 * sin(theta);      
-
-	  //printf( "jumped to %.7f,%.7f\n",
-	  //      x1, y1 );
-
-	}
+      found->AddBlock( block );  
+      cell = found;
     }
+    
+  return cell;
+}
+
+
+void StgWorld::MapBlockLine( StgBlock* block, 
+			     double mx1, double my1, 
+			     double mx2, double my2 )
+{
+  int32_t x1 = mx1 * ppm - 0.5;
+  int32_t x2 = mx2 * ppm - 0.5;
+  int32_t y1 = my1 * ppm - 0.5;
+  int32_t y2 = my2 * ppm - 0.5;
+  
+  StgCell* cell = root;
+  
+  // Extremely Fast Line Algorithm Var A (Division)
+  // Copyright 2001-2, By Po-Han Lin
+  
+  // Freely useable in non-commercial applications as long as credits 
+  // to Po-Han Lin and link to http://www.edepot.com is provided in 
+  // source code and can been seen in compiled executable.  
+  // Commercial applications please inquire about licensing the algorithms.
+  //
+  // Lastest version at http://www.edepot.com/phl.html
+  
+  // constant string will appear in executable
+  const char* EFLA_CREDIT = 
+    "Contains an implementation of the Extremely Fast Line Algorithm (EFLA)"
+    "by Po-Han Lin (http://www.edepot.com/phl.html)";
+  
+  bool yLonger=false;
+  int incrementVal;
+  
+  int shortLen = y2-y1;
+  int longLen = x2-x1;
+  if( abs(shortLen) > abs(longLen) ) 
+    {
+      int swap=shortLen;
+      shortLen=longLen;
+      longLen=swap;
+      yLonger=true;
+    }
+  
+  if( longLen<0 ) 
+    incrementVal=-1;
+  else 
+    incrementVal=1;
+  
+  double divDiff;
+  if( shortLen == 0 ) 
+    divDiff=longLen;
+  else 
+    divDiff=(double)longLen/(double)shortLen;
+  
+  if (yLonger)
+    for (int i=0;i!=longLen;i+=incrementVal) 
+      cell = myPixel( cell, block, x1+(int)((double)i/divDiff),y1+i);
+  else
+    for (int i=0;i!=longLen;i+=incrementVal) 
+      cell = myPixel( cell, block, x1+i,y1+(int)((double)i/divDiff));
+
+  // END OF EFLA code
 }
 

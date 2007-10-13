@@ -3,7 +3,7 @@
  Desc: Implements GTK-based GUI for Stage
  Author: Richard Vaughan
 
- CVS: $Id: worldgtk.cc,v 1.1.2.4 2007-10-12 00:41:54 rtv Exp $
+ CVS: $Id: worldgtk.cc,v 1.1.2.5 2007-10-13 07:42:55 rtv Exp $
 ***/
 
 
@@ -413,8 +413,8 @@ static GtkToggleActionEntry toggle_entries[] = {
 
   /*   { "DebugRays", NULL, "_Raytrace", "<alt>R", "Draw sensor rays", G_CALLBACK(gui_action_raytrace), 0 }, */
   /*   { "DebugGeom", NULL, "_Geometry", "<alt>G", "Draw model geometry", G_CALLBACK(gui_action_geom), 0 }, */
-  { "DebugMatrixTree", NULL, "Quad Tree", NULL, "Show occupancy quadtree", G_CALLBACK(cbQuadtree), 0 }, 
-   { "DebugMatrixOccupancy", NULL, "Occupancy Grid", NULL, "Show occupancy grid", G_CALLBACK(cbOccupancy), 0 }, 
+  { "DebugMatrixTree", NULL, "Tree", NULL, "Show occupancy tree", G_CALLBACK(cbQuadtree), 0 }, 
+   { "DebugMatrixOccupancy", NULL, "Leaves", NULL, "Show occupancy grid", G_CALLBACK(cbOccupancy), 0 }, 
 /*   { "DebugMatrixDelta", NULL, "Matrix _Delta", "<alt>D", "Show changes to quadtree", G_CALLBACK(gui_action_matrixdelta), 0 }, */
 };
 
@@ -621,6 +621,7 @@ StgWorldGtk::StgWorldGtk()
   // set up a reasonable default scaling, so that the world fits
   // neatly into the window.
   scale = width; //(1 to 1)
+  //scale = 0.2 * width; //(1 to 1)
 
   memset( &click_point, 0, sizeof(click_point));
 
@@ -784,6 +785,32 @@ void  StgWorldGtk::Realize( GtkWidget *widget )
   glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
+
+  
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  double pixels_width =  canvas->allocation.width;
+  double pixels_height = canvas->allocation.height ;
+  double zclip = hypot(width, height) * scale;
+
+  glOrtho( -pixels_width/2.0, pixels_width/2.0,
+	   -pixels_height/2.0, pixels_height/2.0,
+	   0, zclip );
+  
+  glMatrixMode (GL_MODELVIEW);
+  glLoadIdentity ();
+
+  glTranslatef(  -panx, 
+		 -pany, 
+		 -zclip / 2.0 );
+  
+  glRotatef( RTOD(-stheta), 1,0,0);      
+  glRotatef( RTOD(sphi), 0.0, 0.0, 1.0);   // rotate about z - pitch
+      
+  // meter scale
+  glScalef ( scale, scale, scale ); // zoom
+
 
   gdk_gl_drawable_gl_end (gldrawable);
 }
@@ -1817,25 +1844,34 @@ void StgWorldGtk::Draw()
     {
       glDisable( GL_LINE_SMOOTH );
       glLineWidth( 1 );
-      glPolygonMode( GL_FRONT, GL_LINE );
+
+      float zm = 1.0/ppm;
+
+      glPushMatrix();
+      glTranslatef( 0,0,1 );
+      glScalef( zm, zm, 0 );
+      
+      StgCell* cell = root;
+      while( cell->parent )
+	cell = cell->parent;
 
       if( show_quadtree )
 	{
 	  colorstack.Push( 0,1,0 );
-	  glTranslatef( 0,0,1 );
-	  root->DrawTree(false);
-	  glTranslatef( 0,0,-1 );
-	  colorstack.Pop();
+	  glPolygonMode( GL_FRONT, GL_LINE );
+	  cell->DrawTree(false);	  
 	}
       
       if( show_occupancy )
 	{
+	  glTranslatef( 0,0,1 );
+	  glPolygonMode( GL_FRONT, GL_FILL );
 	  colorstack.Push( 0,0.5,0 );
-	  glTranslatef( 0,0,1.1 );
-	  root->DrawTree(true);
-	  glTranslatef( 0,0,-1.1 );
-	  colorstack.Pop();
+	  cell->DrawTree(true);
 	}
+
+      glPopMatrix();
+      colorstack.Pop();
 
       glEnable( GL_LINE_SMOOTH );
     }

@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.3 $
+ //  $Revision: 1.1.2.4 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -99,8 +99,11 @@ StgModelLaser::StgModelLaser( StgWorld* world,
   fov          = STG_DEFAULT_LASER_FOV;
   sample_count = STG_DEFAULT_LASER_SAMPLES;  
   resolution = STG_DEFAULT_LASER_RESOLUTION;
-  
-  samples = g_new0( stg_laser_sample_t, sample_count );
+
+  // don't allocate sample buffer memory until Startup()
+  samples = NULL;
+
+  debug = true;
 
   dl_debug_laser = glGenLists( 1 );
   glNewList( dl_debug_laser, GL_COMPILE );
@@ -110,7 +113,20 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 
 StgModelLaser::~StgModelLaser( void )
 {
-  g_free( samples );
+  if(samples)
+    delete[] samples;
+}
+
+void StgModelLaser::SetSampleCount( unsigned int count )
+{
+  if( count != sample_count )
+    {
+      if( samples )
+	delete[] samples;
+
+      sample_count = count;
+      samples = new stg_laser_sample_t[sample_count];
+    }
 }
 
 void StgModelLaser::Load( void )
@@ -118,11 +134,8 @@ void StgModelLaser::Load( void )
   StgModel::Load(); 
 
   CWorldFile* wf = world->wf;
-
-  sample_count   = wf->ReadInt( id, "samples", sample_count );       
-  samples = g_renew( stg_laser_sample_t, samples, sample_count );
-  bzero( samples, sizeof(stg_laser_sample_t) * sample_count );
   
+  sample_count = wf->ReadInt( id, "samples", sample_count );        
   range_min = wf->ReadLength( id, "range_min", range_min);
   range_max = wf->ReadLength( id, "range_max", range_max );
   fov       = wf->ReadAngle( id, "fov",  fov );      
@@ -146,7 +159,7 @@ void StgModelLaser::Update( void )
   StgModel::Update();
   
   //PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", gpose.x, gpose.y, gpose.a );
-  
+
 #if TIMING
   struct timeval tv1, tv2;
   gettimeofday( &tv1, NULL );
@@ -158,25 +171,32 @@ void StgModelLaser::Update( void )
   double sample_incr = fov / (double)(sample_count-1);
   
 
-  glNewList( this->dl_debug_laser, GL_COMPILE );
-  glPushMatrix();
+  if( debug )
+    {
+      glNewList( this->dl_debug_laser, GL_COMPILE );
+      glPushMatrix();
 
-  // go into global coords
-  stg_pose_t gpose;
-  GetGlobalPose( &gpose );
-  //gl_coord_shift( -gpose.x, -gpose.y, 0, -gpose.a );
-  glRotatef( RTOD(-gpose.a), 0,0,1 );
-  glTranslatef( -gpose.x, -gpose.y, 0 );
+      // go into global coords
+      stg_pose_t gpose;
+      GetGlobalPose( &gpose );
+      //gl_coord_shift( -gpose.x, -gpose.y, 0, -gpose.a );
+      glRotatef( RTOD(-gpose.a), 0,0,1 );
+      glTranslatef( -gpose.x, -gpose.y, 0 );
+    }
 
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
       StgModel* hitmod = NULL;
       
+       //printf( "  [%d] %.2f\n", (int)t, samples[t].range );
+       printf( "  [%d] ", (int)t );
+
        samples[t].range = Raytrace( bearing, 
 				    range_max,
 				    laser_raytrace_match,
 				    &hitmod );
        
+
        // if we hit a model and it reflects brightly, we set
        // reflectance high, else low
        samples[t].reflectance =
@@ -185,6 +205,8 @@ void StgModelLaser::Update( void )
        // todo - lower bound on range      
        bearing += sample_incr;      
      }
+
+  puts("");
 
    // we may need to interpolate the samples we skipped 
    if( resolution > 1 )
@@ -207,11 +229,13 @@ void StgModelLaser::Update( void )
 	     samples[t-g].range = (left-g*(left-right)/resolution);
 	   }
      }
-
-
-   glPopMatrix();
-   glEndList();
    
+   if( debug )
+     {
+       glPopMatrix();
+       glEndList();
+     }
+
    data_dirty = true;
    
 #if TIMING
@@ -230,6 +254,9 @@ void StgModelLaser::Startup(  void )
   
   PRINT_DEBUG( "laser startup" );
   
+  // allocate memory for laser samples
+  samples = new stg_laser_sample_t[sample_count];
+
   // start consuming power
   SetWatts( STG_DEFAULT_LASER_WATTS );
 }
@@ -243,8 +270,11 @@ void StgModelLaser::Shutdown( void )
   SetWatts( 0 );
   
   // clear the data - this will unrender it too
-  g_free( samples );
-  samples = NULL;
+  if( samples )
+    {
+      delete[] samples;
+      samples = NULL;
+    }
   
   StgModel::Shutdown();
 }
@@ -339,7 +369,8 @@ void StgModelLaser::DataVisualize( void )
       glPopMatrix();      
     }
   
-  //glCallList( this->dl_debug_laser );
+  if( this->debug )
+    glCallList( this->dl_debug_laser );
 
   glEndList();
 }

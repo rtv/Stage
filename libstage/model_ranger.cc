@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -90,10 +90,7 @@ StgModelRanger::StgModelRanger( stg_world_t* world,
 {
   PRINT_DEBUG2( "Constructing StgModelRanger %d (%s)\n", 
 		id, wf->GetEntityType( id ) );
-  
-
-  
-  
+    
   // Set up sensible defaults
   
   stg_color_t col = stg_lookup_color( STG_RANGER_CONFIG_COLOR );
