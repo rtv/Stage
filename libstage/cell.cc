@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: cell.cc,v 1.1.2.2 2007-10-13 07:42:55 rtv Exp $
+ * $Id: cell.cc,v 1.1.2.3 2007-10-22 09:06:27 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -45,12 +45,22 @@ StgCell::~StgCell()
     delete right;
 }
 
+StgCell* StgCell::Root()
+{
+  StgCell* cell = this;
+
+  while( parent )
+    cell = parent;
+
+  return cell;
+}
+    
 bool StgCell::Atomic()
 {
   //printf( "atomic test width %d height %d atom %d\n",
   //  width, height, sz );
 
-  return( (width < 2) && (height < 2)); 
+  return( (width == 1) && (height == 1)); 
 }
 
 GLvoid glPrint( const char *fmt, ... );
@@ -58,8 +68,8 @@ GLvoid glPrint( const char *fmt, ... );
 void StgCell::Draw()
 {
   //this->Print( "Draw" );
-  //printf( "left %.2f right %.2f bottom %.2f top %.2f\n",
-  //  left, right, bottom, top );
+  //printf( "left %d right %d bottom %d top %d\n",
+  //  xmin, xmax, ymin, ymax );
 
   glRecti( xmin, ymin, xmax, ymax );
 
@@ -159,6 +169,44 @@ void StgCell::AddBlock( StgBlock* block )
   
   block->AddCell( this );
 }
+
+StgBlock* StgCell::FindBlock( stg_block_match_func_t func, 
+			      const void* arg )
+{  
+  GSList* match = 
+    g_slist_find_custom( this->list, arg, (GCompareFunc)func );
+  
+  return match ? (StgBlock*)match->data : (StgBlock*)NULL;
+
+  //for( GSList* it = list; it; it=it->next )
+  //{
+  //  StgBlock* block = (StgBlock*)it->data;		
+  //  StgModel* candidate = block->mod;		
+  //  assert( candidate );
+      
+      //printf( "block of %s\n", candidate->Token() );
+      
+      //stg_pose_t gpose;
+      //candidate->GetGlobalPose( &gpose );
+      
+      // test to see if the block exists at height z
+      //double block_min = gpose.z + block->zmin;
+      //double block_max = gpose.z + block->zmax;
+      
+      //printf( "[%.2f %.2f %.2f] %s testing %s (laser return %d)\n",
+      //      x,y,z,
+      //      finder->Token(), candidate->Token(), candidate->LaserReturn() );
+      
+      
+      //if( LT(block_min,z) && 
+      //  GT(block_max,z) && 
+      
+  // if( (*func)( arg, candidate ) )
+  //return block;
+  // }
+  
+  //return NULL;
+}			     
 
 void StgCell::RemoveBlock( StgCell* cell, StgBlock* block )
 {

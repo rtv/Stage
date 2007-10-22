@@ -5,6 +5,7 @@ StgAncestor::StgAncestor()
   token = NULL;
   children = NULL;
   child_types = g_hash_table_new( g_str_hash, g_str_equal );
+  debug = false;
 }
 
 StgAncestor::~StgAncestor()

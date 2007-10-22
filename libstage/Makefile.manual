@@ -31,9 +31,12 @@ OBS = \
 CPPFLAGS= -g -Wall -I.. -I../replace `pkg-config --cflags gtkglext-1.0`
 LIBS= `pkg-config --libs gtkglext-1.0`
 
+
+all: foo
+
 foo : $(OBS) $(HEADERS)
 	g++ -o foo $(CPPFLAGS) $(OBS) $(LIBS)  
 
 clean : 
-	rm *.o *.lo
+	rm -f *.o *.lo
 

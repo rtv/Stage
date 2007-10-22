@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.7 2007-10-13 07:42:55 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.8 2007-10-22 09:06:28 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -768,61 +768,88 @@ typedef enum {
   STG_SPLIT_Y
 } stg_split_t;
 
-typedef enum {
-  STG_EXPAND_LEFT=0, 
-  STG_EXPAND_RIGHT,
-  STG_EXPAND_UP,
-  STG_EXPAND_DOWN
-} stg_expand_t;
-
-
 class StgBlock;
+
+/** matching function should return 0 iff the candidate block is
+    acceptable */
+typedef int(*stg_block_match_func_t)(StgBlock* candidate, const void* arg );
 
 /** A node in the occupancy quadtree */
 class StgCell
 {
+  friend class StgWorld;
+
 private:
-public:
+  void Split(); ///< split the cell into children
+
+  /** list of models that have been AddBlock()ed into this
+      cell */
   GSList* list;
+
+  /** extent of the cell */
   int32_t width, height;
   
-  // bounding box
+  /** bounding box */
   int32_t xmin,ymin,xmax,ymax;
   
+  /** direction of split for this cell */
   stg_split_t split;
-  //stg_expand_t expand;
 
+  /** links for BSP tree */
   StgCell *left, *right;
-  StgCell* parent;
-  
+
+  /** links for BSP tree */
+  StgCell* parent;  
+
+public:
   StgCell( StgCell* parent, 
 	   int32_t xmin, int32_t xmax, 
 	   int32_t ymin, int32_t ymax );
 
   ~StgCell();
   
+  /** Return the root of the tree that contains this cell */
+  StgCell* Root();
+
+  /** Remove block from the cell. This method is static as it may
+      destroy the cell. */
   static void RemoveBlock( StgCell* cell, StgBlock* block );
+
+  /** Add a pointer to block to the list of this cells contents */
   void AddBlock( StgBlock* block );  
   
+  /** Return the first block in the cell that matches the comparison
+      function */
+  StgBlock* FindBlock( stg_block_match_func_t, const void* arg );
+
+  /** Draw the cell into the current OpenGL context */
   void Draw();
+
+  /** Draw the cell and all its descendents in the current OpenGL
+      context. If leaf_only is true, only occupied leaf nodes are
+      drawn */
   void DrawTree( bool leaf_only );
+
+  /** Print a human-readable description of the cell on stdout,
+      prefixed by the string prefix. */
   void Print( char* prefix );
 
-  void Split(); ///< split the cell into children
-  StgCell* ExpandLeft(); ///< add a new parent to this cell, twice the size
-  StgCell* ExpandRight(); ///< add a new parent to this cell, twice the size
-  StgCell* ExpandUp(); ///< add a new parent to this cell, twice the size
-  StgCell* ExpandDown(); ///< add a new parent to this cell, twice the size
-
-  bool Atomic();  
-  bool Contains( int32_t x, int32_t y );
+  /** returns true iff the cell is a unit square (ie. as small as it
+      can be */
+  bool Atomic(); 
   
-  StgCell* Locate( int32_t x, int32_t y );
-  StgCell* LocateAtom( int32_t x, int32_t y );
+  /** Returns true iff the cell contains the  point <x,y> */
+  bool Contains( int32_t x, int32_t y ); 
+  
+  /** returns the smallest currently existing cell that contains point
+      <x,y>. Does not create new cells. */
+  StgCell* Locate( int32_t x,  int32_t y );
+
+  /** returns a unit cell that contains <x,y>, creating cells if
+      necessary */
+  StgCell* LocateAtom( int32_t x, int32_t y ); 
 };
   
-
-typedef int(*stg_itl_test_func_t)(StgModel* finder, StgModel* found );
 
 
 /** @} */
@@ -1081,6 +1108,8 @@ protected:
   GHashTable* child_types;
   char* token;
   
+  bool debug;
+
 public:
   StgAncestor();
   virtual ~StgAncestor();
@@ -1119,11 +1148,6 @@ private:
 			       //allocate unique sequential world ids
   static GHashTable* typetable;  
   
-  StgModel* TestCandidateList( StgModel* finder, 
-			       stg_itl_test_func_t func,
-			       stg_meters_t z,
-			       GSList* list );
-
 public:
 
   StgWorld( void ); 
@@ -1210,11 +1234,12 @@ public:
   void MapBlockLine( StgBlock* block, 
 		     double x1, double y1, 
 		     double x2, double y2 );
-
+  
   stg_meters_t Raytrace( StgModel* finder,
 			 stg_pose_t* pose, 			 
 			 stg_meters_t max_range,
-			 stg_itl_test_func_t func,
+			 stg_block_match_func_t func,
+			 const void* arg,
 			 StgModel** hit_model );
 			 
   void ClockString( char* str, size_t maxlen );
@@ -1566,13 +1591,15 @@ public:
   // this version raytraces from our local origin
   stg_meters_t Raytrace( stg_radians_t angle, 
 			 stg_meters_t range, 
-			 stg_itl_test_func_t func,
+			 stg_block_match_func_t func,
+			 const void* arg,
 			 StgModel** hitmod );
   
   // raytraces from the point and heading identified by pose, in local coords
   stg_meters_t Raytrace( stg_pose_t* pose,
 			 stg_meters_t range, 
-			 stg_itl_test_func_t func,
+			 stg_block_match_func_t func,
+			 const void* arg,
 			 StgModel** hitmod );
   
   // static wrapper for the constructor - all models must implement

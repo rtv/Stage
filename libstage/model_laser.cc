@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.5 $
+ //  $Revision: 1.1.2.6 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -103,8 +103,6 @@ StgModelLaser::StgModelLaser( StgWorld* world,
   // don't allocate sample buffer memory until Startup()
   samples = NULL;
 
-  debug = true;
-
   dl_debug_laser = glGenLists( 1 );
   glNewList( dl_debug_laser, GL_COMPILE );
   glEndList();
@@ -148,10 +146,19 @@ void StgModelLaser::Load( void )
     }
 }
 
-int laser_raytrace_match( StgModel* mod, StgModel* hitmod )
-{           
-  // Ignore myself and things that are invisible to lasers
-  return( (mod != hitmod) && (hitmod->LaserReturn() > 0) );
+int laser_raytrace_match( StgBlock* testblock, 
+			  StgModel* finder )
+{ 
+  // Ignore the model that's looking and things that are invisible to
+  // lasers
+
+  if( (testblock->mod != finder) &&
+      (testblock->mod->LaserReturn() > 0 ) )
+    return 0; // match!
+
+  return 1; // no match
+
+  //return( (mod != hitmod) && (hitmod->LaserReturn() > 0) );
 }	
 
 void StgModelLaser::Update( void )
@@ -188,11 +195,12 @@ void StgModelLaser::Update( void )
       StgModel* hitmod = NULL;
       
        //printf( "  [%d] %.2f\n", (int)t, samples[t].range );
-       printf( "  [%d] ", (int)t );
+       //printf( "  [%d] ", (int)t );
 
        samples[t].range = Raytrace( bearing, 
 				    range_max,
-				    laser_raytrace_match,
+				    (stg_block_match_func_t)laser_raytrace_match,
+				    (const void*)this,
 				    &hitmod );
        
 
@@ -205,7 +213,7 @@ void StgModelLaser::Update( void )
        bearing += sample_incr;      
      }
 
-  puts("");
+  //puts("");
 
    // we may need to interpolate the samples we skipped 
    if( resolution > 1 )

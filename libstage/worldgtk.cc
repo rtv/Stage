@@ -3,7 +3,7 @@
  Desc: Implements GTK-based GUI for Stage
  Author: Richard Vaughan
 
- CVS: $Id: worldgtk.cc,v 1.1.2.5 2007-10-13 07:42:55 rtv Exp $
+ CVS: $Id: worldgtk.cc,v 1.1.2.6 2007-10-22 09:06:28 rtv Exp $
 ***/
 
 
@@ -1852,9 +1852,7 @@ void StgWorldGtk::Draw()
       glScalef( zm, zm, 0 );
       
       StgCell* cell = root;
-      while( cell->parent )
-	cell = cell->parent;
-
+ 
       if( show_quadtree )
 	{
 	  colorstack.Push( 0,1,0 );

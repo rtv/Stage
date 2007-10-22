@@ -157,8 +157,8 @@ void StgWorld::Initialize( const char* token,
   this->height = height;
   this->ppm = ppm; // this is the finest resolution of the matrix
 
-  int32_t dx = width/2.0 * ppm;
-  int32_t dy = height/2.0 * ppm;
+  int32_t dx = (int32_t)(width/2.0 * ppm);
+  int32_t dy = (int32_t)(height/2.0 * ppm);
   this->root = new StgCell( NULL, -dx, +dx, -dy, +dy );
 
   this->total_subs = 0;
@@ -250,8 +250,8 @@ void StgWorld::Load( const char* worldfile_path )
   if( this->root )
     delete root;
   
-  int32_t dx = width/2.0 * ppm;
-  int32_t dy = height/2.0 * ppm;
+  int32_t dx = (int32_t)(width/2.0 * ppm);
+  int32_t dy = (int32_t)(height/2.0 * ppm);
   this->root = new StgCell( NULL, -dx, +dx, -dy, +dy );
 
   //_stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
@@ -440,46 +440,47 @@ StgModel* StgWorld::GetModel( const stg_id_t id )
 
 
 
-StgModel* StgWorld::TestCandidateList( StgModel* finder, 
-				       stg_itl_test_func_t func,
-				       stg_meters_t z,
-				       GSList* list )
-{
-  assert(list);
+// StgModel* StgWorld::TestCandidateList( StgModel* finder, 
+// 				       stg_itl_test_func_t func,
+// 				       stg_meters_t z,
+// 				       GSList* list )
+// {
+//   assert(list);
   
-  for( GSList* it = list; it; it=it->next )
-    {
-      StgBlock* block = (StgBlock*)it->data;		
-      StgModel* candidate = block->mod;		
-      assert( candidate );
+//   for( GSList* it = list; it; it=it->next )
+//     {
+//       StgBlock* block = (StgBlock*)it->data;		
+//       StgModel* candidate = block->mod;		
+//       assert( candidate );
       
-      //printf( "block of %s\n", candidate->Token() );
+//       //printf( "block of %s\n", candidate->Token() );
       
-      stg_pose_t gpose;
-      candidate->GetGlobalPose( &gpose );
+//       stg_pose_t gpose;
+//       candidate->GetGlobalPose( &gpose );
       
-      // test to see if the block exists at height z
-      double block_min = gpose.z + block->zmin;
-      double block_max = gpose.z + block->zmax;
+//       // test to see if the block exists at height z
+//       double block_min = gpose.z + block->zmin;
+//       double block_max = gpose.z + block->zmax;
       
-      //printf( "[%.2f %.2f %.2f] %s testing %s (laser return %d)\n",
-      //      x,y,z,
-      //      finder->Token(), candidate->Token(), candidate->LaserReturn() );
+//       //printf( "[%.2f %.2f %.2f] %s testing %s (laser return %d)\n",
+//       //      x,y,z,
+//       //      finder->Token(), candidate->Token(), candidate->LaserReturn() );
       
       
-      if( LT(block_min,z) && 
-	  GT(block_max,z) && 
-	  (*func)( finder, candidate ) )
-	return candidate;
-    }
+//       if( LT(block_min,z) && 
+// 	  GT(block_max,z) && 
+// 	  (*func)( finder, candidate ) )
+// 	return candidate;
+//     }
 
-  return NULL;
-}
+//   return NULL;
+// }
 
 stg_meters_t StgWorld::Raytrace( StgModel* finder,
 				 stg_pose_t* pose,
 				 stg_meters_t max_range,
-				 stg_itl_test_func_t func,
+				 stg_block_match_func_t func,
+				 const void* arg,
 				 StgModel** hit_model )
 {
   const double epsilon = 0.0001;
@@ -487,7 +488,7 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
   double x = pose->x;
   double y = pose->y;
   double z = pose->z;
-  double a = pose->a;
+  double a = NORMALIZE(pose->a);
 
   double tana = tan( a );
   
@@ -496,38 +497,55 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 
   StgModel* hit = NULL;
 
+  double p2m = 1.0/ppm;
+
   while( LT(range,max_range) )
     {
-      printf( "locating cell at (%.2f %.2f)\n", x, y );
       
+      int xpix = floor(x*ppm);
+      int ypix = floor(y*ppm);
+      
+      //printf( "locating cell at (%.2f %.2f) [%d,%d]\n", x, y, xpix, ypix );
+
       // locate the leaf cell at X,Y
-      //cell = StgCell::Locate( cell, x, y );      
-      cell = cell->Locate( x*ppm, y*ppm );
+      cell = cell->Locate( xpix, ypix );
 
       // the cell is null iff the point was outside the root
       if( cell == NULL )
 	{
-	  printf( "ray at angle %.2f out of bounds at [%d, %d]",
-		  a, x, y );
+	  //printf( "ray at angle %.2f out of bounds at [%.2f, %.2f]",
+	  //  a, x, y );
 
 	  break;
 	}
-      
+
+     //  printf( "found cell (%.2f,%.2f) (%.2f,%.2f)\n",
+// 	      cell->xmin * p2m, 
+// 	      cell->xmax * p2m, 
+// 	      cell->ymin * p2m,
+// 	      cell->ymax * p2m );
+    
+
       if( finder->debug )
 	{
-	  PushColor( 1,0,0, 0.3 );
+	  glPushMatrix();      
+	  glTranslatef( 0,0,1.2 );
+	  glScalef( 1.0/ppm, 1.0/ppm, 0 );	  
+	  PushColor( 1,0,1, 1 );
 	  glPolygonMode( GL_FRONT, GL_LINE );
 	  cell->Draw();
 	  PopColor();
+	  glPopMatrix();
 	}
       
-      if( cell->list ) 
-	{ 
-	  hit = TestCandidateList( finder, func, z, cell->list );
-	  if( hit )
-	    break; // we're done looking	  
-	}	    
+      StgBlock* hitblock = cell->FindBlock( func, arg );
       
+      if( hitblock )
+	{
+	  hit = hitblock->mod;
+	  break;
+	}
+
       double c = y - tana * x; // line offset
       
       double xleave = x;
@@ -535,24 +553,32 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
       
       if( GT(a,0) ) // up
 	{
+	  //puts( "up" );
+
 	  // ray could leave through the top edge
 	  // solve x for known y      
-	  yleave = cell->ymax; // top edge
+	  yleave = cell->ymax * p2m; // top edge
 	  xleave = (yleave - c) / tana;
-	  
+
+	  int32_t xleave_pixel = floor(xleave*ppm);
+
 	  // if the edge crossing was not in cell bounds     
-	  if( !((xleave >= cell->xmin) && (xleave < cell->xmax)) )
+	  //if( !(  GTE(xleave,cell->xmin*p2m) && LT(xleave,cell->xmax*p2m)) )
+	  //if( ! cell->Contains( xleave*ppm, yleave*ppm )
+	  
+	  if( xleave_pixel < cell->xmin || 
+	      xleave_pixel >= cell->xmax )
 	    {
 	      // it must have left the cell on the left or right instead 
 	      // solve y for known x
 	      
 	      if( GT(a,M_PI/2.0) ) // left side
 		{
-		  xleave = cell->xmin-epsilon;
+		  xleave = (cell->xmin*p2m)-epsilon;
 		}
 	      else // right side
 		{
-		  xleave = cell->xmax;
+		  xleave = cell->xmax*p2m +epsilon;
 		}
 	      
 	      yleave = tana * xleave + c;
@@ -560,33 +586,59 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	}	 
       else 
 	{
+	  //puts( "down" );
+	  
 	  // ray could leave through the bottom edge
 	  // solve x for known y      
-	  yleave = cell->ymin; // bottom edge
+	  yleave = cell->ymin*p2m; // bottom edge
 	  xleave = (yleave - c) / tana;
 	  
+	  int32_t xleave_pixel = floor(xleave*ppm);
+
+// 	  printf( "test leave (%.2f %.2f) %d [%d %d] %d %d %d\n", 
+// 		  xleave, 
+// 		  yleave,
+// 		  xleave_pixel,
+// 		  cell->xmin,
+// 		  cell->xmax,
+// 		  xleave_pixel < cell->xmin,
+// 		  xleave_pixel >= cell->xmax,
+// 		  xleave_pixel < cell->xmin ||
+// 		  xleave_pixel >= cell->xmax 		  
+// 	  );
+	  
 	  // if the edge crossing was not in cell bounds     
-	  if( !((xleave >= cell->xmin) && (xleave < cell->xmax)) )
+	  //if( !( GTE(xleave,cell->xmin*p2m) && LT(xleave,cell->xmax*p2m)))
+	  if( xleave_pixel < cell->xmin || 
+	      xleave_pixel >= cell->xmax )
 	    {
+	      //	      puts( "L or R" );
+
 	      // it must have left the cell on the left or right instead 
 	      // solve y for known x	  
 	      if( LT(a,-M_PI/2.0) ) // left side
 		{
-		  xleave = cell->xmin-epsilon;
+		  //puts( "L" );
+		  xleave = (cell->xmin*p2m)-epsilon;
 		}
 	      else
 		{
-		  xleave = cell->xmax;
+		  //puts(  "R" );
+		  xleave = cell->xmax*p2m+epsilon;
 		}
 	      
 	      yleave = tana * xleave + c;
 	    }
 	  else
-	    yleave-=epsilon;
+	    {
+	      yleave-=epsilon;
+	      //printf( "left through bottom edge\n" );
+	    }
 	}
 
-      cell->Print( NULL );
-      printf( "(%.2f %.2f)\n", hypot( yleave - y, xleave - x ), range );
+      //cell->Print( NULL );
+      //printf( "leave at (%.2f %.2f)\n", hypot( yleave - y, xleave - x ), range );
+      //printf( "leave at (%.2f %.2f)\n", xleave, yleave );
       
       // jump to the leave point
       range += hypot( yleave - y, xleave - x );
@@ -607,9 +659,9 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	  glVertex3f( x,y, z );
 	  glEnd();
 
-	  PushColor( 0,0,1, 1 );
+	  PushColor( 0,1,0, 1 );
 	  glBegin( GL_POINTS );
-	  glVertex3f( xleave+0.01, yleave+0.01, z );
+	  glVertex3f( xleave, yleave, z );
 	  glEnd();
 	  PopColor();
 
@@ -620,18 +672,19 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
       y = yleave;      
     }
   
-  if( hit )
-    printf( "HIT %s at [%d %d %.2f] range %.2f\n",
-	    hit->Token(),
-	    x,y,z, range );
-  else
-    printf( "no hit at range %.2f\n", range );
+//   if( hit )
+//     printf( "HIT %s at [%.2f %.2f %.2f] range %.2f\n",
+// 	    hit->Token(),
+// 	    x,y,z, range );
+//   else
+//     printf( "no hit at range %.2f\n", range );
   
   // if the caller supplied a place to store the hit model pointer,
   // give it to 'em.
   if( hit_model )
     *hit_model = hit;
   
+
   // return the range
   return MIN( range, max_range );
 }
@@ -715,13 +768,20 @@ void StgWorld::MapBlockLine( StgBlock* block,
 			     double mx1, double my1, 
 			     double mx2, double my2 )
 {
-  int32_t x1 = mx1 * ppm - 0.5;
-  int32_t x2 = mx2 * ppm - 0.5;
-  int32_t y1 = my1 * ppm - 0.5;
-  int32_t y2 = my2 * ppm - 0.5;
+  //int32_t x1 = (int32_t)(mx1 * ppm - 0.5);
+  //int32_t x2 = (int32_t)(mx2 * ppm - 0.5);
+  //int32_t y1 = (int32_t)(my1 * ppm - 0.5);
+  //int32_t y2 = (int32_t)(my2 * ppm - 0.5);
+
+  int32_t x1 = floor(mx1 * ppm);
+  int32_t x2 = floor(mx2 * ppm);
+  int32_t y1 = floor(my1 * ppm);
+  int32_t y2 = floor(my2 * ppm);
   
   StgCell* cell = root;
-  
+
+  //cell = myPixel( cell, block, x1, y1 );
+
   // Extremely Fast Line Algorithm Var A (Division)
   // Copyright 2001-2, By Po-Han Lin
   
@@ -736,7 +796,9 @@ void StgWorld::MapBlockLine( StgBlock* block,
   const char* EFLA_CREDIT = 
     "Contains an implementation of the Extremely Fast Line Algorithm (EFLA)"
     "by Po-Han Lin (http://www.edepot.com/phl.html)";
-  
+  char* dummy = (char*)EFLA_CREDIT; // prevents compiler warning about unused var
+  dummy++; // ditto
+
   bool yLonger=false;
   int incrementVal;
   

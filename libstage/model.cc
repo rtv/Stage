@@ -298,7 +298,8 @@ void StgModel::AddBlockRect( double x, double y,
 
 stg_meters_t StgModel::Raytrace( stg_radians_t angle,
 				 stg_meters_t range, 
-				 stg_itl_test_func_t func,
+				 stg_block_match_func_t func,
+				 const void* arg,
 				 StgModel** hitmod )
   
 {
@@ -310,12 +311,14 @@ stg_meters_t StgModel::Raytrace( stg_radians_t angle,
 			  &gpose,
 			  range,
 			  func,
+			  arg,
 			  hitmod );
 }
 
 stg_meters_t StgModel::Raytrace( stg_pose_t* pz,
 				 stg_meters_t range, 
-				 stg_itl_test_func_t func,
+				 stg_block_match_func_t func,
+				 const void* arg,
 				 StgModel** hitmod )
 
 {
@@ -327,6 +330,7 @@ stg_meters_t StgModel::Raytrace( stg_pose_t* pz,
 			  &gpose,
 			  range,
 			  func,
+			  arg,
 			  hitmod );
 }
 
