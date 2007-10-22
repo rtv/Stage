@@ -264,7 +264,7 @@ void StgWorld::Load( const char* worldfile_path )
       
       // don't load window entries here
       if( strcmp( typestr, "window" ) == 0 )
-	continue;
+	  continue;
 
       int parent_entity = wf->GetEntityParent( entity );
       
@@ -298,7 +298,7 @@ void StgWorld::Load( const char* worldfile_path )
     }
   
   // warn about unused WF linesa
-  wf->WarnUnused();
+  //wf->WarnUnused();
 }
 
 void StgWorld::Stop()
@@ -309,6 +309,8 @@ void StgWorld::Stop()
 void StgWorld::Start()
 {
   this->paused = false;
+
+  wf->WarnUnused();
 }
 
 stg_msec_t StgWorld::RealTimeNow(void)

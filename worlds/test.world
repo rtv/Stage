@@ -24,6 +24,7 @@ window
 )
 
 include "map.inc"
+include "sick.inc"
 
 floorplan
 ( 
@@ -34,8 +35,12 @@ floorplan
 
 define robot model
 ( 
+  fancy_sick_laser( samples 1 )
+
   size [0.5 0.5 0.3]
 
+  velocity [0 0 0 20]
+  
   color "red"
 
   blocks 7
@@ -139,12 +144,17 @@ define robot model
 
 
 
+define grobot model
+( 
+  fancy_sick_laser( samples 1 )
+  #laser( samples 64 )  
 
+  size [0.5 0.5 0.3]
 
-
-
-
-
+  velocity [0 0 0 20]
+  
+  color "red"
+)
 
 
 robot( pose [-2.059 0.153 0.000 0.000] )
@@ -253,7 +263,6 @@ model
   pose [-4.378 -4.784 0.000 0.000]
   color "green"
 )
-
 model
 ( 
   pose [3.496 4.521 0.000 0.000]
@@ -263,5 +272,5 @@ model
 model
 (
   pose [6.000 0.000 0.000 0.000]
-  color "purple"
+ color "purple"
 )

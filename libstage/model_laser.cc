@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.4 $
+ //  $Revision: 1.1.2.5 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -168,8 +168,7 @@ void StgModelLaser::Update( void )
   assert(samples);
   
   double bearing = -fov/2.0;
-  double sample_incr = fov / (double)(sample_count-1);
-  
+  double sample_incr = fov / (double)(sample_count-1);  
 
   if( debug )
     {

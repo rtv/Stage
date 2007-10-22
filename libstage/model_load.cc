@@ -7,15 +7,15 @@
 
 #include "stage.hh"
 
-//model.hh"
-//#include "world.hh"
-
 void StgModel::Load( void )
 {  
   PRINT_DEBUG1( "Model \"%s\" loading...", token );
 
   CWorldFile* wf = world->wf;
-
+  
+  if( wf->PropertyExists( this->id, "debug" ) )
+    this->debug = wf->ReadInt( this->id, "debug", this->debug );
+  
   if( wf->PropertyExists( this->id, "name" ) )
     {
       char *name = (char*)wf->ReadString(this->id, "name", NULL );
@@ -260,7 +260,10 @@ void StgModel::Load( void )
     this->CallCallbacks( &this->load );
 
 
-  PRINT_DEBUG1( "Model \"%s\" loading complete.", token );
+    if( this->debug )
+      printf( "Model \"%s\" is in debug mode\n", token ); 
+
+    PRINT_DEBUG1( "Model \"%s\" loading complete", token );
 }
 
 
