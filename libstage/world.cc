@@ -502,13 +502,15 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
   while( LT(range,max_range) )
     {
       
-      int xpix = floor(x*ppm);
-      int ypix = floor(y*ppm);
+      int xpix = (int)floor(x*ppm);
+      int ypix = (int)floor(y*ppm);
       
-      //printf( "locating cell at (%.2f %.2f) [%d,%d]\n", x, y, xpix, ypix );
+      //printf( "theta %.2f locating cell at (%.2f %.2f) [%d,%d]\n",a, x, y, xpix, ypix );
 
       // locate the leaf cell at X,Y
       cell = cell->Locate( xpix, ypix );
+
+      //if( cell ) cell->Print( "Found" );
 
       // the cell is null iff the point was outside the root
       if( cell == NULL )
@@ -555,16 +557,15 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	{
 	  //puts( "up" );
 
+	  
+	  int yleave_pixel = cell->ymax; // top edge
+
 	  // ray could leave through the top edge
 	  // solve x for known y      
-	  yleave = cell->ymax * p2m; // top edge
+	  yleave = (double)yleave_pixel * p2m; 
 	  xleave = (yleave - c) / tana;
-
-	  int32_t xleave_pixel = floor(xleave*ppm);
-
-	  // if the edge crossing was not in cell bounds     
-	  //if( !(  GTE(xleave,cell->xmin*p2m) && LT(xleave,cell->xmax*p2m)) )
-	  //if( ! cell->Contains( xleave*ppm, yleave*ppm )
+	  
+	  int xleave_pixel = floor( xleave * ppm );
 	  
 	  if( xleave_pixel < cell->xmin || 
 	      xleave_pixel >= cell->xmax )
@@ -588,12 +589,15 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	{
 	  //puts( "down" );
 	  
+	  int yleave_pixel = cell->ymin; // bottom edge
+
 	  // ray could leave through the bottom edge
 	  // solve x for known y      
-	  yleave = cell->ymin*p2m; // bottom edge
+	  yleave = (double)yleave_pixel * p2m;
 	  xleave = (yleave - c) / tana;
+
+	  int xleave_pixel = floor( xleave * ppm );
 	  
-	  int32_t xleave_pixel = floor(xleave*ppm);
 
 // 	  printf( "test leave (%.2f %.2f) %d [%d %d] %d %d %d\n", 
 // 		  xleave, 
@@ -773,10 +777,10 @@ void StgWorld::MapBlockLine( StgBlock* block,
   //int32_t y1 = (int32_t)(my1 * ppm - 0.5);
   //int32_t y2 = (int32_t)(my2 * ppm - 0.5);
 
-  int32_t x1 = floor(mx1 * ppm);
-  int32_t x2 = floor(mx2 * ppm);
-  int32_t y1 = floor(my1 * ppm);
-  int32_t y2 = floor(my2 * ppm);
+  int x1 = (int)floor(mx1 * ppm);
+  int x2 = (int)floor(mx2 * ppm);
+  int y1 = (int)floor(my1 * ppm);
+  int y2 = (int)floor(my2 * ppm);
   
   StgCell* cell = root;
 
