@@ -465,10 +465,13 @@ int raytest( int32_t x, int32_t y, int32_t z,
      {
        StgBlock* block = (StgBlock*)list->data;       
        assert( block );
-
-//       // if this block does not belong to the searching model and
-//       // matches the predicate
-       if( block && (block->mod != rti->finder) )// && (*rti->func)( block, rti->arg ) )
+       
+       // if this block does not belong to the searching model and it
+       // matches the predicate and it's in the right z range
+       if( block && (block->mod != rti->finder) && 
+	   (*rti->func)( block, rti->arg ) )//&&
+	 //z >= block->zmin &&
+	 // z < block->zmax )	 
 	 {
  	  // a hit!
  	  rti->hit = block->mod;

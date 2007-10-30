@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.6 $
+ //  $Revision: 1.1.2.7 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -154,9 +154,9 @@ int laser_raytrace_match( StgBlock* testblock,
 
   if( (testblock->mod != finder) &&
       (testblock->mod->LaserReturn() > 0 ) )
-    return 0; // match!
+    return TRUE; // match!
 
-  return 1; // no match
+  return FALSE; // no match
 
   //return( (mod != hitmod) && (hitmod->LaserReturn() > 0) );
 }	
