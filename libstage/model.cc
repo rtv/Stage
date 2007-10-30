@@ -307,7 +307,7 @@ stg_meters_t StgModel::Raytrace( stg_radians_t angle,
   GetGlobalPose( &gpose );
   gpose.a += angle;
   
-  return world->Raytrace2( this, 
+  return world->Raytrace( this, 
 			  &gpose,
 			  range,
 			  func,
@@ -326,7 +326,7 @@ stg_meters_t StgModel::Raytrace( stg_pose_t* pz,
   memcpy( &gpose, pz, sizeof(stg_pose_t) );
   LocalToGlobal( &gpose );
   
-  return world->Raytrace2( this,
+  return world->Raytrace( this,
 			  &gpose,
 			  range,
 			  func,

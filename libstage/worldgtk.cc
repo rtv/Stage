@@ -3,7 +3,7 @@
  Desc: Implements GTK-based GUI for Stage
  Author: Richard Vaughan
 
- CVS: $Id: worldgtk.cc,v 1.1.2.7 2007-10-30 01:01:48 rtv Exp $
+ CVS: $Id: worldgtk.cc,v 1.1.2.8 2007-10-30 04:20:45 rtv Exp $
 ***/
 
 
@@ -1850,7 +1850,13 @@ void StgWorldGtk::Draw()
       glScalef( 1.0/ppm, 1.0/ppm, 0 );
       glPolygonMode( GL_FRONT, GL_LINE );
       colorstack.Push(1,0,0);
-      this->bgrid->Draw();
+      
+      if( show_occupancy )
+	this->bgrid->Draw( false );
+
+      if( show_quadtree )
+	this->bgrid->Draw( true );
+
       colorstack.Pop();
       glPopMatrix();  
 

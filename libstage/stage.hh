@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.9 2007-10-30 01:01:48 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.10 2007-10-30 04:20:45 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -1165,20 +1165,27 @@ public:
 };
 
 
+typedef struct
+{
+  uint16_t counter;
+  GSList** lists;
+} stg_bigblock_t;
+
 class StgBlockGrid 
 {
 private:
-  GSList** lists;
-
+  //GSList** lists;
+  stg_bigblock_t* map;
+  
 public:
-  uint32_t width, height;
+  uint32_t width, height, bwidth, bheight;
   StgBlockGrid( uint32_t width, uint32_t height );
   ~StgBlockGrid();
   void AddBlock( uint32_t x, uint32_t y, StgBlock* block );
   void RemoveBlock( uint32_t x, uint32_t y, StgBlock* block );
   GSList* GetList( uint32_t x, uint32_t y );
   void RemoveBlock( StgBlock* block );
-  void Draw();
+  void Draw( bool drawall );
 };
   
 
@@ -1289,9 +1296,6 @@ public:
   //uint16_t* sparsetable;
 
   void MapBlock( StgBlock* block );
-//   void MapBlockLine( StgBlock* block, 
-// 		     double x1, double y1, double z1,
-// 		     double x2, double y2, double z2 );
   
   stg_meters_t Raytrace( StgModel* finder,
 			 stg_pose_t* pose, 			 
@@ -1300,13 +1304,6 @@ public:
 			 const void* arg,
 			 StgModel** hit_model );
 
-  stg_meters_t Raytrace2( StgModel* finder,
-			 stg_pose_t* pose, 			 
-			 stg_meters_t max_range,
-			 stg_block_match_func_t func,
-			 const void* arg,
-			 StgModel** hit_model );
-			 
   void ClockString( char* str, size_t maxlen );
 
  private:

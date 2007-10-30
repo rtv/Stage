@@ -486,12 +486,12 @@ int raytest( int32_t x, int32_t y, int32_t z,
 }
  
 	    
-stg_meters_t StgWorld::Raytrace2( StgModel* finder,
-				  stg_pose_t* pose,
-				  stg_meters_t max_range,
-				  stg_block_match_func_t func,
-				  const void* arg,
-				  StgModel** hit_model )
+stg_meters_t StgWorld::Raytrace( StgModel* finder,
+				 stg_pose_t* pose,
+				 stg_meters_t max_range,
+				 stg_block_match_func_t func,
+				 const void* arg,
+				 StgModel** hit_model )
 {
   // find the global integer bitmap address of the ray  
   int32_t x = (int32_t)((pose->x+width/2.0)*ppm);
