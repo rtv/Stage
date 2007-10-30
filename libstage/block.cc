@@ -19,18 +19,21 @@ StgBlock::StgBlock( StgModel* mod,
   this->mod = mod;
   this->pt_count = pt_count;
   this->pts = (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t));
-  this->pts_global = (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t));
+  //this->pts_global = (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t));
+  // allocate space for the integer version of the block vertices
+  this->pts_global = new stg_point_int_t[pt_count];
   this->zmin = zmin;
   this->zmax = zmax;
   this->color = color;
   this->inherit_color = inherit_color;
-  this->rendered_cells = NULL;
+  this->rendered_points = g_array_new( FALSE, FALSE, sizeof(stg_point_int_t));
 }
 
 StgBlock::~StgBlock()
 { 
   this->UnMap();
   g_free( pts );
+  g_array_free( rendered_points, TRUE );
 }
 
 void stg_block_list_destroy( GList* list )
@@ -112,24 +115,28 @@ void StgBlock::Map()
 	       mod->Token(),
 	       (int)pt_count );
 
+  double ppm = mod->world->ppm;
+ 
   // update the global coordinate list
   stg_pose_t gpose;
   for( unsigned int p=0; p<pt_count; p++ )
     {
       gpose.x = pts[p].x;
       gpose.y = pts[p].y;
+      //gpose.z = pts[p].z;
       gpose.a = 0.0;
       
       mod->LocalToGlobal( &gpose );
-      
-      pts_global[p].x = gpose.x;
-      pts_global[p].y = gpose.y;
-      
+            
+      pts_global[p].x = (int32_t)floor((gpose.x+mod->world->width/2.0)*ppm);
+      pts_global[p].y = (int32_t)floor((gpose.y+mod->world->height/2.0)*ppm);
+      //pts_global[p].z = gpose.z;
+
       PRINT_DEBUG2("loc [%.2f %.2f]", 
 		   pts[p].x,
  		   pts[p].y );
       
-      PRINT_DEBUG2("glb [%.2f %.2f]", 
+      PRINT_DEBUG2("glb [%d %d]", 
 		   pts_global[p].x,
  		   pts_global[p].y );
     }
@@ -143,15 +150,29 @@ void StgBlock::UnMap()
 		mod->Token(),
 		(int)pt_count);
   
-  // remove this block from each cell in the list      
-  for( GList* it = rendered_cells; it; it = it->next )
-    //((StgCell*)it->data)->RemoveBlock( this );
-    StgCell::RemoveBlock( ((StgCell*)it->data), this );
-  
-  g_list_free( rendered_cells );
-  rendered_cells = NULL;
+  for( unsigned int p=0; p<rendered_points->len; p++ )    
+    {
+      stg_point_int_t* pt = 
+	&g_array_index( rendered_points, stg_point_int_t, p);
+      
+      mod->world->bgrid->RemoveBlock( pt->x, pt->y, this );
+
+    }
+
+  // forget the points we have unrendered (but keep their storage)
+  g_array_set_size( rendered_points,0 );
 }  
-    
+
+void StgBlock::RecordRenderPoint( uint32_t x, uint32_t y )
+{
+  // store this index in the block for later fast deletion
+  stg_point_int_t pt;
+  pt.x = x;
+  pt.y = y;
+  g_array_append_val( rendered_points, pt ); 
+}
+
+
 void stg_block_list_scale( GList* blocks, 
 			   stg_size_t* size )
 {
@@ -222,23 +243,3 @@ void stg_block_list_scale( GList* blocks,
     }
 }
 
-void StgBlock::AddCell( StgCell* cell )
-{ 
-//   printf( "adding cell [%.2f %.2f %d]\n",
-// 	  cell->x,
-// 	  cell->y,
-// 	  (int)g_slist_length( cell->list ) );
-  
-  rendered_cells = g_list_prepend( rendered_cells, cell ); 
-  
-//   for( GList* it = rendered_cells; it; it=it->next )
-//     {
-//       StgCell* c = (StgCell*)it->data;
-//       printf( "[%.2f %.2f %d] ",
-// 	      c->x,
-// 	      c->y,
-// 	      (int)g_slist_length( c->list ) );
-//     }
-
-//   printf( "total %d cells\n", (int)g_list_length( rendered_cells ));
-}

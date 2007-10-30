@@ -9,7 +9,7 @@ CC = g++
 OBS = \
     ancestor.o \
     block.o \
-    cell.o \
+    blockgrid.o \
     gl.o \
     glcolorstack.o \
     logo.o \

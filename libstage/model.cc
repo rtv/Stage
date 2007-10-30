@@ -307,7 +307,7 @@ stg_meters_t StgModel::Raytrace( stg_radians_t angle,
   GetGlobalPose( &gpose );
   gpose.a += angle;
   
-  return world->Raytrace( this, 
+  return world->Raytrace2( this, 
 			  &gpose,
 			  range,
 			  func,
@@ -326,7 +326,7 @@ stg_meters_t StgModel::Raytrace( stg_pose_t* pz,
   memcpy( &gpose, pz, sizeof(stg_pose_t) );
   LocalToGlobal( &gpose );
   
-  return world->Raytrace( this,
+  return world->Raytrace2( this,
 			  &gpose,
 			  range,
 			  func,
@@ -583,8 +583,19 @@ void StgModel::Map()
 {
   //PRINT_DEBUG1( "%s.Map()", token );
 
+  if( this->debug )
+    {
+      double scale = 1.0 / world->ppm;
+      glPushMatrix();
+      glTranslatef( 0,0,1 );
+      glScalef( scale,scale,scale );
+    }
+  
   for( GList* it=blocks; it; it=it->next )
     ((StgBlock*)it->data)->Map();
+
+  if( this->debug )
+    glPopMatrix();
 } 
 
 void StgModel::UnMap()

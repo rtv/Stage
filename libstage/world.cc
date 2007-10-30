@@ -156,11 +156,10 @@ void StgWorld::Initialize( const char* token,
   this->width = width;
   this->height = height;
   this->ppm = ppm; // this is the finest resolution of the matrix
-
-  int32_t dx = (int32_t)(width/2.0 * ppm);
-  int32_t dy = (int32_t)(height/2.0 * ppm);
-  this->root = new StgCell( NULL, -dx, +dx, -dy, +dy );
-
+  
+  this->bgrid = new StgBlockGrid( (uint32_t)(width * ppm),
+				  (uint32_t)(height * ppm) );
+  
   this->total_subs = 0;
   this->paused = false; 
   this->destroy = false;   
@@ -170,9 +169,9 @@ StgWorld::~StgWorld( void )
 {
   PRINT_DEBUG2( "destroying world %d %s", id, token );
   
-  delete root;
   delete wf;
-  
+  delete bgrid;
+
   g_hash_table_destroy( models_by_id );
   g_hash_table_destroy( models_by_name );
   
@@ -247,12 +246,13 @@ void StgWorld::Load( const char* worldfile_path )
   this->height = 
     wf->ReadTupleFloat( entity, "size", 1, this->height ); 
   
-  if( this->root )
-    delete root;
   
-  int32_t dx = (int32_t)(width/2.0 * ppm);
-  int32_t dy = (int32_t)(height/2.0 * ppm);
-  this->root = new StgCell( NULL, -dx, +dx, -dy, +dy );
+  if( this->bgrid )
+    delete bgrid;
+
+  int32_t vwidth = (int32_t)(width * ppm);
+  int32_t vheight = (int32_t)(height * ppm);
+  this->bgrid = new StgBlockGrid( vwidth, vheight );
 
   //_stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
 
@@ -435,264 +435,100 @@ StgModel* StgWorld::GetModel( const stg_id_t id )
   return (StgModel*)g_hash_table_lookup( this->models_by_id, (gpointer)id );
 }
 
-//	itl->a = atan2( b-y, a-x );
-//itl->max_range = hypot( a-x, b-y );       
 
-
-
-// StgModel* StgWorld::TestCandidateList( StgModel* finder, 
-// 				       stg_itl_test_func_t func,
-// 				       stg_meters_t z,
-// 				       GSList* list )
+// int raytest( int x, int y, int z,
+// 	     void* arg1, void* arg2 )
 // {
-//   assert(list);
-  
-//   for( GSList* it = list; it; it=it->next )
-//     {
-//       StgBlock* block = (StgBlock*)it->data;		
-//       StgModel* candidate = block->mod;		
-//       assert( candidate );
-      
-//       //printf( "block of %s\n", candidate->Token() );
-      
-//       stg_pose_t gpose;
-//       candidate->GetGlobalPose( &gpose );
-      
-//       // test to see if the block exists at height z
-//       double block_min = gpose.z + block->zmin;
-//       double block_max = gpose.z + block->zmax;
-      
-//       //printf( "[%.2f %.2f %.2f] %s testing %s (laser return %d)\n",
-//       //      x,y,z,
-//       //      finder->Token(), candidate->Token(), candidate->LaserReturn() );
-      
-      
-//       if( LT(block_min,z) && 
-// 	  GT(block_max,z) && 
-// 	  (*func)( finder, candidate ) )
-// 	return candidate;
-//     }
-
-//   return NULL;
+//   glRecti( x,y, x+1,y+1 );
+//   return FALSE;
 // }
 
-stg_meters_t StgWorld::Raytrace( StgModel* finder,
-				 stg_pose_t* pose,
-				 stg_meters_t max_range,
-				 stg_block_match_func_t func,
-				 const void* arg,
-				 StgModel** hit_model )
+typedef struct
 {
-  const double epsilon = 0.0001;
+  StgWorld* world;
+  StgModel* finder;
+  StgModel* hit;
+  int32_t x, y, z; // leave point
+  stg_block_match_func_t func;
+  const void* arg;
+} _raytrace_info_t;
 
-  double x = pose->x;
-  double y = pose->y;
-  double z = pose->z;
-  double a = NORMALIZE(pose->a);
+int raytest( int32_t x, int32_t y, int32_t z,
+	     _raytrace_info_t* rti )
+{
+  //glRecti( x,y, x+1,y+1 );
 
-  double tana = tan( a );
+   // for each block recorded at his location
+   for( GSList* list = rti->world->bgrid->GetList( x, y );
+        list;
+        list = list->next )
+     {
+       StgBlock* block = (StgBlock*)list->data;       
+       assert( block );
+
+//       // if this block does not belong to the searching model and
+//       // matches the predicate
+       if( block && (block->mod != rti->finder) )// && (*rti->func)( block, rti->arg ) )
+	 {
+ 	  // a hit!
+ 	  rti->hit = block->mod;
+ 	  rti->x = x;
+ 	  rti->y = y;
+ 	  rti->z = z;	  
+ 	  return TRUE;
+ 	}
+     }
   
-  StgCell* cell = root;
-  double range = 0.0;
-
-  StgModel* hit = NULL;
-
-  double p2m = 1.0/ppm;
-
-  while( LT(range,max_range) )
-    {
-      
-      int xpix = (int)floor(x*ppm);
-      int ypix = (int)floor(y*ppm);
-      
-      //printf( "theta %.2f locating cell at (%.2f %.2f) [%d,%d]\n",a, x, y, xpix, ypix );
-
-      // locate the leaf cell at X,Y
-      cell = cell->Locate( xpix, ypix );
-
-      //if( cell ) cell->Print( "Found" );
-
-      // the cell is null iff the point was outside the root
-      if( cell == NULL )
-	{
-	  //printf( "ray at angle %.2f out of bounds at [%.2f, %.2f]",
-	  //  a, x, y );
-
-	  break;
-	}
-
-     //  printf( "found cell (%.2f,%.2f) (%.2f,%.2f)\n",
-// 	      cell->xmin * p2m, 
-// 	      cell->xmax * p2m, 
-// 	      cell->ymin * p2m,
-// 	      cell->ymax * p2m );
-    
-
-      if( finder->debug )
-	{
-	  glPushMatrix();      
-	  glTranslatef( 0,0,1.2 );
-	  glScalef( 1.0/ppm, 1.0/ppm, 0 );	  
-	  PushColor( 1,0,1, 1 );
-	  glPolygonMode( GL_FRONT, GL_LINE );
-	  cell->Draw();
-	  PopColor();
-	  glPopMatrix();
-	}
-      
-      StgBlock* hitblock = cell->FindBlock( func, arg );
-      
-      if( hitblock )
-	{
-	  hit = hitblock->mod;
-	  break;
-	}
-
-      double c = y - tana * x; // line offset
-      
-      double xleave = x;
-      double yleave = y;
-      
-      if( GT(a,0) ) // up
-	{
-	  //puts( "up" );
-
-	  
-	  int yleave_pixel = cell->ymax; // top edge
-
-	  // ray could leave through the top edge
-	  // solve x for known y      
-	  yleave = (double)yleave_pixel * p2m; 
-	  xleave = (yleave - c) / tana;
-	  
-	  int xleave_pixel = floor( xleave * ppm );
-	  
-	  if( xleave_pixel < cell->xmin || 
-	      xleave_pixel >= cell->xmax )
-	    {
-	      // it must have left the cell on the left or right instead 
-	      // solve y for known x
-	      
-	      if( GT(a,M_PI/2.0) ) // left side
-		{
-		  xleave = (cell->xmin*p2m)-epsilon;
-		}
-	      else // right side
-		{
-		  xleave = cell->xmax*p2m +epsilon;
-		}
-	      
-	      yleave = tana * xleave + c;
-	    }
-	}	 
-      else 
-	{
-	  //puts( "down" );
-	  
-	  int yleave_pixel = cell->ymin; // bottom edge
-
-	  // ray could leave through the bottom edge
-	  // solve x for known y      
-	  yleave = (double)yleave_pixel * p2m;
-	  xleave = (yleave - c) / tana;
-
-	  int xleave_pixel = floor( xleave * ppm );
-	  
-
-// 	  printf( "test leave (%.2f %.2f) %d [%d %d] %d %d %d\n", 
-// 		  xleave, 
-// 		  yleave,
-// 		  xleave_pixel,
-// 		  cell->xmin,
-// 		  cell->xmax,
-// 		  xleave_pixel < cell->xmin,
-// 		  xleave_pixel >= cell->xmax,
-// 		  xleave_pixel < cell->xmin ||
-// 		  xleave_pixel >= cell->xmax 		  
-// 	  );
-	  
-	  // if the edge crossing was not in cell bounds     
-	  //if( !( GTE(xleave,cell->xmin*p2m) && LT(xleave,cell->xmax*p2m)))
-	  if( xleave_pixel < cell->xmin || 
-	      xleave_pixel >= cell->xmax )
-	    {
-	      //	      puts( "L or R" );
-
-	      // it must have left the cell on the left or right instead 
-	      // solve y for known x	  
-	      if( LT(a,-M_PI/2.0) ) // left side
-		{
-		  //puts( "L" );
-		  xleave = (cell->xmin*p2m)-epsilon;
-		}
-	      else
-		{
-		  //puts(  "R" );
-		  xleave = cell->xmax*p2m+epsilon;
-		}
-	      
-	      yleave = tana * xleave + c;
-	    }
-	  else
-	    {
-	      yleave-=epsilon;
-	      //printf( "left through bottom edge\n" );
-	    }
-	}
-
-      //cell->Print( NULL );
-      //printf( "leave at (%.2f %.2f)\n", hypot( yleave - y, xleave - x ), range );
-      //printf( "leave at (%.2f %.2f)\n", xleave, yleave );
-      
-      // jump to the leave point
-      range += hypot( yleave - y, xleave - x );
-      
-      if( finder->debug )
-	{
-	  PushColor( 0,0,0, 0.2 );
-	  glBegin( GL_LINES );
-	  glVertex3f( x,y, z );
-	  glVertex3f( xleave, yleave, z );
-	  glEnd();
-	  PopColor();
-
-	  glPointSize( 4 );
-
-	  PushColor( 1,0,0, 1 );
-	  glBegin( GL_POINTS );
-	  glVertex3f( x,y, z );
-	  glEnd();
-
-	  PushColor( 0,1,0, 1 );
-	  glBegin( GL_POINTS );
-	  glVertex3f( xleave, yleave, z );
-	  glEnd();
-	  PopColor();
-
-	  glPointSize( 1 );
-	}
-
-      x = xleave;
-      y = yleave;      
-    }
-  
-//   if( hit )
-//     printf( "HIT %s at [%.2f %.2f %.2f] range %.2f\n",
-// 	    hit->Token(),
-// 	    x,y,z, range );
-//   else
-//     printf( "no hit at range %.2f\n", range );
-  
-  // if the caller supplied a place to store the hit model pointer,
-  // give it to 'em.
-  if( hit_model )
-    *hit_model = hit;
-  
-
-  // return the range
-  return MIN( range, max_range );
+  return FALSE;  
 }
+ 
+	    
+stg_meters_t StgWorld::Raytrace2( StgModel* finder,
+				  stg_pose_t* pose,
+				  stg_meters_t max_range,
+				  stg_block_match_func_t func,
+				  const void* arg,
+				  StgModel** hit_model )
+{
+  // find the global integer bitmap address of the ray  
+  int32_t x = (int32_t)((pose->x+width/2.0)*ppm);
+  int32_t y = (int32_t)((pose->y+height/2.0)*ppm);
+  
+  // and the x and y offsets of the ray
+  int32_t dx = (int32_t)(ppm*max_range * cos(pose->a));
+  int32_t dy = (int32_t)(ppm*max_range * sin(pose->a));
+  
+  //glPushMatrix();
+  //glTranslatef( -width/2.0, -height/2.0, 0 );
+  //glScalef( 1.0/ppm, 1.0/ppm, 0 );
+	   
+  _raytrace_info_t rinfo;
+  rinfo.world = this;
+  rinfo.finder = finder;
+  rinfo.func = func;
+  rinfo.arg = arg;
+  rinfo.hit = NULL;
+  
+  if( stg_line_3d( x, y, 0, 
+   		   dx, dy, 0,
+   		   (stg_line3d_func_t)raytest,
+   		   &rinfo ) )
+    {
+      //glPopMatrix();      
 
+      *hit_model = rinfo.hit;
+
+      // how far away was that strike?
+      return hypot( (rinfo.x-x)/ppm, (rinfo.y-y)/ppm );
+    }
+
+
+  //glPopMatrix();
+  // return the range from ray start to object strike
+  
+  // hit nothing, so return max range
+  return max_range;
+}
 
 
 void stg_model_save_cb( gpointer key, gpointer data, gpointer user )
@@ -734,106 +570,108 @@ void StgWorld::StopUpdatingModel( StgModel* mod )
   this->update_list = g_list_remove( this->update_list, mod ); 
 }
 
+
+void draw_voxel( int x, int y, int z )
+{
+  glTranslatef( x,y,z );
+  
+  glBegin(GL_QUADS);		// Draw The Cube Using quads
+    glColor3f(0.0f,1.0f,0.0f);	// Color Blue
+    glVertex3f( 1.0f, 1.0f,-1.0f);	// Top Right Of The Quad (Top)
+    glVertex3f(-1.0f, 1.0f,-1.0f);	// Top Left Of The Quad (Top)
+    glVertex3f(-1.0f, 1.0f, 1.0f);	// Bottom Left Of The Quad (Top)
+    glVertex3f( 1.0f, 1.0f, 1.0f);	// Bottom Right Of The Quad (Top)
+    glColor3f(1.0f,0.5f,0.0f);	// Color Orange
+    glVertex3f( 1.0f,-1.0f, 1.0f);	// Top Right Of The Quad (Bottom)
+    glVertex3f(-1.0f,-1.0f, 1.0f);	// Top Left Of The Quad (Bottom)
+    glVertex3f(-1.0f,-1.0f,-1.0f);	// Bottom Left Of The Quad (Bottom)
+    glVertex3f( 1.0f,-1.0f,-1.0f);	// Bottom Right Of The Quad (Bottom)
+    glColor3f(1.0f,0.0f,0.0f);	// Color Red	
+    glVertex3f( 1.0f, 1.0f, 1.0f);	// Top Right Of The Quad (Front)
+    glVertex3f(-1.0f, 1.0f, 1.0f);	// Top Left Of The Quad (Front)
+    glVertex3f(-1.0f,-1.0f, 1.0f);	// Bottom Left Of The Quad (Front)
+    glVertex3f( 1.0f,-1.0f, 1.0f);	// Bottom Right Of The Quad (Front)
+    glColor3f(1.0f,1.0f,0.0f);	// Color Yellow
+    glVertex3f( 1.0f,-1.0f,-1.0f);	// Top Right Of The Quad (Back)
+    glVertex3f(-1.0f,-1.0f,-1.0f);	// Top Left Of The Quad (Back)
+    glVertex3f(-1.0f, 1.0f,-1.0f);	// Bottom Left Of The Quad (Back)
+    glVertex3f( 1.0f, 1.0f,-1.0f);	// Bottom Right Of The Quad (Back)
+    glColor3f(0.0f,0.0f,1.0f);	// Color Blue
+    glVertex3f(-1.0f, 1.0f, 1.0f);	// Top Right Of The Quad (Left)
+    glVertex3f(-1.0f, 1.0f,-1.0f);	// Top Left Of The Quad (Left)
+    glVertex3f(-1.0f,-1.0f,-1.0f);	// Bottom Left Of The Quad (Left)
+    glVertex3f(-1.0f,-1.0f, 1.0f);	// Bottom Right Of The Quad (Left)
+    glColor3f(1.0f,0.0f,1.0f);	// Color Violet
+    glVertex3f( 1.0f, 1.0f,-1.0f);	// Top Right Of The Quad (Right)
+    glVertex3f( 1.0f, 1.0f, 1.0f);	// Top Left Of The Quad (Right)
+    glVertex3f( 1.0f,-1.0f, 1.0f);	// Bottom Left Of The Quad (Right)
+    glVertex3f( 1.0f,-1.0f,-1.0f);	// Bottom Right Of The Quad (Right)
+  glEnd();			// End Drawing The Cube
+
+  glTranslatef( -x, -y, -z );
+}
+
+
+
+// int stg_hash3d( int x, int y, int z )
+// {
+//   return (x+y+z);
+// }
+
+
+void StgWorld::MetersToPixels( stg_meters_t mx, stg_meters_t my, 
+			       int32_t *px, int32_t *py )
+{
+  *px = (int32_t)floor((mx+width/2.0) * ppm);
+  *py = (int32_t)floor((my+height/2.0) * ppm);
+}
+
+typedef struct
+{
+  StgBlockGrid* grid;
+  StgBlock* block;
+} _render_info_t;
+
+int stg_add_block_to_grid( int x, int y, int z,
+			   _render_info_t* rinfo )
+{
+  rinfo->grid->AddBlock( x, y, rinfo->block );
+  return FALSE;
+}
+
+
 void StgWorld::MapBlock( StgBlock* block )
 {
-  stg_point_t* pts = block->pts_global;
+  stg_point_int_t* pts = block->pts_global;
   unsigned int pt_count = block->pt_count;
   
   assert( pt_count >=2 );
   
-  for( unsigned int p=0; p<pt_count-1; p++ )
-    MapBlockLine( block, 
-		  pts[p].x, pts[p].y,
-		  pts[p+1].x, pts[p+1].y );
-  
-  // close the loop
-  MapBlockLine( block, 
-		pts[0].x, pts[0].y,
-		pts[pt_count-1].x, pts[pt_count-1].y );
-}
+  _render_info_t rinfo;
+  rinfo.grid = bgrid;
+  rinfo.block - block;
 
-
-
-StgCell* myPixel( StgCell* cell, StgBlock* block, long int x, long int y) 
-{
-  StgCell* found = cell->LocateAtom( x, y );
-  
-  if( found ) 
+  // TODO - could be a little bit faster - currently considers each
+  // vertex twice
+  for( unsigned int p=0; p<pt_count; p++ )
     {
-      found->AddBlock( block );  
-      cell = found;
+      int32_t x = pts[p].x; // line start
+      int32_t y = pts[p].y; // line end
+      
+      int32_t dx = pts[(p+1)%pt_count].x - x;
+      int32_t dy = pts[(p+1)%pt_count].y - y;
+
+      
+      // pass this structure into our per-pixel callback
+      _render_info_t rinfo;
+      rinfo.grid = bgrid;
+      rinfo.block = block;
+      
+      // ignore return value
+      stg_line_3d( x, y, 0,
+		   dx, dy, 0,
+		   (stg_line3d_func_t)stg_add_block_to_grid, 
+		   &rinfo );
     }
-    
-  return cell;
-}
-
-
-void StgWorld::MapBlockLine( StgBlock* block, 
-			     double mx1, double my1, 
-			     double mx2, double my2 )
-{
-  //int32_t x1 = (int32_t)(mx1 * ppm - 0.5);
-  //int32_t x2 = (int32_t)(mx2 * ppm - 0.5);
-  //int32_t y1 = (int32_t)(my1 * ppm - 0.5);
-  //int32_t y2 = (int32_t)(my2 * ppm - 0.5);
-
-  int x1 = (int)floor(mx1 * ppm);
-  int x2 = (int)floor(mx2 * ppm);
-  int y1 = (int)floor(my1 * ppm);
-  int y2 = (int)floor(my2 * ppm);
-  
-  StgCell* cell = root;
-
-  //cell = myPixel( cell, block, x1, y1 );
-
-  // Extremely Fast Line Algorithm Var A (Division)
-  // Copyright 2001-2, By Po-Han Lin
-  
-  // Freely useable in non-commercial applications as long as credits 
-  // to Po-Han Lin and link to http://www.edepot.com is provided in 
-  // source code and can been seen in compiled executable.  
-  // Commercial applications please inquire about licensing the algorithms.
-  //
-  // Lastest version at http://www.edepot.com/phl.html
-  
-  // constant string will appear in executable
-  const char* EFLA_CREDIT = 
-    "Contains an implementation of the Extremely Fast Line Algorithm (EFLA)"
-    "by Po-Han Lin (http://www.edepot.com/phl.html)";
-  char* dummy = (char*)EFLA_CREDIT; // prevents compiler warning about unused var
-  dummy++; // ditto
-
-  bool yLonger=false;
-  int incrementVal;
-  
-  int shortLen = y2-y1;
-  int longLen = x2-x1;
-  if( abs(shortLen) > abs(longLen) ) 
-    {
-      int swap=shortLen;
-      shortLen=longLen;
-      longLen=swap;
-      yLonger=true;
-    }
-  
-  if( longLen<0 ) 
-    incrementVal=-1;
-  else 
-    incrementVal=1;
-  
-  double divDiff;
-  if( shortLen == 0 ) 
-    divDiff=longLen;
-  else 
-    divDiff=(double)longLen/(double)shortLen;
-  
-  if (yLonger)
-    for (int i=0;i!=longLen;i+=incrementVal) 
-      cell = myPixel( cell, block, x1+(int)((double)i/divDiff),y1+i);
-  else
-    for (int i=0;i!=longLen;i+=incrementVal) 
-      cell = myPixel( cell, block, x1+i,y1+(int)((double)i/divDiff));
-
-  // END OF EFLA code
 }
 

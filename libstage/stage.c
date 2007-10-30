@@ -38,30 +38,59 @@ const char* stg_version_string( void )
   return VERSION;
 }
 
-/* const char* stg_model_type_string( stg_model_type_t type ) */
-/* { */
-/*   switch( type ) */
-/*     { */
-/*     case STG_MODEL_BASIC: return "model"; */
-/*     case STG_MODEL_LASER: return "laser"; */
-/*     case STG_MODEL_POSITION: return "position"; */
-/*     case STG_MODEL_BLOB: return "blobfinder"; */
-/*     case STG_MODEL_FIDUCIAL: return "fiducial"; */
-/*     case STG_MODEL_RANGER: return "ranger"; */
-/*       //case STG_MODEL_TEST: return "test"; */
-/*     case STG_MODEL_GRIPPER: return "gripper"; */
-/*     default: */
-/*       break; */
-/*     }   */
-/*   return "<unknown type>"; */
-/* } */
-
 void stg_print_err( const char* err )
 {
   printf( "Stage error: %s\n", err );
   _stg_quit = TRUE;
 }
 
+
+/** Visit every voxel along a vector from (x,y,z) to (x+dx, y+dy, z+dz).
+    Call the function for every voxel, passing in the current voxel
+    coordinates followed by the two arguments. Adapted from Graphics
+    Gems IV, algorithm by Cohen & Kaufman 1991 */
+int stg_line_3d( int32_t x, int32_t y, int32_t z,
+		 int32_t dx, int32_t dy, int32_t dz,
+		 stg_line3d_func_t visit_voxel,
+		 void* arg )
+{
+  int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;
+  
+  sx = SGN(dx);  sy = SGN(dy);  sz = SGN(dz);
+  ax = abs(dx);  ay = abs(dy);  az = abs(dz);
+  bx = 2*ax;	   by = 2*ay;	  bz = 2*az;
+  exy = ay-ax;   exz = az-ax;	  ezy = ay-az;
+  n = ax+ay+az;
+  while ( n-- ) {
+    if((*visit_voxel)( x, y, z, arg ) )
+      {
+	return TRUE; // hit something!
+      }
+
+    if ( exy < 0 ) {
+      if ( exz < 0 ) {
+	x += sx;
+	exy += by; exz += bz;
+      }
+      else  {
+	z += sz;
+	exz -= bx; ezy += by;
+      }
+    }
+    else {
+      if ( ezy < 0 ) {
+	z += sz;
+	exz -= bx; ezy += by;
+      }
+      else  {
+	y += sy;
+	exy -= bx; ezy -= bz;
+      }
+    }
+  }
+
+  return FALSE; // hit nothing (leave vars not set)
+}
 
 void stg_print_geom( stg_geom_t* geom )
 {
