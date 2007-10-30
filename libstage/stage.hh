@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.10 2007-10-30 04:20:45 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.11 2007-10-30 07:30:01 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -1174,9 +1174,10 @@ typedef struct
 class StgBlockGrid 
 {
 private:
-  //GSList** lists;
   stg_bigblock_t* map;
   
+  GTrashStack* trashstack;
+
 public:
   uint32_t width, height, bwidth, bheight;
   StgBlockGrid( uint32_t width, uint32_t height );

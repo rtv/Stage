@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.9 2007-10-30 01:22:44 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.10 2007-10-30 07:30:01 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -70,21 +70,23 @@ int main( int argc, char* argv[] )
    //StgModelPosition* position = (StgModelPosition*)world.GetModel( "MyWorld:0.model:1" );
    //assert(position);
 
-   StgModelLaser* laser0 = (StgModelLaser*)world.GetModel( "MyWorld:0.model:1.laser:0" );
-   StgModelLaser* laser1 = (StgModelLaser*)world.GetModel( "MyWorld:0.model:2.laser:0" );
-   StgModelLaser* laser2 = (StgModelLaser*)world.GetModel( "MyWorld:0.model:3.laser:0" );
-   StgModelLaser* laser3 = (StgModelLaser*)world.GetModel( "MyWorld:0.model:4.laser:0" );
-   //   assert(laser);
+   char namebuf[256];
+   StgModelLaser* lasers[200];
+
+   for( int i=1; i<10; i++ )
+     {
+       sprintf( namebuf, "MyWorld:0.model:%d.laser:0", i );
+       lasers[i] = (StgModelLaser*)world.GetModel( namebuf );
+       assert(lasers[i]);
+       lasers[i]->Subscribe();
+     }
 
 //   StgModelRanger* ranger = (StgModelRanger*)world.GetModel( rangername );
 //   assert(ranger);
 
 //   // subscribe to the laser - starts it collecting data
 //   position->Subscribe();
-   laser0->Subscribe();
-   laser1->Subscribe();
-   laser2->Subscribe();
-   laser3->Subscribe();
+
 //   ranger->Subscribe();
 
   //position->Print( "Subscribed to model" );
