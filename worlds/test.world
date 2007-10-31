@@ -21,11 +21,15 @@ window
   scale 30.806 
   #show_bboxes 0
   #show_grid 1
+
+  redraw_interval 10
 )
 
 include "map.inc"
 
+
 include "sick.inc"
+
 
 
 floorplan
@@ -41,7 +45,7 @@ define grobot model
 
   size [0.5 0.5 0.3]
 
-  velocity [0 0 0 20]
+  velocity [0 0 0 0]
   
   color "red"
 
@@ -143,16 +147,16 @@ define grobot model
 )
 
 
-define robot model
+define robot position
 ( 
-  debug 1
+  debug 0
 
   #fancy_sick_laser( samples 361 )
-  laser( samples 361 debug 0 pose [0.500 0.000 0.000 0.000 ] )  
+  laser( samples 180 debug 0 pose [0.00 0.000 0.000 0.000 ] )  
 
   size [0.5 0.5 0.3]
 
-  velocity [0 0 0 10]
+  velocity [0 0 0 0]
   
   color "red"
 )
@@ -160,19 +164,19 @@ define robot model
 define blubot robot
 ( color "purple" )
 
-blubot( pose [ 1.946 -6.796 0.000 -114.000 ] )
-blubot( pose [ 4.090 -3.116 0.000 -114.000 ] )
-blubot( pose [ -7.141 -4.317 0.000 -114.000 ] )
-blubot( pose [ -7.466 -5.389 0.000 -114.000 ] )
+blubot( name "han" pose [ 1.946 -6.796 0.000 -30.510 ] )
+#blubot( pose [ 4.090 -3.116 0.000 -132.679 ] )
+#blubot( pose [ -7.141 -4.317 0.000 -124.084 ] )
+#blubot( pose [ -7.466 -5.389 0.000 -132.679 ] )
+#blubot( pose [ -1.555 6.742 0.000 -56.293 ] )
+#blubot( pose [ 0.452 6.796 0.000 21.056 ] )
+#blubot( pose [ 1.609 6.634 0.000 3.868 ] )
+#blubot( pose [ -5.513 -5.640 0.000 64.028 ] )
+#blubot( pose [ -5.947 -6.724 0.000 21.056 ] )
+#blubot( pose [ -3.886 -6.037 0.000 -106.896 ] )
+#blubot( pose [ 2.404 6.995 0.000 -124.084 ] )
+#blubot( pose [ 3.543 5.549 0.000 55.434 ] )
 
-#blubot( pose [ -1.555 6.742 0.000 -114.000 ] )
-#blubot( pose [ 0.452 6.796 0.000 -114.000 ] )
-#blubot( pose [ 1.609 6.634 0.000 -114.000 ] )
-#blubot( pose [ -5.513 -5.640 0.000 -114.000 ] )
-#blubot( pose [ -5.947 -6.724 0.000 -114.000 ] )
-#blubot( pose [ -3.886 -6.037 0.000 -114.000 ] )
-#blubot( pose [ 2.404 6.995 0.000 -114.000 ] )
-#blubot( pose [ 3.543 5.549 0.000 -114.000 ] )
 #blubot( pose [ 4.067 6.489 0.000 -114.000 ] )
 #blubot( pose [ 4.302 7.429 0.000 -114.000 ] )
 #blubot( pose [ 6.019 7.574 0.000 -114.000 ] )
@@ -364,19 +368,20 @@ blubot( pose [ -7.466 -5.389 0.000 -114.000 ] )
 #robot( pose [-4.012 4.975 0.000 -114.000] )
 #robot( pose [-5.562 2.462 0.000 -114.000] )
 
-model
-( 
-  pose [3.539 0.693 0.000 0.000]
-  color "green"
-)
-model
-( 
-  pose [3.496 4.521 0.000 0.000]
-  color "blue"
-)
+#model
+#( 
+#  pose [3.539 0.693 0.000 0.000]
+#  color "green"
+#)
 
-model
-(
-  pose [6.000 0.000 0.000 0.000]
- color "purple"
-)
+#model
+#( 
+#  pose [3.496 4.521 0.000 0.000]
+#  color "blue"
+#)
+
+#model
+#(
+#  pose [6.000 0.000 0.000 0.000]
+# color "purple"
+#)

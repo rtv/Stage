@@ -55,7 +55,7 @@ described on the manual page for each model type.
 #include <string.h> // for strdup(3)
 #include <locale.h> 
 
-#define DEBUG 
+//#define DEBUG 
 
 #include "stage.hh"
 
@@ -407,6 +407,10 @@ void StgWorld::AddModel( StgModel*  mod  )
   g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
 }
 
+void StgWorld::AddModelName( StgModel* mod )
+{
+  g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );    
+}
 
 // void stg_world_print( StgWorld* world )
 // {
@@ -431,61 +435,109 @@ StgModel* StgWorld::GetModel( const char* name )
 
 StgModel* StgWorld::GetModel( const stg_id_t id )
 {
-  //printf( "looking up model name %s in models_by_name\n", name );
+  //printf( "looking up model id %d in models_by_id\n", id );
   return (StgModel*)g_hash_table_lookup( this->models_by_id, (gpointer)id );
 }
 
+//#define NBITS 6
 
-// int raytest( int x, int y, int z,
-// 	     void* arg1, void* arg2 )
+// int bigtest( int x, int y, int z,
+//  	     void* arg1, void* arg2 )
 // {
-//   glRecti( x,y, x+1,y+1 );
+//   glRecti( x<<NBITS,y<<NBITS, (x+1)<<NBITS,(y+1)<<NBITS );
 //   return FALSE;
 // }
 
-typedef struct
-{
-  StgWorld* world;
-  StgModel* finder;
-  StgModel* hit;
-  int32_t x, y, z; // leave point
-  stg_block_match_func_t func;
-  const void* arg;
-} _raytrace_info_t;
+// typedef struct
+// {
+//   StgWorld* world;
+//   StgModel* finder;
+//   StgModel* hit;
+//   int32_t x, y, z; // leave point
+//   stg_block_match_func_t func;
+//   const void* arg;
+// } _raytrace_info_t;
 
-int raytest( int32_t x, int32_t y, int32_t z,
-	     _raytrace_info_t* rti )
-{
-  //glRecti( x,y, x+1,y+1 );
+// int raytest( int32_t x, int32_t y, int32_t z,
+// 	     _raytrace_info_t* rti )
+// {
+//   //glRecti( x,y, x+1,y+1 );
 
-   // for each block recorded at his location
-   for( GSList* list = rti->world->bgrid->GetList( x, y );
-        list;
-        list = list->next )
-     {
-       StgBlock* block = (StgBlock*)list->data;       
-       assert( block );
+//    // for each block recorded at his location
+//    for( GSList* list = rti->world->bgrid->GetList( x, y );
+//         list;
+//         list = list->next )
+//      {
+//        StgBlock* block = (StgBlock*)list->data;       
+//        assert( block );
        
-       // if this block does not belong to the searching model and it
-       // matches the predicate and it's in the right z range
-       if( block && (block->mod != rti->finder) && 
-	   (*rti->func)( block, rti->arg ) )//&&
-	 //z >= block->zmin &&
-	 // z < block->zmax )	 
-	 {
- 	  // a hit!
- 	  rti->hit = block->mod;
- 	  rti->x = x;
- 	  rti->y = y;
- 	  rti->z = z;	  
- 	  return TRUE;
- 	}
-     }
+//        // if this block does not belong to the searching model and it
+//        // matches the predicate and it's in the right z range
+//        if( block && (block->mod != rti->finder) && 
+// 	   (*rti->func)( block, rti->arg ) )//&&
+// 	 //z >= block->zmin &&
+// 	 // z < block->zmax )	 
+// 	 {
+//  	  // a hit!
+//  	  rti->hit = block->mod;
+//  	  rti->x = x;
+//  	  rti->y = y;
+//  	  rti->z = z;	  
+//  	  return TRUE;
+//  	}
+//      }
   
-  return FALSE;  
-}
+//   return FALSE;  
+// }
  
 	    
+// stg_meters_t StgWorld::Raytrace( StgModel* finder,
+// 				 stg_pose_t* pose,
+// 				 stg_meters_t max_range,
+// 				 stg_block_match_func_t func,
+// 				 const void* arg,
+// 				 StgModel** hit_model )
+// {
+//   // find the global integer bitmap address of the ray  
+//   int32_t x = (int32_t)((pose->x+width/2.0)*ppm);
+//   int32_t y = (int32_t)((pose->y+height/2.0)*ppm);
+  
+//   // and the x and y offsets of the ray
+//   int32_t dx = (int32_t)(ppm*max_range * cos(pose->a));
+//   int32_t dy = (int32_t)(ppm*max_range * sin(pose->a));
+  
+//   glPushMatrix();
+//   glTranslatef( -width/2.0, -height/2.0, 0 );
+//   glScalef( 1.0/ppm, 1.0/ppm, 0 );
+	   
+//   _raytrace_info_t rinfo;
+//   rinfo.world = this;
+//   rinfo.finder = finder;
+//   rinfo.func = func;
+//   rinfo.arg = arg;
+//   rinfo.hit = NULL;
+  
+//   if( stg_line_3d( x, y, 0, 
+//    		   dx, dy, 0,
+//    		   (stg_line3d_func_t)raytest,
+//    		   &rinfo ) )
+//     {
+//       glPopMatrix();      
+
+//       *hit_model = rinfo.hit;
+
+//       // how far away was that strike?
+//       return hypot( (rinfo.x-x)/ppm, (rinfo.y-y)/ppm );
+//     }
+
+
+//   glPopMatrix();
+//   // return the range from ray start to object strike
+  
+//   // hit nothing, so return max range
+//   return max_range;
+// }
+
 stg_meters_t StgWorld::Raytrace( StgModel* finder,
 				 stg_pose_t* pose,
 				 stg_meters_t max_range,
@@ -496,43 +548,81 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
   // find the global integer bitmap address of the ray  
   int32_t x = (int32_t)((pose->x+width/2.0)*ppm);
   int32_t y = (int32_t)((pose->y+height/2.0)*ppm);
-  
+  int32_t z = 0;
+
+  int32_t xstart = x;
+  int32_t ystart = y;
+
   // and the x and y offsets of the ray
   int32_t dx = (int32_t)(ppm*max_range * cos(pose->a));
   int32_t dy = (int32_t)(ppm*max_range * sin(pose->a));
-  
-  //glPushMatrix();
-  //glTranslatef( -width/2.0, -height/2.0, 0 );
-  //glScalef( 1.0/ppm, 1.0/ppm, 0 );
+  int32_t dz = 0;
+
+ //  glPushMatrix();
+//   glTranslatef( -width/2.0, -height/2.0, 0 );
+//   glScalef( 1.0/ppm, 1.0/ppm, 0 );
 	   
-  _raytrace_info_t rinfo;
-  rinfo.world = this;
-  rinfo.finder = finder;
-  rinfo.func = func;
-  rinfo.arg = arg;
-  rinfo.hit = NULL;
-  
-  if( stg_line_3d( x, y, 0, 
-   		   dx, dy, 0,
-   		   (stg_line3d_func_t)raytest,
-   		   &rinfo ) )
-    {
-      //glPopMatrix();      
+  // line 3d algorithm adapted from Cohen's code from Graphics Gems IV
+  int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;  
+  sx = SGN(dx);  sy = SGN(dy);  sz = SGN(dz);
+  ax = abs(dx);  ay = abs(dy);  az = abs(dz);
+  bx = 2*ax;	 by = 2*ay;	bz = 2*az;
+  exy = ay-ax;   exz = az-ax;	ezy = ay-az;
+  n = ax+ay+az;
 
-      *hit_model = rinfo.hit;
-
-      // how far away was that strike?
-      return hypot( (rinfo.x-x)/ppm, (rinfo.y-y)/ppm );
+  while ( n-- ) 
+    {          
+      for( GSList* list = bgrid->GetList( x, y );
+	   list;
+	   list = list->next )
+	{
+	  StgBlock* block = (StgBlock*)list->data;       
+	  assert( block );
+	  
+	  // if this block does not belong to the searching model and it
+	  // matches the predicate and it's in the right z range
+	  if( block && (block->mod != finder) && 
+	      (*func)( block, arg ) &&
+	      pose->z >= block->zmin &&
+	      pose->z < block->zmax )	 
+	    {
+	      // a hit!
+	      //glPopMatrix();      	      
+	      
+	      *hit_model = block->mod;	      
+	      // how far away was that strike?
+	      return hypot( (x-xstart)/ppm, (y-ystart)/ppm );
+	    }
+	}
+      
+      if ( exy < 0 ) {
+	if ( exz < 0 ) {
+	  x += sx;
+	  exy += by; exz += bz;
+	}
+	else  {
+	  z += sz;
+	  exz -= bx; ezy += by;
+	}
+      }
+      else {
+	if ( ezy < 0 ) {
+	  z += sz;
+	  exz -= bx; ezy += by;
+	}
+	else  {
+	  y += sy;
+	  exy -= bx; ezy -= bz;
+	}
+      }
     }
-
-
+  
   //glPopMatrix();
   // return the range from ray start to object strike
   
   // hit nothing, so return max range
   return max_range;
 }
-
 
 void stg_model_save_cb( gpointer key, gpointer data, gpointer user )
 {

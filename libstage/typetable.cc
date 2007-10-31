@@ -7,6 +7,7 @@
 stg_typetable_entry_t typetable[] = {
   { "model",     StgModel::Create },
   { "laser",     StgModelLaser::Create },
+  { "position",  StgModelPosition::Create },
   { NULL, NULL } // this must be the last entry
 };
 

@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.7 $
+ //  $Revision: 1.1.2.8 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -292,14 +292,21 @@ void StgModelLaser::Print( char* prefix )
     
   printf( "\tRanges[ " );
   
-  for( unsigned int i=0; i<sample_count; i++ )
-    printf( "%.2f ", samples[i].range );
+  if( samples )
+    for( unsigned int i=0; i<sample_count; i++ )
+      printf( "%.2f ", samples[i].range );
+  else
+    printf( "<none until subscribed>" );
   puts( " ]" );
 
   printf( "\tReflectance[ " );
   
-  for( unsigned int i=0; i<sample_count; i++ )
-    printf( "%.2f ", samples[i].reflectance );
+  if( samples )
+    for( unsigned int i=0; i<sample_count; i++ )
+      printf( "%.2f ", samples[i].reflectance );
+  else
+    printf( "<none until subscribed>" );
+    
   puts( " ]" );
 }
 

@@ -115,7 +115,6 @@ model
 #include <glib.h>
 
 //#define DEBUG
-
 #include "stage.hh"
 
 // basic model
@@ -917,8 +916,8 @@ void StgModel::GPoseDirtyTree( void )
 
 void StgModel::SetPose( stg_pose_t* pose )
 {
-  PRINT_DEBUG5( "%s.SetPose(%.2f %.2f %.2f %.2f)", 
-		this->token, pose->x, pose->y, pose->z, pose->a ); 
+  //PRINT_DEBUG5( "%s.SetPose(%.2f %.2f %.2f %.2f)", 
+  //	this->token, pose->x, pose->y, pose->z, pose->a ); 
   
   assert(pose);
 

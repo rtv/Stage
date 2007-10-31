@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.11 2007-10-30 07:30:01 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.12 2007-10-31 03:55:11 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -1167,7 +1167,7 @@ public:
 
 typedef struct
 {
-  uint16_t counter;
+  uint32_t counter;
   GSList** lists;
 } stg_bigblock_t;
 
@@ -1187,6 +1187,10 @@ public:
   GSList* GetList( uint32_t x, uint32_t y );
   void RemoveBlock( StgBlock* block );
   void Draw( bool drawall );
+  
+  /** Returns the number of blocks occupying the big block, specified
+      in big block coordinates, NOT in small blocks.*/
+  uint32_t BigBlockOccupancy( uint32_t bbx, uint32_t bby );
 };
   
 
@@ -1282,7 +1286,8 @@ public:
   
   void AddModel( StgModel* mod );
   void RemoveModel( StgModel* mod );
-  
+  void AddModelName( StgModel* mod );  
+
   void StartUpdatingModel( StgModel* mod );
   void StopUpdatingModel( StgModel* mod );
   
@@ -1865,6 +1870,9 @@ private:
   int beginX, beginY;
   
 private:
+  stg_msec_t redraw_interval;
+  guint timer_handle;
+
   bool follow_selection;
 
   bool show_quadtree;  
@@ -2102,10 +2110,10 @@ public:
     ~StgModelLaser( void );
     
     stg_laser_sample_t* samples;
-    size_t sample_count;
+    uint32_t sample_count;
     stg_meters_t range_min, range_max;
     stg_radians_t fov;
-    unsigned int resolution;
+    uint32_t resolution;
     
     virtual void Startup( void );
     virtual void Shutdown( void );
@@ -2418,7 +2426,18 @@ public:
       velocities. If control_mode == STG_POSITION_CONTROL_POSITION,
       [x,y,a] defines a 2D position and heading goal to achieve. */
   void Do( double x, double y, double a ) 
-  { goal.x = x; goal.y = y; goal.a = a; }
+  { goal.x = x; goal.y = y; goal.a = a; }  
+
+  // static wrapper for the constructor - all models must implement
+  // this method and add an entry in typetable.cc
+  static StgModel* Create( StgWorld* world,
+			   StgModel* parent, 
+			   stg_id_t id, 
+			   char* typestr )
+  { 
+    return (StgModel*)new StgModelPosition( world, parent, id, typestr ); 
+  }    
+
 };
 
 

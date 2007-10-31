@@ -17,6 +17,7 @@ OBS = \
     model_callbacks.o \
     model_laser.o \
     model_load.o \
+    model_position.o \
     model_props.o \
     stage.o \
     stest.o \

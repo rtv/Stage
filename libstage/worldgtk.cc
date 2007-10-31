@@ -3,7 +3,7 @@
  Desc: Implements GTK-based GUI for Stage
  Author: Richard Vaughan
 
- CVS: $Id: worldgtk.cc,v 1.1.2.8 2007-10-30 04:20:45 rtv Exp $
+ CVS: $Id: worldgtk.cc,v 1.1.2.9 2007-10-31 03:55:11 rtv Exp $
 ***/
 
 
@@ -662,6 +662,9 @@ StgWorldGtk::StgWorldGtk()
   sphi = 0.0;
   stheta = 0.0;
 
+  this->timer_handle = 0;
+  this->redraw_interval = 100; //msec
+
   // CREATE THE MENUS
   ui_manager = gtk_ui_manager_new ();
   
@@ -734,6 +737,14 @@ StgWorldGtk::StgWorldGtk()
 /*   win->timeout_id = g_timeout_add( win->redraw_interval, timeout, world ); */
 }
 
+
+gboolean timed_redraw( StgWorldGtk* world )
+{
+  //puts( "TIMED REDRAW" );
+  world->RenderClock();
+  world->Draw();
+  return TRUE;
+}
 
 /***
  *** The "realize" signal handler. All the OpenGL initialization
@@ -813,6 +824,10 @@ void  StgWorldGtk::Realize( GtkWidget *widget )
 
 
   gdk_gl_drawable_gl_end (gldrawable);
+
+
+  // start a timer to redraw the window periodically
+  timer_handle = g_timeout_add( redraw_interval, (GSourceFunc)timed_redraw, this );
 }
 
 void StgWorldGtk::CanvasToWorld( int px, int py, 
@@ -1368,17 +1383,6 @@ void StgWorldGtk::Load( const char* filename )
   if( wf_section < 1) // no section defined
     return;
 
-  // remember the section for subsequent gui_save()s
-  
-/*   win->redraw_interval =  */
-/*     wf_read_int( section, "redraw_interval", win->redraw_interval ); */
-/*   // cancel our old timeout callback */
-/*   g_source_remove( win->timeout_id ); */
-/*   // and install a new one with the (possibly) new interval */
-/*   win->timeout_id = g_timeout_add( win->redraw_interval, timeout, world ); */
-  
-/*   printf( "** REDRAW interval %d ms\n", win->redraw_interval ); */
-
   panx = wf->ReadTupleFloat(wf_section, "center", 0, panx );
   pany = wf->ReadTupleFloat(wf_section, "center", 1, pany );
   stheta = wf->ReadTupleFloat( wf_section, "rotate", 0, stheta );
@@ -1412,6 +1416,18 @@ void StgWorldGtk::Load( const char* filename )
   width = (int)wf->ReadTupleFloat(wf_section, "size", 0, width );
   height = (int)wf->ReadTupleFloat(wf_section, "size", 1, height );
   gtk_window_resize( GTK_WINDOW(frame), width, height );
+
+  if( wf->PropertyExists( wf_section, "redraw_interval" ) )
+    {
+      redraw_interval = 
+	wf->ReadInt(wf_section, "redraw_interval", redraw_interval );
+      
+      if( timer_handle > 0 )
+	g_source_remove( timer_handle );
+      
+      timer_handle = 
+	g_timeout_add( redraw_interval, (GSourceFunc)timed_redraw, this );
+    }
 }
 
 void StgWorldGtk::SetTitle( char* txt )
@@ -1657,38 +1673,25 @@ bool StgWorldGtk::Update()
   return !( quit || quit_all );
 }
 
+
 bool StgWorldGtk::RealTimeUpdate()
  
 {
   //PRINT_DEBUG( "StageWorldGtk::RealTimeUpdate()" );
   
-  if( !paused )
-    StgWorld::Update(); // ignore return value
+  //StgWorld::Update(); // ignore return value
     
-  // handle GUI events and possibly sleep until it's time to update  
-  stg_msec_t timenow = 0;
-  while( 1 )    
-    {    
-      RenderClock();
+  this->Update();
 
-      //if( dirty )
-	Draw();
-
-      while( gtk_events_pending() )
-	gtk_main_iteration(); 
+//   // handle GUI events and possibly sleep until it's time to update  
+//   stg_msec_t timenow = 0;
+//   while( 1 )    
+//     {    
+//       while( gtk_events_pending() )
+// 	gtk_main_iteration(); 
             
-      timenow = RealTimeSinceStart();
-      
-      //PRINT_DEBUG3( "timenow %lu real_time_next_update %lu diff %lu",
-      //	    timenow, real_time_next_update, real_time_next_update - timenow );
 
-      if( timenow < real_time_next_update )
-	usleep( 20 * 1e3 ); // sleep 20ms  
-      else
-	break;
-    }
-
-  real_time_next_update = timenow + interval_real;      
+  PauseUntilNextUpdateTime();
   
   return !( quit || quit_all );
 }

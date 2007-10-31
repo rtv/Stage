@@ -1,6 +1,6 @@
 #include "stage.hh"
 
-static const uint32_t NBITS = 5;
+static const uint32_t NBITS = 6;
 static const uint32_t NSIZE = 1<<NBITS;
 static const uint32_t NSQR = NSIZE*NSIZE;
 static const uint32_t MASK = NSIZE-1;
@@ -76,25 +76,6 @@ void StgBlockGrid::AddBlock( uint32_t x, uint32_t y, StgBlock* block )
     }
 }
 
-
-GSList* StgBlockGrid::GetList( uint32_t x, uint32_t y )
-{
-  if( x < width && y < height )
-    {  
-      uint32_t a = x>>NBITS;
-      uint32_t b = y>>NBITS;
-      
-      stg_bigblock_t* bb = &map[ a + b*bwidth ];      
-
-      if( bb->lists )
-	{      
-	  uint32_t index = (x&MASK) + (y&MASK)*NSIZE;     
-	  return bb->lists[index];
-	}
-    }
-  return NULL;
-}
-
 void StgBlockGrid::RemoveBlock( uint32_t x, uint32_t y, StgBlock* block )
 {
   //printf( "remove block %u %u\n", x, y );
@@ -112,6 +93,7 @@ void StgBlockGrid::RemoveBlock( uint32_t x, uint32_t y, StgBlock* block )
       assert( bb->lists[index] );
       bb->lists[index] = g_slist_remove( bb->lists[index], block );
 
+      assert( bb->counter > 0 ); 
       bb->counter--;
       
       if( bb->counter == 0 ) // this was the last entry in this block;
@@ -120,9 +102,34 @@ void StgBlockGrid::RemoveBlock( uint32_t x, uint32_t y, StgBlock* block )
 	  //printf( "pushed %p\n", bb->lists );
  	  bb->lists = NULL;
  	}
-
-      assert( bb->counter >=0 );
     }
+}
+
+// uint32_t StgBlockGrid::BigBlockOccupancy( uint32_t bbx, uint32_t bby )
+// {
+//   //glRecti( bbx<<NBITS, bby<<NBITS,(bbx+1)<<NBITS,(bby+1)<<NBITS );	
+//   return map[ bbx + bby*bwidth].counter;
+// }
+
+GSList* StgBlockGrid::GetList( uint32_t x, uint32_t y )
+{
+  if( x < width && y < height )
+    {  
+      uint32_t a = x>>NBITS;
+      uint32_t b = y>>NBITS;
+      
+      stg_bigblock_t* bb = &map[ a + b*bwidth ];      
+
+      if( bb->lists )
+	{      
+	  //glRecti( x,y,x+1,y+1 );
+
+	  assert( bb->counter > 0 );
+	  uint32_t index = (x&MASK) + (y&MASK)*NSIZE;     
+	  return bb->lists[index];
+	}
+    }
+  return NULL;
 }
 
 void StgBlockGrid::RemoveBlock( StgBlock* block )

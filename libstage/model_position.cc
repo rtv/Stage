@@ -7,20 +7,17 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-//#define DEBUG
 
 #include <sys/time.h>
 #include <math.h>
 #include <stdlib.h>
 
 //#define DEBUG
-
-#include "model.hh"
-#include "gui.h"
+#include "stage.hh"
 
 /** 
 @ingroup model
@@ -101,14 +98,14 @@ const double STG_POSITION_INTEGRATION_ERROR_MAX_Y = 0.03;
 const double STG_POSITION_INTEGRATION_ERROR_MAX_A = 0.05;
 
 
-StgModelPosition::StgModelPosition( stg_world_t* world, 
+StgModelPosition::StgModelPosition( StgWorld* world, 
 				    StgModel* parent,
 				    stg_id_t id,
-				    CWorldFile* wf )
-  : StgModel( world, parent, id, wf )
+				    char* typestr )
+  : StgModel( world, parent, id, typestr )
 {
   PRINT_DEBUG2( "Constructing StgModelPosition %d (%s)\n", 
-		id, wf->GetEntityType( id ) );
+		id, typestr );
   
   // TODO - move this to stg_init()
   static int first_time = 1;
@@ -165,6 +162,8 @@ void StgModelPosition::Load( void )
   
   char* keyword = NULL;
   
+  CWorldFile* wf = world->wf;
+
   // load steering mode
   if( wf->PropertyExists( this->id, "drive" ) )
     {
@@ -445,7 +444,7 @@ void StgModelPosition::Load( void )
     case STG_POSITION_LOCALIZATION_ODOM:
       {
 	// integrate our velocities to get an 'odometry' position estimate.
-	double dt = this->world->sim_interval_ms/1e3;
+	double dt = this->world->interval_sim/1e3;
 	
 	est_pose.a = NORMALIZE( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
 	
