@@ -220,23 +220,24 @@ StgModel::StgModel( StgWorld* world,
   //this->velocity.a = 0.2;
   //SetVelocity( &this->velocity );
 
-  this->last_update_ms = 0;
-  this->update_interval_ms = 10;
+  this->last_update = 0;
+  this->interval = 1e4; // 10msec
   
   // now we can add the basic square shape
   this->AddBlockRect( -0.5,-0.5,1,1 );
-
-  // GL
-  this->dl_body = glGenLists( 1 );
-  this->dl_data = glGenLists( 1 );
-  //this->dl_debug = glGenLists( 1 );
-  //this->dl_raytrace = glGenLists( 1 );
-  this->dl_grid = glGenLists(1);
-
+  
   PRINT_DEBUG2( "finished model %s (%d).", 
 		this->token,
 		this->id );
 }
+
+void StgModel::InitGraphics()
+{
+  this->dl_body = glGenLists(1);
+  this->dl_data = glGenLists(1);
+  this->dl_grid = glGenLists(1);
+}
+
 
 StgModel::~StgModel( void )
 {
@@ -582,7 +583,7 @@ void StgModel::Map()
 {
   //PRINT_DEBUG1( "%s.Map()", token );
 
-  if( this->debug )
+  if( world->graphics && this->debug )
     {
       double scale = 1.0 / world->ppm;
       glPushMatrix();
@@ -593,7 +594,7 @@ void StgModel::Map()
   for( GList* it=blocks; it; it=it->next )
     ((StgBlock*)it->data)->Map();
 
-  if( this->debug )
+  if( world->graphics && this->debug )
     glPopMatrix();
 } 
 
@@ -684,19 +685,10 @@ void StgModel::Shutdown( void )
   CallCallbacks( &shutdown );
 }
 
-// void StgModel::UpdateTreeIfDue( void )
-// {
-//   if(  this->world->sim_time_ms  >= 
-//        (this->last_update_ms + this->update_interval_ms) )
-//     this->Update();
-  
-//   LISTMETHOD( this->children, StgModel*, UpdateTreeIfDue );
-// }
-
 void StgModel::UpdateIfDue( void )
 {
   if(  world->sim_time  >= 
-       (last_update_ms + update_interval_ms) )
+       (last_update + interval) )
     this->Update();
 }
 
@@ -712,7 +704,7 @@ void StgModel::Update( void )
   
   CallCallbacks( &update );
 
-  last_update_ms = world->sim_time;
+  last_update = world->sim_time;
 }
  
 void StgModel::DrawData( void )
@@ -751,8 +743,6 @@ void StgModel::DrawSelected()
   
   glPopMatrix();
 }
-
-
 
 void StgModel::Draw( void )
 {
@@ -1292,7 +1282,7 @@ void StgModel::UpdatePose( void )
    //stg_model_get_global_pose( mod, &gpose );
    
    // convert msec to sec
-   double interval = (double)world->interval_sim / 1e3;
+   double interval = (double)world->interval_sim / 1e6;
   
 
    //stg_pose_t old_pose;

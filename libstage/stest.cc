@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.11 2007-10-31 03:55:11 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.12 2007-11-01 07:18:53 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -20,12 +20,17 @@ double minfrontdistance = 0.750;
 double speed = 0.400;
 double turnrate = DTOR(60);
 
-int randint;
-int randcount = 0;
-int avoidcount = 0;
-int obs = FALSE;
+typedef struct
+{
+  StgModelLaser* laser;
+  StgModelPosition* position;
+  StgModelRanger* ranger;
+  int randcount ;
+  int avoidcount;
+  bool obs;
+} robot_t;
 
-int POPSIZE = 50;
+const int POPSIZE = 10;
 
 int main( int argc, char* argv[] )
 { 
@@ -38,9 +43,12 @@ int main( int argc, char* argv[] )
     }
       
   // initialize libstage
-  StgWorldGtk::Init( &argc, &argv );
+  //StgWorld::Init( &argc, &argv );
+  //StgWorld world;
 
+  StgWorldGtk::Init( &argc, &argv );
   StgWorldGtk world;
+
   world.Load( argv[1] );
   
   //StgModel mod( &world, NULL, 0, "model" );
@@ -61,55 +69,33 @@ int main( int argc, char* argv[] )
    
    //char* robotname = argv[2];
    
-   //   // generate the name of the laser attached to the robot
-   //char lasername[64];
-   //snprintf( lasername, 63, "%s.laser:0", robotname ); 
-   
-   //   // generate the name of the sonar attached to the robot
-   //   char rangername[64];
-   //   snprintf( rangername, 63, "%s.ranger:0", robotname ); 
-   
-   char namebuf[256];
-   
-
-
-   //StgModelPosition* position = (StgModelPosition*)world.GetModel( "MyWorld:0.position:0" );
-   //assert(position);
-   
-   //StgModelLaser* laser = (StgModelLaser*)world.GetModel("MyWorld:0.position:0.laser:0" );
-   //assert( laser );
-   
-   StgModelPosition* positions[POPSIZE];
-   StgModelLaser* lasers[POPSIZE];
-
-   for( int i=0; i<POPSIZE; i++ )
-     {
-       sprintf( namebuf, "MyWorld:0.position:%d", i+1 );
-       positions[i] = (StgModelPosition*)world.GetModel( namebuf );
-       assert(positions[i]);
-       positions[i]->Subscribe();
+  char namebuf[256];  
+  robot_t robots[POPSIZE];
+  
+  for( int i=0; i<POPSIZE; i++ )
+    {
+       robots[i].randcount = 0;
+       robots[i].avoidcount = 0;
+       robots[i].obs = false;
        
-       sprintf( namebuf, "MyWorld:0.position:%d.laser:0", i+1 );
-       lasers[i] = (StgModelLaser*)world.GetModel( namebuf );
-       assert(lasers[i]);
-       lasers[i]->Subscribe();
-     }
+       sprintf( namebuf, "MyWorld.position:%d", i );
+       robots[i].position = (StgModelPosition*)world.GetModel( namebuf );
+       assert(robots[i].position);
+       robots[i].position->Subscribe();
+       
+       sprintf( namebuf, "MyWorld.position:%d.laser:0", i );
+       robots[i].laser = (StgModelLaser*)world.GetModel( namebuf );
+       assert(robots[i].laser);
+       robots[i].laser->Subscribe();
+
+       sprintf( namebuf, "MyWorld.position:%d.ranger:0", i );
+       robots[i].ranger = (StgModelRanger*)world.GetModel( namebuf );
+       assert(robots[i].ranger);
+       robots[i].ranger->Subscribe();
+    }
    
-//   StgModelRanger* ranger = (StgModelRanger*)world.GetModel( rangername );
-//   assert(ranger);
-
-//   // subscribe to the laser - starts it collecting data
-
-   //position->Subscribe();   
-   //laser->Subscribe();
-
-   //position->Print( "Subscribed to model" );
-   //laser->Print( "Subscribed to model" );
-  //ranger->Print( "Subscribed to model" );
-
-  //printf( "Starting world clock..." ); fflush(stdout);
   // start the clock
-  //world.Start();
+  world.Start();
   //puts( "done" );
 
   double newspeed = 0.0;
@@ -119,90 +105,86 @@ int main( int argc, char* argv[] )
   
   //  StgModelLaser* laser = lasers[1];
 
-  //while( world.RealTimeUpdate() )
-  while( world.Update() )
+   while( world.RealTimeUpdate() )
+     // while( world.Update() )
     {
       //       nothing
       //while( ! laser->DataIsFresh() )
       //if( ! world.RealTimeUpdate() )
       //break;
-     
+      
       for( int i=0; i<POPSIZE; i++ )
 	{
-	  StgModelPosition* position = positions[i];
-	  StgModelLaser* laser = lasers[i];
+	  //robots[i].ranger->Print( NULL );
 	  
 	  // get some laser data
-	  size_t laser_sample_count = laser->sample_count;      
-	  stg_laser_sample_t* laserdata = laser->samples;
-
+	  size_t laser_sample_count = robots[i].laser->sample_count;      
+	  stg_laser_sample_t* laserdata = robots[i].laser->samples;
+      
 	  if( laserdata == NULL )
 	    continue;
       
-	  // THIS IS ADAPTED FROM PLAYER'S RANDOMWALK C++ EXAMPLE
-
-	  /* See if there is an obstacle in front */
-	  obs = FALSE;
-	  for( unsigned int i = 0; i < laser_sample_count; i++)
-	    {
-	      if(laserdata[i].range < minfrontdistance)
-		obs = TRUE;
-	    }
+      // THIS IS ADAPTED FROM PLAYER'S RANDOMWALK C++ EXAMPLE
       
-	  if(obs || avoidcount )
-	    {
-	      newspeed = 0;
-	  
-	      /* once we start avoiding, continue avoiding for 2 seconds */
-	      /* (we run at about 10Hz, so 20 loop iterations is about 2 sec) */
-	      if(!avoidcount)
-		{
-		  avoidcount = 15;
-		  randcount = 0;
-	      
-		  // find the minimum on the left and right
-	      
-		  double min_left = 1e9;
-		  double min_right = 1e9;
-	      
-		  for( unsigned int i=0; i<laser_sample_count; i++ )
-		    {
-		      if(i>(laser_sample_count/2) && laserdata[i].range < min_left)
-			min_left = laserdata[i].range;
-		      else if(i<(laser_sample_count/2) && laserdata[i].range < min_right)
-			min_right = laserdata[i].range;
-		    }
-
-		  if( min_left < min_right)
-		    newturnrate = -turnrate;
-		  else
-		    newturnrate = turnrate;
-		}
-	  
-	      avoidcount--;
-	    }
-	  else
-	    {
-	      avoidcount = 0;
-	      newspeed = speed;
-	  
-	      /* update turnrate every 3 seconds */
-	      if(!randcount)
-		{
-		  /* make random int tween -20 and 20 */
-		  randint = rand() % 41 - 20;
-	      
-		  newturnrate = DTOR(randint);
-		  randcount = 50;
-		}
-	      randcount--;
-	    }
-      
-	  position->Do( newspeed, 0, newturnrate );
+      /* See if there is an obstacle in front */
+      robots[i].obs = FALSE;
+      for( unsigned int l = 0; l < laser_sample_count; l++)
+	{
+	  if(laserdata[l].range < minfrontdistance)
+	    robots[i].obs = TRUE;
 	}
-
-    }
-  
+      
+      if( robots[i].obs || robots[i].avoidcount )
+	{
+	  newspeed = 0;
+	  
+	  /* once we start avoiding, continue avoiding for 2 seconds */
+	  /* (we run at about 10Hz, so 20 loop iterations is about 2 sec) */
+	  if( ! robots[i].avoidcount)
+	    {
+	      robots[i].avoidcount = 15;
+	      robots[i].randcount = 0;
+	      
+	      // find the minimum on the left and right
+	      
+	      double min_left = 1e9;
+	      double min_right = 1e9;
+	      
+	      for( unsigned int i=0; i<laser_sample_count; i++ )
+		{
+		  if(i>(laser_sample_count/2) && laserdata[i].range < min_left)
+		    min_left = laserdata[i].range;
+		  else if(i<(laser_sample_count/2) && laserdata[i].range < min_right)
+		    min_right = laserdata[i].range;
+		}
+	      
+	      if( min_left < min_right)
+		newturnrate = -turnrate;
+	      else
+		newturnrate = turnrate;
+	    }
+	  
+	  robots[i].avoidcount--;
+	}
+      else
+	{
+	  robots[i].avoidcount = 0;
+	  newspeed = speed;
+	  
+	  /* update turnrate every 3 seconds */
+	  if(! robots[i].randcount)
+	    {
+	      /* make random int tween -20 and 20 */
+	      newturnrate = DTOR(rand() % 41 - 20);
+	      robots[i].randcount = 50;
+	    }
+	  robots[i].randcount--;
+	}
+      
+      robots[i].position->Do( newspeed, 0, newturnrate );
+      //robots[i].position->Do( 0, 0, 10 );
+      	}
+    }  
   //#endif  
 
   exit( 0 );

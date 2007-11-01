@@ -19,15 +19,13 @@ OBS = \
     model_load.o \
     model_position.o \
     model_props.o \
+    model_ranger.o \
     stage.o \
     stest.o \
     typetable.o \
     world.o \
     worldgtk.o \
     worldfile.o 
-
-#    model_ranger.o 
-#    model_position.o 
 
 CPPFLAGS= -g -Wall -I.. -I../replace `pkg-config --cflags gtkglext-1.0`
 LIBS= `pkg-config --libs gtkglext-1.0`

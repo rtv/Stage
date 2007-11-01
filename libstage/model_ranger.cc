@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -76,20 +76,18 @@ The ranger model allows configuration of the pose, size and view parameters of e
 //#define DEBUG
 
 #include <math.h>
-#include "model.hh"
-#include "gui.h"
-#include <GL/gl.h>
+#include "stage.hh"
 
 #define STG_RANGER_WATTS 2.0 // ranger power consumption
 
-StgModelRanger::StgModelRanger( stg_world_t* world, 
+StgModelRanger::StgModelRanger( StgWorld* world, 
 				StgModel* parent,
 				stg_id_t id,
-				CWorldFile* wf )
-  : StgModel( world, parent, id, wf )
+				char* typestr )
+  : StgModel( world, parent, id, typestr )
 {
   PRINT_DEBUG2( "Constructing StgModelRanger %d (%s)\n", 
-		id, wf->GetEntityType( id ) );
+		id, typestr );
     
   // Set up sensible defaults
   
@@ -153,6 +151,8 @@ void StgModelRanger::Load( void )
 {
   StgModel::Load();
   
+  CWorldFile* wf = world->wf;
+
   if( wf->PropertyExists(id, "scount" ) )
     {
       PRINT_DEBUG( "Loading ranger array" );
@@ -216,10 +216,11 @@ void StgModelRanger::Load( void )
     }
 }
 
-int ranger_raytrace_match( StgModel* mod, StgModel* hitmod )
+int ranger_raytrace_match( StgBlock* block, StgModel* finder )
 {
   // Ignore myself, my children, and my ancestors.
-  return( hitmod->RangerReturn() && !mod->IsRelated( hitmod ) );
+  return( block->mod->RangerReturn() && !block->mod->IsRelated( finder ) );
+  //return true;
 }	
 
 void StgModelRanger::Update( void )
@@ -238,33 +239,37 @@ void StgModelRanger::Update( void )
   for( unsigned int t=0; t<sensor_count; t++ )
     {
       // get the sensor's pose in global coords
-      stg_pose_t pz;
-      memcpy( &pz, &sensors[t].pose, sizeof(pz) ); 
-      this->LocalToGlobal( &pz );
+      //stg_pose_t pz;
+      //memcpy( &pz, &sensors[t].pose, sizeof(pz) ); 
+      //this->LocalToGlobal( &pz );
       
-      double range = sensors[t].bounds_range.max;
+      double range;
       
       int r;
       for( r=0; r<sensors[t].ray_count; r++ )
 	{	  
-	  double angle_per_ray = sensors[t].fov / sensors[t].ray_count;
-	  double ray_angle = -sensors[t].fov/2.0 + angle_per_ray * r + angle_per_ray/2.0;
+	  //double angle_per_ray = sensors[t].fov / sensors[t].ray_count;
+	  //double ray_angle = -sensors[t].fov/2.0 + angle_per_ray * r + angle_per_ray/2.0;
 	  
-	  stg_meters_t hitrange, hitx, hity;
-	  
-	  // if the ray hits anything, 'range' will be changed
-	  if( stg_first_model_on_ray( pz.x, pz.y, pz.z + 0.01, // TODO: UNHACK 
-				      pz.a + ray_angle, 
-				      sensors[t].bounds_range.max, 
-				      world->matrix, 
-				      PointToBearingRange, 
-				      ranger_raytrace_match,
-				      this,
-				      &hitrange, &hitx, &hity ) )
-	    {
-	      if( hitrange < range )
-		range = hitrange;
-	    } 
+	  range = Raytrace( &sensors[t].pose,
+			    sensors[t].bounds_range.max,
+			    (stg_block_match_func_t)ranger_raytrace_match,
+			    this,
+			    NULL );			       
+
+// 	  // if the ray hits anything, 'range' will be changed
+// 	  if( stg_first_model_on_ray( pz.x, pz.y, pz.z + 0.01, // TODO: UNHACK 
+// 				      pz.a + ray_angle, 
+// 				      sensors[t].bounds_range.max, 
+// 				      world->matrix, 
+// 				      PointToBearingRange, 
+// 				      ranger_raytrace_match,
+// 				      this,
+// 				      &hitrange, &hitx, &hity ) )
+// 	    {
+// 	      if( hitrange < range )
+// 		range = hitrange;
+// 	    } 
 
 	  
 	  //double a = sensors[t].pose.a + ray_angle;
@@ -283,7 +288,7 @@ void StgModelRanger::Update( void )
       
       sensors[t].range = range;
       //sensors[t].error = TODO;
-
+      
       
     }   
   
@@ -347,7 +352,7 @@ void render_rangers( stg_ranger_sensor_t* sensors, size_t sensor_count )
     } 
 }
 
-void StgModelRanger::DListData( void )
+void StgModelRanger::DataVisualize( void )
 {
   // recreate the display list for this data
   glNewList( this->dl_data, GL_COMPILE );
@@ -359,11 +364,11 @@ void StgModelRanger::DListData( void )
       glDepthMask( GL_FALSE ); 
 
       // now get on with rendering the ranger data 
-      glPolygonMode( GL_FRONT_AND_BACK, 
-		     world->win->show_alpha ? GL_FILL : GL_LINES );
-      push_color_rgba( 0, 1, 0, 0.2 ); // transparent pale green 
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		     //		     world->win->show_alpha ? GL_FILL : GL_LINES );
+      PushColor( 0, 1, 0, 0.2 ); // transparent pale green 
       render_rangers( sensors, sensor_count );
-      pop_color(); 
+      PopColor(); 
 
       // restore state 
       glDepthMask( GL_TRUE ); 

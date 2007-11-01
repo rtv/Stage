@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.8 $
+ //  $Revision: 1.1.2.9 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,7 @@
  #define STG_DEFAULT_LASER_MAXRANGE 8.0
  #define STG_DEFAULT_LASER_FOV M_PI
  #define STG_DEFAULT_LASER_SAMPLES 180
- #define STG_DEFAULT_LASER_INTERVAL_MS 200
+ #define STG_DEFAULT_LASER_INTERVAL_MS 100
  #define STG_DEFAULT_LASER_RESOLUTION 1
 
  /**
@@ -81,7 +81,7 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 		id, typestr );
   
   // sensible laser defaults 
-  update_interval_ms = STG_DEFAULT_LASER_INTERVAL_MS; 
+  interval = 1e3 * STG_DEFAULT_LASER_INTERVAL_MS; 
   laser_return = LaserVisible;
   
   stg_geom_t geom; 
@@ -102,10 +102,6 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 
   // don't allocate sample buffer memory until Startup()
   samples = NULL;
-
-  dl_debug_laser = glGenLists( 1 );
-  glNewList( dl_debug_laser, GL_COMPILE );
-  glEndList();
 }
 
 
@@ -113,6 +109,15 @@ StgModelLaser::~StgModelLaser( void )
 {
   if(samples)
     delete[] samples;
+}
+
+void StgModelLaser::InitGraphics()
+{
+  StgModel::InitGraphics();
+
+  dl_debug_laser = glGenLists( 1 );
+  glNewList( dl_debug_laser, GL_COMPILE );
+  glEndList();
 }
 
 void StgModelLaser::SetSampleCount( unsigned int count )

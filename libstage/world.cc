@@ -55,14 +55,13 @@ described on the manual page for each model type.
 #include <string.h> // for strdup(3)
 #include <locale.h> 
 
-//#define DEBUG 
+#define DEBUG 
 
 #include "stage.hh"
 
 const double STG_DEFAULT_WORLD_PPM = 50;  // 2cm pixels
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
-const stg_msec_t STG_DEFAULT_MAX_SLEEP = 20;
 
 // TODO: fix the quadtree code so we don't need a world size
 const stg_meters_t STG_DEFAULT_WORLD_WIDTH = 20.0;
@@ -135,18 +134,20 @@ void StgWorld::Initialize( const char* token,
   
   assert(token);
   this->token = (char*)malloc(STG_TOKEN_MAX);
-  snprintf( this->token, STG_TOKEN_MAX, "%s:%d", token, this->id );
+  snprintf( this->token, STG_TOKEN_MAX, "%s", token );//this->id );
 
   this->quit = false;
   this->updates = 0;
   this->wf = NULL;
+  this->graphics = false; // subclasses that provide GUIs should
+			  // change this
 
   this->models_by_id = g_hash_table_new( g_int_hash, g_int_equal );
   this->models_by_name = g_hash_table_new( g_str_hash, g_str_equal );
   this->sim_time = 0;
-  this->interval_sim = interval_sim;
-  this->interval_real = interval_real;
-  this->interval_sleep_max = STG_DEFAULT_MAX_SLEEP;
+  this->interval_sim = 1e3 * interval_sim;
+  this->interval_real = 1e3 * interval_real;
+
   this->real_time_start = RealTimeNow();
   this->real_time_next_update = 0;
 
@@ -161,8 +162,12 @@ void StgWorld::Initialize( const char* token,
 				  (uint32_t)(height * ppm) );
   
   this->total_subs = 0;
-  this->paused = false; 
+  this->paused = true; 
   this->destroy = false;   
+
+  for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
+    this->interval_log[i] = this->interval_real;
+  this->real_time_now = 0;
 }
 
 StgWorld::~StgWorld( void )
@@ -185,30 +190,33 @@ void StgWorld::RemoveModel( StgModel* mod )
   g_hash_table_remove( models_by_name, mod );  
 }
 
-
 void StgWorld::ClockString( char* str, size_t maxlen )
 {
-  long unsigned int days = this->sim_time / (24*3600000);
-  long unsigned int hours = this->sim_time / 3600000;
-  long unsigned int minutes = (this->sim_time % 3600000) / 60000;
-  long unsigned int seconds = (this->sim_time % 60000) / 1000; // seconds
-  long unsigned int msec =  this->sim_time % 1000; // milliseconds
+  uint32_t hours   =  sim_time / 3600000000; 
+  uint32_t minutes = (sim_time % 3600000000) / 60000000; 
+  uint32_t seconds = (sim_time % 60000000) / 1000000; 
+  uint32_t msec    = (sim_time % 1000000) / 1000; 
   
-  if( days > 0 )
-    snprintf( str, maxlen, "Time: %lu:%lu:%02lu:%02lu.%03lu\tsubs: %d  %s",
-	      days, hours, minutes, seconds, msec,
-	      this->total_subs,
-	      this->paused ? "--PAUSED--" : "" );
-  else if( hours > 0 )
-    snprintf( str, maxlen, "Time: %lu:%02lu:%02lu.%03lu\tsubs: %d  %s",
+  // find the average length of the last few realtime intervals;
+  stg_usec_t average_real_interval = 0;
+  for( uint32_t i=0; i<INTERVAL_LOG_LEN; i++ )
+    average_real_interval += interval_log[i];
+  average_real_interval /= INTERVAL_LOG_LEN;
+  
+  double localratio = (double)interval_sim / (double)average_real_interval;
+  
+  if( hours > 0 )
+    snprintf( str, maxlen, "Time: %uh%02um%02u.%03us\t[%.1f]\tsubs: %d  %s",
 	      hours, minutes, seconds, msec,
-	      this->total_subs,
-	      this->paused ? "--PAUSED--" : "" );
+	      localratio,
+	      total_subs,
+	      paused ? "--PAUSED--" : "" );
   else
-    snprintf( str, maxlen, "Time: %02lu:%02lu.%03lu\tsubs: %d  %s",
+    snprintf( str, maxlen, "Time: %02um%02u.%03us\t[%.1f]\tsubs: %d  %s",
 	      minutes, seconds, msec,
-	      this->total_subs,
-	      this->paused ? "--PAUSED--" : "" );
+	      localratio,
+	      total_subs,
+	      paused ? "--PAUSED--" : "" );
 }
 
 void StgWorld::Load( const char* worldfile_path )
@@ -228,15 +236,12 @@ void StgWorld::Load( const char* worldfile_path )
   this->token = (char*)
     wf->ReadString( entity, "name", token );
   
-  this->interval_real = 
-    wf->ReadInt( entity, "interval_real", this->interval_real );
+  this->interval_real = 1e3 *  
+    wf->ReadInt( entity, "interval_real", this->interval_real/1e3 );
 
-  this->interval_sim = 
-    wf->ReadInt( entity, "interval_sim", this->interval_sim );
+  this->interval_sim = 1e3 * 
+    wf->ReadInt( entity, "interval_sim", this->interval_sim/1e3 );
   
-  this->interval_sleep_max = 
-    wf->ReadInt( entity, "interval_sleep_max", this->interval_sleep_max );    
-
   this->ppm = 
     1.0 / wf->ReadFloat( entity, "resolution", this->ppm ); 
   
@@ -313,54 +318,45 @@ void StgWorld::Start()
   wf->WarnUnused();
 }
 
-stg_msec_t StgWorld::RealTimeNow(void)
+stg_usec_t StgWorld::RealTimeNow()
 {
   struct timeval tv;
   gettimeofday( &tv, NULL );  // slow system call: use sparingly
-  return (stg_msec_t)( tv.tv_sec*1000 + tv.tv_usec/1000 );
+  
+  return( tv.tv_sec*1000000 + tv.tv_usec );
 }
 
-stg_msec_t StgWorld::RealTimeSinceStart(void)
+stg_usec_t StgWorld::RealTimeSinceStart()
 {
-  stg_msec_t timenow = RealTimeNow();
-  stg_msec_t diff = timenow - real_time_start;
+  stg_usec_t timenow = RealTimeNow();
+  
+  // subtract the start time from the current time to get the elapsed
+  // time
 
-  //PRINT_DEBUG3( "timenow %lu start %lu diff %lu", timenow, real_time_start, diff );
-
-  return diff;
-  //return( RealTimeNow() - real_time_start );
+  return timenow - real_time_start;
 }
 
 void StgWorld::PauseUntilNextUpdateTime( void )
 {
   // sleep until it's time to update  
-  stg_msec_t timenow = 0;
-  for( timenow = RealTimeSinceStart();
-       timenow < real_time_next_update;
-       timenow = RealTimeSinceStart() )
+  stg_usec_t timenow = RealTimeSinceStart();
+  
+  /*  printf( "\ntimesincestart %llu interval_real %llu interval_sim %llu real_time_next_update %llu\n",
+	  timenow,
+	  interval_real,
+	  interval_sim,
+	  real_time_next_update );
+  */
+
+  if( timenow < real_time_next_update )
     {
-      stg_msec_t sleeptime = real_time_next_update - timenow; // must be >0
-      
-      PRINT_DEBUG3( "timenow %lu nextupdate %lu sleeptime %lu",
-		    timenow, real_time_next_update, sleeptime );
-      
-      usleep( sleeptime * 1000 ); // sleep for few microseconds
+      usleep( real_time_next_update - timenow );
     }
-  
-#ifdef DEBUG     
-  printf( "[%u %lu %lu] ufreq:%.2f\n",
-	  this->id, 
-	  this->sim_time,
-	  this->updates,
-	  //this->interval_sim,
-	  //this->real_interval_measured,
-	  //(double)this->interval_sim / (double)this->real_interval_measured,
-	  this->updates/(timenow/1e3));
-  
-  fflush(stdout);
-#endif
-  
-  real_time_next_update = timenow + interval_real;      
+
+  interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
+
+  real_time_now = timenow;
+  real_time_next_update += interval_real;
 }
 
 bool StgWorld::Update()
@@ -368,7 +364,17 @@ bool StgWorld::Update()
   if( !paused )
     {  
       //PRINT_DEBUG( "StgWorld::Update()" );
-      
+
+      if( interval_real > 0 || updates % 100 == 0 )
+	{
+	  char str[64];
+	  ClockString( str, 64 );
+	  //printf( "Stage timestep: %lu simtime: %lu\n",
+	  //      updates, sim_time );
+	  printf( "\r%s", str );
+	  fflush(stdout);
+	}
+
       // update any models that are due to be updated
       for( GList* it=this->update_list; it; it=it->next )
 	((StgModel*)it->data)->UpdateIfDue();
@@ -407,25 +413,11 @@ void StgWorld::AddModel( StgModel*  mod  )
   g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
 }
 
+
 void StgWorld::AddModelName( StgModel* mod )
 {
   g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );    
 }
-
-// void stg_world_print( StgWorld* world )
-// {
-//   printf( " world %d:%s (%d models)\n", 
-// 	  world->id, 
-// 	  world->token,
-// 	  g_hash_table_size( world->models ) );
-  
-//    g_hash_table_foreach( world->models, model_print_cb, NULL );
-// }
-
-// void world_print_cb( gpointer key, gpointer value, gpointer user )
-// {
-//   stg_world_print( (StgWorld*)value );
-// }
 
 StgModel* StgWorld::GetModel( const char* name )
 {
@@ -438,105 +430,6 @@ StgModel* StgWorld::GetModel( const stg_id_t id )
   //printf( "looking up model id %d in models_by_id\n", id );
   return (StgModel*)g_hash_table_lookup( this->models_by_id, (gpointer)id );
 }
-
-//#define NBITS 6
-
-// int bigtest( int x, int y, int z,
-//  	     void* arg1, void* arg2 )
-// {
-//   glRecti( x<<NBITS,y<<NBITS, (x+1)<<NBITS,(y+1)<<NBITS );
-//   return FALSE;
-// }
-
-// typedef struct
-// {
-//   StgWorld* world;
-//   StgModel* finder;
-//   StgModel* hit;
-//   int32_t x, y, z; // leave point
-//   stg_block_match_func_t func;
-//   const void* arg;
-// } _raytrace_info_t;
-
-// int raytest( int32_t x, int32_t y, int32_t z,
-// 	     _raytrace_info_t* rti )
-// {
-//   //glRecti( x,y, x+1,y+1 );
-
-//    // for each block recorded at his location
-//    for( GSList* list = rti->world->bgrid->GetList( x, y );
-//         list;
-//         list = list->next )
-//      {
-//        StgBlock* block = (StgBlock*)list->data;       
-//        assert( block );
-       
-//        // if this block does not belong to the searching model and it
-//        // matches the predicate and it's in the right z range
-//        if( block && (block->mod != rti->finder) && 
-// 	   (*rti->func)( block, rti->arg ) )//&&
-// 	 //z >= block->zmin &&
-// 	 // z < block->zmax )	 
-// 	 {
-//  	  // a hit!
-//  	  rti->hit = block->mod;
-//  	  rti->x = x;
-//  	  rti->y = y;
-//  	  rti->z = z;	  
-//  	  return TRUE;
-//  	}
-//      }
-  
-//   return FALSE;  
-// }
- 
-	    
-// stg_meters_t StgWorld::Raytrace( StgModel* finder,
-// 				 stg_pose_t* pose,
-// 				 stg_meters_t max_range,
-// 				 stg_block_match_func_t func,
-// 				 const void* arg,
-// 				 StgModel** hit_model )
-// {
-//   // find the global integer bitmap address of the ray  
-//   int32_t x = (int32_t)((pose->x+width/2.0)*ppm);
-//   int32_t y = (int32_t)((pose->y+height/2.0)*ppm);
-  
-//   // and the x and y offsets of the ray
-//   int32_t dx = (int32_t)(ppm*max_range * cos(pose->a));
-//   int32_t dy = (int32_t)(ppm*max_range * sin(pose->a));
-  
-//   glPushMatrix();
-//   glTranslatef( -width/2.0, -height/2.0, 0 );
-//   glScalef( 1.0/ppm, 1.0/ppm, 0 );
-	   
-//   _raytrace_info_t rinfo;
-//   rinfo.world = this;
-//   rinfo.finder = finder;
-//   rinfo.func = func;
-//   rinfo.arg = arg;
-//   rinfo.hit = NULL;
-  
-//   if( stg_line_3d( x, y, 0, 
-//    		   dx, dy, 0,
-//    		   (stg_line3d_func_t)raytest,
-//    		   &rinfo ) )
-//     {
-//       glPopMatrix();      
-
-//       *hit_model = rinfo.hit;
-
-//       // how far away was that strike?
-//       return hypot( (rinfo.x-x)/ppm, (rinfo.y-y)/ppm );
-//     }
-
-
-//   glPopMatrix();
-//   // return the range from ray start to object strike
-  
-//   // hit nothing, so return max range
-//   return max_range;
-// }
 
 stg_meters_t StgWorld::Raytrace( StgModel* finder,
 				 stg_pose_t* pose,
@@ -558,9 +451,10 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
   int32_t dy = (int32_t)(ppm*max_range * sin(pose->a));
   int32_t dz = 0;
 
- //  glPushMatrix();
+//   glPushMatrix();
 //   glTranslatef( -width/2.0, -height/2.0, 0 );
 //   glScalef( 1.0/ppm, 1.0/ppm, 0 );
+//   PushColor( 1,0,0,1 );
 	   
   // line 3d algorithm adapted from Cohen's code from Graphics Gems IV
   int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;  
@@ -570,31 +464,66 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
   exy = ay-ax;   exz = az-ax;	ezy = ay-az;
   n = ax+ay+az;
 
+  uint32_t bbx_last = 0;
+  uint32_t bby_last = 0;
+  uint32_t bbx = 0;
+  uint32_t bby = 0;
+  
+  const uint32_t NBITS = bgrid->numbits;
+
+  bool lookup_list = true;
+  
   while ( n-- ) 
     {          
-      for( GSList* list = bgrid->GetList( x, y );
-	   list;
-	   list = list->next )
+      // todo - avoid calling this multiple times for a single
+      // bigblock.
+      
+      bbx = x>>NBITS;
+      bby = y>>NBITS;
+      
+      // if we just changed grid square
+      if( ! ((bbx == bbx_last) && (bby == bby_last)) )
 	{
-	  StgBlock* block = (StgBlock*)list->data;       
-	  assert( block );
-	  
-	  // if this block does not belong to the searching model and it
-	  // matches the predicate and it's in the right z range
-	  if( block && (block->mod != finder) && 
-	      (*func)( block, arg ) &&
-	      pose->z >= block->zmin &&
-	      pose->z < block->zmax )	 
-	    {
-	      // a hit!
-	      //glPopMatrix();      	      
-	      
-	      *hit_model = block->mod;	      
-	      // how far away was that strike?
-	      return hypot( (x-xstart)/ppm, (y-ystart)/ppm );
-	    }
+	  // if this square has some contents, we need to look it up
+	  lookup_list = !(bgrid->BigBlockOccupancy(bbx,bby) < 1 );
+
+	  bbx_last = bbx;
+	  bby_last = bby;
 	}
       
+      if( lookup_list )
+	{	  
+	  for( GSList* list = bgrid->GetList(x,y);
+	       list;
+	       list = list->next )      
+	    {
+	      
+	      
+	      StgBlock* block = (StgBlock*)list->data;       
+	      assert( block );
+	      
+	      // if this block does not belong to the searching model and it
+	      // matches the predicate and it's in the right z range
+	      if( block && (block->mod != finder) && 
+		  (*func)( block, arg ) &&
+		  pose->z >= block->zmin &&
+		  pose->z < block->zmax )	 
+		{
+		  //glPopMatrix();      	      
+		  
+		  // a hit!
+		  if( hit_model )
+		    *hit_model = block->mod;	      
+		  // how far away was that strike?
+		  return hypot( (x-xstart)/ppm, (y-ystart)/ppm );
+		}
+	    }
+	}
+//        else
+//    	{
+//    	  glRecti( x,y, x+1, y+1 );
+//    	}
+	  
       if ( exy < 0 ) {
 	if ( exz < 0 ) {
 	  x += sx;
@@ -618,8 +547,6 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
     }
   
   //glPopMatrix();
-  // return the range from ray start to object strike
-  
   // hit nothing, so return max range
   return max_range;
 }
@@ -742,7 +669,7 @@ void StgWorld::MapBlock( StgBlock* block )
   
   _render_info_t rinfo;
   rinfo.grid = bgrid;
-  rinfo.block - block;
+  rinfo.block = block;
 
   // TODO - could be a little bit faster - currently considers each
   // vertex twice

@@ -1,13 +1,13 @@
 #include "stage.hh"
 
-static const uint32_t NBITS = 6;
-static const uint32_t NSIZE = 1<<NBITS;
-static const uint32_t NSQR = NSIZE*NSIZE;
-static const uint32_t MASK = NSIZE-1;
-
+const uint32_t NBITS = 5;
+const uint32_t NSIZE = 1<<NBITS;
+const uint32_t NSQR = NSIZE*NSIZE;
+const uint32_t MASK = NSIZE-1;
 
 StgBlockGrid::StgBlockGrid( uint32_t width, uint32_t height )
 {
+  this->numbits = NBITS;
   this->width = width;
   this->height = height;
   
@@ -105,11 +105,11 @@ void StgBlockGrid::RemoveBlock( uint32_t x, uint32_t y, StgBlock* block )
     }
 }
 
-// uint32_t StgBlockGrid::BigBlockOccupancy( uint32_t bbx, uint32_t bby )
-// {
-//   //glRecti( bbx<<NBITS, bby<<NBITS,(bbx+1)<<NBITS,(bby+1)<<NBITS );	
-//   return map[ bbx + bby*bwidth].counter;
-// }
+uint32_t StgBlockGrid::BigBlockOccupancy( uint32_t bbx, uint32_t bby )
+{
+  //glRecti( bbx<<NBITS, bby<<NBITS,(bbx+1)<<NBITS,(bby+1)<<NBITS );	
+  return map[ bbx + bby*bwidth].counter;
+}
 
 GSList* StgBlockGrid::GetList( uint32_t x, uint32_t y )
 {

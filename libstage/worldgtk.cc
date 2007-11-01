@@ -3,7 +3,7 @@
  Desc: Implements GTK-based GUI for Stage
  Author: Richard Vaughan
 
- CVS: $Id: worldgtk.cc,v 1.1.2.9 2007-10-31 03:55:11 rtv Exp $
+ CVS: $Id: worldgtk.cc,v 1.1.2.10 2007-11-01 07:18:53 rtv Exp $
 ***/
 
 
@@ -114,7 +114,7 @@ debug menu that enables visualization of some of the innards of Stage.
 #include <gdk/gdkglglext.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 
-//#define DEBUG 
+#define DEBUG 
 
 #include "stage.hh"
 #include "config.h" 
@@ -127,6 +127,7 @@ debug menu that enables visualization of some of the innards of Stage.
 #define VERSION 42.0
 #endif
 
+static const stg_msec_t STG_DEFAULT_REDRAW_INTERVAL = 100;
 
 // only models that have fewer rectangles than this get matrix
 // rendered when dragged
@@ -527,6 +528,8 @@ StgWorldGtk::StgWorldGtk()
 
   PRINT_DEBUG( "Constructing StgWorldGtk" );
   
+  this->graphics = true;
+
   // Create a top-level window
   frame = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   assert( frame );
@@ -621,7 +624,6 @@ StgWorldGtk::StgWorldGtk()
   // set up a reasonable default scaling, so that the world fits
   // neatly into the window.
   scale = width; //(1 to 1)
-  //scale = 0.2 * width; //(1 to 1)
 
   memset( &click_point, 0, sizeof(click_point));
 
@@ -663,7 +665,7 @@ StgWorldGtk::StgWorldGtk()
   stheta = 0.0;
 
   this->timer_handle = 0;
-  this->redraw_interval = 100; //msec
+  this->redraw_interval = STG_DEFAULT_REDRAW_INTERVAL; //msec
 
   // CREATE THE MENUS
   ui_manager = gtk_ui_manager_new ();
@@ -731,10 +733,6 @@ StgWorldGtk::StgWorldGtk()
 
   // show the window
   gtk_widget_show_all(frame);
-
-/*   // install the timeout callback that renders the window */
-/*   win->redraw_interval = STG_DEFAULT_REDRAW_INTERVAL; */
-/*   win->timeout_id = g_timeout_add( win->redraw_interval, timeout, world ); */
 }
 
 
@@ -1422,6 +1420,19 @@ void StgWorldGtk::Load( const char* filename )
       redraw_interval = 
 	wf->ReadInt(wf_section, "redraw_interval", redraw_interval );
       
+      const stg_msec_t lowbound = 10;
+      if( redraw_interval < lowbound )
+	{
+	  PRINT_WARN2( "redraw_interval of %lu is probably too low "
+		       "to be practical. Setting to %lu msec instead.",
+		       redraw_interval, lowbound );
+
+	  redraw_interval = lowbound;
+	}
+      
+      // there's no point redrawing faster than the world updates
+      //redraw_interval = MAX( redraw_interval, interval_real );
+
       if( timer_handle > 0 )
 	g_source_remove( timer_handle );
       
@@ -1441,8 +1452,6 @@ void StgWorldGtk::Save( void )
 {
   PRINT_DEBUG1( "%s.Save()", token );
   
-  StgWorld::Save();
-
   int width, height;
   gtk_window_get_size(  GTK_WINDOW(frame), &width, &height );
   
@@ -1472,6 +1481,8 @@ void StgWorldGtk::Save( void )
       wf->WriteInt( wf_section, tog->path, 
 		   gtk_toggle_action_get_active(  GTK_TOGGLE_ACTION(tog->action) ));
     }
+
+  StgWorld::Save();
 }
 
 
@@ -1502,6 +1513,11 @@ gboolean StgWorldGtk::DialogQuit( GtkWindow* parent )
   return true;
 }
 
+void StgWorldGtk::AddModel( StgModel*  mod  )
+{
+  mod->InitGraphics();
+  StgWorld::AddModel( mod );
+}
 
 
 typedef struct 
@@ -1664,8 +1680,8 @@ bool StgWorldGtk::Update()
   
   StgWorld::Update(); // ignore return value
   
-  if( dirty )
-    Draw();
+  //if( dirty )
+  //Draw();
   
   while( gtk_events_pending() )
     gtk_main_iteration(); 
@@ -1879,6 +1895,7 @@ void StgWorldGtk::Draw()
   glLineWidth( 1 );
   
   // draw the models
+  //puts( "WORLD DRAW" );
   GList* it;
   for( it=children; it; it=it->next )
     ((StgModel*)it->data)->Draw();

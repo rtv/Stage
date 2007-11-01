@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.12 2007-10-31 03:55:11 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.13 2007-11-01 07:18:53 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -160,8 +160,14 @@ typedef double stg_meters_t;
 /** Radians: unit of angle */
 typedef double stg_radians_t;
 
+/** time structure */
+typedef struct timeval stg_time_t;
+
 /** Milliseconds: unit of (short) time */
 typedef unsigned long stg_msec_t;
+
+/** Microseconds: unit of (very short) time */
+typedef uint64_t stg_usec_t;
 
 /** Kilograms: unit of mass */
 typedef double stg_kg_t; // Kilograms (mass)
@@ -261,11 +267,11 @@ void stg_color_unpack( stg_color_t col,
 
 /** Returns the real (wall-clock) time in milliseconds since the
     epoch. */
-stg_msec_t stg_realtime( void );
+//stg_msec_t stg_realtime( void );
 
 /** Returns the real (wall-clock) time in milliseconds since the
     simulation started. */
-stg_msec_t stg_realtime_since_start( void );
+//stg_msec_t stg_realtime_since_start( void );
   
 
   /// iff stage wants to quit, this will return true, else false
@@ -1141,7 +1147,6 @@ protected:
   GList* children;
   GHashTable* child_types;
   char* token;
-  
   bool debug;
 
 public:
@@ -1176,10 +1181,11 @@ class StgBlockGrid
 private:
   stg_bigblock_t* map;
   
-  GTrashStack* trashstack;
+  GTrashStack* trashstack;  
+  uint32_t width, height, bwidth, bheight;
 
 public:
-  uint32_t width, height, bwidth, bheight;
+  uint32_t numbits;
   StgBlockGrid( uint32_t width, uint32_t height );
   ~StgBlockGrid();
   void AddBlock( uint32_t x, uint32_t y, StgBlock* block );
@@ -1194,16 +1200,22 @@ public:
 };
   
 
+
+
+const uint32_t INTERVAL_LOG_LEN = 32;
+
 /// WORLD CLASS
 class StgWorld : public StgAncestor
 {
 protected:
-  stg_msec_t real_time_next_update;
-  stg_msec_t real_time_start;
+  stg_usec_t real_time_next_update;
+  stg_usec_t real_time_start;
   static bool init_done;
+
 
   bool quit; // quit this world ASAP
   static bool quit_all; // quit all worlds ASAP
+
 
 private:
   
@@ -1236,8 +1248,11 @@ public:
   
   virtual ~StgWorld( void );
   
-  stg_msec_t RealTimeNow(void);
-  stg_msec_t RealTimeSinceStart(void);
+  bool graphics;
+
+  stg_usec_t real_time_now;
+  stg_usec_t RealTimeNow(void);
+  stg_usec_t RealTimeSinceStart(void);
   void PauseUntilNextUpdateTime(void);
 
   virtual void Load( const char* worldfile_path );
@@ -1262,18 +1277,19 @@ public:
   GList* velocity_list; ///< a list of models that have non-zero velocity, for efficient updating
   CWorldFile* wf; ///< If set, points to the worldfile used to create this world
 
-  stg_msec_t sim_time; ///< the current sim time in this world in ms
-  stg_msec_t wall_last_update; ///< the real time of the last update in ms
+  stg_usec_t sim_time; ///< the current sim time in this world in ms
+  stg_usec_t wall_last_update; ///< the real time of the last update in ms
 
   long unsigned int updates; ///< the number of simulated time steps executed so far
   
   bool dirty; ///< iff true, a gui redraw would be required
 
-  stg_msec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
-  stg_msec_t interval_sleep_max;
-  stg_msec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
-  //stg_msec_t real_interval_measured;
+  stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
+  stg_usec_t interval_sleep_max;
+  stg_usec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
 
+  stg_usec_t interval_log[INTERVAL_LOG_LEN];
+  
   int total_subs; ///< the total number of subscriptions to all models
   double ppm; ///< the resolution of the world model in pixels per meter  
 
@@ -1284,8 +1300,8 @@ public:
   StgModel* GetModel( const stg_id_t id );
   StgModel* GetModel( const char* name );
   
-  void AddModel( StgModel* mod );
-  void RemoveModel( StgModel* mod );
+  virtual void AddModel( StgModel* mod );
+  virtual void RemoveModel( StgModel* mod );
   void AddModelName( StgModel* mod );  
 
   void StartUpdatingModel( StgModel* mod );
@@ -1374,8 +1390,8 @@ public:
   
   int subs;     //< the number of subscriptions to this model
   
-  stg_msec_t update_interval_ms; //< time between updates in ms
-  stg_msec_t last_update_ms; //< time of last update in ms
+  stg_usec_t interval; //< time between updates in ms
+  stg_usec_t last_update; //< time of last update in ms
   
   stg_bool_t disabled; //< if non-zero, the model is disabled
    
@@ -1422,7 +1438,9 @@ public:
   virtual void DrawData( void );
   virtual void DataVisualize( void );
   virtual void DrawSelected(void);
-  
+  virtual void InitGraphics(void); // called by a world that supports
+				   // graphics
+
   virtual void PushColor( stg_color_t col )
   { world->PushColor( col ); }
   
@@ -1812,6 +1830,8 @@ public:
 protected:
   GlColorStack colorstack;
   
+  virtual void AddModel( StgModel*  mod );
+
 private:
   GList* selected_models; ///<   a list of models that are currently selected by the user 
 
@@ -1953,11 +1973,12 @@ public:
 //#define FALSE 0
 //#endif
 
-#define MILLION 1e6
-#define BILLION 1e9
+#define THOUSAND (1e3)
+#define MILLION (1e6)
+#define BILLION (1e9)
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+#define M_PI (3.14159265358979323846)
 #endif
 
 #ifndef TWOPI
@@ -2121,6 +2142,7 @@ public:
     virtual void Load( void );  
     virtual void Print( char* prefix );
     virtual void DataVisualize( void );
+    virtual void InitGraphics(void);
 
     void SetSampleCount( unsigned int count );
 
@@ -2306,8 +2328,9 @@ class StgModelRanger : public StgModel
 public:
   // constructor
   StgModelRanger( StgWorld* world,
-	       StgModel* parent, 
-	       stg_id_t id, CWorldFile* wf );
+		  StgModel* parent, 
+		  stg_id_t id, 
+		  char* typestr );
   
   // destructor
   virtual ~StgModelRanger( void );
@@ -2317,10 +2340,20 @@ public:
   virtual void Update( void );
   virtual void Load( void );
   virtual void Print( char* prefix );
-  virtual void DListData( void );
+  virtual void DataVisualize( void );
 
   size_t sensor_count;
   stg_ranger_sensor_t* sensors;
+
+  // static wrapper for the constructor - all models must implement
+  // this method and add an entry in typetable.cc
+  static StgModel* Create( StgWorld* world,
+			   StgModel* parent, 
+			   stg_id_t id, 
+			   char* typestr )
+  { 
+    return (StgModel*)new StgModelRanger( world, parent, id, typestr ); 
+  }    
 };
 
   // BUMPER MODEL --------------------------------------------------------
