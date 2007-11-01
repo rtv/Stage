@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_map.cc,v 1.13 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_map.cc,v 1.14 2007-11-01 22:17:18 gerkey Exp $
  */
 
 #include "p_driver.h"
@@ -171,7 +171,9 @@ int InterfaceMap::HandleMsgReqData( QueuePointer &resp_queue,
   sj = mapresp->height =  mapreq->height;
   
   // initiall all cells are 'empty'
-  memset( mapresp->data, -1, sizeof(uint8_t) * PLAYER_MAP_MAX_TILE_SIZE );
+  mapresp->data_count = mapresp->width * mapresp->height;
+  mapresp->data = new int8_t[mapresp->data_count];
+  memset( mapresp->data, -1, sizeof(uint8_t) * mapresp->data_count );
 
   printf( "Stage computing map tile (%d,%d)(%d,%d)...",
    	  oi, oj, si, sj);
@@ -222,7 +224,6 @@ int InterfaceMap::HandleMsgReqData( QueuePointer &resp_queue,
 // 		   right, 0, 0,0, 1 );
 //     }
 
-   mapresp->data_count = mapresp->width * mapresp->height;
    
    //printf( "Stage publishing map data %d bytes\n",
    //   (int)mapsize );
@@ -231,6 +232,7 @@ int InterfaceMap::HandleMsgReqData( QueuePointer &resp_queue,
 			 PLAYER_MSGTYPE_RESP_ACK,
 			 PLAYER_MAP_REQ_GET_DATA,
 			 (void*)mapresp, mapsize, NULL);
+   delete [] mapresp->data;
    free(mapresp);   
 
    puts( " done." );

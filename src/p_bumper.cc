@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_bumper.cc,v 1.3 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_bumper.cc,v 1.4 2007-11-01 22:17:18 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -65,21 +65,18 @@ void InterfaceBumper::Publish( void )
   if( len > 0 )
     {      
       size_t bcount = len / sizeof(stg_bumper_sample_t);
-      
-      // limit the number of samples to Player's maximum
-      if( bcount > PLAYER_BUMPER_MAX_SAMPLES )
-	bcount = PLAYER_BUMPER_MAX_SAMPLES;
-      
       pdata.bumpers_count = bcount;
+      pdata.bumpers = new uint8_t[bcount];
       
       for( int i=0; i<(int)bcount; i++ )
-	pdata.bumpers[i] = sdata[i].hit ? 1 : 0;
+      	pdata.bumpers[i] = sdata[i].hit ? 1 : 0;
     } 
   
   this->driver->Publish( this->addr,
 			 PLAYER_MSGTYPE_DATA,
 			 PLAYER_BUMPER_DATA_STATE,
 			 &pdata, sizeof(pdata), NULL); 
+  delete [] pdata.bumpers;
 }
 
 
@@ -88,7 +85,7 @@ int InterfaceBumper::ProcessMessage( QueuePointer &resp_queue,
 				     void* data )
 {  
   if( Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-			    PLAYER_BUMPER_GET_GEOM, 
+			    PLAYER_BUMPER_REQ_GET_GEOM, 
 			    this->addr) )
     {
       size_t cfglen = mod->cfg_len;
@@ -102,10 +99,8 @@ int InterfaceBumper::ProcessMessage( QueuePointer &resp_queue,
       memset( &pgeom, 0, sizeof(pgeom) );
       
       // limit the number of samples to Player's maximum
-      if( bcount > PLAYER_BUMPER_MAX_SAMPLES )
-	bcount = PLAYER_BUMPER_MAX_SAMPLES;
-      
       pgeom.bumper_def_count = bcount;
+      pgeom.bumper_def = new player_bumper_define_t[bcount];
       
       for( int i=0; i<(int)bcount; i++ )
 	{
@@ -119,9 +114,9 @@ int InterfaceBumper::ProcessMessage( QueuePointer &resp_queue,
       
       this->driver->Publish( this->addr, resp_queue, 
 			     PLAYER_MSGTYPE_RESP_ACK, 
-			     PLAYER_BUMPER_GET_GEOM,
+			     PLAYER_BUMPER_REQ_GET_GEOM,
 			     (void*)&pgeom, sizeof(pgeom), NULL );
-      
+      delete [] pgeom.bumper_def;
       return 0; // ok
     }
   else
