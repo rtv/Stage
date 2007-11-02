@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.22 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_simulation.cc,v 1.23 2007-11-02 00:06:51 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -258,7 +258,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
       memcpy( &reply, req, sizeof(reply));
       reply.pose.px = pose->x;
       reply.pose.py = pose->y;
-      reply.pose.pa = pose->a;
+      reply.pose.pa = NORMALIZE(pose->a);
 
       /*
          printf( "Stage: returning location (%d %d %d)\n",
