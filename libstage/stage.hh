@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.13 2007-11-01 07:18:53 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.14 2007-11-17 23:31:22 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -47,8 +47,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
-#include <glib-object.h>
-#include <gtk/gtk.h>
+//#include <glib-object.h>
+//#include <gtk/gtk.h>
 
 // todo: consider moving these out
 #include "worldfile.hh"
@@ -754,7 +754,7 @@ typedef struct
   void* arg_on; // argument to callback_on
   void* arg_off; // argument to callback_off
   //int default_state; // disabled = 0
-  GtkAction* action; // action associated with this toggle, may be NULL
+  //GtkAction* action; // action associated with this toggle, may be NULL
   char* path;
 } stg_property_toggle_args_t;
 
@@ -1164,6 +1164,7 @@ public:
   const char* Token( void )
   { return this->token; }
   
+  // todo - should these be pure virtual?
   virtual void PushColor( stg_color_t col ){} // does nothing
   virtual void PushColor( double r, double g, double b, double a ){} // does nothing
   virtual void PopColor(){} // does nothing
@@ -1228,7 +1229,7 @@ private:
   
 public:
 
-  StgWorld( void ); 
+  StgWorld( void );
   
   StgWorld( const char* token, 
 	    stg_msec_t interval_sim, 
@@ -1434,6 +1435,7 @@ public:
   /** save the state of the model to the current world file */
   virtual void Save( void );
   virtual void Draw( void );
+  virtual void DrawPicker( void );
   virtual void DrawBody( void );
   virtual void DrawData( void );
   virtual void DataVisualize( void );
@@ -1725,6 +1727,7 @@ public:
   void UnMap(); // draw the block into the world
 
   void Draw(); // draw the block in OpenGL
+  void DrawSolid(); // draw the block in OpenGL as a solid single color
 
   stg_point_t* pts; //< points defining a polygon
   size_t pt_count; //< the number of points
@@ -1761,12 +1764,12 @@ private:
 
 //#if _INCLUDE_GTK // TODO - conditional compilation of the GUI
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
-#include <GL/glx.h> // for XFont for drawing text from X fonts
-#include <gtk/gtk.h>
-#include <gtk/gtkgl.h>
+#include <gl.h>
+#include <glu.h>
+//#include <GL/glext.h>
+//#include <glx.h> // for XFont for drawing text from X fonts
+//#include <gtk/gtk.h>
+//#include <gtk/gtkgl.h>
 
 // COLOR STACK CLASS
 class GlColorStack
@@ -1789,189 +1792,271 @@ class GlColorStack
   GQueue* colorstack;
 };
 
-// WORLDGTK class - a world plus a GUI
-class StgWorldGtk : public StgWorld
-{
-public:
-  StgWorldGtk( void );
-  virtual ~StgWorldGtk( void );
+// // WORLDGTK class - a world plus a GUI
+// class StgWorldGtk : public StgWorld
+// {
+// public:
+//   StgWorldGtk( void );
+//   virtual ~StgWorldGtk( void );
     
-  void Configure( int width, 
-		  int height, 
-		  double xscale, 
-		  double yscale, 
-		  double xcenter, 
-		  double ycenter );
+//   void Configure( int width, 
+// 		  int height, 
+// 		  double xscale, 
+// 		  double yscale, 
+// 		  double xcenter, 
+// 		  double ycenter );
 
-  static void Init( int* argc, char** argv[] );
+//   static void Init( int* argc, char** argv[] );
 
-  virtual void Load( const char* filename );
-  virtual void Save( void );
-  virtual void Draw( void );
-  virtual bool Update( void );
-  virtual bool RealTimeUpdate( void );
+//   virtual void Load( const char* filename );
+//   virtual void Save( void );
+//   virtual void Draw( void );
+//   virtual bool Update( void );
+//   virtual bool RealTimeUpdate( void );
+  
+//   virtual void PushColor( stg_color_t col )
+//   { colorstack.Push( col ); } 
+  
+//   virtual void PushColor( double r, double g, double b, double a )
+//   { colorstack.Push( r,g,b,a ); }
+
+//   virtual void PopColor()
+//   { colorstack.Pop(); } 
+
+//   void AddViewItem( const gchar *name,
+// 		    const gchar *label,
+// 		    const gchar *tooltip,
+// 		    GCallback callback,
+// 		    gboolean  is_active,
+// 		    void* userdata );
+
+// protected:
+//   GlColorStack colorstack;
+  
+//   virtual void AddModel( StgModel*  mod );
+
+// private:
+//   GList* selected_models; ///<   a list of models that are currently selected by the user 
+
+//   // Gtk stuff
+//   GtkWidget* frame;    
+//   GtkWidget *layout;
+//   GtkWidget *menu_bar;
+//   //GtkWidget* scrolled_win;
+  
+//   // The status bar widget
+//   GtkStatusbar *status_bar;
+//   GtkProgressBar *perf_bar;
+//   GtkProgressBar *rt_bar;
+//   GtkLabel *clock_label;
+//   GtkActionGroup *action_group;
+
+//   // the main drawing widget
+//   GtkWidget* canvas;
+//   int dirty;
+  
+//   int draw_list;
+//   int debug_list;
+
+//   char clock[512];
+
+//   stg_radians_t stheta; ///< view rotation about x axis
+//   stg_radians_t sphi; ///< view rotation about x y axis
+//   double scale; ///< view scale
+//   double panx; ///< pan along x axis in meters
+//   double pany; ///< pan along y axis in meters
+  
+//   stg_point_t click_point; ///< The place where the most recent
+//   ///< mouse click happened, in world coords
+    
+//   GtkStatusbar* statusbar;
+//   GtkLabel* timelabel;
+    
+//   gboolean dragging;
+  
+//   int frame_series;
+//   int frame_index;
+//   int frame_callback_tag;
+//   int frame_interval;
+//   stg_image_format_t frame_format;
+  
+//   stg_pose_t selection_pose_start;
+//   stg_point_3d_t selection_pointer_start;
+  
+//   GList* toggle_list;  
+
+//   int wf_section;
+  
+//   //GdkGLConfig *glconfig;
+
+//   // mouse click position, for dragging
+//   int beginX, beginY;
+  
+// private:
+//   stg_msec_t redraw_interval;
+//   guint timer_handle;
+
+//   bool follow_selection;
+//   bool show_quadtree;  
+//   bool show_occupancy;  
+//   bool show_fill;
+//   bool show_geom;
+//   bool show_polygons;
+//   bool show_grid;
+//   bool show_data;
+//   bool show_cfg;
+//   bool show_cmd;
+//   bool show_alpha;
+//   bool show_thumbnail;
+//   bool show_bboxes;
+//   bool show_trails;
+
+// public:
+//   void SetFollowSelection( bool b ){ this->follow_selection = b; dirty=true; }
+//   void SetShowFill( bool b ){ this->show_fill = b; dirty=true; }    
+//   void SetShowGeom( bool b ){ this->show_geom = b; dirty=true; }    
+//   void SetShowPolygons( bool b ){ this->show_polygons = b;  dirty=true; }
+//   void SetShowAlpha( bool b ){ this->show_alpha = b; dirty=true; }
+//   void SetShowThumbnail( bool b ){ this->show_thumbnail = b;  dirty=true;}
+//   void SetShowBBoxes( bool b ){ this->show_bboxes = b; dirty=true; }
+//   void SetShowTrails( bool b ){ this->show_trails = b; dirty=true; }
+//   void SetShowGrid( bool b ){ this->show_grid = b; dirty=true; }
+//   void SetShowQuadtree( bool b ){ this->show_quadtree = b; dirty=true; }
+//   void SetShowOccupancy( bool b ){ this->show_occupancy = b; dirty=true; }
+  
+  
+//   // signal handlers
+//   //gboolean EvDelete( GtkWidget *widget );
+//   //void EvDestroy( GtkWidget *widget, GdkEvent *event );
+//   void Realize( GtkWidget *widget );
+//   //void EvConfigure( GtkWidget *widget );
+  
+//   void CanvasMotionNotify( GdkEventMotion *event );
+//   void CanvasButtonPress( GdkEventButton *event );
+//   void CanvasButtonRelease( GdkEventButton *event );
+  
+//   gboolean DialogQuit( GtkWindow* parent );
+//   void SetTitle( char* txt );
+//   void RenderClock();
+//   void SetWindowSize( unsigned int w, unsigned int h );
+  
+//   // exporting screen shots as image files
+//   void ExportSequenceStart();
+//   void ExportSequenceStop();
+//   void ExportSequence();
+//   void ExportWindow();
+//   void SetExportFormat( stg_image_format_t format);
+//   void SetExportInterval( int interval );
+  
+//   void Derotate();
+//   void Zoom( double multiplier ); ///< multiply the scale factor by the argument
+//   void SetScale( double scale ); ///< set the scale factor directly
+//   void AboutBox();
+//   GtkWidget* GetCanvas(){ return canvas; }
+  
+//   void PushModelStatus( StgModel* mod, char* verb );
+//   void PopModelStatus();
+  
+//   // convert canvas window pixel coordinate to 3d world coordinate
+//   void CanvasToWorld( int px, int py, 
+// 		      double *wx, double *wy, double* wz );
+
+//   StgModel* NearestRootModel( double wx, double wy );
+
+//   };
+
+/** @} */
+
+/* FLTK code - experimenting with replacing GTK with a more portable
+   and less bulky framework */
+#include <FL/Fl.H>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Menu_Button.H>
+#include <FL/Fl_Gl_Window.H>
+#include <FL/gl.h>
+
+class StgGlWindow;
+
+class StgWorldGui : public StgWorld, public Fl_Gl_Window 
+{
+protected:
+  GlColorStack colorstack;
+  double scale;
+  
+  double fg;                       // foreground brightness
+  double bg;                       // background brightness
+  double panx, pany, stheta, sphi;
+  
+  int startx, starty;
+  bool dragging;
+
+  //int overlay_sides;
+  //bool ctrl_down;
+
+  GList* selected_models; ///<   a list of models that are currently selected by the user 
+
+public:
+  StgWorldGui(int W,int H,const char*L=0);
+  StgGlWindow* gl;        
+  //Fl_Menu_Bar* menubar;  
+
+  bool follow_selection;
+  bool show_quadtree;  
+  bool show_occupancy;  
+  bool show_geom;
+  bool show_boxes;
+  bool show_grid;
+  bool show_data;
+  bool show_cfg;
+  bool show_cmd;
+  bool show_thumbnail;
+  bool show_trails;
+  bool show_clock;
+
+  //bool show_bboxes;
+  //bool show_alpha;
+  //bool show_fill;
+
+  bool graphics;
+  void FixViewport(int W,int H);
+  virtual void draw();
+  virtual void draw_overlay();
+  virtual int handle( int event );
+  void resize(int X,int Y,int W,int H);
+  
+  //Fl_Menu_Item* menuitems;
+  Fl_Menu_Button* menu;
+
+  void PopupMenu( int x, int y);
+
+  // overloaded StgWorld methods
+  virtual bool RealTimeUpdate();
+  virtual bool Update();
+  virtual void AddModel( StgModel* mod );
+
+  void CanvasToWorld( int px, int py, 
+		      double *wx, double *wy, double* wz );
+
+  StgModel* Select( int x, int y );
   
   virtual void PushColor( stg_color_t col )
   { colorstack.Push( col ); } 
   
   virtual void PushColor( double r, double g, double b, double a )
   { colorstack.Push( r,g,b,a ); }
-
+  
   virtual void PopColor()
   { colorstack.Pop(); } 
+};
 
-  void AddViewItem( const gchar *name,
-		    const gchar *label,
-		    const gchar *tooltip,
-		    GCallback callback,
-		    gboolean  is_active,
-		    void* userdata );
+#ifndef TRUE
+#define TRUE 1
+#endif
 
-protected:
-  GlColorStack colorstack;
-  
-  virtual void AddModel( StgModel*  mod );
-
-private:
-  GList* selected_models; ///<   a list of models that are currently selected by the user 
-
-  // Gtk stuff
-  GtkWidget* frame;    
-  GtkWidget *layout;
-  GtkWidget *menu_bar;
-  //GtkWidget* scrolled_win;
-  
-  // The status bar widget
-  GtkStatusbar *status_bar;
-  GtkProgressBar *perf_bar;
-  GtkProgressBar *rt_bar;
-  GtkLabel *clock_label;
-  GtkActionGroup *action_group;
-
-  // the main drawing widget
-  GtkWidget* canvas;
-  int dirty;
-  
-  int draw_list;
-  int debug_list;
-
-  char clock[512];
-
-  stg_radians_t stheta; ///< view rotation about x axis
-  stg_radians_t sphi; ///< view rotation about x y axis
-  double scale; ///< view scale
-  double panx; ///< pan along x axis in meters
-  double pany; ///< pan along y axis in meters
-  
-  stg_point_t click_point; ///< The place where the most recent
-  ///< mouse click happened, in world coords
-    
-  GtkStatusbar* statusbar;
-  GtkLabel* timelabel;
-    
-  gboolean dragging;
-  
-  int frame_series;
-  int frame_index;
-  int frame_callback_tag;
-  int frame_interval;
-  stg_image_format_t frame_format;
-  
-  stg_pose_t selection_pose_start;
-  stg_point_3d_t selection_pointer_start;
-  
-  GList* toggle_list;  
-
-  int wf_section;
-  
-  GdkGLConfig *glconfig;
-
-  // mouse click position, for dragging
-  int beginX, beginY;
-  
-private:
-  stg_msec_t redraw_interval;
-  guint timer_handle;
-
-  bool follow_selection;
-
-  bool show_quadtree;  
-  bool show_occupancy;  
-  bool show_fill;
-  bool show_geom;
-  bool show_polygons;
-  bool show_grid;
-  bool show_data;
-  bool show_cfg;
-  bool show_cmd;
-  bool show_alpha;
-  bool show_thumbnail;
-  bool show_bboxes;
-  bool show_trails;
-
-public:
-  void SetFollowSelection( bool b ){ this->follow_selection = b; dirty=true; }
-  void SetShowFill( bool b ){ this->show_fill = b; dirty=true; }    
-  void SetShowGeom( bool b ){ this->show_geom = b; dirty=true; }    
-  void SetShowPolygons( bool b ){ this->show_polygons = b;  dirty=true; }
-  void SetShowAlpha( bool b ){ this->show_alpha = b; dirty=true; }
-  void SetShowThumbnail( bool b ){ this->show_thumbnail = b;  dirty=true;}
-  void SetShowBBoxes( bool b ){ this->show_bboxes = b; dirty=true; }
-  void SetShowTrails( bool b ){ this->show_trails = b; dirty=true; }
-  void SetShowGrid( bool b ){ this->show_grid = b; dirty=true; }
-  void SetShowQuadtree( bool b ){ this->show_quadtree = b; dirty=true; }
-  void SetShowOccupancy( bool b ){ this->show_occupancy = b; dirty=true; }
-  
-  
-  // signal handlers
-  //gboolean EvDelete( GtkWidget *widget );
-  //void EvDestroy( GtkWidget *widget, GdkEvent *event );
-  void Realize( GtkWidget *widget );
-  //void EvConfigure( GtkWidget *widget );
-  
-  void CanvasMotionNotify( GdkEventMotion *event );
-  void CanvasButtonPress( GdkEventButton *event );
-  void CanvasButtonRelease( GdkEventButton *event );
-  
-  gboolean DialogQuit( GtkWindow* parent );
-  void SetTitle( char* txt );
-  void RenderClock();
-  void SetWindowSize( unsigned int w, unsigned int h );
-  
-  // exporting screen shots as image files
-  void ExportSequenceStart();
-  void ExportSequenceStop();
-  void ExportSequence();
-  void ExportWindow();
-  void SetExportFormat( stg_image_format_t format);
-  void SetExportInterval( int interval );
-  
-  void Derotate();
-  void Zoom( double multiplier ); ///< multiply the scale factor by the argument
-  void SetScale( double scale ); ///< set the scale factor directly
-  void AboutBox();
-  GtkWidget* GetCanvas(){ return canvas; }
-  
-  void PushModelStatus( StgModel* mod, char* verb );
-  void PopModelStatus();
-  
-  // convert canvas window pixel coordinate to 3d world coordinate
-  void CanvasToWorld( int px, int py, 
-		      double *wx, double *wy, double* wz );
-
-  StgModel* NearestRootModel( double wx, double wy );
-
-  };
-
-/** @} */
-
-//#ifndef TRUE
-//#define TRUE 1
-//#endif
-
-//#ifndef FALSE
-//#define FALSE 0
-//#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 
 #define THOUSAND (1e3)
 #define MILLION (1e6)

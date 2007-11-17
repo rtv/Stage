@@ -109,10 +109,10 @@ model
 #define _GNU_SOURCE
 
 #include <limits.h> 
-#include <assert.h>
-#include <math.h>
-#include <GL/gl.h>
-#include <glib.h>
+//#include <assert.h>
+//#include <math.h>
+//#include <GL/gl.h>
+//#include <glib.h>
 
 //#define DEBUG
 #include "stage.hh"
@@ -235,7 +235,7 @@ void StgModel::InitGraphics()
 {
   this->dl_body = glGenLists(1);
   this->dl_data = glGenLists(1);
-  this->dl_grid = glGenLists(1);
+  this->dl_grid = glGenLists(1);  
 }
 
 
@@ -709,13 +709,19 @@ void StgModel::Update( void )
  
 void StgModel::DrawData( void )
 {
+  if( this->data_dirty )
+    {
+      this->DataVisualize();
+      this->data_dirty = false;
+    }
+
   glPushMatrix();
   
   // move into this model's local coordinate frame
   gl_pose_shift( &this->pose );
   gl_pose_shift( &this->geom.pose );
   
-  //glCallList( this->dl_data );
+  glCallList( this->dl_data );
   glCallList( this->dl_raytrace );
   
   // shift up the CS to the top of this model
@@ -749,7 +755,7 @@ void StgModel::Draw( void )
   //PRINT_DEBUG1( "Drawing %s", token );
 
   glPushMatrix();
-  
+
   // move into this model's local coordinate frame
   gl_pose_shift( &this->pose );
   gl_pose_shift( &this->geom.pose );
@@ -762,19 +768,12 @@ void StgModel::Draw( void )
   
   glCallList( this->dl_body );
   
-  if( this->data_dirty )
-    {
-      this->DataVisualize();
-      this->data_dirty = false;
-    }
-
-  glCallList( this->dl_data );
   
   //if( this->say_string )
   // gl_speech_bubble( 0,0,0, this->say_string );
 
   // Call my various display lists
-  //if( win->show_grid ) && this->gui_grid )
+  //if( this->gui_grid )
   //glCallList( this->dl_grid );
 
   // shift up the CS to the top of this model
@@ -787,6 +786,30 @@ void StgModel::Draw( void )
 
   //glCallList( this->dl_debug );
 }
+
+void StgModel::DrawPicker( void )
+{
+  //PRINT_DEBUG1( "Drawing %s", token );
+
+  glPushMatrix();
+
+  // move into this model's local coordinate frame
+  gl_pose_shift( &this->pose );
+  gl_pose_shift( &this->geom.pose );
+  
+  // draw the boxes
+  for( GList* it=blocks; it; it=it->next )
+    ((StgBlock*)it->data)->DrawSolid() ;
+  
+  // shift up the CS to the top of this model
+  gl_coord_shift(  0,0, this->geom.size.z, 0 );
+  
+  // recursively draw the tree below this model 
+  LISTMETHOD( this->children, StgModel*, DrawPicker );
+
+  glPopMatrix(); // drop out of local coords
+}
+
 
 // call this when the local physical appearance has changed
 void StgModel::DrawBody( void )
@@ -1275,6 +1298,9 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
 
 void StgModel::UpdatePose( void )
 {
+  if( disabled )
+    return;
+
    //stg_velocity_t gvel;
    //this->GetGlostg_model_get_global_velocity( mod, &gvel );
       

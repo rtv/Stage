@@ -54,8 +54,9 @@ described on the manual page for each model type.
 #include <assert.h>
 #include <string.h> // for strdup(3)
 #include <locale.h> 
+#include <glib-object.h> // fior g_type_init() used by GDKPixbuf objects
 
-#define DEBUG 
+//#define DEBUG 
 
 #include "stage.hh"
 
@@ -205,6 +206,7 @@ void StgWorld::ClockString( char* str, size_t maxlen )
   
   double localratio = (double)interval_sim / (double)average_real_interval;
   
+#ifdef DEBUG
   if( hours > 0 )
     snprintf( str, maxlen, "Time: %uh%02um%02u.%03us\t[%.1f]\tsubs: %d  %s",
 	      hours, minutes, seconds, msec,
@@ -217,6 +219,18 @@ void StgWorld::ClockString( char* str, size_t maxlen )
 	      localratio,
 	      total_subs,
 	      paused ? "--PAUSED--" : "" );
+#else
+  if( hours > 0 )
+    snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.1f] %s",
+	      hours, minutes, seconds, msec,
+	      localratio,
+	      paused ? "--PAUSED--" : "" );
+  else
+    snprintf( str, maxlen, "%02um%02u.%03us\t[%.1f] %s",
+	      minutes, seconds, msec,
+	      localratio,
+	      paused ? "--PAUSED--" : "" );
+#endif
 }
 
 void StgWorld::Load( const char* worldfile_path )
@@ -365,15 +379,15 @@ bool StgWorld::Update()
     {  
       //PRINT_DEBUG( "StgWorld::Update()" );
 
-      if( interval_real > 0 || updates % 100 == 0 )
-	{
-	  char str[64];
-	  ClockString( str, 64 );
-	  //printf( "Stage timestep: %lu simtime: %lu\n",
-	  //      updates, sim_time );
-	  printf( "\r%s", str );
-	  fflush(stdout);
-	}
+//       if( interval_real > 0 || updates % 100 == 0 )
+// 	{
+// 	  char str[64];
+// 	  ClockString( str, 64 );
+// 	  //printf( "Stage timestep: %lu simtime: %lu\n",
+// 	  //      updates, sim_time );
+// 	  printf( "\r%s", str );
+// 	  fflush(stdout);
+// 	}
 
       // update any models that are due to be updated
       for( GList* it=this->update_list; it; it=it->next )

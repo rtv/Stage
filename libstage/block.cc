@@ -1,7 +1,4 @@
-#include <GL/gl.h>
-
 //#define DEBUG 1
-
 #include "stage.hh"
 
 
@@ -51,9 +48,7 @@ void StgBlock::DrawTop()
   glBegin(GL_POLYGON);
 
   for( unsigned int p=0; p<pt_count; p++ )
-    {
-      glVertex3f( pts[p].x, pts[p].y, zmax );
-    }
+    glVertex3f( pts[p].x, pts[p].y, zmax );
   
   glEnd();
 }       
@@ -108,6 +103,12 @@ void StgBlock::Draw()
   PopColor();
 }
 
+void StgBlock::DrawSolid( void )
+{
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+  DrawSides();
+  DrawTop();
+}
 
 void StgBlock::Map()
 {

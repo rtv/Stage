@@ -7,15 +7,15 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.9 $
+ //  $Revision: 1.1.2.10 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
  //#define DEBUG 
 
  #include <sys/time.h>
- #include <math.h>
- #include <GL/gl.h>
+//#include <math.h>
+// #include <GL/gl.h>
 
  #include "stage.hh"
 

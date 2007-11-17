@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.12 2007-11-01 07:18:53 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.13 2007-11-17 23:31:22 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -41,13 +41,17 @@ int main( int argc, char* argv[] )
       puts( "Usage: stest <worldfile> <robotname>" );
       exit(0);
     }
-      
+
+
+  StgWorld::Init( &argc, &argv );
+    
+  StgWorldGui world(800, 700, "Stage Test Program");
+  
   // initialize libstage
-  //StgWorld::Init( &argc, &argv );
   //StgWorld world;
 
-  StgWorldGtk::Init( &argc, &argv );
-  StgWorldGtk world;
+  //StgWorldGtk::Init( &argc, &argv );
+  //StgWorldGtk world;
 
   world.Load( argv[1] );
   
@@ -91,7 +95,7 @@ int main( int argc, char* argv[] )
        sprintf( namebuf, "MyWorld.position:%d.ranger:0", i );
        robots[i].ranger = (StgModelRanger*)world.GetModel( namebuf );
        assert(robots[i].ranger);
-       robots[i].ranger->Subscribe();
+       //robots[i].ranger->Subscribe();
     }
    
   // start the clock
@@ -105,13 +109,14 @@ int main( int argc, char* argv[] )
   
   //  StgModelLaser* laser = lasers[1];
 
-   while( world.RealTimeUpdate() )
-     // while( world.Update() )
+  while( world.RealTimeUpdate() )
+    //   while( world.Update() )
     {
       //       nothing
       //while( ! laser->DataIsFresh() )
       //if( ! world.RealTimeUpdate() )
       //break;
+
       
       for( int i=0; i<POPSIZE; i++ )
 	{

@@ -24,11 +24,14 @@ OBS = \
     stest.o \
     typetable.o \
     world.o \
-    worldgtk.o \
+    worldfltk.o \
     worldfile.o 
 
+#    worldgtk.o 
+
+
 CPPFLAGS= -g -Wall -I.. -I../replace `pkg-config --cflags gtkglext-1.0`
-LIBS= `pkg-config --libs gtkglext-1.0`
+LIBS= `pkg-config --libs gtkglext-1.0` -Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib
 
 
 all: foo
