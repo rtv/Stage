@@ -33,7 +33,8 @@ StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h)
   dragging = false;
   rotating = false;
 
-  showflags = STG_SHOW_CLOCK | STG_SHOW_DATA | STG_SHOW_BLOCKS | STG_SHOW_GRID;
+  //showflags = STG_SHOW_CLOCK | STG_SHOW_DATA | STG_SHOW_BLOCKS | STG_SHOW_GRID;
+  showflags = STG_SHOW_CLOCK | STG_SHOW_BLOCKS | STG_SHOW_GRID;
  
   // start the timer that causes regular redraws
   Fl::add_timeout( ((double)interval/1000), 

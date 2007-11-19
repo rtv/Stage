@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.14 2007-11-19 07:40:41 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.15 2007-11-19 08:18:44 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -30,8 +30,12 @@ typedef struct
   bool obs;
 } robot_t;
 
-const int POPSIZE = 10;
+const int POPSIZE = 100;
 
+#define VSPEED 0.4 // meters per second
+#define WGAIN 1.0 // turn speed gain
+#define SAFE_DIST 0.35 // meters
+#define SAFE_ANGLE 0.4 // radians
 
 int main( int argc, char* argv[] )
 { 
@@ -78,17 +82,20 @@ int main( int argc, char* argv[] )
        robots[i].avoidcount = 0;
        robots[i].obs = false;
        
-       sprintf( namebuf, "MyWorld.position:%d", i );
+       char* base = "r";
+       sprintf( namebuf, "%s%02d", base, i );
+       printf( "finding robot \"%s\"\n", namebuf );
        robots[i].position = (StgModelPosition*)world.GetModel( namebuf );
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
-       sprintf( namebuf, "MyWorld.position:%d.laser:0", i );
-       robots[i].laser = (StgModelLaser*)world.GetModel( namebuf );
-       assert(robots[i].laser);
-       robots[i].laser->Subscribe();
+       //sprintf( namebuf, "MyWorld.position:%d.laser:0", i );
+       //robots[i].laser = (StgModelLaser*)world.GetModel( namebuf );
+       //assert(robots[i].laser);
+       //robots[i].laser->Subscribe();
 
-       sprintf( namebuf, "MyWorld.position:%d.ranger:0", i );
+       //sprintf( namebuf, "MyWorld.position:%d.ranger:0", i );
+       sprintf( namebuf, "%s%02d.ranger:0", base, i );
        robots[i].ranger = (StgModelRanger*)world.GetModel( namebuf );
        assert(robots[i].ranger);
        robots[i].ranger->Subscribe();
@@ -107,6 +114,54 @@ int main( int argc, char* argv[] )
 
   while( world.RealTimeUpdate() )
     //   while( world.Update() )
+    for( int i=0; i<POPSIZE; i++ )
+	{
+	  
+	  StgModelRanger* rgr = robots[i].ranger;
+      
+      // compute the vector sum of the sonar ranges	      
+      double dx=0, dy=0;
+      
+      int num_ranges = rgr->sensor_count;//spp[i]->GetCount();
+      for( int s=0; s<num_ranges; s++ )
+	{
+	  //player_pose3d_t spose = spp[i]->GetPose(s);
+	  double srange = rgr->sensors[s].range; //spp[i]->GetScan(s);
+	  
+	  dx += srange * cos( rgr->sensors[s].pose.a );
+	  dy += srange * sin( rgr->sensors[s].pose.a );
+	}
+      
+      double resultant_angle = atan2( dy, dx );
+      //double resultant_magnitude = hypot( dy, dx );
+      
+      double forward_speed = 0.0;
+      double side_speed = 0.0;	   
+      double turn_speed = WGAIN * resultant_angle;
+      
+      int forward = num_ranges/2 -1 ;
+      // if the front is clear, drive forwards
+      if( (rgr->sensors[forward-1].range > SAFE_DIST) &&
+	  (rgr->sensors[forward  ].range > SAFE_DIST) &&
+	  (rgr->sensors[forward+1].range > SAFE_DIST) && 
+	  (fabs( resultant_angle ) < SAFE_ANGLE) )
+	{
+	  forward_speed = VSPEED;
+	}
+      
+      // send a command to the robot
+      stg_velocity_t vel;
+      vel.x = forward_speed;
+      vel.y = side_speed;
+      vel.z = 0;
+      vel.a = turn_speed;
+      
+      robots[i].position->Do( forward_speed, side_speed, turn_speed );
+
+           
+      //ppp[i]->SetSpeed( forward_speed, side_speed, turn_speed );
+    }
+
     {
 
       //}
