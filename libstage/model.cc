@@ -231,14 +231,6 @@ StgModel::StgModel( StgWorld* world,
 		this->id );
 }
 
-void StgModel::InitGraphics()
-{
-  this->dl_body = glGenLists(1);
-  this->dl_data = glGenLists(1);
-  this->dl_grid = glGenLists(1);  
-}
-
-
 StgModel::~StgModel( void )
 {
   // remove from parent, if there is one
@@ -707,32 +699,6 @@ void StgModel::Update( void )
   last_update = world->sim_time;
 }
  
-void StgModel::DrawData( void )
-{
-  if( this->data_dirty )
-    {
-      this->DataVisualize();
-      this->data_dirty = false;
-    }
-
-  glPushMatrix();
-  
-  // move into this model's local coordinate frame
-  gl_pose_shift( &this->pose );
-  gl_pose_shift( &this->geom.pose );
-  
-  glCallList( this->dl_data );
-  glCallList( this->dl_raytrace );
-  
-  // shift up the CS to the top of this model
-  gl_coord_shift(  0,0, this->geom.size.z, 0 );
-  
-  // recursively draw the tree below this model 
-  LISTMETHOD( this->children, StgModel*, DrawData );
-
-  glPopMatrix(); // drop out of local coords
-}
-
 void StgModel::DrawSelected()
 {
   glPushMatrix();
@@ -750,7 +716,7 @@ void StgModel::DrawSelected()
   glPopMatrix();
 }
 
-void StgModel::Draw( void )
+void StgModel::Draw( uint32_t flags )
 {
   //PRINT_DEBUG1( "Drawing %s", token );
 
@@ -759,32 +725,35 @@ void StgModel::Draw( void )
   // move into this model's local coordinate frame
   gl_pose_shift( &this->pose );
   gl_pose_shift( &this->geom.pose );
+
+  // draw all the blocks
+  if( flags & STG_SHOW_BLOCKS )
+    LISTMETHOD( this->blocks, StgBlock*, Draw );
   
-  if( this->body_dirty )
-    {
-      this->DrawBody();
-      this->body_dirty = false;
-    }
-  
-  glCallList( this->dl_body );
-  
-  
+  if( flags & STG_SHOW_DATA )
+    this->DataVisualize();
+
+  //if( flags & STG_SHOW_GEOM )
+    //this->DataVisualize();
+
+  // etc
+
   //if( this->say_string )
   // gl_speech_bubble( 0,0,0, this->say_string );
-
-  // Call my various display lists
-  //if( this->gui_grid )
-  //glCallList( this->dl_grid );
+  
+  
+  if( gui_grid && (flags & STG_SHOW_GRID) )
+    DrawGrid();
 
   // shift up the CS to the top of this model
   gl_coord_shift(  0,0, this->geom.size.z, 0 );
   
   // recursively draw the tree below this model 
-  LISTMETHOD( this->children, StgModel*, Draw );
+  //LISTMETHOD( this->children, StgModel*, Draw );
+  for( GList* it=children; it; it=it->next )
+    ((StgModel*)it->data)->Draw( flags );
 
   glPopMatrix(); // drop out of local coords
-
-  //glCallList( this->dl_debug );
 }
 
 void StgModel::DrawPicker( void )
@@ -811,77 +780,62 @@ void StgModel::DrawPicker( void )
 }
 
 
-// call this when the local physical appearance has changed
-void StgModel::DrawBody( void )
-{
-  //printf( "%s::GuiGenerateBody()\n", this->token );
-  
-  // draw blocks
-  glNewList( dl_body, GL_COMPILE );  
-  LISTMETHOD( this->blocks, StgBlock*, Draw );
-  glEndList();
-}
-  
 void StgModel::DataVisualize( void )
 {
   // do nothing
 }
 
+void StgModel::DrawGrid( void )
+{
+  PushColor( 0,0,0,0.1 );
 
-
-// void StgModel::GuiGenerateGrid( void )
-// {
-//   glNewList( dl_grid, GL_COMPILE );
-
-//   push_color_rgba( 0.8,0.8,0.8,0.8 );
-
-//   double dx = geom.size.x;
-//   double dy = geom.size.y;
-//   double sp = 1.0;
+  double dx = geom.size.x;
+  double dy = geom.size.y;
+  double sp = 1.0;
  
-//   int nx = (int) ceil((dx/2.0) / sp);
-//   int ny = (int) ceil((dy/2.0) / sp);
+  int nx = (int) ceil((dx/2.0) / sp);
+  int ny = (int) ceil((dy/2.0) / sp);
   
-//   if( nx == 0 ) nx = 1.0;
-//   if( ny == 0 ) ny = 1.0;
+  if( nx == 0 ) nx = 1.0;
+  if( ny == 0 ) ny = 1.0;
   
-//   glBegin(GL_LINES);
+  glBegin(GL_LINES);
 
-//   // draw the bounding box first
-//   glVertex2f( -nx, -ny );
-//   glVertex2f(  nx, -ny );
+  // draw the bounding box first
+  glVertex2f( -nx, -ny );
+  glVertex2f(  nx, -ny );
 
-//   glVertex2f( -nx, ny );
-//   glVertex2f(  nx, ny );
+  glVertex2f( -nx, ny );
+  glVertex2f(  nx, ny );
 
-//   glVertex2f( nx, -ny );
-//   glVertex2f( nx,  ny );
+  glVertex2f( nx, -ny );
+  glVertex2f( nx,  ny );
 
-//   glVertex2f( -nx,-ny );
-//   glVertex2f( -nx, ny );
+  glVertex2f( -nx,-ny );
+  glVertex2f( -nx, ny );
 
-//   int i;
-//   for (i = -nx+1; i < nx; i++)
-//     {
-//       glVertex2f(  i * sp,  - dy/2 );
-//       glVertex2f(  i * sp,  + dy/2 );
-//       //snprintf( str, 64, "%d", (int)i );
-//       //stg_rtk_fig_text( fig, -0.2 + (ox + i * sp), -0.2 , 0, str );
-//     }
+  char str[16];
+  int i;
+  for (i = -nx+1; i < nx; i++)
+    {
+      glVertex2f(  i * sp,  - dy/2 );
+      glVertex2f(  i * sp,  + dy/2 );
+      snprintf( str, 16, "%d", (int)i );
+      //gl_draw( str, -0.2 + (nx + i * sp), -0.2 , 1 );
+    }
   
-//   for (i = -ny+1; i < ny; i++)
-//     {
-//       glVertex2f( - dx/2, i * sp );
-//       glVertex2f( + dx/2,  i * sp );
-//       //snprintf( str, 64, "%d", (int)i );
-//       //stg_rtk_fig_text( fig, -0.2, -0.2 + (oy + i * sp) , 0, str );
-//     }
+  for (i = -ny+1; i < ny; i++)
+    {
+      glVertex2f( - dx/2, i * sp );
+      glVertex2f( + dx/2,  i * sp );
+      snprintf( str, 16, "%d", (int)i );
+      //gl_draw( str, -0.2, -0.2 + (ny + i * sp) , 1 );
+    }
   
-//   glEnd();
+  glEnd();
   
-//   pop_color();
-//   glEndList();
-// }
+  PopColor();
+}
 
 void StgModel::GetVelocity( stg_velocity_t* dest )
 {

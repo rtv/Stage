@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -355,7 +355,7 @@ void render_rangers( stg_ranger_sensor_t* sensors, size_t sensor_count )
 void StgModelRanger::DataVisualize( void )
 {
   // recreate the display list for this data
-  glNewList( this->dl_data, GL_COMPILE );
+  //glNewList( this->dl_data, GL_COMPILE );
   
   if( sensors && sensor_count ) 
     {
@@ -373,7 +373,8 @@ void StgModelRanger::DataVisualize( void )
       // restore state 
       glDepthMask( GL_TRUE ); 
     }
-  glEndList();
+
+  //glEndList();
 }
    
    

@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.14 2007-11-17 23:31:22 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.15 2007-11-19 07:40:41 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -685,6 +685,17 @@ void stg_d_render( stg_d_draw_t* d );
 /** TRUE iff A is less than or equal to B, subject to PRECISION */
 #define LTE(A,B) ((lrint(A*PRECISION))<=(lrint(B*PRECISION)))
 
+#define STG_SHOW_BLOCKS       1
+#define STG_SHOW_DATA         1<<1
+#define STG_SHOW_GEOM         1<<2
+#define STG_SHOW_GRID         1<<3
+#define STG_SHOW_OCCUPANCY    1<<4
+#define STG_SHOW_TRAILS       1<<5
+#define STG_SHOW_FOLLOW       1<<6
+#define STG_SHOW_CLOCK        1<<7
+#define STG_SHOW_QUADTREE     1<<8
+//#define STG_SHOW_   1<<
+
 // STAGE INTERNAL
 
 // forward declare
@@ -1143,6 +1154,8 @@ class StgModel;
 /// Base class for StgModel and StgWorld
 class StgAncestor
 {
+  friend class StgCanvas; // allow StgCanvas access to our private members
+  
 protected:
   GList* children;
   GHashTable* child_types;
@@ -1158,16 +1171,15 @@ public:
   
   virtual void AddChild( StgModel* mod );
   virtual void RemoveChild( StgModel* mod );
-  
   virtual void GetGlobalPose( stg_pose_t* gpose );  
   
   const char* Token( void )
   { return this->token; }
   
-  // todo - should these be pure virtual?
-  virtual void PushColor( stg_color_t col ){} // does nothing
-  virtual void PushColor( double r, double g, double b, double a ){} // does nothing
-  virtual void PopColor(){} // does nothing
+  // PURE VIRTUAL - descendents must implement
+  virtual void PushColor( stg_color_t col ) = 0;
+  virtual void PushColor( double r, double g, double b, double a ) = 0;
+  virtual void PopColor() = 0; // does nothing
 };
 
 
@@ -1400,7 +1412,7 @@ public:
   GList* blocks; //< list of stg_block_t structs that comprise a body
   
   // display lists
-  int dl_body, dl_data, dl_cmd, dl_cfg, dl_grid, dl_debug, dl_raytrace;
+  //int dl_body, dl_data, dl_cmd, dl_cfg, dl_grid, dl_debug, dl_raytrace;
   //GList* raytrace_dl_list;
 
   bool body_dirty; //< iff true, regenerate block display list before redraw
@@ -1434,13 +1446,14 @@ public:
   virtual void Load( void );
   /** save the state of the model to the current world file */
   virtual void Save( void );
-  virtual void Draw( void );
+  virtual void Draw( uint32_t flags );
   virtual void DrawPicker( void );
-  virtual void DrawBody( void );
-  virtual void DrawData( void );
+  //virtual void DrawBody( void );
+  //virtual void DrawData( void );
   virtual void DataVisualize( void );
+  void DrawGrid();
   virtual void DrawSelected(void);
-  virtual void InitGraphics(void); // called by a world that supports
+  //virtual void InitGraphics(void); // called by a world that supports
 				   // graphics
 
   virtual void PushColor( stg_color_t col )
@@ -1971,83 +1984,92 @@ class GlColorStack
    and less bulky framework */
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
+#include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Menu_Button.H>
 #include <FL/Fl_Gl_Window.H>
 #include <FL/gl.h>
+#include <Fl/Fl_Box.H>
 
-class StgGlWindow;
-
-class StgWorldGui : public StgWorld, public Fl_Gl_Window 
+class StgCanvas : public Fl_Gl_Window
 {
-protected:
+  friend class StgWorldGui; // allow access to private members
+
+private:
   GlColorStack colorstack;
   double scale;
-  
-  double fg;                       // foreground brightness
-  double bg;                       // background brightness
   double panx, pany, stheta, sphi;
-  
   int startx, starty;
   bool dragging;
-
-  //int overlay_sides;
-  //bool ctrl_down;
-
-  GList* selected_models; ///<   a list of models that are currently selected by the user 
+  bool rotating;
+  GList* selected_models; ///< a list of models that are currently
+			  ///selected by the user
+  StgModel* last_selection; ///< the most recently selected model
+			    ///(even if it is now unselected).
+  bool follow_selection;
+  uint32_t showflags;
+  stg_msec_t interval; // window refresh interval in ms
 
 public:
-  StgWorldGui(int W,int H,const char*L=0);
-  StgGlWindow* gl;        
-  //Fl_Menu_Bar* menubar;  
-
-  bool follow_selection;
-  bool show_quadtree;  
-  bool show_occupancy;  
-  bool show_geom;
-  bool show_boxes;
-  bool show_grid;
-  bool show_data;
-  bool show_cfg;
-  bool show_cmd;
-  bool show_thumbnail;
-  bool show_trails;
-  bool show_clock;
-
-  //bool show_bboxes;
-  //bool show_alpha;
-  //bool show_fill;
-
+  StgCanvas( StgWorld* world, int x, int y, int W,int H);
+  ~StgCanvas();
+  
+  StgWorld* world;
   bool graphics;
+
   void FixViewport(int W,int H);
   virtual void draw();
   virtual void draw_overlay();
   virtual int handle( int event );
   void resize(int X,int Y,int W,int H);
-  
-  //Fl_Menu_Item* menuitems;
-  Fl_Menu_Button* menu;
-
-  void PopupMenu( int x, int y);
-
-  // overloaded StgWorld methods
-  virtual bool RealTimeUpdate();
-  virtual bool Update();
-  virtual void AddModel( StgModel* mod );
 
   void CanvasToWorld( int px, int py, 
 		      double *wx, double *wy, double* wz );
 
   StgModel* Select( int x, int y );
   
-  virtual void PushColor( stg_color_t col )
+  inline void PushColor( stg_color_t col )
   { colorstack.Push( col ); } 
   
-  virtual void PushColor( double r, double g, double b, double a )
+  inline void PushColor( double r, double g, double b, double a )
   { colorstack.Push( r,g,b,a ); }
   
-  virtual void PopColor()
+  inline void PopColor()
   { colorstack.Pop(); } 
+  
+  static void TimerCallback( StgCanvas* canvas );
+};
+
+class StgWorldGui : public StgWorld, public Fl_Window 
+{
+private:
+  int wf_section;
+
+public:
+  StgWorldGui(int W,int H,const char*L=0);
+  ~StgWorldGui();
+
+  StgCanvas* canvas;
+  
+  // overload inherited methods
+  virtual bool RealTimeUpdate();
+  virtual bool Update();
+
+  virtual void Load( const char* filename );
+  virtual void Save();
+  
+  // static callback functions
+  static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
+  
+  virtual void PushColor( stg_color_t col )
+  { canvas->PushColor( col ); } 
+  
+  virtual void PushColor( double r, double g, double b, double a )
+  { canvas->PushColor( r,g,b,a ); }
+  
+  virtual void PopColor()
+  { canvas->PopColor(); } 
 };
 
 #ifndef TRUE
@@ -2227,7 +2249,7 @@ public:
     virtual void Load( void );  
     virtual void Print( char* prefix );
     virtual void DataVisualize( void );
-    virtual void InitGraphics(void);
+    //    virtual void InitGraphics(void);
 
     void SetSampleCount( unsigned int count );
 

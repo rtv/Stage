@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.10 $
+ //  $Revision: 1.1.2.11 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -111,14 +111,14 @@ StgModelLaser::~StgModelLaser( void )
     delete[] samples;
 }
 
-void StgModelLaser::InitGraphics()
-{
-  StgModel::InitGraphics();
+// void StgModelLaser::InitGraphics()
+// {
+//   StgModel::InitGraphics();
 
-  dl_debug_laser = glGenLists( 1 );
-  glNewList( dl_debug_laser, GL_COMPILE );
-  glEndList();
-}
+//   dl_debug_laser = glGenLists( 1 );
+//   glNewList( dl_debug_laser, GL_COMPILE );
+//   glEndList();
+// }
 
 void StgModelLaser::SetSampleCount( unsigned int count )
 {
@@ -182,18 +182,18 @@ void StgModelLaser::Update( void )
   double bearing = -fov/2.0;
   double sample_incr = fov / (double)(sample_count-1);  
 
-  if( debug )
-    {
-      glNewList( this->dl_debug_laser, GL_COMPILE );
-      glPushMatrix();
+//   if( debug )
+//     {
+//       glNewList( this->dl_debug_laser, GL_COMPILE );
+//       glPushMatrix();
 
-      // go into global coords
-      stg_pose_t gpose;
-      GetGlobalPose( &gpose );
-      //gl_coord_shift( -gpose.x, -gpose.y, 0, -gpose.a );
-      glRotatef( RTOD(-gpose.a), 0,0,1 );
-      glTranslatef( -gpose.x, -gpose.y, 0 );
-    }
+//       // go into global coords
+//       stg_pose_t gpose;
+//       GetGlobalPose( &gpose );
+//       //gl_coord_shift( -gpose.x, -gpose.y, 0, -gpose.a );
+//       glRotatef( RTOD(-gpose.a), 0,0,1 );
+//       glTranslatef( -gpose.x, -gpose.y, 0 );
+//     }
 
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
@@ -242,11 +242,11 @@ void StgModelLaser::Update( void )
 	   }
      }
    
-   if( debug )
-     {
-       glPopMatrix();
-       glEndList();
-     }
+//    if( debug )
+//      {
+//        glPopMatrix();
+//        glEndList();
+//      }
 
    data_dirty = true;
    
@@ -321,7 +321,7 @@ void StgModelLaser::Print( char* prefix )
 void StgModelLaser::DataVisualize( void )
 {
   // rebuild the graphics for this data
-  glNewList( dl_data, GL_COMPILE );
+  //glNewList( dl_data, GL_COMPILE );
   
   if( samples && sample_count )
     {
@@ -388,10 +388,10 @@ void StgModelLaser::DataVisualize( void )
       glPopMatrix();      
     }
   
-  if( this->debug )
-    glCallList( this->dl_debug_laser );
+  //if( this->debug )
+  //glCallList( this->dl_debug_laser );
 
-  glEndList();
+  //glEndList();
 }
 
 

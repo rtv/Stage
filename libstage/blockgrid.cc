@@ -14,8 +14,8 @@ StgBlockGrid::StgBlockGrid( uint32_t width, uint32_t height )
   this->bwidth = width >> NBITS;
   this->bheight = height >> NBITS;
   
-  printf( "Creating StgBlockGrid of [%u,%u](%u,%u) elements\n", 
-	  width, height, bwidth, bheight );
+  //printf( "Creating StgBlockGrid of [%u,%u](%u,%u) elements\n", 
+  //  width, height, bwidth, bheight );
   
   trashstack = NULL;
   

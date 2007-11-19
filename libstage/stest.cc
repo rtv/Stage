@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.13 2007-11-17 23:31:22 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.14 2007-11-19 07:40:41 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -32,6 +32,7 @@ typedef struct
 
 const int POPSIZE = 10;
 
+
 int main( int argc, char* argv[] )
 { 
   printf( "%s test program.\n", stg_package_string() );
@@ -43,15 +44,10 @@ int main( int argc, char* argv[] )
     }
 
 
-  StgWorld::Init( &argc, &argv );
-    
-  StgWorldGui world(800, 700, "Stage Test Program");
-  
   // initialize libstage
+  StgWorld::Init( &argc, &argv );
   //StgWorld world;
-
-  //StgWorldGtk::Init( &argc, &argv );
-  //StgWorldGtk world;
+  StgWorldGui world(800, 700, "Stage Test Program");
 
   world.Load( argv[1] );
   
@@ -95,7 +91,7 @@ int main( int argc, char* argv[] )
        sprintf( namebuf, "MyWorld.position:%d.ranger:0", i );
        robots[i].ranger = (StgModelRanger*)world.GetModel( namebuf );
        assert(robots[i].ranger);
-       //robots[i].ranger->Subscribe();
+       robots[i].ranger->Subscribe();
     }
    
   // start the clock
@@ -112,6 +108,9 @@ int main( int argc, char* argv[] )
   while( world.RealTimeUpdate() )
     //   while( world.Update() )
     {
+
+      //}
+      //{
       //       nothing
       //while( ! laser->DataIsFresh() )
       //if( ! world.RealTimeUpdate() )

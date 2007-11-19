@@ -14,7 +14,7 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage.hh"
 #include "config.h" // results of autoconf's system configuration tests

@@ -10,6 +10,7 @@ OBS = \
     ancestor.o \
     block.o \
     blockgrid.o \
+    canvas.o \
     gl.o \
     glcolorstack.o \
     model.o \
