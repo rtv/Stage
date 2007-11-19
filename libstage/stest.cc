@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.15 2007-11-19 08:18:44 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.16 2007-11-19 08:30:34 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -12,9 +12,6 @@
 #include <string.h>
 
 #include "stage.hh"
-//#include "world.hh"
-//#include "worldgtk.hh"
-//#include "config.h" // results of autoconf's system configuration tests
 
 double minfrontdistance = 0.750;
 double speed = 0.400;
@@ -30,8 +27,6 @@ typedef struct
   bool obs;
 } robot_t;
 
-const int POPSIZE = 100;
-
 #define VSPEED 0.4 // meters per second
 #define WGAIN 1.0 // turn speed gain
 #define SAFE_DIST 0.35 // meters
@@ -43,10 +38,11 @@ int main( int argc, char* argv[] )
 
   if( argc < 3 )
     {
-      puts( "Usage: stest <worldfile> <robotname>" );
+      puts( "Usage: stest <worldfile> <number of robots>" );
       exit(0);
     }
-
+  
+  const int POPSIZE = atoi(argv[2] );
 
   // initialize libstage
   StgWorld::Init( &argc, &argv );
@@ -89,12 +85,11 @@ int main( int argc, char* argv[] )
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
-       //sprintf( namebuf, "MyWorld.position:%d.laser:0", i );
-       //robots[i].laser = (StgModelLaser*)world.GetModel( namebuf );
-       //assert(robots[i].laser);
+       sprintf( namebuf, "%s%02d.laser:0", base, i );
+       robots[i].laser = (StgModelLaser*)world.GetModel( namebuf );
+       assert(robots[i].laser);
        //robots[i].laser->Subscribe();
 
-       //sprintf( namebuf, "MyWorld.position:%d.ranger:0", i );
        sprintf( namebuf, "%s%02d.ranger:0", base, i );
        robots[i].ranger = (StgModelRanger*)world.GetModel( namebuf );
        assert(robots[i].ranger);
