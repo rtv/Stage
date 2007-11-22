@@ -2,15 +2,13 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.1.2.4 2007-11-22 01:36:46 rtv Exp $
+# $Id: Makefile.am,v 1.1.2.5 2007-11-22 01:39:04 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.hh 
 
 # install the color database
 pkgdata_DATA = rgb.txt
-
-# CC=g++
 
 RGB=$(datadir)/@PACKAGE@/rgb.txt
 
@@ -40,7 +38,7 @@ libstage_la_SOURCES =  \
 	model_position.cc \
 	model_ranger.cc \
 	model_props.cc \
-	stage.c \
+	stage.cc \
 	stage.hh \
 	typetable.cc \
 	world.cc \

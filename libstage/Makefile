@@ -17,10 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.1.2.5 2007-11-22 01:36:46 rtv Exp $
-
-# also build Zoo referees
-#SUBDIRS = referees
+# $Id: Makefile,v 1.1.2.6 2007-11-22 01:39:04 rtv Exp $
 
 
 
@@ -116,7 +113,7 @@ AUTOCONF = ${SHELL} /Users/vaughan/PS/HEAD/stage.opengl/missing --run autoconf
 AUTOHEADER = ${SHELL} /Users/vaughan/PS/HEAD/stage.opengl/missing --run autoheader
 AUTOMAKE = ${SHELL} /Users/vaughan/PS/HEAD/stage.opengl/missing --run automake-1.10
 AWK = gawk
-CC = g++
+CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
 CPP = gcc -E
@@ -234,6 +231,8 @@ include_HEADERS = stage.hh
 
 # install the color database
 pkgdata_DATA = rgb.txt
+
+# CC=g++
 RGB = $(datadir)/stage/rgb.txt
 
 # system-wide compile flags - target-specific flags are added to each target below
@@ -242,12 +241,7 @@ AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -I/opt/local/include/gtk-2.0 -I
 # build the stage library
 lib_LTLIBRARIES = libstage.la 
 
-# The stage library contains everything you need to build a robot
-# simulation, including graphics and a world description file
-# parser. It does NOT contain a Player interface, so it can not be
-# used as a player plugin. See libstageplugin (below) for good Player
-# satisfaction.
-#
+# The stage library 
 libstage_la_SOURCES = \
 	../config.h \
 	ancestor.cc \
@@ -272,16 +266,9 @@ libstage_la_SOURCES = \
 	worldgui.cc 
 
 
-#	logo.cc 
+#logo.cc 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
 libstage_la_LIBADD = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv   -L/opt/local/lib -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices
-
-# TODO fix these and move them to a separate tree?
-#zoo.c 
-#zoo_driver.cc 
-#zoo_species.cc 
-#zoo_controller.cc 
-#zoo_referee.cc 
 
 # build a stand-alone test program using libstage
 stest_DEPENDENCIES = libstage.la
@@ -674,7 +661,6 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 	uninstall-includeHEADERS uninstall-libLTLIBRARIES \
 	uninstall-pkgdataDATA
 
-#stest_LDFLAGS = 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
