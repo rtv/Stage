@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.15 2007-11-19 07:40:41 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.16 2007-11-22 01:36:47 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -47,8 +47,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
-//#include <glib-object.h>
-//#include <gtk/gtk.h>
+
+#ifdef __APPLE__
+#include <OpenGl/gl.h>
+#include <OpenGl/glu.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
 
 // todo: consider moving these out
 #include "worldfile.hh"
@@ -351,123 +357,6 @@ int stg_line_3d( int32_t x, int32_t y, int32_t z,
   stg_point_t* stg_unit_square_points_create( void );
   /*@}*/
 
-// TODO - cut
-/*   // POLYLINES --------------------------------------------------------- */
-
-/*   /\** @ingroup libstage */
-/*       @defgroup stg_polyline Polylines */
-/*       Defines a line defined by multiple points. */
-/*       @{  */
-/*   *\/ */
-
-/*   /\** define a polyline: a set of connected vertices *\/ */
-/*   typedef struct */
-/*   { */
-/*     stg_point_t* points; ///< Pointer to an array of points */
-/*     size_t points_count; ///< Number of points in array    */
-/*   } stg_polyline_t;  */
-
-/*   /\*@}*\/ */
-
- 
-  // end property typedefs -------------------------------------------------
-
-
- //  WORLD --------------------------------------------------------
-
-  /** @ingroup libstage
-      @defgroup stg_world Worlds
-     Implements a world - a collection of models and a matrix.   
-     @{
-  */
-  
-  /** \struct stg_world_t
-      Opaque data structure implementing a world.      
-      Use the documented stg_world_<something> functions to manipulate
-      worlds. Do not modify the structure directly unless you know
-      what you are doing.
-   */
-
-  /** Create a new world, to be configured and populated
-      manually. Usually this function is not used directly; use the
-      function stg_world_create_from_file() to create a world based on
-      a worldfile instead.
-   */
-/*   stg_world_t* stg_world_create( stg_id_t id,  */
-/* 				 const char* token,  */
-/* 				 int sim_interval,  */
-/* 				 int real_interval, */
-/* 				 int gui_interval, */
-/* 				 double ppm, */
-/* 				 double width, */
-/* 				 double height ); */
-
-/*   /\** Create a new world as described in the worldfile */
-/*       [worldfile_path] */
-/*    *\/ */
-/*   stg_world_t* stg_world_create_from_file( stg_id_t id, const char* worldfile_path ); */
-
-/*   /\** Destroy a world and everything it contains */
-/*    *\/ */
-/*   void stg_world_destroy( stg_world_t* world ); */
-  
-/*   /\** Stop the world clock */
-/*    *\/ */
-/*   void stg_world_stop( stg_world_t* world ); */
-  
-/*   /\** Start the world clock */
-/*    *\/ */
-/*   void stg_world_start( stg_world_t* world ); */
-
-/*   /\** Run one simulation step in world [world]. If [sleepflag] is */
-/*       non-zero, and the simulation update takes less than one */
-/*       real-time step, the simulation will nanosleep() for a while to */
-/*       reduce CPU load. Returns 0 if all is well, or a positive error */
-/*       code. */
-/*    *\/ */
-/*   int stg_world_update( stg_world_t* world, int sleepflag ); */
-
-/*   /\** Configure the world by reading from the current world file *\/ */
-/*   void stg_world_load( stg_world_t* world ); */
-  
-/*   /\** Save the state of the world to the current world file *\/ */
-/*   void stg_world_save( stg_world_t* world ); */
-  
-/*   /\** Reload the state of the world as saved in the current world */
-/*       file *\/ */
-/*   void stg_world_reload( stg_world_t* world ); */
-
-/*   /\** print human-readable information about the world on stdout  */
-/*    *\/ */
-/*   void stg_world_print( stg_world_t* world ); */
-  
-/*   /\** Writes a human-readable simulation time into the string, to a */
-/*       maximum number of characters. The string should be preallocated */
-/*       to at least maxlen bytes long. */
-/*   *\/ */
-/*   void stg_world_clockstring( stg_world_t* world, char* str, size_t maxlen ); */
-
-/*   /\** Set the title of the world, usually  displayed by the GUI in the window titlebar. */
-/*    *\/ */
-/*   void stg_world_set_title( stg_world_t* world, char* txt ); */
-
-/*   /\** Set the duration in milliseconds of each simulation update step  */
-/*    *\/ */
-/*   void stg_world_set_interval_real( stg_world_t* world, unsigned int val ); */
-  
-/*   /\** Set the real time in intervals that Stage should attempt to take */
-/*       for each simulation update step. If Stage has too much */
-/*       computation to do, it might take longer than this. *\/ */
-/*   void stg_world_set_interval_sim( stg_world_t* world, unsigned int val ); */
-
-/*   /\** look up a pointer to a model in [world] from the model's unique */
-/*       ID [mid]. *\/  */
-/*   //stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid ); */
-  
-/*   /\** look up a pointer to a model from from the model's name. *\/ */
-/*   //stg_model_t* stg_world_model_name_lookup( stg_world_t* world, const char* name ); */
-  
-/*   /\**@}*\/ */
 
   //  MODEL --------------------------------------------------------
     
@@ -686,15 +575,14 @@ void stg_d_render( stg_d_draw_t* d );
 #define LTE(A,B) ((lrint(A*PRECISION))<=(lrint(B*PRECISION)))
 
 #define STG_SHOW_BLOCKS       1
-#define STG_SHOW_DATA         1<<1
-#define STG_SHOW_GEOM         1<<2
-#define STG_SHOW_GRID         1<<3
-#define STG_SHOW_OCCUPANCY    1<<4
-#define STG_SHOW_TRAILS       1<<5
-#define STG_SHOW_FOLLOW       1<<6
-#define STG_SHOW_CLOCK        1<<7
-#define STG_SHOW_QUADTREE     1<<8
-//#define STG_SHOW_   1<<
+#define STG_SHOW_DATA         2
+#define STG_SHOW_GEOM         4
+#define STG_SHOW_GRID         8
+#define STG_SHOW_OCCUPANCY    16
+#define STG_SHOW_TRAILS       32
+#define STG_SHOW_FOLLOW       64
+#define STG_SHOW_CLOCK        128
+#define STG_SHOW_QUADTREE     256
 
 // STAGE INTERNAL
 
@@ -713,15 +601,10 @@ class StgModel;
 */
 
 
-//#define STG_DEFAULT_WINDOW_WIDTH 400
-//#define STG_DEFAULT_WINDOW_HEIGHT 440
+
 #define STG_DEFAULT_WINDOW_WIDTH 800
 #define STG_DEFAULT_WINDOW_HEIGHT 840
 
-//#ifdef __cplusplus
-//extern "C" {
-//#endif 
-  
 GHashTable* stg_create_typetable( void );
 
 typedef struct 
@@ -733,6 +616,11 @@ typedef struct
 
 void gl_pose_shift( stg_pose_t* pose );
 void gl_coord_shift( double x, double y, double z, double a  );
+
+/** Render a string at [x,y,z] in the current color */
+ void gl_draw_string( float x, float y, float z, char *string);
+
+
 void stg_block_list_scale( GList* blocks, 
 			   stg_size_t* size );
 void stg_block_list_destroy( GList* list );
@@ -809,146 +697,6 @@ class StgBlock;
 typedef int (*stg_block_match_func_t)(StgBlock* candidate, const void* arg );
 
   
-// MATRIX  -----------------------------------------------------------------------
-  
-/** @ingroup libstage_internal
-    @defgroup stg_matrix Matrix occupancy quadtree
-    Occupancy quadtree underlying Stage's sensing and collision models. 
-    @{ 
-*/
-
-// typedef enum {
-//   STG_SPLIT_NONE=0,
-//   STG_SPLIT_X,
-//   STG_SPLIT_Y
-// } stg_split_t;
-
-
-
-// /** A node in the occupancy quadtree */
-// class StgCell
-// {
-//   friend class StgWorld;
-
-// private:
-//   void Split(); ///< split the cell into children
-
-//   /** list of models that have been AddBlock()ed into this
-//       cell */
-//   GSList* list;
-
-//   /** extent of the cell */
-//   int32_t width, height;
-  
-//   /** bounding box */
-//   int32_t xmin,ymin,xmax,ymax;
-  
-//   /** direction of split for this cell */
-//   stg_split_t split;
-
-//   /** links for BSP tree */
-//   StgCell *left, *right;
-
-//   /** links for BSP tree */
-//   StgCell* parent;  
-
-// public:
-//   StgCell( StgCell* parent, 
-// 	   int32_t xmin, int32_t xmax, 
-// 	   int32_t ymin, int32_t ymax );
-
-//   ~StgCell();
-  
-//   /** Return the root of the tree that contains this cell */
-//   StgCell* Root();
-
-//   /** Remove block from the cell. This method is static as it may
-//       destroy the cell. */
-//   static void RemoveBlock( StgCell* cell, StgBlock* block );
-
-//   /** Add a pointer to block to the list of this cells contents */
-//   void AddBlock( StgBlock* block );  
-  
-//   /** Return the first block in the cell that matches the comparison
-//       function */
-//   StgBlock* FindBlock( stg_block_match_func_t, const void* arg );
-
-//   /** Draw the cell into the current OpenGL context */
-//   void Draw();
-
-//   /** Draw the cell and all its descendents in the current OpenGL
-//       context. If leaf_only is true, only occupied leaf nodes are
-//       drawn */
-//   void DrawTree( bool leaf_only );
-
-//   /** Print a human-readable description of the cell on stdout,
-//       prefixed by the string prefix. */
-//   void Print( char* prefix );
-
-//   /** returns true iff the cell is a unit square (ie. as small as it
-//       can be */
-//   bool Atomic(); 
-  
-//   /** Returns true iff the cell contains the  point <x,y> */
-//   bool Contains( int32_t x, int32_t y ); 
-  
-//   /** returns the smallest currently existing cell that contains point
-//       <x,y>. Does not create new cells. */
-//   StgCell* Locate( int32_t x,  int32_t y );
-
-//   /** returns a unit cell that contains <x,y>, creating cells if
-//       necessary */
-//   StgCell* LocateAtom( int32_t x, int32_t y ); 
-// };
-  
-
-
-/** @} */
-
-  /** @ingroup libstage_internal
-      @defgroup worldfile worldfile C wrappers
-      @{
-  */
-  
-  // C wrappers for C++ worldfile functions
-/*   void wf_warn_unused( void ); */
-/*   int wf_property_exists( int section, char* token ); */
-/*   int wf_read_int( int section, char* token, int def ); */
-/*   double wf_read_length( int section, char* token, double def ); */
-/*   double wf_read_angle( int section, char* token, double def ); */
-/*   double wf_read_float( int section, char* token, double def ); */
-/*   const char* wf_read_tuple_string( int section, char* token, int index, char* def ); */
-/*   double wf_read_tuple_float( int section, char* token, int index, double def ); */
-/*   double wf_read_tuple_length( int section, char* token, int index, double def ); */
-/*   double wf_read_tuple_angle( int section, char* token, int index, double def ); */
-/*   const char* wf_read_string( int section, char* token, char* def ); */
-
-/*   void wf_write_int( int section, char* token, int value ); */
-/*   void wf_write_length( int section, char* token, double value ); */
-/*   void wf_write_angle( int section, char* token, double value ); */
-/*   void wf_write_float( int section, char* token, double value ); */
-/*   void wf_write_tuple_string( int section, char* token, int index, char* value ); */
-/*   void wf_write_tuple_float( int section, char* token, int index, double value ); */
-/*   void wf_write_tuple_length( int section, char* token, int index, double value ); */
-/*   void wf_write_tuple_angle( int section, char* token, int index, double value ); */
-/*   void wf_write_string( int section, char* token, char* value ); */
-
-/*   void wf_save( void ); */
-/*   void wf_load( char* path ); */
-/*   int wf_section_count( void ); */
-/*   const char* wf_get_section_type( int section ); */
-/*   int wf_get_parent_section( int section ); */
-/*   const char* wf_get_filename( void); */
-
-  /** @} */
-
-
-/** @} */  
-// end of libstage_internal documentation  
-
-
-// end documentation group stage
-/**@}*/
 
 
 
@@ -1775,15 +1523,6 @@ private:
 };
 
 
-//#if _INCLUDE_GTK // TODO - conditional compilation of the GUI
-
-#include <gl.h>
-#include <glu.h>
-//#include <GL/glext.h>
-//#include <glx.h> // for XFont for drawing text from X fonts
-//#include <gtk/gtk.h>
-//#include <gtk/gtkgl.h>
-
 // COLOR STACK CLASS
 class GlColorStack
 {
@@ -2007,7 +1746,6 @@ private:
 			  ///selected by the user
   StgModel* last_selection; ///< the most recently selected model
 			    ///(even if it is now unselected).
-  bool follow_selection;
   uint32_t showflags;
   stg_msec_t interval; // window refresh interval in ms
 
@@ -2020,7 +1758,6 @@ public:
 
   void FixViewport(int W,int H);
   virtual void draw();
-  virtual void draw_overlay();
   virtual int handle( int event );
   void resize(int X,int Y,int W,int H);
 
@@ -2038,6 +1775,20 @@ public:
   inline void PopColor()
   { colorstack.Pop(); } 
   
+  void InvertView( uint32_t invertflags );
+
+  uint32_t GetShowFlags()
+  { return showflags; };
+  
+  void SetShowFlags( uint32_t flags )
+  { showflags = flags; };
+
+  // set the bit indicated by flag to the value indicated by val
+  //void SetShowFlag( uint32_t flag, bool val )
+  // {
+  //val ? (showflags |= flag) : (showflags ^= flag );
+  //} 
+
   static void TimerCallback( StgCanvas* canvas );
 };
 
@@ -2051,6 +1802,7 @@ public:
   ~StgWorldGui();
 
   StgCanvas* canvas;
+  Fl_Menu_Bar* mbar;
   
   // overload inherited methods
   virtual bool RealTimeUpdate();

@@ -11,7 +11,6 @@ OBS = \
     block.o \
     blockgrid.o \
     canvas.o \
-    gl.o \
     glcolorstack.o \
     model.o \
     model_callbacks.o \
@@ -20,8 +19,8 @@ OBS = \
     model_position.o \
     model_props.o \
     model_ranger.o \
-    stage.o \
     stest.o \
+    stage.o \
     typetable.o \
     world.o \
     worldfile.o \
@@ -29,8 +28,6 @@ OBS = \
 
 CPPFLAGS= -g -Wall -I.. -I../replace -I/System/Library/Frameworks/OpenGL.framework/Headers `fltk-config --use-gl --cflags` `pkg-config --cflags glib-2.0 gdk-pixbuf-2.0`
 LIBS= `fltk-config --use-gl --ldflags`  `pkg-config --libs gdk-pixbuf-2.0` -framework OpenGL
-
-#-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib
 
 
 all: stagefl

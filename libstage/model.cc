@@ -661,7 +661,7 @@ const char* StgModel::PrintWithPose()
 
 void StgModel::Startup( void )
 {
-  printf( "Startup model %s\n", this->token );
+  //printf( "Startup model %s\n", this->token );
   
   world->StartUpdatingModel( this );
   
@@ -670,7 +670,7 @@ void StgModel::Startup( void )
 
 void StgModel::Shutdown( void )
 {
-  printf( "Shutdown model %s\n", this->token );
+  //printf( "Shutdown model %s\n", this->token );
   
   world->StopUpdatingModel( this );
 
@@ -702,8 +702,19 @@ void StgModel::Update( void )
 void StgModel::DrawSelected()
 {
   glPushMatrix();
+ 
+  glTranslatef( pose.x, pose.y, pose.z );
+
+  stg_pose_t gpose;
+  GetGlobalPose(&gpose);
   
-  gl_pose_shift( &pose );
+  char buf[64];
+  snprintf( buf, 63, "%s [%.2f,%.2f,%.2f]", token, gpose.x, gpose.y, RTOD(gpose.a) );
+  
+  gl_draw_string( 0.5,0.5,0.5, buf );
+
+  glRotatef( RTOD(pose.a), 0,0,1 );
+ 
   gl_pose_shift( &geom.pose );
   
   double dx = geom.size.x / 2.0 * 1.3;
@@ -712,7 +723,7 @@ void StgModel::DrawSelected()
   //glTranslatef( 0,0,0.1 );
   
   glRectf( -dx, -dy, dx, dy );
-  
+
   glPopMatrix();
 }
 

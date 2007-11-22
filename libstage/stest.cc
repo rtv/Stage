@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.16 2007-11-19 08:30:34 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.17 2007-11-22 01:36:47 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -80,14 +80,13 @@ int main( int argc, char* argv[] )
        
        char* base = "r";
        sprintf( namebuf, "%s%02d", base, i );
-       printf( "finding robot \"%s\"\n", namebuf );
        robots[i].position = (StgModelPosition*)world.GetModel( namebuf );
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
        sprintf( namebuf, "%s%02d.laser:0", base, i );
-       robots[i].laser = (StgModelLaser*)world.GetModel( namebuf );
-       assert(robots[i].laser);
+       //robots[i].laser = (StgModelLaser*)world.GetModel( namebuf );
+       //assert(robots[i].laser);
        //robots[i].laser->Subscribe();
 
        sprintf( namebuf, "%s%02d.ranger:0", base, i );

@@ -3,8 +3,41 @@
 #include <FL/fl_draw.H>
 #include <FL/fl_Box.H>
 #include <FL/Fl_Menu_Button.H>
+#include <FL/glut.H>
 
-extern void glPolygonOffsetEXT (GLfloat, GLfloat);
+// some utilities
+
+static const char* MITEM_VIEW_DATA =      "View/Data";
+static const char* MITEM_VIEW_BLOCKS =    "View/Blocks";
+static const char* MITEM_VIEW_GRID =      "View/Grid";
+static const char* MITEM_VIEW_OCCUPANCY = "View/Occupancy";
+static const char* MITEM_VIEW_QUADTREE =  "View/Tree";
+static const char* MITEM_VIEW_FOLLOW =    "View/Follow";
+static const char* MITEM_VIEW_CLOCK =     "View/Clock";
+
+// transform the current coordinate frame by the given pose
+void gl_coord_shift( double x, double y, double z, double a  )
+{
+  glTranslatef( x,y,z );
+  glRotatef( RTOD(a), 0,0,1 );
+}
+
+// transform the current coordinate frame by the given pose
+void gl_pose_shift( stg_pose_t* pose )
+{
+  gl_coord_shift( pose->x, pose->y, pose->z, pose->a );
+}
+
+// TODO - this could be faster, but we don't draw a lot of text
+void gl_draw_string( float x, float y, float z, char *str ) 
+{  
+  char *c;
+  glRasterPos3f(x, y,z);
+  for (c=str; *c != '\0'; c++) 
+    glutBitmapCharacter( GLUT_BITMAP_HELVETICA_12, *c);
+}
+
+/////
 
 void dummy_cb(Fl_Widget*, void* v) 
 {
@@ -15,13 +48,24 @@ void StgWorldGui::SaveCallback( Fl_Widget* wid, StgWorldGui* world )
   world->Save();
 }
 
-void view_toggle_cb(Fl_Widget* w, bool* view ) 
+void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas ) 
 {
-  assert(view);
-  *view = !(*view);
+  char picked[128];
+  menubar->item_pathname(picked, sizeof(picked)-1);
+
+  printf("CALLBACK: You picked '%s'\n", picked);
   
-  Fl_Menu_Item* item = (Fl_Menu_Item*)((Fl_Menu_*)w)->mvalue();
-  *view ?  item->check() : item->clear();
+  // this is slow and a little ugly, but it's the least hacky approach I think
+       if( strcmp(picked, MITEM_VIEW_DATA ) == 0 ) canvas->InvertView( STG_SHOW_DATA );
+  else if( strcmp(picked, MITEM_VIEW_BLOCKS ) == 0 ) canvas->InvertView( STG_SHOW_BLOCKS );
+  else if( strcmp(picked, MITEM_VIEW_GRID ) == 0 ) canvas->InvertView( STG_SHOW_GRID );
+  else if( strcmp(picked, MITEM_VIEW_FOLLOW ) == 0 ) canvas->InvertView( STG_SHOW_FOLLOW );
+  else if( strcmp(picked, MITEM_VIEW_QUADTREE ) == 0 ) canvas->InvertView( STG_SHOW_QUADTREE );
+  else if( strcmp(picked, MITEM_VIEW_OCCUPANCY ) == 0 ) canvas->InvertView( STG_SHOW_OCCUPANCY );
+  else if( strcmp(picked, MITEM_VIEW_CLOCK ) == 0 ) canvas->InvertView( STG_SHOW_CLOCK );
+  else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
+  
+  //printf( "value: %d\n", item->value() );
 }
 
 
@@ -31,31 +75,41 @@ StgWorldGui::StgWorldGui(int W,int H,const char*L)
   graphics = true;
 
   // build the menus
-  Fl_Menu_Bar* mbar = new Fl_Menu_Bar(0,0, W, 30);// 640, 30);
+  mbar = new Fl_Menu_Bar(0,0, W, 30);// 640, 30);
   mbar->textsize(12);
   
   canvas = new StgCanvas( this,0,30,W,H-30 );
   resizable(canvas);
   end();
   
-  mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "File/&Save File", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
+  mbar->add( "File", 0, 0, 0, FL_SUBMENU );
+  mbar->add( "File/Save File", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
   //mbar->add( "File/Save File &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback *)dummy_cb, 0, FL_MENU_DIVIDER );
-  mbar->add( "File/E&xit", FL_CTRL + 'q', (Fl_Callback *)dummy_cb, 0 );
+  mbar->add( "File/Exit", FL_CTRL+'q', (Fl_Callback *)dummy_cb, 0 );
  
-  mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
-
-//    mbar->add( "View/Data", FL_CTRL+'z', (Fl_Callback *)view_toggle_cb, &canvas->show_data, FL_MENU_TOGGLE|FL_MENU_VALUE );  
-//    mbar->add( "View/Blocks", FL_CTRL+'b', (Fl_Callback *)view_toggle_cb, &canvas->show_boxes, FL_MENU_TOGGLE|FL_MENU_VALUE );  
-//    //mbar->add( "View/Clock", FL_CTRL+'c', (Fl_Callback *)view_toggle_cb, &show_clock, FL_MENU_TOGGLE|FL_MENU_VALUE );  
-//    mbar->add( "View/Grid",      FL_CTRL + 'c', (Fl_Callback *)view_toggle_cb, &canvas->show_grid, FL_MENU_TOGGLE|FL_MENU_VALUE );
-//    mbar->add( "View/Occupancy", FL_CTRL + 'o', (Fl_Callback *)view_toggle_cb, &canvas->show_occupancy, FL_MENU_TOGGLE|FL_MENU_VALUE );
-//    mbar->add( "View/Tree",      FL_CTRL + 't', (Fl_Callback *)view_toggle_cb, &canvas->show_quadtree, FL_MENU_TOGGLE|FL_MENU_VALUE|FL_MENU_DIVIDER );
-//    mbar->add( "View/Follow selection", FL_CTRL + 'f', (Fl_Callback *)view_toggle_cb, &canvas->follow_selection, FL_MENU_TOGGLE|FL_MENU_VALUE );
-
+  mbar->add( "View", 0, 0, 0, FL_SUBMENU );
+  mbar->add( MITEM_VIEW_DATA,      FL_CTRL+'z', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_DATA ? FL_MENU_VALUE : 0 ));  
+  mbar->add( MITEM_VIEW_BLOCKS,    FL_CTRL+'b', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_BLOCKS ? FL_MENU_VALUE : 0 ));  
+  mbar->add( MITEM_VIEW_GRID,      FL_CTRL+'c', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_GRID ? FL_MENU_VALUE : 0 ));  
+  mbar->add( MITEM_VIEW_OCCUPANCY, FL_CTRL+'o', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_OCCUPANCY ? FL_MENU_VALUE : 0 ));  
+  mbar->add( MITEM_VIEW_QUADTREE,  FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_QUADTREE ? FL_MENU_VALUE : 0 ));  
+  mbar->add( MITEM_VIEW_FOLLOW,    FL_CTRL+'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOLLOW ? FL_MENU_VALUE : 0 ));  
+  mbar->add( MITEM_VIEW_CLOCK,    0, (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));  
+  
   mbar->add( "Help", 0, 0, 0, FL_SUBMENU );
   mbar->add( "Help/About Stage...", FL_CTRL + 'f', (Fl_Callback *)dummy_cb );
   mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
+
+
+  // set the checked state appropriately
+  
 
   show();
  }
@@ -85,22 +139,57 @@ void StgWorldGui::Load( const char* filename )
   canvas->scale = wf->ReadFloat(wf_section, "scale", canvas->scale );
   canvas->interval = wf->ReadInt(wf_section, "redraw_interval", canvas->interval );
 
+  // set the canvas visibilty flags 
+//   canvas->SetShowFlag( STG_SHOW_GRID,   wf->ReadInt(wf_section, "show_grid"  , flags & STG_SHOW_GRID )); 
+//   canvas->SetShowFlag( STG_SHOW_BLOCKS, wf->ReadInt(wf_section, "show_blocks", flags & STG_SHOW_BLOCKS )); 
+//   canvas->SetShowFlag( STG_SHOW_DATA,   wf->ReadInt(wf_section, "show_data",   flags & STG_SHOW_DATA ));
+//   canvas->SetShowFlag( STG_SHOW_FOLLOW, wf->ReadInt(wf_section, "show_follow", flags & STG_SHOW_FOLLOW )); 
+//   canvas->SetShowFlag( STG_SHOW_QUADTREE,   wf->ReadInt(wf_section, "show_tree",   flags & STG_SHOW_QUADTREE ));
+//   canvas->SetShowFlag( STG_SHOW_OCCUPANCY,   wf->ReadInt(wf_section, "show_occupancy",   flags & STG_SHOW_OCCUPANCY ));
+  
+  uint32_t flags = canvas->GetShowFlags();
+  uint32_t grid = wf->ReadInt(wf_section, "show_grid", flags & STG_SHOW_GRID ) ? STG_SHOW_GRID : 0;
+  uint32_t data = wf->ReadInt(wf_section, "show_data", flags & STG_SHOW_DATA ) ? STG_SHOW_DATA : 0;
+  uint32_t follow = wf->ReadInt(wf_section, "show_follow", flags & STG_SHOW_FOLLOW ) ? STG_SHOW_FOLLOW : 0;
+  uint32_t blocks = wf->ReadInt(wf_section, "show_blocks", flags & STG_SHOW_BLOCKS ) ? STG_SHOW_BLOCKS : 0;
+  uint32_t quadtree = wf->ReadInt(wf_section, "show_tree", flags & STG_SHOW_QUADTREE ) ? STG_SHOW_QUADTREE : 0;
+  uint32_t clock = wf->ReadInt(wf_section, "show_clock", flags & STG_SHOW_CLOCK ) ? STG_SHOW_CLOCK : 0;
+  
+ 
+//canvas->SetShowFlag( STG_SHOW_BLOCKS, wf->ReadInt(wf_section, "show_blocks", flags & STG_SHOW_BLOCKS )); 
+//  canvas->SetShowFlag( STG_SHOW_DATA,   wf->ReadInt(wf_section, "show_data",   flags & STG_SHOW_DATA ));
+//canvas->SetShowFlag( STG_SHOW_FOLLOW, wf->ReadInt(wf_section, "show_follow", flags & STG_SHOW_FOLLOW )); 
+//canvas->SetShowFlag( STG_SHOW_QUADTREE,   wf->ReadInt(wf_section, "show_tree",   flags & STG_SHOW_QUADTREE ));
+//canvas->SetShowFlag( STG_SHOW_OCCUPANCY,   wf->ReadInt(wf_section, "show_occupancy",   flags & STG_SHOW_OCCUPANCY ));
 
-  /*  fill_polygons = wf_read_int(wf_section, "fill_polygons", fill_polygons ); */
-/*   show_grid = wf_read_int(wf_section, "show_grid", show_grid ); */
-/*   show_alpha = wf_read_int(wf_section, "show_alpha", show_alpha ); */
-/*   show_data = wf_read_int(wf_section, "show_data", show_data ); */
-/*   show_thumbnail = wf_read_int(wf_section, "show_thumbnail", win ->show_thumbnail ); */
-
-  // gui_load_toggle( win, wf_section, &show_bboxes, "Bboxes", "show_bboxes" );
-//   gui_load_toggle( win, wf_section, &show_alpha, "Alpha", "show_alpha" );
-//   gui_load_toggle( win, wf_section, &show_grid, "Grid", "show_grid" );
-//   gui_load_toggle( win, wf_section, &show_bboxes, "Thumbnail", "show_thumbnail" );
-//   gui_load_toggle( win, wf_section, &show_data, "Data", "show_data" );
-//   gui_load_toggle( win, wf_section, &follow_selection, "Follow", "show_follow" );
-//   gui_load_toggle( win, wf_section, &fill_polygons, "Fill Polygons", "show_fill" );
-
+  flags = grid | data | follow | blocks | quadtree | clock;  
+  canvas->SetShowFlags( flags );  
   canvas->invalidate(); // we probably changed something
+
+  // fix the GUI menu checkboxes to match
+  flags = canvas->GetShowFlags();
+  
+  Fl_Menu_Item* item = NULL;
+  
+  item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_DATA );
+  (flags & STG_SHOW_DATA) ? item->check() : item->clear();
+
+  item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_GRID );
+  (flags & STG_SHOW_GRID) ? item->check() : item->clear();
+
+  item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_BLOCKS );
+  (flags & STG_SHOW_BLOCKS) ? item->check() : item->clear();
+
+  item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_FOLLOW );
+  (flags & STG_SHOW_FOLLOW) ? item->check() : item->clear();
+
+  item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_OCCUPANCY );
+  (flags & STG_SHOW_OCCUPANCY) ? item->check() : item->clear();
+
+  item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_QUADTREE );
+  (flags & STG_SHOW_QUADTREE) ? item->check() : item->clear();
+
+  // TODO - per model visualizations load
 }
 
 void StgWorldGui::Save( void )
@@ -118,21 +207,16 @@ void StgWorldGui::Save( void )
   wf->WriteTupleFloat( wf_section, "rotate", 0, canvas->stheta  );
   wf->WriteTupleFloat( wf_section, "rotate", 1, canvas->sphi  );
 
-  //wf->WriteInt( wf_section, "fill_polygons", show_fill );
-  //wf->WriteInt( wf_section, "show_grid", show_grid );
-  //wf->WriteInt( wf_section, "show_bboxes", show_bboxes );
-
-//   // save the state of the property toggles
-//   for( GList* list = toggle_list; list; list = g_list_next( list ) )
-//     {
-//       stg_property_toggle_args_t* tog = 
-// 	(stg_property_toggle_args_t*)list->data;
-//       assert( tog );
-//       printf( "toggle item path: %s\n", tog->path );
-
-//       wf->WriteInt( wf_section, tog->path, 
-// 		   gtk_toggle_action_get_active(  GTK_TOGGLE_ACTION(tog->action) ));
-//     }
+  uint32_t flags = canvas->GetShowFlags();
+  wf->WriteInt( wf_section, "show_blocks", flags & STG_SHOW_BLOCKS );
+  wf->WriteInt( wf_section, "show_grid", flags & STG_SHOW_GRID );
+  wf->WriteInt( wf_section, "show_follow", flags & STG_SHOW_FOLLOW );
+  wf->WriteInt( wf_section, "show_data", flags & STG_SHOW_DATA );
+  wf->WriteInt( wf_section, "show_occupancy", flags & STG_SHOW_OCCUPANCY );
+  wf->WriteInt( wf_section, "show_tree", flags & STG_SHOW_QUADTREE );
+  wf->WriteInt( wf_section, "show_clock", flags & STG_SHOW_CLOCK );
+  
+  // TODO - per model visualizations save 
 
   StgWorld::Save();
 }

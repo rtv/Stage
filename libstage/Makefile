@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.1.2.4 2007-10-22 02:36:33 rtv Exp $
+# $Id: Makefile,v 1.1.2.5 2007-11-22 01:36:46 rtv Exp $
 
 # also build Zoo referees
 #SUBDIRS = referees
@@ -41,9 +41,9 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = i386-apple-darwin8.10.1
-host_triplet = i386-apple-darwin8.10.1
-target_triplet = i386-apple-darwin8.10.1
+build_triplet = i386-apple-darwin9.1.0
+host_triplet = i386-apple-darwin9.1.0
+target_triplet = i386-apple-darwin9.1.0
 bin_PROGRAMS = stest$(EXEEXT)
 subdir = libstage
 DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
@@ -67,10 +67,10 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libstage_la_DEPENDENCIES =
-am_libstage_la_OBJECTS = ancestor.lo block.lo cell.lo gl.lo \
-	glcolorstack.lo logo.lo model.lo model_callbacks.lo \
-	model_laser.lo model_load.lo model_props.lo stage.lo \
-	typetable.lo world.lo worldfile.lo worldgtk.lo
+am_libstage_la_OBJECTS = ancestor.lo block.lo blockgrid.lo canvas.lo \
+	glcolorstack.lo model.lo model_callbacks.lo model_laser.lo \
+	model_load.lo model_position.lo model_ranger.lo model_props.lo \
+	stage.lo typetable.lo world.lo worldfile.lo worldgui.lo
 libstage_la_OBJECTS = $(am_libstage_la_OBJECTS)
 libstage_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -128,17 +128,18 @@ CXXFLAGS = -g -O2
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
-ECHO = echo
-ECHO_C = 
-ECHO_N = -n
+ECHO = /bin/echo
+ECHO_C = \c
+ECHO_N = 
 ECHO_T = 
 EGREP = /usr/bin/grep -E
 EXEEXT = 
 F77 = 
 FFLAGS = 
+FLTK_CFLAGS = -I/opt/local/include -I/opt/local/include/FL/images
+FLTK_LIBS = -L/opt/local/lib -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices
 GREP = /usr/bin/grep
-GUI_CFLAGS = -DXTHREADS -I/opt/local/include/gtkglext-1.0 -I/opt/local/lib/gtkglext-1.0/include -I/usr/X11R6/include -I/opt/local/include/gtk-2.0 -I/opt/local/lib/gtk-2.0/include -I/opt/local/include/pango-1.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include -I/opt/local/include/cairo -I/opt/local/include/freetype2 -I/opt/local/include/libpng12 -I/opt/local/include/atk-1.0  
-GUI_LIBS = -L/opt/local/lib -L/usr/X11R6/lib -lgtkglext-x11-1.0 -lgdkglext-x11-1.0 -lGLU -lGL -lXmu -lXt -lgtk-x11-2.0 -lpangox-1.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -ltiff -ljpeg -lm -lpangocairo-1.0 -lpango-1.0 -lcairo -lSM -lICE -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv -lfreetype -lz -lfontconfig -lexpat -lpng12 -lXrender -lX11  
+HAVE_FLTK_CONFIG = fltk-config
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -161,6 +162,8 @@ PACKAGE_STRING = Stage 3.0.0
 PACKAGE_TARNAME = stage
 PACKAGE_VERSION = 3.0.0
 PATH_SEPARATOR = :
+PIXBUF_CFLAGS = -I/opt/local/include/gtk-2.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include  
+PIXBUF_LIBS = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv  
 PKG_CONFIG = /opt/local/bin/pkg-config
 PLAYER_CFLAGS = -I/Users/vaughan/PS-2.0/include/player-2.0  
 PLAYER_LIBS = -L/Users/vaughan/PS-2.0/lib -lplayercore -lltdl -lpthread -lplayererror  
@@ -182,10 +185,10 @@ am__quote =
 am__tar = tar --format=ustar -chf - "$$tardir"
 am__untar = tar -xf -
 bindir = ${exec_prefix}/bin
-build = i386-apple-darwin8.10.1
+build = i386-apple-darwin9.1.0
 build_alias = 
 build_cpu = i386
-build_os = darwin8.10.1
+build_os = darwin9.1.0
 build_vendor = apple
 builddir = .
 datadir = ${datarootdir}
@@ -194,10 +197,10 @@ docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
 have_pkg_config = yes
-host = i386-apple-darwin8.10.1
+host = i386-apple-darwin9.1.0
 host_alias = 
 host_cpu = i386
-host_os = darwin8.10.1
+host_os = darwin9.1.0
 host_vendor = apple
 htmldir = ${docdir}
 includedir = ${prefix}/include
@@ -218,10 +221,10 @@ sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
 srcdir = .
 sysconfdir = ${prefix}/etc
-target = i386-apple-darwin8.10.1
+target = i386-apple-darwin9.1.0
 target_alias = 
 target_cpu = i386
-target_os = darwin8.10.1
+target_os = darwin9.1.0
 target_vendor = apple
 top_builddir = ..
 top_srcdir = ..
@@ -234,8 +237,7 @@ pkgdata_DATA = rgb.txt
 RGB = $(datadir)/stage/rgb.txt
 
 # system-wide compile flags - target-specific flags are added to each target below
-#AM_CFLAGS =   -Wall -I. -I$(top_srcdir)/replace -DXTHREADS -I/opt/local/include/gtkglext-1.0 -I/opt/local/lib/gtkglext-1.0/include -I/usr/X11R6/include -I/opt/local/include/gtk-2.0 -I/opt/local/lib/gtk-2.0/include -I/opt/local/include/pango-1.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include -I/opt/local/include/cairo -I/opt/local/include/freetype2 -I/opt/local/include/libpng12 -I/opt/local/include/atk-1.0   -std=c99  
-AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -DXTHREADS -I/opt/local/include/gtkglext-1.0 -I/opt/local/lib/gtkglext-1.0/include -I/usr/X11R6/include -I/opt/local/include/gtk-2.0 -I/opt/local/lib/gtk-2.0/include -I/opt/local/include/pango-1.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include -I/opt/local/include/cairo -I/opt/local/include/freetype2 -I/opt/local/include/libpng12 -I/opt/local/include/atk-1.0   -DRGBFILE=\"$(RGB)\"
+AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -I/opt/local/include/gtk-2.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include   -I/opt/local/include -I/opt/local/include/FL/images -DRGBFILE=\"$(RGB)\"
 
 # build the stage library
 lib_LTLIBRARIES = libstage.la 
@@ -250,15 +252,16 @@ libstage_la_SOURCES = \
 	../config.h \
 	ancestor.cc \
 	block.cc \
-	cell.cc \
+	blockgrid.cc \
+	canvas.cc \
 	colors.h \
-	gl.c \
 	glcolorstack.cc \
-	logo.cc \
 	model.cc \
 	model_callbacks.cc \
 	model_laser.cc \
 	model_load.cc \
+	model_position.cc \
+	model_ranger.cc \
 	model_props.cc \
 	stage.c \
 	stage.hh \
@@ -266,10 +269,12 @@ libstage_la_SOURCES = \
 	world.cc \
 	worldfile.cc \
 	worldfile.hh \
-	worldgtk.cc 
+	worldgui.cc 
 
+
+#	logo.cc 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
-libstage_la_LIBADD = -L/opt/local/lib -L/usr/X11R6/lib -lgtkglext-x11-1.0 -lgdkglext-x11-1.0 -lGLU -lGL -lXmu -lXt -lgtk-x11-2.0 -lpangox-1.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -ltiff -ljpeg -lm -lpangocairo-1.0 -lpango-1.0 -lcairo -lSM -lICE -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv -lfreetype -lz -lfontconfig -lexpat -lpng12 -lXrender -lX11  
+libstage_la_LIBADD = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv   -L/opt/local/lib -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices
 
 # TODO fix these and move them to a separate tree?
 #zoo.c 
@@ -281,7 +286,7 @@ libstage_la_LIBADD = -L/opt/local/lib -L/usr/X11R6/lib -lgtkglext-x11-1.0 -lgdkg
 # build a stand-alone test program using libstage
 stest_DEPENDENCIES = libstage.la
 stest_SOURCES = stest.cc
-stest_LDADD = libstage.la -L/opt/local/lib -L/usr/X11R6/lib -lgtkglext-x11-1.0 -lgdkglext-x11-1.0 -lGLU -lGL -lXmu -lXt -lgtk-x11-2.0 -lpangox-1.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -ltiff -ljpeg -lm -lpangocairo-1.0 -lpango-1.0 -lcairo -lSM -lICE -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv -lfreetype -lz -lfontconfig -lexpat -lpng12 -lXrender -lX11    
+stest_LDADD = libstage.la
 all: all-am
 
 .SUFFIXES:
@@ -384,21 +389,22 @@ distclean-compile:
 
 include ./$(DEPDIR)/ancestor.Plo
 include ./$(DEPDIR)/block.Plo
-include ./$(DEPDIR)/cell.Plo
-include ./$(DEPDIR)/gl.Plo
+include ./$(DEPDIR)/blockgrid.Plo
+include ./$(DEPDIR)/canvas.Plo
 include ./$(DEPDIR)/glcolorstack.Plo
-include ./$(DEPDIR)/logo.Plo
 include ./$(DEPDIR)/model.Plo
 include ./$(DEPDIR)/model_callbacks.Plo
 include ./$(DEPDIR)/model_laser.Plo
 include ./$(DEPDIR)/model_load.Plo
+include ./$(DEPDIR)/model_position.Plo
 include ./$(DEPDIR)/model_props.Plo
+include ./$(DEPDIR)/model_ranger.Plo
 include ./$(DEPDIR)/stage.Plo
 include ./$(DEPDIR)/stest.Po
 include ./$(DEPDIR)/typetable.Plo
 include ./$(DEPDIR)/world.Plo
 include ./$(DEPDIR)/worldfile.Plo
-include ./$(DEPDIR)/worldgtk.Plo
+include ./$(DEPDIR)/worldgui.Plo
 
 .c.o:
 	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -341,7 +341,7 @@ void render_rangers( stg_ranger_sensor_t* sensors, size_t sensor_count )
 	  double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da ); 
 	  
 	  //printf( "%.2f %.2f  to %.2f %.2f\n",
-	  //      rngr->pose.x, rngr->pose.y, x1, y1 );
+	  //  rngr->pose.x, rngr->pose.y, x1, y1 );
 	  
 	  glBegin( GL_POLYGON); 		
 	  glVertex3f( rngr->pose.x, rngr->pose.y, 0 ); 

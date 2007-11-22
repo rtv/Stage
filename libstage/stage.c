@@ -233,69 +233,6 @@ stg_color_t stg_lookup_color(const char *name)
   return (stg_color_t)g_hash_table_lookup( table, name );
 }
 
-
-
-/* ////////////////////////////////////////////////////////////////////////// */
-/* // scale an array of rectangles so they fit in a unit square */
-/* void stg_lines_normalize( stg_line_t* lines, int num ) */
-/* { */
-/*   // assuming the rectangles fit in a square +/- one billion units */
-/*   double minx, miny, maxx, maxy; */
-/*   minx = miny = BILLION; */
-/*   maxx = maxy = -BILLION; */
-  
-/*   int l; */
-/*   for( l=0; l<num; l++ ) */
-/*     { */
-/*       // find the bounding rectangle */
-/*       if( lines[l].x1 < minx ) minx = lines[l].x1; */
-/*       if( lines[l].y1 < miny ) miny = lines[l].y1;       */
-/*       if( lines[l].x1 > maxx ) maxx = lines[l].x1;       */
-/*       if( lines[l].y1 > maxy ) maxy = lines[l].y1; */
-/*       if( lines[l].x2 < minx ) minx = lines[l].x2; */
-/*       if( lines[l].y2 < miny ) miny = lines[l].y2;       */
-/*       if( lines[l].x2 > maxx ) maxx = lines[l].x2;       */
-/*       if( lines[l].y2 > maxy ) maxy = lines[l].y2; */
-/*     } */
-  
-/*   // now normalize all lengths so that the lines all fit inside */
-/*   // rectangle from 0,0 to 1,1 */
-/*   double scalex = maxx - minx; */
-/*   double scaley = maxy - miny; */
-
-/*   for( l=0; l<num; l++ ) */
-/*     {  */
-/*       lines[l].x1 = (lines[l].x1 - minx) / scalex; */
-/*       lines[l].y1 = (lines[l].y1 - miny) / scaley; */
-/*       lines[l].x2 = (lines[l].x2 - minx) / scalex; */
-/*       lines[l].y2 = (lines[l].y2 - miny) / scaley; */
-/*     } */
-/* } */
-
-/* void stg_lines_scale( stg_line_t* lines, int num, double xscale, double yscale ) */
-/* { */
-/*   int l; */
-/*   for( l=0; l<num; l++ ) */
-/*     { */
-/*       lines[l].x1 *= xscale; */
-/*       lines[l].y1 *= yscale; */
-/*       lines[l].x2 *= xscale; */
-/*       lines[l].y2 *= yscale; */
-/*     } */
-/* } */
-
-/* void stg_lines_translate( stg_line_t* lines, int num, double xtrans, double ytrans ) */
-/* { */
-/*   int l; */
-/*   for( l=0; l<num; l++ ) */
-/*     { */
-/*       lines[l].x1 += xtrans; */
-/*       lines[l].y1 += ytrans; */
-/*       lines[l].x2 += xtrans; */
-/*       lines[l].y2 += ytrans; */
-/*     } */
-/* } */
-
 //////////////////////////////////////////////////////////////////////////
 // scale an array of rectangles so they fit in a unit square
 void stg_rotrects_normalize( stg_rotrect_t* rects, int num )
@@ -341,40 +278,6 @@ void stg_rotrects_normalize( stg_rotrect_t* rects, int num )
       rects[r].size.y = rects[r].size.y / scaley;
     }
 }	
-
-/* // returns an array of 4 * num_rects stg_line_t's */
-/* stg_line_t* stg_rotrects_to_lines( stg_rotrect_t* rects, int num_rects ) */
-/* { */
-/*   // convert rects to an array of lines */
-/*   int num_lines = 4 * num_rects; */
-/*   stg_line_t* lines = (stg_line_t*)calloc( sizeof(stg_line_t), num_lines ); */
-  
-/*   int r; */
-/*   for( r=0; r<num_rects; r++ ) */
-/*     { */
-/*       lines[4*r].x1 = rects[r].pose.x; */
-/*       lines[4*r].y1 = rects[r].pose.y; */
-/*       lines[4*r].x2 = rects[r].pose.x + rects[r].size.x; */
-/*       lines[4*r].y2 = rects[r].pose.y; */
-      
-/*       lines[4*r+1].x1 = rects[r].pose.x + rects[r].size.x;; */
-/*       lines[4*r+1].y1 = rects[r].pose.y; */
-/*       lines[4*r+1].x2 = rects[r].pose.x + rects[r].size.x; */
-/*       lines[4*r+1].y2 = rects[r].pose.y + rects[r].size.y; */
-      
-/*       lines[4*r+2].x1 = rects[r].pose.x + rects[r].size.x;; */
-/*       lines[4*r+2].y1 = rects[r].pose.y + rects[r].size.y;; */
-/*       lines[4*r+2].x2 = rects[r].pose.x; */
-/*       lines[4*r+2].y2 = rects[r].pose.y + rects[r].size.y; */
-      
-/*       lines[4*r+3].x1 = rects[r].pose.x; */
-/*       lines[4*r+3].y1 = rects[r].pose.y + rects[r].size.y; */
-/*       lines[4*r+3].x2 = rects[r].pose.x; */
-/*       lines[4*r+3].y2 = rects[r].pose.y; */
-/*     } */
-  
-/*   return lines; */
-/* } */
 
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
@@ -422,8 +325,6 @@ void pb_set_pixel( GdkPixbuf* pb, int x, int y, uint8_t val )
 // set all the pixels in a rectangle 
 void pb_set_rect( GdkPixbuf* pb, int x, int y, int width, int height, uint8_t val )
 {
-  //int pbwidth = gdk_pixbuf_get_width(pb);
-  //int pbheight = gdk_pixbuf_get_height(pb);
   int bytes_per_sample = gdk_pixbuf_get_bits_per_sample (pb) / 8;
   int num_samples = gdk_pixbuf_get_n_channels(pb);
 

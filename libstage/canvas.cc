@@ -3,6 +3,8 @@
 #include <FL/fl_draw.H>
 #include <FL/fl_Box.H>
 #include <FL/Fl_Menu_Button.H>
+#include <FL/glut.H>
+
 
 void StgCanvas::TimerCallback( StgCanvas* c )
 {
@@ -33,8 +35,7 @@ StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h)
   dragging = false;
   rotating = false;
 
-  showflags = STG_SHOW_CLOCK | STG_SHOW_DATA | STG_SHOW_BLOCKS | STG_SHOW_GRID;
-  //showflags = STG_SHOW_CLOCK | STG_SHOW_BLOCKS | STG_SHOW_GRID;
+  showflags = STG_SHOW_CLOCK | STG_SHOW_BLOCKS | STG_SHOW_GRID;
  
   // start the timer that causes regular redraws
   Fl::add_timeout( ((double)interval/1000), 
@@ -44,6 +45,22 @@ StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h)
 
 StgCanvas::~StgCanvas()
 {
+}
+
+void StgCanvas::InvertView( uint32_t invertflags )
+{
+  showflags = (showflags ^ invertflags);
+
+  printf( "flags %u data %d grid %d blocks %d follow %d clock %d tree %d occ %d\n",
+	  showflags, 
+	  showflags & STG_SHOW_DATA,
+	  showflags & STG_SHOW_GRID,
+	  showflags & STG_SHOW_BLOCKS,
+	  showflags & STG_SHOW_FOLLOW,
+	  showflags & STG_SHOW_CLOCK,
+	  showflags & STG_SHOW_QUADTREE,
+	  showflags & STG_SHOW_OCCUPANCY );
+	  
 }
 
 StgModel* StgCanvas::Select( int x, int y )
@@ -319,37 +336,22 @@ void StgCanvas::draw()
       valid(1); 
       FixViewport(w(), h()); 
 
-  // set gl state that won't change every redraw
-  glClearColor ( 0.7, 0.7, 0.8, 1.0);
-  glDisable(GL_LIGHTING);
-  glEnable (GL_DEPTH_TEST);
-  glDepthFunc (GL_LESS);
-  glCullFace( GL_BACK );
-  glEnable (GL_CULL_FACE);  
-  glEnable( GL_BLEND );
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-  glEnable( GL_LINE_SMOOTH );
-  glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
-  glDepthMask(GL_TRUE);
-
-  // install a font
-  gl_font( FL_HELVETICA, 12 );
+      // set gl state that won't change every redraw
+      glClearColor ( 0.7, 0.7, 0.8, 1.0);
+      glDisable(GL_LIGHTING);
+      glEnable (GL_DEPTH_TEST);
+      glDepthFunc (GL_LESS);
+      glCullFace( GL_BACK );
+      glEnable (GL_CULL_FACE);  
+      glEnable( GL_BLEND );
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+      glEnable( GL_LINE_SMOOTH );
+      glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
+      glDepthMask(GL_TRUE);
       
-//   glClearColor ( 0.7, 0.7, 0.8, 1.0);
-//   glDisable(GL_LIGHTING);
-//   glEnable (GL_DEPTH_TEST);
-//   glDepthFunc (GL_LESS);
-//   glCullFace( GL_BACK );
-//   glEnable (GL_CULL_FACE);  
-//   glEnable( GL_BLEND );
-//   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-//   glEnable( GL_LINE_SMOOTH );
-//   glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
-//   glDepthMask(GL_TRUE);
-
-  // install a font
-      //  gl_font( FL_HELVETICA, 12 );
-
+      // install a font
+      gl_font( FL_HELVETICA, 12 );
+      
       double zclip = hypot(world->width, world->height) * scale;
       double pixels_width =  w();
       double pixels_height = h();
@@ -365,6 +367,8 @@ void StgCanvas::draw()
       glMatrixMode (GL_MODELVIEW);
       
       glLoadIdentity ();
+
+
       glTranslatef(  -panx, 
 		     -pany, 
 		     -zclip / 2.0 );
@@ -382,7 +386,23 @@ void StgCanvas::draw()
 
   // Clear screen to bg color
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+  if( showflags & STG_SHOW_CLOCK )
+    {
+      glPushMatrix();
+      glLoadIdentity();
+
+      char clockstr[50];
+      world->ClockString( clockstr, 50 );      
+      
+      colorstack.Push( 0,0,0 ); // black
+      gl_draw_string( -w()/2+4, -h()/2+4, 0, clockstr ); 
+      colorstack.Pop();
+
+      glPopMatrix();
+    }
   
+
   if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
     {      
       glLoadIdentity ();
@@ -397,7 +417,9 @@ void StgCanvas::draw()
       last_selection->GetGlobalPose( &gpose );
       
       // and put it in the center of the window
+      //glRotatef( -RTOD(gpose.a), 0,0,1 );
       glTranslatef(  -gpose.x, -gpose.y, 0 );
+      
      }
    
    // draw the world size rectangle in white, using the polygon offset
@@ -438,10 +460,8 @@ void StgCanvas::draw()
   glLineWidth( 4 );
   
   for( GList* it=selected_models; it; it=it->next )
-    {
       ((StgModel*)it->data)->DrawSelected();
-      //      ((StgModel*)it->data)->DrawPicker();
-    }  
+
   colorstack.Pop();
   
   glLineWidth( 1 );
@@ -452,23 +472,6 @@ void StgCanvas::draw()
   if( showflags ) // if any bits are set there's something to draw
     for( it=world->children; it; it=it->next )
     ((StgModel*)it->data)->Draw( showflags );
-    
-  if( showflags && STG_SHOW_CLOCK )  
-    redraw_overlay();
-}
-
-void StgCanvas::draw_overlay() 
-{
-  char clockstr[50];
-  world->ClockString( clockstr, 50 );
-  
-  glPushMatrix();
-  glLoadIdentity();
-  
-  colorstack.Push( 0,0,0 ); // black
-  gl_draw( clockstr, -w()/2.0 + 5, -h()/2 + 5 );
-  colorstack.Pop();
-  glPopMatrix();
 }
 
 void StgCanvas::resize(int X,int Y,int W,int H) 
