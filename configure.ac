@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.13.2.4 2007-10-04 01:17:02 rtv Exp $
+dnl $Id: configure.ac,v 1.13.2.5 2007-11-22 01:42:48 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -49,6 +49,22 @@ if test "x$have_pkg_config" = "xno"; then
   AC_MSG_ERROR([pkg-config is required to build Stage.  Install pkg-config, then run configure again.])
 fi
 
+dnl ==== GRAPHICS FILES ====
+
+PKG_CHECK_MODULES(PIXBUF, gdk-pixbuf-2.0 >= 1.0, , 
+  AC_MSG_ERROR([Required library gdk-pixbuf-2.0 not found. Install it and try again.]) 
+)
+
+dnl ==== FLTK GUI ====
+
+AC_CHECK_PROGS(HAVE_FLTK_CONFIG, fltk-config, "")
+if test -n "$HAVE_FLTK_CONFIG"; then
+  AC_SUBST(FLTK_CFLAGS,"`fltk-config --use-gl --cxxflags`")
+  AC_SUBST(FLTK_LIBS,"`fltk-config --use-gl --ldflags`")
+else
+ AC_MSG_ERROR(Could not find fltk-config. Check that FLTK is installed.)
+fi
+
 dnl ==== PLAYER ====
 
 dnl add prefix to the pkg-config path in case things were installed there
@@ -71,14 +87,6 @@ dnl  AC_DEFINE(INCLUDE_LIBPLAYERC,1,[building test Player client]),
 dnl  AC_MSG_WARN([libplayercr was not found. ])
 dnl )
 
-dnl ==== GUI/GRAPHICS ====
-
-dnl GTK+ with OpenGL: gtkglext brings in all dependencies on GTK,
-dnl glib, etc. Almost too easy!
-PKG_CHECK_MODULES(GUI, gtkglext-1.0 >= 1.0, , 
- AC_MSG_ERROR([Required library GtkGLExt not found. Install it and try again.]) 
-)
-
 dnl ==== FINISH UP =====
 
 AC_OUTPUT(Makefile 
@@ -96,7 +104,7 @@ AC_MSG_RESULT([])
 AC_MSG_RESULT([*************************************************************])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([Stage will be built for a $host system, with the following tools and options:])
-AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS ])
+AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS $PIXBUF_CFLAGS $FLTK_CFLAGS ])
 AC_MSG_RESULT([])
 
 if test $have_player = yes; then

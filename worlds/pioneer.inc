@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Richard Vaughan, Andrew Howard
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.10 2007-07-18 06:39:10 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.11 2007-11-22 01:42:48 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -13,22 +13,22 @@ define p2dx_sonar ranger
   scount 16 # the number of transducers
 
   # define the pose of each transducer [xpos ypos heading]
-  spose[0] [ 0.0075 0.0130 90 ]
-  spose[1] [ 0.0115 0.0115 50 ]
-  spose[2] [ 0.0150 0.0080 30 ]
-  spose[3] [ 0.0170 0.0025 10 ]
-  spose[4] [ 0.0170 -0.0025 -10 ]
-  spose[5] [ 0.0150 -0.0080 -30 ]
-  spose[6] [ 0.0115 -0.0115 -50 ]
-  spose[7] [ 0.0075 -0.0130 -90 ]
-  spose[8] [ -0.0155 -0.0130 -90 ]
-  spose[9] [ -0.0195 -0.0115 -130 ]
-  spose[10] [ -0.0230 -0.0080 -150 ]
-  spose[11] [ -0.0250 -0.0025 -170 ]
-  spose[12] [ -0.0250 0.0025 170 ]
-  spose[13] [ -0.0230 0.0080 150 ]
-  spose[14] [ -0.0195 0.0115 130 ]
-  spose[15] [ -0.0155 0.0130 90 ]	
+  spose[0] [ 0.075 0.130 90 ]
+  spose[1] [ 0.115 0.115 50 ]
+  spose[2] [ 0.150 0.080 30 ]
+  spose[3] [ 0.170 0.025 10 ]
+  spose[4] [ 0.170 -0.025 -10 ]
+  spose[5] [ 0.150 -0.080 -30 ]
+  spose[6] [ 0.115 -0.115 -50 ]
+  spose[7] [ 0.075 -0.130 -90 ]
+  spose[8] [ -0.155 -0.130 -90 ]
+  spose[9] [ -0.195 -0.115 -130 ]
+  spose[10] [ -0.230 -0.080 -150 ]
+  spose[11] [ -0.250 -0.025 -170 ]
+  spose[12] [ -0.250 0.025 170 ]
+  spose[13] [ -0.230 0.080 150 ]
+  spose[14] [ -0.195 0.115 130 ]
+  spose[15] [ -0.155 0.130 90 ]	
 		
   # define the field of view of each transducer [range_min range_max view_angle]
   sview [0 5.0 15]
@@ -37,8 +37,7 @@ define p2dx_sonar ranger
   ssize [0.01 0.05]
 )
 
- 
-# a Pioneer 2 or 3 in standard configuration
+
 define pioneer2dx position
 (
   # actual size
@@ -59,7 +58,24 @@ define pioneer2dx position
   # differential steering model
   drive "diff"
 
-  # this set of blocks approximates the shape of a pioneer
+ # this polygon approximates the shape of a pioneer
+  blocks 1
+  block[0].points 8
+  block[0].point[0] [  0.23  0.05 ]
+  block[0].point[1] [  0.15  0.15 ]
+  block[0].point[2] [ -0.15  0.15 ]
+  block[0].point[3] [ -0.23  0.05 ]
+  block[0].point[4] [ -0.23 -0.05 ]
+  block[0].point[5] [ -0.15 -0.15 ]
+  block[0].point[6] [  0.15 -0.15 ]
+  block[0].point[7] [  0.23 -0.05 ]
+  block[0].z [0 0.45]
+)
+
+# a Pioneer 2 or 3 in standard configuration
+define fancypioneer2dx pioneer2dx
+(
+  # this set of blocks approximates the shape of a real Pioneer
 
   #  The geometry is from the Webots v5.3.0 manual. Thanks to Webots
   #  and Olivier Michel. If Stage or Gazebo do not do what you want,
