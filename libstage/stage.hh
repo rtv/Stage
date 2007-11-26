@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.16 2007-11-22 01:36:47 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.17 2007-11-26 06:28:16 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -694,11 +694,7 @@ int stg_rotrects_from_image_file( const char* filename,
 //     acceptable */
 class StgBlock;
 
-typedef int (*stg_block_match_func_t)(StgBlock* candidate, const void* arg );
-
-  
-
-
+typedef bool (*stg_block_match_func_t)(StgBlock* candidate, const void* arg );
 
 
 // TODO - some of this needs to be implemented, the rest junked.
@@ -1011,6 +1007,10 @@ public:
   
   bool graphics;
 
+  virtual void PushColor( stg_color_t col ) { /* do nothing */  };
+  virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
+  virtual void PopColor(){ /* do nothing */  };
+
   stg_usec_t real_time_now;
   stg_usec_t RealTimeNow(void);
   stg_usec_t RealTimeSinceStart(void);
@@ -1185,10 +1185,7 @@ public:
   virtual void UpdatePose( void );
 
   void Say( char* str );
-  
-  void UpdateIfDue( void );
-  //void UpdateTree( void );
-  //void UpdateTreeIfDue( void );
+    void UpdateIfDue( void );
 
   /** configure a model by reading from the current world file */
   virtual void Load( void );
@@ -1196,13 +1193,9 @@ public:
   virtual void Save( void );
   virtual void Draw( uint32_t flags );
   virtual void DrawPicker( void );
-  //virtual void DrawBody( void );
-  //virtual void DrawData( void );
   virtual void DataVisualize( void );
   void DrawGrid();
   virtual void DrawSelected(void);
-  //virtual void InitGraphics(void); // called by a world that supports
-				   // graphics
 
   virtual void PushColor( stg_color_t col )
   { world->PushColor( col ); }
@@ -1496,9 +1489,6 @@ public:
   stg_meters_t zmax; 
 
   StgModel* mod; //< model to which this block belongs
-  
-  //void AddCell( StgCell* cell );
-  
   stg_point_int_t* pts_global; //< points defining a polygon in global coords
 
   void RecordRenderPoint( uint32_t x, uint32_t y );

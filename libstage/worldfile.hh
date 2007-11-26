@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+ * CVS info: $Id: worldfile.hh,v 1.1.2.2 2007-11-26 06:28:16 rtv Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -30,6 +30,30 @@
 
 #include <stdint.h> // for portable int types eg. uint32_t
 #include <stdio.h> // for FILE ops
+#include <glib.h>
+
+  // Private property class
+struct CProperty
+  {
+    // Index of entity this property belongs to
+    int entity;
+
+    // Name of property
+    const char *name;
+
+    char* key; // this property's hash table key
+    
+    // A list of token indexes
+    int value_count;
+    int *values;
+
+    // Line this property came from
+    int line;
+
+    // Flag set if property has been used
+    bool used;
+  };
+
 
 // Class for loading/saving world file.  This class hides the syntax
 // of the world file and provides an 'entity.property = value' style
@@ -188,7 +212,7 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   private: bool ParseTokenProperty(int entity, int *index, int *line);
 
   // Parse a tuple.
-  private: bool ParseTokenTuple(int entity, int property, int *index, int *line);
+  private: bool ParseTokenTuple( CProperty*  property, int *index, int *line);
 
   // Clear the macro list
   private: void ClearMacros();
@@ -231,23 +255,22 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   private: void ClearProperties();
 
   // Add an property
-  private: int AddProperty(int entity, const char *name, int line);
-
+  private: CProperty* AddProperty(int entity, const char *name, int line);
   // Add an property value.
-  private: void AddPropertyValue(int property, int index, int value_token);
+  private: void AddPropertyValue( CProperty* property, int index, int value_token);
   
   // Get an property
-  public: int GetProperty(int entity, const char *name);
+  public: CProperty* GetProperty(int entity, const char *name);
 
   // returns true iff the property exists in the file, so that you can
   // be sure that GetProperty() will work
   bool PropertyExists( int section, char* token );
 
   // Set the value of an property.
-  private: void SetPropertyValue(int property, int index, const char *value);
+  private: void SetPropertyValue( CProperty* property, int index, const char *value);
 
   // Get the value of an property.
-  private: const char *GetPropertyValue(int property, int index);
+  private: const char *GetPropertyValue( CProperty* property, int index);
 
   // Dump the property list for debugging
   private: void DumpProperties();
@@ -316,31 +339,14 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   private: int entity_count;
   private: CEntity *entities;
 
-  // Private property class
-  private: struct CProperty
-  {
-    // Index of entity this property belongs to
-    int entity;
-
-    // Name of property
-    const char *name;
-    
-    // A list of token indexes
-    int value_count;
-    int *values;
-
-    // Line this property came from
-    int line;
-
-    // Flag set if property has been used
-    bool used;
-  };
   
   // Property list
-  private: int property_size;
+  //private: int property_size;
   private: int property_count;
-  private: CProperty *properties;
-
+  //private: CProperty *properties;
+  
+  private: GHashTable* nametable;
+  
   // Name of the file we loaded
   public: char *filename;
 

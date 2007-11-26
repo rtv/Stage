@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.17 2007-11-22 01:36:47 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.18 2007-11-26 06:28:16 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -70,8 +70,11 @@ int main( int argc, char* argv[] )
    //char* robotname = argv[2];
    
   char namebuf[256];  
-  robot_t robots[POPSIZE];
+  //robot_t robots[POPSIZE];
   
+  robot_t* robots = new robot_t[POPSIZE];
+
+
   for( int i=0; i<POPSIZE; i++ )
     {
        robots[i].randcount = 0;
@@ -79,17 +82,17 @@ int main( int argc, char* argv[] )
        robots[i].obs = false;
        
        char* base = "r";
-       sprintf( namebuf, "%s%02d", base, i );
+       sprintf( namebuf, "%s%d", base, i );
        robots[i].position = (StgModelPosition*)world.GetModel( namebuf );
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
-       sprintf( namebuf, "%s%02d.laser:0", base, i );
+       sprintf( namebuf, "%s%d.laser:0", base, i );
        //robots[i].laser = (StgModelLaser*)world.GetModel( namebuf );
        //assert(robots[i].laser);
        //robots[i].laser->Subscribe();
 
-       sprintf( namebuf, "%s%02d.ranger:0", base, i );
+       sprintf( namebuf, "%s%d.ranger:0", base, i );
        robots[i].ranger = (StgModelRanger*)world.GetModel( namebuf );
        assert(robots[i].ranger);
        robots[i].ranger->Subscribe();
@@ -240,5 +243,7 @@ int main( int argc, char* argv[] )
     }  
   //#endif  
 
+
+    delete[] robots;  
   exit( 0 );
 }

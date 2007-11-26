@@ -159,6 +159,8 @@ StgModel::StgModel( StgWorld* world,
   this->parent = parent; 
   this->world = world;
 
+  this->debug = false;
+
   // generate a name. This might be overwritten if the "name" property
   // is set in the worldfile when StgModel::Load() is called
   
@@ -711,19 +713,21 @@ void StgModel::DrawSelected()
   char buf[64];
   snprintf( buf, 63, "%s [%.2f,%.2f,%.2f]", token, gpose.x, gpose.y, RTOD(gpose.a) );
   
+  PushColor( 0,0,0,1 ); // text color black
   gl_draw_string( 0.5,0.5,0.5, buf );
 
   glRotatef( RTOD(pose.a), 0,0,1 );
  
   gl_pose_shift( &geom.pose );
   
-  double dx = geom.size.x / 2.0 * 1.3;
-  double dy = geom.size.y / 2.0 * 1.3;
+  double dx = geom.size.x / 2.0 * 1.6;
+  double dy = geom.size.y / 2.0 * 1.6;
   
-  //glTranslatef( 0,0,0.1 );
-  
+  PopColor();
+  PushColor( 1,0,0,0.8 ); // highlight color red
   glRectf( -dx, -dy, dx, dy );
 
+  PopColor();
   glPopMatrix();
 }
 
@@ -1166,7 +1170,7 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
   // raytrace along all our blocks. expensive, but most vehicles 
   // will just be a few blocks, grippers 3 blocks, etc. not too bad. 
 
-  // no blocks? no hit!
+  // no blocks, no hit!
   if( this->blocks == NULL )
     return NULL;
 
@@ -1304,8 +1308,8 @@ void StgModel::UpdatePose( void )
 
    if( hitthing )
      {
-       // printf( "hit %s at %.2f %.2f\n",
-       //    hitthing->Token(), hitx, hity );
+       printf( "hit %s at %.2f %.2f\n",
+	       hitthing->Token(), hitx, hity );
      }
    else
      this->SetPose( &p );

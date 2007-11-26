@@ -53,7 +53,7 @@ void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas )
   char picked[128];
   menubar->item_pathname(picked, sizeof(picked)-1);
 
-  printf("CALLBACK: You picked '%s'\n", picked);
+  //printf("CALLBACK: You picked '%s'\n", picked);
   
   // this is slow and a little ugly, but it's the least hacky approach I think
        if( strcmp(picked, MITEM_VIEW_DATA ) == 0 ) canvas->InvertView( STG_SHOW_DATA );
@@ -106,13 +106,8 @@ StgWorldGui::StgWorldGui(int W,int H,const char*L)
   mbar->add( "Help", 0, 0, 0, FL_SUBMENU );
   mbar->add( "Help/About Stage...", FL_CTRL + 'f', (Fl_Callback *)dummy_cb );
   mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
-
-
-  // set the checked state appropriately
-  
-
   show();
- }
+}
 
 StgWorldGui::~StgWorldGui()
 {
@@ -137,16 +132,9 @@ void StgWorldGui::Load( const char* filename )
   canvas->stheta = wf->ReadTupleFloat( wf_section, "rotate", 0, canvas->stheta );
   canvas->sphi = wf->ReadTupleFloat( wf_section, "rotate", 1, canvas->sphi );
   canvas->scale = wf->ReadFloat(wf_section, "scale", canvas->scale );
-  canvas->interval = wf->ReadInt(wf_section, "redraw_interval", canvas->interval );
+  canvas->interval = wf->ReadInt(wf_section, "interval", canvas->interval );
 
-  // set the canvas visibilty flags 
-//   canvas->SetShowFlag( STG_SHOW_GRID,   wf->ReadInt(wf_section, "show_grid"  , flags & STG_SHOW_GRID )); 
-//   canvas->SetShowFlag( STG_SHOW_BLOCKS, wf->ReadInt(wf_section, "show_blocks", flags & STG_SHOW_BLOCKS )); 
-//   canvas->SetShowFlag( STG_SHOW_DATA,   wf->ReadInt(wf_section, "show_data",   flags & STG_SHOW_DATA ));
-//   canvas->SetShowFlag( STG_SHOW_FOLLOW, wf->ReadInt(wf_section, "show_follow", flags & STG_SHOW_FOLLOW )); 
-//   canvas->SetShowFlag( STG_SHOW_QUADTREE,   wf->ReadInt(wf_section, "show_tree",   flags & STG_SHOW_QUADTREE ));
-//   canvas->SetShowFlag( STG_SHOW_OCCUPANCY,   wf->ReadInt(wf_section, "show_occupancy",   flags & STG_SHOW_OCCUPANCY ));
-  
+  // set the canvas visibilty flags   
   uint32_t flags = canvas->GetShowFlags();
   uint32_t grid = wf->ReadInt(wf_section, "show_grid", flags & STG_SHOW_GRID ) ? STG_SHOW_GRID : 0;
   uint32_t data = wf->ReadInt(wf_section, "show_data", flags & STG_SHOW_DATA ) ? STG_SHOW_DATA : 0;
@@ -155,15 +143,7 @@ void StgWorldGui::Load( const char* filename )
   uint32_t quadtree = wf->ReadInt(wf_section, "show_tree", flags & STG_SHOW_QUADTREE ) ? STG_SHOW_QUADTREE : 0;
   uint32_t clock = wf->ReadInt(wf_section, "show_clock", flags & STG_SHOW_CLOCK ) ? STG_SHOW_CLOCK : 0;
   
- 
-//canvas->SetShowFlag( STG_SHOW_BLOCKS, wf->ReadInt(wf_section, "show_blocks", flags & STG_SHOW_BLOCKS )); 
-//  canvas->SetShowFlag( STG_SHOW_DATA,   wf->ReadInt(wf_section, "show_data",   flags & STG_SHOW_DATA ));
-//canvas->SetShowFlag( STG_SHOW_FOLLOW, wf->ReadInt(wf_section, "show_follow", flags & STG_SHOW_FOLLOW )); 
-//canvas->SetShowFlag( STG_SHOW_QUADTREE,   wf->ReadInt(wf_section, "show_tree",   flags & STG_SHOW_QUADTREE ));
-//canvas->SetShowFlag( STG_SHOW_OCCUPANCY,   wf->ReadInt(wf_section, "show_occupancy",   flags & STG_SHOW_OCCUPANCY ));
-
-  flags = grid | data | follow | blocks | quadtree | clock;  
-  canvas->SetShowFlags( flags );  
+  canvas->SetShowFlags( grid | data | follow | blocks | quadtree | clock );  
   canvas->invalidate(); // we probably changed something
 
   // fix the GUI menu checkboxes to match

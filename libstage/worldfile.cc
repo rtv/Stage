@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.1.2.2 2007-11-26 06:28:16 rtv Exp $
  */
 
 #include <assert.h>
@@ -58,6 +58,18 @@
   PRINT_ERR2("%s:%d : " z, this->filename, l)
 
 
+
+// guint PropertyHash( const CProperty* prop )
+// {
+//   char key[128];
+//   snprintf( key, 127, "%d%s", prop->entity, prop->name );
+//   prop->key = strdup( key );
+  
+//   return g_str_hash( prop->key );
+// }
+
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 CWorldFile::CWorldFile() 
@@ -77,12 +89,14 @@ CWorldFile::CWorldFile()
   this->entities = NULL;
 
   this->property_count = 0;
-  this->property_size = 0;
-  this->properties = NULL;
+  //this->property_size = 0;
+  //this->properties = NULL;
 
   // Set defaults units
   this->unit_length = 1.0;
   this->unit_angle = M_PI / 180;
+
+  this->nametable = g_hash_table_new( g_str_hash, g_str_equal );
 }
 
 
@@ -95,6 +109,8 @@ CWorldFile::~CWorldFile()
   ClearEntities();
   ClearTokens();
 
+  g_hash_table_destroy( this->nametable );
+  
   if (this->filename)
     free(this->filename);
 }
@@ -244,18 +260,19 @@ bool CWorldFile::Save(const char *filename)
 // Check for unused properties and print warnings
 bool CWorldFile::WarnUnused()
 {
-  bool unused = false;
-  for (int i = 0; i < this->property_count; i++)
-  {
-    CProperty *property = this->properties + i;
-    if (!property->used)
-    {
-      unused = true;
-      PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
-                  this->filename, property->line, property->name);
-    }
-  }
-  return unused;
+//   bool unused = false;
+//   for (int i = 0; i < this->property_count; i++)
+//   {
+//     CProperty *property = this->properties + i;
+//     if (!property->used)
+//     {
+//       unused = true;
+//       PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
+//                   this->filename, property->line, property->name);
+//     }
+//   }
+//   return unused;
+  return false;
 }
 
 
@@ -1051,7 +1068,8 @@ bool CWorldFile::ParseTokenEntity(int entity, int *index, int *line)
 // Parse an property from the token list.
 bool CWorldFile::ParseTokenProperty(int entity, int *index, int *line)
 {
-  int i, property;
+  int i;
+  CProperty* property;
   int name, value, count;
   CToken *token;
 
@@ -1077,7 +1095,7 @@ bool CWorldFile::ParseTokenProperty(int entity, int *index, int *line)
         return true;
       case TokenOpenTuple:
         property = AddProperty(entity, GetTokenValue(name), *line);
-        if (!ParseTokenTuple(entity, property, &i, line))
+        if (!ParseTokenTuple( property, &i, line))
           return false;
         *index = i;
         return true;
@@ -1094,7 +1112,7 @@ bool CWorldFile::ParseTokenProperty(int entity, int *index, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse a tuple.
-bool CWorldFile::ParseTokenTuple(int entity, int property, int *index, int *line)
+bool CWorldFile::ParseTokenTuple( CProperty* property, int *index, int *line)
 {
   int i, count;
   CToken *token;
@@ -1278,18 +1296,20 @@ int CWorldFile::LookupEntity(const char *type)
 }
 
 
+void PrintProp( char* key, CProperty* prop, void* user )
+{
+  if( prop )
+    printf( "Print key %s prop ent %d name %s\n", key, prop->entity, prop->name );
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // Dump the entity list for debugging
 void CWorldFile::DumpEntities()
 {
   printf("\n## begin entities\n");
-  for (int i = 0; i < this->entity_count; i++)
-  {
-    CEntity *entity = this->entities + i;
+  
+  g_hash_table_foreach( this->nametable, (GHFunc)PrintProp, NULL );
 
-    printf("## [%d][%d]", i, entity->parent);
-    printf("[%s]\n", entity->type);
-  }
   printf("## end entities\n");
 }
 
@@ -1298,49 +1318,21 @@ void CWorldFile::DumpEntities()
 // Clear the property list
 void CWorldFile::ClearProperties()
 {
-  int i;
-  CProperty *property;
-
-  for (i = 0; i < this->property_count; i++)
-  {
-    property = this->properties + i;
-    free(property->values);
-  }
-  free(this->properties);
-  this->properties = NULL;
-  this->property_size = 0;
   this->property_count = 0;
+  
+  if( this->nametable )
+    g_hash_table_destroy( this->nametable );
+  this->nametable = g_hash_table_new( g_str_hash, g_str_equal );
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Add an property
-int CWorldFile::AddProperty(int entity, const char *name, int line)
+CProperty* CWorldFile::AddProperty(int entity, const char *name, int line)
 {
-  int i;
-  CProperty *property;
+  //int i;
+  CProperty *property = g_new0( CProperty, 1 );
   
-  // See if this property already exists; if it does, we dont need to
-  // add it again.
-  for (i = 0; i < this->property_count; i++)
-  {
-    property = this->properties + i;
-    if (property->entity != entity)
-      continue;
-    if (strcmp(property->name, name) == 0)
-      return i;
-  }
-
-  // Expand property array if necessary.
-  if (i >= this->property_size)
-  {
-    this->property_size += 100;
-    this->properties = (CProperty*)
-      realloc(this->properties, this->property_size * sizeof(this->properties[0]));
-  }
-
-  property = this->properties + i;
-  memset(property, 0, sizeof(CProperty));
   property->entity = entity;
   property->name = name;
   property->value_count = 0;
@@ -1348,86 +1340,87 @@ int CWorldFile::AddProperty(int entity, const char *name, int line)
   property->line = line;
   property->used = false;
 
+  char key[128];
+  snprintf( key, 127, "%d%s", entity, name );
+  property->key = strdup( key );
+  
+  // add this property to a hash table keyed by name for fast lookup
+  g_hash_table_insert( nametable, property->key, property );
+  
+  //printf( "added key %s for prop %p entity %d name %s\n", key, property, property->entity, property->name );
+  
   this->property_count++;
 
-  return i;
+  return property;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Add an property value
-void CWorldFile::AddPropertyValue(int property, int index, int value_token)
+void CWorldFile::AddPropertyValue( CProperty* property, int index, int value_token)
 {
-  assert(property >= 0);
-  CProperty *pproperty = this->properties + property;
+  assert(property);
 
   // Expand the array if it's too small
-  if (index >= pproperty->value_count)
+  if (index >= property->value_count)
   {
-    pproperty->value_count = index + 1;
-    pproperty->values = (int*) realloc(pproperty->values, pproperty->value_count * sizeof(int));
+    property->value_count = index + 1;
+    property->values = (int*) realloc(property->values, property->value_count * sizeof(int));
   }
 
   // Set the relevant value
-  pproperty->values[index] = value_token;
+  property->values[index] = value_token;
 }
+
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Get an property 
-int CWorldFile::GetProperty(int entity, const char *name)
+CProperty* CWorldFile::GetProperty(int entity, const char *name)
 {
-  // Find first instance of property
-  for (int i = 0; i < this->property_count; i++)
-  {
-    CProperty *property = this->properties + i;
-    if (property->entity != entity)
-      continue;
-    if (strcmp(property->name, name) == 0)
-      return i;
-  }
-  return -1;
+  char key[128];
+  snprintf( key, 127, "%d%s", entity, name );
+  
+  //  printf( "looking up key %s for entity %d name %s\n", key, entity, name );
+
+  // g_hash_table_foreach( this->nametable, (GHFunc)PrintProp, NULL );
+
+  CProperty* prop = (CProperty*)g_hash_table_lookup( this->nametable, key );
+
+ //  if( prop )
+//     printf( "found entity %d name %s\n", prop->entity, prop->name );
+//   else
+//     printf( "key %s not found\n", key );
+
+  return prop;  
 }
 
 
 bool CWorldFile::PropertyExists( int section, char* token )
 {
-  return( this->GetProperty( section, token ) > -1 );
+  return( this->GetProperty( section, token ) ? true : false );
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Set the value of an property
-void CWorldFile::SetPropertyValue(int property, int index, const char *value)
+void CWorldFile::SetPropertyValue( CProperty* property, int index, const char *value)
 {
-  //assert(property >= 0 && property < this->property_count);
-  if(property < 0 || property >= this->property_count)
-    return;
-  CProperty *pproperty = this->properties + property;
-  assert(index >= 0 && index < pproperty->value_count);
+  assert( property );
+  assert(index >= 0 && index < property->value_count);
 
   // Set the relevant value
-  SetTokenValue(pproperty->values[index], value);
+  SetTokenValue( property->values[index], value);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the value of an property 
-const char *CWorldFile::GetPropertyValue(int property, int index)
+const char *CWorldFile::GetPropertyValue(CProperty* property, int index)
 {
-  assert(property >= 0);
-  CProperty *pproperty = this->properties + property;
-
-  // changed this as the assert prevents us for asking for a value
-  // that does not exist in the array - it should fail nicely rather
-  // than crashing out -rtv
-  //assert(index < pproperty->value_count);
-  
-  if( !(index < pproperty->value_count) )
-    return NULL;
-
-  pproperty->used = true;
-  return GetTokenValue(pproperty->values[index]);
+  assert(property);
+  property->used = true;
+  return GetTokenValue(property->values[index]);
 }
 
 
@@ -1436,18 +1429,18 @@ const char *CWorldFile::GetPropertyValue(int property, int index)
 void CWorldFile::DumpProperties()
 {
   printf("\n## begin properties\n");
-  for (int i = 0; i < this->property_count; i++)
-  {
-    CProperty *property = this->properties + i;
-    CEntity *entity = this->entities + property->entity;
+//   for (int i = 0; i < this->property_count; i++)
+//   {
+//     CProperty *property = this->properties + i;
+//     CEntity *entity = this->entities + property->entity;
     
-    printf("## [%d]", property->entity);
-    printf("[%s]", entity->type);
-    printf("[%s]", property->name);
-    for (int j = 0; j < property->value_count; j++)
-      printf("[%s]", GetTokenValue(property->values[j]));
-    printf("\n");
-  }
+//     printf("## [%d]", property->entity);
+//     printf("[%s]", entity->type);
+//     printf("[%s]", property->name);
+//     for (int j = 0; j < property->value_count; j++)
+//       printf("[%s]", GetTokenValue(property->values[j]));
+//     printf("\n");
+//   }
   printf("## end properties\n");
 }
 
@@ -1456,8 +1449,8 @@ void CWorldFile::DumpProperties()
 // Read a string
 const char *CWorldFile::ReadString(int entity, const char *name, const char *value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
     return value;
   return GetPropertyValue(property, 0);
 }
@@ -1467,8 +1460,8 @@ const char *CWorldFile::ReadString(int entity, const char *name, const char *val
 // Write a string
 void CWorldFile::WriteString(int entity, const char *name, const char *value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if( property == NULL )
     return;
   SetPropertyValue(property, 0, value);  
 }
@@ -1478,8 +1471,8 @@ void CWorldFile::WriteString(int entity, const char *name, const char *value)
 // Read an int
 int CWorldFile::ReadInt(int entity, const char *name, int value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
     return value;
   return atoi(GetPropertyValue(property, 0));
 }
@@ -1508,8 +1501,8 @@ void CWorldFile::WriteFloat(int entity, const char *name, double value)
 // Read a float
 double CWorldFile::ReadFloat(int entity, const char *name, double value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
     return value;
   return atof(GetPropertyValue(property, 0));
 }
@@ -1519,8 +1512,8 @@ double CWorldFile::ReadFloat(int entity, const char *name, double value)
 // Read a length (includes unit conversion)
 double CWorldFile::ReadLength(int entity, const char *name, double value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
     return value;
   return atof(GetPropertyValue(property, 0)) * this->unit_length;
 }
@@ -1539,8 +1532,8 @@ void CWorldFile::WriteLength(int entity, const char *name, double value)
 // Read an angle (includes unit conversion)
 double CWorldFile::ReadAngle(int entity, const char *name, double value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
     return value;
   return atof(GetPropertyValue(property, 0)) * this->unit_angle;
 }
@@ -1551,7 +1544,7 @@ double CWorldFile::ReadAngle(int entity, const char *name, double value)
 bool CWorldFile::ReadBool(int entity, const char *name, bool value)
 {
 //return (bool) ReadInt(entity, name, value);
-  int property = GetProperty(entity, name);
+  CProperty* property = GetProperty(entity, name);
   if (property < 0)
     return value;
   const char *v = GetPropertyValue(property, 0);
@@ -1571,11 +1564,11 @@ bool CWorldFile::ReadBool(int entity, const char *name, bool value)
 // We look up the color in one of the common color databases.
 uint32_t CWorldFile::ReadColor(int entity, const char *name, uint32_t value)
 {
-  int property;
+  CProperty* property;
   const char *color;
   
   property = GetProperty(entity, name);
-  if (property < 0)
+  if (property == NULL )
     return value;
   color = GetPropertyValue(property, 0);
 
@@ -1593,8 +1586,8 @@ uint32_t CWorldFile::ReadColor(int entity, const char *name, uint32_t value)
 // so I cant be bothered fixing it).
 const char *CWorldFile::ReadFilename(int entity, const char *name, const char *value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
     return value;
   const char *filename = GetPropertyValue(property, 0);
   
@@ -1642,8 +1635,8 @@ const char *CWorldFile::ReadFilename(int entity, const char *name, const char *v
 const char *CWorldFile::ReadTupleString(int entity, const char *name,
                                         int index, const char *value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL)
     return value;
   return GetPropertyValue(property, index);
 }
@@ -1654,7 +1647,7 @@ const char *CWorldFile::ReadTupleString(int entity, const char *name,
 void CWorldFile::WriteTupleString(int entity, const char *name,
                                   int index, const char *value)
 {
-  int property = GetProperty(entity, name);
+  CProperty* property = GetProperty(entity, name);
   /* TODO
   if (property < 0)
     property = InsertProperty(entity, name);
@@ -1668,8 +1661,8 @@ void CWorldFile::WriteTupleString(int entity, const char *name,
 double CWorldFile::ReadTupleFloat(int entity, const char *name,
                                   int index, double value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
     return value;
   return atof(GetPropertyValue(property, index));
 }
@@ -1691,8 +1684,8 @@ void CWorldFile::WriteTupleFloat(int entity, const char *name,
 double CWorldFile::ReadTupleLength(int entity, const char *name,
                                    int index, double value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
     return value;
   return atof(GetPropertyValue(property, index)) * this->unit_length;
 }
@@ -1714,8 +1707,8 @@ void CWorldFile::WriteTupleLength(int entity, const char *name,
 double CWorldFile::ReadTupleAngle(int entity, const char *name,
                                   int index, double value)
 {
-  int property = GetProperty(entity, name);
-  if (property < 0)
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL)
     return value;
   return atof(GetPropertyValue(property, index)) * this->unit_angle;
 }

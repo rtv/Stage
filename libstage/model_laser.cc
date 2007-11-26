@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.11 $
+ //  $Revision: 1.1.2.12 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -151,7 +151,7 @@ void StgModelLaser::Load( void )
     }
 }
 
-int laser_raytrace_match( StgBlock* testblock, 
+bool laser_raytrace_match( StgBlock* testblock, 
 			  StgModel* finder )
 { 
   // Ignore the model that's looking and things that are invisible to
@@ -159,9 +159,9 @@ int laser_raytrace_match( StgBlock* testblock,
 
   if( (testblock->mod != finder) &&
       (testblock->mod->LaserReturn() > 0 ) )
-    return TRUE; // match!
+    return true; // match!
 
-  return FALSE; // no match
+  return false; // no match
 
   //return( (mod != hitmod) && (hitmod->LaserReturn() > 0) );
 }	
@@ -320,12 +320,8 @@ void StgModelLaser::Print( char* prefix )
 
 void StgModelLaser::DataVisualize( void )
 {
-  // rebuild the graphics for this data
-  //glNewList( dl_data, GL_COMPILE );
-  
   if( samples && sample_count )
-    {
-      
+    {      
       glPushMatrix();
       glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
       
@@ -352,46 +348,32 @@ void StgModelLaser::DataVisualize( void )
 	      glVertex2f( pts[2*s+2], pts[2*s+3] );
 	      glEnd();
 	    }
-	    
+	  
 	}
       PopColor();
-
-      glPointSize( 1.0 );
-
+      
+      
       glEnableClientState( GL_VERTEX_ARRAY );
       glVertexPointer( 2, GL_FLOAT, 0, pts );   
 
-      // todo
-      //if( world->win->show_alpha )
-	{   
-	  glDepthMask( GL_FALSE );
+      glDepthMask( GL_FALSE );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
-	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	  PushColor( 0, 0, 1, 0.1 );
-	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-	  PopColor();
+      // draw the filled polygon in transparent blue
+      PushColor( 0, 0, 1, 0.1 );
+      glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+      
+      // draw the beam strike points in black
+      PushColor( 0, 0, 0, 1.0 );
+      glPointSize( 1.0 );
+      glDrawArrays( GL_POINTS, 0, sample_count+1 );
 
-	  PushColor( 0, 0, 0, 1.0 );
-	  glDrawArrays( GL_POINTS, 0, sample_count+1 );
-	  PopColor();
-
-	  glDepthMask( GL_TRUE );
-	}
-//       else
-// 	{
-// 	  glPolygonMode( GL_FRONT_AND_BACK, GL_LINES );
-// 	  PushColor( 0, 0, 1, 1 );
-// 	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-// 	  PopColor();
-// 	}
-	  
+      // reset
+      PopColor();
+      PopColor();      
+      glDepthMask( GL_TRUE );
       glPopMatrix();      
     }
-  
-  //if( this->debug )
-  //glCallList( this->dl_debug_laser );
-
-  //glEndList();
 }
 
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -216,11 +216,10 @@ void StgModelRanger::Load( void )
     }
 }
 
-int ranger_raytrace_match( StgBlock* block, StgModel* finder )
+bool ranger_raytrace_match( StgBlock* block, StgModel* finder )
 {
   // Ignore myself, my children, and my ancestors.
   return( block->mod->RangerReturn() && !block->mod->IsRelated( finder ) );
-  //return true;
 }	
 
 void StgModelRanger::Update( void )
@@ -238,67 +237,28 @@ void StgModelRanger::Update( void )
   // raytrace new range data for all sensors
   for( unsigned int t=0; t<sensor_count; t++ )
     {
-      // get the sensor's pose in global coords
-      //stg_pose_t pz;
-      //memcpy( &pz, &sensors[t].pose, sizeof(pz) ); 
-      //this->LocalToGlobal( &pz );
-      
-      double range;
-      
-      int r;
-      for( r=0; r<sensors[t].ray_count; r++ )
-	{	  
-	  //double angle_per_ray = sensors[t].fov / sensors[t].ray_count;
-	  //double ray_angle = -sensors[t].fov/2.0 + angle_per_ray * r + angle_per_ray/2.0;
-	  
-	  range = Raytrace( &sensors[t].pose,
+      double range = 0;
+
+      // TODO - reinstate multi-ray rangers
+      //for( int r=0; r<sensors[t].ray_count; r++ )
+      //{	  
+      range = Raytrace( &sensors[t].pose,
 			    sensors[t].bounds_range.max,
-			    (stg_block_match_func_t)ranger_raytrace_match,
-			    this,
-			    NULL );			       
-
-// 	  // if the ray hits anything, 'range' will be changed
-// 	  if( stg_first_model_on_ray( pz.x, pz.y, pz.z + 0.01, // TODO: UNHACK 
-// 				      pz.a + ray_angle, 
-// 				      sensors[t].bounds_range.max, 
-// 				      world->matrix, 
-// 				      PointToBearingRange, 
-// 				      ranger_raytrace_match,
-// 				      this,
-// 				      &hitrange, &hitx, &hity ) )
-// 	    {
-// 	      if( hitrange < range )
-// 		range = hitrange;
-// 	    } 
-
-	  
-	  //double a = sensors[t].pose.a + ray_angle;
-	  //double dx = range * cos(a);//' + range * sin(a);
-	  //double dy = range * sin(a);// - range * cos(a);
-
-	  //glBegin( GL_LINES );
-	  //glVertex3f( sensors[t].pose.x, sensors[t].pose.y, 0 );
-	  //glVertex3f( sensors[t].pose.x+dx, sensors[t].pose.y+dy, 0 );
-	  //glEnd();
-	  //pop_color();
-	}
+			(stg_block_match_func_t)ranger_raytrace_match,
+			this,
+			NULL );			       
+      //}
+      
       // low-threshold the range
       if( range < sensors[t].bounds_range.min )
 	range = sensors[t].bounds_range.min;	
       
       sensors[t].range = range;
-      //sensors[t].error = TODO;
-      
-      
+      //sensors[t].error = TODO;            
     }   
-  
-  //pop_color();
-  //glEndList();
-
-  // data graphics will be updated before being drawn onscreen again
-  data_dirty = true;
 }
 
+// TODO: configurable ranger noise model
 /*
 int ranger_noise_test( stg_ranger_sample_t* data, size_t count,  )
 {
@@ -322,59 +282,51 @@ void StgModelRanger::Print( char* prefix )
   puts( " ]" );
 }
 
-
-void render_rangers( stg_ranger_sensor_t* sensors, size_t sensor_count )
-{
-  for( unsigned int s=0; s<sensor_count; s++ ) 
-    { 
-      if( sensors[s].range > 0.0 ) 
-	{ 
-	  stg_ranger_sensor_t* rngr = &sensors[s]; 
-	  
-	  // sensor FOV 
-	  double sidelen = sensors[s].range; 
-	  double da = rngr->fov/2.0; 
-	      
-	  double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - da ); 
-	  double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - da ); 
-	  double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da ); 
-	  double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da ); 
-	  
-	  //printf( "%.2f %.2f  to %.2f %.2f\n",
-	  //  rngr->pose.x, rngr->pose.y, x1, y1 );
-	  
-	  glBegin( GL_POLYGON); 		
-	  glVertex3f( rngr->pose.x, rngr->pose.y, 0 ); 
-	  glVertex3f( x1, y1, 0 ); 
-	  glVertex3f( x2, y2, 0 ); 
-	  glEnd();	   	      
-	} 
-    } 
-}
-
 void StgModelRanger::DataVisualize( void )
 {
-  // recreate the display list for this data
-  //glNewList( this->dl_data, GL_COMPILE );
-  
   if( sensors && sensor_count ) 
     {
-      //puts( "ranger graphics" );
+      // if all models have the same number of sensors, this is fast
+      // as it will probably not use a system call or cause a cache
+      // miss
+      static float* pts = NULL;
+      size_t memsize =  6 * sensor_count * sizeof(float);
+      pts = (float*)g_realloc( pts, memsize );
+      bzero( pts, memsize );
+      
+      // calculate a triangle for each non-zero sensor range
+      for( unsigned int s=0; s<sensor_count; s++ ) 
+	{ 
+	  if( sensors[s].range > 0.0 ) 
+	    { 
+	      stg_ranger_sensor_t* rngr = &sensors[s]; 
+	      
+	      // sensor FOV 
+	      double sidelen = sensors[s].range; 
+	      double da = rngr->fov/2.0; 
+	      
+	      unsigned int index = s*6;
+	      pts[index+0] = rngr->pose.x;
+	      pts[index+1] = rngr->pose.y;
+	      pts[index+2] = rngr->pose.x + sidelen*cos(rngr->pose.a - da ); 
+	      pts[index+3] = rngr->pose.y + sidelen*sin(rngr->pose.a - da ); 
+	      pts[index+4] = rngr->pose.x + sidelen*cos(rngr->pose.a + da ); 
+	      pts[index+5] = rngr->pose.y + sidelen*sin(rngr->pose.a + da ); 
+	    }
+	}
 
+      // draw the filled triangles in transparent blue
       glDepthMask( GL_FALSE ); 
-
-      // now get on with rendering the ranger data 
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		     //		     world->win->show_alpha ? GL_FILL : GL_LINES );
-      PushColor( 0, 1, 0, 0.2 ); // transparent pale green 
-      render_rangers( sensors, sensor_count );
-      PopColor(); 
-
+      PushColor( 0, 1, 0, 0.1 ); // transparent pale green       
+      glEnableClientState( GL_VERTEX_ARRAY );
+      glVertexPointer( 2, GL_FLOAT, 0, pts );         
+      glDrawArrays( GL_TRIANGLES, 0, 3 * sensor_count );
+      
       // restore state 
       glDepthMask( GL_TRUE ); 
+      PopColor();
     }
-
-  //glEndList();
 }
    
    

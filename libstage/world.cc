@@ -208,25 +208,25 @@ void StgWorld::ClockString( char* str, size_t maxlen )
   
 #ifdef DEBUG
   if( hours > 0 )
-    snprintf( str, maxlen, "Time: %uh%02um%02u.%03us\t[%.1f]\tsubs: %d  %s",
+    snprintf( str, maxlen, "Time: %uh%02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
 	      hours, minutes, seconds, msec,
 	      localratio,
 	      total_subs,
 	      paused ? "--PAUSED--" : "" );
   else
-    snprintf( str, maxlen, "Time: %02um%02u.%03us\t[%.1f]\tsubs: %d  %s",
+    snprintf( str, maxlen, "Time: %02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
 	      minutes, seconds, msec,
 	      localratio,
 	      total_subs,
 	      paused ? "--PAUSED--" : "" );
 #else
   if( hours > 0 )
-    snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.1f] %s",
+    snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.6f] %s",
 	      hours, minutes, seconds, msec,
 	      localratio,
 	      paused ? "--PAUSED--" : "" );
   else
-    snprintf( str, maxlen, "%02um%02u.%03us\t[%.1f] %s",
+    snprintf( str, maxlen, "%02um%02u.%03us\t[%.6f] %s",
 	      minutes, seconds, msec,
 	      localratio,
 	      paused ? "--PAUSED--" : "" );
@@ -238,12 +238,14 @@ void StgWorld::Load( const char* worldfile_path )
   printf( " [Loading %s]", worldfile_path );      
   fflush(stdout);
 
+  stg_usec_t load_start_time = RealTimeNow();
+
   this->wf = new CWorldFile();
   wf->Load( worldfile_path );
   PRINT_DEBUG1( "wf has %d entitys", wf->GetEntityCount() );
 
   // end the output line of worldfile components
-  puts("");
+  //puts("");
 
   int entity = 0;
   
@@ -274,7 +276,6 @@ void StgWorld::Load( const char* worldfile_path )
   this->bgrid = new StgBlockGrid( vwidth, vheight );
 
   //_stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
-
      
   // Iterate through entitys and create client-side models
   for( entity = 1; entity < wf->GetEntityCount(); entity++ )
@@ -317,7 +318,12 @@ void StgWorld::Load( const char* worldfile_path )
     }
   
   // warn about unused WF linesa
-  //wf->WarnUnused();
+  wf->WarnUnused();
+
+  stg_usec_t load_end_time = RealTimeNow();
+
+  printf( "[Load time %.3fsec]\n", (load_end_time - load_start_time) / 1000000.0 );
+  
 }
 
 void StgWorld::Stop()
@@ -379,15 +385,13 @@ bool StgWorld::Update()
     {  
       //PRINT_DEBUG( "StgWorld::Update()" );
 
-//       if( interval_real > 0 || updates % 100 == 0 )
-// 	{
-// 	  char str[64];
-// 	  ClockString( str, 64 );
-// 	  //printf( "Stage timestep: %lu simtime: %lu\n",
-// 	  //      updates, sim_time );
-// 	  printf( "\r%s", str );
-// 	  fflush(stdout);
-// 	}
+       if( interval_real > 0 || updates % 100 == 0 )
+ 	{
+ 	  char str[64];
+ 	  ClockString( str, 64 );
+ 	  printf( "\r%s", str );
+ 	  fflush(stdout);
+ 	}
 
       // update any models that are due to be updated
       for( GList* it=this->update_list; it; it=it->next )

@@ -51,16 +51,15 @@ void StgCanvas::InvertView( uint32_t invertflags )
 {
   showflags = (showflags ^ invertflags);
 
-  printf( "flags %u data %d grid %d blocks %d follow %d clock %d tree %d occ %d\n",
-	  showflags, 
-	  showflags & STG_SHOW_DATA,
-	  showflags & STG_SHOW_GRID,
-	  showflags & STG_SHOW_BLOCKS,
-	  showflags & STG_SHOW_FOLLOW,
-	  showflags & STG_SHOW_CLOCK,
-	  showflags & STG_SHOW_QUADTREE,
-	  showflags & STG_SHOW_OCCUPANCY );
-	  
+//   printf( "flags %u data %d grid %d blocks %d follow %d clock %d tree %d occ %d\n",
+// 	  showflags, 
+// 	  showflags & STG_SHOW_DATA,
+// 	  showflags & STG_SHOW_GRID,
+// 	  showflags & STG_SHOW_BLOCKS,
+// 	  showflags & STG_SHOW_FOLLOW,
+// 	  showflags & STG_SHOW_CLOCK,
+// 	  showflags & STG_SHOW_QUADTREE,
+// 	  showflags & STG_SHOW_OCCUPANCY );
 }
 
 StgModel* StgCanvas::Select( int x, int y )
@@ -165,11 +164,10 @@ int StgCanvas::handle(int event)
 	}
       else
 	{
+	  //scale -= 0.5 * (double)Fl::event_dy();
 	  scale -= 0.5 * (double)Fl::event_dy();
 	  if( scale < 1 )
 	    scale = 1;    
-
-	  //if( width
 
 	  invalidate();
 	}
@@ -331,6 +329,8 @@ void StgCanvas::FixViewport(int W,int H)
 
 void StgCanvas::draw() 
 {
+  //  static int centerx = 0, centery = 0;
+
   if (!valid()) 
     { 
       valid(1); 
@@ -356,32 +356,27 @@ void StgCanvas::draw()
       double pixels_width =  w();
       double pixels_height = h();
       
-      glMatrixMode (GL_PROJECTION);
-      glLoadIdentity ();
-      
       // map the viewport to pixel units by scaling it the same as the window
+      glMatrixMode (GL_PROJECTION);
+      glLoadIdentity ();      
+      
+
       glOrtho( -pixels_width/2.0, pixels_width/2.0,
-	       -pixels_height/2.0, pixels_height/2.0,
-	       0, zclip );
-      
-      glMatrixMode (GL_MODELVIEW);
-      
+             -pixels_height/2.0, pixels_height/2.0,
+             -zclip, zclip );
+            
+      // set the modelview matrix
+      glMatrixMode (GL_MODELVIEW);      
       glLoadIdentity ();
+      
+      // move the next two lines...
+      glScalef( scale, scale, scale ); 
+      glTranslatef(  -panx/scale, -pany/scale, 0 );
 
-
-      glTranslatef(  -panx, 
-		     -pany, 
-		     -zclip / 2.0 );
+      glRotatef( RTOD(-stheta), fabs(cos(sphi)), 0, 0 );
+      glRotatef( RTOD(sphi), 0,0,1 );   // rotate about z - yaw
       
-      glRotatef( RTOD(-stheta), 1,0,0);  
-      
-      //glTranslatef(  -panx * cos(sphi) - pany*sin(sphi), 
-      //	 panx*sin(sphi) - pany*cos(sphi), 0 );
-      
-      glRotatef( RTOD(sphi), 0.0, 0.0, 1.0);   // rotate about z - pitch
-      
-      // meter scale
-      glScalef ( scale, scale, scale ); // zoom
+      // ... to here to get rotation about the center of the window (but broken panning)
     }      
 
   // Clear screen to bg color
@@ -403,6 +398,7 @@ void StgCanvas::draw()
     }
   
 
+  // if following selected, shift the view to above the selected robot
   if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
     {      
       glLoadIdentity ();
@@ -454,19 +450,10 @@ void StgCanvas::draw()
       
       glEnable( GL_LINE_SMOOTH );
      }
-
-  colorstack.Push( 1, 0, 0 );
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  glLineWidth( 4 );
-  
-  for( GList* it=selected_models; it; it=it->next )
-      ((StgModel*)it->data)->DrawSelected();
-
-  colorstack.Pop();
-  
-  glLineWidth( 1 );
-  
-  
+   
+   for( GList* it=selected_models; it; it=it->next )
+     ((StgModel*)it->data)->DrawSelected();
+   
   // draw the models
   GList* it;
   if( showflags ) // if any bits are set there's something to draw

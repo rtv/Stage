@@ -21,7 +21,7 @@ size [16 16 10]
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 100  # real-time interval between simulation updates in milliseconds 
+interval_real 10  # real-time interval between simulation updates in milliseconds 
 # configure the GUI window
 window
 ( 
@@ -50,79 +50,12 @@ floorplan
   #bitmap "bitmaps/hospital_section.png"
 )
 
-# create a robot
-define laserpioneer pioneer2dx
-(
-  sick_laser( pose [ 0.040 0.000 0.000 0.000 ] ) 
-)
 
-define brownpioneer laserpioneer( color "brown" )
-define greenpioneer laserpioneer( color "green" )
-define purplepioneer laserpioneer( color "purple" )
-define bluepioneer laserpioneer( color "blue" )
-define orangepioneer laserpioneer( color "orange" )
-
-laserpioneer
+pioneer2dx
 (
- name "r00"
+ name "r0"
  color "red"
- pose [-2.551 -0.281 0.000 -39.206]
+ pose [-2.551 -0.281 -39.206]
+ sick_laser( pose [ 0.040 0.000 0.000 ] ) 
 )
 
-laserpioneer
-(
- name "r01"
- color "green"
- pose [-1.651 -5.621 0.000 176.566]
-)
-
-laserpioneer
-(
- name "r02"
- color "LightBlue"
- pose [-3.383 -4.781 0.000 -132.172]
-)
-
-#brownpioneer( name "r00" pose [-1.731 -4.803 0.000 54.558] )
-#brownpioneer( name "r01" pose [-1.731 -4.803 0.000 54.558] )
-#brownpioneer( name "r02" pose [-1.731 -4.803 0.000 54.558] )
-brownpioneer( name "r03" pose [-6.675 7.282 0.000 43.480] )
-brownpioneer( name "r04" pose [-7.413 7.283 0.000 -101.231] )
-brownpioneer( name "r05" pose [-7.114 6.798 0.000 -57.925] )
-brownpioneer( name "r06" pose [-6.560 6.379 0.000 -66.074] )
-brownpioneer( name "r07" pose [-5.825 6.097 0.000 -59.973] )
-brownpioneer( name "r08" pose [-7.357 6.214 0.000 20.840] )
-brownpioneer( name "r09" pose [-6.819 5.771 0.000 -46.914] )
-
-orangepioneer( name "r10" pose [-3.455 5.078 0.000 -0.989] )
-orangepioneer( name "r11" pose [-1.873 5.426 0.000 -125.036] )
-orangepioneer( name "r12" pose [-2.085 4.095 0.000 -69.624] )
-orangepioneer( name "r13" pose [-0.661 6.763 0.000 3.686] )
-orangepioneer( name "r14" pose [-1.060 7.116 0.000 -15.328] )
-orangepioneer( name "r15" pose [-3.032 6.263 0.000 -48.642] )
-orangepioneer( name "r16" pose [-1.573 2.505 0.000 -73.683] )
-orangepioneer( name "r17" pose [-3.410 5.744 0.000 -55.314] )
-orangepioneer( name "r18" pose [-2.101 6.437 0.000 -86.619] )
-orangepioneer( name "r19" pose [-1.746 7.091 0.000 -70.091] )
-
-greenpioneer( name "r20" pose [-6.132 1.953 0.000 -82.892] )
-greenpioneer( name "r21" pose [-5.281 4.268 0.000 -79.434] )
-greenpioneer( name "r22" pose [-5.998 2.927 0.000 -94.437] )
-greenpioneer( name "r23" pose [-6.691 1.420 0.000 -81.293] )
-greenpioneer( name "r24" pose [-5.524 -0.199 0.000 -86.044] )
-greenpioneer( name "r25" pose [-5.263 1.784 0.000 -63.546] )
-greenpioneer( name "r26" pose [-6.168 0.455 0.000 -76.684] )
-greenpioneer( name "r27" pose [-6.922 2.700 0.000 -86.839] )
-greenpioneer( name "r28" pose [-4.211 0.491 0.000 -38.003] )
-greenpioneer( name "r29" pose [-4.855 1.027 0.000 -42.091] )
-
-purplepioneer( name "r30" pose [-7.189 5.280 0.000 -62.388] )
-purplepioneer( name "r31" pose [-6.098 5.531 0.000 -91.188] )
-purplepioneer( name "r32" pose [-6.715 4.555 0.000 -101.809] )
-purplepioneer( name "r33" pose [-7.071 3.551 0.000 -55.258] )
-purplepioneer( name "r34" pose [-5.152 5.719 0.000 -21.781] )
-purplepioneer( name "r35" pose [-5.658 4.849 0.000 -36.223] )
-purplepioneer( name "r36" pose [-5.762 3.699 0.000 -86.429] )
-purplepioneer( name "r37" pose [-6.209 4.311 0.000 -57.884] )
-purplepioneer( name "r38" pose [-4.071 5.482 0.000 75.347] )
-purplepioneer( name "r39" pose [-4.900 5.195 0.000 -43.787] )
