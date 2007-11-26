@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_wifi.cc,v 1.3 2007-08-23 19:58:49 gerkey Exp $
+ * CVS: $Id: p_wifi.cc,v 1.4 2007-11-26 21:50:08 gerkey Exp $
  */
 
 
@@ -52,12 +52,26 @@ void InterfaceWifi::Publish( void )
   memset( &pdata, 0, sizeof(pdata) );
 
   // Translate the Stage-formatted sdata into the Player-formatted pdata
-  
+  pdata.links_count = sdata->neighbours->len;
+  pdata.links = new player_wifi_link_t[pdata.links_count];
+  assert(pdata.links);
+  memset(pdata.links,0,sizeof(player_wifi_link_t)*pdata.links_count);
+  //printf("WiFi: publishing %u links\n", pdata.links_count);
+  for(guint i=0;i<sdata->neighbours->len;i++)
+  {
+    stg_wifi_sample_t samp = g_array_index(sdata->neighbours, 
+                                           stg_wifi_sample_t, i);
+    memcpy(pdata.links[i].mac,samp.mac,sizeof(pdata.links[i].mac));
+    pdata.links[i].mac_count = sizeof(pdata.links[i].mac);
+    //printf("%s\n", (char*)pdata.links[i].mac);
+  }
+
   // Publish it
   this->driver->Publish(this->addr,
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_WIFI_DATA_STATE,
 			(void*)&pdata, sizeof(pdata), NULL);
+  delete [] pdata.links;
 }
 
 int InterfaceWifi::ProcessMessage(QueuePointer &resp_queue,
