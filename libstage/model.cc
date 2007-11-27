@@ -328,9 +328,6 @@ stg_meters_t StgModel::Raytrace( stg_pose_t* pz,
 			  hitmod );
 }
 
-
-
-
 stg_d_draw_t* stg_d_draw_create( stg_d_type_t type,
 				 stg_vertex_t* verts,
 				 size_t vert_count )
@@ -1127,16 +1124,11 @@ int StgModel::SetParent(  StgModel* newparent)
 }
 
 
-
-int lines_raytrace_match( StgModel* mod, StgModel* hitmod ) 
- { 
-   // Ignore invisible things, myself, my children, and my ancestors. 
-   if(  hitmod->ObstacleReturn() && !(mod == hitmod) )//&& (!stg_model_is_related(mod,hitmod)) )  
-     return 1; 
-  
-   return 0; // no match 
- }	 
-
+static bool collision_match( StgBlock* testblock, 
+			     StgModel* finder )
+{ 
+  return( (testblock->mod != finder) && testblock->mod->ObstacleReturn()  );
+}	
 
 
 // Check to see if the given pose will yield a collision with obstacles.
@@ -1160,19 +1152,14 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
 /* 	return child_hit; */
 /*     } */
   
-
-/*   stg_pose_t pose; */
-/*   memcpy( &pose, &mod->geom.pose, sizeof(pose)); */
-/*   stg_model_local_to_global( mod, &pose ); */
-  
-/*   //return NULL; */
-  
   // raytrace along all our blocks. expensive, but most vehicles 
   // will just be a few blocks, grippers 3 blocks, etc. not too bad. 
 
   // no blocks, no hit!
   if( this->blocks == NULL )
     return NULL;
+
+  StgModel* hitmod = NULL;
 
   // unrender myself - avoids a lot of self-hits
   this->UnMap();
@@ -1181,12 +1168,6 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
   stg_pose_t local;
   stg_pose_sum( &local, pose, &this->geom.pose );
   
-  //glNewList( this->dl_debug, GL_COMPILE );
-  //glPushMatrix();
-  //glTranslatef( 0,0,1.0 );  
-  //push_color_rgb( 0,0,1 );
-  //glBegin( GL_LINES );
-
   // loop over all blocks 
   for( GList* it = this->blocks; it; it=it->next )
     {
@@ -1198,69 +1179,40 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
 	  stg_point_t* pt1 = &b->pts[p];
 	  stg_point_t* pt2 = &b->pts[(p+1) % b->pt_count]; 
 
-	  stg_pose_t pp1; 
- 	  pp1.x = pt1->x; 
- 	  pp1.y = pt1->y; 
- 	  pp1.a = 0; 
-	  
- 	  stg_pose_t pp2; 
- 	  pp2.x = pt2->x; 
- 	  pp2.y = pt2->y; 
- 	  pp2.a = 0; 
-	  
- 	  stg_pose_t p1; 
- 	  stg_pose_t p2; 
-	  
- 	  // shift the line points into the global coordinate system 
- 	  stg_pose_sum( &p1, &local, &pp1 ); 
- 	  stg_pose_sum( &p2, &local, &pp2 ); 
-	  
-	  //glVertex2f( p1.x, p1.y );
-	  //glVertex2f( p2.x, p2.y );
+ 	  //printf( "tracing %.2f %.2f   %.2f %.2f\n",  pt1->x, pt1->y, pt2->x, pt2->y ); 
 
- 	  printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y ); 
-	  
-	  //double dx = p2.x - p1.x;
-	  //double dy = p2.y - p1.y;
+	  double dx = pt2->x - pt1->x;
+	  double dy = pt2->y - pt1->y;
 
-//  	  itl_t* itl = itl_create( p1.x, p1.y, 0.2,
-// 				   p2.x, p2.y,  				   
-//  				   root->matrix,  
-//  				   PointToPoint ); 
-	  	  
-//  	  StgModel* hitmod = itl_first_matching( itl, lines_raytrace_match, this ); 
+	  double range = hypot( dx, dy );
+	  double bearing = atan2( dy,dx );
+	  
+	  stg_pose_t pose;
+	  bzero(&pose,sizeof(pose));
+
+	  pose.x = pt1->x;
+	  pose.y = pt1->y;
+	  pose.a = bearing;
+
+	  Raytrace( &pose, 
+		    range,
+		    (stg_block_match_func_t)collision_match, 
+		    (const void*)this, 
+		    &hitmod );
+
+	  if( hitmod )
+	    printf( "I hit %s\n", hitmod->Token() );
 	  
 //  	  if( hitmod ) 
 //  	    { 
-//  	      if( hitx ) *hitx = itl->x; // report them 
-//  	      if( hity ) *hity = itl->y;	   
-//  	      itl_destroy( itl ); 
-
-// 	      this->Map(1);
-
-// 	      //pop_color();
-// 	      //glEnd();
-// 	      //glPopMatrix();
-// 	      //glEndList();
-	      
-//  	      return hitmod; // we hit this object! stop raytracing 
-//  	    } 
-
-//  	  itl_destroy( itl ); 
+	  //	      if( hitx ) *hitx = itl->x; // report them 
+	  //  if( hity ) *hity = itl->y;	   
  	} 
     } 
   
   // re-render myself
   this->Map();
-
-
-  //pop_color();
-  //glEnd();
-  //glPopMatrix();
-  //glEndList();
-
-
-   return NULL;  // done  
+  return hitmod;  // done  
 }
 
 
@@ -1274,7 +1226,7 @@ void StgModel::UpdatePose( void )
    double interval = (double)world->interval_sim / 1e6;
   
    //stg_pose_t old_pose;
-   //memcpy( &old_pose, &mod->pose, sizeof(old_pose));
+   //memcpy( &old_pose, &pose, sizeof(old_pose));
 
    stg_velocity_t v;
    this->GetVelocity( &v );
@@ -1286,14 +1238,11 @@ void StgModel::UpdatePose( void )
    p.y += (v.x * sin(p.a) + v.y * cos(p.a)) * interval;
    p.a += v.a * interval;
 
-   //this->SetPose( &p );
-
    // convert the new pose to global coords so we can see what it might hit
-
    stg_pose_t gp;
    memcpy( &gp, &p, sizeof(stg_pose_t));
 
-   //this->LocalToGlobal( &gp );
+   this->LocalToGlobal( &gp );
 
    // check this model and all it's children at the new pose
    double hitx=0, hity=0;
@@ -1303,6 +1252,9 @@ void StgModel::UpdatePose( void )
      {
        printf( "hit %s at %.2f %.2f\n",
 	       hitthing->Token(), hitx, hity );
+
+       //dd// 	  //memcpy( &mod->pose, &old_pose, sizeof(mod->pose));
+       //this->SetPose( &old_pose );
      }
    else
      this->SetPose( &p );

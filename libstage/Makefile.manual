@@ -1,9 +1,11 @@
 
-SRC = \
+HDR = \
     ../config.h \
     colors.h \
     stage.hh \
-    worldfile.hh \
+    worldfile.hh
+
+SRC = \
     ancestor.cc \
     block.cc \
     blockgrid.cc \
@@ -26,11 +28,15 @@ SRC = \
 CXXFLAGS+= -g -Wall -I.. -I../replace `fltk-config --use-gl --cflags` `pkg-config --cflags glib-2.0 gdk-pixbuf-2.0`
 LIBS= `fltk-config --use-gl --ldflags`  `pkg-config --libs gdk-pixbuf-2.0` -framework OpenGL
 
+OBJ=$(SRC:.cc=.o)
 
 all: stage
 
-stage: $(SRC)
-	g++ -o $@ $(CXXFLAGS) $(SRC) $(LIBS)  
+.cc.o:
+	g++ $(CXXFLAGS) -c $< 
+
+stage: $(OBJ)
+	g++ $(LIBS) $(OBJ) -o $@
 
 clean : 
 	rm -f *.o *.lo stage
