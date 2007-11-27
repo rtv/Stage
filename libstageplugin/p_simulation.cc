@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -48,7 +48,9 @@
 
 #define DEBUG
 
+#include <libplayercore/globals.h> // for player_argc & player_argv
 #include "p_driver.h"
+#include <libgen.h> // for dirname(3)
 
 // these are Player globals
 extern bool player_quiet_startup;
@@ -58,10 +60,6 @@ extern PlayerTime* GlobalTime;
 
 
 ////////////////////////////////////////////////////////////////////////////////////
-
-// player's cmdline args
-//extern int global_argc;
-//extern char** global_argv;
 
 // 
 // SIMULATION INTERFACE
@@ -81,6 +79,8 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
 //   argv[0] = "player";
 //   argv[1] = "--g-fatal-warnings";
 //   stg_init( argc, argv );
+
+  StgWorld::Init( &player_argc, &player_argv );
 
   const char* worldfile_name = cf->ReadString(section, "worldfile", NULL );
   
@@ -116,17 +116,19 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
   // create a passel of Stage models in the local cache based on the
   // worldfile
   
-  StgDriver::world = stg_world_create_from_file( 0, fullname );
+  StgDriver::world = new StgWorldGui( 700,700, "Player/Stage" );
   assert(StgDriver::world);
+  
+  StgDriver::world->Load( fullname );
   //printf( " done.\n" );
   
   // poke the P/S name into the window title bar
-  if( StgDriver::world && StgDriver::world->win )
-    {
-      char txt[128];
-      snprintf( txt, 128, "Player/Stage: %s", StgDriver::world->token );
-      stg_world_set_title(StgDriver::world, txt ); 
-    }
+//   if( StgDriver::world )
+//     {
+//       char txt[128];
+//       snprintf( txt, 128, "Player/Stage: %s", StgDriver::world->token );
+//       StgDriverstg_world_set_title(StgDriver::world, txt ); 
+//     }
 
   // steal the global clock - a bit aggressive, but a simple approach
   if( GlobalTime ) delete GlobalTime;
@@ -150,7 +152,7 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
   puts( "" ); // end the Stage startup line
 }      
 
-int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
+int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
                                         player_msghdr_t* hdr,
                                         void* data)
 {
@@ -169,8 +171,7 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
 
     // look up the named model
 
-    StgModel* mod = 
-            stg_world_model_name_lookup( StgDriver::world, req->name );
+    StgModel* mod = StgDriver::world->GetModel( req->name );
 
     if( mod )
       {
@@ -201,7 +202,8 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
       
       // look up the named model      
       StgModel* mod = 
-	stg_world_model_name_lookup( StgDriver::world, req->name );
+	//stg_world_model_name_lookup( StgDriver::world, req->name );
+	StgDriver::world->GetModel( req->name );
       
       if( mod )
 	{
@@ -232,7 +234,8 @@ int InterfaceSimulation::ProcessMessage(MessageQueue* resp_queue,
       
       // look up the named model	
       StgModel* mod = 
-	stg_world_model_name_lookup( StgDriver::world, req->name );
+	//stg_world_model_name_lookup( StgDriver::world, req->name );
+	StgDriver::world->GetModel( req->name );
       
       if( mod )
 	{

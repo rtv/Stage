@@ -7,7 +7,7 @@
 
 #include <libplayercore/playercore.h>
 
-#include "model.hh"
+#include "../libstage/stage.hh"
 #include "stg_time.h"
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
@@ -27,7 +27,7 @@ class StgDriver : public Driver
   // Must implement the following methods.
   virtual int Setup();
   virtual int Shutdown();
-  virtual int ProcessMessage(MessageQueue* resp_queue, 
+  virtual int ProcessMessage(QueuePointer &resp_queue, 
 			     player_msghdr * hdr, 
 			     void * data);
   virtual int Subscribe(player_devaddr_t addr);
@@ -36,9 +36,9 @@ class StgDriver : public Driver
   /// The server thread calls this method frequently. We use it to
   /// check for new commands and configs
   virtual void Update();
-
+  
   /// all player devices share the same Stage world (for now)
-  static stg_world_t* world;
+  static StgWorld* world;
   
   /// find the device record with this Player id
   Interface* LookupDevice( player_devaddr_t addr );
@@ -70,7 +70,7 @@ class Interface
   
   StgDriver* driver; // the driver instance that created this device
   
-  virtual int ProcessMessage(MessageQueue* resp_queue,
+  virtual int ProcessMessage(QueuePointer &resp_queue,
        			     player_msghdr_t* hdr,
 			     void* data) { return(-1); } // empty implementation
 
@@ -85,13 +85,15 @@ class InterfaceSimulation : public Interface
  public: 
   InterfaceSimulation( player_devaddr_t addr,  StgDriver* driver,ConfigFile* cf, int section );
   virtual ~InterfaceSimulation( void ){ /* TODO: clean up*/ };
-  virtual int ProcessMessage(MessageQueue* resp_queue,
+  virtual int ProcessMessage(QueuePointer & resp_queue,
                              player_msghdr_t* hdr,
                              void* data);
 };
 
 // base class for all interfaces that are associated with a model
-class InterfaceModel : public Interface
+class InterfaceModel
+
+ : public Interface
 {
  public:
   InterfaceModel( player_devaddr_t addr,
@@ -115,7 +117,7 @@ class InterfacePosition : public InterfaceModel
   InterfacePosition( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfacePosition( void ){ /* TODO: clean up*/ };
   virtual void Publish( void );
-  virtual int ProcessMessage(MessageQueue* resp_queue,
+  virtual int ProcessMessage(QueuePointer & resp_queue,
                              player_msghdr_t* hdr,
                              void* data);
 };
@@ -125,7 +127,7 @@ class InterfaceGripper : public InterfaceModel
  public: 
   InterfaceGripper( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceGripper( void ){ /* TODO: clean up*/ };
-  virtual int ProcessMessage(MessageQueue* resp_queue,
+  virtual int ProcessMessage(QueuePointer & resp_queue,
                              player_msghdr_t* hdr,
                              void* data);
   virtual void Publish( void );
@@ -136,7 +138,7 @@ class InterfaceWifi : public InterfaceModel
  public: 
   InterfaceWifi( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceWifi( void ){ /* TODO: clean up*/ };
-  virtual int ProcessMessage(MessageQueue* resp_queue,
+  virtual int ProcessMessage(QueuePointer & resp_queue,
                              player_msghdr_t* hdr,
                              void* data);
   virtual void Publish( void );
@@ -147,7 +149,7 @@ class InterfaceSpeech : public InterfaceModel
  public: 
   InterfaceSpeech( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceSpeech( void ){ /* TODO: clean up*/ };
-  virtual int ProcessMessage(MessageQueue* resp_queue,
+  virtual int ProcessMessage(QueuePointer & resp_queue,
                              player_msghdr_t* hdr,
                              void* data);
   virtual void Publish( void );
@@ -160,7 +162,7 @@ class InterfaceLaser : public InterfaceModel
  public: 
   InterfaceLaser( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceLaser( void ){ /* TODO: clean up*/ };
-  virtual int ProcessMessage(MessageQueue* resp_queue,
+  virtual int ProcessMessage(QueuePointer & resp_queue,
 			      player_msghdr_t* hdr,
 			      void* data);
   virtual void Publish( void );
@@ -172,7 +174,7 @@ class InterfacePower : public InterfaceModel
   InterfacePower( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfacePower( void ){ /* TODO: clean up*/ };
   
-  virtual int ProcessMessage( MessageQueue* resp_queue, 
+  virtual int ProcessMessage( QueuePointer & resp_queue, 
 			      player_msghdr * hdr, 
 			      void * data );
   
@@ -186,7 +188,7 @@ class InterfaceFiducial : public InterfaceModel
   virtual ~InterfaceFiducial( void ){ /* TODO: clean up*/ };
 
   virtual void Publish( void );
-  virtual int ProcessMessage(MessageQueue* resp_queue,
+  virtual int ProcessMessage(QueuePointer & resp_queue,
                              player_msghdr_t* hdr,
                              void* data);
 };
@@ -198,7 +200,7 @@ class InterfaceBlobfinder : public InterfaceModel
   InterfaceBlobfinder( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceBlobfinder( void ){ /* TODO: clean up*/ };
   
-  virtual int ProcessMessage( MessageQueue* resp_queue, 
+  virtual int ProcessMessage( QueuePointer & resp_queue, 
 			      player_msghdr * hdr, 
 			      void * data );
   virtual void Publish( void );
@@ -210,7 +212,7 @@ class InterfacePtz : public InterfaceModel
   InterfacePtz( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfacePtz( void ){ /* TODO: clean up*/ };
   
-  virtual int ProcessMessage( MessageQueue* resp_queue, 
+  virtual int ProcessMessage( QueuePointer & resp_queue, 
 			      player_msghdr * hdr, 
 			      void * data );
   virtual void Publish( void );
@@ -222,7 +224,7 @@ class InterfaceSonar : public InterfaceModel
   InterfaceSonar( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceSonar( void ){ /* TODO: clean up*/ };
   
-  virtual int ProcessMessage( MessageQueue* resp_queue, 
+  virtual int ProcessMessage( QueuePointer & resp_queue, 
 			      player_msghdr * hdr, 
 			      void * data );
   virtual void Publish( void );
@@ -235,7 +237,7 @@ class InterfaceBumper : public InterfaceModel
   InterfaceBumper( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceBumper( void ){ /* TODO: clean up*/ };
   
-  virtual int ProcessMessage( MessageQueue* resp_queue, 
+  virtual int ProcessMessage( QueuePointer & resp_queue, 
 			      player_msghdr * hdr, 
 			      void * data );
   virtual void Publish( void );
@@ -252,7 +254,7 @@ class InterfaceLocalize : public InterfaceModel
   virtual ~InterfaceLocalize( void ){ /* TODO: clean up*/ };
 
   virtual void Publish( void );
-  virtual int ProcessMessage(MessageQueue* resp_queue,
+  virtual int ProcessMessage(QueuePointer & resp_queue,
                              player_msghdr_t* hdr,
                              void* data);
 };
@@ -263,38 +265,20 @@ class InterfaceMap : public InterfaceModel
   InterfaceMap( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceMap( void ){ /* TODO: clean up*/ };
   
-  virtual int ProcessMessage( MessageQueue* resp_queue, 
+  virtual int ProcessMessage( QueuePointer & resp_queue, 
 			      player_msghdr * hdr, 
 			      void * data );
   //virtual void Publish( void );
   
   // called by ProcessMessage to handle individual messages
 
-  int HandleMsgReqInfo( MessageQueue* resp_queue, 
+  int HandleMsgReqInfo( QueuePointer & resp_queue, 
 			player_msghdr * hdr, 
 			void * data );
-  int HandleMsgReqData( MessageQueue* resp_queue, 
+  int HandleMsgReqData( QueuePointer & resp_queue, 
 			player_msghdr * hdr, 
 			void * data );
 };
-
-/* class InterfaceGraphics2d : public InterfaceModelModel */
-/* { */
-/*  public:  */
-/*   InterfaceGraphics2d( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section ); */
-/*   virtual ~InterfaceGraphics2d( void ); */
-  
-/*   virtual int ProcessMessage( MessageQueue* resp_queue,  */
-/* 			      player_msghdr * hdr,  */
-/* 			      void * data ); */
-/*  private: */
-/*   stg_rtk_fig_t* fig; // a figure we can draw in */
-
-/*   GList* drawlist; // list of drawing commands */
-
-/*   // clear the display */
-/*   void Clear( void ); */
-/* }; */
 
 class InterfaceGraphics3d : public InterfaceModel
 {
@@ -302,7 +286,7 @@ class InterfaceGraphics3d : public InterfaceModel
   InterfaceGraphics3d( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceGraphics3d( void );
   
-  virtual int ProcessMessage( MessageQueue* resp_queue,
+  virtual int ProcessMessage( QueuePointer & resp_queue,
 			      player_msghdr * hdr,
 			      void * data );
   virtual void Publish( void );

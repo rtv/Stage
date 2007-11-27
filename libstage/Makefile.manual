@@ -1,44 +1,37 @@
-HEADERS = \
-	../config.h \
-	colors.h \
-	stage.hh \
-	worldfile.hh 
 
-CC = g++
+SRC = \
+    ../config.h \
+    colors.h \
+    stage.hh \
+    worldfile.hh \
+    ancestor.cc \
+    block.cc \
+    blockgrid.cc \
+    canvas.cc \
+    glcolorstack.cc \
+    model.cc \
+    model_callbacks.cc \
+    model_laser.cc \
+    model_load.cc \
+    model_position.cc \
+    model_props.cc \
+    model_ranger.cc \
+    stest.cc \
+    stage.cc \
+    typetable.cc \
+    world.cc \
+    worldfile.cc \
+    worldgui.cc
 
-OBS = \
-    ancestor.o \
-    block.o \
-    blockgrid.o \
-    gl.o \
-    glcolorstack.o \
-    logo.o \
-    model.o \
-    model_callbacks.o \
-    model_laser.o \
-    model_load.o \
-    model_position.o \
-    model_props.o \
-    model_ranger.o \
-    stage.o \
-    stest.o \
-    typetable.o \
-    world.o \
-    worldfltk.o \
-    worldfile.o 
-
-#    worldgtk.o 
+CXXFLAGS+= -g -Wall -I.. -I../replace `fltk-config --use-gl --cflags` `pkg-config --cflags glib-2.0 gdk-pixbuf-2.0`
+LIBS= `fltk-config --use-gl --ldflags`  `pkg-config --libs gdk-pixbuf-2.0` -framework OpenGL
 
 
-CPPFLAGS= -g -Wall -I.. -I../replace `pkg-config --cflags gtkglext-1.0`
-LIBS= `pkg-config --libs gtkglext-1.0` -Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib
+all: stage
 
-
-all: foo
-
-foo : $(OBS) $(HEADERS)
-	g++ -o foo $(CPPFLAGS) $(OBS) $(LIBS)  
+stage: $(SRC)
+	g++ -o $@ $(CXXFLAGS) $(SRC) $(LIBS)  
 
 clean : 
-	rm -f *.o *.lo
+	rm -f *.o *.lo stage
 

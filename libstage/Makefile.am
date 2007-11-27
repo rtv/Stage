@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.1.2.5 2007-11-22 01:39:04 rtv Exp $
+# $Id: Makefile.am,v 1.1.2.6 2007-11-27 05:36:01 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.hh 
@@ -17,10 +17,6 @@ AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  @PIXBUF_CFLAGS@ @FLTK_CFLAGS@ -
 
 # build the stage library
 lib_LTLIBRARIES = libstage.la 
-
-# TODO put this back in before release
-# build stest, a stand-alone test binary using the stage library, 
-bin_PROGRAMS = stest 
 
 # The stage library 
 libstage_la_SOURCES =  \
@@ -50,7 +46,9 @@ libstage_la_SOURCES =  \
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
 libstage_la_LIBADD = @PIXBUF_LIBS@ @FLTK_LIBS@
 
-# build a stand-alone test program using libstage
+# build stest, a stand-alone test binary using the stage library, 
+bin_PROGRAMS = stest 
 stest_DEPENDENCIES = libstage.la
 stest_SOURCES = stest.cc
 stest_LDADD = libstage.la
+

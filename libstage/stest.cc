@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.18 2007-11-26 06:28:16 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.19 2007-11-27 05:36:02 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -87,13 +87,15 @@ int main( int argc, char* argv[] )
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
-       sprintf( namebuf, "%s%d.laser:0", base, i );
-       //robots[i].laser = (StgModelLaser*)world.GetModel( namebuf );
-       //assert(robots[i].laser);
-       //robots[i].laser->Subscribe();
+       printf( "returned %s\n", robots[i].position->Token() );
 
-       sprintf( namebuf, "%s%d.ranger:0", base, i );
-       robots[i].ranger = (StgModelRanger*)world.GetModel( namebuf );
+       robots[i].laser = (StgModelLaser*)
+	 robots[i].position->GetUnsubcribedModelOfType( "laser" );	 
+       assert(robots[i].laser);
+       robots[i].laser->Subscribe();
+       
+       robots[i].ranger = (StgModelRanger*)
+	 robots[i].position->GetUnsubcribedModelOfType( "ranger" );
        assert(robots[i].ranger);
        robots[i].ranger->Subscribe();
     }
@@ -107,8 +109,6 @@ int main( int argc, char* argv[] )
 
   //stg_world_set_interval_real( world, 0 );
   
-  //  StgModelLaser* laser = lasers[1];
-
   while( world.RealTimeUpdate() )
     //   while( world.Update() )
     for( int i=0; i<POPSIZE; i++ )
@@ -169,77 +169,77 @@ int main( int argc, char* argv[] )
       //break;
 
       
-      for( int i=0; i<POPSIZE; i++ )
-	{
-	  //robots[i].ranger->Print( NULL );
+//       for( int i=0; i<POPSIZE; i++ )
+// 	{
+// 	  //robots[i].ranger->Print( NULL );
 	  
-	  // get some laser data
-	  size_t laser_sample_count = robots[i].laser->sample_count;      
-	  stg_laser_sample_t* laserdata = robots[i].laser->samples;
+// 	  // get some laser data
+// 	  size_t laser_sample_count = robots[i].laser->sample_count;      
+// 	  stg_laser_sample_t* laserdata = robots[i].laser->samples;
       
-	  if( laserdata == NULL )
-	    continue;
+// 	  if( laserdata == NULL )
+// 	    continue;
       
-      // THIS IS ADAPTED FROM PLAYER'S RANDOMWALK C++ EXAMPLE
+//       // THIS IS ADAPTED FROM PLAYER'S RANDOMWALK C++ EXAMPLE
       
-      /* See if there is an obstacle in front */
-      robots[i].obs = FALSE;
-      for( unsigned int l = 0; l < laser_sample_count; l++)
-	{
-	  if(laserdata[l].range < minfrontdistance)
-	    robots[i].obs = TRUE;
-	}
+//       /* See if there is an obstacle in front */
+//       robots[i].obs = FALSE;
+//       for( unsigned int l = 0; l < laser_sample_count; l++)
+// 	{
+// 	  if(laserdata[l].range < minfrontdistance)
+// 	    robots[i].obs = TRUE;
+// 	}
       
-      if( robots[i].obs || robots[i].avoidcount )
-	{
-	  newspeed = 0;
+//       if( robots[i].obs || robots[i].avoidcount )
+// 	{
+// 	  newspeed = 0;
 	  
-	  /* once we start avoiding, continue avoiding for 2 seconds */
-	  /* (we run at about 10Hz, so 20 loop iterations is about 2 sec) */
-	  if( ! robots[i].avoidcount)
-	    {
-	      robots[i].avoidcount = 15;
-	      robots[i].randcount = 0;
+// 	  /* once we start avoiding, continue avoiding for 2 seconds */
+// 	  /* (we run at about 10Hz, so 20 loop iterations is about 2 sec) */
+// 	  if( ! robots[i].avoidcount)
+// 	    {
+// 	      robots[i].avoidcount = 15;
+// 	      robots[i].randcount = 0;
 	      
-	      // find the minimum on the left and right
+// 	      // find the minimum on the left and right
 	      
-	      double min_left = 1e9;
-	      double min_right = 1e9;
+// 	      double min_left = 1e9;
+// 	      double min_right = 1e9;
 	      
-	      for( unsigned int i=0; i<laser_sample_count; i++ )
-		{
-		  if(i>(laser_sample_count/2) && laserdata[i].range < min_left)
-		    min_left = laserdata[i].range;
-		  else if(i<(laser_sample_count/2) && laserdata[i].range < min_right)
-		    min_right = laserdata[i].range;
-		}
+// 	      for( unsigned int i=0; i<laser_sample_count; i++ )
+// 		{
+// 		  if(i>(laser_sample_count/2) && laserdata[i].range < min_left)
+// 		    min_left = laserdata[i].range;
+// 		  else if(i<(laser_sample_count/2) && laserdata[i].range < min_right)
+// 		    min_right = laserdata[i].range;
+// 		}
 	      
-	      if( min_left < min_right)
-		newturnrate = -turnrate;
-	      else
-		newturnrate = turnrate;
-	    }
+// 	      if( min_left < min_right)
+// 		newturnrate = -turnrate;
+// 	      else
+// 		newturnrate = turnrate;
+// 	    }
 	  
-	  robots[i].avoidcount--;
-	}
-      else
-	{
-	  robots[i].avoidcount = 0;
-	  newspeed = speed;
+// 	  robots[i].avoidcount--;
+// 	}
+//       else
+// 	{
+// 	  robots[i].avoidcount = 0;
+// 	  newspeed = speed;
 	  
-	  /* update turnrate every 3 seconds */
-	  if(! robots[i].randcount)
-	    {
-	      /* make random int tween -20 and 20 */
-	      newturnrate = DTOR(rand() % 41 - 20);
-	      robots[i].randcount = 50;
-	    }
-	  robots[i].randcount--;
-	}
+// 	  /* update turnrate every 3 seconds */
+// 	  if(! robots[i].randcount)
+// 	    {
+// 	      /* make random int tween -20 and 20 */
+// 	      newturnrate = DTOR(rand() % 41 - 20);
+// 	      robots[i].randcount = 50;
+// 	    }
+// 	  robots[i].randcount--;
+// 	}
       
-      robots[i].position->Do( newspeed, 0, newturnrate );
-      //robots[i].position->Do( 0, 0, 10 );
-      	}
+//       robots[i].position->Do( newspeed, 0, newturnrate );
+//       //robots[i].position->Do( 0, 0, 10 );
+//       	}
     }  
   //#endif  
 

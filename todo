@@ -1,5 +1,7 @@
 -- TODO --
 
+ - libstageplugin
+ - better model lookup
  - collisons
  - 3d ray tracing
  - fiducials

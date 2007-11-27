@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -56,7 +56,7 @@ InterfacePosition::InterfacePosition(  player_devaddr_t addr,
   //puts( "InterfacePosition constructor" );
 }
 
-int InterfacePosition::ProcessMessage(MessageQueue* resp_queue,
+int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
                                       player_msghdr_t* hdr,
                                       void* data)
 {
@@ -313,7 +313,7 @@ void InterfacePosition::Publish( void )
   ppd.stall = this->mod->Stall();
   
   // publish this data
-  this->driver->Publish( this->addr, NULL,
+  this->driver->Publish( this->addr,
 			 PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,
 			 (void*)&ppd, sizeof(ppd), NULL);
 }

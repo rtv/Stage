@@ -2,13 +2,13 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Richard Vaughan, Andrew Howard
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.11 2007-11-22 01:42:48 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.12 2007-11-27 05:36:02 rtv Exp $
 
 
 # The Pioneer2DX sonar array
 define p2dx_sonar ranger
 (
-  size [ 0.40 0.33 0.06 ] # matches the Pioneer 2-DX dimensions
+  size3 [ 0.40 0.33 0.06 ] # matches the Pioneer 2-DX dimensions
 
   scount 16 # the number of transducers
 
@@ -41,10 +41,10 @@ define p2dx_sonar ranger
 define pioneer2dx position
 (
   # actual size
-  size [0.44 0.38 0.22] # sizes from MobileRobots' web site
+  size3 [0.44 0.38 0.22] # sizes from MobileRobots' web site
 
   # the pioneer's center of rotation is offset from its center of area
-  origin [-0.04 0 0 0]
+  origin3 [-0.04 0 0 0]
 
   # draw a nose on the robot so we can see which way it points
   gui_nose 1

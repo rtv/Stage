@@ -323,8 +323,12 @@ void StgModel::Save( void )
   // right now we only save poses
   wf->WriteTupleLength( this->id, "pose", 0, this->pose.x);
   wf->WriteTupleLength( this->id, "pose", 1, this->pose.y);
-  wf->WriteTupleLength( this->id, "pose", 2, this->pose.z);
-  wf->WriteTupleAngle( this->id, "pose", 3, this->pose.a);
+  wf->WriteTupleAngle( this->id, "pose", 2, this->pose.a);
+
+  wf->WriteTupleLength( this->id, "pose3", 0, this->pose.x);
+  wf->WriteTupleLength( this->id, "pose3", 1, this->pose.y);
+  wf->WriteTupleLength( this->id, "pose3", 2, this->pose.z);
+  wf->WriteTupleAngle( this->id, "pose3", 3, this->pose.a);
 
   // call any type-specific save callbacks
   this->CallCallbacks( &this->save );

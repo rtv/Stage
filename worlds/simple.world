@@ -5,14 +5,11 @@
 # defines Pioneer-like robots
 include "pioneer.inc"
 
-
 # defines 'map' object used for floorplans
 include "map.inc"
 
-
 # defines sick laser
 include "sick.inc"
-
 
 # size of the world in meters
 size [16 16 10]
@@ -21,7 +18,8 @@ size [16 16 10]
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 10  # real-time interval between simulation updates in milliseconds 
+interval_real 50  # real-time interval between simulation updates in milliseconds 
+
 # configure the GUI window
 window
 ( 
@@ -30,26 +28,16 @@ window
   rotate [ 0.000 0.000 ]
   scale 29.806 
 
-  #show_grid 1
-  #show_data 0
-  #show_blocks 1
-  #show_follow 0
-  #show_tree 0
-  #show_clock 0
+  show_data 1
 )
 
 # load an environment bitmap
 floorplan
 ( 
   name "cave"
-  size [16 16 0.5]
+  size3 [16 16 0.5]
   bitmap "bitmaps/cave.png"
-
-  #laser_return 2
-  #size [40 20 0.4]
-  #bitmap "bitmaps/hospital_section.png"
 )
-
 
 pioneer2dx
 (

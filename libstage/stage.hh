@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.17 2007-11-26 06:28:16 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.18 2007-11-27 05:36:01 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -1429,7 +1429,11 @@ public:
       world coordinate system. Overwrites [pose] with the new
       coordinate. */
   void LocalToGlobal( stg_pose_t* pose );
-    
+  
+  /** returns the first descendent of this model that is unsubscribed
+      and has the type indicated by the string */
+  StgModel* GetUnsubcribedModelOfType( char* modelstr );
+  
   // this version raytraces from our local origin
   stg_meters_t Raytrace( stg_radians_t angle, 
 			 stg_meters_t range, 

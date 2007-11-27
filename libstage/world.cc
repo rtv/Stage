@@ -267,7 +267,9 @@ void StgWorld::Load( const char* worldfile_path )
   this->height = 
     wf->ReadTupleFloat( entity, "size", 1, this->height ); 
   
-  
+  this->paused = 
+    wf->ReadInt( entity, "paused", this->paused );
+
   if( this->bgrid )
     delete bgrid;
 
@@ -514,9 +516,7 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	  for( GSList* list = bgrid->GetList(x,y);
 	       list;
 	       list = list->next )      
-	    {
-	      
-	      
+	    {	      	      
 	      StgBlock* block = (StgBlock*)list->data;       
 	      assert( block );
 	      

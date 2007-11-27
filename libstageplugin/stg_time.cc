@@ -22,12 +22,12 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.cc,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+// CVS: $Id: stg_time.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 
-#include "stage_internal.h"
+#include "../libstage/stage.hh"
 #include "stg_time.h"
 #include "math.h"
 #include "p_driver.h"
@@ -53,10 +53,10 @@ int StgTime::GetTime(struct timeval* time)
   
   assert( this->driver );
   
-  stg_world_t* world = driver->world;
+  StgWorld* world = driver->world;
   
-  time->tv_sec  = (int)floor(world->sim_time_ms / 1e3);
-  time->tv_usec = (int)rint(fmod(world->sim_time_ms,1e3) * 1e3);
+  time->tv_sec  = (int)floor(world->sim_time / 1e6);
+  time->tv_usec = (int)rint(fmod(world->sim_time,1e6) * 1e6);
   
   PRINT_DEBUG2( "time now %ld sec %ld usec", time->tv_sec, time->tv_usec );
   
@@ -69,9 +69,9 @@ int StgTime::GetTimeDouble(double* time)
   
   assert( this->driver );
   
-  stg_world_t* world = driver->world;
+  StgWorld* world = driver->world;
   
-  *time = world->sim_time_ms / 1e3;
+  *time = world->sim_time / 1e6;
   
   PRINT_DEBUG1( "time now %f sec ", *time);
   

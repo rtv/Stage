@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.1.2.7 2007-11-22 01:42:48 rtv Exp $
+# $Id: Makefile,v 1.1.2.8 2007-11-27 05:36:01 rtv Exp $
 
 
 
@@ -162,7 +162,7 @@ PATH_SEPARATOR = :
 PIXBUF_CFLAGS = -I/opt/local/include/gtk-2.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include  
 PIXBUF_LIBS = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv  
 PKG_CONFIG = /opt/local/bin/pkg-config
-PLAYER_CFLAGS = -I/Users/vaughan/PS-2.0/include/player-2.0  
+PLAYER_CFLAGS = -I/Users/vaughan/PS-2.0/include/player-2.1  
 PLAYER_LIBS = -L/Users/vaughan/PS-2.0/lib -lplayercore -lltdl -lpthread -lplayererror  
 RANLIB = ranlib
 SET_MAKE = 
@@ -267,8 +267,6 @@ libstage_la_SOURCES = \
 #logo.cc 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
 libstage_la_LIBADD = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv   -L/opt/local/lib -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices
-
-# build a stand-alone test program using libstage
 stest_DEPENDENCIES = libstage.la
 stest_SOURCES = stest.cc
 stest_LDADD = libstage.la

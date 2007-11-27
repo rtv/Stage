@@ -1218,7 +1218,7 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
 	  //glVertex2f( p1.x, p1.y );
 	  //glVertex2f( p2.x, p2.y );
 
- 	  //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y ); 
+ 	  printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y ); 
 	  
 	  //double dx = p2.x - p1.x;
 	  //double dy = p2.y - p1.y;
@@ -1270,16 +1270,9 @@ void StgModel::UpdatePose( void )
   if( disabled )
     return;
 
-   //stg_velocity_t gvel;
-   //this->GetGlostg_model_get_global_velocity( mod, &gvel );
-      
-   //stg_pose_t gpose;
-   //stg_model_get_global_pose( mod, &gpose );
-   
-   // convert msec to sec
+   // convert usec to sec
    double interval = (double)world->interval_sim / 1e6;
   
-
    //stg_pose_t old_pose;
    //memcpy( &old_pose, &mod->pose, sizeof(old_pose));
 
@@ -1439,4 +1432,23 @@ int StgModel::TreeToPtrArray( GPtrArray* array )
   return added;
 }
 
+StgModel* StgModel::GetUnsubcribedModelOfType( char* modelstr )
+{
+  printf( "searching for %s in model %s with string %s\n", modelstr, token, typestr );
 
+  if( subs == 0 && (strcmp( typestr, modelstr ) == 0) )
+    return this;
+  
+  // this model is no use. try children recursively
+  for( GList* it = children; it; it=it->next )
+    {
+      StgModel* child = (StgModel*)it->data;
+      
+      StgModel* found = child->GetUnsubcribedModelOfType( modelstr );
+      if( found )
+	return found;
+    }
+  
+  // nothing matching below this model
+  return NULL;
+}

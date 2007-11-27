@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_sonar.cc,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+ * CVS: $Id: p_sonar.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -64,26 +64,30 @@ void InterfaceSonar::Publish( void )
   if( sensor_count > 0 )
     {      
       // limit the number of samples to Player's maximum
-      if( sensor_count > PLAYER_SONAR_MAX_SAMPLES )
-	sensor_count = PLAYER_SONAR_MAX_SAMPLES;
+      //if( sensor_count > PLAYER_SONAR_MAX_SAMPLES )
+      //sensor_count = PLAYER_SONAR_MAX_SAMPLES;
       
       //if( son->power_on ) // set with a sonar config
       {
 	sonar.ranges_count = sensor_count;
-	
+	sonar.ranges = new float[sensor_count];
+
 	for( unsigned int i=0; i<sensor_count; i++ )
 	  sonar.ranges[i] = mod->sensors[i].range;
       } 
     }
   
-  this->driver->Publish( this->addr, NULL,
+  this->driver->Publish( this->addr,
 			 PLAYER_MSGTYPE_DATA,
 			 PLAYER_SONAR_DATA_RANGES,
 			 &sonar, sizeof(sonar), NULL); 
+
+  if( sonar.ranges )
+    delete[] sonar.ranges;
 }
 
 
-int InterfaceSonar::ProcessMessage( MessageQueue* resp_queue,
+int InterfaceSonar::ProcessMessage( QueuePointer & resp_queue,
 				     player_msghdr_t* hdr,
 				     void* data )
 {  
@@ -97,15 +101,16 @@ int InterfaceSonar::ProcessMessage( MessageQueue* resp_queue,
       size_t rcount = mod->sensor_count;
       
       // limit the number of samples to Player's maximum
-      if( rcount > PLAYER_SONAR_MAX_SAMPLES )
-	rcount = PLAYER_SONAR_MAX_SAMPLES;
+      //if( rcount > PLAYER_SONAR_MAX_SAMPLES )
+      //rcount = PLAYER_SONAR_MAX_SAMPLES;
 
       // convert the ranger data into Player-format sonar poses	
       player_sonar_geom_t pgeom;
       memset( &pgeom, 0, sizeof(pgeom) );
             
       pgeom.poses_count = rcount;
-      
+      pgeom.poses = new player_pose3d_t[rcount];
+
       for( unsigned int i=0; i<rcount; i++ )
 	{
 	  // fill in the geometry data formatted player-like
@@ -118,7 +123,8 @@ int InterfaceSonar::ProcessMessage( MessageQueue* resp_queue,
 			     PLAYER_MSGTYPE_RESP_ACK, 
 			     PLAYER_SONAR_REQ_GET_GEOM,
 			     (void*)&pgeom, sizeof(pgeom), NULL );
-      
+
+      delete[] pgeom.poses;      
       return 0; // ok
     }
   else

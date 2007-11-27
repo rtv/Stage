@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_laser.cc,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+ * CVS: $Id: p_laser.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -51,11 +51,15 @@ InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 
 void InterfaceLaser::Publish( void )
 {
+  
+
+  StgModelLaser* mod = (StgModelLaser*)this->mod;
+  if( mod->samples == NULL )
+    return;
+  
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
 
-  StgModelLaser* mod = (StgModelLaser*)this->mod;
-  
   pdata.min_angle = -mod->fov/2.0;
   pdata.max_angle = +mod->fov/2.0;
   pdata.max_range = mod->range_max;
@@ -63,22 +67,27 @@ void InterfaceLaser::Publish( void )
   pdata.ranges_count = pdata.intensity_count = mod->sample_count;
   pdata.id = this->scan_id++;
   
+  pdata.ranges = new float[pdata.ranges_count];
+  pdata.intensity = new uint8_t[pdata.ranges_count];
+  
   for( int i=0; i<mod->sample_count; i++ )
     {
       //printf( "range %d %d\n", i, samples[i].range);
-      
       pdata.ranges[i] = mod->samples[i].range;
       pdata.intensity[i] = (uint8_t)mod->samples[i].reflectance;
     }
   
   // Write laser data
-  this->driver->Publish(this->addr, NULL,
+  this->driver->Publish(this->addr,
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_LASER_DATA_SCAN,
 			(void*)&pdata, sizeof(pdata), NULL);
+
+  delete [] pdata.ranges;
+  delete [] pdata.intensity;
 }
 
-int InterfaceLaser::ProcessMessage(MessageQueue* resp_queue,
+int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
 				   player_msghdr_t* hdr,
 				   void* data)
 {

@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.1.2.1 2007-10-04 01:17:03 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -169,7 +169,7 @@ extern bool player_quiet_startup;
 extern bool player_quit;
 
 // init static vars
-stg_world_t* StgDriver::world = NULL;
+StgWorld* StgDriver::world = NULL;
 
 int update_request = 0;
 
@@ -185,6 +185,7 @@ extern "C"
 // (as a generic Driver*) a pointer to a new instance of this driver.
 Driver* StgDriver_Init(ConfigFile* cf, int section)
 {
+  puts( "HELLO WORLD" );
   // Create and return a new instance of this driver
   return ((Driver*) (new StgDriver(cf, section)));
 }
@@ -209,66 +210,65 @@ int player_driver_init(DriverTable* table)
 {
   puts(" Stage driver plugin init");
   StgDriver_Register(table);
-  //ZooDriver_Register(table);
   return(0);
 }
 
-// find a model to attach to a Player interface
-StgModel* model_match( StgModel* mod, 
-		       player_devaddr_t *addr, 
-		       char* typestr, 
-		       GPtrArray* devices )
-{
-  //printf( "model_match %s[%s] for [%s]\n",
-  //  mod->Token(), mod->TypeStr(), typestr );
+// // find a model to attach to a Player interface
+// StgModel* model_match( StgModel* mod, 
+// 		       player_devaddr_t *addr, 
+// 		       char* typestr, 
+// 		       GPtrArray* devices )
+// {
+//   //printf( "model_match %s[%s] for [%s]\n",
+//   //  mod->Token(), mod->TypeStr(), typestr );
   
-  if( strcmp( mod->TypeStr(), typestr ) == 0 )
-    return mod;
+// //   if( strcmp( mod->TypeStr(), typestr ) == 0 )
+// //     return mod;
 
-  //printf( "searching children\n" );
+// //   //printf( "searching children\n" );
  
-  // else try the children
-  StgModel* match=NULL;
+// //   // else try the children
+// //   StgModel* match=NULL;
 
-  // for each model in the child list
-  GList* it;
-  int i=0;
-  for( it=mod->Children(); it; it=it->next )
-    {
-      // recurse
-      match = 
-	model_match( (StgModel*)it->data, 
-		     addr, typestr, devices );      
-      if( match )
-	{
-	  // if mod appears in devices already, it can not be used now
-	  //printf( "[inspecting %d devices used already]", devices->len );
+// //   // for each model in the child list
+// //   GList* it;
+// //   int i=0;
+// //   for( it=mod->Children(); it; it=it->next )
+// //     {
+// //       // recurse
+// //       match = 
+// // 	model_match( (StgModel*)it->data, 
+// // 		     addr, typestr, devices );      
+// //       if( match )
+// // 	{
+// // 	  // if mod appears in devices already, it can not be used now
+// // 	  //printf( "[inspecting %d devices used already]", devices->len );
 
-	  for( int i=0; i<(int)devices->len; i++ )
-	    {
-	      InterfaceModel* interface = 
-		(InterfaceModel*)g_ptr_array_index( devices, i );
+// // 	  for( int i=0; i<(int)devices->len; i++ )
+// // 	    {
+// // 	      InterfaceModel* interface = 
+// // 		(InterfaceModel*)g_ptr_array_index( devices, i );
 	      
-	      //printf( "comparing %p and %p (%d.%d.%d)\n", mod, record->mod,
-	      //      record->id.port, record->id.code, record->id.index );
+// // 	      //printf( "comparing %p and %p (%d.%d.%d)\n", mod, record->mod,
+// // 	      //      record->id.port, record->id.code, record->id.index );
 	      
-	      // if we have this type of interface on this model already, it's no-go.
-	      if( match == interface->mod && interface->addr.interf == addr->interf )
-		{
-		  //printf( "[MODEL ALREADY HAS AN INTERFACE]" );
-		  //return NULL;
-		  match = NULL;
-		}
-	    }
-	  // if we found a match, we're done searching
-	  //return match;
-	  if( match ) return match;
-	}
-      i++;
-    }
+// // 	      // if we have this type of interface on this model already, it's no-go.
+// // 	      if( match == interface->mod && interface->addr.interf == addr->interf )
+// // 		{
+// // 		  //printf( "[MODEL ALREADY HAS AN INTERFACE]" );
+// // 		  //return NULL;
+// // 		  match = NULL;
+// // 		}
+// // 	    }
+// // 	  // if we found a match, we're done searching
+// // 	  //return match;
+// // 	  if( match ) return match;
+// // 	}
+// //       i++;
+// //     }
 
-  return NULL;
-}
+//   return NULL;
+// }
 
 
 
@@ -473,8 +473,7 @@ StgModel*  StgDriver::LocateModel( char* basename,
   //printf( "attempting to find a model under model \"%s\" of type [%s]\n", 
   //  basename, typestr );
   
-  StgModel* base_model = 
-    stg_world_model_name_lookup( StgDriver::world, basename );
+  StgModel* base_model = world->GetModel( basename );
   
   if( base_model == NULL )
     {
@@ -486,12 +485,13 @@ StgModel*  StgDriver::LocateModel( char* basename,
   if( typestr == NULL ) // if we don't care what type the model is
     return base_model;
 
-  //printf( "found base model %s\n", base_model->Token() );
+  printf( "found base model %s\n", base_model->Token() );
 
   // we find the first model in the tree that is the right
   // type (i.e. has the right initialization function) and has not
   // been used before
-  return( model_match( base_model, addr, typestr, this->devices ) );
+  //return( model_match( base_model, addr, typestr, this->devices ) );
+  return( base_model->GetUnsubcribedModelOfType( typestr ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -594,7 +594,7 @@ int StgDriver::Shutdown()
 // Driver::ProcessMessages() is called by StgDriver::Update(), which is
 // called periodically by player.
 int 
-StgDriver::ProcessMessage(MessageQueue* resp_queue, 
+StgDriver::ProcessMessage(QueuePointer &resp_queue, 
 			  player_msghdr * hdr, 
 			  void * data)
 {
@@ -628,8 +628,9 @@ void StgDriver::Update(void)
     switch( interface->addr.interf )
       {
       case PLAYER_SIMULATION_CODE:
-	if( stg_world_update( this->world, FALSE ) )
-	  player_quit = TRUE; // set Player's global quit flag
+	//if( stg_world_update( this->world, FALSE ) )
+	world->RealTimeUpdate();
+	//player_quit = TRUE; // set Player's global quit flag
 	break;
 
       default:

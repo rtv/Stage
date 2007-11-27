@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.13.2.5 2007-11-22 01:42:48 rtv Exp $
+dnl $Id: configure.ac,v 1.13.2.6 2007-11-27 05:36:01 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -71,8 +71,8 @@ dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
-dnl for libstageplugin, we need Player 2.0 or higher
-PKG_CHECK_MODULES( PLAYER, playercore >= 2.0.1,
+dnl for libstageplugin, we need Player 2.1 or higher
+PKG_CHECK_MODULES( PLAYER, playercore >= 2.1.0,
  AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin])
  have_player=yes,
  AC_MSG_WARN([No suitable Player installation detected.])
