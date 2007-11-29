@@ -18,12 +18,12 @@ size [16 16 10]
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 50  # real-time interval between simulation updates in milliseconds 
+interval_real 100  # real-time interval between simulation updates in milliseconds 
 
 # configure the GUI window
 window
 ( 
-  size [ 572.000 555.000 ] 
+  size [ 872.000 855.000 ] 
   center [-8.010 -6.040] 
   rotate [ 0.000 0.000 ]
   scale 29.806 
@@ -44,6 +44,15 @@ pioneer2dx
  name "r0"
  color "red"
  pose [-2.551 -0.281 -39.206]
+
  sick_laser( pose [ 0.040 0.000 0.000 ] ) 
 )
 
+
+
+pioneer2dx
+(
+ color "green"
+ pose [-2.551 -2.281 -39.206]
+ sick_laser( pose [ 0.040 0.000 0.000 ] ) 
+)

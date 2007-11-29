@@ -132,6 +132,7 @@ void StgWorld::Initialize( const char* token,
     }
   
   this->id = StgWorld::next_id++;
+  this->ray_list = NULL;
   
   assert(token);
   this->token = (char*)malloc(STG_TOKEN_MAX);
@@ -324,7 +325,7 @@ void StgWorld::Load( const char* worldfile_path )
 
   stg_usec_t load_end_time = RealTimeNow();
 
-  printf( "[Load time %.3fsec]\n", (load_end_time - load_start_time) / 1000000.0 );
+  printf( "[Load time %.3fsec]", (load_end_time - load_start_time) / 1000000.0 );
   
 }
 
@@ -451,6 +452,45 @@ StgModel* StgWorld::GetModel( const stg_id_t id )
   return (StgModel*)g_hash_table_lookup( this->models_by_id, (gpointer)id );
 }
 
+
+void StgWorld::RecordRay( double x1, double y1, double x2, double y2 )
+{  
+  float* drawpts = new float[4];
+  drawpts[0] = x1;
+  drawpts[1] = y1;
+  drawpts[2] = x2; 
+  drawpts[3] = y2;
+  ray_list = g_list_append( ray_list, drawpts );
+}
+
+void StgWorld::DrawRays()
+{
+  glDisable( GL_DEPTH_TEST );
+  PushColor( 0,0,0,0.5 );
+  for( GList* it = ray_list; it; it=it->next )
+    {
+      float* pts = (float*)it->data;
+      glBegin( GL_LINES );
+      glVertex2f( pts[0], pts[1] );
+      glVertex2f( pts[2], pts[3] );
+      glEnd();
+    }  
+  PopColor();
+  glEnable( GL_DEPTH_TEST );
+}
+
+void StgWorld::ClearRays()
+{
+  for( GList* it = ray_list; it; it=it->next )
+    {
+      float* pts = (float*)it->data;
+      delete [] pts;
+    }
+  
+  g_list_free(ray_list );
+  ray_list = NULL;
+}
+
 stg_meters_t StgWorld::Raytrace( StgModel* finder,
 				 stg_pose_t* pose,
 				 stg_meters_t max_range,
@@ -471,12 +511,13 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
   int32_t dy = (int32_t)(ppm*max_range * sin(pose->a));
   int32_t dz = 0;
 
-//   glPushMatrix();
-//   glTranslatef( -width/2.0, -height/2.0, 0 );
-//   glScalef( 1.0/ppm, 1.0/ppm, 0 );
-//   PushColor( 1,0,0,1 );
+  //  RecordRay( pose->x, 
+  //     pose->y, 
+  //     pose->x + max_range * cos(pose->a),
+  //     pose->y + max_range * sin(pose->a) );
 	   
-  // line 3d algorithm adapted from Cohen's code from Graphics Gems IV
+  // fast integer line 3d algorithm adapted from Cohen's code from
+  // Graphics Gems IV
   int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;  
   sx = SGN(dx);  sy = SGN(dy);  sz = SGN(dz);
   ax = abs(dx);  ay = abs(dy);  az = abs(dz);
@@ -524,23 +565,18 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	      // matches the predicate and it's in the right z range
 	      if( block && (block->mod != finder) && 
 		  (*func)( block, arg ) &&
-		  pose->z >= block->zmin &&
-		  pose->z < block->zmax )	 
+		  pose->z >= block->global_zmin &&
+		  pose->z < block->global_zmax )	 
 		{
-		  //glPopMatrix();      	      
-		  
 		  // a hit!
 		  if( hit_model )
 		    *hit_model = block->mod;	      
+		  
 		  // how far away was that strike?
 		  return hypot( (x-xstart)/ppm, (y-ystart)/ppm );
 		}
 	    }
 	}
-//        else
-//    	{
-//    	  glRecti( x,y, x+1, y+1 );
-//    	}
 	  
       if ( exy < 0 ) {
 	if ( exz < 0 ) {
@@ -564,7 +600,6 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
       }
     }
   
-  //glPopMatrix();
   // hit nothing, so return max range
   return max_range;
 }

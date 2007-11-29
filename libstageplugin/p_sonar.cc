@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_sonar.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
+ * CVS: $Id: p_sonar.cc,v 1.1.2.3 2007-11-29 07:59:00 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -56,6 +56,9 @@ void InterfaceSonar::Publish( void )
 {
   StgModelRanger* mod = (StgModelRanger*)this->mod;
 
+  if( mod->samples == NULL )
+    return;
+
   player_sonar_data_t sonar;
   memset( &sonar, 0, sizeof(sonar) );
   
@@ -73,7 +76,7 @@ void InterfaceSonar::Publish( void )
 	sonar.ranges = new float[sensor_count];
 
 	for( unsigned int i=0; i<sensor_count; i++ )
-	  sonar.ranges[i] = mod->sensors[i].range;
+	  sonar.ranges[i] = mod->samples[i];
       } 
     }
   

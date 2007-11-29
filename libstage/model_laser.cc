@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.13 $
+ //  $Revision: 1.1.2.14 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -199,12 +199,15 @@ void StgModelLaser::Update( void )
        //printf( "  [%d] %.2f\n", (int)t, samples[t].range );
        //printf( "  [%d] ", (int)t );
 
+      stg_pose_t pose;
+      bzero( &pose, sizeof(pose) );
+      pose.z = 
+
        samples[t].range = Raytrace( bearing, 
 				    range_max,
 				    (stg_block_match_func_t)laser_raytrace_match,
 				    (const void*)this,
 				    &hitmod );
-       
 
        // if we hit a model and it reflects brightly, we set
        // reflectance high, else low

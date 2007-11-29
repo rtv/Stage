@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.1.2.3 2007-11-29 07:59:00 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -154,8 +154,8 @@ The stage plugin driver provides the following device interfaces:
 
 const char* copyright_notice = 
 "\n * Part of the Player Project [http://playerstage.sourceforge.net]\n"
-" * Copyright 2000-2006 Richard Vaughan, Brian Gerkey, Andrew Howard \n"
-" * and contributors. Released under the GNU General Public License v2.\n"
+" * Copyright 2000-2007 Richard Vaughan, Brian Gerkey and contributors.\n"
+" * Released under the GNU General Public License v2.\n"
 " **\n";
 
 #define STG_DEFAULT_WORLDFILE "default.world"
@@ -185,7 +185,6 @@ extern "C"
 // (as a generic Driver*) a pointer to a new instance of this driver.
 Driver* StgDriver_Init(ConfigFile* cf, int section)
 {
-  puts( "HELLO WORLD" );
   // Create and return a new instance of this driver
   return ((Driver*) (new StgDriver(cf, section)));
 }
@@ -212,65 +211,6 @@ int player_driver_init(DriverTable* table)
   StgDriver_Register(table);
   return(0);
 }
-
-// // find a model to attach to a Player interface
-// StgModel* model_match( StgModel* mod, 
-// 		       player_devaddr_t *addr, 
-// 		       char* typestr, 
-// 		       GPtrArray* devices )
-// {
-//   //printf( "model_match %s[%s] for [%s]\n",
-//   //  mod->Token(), mod->TypeStr(), typestr );
-  
-// //   if( strcmp( mod->TypeStr(), typestr ) == 0 )
-// //     return mod;
-
-// //   //printf( "searching children\n" );
- 
-// //   // else try the children
-// //   StgModel* match=NULL;
-
-// //   // for each model in the child list
-// //   GList* it;
-// //   int i=0;
-// //   for( it=mod->Children(); it; it=it->next )
-// //     {
-// //       // recurse
-// //       match = 
-// // 	model_match( (StgModel*)it->data, 
-// // 		     addr, typestr, devices );      
-// //       if( match )
-// // 	{
-// // 	  // if mod appears in devices already, it can not be used now
-// // 	  //printf( "[inspecting %d devices used already]", devices->len );
-
-// // 	  for( int i=0; i<(int)devices->len; i++ )
-// // 	    {
-// // 	      InterfaceModel* interface = 
-// // 		(InterfaceModel*)g_ptr_array_index( devices, i );
-	      
-// // 	      //printf( "comparing %p and %p (%d.%d.%d)\n", mod, record->mod,
-// // 	      //      record->id.port, record->id.code, record->id.index );
-	      
-// // 	      // if we have this type of interface on this model already, it's no-go.
-// // 	      if( match == interface->mod && interface->addr.interf == addr->interf )
-// // 		{
-// // 		  //printf( "[MODEL ALREADY HAS AN INTERFACE]" );
-// // 		  //return NULL;
-// // 		  match = NULL;
-// // 		}
-// // 	    }
-// // 	  // if we found a match, we're done searching
-// // 	  //return match;
-// // 	  if( match ) return match;
-// // 	}
-// //       i++;
-// //     }
-
-//   return NULL;
-// }
-
-
 
 Interface::Interface(  player_devaddr_t addr, 
 		       StgDriver* driver,
@@ -336,12 +276,12 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
   
   int device_count = cf->GetTupleCount( section, "provides" );
   
-  if( !player_quiet_startup )
-    {  
-      printf( "  Stage driver creating %d %s\n", 
-	      device_count, 
-	      device_count == 1 ? "device" : "devices" );
-    }
+  //if( !player_quiet_startup )
+  // {  
+      //printf( "  Stage driver creating %d %s\n", 
+      //      device_count, 
+      //      device_count == 1 ? "device" : "devices" );
+  // }
   
   for( int d=0; d<device_count; d++ )
     {
@@ -356,7 +296,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
             
       if( !player_quiet_startup )
 	{
-	  printf( "   %d.%s.%d is ", 
+	  printf( " Stage plugin:  %d.%s.%d is ", 
 		  player_addr.robot, 
 		  interf_to_str(player_addr.interf), 
 		  player_addr.index );
@@ -485,7 +425,7 @@ StgModel*  StgDriver::LocateModel( char* basename,
   if( typestr == NULL ) // if we don't care what type the model is
     return base_model;
 
-  printf( "found base model %s\n", base_model->Token() );
+  //  printf( "found base model %s\n", base_model->Token() );
 
   // we find the first model in the tree that is the right
   // type (i.e. has the right initialization function) and has not

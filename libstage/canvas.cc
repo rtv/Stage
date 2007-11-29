@@ -1,4 +1,4 @@
-
+\
 #include "stage.hh"
 #include <FL/fl_draw.H>
 #include <FL/fl_Box.H>
@@ -36,7 +36,8 @@ StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h)
   rotating = false;
 
   showflags = STG_SHOW_CLOCK | STG_SHOW_BLOCKS | STG_SHOW_GRID;
- 
+  //showflags = showflags | STG_SHOW_ARROWS | STG_SHOW_FOOTPRINT;
+
   // start the timer that causes regular redraws
   Fl::add_timeout( ((double)interval/1000), 
 		   (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
@@ -454,11 +455,57 @@ void StgCanvas::draw()
    for( GList* it=selected_models; it; it=it->next )
      ((StgModel*)it->data)->DrawSelected();
    
-  // draw the models
-  GList* it;
-  if( showflags ) // if any bits are set there's something to draw
-    for( it=world->children; it; it=it->next )
-    ((StgModel*)it->data)->Draw( showflags );
+   // draw the models
+   if( showflags ) // if any bits are set there's something to draw
+     {
+       if( showflags & STG_SHOW_FOOTPRINT )
+	 {
+	   glDisable( GL_DEPTH_TEST );
+	   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+  
+	   for( GList* it=world->children; it; it=it->next )
+	     {
+	       ((StgModel*)it->data)->DrawTrailFootprint();
+	     }
+	   glEnable( GL_DEPTH_TEST );
+	 }
+
+       if( showflags & STG_SHOW_TRAILS )
+	 {
+	   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+  
+	   for( GList* it=world->children; it; it=it->next )
+	     {
+	       ((StgModel*)it->data)->DrawTrailBlocks();
+	     }
+	 }
+       
+       if( showflags & STG_SHOW_ARROWS )
+	 {
+	   glEnable( GL_DEPTH_TEST );
+	   for( GList* it=world->children; it; it=it->next )
+	     {
+	       ((StgModel*)it->data)->DrawTrailArrows();
+	     }
+	 }
+
+       if( showflags & STG_SHOW_DATA )
+	 {
+	   for( GList* it=world->children; it; it=it->next )
+	     ((StgModel*)it->data)->DataVisualize();
+	 }
+
+       for( GList* it=world->children; it; it=it->next )
+	 ((StgModel*)it->data)->Draw( showflags );
+       
+       
+     }
+
+   if( world->ray_list )
+     {
+       world->DrawRays();
+       world->ClearRays();
+     }
 }
 
 void StgCanvas::resize(int X,int Y,int W,int H) 

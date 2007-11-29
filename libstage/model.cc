@@ -1,5 +1,3 @@
-//extern GList* dl_list;
-
 /** @ingroup stage 
     @{ 
 */
@@ -88,7 +86,7 @@ model
 - ranger_return [bool]
    - iff 1, this model can be detected by a ranger.
 - gripper_return [bool]
-   - iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has a non-zero obstacle_return.
+   - iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has moa non-zero obstacle_return.
 
 */
 
@@ -184,7 +182,8 @@ StgModel::StgModel( StgWorld* world,
   memset( &pose, 0, sizeof(pose));
   memset( &global_pose, 0, sizeof(global_pose));
   
-
+  this->ray_list = NULL;
+  this->trail = g_array_new( false, false, sizeof(stg_trail_item_t) );
 
   this->data_fresh = false;
   this->disabled = false;
@@ -728,6 +727,112 @@ void StgModel::DrawSelected()
   glPopMatrix();
 }
 
+
+void StgModel::DrawTrailFootprint()
+{
+  double r,g,b,a;
+  
+  for( int i=trail->len-1; i>=0; i-- )
+    {
+      stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
+      
+      glPushMatrix();
+      gl_pose_shift( &checkpoint->pose );
+      gl_pose_shift( &geom.pose );
+
+      stg_color_unpack( checkpoint->color, &r, &g, &b, &a );  
+      PushColor( r, g, b, 0.1 );
+      
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+      LISTMETHOD( this->blocks, StgBlock*, DrawFootPrint );
+      
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
+      PushColor( r/2, g/2, b/2, 0.1 );
+      LISTMETHOD( this->blocks, StgBlock*, DrawFootPrint );
+
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+      
+      PopColor();
+      PopColor();
+      glPopMatrix();
+    }
+}
+
+void StgModel::DrawTrailBlocks()
+{
+  double timescale = 0.0000001;
+
+  for( int i=trail->len-1; i>=0; i-- )
+    {
+      stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
+  
+      stg_pose_t pose;
+      memcpy( &pose, &checkpoint->pose, sizeof(pose));
+      pose.z =  (world->sim_time - checkpoint->time) * timescale;
+
+      glPushMatrix();
+      gl_pose_shift( &pose );      
+      gl_pose_shift( &geom.pose );
+      LISTMETHOD( this->blocks, StgBlock*, Draw );      
+      glPopMatrix();
+    }
+}
+
+void StgModel::DrawTrailArrows()
+{
+  //  PushColor( color );
+
+  double r,g,b,a;
+
+  double dx = 0.2;
+  double dy = 0.07;
+  double z;
+
+  double timescale = 0.0000001;
+
+  for( int i=0; i<trail->len; i++ )
+    {
+      stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
+
+      stg_pose_t pose;
+      memcpy( &pose, &checkpoint->pose, sizeof(pose));
+      pose.z =  (world->sim_time - checkpoint->time) * timescale;
+        
+      glPushMatrix();
+      
+      // set the height proportional to age
+
+      gl_pose_shift( &pose );
+
+      PushColor( checkpoint->color );
+      
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+      
+      glBegin( GL_TRIANGLES );
+      glVertex3f( 0, -dy, 0);
+      glVertex3f( dx, 0, 0 );
+      glVertex3f( 0, +dy, 0 );
+      glEnd();
+
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
+
+      stg_color_unpack( checkpoint->color, &r, &g, &b, &a );  
+      PushColor( r/2, g/2, b/2, 1 ); // darker color
+
+      glDepthMask(GL_FALSE); 
+      glBegin( GL_TRIANGLES );
+      glVertex3f( 0, -dy, 0);
+      glVertex3f( dx, 0, 0 );
+      glVertex3f( 0, +dy, 0 );
+      glEnd();
+      glDepthMask(GL_TRUE); 
+
+      PopColor();
+      PopColor();
+      glPopMatrix();
+    }
+}
+
 void StgModel::Draw( uint32_t flags )
 {
   //PRINT_DEBUG1( "Drawing %s", token );
@@ -742,18 +847,9 @@ void StgModel::Draw( uint32_t flags )
   if( flags & STG_SHOW_BLOCKS )
     LISTMETHOD( this->blocks, StgBlock*, Draw );
   
-  if( flags & STG_SHOW_DATA )
-    this->DataVisualize();
-
-  //if( flags & STG_SHOW_GEOM )
-    //this->DataVisualize();
-
-  // etc
-
   //if( this->say_string )
   // gl_speech_bubble( 0,0,0, this->say_string );
-  
-  
+    
   if( gui_grid && (flags & STG_SHOW_GRID) )
     DrawGrid();
 
@@ -1131,20 +1227,17 @@ static bool collision_match( StgBlock* testblock,
 }	
 
 
-// Check to see if the given pose will yield a collision with obstacles.
-// Returns a pointer to the first entity we are in collision with, and stores
-// the location of the hit in hitx,hity (if non-null)
-// Returns NULL if not collisions.
-// This function is useful for writing position devices.
+// Check to see if the given change in pose will yield a collision
+// with obstacles.  Returns a pointer to the first entity we are in
+// collision with, and stores the location of the hit in hitx,hity (if
+// non-null) Returns NULL if no collision. 
 
-StgModel* StgModel::TestCollision( stg_pose_t* pose, 
+StgModel* StgModel::TestCollision( stg_pose_t* posedelta, 
 				   double* hitx, double* hity ) 
 { 
-  
 /*  stg_model_t* child_hit = NULL; */
 
-/*   GList* it; */
-/*   for(it=mod->children; it; it=it->next ) */
+/*   for( GList* it=mod->children; it; it=it->next ) */
 /*     { */
 /*       stg_model_t* child = (stg_model_t*)it->data; */
 /*       child_hit = stg_model_test_collision( child, hitx, hity ); */
@@ -1165,8 +1258,8 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
   this->UnMap();
 
   // add the local geom offset
-  stg_pose_t local;
-  stg_pose_sum( &local, pose, &this->geom.pose );
+  //stg_pose_t local;
+  //stg_pose_sum( &local, pose, &this->geom.pose );
   
   // loop over all blocks 
   for( GList* it = this->blocks; it; it=it->next )
@@ -1176,33 +1269,33 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
       // loop over all edges of the block
       for( unsigned int p=0; p<b->pt_count; p++ ) 
 	{ 
+	  // find the local poses of the ends of this block edge
 	  stg_point_t* pt1 = &b->pts[p];
 	  stg_point_t* pt2 = &b->pts[(p+1) % b->pt_count]; 
-
- 	  //printf( "tracing %.2f %.2f   %.2f %.2f\n",  pt1->x, pt1->y, pt2->x, pt2->y ); 
-
 	  double dx = pt2->x - pt1->x;
 	  double dy = pt2->y - pt1->y;
 
+	  // find the range and bearing to raytrace along the block edge
 	  double range = hypot( dx, dy );
 	  double bearing = atan2( dy,dx );
 	  
-	  stg_pose_t pose;
-	  bzero(&pose,sizeof(pose));
+	  stg_pose_t edgepose;
+	  bzero(&edgepose,sizeof(edgepose));
+	  edgepose.x = pt1->x;
+	  edgepose.y = pt1->y;
+	  edgepose.a = bearing;
 
-	  pose.x = pt1->x;
-	  pose.y = pt1->y;
-	  pose.a = bearing;
+	  // shift the edge ray vector by the local change in pose
+	  stg_pose_t raypose;	  
+	  stg_pose_sum( &raypose, posedelta, &edgepose );
 
-	  Raytrace( &pose, 
+	  // raytrace in local coordinates
+	  Raytrace( &raypose, 
 		    range,
 		    (stg_block_match_func_t)collision_match, 
 		    (const void*)this, 
 		    &hitmod );
 
-	  if( hitmod )
-	    printf( "I hit %s\n", hitmod->Token() );
-	  
 //  	  if( hitmod ) 
 //  	    { 
 	  //	      if( hitx ) *hitx = itl->x; // report them 
@@ -1216,54 +1309,61 @@ StgModel* StgModel::TestCollision( stg_pose_t* pose,
 }
 
 
-
 void StgModel::UpdatePose( void )
 {
   if( disabled )
     return;
 
+  static uint32_t calls = 0;
+  
+  if( (world->updates % 10 == 0) )
+    {
+      stg_trail_item_t checkpoint;
+      memcpy( &checkpoint.pose, &pose, sizeof(pose));
+      checkpoint.color = color;     
+      checkpoint.time = world->sim_time;
+
+      if( trail->len > 100 )
+	g_array_remove_index( trail, 0 );
+      
+      g_array_append_val( this->trail, checkpoint );
+    }
+
    // convert usec to sec
    double interval = (double)world->interval_sim / 1e6;
-  
-   //stg_pose_t old_pose;
-   //memcpy( &old_pose, &pose, sizeof(old_pose));
 
-   stg_velocity_t v;
-   this->GetVelocity( &v );
-
+   // find the change of pose due to our velocity vector
    stg_pose_t p;
-   this->GetPose( &p );
-
-   p.x += (v.x * cos(p.a) - v.y * sin(p.a)) * interval;
-   p.y += (v.x * sin(p.a) + v.y * cos(p.a)) * interval;
-   p.a += v.a * interval;
-
-   // convert the new pose to global coords so we can see what it might hit
-   stg_pose_t gp;
-   memcpy( &gp, &p, sizeof(stg_pose_t));
-
-   this->LocalToGlobal( &gp );
-
-   // check this model and all it's children at the new pose
-   double hitx=0, hity=0;
-   StgModel* hitthing = this->TestCollision( &gp, &hitx, &hity );
-
+   bzero(&p,sizeof(p));
+   p.x += velocity.x * interval;
+   p.y += velocity.y * interval;
+   p.a += velocity.a * interval;
+   
+   // test to see if this pose change would cause us to crash
+   StgModel* hitthing = this->TestCollision( &p, NULL, NULL );
+   
+   //double hitx=0, hity=0;
+   //StgModel* hitthing = this->TestCollision( &p, &hitx, &hity );
+   
    if( hitthing )
      {
-       printf( "hit %s at %.2f %.2f\n",
-	       hitthing->Token(), hitx, hity );
+       //printf( "hit %s at %.2f %.2f\n",
+       //      hitthing->Token(), hitx, hity );
 
        //dd// 	  //memcpy( &mod->pose, &old_pose, sizeof(mod->pose));
        //this->SetPose( &old_pose );
      }
    else
-     this->SetPose( &p );
-     
+     {
+       stg_pose_t newpose;
+       stg_pose_sum( &newpose, &this->pose, &p );
+       this->SetPose( &newpose );
+     }
 
 //   int stall = 0;
       
-//   if( hitthing )
-//     {
+   //  if( hitthing )
+   //   {
 //       // grippable objects move when we hit them
 //       if(  hitthing->gripper_return ) 
 // 	{
@@ -1293,26 +1393,28 @@ void StgModel::UpdatePose( void )
 // 	  hitthing = NULL;
 // 	  // move back to where we started
 // 	  memcpy( &mod->pose, &old_pose, sizeof(mod->pose));
-// 	  interval = 0.2 * interval; // slow down time
-	  
-// 	  // inch forward until we collide
-// 	  do
-// 	    {
-// 	      memcpy( &old_pose, &mod->pose, sizeof(old_pose));
+       
+   //     // compute a move over a smaller period of time
+//        interval = 0.1 * interval; // slow down time so we move slowly
+//        stg_pose_t p;
+//        bzero(&p,sizeof(p));
+//        p.x += (v.x * cos(p.a) - v.y * sin(p.a)) * interval;
+//        p.y += (v.x * sin(p.a) + v.y * cos(p.a)) * interval;
+//        p.a += v.a * interval;
+       
+//        // inch forward until we collide
+//        while( (TestCollision( &p, NULL, NULL ) == NULL) );
+//        {
+// 	 puts( "inching" );
+// 	 stg_pose_t newpose;
+// 	 stg_pose_sum( &newpose, &this->pose, &p );
+// 	 this->SetPose( &newpose );
+//        }
 	      
-// 	      mod->pose.x += 
-// 		(mod->velocity.x * cos(mod->pose.a) - mod->velocity.y * sin(mod->pose.a)) * interval;
-// 	      mod->pose.y += 
-// 		(mod->velocity.x * sin(mod->pose.a) + mod->velocity.y * cos(mod->pose.a)) * interval;
-// 	      mod->pose.a += mod->velocity.a * interval;
-	      
-// 	      hitthing = stg_model_test_collision( mod, &hitx, &hity );
-	      
-// 	    } while( hitthing == NULL );
 	  
-// 	  //PRINT_WARN( "HIT something immovable!" );
+// // 	  //PRINT_WARN( "HIT something immovable!" );
 	  
-// 	  stall = 1;
+//  	  stall = 1;
 	  
 // 	  // set velocity to zero
 // 	  stg_velocity_t zero_v;
@@ -1323,7 +1425,7 @@ void StgModel::UpdatePose( void )
 // 	  memcpy( &mod->pose, &old_pose, sizeof(mod->pose));
 
 // 	}
-//     }
+       //  }
 
 //   // if the pose changed, we need to set it.
 //   if( memcmp( &old_pose, &mod->pose, sizeof(old_pose) ))
@@ -1386,7 +1488,7 @@ int StgModel::TreeToPtrArray( GPtrArray* array )
 
 StgModel* StgModel::GetUnsubcribedModelOfType( char* modelstr )
 {
-  printf( "searching for %s in model %s with string %s\n", modelstr, token, typestr );
+  //  printf( "searching for %s in model %s with string %s\n", modelstr, token, typestr );
 
   if( subs == 0 && (strcmp( typestr, modelstr ) == 0) )
     return this;

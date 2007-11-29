@@ -16,7 +16,6 @@ StgBlock::StgBlock( StgModel* mod,
   this->mod = mod;
   this->pt_count = pt_count;
   this->pts = (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t));
-  //this->pts_global = (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t));
   // allocate space for the integer version of the block vertices
   this->pts_global = new stg_point_int_t[pt_count];
   this->zmin = zmin;
@@ -24,6 +23,10 @@ StgBlock::StgBlock( StgModel* mod,
   this->color = color;
   this->inherit_color = inherit_color;
   this->rendered_points = g_array_new( FALSE, FALSE, sizeof(stg_point_int_t));
+  
+  // flag these as unset until StgBlock::Map() is called.
+  this->global_zmin = -1;
+  this->global_zmax = -1;
 }
 
 StgBlock::~StgBlock()
@@ -69,6 +72,15 @@ void StgBlock::DrawSides()
   glEnd();
 }
 
+void StgBlock::DrawFootPrint()
+{
+  glBegin(GL_POLYGON);
+
+  for( unsigned int p=0; p<pt_count; p++ )
+    glVertex2f( pts[p].x, pts[p].y );
+  
+  glEnd();
+}
 
 void StgBlock::Draw()
 {
@@ -120,18 +132,18 @@ void StgBlock::Map()
  
   // update the global coordinate list
   stg_pose_t gpose;
+  bzero(&gpose,sizeof(gpose));
+
   for( unsigned int p=0; p<pt_count; p++ )
     {
       gpose.x = pts[p].x;
       gpose.y = pts[p].y;
-      //gpose.z = pts[p].z;
-      gpose.a = 0.0;
+      gpose.z = zmin;
       
       mod->LocalToGlobal( &gpose );
             
       pts_global[p].x = (int32_t)floor((gpose.x+mod->world->width/2.0)*ppm);
       pts_global[p].y = (int32_t)floor((gpose.y+mod->world->height/2.0)*ppm);
-      //pts_global[p].z = gpose.z;
 
       PRINT_DEBUG2("loc [%.2f %.2f]", 
 		   pts[p].x,
@@ -142,6 +154,11 @@ void StgBlock::Map()
  		   pts_global[p].y );
     }
   
+  // store the block's global vertical bounds for inspection by the
+  // raytracer
+  global_zmin = gpose.z;
+  global_zmax = gpose.z + (zmax-zmin);
+
   mod->world->MapBlock( this );
 }
 

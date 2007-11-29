@@ -2,13 +2,13 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Richard Vaughan, Andrew Howard
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.12 2007-11-27 05:36:02 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.13 2007-11-29 07:59:00 rtv Exp $
 
 
 # The Pioneer2DX sonar array
 define p2dx_sonar ranger
 (
-  size3 [ 0.40 0.33 0.06 ] # matches the Pioneer 2-DX dimensions
+  #size3 [ 0.40 0.33 0.06 ] # matches the Pioneer 2-DX dimensions
 
   scount 16 # the number of transducers
 
@@ -52,13 +52,14 @@ define pioneer2dx position
   # estimated mass in KG
   mass 15.0 
 
-  # use the sonar array defined above
-  p2dx_sonar() 
+  # use the sonar array defined above with a small vertical offset to
+  # drop the sensors into the robot body
+  p2dx_sonar( pose4 [.04 0 -0.05 0] ) 
 
   # differential steering model
   drive "diff"
 
- # this polygon approximates the shape of a pioneer
+  # this polygon approximates the shape of a pioneer
   blocks 1
   block[0].points 8
   block[0].point[0] [  0.23  0.05 ]

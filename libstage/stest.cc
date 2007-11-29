@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.19 2007-11-27 05:36:02 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.20 2007-11-29 07:58:59 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -22,9 +22,9 @@ typedef struct
   StgModelLaser* laser;
   StgModelPosition* position;
   StgModelRanger* ranger;
-  int randcount ;
-  int avoidcount;
-  bool obs;
+  //int randcount ;
+  //int avoidcount;
+  //bool obs;
 } robot_t;
 
 #define VSPEED 0.4 // meters per second
@@ -77,9 +77,9 @@ int main( int argc, char* argv[] )
 
   for( int i=0; i<POPSIZE; i++ )
     {
-       robots[i].randcount = 0;
-       robots[i].avoidcount = 0;
-       robots[i].obs = false;
+      //robots[i].randcount = 0;
+      //robots[i].avoidcount = 0;
+      //robots[i].obs = false;
        
        char* base = "r";
        sprintf( namebuf, "%s%d", base, i );
@@ -87,12 +87,10 @@ int main( int argc, char* argv[] )
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
-       printf( "returned %s\n", robots[i].position->Token() );
-
-       robots[i].laser = (StgModelLaser*)
-	 robots[i].position->GetUnsubcribedModelOfType( "laser" );	 
-       assert(robots[i].laser);
-       robots[i].laser->Subscribe();
+ //       robots[i].laser = (StgModelLaser*)
+// 	 robots[i].position->GetUnsubcribedModelOfType( "laser" );	 
+//        assert(robots[i].laser);
+//        robots[i].laser->Subscribe();
        
        robots[i].ranger = (StgModelRanger*)
 	 robots[i].position->GetUnsubcribedModelOfType( "ranger" );
@@ -101,14 +99,9 @@ int main( int argc, char* argv[] )
     }
    
   // start the clock
-  world.Start();
+  //world.Start();
   //puts( "done" );
 
-  double newspeed = 0.0;
-  double newturnrate = 0.0;
-
-  //stg_world_set_interval_real( world, 0 );
-  
   while( world.RealTimeUpdate() )
     //   while( world.Update() )
     for( int i=0; i<POPSIZE; i++ )
@@ -119,11 +112,9 @@ int main( int argc, char* argv[] )
       // compute the vector sum of the sonar ranges	      
       double dx=0, dy=0;
       
-      int num_ranges = rgr->sensor_count;//spp[i]->GetCount();
-      for( int s=0; s<num_ranges; s++ )
+      for( int s=0; s< rgr->sensor_count; s++ )
 	{
-	  //player_pose3d_t spose = spp[i]->GetPose(s);
-	  double srange = rgr->sensors[s].range; //spp[i]->GetScan(s);
+	  double srange = rgr->samples[s]; 
 	  
 	  dx += srange * cos( rgr->sensors[s].pose.a );
 	  dy += srange * sin( rgr->sensors[s].pose.a );
@@ -136,11 +127,11 @@ int main( int argc, char* argv[] )
       double side_speed = 0.0;	   
       double turn_speed = WGAIN * resultant_angle;
       
-      int forward = num_ranges/2 -1 ;
+      int forward = rgr->sensor_count/2 -1 ;
       // if the front is clear, drive forwards
-      if( (rgr->sensors[forward-1].range > SAFE_DIST) &&
-	  (rgr->sensors[forward  ].range > SAFE_DIST) &&
-	  (rgr->sensors[forward+1].range > SAFE_DIST) && 
+      if( (rgr->samples[forward-1] > SAFE_DIST) &&
+	  (rgr->samples[forward  ] > SAFE_DIST) &&
+	  (rgr->samples[forward+1] > SAFE_DIST) && 
 	  (fabs( resultant_angle ) < SAFE_ANGLE) )
 	{
 	  forward_speed = VSPEED;

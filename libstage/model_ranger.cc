@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -97,10 +97,11 @@ StgModelRanger::StgModelRanger( StgWorld* world,
   // remove the polygon: ranger has no body
   this->ClearBlocks();
 
-  //stg_geom_t geom;
-  //memset( &geom, 0, sizeof(geom)); // no size
-  //this->SetGeom( &geom );
-  
+  stg_geom_t geom;
+  memset( &geom, 0, sizeof(geom)); // no size
+  this->SetGeom( &geom );
+
+  samples = NULL;
   sensor_count = 16;
   sensors= g_new0( stg_ranger_sensor_t, sensor_count );
 
@@ -112,9 +113,11 @@ StgModelRanger::StgModelRanger( StgWorld* world,
       sensors[c].pose.a = (2.0*M_PI)/sensor_count * c;
       sensors[c].pose.x = offset * cos( sensors[c].pose.a );
       sensors[c].pose.y = offset * sin( sensors[c].pose.a );
+      sensors[c].pose.z = 0;geom.size.z / 2.0; // half way up
       
       sensors[c].size.x = 0.01; // a small device
       sensors[c].size.y = 0.04;
+      sensors[c].size.z = 0.04;
       
       sensors[c].bounds_range.min = 0;
       sensors[c].bounds_range.max = 5.0;
@@ -133,6 +136,8 @@ void StgModelRanger::Startup( void )
   
   PRINT_DEBUG( "ranger startup" );
   
+  this->samples = new stg_meters_t[sensor_count];
+
   this->SetWatts( STG_RANGER_WATTS );
 }
 
@@ -142,8 +147,13 @@ void StgModelRanger::Shutdown( void )
   PRINT_DEBUG( "ranger shutdown" );
 
   this->SetWatts( 0 );
-  //this->SetData( NULL, 0 ); // this will unrender data too.
 
+  if( this->samples )
+    {
+      delete[] samples;
+      samples = NULL;
+    }
+  
   StgModel::Shutdown();
 }
 
@@ -190,9 +200,16 @@ void StgModelRanger::Load( void )
       for( unsigned int i = 0; i < sensor_count; i++)
 	{
 	  snprintf(key, sizeof(key), "spose[%d]", i);
-	  sensors[i].pose.x = wf->ReadTupleLength( id, key, 0, 0);
-	  sensors[i].pose.y = wf->ReadTupleLength( id, key, 1, 0);
-	  sensors[i].pose.a = wf->ReadTupleAngle( id, key, 2, 0);
+	  sensors[i].pose.x = wf->ReadTupleLength( id, key, 0, sensors[i].pose.x );
+	  sensors[i].pose.y = wf->ReadTupleLength( id, key, 1, sensors[i].pose.y );
+	  sensors[i].pose.z = 0.0;
+	  sensors[i].pose.a = wf->ReadTupleAngle( id, key, 2, sensors[i].pose.a );
+
+	  snprintf(key, sizeof(key), "spose3[%d]", i);
+	  sensors[i].pose.x = wf->ReadTupleLength( id, key, 0, sensors[i].pose.x );
+	  sensors[i].pose.y = wf->ReadTupleLength( id, key, 1, sensors[i].pose.y );
+	  sensors[i].pose.z = wf->ReadTupleLength( id, key, 2, sensors[i].pose.z );
+	  sensors[i].pose.a = wf->ReadTupleAngle( id, key, 3, sensors[i].pose.a );
 	  
 /* 	  snprintf(key, sizeof(key), "ssize[%d]", i); */
 /* 	  sensors[i].size.x = wf->ReadTuplelength(mod->id, key, 0, 0.01); */
@@ -218,6 +235,11 @@ void StgModelRanger::Load( void )
 
 bool ranger_raytrace_match( StgBlock* block, StgModel* finder )
 {
+  //  printf( "ranger match sees %s %p %d zmin %.2f zmax %.2f global_zmin %.2f global_zmax %.2f\n", 
+  //  block->mod->Token(), block->mod, block->mod->LaserReturn(),
+  //  block->zmin, block->zmax,
+  //  block->zmin, block->zmax );
+  
   // Ignore myself, my children, and my ancestors.
   return( block->mod->RangerReturn() && !block->mod->IsRelated( finder ) );
 }	
@@ -231,7 +253,9 @@ void StgModelRanger::Update( void )
   
   if( (sensors == NULL) || (sensor_count < 1 ))
     return;
-
+  
+  assert( samples ); // make sure we have the range data array
+  
   //PRINT_DEBUG2( "[%d] updating ranger %s", (int)world->sim_time_ms, token );
 
   // raytrace new range data for all sensors
@@ -243,7 +267,7 @@ void StgModelRanger::Update( void )
       //for( int r=0; r<sensors[t].ray_count; r++ )
       //{	  
       range = Raytrace( &sensors[t].pose,
-			    sensors[t].bounds_range.max,
+			sensors[t].bounds_range.max,
 			(stg_block_match_func_t)ranger_raytrace_match,
 			this,
 			NULL );			       
@@ -253,7 +277,7 @@ void StgModelRanger::Update( void )
       if( range < sensors[t].bounds_range.min )
 	range = sensors[t].bounds_range.min;	
       
-      sensors[t].range = range;
+      samples[t] = range;
       //sensors[t].error = TODO;            
     }   
 }
@@ -278,55 +302,83 @@ void StgModelRanger::Print( char* prefix )
   printf( "\tRanges[ " );
   
   for( unsigned int i=0; i<sensor_count; i++ )
-    printf( "%.2f ", sensors[i].range );
+    printf( "%.2f ", samples[i] );
   puts( " ]" );
 }
 
 void StgModelRanger::DataVisualize( void )
 {
-  if( sensors && sensor_count ) 
-    {
-      // if all models have the same number of sensors, this is fast
-      // as it will probably not use a system call or cause a cache
-      // miss
-      static float* pts = NULL;
-      size_t memsize =  6 * sensor_count * sizeof(float);
-      pts = (float*)g_realloc( pts, memsize );
-      bzero( pts, memsize );
-      
-      // calculate a triangle for each non-zero sensor range
-      for( unsigned int s=0; s<sensor_count; s++ ) 
-	{ 
-	  if( sensors[s].range > 0.0 ) 
-	    { 
-	      stg_ranger_sensor_t* rngr = &sensors[s]; 
-	      
-	      // sensor FOV 
-	      double sidelen = sensors[s].range; 
-	      double da = rngr->fov/2.0; 
-	      
-	      unsigned int index = s*6;
-	      pts[index+0] = rngr->pose.x;
-	      pts[index+1] = rngr->pose.y;
-	      pts[index+2] = rngr->pose.x + sidelen*cos(rngr->pose.a - da ); 
-	      pts[index+3] = rngr->pose.y + sidelen*sin(rngr->pose.a - da ); 
-	      pts[index+4] = rngr->pose.x + sidelen*cos(rngr->pose.a + da ); 
-	      pts[index+5] = rngr->pose.y + sidelen*sin(rngr->pose.a + da ); 
-	    }
-	}
+  //if( ! (samples && sensors && sensor_count) )
+  //return;
 
-      // draw the filled triangles in transparent blue
-      glDepthMask( GL_FALSE ); 
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-      PushColor( 0, 1, 0, 0.1 ); // transparent pale green       
-      glEnableClientState( GL_VERTEX_ARRAY );
-      glVertexPointer( 2, GL_FLOAT, 0, pts );         
-      glDrawArrays( GL_TRIANGLES, 0, 3 * sensor_count );
+  glPushMatrix();
+
+  // move into this model's local coordinate frame
+  gl_pose_shift( &this->pose );
+  gl_pose_shift( &this->geom.pose );
+
+  // if all models have the same number of sensors, this is fast
+  // as it will probably not use a system call or cause a cache
+  // miss
+  static float* pts = NULL;
+  size_t memsize =  9 * sensor_count * sizeof(float);
+  pts = (float*)g_realloc( pts, memsize );
+  bzero( pts, memsize );
       
-      // restore state 
-      glDepthMask( GL_TRUE ); 
-      PopColor();
+  //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  //PushColor( 0,0,0,1 );
+      
+  // calculate a triangle for each non-zero sensor range
+  for( unsigned int s=0; s<sensor_count; s++ ) 
+    { 
+      if( samples[s] > 0.0 ) 
+	{ 
+	  stg_ranger_sensor_t* rngr = &sensors[s]; 
+	      
+	  double dx =  rngr->size.x/2.0;
+	  double dy =  rngr->size.y/2.0;
+	  double dz =  rngr->size.z/2.0;
+
+	  // DEBUG: draw a point for the sensor pose
+	  //glPointSize( 6 );
+	  //glBegin( GL_POINTS );
+	  //glVertex3f( rngr->pose.x, rngr->pose.y, rngr->pose.z );
+	  //glEnd();
+	      
+	  // sensor FOV 
+	  double sidelen = samples[s]; 
+	  double da = rngr->fov/2.0; 
+	      
+	  unsigned int index = s*9;
+	  pts[index+0] = rngr->pose.x;
+	  pts[index+1] = rngr->pose.y;
+	  pts[index+2] = rngr->pose.z;
+
+	  pts[index+3] = rngr->pose.x + sidelen*cos(rngr->pose.a - da ); 
+	  pts[index+4] = rngr->pose.y + sidelen*sin(rngr->pose.a - da ); 
+	  pts[index+5] = rngr->pose.z;
+
+	  pts[index+6] = rngr->pose.x + sidelen*cos(rngr->pose.a + da ); 
+	  pts[index+7] = rngr->pose.y + sidelen*sin(rngr->pose.a + da ); 
+	  pts[index+8] = rngr->pose.z;
+	}
     }
+
+  //PopColor();
+
+  // draw the filled triangles in transparent blue
+  glDepthMask( GL_FALSE ); 
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  PushColor( 0, 1, 0, 0.1 ); // transparent pale green       
+  glEnableClientState( GL_VERTEX_ARRAY );
+  glVertexPointer( 3, GL_FLOAT, 0, pts );         
+  glDrawArrays( GL_TRIANGLES, 0, 3 * sensor_count );
+      
+  // restore state 
+  glDepthMask( GL_TRUE ); 
+  PopColor();
+
+  glPopMatrix();
 }
    
    

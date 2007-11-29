@@ -14,6 +14,9 @@ static const char* MITEM_VIEW_OCCUPANCY = "View/Occupancy";
 static const char* MITEM_VIEW_QUADTREE =  "View/Tree";
 static const char* MITEM_VIEW_FOLLOW =    "View/Follow";
 static const char* MITEM_VIEW_CLOCK =     "View/Clock";
+static const char* MITEM_VIEW_FOOTPRINTS = "View/Trails/Footprints";
+static const char* MITEM_VIEW_TRAILS =     "View/Trails/Blocks";
+static const char* MITEM_VIEW_ARROWS =     "View/Trails/Arrows";
 
 // transform the current coordinate frame by the given pose
 void gl_coord_shift( double x, double y, double z, double a  )
@@ -63,6 +66,9 @@ void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas )
   else if( strcmp(picked, MITEM_VIEW_QUADTREE ) == 0 ) canvas->InvertView( STG_SHOW_QUADTREE );
   else if( strcmp(picked, MITEM_VIEW_OCCUPANCY ) == 0 ) canvas->InvertView( STG_SHOW_OCCUPANCY );
   else if( strcmp(picked, MITEM_VIEW_CLOCK ) == 0 ) canvas->InvertView( STG_SHOW_CLOCK );
+  else if( strcmp(picked, MITEM_VIEW_FOOTPRINTS ) == 0 ) canvas->InvertView( STG_SHOW_FOOTPRINT );
+  else if( strcmp(picked, MITEM_VIEW_ARROWS ) == 0 ) canvas->InvertView( STG_SHOW_ARROWS );
+  else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
   else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
   
   //printf( "value: %d\n", item->value() );
@@ -102,6 +108,13 @@ StgWorldGui::StgWorldGui(int W,int H,const char*L)
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOLLOW ? FL_MENU_VALUE : 0 ));  
   mbar->add( MITEM_VIEW_CLOCK,    0, (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));  
+
+  mbar->add( MITEM_VIEW_FOOTPRINTS,  0, (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOOTPRINT ? FL_MENU_VALUE : 0 ));  
+  mbar->add( MITEM_VIEW_ARROWS,    0, (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_ARROWS ? FL_MENU_VALUE : 0 ));  
+  mbar->add( MITEM_VIEW_TRAILS,    0, (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));  
   
   mbar->add( "Help", 0, 0, 0, FL_SUBMENU );
   mbar->add( "Help/About Stage...", FL_CTRL + 'f', (Fl_Callback *)dummy_cb );
@@ -142,8 +155,12 @@ void StgWorldGui::Load( const char* filename )
   uint32_t blocks = wf->ReadInt(wf_section, "show_blocks", flags & STG_SHOW_BLOCKS ) ? STG_SHOW_BLOCKS : 0;
   uint32_t quadtree = wf->ReadInt(wf_section, "show_tree", flags & STG_SHOW_QUADTREE ) ? STG_SHOW_QUADTREE : 0;
   uint32_t clock = wf->ReadInt(wf_section, "show_clock", flags & STG_SHOW_CLOCK ) ? STG_SHOW_CLOCK : 0;
+  uint32_t trails = wf->ReadInt(wf_section, "show_trails", flags & STG_SHOW_TRAILS ) ? STG_SHOW_TRAILS : 0;
+  uint32_t arrows = wf->ReadInt(wf_section, "show_arrows", flags & STG_SHOW_ARROWS ) ? STG_SHOW_ARROWS : 0;
+  uint32_t footprints = wf->ReadInt(wf_section, "show_footprints", flags & STG_SHOW_FOOTPRINT ) ? STG_SHOW_FOOTPRINT : 0;
   
-  canvas->SetShowFlags( grid | data | follow | blocks | quadtree | clock );  
+  canvas->SetShowFlags( grid | data | follow | blocks | quadtree | clock
+			| trails | arrows | footprints );  
   canvas->invalidate(); // we probably changed something
 
   // fix the GUI menu checkboxes to match

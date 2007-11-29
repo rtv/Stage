@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.18 2007-11-27 05:36:01 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.19 2007-11-29 07:58:59 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -583,6 +583,8 @@ void stg_d_render( stg_d_draw_t* d );
 #define STG_SHOW_FOLLOW       64
 #define STG_SHOW_CLOCK        128
 #define STG_SHOW_QUADTREE     256
+#define STG_SHOW_ARROWS       512
+#define STG_SHOW_FOOTPRINT    1024
 
 // STAGE INTERNAL
 
@@ -1087,12 +1089,24 @@ public:
 			 const void* arg,
 			 StgModel** hit_model );
 
+  // visualize calls to Raytrace() for debugging purposes
+  GList* ray_list;
+  void RecordRay( double x1, double y1, double x2, double y2 );
+  void DrawRays();
+  void ClearRays();
+
   void ClockString( char* str, size_t maxlen );
 
  private:
   // todo - hide some stuff here?
 
 };
+
+typedef struct {
+  stg_pose_t pose;
+  stg_color_t color;
+  stg_usec_t time;
+} stg_trail_item_t;
 
 // MODEL CLASS
 class StgModel : public StgAncestor
@@ -1159,10 +1173,9 @@ public:
   GList* d_list;    
   GList* blocks; //< list of stg_block_t structs that comprise a body
   
-  // display lists
-  //int dl_body, dl_data, dl_cmd, dl_cfg, dl_grid, dl_debug, dl_raytrace;
-  //GList* raytrace_dl_list;
-
+  GList* ray_list;
+  GArray* trail;
+  
   bool body_dirty; //< iff true, regenerate block display list before redraw
   bool data_dirty; //< iff true, regenerate data display list before redraw
 
@@ -1185,7 +1198,7 @@ public:
   virtual void UpdatePose( void );
 
   void Say( char* str );
-    void UpdateIfDue( void );
+  void UpdateIfDue( void );
 
   /** configure a model by reading from the current world file */
   virtual void Load( void );
@@ -1193,6 +1206,9 @@ public:
   virtual void Save( void );
   virtual void Draw( uint32_t flags );
   virtual void DrawPicker( void );
+  void DrawTrailFootprint();
+  void DrawTrailBlocks();
+  void DrawTrailArrows();
   virtual void DataVisualize( void );
   void DrawGrid();
   virtual void DrawSelected(void);
@@ -1483,14 +1499,18 @@ public:
   
   void Map();
   void UnMap(); // draw the block into the world
-
+  
   void Draw(); // draw the block in OpenGL
   void DrawSolid(); // draw the block in OpenGL as a solid single color
+  void DrawFootPrint(); // draw the projection of the block onto the z=0 plane
 
   stg_point_t* pts; //< points defining a polygon
   size_t pt_count; //< the number of points
   stg_meters_t zmin; 
   stg_meters_t zmax; 
+
+  stg_meters_t global_zmin; 
+  stg_meters_t global_zmax; 
 
   StgModel* mod; //< model to which this block belongs
   stg_point_int_t* pts_global; //< points defining a polygon in global coords
@@ -2172,8 +2192,6 @@ public:
     stg_bounds_t bounds_range;
     stg_radians_t fov;
     int ray_count;
-    stg_meters_t range;
-    //double error; // TODO
   } stg_ranger_sensor_t;
   
 class StgModelRanger : public StgModel
@@ -2197,6 +2215,7 @@ public:
 
   size_t sensor_count;
   stg_ranger_sensor_t* sensors;
+  stg_meters_t* samples;
 
   // static wrapper for the constructor - all models must implement
   // this method and add an entry in typetable.cc
