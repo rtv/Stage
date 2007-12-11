@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.37 2006-03-29 05:11:00 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.37.2.1 2007-12-11 23:32:16 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -298,6 +298,8 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 
 
 
+extern int _stg_disable_gui;
+
 // Constructor.  Retrieve options from the configuration file and do any
 // pre-Setup() setup.
 
@@ -382,8 +384,16 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  break;	  
 	  
 	case PLAYER_GRAPHICS2D_CODE:
-	  ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
-	  break;	  
+          if(_stg_disable_gui)
+          {
+            PLAYER_WARN("Stage graphics2d interface disabled when not running GUI");
+            continue;
+          }
+          else
+          {
+            ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
+            break;	  
+          }
 
 	case PLAYER_GRIPPER_CODE:
 	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
