@@ -44,7 +44,7 @@
 
 extern stg_type_record_t typetable[];
 
-//extern int _stg_disable_gui;
+extern int _stg_disable_gui;
 
 /** @ingroup stage 
     @{ 
@@ -423,6 +423,9 @@ stg_model_t* stg_model_create( stg_world_t* world,
 /*   mod->lines = pline; */
 /*   mod->lines_count = 1; */
 
+  if (!_stg_disable_gui)
+  {
+
   // now it's safe to create the GUI components
   if( mod->world->win )
     gui_model_create( mod );
@@ -476,6 +479,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
   // exterimental: creates a menu of models
   // gui_add_tree_item( mod );
+  }
   
   PRINT_DEBUG3( "finished model %d.%d(%s)", 
 		mod->world->id, 

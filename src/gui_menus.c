@@ -6,6 +6,8 @@
 
 #define TOGGLE_PATH "/Main/View"
 
+extern int _stg_disable_gui;
+
 extern stg_rtk_fig_t* fig_debug_geom;
 extern stg_rtk_fig_t* fig_debug_rays;
 extern stg_rtk_fig_t* fig_debug_matrix;
@@ -684,6 +686,9 @@ void stg_model_add_property_toggles( stg_model_t* mod,
 				     const char* label,
 				     gboolean enabled )
 {
+  if (_stg_disable_gui)
+    return;
+
   stg_property_toggle_args_t* args = 
     calloc(sizeof(stg_property_toggle_args_t),1);
   
