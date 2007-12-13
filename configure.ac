@@ -1,10 +1,10 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.16 2006-09-20 01:45:08 adam_lein Exp $
+dnl $Id: configure.ac,v 1.17 2007-12-13 20:31:07 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,2.1.0)
+AC_INIT(stage,2.1.0rc1)
 
 AC_CONFIG_SRCDIR(src/stage.c)
 
@@ -114,6 +114,7 @@ AC_OUTPUT(Makefile
           src/Makefile 
 	  docsrc/Makefile
           worlds/Makefile 
+          worlds/wifi/Makefile 
           worlds/bitmaps/Makefile 
           replace/Makefile
           examples/Makefile
