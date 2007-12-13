@@ -2,10 +2,11 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.143 2006-09-20 01:45:08 adam_lein Exp $
+# $Id: Makefile.am,v 1.144 2007-12-13 21:07:05 gerkey Exp $
 
 # install the header file for the Stage library
-include_HEADERS = stage.h 
+versionedincludedir = $(includedir)/stage-2.1
+versionedinclude_HEADERS = stage.h 
 
 # system-wide compile flags - target-specific flags are added to each target below
 AM_CFLAGS =   -Wall -I. -I$(top_srcdir)/replace @GTK_CFLAGS@  -std=c99 
@@ -65,7 +66,7 @@ libstage_la_SOURCES = \
 # TODO
 # model_power.c
 
-libstage_la_LDFLAGS = -version-info 2:0:0 -rpath $(libdir)
+libstage_la_LDFLAGS = -version-info 2:1:0 -rpath $(libdir)
 libstage_la_LIBADD = @GTK_LIBS@
 
 if GNOME
@@ -103,6 +104,6 @@ libstageplugin_la_SOURCES = \
 # p_power.cc 
 
 libstageplugin_la_CPPFLAGS = $(AM_CPPFLAGS) @PLAYER_CFLAGS@  
-libstageplugin_la_LDFLAGS = -version-info 1:0:0 -rpath $(libdir)
+libstageplugin_la_LDFLAGS = -version-info 1:1:0 -rpath $(libdir)
 libstageplugin_la_LIBADD = libstage.la @PLAYER_LIBS@
 
