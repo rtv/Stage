@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.20 2007-12-24 10:50:45 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.21 2007-12-24 11:20:36 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -2194,11 +2194,6 @@ private:
   stg_position_control_mode_t control_mode;
   stg_position_drive_mode_t drive_mode;
 
-  // localization state
-  stg_pose_t est_pose; ///< position estimate in local coordinates
-  stg_pose_t est_pose_error; ///< estimated error in position estimate
-  stg_pose_t est_origin; ///< global origin of the local coordinate system
-
   stg_position_localization_mode_t localization_mode; ///< global or local mode
   stg_velocity_t integration_error; ///< errors to apply in simple odometry model
 
@@ -2236,6 +2231,11 @@ public:
     control_mode = STG_POSITION_CONTROL_POSITION;
     goal.x = x; goal.y = y; goal.z = 0; goal.a = a; 
   }  
+
+  // localization state
+  stg_pose_t est_pose; ///< position estimate in local coordinates
+  stg_pose_t est_pose_error; ///< estimated error in position estimate
+  stg_pose_t est_origin; ///< global origin of the local coordinate system
 
   // static wrapper for the constructor - all models must implement
   // this method and add an entry in typetable.cc

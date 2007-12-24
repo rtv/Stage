@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.1.2.3 2007-12-24 11:20:37 rtv Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -73,10 +73,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
     //stg_position_cmd_t scmd; 
     //memset( &scmd, 0, sizeof(scmd));
 
-    mod->goal.x = pcmd->vel.px;
-    mod->goal.y = pcmd->vel.py;
-    mod->goal.a = pcmd->vel.pa;
-    mod->control_mode = STG_POSITION_CONTROL_VELOCITY;
+    mod->SetSpeed( pcmd->vel.px, pcmd->vel.py, pcmd->vel.pa );
 
     return 0;
   }
@@ -92,11 +89,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
     stg_position_cmd_t scmd; 
     memset( &scmd, 0, sizeof(scmd));
 
-    mod->goal.x = pcmd->pos.px;
-    mod->goal.y = pcmd->pos.py;
-    mod->goal.a = pcmd->pos.pa;
-    mod->control_mode = STG_POSITION_CONTROL_POSITION;
-
+    mod->GoTo( pcmd->vel.px, pcmd->vel.py, pcmd->vel.pa );
     return 0;
   }
 
@@ -111,11 +104,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
     stg_position_cmd_t scmd; 
     memset( &scmd, 0, sizeof(scmd));
 
-    mod->goal.x = pcmd->velocity;
-    mod->goal.y = 0;
-    mod->goal.a = pcmd->angle;
-    mod->control_mode = STG_POSITION_CONTROL_VELOCITY;
-
+    mod->SetSpeed( pcmd->velocity, 0, pcmd->angle );
     return 0;
   }
  

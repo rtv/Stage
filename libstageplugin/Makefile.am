@@ -1,7 +1,7 @@
 # Automake script to build Libstageplugin's Makefile
 #
 # RTV 20071126
-# $Id: Makefile.am,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
+# $Id: Makefile.am,v 1.1.2.3 2007-12-24 11:20:37 rtv Exp $
 
 SUBDIRS = 
 
@@ -17,6 +17,7 @@ endif
 libstageplugin_la_SOURCES = \
 	p_driver.cc \
 	p_driver.h \
+	p_graphics3d.cc \
 	p_laser.cc \
 	p_position.cc \
 	p_simulation.cc \

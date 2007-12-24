@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.1.2.6 2007-11-27 05:36:01 rtv Exp $
+# $Id: Makefile.am,v 1.1.2.7 2007-12-24 11:20:36 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.hh 
@@ -29,6 +29,7 @@ libstage_la_SOURCES =  \
 	glcolorstack.cc \
 	model.cc \
 	model_callbacks.cc \
+	model_fiducial.cc \
 	model_laser.cc \
 	model_load.cc \
 	model_position.cc \

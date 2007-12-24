@@ -4,15 +4,18 @@ X=10
 Y=20
 
 for (( INDEX=0 ; $INDEX < $1 ; INDEX++ )) ; do
-  X=$(($RANDOM)) 
-  Y=$(($RANDOM))
+  #X=$(($RANDOM % 100))
+  #Y=$(($RANDOM % 100))
   A=$(($RANDOM % 360))
 
-  #P=$(bc <<< "scale=4; ($X * ( $2 / 32767.0 )) - $2/2.0")
-  #Q=$(bc <<< "scale=4; ($Y * ( $3 / 32767.0 )) - $3/2.0")
-  P=$(bc <<< "scale=4; ($X * ( $2 / 32767.0 )) + $4")
-  Q=$(bc <<< "scale=4; ($Y * ( $3 / 32767.0 )) + $5")
+  #P=$(bc <<< "scale=3; ($X * ( $2 / 32767.0 )) + $4")
+  #Q=$(bc <<< "scale=3; ($Y * ( $3 / 32767.0 )) + $5")
 
-  echo "robot( name \"r$INDEX\" pose [ $P $Q $A ] )" 
+ # P=$(bc <<< "scale=3; ($X / 4.0 ) + $4")
+ # Q=$(bc <<< "scale=3; ($Y / 4.0 ) + $5")
+
+  
+
+  echo "swarmbot( name \"r$INDEX\" pose [ -18 0 $A ] )" 
 done
   

@@ -39,20 +39,21 @@ floorplan
   bitmap "bitmaps/cave.png"
 )
 
-pioneer2dx
+fancypioneer2dx
 (
  name "r0"
  color "red"
  pose [-2.551 -0.281 -39.206]
 
- sick_laser( pose [ 0.040 0.000 0.000 ] ) 
+ fancysicklaser( pose [ 0.040 0.000 0.000 ] ) 
 )
 
 
 
 pioneer2dx
 (
+ name "r1"
  color "green"
  pose [-2.551 -2.281 -39.206]
- sick_laser( pose [ 0.040 0.000 0.000 ] ) 
+ sicklaser( pose [ 0.040 0.000 0.000 ] ) 
 )

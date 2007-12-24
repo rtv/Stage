@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.1.2.9 2007-11-27 07:03:33 rtv Exp $
+# $Id: Makefile,v 1.1.2.10 2007-12-24 11:20:36 rtv Exp $
 
 
 
@@ -65,9 +65,10 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libstage_la_DEPENDENCIES =
 am_libstage_la_OBJECTS = ancestor.lo block.lo blockgrid.lo canvas.lo \
-	glcolorstack.lo model.lo model_callbacks.lo model_laser.lo \
-	model_load.lo model_position.lo model_ranger.lo model_props.lo \
-	stage.lo typetable.lo world.lo worldfile.lo worldgui.lo
+	glcolorstack.lo model.lo model_callbacks.lo model_fiducial.lo \
+	model_laser.lo model_load.lo model_position.lo model_ranger.lo \
+	model_props.lo stage.lo typetable.lo world.lo worldfile.lo \
+	worldgui.lo
 libstage_la_OBJECTS = $(am_libstage_la_OBJECTS)
 libstage_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -250,6 +251,7 @@ libstage_la_SOURCES = \
 	glcolorstack.cc \
 	model.cc \
 	model_callbacks.cc \
+	model_fiducial.cc \
 	model_laser.cc \
 	model_load.cc \
 	model_position.cc \
@@ -377,6 +379,7 @@ include ./$(DEPDIR)/canvas.Plo
 include ./$(DEPDIR)/glcolorstack.Plo
 include ./$(DEPDIR)/model.Plo
 include ./$(DEPDIR)/model_callbacks.Plo
+include ./$(DEPDIR)/model_fiducial.Plo
 include ./$(DEPDIR)/model_laser.Plo
 include ./$(DEPDIR)/model_load.Plo
 include ./$(DEPDIR)/model_position.Plo

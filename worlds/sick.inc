@@ -1,11 +1,11 @@
 
-define sick_laser laser
+define sicklaser laser
 (
   # factory settings for LMS200	
   range_min 0.0
   range_max 8.0
   fov 180.0
-  samples 361
+  samples 180
 
   #samples 90 # still useful but much faster to compute
 
@@ -13,7 +13,7 @@ define sick_laser laser
   size [ 0.156 0.155 0.19 ] # dimensions from LMS200 data sheet	
 )
 
-define fancy_sick_laser sick_laser
+define fancysicklaser sicklaser
 (
   blocks 4
 
@@ -48,5 +48,5 @@ define fancy_sick_laser sick_laser
   block[3].point[2] [  0.06  0.05 ]
   block[3].point[3] [ -0.02  0.05 ]
   block[3].z [0.02 0.12 ]  
-  block[3].color "gray10"
+  #block[3].color "darkgray"
 )
