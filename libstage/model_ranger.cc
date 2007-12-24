@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -113,7 +113,7 @@ StgModelRanger::StgModelRanger( StgWorld* world,
       sensors[c].pose.a = (2.0*M_PI)/sensor_count * c;
       sensors[c].pose.x = offset * cos( sensors[c].pose.a );
       sensors[c].pose.y = offset * sin( sensors[c].pose.a );
-      sensors[c].pose.z = 0;geom.size.z / 2.0; // half way up
+      sensors[c].pose.z = 0;//geom.size.z / 2.0; // half way up
       
       sensors[c].size.x = 0.01; // a small device
       sensors[c].size.y = 0.04;
@@ -308,8 +308,8 @@ void StgModelRanger::Print( char* prefix )
 
 void StgModelRanger::DataVisualize( void )
 {
-  //if( ! (samples && sensors && sensor_count) )
-  //return;
+  if( ! (samples && sensors && sensor_count) )
+    return;
 
   glPushMatrix();
 
@@ -327,7 +327,7 @@ void StgModelRanger::DataVisualize( void )
       
   //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   //PushColor( 0,0,0,1 );
-      
+    
   // calculate a triangle for each non-zero sensor range
   for( unsigned int s=0; s<sensor_count; s++ ) 
     { 
@@ -335,9 +335,9 @@ void StgModelRanger::DataVisualize( void )
 	{ 
 	  stg_ranger_sensor_t* rngr = &sensors[s]; 
 	      
-	  double dx =  rngr->size.x/2.0;
-	  double dy =  rngr->size.y/2.0;
-	  double dz =  rngr->size.z/2.0;
+	  //double dx =  rngr->size.x/2.0;
+	  //double dy =  rngr->size.y/2.0;
+	  //double dz =  rngr->size.z/2.0;
 
 	  // DEBUG: draw a point for the sensor pose
 	  //glPointSize( 6 );

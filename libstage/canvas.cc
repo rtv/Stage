@@ -489,16 +489,15 @@ void StgCanvas::draw()
 	     }
 	 }
 
-       if( showflags & STG_SHOW_DATA )
-	 {
-	   for( GList* it=world->children; it; it=it->next )
-	     ((StgModel*)it->data)->DataVisualize();
-	 }
-
        for( GList* it=world->children; it; it=it->next )
-	 ((StgModel*)it->data)->Draw( showflags );
-       
-       
+	 {
+	   uint32_t flags = showflags;
+	   
+	   if( (stheta == 0) && (sphi == 0) )
+	     flags |= STG_SHOW_BLOCKS_2D;
+	   
+	   ((StgModel*)it->data)->Draw( flags );
+	 }
      }
 
    if( world->ray_list )

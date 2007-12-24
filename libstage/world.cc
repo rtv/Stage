@@ -133,6 +133,7 @@ void StgWorld::Initialize( const char* token,
   
   this->id = StgWorld::next_id++;
   this->ray_list = NULL;
+  this->quit_time = 0; 
   
   assert(token);
   this->token = (char*)malloc(STG_TOKEN_MAX);
@@ -194,7 +195,7 @@ void StgWorld::RemoveModel( StgModel* mod )
 
 void StgWorld::ClockString( char* str, size_t maxlen )
 {
-  uint32_t hours   =  sim_time / 3600000000; 
+  uint32_t hours   = sim_time / 3600000000; 
   uint32_t minutes = (sim_time % 3600000000) / 60000000; 
   uint32_t seconds = (sim_time % 60000000) / 1000000; 
   uint32_t msec    = (sim_time % 1000000) / 1000; 
@@ -222,12 +223,12 @@ void StgWorld::ClockString( char* str, size_t maxlen )
 	      paused ? "--PAUSED--" : "" );
 #else
   if( hours > 0 )
-    snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.6f] %s",
+    snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.2f] %s",
 	      hours, minutes, seconds, msec,
 	      localratio,
 	      paused ? "--PAUSED--" : "" );
   else
-    snprintf( str, maxlen, "%02um%02u.%03us\t[%.6f] %s",
+    snprintf( str, maxlen, "%02um%02u.%03us\t[%.2f] %s",
 	      minutes, seconds, msec,
 	      localratio,
 	      paused ? "--PAUSED--" : "" );
@@ -258,6 +259,10 @@ void StgWorld::Load( const char* worldfile_path )
 
   this->interval_sim = 1e3 * 
     wf->ReadInt( entity, "interval_sim", this->interval_sim/1e3 );
+  
+  if( wf->PropertyExists( entity, "quit_time" ) )
+    this->quit_time = 1e6 * 
+      wf->ReadInt( entity, "quit_time", 0 );
   
   this->ppm = 
     1.0 / wf->ReadFloat( entity, "resolution", this->ppm ); 
@@ -384,46 +389,38 @@ void StgWorld::PauseUntilNextUpdateTime( void )
 
 bool StgWorld::Update()
 {
-  if( !paused )
-    {  
-      //PRINT_DEBUG( "StgWorld::Update()" );
+  //PRINT_DEBUG( "StgWorld::Update()" );
 
-       if( interval_real > 0 || updates % 100 == 0 )
- 	{
- 	  char str[64];
- 	  ClockString( str, 64 );
- 	  printf( "\r%s", str );
- 	  fflush(stdout);
- 	}
-
-      // update any models that are due to be updated
-      for( GList* it=this->update_list; it; it=it->next )
-	((StgModel*)it->data)->UpdateIfDue();
-      
-      // update any models with non-zero velocity
-      for( GList* it=this->velocity_list; it; it=it->next )
-	((StgModel*)it->data)->UpdatePose();
-      
-      this->sim_time += this->interval_sim;
-      this->updates++;
-    }
-
-  return !( quit || quit_all );
+  if( paused )
+    return false;
+  
+  // update any models that are due to be updated
+  for( GList* it=this->update_list; it; it=it->next )
+    ((StgModel*)it->data)->UpdateIfDue();
+  
+  // update any models with non-zero velocity
+  for( GList* it=this->velocity_list; it; it=it->next )
+    ((StgModel*)it->data)->UpdatePose();
+  
+  this->sim_time += this->interval_sim;
+  this->updates++;
+  
+  // if we've run long enough, set the quit flag
+  if( (quit_time > 0) && (sim_time >= quit_time) )
+    quit = true;
+  
+  return true;
 }
 
 bool StgWorld::RealTimeUpdate()
   
 {
   //PRINT_DEBUG( "StageWorld::RealTimeUpdate()" );  
-  bool ok = Update();
+  bool updated = Update();
+  PauseUntilNextUpdateTime();
   
-  if( ok )
-    PauseUntilNextUpdateTime();
-  
-  return ok;
+  return updated;
 }
-
-
 
 void StgWorld::AddModel( StgModel*  mod  )
 {
@@ -431,7 +428,7 @@ void StgWorld::AddModel( StgModel*  mod  )
   //        token, mod->id, mod->Token() );  
 
   g_hash_table_insert( this->models_by_id, &mod->id, mod );
-  g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
+  AddModelName( mod );
 }
 
 
@@ -443,7 +440,12 @@ void StgWorld::AddModelName( StgModel* mod )
 StgModel* StgWorld::GetModel( const char* name )
 {
   //printf( "looking up model name %s in models_by_name\n", name );
-  return (StgModel*)g_hash_table_lookup( this->models_by_name, name );
+  StgModel* mod = (StgModel*)g_hash_table_lookup( this->models_by_name, name );
+
+  if( mod == NULL )
+    PRINT_WARN1( "lookup of model name %s: no matching name", name );
+  
+  return mod;
 }
 
 StgModel* StgWorld::GetModel( const stg_id_t id )
@@ -511,10 +513,11 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
   int32_t dy = (int32_t)(ppm*max_range * sin(pose->a));
   int32_t dz = 0;
 
-  //  RecordRay( pose->x, 
-  //     pose->y, 
-  //     pose->x + max_range * cos(pose->a),
-  //     pose->y + max_range * sin(pose->a) );
+  if( finder->debug )
+    RecordRay( pose->x, 
+	       pose->y, 
+	       pose->x + max_range * cos(pose->a),
+	       pose->y + max_range * sin(pose->a) );
 	   
   // fast integer line 3d algorithm adapted from Cohen's code from
   // Graphics Gems IV
@@ -564,9 +567,9 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	      // if this block does not belong to the searching model and it
 	      // matches the predicate and it's in the right z range
 	      if( block && (block->mod != finder) && 
-		  (*func)( block, arg ) &&
-		  pose->z >= block->global_zmin &&
-		  pose->z < block->global_zmax )	 
+		  (*func)( block, arg ) )// &&
+		  //pose->z >= block->global_zmin &&
+		  //pose->z < block->global_zmax )	 
 		{
 		  // a hit!
 		  if( hit_model )

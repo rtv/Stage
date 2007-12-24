@@ -118,7 +118,7 @@ model
 // basic model
 #define STG_DEFAULT_BLOBRETURN true
 #define STG_DEFAULT_BOUNDARY true
-#define STG_DEFAULT_COLOR (0xFF0000) // red
+#define STG_DEFAULT_COLOR (0xFFFF0000) // red
 #define STG_DEFAULT_ENERGY_CAPACITY 1000.0
 #define STG_DEFAULT_ENERGY_CHARGEENABLE 1
 #define STG_DEFAULT_ENERGY_GIVERATE 0.0
@@ -205,13 +205,16 @@ StgModel::StgModel( StgWorld* world,
   this->blob_return = STG_DEFAULT_BLOBRETURN;
   this->laser_return = STG_DEFAULT_LASERRETURN;
   this->gripper_return = STG_DEFAULT_GRIPPERRETURN;
-  this->boundary = STG_DEFAULT_BOUNDARY;
+  this->boundary = false;//STG_DEFAULT_BOUNDARY;
   this->color = STG_DEFAULT_COLOR;
   this->map_resolution = STG_DEFAULT_MAP_RESOLUTION; // meters
   this->gui_nose = STG_DEFAULT_NOSE;
   this->gui_grid = STG_DEFAULT_GRID;
   this->gui_outline = STG_DEFAULT_OUTLINE;
   this->gui_mask = this->parent ? 0 : STG_DEFAULT_MASK;
+
+  this->fiducial_return = 0;
+  this->fiducial_key = 0;
 
   this->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
 
@@ -502,17 +505,11 @@ void StgModel::GetGlobalPose( stg_pose_t* gpose )
       // find my parent's pose
       if( this->parent )
 	{
-	  parent->GetGlobalPose( &parent_pose );
+	  parent->GetGlobalPose( &parent_pose );	  
+	  stg_pose_sum( &global_pose, &parent_pose, &pose );
 	  
-	  global_pose.x = parent_pose.x + pose.x * cos(parent_pose.a) 
-	    - pose.y * sin(parent_pose.a);
-	  global_pose.y = parent_pose.y + pose.x * sin(parent_pose.a) 
-	    + pose.y * cos(parent_pose.a);
-	  global_pose.a = NORMALIZE(parent_pose.a + pose.a);
-	  
-	  // no 3Dg geometry, as we can only rotate about the z axis (yaw)
-	  // but we are on top of our parent
-	  global_pose.z = parent_pose.z + this->parent->geom.size.z + pose.z;
+	  // we are on top of our parent
+	  global_pose.z += parent->geom.size.z;
 	}
       else
 	memcpy( &global_pose, &pose, sizeof(stg_pose_t));
@@ -786,11 +783,11 @@ void StgModel::DrawTrailArrows()
 
   double dx = 0.2;
   double dy = 0.07;
-  double z;
+  //double z;
 
   double timescale = 0.0000001;
 
-  for( int i=0; i<trail->len; i++ )
+  for( unsigned int i=0; i<trail->len; i++ )
     {
       stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
 
@@ -807,12 +804,15 @@ void StgModel::DrawTrailArrows()
       PushColor( checkpoint->color );
       
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+      glEnable(GL_POLYGON_OFFSET_FILL);
+      glPolygonOffset(1.0, 1.0);
       
       glBegin( GL_TRIANGLES );
       glVertex3f( 0, -dy, 0);
       glVertex3f( dx, 0, 0 );
       glVertex3f( 0, +dy, 0 );
       glEnd();
+      glDisable(GL_POLYGON_OFFSET_FILL);
 
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
 
@@ -844,14 +844,24 @@ void StgModel::Draw( uint32_t flags )
   gl_pose_shift( &this->geom.pose );
 
   // draw all the blocks
-  if( flags & STG_SHOW_BLOCKS )
-    LISTMETHOD( this->blocks, StgBlock*, Draw );
+  if( flags & STG_SHOW_BLOCKS_2D )
+    {
+      LISTMETHOD( this->blocks, StgBlock*, Draw2D );
+    }
+  else if( flags & STG_SHOW_BLOCKS )
+    {
+      LISTMETHOD( this->blocks, StgBlock*, Draw );
+    }
+  else 
   
   //if( this->say_string )
   // gl_speech_bubble( 0,0,0, this->say_string );
     
   if( gui_grid && (flags & STG_SHOW_GRID) )
     DrawGrid();
+
+  if( flags & STG_SHOW_DATA )
+    DataVisualize();
 
   // shift up the CS to the top of this model
   gl_coord_shift(  0,0, this->geom.size.z, 0 );
@@ -890,7 +900,9 @@ void StgModel::DrawPicker( void )
 
 void StgModel::DataVisualize( void )
 {
-  // do nothing
+ //  // do nothing but recursively draw the tree below this model
+//   for( GList* it=children; it; it=it->next )
+//     ((StgModel*)it->data)->DataVisualize();
 }
 
 void StgModel::DrawGrid( void )
@@ -1314,8 +1326,8 @@ void StgModel::UpdatePose( void )
   if( disabled )
     return;
 
-  static uint32_t calls = 0;
-  
+  // TODO - control this properly, and maybe do it faster
+  if( 0 )
   if( (world->updates % 10 == 0) )
     {
       stg_trail_item_t checkpoint;

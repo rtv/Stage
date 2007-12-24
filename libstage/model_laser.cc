@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.14 $
+ //  $Revision: 1.1.2.15 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,6 @@
  #include <sys/time.h>
  #include "stage.hh"
 
- #define TIMING 0
  #define LASER_FILLED 1
 
  #define STG_DEFAULT_LASER_WATTS 17.5 // laser power consumption
@@ -169,11 +168,6 @@ void StgModelLaser::Update( void )
   
   //PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", gpose.x, gpose.y, gpose.a );
 
-#if TIMING
-  struct timeval tv1, tv2;
-  gettimeofday( &tv1, NULL );
-#endif
-  
   assert(samples);
   
   double bearing = -fov/2.0;
@@ -249,15 +243,7 @@ void StgModelLaser::Update( void )
 //      }
 
    data_dirty = true;
-   
-#if TIMING
-   gettimeofday( &tv2, NULL );
-   printf( " laser data update time %.6f\n",
-	   (tv2.tv_sec + tv2.tv_usec / 1e6) - 
-	   (tv1.tv_sec + tv1.tv_usec / 1e6) );	    
- #endif
-
- }
+}
 
 
 void StgModelLaser::Startup(  void )

@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.1.2.3 2007-11-27 05:36:02 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.1.2.4 2007-12-24 10:50:45 rtv Exp $
  */
 
 #include <assert.h>
@@ -1407,8 +1407,8 @@ bool CWorldFile::PropertyExists( int section, char* token )
 void CWorldFile::SetPropertyValue( CProperty* property, int index, const char *value)
 {
   assert( property );
-  printf( "property %s index %d value_count %d \n",
-	  property->key, index, property->value_count );
+  //  printf( "property %s index %d value_count %d \n",
+  //  property->key, index, property->value_count );
 
   assert(index >= 0 && index < property->value_count);
 

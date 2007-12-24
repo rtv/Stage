@@ -18,6 +18,7 @@ SRC = \
     model_position.cc \
     model_props.cc \
     model_ranger.cc \
+    model_fiducial.cc \
     stest.cc \
     stage.cc \
     typetable.cc \

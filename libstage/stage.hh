@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.19 2007-11-29 07:58:59 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.20 2007-12-24 10:50:45 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -246,6 +246,13 @@ void stg_color_unpack( stg_color_t col,
     double min; //< smallest value in range
     double max; //< largest value in range
   } stg_bounds_t;
+
+  /** bound a range of range values, from min to max */
+  typedef struct
+  {
+    stg_meters_t min; //< smallest value in range
+    stg_meters_t max; //< largest value in range
+  } stg_range_bounds_t;
   
   /** define a three-dimensional bounding box */
   typedef struct
@@ -279,14 +286,6 @@ void stg_color_unpack( stg_color_t col,
     simulation started. */
 //stg_msec_t stg_realtime_since_start( void );
   
-
-  /// iff stage wants to quit, this will return true, else false
-bool stg_quit_test( void );
-
-  /** set stage's quit flag. Stage will quit cleanly very soon after
-      this function is called. */
-  void stg_quit_request( void );
-
 
 
 /** take binary sign of a, either -1, or 1 if >= 0 */
@@ -585,6 +584,7 @@ void stg_d_render( stg_d_draw_t* d );
 #define STG_SHOW_QUADTREE     256
 #define STG_SHOW_ARROWS       512
 #define STG_SHOW_FOOTPRINT    1024
+#define STG_SHOW_BLOCKS_2D    2048
 
 // STAGE INTERNAL
 
@@ -660,7 +660,7 @@ typedef struct
 } stg_property_toggle_args_t;
 
 
-// ROTATED RECTANGLES -------------------------------------------------
+// // ROTATED RECTANGLES -------------------------------------------------
 
 /** @ingroup libstage_internal
     @defgroup rotrect Rotated Rectangles
@@ -1014,6 +1014,12 @@ public:
   virtual void PopColor(){ /* do nothing */  };
 
   stg_usec_t real_time_now;
+ 
+  /** StgWorld::quit is set true when this simulation time is reached */
+  stg_usec_t quit_time; 
+ 
+
+
   stg_usec_t RealTimeNow(void);
   stg_usec_t RealTimeSinceStart(void);
   void PauseUntilNextUpdateTime(void);
@@ -1025,7 +1031,11 @@ public:
   virtual bool Update(void);
   virtual bool RealTimeUpdate(void);
   
-  void Quit(){ this->quit = true; }
+  bool TestQuit(){ return( quit || quit_all );  }
+  void Quit(){ quit = true; }
+  void QuitAll(){ quit_all = true; }
+  void CancelQuit(){ quit = false; }
+  void CancelQuitAll(){ quit_all = false; }
 
   void Start();
   void Stop();
@@ -1142,7 +1152,8 @@ public:
   stg_meters_t map_resolution;
   stg_bool_t stall;
   
-  char* say_string; // if non-null, this string is displayed in the GUI
+  /** if non-null, this string is displayed in the GUI */
+  char* say_string; 
 
   bool on_velocity_list;
 
@@ -1176,6 +1187,8 @@ public:
   GList* ray_list;
   GArray* trail;
   
+  //  stg_trail_item_t* history; 
+
   bool body_dirty; //< iff true, regenerate block display list before redraw
   bool data_dirty; //< iff true, regenerate data display list before redraw
 
@@ -1501,6 +1514,7 @@ public:
   void UnMap(); // draw the block into the world
   
   void Draw(); // draw the block in OpenGL
+  void Draw2D(); // draw the block in OpenGL
   void DrawSolid(); // draw the block in OpenGL as a solid single color
   void DrawFootPrint(); // draw the projection of the block onto the z=0 plane
 
@@ -1558,183 +1572,9 @@ class GlColorStack
   GQueue* colorstack;
 };
 
-// // WORLDGTK class - a world plus a GUI
-// class StgWorldGtk : public StgWorld
-// {
-// public:
-//   StgWorldGtk( void );
-//   virtual ~StgWorldGtk( void );
-    
-//   void Configure( int width, 
-// 		  int height, 
-// 		  double xscale, 
-// 		  double yscale, 
-// 		  double xcenter, 
-// 		  double ycenter );
 
-//   static void Init( int* argc, char** argv[] );
+/* FLTK gui code */
 
-//   virtual void Load( const char* filename );
-//   virtual void Save( void );
-//   virtual void Draw( void );
-//   virtual bool Update( void );
-//   virtual bool RealTimeUpdate( void );
-  
-//   virtual void PushColor( stg_color_t col )
-//   { colorstack.Push( col ); } 
-  
-//   virtual void PushColor( double r, double g, double b, double a )
-//   { colorstack.Push( r,g,b,a ); }
-
-//   virtual void PopColor()
-//   { colorstack.Pop(); } 
-
-//   void AddViewItem( const gchar *name,
-// 		    const gchar *label,
-// 		    const gchar *tooltip,
-// 		    GCallback callback,
-// 		    gboolean  is_active,
-// 		    void* userdata );
-
-// protected:
-//   GlColorStack colorstack;
-  
-//   virtual void AddModel( StgModel*  mod );
-
-// private:
-//   GList* selected_models; ///<   a list of models that are currently selected by the user 
-
-//   // Gtk stuff
-//   GtkWidget* frame;    
-//   GtkWidget *layout;
-//   GtkWidget *menu_bar;
-//   //GtkWidget* scrolled_win;
-  
-//   // The status bar widget
-//   GtkStatusbar *status_bar;
-//   GtkProgressBar *perf_bar;
-//   GtkProgressBar *rt_bar;
-//   GtkLabel *clock_label;
-//   GtkActionGroup *action_group;
-
-//   // the main drawing widget
-//   GtkWidget* canvas;
-//   int dirty;
-  
-//   int draw_list;
-//   int debug_list;
-
-//   char clock[512];
-
-//   stg_radians_t stheta; ///< view rotation about x axis
-//   stg_radians_t sphi; ///< view rotation about x y axis
-//   double scale; ///< view scale
-//   double panx; ///< pan along x axis in meters
-//   double pany; ///< pan along y axis in meters
-  
-//   stg_point_t click_point; ///< The place where the most recent
-//   ///< mouse click happened, in world coords
-    
-//   GtkStatusbar* statusbar;
-//   GtkLabel* timelabel;
-    
-//   gboolean dragging;
-  
-//   int frame_series;
-//   int frame_index;
-//   int frame_callback_tag;
-//   int frame_interval;
-//   stg_image_format_t frame_format;
-  
-//   stg_pose_t selection_pose_start;
-//   stg_point_3d_t selection_pointer_start;
-  
-//   GList* toggle_list;  
-
-//   int wf_section;
-  
-//   //GdkGLConfig *glconfig;
-
-//   // mouse click position, for dragging
-//   int beginX, beginY;
-  
-// private:
-//   stg_msec_t redraw_interval;
-//   guint timer_handle;
-
-//   bool follow_selection;
-//   bool show_quadtree;  
-//   bool show_occupancy;  
-//   bool show_fill;
-//   bool show_geom;
-//   bool show_polygons;
-//   bool show_grid;
-//   bool show_data;
-//   bool show_cfg;
-//   bool show_cmd;
-//   bool show_alpha;
-//   bool show_thumbnail;
-//   bool show_bboxes;
-//   bool show_trails;
-
-// public:
-//   void SetFollowSelection( bool b ){ this->follow_selection = b; dirty=true; }
-//   void SetShowFill( bool b ){ this->show_fill = b; dirty=true; }    
-//   void SetShowGeom( bool b ){ this->show_geom = b; dirty=true; }    
-//   void SetShowPolygons( bool b ){ this->show_polygons = b;  dirty=true; }
-//   void SetShowAlpha( bool b ){ this->show_alpha = b; dirty=true; }
-//   void SetShowThumbnail( bool b ){ this->show_thumbnail = b;  dirty=true;}
-//   void SetShowBBoxes( bool b ){ this->show_bboxes = b; dirty=true; }
-//   void SetShowTrails( bool b ){ this->show_trails = b; dirty=true; }
-//   void SetShowGrid( bool b ){ this->show_grid = b; dirty=true; }
-//   void SetShowQuadtree( bool b ){ this->show_quadtree = b; dirty=true; }
-//   void SetShowOccupancy( bool b ){ this->show_occupancy = b; dirty=true; }
-  
-  
-//   // signal handlers
-//   //gboolean EvDelete( GtkWidget *widget );
-//   //void EvDestroy( GtkWidget *widget, GdkEvent *event );
-//   void Realize( GtkWidget *widget );
-//   //void EvConfigure( GtkWidget *widget );
-  
-//   void CanvasMotionNotify( GdkEventMotion *event );
-//   void CanvasButtonPress( GdkEventButton *event );
-//   void CanvasButtonRelease( GdkEventButton *event );
-  
-//   gboolean DialogQuit( GtkWindow* parent );
-//   void SetTitle( char* txt );
-//   void RenderClock();
-//   void SetWindowSize( unsigned int w, unsigned int h );
-  
-//   // exporting screen shots as image files
-//   void ExportSequenceStart();
-//   void ExportSequenceStop();
-//   void ExportSequence();
-//   void ExportWindow();
-//   void SetExportFormat( stg_image_format_t format);
-//   void SetExportInterval( int interval );
-  
-//   void Derotate();
-//   void Zoom( double multiplier ); ///< multiply the scale factor by the argument
-//   void SetScale( double scale ); ///< set the scale factor directly
-//   void AboutBox();
-//   GtkWidget* GetCanvas(){ return canvas; }
-  
-//   void PushModelStatus( StgModel* mod, char* verb );
-//   void PopModelStatus();
-  
-//   // convert canvas window pixel coordinate to 3d world coordinate
-//   void CanvasToWorld( int px, int py, 
-// 		      double *wx, double *wy, double* wz );
-
-//   StgModel* NearestRootModel( double wx, double wy );
-
-//   };
-
-/** @} */
-
-/* FLTK code - experimenting with replacing GTK with a more portable
-   and less bulky framework */
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Double_Window.H>
@@ -1877,9 +1717,7 @@ public:
 /** @} */ 
 
 
-
-
-  // BLOBFINDER MODEL --------------------------------------------------------
+// BLOBFINDER MODEL --------------------------------------------------------
   
 #define STG_BLOB_CHANNELS_MAX 16
   
@@ -1888,6 +1726,7 @@ public:
   typedef struct
   {
     int channel_count; // 0 to STG_BLOBFINDER_CHANNELS_MAX
+    // todo - get rid of this static size
     stg_color_t channels[STG_BLOB_CHANNELS_MAX];
     int scan_width;
     int scan_height;
@@ -1981,55 +1820,92 @@ public:
   
   /** laser sample packet
    */
-  typedef struct
-  {
-    stg_meters_t range; ///< range to laser hit in meters
-    double reflectance; ///< intensity of the reflection 0.0 to 1.0
-    stg_point_t hitpoint; ///< the location of the laser hit in local coordinates
-  } stg_laser_sample_t;
+typedef struct
+{
+  stg_meters_t range; ///< range to laser hit in meters
+  double reflectance; ///< intensity of the reflection 0.0 to 1.0
+} stg_laser_sample_t;
+
+typedef struct
+{
+  uint32_t sample_count;
+  uint32_t resolution;
+  stg_range_bounds_t range_bounds;
+  stg_radians_t fov;
+} stg_laser_cfg_t;
+
+class StgModelLaser : public StgModel
+{
+private:
+  int dl_debug_laser;
   
-  class StgModelLaser : public StgModel
-  {
-  private:
-    int dl_debug_laser;
+  stg_laser_sample_t* samples;
+  uint32_t sample_count;
+  stg_meters_t range_min, range_max;
+  stg_radians_t fov;
+  uint32_t resolution;
+  
+public:
+  // constructor
+  StgModelLaser( StgWorld* world,
+		 StgModel* parent, 
+		 stg_id_t id, 
+		 char* typestr );
+  
+  // destructor
+  ~StgModelLaser( void );
+  
+  virtual void Startup( void );
+  virtual void Shutdown( void );
+  virtual void Update( void );
+  virtual void Load( void );  
+  virtual void Print( char* prefix );
+  virtual void DataVisualize( void );
+  
+  void SetSampleCount( unsigned int count );
+  
+  // implement the generic Laser interface
     
-  public:
-    // constructor
-    StgModelLaser( StgWorld* world,
-		   StgModel* parent, 
-		   stg_id_t id, 
-		   char* typestr );
-    
-    // destructor
-    ~StgModelLaser( void );
-    
-    stg_laser_sample_t* samples;
-    uint32_t sample_count;
-    stg_meters_t range_min, range_max;
-    stg_radians_t fov;
-    uint32_t resolution;
-    
-    virtual void Startup( void );
-    virtual void Shutdown( void );
-    virtual void Update( void );
-    virtual void Load( void );  
-    virtual void Print( char* prefix );
-    virtual void DataVisualize( void );
-    //    virtual void InitGraphics(void);
-
-    void SetSampleCount( unsigned int count );
-
-    // static wrapper for the constructor - all models must implement
-    // this method and add an entry in typetable.cc
-    static StgModel* Create( StgWorld* world,
-			     StgModel* parent, 
-			     stg_id_t id, 
-			     char* typestr )
+  uint32_t GetSampleCount(){ return sample_count; }
+  
+  stg_laser_sample_t* GetSamples( uint32_t* count=NULL)
+  { 
+    if( count ) *count = sample_count; 
+    return samples; 
+  }
+  
+  void GetConfig( stg_laser_cfg_t* cfg )
+  { 
+    assert( cfg );
+    cfg->sample_count = sample_count;
+    cfg->range_bounds.min = range_min;
+    cfg->range_bounds.max = range_max;
+    cfg->fov = fov;
+    cfg->resolution = resolution;
+  }
+  
+  void SetConfig( stg_laser_cfg_t* cfg )
     { 
-      return (StgModel*)new StgModelLaser( world, parent, id, typestr ); 
+      assert( cfg );
+      range_min = cfg->range_bounds.min;
+      range_max = cfg->range_bounds.max;
+      fov = cfg->fov;
+      resolution = resolution;      
+      SetSampleCount( cfg->sample_count );
+    }
+  
+  // end generic interface
+  
+  // static wrapper for the constructor - all models must implement
+  // this method and add an entry in typetable.cc
+  static StgModel* Create( StgWorld* world,
+			   StgModel* parent, 
+			   stg_id_t id, 
+			   char* typestr )
+  { 
+    return (StgModel*)new StgModelLaser( world, parent, id, typestr ); 
     }    
-  };
-
+};
 
   // GRIPPER MODEL --------------------------------------------------------
   
@@ -2126,7 +2002,7 @@ public:
     
     /// only detects fiducials with a key string that matches this one
     /// (defaults to NULL)
-    char* key;
+    int key;
   } stg_fiducial_config_t;
   
   /** fiducial data packet 
@@ -2157,6 +2033,7 @@ public:
   //virtual void Shutdown( void );
   virtual void Update( void );
   virtual void Load( void );
+  virtual void DataVisualize( void );
  
   stg_meters_t max_range_anon; //< maximum detection range
   stg_meters_t max_range_id; ///< maximum range at which the ID can be read
@@ -2164,22 +2041,37 @@ public:
   stg_radians_t fov; ///< field of view 
   stg_radians_t heading; ///< center of field of view
   
-  /// only detect fiducials with a key string that matches this one
-  /// (defaults to NULL)
-  char* key;
+  /// only detect fiducials with a key that matches this one (defaults
+  /// to 0)
+  int key;
   
   // an array of stg_fiducial_t structs generated by the sensor
   GArray* data;
   
-  // if neighbor is visible, add him to the fiducial scan
-  void AddModelIfVisible( StgModelFiducial* him );
+  stg_fiducial_t* GetData( uint32_t* count )
+  {
+    if( count ) *count = data->len;
+    return (stg_fiducial_t*)data->data;
+  }
   
-//   // static wrapper function can be used as a function pointer
-//   static void AddModelIfVisibleStatic( gpointer key, 
-// 				       StgModelFiducial* him, 
-// 				       StgModelFiducial* me )
-//   { if( him != me ) me->AddNeighborIfVisible( him ); };
+  // if neighbor is visible, add him to the fiducial scan
+  void AddModelIfVisible( StgModel* him );
+  
+  // static wrapper function can be used as a function pointer
+  static void AddModelIfVisibleStatic( gpointer key, 
+ 				       StgModel* him, 
+ 				       StgModelFiducial* me )
+  { if( him != me ) me->AddModelIfVisible( him ); };
 
+  // static wrapper for the constructor - all models must implement
+  // this method and add an entry in typetable.cc
+  static StgModel* Create( StgWorld* world,
+			   StgModel* parent, 
+			   stg_id_t id, 
+			   char* typestr )
+  { 
+    return (StgModel*)new StgModelFiducial( world, parent, id, typestr ); 
+  }    
 };
 
 
@@ -2294,16 +2186,8 @@ public:
 
 class StgModelPosition : public StgModel
 {
-public:
-  // constructor
-  StgModelPosition( StgWorld* world,
-		    StgModel* parent, 
-		    stg_id_t id, 
-		    char* typestr);
-  
-  // destructor
-  ~StgModelPosition( void );
-  
+private:
+
   // control state
   stg_pose_t goal; //< the current velocity or pose to reach,
 		   //depending on the value of control_mode
@@ -2317,7 +2201,17 @@ public:
 
   stg_position_localization_mode_t localization_mode; ///< global or local mode
   stg_velocity_t integration_error; ///< errors to apply in simple odometry model
+
+public:
+  // constructor
+  StgModelPosition( StgWorld* world,
+		    StgModel* parent, 
+		    stg_id_t id, 
+		    char* typestr);
   
+  // destructor
+  ~StgModelPosition( void );
+    
   virtual void Startup( void );
   virtual void Shutdown( void );
   virtual void Update( void );
@@ -2330,8 +2224,18 @@ public:
       STG_POSITION_CONTROL_VELOCITY, these are x,y, and rotation
       velocities. If control_mode == STG_POSITION_CONTROL_POSITION,
       [x,y,a] defines a 2D position and heading goal to achieve. */
-  void Do( double x, double y, double a ) 
-  { goal.x = x; goal.y = y; goal.a = a; }  
+  void SetSpeed( double x, double y, double a ) 
+  { 
+    control_mode = STG_POSITION_CONTROL_VELOCITY;
+    goal.x = x; goal.y = y; goal.z = 0; goal.a = a; 
+  }  
+
+  //foo
+  void GoTo( double x, double y, double a ) 
+  {
+    control_mode = STG_POSITION_CONTROL_POSITION;
+    goal.x = x; goal.y = y; goal.z = 0; goal.a = a; 
+  }  
 
   // static wrapper for the constructor - all models must implement
   // this method and add an entry in typetable.cc

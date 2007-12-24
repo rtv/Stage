@@ -94,26 +94,26 @@ StgWorldGui::StgWorldGui(int W,int H,const char*L)
   mbar->add( "File/Exit", FL_CTRL+'q', (Fl_Callback *)dummy_cb, 0 );
  
   mbar->add( "View", 0, 0, 0, FL_SUBMENU );
-  mbar->add( MITEM_VIEW_DATA,      FL_CTRL+'z', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_DATA,      'd', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_DATA ? FL_MENU_VALUE : 0 ));  
-  mbar->add( MITEM_VIEW_BLOCKS,    FL_CTRL+'b', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_BLOCKS,    'b', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_BLOCKS ? FL_MENU_VALUE : 0 ));  
-  mbar->add( MITEM_VIEW_GRID,      FL_CTRL+'c', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_GRID,      'g', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_GRID ? FL_MENU_VALUE : 0 ));  
-  mbar->add( MITEM_VIEW_OCCUPANCY, FL_CTRL+'o', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_OCCUPANCY, FL_ALT+'o', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_OCCUPANCY ? FL_MENU_VALUE : 0 ));  
-  mbar->add( MITEM_VIEW_QUADTREE,  FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_QUADTREE,  FL_ALT+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_QUADTREE ? FL_MENU_VALUE : 0 ));  
-  mbar->add( MITEM_VIEW_FOLLOW,    FL_CTRL+'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_FOLLOW,    'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOLLOW ? FL_MENU_VALUE : 0 ));  
-  mbar->add( MITEM_VIEW_CLOCK,    0, (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_CLOCK,    'c', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));  
 
-  mbar->add( MITEM_VIEW_FOOTPRINTS,  0, (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_FOOTPRINTS,  FL_CTRL+'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOOTPRINT ? FL_MENU_VALUE : 0 ));  
-  mbar->add( MITEM_VIEW_ARROWS,    0, (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_ARROWS,    FL_CTRL+'a', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_ARROWS ? FL_MENU_VALUE : 0 ));  
-  mbar->add( MITEM_VIEW_TRAILS,    0, (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+  mbar->add( MITEM_VIEW_TRAILS,    FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));  
   
   mbar->add( "Help", 0, 0, 0, FL_SUBMENU );
@@ -221,16 +221,16 @@ void StgWorldGui::Save( void )
 bool StgWorldGui::RealTimeUpdate()
 {
   //  puts( "RTU" );
-  bool res = StgWorld::RealTimeUpdate();
-  Fl::check();
-  return res;
+  bool updated = StgWorld::RealTimeUpdate();
+  Fl::check(); // may redraw the window
+  return updated;
 }
 
 bool StgWorldGui::Update()
 {
   //  puts( "RTU" );
-  bool res = StgWorld::Update();
-  Fl::check();
-  return res;
+  bool updated = StgWorld::Update();
+  Fl::check(); // may redraw the window
+  return updated;
 }
 

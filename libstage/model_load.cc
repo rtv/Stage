@@ -123,15 +123,24 @@ void StgModel::Load( void )
     }
   
   if( wf->PropertyExists( this->id, "boundary" ))
-      this->SetBoundary( wf->ReadInt(this->id, "boundary", this->boundary  ));
-  
+    {
+      this->SetBoundary( wf->ReadInt(this->id, "boundary", this->boundary  ));  
+    }	  
+
   if( wf->PropertyExists( this->id, "color" ))
     {      
-      stg_color_t col = 0xFF0000; // red;  
+      stg_color_t col = 0xFFFF0000; // red;  
       const char* colorstr = wf->ReadString( this->id, "color", NULL );
       if( colorstr )
 	{
-	  col = stg_lookup_color( colorstr );  
+	  if( strcmp( colorstr, "random" ) == 0 )
+	    {
+	      col = (uint32_t)random();
+	      col |= 0xFF000000; // set the alpha channel to max
+	    }
+	  else
+	    col = stg_lookup_color( colorstr );  
+
 	  this->SetColor( col );
 	}
     }      
@@ -167,7 +176,7 @@ void StgModel::Load( void )
 		      full );
 	  return;
 	}
-      
+
       this->UnMap();
       this->ClearBlocks();
 
@@ -193,7 +202,12 @@ void StgModel::Load( void )
 	  stg_block_list_scale( this->blocks, &this->geom.size );	  
 	  this->Map();
 	  this->body_dirty = true;
+
+	  g_free( rects );
 	}      
+
+      //printf( "model %s block count %d\n",
+      //      token, g_list_length( blocks ));
     }
     
     if( wf->PropertyExists( this->id, "blocks" ) )
@@ -255,6 +269,19 @@ void StgModel::Load( void )
 	  }
 	
 	stg_block_list_scale( this->blocks, &this->geom.size );
+
+	if( this->boundary )
+	  {
+	    // add thin bounding blocks
+	    double epsilon = 0.001;	      
+	    double width =  geom.size.x;
+	    double height = geom.size.y;
+	    this->AddBlockRect(-width/2.0, -height/2.0, epsilon, height );	      
+	    this->AddBlockRect(-width/2.0, -height/2.0, width, epsilon );	      
+	    this->AddBlockRect(-width/2.0, height/2.0-epsilon, width, epsilon );      
+	    this->AddBlockRect(width/2.0-epsilon, -height/2.0, epsilon, height ); 
+	  }     
+
 	this->Map();
       }
     
