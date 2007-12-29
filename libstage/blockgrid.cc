@@ -1,5 +1,7 @@
 #include "stage.hh"
 
+// todo - get rid of constants in code, so that these are just
+// defaults
 const uint32_t NBITS = 5;
 const uint32_t NSIZE = 1<<NBITS;
 const uint32_t NSQR = NSIZE*NSIZE;
@@ -132,7 +134,7 @@ GSList* StgBlockGrid::GetList( uint32_t x, uint32_t y )
   return NULL;
 }
 
-void StgBlockGrid::RemoveBlock( StgBlock* block )
+void StgBlockGrid::GlobalRemoveBlock( StgBlock* block )
 {
   for( uint32_t x=0; x<width; x++ )
     for( uint32_t y=0; y<height; y++ )

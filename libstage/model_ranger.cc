@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -73,12 +73,18 @@ The ranger model allows configuration of the pose, size and view parameters of e
 
 */
 
-//#define DEBUG
-
-#include <math.h>
+//#define DEBUG 1
 #include "stage.hh"
-
-#define STG_RANGER_WATTS 2.0 // ranger power consumption
+#include <math.h>
+   
+static const stg_watts_t STG_DEFAULT_RANGER_WATTSPERSENSOR = 0.2;
+static const stg_meters_t STG_DEFAULT_RANGER_SIZEX = 0.01;
+static const stg_meters_t STG_DEFAULT_RANGER_SIZEY = 0.04;
+static const stg_meters_t STG_DEFAULT_RANGER_SIZEZ = 0.04;
+static const stg_meters_t STG_DEFAULT_RANGER_RANGEMAX = 5.0;
+static const stg_meters_t STG_DEFAULT_RANGER_RANGEMIN = 0.0;
+static const unsigned int STG_DEFAULT_RANGER_RAYCOUNT = 3;
+static const unsigned int STG_DEFAULT_RANGER_SENSORCOUNT = 16;
 
 StgModelRanger::StgModelRanger( StgWorld* world, 
 				StgModel* parent,
@@ -100,10 +106,10 @@ StgModelRanger::StgModelRanger( StgWorld* world,
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom)); // no size
   this->SetGeom( &geom );
-
+  
   samples = NULL;
-  sensor_count = 16;
-  sensors= g_new0( stg_ranger_sensor_t, sensor_count );
+  sensor_count = STG_DEFAULT_RANGER_SENSORCOUNT;
+  sensors = new stg_ranger_sensor_t[sensor_count];
 
   double offset = MIN(geom.size.x, geom.size.y) / 2.0;
 
@@ -115,14 +121,14 @@ StgModelRanger::StgModelRanger( StgWorld* world,
       sensors[c].pose.y = offset * sin( sensors[c].pose.a );
       sensors[c].pose.z = 0;//geom.size.z / 2.0; // half way up
       
-      sensors[c].size.x = 0.01; // a small device
-      sensors[c].size.y = 0.04;
-      sensors[c].size.z = 0.04;
+      sensors[c].size.x = STG_DEFAULT_RANGER_SIZEX;
+      sensors[c].size.y = STG_DEFAULT_RANGER_SIZEY;
+      sensors[c].size.z = STG_DEFAULT_RANGER_SIZEZ;
       
-      sensors[c].bounds_range.min = 0;
-      sensors[c].bounds_range.max = 5.0;
+      sensors[c].bounds_range.min = STG_DEFAULT_RANGER_RANGEMIN;
+      sensors[c].bounds_range.max = STG_DEFAULT_RANGER_RANGEMAX;;
       sensors[c].fov = (2.0*M_PI)/(sensor_count+1);
-      sensors[c].ray_count = 3;
+      sensors[c].ray_count = STG_DEFAULT_RANGER_RAYCOUNT;
     }
 }
 
@@ -136,9 +142,7 @@ void StgModelRanger::Startup( void )
   
   PRINT_DEBUG( "ranger startup" );
   
-  this->samples = new stg_meters_t[sensor_count];
-
-  this->SetWatts( STG_RANGER_WATTS );
+  this->SetWatts( STG_DEFAULT_RANGER_WATTSPERSENSOR * sensor_count );
 }
 
 
@@ -161,7 +165,7 @@ void StgModelRanger::Load( void )
 {
   StgModel::Load();
   
-  CWorldFile* wf = world->wf;
+  CWorldFile* wf = world->GetWorldFile();
 
   if( wf->PropertyExists(id, "scount" ) )
     {
@@ -172,15 +176,17 @@ void StgModelRanger::Load( void )
       assert( sensor_count > 0 );
       
       char key[256];
-      sensors = g_renew( stg_ranger_sensor_t, sensors, sensor_count );
-      
+      //sensors = g_renew( stg_ranger_sensor_t, sensors, sensor_count );
+      delete [] sensors;
+      sensors = new stg_ranger_sensor_t[sensor_count];
+
       stg_size_t common_size;
-      common_size.x = wf->ReadTupleLength( id, "ssize", 0, sensors[0].size.x );
-      common_size.y = wf->ReadTupleLength( id, "ssize", 1, sensors[0].size.y );
+      common_size.x = wf->ReadTupleLength( id, "ssize", 0, STG_DEFAULT_RANGER_SIZEX );
+      common_size.y = wf->ReadTupleLength( id, "ssize", 1, STG_DEFAULT_RANGER_SIZEY );
       
-      double common_min = wf->ReadTupleLength( id, "sview", 0, sensors[0].bounds_range.min );
-      double common_max = wf->ReadTupleLength( id, "sview", 1, sensors[0].bounds_range.max );
-      double common_fov = wf->ReadTupleAngle( id, "sview", 2, sensors[0].fov );
+      double common_min = wf->ReadTupleLength( id, "sview", 0,  STG_DEFAULT_RANGER_RANGEMIN );
+      double common_max = wf->ReadTupleLength( id, "sview", 1, STG_DEFAULT_RANGER_RANGEMAX );
+      double common_fov = wf->ReadTupleAngle( id, "sview", 2, M_PI / (double)sensor_count );
 
       int common_ray_count = wf->ReadInt( id, "sraycount", sensors[0].ray_count );
 
@@ -241,7 +247,7 @@ bool ranger_raytrace_match( StgBlock* block, StgModel* finder )
   //  block->zmin, block->zmax );
   
   // Ignore myself, my children, and my ancestors.
-  return( block->mod->RangerReturn() && !block->mod->IsRelated( finder ) );
+  return( block->Model()->RangerReturn() && !block->Model()->IsRelated( finder ) );
 }	
 
 void StgModelRanger::Update( void )
@@ -254,7 +260,9 @@ void StgModelRanger::Update( void )
   if( (sensors == NULL) || (sensor_count < 1 ))
     return;
   
-  assert( samples ); // make sure we have the range data array
+  if( samples ==  NULL )
+    samples = new stg_meters_t[sensor_count];  
+  assert( samples );
   
   //PRINT_DEBUG2( "[%d] updating ranger %s", (int)world->sim_time_ms, token );
 

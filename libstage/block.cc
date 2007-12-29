@@ -162,7 +162,7 @@ void StgBlock::Map()
 	       mod->Token(),
 	       (int)pt_count );
 
-  double ppm = mod->world->ppm;
+  double ppm = mod->World()->ppm;
  
   // update the global coordinate list
   stg_pose_t gpose;
@@ -176,8 +176,8 @@ void StgBlock::Map()
       
       mod->LocalToGlobal( &gpose );
             
-      pts_global[p].x = (int32_t)floor((gpose.x+mod->world->width/2.0)*ppm);
-      pts_global[p].y = (int32_t)floor((gpose.y+mod->world->height/2.0)*ppm);
+      pts_global[p].x = (int32_t)floor((gpose.x+mod->World()->width/2.0)*ppm);
+      pts_global[p].y = (int32_t)floor((gpose.y+mod->World()->height/2.0)*ppm);
 
       PRINT_DEBUG2("loc [%.2f %.2f]", 
 		   pts[p].x,
@@ -192,8 +192,15 @@ void StgBlock::Map()
   // raytracer
   global_zmin = gpose.z;
   global_zmax = gpose.z + (zmax-zmin);
-
-  mod->world->MapBlock( this );
+  
+  stg_render_info_t render_info;
+  render_info.world = mod->World();
+  render_info.block = this;
+  
+  stg_polygon_3d( pts_global, pt_count,
+		  (stg_line3d_func_t)StgWorld::AddBlockPixel,
+		  (void*)&render_info );
+		
 }
 
 void StgBlock::UnMap()
@@ -207,7 +214,7 @@ void StgBlock::UnMap()
       stg_point_int_t* pt = 
 	&g_array_index( rendered_points, stg_point_int_t, p);
       
-      mod->world->bgrid->RemoveBlock( pt->x, pt->y, this );
+      mod->World()->RemoveBlock( pt->x, pt->y, this );
 
     }
 
@@ -225,8 +232,8 @@ void StgBlock::RecordRenderPoint( uint32_t x, uint32_t y )
 }
 
 
-void stg_block_list_scale( GList* blocks, 
-			   stg_size_t* size )
+void StgBlock::ScaleList( GList* blocks, 
+			  stg_size_t* size )
 {
   if( g_list_length( blocks ) < 1 )
     return;

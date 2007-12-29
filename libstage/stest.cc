@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.21 2007-12-24 10:50:45 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.22 2007-12-29 05:07:40 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -54,28 +54,24 @@ int main( int argc, char* argv[] )
 
   for( int i=0; i<POPSIZE; i++ )
     {
-      //robots[i].randcount = 0;
-      //robots[i].avoidcount = 0;
-      //robots[i].obs = false;
-       
        char* base = "r";
        sprintf( namebuf, "%s%d", base, i );
        robots[i].position = (StgModelPosition*)world.GetModel( namebuf );
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
-       //robots[i].laser = (StgModelLaser*)
-       //robots[i].position->GetUnsubcribedModelOfType( "laser" );	 
-       //assert(robots[i].laser);
-       //robots[i].laser->Subscribe();
+       robots[i].laser = (StgModelLaser*)
+       robots[i].position->GetUnsubscribedModelOfType( "laser" );	 
+       assert(robots[i].laser);
+       robots[i].laser->Subscribe();
 
        robots[i].fiducial = (StgModelFiducial*)
-	 robots[i].position->GetUnsubcribedModelOfType( "fiducial" );	 
+	 robots[i].position->GetUnsubscribedModelOfType( "fiducial" );	 
        assert(robots[i].fiducial);
        robots[i].fiducial->Subscribe();
        
        robots[i].ranger = (StgModelRanger*)
-	 robots[i].position->GetUnsubcribedModelOfType( "ranger" );
+	 robots[i].position->GetUnsubscribedModelOfType( "ranger" );
        assert(robots[i].ranger);
        robots[i].ranger->Subscribe();
     }
@@ -138,8 +134,8 @@ int main( int argc, char* argv[] )
 	vel.z = 0;
 	vel.a = turn_speed;
 	
-	//printf( "robot %s x %.2f y %.2f z %.2f a %.2f\n",
-	//robots[i].position->Token(), vel.x, vel.y, vel.z, vel.a );
+	printf( "robot %s [%.2f %.2f %.2f %.2f]\n",
+		robots[i].position->Token(), vel.x, vel.y, vel.z, vel.a );
 	
 	robots[i].position->SetSpeed( forward_speed, side_speed, turn_speed );
     }

@@ -57,7 +57,7 @@ void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas )
   menubar->item_pathname(picked, sizeof(picked)-1);
 
   //printf("CALLBACK: You picked '%s'\n", picked);
-  
+
   // this is slow and a little ugly, but it's the least hacky approach I think
        if( strcmp(picked, MITEM_VIEW_DATA ) == 0 ) canvas->InvertView( STG_SHOW_DATA );
   else if( strcmp(picked, MITEM_VIEW_BLOCKS ) == 0 ) canvas->InvertView( STG_SHOW_BLOCKS );

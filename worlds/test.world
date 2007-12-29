@@ -40,25 +40,25 @@ floorplan
 
 define robot pioneer2dx
 ( 
-  #sicklaser( pose [0.05 0.000 0.000 0.000 ] )  
+  sicklaser( pose [0.05 0.000 0.000 0.000 ] )  
   fiducial_return 42
+  fiducial( fov 45 )
 )
 
 
 robot( name "r0" pose [ -3.737 -4.760 0.000 -29.237 ] 
-  fiducial( fov 90 )
   fiducial_return 0
 )
 
 robot( name "r1"  pose [ 9.432 -4.207 0.000 -26.879 ] )
 robot( name "r2" pose [ -10.695 -0.712 0.000 154.516 ] )
 robot( name "r3" pose [ -3.139 4.589 0.000 -99.979 ] )
-#robot( name "r" pose [ -13.753 3.035 0.000 -119.470 ] )
-#robot( name "r" pose [ 2.949 3.604 0.000 -14.544 ] )
-#robot( name "r" pose [ 0.095 3.028 0.000 -59.432 ] )
-#robot( name "r" pose [ -6.288 1.818 0.000 -105.872 ] )
-#robot( name "r" pose [ -6.403 3.043 0.000 110.256 ] )
-#robot( name "r" pose [ -5.662 5.675 0.000 65.404 ] )
+robot( name "r4" pose [ -13.753 3.035 0.000 -119.470 ] )
+robot( name "r5" pose [ 2.949 3.604 0.000 -14.544 ] )
+robot( name "r6" pose [ 0.095 3.028 0.000 -59.432 ] )
+robot( name "r7" pose [ -6.288 1.818 0.000 -105.872 ] )
+robot( name "r8" pose [ -6.403 3.043 0.000 110.256 ] )
+robot( name "r9" pose [ -5.662 5.675 0.000 65.404 ] )
 
 model
 ( 

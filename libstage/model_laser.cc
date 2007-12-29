@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.15 $
+ //  $Revision: 1.1.2.16 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -132,7 +132,7 @@ void StgModelLaser::Load( void )
 {  
   StgModel::Load(); 
 
-  CWorldFile* wf = world->wf;
+  CWorldFile* wf = world->GetWorldFile();
   
   sample_count = wf->ReadInt( id, "samples", sample_count );        
   range_min = wf->ReadLength( id, "range_min", range_min);
@@ -153,8 +153,8 @@ bool laser_raytrace_match( StgBlock* testblock,
   // Ignore the model that's looking and things that are invisible to
   // lasers
 
-  if( (testblock->mod != finder) &&
-      (testblock->mod->LaserReturn() > 0 ) )
+  if( (testblock->Model() != finder) &&
+      (testblock->Model()->LaserReturn() > 0 ) )
     return true; // match!
 
   return false; // no match

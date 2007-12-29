@@ -50,13 +50,13 @@ described on the manual page for each model type.
 
 #define _GNU_SOURCE
 
+//#define DEBUG 
+
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h> // for strdup(3)
 #include <locale.h> 
 #include <glib-object.h> // fior g_type_init() used by GDKPixbuf objects
-
-//#define DEBUG 
 
 #include "stage.hh"
 
@@ -145,7 +145,7 @@ void StgWorld::Initialize( const char* token,
   this->graphics = false; // subclasses that provide GUIs should
 			  // change this
 
-  this->models_by_id = g_hash_table_new( g_int_hash, g_int_equal );
+  this->models_by_id = g_hash_table_new( g_direct_hash, g_direct_equal );
   this->models_by_name = g_hash_table_new( g_str_hash, g_str_equal );
   this->sim_time = 0;
   this->interval_sim = 1e3 * interval_sim;
@@ -296,13 +296,12 @@ void StgWorld::Load( const char* worldfile_path )
 
       int parent_entity = wf->GetEntityParent( entity );
       
-      //PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
-      //	    entity, parent_entity );
+      PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
+      	    entity, parent_entity );
       
       StgModel *mod, *parent;
       
-      parent = (StgModel*)
-	g_hash_table_lookup( this->models_by_id, &parent_entity );
+      parent = GetModel( parent_entity );
       
       // find the creator function pointer in the hash table
       stg_creator_t creator = (stg_creator_t) 
@@ -332,18 +331,6 @@ void StgWorld::Load( const char* worldfile_path )
 
   printf( "[Load time %.3fsec]", (load_end_time - load_start_time) / 1000000.0 );
   
-}
-
-void StgWorld::Stop()
-{
-  this->paused = true;
-}
-
-void StgWorld::Start()
-{
-  this->paused = false;
-
-  wf->WarnUnused();
 }
 
 stg_usec_t StgWorld::RealTimeNow()
@@ -427,7 +414,7 @@ void StgWorld::AddModel( StgModel*  mod  )
   //PRINT_DEBUG3( "World %s adding model %d %s to hash tables ", 
   //        token, mod->id, mod->Token() );  
 
-  g_hash_table_insert( this->models_by_id, &mod->id, mod );
+  g_hash_table_insert( this->models_by_id, (gpointer)mod->Id(), mod );
   AddModelName( mod );
 }
 
@@ -439,7 +426,7 @@ void StgWorld::AddModelName( StgModel* mod )
 
 StgModel* StgWorld::GetModel( const char* name )
 {
-  //printf( "looking up model name %s in models_by_name\n", name );
+  PRINT_DEBUG1( "looking up model name %s in models_by_name", name );
   StgModel* mod = (StgModel*)g_hash_table_lookup( this->models_by_name, name );
 
   if( mod == NULL )
@@ -450,7 +437,7 @@ StgModel* StgWorld::GetModel( const char* name )
 
 StgModel* StgWorld::GetModel( const stg_id_t id )
 {
-  //printf( "looking up model id %d in models_by_id\n", id );
+  PRINT_DEBUG1( "looking up model id %d in models_by_id", id );
   return (StgModel*)g_hash_table_lookup( this->models_by_id, (gpointer)id );
 }
 
@@ -463,22 +450,6 @@ void StgWorld::RecordRay( double x1, double y1, double x2, double y2 )
   drawpts[2] = x2; 
   drawpts[3] = y2;
   ray_list = g_list_append( ray_list, drawpts );
-}
-
-void StgWorld::DrawRays()
-{
-  glDisable( GL_DEPTH_TEST );
-  PushColor( 0,0,0,0.5 );
-  for( GList* it = ray_list; it; it=it->next )
-    {
-      float* pts = (float*)it->data;
-      glBegin( GL_LINES );
-      glVertex2f( pts[0], pts[1] );
-      glVertex2f( pts[2], pts[3] );
-      glEnd();
-    }  
-  PopColor();
-  glEnable( GL_DEPTH_TEST );
 }
 
 void StgWorld::ClearRays()
@@ -566,14 +537,13 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	      
 	      // if this block does not belong to the searching model and it
 	      // matches the predicate and it's in the right z range
-	      if( block && (block->mod != finder) && 
-		  (*func)( block, arg ) )// &&
-		  //pose->z >= block->global_zmin &&
-		  //pose->z < block->global_zmax )	 
+	      if( block && (block->Model() != finder) && 
+		  block->IntersectGlobalZ( pose->z ) &&
+		  (*func)( block, arg ) )
 		{
 		  // a hit!
 		  if( hit_model )
-		    *hit_model = block->mod;	      
+		    *hit_model = block->Model();	      
 		  
 		  // how far away was that strike?
 		  return hypot( (x-xstart)/ppm, (y-ystart)/ppm );
@@ -620,8 +590,10 @@ void stg_model_reload_cb( gpointer key, gpointer data, gpointer user )
 void StgWorld::Save( void )
 {
   // ask every model to save itself
-  g_hash_table_foreach( this->models_by_id, stg_model_save_cb, NULL );
+  //g_hash_table_foreach( this->models_by_id, stg_model_save_cb, NULL );
   
+  ForEachModel( stg_model_save_cb, NULL );
+
   this->wf->Save(NULL);
 }
 
@@ -632,7 +604,9 @@ void StgWorld::Reload( void )
   //wf->load( NULL ); 
   
   // ask every model to load itself from the file database
-  g_hash_table_foreach( this->models_by_id, stg_model_reload_cb, NULL );
+  //g_hash_table_foreach( this->models_by_id, stg_model_reload_cb, NULL );
+
+  ForEachModel( stg_model_reload_cb, NULL );
 }
 
 void StgWorld::StartUpdatingModel( StgModel* mod )
@@ -646,48 +620,6 @@ void StgWorld::StopUpdatingModel( StgModel* mod )
   this->update_list = g_list_remove( this->update_list, mod ); 
 }
 
-
-// void draw_voxel( int x, int y, int z )
-// {
-//   glTranslatef( x,y,z );
-  
-//   glBegin(GL_QUADS);		// Draw The Cube Using quads
-//     glColor3f(0.0f,1.0f,0.0f);	// Color Blue
-//     glVertex3f( 1.0f, 1.0f,-1.0f);	// Top Right Of The Quad (Top)
-//     glVertex3f(-1.0f, 1.0f,-1.0f);	// Top Left Of The Quad (Top)
-//     glVertex3f(-1.0f, 1.0f, 1.0f);	// Bottom Left Of The Quad (Top)
-//     glVertex3f( 1.0f, 1.0f, 1.0f);	// Bottom Right Of The Quad (Top)
-//     glColor3f(1.0f,0.5f,0.0f);	// Color Orange
-//     glVertex3f( 1.0f,-1.0f, 1.0f);	// Top Right Of The Quad (Bottom)
-//     glVertex3f(-1.0f,-1.0f, 1.0f);	// Top Left Of The Quad (Bottom)
-//     glVertex3f(-1.0f,-1.0f,-1.0f);	// Bottom Left Of The Quad (Bottom)
-//     glVertex3f( 1.0f,-1.0f,-1.0f);	// Bottom Right Of The Quad (Bottom)
-//     glColor3f(1.0f,0.0f,0.0f);	// Color Red	
-//     glVertex3f( 1.0f, 1.0f, 1.0f);	// Top Right Of The Quad (Front)
-//     glVertex3f(-1.0f, 1.0f, 1.0f);	// Top Left Of The Quad (Front)
-//     glVertex3f(-1.0f,-1.0f, 1.0f);	// Bottom Left Of The Quad (Front)
-//     glVertex3f( 1.0f,-1.0f, 1.0f);	// Bottom Right Of The Quad (Front)
-//     glColor3f(1.0f,1.0f,0.0f);	// Color Yellow
-//     glVertex3f( 1.0f,-1.0f,-1.0f);	// Top Right Of The Quad (Back)
-//     glVertex3f(-1.0f,-1.0f,-1.0f);	// Top Left Of The Quad (Back)
-//     glVertex3f(-1.0f, 1.0f,-1.0f);	// Bottom Left Of The Quad (Back)
-//     glVertex3f( 1.0f, 1.0f,-1.0f);	// Bottom Right Of The Quad (Back)
-//     glColor3f(0.0f,0.0f,1.0f);	// Color Blue
-//     glVertex3f(-1.0f, 1.0f, 1.0f);	// Top Right Of The Quad (Left)
-//     glVertex3f(-1.0f, 1.0f,-1.0f);	// Top Left Of The Quad (Left)
-//     glVertex3f(-1.0f,-1.0f,-1.0f);	// Bottom Left Of The Quad (Left)
-//     glVertex3f(-1.0f,-1.0f, 1.0f);	// Bottom Right Of The Quad (Left)
-//     glColor3f(1.0f,0.0f,1.0f);	// Color Violet
-//     glVertex3f( 1.0f, 1.0f,-1.0f);	// Top Right Of The Quad (Right)
-//     glVertex3f( 1.0f, 1.0f, 1.0f);	// Top Left Of The Quad (Right)
-//     glVertex3f( 1.0f,-1.0f, 1.0f);	// Bottom Left Of The Quad (Right)
-//     glVertex3f( 1.0f,-1.0f,-1.0f);	// Bottom Right Of The Quad (Right)
-//   glEnd();			// End Drawing The Cube
-
-//   glTranslatef( -x, -y, -z );
-// }
-
-
 void StgWorld::MetersToPixels( stg_meters_t mx, stg_meters_t my, 
 			       int32_t *px, int32_t *py )
 {
@@ -695,52 +627,10 @@ void StgWorld::MetersToPixels( stg_meters_t mx, stg_meters_t my,
   *py = (int32_t)floor((my+height/2.0) * ppm);
 }
 
-typedef struct
+int StgWorld::AddBlockPixel( int x, int y, int z,
+			     stg_render_info_t* rinfo )
 {
-  StgBlockGrid* grid;
-  StgBlock* block;
-} _render_info_t;
-
-int stg_add_block_to_grid( int x, int y, int z,
-			   _render_info_t* rinfo )
-{
-  rinfo->grid->AddBlock( x, y, rinfo->block );
+  rinfo->world->bgrid->AddBlock( x, y, rinfo->block );
   return FALSE;
-}
-
-
-void StgWorld::MapBlock( StgBlock* block )
-{
-  stg_point_int_t* pts = block->pts_global;
-  unsigned int pt_count = block->pt_count;
-  
-  assert( pt_count >=2 );
-  
-  _render_info_t rinfo;
-  rinfo.grid = bgrid;
-  rinfo.block = block;
-
-  // TODO - could be a little bit faster - currently considers each
-  // vertex twice
-  for( unsigned int p=0; p<pt_count; p++ )
-    {
-      int32_t x = pts[p].x; // line start
-      int32_t y = pts[p].y; // line end
-      
-      int32_t dx = pts[(p+1)%pt_count].x - x;
-      int32_t dy = pts[(p+1)%pt_count].y - y;
-
-      
-      // pass this structure into our per-pixel callback
-      _render_info_t rinfo;
-      rinfo.grid = bgrid;
-      rinfo.block = block;
-      
-      // ignore return value
-      stg_line_3d( x, y, 0,
-		   dx, dy, 0,
-		   (stg_line3d_func_t)stg_add_block_to_grid, 
-		   &rinfo );
-    }
 }
 

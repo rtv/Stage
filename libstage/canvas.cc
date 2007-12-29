@@ -1,4 +1,3 @@
-\
 #include "stage.hh"
 #include <FL/fl_draw.H>
 #include <FL/fl_Box.H>
@@ -77,9 +76,9 @@ StgModel* StgCanvas::Select( int x, int y )
     {
       StgModel* mod = (StgModel*)it->data;      
 
-      if( mod->gui_mask & (STG_MOVE_TRANS | STG_MOVE_ROT ))
+      if( mod->GuiMask() & (STG_MOVE_TRANS | STG_MOVE_ROT ))
 	{
-	  uint32_t col = (mod->id | 0xFF000000);
+	  uint32_t col = (mod->Id() | 0xFF000000);
 	  glColor4ubv( (GLubyte*)&col );     
 	  mod->DrawPicker();
 	}
@@ -97,8 +96,7 @@ StgModel* StgCanvas::Select( int x, int y )
   // strip off the alpha channel byte to retrieve the model id
   id &= 0x00FFFFFF;
   
-  StgModel* mod = (StgModel*)
-    g_hash_table_lookup( world->models_by_id, &id );
+  StgModel* mod = world->GetModel( id );
   
   //printf("%p %s %d\n", mod, mod ? mod->Token() : "", id );
   
@@ -114,13 +112,13 @@ StgModel* StgCanvas::Select( int x, int y )
 	  selected_models = 
 	    g_list_remove_link( selected_models, link );
 
-	  mod->disabled = false;
+	  mod->Disable();
 	}			  
       else      
 	{
 	  last_selection = mod;
 	  selected_models = g_list_prepend( selected_models, mod );
-	  mod->disabled = true;
+	  mod->Enable();
 	}
    
       invalidate();
@@ -279,7 +277,7 @@ int StgCanvas::handle(int event)
       if( ! Fl::event_state( FL_SHIFT ) )
 	{
 	  for( GList* it=selected_models; it; it=it->next )
-	    ((StgModel*)it->data)->disabled = false;
+	    ((StgModel*)it->data)->Enable();
 	  
 	  g_list_free( selected_models );
 	  selected_models = NULL;
@@ -296,7 +294,7 @@ int StgCanvas::handle(int event)
       switch( Fl::event_key() )
 	{
 	case 'p': // pause
-	  world->paused = !world->paused;
+	  world->TogglePause();
 	  break;
 	case ' ': // space bar
 	  sphi = stheta = 0.0;
@@ -353,7 +351,7 @@ void StgCanvas::draw()
       // install a font
       gl_font( FL_HELVETICA, 12 );
       
-      double zclip = hypot(world->width, world->height) * scale;
+      double zclip = hypot(world->Width(), world->Height()) * scale;
       double pixels_width =  w();
       double pixels_height = h();
       
@@ -403,7 +401,7 @@ void StgCanvas::draw()
   if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
     {      
       glLoadIdentity ();
-      double zclip = hypot(world->width, world->height) * scale;
+      double zclip = hypot(world->Width(), world->Height()) * scale;
       glTranslatef(  0,0,
       	     -zclip / 2.0 );
       
@@ -425,8 +423,8 @@ void StgCanvas::draw()
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(1.0, 1.0);
    glColor3f( 1,1,1 );
-   glRectf( -world->width/2.0, -world->height/2.0,
-	    world->width/2.0, world->height/2.0 ); 
+   glRectf( -world->Width()/2.0, -world->Height()/2.0,
+	    world->Width()/2.0, world->Height()/2.0 ); 
    glDisable(GL_POLYGON_OFFSET_FILL);
 
    if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
@@ -435,21 +433,21 @@ void StgCanvas::draw()
        glLineWidth( 1 );
        
        glPushMatrix();
-       glTranslatef( -world->width/2.0, -world->height/2.0, 1 );
-       glScalef( 1.0/world->ppm, 1.0/world->ppm, 0 );
+       glTranslatef( -world->Width()/2.0, -world->Height()/2.0, 1 );
+       glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
        glPolygonMode( GL_FRONT, GL_LINE );
        colorstack.Push(1,0,0);
        
-      if( showflags & STG_SHOW_OCCUPANCY )
-	world->bgrid->Draw( false );
-
-      if( showflags & STG_SHOW_QUADTREE )
-	world->bgrid->Draw( true );
-      
-      colorstack.Pop();
-      glPopMatrix();  
-      
-      glEnable( GL_LINE_SMOOTH );
+       if( showflags & STG_SHOW_OCCUPANCY )
+	 ((StgWorldGui*)world)->GetBlockGrid()->Draw( false );
+       
+       if( showflags & STG_SHOW_QUADTREE )
+	 ((StgWorldGui*)world)->GetBlockGrid()->Draw( true );
+       
+       colorstack.Pop();
+       glPopMatrix();  
+       
+       glEnable( GL_LINE_SMOOTH );
      }
    
    for( GList* it=selected_models; it; it=it->next )
@@ -499,10 +497,22 @@ void StgCanvas::draw()
 	   ((StgModel*)it->data)->Draw( flags );
 	 }
      }
-
-   if( world->ray_list )
+   
+   if( world->GetRayList() )
      {
-       world->DrawRays();
+       glDisable( GL_DEPTH_TEST );
+       PushColor( 0,0,0,0.5 );
+       for( GList* it = world->GetRayList(); it; it=it->next )
+	 {
+	   float* pts = (float*)it->data;
+	   glBegin( GL_LINES );
+	   glVertex2f( pts[0], pts[1] );
+	   glVertex2f( pts[2], pts[3] );
+	   glEnd();
+	 }  
+       PopColor();
+       glEnable( GL_DEPTH_TEST );
+       
        world->ClearRays();
      }
 }

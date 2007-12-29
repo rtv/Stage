@@ -1,10 +1,12 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.18 2006-03-29 05:14:35 rtv Exp $
+ * $Id: stage.txt,v 1.18.4.1 2007-12-29 05:07:40 rtv Exp $
 */
 
+//@mainpage The Stage Robot Simulator
+
 /**
-@mainpage The Stage Robot Simulator
+\page The Stage Robot Simulator
 
 <p>Copyright Richard Vaughan and contributors 1998-2006 and beyond.
 <p>Part of the Player/Stage Project [http://playerstage.sourceforge.net]

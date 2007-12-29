@@ -106,37 +106,32 @@ model
   
 #define _GNU_SOURCE
 
-#include <limits.h> 
-//#include <assert.h>
-//#include <math.h>
-//#include <GL/gl.h>
-//#include <glib.h>
-
 //#define DEBUG
 #include "stage.hh"
+#include <limits.h> 
 
 // basic model
-#define STG_DEFAULT_BLOBRETURN true
-#define STG_DEFAULT_BOUNDARY true
-#define STG_DEFAULT_COLOR (0xFFFF0000) // red
-#define STG_DEFAULT_ENERGY_CAPACITY 1000.0
-#define STG_DEFAULT_ENERGY_CHARGEENABLE 1
-#define STG_DEFAULT_ENERGY_GIVERATE 0.0
-#define STG_DEFAULT_ENERGY_PROBERANGE 0.0
-#define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
-#define STG_DEFAULT_GEOM_SIZEX 0.10 // 1m square by default
-#define STG_DEFAULT_GEOM_SIZEY 0.10
-#define STG_DEFAULT_GEOM_SIZEZ 0.10
-#define STG_DEFAULT_GRID false
-#define STG_DEFAULT_GRIPPERRETURN false
-#define STG_DEFAULT_LASERRETURN LaserVisible
-#define STG_DEFAULT_MAP_RESOLUTION 0.1
-#define STG_DEFAULT_MASK (STG_MOVE_TRANS | STG_MOVE_ROT)
-#define STG_DEFAULT_MASS 10.0  // kg
-#define STG_DEFAULT_NOSE false
-#define STG_DEFAULT_OBSTACLERETURN true
-#define STG_DEFAULT_OUTLINE true
-#define STG_DEFAULT_RANGERRETURN true
+#define STG_DEFAULT_MOD_BLOBRETURN true
+#define STG_DEFAULT_MOD_BOUNDARY false
+#define STG_DEFAULT_MOD_COLOR (0xFFFF0000) // red
+#define STG_DEFAULT_MOD_ENERGY_CAPACITY 1000.0
+#define STG_DEFAULT_MOD_ENERGY_CHARGEENABLE 1
+#define STG_DEFAULT_MOD_ENERGY_GIVERATE 0.0
+#define STG_DEFAULT_MOD_ENERGY_PROBERANGE 0.0
+#define STG_DEFAULT_MOD_ENERGY_TRICKLERATE 0.1
+#define STG_DEFAULT_MOD_GEOM_SIZEX 0.10 // 1m square by default
+#define STG_DEFAULT_MOD_GEOM_SIZEY 0.10
+#define STG_DEFAULT_MOD_GEOM_SIZEZ 0.10
+#define STG_DEFAULT_MOD_GRID false
+#define STG_DEFAULT_MOD_GRIPPERRETURN false
+#define STG_DEFAULT_MOD_LASERRETURN LaserVisible
+#define STG_DEFAULT_MOD_MAP_RESOLUTION 0.1
+#define STG_DEFAULT_MOD_MASK (STG_MOVE_TRANS | STG_MOVE_ROT)
+#define STG_DEFAULT_MOD_MASS 10.0  // kg
+#define STG_DEFAULT_MOD_NOSE false
+#define STG_DEFAULT_MOD_OBSTACLERETURN true
+#define STG_DEFAULT_MOD_OUTLINE true
+#define STG_DEFAULT_MOD_RANGERRETURN true
 
 
 // constructor
@@ -182,7 +177,6 @@ StgModel::StgModel( StgWorld* world,
   memset( &pose, 0, sizeof(pose));
   memset( &global_pose, 0, sizeof(global_pose));
   
-  this->ray_list = NULL;
   this->trail = g_array_new( false, false, sizeof(stg_trail_item_t) );
 
   this->data_fresh = false;
@@ -195,23 +189,23 @@ StgModel::StgModel( StgWorld* world,
   this->say_string = NULL;
   this->subs = 0;
   
-  this->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
-  this->geom.size.y = STG_DEFAULT_GEOM_SIZEX;
-  this->geom.size.z = STG_DEFAULT_GEOM_SIZEX;
+  this->geom.size.x = STG_DEFAULT_MOD_GEOM_SIZEX;
+  this->geom.size.y = STG_DEFAULT_MOD_GEOM_SIZEX;
+  this->geom.size.z = STG_DEFAULT_MOD_GEOM_SIZEX;
   memset( &this->geom.pose, 0, sizeof(this->geom.pose));
 
-  this->obstacle_return = STG_DEFAULT_OBSTACLERETURN;
-  this->ranger_return = STG_DEFAULT_RANGERRETURN;
-  this->blob_return = STG_DEFAULT_BLOBRETURN;
-  this->laser_return = STG_DEFAULT_LASERRETURN;
-  this->gripper_return = STG_DEFAULT_GRIPPERRETURN;
-  this->boundary = false;//STG_DEFAULT_BOUNDARY;
-  this->color = STG_DEFAULT_COLOR;
-  this->map_resolution = STG_DEFAULT_MAP_RESOLUTION; // meters
-  this->gui_nose = STG_DEFAULT_NOSE;
-  this->gui_grid = STG_DEFAULT_GRID;
-  this->gui_outline = STG_DEFAULT_OUTLINE;
-  this->gui_mask = this->parent ? 0 : STG_DEFAULT_MASK;
+  this->obstacle_return = STG_DEFAULT_MOD_OBSTACLERETURN;
+  this->ranger_return = STG_DEFAULT_MOD_RANGERRETURN;
+  this->blob_return = STG_DEFAULT_MOD_BLOBRETURN;
+  this->laser_return = STG_DEFAULT_MOD_LASERRETURN;
+  this->gripper_return = STG_DEFAULT_MOD_GRIPPERRETURN;
+  this->boundary = STG_DEFAULT_MOD_BOUNDARY;
+  this->color = STG_DEFAULT_MOD_COLOR;
+  this->map_resolution = STG_DEFAULT_MOD_MAP_RESOLUTION; // meters
+  this->gui_nose = STG_DEFAULT_MOD_NOSE;
+  this->gui_grid = STG_DEFAULT_MOD_GRID;
+  this->gui_outline = STG_DEFAULT_MOD_OUTLINE;
+  this->gui_mask = this->parent ? 0 : STG_DEFAULT_MOD_MASK;
 
   this->fiducial_return = 0;
   this->fiducial_key = 0;
@@ -219,10 +213,8 @@ StgModel::StgModel( StgWorld* world,
   this->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
 
   bzero( &this->velocity, sizeof(velocity));
-  this->on_velocity_list = false;
 
-  //this->velocity.a = 0.2;
-  //SetVelocity( &this->velocity );
+  this->on_velocity_list = false;
 
   this->last_update = 0;
   this->interval = 1e4; // 10msec
@@ -254,8 +246,6 @@ void StgModel::AddBlock( stg_point_t* pts,
 			 stg_color_t col,
 			 bool inherit_color )
 {
-  //UnMap();
-  
   blocks = 
     g_list_prepend( blocks, new StgBlock( this, pts, pt_count, 
 					  zmin, zmax, 
@@ -263,8 +253,6 @@ void StgModel::AddBlock( stg_point_t* pts,
   
   // force recreation of display lists before drawing
   body_dirty = true;
-
-  //Map();
 }
 
 
@@ -389,23 +377,6 @@ void StgModel::GlobalToLocal( stg_pose_t* pose )
   //printf( "g2l local pose %.2f %.2f %.2f\n",
   //  pose->x, pose->y, pose->a );
 }
-
-// // default update function that implements velocities for all objects
-// void StgModel::MoveDueToVelocity( void )
-// {
-//   // now move the model if it has any velocity
-//   if( velocity.x || velocity.y || velocity.z || velocity.a )
-//     this->UpdatePoses( void );
-// }
-
-
-// StgModel* StgModel::Create( stg_world_t* world, StgModel* parent, 
-// 			    stg_id_t id, CWorldFile* wf )
-// { 
-//   return new StgModel( world, parent, id, wf ); 
-// }    
-
-
 
 void StgModel::Say( char* str )
 {
@@ -580,7 +551,7 @@ void StgModel::Map()
   
   for( GList* it=blocks; it; it=it->next )
     ((StgBlock*)it->data)->Map();
-
+  
   if( world->graphics && this->debug )
     glPopMatrix();
 } 
@@ -900,9 +871,7 @@ void StgModel::DrawPicker( void )
 
 void StgModel::DataVisualize( void )
 {
- //  // do nothing but recursively draw the tree below this model
-//   for( GList* it=children; it; it=it->next )
-//     ((StgModel*)it->data)->DataVisualize();
+  // do nothing - subclasses will do more here
 }
 
 void StgModel::DrawGrid( void )
@@ -1071,8 +1040,7 @@ void StgModel::SetGeom( stg_geom_t* geom )
   
   memcpy( &this->geom, geom, sizeof(stg_geom_t));
   
-  stg_block_list_scale( blocks,
-			&geom->size );
+  StgBlock::ScaleList( blocks, &geom->size );
   
   body_dirty = true;
 
@@ -1222,12 +1190,7 @@ int StgModel::SetParent(  StgModel* newparent)
   // link from the model to its new parent
   this->parent = newparent;
   
-  // HACK - completely rebuild the GUI elements - it's too complex to patch up the tree
-  //gui_model_destroy( mod );
-  //gui_model_create( mod );
-
   CallCallbacks( &this->parent );
-
   return 0; //ok
 }
 
@@ -1235,7 +1198,7 @@ int StgModel::SetParent(  StgModel* newparent)
 static bool collision_match( StgBlock* testblock, 
 			     StgModel* finder )
 { 
-  return( (testblock->mod != finder) && testblock->mod->ObstacleReturn()  );
+  return( (testblock->Model() != finder) && testblock->Model()->ObstacleReturn()  );
 }	
 
 
@@ -1278,12 +1241,15 @@ StgModel* StgModel::TestCollision( stg_pose_t* posedelta,
     {
       StgBlock* b = (StgBlock*)it->data;
       
+      unsigned int pt_count;
+      stg_point_t *pts = b->Points( &pt_count );
+
       // loop over all edges of the block
-      for( unsigned int p=0; p<b->pt_count; p++ ) 
+      for( unsigned int p=0; p < pt_count; p++ ) 
 	{ 
 	  // find the local poses of the ends of this block edge
-	  stg_point_t* pt1 = &b->pts[p];
-	  stg_point_t* pt2 = &b->pts[(p+1) % b->pt_count]; 
+	  stg_point_t* pt1 = &pts[p];
+	  stg_point_t* pt2 = &pts[(p+1) % pt_count]; 
 	  double dx = pt2->x - pt1->x;
 	  double dy = pt2->y - pt1->y;
 
@@ -1498,9 +1464,9 @@ int StgModel::TreeToPtrArray( GPtrArray* array )
   return added;
 }
 
-StgModel* StgModel::GetUnsubcribedModelOfType( char* modelstr )
+StgModel* StgModel::GetUnsubscribedModelOfType( char* modelstr )
 {
-  //  printf( "searching for %s in model %s with string %s\n", modelstr, token, typestr );
+  //   printf( "searching for %s in model %s with string %s\n", modelstr, token, typestr );
 
   if( subs == 0 && (strcmp( typestr, modelstr ) == 0) )
     return this;
@@ -1510,7 +1476,7 @@ StgModel* StgModel::GetUnsubcribedModelOfType( char* modelstr )
     {
       StgModel* child = (StgModel*)it->data;
       
-      StgModel* found = child->GetUnsubcribedModelOfType( modelstr );
+      StgModel* found = child->GetUnsubscribedModelOfType( modelstr );
       if( found )
 	return found;
     }

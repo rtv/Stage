@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_fiducial.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -96,7 +96,7 @@ StgModelFiducial::~StgModelFiducial( void )
 
 bool fiducial_raytrace_match( StgBlock* testblock, StgModel* finder )
 {
-  return( ! finder->IsRelated( testblock->mod ) );
+  return( ! finder->IsRelated( testblock->Model() ) );
 }	
 
 
@@ -105,14 +105,14 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
   //PRINT_DEBUG2( "Fiducial %s is testing model %s", token, him->Token() );
 
   // don't consider models with invalid returns  
-  if( him->fiducial_return == 0 )
+  if( him->FiducialReturn() == 0 )
     {
       //PRINT_DEBUG1( "  but model %s has a zero fiducial ID", him->Token());
       return;
     }
 
   // check to see if this neighbor has the right fiducial key
-  if( fiducial_key != him->fiducial_key )
+  if( fiducial_key != him->FiducialKey() )
     {
       //PRINT_DEBUG1( "  but model %s doesn't match the fiducial key", him->Token());
       return;
@@ -188,13 +188,16 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
       
       // if he's within ID range, get his fiducial.return value, else
       // we see value 0
-      fid.id = range < max_range_id ? hitmod->fiducial_return : 0;
+      fid.id = range < max_range_id ? hitmod->FiducialReturn() : 0;
       
       PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
-		    him->Token(), him->fiducial_return );
+		    him->Token(), him->FiducialReturn() );
       
       g_array_append_val( data, fid );
     }
+  
+  fiducials = (stg_fiducial_t*)data->data;
+  fiducial_count = data->len;
 }
   
   
@@ -218,9 +221,8 @@ void StgModelFiducial::Update( void )
   
   // TODO - add a fiducial-only hash table to the world to speed this
   // up a lot for large populations
-  g_hash_table_foreach( world->models_by_id, 
-			(GHFunc)(StgModelFiducial::AddModelIfVisibleStatic), 
-			this );
+  world->ForEachModel( (GHFunc)(StgModelFiducial::AddModelIfVisibleStatic), 
+		       this );
   
   PRINT_DEBUG2( "model %s saw %d fiducials", token, data->len );
 }
@@ -231,7 +233,7 @@ void StgModelFiducial::Update( void )
    
    StgModel::Load();
    
-   CWorldFile* wf = world->wf;
+   CWorldFile* wf = world->GetWorldFile();
    
    // load fiducial-specific properties
    min_range      = wf->ReadLength( id, "range_min",    min_range );

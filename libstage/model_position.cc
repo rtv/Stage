@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -162,7 +162,7 @@ void StgModelPosition::Load( void )
   
   char* keyword = NULL;
   
-  CWorldFile* wf = world->wf;
+  CWorldFile* wf = world->GetWorldFile();
 
   // load steering mode
   if( wf->PropertyExists( this->id, "drive" ) )
@@ -444,7 +444,7 @@ void StgModelPosition::Load( void )
     case STG_POSITION_LOCALIZATION_ODOM:
       {
 	// integrate our velocities to get an 'odometry' position estimate.
-	double dt = this->world->interval_sim/1e3;
+	double dt = this->world->GetSimInterval()/1e3;
 	
 	est_pose.a = NORMALIZE( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
 	

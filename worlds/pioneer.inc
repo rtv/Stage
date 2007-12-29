@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Richard Vaughan, Andrew Howard
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.27.4.13 2007-11-29 07:59:00 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.27.4.14 2007-12-29 05:07:40 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -58,7 +58,7 @@ define pioneer2dx position
 
   # differential steering model
   drive "diff"
-
+  
   # this polygon approximates the shape of a pioneer
   blocks 1
   block[0].points 8

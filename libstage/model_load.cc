@@ -199,7 +199,7 @@ void StgModel::Load( void )
 	      this->AddBlockRect(width-epsilon,0, epsilon, height ); 
 	    }     
 	  
-	  stg_block_list_scale( this->blocks, &this->geom.size );	  
+	  StgBlock::ScaleList( this->blocks, &this->geom.size );	  
 	  this->Map();
 	  this->body_dirty = true;
 
@@ -268,7 +268,7 @@ void StgModel::Load( void )
 	    stg_points_destroy( pts );
 	  }
 	
-	stg_block_list_scale( this->blocks, &this->geom.size );
+	StgBlock::ScaleList( this->blocks, &this->geom.size );
 
 	if( this->boundary )
 	  {
