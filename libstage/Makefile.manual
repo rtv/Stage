@@ -13,18 +13,21 @@ SRC = \
     glcolorstack.cc \
     model.cc \
     model_callbacks.cc \
+    model_ranger.cc \
+    model_blobfinder.cc \
     model_laser.cc \
+    model_fiducial.cc \
     model_load.cc \
     model_position.cc \
     model_props.cc \
-    model_ranger.cc \
-    model_fiducial.cc \
     stest.cc \
     stage.cc \
     typetable.cc \
     world.cc \
     worldfile.cc \
     worldgui.cc
+
+
 
 CXXFLAGS+= -g -Wall -I.. -I../replace `fltk-config --use-gl --cflags` `pkg-config --cflags glib-2.0 gdk-pixbuf-2.0`
 LIBS= `fltk-config --use-gl --ldflags`  `pkg-config --libs gdk-pixbuf-2.0` -framework OpenGL

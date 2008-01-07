@@ -5,11 +5,12 @@
 // Each entry maps a worldfile keyword onto a model constructor wrapper
 
 stg_typetable_entry_t typetable[] = {
-  { "model",     StgModel::Create },
-  { "laser",     StgModelLaser::Create },
-  { "position",  StgModelPosition::Create },
-  { "ranger",    StgModelRanger::Create },
-  { "fiducial",    StgModelFiducial::Create },
+  { "model",      StgModel::Create },
+  { "laser",      StgModelLaser::Create },
+  { "position",   StgModelPosition::Create },
+  { "ranger",     StgModelRanger::Create },
+  { "fiducial",   StgModelFiducial::Create },
+  { "blobfinder", StgModelBlobfinder::Create },
   { NULL, NULL } // this must be the last entry
 };
 

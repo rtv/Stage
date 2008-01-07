@@ -464,31 +464,74 @@ void StgWorld::ClearRays()
   ray_list = NULL;
 }
 
-stg_meters_t StgWorld::Raytrace( StgModel* finder,
-				 stg_pose_t* pose,
-				 stg_meters_t max_range,
-				 stg_block_match_func_t func,
-				 const void* arg,
-				 StgModel** hit_model )
+// raytrace wrapper that returns the model hit, rather than the block
+// stg_meters_t StgWorld::Raytrace( StgModel* finder,
+// 				 stg_pose_t* pose,
+// 				 stg_meters_t max_range,
+// 				 stg_block_match_func_t func,
+// 				 const void* arg,
+// 				 StgModel** hit_model )
+// {
+//   StgBlock* block = NULL;
+//   stg_meters_t m = RayTrace( finder, pose, max_range, func, arg, &block );
+  
+//   if( block && hit_model )
+//     *hit_model = block->Model();
+  
+//   return range;
+// }
+
+
+void StgWorld::Raytrace( stg_pose_t pose, // global pose
+			 stg_meters_t range,
+			 stg_radians_t fov,
+			 stg_block_match_func_t func,
+			 StgModel* model,			 
+			 const void* arg,
+			 stg_raytrace_sample_t* samples, // preallocated storage for samples
+			 uint32_t sample_count )  // number of samples
 {
+  pose.a -= fov/2.0; // direction of first ray
+  stg_radians_t angle_incr = fov/(double)sample_count; 
+  
+  for( uint32_t s=0; s < sample_count; s++ )
+    {
+      Raytrace( pose, range, func, model, arg, &samples[s] );
+      pose.a += angle_incr;       
+    }
+}
+
+
+void StgWorld::Raytrace( stg_pose_t pose, // global pose
+			 stg_meters_t range,
+			 stg_block_match_func_t func,
+			 StgModel* mod,		
+			 const void* arg,
+			 stg_raytrace_sample_t* sample ) 
+{
+  // initialize the sample
+  memcpy( &sample->pose, &pose, sizeof(stg_pose_t)); // pose stays fixed
+  sample->range = range; // we might change this below
+  sample->block = NULL; // we might change this below
+
   // find the global integer bitmap address of the ray  
-  int32_t x = (int32_t)((pose->x+width/2.0)*ppm);
-  int32_t y = (int32_t)((pose->y+height/2.0)*ppm);
+  int32_t x = (int32_t)((pose.x+width/2.0)*ppm);
+  int32_t y = (int32_t)((pose.y+height/2.0)*ppm);
   int32_t z = 0;
 
   int32_t xstart = x;
   int32_t ystart = y;
 
   // and the x and y offsets of the ray
-  int32_t dx = (int32_t)(ppm*max_range * cos(pose->a));
-  int32_t dy = (int32_t)(ppm*max_range * sin(pose->a));
+  int32_t dx = (int32_t)(ppm*range * cos(pose.a));
+  int32_t dy = (int32_t)(ppm*range * sin(pose.a));
   int32_t dz = 0;
 
-  if( finder->debug )
-    RecordRay( pose->x, 
-	       pose->y, 
-	       pose->x + max_range * cos(pose->a),
-	       pose->y + max_range * sin(pose->a) );
+//   if( finder->debug )
+//     RecordRay( pose.x, 
+// 	       pose.y, 
+// 	       pose.x + range.max * cos(pose.a),
+// 	       pose.y + range.max * sin(pose.a) );
 	   
   // fast integer line 3d algorithm adapted from Cohen's code from
   // Graphics Gems IV
@@ -537,16 +580,16 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	      
 	      // if this block does not belong to the searching model and it
 	      // matches the predicate and it's in the right z range
-	      if( block && (block->Model() != finder) && 
-		  block->IntersectGlobalZ( pose->z ) &&
-		  (*func)( block, arg ) )
+	      if( //block && (block->Model() != finder) && 
+		  block->IntersectGlobalZ( pose.z ) &&
+		  (*func)( block, mod, arg ) )
 		{
 		  // a hit!
-		  if( hit_model )
-		    *hit_model = block->Model();	      
-		  
-		  // how far away was that strike?
-		  return hypot( (x-xstart)/ppm, (y-ystart)/ppm );
+		  //if( hit_model )
+		  //*hit_model = block->Model();	      
+		  sample->block = block;
+		  sample->range = hypot( (x-xstart)/ppm, (y-ystart)/ppm );
+		  return;
 		}
 	    }
 	}
@@ -572,19 +615,14 @@ stg_meters_t StgWorld::Raytrace( StgModel* finder,
 	}
       }
     }
-  
-  // hit nothing, so return max range
-  return max_range;
+
+  // hit nothing
+  return;
 }
 
-void stg_model_save_cb( gpointer key, gpointer data, gpointer user )
+static void _save_cb( gpointer key, gpointer data, gpointer user )
 {
   ((StgModel*)data)->Save();
-}
-
-void stg_model_reload_cb( gpointer key, gpointer data, gpointer user )
-{
-  ((StgModel*)data)->Load();
 }
 
 void StgWorld::Save( void )
@@ -592,9 +630,14 @@ void StgWorld::Save( void )
   // ask every model to save itself
   //g_hash_table_foreach( this->models_by_id, stg_model_save_cb, NULL );
   
-  ForEachModel( stg_model_save_cb, NULL );
+  ForEachModel( _save_cb, NULL );
 
   this->wf->Save(NULL);
+}
+
+static void _reload_cb( gpointer key, gpointer data, gpointer user )
+{
+  ((StgModel*)data)->Load();
 }
 
 // reload the current worldfile
@@ -606,7 +649,7 @@ void StgWorld::Reload( void )
   // ask every model to load itself from the file database
   //g_hash_table_foreach( this->models_by_id, stg_model_reload_cb, NULL );
 
-  ForEachModel( stg_model_reload_cb, NULL );
+  ForEachModel( _reload_cb, NULL );
 }
 
 void StgWorld::StartUpdatingModel( StgModel* mod )

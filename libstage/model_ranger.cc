@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -239,13 +239,11 @@ void StgModelRanger::Load( void )
     }
 }
 
-bool ranger_raytrace_match( StgBlock* block, StgModel* finder )
+static bool ranger_match( StgBlock* block, StgModel* finder, const void* dummy )
 {
-  //  printf( "ranger match sees %s %p %d zmin %.2f zmax %.2f global_zmin %.2f global_zmax %.2f\n", 
-  //  block->mod->Token(), block->mod, block->mod->LaserReturn(),
-  //  block->zmin, block->zmax,
-  //  block->zmin, block->zmax );
-  
+  //printf( "ranger match sees %s %p %d \n", 
+  //    block->Model()->Token(), block->Model(), block->Model()->LaserReturn() );
+
   // Ignore myself, my children, and my ancestors.
   return( block->Model()->RangerReturn() && !block->Model()->IsRelated( finder ) );
 }	
@@ -253,10 +251,7 @@ bool ranger_raytrace_match( StgBlock* block, StgModel* finder )
 void StgModelRanger::Update( void )
 {     
   StgModel::Update();
-  
-  if( this->subs < 1 )
-    return;
-  
+    
   if( (sensors == NULL) || (sensor_count < 1 ))
     return;
   
@@ -269,23 +264,18 @@ void StgModelRanger::Update( void )
   // raytrace new range data for all sensors
   for( unsigned int t=0; t<sensor_count; t++ )
     {
-      double range = 0;
 
       // TODO - reinstate multi-ray rangers
       //for( int r=0; r<sensors[t].ray_count; r++ )
       //{	  
-      range = Raytrace( &sensors[t].pose,
-			sensors[t].bounds_range.max,
-			(stg_block_match_func_t)ranger_raytrace_match,
-			this,
-			NULL );			       
-      //}
+      stg_raytrace_sample_t ray;
+      Raytrace( sensors[t].pose,
+		sensors[t].bounds_range.max,
+		ranger_match,
+		NULL,
+		&ray );
       
-      // low-threshold the range
-      if( range < sensors[t].bounds_range.min )
-	range = sensors[t].bounds_range.min;	
-      
-      samples[t] = range;
+      samples[t] = MAX( ray.range, sensors[t].bounds_range.min ); 
       //sensors[t].error = TODO;            
     }   
 }

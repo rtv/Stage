@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.22 2007-12-29 05:07:40 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.23 2008-01-07 05:33:17 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -23,6 +23,7 @@ typedef struct
   StgModelPosition* position;
   StgModelRanger* ranger;
   StgModelFiducial* fiducial;
+  StgModelBlobfinder* blobfinder;
 } robot_t;
 
 #define VSPEED 0.4 // meters per second
@@ -74,8 +75,13 @@ int main( int argc, char* argv[] )
 	 robots[i].position->GetUnsubscribedModelOfType( "ranger" );
        assert(robots[i].ranger);
        robots[i].ranger->Subscribe();
+
+       robots[i].blobfinder = (StgModelBlobfinder*)
+	 robots[i].position->GetUnsubscribedModelOfType( "blobfinder" );
+       assert(robots[i].blobfinder);
+       robots[i].blobfinder->Subscribe();
     }
-   
+  
   // start the clock
   //world.Start();
   //puts( "done" );
@@ -86,31 +92,33 @@ int main( int argc, char* argv[] )
       for( int i=0; i<POPSIZE; i++ )
 	{
 	  
-	StgModelRanger* rgr = robots[i].ranger;
-	
-	if( rgr->samples == NULL )
-	  continue;
-	
-	// compute the vector sum of the sonar ranges	      
-	double dx=0, dy=0;
-	
-	for( unsigned int s=0; s< rgr->sensor_count; s++ )
-	  {
-	    double srange = rgr->samples[s]; 
-	    
-	    dx += srange * cos( rgr->sensors[s].pose.a );
-	    dy += srange * sin( rgr->sensors[s].pose.a );
-	  }
-	
-	if( dy == 0 )
-	  continue;
+	  //continue;
 
-	if( dx == 0 )
-	  continue;
-
-	assert( dy != 0 );
-	assert( dx != 0 );
-	
+	  StgModelRanger* rgr = robots[i].ranger;
+	  
+	  if( rgr->samples == NULL )
+	    continue;
+	  
+	  // compute the vector sum of the sonar ranges	      
+	  double dx=0, dy=0;
+	  
+	  for( unsigned int s=0; s< rgr->sensor_count; s++ )
+	    {
+	      double srange = rgr->samples[s]; 
+	      
+	      dx += srange * cos( rgr->sensors[s].pose.a );
+	      dy += srange * sin( rgr->sensors[s].pose.a );
+	    }
+		 
+	 if( dy == 0 )
+	   continue;
+	       
+       if( dx == 0 )
+	 continue;
+	       
+       assert( dy != 0 );
+       assert( dx != 0 );
+	       
 	double resultant_angle = atan2( dy, dx );
 	double forward_speed = 0.0;
 	double side_speed = 0.0;	   
@@ -129,15 +137,20 @@ int main( int argc, char* argv[] )
 	// send a command to the robot
 	stg_velocity_t vel;
 	bzero(&vel,sizeof(vel));
-	vel.x = forward_speed;
+        vel.x = forward_speed;
 	vel.y = side_speed;
 	vel.z = 0;
 	vel.a = turn_speed;
 	
-	printf( "robot %s [%.2f %.2f %.2f %.2f]\n",
-		robots[i].position->Token(), vel.x, vel.y, vel.z, vel.a );
-	
-	robots[i].position->SetSpeed( forward_speed, side_speed, turn_speed );
+	     //printf( "robot %s [%.2f %.2f %.2f %.2f]\n",
+	     //robots[i].position->Token(), vel.x, vel.y, vel.z, vel.a );
+	     
+     uint32_t bcount=0;     
+     stg_blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );    
+
+       printf( "robot %s sees %u blobs\n", robots[i].blobfinder->Token(), bcount );	       
+
+       //robots[i].position->SetSpeed( forward_speed, side_speed, turn_speed );
     }
   
 

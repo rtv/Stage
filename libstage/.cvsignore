@@ -1,5 +1,4 @@
 Makefile
 Makefile.in
-stest
-ptest
+stage
 .DS_Store

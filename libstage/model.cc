@@ -2,7 +2,7 @@
     @{ 
 */
 
-/** @defgroup model Model
+/** @ingroup StgModel
     
 The basic model simulates an object with basic properties; position,
 size, velocity, color, visibility to various sensors, etc. The basic
@@ -280,42 +280,66 @@ void StgModel::AddBlockRect( double x, double y,
   AddBlock( pts, 4, 0, 1, 0, true );	      
 }
 
-stg_meters_t StgModel::Raytrace( stg_radians_t angle,
-				 stg_meters_t range, 
-				 stg_block_match_func_t func,
-				 const void* arg,
-				 StgModel** hitmod )
-  
+void StgModel::Raytrace( stg_pose_t pose,
+			 stg_meters_t range, 
+			 stg_block_match_func_t func,
+			 const void* arg,
+			 stg_raytrace_sample_t* sample )
 {
-  stg_pose_t gpose;
-  GetGlobalPose( &gpose );
-  gpose.a += angle;
-  
-  return world->Raytrace( this, 
-			  &gpose,
-			  range,
-			  func,
-			  arg,
-			  hitmod );
+  LocalToGlobal( &pose );
+  world->Raytrace( pose,
+		   range,
+		   func,
+		   this,
+		   arg,
+		   sample );
 }
 
-stg_meters_t StgModel::Raytrace( stg_pose_t* pz,
-				 stg_meters_t range, 
-				 stg_block_match_func_t func,
-				 const void* arg,
-				 StgModel** hitmod )
-
+void StgModel::Raytrace( stg_radians_t bearing,
+			 stg_meters_t range, 
+			 stg_block_match_func_t func,
+			 const void* arg,
+			 stg_raytrace_sample_t* sample )
 {
-  stg_pose_t gpose;
-  memcpy( &gpose, pz, sizeof(stg_pose_t) );
-  LocalToGlobal( &gpose );
-  
-  return world->Raytrace( this,
-			  &gpose,
-			  range,
-			  func,
-			  arg,
-			  hitmod );
+  stg_pose_t pose;
+  bzero(&pose,sizeof(pose));
+  pose.a = bearing;
+
+  Raytrace( pose, range, func, arg, sample );
+}
+
+void StgModel::Raytrace( stg_pose_t pose,
+			 stg_meters_t range, 
+			 stg_radians_t fov,
+			 stg_block_match_func_t func,
+			 const void* arg,
+			 stg_raytrace_sample_t* samples,
+			 uint32_t sample_count )
+{
+  LocalToGlobal( &pose );
+  world->Raytrace( pose,
+		   range,		   
+		   fov,
+		   func,
+		   this,
+		   arg,
+		   samples,
+		   sample_count );
+}
+
+void StgModel::Raytrace( stg_radians_t bearing,
+			 stg_meters_t range, 
+			 stg_radians_t fov,
+			 stg_block_match_func_t func,
+			 const void* arg,
+			 stg_raytrace_sample_t* samples,
+			 uint32_t sample_count )
+{
+  stg_pose_t pose;
+  bzero(&pose,sizeof(pose));
+  pose.a = bearing;
+
+  Raytrace( pose, range, fov, func, arg, samples, sample_count );
 }
 
 stg_d_draw_t* stg_d_draw_create( stg_d_type_t type,
@@ -1266,18 +1290,17 @@ StgModel* StgModel::TestCollision( stg_pose_t* posedelta,
 	  // shift the edge ray vector by the local change in pose
 	  stg_pose_t raypose;	  
 	  stg_pose_sum( &raypose, posedelta, &edgepose );
-
+	  
 	  // raytrace in local coordinates
-	  Raytrace( &raypose, 
+	  stg_raytrace_sample_t sample;
+	  Raytrace( raypose, 
 		    range,
 		    (stg_block_match_func_t)collision_match, 
-		    (const void*)this, 
-		    &hitmod );
-
-//  	  if( hitmod ) 
-//  	    { 
-	  //	      if( hitx ) *hitx = itl->x; // report them 
-	  //  if( hity ) *hity = itl->y;	   
+		    NULL, 
+		    &sample );
+	  
+	  if( sample.block )
+	    hitmod = sample.block->Model();	  
  	} 
     } 
   

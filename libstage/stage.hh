@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.22 2007-12-29 05:07:40 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.23 2008-01-07 05:33:17 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -98,39 +98,6 @@ const char* stg_version_string();
 const char* stg_package_string();
 
 
-/** @defgroup libstage libstage API reference
-
-    libstage (The Stage Library) provides a C++ code library for
-    simulating a population of mobile robots and sensors. It is
-    usually used as a plugin driver for <a
-    href="http://playerstage.sf.net/player/player.html">Player</a>,
-    but it can also be used directly to build custom simulations.
-
-    libstage is modular and fairly simple to use. The following code is
-    enough to get a complete robot simulation running:
-
-@verbatim
-#include "stage.h"
-
-int main( int argc, char* argv[] )
-{ 
-  stg_world_t* world = stg_world_create_from_file( argv[1] );
-  
-  while( (stg_world_update( world,TRUE )==0) )
-    {}
-  
-  stg_world_destroy( world );
-  
-  return 0;
-}
-@endverbatim
-
-@par Contact and support
-
-For help with libstage, please use the mailing list playerstage_users@lists.sourceforge.net. 
-@{
-*/
-
 // forward declare
   class StgModel;
 
@@ -145,13 +112,6 @@ typedef enum {
 
 /** Limit the length of the character strings that identify models */
 #define STG_TOKEN_MAX 64
-
-/** @defgroup types Measurement Types
-    Basic self-describing measurement types. All packets with real
-    measurements are specified in these terms so changing types here
-    should work throughout the code.
-  @{
-*/    
 
 /** uniquely identify a model */
 typedef uint32_t stg_id_t;
@@ -271,18 +231,6 @@ void stg_color_unpack( stg_color_t col,
     stg_radians_t zoom;
   } stg_ptz_t;
 
-  /*@}*/ // end types
-
-
-/** Returns the real (wall-clock) time in milliseconds since the
-    epoch. */
-//stg_msec_t stg_realtime();
-
-/** Returns the real (wall-clock) time in milliseconds since the
-    simulation started. */
-//stg_msec_t stg_realtime_since_start();
-  
-
 
 /** take binary sign of a, either -1, or 1 if >= 0 */
 #define SGN(a)		(((a)<0) ? -1 : 1)
@@ -292,13 +240,6 @@ void stg_color_unpack( stg_color_t col,
   */
   //const char* stg_version_string();
 
-
-  // POINTS ---------------------------------------------------------
-  /** @ingroup libstage
-      @defgroup stg_points Points
-      Defines a point on the 2D plane.
-      @{ 
-  */
 
   /** define a point on the plane */
   typedef struct
@@ -336,7 +277,6 @@ void stg_color_unpack( stg_color_t col,
   /** create an array of 4 points containing the corners of a unit
       square.*/
   stg_point_t* stg_unit_square_points_create();
-  /*@}*/
 
 
 /** matching function should return 0 iff the candidate block is
@@ -362,23 +302,13 @@ int stg_polygon_3d( stg_point_int_t* pts,
 		    void* arg );
   
 
-  //  MODEL --------------------------------------------------------
-    
-  // group the docs of all the model types
-  /** @ingroup libstage
-      @defgroup stg_model Models
-      Implements the basic object
-      @{ 
-  */
   
   // Movement masks for figures
 #define STG_MOVE_TRANS (1 << 0)
 #define STG_MOVE_ROT   (1 << 1)
 #define STG_MOVE_SCALE (1 << 2)
   
-  typedef int stg_movemask_t;
-
-
+typedef int stg_movemask_t;
 
 #define STG_MP_PREFIX          "_mp_"
 
@@ -394,38 +324,37 @@ int stg_polygon_3d( stg_point_int_t* pts,
 #define STG_MP_GRIPPER_RETURN           "_mp_gripper_return"
 #define STG_MP_MASS                     "_mp_mass"
   
-  /* TODO - complete the set of named properties */
 
-  /** @brief Set a named property of a Stage model.
-      
-      Set a property of a Stage model. 
-
-      This function can set both predefined and user-defined
-      properties of a model. Predefined properties are intrinsic to
-      every model, such as pose and color. Every supported predefined
-      properties has its identifying string defined as a preprocessor
-      macro in stage.h. Users should use the macro instead of a
-      hard-coded string, so that the compiler can help you to avoid
-      mis-naming properties.
-
-      User-defined properties allow the user to attach arbitrary data
-      pointers to a model. User-defined property data is not copied,
-      so the original pointer must remain valid. User-defined property
-      names are simple strings. Names beginning with an underscore
-      ('_') are reserved for internal libstage use: users should not
-      use names beginning with underscore (at risk of causing very
-      weird behaviour).
-
-      Any callbacks registered for the named property will be called.      
-
-      Returns 0 on success, or a positive error code on failure.
-
-      *CAUTION* The caller is responsible for making sure the pointer
-      points to data of the correct type for the property, so use
-      carefully. Check the docs or the equivalent
-      stg_model_set_<property>() function definition to see the type
-      of data required for each property.
-  */ 
+/** @brief Set a named property of a Stage model.
+    
+    Set a property of a Stage model. 
+    
+    This function can set both predefined and user-defined
+    properties of a model. Predefined properties are intrinsic to
+    every model, such as pose and color. Every supported predefined
+    properties has its identifying string defined as a preprocessor
+    macro in stage.h. Users should use the macro instead of a
+    hard-coded string, so that the compiler can help you to avoid
+    mis-naming properties.
+    
+    User-defined properties allow the user to attach arbitrary data
+    pointers to a model. User-defined property data is not copied,
+    so the original pointer must remain valid. User-defined property
+    names are simple strings. Names beginning with an underscore
+    ('_') are reserved for internal libstage use: users should not
+    use names beginning with underscore (at risk of causing very
+    weird behaviour).
+    
+    Any callbacks registered for the named property will be called.      
+    
+    Returns 0 on success, or a positive error code on failure.
+    
+    *CAUTION* The caller is responsible for making sure the pointer
+    points to data of the correct type for the property, so use
+    carefully. Check the docs or the equivalent
+    stg_model_set_<property>() function definition to see the type
+    of data required for each property.
+*/ 
 
   /// laser return value
   typedef enum 
@@ -513,11 +442,6 @@ void stg_d_render( stg_d_draw_t* d );
 // MACROS ------------------------------------------------------
 // Some useful macros
   
-/** @ingroup libstage
-    @defgroup libstage_util Utilities
-    Various useful macros and functions that don't belong anywhere else.
-    @{
-*/
   
   /** Look up the color in the X11 database.  (i.e. transform color
       name to color value).  If the color is not found in the
@@ -545,39 +469,6 @@ void stg_d_render( stg_d_draw_t* d );
   //void stg_print_laser_config( stg_laser_config_t* slc );
   
 
-
-/** @ingroup libstage_util
-    @defgroup floatcomparison Floating point comparisons
-
- Macros for comparing floating point numbers. It's a troublesome
- limitation of C and C++ that floating point comparisons are not very
- accurate. These macros multiply their arguments by a large number
- before comparing them, to improve resolution.
-
-  @{
-*/
-
-/** Precision of comparison. The number of zeros to the left of the
-   decimal point determines the accuracy of the comparison in decimal
-   places to the right of the point. E.g. precision of 100000.0 gives
-   a comparison precision of within 0.000001 */
-// #define PRECISION 100000.0
-
-// /** TRUE iff A and B are equal to within PRECISION */
-// #define EQ(A,B) ((lrint(A*PRECISION))==(lrint(B*PRECISION)))
-
-// /** TRUE iff A is less than B, subject to PRECISION */
-// #define LT(A,B) ((lrint(A*PRECISION))<(lrint(B*PRECISION)))
-
-// /** TRUE iff A is greater than B, subject to PRECISION */
-// #define GT(A,B) ((lrint(A*PRECISION))>(lrint(B*PRECISION)))
-
-// /** TRUE iff A is greater than or equal B, subject to PRECISION */
-// #define GTE(A,B) ((lrint(A*PRECISION))>=(lrint(B*PRECISION)))
-
-// /** TRUE iff A is less than or equal to B, subject to PRECISION */
-// #define LTE(A,B) ((lrint(A*PRECISION))<=(lrint(B*PRECISION)))
-
 #define STG_SHOW_BLOCKS       1
 #define STG_SHOW_DATA         2
 #define STG_SHOW_GEOM         4
@@ -596,17 +487,6 @@ void stg_d_render( stg_d_draw_t* d );
 // forward declare
 class StgWorld;
 class StgModel;
-
-/** @ingroup libstage
-    @defgroup libstage_internal Internals
-
-    These are internal docs. Don't use these functions in user
-    code. Let us know if there is anything useful here that should be
-    exposed in the external interface.
-
-    @{ 
-*/
-
 
 
 #define STG_DEFAULT_WINDOW_WIDTH 800
@@ -665,12 +545,6 @@ typedef struct
 } stg_property_toggle_args_t;
 
 
-// // ROTATED RECTANGLES -------------------------------------------------
-
-/** @ingroup libstage_internal
-    @defgroup rotrect Rotated Rectangles
-    @{ 
-*/
 
 /** defines a rectangle of [size] located at [pose] */
 typedef struct
@@ -695,14 +569,11 @@ int stg_rotrects_from_image_file( const char* filename,
 				  unsigned int* widthp, 
 				  unsigned int* heightp );
 
-/**@}*/
-
 // /** matching function should return 0 iff the candidate block is
 //     acceptable */
 class StgBlock;
 
-typedef bool (*stg_block_match_func_t)(StgBlock* candidate, const void* arg );
-
+typedef bool (*stg_block_match_func_t)(StgBlock* candidate, StgModel* finder, const void* arg );
 
 // TODO - some of this needs to be implemented, the rest junked.
 
@@ -970,7 +841,14 @@ public:
   uint32_t BigBlockOccupancy( uint32_t bbx, uint32_t bby );
 };
   
-
+/** raytrace sample
+ */
+typedef struct
+{
+  stg_pose_t pose; ///< location and direction of the ray origin
+  stg_meters_t range; ///< range to beam hit in meters
+  StgBlock* block; ///< the block struck by this beam
+} stg_raytrace_sample_t;
 
 
 const uint32_t INTERVAL_LOG_LEN = 32;
@@ -1053,12 +931,21 @@ private:
   
   //void MapBlock( StgBlock* block );
   
-  stg_meters_t Raytrace( StgModel* finder,
-			 stg_pose_t* pose, 			 
-			 stg_meters_t max_range,
-			 stg_block_match_func_t func,
-			 const void* arg,
-			 StgModel** hit_model );
+  void Raytrace( stg_pose_t pose, 			 
+		 stg_meters_t range,
+		 stg_block_match_func_t func,
+		 StgModel* finder,
+		 const void* arg,
+		 stg_raytrace_sample_t* sample );
+  
+  void Raytrace( stg_pose_t pose, 			 
+		 stg_meters_t range,
+		 stg_radians_t fov,
+		 stg_block_match_func_t func,
+		 StgModel* finder,
+		 const void* arg,
+		 stg_raytrace_sample_t* samples,
+		 uint32_t sample_count );
   
   void RemoveBlock( int x, int y, StgBlock* block )
   { bgrid->RemoveBlock( x, y, block ); };
@@ -1129,6 +1016,7 @@ public:
   { g_hash_table_foreach( models_by_id, func, arg ); };
   
 };
+
 
 typedef struct {
   stg_pose_t pose;
@@ -1228,21 +1116,41 @@ protected:
   void UnMapWithChildren();
 
   int TreeToPtrArray( GPtrArray* array );
-
-  // this version raytraces from our local origin
-  stg_meters_t Raytrace( stg_radians_t angle, 
-			 stg_meters_t range, 
-			 stg_block_match_func_t func,
-			 const void* arg,
-			 StgModel** hitmod );
   
-  // raytraces from the point and heading identified by pose, in local coords
-  stg_meters_t Raytrace( stg_pose_t* pose,
-			 stg_meters_t range, 
-			 stg_block_match_func_t func,
-			 const void* arg,
-			 StgModel** hitmod );
 
+  // raytraces from the point and heading identified by pose, in local coords
+  void Raytrace( stg_pose_t pose,
+		 stg_meters_t range, 
+		 stg_block_match_func_t func,
+		 const void* arg,
+		 stg_raytrace_sample_t* sample );
+
+  // this version raytraces from our local origin in the direction [angle]
+  void Raytrace( stg_radians_t angle, 
+		 stg_meters_t range, 
+		 stg_block_match_func_t func,
+		 const void* arg,
+		 stg_raytrace_sample_t* sample );
+
+  // raytraces from the point and heading identified by pose, in local coords
+  void Raytrace( stg_pose_t pose,
+		 stg_meters_t range, 
+		 stg_radians_t fov, 
+		 stg_block_match_func_t func,
+		 const void* arg,
+		 stg_raytrace_sample_t* samples,
+		 uint32_t sample_count );
+
+  // this version raytraces from our local origin in the direction [angle]
+  void Raytrace( stg_radians_t angle, 
+		 stg_meters_t range, 
+		 stg_radians_t fov, 
+		 stg_block_match_func_t func,
+		 const void* arg,
+		 stg_raytrace_sample_t* samples,
+		 uint32_t sample_count );
+
+  
   /** Causes this model and its children to recompute their global
       position instead of using a cached pose in
       StgModel::GetGlobalPose()..*/
@@ -1536,11 +1444,14 @@ public:
   
   StgModel* Model(){ return mod; };
   
-  inline stg_point_t* Points( unsigned int *count )
+  stg_point_t* Points( unsigned int *count )
   { if( count ) *count = pt_count; return pts; };	       
-    
-  inline bool IntersectGlobalZ( stg_meters_t z )
+  
+  bool IntersectGlobalZ( stg_meters_t z )
   { return( z >= global_zmin &&  z < global_zmax ); }
+  
+  stg_color_t Color()
+  { return color; };
 
 private:
   stg_point_t* pts; //< points defining a polygon
@@ -1739,39 +1650,86 @@ public:
 #endif
 
 // end doc group libstage_utilities
-/** @} */ 
 
 
 // BLOBFINDER MODEL --------------------------------------------------------
   
-#define STG_BLOB_CHANNELS_MAX 16
-  
-  /** blobfinder config packet
-   */
-  typedef struct
-  {
-    int channel_count; // 0 to STG_BLOBFINDER_CHANNELS_MAX
-    // todo - get rid of this static size
-    stg_color_t channels[STG_BLOB_CHANNELS_MAX];
-    int scan_width;
-    int scan_height;
-    stg_meters_t range_max;
-  } stg_blobfinder_config_t;
-  
-  /** blobfinder data packet 
-   */
-  typedef struct
-  {
-    int channel;
-    stg_color_t color;
-    int xpos, ypos;   // all values are in pixels
-    //int width, height;
-    int left, top, right, bottom;
-    int area;
-    stg_meters_t range;
-  } stg_blobfinder_blob_t;
+/** blobfinder data packet 
+ */
+typedef struct
+{
+  //int channel;
+  stg_color_t color;
+  int xpos, ypos;   // all values are in pixels
+  //int width, height;
+  int left, top, right, bottom;
+  int area;
+  stg_meters_t range;
+} stg_blobfinder_blob_t;
 
 
+class StgModelBlobfinder : public StgModel
+{
+private:
+  
+  GArray* colors;
+  GArray* blobs;
+  
+  // predicate for ray tracing
+  static bool BlockMatcher( StgBlock* testblock, StgModel* finder );
+  
+public:
+  
+  unsigned int scan_width;
+  unsigned int scan_height;
+  stg_meters_t range;
+  stg_radians_t fov;
+
+  // TODO
+  // stg_radians_t pan;
+  
+ // constructor
+  StgModelBlobfinder( StgWorld* world,
+		    StgModel* parent, 
+		    stg_id_t id, 
+		    char* typestr);
+  
+  // destructor
+  ~StgModelBlobfinder();
+    
+  virtual void Startup();
+  virtual void Shutdown();
+  virtual void Update();
+  virtual void Load();
+  virtual void DataVisualize();
+
+  stg_blobfinder_blob_t* GetBlobs( unsigned int* count )
+  { 
+    if( count ) *count = blobs->len;
+    return (stg_blobfinder_blob_t*)blobs->data;
+  }
+
+  /** Start finding blobs with this color.*/
+  void AddColor( stg_color_t col );
+
+  /** Stop tracking blobs with this color */
+  void RemoveColor( stg_color_t col );
+  
+  /** Stop tracking all colors. Call this to clear the defaults, then
+      add colors individually with AddColor(); */
+  void RemoveAllColors();
+
+  // static wrapper for the constructor - all models must implement
+  // this method and add an entry in typetable.cc
+  static StgModel* Create( StgWorld* world,
+			   StgModel* parent, 
+			   stg_id_t id, 
+			   char* typestr )
+  { 
+    return (StgModel*)new StgModelBlobfinder( world, parent, id, typestr ); 
+  }    
+};
+  
 // ENERGY model --------------------------------------------------------------
   
   /** energy data packet */
@@ -1841,7 +1799,44 @@ public:
   } stg_ptz_config_t;
   
   
-  // LASER MODEL --------------------------------------------------------
+// SCANNER MODEL --------------------------------------------------------
+  
+
+// typedef struct
+// {
+//   uint32_t sample_count;
+//   uint32_t resolution;
+//   stg_pose_t pose;
+//   stg_range_bounds_t range_bounds;
+//   stg_radians_t fov;
+//   stg_block_match_func_t func; ///< block visibility predicate
+//   void* arg; ///< argument passed to the block match predicate
+// } stg_scanner_cfg_t;
+
+// class StgScanner 
+// {
+// protected:
+
+//   stg_scanner_sample_t* samples;
+//   stg_scanner_cfg_t cfg;
+//   StgModel* model;
+
+// public:
+//   StgScanner();
+//   ~StgScanner();
+  
+//   stg_scanner_sample_t* Scan( StgModel uint32_t* count );
+//   stg_scanner_sample_t* LastScan( uint32_t* count );  
+  
+//   void Load( CWorldfile* wf, int section );  
+//   void Save( CWorldfile* wf, int section );  
+//   void Visualize();
+  
+//   void GetConfig( stg_scanner_cfg_t* cfg );  
+//   void SetConfig( stg_scanner_cfg_t* cfg );
+//  };
+
+// LASER MODEL --------------------------------------------------------
   
   /** laser sample packet
    */
@@ -2270,11 +2265,5 @@ public:
 
 };
 
-
-  // end the group of all models
-  /**@}*/
-
-// end documentation group libstage
-/**@}*/
 
 #endif

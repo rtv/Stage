@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_fiducial.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +94,7 @@ StgModelFiducial::~StgModelFiducial( void )
     g_array_free( data, true );
 }
 
-bool fiducial_raytrace_match( StgBlock* testblock, StgModel* finder )
+static bool fiducial_raytrace_match( StgBlock* testblock, StgModel* finder, const void* dummy )
 {
   return( ! finder->IsRelated( testblock->Model() ) );
 }	
@@ -155,19 +155,22 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
    PRINT_DEBUG1( "  %s is a candidate. doing ray trace", him->Token());
   
 
-  StgModel* hitmod =  NULL;
-  
   //printf( "bearing %.2f\n", RTOD(bearing) );
 
-  range = Raytrace( dtheta,
-		    max_range_anon,
-		    (stg_block_match_func_t)fiducial_raytrace_match,
-		    (const void*)this,
-		    &hitmod );
+  stg_raytrace_sample_t ray;
   
-  //printf( "ray hit %s and was seeking LOS to %s\n",
-  //  hitmod ? hitmod->Token() : "null",
-  //  him->Token() );
+  Raytrace( dtheta,
+	    max_range_anon,
+	    fiducial_raytrace_match,
+	    NULL,
+	    &ray );
+  
+  range = ray.range;
+  StgModel* hitmod = ray.block->Model();
+
+  printf( "ray hit %s and was seeking LOS to %s\n",
+    hitmod ? hitmod->Token() : "null",
+    him->Token() );
   
   // if it was him, we can see him
   if( hitmod == him )
@@ -246,23 +249,22 @@ void StgModelFiducial::Update( void )
  void StgModelFiducial::DataVisualize()
  {
    // draw the FOV
-   GLUquadric* quadric = gluNewQuadric();
+//    GLUquadric* quadric = gluNewQuadric();
 
+//    PushColor( 0,0,0,0.2  );
 
-   PushColor( 0,0,0,0.2  );
+//    gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
+//    //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+//    gluPartialDisk( quadric,
+// 		   0, 
+// 		   max_range_anon,
+// 		   20, // slices	
+// 		   1, // loops
+// 		   RTOD( M_PI/2.0 + fov/2.0), // start angle
+// 		   RTOD(-fov) ); // sweep angle
 
-   gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
-   //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-   gluPartialDisk( quadric,
-		   0, 
-		   max_range_anon,
-		   20, // slices	
-		   1, // loops
-		   RTOD( M_PI/2.0 + fov/2.0), // start angle
-		   RTOD(-fov) ); // sweep angle
-
-   gluDeleteQuadric( quadric );
-   PopColor();
+//    gluDeleteQuadric( quadric );
+//    PopColor();
 
    if( data->len == 0 )
      return;

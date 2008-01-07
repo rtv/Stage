@@ -10,7 +10,7 @@ size [40 20 10]
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 100  # real-time interval between simulation updates in milliseconds 
+interval_real 10  # real-time interval between simulation updates in milliseconds 
 
 # configure the GUI window
 window
@@ -26,8 +26,11 @@ window
 )
 
 include "map.inc"
+
 include "pioneer.inc"
+
 include "sick.inc"
+
 
 paused 0
 
@@ -40,13 +43,15 @@ floorplan
 
 define robot pioneer2dx
 ( 
-  sicklaser( pose [0.05 0.000 0.000 0.000 ] )  
+  sicklaser( pose [0.050 0.000 0.000 0.000 ] )  
   fiducial_return 42
-  fiducial( fov 45 )
+  fiducial( debug 1 fov 45 )
+
+  blobfinder( debug 1)
 )
 
 
-robot( name "r0" pose [ -3.737 -4.760 0.000 -29.237 ] 
+robot( name "r0" pose [ -5.285 -3.995 116.001 -29.237 ] 
   fiducial_return 0
 )
 

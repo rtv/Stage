@@ -487,7 +487,8 @@ void StgCanvas::draw()
 	     }
 	 }
 
-       for( GList* it=world->children; it; it=it->next )
+       if( showflags & STG_SHOW_BLOCKS )
+	 for( GList* it=world->children; it; it=it->next )
 	 {
 	   uint32_t flags = showflags;
 	   

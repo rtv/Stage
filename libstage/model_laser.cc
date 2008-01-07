@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.16 $
+ //  $Revision: 1.1.2.17 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -148,7 +148,8 @@ void StgModelLaser::Load( void )
 }
 
 bool laser_raytrace_match( StgBlock* testblock, 
-			  StgModel* finder )
+			   StgModel* finder,
+			   const void* dummy )
 { 
   // Ignore the model that's looking and things that are invisible to
   // lasers
@@ -173,46 +174,27 @@ void StgModelLaser::Update( void )
   double bearing = -fov/2.0;
   double sample_incr = fov / (double)(sample_count-1);  
 
-//   if( debug )
-//     {
-//       glNewList( this->dl_debug_laser, GL_COMPILE );
-//       glPushMatrix();
-
-//       // go into global coords
-//       stg_pose_t gpose;
-//       GetGlobalPose( &gpose );
-//       //gl_coord_shift( -gpose.x, -gpose.y, 0, -gpose.a );
-//       glRotatef( RTOD(-gpose.a), 0,0,1 );
-//       glTranslatef( -gpose.x, -gpose.y, 0 );
-//     }
-
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
-      StgModel* hitmod = NULL;
+      stg_raytrace_sample_t sample;
+      Raytrace( bearing, 
+		range_max,
+		laser_raytrace_match,
+		NULL,
+		&sample );
       
-       //printf( "  [%d] %.2f\n", (int)t, samples[t].range );
-       //printf( "  [%d] ", (int)t );
+      samples[t].range = sample.range;
 
-      stg_pose_t pose;
-      bzero( &pose, sizeof(pose) );
-      pose.z = 
-
-       samples[t].range = Raytrace( bearing, 
-				    range_max,
-				    (stg_block_match_func_t)laser_raytrace_match,
-				    (const void*)this,
-				    &hitmod );
-
-       // if we hit a model and it reflects brightly, we set
-       // reflectance high, else low
-       samples[t].reflectance =
-	 (hitmod && (hitmod->LaserReturn() >= LaserBright)) ? 1.0 : 0.0;	  
-	 
+      // if we hit a model and it reflects brightly, we set
+      // reflectance high, else low
+      if( sample.block && ( sample.block->Model()->LaserReturn() >= LaserBright ) )	
+	samples[t].reflectance = 1;
+      else
+	samples[t].reflectance = 0;
+		  
        // todo - lower bound on range      
        bearing += sample_incr;      
      }
-
-  //puts("");
 
    // we may need to interpolate the samples we skipped 
    if( resolution > 1 )
@@ -236,12 +218,6 @@ void StgModelLaser::Update( void )
 	   }
      }
    
-//    if( debug )
-//      {
-//        glPopMatrix();
-//        glEndList();
-//      }
-
    data_dirty = true;
 }
 
