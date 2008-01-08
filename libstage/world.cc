@@ -581,7 +581,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	      // if this block does not belong to the searching model and it
 	      // matches the predicate and it's in the right z range
 	      if( //block && (block->Model() != finder) && 
-		  block->IntersectGlobalZ( pose.z ) &&
+		  //block->IntersectGlobalZ( pose.z ) &&
 		  (*func)( block, mod, arg ) )
 		{
 		  // a hit!

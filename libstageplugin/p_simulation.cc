@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.1.2.3 2007-11-29 07:59:00 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.1.2.4 2008-01-08 00:30:12 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -139,16 +139,11 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
   // printf( "  Starting world clock... " ); fflush(stdout);
   //stg_world_resume( world );
   
-  StgDriver::world->paused = FALSE;
-  
+  StgDriver::world->Start();
+    
   // this causes Driver::Update() to be called even when the device is
   // not subscribed
   driver->alwayson = TRUE;    
-  
-  // Start the device thread; spawns a new thread and executes
-  // StgDriver::Main(), which contains the main loop for the driver.
-  //puts( "\nStarting thread" );
-  //driver->StartThread();
 
   puts( "" ); // end the Stage startup line
 }      

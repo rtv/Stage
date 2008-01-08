@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_fiducial.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -168,9 +168,9 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
   range = ray.range;
   StgModel* hitmod = ray.block->Model();
 
-  printf( "ray hit %s and was seeking LOS to %s\n",
-    hitmod ? hitmod->Token() : "null",
-    him->Token() );
+  //  printf( "ray hit %s and was seeking LOS to %s\n",
+  //hitmod ? hitmod->Token() : "null",
+  //him->Token() );
   
   // if it was him, we can see him
   if( hitmod == him )

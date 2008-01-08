@@ -16,20 +16,28 @@ interval_real 10  # real-time interval between simulation updates in millisecond
 window
 ( 
   size [ 1135.000 611.000 ] 
-  center [1.990 -6.040] 
+  center [30.990 0.960] 
   rotate [ 0.000 0.000 ]
-  scale 26.603 
+  scale 21.103 
   #show_bboxes 0
   #show_grid 1
 
+  show_data 2
+  
   redraw_interval 50
 )
 
 include "map.inc"
 
+
+
 include "pioneer.inc"
 
+
+
 include "sick.inc"
+
+
 
 
 paused 0
@@ -45,18 +53,18 @@ define robot pioneer2dx
 ( 
   sicklaser( pose [0.050 0.000 0.000 0.000 ] )  
   fiducial_return 42
-  fiducial( debug 1 fov 45 )
+  fiducial( fov 45 )
 
-  blobfinder( debug 1)
+  blobfinder()
 )
 
 
-robot( name "r0" pose [ -5.285 -3.995 116.001 -29.237 ] 
+robot( name "r0" pose [ -7.362 -9.530 93.083 -29.237 ] 
   fiducial_return 0
 )
 
 robot( name "r1"  pose [ 9.432 -4.207 0.000 -26.879 ] )
-robot( name "r2" pose [ -10.695 -0.712 0.000 154.516 ] )
+robot( name "r2" pose [ -8.853 -1.050 0.000 154.516 ] )
 robot( name "r3" pose [ -3.139 4.589 0.000 -99.979 ] )
 robot( name "r4" pose [ -13.753 3.035 0.000 -119.470 ] )
 robot( name "r5" pose [ 2.949 3.604 0.000 -14.544 ] )
@@ -79,6 +87,6 @@ model
 
 model
 (
-  pose [-5.278 -8.871 0.000 0.000]
+  pose [-8.497 -7.616 0.000 0.000]
  color "magenta"
 )

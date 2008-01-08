@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics3d.cc,v 1.1.2.2 2007-12-24 11:20:37 rtv Exp $
+ * CVS: $Id: p_graphics3d.cc,v 1.1.2.3 2008-01-08 00:30:12 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -40,7 +40,7 @@ using namespace std;
 //#include <glu.h>
 //#include <glext.h>
 
-extern GList* dl_list;
+//extern GList* dl_list;
 
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -73,7 +73,7 @@ InterfaceGraphics3d::InterfaceGraphics3d( player_devaddr_t addr,
  
   rebuild_displaylist = FALSE;
 
-  dl_list = g_list_append( dl_list, (void*)displaylist );
+  //dl_list = g_list_append( dl_list, (void*)displaylist );
 }
 
 InterfaceGraphics3d::~InterfaceGraphics3d( void )

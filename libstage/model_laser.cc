@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.17 $
+ //  $Revision: 1.1.2.18 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -149,12 +149,15 @@ void StgModelLaser::Load( void )
 
 bool laser_raytrace_match( StgBlock* testblock, 
 			   StgModel* finder,
-			   const void* dummy )
-{ 
+			   const void* zp )
+{
   // Ignore the model that's looking and things that are invisible to
   // lasers
 
+  double z = *(stg_meters_t*)zp;
+
   if( (testblock->Model() != finder) &&
+      testblock->IntersectGlobalZ( z ) &&
       (testblock->Model()->LaserReturn() > 0 ) )
     return true; // match!
 
@@ -173,6 +176,11 @@ void StgModelLaser::Update( void )
   
   double bearing = -fov/2.0;
   double sample_incr = fov / (double)(sample_count-1);  
+  
+  stg_pose_t gpose;
+  GetGlobalPose( &gpose );
+
+  stg_meters_t zscan = gpose.z + geom.size.z /2.0;
 
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
@@ -180,7 +188,7 @@ void StgModelLaser::Update( void )
       Raytrace( bearing, 
 		range_max,
 		laser_raytrace_match,
-		NULL,
+		&zscan, // height of scan line
 		&sample );
       
       samples[t].range = sample.range;

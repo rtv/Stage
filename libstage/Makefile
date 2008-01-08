@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.1.2.11 2007-12-29 05:07:40 rtv Exp $
+# $Id: Makefile,v 1.1.2.12 2008-01-08 00:30:12 rtv Exp $
 
 
 
@@ -67,8 +67,8 @@ libstage_la_DEPENDENCIES =
 am_libstage_la_OBJECTS = ancestor.lo block.lo blockgrid.lo canvas.lo \
 	glcolorstack.lo model.lo model_callbacks.lo model_fiducial.lo \
 	model_laser.lo model_load.lo model_position.lo model_ranger.lo \
-	model_props.lo stage.lo typetable.lo world.lo worldfile.lo \
-	worldgui.lo
+	model_blobfinder.lo model_props.lo stage.lo typetable.lo \
+	world.lo worldfile.lo worldgui.lo
 libstage_la_OBJECTS = $(am_libstage_la_OBJECTS)
 libstage_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -138,7 +138,7 @@ FLTK_CFLAGS = -I/opt/local/include -I/opt/local/include/FL/images
 FLTK_LIBS = -L/opt/local/lib -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices
 GREP = /usr/bin/grep
 HAVE_FLTK_CONFIG = fltk-config
-INSTALL = /usr/bin/install -c
+INSTALL = /opt/local/bin/ginstall -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
@@ -151,7 +151,7 @@ LIBTOOL_DEPS = ./ltmain.sh
 LN_S = ln -s
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /Users/vaughan/PS/HEAD/stage.opengl/missing --run makeinfo
-MKDIR_P = .././install-sh -c -d
+MKDIR_P = /opt/local/bin/gmkdir -p
 OBJEXT = o
 PACKAGE = stage
 PACKAGE_BUGREPORT = 
@@ -209,7 +209,7 @@ libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = $(top_builddir)/./install-sh -c -d
+mkdir_p = /opt/local/bin/gmkdir -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
 prefix = /Users/vaughan/PS-2.0
@@ -256,6 +256,7 @@ libstage_la_SOURCES = \
 	model_load.cc \
 	model_position.cc \
 	model_ranger.cc \
+	model_blobfinder.cc \
 	model_props.cc \
 	stage.cc \
 	stage.hh \
@@ -378,6 +379,7 @@ include ./$(DEPDIR)/blockgrid.Plo
 include ./$(DEPDIR)/canvas.Plo
 include ./$(DEPDIR)/glcolorstack.Plo
 include ./$(DEPDIR)/model.Plo
+include ./$(DEPDIR)/model_blobfinder.Plo
 include ./$(DEPDIR)/model_callbacks.Plo
 include ./$(DEPDIR)/model_fiducial.Plo
 include ./$(DEPDIR)/model_laser.Plo

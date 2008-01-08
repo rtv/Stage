@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.1.2.3 2007-12-24 11:20:37 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.1.2.4 2008-01-08 00:30:12 rtv Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -292,11 +292,12 @@ void InterfacePosition::Publish( void )
   ppd.pos.py = mod->est_pose.y;
   //ppd.pos.pz = mod->est_pose.z;
   ppd.pos.pa = mod->est_pose.a;
-  
-  ppd.vel.px = mod->velocity.x;
-  ppd.vel.py = mod->velocity.y;
-  //ppd.vel.pz = mod->velocity.z;
-  ppd.vel.pa = mod->velocity.a;
+
+  stg_velocity_t v = mod->Velocity();
+
+  ppd.vel.px = v.x;
+  ppd.vel.py = v.y;
+  ppd.vel.pa = v.a;
   
   // etc
   ppd.stall = this->mod->Stall();

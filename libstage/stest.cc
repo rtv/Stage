@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.23 2008-01-07 05:33:17 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.24 2008-01-08 00:30:12 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -148,9 +148,9 @@ int main( int argc, char* argv[] )
      uint32_t bcount=0;     
      stg_blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );    
 
-       printf( "robot %s sees %u blobs\n", robots[i].blobfinder->Token(), bcount );	       
+     //printf( "robot %s sees %u blobs\n", robots[i].blobfinder->Token(), bcount );	       
 
-       //robots[i].position->SetSpeed( forward_speed, side_speed, turn_speed );
+       robots[i].position->SetSpeed( forward_speed, side_speed, turn_speed );
     }
   
 

@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.23 2008-01-07 05:33:17 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.24 2008-01-08 00:30:12 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -858,6 +858,7 @@ class StgWorld : public StgAncestor
 {
   friend class StgModel; // allow access to private members
   friend class StgBlock;
+  friend class StgTime;
 
 private:
 
@@ -1281,6 +1282,8 @@ public:
   
   void GetColor( stg_color_t* col )
   { if(color) memcpy( col, &this->color, sizeof(stg_color_t)); }
+
+  stg_color_t Color(){ return color; }
   
   void GetLaserReturn( int* val )
   { if(val) memcpy( val, &this->laser_return, sizeof(int)); }
@@ -1291,12 +1294,19 @@ public:
   /** Get a model's geometry - it's size and local pose (offset from
       origin in local coords) */
   void GetGeom(  stg_geom_t* dest );
+  /** Get a model's geometry - it's size and local pose (offset from
+      origin in local coords) */
+  stg_geom_t Geom(){ return geom; };
 
   /** Get the pose of a model in its parent's coordinate system  */
   void GetPose(  stg_pose_t* dest );
+  /** Get the pose of a model in its parent's coordinate system  */
+  stg_pose_t Pose(){ return pose; }
 
   /** Get a model's velocity (in its local reference frame) */
   void GetVelocity(  stg_velocity_t* dest );
+  /** Get a model's velocity (in its local reference frame) */
+  stg_velocity_t Velocity(){ return velocity; }
 
   // guess what these do?
   void SetColor( stg_color_t col );
@@ -1451,7 +1461,7 @@ public:
   { return( z >= global_zmin &&  z < global_zmax ); }
   
   stg_color_t Color()
-  { return color; };
+  { return( inherit_color ? mod->Color() : color ); }
 
 private:
   stg_point_t* pts; //< points defining a polygon
@@ -1658,12 +1668,8 @@ public:
  */
 typedef struct
 {
-  //int channel;
   stg_color_t color;
-  int xpos, ypos;   // all values are in pixels
-  //int width, height;
-  int left, top, right, bottom;
-  int area;
+  uint32_t left, top, right, bottom;
   stg_meters_t range;
 } stg_blobfinder_blob_t;
 
@@ -1684,10 +1690,8 @@ public:
   unsigned int scan_height;
   stg_meters_t range;
   stg_radians_t fov;
+  stg_radians_t pan;
 
-  // TODO
-  // stg_radians_t pan;
-  
  // constructor
   StgModelBlobfinder( StgWorld* world,
 		    StgModel* parent, 

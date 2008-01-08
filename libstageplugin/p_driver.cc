@@ -22,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.1.2.3 2007-11-29 07:59:00 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.1.2.4 2008-01-08 00:30:12 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -410,8 +410,8 @@ StgModel*  StgDriver::LocateModel( char* basename,
 				   player_devaddr_t* addr,
 				   char* typestr )
 {  
-  //printf( "attempting to find a model under model \"%s\" of type [%s]\n", 
-  //  basename, typestr );
+  printf( "attempting to find a model under model \"%s\" of type [%s]\n", 
+    basename, typestr );
   
   StgModel* base_model = world->GetModel( basename );
   
@@ -431,7 +431,7 @@ StgModel*  StgDriver::LocateModel( char* basename,
   // type (i.e. has the right initialization function) and has not
   // been used before
   //return( model_match( base_model, addr, typestr, this->devices ) );
-  return( base_model->GetUnsubcribedModelOfType( typestr ) );
+  return( base_model->GetUnsubscribedModelOfType( typestr ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
