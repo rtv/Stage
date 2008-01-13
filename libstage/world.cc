@@ -1,11 +1,4 @@
 
-
-
-
-
-/** @addtogroup stage
-    @{ */
-
 /** @defgroup world Worlds
 
 Stage simulates a 'world' composed of `models', defined in a `world
@@ -46,8 +39,6 @@ described on the manual page for each model type.
 
 */
 
-/**@}*/
-
 #define _GNU_SOURCE
 
 //#define DEBUG 
@@ -58,7 +49,7 @@ described on the manual page for each model type.
 #include <locale.h> 
 #include <glib-object.h> // fior g_type_init() used by GDKPixbuf objects
 
-#include "stage.hh"
+#include "stage_internal.hh"
 
 const double STG_DEFAULT_WORLD_PPM = 50;  // 2cm pixels
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
@@ -136,8 +127,8 @@ void StgWorld::Initialize( const char* token,
   this->quit_time = 0; 
   
   assert(token);
-  this->token = (char*)malloc(STG_TOKEN_MAX);
-  snprintf( this->token, STG_TOKEN_MAX, "%s", token );//this->id );
+  this->token = (char*)malloc(Stg::TOKEN_MAX);
+  snprintf( this->token, Stg::TOKEN_MAX, "%s", token );//this->id );
 
   this->quit = false;
   this->updates = 0;

@@ -1,9 +1,9 @@
-#include "stage.hh"
+#include "stage_internal.hh"
+
 #include <FL/fl_draw.H>
 #include <FL/fl_Box.H>
 #include <FL/Fl_Menu_Button.H>
 #include <FL/glut.H>
-
 
 void StgCanvas::TimerCallback( StgCanvas* c )
 {
@@ -35,7 +35,6 @@ StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h)
   rotating = false;
 
   showflags = STG_SHOW_CLOCK | STG_SHOW_BLOCKS | STG_SHOW_GRID;
-  //showflags = showflags | STG_SHOW_ARROWS | STG_SHOW_FOOTPRINT;
 
   // start the timer that causes regular redraws
   Fl::add_timeout( ((double)interval/1000), 
@@ -408,8 +407,7 @@ void StgCanvas::draw()
       // meter scale
       glScalef ( scale, scale, scale ); // zoom
       
-      stg_pose_t gpose;
-      last_selection->GetGlobalPose( &gpose );
+      stg_pose_t gpose = last_selection->GetGlobalPose();
       
       // and put it in the center of the window
       //glRotatef( -RTOD(gpose.a), 0,0,1 );

@@ -1,5 +1,5 @@
 
-#include "stage.hh"
+#include "stage_internal.hh"
 
 #define MATCH(A,B) (strcmp(A,B)== 0)
 
@@ -40,7 +40,7 @@ int StgModel::SetProperty( char* key,
 	}
       if( MATCH( key, STG_MP_LASER_RETURN ) )
 	{
-	  this->SetLaserReturn( *(int*)data );
+	  this->SetLaserReturn( *(stg_laser_return_t*)data );
 	  return 0;
 	}
       if( MATCH( key, STG_MP_OBSTACLE_RETURN ) )

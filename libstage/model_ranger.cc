@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.10 $
+//  $Revision: 1.1.2.11 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -74,7 +74,7 @@ The ranger model allows configuration of the pose, size and view parameters of e
 */
 
 //#define DEBUG 1
-#include "stage.hh"
+#include "stage_internal.hh"
 #include <math.h>
    
 static const stg_watts_t STG_DEFAULT_RANGER_WATTSPERSENSOR = 0.2;
@@ -85,6 +85,11 @@ static const stg_meters_t STG_DEFAULT_RANGER_RANGEMAX = 5.0;
 static const stg_meters_t STG_DEFAULT_RANGER_RANGEMIN = 0.0;
 static const unsigned int STG_DEFAULT_RANGER_RAYCOUNT = 3;
 static const unsigned int STG_DEFAULT_RANGER_SENSORCOUNT = 16;
+
+static const char STG_RANGER_COLOR[] = "gray75";
+static const char STG_RANGER_CONFIG_COLOR[] = "gray90";
+static const char STG_RANGER_GEOM_COLOR[] = "orange";
+
 
 StgModelRanger::StgModelRanger( StgWorld* world, 
 				StgModel* parent,
@@ -245,7 +250,8 @@ static bool ranger_match( StgBlock* block, StgModel* finder, const void* dummy )
   //    block->Model()->Token(), block->Model(), block->Model()->LaserReturn() );
 
   // Ignore myself, my children, and my ancestors.
-  return( block->Model()->RangerReturn() && !block->Model()->IsRelated( finder ) );
+  return( block->Model()->GetRangerReturn() && 
+	  !block->Model()->IsRelated( finder ) );
 }	
 
 void StgModelRanger::Update( void )

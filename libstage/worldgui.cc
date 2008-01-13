@@ -1,5 +1,97 @@
+/** @defgroup worldgui World with Graphical User Interface
 
-#include "stage.hh"
+The Stage window consists of a menu bar, a view of the simulated
+world, and a status bar.
+
+The world view shows part of the simulated world. You can zoom the
+view in and out, and scroll it to see more of the world. Simulated
+robot devices, obstacles, etc., are rendered as colored polygons. The
+world view can also show visualizations of the data and configuration
+of various sensor and actuator models. The View menu has options to
+control which data and configurations are rendered.
+
+<h2>Worldfile Properties</h2>
+
+@par Summary and default values
+
+@verbatim
+window
+(
+  # gui properties
+  center [0 0]
+  size [700 740]
+  scale 1.0
+
+  # model properties do not apply to the gui window
+)
+@endverbatim
+
+@par Details
+- size [width:int width:int]
+  - size of the window in pixels
+- center [x:float y:float]
+  - location of the center of the window in world coordinates (meters)
+  - scale [?:double]
+  - ratio of world to pixel coordinates (window zoom)
+
+
+<h2>Using the Stage window</h2>
+
+
+<h3>Scrolling the view</h3>
+
+<p>Left-click and drag on the background to move your view of the world.
+
+<h3>Zooming the view</h3>
+
+<p>Right-click and drag on the background to zoom your view of the
+world. When you press the right mouse button, a circle appears. Moving
+the mouse adjusts the size of the circle; the current view is scaled
+with the circle.
+
+<h3>Saving the world</h3>
+
+<P>You can save the current pose of everything in the world, using the
+File/Save menu item. <b>Warning: the saved poses overwrite the current
+world file.</b> Make a copy of your world file before saving if you
+want to keep the old poses.
+
+
+<h3>Saving a screenshot</h3>
+
+<p> The File/Export menu allows you to export a screenshot of the
+current world view in JPEG or PNG format. The frame is saved in the
+current directory with filename in the format "stage-(frame
+number).(jpg/png)". 
+
+ You can also save sequences of screen shots. To start saving a
+sequence, select the desired time interval from the same menu, then
+select File/Export/Sequence of frames. The frames are saved in the
+current directory with filenames in the format "stage-(sequence
+number)-(frame number).(jpg/png)".
+
+The frame and sequence numbers are reset to zero every time you run
+Stage, so be careful to rename important frames before they are
+overwritten.
+
+<h3>Pausing and resuming the clock</h3>
+
+<p>The Clock/Pause menu item allows you to stop the simulation clock,
+freezing the world. Selecting this item again re-starts the clock.
+
+
+<h3>View options</h3>
+
+<p>The View menu allows you to toggle rendering of a 1m grid, to help
+you line up objects (View/Grid). You can control whether polygons are
+filled (View/Fill polygons); turning this off slightly improves
+graphics performance. The rest of the view menu contains options for
+rendering of data and configuration for each type of model, and a
+debug menu that enables visualization of some of the innards of Stage.
+
+*/
+
+#include "stage_internal.hh"
 #include <FL/fl_draw.H>
 #include <FL/fl_Box.H>
 #include <FL/Fl_Menu_Button.H>
@@ -19,20 +111,20 @@ static const char* MITEM_VIEW_TRAILS =     "View/Trails/Blocks";
 static const char* MITEM_VIEW_ARROWS =     "View/Trails/Arrows";
 
 // transform the current coordinate frame by the given pose
-void gl_coord_shift( double x, double y, double z, double a  )
+void Stg::gl_coord_shift( double x, double y, double z, double a  )
 {
   glTranslatef( x,y,z );
   glRotatef( RTOD(a), 0,0,1 );
 }
 
 // transform the current coordinate frame by the given pose
-void gl_pose_shift( stg_pose_t* pose )
+void Stg::gl_pose_shift( stg_pose_t* pose )
 {
   gl_coord_shift( pose->x, pose->y, pose->z, pose->a );
 }
 
 // TODO - this could be faster, but we don't draw a lot of text
-void gl_draw_string( float x, float y, float z, char *str ) 
+void Stg::gl_draw_string( float x, float y, float z, char *str ) 
 {  
   char *c;
   glRasterPos3f(x, y,z);

@@ -1,4 +1,4 @@
-#include "stage.hh"
+#include "stage_internal.hh"
 
 // todo - get rid of constants in code, so that these are just
 // defaults

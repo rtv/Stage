@@ -1,4 +1,4 @@
-#include "stage.hh"
+#include "stage_internal.hh"
 
 int key_gen( StgModel* mod, void* address )
 {

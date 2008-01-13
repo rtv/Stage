@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.24 2008-01-08 00:30:12 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.25 2008-01-13 22:55:47 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -12,6 +12,9 @@
 #include <string.h>
 
 #include "stage.hh"
+using namespace Stg;
+
+#include "config.h"
 
 double minfrontdistance = 0.750;
 double speed = 0.400;
@@ -33,7 +36,7 @@ typedef struct
 
 int main( int argc, char* argv[] )
 { 
-  printf( "%s benchmarker\n", stg_package_string() );
+  printf( "%s %s benchmarker\n", PACKAGE, VERSION );
 
   if( argc < 3 )
     {
@@ -61,25 +64,25 @@ int main( int argc, char* argv[] )
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
-       robots[i].laser = (StgModelLaser*)
-       robots[i].position->GetUnsubscribedModelOfType( "laser" );	 
-       assert(robots[i].laser);
-       robots[i].laser->Subscribe();
+//        robots[i].laser = (StgModelLaser*)
+//        robots[i].position->GetUnsubscribedModelOfType( "laser" );	 
+//        assert(robots[i].laser);
+//        robots[i].laser->Subscribe();
 
-       robots[i].fiducial = (StgModelFiducial*)
-	 robots[i].position->GetUnsubscribedModelOfType( "fiducial" );	 
-       assert(robots[i].fiducial);
-       robots[i].fiducial->Subscribe();
+//        robots[i].fiducial = (StgModelFiducial*)
+// 	 robots[i].position->GetUnsubscribedModelOfType( "fiducial" );	 
+//        assert(robots[i].fiducial);
+//        robots[i].fiducial->Subscribe();
        
        robots[i].ranger = (StgModelRanger*)
 	 robots[i].position->GetUnsubscribedModelOfType( "ranger" );
        assert(robots[i].ranger);
        robots[i].ranger->Subscribe();
 
-       robots[i].blobfinder = (StgModelBlobfinder*)
-	 robots[i].position->GetUnsubscribedModelOfType( "blobfinder" );
-       assert(robots[i].blobfinder);
-       robots[i].blobfinder->Subscribe();
+//        robots[i].blobfinder = (StgModelBlobfinder*)
+// 	 robots[i].position->GetUnsubscribedModelOfType( "blobfinder" );
+//        assert(robots[i].blobfinder);
+//        robots[i].blobfinder->Subscribe();
     }
   
   // start the clock
@@ -95,7 +98,7 @@ int main( int argc, char* argv[] )
 	  //continue;
 
 	  StgModelRanger* rgr = robots[i].ranger;
-	  
+ 	  
 	  if( rgr->samples == NULL )
 	    continue;
 	  
@@ -134,23 +137,23 @@ int main( int argc, char* argv[] )
 	    forward_speed = VSPEED;
 	  }
 	
-	// send a command to the robot
-	stg_velocity_t vel;
-	bzero(&vel,sizeof(vel));
-        vel.x = forward_speed;
-	vel.y = side_speed;
-	vel.z = 0;
-	vel.a = turn_speed;
+// 	// send a command to the robot
+// 	stg_velocity_t vel;
+// 	bzero(&vel,sizeof(vel));
+//         vel.x = forward_speed;
+// 	vel.y = side_speed;
+// 	vel.z = 0;
+// 	vel.a = turn_speed;
 	
 	     //printf( "robot %s [%.2f %.2f %.2f %.2f]\n",
 	     //robots[i].position->Token(), vel.x, vel.y, vel.z, vel.a );
 	     
-     uint32_t bcount=0;     
-     stg_blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );    
+	//  uint32_t bcount=0;     
+	//stg_blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );    
 
      //printf( "robot %s sees %u blobs\n", robots[i].blobfinder->Token(), bcount );	       
 
-       robots[i].position->SetSpeed( forward_speed, side_speed, turn_speed );
+	robots[i].position->SetSpeed( forward_speed, side_speed, turn_speed );
     }
   
 

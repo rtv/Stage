@@ -1,8 +1,4 @@
-/** @ingroup stage 
-    @{ 
-*/
-
-/** @ingroup StgModel
+/** @defgroup model
     
 The basic model simulates an object with basic properties; position,
 size, velocity, color, visibility to various sensors, etc. The basic
@@ -90,8 +86,6 @@ model
 
 */
 
-/** @} */  
-
 /*
   TODO
   
@@ -107,7 +101,7 @@ model
 #define _GNU_SOURCE
 
 //#define DEBUG
-#include "stage.hh"
+#include "stage_internal.hh"
 #include <limits.h> 
 
 // basic model
@@ -132,7 +126,6 @@ model
 #define STG_DEFAULT_MOD_OBSTACLERETURN true
 #define STG_DEFAULT_MOD_OUTLINE true
 #define STG_DEFAULT_MOD_RANGERRETURN true
-
 
 // constructor
 StgModel::StgModel( StgWorld* world,
@@ -160,9 +153,9 @@ StgModel::StgModel( StgWorld* world,
   StgAncestor* anc = parent ? (StgAncestor*)parent : (StgAncestor*)world;
 
   unsigned int cnt = anc->GetNumChildrenOfType( typestr );
-  char* buf = new char[STG_TOKEN_MAX];
+  char* buf = new char[TOKEN_MAX];
 
-  snprintf( buf, STG_TOKEN_MAX, "%s.%s:%d", 
+  snprintf( buf, TOKEN_MAX, "%s.%s:%d", 
 	    anc->Token(), typestr, cnt ); 
 
   this->token = strdup( buf );
@@ -174,8 +167,8 @@ StgModel::StgModel( StgWorld* world,
   anc->AddChild( this );
   world->AddModel( this );
   
-  memset( &pose, 0, sizeof(pose));
-  memset( &global_pose, 0, sizeof(global_pose));
+  bzero( &pose, sizeof(pose));
+  bzero( &global_pose, sizeof(global_pose));
   
   this->trail = g_array_new( false, false, sizeof(stg_trail_item_t) );
 
@@ -383,8 +376,7 @@ void StgModel::GlobalToLocal( stg_pose_t* pose )
   //  pose->x, pose->y, pose->a );
 
   // get model's global pose
-  stg_pose_t org;
-  GetGlobalPose( &org );
+  stg_pose_t org = GetGlobalPose();
 
   //printf( "g2l global origin %.2f %.2f %.2f\n",
   //  org.x, org.y, org.a );
@@ -454,28 +446,29 @@ bool StgModel::IsRelated( StgModel* mod2 )
 }
 
 // get the model's velocity in the global frame
-void StgModel::GetGlobalVelocity( stg_velocity_t* gv )
+stg_velocity_t StgModel::GetGlobalVelocity()
 {
-  stg_pose_t gpose;
-  this->GetGlobalPose( &gpose );
+  stg_pose_t gpose = GetGlobalPose();
   
   double cosa = cos( gpose.a );
   double sina = sin( gpose.a );
   
-  gv->x = velocity.x * cosa - velocity.y * sina;
-  gv->y = velocity.x * sina + velocity.y * cosa;
-  gv->a = velocity.a;
+  stg_velocity_t gv;
+  gv.x = velocity.x * cosa - velocity.y * sina;
+  gv.y = velocity.x * sina + velocity.y * cosa;
+  gv.a = velocity.a;
       
   //printf( "local velocity %.2f %.2f %.2f\nglobal velocity %.2f %.2f %.2f\n",
   //  mod->velocity.x, mod->velocity.y, mod->velocity.a,
   //  gvel->x, gvel->y, gvel->a );
+  
+  return gv;
 }
 
 // set the model's velocity in the global frame
 void StgModel::SetGlobalVelocity( stg_velocity_t* gv )
 {
-  stg_pose_t gpose;
-  this->GetGlobalPose( &gpose );
+  stg_pose_t gpose = GetGlobalPose();
   
   double cosa = cos( gpose.a );
   double sina = sin( gpose.a );
@@ -489,7 +482,7 @@ void StgModel::SetGlobalVelocity( stg_velocity_t* gv )
 }
 
 // get the model's position in the global frame
-void StgModel::GetGlobalPose( stg_pose_t* gpose )
+stg_pose_t StgModel::GetGlobalPose()
 { 
   //printf( "model %s global pose ", token );
 
@@ -500,7 +493,7 @@ void StgModel::GetGlobalPose( stg_pose_t* gpose )
       // find my parent's pose
       if( this->parent )
 	{
-	  parent->GetGlobalPose( &parent_pose );	  
+	  parent_pose = parent->GetGlobalPose();	  
 	  stg_pose_sum( &global_pose, &parent_pose, &pose );
 	  
 	  // we are on top of our parent
@@ -522,8 +515,7 @@ void StgModel::GetGlobalPose( stg_pose_t* gpose )
 // 		global_pose.z,
 // 		global_pose.a );
 
-
-  memcpy( gpose, &global_pose, sizeof(stg_pose_t));
+  return global_pose;
 }
     
   
@@ -535,8 +527,7 @@ void StgModel::LocalToGlobal( stg_pose_t* pose )
   stg_pose_t pz;
   memcpy( &pz, pose, sizeof(stg_pose_t));
   
-  stg_pose_t origin;   
-  this->GetGlobalPose( &origin );
+  stg_pose_t origin = GetGlobalPose();
   
   stg_pose_sum( pose, &origin, &pz );
 }
@@ -636,8 +627,7 @@ void StgModel::Print( char* prefix )
 
 const char* StgModel::PrintWithPose()
 {
-  stg_pose_t gpose;
-  GetGlobalPose( &gpose );
+  stg_pose_t gpose = GetGlobalPose();
   
   static char txt[256];  
   snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",  
@@ -695,8 +685,7 @@ void StgModel::DrawSelected()
  
   glTranslatef( pose.x, pose.y, pose.z );
 
-  stg_pose_t gpose;
-  GetGlobalPose(&gpose);
+  stg_pose_t gpose = GetGlobalPose();
   
   char buf[64];
   snprintf( buf, 63, "%s [%.2f,%.2f,%.2f]", token, gpose.x, gpose.y, RTOD(gpose.a) );
@@ -950,12 +939,6 @@ void StgModel::DrawGrid( void )
   PopColor();
 }
 
-void StgModel::GetVelocity( stg_velocity_t* dest )
-{
-  assert(dest);
-  memcpy( dest, &this->velocity, sizeof(stg_velocity_t));
-}
-
 bool velocity_is_nonzero( stg_velocity_t* v )
 {
   return( v->x || v->y || v->z || v->a );
@@ -1045,12 +1028,6 @@ void StgModel::AddToPose( stg_pose_t* pose )
 }
 
 
-void StgModel::GetGeom( stg_geom_t* dest )
-{
-  assert(dest);
-  memcpy( dest, &this->geom, sizeof(stg_geom_t));
-}
-
 void StgModel::SetGeom( stg_geom_t* geom )
 {
   //printf( "MODEL \"%s\" SET GEOM (%.2f %.2f %.2f)[%.2f %.2f]\n",
@@ -1110,7 +1087,7 @@ void StgModel::SetFiducialKey( int key )
   CallCallbacks( &this->fiducial_key );
 }
 
-void StgModel::SetLaserReturn( int val )
+void StgModel::SetLaserReturn( stg_laser_return_t val )
 {
   this->laser_return = val;
   CallCallbacks( &this->laser_return );

@@ -7,27 +7,34 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.18 $
+ //  $Revision: 1.1.2.19 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
  //#define DEBUG 
 
  #include <sys/time.h>
- #include "stage.hh"
+ #include "stage_internal.hh"
 
- #define LASER_FILLED 1
+// DEFAULT PARAMETERS FOR LASER MODEL
+static const bool DEFAULT_LASER_FILLED = true;
+static const stg_watts_t DEFAULT_LASER_WATTS = 17.5; // laser power consumption
+static const stg_meters_t DEFAULT_LASER_SIZEX = 0.15;
+static const stg_meters_t DEFAULT_LASER_SIZEY = 0.15;
+static const stg_meters_t DEFAULT_LASER_SIZEZ = 0.2;
+static const stg_meters_t DEFAULT_LASER_MINRANGE = 0.0;
+static const stg_meters_t DEFAULT_LASER_MAXRANGE = 8.0;
+static const stg_radians_t DEFAULT_LASER_FOV = M_PI;
+static const unsigned int DEFAULT_LASER_SAMPLES = 180;
+static const stg_msec_t DEFAULT_LASER_INTERVAL_MS = 100;
+static const unsigned int DEFAULT_LASER_RESOLUTION = 1;
 
- #define STG_DEFAULT_LASER_WATTS 17.5 // laser power consumption
- #define STG_DEFAULT_LASER_SIZEX 0.15
- #define STG_DEFAULT_LASER_SIZEY 0.15
- #define STG_DEFAULT_LASER_SIZEZ 0.2
- #define STG_DEFAULT_LASER_MINRANGE 0.0
- #define STG_DEFAULT_LASER_MAXRANGE 8.0
- #define STG_DEFAULT_LASER_FOV M_PI
- #define STG_DEFAULT_LASER_SAMPLES 180
- #define STG_DEFAULT_LASER_INTERVAL_MS 100
- #define STG_DEFAULT_LASER_RESOLUTION 1
+static const char LASER_GEOM_COLOR[] = "blue";
+// todo
+//static const char LASER_BRIGHT_COLOR[] = "blue";
+//static const char LASER_CFG_COLOR[] = "light steel blue";
+//static const char LASER_COLOR[] = "steel blue";
+//static const char LASER_FILL_COLOR[] = "powder blue";
 
  /**
     @ingroup model
@@ -77,24 +84,24 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 		id, typestr );
   
   // sensible laser defaults 
-  interval = 1e3 * STG_DEFAULT_LASER_INTERVAL_MS; 
+  interval = 1e3 * DEFAULT_LASER_INTERVAL_MS; 
   laser_return = LaserVisible;
   
   stg_geom_t geom; 
   memset( &geom, 0, sizeof(geom));
-  geom.size.x = STG_DEFAULT_LASER_SIZEX;
-  geom.size.y = STG_DEFAULT_LASER_SIZEY;
-  geom.size.z = STG_DEFAULT_LASER_SIZEZ;
+  geom.size.x = DEFAULT_LASER_SIZEX;
+  geom.size.y = DEFAULT_LASER_SIZEY;
+  geom.size.z = DEFAULT_LASER_SIZEZ;
   SetGeom( &geom );
   
   // set default color
-  SetColor( stg_lookup_color(STG_LASER_GEOM_COLOR));
+  SetColor( stg_lookup_color(LASER_GEOM_COLOR));
   
-  range_min    = STG_DEFAULT_LASER_MINRANGE;
-  range_max    = STG_DEFAULT_LASER_MAXRANGE;
-  fov          = STG_DEFAULT_LASER_FOV;
-  sample_count = STG_DEFAULT_LASER_SAMPLES;  
-  resolution = STG_DEFAULT_LASER_RESOLUTION;
+  range_min    = DEFAULT_LASER_MINRANGE;
+  range_max    = DEFAULT_LASER_MAXRANGE;
+  fov          = DEFAULT_LASER_FOV;
+  sample_count = DEFAULT_LASER_SAMPLES;  
+  resolution = DEFAULT_LASER_RESOLUTION;
 
   // don't allocate sample buffer memory until Startup()
   samples = NULL;
@@ -158,7 +165,7 @@ bool laser_raytrace_match( StgBlock* testblock,
 
   if( (testblock->Model() != finder) &&
       testblock->IntersectGlobalZ( z ) &&
-      (testblock->Model()->LaserReturn() > 0 ) )
+      (testblock->Model()->GetLaserReturn() > 0 ) )
     return true; // match!
 
   return false; // no match
@@ -177,8 +184,7 @@ void StgModelLaser::Update( void )
   double bearing = -fov/2.0;
   double sample_incr = fov / (double)(sample_count-1);  
   
-  stg_pose_t gpose;
-  GetGlobalPose( &gpose );
+  stg_pose_t gpose = GetGlobalPose();
 
   stg_meters_t zscan = gpose.z + geom.size.z /2.0;
 
@@ -195,7 +201,7 @@ void StgModelLaser::Update( void )
 
       // if we hit a model and it reflects brightly, we set
       // reflectance high, else low
-      if( sample.block && ( sample.block->Model()->LaserReturn() >= LaserBright ) )	
+      if( sample.block && ( sample.block->Model()->GetLaserReturn() >= LaserBright ) )	
 	samples[t].reflectance = 1;
       else
 	samples[t].reflectance = 0;
@@ -240,7 +246,7 @@ void StgModelLaser::Startup(  void )
   samples = new stg_laser_sample_t[sample_count];
 
   // start consuming power
-  SetWatts( STG_DEFAULT_LASER_WATTS );
+  SetWatts( DEFAULT_LASER_WATTS );
 }
 
 void StgModelLaser::Shutdown( void )

@@ -1,6 +1,5 @@
 //#define DEBUG 1
-#include "stage.hh"
-
+#include "stage_internal.hh"
 
 /** Create a new block. A model's body is a list of these
     blocks. The point data is copied, so pts can safely be freed
@@ -36,7 +35,7 @@ StgBlock::~StgBlock()
   g_array_free( rendered_points, TRUE );
 }
 
-void stg_block_list_destroy( GList* list )
+void Stg::stg_block_list_destroy( GList* list )
 {
   GList* it;
   for( it=list; it; it=it->next )
@@ -84,13 +83,8 @@ void StgBlock::DrawFootPrint()
 
 void StgBlock::Draw()
 {
-  // draw filled color polygons
-  
-  stg_color_t color;
-  if( inherit_color )
-    mod->GetColor( &color );
-  else
-    color = color;
+  // draw filled color polygons  
+  stg_color_t color = Color();
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
   PushColor( color );
@@ -117,13 +111,8 @@ void StgBlock::Draw()
 
 void StgBlock::Draw2D()
 {
-  // draw filled color polygons
-  
-  stg_color_t color;
-  if( inherit_color )
-    mod->GetColor( &color );
-  else
-    color = color;
+  // draw filled color polygons  
+  stg_color_t color = Color();
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
   PushColor( color );

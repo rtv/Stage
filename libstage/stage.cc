@@ -16,25 +16,11 @@
 
 //#define DEBUG
 
-#include "stage.hh"
+#include "stage_internal.hh"
 #include "config.h" // results of autoconf's system configuration tests
 
-GHashTable* global_typetable = NULL;
-GHashTable* stg_create_typetable( void );
 
-//const char* stg_version
-
-const char* stg_package_string( void )
-{
-  return PACKAGE_STRING;
-}
-
-const char* stg_version_string( void )
-{
-  return VERSION;
-}
-
-void stg_print_err( const char* err )
+void Stg::stg_print_err( const char* err )
 {
   printf( "Stage error: %s\n", err );
   //_stg_quit = TRUE;
@@ -45,7 +31,7 @@ void stg_print_err( const char* err )
     Call the function for every voxel, passing in the current voxel
     coordinates followed by the two arguments. Adapted from Graphics
     Gems IV, algorithm by Cohen & Kaufman 1991 */
-int stg_line_3d( int32_t x, int32_t y, int32_t z,
+int Stg::stg_line_3d( int32_t x, int32_t y, int32_t z,
 		 int32_t dx, int32_t dy, int32_t dz,
 		 stg_line3d_func_t visit_voxel,
 		 void* arg )
@@ -88,7 +74,7 @@ int stg_line_3d( int32_t x, int32_t y, int32_t z,
   return FALSE; // hit nothing (leave vars not set)
 }
 
-int stg_polygon_3d( stg_point_int_t* pts, unsigned int pt_count,
+int Stg::stg_polygon_3d( stg_point_int_t* pts, unsigned int pt_count,
 		    stg_line3d_func_t visit_voxel,
 		    void* arg )
 {
@@ -110,7 +96,7 @@ int stg_polygon_3d( stg_point_int_t* pts, unsigned int pt_count,
   return FALSE;
 }
 
-void stg_print_geom( stg_geom_t* geom )
+void Stg::stg_print_geom( stg_geom_t* geom )
 {
   printf( "geom pose: (%.2f,%.2f,%.2f) size: [%.2f,%.2f]\n",
 	  geom->pose.x,
@@ -121,19 +107,19 @@ void stg_print_geom( stg_geom_t* geom )
 }
 
 
-void stg_print_pose( stg_pose_t* pose )
+void Stg::stg_print_pose( stg_pose_t* pose )
 {
   printf( "pose [x:%.3f y:%.3f a:%.3f]\n",
 	  pose->x, pose->y, pose->a );
 }
 
-void stg_print_velocity( stg_velocity_t* vel )
+void Stg::stg_print_velocity( stg_velocity_t* vel )
 {
   printf( "velocity [x:%.3f y:%.3f a:%.3f]\n",
 	  vel->x, vel->y, vel->a );
 }
 
-stg_msec_t stg_realtime( void )
+stg_msec_t Stg::stg_realtime( void )
 {
   struct timeval tv;
   gettimeofday( &tv, NULL );  
@@ -141,7 +127,7 @@ stg_msec_t stg_realtime( void )
   return timenow;
 }
 
-stg_msec_t stg_realtime_since_start( void )
+stg_msec_t Stg::stg_realtime_since_start( void )
 {
   static stg_msec_t starttime = 0;  
   stg_msec_t timenow = stg_realtime();
@@ -156,7 +142,7 @@ stg_msec_t stg_realtime_since_start( void )
 // Look up the color in a database.  (i.e. transform color name to
 // color value).  If the color is not found in the database, a bright
 // red color will be returned instead.
-stg_color_t stg_lookup_color(const char *name)
+stg_color_t Stg::stg_lookup_color(const char *name)
 {
   if( name == NULL ) // no string?
     return 0; // black
@@ -237,7 +223,7 @@ stg_color_t stg_lookup_color(const char *name)
 
 //////////////////////////////////////////////////////////////////////////
 // scale an array of rectangles so they fit in a unit square
-void stg_rotrects_normalize( stg_rotrect_t* rects, int num )
+void Stg::stg_rotrects_normalize( stg_rotrect_t* rects, int num )
 {
   // assuming the rectangles fit in a square +/- one billion units
   double minx, miny, maxx, maxy;
@@ -282,7 +268,7 @@ void stg_rotrects_normalize( stg_rotrect_t* rects, int num )
 }	
 
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
-void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
+void Stg::stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
 {
   double cosa = cos(p1->a);
   double sina = sin(p1->a);
@@ -355,7 +341,7 @@ static gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y, int threshold )
 
 
 
-int stg_rotrects_from_image_file( const char* filename, 
+int Stg::stg_rotrects_from_image_file( const char* filename, 
 					 stg_rotrect_t** rects, 
 					 unsigned int* rect_count,
 					 unsigned int* widthp, 
@@ -480,26 +466,26 @@ int stg_rotrects_from_image_file( const char* filename,
   return 0; // ok
 }
 
-void print_pointer( void* p, char* separator )
-{
-  printf( "%p%s", p, separator) ;
-}
+// void Stg::print_pointer( void* p, char* separator )
+// {
+//   printf( "%p%s", p, separator) ;
+// }
 
 
 // POINTS -----------------------------------------------------------
 
-stg_point_t* stg_points_create( size_t count )
+stg_point_t* Stg::stg_points_create( size_t count )
 {
   return( (stg_point_t*)g_new( stg_point_t, count ));
 }
 
-void stg_points_destroy( stg_point_t* pts )
+void Stg::stg_points_destroy( stg_point_t* pts )
 {
   g_free( pts );
 }
 
 
-stg_point_t* stg_unit_square_points_create( void )
+stg_point_t* Stg::stg_unit_square_points_create( void )
 {
   stg_point_t * pts = stg_points_create( 4 );
   
@@ -518,7 +504,7 @@ stg_point_t* stg_unit_square_points_create( void )
 
 // CALLBACKS -------------------------------------------------------
 
-stg_cb_t* cb_create( stg_model_callback_t callback, void* arg )
+stg_cb_t* Stg::cb_create( stg_model_callback_t callback, void* arg )
 {
   stg_cb_t* cb = (stg_cb_t*)g_new( stg_cb_t, 1 );
   cb->callback = callback;
@@ -526,13 +512,13 @@ stg_cb_t* cb_create( stg_model_callback_t callback, void* arg )
   return cb;
 }
 
-void cb_destroy( stg_cb_t* cb )
+void Stg::cb_destroy( stg_cb_t* cb )
 {
   free( cb );
 }
 
 // return a value based on val, but limited minval <= val >= maxval  
-double constrain( double val, double minval, double maxval )
+double Stg::constrain( double val, double minval, double maxval )
 {
   if( val < minval )
     return minval;
@@ -544,7 +530,7 @@ double constrain( double val, double minval, double maxval )
 }
 
 
-stg_color_t stg_color_pack( double r, double g, double b, double a )
+stg_color_t Stg::stg_color_pack( double r, double g, double b, double a )
 {
   stg_color_t col=0;
   col += (stg_color_t)((1.0-a)*256.0)<<24;
@@ -555,7 +541,7 @@ stg_color_t stg_color_pack( double r, double g, double b, double a )
   return col;
 }
 
-void stg_color_unpack( stg_color_t col, 
+void Stg::stg_color_unpack( stg_color_t col, 
 		       double* r, double* g, double* b, double* a )
 {
   if(a) *a = 1.0 - (((col & 0xFF000000) >> 24) / 256.0);

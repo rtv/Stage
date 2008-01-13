@@ -1,4 +1,4 @@
-#include "stage.hh"
+#include "stage_internal.hh"
 
 GlColorStack::GlColorStack()
 {

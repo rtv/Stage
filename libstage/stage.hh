@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.1.2.24 2008-01-08 00:30:12 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.1.2.25 2008-01-13 22:55:47 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -36,17 +36,24 @@
   library
 */
 
+/**
+\defgroup libstage libstage: the Stage Robot Simulation Library
+
+Here is where I describe libstage for the developer.
+
+*/
+/*@{*/
+
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
-#include <sys/types.h>
-#include <sys/time.h>
-#include <glib.h> // we use GLib's data structures extensively
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <glib.h>
+#include <glib.h> // we use GLib's data structures extensively
+#include <sys/types.h>
+#include <sys/time.h>
 
 #ifdef __APPLE__
 #include <OpenGl/gl.h>
@@ -56,50 +63,59 @@
 #include <GL/glu.h>
 #endif
 
-// todo: consider moving these out
-#include "worldfile.hh"
-#include "colors.h"
+// FLTK Gui includes
+#include <FL/Fl.H>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_Menu_Button.H>
+#include <FL/Fl_Gl_Window.H>
+#include <FL/gl.h>
+#include <Fl/Fl_Box.H>
 
-#define STG_STRING_AUTHORS { \
-    "Richard Vaughan",	     \
-    "Brian Gerkey",	     \
-    "Andrew Howard",	     \
-    "Reed Hedges",	     \
-    "Pooya Karimian",	     \
-    "and contributors",      \
-      NULL }
+#include "worldfile.hh" // StgWorld has a CWorldFile member
+
+namespace Stg 
+{
+
+  const char COPYRIGHT[] =				       
+    "Copyright Richard Vaughan and contributors 2000-2008";
   
-#define STG_STRING_COPYRIGHT "Copyright the Authors 2000-2007"
-#define STG_STRING_WEBSITE "http://playerstage.org"
-#define STG_STRING_DESCRIPTION "Robot simulation library\nPart of the Player Project"
-#define STG_STRING_LICENSE "Stage robot simulation library\n"\
-    "Copyright (C) 2000-2007 Richard Vaughan and contributors\n"\
-    "Part of the Player Project [http://playerstage.org]\n"\
-    "\n"\
-    "This program is free software; you can redistribute it and/or\n"\
-    "modify it under the terms of the GNU General Public License\n"\
-    "as published by the Free Software Foundation; either version 2\n"\
-    "of the License, or (at your option) any later version.\n"\
-    "\n"\
-    "This program is distributed in the hope that it will be useful,\n"\
-    "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"\
-    "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"\
-    "GNU General Public License for more details.\n"\
-    "\n"\
-    "You should have received a copy of the GNU General Public License\n"\
-    "along with this program; if not, write to the Free Software\n"\
-    "Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.\n"\
-    "\n"\
-    "The text of the license may also be available online at\n"\
-    "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html\n"
-
-/** Returns a string indentifying the package version number, e.g. "3.0.0" */
-const char* stg_version_string();
-const char* stg_package_string();
-
-
+  const char AUTHORS[] =					
+    "Richard Vaughan, Brian Gerkey, Andrew Howard, Reed Hedges, Pooya Karimian and contributors.";
+  
+  const char WEBSITE[] = "http://playerstage.org";
+  
+  const char DESCRIPTION[] =				       
+    "Robot simulation library\nPart of the Player Project";
+  
+  const char LICENSE[] = 
+    "Stage robot simulation library\n"					\
+    "Copyright (C) 2000-2008 Richard Vaughan and contributors\n"	\
+    "Part of the Player Project [http://playerstage.org]\n"		\
+    "\n"								\
+    "This program is free software; you can redistribute it and/or\n"	\
+    "modify it under the terms of the GNU General Public License\n"	\
+    "as published by the Free Software Foundation; either version 2\n"	\
+    "of the License, or (at your option) any later version.\n"		\
+    "\n"								\
+    "This program is distributed in the hope that it will be useful,\n"	\
+    "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"	\
+    "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"	\
+    "GNU General Public License for more details.\n"			\
+    "\n"								\
+    "You should have received a copy of the GNU General Public License\n" \
+    "along with this program; if not, write to the Free Software\n"	\
+    "Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.\n" \
+    "\n"								\
+    "The text of the license may also be available online at\n"		\
+    "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html\n";
+  
+  const uint32_t TOKEN_MAX = 64;
+  
 // forward declare
-  class StgModel;
+class StgModel;
 
 typedef enum {
   STG_IMAGE_FORMAT_PNG,
@@ -108,10 +124,8 @@ typedef enum {
 
 /** any integer value other than this is a valid fiducial ID 
  */
-#define FiducialNone 0
+enum { FiducialNone = 0 };
 
-/** Limit the length of the character strings that identify models */
-#define STG_TOKEN_MAX 64
 
 /** uniquely identify a model */
 typedef uint32_t stg_id_t;
@@ -380,18 +394,18 @@ typedef enum {
   STG_D_DRAW_POINTS,
   STG_D_DRAW_LINES,
   STG_D_DRAW_LINE_STRIP,
-    STG_D_DRAW_LINE_LOOP,
-    STG_D_DRAW_TRIANGLES,
-    STG_D_DRAW_TRIANGLE_STRIP,
-    STG_D_DRAW_TRIANGLE_FAN,
-    STG_D_DRAW_QUADS,
-    STG_D_DRAW_QUAD_STRIP,
-    STG_D_DRAW_POLYGON,
-    STG_D_PUSH,
-    STG_D_POP,
-    STG_D_ROTATE,
-    STG_D_TRANSLATE,
-  } stg_d_type_t;
+  STG_D_DRAW_LINE_LOOP,
+  STG_D_DRAW_TRIANGLES,
+  STG_D_DRAW_TRIANGLE_STRIP,
+  STG_D_DRAW_TRIANGLE_FAN,
+  STG_D_DRAW_QUADS,
+  STG_D_DRAW_QUAD_STRIP,
+  STG_D_DRAW_POLYGON,
+  STG_D_PUSH,
+  STG_D_POP,
+  STG_D_ROTATE,
+  STG_D_TRANSLATE,
+} stg_d_type_t;
   
   /** the start of all stg_d structures looks like this */
   typedef struct stg_d_hdr
@@ -766,6 +780,12 @@ the worldfile c++ code */
 class StgBlock;
 class StgModel;
 
+
+stg_msec_t stg_realtime();
+stg_msec_t stg_realtime_since_start( void );
+
+
+
 // ANCESTOR CLASS
 
   /** Define a callback function type that can be attached to a
@@ -793,7 +813,7 @@ public:
   
   virtual void AddChild( StgModel* mod );
   virtual void RemoveChild( StgModel* mod );
-  virtual void GetGlobalPose( stg_pose_t* gpose );  
+  virtual stg_pose_t GetGlobalPose();  
   
   const char* Token()
   { return this->token; }
@@ -1042,7 +1062,7 @@ protected:
   stg_color_t color;
   stg_kg_t mass;
   stg_geom_t geom;
-  int laser_return;
+  stg_laser_return_t laser_return;
   int obstacle_return;
   int blob_return;
   int gripper_return;
@@ -1228,8 +1248,8 @@ public:
   { return(  parent ? parent->Root() : this ); }
   
   bool ObstacleReturn(){ return obstacle_return; }  
-  int LaserReturn(){ return laser_return; }
-  int RangerReturn(){ return ranger_return; }  
+  stg_laser_return_t GetLaserReturn(){ return laser_return; }
+  int GetRangerReturn(){ return ranger_return; }  
   int FiducialReturn(){ return fiducial_return; }
   int FiducialKey(){ return fiducial_key; }
 
@@ -1240,11 +1260,11 @@ public:
 
   bool IsRelated( StgModel* mod2 );
 
-    /** get the pose of a model in the global CS */
-  void GetGlobalPose(  stg_pose_t* pose );
+  /** get the pose of a model in the global CS */
+  stg_pose_t GetGlobalPose();
 
   /** get the velocity of a model in the global CS */
-  void GetGlobalVelocity(  stg_velocity_t* gvel );
+  stg_velocity_t GetGlobalVelocity();
 
   /* set the velocity of a model in the global coordinate system */
   void SetGlobalVelocity(  stg_velocity_t* gvel );
@@ -1280,40 +1300,32 @@ public:
       matching key can detect this model as a fiducial. */
   void SetFiducialKey(  int key );
   
-  void GetColor( stg_color_t* col )
-  { if(color) memcpy( col, &this->color, sizeof(stg_color_t)); }
-
-  stg_color_t Color(){ return color; }
+  stg_color_t GetColor(){ return color; }
   
-  void GetLaserReturn( int* val )
-  { if(val) memcpy( val, &this->laser_return, sizeof(int)); }
+  //  stg_laser_return_t GetLaserReturn(){ return laser_return; }
   
   /** Change a model's parent - experimental*/
   int SetParent( StgModel* newparent);
   
   /** Get a model's geometry - it's size and local pose (offset from
       origin in local coords) */
-  void GetGeom(  stg_geom_t* dest );
-  /** Get a model's geometry - it's size and local pose (offset from
-      origin in local coords) */
-  stg_geom_t Geom(){ return geom; };
+  stg_geom_t GetGeom(){ return geom; }
 
   /** Get the pose of a model in its parent's coordinate system  */
   void GetPose(  stg_pose_t* dest );
+
   /** Get the pose of a model in its parent's coordinate system  */
-  stg_pose_t Pose(){ return pose; }
+  stg_pose_t GetPose(){ return pose; }
 
   /** Get a model's velocity (in its local reference frame) */
-  void GetVelocity(  stg_velocity_t* dest );
-  /** Get a model's velocity (in its local reference frame) */
-  stg_velocity_t Velocity(){ return velocity; }
+  stg_velocity_t GetVelocity(){ return velocity; }
 
   // guess what these do?
   void SetColor( stg_color_t col );
   void SetMass( stg_kg_t mass );
   void SetStall( stg_bool_t stall );
   void SetGripperReturn( int val );
-  void SetLaserReturn( int val );
+  void SetLaserReturn( stg_laser_return_t val );
   void SetObstacleReturn( int val );
   void SetBlobReturn( int val );
   void SetRangerReturn( int val );
@@ -1461,7 +1473,7 @@ public:
   { return( z >= global_zmin &&  z < global_zmax ); }
   
   stg_color_t Color()
-  { return( inherit_color ? mod->Color() : color ); }
+  { return( inherit_color ? mod->GetColor() : color ); }
 
 private:
   stg_point_t* pts; //< points defining a polygon
@@ -1518,17 +1530,6 @@ class GlColorStack
 
 
 /* FLTK gui code */
-
-#include <FL/Fl.H>
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Value_Slider.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Menu_Button.H>
-#include <FL/Fl_Gl_Window.H>
-#include <FL/gl.h>
-#include <Fl/Fl_Box.H>
-
 class StgCanvas : public Fl_Gl_Window
 {
   friend class StgWorldGui; // allow access to private members
@@ -1572,19 +1573,16 @@ public:
   inline void PushColor( stg_color_t col )
   { colorstack.Push( col ); } 
   
-  inline void PushColor( double r, double g, double b, double a )
+  void PushColor( double r, double g, double b, double a )
   { colorstack.Push( r,g,b,a ); }
   
-  inline void PopColor()
-  { colorstack.Pop(); } 
+   void PopColor(){ colorstack.Pop(); } 
   
   void InvertView( uint32_t invertflags );
 
-  uint32_t GetShowFlags()
-  { return showflags; };
-  
-  void SetShowFlags( uint32_t flags )
-  { showflags = flags; };
+  uint32_t GetShowFlags(){ return showflags; }
+
+  void SetShowFlags( uint32_t flags ){ showflags = flags; }
 
   static void TimerCallback( StgCanvas* canvas );
 };
@@ -1803,43 +1801,6 @@ public:
   } stg_ptz_config_t;
   
   
-// SCANNER MODEL --------------------------------------------------------
-  
-
-// typedef struct
-// {
-//   uint32_t sample_count;
-//   uint32_t resolution;
-//   stg_pose_t pose;
-//   stg_range_bounds_t range_bounds;
-//   stg_radians_t fov;
-//   stg_block_match_func_t func; ///< block visibility predicate
-//   void* arg; ///< argument passed to the block match predicate
-// } stg_scanner_cfg_t;
-
-// class StgScanner 
-// {
-// protected:
-
-//   stg_scanner_sample_t* samples;
-//   stg_scanner_cfg_t cfg;
-//   StgModel* model;
-
-// public:
-//   StgScanner();
-//   ~StgScanner();
-  
-//   stg_scanner_sample_t* Scan( StgModel uint32_t* count );
-//   stg_scanner_sample_t* LastScan( uint32_t* count );  
-  
-//   void Load( CWorldfile* wf, int section );  
-//   void Save( CWorldfile* wf, int section );  
-//   void Visualize();
-  
-//   void GetConfig( stg_scanner_cfg_t* cfg );  
-//   void SetConfig( stg_scanner_cfg_t* cfg );
-//  };
-
 // LASER MODEL --------------------------------------------------------
   
   /** laser sample packet
@@ -2233,25 +2194,18 @@ public:
   virtual void Load();
 
   /** Set the current pose estimate.*/
-  void SetOdom( stg_pose_t* odom );
+  void SetOdom( stg_pose_t odom );
   
-  /** Set the goal for the position device. If member control_mode ==
-      STG_POSITION_CONTROL_VELOCITY, these are x,y, and rotation
-      velocities. If control_mode == STG_POSITION_CONTROL_POSITION,
-      [x,y,a] defines a 2D position and heading goal to achieve. */
-  void SetSpeed( double x, double y, double a ) 
-  { 
-    control_mode = STG_POSITION_CONTROL_VELOCITY;
-    goal.x = x; goal.y = y; goal.z = 0; goal.a = a; 
-  }  
+  /** Sets the control_mode to STG_POSITION_CONTROL_VELOCITY and sets
+      the goal velocity. */
+  void SetSpeed( double x, double y, double a ); 
+  void SetSpeed( stg_velocity_t vel );
 
-  //foo
-  void GoTo( double x, double y, double a ) 
-  {
-    control_mode = STG_POSITION_CONTROL_POSITION;
-    goal.x = x; goal.y = y; goal.z = 0; goal.a = a; 
-  }  
-
+  /** Sets the control mode to STG_POSITION_CONTROL_POSITION and sets
+      the goal pose */
+  void GoTo( double x, double y, double a );
+  void GoTo( stg_pose_t pose );
+  
   // localization state
   stg_pose_t est_pose; ///< position estimate in local coordinates
   stg_pose_t est_pose_error; ///< estimated error in position estimate
@@ -2269,5 +2223,9 @@ public:
 
 };
 
+
+}; // end namespace stg
+
+/*@}*/
 
 #endif

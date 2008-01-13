@@ -2,11 +2,9 @@
 #include <limits.h> 
 #include <libgen.h> // for dirname()
 #include <string.h>
-#include "stage.hh"
+#include "stage_internal.hh"
 
 //#define DEBUG 1
-
-#include "stage.hh"
 
 void StgModel::Load( void )
 {  
@@ -41,8 +39,7 @@ void StgModel::Load( void )
 
   if( wf->PropertyExists( this->id, "origin" ) )
     {
-      stg_geom_t geom;
-      GetGeom( &geom );
+      stg_geom_t geom = GetGeom();
       geom.pose.x = wf->ReadTupleLength(this->id, "origin", 0, geom.pose.x );
       geom.pose.y = wf->ReadTupleLength(this->id, "origin", 1, geom.pose.y );
       geom.pose.a =  wf->ReadTupleAngle(this->id, "origin", 2, geom.pose.a );
@@ -51,8 +48,7 @@ void StgModel::Load( void )
 
   if( wf->PropertyExists( this->id, "origin4" ) )
     {
-      stg_geom_t geom;
-      GetGeom( &geom );
+      stg_geom_t geom = GetGeom();
       geom.pose.x = wf->ReadTupleLength(this->id, "origin4", 0, geom.pose.x );
       geom.pose.y = wf->ReadTupleLength(this->id, "origin4", 1, geom.pose.y );
       geom.pose.z = wf->ReadTupleLength(this->id, "origin4", 2, geom.pose.z );
@@ -62,8 +58,7 @@ void StgModel::Load( void )
   
   if( wf->PropertyExists( this->id, "size" ) )
     {
-      stg_geom_t geom;
-      GetGeom( &geom );
+      stg_geom_t geom = GetGeom();
       geom.size.x = wf->ReadTupleLength(this->id, "size", 0, geom.size.x );
       geom.size.y = wf->ReadTupleLength(this->id, "size", 1, geom.size.y );
       this->SetGeom( &geom );
@@ -71,8 +66,7 @@ void StgModel::Load( void )
 
   if( wf->PropertyExists( this->id, "size3" ) )
     {
-      stg_geom_t geom;
-      GetGeom( &geom );
+      stg_geom_t geom = GetGeom();
       geom.size.x = wf->ReadTupleLength(this->id, "size3", 0, geom.size.x );
       geom.size.y = wf->ReadTupleLength(this->id, "size3", 1, geom.size.y );
       geom.size.z = wf->ReadTupleLength(this->id, "size3", 2, geom.size.z );      
@@ -81,8 +75,7 @@ void StgModel::Load( void )
 
   if( wf->PropertyExists( this->id, "pose" ))
     {
-      stg_pose_t pose;
-      GetPose( &pose );
+      stg_pose_t pose = GetPose();
       pose.x = wf->ReadTupleLength(this->id, "pose", 0, pose.x );
       pose.y = wf->ReadTupleLength(this->id, "pose", 1, pose.y ); 
       pose.a =  wf->ReadTupleAngle(this->id, "pose", 2, pose.a );
@@ -91,8 +84,7 @@ void StgModel::Load( void )
   
   if( wf->PropertyExists( this->id, "pose4" ))
     {
-      stg_pose_t pose;
-      GetPose( &pose );
+      stg_pose_t pose = GetPose();
       pose.x = wf->ReadTupleLength(this->id, "pose4", 0, pose.x );
       pose.y = wf->ReadTupleLength(this->id, "pose4", 1, pose.y ); 
       pose.z = wf->ReadTupleLength(this->id, "pose4", 2, pose.z ); 
@@ -103,8 +95,7 @@ void StgModel::Load( void )
 
   if( wf->PropertyExists( this->id, "velocity" ))
     {
-      stg_velocity_t vel;
-      GetVelocity( &vel );
+      stg_velocity_t vel = GetVelocity();
       vel.x = wf->ReadTupleLength(this->id, "velocity", 0, vel.x );
       vel.y = wf->ReadTupleLength(this->id, "velocity", 1, vel.y );
       vel.a = wf->ReadTupleAngle(this->id, "velocity", 3,  vel.a );      
@@ -113,8 +104,7 @@ void StgModel::Load( void )
 
   if( wf->PropertyExists( this->id, "velocity4" ))
     {
-      stg_velocity_t vel;
-      GetVelocity( &vel );
+      stg_velocity_t vel = GetVelocity();
       vel.x = wf->ReadTupleLength(this->id, "velocity4", 0, vel.x );
       vel.y = wf->ReadTupleLength(this->id, "velocity4", 1, vel.y );
       vel.z = wf->ReadTupleLength(this->id, "velocity4", 2, vel.z );
@@ -304,7 +294,7 @@ void StgModel::Load( void )
     this->SetBlobReturn( wf->ReadInt( this->id, "blob_return", this->blob_return ));
   
   if( wf->PropertyExists( this->id, "laser_return" ))
-    this->SetLaserReturn( wf->ReadInt(this->id, "laser_return", this->laser_return ));
+    this->SetLaserReturn( (stg_laser_return_t)wf->ReadInt(this->id, "laser_return", this->laser_return ));
   
   if( wf->PropertyExists( this->id, "gripper_return" ))
     this->SetGripperReturn( wf->ReadInt( this->id, "gripper_return", this->gripper_return ));

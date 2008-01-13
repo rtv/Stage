@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.1.2.4 2007-12-24 10:50:45 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.1.2.5 2008-01-13 22:55:47 rtv Exp $
  */
 
 #include <assert.h>
@@ -40,8 +40,7 @@
 //#define DEBUG
 
 #include "replace.h" // for dirname(3)
-//#include "stage_internal.h"
-#include "stage.hh"
+#include "stage_internal.hh"
 #include "worldfile.hh"
 
 // the isblank() macro is not standard - it's a GNU extension

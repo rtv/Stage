@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_fiducial.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,7 +15,7 @@
 
 #include <assert.h>
 #include <math.h>
-#include "stage.hh"
+#include "stage_internal.hh"
 
 #define STG_DEFAULT_FIDUCIAL_RANGEMIN 0
 #define STG_DEFAULT_FIDUCIAL_RANGEMAXID 5
@@ -118,12 +118,10 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
       return;
     }
 
-  stg_pose_t mypose;
-  this->GetGlobalPose( &mypose );
+  stg_pose_t mypose = this->GetGlobalPose();
 
   // are we within range?
-  stg_pose_t hispose;
-  him->GetGlobalPose( &hispose );  
+  stg_pose_t hispose = him->GetGlobalPose();  
   double dx = hispose.x - mypose.x;
   double dy = hispose.y - mypose.y;  
   double range = hypot( dy, dx );
@@ -175,8 +173,7 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
   // if it was him, we can see him
   if( hitmod == him )
     {
-      stg_geom_t hisgeom;
-      him->GetGeom( &hisgeom );
+      stg_geom_t hisgeom = him->GetGeom();
       
       // record where we saw him and what he looked like
       stg_fiducial_t fid;      

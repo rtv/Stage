@@ -1,10 +1,10 @@
-#include "stage.hh"
+#include "stage_internal.hh"
 
 // ******************************
 // Register new model types here
 // Each entry maps a worldfile keyword onto a model constructor wrapper
 
-stg_typetable_entry_t typetable[] = {
+static stg_typetable_entry_t typearray[] = {
   { "model",      StgModel::Create },
   { "laser",      StgModelLaser::Create },
   { "position",   StgModelPosition::Create },
@@ -15,13 +15,12 @@ stg_typetable_entry_t typetable[] = {
 };
 
 // ******************************
-
 // generate a hash table from the typetable array
-GHashTable* stg_create_typetable( void )
+GHashTable* Stg::stg_create_typetable( void )
 {
   GHashTable* table = g_hash_table_new( g_str_hash, g_str_equal );
   
-  for( stg_typetable_entry_t* ent = typetable;
+  for( stg_typetable_entry_t* ent = typearray;
        ent->token;
        ent++ )  
     g_hash_table_insert( table, (void*)(ent->token), (void*)(ent->creator_fn) );

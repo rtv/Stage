@@ -1,4 +1,4 @@
-#include "stage.hh"
+#include "stage_internal.hh"
 
 StgAncestor::StgAncestor()
 {
@@ -46,9 +46,10 @@ void StgAncestor::RemoveChild( StgModel* mod )
   puts( "TODO: StgWorld::RemoveChild()" );    
 }
 
-void StgAncestor::GetGlobalPose( stg_pose_t* gpose )
+stg_pose_t StgAncestor::GetGlobalPose()
 {
-  assert( gpose );
-  memset( gpose, 0, sizeof(stg_pose_t));
+  stg_pose_t pose;
+  bzero( &pose, sizeof(pose));
+  return pose;
 }
 

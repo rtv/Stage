@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 //#define DEBUG
-#include "stage.hh"
+#include "stage_internal.hh"
 
 /** 
 @ingroup model
@@ -68,17 +68,16 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
 /* External interface */
 
 /// set the current odometry estimate 
-void StgModelPosition::SetOdom( stg_pose_t* odom )
+void StgModelPosition::SetOdom( stg_pose_t odom )
 {
-  memcpy( &est_pose, odom, sizeof(stg_pose_t));
+  est_pose = odom;
 
   // figure out where the implied origin is in global coords
-  stg_pose_t gp;
-  this->GetGlobalPose( &gp );
+  stg_pose_t gp = GetGlobalPose();
 			
-  double da = -odom->a + gp.a;
-  double dx = -odom->x * cos(da) + odom->y * sin(da);
-  double dy = -odom->y * cos(da) - odom->x * sin(da);
+  double da = -odom.a + gp.a;
+  double dx = -odom.x * cos(da) + odom.y * sin(da);
+  double dy = -odom.y * cos(da) - odom.x * sin(da);
 
   // origin of our estimated pose
   est_origin.x = gp.x + dx;
@@ -198,7 +197,7 @@ void StgModelPosition::Load( void )
   // set the starting pose as my initial odom position. This could be
   // overwritten below if the localization_origin property is
   // specified
-  this->GetGlobalPose( &est_origin );
+  est_origin = this->GetGlobalPose();
 
   keyword = "localization_origin"; 
   if( wf->PropertyExists( this->id, keyword ) )
@@ -208,8 +207,7 @@ void StgModelPosition::Load( void )
       est_origin.a = wf->ReadTupleAngle( id,keyword, 2, est_origin.a );
 
       // compute our localization pose based on the origin and true pose
-      stg_pose_t gpose;
-      this->GetGlobalPose( &gpose );
+      stg_pose_t gpose = this->GetGlobalPose();
       
       est_pose.a = NORMALIZE( gpose.a - est_origin.a );
       //double cosa = cos(est_pose.a);
@@ -426,8 +424,7 @@ void StgModelPosition::Load( void )
     case STG_POSITION_LOCALIZATION_GPS:
       {
 	// compute our localization pose based on the origin and true pose
-	stg_pose_t gpose;
-	this->GetGlobalPose( &gpose );
+	stg_pose_t gpose = this->GetGlobalPose();
 	
 	est_pose.a = NORMALIZE( gpose.a - est_origin.a );
 	//est_pose.a =0;// NORMALIZE( gpose.a - est_origin.a );
@@ -492,3 +489,32 @@ void StgModelPosition::Load( void )
    StgModel::Shutdown();
 }
 
+void StgModelPosition::SetSpeed( double x, double y, double a ) 
+{ 
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.x = x; 
+  goal.y = y; 
+  goal.z = 0; 
+  goal.a = a; 
+}  
+
+void StgModelPosition::SetSpeed( stg_velocity_t vel ) 
+{ 
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  velocity = vel;
+}
+
+void StgModelPosition::GoTo( double x, double y, double a ) 
+{
+  control_mode = STG_POSITION_CONTROL_POSITION;
+  goal.x = x; 
+  goal.y = y; 
+  goal.z = 0; 
+  goal.a = a; 
+}  
+
+void StgModelPosition::GoTo( stg_pose_t pose ) 
+{
+  control_mode = STG_POSITION_CONTROL_POSITION;
+  goal = pose;
+}  
