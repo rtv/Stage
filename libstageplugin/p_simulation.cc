@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.1.2.5 2008-01-14 22:35:46 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.1.2.6 2008-01-14 22:37:58 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -127,8 +127,8 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
 
   // steal the global clock - a bit aggressive, but a simple approach
 
-  //  if( GlobalTime ) delete GlobalTime;
-  //assert( (GlobalTime = new StgTime( driver ) ));
+  if( GlobalTime ) delete GlobalTime;
+  assert( (GlobalTime = new StTime( driver ) ));
   
   // start the simulation
   // printf( "  Starting world clock... " ); fflush(stdout);

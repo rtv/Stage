@@ -18,7 +18,7 @@ size [16 16 10]
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 100  # real-time interval between simulation updates in milliseconds 
+interval_real 10  # real-time interval between simulation updates in milliseconds 
 
 # configure the GUI window
 window
