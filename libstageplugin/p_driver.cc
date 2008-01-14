@@ -22,12 +22,12 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_driver.cc,v 1.1.2.4 2008-01-08 00:30:12 rtv Exp $
+ * CVS: $Id: p_driver.cc,v 1.1.2.5 2008-01-14 22:35:46 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
 
-/** @defgroup player libstageplugin - Stage plugin driver for Player
+/** @defgroup player libstageplugin -  simulation driver for Player
 
 <b>libstageplugin</b> is a plugin for Player that allows Player
 clients to access simulated robots as if they were normal Player
@@ -150,7 +150,6 @@ The stage plugin driver provides the following device interfaces:
 #include <math.h>
 
 #include "p_driver.h"
-//#include "zoo_driver.h"
 
 const char* copyright_notice = 
 "\n * Part of the Player Project [http://playerstage.sourceforge.net]\n"

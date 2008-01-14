@@ -1,7 +1,7 @@
 # Automake script to build Libstageplugin's Makefile
 #
 # RTV 20071126
-# $Id: Makefile.am,v 1.1.2.3 2007-12-24 11:20:37 rtv Exp $
+# $Id: Makefile.am,v 1.1.2.4 2008-01-14 22:35:46 rtv Exp $
 
 SUBDIRS = 
 
@@ -29,7 +29,6 @@ libstageplugin_la_SOURCES = \
 #	p_gripper.cc 
 #	p_power.cc 
 #	p_graphics2d.cc
-#	p_graphics3d.cc 
 #	p_bumper.cc 
 #	p_fiducial.cc 
 #	p_ptz.cc 

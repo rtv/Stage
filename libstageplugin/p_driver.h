@@ -7,13 +7,13 @@
 
 #include <libplayercore/playercore.h>
 
-#include "../libstage/stage.hh"
-#include "stg_time.h"
+#include "../libstage/stage_internal.hh"
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
 
 // foward declare;
 class Interface;
+class StgTime;
 
 class StgDriver : public Driver
 {
@@ -303,6 +303,23 @@ class InterfaceGraphics3d : public InterfaceModel
   void Clear( void );
 };
 
+/** Replaces Player's real time clock object */
+class StTime : public PlayerTime
+{ 
+ private: 
+  StgDriver* driver;
+  
+ public: 
+ // Constructor
+  StTime( StgDriver* driver );
+ 
+ // Destructor
+ virtual ~StTime();
+ 
+ // Get the simulator time
+ int GetTime(struct timeval* time);
+ int GetTimeDouble(double* time);
+};
 
 
 #endif

@@ -1,36 +1,31 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.18.4.1 2007-12-29 05:07:40 rtv Exp $
+ * $Id: stage.txt,v 1.18.4.2 2008-01-14 22:35:46 rtv Exp $
 */
 
-//@mainpage The Stage Robot Simulator
 
 /**
-\page The Stage Robot Simulator
+\mainpage The Stage Robot Simulator
 
-<p>Copyright Richard Vaughan and contributors 1998-2006 and beyond.
-<p>Part of the Player/Stage Project [http://playerstage.sourceforge.net]
+<p>Copyright Richard Vaughan and contributors 1998-2008.
+<p>Part of the Player Project [http://playerstage.sourceforge.net]
 
 \section License
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License version 2 as published by
-   the Free Software Foundation.
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
  
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
 
 A copy of the license is included with the sourcecode in the file
 'COPYING". Copying and redistribution is permitted only under the
 terms of the license.
 
-*/
-
-
-
-/** @defgroup stage Stage User Guide 
+\section Introduction
 
 Stage is a robot simulator. It provides a virtual world populated by
 mobile robots and sensors, along with various objects for the robots
@@ -73,16 +68,17 @@ Stage was written by:
 
 <ul>
 <li>Richard Vaughan <tt>(vaughan@sfu.ca)</tt>
-<li>Andrew Howard  <tt>(ahoward@robotics.usc.edu)</tt>
-<li>Brian Gerkey <tt>(gerkey@robotics.stanford.edu)</tt>
+<li>Brian Gerkey <tt>(gerkey@sri.com)</tt>
 <li>Reed Hedges <tt>(hedges@mobilerobots.com)</tt>
+<li>Andrew Howard  <tt>(ahoward@robotics.usc.edu)</tt>
+<li>Pooya Karimian <tt>(pooyak@sfu.ca)</tt>
 </ul>
 
 Many patches and bug reports have been contributed by users around the
 world.
 
 Stage is part of the <a
-href="http://playerstage.sourceforge.net">Player/Stage Project</a>, a
+href="http://playerstage.sourceforge.net">Player Project</a>, a
 community effort to develop Free Software tools for robotics
 research. Stage is free to use, modify and redistribute under the
 terms of the <a href=http://www.gnu.org/licenses/licenses.html> GNU
@@ -119,11 +115,11 @@ Gazebo, it's called Player/Gazebo. Gazebo without Player is just
 <p> Funding for Stage has been provided in part by:
 
 <ul>
- <li>NSERC (Canada)
- <li>Simon Fraser University (Canada)
  <li>DARPA (USA)
  <li>NASA (USA)
+ <li>NSERC (Canada)
  <li>NSF (USA)
+ <li>Simon Fraser University (Canada)
 </ul>
 
 \section Names
@@ -137,11 +133,14 @@ The names "Player" and "Stage" were inspired by the lines:
 
 <p>from <i>"As You Like It"</i> by William Shakespeare.
 
-*/
 
-
-/** 
 \page release Release Notes
+
+\section v300 Version 3.0.0
+
+TODO
+
+Richard Vaughan (rtv) vaughan@sfu.ca 
 
 \section v201 Version 2.0.1
 
@@ -199,11 +198,8 @@ worlds to get them to work. Look at the example worlds in <tt>(stage
 src)/worlds</tt> to get the idea.
 
  - Worlds can be very large (thousands of meters square).
-*/
 
-/**
-@ingroup stage 
-@defgroup help Getting Help
+\page help Getting Help
 
 If you're having problems and you can't find what you need in this manual, there are several places to find help. 
 
@@ -229,12 +225,7 @@ reply to you. <b>Remember that these mails go to hundreds of people</b>, so
 please be polite and give as much information as you can in your
 email.
 
-*/
-
-
-/**
-@ingroup stage 
-@defgroup faq FAQ: Frequently Asked Questions
+\page faq FAQ: Frequently Asked Questions
 
 <b>There are no questions about the 2.0 release yet. If you have a question, <a href="group__help.html">follow the advice here</a></b>.
 
@@ -242,41 +233,8 @@ email.
 <li> [none]
 </ol>
 
-*/
 
-
-/**
-@ingroup stage 
-@defgroup refs References
-
-[1] Brian Gerkey, Richard Vaughan, Kasper Stoy, Andrew Howard, Gaurav
-Sukhatme, Maja Mataric (2001) "Most Valuable Player: A Robot Device
-Server for Distributed Control", Proc. IEEE Int. Conf. Intelligent
-Robotic Systems, Maui, Hawaii. (IROS'01)
-
-[2] Richard Vaughan, Brian Gerkey, Andrew Howard (2003) "On device
-abstractions for portable, resuable robot code", IEEE/RSJ
-International Conference on Intelligent Robot Systems, Las Vegas,
-Nevada, USA.  (IROS2003)
-
-[3] Brian Gerkey, Richard Vaughan, Andrew Howard (2003) "The
-Player/Stage Project: Tools for Multi-Robot and Distributed Sensor
-Systems", 11th International Conference on Advanced Robotics, Coimbra,
-Portugal (ICAR'03).
-
-[4] Nick Jakobi (1997) "Evolutionary Robotics and the Radical Envelope
-of Noise Hypothesis", Adaptive Behavior Volume 6, Issue 2. pp.325 -
-368 .
-
-[5] Stuart Wilson (1985) "Knowledge Growth in an Artificial Animal",
-Proceedings of the First International Conference on Genetic Agorithms
-and Their Applications.  Hillsdale, New Jersey. pp.16-23.
-
-*/
-
-/**
-@ingroup stage 
-@defgroup install Installation
+\page install Installation
 
 <b>Important: If you plan to use Stage with Player, Player must be
 properly installed before you install Stage.</b>
@@ -360,13 +318,29 @@ because you don't have root access:
 same prefix.</b> The command line to do this is probably the same, but you
 should check the Player instructions just in case.
 
+\section References
+
+[1] Brian Gerkey, Richard Vaughan, Kasper Stoy, Andrew Howard, Gaurav
+Sukhatme, Maja Mataric (2001) "Most Valuable Player: A Robot Device
+Server for Distributed Control", Proc. IEEE Int. Conf. Intelligent
+Robotic Systems, Maui, Hawaii. (IROS'01)
+
+[2] Richard Vaughan, Brian Gerkey, Andrew Howard (2003) "On device
+abstractions for portable, resuable robot code", IEEE/RSJ
+International Conference on Intelligent Robot Systems, Las Vegas,
+Nevada, USA.  (IROS2003)
+
+[3] Brian Gerkey, Richard Vaughan, Andrew Howard (2003) "The
+Player/Stage Project: Tools for Multi-Robot and Distributed Sensor
+Systems", 11th International Conference on Advanced Robotics, Coimbra,
+Portugal (ICAR'03).
+
+[4] Nick Jakobi (1997) "Evolutionary Robotics and the Radical Envelope
+of Noise Hypothesis", Adaptive Behavior Volume 6, Issue 2. pp.325 -
+368 .
+
+[5] Stuart Wilson (1985) "Knowledge Growth in an Artificial Animal",
+Proceedings of the First International Conference on Genetic Agorithms
+and Their Applications.  Hillsdale, New Jersey. pp.16-23.
+
 */
-
-
-/** @ingroup stage
-@defgroup writingmodels Writing Stage models
-
-TODO: steps required to add a new Stage model
-
-*/
-

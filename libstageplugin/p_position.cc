@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_position.cc,v 1.1.2.4 2008-01-08 00:30:12 rtv Exp $
+ * CVS: $Id: p_position.cc,v 1.1.2.5 2008-01-14 22:35:46 rtv Exp $
  */
 // DOCUMENTATION ------------------------------------------------------------
 
@@ -86,9 +86,6 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
     // convert from Player to Stage format
     player_position2d_cmd_pos_t* pcmd = (player_position2d_cmd_pos_t*)data;
 
-    stg_position_cmd_t scmd; 
-    memset( &scmd, 0, sizeof(scmd));
-
     mod->GoTo( pcmd->vel.px, pcmd->vel.py, pcmd->vel.pa );
     return 0;
   }
@@ -101,9 +98,6 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
     // convert from Player to Stage format
     player_position2d_cmd_car_t* pcmd = (player_position2d_cmd_car_t*)data;
 
-    stg_position_cmd_t scmd; 
-    memset( &scmd, 0, sizeof(scmd));
-
     mod->SetSpeed( pcmd->velocity, 0, pcmd->angle );
     return 0;
   }
@@ -115,8 +109,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
   {
     if(hdr->size == 0)
     {
-      stg_geom_t geom;
-      this->mod->GetGeom( &geom );
+      stg_geom_t geom = this->mod->GetGeom();
 
       // fill in the geometry data formatted player-like
       player_position2d_geom_t pgeom;
@@ -284,7 +277,7 @@ void InterfacePosition::Publish( void )
   //  data->pose.x, data->pose.y, data->pose.a );
   
   player_position2d_data_t ppd;
-  memset( &ppd, 0, sizeof(ppd) );
+  bzero( &ppd, sizeof(ppd) );
   
   // pack the data into player format
   // packing by hand allows for type conversions
@@ -293,7 +286,7 @@ void InterfacePosition::Publish( void )
   //ppd.pos.pz = mod->est_pose.z;
   ppd.pos.pa = mod->est_pose.a;
 
-  stg_velocity_t v = mod->Velocity();
+  stg_velocity_t v = mod->GetVelocity();
 
   ppd.vel.px = v.x;
   ppd.vel.py = v.y;

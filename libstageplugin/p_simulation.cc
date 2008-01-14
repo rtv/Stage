@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.1.2.4 2008-01-08 00:30:12 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.1.2.5 2008-01-14 22:35:46 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -48,9 +48,10 @@
 
 #define DEBUG
 
-#include <libplayercore/globals.h> // for player_argc & player_argv
-#include "p_driver.h"
 #include <libgen.h> // for dirname(3)
+#include <libplayercore/globals.h> // for player_argc & player_argv
+
+#include "p_driver.h"
 
 // these are Player globals
 extern bool player_quiet_startup;
@@ -73,14 +74,7 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
   printf( "a Stage world" ); fflush(stdout);
   //puts( "InterfaceSimulation constructor" );
   
-  // boot libstage, requesting halt on any glib/gtk/gnome problem
-//   int argc = 2;
-//   char* argv[2];
-//   argv[0] = "player";
-//   argv[1] = "--g-fatal-warnings";
-//   stg_init( argc, argv );
-
-  StgWorld::Init( &player_argc, &player_argv );
+  Stg::Init( &player_argc, &player_argv );
 
   const char* worldfile_name = cf->ReadString(section, "worldfile", NULL );
   
@@ -116,7 +110,7 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
   // create a passel of Stage models in the local cache based on the
   // worldfile
   
-  StgDriver::world = new StgWorldGui( 700,700, "Player/Stage" );
+  StgDriver::world = new StgWorldGui( 800,840, "Player/Stage" );
   assert(StgDriver::world);
 
   puts("");
@@ -132,8 +126,9 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
 //     }
 
   // steal the global clock - a bit aggressive, but a simple approach
-  if( GlobalTime ) delete GlobalTime;
-  assert( (GlobalTime = new StgTime( driver ) ));
+
+  //  if( GlobalTime ) delete GlobalTime;
+  //assert( (GlobalTime = new StgTime( driver ) ));
   
   // start the simulation
   // printf( "  Starting world clock... " ); fflush(stdout);

@@ -22,18 +22,15 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.cc,v 1.1.2.2 2007-11-27 05:36:02 rtv Exp $
+// CVS: $Id: stg_time.cc,v 1.1.2.3 2008-01-14 22:35:46 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-
-#include "../libstage/stage.hh"
-#include "stg_time.h"
-#include "math.h"
 #include "p_driver.h"
+#include "math.h"
 
 // Constructor
-StgTime::StgTime( StgDriver* driver )
+StTime::StTime( StgDriver* driver )
 {
   assert(driver);
   this->driver = driver;
@@ -41,13 +38,13 @@ StgTime::StgTime( StgDriver* driver )
 }
 
 // Destructor
-StgTime::~StgTime()
+StTime::~StTime()
 {
   return;
 }
 
 // Get the simulator time
-int StgTime::GetTime(struct timeval* time)
+int StTime::GetTime(struct timeval* time)
 {
   PRINT_DEBUG( "get time" );
   
@@ -55,15 +52,16 @@ int StgTime::GetTime(struct timeval* time)
   
   StgWorld* world = driver->world;
   
-  time->tv_sec  = (int)floor(world->sim_time / 1e6);
-  time->tv_usec = (int)rint(fmod(world->sim_time,1e6) * 1e6);
+  stg_usec_t usec = world->SimTimeNow();
+  time->tv_sec  = (int)floor(usec/million);
+  time->tv_usec = (int)rint(fmod(usec,million) * million);
   
   PRINT_DEBUG2( "time now %ld sec %ld usec", time->tv_sec, time->tv_usec );
   
   return 0;
 }
 
-int StgTime::GetTimeDouble(double* time)
+int StTime::GetTimeDouble(double* time)
 {
   PRINT_DEBUG( "get time (double)" );
   
@@ -71,7 +69,7 @@ int StgTime::GetTimeDouble(double* time)
   
   StgWorld* world = driver->world;
   
-  *time = world->sim_time / 1e6;
+  *time = world->SimTimeNow() / million;
   
   PRINT_DEBUG1( "time now %f sec ", *time);
   

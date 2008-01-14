@@ -1,8 +1,7 @@
 /*
- *  Player - One Hell of a Robot Server
- *  Copyright (C) 2004, 2005 Richard Vaughan
+ *  Stage 
+ *  Copyright (C) Richard Vaughan
  *                      
- * 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -23,7 +22,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_graphics3d.cc,v 1.1.2.3 2008-01-08 00:30:12 rtv Exp $
+ * CVS: $Id: p_graphics3d.cc,v 1.1.2.4 2008-01-14 22:35:46 rtv Exp $
  */
 
 #include "p_driver.h"
@@ -35,10 +34,6 @@ using namespace std;
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 #endif
-
-//#include <gl.h>
-//#include <glu.h>
-//#include <glext.h>
 
 //extern GList* dl_list;
 
@@ -124,7 +119,6 @@ int InterfaceGraphics3d::ProcessMessage( QueuePointer & resp_queue,
 					 player_msghdr_t* hdr,
 					 void* data)
 {
-
   // TODO queue *all* commands so that tranformations and clearing are
   // done synchronously
 
@@ -204,8 +198,7 @@ void InterfaceGraphics3d::Publish( void )
       glNewList( displaylist, GL_COMPILE );
 
       // move into the relevant model's coordinate frame
-      stg_pose_t gpose;
-      mod->GetGlobalPose( &gpose );
+      stg_pose_t gpose = mod->GetGlobalPose();
       
       glPushMatrix();
       glTranslatef( gpose.x, gpose.y, 0 ); 

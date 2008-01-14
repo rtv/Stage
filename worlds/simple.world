@@ -45,10 +45,8 @@ fancypioneer2dx
  color "red"
  pose [-2.551 -0.281 -39.206]
 
- fancysicklaser( pose [ 0.040 0.000 0.000 ] ) 
+ sicklaser( pose [ 0.040 0.000 0.000 ] ) 
 )
-
-
 
 pioneer2dx
 (
