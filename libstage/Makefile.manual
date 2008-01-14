@@ -3,6 +3,7 @@ HDR = \
     ../config.h \
     colors.h \
     stage.hh \
+    stage_internalmake.hh \
     worldfile.hh
 
 SRC = \

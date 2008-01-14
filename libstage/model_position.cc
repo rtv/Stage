@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -64,29 +64,8 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
   - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
 */
 
-
-/* External interface */
-
-/// set the current odometry estimate 
-void StgModelPosition::SetOdom( stg_pose_t odom )
-{
-  est_pose = odom;
-
-  // figure out where the implied origin is in global coords
-  stg_pose_t gp = GetGlobalPose();
-			
-  double da = -odom.a + gp.a;
-  double dx = -odom.x * cos(da) + odom.y * sin(da);
-  double dy = -odom.y * cos(da) - odom.x * sin(da);
-
-  // origin of our estimated pose
-  est_origin.x = gp.x + dx;
-  est_origin.y = gp.y + dy;
-  est_origin.a = da;
-} 
-
-/* Internal */
-
+  
+																																																									     
 const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
 const double STG_POSITION_WATTS = 2.0; // base cost of position device
 
@@ -95,6 +74,10 @@ const double STG_POSITION_WATTS = 2.0; // base cost of position device
 const double STG_POSITION_INTEGRATION_ERROR_MAX_X = 0.03;
 const double STG_POSITION_INTEGRATION_ERROR_MAX_Y = 0.03;
 const double STG_POSITION_INTEGRATION_ERROR_MAX_A = 0.05;
+
+const stg_position_control_mode_t POSITION_CONTROL_DEFAULT = STG_POSITION_CONTROL_VELOCITY;
+const stg_position_localization_mode_t POSITION_LOCALIZATION_DEFAULT = STG_POSITION_LOCALIZATION_GPS;
+const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIFFERENTIAL;
 
 
 StgModelPosition::StgModelPosition( StgWorld* world, 
@@ -105,16 +88,7 @@ StgModelPosition::StgModelPosition( StgWorld* world,
 {
   PRINT_DEBUG2( "Constructing StgModelPosition %d (%s)\n", 
 		id, typestr );
-  
-  // TODO - move this to stg_init()
-  static int first_time = 1;
-  if( first_time )
-    {
-      first_time = 0;
-      // seed the RNG on startup
-      srand48( time(NULL) );
-    }
- 
+   
   // no power consumed until we're subscribed
   this->SetWatts( 0 ); 
   
@@ -129,11 +103,11 @@ StgModelPosition::StgModelPosition( StgWorld* world,
  
   // control
   memset( &goal, 0, sizeof(goal));  
-  drive_mode = STG_POSITION_DRIVE_DEFAULT;
-  control_mode = STG_POSITION_CONTROL_DEFAULT;
+  drive_mode = POSITION_DRIVE_DEFAULT;
+  control_mode = POSITION_CONTROL_DEFAULT;
 
   // localization
-  localization_mode = STG_POSITION_LOCALIZATION_DEFAULT;  
+  localization_mode = POSITION_LOCALIZATION_DEFAULT;  
 
   integration_error.x =  
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_X - 
@@ -161,7 +135,7 @@ void StgModelPosition::Load( void )
   
   char* keyword = NULL;
   
-  CWorldFile* wf = world->GetWorldFile();
+  Worldfile* wf = world->GetWorldFile();
 
   // load steering mode
   if( wf->PropertyExists( this->id, "drive" ) )
@@ -209,7 +183,7 @@ void StgModelPosition::Load( void )
       // compute our localization pose based on the origin and true pose
       stg_pose_t gpose = this->GetGlobalPose();
       
-      est_pose.a = NORMALIZE( gpose.a - est_origin.a );
+      est_pose.a = normalize( gpose.a - est_origin.a );
       //double cosa = cos(est_pose.a);
       //double sina = sin(est_pose.a);
       double cosa = cos(est_origin.a);
@@ -318,7 +292,7 @@ void StgModelPosition::Load( void )
 	    
 	    double x_error = goal.x - est_pose.x;
 	    double y_error = goal.y - est_pose.y;
-	    double a_error = NORMALIZE( goal.a - est_pose.a );
+	    double a_error = normalize( goal.a - est_pose.a );
 	    
 	    PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
 	    
@@ -371,7 +345,7 @@ void StgModelPosition::Load( void )
 		      double goal_angle = atan2( y_error, x_error );
 		      double goal_distance = hypot( y_error, x_error );
 		      
-		      a_error = NORMALIZE( goal_angle - est_pose.a );
+		      a_error = normalize( goal_angle - est_pose.a );
 		      calc.a = MIN( a_error, max_speed_a );
 		      calc.a = MAX( a_error, -max_speed_a );
 		      
@@ -426,8 +400,8 @@ void StgModelPosition::Load( void )
 	// compute our localization pose based on the origin and true pose
 	stg_pose_t gpose = this->GetGlobalPose();
 	
-	est_pose.a = NORMALIZE( gpose.a - est_origin.a );
-	//est_pose.a =0;// NORMALIZE( gpose.a - est_origin.a );
+	est_pose.a = normalize( gpose.a - est_origin.a );
+	//est_pose.a =0;// normalize( gpose.a - est_origin.a );
 	double cosa = cos(est_origin.a);
 	double sina = sin(est_origin.a);
 	double dx = gpose.x - est_origin.x;
@@ -443,7 +417,7 @@ void StgModelPosition::Load( void )
 	// integrate our velocities to get an 'odometry' position estimate.
 	double dt = this->world->GetSimInterval()/1e3;
 	
-	est_pose.a = NORMALIZE( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
+	est_pose.a = normalize( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
 	
 	double cosa = cos(est_pose.a);
 	double sina = sin(est_pose.a);
@@ -518,3 +492,24 @@ void StgModelPosition::GoTo( stg_pose_t pose )
   control_mode = STG_POSITION_CONTROL_POSITION;
   goal = pose;
 }  
+
+/** 
+    Set the current odometry estimate 
+*/
+void StgModelPosition::SetOdom( stg_pose_t odom )
+{
+  est_pose = odom;
+
+  // figure out where the implied origin is in global coords
+  stg_pose_t gp = GetGlobalPose();
+  
+  double da = -odom.a + gp.a;
+  double dx = -odom.x * cos(da) + odom.y * sin(da);
+  double dy = -odom.y * cos(da) - odom.x * sin(da);
+
+  // origin of our estimated pose
+  est_origin.x = gp.x + dx;
+  est_origin.y = gp.y + dy;
+  est_origin.a = da;
+} 
+

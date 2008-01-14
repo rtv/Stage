@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.11 $
+//  $Revision: 1.1.2.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -77,18 +77,18 @@ The ranger model allows configuration of the pose, size and view parameters of e
 #include "stage_internal.hh"
 #include <math.h>
    
-static const stg_watts_t STG_DEFAULT_RANGER_WATTSPERSENSOR = 0.2;
-static const stg_meters_t STG_DEFAULT_RANGER_SIZEX = 0.01;
-static const stg_meters_t STG_DEFAULT_RANGER_SIZEY = 0.04;
-static const stg_meters_t STG_DEFAULT_RANGER_SIZEZ = 0.04;
-static const stg_meters_t STG_DEFAULT_RANGER_RANGEMAX = 5.0;
-static const stg_meters_t STG_DEFAULT_RANGER_RANGEMIN = 0.0;
-static const unsigned int STG_DEFAULT_RANGER_RAYCOUNT = 3;
-static const unsigned int STG_DEFAULT_RANGER_SENSORCOUNT = 16;
+static const stg_watts_t DEFAULT_RANGER_WATTSPERSENSOR = 0.2;
+static const stg_meters_t DEFAULT_RANGER_SIZEX = 0.01;
+static const stg_meters_t DEFAULT_RANGER_SIZEY = 0.04;
+static const stg_meters_t DEFAULT_RANGER_SIZEZ = 0.04;
+static const stg_meters_t DEFAULT_RANGER_RANGEMAX = 5.0;
+static const stg_meters_t DEFAULT_RANGER_RANGEMIN = 0.0;
+static const unsigned int DEFAULT_RANGER_RAYCOUNT = 3;
+static const unsigned int DEFAULT_RANGER_SENSORCOUNT = 16;
 
-static const char STG_RANGER_COLOR[] = "gray75";
-static const char STG_RANGER_CONFIG_COLOR[] = "gray90";
-static const char STG_RANGER_GEOM_COLOR[] = "orange";
+static const char RANGER_COLOR[] = "gray75";
+static const char RANGER_CONFIG_COLOR[] = "gray90";
+static const char RANGER_GEOM_COLOR[] = "orange";
 
 
 StgModelRanger::StgModelRanger( StgWorld* world, 
@@ -102,7 +102,7 @@ StgModelRanger::StgModelRanger( StgWorld* world,
     
   // Set up sensible defaults
   
-  stg_color_t col = stg_lookup_color( STG_RANGER_CONFIG_COLOR );
+  stg_color_t col = stg_lookup_color( RANGER_CONFIG_COLOR );
   this->SetColor( col );
   
   // remove the polygon: ranger has no body
@@ -113,7 +113,7 @@ StgModelRanger::StgModelRanger( StgWorld* world,
   this->SetGeom( &geom );
   
   samples = NULL;
-  sensor_count = STG_DEFAULT_RANGER_SENSORCOUNT;
+  sensor_count = DEFAULT_RANGER_SENSORCOUNT;
   sensors = new stg_ranger_sensor_t[sensor_count];
 
   double offset = MIN(geom.size.x, geom.size.y) / 2.0;
@@ -126,14 +126,14 @@ StgModelRanger::StgModelRanger( StgWorld* world,
       sensors[c].pose.y = offset * sin( sensors[c].pose.a );
       sensors[c].pose.z = 0;//geom.size.z / 2.0; // half way up
       
-      sensors[c].size.x = STG_DEFAULT_RANGER_SIZEX;
-      sensors[c].size.y = STG_DEFAULT_RANGER_SIZEY;
-      sensors[c].size.z = STG_DEFAULT_RANGER_SIZEZ;
+      sensors[c].size.x = DEFAULT_RANGER_SIZEX;
+      sensors[c].size.y = DEFAULT_RANGER_SIZEY;
+      sensors[c].size.z = DEFAULT_RANGER_SIZEZ;
       
-      sensors[c].bounds_range.min = STG_DEFAULT_RANGER_RANGEMIN;
-      sensors[c].bounds_range.max = STG_DEFAULT_RANGER_RANGEMAX;;
+      sensors[c].bounds_range.min = DEFAULT_RANGER_RANGEMIN;
+      sensors[c].bounds_range.max = DEFAULT_RANGER_RANGEMAX;;
       sensors[c].fov = (2.0*M_PI)/(sensor_count+1);
-      sensors[c].ray_count = STG_DEFAULT_RANGER_RAYCOUNT;
+      sensors[c].ray_count = DEFAULT_RANGER_RAYCOUNT;
     }
 }
 
@@ -147,7 +147,7 @@ void StgModelRanger::Startup( void )
   
   PRINT_DEBUG( "ranger startup" );
   
-  this->SetWatts( STG_DEFAULT_RANGER_WATTSPERSENSOR * sensor_count );
+  this->SetWatts( DEFAULT_RANGER_WATTSPERSENSOR * sensor_count );
 }
 
 
@@ -170,7 +170,7 @@ void StgModelRanger::Load( void )
 {
   StgModel::Load();
   
-  CWorldFile* wf = world->GetWorldFile();
+  Worldfile* wf = world->GetWorldFile();
 
   if( wf->PropertyExists(id, "scount" ) )
     {
@@ -186,11 +186,11 @@ void StgModelRanger::Load( void )
       sensors = new stg_ranger_sensor_t[sensor_count];
 
       stg_size_t common_size;
-      common_size.x = wf->ReadTupleLength( id, "ssize", 0, STG_DEFAULT_RANGER_SIZEX );
-      common_size.y = wf->ReadTupleLength( id, "ssize", 1, STG_DEFAULT_RANGER_SIZEY );
+      common_size.x = wf->ReadTupleLength( id, "ssize", 0, DEFAULT_RANGER_SIZEX );
+      common_size.y = wf->ReadTupleLength( id, "ssize", 1, DEFAULT_RANGER_SIZEY );
       
-      double common_min = wf->ReadTupleLength( id, "sview", 0,  STG_DEFAULT_RANGER_RANGEMIN );
-      double common_max = wf->ReadTupleLength( id, "sview", 1, STG_DEFAULT_RANGER_RANGEMAX );
+      double common_min = wf->ReadTupleLength( id, "sview", 0,  DEFAULT_RANGER_RANGEMIN );
+      double common_max = wf->ReadTupleLength( id, "sview", 1, DEFAULT_RANGER_RANGEMAX );
       double common_fov = wf->ReadTupleAngle( id, "sview", 2, M_PI / (double)sensor_count );
 
       int common_ray_count = wf->ReadInt( id, "sraycount", sensors[0].ray_count );

@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.1.2.2 2007-11-26 06:28:16 rtv Exp $
+ * CVS info: $Id: worldfile.hh,v 1.1.2.3 2008-01-14 19:35:12 rtv Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -60,11 +60,11 @@ struct CProperty
 // interface.  Global settings go in entity 0; every other entity
 // refers to a specific entity.  Parent/child relationships are
 // encoded in the form of entity/subentity relationships.
-class CWorldFile
+class Stg::Worldfile
 {
   // Standard constructors/destructors
-  public: CWorldFile();
-  public: ~CWorldFile();
+public: Worldfile();
+public: ~Worldfile();
 
   // replacement for fopen() that checks STAGEPATH dirs for the named file
   // (thanks to  Douglas S. Blank <dblank@brynmawr.edu>)

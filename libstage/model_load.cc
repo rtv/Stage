@@ -10,7 +10,7 @@ void StgModel::Load( void )
 {  
   PRINT_DEBUG1( "Model \"%s\" loading...", token );
 
-  CWorldFile* wf = world->wf;
+  Worldfile* wf = world->wf;
   
   if( wf->PropertyExists( this->id, "debug" ) )
     {
@@ -329,7 +329,7 @@ void StgModel::Save( void )
 {  
   PRINT_DEBUG1( "Model \"%s\" saving...", token );
 
-  CWorldFile* wf = world->wf;
+  Worldfile* wf = world->wf;
 
   PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
 		this->token,

@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.1.2.13 2008-01-13 22:55:47 rtv Exp $
+# $Id: Makefile,v 1.1.2.14 2008-01-14 19:35:11 rtv Exp $
 
 
 
@@ -260,6 +260,7 @@ libstage_la_SOURCES = \
 	model_props.cc \
 	stage.cc \
 	stage.hh \
+	stage_internal.hh \
 	typetable.cc \
 	world.cc \
 	worldfile.cc \

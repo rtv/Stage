@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.1.2.19 $
+ //  $Revision: 1.1.2.20 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -114,15 +114,6 @@ StgModelLaser::~StgModelLaser( void )
     delete[] samples;
 }
 
-// void StgModelLaser::InitGraphics()
-// {
-//   StgModel::InitGraphics();
-
-//   dl_debug_laser = glGenLists( 1 );
-//   glNewList( dl_debug_laser, GL_COMPILE );
-//   glEndList();
-// }
-
 void StgModelLaser::SetSampleCount( unsigned int count )
 {
   if( count != sample_count )
@@ -139,7 +130,7 @@ void StgModelLaser::Load( void )
 {  
   StgModel::Load(); 
 
-  CWorldFile* wf = world->GetWorldFile();
+  Worldfile* wf = world->GetWorldFile();
   
   sample_count = wf->ReadInt( id, "samples", sample_count );        
   range_min = wf->ReadLength( id, "range_min", range_min);

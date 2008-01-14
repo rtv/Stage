@@ -1,10 +1,5 @@
 #include "stage_internal.hh"
 
-#include <FL/fl_draw.H>
-#include <FL/fl_Box.H>
-#include <FL/Fl_Menu_Button.H>
-#include <FL/glut.H>
-
 void StgCanvas::TimerCallback( StgCanvas* c )
 {
   c->redraw();
@@ -371,8 +366,8 @@ void StgCanvas::draw()
       glScalef( scale, scale, scale ); 
       glTranslatef(  -panx/scale, -pany/scale, 0 );
 
-      glRotatef( RTOD(-stheta), fabs(cos(sphi)), 0, 0 );
-      glRotatef( RTOD(sphi), 0,0,1 );   // rotate about z - yaw
+      glRotatef( rtod(-stheta), fabs(cos(sphi)), 0, 0 );
+      glRotatef( rtod(sphi), 0,0,1 );   // rotate about z - yaw
       
       // ... to here to get rotation about the center of the window (but broken panning)
     }      
@@ -410,7 +405,7 @@ void StgCanvas::draw()
       stg_pose_t gpose = last_selection->GetGlobalPose();
       
       // and put it in the center of the window
-      //glRotatef( -RTOD(gpose.a), 0,0,1 );
+      //glRotatef( -rtod(gpose.a), 0,0,1 );
       glTranslatef(  -gpose.x, -gpose.y, 0 );
       
      }

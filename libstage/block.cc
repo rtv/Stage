@@ -229,8 +229,8 @@ void StgBlock::ScaleList( GList* blocks,
 
   // assuming the blocks currently fit in a square +/- one billion units
   double minx, miny, maxx, maxy; 
-  minx = miny =  BILLION;
-  maxx = maxy = -BILLION;
+  minx = miny =  billion;
+  maxx = maxy = -billion;
 
   double maxz = 0;
   

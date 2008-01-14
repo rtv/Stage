@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_fiducial.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,12 +17,11 @@
 #include <math.h>
 #include "stage_internal.hh"
 
-#define STG_DEFAULT_FIDUCIAL_RANGEMIN 0
-#define STG_DEFAULT_FIDUCIAL_RANGEMAXID 5
-#define STG_DEFAULT_FIDUCIAL_RANGEMAXANON 8
-#define STG_DEFAULT_FIDUCIAL_FOV DTOR(180)
-
-const double STG_FIDUCIAL_WATTS = 10.0;
+const stg_meters_t DEFAULT_FIDUCIAL_RANGEMIN = 0.0;
+const stg_meters_t DEFAULT_FIDUCIAL_RANGEMAXID = 5.0;
+const stg_meters_t DEFAULT_FIDUCIAL_RANGEMAXANON = 8.0;
+const stg_radians_t DEFAULT_FIDUCIAL_FOV = M_PI;
+const stg_watts_t DEFAULT_FIDUCIAL_WATTS = 10.0;
 
 /** 
 @ingroup model
@@ -79,10 +78,10 @@ StgModelFiducial::StgModelFiducial( StgWorld* world,
   SetGeom( &geom );
 
   // default parameters
-  min_range = STG_DEFAULT_FIDUCIAL_RANGEMIN;
-  max_range_anon = STG_DEFAULT_FIDUCIAL_RANGEMAXANON;
-  max_range_id = STG_DEFAULT_FIDUCIAL_RANGEMAXID;
-  fov = STG_DEFAULT_FIDUCIAL_FOV;  
+  min_range = DEFAULT_FIDUCIAL_RANGEMIN;
+  max_range_anon = DEFAULT_FIDUCIAL_RANGEMAXANON;
+  max_range_id = DEFAULT_FIDUCIAL_RANGEMAXID;
+  fov = DEFAULT_FIDUCIAL_FOV;  
   key = 0;
 
   data = g_array_new( false, true, sizeof(stg_fiducial_t) );
@@ -139,7 +138,7 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
   
   // is he in my field of view?
   double bearing = atan2( dy, dx );
-  double dtheta = NORMALIZE(bearing - mypose.a);
+  double dtheta = normalize(bearing - mypose.a);
   
   if( fabs(dtheta) > fov/2.0 )
     {
@@ -181,7 +180,7 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
       fid.bearing = dtheta;
       fid.geom.x = hisgeom.size.x;
       fid.geom.y = hisgeom.size.y;
-      fid.geom.a = NORMALIZE( hispose.a - mypose.a);
+      fid.geom.a = normalize( hispose.a - mypose.a);
       
       // store the global pose of the fiducial (mainly for the GUI)
       memcpy( &fid.pose, &hispose, sizeof(fid.pose));
@@ -233,7 +232,7 @@ void StgModelFiducial::Update( void )
    
    StgModel::Load();
    
-   CWorldFile* wf = world->GetWorldFile();
+   Worldfile* wf = world->GetWorldFile();
    
    // load fiducial-specific properties
    min_range      = wf->ReadLength( id, "range_min",    min_range );
@@ -257,8 +256,8 @@ void StgModelFiducial::Update( void )
 // 		   max_range_anon,
 // 		   20, // slices	
 // 		   1, // loops
-// 		   RTOD( M_PI/2.0 + fov/2.0), // start angle
-// 		   RTOD(-fov) ); // sweep angle
+// 		   rtod( M_PI/2.0 + fov/2.0), // start angle
+// 		   rtod(-fov) ); // sweep angle
 
 //    gluDeleteQuadric( quadric );
 //    PopColor();

@@ -60,18 +60,8 @@ const stg_meters_t STG_DEFAULT_WORLD_WIDTH = 20.0;
 const stg_meters_t STG_DEFAULT_WORLD_HEIGHT = 20.0; 
 
 // static data members
-bool StgWorld::init_done = false;
 unsigned int StgWorld::next_id = 0;
-GHashTable* StgWorld::typetable = NULL;
 bool StgWorld::quit_all = false;
-
-
-
-typedef	StgModel* (*stg_creator_t)(StgWorld*, 
-				   StgModel*, 
-				   stg_id_t id, 
-				   char* typestr );
-
 
 // todo: get rid of width and height
 
@@ -95,19 +85,6 @@ StgWorld::StgWorld( const char* token,
   Initialize( token, interval_sim, interval_real, ppm, width, height );
 }
 
-void StgWorld::Init( int* argc, char** argv[] )
-{
-  PRINT_DEBUG( "StgWorld::Init()" );
-
-  g_type_init();
-  
-  if(!setlocale(LC_ALL,"POSIX"))
-    PRINT_WARN("Failed to setlocale(); config file may not be parse correctly\n" );
-  
-  StgWorld::typetable = stg_create_typetable();      
-  StgWorld::init_done = true;  
-}
-
 
 void StgWorld::Initialize( const char* token, 
 			   stg_msec_t interval_sim, 
@@ -116,9 +93,9 @@ void StgWorld::Initialize( const char* token,
 			   double width,
 			   double height ) 
 {
-  if( ! StgWorld::init_done )
+  if( ! Stg::InitDone() )
     {
-      PRINT_WARN( "StgWorld::Init() must be called before a StgWorld is created." );
+      PRINT_WARN( "Stg::Init() must be called before a StgWorld is created." );
       exit(-1);
     }
   
@@ -233,7 +210,7 @@ void StgWorld::Load( const char* worldfile_path )
 
   stg_usec_t load_start_time = RealTimeNow();
 
-  this->wf = new CWorldFile();
+  this->wf = new Worldfile();
   wf->Load( worldfile_path );
   PRINT_DEBUG1( "wf has %d entitys", wf->GetEntityCount() );
 
@@ -296,7 +273,7 @@ void StgWorld::Load( const char* worldfile_path )
       
       // find the creator function pointer in the hash table
       stg_creator_t creator = (stg_creator_t) 
-	g_hash_table_lookup( typetable, typestr );
+	g_hash_table_lookup( Stg::Typetable(), typestr );
       
       // if we found a creator function, call it
       if( creator )
@@ -527,7 +504,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
   // fast integer line 3d algorithm adapted from Cohen's code from
   // Graphics Gems IV
   int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;  
-  sx = SGN(dx);  sy = SGN(dy);  sz = SGN(dz);
+  sx = sgn(dx);  sy = sgn(dy);  sz = sgn(dz);
   ax = abs(dx);  ay = abs(dy);  az = abs(dz);
   bx = 2*ax;	 by = 2*ay;	bz = 2*az;
   exy = ay-ax;   exz = az-ax;	ezy = ay-az;

@@ -335,29 +335,6 @@ void StgModel::Raytrace( stg_radians_t bearing,
   Raytrace( pose, range, fov, func, arg, samples, sample_count );
 }
 
-stg_d_draw_t* stg_d_draw_create( stg_d_type_t type,
-				 stg_vertex_t* verts,
-				 size_t vert_count )
-{
-  size_t vert_mem_size = vert_count * sizeof(stg_vertex_t);
-  
-  // allocate space for the draw structure and the vertex data behind it
-  stg_d_draw_t* d = (stg_d_draw_t*)
-    g_malloc( sizeof(stg_d_draw_t) + vert_mem_size );
-  
-  d->type = type;
-  d->vert_count = vert_count;
-  
-  // copy the vertex data behind the draw structure
-  memcpy( d->verts, verts, vert_mem_size );
-	     
-  return d;
-}
-
-void stg_d_draw_destroy( stg_d_draw_t* d )
-{
-  g_free( d );
-}
 
 // utility for g_free()ing everything in a list
 void list_gfree( GList* list )
@@ -688,12 +665,12 @@ void StgModel::DrawSelected()
   stg_pose_t gpose = GetGlobalPose();
   
   char buf[64];
-  snprintf( buf, 63, "%s [%.2f,%.2f,%.2f]", token, gpose.x, gpose.y, RTOD(gpose.a) );
+  snprintf( buf, 63, "%s [%.2f,%.2f,%.2f]", token, gpose.x, gpose.y, rtod(gpose.a) );
   
   PushColor( 0,0,0,1 ); // text color black
   gl_draw_string( 0.5,0.5,0.5, buf );
 
-  glRotatef( RTOD(pose.a), 0,0,1 );
+  glRotatef( rtod(pose.a), 0,0,1 );
  
   gl_pose_shift( &geom.pose );
   
@@ -991,7 +968,7 @@ void StgModel::SetPose( stg_pose_t* pose )
       
       memcpy( &this->pose, pose, sizeof(stg_pose_t));
 
-      this->pose.a = NORMALIZE(this->pose.a);
+      this->pose.a = normalize(this->pose.a);
 		            
       //double hitx, hity;
       //stg_model_test_collision2( mod, &hitx, &hity );

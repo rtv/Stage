@@ -92,10 +92,6 @@ debug menu that enables visualization of some of the innards of Stage.
 */
 
 #include "stage_internal.hh"
-#include <FL/fl_draw.H>
-#include <FL/fl_Box.H>
-#include <FL/Fl_Menu_Button.H>
-#include <FL/glut.H>
 
 // some utilities
 
@@ -114,7 +110,7 @@ static const char* MITEM_VIEW_ARROWS =     "View/Trails/Arrows";
 void Stg::gl_coord_shift( double x, double y, double z, double a  )
 {
   glTranslatef( x,y,z );
-  glRotatef( RTOD(a), 0,0,1 );
+  glRotatef( rtod(a), 0,0,1 );
 }
 
 // transform the current coordinate frame by the given pose

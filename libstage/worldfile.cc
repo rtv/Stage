@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.1.2.5 2008-01-13 22:55:47 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.1.2.6 2008-01-14 19:35:12 rtv Exp $
  */
 
 #include <assert.h>
@@ -41,7 +41,7 @@
 
 #include "replace.h" // for dirname(3)
 #include "stage_internal.hh"
-#include "worldfile.hh"
+//#include "worldfile.hh"
 
 // the isblank() macro is not standard - it's a GNU extension
 // and it doesn't work for me, so here's an implementation - rtv
@@ -71,7 +71,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CWorldFile::CWorldFile() 
+Worldfile::Worldfile() 
 {
   this->filename = NULL;
 
@@ -101,7 +101,7 @@ CWorldFile::CWorldFile()
 
 ///////////////////////////////////////////////////////////////////////////
 // Destructor
-CWorldFile::~CWorldFile()
+Worldfile::~Worldfile()
 {
   ClearProperties();
   ClearMacros();
@@ -114,7 +114,7 @@ CWorldFile::~CWorldFile()
     free(this->filename);
 }
 
-FILE *CWorldFile::FileOpen(const char *filename, const char* method)
+FILE *Worldfile::FileOpen(const char *filename, const char* method)
 {
    FILE *fp = fopen(filename, method);
    // if this opens, then we will go with it:
@@ -152,7 +152,7 @@ FILE *CWorldFile::FileOpen(const char *filename, const char* method)
 
 ///////////////////////////////////////////////////////////////////////////
 // Load world from file
-bool CWorldFile::Load(const char *filename)
+bool Worldfile::Load(const char *filename)
 {
   // Shouldnt call load more than once,
   // so this should be null.
@@ -222,7 +222,7 @@ bool CWorldFile::Load(const char *filename)
 
 ///////////////////////////////////////////////////////////////////////////
 // Save world to file
-bool CWorldFile::Save(const char *filename)
+bool Worldfile::Save(const char *filename)
 {
   // Debugging
   //DumpProperties();
@@ -257,7 +257,7 @@ bool CWorldFile::Save(const char *filename)
 
 ///////////////////////////////////////////////////////////////////////////
 // Check for unused properties and print warnings
-bool CWorldFile::WarnUnused()
+bool Worldfile::WarnUnused()
 {
 //   bool unused = false;
 //   for (int i = 0; i < this->property_count; i++)
@@ -277,7 +277,7 @@ bool CWorldFile::WarnUnused()
 
 ///////////////////////////////////////////////////////////////////////////
 // Load tokens from a file.
-bool CWorldFile::LoadTokens(FILE *file, int include)
+bool Worldfile::LoadTokens(FILE *file, int include)
 {
   int ch;
   int line;
@@ -374,7 +374,7 @@ bool CWorldFile::LoadTokens(FILE *file, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a comment token
-bool CWorldFile::LoadTokenComment(FILE *file, int *line, int include)
+bool Worldfile::LoadTokenComment(FILE *file, int *line, int include)
 {
   char token[256];
   int len;
@@ -407,7 +407,7 @@ bool CWorldFile::LoadTokenComment(FILE *file, int *line, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a word token
-bool CWorldFile::LoadTokenWord(FILE *file, int *line, int include)
+bool Worldfile::LoadTokenWord(FILE *file, int *line, int include)
 {
   char token[256];
   int len;
@@ -453,7 +453,7 @@ bool CWorldFile::LoadTokenWord(FILE *file, int *line, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Load an include token; this will load the include file.
-bool CWorldFile::LoadTokenInclude(FILE *file, int *line, int include)
+bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
 {
   int ch;
   const char *filename;
@@ -563,7 +563,7 @@ bool CWorldFile::LoadTokenInclude(FILE *file, int *line, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a number token
-bool CWorldFile::LoadTokenNum(FILE *file, int *line, int include)
+bool Worldfile::LoadTokenNum(FILE *file, int *line, int include)
 {
   char token[256];
   int len;
@@ -599,7 +599,7 @@ bool CWorldFile::LoadTokenNum(FILE *file, int *line, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a string token
-bool CWorldFile::LoadTokenString(FILE *file, int *line, int include)
+bool Worldfile::LoadTokenString(FILE *file, int *line, int include)
 {
   int ch;
   int len;
@@ -636,7 +636,7 @@ bool CWorldFile::LoadTokenString(FILE *file, int *line, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a whitespace token
-bool CWorldFile::LoadTokenSpace(FILE *file, int *line, int include)
+bool Worldfile::LoadTokenSpace(FILE *file, int *line, int include)
 {
   int ch;
   int len;
@@ -672,7 +672,7 @@ bool CWorldFile::LoadTokenSpace(FILE *file, int *line, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Save tokens to a file.
-bool CWorldFile::SaveTokens(FILE *file)
+bool Worldfile::SaveTokens(FILE *file)
 {
   int i;
   CToken *token;
@@ -694,7 +694,7 @@ bool CWorldFile::SaveTokens(FILE *file)
 
 ///////////////////////////////////////////////////////////////////////////
 // Clear the token list
-void CWorldFile::ClearTokens()
+void Worldfile::ClearTokens()
 {
   int i;
   CToken *token;
@@ -713,7 +713,7 @@ void CWorldFile::ClearTokens()
 
 ///////////////////////////////////////////////////////////////////////////
 // Add a token to the token list
-bool CWorldFile::AddToken(int type, const char *value, int include)
+bool Worldfile::AddToken(int type, const char *value, int include)
 {
   if (this->token_count >= this->token_size)
   {
@@ -732,7 +732,7 @@ bool CWorldFile::AddToken(int type, const char *value, int include)
 
 ///////////////////////////////////////////////////////////////////////////
 // Set a token value in the token list
-bool CWorldFile::SetTokenValue(int index, const char *value)
+bool Worldfile::SetTokenValue(int index, const char *value)
 {
   assert(index >= 0 && index < this->token_count);
 
@@ -745,7 +745,7 @@ bool CWorldFile::SetTokenValue(int index, const char *value)
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the value of a token
-const char *CWorldFile::GetTokenValue(int index)
+const char *Worldfile::GetTokenValue(int index)
 {
   assert(index >= 0 && index < this->token_count);
 
@@ -755,7 +755,7 @@ const char *CWorldFile::GetTokenValue(int index)
 
 ///////////////////////////////////////////////////////////////////////////
 // Dump the token list (for debugging).
-void CWorldFile::DumpTokens()
+void Worldfile::DumpTokens()
 {
   int line;
 
@@ -776,7 +776,7 @@ void CWorldFile::DumpTokens()
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse tokens into entities and properties.
-bool CWorldFile::ParseTokens()
+bool Worldfile::ParseTokens()
 {
   int i;
   int entity;
@@ -831,7 +831,7 @@ bool CWorldFile::ParseTokens()
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse an include statement
-bool CWorldFile::ParseTokenInclude(int *index, int *line)
+bool Worldfile::ParseTokenInclude(int *index, int *line)
 {
   int i;
   CToken *token;
@@ -862,7 +862,7 @@ bool CWorldFile::ParseTokenInclude(int *index, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse a macro definition
-bool CWorldFile::ParseTokenDefine(int *index, int *line)
+bool Worldfile::ParseTokenDefine(int *index, int *line)
 {
   int i;
   int count;
@@ -939,7 +939,7 @@ bool CWorldFile::ParseTokenDefine(int *index, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse something starting with a word; could be a entity or an property.
-bool CWorldFile::ParseTokenWord(int entity, int *index, int *line)
+bool Worldfile::ParseTokenWord(int entity, int *index, int *line)
 {
   int i;
   CToken *token;
@@ -975,7 +975,7 @@ bool CWorldFile::ParseTokenWord(int entity, int *index, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse a entity from the token list.
-bool CWorldFile::ParseTokenEntity(int entity, int *index, int *line)
+bool Worldfile::ParseTokenEntity(int entity, int *index, int *line)
 {
   int i;
   int macro;
@@ -1065,7 +1065,7 @@ bool CWorldFile::ParseTokenEntity(int entity, int *index, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse an property from the token list.
-bool CWorldFile::ParseTokenProperty(int entity, int *index, int *line)
+bool Worldfile::ParseTokenProperty(int entity, int *index, int *line)
 {
   int i;
   CProperty* property;
@@ -1111,7 +1111,7 @@ bool CWorldFile::ParseTokenProperty(int entity, int *index, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse a tuple.
-bool CWorldFile::ParseTokenTuple( CProperty* property, int *index, int *line)
+bool Worldfile::ParseTokenTuple( CProperty* property, int *index, int *line)
 {
   int i, count;
   CToken *token;
@@ -1148,7 +1148,7 @@ bool CWorldFile::ParseTokenTuple( CProperty* property, int *index, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Clear the macro list
-void CWorldFile::ClearMacros()
+void Worldfile::ClearMacros()
 {
   free(this->macros);
   this->macros = NULL;
@@ -1159,7 +1159,7 @@ void CWorldFile::ClearMacros()
 
 ///////////////////////////////////////////////////////////////////////////
 // Add a macro
-int CWorldFile::AddMacro(const char *macroname, const char *entityname,
+int Worldfile::AddMacro(const char *macroname, const char *entityname,
                          int line, int starttoken, int endtoken)
 {
   if (this->macro_count >= this->macro_size)
@@ -1184,7 +1184,7 @@ int CWorldFile::AddMacro(const char *macroname, const char *entityname,
 ///////////////////////////////////////////////////////////////////////////
 // Lookup a macro by name
 // Returns -1 if there is no macro with this name.
-int CWorldFile::LookupMacro(const char *macroname)
+int Worldfile::LookupMacro(const char *macroname)
 {
   int i;
   CMacro *macro;
@@ -1201,7 +1201,7 @@ int CWorldFile::LookupMacro(const char *macroname)
 
 ///////////////////////////////////////////////////////////////////////////
 // Dump the macro list for debugging
-void CWorldFile::DumpMacros()
+void Worldfile::DumpMacros()
 {
   printf("\n## begin macros\n");
   for (int i = 0; i < this->macro_count; i++)
@@ -1224,7 +1224,7 @@ void CWorldFile::DumpMacros()
 
 ///////////////////////////////////////////////////////////////////////////
 // Clear the entity list
-void CWorldFile::ClearEntities()
+void Worldfile::ClearEntities()
 {
   free(this->entities);
   this->entities = NULL;
@@ -1235,7 +1235,7 @@ void CWorldFile::ClearEntities()
 
 ///////////////////////////////////////////////////////////////////////////
 // Add a entity
-int CWorldFile::AddEntity(int parent, const char *type)
+int Worldfile::AddEntity(int parent, const char *type)
 {
   if (this->entity_count >= this->entity_size)
   {
@@ -1255,7 +1255,7 @@ int CWorldFile::AddEntity(int parent, const char *type)
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the number of entities
-int CWorldFile::GetEntityCount()
+int Worldfile::GetEntityCount()
 {
   return this->entity_count;
 }
@@ -1263,7 +1263,7 @@ int CWorldFile::GetEntityCount()
 
 ///////////////////////////////////////////////////////////////////////////
 // Get a entity's parent entity
-int CWorldFile::GetEntityParent(int entity)
+int Worldfile::GetEntityParent(int entity)
 {
   if (entity < 0 || entity >= this->entity_count)
     return -1;
@@ -1273,7 +1273,7 @@ int CWorldFile::GetEntityParent(int entity)
 
 ///////////////////////////////////////////////////////////////////////////
 // Get a entity (returns the entity type value)
-const char *CWorldFile::GetEntityType(int entity)
+const char *Worldfile::GetEntityType(int entity)
 {
   if (entity < 0 || entity >= this->entity_count)
     return NULL;
@@ -1284,7 +1284,7 @@ const char *CWorldFile::GetEntityType(int entity)
 ///////////////////////////////////////////////////////////////////////////
 // Lookup a entity number by type name
 // Returns -1 if there is no entity with this type
-int CWorldFile::LookupEntity(const char *type)
+int Worldfile::LookupEntity(const char *type)
 {
   for (int entity = 0; entity < GetEntityCount(); entity++)
   {
@@ -1303,7 +1303,7 @@ void PrintProp( char* key, CProperty* prop, void* user )
 
 ///////////////////////////////////////////////////////////////////////////
 // Dump the entity list for debugging
-void CWorldFile::DumpEntities()
+void Worldfile::DumpEntities()
 {
   printf("\n## begin entities\n");
   
@@ -1315,7 +1315,7 @@ void CWorldFile::DumpEntities()
 
 ///////////////////////////////////////////////////////////////////////////
 // Clear the property list
-void CWorldFile::ClearProperties()
+void Worldfile::ClearProperties()
 {
   this->property_count = 0;
   
@@ -1327,7 +1327,7 @@ void CWorldFile::ClearProperties()
 
 ///////////////////////////////////////////////////////////////////////////
 // Add an property
-CProperty* CWorldFile::AddProperty(int entity, const char *name, int line)
+CProperty* Worldfile::AddProperty(int entity, const char *name, int line)
 {
   //int i;
   CProperty *property = g_new0( CProperty, 1 );
@@ -1356,7 +1356,7 @@ CProperty* CWorldFile::AddProperty(int entity, const char *name, int line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Add an property value
-void CWorldFile::AddPropertyValue( CProperty* property, int index, int value_token)
+void Worldfile::AddPropertyValue( CProperty* property, int index, int value_token)
 {
   assert(property);
 
@@ -1375,7 +1375,7 @@ void CWorldFile::AddPropertyValue( CProperty* property, int index, int value_tok
 
 ///////////////////////////////////////////////////////////////////////////
 // Get an property 
-CProperty* CWorldFile::GetProperty(int entity, const char *name)
+CProperty* Worldfile::GetProperty(int entity, const char *name)
 {
   char key[128];
   snprintf( key, 127, "%d%s", entity, name );
@@ -1395,7 +1395,7 @@ CProperty* CWorldFile::GetProperty(int entity, const char *name)
 }
 
 
-bool CWorldFile::PropertyExists( int section, char* token )
+bool Worldfile::PropertyExists( int section, char* token )
 {
   return( this->GetProperty( section, token ) ? true : false );
 }
@@ -1403,7 +1403,7 @@ bool CWorldFile::PropertyExists( int section, char* token )
 
 ///////////////////////////////////////////////////////////////////////////
 // Set the value of an property
-void CWorldFile::SetPropertyValue( CProperty* property, int index, const char *value)
+void Worldfile::SetPropertyValue( CProperty* property, int index, const char *value)
 {
   assert( property );
   //  printf( "property %s index %d value_count %d \n",
@@ -1418,7 +1418,7 @@ void CWorldFile::SetPropertyValue( CProperty* property, int index, const char *v
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the value of an property 
-const char *CWorldFile::GetPropertyValue(CProperty* property, int index)
+const char *Worldfile::GetPropertyValue(CProperty* property, int index)
 {
   assert(property);
   property->used = true;
@@ -1428,7 +1428,7 @@ const char *CWorldFile::GetPropertyValue(CProperty* property, int index)
 
 ///////////////////////////////////////////////////////////////////////////
 // Dump the property list for debugging
-void CWorldFile::DumpProperties()
+void Worldfile::DumpProperties()
 {
   printf("\n## begin properties\n");
 //   for (int i = 0; i < this->property_count; i++)
@@ -1449,7 +1449,7 @@ void CWorldFile::DumpProperties()
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a string
-const char *CWorldFile::ReadString(int entity, const char *name, const char *value)
+const char *Worldfile::ReadString(int entity, const char *name, const char *value)
 {
   CProperty* property = GetProperty(entity, name);
   if (property == NULL )
@@ -1460,7 +1460,7 @@ const char *CWorldFile::ReadString(int entity, const char *name, const char *val
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a string
-void CWorldFile::WriteString(int entity, const char *name, const char *value)
+void Worldfile::WriteString(int entity, const char *name, const char *value)
 {
   CProperty* property = GetProperty(entity, name);
   if( property == NULL )
@@ -1471,7 +1471,7 @@ void CWorldFile::WriteString(int entity, const char *name, const char *value)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read an int
-int CWorldFile::ReadInt(int entity, const char *name, int value)
+int Worldfile::ReadInt(int entity, const char *name, int value)
 {
   CProperty* property = GetProperty(entity, name);
   if (property == NULL )
@@ -1482,7 +1482,7 @@ int CWorldFile::ReadInt(int entity, const char *name, int value)
 
 ///////////////////////////////////////////////////////////////////////////
 // Write an int
-void CWorldFile::WriteInt(int entity, const char *name, int value)
+void Worldfile::WriteInt(int entity, const char *name, int value)
 {
   char default_str[64];
   snprintf(default_str, sizeof(default_str), "%d", value);
@@ -1491,7 +1491,7 @@ void CWorldFile::WriteInt(int entity, const char *name, int value)
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a float
-void CWorldFile::WriteFloat(int entity, const char *name, double value)
+void Worldfile::WriteFloat(int entity, const char *name, double value)
 {
   char default_str[64];
   snprintf(default_str, sizeof(default_str), "%.3f", value);
@@ -1501,7 +1501,7 @@ void CWorldFile::WriteFloat(int entity, const char *name, double value)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a float
-double CWorldFile::ReadFloat(int entity, const char *name, double value)
+double Worldfile::ReadFloat(int entity, const char *name, double value)
 {
   CProperty* property = GetProperty(entity, name);
   if (property == NULL )
@@ -1512,7 +1512,7 @@ double CWorldFile::ReadFloat(int entity, const char *name, double value)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a length (includes unit conversion)
-double CWorldFile::ReadLength(int entity, const char *name, double value)
+double Worldfile::ReadLength(int entity, const char *name, double value)
 {
   CProperty* property = GetProperty(entity, name);
   if (property == NULL )
@@ -1522,7 +1522,7 @@ double CWorldFile::ReadLength(int entity, const char *name, double value)
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a length (includes units conversion)
-void CWorldFile::WriteLength(int entity, const char *name, double value)
+void Worldfile::WriteLength(int entity, const char *name, double value)
 {
   char default_str[64];
   snprintf(default_str, sizeof(default_str), "%.3f", value / this->unit_length);
@@ -1532,7 +1532,7 @@ void CWorldFile::WriteLength(int entity, const char *name, double value)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read an angle (includes unit conversion)
-double CWorldFile::ReadAngle(int entity, const char *name, double value)
+double Worldfile::ReadAngle(int entity, const char *name, double value)
 {
   CProperty* property = GetProperty(entity, name);
   if (property == NULL )
@@ -1543,7 +1543,7 @@ double CWorldFile::ReadAngle(int entity, const char *name, double value)
 /* REMOVE?
 ///////////////////////////////////////////////////////////////////////////
 // Read a boolean
-bool CWorldFile::ReadBool(int entity, const char *name, bool value)
+bool Worldfile::ReadBool(int entity, const char *name, bool value)
 {
 //return (bool) ReadInt(entity, name, value);
   CProperty* property = GetProperty(entity, name);
@@ -1564,7 +1564,7 @@ bool CWorldFile::ReadBool(int entity, const char *name, bool value)
 ///////////////////////////////////////////////////////////////////////////
 // Read a color (included text -> RGB conversion).
 // We look up the color in one of the common color databases.
-uint32_t CWorldFile::ReadColor(int entity, const char *name, uint32_t value)
+uint32_t Worldfile::ReadColor(int entity, const char *name, uint32_t value)
 {
   CProperty* property;
   const char *color;
@@ -1586,7 +1586,7 @@ uint32_t CWorldFile::ReadColor(int entity, const char *name, uint32_t value)
 // the world files path to it.
 // Known bug: will leak memory everytime it is called (but its not called often,
 // so I cant be bothered fixing it).
-const char *CWorldFile::ReadFilename(int entity, const char *name, const char *value)
+const char *Worldfile::ReadFilename(int entity, const char *name, const char *value)
 {
   CProperty* property = GetProperty(entity, name);
   if (property == NULL )
@@ -1634,7 +1634,7 @@ const char *CWorldFile::ReadFilename(int entity, const char *name, const char *v
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a string from a tuple
-const char *CWorldFile::ReadTupleString(int entity, const char *name,
+const char *Worldfile::ReadTupleString(int entity, const char *name,
                                         int index, const char *value)
 {
   CProperty* property = GetProperty(entity, name);
@@ -1646,7 +1646,7 @@ const char *CWorldFile::ReadTupleString(int entity, const char *name,
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a string to a tuple
-void CWorldFile::WriteTupleString(int entity, const char *name,
+void Worldfile::WriteTupleString(int entity, const char *name,
                                   int index, const char *value)
 {
   CProperty* property = GetProperty(entity, name);
@@ -1665,7 +1665,7 @@ void CWorldFile::WriteTupleString(int entity, const char *name,
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a float from a tuple
-double CWorldFile::ReadTupleFloat(int entity, const char *name,
+double Worldfile::ReadTupleFloat(int entity, const char *name,
                                   int index, double value)
 {
   CProperty* property = GetProperty(entity, name);
@@ -1677,7 +1677,7 @@ double CWorldFile::ReadTupleFloat(int entity, const char *name,
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a float to a tuple
-void CWorldFile::WriteTupleFloat(int entity, const char *name,
+void Worldfile::WriteTupleFloat(int entity, const char *name,
                                  int index, double value)
 {
   char default_str[64];
@@ -1688,7 +1688,7 @@ void CWorldFile::WriteTupleFloat(int entity, const char *name,
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a length from a tuple (includes unit conversion)
-double CWorldFile::ReadTupleLength(int entity, const char *name,
+double Worldfile::ReadTupleLength(int entity, const char *name,
                                    int index, double value)
 {
   CProperty* property = GetProperty(entity, name);
@@ -1700,7 +1700,7 @@ double CWorldFile::ReadTupleLength(int entity, const char *name,
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a length to a tuple (includes unit conversion)
-void CWorldFile::WriteTupleLength(int entity, const char *name,
+void Worldfile::WriteTupleLength(int entity, const char *name,
                                  int index, double value)
 {
   char default_str[64];
@@ -1711,7 +1711,7 @@ void CWorldFile::WriteTupleLength(int entity, const char *name,
 
 ///////////////////////////////////////////////////////////////////////////
 // Read an angle from a tuple (includes unit conversion)
-double CWorldFile::ReadTupleAngle(int entity, const char *name,
+double Worldfile::ReadTupleAngle(int entity, const char *name,
                                   int index, double value)
 {
   CProperty* property = GetProperty(entity, name);
@@ -1723,7 +1723,7 @@ double CWorldFile::ReadTupleAngle(int entity, const char *name,
 
 ///////////////////////////////////////////////////////////////////////////
 // Write an angle to a tuple (includes unit conversion)
-void CWorldFile::WriteTupleAngle(int entity, const char *name,
+void Worldfile::WriteTupleAngle(int entity, const char *name,
                                  int index, double value)
 {
   char default_str[64];

@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.1.2.25 2008-01-13 22:55:47 rtv Exp $
+// CVS: $Id: stest.cc,v 1.1.2.26 2008-01-14 19:35:12 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -18,7 +18,7 @@ using namespace Stg;
 
 double minfrontdistance = 0.750;
 double speed = 0.400;
-double turnrate = DTOR(60);
+double turnrate = M_PI/3.0;
 
 typedef struct
 {
@@ -47,7 +47,7 @@ int main( int argc, char* argv[] )
   const int POPSIZE = atoi(argv[2] );
 
   // initialize libstage
-  StgWorld::Init( &argc, &argv );
+  Stg::Init( &argc, &argv );
   //StgWorld world;
   StgWorldGui world(800, 700, "Stage Benchmark Program");
 

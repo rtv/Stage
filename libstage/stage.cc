@@ -19,6 +19,36 @@
 #include "stage_internal.hh"
 #include "config.h" // results of autoconf's system configuration tests
 
+static bool init_called = false;
+static GHashTable* typetable = NULL;
+
+
+void Stg::Init( int* argc, char** argv[] )
+{
+  PRINT_DEBUG( "Stg::Init()" );
+
+  // seed the RNG 
+  srand48( time(NULL) );
+  
+  g_type_init();
+  
+  if(!setlocale(LC_ALL,"POSIX"))
+    PRINT_WARN("Failed to setlocale(); config file may not be parse correctly\n" );
+  
+  typetable = stg_create_typetable();      
+  init_called = true;  
+}
+
+bool Stg::InitDone()
+{
+  return init_called;
+}
+
+GHashTable* Stg::Typetable()
+{
+  return typetable;
+}
+
 
 void Stg::stg_print_err( const char* err )
 {
@@ -38,7 +68,7 @@ int Stg::stg_line_3d( int32_t x, int32_t y, int32_t z,
 {
   int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;
   
-  sx = SGN(dx);  sy = SGN(dy);  sz = SGN(dz);
+  sx = sgn(dx);  sy = sgn(dy);  sz = sgn(dz);
   ax = abs(dx);  ay = abs(dy);  az = abs(dz);
   bx = 2*ax;	   by = 2*ay;	  bz = 2*az;
   exy = ay-ax;   exz = az-ax;	  ezy = ay-az;
@@ -227,8 +257,8 @@ void Stg::stg_rotrects_normalize( stg_rotrect_t* rects, int num )
 {
   // assuming the rectangles fit in a square +/- one billion units
   double minx, miny, maxx, maxy;
-  minx = miny = BILLION;
-  maxx = maxy = -BILLION;
+  minx = miny = billion;
+  maxx = maxy = -billion;
   
   int r;
   for( r=0; r<num; r++ )
@@ -276,7 +306,7 @@ void Stg::stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
   result->x = p1->x + p2->x * cosa - p2->y * sina;
   result->y = p1->y + p2->x * sina + p2->y * cosa;
   result->z = p1->z + p2->z;
-  result->a = NORMALIZE(p1->a + p2->a);
+  result->a = normalize(p1->a + p2->a);
 
   //  printf( "pose z %.2f\n", result->z );
 }
@@ -551,3 +581,30 @@ void Stg::stg_color_unpack( stg_color_t col,
 }
 
 
+// DRAW INTERFACE
+
+using namespace Draw;
+
+draw_t* Draw::create( type_t type,
+		      vertex_t* verts,
+		      size_t vert_count )
+{
+  size_t vert_mem_size = vert_count * sizeof(vertex_t);
+  
+  // allocate space for the draw structure and the vertex data behind it
+  draw_t* d = (draw_t*)
+    g_malloc( sizeof(draw_t) + vert_mem_size );
+  
+  d->type = type;
+  d->vert_count = vert_count;
+  
+  // copy the vertex data behind the draw structure
+  memcpy( d->verts, verts, vert_mem_size );
+	     
+  return d;
+}
+
+void Draw::destroy( draw_t* d )
+{
+  g_free( d );
+}
