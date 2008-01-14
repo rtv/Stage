@@ -142,59 +142,85 @@ void stg_quit_cancel( void )
 // red color will be returned instead.
 stg_color_t stg_lookup_color(const char *name)
 {
-  FILE *file;
-  const char *filename;
-  
   if( name == NULL ) // no string?
     return 0; // black
   
   if( strcmp( name, "" ) == 0 ) // empty string?
     return 0; // black
-
-  filename = COLOR_DATABASE;
-  file = fopen(filename, "r");
-  if (!file)
-  {
-    PRINT_ERR2("unable to open color database %s : %s",
-               filename, strerror(errno));
-    fclose(file);
-    return 0xFFFFFF;
-  }
   
-  while (TRUE)
-  {
-    char line[1024];
-    if (!fgets(line, sizeof(line), file))
-      break;
+  static FILE *file = NULL;
+  static GHashTable* table = NULL;
 
-    // it's a macro or comment line - ignore the line
-    if (line[0] == '!' || line[0] == '#' || line[0] == '%') 
-      continue;
-
-    // Trim the trailing space
-    while (strchr(" \t\n", line[strlen(line)-1]))
-      line[strlen(line)-1] = 0;
-
-    // Read the color
-    int r, g, b;
-    int chars_matched = 0;
-    sscanf( line, "%d %d %d %n", &r, &g, &b, &chars_matched );
-      
-    // Read the name
-    char* nname = line + chars_matched;
-
-    // If the name matches
-    if (strcmp(nname, name) == 0)
+  if( table == NULL )
+    table = g_hash_table_new( g_str_hash, g_str_equal );
+  
+  if( file == NULL )
     {
-      fclose(file);
-      return ((r << 16) | (g << 8) | b);
-    }
-  }
-  PRINT_WARN1("unable to find color [%s]; using default (red)", name);
-  fclose(file);
-  return 0xFF0000;
-}
+      char* searchfiles[] = {
+	"./rgb.txt",
+#ifdef RGBFILE
+	RGBFILE,
+#endif
+	"../rgb.txt",
+	NULL };
+      
+      for( int i=0;
+	   searchfiles[i];
+	   i++ )
+	{
+	  char* filename = searchfiles[i];
+	  PRINT_DEBUG1( "Attempting to open \"%s\"", filename );
+	  if( (file = fopen( filename, "r")) )
+	    break; // opened a file ok - jump out of for loop
+	}
+      
+      if( file == NULL )
+	{
+	  
+	  PRINT_ERR1("unable to open color database: %s",
+		     strerror(errno));
+	  fclose(file);
+	  exit(0);
+	}
+      
+      PRINT_DEBUG( "Success!" );
 
+      // load the file into the hash table       
+      while (TRUE)
+	{
+	  char line[1024];
+	  if (!fgets(line, sizeof(line), file))
+	    break;
+	  
+	  // it's a macro or comment line - ignore the line
+	  if (line[0] == '!' || line[0] == '#' || line[0] == '%') 
+	    continue;
+
+	  // Trim the trailing space
+	  while (strchr(" \t\n", line[strlen(line)-1]))
+	    line[strlen(line)-1] = 0;
+	  
+	  // Read the color
+	  int r, g, b;
+	  int chars_matched = 0;
+	  sscanf( line, "%d %d %d %n", &r, &g, &b, &chars_matched );
+	  
+	  stg_color_t col = ( 0xFF000000 | (r << 16) | (g << 8) | b);
+
+	  // Read the name
+	  char* colorname = strdup( line + chars_matched );
+	  
+	  // map the name to the color in the table
+	  g_hash_table_insert( table, (gpointer)colorname, (gpointer)col );
+	  
+	}
+
+      fclose(file);
+    }
+
+  // look up the colorname in the database  
+  return (stg_color_t)g_hash_table_lookup( table, name );
+}
 
 
 //////////////////////////////////////////////////////////////////////////

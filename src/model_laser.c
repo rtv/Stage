@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.90 $
+//  $Revision: 1.91 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -375,6 +375,9 @@ int laser_render_data( stg_model_t* mod, void* enabled )
       
   stg_rtk_fig_color_rgb32( fg, bright_color );
       
+  points[0].x = 0.0;
+  points[0].y = 0.0;
+
   int s;
   for( s=0; s<sample_count; s++ )
     {

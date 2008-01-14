@@ -22,7 +22,7 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.h,v 1.5 2005-08-25 18:11:45 gerkey Exp $
+// CVS: $Id: stg_time.h,v 1.6 2008-01-14 20:23:01 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -30,8 +30,6 @@
 #define STG_TIME_H
 
 #include <libplayercore/playercore.h>
-//#include "stage.h"
-//#include "p_driver.h"
 
 class StgDriver;
 

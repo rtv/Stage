@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.17 2007-12-13 20:31:07 gerkey Exp $
+dnl $Id: configure.ac,v 1.18 2008-01-14 20:23:01 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -75,8 +75,8 @@ AC_ARG_ENABLE(gnomecanvas,
 
 AM_CONDITIONAL(GNOME, test x$gnome = xtrue)
 
-dnl for libstageplugin, we need Player 2.0 or higher
-PKG_CHECK_MODULES( PLAYER, playercore >= 2.0.1,
+dnl for libstageplugin, we need Player 2.1 or higher
+PKG_CHECK_MODULES( PLAYER, playercore >= 2.1.0,
  AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin])
  have_player=yes
  ,
