@@ -1,0 +1,48 @@
+
+HDR = \
+    ../config.h \
+    colors.h \
+    stage.hh \
+    stage_internalmake.hh \
+    worldfile.hh
+
+SRC = \
+    ancestor.cc \
+    block.cc \
+    blockgrid.cc \
+    canvas.cc \
+    glcolorstack.cc \
+    model.cc \
+    model_callbacks.cc \
+    model_ranger.cc \
+    model_blobfinder.cc \
+    model_laser.cc \
+    model_fiducial.cc \
+    model_load.cc \
+    model_position.cc \
+    model_props.cc \
+    stest.cc \
+    stage.cc \
+    typetable.cc \
+    world.cc \
+    worldfile.cc \
+    worldgui.cc
+
+
+
+CXXFLAGS+= -g -Wall -I.. -I../replace `fltk-config --use-gl --use-images --cflags` `pkg-config --cflags glib-2.0 gdk-pixbuf-2.0`
+LIBS= `fltk-config --use-gl --use-images --ldflags`  `pkg-config --libs gdk-pixbuf-2.0` -framework OpenGL
+
+OBJ=$(SRC:.cc=.o)
+
+all: stage
+
+.cc.o:
+	g++ $(CXXFLAGS) -c $< 
+
+stage: $(OBJ)
+	g++ $(LIBS) $(OBJ) -o $@
+
+clean : 
+	rm -f *.o *.lo stage
+
