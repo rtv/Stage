@@ -1,28 +1,25 @@
 -- TODO --
 
+ - libstageplugin
+ - better model lookup
+ - collisons
+ - 3d ray tracing
+ - fiducials
+ - GUI rotations
+ - docs
  - gripper
- - localization
  - power
- - polylines
-
- - sell large scale sims to industry?
- - 0.01M robots
- - pacman world
-
- - boundary property
+ - energy
+ - pucks
 
  - sensible defaults - laser (all devices)
     - where to put default values? in each model seems better than the
       header file
 
- - docs
-
- - energy
-
- - pucks
-
- - gripper 
-
+-- Large Scale Robotics paper
+ - 0.01M robots
+ - two or three benchmark controllers
+ - experimental design
 
 -- DONE --
 

@@ -1,6 +1,6 @@
 SUBDIRS = bitmaps wifi
 
-worldsdir = $(prefix)/share/stage/worlds
+worldsdir = $(datadir)/$(package)/worlds
 
 EXAMPLES =  \
 889_05.cfg \

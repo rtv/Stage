@@ -1,52 +1,57 @@
-
-# Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.67 2006-10-05 22:27:29 gerkey Exp $
+# simple.world - basic world file example
+# Authors: Richard Vaughan
+# $id$
 
 # defines Pioneer-like robots
 include "pioneer.inc"
 
-
 # defines 'map' object used for floorplans
 include "map.inc"
 
-
-# defines sick laser scanner
+# defines sick laser
 include "sick.inc"
 
-
 # size of the world in meters
-size [16 16]
+size [16 16 10]
 
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02
 
-interval_sim 100
-interval_real 100
+interval_sim 100  # simulation timestep in milliseconds
+interval_real 10  # real-time interval between simulation updates in milliseconds 
 
 # configure the GUI window
 window
 ( 
-  size [ 695.000 693.000 ] 
-  center [-0.010 -0.040] 
-  scale 0.028 
+  size [ 872.000 855.000 ] 
+  center [-8.010 -6.040] 
+  rotate [ 0.000 0.000 ]
+  scale 29.806 
+
+  show_data 1
 )
 
 # load an environment bitmap
-map
+floorplan
 ( 
-  bitmap "bitmaps/cave.png"
-  size [16 16]
   name "cave"
+  size3 [16 16 0.5]
+  bitmap "bitmaps/cave.png"
 )
 
+fancypioneer2dx
+(
+ name "r0"
+ color "red"
+ pose [-2.551 -0.281 -39.206]
 
-# create a robot
+ sicklaser( pose [ 0.040 0.000 0.000 ] ) 
+)
+
 pioneer2dx
 (
-  name "robot1"
-  color "red"
-  pose [-7 -7 45]
-  sick_laser()
-  watchdog_timeout -1.0
+ name "r1"
+ color "green"
+ pose [-2.551 -2.281 -39.206]
+ sicklaser( pose [ 0.040 0.000 0.000 ] ) 
 )
-

@@ -1,12 +1,14 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.18 2008-01-14 20:23:01 rtv Exp $
+dnl $Id: configure.ac,v 1.19 2008-01-15 01:25:42 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,2.1.0rc1)
-
-AC_CONFIG_SRCDIR(src/stage.c)
+AC_INIT(Stage,3.0.0)  
+			
+dnl Check for a source file, to make sure any user-specified source
+dnl dir is correct	 	
+AC_CONFIG_SRCDIR(libstage/model.cc)
 
 dnl determine system type.  this is used in a couple of places to infer the 
 dnl types of arguments to some networking library functions.  if/when we 
@@ -47,45 +49,37 @@ if test "x$have_pkg_config" = "xno"; then
   AC_MSG_ERROR([pkg-config is required to build Stage.  Install pkg-config, then run configure again.])
 fi
 
+dnl ==== GRAPHICS FILES ====
+
+PKG_CHECK_MODULES(PIXBUF, gdk-pixbuf-2.0 >= 1.0, , 
+  AC_MSG_ERROR([Required library gdk-pixbuf-2.0 not found. Install it and try again.]) 
+)
+
+dnl ==== FLTK GUI ====
+
+AC_CHECK_PROGS(HAVE_FLTK_CONFIG, fltk-config, "")
+if test -n "$HAVE_FLTK_CONFIG"; then
+  AC_SUBST(FLTK_CFLAGS,"`fltk-config --use-gl --use-images --cxxflags`")
+  AC_SUBST(FLTK_LIBS,"`fltk-config --use-gl --use-images --ldflags`")
+else
+ AC_MSG_ERROR(Could not find fltk-config. Check that FLTK is installed.)
+fi
+
+dnl ==== PLAYER ====
+
 dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
-dnl check for GTK stuff - we need it for the GUI
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.4, ,
- AC_MSG_WARN([A suitable GTK+ was not found. GTK+-2.4 or later is required. ])
-)
-
-	
-dnl if GNOMECANVAS is requested and available, we use that for graphics
-AC_ARG_ENABLE(gnomecanvas,
-	      AC_HELP_STRING([--enable-gnomecanvas],[Use GnomeCanvas if available *EXPERIMENTAL (rtv)*]),
-	      [ if test "x$enableval" = "xyes"; then
-	      PKG_CHECK_MODULES(GNOME, libgnomecanvas-2.0 >= 2.0,
-	        gnome=true
-                AC_DEFINE(INCLUDE_GNOME,1,[building GnomeCanvas components]),
-	        AC_MSG_WARN([no suitable GnomeCanvas library was found. ])
-	        )
- 	        AC_MSG_RESULT([GnomeCanvas graphics will be used.])
-              else
-                gnome=false
-	        AC_MSG_RESULT([GnomeCanvas graphics disabled by user])
-              fi ],
-)
-
-AM_CONDITIONAL(GNOME, test x$gnome = xtrue)
-
 dnl for libstageplugin, we need Player 2.1 or higher
 PKG_CHECK_MODULES( PLAYER, playercore >= 2.1.0,
  AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin])
- have_player=yes
- ,
+ have_player=yes,
  AC_MSG_WARN([No suitable Player installation detected.])
  have_player=no
 )
 
-AM_CONDITIONAL(HAVE_PLAYER, [test $have_player = yes])
-
+AM_CONDITIONAL(HAVE_PLAYER, [test $have_player=yes])
 
 dnl for libplayerc examples, we need libplayerc
 PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0.1,
@@ -98,20 +92,9 @@ PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0.1,
 
 AM_CONDITIONAL(HAVE_PLAYERC, [test $have_playerc = yes])
 
-dnl where's the X11 color database?
-AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
-  CDB="\"/usr/X11R6/lib/X11/rgb.txt\"",
-  AC_CHECK_FILE([/usr/openwin/lib/X11/rgb.txt],
-    CDB="\"/usr/openwin/lib/X11/rgb.txt\"",
-    AC_CHECK_FILE([/usr/share/X11/rgb.txt],
-      CDB="\"/usr/share/X11/rgb.txt\"",
-      CDB="\"/usr/X11R6/lib/X11/rgb.txt\"")))
-AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
-CDB="\"$with_color\"",)
-AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
-
 AC_OUTPUT(Makefile 
-          src/Makefile 
+          libstage/Makefile 
+          libstageplugin/Makefile 
 	  docsrc/Makefile
           worlds/Makefile 
           worlds/wifi/Makefile 
@@ -128,11 +111,10 @@ AC_MSG_RESULT([])
 AC_MSG_RESULT([*************************************************************])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([Stage will be built for a $host system, with the following tools and options:])
-AC_MSG_RESULT([  C   compiler: $CC $CFLAGS])
-AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS])
+AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS $PIXBUF_CFLAGS $FLTK_CFLAGS ])
 AC_MSG_RESULT([])
 
-if test "x$have_player" = "xyes"; then
+if test $have_player = yes; then
   AC_MSG_RESULT([The Player plugin (libstageplugin) will be built using the following flags: ])
   AC_MSG_RESULT([  compiler: $PLAYER_CFLAGS])
   AC_MSG_RESULT([    linker: $PLAYER_LIBS])
