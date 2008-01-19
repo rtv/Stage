@@ -93,6 +93,7 @@ debug menu that enables visualization of some of the innards of Stage.
 
 #include "stage_internal.hh"
 #include <FL/Fl_Image.H>
+#include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_PNG_Image.H>
 					     //#include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Output.H>
@@ -142,26 +143,24 @@ void dummy_cb(Fl_Widget*, void* v)
 
 void About_cb(Fl_Widget*, void* v) 
 {
+  fl_register_images();
   Fl_Window     win(400,200);                 // make a window
   Fl_Box        box(10,20,400-20,80 );     // widget that will contain image
-  Fl_PNG_Image png("logo.png");      // load jpeg image into ram
-  box.image(png);                             // attach jpg image to box
+
+  // TODO - get image from the install path 
+  Fl_PNG_Image png("logo.png");      // load image into ram
+  box.image(png);                    // attach image to box
   
   Fl_Multiline_Output text(  20,120, 400-20, 100 );
   text.box( FL_NO_BOX );
   char buf[256];
   snprintf( buf, 255, 
-	    "Version %s\n" 
+	    "%s\n" 
 	    "Part of the Player Project\n"
 	    "http://playerstage.sourceforge.net\n"
 	    "Copyright 2000-2008 Richard Vaughan and contributors",
-	    VERSION );
+	    PACKAGE_STRING );
   text.value( buf );
-
-//   Fl_Multiline_Output text2(  10,180,400-20, 60 );
-//   text2.box( FL_NO_BOX );
-
-  printf( "image size %d %d\n", png.w(), png.h() );
   win.show();
   Fl::run();
 }

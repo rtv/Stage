@@ -14,7 +14,8 @@ StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h)
   : Fl_Gl_Window(x,y,w,h)
 {
   end();
-  show(); // must do this so that the GL context is created before configuring GL
+  //show(); // must do this so that the GL context is created before configuring GL
+  // but that line causes a segfault in Linux/X11! TODO: test in OS X
 
   this->world = world;
   selected_models = NULL;

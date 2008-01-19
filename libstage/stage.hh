@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.2 2008-01-15 01:16:49 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.3 2008-01-19 01:19:40 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -67,11 +67,15 @@
 #include <FL/Fl_Menu_Button.H>
 #include <FL/Fl_Value_Slider.H>
 #include <FL/Fl_Window.H>
-#include <FL/fl_Box.H>
 #include <FL/fl_draw.H>
 #include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
-#include <FL/glut.H>
-#include <FL/glu.H>
+#include <FL/glut.h>
+//#include <FL/glu.h>
+//#ifdef __APPLE __
+//#include <OpenGL/glu.h>
+//#else
+#include <GL/glu.h>
+//#endif 
 
 /** The Stage library uses its own namespace */
 namespace Stg 
@@ -827,13 +831,14 @@ namespace Draw
   class StgBlockGrid 
   {
   private:
-    stg_bigblock_t* map;
-  
-    GTrashStack* trashstack;  
-    uint32_t width, height, bwidth, bheight;
+    //stg_bigblock_t* map;
+    GSList** cells;
+
+    //GTrashStack* trashstack;  
+    uint32_t width, height;// bwidth, bheight;
 
   public:
-    uint32_t numbits;
+    //uint32_t numbits;
     StgBlockGrid( uint32_t width, uint32_t height );
     ~StgBlockGrid();
     void AddBlock( uint32_t x, uint32_t y, StgBlock* block );
@@ -844,7 +849,7 @@ namespace Draw
   
     /** Returns the number of blocks occupying the big block, specified
 	in big block coordinates, NOT in small blocks.*/
-    uint32_t BigBlockOccupancy( uint32_t bbx, uint32_t bby );
+    //uint32_t BigBlockOccupancy( uint32_t bbx, uint32_t bby );
   };
   
   /** raytrace sample
@@ -1004,7 +1009,7 @@ namespace Draw
   
     stg_meters_t Width(){ return width; };
     stg_meters_t Height(){ return height; };
-    uint32_t Resolution(){ return ppm; };
+    double Resolution(){ return ppm; };
   
     StgModel* GetModel( const stg_id_t id );
     StgModel* GetModel( const char* name );

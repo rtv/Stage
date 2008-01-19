@@ -31,7 +31,7 @@ SRC = \
 
 
 CXXFLAGS+= -g -Wall -I.. -I../replace `fltk-config --use-gl --use-images --cflags` `pkg-config --cflags glib-2.0 gdk-pixbuf-2.0`
-LIBS= `fltk-config --use-gl --use-images --ldflags`  `pkg-config --libs gdk-pixbuf-2.0` -framework OpenGL
+LIBS= `fltk-config --use-gl --use-images --ldflags`  `pkg-config --libs gdk-pixbuf-2.0` 
 
 OBJ=$(SRC:.cc=.o)
 
@@ -41,8 +41,10 @@ all: stage
 	g++ $(CXXFLAGS) -c $< 
 
 stage: $(OBJ)
-	g++ $(LIBS) $(OBJ) -o $@
+	g++ $(OBJ) -o $@ $(LIBS) 
 
 clean : 
 	rm -f *.o *.lo stage
 
+demo: gldemo.cc
+	g++ gldemo.cc -o $@ $(LIBS) 		

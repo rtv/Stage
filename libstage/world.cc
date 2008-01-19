@@ -104,7 +104,7 @@ void StgWorld::Initialize( const char* token,
   this->quit_time = 0; 
   
   assert(token);
-  this->token = (char*)malloc(Stg::TOKEN_MAX);
+  this->token = (char*)g_malloc(Stg::TOKEN_MAX);
   snprintf( this->token, Stg::TOKEN_MAX, "%s", token );//this->id );
 
   this->quit = false;
@@ -116,8 +116,8 @@ void StgWorld::Initialize( const char* token,
   this->models_by_id = g_hash_table_new( g_direct_hash, g_direct_equal );
   this->models_by_name = g_hash_table_new( g_str_hash, g_str_equal );
   this->sim_time = 0;
-  this->interval_sim = 1e3 * interval_sim;
-  this->interval_real = 1e3 * interval_real;
+  this->interval_sim = (stg_usec_t)thousand * interval_sim;
+  this->interval_real = (stg_usec_t)thousand * interval_real;
 
   this->real_time_start = RealTimeNow();
   this->real_time_next_update = 0;
@@ -145,13 +145,14 @@ StgWorld::~StgWorld( void )
 {
   PRINT_DEBUG2( "destroying world %d %s", id, token );
   
-  delete wf;
-  delete bgrid;
+  if( wf ) delete wf;
+  if( bgrid ) delete bgrid;
 
   g_hash_table_destroy( models_by_id );
   g_hash_table_destroy( models_by_name );
   
-  // TODO : finish clean up
+  delete bgrid;
+  g_free( token );
 }
 
 
@@ -163,10 +164,15 @@ void StgWorld::RemoveModel( StgModel* mod )
 
 void StgWorld::ClockString( char* str, size_t maxlen )
 {
-  uint32_t hours   = sim_time / 3600000000; 
-  uint32_t minutes = (sim_time % 3600000000) / 60000000; 
-  uint32_t seconds = (sim_time % 60000000) / 1000000; 
-  uint32_t msec    = (sim_time % 1000000) / 1000; 
+  const uint32_t usec_per_hour = 360000000;
+  const uint32_t usec_per_minute = 60000000;
+  const uint32_t usec_per_second = 1000000;
+  const uint32_t usec_per_msec = 1000;
+
+  uint32_t hours   = sim_time / usec_per_hour; 
+  uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute; 
+  uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second; 
+  uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec; 
   
   // find the average length of the last few realtime intervals;
   stg_usec_t average_real_interval = 0;
@@ -222,14 +228,14 @@ void StgWorld::Load( const char* worldfile_path )
   this->token = (char*)
     wf->ReadString( entity, "name", token );
   
-  this->interval_real = 1e3 *  
-    wf->ReadInt( entity, "interval_real", this->interval_real/1e3 );
+  this->interval_real = (stg_usec_t)thousand *  
+    wf->ReadInt( entity, "interval_real", this->interval_real/thousand );
 
-  this->interval_sim = 1e3 * 
-    wf->ReadInt( entity, "interval_sim", this->interval_sim/1e3 );
+  this->interval_sim = (stg_usec_t)thousand * 
+    wf->ReadInt( entity, "interval_sim", this->interval_sim/thousand );
   
   if( wf->PropertyExists( entity, "quit_time" ) )
-    this->quit_time = 1e6 * 
+    this->quit_time = (stg_usec_t)million * 
       wf->ReadInt( entity, "quit_time", 0 );
   
   this->ppm = 
@@ -432,23 +438,6 @@ void StgWorld::ClearRays()
   ray_list = NULL;
 }
 
-// raytrace wrapper that returns the model hit, rather than the block
-// stg_meters_t StgWorld::Raytrace( StgModel* finder,
-// 				 stg_pose_t* pose,
-// 				 stg_meters_t max_range,
-// 				 stg_block_match_func_t func,
-// 				 const void* arg,
-// 				 StgModel** hit_model )
-// {
-//   StgBlock* block = NULL;
-//   stg_meters_t m = RayTrace( finder, pose, max_range, func, arg, &block );
-  
-//   if( block && hit_model )
-//     *hit_model = block->Model();
-  
-//   return range;
-// }
-
 
 void StgWorld::Raytrace( stg_pose_t pose, // global pose
 			 stg_meters_t range,
@@ -515,8 +504,6 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
   uint32_t bbx = 0;
   uint32_t bby = 0;
   
-  const uint32_t NBITS = bgrid->numbits;
-
   bool lookup_list = true;
   
   while ( n-- ) 
@@ -524,20 +511,19 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
       // todo - avoid calling this multiple times for a single
       // bigblock.
       
-      bbx = x>>NBITS;
-      bby = y>>NBITS;
+//       bbx = x>>bgrid->numbits;
+//       bby = y>>bgrid->numbits;
       
-      // if we just changed grid square
-      if( ! ((bbx == bbx_last) && (bby == bby_last)) )
-	{
-	  // if this square has some contents, we need to look it up
-	  lookup_list = !(bgrid->BigBlockOccupancy(bbx,bby) < 1 );
-
-	  bbx_last = bbx;
-	  bby_last = bby;
-	}
+//       //   // if we just changed grid square
+//       if( ! ((bbx == bbx_last) && (bby == bby_last)) )
+//  	{
+//  	  // if this square has some contents, we need to look it up
+//  	  lookup_list = !(bgrid->BigBlockOccupancy(bbx,bby) < 1 );
+//  	  bbx_last = bbx;
+// 	  bby_last = bby;
+//  	}
       
-      if( lookup_list )
+//       if( lookup_list )
 	{	  
 	  for( GSList* list = bgrid->GetList(x,y);
 	       list;
@@ -553,8 +539,6 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 		  (*func)( block, mod, arg ) )
 		{
 		  // a hit!
-		  //if( hit_model )
-		  //*hit_model = block->Model();	      
 		  sample->block = block;
 		  sample->range = hypot( (x-xstart)/ppm, (y-ystart)/ppm );
 		  return;
@@ -562,6 +546,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	    }
 	}
 	  
+      // increment our pixel in the correct direction
       if ( exy < 0 ) {
 	if ( exz < 0 ) {
 	  x += sx;
