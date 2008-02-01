@@ -1,6 +1,15 @@
 //#define DEBUG 1
 #include "stage_internal.hh"
 
+typedef struct
+{
+  GSList** head;
+  GSList* link;
+  unsigned int* counter1;
+  unsigned int* counter2;
+} stg_list_entry_t;
+
+
 /** Create a new block. A model's body is a list of these
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
@@ -21,7 +30,8 @@ StgBlock::StgBlock( StgModel* mod,
   this->zmax = zmax;
   this->color = color;
   this->inherit_color = inherit_color;
-  this->rendered_points = g_array_new( FALSE, FALSE, sizeof(stg_point_int_t));
+  this->rendered_points = 
+    g_array_new( FALSE, FALSE, sizeof(stg_list_entry_t));
   
   // flag these as unset until StgBlock::Map() is called.
   this->global_zmin = -1;
@@ -165,8 +175,10 @@ void StgBlock::Map()
       
       mod->LocalToGlobal( &gpose );
             
-      pts_global[p].x = (int32_t)floor((gpose.x+mod->World()->width/2.0)*ppm);
-      pts_global[p].y = (int32_t)floor((gpose.y+mod->World()->height/2.0)*ppm);
+      //pts_global[p].x = (int32_t)floor((gpose.x+mod->World()->width/2.0)*ppm);
+      //pts_global[p].y = (int32_t)floor((gpose.y+mod->World()->height/2.0)*ppm);
+      pts_global[p].x = (int32_t)floor(gpose.x*ppm);
+      pts_global[p].y = (int32_t)floor(gpose.y*ppm);
 
       PRINT_DEBUG2("loc [%.2f %.2f]", 
 		   pts[p].x,
@@ -200,24 +212,33 @@ void StgBlock::UnMap()
   
   for( unsigned int p=0; p<rendered_points->len; p++ )    
     {
-      stg_point_int_t* pt = 
-	&g_array_index( rendered_points, stg_point_int_t, p);
+      stg_list_entry_t* pt = 
+	&g_array_index( rendered_points, stg_list_entry_t, p);
       
-      mod->World()->RemoveBlock( pt->x, pt->y, this );
-
+      //mod->World()->RemoveBlockPixel( pt->x, pt->y, this );
+      *pt->head = g_slist_delete_link( *pt->head, pt->link );      
+      
+      // decrement the region and superregion render counts
+      (*pt->counter1)--;
+      (*pt->counter2)--;
     }
 
   // forget the points we have unrendered (but keep their storage)
   g_array_set_size( rendered_points,0 );
 }  
 
-void StgBlock::RecordRenderPoint( uint32_t x, uint32_t y )
+void StgBlock::RecordRenderPoint( GSList** head, 
+				  GSList* link, 
+				  unsigned int* c1, 
+				  unsigned int* c2 )
 {
   // store this index in the block for later fast deletion
-  stg_point_int_t pt;
-  pt.x = x;
-  pt.y = y;
-  g_array_append_val( rendered_points, pt ); 
+  stg_list_entry_t el;
+  el.head = head;
+  el.link = link;
+  el.counter1 = c1;
+  el.counter2 = c2;
+  g_array_append_val( rendered_points, el ); 
 }
 
 

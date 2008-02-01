@@ -353,4 +353,3 @@ bool StgWorldGui::Update()
   Fl::check(); // may redraw the window
   return updated;
 }
-

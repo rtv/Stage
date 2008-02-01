@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.4 2008-01-19 01:41:14 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.5 2008-02-01 03:11:01 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -309,7 +309,7 @@ namespace Stg
    */
   typedef struct
   {
-    uint32_t x,y;
+    int32_t x,y;
   } stg_point_int_t;
   
   /** Create an array of [count] points. Caller must free the returned
@@ -868,6 +868,9 @@ namespace Draw
 
 
   const uint32_t INTERVAL_LOG_LEN = 32;
+  
+  class Region;
+  class SuperRegion;
 
   /** WORLD CLASS */
   class StgWorld : public StgAncestor
@@ -896,11 +899,10 @@ namespace Draw
     void Initialize( const char* token, 
 		     stg_msec_t interval_sim, 
 		     stg_msec_t interval_real,
-		     double ppm, 
-		     double width,
-		     double height );
+		     double ppm );
+    //	     double width,
+    //	     double height );
   
-
 
     virtual void PushColor( stg_color_t col ) { /* do nothing */  };
     virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
@@ -914,7 +916,7 @@ namespace Draw
     bool destroy;
 
     stg_id_t id;
-    stg_meters_t width, height;
+    //stg_meters_t width, height;
 
     GHashTable* models_by_id; ///< the models that make up the world, indexed by id
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
@@ -945,7 +947,10 @@ namespace Draw
     void StopUpdatingModel( StgModel* mod );
   
     //void MapBlock( StgBlock* block );
-  
+
+    SuperRegion* CreateSuperRegion( int32_t x, int32_t y );
+    void DestroySuperRegion( SuperRegion* sr );
+
     void Raytrace( stg_pose_t pose, 			 
 		   stg_meters_t range,
 		   stg_block_match_func_t func,
@@ -962,16 +967,18 @@ namespace Draw
 		   stg_raytrace_sample_t* samples,
 		   uint32_t sample_count );
   
-    void RemoveBlock( int x, int y, StgBlock* block )
-    { bgrid->RemoveBlock( x, y, block ); };
+    void RemoveBlock( int x, int y, StgBlock* block );
+    //{ }//bgrid->RemoveBlock( x, y, block ); };
   
   protected:
+    GHashTable* superregions;
+
     GList* ray_list;
     // store rays traced for debugging purposes
     void RecordRay( double x1, double y1, double x2, double y2 );
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
     bool graphics;
-    StgBlockGrid* bgrid;
+    //StgBlockGrid* bgrid;
 
   public:
 
@@ -980,9 +987,9 @@ namespace Draw
     StgWorld( const char* token, 
 	      stg_msec_t interval_sim, 
 	      stg_msec_t interval_real,
-	      double ppm, 
-	      double width,
-	      double height );
+	      double ppm ); 
+	      //double width,
+	      //double height );
   
     virtual ~StgWorld();
     
@@ -1012,8 +1019,8 @@ namespace Draw
     void CancelQuit(){ quit = false; }
     void CancelQuitAll(){ quit_all = false; }
   
-    stg_meters_t Width(){ return width; };
-    stg_meters_t Height(){ return height; };
+    //stg_meters_t Width(){ return width; };
+    //stg_meters_t Height(){ return height; };
     double Resolution(){ return ppm; };
   
     StgModel* GetModel( const stg_id_t id );
@@ -1022,7 +1029,9 @@ namespace Draw
 
     GList* GetRayList(){ return ray_list; };
     void ClearRays();
-  
+    void DrawTree( bool leaves );
+    void DrawFloor();
+    
     void ClockString( char* str, size_t maxlen );
 
     void ForEachModel( GHFunc func, void* arg )
@@ -1458,7 +1467,7 @@ namespace Draw
     bool debug;
 
   };
-
+  
   // BLOCKS
   class StgBlock
   {
@@ -1484,9 +1493,9 @@ namespace Draw
     void Draw2D(); // draw the block in OpenGL
     void DrawSolid(); // draw the block in OpenGL as a solid single color
     void DrawFootPrint(); // draw the projection of the block onto the z=0 plane
-
+    
     static void ScaleList( GList* blocks, stg_size_t* size );
-    void RecordRenderPoint( uint32_t x, uint32_t y );
+    void RecordRenderPoint( GSList** head, GSList* link, unsigned int* c1, unsigned int* c2 );
   
     StgModel* Model(){ return mod; };
   
@@ -1620,7 +1629,7 @@ namespace Draw
     int wf_section;
     StgCanvas* canvas;
     Fl_Menu_Bar* mbar;
-    StgBlockGrid* GetBlockGrid(){ return bgrid; };
+    //StgBlockGrid* GetBlockGrid(){ return bgridx; };
 
   public:
     StgWorldGui(int W,int H,const char*L=0);

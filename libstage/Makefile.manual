@@ -9,7 +9,6 @@ HDR = \
 SRC = \
     ancestor.cc \
     block.cc \
-    blockgrid.cc \
     canvas.cc \
     glcolorstack.cc \
     model.cc \
@@ -28,6 +27,7 @@ SRC = \
     worldfile.cc \
     worldgui.cc
 
+#    blockgrid.cc 
 
 
 CXXFLAGS+= -g -Wall -I.. -I../replace `fltk-config --use-gl --use-images --cflags` `pkg-config --cflags glib-2.0 gdk-pixbuf-2.0`

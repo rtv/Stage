@@ -3,7 +3,7 @@
 // Desc: Stage library test program
 // Created: 2004.9.15
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.2 2008-01-15 01:16:49 rtv Exp $
+// CVS: $Id: stest.cc,v 1.3 2008-02-01 03:11:02 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -67,7 +67,7 @@ int main( int argc, char* argv[] )
         robots[i].laser = (StgModelLaser*)
         robots[i].position->GetUnsubscribedModelOfType( "laser" );	 
         assert(robots[i].laser);
-        robots[i].laser->Subscribe();
+	robots[i].laser->Subscribe();
 
 //        robots[i].fiducial = (StgModelFiducial*)
 // 	 robots[i].position->GetUnsubscribedModelOfType( "fiducial" );	 
@@ -77,7 +77,7 @@ int main( int argc, char* argv[] )
        robots[i].ranger = (StgModelRanger*)
 	 robots[i].position->GetUnsubscribedModelOfType( "ranger" );
        assert(robots[i].ranger);
-       robots[i].ranger->Subscribe();
+              robots[i].ranger->Subscribe();
 
 //        robots[i].blobfinder = (StgModelBlobfinder*)
 // 	 robots[i].position->GetUnsubscribedModelOfType( "blobfinder" );

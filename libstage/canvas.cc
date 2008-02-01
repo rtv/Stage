@@ -346,7 +346,7 @@ void StgCanvas::draw()
       // install a font
       gl_font( FL_HELVETICA, 12 );
       
-      double zclip = hypot(world->Width(), world->Height()) * scale;
+      double zclip = 20 * scale; //hypot(world->Width(), world->Height()) * scale;
       double pixels_width =  w();
       double pixels_height = h();
       
@@ -396,7 +396,7 @@ void StgCanvas::draw()
   if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
     {      
       glLoadIdentity ();
-      double zclip = hypot(world->Width(), world->Height()) * scale;
+      double zclip = 20 * scale; //hypot(world->Width(), world->Height()) * scale;
       glTranslatef(  0,0,
       	     -zclip / 2.0 );
       
@@ -417,8 +417,14 @@ void StgCanvas::draw()
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(1.0, 1.0);
    glColor3f( 1,1,1 );
-   glRectf( -world->Width()/2.0, -world->Height()/2.0,
-	    world->Width()/2.0, world->Height()/2.0 ); 
+
+   glPushMatrix();
+   glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
+   //g_hash_table_foreach( world->superregions, StgWorld::Floor_cb, NULL );
+   ((StgWorldGui*)world)->DrawFloor();
+
+   //   glRectf( -world->Width()/2.0, -world->Height()/2.0,
+   //	    world->Width()/2.0, world->Height()/2.0 ); 
    glDisable(GL_POLYGON_OFFSET_FILL);
 
    if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
@@ -427,22 +433,23 @@ void StgCanvas::draw()
        glLineWidth( 1 );
        
        glPushMatrix();
-       glTranslatef( -world->Width()/2.0, -world->Height()/2.0, 1 );
-       glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
+       //glTranslatef( -world->Width()/2.0, -world->Height()/2.0, 1 );
+       //glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
        glPolygonMode( GL_FRONT, GL_LINE );
        colorstack.Push(1,0,0);
        
        if( showflags & STG_SHOW_OCCUPANCY )
-	 ((StgWorldGui*)world)->GetBlockGrid()->Draw( false );
+ 	 ((StgWorldGui*)world)->DrawTree( false );
        
        if( showflags & STG_SHOW_QUADTREE )
-	 ((StgWorldGui*)world)->GetBlockGrid()->Draw( true );
+ 	 ((StgWorldGui*)world)->DrawTree( true );
        
        colorstack.Pop();
-       glPopMatrix();  
        
        glEnable( GL_LINE_SMOOTH );
      }
+
+   glPopMatrix();         
    
    for( GList* it=selected_models; it; it=it->next )
      ((StgModel*)it->data)->DrawSelected();

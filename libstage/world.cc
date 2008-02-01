@@ -30,7 +30,6 @@ world
   - the amount of real-world time between GUI updates
 - resolution [meters]
   - specifies the resolution of the underlying bitmap model. Larger values speed up raytracing at the expense of fidelity in collision detection and sensing. 
-
 @par More examples
 
 The Stage source distribution contains several example world files in
@@ -48,6 +47,7 @@ described on the manual page for each model type.
 #include <string.h> // for strdup(3)
 #include <locale.h> 
 #include <glib-object.h> // fior g_type_init() used by GDKPixbuf objects
+#include <limits.h>
 
 #include "stage_internal.hh"
 
@@ -56,12 +56,208 @@ const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between u
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
 
 // TODO: fix the quadtree code so we don't need a world size
-const stg_meters_t STG_DEFAULT_WORLD_WIDTH = 20.0;
-const stg_meters_t STG_DEFAULT_WORLD_HEIGHT = 20.0; 
+//const stg_meters_t STG_DEFAULT_WORLD_WIDTH = 20.0;
+//const stg_meters_t STG_DEFAULT_WORLD_HEIGHT = 20.0; 
 
 // static data members
 unsigned int StgWorld::next_id = 0;
 bool StgWorld::quit_all = false;
+
+const uint32_t RBITS = 6;
+const uint32_t SBITS = 4;
+const uint32_t SRBITS = RBITS+SBITS;
+
+static guint PointIntHash( stg_point_int_t* pt )
+{
+  return( pt->x + (pt->y<<16 ));
+}
+
+static gboolean PointIntEqual( stg_point_int_t* p1, stg_point_int_t* p2 )
+{
+  return( memcmp( p1, p2, sizeof(stg_point_int_t) ) == 0 );
+}
+
+typedef struct
+{
+  GSList* list;
+}  stg_cell_t;
+
+class Stg::Region
+{
+  friend class SuperRegion;
+  
+private:  
+  static const uint32_t REGIONWIDTH = 1<<RBITS;
+  static const uint32_t REGIONSIZE = REGIONWIDTH*REGIONWIDTH;
+  
+  stg_cell_t cells[REGIONSIZE];
+  
+public:
+  uint32_t count; // number of blocks rendered into these cells
+  
+  Region()
+  {
+    bzero( cells, REGIONSIZE * sizeof(stg_cell_t));
+    count = 0;
+  }
+  
+  stg_cell_t* GetCell( int32_t x, int32_t y )
+  {
+    uint32_t index = x + (y*REGIONWIDTH);
+    assert( index >=0 );
+    assert( index < REGIONSIZE );    
+    return &cells[index];    
+  }
+  
+  // add a block to a region cell specified in REGION coordinates
+  void AddBlock( StgBlock* block, int32_t x, int32_t y, unsigned int* count2 )
+  {
+    stg_cell_t* cell = GetCell( x, y );
+    cell->list = g_slist_prepend( cell->list, block ); 
+    block->RecordRenderPoint( &cell->list, cell->list, &this->count, count2 );    
+    count++;
+  }
+  
+  // UNUSED
+//   // remove a block from a region cell specified in REGION coordinates
+//   void RemoveBlock( StgBlock* block, int32_t x, int32_t y )
+//   {
+//     stg_cell_t* cell = GetCell( x, y );
+//     cell->list = g_slist_remove( cell->list, block );     
+//     count--;
+//   }
+};
+
+
+class Stg::SuperRegion
+{
+  friend class StgWorld;
+ 
+private:
+  static const uint32_t SUPERREGIONWIDTH = 1<<SBITS;
+  static const uint32_t SUPERREGIONSIZE = SUPERREGIONWIDTH*SUPERREGIONWIDTH;
+  
+  Region regions[SUPERREGIONSIZE];  
+  uint32_t count; // number of blocks rendered into these regions
+  
+  stg_point_int_t origin;
+  
+public:
+  
+  SuperRegion( int32_t x, int32_t y )
+  {
+    count = 0;
+    origin.x = x;
+    origin.y = y;
+    //regions = new Region[SUPERREGIONSIZE];
+  }
+  
+  ~SuperRegion()
+  {
+    //delete [] regions;
+  }
+
+  // get the region x,y from the region array
+  Region* GetRegion( int32_t x, int32_t y )
+  {
+    int32_t index =  x + (y*SUPERREGIONWIDTH);
+    assert( index >=0 );
+    assert( index < (int)SUPERREGIONSIZE );
+    return &regions[ index ];
+  } 
+  
+  // add a block to a cell specified in superregion coordinates
+  void AddBlock( StgBlock* block, int32_t x, int32_t y )
+  {
+    GetRegion( x>>RBITS, y>>RBITS )
+      ->AddBlock( block,  
+		  x - ((x>>RBITS)<<RBITS),
+		  y - ((y>>RBITS)<<RBITS),
+		  &count);		   
+    count++;
+  }
+
+  // UNUSED
+  // remove a block from a cell specified in superregion coordinates
+//   void RemoveBlock( StgBlock* block, int32_t x, int32_t y )
+//   {
+//     GetRegion( x>>RBITS, y>>RBITS )
+//       ->RemoveBlock( block,  
+// 		     x - ((x>>RBITS)<<RBITS),
+// 		     y - ((y>>RBITS)<<RBITS) );		   
+//     count--;
+//   }
+  
+  static void Draw_cb( gpointer dummykey, 
+		       SuperRegion* sr, 
+		       gpointer dummyval )
+  {
+    sr->Draw();
+  }
+  
+  void Draw()
+  {
+    glPushMatrix();
+    glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS,0 );
+        
+    glColor3f( 1,0,0 );    
+
+    for( unsigned int x=0; x<SUPERREGIONWIDTH; x++ )
+      for( unsigned int y=0; y<SUPERREGIONWIDTH; y++ )
+	{
+	  Region* r = GetRegion(x,y);
+	  
+	  for( unsigned int p=0; p<Region::REGIONWIDTH; p++ )
+	    for( unsigned int q=0; q<Region::REGIONWIDTH; q++ )
+	      if( r->cells[p+(q*Region::REGIONWIDTH)].list )
+		glRecti( p+(x<<RBITS), q+(y<<RBITS),
+			 1+p+(x<<RBITS), 1+q+(y<<RBITS) );
+	}
+
+    // outline regions
+    glColor3f( 0,1,0 );    
+    for( unsigned int x=0; x<SUPERREGIONWIDTH; x++ )
+      for( unsigned int y=0; y<SUPERREGIONWIDTH; y++ )
+ 	glRecti( x<<RBITS, y<<RBITS, 
+		 (x+1)<<RBITS, (y+1)<<RBITS );
+    
+    // outline superregion
+    glColor3f( 0,0,1 );    
+    glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
+
+    glPopMatrix();    
+  }
+  
+  static void Floor_cb( gpointer dummykey, 
+			SuperRegion* sr, 
+			gpointer dummyval )
+  {
+    sr->Floor();
+  }
+  
+  void Floor()
+  {
+    glPushMatrix();
+    glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS,0 );        
+    glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
+    glPopMatrix();    
+  }
+  
+  
+};
+
+SuperRegion* StgWorld::CreateSuperRegion( int32_t x, int32_t y )
+{
+  SuperRegion* sr = new SuperRegion( x, y );  
+  g_hash_table_insert( superregions, &sr->origin, sr );
+  return sr;
+}
+
+void StgWorld::DestroySuperRegion( SuperRegion* sr )
+{
+  g_hash_table_remove( superregions, &sr->origin );
+  delete sr; 
+}
 
 // todo: get rid of width and height
 
@@ -70,28 +266,27 @@ StgWorld::StgWorld( void )
   Initialize( "MyWorld",
 	      STG_DEFAULT_WORLD_INTERVAL_SIM, 
 	      STG_DEFAULT_WORLD_INTERVAL_REAL,
-	      STG_DEFAULT_WORLD_PPM,
-	      STG_DEFAULT_WORLD_WIDTH,
-	      STG_DEFAULT_WORLD_HEIGHT );
+	      STG_DEFAULT_WORLD_PPM );  
+	      //STG_DEFAULT_WORLD_WIDTH,
+	      //STG_DEFAULT_WORLD_HEIGHT );
 }  
 
 StgWorld::StgWorld( const char* token, 
  		    stg_msec_t interval_sim, 
  		    stg_msec_t interval_real,
- 		    double ppm, 
- 		    double width,
- 		    double height )
+ 		    double ppm )
+//double width,
+//double height )
 {
-  Initialize( token, interval_sim, interval_real, ppm, width, height );
+  Initialize( token, interval_sim, interval_real, ppm );//, width, height );
 }
-
 
 void StgWorld::Initialize( const char* token, 
 			   stg_msec_t interval_sim, 
 			   stg_msec_t interval_real,
-			   double ppm, 
-			   double width,
-			   double height ) 
+			   double ppm ) 
+//double width,
+//double height ) 
 {
   if( ! Stg::InitDone() )
     {
@@ -125,12 +320,13 @@ void StgWorld::Initialize( const char* token,
   this->update_list = NULL;
   this->velocity_list = NULL;
 
-  this->width = width;
-  this->height = height;
+  //  this->width = width;
+  //this->height = height;
   this->ppm = ppm; // this is the finest resolution of the matrix
   
-  this->bgrid = new StgBlockGrid( (uint32_t)(width * ppm),
-				  (uint32_t)(height * ppm) );
+  this->superregions = g_hash_table_new( (GHashFunc)PointIntHash, 
+					 (GEqualFunc)PointIntEqual );
+  this->CreateSuperRegion( 0, 0 );
   
   this->total_subs = 0;
   this->paused = true; 
@@ -146,12 +342,11 @@ StgWorld::~StgWorld( void )
   PRINT_DEBUG2( "destroying world %d %s", id, token );
   
   if( wf ) delete wf;
-  if( bgrid ) delete bgrid;
+  //if( bgrid ) delete bgrid;
 
   g_hash_table_destroy( models_by_id );
   g_hash_table_destroy( models_by_name );
   
-  delete bgrid;
   g_free( token );
 }
 
@@ -241,21 +436,14 @@ void StgWorld::Load( const char* worldfile_path )
   this->ppm = 
     1.0 / wf->ReadFloat( entity, "resolution", this->ppm ); 
   
-  this->width = 
-    wf->ReadTupleFloat( entity, "size", 0, this->width ); 
+//   this->width = 
+//     wf->ReadTupleFloat( entity, "size", 0, this->width ); 
   
-  this->height = 
-    wf->ReadTupleFloat( entity, "size", 1, this->height ); 
+//   this->height = 
+//     wf->ReadTupleFloat( entity, "size", 1, this->height ); 
   
   this->paused = 
     wf->ReadInt( entity, "paused", this->paused );
-
-  if( this->bgrid )
-    delete bgrid;
-
-  int32_t vwidth = (int32_t)(width * ppm);
-  int32_t vheight = (int32_t)(height * ppm);
-  this->bgrid = new StgBlockGrid( vwidth, vheight );
 
   //_stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
      
@@ -459,6 +647,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 }
 
 
+
 void StgWorld::Raytrace( stg_pose_t pose, // global pose
 			 stg_meters_t range,
 			 stg_block_match_func_t func,
@@ -472,10 +661,12 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
   sample->block = NULL; // we might change this below
 
   // find the global integer bitmap address of the ray  
-  int32_t x = (int32_t)((pose.x+width/2.0)*ppm);
-  int32_t y = (int32_t)((pose.y+height/2.0)*ppm);
+  //int32_t x = (int32_t)((pose.x+width/2.0)*ppm);
+  //int32_t y = (int32_t)((pose.y+height/2.0)*ppm);
+  int32_t x = (int32_t)(pose.x*ppm);
+  int32_t y = (int32_t)(pose.y*ppm);
   int32_t z = 0;
-
+  
   int32_t xstart = x;
   int32_t ystart = y;
 
@@ -498,63 +689,100 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
   bx = 2*ax;	 by = 2*ay;	bz = 2*az;
   exy = ay-ax;   exz = az-ax;	ezy = ay-az;
   n = ax+ay+az;
-
-  uint32_t bbx_last = 0;
-  uint32_t bby_last = 0;
-  uint32_t bbx = 0;
-  uint32_t bby = 0;
   
-  bool lookup_list = true;
+  //  printf( "Raytracing from (%d,%d,%d) steps (%d,%d,%d) %d\n",
+  //  x,y,z,  dx,dy,dz, n );
+  
+  // superregion coords
+  stg_point_int_t lastsup;
+  lastsup.x = INT_MAX; // an unlikely first raytrace
+  lastsup.y = INT_MAX;
+  
+  stg_point_int_t lastreg;
+  lastsup.x = INT_MAX; // an unlikely first raytrace
+  lastsup.y = INT_MAX;
+      
+  SuperRegion* sr = NULL;
+  Region* r = NULL;
+  
+  //puts( "RAYTRACE" );
   
   while ( n-- ) 
-    {          
-      // todo - avoid calling this multiple times for a single
-      // bigblock.
+    {         
+      // superregion coords
+      stg_point_int_t sup;
+      sup.x = x >> SRBITS;
+      sup.y = y >> SRBITS;
       
-//       bbx = x>>bgrid->numbits;
-//       bby = y>>bgrid->numbits;
+      //  printf( "pixel [%d %d]\tS[ %d %d ]\t",
+      //      x, y, sup.x, sup.y ); 
       
-//       //   // if we just changed grid square
-//       if( ! ((bbx == bbx_last) && (bby == bby_last)) )
-//  	{
-//  	  // if this square has some contents, we need to look it up
-//  	  lookup_list = !(bgrid->BigBlockOccupancy(bbx,bby) < 1 );
-//  	  bbx_last = bbx;
-// 	  bby_last = bby;
-//  	}
-      
-//       if( lookup_list )
+      if( ! (sup.x == lastsup.x && sup.y == lastsup.y )) 
+	{
+	  sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
+	  lastsup = sup; // remember these coords
+ 
+	  //puts( "LOOKED UP SR" );
+	  
+	}
+            
+      if( sr )
 	{	  
-	  for( GSList* list = bgrid->GetList(x,y);
-	       list;
-	       list = list->next )      
-	    {	      	      
-	      StgBlock* block = (StgBlock*)list->data;       
-	      assert( block );
+	  // find the region coords inside this superregion
+	  stg_point_int_t reg;
+	  reg.x = (x - ( sup.x << SRBITS)) >> RBITS;
+	  reg.y = (y - ( sup.y << SRBITS)) >> RBITS;
+	  
+	  //  printf( "R[ %d %d ]\t", reg.x, reg.y ); 
+	  
+	  if( ! (reg.x == lastreg.x && reg.y == lastreg.y ))
+	    {
+	      r = sr->GetRegion( reg.x, reg.y );       
+	      lastreg = reg;
+	    }
+	  
+	  if( r && r->count )
+	    {
+	      // compute the pixel offset inside this region
+	      stg_point_int_t cell;
+	      cell.x = x - ((sup.x << SRBITS) + (reg.x << RBITS));
+	      cell.y = y - ((sup.y << SRBITS) + (reg.y << RBITS));
+
+	      //  printf( "C[ %d %d ]\t", cell.x, cell.y ); 
 	      
-	      // if this block does not belong to the searching model and it
-	      // matches the predicate and it's in the right z range
-	      if( //block && (block->Model() != finder) && 
-		  //block->IntersectGlobalZ( pose.z ) &&
-		  (*func)( block, mod, arg ) )
-		{
-		  // a hit!
-		  sample->block = block;
-		  sample->range = hypot( (x-xstart)/ppm, (y-ystart)/ppm );
+	      for( GSList* list = r->GetCell( cell.x, cell.y )->list;
+		   list;
+		   list = list->next )      
+		{	      	      
+		  StgBlock* block = (StgBlock*)list->data;       
+		  assert( block );
+		  
+		  // if this block does not belong to the searching model and it
+		  // matches the predicate and it's in the right z range
+		  if( //block && (block->Model() != finder) && 
+		     //block->IntersectGlobalZ( pose.z ) &&
+		     (*func)( block, mod, arg ) )
+		    {
+		      // a hit!
+		      sample->block = block;
+		      sample->range = hypot( (x-xstart)/ppm, (y-ystart)/ppm );
 		  return;
+		    }
 		}
 	    }
-	}
-	  
+	}      
+      
+      //      printf( "\t step %d n %d   pixel [ %d, %d ] block [ %d %d ] index [ %d %d ] \n", 
+      //      //coarse [ %d %d ]\n",
+      //      count++, n, x, y, blockx, blocky, b_dx, b_dy );
+        
       // increment our pixel in the correct direction
       if ( exy < 0 ) {
 	if ( exz < 0 ) {
-	  x += sx;
-	  exy += by; exz += bz;
+	  x += sx; exy += by; exz += bz;
 	}
 	else  {
-	  z += sz;
-	  exz -= bx; ezy += by;
+	  z += sz; exz -= bx; ezy += by;
 	}
       }
       else {
@@ -563,12 +791,12 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	  exz -= bx; ezy += by;
 	}
 	else  {
-	  y += sy;
-	  exy -= bx; ezy -= bz;
+	  y += sy; exy -= bx; ezy -= bz;
 	}
       }
+      //     puts("");
     }
-
+  
   // hit nothing
   return;
 }
@@ -619,14 +847,50 @@ void StgWorld::StopUpdatingModel( StgModel* mod )
 void StgWorld::MetersToPixels( stg_meters_t mx, stg_meters_t my, 
 			       int32_t *px, int32_t *py )
 {
-  *px = (int32_t)floor((mx+width/2.0) * ppm);
-  *py = (int32_t)floor((my+height/2.0) * ppm);
+  *px = (int32_t)floor(mx* ppm);
+  *py = (int32_t)floor(my* ppm);
 }
 
 int StgWorld::AddBlockPixel( int x, int y, int z,
 			     stg_render_info_t* rinfo )
 {
-  rinfo->world->bgrid->AddBlock( x, y, rinfo->block );
+  // superregion coords
+  stg_point_int_t sup;
+  sup.x = x >> SRBITS;
+  sup.y = y >> SRBITS;
+  
+  //printf( "ADDBLOCKPIXEL pixel [%d %d]  S[ %d %d ]\t",
+  //  x, y, sup.x, sup.y ); 
+  
+  SuperRegion* sr = (SuperRegion*)
+    g_hash_table_lookup( rinfo->world->superregions, (void*)&sup );
+
+  if( sr == NULL ) // no superregion exists here
+    {
+      //printf( "Creating super region [ %d %d ]\n", sup.x, sup.y );
+      sr = rinfo->world->CreateSuperRegion( sup.x, sup.y );
+    }
+  
+  assert(sr);
+  
+  // find the pixel coords inside this superregion
+  stg_point_int_t cell;
+  cell.x = x - ( sup.x << SRBITS);    
+  cell.y = y - ( sup.y << SRBITS);
+  
+  //printf( "C[ %d %d]", cell.x, cell.y );
+  
+  sr->AddBlock( rinfo->block, cell.x, cell.y );
+
   return FALSE;
 }
 
+void StgWorld::DrawTree( bool drawall )
+{  
+  g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Draw_cb, NULL );
+}
+
+void StgWorld::DrawFloor()
+{
+  g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Floor_cb, NULL );
+}
