@@ -407,8 +407,7 @@ void StgCanvas::draw()
       
       // and put it in the center of the window
       //glRotatef( -rtod(gpose.a), 0,0,1 );
-      glTranslatef(  -gpose.x, -gpose.y, 0 );
-      
+      glTranslatef(  -gpose.x, -gpose.y, 0 );      
      }
    
    // draw the world size rectangle in white, using the polygon offset
@@ -419,22 +418,15 @@ void StgCanvas::draw()
    glColor3f( 1,1,1 );
 
    glPushMatrix();
-   glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
-   //g_hash_table_foreach( world->superregions, StgWorld::Floor_cb, NULL );
-   ((StgWorldGui*)world)->DrawFloor();
 
-   //   glRectf( -world->Width()/2.0, -world->Height()/2.0,
-   //	    world->Width()/2.0, world->Height()/2.0 ); 
+   glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
+   ((StgWorldGui*)world)->DrawFloor();
    glDisable(GL_POLYGON_OFFSET_FILL);
 
    if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
      {
        glDisable( GL_LINE_SMOOTH );
        glLineWidth( 1 );
-       
-       glPushMatrix();
-       //glTranslatef( -world->Width()/2.0, -world->Height()/2.0, 1 );
-       //glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
        glPolygonMode( GL_FRONT, GL_LINE );
        colorstack.Push(1,0,0);
        
