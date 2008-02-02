@@ -55,10 +55,6 @@ const double STG_DEFAULT_WORLD_PPM = 50;  // 2cm pixels
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
 
-// TODO: fix the quadtree code so we don't need a world size
-//const stg_meters_t STG_DEFAULT_WORLD_WIDTH = 20.0;
-//const stg_meters_t STG_DEFAULT_WORLD_HEIGHT = 20.0; 
-
 // static data members
 unsigned int StgWorld::next_id = 0;
 bool StgWorld::quit_all = false;
@@ -259,24 +255,18 @@ void StgWorld::DestroySuperRegion( SuperRegion* sr )
   delete sr; 
 }
 
-// todo: get rid of width and height
-
 StgWorld::StgWorld( void )
 {
   Initialize( "MyWorld",
 	      STG_DEFAULT_WORLD_INTERVAL_SIM, 
 	      STG_DEFAULT_WORLD_INTERVAL_REAL,
 	      STG_DEFAULT_WORLD_PPM );  
-	      //STG_DEFAULT_WORLD_WIDTH,
-	      //STG_DEFAULT_WORLD_HEIGHT );
 }  
 
 StgWorld::StgWorld( const char* token, 
  		    stg_msec_t interval_sim, 
  		    stg_msec_t interval_real,
  		    double ppm )
-//double width,
-//double height )
 {
   Initialize( token, interval_sim, interval_real, ppm );//, width, height );
 }
@@ -285,8 +275,6 @@ void StgWorld::Initialize( const char* token,
 			   stg_msec_t interval_sim, 
 			   stg_msec_t interval_real,
 			   double ppm ) 
-//double width,
-//double height ) 
 {
   if( ! Stg::InitDone() )
     {
@@ -313,16 +301,13 @@ void StgWorld::Initialize( const char* token,
   this->sim_time = 0;
   this->interval_sim = (stg_usec_t)thousand * interval_sim;
   this->interval_real = (stg_usec_t)thousand * interval_real;
+  this->ppm = ppm; // this is the raytrace resolution
 
   this->real_time_start = RealTimeNow();
   this->real_time_next_update = 0;
 
   this->update_list = NULL;
   this->velocity_list = NULL;
-
-  //  this->width = width;
-  //this->height = height;
-  this->ppm = ppm; // this is the finest resolution of the matrix
   
   this->superregions = g_hash_table_new( (GHashFunc)PointIntHash, 
 					 (GEqualFunc)PointIntEqual );
@@ -435,12 +420,6 @@ void StgWorld::Load( const char* worldfile_path )
   
   this->ppm = 
     1.0 / wf->ReadFloat( entity, "resolution", this->ppm ); 
-  
-//   this->width = 
-//     wf->ReadTupleFloat( entity, "size", 0, this->width ); 
-  
-//   this->height = 
-//     wf->ReadTupleFloat( entity, "size", 1, this->height ); 
   
   this->paused = 
     wf->ReadInt( entity, "paused", this->paused );
@@ -661,8 +640,6 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
   sample->block = NULL; // we might change this below
 
   // find the global integer bitmap address of the ray  
-  //int32_t x = (int32_t)((pose.x+width/2.0)*ppm);
-  //int32_t y = (int32_t)((pose.y+height/2.0)*ppm);
   int32_t x = (int32_t)(pose.x*ppm);
   int32_t y = (int32_t)(pose.y*ppm);
   int32_t z = 0;
@@ -721,9 +698,6 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	{
 	  sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
 	  lastsup = sup; // remember these coords
- 
-	  //puts( "LOOKED UP SR" );
-	  
 	}
             
       if( sr )
