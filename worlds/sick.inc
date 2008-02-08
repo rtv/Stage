@@ -1,6 +1,8 @@
 
 define sicklaser laser
 (
+  # laser-specific properties
+
   # factory settings for LMS200	
   range_min 0.0
   range_max 8.0
@@ -9,6 +11,7 @@ define sicklaser laser
 
   #samples 90 # still useful but much faster to compute
 
+  # generic model properties
   color "blue"
   size [ 0.156 0.155 0.19 ] # dimensions from LMS200 data sheet	
 )
