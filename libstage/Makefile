@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.4 2008-02-01 03:11:01 rtv Exp $
+# $Id: Makefile,v 1.5 2008-02-12 02:53:53 rtv Exp $
 
 
 
@@ -38,9 +38,9 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = i386-apple-darwin9.1.0
-host_triplet = i386-apple-darwin9.1.0
-target_triplet = i386-apple-darwin9.1.0
+build_triplet = i386-apple-darwin9.2.0
+host_triplet = i386-apple-darwin9.2.0
+target_triplet = i386-apple-darwin9.2.0
 bin_PROGRAMS = stest$(EXEEXT)
 subdir = libstage
 DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
@@ -64,7 +64,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libstage_la_DEPENDENCIES =
-am_libstage_la_OBJECTS = ancestor.lo block.lo blockgrid.lo canvas.lo \
+am_libstage_la_OBJECTS = ancestor.lo block.lo canvas.lo \
 	glcolorstack.lo model.lo model_callbacks.lo model_fiducial.lo \
 	model_laser.lo model_load.lo model_position.lo model_ranger.lo \
 	model_blobfinder.lo model_props.lo stage.lo typetable.lo \
@@ -185,10 +185,10 @@ am__quote =
 am__tar = tar --format=ustar -chf - "$$tardir"
 am__untar = tar -xf -
 bindir = ${exec_prefix}/bin
-build = i386-apple-darwin9.1.0
+build = i386-apple-darwin9.2.0
 build_alias = 
 build_cpu = i386
-build_os = darwin9.1.0
+build_os = darwin9.2.0
 build_vendor = apple
 builddir = .
 datadir = ${datarootdir}
@@ -197,10 +197,10 @@ docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
 have_pkg_config = yes
-host = i386-apple-darwin9.1.0
+host = i386-apple-darwin9.2.0
 host_alias = 
 host_cpu = i386
-host_os = darwin9.1.0
+host_os = darwin9.2.0
 host_vendor = apple
 htmldir = ${docdir}
 includedir = ${prefix}/include
@@ -221,10 +221,10 @@ sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
 srcdir = .
 sysconfdir = ${prefix}/etc
-target = i386-apple-darwin9.1.0
+target = i386-apple-darwin9.2.0
 target_alias = 
 target_cpu = i386
-target_os = darwin9.1.0
+target_os = darwin9.2.0
 target_vendor = apple
 top_builddir = ..
 top_srcdir = ..
@@ -247,7 +247,6 @@ libstage_la_SOURCES = \
 	../config.h \
 	ancestor.cc \
 	block.cc \
-	blockgrid.cc \
 	canvas.cc \
 	colors.h \
 	glcolorstack.cc \
@@ -378,7 +377,6 @@ distclean-compile:
 
 include ./$(DEPDIR)/ancestor.Plo
 include ./$(DEPDIR)/block.Plo
-include ./$(DEPDIR)/blockgrid.Plo
 include ./$(DEPDIR)/canvas.Plo
 include ./$(DEPDIR)/glcolorstack.Plo
 include ./$(DEPDIR)/model.Plo

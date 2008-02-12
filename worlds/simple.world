@@ -15,7 +15,7 @@ include "sick.inc"
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 0  # real-time interval between simulation updates in milliseconds 
+interval_real 10  # real-time interval between simulation updates in milliseconds 
 
 paused 0
 
@@ -26,8 +26,6 @@ window
   center [-8.010 -6.040] 
   rotate [ 0.000 0.000 ]
   scale 29.806 
-
-  show_data 1
 )
 
 # load an environment bitmap
@@ -35,7 +33,8 @@ floorplan
 ( 
   name "cave"
   size3 [16 16 0.5]
-  pose [8 8 0]
+  pose [0 0 0]
+  #origin [ 8 8 0 ]
   bitmap "bitmaps/cave.png"
 )
 
@@ -48,13 +47,3 @@ pioneer2dx
  sicklaser( pose [ 0.040 0.000 0.000 ] ) 
 )
 
-define lr pioneer2dx (
- sicklaser( pose [ 0.040 0.000 0.000 ] ) 
-)
-
-lr ( name "r1" color "green"
- pose [2.551 2.281 39.206]
-)
-
-pioneer2dx ( name "r2" color "magenta" pose [3.551 0.281 -39.206] sicklaser( pose [ 0.040 0.000 0.000 ] ) 
-)

@@ -24,9 +24,9 @@ define roomba position
   polygon[0].point[15] [ 0.208 -0.086 ]
 
   # this bumper array VERY crudely approximates the Roomba's bumpers
-  bumper( bcount 2  
-	  blength 0.33
-          bpose[0] [0.12  0.12  45]
-          bpose[1] [0.12 -0.12 -45] 
-        )
+#  bumper( bcount 2  
+#	  blength 0.33
+#          bpose[0] [0.12  0.12  45]
+#          bpose[1] [0.12 -0.12 -45] 
+#        )
 )

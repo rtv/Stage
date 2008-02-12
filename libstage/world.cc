@@ -54,14 +54,14 @@ described on the manual page for each model type.
 const double STG_DEFAULT_WORLD_PPM = 50;  // 2cm pixels
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
 const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
+const uint32_t RBITS = 6; // regions contain (2^RBITS)^2 pixels
+const uint32_t SBITS = 5; // superregions contain (2^SBITS)^2 regions
+const uint32_t SRBITS = RBITS+SBITS;
 
 // static data members
 unsigned int StgWorld::next_id = 0;
 bool StgWorld::quit_all = false;
 
-const uint32_t RBITS = 6;
-const uint32_t SBITS = 4;
-const uint32_t SRBITS = RBITS+SBITS;
 
 static guint PointIntHash( stg_point_int_t* pt )
 {
@@ -112,16 +112,7 @@ public:
     cell->list = g_slist_prepend( cell->list, block ); 
     block->RecordRenderPoint( &cell->list, cell->list, &this->count, count2 );    
     count++;
-  }
-  
-  // UNUSED
-//   // remove a block from a region cell specified in REGION coordinates
-//   void RemoveBlock( StgBlock* block, int32_t x, int32_t y )
-//   {
-//     stg_cell_t* cell = GetCell( x, y );
-//     cell->list = g_slist_remove( cell->list, block );     
-//     count--;
-//   }
+  }  
 };
 
 
@@ -173,17 +164,7 @@ public:
     count++;
   }
 
-  // UNUSED
-  // remove a block from a cell specified in superregion coordinates
-//   void RemoveBlock( StgBlock* block, int32_t x, int32_t y )
-//   {
-//     GetRegion( x>>RBITS, y>>RBITS )
-//       ->RemoveBlock( block,  
-// 		     x - ((x>>RBITS)<<RBITS),
-// 		     y - ((y>>RBITS)<<RBITS) );		   
-//     count--;
-//   }
-  
+  // callback wrapper for Draw()
   static void Draw_cb( gpointer dummykey, 
 		       SuperRegion* sr, 
 		       gpointer dummyval )
@@ -311,7 +292,8 @@ void StgWorld::Initialize( const char* token,
   
   this->superregions = g_hash_table_new( (GHashFunc)PointIntHash, 
 					 (GEqualFunc)PointIntEqual );
-  this->CreateSuperRegion( 0, 0 );
+
+  //this->CreateSuperRegion( -2, -2 );
   
   this->total_subs = 0;
   this->paused = true; 

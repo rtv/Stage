@@ -105,27 +105,27 @@ model
 #include <limits.h> 
 
 // basic model
-#define STG_DEFAULT_MOD_BLOBRETURN true
-#define STG_DEFAULT_MOD_BOUNDARY false
-#define STG_DEFAULT_MOD_COLOR (0xFFFF0000) // red
-#define STG_DEFAULT_MOD_ENERGY_CAPACITY 1000.0
-#define STG_DEFAULT_MOD_ENERGY_CHARGEENABLE 1
-#define STG_DEFAULT_MOD_ENERGY_GIVERATE 0.0
-#define STG_DEFAULT_MOD_ENERGY_PROBERANGE 0.0
-#define STG_DEFAULT_MOD_ENERGY_TRICKLERATE 0.1
-#define STG_DEFAULT_MOD_GEOM_SIZEX 0.10 // 1m square by default
-#define STG_DEFAULT_MOD_GEOM_SIZEY 0.10
-#define STG_DEFAULT_MOD_GEOM_SIZEZ 0.10
-#define STG_DEFAULT_MOD_GRID false
-#define STG_DEFAULT_MOD_GRIPPERRETURN false
-#define STG_DEFAULT_MOD_LASERRETURN LaserVisible
-#define STG_DEFAULT_MOD_MAP_RESOLUTION 0.1
-#define STG_DEFAULT_MOD_MASK (STG_MOVE_TRANS | STG_MOVE_ROT)
-#define STG_DEFAULT_MOD_MASS 10.0  // kg
-#define STG_DEFAULT_MOD_NOSE false
-#define STG_DEFAULT_MOD_OBSTACLERETURN true
-#define STG_DEFAULT_MOD_OUTLINE true
-#define STG_DEFAULT_MOD_RANGERRETURN true
+const bool STG_DEFAULT_MOD_BLOBRETURN = true;
+const bool STG_DEFAULT_MOD_BOUNDARY = false;
+const stg_color_t STG_DEFAULT_MOD_COLOR = (0xFFFF0000); // solid red
+const stg_joules_t STG_DEFAULT_MOD_ENERGY_CAPACITY = 1000.0;
+const bool STG_DEFAULT_MOD_ENERGY_CHARGEENABLE = true;
+const stg_watts_t STG_DEFAULT_MOD_ENERGY_GIVERATE =  0.0;
+const stg_meters_t STG_DEFAULT_MOD_ENERGY_PROBERANGE = 0.0;
+const stg_watts_t STG_DEFAULT_MOD_ENERGY_TRICKLERATE = 0.1;
+const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEX = 0.10; 
+const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEY = 0.10;
+const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEZ = 0.10;
+const bool STG_DEFAULT_MOD_GRID = false;
+const bool STG_DEFAULT_MOD_GRIPPERRETURN = false;
+const stg_laser_return_t STG_DEFAULT_MOD_LASERRETURN = LaserVisible;
+const stg_meters_t STG_DEFAULT_MOD_MAP_RESOLUTION = 0.1;
+const stg_movemask_t STG_DEFAULT_MOD_MASK = (STG_MOVE_TRANS | STG_MOVE_ROT);
+const stg_kg_t STG_DEFAULT_MOD_MASS = 10.0; 
+const bool STG_DEFAULT_MOD_NOSE = false;
+const bool STG_DEFAULT_MOD_OBSTACLERETURN = true;
+const bool STG_DEFAULT_MOD_OUTLINE = true;
+const bool STG_DEFAULT_MOD_RANGERRETURN = true;
 
 // constructor
 StgModel::StgModel( StgWorld* world,
@@ -813,7 +813,7 @@ void StgModel::Draw( uint32_t flags )
     {
       LISTMETHOD( this->blocks, StgBlock*, Draw );
     }
-  else 
+  //else 
   
   //if( this->say_string )
   // gl_speech_bubble( 0,0,0, this->say_string );
@@ -872,8 +872,8 @@ void StgModel::DrawGrid( void )
   double dy = geom.size.y;
   double sp = 1.0;
  
-  int nx = (int) ceil((dx/2.0) / sp);
-  int ny = (int) ceil((dy/2.0) / sp);
+  int nx = (int) ceil((dx/2.0) / sp );
+  int ny = (int) ceil((dy/2.0) / sp );
   
   if( nx == 0 ) nx = 1.0;
   if( ny == 0 ) ny = 1.0;
@@ -893,26 +893,38 @@ void StgModel::DrawGrid( void )
   glVertex2f( -nx,-ny );
   glVertex2f( -nx, ny );
 
-  char str[16];
+  
   int i;
   for (i = -nx+1; i < nx; i++)
     {
       glVertex2f(  i * sp,  - dy/2 );
       glVertex2f(  i * sp,  + dy/2 );
-      snprintf( str, 16, "%d", (int)i );
-      //gl_draw( str, -0.2 + (nx + i * sp), -0.2 , 1 );
     }
-  
   for (i = -ny+1; i < ny; i++)
     {
       glVertex2f( - dx/2, i * sp );
       glVertex2f( + dx/2,  i * sp );
-      snprintf( str, 16, "%d", (int)i );
-      //gl_draw( str, -0.2, -0.2 + (ny + i * sp) , 1 );
     }
   
   glEnd();
   
+  PushColor( 0,0,0,0.3);
+
+  char str[16];
+
+  for (i = -nx+1; i < nx; i++)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      gl_draw_string( -dx/2.0 +  -0.2 + (nx + i * sp), -0.2 , 0.01, str );
+    }
+
+  for (i = -ny+1; i < ny; i++)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      gl_draw_string( -0.2, -dy/2.0 + -0.2 + (ny + i * sp) , 0.01, str );
+    }
+  
+  PopColor();
   PopColor();
 }
 

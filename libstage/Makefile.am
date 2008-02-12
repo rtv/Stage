@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.2 2008-01-15 01:16:49 rtv Exp $
+# $Id: Makefile.am,v 1.3 2008-02-12 02:53:53 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.hh 
@@ -23,7 +23,6 @@ libstage_la_SOURCES =  \
 	../config.h \
 	ancestor.cc \
 	block.cc \
-	blockgrid.cc \
 	canvas.cc \
 	colors.h \
 	glcolorstack.cc \
