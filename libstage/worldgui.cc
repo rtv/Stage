@@ -92,6 +92,8 @@ debug menu that enables visualization of some of the innards of Stage.
 */
 
 #include "stage_internal.hh"
+#include "region.hh"
+
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_PNG_Image.H>
@@ -113,29 +115,6 @@ static const char* MITEM_VIEW_FOOTPRINTS = "View/Trails/Footprints";
 static const char* MITEM_VIEW_TRAILS =     "View/Trails/Blocks";
 static const char* MITEM_VIEW_ARROWS =     "View/Trails/Arrows";
 
-// transform the current coordinate frame by the given pose
-void Stg::gl_coord_shift( double x, double y, double z, double a  )
-{
-  glTranslatef( x,y,z );
-  glRotatef( rtod(a), 0,0,1 );
-}
-
-// transform the current coordinate frame by the given pose
-void Stg::gl_pose_shift( stg_pose_t* pose )
-{
-  gl_coord_shift( pose->x, pose->y, pose->z, pose->a );
-}
-
-// TODO - this could be faster, but we don't draw a lot of text
-void Stg::gl_draw_string( float x, float y, float z, char *str ) 
-{  
-  char *c;
-  glRasterPos3f(x, y,z);
-  for (c=str; *c != '\0'; c++) 
-    glutBitmapCharacter( GLUT_BITMAP_HELVETICA_12, *c);
-}
-
-/////
 
 void dummy_cb(Fl_Widget*, void* v) 
 {
@@ -198,6 +177,8 @@ void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas )
 StgWorldGui::StgWorldGui(int W,int H,const char*L) 
   : Fl_Window(0,0,W,H,L)
 {
+  //size_range( 100,100 ); // set minimum window size
+
   graphics = true;
 
   // build the menus
@@ -258,8 +239,11 @@ void StgWorldGui::Load( const char* filename )
   
   int width =  (int)wf->ReadTupleFloat(wf_section, "size", 0, w() );
   int height = (int)wf->ReadTupleFloat(wf_section, "size", 1, h() );
-  size( width,height ); // resize this window
+  // on OS X this behaves badly - prevents the Window manager resizing
+  //larger than this size.
+  //size( width,height ); 
   
+
   canvas->panx = wf->ReadTupleFloat(wf_section, "center", 0, canvas->panx );
   canvas->pany = wf->ReadTupleFloat(wf_section, "center", 1, canvas->pany );
   canvas->stheta = wf->ReadTupleFloat( wf_section, "rotate", 0, canvas->stheta );
@@ -340,16 +324,24 @@ void StgWorldGui::Save( void )
 
 bool StgWorldGui::RealTimeUpdate()
 {
-  //  puts( "RTU" );
-  bool updated = StgWorld::RealTimeUpdate();
-  Fl::check(); // may redraw the window
+  bool updated = StgWorld::RealTimeUpdateWithIdler( Fl::check);
   return updated;
 }
 
 bool StgWorldGui::Update()
 {
-  //  puts( "RTU" );
   bool updated = StgWorld::Update();
   Fl::check(); // may redraw the window
   return updated;
 }
+
+void StgWorldGui::DrawTree( bool drawall )
+{  
+  g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Draw_cb, NULL );
+}
+
+void StgWorldGui::DrawFloor()
+{
+  g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Floor_cb, NULL );
+}
+

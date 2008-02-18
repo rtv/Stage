@@ -140,7 +140,7 @@ void StgBlock::Draw2D()
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
   glDepthMask(GL_FALSE); 
   DrawTop();
-  //DrawSides();  
+  //DrawSides();  // skip this in 2d mode - faster!
   glDepthMask(GL_TRUE); 
   
   PopColor();
@@ -164,21 +164,20 @@ void StgBlock::Map()
   double ppm = mod->World()->ppm;
  
   // update the global coordinate list
-  stg_pose_t gpose;
-  bzero(&gpose,sizeof(gpose));
+
+  stg_point3_t global;
 
   for( unsigned int p=0; p<pt_count; p++ )
     {
-      gpose.x = pts[p].x;
-      gpose.y = pts[p].y;
-      gpose.z = zmin;
+      stg_point3_t local;
+      local.x = pts[p].x;
+      local.y = pts[p].y;
+      local.z = zmin;
       
-      mod->LocalToGlobal( &gpose );
-            
-      //pts_global[p].x = (int32_t)floor((gpose.x+mod->World()->width/2.0)*ppm);
-      //pts_global[p].y = (int32_t)floor((gpose.y+mod->World()->height/2.0)*ppm);
-      pts_global[p].x = (int32_t)floor(gpose.x*ppm);
-      pts_global[p].y = (int32_t)floor(gpose.y*ppm);
+      global = mod->LocalToGlobal( local );
+        
+      pts_global[p].x = (int32_t)floor(global.x*ppm);
+      pts_global[p].y = (int32_t)floor(global.y*ppm);
 
       PRINT_DEBUG2("loc [%.2f %.2f]", 
 		   pts[p].x,
@@ -191,8 +190,8 @@ void StgBlock::Map()
   
   // store the block's global vertical bounds for inspection by the
   // raytracer
-  global_zmin = gpose.z;
-  global_zmax = gpose.z + (zmax-zmin);
+  global_zmin = global.z;
+  global_zmax = global.z + (zmax-zmin);
   
   stg_render_info_t render_info;
   render_info.world = mod->World();

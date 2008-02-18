@@ -168,6 +168,9 @@ StgModel::StgModel( StgWorld* world,
   world->AddModel( this );
   
   bzero( &pose, sizeof(pose));
+  pose.x = 5; // prevent creating uncessary superregions
+  pose.y = 5;
+
   bzero( &global_pose, sizeof(global_pose));
   
   this->trail = g_array_new( false, false, sizeof(stg_trail_item_t) );
@@ -279,8 +282,8 @@ void StgModel::Raytrace( stg_pose_t pose,
 			 const void* arg,
 			 stg_raytrace_sample_t* sample )
 {
-  LocalToGlobal( &pose );
-  world->Raytrace( pose,
+  //LocalToGlobal( &pose );
+  world->Raytrace( LocalToGlobal(pose),
 		   range,
 		   func,
 		   this,
@@ -309,8 +312,8 @@ void StgModel::Raytrace( stg_pose_t pose,
 			 stg_raytrace_sample_t* samples,
 			 uint32_t sample_count )
 {
-  LocalToGlobal( &pose );
-  world->Raytrace( pose,
+  //LocalToGlobal( &pose );
+  world->Raytrace( LocalToGlobal(pose),
 		   range,		   
 		   fov,
 		   func,
@@ -443,19 +446,19 @@ stg_velocity_t StgModel::GetGlobalVelocity()
 }
 
 // set the model's velocity in the global frame
-void StgModel::SetGlobalVelocity( stg_velocity_t* gv )
+void StgModel::SetGlobalVelocity( stg_velocity_t gv )
 {
   stg_pose_t gpose = GetGlobalPose();
   
   double cosa = cos( gpose.a );
   double sina = sin( gpose.a );
-
+  
   stg_velocity_t lv;
-  lv.x = gv->x * cosa + gv->y * sina; 
-  lv.y = -gv->x * sina + gv->y * cosa; 
-  lv.a = gv->a;
+  lv.x = gv.x * cosa + gv.y * sina; 
+  lv.y = -gv.x * sina + gv.y * cosa; 
+  lv.a = gv.a;
 
-  this->SetVelocity( &lv );
+  this->SetVelocity( lv );
 }
 
 // get the model's position in the global frame
@@ -495,20 +498,31 @@ stg_pose_t StgModel::GetGlobalPose()
   return global_pose;
 }
     
-  
+
 // convert a pose in this model's local coordinates into global
 // coordinates
 // should one day do all this with affine transforms for neatness?
-void StgModel::LocalToGlobal( stg_pose_t* pose )
+stg_pose_t StgModel::LocalToGlobal( stg_pose_t pose )
 {  
-  stg_pose_t pz;
-  memcpy( &pz, pose, sizeof(stg_pose_t));
-  
-  stg_pose_t origin = GetGlobalPose();
-  
-  stg_pose_sum( pose, &origin, &pz );
+  return pose_sum( pose_sum( geom.pose, GetGlobalPose()), pose );
 }
 
+stg_point3_t StgModel::LocalToGlobal( stg_point3_t point )
+{
+  stg_pose_t pose;
+  pose.x = point.x;
+  pose.y = point.y;
+  pose.z = point.z;
+  pose.a = 0;
+
+  pose = LocalToGlobal( pose );
+  
+  point.x = pose.x;
+  point.y = pose.y;
+  point.z = pose.z;
+
+  return point;
+}
 
 void StgModel::MapWithChildren()
 {
@@ -866,65 +880,16 @@ void StgModel::DataVisualize( void )
 
 void StgModel::DrawGrid( void )
 {
-  PushColor( 0,0,0,0.1 );
+  stg_bounds3d_t vol;
+  vol.x.min = -geom.size.x/2.0;
+  vol.x.max =  geom.size.x/2.0;
+  vol.y.min = -geom.size.y/2.0;
+  vol.y.max =  geom.size.y/2.0;
+  vol.z.min = 0;
+  vol.z.max = geom.size.z;
 
-  double dx = geom.size.x;
-  double dy = geom.size.y;
-  double sp = 1.0;
- 
-  int nx = (int) ceil((dx/2.0) / sp );
-  int ny = (int) ceil((dy/2.0) / sp );
-  
-  if( nx == 0 ) nx = 1.0;
-  if( ny == 0 ) ny = 1.0;
-  
-  glBegin(GL_LINES);
-
-  // draw the bounding box first
-  glVertex2f( -nx, -ny );
-  glVertex2f(  nx, -ny );
-
-  glVertex2f( -nx, ny );
-  glVertex2f(  nx, ny );
-
-  glVertex2f( nx, -ny );
-  glVertex2f( nx,  ny );
-
-  glVertex2f( -nx,-ny );
-  glVertex2f( -nx, ny );
-
-  
-  int i;
-  for (i = -nx+1; i < nx; i++)
-    {
-      glVertex2f(  i * sp,  - dy/2 );
-      glVertex2f(  i * sp,  + dy/2 );
-    }
-  for (i = -ny+1; i < ny; i++)
-    {
-      glVertex2f( - dx/2, i * sp );
-      glVertex2f( + dx/2,  i * sp );
-    }
-  
-  glEnd();
-  
-  PushColor( 0,0,0,0.3);
-
-  char str[16];
-
-  for (i = -nx+1; i < nx; i++)
-    {
-      snprintf( str, 16, "%d", (int)i );
-      gl_draw_string( -dx/2.0 +  -0.2 + (nx + i * sp), -0.2 , 0.01, str );
-    }
-
-  for (i = -ny+1; i < ny; i++)
-    {
-      snprintf( str, 16, "%d", (int)i );
-      gl_draw_string( -0.2, -dy/2.0 + -0.2 + (ny + i * sp) , 0.01, str );
-    }
-  
-  PopColor();
+  PushColor( 0,0,1,0.4 );
+  gl_draw_grid(vol);
   PopColor();
 }
 
@@ -933,10 +898,9 @@ bool velocity_is_nonzero( stg_velocity_t* v )
   return( v->x || v->y || v->z || v->a );
 }
 
-void StgModel::SetVelocity( stg_velocity_t* vel )
+void StgModel::SetVelocity( stg_velocity_t vel )
 {
-  assert(vel);  
-  memcpy( &this->velocity, vel, sizeof(stg_velocity_t));
+  this->velocity = vel;
   
   if( ! this->on_velocity_list && velocity_is_nonzero( & this->velocity ) )
     {
@@ -966,21 +930,22 @@ void StgModel::GPoseDirtyTree( void )
     ((StgModel*)it->data)->GPoseDirtyTree();      
 }
 
-void StgModel::SetPose( stg_pose_t* pose )
+void StgModel::SetPose( stg_pose_t pose )
 {
   //PRINT_DEBUG5( "%s.SetPose(%.2f %.2f %.2f %.2f)", 
   //	this->token, pose->x, pose->y, pose->z, pose->a ); 
   
-  assert(pose);
-
   // if the pose has changed, we need to do some work
-  if( memcmp( &this->pose, pose, sizeof(stg_pose_t) ) != 0 )
+  if( memcmp( &this->pose, &pose, sizeof(stg_pose_t) ) != 0 )
     {
       UnMapWithChildren();
-      
-      memcpy( &this->pose, pose, sizeof(stg_pose_t));
 
-      this->pose.a = normalize(this->pose.a);
+      pose.a = normalize( pose.a );
+      this->pose = pose;
+      
+      //memcpy( &this->pose, &pose, sizeof(stg_pose_t));
+
+      //this->pose.a = normalize(this->pose.a);
 		            
       //double hitx, hity;
       //stg_model_test_collision2( mod, &hitx, &hity );
@@ -999,38 +964,34 @@ void StgModel::AddToPose( double dx, double dy, double dz, double da )
 {
   if( dx || dy || dz || da )
     {
-      stg_pose_t pose;
-      GetPose( &pose );
+      stg_pose_t pose = GetPose();
       pose.x += dx;
       pose.y += dy;
       pose.z += dz;
       pose.a += da;
 
-      SetPose( &pose );
+      SetPose( pose );
     }
 }
 
-void StgModel::AddToPose( stg_pose_t* pose )
+void StgModel::AddToPose( stg_pose_t pose )
 {
-  assert( pose );
-  this->AddToPose( pose->x, pose->y, pose->z, pose->a );
+  this->AddToPose( pose.x, pose.y, pose.z, pose.a );
 }
 
 
-void StgModel::SetGeom( stg_geom_t* geom )
+void StgModel::SetGeom( stg_geom_t geom )
 {
   //printf( "MODEL \"%s\" SET GEOM (%.2f %.2f %.2f)[%.2f %.2f]\n",
   //  this->token,
   //  geom->pose.x, geom->pose.y, geom->pose.a,
   //  geom->size.x, geom->size.y );
 
-  assert(geom);
- 
   UnMap();
   
-  memcpy( &this->geom, geom, sizeof(stg_geom_t));
+  this->geom = geom;
   
-  StgBlock::ScaleList( blocks, &geom->size );
+  StgBlock::ScaleList( blocks, &geom.size );
   
   body_dirty = true;
 
@@ -1142,14 +1103,8 @@ void StgModel::SetMapResolution(  stg_meters_t res )
   CallCallbacks( &this->map_resolution );
 }
 
-void StgModel::GetPose( stg_pose_t* dest )
-{
-  assert(dest);
-  memcpy( dest, &this->pose, sizeof(stg_pose_t));
-}
-
 // set the pose of model in global coordinates 
-void StgModel::SetGlobalPose( stg_pose_t* gpose )
+void StgModel::SetGlobalPose( stg_pose_t gpose )
 {
   if( this->parent == NULL )
     {
@@ -1159,9 +1114,9 @@ void StgModel::SetGlobalPose( stg_pose_t* gpose )
   else
     {
       stg_pose_t lpose;
-      memcpy( &lpose, gpose, sizeof(lpose) );
+      memcpy( &lpose, &gpose, sizeof(lpose) );
       this->parent->GlobalToLocal( &lpose );
-      this->SetPose( &lpose );
+      this->SetPose( lpose );
     }
 
   //printf( "setting global pose %.2f %.2f %.2f = local pose %.2f %.2f %.2f\n",
@@ -1254,12 +1209,12 @@ StgModel* StgModel::TestCollision( stg_pose_t* posedelta,
 	  edgepose.a = bearing;
 
 	  // shift the edge ray vector by the local change in pose
-	  stg_pose_t raypose;	  
-	  stg_pose_sum( &raypose, posedelta, &edgepose );
+// 	  stg_pose_t raypose;	  
+// 	  stg_pose_sum( &raypose, posedelta, &edgepose );
 	  
 	  // raytrace in local coordinates
 	  stg_raytrace_sample_t sample;
-	  Raytrace( raypose, 
+	  Raytrace( pose_sum( *posedelta, edgepose), 
 		    range,
 		    (stg_block_match_func_t)collision_match, 
 		    NULL, 
@@ -1324,7 +1279,7 @@ void StgModel::UpdatePose( void )
      {
        stg_pose_t newpose;
        stg_pose_sum( &newpose, &this->pose, &p );
-       this->SetPose( &newpose );
+       this->SetPose( newpose );
      }
 
 //   int stall = 0;

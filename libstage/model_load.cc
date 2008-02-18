@@ -43,7 +43,7 @@ void StgModel::Load( void )
       geom.pose.x = wf->ReadTupleLength(this->id, "origin", 0, geom.pose.x );
       geom.pose.y = wf->ReadTupleLength(this->id, "origin", 1, geom.pose.y );
       geom.pose.a =  wf->ReadTupleAngle(this->id, "origin", 2, geom.pose.a );
-      this->SetGeom( &geom );
+      this->SetGeom( geom );
     }
 
   if( wf->PropertyExists( this->id, "origin4" ) )
@@ -53,7 +53,7 @@ void StgModel::Load( void )
       geom.pose.y = wf->ReadTupleLength(this->id, "origin4", 1, geom.pose.y );
       geom.pose.z = wf->ReadTupleLength(this->id, "origin4", 2, geom.pose.z );
       geom.pose.a =  wf->ReadTupleAngle(this->id, "origin4", 3, geom.pose.a );
-      this->SetGeom( &geom );
+      this->SetGeom( geom );
     }
   
   if( wf->PropertyExists( this->id, "size" ) )
@@ -61,7 +61,7 @@ void StgModel::Load( void )
       stg_geom_t geom = GetGeom();
       geom.size.x = wf->ReadTupleLength(this->id, "size", 0, geom.size.x );
       geom.size.y = wf->ReadTupleLength(this->id, "size", 1, geom.size.y );
-      this->SetGeom( &geom );
+      this->SetGeom( geom );
     }
 
   if( wf->PropertyExists( this->id, "size3" ) )
@@ -70,7 +70,7 @@ void StgModel::Load( void )
       geom.size.x = wf->ReadTupleLength(this->id, "size3", 0, geom.size.x );
       geom.size.y = wf->ReadTupleLength(this->id, "size3", 1, geom.size.y );
       geom.size.z = wf->ReadTupleLength(this->id, "size3", 2, geom.size.z );      
-      this->SetGeom( &geom );
+      this->SetGeom( geom );
     }
 
   if( wf->PropertyExists( this->id, "pose" ))
@@ -79,7 +79,7 @@ void StgModel::Load( void )
       pose.x = wf->ReadTupleLength(this->id, "pose", 0, pose.x );
       pose.y = wf->ReadTupleLength(this->id, "pose", 1, pose.y ); 
       pose.a =  wf->ReadTupleAngle(this->id, "pose", 2, pose.a );
-      this->SetPose( &pose );
+      this->SetPose( pose );
     }
   
   if( wf->PropertyExists( this->id, "pose4" ))
@@ -90,7 +90,7 @@ void StgModel::Load( void )
       pose.z = wf->ReadTupleLength(this->id, "pose4", 2, pose.z ); 
       pose.a = wf->ReadTupleAngle( this->id, "pose4", 3,  pose.a );
       
-      this->SetPose( &pose );
+      this->SetPose( pose );
     }
 
   if( wf->PropertyExists( this->id, "velocity" ))
@@ -99,7 +99,7 @@ void StgModel::Load( void )
       vel.x = wf->ReadTupleLength(this->id, "velocity", 0, vel.x );
       vel.y = wf->ReadTupleLength(this->id, "velocity", 1, vel.y );
       vel.a = wf->ReadTupleAngle(this->id, "velocity", 3,  vel.a );      
-      this->SetVelocity( &vel );
+      this->SetVelocity( vel );
     }
 
   if( wf->PropertyExists( this->id, "velocity4" ))
@@ -109,7 +109,7 @@ void StgModel::Load( void )
       vel.y = wf->ReadTupleLength(this->id, "velocity4", 1, vel.y );
       vel.z = wf->ReadTupleLength(this->id, "velocity4", 2, vel.z );
       vel.a =  wf->ReadTupleAngle(this->id, "velocity4", 3,  vel.a );      
-      this->SetVelocity( &vel );
+      this->SetVelocity( vel );
     }
   
   if( wf->PropertyExists( this->id, "boundary" ))

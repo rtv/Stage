@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +95,7 @@ StgModelPosition::StgModelPosition( StgWorld* world,
   // sensible position defaults
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(vel));
-  this->SetVelocity( &vel );
+  this->SetVelocity( vel );
   
   this->SetBlobReturn( TRUE );
     
@@ -390,7 +390,7 @@ void StgModelPosition::Load( void )
       //	    this->velocity.y,
       //	    this->velocity.a );
       
-      this->SetVelocity( &vel );
+      this->SetVelocity( vel );
     }
   
   switch( localization_mode )

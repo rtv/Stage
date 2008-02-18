@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.2 $
+ //  $Revision: 1.3 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -91,7 +91,7 @@ StgModelLaser::StgModelLaser( StgWorld* world,
   geom.size.x = DEFAULT_LASER_SIZEX;
   geom.size.y = DEFAULT_LASER_SIZEY;
   geom.size.z = DEFAULT_LASER_SIZEZ;
-  SetGeom( &geom );
+  SetGeom( geom );
   
   // set default color
   SetColor( stg_lookup_color(LASER_GEOM_COLOR));

@@ -96,7 +96,8 @@ StgModel* StgCanvas::Select( int x, int y )
   //printf("%p %s %d\n", mod, mod ? mod->Token() : "", id );
   
   glEnable(GL_DITHER);
-  glClearColor ( 0.7, 0.7, 0.8, 1.0);
+  //glClearColor ( 0.7, 0.7, 0.8, 1.0);
+  glClearColor ( 1,1,1,1 );
   
   if( mod ) // we clicked on a root model
     {
@@ -321,6 +322,13 @@ void StgCanvas::FixViewport(int W,int H)
   glViewport(0,0,W,H);
 }
 
+void StgCanvas::DrawGlobalGrid()
+{
+  PushColor( 0,0,0,0.2 );
+  gl_draw_grid( world->GetExtent() );
+  PopColor();
+}
+
 void StgCanvas::draw() 
 {
   //  static int centerx = 0, centery = 0;
@@ -331,7 +339,8 @@ void StgCanvas::draw()
       FixViewport(w(), h()); 
 
       // set gl state that won't change every redraw
-      glClearColor ( 0.7, 0.7, 0.8, 1.0);
+      //glClearColor ( 0.7, 0.7, 0.8, 1.0);
+      glClearColor ( 1,1,1,1 );
       glDisable(GL_LIGHTING);
       glEnable (GL_DEPTH_TEST);
       glDepthFunc (GL_LESS);
@@ -346,7 +355,7 @@ void StgCanvas::draw()
       // install a font
       gl_font( FL_HELVETICA, 12 );
       
-      double zclip = 20 * scale; //hypot(world->Width(), world->Height()) * scale;
+      //double zclip = 20 * scale; //hypot(world->Width(), world->Height()) * scale;
       double pixels_width =  w();
       double pixels_height = h();
       
@@ -355,9 +364,11 @@ void StgCanvas::draw()
       glLoadIdentity ();      
       
 
+      stg_bounds3d_t extent = world->GetExtent();
+      
       glOrtho( -pixels_width/2.0, pixels_width/2.0,
              -pixels_height/2.0, pixels_height/2.0,
-             -zclip, zclip );
+	       extent.y.min*scale, extent.y.max*scale );
             
       // set the modelview matrix
       glMatrixMode (GL_MODELVIEW);      
@@ -366,7 +377,8 @@ void StgCanvas::draw()
       // move the next two lines...
       glScalef( scale, scale, scale ); 
       glTranslatef(  -panx/scale, -pany/scale, 0 );
-
+      // .. from here
+      
       glRotatef( rtod(-stheta), fabs(cos(sphi)), 0, 0 );
       glRotatef( rtod(sphi), 0,0,1 );   // rotate about z - yaw
       
@@ -412,16 +424,18 @@ void StgCanvas::draw()
    
    // draw the world size rectangle in white, using the polygon offset
    // so it doesn't z-fight with the models
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1.0, 1.0);
-   glColor3f( 1,1,1 );
-
+   //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   //glEnable(GL_POLYGON_OFFSET_FILL);
+   //glPolygonOffset(1.0, 1.0);
+   //glColor3f( 1,1,1 );
+   //colorstack.Push(1,1,1);
+   
    glPushMatrix();
 
    glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
-   ((StgWorldGui*)world)->DrawFloor();
-   glDisable(GL_POLYGON_OFFSET_FILL);
+   //((StgWorldGui*)world)->DrawFloor();
+
+   //glDisable(GL_POLYGON_OFFSET_FILL);
 
    if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
      {
@@ -442,6 +456,9 @@ void StgCanvas::draw()
      }
 
    glPopMatrix();         
+   
+   if( showflags & STG_SHOW_GRID )
+     DrawGlobalGrid(); 
    
    for( GList* it=selected_models; it; it=it->next )
      ((StgModel*)it->data)->DrawSelected();

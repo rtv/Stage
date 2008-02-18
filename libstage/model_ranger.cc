@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -110,7 +110,7 @@ StgModelRanger::StgModelRanger( StgWorld* world,
 
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom)); // no size
-  this->SetGeom( &geom );
+  this->SetGeom( geom );
   
   samples = NULL;
   sensor_count = DEFAULT_RANGER_SENSORCOUNT;

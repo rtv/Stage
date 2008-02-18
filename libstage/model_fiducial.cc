@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_fiducial.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -75,7 +75,7 @@ StgModelFiducial::StgModelFiducial( StgWorld* world,
 
   stg_geom_t geom; 
   memset( &geom, 0, sizeof(geom));
-  SetGeom( &geom );
+  SetGeom( geom );
 
   // default parameters
   min_range = DEFAULT_FIDUCIAL_RANGEMIN;

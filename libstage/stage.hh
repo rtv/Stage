@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.5 2008-02-01 03:11:01 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.6 2008-02-18 03:52:30 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -275,6 +275,14 @@ namespace Stg
     double min; //< smallest value in range
     double max; //< largest value in range
   } stg_bounds_t;
+  
+  /** bound a volume along the x,y,z axes */
+  typedef struct
+  {
+    stg_bounds_t x; //< volume extent along x axis
+    stg_bounds_t y; //< volume extent along y axis
+    stg_bounds_t z; //< volume extent along z axis 
+  } stg_bounds3d_t;
 
   /** bound a range of range values, from min to max  
    */
@@ -297,13 +305,18 @@ namespace Stg
     stg_radians_t angle; //< width of viewing angle of sensor
   } stg_fov_t;
 
-
-  /** define a point on the plane */
+  
+  /** define a point on a 2d plane */
   typedef struct
   {
     stg_meters_t x, y;
   } stg_point_t;
-
+  
+  /** define a point in 3d space */
+  typedef struct
+  {
+    stg_meters_t x, y, z;
+  } stg_point3_t;
   
   /** define an integer point on the plane 
    */
@@ -469,6 +482,9 @@ namespace Draw
   /** calculate the sum of [p1] and [p2], in [p1]'s coordinate system, and
       copy the result into result. */
   void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 );
+  
+  /** returns the sum of [p1] + [p2], in [p1]'s coordinate system */
+  stg_pose_t pose_sum( stg_pose_t p1, stg_pose_t p2 );
 
   // PRETTY PRINTING -------------------------------------------------
   
@@ -510,6 +526,7 @@ namespace Draw
   } stg_typetable_entry_t;
 
 
+  void gl_draw_grid( stg_bounds3d_t vol );
   void gl_pose_shift( stg_pose_t* pose );
   void gl_coord_shift( double x, double y, double z, double a  );
 
@@ -978,7 +995,10 @@ namespace Draw
     void RecordRay( double x1, double y1, double x2, double y2 );
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
     bool graphics;
-    //StgBlockGrid* bgrid;
+    stg_bounds3d_t extent;
+    
+    /** Enlarge the bounding volume to include this point */
+    void Extend( stg_point3_t pt );
 
   public:
 
@@ -997,6 +1017,7 @@ namespace Draw
     stg_usec_t RealTimeNow(void);
     stg_usec_t RealTimeSinceStart(void);
     void PauseUntilNextUpdateTime(void);
+    void IdleUntilNextUpdateTime( int (*idler)(void) );
   
     stg_usec_t GetSimInterval(){ return interval_sim; }; 
   
@@ -1007,6 +1028,8 @@ namespace Draw
     virtual void Save();
     virtual bool Update(void);
     virtual bool RealTimeUpdate(void);
+    virtual bool RealTimeUpdateWithIdler( int (*idler)(void) );
+
     virtual void AddModel( StgModel* mod );
     virtual void RemoveModel( StgModel* mod );
   
@@ -1025,15 +1048,15 @@ namespace Draw
   
     StgModel* GetModel( const stg_id_t id );
     StgModel* GetModel( const char* name );
-  
+    
 
     GList* GetRayList(){ return ray_list; };
     void ClearRays();
-    void DrawTree( bool leaves );
-    void DrawFloor();
     
     void ClockString( char* str, size_t maxlen );
 
+    stg_bounds3d_t GetExtent(){ return extent; };  
+        
     void ForEachModel( GHFunc func, void* arg )
     { g_hash_table_foreach( models_by_id, func, arg ); };
   
@@ -1272,7 +1295,7 @@ namespace Draw
     stg_velocity_t GetGlobalVelocity();
 
     /* set the velocity of a model in the global coordinate system */
-    void SetGlobalVelocity(  stg_velocity_t* gvel );
+    void SetGlobalVelocity(  stg_velocity_t gvel );
 
     /** subscribe to a model's data */
     void Subscribe();
@@ -1281,22 +1304,22 @@ namespace Draw
     void Unsubscribe();
 
     /** set the pose of model in global coordinates */
-    void SetGlobalPose(  stg_pose_t* gpose );
+    void SetGlobalPose(  stg_pose_t gpose );
   
     /** set a model's velocity in its parent's coordinate system */
-    void SetVelocity(  stg_velocity_t* vel );
+    void SetVelocity(  stg_velocity_t vel );
  
     /** set a model's pose in its parent's coordinate system */
-    void SetPose(  stg_pose_t* pose );
+    void SetPose(  stg_pose_t pose );
 
     /** add values to a model's pose in its parent's coordinate system */
-    void AddToPose(  stg_pose_t* pose );
+    void AddToPose(  stg_pose_t pose );
 
     /** add values to a model's pose in its parent's coordinate system */
     void AddToPose(  double dy, double dy, double dz, double da );
 
     /** set a model's geometry (size and center offsets) */
-    void SetGeom(  stg_geom_t* src );
+    void SetGeom(  stg_geom_t src );
 
     /** set a model's geometry (size and center offsets) */
     void SetFiducialReturn(  int fid );
@@ -1315,9 +1338,6 @@ namespace Draw
     /** Get a model's geometry - it's size and local pose (offset from
 	origin in local coords) */
     stg_geom_t GetGeom(){ return geom; }
-
-    /** Get the pose of a model in its parent's coordinate system  */
-    void GetPose(  stg_pose_t* dest );
 
     /** Get the pose of a model in its parent's coordinate system  */
     stg_pose_t GetPose(){ return pose; }
@@ -1447,7 +1467,15 @@ namespace Draw
     /** Convert a pose in the model's local coordinate system into the
 	world coordinate system. Overwrites [pose] with the new
 	coordinate. */
-    void LocalToGlobal( stg_pose_t* pose );
+    //void LocalToGlobal( stg_pose_t* pose );
+    
+    /** Return the global pose (i.e. pose in world coordinates) of a
+	pose specified in the model's local coordinate system */
+    stg_pose_t LocalToGlobal( stg_pose_t pose );
+
+    /** Return the 3d point in world coordinates of a 3d point
+	specified in the model's local coordinate system */
+    stg_point3_t LocalToGlobal( stg_point3_t local );
   
     /** returns the first descendent of this model that is unsubscribed
 	and has the type indicated by the string */
@@ -1585,6 +1613,7 @@ namespace Draw
     void RecordRay( double x1, double y1, double x2, double y2 );
     void DrawRays();
     void ClearRays();
+    void DrawGlobalGrid();
 
   public:
     StgCanvas( StgWorld* world, int x, int y, int W,int H);
@@ -1653,6 +1682,9 @@ namespace Draw
   
     virtual void PopColor()
     { canvas->PopColor(); } 
+
+    void DrawTree( bool leaves );
+    void DrawFloor();
   };
 
 

@@ -10,6 +10,7 @@ SRC = \
     ancestor.cc \
     block.cc \
     canvas.cc \
+    gl.cc \
     glcolorstack.cc \
     model.cc \
     model_callbacks.cc \

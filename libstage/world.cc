@@ -50,18 +50,12 @@ described on the manual page for each model type.
 #include <limits.h>
 
 #include "stage_internal.hh"
+#include "region.hh"
 
-const double STG_DEFAULT_WORLD_PPM = 50;  // 2cm pixels
-const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
-const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
-const uint32_t RBITS = 6; // regions contain (2^RBITS)^2 pixels
-const uint32_t SBITS = 5; // superregions contain (2^SBITS)^2 regions
-const uint32_t SRBITS = RBITS+SBITS;
 
 // static data members
 unsigned int StgWorld::next_id = 0;
 bool StgWorld::quit_all = false;
-
 
 static guint PointIntHash( stg_point_int_t* pt )
 {
@@ -73,155 +67,6 @@ static gboolean PointIntEqual( stg_point_int_t* p1, stg_point_int_t* p2 )
   return( memcmp( p1, p2, sizeof(stg_point_int_t) ) == 0 );
 }
 
-typedef struct
-{
-  GSList* list;
-}  stg_cell_t;
-
-class Stg::Region
-{
-  friend class SuperRegion;
-  
-private:  
-  static const uint32_t REGIONWIDTH = 1<<RBITS;
-  static const uint32_t REGIONSIZE = REGIONWIDTH*REGIONWIDTH;
-  
-  stg_cell_t cells[REGIONSIZE];
-  
-public:
-  uint32_t count; // number of blocks rendered into these cells
-  
-  Region()
-  {
-    bzero( cells, REGIONSIZE * sizeof(stg_cell_t));
-    count = 0;
-  }
-  
-  stg_cell_t* GetCell( int32_t x, int32_t y )
-  {
-    uint32_t index = x + (y*REGIONWIDTH);
-    assert( index >=0 );
-    assert( index < REGIONSIZE );    
-    return &cells[index];    
-  }
-  
-  // add a block to a region cell specified in REGION coordinates
-  void AddBlock( StgBlock* block, int32_t x, int32_t y, unsigned int* count2 )
-  {
-    stg_cell_t* cell = GetCell( x, y );
-    cell->list = g_slist_prepend( cell->list, block ); 
-    block->RecordRenderPoint( &cell->list, cell->list, &this->count, count2 );    
-    count++;
-  }  
-};
-
-
-class Stg::SuperRegion
-{
-  friend class StgWorld;
- 
-private:
-  static const uint32_t SUPERREGIONWIDTH = 1<<SBITS;
-  static const uint32_t SUPERREGIONSIZE = SUPERREGIONWIDTH*SUPERREGIONWIDTH;
-  
-  Region regions[SUPERREGIONSIZE];  
-  uint32_t count; // number of blocks rendered into these regions
-  
-  stg_point_int_t origin;
-  
-public:
-  
-  SuperRegion( int32_t x, int32_t y )
-  {
-    count = 0;
-    origin.x = x;
-    origin.y = y;
-    //regions = new Region[SUPERREGIONSIZE];
-  }
-  
-  ~SuperRegion()
-  {
-    //delete [] regions;
-  }
-
-  // get the region x,y from the region array
-  Region* GetRegion( int32_t x, int32_t y )
-  {
-    int32_t index =  x + (y*SUPERREGIONWIDTH);
-    assert( index >=0 );
-    assert( index < (int)SUPERREGIONSIZE );
-    return &regions[ index ];
-  } 
-  
-  // add a block to a cell specified in superregion coordinates
-  void AddBlock( StgBlock* block, int32_t x, int32_t y )
-  {
-    GetRegion( x>>RBITS, y>>RBITS )
-      ->AddBlock( block,  
-		  x - ((x>>RBITS)<<RBITS),
-		  y - ((y>>RBITS)<<RBITS),
-		  &count);		   
-    count++;
-  }
-
-  // callback wrapper for Draw()
-  static void Draw_cb( gpointer dummykey, 
-		       SuperRegion* sr, 
-		       gpointer dummyval )
-  {
-    sr->Draw();
-  }
-  
-  void Draw()
-  {
-    glPushMatrix();
-    glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS,0 );
-        
-    glColor3f( 1,0,0 );    
-
-    for( unsigned int x=0; x<SUPERREGIONWIDTH; x++ )
-      for( unsigned int y=0; y<SUPERREGIONWIDTH; y++ )
-	{
-	  Region* r = GetRegion(x,y);
-	  
-	  for( unsigned int p=0; p<Region::REGIONWIDTH; p++ )
-	    for( unsigned int q=0; q<Region::REGIONWIDTH; q++ )
-	      if( r->cells[p+(q*Region::REGIONWIDTH)].list )
-		glRecti( p+(x<<RBITS), q+(y<<RBITS),
-			 1+p+(x<<RBITS), 1+q+(y<<RBITS) );
-	}
-
-    // outline regions
-    glColor3f( 0,1,0 );    
-    for( unsigned int x=0; x<SUPERREGIONWIDTH; x++ )
-      for( unsigned int y=0; y<SUPERREGIONWIDTH; y++ )
- 	glRecti( x<<RBITS, y<<RBITS, 
-		 (x+1)<<RBITS, (y+1)<<RBITS );
-    
-    // outline superregion
-    glColor3f( 0,0,1 );    
-    glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
-
-    glPopMatrix();    
-  }
-  
-  static void Floor_cb( gpointer dummykey, 
-			SuperRegion* sr, 
-			gpointer dummyval )
-  {
-    sr->Floor();
-  }
-  
-  void Floor()
-  {
-    glPushMatrix();
-    glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS,0 );        
-    glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
-    glPopMatrix();    
-  }
-  
-  
-};
 
 SuperRegion* StgWorld::CreateSuperRegion( int32_t x, int32_t y )
 {
@@ -249,7 +94,7 @@ StgWorld::StgWorld( const char* token,
  		    stg_msec_t interval_real,
  		    double ppm )
 {
-  Initialize( token, interval_sim, interval_real, ppm );//, width, height );
+  Initialize( token, interval_sim, interval_real, ppm );
 }
 
 void StgWorld::Initialize( const char* token, 
@@ -293,12 +138,12 @@ void StgWorld::Initialize( const char* token,
   this->superregions = g_hash_table_new( (GHashFunc)PointIntHash, 
 					 (GEqualFunc)PointIntEqual );
 
-  //this->CreateSuperRegion( -2, -2 );
-  
   this->total_subs = 0;
   this->paused = true; 
   this->destroy = false;   
-
+  
+  bzero( &this->extent, sizeof(this->extent));
+  
   for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
     this->interval_log[i] = this->interval_real;
   this->real_time_now = 0;
@@ -497,6 +342,32 @@ void StgWorld::PauseUntilNextUpdateTime( void )
   real_time_next_update += interval_real;
 }
 
+void StgWorld::IdleUntilNextUpdateTime( int (*idler)(void) )
+{
+  // sleep until it's time to update  
+  stg_usec_t timenow = RealTimeSinceStart();
+  
+  /*  printf( "\ntimesincestart %llu interval_real %llu interval_sim %llu real_time_next_update %llu\n",
+	  timenow,
+	  interval_real,
+	  interval_sim,
+	  real_time_next_update );
+  */
+
+  while( timenow < real_time_next_update )
+    {
+      (*idler)();
+      usleep( 10000 );
+      timenow = RealTimeSinceStart();
+    }
+
+  interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
+
+  real_time_now = timenow;
+  real_time_next_update += interval_real;
+}
+
+
 bool StgWorld::Update()
 {
   //PRINT_DEBUG( "StgWorld::Update()" );
@@ -529,6 +400,16 @@ bool StgWorld::RealTimeUpdate()
   bool updated = Update();
   PauseUntilNextUpdateTime();
   
+  return updated;
+}
+
+bool StgWorld::RealTimeUpdateWithIdler( int (*idler)(void) )
+  
+{
+  //PRINT_DEBUG( "StageWorld::RealTimeUpdate()" );  
+  bool updated = Update();
+  IdleUntilNextUpdateTime( idler );
+ 
   return updated;
 }
 
@@ -780,12 +661,6 @@ static void _reload_cb( gpointer key, gpointer data, gpointer user )
 // reload the current worldfile
 void StgWorld::Reload( void )
 {
-  // can't reload the file yet - need to hack on the worldfile class. 
-  //wf->load( NULL ); 
-  
-  // ask every model to load itself from the file database
-  //g_hash_table_foreach( this->models_by_id, stg_model_reload_cb, NULL );
-
   ForEachModel( _reload_cb, NULL );
 }
 
@@ -825,6 +700,18 @@ int StgWorld::AddBlockPixel( int x, int y, int z,
     {
       //printf( "Creating super region [ %d %d ]\n", sup.x, sup.y );
       sr = rinfo->world->CreateSuperRegion( sup.x, sup.y );
+      
+      // the bounds of the world have changed
+      stg_point3_t pt;
+      pt.x = (sup.x << SRBITS) / rinfo->world->ppm;
+      pt.y = (sup.y << SRBITS) / rinfo->world->ppm;
+      pt.z = 0;
+      rinfo->world->Extend( pt ); // lower left corner of the new superregion
+
+      pt.x = ((sup.x+1) << SRBITS) / rinfo->world->ppm;
+      pt.y = ((sup.y+1) << SRBITS) / rinfo->world->ppm;
+      pt.z = 0;
+      rinfo->world->Extend( pt ); // top right corner of the new superregion
     }
   
   assert(sr);
@@ -841,12 +728,12 @@ int StgWorld::AddBlockPixel( int x, int y, int z,
   return FALSE;
 }
 
-void StgWorld::DrawTree( bool drawall )
-{  
-  g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Draw_cb, NULL );
-}
-
-void StgWorld::DrawFloor()
+void StgWorld::Extend( stg_point3_t pt )
 {
-  g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Floor_cb, NULL );
+  extent.x.min = MIN( extent.x.min, pt.x);
+  extent.x.max = MAX( extent.x.max, pt.x );
+  extent.y.min = MIN( extent.y.min, pt.y );
+  extent.y.max = MAX( extent.y.max, pt.y );      
+  extent.z.min = MIN( extent.z.min, pt.z );
+  extent.z.max = MAX( extent.z.max, pt.z );      
 }

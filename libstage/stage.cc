@@ -311,6 +311,20 @@ void Stg::stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
   //  printf( "pose z %.2f\n", result->z );
 }
 
+// returns the resultant of vector [p1] and [p2] 
+stg_pose_t Stg::pose_sum( stg_pose_t p1, stg_pose_t p2 )
+{
+  double cosa = cos(p1.a);
+  double sina = sin(p1.a);
+  
+  stg_pose_t result;  
+  result.x = p1.x + p2.x * cosa - p2.y * sina;
+  result.y = p1.y + p2.x * sina + p2.y * cosa;
+  result.z = p1.z + p2.z;
+  result.a = normalize(p1.a + p2.a);
+
+  return result;
+}
 
 // pb_* functions are only used inside this file
 
