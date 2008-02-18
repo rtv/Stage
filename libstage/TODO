@@ -1,9 +1,15 @@
-
-INCOMPLETE
-* Fix 3D panning and scrolling
+	
+** 3.0 RELEASE **
 
 BUGS
 * saving worldfile adds newlines after includes
 
+INCOMPLETE
+* Fix 3D panning and scrolling
+* per-model visualization entries in view menu
+
+
 DESIRABLE FEATURES
-*  
+* energy model & recharging
+
+** FUTURE RELEASES **
