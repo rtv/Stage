@@ -1,0 +1,9 @@
+
+INCOMPLETE
+* Fix 3D panning and scrolling
+
+BUGS
+* saving worldfile adds newlines after includes
+
+DESIRABLE FEATURES
+*  
