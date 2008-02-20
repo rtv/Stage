@@ -216,6 +216,12 @@ void StgWorld::ClockString( char* str, size_t maxlen )
 #endif
 }
 
+// wrapper to startup all models from the hash table
+void init_models( gpointer dummy1, StgModel* mod, gpointer dummy2 )
+{
+  mod->Init();
+}
+
 void StgWorld::Load( const char* worldfile_path )
 {
   printf( " [Loading %s]", worldfile_path );      
@@ -294,7 +300,10 @@ void StgWorld::Load( const char* worldfile_path )
   
   // warn about unused WF linesa
   wf->WarnUnused();
-
+  
+  // run through the loaded models and initialise them
+  g_hash_table_foreach( models_by_id, (GHFunc)init_models, NULL );
+  
   stg_usec_t load_end_time = RealTimeNow();
 
   printf( "[Load time %.3fsec]", (load_end_time - load_start_time) / 1000000.0 );

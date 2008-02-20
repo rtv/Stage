@@ -215,6 +215,9 @@ StgModel::StgModel( StgWorld* world,
   this->last_update = 0;
   this->interval = 1e4; // 10msec
   
+  this->initfunc = NULL;
+  this->updatefunc = NULL;
+
   // now we can add the basic square shape
   this->AddBlockRect( -0.5,-0.5,1,1 );
   
@@ -234,6 +237,16 @@ StgModel::~StgModel( void )
   world->RemoveModel( this );  
 }
 
+// this should be called after all models have loaded from the
+// worldfile - it's a chance to do any setup now that all models are
+// in existence
+void StgModel::Init()
+{
+  if( initfunc && updatefunc )
+    Subscribe();
+  
+  // anything else to do here?
+}  
 
 void StgModel::AddBlock( stg_point_t* pts, 
 			 size_t pt_count,
@@ -633,6 +646,9 @@ const char* StgModel::PrintWithPose()
 void StgModel::Startup( void )
 {
   //printf( "Startup model %s\n", this->token );
+
+  if( initfunc )
+    initfunc( this );
   
   world->StartUpdatingModel( this );
   
@@ -655,15 +671,14 @@ void StgModel::UpdateIfDue( void )
     this->Update();
 }
 
-// void StgModel::UpdateTree( void )
-// {
-//   LISTMETHOD( this->children, StgModel*, UpdateTree );
-// }
-
 void StgModel::Update( void )
 {
   //printf( "[%lu] %s update (%d subs)\n", 
   //  this->world->sim_time_ms, this->token, this->subs );
+  
+  //puts( "UPDATE" );
+  if( updatefunc )
+    updatefunc( this );
   
   CallCallbacks( &update );
 

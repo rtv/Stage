@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.6 2008-02-18 03:52:30 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.7 2008-02-20 06:03:58 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -933,7 +933,6 @@ namespace Draw
     bool destroy;
 
     stg_id_t id;
-    //stg_meters_t width, height;
 
     GHashTable* models_by_id; ///< the models that make up the world, indexed by id
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
@@ -1008,8 +1007,6 @@ namespace Draw
 	      stg_msec_t interval_sim, 
 	      stg_msec_t interval_real,
 	      double ppm ); 
-	      //double width,
-	      //double height );
   
     virtual ~StgWorld();
     
@@ -1068,6 +1065,9 @@ namespace Draw
     stg_color_t color;
     stg_usec_t time;
   } stg_trail_item_t;
+  
+  typedef void ctrlinit_t( StgModel* mod );
+  typedef void ctrlupdate_t( StgModel* mod );
 
   // MODEL CLASS
   class StgModel : public StgAncestor
@@ -1154,6 +1154,7 @@ namespace Draw
     StgModel* TestCollision( stg_pose_t* pose, 
 			     double* hitx, double* hity );
 
+
     void Map();
     void UnMap();
 
@@ -1220,7 +1221,10 @@ namespace Draw
     /* hooks for attaching special callback functions (not used as
        variables) */
     char startup, shutdown, load, save, update;
-  
+    
+    ctrlinit_t* initfunc;
+    ctrlupdate_t* updatefunc;
+
   public:
   
     // constructor
@@ -1237,6 +1241,9 @@ namespace Draw
     virtual void Load();
     /** save the state of the model to the current world file */
     virtual void Save();
+
+    /** Should be called after all models are loaded, to do any last-minute setup */
+    void Init();
     
     virtual void PushColor( stg_color_t col )
     { world->PushColor( col ); }
@@ -1248,7 +1255,10 @@ namespace Draw
 
     void Enable(){ disabled = false; };
     void Disable(){ disabled = true; };
-  
+    
+    // Load a control program for this model from an external library
+    void LoadControllerModule( char* lib );
+
     // call this to ensure the GUI window is redrawn
     void NeedRedraw();
 

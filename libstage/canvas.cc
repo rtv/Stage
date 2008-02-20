@@ -96,8 +96,8 @@ StgModel* StgCanvas::Select( int x, int y )
   //printf("%p %s %d\n", mod, mod ? mod->Token() : "", id );
   
   glEnable(GL_DITHER);
-  //glClearColor ( 0.7, 0.7, 0.8, 1.0);
-  glClearColor ( 1,1,1,1 );
+  glClearColor ( 0.7, 0.7, 0.8, 1.0);
+  //glClearColor ( 1,1,1,1 );
   
   if( mod ) // we clicked on a root model
     {
@@ -339,8 +339,8 @@ void StgCanvas::draw()
       FixViewport(w(), h()); 
 
       // set gl state that won't change every redraw
-      //glClearColor ( 0.7, 0.7, 0.8, 1.0);
-      glClearColor ( 1,1,1,1 );
+      glClearColor ( 0.7, 0.7, 0.8, 1.0);
+      //glClearColor ( 1,1,1,1 );
       glDisable(GL_LIGHTING);
       glEnable (GL_DEPTH_TEST);
       glDepthFunc (GL_LESS);
@@ -422,20 +422,18 @@ void StgCanvas::draw()
       glTranslatef(  -gpose.x, -gpose.y, 0 );      
      }
    
-   // draw the world size rectangle in white, using the polygon offset
-   // so it doesn't z-fight with the models
-   //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   //glEnable(GL_POLYGON_OFFSET_FILL);
-   //glPolygonOffset(1.0, 1.0);
-   //glColor3f( 1,1,1 );
-   //colorstack.Push(1,1,1);
-   
    glPushMatrix();
 
+   // draw the world size rectangle in white, using the polygon offset
+   // so it doesn't z-fight with the models
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(1.0, 1.0);
+   
    glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
-   //((StgWorldGui*)world)->DrawFloor();
+   ((StgWorldGui*)world)->DrawFloor();
 
-   //glDisable(GL_POLYGON_OFFSET_FILL);
+   glDisable(GL_POLYGON_OFFSET_FILL);
 
    if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
      {

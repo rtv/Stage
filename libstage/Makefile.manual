@@ -12,6 +12,7 @@ SRC = \
     canvas.cc \
     gl.cc \
     glcolorstack.cc \
+    main.cc \
     model.cc \
     model_callbacks.cc \
     model_ranger.cc \
@@ -21,7 +22,6 @@ SRC = \
     model_load.cc \
     model_position.cc \
     model_props.cc \
-    stest.cc \
     stage.cc \
     typetable.cc \
     world.cc \
@@ -29,6 +29,8 @@ SRC = \
     worldgui.cc
 
 #    blockgrid.cc 
+#    stest.cc 
+
 
 
 CXXFLAGS+= -g -Wall -I.. -I../replace `fltk-config --use-gl --use-images --cflags` `pkg-config --cflags glib-2.0 gdk-pixbuf-2.0`
@@ -41,6 +43,7 @@ all: stage
 .cc.o:
 	g++ $(CXXFLAGS) -c $< 
 
+
 stage: $(OBJ)
 	g++ $(OBJ) -o $@ $(LIBS) 
 
@@ -49,3 +52,8 @@ clean :
 
 demo: gldemo.cc
 	g++ gldemo.cc -o $@ $(LIBS) 		
+
+ctrl: ctrl.cc
+	g++ $(CXXFLAGS) -fPIC -c ctrl.cc
+	g++ -shared -o libctrl.so -fPIC ctrl.o
+

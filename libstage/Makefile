@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.5 2008-02-12 02:53:53 rtv Exp $
+# $Id: Makefile,v 1.6 2008-02-20 06:03:58 rtv Exp $
 
 
 
@@ -41,10 +41,10 @@ POST_UNINSTALL = :
 build_triplet = i386-apple-darwin9.2.0
 host_triplet = i386-apple-darwin9.2.0
 target_triplet = i386-apple-darwin9.2.0
-bin_PROGRAMS = stest$(EXEEXT)
+bin_PROGRAMS = stage$(EXEEXT)
 subdir = libstage
 DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+	$(srcdir)/Makefile.in TODO
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.ac
@@ -63,8 +63,14 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(pkgdatadir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
+ctrl_la_LIBADD =
+am_ctrl_la_OBJECTS = ctrl.lo
+ctrl_la_OBJECTS = $(am_ctrl_la_OBJECTS)
+ctrl_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(ctrl_la_LDFLAGS) $(LDFLAGS) -o $@
 libstage_la_DEPENDENCIES =
-am_libstage_la_OBJECTS = ancestor.lo block.lo canvas.lo \
+am_libstage_la_OBJECTS = ancestor.lo block.lo canvas.lo gl.lo \
 	glcolorstack.lo model.lo model_callbacks.lo model_fiducial.lo \
 	model_laser.lo model_load.lo model_position.lo model_ranger.lo \
 	model_blobfinder.lo model_props.lo stage.lo typetable.lo \
@@ -75,8 +81,8 @@ libstage_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(CXXFLAGS) $(libstage_la_LDFLAGS) $(LDFLAGS) -o $@
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_stest_OBJECTS = stest.$(OBJEXT)
-stest_OBJECTS = $(am_stest_OBJECTS)
+am_stage_OBJECTS = main.$(OBJEXT)
+stage_OBJECTS = $(am_stage_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -98,8 +104,9 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libstage_la_SOURCES) $(stest_SOURCES)
-DIST_SOURCES = $(libstage_la_SOURCES) $(stest_SOURCES)
+SOURCES = $(ctrl_la_SOURCES) $(libstage_la_SOURCES) $(stage_SOURCES)
+DIST_SOURCES = $(ctrl_la_SOURCES) $(libstage_la_SOURCES) \
+	$(stage_SOURCES)
 pkgdataDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(pkgdata_DATA)
 includeHEADERS_INSTALL = $(INSTALL_HEADER)
@@ -240,7 +247,7 @@ RGB = $(datadir)/stage/rgb.txt
 AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -I/opt/local/include/gtk-2.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include   -I/opt/local/include -I/opt/local/include/FL/images -DRGBFILE=\"$(RGB)\"
 
 # build the stage library
-lib_LTLIBRARIES = libstage.la 
+lib_LTLIBRARIES = libstage.la ctrl.la
 
 # The stage library 
 libstage_la_SOURCES = \
@@ -249,6 +256,7 @@ libstage_la_SOURCES = \
 	block.cc \
 	canvas.cc \
 	colors.h \
+	gl.cc \
 	glcolorstack.cc \
 	model.cc \
 	model_callbacks.cc \
@@ -271,10 +279,12 @@ libstage_la_SOURCES = \
 
 #logo.cc 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
-libstage_la_LIBADD = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv   -L/opt/local/lib -lfltk_images -lfltk_png -lz -lfltk_jpeg -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices
-stest_DEPENDENCIES = libstage.la
-stest_SOURCES = stest.cc
-stest_LDADD = libstage.la
+libstage_la_LIBADD = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv   -L/opt/local/lib -lfltk_images -lfltk_png -lz -lfltk_jpeg -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices  -lltdl
+stage_DEPENDENCIES = libstage.la
+stage_SOURCES = main.cc
+stage_LDADD = libstage.la
+ctrl_la_SOURCES = ctrl.cc stage.hh
+ctrl_la_LDFLAGS = -module 
 all: all-am
 
 .SUFFIXES:
@@ -335,6 +345,8 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
+ctrl.la: $(ctrl_la_OBJECTS) $(ctrl_la_DEPENDENCIES) 
+	$(ctrl_la_LINK) -rpath $(libdir) $(ctrl_la_OBJECTS) $(ctrl_la_LIBADD) $(LIBS)
 libstage.la: $(libstage_la_OBJECTS) $(libstage_la_DEPENDENCIES) 
 	$(libstage_la_LINK) -rpath $(libdir) $(libstage_la_OBJECTS) $(libstage_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
@@ -365,9 +377,9 @@ clean-binPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-stest$(EXEEXT): $(stest_OBJECTS) $(stest_DEPENDENCIES) 
-	@rm -f stest$(EXEEXT)
-	$(CXXLINK) $(stest_OBJECTS) $(stest_LDADD) $(LIBS)
+stage$(EXEEXT): $(stage_OBJECTS) $(stage_DEPENDENCIES) 
+	@rm -f stage$(EXEEXT)
+	$(CXXLINK) $(stage_OBJECTS) $(stage_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -378,7 +390,10 @@ distclean-compile:
 include ./$(DEPDIR)/ancestor.Plo
 include ./$(DEPDIR)/block.Plo
 include ./$(DEPDIR)/canvas.Plo
+include ./$(DEPDIR)/ctrl.Plo
+include ./$(DEPDIR)/gl.Plo
 include ./$(DEPDIR)/glcolorstack.Plo
+include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/model.Plo
 include ./$(DEPDIR)/model_blobfinder.Plo
 include ./$(DEPDIR)/model_callbacks.Plo
@@ -389,7 +404,6 @@ include ./$(DEPDIR)/model_position.Plo
 include ./$(DEPDIR)/model_props.Plo
 include ./$(DEPDIR)/model_ranger.Plo
 include ./$(DEPDIR)/stage.Plo
-include ./$(DEPDIR)/stest.Po
 include ./$(DEPDIR)/typetable.Plo
 include ./$(DEPDIR)/world.Plo
 include ./$(DEPDIR)/worldfile.Plo

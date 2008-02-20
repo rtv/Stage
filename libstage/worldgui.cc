@@ -342,6 +342,8 @@ void StgWorldGui::DrawTree( bool drawall )
 
 void StgWorldGui::DrawFloor()
 {
+  PushColor( 1,1,1,1 );
   g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Floor_cb, NULL );
+  PopColor();
 }
 

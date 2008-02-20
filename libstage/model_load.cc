@@ -6,6 +6,12 @@
 
 //#define DEBUG 1
 
+#include <ltdl.h>
+
+void FooInit( StgModel* );
+void FooUpdate( StgModel* );
+
+
 void StgModel::Load( void )
 {  
   PRINT_DEBUG1( "Model \"%s\" loading...", token );
@@ -314,14 +320,25 @@ void StgModel::Load( void )
   if( wf->PropertyExists( this->id, "map_resolution" ))
     this->SetMapResolution( wf->ReadFloat(this->id, "map_resolution", this->map_resolution )); 
   
-    // call any type-specific load callbacks
-    this->CallCallbacks( &this->load );
-
-
-    if( this->debug )
-      printf( "Model \"%s\" is in debug mode\n", token ); 
-
-    PRINT_DEBUG1( "Model \"%s\" loading complete", token );
+  
+  if( wf->PropertyExists( this->id, "ctrl" ))
+    {
+      char* lib = (char*)wf->ReadString(this->id, "ctrl", NULL );
+      
+      if( !lib )
+	puts( "Error - NULL library name" );
+      else
+	LoadControllerModule( lib );
+    }
+  
+  // call any type-specific load callbacks
+  this->CallCallbacks( &this->load );
+  
+  
+  if( this->debug )
+    printf( "Model \"%s\" is in debug mode\n", token ); 
+  
+  PRINT_DEBUG1( "Model \"%s\" loading complete", token );
 }
 
 
@@ -352,3 +369,40 @@ void StgModel::Save( void )
 
   PRINT_DEBUG1( "Model \"%s\" saving complete.", token );
 }
+
+
+void StgModel::LoadControllerModule( char* lib )
+{
+  printf( "Loading controller \"%s\" ...", lib );
+  
+  /* Initialise libltdl. */
+  int errors = lt_dlinit();
+  assert(errors==0);
+  
+  // TODO - do this properly!
+  lt_dlsetsearchpath( ".:.libs:/usr/lib/" );
+  
+  lt_dlhandle handle = NULL;
+  
+  if(( handle = lt_dlopenext( lib ) ))
+    puts( "success." );
+  else
+    puts( "fail." );
+  
+  this->initfunc = (ctrlinit_t*)lt_dlsym( handle, "Init" );
+  if( this->initfunc  == NULL )
+    {
+      puts( lt_dlerror() );	      
+    }
+  assert( this->initfunc );
+  
+  this->updatefunc = (ctrlupdate_t*)lt_dlsym( handle, "Update" );
+  if( this->updatefunc  == NULL )
+    {
+      puts( lt_dlerror() );	      
+    }
+  assert( this->updatefunc );
+  
+  //this->Subscribe(); // causes the model to startup and update
+}
+

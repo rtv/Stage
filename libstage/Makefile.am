@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.3 2008-02-12 02:53:53 rtv Exp $
+# $Id: Makefile.am,v 1.4 2008-02-20 06:03:58 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.hh 
@@ -16,7 +16,7 @@ RGB=$(datadir)/@PACKAGE@/rgb.txt
 AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  @PIXBUF_CFLAGS@ @FLTK_CFLAGS@ -DRGBFILE=\"$(RGB)\"
 
 # build the stage library
-lib_LTLIBRARIES = libstage.la 
+lib_LTLIBRARIES = libstage.la ctrl.la
 
 # The stage library 
 libstage_la_SOURCES =  \
@@ -25,6 +25,7 @@ libstage_la_SOURCES =  \
 	block.cc \
 	canvas.cc \
 	colors.h \
+	gl.cc \
 	glcolorstack.cc \
 	model.cc \
 	model_callbacks.cc \
@@ -46,11 +47,20 @@ libstage_la_SOURCES =  \
 
 #logo.cc 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
-libstage_la_LIBADD = @PIXBUF_LIBS@ @FLTK_LIBS@
+libstage_la_LIBADD = @PIXBUF_LIBS@ @FLTK_LIBS@  -lltdl
 
 # build stest, a stand-alone test binary using the stage library, 
-bin_PROGRAMS = stest 
-stest_DEPENDENCIES = libstage.la
-stest_SOURCES = stest.cc
-stest_LDADD = libstage.la
+#bin_PROGRAMS = stest stage
+#stest_DEPENDENCIES = libstage.la
+#stest_SOURCES = stest.cc
+#stest_LDADD = libstage.la
+
+bin_PROGRAMS = stage
+
+stage_DEPENDENCIES = libstage.la
+stage_SOURCES = main.cc
+stage_LDADD = libstage.la
+
+ctrl_la_SOURCES = ctrl.cc stage.hh
+ctrl_la_LDFLAGS = -module 
 
