@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.3 2008-01-19 01:20:08 rtv Exp $
+ * CVS: $Id: p_simulation.cc,v 1.4 2008-02-21 19:52:24 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -169,7 +169,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 	printf( "Stage: moving \"%s\" to (%.2f,%.2f,%.2f)\n",
 		req->name, pose.x, pose.y, pose.a );
 	
-	mod->SetPose( &pose );
+	mod->SetPose( pose );
 	
 	this->driver->Publish(this->addr, resp_queue,
 			      PLAYER_MSGTYPE_RESP_ACK,
@@ -230,8 +230,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
       
       if( mod )
 	{
-	  stg_pose_t pose;
-	  mod->GetPose( &pose );
+	  stg_pose_t pose = mod->GetPose();
 
       printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
               pose.x, pose.y, pose.a );
