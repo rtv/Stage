@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.2 2008-01-15 01:16:49 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.3 2008-02-21 23:40:13 rtv Exp $
  */
 
 #include <assert.h>
@@ -32,7 +32,7 @@
 #include <errno.h>
 #include <limits.h> // for PATH_MAX
 #include <stdio.h>
-#include <stdlib.h>x
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <math.h>

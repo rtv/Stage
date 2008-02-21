@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.8 2008-02-21 03:35:05 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.9 2008-02-21 23:40:13 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -945,7 +945,6 @@ namespace Draw
   
     bool dirty; ///< iff true, a gui redraw would be required
 
-    stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
     stg_usec_t interval_sleep_max;
     stg_usec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
 
@@ -987,6 +986,8 @@ namespace Draw
     //{ }//bgrid->RemoveBlock( x, y, block ); };
   
   protected:
+    stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
+
     GHashTable* superregions;
 
     GList* ray_list;
@@ -2171,6 +2172,10 @@ namespace Draw
     /** Sets the control_mode to STG_POSITION_CONTROL_VELOCITY and sets
 	the goal velocity. */
     void SetSpeed( double x, double y, double a ); 
+    void SetXSpeed( double x ); 
+    void SetYSpeed( double y ); 
+    void SetZSpeed( double z ); 
+    void SetTurnSpeed( double a ); 
     void SetSpeed( stg_velocity_t vel );
 
     /** Sets the control mode to STG_POSITION_CONTROL_POSITION and sets

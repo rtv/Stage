@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -471,6 +471,32 @@ void StgModelPosition::SetSpeed( double x, double y, double a )
   goal.z = 0; 
   goal.a = a; 
 }  
+
+void StgModelPosition::SetXSpeed( double x )
+{ 
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.x = x; 
+}  
+
+
+void StgModelPosition::SetYSpeed( double y )
+{ 
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.y = y; 
+}  
+
+void StgModelPosition::SetZSpeed( double z )
+{ 
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.z = z; 
+}  
+
+void StgModelPosition::SetTurnSpeed( double a )
+{ 
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.a = a; 
+}  
+
 
 void StgModelPosition::SetSpeed( stg_velocity_t vel ) 
 { 

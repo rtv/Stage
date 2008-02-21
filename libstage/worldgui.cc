@@ -241,8 +241,7 @@ void StgWorldGui::Load( const char* filename )
   int height = (int)wf->ReadTupleFloat(wf_section, "size", 1, h() );
   // on OS X this behaves badly - prevents the Window manager resizing
   //larger than this size.
-  //size( width,height ); 
-  
+  size( width,height ); 
 
   canvas->panx = wf->ReadTupleFloat(wf_section, "center", 0, canvas->panx );
   canvas->pany = wf->ReadTupleFloat(wf_section, "center", 1, canvas->pany );
@@ -324,8 +323,10 @@ void StgWorldGui::Save( void )
 
 bool StgWorldGui::RealTimeUpdate()
 {
-  bool updated = StgWorld::RealTimeUpdateWithIdler( Fl::check);
-  return updated;
+  if( interval_real )
+    return StgWorld::RealTimeUpdateWithIdler( Fl::check);
+  else
+    return Update();
 }
 
 bool StgWorldGui::Update()

@@ -3,6 +3,8 @@
 
 BUGS
 * saving worldfile adds newlines after includes
+* Viewing About Box stops simulation
+* [OSX only - FLTK bug?] loading window size constrains maximum window size
 
 INCOMPLETE
 * Fix 3D panning and scrolling

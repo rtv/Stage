@@ -346,7 +346,7 @@ void StgWorld::PauseUntilNextUpdateTime( void )
     }
 
   interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
-
+  
   real_time_now = timenow;
   real_time_next_update += interval_real;
 }
@@ -354,7 +354,7 @@ void StgWorld::PauseUntilNextUpdateTime( void )
 void StgWorld::IdleUntilNextUpdateTime( int (*idler)(void) )
 {
   // sleep until it's time to update  
-  stg_usec_t timenow = RealTimeSinceStart();
+  stg_usec_t timenow;
   
   /*  printf( "\ntimesincestart %llu interval_real %llu interval_sim %llu real_time_next_update %llu\n",
 	  timenow,
@@ -362,12 +362,11 @@ void StgWorld::IdleUntilNextUpdateTime( int (*idler)(void) )
 	  interval_sim,
 	  real_time_next_update );
   */
-
-  while( timenow < real_time_next_update )
+  
+  while( (timenow = RealTimeSinceStart()) < real_time_next_update )
     {
       (*idler)();
-      usleep( 10000 );
-      timenow = RealTimeSinceStart();
+      usleep( 1000 );
     }
 
   interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
@@ -399,15 +398,18 @@ bool StgWorld::Update()
   if( (quit_time > 0) && (sim_time >= quit_time) )
     quit = true;
   
+  //interval_log[updates%INTERVAL_LOG_LEN] = RealTimeSinceStart() - real_time_now;
+  
   return true;
 }
 
 bool StgWorld::RealTimeUpdate()
-  
+ 
 {
   //PRINT_DEBUG( "StageWorld::RealTimeUpdate()" );  
   bool updated = Update();
-  PauseUntilNextUpdateTime();
+  if( interval_real )
+    PauseUntilNextUpdateTime();
   
   return updated;
 }
@@ -547,7 +549,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
   lastsup.x = INT_MAX; // an unlikely first raytrace
   lastsup.y = INT_MAX;
   
-  stg_point_int_t lastreg;
+  stg_point_int_t lastreg = {0,0};
   lastsup.x = INT_MAX; // an unlikely first raytrace
   lastsup.y = INT_MAX;
       
