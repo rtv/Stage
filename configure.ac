@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.19 2008-01-15 01:25:42 rtv Exp $
+dnl $Id: configure.ac,v 1.20 2008-02-21 05:57:43 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -21,6 +21,7 @@ AM_INIT_AUTOMAKE([tar-ustar dist-bzip2 1.9])
 
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET
+
 
 dnl Generate a configuration header called <config.h> and put all the C
 dnl preprocessor defines in there

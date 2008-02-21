@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.3 $
+ //  $Revision: 1.4 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -173,8 +173,6 @@ static bool laser_raytrace_match( StgBlock* testblock,
 
 void StgModelLaser::Update( void )
 {     
-  StgModel::Update();
-  
   double bearing = -fov/2.0;
   double sample_incr = fov / (double)(sample_count-1);  
   
@@ -228,6 +226,8 @@ void StgModelLaser::Update( void )
      }
    
    data_dirty = true;
+
+  StgModel::Update();  
 }
 
 
