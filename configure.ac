@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.20 2008-02-21 05:57:43 rtv Exp $
+dnl $Id: configure.ac,v 1.21 2008-02-21 23:55:29 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -79,8 +79,8 @@ PKG_CHECK_MODULES( PLAYER, playercore >= 2.1.0,
  AC_MSG_WARN([No suitable Player installation detected.])
  have_player=no
 )
+AM_CONDITIONAL(HAVE_PLAYER, test "x$have_player" = "xyes")
 
-AM_CONDITIONAL(HAVE_PLAYER, [test $have_player=yes])
 
 dnl for libplayerc examples, we need libplayerc
 PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0.1,
@@ -90,8 +90,7 @@ PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0.1,
  AC_MSG_WARN([libplayerc was not found. ])
  have_playerc=no
 )
-
-AM_CONDITIONAL(HAVE_PLAYERC, [test $have_playerc = yes])
+AM_CONDITIONAL(HAVE_PLAYERC, test "x$have_playerc" = "xyes")
 
 AC_OUTPUT(Makefile 
           libstage/Makefile 

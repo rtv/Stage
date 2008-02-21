@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.9 2008-02-21 20:10:40 rtv Exp $
+# $Id: Makefile,v 1.10 2008-02-21 23:55:29 rtv Exp $
 
 
 
@@ -143,10 +143,10 @@ FLTK_CFLAGS = -I/usr/local/include
 FLTK_LIBS = -L/usr/local/lib -lfltk_images -lpng -lz -ljpeg -lfltk_gl -lGLU -lGL -lfltk -lm -lXext -lX11
 GREP = /bin/grep
 HAVE_FLTK_CONFIG = fltk-config
-HAVE_PLAYERC_FALSE = #
-HAVE_PLAYERC_TRUE = 
-HAVE_PLAYER_FALSE = #
-HAVE_PLAYER_TRUE = 
+HAVE_PLAYERC_FALSE = 
+HAVE_PLAYERC_TRUE = #
+HAVE_PLAYER_FALSE = 
+HAVE_PLAYER_TRUE = #
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
@@ -170,10 +170,10 @@ PATH_SEPARATOR = :
 PIXBUF_CFLAGS = -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
 PIXBUF_LIBS = -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0  
 PKG_CONFIG = /usr/bin/pkg-config
-PLAYERC_CFLAGS = -I/home/vaughan/PS-2.0/include/player-2.1  
-PLAYERC_LIBS = -L/home/vaughan/PS-2.0/lib -lplayerc -lm -lplayerxdr -lplayererror  
-PLAYER_CFLAGS = -I/home/vaughan/PS-2.0/include/player-2.1  
-PLAYER_LIBS = -L/home/vaughan/PS-2.0/lib -lplayercore -lltdl -lpthread -lplayererror  
+PLAYERC_CFLAGS = 
+PLAYERC_LIBS = 
+PLAYER_CFLAGS = 
+PLAYER_LIBS = 
 RANLIB = ranlib
 SED = /usr/bin/sed
 SET_MAKE = 
@@ -221,7 +221,7 @@ mandir = ${datarootdir}/man
 mkdir_p = mkdir -p --
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/vaughan/PS-2.0
+prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
