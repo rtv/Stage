@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.7 2008-02-20 06:03:58 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.8 2008-02-21 03:35:05 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -1066,8 +1066,8 @@ namespace Draw
     stg_usec_t time;
   } stg_trail_item_t;
   
-  typedef void ctrlinit_t( StgModel* mod );
-  typedef void ctrlupdate_t( StgModel* mod );
+  typedef int ctrlinit_t( StgModel* mod );
+  //typedef void ctrlupdate_t( StgModel* mod );
 
   // MODEL CLASS
   class StgModel : public StgAncestor
@@ -1223,7 +1223,7 @@ namespace Draw
     char startup, shutdown, load, save, update;
     
     ctrlinit_t* initfunc;
-    ctrlupdate_t* updatefunc;
+    //ctrlupdate_t* updatefunc;
 
   public:
   
@@ -1277,6 +1277,7 @@ namespace Draw
 
     const char* TypeStr(){ return this->typestr; }
     StgModel* Parent(){ return this->parent; }
+    StgModel* GetModel( const char* name );
     bool Stall(){ return this->stall; }
     int GuiMask(){ return this->gui_mask; };  
     StgWorld* World(){ return this->world; }

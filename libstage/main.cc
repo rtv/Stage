@@ -3,7 +3,7 @@
 
 int main( int argc, char* argv[] )
 {
-  printf( %s %s\n", PACKAGE, VERSION );
+  printf( "%s %s\n", PACKAGE, VERSION );
   
   if( argc < 2 )
     {

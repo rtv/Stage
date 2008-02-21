@@ -396,12 +396,12 @@ void StgModel::LoadControllerModule( char* lib )
     }
   assert( this->initfunc );
   
-  this->updatefunc = (ctrlupdate_t*)lt_dlsym( handle, "Update" );
-  if( this->updatefunc  == NULL )
-    {
-      puts( lt_dlerror() );	      
-    }
-  assert( this->updatefunc );
+//   this->updatefunc = (ctrlupdate_t*)lt_dlsym( handle, "Update" );
+//   if( this->updatefunc  == NULL )
+//     {
+//       puts( lt_dlerror() );	      
+//     }
+//   assert( this->updatefunc );
   
   //this->Subscribe(); // causes the model to startup and update
 }

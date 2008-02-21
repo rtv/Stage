@@ -216,7 +216,7 @@ StgModel::StgModel( StgWorld* world,
   this->interval = 1e4; // 10msec
   
   this->initfunc = NULL;
-  this->updatefunc = NULL;
+  //this->updatefunc = NULL;
 
   // now we can add the basic square shape
   this->AddBlockRect( -0.5,-0.5,1,1 );
@@ -242,7 +242,7 @@ StgModel::~StgModel( void )
 // in existence
 void StgModel::Init()
 {
-  if( initfunc && updatefunc )
+  if( initfunc )
     Subscribe();
   
   // anything else to do here?
@@ -677,8 +677,8 @@ void StgModel::Update( void )
   //  this->world->sim_time_ms, this->token, this->subs );
   
   //puts( "UPDATE" );
-  if( updatefunc )
-    updatefunc( this );
+ //  if( updatefunc )
+//     updatefunc( this );
   
   CallCallbacks( &update );
 
@@ -1442,4 +1442,20 @@ StgModel* StgModel::GetUnsubscribedModelOfType( char* modelstr )
   
   // nothing matching below this model
   return NULL;
+}
+
+StgModel* StgModel::GetModel( const char* modelname )
+{
+  // construct the full model name and look it up
+  char* buf = new char[TOKEN_MAX];
+  snprintf( buf, TOKEN_MAX, "%s.%s", this->token, modelname );
+  
+  StgModel* mod = world->GetModel( buf );
+  
+  if( mod == NULL )
+    PRINT_WARN1( "Model %s not found", buf );
+  
+  delete[] buf;
+
+  return mod;
 }
