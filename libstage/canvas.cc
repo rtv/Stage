@@ -434,7 +434,7 @@ void StgCanvas::draw()
    ((StgWorldGui*)world)->DrawFloor();
 
    glDisable(GL_POLYGON_OFFSET_FILL);
-
+   
    if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
      {
        glDisable( GL_LINE_SMOOTH );
@@ -456,8 +456,8 @@ void StgCanvas::draw()
    glPopMatrix();         
    
    if( showflags & STG_SHOW_GRID )
-     DrawGlobalGrid(); 
-   
+     DrawGlobalGrid();    
+
    for( GList* it=selected_models; it; it=it->next )
      ((StgModel*)it->data)->DrawSelected();
    

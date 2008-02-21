@@ -689,7 +689,7 @@ void StgModel::DrawSelected()
 {
   glPushMatrix();
  
-  glTranslatef( pose.x, pose.y, pose.z );
+  glTranslatef( pose.x, pose.y, pose.z+0.01 ); // tiny Z offset raises rect above grid
 
   stg_pose_t gpose = GetGlobalPose();
   
