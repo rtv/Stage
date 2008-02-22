@@ -373,36 +373,40 @@ void StgModel::Save( void )
 
 void StgModel::LoadControllerModule( char* lib )
 {
-  printf( "Loading controller \"%s\" ...", lib );
-  
+  printf( "[Ctrl \"%s\"", lib );
+  fflush(stdout);
+
   /* Initialise libltdl. */
   int errors = lt_dlinit();
   assert(errors==0);
   
-  // TODO - do this properly!
-  lt_dlsetsearchpath( ".:.libs:/usr/lib/" );
-  
+  char* stagepath = getenv("STAGEPATH");
+  if( stagepath == NULL )
+    stagepath = "."; 
+
+  lt_dlsetsearchpath( stagepath );
+
   lt_dlhandle handle = NULL;
   
   if(( handle = lt_dlopenext( lib ) ))
-    puts( "success." );
-  else
-    puts( "fail." );
-  
-  this->initfunc = (ctrlinit_t*)lt_dlsym( handle, "Init" );
-  if( this->initfunc  == NULL )
     {
-      puts( lt_dlerror() );	      
+      printf( "]" );
+      
+      this->initfunc = (ctrlinit_t*)lt_dlsym( handle, "Init" );
+      if( this->initfunc  == NULL )
+	{
+	  printf( "Libtool error: %s. Something is wrong with your plugin. Quitting\n",
+		  lt_dlerror() ); // report the error from libtool
+	  exit(-1);
+	}
     }
-  assert( this->initfunc );
-  
-//   this->updatefunc = (ctrlupdate_t*)lt_dlsym( handle, "Update" );
-//   if( this->updatefunc  == NULL )
-//     {
-//       puts( lt_dlerror() );	      
-//     }
-//   assert( this->updatefunc );
-  
-  //this->Subscribe(); // causes the model to startup and update
+  else
+    {
+      PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", lib );  
+      exit(-1);
+    }
+      
+ fflush(stdout);
 }
+
 

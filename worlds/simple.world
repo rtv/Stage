@@ -5,20 +5,11 @@
 # defines Pioneer-like robots
 include "pioneer.inc"
 
-
-
-
 # defines 'map' object used for floorplans
 include "map.inc"
 
-
-
-
 # defines sick laser
 include "sick.inc"
-
-
-
 
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02
@@ -50,7 +41,7 @@ define autorob pioneer2dx
 (
  color "red"
  sicklaser( pose [ 0.040 0.000 0.000 ] samples 32 ) 
- ctrl "ctrl"
+ ctrl "wander"
 )
 
 autorob( pose [3.537 7.177 158.268] )
