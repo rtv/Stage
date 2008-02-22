@@ -41,10 +41,10 @@ define autorob pioneer2dx
 (
  color "red"
  sicklaser( pose [ 0.040 0.000 0.000 ] samples 32 ) 
- ctrl "wander"
+ #ctrl "wander"
 )
 
-autorob( pose [3.537 7.177 158.268] )
+autorob( pose [3.537 7.177 158.268] name "r0" )
 autorob( pose [4.142 -7.764 -52.629] )
 autorob( pose [6.320 3.775 22.445] )
 autorob( pose [-1.915 3.332 156.191] )

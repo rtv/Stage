@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.21 2008-02-21 23:55:29 rtv Exp $
+dnl $Id: configure.ac,v 1.22 2008-02-22 21:20:47 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -103,6 +103,7 @@ AC_OUTPUT(Makefile
           examples/Makefile
           examples/libstage/Makefile
           examples/libplayerc/Makefile
+          examples/ctrl/Makefile
 	  stage.pc )
 
 dnl should use AC_MSG_NOTICE(), but that's apparently not defined in

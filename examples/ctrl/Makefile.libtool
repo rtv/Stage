@@ -1,0 +1,19 @@
+#
+# An example of how to build a Stage controller plugin with libtool
+#
+
+CXX = g++
+CXXLD = g++
+LIBTOOL = libtool
+STAGE_CFLAGS = `pkg-config --cflags stage`
+
+all: wander.la
+
+wander.la: wander.lo
+	$(LIBTOOL) --mode=link $(CXXLD) -rpath $(INSTALL_DIR) -module -export-dynamic -version-info 0:0:0 $^ -o $@
+
+%.lo: %.cc
+	$(LIBTOOL) --mode=compile $(CXX) $(STAGE_CFLAGS) -c $<
+
+clean:
+	rm -rf *.o *.lo *.la .libs  

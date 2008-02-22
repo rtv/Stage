@@ -1,9 +1,10 @@
 	
-** 3.0 RELEASE **
+** 3.0.0 RELEASE **
 
 BUGS
 * saving worldfile adds newlines after includes
 * Viewing About Box stops simulation
+* 3d collision detection broken - e.g. fancypioneer2dx
 * [OSX only - FLTK bug?] loading window size constrains maximum window size
 
 INCOMPLETE
@@ -13,5 +14,7 @@ INCOMPLETE
 
 DESIRABLE FEATURES
 * energy model & recharging
+* runtime update rate UI
+
 
 ** FUTURE RELEASES **

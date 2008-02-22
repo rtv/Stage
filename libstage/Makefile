@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.11 2008-02-22 20:33:48 rtv Exp $
+# $Id: Makefile,v 1.12 2008-02-22 21:20:47 rtv Exp $
 
 
 
@@ -73,12 +73,6 @@ libstage_la_OBJECTS = $(am_libstage_la_OBJECTS)
 libstage_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libstage_la_LDFLAGS) $(LDFLAGS) -o $@
-wander_la_LIBADD =
-am_wander_la_OBJECTS = ctrl.lo
-wander_la_OBJECTS = $(am_wander_la_OBJECTS)
-wander_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(wander_la_LDFLAGS) $(LDFLAGS) -o $@
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_stage_OBJECTS = main.$(OBJEXT)
@@ -104,9 +98,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libstage_la_SOURCES) $(wander_la_SOURCES) $(stage_SOURCES)
-DIST_SOURCES = $(libstage_la_SOURCES) $(wander_la_SOURCES) \
-	$(stage_SOURCES)
+SOURCES = $(libstage_la_SOURCES) $(stage_SOURCES)
+DIST_SOURCES = $(libstage_la_SOURCES) $(stage_SOURCES)
 pkgdataDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(pkgdata_DATA)
 includeHEADERS_INSTALL = $(INSTALL_HEADER)
@@ -246,16 +239,13 @@ RGB = $(datadir)/stage/rgb.txt
 # system-wide compile flags - target-specific flags are added to each target below
 AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -I/opt/local/include/gtk-2.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include   -I/opt/local/include -I/opt/local/include/FL/images -DRGBFILE=\"$(RGB)\"
 
-# build the stage library
-lib_LTLIBRARIES = libstage.la wander.la
-
-# The stage library 
+# build the stage library and program
+lib_LTLIBRARIES = libstage.la 
 libstage_la_SOURCES = \
 	../config.h \
 	ancestor.cc \
 	block.cc \
 	canvas.cc \
-	colors.h \
 	gl.cc \
 	glcolorstack.cc \
 	model.cc \
@@ -278,13 +268,11 @@ libstage_la_SOURCES = \
 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
 libstage_la_LIBADD = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv   -L/opt/local/lib -lfltk_images -lfltk_png -lz -lfltk_jpeg -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices  -lltdl
+
+# STAGE
 stage_DEPENDENCIES = libstage.la
 stage_SOURCES = main.cc
 stage_LDADD = libstage.la
-
-# WANDER CONTROLLER
-wander_la_SOURCES = ctrl.cc stage.hh
-wander_la_LDFLAGS = -module 
 all: all-am
 
 .SUFFIXES:
@@ -347,8 +335,6 @@ clean-libLTLIBRARIES:
 	done
 libstage.la: $(libstage_la_OBJECTS) $(libstage_la_DEPENDENCIES) 
 	$(libstage_la_LINK) -rpath $(libdir) $(libstage_la_OBJECTS) $(libstage_la_LIBADD) $(LIBS)
-wander.la: $(wander_la_OBJECTS) $(wander_la_DEPENDENCIES) 
-	$(wander_la_LINK) -rpath $(libdir) $(wander_la_OBJECTS) $(wander_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
@@ -390,7 +376,6 @@ distclean-compile:
 include ./$(DEPDIR)/ancestor.Plo
 include ./$(DEPDIR)/block.Plo
 include ./$(DEPDIR)/canvas.Plo
-include ./$(DEPDIR)/ctrl.Plo
 include ./$(DEPDIR)/gl.Plo
 include ./$(DEPDIR)/glcolorstack.Plo
 include ./$(DEPDIR)/main.Po
