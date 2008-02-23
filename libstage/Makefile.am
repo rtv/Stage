@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.6 2008-02-22 21:20:47 rtv Exp $
+# $Id: Makefile.am,v 1.7 2008-02-23 05:22:54 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.hh 
@@ -45,7 +45,7 @@ libstage_la_SOURCES =  \
 	worldgui.cc 
 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
-libstage_la_LIBADD = @PIXBUF_LIBS@ @FLTK_LIBS@  -lltdl
+libstage_la_LIBADD = @PIXBUF_LIBS@ @FLTK_LIBS@  -lltdl -lGLU
 
 # STAGE
 stage_DEPENDENCIES = libstage.la
