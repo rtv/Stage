@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.13 2008-02-23 05:22:54 rtv Exp $
+# $Id: Makefile,v 1.14 2008-02-24 20:13:57 rtv Exp $
 
 
 
@@ -136,6 +136,10 @@ F77 =
 FFLAGS = 
 FLTK_CFLAGS = -I/usr/include/freetype2
 FLTK_LIBS = -lfltk_images -lfltk_gl -lfltk
+GLU_CFLAGS = -pthread
+GLU_LIBS = -lGLU -lGL  -lm
+GL_CFLAGS = -pthread
+GL_LIBS = -lGL  -lm
 GREP = /bin/grep
 HAVE_FLTK_CONFIG = fltk-config
 INSTALL = /usr/bin/install -c
@@ -167,12 +171,16 @@ PLAYERC_CFLAGS =
 PLAYERC_LIBS = 
 PLAYER_CFLAGS = 
 PLAYER_LIBS = 
+PTHREAD_CC = gcc
+PTHREAD_CFLAGS = -pthread
+PTHREAD_LIBS = 
 RANLIB = ranlib
 SED = /bin/sed
 SET_MAKE = 
 SHELL = /bin/bash
 STRIP = strip
 VERSION = 3.0.0
+XMKMF = 
 abs_builddir = /home/vaughan/PS/HEAD/stage/libstage
 abs_srcdir = /home/vaughan/PS/HEAD/stage/libstage
 abs_top_builddir = /home/vaughan/PS/HEAD/stage
@@ -180,6 +188,7 @@ abs_top_srcdir = /home/vaughan/PS/HEAD/stage
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 ac_ct_F77 = 
+acx_pthread_config = 
 am__include = include
 am__leading_dot = .
 am__quote = 
@@ -215,7 +224,7 @@ mandir = ${datarootdir}/man
 mkdir_p = /bin/mkdir -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/vaughan/PS-2
+prefix = /home/vaughan/PS-2/
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
@@ -238,7 +247,7 @@ pkgdata_DATA = rgb.txt
 RGB = $(datadir)/stage/rgb.txt
 
 # system-wide compile flags - target-specific flags are added to each target below
-AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include   -I/usr/include/freetype2 -DRGBFILE=\"$(RGB)\"
+AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -pthread -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include   -I/usr/include/freetype2 -DRGBFILE=\"$(RGB)\"
 
 # build the stage library and program
 lib_LTLIBRARIES = libstage.la 
@@ -268,7 +277,7 @@ libstage_la_SOURCES = \
 	worldgui.cc 
 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
-libstage_la_LIBADD = -lgdk_pixbuf-2.0 -lm -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0   -lfltk_images -lfltk_gl -lfltk  -lltdl -lGLU
+libstage_la_LIBADD = -lgdk_pixbuf-2.0 -lm -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0   -lfltk_images -lfltk_gl -lfltk  -lGLU -lGL  -lm -lltdl
 
 # STAGE
 stage_DEPENDENCIES = libstage.la

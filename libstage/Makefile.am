@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.7 2008-02-23 05:22:54 rtv Exp $
+# $Id: Makefile.am,v 1.8 2008-02-24 20:13:57 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.hh 
@@ -13,7 +13,7 @@ pkgdata_DATA = rgb.txt
 RGB=$(datadir)/@PACKAGE@/rgb.txt
 
 # system-wide compile flags - target-specific flags are added to each target below
-AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  @PIXBUF_CFLAGS@ @FLTK_CFLAGS@ -DRGBFILE=\"$(RGB)\"
+AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  @GLU_CFLAGS@ @PIXBUF_CFLAGS@ @FLTK_CFLAGS@ -DRGBFILE=\"$(RGB)\"
 
 # build the stage library and program
 lib_LTLIBRARIES = libstage.la 
@@ -45,7 +45,7 @@ libstage_la_SOURCES =  \
 	worldgui.cc 
 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
-libstage_la_LIBADD = @PIXBUF_LIBS@ @FLTK_LIBS@  -lltdl -lGLU
+libstage_la_LIBADD = @PIXBUF_LIBS@ @FLTK_LIBS@  @GLU_LIBS@ -lltdl
 
 # STAGE
 stage_DEPENDENCIES = libstage.la

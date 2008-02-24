@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.22 2008-02-22 21:20:47 rtv Exp $
+dnl $Id: configure.ac,v 1.23 2008-02-24 20:13:57 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -49,6 +49,9 @@ AC_CHECK_PROG(have_pkg_config,pkg-config,yes,no)
 if test "x$have_pkg_config" = "xno"; then
   AC_MSG_ERROR([pkg-config is required to build Stage.  Install pkg-config, then run configure again.])
 fi
+
+dnl ==== OPEN GL =====
+AX_CHECK_GLU
 
 dnl ==== GRAPHICS FILES ====
 
