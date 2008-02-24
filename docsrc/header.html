@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header.html,v 1.4 2008-01-15 01:25:42 rtv Exp $ -->
+<!-- $Id: header.html,v 1.5 2008-02-24 23:24:40 rtv Exp $ -->
 
 <HEAD>
 
@@ -75,9 +75,9 @@ li.menu {
 }
 
 
-#sidebar { position: absolute; left:0px; padding:2em; top:0em; width:9em;}
+#sidebar { position: absolute; left:0px; padding:2em; top:0em; width:11em;}
 
-#content { position: absolute; left:10em; top:0em; padding-left:3em; padding-right:3em; padding-bottom:2em; margin-top:1em; margin-right:2em; }
+#content { position: absolute; left:12em; top:0em; padding-left:3em; padding-right:3em; padding-bottom:2em; margin-top:1em; margin-right:2em; }
 
 div.box { background-color:#EEE; border: 1px solid #000; padding: 0.5ex 0.4em 0.5ex 0.6em; margin:1em;  }
 div.box_light { background-color:#FFF; border: 1px solid #000; padding: 0.5ex 0.4em 0.5ex 0.6em; margin:1em;  }
@@ -114,27 +114,33 @@ div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 <ul class=menu>
 <li class=menu><a href="install.html">Installation</a>
 <li class=menu><a href="help.html">Help</a>
-<li class=menu><a href="faq.html">FAQ</a>
-<hr>
-<li class=menu><a href="group__player.html">Player plugin</a>
 <hr>
 
 <!-- the lists of plugins and models come next -->
 
 <li class=menu><a href="group__world.html">World</a>
-<li class=menu><a href="group__window.html">Window</a>
+<li class=menu><a href="group__worldgui.html">WorldGUI</a>
 <li class=menu><a href="group__model.html">Model</a>
 <ul class=menu1>
 <li class=menu><a href="group__model__blobfinder.html">blobfinder</a></li>
-<li class=menu><a href="group__model__bumper.html">bumper</a></li>
 <li class=menu><a href="group__model__fiducial.html">fiducial</a></li>
-<li class=menu><a href="group__model__gripper.html">gripper</a></li>
 <li class=menu><a href="group__model__laser.html">laser</a></li>
 <li class=menu><a href="group__model__position.html">position</a></li>
 <li class=menu><a href="group__model__ranger.html">ranger</a></li>
+<!--
+TODO
+<li class=menu><a href="group__model__gripper.html">gripper</a></li>
+<li class=menu><a href="group__model__bumper.html">bumper</a></li>
+-->
 </ul>
 
 </div>
+
+<div class=box>
+<div class="title">Player</div>
+<li class=menu><a href="group__player.html">libstageplugin</a>
+</div>
+
 
 <div class=box>
 <div class="title">Developer</div>
@@ -145,6 +151,7 @@ div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
 <!-- <a href="http://sourceforge.net"><img border=0 src="http://sourceforge.net/sflogo.php?group_id=42445&type=1"></a> -->
 <div class="title">Online</div>
 <a href="http://playerstage.sourceforge.net">Homepage</a><br>
+<a href="http://playerstage.sourceforge.net/wiki/Basic_FAQ">FAQ (Wiki)</a><br>
 <a href="http://sourceforge.net/project/showfiles.php?group_id=42445">Download</a><br>
 <a href="http://sourceforge.net/projects/playerstage">Project</a><br>
 <a href="http://sourceforge.net/tracker/?group_id=42445">Bugs</a><br>

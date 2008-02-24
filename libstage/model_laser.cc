@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.4 $
+ //  $Revision: 1.5 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +39,8 @@ static const char LASER_GEOM_COLOR[] = "blue";
     @ingroup model
     @defgroup model_laser Laser model 
     The laser model simulates a scanning laser rangefinder
+
+    API: Stg::StgModelLaser
 
     <h2>Worldfile properties</h2>
 

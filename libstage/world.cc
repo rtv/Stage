@@ -4,24 +4,25 @@
 Stage simulates a 'world' composed of `models', defined in a `world
 file'. 
 
+API: Stg::StgWorld
+
 <h2>Worldfile properties</h2>
 
 @par Summary and default values
 
 @verbatim
-world
-(
-   name            "[filename of worldfile]"
-   interval_real   100
-   interval_sim    100
-   gui_interval    100
-   resolution      0.01
-)
+
+  title "[defaults to worldfile filename]"
+  interval_real   100
+  interval_sim    100
+  gui_interval    100
+  resolution      0.02
+
 @endverbatim
 
 @par Details
 - name [string]
-  - the name of the world, as displayed in the window title bar. Defaults to the worldfile file name.
+ - the name of the world, as displayed in the window title bar. Defaults to the worldfile file name.
 - interval_sim [milliseconds]
   - the length of each simulation update cycle in milliseconds.
 - interval_real [milliseconds]

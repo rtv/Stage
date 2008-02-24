@@ -1,3 +1,10 @@
+/**
+   \defgroup stage The Stage standalone robot simulator.
+
+   Here is where I describe the Stage standalone program.
+*/
+
+
 #include "config.h"
 #include "stage_internal.hh"
 

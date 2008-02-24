@@ -6,6 +6,8 @@ model also has a body made up of a list of lines. Internally, the
 basic model is used base class for all other model types. You can use
 the basic model to simulate environmental objects.
 
+API: Stg::StgModel 
+
 <h2>Worldfile properties</h2>
 
 @par Summary and default values

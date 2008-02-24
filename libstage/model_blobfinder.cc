@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_blobfinder.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.2 $
+ //  $Revision: 1.3 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -36,6 +36,8 @@ of the color 'blobs'. Multiple colors can be tracked at once; they are
 separated into channels, so that e.g. all red objects are tracked as
 channel one, blue objects in channel two, etc. The color associated
 with each channel is configurable.
+
+API: Stg::StgModelBlobfinder
 
 <h2>Worldfile properties</h2>
 

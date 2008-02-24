@@ -10,6 +10,8 @@ world view can also show visualizations of the data and configuration
 of various sensor and actuator models. The View menu has options to
 control which data and configurations are rendered.
 
+API: Stg::StgWorldGui
+
 <h2>Worldfile Properties</h2>
 
 @par Summary and default values
@@ -27,6 +29,8 @@ window
 @endverbatim
 
 @par Details
+- title [string]
+ - the string displayed in the window title bar. Defaults to the worldfile file name.
 - size [width:int width:int]
   - size of the window in pixels
 - center [x:float y:float]
@@ -91,18 +95,15 @@ debug menu that enables visualization of some of the innards of Stage.
 
 */
 
+#include "config.h" // for PACKAGE strings etc
 #include "stage_internal.hh"
 #include "region.hh"
 
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_PNG_Image.H>
-					     //#include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Output.H>
 #include <FL/Fl_Multiline_Output.H>
-#include "config.h" // for PACKAGE strings etc
-
-// some utilities
 
 static const char* MITEM_VIEW_DATA =      "View/Data";
 static const char* MITEM_VIEW_BLOCKS =    "View/Blocks";

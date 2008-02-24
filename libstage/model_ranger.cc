@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_ranger.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,6 +15,8 @@
 @ingroup model
 @defgroup model_ranger Ranger model 
 The ranger model simulates an array of sonar or infra-red (IR) range sensors.
+
+API: Stg::StgModelRanger
 
 <h2>Worldfile properties</h2>
 

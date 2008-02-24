@@ -1,3 +1,9 @@
+/** canvas.cc
+    Implement the main world viewing area in FLTK and OpenGL. 
+    Author: Richard Vaughan (vaughan@sfu.ca)
+    $Id: canvas.cc,v 1.10 2008-02-24 23:24:40 rtv Exp $
+*/
+
 #include "stage_internal.hh"
 
 void StgCanvas::TimerCallback( StgCanvas* c )

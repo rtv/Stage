@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,6 +29,8 @@ mobile robot base. It can drive in one of two modes; either
 driving left and roght wheels like a Pioneer robot, or
 <i>omnidirectional</i>, i.e. able to control each of its three axes
 independently.
+
+API: Stg::StgModelPosition
 
 <h2>Worldfile properties</h2>
 
