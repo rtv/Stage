@@ -106,6 +106,9 @@ void StgModel::Load( void )
       vel.y = wf->ReadTupleLength(this->id, "velocity", 1, vel.y );
       vel.a = wf->ReadTupleAngle(this->id, "velocity", 3,  vel.a );      
       this->SetVelocity( vel );
+
+      if( vel.x || vel.y || vel.z || vel.a )
+	world->StartUpdatingModel( this );
     }
 
   if( wf->PropertyExists( this->id, "velocity4" ))

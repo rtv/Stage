@@ -17,7 +17,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile,v 1.15 2008-02-24 20:46:13 rtv Exp $
+# $Id: Makefile,v 1.16 2008-02-24 20:48:33 rtv Exp $
 
 
 
@@ -38,12 +38,12 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = i686-pc-linux-gnu
-host_triplet = i686-pc-linux-gnu
-target_triplet = i686-pc-linux-gnu
+build_triplet = i386-apple-darwin9.2.0
+host_triplet = i386-apple-darwin9.2.0
+target_triplet = i386-apple-darwin9.2.0
 bin_PROGRAMS = stage$(EXEEXT)
-#am__append_1 = 
-am__append_2 = -lGLU
+am__append_1 = 
+#am__append_2 = -lGLU
 subdir = libstage
 DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in TODO
@@ -110,13 +110,13 @@ HEADERS = $(include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /home/vaughan/PS/HEAD/stage/missing --run aclocal-1.10
-AMTAR = ${SHELL} /home/vaughan/PS/HEAD/stage/missing --run tar
+ACLOCAL = ${SHELL} /Users/vaughan/PS/HEAD/stage/missing --run aclocal-1.10
+AMTAR = ${SHELL} /Users/vaughan/PS/HEAD/stage/missing --run tar
 AR = ar
-AUTOCONF = ${SHELL} /home/vaughan/PS/HEAD/stage/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/vaughan/PS/HEAD/stage/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/vaughan/PS/HEAD/stage/missing --run automake-1.10
-AWK = mawk
+AUTOCONF = ${SHELL} /Users/vaughan/PS/HEAD/stage/missing --run autoconf
+AUTOHEADER = ${SHELL} /Users/vaughan/PS/HEAD/stage/missing --run autoheader
+AUTOMAKE = ${SHELL} /Users/vaughan/PS/HEAD/stage/missing --run automake-1.10
+AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
@@ -129,19 +129,19 @@ CXXFLAGS = -g -O2
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
-ECHO = echo
-ECHO_C = 
-ECHO_N = -n
+ECHO = /bin/echo
+ECHO_C = \c
+ECHO_N = 
 ECHO_T = 
-EGREP = /bin/grep -E
+EGREP = /usr/bin/grep -E
 EXEEXT = 
 F77 = 
 FFLAGS = 
-FLTK_CFLAGS = -I/usr/include/freetype2
-FLTK_LIBS = -lfltk_images -lfltk_gl -lfltk
-GREP = /bin/grep
+FLTK_CFLAGS = -I/opt/local/include -I/opt/local/include/FL/images
+FLTK_LIBS = -L/opt/local/lib -lfltk_images -lfltk_png -lz -lfltk_jpeg -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices
+GREP = /usr/bin/grep
 HAVE_FLTK_CONFIG = fltk-config
-INSTALL = /usr/bin/install -c
+INSTALL = /opt/local/bin/ginstall -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
@@ -153,8 +153,8 @@ LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIBTOOL_DEPS = ./ltmain.sh
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/vaughan/PS/HEAD/stage/missing --run makeinfo
-MKDIR_P = /bin/mkdir -p
+MAKEINFO = ${SHELL} /Users/vaughan/PS/HEAD/stage/missing --run makeinfo
+MKDIR_P = /opt/local/bin/gmkdir -p
 OBJEXT = o
 PACKAGE = stage
 PACKAGE_BUGREPORT = 
@@ -163,23 +163,22 @@ PACKAGE_STRING = Stage 3.0.0
 PACKAGE_TARNAME = stage
 PACKAGE_VERSION = 3.0.0
 PATH_SEPARATOR = :
-PIXBUF_CFLAGS = -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include  
-PIXBUF_LIBS = -lgdk_pixbuf-2.0 -lm -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0  
-PKG_CONFIG = /usr/bin/pkg-config
-PLAYERC_CFLAGS = 
-PLAYERC_LIBS = 
-PLAYER_CFLAGS = 
-PLAYER_LIBS = 
+PIXBUF_CFLAGS = -I/opt/local/include/gtk-2.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include  
+PIXBUF_LIBS = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv  
+PKG_CONFIG = /opt/local/bin/pkg-config
+PLAYERC_CFLAGS = -I/Users/vaughan/PS-2.0/include/player-2.1  
+PLAYERC_LIBS = -L/Users/vaughan/PS-2.0/lib -lplayerc -lm -lplayerxdr -lplayererror  
+PLAYER_CFLAGS = -I/Users/vaughan/PS-2.0/include/player-2.1  
+PLAYER_LIBS = -L/Users/vaughan/PS-2.0/lib -lplayercore -lltdl -lpthread -lplayererror  
 RANLIB = ranlib
-SED = /bin/sed
 SET_MAKE = 
-SHELL = /bin/bash
+SHELL = /bin/sh
 STRIP = strip
 VERSION = 3.0.0
-abs_builddir = /home/vaughan/PS/HEAD/stage/libstage
-abs_srcdir = /home/vaughan/PS/HEAD/stage/libstage
-abs_top_builddir = /home/vaughan/PS/HEAD/stage
-abs_top_srcdir = /home/vaughan/PS/HEAD/stage
+abs_builddir = /Users/vaughan/PS/HEAD/stage/libstage
+abs_srcdir = /Users/vaughan/PS/HEAD/stage/libstage
+abs_top_builddir = /Users/vaughan/PS/HEAD/stage
+abs_top_srcdir = /Users/vaughan/PS/HEAD/stage
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 ac_ct_F77 = 
@@ -189,11 +188,11 @@ am__quote =
 am__tar = tar --format=ustar -chf - "$$tardir"
 am__untar = tar -xf -
 bindir = ${exec_prefix}/bin
-build = i686-pc-linux-gnu
+build = i386-apple-darwin9.2.0
 build_alias = 
-build_cpu = i686
-build_os = linux-gnu
-build_vendor = pc
+build_cpu = i386
+build_os = darwin9.2.0
+build_vendor = apple
 builddir = .
 datadir = ${datarootdir}
 datarootdir = ${prefix}/share
@@ -201,35 +200,35 @@ docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
 have_pkg_config = yes
-host = i686-pc-linux-gnu
+host = i386-apple-darwin9.2.0
 host_alias = 
-host_cpu = i686
-host_os = linux-gnu
-host_vendor = pc
+host_cpu = i386
+host_os = darwin9.2.0
+host_vendor = apple
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = $(SHELL) /home/vaughan/PS/HEAD/stage/install-sh
+install_sh = $(SHELL) /Users/vaughan/PS/HEAD/stage/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = /bin/mkdir -p
+mkdir_p = /opt/local/bin/gmkdir -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/vaughan/PS-2/
+prefix = /Users/vaughan/PS-2.0
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
 srcdir = .
 sysconfdir = ${prefix}/etc
-target = i686-pc-linux-gnu
+target = i386-apple-darwin9.2.0
 target_alias = 
-target_cpu = i686
-target_os = linux-gnu
-target_vendor = pc
+target_cpu = i386
+target_os = darwin9.2.0
+target_vendor = apple
 top_builddir = ..
 top_srcdir = ..
 
@@ -241,7 +240,7 @@ pkgdata_DATA = rgb.txt
 RGB = $(datadir)/stage/rgb.txt
 
 # system-wide compile flags - target-specific flags are added to each target below
-AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include   -I/usr/include/freetype2 -DRGBFILE=\"$(RGB)\"
+AM_CPPFLAGS = -Wall -I. -I$(top_srcdir)/replace  -I/opt/local/include/gtk-2.0 -I/opt/local/include/glib-2.0 -I/opt/local/lib/glib-2.0/include -I/opt/local/include   -I/opt/local/include -I/opt/local/include/FL/images -DRGBFILE=\"$(RGB)\"
 
 # build the stage library and program
 lib_LTLIBRARIES = libstage.la 
@@ -271,7 +270,7 @@ libstage_la_SOURCES = \
 	worldgui.cc 
 
 libstage_la_LDFLAGS = -version-info 3:1:0 -rpath $(libdir) 
-libstage_la_LIBADD = -lgdk_pixbuf-2.0 -lm -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0   -lfltk_images -lfltk_gl -lfltk -lltdl $(am__append_1) \
+libstage_la_LIBADD = -L/opt/local/lib -lgdk_pixbuf-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lintl -liconv   -L/opt/local/lib -lfltk_images -lfltk_png -lz -lfltk_jpeg -lfltk_gl -framework AGL -framework OpenGL -lfltk -framework Carbon -framework ApplicationServices -lltdl $(am__append_1) \
 	$(am__append_2)
 
 # STAGE
