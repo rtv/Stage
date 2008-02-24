@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.10 2008-02-23 05:22:54 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.11 2008-02-24 20:46:13 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -71,9 +71,6 @@
 #include <FL/fl_draw.H>
 #include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
 #include <FL/glut.H>
-//#include <FL/glut.h>
-
-//#include <FL/glu.h>
 
 #ifdef __APPLE__
 #include <OpenGL/glu.h>

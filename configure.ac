@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.23 2008-02-24 20:13:57 rtv Exp $
+dnl $Id: configure.ac,v 1.24 2008-02-24 20:46:12 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -10,10 +10,16 @@ dnl Check for a source file, to make sure any user-specified source
 dnl dir is correct	 	
 AC_CONFIG_SRCDIR(libstage/model.cc)
 
-dnl determine system type.  this is used in a couple of places to infer the 
-dnl types of arguments to some networking library functions.  if/when we 
-dnl upgrade to newer Autotools, this can probably go away.
+dnl Determine system type. We need to know if we're on Darwin so we
+dnl can make spacial arrangements for OS X's weird framework system
 AC_CANONICAL_SYSTEM
+darwin=no
+case $host in
+  *-darwin*)
+    darwin=yes ;;
+esac
+AM_CONDITIONAL(DARWIN, test "x$darwin" = "xyes")
+
 
 dnl Initialize automake, requiring version 1.9 or better,
 dnl using modern tar format and generate bzip tarballs
@@ -21,7 +27,6 @@ AM_INIT_AUTOMAKE([tar-ustar dist-bzip2 1.9])
 
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET
-
 
 dnl Generate a configuration header called <config.h> and put all the C
 dnl preprocessor defines in there
@@ -51,7 +56,7 @@ if test "x$have_pkg_config" = "xno"; then
 fi
 
 dnl ==== OPEN GL =====
-AX_CHECK_GLU
+dnl AX_CHECK_GLU
 
 dnl ==== GRAPHICS FILES ====
 
