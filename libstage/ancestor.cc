@@ -23,19 +23,32 @@ StgAncestor::~StgAncestor()
 
 unsigned int StgAncestor::GetNumChildrenOfType( const char* typestr )
 {
-  return (unsigned int)g_hash_table_lookup( child_types, typestr);
+  unsigned int *c = (unsigned int*)g_hash_table_lookup( child_types, typestr);
+
+  if( c )
+    return *c;
+  else
+    return 0;
 }
 
-void StgAncestor::SetNumChildrenOfType( const char* typestr, unsigned int count )
+void StgAncestor::IncrementNumChildrenOfType( const char* typestr )
 {
-  g_hash_table_insert( child_types, (gpointer)typestr, (gpointer)count);
+  unsigned int* c = (unsigned int*)g_hash_table_lookup( child_types, typestr);
+  
+  if( c == NULL )
+    {
+      c = new unsigned int;
+      g_hash_table_insert( child_types, (gpointer)typestr, (gpointer)c);
+      *c = 1;
+    }
+  else
+    (*c)++;
 }
 
 void StgAncestor::AddChild( StgModel* mod )
 {
   // increment the count of models of this type
-  unsigned int count = GetNumChildrenOfType( mod->typestr );
-  SetNumChildrenOfType( mod->typestr, ++count );
+  IncrementNumChildrenOfType( mod->typestr );
   
   // store as a child
   children = g_list_append( children, mod );     

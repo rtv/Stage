@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.11 2008-02-24 20:46:13 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.12 2008-02-25 04:45:42 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -818,7 +818,7 @@ namespace Draw
     virtual ~StgAncestor();
   
     unsigned int GetNumChildrenOfType( const char* typestr );
-    void SetNumChildrenOfType( const char* typestr, unsigned int count );
+    void IncrementNumChildrenOfType( const char* typestr );
   
     virtual void AddChild( StgModel* mod );
     virtual void RemoveChild( StgModel* mod );
