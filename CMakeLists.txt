@@ -1,0 +1,2 @@
+PROJECT(Stage)
+ADD_SUBDIRECTORY(libstage)
