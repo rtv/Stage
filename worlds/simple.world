@@ -1,6 +1,6 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.63.2.2 2007-12-11 19:20:12 gerkey Exp $
+# CVS: $Id: simple.world,v 1.63.2.3 2008-02-27 23:39:59 gerkey Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -20,7 +20,7 @@ resolution 0.02
 # update the screen every 10ms (we need fast update for the stest demo)
 gui_interval 20
 
-gui_disable 1
+gui_disable 0
 
 # configure the GUI window
 window
