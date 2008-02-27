@@ -234,8 +234,10 @@ stg_color_t Stg::stg_lookup_color(const char *name)
 	  int chars_matched = 0;
 	  sscanf( line, "%d %d %d %n", &r, &g, &b, &chars_matched );
 	  
-	  stg_color_t col = ( 0xFF000000 | (r << 16) | (g << 8) | b);
-
+	  
+	  stg_color_t* col = new stg_color_t;
+	  *col = ( 0xFF000000 | (r << 16) | (g << 8) | b);
+	  
 	  // Read the name
 	  char* colorname = strdup( line + chars_matched );
 	  
@@ -248,7 +250,12 @@ stg_color_t Stg::stg_lookup_color(const char *name)
     }
 
   // look up the colorname in the database  
-  return (stg_color_t)g_hash_table_lookup( table, name );
+  stg_color_t* found = (stg_color_t*)g_hash_table_lookup( table, name );
+
+  if( found )
+    return *found;
+  else
+    return (stg_color_t)0;
 }
 
 //////////////////////////////////////////////////////////////////////////

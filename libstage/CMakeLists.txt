@@ -2,17 +2,20 @@
 include(FindPkgConfig)
 pkg_check_modules( GLIB gdk-pixbuf-2.0 )
 
-# hack to find FLTK on OS X using MacPorts
-SET(FLTK_INCLUDE_DIR /opt/local/include)
-
 find_package(OPENGL REQUIRED)
+
+if(APPLE)
+  set(FLTK_INCLUDE_DIR /opt/local/include) # MacPorts' install path
+endif(APPLE)
+
 find_package(FLTK REQUIRED)
 
-MESSAGE("hello")
-MESSAGE("FL INC ${FLTK_INCLUDE_DIR}")
-MESSAGE("FL LIBS ${FLTK_LIBRARIES}")
-MESSAGE("GL INC ${OPENGL_INCLUDE_DIR}")
-MESSAGE("GL LIBS ${OPENGL_LIBRARIES}")
+message("FLTK")
+message("  include ${FLTK_INCLUDE_DIR}")
+message("  libs  ${FLTK_LIBRARIES}")
+message("OpenGL")
+message("  include ${OPENGL_INCLUDE_DIR}")
+message("  libs ${OPENGL_LIBRARIES}")
 
 include_directories( .
 		     .. 
