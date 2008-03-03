@@ -18,6 +18,7 @@
 
 #include "replace.h"
 #include "stage_internal.h"
+#include "config.h"
 
 int _stg_quit = FALSE;
 int _stg_disable_gui = FALSE;
@@ -158,8 +159,8 @@ stg_color_t stg_lookup_color(const char *name)
     {
       char* searchfiles[] = {
 	"./rgb.txt",
-#ifdef RGBFILE
-	RGBFILE,
+#ifdef COLOR_DATABASE
+	COLOR_DATABASE,
 #endif
 	"../rgb.txt",
 	NULL };
