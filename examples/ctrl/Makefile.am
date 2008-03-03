@@ -1,12 +1,23 @@
-# $Id: Makefile.am,v 1.1 2008-02-22 21:20:47 rtv Exp $
+# $Id: Makefile.am,v 1.2 2008-03-03 06:02:25 rtv Exp $
 
 # system-wide compile flags - target-specific flags are added to each target below
 AM_CPPFLAGS = -Wall -I. -I../../libstage -I$(top_srcdir)/replace  @PIXBUF_CFLAGS@ @FLTK_CFLAGS@ -DRGBFILE=\"$(RGB)\"
 
 
-lib_LTLIBRARIES = wander.la
+lib_LTLIBRARIES = wander.la fasr.la source.la sink.la
 
 # WANDER CONTROLLER
 wander_la_SOURCES = wander.cc ../../libstage/stage.hh
 wander_la_LDFLAGS = -module 
 
+# FASR controller
+fasr_la_SOURCES = fasr.cc ../../libstage/stage.hh
+fasr_la_LDFLAGS = -module 
+
+# resource source
+source_la_SOURCES = source.cc ../../libstage/stage.hh
+source_la_LDFLAGS = -module 
+
+# resource sink
+sink_la_SOURCES = sink.cc ../../libstage/stage.hh
+sink_la_LDFLAGS = -module 

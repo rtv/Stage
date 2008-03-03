@@ -18,7 +18,7 @@ include "sick.inc"
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 1  # real-time interval between simulation updates in milliseconds 
+interval_real 25  # real-time interval between simulation updates in milliseconds 
 
 paused 0
 
@@ -42,6 +42,7 @@ define redrobot pioneer2dx
 (
  color "red"
  sicklaser( pose [ 0.040 0.000 0.000 ] samples 32 ) 
+ blobfinder() 
  ctrl "wander"
 )
 

@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.12 2008-02-25 04:45:42 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.13 2008-03-03 06:02:26 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -527,6 +527,16 @@ namespace Draw
   void gl_pose_shift( stg_pose_t* pose );
   void gl_coord_shift( double x, double y, double z, double a  );
 
+  class StgFlag
+  {
+  public:
+    stg_color_t color;
+    double size;
+
+    StgFlag( stg_color_t color, double size );
+    StgFlag* Nibble( double portion );
+  };
+  
   /** Render a string at [x,y,z] in the current color */
   void gl_draw_string( float x, float y, float z, char *string);
 
@@ -1037,8 +1047,6 @@ namespace Draw
     void CancelQuit(){ quit = false; }
     void CancelQuitAll(){ quit_all = false; }
   
-    //stg_meters_t Width(){ return width; };
-    //stg_meters_t Height(){ return height; };
     double Resolution(){ return ppm; };
   
     StgModel* GetModel( const stg_id_t id );
@@ -1054,7 +1062,9 @@ namespace Draw
         
     void ForEachModel( GHFunc func, void* arg )
     { g_hash_table_foreach( models_by_id, func, arg ); };
-  
+
+    long unsigned int GetUpdateCount()
+    { return updates; }
   };
 
 
@@ -1223,6 +1233,8 @@ namespace Draw
     ctrlinit_t* initfunc;
     //ctrlupdate_t* updatefunc;
 
+    GList* flag_list;
+
   public:
   
     // constructor
@@ -1243,6 +1255,17 @@ namespace Draw
     /** Should be called after all models are loaded, to do any last-minute setup */
     void Init();
     
+    
+    void AddFlag(  StgFlag* flag );
+    void RemoveFlag( StgFlag* flag );
+    
+    void PushFlag( StgFlag* flag );
+    StgFlag* PopFlag();
+
+    int GetFlagCount(){ return g_list_length( flag_list ); }
+
+    void DrawFlagList();
+
     virtual void PushColor( stg_color_t col )
     { world->PushColor( col ); }
   
@@ -1278,7 +1301,7 @@ namespace Draw
     StgModel* GetModel( const char* name );
     bool Stall(){ return this->stall; }
     int GuiMask(){ return this->gui_mask; };  
-    StgWorld* World(){ return this->world; }
+    StgWorld* GetWorld(){ return this->world; }
 
     /// return the root model of the tree containing this model
     StgModel* Root()

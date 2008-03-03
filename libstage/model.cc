@@ -56,8 +56,7 @@ model
 - color [colorname:string]
   - specify the color of the object using a color name from the X11 database (rgb.txt)
 - line_count [int]
-  - specify the number of lines that make up the model's body
-- line[index] [x1:float y1:float x2:float y2:float]
+  - specify the number of lines that make up the model's body- line[index] [x1:float y1:float x2:float y2:float]
   - creates a line from (x1,y1) to (x2,y2). A set of line_count lines defines the robot's body for the purposes of collision detection and rendering in the GUI window.
 - bitmap [filename:string}
   - alternative way to set the model's line_count and lines. The file must be a bitmap recognized by libgtkpixbuf (most popular formats are supported). The file is opened and parsed into a set of lines. Unless the bitmap_resolution option is used, the lines are scaled to fit inside the rectangle defined by the model's current size.
@@ -170,9 +169,6 @@ StgModel::StgModel( StgWorld* world,
   world->AddModel( this );
   
   bzero( &pose, sizeof(pose));
-  pose.x = 5; // prevent creating uncessary superregions
-  pose.y = 5;
-
   bzero( &global_pose, sizeof(global_pose));
   
   this->trail = g_array_new( false, false, sizeof(stg_trail_item_t) );
@@ -209,6 +205,8 @@ StgModel::StgModel( StgWorld* world,
   this->fiducial_key = 0;
 
   this->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
+
+  this->flag_list = NULL;
 
   bzero( &this->velocity, sizeof(velocity));
 
@@ -249,6 +247,36 @@ void StgModel::Init()
   
   // anything else to do here?
 }  
+
+void StgModel::AddFlag( StgFlag* flag )
+{
+  if( flag )
+    flag_list = g_list_append( this->flag_list, flag );
+}
+
+void StgModel::RemoveFlag( StgFlag* flag )
+{
+  if( flag )
+    flag_list = g_list_remove( this->flag_list, flag );
+}
+
+void StgModel::PushFlag( StgFlag* flag )
+{
+  if( flag )
+    flag_list = g_list_prepend( flag_list, flag);
+}
+
+StgFlag* StgModel::PopFlag()
+{
+  if( flag_list == NULL )
+    return NULL;
+  
+  StgFlag* flag = (StgFlag*)flag_list->data;
+  flag_list = g_list_remove( flag_list, flag );
+
+  return flag;
+}
+
 
 void StgModel::AddBlock( stg_point_t* pts, 
 			 size_t pt_count,
@@ -825,6 +853,8 @@ void StgModel::DrawTrailArrows()
     }
 }
 
+
+
 void StgModel::Draw( uint32_t flags )
 {
   //PRINT_DEBUG1( "Drawing %s", token );
@@ -849,21 +879,70 @@ void StgModel::Draw( uint32_t flags )
   //if( this->say_string )
   // gl_speech_bubble( 0,0,0, this->say_string );
     
-  if( gui_grid && (flags & STG_SHOW_GRID) )
-    DrawGrid();
-
   if( flags & STG_SHOW_DATA )
     DataVisualize();
+
+  if( gui_grid && (flags & STG_SHOW_GRID) )
+    DrawGrid();
+    
+  if( flag_list ) 
+    DrawFlagList();
 
   // shift up the CS to the top of this model
   gl_coord_shift(  0,0, this->geom.size.z, 0 );
   
   // recursively draw the tree below this model 
-  //LISTMETHOD( this->children, StgModel*, Draw );
   for( GList* it=children; it; it=it->next )
     ((StgModel*)it->data)->Draw( flags );
 
   glPopMatrix(); // drop out of local coords
+}
+
+void StgModel::DrawFlagList( void )
+{
+  glPushMatrix();
+  
+
+
+  GLUquadric* quadric = gluNewQuadric();
+  glTranslatef(0,0,1); // jump up
+  stg_pose_t gpose = GetGlobalPose();
+  glRotatef( 180 + rtod(-gpose.a),0,0,1 );
+  
+  
+  GList* list = g_list_copy( flag_list );
+  list = g_list_reverse(list);
+
+  for( GList* item = list; item; item = item->next )
+    {
+
+      StgFlag* flag = (StgFlag*)item->data;
+
+      glTranslatef( 0, 0, flag->size/2.0 );
+
+
+      PushColor( flag->color );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+      
+      gluQuadricDrawStyle( quadric, GLU_FILL );
+      gluSphere( quadric, flag->size/2.0, 4,2  );
+           
+      // draw the edges darker version of the same color
+      double r,g,b,a;
+      stg_color_unpack( flag->color, &r, &g, &b, &a );  
+      PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+      
+      gluQuadricDrawStyle( quadric, GLU_LINE );
+      gluSphere( quadric, flag->size/2.0, 4,2 );
+
+      PopColor();      
+      PopColor();
+
+      glTranslatef( 0, 0, flag->size/2.0 );
+    }
+
+  gluDeleteQuadric( quadric );
+  glPopMatrix();
 }
 
 void StgModel::DrawPicker( void )

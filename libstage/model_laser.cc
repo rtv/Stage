@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.5 $
+ //  $Revision: 1.6 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -289,60 +289,60 @@ void StgModelLaser::Print( char* prefix )
 
 void StgModelLaser::DataVisualize( void )
 {
-  if( samples && sample_count )
-    {      
-      glPushMatrix();
-      glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
+  if( ! (samples && sample_count) )
+    return;
+  
+  glPushMatrix();
+  glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
+  
+  // pack the laser hit points into a vertex array for fast rendering
+  static float* pts = NULL;
+  pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float));
+  
+  pts[0] = 0.0;
+  pts[1] = 0.0;
+  
+  PushColor( 0, 0, 1, 0.5 );
+  
+  for( unsigned int s=0; s<sample_count; s++ )
+    {
+      double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;  
+      pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
+      pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
       
-      // pack the laser hit points into a vertex array for fast rendering
-      static float* pts = NULL;
-      pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float));
-      
-      pts[0] = 0.0;
-      pts[1] = 0.0;
-      
-      PushColor( 0, 0, 1, 0.5 );
-      
-      for( unsigned int s=0; s<sample_count; s++ )
+      // if the sample is unusually bright, draw a little blob
+      if( samples[s].reflectance > 0 )
 	{
-	  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;  
-	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
-	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
-	  
-	  // if the sample is unusually bright, draw a little blob
-	  if( samples[s].reflectance > 0 )
-	    {
-	      glPointSize( 4.0 );
-	      glBegin( GL_POINTS );
-	      glVertex2f( pts[2*s+2], pts[2*s+3] );
-	      glEnd();
-	    }
-	  
+	  glPointSize( 4.0 );
+	  glBegin( GL_POINTS );
+	  glVertex2f( pts[2*s+2], pts[2*s+3] );
+	  glEnd();
 	}
-      PopColor();
       
-      
-      glEnableClientState( GL_VERTEX_ARRAY );
-      glVertexPointer( 2, GL_FLOAT, 0, pts );   
-
-      glDepthMask( GL_FALSE );
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-      // draw the filled polygon in transparent blue
-      PushColor( 0, 0, 1, 0.1 );
-      glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-      
-      // draw the beam strike points in black
-      PushColor( 0, 0, 0, 1.0 );
-      glPointSize( 1.0 );
-      glDrawArrays( GL_POINTS, 0, sample_count+1 );
-
-      // reset
-      PopColor();
-      PopColor();      
-      glDepthMask( GL_TRUE );
-      glPopMatrix();      
     }
+  PopColor();
+  
+  
+  glEnableClientState( GL_VERTEX_ARRAY );
+  glVertexPointer( 2, GL_FLOAT, 0, pts );   
+  
+  glDepthMask( GL_FALSE );
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  
+  // draw the filled polygon in transparent blue
+  PushColor( 0, 0, 1, 0.1 );
+  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+  
+  // draw the beam strike points in black
+  PushColor( 0, 0, 0, 1.0 );
+  glPointSize( 1.0 );
+  glDrawArrays( GL_POINTS, 0, sample_count+1 );
+  
+  // reset
+  PopColor();
+  PopColor();      
+  glDepthMask( GL_TRUE );
+  glPopMatrix();      
 }
 
 

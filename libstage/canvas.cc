@@ -1,7 +1,7 @@
 /** canvas.cc
     Implement the main world viewing area in FLTK and OpenGL. 
     Author: Richard Vaughan (vaughan@sfu.ca)
-    $Id: canvas.cc,v 1.10 2008-02-24 23:24:40 rtv Exp $
+    $Id: canvas.cc,v 1.11 2008-03-03 06:02:26 rtv Exp $
 */
 
 #include "stage_internal.hh"
@@ -529,7 +529,11 @@ void StgCanvas::draw()
        glEnable( GL_DEPTH_TEST );
        
        world->ClearRays();
-     }
+     }   
+
+
+   // find all the flags
+   GList* flags = NULL;   
 }
 
 void StgCanvas::resize(int X,int Y,int W,int H) 

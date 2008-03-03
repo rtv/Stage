@@ -161,7 +161,7 @@ void StgBlock::Map()
 	       mod->Token(),
 	       (int)pt_count );
 
-  double ppm = mod->World()->ppm;
+  double ppm = mod->GetWorld()->ppm;
  
   // update the global coordinate list
 
@@ -194,7 +194,7 @@ void StgBlock::Map()
   global_zmax = global.z + (zmax-zmin);
   
   stg_render_info_t render_info;
-  render_info.world = mod->World();
+  render_info.world = mod->GetWorld();
   render_info.block = this;
   
   stg_polygon_3d( pts_global, pt_count,
@@ -214,7 +214,6 @@ void StgBlock::UnMap()
       stg_list_entry_t* pt = 
 	&g_array_index( rendered_points, stg_list_entry_t, p);
       
-      //mod->World()->RemoveBlockPixel( pt->x, pt->y, this );
       *pt->head = g_slist_delete_link( *pt->head, pt->link );      
       
       // decrement the region and superregion render counts

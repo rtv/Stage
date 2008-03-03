@@ -584,10 +584,10 @@ double Stg::constrain( double val, double minval, double maxval )
 stg_color_t Stg::stg_color_pack( double r, double g, double b, double a )
 {
   stg_color_t col=0;
-  col += (stg_color_t)((1.0-a)*256.0)<<24;
-  col += (stg_color_t)(r*256.0)<<16;
-  col += (stg_color_t)(g*256.0)<<8;
-  col += (stg_color_t)(b*256.0);
+  col += (stg_color_t)((1.0-a)*255.0)<<24;
+  col += (stg_color_t)(r*255.0)<<16;
+  col += (stg_color_t)(g*255.0)<<8;
+  col += (stg_color_t)(b*255.0);
 
   return col;
 }
@@ -595,10 +595,10 @@ stg_color_t Stg::stg_color_pack( double r, double g, double b, double a )
 void Stg::stg_color_unpack( stg_color_t col, 
 		       double* r, double* g, double* b, double* a )
 {
-  if(a) *a = 1.0 - (((col & 0xFF000000) >> 24) / 256.0);
-  if(r) *r = ((col & 0x00FF0000) >> 16) / 256.0;
-  if(g) *g = ((col & 0x0000FF00) >> 8)  / 256.0;
-  if(b) *b = ((col & 0x000000FF) >> 0)  / 256.0;
+  if(a) *a = 1.0 - (((col & 0xFF000000) >> 24) / 255.0);
+  if(r) *r = ((col & 0x00FF0000) >> 16) / 255.0;
+  if(g) *g = ((col & 0x0000FF00) >> 8)  / 255.0;
+  if(b) *b = ((col & 0x000000FF) >> 0)  / 255.0;
 }
 
 

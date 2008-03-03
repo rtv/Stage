@@ -24,6 +24,7 @@ void Stg::gl_draw_string( float x, float y, float z, char *str )
     glutBitmapCharacter( GLUT_BITMAP_HELVETICA_12, *c);
 }
 
+
 void Stg::gl_draw_grid( stg_bounds3d_t vol )
 {
   glBegin(GL_LINES);

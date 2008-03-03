@@ -18,3 +18,12 @@ define floorplan model
   fiducial_return 0
   laser_return 1
 )
+
+define zone model
+(
+  color	"orange"
+  size3 [ 2 2 0.001 ]
+  obstacle_return 0
+  laser_return 0
+  ranger_return 0  
+)

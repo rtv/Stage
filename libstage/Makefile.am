@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.9 2008-02-24 20:46:13 rtv Exp $
+# $Id: Makefile.am,v 1.10 2008-03-03 06:02:26 rtv Exp $
 
 # install the header file for the Stage library
 include_HEADERS = stage.hh 
@@ -35,6 +35,7 @@ libstage_la_SOURCES =  \
 	model_ranger.cc \
 	model_blobfinder.cc \
 	model_props.cc \
+	resource.cc \
 	stage.cc \
 	stage.hh \
 	stage_internal.hh \

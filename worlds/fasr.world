@@ -1,0 +1,90 @@
+# FASR demo world 
+# Authors: Richard Vaughan
+# $Id: fasr.world,v 1.1 2008-03-03 06:02:26 rtv Exp $
+
+# defines Pioneer-like robots
+include "pioneer.inc"
+
+
+
+# defines 'map' object used for floorplans
+include "map.inc"
+
+
+
+# defines sick laser
+include "sick.inc"
+
+
+
+# set the resolution of the underlying raytrace model in meters
+resolution 0.02
+
+interval_sim 100  # simulation timestep in milliseconds
+interval_real 10  # real-time interval between simulation updates in milliseconds 
+
+paused 0
+
+# configure the GUI window
+window
+( 
+  size [ 1100.000 724.000 ] 
+  center [156.990 124.960] 
+  rotate [ 0.000 0.000 ]
+  scale 39.806 
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "cave"
+  size3 [16 16 0.5]
+  pose [0.000 0.000 0.000]
+  bitmap "bitmaps/cave.png"
+)
+
+zone
+(
+  color "green"
+  pose [ -7.000 -7.000 0.000 ]
+  name "source"
+  ctrl "source"
+)
+
+zone
+(
+  color "red"
+  pose [ 7.000 7.000 0.000 ]
+  name "sink"
+  ctrl "sink"
+)
+
+define autorob pioneer2dx
+(
+ color "red"
+ sicklaser(pose [ 0.040 0.000 0.000 ] samples 32 fov 180 ) 
+ ctrl "fasr"
+)
+
+autorob( pose [4.126 6.251 1.930] )
+autorob( pose [6.635 6.458 -52.629] )
+autorob( pose [6.668 5.238 -87.082] )
+autorob( pose [6.540 4.245 170.536] )
+autorob( pose [5.641 6.672 -10.539] )
+autorob( pose [7.493 4.852 -156.719] )
+autorob( pose [5.078 6.853 -37.549] )
+autorob( pose [6.147 7.399 4.964] )
+autorob( pose [4.477 4.990 125.796] )
+autorob( pose [7.487 6.926 -40.634] )
+
+#autorob( pose [-6.370 2.754 -113.456] )
+#autorob( pose [0.402 -6.819 -1.177] )
+#autorob( pose [-2.892 -0.583 46.585] )
+#autorob( pose [2.284 5.478 135.162] )
+#autorob( pose [-2.483 -1.567 -3.588] )
+autorob( pose [6.714 7.447 -73.332] )
+autorob( pose [5.582 5.724 -48.161] )
+autorob( pose [3.778 7.160 -102.651] )
+autorob( pose [5.539 4.594 23.582] )
+autorob( pose [7.534 5.825 -70.230] )
+

@@ -144,6 +144,17 @@ void StgModel::Load( void )
 	}
     }      
   
+
+  if( wf->PropertyExists( this->id, "color_rgba" ))
+    {      
+      double red   = wf->ReadTupleFloat( this->id, "color_rgba", 0, 0);
+      double green = wf->ReadTupleFloat( this->id, "color_rgba", 1, 0);
+      double blue  = wf->ReadTupleFloat( this->id, "color_rgba", 2, 0);
+      double alpha = wf->ReadTupleFloat( this->id, "color_rgba", 3, 0);
+      
+      this->SetColor( stg_color_pack( red, green, blue, alpha ));
+    }  
+
   if( wf->PropertyExists( this->id, "bitmap" ) )
     {
       const char* bitmapfile = wf->ReadString( this->id, "bitmap", NULL );
@@ -322,7 +333,6 @@ void StgModel::Load( void )
   
   if( wf->PropertyExists( this->id, "map_resolution" ))
     this->SetMapResolution( wf->ReadFloat(this->id, "map_resolution", this->map_resolution )); 
-  
   
   if( wf->PropertyExists( this->id, "ctrl" ))
     {

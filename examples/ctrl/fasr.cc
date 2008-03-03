@@ -3,16 +3,40 @@ using namespace Stg;
 
 const double cruisespeed = 0.4; 
 const double avoidspeed = 0.05; 
-const double avoidturn = 1.0;
-const double minfrontdistance = 0.8;  
+const double avoidturn = 0.5;
+const double minfrontdistance = 0.7;  
+const double stopdist = 0.5;
 const bool verbose = false;
+const int avoidduration = 10;
+
+double have[4][4] = { 
+  { 90, 180, 180, 180 },
+  { 90, -90, 0, -90 },
+  { 90, 90, 180, 90 },
+  { 0, 0, 0, 45} 
+};
+
+double need[4][4] = {
+  { -120, -180, 180, 180 },
+  { -90, -90, 180, 180 },
+  { -90, -90, 180, 180 },
+  { -90, -180, -90, -90 }
+};
+  
+
 
 typedef struct
 {
   StgModelPosition* pos;
   StgModelLaser* laser;
   StgModelBlobfinder* blobfinder;
+
+  StgModel *source, *sink;
+
   int avoidcount, randcount;
+
+  int latch;
+
 } robot_t;
 
 int LaserUpdate( StgModel* mod, robot_t* robot );
@@ -22,27 +46,27 @@ int PositionUpdate( StgModel* mod, robot_t* robot );
 extern "C" int Init( StgModel* mod )
 {
   robot_t* robot = new robot_t;
- 
+  robot->latch = 0;
+  
+  //robot->flag = new StgFlag( stg_color_pack( 1,1,0,0.5 ), 3 );
   robot->pos = (StgModelPosition*)mod;
 
   robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
   assert( robot->laser );
   robot->laser->Subscribe();
 
-  robot->blobfinder = (StgModelBlobfinder*)mod->GetModel( "blobfinder:0" );
-  assert( robot->blobfinder );
-  // robot->blobfinder->Subscribe();
-
   robot->avoidcount = 0;
   robot->randcount = 0;
   
   robot->laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, robot );
-  //robot->pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, robot );
+  robot->pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, robot );
 
-  robot->pos->AddFlag( new StgFlag( (stg_color_t)0xFFAA00AA, 1.0));
-  robot->pos->AddFlag( new StgFlag( (stg_color_t)0xFF0000AA, 0.5));
-  robot->pos->AddFlag( new StgFlag( (stg_color_t)0xFFAA0000, 0.2));
-  robot->pos->AddFlag( new StgFlag( (stg_color_t)0xFF00FFFF, 0.1));
+  robot->source = mod->GetWorld()->GetModel( "source" );
+  assert(robot->source);
+
+  robot->sink = mod->GetWorld()->GetModel( "sink" );
+  assert(robot->sink);
+
   return 0; //ok
 }
 
@@ -56,7 +80,8 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
   
   double newturnrate=0.0, newspeed=0.0;  
   bool obstruction = false;
-  
+  bool stop = false;
+
   // find the closest distance to the left and right and check if
   // there's anything in front
   double minleft = 1e6;
@@ -64,8 +89,13 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
   
   for (uint32_t i = 0; i < sample_count; i++)
     {
-      if( scan[i].range < minfrontdistance)
+      if( (i > (sample_count/4)) 
+	  && (i < (sample_count - (sample_count/4))) 
+	  && scan[i].range < minfrontdistance)
 	obstruction = true;
+      
+      if( scan[i].range < stopdist )
+	stop = true;
       
       if( i > sample_count/2 )
 	minleft = MIN( minleft, scan[i].range );
@@ -73,19 +103,18 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
 	minright = MIN( minright, scan[i].range );
     }
   
-  if( obstruction || robot->avoidcount )
+  if( obstruction || stop || (robot->avoidcount>0) )
     {
       if( verbose ) puts( "Avoid" );
-
-      robot->pos->SetXSpeed( avoidspeed );
+      robot->pos->SetXSpeed( stop ? 0.0 : avoidspeed );      
       
       /* once we start avoiding, select a turn direction and stick
 	 with it for a few iterations */
-      if( robot->avoidcount == 0 )
+      if( robot->avoidcount < 1 )
         {
 	  if( verbose ) puts( "Avoid START" );
-          robot->avoidcount = 5;
-	  
+          robot->avoidcount = random() % avoidduration + avoidduration;
+
 	  if( minleft < minright  )
 	    robot->pos->SetTurnSpeed( -avoidturn );
 	  else
@@ -101,20 +130,17 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
       robot->avoidcount = 0;
       robot->pos->SetXSpeed( cruisespeed );	  
       
-      /* update turnrate every few updates */
-      if( robot->randcount == 0 )
-	{
-	  if( verbose )puts( "Random turn" );
-	  
-	  /* make random int tween -30 and 30 */
-	  //newturnrate = dtor( rand() % 61 - 30 );
-	  
-	  robot->randcount = 20;
-	  
-	  robot->pos->SetTurnSpeed(  dtor( rand() % 11 - 5 ) );
-	}
+      stg_pose_t pose = robot->pos->GetPose();
+
+      int x = (pose.x + 8) / 4;
+      int y = (pose.y + 8) / 4;
       
-      robot->randcount--;
+      double a_goal = 
+	dtor( robot->pos->GetFlagCount() ? have[y][x] : need[y][x] );
+      
+      double a_error = normalize( a_goal - pose.a );
+ 
+      robot->pos->SetTurnSpeed(  a_error );
     }
   
   return 0;
@@ -123,9 +149,28 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
 int PositionUpdate( StgModel* mod, robot_t* robot )
 {
   stg_pose_t pose = robot->pos->GetPose();
+  
+  if( --robot->latch < 1 )
+    {
+      //printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
+      //  pose.x, pose.y, pose.z, pose.a );
+      
+      if( hypot( -7-pose.x, -7-pose.y ) < 2.0 )
+	{
+	  //puts( "collecting" );
+	  robot->pos->PushFlag( robot->source->PopFlag() );
+	}
+      
+      if( hypot( 7-pose.x, 7-pose.y ) < 1.0 )
+	{
+	  //puts( "dropping" );
+	  // transfer a chunk between robot and goal
+	  robot->sink->PushFlag( robot->pos->PopFlag() );
+	}
 
-  printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
-	  pose.x, pose.y, pose.z, pose.a );
+      robot->latch = 20;
+    }
+
 
   return 0; // run again
 }
