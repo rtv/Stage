@@ -22,7 +22,7 @@ define floorplan model
 define zone model
 (
   color	"orange"
-  size3 [ 2 2 0.001 ]
+  size3 [ 2 2 0.02 ]
   obstacle_return 0
   laser_return 0
   ranger_return 0  
