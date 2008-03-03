@@ -1,7 +1,7 @@
 #include "stage.hh"
 using namespace Stg;
 
-const int INTERVAL = 100;
+const int INTERVAL = 50;
 
 int Update( StgModel* mod, void* dummy );
 

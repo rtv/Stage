@@ -1,7 +1,7 @@
 /** canvas.cc
     Implement the main world viewing area in FLTK and OpenGL. 
     Author: Richard Vaughan (vaughan@sfu.ca)
-    $Id: canvas.cc,v 1.11 2008-03-03 06:02:26 rtv Exp $
+    $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
 */
 
 #include "stage_internal.hh"
@@ -403,7 +403,7 @@ void StgCanvas::draw()
       world->ClockString( clockstr, 50 );      
       
       colorstack.Push( 0,0,0 ); // black
-      gl_draw_string( -w()/2+4, -h()/2+4, 0, clockstr ); 
+      gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr ); 
       colorstack.Pop();
 
       glPopMatrix();
@@ -434,7 +434,7 @@ void StgCanvas::draw()
    // so it doesn't z-fight with the models
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1.0, 1.0);
+   glPolygonOffset(2.0, 2.0);
    
    glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
    ((StgWorldGui*)world)->DrawFloor();
@@ -507,7 +507,7 @@ void StgCanvas::draw()
 	   uint32_t flags = showflags;
 	   
 	   if( (stheta == 0) && (sphi == 0) )
-	     flags |= STG_SHOW_BLOCKS_2D;
+	   flags |= STG_SHOW_BLOCKS_2D;
 	   
 	   ((StgModel*)it->data)->Draw( flags );
 	 }

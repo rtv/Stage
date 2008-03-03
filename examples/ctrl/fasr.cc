@@ -8,17 +8,20 @@ const double minfrontdistance = 0.7;
 const double stopdist = 0.5;
 const bool verbose = false;
 const int avoidduration = 10;
+const int workduration = 20;
+const int payload = 4;
+
 
 double have[4][4] = { 
   { 90, 180, 180, 180 },
   { 90, -90, 0, -90 },
   { 90, 90, 180, 90 },
-  { 0, 0, 0, 45} 
+  { 0, 45, 0, 45} 
 };
 
 double need[4][4] = {
   { -120, -180, 180, 180 },
-  { -90, -90, 180, 180 },
+  { -90, -120, 180, 180 },
   { -90, -90, 180, 180 },
   { -90, -180, -90, -90 }
 };
@@ -35,7 +38,7 @@ typedef struct
 
   int avoidcount, randcount;
 
-  int latch;
+  int work_get, work_put;
 
 } robot_t;
 
@@ -46,7 +49,8 @@ int PositionUpdate( StgModel* mod, robot_t* robot );
 extern "C" int Init( StgModel* mod )
 {
   robot_t* robot = new robot_t;
-  robot->latch = 0;
+  robot->work_get = 0;
+  robot->work_put = 0;
   
   //robot->flag = new StgFlag( stg_color_pack( 1,1,0,0.5 ), 3 );
   robot->pos = (StgModelPosition*)mod;
@@ -150,28 +154,30 @@ int PositionUpdate( StgModel* mod, robot_t* robot )
 {
   stg_pose_t pose = robot->pos->GetPose();
   
-  if( --robot->latch < 1 )
+  //printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
+  //  pose.x, pose.y, pose.z, pose.a );
+  
+  if( robot->pos->GetFlagCount() < payload && 
+      hypot( -7-pose.x, -7-pose.y ) < 2.0 )
     {
-      //printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
-      //  pose.x, pose.y, pose.z, pose.a );
-      
-      if( hypot( -7-pose.x, -7-pose.y ) < 2.0 )
+      if( ++robot->work_get > workduration )
 	{
-	  //puts( "collecting" );
 	  robot->pos->PushFlag( robot->source->PopFlag() );
-	}
-      
-      if( hypot( 7-pose.x, 7-pose.y ) < 1.0 )
+	  robot->work_get = 0;
+	}	  
+    }
+  
+  if( hypot( 7-pose.x, 7-pose.y ) < 1.0 )
+    {
+      if( ++robot->work_put > workduration )
 	{
 	  //puts( "dropping" );
 	  // transfer a chunk between robot and goal
 	  robot->sink->PushFlag( robot->pos->PopFlag() );
+	  robot->work_put = 0;
 	}
-
-      robot->latch = 20;
     }
-
-
+  
   return 0; // run again
 }
 

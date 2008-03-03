@@ -111,7 +111,7 @@ public:
   void Draw()
   {
     glPushMatrix();
-    glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS,0 );
+    glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS,0);
         
     glColor3f( 1,0,0 );    
 
@@ -151,7 +151,7 @@ public:
   void Floor()
   {
     glPushMatrix();
-    glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS,0 );        
+    glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS, 0 );        
     glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
     glPopMatrix();    
   }

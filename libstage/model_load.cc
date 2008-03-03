@@ -202,7 +202,7 @@ void StgModel::Load( void )
 	  if( this->boundary )
 	    {
 	      // add thin bounding blocks
-	      double epsilon = 0.001;	      
+	      double epsilon = 0.01;	      
 	      this->AddBlockRect(0,0, epsilon, height );	      
 	      this->AddBlockRect(0,0, width, epsilon );	      
 	      this->AddBlockRect(0, height-epsilon, width, epsilon );      

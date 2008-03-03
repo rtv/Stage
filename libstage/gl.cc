@@ -48,13 +48,13 @@ void Stg::gl_draw_grid( stg_bounds3d_t vol )
   for( double i = floor(vol.x.min); i < vol.x.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
-      gl_draw_string(  i, 0, 0.01, str );
+      gl_draw_string(  i, 0, 0.00, str );
     }
 
   for( double i = floor(vol.y.min); i < vol.y.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
-      gl_draw_string(  0, i, 0.01, str );
+      gl_draw_string(  0, i, 0.00, str );
     }
 }
 

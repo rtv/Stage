@@ -1333,7 +1333,7 @@ void StgModel::UpdatePose( void )
     return;
 
   // TODO - control this properly, and maybe do it faster
-  if( 0 )
+  //  if( 0 )
   if( (world->updates % 10 == 0) )
     {
       stg_trail_item_t checkpoint;
