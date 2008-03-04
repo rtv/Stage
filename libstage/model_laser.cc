@@ -7,7 +7,7 @@
  // CVS info:
  //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
  //  $Author: rtv $
- //  $Revision: 1.6 $
+ //  $Revision: 1.7 $
  //
  ///////////////////////////////////////////////////////////////////////////
 
@@ -285,7 +285,19 @@ void StgModelLaser::Print( char* prefix )
 }
 
 
+stg_laser_sample_t* StgModelLaser::GetSamples( uint32_t* count )
+{ 
+  if( count ) *count = sample_count; 
+  return samples; 
+}
 
+void StgModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
+{ 
+  this->samples = g_renew( stg_laser_sample_t, this->samples, sample_count );      
+  memcpy( this->samples, samples, sample_count * sizeof(stg_laser_sample_t));
+  this->sample_count = count;
+  this->data_dirty = true;
+}
 
 void StgModelLaser::DataVisualize( void )
 {

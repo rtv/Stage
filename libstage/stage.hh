@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.13 2008-03-03 06:02:26 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.14 2008-03-04 02:09:56 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -1891,12 +1891,10 @@ namespace Draw
     virtual void DataVisualize();
   
     uint32_t GetSampleCount(){ return sample_count; }
-  
-    stg_laser_sample_t* GetSamples( uint32_t* count=NULL)
-    { 
-      if( count ) *count = sample_count; 
-      return samples; 
-    }
+    
+    stg_laser_sample_t* GetSamples( uint32_t* count=NULL);
+    
+    void SetSamples( stg_laser_sample_t* samples, uint32_t count);
     
     // Get the user-tweakable configuration of the laser
     stg_laser_cfg_t GetConfig( );    
