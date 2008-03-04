@@ -1,31 +1,11 @@
 # simple.world - basic world file example
 # Authors: Richard Vaughan
-# $id$
+# $Id: ctrl_demo.world,v 1.2 2008-03-04 02:21:49 rtv Exp $
 
-# defines Pioneer-like robots
 include "pioneer.inc"
-
-
-
-# defines 'map' object used for floorplans
 include "map.inc"
-
-
-
-# defines sick laser
 include "sick.inc"
 
-
-
-# set the resolution of the underlying raytrace model in meters
-resolution 0.02
-
-interval_sim 100  # simulation timestep in milliseconds
-interval_real 100  # real-time interval between simulation updates in milliseconds 
-
-paused 0
-
-# configure the GUI window
 window
 ( 
   size [ 500.000 500.000 ] 
@@ -34,7 +14,6 @@ window
   scale 26 
 )
 
-# load an environment bitmap
 floorplan
 ( 
   name "cave"

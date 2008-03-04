@@ -58,6 +58,10 @@ described on the manual page for each model type.
 unsigned int StgWorld::next_id = 0;
 bool StgWorld::quit_all = false;
 
+const double STG_DEFAULT_WORLD_PPM = 50;  // 2cm pixels
+const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
+const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
+
 static guint PointIntHash( stg_point_int_t* pt )
 {
   return( pt->x + (pt->y<<16 ));
@@ -140,7 +144,7 @@ void StgWorld::Initialize( const char* token,
 					 (GEqualFunc)PointIntEqual );
 
   this->total_subs = 0;
-  this->paused = true; 
+  this->paused = false; 
   this->destroy = false;   
   
   bzero( &this->extent, sizeof(this->extent));
@@ -252,8 +256,9 @@ void StgWorld::Load( const char* worldfile_path )
     this->quit_time = (stg_usec_t)million * 
       wf->ReadInt( entity, "quit_time", 0 );
   
-  this->ppm = 
-    1.0 / wf->ReadFloat( entity, "resolution", this->ppm ); 
+  if( wf->PropertyExists( entity, "resolution" ) )
+    this->ppm = 
+      1.0 / wf->ReadFloat( entity, "resolution", STG_DEFAULT_WORLD_PPM ); 
   
   this->paused = 
     wf->ReadInt( entity, "paused", this->paused );

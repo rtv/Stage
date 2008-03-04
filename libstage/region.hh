@@ -4,9 +4,6 @@
   Copyright Richard Vaughan 2008
 */
 
-const double STG_DEFAULT_WORLD_PPM = 50;  // 2cm pixels
-const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
-const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
 const uint32_t RBITS = 6; // regions contain (2^RBITS)^2 pixels
 const uint32_t SBITS = 5; // superregions contain (2^SBITS)^2 regions
 const uint32_t SRBITS = RBITS+SBITS;
