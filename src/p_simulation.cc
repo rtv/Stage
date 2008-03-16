@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: p_simulation.cc,v 1.23 2007-11-02 00:06:51 gerkey Exp $
+ * CVS: $Id: p_simulation.cc,v 1.23.4.1 2008-03-16 02:14:41 thjc Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -240,7 +240,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
       player_simulation_pose2d_req_t* req = 
 	(player_simulation_pose2d_req_t*)data;
       
-      printf( "Stage: received request for position of object \"%s\"\n", req->name );
+      //printf( "Stage: received request for position of object \"%s\"\n", req->name );
       
       // look up the named model	
       stg_model_t* mod = 
@@ -250,8 +250,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 	{
       stg_pose_t* pose = &mod->pose;
 
-      printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
-              pose->x, pose->y, pose->a );
+      //printf( "Stage: returning location (%.2f,%.2f,%.2f)\n", pose->x, pose->y, pose->a );
 
 
       player_simulation_pose2d_req_t reply;

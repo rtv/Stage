@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.ac,v 1.18 2008-01-14 20:23:01 rtv Exp $
+dnl $Id: configure.ac,v 1.18.4.1 2008-03-16 02:14:40 thjc Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -109,6 +109,30 @@ AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
 AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
 CDB="\"$with_color\"",)
 AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
+
+AC_ARG_ENABLE(optimize, [  --disable-optimize      Compile without optimization (O2) ],
+    if test "x$enableval" = "xyes"; then
+        CXXFLAGS="$CXXFLAGS -O2"
+        CFLAGS="$CFLAGS -O2"
+    elif test "x$enableval" = "xno"; then
+        CXXFLAGS=`echo $CXXFLAGS | sed -e s/-O.//g`
+        CFLAGS=`echo $CFLAGS | sed -e s/-O.//g`
+    else
+        CXXFLAGS="$CXXFLAGS -$enableval"
+        CFLAGS="$CFLAGS -$enableval"
+    fi,
+)
+
+AC_ARG_ENABLE(debug,    [  --disable-debug         Compile without debugging information (-g)],
+    if test "x$enableval" = "xyes"; then
+        CXXFLAGS="$CXXFLAGS -g"
+        CFLAGS="$CFLAGS -g"
+    elif test "x$enableval" = "xno"; then
+        CXXFLAGS=`echo $CXXFLAGS | sed -e s/-g//g`
+        CFLAGS=`echo $CFLAGS | sed -e s/-g//g`
+    fi,
+)
+
 
 AC_OUTPUT(Makefile 
           src/Makefile 

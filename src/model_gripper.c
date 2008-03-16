@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
-//  $Author: gerkey $
-//  $Revision: 1.26 $
+//  $Author: thjc $
+//  $Revision: 1.26.8.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -437,8 +437,8 @@ int gripper_break_beam(stg_model_t* mod, stg_gripper_config_t* cfg, int beam)
 }
 
 int gripper_paddle_contact( stg_model_t* mod, 
-			    stg_gripper_config_t* cfg,
-			    double contacts[2] )
+  stg_gripper_config_t* cfg,
+  double contacts[2] )
 { 
   stg_geom_t geom;
   stg_model_get_geom( mod, &geom );
@@ -455,11 +455,11 @@ int gripper_paddle_contact( stg_model_t* mod,
 
   // y location of paddle beam origin
 
-    lpz.y = (1.0 - cfg->paddle_position) * 
-      ((geom.size.y/2.0) - (geom.size.y*cfg->paddle_size.y));
+  lpz.y = (1.0 - cfg->paddle_position) * 
+    ((geom.size.y/2.0) - (geom.size.y*cfg->paddle_size.y));
 
-    rpz.y = (1.0 - cfg->paddle_position) * 
-      -((geom.size.y/2.0) - (geom.size.y*cfg->paddle_size.y));
+  rpz.y = (1.0 - cfg->paddle_position) * 
+    -((geom.size.y/2.0) - (geom.size.y*cfg->paddle_size.y));
   
 /*   // if we're opening, we check the outside of the paddle instead */
 /*   if( cfg->paddles == STG_GRIPPER_PADDLE_OPENING ) */
@@ -484,14 +484,14 @@ int gripper_paddle_contact( stg_model_t* mod,
   //  pz.x, pz.y, pz.a, bbr );
 
   itl_t* litl = itl_create( lpz.x, lpz.y, lpz.a, 
-			   bbr,
-			   mod->world->matrix, 
-			   PointToBearingRange );
+    bbr,
+    mod->world->matrix, 
+    PointToBearingRange );
 
   itl_t* ritl = itl_create( rpz.x, rpz.y, rpz.a, 
-			   bbr,
-			   mod->world->matrix, 
-			   PointToBearingRange );
+    bbr,
+    mod->world->matrix, 
+    PointToBearingRange );
   
   stg_model_t* lhit = NULL;
   stg_model_t* rhit = NULL;
@@ -506,54 +506,53 @@ int gripper_paddle_contact( stg_model_t* mod,
 
   // if the breakbeam strikes anything
   if( (lhit = itl_first_matching( litl, gripper_raytrace_match, mod )) )
-    {
-      contacts[0] = 1; // touching something
+  {
+    contacts[0] = 1; // touching something
+    
+    //if( cfg->paddles == STG_GRIPPER_PADDLE_CLOSING || 
+    //  cfg->paddles == STG_GRIPPER_PADDLE_OPENING )
+      //cfg->paddles_stalled = TRUE;
       
-      //if( cfg->paddles == STG_GRIPPER_PADDLE_CLOSING || 
-      //  cfg->paddles == STG_GRIPPER_PADDLE_OPENING )
-	//cfg->paddles_stalled = TRUE;
-      
-      //puts( "left hit" );
-    }
+    //puts( "left hit" );
+  }
 
       
   if( (rhit = itl_first_matching( ritl, gripper_raytrace_match, mod )))
-    {
-      contacts[1] = 1;      
-      //puts( "right hit" );
-    }
+  {
+    contacts[1] = 1;      
+    //puts( "right hit" );
+  }
   
   if( lhit && (lhit == rhit) )
+  {
+    //puts( "left and right hit same thing" );
+    
+    if(  cfg->paddles == STG_GRIPPER_PADDLE_CLOSING )
     {
-      //puts( "left and right hit same thing" );
+      // get the global pose of the gripper for calculations of the gripped object position
+        // and move it to be right between the paddles
+      stg_geom_t hitgeom;
+      stg_model_get_geom( lhit, &hitgeom );
+
+      stg_pose_t pose = {0,0,0};
+      stg_model_local_to_global( lhit, &pose );
+      stg_model_global_to_local( mod, &pose );
+
+      // grab the model we hit - very simple grip model for now
+      stg_model_set_parent( lhit, mod );
+
+      stg_model_set_pose( lhit, &pose );
       
-      if(  cfg->paddles == STG_GRIPPER_PADDLE_CLOSING )
-	{
-	  // grab the model we hit - very simple grip model for now
-	  stg_model_set_parent( lhit, mod );
-	  
-	  // and move it to be right between the paddles
-	  stg_geom_t hitgeom;
-	  stg_model_get_geom( lhit, &hitgeom );
-	  
-	  stg_pose_t pose;
-	  pose.x = hitgeom.size.x/2.0;
-	  pose.y = 0;
-	  pose.a = 0;
-	  
-	  stg_model_set_pose( lhit, &pose );	      
-	  
-	  // add this item to the stack
-	  cfg->grip_stack = g_slist_prepend( cfg->grip_stack, lhit );
-	  
-	  // calculate how far closed we can get the paddles now
-	  double puckw = hitgeom.size.y;
-	  double gripperw = geom.size.y;	      
-	  
-	  cfg->close_limit = 
-	    MAX( 0.0, 1.0 - puckw/(gripperw - cfg->paddle_size.y/2.0 )); 
-	}
+        // add this item to the stack
+      cfg->grip_stack = g_slist_prepend( cfg->grip_stack, lhit );
+      
+      // calculate how far closed we can get the paddles now
+      double puckw = hitgeom.size.y;
+      double gripperw = geom.size.y;	      
+      
+      cfg->close_limit = MAX( 0.0, 1.0 - puckw/(gripperw - cfg->paddle_size.y/2.0 ));
     }
+  }
 
   itl_destroy( litl );
   itl_destroy( ritl );
