@@ -26,7 +26,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.14 2008-03-04 02:09:56 rtv Exp $
+ * CVS: $Id: stage.hh,v 1.15 2008-04-01 23:57:41 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -843,6 +843,16 @@ namespace Draw
     virtual void PopColor() = 0; // does nothing
   };
 
+  
+  typedef struct 
+  {
+    int enabled;
+    stg_pose_t pose;
+    stg_meters_t size; ///< rendered as a sphere with this diameter
+    stg_color_t color;
+    stg_msec_t period; ///< duration of a complete cycle
+    double duty_cycle; ///< mark/space ratio
+  } stg_blinkenlight_t;
 
   typedef struct
   {
@@ -1234,6 +1244,9 @@ namespace Draw
     //ctrlupdate_t* updatefunc;
 
     GList* flag_list;
+    
+    GPtrArray* blinkenlights;
+    void DrawBlinkenlights();
 
   public:
   
@@ -1265,7 +1278,17 @@ namespace Draw
     int GetFlagCount(){ return g_list_length( flag_list ); }
 
     void DrawFlagList();
-
+    
+    void AddBlinkenlight( stg_blinkenlight_t* b )
+    {
+      g_ptr_array_add( this->blinkenlights, b );
+    }
+    
+    void ClearBlinkenlights()
+    {
+      g_ptr_array_set_size( this->blinkenlights, 0 );
+    }
+    
     virtual void PushColor( stg_color_t col )
     { world->PushColor( col ); }
   
@@ -1836,13 +1859,6 @@ namespace Draw
 
   // there is currently no energy command packet
 
-  // BLINKENLIGHT -------------------------------------------------------
-
-  //typedef struct
-  //{
-  //int enable;
-  //stg_msec_t period;
-  //} stg_blinkenlight_t;
   
   // LASER MODEL --------------------------------------------------------
   
@@ -2135,6 +2151,39 @@ namespace Draw
 			     char* typestr )
     { 
       return (StgModel*)new StgModelRanger( world, parent, id, typestr ); 
+    }    
+  };
+
+  // BLINKENLIGHT MODEL ----------------------------------------------------
+  class StgModelBlinkenlight : public StgModel
+  {
+  private:
+    double dutycycle;
+    bool enabled;
+    double period;
+    bool on;
+
+  public:
+
+    StgModelBlinkenlight( StgWorld* world,
+			  StgModel* parent, 
+			  stg_id_t id, 
+			  char* typestr );
+
+    ~StgModelBlinkenlight();
+
+    virtual void Load();
+    virtual void Update();
+    virtual void Draw( uint32_t flags );
+
+    // static wrapper for the constructor - all models must implement
+    // this method and add an entry in typetable.cc
+    static StgModel* Create( StgWorld* world,
+			     StgModel* parent, 
+			     stg_id_t id, 
+			     char* typestr )
+    { 
+      return (StgModel*)new StgModelBlinkenlight( world, parent, id, typestr ); 
     }    
   };
   

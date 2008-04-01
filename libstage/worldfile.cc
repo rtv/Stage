@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.3 2008-02-21 23:40:13 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.4 2008-04-01 23:57:41 rtv Exp $
  */
 
 #include <assert.h>
@@ -548,6 +548,8 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
   // Terminate the include line
   AddToken(TokenEOL, "\n", include);
       
+  //DumpTokens();
+
   // Read tokens from the file
   if (!LoadTokens(infile, include + 1))
   {
@@ -555,6 +557,11 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
     free(fullpath);
     return false;
   }
+  
+  // consume the rest of the include line XX a bit of a hack - assumes
+  // that an include is the last thing on a line
+  while ( ch != '\n' )
+    ch = fgetc(file);
 
   free(fullpath);
   return true;

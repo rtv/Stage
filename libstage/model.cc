@@ -182,7 +182,8 @@ StgModel::StgModel( StgWorld* world,
   this->gpose_dirty = true;
   this->say_string = NULL;
   this->subs = 0;
-  
+  this->stall = false;
+
   this->geom.size.x = STG_DEFAULT_MOD_GEOM_SIZEX;
   this->geom.size.y = STG_DEFAULT_MOD_GEOM_SIZEX;
   this->geom.size.z = STG_DEFAULT_MOD_GEOM_SIZEX;
@@ -207,7 +208,9 @@ StgModel::StgModel( StgWorld* world,
   this->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
 
   this->flag_list = NULL;
-
+  
+  this->blinkenlights = g_ptr_array_new();
+  
   bzero( &this->velocity, sizeof(velocity));
 
   this->on_velocity_list = false;
@@ -246,6 +249,27 @@ void StgModel::Init()
     Subscribe();
   
   // anything else to do here?
+  
+  // try some things out;
+  stg_blinkenlight_t* b = new stg_blinkenlight_t;
+  b->pose.x = 0;
+  b->pose.y = 0;
+  b->pose.z = 0.4;
+  b->pose.a = 0;
+  b->enabled = true;
+  b->color = stg_color_pack( 1,1,0,0 );
+  b->size = 0.1;
+
+  //AddBlinkenlight( b );
+
+  stg_blinkenlight_t* c = new stg_blinkenlight_t;
+  c->pose.x = 0.1;
+  c->pose.y = 0;
+  c->pose.z = 0.4;
+  c->pose.a = 0;
+  c->enabled = false;
+  c->color = stg_color_pack( 1,1,0,0 );
+  c->size = 0.1;
 }  
 
 void StgModel::AddFlag( StgFlag* flag )
@@ -888,8 +912,15 @@ void StgModel::Draw( uint32_t flags )
   if( flag_list ) 
     DrawFlagList();
 
+  if( blinkenlights )
+    DrawBlinkenlights();
+
+ if( stall )
+   gl_draw_string( 0,0,0.5, "!" );
+ 
   // shift up the CS to the top of this model
   gl_coord_shift(  0,0, this->geom.size.z, 0 );
+
   
   // recursively draw the tree below this model 
   for( GList* it=children; it; it=it->next )
@@ -902,8 +933,6 @@ void StgModel::DrawFlagList( void )
 {
   glPushMatrix();
   
-
-
   GLUquadric* quadric = gluNewQuadric();
   glTranslatef(0,0,1); // jump up
   stg_pose_t gpose = GetGlobalPose();
@@ -939,6 +968,41 @@ void StgModel::DrawFlagList( void )
       PopColor();
 
       glTranslatef( 0, 0, flag->size/2.0 );
+    }
+
+  gluDeleteQuadric( quadric );
+  glPopMatrix();
+}
+
+void StgModel::DrawBlinkenlights()
+{
+  glPushMatrix();
+  
+  GLUquadric* quadric = gluNewQuadric();
+  //glTranslatef(0,0,1); // jump up
+  //stg_pose_t gpose = GetGlobalPose();
+  //glRotatef( 180 + rtod(-gpose.a),0,0,1 );
+  
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+  for( int i=0; i<blinkenlights->len; i++ )
+    {
+      stg_blinkenlight_t* b = 
+	(stg_blinkenlight_t*)g_ptr_array_index( blinkenlights, i );
+      assert(b);
+
+      glTranslatef( b->pose.x, b->pose.y, b->pose.z );
+
+      PushColor( b->color );
+
+      if( b->enabled )
+	gluQuadricDrawStyle( quadric, GLU_FILL );
+      else
+	gluQuadricDrawStyle( quadric, GLU_LINE );
+
+      gluSphere( quadric, b->size/2.0, 8,8  );
+           
+      PopColor();
     }
 
   gluDeleteQuadric( quadric );
@@ -1365,6 +1429,8 @@ void StgModel::UpdatePose( void )
    
    if( hitthing )
      {
+       // XX 
+       SetStall( true );
        //printf( "hit %s at %.2f %.2f\n",
        //      hitthing->Token(), hitx, hity );
 
@@ -1373,6 +1439,9 @@ void StgModel::UpdatePose( void )
      }
    else
      {
+       // XX 
+       SetStall( false );
+ 
        stg_pose_t newpose;
        stg_pose_sum( &newpose, &this->pose, &p );
        this->SetPose( newpose );

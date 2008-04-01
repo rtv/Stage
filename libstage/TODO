@@ -6,6 +6,7 @@ BUGS
 * Viewing About Box stops simulation
 * 3d collision detection broken - e.g. fancypioneer2dx
 * [OSX only - FLTK bug?] loading window size constrains maximum window size
+* alpha properly done
 
 INCOMPLETE
 * Fix 3D panning and scrolling

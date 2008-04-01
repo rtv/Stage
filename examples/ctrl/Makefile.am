@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.3 2008-03-04 02:09:56 rtv Exp $
+# $Id: Makefile.am,v 1.4 2008-04-01 23:57:41 rtv Exp $
 
 # system-wide compile flags - target-specific flags are added to each target below
 AM_CPPFLAGS = -Wall -I. -I../../libstage -I$(top_srcdir)/replace  @PIXBUF_CFLAGS@ @FLTK_CFLAGS@ -DRGBFILE=\"$(RGB)\"
@@ -25,3 +25,15 @@ sink_la_LDFLAGS = -module
 # laser noise
 lasernoise_la_SOURCES = lasernoise.cc ../../libstage/stage.hh
 lasernoise_la_LDFLAGS = -module
+
+
+lib_LTLIBRARIES += predator.la prey.la
+
+# PREDATOR CONTROLLER
+predator_la_SOURCES = predator.cc mydef.cc mydef.hh ../../libstage/stage.hh
+predator_la_LDFLAGS = -module
+
+# PREY CONTROLLER
+prey_la_SOURCES = prey.cc mydef.cc mydef.hh ../../libstage/stage.hh
+prey_la_LDFLAGS = -module
+

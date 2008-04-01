@@ -11,6 +11,7 @@ static stg_typetable_entry_t typearray[] = {
   { "ranger",     StgModelRanger::Create },
   { "fiducial",   StgModelFiducial::Create },
   { "blobfinder", StgModelBlobfinder::Create },
+  { "blinkenlight", StgModelBlinkenlight::Create },
   { NULL, NULL } // this must be the last entry
 };
 
