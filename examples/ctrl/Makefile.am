@@ -27,13 +27,13 @@ lasernoise_la_SOURCES = lasernoise.cc ../../libstage/stage.hh
 lasernoise_la_LDFLAGS = -module
 
 
-lib_LTLIBRARIES += predator.la prey.la
+#lib_LTLIBRARIES += predator.la prey.la
 
 # PREDATOR CONTROLLER
-predator_la_SOURCES = predator.cc mydef.cc mydef.hh ../../libstage/stage.hh
-predator_la_LDFLAGS = -module
+#predator_la_SOURCES = predator.cc mydef.cc mydef.hh ../../libstage/stage.hh
+#predator_la_LDFLAGS = -module
 
 # PREY CONTROLLER
-prey_la_SOURCES = prey.cc mydef.cc mydef.hh ../../libstage/stage.hh
-prey_la_LDFLAGS = -module
+#prey_la_SOURCES = prey.cc mydef.cc mydef.hh ../../libstage/stage.hh
+#prey_la_LDFLAGS = -module
 
