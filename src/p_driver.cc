@@ -506,7 +506,7 @@ Interface* StgDriver::LookupDevice( player_devaddr_t addr )
 
 
 // subscribe to a device
-int StgDriver::Subscribe(player_devaddr_t addr)
+int StgDriver::Subscribe(QueuePointer &queue, player_devaddr_t addr)
 {
   if( addr.interf == PLAYER_SIMULATION_CODE )
     return 0; // ok
@@ -516,16 +516,19 @@ int StgDriver::Subscribe(player_devaddr_t addr)
   if( device )
     {      
       stg_model_subscribe( device->mod );  
-      return Driver::Subscribe(addr);
+      int result = Driver::Subscribe(addr);
+      if ( result != 0 )
+    	  return result;
+      return device->Subscribe(queue, addr);
     }
 
   puts( "failed to find a device" );
-  return 1; // error
+  return -1; // error
 }
 
 
 // unsubscribe to a device
-int StgDriver::Unsubscribe(player_devaddr_t addr)
+int StgDriver::Unsubscribe(QueuePointer &queue, player_devaddr_t addr)
 {
   if( addr.interf == PLAYER_SIMULATION_CODE )
     return 0; // ok
@@ -535,10 +538,13 @@ int StgDriver::Unsubscribe(player_devaddr_t addr)
   if( device )
     {
       stg_model_unsubscribe( device->mod );  
-      return Driver::Unsubscribe(addr);
+      int result = Driver::Unsubscribe(addr);
+      if ( result != 0 )
+    	  return result;
+      return device->Unsubscribe(queue, addr);
     }
   else
-    return 1; // error
+    return -1; // error
 }
 
 StgDriver::~StgDriver()

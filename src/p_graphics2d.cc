@@ -56,18 +56,15 @@ InterfaceGraphics2d::InterfaceGraphics2d( player_devaddr_t addr,
 			    int section )
   : InterfaceModel( addr, driver, cf, section, NULL )
 { 
-  // get or create a nice clean figure for drawing
-  this->fig = stg_model_get_fig( mod, "g2d_fig" );
-  
-  if( ! this->fig )
-    this->fig = stg_model_fig_create( mod, "g2d_fig", "top", 99 );
-  
-  stg_rtk_fig_clear( this->fig );
+  for (int i = 0; i < INTERFACE_GRAPHICS_2D_MAX_CLIENTS; i++)
+	  figs[i].queue = QueuePointer(); // Set to NULL
 }
 
 InterfaceGraphics2d::~InterfaceGraphics2d( void )
 { 
-  stg_rtk_fig_clear( this->fig );
+  for (int i = 0; i < INTERFACE_GRAPHICS_2D_MAX_CLIENTS; i++)
+	if ( this->figs[i].queue != NULL ) // Find the client
+		stg_rtk_fig_clear( this->figs[i].stageFig ); // Clear the figure
 };
 
 
@@ -76,13 +73,24 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
 				 void* data)
 {
   // printf( "Stage graphics2d interface processing message\n" );
+
+  // Find the index of the client.
+  int index;
+  for ( index = 0; index < INTERFACE_GRAPHICS_2D_MAX_CLIENTS; index++ )
+	  if ( this->figs[index].queue == resp_queue )
+		  break;
+  if ( index >= INTERFACE_GRAPHICS_2D_MAX_CLIENTS )
+  {
+	  PLAYER_ERROR("Graphics 2d received message from client that was not subscribed");
+	  return 0;
+  }
   
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
                            PLAYER_GRAPHICS2D_CMD_CLEAR, 
                            this->addr))
     {
-      //puts( "g2d: clearing figure" );
-      stg_rtk_fig_clear( this->fig );      
+      puts( "g2d: clearing figure" );
+      stg_rtk_fig_clear( this->figs[index].stageFig );
       return 0; //ok
     }
   
@@ -93,12 +101,12 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
       player_graphics2d_cmd_points_t* pcmd = 
 	(player_graphics2d_cmd_points_t*)data;
       
-      stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
+      stg_rtk_fig_color_rgb32( this->figs[index].stageFig, rgb32_pack( &pcmd->color) );
       
       for(unsigned int p=0; p<pcmd->points_count; p++ )        
 	{
 	  //printf( "g2d: Drawing point %.2f %.2f\n", pcmd->points[p].px, pcmd->points[p].py );
-	  stg_rtk_fig_point( this->fig, 
+	  stg_rtk_fig_point( this->figs[index].stageFig, 
 			     pcmd->points[p].px, 
 			     pcmd->points[p].py );      
 	}
@@ -112,7 +120,7 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
       player_graphics2d_cmd_polyline_t* pcmd = 
 	(player_graphics2d_cmd_polyline_t*)data;
       
-      stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
+      stg_rtk_fig_color_rgb32( this->figs[index].stageFig, rgb32_pack( &pcmd->color) );
       
       if( pcmd->points_count > 1 )
        for(unsigned int p=0; p<pcmd->points_count-1; p++ )     
@@ -121,7 +129,7 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
 	    //    pcmd->points[p].px, pcmd->points[p].py, 
 	    //    pcmd->points[p+1].px, pcmd->points[p+1].py );
 	    
-	    stg_rtk_fig_line( this->fig, 
+	    stg_rtk_fig_line( this->figs[index].stageFig, 
 			      pcmd->points[p].px, 
 			      pcmd->points[p].py,
 			      pcmd->points[p+1].px, 
@@ -153,16 +161,16 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
       
       if( pcmd->filled )
       {
-          stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->fill_color));
-          stg_rtk_fig_polygon( this->fig, 
+          stg_rtk_fig_color_rgb32( this->figs[index].stageFig, rgb32_pack( &pcmd->fill_color));
+          stg_rtk_fig_polygon( this->figs[index].stageFig, 
 			       0,0,0,			   
                               pcmd->points_count,
 			       pts,
 			       TRUE );
       }
       
-      stg_rtk_fig_color_rgb32( this->fig, rgb32_pack( &pcmd->color) );
-      stg_rtk_fig_polygon( this->fig, 
+      stg_rtk_fig_color_rgb32( this->figs[index].stageFig, rgb32_pack( &pcmd->color) );
+      stg_rtk_fig_polygon( this->figs[index].stageFig, 
 			   0,0,0,			   
                           pcmd->points_count,
 			   pts,
@@ -174,4 +182,69 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
   PLAYER_WARN2("stage graphics2d doesn't support message %d:%d.", 
 	       hdr->type, hdr->subtype );
   return -1;
+}
+
+int InterfaceGraphics2d::Subscribe(QueuePointer &queue, player_devaddr_t addr)
+{
+	int result = InterfaceModel::Subscribe(queue, addr);
+	if (result != 0)
+		return result;
+	
+	if (queue == NULL) // Always on subscription.
+		return 0;
+	
+	// Find an index for the new client.
+	int index;
+	for (index = 0; index < INTERFACE_GRAPHICS_2D_MAX_CLIENTS; index++)
+	{
+		if (figs[index].queue == queue)
+		{
+			PLAYER_ERROR("Client subscribed to graphics2d twice");
+			return -1;
+		}
+		if (figs[index].queue == NULL) // Found an empty position.
+			break;
+	}
+	
+	if (index >= INTERFACE_GRAPHICS_2D_MAX_CLIENTS)
+	{
+		PLAYER_ERROR("Too many clients subscribed to graphics 2d");
+		return -1;
+	}
+	
+	// Take over position.
+	figs[index].queue = queue;
+	
+	char figname[10];
+	snprintf(figname, 10, "g2d_fig%d", index); // Name the figures g2d_fig0 through g2d_fign.
+	
+	// Get or create a nice clean figure for the client to draw on.
+	figs[index].stageFig = stg_model_fig_get_or_create( mod, figname, "top", 99 );
+	stg_rtk_fig_clear( figs[index].stageFig );
+	
+	return 0;
+}
+
+int InterfaceGraphics2d::Unsubscribe(QueuePointer &queue, player_devaddr_t addr)
+{
+	if (queue == NULL)
+		return InterfaceModel::Unsubscribe(queue, addr);
+	
+	int index;
+	for (index = 0; index < INTERFACE_GRAPHICS_2D_MAX_CLIENTS; index++)
+	{
+		if (figs[index].queue == queue)
+			break;
+	}
+	
+	if (index >= INTERFACE_GRAPHICS_2D_MAX_CLIENTS)
+	{
+		PLAYER_ERROR("Client unsubscribed without subscribing");
+		return -1;
+	}
+	
+	stg_rtk_fig_clear( figs[index].stageFig );
+	figs[index].queue = QueuePointer(); // Set to NULL.
+	
+	return InterfaceModel::Unsubscribe(queue, addr);
 }

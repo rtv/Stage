@@ -30,8 +30,8 @@ class StgDriver : public Driver
   virtual int ProcessMessage(QueuePointer &resp_queue, 
 			     player_msghdr * hdr, 
 			     void * data);
-  virtual int Subscribe(player_devaddr_t addr);
-  virtual int Unsubscribe(player_devaddr_t addr);
+  virtual int Subscribe(QueuePointer &queue, player_devaddr_t addr);
+  virtual int Unsubscribe(QueuePointer &queue, player_devaddr_t addr);
     
   /// The server thread calls this method frequently. We use it to
   /// check for new commands and configs
@@ -76,6 +76,9 @@ class Interface
        			     player_msghdr_t* hdr,
 			     void* data) { return(-1); } // empty implementation
   virtual void Publish( void ){}; // empty implementation
+  
+  virtual int Subscribe(QueuePointer &queue, player_devaddr_t addr) { return 0; }
+  virtual int Unsubscribe(QueuePointer &queue, player_devaddr_t addr) { return 0; }
 };
 
 
@@ -285,6 +288,14 @@ class InterfaceMap : public InterfaceModel
 			void * data );
 };
 
+#define INTERFACE_GRAPHICS_2D_MAX_CLIENTS 16
+
+struct Graphics2dFig
+{
+	QueuePointer queue;
+	stg_rtk_fig_t* stageFig;
+};
+
 class InterfaceGraphics2d : public InterfaceModel
 {
  public: 
@@ -294,8 +305,12 @@ class InterfaceGraphics2d : public InterfaceModel
   virtual int ProcessMessage( QueuePointer &resp_queue, 
 			      player_msghdr * hdr, 
 			      void * data );
+  
+  // Override subscribe and unsubscribe to handle each client separately.
+  virtual int Subscribe(QueuePointer &queue, player_devaddr_t addr);
+  virtual int Unsubscribe(QueuePointer &queue, player_devaddr_t addr);
  private:
-  stg_rtk_fig_t* fig; // a figure we can draw in
+  Graphics2dFig figs[INTERFACE_GRAPHICS_2D_MAX_CLIENTS]; // a figure we can draw in
 };
 
 
