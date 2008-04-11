@@ -95,7 +95,7 @@ debug menu that enables visualization of some of the innards of Stage.
 
 */
 
-#include "config.h" // for PACKAGE strings etc
+//#include "config.h" // for PACKAGE strings etc
 #include "stage_internal.hh"
 #include "region.hh"
 
@@ -116,6 +116,8 @@ static const char* MITEM_VIEW_FOOTPRINTS = "View/Trails/Footprints";
 static const char* MITEM_VIEW_TRAILS =     "View/Trails/Blocks";
 static const char* MITEM_VIEW_ARROWS =     "View/Trails/Arrows";
 
+// hack - get this from somewhere sensible
+const char* PACKAGE_STRING = "Stage-3.dev";
 
 void dummy_cb(Fl_Widget*, void* v) 
 {

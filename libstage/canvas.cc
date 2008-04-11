@@ -533,7 +533,7 @@ void StgCanvas::draw()
 
 
    // find all the flags
-   GList* flags = NULL;   
+   //GList* flags = NULL;   
 }
 
 void StgCanvas::resize(int X,int Y,int W,int H) 

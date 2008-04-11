@@ -12,6 +12,7 @@ add_library( stage SHARED
 	     gl.cc 
 	     glcolorstack.cc 
 	     model.cc 
+	     model_blinkenlight.cc
 	     model_callbacks.cc 
 	     model_fiducial.cc 
 	     model_laser.cc 
@@ -20,15 +21,13 @@ add_library( stage SHARED
 	     model_ranger.cc 
 	     model_blobfinder.cc 
 	     model_props.cc 
+	     resource.cc
 	     stage.cc 
 	     typetable.cc 
 	     world.cc 
 	     worldfile.cc 
 	     worldgui.cc 
 )
-
-add_executable( stage main.cc ) 
-
 
 
 target_link_libraries( stage
@@ -38,3 +37,17 @@ target_link_libraries( stage
 		       ltdl
 )
 
+add_executable( stagebinary main.cc 
+)
+
+set_target_properties( stagebinary PROPERTIES
+		       OUTPUT_NAME stage )
+
+target_link_libraries( stagebinary
+		       stage 
+) 
+
+INSTALL(TARGETS stagebinary stage
+	RUNTIME DESTINATION bin 
+	LIBRARY DESTINATION lib
+)

@@ -82,7 +82,6 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
   stg_laser_sample_t* scan = robot->laser->GetSamples( &sample_count );
   assert(scan);
   
-  double newturnrate=0.0, newspeed=0.0;  
   bool obstruction = false;
   bool stop = false;
 

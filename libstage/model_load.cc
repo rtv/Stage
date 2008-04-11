@@ -415,10 +415,13 @@ void StgModel::LoadControllerModule( char* lib )
     }
   else
     {
+      printf( "Libtool error: %s. Can't open your plugin controller. Quitting\n",
+	      lt_dlerror() ); // report the error from libtool
+      
       PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", lib );  
       exit(-1);
     }
-      
+  
  fflush(stdout);
 }
 

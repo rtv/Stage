@@ -28,7 +28,7 @@ int LaserUpdate( StgModelLaser* mod, void* dummy )
   stg_laser_sample_t* scan = mod->GetSamples( &sample_count );
   
   if( scan )
-    for( int i=0; i<sample_count; i++ )
+    for( unsigned int i=0; i<sample_count; i++ )
       scan[i].range *= SimpleNormalDeviate( 1.0, DEVIATION );
   
   return 0; // run again

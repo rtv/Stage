@@ -985,7 +985,7 @@ void StgModel::DrawBlinkenlights()
   
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
-  for( int i=0; i<blinkenlights->len; i++ )
+  for( unsigned int i=0; i<blinkenlights->len; i++ )
     {
       stg_blinkenlight_t* b = 
 	(stg_blinkenlight_t*)g_ptr_array_index( blinkenlights, i );

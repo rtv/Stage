@@ -49,12 +49,12 @@
 //#define DEBUG 1
 #include "stage_internal.hh"
 
-static gboolean blink( bool* enabled )
-{
-  *enabled = ! *enabled;
-  puts( "blink" );
-  return true;
-}
+//static gboolean blink( bool* enabled )
+//{
+//  *enabled = ! *enabled;
+//  puts( "blink" );
+//  return true;
+//}
 
 StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world, 
 				StgModel* parent,

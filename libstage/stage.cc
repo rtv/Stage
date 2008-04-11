@@ -17,7 +17,7 @@
 //#define DEBUG
 
 #include "stage_internal.hh"
-#include "config.h" // results of autoconf's system configuration tests
+//#include "config.h" // results of autoconf's system configuration tests
 
 static bool init_called = false;
 static GHashTable* typetable = NULL;

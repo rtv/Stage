@@ -5,8 +5,11 @@
 */
 
 
-#include "config.h"
+//#include "config.h"
 #include "stage_internal.hh"
+
+const char* PACKAGE = "Stage";
+const char* VERSION = "3.dev";
 
 int main( int argc, char* argv[] )
 {
