@@ -250,26 +250,26 @@ void StgModel::Init()
   
   // anything else to do here?
   
-  // try some things out;
-  stg_blinkenlight_t* b = new stg_blinkenlight_t;
-  b->pose.x = 0;
-  b->pose.y = 0;
-  b->pose.z = 0.4;
-  b->pose.a = 0;
-  b->enabled = true;
-  b->color = stg_color_pack( 1,1,0,0 );
-  b->size = 0.1;
+//   // try some things out;
+//   stg_blinkenlight_t* b = new stg_blinkenlight_t;
+//   b->pose.x = 0;
+//   b->pose.y = 0;
+//   b->pose.z = 0.4;
+//   b->pose.a = 0;
+//   b->enabled = true;
+//   b->color = stg_color_pack( 1,1,0,0 );
+//   b->size = 0.1;
 
-  //AddBlinkenlight( b );
+//   //AddBlinkenlight( b );
 
-  stg_blinkenlight_t* c = new stg_blinkenlight_t;
-  c->pose.x = 0.1;
-  c->pose.y = 0;
-  c->pose.z = 0.4;
-  c->pose.a = 0;
-  c->enabled = false;
-  c->color = stg_color_pack( 1,1,0,0 );
-  c->size = 0.1;
+//   stg_blinkenlight_t* c = new stg_blinkenlight_t;
+//   c->pose.x = 0.1;
+//   c->pose.y = 0;
+//   c->pose.z = 0.4;
+//   c->pose.a = 0;
+//   c->enabled = false;
+//   c->color = stg_color_pack( 1,1,0,0 );
+//   c->size = 0.1;
 }  
 
 void StgModel::AddFlag( StgFlag* flag )
@@ -920,7 +920,6 @@ void StgModel::Draw( uint32_t flags )
  
   // shift up the CS to the top of this model
   gl_coord_shift(  0,0, this->geom.size.z, 0 );
-
   
   // recursively draw the tree below this model 
   for( GList* it=children; it; it=it->next )
@@ -969,6 +968,8 @@ void StgModel::DrawFlagList( void )
 
       glTranslatef( 0, 0, flag->size/2.0 );
     }
+
+  g_list_free( list );
 
   gluDeleteQuadric( quadric );
   glPopMatrix();

@@ -394,21 +394,6 @@ void StgCanvas::draw()
   // Clear screen to bg color
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-  if( showflags & STG_SHOW_CLOCK )
-    {
-      glPushMatrix();
-      glLoadIdentity();
-
-      char clockstr[50];
-      world->ClockString( clockstr, 50 );      
-      
-      colorstack.Push( 0,0,0 ); // black
-      gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr ); 
-      colorstack.Pop();
-
-      glPopMatrix();
-    }
-  
 
   // if following selected, shift the view to above the selected robot
   if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
@@ -531,7 +516,23 @@ void StgCanvas::draw()
        world->ClearRays();
      }   
 
+  if( showflags & STG_SHOW_CLOCK )
+    {
+      glPushMatrix();
+      glLoadIdentity();
+      glDisable( GL_DEPTH_TEST );
 
+      char clockstr[50];
+      world->ClockString( clockstr, 50 );      
+      
+      colorstack.Push( 0,0,0 ); // black
+      gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr ); 
+      colorstack.Pop();
+
+      glEnable( GL_DEPTH_TEST );
+      glPopMatrix();
+    }
+  
    // find all the flags
    //GList* flags = NULL;   
 }
