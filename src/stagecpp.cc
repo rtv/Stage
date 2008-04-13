@@ -19,6 +19,11 @@ int wf_property_exists( int section, char* token )
   return( wf.GetProperty( section, token ) > -1 );
 }
 
+int wf_tuple_count( int section, char* token )
+{
+  return wf.GetPropertyCount( section, token );
+}
+
 // read wrappers
 int wf_read_int( int section, char* token, int def )
 {

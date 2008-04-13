@@ -1388,6 +1388,16 @@ int CWorldFile::GetProperty(int entity, const char *name)
   return -1;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Get the count of a tuple property
+const int CWorldFile::GetPropertyCount(int entity, const char *name)
+{
+  int property = GetProperty(entity, name);
+  if (property < 0) return -1;
+  CProperty *pproperty = this->properties + property;
+  return pproperty->value_count;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Set the value of an property

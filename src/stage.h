@@ -1008,7 +1008,8 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   // POSITION MODEL --------------------------------------------------------
   
   typedef enum
-    { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
+    { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION,
+      STG_POSITION_CONTROL_VELOCITY_HEADING }
   stg_position_control_mode_t;
   
 #define STG_POSITION_CONTROL_DEFAULT STG_POSITION_CONTROL_VELOCITY
@@ -1039,8 +1040,9 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_pose_t pose; ///< position estimate in local coordinates
     stg_pose_t pose_error; ///< estimated error in position estimate
     stg_pose_t origin; ///< global origin of the local coordinate system
-    stg_velocity_t velocity; ///< current translation and rotaation speeds
-    stg_velocity_t integration_error; ///< errors in simple odometry model
+    stg_velocity_t velocity; ///< current translation and rotation speeds
+    stg_velocity_t integration_error; ///< std error in simple odometry model
+    stg_velocity_t integration_bias;  ///< bias (mean offset) error in simple odometry model
     //stg_bool_t stall; ///< TRUE iff the robot can't move due to a collision
     stg_position_localization_mode_t localization; ///< global or local mode
     stg_msec_t watchdog_timeout; ///< time since last command after which we stop

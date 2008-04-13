@@ -237,6 +237,9 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   // Get an property
   public: int GetProperty(int entity, const char *name);
 
+  // Get the number of values in a property
+  public: const int GetPropertyCount(int entity, const char *name);
+
   // Set the value of an property.
   private: void SetPropertyValue(int property, int index, const char *value);
 
