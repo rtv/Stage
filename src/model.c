@@ -114,11 +114,13 @@ model
   - specify the initial velocity of the model. Not that if the model hits an obstacle, its velocity will be set to zero.
 - color [colorname:string]
   - specify the color of the object using a color name from the X11 database (rgb.txt)
-- line_count [int]
-  - specify the number of lines that make up the model's body
-- line[index] [x1:float y1:float x2:float y2:float]
-  - creates a line from (x1,y1) to (x2,y2). A set of line_count lines defines the robot's body for the purposes of collision detection and rendering in the GUI window.
-- bitmap [filename:string}
+- polygons [int]
+  - specify the number of polygons that make up the model's body
+- polygon[index].points [int]
+  - specify the number of points in a polygon
+- polygon[index].point[index] [x:float y:float]
+  - creates a point on the polgon.
+- bitmap [filename:string]
   - alternative way to set the model's line_count and lines. The file must be a bitmap recognized by libgtkpixbuf (most popular formats are supported). The file is opened and parsed into a set of lines. Unless the bitmap_resolution option is used, the lines are scaled to fit inside the rectangle defined by the model's current size.
 - gui_nose [bool]
   - if 1, draw a nose on the model showing its heading (positive X axis)
