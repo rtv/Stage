@@ -592,34 +592,32 @@ int stg_rotrects_from_image_file( const char* filename,
 	  // a rectangle starts from this point
 	  int startx = x;
 	  int starty = y;
-	  int height = img_height; // assume full height for starters
-	  
-	  // grow the width - scan along the line until we hit an empty (white) pixel
-	  for( ; x < img_width &&  ! pb_pixel_is_set(pb,x,y,threshold); x++ )
-	    {
-	      // handle horizontal cropping
-	      //double ppx = x * sx; 
-	      //if (ppx < this->crop_ax || ppx > this->crop_bx)
-	      //continue;
-	      
-	      // look down to see how large a rectangle below we can make
-	      int yy  = y;
-	      while( ! pb_pixel_is_set(pb,x,yy,threshold) && (yy < img_height-1) )
-		{ 
-		  // handle vertical cropping
-		  //double ppy = (this->image->height - yy) * sy;
-		  //if (ppy < this->crop_ay || ppy > this->crop_by)
-		  //continue;
-		  
-		  yy++; 
-		} 	      
+	  int height = img_height - y; // assume full height for starters
 
-	      // now yy is the depth of a line of non-zero pixels
-	      // downward we store the smallest depth - that'll be the
-	      // height of the rectangle
-	      if( yy-y < height ) height = yy-y; // shrink the height to fit
-	    } 
-	  
+          // grow the width - scan along the line until we hit an empty (white) pixel
+          for( ; x < img_width &&  ! pb_pixel_is_set(pb,x,y,threshold); x++ )
+          {
+            // handle horizontal cropping
+            //double ppx = x * sx; 
+            //if (ppx < this->crop_ax || ppx > this->crop_bx)
+            //continue;
+
+            // look down to see how large a rectangle below we can make
+            int yy;
+            for (yy = y + 1;  yy < y + height; ++yy)
+            {
+              // handle vertical cropping
+              //double ppy = (this->image->height - yy) * sy;
+              //if (ppy < this->crop_ay || ppy > this->crop_by)
+              //continue;
+              if (pb_pixel_is_set(pb,x,yy,threshold)) // found a full (non-white) pixel --> smaller height!
+                {
+                  height = yy - y;
+                  break;
+                }
+            }
+          }
+
 	  // whiten the pixels we have used in this rect
 	  pb_set_rect( pb, startx, starty, x-startx, height, 0xFF );
 	  
