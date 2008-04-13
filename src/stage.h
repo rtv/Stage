@@ -1040,6 +1040,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_pose_t pose; ///< position estimate in local coordinates
     stg_pose_t pose_error; ///< estimated error in position estimate
     stg_pose_t origin; ///< global origin of the local coordinate system
+    stg_pose_t max_speed; ///< max speed for position controller
     stg_velocity_t velocity; ///< current translation and rotation speeds
     stg_velocity_t integration_error; ///< std error in simple odometry model
     stg_velocity_t integration_bias;  ///< bias (mean offset) error in simple odometry model
@@ -1048,7 +1049,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     stg_msec_t watchdog_timeout; ///< time since last command after which we stop
   } stg_position_data_t;
   
-  /** position_cfg" property */
+  /** "position_cfg" property */
   typedef struct
   {
     stg_position_drive_mode_t drive_mode;

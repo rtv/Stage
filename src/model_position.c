@@ -317,6 +317,13 @@ void position_load( stg_model_t* mod )
       memset( &data->pose_error, 0, sizeof(data->pose_error));      
     }
 
+  if( wf_property_exists( mod->id, "max_speed" ) )
+    {
+      data->max_speed.x = wf_read_tuple_length(mod->id, "max_speed", 0, data->max_speed.x );
+      data->max_speed.y = wf_read_tuple_length(mod->id, "max_speed", 1, data->max_speed.y );
+      data->max_speed.a = wf_read_tuple_angle(mod->id, "max_speed", 2, data->max_speed.a );
+    }
+
   // odometry model parameters
   if( wf_property_exists( mod->id, "odom_error" ) )
     {
@@ -501,12 +508,6 @@ int position_update( stg_model_t* mod )
 	    
 	    PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
 	    
-	    // speed limits for controllers
-	    // TODO - have these configurable
-	    double max_speed_x = 0.4;
-	    double max_speed_y = 0.4;
-	    double max_speed_a = 1.0;	      
-	    
 	    switch( cfg->drive_mode )
 	      {
 	      case STG_POSITION_DRIVE_OMNI:
@@ -514,9 +515,9 @@ int position_update( stg_model_t* mod )
 		  // this is easy - we just reduce the errors in each axis
 		  // independently with a proportional controller, speed
 		  // limited
-		  vel->x = MIN( x_error, max_speed_x );
-		  vel->y = MIN( y_error, max_speed_y );
-		  vel->a = MIN( a_error, max_speed_a );
+		  vel->x = MIN( x_error, data->max_speed.x );
+		  vel->y = MIN( y_error, data->max_speed.y );
+		  vel->a = MIN( a_error, data->max_speed.a );
 		}
 		break;
 		
@@ -540,8 +541,8 @@ int position_update( stg_model_t* mod )
 		    {
 		      PRINT_DEBUG( "TURNING ON THE SPOT" );
 		      // turn on the spot to minimize the error
-		      calc.a = MIN( a_error, max_speed_a );
-		      calc.a = MAX( a_error, -max_speed_a );
+		      calc.a = MIN( a_error, data->max_speed.a );
+		      calc.a = MAX( a_error, -data->max_speed.a );
 		    }
 		  else
 		    {
@@ -551,8 +552,8 @@ int position_update( stg_model_t* mod )
 		      double goal_distance = hypot( y_error, x_error );
 		      
 		      a_error = NORMALIZE( goal_angle - data->pose.a );
-		      calc.a = MIN( a_error, max_speed_a );
-		      calc.a = MAX( a_error, -max_speed_a );
+		      calc.a = MIN( a_error, data->max_speed.a );
+		      calc.a = MAX( a_error, -data->max_speed.a );
 		      
 		      PRINT_DEBUG2( "steer errors: %.2f %.2f \n", a_error, goal_distance );
 		      
@@ -561,7 +562,7 @@ int position_update( stg_model_t* mod )
 		      if( fabs(a_error) < M_PI/16 )
 			{
 			  PRINT_DEBUG( "DRIVING TOWARDS THE GOAL" );
-			  calc.x = MIN( goal_distance, max_speed_x );
+			  calc.x = MIN( goal_distance, data->max_speed.x );
 			}
 		    }
 		  
