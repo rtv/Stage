@@ -496,10 +496,9 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 	}
     }
   
-  printf( "rects found %d\n", *rect_count );
+  if( img ) img->release(); // frees all image resources: the
+			  // constructor is not available
 
-  // free the image data
-  //gdk_pixbuf_unref( pb );
   return 0; // ok
 }
 
