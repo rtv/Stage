@@ -5,7 +5,7 @@ SET (STAGE_API_VERSION 3.0.0 CACHE STRING "Stage API version")
 MESSAGE (STATUS "${PROJECT_NAME} version ${STAGE_VERSION}")
 
 include(FindPkgConfig)
-pkg_check_modules( GLIB gdk-pixbuf-2.0 )
+pkg_check_modules( GLIB glib-2.0 )
 
 find_package(OPENGL REQUIRED)
 
