@@ -4,7 +4,7 @@ dnl $Id: configure.ac,v 1.18.4.2 2008-03-29 00:52:53 thjc Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,2.1.0rc2-cvs)
+AC_INIT(stage,2.1.0rc2)
 
 AC_CONFIG_SRCDIR(src/stage.c)
 

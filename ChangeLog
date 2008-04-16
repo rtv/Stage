@@ -1,3 +1,6 @@
+2008-04-16 18:47  thjc
+	* 2.1rc2 release
+
 2007-12-13 13:07  gerkey
 
 	* stage.pc.in (1.8), src/Makefile.am (1.144): fixed up lib version
