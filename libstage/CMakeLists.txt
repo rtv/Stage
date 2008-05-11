@@ -51,3 +51,5 @@ INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin 
 	LIBRARY DESTINATION lib
 )
+INSTALL(FILES stage.hh
+        DESTINATION include/stage-3.0)
