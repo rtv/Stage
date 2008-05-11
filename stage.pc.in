@@ -5,4 +5,4 @@ Description: Stage robot simulation C library and Player plugin - part of the Pl
 Version: @VERSION@
 Requires: gtk+-2.0 >= 2.4 gthread-2.0 >= 2.4 playercore >= 2.1 playerc >= 2.1
 Libs: -L${prefix}/lib -lstage
-Cflags: -I${prefix}/include/stage-2.1
+Cflags: -I${prefix}/include/stage-3.0
