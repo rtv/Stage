@@ -5,7 +5,8 @@
 # $Id: Makefile.am,v 1.11 2008-04-01 23:57:41 rtv Exp $
 
 # install the header file for the Stage library
-include_HEADERS = stage.hh 
+versionedincludedir = $(prefix)/include/stage-3.0
+versionedinclude_HEADERS = stage.hh 
 
 # install the color database
 pkgdata_DATA = rgb.txt
