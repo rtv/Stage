@@ -427,7 +427,6 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
   int y, x;
   for(y = 0; y < img_height; y++)
     {
-      puts("");
       for(x = 0; x < img_width; x++)
 	{
 	  // skip blank (white) pixels

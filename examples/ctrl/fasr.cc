@@ -52,7 +52,6 @@ extern "C" int Init( StgModel* mod )
   robot->work_get = 0;
   robot->work_put = 0;
   
-  //robot->flag = new StgFlag( stg_color_pack( 1,1,0,0.5 ), 3 );
   robot->pos = (StgModelPosition*)mod;
 
   robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
