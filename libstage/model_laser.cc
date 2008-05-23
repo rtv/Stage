@@ -299,6 +299,7 @@ void StgModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
   this->data_dirty = true;
 }
 
+
 void StgModelLaser::DataVisualize( void )
 {
   if( ! (samples && sample_count) )
@@ -316,6 +317,10 @@ void StgModelLaser::DataVisualize( void )
   
   PushColor( 0, 0, 1, 0.5 );
   
+  glPointSize( 4.0 );
+  
+  glVertexPointer( 2, GL_FLOAT, 0, pts );   
+
   for( unsigned int s=0; s<sample_count; s++ )
     {
       double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;  
@@ -325,24 +330,23 @@ void StgModelLaser::DataVisualize( void )
       // if the sample is unusually bright, draw a little blob
       if( samples[s].reflectance > 0 )
 	{
-	  glPointSize( 4.0 );
 	  glBegin( GL_POINTS );
-	  glVertex2f( pts[2*s+2], pts[2*s+3] );
+	   glVertex2f( pts[2*s+2], pts[2*s+3] );
 	  glEnd();
+
+	  // why doesn't this work?
+	  //glDrawArrays( GL_POINTS, 2*s+2, 1 );
 	}
       
     }
   PopColor();
-  
-  
-  glEnableClientState( GL_VERTEX_ARRAY );
-  glVertexPointer( 2, GL_FLOAT, 0, pts );   
-  
+    
   glDepthMask( GL_FALSE );
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   
   // draw the filled polygon in transparent blue
   PushColor( 0, 0, 1, 0.1 );
+  
   glDrawArrays( GL_POLYGON, 0, sample_count+1 );
   
   // draw the beam strike points in black

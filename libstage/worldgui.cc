@@ -350,4 +350,3 @@ void StgWorldGui::DrawFloor()
   g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Floor_cb, NULL );
   PopColor();
 }
-

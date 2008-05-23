@@ -878,6 +878,19 @@ void StgModel::DrawTrailArrows()
 }
 
 
+void StgModel::DrawBlocks( )
+{
+  LISTMETHOD( this->children, StgModel*, DrawBlocks );  
+
+  LISTMETHOD( this->blocks, StgBlock*, DrawGlobal );
+}
+
+void StgModel::DrawBlocks( gpointer dummykey, 
+			   StgModel* mod, void* dummyarg )
+{
+  mod->DrawBlocks();
+
+}
 
 void StgModel::Draw( uint32_t flags )
 {
@@ -889,17 +902,6 @@ void StgModel::Draw( uint32_t flags )
   gl_pose_shift( &this->pose );
   gl_pose_shift( &this->geom.pose );
 
-  // draw all the blocks
-  if( flags & STG_SHOW_BLOCKS_2D )
-    {
-      LISTMETHOD( this->blocks, StgBlock*, Draw2D );
-    }
-  else if( flags & STG_SHOW_BLOCKS )
-    {
-      LISTMETHOD( this->blocks, StgBlock*, Draw );
-    }
-  //else 
-  
   //if( this->say_string )
   // gl_speech_bubble( 0,0,0, this->say_string );
     

@@ -25,7 +25,9 @@ StgBlock::StgBlock( StgModel* mod,
   this->pt_count = pt_count;
   this->pts = (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t));
   // allocate space for the integer version of the block vertices
-  this->pts_global = new stg_point_int_t[pt_count];
+  this->pts_global_pixels = new stg_point_int_t[pt_count];
+  this->global_vertices = new stg_vertex_t[2*pt_count+2];
+
   this->zmin = zmin;
   this->zmax = zmax;
   this->color = color;
@@ -36,6 +38,18 @@ StgBlock::StgBlock( StgModel* mod,
   // flag these as unset until StgBlock::Map() is called.
   this->global_zmin = -1;
   this->global_zmax = -1;
+
+  this->edge_indices = new GLubyte[ 6 * pt_count ];
+  for( int i=0; i<pt_count; i++ )
+    {
+      this->edge_indices[6*i] = 2*i;
+      this->edge_indices[6*i+1] = 2*i+1;
+      this->edge_indices[6*i+2] = 2*i;
+      this->edge_indices[6*i+3] = 2*i+2;
+      this->edge_indices[6*i+4] = 2*i+1;
+      this->edge_indices[6*i+5] = 2*i+3;
+    }
+
 }
 
 StgBlock::~StgBlock()
@@ -43,6 +57,8 @@ StgBlock::~StgBlock()
   this->UnMap();
   g_free( pts );
   g_array_free( rendered_points, TRUE );
+
+  delete[] edge_indices;
 }
 
 void Stg::stg_block_list_destroy( GList* list )
@@ -57,18 +73,16 @@ void Stg::stg_block_list_destroy( GList* list )
 void StgBlock::DrawTop()
 {
   // draw a top that fits over the side strip
-  glBegin(GL_POLYGON);
-
-  for( unsigned int p=0; p<pt_count; p++ )
-    glVertex3f( pts[p].x, pts[p].y, zmax );
-  
-  glEnd();
+   glPushMatrix();
+   glTranslatef( 0,0,zmax);
+   glVertexPointer( 2, GL_DOUBLE, 0, pts );
+   glDrawArrays( GL_POLYGON, 0, pt_count );   
+   glPopMatrix();
 }       
 
 void StgBlock::DrawSides()
 {
-  // construct a strip that wraps around the polygon
-  
+  // construct a strip that wraps around the polygon  
   glBegin(GL_QUAD_STRIP);
   for( unsigned int p=0; p<pt_count; p++)
     {
@@ -90,6 +104,7 @@ void StgBlock::DrawFootPrint()
   
   glEnd();
 }
+
 
 void StgBlock::Draw()
 {
@@ -117,6 +132,45 @@ void StgBlock::Draw()
   
   PopColor();
   PopColor();
+}
+
+void StgBlock::DrawGlobal()
+{
+  // draw filled color polygons  
+  stg_color_t color = Color();
+  
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+  PushColor( color );
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1.0, 1.0);
+    
+  // glColorPointer(3, GL_UNSIGNED_BYTE, 0, colors );
+
+  // top - we skip every 2nd vertex
+  glVertexPointer( 3, GL_FLOAT, 6*sizeof(GLfloat), global_vertices );
+  glDrawArrays( GL_TRIANGLE_FAN, 0, pt_count );
+
+  // sides - we use all vertices
+  glVertexPointer( 3, GL_FLOAT, 0, global_vertices );
+  glDrawArrays( GL_TRIANGLE_STRIP, 0, pt_count*2+2 );
+
+  glDisable(GL_POLYGON_OFFSET_FILL);
+  
+  // draw the block outline in a darker version of the same color
+  double r,g,b,a;
+  stg_color_unpack( color, &r, &g, &b, &a );  
+  PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+  
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
+  glDepthMask(GL_FALSE); 
+    
+  // we use the array of vertices
+  glDrawElements( GL_LINES, pt_count*6, GL_UNSIGNED_BYTE, edge_indices );
+  
+  glDepthMask(GL_TRUE); 
+  
+  PopColor();
+  PopColor();  
 }
 
 void StgBlock::Draw2D()
@@ -175,19 +229,35 @@ void StgBlock::Map()
       local.z = zmin;
       
       global = mod->LocalToGlobal( local );
-        
-      pts_global[p].x = (int32_t)floor(global.x*ppm);
-      pts_global[p].y = (int32_t)floor(global.y*ppm);
+
+      // top surface vertex
+      global_vertices[2*p].x = global.x;
+      global_vertices[2*p].y = global.y;
+      global_vertices[2*p].z = global.z + zmax;
+      
+      // bottom surface vertex
+      global_vertices[2*p+1].x = global.x;
+      global_vertices[2*p+1].y = global.y;
+      global_vertices[2*p+1].z = global.z;
+      
+      pts_global_pixels[p].x = (int32_t)floor(global.x*ppm);
+      pts_global_pixels[p].y = (int32_t)floor(global.y*ppm);
 
       PRINT_DEBUG2("loc [%.2f %.2f]", 
 		   pts[p].x,
  		   pts[p].y );
       
       PRINT_DEBUG2("glb [%d %d]", 
-		   pts_global[p].x,
- 		   pts_global[p].y );
+		   pts_global_pixels[p].x,
+ 		   pts_global_pixels[p].y );
     }
-  
+
+  // close the strip
+  // top surface vertex
+  global_vertices[2*pt_count] = global_vertices[0];
+  global_vertices[2*pt_count+1] = global_vertices[1];
+
+ 
   // store the block's global vertical bounds for inspection by the
   // raytracer
   global_zmin = global.z;
@@ -197,7 +267,7 @@ void StgBlock::Map()
   render_info.world = mod->GetWorld();
   render_info.block = this;
   
-  stg_polygon_3d( pts_global, pt_count,
+  stg_polygon_3d( pts_global_pixels, pt_count,
 		  (stg_line3d_func_t)StgWorld::AddBlockPixel,
 		  (void*)&render_info );
 		

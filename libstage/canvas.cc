@@ -27,7 +27,7 @@ StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h)
   selected_models = NULL;
   last_selection = NULL;
 
-  startx = starty = 0;
+ startx = starty = 0;
   panx = pany = stheta = sphi = 0.0;
   scale = 15.0;
   interval = 100; //msec between redraws
@@ -389,7 +389,12 @@ void StgCanvas::draw()
       glRotatef( rtod(sphi), 0,0,1 );   // rotate about z - yaw
       
       // ... to here to get rotation about the center of the window (but broken panning)
+
+      // enable vertex arrays
+      glEnableClientState( GL_VERTEX_ARRAY );
+      //glEnableClientState( GL_COLOR_ARRAY );
     }      
+
 
   // Clear screen to bg color
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -459,18 +464,18 @@ void StgCanvas::draw()
 	 {
 	   glDisable( GL_DEPTH_TEST );
 	   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-  
+	   
 	   for( GList* it=world->children; it; it=it->next )
 	     {
 	       ((StgModel*)it->data)->DrawTrailFootprint();
 	     }
 	   glEnable( GL_DEPTH_TEST );
 	 }
-
+       
        if( showflags & STG_SHOW_TRAILS )
 	 {
 	   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-  
+	   
 	   for( GList* it=world->children; it; it=it->next )
 	     {
 	       ((StgModel*)it->data)->DrawTrailBlocks();
@@ -487,15 +492,14 @@ void StgCanvas::draw()
 	 }
 
        if( showflags & STG_SHOW_BLOCKS )
-	 for( GList* it=world->children; it; it=it->next )
 	 {
-	   uint32_t flags = showflags;
-	   
-	   if( (stheta == 0) && (sphi == 0) )
-	   flags |= STG_SHOW_BLOCKS_2D;
-	   
-	   ((StgModel*)it->data)->Draw( flags );
+	   for( GList* it=world->children; it; it=it->next )
+	   ((StgModel*)it->data)->DrawBlocks();	   	          
 	 }
+
+       // draw everything else
+       for( GList* it=world->children; it; it=it->next )
+	   ((StgModel*)it->data)->Draw( showflags );
      }
    
    if( world->GetRayList() )
@@ -532,9 +536,6 @@ void StgCanvas::draw()
       glEnable( GL_DEPTH_TEST );
       glPopMatrix();
     }
-  
-   // find all the flags
-   //GList* flags = NULL;   
 }
 
 void StgCanvas::resize(int X,int Y,int W,int H) 

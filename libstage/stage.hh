@@ -312,6 +312,18 @@ namespace Stg
   /** define a point in 3d space */
   typedef struct
   {
+    float x, y, z;
+  } stg_vertex_t;
+  
+  /** define vertex and its color */
+  typedef struct
+  {
+    float x, y, z, r, g, b, a;    
+  } stg_colorvertex_t;
+
+  /** define a point in 3d space */
+  typedef struct
+  {
     stg_meters_t x, y, z;
   } stg_point3_t;
   
@@ -1016,6 +1028,9 @@ namespace Draw
     
     /** Enlarge the bounding volume to include this point */
     void Extend( stg_point3_t pt );
+    
+    //GHashTable* blocks;
+    GArray lines;
 
   public:
 
@@ -1033,9 +1048,13 @@ namespace Draw
     stg_usec_t RealTimeSinceStart(void);
     void PauseUntilNextUpdateTime(void);
     void IdleUntilNextUpdateTime( int (*idler)(void) );
+
+    void AddBlock( StgBlock* block );
+    void RemoveBlock( StgBlock* block );
   
     stg_usec_t GetSimInterval(){ return interval_sim; }; 
-  
+    
+
     Worldfile* GetWorldFile(){ return wf; };
   
     virtual void Load( const char* worldfile_path );
@@ -1225,6 +1244,14 @@ namespace Draw
     virtual void Update();
     virtual void UpdatePose();
     virtual void Draw( uint32_t flags );
+
+    virtual void DrawBlocks();
+
+    // static wrapper for DrawBlocks()
+    static void DrawBlocks( gpointer dummykey, 
+			    StgModel* mod, 
+			    void* arg );
+      
     virtual void DrawPicker();
     virtual void DataVisualize();
 
@@ -1572,6 +1599,7 @@ namespace Draw
     void Map();
     void UnMap(); // draw the block into the world
   
+    void DrawGlobal(); // draw the block in OpenGL using pts_global coords
     void Draw(); // draw the block in OpenGL
     void Draw2D(); // draw the block in OpenGL
     void DrawSolid(); // draw the block in OpenGL as a solid single color
@@ -1601,9 +1629,12 @@ namespace Draw
     stg_meters_t global_zmax; 
 
     StgModel* mod; //< model to which this block belongs
-    stg_point_int_t* pts_global; //< points defining a polygon in global coords
 
-
+    stg_point_int_t* pts_global_pixels; //< points defining a polygon in global coords
+    stg_vertex_t* global_vertices; //< points defining a polygon in global coords
+    //GLubyte* colors;
+    GLubyte* edge_indices;
+    
     stg_color_t color;
     bool inherit_color;  
 

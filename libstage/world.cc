@@ -147,6 +147,10 @@ void StgWorld::Initialize( const char* token,
   this->paused = false; 
   this->destroy = false;   
   
+  // store a global table of all blocks, so they can be rendered all
+  // at once.
+  //this->blocks = g_hash_table_new( NULL, NULL );
+  
   bzero( &this->extent, sizeof(this->extent));
   
   for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
