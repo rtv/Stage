@@ -26,16 +26,17 @@ window
   rotate [ 0.000 0.000 ]
   scale 33.306 
   show_data 0
+  interval 50
 )
 
 # load an environment bitmap
-floorplan
-( 
-  name "cave"
-  size3 [16 16 0.5]
-  pose [0.000 0.000 0.000]
-  bitmap "bitmaps/cave.png"
-)
+#floorplan
+#( 
+#  name "cave"
+#  size3 [16 16 0.5]
+#  pose [0.000 0.000 0.000]
+#  bitmap "bitmaps/cave.png"
+#)
 
 zone
 (
@@ -56,29 +57,29 @@ zone
 define autorob pioneer2dx
 (
  color "red"
- sicklaser(pose [ 0.040 0.000 0.000 ] samples 32 range_max 5 laser_return 2 ) 
+ sicklaser( pose [ 0.040 0.000 0.000 ] samples 32 range_max 5 laser_return 2 ) 
  ctrl "fasr"
 )
 
-autorob( pose [4.461 6.406 1.930] )
+autorob( pose [4.461 6.406 1.930]  say "Booga" )
 autorob( pose [6.635 6.458 -52.629] )
 autorob( pose [6.385 5.805 -87.082] )
 autorob( pose [7.004 5.327 170.536] )
 autorob( pose [5.770 6.492 -10.539] )
 autorob( pose [7.493 4.852 -156.719] )
 autorob( pose [5.078 6.853 -37.549] )
-autorob( pose [6.147 7.399 4.964] )
-autorob( pose [4.065 5.583 125.796] )
-autorob( pose [7.487 6.926 -40.634] )
+#autorob( pose [6.147 7.399 4.964] )
+#autorob( pose [4.065 5.583 125.796] )
+#autorob( pose [7.487 6.926 -40.634] )
 
-autorob( pose [4.530 7.367 -113.456] )
-autorob( pose [6.071 5.138 -1.177] )
-autorob( pose [6.591 4.622 -68.007] )
-autorob( pose [5.454 7.540 135.162] )
-autorob( pose [4.707 5.855 -3.588] )
-autorob( pose [6.714 7.447 -73.332] )
-autorob( pose [5.582 5.724 -48.161] )
-autorob( pose [3.958 6.851 -102.651] )
-autorob( pose [5.127 5.109 23.582] )
-autorob( pose [7.534 5.825 -70.230] )
+#autorob( pose [4.530 7.367 -113.456] )
+#autorob( pose [6.071 5.138 -1.177] )
+#autorob( pose [6.591 4.622 -68.007] )
+#autorob( pose [5.454 7.540 135.162] )
+#autorob( pose [4.707 5.855 -3.588] )
+#autorob( pose [6.714 7.447 -73.332] )
+#autorob( pose [5.582 5.724 -48.161] )
+#autorob( pose [3.958 6.851 -102.651] )
+#autorob( pose [5.127 5.109 23.582] )
+#autorob( pose [7.534 5.825 -70.230] )
 

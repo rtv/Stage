@@ -13,43 +13,42 @@ add_library( stage SHARED
 	     glcolorstack.cc 
 	     model.cc 
 	     model_blinkenlight.cc
+	     model_blobfinder.cc 
 	     model_callbacks.cc 
 	     model_fiducial.cc 
 	     model_laser.cc 
 	     model_load.cc 
 	     model_position.cc 
-	     model_ranger.cc 
-	     model_blobfinder.cc 
 	     model_props.cc 
+	     model_ranger.cc 
 	     resource.cc
 	     stage.cc 
 	     typetable.cc 
 	     world.cc 
 	     worldfile.cc 
-	     worldgui.cc 
+	     worldgui.cc
 )
-
 
 target_link_libraries( stage
 		       ${GLIB_LIBRARIES}
-		       ${FLTK_LIBRARIES} 
 		       ${OPENGL_LIBRARIES}
+		       ${FLTK_LIBRARIES} 
 		       ltdl
 )
 
-add_executable( stagebinary main.cc 
-)
+add_executable( stagebinary main.cc )
 
 set_target_properties( stagebinary PROPERTIES
 		       OUTPUT_NAME stage )
 
 target_link_libraries( stagebinary
-		       stage 
+		       stage
 ) 
 
 INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin 
 	LIBRARY DESTINATION lib
 )
+
 INSTALL(FILES stage.hh
         DESTINATION include/stage-3.0)

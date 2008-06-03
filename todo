@@ -1,12 +1,17 @@
 -- TODO --
 
+ESSENTIAL
  - 3d ray tracing
  - GUI rotations
  - docs
+ - finish CMake scripts
+ - clean up graphics implementation
+
+NICE
  - gripper
+ - pucks
  - power
  - energy
- - pucks
 
 
 -- DONE --
@@ -15,8 +20,8 @@
 multiple interfaces. See note in stg_driver.cc
 
 -- Large Scale Robotics paper
- - 0.01M robots
- - two or three benchmark controllers
+ - 0.1M robots
+ - two or three benchmark controllers (ended up as 1)
  - experimental design
 
  - sensible defaults - laser (all devices)

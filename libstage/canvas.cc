@@ -6,6 +6,8 @@
 
 #include "stage_internal.hh"
 
+using namespace Stg;
+
 void StgCanvas::TimerCallback( StgCanvas* c )
 {
   c->redraw();
@@ -27,10 +29,10 @@ StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h)
   selected_models = NULL;
   last_selection = NULL;
 
- startx = starty = 0;
+  startx = starty = 0;
   panx = pany = stheta = sphi = 0.0;
   scale = 15.0;
-  interval = 100; //msec between redraws
+  interval = 50; //msec between redraws
 
   graphics = true;
   dragging = false;
@@ -288,6 +290,7 @@ int StgCanvas::handle(int event)
 	  redraw();
 	}
       return 1;
+
     case FL_FOCUS :
     case FL_UNFOCUS :
       //.... Return 1 if you want keyboard events, 0 otherwise
@@ -338,7 +341,8 @@ void StgCanvas::DrawGlobalGrid()
 void StgCanvas::draw() 
 {
   //  static int centerx = 0, centery = 0;
-
+  //puts( "CANVAS" );
+  
   if (!valid()) 
     { 
       valid(1); 
@@ -393,12 +397,12 @@ void StgCanvas::draw()
       // enable vertex arrays
       glEnableClientState( GL_VERTEX_ARRAY );
       //glEnableClientState( GL_COLOR_ARRAY );
+
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     }      
 
-
-  // Clear screen to bg color
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
+  if( ! (showflags & STG_SHOW_TRAILS) )
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
   // if following selected, shift the view to above the selected robot
   if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
@@ -472,7 +476,7 @@ void StgCanvas::draw()
 	   glEnable( GL_DEPTH_TEST );
 	 }
        
-       if( showflags & STG_SHOW_TRAILS )
+       if( showflags & STG_SHOW_TRAILRISE )
 	 {
 	   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 	   
@@ -494,12 +498,32 @@ void StgCanvas::draw()
        if( showflags & STG_SHOW_BLOCKS )
 	 {
 	   for( GList* it=world->children; it; it=it->next )
-	   ((StgModel*)it->data)->DrawBlocks();	   	          
+	     {
+	       StgModel* mod = ((StgModel*)it->data);
+
+	       if( mod->displaylist == 0 )
+		 {
+		   mod->displaylist = glGenLists(1);
+		   mod->BuildDisplayList( showflags ); // ready to be rendered
+		 }
+
+	       // move into this model's local coordinate frame
+	       glPushMatrix();
+	       gl_pose_shift( &mod->pose );
+	       gl_pose_shift( &mod->geom.pose );
+
+	       // render the pre-recorded graphics for this model and
+	       // its children
+	       glCallList( mod->displaylist );
+
+	       glPopMatrix();
+	     }
 	 }
 
+       //mod->Draw( showflags ); // draw the stuff that changes every update
        // draw everything else
        for( GList* it=world->children; it; it=it->next )
-	   ((StgModel*)it->data)->Draw( showflags );
+         ((StgModel*)it->data)->Draw( showflags );
      }
    
    if( world->GetRayList() )
@@ -525,6 +549,14 @@ void StgCanvas::draw()
       glPushMatrix();
       glLoadIdentity();
       glDisable( GL_DEPTH_TEST );
+
+      // if trails are on, we need to clear the clock background
+      
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+      colorstack.Push( 0.8,0.8,1.0 ); // pale blue
+      glRectf( -w()/2, -h()/2, -w()/2 +120, -h()/2+20 ); 
+      colorstack.Pop();
 
       char clockstr[50];
       world->ClockString( clockstr, 50 );      

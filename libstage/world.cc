@@ -386,9 +386,11 @@ void StgWorld::IdleUntilNextUpdateTime( int (*idler)(void) )
 }
 
 
+#define DEBUG 1
+
 bool StgWorld::Update()
 {
-  //PRINT_DEBUG( "StgWorld::Update()" );
+  PRINT_DEBUG( "StgWorld::Update()" );
 
   if( paused )
     return false;
@@ -408,30 +410,16 @@ bool StgWorld::Update()
   if( (quit_time > 0) && (sim_time >= quit_time) )
     quit = true;
   
-  //interval_log[updates%INTERVAL_LOG_LEN] = RealTimeSinceStart() - real_time_now;
+  stg_usec_t timenow = RealTimeSinceStart();
+
+  interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
   
+  //interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
+
+  real_time_now = timenow;
+  //real_time_next_update += interval_real;
+
   return true;
-}
-
-bool StgWorld::RealTimeUpdate()
- 
-{
-  //PRINT_DEBUG( "StageWorld::RealTimeUpdate()" );  
-  bool updated = Update();
-  if( interval_real )
-    PauseUntilNextUpdateTime();
-  
-  return updated;
-}
-
-bool StgWorld::RealTimeUpdateWithIdler( int (*idler)(void) )
-  
-{
-  //PRINT_DEBUG( "StageWorld::RealTimeUpdate()" );  
-  bool updated = Update();
-  IdleUntilNextUpdateTime( idler );
- 
-  return updated;
 }
 
 void StgWorld::AddModel( StgModel*  mod  )
@@ -696,12 +684,10 @@ void StgWorld::StopUpdatingModel( StgModel* mod )
   this->update_list = g_list_remove( this->update_list, mod ); 
 }
 
-void StgWorld::MetersToPixels( stg_meters_t mx, stg_meters_t my, 
-			       int32_t *px, int32_t *py )
-{
-  *px = (int32_t)floor(mx* ppm);
-  *py = (int32_t)floor(my* ppm);
-}
+// int32_t StgWorld::MetersToPixels( stg_meters_t m )
+// {
+//   return (int32_t)floor(m * ppm);
+// }
 
 int StgWorld::AddBlockPixel( int x, int y, int z,
 			     stg_render_info_t* rinfo )

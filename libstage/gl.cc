@@ -1,7 +1,6 @@
 
 #include "stage_internal.hh"
 
-
 // transform the current coordinate frame by the given pose
 void Stg::gl_coord_shift( double x, double y, double z, double a  )
 {
@@ -16,12 +15,17 @@ void Stg::gl_pose_shift( stg_pose_t* pose )
 }
 
 // TODO - this could be faster, but we don't draw a lot of text
-void Stg::gl_draw_string( float x, float y, float z, char *str ) 
+void Stg::gl_draw_string( float x, float y, float z, const char *str ) 
 {  
-  char *c;
+  const char *c;
   glRasterPos3f(x, y,z);
   for (c=str; *c != '\0'; c++) 
     glutBitmapCharacter( GLUT_BITMAP_HELVETICA_12, *c);
+}
+
+void Stg::gl_speech_bubble( float x, float y, float z, const char* str )
+{  
+  gl_draw_string( x, y, z, str );
 }
 
 

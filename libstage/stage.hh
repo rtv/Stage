@@ -518,6 +518,7 @@ namespace Draw
   const uint32_t STG_SHOW_ARROWS =     (1<<9);
   const uint32_t STG_SHOW_FOOTPRINT =  (1<<10);
   const uint32_t STG_SHOW_BLOCKS_2D =  (1<<10);
+  const uint32_t STG_SHOW_TRAILRISE =  (1<<11); 
 
   // forward declare
   class StgWorld;
@@ -550,7 +551,8 @@ namespace Draw
   };
   
   /** Render a string at [x,y,z] in the current color */
-  void gl_draw_string( float x, float y, float z, char *string);
+  void gl_draw_string( float x, float y, float z, const char *string);
+  void gl_speech_bubble( float x, float y, float z, const char* str );
 
 
   void stg_block_list_scale( GList* blocks, 
@@ -926,9 +928,9 @@ namespace Draw
     friend class StgTime;
 
   private:
-
+    
     static bool quit_all; // quit all worlds ASAP  
-    static unsigned int next_id; //< initialized to zero, used to
+    static unsigned int next_id; //< initialized to zero, used tob
     //allocate unique sequential world ids
     static int AddBlockPixel( int x, int y, int z,
 			      stg_render_info_t* rinfo ) ; //< used as a callback by StgModel
@@ -938,17 +940,13 @@ namespace Draw
   
     bool quit; // quit this world ASAP
 
-  
-    inline void MetersToPixels( stg_meters_t mx, stg_meters_t my, 
-				int32_t *px, int32_t *py );
-    
+    // convert a distance in meters to a distance in world occupancy grid pixels
+    int32_t MetersToPixels( stg_meters_t x ){ return (int32_t)floor(x * ppm) ; };    
+
     void Initialize( const char* token, 
 		     stg_msec_t interval_sim, 
 		     stg_msec_t interval_real,
 		     double ppm );
-    //	     double width,
-    //	     double height );
-  
 
     virtual void PushColor( stg_color_t col ) { /* do nothing */  };
     virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
@@ -974,7 +972,6 @@ namespace Draw
   
     bool dirty; ///< iff true, a gui redraw would be required
 
-    stg_usec_t interval_sleep_max;
     stg_usec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
 
     stg_usec_t interval_log[INTERVAL_LOG_LEN];
@@ -989,8 +986,6 @@ namespace Draw
 
     void StartUpdatingModel( StgModel* mod );
     void StopUpdatingModel( StgModel* mod );
-  
-    //void MapBlock( StgBlock* block );
 
     SuperRegion* CreateSuperRegion( int32_t x, int32_t y );
     void DestroySuperRegion( SuperRegion* sr );
@@ -1018,6 +1013,8 @@ namespace Draw
     stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
 
     GHashTable* superregions;
+
+    static void UpdateCb( StgWorld* world);
 
     GList* ray_list;
     // store rays traced for debugging purposes
@@ -1061,9 +1058,6 @@ namespace Draw
     virtual void Reload();
     virtual void Save();
     virtual bool Update(void);
-    virtual bool RealTimeUpdate(void);
-    virtual bool RealTimeUpdateWithIdler( int (*idler)(void) );
-
     virtual void AddModel( StgModel* mod );
     virtual void RemoveModel( StgModel* mod );
   
@@ -1275,6 +1269,12 @@ namespace Draw
     GPtrArray* blinkenlights;
     void DrawBlinkenlights();
 
+    /** OpenGL display list identifier */
+    int displaylist; 
+
+    /** Compile the display list for this model */
+    void BuildDisplayList( int flags );
+
   public:
   
     // constructor
@@ -1283,7 +1283,7 @@ namespace Draw
     // destructor
     virtual ~StgModel();
 
-    void Say( char* str );
+    void Say( const char* str );
   
     stg_id_t Id(){ return id; };
 
@@ -1295,7 +1295,7 @@ namespace Draw
     /** Should be called after all models are loaded, to do any last-minute setup */
     void Init();
     
-    
+
     void AddFlag(  StgFlag* flag );
     void RemoveFlag( StgFlag* flag );
     
@@ -1351,7 +1351,7 @@ namespace Draw
     StgModel* GetModel( const char* name );
     bool Stall(){ return this->stall; }
     int GuiMask(){ return this->gui_mask; };  
-    StgWorld* GetWorld(){ return this->world; }
+    inline StgWorld* GetWorld(){ return this->world; }
 
     /// return the root model of the tree containing this model
     StgModel* Root()
@@ -1601,7 +1601,7 @@ namespace Draw
   
     void DrawGlobal(); // draw the block in OpenGL using pts_global coords
     void Draw(); // draw the block in OpenGL
-    void Draw2D(); // draw the block in OpenGL
+    //void Draw2D(); // draw the block in OpenGL
     void DrawSolid(); // draw the block in OpenGL as a solid single color
     void DrawFootPrint(); // draw the projection of the block onto the z=0 plane
     
@@ -1631,9 +1631,7 @@ namespace Draw
     StgModel* mod; //< model to which this block belongs
 
     stg_point_int_t* pts_global_pixels; //< points defining a polygon in global coords
-    stg_vertex_t* global_vertices; //< points defining a polygon in global coords
-    //GLubyte* colors;
-    GLubyte* edge_indices;
+    //GLubyte* edge_indices;
     
     stg_color_t color;
     bool inherit_color;  
@@ -1674,108 +1672,118 @@ namespace Draw
     GQueue* colorstack;
   };
 
+// FLTK Gui includes
+#include <FL/Fl.H>
+//#include <FL/Fl_Box.H>
+//#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Gl_Window.H>
+#include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_Menu_Button.H>
+#include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Box.H>
+#include <FL/fl_draw.H>
+#include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
+#include <FL/glut.H>
 
-/** Implements a FLTK / OpenGL graphical user interfae.      
-*/
-  class StgCanvas : public Fl_Gl_Window
-  {
-    friend class StgWorldGui; // allow access to private members
-
-  private:
-    GlColorStack colorstack;
-    double scale;
-    double panx, pany, stheta, sphi;
-    int startx, starty;
-    bool dragging;
-    bool rotating;
-    GList* selected_models; ///< a list of models that are currently
-    ///selected by the user
-    StgModel* last_selection; ///< the most recently selected model
-    ///(even if it is now unselected).
-    uint32_t showflags;
-    stg_msec_t interval; // window refresh interval in ms
-
-    GList* ray_list;
-    void RecordRay( double x1, double y1, double x2, double y2 );
-    void DrawRays();
-    void ClearRays();
-    void DrawGlobalGrid();
-
-  public:
-    StgCanvas( StgWorld* world, int x, int y, int W,int H);
-    ~StgCanvas();
+class StgCanvas : public Fl_Gl_Window
+{
+  friend class StgWorldGui; // allow access to private members
   
-    bool graphics;
+private:
+  GlColorStack colorstack;
+  double scale;
+  double panx, pany, stheta, sphi;
+  int startx, starty;
+  bool dragging;
+  bool rotating;
+  GList* selected_models; ///< a list of models that are currently
+  ///selected by the user
+  StgModel* last_selection; ///< the most recently selected model
+  ///(even if it is now unselected).
+  uint32_t showflags;
+  stg_msec_t interval; // window refresh interval in ms
+  
+  GList* ray_list;
+  void RecordRay( double x1, double y1, double x2, double y2 );
+  void DrawRays();
+  void ClearRays();
+  void DrawGlobalGrid();
+  
+public:
+  StgCanvas( StgWorld* world, int x, int y, int W,int H);
+  ~StgCanvas();
+  
+  bool graphics;
     StgWorld* world;
-
-    void FixViewport(int W,int H);
-    virtual void draw();
-    virtual int handle( int event );
-    void resize(int X,int Y,int W,int H);
-
-    void CanvasToWorld( int px, int py, 
-			double *wx, double *wy, double* wz );
-
-    StgModel* Select( int x, int y );
   
-    inline void PushColor( stg_color_t col )
-    { colorstack.Push( col ); } 
+  void FixViewport(int W,int H);
+  virtual void draw();
+  virtual int handle( int event );
+  void resize(int X,int Y,int W,int H);
   
-    void PushColor( double r, double g, double b, double a )
-    { colorstack.Push( r,g,b,a ); }
+  void CanvasToWorld( int px, int py, 
+		      double *wx, double *wy, double* wz );
   
-    void PopColor(){ colorstack.Pop(); } 
+  StgModel* Select( int x, int y );
   
-    void InvertView( uint32_t invertflags );
-
-    uint32_t GetShowFlags(){ return showflags; }
-
-    void SetShowFlags( uint32_t flags ){ showflags = flags; }
-
-    static void TimerCallback( StgCanvas* canvas );
-  };
-
-  /** Extends StgWorld to present an OpenGL-based GUI to the user */
-  class StgWorldGui : public StgWorld, public Fl_Window 
-  {
-    friend class StgCanvas;
+  inline void PushColor( stg_color_t col )
+  { colorstack.Push( col ); } 
   
-  private:
-    int wf_section;
-    StgCanvas* canvas;
-    Fl_Menu_Bar* mbar;
-    //StgBlockGrid* GetBlockGrid(){ return bgridx; };
-
-  public:
-    StgWorldGui(int W,int H,const char*L=0);
-    ~StgWorldGui();
-
-    // overload inherited methods
-    virtual bool RealTimeUpdate();
-    virtual bool Update();
-
-    virtual void Load( const char* filename );
-    virtual void Save();
+  void PushColor( double r, double g, double b, double a )
+  { colorstack.Push( r,g,b,a ); }
   
-    // static callback functions
-    static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
+  void PopColor(){ colorstack.Pop(); } 
   
-    virtual void PushColor( stg_color_t col )
-    { canvas->PushColor( col ); } 
+  void InvertView( uint32_t invertflags );
   
-    virtual void PushColor( double r, double g, double b, double a )
-    { canvas->PushColor( r,g,b,a ); }
+  uint32_t GetShowFlags(){ return showflags; }
   
-    virtual void PopColor()
-    { canvas->PopColor(); } 
-
-    void DrawTree( bool leaves );
-    void DrawFloor();
-  };
+  void SetShowFlags( uint32_t flags ){ showflags = flags; }
+  
+  static void TimerCallback( StgCanvas* canvas );
+};
 
 
 
-  // end doc group libstage_utilities
+
+/** Extends StgWorld to implements an FLTK / OpenGL graphical user
+    interface.
+*/
+class StgWorldGui : public StgWorld, public Fl_Window 
+{
+  friend class StgCanvas;
+  
+private:
+  int wf_section;
+  StgCanvas* canvas;
+  Fl_Menu_Bar* mbar;
+  
+public:
+  StgWorldGui(int W,int H,const char*L=0);
+  ~StgWorldGui();
+  
+  /** Start the simulation and GUI. Does not return */
+  void Run();
+  
+  virtual void Load( const char* filename );
+  virtual void Save();
+  
+  // static callback functions
+  static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
+  
+  virtual void PushColor( stg_color_t col )
+  { canvas->PushColor( col ); } 
+  
+  virtual void PushColor( double r, double g, double b, double a )
+  { canvas->PushColor( r,g,b,a ); }
+  
+  virtual void PopColor()
+  { canvas->PopColor(); } 
+  
+  void DrawTree( bool leaves );
+  void DrawFloor();
+};
 
 
   // BLOBFINDER MODEL --------------------------------------------------------

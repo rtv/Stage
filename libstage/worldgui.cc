@@ -95,7 +95,6 @@ debug menu that enables visualization of some of the innards of Stage.
 
 */
 
-//#include "config.h" // for PACKAGE strings etc
 #include "stage_internal.hh"
 #include "region.hh"
 
@@ -113,10 +112,11 @@ static const char* MITEM_VIEW_QUADTREE =  "View/Tree";
 static const char* MITEM_VIEW_FOLLOW =    "View/Follow";
 static const char* MITEM_VIEW_CLOCK =     "View/Clock";
 static const char* MITEM_VIEW_FOOTPRINTS = "View/Trails/Footprints";
-static const char* MITEM_VIEW_TRAILS =     "View/Trails/Blocks";
-static const char* MITEM_VIEW_ARROWS =     "View/Trails/Arrows";
+static const char* MITEM_VIEW_BLOCKSRISING =  "View/Trails/Blocks rising";
+static const char* MITEM_VIEW_ARROWS =     "View/Trails/Arrows rising";
+static const char* MITEM_VIEW_TRAILS =     "View/Trail";
 
-// hack - get this from somewhere sensible
+// hack - get this from somewhere sensible, like CMake's config file
 const char* PACKAGE_STRING = "Stage-3.dev";
 
 void dummy_cb(Fl_Widget*, void* v) 
@@ -147,12 +147,6 @@ void About_cb(Fl_Widget*, void* v)
   Fl::run();
 }
 
-
-void StgWorldGui::SaveCallback( Fl_Widget* wid, StgWorldGui* world )
-{
-  world->Save();
-}
-
 void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas ) 
 {
   char picked[128];
@@ -171,13 +165,14 @@ void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas )
   else if( strcmp(picked, MITEM_VIEW_FOOTPRINTS ) == 0 ) canvas->InvertView( STG_SHOW_FOOTPRINT );
   else if( strcmp(picked, MITEM_VIEW_ARROWS ) == 0 ) canvas->InvertView( STG_SHOW_ARROWS );
   else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
+  else if( strcmp(picked, MITEM_VIEW_BLOCKSRISING ) == 0 ) canvas->InvertView( STG_SHOW_TRAILRISE );
   else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
   
   //printf( "value: %d\n", item->value() );
 }
 
 
-StgWorldGui::StgWorldGui(int W,int H,const char*L) 
+StgWorldGui::StgWorldGui(int W,int H,const char* L) 
   : Fl_Window(0,0,W,H,L)
 {
   //size_range( 100,100 ); // set minimum window size
@@ -213,15 +208,18 @@ StgWorldGui::StgWorldGui(int W,int H,const char*L)
   mbar->add( MITEM_VIEW_CLOCK,    'c', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));  
 
+  mbar->add( MITEM_VIEW_TRAILS,    't', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));  
+
   mbar->add( MITEM_VIEW_FOOTPRINTS,  FL_CTRL+'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOOTPRINT ? FL_MENU_VALUE : 0 ));  
   mbar->add( MITEM_VIEW_ARROWS,    FL_CTRL+'a', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_ARROWS ? FL_MENU_VALUE : 0 ));  
-  mbar->add( MITEM_VIEW_TRAILS,    FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));  
-  
+  mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));  
+
   mbar->add( "Help", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "Help/About Stage...", FL_CTRL + 'f', (Fl_Callback *)About_cb );
+  mbar->add( "Help/About Stage...", NULL, (Fl_Callback *)About_cb );
   //mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
   show();
 }
@@ -262,11 +260,12 @@ void StgWorldGui::Load( const char* filename )
   uint32_t quadtree = wf->ReadInt(wf_section, "show_tree", flags & STG_SHOW_QUADTREE ) ? STG_SHOW_QUADTREE : 0;
   uint32_t clock = wf->ReadInt(wf_section, "show_clock", flags & STG_SHOW_CLOCK ) ? STG_SHOW_CLOCK : 0;
   uint32_t trails = wf->ReadInt(wf_section, "show_trails", flags & STG_SHOW_TRAILS ) ? STG_SHOW_TRAILS : 0;
+  uint32_t trailsrising = wf->ReadInt(wf_section, "show_trails_rising", flags & STG_SHOW_TRAILRISE ) ? STG_SHOW_TRAILRISE : 0;
   uint32_t arrows = wf->ReadInt(wf_section, "show_arrows", flags & STG_SHOW_ARROWS ) ? STG_SHOW_ARROWS : 0;
   uint32_t footprints = wf->ReadInt(wf_section, "show_footprints", flags & STG_SHOW_FOOTPRINT ) ? STG_SHOW_FOOTPRINT : 0;
   
   canvas->SetShowFlags( grid | data | follow | blocks | quadtree | clock
-			| trails | arrows | footprints );  
+			| trails | arrows | footprints | trailsrising );  
   canvas->invalidate(); // we probably changed something
 
   // fix the GUI menu checkboxes to match
@@ -294,6 +293,11 @@ void StgWorldGui::Load( const char* filename )
 
   // TODO - per model visualizations load
 }
+
+ void StgWorldGui::SaveCallback( Fl_Widget* wid, StgWorldGui* world )
+ {
+   world->Save();
+ }
 
 void StgWorldGui::Save( void )
 {
@@ -324,20 +328,33 @@ void StgWorldGui::Save( void )
   StgWorld::Save();
 }
 
-bool StgWorldGui::RealTimeUpdate()
+void StgWorld::UpdateCb( StgWorld* world  )
 {
-  if( interval_real )
-    return StgWorld::RealTimeUpdateWithIdler( Fl::check);
-  else
-    return Update();
+   world->Update();
+  
+  // need to reinstantiatethe timeout each time
+  Fl::repeat_timeout( world->interval_real/1e6, 
+		      (Fl_Timeout_Handler)UpdateCb, world );
 }
 
-bool StgWorldGui::Update()
+static void idle_callback( StgWorld* world  )
 {
-  bool updated = StgWorld::Update();
-  Fl::check(); // may redraw the window
-  return updated;
+  world->Update();
 }
+
+void StgWorldGui::Run()
+{
+
+  // if a non-zero interval was requested, call Update() after that
+  // interval
+  if( interval_real > 0 )
+    Fl::add_timeout( interval_real/1e6, (Fl_Timeout_Handler)UpdateCb, this );
+  else // otherwise call Update() whenever there's no GUI work to do
+    Fl::add_idle( (Fl_Timeout_Handler)idle_callback, this );
+
+  Fl::run();
+}
+
 
 void StgWorldGui::DrawTree( bool drawall )
 {  

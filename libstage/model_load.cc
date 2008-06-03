@@ -343,6 +343,9 @@ void StgModel::Load( void )
       else
 	LoadControllerModule( lib );
     }
+
+  if( wf->PropertyExists( this->id, "say" ))
+    this->Say( wf->ReadString(this->id, "say", NULL )); 
   
   // call any type-specific load callbacks
   this->CallCallbacks( &this->load );

@@ -36,7 +36,6 @@ define p2dx_sonar ranger
   ssize [0.01 0.05]
 )
 
-
 define pioneer2dx position
 (
   # actual size

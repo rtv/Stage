@@ -44,6 +44,8 @@ model
 )
 @endverbatim
 
+TODO PLAN: single array of all polygon vertices - model just keeps an index
+
 @par Details
 - pose [x_pos:float y_pos:float heading:float]
   - specify the pose of the model in its parent's coordinate system
@@ -169,6 +171,8 @@ StgModel::StgModel( StgWorld* world,
   world->AddModel( this );
   
   bzero( &pose, sizeof(pose));
+  if( parent ) 
+    pose.z = parent->geom.size.z;
   bzero( &global_pose, sizeof(global_pose));
   
   this->trail = g_array_new( false, false, sizeof(stg_trail_item_t) );
@@ -183,6 +187,8 @@ StgModel::StgModel( StgWorld* world,
   this->say_string = NULL;
   this->subs = 0;
   this->stall = false;
+
+  this->displaylist = 0;
 
   this->geom.size.x = STG_DEFAULT_MOD_GEOM_SIZEX;
   this->geom.size.y = STG_DEFAULT_MOD_GEOM_SIZEX;
@@ -349,7 +355,6 @@ void StgModel::Raytrace( stg_pose_t pose,
 			 const void* arg,
 			 stg_raytrace_sample_t* sample )
 {
-  //LocalToGlobal( &pose );
   world->Raytrace( LocalToGlobal(pose),
 		   range,
 		   func,
@@ -379,7 +384,6 @@ void StgModel::Raytrace( stg_pose_t pose,
 			 stg_raytrace_sample_t* samples,
 			 uint32_t sample_count )
 {
-  //LocalToGlobal( &pose );
   world->Raytrace( LocalToGlobal(pose),
 		   range,		   
 		   fov,
@@ -441,7 +445,7 @@ void StgModel::GlobalToLocal( stg_pose_t* pose )
   //  pose->x, pose->y, pose->a );
 }
 
-void StgModel::Say( char* str )
+void StgModel::Say( const char* str )
 {
   if( say_string )
     free( say_string );
@@ -614,19 +618,19 @@ void StgModel::Map()
 {
   //PRINT_DEBUG1( "%s.Map()", token );
 
-  if( world->graphics && this->debug )
-    {
-      double scale = 1.0 / world->ppm;
-      glPushMatrix();
-      glTranslatef( 0,0,1 );
-      glScalef( scale,scale,scale );
-    }
+//   if( world->graphics && this->debug )
+//     {
+//       double scale = 1.0 / world->ppm;
+//       glPushMatrix();
+//       glTranslatef( 0,0,1 );
+//       glScalef( scale,scale,scale );
+//     }
   
   for( GList* it=blocks; it; it=it->next )
     ((StgBlock*)it->data)->Map();
   
-  if( world->graphics && this->debug )
-    glPopMatrix();
+//   if( world->graphics && this->debug )
+//     glPopMatrix();
 } 
 
 void StgModel::UnMap()
@@ -814,7 +818,7 @@ void StgModel::DrawTrailBlocks()
       glPushMatrix();
       gl_pose_shift( &pose );      
       gl_pose_shift( &geom.pose );
-      LISTMETHOD( this->blocks, StgBlock*, Draw );      
+      glCallList( displaylist);
       glPopMatrix();
     }
 }
@@ -827,8 +831,6 @@ void StgModel::DrawTrailArrows()
 
   double dx = 0.2;
   double dy = 0.07;
-  //double z;
-
   double timescale = 0.0000001;
 
   for( unsigned int i=0; i<trail->len; i++ )
@@ -880,17 +882,24 @@ void StgModel::DrawTrailArrows()
 
 void StgModel::DrawBlocks( )
 {
-  LISTMETHOD( this->children, StgModel*, DrawBlocks );  
+  LISTMETHOD( this->blocks, StgBlock*, Draw );
+  
+  // recursively draw the tree below this model 
+  for( GList* it=children; it; it=it->next )
+    {
+      StgModel* child = ((StgModel*)it->data);
 
-  LISTMETHOD( this->blocks, StgBlock*, DrawGlobal );
+      glPushMatrix();
+      gl_pose_shift( &child->pose );
+      gl_pose_shift( &child->geom.pose );
+      
+      child->DrawBlocks();
+
+      glPopMatrix();
+    }
+
 }
 
-void StgModel::DrawBlocks( gpointer dummykey, 
-			   StgModel* mod, void* dummyarg )
-{
-  mod->DrawBlocks();
-
-}
 
 void StgModel::Draw( uint32_t flags )
 {
@@ -902,9 +911,31 @@ void StgModel::Draw( uint32_t flags )
   gl_pose_shift( &this->pose );
   gl_pose_shift( &this->geom.pose );
 
-  //if( this->say_string )
-  // gl_speech_bubble( 0,0,0, this->say_string );
-    
+  
+  if( this->say_string )
+    {
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+      glPushMatrix();
+      
+      PushColor( 0.8,0.8,1.0,1.0 ); // pale blue
+
+      
+      glRotatef( -rtod(global_pose.a), 0,0,1 ); // out of the robot pose CS
+      // out of the world view CS
+      glRotatef( 90, 1,0,0 ); // out of the ground plane
+
+      glRectf( 0,0,1,1 ); 
+      PopColor();
+
+      PushColor( color );
+      gl_speech_bubble( 0.3,0.3,0, this->say_string );
+      PopColor();
+
+      glPopMatrix();
+    }
+
+
   if( flags & STG_SHOW_DATA )
     DataVisualize();
 
@@ -918,7 +949,7 @@ void StgModel::Draw( uint32_t flags )
     DrawBlinkenlights();
 
  if( stall )
-   gl_draw_string( 0,0,0.5, "!" );
+   gl_draw_string( 0,0,0.5, "X" );
  
   // shift up the CS to the top of this model
   gl_coord_shift(  0,0, this->geom.size.z, 0 );
@@ -986,7 +1017,7 @@ void StgModel::DrawBlinkenlights()
   //stg_pose_t gpose = GetGlobalPose();
   //glRotatef( 180 + rtod(-gpose.a),0,0,1 );
   
-  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
   for( unsigned int i=0; i<blinkenlights->len; i++ )
     {
@@ -1035,6 +1066,15 @@ void StgModel::DrawPicker( void )
   glPopMatrix(); // drop out of local coords
 }
 
+void StgModel::BuildDisplayList( int flags )
+{
+  glNewList( displaylist, GL_COMPILE );
+  //printf("Model %s blocks %d\n", token, g_list_length( blocks ) );
+
+  DrawBlocks();
+
+  glEndList();
+}
 
 void StgModel::DataVisualize( void )
 {
@@ -1105,14 +1145,8 @@ void StgModel::SetPose( stg_pose_t pose )
 
       pose.a = normalize( pose.a );
       this->pose = pose;
-      
-      //memcpy( &this->pose, &pose, sizeof(stg_pose_t));
-
-      //this->pose.a = normalize(this->pose.a);
+      this->pose.a = normalize(this->pose.a);
 		            
-      //double hitx, hity;
-      //stg_model_test_collision2( mod, &hitx, &hity );
-
       this->NeedRedraw();
       this->GPoseDirtyTree(); // global pose may have changed
 

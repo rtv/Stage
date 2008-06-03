@@ -49,11 +49,10 @@ int main( int argc, char* argv[] )
   // initialize libstage
   Stg::Init( &argc, &argv );
   
-  StgWorld* world = usegui ? new StgWorldGui(800, 700, argv[0]) : new StgWorld();
+  StgWorldGui world( 800, 700, argv[0]);
   
-  world->Load( argv[argc-1] );
+  world.Load( argv[argc-1] );
   
-  while( ! world->TestQuit() )
-    world->RealTimeUpdate();
+  world.Run();
 }
 

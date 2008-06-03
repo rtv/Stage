@@ -1,4 +1,4 @@
-/** Stage internal header file - all libstage implementation *.cpp
+/** Stage internal header file - all libstage implementation *.cc
     files include this header 
     Author: Richard Vaughan (vaughan@sfu.ca)
     Date: 13 Jan 2008
