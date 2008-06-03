@@ -157,12 +157,13 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
   //printf( "bearing %.2f\n", RTOD(bearing) );
 
   stg_raytrace_sample_t ray;
-  
+
   Raytrace( dtheta,
 	    max_range_anon,
 	    fiducial_raytrace_match,
 	    NULL,
-	    &ray );
+	    &ray,
+	    false );
   
   range = ray.range;
   StgModel* hitmod = ray.block->Model();

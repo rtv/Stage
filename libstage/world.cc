@@ -485,14 +485,15 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 			 StgModel* model,			 
 			 const void* arg,
 			 stg_raytrace_sample_t* samples, // preallocated storage for samples
-			 uint32_t sample_count )  // number of samples
+			 uint32_t sample_count,
+			 bool ztest )  // number of samples
 {
   pose.a -= fov/2.0; // direction of first ray
   stg_radians_t angle_incr = fov/(double)sample_count; 
   
   for( uint32_t s=0; s < sample_count; s++ )
     {
-      Raytrace( pose, range, func, model, arg, &samples[s] );
+      Raytrace( pose, range, func, model, arg, &samples[s], ztest );
       pose.a += angle_incr;       
     }
 }
@@ -504,7 +505,8 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 			 stg_block_match_func_t func,
 			 StgModel* mod,		
 			 const void* arg,
-			 stg_raytrace_sample_t* sample ) 
+			 stg_raytrace_sample_t* sample,
+			 bool ztest ) 
 {
   // initialize the sample
   memcpy( &sample->pose, &pose, sizeof(stg_pose_t)); // pose stays fixed
@@ -606,7 +608,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 		  // if this block does not belong to the searching model and it
 		  // matches the predicate and it's in the right z range
 		  if( //block && (block->Model() != finder) && 
-		     //block->IntersectGlobalZ( pose.z ) &&
+		     (ztest ? block->IntersectGlobalZ( pose.z ) : true) &&
 		     (*func)( block, mod, arg ) )
 		    {
 		      // a hit!

@@ -21,7 +21,7 @@ paused 0
 # configure the GUI window
 window
 ( 
-  size [ 698.000 628.000 ] 
+  #size [ 698.000 628.000 ] 
   center [6.990 -4.040] 
   rotate [ 0.000 0.000 ]
   scale 33.306 
@@ -30,13 +30,13 @@ window
 )
 
 # load an environment bitmap
-#floorplan
-#( 
-#  name "cave"
-#  size3 [16 16 0.5]
-#  pose [0.000 0.000 0.000]
-#  bitmap "bitmaps/cave.png"
-#)
+floorplan
+( 
+  name "cave"
+  size3 [16 16 0.8]
+  pose [0.000 0.000 0.000]
+  bitmap "bitmaps/cave.png"
+)
 
 zone
 (
@@ -57,20 +57,24 @@ zone
 define autorob pioneer2dx
 (
  color "red"
+
  sicklaser( pose [ 0.040 0.000 0.000 ] samples 32 range_max 5 laser_return 2 ) 
- ctrl "fasr"
+
+  ctrl "fasr"	 
 )
 
-autorob( pose [4.461 6.406 1.930]  say "Booga" )
+sicklaser( pose [0 0 0] alwayson 1 color "white")
+
+autorob( pose [4.461 6.406 1.930]  )
 autorob( pose [6.635 6.458 -52.629] )
 autorob( pose [6.385 5.805 -87.082] )
 autorob( pose [7.004 5.327 170.536] )
 autorob( pose [5.770 6.492 -10.539] )
 autorob( pose [7.493 4.852 -156.719] )
 autorob( pose [5.078 6.853 -37.549] )
-#autorob( pose [6.147 7.399 4.964] )
-#autorob( pose [4.065 5.583 125.796] )
-#autorob( pose [7.487 6.926 -40.634] )
+autorob( pose [6.147 7.399 4.964] )
+autorob( pose [4.065 5.583 125.796] )
+autorob( pose [7.487 6.926 -40.634] )
 
 #autorob( pose [4.530 7.367 -113.456] )
 #autorob( pose [6.071 5.138 -1.177] )

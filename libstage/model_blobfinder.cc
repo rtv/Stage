@@ -184,8 +184,7 @@ void StgModelBlobfinder::Update( void )
   
   stg_raytrace_sample_t* samples = new stg_raytrace_sample_t[scan_width];
 
-  Raytrace( pan, range, fov, blob_match, NULL, samples, scan_width );
-
+  Raytrace( pan, range, fov, blob_match, NULL, samples, scan_width, false );
   
   // now the colors and ranges are filled in - time to do blob detection
   double yRadsPerPixel = fov / scan_height; 

@@ -349,66 +349,67 @@ void StgModel::AddBlockRect( double x, double y,
   AddBlock( pts, 4, 0, 1, 0, true );	      
 }
 
+
 void StgModel::Raytrace( stg_pose_t pose,
 			 stg_meters_t range, 
 			 stg_block_match_func_t func,
 			 const void* arg,
-			 stg_raytrace_sample_t* sample )
+			 stg_raytrace_sample_t* sample,
+			 bool ztest )
 {
   world->Raytrace( LocalToGlobal(pose),
 		   range,
 		   func,
 		   this,
 		   arg,
-		   sample );
+		   sample,
+		   ztest );
 }
 
 void StgModel::Raytrace( stg_radians_t bearing,
 			 stg_meters_t range, 
 			 stg_block_match_func_t func,
 			 const void* arg,
-			 stg_raytrace_sample_t* sample )
+			 stg_raytrace_sample_t* sample,
+			 bool ztest )
 {
-  stg_pose_t pose;
-  bzero(&pose,sizeof(pose));
-  pose.a = bearing;
-
-  Raytrace( pose, range, func, arg, sample );
+  stg_pose_t raystart;
+  bzero( &raystart, sizeof(raystart));
+  raystart.a = bearing;
+  
+  world->Raytrace( LocalToGlobal(raystart),
+		   range,
+		   func,
+		   this,
+		   arg,
+		   sample,
+		   ztest );
 }
 
-void StgModel::Raytrace( stg_pose_t pose,
+
+void StgModel::Raytrace( stg_radians_t bearing,
 			 stg_meters_t range, 
 			 stg_radians_t fov,
 			 stg_block_match_func_t func,
 			 const void* arg,
 			 stg_raytrace_sample_t* samples,
-			 uint32_t sample_count )
+			 uint32_t sample_count,
+			 bool ztest )
 {
-  world->Raytrace( LocalToGlobal(pose),
+  stg_pose_t raystart;
+  bzero( &raystart, sizeof(raystart));
+  raystart.a = bearing;
+
+  world->Raytrace( LocalToGlobal(raystart),
 		   range,		   
 		   fov,
 		   func,
 		   this,
 		   arg,
 		   samples,
-		   sample_count );
+		   sample_count,
+		   ztest );
 }
-
-void StgModel::Raytrace( stg_radians_t bearing,
-			 stg_meters_t range, 
-			 stg_radians_t fov,
-			 stg_block_match_func_t func,
-			 const void* arg,
-			 stg_raytrace_sample_t* samples,
-			 uint32_t sample_count )
-{
-  stg_pose_t pose;
-  bzero(&pose,sizeof(pose));
-  pose.a = bearing;
-
-  Raytrace( pose, range, fov, func, arg, samples, sample_count );
-}
-
 
 // utility for g_free()ing everything in a list
 void list_gfree( GList* list )
@@ -948,11 +949,15 @@ void StgModel::Draw( uint32_t flags )
   if( blinkenlights )
     DrawBlinkenlights();
 
- if( stall )
-   gl_draw_string( 0,0,0.5, "X" );
- 
+  if( stall )
+    {
+      PushColor( 1,0,0,1 );
+      gl_draw_string( 0,0,0.5, "!" );
+      PopColor();
+    }
+
   // shift up the CS to the top of this model
-  gl_coord_shift(  0,0, this->geom.size.z, 0 );
+  //gl_coord_shift(  0,0, this->geom.size.z, 0 );
   
   // recursively draw the tree below this model 
   for( GList* it=children; it; it=it->next )
@@ -1415,7 +1420,8 @@ StgModel* StgModel::TestCollision( stg_pose_t* posedelta,
 		    range,
 		    (stg_block_match_func_t)collision_match, 
 		    NULL, 
-		    &sample );
+		    &sample,
+		    true );
 	  
 	  if( sample.block )
 	    hitmod = sample.block->Model();	  

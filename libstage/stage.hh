@@ -995,7 +995,8 @@ namespace Draw
 		   stg_block_match_func_t func,
 		   StgModel* finder,
 		   const void* arg,
-		   stg_raytrace_sample_t* sample );
+		   stg_raytrace_sample_t* sample,
+		   bool ztest );
   
     void Raytrace( stg_pose_t pose, 			 
 		   stg_meters_t range,
@@ -1004,7 +1005,8 @@ namespace Draw
 		   StgModel* finder,
 		   const void* arg,
 		   stg_raytrace_sample_t* samples,
-		   uint32_t sample_count );
+		   uint32_t sample_count,
+		   bool ztest );
   
     void RemoveBlock( int x, int y, StgBlock* block );
     //{ }//bgrid->RemoveBlock( x, y, block ); };
@@ -1195,39 +1197,43 @@ namespace Draw
     int TreeToPtrArray( GPtrArray* array );
   
 
-    // raytraces from the point and heading identified by pose, in local coords
+    /** raytraces a single ray from the point and heading identified by
+	pose, in local coords */
     void Raytrace( stg_pose_t pose,
 		   stg_meters_t range, 
 		   stg_block_match_func_t func,
 		   const void* arg,
-		   stg_raytrace_sample_t* sample );
-
-    // this version raytraces from our local origin in the direction [angle]
-    void Raytrace( stg_radians_t angle, 
-		   stg_meters_t range, 
-		   stg_block_match_func_t func,
-		   const void* arg,
-		   stg_raytrace_sample_t* sample );
-
-    // raytraces from the point and heading identified by pose, in local coords
+		   stg_raytrace_sample_t* sample,
+		   bool ztest = true );
+    
+    /** raytraces multiple rays around the point and heading identified
+	by pose, in local coords */
     void Raytrace( stg_pose_t pose,
 		   stg_meters_t range, 
 		   stg_radians_t fov, 
 		   stg_block_match_func_t func,
 		   const void* arg,
 		   stg_raytrace_sample_t* samples,
-		   uint32_t sample_count );
+		   uint32_t sample_count,
+		   bool ztest = true  );
 
-    // this version raytraces from our local origin in the direction [angle]
-    void Raytrace( stg_radians_t angle, 
-		   stg_meters_t range, 
-		   stg_radians_t fov, 
+    void Raytrace( stg_radians_t bearing, 			 
+		   stg_meters_t range,
 		   stg_block_match_func_t func,
 		   const void* arg,
-		   stg_raytrace_sample_t* samples,
-		   uint32_t sample_count );
-
+		   stg_raytrace_sample_t* sample,
+		   bool ztest = true );
   
+    void Raytrace( stg_radians_t bearing, 			 
+		   stg_meters_t range,
+		   stg_radians_t fov,
+		   stg_block_match_func_t func,
+		   const void* arg,
+		   stg_raytrace_sample_t* samples,
+		   uint32_t sample_count,
+		   bool ztest = true );
+
+
     /** Causes this model and its children to recompute their global
 	position instead of using a cached pose in
 	StgModel::GetGlobalPose()..*/
@@ -1614,7 +1620,7 @@ namespace Draw
     { if( count ) *count = pt_count; return pts; };	       
   
     bool IntersectGlobalZ( stg_meters_t z )
-    { return( z >= global_zmin &&  z < global_zmax ); }
+    { return( z >= global_zmin &&  z <= global_zmax ); }
   
     stg_color_t Color()
     { return( inherit_color ? mod->GetColor() : color ); }

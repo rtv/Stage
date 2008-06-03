@@ -350,6 +350,12 @@ void StgModel::Load( void )
   // call any type-specific load callbacks
   this->CallCallbacks( &this->load );
   
+  // MUST BE THE LAST THING LOADED
+  if( wf->PropertyExists( this->id, "alwayson" ))
+    {
+      if( wf->ReadInt( this->id, "alwayson", 0) > 0 )
+	Startup();
+    }
   
   if( this->debug )
     printf( "Model \"%s\" is in debug mode\n", token ); 

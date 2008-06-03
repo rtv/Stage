@@ -88,6 +88,8 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
   // there's anything in front
   double minleft = 1e6;
   double minright = 1e6;
+
+  //return 0;
   
   for (uint32_t i = 0; i < sample_count; i++)
     {
@@ -155,6 +157,9 @@ int PositionUpdate( StgModel* mod, robot_t* robot )
   //printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
   //  pose.x, pose.y, pose.z, pose.a );
   
+  //pose.z += 0.0001;
+  //robot->pos->SetPose( pose );
+
   if( robot->pos->GetFlagCount() < payload && 
       hypot( -7-pose.x, -7-pose.y ) < 2.0 )
     {

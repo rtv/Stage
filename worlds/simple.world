@@ -37,10 +37,10 @@ floorplan
   bitmap "bitmaps/cave.png"
 )
 
-define autorob pioneer2dx
+define autorob fancypioneer2dx
 (
  color "red"
- #sicklaser( pose [ 0.040 0.000 0.000 ] samples 32 ) 
+ fancysicklaser( pose [ 0.040 0.000 0.000 ] samples 32 ) 
  #ctrl "wander"
 
  blinkenlight( pose [ 0.15 0.1 0 ] color "red" )

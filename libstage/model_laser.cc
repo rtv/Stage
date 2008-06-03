@@ -158,15 +158,12 @@ void StgModelLaser::SetConfig( stg_laser_cfg_t cfg )
 
 static bool laser_raytrace_match( StgBlock* testblock, 
 				  StgModel* finder,
-				  const void* zp )
+				  const void* dummy )
 {
   // Ignore the model that's looking and things that are invisible to
   // lasers
 
-  double z = *(stg_meters_t*)zp;
-
   if( (testblock->Model() != finder) &&
-      testblock->IntersectGlobalZ( z ) &&
       (testblock->Model()->GetLaserReturn() > 0 ) )
     return true; // match!
 
@@ -178,19 +175,24 @@ void StgModelLaser::Update( void )
   double bearing = -fov/2.0;
   double sample_incr = fov / (double)(sample_count-1);  
   
-  stg_pose_t gpose = GetGlobalPose();
-  stg_meters_t zscan = gpose.z + geom.size.z /2.0;
-
   samples = g_renew( stg_laser_sample_t, samples, sample_count );
+  
+  stg_pose_t rayorg;
+  bzero( &rayorg, sizeof(rayorg));
+  rayorg.z = geom.size.z/2;
 
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
       stg_raytrace_sample_t sample;
-      Raytrace( bearing, 
+
+      rayorg.a = pose.a + bearing;
+
+      Raytrace( rayorg, 
 		range_max,
 		laser_raytrace_match,
-		&zscan, // height of scan line
-		&sample );
+		NULL,
+		&sample,
+		true ); // z testing enabled
       
       samples[t].range = sample.range;
 
@@ -306,6 +308,7 @@ void StgModelLaser::DataVisualize( void )
     return;
   
   glPushMatrix();
+  //glTranslatef( 0,0, 0 ); // shoot the laser beam out at the right height
   glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
   
   // pack the laser hit points into a vertex array for fast rendering
