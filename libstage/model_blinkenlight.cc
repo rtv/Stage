@@ -110,9 +110,9 @@ void StgModelBlinkenlight::Update( void )
 }
 
 
-void StgModelBlinkenlight::Draw( uint32_t flags )
+void StgModelBlinkenlight::Draw( uint32_t flags, StgCanvas* canvas )
 {
-  StgModel::Draw( flags );
+  StgModel::Draw( flags, canvas );
 
   if( on )
     {

@@ -902,7 +902,7 @@ void StgModel::DrawBlocks( )
 }
 
 
-void StgModel::Draw( uint32_t flags )
+void StgModel::Draw( uint32_t flags, StgCanvas* canvas )
 {
   //PRINT_DEBUG1( "Drawing %s", token );
 
@@ -914,28 +914,35 @@ void StgModel::Draw( uint32_t flags )
 
   
   if( this->say_string )
-    {
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-      glPushMatrix();
-      
-      PushColor( 0.8,0.8,1.0,1.0 ); // pale blue
-
-      
-      glRotatef( -rtod(global_pose.a), 0,0,1 ); // out of the robot pose CS
-      // out of the world view CS
-      glRotatef( 90, 1,0,0 ); // out of the ground plane
-
-      glRectf( 0,0,1,1 ); 
-      PopColor();
-
-      PushColor( color );
-      gl_speech_bubble( 0.3,0.3,0, this->say_string );
-      PopColor();
-
-      glPopMatrix();
-    }
-
+  {
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    
+    glPushMatrix();
+    
+    glTranslatef( 0, 0, 0.5 );		
+    
+    glRotatef( -rtod(global_pose.a), 0,0,1 ); // out of the robot pose CS
+    glRotatef( -rtod(canvas->sphi), 0,0,1 ); // out of the world view CS
+    glRotatef( rtod(canvas->stheta)-90, 1,0,0 );
+    glRotatef( 90, 1,0,0 ); // out of the ground plane
+    
+    
+    const float margin = 0.1;
+    float w = gl_width( this->say_string ) / canvas->scale + 2*margin;
+    float h = gl_height() / canvas->scale + 2*margin;
+    
+    
+    PushColor( 0.8,0.8,1.0,1.0 ); // pale blue
+    glRectf( 0,0, w,h ); // draw bubble
+    PopColor();
+		
+    glTranslatef( 0, 0, 0.1 ); // draw text forwards of bubble
+    PushColor( color );
+    gl_draw_string( margin, margin, 0.0, this->say_string );
+    PopColor();
+    
+    glPopMatrix();
+  }
 
   if( flags & STG_SHOW_DATA )
     DataVisualize();
@@ -961,7 +968,7 @@ void StgModel::Draw( uint32_t flags )
   
   // recursively draw the tree below this model 
   for( GList* it=children; it; it=it->next )
-    ((StgModel*)it->data)->Draw( flags );
+    ((StgModel*)it->data)->Draw( flags, canvas );
 
   glPopMatrix(); // drop out of local coords
 }

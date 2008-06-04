@@ -1243,7 +1243,7 @@ namespace Draw
     virtual void Shutdown();
     virtual void Update();
     virtual void UpdatePose();
-    virtual void Draw( uint32_t flags );
+    virtual void Draw( uint32_t flags, StgCanvas* canvas );
 
     virtual void DrawBlocks();
 
@@ -1695,6 +1695,7 @@ namespace Draw
 class StgCanvas : public Fl_Gl_Window
 {
   friend class StgWorldGui; // allow access to private members
+  friend class StgModel;
   
 private:
   GlColorStack colorstack;
@@ -2219,7 +2220,7 @@ public:
 
     virtual void Load();
     virtual void Update();
-    virtual void Draw( uint32_t flags );
+    virtual void Draw( uint32_t flags, StgCanvas* canvas );
 
     // static wrapper for the constructor - all models must implement
     // this method and add an entry in typetable.cc

@@ -523,7 +523,7 @@ void StgCanvas::draw()
        //mod->Draw( showflags ); // draw the stuff that changes every update
        // draw everything else
        for( GList* it=world->children; it; it=it->next )
-         ((StgModel*)it->data)->Draw( showflags );
+         ((StgModel*)it->data)->Draw( showflags, this );
      }
    
    if( world->GetRayList() )
