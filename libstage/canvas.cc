@@ -410,8 +410,8 @@ void StgCanvas::draw()
       glLoadIdentity ();
       
       // move the next two lines...
+      glTranslatef(  -panx, -pany, 0 );
       glScalef( scale, scale, scale ); 
-      glTranslatef(  -panx/scale, -pany/scale, 0 );
       // .. from here
       
       glRotatef( rtod(-stheta), fabs(cos(sphi)), 0, 0 );
