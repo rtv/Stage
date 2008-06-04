@@ -41,6 +41,7 @@ libstage_la_SOURCES =  \
 	stage.cc \
 	stage.hh \
 	stage_internal.hh \
+	texture_manager.cc \
 	typetable.cc \
 	world.cc \
 	worldfile.cc \
