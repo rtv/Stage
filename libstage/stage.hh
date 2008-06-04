@@ -1246,6 +1246,10 @@ namespace Draw
     virtual void Draw( uint32_t flags, StgCanvas* canvas );
 
     virtual void DrawBlocks();
+	  
+	///Draw the image stored in texture_id above the model
+	  void DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha );
+
 
     // static wrapper for DrawBlocks()
     static void DrawBlocks( gpointer dummykey, 

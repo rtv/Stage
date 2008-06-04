@@ -105,6 +105,7 @@ TODO PLAN: single array of all polygon vertices - model just keeps an index
 
 //#define DEBUG
 #include "stage_internal.hh"
+#include "texture_manager.hh"
 #include <limits.h> 
 
 // basic model
@@ -901,8 +902,40 @@ void StgModel::DrawBlocks( )
 
 }
 
+void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha )
+{
+	double sphi = canvas->sphi;
+	double stheta = canvas->stheta;
 
-void StgModel::Draw( uint32_t flags, StgCanvas* canvas )
+	glBindTexture( GL_TEXTURE_2D, 1 );
+	
+	glColor4f( 1.0, 1.0, 1.0, alpha );
+	glPushMatrix();
+	
+	glTranslatef( 0.0, 0.0, 0.75 );
+		
+	//orient 2d sprites to face the camera (left-right)
+	float a = rtod( sphi + pose.a );
+	glRotatef( -a, 0.0, 0.0, 1.0 );
+	
+	//orient to face camera (from top-front)
+	a = rtod( stheta );
+	glRotatef( -(90.0-a), 1.0, 0.0, 0.0 );
+
+	//draw a square, with the textured image
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.25f, 0, -0.25f );
+	glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.25f, 0, -0.25f );
+	glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.25f, 0,  0.25f );
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.25f, 0,  0.25f );
+	glEnd();
+	
+	glPopMatrix();
+	glBindTexture( GL_TEXTURE_2D, 0 );
+}
+
+
+void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
 {
   //PRINT_DEBUG1( "Drawing %s", token );
 
@@ -958,12 +991,10 @@ void StgModel::Draw( uint32_t flags, StgCanvas* canvas )
 
   if( stall )
     {
-      PushColor( 1,0,0,1 );
-      gl_draw_string( 0,0,0.5, "!" );
-      PopColor();
+		DrawImage( TextureManager::getInstance()._stall_texture_id, canvas, 0.85 );
     }
 
-  // shift up the CS to the top of this model
+	// shift up the CS to the top of this model
   //gl_coord_shift(  0,0, this->geom.size.z, 0 );
   
   // recursively draw the tree below this model 

@@ -5,6 +5,8 @@
 */
 
 #include "stage_internal.hh"
+#include "texture_manager.hh"
+#include "replace.h"
 
 using namespace Stg;
 
@@ -340,6 +342,7 @@ void StgCanvas::DrawGlobalGrid()
 
 void StgCanvas::draw() 
 {
+	static bool loaded_texture = false;
   //  static int centerx = 0, centery = 0;
   //puts( "CANVAS" );
   
@@ -361,7 +364,29 @@ void StgCanvas::draw()
       glEnable( GL_LINE_SMOOTH );
       glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
       glDepthMask(GL_TRUE);
-      
+		glEnable( GL_TEXTURE_2D );
+		
+		
+		//TODO find a better home for loading textures
+		if( loaded_texture == false ) {
+
+			char* tmp = strdup( world->GetWorldFile()->filename );			
+			char* fullpath = (char*) malloc(PATH_MAX);
+			
+			//find path of images relative to the 
+			getcwd(fullpath, PATH_MAX);
+			strcat( fullpath, "/" ); 
+			strcat( fullpath, dirname(tmp));
+			strcat( fullpath, "/assets/stall.png" ); 
+			
+			GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath );
+			TextureManager::getInstance()._stall_texture_id = stall_id;
+			
+			loaded_texture = true;
+			free( tmp );
+			free( fullpath );
+		}
+	
       // install a font
       gl_font( FL_HELVETICA, 12 );
       
