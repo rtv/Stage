@@ -27,6 +27,7 @@ add_library( stage SHARED
 	     world.cc 
 	     worldfile.cc 
 	     worldgui.cc
+		 texture_manager.cc
 )
 
 target_link_libraries( stage
