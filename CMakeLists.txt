@@ -7,11 +7,16 @@ SET( V_BUGFIX 0 )
 SET( VERSION ${V_MAJOR}.${V_MINOR}.${V_BUGFIX} )
 SET( APIVERSION ${V_MAJOR}.${V_MINOR} )
 
+cmake_minimum_required( VERSION 2.4 )
+
+cmake_policy( SET CMP0003 NEW )
+cmake_policy( SET CMP0005 NEW )
+
 MESSAGE (STATUS "${PROJECT_NAME} version ${VERSION}")
 
 # define some preprocessor strings that the code is expecting
-ADD_DEFINITIONS( -DPROJECT='"'${PROJECT_NAME}'"' 
-		 -DVERSION='"'${VERSION}'"' )
+ADD_DEFINITIONS( -DPROJECT=\"${PROJECT_NAME}\" 
+		 -DVERSION=\"${VERSION}\" )
 
 include(FindPkgConfig)
 pkg_check_modules( GLIB glib-2.0 )
@@ -29,6 +34,7 @@ include_directories( .
 		     ${GLIB_INCLUDE_DIRS} 
 		     ${FLTK_INCLUDE_DIR}
 		     ${OPENGL_INCLUDE_DIR}		     
+			 /opt/local/include
 )
 
 
