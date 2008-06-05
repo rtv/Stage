@@ -8,8 +8,8 @@
 
 #include "stage_internal.hh"
 
-const char* PACKAGE = "Stage";
-const char* VERSION = "3.dev";
+//const char* PACKAGE = "Stage";
+//const char* VERSION = "3.dev";
 
 /* options descriptor */
 static struct option longopts[] = {
@@ -21,7 +21,7 @@ static struct option longopts[] = {
 
 int main( int argc, char* argv[] )
 {
-  printf( "%s %s ", PACKAGE, VERSION );
+  printf( "%s %s ", PROJECT, VERSION );
 
   int ch=0, optindex=0;
   bool usegui = true;

@@ -194,7 +194,7 @@ Driver* StgDriver_Init(ConfigFile* cf, int section)
 // driver can support and how to create a driver instance.
 void StgDriver_Register(DriverTable* table)
 {
-  printf( "\n ** Stage plugin v%s **", PACKAGE_VERSION );
+  printf( "\n ** Stage plugin v%s **", "3.0dev" ); // XX TODO
     
   if( !player_quiet_startup )
     {
@@ -323,7 +323,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
  	  ifsrc = new InterfacePosition( player_addr, this,  cf, section );
 	  break;
 	  
- 	case PLAYER_SONAR_CODE:
+	case PLAYER_SONAR_CODE:
  	  ifsrc = new InterfaceSonar( player_addr,  this, cf, section );
  	  break;
 	  
@@ -351,9 +351,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 // 	  ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
 // 	  break;	  
 
- 	case PLAYER_GRAPHICS3D_CODE:
- 	  ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
- 	  break;	  
+// 	case PLAYER_GRAPHICS3D_CODE:
+	  //  ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
+ 	  //break;	  
 	  
 // 	case PLAYER_GRIPPER_CODE:
 // 	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
@@ -568,7 +568,7 @@ void StgDriver::Update(void)
       {
       case PLAYER_SIMULATION_CODE:
 	//if( stg_world_update( this->world, FALSE ) )
-	world->RealTimeUpdate();
+	world->Update();
 	//player_quit = TRUE; // set Player's global quit flag
 	break;
 

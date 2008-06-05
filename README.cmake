@@ -1,6 +1,6 @@
 
-Stage build using CMake instructions
-author: Richard Vaughan, 2008.4.11 $Id$
+Stage v.3 build using CMake instructions
+Author: Richard Vaughan, 2008.4.11 $Id$
 
 * Purpose *
 
@@ -15,11 +15,31 @@ which will help Stage become more portable.
 Unpack the distribution or check it out from SVN. Change directory to
 the top level of the Stage source tree.
 
-First, decide where you want to install Stage. The default
-installation directory varies by system, but is often /usr/local on
-Unix variants. This is easy and is often a good choice, but has the
-disadvantage that installation needs root/sudo priviliges. To install
-in the default location, do:
+First, you may need to help CMake find your the libraries on which
+Stage depends. For example, if you use MacPorts on OS X, packages are
+usually installed in /opt/local, which is not in CMake's default
+system search path. Add your non-standard software directories to
+CMake's search paths by setting environment variables, e.g. in bash:
+
+export CMAKE_INCLUDE_PATH=/opt/local/include
+export CMAKE_LIBRARY_PATH=/opt/local/lib
+
+If you want to use Player with Stage, install Player first, then make
+sure that pkg-config can find it. Test it like so:
+
+pkg-config --modversion playercore
+
+This should output the version number of the Player installation
+(probably 2.2.0 or later). If not, add the location of Player's
+pkg-config file to your PKG_CONFIG_PATH, eg. in bash:
+
+export PKG_CONFIG_PATH+=<Player installation prefix>/lib/pkgconfig
+
+Now that the supporting software is set up, you can decide where you
+want to install Stage. The default installation directory varies by
+system, but is often /usr/local on Unix variants. This is easy and is
+often a good choice, but has the disadvantage that installation needs
+root/sudo priviliges. To install in the default location, do:
 
   $ cmake .
 
@@ -28,11 +48,11 @@ path variable when invoking cmake. To do this, use this command,
 substituting <prefix> with your chosen installation
 directory.
 	
-  $ cmake -DCMAKE_INSTALL_PREFIX=PATH:<prefix>
+  $ cmake -DCMAKE_INSTALL_PREFIX=<prefix>
 
-For example to install in $HOME/stage, do:
+For example to install in $HOME/playerstage, do:
 
-  $ cmake -DCMAKE_INSTALL_PREFIX=PATH:$HOME/stage
+  $ cmake -DCMAKE_INSTALL_PREFIX=$HOME/playerstage
 
 CMake will generate makefiles specifically for your machine. When this
 is done, you can inspect and edit the build settings using ccmake, or

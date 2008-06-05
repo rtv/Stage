@@ -1,10 +1,4 @@
 
-link_directories(${GLIB_LIBRARY_DIRS}
-		${FLTK_LIBRARY_DIRS}
-		${OPENGL_LIBRARY_DIRS}
-)
-
-
 add_library( stage SHARED
 	     ancestor.cc 
 	     block.cc 
@@ -37,10 +31,22 @@ target_link_libraries( stage
 		       ltdl
 )
 
+# causes the shared library to have a version number
+set_target_properties( stage PROPERTIES
+		       VERSION ${VERSION}
+)
+
+
 add_executable( stagebinary main.cc )
 
 set_target_properties( stagebinary PROPERTIES
-		       OUTPUT_NAME stage )
+		       OUTPUT_NAME stage 
+)
+
+
+set_target_properties( stagebinary PROPERTIES
+		       OUTPUT_NAME stage 
+)
 
 target_link_libraries( stagebinary
 		       stage
@@ -52,4 +58,4 @@ INSTALL(TARGETS stagebinary stage
 )
 
 INSTALL(FILES stage.hh
-        DESTINATION include/stage-3.0)
+        DESTINATION include/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR})
