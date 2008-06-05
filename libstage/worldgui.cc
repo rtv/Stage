@@ -171,7 +171,6 @@ void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas )
   //printf( "value: %d\n", item->value() );
 }
 
-
 StgWorldGui::StgWorldGui(int W,int H,const char* L) 
   : Fl_Window(0,0,W,H,L)
 {
@@ -341,6 +340,7 @@ static void idle_callback( StgWorld* world  )
 {
   world->Update();
 }
+
 
 void StgWorldGui::Start()
 {

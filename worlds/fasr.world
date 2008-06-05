@@ -26,7 +26,7 @@ window
   rotate [ 0.000 0.000 ]
   scale 33.306 
   show_data 0
-  interval 50
+  interval 100
 )
 
 # load an environment bitmap
@@ -61,6 +61,8 @@ define autorob pioneer2dx
  sicklaser( pose [ 0.040 0.000 0.000 ] samples 32 range_max 5 laser_return 2 ) 
 
   ctrl "fasr"	 
+
+  say "Autolab"
 )
 
 

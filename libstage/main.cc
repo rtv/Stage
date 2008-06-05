@@ -8,16 +8,12 @@
 
 #include "stage_internal.hh"
 
-//const char* PACKAGE = "Stage";
-//const char* VERSION = "3.dev";
-
 /* options descriptor */
 static struct option longopts[] = {
   { "gui",  no_argument,   NULL,  'g' },
   //  { "fast",  no_argument,   NULL,  'f' },
   { NULL, 0, NULL, 0 }
 };
-
 
 int main( int argc, char* argv[] )
 {
@@ -48,11 +44,22 @@ int main( int argc, char* argv[] )
   
   // initialize libstage
   Stg::Init( &argc, &argv );
+
+  // arguments at index optindex and later are not options, so they
+  // must be world file names
   
-  StgWorldGui world( 800, 700, argv[0]);
-  
-  world.Load( argv[argc-1] );
-  world.Start();
-  world.Run();
+  while( optindex < argc )
+    {
+      if( optindex > 0 )
+	{      
+	  const char* worldfilename = argv[optindex]; 
+	  StgWorldGui* world = new StgWorldGui( 400, 300, worldfilename );
+	  world->Load( worldfilename );
+	  world->Start();
+	}
+      optindex++;
+    }
+
+  StgWorldGui::Run(); // run all the simulations
 }
 

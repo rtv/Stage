@@ -4,6 +4,15 @@
 * $Id: README,v 1.18 2006-03-29 05:13:44 rtv Exp $    
 ****************************************************************************
 
+CMAKE building notes - to be integrated properly:
+
+export PLAYER=$HOME/Stage-3.0
+export PKG_CONFIG_PATH=$PLAYER/lib/pkgconfig
+
+export CMAKE_INCLUDE_PATH=/opt/local/include
+export CMAKE_LIBRARY_PATH=/opt/local/lib
+export CMAKE_INSTALL_PREFIX=$PLAYER
+
 ** Release Notes for 2.0.2 **
 
 New features:

@@ -965,7 +965,7 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
     float h = gl_height() / canvas->scale + 2*margin;
     
     
-    PushColor( 0.8,0.8,1.0,1.0 ); // pale blue
+    PushColor( 0,1,0,0.5 ); // transparent green
     glRectf( 0,0, w,h ); // draw bubble
     PopColor();
 		

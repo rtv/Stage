@@ -1775,7 +1775,7 @@ public:
   ~StgWorldGui();
   
   /** Start the simulation and GUI. Does not return */
-  void Run();
+  static void Run();
   void Start();
   void Cycle();
   
