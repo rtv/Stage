@@ -49,3 +49,8 @@ MESSAGE( "Found Player in ${PLAYER_INCLUDE_DIRS}")
 ADD_SUBDIRECTORY(libstageplugin)
 ENDIF( PLAYER_FOUND )
 
+INSTALL(FILES rgb.txt stagelogo.png
+        DESTINATION share 
+)
+
+
