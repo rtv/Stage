@@ -346,10 +346,10 @@ void StgModelRanger::DataVisualize( void )
 	  //double dz =  rngr->size.z/2.0;
 
 	  // DEBUG: draw a point for the sensor pose
-	  //glPointSize( 6 );
-	  //glBegin( GL_POINTS );
-	  //glVertex3f( rngr->pose.x, rngr->pose.y, rngr->pose.z );
-	  //glEnd();
+	  glPointSize( 6 );
+	  glBegin( GL_POINTS );
+	  glVertex3f( rngr->pose.x, rngr->pose.y, rngr->pose.z );
+	  glEnd();
 	      
 	  // sensor FOV 
 	  double sidelen = samples[s]; 

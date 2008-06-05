@@ -1776,6 +1776,8 @@ public:
   
   /** Start the simulation and GUI. Does not return */
   void Run();
+  void Start();
+  void Cycle();
   
   virtual void Load( const char* filename );
   virtual void Save();

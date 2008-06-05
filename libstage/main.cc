@@ -52,7 +52,7 @@ int main( int argc, char* argv[] )
   StgWorldGui world( 800, 700, argv[0]);
   
   world.Load( argv[argc-1] );
-  
+  world.Start();
   world.Run();
 }
 

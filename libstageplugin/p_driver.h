@@ -38,7 +38,7 @@ class StgDriver : public Driver
   virtual void Update();
   
   /// all player devices share the same Stage world (for now)
-  static StgWorld* world;
+  static StgWorldGui* world;
   
   /// find the device record with this Player id
   Interface* LookupDevice( player_devaddr_t addr );

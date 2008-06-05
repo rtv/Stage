@@ -168,7 +168,7 @@ extern bool player_quiet_startup;
 extern bool player_quit;
 
 // init static vars
-StgWorld* StgDriver::world = NULL;
+StgWorldGui* StgDriver::world = NULL;
 
 int update_request = 0;
 
@@ -437,7 +437,8 @@ StgModel*  StgDriver::LocateModel( char* basename,
 // Set up the device.  Return 0 if things go well, and -1 otherwise.
 int StgDriver::Setup()
 {   
-  //puts("stage driver setup");  
+  puts("stage driver setup");  
+  world->Start();
   return(0);
 }
 
@@ -557,7 +558,7 @@ void StgDriver::Update(void)
 {
   Driver::ProcessMessages();
 
-  //puts( "STG driver update" );
+  //  puts( "STG driver update" );
 
   for( int i=0; i<(int)this->devices->len; i++ )
   {
@@ -568,7 +569,7 @@ void StgDriver::Update(void)
       {
       case PLAYER_SIMULATION_CODE:
 	//if( stg_world_update( this->world, FALSE ) )
-	world->Update();
+	world->Cycle();
 	//player_quit = TRUE; // set Player's global quit flag
 	break;
 
@@ -578,11 +579,11 @@ void StgDriver::Update(void)
 	  // interface?  This really needs some thought, as each model/interface
 	  // should have a configurable publishing rate. For now, I'm using the
 	  // world's update rate (which appears to be stored as msec).  - BPG
-	  double currtime;
-	  GlobalTime->GetTimeDouble(&currtime);
-	  if((currtime - interface->last_publish_time) >= 
-	     (interface->publish_interval_msec / 1e3))
-	    {
+	   double currtime;
+ 	  GlobalTime->GetTimeDouble(&currtime);
+ 	  if((currtime - interface->last_publish_time) >= 
+ 	     (interface->publish_interval_msec / 1e3))
+ 	    {
 	      interface->Publish();
 	      interface->last_publish_time = currtime;
 	    }

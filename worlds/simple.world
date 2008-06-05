@@ -15,7 +15,7 @@ include "sick.inc"
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 10  # real-time interval between simulation updates in milliseconds 
+interval_real 100  # real-time interval between simulation updates in milliseconds 
 
 paused 0
 
@@ -29,13 +29,13 @@ window
 )
 
 # load an environment bitmap
-floorplan
-( 
-  name "cave"
-  size3 [16 16 0.5]
-  pose [0.000 0.000 0.000]
-  bitmap "bitmaps/cave.png"
-)
+#floorplan
+#( 
+#  name "cave"
+#  size3 [16 16 0.5]
+#  pose [0.000 0.000 0.000]
+#  bitmap "bitmaps/cave.png"
+#)
 
 define autorob fancypioneer2dx
 (
@@ -51,23 +51,23 @@ define autorob fancypioneer2dx
 autorob( pose [3.537 7.177 158.268] name "r0" )
 autorob( pose [4.142 -7.764 -52.629] )
 autorob( pose [6.320 3.775 22.445] )
-autorob( pose [-1.915 3.332 156.191] )
-autorob( pose [3.309 5.546 -109.062] )
-autorob( pose [7.209 4.552 89.455] )
-autorob( pose [-6.329 1.151 -164.935] )
-autorob( pose [-6.320 -5.692 -103.425] )
-autorob( pose [3.187 -7.170 -57.759] )
-autorob( pose [7.407 2.058 -57.823] )
+#autorob( pose [-1.915 3.332 156.191] )
+#autorob( pose [3.309 5.546 -109.062] )
+#autorob( pose [7.209 4.552 89.455] )
+#autorob( pose [-6.329 1.151 -164.935] )
+#autorob( pose [-6.320 -5.692 -103.425] )
+#autorob( pose [3.187 -7.170 -57.759] )
+#autorob( pose [7.407 2.058 -57.823] )
 
-autorob( pose [-6.370 2.754 -113.456] )
-autorob( pose [0.402 -6.819 -1.177] )
-autorob( pose [-2.892 -0.583 46.585] )
-autorob( pose [2.284 5.478 135.162] )
-autorob( pose [-2.483 -1.567 -3.588] )
-autorob( pose [-6.321 4.372 93.535] )
-autorob( pose [-4.204 -5.882 -35.760] )
-autorob( pose [-2.409 -4.979 -17.538] )
-autorob( pose [-6.692 5.179 -23.903] )
-autorob( pose [-1.958 0.013 -17.092] )
+#autorob( pose [-6.370 2.754 -113.456] )
+#autorob( pose [0.402 -6.819 -1.177] )
+#autorob( pose [-2.892 -0.583 46.585] )
+#autorob( pose [2.284 5.478 135.162] )
+#autorob( pose [-2.483 -1.567 -3.588] )
+#autorob( pose [-6.321 4.372 93.535] )
+#autorob( pose [-4.204 -5.882 -35.760] )
+#autorob( pose [-2.409 -4.979 -17.538] )
+#autorob( pose [-6.692 5.179 -23.903] )
+#autorob( pose [-1.958 0.013 -17.092] )
 
 

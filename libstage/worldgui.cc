@@ -342,17 +342,25 @@ static void idle_callback( StgWorld* world  )
   world->Update();
 }
 
-void StgWorldGui::Run()
+void StgWorldGui::Start()
 {
-
   // if a non-zero interval was requested, call Update() after that
   // interval
   if( interval_real > 0 )
     Fl::add_timeout( interval_real/1e6, (Fl_Timeout_Handler)UpdateCb, this );
   else // otherwise call Update() whenever there's no GUI work to do
     Fl::add_idle( (Fl_Timeout_Handler)idle_callback, this );
+}
 
+void StgWorldGui::Run()
+{
   Fl::run();
+}
+
+void StgWorldGui::Cycle()
+{
+  if( Fl::ready() )
+    Fl::check();
 }
 
 
