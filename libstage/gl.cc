@@ -5,7 +5,7 @@
 void Stg::gl_coord_shift( double x, double y, double z, double a  )
 {
   glTranslatef( x,y,z );
-  glRotatef( rtod(a), 0,0,1 );
+ glRotatef( rtod(a), 0,0,1 );
 }
 
 // transform the current coordinate frame by the given pose
@@ -26,6 +26,22 @@ void Stg::gl_draw_string( float x, float y, float z, const char *str )
 void Stg::gl_speech_bubble( float x, float y, float z, const char* str )
 {  
   gl_draw_string( x, y, z, str );
+}
+
+// draw an octagon with center rectangle dimensions w/h
+//   and outside margin m
+void Stg::gl_draw_octagon( float w, float h, float m )
+{
+  glBegin(GL_POLYGON);
+    glVertex2f( m+w, 0 );   
+    glVertex2f( w+2*m, m );
+    glVertex2f( w+2*m, h+m );
+    glVertex2f( m+w, h+2*m );
+    glVertex2f( m, h+2*m );
+    glVertex2f( 0, h+m );
+    glVertex2f( 0, m );
+    glVertex2f( m, 0 );
+  glEnd();
 }
 
 

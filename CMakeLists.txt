@@ -52,10 +52,10 @@ link_directories(${GLIB_LIBRARY_DIRS}
 ADD_SUBDIRECTORY(libstage)
 ADD_SUBDIRECTORY(examples)
 
-IF( PLAYER_FOUND )
-MESSAGE( "Found Player in ${PLAYER_INCLUDE_DIRS}")
-ADD_SUBDIRECTORY(libstageplugin)
-ENDIF( PLAYER_FOUND )
+#IF( PLAYER_FOUND )
+#MESSAGE( "Found Player in ${PLAYER_INCLUDE_DIRS}")
+#ADD_SUBDIRECTORY(libstageplugin)
+#ENDIF( PLAYER_FOUND )
 
 INSTALL(FILES rgb.txt stagelogo.png
         DESTINATION share/stage 

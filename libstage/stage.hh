@@ -553,7 +553,7 @@ namespace Draw
   /** Render a string at [x,y,z] in the current color */
   void gl_draw_string( float x, float y, float z, const char *string);
   void gl_speech_bubble( float x, float y, float z, const char* str );
-
+  void gl_draw_octagon( float w, float h, float m );
 
   void stg_block_list_scale( GList* blocks, 
 			     stg_size_t* size );

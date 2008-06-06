@@ -17,7 +17,7 @@ static struct option longopts[] = {
 
 int main( int argc, char* argv[] )
 {
-  printf( "%s %s ", PROJECT, VERSION );
+  //printf( "%s %s ", PROJECT, VERSION );
 
   int ch=0, optindex=0;
   bool usegui = true;
