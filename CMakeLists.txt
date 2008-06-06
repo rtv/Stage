@@ -16,7 +16,8 @@ MESSAGE (STATUS "${PROJECT_NAME} version ${VERSION}")
 
 # define some preprocessor strings that the code is expecting
 ADD_DEFINITIONS( -DPROJECT=\"${PROJECT_NAME}\" 
-		 -DVERSION=\"${VERSION}\" )
+		-DINSTALL_PREFIX=\"${CMAKE_INSTALL_PREFIX}\"
+		-DVERSION=\"${VERSION}\" )
 
 include(FindPkgConfig)
 pkg_check_modules( GLIB glib-2.0 )
@@ -34,7 +35,7 @@ include_directories( .
 		     ${GLIB_INCLUDE_DIRS} 
 		     ${FLTK_INCLUDE_DIR}
 		     ${OPENGL_INCLUDE_DIR}		     
-			 /opt/local/include
+			 ${CMAKE_INCLUDE_PATH}
 )
 
 
@@ -57,7 +58,12 @@ ADD_SUBDIRECTORY(libstageplugin)
 ENDIF( PLAYER_FOUND )
 
 INSTALL(FILES rgb.txt stagelogo.png
-        DESTINATION share 
+        DESTINATION share/stage 
+)
+
+FILE( GLOB assets "assets/*.png" )
+INSTALL(FILES ${assets}
+        DESTINATION share/stage/assets
 )
 
 

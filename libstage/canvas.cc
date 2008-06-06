@@ -370,21 +370,10 @@ void StgCanvas::draw()
 		//TODO find a better home for loading textures
 		if( loaded_texture == false ) {
 
-			char* tmp = strdup( world->GetWorldFile()->filename );			
-			char* fullpath = (char*) malloc(PATH_MAX);
-			
-			//find path of images relative to the 
-			getcwd(fullpath, PATH_MAX);
-			strcat( fullpath, "/" ); 
-			strcat( fullpath, dirname(tmp));
-			strcat( fullpath, "/assets/stall.png" ); 
-			
-			GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath );
+			GLuint stall_id = TextureManager::getInstance().loadTexture( "assets/stall.png" );
 			TextureManager::getInstance()._stall_texture_id = stall_id;
 			
 			loaded_texture = true;
-			free( tmp );
-			free( fullpath );
 		}
 	
       // install a font

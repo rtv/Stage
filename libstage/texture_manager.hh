@@ -18,6 +18,9 @@
 class TextureManager {
 private:
 	TextureManager( void ) { }
+
+	//try to load filename from relative dir, then install path
+	Fl_Shared_Image* loadImage( const char* filename );
 	
 public:
 

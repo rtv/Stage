@@ -48,6 +48,7 @@ int main( int argc, char* argv[] )
   // arguments at index optindex and later are not options, so they
   // must be world file names
   
+	bool loaded_world_file = false;
   while( optindex < argc )
     {
       if( optindex > 0 )
@@ -56,9 +57,16 @@ int main( int argc, char* argv[] )
 	  StgWorldGui* world = new StgWorldGui( 400, 300, worldfilename );
 	  world->Load( worldfilename );
 	  world->Start();
+		loaded_world_file = true;
 	}
       optindex++;
     }
+	
+	if( loaded_world_file == false ) {
+		printf( "No world file specified.\n" );
+	}
+	
+	
 
   StgWorldGui::Run(); // run all the simulations
 }

@@ -8,25 +8,46 @@
  */
 
 #include "texture_manager.hh"
+#include <sstream>
+
+//TODO Windows Port
+Fl_Shared_Image* TextureManager::loadImage( const char* filename )
+{
+	if( filename[ 0 ] == '/' || filename[ 0 ] == '~' )
+		return Fl_Shared_Image::get( filename );
+	
+	const char* prefixes[] = {
+		".",
+		INSTALL_PREFIX "/share/stage",
+		NULL
+	};
+
+	Fl_Shared_Image *img = NULL;
+	int i = 0;	
+	while( img == NULL && prefixes[ i ] != NULL ) {
+		std::ostringstream oss;
+		oss << prefixes[ i ] << "/" << filename;
+		img = Fl_Shared_Image::get( oss.str().c_str() );
+		std::cout << "loading from: " << oss.str() << std::endl;
+		i++;
+	}
+	return img;
+}
 
 GLuint TextureManager::loadTexture( const char *filename )
 {
 	GLuint texName;
-	Fl_Shared_Image *img = Fl_Shared_Image::get( filename );
+	Fl_Shared_Image *img = loadImage( filename );
 	if( img == NULL ) {
 		printf( "unable to open image: %s\n", filename );
 		return 0;
 	}
-	
-	std::cout << "loading image 1 " << std::endl;
 	
 	//TODO display an error for incorrect depths
 	if( img->d() != 3 && img->d() != 4 ) {
 		printf( "unable to open image: %s - incorrect depth - should be 3 or 4\n", filename );
 		return 0;
 	}
-	
-	std::cout << "loading image 2 " << std::endl;
 	
 	//TODO check for correct width/height - or convert it.
 	
