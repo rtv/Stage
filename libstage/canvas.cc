@@ -32,8 +32,8 @@ StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h)
   last_selection = NULL;
 
   startx = starty = 0;
-  panx = pany = stheta = sphi = 0.0;
-  scale = 15.0;
+  //panx = pany = stheta = sphi = 0.0;
+  //scale = 15.0;
   interval = 50; //msec between redraws
 
   graphics = true;
@@ -169,11 +169,7 @@ int StgCanvas::handle(int event)
 	}
       else
 	{
-	  //scale -= 0.5 * (double)Fl::event_dy();
-	  scale -= 0.5 * (double)Fl::event_dy();
-	  if( scale < 1 )
-	    scale = 1;    
-
+		camera.scale( Fl::event_dy() );
 	  invalidate();
 	}
       return 1;
@@ -184,18 +180,17 @@ int StgCanvas::handle(int event)
 	  int dx = Fl::event_x() - startx; 
 	  int dy = Fl::event_y() - starty;
 	    
-	  stheta -= 0.01 * (double)dy;
-	  sphi += 0.01 * (double)dx;
-	  stheta = constrain( stheta, 0, M_PI/2.0 );
+		camera.pitch( 0.5 * static_cast<double>( dy ) );
+		camera.yaw( 0.5 * static_cast<double>( dx ) );
+		
 	  invalidate();
 	}
       else if( Fl::event_state( FL_ALT ) )
-	{          
+	{       
 	  int dx = Fl::event_x() - startx; 
 	  int dy = Fl::event_y() - starty;
 	    
-	  panx -= dx;
-	  pany += dy; 
+		camera.move( -dx, dy );
 	  invalidate();
 	}
       
@@ -256,8 +251,7 @@ int StgCanvas::handle(int event)
 	      }
 	    else
 	      {
-		panx -= dx;
-		pany += dy; 
+			  camera.move( -dx, dy );
 		invalidate(); // so the projection gets updated
 	      }
 	    break;	    
@@ -304,13 +298,14 @@ int StgCanvas::handle(int event)
 	  world->TogglePause();
 	  break;
 	case ' ': // space bar
-	  sphi = stheta = 0.0;
+
+			camera.resetAngle();
 	  invalidate();
 	  break;
-	case FL_Left:  panx += 10; break;
-	case FL_Right: panx -= 10; break;
-	case FL_Down:    pany += 10; break;
-	case FL_Up:  pany -= 10; break;
+		case FL_Left:  camera.move( -10, 0 ); break;
+	case FL_Right: camera.move( 10, 0 );; break;
+	case FL_Down:    camera.move( 0, -10 );; break;
+	case FL_Up:  camera.move( 0, 10 );; break;
 	default:
 	  return 0; // keypress unhandled
 	}
@@ -390,21 +385,28 @@ void StgCanvas::draw()
 
       stg_bounds3d_t extent = world->GetExtent();
       
-      glOrtho( -pixels_width/2.0, pixels_width/2.0,
-             -pixels_height/2.0, pixels_height/2.0,
-	       extent.y.min*scale, extent.y.max*scale );
+//		glFrustum( -pixels_width/2.0, pixels_width/2.0,
+//				-pixels_height/2.0, pixels_height/2.0,
+//				extent.y.min, extent.y.max );
+//		glOrtho( -pixels_width/2.0, pixels_width/2.0,
+//				-pixels_height/2.0, pixels_height/2.0,
+//				extent.y.min*scale, extent.y.max*scale );
             
       // set the modelview matrix
       glMatrixMode (GL_MODELVIEW);      
       glLoadIdentity ();
       
-      // move the next two lines...
-      glTranslatef(  -panx, -pany, 0 );
-      glScalef( scale, scale, scale ); 
-      // .. from here
-      
-      glRotatef( rtod(-stheta), fabs(cos(sphi)), 0, 0 );
-      glRotatef( rtod(sphi), 0,0,1 );   // rotate about z - yaw
+		//TODO insert a camera class here
+
+		camera.Draw();
+		
+//      // move the next two lines...
+//      glTranslatef(  -panx, -pany, 0 );
+//      glScalef( scale, scale, scale ); 
+//      // .. from here
+//      
+//      glRotatef( rtod(-stheta), fabs(cos(sphi)), 0, 0 );
+//      glRotatef( rtod(sphi), 0,0,1 );   // rotate about z - yaw
       
       // ... to here to get rotation about the center of the window (but broken panning)
 
@@ -415,6 +417,27 @@ void StgCanvas::draw()
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     }      
 
+	glMatrixMode (GL_PROJECTION);
+	glLoadIdentity ();      
+	
+	
+	stg_bounds3d_t extent = world->GetExtent();
+	double pixels_width =  w();
+	double pixels_height = h();
+
+//	gluPerspective( 60, pixels_width / pixels_height, 0.01, 1000 );
+	
+	
+	
+	glOrtho( -pixels_width/2.0 / camera.getScale(), pixels_width/2.0 / camera.getScale(),
+			  -pixels_height/2.0 / camera.getScale(), pixels_height/2.0 / camera.getScale(),
+			  extent.y.min * camera.getScale() * 2, extent.y.max * camera.getScale() * 2 );
+	
+	//draw camera
+	glMatrixMode (GL_MODELVIEW);      
+	glLoadIdentity ();
+	camera.Draw();
+	
   if( ! (showflags & STG_SHOW_TRAILS) )
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -422,12 +445,12 @@ void StgCanvas::draw()
   if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
     {      
       glLoadIdentity ();
-      double zclip = 20 * scale; //hypot(world->Width(), world->Height()) * scale;
+      double zclip = 20 * camera.getScale(); //hypot(world->Width(), world->Height()) * camera.getScale();
       glTranslatef(  0,0,
       	     -zclip / 2.0 );
       
       // meter scale
-      glScalef ( scale, scale, scale ); // zoom
+      glScalef ( camera.getScale(), camera.getScale(), camera.getScale() ); // zoom
       
       stg_pose_t gpose = last_selection->GetGlobalPose();
       

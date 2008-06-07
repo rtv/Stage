@@ -910,8 +910,8 @@ void StgModel::DrawBlocks( )
 
 void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha )
 {
-	double sphi = canvas->sphi;
-	double stheta = canvas->stheta;
+	float stheta = -dtor( canvas->camera.getPitch() );
+	float sphi = dtor( canvas->camera.getYaw() );
 
 	glBindTexture( GL_TEXTURE_2D, 1 );
 	
@@ -969,19 +969,23 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
   // draw speech bubble
   if( this->say_string )
   {
+	  float stheta = -dtor( canvas->camera.getPitch() );
+	  float sphi = dtor( canvas->camera.getYaw() );
+	  float scale = canvas->camera.getScale(); //TODO FIX THIS
     glPushMatrix();
     
     // move above the robot
     glTranslatef( 0, 0, 0.5 );		
-    
+
     // rotate to face screen
-    glRotatef( -rtod(global_pose.a + canvas->sphi), 0,0,1 );
-    glRotatef( rtod(canvas->stheta), 1,0,0 );
+    glRotatef( -rtod(global_pose.a + sphi), 0,0,1 );
+    glRotatef( rtod(stheta), 1,0,0 );
     
-    const float m = 4 / canvas->scale; // margin
-    float w = gl_width( this->say_string ) / canvas->scale; // scaled text width
-    float h = gl_height() / canvas->scale; // scaled text height
+    const float m = 4 / scale; // margin
+    float w = gl_width( this->say_string ) / scale; // scaled text width
+    float h = gl_height() / scale; // scaled text height
     
+
     // draw inside of bubble
     PushColor( STG_BUBBLE_FILL );
     glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );

@@ -3,6 +3,7 @@ add_library( stage SHARED
 	     ancestor.cc 
 	     block.cc 
 	     canvas.cc 
+		 camera.cc
 	     gl.cc 
 	     glcolorstack.cc 
 	     model.cc 

@@ -243,12 +243,14 @@ void StgWorldGui::Load( const char* filename )
   //larger than this size.
   size( width,height ); 
 
-  canvas->panx = wf->ReadTupleFloat(wf_section, "center", 0, canvas->panx );
-  canvas->pany = wf->ReadTupleFloat(wf_section, "center", 1, canvas->pany );
-  canvas->stheta = wf->ReadTupleFloat( wf_section, "rotate", 0, canvas->stheta );
-  canvas->sphi = wf->ReadTupleFloat( wf_section, "rotate", 1, canvas->sphi );
-  canvas->scale = wf->ReadFloat(wf_section, "scale", canvas->scale );
-  canvas->interval = wf->ReadInt(wf_section, "interval", canvas->interval );
+	float x = wf->ReadTupleFloat(wf_section, "center", 0, 0 );
+	float y = wf->ReadTupleFloat(wf_section, "center", 1, 0 );
+	canvas->camera.setPose( x, y );
+	
+	canvas->camera.setPitch( wf->ReadTupleFloat( wf_section, "rotate", 0, 0 ) );
+	canvas->camera.setYaw( wf->ReadTupleFloat( wf_section, "rotate", 1, 0 ) );
+	canvas->camera.setScale( wf->ReadFloat(wf_section, "scale", canvas->camera.getScale() ) );
+	canvas->interval = wf->ReadInt(wf_section, "interval", canvas->interval );
 
   // set the canvas visibilty flags   
   uint32_t flags = canvas->GetShowFlags();
@@ -305,13 +307,13 @@ void StgWorldGui::Save( void )
   wf->WriteTupleFloat( wf_section, "size", 0, w() );
   wf->WriteTupleFloat( wf_section, "size", 1, h() );
 
-  wf->WriteFloat( wf_section, "scale", canvas->scale );
-
-  wf->WriteTupleFloat( wf_section, "center", 0, canvas->panx );
-  wf->WriteTupleFloat( wf_section, "center", 1, canvas->pany );
-
-  wf->WriteTupleFloat( wf_section, "rotate", 0, canvas->stheta  );
-  wf->WriteTupleFloat( wf_section, "rotate", 1, canvas->sphi  );
+//  wf->WriteFloat( wf_section, "scale", canvas->scale );
+//
+//  wf->WriteTupleFloat( wf_section, "center", 0, canvas->panx );
+//  wf->WriteTupleFloat( wf_section, "center", 1, canvas->pany );
+//
+//  wf->WriteTupleFloat( wf_section, "rotate", 0, canvas->stheta  );
+//  wf->WriteTupleFloat( wf_section, "rotate", 1, canvas->sphi  );
 
   uint32_t flags = canvas->GetShowFlags();
   wf->WriteInt( wf_section, "show_blocks", flags & STG_SHOW_BLOCKS );

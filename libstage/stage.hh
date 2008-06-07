@@ -53,6 +53,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <iostream>
 
 // we use GLib's data structures extensively. Perhaps we'll move to
 // C++ STL types to lose this dependency one day.
@@ -1696,6 +1697,62 @@ namespace Draw
 #include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
 #include <FL/glut.H>
 
+class StgCamera 
+{
+private:
+	float _x, _y, _z;
+	float _pitch; //left-right (about y)
+	float _yaw; //up-down (about x)
+	float _scale;
+	
+public:
+	StgCamera( void ) : _x( 0 ), _y( 0 ), _z( 0 ), _pitch( 0 ), _yaw( 0 ), _scale( 15 ) { }
+	void Draw();
+	
+	void move( float x, float y ) { 
+		x = x / ( _scale * _scale );
+		y = y / ( _scale * _scale );
+		
+		std::cout << _scale << std::endl;
+		
+		_x += cos( dtor( _yaw ) ) * x;
+		_y += -sin( dtor( _yaw ) ) * x;
+
+		_x += sin( dtor( _yaw ) ) * y;
+		_y += cos( dtor( _yaw ) ) * y;
+	}
+	void yaw( float yaw ) { 
+		_yaw += yaw;
+	}
+	void pitch( float pitch ) {
+		_pitch += pitch;
+		if( _pitch < -90 )
+			_pitch = -90;
+		else if( _pitch > 0 )
+			_pitch = 0;
+	}
+	inline float getYaw( void ) { return _yaw; }
+	inline float getPitch( void ) { return _pitch; }
+	
+	inline void setYaw( float yaw ) { _yaw = yaw; }
+	inline void setPitch( float pitch ) { _pitch = pitch; }
+	inline void setScale( float scale ) { _scale = scale; }
+	inline void setPose( float x, float y) { _x = x; _y = y; }
+	
+	
+	
+	void scale( float scale ) { _scale -= 0.5 * scale;
+		if( _scale < 1 ) _scale = 1;
+		
+	}
+	
+	inline void resetAngle( void ) { _pitch = _yaw = 0; }
+	
+	inline float getScale() { return _scale; }
+	inline float getX() { return _x; }
+	inline float getY() { return _y; }
+};
+	
 class StgCanvas : public Fl_Gl_Window
 {
   friend class StgWorldGui; // allow access to private members
@@ -1703,8 +1760,9 @@ class StgCanvas : public Fl_Gl_Window
   
 private:
   GlColorStack colorstack;
-  double scale;
-  double panx, pany, stheta, sphi;
+
+	StgCamera camera;
+	
   int startx, starty;
   bool dragging;
   bool rotating;
