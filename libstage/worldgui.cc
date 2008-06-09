@@ -190,7 +190,7 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L)
   mbar->add( "File", 0, 0, 0, FL_SUBMENU );
   mbar->add( "File/Save File", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
   mbar->add( "File/Save File &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback *)SaveAsCallback, this, FL_MENU_DIVIDER );
-  mbar->add( "File/Exit", FL_CTRL+'q', (Fl_Callback *)dummy_cb, 0 );
+  mbar->add( "File/Exit", FL_CTRL+'q', (Fl_Callback *)QuitCallback, this );
  
   mbar->add( "View", 0, 0, 0, FL_SUBMENU );
   mbar->add( MITEM_VIEW_DATA,      'd', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
@@ -221,6 +221,8 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L)
   mbar->add( "Help", 0, 0, 0, FL_SUBMENU );
   mbar->add( "Help/About Stage...", NULL, (Fl_Callback *)About_cb );
   //mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
+  
+  callback( (Fl_Callback*)WindowCallback, this );
   show();
 }
 
@@ -307,12 +309,16 @@ void StgWorldGui::Load( const char* filename )
 
 void StgWorldGui::SaveAsCallback( Fl_Widget* wid, StgWorldGui* world )
 {
-  const char* curFilename = world->wf->filename;
+  world->SaveAsDialog();
+}
+
+bool StgWorldGui::SaveAsDialog()
+{
   const char* newFilename;
-  bool success;
+  bool success = false;
   const char* pattern = "World Files (*.world)"; 
   
-  Fl_File_Chooser fc( curFilename, pattern, Fl_File_Chooser::CREATE, "Save File As..." );
+  Fl_File_Chooser fc( wf->filename, pattern, Fl_File_Chooser::CREATE, "Save File As..." );
   fc.ok_label( "Save" );
 
   fc.show();
@@ -323,13 +329,61 @@ void StgWorldGui::SaveAsCallback( Fl_Widget* wid, StgWorldGui* world )
 
   if (newFilename != NULL) {
     // todo: make sure file ends in .world
-    success = world->Save( newFilename );
+    success = Save( newFilename );
     if ( !success ) {
       fl_alert( "Error saving world file." );
     }
   }
-
   
+  return success;
+}
+
+void StgWorldGui::QuitCallback( Fl_Widget* wid, StgWorldGui* world ) 
+{
+  bool done = world->CloseWindowQuery();
+  if (done) {
+    exit(0);
+  }
+}
+
+bool StgWorldGui::CloseWindowQuery()
+{
+  int choice;
+  choice = fl_choice("Do you want to save?",
+                     "Cancel", // ->0: defaults to ESC
+                     "Yes", // ->1
+                     "No" // ->2
+   );
+   
+  switch (choice) {
+    case 1: // Yes
+      bool saved = SaveAsDialog();
+      if ( saved ) {
+        return 1;
+      }
+      else {
+        return 0;
+      }
+    case 2: // No
+      return 1;
+  }
+  
+  return 0;
+}
+
+void StgWorldGui::WindowCallback( Fl_Widget* wid, StgWorldGui* world )
+{
+  switch ( Fl::event() ) {
+    case FL_SHORTCUT:
+      if ( Fl::event_key() == FL_Escape )
+        return;
+    case FL_CLOSE: // clicked close button
+      bool done = world->CloseWindowQuery();
+      if ( !done )
+        return;
+  }
+
+  exit(0);
 }
 
 bool StgWorldGui::Save( const char* filename )

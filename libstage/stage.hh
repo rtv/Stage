@@ -1847,6 +1847,11 @@ public:
   // static callback functions
   static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
   static void SaveAsCallback( Fl_Widget* wid, StgWorldGui* world );
+  static void QuitCallback( Fl_Widget* wid, StgWorldGui* world );
+  static void WindowCallback( Fl_Widget* wid, StgWorldGui* world );
+  
+  bool SaveAsDialog();
+  bool CloseWindowQuery();
   
   virtual void PushColor( stg_color_t col )
   { canvas->PushColor( col ); } 
