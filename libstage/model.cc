@@ -971,7 +971,8 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
   {
 	  float stheta = -dtor( canvas->camera.getPitch() );
 	  float sphi = dtor( canvas->camera.getYaw() );
-	  float scale = canvas->camera.getScale(); //TODO FIX THIS
+	  float scale = canvas->camera.getScale();
+
     glPushMatrix();
     
     // move above the robot

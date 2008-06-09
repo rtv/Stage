@@ -169,7 +169,7 @@ int StgCanvas::handle(int event)
 	}
       else
 	{
-		camera.scale( Fl::event_dy() );
+		camera.scale( Fl::event_dy(), Fl::event_x() - w() / 2, - ( Fl::event_y() - h() / 2 ) );
 	  invalidate();
 	}
       return 1;
@@ -374,69 +374,22 @@ void StgCanvas::draw()
       // install a font
       gl_font( FL_HELVETICA, 12 );
       
-      //double zclip = 20 * scale; //hypot(world->Width(), world->Height()) * scale;
-      double pixels_width =  w();
-      double pixels_height = h();
-      
-      // map the viewport to pixel units by scaling it the same as the window
-      glMatrixMode (GL_PROJECTION);
-      glLoadIdentity ();      
-      
-
-      stg_bounds3d_t extent = world->GetExtent();
-      
-//		glFrustum( -pixels_width/2.0, pixels_width/2.0,
-//				-pixels_height/2.0, pixels_height/2.0,
-//				extent.y.min, extent.y.max );
-//		glOrtho( -pixels_width/2.0, pixels_width/2.0,
-//				-pixels_height/2.0, pixels_height/2.0,
-//				extent.y.min*scale, extent.y.max*scale );
-            
-      // set the modelview matrix
-      glMatrixMode (GL_MODELVIEW);      
-      glLoadIdentity ();
-      
-		//TODO insert a camera class here
-
+		stg_bounds3d_t extent = world->GetExtent();
+		camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
 		camera.Draw();
-		
-//      // move the next two lines...
-//      glTranslatef(  -panx, -pany, 0 );
-//      glScalef( scale, scale, scale ); 
-//      // .. from here
-//      
-//      glRotatef( rtod(-stheta), fabs(cos(sphi)), 0, 0 );
-//      glRotatef( rtod(sphi), 0,0,1 );   // rotate about z - yaw
       
-      // ... to here to get rotation about the center of the window (but broken panning)
 
-      // enable vertex arrays
+      
+
+		// enable vertex arrays
       glEnableClientState( GL_VERTEX_ARRAY );
       //glEnableClientState( GL_COLOR_ARRAY );
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    }      
+    }            
+	
+	
 
-	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();      
-	
-	
-	stg_bounds3d_t extent = world->GetExtent();
-	double pixels_width =  w();
-	double pixels_height = h();
-
-//	gluPerspective( 60, pixels_width / pixels_height, 0.01, 1000 );
-	
-	
-	
-	glOrtho( -pixels_width/2.0 / camera.getScale(), pixels_width/2.0 / camera.getScale(),
-			  -pixels_height/2.0 / camera.getScale(), pixels_height/2.0 / camera.getScale(),
-			  extent.y.min * camera.getScale() * 2, extent.y.max * camera.getScale() * 2 );
-	
-	//draw camera
-	glMatrixMode (GL_MODELVIEW);      
-	glLoadIdentity ();
-	camera.Draw();
 	
   if( ! (showflags & STG_SHOW_TRAILS) )
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );

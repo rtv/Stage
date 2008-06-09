@@ -12,28 +12,27 @@
 
 #include <iostream>
 
-void StgCamera::Draw( void )
+void StgCamera::Draw( void ) const
 {	
-	static float i = 0;
-	i += 1;
-//	glRotatef( rtod(-_stheta), fabs(cos(_sphi)), 0, 0 );
-//	glRotatef( rtod(_sphi), 0,0,1 );   // rotate about z - yaw
-//	
-//	glTranslatef(  -_panx, -_pany, 0 );
-//	glScalef( _scale, _scale, _scale ); 
-
+	glMatrixMode (GL_MODELVIEW);
+	glLoadIdentity ();
 	
 	glRotatef( _pitch, 1.0, 0.0, 0.0 );
 	glRotatef( _yaw, 0.0, 0.0, 1.0 );
 	
-	//both of these are handled in the glOrtho call
-//	glScalef( _scale, _scale, _scale );
-	glTranslatef( - _x * _scale, - _y * _scale, 0.0 );
-	glScalef( _scale, _scale, _scale );
-		
-//	glRotatef( 60.0, 1.0, 0.0, 0.0 );
-
-	//glRotatef( 60, 0.0, 1.0, 0.0 );
-//	glRotatef( i, 0.0, 0.0, 1.0 );
+	glTranslatef( - _x, - _y, 0.0 );
+	//zooming needs to happen in the Projection code (don't use glScale for zoom)
 	
+}
+
+void StgCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const
+{
+	glMatrixMode (GL_PROJECTION);
+	glLoadIdentity ();
+	
+	glOrtho( -pixels_width/2.0 / _scale, pixels_width/2.0 / _scale,
+			-pixels_height/2.0 / _scale, pixels_height/2.0 / _scale,
+			y_min * _scale * 2, y_max * _scale * 2 );	
+	
+	glMatrixMode (GL_MODELVIEW);
 }

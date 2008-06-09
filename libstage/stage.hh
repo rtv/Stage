@@ -1707,13 +1707,13 @@ private:
 	
 public:
 	StgCamera( void ) : _x( 0 ), _y( 0 ), _z( 0 ), _pitch( 0 ), _yaw( 0 ), _scale( 15 ) { }
-	void Draw();
+	void Draw() const;
+	void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;
+
 	
-	void move( float x, float y ) { 
-		x = x / ( _scale * _scale );
-		y = y / ( _scale * _scale );
-		
-		std::cout << _scale << std::endl;
+	inline void move( float x, float y ) { 
+		x = x / ( _scale );
+		y = y / ( _scale );
 		
 		_x += cos( dtor( _yaw ) ) * x;
 		_y += -sin( dtor( _yaw ) ) * x;
@@ -1721,18 +1721,18 @@ public:
 		_x += sin( dtor( _yaw ) ) * y;
 		_y += cos( dtor( _yaw ) ) * y;
 	}
-	void yaw( float yaw ) { 
+	inline void yaw( float yaw ) { 
 		_yaw += yaw;
 	}
-	void pitch( float pitch ) {
+	inline void pitch( float pitch ) {
 		_pitch += pitch;
 		if( _pitch < -90 )
 			_pitch = -90;
 		else if( _pitch > 0 )
 			_pitch = 0;
 	}
-	inline float getYaw( void ) { return _yaw; }
-	inline float getPitch( void ) { return _pitch; }
+	inline float getYaw( void ) const { return _yaw; }
+	inline float getPitch( void ) const { return _pitch; }
 	
 	inline void setYaw( float yaw ) { _yaw = yaw; }
 	inline void setPitch( float pitch ) { _pitch = pitch; }
@@ -1741,16 +1741,17 @@ public:
 	
 	
 	
-	void scale( float scale ) { _scale -= 0.5 * scale;
+	inline void scale( float scale, float center_x = 0, float center_y = 0 ) { 
+		//TODO figure out how to zoom in centered on the given points (rather than just center of screen)
+		_scale -= 0.25 * scale * sqrt( _scale );
 		if( _scale < 1 ) _scale = 1;
-		
 	}
 	
 	inline void resetAngle( void ) { _pitch = _yaw = 0; }
 	
-	inline float getScale() { return _scale; }
-	inline float getX() { return _x; }
-	inline float getY() { return _y; }
+	inline float getScale() const { return _scale; }
+	inline float getX() const { return _x; }
+	inline float getY() const { return _y; }
 };
 	
 class StgCanvas : public Fl_Gl_Window
