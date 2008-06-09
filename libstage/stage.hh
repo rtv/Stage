@@ -1711,19 +1711,26 @@ public:
 	void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;
 
 	
-	inline void move( float x, float y ) { 
+	inline void move( float x, float y ) {
+		//convert screen points into world points
 		x = x / ( _scale );
 		y = y / ( _scale );
 		
+		//adjust for pitch angle
+		y = y / cos( dtor( _pitch ) );
+		
+		//adjust for yaw andle
 		_x += cos( dtor( _yaw ) ) * x;
 		_y += -sin( dtor( _yaw ) ) * x;
 
 		_x += sin( dtor( _yaw ) ) * y;
 		_y += cos( dtor( _yaw ) ) * y;
 	}
+	
 	inline void yaw( float yaw ) { 
 		_yaw += yaw;
 	}
+	
 	inline void pitch( float pitch ) {
 		_pitch += pitch;
 		if( _pitch < -90 )
@@ -1731,6 +1738,7 @@ public:
 		else if( _pitch > 0 )
 			_pitch = 0;
 	}
+	
 	inline float getYaw( void ) const { return _yaw; }
 	inline float getPitch( void ) const { return _pitch; }
 	
@@ -1741,12 +1749,7 @@ public:
 	
 	
 	
-	inline void scale( float scale, float center_x = 0, float center_y = 0 ) { 
-		//TODO figure out how to zoom in centered on the given points (rather than just center of screen)
-		_scale -= 0.25 * scale * sqrt( _scale );
-		if( _scale < 1 ) _scale = 1;
-	}
-	
+	void scale( float scale, float shift_x = 0, float h = 0, float shift_y = 0, float w = 0 );	
 	inline void resetAngle( void ) { _pitch = _yaw = 0; }
 	
 	inline float getScale() const { return _scale; }

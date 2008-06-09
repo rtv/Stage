@@ -169,7 +169,7 @@ int StgCanvas::handle(int event)
 	}
       else
 	{
-		camera.scale( Fl::event_dy(), Fl::event_x() - w() / 2, - ( Fl::event_y() - h() / 2 ) );
+		camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
 	  invalidate();
 	}
       return 1;
