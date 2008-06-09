@@ -1059,7 +1059,7 @@ namespace Draw
   
     virtual void Load( const char* worldfile_path );
     virtual void Reload();
-    virtual void Save();
+    virtual bool Save( const char* filename );
     virtual bool Update(void);
     virtual void AddModel( StgModel* mod );
     virtual void RemoveModel( StgModel* mod );
@@ -1839,10 +1839,11 @@ public:
   void Cycle();
   
   virtual void Load( const char* filename );
-  virtual void Save();
+  virtual bool Save( const char* filename );
   
   // static callback functions
   static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
+  static void SaveAsCallback( Fl_Widget* wid, StgWorldGui* world );
   
   virtual void PushColor( stg_color_t col )
   { canvas->PushColor( col ); } 

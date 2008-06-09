@@ -232,15 +232,15 @@ bool Worldfile::Save(const char *filename)
     filename = this->filename;
 
   // Open file
-  //FILE *file = fopen(filename, "w+");
-  FILE *file = FileOpen(filename, "w+");
+  FILE *file = fopen(filename, "w+");
+  //FILE *file = FileOpen(filename, "w+");
   if (!file)
   {
     PRINT_ERR2("unable to open world file %s : %s",
                filename, strerror(errno));
     return false;
   }
-
+  
   // TODO - make a backup before saving the file
 
   // Write the current set of tokens to the file

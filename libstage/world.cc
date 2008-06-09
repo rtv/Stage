@@ -654,14 +654,14 @@ static void _save_cb( gpointer key, gpointer data, gpointer user )
   ((StgModel*)data)->Save();
 }
 
-void StgWorld::Save( void )
+bool StgWorld::Save( const char *filename )
 {
   // ask every model to save itself
   //g_hash_table_foreach( this->models_by_id, stg_model_save_cb, NULL );
   
   ForEachModel( _save_cb, NULL );
 
-  this->wf->Save(NULL);
+  return this->wf->Save( filename );
 }
 
 static void _reload_cb( gpointer key, gpointer data, gpointer user )

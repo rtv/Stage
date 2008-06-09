@@ -103,6 +103,7 @@ debug menu that enables visualization of some of the innards of Stage.
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_Output.H>
 #include <FL/Fl_Multiline_Output.H>
+#include <FL/Fl_File_Chooser.H>
 
 static const char* MITEM_VIEW_DATA =      "View/Data";
 static const char* MITEM_VIEW_BLOCKS =    "View/Blocks";
@@ -188,7 +189,7 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L)
   
   mbar->add( "File", 0, 0, 0, FL_SUBMENU );
   mbar->add( "File/Save File", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
-  //mbar->add( "File/Save File &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback *)dummy_cb, 0, FL_MENU_DIVIDER );
+  mbar->add( "File/Save File &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback *)SaveAsCallback, this, FL_MENU_DIVIDER );
   mbar->add( "File/Exit", FL_CTRL+'q', (Fl_Callback *)dummy_cb, 0 );
  
   mbar->add( "View", 0, 0, 0, FL_SUBMENU );
@@ -297,10 +298,41 @@ void StgWorldGui::Load( const char* filename )
 
  void StgWorldGui::SaveCallback( Fl_Widget* wid, StgWorldGui* world )
  {
-   world->Save();
+   // save to current file
+   bool success =  world->Save( NULL ); 
+   if ( !success ) {
+     fl_alert( "Error saving world file." );
+   }
  }
 
-void StgWorldGui::Save( void )
+void StgWorldGui::SaveAsCallback( Fl_Widget* wid, StgWorldGui* world )
+{
+  const char* curFilename = world->wf->filename;
+  const char* newFilename;
+  bool success;
+  const char* pattern = "World Files (*.world)"; 
+  
+  Fl_File_Chooser fc( curFilename, pattern, Fl_File_Chooser::CREATE, "Save File As..." );
+  fc.ok_label( "Save" );
+
+  fc.show();
+  while (fc.shown())
+    Fl::wait();
+  
+  newFilename = fc.value();
+
+  if (newFilename != NULL) {
+    // todo: make sure file ends in .world
+    success = world->Save( newFilename );
+    if ( !success ) {
+      fl_alert( "Error saving world file." );
+    }
+  }
+
+  
+}
+
+bool StgWorldGui::Save( const char* filename )
 {
   PRINT_DEBUG1( "%s.Save()", token );
   
@@ -326,7 +358,7 @@ void StgWorldGui::Save( void )
   
   // TODO - per model visualizations save 
 
-  StgWorld::Save();
+  return StgWorld::Save( filename );
 }
 
 void StgWorld::UpdateCb( StgWorld* world  )
