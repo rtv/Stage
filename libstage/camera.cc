@@ -12,7 +12,52 @@
 
 #include <iostream>
 
-void StgCamera::Draw( void ) const
+//perspective camera
+//perspective camera
+void StgPerspectiveCamera::Draw( void ) const
+{	
+	glMatrixMode (GL_MODELVIEW);
+	glLoadIdentity ();
+	
+	glRotatef( - _pitch, 1.0, 0.0, 0.0 );
+	glRotatef( - _yaw, 0.0, 0.0, 1.0 );
+	
+	std::cout << "y: " << _z << std::endl;
+	glTranslatef( - _x, - _y, - _z );
+	//zooming needs to happen in the Projection code (don't use glScale for zoom)
+	
+}
+
+void StgPerspectiveCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const
+{
+	glMatrixMode (GL_PROJECTION);
+	glLoadIdentity ();
+	
+	gluPerspective( 60.0, pixels_width/pixels_height, 0.01, 100 );
+	
+	glMatrixMode (GL_MODELVIEW);
+}
+
+void StgPerspectiveCamera::update( void )
+{	
+//	_x = 0;
+//	_y = 0;
+//	_z = i;
+	_pitch = 90.0;
+//	_yaw = 90.0;
+}
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Ortho camera
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void StgOrthoCamera::Draw( void ) const
 {	
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
@@ -25,7 +70,7 @@ void StgCamera::Draw( void ) const
 	
 }
 
-void StgCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const
+void StgOrthoCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const
 {
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
@@ -38,7 +83,7 @@ void StgCamera::SetProjection( float pixels_width, float pixels_height, float y_
 }
 
 //TODO re-evaluate the way the camera is shifted when the mouse zooms - it might be possible to simplify
-void StgCamera::scale( float scale, float shift_x, float w, float shift_y, float h )
+void StgOrthoCamera::scale( float scale, float shift_x, float w, float shift_y, float h )
 {
 	float to_scale = -scale;
 	const float old_scale = _scale;

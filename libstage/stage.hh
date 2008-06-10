@@ -1699,6 +1699,34 @@ namespace Draw
 
 class StgCamera 
 {
+public:
+	StgCamera() { }
+	virtual ~StgCamera() { }
+
+	virtual void Draw() const = 0;
+	virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const = 0;
+};
+
+class StgPerspectiveCamera : public StgCamera
+{
+private:
+	float _x, _y, _z;
+	float _pitch; //left-right (about y)
+	float _yaw; //up-down (about x)
+	
+public:
+	StgPerspectiveCamera( void ) : _x( 0 ), _y( 0 ), _z( 0 ), _pitch( 0 ), _yaw( 0 ) { }
+	
+	virtual void Draw() const;
+	virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;			
+	void update( void );
+	
+	inline void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
+	inline void setYaw( float yaw ) { _yaw = yaw; }
+};
+	
+class StgOrthoCamera : public StgCamera
+{
 private:
 	float _x, _y, _z;
 	float _pitch; //left-right (about y)
@@ -1706,9 +1734,9 @@ private:
 	float _scale;
 	
 public:
-	StgCamera( void ) : _x( 0 ), _y( 0 ), _z( 0 ), _pitch( 0 ), _yaw( 0 ), _scale( 15 ) { }
-	void Draw() const;
-	void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;
+	StgOrthoCamera( void ) : _x( 0 ), _y( 0 ), _z( 0 ), _pitch( 0 ), _yaw( 0 ), _scale( 15 ) { }
+	virtual void Draw() const;
+	virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;
 
 	
 	inline void move( float x, float y ) {
@@ -1765,7 +1793,7 @@ class StgCanvas : public Fl_Gl_Window
 private:
   GlColorStack colorstack;
 
-	StgCamera camera;
+	StgOrthoCamera camera;
 	
   int startx, starty;
   bool dragging;
@@ -1791,6 +1819,7 @@ public:
     StgWorld* world;
   
   void FixViewport(int W,int H);
+	virtual void renderFrame();
   virtual void draw();
   virtual int handle( int event );
   void resize(int X,int Y,int W,int H);
@@ -2307,6 +2336,33 @@ public:
     }    
   };
   
+	// CAMERA MODEL ----------------------------------------------------
+	class StgModelCamera : public StgModel
+		{
+		public:
+			
+			StgModelCamera( StgWorld* world,
+								 StgModel* parent, 
+								 stg_id_t id, 
+								 char* typestr );
+			
+			~StgModelCamera();
+			
+			virtual void Load();
+			virtual void Update();
+			virtual void Draw( uint32_t flags, StgCanvas* canvas );
+			
+			// static wrapper for the constructor - all models must implement
+			// this method and add an entry in typetable.cc
+			static StgModel* Create( StgWorld* world,
+									StgModel* parent, 
+									stg_id_t id, 
+									char* typestr )
+			{ 
+				return (StgModel*)new StgModelCamera( world, parent, id, typestr ); 
+			}    
+		};
+	
   // POSITION MODEL --------------------------------------------------------
   
   /** Define a position  control method */

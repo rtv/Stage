@@ -335,7 +335,180 @@ void StgCanvas::DrawGlobalGrid()
   PopColor();
 }
 
-void StgCanvas::draw() 
+void StgCanvas::renderFrame()
+{	
+	
+	if( ! (showflags & STG_SHOW_TRAILS) )
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	
+	// if following selected, shift the view to above the selected robot
+	if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
+    {      
+		glLoadIdentity ();
+		double zclip = 20 * camera.getScale(); //hypot(world->Width(), world->Height()) * camera.getScale();
+		glTranslatef(  0,0,
+					 -zclip / 2.0 );
+		
+		// meter scale
+		glScalef ( camera.getScale(), camera.getScale(), camera.getScale() ); // zoom
+		
+		stg_pose_t gpose = last_selection->GetGlobalPose();
+		
+		// and put it in the center of the window
+		//glRotatef( -rtod(gpose.a), 0,0,1 );
+		glTranslatef(  -gpose.x, -gpose.y, 0 );      
+	}
+	
+	glPushMatrix();
+	
+	// draw the world size rectangle in white, using the polygon offset
+	// so it doesn't z-fight with the models
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_POLYGON_OFFSET_FILL);
+	glPolygonOffset(2.0, 2.0);
+	
+	glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
+	((StgWorldGui*)world)->DrawFloor();
+	
+	glDisable(GL_POLYGON_OFFSET_FILL);
+	
+	if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
+	{
+		glDisable( GL_LINE_SMOOTH );
+		glLineWidth( 1 );
+		glPolygonMode( GL_FRONT, GL_LINE );
+		colorstack.Push(1,0,0);
+		
+		if( showflags & STG_SHOW_OCCUPANCY )
+			((StgWorldGui*)world)->DrawTree( false );
+		
+		if( showflags & STG_SHOW_QUADTREE )
+			((StgWorldGui*)world)->DrawTree( true );
+		
+		colorstack.Pop();
+		
+		glEnable( GL_LINE_SMOOTH );
+	}
+	
+	glPopMatrix();
+	
+	if( showflags & STG_SHOW_GRID )
+		DrawGlobalGrid();    
+	
+	for( GList* it=selected_models; it; it=it->next )
+		((StgModel*)it->data)->DrawSelected();
+	
+	// draw the models
+	if( showflags ) // if any bits are set there's something to draw
+	{
+		if( showflags & STG_SHOW_FOOTPRINT )
+		{
+			glDisable( GL_DEPTH_TEST );
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+			
+			for( GList* it=world->children; it; it=it->next )
+			{
+				((StgModel*)it->data)->DrawTrailFootprint();
+			}
+			glEnable( GL_DEPTH_TEST );
+		}
+		
+		if( showflags & STG_SHOW_TRAILRISE )
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+			
+			for( GList* it=world->children; it; it=it->next )
+			{
+				((StgModel*)it->data)->DrawTrailBlocks();
+			}
+		}
+		
+		if( showflags & STG_SHOW_ARROWS )
+		{
+			glEnable( GL_DEPTH_TEST );
+			for( GList* it=world->children; it; it=it->next )
+			{
+				((StgModel*)it->data)->DrawTrailArrows();
+			}
+		}
+		
+		if( showflags & STG_SHOW_BLOCKS )
+		{
+			for( GList* it=world->children; it; it=it->next )
+			{
+				StgModel* mod = ((StgModel*)it->data);
+				
+				if( mod->displaylist == 0 )
+				{
+					mod->displaylist = glGenLists(1);
+					mod->BuildDisplayList( showflags ); // ready to be rendered
+				}
+				
+				// move into this model's local coordinate frame
+				glPushMatrix();
+				gl_pose_shift( &mod->pose );
+				gl_pose_shift( &mod->geom.pose );
+				
+				// render the pre-recorded graphics for this model and
+				// its children
+				glCallList( mod->displaylist );
+				
+				glPopMatrix();
+			}
+		}
+		
+		//mod->Draw( showflags ); // draw the stuff that changes every update
+		// draw everything else
+		for( GList* it=world->children; it; it=it->next )
+			((StgModel*)it->data)->Draw( showflags, this );
+	}
+	
+	if( world->GetRayList() )
+	{
+		glDisable( GL_DEPTH_TEST );
+		PushColor( 0,0,0,0.5 );
+		for( GList* it = world->GetRayList(); it; it=it->next )
+		{
+			float* pts = (float*)it->data;
+			glBegin( GL_LINES );
+			glVertex2f( pts[0], pts[1] );
+			glVertex2f( pts[2], pts[3] );
+			glEnd();
+		}  
+		PopColor();
+		glEnable( GL_DEPTH_TEST );
+		
+		world->ClearRays();
+	}   
+	
+	if( showflags & STG_SHOW_CLOCK )
+    {
+		glPushMatrix();
+		glLoadIdentity();
+		glDisable( GL_DEPTH_TEST );
+		
+		// if trails are on, we need to clear the clock background
+		
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		
+		colorstack.Push( 0.8,0.8,1.0 ); // pale blue
+		glRectf( -w()/2, -h()/2, -w()/2 +120, -h()/2+20 ); 
+		colorstack.Pop();
+		
+		char clockstr[50];
+		world->ClockString( clockstr, 50 );      
+		
+		colorstack.Push( 0,0,0 ); // black
+		gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr ); 
+		colorstack.Pop();
+		
+		glEnable( GL_DEPTH_TEST );
+		glPopMatrix();
+    }
+	
+}
+
+void StgCanvas::draw()
 {
 	static bool loaded_texture = false;
   //  static int centerx = 0, centery = 0;
@@ -388,176 +561,7 @@ void StgCanvas::draw()
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     }            
 	
-	
-
-	
-  if( ! (showflags & STG_SHOW_TRAILS) )
-  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-  // if following selected, shift the view to above the selected robot
-  if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
-    {      
-      glLoadIdentity ();
-      double zclip = 20 * camera.getScale(); //hypot(world->Width(), world->Height()) * camera.getScale();
-      glTranslatef(  0,0,
-      	     -zclip / 2.0 );
-      
-      // meter scale
-      glScalef ( camera.getScale(), camera.getScale(), camera.getScale() ); // zoom
-      
-      stg_pose_t gpose = last_selection->GetGlobalPose();
-      
-      // and put it in the center of the window
-      //glRotatef( -rtod(gpose.a), 0,0,1 );
-      glTranslatef(  -gpose.x, -gpose.y, 0 );      
-     }
-   
-   glPushMatrix();
-
-   // draw the world size rectangle in white, using the polygon offset
-   // so it doesn't z-fight with the models
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(2.0, 2.0);
-   
-   glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
-   ((StgWorldGui*)world)->DrawFloor();
-
-   glDisable(GL_POLYGON_OFFSET_FILL);
-   
-   if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
-     {
-       glDisable( GL_LINE_SMOOTH );
-       glLineWidth( 1 );
-       glPolygonMode( GL_FRONT, GL_LINE );
-       colorstack.Push(1,0,0);
-       
-       if( showflags & STG_SHOW_OCCUPANCY )
- 	 ((StgWorldGui*)world)->DrawTree( false );
-       
-       if( showflags & STG_SHOW_QUADTREE )
- 	 ((StgWorldGui*)world)->DrawTree( true );
-       
-       colorstack.Pop();
-       
-       glEnable( GL_LINE_SMOOTH );
-     }
-
-   glPopMatrix();         
-   
-   if( showflags & STG_SHOW_GRID )
-     DrawGlobalGrid();    
-
-   for( GList* it=selected_models; it; it=it->next )
-     ((StgModel*)it->data)->DrawSelected();
-   
-   // draw the models
-   if( showflags ) // if any bits are set there's something to draw
-     {
-       if( showflags & STG_SHOW_FOOTPRINT )
-	 {
-	   glDisable( GL_DEPTH_TEST );
-	   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-	   
-	   for( GList* it=world->children; it; it=it->next )
-	     {
-	       ((StgModel*)it->data)->DrawTrailFootprint();
-	     }
-	   glEnable( GL_DEPTH_TEST );
-	 }
-       
-       if( showflags & STG_SHOW_TRAILRISE )
-	 {
-	   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-	   
-	   for( GList* it=world->children; it; it=it->next )
-	     {
-	       ((StgModel*)it->data)->DrawTrailBlocks();
-	     }
-	 }
-       
-       if( showflags & STG_SHOW_ARROWS )
-	 {
-	   glEnable( GL_DEPTH_TEST );
-	   for( GList* it=world->children; it; it=it->next )
-	     {
-	       ((StgModel*)it->data)->DrawTrailArrows();
-	     }
-	 }
-
-       if( showflags & STG_SHOW_BLOCKS )
-	 {
-	   for( GList* it=world->children; it; it=it->next )
-	     {
-	       StgModel* mod = ((StgModel*)it->data);
-
-	       if( mod->displaylist == 0 )
-		 {
-		   mod->displaylist = glGenLists(1);
-		   mod->BuildDisplayList( showflags ); // ready to be rendered
-		 }
-
-	       // move into this model's local coordinate frame
-	       glPushMatrix();
-	       gl_pose_shift( &mod->pose );
-	       gl_pose_shift( &mod->geom.pose );
-
-	       // render the pre-recorded graphics for this model and
-	       // its children
-	       glCallList( mod->displaylist );
-
-	       glPopMatrix();
-	     }
-	 }
-
-       //mod->Draw( showflags ); // draw the stuff that changes every update
-       // draw everything else
-       for( GList* it=world->children; it; it=it->next )
-         ((StgModel*)it->data)->Draw( showflags, this );
-     }
-   
-   if( world->GetRayList() )
-     {
-       glDisable( GL_DEPTH_TEST );
-       PushColor( 0,0,0,0.5 );
-       for( GList* it = world->GetRayList(); it; it=it->next )
-	 {
-	   float* pts = (float*)it->data;
-	   glBegin( GL_LINES );
-	   glVertex2f( pts[0], pts[1] );
-	   glVertex2f( pts[2], pts[3] );
-	   glEnd();
-	 }  
-       PopColor();
-       glEnable( GL_DEPTH_TEST );
-       
-       world->ClearRays();
-     }   
-
-  if( showflags & STG_SHOW_CLOCK )
-    {
-      glPushMatrix();
-      glLoadIdentity();
-      glDisable( GL_DEPTH_TEST );
-
-      // if trails are on, we need to clear the clock background
-      
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-      colorstack.Push( 0.8,0.8,1.0 ); // pale blue
-      glRectf( -w()/2, -h()/2, -w()/2 +120, -h()/2+20 ); 
-      colorstack.Pop();
-
-      char clockstr[50];
-      world->ClockString( clockstr, 50 );      
-      
-      colorstack.Push( 0,0,0 ); // black
-      gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr ); 
-      colorstack.Pop();
-
-      glEnable( GL_DEPTH_TEST );
-      glPopMatrix();
-    }
+	renderFrame();
 }
 
 void StgCanvas::resize(int X,int Y,int W,int H) 

@@ -10,6 +10,7 @@ add_library( stage SHARED
 	     model_blinkenlight.cc
 	     model_blobfinder.cc 
 	     model_callbacks.cc 
+	     model_camera.cc 
 	     model_fiducial.cc 
 	     model_laser.cc 
 	     model_load.cc 
