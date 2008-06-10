@@ -1819,7 +1819,8 @@ class StgCanvas : public Fl_Gl_Window
 	StgWorld* world;
 
 	void FixViewport(int W,int H);
-	virtual void renderFrame();
+	//robot_camera = true
+	virtual void renderFrame( bool robot_camera = false );
 	virtual void draw();
 	virtual int handle( int event );
 	void resize(int X,int Y,int W,int H);
@@ -1897,6 +1898,8 @@ class StgWorldGui : public StgWorld, public Fl_Window
 
 	void DrawTree( bool leaves );
 	void DrawFloor();
+	
+	StgCanvas* GetCanvas( void ) { return canvas; }
 };
 
 
@@ -2343,6 +2346,13 @@ class StgModelBlinkenlight : public StgModel
 // CAMERA MODEL ----------------------------------------------------
 class StgModelCamera : public StgModel
 {
+	private:
+		StgCanvas* _canvas;
+
+		char* _frame_data;
+		int _frame_data_width;
+		int _frame_data_height;
+	
 	public:
 
 		StgModelCamera( StgWorld* world,
@@ -2355,6 +2365,9 @@ class StgModelCamera : public StgModel
 		virtual void Load();
 		virtual void Update();
 		virtual void Draw( uint32_t flags, StgCanvas* canvas );
+	
+		///Take a screenshot from the camera's perspective
+		const char* GetFrame( int width, int height );
 
 		// static wrapper for the constructor - all models must implement
 		// this method and add an entry in typetable.cc

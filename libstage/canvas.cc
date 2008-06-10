@@ -335,14 +335,18 @@ void StgCanvas::DrawGlobalGrid()
 	PopColor();
 }
 
-void StgCanvas::renderFrame()
+void StgCanvas::renderFrame( bool robot_camera )
 {	
 
-	if( ! (showflags & STG_SHOW_TRAILS) )
+	uint32_t showflags = this->showflags;
+	if( robot_camera == true )
+		showflags = STG_SHOW_BLOCKS;
+	
+	if( ! (showflags & STG_SHOW_TRAILS) || robot_camera )
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	// if following selected, shift the view to above the selected robot
-	if( (showflags & STG_SHOW_FOLLOW)  && last_selection )
+	if( (showflags & STG_SHOW_FOLLOW)  && last_selection && robot_camera == false )
 	{      
 		glLoadIdentity ();
 		double zclip = 20 * camera.getScale(); //hypot(world->Width(), world->Height()) * camera.getScale();
@@ -372,7 +376,7 @@ void StgCanvas::renderFrame()
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
 
-	if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
+	if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) && robot_camera == false )
 	{
 		glDisable( GL_LINE_SMOOTH );
 		glLineWidth( 1 );
@@ -392,7 +396,7 @@ void StgCanvas::renderFrame()
 
 	glPopMatrix();
 
-	if( showflags & STG_SHOW_GRID )
+	if( showflags & STG_SHOW_GRID && robot_camera == false )
 		DrawGlobalGrid();
 
 	for( GList* it=selected_models; it; it=it->next )

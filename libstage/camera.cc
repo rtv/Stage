@@ -33,7 +33,7 @@ void StgPerspectiveCamera::SetProjection( float pixels_width, float pixels_heigh
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
 
-	gluPerspective( 60.0, pixels_width/pixels_height, 0.01, 100 );
+	gluPerspective( 120.0, pixels_width/pixels_height, 0.01, 100 );
 
 	glMatrixMode (GL_MODELVIEW);
 }

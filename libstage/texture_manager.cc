@@ -16,7 +16,7 @@ Fl_Shared_Image* TextureManager::loadImage( const char* filename )
 	if( filename[ 0 ] == '/' || filename[ 0 ] == '~' )
 		return Fl_Shared_Image::get( filename );
 	
-	//TODO move this somewhere else, and include STAGE_PATH, and path relative to user supplied world file
+	//TODO move this somewhere else, and include STAGEPATH, and path relative to user supplied world file
 	const char* prefixes[] = {
 		".",
 		INSTALL_PREFIX "/share/stage",
