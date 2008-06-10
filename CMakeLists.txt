@@ -20,8 +20,10 @@ ADD_DEFINITIONS( -DPROJECT=\"${PROJECT_NAME}\"
 		-DVERSION=\"${VERSION}\" )
 
 include(FindPkgConfig)
-pkg_check_modules( GLIB glib-2.0 )
-pkg_check_modules( PLAYER playercore )
+#variable_watch(PLAYER_FOUND)
+#variable_watch(PLAYER_VERSION)
+pkg_search_module( GLIB glib-2.0 )
+pkg_search_module( PLAYER playercore>=2.1 )
 find_package(OPENGL REQUIRED)
 
 # include(FindFLTK) doesn't seem to work for me, so we work a bit harder
@@ -52,10 +54,15 @@ link_directories(${GLIB_LIBRARY_DIRS}
 ADD_SUBDIRECTORY(libstage)
 ADD_SUBDIRECTORY(examples)
 
-#IF( PLAYER_FOUND )
-#MESSAGE( "Found Player in ${PLAYER_INCLUDE_DIRS}")
-#ADD_SUBDIRECTORY(libstageplugin)
-#ENDIF( PLAYER_FOUND )
+string( REGEX MATCH "([0-9]*)\\.([0-9]*)\\." player_ver ${PLAYER_VERSION} )
+SET(min_player_major 2)
+SET(min_player_minor 1)
+IF( NOT CMAKE_MATCH_1 LESS min_player_major )
+	IF( NOT CMAKE_MATCH_2 LESS min_player_minor )
+		MESSAGE( "Found Player v${PLAYER_VERSION} in ${PLAYER_INCLUDE_DIRS}")
+		ADD_SUBDIRECTORY(libstageplugin)
+	ENDIF()
+ENDIF()
 
 INSTALL(FILES rgb.txt stagelogo.png
         DESTINATION share/stage 
