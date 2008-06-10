@@ -79,7 +79,7 @@ int StgModel::SetProperty( char* key,
     }
 
   // otherwise it's an arbitary property and we store the pointer
-  g_datalist_set_data( &this->props, key, data ); 
+  g_datalist_set_data( &this->props, key, data );
   return 0; // ok
 }
 

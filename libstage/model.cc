@@ -117,7 +117,7 @@ const bool STG_DEFAULT_MOD_ENERGY_CHARGEENABLE = true;
 const stg_watts_t STG_DEFAULT_MOD_ENERGY_GIVERATE =  0.0;
 const stg_meters_t STG_DEFAULT_MOD_ENERGY_PROBERANGE = 0.0;
 const stg_watts_t STG_DEFAULT_MOD_ENERGY_TRICKLERATE = 0.1;
-const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEX = 0.10; 
+const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEX = 0.10;
 const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEY = 0.10;
 const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEZ = 0.10;
 const bool STG_DEFAULT_MOD_GRID = false;
@@ -125,7 +125,7 @@ const bool STG_DEFAULT_MOD_GRIPPERRETURN = false;
 const stg_laser_return_t STG_DEFAULT_MOD_LASERRETURN = LaserVisible;
 const stg_meters_t STG_DEFAULT_MOD_MAP_RESOLUTION = 0.1;
 const stg_movemask_t STG_DEFAULT_MOD_MASK = (STG_MOVE_TRANS | STG_MOVE_ROT);
-const stg_kg_t STG_DEFAULT_MOD_MASS = 10.0; 
+const stg_kg_t STG_DEFAULT_MOD_MASS = 10.0;
 const bool STG_DEFAULT_MOD_NOSE = false;
 const bool STG_DEFAULT_MOD_OBSTACLERETURN = true;
 const bool STG_DEFAULT_MOD_OUTLINE = true;
@@ -152,7 +152,7 @@ StgModel::StgModel( StgWorld* world,
 
   this->id = id;
   this->typestr = typestr;
-  this->parent = parent; 
+  this->parent = parent;
   this->world = world;
 
   this->debug = false;
@@ -166,13 +166,13 @@ StgModel::StgModel( StgWorld* world,
   char* buf = new char[TOKEN_MAX];
 
   snprintf( buf, TOKEN_MAX, "%s.%s:%d", 
-	    anc->Token(), typestr, cnt ); 
+	    anc->Token(), typestr, cnt );
 
   this->token = strdup( buf );
   delete buf;
   
   PRINT_DEBUG2( "model has token \"%s\" and typestr \"%s\"", 
-		this->token, this->typestr );  
+		this->token, this->typestr );
 
   anc->AddChild( this );
   world->AddModel( this );
@@ -250,7 +250,7 @@ StgModel::~StgModel( void )
     
   if( callbacks ) g_hash_table_destroy( callbacks );
 
-  world->RemoveModel( this );  
+  world->RemoveModel( this );
 }
 
 // this should be called after all models have loaded from the
@@ -325,7 +325,7 @@ void StgModel::AddBlock( stg_point_t* pts,
   blocks = 
     g_list_prepend( blocks, new StgBlock( this, pts, pt_count, 
 					  zmin, zmax, 
-					  col, inherit_color ));  
+					  col, inherit_color ));
   
   // force recreation of display lists before drawing
   body_dirty = true;
@@ -533,8 +533,8 @@ void StgModel::SetGlobalVelocity( stg_velocity_t gv )
   double sina = sin( gpose.a );
   
   stg_velocity_t lv;
-  lv.x = gv.x * cosa + gv.y * sina; 
-  lv.y = -gv.x * sina + gv.y * cosa; 
+  lv.x = gv.x * cosa + gv.y * sina;
+  lv.y = -gv.x * sina + gv.y * cosa;
   lv.a = gv.a;
 
   this->SetVelocity( lv );
@@ -547,7 +547,7 @@ stg_pose_t StgModel::GetGlobalPose()
 
   if( this->gpose_dirty )
     {
-      stg_pose_t parent_pose;  
+      stg_pose_t parent_pose;
       
       // find my parent's pose
       if( this->parent )
@@ -609,7 +609,7 @@ void StgModel::MapWithChildren()
   
   // recursive call for all the model's children
   for( GList* it=children; it; it=it->next )
-    ((StgModel*)it->data)->MapWithChildren();  
+    ((StgModel*)it->data)->MapWithChildren();
   
 }
 
@@ -619,7 +619,7 @@ void StgModel::UnMapWithChildren()
   
   // recursive call for all the model's children
   for( GList* it=children; it; it=it->next )
-    ((StgModel*)it->data)->UnMapWithChildren();  
+    ((StgModel*)it->data)->UnMapWithChildren();
 }
 
 void StgModel::Map()
@@ -699,7 +699,7 @@ const char* StgModel::PrintWithPose()
 {
   stg_pose_t gpose = GetGlobalPose();
   
-  static char txt[256];  
+  static char txt[256];
   snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",  
 	   token, 
 	   gpose.x, gpose.y, gpose.z, gpose.a  );
@@ -793,7 +793,7 @@ void StgModel::DrawTrailFootprint()
       gl_pose_shift( &checkpoint->pose );
       gl_pose_shift( &geom.pose );
 
-      stg_color_unpack( checkpoint->color, &r, &g, &b, &a );  
+      stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
       PushColor( r, g, b, 0.1 );
       
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
@@ -824,7 +824,7 @@ void StgModel::DrawTrailBlocks()
       pose.z =  (world->sim_time - checkpoint->time) * timescale;
 
       glPushMatrix();
-      gl_pose_shift( &pose );      
+      gl_pose_shift( &pose );
       gl_pose_shift( &geom.pose );
       glCallList( displaylist);
       glPopMatrix();
@@ -870,16 +870,16 @@ void StgModel::DrawTrailArrows()
 
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
 
-      stg_color_unpack( checkpoint->color, &r, &g, &b, &a );  
+      stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
       PushColor( r/2, g/2, b/2, 1 ); // darker color
 
-      glDepthMask(GL_FALSE); 
+      glDepthMask(GL_FALSE);
       glBegin( GL_TRIANGLES );
       glVertex3f( 0, -dy, 0);
       glVertex3f( dx, 0, 0 );
       glVertex3f( 0, +dy, 0 );
       glEnd();
-      glDepthMask(GL_TRUE); 
+      glDepthMask(GL_TRUE);
 
       PopColor();
       PopColor();
@@ -990,18 +990,18 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
     // draw inside of bubble
     PushColor( STG_BUBBLE_FILL );
     glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-    glPolygonMode( GL_FRONT, GL_FILL );   
+    glPolygonMode( GL_FRONT, GL_FILL );
     glEnable( GL_POLYGON_OFFSET_FILL );
     glPolygonOffset( 1.0, 1.0 );
     gl_draw_octagon( w, h, m );
     glDisable( GL_POLYGON_OFFSET_FILL );
     PopColor();
     // draw outline of bubble
-    PushColor( STG_BUBBLE_BORDER ); 
+    PushColor( STG_BUBBLE_BORDER );
     glLineWidth( 1 );
     glEnable( GL_LINE_SMOOTH );
     glPolygonMode( GL_FRONT, GL_LINE );
-    gl_draw_octagon( w, h, m );   
+    gl_draw_octagon( w, h, m );
     glPopAttrib();
     PopColor();
     
@@ -1059,13 +1059,13 @@ void StgModel::DrawFlagList( void )
            
       // draw the edges darker version of the same color
       double r,g,b,a;
-      stg_color_unpack( flag->color, &r, &g, &b, &a );  
+      stg_color_unpack( flag->color, &r, &g, &b, &a );
       PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
       
       gluQuadricDrawStyle( quadric, GLU_LINE );
       gluSphere( quadric, flag->size/2.0, 4,2 );
 
-      PopColor();      
+      PopColor();
       PopColor();
 
       glTranslatef( 0, 0, flag->size/2.0 );
@@ -1199,13 +1199,13 @@ void StgModel::GPoseDirtyTree( void )
   this->gpose_dirty = true; // our global pose may have changed
   
   for( GList* it = this->children; it; it=it->next )
-    ((StgModel*)it->data)->GPoseDirtyTree();      
+    ((StgModel*)it->data)->GPoseDirtyTree();
 }
 
 void StgModel::SetPose( stg_pose_t pose )
 {
   //PRINT_DEBUG5( "%s.SetPose(%.2f %.2f %.2f %.2f)", 
-  //	this->token, pose->x, pose->y, pose->z, pose->a ); 
+  //	this->token, pose->x, pose->y, pose->z, pose->a );
   
   // if the pose has changed, we need to do some work
   if( memcmp( &this->pose, &pose, sizeof(stg_pose_t) ) != 0 )
@@ -1261,14 +1261,14 @@ void StgModel::SetGeom( stg_geom_t geom )
   
   body_dirty = true;
 
-  Map();  
+  Map();
 
   CallCallbacks( &this->geom );
 }
 
 void StgModel::SetColor( stg_color_t col )
 {
-  this->color = col;  
+  this->color = col;
   body_dirty = true;
   CallCallbacks( &this->color );
 }
@@ -1460,7 +1460,7 @@ StgModel* StgModel::TestCollision( stg_pose_t* posedelta,
 	{ 
 	  // find the local poses of the ends of this block edge
 	  stg_point_t* pt1 = &pts[p];
-	  stg_point_t* pt2 = &pts[(p+1) % pt_count]; 
+	  stg_point_t* pt2 = &pts[(p+1) % pt_count];
 	  double dx = pt2->x - pt1->x;
 	  double dy = pt2->y - pt1->y;
 
@@ -1509,7 +1509,7 @@ void StgModel::UpdatePose( void )
     {
       stg_trail_item_t checkpoint;
       memcpy( &checkpoint.pose, &pose, sizeof(pose));
-      checkpoint.color = color;     
+      checkpoint.color = color;
       checkpoint.time = world->sim_time;
 
       if( trail->len > 100 )

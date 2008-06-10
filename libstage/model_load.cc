@@ -75,7 +75,7 @@ void StgModel::Load( void )
       stg_geom_t geom = GetGeom();
       geom.size.x = wf->ReadTupleLength(this->id, "size3", 0, geom.size.x );
       geom.size.y = wf->ReadTupleLength(this->id, "size3", 1, geom.size.y );
-      geom.size.z = wf->ReadTupleLength(this->id, "size3", 2, geom.size.z );      
+      geom.size.z = wf->ReadTupleLength(this->id, "size3", 2, geom.size.z );
       this->SetGeom( geom );
     }
 
@@ -83,7 +83,7 @@ void StgModel::Load( void )
     {
       stg_pose_t pose = GetPose();
       pose.x = wf->ReadTupleLength(this->id, "pose", 0, pose.x );
-      pose.y = wf->ReadTupleLength(this->id, "pose", 1, pose.y ); 
+      pose.y = wf->ReadTupleLength(this->id, "pose", 1, pose.y );
       pose.a =  wf->ReadTupleAngle(this->id, "pose", 2, pose.a );
       this->SetPose( pose );
     }
@@ -92,8 +92,8 @@ void StgModel::Load( void )
     {
       stg_pose_t pose = GetPose();
       pose.x = wf->ReadTupleLength(this->id, "pose4", 0, pose.x );
-      pose.y = wf->ReadTupleLength(this->id, "pose4", 1, pose.y ); 
-      pose.z = wf->ReadTupleLength(this->id, "pose4", 2, pose.z ); 
+      pose.y = wf->ReadTupleLength(this->id, "pose4", 1, pose.y );
+      pose.z = wf->ReadTupleLength(this->id, "pose4", 2, pose.z );
       pose.a = wf->ReadTupleAngle( this->id, "pose4", 3,  pose.a );
       
       this->SetPose( pose );
@@ -104,7 +104,7 @@ void StgModel::Load( void )
       stg_velocity_t vel = GetVelocity();
       vel.x = wf->ReadTupleLength(this->id, "velocity", 0, vel.x );
       vel.y = wf->ReadTupleLength(this->id, "velocity", 1, vel.y );
-      vel.a = wf->ReadTupleAngle(this->id, "velocity", 3,  vel.a );      
+      vel.a = wf->ReadTupleAngle(this->id, "velocity", 3,  vel.a );
       this->SetVelocity( vel );
 
       if( vel.x || vel.y || vel.z || vel.a )
@@ -117,18 +117,18 @@ void StgModel::Load( void )
       vel.x = wf->ReadTupleLength(this->id, "velocity4", 0, vel.x );
       vel.y = wf->ReadTupleLength(this->id, "velocity4", 1, vel.y );
       vel.z = wf->ReadTupleLength(this->id, "velocity4", 2, vel.z );
-      vel.a =  wf->ReadTupleAngle(this->id, "velocity4", 3,  vel.a );      
+      vel.a =  wf->ReadTupleAngle(this->id, "velocity4", 3,  vel.a );
       this->SetVelocity( vel );
     }
   
   if( wf->PropertyExists( this->id, "boundary" ))
     {
-      this->SetBoundary( wf->ReadInt(this->id, "boundary", this->boundary  ));  
+      this->SetBoundary( wf->ReadInt(this->id, "boundary", this->boundary  ));
     }	  
 
   if( wf->PropertyExists( this->id, "color" ))
     {      
-      stg_color_t col = 0xFFFF0000; // red;  
+      stg_color_t col = 0xFFFF0000; // red;
       const char* colorstr = wf->ReadString( this->id, "color", NULL );
       if( colorstr )
 	{
@@ -138,7 +138,7 @@ void StgModel::Load( void )
 	      col |= 0xFF000000; // set the alpha channel to max
 	    }
 	  else
-	    col = stg_lookup_color( colorstr );  
+	    col = stg_lookup_color( colorstr );
 
 	  this->SetColor( col );
 	}
@@ -175,7 +175,7 @@ void StgModel::Load( void )
       PRINT_DEBUG1( "attempting to load image %s", full );
       
       stg_rotrect_t* rects = NULL;
-      unsigned int rect_count = 0;      
+      unsigned int rect_count = 0;
       unsigned int width, height;
       if( stg_rotrects_from_image_file( full,
 					&rects,
@@ -205,8 +205,8 @@ void StgModel::Load( void )
 	      double epsilon = 0.01;	      
 	      this->AddBlockRect(0,0, epsilon, height );	      
 	      this->AddBlockRect(0,0, width, epsilon );	      
-	      this->AddBlockRect(0, height-epsilon, width, epsilon );      
-	      this->AddBlockRect(width-epsilon,0, epsilon, height ); 
+	      this->AddBlockRect(0, height-epsilon, width, epsilon );
+	      this->AddBlockRect(width-epsilon,0, epsilon, height );
 	    }     
 	  
 	  StgBlock::ScaleList( this->blocks, &this->geom.size );	  
@@ -229,7 +229,7 @@ void StgModel::Load( void )
 
 	//printf( "expecting %d blocks\n", blockcount );
 	
-	char key[256]; 
+	char key[256];
 	for( int l=0; l<blockcount; l++ )
 	  {	  	  
 	    snprintf(key, sizeof(key), "block[%d].points", l);
@@ -269,7 +269,7 @@ void StgModel::Load( void )
 	    const char* colorstr = wf->ReadString( this->id, key, NULL );
 	    if( colorstr )
 	      {
-		blockcol = stg_lookup_color( colorstr );  
+		blockcol = stg_lookup_color( colorstr );
 		inherit_color = false;
 	      }
 	    
@@ -288,8 +288,8 @@ void StgModel::Load( void )
 	    double height = geom.size.y;
 	    this->AddBlockRect(-width/2.0, -height/2.0, epsilon, height );	      
 	    this->AddBlockRect(-width/2.0, -height/2.0, width, epsilon );	      
-	    this->AddBlockRect(-width/2.0, height/2.0-epsilon, width, epsilon );      
-	    this->AddBlockRect(width/2.0-epsilon, -height/2.0, epsilon, height ); 
+	    this->AddBlockRect(-width/2.0, height/2.0-epsilon, width, epsilon );
+	    this->AddBlockRect(width/2.0-epsilon, -height/2.0, epsilon, height );
 	  }     
 
 	this->Map();
@@ -320,19 +320,19 @@ void StgModel::Load( void )
     this->SetGripperReturn( wf->ReadInt( this->id, "gripper_return", this->gripper_return ));
   
   if( wf->PropertyExists( this->id, "gui_nose" ))
-    this->SetGuiNose( wf->ReadInt(this->id, "gui_nose", this->gui_nose ));    
+    this->SetGuiNose( wf->ReadInt(this->id, "gui_nose", this->gui_nose ));
   
   if( wf->PropertyExists( this->id, "gui_grid" ))
-    this->SetGuiGrid( wf->ReadInt(this->id, "gui_grid", this->gui_grid ));  
+    this->SetGuiGrid( wf->ReadInt(this->id, "gui_grid", this->gui_grid ));
   
   if( wf->PropertyExists( this->id, "gui_outline" ))
-    this->SetGuiOutline( wf->ReadInt(this->id, "gui_outline", this->gui_outline )); 
+    this->SetGuiOutline( wf->ReadInt(this->id, "gui_outline", this->gui_outline ));
   
   if( wf->PropertyExists( this->id, "gui_movemask" ))
     this->SetGuiMask( wf->ReadInt(this->id, "gui_movemask", this->gui_mask ));
   
   if( wf->PropertyExists( this->id, "map_resolution" ))
-    this->SetMapResolution( wf->ReadFloat(this->id, "map_resolution", this->map_resolution )); 
+    this->SetMapResolution( wf->ReadFloat(this->id, "map_resolution", this->map_resolution ));
   
   if( wf->PropertyExists( this->id, "ctrl" ))
     {
@@ -345,7 +345,7 @@ void StgModel::Load( void )
     }
 
   if( wf->PropertyExists( this->id, "say" ))
-    this->Say( wf->ReadString(this->id, "say", NULL )); 
+    this->Say( wf->ReadString(this->id, "say", NULL ));
   
   // call any type-specific load callbacks
   this->CallCallbacks( &this->load );
@@ -358,7 +358,7 @@ void StgModel::Load( void )
     }
   
   if( this->debug )
-    printf( "Model \"%s\" is in debug mode\n", token ); 
+    printf( "Model \"%s\" is in debug mode\n", token );
   
   PRINT_DEBUG1( "Model \"%s\" loading complete", token );
 }
@@ -404,7 +404,7 @@ void StgModel::LoadControllerModule( char* lib )
   
   char* stagepath = getenv("STAGEPATH");
   if( stagepath == NULL )
-    stagepath = "."; 
+    stagepath = ".";
 
   lt_dlsetsearchpath( stagepath );
 
@@ -427,7 +427,7 @@ void StgModel::LoadControllerModule( char* lib )
       printf( "Libtool error: %s. Can't open your plugin controller. Quitting\n",
 	      lt_dlerror() ); // report the error from libtool
       
-      PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", lib );  
+      PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", lib );
       exit(-1);
     }
   

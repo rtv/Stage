@@ -33,7 +33,7 @@ void Stg::gl_speech_bubble( float x, float y, float z, const char* str )
 void Stg::gl_draw_octagon( float w, float h, float m )
 {
   glBegin(GL_POLYGON);
-    glVertex2f( m+w, 0 );   
+    glVertex2f( m+w, 0 );
     glVertex2f( w+2*m, m );
     glVertex2f( w+2*m, h+m );
     glVertex2f( m+w, h+2*m );

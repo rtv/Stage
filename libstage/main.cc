@@ -30,8 +30,8 @@ int main( int argc, char* argv[] )
 	  printf( "option %s given", longopts[optindex].name );
 	  break;
 	case 'g': 
-	  usegui = false; 
-	  printf( "[GUI disabled]" ); 
+	  usegui = false;
+	  printf( "[GUI disabled]" );
 	  break;
 	case '?':  
 	  break;
@@ -53,7 +53,7 @@ int main( int argc, char* argv[] )
     {
       if( optindex > 0 )
 	{      
-	  const char* worldfilename = argv[optindex]; 
+	  const char* worldfilename = argv[optindex];
 	  StgWorldGui* world = new StgWorldGui( 400, 300, worldfilename );
 	  world->Load( worldfilename );
 	  world->Start();

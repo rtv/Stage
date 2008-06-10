@@ -194,29 +194,29 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L)
  
   mbar->add( "View", 0, 0, 0, FL_SUBMENU );
   mbar->add( MITEM_VIEW_DATA,      'd', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_DATA ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_DATA ? FL_MENU_VALUE : 0 ));
   mbar->add( MITEM_VIEW_BLOCKS,    'b', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_BLOCKS ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_BLOCKS ? FL_MENU_VALUE : 0 ));
   mbar->add( MITEM_VIEW_GRID,      'g', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_GRID ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_GRID ? FL_MENU_VALUE : 0 ));
   mbar->add( MITEM_VIEW_OCCUPANCY, FL_ALT+'o', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_OCCUPANCY ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_OCCUPANCY ? FL_MENU_VALUE : 0 ));
   mbar->add( MITEM_VIEW_QUADTREE,  FL_ALT+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_QUADTREE ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_QUADTREE ? FL_MENU_VALUE : 0 ));
   mbar->add( MITEM_VIEW_FOLLOW,    'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOLLOW ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOLLOW ? FL_MENU_VALUE : 0 ));
   mbar->add( MITEM_VIEW_CLOCK,    'c', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));
 
   mbar->add( MITEM_VIEW_TRAILS,    't', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));
 
   mbar->add( MITEM_VIEW_FOOTPRINTS,  FL_CTRL+'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOOTPRINT ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOOTPRINT ? FL_MENU_VALUE : 0 ));
   mbar->add( MITEM_VIEW_ARROWS,    FL_CTRL+'a', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_ARROWS ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_ARROWS ? FL_MENU_VALUE : 0 ));
   mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));  
+	     FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));
 
   mbar->add( "Help", 0, 0, 0, FL_SUBMENU );
   mbar->add( "Help/About Stage...", NULL, (Fl_Callback *)About_cb );
@@ -244,7 +244,7 @@ void StgWorldGui::Load( const char* filename )
   int height = (int)wf->ReadTupleFloat(wf_section, "size", 1, h() );
   // on OS X this behaves badly - prevents the Window manager resizing
   //larger than this size.
-  size( width,height ); 
+  size( width,height );
 
 	float x = wf->ReadTupleFloat(wf_section, "center", 0, 0 );
 	float y = wf->ReadTupleFloat(wf_section, "center", 1, 0 );
@@ -269,7 +269,7 @@ void StgWorldGui::Load( const char* filename )
   uint32_t footprints = wf->ReadInt(wf_section, "show_footprints", flags & STG_SHOW_FOOTPRINT ) ? STG_SHOW_FOOTPRINT : 0;
   
   canvas->SetShowFlags( grid | data | follow | blocks | quadtree | clock
-			| trails | arrows | footprints | trailsrising );  
+			| trails | arrows | footprints | trailsrising );
   canvas->invalidate(); // we probably changed something
 
   // fix the GUI menu checkboxes to match
@@ -301,7 +301,7 @@ void StgWorldGui::Load( const char* filename )
  void StgWorldGui::SaveCallback( Fl_Widget* wid, StgWorldGui* world )
  {
    // save to current file
-   bool success =  world->Save( NULL ); 
+   bool success =  world->Save( NULL );
    if ( !success ) {
      fl_alert( "Error saving world file." );
    }
@@ -316,7 +316,7 @@ bool StgWorldGui::SaveAsDialog()
 {
   const char* newFilename;
   bool success = false;
-  const char* pattern = "World Files (*.world)"; 
+  const char* pattern = "World Files (*.world)";
   
   Fl_File_Chooser fc( wf->filename, pattern, Fl_File_Chooser::CREATE, "Save File As..." );
   fc.ok_label( "Save" );

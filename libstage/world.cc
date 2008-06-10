@@ -75,7 +75,7 @@ static gboolean PointIntEqual( stg_point_int_t* p1, stg_point_int_t* p2 )
 
 SuperRegion* StgWorld::CreateSuperRegion( int32_t x, int32_t y )
 {
-  SuperRegion* sr = new SuperRegion( x, y );  
+  SuperRegion* sr = new SuperRegion( x, y );
   g_hash_table_insert( superregions, &sr->origin, sr );
   return sr;
 }
@@ -83,7 +83,7 @@ SuperRegion* StgWorld::CreateSuperRegion( int32_t x, int32_t y )
 void StgWorld::DestroySuperRegion( SuperRegion* sr )
 {
   g_hash_table_remove( superregions, &sr->origin );
-  delete sr; 
+  delete sr;
 }
 
 StgWorld::StgWorld( void )
@@ -91,7 +91,7 @@ StgWorld::StgWorld( void )
   Initialize( "MyWorld",
 	      STG_DEFAULT_WORLD_INTERVAL_SIM, 
 	      STG_DEFAULT_WORLD_INTERVAL_REAL,
-	      STG_DEFAULT_WORLD_PPM );  
+	      STG_DEFAULT_WORLD_PPM );
 }  
 
 StgWorld::StgWorld( const char* token, 
@@ -115,7 +115,7 @@ void StgWorld::Initialize( const char* token,
   
   this->id = StgWorld::next_id++;
   this->ray_list = NULL;
-  this->quit_time = 0; 
+  this->quit_time = 0;
   
   assert(token);
   this->token = (char*)g_malloc(Stg::TOKEN_MAX);
@@ -144,8 +144,8 @@ void StgWorld::Initialize( const char* token,
 					 (GEqualFunc)PointIntEqual );
 
   this->total_subs = 0;
-  this->paused = false; 
-  this->destroy = false;   
+  this->paused = false;
+  this->destroy = false;
   
   // store a global table of all blocks, so they can be rendered all
   // at once.
@@ -174,8 +174,8 @@ StgWorld::~StgWorld( void )
 
 void StgWorld::RemoveModel( StgModel* mod )
 {
-  g_hash_table_remove( models_by_id, mod );  
-  g_hash_table_remove( models_by_name, mod );  
+  g_hash_table_remove( models_by_id, mod );
+  g_hash_table_remove( models_by_name, mod );
 }
 
 void StgWorld::ClockString( char* str, size_t maxlen )
@@ -185,10 +185,10 @@ void StgWorld::ClockString( char* str, size_t maxlen )
   const uint32_t usec_per_second = 1000000;
   const uint32_t usec_per_msec = 1000;
 
-  uint32_t hours   = sim_time / usec_per_hour; 
-  uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute; 
-  uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second; 
-  uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec; 
+  uint32_t hours   = sim_time / usec_per_hour;
+  uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
+  uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
+  uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
   
   // find the average length of the last few realtime intervals;
   stg_usec_t average_real_interval = 0;
@@ -233,7 +233,7 @@ void init_models( gpointer dummy1, StgModel* mod, gpointer dummy2 )
 
 void StgWorld::Load( const char* worldfile_path )
 {
-  printf( " [Loading %s]", worldfile_path );      
+  printf( " [Loading %s]", worldfile_path );
   fflush(stdout);
 
   stg_usec_t load_start_time = RealTimeNow();
@@ -262,7 +262,7 @@ void StgWorld::Load( const char* worldfile_path )
   
   if( wf->PropertyExists( entity, "resolution" ) )
     this->ppm = 
-      1.0 / wf->ReadFloat( entity, "resolution", STG_DEFAULT_WORLD_PPM ); 
+      1.0 / wf->ReadFloat( entity, "resolution", STG_DEFAULT_WORLD_PPM );
   
   this->paused = 
     wf->ReadInt( entity, "paused", this->paused );
@@ -300,7 +300,7 @@ void StgWorld::Load( const char* worldfile_path )
       else
 	{
 	  PRINT_ERR1( "Unknown model type %s in world file.", 
-		      typestr ); 
+		      typestr );
 	  exit( 1 );
 	}
       
@@ -425,7 +425,7 @@ bool StgWorld::Update()
 void StgWorld::AddModel( StgModel*  mod  )
 {
   //PRINT_DEBUG3( "World %s adding model %d %s to hash tables ", 
-  //        token, mod->id, mod->Token() );  
+  //        token, mod->id, mod->Token() );
 
   g_hash_table_insert( this->models_by_id, (gpointer)mod->Id(), mod );
   AddModelName( mod );
@@ -434,7 +434,7 @@ void StgWorld::AddModel( StgModel*  mod  )
 
 void StgWorld::AddModelName( StgModel* mod )
 {
-  g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );    
+  g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
 }
 
 StgModel* StgWorld::GetModel( const char* name )
@@ -460,7 +460,7 @@ void StgWorld::RecordRay( double x1, double y1, double x2, double y2 )
   float* drawpts = new float[4];
   drawpts[0] = x1;
   drawpts[1] = y1;
-  drawpts[2] = x2; 
+  drawpts[2] = x2;
   drawpts[3] = y2;
   ray_list = g_list_append( ray_list, drawpts );
 }
@@ -489,12 +489,12 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 			 bool ztest )  // number of samples
 {
   pose.a -= fov/2.0; // direction of first ray
-  stg_radians_t angle_incr = fov/(double)sample_count; 
+  stg_radians_t angle_incr = fov/(double)sample_count;
   
   for( uint32_t s=0; s < sample_count; s++ )
     {
       Raytrace( pose, range, func, model, arg, &samples[s], ztest );
-      pose.a += angle_incr;       
+      pose.a += angle_incr;
     }
 }
 
@@ -534,7 +534,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	   
   // fast integer line 3d algorithm adapted from Cohen's code from
   // Graphics Gems IV
-  int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;  
+  int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;
   sx = sgn(dx);  sy = sgn(dy);  sz = sgn(dz);
   ax = abs(dx);  ay = abs(dy);  az = abs(dz);
   bx = 2*ax;	 by = 2*ay;	bz = 2*az;
@@ -566,7 +566,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
       sup.y = y >> SRBITS;
       
       //  printf( "pixel [%d %d]\tS[ %d %d ]\t",
-      //      x, y, sup.x, sup.y ); 
+      //      x, y, sup.x, sup.y );
       
       if( ! (sup.x == lastsup.x && sup.y == lastsup.y )) 
 	{
@@ -581,11 +581,11 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	  reg.x = (x - ( sup.x << SRBITS)) >> RBITS;
 	  reg.y = (y - ( sup.y << SRBITS)) >> RBITS;
 	  
-	  //  printf( "R[ %d %d ]\t", reg.x, reg.y ); 
+	  //  printf( "R[ %d %d ]\t", reg.x, reg.y );
 	  
 	  if( ! (reg.x == lastreg.x && reg.y == lastreg.y ))
 	    {
-	      r = sr->GetRegion( reg.x, reg.y );       
+	      r = sr->GetRegion( reg.x, reg.y );
 	      lastreg = reg;
 	    }
 	  
@@ -596,13 +596,13 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	      cell.x = x - ((sup.x << SRBITS) + (reg.x << RBITS));
 	      cell.y = y - ((sup.y << SRBITS) + (reg.y << RBITS));
 
-	      //  printf( "C[ %d %d ]\t", cell.x, cell.y ); 
+	      //  printf( "C[ %d %d ]\t", cell.x, cell.y );
 	      
 	      for( GSList* list = r->GetCell( cell.x, cell.y )->list;
 		   list;
 		   list = list->next )      
 		{	      	      
-		  StgBlock* block = (StgBlock*)list->data;       
+		  StgBlock* block = (StgBlock*)list->data;
 		  assert( block );
 		  
 		  // if this block does not belong to the searching model and it
@@ -678,12 +678,12 @@ void StgWorld::Reload( void )
 void StgWorld::StartUpdatingModel( StgModel* mod )
 {
   if( g_list_find( this->update_list, mod ) == NULL )
-    this->update_list = g_list_append( this->update_list, mod ); 
+    this->update_list = g_list_append( this->update_list, mod );
 }
 
 void StgWorld::StopUpdatingModel( StgModel* mod )
 {
-  this->update_list = g_list_remove( this->update_list, mod ); 
+  this->update_list = g_list_remove( this->update_list, mod );
 }
 
 // int32_t StgWorld::MetersToPixels( stg_meters_t m )
@@ -700,7 +700,7 @@ int StgWorld::AddBlockPixel( int x, int y, int z,
   sup.y = y >> SRBITS;
   
   //printf( "ADDBLOCKPIXEL pixel [%d %d]  S[ %d %d ]\t",
-  //  x, y, sup.x, sup.y ); 
+  //  x, y, sup.x, sup.y );
   
   SuperRegion* sr = (SuperRegion*)
     g_hash_table_lookup( rinfo->world->superregions, (void*)&sup );
@@ -727,7 +727,7 @@ int StgWorld::AddBlockPixel( int x, int y, int z,
   
   // find the pixel coords inside this superregion
   stg_point_int_t cell;
-  cell.x = x - ( sup.x << SRBITS);    
+  cell.x = x - ( sup.x << SRBITS);
   cell.y = y - ( sup.y << SRBITS);
   
   //printf( "C[ %d %d]", cell.x, cell.y );
@@ -742,7 +742,7 @@ void StgWorld::Extend( stg_point3_t pt )
   extent.x.min = MIN( extent.x.min, pt.x);
   extent.x.max = MAX( extent.x.max, pt.x );
   extent.y.min = MIN( extent.y.min, pt.y );
-  extent.y.max = MAX( extent.y.max, pt.y );      
+  extent.y.max = MAX( extent.y.max, pt.y );
   extent.z.min = MIN( extent.z.min, pt.z );
-  extent.z.max = MAX( extent.z.max, pt.z );      
+  extent.z.max = MAX( extent.z.max, pt.z );
 }

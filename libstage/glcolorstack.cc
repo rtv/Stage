@@ -12,7 +12,7 @@ GlColorStack::~GlColorStack()
 
 void GlColorStack::Push( GLdouble col[4] )
 {
-  size_t sz =  4 * sizeof(col[0]);  
+  size_t sz =  4 * sizeof(col[0]);
   GLdouble *keep = (GLdouble*)malloc( sz );
   memcpy( keep, col, sz );
   
@@ -68,7 +68,7 @@ void GlColorStack::Pop( void )
   else
     {
       GLdouble *col = (GLdouble*)g_queue_pop_head( colorstack );
-      glColor4dv( col ); 
+      glColor4dv( col );
       free( col );
     }
 }

@@ -511,7 +511,7 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
     fullpath = (char*) malloc(PATH_MAX);
     memset(fullpath, 0, PATH_MAX);
     strcat( fullpath, dirname(tmp));
-    strcat( fullpath, "/" ); 
+    strcat( fullpath, "/" );
     strcat( fullpath, filename );
     assert(strlen(fullpath) + 1 < PATH_MAX);
     free(tmp);
@@ -524,9 +524,9 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
     char *tmp = strdup(this->filename);
     fullpath = (char*) malloc(PATH_MAX);
     getcwd(fullpath, PATH_MAX);
-    strcat( fullpath, "/" ); 
+    strcat( fullpath, "/" );
     strcat( fullpath, dirname(tmp));
-    strcat( fullpath, "/" ); 
+    strcat( fullpath, "/" );
     strcat( fullpath, filename );
     assert(strlen(fullpath) + 1 < PATH_MAX);
     free(tmp);
@@ -691,7 +691,7 @@ bool Worldfile::SaveTokens(FILE *file)
     if (token->include > 0)
       continue;
     if (token->type == TokenString)
-      fprintf(file, "\"%s\"", token->value);  
+      fprintf(file, "\"%s\"", token->value);
     else
       fprintf(file, "%s", token->value);
   }
@@ -728,7 +728,7 @@ bool Worldfile::AddToken(int type, const char *value, int include)
     this->tokens = (CToken*) realloc(this->tokens, this->token_size * sizeof(this->tokens[0]));
   }
 
-  this->tokens[this->token_count].include = include;  
+  this->tokens[this->token_count].include = include;
   this->tokens[this->token_count].type = type;
   this->tokens[this->token_count].value = strdup(value);
   this->token_count++;
@@ -1398,7 +1398,7 @@ CProperty* Worldfile::GetProperty(int entity, const char *name)
 //   else
 //     printf( "key %s not found\n", key );
 
-  return prop;  
+  return prop;
 }
 
 
@@ -1472,7 +1472,7 @@ void Worldfile::WriteString(int entity, const char *name, const char *value)
   CProperty* property = GetProperty(entity, name);
   if( property == NULL )
     return;
-  SetPropertyValue(property, 0, value);  
+  SetPropertyValue(property, 0, value);
 }
 
 
@@ -1612,7 +1612,7 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
     char *fullpath = (char*) malloc(PATH_MAX);
     memset(fullpath, 0, PATH_MAX);
     strcat( fullpath, dirname(tmp));
-    strcat( fullpath, "/" ); 
+    strcat( fullpath, "/" );
     strcat( fullpath, filename );
     assert(strlen(fullpath) + 1 < PATH_MAX);
     free(tmp);
@@ -1627,9 +1627,9 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
     char *tmp = strdup(this->filename);
     char *fullpath = (char*) malloc(PATH_MAX);
     getcwd(fullpath, PATH_MAX);
-    strcat( fullpath, "/" ); 
+    strcat( fullpath, "/" );
     strcat( fullpath, dirname(tmp));
-    strcat( fullpath, "/" ); 
+    strcat( fullpath, "/" );
     strcat( fullpath, filename );
     assert(strlen(fullpath) + 1 < PATH_MAX);
     free(tmp);
@@ -1662,11 +1662,11 @@ void Worldfile::WriteTupleString(int entity, const char *name,
     {
       /* TODO
 	 property = InsertProperty(entity, name);
-	 SetPropertyValue(property, index, value);  
+	 SetPropertyValue(property, index, value);
       */
     }
     else
-      SetPropertyValue(property, index, value);  
+      SetPropertyValue(property, index, value);
 }
 
 

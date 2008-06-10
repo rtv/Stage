@@ -120,7 +120,7 @@ void StgModelBlinkenlight::Draw( uint32_t flags, StgCanvas* canvas )
       // move into this model's local coordinate frame      
       gl_pose_shift( &this->pose );
       gl_pose_shift( &this->geom.pose );
-      glLineWidth( 3 );      
+      glLineWidth( 3 );
       LISTMETHOD( this->blocks, StgBlock*, Draw );
       glLineWidth( 1 );
       glPopMatrix(); // drop out of local coords

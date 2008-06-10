@@ -2,7 +2,7 @@
 
 StgFlag::StgFlag( stg_color_t color, double size )
 { 
-  this->color = color; 
+  this->color = color;
   this->size = size;
 }
 

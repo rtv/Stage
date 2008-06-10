@@ -53,7 +53,7 @@ int main( int argc, char* argv[] )
 
   world.Load( argv[1] );
   
-  char namebuf[256];  
+  char namebuf[256];
   robot_t* robots = new robot_t[POPSIZE];
 
   for( int i=0; i<POPSIZE; i++ )
@@ -107,7 +107,7 @@ int main( int argc, char* argv[] )
 	  
 	  for( unsigned int s=0; s< rgr->sensor_count; s++ )
 	    {
-	      double srange = rgr->samples[s]; 
+	      double srange = rgr->samples[s];
 	      
 	      dx += srange * cos( rgr->sensors[s].pose.a );
 	      dy += srange * sin( rgr->sensors[s].pose.a );
@@ -148,8 +148,8 @@ int main( int argc, char* argv[] )
 	     //printf( "robot %s [%.2f %.2f %.2f %.2f]\n",
 	     //robots[i].position->Token(), vel.x, vel.y, vel.z, vel.a );
 	     
-	//  uint32_t bcount=0;     
-	//stg_blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );    
+	//  uint32_t bcount=0;
+	//stg_blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );
 
      //printf( "robot %s sees %u blobs\n", robots[i].blobfinder->Token(), bcount );	       
 
@@ -157,6 +157,6 @@ int main( int argc, char* argv[] )
     }
   
 
-  delete[] robots;  
+  delete[] robots;
   exit( 0 );
 }

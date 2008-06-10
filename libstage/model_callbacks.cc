@@ -86,7 +86,7 @@ void StgModel::CallCallbacks(  void* address )
   //printf( "Model %s has %d callbacks. Checking key %d\n", 
   //  mod->token, g_hash_table_size( mod->callbacks ), key );
   
-  GList* cbs = (GList*)g_hash_table_lookup( callbacks, &key ); 
+  GList* cbs = (GList*)g_hash_table_lookup( callbacks, &key );
   
   //printf( "key %d has %d callbacks registered\n",
   //  key, g_list_length( cbs ) );
@@ -121,7 +121,7 @@ void StgModel::CallCallbacks(  void* address )
       for( ; doomed ; doomed = doomed->next )
 	this->RemoveCallback( address, (stg_model_callback_t)doomed->data );
       
-      g_list_free( doomed );      
+      g_list_free( doomed );
     }
 
 }

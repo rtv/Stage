@@ -63,7 +63,7 @@ void StgBlock::DrawTop()
    glPushMatrix();
    glTranslatef( 0,0,zmax);
    glVertexPointer( 2, GL_DOUBLE, 0, pts );
-   glDrawArrays( GL_POLYGON, 0, pt_count );   
+   glDrawArrays( GL_POLYGON, 0, pt_count );
    glPopMatrix();
 }       
 
@@ -108,14 +108,14 @@ void StgBlock::Draw()
   
 //   // draw the block outline in a darker version of the same color
    double r,g,b,a;
-   stg_color_unpack( color, &r, &g, &b, &a );  
+   stg_color_unpack( color, &r, &g, &b, &a );
    PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
-  glDepthMask(GL_FALSE); 
+  glDepthMask(GL_FALSE);
   DrawTop();
-  DrawSides();  
-  glDepthMask(GL_TRUE); 
+  DrawSides();
+  glDepthMask(GL_TRUE);
   
   PopColor();
   PopColor();
@@ -184,7 +184,7 @@ void StgBlock::UnMap()
       stg_list_entry_t* pt = 
 	&g_array_index( rendered_points, stg_list_entry_t, p);
       
-      *pt->head = g_slist_delete_link( *pt->head, pt->link );      
+      *pt->head = g_slist_delete_link( *pt->head, pt->link );
       
       // decrement the region and superregion render counts
       (*pt->counter1)--;
@@ -206,7 +206,7 @@ void StgBlock::RecordRenderPoint( GSList** head,
   el.link = link;
   el.counter1 = c1;
   el.counter2 = c2;
-  g_array_append_val( rendered_points, el ); 
+  g_array_append_val( rendered_points, el );
 }
 
 
@@ -217,7 +217,7 @@ void StgBlock::ScaleList( GList* blocks,
     return;
 
   // assuming the blocks currently fit in a square +/- one billion units
-  double minx, miny, maxx, maxy; 
+  double minx, miny, maxx, maxy;
   minx = miny =  billion;
   maxx = maxy = -billion;
 

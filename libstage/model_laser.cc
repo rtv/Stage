@@ -85,10 +85,10 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 		id, typestr );
   
   // sensible laser defaults 
-  interval = 1e3 * DEFAULT_LASER_INTERVAL_MS; 
+  interval = 1e3 * DEFAULT_LASER_INTERVAL_MS;
   laser_return = LaserVisible;
   
-  stg_geom_t geom; 
+  stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
   geom.size.x = DEFAULT_LASER_SIZEX;
   geom.size.y = DEFAULT_LASER_SIZEY;
@@ -101,7 +101,7 @@ StgModelLaser::StgModelLaser( StgWorld* world,
   range_min    = DEFAULT_LASER_MINRANGE;
   range_max    = DEFAULT_LASER_MAXRANGE;
   fov          = DEFAULT_LASER_FOV;
-  sample_count = DEFAULT_LASER_SAMPLES;  
+  sample_count = DEFAULT_LASER_SAMPLES;
   resolution   = DEFAULT_LASER_RESOLUTION;
   
   // don't allocate sample buffer memory until Update() is called
@@ -120,14 +120,14 @@ StgModelLaser::~StgModelLaser( void )
 
 void StgModelLaser::Load( void )
 {  
-  StgModel::Load(); 
+  StgModel::Load();
 
   Worldfile* wf = world->GetWorldFile();
   
-  sample_count = wf->ReadInt( id, "samples", sample_count );        
+  sample_count = wf->ReadInt( id, "samples", sample_count );
   range_min = wf->ReadLength( id, "range_min", range_min);
   range_max = wf->ReadLength( id, "range_max", range_max );
-  fov       = wf->ReadAngle( id, "fov",  fov );      
+  fov       = wf->ReadAngle( id, "fov",  fov );
   resolution = wf->ReadInt( id, "laser_sample_skip",  resolution );
   
   if( resolution < 1 )
@@ -153,7 +153,7 @@ void StgModelLaser::SetConfig( stg_laser_cfg_t cfg )
   range_min = cfg.range_bounds.min;
   range_max = cfg.range_bounds.max;
   fov = cfg.fov;
-  resolution = cfg.resolution;      
+  resolution = cfg.resolution;
 }
 
 static bool laser_raytrace_match( StgBlock* testblock, 
@@ -173,7 +173,7 @@ static bool laser_raytrace_match( StgBlock* testblock,
 void StgModelLaser::Update( void )
 {     
   double bearing = -fov/2.0;
-  double sample_incr = fov / (double)(sample_count-1);  
+  double sample_incr = fov / (double)(sample_count-1);
   
   samples = g_renew( stg_laser_sample_t, samples, sample_count );
   
@@ -204,7 +204,7 @@ void StgModelLaser::Update( void )
 	samples[t].reflectance = 0;
 		  
        // todo - lower bound on range      
-       bearing += sample_incr;      
+       bearing += sample_incr;
      }
 
    // we may need to interpolate the samples we skipped 
@@ -231,7 +231,7 @@ void StgModelLaser::Update( void )
    
    data_dirty = true;
 
-  StgModel::Update();  
+  StgModel::Update();
 }
 
 
@@ -289,13 +289,13 @@ void StgModelLaser::Print( char* prefix )
 
 stg_laser_sample_t* StgModelLaser::GetSamples( uint32_t* count )
 { 
-  if( count ) *count = sample_count; 
-  return samples; 
+  if( count ) *count = sample_count;
+  return samples;
 }
 
 void StgModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
 { 
-  this->samples = g_renew( stg_laser_sample_t, this->samples, sample_count );      
+  this->samples = g_renew( stg_laser_sample_t, this->samples, sample_count );
   memcpy( this->samples, samples, sample_count * sizeof(stg_laser_sample_t));
   this->sample_count = count;
   this->data_dirty = true;
@@ -322,11 +322,11 @@ void StgModelLaser::DataVisualize( void )
   
   glPointSize( 4.0 );
   
-  glVertexPointer( 2, GL_FLOAT, 0, pts );   
+  glVertexPointer( 2, GL_FLOAT, 0, pts );
 
   for( unsigned int s=0; s<sample_count; s++ )
     {
-      double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;  
+      double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
       pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
       pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
       
@@ -359,9 +359,9 @@ void StgModelLaser::DataVisualize( void )
   
   // reset
   PopColor();
-  PopColor();      
+  PopColor();
   glDepthMask( GL_TRUE );
-  glPopMatrix();      
+  glPopMatrix();
 }
 
 

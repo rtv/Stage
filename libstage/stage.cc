@@ -33,8 +33,8 @@ void Stg::Init( int* argc, char** argv[] )
   if(!setlocale(LC_ALL,"POSIX"))
     PRINT_WARN("Failed to setlocale(); config file may not be parse correctly\n" );
   
-  typetable = stg_create_typetable();      
-  init_called = true;  
+  typetable = stg_create_typetable();
+  init_called = true;
 
   // ask FLTK to load support for various image formats
   fl_register_images();
@@ -113,8 +113,8 @@ int Stg::stg_polygon_3d( stg_point_int_t* pts, unsigned int pt_count,
   
   for( unsigned int p=0; p<pt_count; p++ )
     {
-      int32_t x = pts[p].x; 
-      int32_t y = pts[p].y; 
+      int32_t x = pts[p].x;
+      int32_t y = pts[p].y;
       
       int32_t dx = pts[(p+1)%pt_count].x - x;
       int32_t dy = pts[(p+1)%pt_count].y - y;
@@ -153,14 +153,14 @@ void Stg::stg_print_velocity( stg_velocity_t* vel )
 stg_msec_t Stg::stg_realtime( void )
 {
   struct timeval tv;
-  gettimeofday( &tv, NULL );  
+  gettimeofday( &tv, NULL );
   stg_msec_t timenow = (stg_msec_t)( tv.tv_sec*1e3 + tv.tv_usec/1e3 );
   return timenow;
 }
 
 stg_msec_t Stg::stg_realtime_since_start( void )
 {
-  static stg_msec_t starttime = 0;  
+  static stg_msec_t starttime = 0;
   stg_msec_t timenow = stg_realtime();
   
   if( starttime == 0 )
@@ -273,8 +273,8 @@ void Stg::stg_rotrects_normalize( stg_rotrect_t* rects, int num )
     {
       // test the origin of the rect
       if( rects[r].pose.x < minx ) minx = rects[r].pose.x;
-      if( rects[r].pose.y < miny ) miny = rects[r].pose.y;      
-      if( rects[r].pose.x > maxx ) maxx = rects[r].pose.x;      
+      if( rects[r].pose.y < miny ) miny = rects[r].pose.y;
+      if( rects[r].pose.x > maxx ) maxx = rects[r].pose.x;
       if( rects[r].pose.y > maxy ) maxy = rects[r].pose.y;
 
       // test the extremes of the rect
@@ -325,7 +325,7 @@ stg_pose_t Stg::pose_sum( stg_pose_t p1, stg_pose_t p2 )
   double cosa = cos(p1.a);
   double sina = sin(p1.a);
   
-  stg_pose_t result;  
+  stg_pose_t result;
   result.x = p1.x + p2.x * cosa - p2.y * sina;
   result.y = p1.y + p2.x * sina + p2.y * cosa;
   result.z = p1.z + p2.z;
@@ -442,7 +442,7 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 	  for( ; x < img_width &&  ! pb_pixel_is_set(img,x,y,threshold); x++ )
 	    {
 	      // handle horizontal cropping
-	      //double ppx = x * sx; 
+	      //double ppx = x * sx;
 	      //if (ppx < this->crop_ax || ppx > this->crop_bx)
 	      //continue;
 	      
@@ -455,7 +455,7 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 		  //if (ppy < this->crop_ay || ppy > this->crop_by)
 		  //continue;
 		  
-		  yy++; 
+		  yy++;
 		} 	      
 
 	      // now yy is the depth of a line of non-zero pixels
@@ -490,7 +490,7 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 	  
 	  //printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
 	  //  *rect_count, 
-	  //  latest->x, latest->y, latest->a, latest->w, latest->h ); 
+	  //  latest->x, latest->y, latest->a, latest->w, latest->h );
 	  
 	}
     }
@@ -531,7 +531,7 @@ stg_point_t* Stg::stg_unit_square_points_create( void )
   pts[2].x = 1;
   pts[2].y = 1;
   pts[3].x = 0;
-  pts[3].y = 1;  
+  pts[3].y = 1;
   
   return pts;
 }

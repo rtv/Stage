@@ -1,10 +1,10 @@
 #include "stage.hh"
 using namespace Stg;
 
-const double cruisespeed = 0.4; 
-const double avoidspeed = 0.05; 
+const double cruisespeed = 0.4;
+const double avoidspeed = 0.05;
 const double avoidturn = 1.0;
-const double minfrontdistance = 0.8;  
+const double minfrontdistance = 0.8;
 const bool verbose = false;
 
 typedef struct
@@ -43,7 +43,7 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
   stg_laser_sample_t* scan = robot->laser->GetSamples( &sample_count );
   assert(scan);
   
-  double newturnrate=0.0, newspeed=0.0;  
+  double newturnrate=0.0, newspeed=0.0;
   bool obstruction = false;
   
   // find the closest distance to the left and right and check if

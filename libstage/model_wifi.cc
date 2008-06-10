@@ -55,7 +55,7 @@ int
 wifi_init( stg_model_t* mod )
 {
   // we don't consume any power until subscribed
-  mod->watts = 0.0; 
+  mod->watts = 0.0;
   
   // override the default methods; these will be called by the simualtion
   // engine
@@ -102,7 +102,7 @@ wifi_update( stg_model_t* mod, void* unused )
   
   // get the sensor's pose in global coords
   stg_pose_t pz;
-  memcpy( &pz, &geom.pose, sizeof(pz) ); 
+  memcpy( &pz, &geom.pose, sizeof(pz) );
   stg_model_local_to_global( mod, &pz );
 
   

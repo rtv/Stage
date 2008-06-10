@@ -98,7 +98,7 @@ StgModelBlobfinder::StgModelBlobfinder( StgWorld* world,
   blobs = g_array_new( false, true, sizeof(stg_blobfinder_blob_t));
 
   // leave the color filter array empty initally - this tracks all colors
-  colors = g_array_new( false, true, sizeof(stg_color_t) );  
+  colors = g_array_new( false, true, sizeof(stg_color_t) );
 }
 
 
@@ -146,7 +146,7 @@ void StgModelBlobfinder::RemoveAllColors()
 
 void StgModelBlobfinder::Load( void )
 {  
-  StgModel::Load(); 
+  StgModel::Load();
   
   Worldfile* wf = world->GetWorldFile();
   
@@ -187,7 +187,7 @@ void StgModelBlobfinder::Update( void )
   Raytrace( pan, range, fov, blob_match, NULL, samples, scan_width, false );
   
   // now the colors and ranges are filled in - time to do blob detection
-  double yRadsPerPixel = fov / scan_height; 
+  double yRadsPerPixel = fov / scan_height;
 
   g_array_set_size( blobs, 0 );
 
@@ -252,7 +252,7 @@ void StgModelBlobfinder::Update( void )
 
       // fill in an array entry for this blob
       stg_blobfinder_blob_t blob;
-      memset( &blob, 0, sizeof(blob) );      
+      memset( &blob, 0, sizeof(blob) );
       blob.color = blobcol;
       blob.left = blobleft;
       blob.top = blobtop;

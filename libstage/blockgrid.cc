@@ -35,7 +35,7 @@ void StgBlockGrid::AddBlock( uint32_t x, uint32_t y, StgBlock* block )
 
   if( x < width && y < height )
     {  
-      cells[ x+y*width ] = g_slist_prepend( cells[ x+y*width ], block ); 
+      cells[ x+y*width ] = g_slist_prepend( cells[ x+y*width ], block );
       block->RecordRenderPoint( x, y );
     }
 }
@@ -46,7 +46,7 @@ void StgBlockGrid::RemoveBlock( uint32_t x, uint32_t y, StgBlock* block )
   
   if( x < width && y < height )
     {
-      cells[ x+y*width ] = g_slist_remove( cells[ x+y*width ], block ); 
+      cells[ x+y*width ] = g_slist_remove( cells[ x+y*width ], block );
     }
 }
 
@@ -62,7 +62,7 @@ void StgBlockGrid::GlobalRemoveBlock( StgBlock* block )
 {
   for( uint32_t x=0; x<width; x++ )
     for( uint32_t y=0; y<height; y++ )
-      RemoveBlock(x,y,block );    
+      RemoveBlock(x,y,block );
 }
 
 void StgBlockGrid::Draw( bool drawall )

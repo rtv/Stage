@@ -79,12 +79,12 @@ StgModel* StgCanvas::Select( int x, int y )
   // id + a 100% alpha value
   for( GList* it=world->children; it; it=it->next )
     {
-      StgModel* mod = (StgModel*)it->data;      
+      StgModel* mod = (StgModel*)it->data;
 
       if( mod->GuiMask() & (STG_MOVE_TRANS | STG_MOVE_ROT ))
 	{
 	  uint32_t col = (mod->Id() | 0xFF000000);
-	  glColor4ubv( (GLubyte*)&col );     
+	  glColor4ubv( (GLubyte*)&col );
 	  mod->DrawPicker();
 	}
     }
@@ -141,7 +141,7 @@ void StgCanvas::CanvasToWorld( int px, int py,
   glGetIntegerv(GL_VIEWPORT, viewport);
   
   GLdouble modelview[16];
-  glGetDoublev(GL_MODELVIEW_MATRIX, modelview); 
+  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
   
   GLdouble projection[16];	
   glGetDoublev(GL_PROJECTION_MATRIX, projection);	
@@ -177,7 +177,7 @@ int StgCanvas::handle(int event)
     case FL_MOVE: // moused moved while no button was pressed
       if( Fl::event_state( FL_CTRL ) )
 	{          
-	  int dx = Fl::event_x() - startx; 
+	  int dx = Fl::event_x() - startx;
 	  int dy = Fl::event_y() - starty;
 	    
 		camera.pitch( 0.5 * static_cast<double>( dy ) );
@@ -187,7 +187,7 @@ int StgCanvas::handle(int event)
 	}
       else if( Fl::event_state( FL_ALT ) )
 	{       
-	  int dx = Fl::event_x() - startx; 
+	  int dx = Fl::event_x() - startx;
 	  int dy = Fl::event_y() - starty;
 	    
 		camera.move( -dx, dy );
@@ -195,7 +195,7 @@ int StgCanvas::handle(int event)
 	}
       
       startx = Fl::event_x();
-      starty = Fl::event_y();      
+      starty = Fl::event_y();
       return 1;
 
     case FL_PUSH: // button pressed
@@ -225,7 +225,7 @@ int StgCanvas::handle(int event)
       
     case FL_DRAG: // mouse moved while button was pressed
       {
-	int dx = Fl::event_x() - startx; 
+	int dx = Fl::event_x() - startx;
 	int dy = Fl::event_y() - starty;
 	
 	switch( Fl::event_button() )
@@ -356,7 +356,7 @@ void StgCanvas::renderFrame()
 		
 		// and put it in the center of the window
 		//glRotatef( -rtod(gpose.a), 0,0,1 );
-		glTranslatef(  -gpose.x, -gpose.y, 0 );      
+		glTranslatef(  -gpose.x, -gpose.y, 0 );
 	}
 	
 	glPushMatrix();
@@ -393,7 +393,7 @@ void StgCanvas::renderFrame()
 	glPopMatrix();
 	
 	if( showflags & STG_SHOW_GRID )
-		DrawGlobalGrid();    
+		DrawGlobalGrid();
 	
 	for( GList* it=selected_models; it; it=it->next )
 		((StgModel*)it->data)->DrawSelected();
@@ -492,14 +492,14 @@ void StgCanvas::renderFrame()
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		
 		colorstack.Push( 0.8,0.8,1.0 ); // pale blue
-		glRectf( -w()/2, -h()/2, -w()/2 +120, -h()/2+20 ); 
+		glRectf( -w()/2, -h()/2, -w()/2 +120, -h()/2+20 );
 		colorstack.Pop();
 		
 		char clockstr[50];
-		world->ClockString( clockstr, 50 );      
+		world->ClockString( clockstr, 50 );
 		
 		colorstack.Push( 0,0,0 ); // black
-		gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr ); 
+		gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr );
 		colorstack.Pop();
 		
 		glEnable( GL_DEPTH_TEST );
@@ -516,8 +516,8 @@ void StgCanvas::draw()
   
   if (!valid()) 
     { 
-      valid(1); 
-      FixViewport(w(), h()); 
+      valid(1);
+      FixViewport(w(), h());
 
       // set gl state that won't change every redraw
       glClearColor ( 0.7, 0.7, 0.8, 1.0);
@@ -526,7 +526,7 @@ void StgCanvas::draw()
       glEnable (GL_DEPTH_TEST);
       glDepthFunc (GL_LESS);
       glCullFace( GL_BACK );
-      glEnable (GL_CULL_FACE);  
+      glEnable (GL_CULL_FACE);
       glEnable( GL_BLEND );
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
       glEnable( GL_LINE_SMOOTH );

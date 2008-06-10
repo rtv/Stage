@@ -51,12 +51,12 @@ void StgAncestor::AddChild( StgModel* mod )
   IncrementNumChildrenOfType( mod->typestr );
   
   // store as a child
-  children = g_list_append( children, mod );     
+  children = g_list_append( children, mod );
 }
 
 void StgAncestor::RemoveChild( StgModel* mod )
 {
-  puts( "TODO: StgWorld::RemoveChild()" );    
+  puts( "TODO: StgWorld::RemoveChild()" );
 }
 
 stg_pose_t StgAncestor::GetGlobalPose()

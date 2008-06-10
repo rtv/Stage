@@ -264,7 +264,7 @@ void StgModelRanger::Update( void )
     return;
   
   if( samples ==  NULL )
-    samples = new stg_meters_t[sensor_count];  
+    samples = new stg_meters_t[sensor_count];
   assert( samples );
   
   //PRINT_DEBUG2( "[%d] updating ranger %s", (int)world->sim_time_ms, token );
@@ -283,8 +283,8 @@ void StgModelRanger::Update( void )
 		NULL,
 		&ray );
       
-      samples[t] = MAX( ray.range, sensors[t].bounds_range.min ); 
-      //sensors[t].error = TODO;            
+      samples[t] = MAX( ray.range, sensors[t].bounds_range.min );
+      //sensors[t].error = TODO;
     }   
 }
 
@@ -339,7 +339,7 @@ void StgModelRanger::DataVisualize( void )
     { 
       if( samples[s] > 0.0 ) 
 	{ 
-	  stg_ranger_sensor_t* rngr = &sensors[s]; 
+	  stg_ranger_sensor_t* rngr = &sensors[s];
 	      
 	  //double dx =  rngr->size.x/2.0;
 	  //double dy =  rngr->size.y/2.0;
@@ -352,20 +352,20 @@ void StgModelRanger::DataVisualize( void )
 	  glEnd();
 	      
 	  // sensor FOV 
-	  double sidelen = samples[s]; 
-	  double da = rngr->fov/2.0; 
+	  double sidelen = samples[s];
+	  double da = rngr->fov/2.0;
 	      
 	  unsigned int index = s*9;
 	  pts[index+0] = rngr->pose.x;
 	  pts[index+1] = rngr->pose.y;
 	  pts[index+2] = rngr->pose.z;
 
-	  pts[index+3] = rngr->pose.x + sidelen*cos(rngr->pose.a - da ); 
-	  pts[index+4] = rngr->pose.y + sidelen*sin(rngr->pose.a - da ); 
+	  pts[index+3] = rngr->pose.x + sidelen*cos(rngr->pose.a - da );
+	  pts[index+4] = rngr->pose.y + sidelen*sin(rngr->pose.a - da );
 	  pts[index+5] = rngr->pose.z;
 
-	  pts[index+6] = rngr->pose.x + sidelen*cos(rngr->pose.a + da ); 
-	  pts[index+7] = rngr->pose.y + sidelen*sin(rngr->pose.a + da ); 
+	  pts[index+6] = rngr->pose.x + sidelen*cos(rngr->pose.a + da );
+	  pts[index+7] = rngr->pose.y + sidelen*sin(rngr->pose.a + da );
 	  pts[index+8] = rngr->pose.z;
 	}
     }
@@ -373,15 +373,15 @@ void StgModelRanger::DataVisualize( void )
   //PopColor();
 
   // draw the filled triangles in transparent blue
-  glDepthMask( GL_FALSE ); 
+  glDepthMask( GL_FALSE );
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   PushColor( 0, 1, 0, 0.1 ); // transparent pale green       
   glEnableClientState( GL_VERTEX_ARRAY );
-  glVertexPointer( 3, GL_FLOAT, 0, pts );         
+  glVertexPointer( 3, GL_FLOAT, 0, pts );
   glDrawArrays( GL_TRIANGLES, 0, 3 * sensor_count );
       
   // restore state 
-  glDepthMask( GL_TRUE ); 
+  glDepthMask( GL_TRUE );
   PopColor();
 
   glPopMatrix();

@@ -75,7 +75,7 @@ StgModelFiducial::StgModelFiducial( StgWorld* world,
 
   this->ClearBlocks();
 
-  stg_geom_t geom; 
+  stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
   SetGeom( geom );
 
@@ -83,7 +83,7 @@ StgModelFiducial::StgModelFiducial( StgWorld* world,
   min_range = DEFAULT_FIDUCIAL_RANGEMIN;
   max_range_anon = DEFAULT_FIDUCIAL_RANGEMAXANON;
   max_range_id = DEFAULT_FIDUCIAL_RANGEMAXID;
-  fov = DEFAULT_FIDUCIAL_FOV;  
+  fov = DEFAULT_FIDUCIAL_FOV;
   key = 0;
 
   data = g_array_new( false, true, sizeof(stg_fiducial_t) );
@@ -122,9 +122,9 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
   stg_pose_t mypose = this->GetGlobalPose();
 
   // are we within range?
-  stg_pose_t hispose = him->GetGlobalPose();  
+  stg_pose_t hispose = him->GetGlobalPose();
   double dx = hispose.x - mypose.x;
-  double dy = hispose.y - mypose.y;  
+  double dy = hispose.y - mypose.y;
   double range = hypot( dy, dx );
 
   //  printf( "range to target %.2f m (
@@ -178,7 +178,7 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
       stg_geom_t hisgeom = him->GetGeom();
       
       // record where we saw him and what he looked like
-      stg_fiducial_t fid;      
+      stg_fiducial_t fid;
       fid.range = range;
       fid.bearing = dtheta;
       fid.geom.x = hisgeom.size.x;
@@ -296,7 +296,7 @@ void StgModelFiducial::Update( void )
        snprintf(idstr, 31, "%d", fid.id );
 
        PushColor( 0,0,0,1 ); // black
-       gl_draw_string( 0,0,0, idstr ); 
+       gl_draw_string( 0,0,0, idstr );
        PopColor();
 
        glPopMatrix();

@@ -92,7 +92,7 @@ StgModelPosition::StgModelPosition( StgWorld* world,
 		id, typestr );
    
   // no power consumed until we're subscribed
-  this->SetWatts( 0 ); 
+  this->SetWatts( 0 );
   
   // sensible position defaults
   stg_velocity_t vel;
@@ -104,12 +104,12 @@ StgModelPosition::StgModelPosition( StgWorld* world,
   // configure the position-specific stuff
  
   // control
-  memset( &goal, 0, sizeof(goal));  
+  memset( &goal, 0, sizeof(goal));
   drive_mode = POSITION_DRIVE_DEFAULT;
   control_mode = POSITION_CONTROL_DEFAULT;
 
   // localization
-  localization_mode = POSITION_LOCALIZATION_DEFAULT;  
+  localization_mode = POSITION_LOCALIZATION_DEFAULT;
 
   integration_error.x =  
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_X - 
@@ -175,7 +175,7 @@ void StgModelPosition::Load( void )
   // specified
   est_origin = this->GetGlobalPose();
 
-  keyword = "localization_origin"; 
+  keyword = "localization_origin";
   if( wf->PropertyExists( this->id, keyword ) )
     {  
       est_origin.x = wf->ReadTupleLength( id, keyword, 0, est_origin.x );
@@ -191,12 +191,12 @@ void StgModelPosition::Load( void )
       double cosa = cos(est_origin.a);
       double sina = sin(est_origin.a);
       double dx = gpose.x - est_origin.x;
-      double dy = gpose.y - est_origin.y; 
-      est_pose.x = dx * cosa + dy * sina; 
+      double dy = gpose.y - est_origin.y;
+      est_pose.x = dx * cosa + dy * sina;
       est_pose.y = dy * cosa - dx * sina;
 
       // zero position error: assume we know exactly where we are on startup
-      memset( &est_pose_error, 0, sizeof(est_pose_error));      
+      memset( &est_pose_error, 0, sizeof(est_pose_error));
     }
 
   // odometry model parameters
@@ -384,7 +384,7 @@ void StgModelPosition::Load( void )
       // this->watts = STG_POSITION_WATTS + 
       //fabs(vel->x) * STG_POSITION_WATTS_KGMS * this->mass + 
       //fabs(vel->y) * STG_POSITION_WATTS_KGMS * this->mass + 
-      //fabs(vel->a) * STG_POSITION_WATTS_KGMS * this->mass; 
+      //fabs(vel->a) * STG_POSITION_WATTS_KGMS * this->mass;
 
       //PRINT_DEBUG4( "model %s velocity (%.2f %.2f %.2f)",
       //	    this->token, 
@@ -407,8 +407,8 @@ void StgModelPosition::Load( void )
 	double cosa = cos(est_origin.a);
 	double sina = sin(est_origin.a);
 	double dx = gpose.x - est_origin.x;
-	double dy = gpose.y - est_origin.y; 
-	est_pose.x = dx * cosa + dy * sina; 
+	double dy = gpose.y - est_origin.y;
+	est_pose.x = dx * cosa + dy * sina;
 	est_pose.y = dy * cosa - dx * sina;
 
       }
@@ -426,7 +426,7 @@ void StgModelPosition::Load( void )
 	double dx = (vel.x * dt) * (1.0 + integration_error.x );
 	double dy = (vel.y * dt) * (1.0 + integration_error.y );
 	
-	est_pose.x += dx * cosa + dy * sina; 
+	est_pose.x += dx * cosa + dy * sina;
 	est_pose.y -= dy * cosa - dx * sina;
 
       }
@@ -449,7 +449,7 @@ void StgModelPosition::Load( void )
    
    this->SetWatts( STG_POSITION_WATTS );
    
-   //stg_model_position_odom_reset( mod );   
+   //stg_model_position_odom_reset( mod );
  }
 
  void StgModelPosition::Shutdown( void )
@@ -457,8 +457,8 @@ void StgModelPosition::Load( void )
    PRINT_DEBUG( "position shutdown" );
    
    // safety features!
-   bzero( &goal, sizeof(goal) ); 
-   bzero( &velocity, sizeof(velocity) ); 
+   bzero( &goal, sizeof(goal) );
+   bzero( &velocity, sizeof(velocity) );
    
    this->SetWatts( 0 );
    
@@ -468,35 +468,35 @@ void StgModelPosition::Load( void )
 void StgModelPosition::SetSpeed( double x, double y, double a ) 
 { 
   control_mode = STG_POSITION_CONTROL_VELOCITY;
-  goal.x = x; 
-  goal.y = y; 
-  goal.z = 0; 
-  goal.a = a; 
+  goal.x = x;
+  goal.y = y;
+  goal.z = 0;
+  goal.a = a;
 }  
 
 void StgModelPosition::SetXSpeed( double x )
 { 
   control_mode = STG_POSITION_CONTROL_VELOCITY;
-  goal.x = x; 
+  goal.x = x;
 }  
 
 
 void StgModelPosition::SetYSpeed( double y )
 { 
   control_mode = STG_POSITION_CONTROL_VELOCITY;
-  goal.y = y; 
+  goal.y = y;
 }  
 
 void StgModelPosition::SetZSpeed( double z )
 { 
   control_mode = STG_POSITION_CONTROL_VELOCITY;
-  goal.z = z; 
+  goal.z = z;
 }  
 
 void StgModelPosition::SetTurnSpeed( double a )
 { 
   control_mode = STG_POSITION_CONTROL_VELOCITY;
-  goal.a = a; 
+  goal.a = a;
 }  
 
 
@@ -509,10 +509,10 @@ void StgModelPosition::SetSpeed( stg_velocity_t vel )
 void StgModelPosition::GoTo( double x, double y, double a ) 
 {
   control_mode = STG_POSITION_CONTROL_POSITION;
-  goal.x = x; 
-  goal.y = y; 
-  goal.z = 0; 
-  goal.a = a; 
+  goal.x = x;
+  goal.y = y;
+  goal.z = 0;
+  goal.a = a;
 }  
 
 void StgModelPosition::GoTo( stg_pose_t pose ) 
