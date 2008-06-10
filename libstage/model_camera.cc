@@ -13,26 +13,26 @@
 #include "stage_internal.hh"
 
 StgModelCamera::StgModelCamera( StgWorld* world, 
-										   StgModel* parent,
-										   stg_id_t id,
-										   char* typestr )
+		StgModel* parent,
+		stg_id_t id,
+		char* typestr )
 : StgModel( world, parent, id, typestr )
 {
 	PRINT_DEBUG2( "Constructing StgModelCamera %d (%s)\n", 
-				 id, typestr );
-    
+			id, typestr );
+
 	// Set up sensible defaults
-	
+
 	this->SetColor( stg_lookup_color( "green" ) );
-	
-	
+
+
 	stg_geom_t geom;
 	memset( &geom, 0, sizeof(geom)); // no size
 	geom.size.x = 0.02;
 	geom.size.y = 0.02;
 	geom.size.z = 0.02;
 	this->SetGeom( geom );
-	
+
 	this->Startup();
 }
 
@@ -44,7 +44,7 @@ void StgModelCamera::Load( void )
 {
 	StgModel::Load();	
 	Worldfile* wf = world->GetWorldFile();
-	
+
 }
 
 

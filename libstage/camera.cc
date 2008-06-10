@@ -18,33 +18,33 @@ void StgPerspectiveCamera::Draw( void ) const
 {	
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
-	
+
 	glRotatef( - _pitch, 1.0, 0.0, 0.0 );
 	glRotatef( - _yaw, 0.0, 0.0, 1.0 );
-	
+
 	std::cout << "y: " << _z << std::endl;
 	glTranslatef( - _x, - _y, - _z );
 	//zooming needs to happen in the Projection code (don't use glScale for zoom)
-	
+
 }
 
 void StgPerspectiveCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const
 {
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
-	
+
 	gluPerspective( 60.0, pixels_width/pixels_height, 0.01, 100 );
-	
+
 	glMatrixMode (GL_MODELVIEW);
 }
 
 void StgPerspectiveCamera::update( void )
 {	
-//	_x = 0;
-//	_y = 0;
-//	_z = i;
+	//	_x = 0;
+	//	_y = 0;
+	//	_z = i;
 	_pitch = 90.0;
-//	_yaw = 90.0;
+	//	_yaw = 90.0;
 }
 
 
@@ -61,24 +61,24 @@ void StgOrthoCamera::Draw( void ) const
 {	
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
-	
+
 	glRotatef( _pitch, 1.0, 0.0, 0.0 );
 	glRotatef( _yaw, 0.0, 0.0, 1.0 );
-	
+
 	glTranslatef( - _x, - _y, 0.0 );
 	//zooming needs to happen in the Projection code (don't use glScale for zoom)
-	
+
 }
 
 void StgOrthoCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const
 {
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
-	
+
 	glOrtho( -pixels_width/2.0 / _scale, pixels_width/2.0 / _scale,
 			-pixels_height/2.0 / _scale, pixels_height/2.0 / _scale,
 			y_min * _scale * 2, y_max * _scale * 2 );	
-	
+
 	glMatrixMode (GL_MODELVIEW);
 }
 
@@ -87,27 +87,27 @@ void StgOrthoCamera::scale( float scale, float shift_x, float w, float shift_y, 
 {
 	float to_scale = -scale;
 	const float old_scale = _scale;
-	
+
 	//TODO setting up the factor can use some work
 	float factor = 1.0 + fabs( to_scale ) / 25;
 	if( factor < 1.1 )
 		factor = 1.1; //this must be greater than 1.
 	else if( factor > 2.5 )
 		factor = 2.5;
-	
+
 	//convert the shift distance to the range [-0.5, 0.5]
 	shift_x = shift_x / w - 0.5;
 	shift_y = shift_y / h - 0.5;
-	
+
 	//adjust the shift values based on the factor (this represents how much the positions grows/shrinks)
 	shift_x *= factor - 1.0;
 	shift_y *= factor - 1.0;
-	
+
 	if( to_scale > 0 ) {
 		//zoom in
 		_scale *= factor;
 		move( shift_x * w / _scale * _scale, 
-			- shift_y * h / _scale * _scale );
+				- shift_y * h / _scale * _scale );
 	}
 	else {
 		//zoom out
@@ -117,7 +117,7 @@ void StgOrthoCamera::scale( float scale, float shift_x, float w, float shift_y, 
 		} else {
 			//shift camera to follow where mouse zoomed out
 			move( - shift_x * w / old_scale * _scale, 
-			        shift_y * h / old_scale * _scale );
+					shift_y * h / old_scale * _scale );
 		}
 	}
 }
