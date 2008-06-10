@@ -102,20 +102,20 @@ overwritten.
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_Output.H>
-#include <FL/Fl_Multiline_Output.H>
+#include <FL/Fl_Text_Display.H>
 #include <FL/Fl_File_Chooser.H>
 
-	static const char* MITEM_VIEW_DATA =      "View/Data";
-	static const char* MITEM_VIEW_BLOCKS =    "View/Blocks";
-	static const char* MITEM_VIEW_GRID =      "View/Grid";
-	static const char* MITEM_VIEW_OCCUPANCY = "View/Occupancy";
-	static const char* MITEM_VIEW_QUADTREE =  "View/Tree";
-	static const char* MITEM_VIEW_FOLLOW =    "View/Follow";
-	static const char* MITEM_VIEW_CLOCK =     "View/Clock";
-	static const char* MITEM_VIEW_FOOTPRINTS = "View/Trails/Footprints";
-	static const char* MITEM_VIEW_BLOCKSRISING =  "View/Trails/Blocks rising";
-	static const char* MITEM_VIEW_ARROWS =     "View/Trails/Arrows rising";
-	static const char* MITEM_VIEW_TRAILS =     "View/Trail";
+static const char* MITEM_VIEW_DATA =      "&View/&Data";
+static const char* MITEM_VIEW_BLOCKS =    "&View/&Blocks";
+static const char* MITEM_VIEW_GRID =      "&View/&Grid";
+static const char* MITEM_VIEW_OCCUPANCY = "&View/&Occupancy";
+static const char* MITEM_VIEW_QUADTREE =  "&View/&Tree";
+static const char* MITEM_VIEW_FOLLOW =    "&View/&Follow";
+static const char* MITEM_VIEW_CLOCK =     "&View/&Clock";
+static const char* MITEM_VIEW_FOOTPRINTS = "&View/T&rails/&Footprints";
+static const char* MITEM_VIEW_BLOCKSRISING =  "&View/T&rails/&Blocks rising";
+static const char* MITEM_VIEW_ARROWS =     "&View/T&rails/&Arrows rising";
+static const char* MITEM_VIEW_TRAILS =     "&View/&Trail";
 
 	// hack - get this from somewhere sensible, like CMake's config file
 	const char* PACKAGE_STRING = "Stage-3.dev";
@@ -138,13 +138,13 @@ overwritten.
 	resizable(canvas);
 	end();
 
-	mbar->add( "File", 0, 0, 0, FL_SUBMENU );
+	mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
 	mbar->add( "File/&Load World...", FL_CTRL + 'l', (Fl_Callback *)LoadCallback, this, FL_MENU_DIVIDER );
 	mbar->add( "File/Save World", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
 	mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback *)SaveAsCallback, this, FL_MENU_DIVIDER );
 	mbar->add( "File/Exit", FL_CTRL+'q', (Fl_Callback *)QuitCallback, this );
 
-	mbar->add( "View", 0, 0, 0, FL_SUBMENU );
+	mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
 	mbar->add( MITEM_VIEW_DATA,      'd', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_DATA ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_BLOCKS,    'b', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
@@ -170,8 +170,8 @@ overwritten.
 	mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));
 
-	mbar->add( "Help", 0, 0, 0, FL_SUBMENU );
-	mbar->add( "Help/About Stage...", NULL, (Fl_Callback *)About_cb );
+	mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
+	mbar->add( "Help/&About Stage...", NULL, (Fl_Callback *)About_cb );
 	//mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
 
 	callback( (Fl_Callback*)WindowCallback, this );
@@ -370,33 +370,62 @@ void StgWorldGui::view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas )
 void StgWorldGui::About_cb( Fl_Widget* ) 
 {
 	fl_register_images();
-	Fl_Window win(400,200); // make a window
-	Fl_Box box(10,20,400-20,80 ); // widget that will contain image
+	
+	const int Width = 400;
+	const int Height = 220;
+	const int Spc = 10;
+	const int ButtonH = 25;
+	const int ButtonW = 60;
+	
+	Fl_Window win( Width, Height ); // make a window
 
-	// temporary hack
+	// <temporary hack>
 	const char* stagepath = getenv("STAGEPATH");
 	const char* logopath = "../../../assets/logo.png";
 	char* fullpath = (char*)malloc( strlen(stagepath) + strlen(logopath) + 2 );
 	strcpy( fullpath, stagepath );
 	strcat( fullpath, "/" );
 	strcat( fullpath, logopath );
-	printf("fullpath: %s\n", fullpath);
+	printf("fullpath: %s\n", fullpath); 
 	Fl_PNG_Image png(fullpath); // load image into ram
 	free( fullpath );
+	
+	Fl_Box box( Spc, Spc, 
+			    Width-2*Spc, png.h() ); // widget that will contain image
+	
+
+	// </temporary hack>
+	
 	box.image(png); // attach image to box
 
-	Fl_Multiline_Output text( 20,120, 400-20, 100 );
+	Fl_Text_Display text( Spc, png.h()+2*Spc,
+						  Width-2*Spc, Height-png.h()-ButtonH-4*Spc );
 	text.box( FL_NO_BOX );
-	char buf[256];
-	snprintf( buf, 255,
-			"%s\n" 
-			"Part of the Player Project\n"
-			"http://playerstage.sourceforge.net\n"
-			"Copyright 2000-2008 Richard Vaughan and contributors",
-			PACKAGE_STRING );
-	text.value( buf );
+	text.color(win.color());
+	
+	const char* AboutText = 
+		"\n" 
+		"Part of the Player Project\n"
+		"http://playerstage.sourceforge.net\n"
+		"Copyright 2000-2008 Richard Vaughan and contributors";
+	
+	Fl_Text_Buffer tBuffer;
+	tBuffer.append( PACKAGE_STRING );
+	tBuffer.append( AboutText );
+	text.buffer( tBuffer );
+	
+	Fl_Return_Button button( (Width - ButtonW)/2, Height-Spc-ButtonH,
+					  ButtonW, ButtonH,
+					  "&OK" );
+	button.callback( (Fl_Callback*)HelpAboutCallback );
+	
 	win.show();
-	Fl::run();
+	while (win.shown())
+		Fl::wait();
+}
+
+void StgWorldGui::HelpAboutCallback( Fl_Widget* wid ) {
+	wid->window()->hide();
 }
 
 bool StgWorldGui::Save( const char* filename )

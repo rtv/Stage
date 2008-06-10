@@ -1879,6 +1879,7 @@ class StgWorldGui : public StgWorld, public Fl_Window
 	static void SaveAsCallback( Fl_Widget* wid, StgWorldGui* world );
 	static void QuitCallback( Fl_Widget* wid, StgWorldGui* world );
 	static void About_cb( Fl_Widget* wid );
+	static void HelpAboutCallback( Fl_Widget* wid );
 	static void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas );
 	static void WindowCallback( Fl_Widget* wid, StgWorldGui* world );
 
