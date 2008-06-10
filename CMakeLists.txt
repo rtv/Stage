@@ -23,7 +23,7 @@ include(FindPkgConfig)
 #variable_watch(PLAYER_FOUND)
 #variable_watch(PLAYER_VERSION)
 pkg_search_module( GLIB glib-2.0 )
-pkg_search_module( PLAYER playercore>=2.1 )
+pkg_search_module( PLAYER playercore )
 find_package(OPENGL REQUIRED)
 
 # include(FindFLTK) doesn't seem to work for me, so we work a bit harder
