@@ -345,23 +345,6 @@ void StgCanvas::renderFrame( bool robot_camera )
 	if( ! (showflags & STG_SHOW_TRAILS) || robot_camera )
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	// if following selected, shift the view to above the selected robot
-	if( (showflags & STG_SHOW_FOLLOW)  && last_selection && robot_camera == false )
-	{      
-		glLoadIdentity ();
-		double zclip = 20 * camera.getScale(); //hypot(world->Width(), world->Height()) * camera.getScale();
-		glTranslatef(  0,0,
-				-zclip / 2.0 );
-
-		// meter scale
-		glScalef ( camera.getScale(), camera.getScale(), camera.getScale() ); // zoom
-
-		stg_pose_t gpose = last_selection->GetGlobalPose();
-
-		// and put it in the center of the window
-		//glRotatef( -rtod(gpose.a), 0,0,1 );
-		glTranslatef(  -gpose.x, -gpose.y, 0 );
-	}
 
 	glPushMatrix();
 
@@ -553,7 +536,6 @@ void StgCanvas::draw()
 
 		//TODO find a better home for loading textures
 		if( loaded_texture == false ) {
-
 			GLuint stall_id = TextureManager::getInstance().loadTexture( "assets/stall.png" );
 			TextureManager::getInstance()._stall_texture_id = stall_id;
 
@@ -567,9 +549,6 @@ void StgCanvas::draw()
 		camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
 		camera.Draw();
 
-
-
-
 		// enable vertex arrays
 		glEnableClientState( GL_VERTEX_ARRAY );
 		//glEnableClientState( GL_COLOR_ARRAY );
@@ -577,6 +556,16 @@ void StgCanvas::draw()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	}            
 
+	//Follow the selected robot
+	if( (showflags & STG_SHOW_FOLLOW)  && last_selection ) {
+		stg_pose_t gpose = last_selection->GetGlobalPose();
+		camera.setPose( gpose.x, gpose.y );
+		
+		stg_bounds3d_t extent = world->GetExtent();
+		camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
+		camera.Draw();
+	}
+	
 	renderFrame();
 }
 
