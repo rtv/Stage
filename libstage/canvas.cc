@@ -483,6 +483,13 @@ void StgCanvas::renderFrame()
 	
 	if( showflags & STG_SHOW_CLOCK )
     {
+		//use orthogonal projeciton without any zoom
+		glMatrixMode (GL_PROJECTION);
+		glPushMatrix(); //save old projection
+		glLoadIdentity ();
+		glOrtho( -w()/2.0, w()/2.0, -h()/2.0, h()/2.0, -100, 100 );	
+		glMatrixMode (GL_MODELVIEW);
+		
 		glPushMatrix();
 		glLoadIdentity();
 		glDisable( GL_DEPTH_TEST );
@@ -504,6 +511,11 @@ void StgCanvas::renderFrame()
 		
 		glEnable( GL_DEPTH_TEST );
 		glPopMatrix();
+
+		//restore camera projection
+		glMatrixMode (GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode (GL_MODELVIEW);
     }
 	
 }
