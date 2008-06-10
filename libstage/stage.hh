@@ -87,7 +87,7 @@ namespace Stg
 	void Init( int* argc, char** argv[] );
 
 	/** returns true iff Stg::Init() has been called. */
-	bool InitDone(); 
+	bool InitDone();
 
 	/** Returns a hash table of model creator functions indexed by worldfile model string */
 	GHashTable* Typetable();
@@ -211,7 +211,7 @@ namespace Stg
 	typedef double stg_joules_t;
 
 	/** Watts: unit of power (energy/time) */
-	typedef double stg_watts_t; 
+	typedef double stg_watts_t;
 
 	/** boolean */
 	typedef uint32_t stg_bool_t;
@@ -257,7 +257,7 @@ namespace Stg
 	} stg_pose_t;
 
 	/** specify a 3 axis velocity in x, y and heading. */
-	typedef stg_pose_t stg_velocity_t;  
+	typedef stg_pose_t stg_velocity_t;
 
 	/** specify an object's basic geometry: position and rectangular
 	  size.  */
@@ -319,7 +319,7 @@ namespace Stg
 	/** define vertex and its color */
 	typedef struct
 	{
-		float x, y, z, r, g, b, a;    
+		float x, y, z, r, g, b, a;
 	} stg_colorvertex_t;
 
 	/** define a point in 3d space */
@@ -446,14 +446,14 @@ namespace Stg
 			/** number of vertices */
 			size_t vert_count;
 			/** array of vertex data follows at the end of this struct*/
-			vertex_t verts[]; 
+			vertex_t verts[];
 		} draw_t;
 
 		/** stg_d translate command */
 		typedef struct
 		{
 			/** required type field */
-			type_t type; 
+			type_t type;
 			/** distance to translate, in 3 axes */
 			vertex_t vector;
 		} translate_t;
@@ -462,7 +462,7 @@ namespace Stg
 		typedef  struct
 		{
 			/** required type field */
-			type_t type; 
+			type_t type;
 			/** vector about which we should rotate */
 			vertex_t vector;
 			/** angle to rotate */
@@ -508,18 +508,18 @@ namespace Stg
 	void stg_print_velocity( stg_velocity_t* vel );
 
 	const uint32_t STG_SHOW_BLOCKS =     (1<<0);
-	const uint32_t STG_SHOW_DATA =       (1<<1); 
+	const uint32_t STG_SHOW_DATA =       (1<<1);
 	const uint32_t STG_SHOW_GEOM =       (1<<2);
 	const uint32_t STG_SHOW_GRID =       (1<<3);
 	const uint32_t STG_SHOW_OCCUPANCY =  (1<<4);
-	const uint32_t STG_SHOW_TRAILS =     (1<<5); 
-	const uint32_t STG_SHOW_FOLLOW =     (1<<6); 
+	const uint32_t STG_SHOW_TRAILS =     (1<<5);
+	const uint32_t STG_SHOW_FOLLOW =     (1<<6);
 	const uint32_t STG_SHOW_CLOCK =      (1<<7);
 	const uint32_t STG_SHOW_QUADTREE =   (1<<8);
 	const uint32_t STG_SHOW_ARROWS =     (1<<9);
 	const uint32_t STG_SHOW_FOOTPRINT =  (1<<10);
 	const uint32_t STG_SHOW_BLOCKS_2D =  (1<<10);
-	const uint32_t STG_SHOW_TRAILRISE =  (1<<11); 
+	const uint32_t STG_SHOW_TRAILRISE =  (1<<11);
 
 	// forward declare
 	class StgWorld;
@@ -847,7 +847,7 @@ namespace Stg
 
 	virtual void AddChild( StgModel* mod );
 	virtual void RemoveChild( StgModel* mod );
-	virtual stg_pose_t GetGlobalPose();  
+	virtual stg_pose_t GetGlobalPose();
 
 	const char* Token()
 	{ return this->token; }
@@ -888,7 +888,7 @@ class StgBlockGrid
 		//stg_bigblock_t* map;
 		GSList** cells;
 
-		//GTrashStack* trashstack;  
+		//GTrashStack* trashstack;
 		uint32_t width, height;// bwidth, bheight;
 
 	public:
@@ -942,7 +942,7 @@ class StgWorld : public StgAncestor
 	bool quit; // quit this world ASAP
 
 	// convert a distance in meters to a distance in world occupancy grid pixels
-	int32_t MetersToPixels( stg_meters_t x ){ return (int32_t)floor(x * ppm) ; };    
+	int32_t MetersToPixels( stg_meters_t x ){ return (int32_t)floor(x * ppm) ; };
 
 	void Initialize( const char* token, 
 			stg_msec_t interval_sim, 
@@ -956,7 +956,7 @@ class StgWorld : public StgAncestor
 	stg_usec_t real_time_now;
 
 	/** StgWorld::quit is set true when this simulation time is reached */
-	stg_usec_t quit_time; 
+	stg_usec_t quit_time;
 
 	bool destroy;
 
@@ -983,7 +983,7 @@ class StgWorld : public StgAncestor
 	bool paused; ///< the world only updates when this is false
 
 	GList* update_list; //< the descendants that need Update() called
-	void AddModelName( StgModel* mod );  
+	void AddModelName( StgModel* mod );
 
 	void StartUpdatingModel( StgModel* mod );
 	void StopUpdatingModel( StgModel* mod );
@@ -1039,7 +1039,7 @@ class StgWorld : public StgAncestor
 	StgWorld( const char* token, 
 			stg_msec_t interval_sim, 
 			stg_msec_t interval_real,
-			double ppm ); 
+			double ppm );
 
 virtual ~StgWorld();
 
@@ -1052,7 +1052,7 @@ void IdleUntilNextUpdateTime( int (*idler)(void) );
 void AddBlock( StgBlock* block );
 void RemoveBlock( StgBlock* block );
 
-stg_usec_t GetSimInterval(){ return interval_sim; }; 
+stg_usec_t GetSimInterval(){ return interval_sim; };
 
 
 Worldfile* GetWorldFile(){ return wf; };
@@ -1084,7 +1084,7 @@ void ClearRays();
 
 void ClockString( char* str, size_t maxlen );
 
-stg_bounds3d_t GetExtent(){ return extent; };  
+stg_bounds3d_t GetExtent(){ return extent; };
 
 void ForEachModel( GHFunc func, void* arg )
 { g_hash_table_foreach( models_by_id, func, arg ); };
@@ -1115,7 +1115,7 @@ class StgModel : public StgAncestor
 
 	const char* typestr;
 	stg_pose_t pose;
-	stg_velocity_t velocity;    
+	stg_velocity_t velocity;
 	stg_watts_t watts; //< power consumed by this model
 	stg_color_t color;
 	stg_kg_t mass;
@@ -1132,7 +1132,7 @@ class StgModel : public StgAncestor
 	stg_bool_t stall;
 
 	/** if non-null, this string is displayed in the GUI */
-	char* say_string; 
+	char* say_string;
 
 	bool on_velocity_list;
 
@@ -1160,12 +1160,12 @@ class StgModel : public StgAncestor
 
 	stg_bool_t disabled; //< if non-zero, the model is disabled
 
-	GList* d_list;    
+	GList* d_list;
 	GList* blocks; //< list of stg_block_t structs that comprise a body
 
 	GArray* trail;
 
-	//  stg_trail_item_t* history; 
+	//  stg_trail_item_t* history;
 
 	bool body_dirty; //< iff true, regenerate block display list before redraw
 	bool data_dirty; //< iff true, regenerate data display list before redraw
@@ -1281,7 +1281,7 @@ class StgModel : public StgAncestor
 	void DrawBlinkenlights();
 
 	/** OpenGL display list identifier */
-	int displaylist; 
+	int displaylist;
 
 	/** Compile the display list for this model */
 	void BuildDisplayList( int flags );
@@ -1361,7 +1361,7 @@ class StgModel : public StgAncestor
 	StgModel* Parent(){ return this->parent; }
 	StgModel* GetModel( const char* name );
 	bool Stall(){ return this->stall; }
-	int GuiMask(){ return this->gui_mask; };  
+	int GuiMask(){ return this->gui_mask; };
 	inline StgWorld* GetWorld(){ return this->world; }
 
 	/// return the root model of the tree containing this model
@@ -1536,7 +1536,7 @@ class StgModel : public StgAncestor
 	 stg_model_set_<property>() function definition to see the type
 	 of data required for each property.
 	 */ 
-	int SetProperty( char* key, void* data );    
+	int SetProperty( char* key, void* data );
 	void UnsetProperty( char* key );
 
 
@@ -1547,7 +1547,7 @@ class StgModel : public StgAncestor
 			void* arg_off,
 			char* name,
 			char* label,
-			gboolean enabled );  
+			gboolean enabled );
 
 	virtual void Print( char* prefix );
 	virtual const char* PrintWithPose();
@@ -1581,7 +1581,7 @@ class StgModel : public StgAncestor
 			stg_id_t id, 
 			char* typestr )
 	{ 
-		return new StgModel( world, parent, id, typestr ); 
+		return new StgModel( world, parent, id, typestr );
 	}    
 
 	// iff true, model may output some debugging visualizations and other info
@@ -1633,11 +1633,11 @@ class StgBlock
 	private:
 		stg_point_t* pts; //< points defining a polygon
 		size_t pt_count; //< the number of points
-		stg_meters_t zmin; 
-		stg_meters_t zmax; 
+		stg_meters_t zmin;
+		stg_meters_t zmax;
 
-		stg_meters_t global_zmin; 
-		stg_meters_t global_zmax; 
+		stg_meters_t global_zmin;
+		stg_meters_t global_zmax;
 
 		StgModel* mod; //< model to which this block belongs
 
@@ -1645,7 +1645,7 @@ class StgBlock
 		//GLubyte* edge_indices;
 
 		stg_color_t color;
-		bool inherit_color;  
+		bool inherit_color;
 
 		GArray* rendered_points;
 
@@ -1964,7 +1964,7 @@ class StgModelBlobfinder : public StgModel
 				stg_id_t id, 
 				char* typestr )
 		{ 
-			return (StgModel*)new StgModelBlobfinder( world, parent, id, typestr ); 
+			return (StgModel*)new StgModelBlobfinder( world, parent, id, typestr );
 		}    
 };
 
@@ -2051,7 +2051,7 @@ class StgModelLaser : public StgModel
 		virtual void Startup();
 		virtual void Shutdown();
 		virtual void Update();
-		virtual void Load();  
+		virtual void Load();
 		virtual void Print( char* prefix );
 		virtual void DataVisualize();
 
@@ -2062,7 +2062,7 @@ class StgModelLaser : public StgModel
 		void SetSamples( stg_laser_sample_t* samples, uint32_t count);
 
 		// Get the user-tweakable configuration of the laser
-		stg_laser_cfg_t GetConfig( );    
+		stg_laser_cfg_t GetConfig( );
 
 		// Set the user-tweakable configuration of the laser
 		void SetConfig( stg_laser_cfg_t cfg );
@@ -2075,7 +2075,7 @@ class StgModelLaser : public StgModel
 				stg_id_t id, 
 				char* typestr )
 		{ 
-			return (StgModel*)new StgModelLaser( world, parent, id, typestr ); 
+			return (StgModel*)new StgModelLaser( world, parent, id, typestr );
 		}    
 };
 
@@ -2109,7 +2109,7 @@ class StgModelLaser : public StgModel
 //   {
 //     stg_size_t paddle_size; ///< paddle dimensions 
 
-//     stg_gripper_paddle_state_t paddles; 
+//     stg_gripper_paddle_state_t paddles;
 //     stg_gripper_lift_state_t lift;
 
 //     double paddle_position; ///< 0.0 = full open, 1.0 full closed
@@ -2140,7 +2140,7 @@ class StgModelLaser : public StgModel
 //    */
 //   typedef struct
 //   {
-//     stg_gripper_paddle_state_t paddles; 
+//     stg_gripper_paddle_state_t paddles;
 //     stg_gripper_lift_state_t lift;
 
 //     double paddle_position; ///< 0.0 = full open, 1.0 full closed
@@ -2250,7 +2250,7 @@ class StgModelFiducial : public StgModel
 				stg_id_t id, 
 				char* typestr )
 		{ 
-			return (StgModel*)new StgModelFiducial( world, parent, id, typestr ); 
+			return (StgModel*)new StgModelFiducial( world, parent, id, typestr );
 		}    
 };
 
@@ -2299,7 +2299,7 @@ class StgModelRanger : public StgModel
 				stg_id_t id, 
 				char* typestr )
 		{ 
-			return (StgModel*)new StgModelRanger( world, parent, id, typestr ); 
+			return (StgModel*)new StgModelRanger( world, parent, id, typestr );
 		}    
 };
 
@@ -2332,7 +2332,7 @@ class StgModelBlinkenlight : public StgModel
 				stg_id_t id, 
 				char* typestr )
 		{ 
-			return (StgModel*)new StgModelBlinkenlight( world, parent, id, typestr ); 
+			return (StgModel*)new StgModelBlinkenlight( world, parent, id, typestr );
 		}    
 };
 
@@ -2359,7 +2359,7 @@ class StgModelCamera : public StgModel
 				stg_id_t id, 
 				char* typestr )
 		{ 
-			return (StgModel*)new StgModelCamera( world, parent, id, typestr ); 
+			return (StgModel*)new StgModelCamera( world, parent, id, typestr );
 		}    
 };
 
@@ -2389,7 +2389,7 @@ class StgModelPosition : public StgModel
 {
 	private:
 		stg_pose_t goal; //< the current velocity or pose to reach, depending on the value of control_mode
-		stg_position_control_mode_t control_mode; 
+		stg_position_control_mode_t control_mode;
 		stg_position_drive_mode_t drive_mode;
 		stg_position_localization_mode_t localization_mode; ///< global or local mode
 		stg_velocity_t integration_error; ///< errors to apply in simple odometry model
@@ -2414,11 +2414,11 @@ class StgModelPosition : public StgModel
 
 		/** Sets the control_mode to STG_POSITION_CONTROL_VELOCITY and sets
 		  the goal velocity. */
-		void SetSpeed( double x, double y, double a ); 
-		void SetXSpeed( double x ); 
-		void SetYSpeed( double y ); 
-		void SetZSpeed( double z ); 
-		void SetTurnSpeed( double a ); 
+		void SetSpeed( double x, double y, double a );
+		void SetXSpeed( double x );
+		void SetYSpeed( double y );
+		void SetZSpeed( double z );
+		void SetTurnSpeed( double a );
 		void SetSpeed( stg_velocity_t vel );
 
 		/** Sets the control mode to STG_POSITION_CONTROL_POSITION and sets
@@ -2438,7 +2438,7 @@ class StgModelPosition : public StgModel
 				stg_id_t id, 
 				char* typestr )
 		{ 
-			return (StgModel*)new StgModelPosition( world, parent, id, typestr ); 
+			return (StgModel*)new StgModelPosition( world, parent, id, typestr );
 		}    
 
 };
