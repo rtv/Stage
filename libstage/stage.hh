@@ -1874,9 +1874,12 @@ class StgWorldGui : public StgWorld, public Fl_Window
 	virtual bool Save( const char* filename );
 
 	// static callback functions
+	static void LoadCallback( Fl_Widget* wid, StgWorldGui* world );
 	static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
 	static void SaveAsCallback( Fl_Widget* wid, StgWorldGui* world );
 	static void QuitCallback( Fl_Widget* wid, StgWorldGui* world );
+	static void About_cb( Fl_Widget* wid );
+	static void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas );
 	static void WindowCallback( Fl_Widget* wid, StgWorldGui* world );
 
 	bool SaveAsDialog();

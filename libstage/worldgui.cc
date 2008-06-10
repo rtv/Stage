@@ -120,57 +120,8 @@ overwritten.
 	// hack - get this from somewhere sensible, like CMake's config file
 	const char* PACKAGE_STRING = "Stage-3.dev";
 
-void dummy_cb(Fl_Widget*, void* v) 
-{
-}
 
-void About_cb(Fl_Widget*, void* v) 
-{
-	fl_register_images();
-	Fl_Window     win(400,200);                 // make a window
-	Fl_Box        box(10,20,400-20,80 );     // widget that will contain image
 
-	// TODO - get image from the install path 
-	Fl_PNG_Image png("logo.png");      // load image into ram
-	box.image(png);                    // attach image to box
-
-	Fl_Multiline_Output text(  20,120, 400-20, 100 );
-	text.box( FL_NO_BOX );
-	char buf[256];
-	snprintf( buf, 255, 
-			"%s\n" 
-			"Part of the Player Project\n"
-			"http://playerstage.sourceforge.net\n"
-			"Copyright 2000-2008 Richard Vaughan and contributors",
-			PACKAGE_STRING );
-	text.value( buf );
-	win.show();
-	Fl::run();
-}
-
-void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas ) 
-{
-	char picked[128];
-	menubar->item_pathname(picked, sizeof(picked)-1);
-
-	//printf("CALLBACK: You picked '%s'\n", picked);
-
-	// this is slow and a little ugly, but it's the least hacky approach I think
-	if( strcmp(picked, MITEM_VIEW_DATA ) == 0 ) canvas->InvertView( STG_SHOW_DATA );
-	else if( strcmp(picked, MITEM_VIEW_BLOCKS ) == 0 ) canvas->InvertView( STG_SHOW_BLOCKS );
-	else if( strcmp(picked, MITEM_VIEW_GRID ) == 0 ) canvas->InvertView( STG_SHOW_GRID );
-	else if( strcmp(picked, MITEM_VIEW_FOLLOW ) == 0 ) canvas->InvertView( STG_SHOW_FOLLOW );
-	else if( strcmp(picked, MITEM_VIEW_QUADTREE ) == 0 ) canvas->InvertView( STG_SHOW_QUADTREE );
-	else if( strcmp(picked, MITEM_VIEW_OCCUPANCY ) == 0 ) canvas->InvertView( STG_SHOW_OCCUPANCY );
-	else if( strcmp(picked, MITEM_VIEW_CLOCK ) == 0 ) canvas->InvertView( STG_SHOW_CLOCK );
-	else if( strcmp(picked, MITEM_VIEW_FOOTPRINTS ) == 0 ) canvas->InvertView( STG_SHOW_FOOTPRINT );
-	else if( strcmp(picked, MITEM_VIEW_ARROWS ) == 0 ) canvas->InvertView( STG_SHOW_ARROWS );
-	else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
-	else if( strcmp(picked, MITEM_VIEW_BLOCKSRISING ) == 0 ) canvas->InvertView( STG_SHOW_TRAILRISE );
-	else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
-
-	//printf( "value: %d\n", item->value() );
-}
 
 	StgWorldGui::StgWorldGui(int W,int H,const char* L) 
 : Fl_Window(0,0,W,H,L)
@@ -188,8 +139,9 @@ void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas )
 	end();
 
 	mbar->add( "File", 0, 0, 0, FL_SUBMENU );
-	mbar->add( "File/Save File", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
-	mbar->add( "File/Save File &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback *)SaveAsCallback, this, FL_MENU_DIVIDER );
+	mbar->add( "File/&Load World...", FL_CTRL + 'l', (Fl_Callback *)LoadCallback, this, FL_MENU_DIVIDER );
+	mbar->add( "File/Save World", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
+	mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback *)SaveAsCallback, this, FL_MENU_DIVIDER );
 	mbar->add( "File/Exit", FL_CTRL+'q', (Fl_Callback *)QuitCallback, this );
 
 	mbar->add( "View", 0, 0, 0, FL_SUBMENU );
@@ -298,6 +250,11 @@ void StgWorldGui::Load( const char* filename )
 	// TODO - per model visualizations load
 }
 
+void StgWorldGui::LoadCallback( Fl_Widget* wid, StgWorldGui* world )
+{
+	// implement me
+}
+
 void StgWorldGui::SaveCallback( Fl_Widget* wid, StgWorldGui* world )
 {
 	// save to current file
@@ -350,9 +307,9 @@ bool StgWorldGui::CloseWindowQuery()
 {
 	int choice;
 	choice = fl_choice("Do you want to save?",
-			"Cancel", // ->0: defaults to ESC
-			"Yes", // ->1
-			"No" // ->2
+			"&Cancel", // ->0: defaults to ESC
+			"&Yes", // ->1
+			"&No" // ->2
 			);
 
 	switch (choice) {
@@ -384,6 +341,62 @@ void StgWorldGui::WindowCallback( Fl_Widget* wid, StgWorldGui* world )
 	}
 
 	exit(0);
+}
+
+void StgWorldGui::view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas ) 
+{
+	char picked[128];
+	menubar->item_pathname(picked, sizeof(picked)-1);
+
+	//printf("CALLBACK: You picked '%s'\n", picked);
+
+	// this is slow and a little ugly, but it's the least hacky approach I think
+	if( strcmp(picked, MITEM_VIEW_DATA ) == 0 ) canvas->InvertView( STG_SHOW_DATA );
+	else if( strcmp(picked, MITEM_VIEW_BLOCKS ) == 0 ) canvas->InvertView( STG_SHOW_BLOCKS );
+	else if( strcmp(picked, MITEM_VIEW_GRID ) == 0 ) canvas->InvertView( STG_SHOW_GRID );
+	else if( strcmp(picked, MITEM_VIEW_FOLLOW ) == 0 ) canvas->InvertView( STG_SHOW_FOLLOW );
+	else if( strcmp(picked, MITEM_VIEW_QUADTREE ) == 0 ) canvas->InvertView( STG_SHOW_QUADTREE );
+	else if( strcmp(picked, MITEM_VIEW_OCCUPANCY ) == 0 ) canvas->InvertView( STG_SHOW_OCCUPANCY );
+	else if( strcmp(picked, MITEM_VIEW_CLOCK ) == 0 ) canvas->InvertView( STG_SHOW_CLOCK );
+	else if( strcmp(picked, MITEM_VIEW_FOOTPRINTS ) == 0 ) canvas->InvertView( STG_SHOW_FOOTPRINT );
+	else if( strcmp(picked, MITEM_VIEW_ARROWS ) == 0 ) canvas->InvertView( STG_SHOW_ARROWS );
+	else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
+	else if( strcmp(picked, MITEM_VIEW_BLOCKSRISING ) == 0 ) canvas->InvertView( STG_SHOW_TRAILRISE );
+	else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
+
+	//printf( "value: %d\n", item->value() );
+}
+
+void StgWorldGui::About_cb( Fl_Widget* ) 
+{
+	fl_register_images();
+	Fl_Window win(400,200); // make a window
+	Fl_Box box(10,20,400-20,80 ); // widget that will contain image
+
+	// temporary hack
+	const char* stagepath = getenv("STAGEPATH");
+	const char* logopath = "../../../assets/logo.png";
+	char* fullpath = (char*)malloc( strlen(stagepath) + strlen(logopath) + 2 );
+	strcpy( fullpath, stagepath );
+	strcat( fullpath, "/" );
+	strcat( fullpath, logopath );
+	printf("fullpath: %s\n", fullpath);
+	Fl_PNG_Image png(fullpath); // load image into ram
+	free( fullpath );
+	box.image(png); // attach image to box
+
+	Fl_Multiline_Output text( 20,120, 400-20, 100 );
+	text.box( FL_NO_BOX );
+	char buf[256];
+	snprintf( buf, 255,
+			"%s\n" 
+			"Part of the Player Project\n"
+			"http://playerstage.sourceforge.net\n"
+			"Copyright 2000-2008 Richard Vaughan and contributors",
+			PACKAGE_STRING );
+	text.value( buf );
+	win.show();
+	Fl::run();
 }
 
 bool StgWorldGui::Save( const char* filename )
