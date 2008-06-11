@@ -231,6 +231,19 @@ void init_models( gpointer dummy1, StgModel* mod, gpointer dummy2 )
 	mod->Init();
 }
 
+// delete a model from the hash table
+void destroy_model( gpointer dummy1, StgModel* mod, gpointer dummy2 )
+{
+	free(mod);
+}
+
+// delete a model from the hash table
+void destroy_sregion( gpointer dummy1, SuperRegion* sr, gpointer dummy2 )
+{
+	free(sr);
+}
+
+
 void StgWorld::Load( const char* worldfile_path )
 {
 	printf( " [Loading %s]", worldfile_path );
@@ -318,6 +331,38 @@ void StgWorld::Load( const char* worldfile_path )
 
 	printf( "[Load time %.3fsec]", (load_end_time - load_start_time) / 1000000.0 );
 
+}
+
+void StgWorld::UnLoad()
+{
+	if( wf ) delete wf;
+	//if( bgrid ) delete bgrid;
+
+	g_list_foreach( children, (GFunc)destroy_model, NULL );
+	g_list_free( children );
+	children = NULL;
+	
+	g_hash_table_remove_all( child_types ); // small memory leak	
+	
+	g_hash_table_remove_all( models_by_id );
+		
+	g_hash_table_remove_all( models_by_name );
+	
+	g_list_free( velocity_list );
+	velocity_list = NULL;
+	
+	g_list_free( update_list );
+	update_list = NULL;
+	
+	g_list_free( ray_list );
+	ray_list = NULL;
+	
+	g_hash_table_foreach( superregions, (GHFunc)destroy_sregion, NULL );
+	g_hash_table_remove_all( superregions );
+
+	g_free( token );
+	this->token = (char*)g_malloc(Stg::TOKEN_MAX);  // necessary?
+	
 }
 
 stg_usec_t StgWorld::RealTimeNow()

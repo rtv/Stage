@@ -180,13 +180,15 @@ static const char* MITEM_VIEW_TRAILS =     "&View/&Trail";
 
 StgWorldGui::~StgWorldGui()
 {
+	delete mbar;
+	delete canvas;
 }
 
 void StgWorldGui::Load( const char* filename )
 {
 	PRINT_DEBUG1( "%s.Load()", token );
 
-	StgWorld::Load( filename);
+	StgWorld::Load( filename );
 
 	wf_section = wf->LookupEntity( "window" );
 	if( wf_section < 1) // no section defined
@@ -250,9 +252,43 @@ void StgWorldGui::Load( const char* filename )
 	// TODO - per model visualizations load
 }
 
+void StgWorldGui::UnLoad() 
+{
+	//canvas->UnLoad();
+//	delete canvas;
+//	canvas = new StgCanvas( this,0,30,640,480 );
+	StgWorld::UnLoad();
+//	canvas->camera.setPose( 0, 0 );
+}
+
 void StgWorldGui::LoadCallback( Fl_Widget* wid, StgWorldGui* world )
 {
-	// implement me
+	const char* filename;
+	const char* worldsPath;
+	//bool success;
+	const char* pattern = "World Files (*.world)";
+	
+	// todo: replace this with real path
+	worldsPath = "/Users/jeremya/stage_trunk/worlds";
+	Fl_File_Chooser fc( worldsPath, pattern, Fl_File_Chooser::CREATE, "Load World File..." );
+	fc.ok_label( "Load" );
+	
+	fc.show();
+	while (fc.shown())
+		Fl::wait();
+	
+	filename = fc.value();
+	
+	if (filename != NULL) {
+		// if (initialized) {
+		world->Stop();
+		world->UnLoad();
+		// }
+		
+		// todo: make sure loading is successful
+		world->Load( filename );
+		world->Start();
+	}
 }
 
 void StgWorldGui::SaveCallback( Fl_Widget* wid, StgWorldGui* world )
@@ -481,6 +517,13 @@ void StgWorldGui::Start()
 	else // otherwise call Update() whenever there's no GUI work to do
 		Fl::add_idle( (Fl_Timeout_Handler)idle_callback, this );
 }
+
+void StgWorldGui::Stop()
+{
+	Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCb, this );
+	Fl::remove_idle( (Fl_Timeout_Handler)idle_callback, this );
+}
+
 
 void StgWorldGui::Run()
 {

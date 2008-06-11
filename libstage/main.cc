@@ -63,7 +63,8 @@ int main( int argc, char* argv[] )
 	}
 
 	if( loaded_world_file == false ) {
-		printf( "No world file specified.\n" );
+		// replace this with a loading dialog/window
+		StgWorldGui* world = new StgWorldGui( 400, 300 );
 	}
 
 

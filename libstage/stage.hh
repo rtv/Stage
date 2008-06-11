@@ -1012,7 +1012,7 @@ class StgWorld : public StgAncestor
 	void RemoveBlock( int x, int y, StgBlock* block );
 	//{ }//bgrid->RemoveBlock( x, y, block ); };
 
-	protected:
+protected:
 	stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
 
 	GHashTable* superregions;
@@ -1032,8 +1032,7 @@ class StgWorld : public StgAncestor
 	//GHashTable* blocks;
 	GArray lines;
 
-	public:
-
+public:
 	StgWorld();
 
 	StgWorld( const char* token, 
@@ -1041,56 +1040,57 @@ class StgWorld : public StgAncestor
 			stg_msec_t interval_real,
 			double ppm );
 
-virtual ~StgWorld();
+	virtual ~StgWorld();
 
-stg_usec_t SimTimeNow(void){ return sim_time;} ;
-stg_usec_t RealTimeNow(void);
-stg_usec_t RealTimeSinceStart(void);
-void PauseUntilNextUpdateTime(void);
-void IdleUntilNextUpdateTime( int (*idler)(void) );
+	stg_usec_t SimTimeNow(void){ return sim_time;} ;
+	stg_usec_t RealTimeNow(void);
+	stg_usec_t RealTimeSinceStart(void);
+	void PauseUntilNextUpdateTime(void);
+	void IdleUntilNextUpdateTime( int (*idler)(void) );
 
-void AddBlock( StgBlock* block );
-void RemoveBlock( StgBlock* block );
+	void AddBlock( StgBlock* block );
+	void RemoveBlock( StgBlock* block );
 
-stg_usec_t GetSimInterval(){ return interval_sim; };
-
-
-Worldfile* GetWorldFile(){ return wf; };
-
-virtual void Load( const char* worldfile_path );
-virtual void Reload();
-virtual bool Save( const char* filename );
-virtual bool Update(void);
-virtual void AddModel( StgModel* mod );
-virtual void RemoveModel( StgModel* mod );
-
-void Start(){ paused = false; };
-void Stop(){ paused = true; };
-void TogglePause(){ paused = !paused; };
-bool TestQuit(){ return( quit || quit_all );  }
-void Quit(){ quit = true; }
-void QuitAll(){ quit_all = true; }
-void CancelQuit(){ quit = false; }
-void CancelQuitAll(){ quit_all = false; }
-
-double Resolution(){ return ppm; };
-
-StgModel* GetModel( const stg_id_t id );
-StgModel* GetModel( const char* name );
+	stg_usec_t GetSimInterval(){ return interval_sim; };
 
 
-GList* GetRayList(){ return ray_list; };
-void ClearRays();
+	Worldfile* GetWorldFile(){ return wf; };
 
-void ClockString( char* str, size_t maxlen );
+	virtual void Load( const char* worldfile_path );
+	virtual void UnLoad();
+	virtual void Reload();
+	virtual bool Save( const char* filename );
+	virtual bool Update(void);
+	virtual void AddModel( StgModel* mod );
+	virtual void RemoveModel( StgModel* mod );
 
-stg_bounds3d_t GetExtent(){ return extent; };
+	void Start(){ paused = false; };
+	void Stop(){ paused = true; };
+	void TogglePause(){ paused = !paused; };
+	bool TestQuit(){ return( quit || quit_all );  }
+	void Quit(){ quit = true; }
+	void QuitAll(){ quit_all = true; }
+	void CancelQuit(){ quit = false; }
+	void CancelQuitAll(){ quit_all = false; }
 
-void ForEachModel( GHFunc func, void* arg )
-{ g_hash_table_foreach( models_by_id, func, arg ); };
+	double Resolution(){ return ppm; };
 
-long unsigned int GetUpdateCount()
-{ return updates; }
+	StgModel* GetModel( const stg_id_t id );
+	StgModel* GetModel( const char* name );
+
+
+	GList* GetRayList(){ return ray_list; };
+	void ClearRays();
+
+	void ClockString( char* str, size_t maxlen );
+
+	stg_bounds3d_t GetExtent(){ return extent; };
+
+	void ForEachModel( GHFunc func, void* arg )
+	{ g_hash_table_foreach( models_by_id, func, arg ); };
+
+	long unsigned int GetUpdateCount()
+	{ return updates; }
 };
 
 
@@ -1869,9 +1869,11 @@ class StgWorldGui : public StgWorld, public Fl_Window
 	/** Start the simulation and GUI. Does not return */
 	static void Run();
 	void Start();
+	void Stop();
 	void Cycle();
 
 	virtual void Load( const char* filename );
+	virtual void UnLoad();
 	virtual bool Save( const char* filename );
 
 	// static callback functions
