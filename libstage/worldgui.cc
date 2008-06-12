@@ -120,8 +120,10 @@ static const char* MITEM_VIEW_ARROWS =     "&View/T&rails/&Arrows rising";
 static const char* MITEM_VIEW_TRAILS =     "&View/&Trail";
 static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 
-	// hack - get this from somewhere sensible, like CMake's config file
-	const char* PACKAGE_STRING = "Stage-3.dev";
+// this should be set by CMake
+#ifndef PACKAGE_STRING
+#define PACKAGE_STRING "Stage-3.dev"
+#endif
 
 
 
@@ -447,10 +449,11 @@ void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world )
 	Fl_PNG_Image png( fullpath.c_str() ); // load image into ram
 	box.image(png); // attach image to box
 	
-	Fl_Text_Display text( Spc, pngH+2*Spc,
+	Fl_Text_Display* textDisplay;
+	textDisplay = new Fl_Text_Display( Spc, pngH+2*Spc,
 						  Width-2*Spc, Height-pngH-ButtonH-4*Spc );
-	text.box( FL_NO_BOX );
-	text.color(win.color());
+	textDisplay->box( FL_NO_BOX );
+	textDisplay->color(win.color());
 	
 	const char* AboutText = 
 		"\n" 
@@ -458,10 +461,10 @@ void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world )
 		"http://playerstage.sourceforge.net\n"
 		"Copyright 2000-2008 Richard Vaughan and contributors";
 	
-	Fl_Text_Buffer tBuffer;
-	tBuffer.append( PACKAGE_STRING );
-	tBuffer.append( AboutText );
-	text.buffer( tBuffer );
+	Fl_Text_Buffer* tbuf = new Fl_Text_Buffer;
+	tbuf->text( PACKAGE_STRING );
+	tbuf->append( AboutText );
+	textDisplay->buffer( tbuf );
 	
 	Fl_Return_Button button( (Width - ButtonW)/2, Height-Spc-ButtonH,
 					  ButtonW, ButtonH,
@@ -472,7 +475,8 @@ void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world )
 	while (win.shown())
 		Fl::wait();
 	
-	
+	delete textDisplay;
+	delete tbuf;
 }
 
 void StgWorldGui::HelpAboutCallback( Fl_Widget* wid ) {
