@@ -967,7 +967,7 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
 		DrawBlinkenlights();
 
 	// draw speech bubble
-	if( this->say_string )
+	if( say_string && flags & STG_SHOW_STATUS )
 	{
 		float stheta = -dtor( canvas->camera.getPitch() );
 		float sphi = dtor( canvas->camera.getYaw() );

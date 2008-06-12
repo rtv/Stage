@@ -55,7 +55,11 @@ void StgModelCamera::Load( void )
 {
 	StgModel::Load();
 	Worldfile* wf = world->GetWorldFile();
-
+	int fov = wf->ReadLength( id, "fov",    -1 );
+	if( fov > 0 ) {
+		_camera.setFov( fov );
+	}
+	
 }
 
 
@@ -66,11 +70,10 @@ void StgModelCamera::Update( void )
 
 float* StgModelCamera::laser()
 {
-	int h = 32;
-	int w = 32;
+	//TODO allow the h and w to be passed by user
+	int h = 320;
+	int w = 320;
 	
-	static StgPerspectiveCamera camera;
-
 	static GLfloat* data_gl = NULL;
 	static GLfloat* data = NULL;
 	if( data == NULL ) {
@@ -80,19 +83,24 @@ float* StgModelCamera::laser()
 	}
 	
 	glViewport( 0, 0, w, h );
-	camera.update();
-	camera.SetProjection( 1.0 );
+	_camera.update();
+	_camera.SetProjection( 1.0 );
 	
-	camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.1 );
-	camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 );
-	camera.Draw();
+	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.3 );
+	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 );
+	_camera.Draw();
 
 	_canvas->renderFrame( true );
 	
 	glReadPixels(0, h / 2, w, 1, GL_DEPTH_COMPONENT, GL_FLOAT, data_gl );
 
 	for( int i = 0; i < w; i++ ) {
-		data[ w-1-i ] = camera.realDistance( data_gl[ i ] );
+		data[ w-1-i ] = _camera.realDistance( data_gl[ i ] );
+	}
+	for( int i = 0; i < 32; i++ ) {
+		for( int j = 1; j < 10; j++ )
+			data[ i ] += data[ i * 10 + j ];
+		data[ i ] /= 10.0;
 	}
 	_canvas->invalidate();
 	return data;

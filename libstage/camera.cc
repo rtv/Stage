@@ -14,7 +14,7 @@
 //perspective camera
 //perspective camera
 StgPerspectiveCamera::StgPerspectiveCamera( void ) : 
-		_x( 0 ), _y( 0 ), _z( 0 ), _pitch( 90 ), _yaw( 0 ), _z_near( 0.1 ), _z_far( 20.0 )
+		_x( 0 ), _y( 0 ), _z( 0 ), _pitch( 90 ), _yaw( 0 ), _z_near( 0.2 ), _z_far( 40.0 ), _fov( 60 )
 {
 }
 
@@ -33,12 +33,7 @@ void StgPerspectiveCamera::Draw( void ) const
 
 void StgPerspectiveCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const
 {
-	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-	
-	gluPerspective( 60.0, pixels_width/pixels_height, _z_near, _z_far );
-	
-	glMatrixMode (GL_MODELVIEW);
+	SetProjection( pixels_width/pixels_height );
 }
 
 void StgPerspectiveCamera::SetProjection( float aspect ) const
@@ -46,7 +41,7 @@ void StgPerspectiveCamera::SetProjection( float aspect ) const
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
 	
-	gluPerspective( 60.0, aspect, _z_near, _z_far );
+	gluPerspective( _fov, aspect, _z_near, _z_far );
 	
 	glMatrixMode (GL_MODELVIEW);
 }

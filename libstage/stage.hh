@@ -521,6 +521,7 @@ namespace Stg
 	const uint32_t STG_SHOW_FOOTPRINT =  (1<<10);
 	const uint32_t STG_SHOW_BLOCKS_2D =  (1<<10);
 	const uint32_t STG_SHOW_TRAILRISE =  (1<<11);
+	const uint32_t STG_SHOW_STATUS =     (1<<12);
 
 	// forward declare
 	class StgWorld;
@@ -1712,13 +1713,14 @@ class StgCamera
 
 class StgPerspectiveCamera : public StgCamera
 {
-	public: //TODO make this private
+	private:
 		float _x, _y, _z;
 		float _pitch; //left-right (about y)
 		float _yaw; //up-down (about x)
-	private:
+
 		float _z_near;
 		float _z_far;
+		float _fov;
 
 	public:
 		StgPerspectiveCamera( void );
@@ -1729,13 +1731,33 @@ class StgPerspectiveCamera : public StgCamera
 		void update( void );
 
 		inline void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
+		inline void addPose( float x, float y, float z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
+		inline void move( float x, float y, float z )
+		{
+			//scale relative to zoom level
+			_x *= _z;
+			_y *= _z;
+			
+			//adjust for yaw angle
+			std::cout << "yaw:" << _yaw << std::endl;
+			_x += cos( dtor( _yaw ) ) * x;
+			_y += -sin( dtor( _yaw ) ) * x;
+			
+			_x += sin( dtor( _yaw ) ) * y;
+			_y += cos( dtor( _yaw ) ) * y;
+		}
+		inline void setFov( float fov ) { _fov = fov; }
 		inline void setYaw( float yaw ) { _yaw = yaw; }
+		inline void addYaw( float yaw ) { _yaw += yaw; }
+		inline void setPitch( float pitch ) { _pitch = pitch; }
+		inline void addPitch( float pitch ) { _pitch += pitch; }
 	
 		inline float realDistance( float z_buf_val ) const {
 			//formulat found at http://www.cs.unc.edu/~hoff/techrep/openglz.html
 			//Z = Zn*Zf / (Zf - z*(Zf-Zn))
 			return _z_near * _z_far / ( _z_far - z_buf_val * ( _z_far - _z_near ) );
 		}
+		inline void scroll( float dy ) { _z += dy; }
 };
 
 class StgOrthoCamera : public StgCamera
@@ -1759,7 +1781,7 @@ class StgOrthoCamera : public StgCamera
 			//adjust for pitch angle
 			y = y / cos( dtor( _pitch ) );
 
-			//adjust for yaw andle
+			//adjust for yaw angle
 			_x += cos( dtor( _yaw ) ) * x;
 			_y += -sin( dtor( _yaw ) ) * x;
 
@@ -2368,6 +2390,8 @@ class StgModelCamera : public StgModel
 		char* _frame_data;
 		int _frame_data_width;
 		int _frame_data_height;
+	
+		StgPerspectiveCamera _camera;
 	
 	public:
 

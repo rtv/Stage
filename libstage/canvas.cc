@@ -34,7 +34,7 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 
 	use_perspective_camera = false;
 	perspective_camera.setPose( -3.0, 0.0, 1.0 );
-	perspective_camera._pitch = 70.0; //look down
+	perspective_camera.setPitch( 70.0 ); //look down
 	
 	startx = starty = 0;
 	//panx = pany = stheta = sphi = 0.0;
@@ -175,7 +175,7 @@ int StgCanvas::handle(int event)
 			else
 			{
 				if( use_perspective_camera == true ) {
-					perspective_camera._z += Fl::event_dy() / 10.0;
+					perspective_camera.scroll( Fl::event_dy() / 10.0 );
 				} else {
 					camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
 				}
@@ -190,8 +190,8 @@ int StgCanvas::handle(int event)
 				int dy = Fl::event_y() - starty;
 
 				if( use_perspective_camera == true ) {
-					perspective_camera._yaw += -dx;
-					perspective_camera._pitch += -dy;
+					perspective_camera.addYaw( -dx );
+					perspective_camera.addPitch( -dy );
 				} else {
 					camera.pitch( 0.5 * static_cast<double>( dy ) );
 					camera.yaw( 0.5 * static_cast<double>( dx ) );
@@ -205,8 +205,7 @@ int StgCanvas::handle(int event)
 				int dy = Fl::event_y() - starty;
 
 				if( use_perspective_camera == true ) {
-					perspective_camera._x += -dx / 100.0 * perspective_camera._z;
-					perspective_camera._y += dy / 100.0 * perspective_camera._z;
+					perspective_camera.move( -dx, dy, 0.0 );
 				} else {
 					camera.move( -dx, dy );
 
@@ -359,14 +358,12 @@ void StgCanvas::DrawGlobalGrid()
 
 void StgCanvas::renderFrame( bool robot_camera )
 {	
-
 	uint32_t showflags = this->showflags;
 	if( robot_camera == true )
 		showflags = STG_SHOW_BLOCKS;
 	
-	if( ! (showflags & STG_SHOW_TRAILS) || robot_camera )
+	if( ! (showflags & STG_SHOW_TRAILS) || robot_camera == true )
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
 
 	glPushMatrix();
 
@@ -532,8 +529,10 @@ void StgCanvas::renderFrame( bool robot_camera )
 void StgCanvas::draw()
 {
 	static bool loaded_texture = false;
-	//  static int centerx = 0, centery = 0;
-	//puts( "CANVAS" );
+
+	//Enable the following to debug camera model
+//	if( loaded_texture == true && use_perspective_camera == true )
+//		return;
 
 	if (!valid()) 
 	{ 
