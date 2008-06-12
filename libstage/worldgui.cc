@@ -116,6 +116,7 @@ static const char* MITEM_VIEW_FOOTPRINTS = "&View/T&rails/&Footprints";
 static const char* MITEM_VIEW_BLOCKSRISING =  "&View/T&rails/&Blocks rising";
 static const char* MITEM_VIEW_ARROWS =     "&View/T&rails/&Arrows rising";
 static const char* MITEM_VIEW_TRAILS =     "&View/&Trail";
+static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 
 	// hack - get this from somewhere sensible, like CMake's config file
 	const char* PACKAGE_STRING = "Stage-3.dev";
@@ -158,7 +159,9 @@ static const char* MITEM_VIEW_TRAILS =     "&View/&Trail";
 	mbar->add( MITEM_VIEW_FOLLOW,    'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOLLOW ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_CLOCK,    'c', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));
+			  FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));
+	mbar->add( MITEM_VIEW_PERSPECTIVE,   'r', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+			  FL_MENU_TOGGLE| (canvas->use_perspective_camera ));
 
 	mbar->add( MITEM_VIEW_TRAILS,    't', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));
@@ -398,6 +401,7 @@ void StgWorldGui::view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas )
 	else if( strcmp(picked, MITEM_VIEW_ARROWS ) == 0 ) canvas->InvertView( STG_SHOW_ARROWS );
 	else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
 	else if( strcmp(picked, MITEM_VIEW_BLOCKSRISING ) == 0 ) canvas->InvertView( STG_SHOW_TRAILRISE );
+	else if( strcmp(picked, MITEM_VIEW_PERSPECTIVE ) == 0 ) { canvas->use_perspective_camera = ! canvas->use_perspective_camera; canvas->invalidate(); }
 	else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
 
 	//printf( "value: %d\n", item->value() );

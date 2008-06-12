@@ -31,6 +31,10 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 	selected_models = NULL;
 	last_selection = NULL;
 
+	use_perspective_camera = false;
+	perspective_camera.setPose( -3.0, 0.0, 1.0 );
+	perspective_camera._pitch = 70.0; //look down
+	
 	startx = starty = 0;
 	//panx = pany = stheta = sphi = 0.0;
 	//scale = 15.0;
@@ -169,7 +173,11 @@ int StgCanvas::handle(int event)
 			}
 			else
 			{
-				camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
+				if( use_perspective_camera == true ) {
+					perspective_camera._z += Fl::event_dy() / 10.0;
+				} else {
+					camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
+				}
 				invalidate();
 			}
 			return 1;
@@ -180,22 +188,35 @@ int StgCanvas::handle(int event)
 				int dx = Fl::event_x() - startx;
 				int dy = Fl::event_y() - starty;
 
-				camera.pitch( 0.5 * static_cast<double>( dy ) );
-				camera.yaw( 0.5 * static_cast<double>( dx ) );
+				if( use_perspective_camera == true ) {
+					perspective_camera._yaw += -dx;
+					perspective_camera._pitch += -dy;
+				} else {
+					camera.pitch( 0.5 * static_cast<double>( dy ) );
+					camera.yaw( 0.5 * static_cast<double>( dx ) );
+				}
 
 				invalidate();
 			}
 			else if( Fl::event_state( FL_ALT ) )
-			{       
+			{   
 				int dx = Fl::event_x() - startx;
 				int dy = Fl::event_y() - starty;
 
-				camera.move( -dx, dy );
+				if( use_perspective_camera == true ) {
+					perspective_camera._x += -dx / 100.0 * perspective_camera._z;
+					perspective_camera._y += dy / 100.0 * perspective_camera._z;
+				} else {
+					camera.move( -dx, dy );
+
+				}
 				invalidate();
+
 			}
 
 			startx = Fl::event_x();
 			starty = Fl::event_y();
+			
 			return 1;
 
 		case FL_PUSH: // button pressed
@@ -545,9 +566,13 @@ void StgCanvas::draw()
 		// install a font
 		gl_font( FL_HELVETICA, 12 );
 
-		stg_bounds3d_t extent = world->GetExtent();
-		camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
-		camera.Draw();
+		if( use_perspective_camera == true ) {
+			perspective_camera.SetProjection( w(), h(), 0.01, 0.5 );
+		} else {
+			stg_bounds3d_t extent = world->GetExtent();
+			camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
+			camera.Draw();
+		}
 
 		// enable vertex arrays
 		glEnableClientState( GL_VERTEX_ARRAY );
@@ -564,6 +589,10 @@ void StgCanvas::draw()
 		stg_bounds3d_t extent = world->GetExtent();
 		camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
 		camera.Draw();
+	}
+	
+	if( use_perspective_camera == true ) {
+		perspective_camera.Draw();
 	}
 	
 	renderFrame();

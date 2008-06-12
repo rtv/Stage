@@ -1703,26 +1703,36 @@ class StgCamera
 		StgCamera() { }
 		virtual ~StgCamera() { }
 
-		virtual void Draw() const = 0;
+		virtual void Draw( void ) const = 0;
 		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const = 0;
 };
 
 class StgPerspectiveCamera : public StgCamera
 {
-	private:
+	public: //TODO make this private
 		float _x, _y, _z;
 		float _pitch; //left-right (about y)
 		float _yaw; //up-down (about x)
+	private:
+		float _z_near;
+		float _z_far;
 
 	public:
-		StgPerspectiveCamera( void ) : _x( 0 ), _y( 0 ), _z( 0 ), _pitch( 0 ), _yaw( 0 ) { }
+		StgPerspectiveCamera( void );
 
-		virtual void Draw() const;
-		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;			
+		virtual void Draw( void ) const;
+		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;
+		void SetProjection( float aspect ) const;
 		void update( void );
 
 		inline void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
 		inline void setYaw( float yaw ) { _yaw = yaw; }
+	
+		inline float realDistance( float z_buf_val ) const {
+			//formulat found at http://www.cs.unc.edu/~hoff/techrep/openglz.html
+			//Z = Zn*Zf / (Zf - z*(Zf-Zn))
+			return _z_near * _z_far / ( _z_far - z_buf_val * ( _z_far - _z_near ) );
+		}
 };
 
 class StgOrthoCamera : public StgCamera
@@ -1737,7 +1747,6 @@ class StgOrthoCamera : public StgCamera
 		StgOrthoCamera( void ) : _x( 0 ), _y( 0 ), _z( 0 ), _pitch( 0 ), _yaw( 0 ), _scale( 15 ) { }
 		virtual void Draw() const;
 		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;
-
 
 		inline void move( float x, float y ) {
 			//convert screen points into world points
@@ -1794,6 +1803,8 @@ class StgCanvas : public Fl_Gl_Window
 	GlColorStack colorstack;
 
 	StgOrthoCamera camera;
+	StgPerspectiveCamera perspective_camera;
+	bool use_perspective_camera;
 
 	int startx, starty;
 	bool dragging;
@@ -2369,7 +2380,10 @@ class StgModelCamera : public StgModel
 		virtual void Draw( uint32_t flags, StgCanvas* canvas );
 	
 		///Take a screenshot from the camera's perspective
-		const char* GetFrame( int width, int height );
+		const char* GetFrame( int width, int height, bool depth_buffer );
+	
+		///Imiate laser scan
+		float* laser();
 
 		// static wrapper for the constructor - all models must implement
 		// this method and add an entry in typetable.cc
@@ -2379,7 +2393,7 @@ class StgModelCamera : public StgModel
 				char* typestr )
 		{ 
 			return (StgModel*)new StgModelCamera( world, parent, id, typestr );
-		}    
+		}
 };
 
 // POSITION MODEL --------------------------------------------------------

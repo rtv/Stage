@@ -3,7 +3,6 @@
  *  Stage
  *
  *  Created by Alex Couture-Beil on 03/06/08.
- *  Copyright 2008 __MyCompanyName__. All rights reserved.
  *
  */
 

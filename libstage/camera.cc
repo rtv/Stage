@@ -3,7 +3,6 @@
  *  Stage
  *
  *  Created by Alex Couture-Beil on 06/06/08.
- *  Copyright 2008 __MyCompanyName__. All rights reserved.
  *
  */
 
@@ -14,15 +13,19 @@
 
 //perspective camera
 //perspective camera
+StgPerspectiveCamera::StgPerspectiveCamera( void ) : 
+		_x( 0 ), _y( 0 ), _z( 0 ), _pitch( 90 ), _yaw( 0 ), _z_near( 0.1 ), _z_far( 20.0 )
+{
+}
+
 void StgPerspectiveCamera::Draw( void ) const
 {	
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
-
+	
 	glRotatef( - _pitch, 1.0, 0.0, 0.0 );
 	glRotatef( - _yaw, 0.0, 0.0, 1.0 );
 
-	std::cout << "y: " << _z << std::endl;
 	glTranslatef( - _x, - _y, - _z );
 	//zooming needs to happen in the Projection code (don't use glScale for zoom)
 
@@ -32,21 +35,26 @@ void StgPerspectiveCamera::SetProjection( float pixels_width, float pixels_heigh
 {
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
+	
+	gluPerspective( 60.0, pixels_width/pixels_height, _z_near, _z_far );
+	
+	glMatrixMode (GL_MODELVIEW);
+}
 
-	gluPerspective( 120.0, pixels_width/pixels_height, 0.01, 100 );
-
+void StgPerspectiveCamera::SetProjection( float aspect ) const
+{
+	glMatrixMode (GL_PROJECTION);
+	glLoadIdentity ();
+	
+	gluPerspective( 60.0, aspect, _z_near, _z_far );
+	
 	glMatrixMode (GL_MODELVIEW);
 }
 
 void StgPerspectiveCamera::update( void )
 {	
-	//	_x = 0;
-	//	_y = 0;
-	//	_z = i;
-	_pitch = 90.0;
-	//	_yaw = 90.0;
-}
 
+}
 
 
 

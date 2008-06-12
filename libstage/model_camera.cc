@@ -64,8 +64,41 @@ void StgModelCamera::Update( void )
 	StgModel::Update();
 }
 
+float* StgModelCamera::laser()
+{
+	int h = 32;
+	int w = 32;
+	
+	static StgPerspectiveCamera camera;
 
-const char* StgModelCamera::GetFrame( int width, int height )
+	static GLfloat* data_gl = NULL;
+	static GLfloat* data = NULL;
+	if( data == NULL ) {
+		data = new GLfloat[ h * w ];
+		data_gl = new GLfloat[ h * w ];
+		
+	}
+	
+	glViewport( 0, 0, w, h );
+	camera.update();
+	camera.SetProjection( 1.0 );
+	
+	camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.1 );
+	camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 );
+	camera.Draw();
+
+	_canvas->renderFrame( true );
+	
+	glReadPixels(0, h / 2, w, 1, GL_DEPTH_COMPONENT, GL_FLOAT, data_gl );
+
+	for( int i = 0; i < w; i++ ) {
+		data[ w-1-i ] = camera.realDistance( data_gl[ i ] );
+	}
+	_canvas->invalidate();
+	return data;
+}
+
+const char* StgModelCamera::GetFrame( int width, int height, bool depth_buffer )
 {
 	static StgPerspectiveCamera camera; //shared between _ALL_ instances
 	
@@ -75,24 +108,32 @@ const char* StgModelCamera::GetFrame( int width, int height )
 	if( width != _frame_data_width || height != _frame_data_height ) {
 		if( _frame_data != NULL )
 			delete _frame_data;
-		_frame_data = new char[ 3 * width * height ];
+		_frame_data = new char[ 4 * width * height ]; //assumes a max of depth 4
 	}
+
 	
 	glViewport( 0, 0, width, height );
-	
 	camera.update();
-	camera.SetProjection( width, height, 0.01, 200.0 );
+	camera.SetProjection( width, height, 0.0, 0.0 );
 	camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.1 );
 	camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 );
 	camera.Draw();
 	
 	_canvas->renderFrame( true );
 	
-	glReadPixels(0, 0, width, height,
-				 GL_RGB,
-				 GL_UNSIGNED_BYTE,
-				 _frame_data );
-	
+	if( depth_buffer == true ) {
+		glReadPixels(0, 0, width, height,
+					 GL_DEPTH_COMPONENT, //GL_RGB,
+					 GL_FLOAT, //GL_UNSIGNED_BYTE,
+					 _frame_data );
+	} else {
+		glReadPixels(0, 0, width, height,
+					 GL_RGB,
+					 GL_UNSIGNED_BYTE,
+					 _frame_data );		
+	}
+
+		
 	_canvas->invalidate();
 	return _frame_data;
 }
