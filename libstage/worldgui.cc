@@ -259,9 +259,6 @@ void StgWorldGui::Load( const char* filename )
 
 void StgWorldGui::UnLoad() 
 {
-	//canvas->UnLoad();
-//	delete canvas;
-//	canvas = new StgCanvas( this,0,30,640,480 );
 	StgWorld::UnLoad();
 //	canvas->camera.setPose( 0, 0 );
 }
@@ -356,26 +353,35 @@ void StgWorldGui::QuitCallback( Fl_Widget* wid, StgWorldGui* world )
 bool StgWorldGui::CloseWindowQuery()
 {
 	int choice;
-	choice = fl_choice("Do you want to save?",
-			"&Cancel", // ->0: defaults to ESC
-			"&Yes", // ->1
-			"&No" // ->2
-			);
-
-	switch (choice) {
-		case 1: // Yes
-			bool saved = SaveAsDialog();
-			if ( saved ) {
-				return 1;
-			}
-			else {
-				return 0;
-			}
-		case 2: // No
-			return 1;
+	
+	if ( wf ) {
+		// worldfile loaded, ask to save
+		choice = fl_choice("Do you want to save?",
+						   "&Cancel", // ->0: defaults to ESC
+						   "&Yes", // ->1
+						   "&No" // ->2
+						   );
+		
+		switch (choice) {
+			case 1: // Yes
+				bool saved = SaveAsDialog();
+				if ( saved ) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			case 2: // No
+				return true;
+		}
+		
+		// Cancel
+		return false;
 	}
-
-	return 0;
+	else {
+		// nothing is loaded, just quit
+		return true;
+	}
 }
 
 void StgWorldGui::WindowCallback( Fl_Widget* wid, StgWorldGui* world )
