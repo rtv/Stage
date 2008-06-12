@@ -4,15 +4,17 @@
 namespace Stg
 {
 	FileManager::FileManager() {
+		char *tmp;
+		
 		SharePath = INSTALL_PREFIX "/share/stage";
 		AssetPath = SharePath + '/' + "assets";
-		CtrlPath = getenv("STAGEPATH");
 		WorldsRoot = ".";
 		
 		paths.push_back( "." );
 		paths.push_back( SharePath );
 		paths.push_back( AssetPath );
-		paths.push_back( CtrlPath );
+		if( tmp = getenv("STAGEPATH") )
+			paths.push_back( tmp );
 	}
 
 	std::string FileManager::fullPath( std::string filename ) {
