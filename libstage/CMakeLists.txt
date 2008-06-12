@@ -1,6 +1,8 @@
 
 add_library( stage SHARED
              stage.hh  # get headers into IDE projects
+		file_manager.hh
+		file_manager.cc
 	     ancestor.cc 
 	     block.cc 
 	     canvas.cc 

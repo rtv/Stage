@@ -7,29 +7,15 @@
  */
 
 #include "texture_manager.hh"
+#include "file_manager.hh"
 #include <sstream>
 
-//TODO Windows Port
 Fl_Shared_Image* TextureManager::loadImage( const char* filename )
-{
-	if( filename[ 0 ] == '/' || filename[ 0 ] == '~' )
-		return Fl_Shared_Image::get( filename );
-	
-	//TODO move this somewhere else, and include STAGEPATH, and path relative to user supplied world file
-	const char* prefixes[] = {
-		".",
-		INSTALL_PREFIX "/share/stage",
-		NULL
-	};
-
+{	
 	Fl_Shared_Image *img = NULL;
-	int i = 0;	
-	while( img == NULL && prefixes[ i ] != NULL ) {
-		std::ostringstream oss;
-		oss << prefixes[ i ] << "/" << filename;
-		img = Fl_Shared_Image::get( oss.str().c_str() );
-		i++;
-	}
+
+	img = Fl_Shared_Image::get( filename );
+	
 	return img;
 }
 

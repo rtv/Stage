@@ -79,6 +79,7 @@
 #include <GL/glu.h>
 #endif 
 
+#include "file_manager.hh"
 
 /** The Stage library uses its own namespace */
 namespace Stg 
@@ -928,8 +929,8 @@ class StgWorld : public StgAncestor
 	friend class StgBlock;
 	friend class StgTime;
 
-	private:
-
+private:
+	
 	static bool quit_all; // quit all worlds ASAP  
 	static unsigned int next_id; //< initialized to zero, used tob
 	//allocate unique sequential world ids
@@ -1041,6 +1042,8 @@ public:
 			double ppm );
 
 	virtual ~StgWorld();
+	
+	FileManager fileMan;
 
 	stg_usec_t SimTimeNow(void){ return sim_time;} ;
 	stg_usec_t RealTimeNow(void);
@@ -1892,9 +1895,9 @@ class StgWorldGui : public StgWorld, public Fl_Window
 	static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
 	static void SaveAsCallback( Fl_Widget* wid, StgWorldGui* world );
 	static void QuitCallback( Fl_Widget* wid, StgWorldGui* world );
-	static void About_cb( Fl_Widget* wid );
+	static void About_cb( Fl_Widget* wid, StgWorldGui* world );
 	static void HelpAboutCallback( Fl_Widget* wid );
-	static void view_toggle_cb(Fl_Menu_Bar* menubar, StgCanvas* canvas );
+	static void view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas );
 	static void WindowCallback( Fl_Widget* wid, StgWorldGui* world );
 
 	bool SaveAsDialog();

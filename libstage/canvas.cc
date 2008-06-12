@@ -7,6 +7,7 @@ $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
 #include "stage_internal.hh"
 #include "texture_manager.hh"
 #include "replace.h"
+#include <string>
 
 using namespace Stg;
 
@@ -557,7 +558,14 @@ void StgCanvas::draw()
 
 		//TODO find a better home for loading textures
 		if( loaded_texture == false ) {
-			GLuint stall_id = TextureManager::getInstance().loadTexture( "assets/stall.png" );
+			std::string fullpath;
+			fullpath = world->fileMan.fullPath( "stall.png" );
+			if ( fullpath == "" ) {
+				PRINT_DEBUG( "Unable to load texture.\n" );
+			}
+			
+			GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
+			
 			TextureManager::getInstance()._stall_texture_id = stall_id;
 
 			loaded_texture = true;

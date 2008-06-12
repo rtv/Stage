@@ -105,6 +105,8 @@ overwritten.
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_File_Chooser.H>
 
+#include "file_manager.hh"
+
 static const char* MITEM_VIEW_DATA =      "&View/&Data";
 static const char* MITEM_VIEW_BLOCKS =    "&View/&Blocks";
 static const char* MITEM_VIEW_GRID =      "&View/&Grid";
@@ -174,7 +176,7 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));
 
 	mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
-	mbar->add( "Help/&About Stage...", NULL, (Fl_Callback *)About_cb );
+	mbar->add( "Help/&About Stage...", NULL, (Fl_Callback *)About_cb, this );
 	//mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
 
 	callback( (Fl_Callback*)WindowCallback, this );
@@ -271,8 +273,7 @@ void StgWorldGui::LoadCallback( Fl_Widget* wid, StgWorldGui* world )
 	//bool success;
 	const char* pattern = "World Files (*.world)";
 	
-	// todo: replace this with real path
-	worldsPath = "/Users/jeremya/stage_trunk/worlds";
+	worldsPath = world->fileMan.worldsRoot().c_str();
 	Fl_File_Chooser fc( worldsPath, pattern, Fl_File_Chooser::CREATE, "Load World File..." );
 	fc.ok_label( "Load" );
 	
@@ -282,15 +283,25 @@ void StgWorldGui::LoadCallback( Fl_Widget* wid, StgWorldGui* world )
 	
 	filename = fc.value();
 	
-	if (filename != NULL) {
-		// if (initialized) {
-		world->Stop();
-		world->UnLoad();
-		// }
+	if (filename != NULL) { // chose something
+		if ( world->fileMan.readable( filename ) ) {
+			// file is readable, clear and load
+
+			// if (initialized) {
+			world->Stop();
+			world->UnLoad();
+			// }
+			
+			// todo: make sure loading is successful
+			world->fileMan.newWorld( filename );
+			world->Load( filename );
+			world->Start(); // if (stopped)
+		}
+		else {
+			fl_alert( "Unable to read selected world file." );
+		}
 		
-		// todo: make sure loading is successful
-		world->Load( filename );
-		world->Start();
+
 	}
 }
 
@@ -407,7 +418,7 @@ void StgWorldGui::view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas )
 	//printf( "value: %d\n", item->value() );
 }
 
-void StgWorldGui::About_cb( Fl_Widget* ) 
+void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world ) 
 {
 	fl_register_images();
 	
@@ -416,30 +427,22 @@ void StgWorldGui::About_cb( Fl_Widget* )
 	const int Spc = 10;
 	const int ButtonH = 25;
 	const int ButtonW = 60;
+	const int pngH = 82;
+	//const int pngW = 264;
 	
 	Fl_Window win( Width, Height ); // make a window
 
-	// <temporary hack>
-	const char* stagepath = getenv("STAGEPATH");
-	const char* logopath = "../../../assets/logo.png";
-	char* fullpath = (char*)malloc( strlen(stagepath) + strlen(logopath) + 2 );
-	strcpy( fullpath, stagepath );
-	strcat( fullpath, "/" );
-	strcat( fullpath, logopath );
-	printf("fullpath: %s\n", fullpath); 
-	Fl_PNG_Image png(fullpath); // load image into ram
-	free( fullpath );
-	
 	Fl_Box box( Spc, Spc, 
-			    Width-2*Spc, png.h() ); // widget that will contain image
-	
+			   Width-2*Spc, pngH ); // widget that will contain image
 
-	// </temporary hack>
 	
+	std::string fullpath;
+	fullpath = world->fileMan.fullPath( "stagelogo.png" );
+	Fl_PNG_Image png( fullpath.c_str() ); // load image into ram
 	box.image(png); // attach image to box
-
-	Fl_Text_Display text( Spc, png.h()+2*Spc,
-						  Width-2*Spc, Height-png.h()-ButtonH-4*Spc );
+	
+	Fl_Text_Display text( Spc, pngH+2*Spc,
+						  Width-2*Spc, Height-pngH-ButtonH-4*Spc );
 	text.box( FL_NO_BOX );
 	text.color(win.color());
 	
@@ -462,6 +465,8 @@ void StgWorldGui::About_cb( Fl_Widget* )
 	win.show();
 	while (win.shown())
 		Fl::wait();
+	
+	
 }
 
 void StgWorldGui::HelpAboutCallback( Fl_Widget* wid ) {
