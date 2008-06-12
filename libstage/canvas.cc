@@ -581,18 +581,24 @@ void StgCanvas::draw()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	}            
 
-	//Follow the selected robot
-	if( (showflags & STG_SHOW_FOLLOW)  && last_selection ) {
+	
+	if( use_perspective_camera == true ) {
+		if( (showflags & STG_SHOW_FOLLOW)  && last_selection ) {
+			//Follow the selected robot
+			stg_pose_t gpose = last_selection->GetGlobalPose();
+			perspective_camera.setPose( gpose.x, gpose.y, 0.1 );
+			perspective_camera.setYaw( rtod( gpose.a ) - 90.0 );
+			
+		}
+		perspective_camera.Draw();
+	} else if( (showflags & STG_SHOW_FOLLOW)  && last_selection ) {
+		//Follow the selected robot
 		stg_pose_t gpose = last_selection->GetGlobalPose();
 		camera.setPose( gpose.x, gpose.y );
 		
 		stg_bounds3d_t extent = world->GetExtent();
 		camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
 		camera.Draw();
-	}
-	
-	if( use_perspective_camera == true ) {
-		perspective_camera.Draw();
 	}
 	
 	renderFrame();
