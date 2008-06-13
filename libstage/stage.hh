@@ -94,6 +94,7 @@ namespace Stg
 	GHashTable* Typetable();
 
 	// foreward declare
+	class StgCanvas;
 	class Worldfile;
 
 	/// Copyright string

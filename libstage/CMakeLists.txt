@@ -33,6 +33,7 @@ target_link_libraries( stage
 		       ${GLIB_LIBRARIES}
 		       ${OPENGL_LIBRARIES}
 		       ${FLTK_LIBRARIES} 
+		       ${APPLE_LIBRARIES}
 		       ltdl
 )
 

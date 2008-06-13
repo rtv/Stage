@@ -178,7 +178,7 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));
 
 	mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
-	mbar->add( "Help/&About Stage...", NULL, (Fl_Callback *)About_cb, this );
+	mbar->add( "Help/&About Stage...", 0, (Fl_Callback *)About_cb, this );
 	//mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
 
 	callback( (Fl_Callback*)WindowCallback, this );
@@ -366,8 +366,7 @@ bool StgWorldGui::CloseWindowQuery()
 		
 		switch (choice) {
 			case 1: // Yes
-				bool saved = SaveAsDialog();
-				if ( saved ) {
+				if ( SaveAsDialog() ) {
 					return true;
 				}
 				else {

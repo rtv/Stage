@@ -7,28 +7,61 @@ SET( V_BUGFIX 0 )
 SET( VERSION ${V_MAJOR}.${V_MINOR}.${V_BUGFIX} )
 SET( APIVERSION ${V_MAJOR}.${V_MINOR} )
 
-cmake_minimum_required( VERSION 2.4 )
+SET( MIN_PLAYER_MAJOR 2 )
+SET( MIN_PLAYER_MINOR 1 )
 
-cmake_policy( SET CMP0003 NEW )
-cmake_policy( SET CMP0005 NEW )
+cmake_minimum_required( VERSION 2.4 FATAL_ERROR )
+
+IF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
+	cmake_policy( SET CMP0003 NEW )
+	cmake_policy( SET CMP0005 OLD )
+ENDIF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
 
 MESSAGE (STATUS "${PROJECT_NAME} version ${VERSION}")
 
 # define some preprocessor strings that the code is expecting
-ADD_DEFINITIONS( -DPROJECT=\"${PROJECT_NAME}\" 
-		-DINSTALL_PREFIX=\"${CMAKE_INSTALL_PREFIX}\"
-		-DVERSION=\"${VERSION}\" )
+ADD_DEFINITIONS( -DPROJECT=\\\"${PROJECT_NAME}\\\" 
+		-DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"
+		-DVERSION=\\\"${VERSION}\\\" )
 
 include(FindPkgConfig)
-#variable_watch(PLAYER_FOUND)
-#variable_watch(PLAYER_VERSION)
-pkg_search_module( GLIB glib-2.0 )
-pkg_search_module( PLAYER playercore )
-find_package(OPENGL REQUIRED)
 
-# include(FindFLTK) doesn't seem to work for me, so we work a bit harder
-set(FLTK_INCLUDE_DIR CMAKE_INCLUDE_PATH ) 
-find_package(FLTK REQUIRED)
+pkg_search_module( GLIB REQUIRED glib-2.0 )
+find_package( OpenGL REQUIRED )
+
+#pkg_search_module( PLAYER playercore )
+#SET(VER_PATTERN "([0-9]*)\\.([0-9]*)\\.([0-9]*)") 
+#STRING( REGEX REPLACE ${VER_PATTERN} "\\1" PLAYER_MAJOR_VER ${PLAYER_VERSION} )
+#MESSAGE( "Major: ${PLAYER_MAJOR_VER}" )
+#STRING( REGEX REPLACE ${VER_PATTERN} "\\2" PLAYER_MINOR_VER ${PLAYER_VERSION} )
+#MESSAGE( "Minor: ${PLAYER_MINOR_VER}" )
+#IF( NOT PLAYER_MAJOR_VER LESS MIN_PLAYER_MAJOR )
+#	IF( NOT PLAYER_MINOR_VER LESS MIN_PLAYER_MINOR )
+#		MESSAGE( STATUS "  Player up to date, building plugin")
+#		ADD_SUBDIRECTORY(libstageplugin)
+#	ENDIF( NOT PLAYER_MINOR_VER LESS MIN_PLAYER_MINOR )
+#ENDIF( NOT PLAYER_MAJOR_VER LESS MIN_PLAYER_MAJOR )
+
+FIND_PROGRAM (FLTKCONFIG NAMES fltk-config)
+IF (FLTKCONFIG)
+    EXECUTE_PROCESS (COMMAND fltk-config --cxxflags --use-gl --use-images
+        OUTPUT_VARIABLE FLTK_CFLAGS
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    EXECUTE_PROCESS (COMMAND fltk-config --ldflags --use-gl --use-images
+        OUTPUT_VARIABLE FLTK_LIBRARIES
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    MESSAGE (STATUS "Found FLTK")
+    SET (FLTK_FOUND TRUE)
+ELSE (FLTKCONFIG)
+    MESSAGE (FATAL_ERROR "FLTK not found, aborting")
+    SET (FLTK_FOUND FALSE)
+ENDIF (FLTKCONFIG)
+
+
+IF (APPLE)
+	MESSAGE(STATUS "Setting Apple specific flags")
+	SET(APPLE_LIBRARIES "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
+ENDIF (APPLE)
 
 # all targets need these include directories
 include_directories( . 
@@ -36,8 +69,7 @@ include_directories( .
 		     replace 
 		     ${GLIB_INCLUDE_DIRS} 
 		     ${FLTK_INCLUDE_DIR}
-		     ${OPENGL_INCLUDE_DIR}		     
-			 ${CMAKE_INCLUDE_PATH}
+		     ${CMAKE_INCLUDE_PATH}
 )
 
 
@@ -53,16 +85,6 @@ link_directories(${GLIB_LIBRARY_DIRS}
 # work through these subdirs
 ADD_SUBDIRECTORY(libstage)
 ADD_SUBDIRECTORY(examples)
-
-string( REGEX MATCH "([0-9]*)\\.([0-9]*)\\." player_ver ${PLAYER_VERSION} )
-SET(min_player_major 2)
-SET(min_player_minor 1)
-IF( NOT CMAKE_MATCH_1 LESS min_player_major )
-	IF( NOT CMAKE_MATCH_2 LESS min_player_minor )
-		MESSAGE( "Found Player v${PLAYER_VERSION} in ${PLAYER_INCLUDE_DIRS}")
-		ADD_SUBDIRECTORY(libstageplugin)
-	ENDIF()
-ENDIF()
 
 INSTALL(FILES rgb.txt stagelogo.png
         DESTINATION share/stage 
