@@ -305,6 +305,17 @@ void Stg::stg_rotrects_normalize( stg_rotrect_t* rects, int num )
 	}
 }	
 
+stg_pose_t Stg::new_pose( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a )
+{
+  stg_pose_t p;
+  p.x = x;
+  p.y = y;
+  p.z = z;
+  p.a = a;
+  return p;
+};
+
+
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void Stg::stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
 {

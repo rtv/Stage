@@ -58,6 +58,9 @@ target_link_libraries( stagebinary
 		       stage
 ) 
 
+add_executable( test test.cc )
+target_link_libraries( test stage )
+
 INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin 
 	LIBRARY DESTINATION lib

@@ -3,7 +3,7 @@
 /*
  *  Stage : a multi-robot simulator.  Part of the Player Project
  * 
- *  Copyright (C) 2001-2007 Richard Vaughan, Brian Gerkey, Andrew
+ *  Copyright (C) 2001-2008 Richard Vaughan, Brian Gerkey, Andrew
  *  Howard
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -372,6 +372,9 @@ namespace Stg
 			stg_line3d_func_t visit_voxel, 
 			void* arg );
 
+  /** return a stg_pose_t with its fields initialized by the
+		parameters */
+  stg_pose_t new_pose( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a );
 
 	const uint32_t STG_MOVE_TRANS = (1 << 0);
 	const uint32_t STG_MOVE_ROT   = (1 << 1);
@@ -930,6 +933,7 @@ class StgWorld : public StgAncestor
 	friend class StgModel; // allow access to private members
 	friend class StgBlock;
 	friend class StgTime;
+   friend class StgCanvas;
 
 private:
 	
@@ -1013,7 +1017,7 @@ private:
 			bool ztest );
 
 	void RemoveBlock( int x, int y, StgBlock* block );
-	//{ }//bgrid->RemoveBlock( x, y, block ); };
+
 
 protected:
 	stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
@@ -1021,7 +1025,7 @@ protected:
 	GHashTable* superregions;
 
 	static void UpdateCb( StgWorld* world);
-
+  
 	GList* ray_list;
 	// store rays traced for debugging purposes
 	void RecordRay( double x1, double y1, double x2, double y2 );
@@ -1034,6 +1038,12 @@ protected:
 
 	//GHashTable* blocks;
 	GArray lines;
+
+	virtual void AddModel( StgModel* mod );
+	virtual void RemoveModel( StgModel* mod );
+
+	GList* GetRayList(){ return ray_list; };
+	void ClearRays();
 
 public:
 	StgWorld();
@@ -1058,7 +1068,6 @@ public:
 
 	stg_usec_t GetSimInterval(){ return interval_sim; };
 
-
 	Worldfile* GetWorldFile(){ return wf; };
 
 	virtual void Load( const char* worldfile_path );
@@ -1066,8 +1075,6 @@ public:
 	virtual void Reload();
 	virtual bool Save( const char* filename );
 	virtual bool Update(void);
-	virtual void AddModel( StgModel* mod );
-	virtual void RemoveModel( StgModel* mod );
 
 	void Start(){ paused = false; };
 	void Stop(){ paused = true; };
@@ -1078,22 +1085,31 @@ public:
 	void CancelQuit(){ quit = false; }
 	void CancelQuitAll(){ quit_all = false; }
 
+  /** Get the resolution in pixels-per-metre of the underlying
+		discrete raytracing model */ 
 	double Resolution(){ return ppm; };
 
+  /** Returns a pointer to the model identified by ID, or NULL if
+		nonexistent */
 	StgModel* GetModel( const stg_id_t id );
+
+  /** Returns a pointer to the model identified by name, or NULL if
+		nonexistent */
 	StgModel* GetModel( const char* name );
 
 
-	GList* GetRayList(){ return ray_list; };
-	void ClearRays();
-
+  /** Get human readable string that describes the current simulation
+		time. */
 	void ClockString( char* str, size_t maxlen );
 
-	stg_bounds3d_t GetExtent(){ return extent; };
+  /** Return the 3D bounding box of the world, in meters */
+  stg_bounds3d_t GetExtent(){ return extent; };
 
+  /** call func( model, arg ) for each model in the world */
 	void ForEachModel( GHFunc func, void* arg )
 	{ g_hash_table_foreach( models_by_id, func, arg ); };
 
+  /** Return the number of times the world has been updated. */
 	long unsigned int GetUpdateCount()
 	{ return updates; }
 };

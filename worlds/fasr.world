@@ -16,7 +16,7 @@ resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 10  # real-time interval between simulation updates in milliseconds 
-paused 0
+paused 1
 
 # configure the GUI window
 window
@@ -74,7 +74,7 @@ autorob( pose [5.770 6.492 -10.539] )
 autorob( pose [7.493 4.852 -156.719] )
 autorob( pose [5.078 6.853 -37.549] )
 autorob( pose [6.147 7.399 4.964] )
-autorob( pose [4.065 5.583 125.796] )
+autorob( pose [4.058 5.283 125.796] )
 autorob( pose [7.487 6.926 -40.634] )
 
 autorob( pose [4.530 7.367 -113.456] )

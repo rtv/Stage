@@ -2,20 +2,27 @@
 ** 3.0.0 RELEASE **
 
 BUGS
-* saving worldfile adds newlines after includes
-* Viewing About Box stops simulation
+
 * 3d collision detection broken - e.g. fancypioneer2dx
 * [OSX only - FLTK bug?] loading window size constrains maximum window size
-* alpha properly done
 
 INCOMPLETE
-* Fix 3D panning and scrolling
+
 * per-model visualization entries in view menu
 
 
 DESIRABLE FEATURES
+
+* add blocks to world w/o model?
 * energy model & recharging
 * runtime update rate UI
 
 
 ** FUTURE RELEASES **
+
+DONE
+
+* Viewing About Box stops simulation
+* saving worldfile adds newlines after includes
+* alpha properly done
+* Fix 3D panning and scrolling
