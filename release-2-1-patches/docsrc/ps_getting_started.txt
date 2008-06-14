@@ -1,0 +1,349 @@
+
+\begin{verbatim}
+
+
+Player/Stage Getting Started
+----------------------------
+
+Author: Richard T. Vaughan (rtv) 
+Created: 2004.02.05
+
+Revisions (most recent first):
+rtv - 2004.07.05 - Updated for Stage-1.5
+rtv, Reed Hedges - 2004.02.06
+rtv - 2004.02.05
+
+
+CVS: $id$
+
+** IMPORTANT NOTE FOR USERS OF PREVIOUS VERSIONS **
+
+The required build order of P/S components has changed with the
+release of Stage-1.5. The order is now:
+
+1. libRTK2
+2. Stage
+3. Player
+
+** END **
+
+Where to find help on installing and using the Player/Stage system
+------------------------------------------------------------------
+
+In order of likely up-to-dateness:
+
+1. The README file contained in every distribution
+2. The Stage and Player manuals
+3. This document
+4. The project homepage http://playerstage.sourceforge.net
+     - FAQ list
+     - user mailing list archive (playerstage-users@sourceforge.net)
+     - developer mailing list archive (playerstage-developers@sourceforge.net)
+     - ask a question on the user list playerstage-users@sourceforge.net
+     
+If you run into problems following the instructions in this document,
+please check the other resources.
+
+It is considered bad manners to contact the authors directly until you
+have exhausted the other resources.
+
+How to read this document
+-------------------------
+
+Throughout this document you will see some terms bracketed by
+less-than, greater-than symbols, like <this>. When reading these
+terms, you should substitute some version- or location-specific text
+for the term in brackets. For example, when you see the path
+
+<player_source_dir>/examples/c++
+
+you should replace <player_source_dir> with the directory created when
+you unpacked the Player source on your system. Perhaps:
+
+/home/rtv/PS/player-src-1.5/examples/c++
+
+Similarly, version numbers may be specified like this: 
+
+1.5.x
+
+Which means _any_ version that begins with 1.5, for example 1.5,
+1.5.3, 1.5.99. Usually, P/S components with the first two numbers the
+same (the MAJOR and MINOR version numbers) will work together. (The
+third number gives the BUGFIX version number).
+
+These conventions are common in the software community. 
+
+
+Instructions for installing the Player/Stage system v1.5.
+--------------------------------------------------------
+
+You must take the following steps in this order:
+
+-1: install prerequisites
+ 0. get the source and decide common system configurations
+ 1. install libRTK
+ 2. install Stage
+ 3. install Player
+ 4. set up your environment
+ 5. test
+
+
+-1: Prerequisites
+
+The P/S system is developed and tested under Linux and OS X. It is
+less frequently tested on Solaris and *BSD systems, but it usually
+works there too.
+
+You need the GIMP toolkit (GTK+-1.x or GTK+-2.x) installed first. If you have
+GNOME installed, you have this already. GTK+ has its own
+dependencies. You can almost certainly use your system's package
+management to simplify GTK+ installation. OS X users can use Fink - it
+works fine for me. 
+
+Optional components include the GNU Science Library (GSL). You can do
+without it for now. You don't need the Open Dynamics Engine unless you
+want to run Gazebo, and these instructions don't cover Gazebo. Look
+for a Player/Gazebo Getting Started in the future.
+
+0. System-wide configuration
+
+Obtain the librtk, Player and Stage distributions. They come packaged
+as compressed tar archives, commonly called 'tarballs'. Get the latest
+releases from:
+
+http://sourceforge.net/project/showfiles.php?group_id=42445
+
+You need:
+
+librtk-src-<version>.tar.gz
+stage-src-<version>.tar.gz
+player-src-<version>.tar.gz
+
+Where <version> is greater than 1.5. Stage-related code in the P/S
+system changed dramaticaly between 1.3.4 and 1.5 (Stage skipped v1.4
+to catch up with Player's numbering).
+
+Now figure out where you want to install the software. The install
+location is determined by autoconf's `prefix' variable. The default
+value of prefix depends on your system, but is usually /usr/local. If
+you want to install somewhere else (if e.g. you don't have root
+access, or you have another version installed already), you can change
+`prefix' using an argument to the configure script. For example, to
+install in ~/PS-TEST do this:
+
+./configure --prefix=$HOME/PS-TEST
+
+You should pass the same prefix to each P/S package so they can find
+each other (actually, you can provide paths for each package
+individually if you need to, which is useful for testing modified
+versions, but using a single common prefix is much easier and is
+recommended). If you don't supply a prefix,the default for your system
+(normally /usr/local) will be used. As you read these instructions,
+you should substitute your chosen prefix whenever you see <prefix>.
+
+Note that this is the normal behavior for autoconf, so this knowledge
+should be useful elsewhere. If you're experienced with autoconf, you
+could have guessed that P/S works this way. This is the beauty of
+standard tools.
+
+
+1. libRTK
+
+libRTK is Andrew Howard's Robot ToolKit, used for most of the graphics
+in Player and Stage. It needs to be installed first because Player and
+Stage include it as they compile.
+
+To install in the default location (probably
+/usr/local):
+
+$ ./configure
+
+or to install somewhere else:
+
+$ ./configure --prefix=<prefix>
+
+Now compile the library:
+
+$ make 
+
+If the library builds without errors you install it like this:
+
+$ make install
+
+If 'make install' complains about write permissions, you may need 
+to be root for this step, depending on the installation prefix you
+chose. Generally it's a good idea to be root only when you really 
+have to, so don't forget to change back to your regular UID after 
+this step. 
+
+If successful, you should now be able to find the header file
+<prefix>/include/rtk.h and the library <prefix>/include/librtk.a. You
+should find that these files have very recent modification times.
+
+
+2. Stage
+
+Change directory to the Stage distribution, and follow the same
+procedure:
+
+$ ./configure --prefix=<prefix>
+$ make 
+$ make install
+
+You should now have the Stage binary in <prefix>/bin, the stageclient library libstageclient.a in <prefix>/lib and the stageclient header file stage.h in <prefix>/include.
+
+
+3. Player
+   
+Player comes last because it depends on the stageclient library that
+is installed by Stage.
+
+Change directory to the Player distribution, and follow the same
+procedure:
+
+$ ./configure --prefix=<prefix>
+$ make 
+$ make install
+
+You should now find several more header files in <prefix>/include,
+including player.h. You'll also have the Player binary itself:
+<prefix>/bin/player along with various optional tools.
+
+
+4. Setting up your environment
+
+You may find it convenient to have the player and stage binaries in
+your path. Test this with the `which' command:
+
+which player stage
+
+If `which' can not find player and stage, add the binary installation
+directory to your PATH environment variable. 
+
+E.g. in BASH:
+
+$ export PATH=<prefix>/bin:$PATH
+
+and in CSH:
+
+% setenv PATH <prefix>/bin:$PATH
+
+If you don't understand this section, read an introductory UNIX text
+or tutorial. You'll need to have the basics under control to be
+productive with P/S.
+
+You may want to add this PATH change to your login scripts so you
+don't have to do it every time.
+
+5. Testing
+
+Stage runs as a 'server' process, i.e. it starts up and does nothing
+until a 'client' makes requests of it.
+
+Start stage like this:
+
+$ <prefix>/bin/stage
+
+or, if Stage is in your path, simply:
+
+$ stage
+
+All being well, you should see Stage's standard startup messages:
+
+* Stage-1.5.0 * [localhost:6600]  
+* Ready.
+
+That's it. Now we run a client that requests some simulation services
+from Stage. Player is a stage client.
+
+Player requires the name of a configuration file as an argument, like
+this:
+
+$ player <file.cfg>
+
+By convention, Player config files have the suffix '.cfg'. Some
+examples are provided in the distribution to get you started. To try
+one out do:
+
+$ cd <player_source_dir>/config/stage
+$ <prefix>/bin/player test.cfg
+
+or, if player is in your path:
+
+$ player test.cfg
+
+All being well, you'll see some console output declaring the version
+numbers and startup details for Player. This should be shortly
+followed by Stage's window containing a floor plan of a set of rooms
+and one or more robots.
+
+Click on a robot and you'll see its name and pose in the status bar at
+the bottom left of the window. Try dragging the robot around with the
+mouse and see the pose change.
+
+Notes on config files: 
+
+  The configuration file is a plain text file that describes what
+  robot devices are available to Player, and how Player should present
+  them to the user. This is done by specifying the set of interfaces
+  and drivers you want in your Player session. When using Player as a
+  Stage client, your config file will contain a 'simulation' interface
+  entry that uses the 'stageclient' driver and specifies a 'world
+  file' with a '.world' suffix that describes the contents of the
+  world that Stage should simulate. The .cfg and .world config files
+  are very powerful and details are beyond the scope of this
+  document. Consult the he Player and Stage manuals instead.
+
+
+To complete the test, we'll run a Player client; a program that talks
+to Player. Playerv is a Player client that can give a visualization of
+the data from various Player devices. In another terminal do:
+
+$ <prefix>/bin/playerv
+
+This should pop up another window. From the Devices menu, select
+laser:0. In the Stage window you should see a robot generating a laser
+scan of the world in front of it. The Playerv window should show a
+matching scan. The client program has fetched this data from Player,
+which fetched it from Stage. This is just what happens with a real
+hardware laser scanner: The device (or its Stage-simulated equivalent)
+generates the data, Player collects it all in one place, then delivers
+it to Player client programs. Like most Player clients, playerv
+doesn't know that the data comes from a simulator; it works just the
+same on real robots. Experiment with subscribing and commanding
+position:0 (again in the Device menu). You can drive the robot around
+by dragging the red cross-hairs widget in playerv's window.
+
+ If all this works, your installation is good. Take a look at some of
+the Player example clients in the Player source tree under `examples'
+(not the installation tree). These are separated by programming
+language. For example:
+
+$ cd <player_source_dir>/examples/c++
+$ laserobstacleavoid
+
+should get your test robot running around. Player allows multiple
+clients to connect to robot devices, so if you're still running
+playerv you can see the laser data changing.
+
+
+Authors note
+------------
+
+I hope you found this document useful. I'd appreciate your feedback to
+help me improve it. Please use the reporting systems on the homepage
+to submit feedback, patches, etc.
+
+Richard Vaughan
+July 2004.
+
+http://playerstage.sourceforge.net
+
+\end{verbatim}
+
+
+
+
+
+
+

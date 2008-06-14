@@ -1,0 +1,141 @@
+include "pioneer.inc"
+
+
+
+
+
+
+size [100 100]
+
+# defines 'map' object used for floorplans
+include "map.inc"
+
+
+
+
+
+
+
+# set the size of a pixel in meters
+resolution 0.02
+
+# configure the GUI window
+window
+( 
+  size [ 753.000 696.000 ] 
+  center [0.973 0.094] 
+  scale 0.154 
+)
+
+# load an environment bitmap
+map
+(
+  bitmap "bitmaps/cave.png"
+  size [100 100]	
+
+  #bitmap "bitmaps/hospital.png"
+  #size [143 59]
+  boundary 1
+  name "hospital"
+)
+
+pioneer2dx( name "robot0" pose [12.829 13.723 -37.600] laser() blobfinder() )
+pioneer2dx( name "robot1" pose [17.657 2.532 37.600] laser() blobfinder() )
+pioneer2dx( name "robot2" pose [-11.525 2.786 209.100] laser() blobfinder() )
+pioneer2dx( name "robot3" pose [-22.185 -5.635 77.100] laser() blobfinder() )
+pioneer2dx( name "robot4" pose [3.125 -7.053 262.500] laser() blobfinder() )
+pioneer2dx( name "robot5" pose [-16.015 -3.677 252.900] laser() blobfinder() )
+pioneer2dx( name "robot6" pose [-3.665 -12.638 87.300] laser() blobfinder() )
+pioneer2dx( name "robot7" pose [-4.666 -7.323 203.500] laser() blobfinder() )
+pioneer2dx( name "robot8" pose [-12.150 -10.643 133.100] laser() blobfinder() )
+pioneer2dx( name "robot9" pose [0.231 1.842 240.900] laser() blobfinder() )
+pioneer2dx( name "robot10" pose [22.133 -9.418 -122.400] laser() blobfinder() )
+pioneer2dx( name "robot11" pose [7.824 -5.841 -32.600] laser() blobfinder() )
+pioneer2dx( name "robot12" pose [-11.601 12.922 138.200] laser() blobfinder() )
+pioneer2dx( name "robot13" pose [-23.685 5.447 301.500] laser() blobfinder() )
+pioneer2dx( name "robot14" pose [0.220 13.352 -49.500] laser() blobfinder() )
+pioneer2dx( name "robot15" pose [-19.218 2.905 260.300] laser() blobfinder() )
+pioneer2dx( name "robot16" pose [2.059 12.919 168.300] laser() blobfinder() )
+pioneer2dx( name "robot17" pose [4.494 2.062 306.400] laser() blobfinder() )
+pioneer2dx( name "robot18" pose [5.225 12.505 420.400] laser() blobfinder() )
+pioneer2dx( name "robot19" pose [19.832 4.478 253.400] laser() blobfinder() )
+pioneer2dx( name "robot20" pose [-19.376 -17.675 378.100] laser() blobfinder() )
+pioneer2dx( name "robot21" pose [15.060 6.769 -5.700] laser() blobfinder() )
+pioneer2dx( name "robot22" pose [16.848 12.150 -23.400] laser() blobfinder() )
+pioneer2dx( name "robot23" pose [-13.635 -4.310 186.700] laser() blobfinder() )
+pioneer2dx( name "robot24" pose [-3.935 9.032 -153.700] laser() blobfinder() )
+pioneer2dx( name "robot25" pose [-23.018 3.761 201.000] laser() blobfinder() )
+pioneer2dx( name "robot26" pose [11.818 8.820 -40.500] laser() blobfinder() )
+pioneer2dx( name "robot27" pose [-13.471 -6.535 359.300] laser() blobfinder() )
+pioneer2dx( name "robot28" pose [9.310 -1.523 195.800] laser() blobfinder() )
+pioneer2dx( name "robot29" pose [-12.904 -3.159 367.400] laser() blobfinder() )
+pioneer2dx( name "robot30" pose [-12.862 -10.549 77.000] laser() blobfinder() )
+pioneer2dx( name "robot31" pose [-2.640 -4.591 42.500] laser() blobfinder() )
+pioneer2dx( name "robot32" pose [-18.883 4.931 170.400] laser() blobfinder() )
+pioneer2dx( name "robot33" pose [3.369 -8.789 81.800] laser() blobfinder() )
+pioneer2dx( name "robot34" pose [-23.512 0.501 141.000] laser() blobfinder() )
+pioneer2dx( name "robot35" pose [19.150 -16.679 297.000] laser() blobfinder() )
+pioneer2dx( name "robot36" pose [23.552 -10.594 250.000] laser() blobfinder() )
+pioneer2dx( name "robot37" pose [1.333 -5.548 108.000] laser() blobfinder() )
+pioneer2dx( name "robot38" pose [26.688 10.158 -24.000] laser() blobfinder() )
+pioneer2dx( name "robot39" pose [-14.684 -1.323 258.000] laser() blobfinder() )
+pioneer2dx( name "robot40" pose [7.007 9.875 -5.900] laser() blobfinder() )
+pioneer2dx( name "robot41" pose [26.217 5.206 268.100] laser() blobfinder() )
+pioneer2dx( name "robot42" pose [4.516 -4.739 -162.400] laser() blobfinder() )
+pioneer2dx( name "robot43" pose [-17.890 -20.724 226.100] laser() blobfinder() )
+pioneer2dx( name "robot44" pose [-3.774 4.811 21.100] laser() blobfinder() )
+pioneer2dx( name "robot45" pose [19.685 -0.683 -60.100] laser() blobfinder() )
+pioneer2dx( name "robot46" pose [-29.792 -11.915 144.100] laser() blobfinder() )
+pioneer2dx( name "robot47" pose [12.657 2.861 198.400] laser() blobfinder() )
+pioneer2dx( name "robot48" pose [-7.185 -5.596 -77.200] laser() blobfinder() )
+pioneer2dx( name "robot49" pose [1.173 -7.449 173.000] laser() blobfinder() )
+pioneer2dx( name "robot50" pose [18.379 -1.822 -76.100] laser() blobfinder() )
+pioneer2dx( name "robot51" pose [-4.018 -5.665 331.900] laser() blobfinder() )
+pioneer2dx( name "robot52" pose [15.279 6.427 387.200] laser() blobfinder() )
+pioneer2dx( name "robot53" pose [-17.630 11.436 101.600] laser() blobfinder() )
+pioneer2dx( name "robot54" pose [-3.259 -11.948 -22.200] laser() blobfinder() )
+pioneer2dx( name "robot55" pose [20.717 10.499 345.000] laser() blobfinder() )
+pioneer2dx( name "robot56" pose [-13.722 -9.152 158.800] laser() blobfinder() )
+pioneer2dx( name "robot57" pose [-28.183 0.315 174.800] laser() blobfinder() )
+pioneer2dx( name "robot58" pose [0.387 14.326 20.000] laser() blobfinder() )
+pioneer2dx( name "robot59" pose [-24.452 -18.811 242.800] laser() blobfinder() )
+pioneer2dx( name "robot60" pose [22.952 -14.759 246.800] laser() blobfinder() )
+pioneer2dx( name "robot61" pose [-15.460 3.886 -21.100] laser() blobfinder() )
+pioneer2dx( name "robot62" pose [-6.433 0.920 209.300] laser() blobfinder() )
+pioneer2dx( name "robot63" pose [21.120 -13.829 237.800] laser() blobfinder() )
+pioneer2dx( name "robot64" pose [7.000 -12.000 5.000] laser() blobfinder() )
+pioneer2dx( name "robot65" pose [-10.834 -14.251 190.200] laser() blobfinder() )
+pioneer2dx( name "robot66" pose [-19.458 -18.654 287.800] laser() blobfinder() )
+pioneer2dx( name "robot67" pose [5.982 1.988 87.800] laser() blobfinder() )
+pioneer2dx( name "robot68" pose [11.027 15.186 373.100] laser() blobfinder() )
+pioneer2dx( name "robot69" pose [-25.667 6.494 109.800] laser() blobfinder() )
+pioneer2dx( name "robot70" pose [21.058 -0.899 296.800] laser() blobfinder() )
+pioneer2dx( name "robot71" pose [-9.274 8.059 240.200] laser() blobfinder() )
+pioneer2dx( name "robot72" pose [-15.333 9.506 289.800] laser() blobfinder() )
+pioneer2dx( name "robot73" pose [19.955 -2.325 76.000] laser() blobfinder() )
+pioneer2dx( name "robot74" pose [-18.677 -14.821 239.800] laser() blobfinder() )
+pioneer2dx( name "robot75" pose [7.000 -12.000 36.000] laser() blobfinder() )
+pioneer2dx( name "robot76" pose [-0.477 12.436 267.100] laser() blobfinder() )
+pioneer2dx( name "robot77" pose [-18.930 0.755 65.800] laser() blobfinder() )
+pioneer2dx( name "robot78" pose [29.373 -15.261 303.800] laser() blobfinder() )
+pioneer2dx( name "robot79" pose [-28.962 8.724 193.800] laser() blobfinder() )
+pioneer2dx( name "robot80" pose [-26.823 -9.275 180.800] laser() blobfinder() )
+pioneer2dx( name "robot81" pose [-7.447 -10.565 413.700] laser() blobfinder() )
+pioneer2dx( name "robot82" pose [-20.467 3.198 215.600] laser() blobfinder() )
+pioneer2dx( name "robot83" pose [-20.996 -8.046 87.000] laser() blobfinder() )
+pioneer2dx( name "robot84" pose [27.129 -9.057 -36.700] laser() blobfinder() )
+pioneer2dx( name "robot85" pose [-14.665 -11.208 113.100] laser() blobfinder() )
+pioneer2dx( name "robot86" pose [7.996 -10.434 256.000] laser() blobfinder() )
+pioneer2dx( name "robot87" pose [17.212 12.882 147.000] laser() blobfinder() )
+pioneer2dx( name "robot88" pose [23.596 9.791 60.500] laser() blobfinder() )
+pioneer2dx( name "robot89" pose [-14.867 -4.622 409.000] laser() blobfinder() )
+pioneer2dx( name "robot90" pose [5.791 -0.596 -29.500] laser() blobfinder() )
+pioneer2dx( name "robot91" pose [-13.936 -3.836 197.200] laser() blobfinder() )
+pioneer2dx( name "robot92" pose [11.342 -7.695 133.800] laser() blobfinder() )
+pioneer2dx( name "robot93" pose [-17.437 8.234 309.800] laser() blobfinder() )
+pioneer2dx( name "robot94" pose [-1.589 3.535 240.900] laser() blobfinder() )
+pioneer2dx( name "robot95" pose [19.570 6.744 -15.200] laser() blobfinder() )
+pioneer2dx( name "robot96" pose [2.003 5.250 374.100] laser() blobfinder() )
+pioneer2dx( name "robot97" pose [-23.159 -9.539 255.800] laser() blobfinder() )
+pioneer2dx( name "robot98" pose [5.843 -13.123 155.900] laser() blobfinder() )
+pioneer2dx( name "robot99" pose [-3.141 -5.592 261.000] laser() blobfinder() )

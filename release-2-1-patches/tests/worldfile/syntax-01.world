@@ -1,0 +1,56 @@
+
+# Desc: Test world file with various formats (this one has no errors)
+# Author: Andrew Howard
+# Date: 4 Jun 2002
+# CVS: $Id: syntax-01.world,v 1.2 2002-06-10 17:35:57 inspectorg Exp $
+# Notes: The bottom half of the file lists the expected results.
+
+test 1
+
+environment
+(
+  file "cave.pnm.gz"
+  scale 0.03
+  resolution 0.03
+)
+
+position
+(
+  name "robot1" 
+  port 6665
+  pose [1 2 0]
+  player
+  (
+  ) 
+  sonar (
+  )
+  laser 
+  (
+    lbd() 
+    ptz( vision ( ) )
+  )
+)
+
+## stage error : worldfile.cc : this is a test file; quitting
+
+## begin entities
+## [0][-1][]
+## [1][0][environment]
+## [2][0][position]
+## [3][2][player]
+## [4][2][sonar]
+## [5][2][laser]
+## [6][5][lbd]
+## [7][5][ptz]
+## [8][7][vision]
+## end entities
+
+## begin properties
+## [0][][test][1]
+## [1][environment][file][cave.pnm]
+## [1][environment][scale][0.03]
+## [1][environment][resolution][0.03]
+## [2][position][name][robot1]
+## [2][position][port][6665]
+## [2][position][pose][1][2][0]
+## end properties

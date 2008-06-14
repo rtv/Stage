@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Generic bootstrap file. 
+# If this fails for you, check for a bootstrap file for your platform.
+
+autoreconf -fi

@@ -1,0 +1,256 @@
+/* Stage plugin documentation file - parsed by Doxygen for the user
+ * manual 
+ * $Id: help.txt,v 1.12 2005-08-11 19:56:54 rtv Exp $
+*/
+
+/**
+@mainpage The Stage Robot Simulator
+
+<p>Copyright Richard Vaughan and contributors 1998-2005.
+<p>Part of the Player/Stage Project [http://playerstage.sourceforge.net]
+
+\section License
+
+<p>Stage sourcecode and documentation is released under the terms of
+the GNU General Public License v2. A copy of the license is included
+with the sourcecode in the file 'COPYING". Copying and redistribution
+is permitted only under the terms of the license.
+
+<hr>
+<small>
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.12 2005-08-11 19:56:54 rtv Exp $
+</small>
+*/
+
+
+/** 
+@ingroup stage
+@defgroup help Getting Help
+
+If you're having problems and you can't find what you need in this manual, there are several places to find help. 
+
+First, please check the <a
+href=http://playerstage.sourceforge.net/doc/doc.html>online
+documentation page</a> to make sure you have the latest
+documentation. In particular, check the <a
+href=http://playerstage.sourceforge.net/doc/stage_user/faq.html>latest
+online latest FAQ page</a>.
+
+Next, you should search <a
+href=http://sourceforge.net/mailarchive/forum.php?forum_id=8201>the
+playerstage_users mailing list archive</a> to
+see if your questions have already been answered.
+
+Next, you should probably spend a few minutes with <a
+href=http://www.google.com>Google</a>. This often works well, as it
+picks up P/S conversations from all over the place.
+
+If you still need help, you can send email to the mailing list
+playerstage_users@lists.sourceforge.net and a user or developer may
+reply to you. <b>Remember that these mails go to hundreds of people</b>, so
+please be polite and give as much information as you can in your
+email.
+
+*/
+
+
+/**
+@ingroup stage
+@defgroup faq FAQ: Frequently Asked Questions
+
+<b>There are no questions about the 1.6 release yet. If you have a question, <a href=help.html>follow the advice here</a></b>.
+
+<ol>
+<li> [none]
+</ol>
+
+*/
+
+
+/**
+@ingroup stage
+@defgroup refs References
+
+[1] Brian Gerkey, Richard Vaughan, Kasper Stoy, Andrew Howard, Gaurav
+Sukhatme, Maja Mataric (2001) "Most Valuable Player: A Robot Device
+Server for Distributed Control", Proc. IEEE Int. Conf. Intelligent
+Robotic Systems, Maui, Hawaii. (IROS'01)
+
+[2] Richard Vaughan, Brian Gerkey, Andrew Howard (2003) "On device
+abstractions for portable, resuable robot code", IEEE/RSJ
+International Conference on Intelligent Robot Systems, Las Vegas,
+Nevada, USA.  (IROS2003)
+
+[3] Brian Gerkey, Richard Vaughan, Andrew Howard (2003) "The
+Player/Stage Project: Tools for Multi-Robot and Distributed Sensor
+Systems", 11th International Conference on Advanced Robotics, Coimbra,
+Portugal (ICAR'03).
+
+[4] Nick Jakobi (1997) "Evolutionary Robotics and the Radical Envelope
+of Noise Hypothesis", Adaptive Behavior Volume 6, Issue 2. pp.325 -
+368 .
+
+[5] Stuart Wilson (1985) "Knowledge Growth in an Artificial Animal",
+Proceedings of the First International Conference on Genetic Agorithms
+and Their Applications.  Hillsdale, New Jersey. pp.16-23.
+
+*/
+
+/**
+@ingroup stage
+@defgroup install Installation
+
+<b>Important: Stage is an extension to Player; Player must be properly
+installed before you can install Stage.</b>
+
+<h2>Quick start</h2>
+
+Install Player first, then Stage, using the standard GNU autotools
+build system: download and extract the tarballs, then <tt>./configure
+; make install</tt>.
+
+<h2>Standard install procedure</h2>
+
+<p>To install Stage in the default location, follow these steps:
+
+<ol>
+
+<li>Make sure Player is installed and working. See the Player
+ documentation for instructions.
+
+<li>Download the latest Stage source tarball (stage-src-\<version\>.tgz)
+from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
+
+<li>Uncompress and expand the tarball: <br>
+    <tt>$ tar xzvf stage-\<version\>.tgz</tt>
+
+<li>`cd' into Stage's source directory:<br>
+     <tt>$ cd stage-\<version\></tt>
+ 
+<li>To configure Stage with default settings:<br>
+<tt>$ ./configure</tt><br>
+
+<li>Compile Stage:<br>
+<tt>$ make</tt>
+
+<li>Install Stage. By default, Stage will be installed in
+<tt>/usr/local</tt> so you need to become root for this step. Remember
+to return to your normal user ID afterwards. <br> 
+<tt>$ make install</tt>
+
+</ol>
+
+<h2>Customized installations</h2>
+
+<p>Stage follows the standard GNU autotools conventions for build and
+install options. To see a list of all the available configuration
+options, do this:
+
+<p><tt>./configure --help</tt>
+
+<p>The most important option is <tt>--prefix</tt>, used
+to change the installation directory from the default (which varies
+from system to system, but is usually <tt>/usr/local</tt>). In
+general, Stage should get the same prefix you used to install Player. Prefixes must be absolute paths, i.e. a complete path starting with a '/'.
+
+<p>For example, you might want to install Stage your home directory
+because you don't have root access:
+
+<p><tt>$./configure --prefix=/home/harrison/PS</tt>
+
+<p><b>Remember: these instructions assume that Player was configured with the
+same prefix.</b> The command line to do this is probably the same, but you
+should check the Player instructions just in case.
+
+*/
+
+
+/**
+@page release Release Notes
+
+<h2>Version 1.6.1</h2>
+
+This is a bug-fix release that replaces 1.6.0. 
+
+- Fixes several GUI bugs, including the [View/Fill Polygons] menu item.
+
+- Some code clean-up and thread-safety fixes
+
+<h2>Version 1.6.0</h2>
+
+This release of Stage is the first after a major rewrite. There are
+bound to be bugs and teething troubles, but the <a
+href=http://www.cs.sfu.ca/research/groups/autonomy>Autonomy Lab</a>
+has been using this code for serious work for a few months now and we
+think it's useful and usable.
+
+<h3>Significant changes visible to the user</h3>
+
+<ol>
+
+<li>Stage is now a Player plugin, instead of an executable. The key
+benefit of this is that <b>all Player drivers are now available for
+use directly with Stage</b>, including sophisticated drivers like
+AMCL, without needing passthrough drivers.
+
+<li>Stage depends on Player 1.6 or newer.
+
+<li>Worldfile syntax has a changed, so you need to edit your existing
+worlds to get them to work. Look at the example worlds in <tt>(stage
+src)/worlds</tt> to get the idea.
+
+<li>Any object can now have its shape specified by a bitmap file
+
+<li>Several bitmap file formats are supported, using a third-party
+library. Load maps and robot bodies from JPG, PNG, etc. No more PNM
+troubles.
+
+<li>Worlds can now be very large (thousands of meters square).
+
+<li>Several models are missing from this release - notably the gripper
+and puck. These will be available soon. Meanwhile, enjoy the full
+power of Player with the basic laser, sonar, position, fiducial and
+blobfinder models.
+
+<li>Stage no longer depends on libRTK.
+
+<li>Some models from previous versions may not yet be available in
+this release (e.g. gripper & puck), but we're working on them. Let us
+know which ones you need.
+
+</ol>
+
+<h3>Significant changes under the hood</h3>
+
+<ol>
+
+<li>The Stage simulation engine is now a library rather than an
+application. The library can be used to write custom robot
+simulations. This is very useful if you need to do synchronous control
+of robots (e.g for perfectly repeatable experiments), or dynamically
+create and destroy robots or other objects. You can't (yet) do this
+though Player. Refer to the <a
+href=http://playerstage.sf.net/doc/stage_reference>libstage reference
+manual</a> for the API and developer docs.</a>.
+
+<li>Stage is now mostly written in C. A simple object-oriented system
+allows one level of inheritance for writing polymorphic model code.
+
+<li>The underlying occupancy grid model has changed from a simple
+fixed-size array to a sparse array of (almost) unlimited size
+(implemented with a hash table). To compensate for the performance hit
+of raytracing in the hash table, a three-level multiple-resolution
+approach is used. Raytracing is now usually <i>much</i> faster than in
+Stage-1.3. To get an idea how this works, select the
+View/Debug/Raytrace menu item while a laser or ranger is producing
+data.
+
+<li>Most home-rolled data structures have been replaced by glib
+versions.
+
+</ol>
+
+*/
+
+
+

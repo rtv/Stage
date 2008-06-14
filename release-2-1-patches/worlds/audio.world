@@ -1,0 +1,104 @@
+# A Sample world file using audio model
+# CVS: $Id: audio.world,v 1.2 2006-08-01 04:20:49 pooya Exp $
+
+# defines 'map' object used for floorplans
+include "map.inc"
+
+# size of the world in meters
+size [16 16]
+
+# set the resolution of the underlying raytrace model in meters
+resolution 0.02
+
+interval_sim 100  # milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
+
+# update the screen every 10ms (we need fast update for the stest demo)
+gui_interval 20
+
+# configure the GUI window
+window
+( 
+  size [ 591.000 638.000 ] 
+  center [-0.010 -0.040] 
+  scale 0.028 
+)
+
+# load an environment bitmap
+# this is the only object in world with audio_return=1. 
+# The set of important audio refraction/defraction points will be built only 
+# for this model. This model should be fixed and not move.
+# map_resolution should be equal/more than raytracing resolution.
+# 
+map
+( 
+#  bitmap "bitmaps/cave.png"
+  bitmap "bitmaps/autolab.png"
+  size [16 16]
+  name "floorplan"
+  map_resolution 0.05
+  audio_return 1
+)
+
+# define a simple robot 
+define testbot position
+(
+  size [0.4 0.4]
+
+  polygons 1
+  polygon[0].points 10
+  polygon[0].point[0] [  0.1  0.03 ]
+  polygon[0].point[1] [  0.23  0.05 ]
+  polygon[0].point[2] [  0.15  0.15 ]
+  polygon[0].point[3] [ -0.15  0.15 ]
+  polygon[0].point[4] [ -0.23  0.05 ]
+  polygon[0].point[5] [ -0.23 -0.05 ]
+  polygon[0].point[6] [ -0.15 -0.15 ]
+  polygon[0].point[7] [  0.15 -0.15 ]
+  polygon[0].point[8] [  0.23 -0.05 ]
+  polygon[0].point[9] [  0.1  -0.03 ]
+
+  laser ( size [ 0.1 0.1 ])
+)  
+
+# create an audio equipped robot
+testbot
+(
+  name "robot1"
+  color "red"
+  pose [-6.5 6.5 45]
+  audio ()
+)
+
+# create another robot
+testbot
+(
+  name "robot2"
+  color "blue"
+  pose [-3.5 -3.0 90]
+  audio (
+    say "Robot 2"
+    say_period 1000
+  )
+)
+
+# create another robot
+testbot
+(
+  name "robot3"
+  color "green"
+  pose [3 1.5 0]
+  audio (
+    say "Robot 3"
+    say_period 2700
+  )
+)
+
+# create another robot
+testbot
+(
+  name "robot4"
+  color "orange"
+  pose [6.0 -3.0 0]
+  audio ()
+)

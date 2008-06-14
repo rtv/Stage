@@ -1,0 +1,66 @@
+
+# Desc: 1 pioneer robot with laser	
+# CVS: $Id: sample-zoo.world,v 1.3 2005-08-12 21:38:20 adam_lein Exp $
+
+# defines Pioneer-like robots
+include "pioneer.inc"
+
+
+
+
+
+# defines 'map' object used for floorplans
+include "map.inc"
+
+
+
+
+
+
+
+
+
+size [16 16]
+
+# set the size of a pixel in meters
+resolution 0.02
+
+# configure the GUI window
+window
+( 
+  size [ 512.000 512.000 ]
+  center [-0.148 0.014] 
+  scale 0.040
+)
+
+# load an environment bitmap
+map
+( 
+  bitmap "bitmaps/cave.png"
+  size [16 16]
+)
+
+# create a robot
+pioneer2dx
+(
+  name "robot1"
+  color "red"
+  pose [-5.145 -5.689 396.691]
+  laser()
+)
+
+pioneer2dx
+(
+  name "robot2"
+  color "magenta"
+  pose [-3.559 -5.987 436.882]
+  laser()
+)
+
+pioneer2dx
+(
+  name "robotX"
+  color "black"
+  pose [-2.960 -1.680 -131.382]
+)
+

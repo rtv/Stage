@@ -1,0 +1,235 @@
+
+# Desc: 1 robot with player, laser, sonar and gps
+# CVS: $Id: 889_05.world,v 1.2 2005-04-06 21:37:43 rtv Exp $
+
+# the size of a pixel in Stage's underlying raytrace model in meters
+resolution     0.02 
+
+# optionally tune the medium and high matrix pixel sizes
+#resolution_med  0.2
+#resolution_low  1.0
+
+interval_sim 100  # milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
+
+# defines Pioneer-like robots
+include "pioneer.inc"
+
+
+
+
+
+
+
+# defines 'map' object used for floorplans
+include "map.inc"
+
+
+window( 
+  size [ 1020.000 514.000 ] 
+  center [0.289 0.051] 
+  scale 0.033 
+
+  show_grid 1
+  fill_polygons 1
+
+  # control what data gets drawn in the window
+  laser_data 1
+  ranger_data 1
+  fiducial_data 0
+  blobfinder_data 0
+
+  # control what configurations get drawn in the window
+  laser_config 0
+  ranger_config 0
+  blobfinder_config 0
+  fiducial_config 0
+)
+
+map(
+  bitmap "bitmaps/889_05.png"
+  bitmap_resolution 0.03
+)
+
+energy
+(
+  fiducial_return 255
+  pose [ 13.923 4.551 0.000 ]
+  size [ 0.5 0.5 ]
+  give 200
+  take 0
+  capacity -1 # infinite
+)
+
+energy
+(
+  fiducial_return 255
+  pose [ -7.890 3.987 0.000 ]
+  size [ 0.5 0.5 ]
+  give 200
+  take 0
+  capacity -1 # infinite
+)
+
+
+define sicklaser laser
+(
+  range_min 0.0
+  range_max 8.0
+  fov 180.0
+  samples 180
+
+  color "LightBlue"
+  size [ 0.14 0.14 ]	
+)
+
+# extend the pioneer2dx definition from pioneer.inc
+#
+define laserpioneer pioneer2dx_battery
+(
+  sicklaser(  fiducialfinder( color "green" obstacle 0 ) )
+  blobfinder()
+
+  fiducial_return 42
+  blobfinder_return 1
+)
+
+
+laserpioneer
+(
+  name "p0"
+  pose [-10.000 2.000 90.000]
+)
+
+laserpioneer
+(
+  color "red"
+  name "p1"
+  pose [2.749 -2.948 -162.098]
+)
+
+laserpioneer
+(
+  color "blue"
+  name "p2"
+  pose [-13.802 -1.955 -194.220]
+)
+
+laserpioneer
+(
+  color "green"
+  name "p3"
+  pose [-6.136 -0.830 -199.781]
+)
+
+laserpioneer
+(
+  color "cyan"
+  name "p4"
+  pose [-6.916 4.390 -458.929]
+)
+
+laserpioneer
+(
+  color "yellow"
+  name "p5"
+  pose [-15.024 4.997 -110.414]
+)
+
+laserpioneer
+(
+  color "magenta"
+  name "p6"
+  pose [9.150 2.098 2.329]
+)
+
+laserpioneer
+(
+  color "orange"
+  name "p7"
+  pose [-11.352 2.460 -176.934]
+)
+
+laserpioneer
+(
+  color "wheat"
+  name "p8"
+  pose [-3.644 0.134 -135.449]
+)
+
+laserpioneer
+(
+  color "purple"
+  name "p9"
+  pose [-1.887 -5.654 -447.483]
+)
+
+laserpioneer
+(
+  color "grey"
+  name "p10"
+  pose [-1.781 -2.817 -135.449]
+)
+laserpioneer
+(
+  color "DarkRed"
+  name "p11"
+  pose [-3.298 0.527 -135.449]
+)
+
+laserpioneer
+(
+  color "DarkBlue"
+  name "p12"
+  pose [-8.991 -0.957 -107.986]
+)
+
+laserpioneer
+(
+  color "LightBlue"
+  name "p13"
+  pose [-4.129 -3.192 -135.449]
+)
+
+laserpioneer
+(
+  color "red"
+  name "p14"
+  pose [13.464 2.198 -337.656]
+)
+
+laserpioneer
+(
+  color "green"
+  name "p15"
+  pose [6.015 4.025 -135.449]
+)
+
+laserpioneer
+(
+  color "blue"
+  name "p16"
+  pose [10.246 -2.984 -101.059]
+)
+
+laserpioneer
+(
+  color "magenta"
+  name "p17"
+  pose [3.428 1.868 -135.449]
+)
+
+laserpioneer
+(
+  color "orange"
+  name "p18"
+  pose [-5.095 1.875 -135.449]
+)
+
+laserpioneer
+(
+  color "red"
+  name "p19"
+  pose [6.343 -0.767 -200.462]
+)
+

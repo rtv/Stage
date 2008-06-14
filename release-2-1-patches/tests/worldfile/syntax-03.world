@@ -1,0 +1,18 @@
+
+# Desc: Test world file with syntax error (unterminated paren)
+# Author: Andrew Howard
+# Date: 4 Jun 2002
+# CVS: $Id: syntax-03.world,v 1.1 2002-06-07 16:28:40 inspectorg Exp $
+# Notes: The bottom half of the file lists the expected results.
+
+test 1
+
+position
+(
+  name "robot1" 
+  port 6665
+  pose [1 2 0]
+  player (
+)
+
+## stage error : worldfile.cc : syntax-03.world:20 : missing ')'

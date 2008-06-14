@@ -1,0 +1,58 @@
+
+include "pioneer.inc"
+include "map.inc"
+
+
+size [16 16]
+resolution 0.02
+gui_interval 20
+
+window
+( 
+  size [ 591.000 638.000 ] 
+  center [-0.010 -0.040] 
+  scale 0.028 
+)
+
+
+map
+( 
+  bitmap "bitmaps/cave.png"
+  size [16 16]
+  name "cave"
+)
+
+
+pioneer2dx
+(
+  name "robot1"
+  color "red"
+  pose [-5 -5 90]
+  laser(
+   samples 181
+  )
+  wifi(
+    ip "192.168.0.2"
+    mac "00:03:03:ac:a7:b5"
+    essid "test network"
+    model "simple"
+    range 4
+  )
+)
+
+pioneer2dx
+(
+  name "robot2"
+  color "blue"
+  pose [5 5 90]
+  laser(
+   samples 181
+  )
+  wifi (
+    ip "192.168.0.4"
+    mac "00:03:03:ac:a7:b5"
+    essid "test network"
+    model "simple"
+    range 4
+  )
+)

@@ -1,0 +1,386 @@
+****************************************************************************
+* README.stage  - Richard Vaughan - Stage-2.0.1       
+*                                                                          
+* $Id: README,v 1.18 2006-03-29 05:13:44 rtv Exp $    
+****************************************************************************
+
+** Release Notes for 2.0.2 **
+
+New features:
+
+* bumper model
+
+Richard Vaughan (rtv) vaughan@sfu.ca 2006.3.24
+
+
+** Release Notes for 2.0.1 **
+
+This is mainly a bugfix and performance-enhancement release.  This
+release requires Player-2.0.1, released simultaneously.
+
+The only major new feature is the addition of support for Player's
+speech interface: speech bubbles show the text being "spoken" by each
+robot. The text is rendered using Pango, so non-Roman alphabets are
+supported.
+
+Richard Vaughan (rtv) vaughan@sfu.ca 2006.3.24
+
+** Release Notes for 2.0.0 **
+
+This is a major new release of Stage, and is intended to replace all
+previous versions. It requires Player-2.0.0 or later.
+
+Significant user-level changes include:
+
+ - Stage is now implemented as the C library libstage. Using libstage, 
+   your programs can include a sophisticated robot simulator with a
+   few lines of code. The Player plugin libstageplugin is a wrapper for
+   libstage that provides simulation services to Player. Player with
+   libstageplugin is the Player/Stage system.
+
+ - Player clients can draw directly in the Stage window using the
+   graphics2d interface. libstage programs can use the internal
+   user graphics API.
+
+ - Configurable odometry error in position model
+
+ - Gripper model that can pick up anything. Any object can be made
+   grippable/pushable by setting the the gripper_return property.
+ 
+ - Pan-tilt-zoom (PTZ) model.
+
+ - More and improved visualizations, including models leaving trails
+   over time
+
+ - Worldfile syntax has changed slightly, so you may need to edit your 
+   existing worlds to get them to work. Look at the example worlds in 
+   <stagesrc>/worlds to get the idea.
+
+Please report bugs to the tracker and let us know what you do with Stage.
+
+Richard Vaughan (rtv) vaughan@sfu.ca 2006.2.26
+
+** Release Notes for 1.6.3 **
+ 
+New features:
+
+ - polygons rendered with outlines for more crisp look.
+
+ - added support for the Player 'map' interface.
+
+ - added 'File/Reset' menu item that reloads as much as possible to
+   the last saved state. It doesn't reload the text file yet,
+   unfortunately.
+
+ - grids now fit their models precisely, and the arbitrary background
+   grid has been removed.
+
+Major bug fixes:
+
+ - fixed walls-have-gaps problem 
+
+
+** Release Notes for 1.6.2 **
+
+This is a bugfix release that fixes several problems with previous
+versions. For example:
+
+ - fixed invisible 'shadow' object at origin
+ - builds on latest GCC
+ - can set robot odometry & odometry origin properly
+ - can respond to config messages from Player drivers
+
+New features include:
+
+ - simulation interface can move arbitrary named simulation objects
+(Player CVS HEAD is needed for this)
+
+ - visualization of odometry data (selectable in view menu)
+
+Enjoy. 
+rtv - 2005.2.8
+
+** Release notes for 1.6.0 **
+
+ You should read these notes carefully before running Stage. This is
+the first release after a substantial rewrite: plenty has changed
+under the hood, but more important for most people is that the way
+Stage is configured, launched and used has changed significantly.
+
+Help is available in several places:
+
++ Here. Please read this document..
++ The Player/Stage web pages at http://playerstage.sourceforge.net
+  - from the web site you can access manuals, FAQ and mailing lists 
++ The Player/Stage Getting Started document, included with the Stage
+distro in <stage>/docsrc/ps_getting_started.txt
+
+* WARNINGS FOR USERS OF PREVIOUS VERSIONS*
+
+This release of Stage is very different to previous releases. Many new
+features have been added but not all the old features have yet been
+implemented (e.g. grippers, pucks, position-control mode, placing
+models on top of each other). This version is very usable and solves
+some crucial problems with previous releases, so we decided it was
+about time to make a release, even with some things missing.
+
+Before deciding to upgrade your existing Stage installation you should
+check the docs and code to see if the features you use exist in this
+release. If you don't see it listed in the manual, chances are it's
+not here yet. Many of the missing features will be added over time if
+there is a need for them. If you miss something, you can submit a
+request on the P/S SourceForge pages.
+
+Also, the worldfile syntax has changed. You'll need to update your
+syntax by hand. Stage is much more configurable than it used to be.
+
+We recommend new users start with this release, unless they absolutely
+require a feature from a previous version and can't wait for it to
+show up here (or do the port themselves).
+
+Summary of new features:
+
++ Access to more Player goodness: previous versions did not permit the
+use of Player's meta-devices. Now you can compose your Player config
+file as you wish.
+
++ Dynamic creation, deletion and modification of worlds, robots,
+and environmental features.
+
++ Robot geometry: robot bodies are composed from line segments, so you
+can build a robot any shape and size either by desribing the lines
+yourself, or by loading an image file using the provided
+bitmap-to-line-segment filter. 
+
++ Bitmap formats: The shape of any object, including backgrounds, can
+be loaded from bitmap files in any format understood my gdkpixmap
+(PNG,JPG,PPM,etc.). Example bitmaps are provided in PNG format. The
+days of the fussy old PNM parser are gone.
+
++ World size: worlds can now be very large indeed
+(UNSIGNED_LONG_MAX**2 pixels). For most purposes this is effectively
+infinite. You no longer need to specify a world size in the world
+file. A sparse array (hash table) is used to represent the world, so
+worlds use memory proportional to the amount of stuff in 'em,
+independent of their dimensions.
+
++ A single instance of Stage can provide multiple concurrent
+simulation sessions. Stage is now a server that provides simulation
+services, when requested by a client. The stage1p5 driver in Player is
+a client to the Stage server. Other clients are possible; in fact
+Player does not provide access to all of Stage's features (the Player
+protocol doesn't currently contain any simulation control spec, though
+this might be added in time), so you may want to write clients that
+talk directly to Stage. Of course, Player is still the first choice of
+target for your robot controller.
+
+
+Summary of new internal stuff, not apparent to the user:
+
++ Timing and synchronization with Player works properly.
+
++ Stage is now written entirely in C and makes extensive use of GLib
+data structures.
+
++ Multi-resolution ray-tracing: the cost of using a memory-friendly
+hash table for the underlying world representation (matrix) is a much
+greater time-cost in checking and setting matrix cells. This made
+ray-tracing very slow. To compensate, I implemented multi-resolution
+ray tracing, reducing the number of matrix lookups by a factor of a
+few hundred in typical use. The result is faster ray-tracing
+performance overall compared to previous versions.
+
+** README ***
+
+This README provides a quick-start guide to building and running
+Stage.  Consult the Stage User Manual for full details.
+
+-- What is Stage? ---------------------------------------------------------
+
+Stage simulates mobile robots and sensors in a two-dimensional
+bitmapped environment containing a variety of objects. Stage is
+designed to work well with Player. Player provides a powerful,
+flexible interface to a variety of robot hardware; Stage provides
+virtual devices for Player. Various sensor models are provided,
+including sonar, scanning laser rangefinder, color blob tracking from
+a pan-tilt-zoom camera and odometry. Several controllers designed in
+Stage have been demonstrated to work on real robots.
+
+Stage is developed by the Player/Stage Project (P/S), an international
+consortium of robotics researchers. P/S is lead by Brian Gerkey
+(Stanford University), Richard Vaughan (Simon Fraser University) and
+Andrew Howard (University of Southern California).
+
+-- How to get Stage -----------------------------------------------------
+
+The primary source for Player and Stage is:
+
+http://playerstage.sourceforge.net
+
+-- Ownership ------------------------------------------------------------
+
+Stage is released under the GNU General Public License.
+
+Stage programs, images, examples, source code and documentation are
+copyright (c) the authors.
+
+These authors have worked on Stage over the years:
+
+Richard Vaughan
+Andrew Howard
+Brian Gerkey
+Kasper Stoy
+Boyoon Jung
+Jakob Fredslund
+
+Stage's development has been supported at the University of Southern
+California and HRL Laboratories LLC by DARPA IPTO, and at Simon Fraser
+University by an NSERC Discovery Grant.
+
+-- Whats here? ------------------------------------------------------------
+
+stage    - the simulation engine.
+       
+Some example environments and setup files are provided, along with a
+manual and this bootstrap documentation
+
+-- Requirements ------------------------------------------------------------ 
+
+Developed and tested under Linux kernel 2.4, glibc-2 and OS X 1.3.
+Written in reasonable ANSII/POSIX so should compile elsewhere. No
+promises, but people have found it to work on a variety of set-ups.
+
+Requires: 
+
++ Player & RTK [http://playerstage.sourceforge.net]
++ GTK [http://www.gtk.org]
++ X11R6 [http://www.x.org]
+
+-- Mac OS X ----------------------------------------------------------------
+
+NOTES
+
+Requirements
+install fink
+sudo apt-get install gtk2 atk1 libjpeg-bin
+export PKG_CONFIG_PATH=<prefix>/lib/pkgconfig
+
+-- Compiling ---------------------------------------------------------------
+
+** NOTE FOR USERS BUILDING OUT OF CVS **
+
+If you pulled the sources from CVS rather than using a released
+package, you need to generate a 'configure' script. This script is
+built automatically when we package up a release, but doesn't actually
+exist in the CVS repository. To create this script, you must run
+'bootstrap' instead of 'configure' on first checkout and after cvs
+updating.
+
+**
+
+** TODO - WARNING - THIS SECTION IS OUT OF DATE **
+
+
+We use the standard GNU build system: download; extract; configure;
+make install. 
+
+0) Obtain and install these packages, on which Stage depends:
+
+- librtk2 (available from http://playerstage.sourceforge.net)
+
+1) unpack the Stage tarball with
+
+$ tar xzvf stage-<version>.tgz
+
+The tar on some systems (such as OS X) does not support the '-z'
+option, so you have to gunzip first, then 'tar xvf stage-<version>.tar'
+
+2) configure stage:
+
+Stage needs to know the path to your Player installation or build
+directory, and to librtk and your X11 color database if you want to
+use the GUI. We use the GNU autoconf system to handle these
+configurations, plus various optional components and cross-platform
+compatibility issues. If you installed Player and librtk in their
+default locations (/usr/local), and you want a normal installation,
+the defaults should work:
+
+$ cd stage-<version>
+$ ./configure
+
+(or, if you're building from CVS:
+
+$ ./bootstrap 
+)
+
+To see all the available configuration options do:
+
+$ configure --help
+
+3) compile stage:
+
+$ make
+
+will build the binary src/stage.
+
+Optionally, as root you can do:
+ 
+$ make install
+
+to install the executables in /usr/local/bin/
+
+You can specify a different installation directory using:
+
+$ configure --prefix=<install dir>
+
+Which is useful if you don't have root access to your machine. If you
+change the prefix, remember to set the correct path to Player and
+librtk.
+
+-- Running ---------------------------------------------------------------
+
+To test the Stage you just built do:
+
+$ src/stage
+
+You should see the following output:
+
+* Stage-1.4.dev * [localhost:6600]  
+* Ready.
+
+Note that Stage doesn't do anything interesting until a client
+connects and requests simulation session. Player is a suitable client.
+
+
+-- Using Stage ----------------------------------------------------
+
+You must use a client program to access Stage, just as you must use a
+browser to access a web server, or a Player client to access
+Player. The latest releases of Player contain the stageclient driver
+that allows Player to be a Stage client. See the documentation for the
+stageclient driver.
+
+The stageclient driver uses the libStage C library that comes with
+Stage. You can use this library to write your own client quite
+simply. The libStage API will eventually be documented in the Stage
+manual. 
+
+-- Worldfiles ----------------------------------------------------
+
+The Stage client library libStage can create worlds based on a text
+decription called a "worldfile". This file is not loaded directly by
+Stage, as was the case in previous releases. The worldfile format is
+documented in the Stage manual, but you can get the idea from looking
+at the examples in the <stage>/worlds directory.
+
+--------------------------------------------------------------------------
+
+Enjoy, and let us know what you do with Stage.
+
+ - Richard Vaughan, Andrew Howard, Brian Gerkey
+
+
+
+
+
+
