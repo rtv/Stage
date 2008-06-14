@@ -77,6 +77,8 @@ SuperRegion* StgWorld::CreateSuperRegion( int32_t x, int32_t y )
 {
 	SuperRegion* sr = new SuperRegion( x, y );
 	g_hash_table_insert( superregions, &sr->origin, sr );
+
+	dirty = true; // force redraw
 	return sr;
 }
 

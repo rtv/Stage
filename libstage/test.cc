@@ -44,7 +44,7 @@ int main( int argc,  char* argv[] )
   
   world.Start();
     
-  for( stg_meters_t x=0; x<5; x+=0.01 )	 
+  for( stg_meters_t x=0; x<5; x+=0.1 )	 
 	 {
 		pose = new_pose( x, 0, 0, 0 );
 		mod.SetPose( pose );  		
@@ -52,7 +52,7 @@ int main( int argc,  char* argv[] )
 		interact( &world );
 	 }
 
-  for( stg_meters_t y=0; y<5; y+=0.01 )	 
+  for( stg_meters_t y=0; y<5; y+=0.1 )	 
 	 {
 		pose = new_pose( 0, y, 0, 0 );
 		mod.SetPose( pose );  		
@@ -60,7 +60,7 @@ int main( int argc,  char* argv[] )
 		interact( &world );
 	 }
 
-  for( stg_meters_t z=0; z<5; z+=0.01 )	 
+  for( stg_meters_t z=0; z<5; z+=0.1 )	 
 	 {
 		pose = new_pose( 0, 0, z, 0 );
 		mod.SetPose( pose );  		
@@ -68,7 +68,7 @@ int main( int argc,  char* argv[] )
 		interact( &world );
 	 }
   
-  for( stg_radians_t a=0; a<dtor(360); a+=dtor(1) )	 
+  for( stg_radians_t a=0; a<dtor(360); a+=dtor(2) )	 
 	 {
 		pose = new_pose( 0, 0, 0, a );
 		mod.SetPose( pose );  		  
@@ -77,7 +77,7 @@ int main( int argc,  char* argv[] )
 		interact( &world );
 	 }
 
-  for( stg_radians_t a=0; a<dtor(360); a+=dtor(1) )	 
+  for( stg_radians_t a=0; a<dtor(360); a+=dtor(2) )	 
 	 {
 		pose = new_pose( cos(a), sin(a), 0, 0 );
 		mod.SetPose( pose );  		
@@ -85,20 +85,69 @@ int main( int argc,  char* argv[] )
 		interact( &world );
 	 }
 
+  mod.SetPose( new_pose( 0,0,0,0 ));  		
+
   stg_geom_t geom;
   bzero( &geom, sizeof(geom) );
 
   for( stg_meters_t x=0.01; x<5; x+=0.1 )	 
-	 for( stg_meters_t y=0.01; y<5; y+=0.1 )	 
-		//for( stg_meters_t z=0.01; z<5; z+=0.01 )	 
-		  {
-			 geom.size.x = x;
-			 geom.size.y = y;
-			 geom.size.z = 1.0;
-			 
-			 mod.SetGeom( geom );
-			 interact( &world );
-		  }
+	 {
+		geom.size.x = x;
+		geom.size.y = 1.0;
+		geom.size.z = 1.0;
+		
+		mod.SetGeom( geom );
+		interact( &world );
+	 }
   
+  for( stg_meters_t y=0.01; y<5; y+=0.1 )	 
+	 {
+		geom.size.x = 5;
+		geom.size.y = y;
+		geom.size.z = 1.0;
+		
+		mod.SetGeom( geom );
+		interact( &world );
+	 }
+
+  for( stg_meters_t z=0.01; z<5; z+=0.1 )	 
+	 {
+		geom.size.x = 1;
+		geom.size.y = 1;
+		geom.size.z = z;
+		
+		mod.SetGeom( geom );
+		interact( &world );
+	 }
+  
+  geom.size.x = 0.5;
+  geom.size.y = 0.5;
+  geom.size.z = 0.5;
+  
+  mod.SetGeom( geom );
+  
+
+#define POP 100
+  
+  StgModel* m[POP]; 
+  for( int i=0; i<POP; i++ )
+	 {
+		m[i] = new StgModel( &world, NULL, 0, "model" );
+		m[i]->SetGeom( geom );
+		//m[i]->SetPose( random_pose( -10,10, -10,10 ) );		
+		m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
+		m[i]->SetColor( lrand48() | 0xFF000000 );
+ 		interact( &world );
+	 }
+
+  
+//   for( int i=0; i<POP; i++ )
+// 	 {
+// 		m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
+// 		m[i]->SetColor( 0xFF00FF00 );
+// 		interact( &world );
+// 	 }
+
+
   StgWorldGui::Run();
 }

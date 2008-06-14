@@ -316,6 +316,16 @@ stg_pose_t Stg::new_pose( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_ra
 };
 
 
+stg_pose_t Stg::random_pose( stg_meters_t xmin, stg_meters_t xmax, 
+									  stg_meters_t ymin, stg_meters_t ymax )
+{
+  return new_pose( xmin + drand48() * (xmax-xmin),
+						 ymin + drand48() * (ymax-ymin),
+						 0, 
+						 normalize( drand48() * (2.0 * M_PI) ));
+}
+
+
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void Stg::stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
 {

@@ -445,11 +445,11 @@ void StgCanvas::renderFrame( bool robot_camera )
 				StgModel* mod = ((StgModel*)it->data);
 
 				if( mod->displaylist == 0 )
-				{
-					mod->displaylist = glGenLists(1);
-					mod->BuildDisplayList( showflags ); // ready to be rendered
-				}
+				  mod->displaylist = glGenLists(1);
 
+				if( mod->body_dirty )
+				  mod->BuildDisplayList( showflags ); // ready to be rendered
+			
 				// move into this model's local coordinate frame
 				glPushMatrix();
 				gl_pose_shift( &mod->pose );
@@ -534,7 +534,7 @@ void StgCanvas::draw()
 //	if( loaded_texture == true && use_perspective_camera == true )
 //		return;
 
-	if (!valid()) 
+	if (!valid() || world->dirty ) 
 	{ 
 		valid(1);
 		FixViewport(w(), h());

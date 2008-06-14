@@ -328,7 +328,7 @@ void StgModel::AddBlock( stg_point_t* pts,
 					col, inherit_color ));
 
 	// force recreation of display lists before drawing
-	body_dirty = true;
+	NeedRedraw();
 }
 
 
@@ -336,7 +336,7 @@ void StgModel::ClearBlocks( void )
 {
 	stg_block_list_destroy( blocks );
 	blocks = NULL;
-	body_dirty = true;
+	NeedRedraw();
 }
 
 void StgModel::AddBlockRect( double x, double y, 
@@ -1191,7 +1191,8 @@ void StgModel::SetVelocity( stg_velocity_t vel )
 
 void StgModel::NeedRedraw( void )
 {
-	this->world->dirty = true;
+  this->body_dirty = true;
+  //this->world->dirty = true;
 }
 
 void StgModel::GPoseDirtyTree( void )
@@ -1259,7 +1260,7 @@ void StgModel::SetGeom( stg_geom_t geom )
 
 	StgBlock::ScaleList( blocks, &geom.size );
 
-	body_dirty = true;
+	NeedRedraw();
 
 	Map();
 
@@ -1269,7 +1270,7 @@ void StgModel::SetGeom( stg_geom_t geom )
 void StgModel::SetColor( stg_color_t col )
 {
 	this->color = col;
-	body_dirty = true;
+	NeedRedraw();
 	CallCallbacks( &this->color );
 }
 
@@ -1413,13 +1414,22 @@ static bool collision_match( StgBlock* testblock,
 }	
 
 
-// Check to see if the given change in pose will yield a collision
-// with obstacles.  Returns a pointer to the first entity we are in
-// collision with, and stores the location of the hit in hitx,hity (if
-// non-null) Returns NULL if no collision. 
+void StgModel::PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
+											stg_meters_t ymin, stg_meters_t ymax )
+{
+  while( TestCollision( NULL, NULL ) )
+	 SetPose( random_pose( xmin,xmax, ymin, ymax ));		
+}
 
-StgModel* StgModel::TestCollision( stg_pose_t* posedelta, 
-		double* hitx, double* hity ) 
+
+StgModel* StgModel::TestCollision( stg_meters_t* hitx, stg_meters_t* hity )
+{
+  return TestCollision( new_pose(0,0,0,0), hitx, hity );
+}
+
+StgModel* StgModel::TestCollision( stg_pose_t posedelta, 
+											  stg_meters_t* hitx,
+											  stg_meters_t* hity ) 
 { 
 	/*  stg_model_t* child_hit = NULL; */
 
@@ -1480,7 +1490,7 @@ StgModel* StgModel::TestCollision( stg_pose_t* posedelta,
 
 			// raytrace in local coordinates
 			stg_raytrace_sample_t sample;
-			Raytrace( pose_sum( *posedelta, edgepose), 
+			Raytrace( pose_sum( posedelta, edgepose), 
 					range,
 					(stg_block_match_func_t)collision_match, 
 					NULL, 
@@ -1529,7 +1539,7 @@ void StgModel::UpdatePose( void )
 	p.a += velocity.a * interval;
 
 	// test to see if this pose change would cause us to crash
-	StgModel* hitthing = this->TestCollision( &p, NULL, NULL );
+	StgModel* hitthing = this->TestCollision( p, NULL, NULL );
 
 	//double hitx=0, hity=0;
 	//StgModel* hitthing = this->TestCollision( &p, &hitx, &hity );

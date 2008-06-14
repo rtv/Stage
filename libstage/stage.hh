@@ -376,6 +376,11 @@ namespace Stg
 		parameters */
   stg_pose_t new_pose( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a );
 
+  /** return a random pose within the bounding rectangle, with z=0 and
+		angle random */
+  stg_pose_t random_pose( stg_meters_t xmin, stg_meters_t xmax, 
+								  stg_meters_t ymin, stg_meters_t ymax );
+  
 	const uint32_t STG_MOVE_TRANS = (1 << 0);
 	const uint32_t STG_MOVE_ROT   = (1 << 1);
 	const uint32_t STG_MOVE_SCALE = (1 << 2);
@@ -1205,11 +1210,26 @@ class StgModel : public StgAncestor
 	// worldfile section identifier
 
 	StgWorld* world; // pointer to the world in which this model exists
-
-	StgModel* TestCollision( stg_pose_t* pose, 
-			double* hitx, double* hity );
-
-
+  
+  /** Check to see if the given change in pose will yield a collision
+		with obstacles.  Returns a pointer to the first entity we are in
+		collision with, and stores the location of the hit in hitx,hity (if
+		non-null) Returns NULL if no collision. */
+  StgModel* TestCollision( stg_pose_t pose, 
+									stg_meters_t* hitx,
+									stg_meters_t* hity );
+  
+  /** Check to see if the current pose is in  a collision
+		with obstacles.  Returns a pointer to the first entity we are in
+		collision with, and stores the location of the hit in hitx,hity (if
+		non-null) Returns NULL if no collision. */
+  StgModel* TestCollision( stg_meters_t* hitx,
+									stg_meters_t* hity );
+  
+public:  void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
+										  stg_meters_t ymin, stg_meters_t ymax );
+  
+protected:
 	void Map();
 	void UnMap();
 
