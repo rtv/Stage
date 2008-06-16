@@ -75,26 +75,31 @@ void StgCanvas::InvertView( uint32_t invertflags )
 StgModel* StgCanvas::Select( int x, int y )
 {
   // TODO XX
-  return NULL;
+  //return NULL;
 
 	// render all models in a unique color
 	make_current(); // make sure the GL context is current
-	glClearColor ( 0,0,0,1 );
+	glClearColor ( 1,1,1,1 ); // white
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
 	glDisable(GL_DITHER);
+	glDisable(GL_BLEND); // turns off alpha blending, so we read back
+								// exactly what we write to a pixel
 
 	// render all top-level, draggable models in a color that is their
-	// id + a 100% alpha value
+	// id 
 	for( GList* it=world->children; it; it=it->next )
 	{
 		StgModel* mod = (StgModel*)it->data;
-
+		
 		if( mod->GuiMask() & (STG_MOVE_TRANS | STG_MOVE_ROT ))
-		{
-		  // TODO XX
-		  uint32_t col = (uint32_t)mod; //(mod->Id() | 0xFF000000);
-			glColor4ubv( (GLubyte*)&col );
-			mod->DrawPicker();
+		  {
+			 glColor4ubv( (GLubyte*)&mod->id );
+
+			 //			 printf( "model %d color %d %x\n",
+			 //		mod->id, mod->id, mod->id );
+
+			 mod->DrawPicker();
 		}
 	}
 
@@ -106,17 +111,15 @@ StgModel* StgCanvas::Select( int x, int y )
 	uint32_t id;
 	glReadPixels( x,viewport[3]-y,1,1,
 			GL_RGBA,GL_UNSIGNED_BYTE,(void*)&id );
+	
+	StgModel* mod = (StgModel*)g_hash_table_lookup( StgModel::modelsbyid, (void*)id );
 
-	// strip off the alpha channel byte to retrieve the model id
-	//id &= 0x00FFFFFF;
+	//printf("%p %s %d %x\n", mod, mod ? mod->Token() : "(none)", id, id );
 
-	StgModel* mod = (StgModel*)id;//world->GetModel( id );
-
-	//printf("%p %s %d\n", mod, mod ? mod->Token() : "", id );
-
+	// put things back the way we found them
 	glEnable(GL_DITHER);
+	glEnable(GL_BLEND);
 	glClearColor ( 0.7, 0.7, 0.8, 1.0);
-	//glClearColor ( 1,1,1,1 );
 
 	if( mod ) // we clicked on a root model
 	{

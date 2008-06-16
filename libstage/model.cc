@@ -108,7 +108,8 @@ TODO PLAN: single array of all polygon vertices - model just keeps an index
 #include "texture_manager.hh"
 #include <limits.h> 
 
-	// basic model
+
+//static const members
 const bool StgModel::DEFAULT_BLOBRETURN = true;
 const bool StgModel::DEFAULT_BOUNDARY = false;
 const stg_color_t StgModel::DEFAULT_COLOR = (0xFFFF0000); // solid red
@@ -131,18 +132,23 @@ const bool StgModel::DEFAULT_OBSTACLERETURN = true;
 const bool StgModel::DEFAULT_OUTLINE = true;
 const bool StgModel::DEFAULT_RANGERRETURN = true;
 
-
 // speech bubble colors
 const stg_color_t StgModel::BUBBLE_FILL = 0xFFC8C8FF; // light blue/grey
 const stg_color_t StgModel::BUBBLE_BORDER = 0xFF000000; // black
 const stg_color_t StgModel::BUBBLE_TEXT = 0xFF000000; // black
+
+// static members
+uint32_t StgModel::count = 0;
+
+GHashTable* StgModel::modelsbyid = g_hash_table_new( NULL, NULL );
 
 // constructor
 StgModel::StgModel( StgWorld* world,
 						  StgModel* parent,
 						  const stg_model_type_t type )
 : StgAncestor()
-{      
+{
+  assert( modelsbyid );
   assert( world );
   
   PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %d ",
@@ -154,8 +160,12 @@ StgModel::StgModel( StgWorld* world,
   this->world = world;  
   this->debug = false;
   this->type = type;
+  this->id = StgModel::count++; // assign a unique ID and increment
+										  // the global model counter
   
-  // Adding this model to its ancestor also gives this model a
+  g_hash_table_insert( modelsbyid, (void*)this->id, this );
+
+ // Adding this model to its ancestor also gives this model a
   // sensible default name
 
   StgAncestor* anc =  parent ? (StgAncestor*)parent : (StgAncestor*)world;

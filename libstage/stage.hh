@@ -1170,6 +1170,15 @@ class StgModel : public StgAncestor
 	friend class StgWorld;
 	friend class StgWorldGui;
 	friend class StgCanvas;
+  
+private:
+  /** the number of models instatiated - used to assign unique IDs */
+  static uint32_t count;
+  static GHashTable*  modelsbyid;
+
+public:
+  /** unique process-wide identifier for this model */
+  uint32_t id;
 
 protected:
 
