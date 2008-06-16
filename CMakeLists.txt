@@ -7,8 +7,8 @@ SET( V_BUGFIX 0 )
 SET( VERSION ${V_MAJOR}.${V_MINOR}.${V_BUGFIX} )
 SET( APIVERSION ${V_MAJOR}.${V_MINOR} )
 
-SET( MIN_PLAYER_MAJOR 2 )
-SET( MIN_PLAYER_MINOR 1 )
+# minimum version of Player to build the plugin
+SET( MIN_PLAYER 99.0.0 ) # change once plugin is fixed
 
 #SET(CMAKE_BUILD_TYPE debug)
 #SET(CMAKE_CXX_FLAGS_DISTRIBUTION "-O3")
@@ -29,24 +29,30 @@ ADD_DEFINITIONS( -DPROJECT=\\\"${PROJECT_NAME}\\\"
 		-DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"
 		-DVERSION=\\\"${VERSION}\\\" )
 
-include(FindPkgConfig)
 
+# find the easy modules
+include(FindPkgConfig)
 pkg_search_module( GLIB REQUIRED glib-2.0 )
 find_package( OpenGL REQUIRED )
 
-#pkg_search_module( PLAYER playercore )
-#SET(VER_PATTERN "([0-9]*)\\.([0-9]*)\\.([0-9]*)") 
-#STRING( REGEX REPLACE ${VER_PATTERN} "\\1" PLAYER_MAJOR_VER ${PLAYER_VERSION} )
-#MESSAGE( "Major: ${PLAYER_MAJOR_VER}" )
-#STRING( REGEX REPLACE ${VER_PATTERN} "\\2" PLAYER_MINOR_VER ${PLAYER_VERSION} )
-#MESSAGE( "Minor: ${PLAYER_MINOR_VER}" )
-#IF( NOT PLAYER_MAJOR_VER LESS MIN_PLAYER_MAJOR )
-#	IF( NOT PLAYER_MINOR_VER LESS MIN_PLAYER_MINOR )
-#		MESSAGE( STATUS "  Player up to date, building plugin")
-#		ADD_SUBDIRECTORY(libstageplugin)
-#	ENDIF( NOT PLAYER_MINOR_VER LESS MIN_PLAYER_MINOR )
-#ENDIF( NOT PLAYER_MAJOR_VER LESS MIN_PLAYER_MAJOR )
+# Look for player v${MIN_PLAYER} or higher and set flags
+#  built-ins don't work properly, so use pkg-config directly
+FIND_PROGRAM (PKGCONFIG NAMES pkg-config)
+IF (PKGCONFIG)
+	EXECUTE_PROCESS (COMMAND pkg-config --atleast-version=${MIN_PLAYER} playercore --silence-errors
+		RESULT_VARIABLE PLAYER_FOUND)
+	IF (PLAYER_FOUND EQUAL 0)
+		# found the correct version
+		pkg_search_module( PLAYER playercore )
+		ADD_SUBDIRECTORY( libstageplugin )
+	ELSE (PLAYER_FOUND EQUAL 0)
+		MESSAGE(STATUS "Player >=v${MIN_PLAYER} not found, skipping Player plugin")
+	ENDIF (PLAYER_FOUND EQUAL 0)
+ELSE (PKGCONFIG)
+	MESSAGE (STATUS "pkg-config not found, skipping Player plugin")
+ENDIF (PKGCONFIG)
 
+# find FLTK and set flags
 FIND_PROGRAM (FLTKCONFIG NAMES fltk-config)
 IF (FLTKCONFIG)
     EXECUTE_PROCESS (COMMAND fltk-config --cxxflags --use-gl --use-images
@@ -62,8 +68,9 @@ ELSE (FLTKCONFIG)
     SET (FLTK_FOUND FALSE)
 ENDIF (FLTKCONFIG)
 
-
 IF (APPLE)
+	# define flags to avoid the error:
+	#  ld: cycle in dylib re-exports with /usr/X11R6/lib/libGL.dylib
 	MESSAGE(STATUS "Setting Apple specific flags")
 	# work around the OS X 10.5  X11/OpenGL library bug
 	SET(APPLE_LIBRARIES "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
