@@ -48,19 +48,10 @@ enabled 1
 
 //#define DEBUG 1
 #include "stage_internal.hh"
-
-//static gboolean blink( bool* enabled )
-//{
-//  *enabled = ! *enabled;
-//  puts( "blink" );
-//  return true;
-//}
-
-StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world, 
-		StgModel* parent,
-		stg_id_t id,
-		char* typestr )
-: StgModel( world, parent, id, typestr )
+											
+StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world,
+														  StgModel* parent ) 
+		 : StgModel( world, parent, MODEL_TYPE_BLINKENLIGHT )
 {
 	PRINT_DEBUG2( "Constructing StgModelBlinkenlight %d (%s)\n", 
 			id, typestr );
@@ -91,13 +82,11 @@ StgModelBlinkenlight::~StgModelBlinkenlight()
 
 void StgModelBlinkenlight::Load( void )
 {
-	StgModel::Load();
-
-	Worldfile* wf = world->GetWorldFile();
-
-	this->dutycycle = wf->ReadFloat( id, "dutycycle", this->dutycycle );
-	this->period = wf->ReadInt( id, "period", this->period );
-	this->enabled = wf->ReadInt( id, "dutycycle", this->enabled );
+  StgModel::Load();
+  
+  this->dutycycle = wf->ReadFloat( wf_entity, "dutycycle", this->dutycycle );
+  this->period = wf->ReadInt( wf_entity, "period", this->period );
+  this->enabled = wf->ReadInt( wf_entity, "dutycycle", this->enabled );
 }
 
 

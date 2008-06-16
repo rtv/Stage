@@ -1,5 +1,7 @@
 
 add_library( stage SHARED
+	     stage.cc 
+	     typetable.cc 
              stage.hh  # get headers into IDE projects
 		file_manager.hh
 		file_manager.cc
@@ -21,8 +23,6 @@ add_library( stage SHARED
 	     model_props.cc 
 	     model_ranger.cc 
 	     resource.cc
-	     stage.cc 
-	     typetable.cc 
 	     world.cc 
 	     worldfile.cc 
 	     worldgui.cc

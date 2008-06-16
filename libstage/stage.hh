@@ -90,8 +90,21 @@ namespace Stg
 	/** returns true iff Stg::Init() has been called. */
 	bool InitDone();
 
-	/** Returns a hash table of model creator functions indexed by worldfile model string */
-	GHashTable* Typetable();
+
+  /** Create unique identifying numbers for each type of model, and a
+		count of the number of types. */
+  typedef enum {
+	 MODEL_TYPE_PLAIN = 0,
+	 MODEL_TYPE_LASER,
+	 MODEL_TYPE_FIDUCIAL,
+	 MODEL_TYPE_RANGER,
+	 MODEL_TYPE_POSITION,
+	 MODEL_TYPE_BLOBFINDER,
+	 MODEL_TYPE_BLINKENLIGHT,
+	 MODEL_TYPE_CAMERA,
+	 MODEL_TYPE_COUNT // must be the last entry, to count the number of
+	 // types
+  } stg_model_type_t;
 
 	// foreward declare
 	class StgCanvas;
@@ -134,7 +147,7 @@ namespace Stg
 		"\n"								\
 		"The text of the license may also be available online at\n"		\
 		"http://www.gnu.org/licenses/old-licenses/gpl-2.0.html\n";
-
+  
 	/** The maximum length of a Stage model identifier string 
 	 */
 	const uint32_t TOKEN_MAX = 64;
@@ -536,17 +549,24 @@ namespace Stg
 	class StgWorld;
 	class StgModel;
 
-	GHashTable* stg_create_typetable();
 
-	/** A model creator function. Each model type must define a function of this type. */
-	typedef StgModel* (*stg_creator_t)( StgWorld*, StgModel*, stg_id_t, char* );
-
+  /** A model creator function. Each model type must define a function of this type. */
+  typedef StgModel* (*stg_creator_t)( StgWorld*, StgModel* );
+  
 	typedef struct 
 	{
 		const char* token;
-		stg_creator_t creator_fn;
+		stg_creator_t creator;
 	} stg_typetable_entry_t;
+  
+  /** a global (to the namespace) table mapping names to model types */
+  extern stg_typetable_entry_t typetable[MODEL_TYPE_COUNT];
 
+  void RegisterModel( stg_model_type_t type, 
+							 const char* name, 
+							 stg_creator_t creator );
+
+  void RegisterModels();
 
 	void gl_draw_grid( stg_bounds3d_t vol );
 	void gl_pose_shift( stg_pose_t* pose );
@@ -845,16 +865,22 @@ namespace Stg
 
 	protected:
 	GList* children;
-	GHashTable* child_types;
-	char* token;
+  //GHashTable* child_types;
+  
+
+  char* token;
 	bool debug;
 
 	public:
+
+  /** array contains the number of each type of child model */
+  unsigned int child_type_counts[MODEL_TYPE_COUNT];
+
 	StgAncestor();
 	virtual ~StgAncestor();
 
-	unsigned int GetNumChildrenOfType( const char* typestr );
-	void IncrementNumChildrenOfType( const char* typestr );
+  //	unsigned int GetNumChildrenOfType( const char* typestr );
+  //	void IncrementNumChildrenOfType( const char* typestr );
 
 	virtual void AddChild( StgModel* mod );
 	virtual void RemoveChild( StgModel* mod );
@@ -863,6 +889,11 @@ namespace Stg
 	const char* Token()
 	{ return this->token; }
 
+  void SetToken( const char* str )
+  {
+	 this->token = strdup( str );
+  }
+  
 	// PURE VIRTUAL - descendents must implement
 	virtual void PushColor( stg_color_t col ) = 0;
 	virtual void PushColor( double r, double g, double b, double a ) = 0;
@@ -972,7 +1003,7 @@ private:
 
 	bool destroy;
 
-	stg_id_t id;
+  //stg_id_t id;
 
 	GHashTable* models_by_id; ///< the models that make up the world, indexed by id
 	GHashTable* models_by_name; ///< the models that make up the world, indexed by name
@@ -1050,13 +1081,16 @@ protected:
 	GList* GetRayList(){ return ray_list; };
 	void ClearRays();
 
-public:
-	StgWorld();
 
-	StgWorld( const char* token, 
-			stg_msec_t interval_sim, 
-			stg_msec_t interval_real,
-			double ppm );
+public:
+  static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
+  static const stg_msec_t DEFAULT_INTERVAL_REAL = 100; ///< real time between updates
+  static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
+  
+	StgWorld( const char* token = "MyWorld", 
+				 stg_msec_t interval_sim = DEFAULT_INTERVAL_SIM,
+				 stg_msec_t interval_real = DEFAULT_INTERVAL_REAL,
+				 double ppm = DEFAULT_PPM );
 
 	virtual ~StgWorld();
 	
@@ -1137,9 +1171,38 @@ class StgModel : public StgAncestor
 	friend class StgWorldGui;
 	friend class StgCanvas;
 
-	protected:
+protected:
 
-	const char* typestr;
+  // basic model
+  static const bool DEFAULT_BLOBRETURN;
+  static const bool DEFAULT_BOUNDARY;
+  static const stg_color_t DEFAULT_COLOR;
+  static const stg_joules_t DEFAULT_ENERGY_CAPACITY;
+  static const bool DEFAULT_ENERGY_CHARGEENABLE;
+  static const stg_watts_t DEFAULT_ENERGY_GIVERATE;
+  static const stg_meters_t DEFAULT_ENERGY_PROBERANGE;
+  static const stg_watts_t DEFAULT_ENERGY_TRICKLERATE;
+  static const stg_meters_t DEFAULT_GEOM_SIZEX;
+  static const stg_meters_t DEFAULT_GEOM_SIZEY;
+  static const stg_meters_t DEFAULT_GEOM_SIZEZ;
+  static const bool DEFAULT_GRID;
+  static const bool DEFAULT_GRIPPERRETURN;
+  static const stg_laser_return_t DEFAULT_LASERRETURN;
+  static const stg_meters_t DEFAULT_MAP_RESOLUTION;
+  static const stg_movemask_t DEFAULT_MASK;
+  static const stg_kg_t DEFAULT_MASS;
+  static const bool DEFAULT_NOSE;
+  static const bool DEFAULT_OBSTACLERETURN;
+  static const bool DEFAULT_OUTLINE;
+  static const bool DEFAULT_RANGERRETURN;
+  
+  // speech bubble colors
+  static const stg_color_t BUBBLE_FILL;
+  static const stg_color_t BUBBLE_BORDER;
+  static const stg_color_t BUBBLE_TEXT; 
+
+
+  //const char* typestr;
 	stg_pose_t pose;
 	stg_velocity_t velocity;
 	stg_watts_t watts; //< power consumed by this model
@@ -1193,7 +1256,7 @@ class StgModel : public StgAncestor
 
 	//  stg_trail_item_t* history;
 
-	bool body_dirty; //< iff true, regenerate block display list before redraw
+	bool rebuild_displaylist; //< iff true, regenerate block display list before redraw
 	bool data_dirty; //< iff true, regenerate data display list before redraw
 
 	stg_pose_t global_pose;
@@ -1206,7 +1269,7 @@ class StgModel : public StgAncestor
 	///allows polling the model instead of adding a
 	///data callback.  
 
-	stg_id_t id; // globally unique ID used as hash table key and
+	//stg_id_t id; // globally unique ID used as hash table key and
 	// worldfile section identifier
 
 	StgWorld* world; // pointer to the world in which this model exists
@@ -1308,18 +1371,20 @@ protected:
 	void DrawTrailArrows();
 	void DrawGrid();
 	void UpdateIfDue();
-
-	/* hooks for attaching special callback functions (not used as
-	   variables) */
-	char startup, shutdown, load, save, update;
-
-	ctrlinit_t* initfunc;
-	//ctrlupdate_t* updatefunc;
-
-	GList* flag_list;
-
-	GPtrArray* blinkenlights;
-	void DrawBlinkenlights();
+  
+  /* hooks for attaching special callback functions (not used as
+	  variables) */
+  char startup_hook, shutdown_hook, load_hook, save_hook, update_hook;
+  
+  ctrlinit_t* initfunc;
+  
+  GList* flag_list;
+  
+  Worldfile* wf;
+  int wf_entity;
+  
+  GPtrArray* blinkenlights;
+  void DrawBlinkenlights();
 
 	/** OpenGL display list identifier */
 	int displaylist;
@@ -1327,20 +1392,35 @@ protected:
 	/** Compile the display list for this model */
 	void BuildDisplayList( int flags );
 
+  stg_model_type_t type;
+
 	public:
 
+  static const char* typestr;
+
 	// constructor
-	StgModel( StgWorld* world, StgModel* parent, stg_id_t id, char* typestr );
+  StgModel( StgWorld* world, StgModel* parent, stg_model_type_t type = MODEL_TYPE_PLAIN );
 
 	// destructor
 	virtual ~StgModel();
 
 	void Say( const char* str );
 
-	stg_id_t Id(){ return id; };
+  /** Set the worldfile and worldfile entity ID - must be called
+		before Load() */
+  void Load( Worldfile* wf, int wf_entity )
+  {
+	 SetWorldfile( wf, wf_entity );
+	 Load(); // call virtual load
+  }
 
-	/** configure a model by reading from the current world file */
-	virtual void Load();
+  /** Set the worldfile and worldfile entity ID */
+  void SetWorldfile( Worldfile* wf, int wf_entity )
+  { this->wf = wf; this->wf_entity = wf_entity; }
+  
+  /** configure a model by reading from the current world file */
+   virtual void Load();
+  
 	/** save the state of the model to the current world file */
 	virtual void Save();
 
@@ -1398,7 +1478,7 @@ protected:
 	/** remove all blocks from this model, freeing their memory */
 	void ClearBlocks();
 
-	const char* TypeStr(){ return this->typestr; }
+  //const char* TypeStr(){ return this->typestr; }
 	StgModel* Parent(){ return this->parent; }
 	StgModel* GetModel( const char* name );
 	bool Stall(){ return this->stall; }
@@ -1514,34 +1594,34 @@ protected:
 	   some implementation detail */
 
 	void AddStartupCallback( stg_model_callback_t cb, void* user )
-	{ AddCallback( &startup, cb, user ); };
+	{ AddCallback( &startup_hook, cb, user ); };
 
 	void RemoveStartupCallback( stg_model_callback_t cb )
-	{ RemoveCallback( &startup, cb ); };
+	{ RemoveCallback( &startup_hook, cb ); };
 
 	void AddShutdownCallback( stg_model_callback_t cb, void* user )
-	{ AddCallback( &shutdown, cb, user ); };
+	{ AddCallback( &shutdown_hook, cb, user ); };
 
 	void RemoveShutdownCallback( stg_model_callback_t cb )
-	{ RemoveCallback( &shutdown, cb ); }
+	{ RemoveCallback( &shutdown_hook, cb ); }
 
 	void AddLoadCallback( stg_model_callback_t cb, void* user )
-	{ AddCallback( &load, cb, user ); }
+	{ AddCallback( &load_hook, cb, user ); }
 
 	void RemoveLoadCallback( stg_model_callback_t cb )
-	{ RemoveCallback( &load, cb ); }
+	{ RemoveCallback( &load_hook, cb ); }
 
 	void AddSaveCallback( stg_model_callback_t cb, void* user )
-	{ AddCallback( &save, cb, user ); }
+	{ AddCallback( &save_hook, cb, user ); }
 
 	void RemoveSaveCallback( stg_model_callback_t cb )
-	{ RemoveCallback( &save, cb ); }
+	{ RemoveCallback( &save_hook, cb ); }
 
 	void AddUpdateCallback( stg_model_callback_t cb, void* user )
-	{ AddCallback( &update, cb, user ); }
+	{ AddCallback( &update_hook, cb, user ); }
 
 	void RemoveUpdateCallback( stg_model_callback_t cb )
-	{ RemoveCallback( &update, cb ); }
+	{ RemoveCallback( &update_hook, cb ); }
 
 	/** named-property interface 
 	 */
@@ -1613,21 +1693,10 @@ protected:
 
 	/** returns the first descendent of this model that is unsubscribed
 	  and has the type indicated by the string */
-	StgModel* GetUnsubscribedModelOfType( char* modelstr );
-
-	// static wrapper for the constructor - all models must implement
-	// this method and add an entry in typetable.cc
-	static StgModel* Create( StgWorld* world,
-			StgModel* parent, 
-			stg_id_t id, 
-			char* typestr )
-	{ 
-		return new StgModel( world, parent, id, typestr );
-	}    
+	StgModel* GetUnsubscribedModelOfType( stg_model_type_t type );
 
 	// iff true, model may output some debugging visualizations and other info
 	bool debug;
-
 };
 
 // BLOCKS
@@ -1998,17 +2067,16 @@ class StgModelBlobfinder : public StgModel
 		stg_radians_t fov;
 		stg_radians_t pan;
 
-		// constructor
-		StgModelBlobfinder( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr);
+  static  const char* typestr;
 
-		// destructor
-		~StgModelBlobfinder();
-
-		virtual void Startup();
-		virtual void Shutdown();
+  // constructor
+  StgModelBlobfinder( StgWorld* world,
+							 StgModel* parent );
+  // destructor
+  ~StgModelBlobfinder();
+  
+  virtual void Startup();
+  virtual void Shutdown();
 		virtual void Update();
 		virtual void Load();
 		virtual void DataVisualize();
@@ -2028,16 +2096,6 @@ class StgModelBlobfinder : public StgModel
 		/** Stop tracking all colors. Call this to clear the defaults, then
 		  add colors individually with AddColor(); */
 		void RemoveAllColors();
-
-		// static wrapper for the constructor - all models must implement
-		// this method and add an entry in typetable.cc
-		static StgModel* Create( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr )
-		{ 
-			return (StgModel*)new StgModelBlobfinder( world, parent, id, typestr );
-		}    
 };
 
 // ENERGY model --------------------------------------------------------------
@@ -2101,54 +2159,42 @@ typedef struct
 
 class StgModelLaser : public StgModel
 {
-	private:
-		int dl_debug_laser;
-
-		stg_laser_sample_t* samples;
-		uint32_t sample_count;
-		stg_meters_t range_min, range_max;
-		stg_radians_t fov;
-		uint32_t resolution;
-
-	public:
-		// constructor
-		StgModelLaser( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr );
-
-		// destructor
-		~StgModelLaser();
-
-		virtual void Startup();
-		virtual void Shutdown();
-		virtual void Update();
-		virtual void Load();
-		virtual void Print( char* prefix );
-		virtual void DataVisualize();
-
-		uint32_t GetSampleCount(){ return sample_count; }
-
-		stg_laser_sample_t* GetSamples( uint32_t* count=NULL);
-
-		void SetSamples( stg_laser_sample_t* samples, uint32_t count);
-
-		// Get the user-tweakable configuration of the laser
-		stg_laser_cfg_t GetConfig( );
-
-		// Set the user-tweakable configuration of the laser
-		void SetConfig( stg_laser_cfg_t cfg );
-
-
-		// static wrapper for the constructor - all models must implement
-		// this method and add an entry in typetable.cc
-		static StgModel* Create( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr )
-		{ 
-			return (StgModel*)new StgModelLaser( world, parent, id, typestr );
-		}    
+private:
+  int dl_debug_laser;
+  
+  stg_laser_sample_t* samples;
+  uint32_t sample_count;
+  stg_meters_t range_min, range_max;
+  stg_radians_t fov;
+  uint32_t resolution;
+  
+public:
+  static const char* typestr;
+  // constructor
+  StgModelLaser( StgWorld* world,
+					  StgModel* parent ); 
+  
+  // destructor
+  ~StgModelLaser();
+  
+  virtual void Startup();
+  virtual void Shutdown();
+  virtual void Update();
+  virtual void Load();
+  virtual void Print( char* prefix );
+  virtual void DataVisualize();
+  
+  uint32_t GetSampleCount(){ return sample_count; }
+  
+  stg_laser_sample_t* GetSamples( uint32_t* count=NULL);
+  
+  void SetSamples( stg_laser_sample_t* samples, uint32_t count);
+  
+  // Get the user-tweakable configuration of the laser
+  stg_laser_cfg_t GetConfig( );
+  
+  // Set the user-tweakable configuration of the laser
+  void SetConfig( stg_laser_cfg_t cfg );  
 };
 
 // \todo  GRIPPER MODEL --------------------------------------------------------
@@ -2294,15 +2340,13 @@ class StgModelFiducial : public StgModel
 		GArray* data;
 
 	public:
-		// constructor
-		StgModelFiducial( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr );
-
-		// destructor
-		virtual ~StgModelFiducial();
-
+  static const char* typestr;
+  // constructor
+  StgModelFiducial( StgWorld* world,
+						  StgModel* parent );
+  // destructor
+  virtual ~StgModelFiducial();
+  
 		virtual void Load();
 
 		stg_meters_t max_range_anon; //< maximum detection range
@@ -2314,16 +2358,6 @@ class StgModelFiducial : public StgModel
 
 		stg_fiducial_t* fiducials; ///< array of detected fiducials
 		uint32_t fiducial_count; ///< the number of fiducials detected
-
-		// static wrapper for the constructor - all models must implement
-		// this method and add an entry in typetable.cc
-		static StgModel* Create( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr )
-		{ 
-			return (StgModel*)new StgModelFiducial( world, parent, id, typestr );
-		}    
 };
 
 
@@ -2348,12 +2382,10 @@ class StgModelRanger : public StgModel
 		virtual void DataVisualize();
 
 	public:
+  static const char* typestr;
 		// constructor
 		StgModelRanger( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr );
-
+							 StgModel* parent );
 		// destructor
 		virtual ~StgModelRanger();
 
@@ -2363,16 +2395,6 @@ class StgModelRanger : public StgModel
 		uint32_t sensor_count;
 		stg_ranger_sensor_t* sensors;
 		stg_meters_t* samples;
-
-		// static wrapper for the constructor - all models must implement
-		// this method and add an entry in typetable.cc
-		static StgModel* Create( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr )
-		{ 
-			return (StgModel*)new StgModelRanger( world, parent, id, typestr );
-		}    
 };
 
 // BLINKENLIGHT MODEL ----------------------------------------------------
@@ -2386,26 +2408,15 @@ class StgModelBlinkenlight : public StgModel
 
 	public:
 
+  static const char* typestr;
 		StgModelBlinkenlight( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr );
+									 StgModel* parent );
 
 		~StgModelBlinkenlight();
 
 		virtual void Load();
 		virtual void Update();
 		virtual void Draw( uint32_t flags, StgCanvas* canvas );
-
-		// static wrapper for the constructor - all models must implement
-		// this method and add an entry in typetable.cc
-		static StgModel* Create( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr )
-		{ 
-			return (StgModel*)new StgModelBlinkenlight( world, parent, id, typestr );
-		}    
 };
 
 // CAMERA MODEL ----------------------------------------------------
@@ -2423,11 +2434,8 @@ class StgModelCamera : public StgModel
 		StgPerspectiveCamera _camera;
 	
 	public:
-
 		StgModelCamera( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr );
+							 StgModel* parent ); 
 
 		~StgModelCamera();
 
@@ -2443,16 +2451,6 @@ class StgModelCamera : public StgModel
 	
 		///Imiate laser scan
 		float* laser();
-
-		// static wrapper for the constructor - all models must implement
-		// this method and add an entry in typetable.cc
-		static StgModel* Create( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr )
-		{ 
-			return (StgModel*)new StgModelCamera( world, parent, id, typestr );
-		}
 };
 
 // POSITION MODEL --------------------------------------------------------
@@ -2487,12 +2485,10 @@ class StgModelPosition : public StgModel
 		stg_velocity_t integration_error; ///< errors to apply in simple odometry model
 
 	public:
+  static const char* typestr;
 		// constructor
 		StgModelPosition( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr);
-
+								StgModel* parent );
 		// destructor
 		~StgModelPosition();
 
@@ -2522,17 +2518,6 @@ class StgModelPosition : public StgModel
 		stg_pose_t est_pose; ///< position estimate in local coordinates
 		stg_pose_t est_pose_error; ///< estimated error in position estimate
 		stg_pose_t est_origin; ///< global origin of the local coordinate system
-
-		// static wrapper for the constructor - all models must implement
-		// this method and add an entry in typetable.cc
-		static StgModel* Create( StgWorld* world,
-				StgModel* parent, 
-				stg_id_t id, 
-				char* typestr )
-		{ 
-			return (StgModel*)new StgModelPosition( world, parent, id, typestr );
-		}    
-
 };
 
 

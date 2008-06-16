@@ -35,15 +35,17 @@ int main( int argc,  char* argv[] )
   Init( &argc, &argv);
 
   StgWorldGui world( 400,400, "Test" );
-
-  StgModel mod( &world, NULL, 0, "model" );
-
-
-  // returned pose must be the same as the set pose
-  stg_pose_t pose;
-  
   world.Start();
-    
+
+  stg_geom_t geom;
+  bzero( &geom, sizeof(geom) );
+
+  {
+	 StgModel mod( &world, NULL );
+	 
+	 // returned pose must be the same as the set pose
+	 stg_pose_t pose;
+      
   for( stg_meters_t x=0; x<5; x+=0.1 )	 
 	 {
 		pose = new_pose( x, 0, 0, 0 );
@@ -87,8 +89,6 @@ int main( int argc,  char* argv[] )
 
   mod.SetPose( new_pose( 0,0,0,0 ));  		
 
-  stg_geom_t geom;
-  bzero( &geom, sizeof(geom) );
 
   for( stg_meters_t x=0.01; x<5; x+=0.1 )	 
 	 {
@@ -126,28 +126,59 @@ int main( int argc,  char* argv[] )
   
   mod.SetGeom( geom );
   
+  } // mod goes out of scope
+  
 
-#define POP 100
+ #define POP 100
   
   StgModel* m[POP]; 
   for( int i=0; i<POP; i++ )
 	 {
-		m[i] = new StgModel( &world, NULL, 0, "model" );
+		m[i] = new StgModel( &world, NULL );
+
+		//m[i]->Say( "Hello" );
 		m[i]->SetGeom( geom );
-		//m[i]->SetPose( random_pose( -10,10, -10,10 ) );		
-		m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
+		m[i]->SetPose( random_pose( -10,10, -10,10 ) );		
+		//m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
 		m[i]->SetColor( lrand48() | 0xFF000000 );
  		interact( &world );
 	 }
+  
+  geom.size.x = 0.2;
+  geom.size.y = 0.2;
+  geom.size.z = 0.2;
 
+  for( int i=0; i<POP; i++ )
+	 {
+		StgModel* top = new StgModel( &world, m[i] );
+		top->SetGeom( geom );
+		//top->SetPose( new_pose( 0,0,0,0 ) );
+		//m[i]->SetPose( random_pose( -10,10, -10,10 ) );		
+		//m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
+		top->SetColor( lrand48() | 0xFF000000 );
+		
+ 		interact( &world );
+	 }
+
+   for( int i=0; i<POP; i++ )
+  	 {
+//  		m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
+  		//m[i]->SetColor( 0xFF00FF00 );
+
+
+ 		stg_velocity_t v = {0,0,0,1};
+		
+ 		m[i]->SetVelocity( v );
+								
+  		interact( &world );
+  	 }
   
 //   for( int i=0; i<POP; i++ )
-// 	 {
-// 		m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
-// 		m[i]->SetColor( 0xFF00FF00 );
-// 		interact( &world );
-// 	 }
-
+//  	 {
+//  		delete m[i];
+//  		interact( &world );
+//  	 }
+  
 
   StgWorldGui::Run();
 }

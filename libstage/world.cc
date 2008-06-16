@@ -58,10 +58,6 @@ described on the manual page for each model type.
 unsigned int StgWorld::next_id = 0;
 bool StgWorld::quit_all = false;
 
-const double STG_DEFAULT_WORLD_PPM = 50;  // 2cm pixels
-const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_REAL = 100; ///< real time between updates
-const stg_msec_t STG_DEFAULT_WORLD_INTERVAL_SIM = 100;  ///< duration of sim timestep
-
 static guint PointIntHash( stg_point_int_t* pt )
 {
 	return( pt->x + (pt->y<<16 ));
@@ -88,20 +84,12 @@ void StgWorld::DestroySuperRegion( SuperRegion* sr )
 	delete sr;
 }
 
-StgWorld::StgWorld( void )
-{
-	Initialize( "MyWorld",
-			STG_DEFAULT_WORLD_INTERVAL_SIM, 
-			STG_DEFAULT_WORLD_INTERVAL_REAL,
-			STG_DEFAULT_WORLD_PPM );
-}  
-
 StgWorld::StgWorld( const char* token, 
-		stg_msec_t interval_sim, 
-		stg_msec_t interval_real,
-		double ppm )
+						  stg_msec_t interval_sim,
+						  stg_msec_t interval_real,
+						  double ppm )
 {
-	Initialize( token, interval_sim, interval_real, ppm );
+  Initialize( token, interval_sim, interval_real, ppm );
 }
 
 void StgWorld::Initialize( const char* token, 
@@ -115,7 +103,7 @@ void StgWorld::Initialize( const char* token,
 		exit(-1);
 	}
 
-	this->id = StgWorld::next_id++;
+	//	this->id = StgWorld::next_id++;
 	this->ray_list = NULL;
 	this->quit_time = 0;
 
@@ -129,7 +117,7 @@ void StgWorld::Initialize( const char* token,
 	this->graphics = false; // subclasses that provide GUIs should
 	// change this
 
-	this->models_by_id = g_hash_table_new( g_direct_hash, g_direct_equal );
+	//this->models_by_id = g_hash_table_new( g_direct_hash, g_direct_equal );
 	this->models_by_name = g_hash_table_new( g_str_hash, g_str_equal );
 	this->sim_time = 0;
 	this->interval_sim = (stg_usec_t)thousand * interval_sim;
@@ -167,7 +155,7 @@ StgWorld::~StgWorld( void )
 	if( wf ) delete wf;
 	//if( bgrid ) delete bgrid;
 
-	g_hash_table_destroy( models_by_id );
+	//g_hash_table_destroy( models_by_id );
 	g_hash_table_destroy( models_by_name );
 
 	g_free( token );
@@ -176,7 +164,7 @@ StgWorld::~StgWorld( void )
 
 void StgWorld::RemoveModel( StgModel* mod )
 {
-	g_hash_table_remove( models_by_id, mod );
+  //g_hash_table_remove( models_by_id, mod );
 	g_hash_table_remove( models_by_name, mod );
 }
 
@@ -248,6 +236,8 @@ void destroy_sregion( gpointer dummy1, SuperRegion* sr, gpointer dummy2 )
 
 void StgWorld::Load( const char* worldfile_path )
 {
+  GHashTable* entitytable = g_hash_table_new( g_direct_hash, g_direct_equal );
+
 	printf( " [Loading %s]", worldfile_path );
 	fflush(stdout);
 
@@ -277,7 +267,7 @@ void StgWorld::Load( const char* worldfile_path )
 
 	if( wf->PropertyExists( entity, "resolution" ) )
 		this->ppm = 
-			1.0 / wf->ReadFloat( entity, "resolution", STG_DEFAULT_WORLD_PPM );
+		  1.0 / wf->ReadFloat( entity, "resolution", 1.0 / this->ppm );
 
 	this->paused = 
 		wf->ReadInt( entity, "paused", this->paused );
@@ -299,18 +289,33 @@ void StgWorld::Load( const char* worldfile_path )
 				entity, parent_entity );
 
 		StgModel *mod, *parent;
+		
+		parent = (StgModel*)g_hash_table_lookup( entitytable, 
+															  (gpointer)parent_entity );
+		
+		// find the creator function pointer in the hash table. use the
+		// vanilla model if the type is NULL.
+		stg_creator_t creator;
+		
+		//printf( "creating model of type %s\n", typestr );
 
-		parent = GetModel( parent_entity );
-
-		// find the creator function pointer in the hash table
-		stg_creator_t creator = (stg_creator_t) 
-			g_hash_table_lookup( Stg::Typetable(), typestr );
-
-		// if we found a creator function, call it
+		if( typestr ) // look up the string in the typetable
+		  for( int i=0; i<MODEL_TYPE_COUNT; i++ )
+			 if( strcmp( typestr, typetable[i].token ) == 0 )
+				{
+				  creator = typetable[i].creator;
+				  break;
+				}
+		
+		  //creator = (stg_creator_t)g_hash_table_lookup( Stg::Typetable(), typestr );      
+		  //else 
+		  //creator = NULL;
+	
+	// if we found a creator function, call it
 		if( creator )
 		{
 			//printf( "creator fn: %p\n", creator );
-			mod = (*creator)( this, parent, entity, typestr );
+			mod = (*creator)( this, parent );
 		}
 		else
 		{
@@ -319,20 +324,29 @@ void StgWorld::Load( const char* worldfile_path )
 			exit( 1 );
 		}
 
+		//printf( "created model %s\n", mod->Token() );
+
 		// configure the model with properties from the world file
+		mod->SetWorldfile( wf, entity );
 		mod->Load();
+		
+		// record the model we created for this worlfile entry
+		g_hash_table_insert( entitytable, (gpointer)entity, mod );
 	}
 
 	// warn about unused WF linesa
 	wf->WarnUnused();
 
 	// run through the loaded models and initialise them
-	g_hash_table_foreach( models_by_id, (GHFunc)init_models, NULL );
+	g_hash_table_foreach( entitytable, (GHFunc)init_models, NULL );
+	
+	// now we're done with the worldfile entry lookup
+	g_hash_table_destroy( entitytable );
 
 	stg_usec_t load_end_time = RealTimeNow();
 
-	printf( "[Load time %.3fsec]", (load_end_time - load_start_time) / 1000000.0 );
-
+	printf( "[Load time %.3fsec]", 
+			  (load_end_time - load_start_time) / 1000000.0 );
 }
 
 void StgWorld::UnLoad()
@@ -344,9 +358,9 @@ void StgWorld::UnLoad()
 	g_list_free( children );
 	children = NULL;
 	
-	g_hash_table_remove_all( child_types ); // small memory leak	
+	//g_hash_table_remove_all( child_types ); // small memory leak	
 	
-	g_hash_table_remove_all( models_by_id );
+	//g_hash_table_remove_all( models_by_id );
 		
 	g_hash_table_remove_all( models_by_name );
 	
@@ -474,7 +488,7 @@ void StgWorld::AddModel( StgModel*  mod  )
 	//PRINT_DEBUG3( "World %s adding model %d %s to hash tables ", 
 	//        token, mod->id, mod->Token() );
 
-	g_hash_table_insert( this->models_by_id, (gpointer)mod->Id(), mod );
+	//g_hash_table_insert( this->models_by_id, (gpointer)mod->Id(), mod );
 	AddModelName( mod );
 }
 
@@ -495,11 +509,11 @@ StgModel* StgWorld::GetModel( const char* name )
 	return mod;
 }
 
-StgModel* StgWorld::GetModel( const stg_id_t id )
-{
-	PRINT_DEBUG1( "looking up model id %d in models_by_id", id );
-	return (StgModel*)g_hash_table_lookup( this->models_by_id, (gpointer)id );
-}
+// StgModel* StgWorld::GetModel( const stg_id_t id )
+// {
+// 	PRINT_DEBUG1( "looking up model id %d in models_by_id", id );
+// 	return (StgModel*)g_hash_table_lookup( this->models_by_id, (gpointer)id );
+// }
 
 
 void StgWorld::RecordRay( double x1, double y1, double x2, double y2 )

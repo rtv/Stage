@@ -83,10 +83,8 @@ const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIF
 
 
 StgModelPosition::StgModelPosition( StgWorld* world, 
-		StgModel* parent,
-		stg_id_t id,
-		char* typestr )
-: StgModel( world, parent, id, typestr )
+												StgModel* parent )
+  : StgModel( world, parent, MODEL_TYPE_POSITION )
 {
 	PRINT_DEBUG2( "Constructing StgModelPosition %d (%s)\n", 
 			id, typestr );
@@ -137,13 +135,11 @@ void StgModelPosition::Load( void )
 
 	char* keyword = NULL;
 
-	Worldfile* wf = world->GetWorldFile();
-
 	// load steering mode
-	if( wf->PropertyExists( this->id, "drive" ) )
+	if( wf->PropertyExists( wf_entity, "drive" ) )
 	{
 		const char* mode_str =  
-			wf->ReadString( this->id, "drive", NULL );
+			wf->ReadString( wf_entity, "drive", NULL );
 
 		if( mode_str )
 		{
@@ -161,7 +157,7 @@ void StgModelPosition::Load( void )
 	}      
 
 	// load odometry if specified
-	if( wf->PropertyExists( this->id, "odom" ) )
+	if( wf->PropertyExists( wf_entity, "odom" ) )
 	{
 		PRINT_WARN1( "the odom property is specified for model \"%s\","
 				" but this property is no longer available."
@@ -176,11 +172,11 @@ void StgModelPosition::Load( void )
 	est_origin = this->GetGlobalPose();
 
 	keyword = "localization_origin";
-	if( wf->PropertyExists( this->id, keyword ) )
+	if( wf->PropertyExists( wf_entity, keyword ) )
 	{  
-		est_origin.x = wf->ReadTupleLength( id, keyword, 0, est_origin.x );
-		est_origin.y = wf->ReadTupleLength( id, keyword, 1, est_origin.y );
-		est_origin.a = wf->ReadTupleAngle( id,keyword, 2, est_origin.a );
+		est_origin.x = wf->ReadTupleLength( wf_entity, keyword, 0, est_origin.x );
+		est_origin.y = wf->ReadTupleLength( wf_entity, keyword, 1, est_origin.y );
+		est_origin.a = wf->ReadTupleAngle( wf_entity,keyword, 2, est_origin.a );
 
 		// compute our localization pose based on the origin and true pose
 		stg_pose_t gpose = this->GetGlobalPose();
@@ -201,21 +197,21 @@ void StgModelPosition::Load( void )
 
 	// odometry model parameters
 	keyword = "odom_error";
-	if( wf->PropertyExists( id, keyword ) )
+	if( wf->PropertyExists( wf_entity, keyword ) )
 	{
 		integration_error.x = 
-			wf->ReadTupleLength( id, keyword, 0, integration_error.x );
+			wf->ReadTupleLength( wf_entity, keyword, 0, integration_error.x );
 		integration_error.y = 
-			wf->ReadTupleLength( id, keyword, 1, integration_error.y );
+			wf->ReadTupleLength( wf_entity, keyword, 1, integration_error.y );
 		integration_error.a 
-			= wf->ReadTupleAngle( id, keyword, 2, integration_error.a );
+			= wf->ReadTupleAngle( wf_entity, keyword, 2, integration_error.a );
 	}
 
 	// choose a localization model
-	if( wf->PropertyExists( this->id, "localization" ) )
+	if( wf->PropertyExists( wf_entity, "localization" ) )
 	{
 		const char* loc_str =  
-			wf->ReadString( id, "localization", NULL );
+			wf->ReadString( wf_entity, "localization", NULL );
 
 		if( loc_str )
 		{

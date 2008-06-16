@@ -10,6 +10,11 @@ SET( APIVERSION ${V_MAJOR}.${V_MINOR} )
 SET( MIN_PLAYER_MAJOR 2 )
 SET( MIN_PLAYER_MINOR 1 )
 
+#SET(CMAKE_BUILD_TYPE debug)
+#SET(CMAKE_CXX_FLAGS_DISTRIBUTION "-O3")
+#SET(CMAKE_C_FLAGS_DISTRIBUTION "-O3")
+
+
 cmake_minimum_required( VERSION 2.4 FATAL_ERROR )
 
 IF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
@@ -60,6 +65,7 @@ ENDIF (FLTKCONFIG)
 
 IF (APPLE)
 	MESSAGE(STATUS "Setting Apple specific flags")
+	# work around the OS X 10.5  X11/OpenGL library bug
 	SET(APPLE_LIBRARIES "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
 ENDIF (APPLE)
 

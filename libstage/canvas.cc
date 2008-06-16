@@ -74,6 +74,9 @@ void StgCanvas::InvertView( uint32_t invertflags )
 
 StgModel* StgCanvas::Select( int x, int y )
 {
+  // TODO XX
+  return NULL;
+
 	// render all models in a unique color
 	make_current(); // make sure the GL context is current
 	glClearColor ( 0,0,0,1 );
@@ -88,7 +91,8 @@ StgModel* StgCanvas::Select( int x, int y )
 
 		if( mod->GuiMask() & (STG_MOVE_TRANS | STG_MOVE_ROT ))
 		{
-			uint32_t col = (mod->Id() | 0xFF000000);
+		  // TODO XX
+		  uint32_t col = (uint32_t)mod; //(mod->Id() | 0xFF000000);
 			glColor4ubv( (GLubyte*)&col );
 			mod->DrawPicker();
 		}
@@ -104,9 +108,9 @@ StgModel* StgCanvas::Select( int x, int y )
 			GL_RGBA,GL_UNSIGNED_BYTE,(void*)&id );
 
 	// strip off the alpha channel byte to retrieve the model id
-	id &= 0x00FFFFFF;
+	//id &= 0x00FFFFFF;
 
-	StgModel* mod = world->GetModel( id );
+	StgModel* mod = (StgModel*)id;//world->GetModel( id );
 
 	//printf("%p %s %d\n", mod, mod ? mod->Token() : "", id );
 
@@ -447,9 +451,12 @@ void StgCanvas::renderFrame( bool robot_camera )
 				if( mod->displaylist == 0 )
 				  mod->displaylist = glGenLists(1);
 
-				if( mod->body_dirty )
-				  mod->BuildDisplayList( showflags ); // ready to be rendered
-			
+				if( mod->rebuild_displaylist )
+				  {
+					 //printf( "Model %s is dirty\n", mod->Token() );					 
+					 mod->BuildDisplayList( showflags ); // ready to be rendered
+				  }
+
 				// move into this model's local coordinate frame
 				glPushMatrix();
 				gl_pose_shift( &mod->pose );

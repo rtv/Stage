@@ -15,10 +15,8 @@
 
 
 StgModelCamera::StgModelCamera( StgWorld* world, 
-		StgModel* parent,
-		stg_id_t id,
-		char* typestr )
-: StgModel( world, parent, id, typestr ),
+										  StgModel* parent ) 
+  : StgModel( world, parent, MODEL_TYPE_CAMERA ),
 _frame_data( NULL ), _frame_data_width( 0 ), _frame_data_height( 0 ), _width( 0 )
 {
 	PRINT_DEBUG2( "Constructing StgModelCamera %d (%s)\n", 
@@ -54,18 +52,16 @@ StgModelCamera::~StgModelCamera()
 void StgModelCamera::Load( void )
 {
 	StgModel::Load();
-	Worldfile* wf = world->GetWorldFile();
 
-	_camera.setFov( wf->ReadLength( id, "fov", _camera.fov() ) );
-	_camera.setYaw( wf->ReadLength( id, "yaw", _camera.yaw() ) );
-	_camera.setPitch( wf->ReadLength( id, "pitch", _camera.pitch() ) );
+	_camera.setFov( wf->ReadLength( wf_entity, "fov", _camera.fov() ) );
+	_camera.setYaw( wf->ReadLength( wf_entity, "yaw", _camera.yaw() ) );
+	_camera.setPitch( wf->ReadLength( wf_entity, "pitch", _camera.pitch() ) );
 
-	_width = wf->ReadLength( id, "width", _width );
+	_width = wf->ReadLength( wf_entity, "width", _width );
 
 	//TODO move to constructor
 	_frame_data_width = _width;
 	_frame_data_height = 100;
-	
 }
 
 

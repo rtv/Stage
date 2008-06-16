@@ -20,8 +20,8 @@
 //#include "config.h" // results of autoconf's system configuration tests
 
 static bool init_called = false;
-static GHashTable* typetable = NULL;
 
+stg_typetable_entry_t Stg::typetable[MODEL_TYPE_COUNT];
 
 void Stg::Init( int* argc, char** argv[] )
 {
@@ -32,8 +32,9 @@ void Stg::Init( int* argc, char** argv[] )
 
 	if(!setlocale(LC_ALL,"POSIX"))
 		PRINT_WARN("Failed to setlocale(); config file may not be parse correctly\n" );
+						  
+	RegisterModels();
 
-	typetable = stg_create_typetable();
 	init_called = true;
 
 	// ask FLTK to load support for various image formats
@@ -45,10 +46,15 @@ bool Stg::InitDone()
 	return init_called;
 }
 
-GHashTable* Stg::Typetable()
+
+void Stg::RegisterModel( stg_model_type_t type, 
+								 const char* name, 
+								 stg_creator_t creator )
 {
-	return typetable;
+  Stg::typetable[ type ].token = name;
+  Stg::typetable[ type ].creator = creator;
 }
+  
 
 
 void Stg::stg_print_err( const char* err )

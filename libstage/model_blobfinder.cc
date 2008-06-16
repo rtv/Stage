@@ -80,10 +80,8 @@ resolution
 
 
 StgModelBlobfinder::StgModelBlobfinder( StgWorld* world, 
-		StgModel* parent,
-		stg_id_t id,
-		char* typestr )
-: StgModel( world, parent, id, typestr )
+													 StgModel* parent )
+  : StgModel( world, parent, MODEL_TYPE_BLOBFINDER )
 {
 	PRINT_DEBUG2( "Constructing StgModelBlobfinder %d (%s)\n", 
 			id, typestr );
@@ -150,22 +148,22 @@ void StgModelBlobfinder::Load( void )
 
 	Worldfile* wf = world->GetWorldFile();
 
-	scan_width = (int)wf->ReadTupleFloat( id, "image", 0, scan_width );
-	scan_height= (int)wf->ReadTupleFloat( id, "image", 1, scan_height );
-	range = wf->ReadFloat( id, "range", range );
-	fov = wf->ReadAngle( id, "fov", fov );
-	pan = wf->ReadAngle( id, "pan", pan );
+	scan_width = (int)wf->ReadTupleFloat( wf_entity, "image", 0, scan_width );
+	scan_height= (int)wf->ReadTupleFloat( wf_entity, "image", 1, scan_height );
+	range = wf->ReadFloat( wf_entity, "range", range );
+	fov = wf->ReadAngle( wf_entity, "fov", fov );
+	pan = wf->ReadAngle( wf_entity, "pan", pan );
 
-	if( wf->PropertyExists( id, "colors" ) )
+	if( wf->PropertyExists( wf_entity, "colors" ) )
 	{
 		RemoveAllColors(); // empty the color list to start from scratch
 
-		unsigned int count = wf->ReadFloat( id, "colors_count", 0 );
+		unsigned int count = wf->ReadFloat( wf_entity, "colors_count", 0 );
 
 		for( unsigned int c=0; c<count; c++ )
 		{
 			const char* colorstr = 
-				wf->ReadTupleString( id, "colors", c, NULL );
+				wf->ReadTupleString( wf_entity, "colors", c, NULL );
 
 			if( ! colorstr )
 				break;

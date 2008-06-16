@@ -62,10 +62,8 @@ size [0 0]
  */
 
 StgModelFiducial::StgModelFiducial( StgWorld* world, 
-		StgModel* parent,
-		stg_id_t id,
-		char* typestr )
-: StgModel( world, parent, id, typestr )
+												StgModel* parent )
+  : StgModel( world, parent, MODEL_TYPE_FIDUCIAL )
 {
 	PRINT_DEBUG2( "Constructing StgModelFiducial %d (%s)\n", 
 			id, typestr );
@@ -235,13 +233,11 @@ void StgModelFiducial::Load( void )
 
 	StgModel::Load();
 
-	Worldfile* wf = world->GetWorldFile();
-
 	// load fiducial-specific properties
-	min_range      = wf->ReadLength( id, "range_min",    min_range );
-	max_range_anon = wf->ReadLength( id, "range_max",    max_range_anon );
-	max_range_id   = wf->ReadLength( id, "range_max_id", max_range_id );
-	fov            = wf->ReadAngle(  id, "fov",          fov );
+	min_range      = wf->ReadLength( wf_entity, "range_min",    min_range );
+	max_range_anon = wf->ReadLength( wf_entity, "range_max",    max_range_anon );
+	max_range_id   = wf->ReadLength( wf_entity, "range_max_id", max_range_id );
+	fov            = wf->ReadAngle( wf_entity, "fov",          fov );
 }  
 
 

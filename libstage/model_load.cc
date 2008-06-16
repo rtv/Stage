@@ -12,22 +12,23 @@ void FooInit( StgModel* );
 void FooUpdate( StgModel* );
 
 
-void StgModel::Load( void )
+void StgModel::Load()
 {  
-	PRINT_DEBUG1( "Model \"%s\" loading...", token );
+  assert( wf );
+  assert( wf_entity );
 
-	Worldfile* wf = world->wf;
+  PRINT_DEBUG1( "Model \"%s\" loading...", token );
 
-	if( wf->PropertyExists( this->id, "debug" ) )
+	if( wf->PropertyExists( wf_entity, "debug" ) )
 	{
 		PRINT_WARN2( "debug property specified for model %d  %s\n",
-				this->id, this->token );
-		this->debug = wf->ReadInt( this->id, "debug", this->debug );
+				wf_entity, this->token );
+		this->debug = wf->ReadInt( wf_entity, "debug", this->debug );
 	}
 
-	if( wf->PropertyExists( this->id, "name" ) )
+	if( wf->PropertyExists( wf_entity, "name" ) )
 	{
-		char *name = (char*)wf->ReadString(this->id, "name", NULL );
+		char *name = (char*)wf->ReadString(wf_entity, "name", NULL );
 		if( name )
 		{
 			//printf( "changed %s to %s\n", this->token, token );
@@ -43,93 +44,93 @@ void StgModel::Load( void )
 
 	//PRINT_WARN1( "%s::Load", token );
 
-	if( wf->PropertyExists( this->id, "origin" ) )
+	if( wf->PropertyExists( wf_entity, "origin" ) )
 	{
 		stg_geom_t geom = GetGeom();
-		geom.pose.x = wf->ReadTupleLength(this->id, "origin", 0, geom.pose.x );
-		geom.pose.y = wf->ReadTupleLength(this->id, "origin", 1, geom.pose.y );
-		geom.pose.a =  wf->ReadTupleAngle(this->id, "origin", 2, geom.pose.a );
+		geom.pose.x = wf->ReadTupleLength(wf_entity, "origin", 0, geom.pose.x );
+		geom.pose.y = wf->ReadTupleLength(wf_entity, "origin", 1, geom.pose.y );
+		geom.pose.a =  wf->ReadTupleAngle(wf_entity, "origin", 2, geom.pose.a );
 		this->SetGeom( geom );
 	}
 
-	if( wf->PropertyExists( this->id, "origin4" ) )
+	if( wf->PropertyExists( wf_entity, "origin4" ) )
 	{
 		stg_geom_t geom = GetGeom();
-		geom.pose.x = wf->ReadTupleLength(this->id, "origin4", 0, geom.pose.x );
-		geom.pose.y = wf->ReadTupleLength(this->id, "origin4", 1, geom.pose.y );
-		geom.pose.z = wf->ReadTupleLength(this->id, "origin4", 2, geom.pose.z );
-		geom.pose.a =  wf->ReadTupleAngle(this->id, "origin4", 3, geom.pose.a );
+		geom.pose.x = wf->ReadTupleLength(wf_entity, "origin4", 0, geom.pose.x );
+		geom.pose.y = wf->ReadTupleLength(wf_entity, "origin4", 1, geom.pose.y );
+		geom.pose.z = wf->ReadTupleLength(wf_entity, "origin4", 2, geom.pose.z );
+		geom.pose.a =  wf->ReadTupleAngle(wf_entity, "origin4", 3, geom.pose.a );
 		this->SetGeom( geom );
 	}
 
-	if( wf->PropertyExists( this->id, "size" ) )
+	if( wf->PropertyExists( wf_entity, "size" ) )
 	{
 		stg_geom_t geom = GetGeom();
-		geom.size.x = wf->ReadTupleLength(this->id, "size", 0, geom.size.x );
-		geom.size.y = wf->ReadTupleLength(this->id, "size", 1, geom.size.y );
+		geom.size.x = wf->ReadTupleLength(wf_entity, "size", 0, geom.size.x );
+		geom.size.y = wf->ReadTupleLength(wf_entity, "size", 1, geom.size.y );
 		this->SetGeom( geom );
 	}
 
-	if( wf->PropertyExists( this->id, "size3" ) )
+	if( wf->PropertyExists( wf_entity, "size3" ) )
 	{
 		stg_geom_t geom = GetGeom();
-		geom.size.x = wf->ReadTupleLength(this->id, "size3", 0, geom.size.x );
-		geom.size.y = wf->ReadTupleLength(this->id, "size3", 1, geom.size.y );
-		geom.size.z = wf->ReadTupleLength(this->id, "size3", 2, geom.size.z );
+		geom.size.x = wf->ReadTupleLength(wf_entity, "size3", 0, geom.size.x );
+		geom.size.y = wf->ReadTupleLength(wf_entity, "size3", 1, geom.size.y );
+		geom.size.z = wf->ReadTupleLength(wf_entity, "size3", 2, geom.size.z );
 		this->SetGeom( geom );
 	}
 
-	if( wf->PropertyExists( this->id, "pose" ))
+	if( wf->PropertyExists( wf_entity, "pose" ))
 	{
 		stg_pose_t pose = GetPose();
-		pose.x = wf->ReadTupleLength(this->id, "pose", 0, pose.x );
-		pose.y = wf->ReadTupleLength(this->id, "pose", 1, pose.y );
-		pose.a =  wf->ReadTupleAngle(this->id, "pose", 2, pose.a );
+		pose.x = wf->ReadTupleLength(wf_entity, "pose", 0, pose.x );
+		pose.y = wf->ReadTupleLength(wf_entity, "pose", 1, pose.y );
+		pose.a =  wf->ReadTupleAngle(wf_entity, "pose", 2, pose.a );
 		this->SetPose( pose );
 	}
 
-	if( wf->PropertyExists( this->id, "pose4" ))
+	if( wf->PropertyExists( wf_entity, "pose4" ))
 	{
 		stg_pose_t pose = GetPose();
-		pose.x = wf->ReadTupleLength(this->id, "pose4", 0, pose.x );
-		pose.y = wf->ReadTupleLength(this->id, "pose4", 1, pose.y );
-		pose.z = wf->ReadTupleLength(this->id, "pose4", 2, pose.z );
-		pose.a = wf->ReadTupleAngle( this->id, "pose4", 3,  pose.a );
+		pose.x = wf->ReadTupleLength(wf_entity, "pose4", 0, pose.x );
+		pose.y = wf->ReadTupleLength(wf_entity, "pose4", 1, pose.y );
+		pose.z = wf->ReadTupleLength(wf_entity, "pose4", 2, pose.z );
+		pose.a = wf->ReadTupleAngle( wf_entity, "pose4", 3,  pose.a );
 
 		this->SetPose( pose );
 	}
 
-	if( wf->PropertyExists( this->id, "velocity" ))
+	if( wf->PropertyExists( wf_entity, "velocity" ))
 	{
 		stg_velocity_t vel = GetVelocity();
-		vel.x = wf->ReadTupleLength(this->id, "velocity", 0, vel.x );
-		vel.y = wf->ReadTupleLength(this->id, "velocity", 1, vel.y );
-		vel.a = wf->ReadTupleAngle(this->id, "velocity", 3,  vel.a );
+		vel.x = wf->ReadTupleLength(wf_entity, "velocity", 0, vel.x );
+		vel.y = wf->ReadTupleLength(wf_entity, "velocity", 1, vel.y );
+		vel.a = wf->ReadTupleAngle(wf_entity, "velocity", 3,  vel.a );
 		this->SetVelocity( vel );
 
 		if( vel.x || vel.y || vel.z || vel.a )
 			world->StartUpdatingModel( this );
 	}
 
-	if( wf->PropertyExists( this->id, "velocity4" ))
+	if( wf->PropertyExists( wf_entity, "velocity4" ))
 	{
 		stg_velocity_t vel = GetVelocity();
-		vel.x = wf->ReadTupleLength(this->id, "velocity4", 0, vel.x );
-		vel.y = wf->ReadTupleLength(this->id, "velocity4", 1, vel.y );
-		vel.z = wf->ReadTupleLength(this->id, "velocity4", 2, vel.z );
-		vel.a =  wf->ReadTupleAngle(this->id, "velocity4", 3,  vel.a );
+		vel.x = wf->ReadTupleLength(wf_entity, "velocity4", 0, vel.x );
+		vel.y = wf->ReadTupleLength(wf_entity, "velocity4", 1, vel.y );
+		vel.z = wf->ReadTupleLength(wf_entity, "velocity4", 2, vel.z );
+		vel.a =  wf->ReadTupleAngle(wf_entity, "velocity4", 3,  vel.a );
 		this->SetVelocity( vel );
 	}
 
-	if( wf->PropertyExists( this->id, "boundary" ))
+	if( wf->PropertyExists( wf_entity, "boundary" ))
 	{
-		this->SetBoundary( wf->ReadInt(this->id, "boundary", this->boundary  ));
+		this->SetBoundary( wf->ReadInt(wf_entity, "boundary", this->boundary  ));
 	}	  
 
-	if( wf->PropertyExists( this->id, "color" ))
+	if( wf->PropertyExists( wf_entity, "color" ))
 	{      
 		stg_color_t col = 0xFFFF0000; // red;
-		const char* colorstr = wf->ReadString( this->id, "color", NULL );
+		const char* colorstr = wf->ReadString( wf_entity, "color", NULL );
 		if( colorstr )
 		{
 			if( strcmp( colorstr, "random" ) == 0 )
@@ -145,19 +146,19 @@ void StgModel::Load( void )
 	}      
 
 
-	if( wf->PropertyExists( this->id, "color_rgba" ))
+	if( wf->PropertyExists( wf_entity, "color_rgba" ))
 	{      
-		double red   = wf->ReadTupleFloat( this->id, "color_rgba", 0, 0);
-		double green = wf->ReadTupleFloat( this->id, "color_rgba", 1, 0);
-		double blue  = wf->ReadTupleFloat( this->id, "color_rgba", 2, 0);
-		double alpha = wf->ReadTupleFloat( this->id, "color_rgba", 3, 0);
+		double red   = wf->ReadTupleFloat( wf_entity, "color_rgba", 0, 0);
+		double green = wf->ReadTupleFloat( wf_entity, "color_rgba", 1, 0);
+		double blue  = wf->ReadTupleFloat( wf_entity, "color_rgba", 2, 0);
+		double alpha = wf->ReadTupleFloat( wf_entity, "color_rgba", 3, 0);
 
 		this->SetColor( stg_color_pack( red, green, blue, alpha ));
 	}  
 
-	if( wf->PropertyExists( this->id, "bitmap" ) )
+	if( wf->PropertyExists( wf_entity, "bitmap" ) )
 	{
-		const char* bitmapfile = wf->ReadString( this->id, "bitmap", NULL );
+		const char* bitmapfile = wf->ReadString( wf_entity, "bitmap", NULL );
 		assert( bitmapfile );
 
 		char full[_POSIX_PATH_MAX];
@@ -211,7 +212,7 @@ void StgModel::Load( void )
 
 			StgBlock::ScaleList( this->blocks, &this->geom.size );	  
 			this->Map();
-			this->body_dirty = true;
+			this->NeedRedraw();
 
 			g_free( rects );
 		}      
@@ -220,9 +221,9 @@ void StgModel::Load( void )
 		//      token, g_list_length( blocks ));
 	}
 
-	if( wf->PropertyExists( this->id, "blocks" ) )
+	if( wf->PropertyExists( wf_entity, "blocks" ) )
 	{
-		int blockcount = wf->ReadInt( this->id, "blocks", -1 );
+		int blockcount = wf->ReadInt( wf_entity, "blocks", -1 );
 
 		this->UnMap();
 		this->ClearBlocks();
@@ -233,7 +234,7 @@ void StgModel::Load( void )
 		for( int l=0; l<blockcount; l++ )
 		{	  	  
 			snprintf(key, sizeof(key), "block[%d].points", l);
-			int pointcount = wf->ReadInt(this->id,key,0);
+			int pointcount = wf->ReadInt(wf_entity,key,0);
 
 			//printf( "expecting %d points in block %d\n",
 			//pointcount, l );
@@ -244,8 +245,8 @@ void StgModel::Load( void )
 			for( p=0; p<pointcount; p++ )	      {
 				snprintf(key, sizeof(key), "block[%d].point[%d]", l, p );
 
-				pts[p].x = wf->ReadTupleLength(this->id, key, 0, 0);
-				pts[p].y = wf->ReadTupleLength(this->id, key, 1, 0);
+				pts[p].x = wf->ReadTupleLength(wf_entity, key, 0, 0);
+				pts[p].y = wf->ReadTupleLength(wf_entity, key, 1, 0);
 
 				//printf( "key %s x: %.2f y: %.2f\n",
 				//      key, pt.x, pt.y );
@@ -255,10 +256,10 @@ void StgModel::Load( void )
 			snprintf(key, sizeof(key), "block[%d].z", l);
 
 			stg_meters_t zmin = 
-				wf->ReadTupleLength(this->id, key, 0, 0.0 );
+				wf->ReadTupleLength(wf_entity, key, 0, 0.0 );
 
 			stg_meters_t zmax = 
-				wf->ReadTupleLength(this->id, key, 1, 1.0 );
+				wf->ReadTupleLength(wf_entity, key, 1, 1.0 );
 
 			// block color
 			stg_color_t blockcol = this->color;
@@ -266,7 +267,7 @@ void StgModel::Load( void )
 
 			snprintf(key, sizeof(key), "block[%d].color", l);
 
-			const char* colorstr = wf->ReadString( this->id, key, NULL );
+			const char* colorstr = wf->ReadString( wf_entity, key, NULL );
 			if( colorstr )
 			{
 				blockcol = stg_lookup_color( colorstr );
@@ -295,48 +296,48 @@ void StgModel::Load( void )
 		this->Map();
 	}
 
-	if( wf->PropertyExists( this->id, "mass" ))
-		this->SetMass( wf->ReadFloat(this->id, "mass", this->mass ));
+	if( wf->PropertyExists( wf_entity, "mass" ))
+		this->SetMass( wf->ReadFloat(wf_entity, "mass", this->mass ));
 
-	if( wf->PropertyExists( this->id, "fiducial_return" ))
-		this->SetFiducialReturn( wf->ReadInt( this->id, "fiducial_return", this->fiducial_return ));
+	if( wf->PropertyExists( wf_entity, "fiducial_return" ))
+		this->SetFiducialReturn( wf->ReadInt( wf_entity, "fiducial_return", this->fiducial_return ));
 
-	if( wf->PropertyExists( this->id, "fiducial_key" ))
-		this->SetFiducialKey( wf->ReadInt( this->id, "fiducial_key", this->fiducial_key ));
+	if( wf->PropertyExists( wf_entity, "fiducial_key" ))
+		this->SetFiducialKey( wf->ReadInt( wf_entity, "fiducial_key", this->fiducial_key ));
 
-	if( wf->PropertyExists( this->id, "obstacle_return" ))
-		this->SetObstacleReturn( wf->ReadInt( this->id, "obstacle_return", this->obstacle_return ));
+	if( wf->PropertyExists( wf_entity, "obstacle_return" ))
+		this->SetObstacleReturn( wf->ReadInt( wf_entity, "obstacle_return", this->obstacle_return ));
 
-	if( wf->PropertyExists( this->id, "ranger_return" ))
-		this->SetRangerReturn( wf->ReadInt( this->id, "ranger_return", this->ranger_return ));
+	if( wf->PropertyExists( wf_entity, "ranger_return" ))
+		this->SetRangerReturn( wf->ReadInt( wf_entity, "ranger_return", this->ranger_return ));
 
-	if( wf->PropertyExists( this->id, "blob_return" ))
-		this->SetBlobReturn( wf->ReadInt( this->id, "blob_return", this->blob_return ));
+	if( wf->PropertyExists( wf_entity, "blob_return" ))
+		this->SetBlobReturn( wf->ReadInt( wf_entity, "blob_return", this->blob_return ));
 
-	if( wf->PropertyExists( this->id, "laser_return" ))
-		this->SetLaserReturn( (stg_laser_return_t)wf->ReadInt(this->id, "laser_return", this->laser_return ));
+	if( wf->PropertyExists( wf_entity, "laser_return" ))
+		this->SetLaserReturn( (stg_laser_return_t)wf->ReadInt(wf_entity, "laser_return", this->laser_return ));
 
-	if( wf->PropertyExists( this->id, "gripper_return" ))
-		this->SetGripperReturn( wf->ReadInt( this->id, "gripper_return", this->gripper_return ));
+	if( wf->PropertyExists( wf_entity, "gripper_return" ))
+		this->SetGripperReturn( wf->ReadInt( wf_entity, "gripper_return", this->gripper_return ));
 
-	if( wf->PropertyExists( this->id, "gui_nose" ))
-		this->SetGuiNose( wf->ReadInt(this->id, "gui_nose", this->gui_nose ));
+	if( wf->PropertyExists( wf_entity, "gui_nose" ))
+		this->SetGuiNose( wf->ReadInt(wf_entity, "gui_nose", this->gui_nose ));
 
-	if( wf->PropertyExists( this->id, "gui_grid" ))
-		this->SetGuiGrid( wf->ReadInt(this->id, "gui_grid", this->gui_grid ));
+	if( wf->PropertyExists( wf_entity, "gui_grid" ))
+		this->SetGuiGrid( wf->ReadInt(wf_entity, "gui_grid", this->gui_grid ));
 
-	if( wf->PropertyExists( this->id, "gui_outline" ))
-		this->SetGuiOutline( wf->ReadInt(this->id, "gui_outline", this->gui_outline ));
+	if( wf->PropertyExists( wf_entity, "gui_outline" ))
+		this->SetGuiOutline( wf->ReadInt(wf_entity, "gui_outline", this->gui_outline ));
 
-	if( wf->PropertyExists( this->id, "gui_movemask" ))
-		this->SetGuiMask( wf->ReadInt(this->id, "gui_movemask", this->gui_mask ));
+	if( wf->PropertyExists( wf_entity, "gui_movemask" ))
+		this->SetGuiMask( wf->ReadInt(wf_entity, "gui_movemask", this->gui_mask ));
 
-	if( wf->PropertyExists( this->id, "map_resolution" ))
-		this->SetMapResolution( wf->ReadFloat(this->id, "map_resolution", this->map_resolution ));
+	if( wf->PropertyExists( wf_entity, "map_resolution" ))
+		this->SetMapResolution( wf->ReadFloat(wf_entity, "map_resolution", this->map_resolution ));
 
-	if( wf->PropertyExists( this->id, "ctrl" ))
+	if( wf->PropertyExists( wf_entity, "ctrl" ))
 	{
-		char* lib = (char*)wf->ReadString(this->id, "ctrl", NULL );
+		char* lib = (char*)wf->ReadString(wf_entity, "ctrl", NULL );
 
 		if( !lib )
 			puts( "Error - NULL library name" );
@@ -344,16 +345,16 @@ void StgModel::Load( void )
 			LoadControllerModule( lib );
 	}
 
-	if( wf->PropertyExists( this->id, "say" ))
-		this->Say( wf->ReadString(this->id, "say", NULL ));
+	if( wf->PropertyExists( wf_entity, "say" ))
+		this->Say( wf->ReadString(wf_entity, "say", NULL ));
 
 	// call any type-specific load callbacks
-	this->CallCallbacks( &this->load );
+	this->CallCallbacks( &this->load_hook );
 
 	// MUST BE THE LAST THING LOADED
-	if( wf->PropertyExists( this->id, "alwayson" ))
+	if( wf->PropertyExists( wf_entity, "alwayson" ))
 	{
-		if( wf->ReadInt( this->id, "alwayson", 0) > 0 )
+		if( wf->ReadInt( wf_entity, "alwayson", 0) > 0 )
 			Startup();
 	}
 
@@ -366,9 +367,10 @@ void StgModel::Load( void )
 
 void StgModel::Save( void )
 {  
+  assert( wf );
+  assert( wf_entity );
+		
 	PRINT_DEBUG1( "Model \"%s\" saving...", token );
-
-	Worldfile* wf = world->wf;
 
 	PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
 			this->token,
@@ -377,17 +379,17 @@ void StgModel::Save( void )
 			this->pose.a );
 
 	// right now we only save poses
-	wf->WriteTupleLength( this->id, "pose", 0, this->pose.x);
-	wf->WriteTupleLength( this->id, "pose", 1, this->pose.y);
-	wf->WriteTupleAngle( this->id, "pose", 2, this->pose.a);
+	wf->WriteTupleLength( wf_entity, "pose", 0, this->pose.x);
+	wf->WriteTupleLength( wf_entity, "pose", 1, this->pose.y);
+	wf->WriteTupleAngle( wf_entity, "pose", 2, this->pose.a);
 
-	wf->WriteTupleLength( this->id, "pose3", 0, this->pose.x);
-	wf->WriteTupleLength( this->id, "pose3", 1, this->pose.y);
-	wf->WriteTupleLength( this->id, "pose3", 2, this->pose.z);
-	wf->WriteTupleAngle( this->id, "pose3", 3, this->pose.a);
+	wf->WriteTupleLength( wf_entity, "pose3", 0, this->pose.x);
+	wf->WriteTupleLength( wf_entity, "pose3", 1, this->pose.y);
+	wf->WriteTupleLength( wf_entity, "pose3", 2, this->pose.z);
+	wf->WriteTupleAngle( wf_entity, "pose3", 3, this->pose.a);
 
 	// call any type-specific save callbacks
-	this->CallCallbacks( &this->save );
+	this->CallCallbacks( &this->save_hook );
 
 	PRINT_DEBUG1( "Model \"%s\" saving complete.", token );
 }

@@ -103,92 +103,78 @@ TODO PLAN: single array of all polygon vertices - model just keeps an index
 
 #define _GNU_SOURCE
 
-	//#define DEBUG
+	//#define DEBUG 0
 #include "stage_internal.hh"
 #include "texture_manager.hh"
 #include <limits.h> 
 
 	// basic model
-	const bool STG_DEFAULT_MOD_BLOBRETURN = true;
-	const bool STG_DEFAULT_MOD_BOUNDARY = false;
-	const stg_color_t STG_DEFAULT_MOD_COLOR = (0xFFFF0000); // solid red
-	const stg_joules_t STG_DEFAULT_MOD_ENERGY_CAPACITY = 1000.0;
-	const bool STG_DEFAULT_MOD_ENERGY_CHARGEENABLE = true;
-	const stg_watts_t STG_DEFAULT_MOD_ENERGY_GIVERATE =  0.0;
-	const stg_meters_t STG_DEFAULT_MOD_ENERGY_PROBERANGE = 0.0;
-	const stg_watts_t STG_DEFAULT_MOD_ENERGY_TRICKLERATE = 0.1;
-	const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEX = 0.10;
-	const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEY = 0.10;
-	const stg_meters_t STG_DEFAULT_MOD_GEOM_SIZEZ = 0.10;
-	const bool STG_DEFAULT_MOD_GRID = false;
-	const bool STG_DEFAULT_MOD_GRIPPERRETURN = false;
-	const stg_laser_return_t STG_DEFAULT_MOD_LASERRETURN = LaserVisible;
-	const stg_meters_t STG_DEFAULT_MOD_MAP_RESOLUTION = 0.1;
-	const stg_movemask_t STG_DEFAULT_MOD_MASK = (STG_MOVE_TRANS | STG_MOVE_ROT);
-	const stg_kg_t STG_DEFAULT_MOD_MASS = 10.0;
-	const bool STG_DEFAULT_MOD_NOSE = false;
-	const bool STG_DEFAULT_MOD_OBSTACLERETURN = true;
-	const bool STG_DEFAULT_MOD_OUTLINE = true;
-	const bool STG_DEFAULT_MOD_RANGERRETURN = true;
+const bool StgModel::DEFAULT_BLOBRETURN = true;
+const bool StgModel::DEFAULT_BOUNDARY = false;
+const stg_color_t StgModel::DEFAULT_COLOR = (0xFFFF0000); // solid red
+const stg_joules_t StgModel::DEFAULT_ENERGY_CAPACITY = 1000.0;
+const bool StgModel::DEFAULT_ENERGY_CHARGEENABLE = true;
+const stg_watts_t StgModel::DEFAULT_ENERGY_GIVERATE =  0.0;
+const stg_meters_t StgModel::DEFAULT_ENERGY_PROBERANGE = 0.0;
+const stg_watts_t StgModel::DEFAULT_ENERGY_TRICKLERATE = 0.1;
+const stg_meters_t StgModel::DEFAULT_GEOM_SIZEX = 0.10;
+const stg_meters_t StgModel::DEFAULT_GEOM_SIZEY = 0.10;
+const stg_meters_t StgModel::DEFAULT_GEOM_SIZEZ = 0.10;
+const bool StgModel::DEFAULT_GRID = false;
+const bool StgModel::DEFAULT_GRIPPERRETURN = false;
+const stg_laser_return_t StgModel::DEFAULT_LASERRETURN = LaserVisible;
+const stg_meters_t StgModel::DEFAULT_MAP_RESOLUTION = 0.1;
+const stg_movemask_t StgModel::DEFAULT_MASK = (STG_MOVE_TRANS | STG_MOVE_ROT);
+const stg_kg_t StgModel::DEFAULT_MASS = 10.0;
+const bool StgModel::DEFAULT_NOSE = false;
+const bool StgModel::DEFAULT_OBSTACLERETURN = true;
+const bool StgModel::DEFAULT_OUTLINE = true;
+const bool StgModel::DEFAULT_RANGERRETURN = true;
 
 
-	// speech bubble colors
-	const stg_color_t STG_BUBBLE_FILL = 0xFFC8C8FF; // light blue/grey
-	const stg_color_t STG_BUBBLE_BORDER = 0xFF000000; // black
-	const stg_color_t STG_BUBBLE_TEXT = 0xFF000000; // black
+// speech bubble colors
+const stg_color_t StgModel::BUBBLE_FILL = 0xFFC8C8FF; // light blue/grey
+const stg_color_t StgModel::BUBBLE_BORDER = 0xFF000000; // black
+const stg_color_t StgModel::BUBBLE_TEXT = 0xFF000000; // black
 
-	// constructor
+// constructor
 StgModel::StgModel( StgWorld* world,
-		StgModel* parent,
-		stg_id_t id,
-		char* typestr )
+						  StgModel* parent,
+						  const stg_model_type_t type )
 : StgAncestor()
-{    
-	PRINT_DEBUG4( "Constructing model world: %s parent: %s type: %s id: %d",
-			world->Token(), 
-			parent ? parent->Token() : "(null)",
-			typestr,
-			id );
+{      
+  assert( world );
+  
+  PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %d ",
+					 world->Token(), 
+					 parent ? parent->Token() : "(null)",
+					 type );
+  
+  this->parent = parent;
+  this->world = world;  
+  this->debug = false;
+  this->type = type;
+  
+  // Adding this model to its ancestor also gives this model a
+  // sensible default name
 
-	this->id = id;
-	this->typestr = typestr;
-	this->parent = parent;
-	this->world = world;
+  StgAncestor* anc =  parent ? (StgAncestor*)parent : (StgAncestor*)world;
 
-	this->debug = false;
-
-	// generate a name. This might be overwritten if the "name" property
-	// is set in the worldfile when StgModel::Load() is called
-
-	StgAncestor* anc = parent ? (StgAncestor*)parent : (StgAncestor*)world;
-
-	unsigned int cnt = anc->GetNumChildrenOfType( typestr );
-	char* buf = new char[TOKEN_MAX];
-
-	snprintf( buf, TOKEN_MAX, "%s.%s:%d", 
-			anc->Token(), typestr, cnt );
-
-	this->token = strdup( buf );
-	delete buf;
-
-	PRINT_DEBUG2( "model has token \"%s\" and typestr \"%s\"", 
-			this->token, this->typestr );
-
-	anc->AddChild( this );
-	world->AddModel( this );
-
-	bzero( &pose, sizeof(pose));
-	if( parent ) 
-		pose.z = parent->geom.size.z;
-	bzero( &global_pose, sizeof(global_pose));
-
+  anc->AddChild( this );
+  world->AddModel( this );
+  
+  bzero( &pose, sizeof(pose));
+  if( parent ) 
+	 pose.z = parent->geom.size.z;
+  bzero( &global_pose, sizeof(global_pose));
+  
 	this->trail = g_array_new( false, false, sizeof(stg_trail_item_t) );
 
 	this->data_fresh = false;
 	this->disabled = false;
 	this->d_list = NULL;
 	this->blocks = NULL;
-	this->body_dirty = true;
+	this->rebuild_displaylist = true;
 	this->data_dirty = true;
 	this->gpose_dirty = true;
 	this->say_string = NULL;
@@ -197,23 +183,23 @@ StgModel::StgModel( StgWorld* world,
 
 	this->displaylist = 0;
 
-	this->geom.size.x = STG_DEFAULT_MOD_GEOM_SIZEX;
-	this->geom.size.y = STG_DEFAULT_MOD_GEOM_SIZEX;
-	this->geom.size.z = STG_DEFAULT_MOD_GEOM_SIZEX;
+	this->geom.size.x = StgModel::DEFAULT_GEOM_SIZEX;
+	this->geom.size.y = StgModel::DEFAULT_GEOM_SIZEX;
+	this->geom.size.z = StgModel::DEFAULT_GEOM_SIZEX;
 	memset( &this->geom.pose, 0, sizeof(this->geom.pose));
 
-	this->obstacle_return = STG_DEFAULT_MOD_OBSTACLERETURN;
-	this->ranger_return = STG_DEFAULT_MOD_RANGERRETURN;
-	this->blob_return = STG_DEFAULT_MOD_BLOBRETURN;
-	this->laser_return = STG_DEFAULT_MOD_LASERRETURN;
-	this->gripper_return = STG_DEFAULT_MOD_GRIPPERRETURN;
-	this->boundary = STG_DEFAULT_MOD_BOUNDARY;
-	this->color = STG_DEFAULT_MOD_COLOR;
-	this->map_resolution = STG_DEFAULT_MOD_MAP_RESOLUTION; // meters
-	this->gui_nose = STG_DEFAULT_MOD_NOSE;
-	this->gui_grid = STG_DEFAULT_MOD_GRID;
-	this->gui_outline = STG_DEFAULT_MOD_OUTLINE;
-	this->gui_mask = this->parent ? 0 : STG_DEFAULT_MOD_MASK;
+	this->obstacle_return = StgModel::DEFAULT_OBSTACLERETURN;
+	this->ranger_return = StgModel::DEFAULT_RANGERRETURN;
+	this->blob_return = StgModel::DEFAULT_BLOBRETURN;
+	this->laser_return = StgModel::DEFAULT_LASERRETURN;
+	this->gripper_return = StgModel::DEFAULT_GRIPPERRETURN;
+	this->boundary = StgModel::DEFAULT_BOUNDARY;
+	this->color = StgModel::DEFAULT_COLOR;
+	this->map_resolution = StgModel::DEFAULT_MAP_RESOLUTION; // meters
+	this->gui_nose = StgModel::DEFAULT_NOSE;
+	this->gui_grid = StgModel::DEFAULT_GRID;
+	this->gui_outline = StgModel::DEFAULT_OUTLINE;
+	this->gui_mask = this->parent ? 0 : StgModel::DEFAULT_MASK;
 
 	this->fiducial_return = 0;
 	this->fiducial_key = 0;
@@ -232,22 +218,34 @@ StgModel::StgModel( StgWorld* world,
 	this->interval = 1e4; // 10msec
 
 	this->initfunc = NULL;
-	//this->updatefunc = NULL;
+
+	this->startup_hook = NULL;
+	this->shutdown_hook = NULL;
+	this->load_hook = NULL;
+	this->save_hook = NULL;
+
+	this->wf = NULL;
+	this->wf_entity = 0;
 
 	// now we can add the basic square shape
 	this->AddBlockRect( -0.5,-0.5,1,1 );
 
-	PRINT_DEBUG2( "finished model %s (%d).", 
-			this->token,
-			this->id );
+	PRINT_DEBUG2( "finished model %s @ %p", 
+					  this->token, this );
 }
 
 StgModel::~StgModel( void )
 {
-	// remove from parent, if there is one
-	if( parent ) 
-		parent->children = g_list_remove( parent->children, this );
+  UnMap(); // remove from the raytrace bitmap
 
+  // children are removed in ancestor class
+  
+  // remove from parent, if there is one
+  if( parent ) 
+	 parent->children = g_list_remove( parent->children, this );
+  else
+	 world->children = g_list_remove( world->children, this );
+  
 	if( callbacks ) g_hash_table_destroy( callbacks );
 
 	world->RemoveModel( this );
@@ -260,29 +258,6 @@ void StgModel::Init()
 {
 	if( initfunc )
 		Subscribe();
-
-	// anything else to do here?
-
-	//   // try some things out;
-	//   stg_blinkenlight_t* b = new stg_blinkenlight_t;
-	//   b->pose.x = 0;
-	//   b->pose.y = 0;
-	//   b->pose.z = 0.4;
-	//   b->pose.a = 0;
-	//   b->enabled = true;
-	//   b->color = stg_color_pack( 1,1,0,0 );
-	//   b->size = 0.1;
-
-	//   //AddBlinkenlight( b );
-
-	//   stg_blinkenlight_t* c = new stg_blinkenlight_t;
-	//   c->pose.x = 0.1;
-	//   c->pose.y = 0;
-	//   c->pose.z = 0.4;
-	//   c->pose.a = 0;
-	//   c->enabled = false;
-	//   c->color = stg_color_pack( 1,1,0,0 );
-	//   c->size = 0.1;
 }  
 
 void StgModel::AddFlag( StgFlag* flag )
@@ -689,10 +664,13 @@ void StgModel::Print( char* prefix )
 	else
 		printf( "Model ");
 
-	printf( "%d %s:%s\n", 
-			id, 
+	printf( "%s:%s\n", 
+			  //			id, 
 			world->Token(), 
 			token );
+
+	for( GList* it=children; it; it=it->next )
+	  ((StgModel*)it->data)->Print( prefix );
 }
 
 const char* StgModel::PrintWithPose()
@@ -718,7 +696,7 @@ void StgModel::Startup( void )
 
 	world->StartUpdatingModel( this );
 
-	CallCallbacks( &startup );
+	CallCallbacks( &startup_hook );
 }
 
 void StgModel::Shutdown( void )
@@ -727,7 +705,7 @@ void StgModel::Shutdown( void )
 
 	world->StopUpdatingModel( this );
 
-	CallCallbacks( &shutdown );
+	CallCallbacks( &shutdown_hook );
 }
 
 void StgModel::UpdateIfDue( void )
@@ -742,12 +720,7 @@ void StgModel::Update( void )
 	//printf( "[%lu] %s update (%d subs)\n", 
 	//  this->world->sim_time_ms, this->token, this->subs );
 
-	//puts( "UPDATE" );
-	//  if( updatefunc )
-	//     updatefunc( this );
-
-	CallCallbacks( &update );
-
+	CallCallbacks( &update_hook );
 	last_update = world->sim_time;
 }
 
@@ -890,6 +863,8 @@ void StgModel::DrawTrailArrows()
 
 void StgModel::DrawBlocks( )
 {
+  //printf( "model %s drawing blocks\n", token );
+
 	LISTMETHOD( this->blocks, StgBlock*, Draw );
 
 	// recursively draw the tree below this model 
@@ -900,9 +875,7 @@ void StgModel::DrawBlocks( )
 		glPushMatrix();
 		gl_pose_shift( &child->pose );
 		gl_pose_shift( &child->geom.pose );
-
 		child->DrawBlocks();
-
 		glPopMatrix();
 	}
 
@@ -988,7 +961,7 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
 
 
 		// draw inside of bubble
-		PushColor( STG_BUBBLE_FILL );
+		PushColor( BUBBLE_FILL );
 		glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
 		glPolygonMode( GL_FRONT, GL_FILL );
 		glEnable( GL_POLYGON_OFFSET_FILL );
@@ -997,7 +970,7 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
 		glDisable( GL_POLYGON_OFFSET_FILL );
 		PopColor();
 		// draw outline of bubble
-		PushColor( STG_BUBBLE_BORDER );
+		PushColor( BUBBLE_BORDER );
 		glLineWidth( 1 );
 		glEnable( GL_LINE_SMOOTH );
 		glPolygonMode( GL_FRONT, GL_LINE );
@@ -1007,7 +980,7 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
 
 
 		// draw text
-		PushColor( STG_BUBBLE_TEXT );
+		PushColor( BUBBLE_TEXT );
 		glTranslatef( 0, 0, 0.1 ); // draw text forwards of bubble
 		gl_draw_string( m, m, 0.0, this->say_string );
 		PopColor();
@@ -1137,12 +1110,11 @@ void StgModel::DrawPicker( void )
 
 void StgModel::BuildDisplayList( int flags )
 {
-	glNewList( displaylist, GL_COMPILE );
-	//printf("Model %s blocks %d\n", token, g_list_length( blocks ) );
-
+	glNewList( displaylist, GL_COMPILE );	
 	DrawBlocks();
-
 	glEndList();
+
+	rebuild_displaylist = false; // we just did it
 }
 
 void StgModel::DataVisualize( void )
@@ -1191,8 +1163,10 @@ void StgModel::SetVelocity( stg_velocity_t vel )
 
 void StgModel::NeedRedraw( void )
 {
-  this->body_dirty = true;
-  //this->world->dirty = true;
+  this->rebuild_displaylist = true;
+
+  if( parent )
+	 parent->NeedRedraw();
 }
 
 void StgModel::GPoseDirtyTree( void )
@@ -1217,7 +1191,7 @@ void StgModel::SetPose( stg_pose_t pose )
 		this->pose = pose;
 		this->pose.a = normalize(this->pose.a);
 
-		this->NeedRedraw();
+		//this->NeedRedraw();
 		this->GPoseDirtyTree(); // global pose may have changed
 
 		MapWithChildren();
@@ -1690,19 +1664,19 @@ int StgModel::TreeToPtrArray( GPtrArray* array )
 	return added;
 }
 
-StgModel* StgModel::GetUnsubscribedModelOfType( char* modelstr )
+StgModel* StgModel::GetUnsubscribedModelOfType( stg_model_type_t type )
 {
-	//   printf( "searching for %s in model %s with string %s\n", modelstr, token, typestr );
-
-	if( subs == 0 && (strcmp( typestr, modelstr ) == 0) )
-		return this;
+  //   printf( "searching for %s in model %s with string %s\n", modelstr, token, typestr );
+  
+  if( (this->type == type) && (this->subs == 0) )
+	 return this;
 
 	// this model is no use. try children recursively
 	for( GList* it = children; it; it=it->next )
 	{
 		StgModel* child = (StgModel*)it->data;
 
-		StgModel* found = child->GetUnsubscribedModelOfType( modelstr );
+		StgModel* found = child->GetUnsubscribedModelOfType( type );
 		if( found )
 			return found;
 	}

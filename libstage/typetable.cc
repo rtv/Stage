@@ -1,31 +1,52 @@
 #include "stage_internal.hh"
 
-// ******************************
-// Register new model types here
-// Each entry maps a worldfile keyword onto a model constructor wrapper
 
-static stg_typetable_entry_t typearray[] = {
-	{ "model",      StgModel::Create },
-	{ "laser",      StgModelLaser::Create },
-	{ "position",   StgModelPosition::Create },
-	{ "ranger",     StgModelRanger::Create },
-	{ "fiducial",   StgModelFiducial::Create },
-	{ "blobfinder", StgModelBlobfinder::Create },
-	{ "blinkenlight", StgModelBlinkenlight::Create },
-	{ "camera", StgModelCamera::Create },
-	{ NULL, NULL } // this must be the last entry
-};
+// define constructor wrapping functions for use in the type table only
 
-// ******************************
-// generate a hash table from the typetable array
-GHashTable* Stg::stg_create_typetable( void )
+static StgModel* CreateModel( StgWorld* world, StgModel* parent ) 
+{  return new StgModel( world, parent ); }    
+
+static StgModel* CreateModelBlinkenlight( StgWorld* world, StgModel* parent ) 
+{  return new StgModelBlinkenlight( world, parent ); }    
+
+static StgModel* CreateModelPosition( StgWorld* world, StgModel* parent ) 
+{  return new StgModelPosition( world, parent ); }    
+
+static StgModel* CreateModelLaser( StgWorld* world, StgModel* parent ) 
+{  return new StgModelLaser( world, parent ); }    
+
+static StgModel* CreateModelRanger( StgWorld* world, StgModel* parent ) 
+{  return new StgModelRanger( world, parent ); }    
+
+static StgModel* CreateModelCamera( StgWorld* world, StgModel* parent ) 
+{  return new StgModelCamera( world, parent ); }    
+
+static StgModel* CreateModelFiducial( StgWorld* world, StgModel* parent ) 
+{  return new StgModelFiducial( world, parent ); }    
+
+static StgModel* CreateModelBlobfinder( StgWorld* world, StgModel* parent ) 
+{  return new StgModelBlobfinder( world, parent ); }    
+
+
+void Stg::RegisterModels()
 {
-	GHashTable* table = g_hash_table_new( g_str_hash, g_str_equal );
+  RegisterModel( MODEL_TYPE_PLAIN, "model", CreateModel );
+  RegisterModel( MODEL_TYPE_LASER,  "laser", CreateModelLaser );
+  RegisterModel( MODEL_TYPE_FIDUCIAL,  "fiducial", CreateModelFiducial );
+  RegisterModel( MODEL_TYPE_RANGER, "ranger", CreateModelRanger );
+  RegisterModel( MODEL_TYPE_CAMERA, "camera", CreateModelCamera );
+  RegisterModel( MODEL_TYPE_POSITION, "position", CreateModelPosition );
+  RegisterModel( MODEL_TYPE_BLOBFINDER, "blobfinder", CreateModelBlobfinder );
+  RegisterModel( MODEL_TYPE_BLINKENLIGHT, "blinkenlight", CreateModelBlinkenlight);
 
-	for( stg_typetable_entry_t* ent = typearray;
-			ent->token;
-			ent++ )  
-		g_hash_table_insert( table, (void*)(ent->token), (void*)(ent->creator_fn) );
+#if DEBUG // human-readable view of the table
+  puts( "Stg::Typetable" );
+  for( int i=0; i<MODEL_TYPE_COUNT; i++ )
+	 printf( "  %d %s %p\n",
+				i,
+				typetable[i].token,
+				typetable[i].creator );
+  puts("");
+#endif
+}  
 
-	return table;
-}

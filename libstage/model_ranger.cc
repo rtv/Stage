@@ -94,10 +94,8 @@ static const char RANGER_GEOM_COLOR[] = "orange";
 
 
 StgModelRanger::StgModelRanger( StgWorld* world, 
-		StgModel* parent,
-		stg_id_t id,
-		char* typestr )
-: StgModel( world, parent, id, typestr )
+										  StgModel* parent ) 
+  : StgModel( world, parent, MODEL_TYPE_RANGER )
 {
 	PRINT_DEBUG2( "Constructing StgModelRanger %d (%s)\n", 
 			id, typestr );
@@ -172,14 +170,12 @@ void StgModelRanger::Load( void )
 {
 	StgModel::Load();
 
-	Worldfile* wf = world->GetWorldFile();
-
-	if( wf->PropertyExists(id, "scount" ) )
+	if( wf->PropertyExists( wf_entity, "scount" ) )
 	{
 		PRINT_DEBUG( "Loading ranger array" );
 
 		// Load the geometry of a ranger array
-		sensor_count = wf->ReadInt( id, "scount", 0);
+		sensor_count = wf->ReadInt( wf_entity, "scount", 0);
 		assert( sensor_count > 0 );
 
 		char key[256];
@@ -188,14 +184,14 @@ void StgModelRanger::Load( void )
 		sensors = new stg_ranger_sensor_t[sensor_count];
 
 		stg_size_t common_size;
-		common_size.x = wf->ReadTupleLength( id, "ssize", 0, DEFAULT_RANGER_SIZEX );
-		common_size.y = wf->ReadTupleLength( id, "ssize", 1, DEFAULT_RANGER_SIZEY );
+		common_size.x = wf->ReadTupleLength( wf_entity, "ssize", 0, DEFAULT_RANGER_SIZEX );
+		common_size.y = wf->ReadTupleLength( wf_entity, "ssize", 1, DEFAULT_RANGER_SIZEY );
 
-		double common_min = wf->ReadTupleLength( id, "sview", 0,  DEFAULT_RANGER_RANGEMIN );
-		double common_max = wf->ReadTupleLength( id, "sview", 1, DEFAULT_RANGER_RANGEMAX );
-		double common_fov = wf->ReadTupleAngle( id, "sview", 2, M_PI / (double)sensor_count );
+		double common_min = wf->ReadTupleLength( wf_entity, "sview", 0,  DEFAULT_RANGER_RANGEMIN );
+		double common_max = wf->ReadTupleLength( wf_entity, "sview", 1, DEFAULT_RANGER_RANGEMAX );
+		double common_fov = wf->ReadTupleAngle( wf_entity, "sview", 2, M_PI / (double)sensor_count );
 
-		int common_ray_count = wf->ReadInt( id, "sraycount", sensors[0].ray_count );
+		int common_ray_count = wf->ReadInt( wf_entity, "sraycount", sensors[0].ray_count );
 
 		// set all transducers with the common settings
 		for( unsigned int i = 0; i < sensor_count; i++)
@@ -213,16 +209,16 @@ void StgModelRanger::Load( void )
 		for( unsigned int i = 0; i < sensor_count; i++)
 		{
 			snprintf(key, sizeof(key), "spose[%d]", i);
-			sensors[i].pose.x = wf->ReadTupleLength( id, key, 0, sensors[i].pose.x );
-			sensors[i].pose.y = wf->ReadTupleLength( id, key, 1, sensors[i].pose.y );
+			sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
+			sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
 			sensors[i].pose.z = 0.0;
-			sensors[i].pose.a = wf->ReadTupleAngle( id, key, 2, sensors[i].pose.a );
+			sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 2, sensors[i].pose.a );
 
 			snprintf(key, sizeof(key), "spose3[%d]", i);
-			sensors[i].pose.x = wf->ReadTupleLength( id, key, 0, sensors[i].pose.x );
-			sensors[i].pose.y = wf->ReadTupleLength( id, key, 1, sensors[i].pose.y );
-			sensors[i].pose.z = wf->ReadTupleLength( id, key, 2, sensors[i].pose.z );
-			sensors[i].pose.a = wf->ReadTupleAngle( id, key, 3, sensors[i].pose.a );
+			sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
+			sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
+			sensors[i].pose.z = wf->ReadTupleLength( wf_entity, key, 2, sensors[i].pose.z );
+			sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 3, sensors[i].pose.a );
 
 			/* 	  snprintf(key, sizeof(key), "ssize[%d]", i); */
 			/* 	  sensors[i].size.x = wf->ReadTuplelength(mod->id, key, 0, 0.01); */

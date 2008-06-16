@@ -4,7 +4,10 @@ StgAncestor::StgAncestor()
 {
 	token = NULL;
 	children = NULL;
-	child_types = g_hash_table_new( g_str_hash, g_str_equal );
+	
+	for( int i=0; i<MODEL_TYPE_COUNT; i++ )
+	  child_type_counts[i] = 0;
+
 	debug = false;
 }
 
@@ -18,45 +21,31 @@ StgAncestor::~StgAncestor()
 		g_list_free( children );
 	}
 
-	g_hash_table_destroy( child_types );
-}
-
-unsigned int StgAncestor::GetNumChildrenOfType( const char* typestr )
-{
-	unsigned int *c = (unsigned int*)g_hash_table_lookup( child_types, typestr);
-
-	if( c )
-		return *c;
-	else
-		return 0;
-}
-
-void StgAncestor::IncrementNumChildrenOfType( const char* typestr )
-{
-	unsigned int* c = (unsigned int*)g_hash_table_lookup( child_types, typestr);
-
-	if( c == NULL )
-	{
-		c = new unsigned int;
-		g_hash_table_insert( child_types, (gpointer)typestr, (gpointer)c);
-		*c = 1;
-	}
-	else
-		(*c)++;
 }
 
 void StgAncestor::AddChild( StgModel* mod )
 {
-	// increment the count of models of this type
-	IncrementNumChildrenOfType( mod->typestr );
+  
+  // poke a name into the child  
+  char* buf = new char[TOKEN_MAX];	
+  snprintf( buf, TOKEN_MAX, "%s.%s:%d", 
+				token, typetable[mod->type].token, child_type_counts[mod->type] );
+  
+  //printf( "%s generated a name for my child %s\n", token, buf );
 
-	// store as a child
-	children = g_list_append( children, mod );
+  mod->SetToken( buf );
+
+  children = g_list_append( children, mod );
+
+  child_type_counts[mod->type]++;
+
+  delete buf;
 }
 
 void StgAncestor::RemoveChild( StgModel* mod )
 {
-	puts( "TODO: StgWorld::RemoveChild()" );
+  child_type_counts[mod->type]--;
+  children = g_list_remove( children, mod );
 }
 
 stg_pose_t StgAncestor::GetGlobalPose()

@@ -76,10 +76,8 @@ watts 17.5 # approximately correct for SICK LMS200
  */
 
 StgModelLaser::StgModelLaser( StgWorld* world, 
-		StgModel* parent,
-		stg_id_t id,
-		char* typestr )
-: StgModel( world, parent, id, typestr )
+										StgModel* parent )
+: StgModel( world, parent, MODEL_TYPE_LASER )
 {
 	PRINT_DEBUG2( "Constructing StgModelLaser %d (%s)\n", 
 			id, typestr );
@@ -121,14 +119,11 @@ StgModelLaser::~StgModelLaser( void )
 void StgModelLaser::Load( void )
 {  
 	StgModel::Load();
-
-	Worldfile* wf = world->GetWorldFile();
-
-	sample_count = wf->ReadInt( id, "samples", sample_count );
-	range_min = wf->ReadLength( id, "range_min", range_min);
-	range_max = wf->ReadLength( id, "range_max", range_max );
-	fov       = wf->ReadAngle( id, "fov",  fov );
-	resolution = wf->ReadInt( id, "laser_sample_skip",  resolution );
+	sample_count = wf->ReadInt( wf_entity, "samples", sample_count );
+	range_min = wf->ReadLength( wf_entity, "range_min", range_min);
+	range_max = wf->ReadLength( wf_entity, "range_max", range_max );
+	fov       = wf->ReadAngle( wf_entity, "fov",  fov );
+	resolution = wf->ReadInt( wf_entity, "laser_sample_skip",  resolution );
 
 	if( resolution < 1 )
 	{
