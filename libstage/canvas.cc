@@ -93,13 +93,18 @@ StgModel* StgCanvas::Select( int x, int y )
 		StgModel* mod = (StgModel*)it->data;
 		
 		if( mod->GuiMask() & (STG_MOVE_TRANS | STG_MOVE_ROT ))
-		  {
-			 glColor4ubv( (GLubyte*)&mod->id );
+		{
+			uint8_t rByte, gByte, bByte, aByte;
+			uint32_t modelId = mod->id;
+			rByte = modelId;
+			gByte = modelId >> 8;
+			bByte = modelId >> 16;
+			aByte = modelId >> 24;
 
-			 //			 printf( "model %d color %d %x\n",
-			 //		mod->id, mod->id, mod->id );
-
-			 mod->DrawPicker();
+			//printf("mod->Id(): 0x%X, rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", modelId, rByte, gByte, bByte, aByte);
+			
+			glColor4ub( rByte, gByte, bByte, aByte );
+			mod->DrawPicker();			
 		}
 	}
 
@@ -108,11 +113,27 @@ StgModel* StgCanvas::Select( int x, int y )
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT,viewport);
 
-	uint32_t id;
-	glReadPixels( x,viewport[3]-y,1,1,
-			GL_RGBA,GL_UNSIGNED_BYTE,(void*)&id );
+	uint8_t rByte, gByte, bByte, aByte;
+	uint32_t modelId;
 	
-	StgModel* mod = (StgModel*)g_hash_table_lookup( StgModel::modelsbyid, (void*)id );
+	glReadPixels( x,viewport[3]-y,1,1,
+				 GL_RED,GL_UNSIGNED_BYTE,(void*)&rByte );
+	glReadPixels( x,viewport[3]-y,1,1,
+				 GL_GREEN,GL_UNSIGNED_BYTE,(void*)&gByte );
+	glReadPixels( x,viewport[3]-y,1,1,
+				 GL_BLUE,GL_UNSIGNED_BYTE,(void*)&bByte );
+	glReadPixels( x,viewport[3]-y,1,1,
+				 GL_ALPHA,GL_UNSIGNED_BYTE,(void*)&aByte );
+	
+	modelId = rByte;
+	modelId |= gByte << 8;
+	modelId |= bByte << 16;
+	modelId |= aByte << 24;
+	
+	//printf("Clicked rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", rByte, gByte, bByte, aByte);
+	//printf("-->model Id = 0x%X\n", modelId);
+	
+	StgModel* mod = (StgModel*)g_hash_table_lookup( StgModel::modelsbyid, (void*)modelId );
 
 	//printf("%p %s %d %x\n", mod, mod ? mod->Token() : "(none)", id, id );
 
