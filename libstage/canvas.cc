@@ -574,7 +574,7 @@ void StgCanvas::draw()
 		gl_font( FL_HELVETICA, 12 );
 
 		if( use_perspective_camera == true ) {
-			perspective_camera.SetProjection( w(), h(), 0.01, 0.5 );
+			perspective_camera.SetProjection( w() / h() );
 		} else {
 			stg_bounds3d_t extent = world->GetExtent();
 			camera.SetProjection( w(), h(), extent.y.min, extent.y.max );

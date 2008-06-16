@@ -1769,22 +1769,12 @@ class StgPerspectiveCamera : public StgCamera
 
 		inline void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
 		inline void addPose( float x, float y, float z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
-		inline void move( float x, float y, float z )
-		{
-			//scale relative to zoom level
-			_x *= _z;
-			_y *= _z;
-			
-			//adjust for yaw angle
-			std::cout << "yaw:" << _yaw << std::endl;
-			_x += cos( dtor( _yaw ) ) * x;
-			_y += -sin( dtor( _yaw ) ) * x;
-			
-			_x += sin( dtor( _yaw ) ) * y;
-			_y += cos( dtor( _yaw ) ) * y;
-		}
+		void move( float x, float y, float z );
 		inline void setFov( float fov ) { _fov = fov; }
 		inline void setYaw( float yaw ) { _yaw = yaw; }
+		inline float yaw( void ) const { return _yaw; }
+		inline float pitch( void ) const { return _pitch; }
+		inline float fov( void ) const { return _fov; }
 		inline void addYaw( float yaw ) { _yaw += yaw; }
 		inline void setPitch( float pitch ) { _pitch = pitch; }
 		inline void addPitch( float pitch ) { _pitch += pitch; }
@@ -2428,6 +2418,8 @@ class StgModelCamera : public StgModel
 		int _frame_data_width;
 		int _frame_data_height;
 	
+		int _width; //TODO merge into frame_data_width
+	
 		StgPerspectiveCamera _camera;
 	
 	public:
@@ -2442,6 +2434,9 @@ class StgModelCamera : public StgModel
 		virtual void Load();
 		virtual void Update();
 		virtual void Draw( uint32_t flags, StgCanvas* canvas );
+		virtual void DataVisualize();
+	
+		inline int getWidth( void ) const { return _width; }
 	
 		///Take a screenshot from the camera's perspective
 		const char* GetFrame( int width, int height, bool depth_buffer );
