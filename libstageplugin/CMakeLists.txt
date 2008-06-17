@@ -1,6 +1,7 @@
 
 link_directories( ${PLAYER_LIBDIR} )
 include_directories( ${PLAYER_INCLUDE_DIRS})
+message( PLAYER INCLUDE ${PLAYER_INCLUDE_DIRS} )
 
 add_library( stageplugin MODULE
 	     p_driver.cc

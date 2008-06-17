@@ -58,7 +58,7 @@ InterfaceGraphics3d::InterfaceGraphics3d( player_devaddr_t addr,
 			    StgDriver* driver,
 			    ConfigFile* cf,
 			    int section )
-  : InterfaceModel( addr, driver, cf, section, NULL )
+  : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_PLAIN )
 { 
   // data members
   commands = NULL;

@@ -134,6 +134,12 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 	//size_range( 100,100 ); // set minimum window size
 
 	graphics = true;
+	paused = false;
+
+	interval_real = (stg_usec_t)thousand * DEFAULT_INTERVAL_REAL;
+	
+	for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
+		this->interval_log[i] = this->interval_real;
 
 	// build the menus
 	mbar = new Fl_Menu_Bar(0,0, W, 30);// 640, 30);
@@ -191,15 +197,72 @@ StgWorldGui::~StgWorldGui()
 	delete canvas;
 }
 
+
+void StgWorldGui::ClockString( char* str, size_t maxlen )
+{
+	const uint32_t usec_per_hour = 360000000;
+	const uint32_t usec_per_minute = 60000000;
+	const uint32_t usec_per_second = 1000000;
+	const uint32_t usec_per_msec = 1000;
+
+	uint32_t hours   = sim_time / usec_per_hour;
+	uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
+	uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
+	uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
+
+	// find the average length of the last few realtime intervals;
+	stg_usec_t average_real_interval = 0;
+	for( uint32_t i=0; i<INTERVAL_LOG_LEN; i++ )
+		average_real_interval += interval_log[i];
+	average_real_interval /= INTERVAL_LOG_LEN;
+
+	double localratio = (double)interval_sim / (double)average_real_interval;
+
+#ifdef DEBUG
+	if( hours > 0 )
+		snprintf( str, maxlen, "Time: %uh%02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
+				hours, minutes, seconds, msec,
+				localratio,
+				total_subs,
+				paused ? "--PAUSED--" : "" );
+	else
+		snprintf( str, maxlen, "Time: %02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
+				minutes, seconds, msec,
+				localratio,
+				total_subs,
+				paused ? "--PAUSED--" : "" );
+#else
+	if( hours > 0 )
+		snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.2f] %s",
+				hours, minutes, seconds, msec,
+				localratio,
+				paused ? "--PAUSED--" : "" );
+	else
+		snprintf( str, maxlen, "%02um%02u.%03us\t[%.2f] %s",
+				minutes, seconds, msec,
+				localratio,
+				paused ? "--PAUSED--" : "" );
+#endif
+}
+
+
 void StgWorldGui::Load( const char* filename )
 {
 	PRINT_DEBUG1( "%s.Load()", token );
 
 	StgWorld::Load( filename );
 
-	wf_section = wf->LookupEntity( "window" );
-	if( wf_section < 1) // no section defined
-		return;
+// 	wf_section = wf->LookupEntity( "window" );
+// 	if( wf_section < 1) // no section defined
+// 		return;
+	
+	int wf_section = 0; // root section
+
+	this->paused = 
+	  wf->ReadInt( wf_section, "paused", this->paused );
+
+	this->interval_real = (stg_usec_t)thousand *  
+		wf->ReadInt( wf_section, "interval_real", this->interval_real/thousand );
 
 	int width =  (int)wf->ReadTupleFloat(wf_section, "size", 0, w() );
 	int height = (int)wf->ReadTupleFloat(wf_section, "size", 1, h() );
@@ -486,6 +549,8 @@ bool StgWorldGui::Save( const char* filename )
 {
 	PRINT_DEBUG1( "%s.Save()", token );
 
+	int wf_section = 0;
+
 	wf->WriteTupleFloat( wf_section, "size", 0, w() );
 	wf->WriteTupleFloat( wf_section, "size", 1, h() );
 
@@ -516,10 +581,9 @@ bool StgWorldGui::Update()
 {
   if( real_time_of_last_update == 0 )
 	 real_time_of_last_update = RealTimeNow();
-  
-  bool val = StgWorld::Update();
-  
 
+  bool val = paused ? true : StgWorld::Update();
+  
   stg_usec_t interval;
   stg_usec_t timenow;
   
@@ -540,6 +604,12 @@ bool StgWorldGui::Update()
   
   real_time_of_last_update = timenow;
   
+  //stg_usec_t timenow = RealTimeSinceStart();
+  
+  interval_log[updates%INTERVAL_LOG_LEN] = interval_real;//timenow - real_time_now;
+  // real_time_now = timenow;
+
+
   return val;
 }
 

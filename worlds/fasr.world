@@ -19,15 +19,12 @@ interval_real 20  # real-time interval between simulation updates in millisecond
 paused 1
 
 # configure the GUI window
-window
-( 
-  #size [ 698.000 628.000 ] 
-  center [6.990 -4.040] 
-  rotate [ 0.000 0.000 ]
-  scale 33.306 
-  show_data 0
-  #interval 10
-)
+size [ 698.000 628.000 ] 
+center [6.990 -4.040] 
+rotate [ 0.000 0.000 ]
+scale 33.306 
+show_data 0
+
 
 # load an environment bitmap
 floorplan

@@ -85,6 +85,8 @@ Stage was written by:
 <li>Reed Hedges <tt>(hedges@mobilerobots.com)</tt>
 <li>Andrew Howard  <tt>(ahoward@robotics.usc.edu)</tt>
 <li>Pooya Karimian <tt>(pooyak@sfu.ca)</tt>
+<li>Jeremy Asher <tt>(jra11@sfu.ca)</tt>
+<li>Alex Couture-Beil <tt>(asc17@sfu.ca)</tt>
 </ul>
 
 Many patches and bug reports have been contributed by users around the

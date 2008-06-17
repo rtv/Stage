@@ -44,7 +44,7 @@ InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( addr, driver, cf, section, "laser" )
+  : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_LASER )
 { 
   this->scan_id = 0;
 }

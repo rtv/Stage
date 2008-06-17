@@ -95,15 +95,13 @@ void StgWorld::UpdateAll()
 
 StgWorld::StgWorld( const char* token, 
 						  stg_msec_t interval_sim,
-						  stg_msec_t interval_real,
 						  double ppm )
 {
-  Initialize( token, interval_sim, interval_real, ppm );
+  Initialize( token, interval_sim, ppm );
 }
 
 void StgWorld::Initialize( const char* token, 
 		stg_msec_t interval_sim, 
-		stg_msec_t interval_real,
 		double ppm ) 
 {
 	if( ! Stg::InitDone() )
@@ -130,11 +128,10 @@ void StgWorld::Initialize( const char* token,
 	this->models_by_name = g_hash_table_new( g_str_hash, g_str_equal );
 	this->sim_time = 0;
 	this->interval_sim = (stg_usec_t)thousand * interval_sim;
-	this->interval_real = (stg_usec_t)thousand * interval_real;
 	this->ppm = ppm; // this is the raytrace resolution
 
 	this->real_time_start = RealTimeNow();
-	this->real_time_next_update = 0;
+	//this->real_time_next_update = 0;
 
 	this->update_list = NULL;
 	this->velocity_list = NULL;
@@ -143,7 +140,6 @@ void StgWorld::Initialize( const char* token,
 			(GEqualFunc)PointIntEqual );
 
 	this->total_subs = 0;
-	this->paused = false;
 	this->destroy = false;
 
 	// store a global table of all blocks, so they can be rendered all
@@ -152,8 +148,6 @@ void StgWorld::Initialize( const char* token,
 
 	bzero( &this->extent, sizeof(this->extent));
 
-	for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
-		this->interval_log[i] = this->interval_real;
 	this->real_time_now = 0;
 }
 
@@ -179,52 +173,6 @@ void StgWorld::RemoveModel( StgModel* mod )
 	g_hash_table_remove( models_by_name, mod );
 }
 
-void StgWorld::ClockString( char* str, size_t maxlen )
-{
-	const uint32_t usec_per_hour = 360000000;
-	const uint32_t usec_per_minute = 60000000;
-	const uint32_t usec_per_second = 1000000;
-	const uint32_t usec_per_msec = 1000;
-
-	uint32_t hours   = sim_time / usec_per_hour;
-	uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
-	uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
-	uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
-
-	// find the average length of the last few realtime intervals;
-	stg_usec_t average_real_interval = 0;
-	for( uint32_t i=0; i<INTERVAL_LOG_LEN; i++ )
-		average_real_interval += interval_log[i];
-	average_real_interval /= INTERVAL_LOG_LEN;
-
-	double localratio = (double)interval_sim / (double)average_real_interval;
-
-#ifdef DEBUG
-	if( hours > 0 )
-		snprintf( str, maxlen, "Time: %uh%02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
-				hours, minutes, seconds, msec,
-				localratio,
-				total_subs,
-				paused ? "--PAUSED--" : "" );
-	else
-		snprintf( str, maxlen, "Time: %02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
-				minutes, seconds, msec,
-				localratio,
-				total_subs,
-				paused ? "--PAUSED--" : "" );
-#else
-	if( hours > 0 )
-		snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.2f] %s",
-				hours, minutes, seconds, msec,
-				localratio,
-				paused ? "--PAUSED--" : "" );
-	else
-		snprintf( str, maxlen, "%02um%02u.%03us\t[%.2f] %s",
-				minutes, seconds, msec,
-				localratio,
-				paused ? "--PAUSED--" : "" );
-#endif
-}
 
 // wrapper to startup all models from the hash table
 void init_models( gpointer dummy1, StgModel* mod, gpointer dummy2 )
@@ -266,9 +214,6 @@ void StgWorld::Load( const char* worldfile_path )
 	this->token = (char*)
 		wf->ReadString( entity, "name", token );
 
-	this->interval_real = (stg_usec_t)thousand *  
-		wf->ReadInt( entity, "interval_real", this->interval_real/thousand );
-
 	this->interval_sim = (stg_usec_t)thousand * 
 		wf->ReadInt( entity, "interval_sim", this->interval_sim/thousand );
 
@@ -279,9 +224,6 @@ void StgWorld::Load( const char* worldfile_path )
 	if( wf->PropertyExists( entity, "resolution" ) )
 		this->ppm = 
 		  1.0 / wf->ReadFloat( entity, "resolution", 1.0 / this->ppm );
-
-	this->paused = 
-		wf->ReadInt( entity, "paused", this->paused );
 
 	//_stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
 
@@ -414,32 +356,24 @@ stg_usec_t StgWorld::RealTimeSinceStart()
 
 bool StgWorld::Update()
 {
-	PRINT_DEBUG( "StgWorld::Update()" );
+  PRINT_DEBUG( "StgWorld::Update()" );
+  
+  // update any models that are due to be updated
+  for( GList* it=this->update_list; it; it=it->next )
+	 ((StgModel*)it->data)->UpdateIfDue();
+  
+  // update any models with non-zero velocity
+  for( GList* it=this->velocity_list; it; it=it->next )
+	 ((StgModel*)it->data)->UpdatePose();
 
-	if( paused )
-		return false;
-
-	// update any models that are due to be updated
-	for( GList* it=this->update_list; it; it=it->next )
-		((StgModel*)it->data)->UpdateIfDue();
-
-	// update any models with non-zero velocity
-	for( GList* it=this->velocity_list; it; it=it->next )
-		((StgModel*)it->data)->UpdatePose();
-
-	this->sim_time += this->interval_sim;
-	this->updates++;
-
-	// if we've run long enough, set the quit flag
-	if( (quit_time > 0) && (sim_time >= quit_time) )
-		quit = true;
-
-	stg_usec_t timenow = RealTimeSinceStart();
-
-	interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
-	real_time_now = timenow;
-
-	return true;
+  this->sim_time += this->interval_sim;
+  this->updates++;
+  
+  // if we've run long enough, set the quit flag
+  if( (quit_time > 0) && (sim_time >= quit_time) )
+	 quit = true;
+  
+  return true;
 }
 
 void StgWorld::AddModel( StgModel*  mod  )

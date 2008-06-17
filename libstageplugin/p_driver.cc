@@ -225,10 +225,10 @@ Interface::Interface(  player_devaddr_t addr,
 }      
 
 InterfaceModel::InterfaceModel(  player_devaddr_t addr, 
-				 StgDriver* driver,
-				 ConfigFile* cf, 
-				 int section,
-				 char* typestr ) 
+											StgDriver* driver,
+											ConfigFile* cf, 
+											int section,
+											stg_model_type_t type ) 
   : Interface( addr, driver, cf, section )
 {
   char* model_name = (char*)cf->ReadString(section, "model", NULL );
@@ -246,7 +246,7 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
   // find a model of the right type
   this->mod = driver->LocateModel( model_name, 
 				   &addr, 
-				   typestr );
+				   type );
   
   if( !this->mod )
     {
@@ -407,30 +407,30 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 
 StgModel*  StgDriver::LocateModel( char* basename,  
 				   player_devaddr_t* addr,
-				   char* typestr )
+				   stg_model_type_t type )
 {  
-  printf( "attempting to find a model under model \"%s\" of type [%s]\n", 
-    basename, typestr );
+  printf( "attempting to find a model under model \"%s\" of type [%d]\n", 
+			 basename, type );
   
   StgModel* base_model = world->GetModel( basename );
   
   if( base_model == NULL )
     {
       PRINT_ERR1( " Error! can't find a Stage model named \"%s\"", 
-		  basename );
+						basename );
       return NULL;
     }
   
-  if( typestr == NULL ) // if we don't care what type the model is
+  if( type == MODEL_TYPE_PLAIN ) // if we don't care what type the model is
     return base_model;
-
+  
   //  printf( "found base model %s\n", base_model->Token() );
-
+  
   // we find the first model in the tree that is the right
   // type (i.e. has the right initialization function) and has not
   // been used before
   //return( model_match( base_model, addr, typestr, this->devices ) );
-  return( base_model->GetUnsubscribedModelOfType( typestr ) );
+  return( base_model->GetUnsubscribedModelOfType( type ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -511,7 +511,7 @@ StgDriver::~StgDriver()
 // Shutdown the device
 int StgDriver::Shutdown()
 {
-  puts("Shutting stage driver down");
+  //puts("Shutting stage driver down");
 
   // Stop and join the driver thread
   // this->StopThread(); // todo - the thread only runs in the sim instance
@@ -523,7 +523,7 @@ int StgDriver::Shutdown()
   //  stg_model_unsubscribe( device->mod );
   // }
 
-  puts("stage driver has been shutdown");
+  puts("Stage driver has been shutdown");
 
   return(0);
 }

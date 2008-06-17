@@ -46,7 +46,7 @@ InterfaceSonar::InterfaceSonar( player_devaddr_t id,
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( id, driver, cf, section, "ranger" )
+  : InterfaceModel( id, driver, cf, section, MODEL_TYPE_RANGER )
 {
   //this->data_len = sizeof(player_sonar_data_t);
   //this->cmd_len = 0;

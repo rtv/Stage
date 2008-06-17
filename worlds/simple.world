@@ -20,22 +20,20 @@ interval_real 100  # real-time interval between simulation updates in millisecon
 paused 0
 
 # configure the GUI window
-window
-( 
-  size [ 745.000 448.000 ] 
-  center [-7.010 5.960] 
-  rotate [ 0.920 -0.430 ]
-  scale 28.806 
-)
+size [ 745.000 448.000 ] 
+center [-7.010 5.960] 
+rotate [ 0.920 -0.430 ]
+scale 28.806 
+
 
 # load an environment bitmap
-#floorplan
-#( 
-#  name "cave"
-#  size3 [16 16 0.5]
-#  pose [0.000 0.000 0.000]
-#  bitmap "bitmaps/cave.png"
-#)
+floorplan
+( 
+  name "cave"
+  size3 [16 16 1.5]
+  pose [0.000 0.000 0.000]
+  bitmap "bitmaps/cave.png"
+)
 
 define autorob fancypioneer2dx
 (

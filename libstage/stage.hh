@@ -988,7 +988,7 @@ private:
 	static int AddBlockPixel( int x, int y, int z,
 			stg_render_info_t* rinfo ) ; //< used as a callback by StgModel
 
-	stg_usec_t real_time_next_update;
+  //stg_usec_t real_time_next_update;
 	stg_usec_t real_time_start;
 
 	bool quit; // quit this world ASAP
@@ -996,11 +996,10 @@ private:
 	// convert a distance in meters to a distance in world occupancy grid pixels
 	int32_t MetersToPixels( stg_meters_t x ){ return (int32_t)floor(x * ppm) ; };
 
-	void Initialize( const char* token, 
-			stg_msec_t interval_sim, 
-			stg_msec_t interval_real,
-			double ppm );
-
+  void Initialize( const char* token, 
+						 stg_msec_t interval_sim, 
+						 double ppm );
+  
 	virtual void PushColor( stg_color_t col ) { /* do nothing */  };
 	virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
 	virtual void PopColor(){ /* do nothing */  };
@@ -1018,22 +1017,13 @@ private:
 	GHashTable* models_by_name; ///< the models that make up the world, indexed by name
 	GList* velocity_list; ///< a list of models that have non-zero velocity, for efficient updating
 
-	stg_usec_t sim_time; ///< the current sim time in this world in ms
-
   //stg_usec_t wall_last_update; ///< the real time of the last update in ms
-
-	long unsigned int updates; ///< the number of simulated time steps executed so far
 
 	bool dirty; ///< iff true, a gui redraw would be required
 
-	stg_usec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
-
-	stg_usec_t interval_log[INTERVAL_LOG_LEN];
 
 	int total_subs; ///< the total number of subscriptions to all models
 	double ppm; ///< the resolution of the world model in pixels per meter  
-
-	bool paused; ///< the world only updates when this is false
 
 	GList* update_list; //< the descendants that need Update() called
 
@@ -1063,14 +1053,13 @@ private:
 
 	void RemoveBlock( int x, int y, StgBlock* block );
 
-
-public:
-	stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
-
 protected:
 	GHashTable* superregions;
+	stg_usec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
 
 	static void UpdateCb( StgWorld* world);
+
+  stg_usec_t sim_time; ///< the current sim time in this world in ms
   
 	GList* ray_list;
 	// store rays traced for debugging purposes
@@ -1091,15 +1080,14 @@ protected:
 	GList* GetRayList(){ return ray_list; };
 	void ClearRays();
 
+	long unsigned int updates; ///< the number of simulated time steps executed so far
 
 public:
   static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
-  static const stg_msec_t DEFAULT_INTERVAL_REAL = 100; ///< real time between updates
   static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
   
 	StgWorld( const char* token = "MyWorld", 
 				 stg_msec_t interval_sim = DEFAULT_INTERVAL_SIM,
-				 stg_msec_t interval_real = DEFAULT_INTERVAL_REAL,
 				 double ppm = DEFAULT_PPM );
 
 	virtual ~StgWorld();
@@ -1125,9 +1113,6 @@ public:
 	virtual bool Save( const char* filename );
 	virtual bool Update(void);
 
-	void Start(){ paused = false; };
-	void Stop(){ paused = true; };
-	void TogglePause(){ paused = !paused; };
 	bool TestQuit(){ return( quit || quit_all );  }
 	void Quit(){ quit = true; }
 	void QuitAll(){ quit_all = true; }
@@ -1145,11 +1130,6 @@ public:
   /** Returns a pointer to the model identified by name, or NULL if
 		nonexistent */
 	StgModel* GetModel( const char* name );
-
-
-  /** Get human readable string that describes the current simulation
-		time. */
-	void ClockString( char* str, size_t maxlen );
 
   /** Return the 3D bounding box of the world, in meters */
   stg_bounds3d_t GetExtent(){ return extent; };
@@ -1969,11 +1949,12 @@ class StgCanvas : public Fl_Gl_Window
 	void DrawGlobalGrid();
 
 	public:
-	StgCanvas( StgWorld* world, int x, int y, int W,int H);
+
+	StgCanvas( StgWorldGui* world, int x, int y, int W,int H);
 	~StgCanvas();
 
 	bool graphics;
-	StgWorld* world;
+	StgWorldGui* world;
 
 	void FixViewport(int W,int H);
 	//robot_camera = true
@@ -2005,48 +1986,62 @@ class StgCanvas : public Fl_Gl_Window
 };
 
 
-
-
 /** Extends StgWorld to implements an FLTK / OpenGL graphical user
   interface.
  */
 class StgWorldGui : public StgWorld, public Fl_Window 
 {
-	friend class StgCanvas;
-
-	private:
-	int wf_section;
-	StgCanvas* canvas;
-	Fl_Menu_Bar* mbar;
-
+  friend class StgCanvas;
+  friend class StgModelCamera;
+  
+private:
+  bool paused; ///< the world only updates when this is false
+  //int wf_section;
+  StgCanvas* canvas;
+  Fl_Menu_Bar* mbar;
+  stg_usec_t interval_log[INTERVAL_LOG_LEN];
+  
   stg_usec_t real_time_of_last_update;
+  stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
 
-	public:
-	StgWorldGui(int W,int H,const char*L=0);
-	~StgWorldGui();
+public:
+  static const stg_msec_t DEFAULT_INTERVAL_REAL = 100; ///< real time between updates
 
+  StgWorldGui(int W,int H,const char*L=0);
+  ~StgWorldGui();
+  
   virtual bool Update();
-
-	virtual void Load( const char* filename );
-	virtual void UnLoad();
-	virtual bool Save( const char* filename );
+  
+  virtual void Load( const char* filename );
+  virtual void UnLoad();
+  virtual bool Save( const char* filename );
+  
+  
+  void Start(){ paused = false; };
+  void Stop(){ paused = true; };
+  void TogglePause(){ paused = !paused; };
+  
+  /** Get human readable string that describes the current simulation
+		time. */
+  void ClockString( char* str, size_t maxlen );
   
   /** Set the minimum real time interval between world updates, in
 		microeconds. */
   void SetRealTimeInterval( stg_usec_t usec )
   { interval_real = usec; }
   
-
-	// static callback functions
-	static void LoadCallback( Fl_Widget* wid, StgWorldGui* world );
-	static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
-	static void SaveAsCallback( Fl_Widget* wid, StgWorldGui* world );
-	static void QuitCallback( Fl_Widget* wid, StgWorldGui* world );
-	static void About_cb( Fl_Widget* wid, StgWorldGui* world );
-	static void HelpAboutCallback( Fl_Widget* wid );
-	static void view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas );
-	static void WindowCallback( Fl_Widget* wid, StgWorldGui* world );
-
+  
+  // static callback functions
+protected:
+  static void LoadCallback( Fl_Widget* wid, StgWorldGui* world );
+  static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
+  static void SaveAsCallback( Fl_Widget* wid, StgWorldGui* world );
+  static void QuitCallback( Fl_Widget* wid, StgWorldGui* world );
+  static void About_cb( Fl_Widget* wid, StgWorldGui* world );
+  static void HelpAboutCallback( Fl_Widget* wid );
+  static void view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas );
+  static void WindowCallback( Fl_Widget* wid, StgWorldGui* world );
+  
 	bool SaveAsDialog();
 	bool CloseWindowQuery();
 

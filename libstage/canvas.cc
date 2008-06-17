@@ -21,7 +21,7 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 }
 
 
-	StgCanvas::StgCanvas( StgWorld* world, int x, int y, int w, int h) 
+	StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) 
 : Fl_Gl_Window(x,y,w,h)
 {
 	end();
@@ -88,7 +88,7 @@ StgModel* StgCanvas::Select( int x, int y )
 
 	// render all top-level, draggable models in a color that is their
 	// id 
-	for( GList* it=world->children; it; it=it->next )
+	for( GList* it= world->StgWorld::children; it; it=it->next )
 	{
 		StgModel* mod = (StgModel*)it->data;
 		
@@ -444,7 +444,7 @@ void StgCanvas::renderFrame( bool robot_camera )
 			glDisable( GL_DEPTH_TEST );
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 
-			for( GList* it=world->children; it; it=it->next )
+			for( GList* it=world->StgWorld::children; it; it=it->next )
 			{
 				((StgModel*)it->data)->DrawTrailFootprint();
 			}
@@ -455,7 +455,7 @@ void StgCanvas::renderFrame( bool robot_camera )
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 
-			for( GList* it=world->children; it; it=it->next )
+			for( GList* it=world->StgWorld::children; it; it=it->next )
 			{
 				((StgModel*)it->data)->DrawTrailBlocks();
 			}
@@ -464,7 +464,7 @@ void StgCanvas::renderFrame( bool robot_camera )
 		if( showflags & STG_SHOW_ARROWS )
 		{
 			glEnable( GL_DEPTH_TEST );
-			for( GList* it=world->children; it; it=it->next )
+			for( GList* it=world->StgWorld::children; it; it=it->next )
 			{
 				((StgModel*)it->data)->DrawTrailArrows();
 			}
@@ -472,7 +472,7 @@ void StgCanvas::renderFrame( bool robot_camera )
 
 		if( showflags & STG_SHOW_BLOCKS )
 		{
-			for( GList* it=world->children; it; it=it->next )
+			for( GList* it=world->StgWorld::children; it; it=it->next )
 			{
 				StgModel* mod = ((StgModel*)it->data);
 
@@ -500,7 +500,7 @@ void StgCanvas::renderFrame( bool robot_camera )
 
 		//mod->Draw( showflags ); // draw the stuff that changes every update
 		// draw everything else
-		for( GList* it=world->children; it; it=it->next )
+		for( GList* it=world->StgWorld::children; it; it=it->next )
 			((StgModel*)it->data)->Draw( showflags, this );
 	}
 
