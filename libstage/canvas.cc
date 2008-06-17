@@ -562,8 +562,8 @@ void StgCanvas::draw()
 	static bool loaded_texture = false;
 
 	//Enable the following to debug camera model
-	if( loaded_texture == true && use_perspective_camera == true )
-		return;
+//	if( loaded_texture == true && use_perspective_camera == true )
+//		return;
 
 	if (!valid() ) 
 	{ 
