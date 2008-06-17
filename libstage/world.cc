@@ -215,7 +215,8 @@ void StgWorld::Load( const char* worldfile_path )
 		wf->ReadString( entity, "name", token );
 
 	this->interval_sim = (stg_usec_t)thousand * 
-		wf->ReadInt( entity, "interval_sim", this->interval_sim/thousand );
+	  wf->ReadInt( entity, "interval_sim", 
+		       (int)(this->interval_sim/thousand) );
 
 	if( wf->PropertyExists( entity, "quit_time" ) )
 		this->quit_time = (stg_usec_t)million * 

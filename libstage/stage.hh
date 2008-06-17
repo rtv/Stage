@@ -88,6 +88,7 @@ namespace Stg
   class StgCanvas;
   class Worldfile;
   class StgWorld;
+  class StgWorldGui;
   class StgModel;
   
 	/** Initialize the Stage library */

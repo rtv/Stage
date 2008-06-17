@@ -225,14 +225,9 @@ StgModel::StgModel( StgWorld* world,
 	this->on_velocity_list = false;
 
 	this->last_update = 0;
-	this->interval = 1e4; // 10msec
+	this->interval = (stg_usec_t)1e4; // 10msec
 
 	this->initfunc = NULL;
-
-	this->startup_hook = NULL;
-	this->shutdown_hook = NULL;
-	this->load_hook = NULL;
-	this->save_hook = NULL;
 
 	this->wf = NULL;
 	this->wf_entity = 0;
@@ -722,18 +717,18 @@ void StgModel::Shutdown( void )
 
 void StgModel::UpdateIfDue( void )
 {
-	if(  world->sim_time  >= 
-			(last_update + interval) )
-		this->Update();
+  if(  world->sim_time  >= 
+       (last_update + interval) )
+    this->Update();
 }
 
 void StgModel::Update( void )
 {
-	//printf( "[%lu] %s update (%d subs)\n", 
-	//  this->world->sim_time_ms, this->token, this->subs );
-
-	CallCallbacks( &update_hook );
-	last_update = world->sim_time;
+  //printf( "[%llu] %s update (%d subs)\n", 
+  //  this->world->sim_time, this->token, this->subs );
+  
+  CallCallbacks( &update_hook );
+  last_update = world->sim_time;
 }
 
 void StgModel::DrawSelected()

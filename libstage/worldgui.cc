@@ -264,7 +264,7 @@ void StgWorldGui::Load( const char* filename )
 	  wf->ReadInt( wf_section, "paused", this->paused );
 
 	this->interval_real = (stg_usec_t)thousand *  
-		wf->ReadInt( wf_section, "interval_real", this->interval_real/thousand );
+	  wf->ReadInt( wf_section, "interval_real", (int)(this->interval_real/thousand) );
 
 	int width =  (int)wf->ReadTupleFloat(wf_section, "size", 0, w() );
 	int height = (int)wf->ReadTupleFloat(wf_section, "size", 1, h() );
@@ -585,6 +585,7 @@ bool StgWorldGui::Update()
 
   bool val = paused ? true : StgWorld::Update();
   
+
   stg_usec_t interval;
   stg_usec_t timenow;
   
@@ -598,18 +599,15 @@ bool StgWorldGui::Update()
 	 double sleeptime = (double)interval_real - (double)interval;
 	 
 	 if( sleeptime > 0  ) 
-		usleep( MIN(sleeptime,100000) ); // check the GUI at 10Hz min
+	   usleep( (stg_usec_t)MIN(sleeptime,100000) ); // check the GUI at 10Hz min
 	 
   } while( interval < interval_real );
   
   
   real_time_of_last_update = timenow;
   
-  //stg_usec_t timenow = RealTimeSinceStart();
   
   interval_log[updates%INTERVAL_LOG_LEN] = interval_real;//timenow - real_time_now;
-  // real_time_now = timenow;
-
 
   return val;
 }
