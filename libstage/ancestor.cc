@@ -39,7 +39,7 @@ void StgAncestor::AddChild( StgModel* mod )
 
   child_type_counts[mod->type]++;
 
-  delete buf;
+  delete[] buf;
 }
 
 void StgAncestor::RemoveChild( StgModel* mod )

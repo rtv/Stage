@@ -17,7 +17,7 @@
 StgModelCamera::StgModelCamera( StgWorld* world, 
 										  StgModel* parent ) 
   : StgModel( world, parent, MODEL_TYPE_CAMERA ),
-_frame_data( NULL ), _width( 0 ), _height( 0 ), _yaw_offset( 0 )
+_frame_data( NULL ), _frame_color_data( NULL ), _vertexbuf( NULL ),  _width( 0 ), _height( 0 ), _yaw_offset( 0 )
 {
 	PRINT_DEBUG2( "Constructing StgModelCamera %d (%s)\n", 
 			id, typestr );
@@ -45,8 +45,11 @@ _frame_data( NULL ), _width( 0 ), _height( 0 ), _yaw_offset( 0 )
 
 StgModelCamera::~StgModelCamera()
 {
-	if( _frame_data != NULL )
-		delete _frame_data;
+	if( _frame_data != NULL ) {
+		delete[] _frame_data;
+		delete[] _frame_color_data;
+		delete[] _vertexbuf;
+	}
 }
 
 void StgModelCamera::Load( void )
@@ -109,9 +112,14 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 		return NULL;
 	
 	if( _frame_data == NULL ) {
-		if( _frame_data != NULL )
-			delete _frame_data;
+		if( _frame_data != NULL ) {
+			delete[] _frame_data;
+			delete[] _frame_color_data;
+			delete[] _vertexbuf;	
+		}
 		_frame_data = new char[ 4 * _width * _height ]; //assumes a max of depth 4
+		_frame_color_data = new char[ 3 * _width * _height ]; //for RGB
+		_vertexbuf = new float[ 3 * _width * _height ]; //for RGB
 	}
 
 	
@@ -124,7 +132,7 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 	
 	_canvas->renderFrame( true );
 	
-	if( depth_buffer == true ) {
+	//read depth buffer
 		glReadPixels(0, 0, _width, _height,
 					 GL_DEPTH_COMPONENT, //GL_RGB,
 					 GL_FLOAT, //GL_UNSIGNED_BYTE,
@@ -134,14 +142,14 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 		int buf_size = _width * _height;
 		for( int i = 0; i < buf_size; i++ )
 			data[ i ] = _camera.realDistance( data[ i ] ) + 0.1;
-	} else {
-		glReadPixels(0, 0, _width, _height,
-					 GL_RGB,
-					 GL_UNSIGNED_BYTE,
-					 _frame_data );		
-	}
 
-		
+	//read color buffer
+	glReadPixels(0, 0, _width, _height,
+				 GL_RGB,
+				 GL_UNSIGNED_BYTE,
+				 _frame_color_data );		
+
+
 	_canvas->invalidate();
 	return _frame_data;
 }
@@ -151,6 +159,7 @@ void StgModelCamera::DataVisualize( void )
 {
 	if( _frame_data == NULL )
 		return;
+	
 	float w_fov = _camera.horizFov();
 	float h_fov = _camera.vertFov();
 	
@@ -176,6 +185,11 @@ void StgModelCamera::DataVisualize( void )
 	float vert_a;
 	float a_space = w_fov / w; //degrees between each sample
 	float vert_a_space = h_fov / h; //degrees between each vertical sample
+	float x, y, z;
+	float tmp_x, tmp_y, tmp_z;
+	float *buf;
+
+	glBegin( GL_POINTS );
 	for( int i = 0; i < w; i++ ) {
 		for( int j = 0; j < h; j++ ) {
 			float length = data[ i + j * h ];
@@ -183,18 +197,41 @@ void StgModelCamera::DataVisualize( void )
 			a = start_fov - static_cast< float >( i ) * a_space;
 			vert_a = start_vert_fov - static_cast< float >( j ) * vert_a_space;
 			
-			glPushMatrix();
-			glRotatef( a, 0.0, 0.0, 1.0 );
-			glRotatef( vert_a, 0.0, 1.0, 0.0 );
-			glBegin( GL_POINTS );
-			//glVertex3f( 0.0, 0.0, 0.0 );
-			glVertex3f( length, 0.0, 0.0 );
-			glEnd();
-			glPopMatrix();
+			x = length;
+			y = 0;
+			z = 0;
 			
-//			break;
+			tmp_x = x * cos( dtor( a ) ); // - y *sin( but y=0)
+			tmp_y = x * sin( dtor( a ) ); // + y * cos( but y=0 )
+			tmp_z = z;
+			
+			x = tmp_x; y = tmp_y; z = tmp_z;
+			
+			tmp_z = - x * sin( dtor( vert_a ) );
+			tmp_x = x * cos( dtor( vert_a ) );
+
+			x = tmp_x; y = tmp_y; z = tmp_z;
+			
+			buf = _vertexbuf + ( i + j * h  ) * 3;
+			
+			buf[ 0 ] = x;
+			buf[ 1 ] = y;
+			buf[ 2 ] = z;
+			
+			//TODO push into a buffer
+			//glVertex3f( x, y, z );
+
 		}
 	}
+	glEnd();
+	
+	//TODO use vertex array buffer
+	glEnableClientState( GL_VERTEX_ARRAY );
+
+	glVertexPointer( 3, GL_FLOAT, 0, _vertexbuf );
+	glDrawArrays( GL_POINTS, 0, _width * _height );
+	
+	glDisableClientState( GL_VERTEX_ARRAY );
 	
 //	for( int i = 0; i < w; i++ ) {
 //		float z_a = h_fov / _width * static_cast< float >( i );

@@ -2474,6 +2474,8 @@ class StgModelCamera : public StgModel
 		StgCanvas* _canvas;
 
 		char* _frame_data;  //opengl read buffer
+		char* _frame_color_data;  //opengl read buffer
+		float* _vertexbuf;   //vertex buffer for visualiation
 		int _width;         //width of buffer
 		int _height;        //height of buffer
 		static const int _depth = 4;
