@@ -1103,8 +1103,8 @@ public:
 				 double ppm = DEFAULT_PPM );
 
 	virtual ~StgWorld();
-	
-	FileManager fileMan;
+
+  FileManager fileMan;
 
 	stg_usec_t SimTimeNow(void){ return sim_time;} ;
 	stg_usec_t RealTimeNow(void);
@@ -2030,6 +2030,12 @@ class StgWorldGui : public StgWorld, public Fl_Window
 	virtual void Load( const char* filename );
 	virtual void UnLoad();
 	virtual bool Save( const char* filename );
+  
+  /** Set the minimum real time interval between world updates, in
+		microeconds. */
+  void SetRealTimeInterval( stg_usec_t usec )
+  { interval_real = usec; }
+  
 
 	// static callback functions
 	static void LoadCallback( Fl_Widget* wid, StgWorldGui* world );

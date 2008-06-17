@@ -37,7 +37,11 @@ int main( int argc,  char* argv[] )
   Init( &argc, &argv);
 
   StgWorldGui world( 400,400, "Test" );
+
+  world.SetRealTimeInterval( 20000 );
+
   world.Start();
+
 
   stg_geom_t geom;
   bzero( &geom, sizeof(geom) );
@@ -159,7 +163,7 @@ int main( int argc,  char* argv[] )
 		//m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
 		top->SetColor( lrand48() | 0xFF000000 );
 		
- 		interact( &world );
+ 		//interact( &world );
 	 }
 
    for( int i=0; i<POP; i++ )
@@ -172,7 +176,7 @@ int main( int argc,  char* argv[] )
 		
  		m[i]->SetVelocity( v );
 								
-  		interact( &world );
+  		//interact( &world );
   	 }
   
 //   for( int i=0; i<POP; i++ )

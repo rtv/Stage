@@ -564,30 +564,28 @@ void StgDriver::Update(void)
   {
     Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
     assert( interface );
-
+	 
     switch( interface->addr.interf )
       {
       case PLAYER_SIMULATION_CODE:
-	//if( stg_world_update( this->world, FALSE ) )
-	world->Cycle();
-	//player_quit = TRUE; // set Player's global quit flag
-	break;
-
+		  world->Update();	  
+		  break;
+		  
       default:
-	{
-	  // Has enough time elapsed since the last time we published on this
-	  // interface?  This really needs some thought, as each model/interface
-	  // should have a configurable publishing rate. For now, I'm using the
-	  // world's update rate (which appears to be stored as msec).  - BPG
-	   double currtime;
- 	  GlobalTime->GetTimeDouble(&currtime);
- 	  if((currtime - interface->last_publish_time) >= 
- 	     (interface->publish_interval_msec / 1e3))
- 	    {
-	      interface->Publish();
-	      interface->last_publish_time = currtime;
-	    }
-	}
+		  {
+			 // Has enough time elapsed since the last time we published on this
+			 // interface?  This really needs some thought, as each model/interface
+			 // should have a configurable publishing rate. For now, I'm using the
+			 // world's update rate (which appears to be stored as msec).  - BPG
+			 double currtime;
+			 GlobalTime->GetTimeDouble(&currtime);
+			 if((currtime - interface->last_publish_time) >= 
+				 (interface->publish_interval_msec / 1e3))
+				{
+				  interface->Publish();
+				  interface->last_publish_time = currtime;
+				}
+		  }
       }
   }
 }
