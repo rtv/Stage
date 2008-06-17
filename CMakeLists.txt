@@ -8,7 +8,7 @@ SET( VERSION ${V_MAJOR}.${V_MINOR}.${V_BUGFIX} )
 SET( APIVERSION ${V_MAJOR}.${V_MINOR} )
 
 # minimum version of Player to build the plugin
-SET( MIN_PLAYER 2.2.0 ) # change once plugin is fixed
+SET( MIN_PLAYER 2.1.0 )
 
 cmake_minimum_required( VERSION 2.4 FATAL_ERROR )
 
@@ -30,7 +30,25 @@ include(FindPkgConfig)
 pkg_search_module( GLIB REQUIRED glib-2.0 )
 find_package( OpenGL REQUIRED )
 
-pkg_search_module( PLAYER playercore )
+# Look for player v${MIN_PLAYER} or higher and set flags
+#  built-ins don't work properly, so use pkg-config directly
+FIND_PROGRAM (PKGCONFIG NAMES pkg-config)
+IF (PKGCONFIG)
+	EXECUTE_PROCESS (COMMAND pkg-config --atleast-version=${MIN_PLAYER} playercore --silence-errors
+		RESULT_VARIABLE PLAYER_NOT_FOUND)
+	IF (PLAYER_NOT_FOUND EQUAL 0)
+		# found the correct version
+		pkg_search_module( PLAYER playercore )
+		MESSAGE(STATUS "  Player headers found in ${PLAYER_INCLUDE_DIRS}")
+		MESSAGE(STATUS "  Player libs found in ${PLAYER_LIBRARY_DIRS}")
+		SET (PLAYER_FOUND TRUE)
+	ELSE (PLAYER_NOT_FOUND EQUAL 0)
+		MESSAGE(STATUS "Player >=v${MIN_PLAYER} not found, skipping Player plugin")
+		SET (PLAYER_FOUND FALSE)
+	ENDIF (PLAYER_NOT_FOUND EQUAL 0)
+ELSE (PKGCONFIG)
+	MESSAGE (STATUS "pkg-config not found, skipping Player plugin")
+ENDIF (PKGCONFIG)
 
 
 # find FLTK and set flags
@@ -79,10 +97,9 @@ link_directories(${GLIB_LIBRARY_DIRS}
 # work through these subdirs
 ADD_SUBDIRECTORY(libstage)
 ADD_SUBDIRECTORY(examples)
-
-if( PLAYER_FOUND )
-ADD_SUBDIRECTORY(libstageplugin)
-endif( PLAYER_FOUND )	 
+IF ( PLAYER_FOUND )
+	ADD_SUBDIRECTORY(libstageplugin)
+ENDIF ( PLAYER_FOUND )	 
 
 
 INSTALL(FILES rgb.txt stagelogo.png
