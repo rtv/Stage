@@ -511,49 +511,37 @@ bool StgWorldGui::Save( const char* filename )
 	return StgWorld::Save( filename );
 }
 
-void StgWorld::UpdateCb( StgWorld* world  )
+
+bool StgWorldGui::Update()
 {
-	world->Update();
+  if( real_time_of_last_update == 0 )
+	 real_time_of_last_update = RealTimeNow();
+  
+  bool val = StgWorld::Update();
+  
 
-	// need to reinstantiatethe timeout each time
-	Fl::repeat_timeout( world->interval_real/1e6, 
-			(Fl_Timeout_Handler)UpdateCb, world );
+  stg_usec_t interval;
+  stg_usec_t timenow;
+  
+  do { // we loop over updating the GUI, sleeping if there's any spare
+		 // time
+	 Fl::check();
+
+	 timenow = RealTimeNow();
+	 interval = timenow - real_time_of_last_update; // guaranteed to be >= 0
+	 
+	 double sleeptime = (double)interval_real - (double)interval;
+	 
+	 if( sleeptime > 0  ) 
+		usleep( MIN(sleeptime,100000) ); // check the GUI at 10Hz min
+	 
+  } while( interval < interval_real );
+  
+  
+  real_time_of_last_update = timenow;
+  
+  return val;
 }
-
-static void idle_callback( StgWorld* world  )
-{
-	world->Update();
-}
-
-
-void StgWorldGui::Start()
-{
-	// if a non-zero interval was requested, call Update() after that
-	// interval
-	if( interval_real > 0 )
-		Fl::add_timeout( interval_real/1e6, (Fl_Timeout_Handler)UpdateCb, this );
-	else // otherwise call Update() whenever there's no GUI work to do
-		Fl::add_idle( (Fl_Timeout_Handler)idle_callback, this );
-}
-
-void StgWorldGui::Stop()
-{
-	Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCb, this );
-	Fl::remove_idle( (Fl_Timeout_Handler)idle_callback, this );
-}
-
-
-void StgWorldGui::Run()
-{
-	Fl::run();
-}
-
-void StgWorldGui::Cycle()
-{
-	if( Fl::ready() )
-		Fl::check();
-}
-
 
 void StgWorldGui::DrawTree( bool drawall )
 {  

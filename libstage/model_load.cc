@@ -33,7 +33,7 @@ void StgModel::Load()
 		{
 			//printf( "changed %s to %s\n", this->token, token );
 			this->token = strdup( name );
-			world->AddModelName( this ); // add this name to the world's table
+			world->AddModel( this ); // add this name to the world's table
 		}
 		else
 			PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token );

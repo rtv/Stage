@@ -17,23 +17,21 @@
 #include "stage_internal.hh"
 
 // DEFAULT PARAMETERS FOR LASER MODEL
-static const bool DEFAULT_LASER_FILLED = true;
-static const stg_watts_t DEFAULT_LASER_WATTS = 17.5; // laser power consumption
-static const stg_meters_t DEFAULT_LASER_SIZEX = 0.15;
-static const stg_meters_t DEFAULT_LASER_SIZEY = 0.15;
-static const stg_meters_t DEFAULT_LASER_SIZEZ = 0.2;
-static const stg_meters_t DEFAULT_LASER_MINRANGE = 0.0;
-static const stg_meters_t DEFAULT_LASER_MAXRANGE = 8.0;
-static const stg_radians_t DEFAULT_LASER_FOV = M_PI;
-static const unsigned int DEFAULT_LASER_SAMPLES = 180;
-static const stg_msec_t DEFAULT_LASER_INTERVAL_MS = 100;
-static const unsigned int DEFAULT_LASER_RESOLUTION = 1;
+const bool StgModelLaser::DEFAULT_FILLED = true;
+const stg_watts_t StgModelLaser::DEFAULT_WATTS = 17.5;
+const stg_size_t StgModelLaser::DEFAULT_SIZE = {0.15, 0.15, 0.2 };
+const stg_meters_t StgModelLaser::DEFAULT_MINRANGE = 0.0;
+const stg_meters_t StgModelLaser::DEFAULT_MAXRANGE = 8.0;
+const stg_radians_t StgModelLaser::DEFAULT_FOV = M_PI;
+const unsigned int StgModelLaser::DEFAULT_SAMPLES = 180;
+const stg_msec_t StgModelLaser::DEFAULT_INTERVAL_MS = 100;
+const unsigned int StgModelLaser::DEFAULT_RESOLUTION = 1;
 
-static const char LASER_GEOM_COLOR[] = "blue";
-//static const char LASER_BRIGHT_COLOR[] = "blue";
-//static const char LASER_CFG_COLOR[] = "light steel blue";
-//static const char LASER_COLOR[] = "steel blue";
-//static const char LASER_FILL_COLOR[] = "powder blue";
+const char StgModelLaser::DEFAULT_GEOM_COLOR[] = "blue";
+//const char BRIGHT_COLOR[] = "blue";
+//const char CFG_COLOR[] = "light steel blue";
+//const char COLOR[] = "steel blue";
+//const char FILL_COLOR[] = "powder blue";
 
 /**
   @ingroup model
@@ -83,24 +81,22 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 			id, typestr );
 
 	// sensible laser defaults 
-	interval = 1e3 * DEFAULT_LASER_INTERVAL_MS;
+	interval = 1e3 * StgModelLaser::DEFAULT_INTERVAL_MS;
 	laser_return = LaserVisible;
 
 	stg_geom_t geom;
 	memset( &geom, 0, sizeof(geom));
-	geom.size.x = DEFAULT_LASER_SIZEX;
-	geom.size.y = DEFAULT_LASER_SIZEY;
-	geom.size.z = DEFAULT_LASER_SIZEZ;
+	geom.size = StgModelLaser::DEFAULT_SIZE;
 	SetGeom( geom );
 
 	// set default color
-	SetColor( stg_lookup_color(LASER_GEOM_COLOR));
+	SetColor( stg_lookup_color(DEFAULT_GEOM_COLOR));
 
-	range_min    = DEFAULT_LASER_MINRANGE;
-	range_max    = DEFAULT_LASER_MAXRANGE;
-	fov          = DEFAULT_LASER_FOV;
-	sample_count = DEFAULT_LASER_SAMPLES;
-	resolution   = DEFAULT_LASER_RESOLUTION;
+	range_min    = DEFAULT_MINRANGE;
+	range_max    = DEFAULT_MAXRANGE;
+	fov          = DEFAULT_FOV;
+	sample_count = DEFAULT_SAMPLES;
+	resolution   = DEFAULT_RESOLUTION;
 
 	// don't allocate sample buffer memory until Update() is called
 	samples = NULL;
@@ -237,7 +233,7 @@ void StgModelLaser::Startup(  void )
 	PRINT_DEBUG( "laser startup" );
 
 	// start consuming power
-	SetWatts( DEFAULT_LASER_WATTS );
+	SetWatts( StgModelLaser::DEFAULT_WATTS );
 }
 
 void StgModelLaser::Shutdown( void )

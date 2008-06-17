@@ -57,6 +57,7 @@ described on the manual page for each model type.
 // static data members
 unsigned int StgWorld::next_id = 0;
 bool StgWorld::quit_all = false;
+GList* StgWorld::world_list = NULL;
 
 static guint PointIntHash( stg_point_int_t* pt )
 {
@@ -84,6 +85,14 @@ void StgWorld::DestroySuperRegion( SuperRegion* sr )
 	delete sr;
 }
 
+void StgWorld::UpdateAll()
+{
+  assert( StgWorld::world_list );
+  
+  for( GList* it = StgWorld::world_list; it; it=it->next )
+	 ((StgWorld*)it->data)->Update();
+}
+
 StgWorld::StgWorld( const char* token, 
 						  stg_msec_t interval_sim,
 						  stg_msec_t interval_real,
@@ -102,8 +111,8 @@ void StgWorld::Initialize( const char* token,
 		PRINT_WARN( "Stg::Init() must be called before a StgWorld is created." );
 		exit(-1);
 	}
-
-	//	this->id = StgWorld::next_id++;
+	StgWorld::world_list = g_list_append( StgWorld::world_list, this );
+	
 	this->ray_list = NULL;
 	this->quit_time = 0;
 
@@ -159,6 +168,8 @@ StgWorld::~StgWorld( void )
 	g_hash_table_destroy( models_by_name );
 
 	g_free( token );
+
+	world_list = g_list_remove( world_list, this );
 }
 
 
@@ -399,54 +410,6 @@ stg_usec_t StgWorld::RealTimeSinceStart()
 	return timenow - real_time_start;
 }
 
-void StgWorld::PauseUntilNextUpdateTime( void )
-{
-	// sleep until it's time to update  
-	stg_usec_t timenow = RealTimeSinceStart();
-
-	/*  printf( "\ntimesincestart %llu interval_real %llu interval_sim %llu real_time_next_update %llu\n",
-		timenow,
-		interval_real,
-		interval_sim,
-		real_time_next_update );
-	 */
-
-	if( timenow < real_time_next_update )
-	{
-		usleep( real_time_next_update - timenow );
-	}
-
-	interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
-
-	real_time_now = timenow;
-	real_time_next_update += interval_real;
-}
-
-void StgWorld::IdleUntilNextUpdateTime( int (*idler)(void) )
-{
-	// sleep until it's time to update  
-	stg_usec_t timenow;
-
-	/*  printf( "\ntimesincestart %llu interval_real %llu interval_sim %llu real_time_next_update %llu\n",
-		timenow,
-		interval_real,
-		interval_sim,
-		real_time_next_update );
-	 */
-
-	while( (timenow = RealTimeSinceStart()) < real_time_next_update )
-	{
-		(*idler)();
-		usleep( 1000 );
-	}
-
-	interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
-
-	real_time_now = timenow;
-	real_time_next_update += interval_real;
-}
-
-
 #define DEBUG 1
 
 bool StgWorld::Update()
@@ -474,26 +437,12 @@ bool StgWorld::Update()
 	stg_usec_t timenow = RealTimeSinceStart();
 
 	interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
-
-	//interval_log[updates%INTERVAL_LOG_LEN] = timenow - real_time_now;
-
 	real_time_now = timenow;
-	//real_time_next_update += interval_real;
 
 	return true;
 }
 
 void StgWorld::AddModel( StgModel*  mod  )
-{
-	//PRINT_DEBUG3( "World %s adding model %d %s to hash tables ", 
-	//        token, mod->id, mod->Token() );
-
-	//g_hash_table_insert( this->models_by_id, (gpointer)mod->Id(), mod );
-	AddModelName( mod );
-}
-
-
-void StgWorld::AddModelName( StgModel* mod )
 {
 	g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
 }
@@ -508,13 +457,6 @@ StgModel* StgWorld::GetModel( const char* name )
 
 	return mod;
 }
-
-// StgModel* StgWorld::GetModel( const stg_id_t id )
-// {
-// 	PRINT_DEBUG1( "looking up model id %d in models_by_id", id );
-// 	return (StgModel*)g_hash_table_lookup( this->models_by_id, (gpointer)id );
-// }
-
 
 void StgWorld::RecordRay( double x1, double y1, double x2, double y2 )
 {  

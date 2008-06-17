@@ -8,8 +8,10 @@ const double epsilon = 0.000001;
 
 void interact( StgWorldGui* wg )
 {
-  for( int i=0; i<100; i++ )
-	 wg->Cycle();
+  //for( int i=0; i<100; i++ )
+  // wg->Cycle();
+
+  wg->Update();
 }
 
 void test( char* str, double a, double b )
@@ -180,5 +182,6 @@ int main( int argc,  char* argv[] )
 //  	 }
   
 
-  StgWorldGui::Run();
+	while(true)
+	  world.Update();
 }

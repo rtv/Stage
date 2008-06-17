@@ -13,11 +13,11 @@ using namespace Stg;
 
 void StgCanvas::TimerCallback( StgCanvas* c )
 {
-	c->redraw();
-
-	Fl::repeat_timeout(((double)c->interval/1000),
-			(Fl_Timeout_Handler)StgCanvas::TimerCallback, 
-			c);
+  c->redraw();
+  
+  Fl::repeat_timeout(((double)c->interval/1000),
+							 (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+							 c);
 }
 
 
@@ -47,10 +47,10 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 
 	showflags = STG_SHOW_CLOCK | STG_SHOW_BLOCKS | STG_SHOW_GRID | STG_SHOW_DATA;
 
-	// start the timer that causes regular redraws
-	Fl::add_timeout( ((double)interval/1000), 
-			(Fl_Timeout_Handler)StgCanvas::TimerCallback, 
-			this);
+	// // start the timer that causes regular redraws
+ 	Fl::add_timeout( ((double)interval/1000), 
+						  (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+						  this);
 }
 
 StgCanvas::~StgCanvas()
@@ -133,7 +133,7 @@ StgModel* StgCanvas::Select( int x, int y )
 	//printf("Clicked rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", rByte, gByte, bByte, aByte);
 	//printf("-->model Id = 0x%X\n", modelId);
 	
-	StgModel* mod = (StgModel*)g_hash_table_lookup( StgModel::modelsbyid, (void*)modelId );
+	StgModel* mod = StgModel::LookupId( modelId );
 
 	//printf("%p %s %d %x\n", mod, mod ? mod->Token() : "(none)", id, id );
 
@@ -208,6 +208,7 @@ int StgCanvas::handle(int event)
 					camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
 				}
 				invalidate();
+				redraw();
 			}
 			return 1;
 
@@ -226,6 +227,7 @@ int StgCanvas::handle(int event)
 				}
 
 				invalidate();
+				redraw();
 			}
 			else if( Fl::event_state( FL_ALT ) )
 			{   
@@ -319,6 +321,8 @@ int StgCanvas::handle(int event)
 			}
 			startx = Fl::event_x();
 			starty = Fl::event_y();
+
+			redraw();
 			return 1; // end case FL_DRAG
 
 		case FL_RELEASE:   // mouse button released
@@ -347,9 +351,9 @@ int StgCanvas::handle(int event)
 					world->TogglePause();
 					break;
 				case ' ': // space bar
-
 					camera.resetAngle();
-					invalidate();
+					//invalidate();
+					redraw();
 					break;
 				case FL_Left:  camera.move( -10, 0 ); break;
 				case FL_Right: camera.move( 10, 0 );; break;
@@ -565,7 +569,7 @@ void StgCanvas::draw()
 //	if( loaded_texture == true && use_perspective_camera == true )
 //		return;
 
-	if (!valid() || world->dirty ) 
+	if (!valid() ) 
 	{ 
 		valid(1);
 		FixViewport(w(), h());

@@ -258,6 +258,8 @@ StgModel::~StgModel( void )
   
 	if( callbacks ) g_hash_table_destroy( callbacks );
 
+	g_hash_table_remove( StgModel::modelsbyid, (void*)id );
+
 	world->RemoveModel( this );
 }
 

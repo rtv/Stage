@@ -15,7 +15,7 @@ include "sick.inc"
 resolution 0.02
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 0  # real-time interval between simulation updates in milliseconds 
+interval_real 20  # real-time interval between simulation updates in milliseconds 
 paused 1
 
 # configure the GUI window
@@ -26,7 +26,7 @@ window
   rotate [ 0.000 0.000 ]
   scale 33.306 
   show_data 0
-  interval 100
+  #interval 10
 )
 
 # load an environment bitmap

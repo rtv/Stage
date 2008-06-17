@@ -84,13 +84,18 @@
 /** The Stage library uses its own namespace */
 namespace Stg 
 {
+	// foreward declare
+  class StgCanvas;
+  class Worldfile;
+  class StgWorld;
+  class StgModel;
+  
 	/** Initialize the Stage library */
 	void Init( int* argc, char** argv[] );
 
 	/** returns true iff Stg::Init() has been called. */
 	bool InitDone();
-
-
+  
   /** Create unique identifying numbers for each type of model, and a
 		count of the number of types. */
   typedef enum {
@@ -106,9 +111,6 @@ namespace Stg
 	 // types
   } stg_model_type_t;
 
-	// foreward declare
-	class StgCanvas;
-	class Worldfile;
 
 	/// Copyright string
 	const char COPYRIGHT[] =				       
@@ -971,8 +973,15 @@ class StgWorld : public StgAncestor
 	friend class StgTime;
    friend class StgCanvas;
 
+public: 
+  static void UpdateAll();
+  
 private:
 	
+  static GList* world_list;
+  /** Update all existing worlds */
+
+
 	static bool quit_all; // quit all worlds ASAP  
 	static unsigned int next_id; //< initialized to zero, used tob
 	//allocate unique sequential world ids
@@ -1010,7 +1019,8 @@ private:
 	GList* velocity_list; ///< a list of models that have non-zero velocity, for efficient updating
 
 	stg_usec_t sim_time; ///< the current sim time in this world in ms
-	stg_usec_t wall_last_update; ///< the real time of the last update in ms
+
+  //stg_usec_t wall_last_update; ///< the real time of the last update in ms
 
 	long unsigned int updates; ///< the number of simulated time steps executed so far
 
@@ -1026,7 +1036,6 @@ private:
 	bool paused; ///< the world only updates when this is false
 
 	GList* update_list; //< the descendants that need Update() called
-	void AddModelName( StgModel* mod );
 
 	void StartUpdatingModel( StgModel* mod );
 	void StopUpdatingModel( StgModel* mod );
@@ -1055,9 +1064,10 @@ private:
 	void RemoveBlock( int x, int y, StgBlock* block );
 
 
-protected:
+public:
 	stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
 
+protected:
 	GHashTable* superregions;
 
 	static void UpdateCb( StgWorld* world);
@@ -1099,8 +1109,8 @@ public:
 	stg_usec_t SimTimeNow(void){ return sim_time;} ;
 	stg_usec_t RealTimeNow(void);
 	stg_usec_t RealTimeSinceStart(void);
-	void PauseUntilNextUpdateTime(void);
-	void IdleUntilNextUpdateTime( int (*idler)(void) );
+  //void PauseUntilNextUpdateTime(void);
+  //	void IdleUntilNextUpdateTime( int (*idler)(void) );
 
 	void AddBlock( StgBlock* block );
 	void RemoveBlock( StgBlock* block );
@@ -1130,7 +1140,7 @@ public:
 
   /** Returns a pointer to the model identified by ID, or NULL if
 		nonexistent */
-	StgModel* GetModel( const stg_id_t id );
+  //StgModel* GetModel( const stg_id_t id );
 
   /** Returns a pointer to the model identified by name, or NULL if
 		nonexistent */
@@ -1176,7 +1186,15 @@ private:
   static uint32_t count;
   static GHashTable*  modelsbyid;
 
+
 public:
+  
+  /** Look up a model pointer by a unique model ID */
+  static StgModel* LookupId( uint32_t id )
+  { 
+	 return (StgModel*)g_hash_table_lookup( modelsbyid, (void*)id ); 
+  }
+  
   /** unique process-wide identifier for this model */
   uint32_t id;
 
@@ -1804,8 +1822,6 @@ class GlColorStack
 
 // FLTK Gui includes
 #include <FL/Fl.H>
-//#include <FL/Fl_Box.H>
-//#include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Gl_Window.H>
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Menu_Button.H>
@@ -2003,15 +2019,13 @@ class StgWorldGui : public StgWorld, public Fl_Window
 	StgCanvas* canvas;
 	Fl_Menu_Bar* mbar;
 
+  stg_usec_t real_time_of_last_update;
+
 	public:
 	StgWorldGui(int W,int H,const char*L=0);
 	~StgWorldGui();
 
-	/** Start the simulation and GUI. Does not return */
-	static void Run();
-	void Start();
-	void Stop();
-	void Cycle();
+  virtual bool Update();
 
 	virtual void Load( const char* filename );
 	virtual void UnLoad();
@@ -2169,6 +2183,18 @@ typedef struct
 class StgModelLaser : public StgModel
 {
 private:
+  // DEFAULT PARAMETERS FOR LASER MODEL
+  static const bool DEFAULT_FILLED;
+  static const stg_watts_t DEFAULT_WATTS; 
+  static const stg_size_t DEFAULT_SIZE;
+  static const stg_meters_t DEFAULT_MINRANGE;
+  static const stg_meters_t DEFAULT_MAXRANGE;
+  static const stg_radians_t DEFAULT_FOV;
+  static const unsigned int DEFAULT_SAMPLES;
+  static const stg_msec_t DEFAULT_INTERVAL_MS;
+  static const unsigned int DEFAULT_RESOLUTION;
+  static const char DEFAULT_GEOM_COLOR[];
+
   int dl_debug_laser;
   
   stg_laser_sample_t* samples;

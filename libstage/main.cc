@@ -42,11 +42,15 @@ int main( int argc, char* argv[] )
 
 	puts("");// end the first start-up line
 
+
+	// XX TODO
+
 	// initialize libstage
 	Stg::Init( &argc, &argv );
 
 	// arguments at index optindex and later are not options, so they
 	// must be world file names
+
 
 	bool loaded_world_file = false;
 	while( optindex < argc )
@@ -56,19 +60,18 @@ int main( int argc, char* argv[] )
 			const char* worldfilename = argv[optindex];
 			StgWorldGui* world = new StgWorldGui( 400, 300, worldfilename );
 			world->Load( worldfilename );
-			world->Start();
 			loaded_world_file = true;
 		}
 		optindex++;
 	}
 
-	if( loaded_world_file == false ) {
-		// replace this with a loading dialog/window
-		StgWorldGui* world = new StgWorldGui( 400, 300 );
-	}
+// 	if( loaded_world_file == false ) {
+// 		// replace this with a loading dialog/window
+// 		StgWorldGui* world = new StgWorldGui( 400, 300 );
+// 	}
 
-
-
-	StgWorldGui::Run(); // run all the simulations
+	
+	while(true)
+	  StgWorld::UpdateAll();	  
 }
 
