@@ -555,13 +555,13 @@ bool StgWorldGui::Save( const char* filename )
 	wf->WriteTupleFloat( wf_section, "size", 0, w() );
 	wf->WriteTupleFloat( wf_section, "size", 1, h() );
 
-	//  wf->WriteFloat( wf_section, "scale", canvas->scale );
-	//
-	//  wf->WriteTupleFloat( wf_section, "center", 0, canvas->panx );
-	//  wf->WriteTupleFloat( wf_section, "center", 1, canvas->pany );
-	//
-	//  wf->WriteTupleFloat( wf_section, "rotate", 0, canvas->stheta  );
-	//  wf->WriteTupleFloat( wf_section, "rotate", 1, canvas->sphi  );
+	wf->WriteFloat( wf_section, "scale", canvas->camera.getScale() );
+	
+	wf->WriteTupleFloat( wf_section, "center", 0, canvas->camera.getX() );
+	wf->WriteTupleFloat( wf_section, "center", 1, canvas->camera.getY() );
+	
+	wf->WriteTupleFloat( wf_section, "rotate", 0, canvas->camera.getPitch()  );
+	wf->WriteTupleFloat( wf_section, "rotate", 1, canvas->camera.getYaw()  );
 
 	uint32_t flags = canvas->GetShowFlags();
 	wf->WriteInt( wf_section, "show_blocks", flags & STG_SHOW_BLOCKS );
