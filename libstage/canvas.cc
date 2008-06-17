@@ -128,7 +128,7 @@ StgModel* StgCanvas::Select( int x, int y )
 	modelId = rByte;
 	modelId |= gByte << 8;
 	modelId |= bByte << 16;
-	modelId |= aByte << 24;
+	//modelId |= aByte << 24;
 	
 	//printf("Clicked rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", rByte, gByte, bByte, aByte);
 	//printf("-->model Id = 0x%X\n", modelId);
