@@ -149,45 +149,74 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 //TODO create lines outlineing camera frustrum, then iterate over each depth measurement and create a square
 void StgModelCamera::DataVisualize( void )
 {
+	if( _frame_data == NULL )
+		return;
 	float w_fov = _camera.horizFov();
 	float h_fov = _camera.vertFov();
-	float length = 8.0;
 	
-	float start_fov = 90 + w_fov / 2.0;
-	float end_fov = 90 - w_fov / 2.0;
+	float center_horiz = - _yaw_offset;
+	float center_vert = 0; // - _pitch_offset;
 	
-	float x, y;
+	float start_fov = center_horiz + w_fov / 2.0; //start at right
+	float start_vert_fov = center_vert + h_fov / 2.0; //start at top
 		
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); //TODO this doesn't seem to work.
 
-	float z = cos( dtor( h_fov / 2.0 ) ) * length;
+//	float z = cos( dtor( h_fov / 2.0 ) ) * length;
 	
 	glColor4f(1.0, 0.0, 0.0, 1.0 );	
+	
+	static float foo = 0.0;
+	foo += 1.0;
 	
 	const float* data = ( float* )( _frame_data ); //TODO use static_cast here
 	int w = _width;
 	int h = _height;
+	float a;
+	float vert_a;
+	float a_space = w_fov / w; //degrees between each sample
+	float vert_a_space = h_fov / h; //degrees between each vertical sample
 	for( int i = 0; i < w; i++ ) {
-		float z_a = h_fov / _width * static_cast< float >( i );
 		for( int j = 0; j < h; j++ ) {
-			float length = data[ i + j * w ];
-			float a;
-			float z = cos( z_a ) * length;
-			//TODO rename j to not conflict with loop
-			int j = i + 1;
-			if( j < _width/2 ) 
-				a = 90 - w_fov / _width * static_cast< float >( _width/2 - 1 - j );
-			else
-				a = 90 + w_fov / _width * static_cast< float >( j - _width/2 );
-			x = sin( dtor( a ) ) * length;
-			y = cos( dtor( a ) ) * length;
-			glBegin( GL_LINE_LOOP );
-			glVertex3f( 0.0, 0.0, 0.0 );
-			glVertex3f( x, y, 0.0 );
-			glEnd();
+			float length = data[ i + j * h ];
 			
+			a = start_fov - static_cast< float >( i ) * a_space;
+			vert_a = start_vert_fov - static_cast< float >( j ) * vert_a_space;
+			
+			glPushMatrix();
+			glRotatef( a, 0.0, 0.0, 1.0 );
+			glRotatef( vert_a, 0.0, 1.0, 0.0 );
+			glBegin( GL_POINTS );
+			//glVertex3f( 0.0, 0.0, 0.0 );
+			glVertex3f( length, 0.0, 0.0 );
+			glEnd();
+			glPopMatrix();
+			
+//			break;
 		}
 	}
+	
+//	for( int i = 0; i < w; i++ ) {
+//		float z_a = h_fov / _width * static_cast< float >( i );
+//		for( int j = 0; j < h; j++ ) {
+//			float length = data[ i + j * w ];
+//			float a;
+//			//float z = cos( z_a ) * length;
+//			//TODO rename j to not conflict with loop
+//			int j = i + 1;
+//			if( j < _width/2 ) 
+//				a = center_horiz - w_fov / _width * static_cast< float >( _width/2 - 1 - j );
+//			else
+//				a = center_horiz + w_fov / _width * static_cast< float >( j - _width/2 );
+//			x = sin( dtor( a ) ) * length;
+//			y = cos( dtor( a ) ) * length;
+//			glBegin( GL_LINE_LOOP );
+//			glVertex3f( 0.0, 0.0, 0.0 );
+//			glVertex3f( x, y, 0.0 );
+//			glEnd();
+//			
+//		}
+//	}
 	
 }
 
