@@ -14,7 +14,7 @@
 //perspective camera
 //perspective camera
 StgPerspectiveCamera::StgPerspectiveCamera( void ) : 
-		_x( 0 ), _y( 0 ), _z( 0 ), _pitch( 90 ), _yaw( 0 ), _z_near( 0.2 ), _z_far( 40.0 ), _fov( 60 )
+		_x( 0 ), _y( 0 ), _z( 0 ), _pitch( 90 ), _yaw( 0 ), _z_near( 0.2 ), _z_far( 40.0 ), _vert_fov( 40 ), _horiz_fov( 60 ), _aspect( 1.0 )
 {
 }
 
@@ -45,44 +45,29 @@ void StgPerspectiveCamera::Draw( void ) const
 
 }
 
-void StgPerspectiveCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const
+void StgPerspectiveCamera::SetProjection( void ) const
 {
 //	SetProjection( pixels_width/pixels_height );
 	
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
 	
-	float near_clip = _z_near;
-	float far_clip = _z_far;
-	float aspect = 1.0;
-	float top = tan( dtor( _fov ) /2.0 ) * near_clip;
+	float top = tan( dtor( _vert_fov ) / 2.0 ) * _z_near;
 	float bottom = -top;
-	float left = - aspect * top;
-	float right = -left;
+	float right = tan( dtor( _horiz_fov ) / 2.0 ) * _z_near;
+	float left = -right;
 	
-	top = 0.001;
-	bottom = -top;
+	right *= _aspect;
+	left *= _aspect;
 
-	glFrustum( left, right, bottom, top, near_clip, far_clip );
+	glFrustum( left, right, bottom, top, _z_near, _z_far );
 	
 	glMatrixMode (GL_MODELVIEW);
 	
-}
-
-void StgPerspectiveCamera::SetProjection( float aspect ) const
-{
-	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-	
-	gluPerspective( _fov, aspect, _z_near, _z_far );
-//	glFrustum( -10, 10, -10, 10, _z_near, _z_far );
-	
-	glMatrixMode (GL_MODELVIEW);
 }
 
 void StgPerspectiveCamera::update( void )
 {	
-
 }
 
 

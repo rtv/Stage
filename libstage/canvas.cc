@@ -566,8 +566,8 @@ void StgCanvas::draw()
 	static bool loaded_texture = false;
 
 	//Enable the following to debug camera model
-//	if( loaded_texture == true && use_perspective_camera == true )
-//		return;
+	if( loaded_texture == true && use_perspective_camera == true )
+		return;
 
 	if (!valid() ) 
 	{ 
@@ -609,7 +609,8 @@ void StgCanvas::draw()
 		gl_font( FL_HELVETICA, 12 );
 
 		if( use_perspective_camera == true ) {
-			perspective_camera.SetProjection( w() / h() );
+			perspective_camera.setAspect( static_cast< float >( w() ) / static_cast< float >( h() ) );
+			perspective_camera.SetProjection();
 		} else {
 			stg_bounds3d_t extent = world->GetExtent();
 			camera.SetProjection( w(), h(), extent.y.min, extent.y.max );

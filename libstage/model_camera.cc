@@ -17,7 +17,7 @@
 StgModelCamera::StgModelCamera( StgWorld* world, 
 										  StgModel* parent ) 
   : StgModel( world, parent, MODEL_TYPE_CAMERA ),
-_frame_data( NULL ), _frame_data_width( 0 ), _frame_data_height( 0 ), _width( 0 )
+_frame_data( NULL ), _width( 0 ), _height( 0 ), _yaw_offset( 0 )
 {
 	PRINT_DEBUG2( "Constructing StgModelCamera %d (%s)\n", 
 			id, typestr );
@@ -52,23 +52,19 @@ StgModelCamera::~StgModelCamera()
 void StgModelCamera::Load( void )
 {
 	StgModel::Load();
-
-	_camera.setFov( wf->ReadLength( wf_entity, "fov", _camera.fov() ) );
-	_camera.setYaw( wf->ReadLength( wf_entity, "yaw", _camera.yaw() ) );
+	
+	_camera.setFov( wf->ReadLength( wf_entity, "horizfov",  _camera.horizFov() ), wf->ReadLength( wf_entity, "vertfov",  _camera.vertFov() ) );
 	_camera.setPitch( wf->ReadLength( wf_entity, "pitch", _camera.pitch() ) );
 
+	_yaw_offset = wf->ReadLength( wf_entity, "yaw", _yaw_offset );
 	_width = wf->ReadLength( wf_entity, "width", _width );
-
-	//TODO move to constructor
-	_frame_data_width = _width;
-	_frame_data_height = 100;
+	_height = wf->ReadLength( wf_entity, "height", _height );
 }
 
 
 void StgModelCamera::Update( void )
 {   
-	GetFrame( _frame_data_width, _frame_data_height, true );
-	
+	GetFrame( true );
 	StgModel::Update();
 }
 
@@ -107,41 +103,39 @@ float* StgModelCamera::laser()
 //	return data;
 }
 
-const char* StgModelCamera::GetFrame( int width, int height, bool depth_buffer )
-{
-	static StgPerspectiveCamera camera; //shared between _ALL_ instances
-	
-	if( width == 0 || height == 0 )
+const char* StgModelCamera::GetFrame( bool depth_buffer )
+{	
+	if( _width == 0 || _height == 0 )
 		return NULL;
 	
-	if( width != _frame_data_width || height != _frame_data_height || _frame_data == NULL ) {
+	if( _frame_data == NULL ) {
 		if( _frame_data != NULL )
 			delete _frame_data;
-		_frame_data = new char[ 4 * width * height ]; //assumes a max of depth 4
+		_frame_data = new char[ 4 * _width * _height ]; //assumes a max of depth 4
 	}
 
 	
-	glViewport( 0, 0, width, height );
-	camera.update();
-	camera.SetProjection( width, height, 0.0, 0.0 );
-	camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.1 );
-	camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 );
-	camera.Draw();
+	glViewport( 0, 0, _width, _height );
+	_camera.update();
+	_camera.SetProjection();
+	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.1 );
+	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 + _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
+	_camera.Draw();
 	
 	_canvas->renderFrame( true );
 	
 	if( depth_buffer == true ) {
-		glReadPixels(0, 0, width, height,
+		glReadPixels(0, 0, _width, _height,
 					 GL_DEPTH_COMPONENT, //GL_RGB,
 					 GL_FLOAT, //GL_UNSIGNED_BYTE,
 					 _frame_data );
 		//transform length into linear length
 		float* data = ( float* )( _frame_data ); //TODO use static_cast here
-		int buf_size = width * height;
+		int buf_size = _width * _height;
 		for( int i = 0; i < buf_size; i++ )
 			data[ i ] = _camera.realDistance( data[ i ] ) + 0.1;
 	} else {
-		glReadPixels(0, 0, width, height,
+		glReadPixels(0, 0, _width, _height,
 					 GL_RGB,
 					 GL_UNSIGNED_BYTE,
 					 _frame_data );		
@@ -155,8 +149,8 @@ const char* StgModelCamera::GetFrame( int width, int height, bool depth_buffer )
 //TODO create lines outlineing camera frustrum, then iterate over each depth measurement and create a square
 void StgModelCamera::DataVisualize( void )
 {
-	float w_fov = _camera.fov();
-	float h_fov = _camera.fov();
+	float w_fov = _camera.horizFov();
+	float h_fov = _camera.vertFov();
 	float length = 8.0;
 	
 	float start_fov = 90 + w_fov / 2.0;
@@ -171,7 +165,8 @@ void StgModelCamera::DataVisualize( void )
 	glColor4f(1.0, 0.0, 0.0, 1.0 );	
 	
 	const float* data = ( float* )( _frame_data ); //TODO use static_cast here
-	int w = _frame_data_width, h = _frame_data_height;
+	int w = _width;
+	int h = _height;
 	for( int i = 0; i < w; i++ ) {
 		float z_a = h_fov / _width * static_cast< float >( i );
 		for( int j = 0; j < h; j++ ) {

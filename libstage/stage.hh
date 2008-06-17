@@ -88,7 +88,6 @@ namespace Stg
   class StgCanvas;
   class Worldfile;
   class StgWorld;
-  class StgWorldGui;
   class StgModel;
   
 	/** Initialize the Stage library */
@@ -1820,7 +1819,9 @@ class StgCamera
 		virtual ~StgCamera() { }
 
 		virtual void Draw( void ) const = 0;
-		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const = 0;
+
+		//TODO data should be passed in somehow else. (at least min/max stuff)
+		//virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const = 0;
 };
 
 class StgPerspectiveCamera : public StgCamera
@@ -1832,24 +1833,33 @@ class StgPerspectiveCamera : public StgCamera
 
 		float _z_near;
 		float _z_far;
-		float _fov;
+		float _vert_fov;
+		float _horiz_fov;
+		float _aspect;
 
 	public:
 		StgPerspectiveCamera( void );
 
 		virtual void Draw( void ) const;
-		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;
-		void SetProjection( float aspect ) const;
+		virtual void SetProjection( void ) const;
+		//void SetProjection( float aspect ) const;
 		void update( void );
 
 		inline void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
 		inline void addPose( float x, float y, float z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
 		void move( float x, float y, float z );
-		inline void setFov( float fov ) { _fov = fov; }
+		inline void setFov( float horiz_fov, float vert_fov ) { _horiz_fov = horiz_fov; _vert_fov = vert_fov; }
+		///update vertical fov based on window aspect and current horizontal fov
+		inline void setAspect( float aspect ) { 
+			//std::cout << "aspect: " << aspect << " vert: " << _vert_fov << " => " << aspect * _vert_fov << std::endl;
+			//_vert_fov = aspect / _horiz_fov;
+			_aspect = aspect;
+		}
 		inline void setYaw( float yaw ) { _yaw = yaw; }
 		inline float yaw( void ) const { return _yaw; }
 		inline float pitch( void ) const { return _pitch; }
-		inline float fov( void ) const { return _fov; }
+		inline float horizFov( void ) const { return _horiz_fov; }
+		inline float vertFov( void ) const { return _vert_fov; }
 		inline void addYaw( float yaw ) { _yaw += yaw; }
 		inline void setPitch( float pitch ) { _pitch = pitch; }
 		inline void addPitch( float pitch ) { _pitch += pitch; }
@@ -2462,13 +2472,13 @@ class StgModelCamera : public StgModel
 	private:
 		StgCanvas* _canvas;
 
-		char* _frame_data;
-		int _frame_data_width;
-		int _frame_data_height;
-	
-		int _width; //TODO merge into frame_data_width
+		char* _frame_data;  //opengl read buffer
+		int _width;         //width of buffer
+		int _height;        //height of buffer
+		static const int _depth = 4;
 	
 		StgPerspectiveCamera _camera;
+		int _yaw_offset;
 	
 	public:
 		StgModelCamera( StgWorld* world,
@@ -2484,7 +2494,7 @@ class StgModelCamera : public StgModel
 		inline int getWidth( void ) const { return _width; }
 	
 		///Take a screenshot from the camera's perspective
-		const char* GetFrame( int width, int height, bool depth_buffer );
+		const char* GetFrame( bool depth_buffer );
 	
 		///Imiate laser scan
 		float* laser();
