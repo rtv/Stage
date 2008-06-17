@@ -86,9 +86,7 @@ void StgWorld::DestroySuperRegion( SuperRegion* sr )
 }
 
 void StgWorld::UpdateAll()
-{
-  assert( StgWorld::world_list );
-  
+{  
   for( GList* it = StgWorld::world_list; it; it=it->next )
 	 ((StgWorld*)it->data)->Update();
 }

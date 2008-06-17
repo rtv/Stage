@@ -42,9 +42,6 @@ int main( int argc, char* argv[] )
 
 	puts("");// end the first start-up line
 
-
-	// XX TODO
-
 	// initialize libstage
 	Stg::Init( &argc, &argv );
 
@@ -65,10 +62,10 @@ int main( int argc, char* argv[] )
 		optindex++;
 	}
 
-// 	if( loaded_world_file == false ) {
-// 		// replace this with a loading dialog/window
-// 		StgWorldGui* world = new StgWorldGui( 400, 300 );
-// 	}
+ 	if( loaded_world_file == false ) {
+ 		// replace this with a loading dialog/window
+ 		StgWorldGui* world = new StgWorldGui( 400, 300 );
+ 	}
 
 	
 	while(true)
