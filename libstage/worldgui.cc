@@ -118,6 +118,7 @@ static const char* MITEM_VIEW_FOOTPRINTS = "&View/T&rails/&Footprints";
 static const char* MITEM_VIEW_BLOCKSRISING =  "&View/T&rails/&Blocks rising";
 static const char* MITEM_VIEW_ARROWS =     "&View/T&rails/&Arrows rising";
 static const char* MITEM_VIEW_TRAILS =     "&View/&Trail";
+static const char* MITEM_VIEW_STATUS =     "&View/&Status";
 static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 
 // this should be set by CMake
@@ -175,6 +176,9 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 
 	mbar->add( MITEM_VIEW_TRAILS,    't', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));
+	
+	mbar->add( MITEM_VIEW_STATUS,    's', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+			  FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_STATUS ? FL_MENU_VALUE : 0 ));
 
 	mbar->add( MITEM_VIEW_FOOTPRINTS,  FL_CTRL+'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOOTPRINT ? FL_MENU_VALUE : 0 ));
@@ -293,9 +297,10 @@ void StgWorldGui::Load( const char* filename )
 	uint32_t trailsrising = wf->ReadInt(wf_section, "show_trails_rising", flags & STG_SHOW_TRAILRISE ) ? STG_SHOW_TRAILRISE : 0;
 	uint32_t arrows = wf->ReadInt(wf_section, "show_arrows", flags & STG_SHOW_ARROWS ) ? STG_SHOW_ARROWS : 0;
 	uint32_t footprints = wf->ReadInt(wf_section, "show_footprints", flags & STG_SHOW_FOOTPRINT ) ? STG_SHOW_FOOTPRINT : 0;
+	uint32_t status = wf->ReadInt(wf_section, "show_status", flags & STG_SHOW_STATUS ) ? STG_SHOW_STATUS : 0;
 
 	canvas->SetShowFlags( grid | data | follow | blocks | quadtree | clock
-			| trails | arrows | footprints | trailsrising );
+			| trails | arrows | footprints | trailsrising | status );
 	canvas->invalidate(); // we probably changed something
 
 	// fix the GUI menu checkboxes to match
@@ -321,6 +326,10 @@ void StgWorldGui::Load( const char* filename )
 	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_QUADTREE );
 	(flags & STG_SHOW_QUADTREE) ? item->check() : item->clear();
 
+	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_STATUS );
+	(flags & STG_SHOW_STATUS) ? item->check() : item->clear();
+
+	
 	// TODO - per model visualizations load
 }
 
@@ -483,6 +492,7 @@ void StgWorldGui::view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas )
 	else if( strcmp(picked, MITEM_VIEW_ARROWS ) == 0 ) canvas->InvertView( STG_SHOW_ARROWS );
 	else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
 	else if( strcmp(picked, MITEM_VIEW_BLOCKSRISING ) == 0 ) canvas->InvertView( STG_SHOW_TRAILRISE );
+	else if( strcmp(picked, MITEM_VIEW_STATUS ) == 0 ) canvas->InvertView( STG_SHOW_STATUS );
 	else if( strcmp(picked, MITEM_VIEW_PERSPECTIVE ) == 0 ) { canvas->use_perspective_camera = ! canvas->use_perspective_camera; canvas->invalidate(); }
 	else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
 

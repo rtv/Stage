@@ -1398,7 +1398,7 @@ protected:
 	int displaylist;
 
 	/** Compile the display list for this model */
-	void BuildDisplayList( int flags );
+	void BuildDisplayList( uint32_t flags );
 
   stg_model_type_t type;
 

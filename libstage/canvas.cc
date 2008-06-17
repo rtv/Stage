@@ -45,7 +45,7 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 	dragging = false;
 	rotating = false;
 
-	showflags = STG_SHOW_CLOCK | STG_SHOW_BLOCKS | STG_SHOW_GRID | STG_SHOW_DATA;
+	showflags = STG_SHOW_CLOCK | STG_SHOW_BLOCKS | STG_SHOW_GRID | STG_SHOW_DATA | STG_SHOW_STATUS;
 
 	// // start the timer that causes regular redraws
  	Fl::add_timeout( ((double)interval/1000), 
@@ -260,14 +260,10 @@ int StgCanvas::handle(int event)
 					return 1;
 				case 3:
 					{
-						puts( "button 3" );
 						startx = Fl::event_x();
 						starty = Fl::event_y();
 						if( Select( startx, starty ) )
-						{
-							printf( "rotating" );
 							rotating = true;	  
-						}	    
 						return 1;
 					}
 				default:
