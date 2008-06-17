@@ -249,6 +249,8 @@ void StgWorldGui::ClockString( char* str, size_t maxlen )
 void StgWorldGui::Load( const char* filename )
 {
 	PRINT_DEBUG1( "%s.Load()", token );
+	
+	fileMan.newWorld( filename );
 
 	StgWorld::Load( filename );
 
@@ -355,7 +357,6 @@ void StgWorldGui::LoadCallback( Fl_Widget* wid, StgWorldGui* world )
 			// }
 			
 			// todo: make sure loading is successful
-			world->fileMan.newWorld( filename );
 			world->Load( filename );
 			world->Start(); // if (stopped)
 		}
