@@ -85,10 +85,11 @@
 namespace Stg 
 {
 	// foreward declare
-  class StgCanvas;
-  class Worldfile;
-  class StgWorld;
-  class StgModel;
+	class StgCanvas;
+	class Worldfile;
+	class StgWorld;
+	class StgWorldGui;
+	class StgModel;
   
 	/** Initialize the Stage library */
 	void Init( int* argc, char** argv[] );
