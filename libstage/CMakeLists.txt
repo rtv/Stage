@@ -1,32 +1,34 @@
 
-add_library( stage SHARED
-	     world.cc 
-	     worldgui.cc
-	     worldfile.cc 
-	     stage.cc 
-	     typetable.cc 
-             stage.hh  # get headers into IDE projects
-		file_manager.hh
-		file_manager.cc
-	     ancestor.cc 
-	     block.cc 
-	     canvas.cc 
-		 camera.cc
-	     gl.cc 
-	     glcolorstack.cc 
-	     model.cc 
-	     model_blinkenlight.cc
-	     model_blobfinder.cc 
-	     model_callbacks.cc 
-	     model_camera.cc 
-	     model_fiducial.cc 
-	     model_laser.cc 
-	     model_load.cc 
-	     model_position.cc 
-	     model_props.cc 
-	     model_ranger.cc 
-	     resource.cc
-		 texture_manager.cc
+add_library(stage SHARED
+	world.cc 
+	worldgui.cc
+	worldfile.cc 
+	stage.cc 
+	typetable.cc 
+	stage.hh
+	file_manager.hh
+	file_manager.cc
+	ancestor.cc 
+	block.cc 
+	canvas.cc 
+	camera.cc
+	gl.cc 
+	glcolorstack.cc 
+	model.cc 
+	model_blinkenlight.cc
+	model_blobfinder.cc 
+	model_callbacks.cc 
+	model_camera.cc 
+	model_fiducial.cc 
+	model_laser.cc 
+	model_load.cc 
+	model_position.cc 
+	model_props.cc 
+	model_ranger.cc 
+	resource.cc
+	texture_manager.cc
+	options_dlg.cc
+	options_dlg.hh
 )
 
 target_link_libraries( stage

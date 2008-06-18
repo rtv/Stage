@@ -67,7 +67,7 @@
 #include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
-#include <FL/glut.H>
+//#include <FL/glut.H>
 
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
@@ -2037,6 +2037,7 @@ protected:
   static void HelpAboutCallback( Fl_Widget* wid );
   static void view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas );
   static void WindowCallback( Fl_Widget* wid, StgWorldGui* world );
+  static void optionsDlgCb( Fl_Widget*, StgCanvas* canvas );
   
 	bool SaveAsDialog();
 	bool CloseWindowQuery();

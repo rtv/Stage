@@ -17,10 +17,11 @@ void Stg::gl_pose_shift( stg_pose_t* pose )
 // TODO - this could be faster, but we don't draw a lot of text
 void Stg::gl_draw_string( float x, float y, float z, const char *str ) 
 {  
-	const char *c;
-	glRasterPos3f(x, y,z);
-	for (c=str; *c != '\0'; c++) 
-		glutBitmapCharacter( GLUT_BITMAP_HELVETICA_12, *c);
+	//const char *c;
+	glRasterPos3f( x, y, z );
+	gl_draw(str);
+//	for (c=str; *c != '\0'; c++) 
+//		glutBitmapCharacter( GLUT_BITMAP_HELVETICA_12, *c);
 }
 
 void Stg::gl_speech_bubble( float x, float y, float z, const char* str )

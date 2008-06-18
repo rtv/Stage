@@ -106,6 +106,7 @@ overwritten.
 #include <FL/Fl_File_Chooser.H>
 
 #include "file_manager.hh"
+#include "options_dlg.hh"
 
 static const char* MITEM_VIEW_DATA =      "&View/&Data";
 static const char* MITEM_VIEW_BLOCKS =    "&View/&Blocks";
@@ -129,8 +130,7 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 
 
 
-	StgWorldGui::StgWorldGui(int W,int H,const char* L) 
-: Fl_Window(0,0,W,H,L)
+StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(0,0,W,H,L)
 {
 	//size_range( 100,100 ); // set minimum window size
 
@@ -186,6 +186,8 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_ARROWS ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));
+	
+	mbar->add( "View/&Options", FL_CTRL + 'o', (Fl_Callback *)optionsDlgCb, canvas );
 
 	mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
 	mbar->add( "Help/&About Stage...", 0, (Fl_Callback *)About_cb, this );
@@ -502,6 +504,12 @@ void StgWorldGui::view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas )
 	else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
 
 	//printf( "value: %d\n", item->value() );
+}
+
+void StgWorldGui::optionsDlgCb( Fl_Widget*, StgCanvas* canvas ) {
+	std::vector<Option> options;
+	OptionsDlg od( options );
+	od.display();
 }
 
 void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world ) 
