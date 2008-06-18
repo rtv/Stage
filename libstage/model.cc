@@ -893,7 +893,8 @@ void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alp
 	float stheta = -dtor( canvas->camera.getPitch() );
 	float sphi = dtor( canvas->camera.getYaw() );
 
-	glBindTexture( GL_TEXTURE_2D, 1 );
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture( GL_TEXTURE_2D, texture_id );
 
 	glColor4f( 1.0, 1.0, 1.0, alpha );
 	glPushMatrix();
@@ -918,6 +919,7 @@ void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alp
 
 	glPopMatrix();
 	glBindTexture( GL_TEXTURE_2D, 0 );
+	glDisable(GL_TEXTURE_2D);
 }
 
 
