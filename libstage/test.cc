@@ -38,7 +38,7 @@ int main( int argc,  char* argv[] )
 
   StgWorldGui world( 400,400, "Test" );
 
-  world.SetRealTimeInterval( 20000 );
+  world.SetRealTimeInterval( 10000 );
 
   world.Start();
 
@@ -46,6 +46,7 @@ int main( int argc,  char* argv[] )
   stg_geom_t geom;
   bzero( &geom, sizeof(geom) );
 
+  if( 0 )
   {
 	 StgModel mod( &world, NULL );
 	 
@@ -135,49 +136,76 @@ int main( int argc,  char* argv[] )
   } // mod goes out of scope
   
 
- #define POP 100
-  
+ #define POP 10
+  stg_velocity_t v = {0,0,0,0};
+		  
   StgModel* m[POP]; 
   for( int i=0; i<POP; i++ )
 	 {
-		m[i] = new StgModel( &world, NULL );
+		m[i] = new StgModelLaser( &world, NULL );
 
 		//m[i]->Say( "Hello" );
-		m[i]->SetGeom( geom );
-		m[i]->SetPose( random_pose( -10,10, -10,10 ) );		
-		//m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
+		m[i]->Subscribe();
+		//m[i]->SetGeom( geom );
+		
+		//m[i]->SetPose( random_pose( -5,5, -5,5 ) );		
+		m[i]->PlaceInFreeSpace( 0, 10, 0, 10 );
 		m[i]->SetColor( lrand48() | 0xFF000000 );
- 		interact( &world );
-	 }
-  
-  geom.size.x = 0.2;
-  geom.size.y = 0.2;
-  geom.size.z = 0.2;
 
-  for( int i=0; i<POP; i++ )
-	 {
-		StgModel* top = new StgModel( &world, m[i] );
-		top->SetGeom( geom );
-		//top->SetPose( new_pose( 0,0,0,0 ) );
-		//m[i]->SetPose( random_pose( -10,10, -10,10 ) );		
-		//m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
-		top->SetColor( lrand48() | 0xFF000000 );
-		
- 		//interact( &world );
+		v.x = drand48() / 10.0;
+		v.y = drand48() / 10.0;
+		v.z = drand48() / 10.0;
+		v.a = drand48() / 3.0;
+
+		m[i]->SetVelocity( v );
 	 }
 
-   for( int i=0; i<POP; i++ )
-  	 {
-//  		m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
-  		//m[i]->SetColor( 0xFF00FF00 );
 
+ //  stg_pose_t o = { 1, 2, 0, 0 };
+//   stg_pose_t p = {0,0,0,0};
 
- 		stg_velocity_t v = {0,0,0,1};
+//   m[0]->SetPose( o );
+
+//   stg_pose_t q = m[0]->LocalToGlobal( p );
+
+//   stg_print_pose( &o );
+//   stg_print_pose( &q );
+
+//   assert( fabs( q.x - o.x ) < 0.0001 );
+//   assert( fabs( q.y - o.y ) < 0.0001 );
+//   assert( fabs( q.z - o.z ) < 0.0001 );
+//   assert( fabs( q.a - o.a ) < 0.0001 );
+
+//   m[1]->SetPose( new_pose( 0,0,0,0 ));
+
+  //  geom.size.x = 0.2;
+  //geom.size.y = 0.2;
+  //geom.size.z = 0.2;
+
+//   for( int i=0; i<POP; i++ )
+// 	 {
+// 		StgModel* top = new StgModel( &world, m[i] );
+// 		top->SetGeom( geom );
+// 		//top->SetPose( new_pose( 0,0,0,0 ) );
+// 		//m[i]->SetPose( random_pose( -10,10, -10,10 ) );		
+// 		//m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
+// 		top->SetColor( lrand48() | 0xFF000000 );
 		
- 		m[i]->SetVelocity( v );
+//  		//interact( &world );
+// 	 }
+
+ //   for( int i=0; i<POP; i++ )
+//   	 {
+// //  		m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
+//   		//m[i]->SetColor( 0xFF00FF00 );
+
+
+//  		stg_velocity_t v = {0,0,0,0.1};
+		
+//  		m[i]->SetVelocity( v );
 								
-  		//interact( &world );
-  	 }
+//   		//interact( &world );
+//   	 }
   
 //   for( int i=0; i<POP; i++ )
 //  	 {

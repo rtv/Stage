@@ -79,9 +79,9 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 {
 	PRINT_DEBUG2( "Constructing StgModelLaser %d (%s)\n", 
 			id, typestr );
-
+	
 	// sensible laser defaults 
-	interval = 1e3 * StgModelLaser::DEFAULT_INTERVAL_MS;
+	interval = StgModelLaser::DEFAULT_INTERVAL_MS * thousand;
 	laser_return = LaserVisible;
 
 	stg_geom_t geom;
@@ -168,23 +168,23 @@ void StgModelLaser::Update( void )
 
 	samples = g_renew( stg_laser_sample_t, samples, sample_count );
 
-	stg_pose_t rayorg;
+	stg_pose_t rayorg = geom.pose;
 	bzero( &rayorg, sizeof(rayorg));
-	rayorg.z = geom.size.z/2;
+	rayorg.z += geom.size.z/2;
 
 	for( unsigned int t=0; t<sample_count; t += resolution )
 	{
 		stg_raytrace_sample_t sample;
 
-		rayorg.a = pose.a + bearing;
+		rayorg.a = bearing;
 
 		Raytrace( rayorg, 
-				range_max,
-				laser_raytrace_match,
-				NULL,
-				&sample,
-				true ); // z testing enabled
-
+					 range_max,
+					 laser_raytrace_match,
+					 NULL,
+					 &sample,
+					 true ); // z testing enabled
+		
 		samples[t].range = sample.range;
 
 		// if we hit a model and it reflects brightly, we set

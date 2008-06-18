@@ -257,47 +257,52 @@ void StgWorldGui::Load( const char* filename )
 	fileMan.newWorld( filename );
 
 	StgWorld::Load( filename );
-
-// 	wf_section = wf->LookupEntity( "window" );
-// 	if( wf_section < 1) // no section defined
-// 		return;
 	
-	int wf_section = 0; // root section
+	int world_section = 0; // use the top-level section for some parms
+								  // that traditionally live there
 
 	this->paused = 
-	  wf->ReadInt( wf_section, "paused", this->paused );
+	  wf->ReadInt( world_section, "paused", this->paused );
 
 	this->interval_real = (stg_usec_t)thousand *  
-	  wf->ReadInt( wf_section, "interval_real", (int)(this->interval_real/thousand) );
+	  wf->ReadInt( world_section, "interval_real", (int)(this->interval_real/thousand) );
 
-	int width =  (int)wf->ReadTupleFloat(wf_section, "size", 0, w() );
-	int height = (int)wf->ReadTupleFloat(wf_section, "size", 1, h() );
+
+	// use the window section for the rest
+ 	int window_section = wf->LookupEntity( "window" );
+
+ 	if( window_section < 1) // no section defined
+ 		return;
+	
+
+	int width =  (int)wf->ReadTupleFloat(window_section, "size", 0, w() );
+	int height = (int)wf->ReadTupleFloat(window_section, "size", 1, h() );
 	// on OS X this behaves badly - prevents the Window manager resizing
 	//larger than this size.
 	size( width,height );
 
-	float x = wf->ReadTupleFloat(wf_section, "center", 0, 0 );
-	float y = wf->ReadTupleFloat(wf_section, "center", 1, 0 );
+	float x = wf->ReadTupleFloat(window_section, "center", 0, 0 );
+	float y = wf->ReadTupleFloat(window_section, "center", 1, 0 );
 	canvas->camera.setPose( x, y );
 
-	canvas->camera.setPitch( wf->ReadTupleFloat( wf_section, "rotate", 0, 0 ) );
-	canvas->camera.setYaw( wf->ReadTupleFloat( wf_section, "rotate", 1, 0 ) );
-	canvas->camera.setScale( wf->ReadFloat(wf_section, "scale", canvas->camera.getScale() ) );
-	canvas->interval = wf->ReadInt(wf_section, "interval", canvas->interval );
+	canvas->camera.setPitch( wf->ReadTupleFloat( window_section, "rotate", 0, 0 ) );
+	canvas->camera.setYaw( wf->ReadTupleFloat( window_section, "rotate", 1, 0 ) );
+	canvas->camera.setScale( wf->ReadFloat(window_section, "scale", canvas->camera.getScale() ) );
+	canvas->interval = wf->ReadInt(window_section, "interval", canvas->interval );
 
 	// set the canvas visibilty flags   
 	uint32_t flags = canvas->GetShowFlags();
-	uint32_t grid = wf->ReadInt(wf_section, "show_grid", flags & STG_SHOW_GRID ) ? STG_SHOW_GRID : 0;
-	uint32_t data = wf->ReadInt(wf_section, "show_data", flags & STG_SHOW_DATA ) ? STG_SHOW_DATA : 0;
-	uint32_t follow = wf->ReadInt(wf_section, "show_follow", flags & STG_SHOW_FOLLOW ) ? STG_SHOW_FOLLOW : 0;
-	uint32_t blocks = wf->ReadInt(wf_section, "show_blocks", flags & STG_SHOW_BLOCKS ) ? STG_SHOW_BLOCKS : 0;
-	uint32_t quadtree = wf->ReadInt(wf_section, "show_tree", flags & STG_SHOW_QUADTREE ) ? STG_SHOW_QUADTREE : 0;
-	uint32_t clock = wf->ReadInt(wf_section, "show_clock", flags & STG_SHOW_CLOCK ) ? STG_SHOW_CLOCK : 0;
-	uint32_t trails = wf->ReadInt(wf_section, "show_trails", flags & STG_SHOW_TRAILS ) ? STG_SHOW_TRAILS : 0;
-	uint32_t trailsrising = wf->ReadInt(wf_section, "show_trails_rising", flags & STG_SHOW_TRAILRISE ) ? STG_SHOW_TRAILRISE : 0;
-	uint32_t arrows = wf->ReadInt(wf_section, "show_arrows", flags & STG_SHOW_ARROWS ) ? STG_SHOW_ARROWS : 0;
-	uint32_t footprints = wf->ReadInt(wf_section, "show_footprints", flags & STG_SHOW_FOOTPRINT ) ? STG_SHOW_FOOTPRINT : 0;
-	uint32_t status = wf->ReadInt(wf_section, "show_status", flags & STG_SHOW_STATUS ) ? STG_SHOW_STATUS : 0;
+	uint32_t grid = wf->ReadInt(window_section, "show_grid", flags & STG_SHOW_GRID ) ? STG_SHOW_GRID : 0;
+	uint32_t data = wf->ReadInt(window_section, "show_data", flags & STG_SHOW_DATA ) ? STG_SHOW_DATA : 0;
+	uint32_t follow = wf->ReadInt(window_section, "show_follow", flags & STG_SHOW_FOLLOW ) ? STG_SHOW_FOLLOW : 0;
+	uint32_t blocks = wf->ReadInt(window_section, "show_blocks", flags & STG_SHOW_BLOCKS ) ? STG_SHOW_BLOCKS : 0;
+	uint32_t quadtree = wf->ReadInt(window_section, "show_tree", flags & STG_SHOW_QUADTREE ) ? STG_SHOW_QUADTREE : 0;
+	uint32_t clock = wf->ReadInt(window_section, "show_clock", flags & STG_SHOW_CLOCK ) ? STG_SHOW_CLOCK : 0;
+	uint32_t trails = wf->ReadInt(window_section, "show_trails", flags & STG_SHOW_TRAILS ) ? STG_SHOW_TRAILS : 0;
+	uint32_t trailsrising = wf->ReadInt(window_section, "show_trails_rising", flags & STG_SHOW_TRAILRISE ) ? STG_SHOW_TRAILRISE : 0;
+	uint32_t arrows = wf->ReadInt(window_section, "show_arrows", flags & STG_SHOW_ARROWS ) ? STG_SHOW_ARROWS : 0;
+	uint32_t footprints = wf->ReadInt(window_section, "show_footprints", flags & STG_SHOW_FOOTPRINT ) ? STG_SHOW_FOOTPRINT : 0;
+	uint32_t status = wf->ReadInt(window_section, "show_status", flags & STG_SHOW_STATUS ) ? STG_SHOW_STATUS : 0;
 
 	canvas->SetShowFlags( grid | data | follow | blocks | quadtree | clock
 			| trails | arrows | footprints | trailsrising | status );
@@ -560,31 +565,35 @@ bool StgWorldGui::Save( const char* filename )
 {
 	PRINT_DEBUG1( "%s.Save()", token );
 
-	int wf_section = 0;
-
-	wf->WriteTupleFloat( wf_section, "size", 0, w() );
-	wf->WriteTupleFloat( wf_section, "size", 1, h() );
-
-	wf->WriteFloat( wf_section, "scale", canvas->camera.getScale() );
+	StgWorld::Save( filename );
 	
-	wf->WriteTupleFloat( wf_section, "center", 0, canvas->camera.getX() );
-	wf->WriteTupleFloat( wf_section, "center", 1, canvas->camera.getY() );
-	
-	wf->WriteTupleFloat( wf_section, "rotate", 0, canvas->camera.getPitch()  );
-	wf->WriteTupleFloat( wf_section, "rotate", 1, canvas->camera.getYaw()  );
+	// use the window section for the rest
+ 	int window_section = wf->LookupEntity( "window" );
 
-	uint32_t flags = canvas->GetShowFlags();
-	wf->WriteInt( wf_section, "show_blocks", flags & STG_SHOW_BLOCKS );
-	wf->WriteInt( wf_section, "show_grid", flags & STG_SHOW_GRID );
-	wf->WriteInt( wf_section, "show_follow", flags & STG_SHOW_FOLLOW );
-	wf->WriteInt( wf_section, "show_data", flags & STG_SHOW_DATA );
-	wf->WriteInt( wf_section, "show_occupancy", flags & STG_SHOW_OCCUPANCY );
-	wf->WriteInt( wf_section, "show_tree", flags & STG_SHOW_QUADTREE );
-	wf->WriteInt( wf_section, "show_clock", flags & STG_SHOW_CLOCK );
+ 	if( window_section > 0 ) // section defined
+	  {
+		 wf->WriteTupleFloat( window_section, "size", 0, w() );
+		 wf->WriteTupleFloat( window_section, "size", 1, h() );
+		 
+		 wf->WriteFloat( window_section, "scale", canvas->camera.getScale() );
+		 
+		 wf->WriteTupleFloat( window_section, "center", 0, canvas->camera.getX() );
+		 wf->WriteTupleFloat( window_section, "center", 1, canvas->camera.getY() );
+		 
+		 wf->WriteTupleFloat( window_section, "rotate", 0, canvas->camera.getPitch()  );
+		 wf->WriteTupleFloat( window_section, "rotate", 1, canvas->camera.getYaw()  );
+		 
+		 uint32_t flags = canvas->GetShowFlags();
+		 wf->WriteInt( window_section, "show_blocks", flags & STG_SHOW_BLOCKS );
+		 wf->WriteInt( window_section, "show_grid", flags & STG_SHOW_GRID );
+		 wf->WriteInt( window_section, "show_follow", flags & STG_SHOW_FOLLOW );
+		 wf->WriteInt( window_section, "show_data", flags & STG_SHOW_DATA );
+		 wf->WriteInt( window_section, "show_occupancy", flags & STG_SHOW_OCCUPANCY );
+		 wf->WriteInt( window_section, "show_tree", flags & STG_SHOW_QUADTREE );
+		 wf->WriteInt( window_section, "show_clock", flags & STG_SHOW_CLOCK );
 
-	// TODO - per model visualizations save 
-
-	return StgWorld::Save( filename );
+		 // TODO - per model visualizations save 
+	  }
 }
 
 
@@ -595,7 +604,6 @@ bool StgWorldGui::Update()
 
   bool val = paused ? true : StgWorld::Update();
   
-
   stg_usec_t interval;
   stg_usec_t timenow;
   
@@ -614,11 +622,10 @@ bool StgWorldGui::Update()
   } while( interval < interval_real );
   
   
+  interval_log[updates%INTERVAL_LOG_LEN] =  timenow - real_time_of_last_update;
+
   real_time_of_last_update = timenow;
   
-  
-  interval_log[updates%INTERVAL_LOG_LEN] = interval_real;//timenow - real_time_now;
-
   return val;
 }
 

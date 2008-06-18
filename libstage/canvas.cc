@@ -11,6 +11,12 @@ $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
 
 using namespace Stg;
 
+static  const int checkImageWidth = 2;
+static  const int	checkImageHeight = 2;
+static  GLubyte checkImage[checkImageHeight][checkImageWidth][4];
+static  GLuint texName;
+static bool canvas_init_done = false;
+
 void StgCanvas::TimerCallback( StgCanvas* c )
 {
   c->redraw();
@@ -25,6 +31,7 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 : Fl_Gl_Window(x,y,w,h)
 {
 	end();
+
 	//show(); // must do this so that the GL context is created before configuring GL
 	// but that line causes a segfault in Linux/X11! TODO: test in OS X
 
@@ -375,13 +382,87 @@ void StgCanvas::FixViewport(int W,int H)
 {
 	glLoadIdentity();
 	glViewport(0,0,W,H);
+
+	if( ! canvas_init_done ) // do a bit of texture setup
+	  {
+		 canvas_init_done = true;
+		 int i, j, c;
+		 for (i = 0; i < checkImageHeight; i++) 
+			for (j = 0; j < checkImageWidth; j++) 
+			  {			
+				 int even = (i+j)%2;
+				 checkImage[i][j][0] = (GLubyte) 255 - 10*even;
+				 checkImage[i][j][1] = (GLubyte) 255 - 10*even;
+				 checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
+				 checkImage[i][j][3] = 255;
+			  }
+		 
+		 
+		 glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		 glGenTextures(1, &texName);		 
+		 glBindTexture(GL_TEXTURE_2D, texName);
+		 glEnable(GL_TEXTURE_2D);
+		 
+		 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		 
+		 
+		 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
+						  0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+
+		 glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	  }
 }
+
 
 void StgCanvas::DrawGlobalGrid()
 {
-	PushColor( 0,0,0,0.2 );
-	gl_draw_grid( world->GetExtent() );
+
+	
+	stg_bounds3d_t bounds = world->GetExtent();
+
+   char str[16];	
+	PushColor( 0,0,0,0.15 );
+	for( double i = floor(bounds.x.min); i < bounds.x.max; i++)
+	  {
+		 snprintf( str, 16, "%d", (int)i );
+		 gl_draw_string(  i, 0, 0.00, str );
+	  }
+	
+	for( double i = floor(bounds.y.min); i < bounds.y.max; i++)
+	  {
+		 snprintf( str, 16, "%d", (int)i );
+		 gl_draw_string(  0, i, 0.00, str );
+	  }
 	PopColor();
+	
+	glEnable(GL_POLYGON_OFFSET_FILL);
+	glPolygonOffset(2.0, 2.0);
+	glDisable(GL_BLEND);
+
+   glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texName);
+
+   glBegin(GL_QUADS);
+
+   glTexCoord2f( bounds.x.min/2.0, bounds.y.min/2.0 ); 
+	glVertex3f( bounds.x.min, bounds.y.min, 0 );
+   glTexCoord2f( bounds.x.max/2.0, bounds.y.min/2.0); 
+	glVertex3f(  bounds.x.max, bounds.y.min, 0 );
+   glTexCoord2f( bounds.x.max/2.0, bounds.y.max/2.0 ); 
+	glVertex3f(  bounds.x.max, bounds.y.max, 0 );
+   glTexCoord2f( bounds.x.min/2.0, bounds.y.max/2.0 ); 
+	glVertex3f( bounds.x.min, bounds.y.max, 0 );
+
+   glEnd();
+
+   glDisable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
+	
+
+	glDisable(GL_POLYGON_OFFSET_FILL );
 }
 
 void StgCanvas::renderFrame( bool robot_camera )
@@ -393,42 +474,28 @@ void StgCanvas::renderFrame( bool robot_camera )
 	if( ! (showflags & STG_SHOW_TRAILS) || robot_camera == true )
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	glPushMatrix();
-
-	// draw the world size rectangle in white, using the polygon offset
-	// so it doesn't z-fight with the models
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glEnable(GL_POLYGON_OFFSET_FILL);
-	glPolygonOffset(2.0, 2.0);
-
-	glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
-	((StgWorldGui*)world)->DrawFloor();
-
-	glDisable(GL_POLYGON_OFFSET_FILL);
-
-	if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) && robot_camera == false )
-	{
-		glDisable( GL_LINE_SMOOTH );
-		glLineWidth( 1 );
-		glPolygonMode( GL_FRONT, GL_LINE );
-		colorstack.Push(1,0,0);
-
-		if( showflags & STG_SHOW_OCCUPANCY )
-			((StgWorldGui*)world)->DrawTree( false );
-
-		if( showflags & STG_SHOW_QUADTREE )
-			((StgWorldGui*)world)->DrawTree( true );
-
-		colorstack.Pop();
-
-		glEnable( GL_LINE_SMOOTH );
-	}
-
-	glPopMatrix();
-
 	if( showflags & STG_SHOW_GRID && robot_camera == false )
 		DrawGlobalGrid();
 
+	if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) && robot_camera == false )
+	{
+	  glPushMatrix();	  
+	  glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
+	  
+	  glLineWidth( 1 );
+	  glPolygonMode( GL_FRONT, GL_LINE );
+	  colorstack.Push(1,0,0);
+	  
+	  if( showflags & STG_SHOW_OCCUPANCY )
+		 ((StgWorldGui*)world)->DrawTree( false );
+	  
+	  if( showflags & STG_SHOW_QUADTREE )
+		 ((StgWorldGui*)world)->DrawTree( true );
+	  
+	  colorstack.Pop();
+	  glPopMatrix();
+	}
+	
 	for( GList* it=selected_models; it; it=it->next )
 		((StgModel*)it->data)->DrawSelected();
 
