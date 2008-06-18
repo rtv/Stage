@@ -62,13 +62,9 @@
 // FLTK Gui includes
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
-#include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Gl_Window.H>
 #include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Menu_Button.H>
-#include <FL/Fl_Value_Slider.H>
 #include <FL/Fl_Window.H>
-#include <FL/Fl_Box.H>
 #include <FL/fl_draw.H>
 #include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
 #include <FL/glut.H>
@@ -1800,18 +1796,6 @@ class GlColorStack
 	private:
 		GQueue* colorstack;
 };
-
-// FLTK Gui includes
-#include <FL/Fl.H>
-#include <FL/Fl_Gl_Window.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Menu_Button.H>
-#include <FL/Fl_Value_Slider.H>
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Box.H>
-#include <FL/fl_draw.H>
-#include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
-#include <FL/glut.H>
 
 class StgCamera 
 {
