@@ -382,39 +382,9 @@ void StgCanvas::FixViewport(int W,int H)
 {
 	glLoadIdentity();
 	glViewport(0,0,W,H);
-
-	if( ! canvas_init_done ) // do a bit of texture setup
-	  {
-		 canvas_init_done = true;
-		 int i, j, c;
-		 for (i = 0; i < checkImageHeight; i++) 
-			for (j = 0; j < checkImageWidth; j++) 
-			  {			
-				 int even = (i+j)%2;
-				 checkImage[i][j][0] = (GLubyte) 255 - 10*even;
-				 checkImage[i][j][1] = (GLubyte) 255 - 10*even;
-				 checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
-				 checkImage[i][j][3] = 255;
-			  }
-		 
-		 
-		 glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		 glGenTextures(1, &texName);		 
-		 glBindTexture(GL_TEXTURE_2D, texName);
-		 glEnable(GL_TEXTURE_2D);
-		 
-		 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		 
-		 
-		 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
-						  0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
-
-		 glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	  }
 }
+
+
 
 
 void StgCanvas::DrawGlobalGrid()
@@ -685,6 +655,38 @@ void StgCanvas::draw()
 		//glEnableClientState( GL_COLOR_ARRAY );
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		
+		if( ! canvas_init_done ) // do a bit of texture setup
+		{
+			canvas_init_done = true;
+			int i, j, c;
+			for (i = 0; i < checkImageHeight; i++) 
+				for (j = 0; j < checkImageWidth; j++) 
+				{			
+					int even = (i+j)%2;
+					checkImage[i][j][0] = (GLubyte) 255 - 10*even;
+					checkImage[i][j][1] = (GLubyte) 255 - 10*even;
+					checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
+					checkImage[i][j][3] = 255;
+				}
+			
+			
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			glGenTextures(1, &texName);		 
+			glBindTexture(GL_TEXTURE_2D, texName);
+			glEnable(GL_TEXTURE_2D);
+			
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			
+			
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
+						 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+			
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+		}
 	}            
 
 	
@@ -716,4 +718,3 @@ void StgCanvas::resize(int X,int Y,int W,int H)
 	FixViewport(W,H);
 	invalidate();
 }
-
