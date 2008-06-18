@@ -1010,7 +1010,7 @@ private:
 
   //stg_id_t id;
 
-	GHashTable* models_by_id; ///< the models that make up the world, indexed by id
+	//GHashTable* models_by_id; ///< the models that make up the world, indexed by id
 	GHashTable* models_by_name; ///< the models that make up the world, indexed by name
 	GList* velocity_list; ///< a list of models that have non-zero velocity, for efficient updating
 
@@ -1133,7 +1133,7 @@ public:
 
   /** call func( model, arg ) for each model in the world */
 	void ForEachModel( GHFunc func, void* arg )
-	{ g_hash_table_foreach( models_by_id, func, arg ); };
+	{ g_hash_table_foreach( models_by_name, func, arg ); };
 
   /** Return the number of times the world has been updated. */
 	long unsigned int GetUpdateCount()

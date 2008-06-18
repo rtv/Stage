@@ -594,6 +594,9 @@ bool StgWorldGui::Save( const char* filename )
 
 		 // TODO - per model visualizations save 
 	  }
+
+	// TODO - error checking
+	return true;
 }
 
 
