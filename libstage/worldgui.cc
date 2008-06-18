@@ -152,9 +152,9 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 
 	mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
 	mbar->add( "File/&Load World...", FL_CTRL + 'l', (Fl_Callback *)LoadCallback, this, FL_MENU_DIVIDER );
-	mbar->add( "File/Save World", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
+	mbar->add( "File/&Save World", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
 	mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback *)SaveAsCallback, this, FL_MENU_DIVIDER );
-	mbar->add( "File/Exit", FL_CTRL+'q', (Fl_Callback *)QuitCallback, this );
+	mbar->add( "File/E&xit", FL_CTRL+'q', (Fl_Callback *)QuitCallback, this );
 
 	mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
 	mbar->add( MITEM_VIEW_DATA,      'd', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
