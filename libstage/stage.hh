@@ -76,6 +76,7 @@
 #endif 
 
 #include "file_manager.hh"
+#include "options_dlg.hh"
 
 /** The Stage library uses its own namespace */
 namespace Stg 
@@ -2037,7 +2038,8 @@ protected:
   static void HelpAboutCallback( Fl_Widget* wid );
   static void view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas );
   static void WindowCallback( Fl_Widget* wid, StgWorldGui* world );
-  static void optionsDlgCb( Fl_Widget*, StgCanvas* canvas );
+  static void optionsDlgCb( Fl_Widget* w, StgCanvas* canvas );
+  static void optionChangeCb( Fl_Widget* w, void* p );
   
 	bool SaveAsDialog();
 	bool CloseWindowQuery();

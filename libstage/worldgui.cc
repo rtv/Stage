@@ -105,8 +105,6 @@ overwritten.
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_File_Chooser.H>
 
-#include "file_manager.hh"
-#include "options_dlg.hh"
 
 static const char* MITEM_VIEW_DATA =      "&View/&Data";
 static const char* MITEM_VIEW_BLOCKS =    "&View/&Blocks";
@@ -506,10 +504,23 @@ void StgWorldGui::view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas )
 	//printf( "value: %d\n", item->value() );
 }
 
-void StgWorldGui::optionsDlgCb( Fl_Widget*, StgCanvas* canvas ) {
+void StgWorldGui::optionsDlgCb( Fl_Widget* w, StgCanvas* canvas ) {
 	std::vector<Option> options;
-	OptionsDlg od( options );
-	od.display();
+	for (int i=0; i<10; i++) {
+		Option o( i, "Option", i%2*true );
+		options.push_back(o);
+	}
+	
+	
+	OptionsDlg oDlg( options, optionChangeCb, 180, 250 );
+	oDlg.display();
+}
+
+void StgWorldGui::optionChangeCb( Fl_Widget* w, void* p ) {
+	OptionsDlg* oDlg = static_cast<OptionsDlg*>( w );
+	Option o = oDlg->changed();
+	printf( "\"%s\"[%d] changed to %d!\n", o.name().c_str(), o.id(), o.val() );
+	// update flag(s)
 }
 
 void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world ) 
