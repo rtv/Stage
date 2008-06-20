@@ -31,7 +31,7 @@ private:
 	std::vector<Option> options;
 	Fl_Scroll* scroll;
 	Fl_Button* button;
-	virtual int OptionsDlg::handle( int event );
+	virtual int handle( int event );
 	static void checkChanged( Fl_Widget* w, void* p );
 	static void applyAllPress( Fl_Widget* w, void* p );
 	Option changedItem;
