@@ -2,10 +2,9 @@
 #include <FL/Fl.H>
 
 
-OptionsDlg::OptionsDlg( const std::vector<Option>& opts, Fl_Callback* cb, int w, int h ) :
-Fl_Window( w, h, "Options" ),
-options( opts ),
-changedCb( cb ) {
+OptionsDlg::OptionsDlg( const std::vector<Option>& opts, int w, int h ) :
+Fl_Window( w, h, "Model Options" ),
+options( opts ) {
 	const int hm = w/6;
 	const int vm = 2;
 	const int btnH = 25;
@@ -45,12 +44,25 @@ void OptionsDlg::checkChanged( Fl_Widget* w, void* p ) {
 	int item = oDlg->scroll->find( check );
 	oDlg->options[ item ].set( check->value() );
 	oDlg->changedItem = oDlg->options[ item ];
-	oDlg->changedCb( oDlg, NULL );
+	oDlg->do_callback();
 }
 
 void OptionsDlg::applyAllPress( Fl_Widget* w, void* p ) {
 	OptionsDlg* oDlg = static_cast<OptionsDlg*>( p );
 	
 	oDlg->changedItem = Option( -1, "", false );
-	oDlg->changedCb( oDlg, NULL );
+	oDlg->do_callback();
+}
+
+int OptionsDlg::handle( int event ) {
+	switch ( event ) {
+		case FL_SHORTCUT:
+			if ( Fl::event_key() == FL_Escape ) {
+				hide();
+				return 1;
+			}
+			break;
+	}
+	
+	return Fl_Window::handle( event );
 }

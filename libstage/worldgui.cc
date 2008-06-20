@@ -185,7 +185,7 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(0,0,W,H,L)
 	mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));
 	
-	mbar->add( "View/&Options", FL_CTRL + 'o', (Fl_Callback *)optionsDlgCb, canvas );
+	mbar->add( "View/&Options", FL_CTRL + 'o', (Fl_Callback *)openOptionsCb, canvas );
 
 	mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
 	mbar->add( "Help/&About Stage...", 0, (Fl_Callback *)About_cb, this );
@@ -504,23 +504,34 @@ void StgWorldGui::view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas )
 	//printf( "value: %d\n", item->value() );
 }
 
-void StgWorldGui::optionsDlgCb( Fl_Widget* w, StgCanvas* canvas ) {
+void StgWorldGui::openOptionsCb( Fl_Widget* w, void* p ) {
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+	
 	std::vector<Option> options;
 	for (int i=0; i<10; i++) {
 		Option o( i, "Option", i%2*true );
-		options.push_back(o);
+		options.push_back( o );
 	}
 	
-	
-	OptionsDlg oDlg( options, optionChangeCb, 180, 250 );
+	OptionsDlg oDlg( options, 180, 250 );
+	oDlg.callback( optionsDlgCb, worldGui );
 	oDlg.display();
+	
+	printf("Dialog callback ended\n");
 }
 
-void StgWorldGui::optionChangeCb( Fl_Widget* w, void* p ) {
+void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
 	OptionsDlg* oDlg = static_cast<OptionsDlg*>( w );
-	Option o = oDlg->changed();
-	printf( "\"%s\"[%d] changed to %d!\n", o.name().c_str(), o.id(), o.val() );
-	// update flag(s)
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+	switch ( Fl::event() ) {
+		case FL_CLOSE: // clicked close button
+			oDlg->hide();
+			return;
+		default:
+			Option o = oDlg->changed();
+			printf( "\"%s\"[%d] changed to %d!\n", o.name().c_str(), o.id(), o.val() );			
+			// update flag(s)
+	}
 }
 
 void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world ) 
