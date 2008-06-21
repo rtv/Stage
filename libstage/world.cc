@@ -325,7 +325,9 @@ stg_usec_t StgWorld::RealTimeNow()
   struct timeval tv;
   gettimeofday( &tv, NULL );  // slow system call: use sparingly
   
-  return( tv.tv_sec*1000000 + tv.tv_usec );
+  // Implicit cast causes overflow
+  //return( tv.tv_sec*1000000 + tv.tv_usec );
+  return( ((stg_usec_t)tv.tv_sec)*1000000 + tv.tv_usec );
 }
 
 stg_usec_t StgWorld::RealTimeSinceStart()
