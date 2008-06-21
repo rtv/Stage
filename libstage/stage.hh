@@ -1953,6 +1953,8 @@ class StgCanvas : public Fl_Gl_Window
 	bool graphics;
 	StgWorldGui* world;
 
+  void Screenshot();
+
 	void FixViewport(int W,int H);
 	//robot_camera = true
 	virtual void renderFrame( bool robot_camera = false );

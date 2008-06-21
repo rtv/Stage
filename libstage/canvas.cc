@@ -7,7 +7,9 @@ $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
 #include "stage_internal.hh"
 #include "texture_manager.hh"
 #include "replace.h"
+
 #include <string>
+#include <png.h>
 
 using namespace Stg;
 
@@ -592,7 +594,64 @@ void StgCanvas::renderFrame( bool robot_camera )
 		glMatrixMode (GL_MODELVIEW);
 	}
 
+	
+	if( 0 )
+	  Screenshot();
 }
+
+
+void StgCanvas::Screenshot()
+{
+  GLint viewport[4];
+  glGetIntegerv(GL_VIEWPORT,viewport);
+  
+  int width = viewport[2] - viewport[0];
+  int height = viewport[3] - viewport[1];
+
+  int depth = 3; // RGB
+  
+  uint8_t* pixels= new uint8_t[ width * height * depth ]; 
+		 
+  glFlush(); // make sure the drawing is done
+  // read the pixels from the screen
+  glReadPixels( viewport[0], viewport[1], width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels );			 
+  
+  static uint32_t count = 0;		 
+  char filename[64];
+  snprintf( filename, 63, "stage-%d.png", count++ );
+  
+  FILE *fp = fopen( filename, "wb" );
+  if( fp == NULL ) 
+	 {
+		PRINT_ERR1( "Unable to open %s", filename );
+	 }
+  
+  // write png header information
+  png_structp pp = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+  png_infop info = png_create_info_struct(pp);
+  png_init_io(pp, fp);
+  png_set_compression_level(pp, Z_DEFAULT_COMPRESSION);
+  png_set_IHDR( pp, info, 
+					 width, height, 8, 
+					 PNG_COLOR_TYPE_RGB, 
+					 PNG_INTERLACE_NONE, 
+					 PNG_COMPRESSION_TYPE_DEFAULT, 
+					 PNG_FILTER_TYPE_DEFAULT);
+  png_write_info(pp, info);
+  
+  // write pixels in reverse row order
+  for( int y=height-1; y >= 0; y-- )
+	 png_write_row( pp, pixels + 3*y*width );
+  
+  png_write_end(pp, info);
+  png_destroy_write_struct(&pp, 0);
+  fclose(fp);
+  
+  printf( "Saved %s\n", filename );
+  
+  delete [] pixels;
+}
+
 
 void StgCanvas::draw()
 {
