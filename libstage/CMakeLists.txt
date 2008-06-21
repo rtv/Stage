@@ -68,5 +68,5 @@ INSTALL(TARGETS stagebinary stage
 	LIBRARY DESTINATION lib
 )
 
-INSTALL(FILES stage.hh
+INSTALL(FILES stage.hh file_manager.hh options_dlg.hh
         DESTINATION include/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR})
