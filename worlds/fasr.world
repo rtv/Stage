@@ -58,6 +58,7 @@ define autorob pioneer2dx
  color "red"
 
  sicklaser( pose [ 0.040 0.000 0.000 ] samples 30 range_max 5 laser_return 2  )
+#camera( pose [ 0.000 0.000 0.000 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )
  ctrl "fasr"
 
   # say "Autolab"
