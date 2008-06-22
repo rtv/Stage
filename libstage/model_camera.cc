@@ -14,10 +14,10 @@
 #include <sstream>
 
 
-StgModelCamera::StgModelCamera( StgWorld* world, 
-										  StgModel* parent ) 
+StgModelCamera::StgModelCamera( StgWorld* world, StgModel* parent ) 
   : StgModel( world, parent, MODEL_TYPE_CAMERA ),
-_frame_data( NULL ), _frame_color_data( NULL ), _vertexbuf( NULL ),  _width( 0 ), _height( 0 ), _yaw_offset( 0 )
+_frame_data( NULL ), _frame_color_data( NULL ), 
+_vertexbuf_scaled( NULL ),  _width( 0 ), _height( 0 ), _valid_vertexbuf_cache( false ), _yaw_offset( 0 )
 {
 	PRINT_DEBUG2( "Constructing StgModelCamera %d (%s)\n", 
 			id, typestr );
@@ -48,7 +48,9 @@ StgModelCamera::~StgModelCamera()
 	if( _frame_data != NULL ) {
 		delete[] _frame_data;
 		delete[] _frame_color_data;
-		delete[] _vertexbuf;
+		delete[] _vertexbuf_cache;
+		delete[] _vertexbuf_scaled;
+		delete[] _vertexbuf_scaled_index;
 	}
 }
 
@@ -74,36 +76,6 @@ void StgModelCamera::Update( void )
 float* StgModelCamera::laser()
 {
 	return NULL;
-//	//TODO allow the h and w to be passed by user
-//	int w = _width;
-//	int h = 1;
-//	
-//	static GLfloat* data_gl = NULL;
-//	static GLfloat* data = NULL;
-//	if( data == NULL ) {
-//		data = new GLfloat[ h * w ];
-//		data_gl = new GLfloat[ h * w ];
-//		
-//	}
-//	
-//	glViewport( 0, 0, w, h );
-//	_camera.update();
-//	_camera.SetProjection( w, h, 0.1, 40.0 );
-//	
-//	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.3 );
-//	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 );
-//	_camera.Draw();
-//
-//	_canvas->renderFrame( true );
-//	
-//	glReadPixels(0, 0, w, h, GL_DEPTH_COMPONENT, GL_FLOAT, data_gl );
-//
-//	for( int i = 0; i < w; i++ ) {
-//		data[ w-1-i ] = _camera.realDistance( data_gl[ i ]);
-//	}
-//
-//	_canvas->invalidate();
-//	return data;
 }
 
 const char* StgModelCamera::GetFrame( bool depth_buffer )
@@ -115,14 +87,18 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 		if( _frame_data != NULL ) {
 			delete[] _frame_data;
 			delete[] _frame_color_data;
-			delete[] _vertexbuf;	
+			delete[] _vertexbuf_cache;
+			delete[] _vertexbuf_scaled;
+			delete[] _vertexbuf_scaled_index;
 		}
-		_frame_data = new char[ 4 * _width * _height ]; //assumes a max of depth 4
-		_frame_color_data = new char[ 3 * _width * _height ]; //for RGB
-		_vertexbuf = new float[ 3 * _width * _height ]; //for RGB
+		_frame_data = new GLfloat[ _width * _height ]; //assumes a max of depth 4
+		_frame_color_data = new GLubyte[ 4 * _width * _height ]; //for RGBA
+
+		_vertexbuf_cache = new ColoredVertex[ _width * _height ]; //for unit vectors
+		_vertexbuf_scaled = new ColoredVertex[ _width * _height ]; //scaled with z-buffer
+		_vertexbuf_scaled_index = new GLushort[ 4 * (_width-1) * (_height-1) ]; //for indicies to draw a quad
 	}
 
-	
 	glViewport( 0, 0, _width, _height );
 	_camera.update();
 	_camera.SetProjection();
@@ -145,13 +121,13 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 
 	//read color buffer
 	glReadPixels(0, 0, _width, _height,
-				 GL_RGB,
+				 GL_RGBA,
 				 GL_UNSIGNED_BYTE,
 				 _frame_color_data );		
 
 
 	_canvas->invalidate();
-	return _frame_data;
+	return NULL; //_frame_data;
 }
 
 //TODO create lines outlineing camera frustrum, then iterate over each depth measurement and create a square
@@ -171,14 +147,7 @@ void StgModelCamera::DataVisualize( void )
 		
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); //TODO this doesn't seem to work.
 
-//	float z = cos( dtor( h_fov / 2.0 ) ) * length;
 	
-	glColor4f(1.0, 0.0, 0.0, 1.0 );	
-	
-	static float foo = 0.0;
-	foo += 1.0;
-	
-	const float* data = ( float* )( _frame_data ); //TODO use static_cast here
 	int w = _width;
 	int h = _height;
 	float a;
@@ -187,74 +156,100 @@ void StgModelCamera::DataVisualize( void )
 	float vert_a_space = h_fov / h; //degrees between each vertical sample
 	float x, y, z;
 	float tmp_x, tmp_y, tmp_z;
-	float *buf;
 
-	glBegin( GL_POINTS );
-	for( int i = 0; i < w; i++ ) {
+
+	//TODO - there are still some vertices which aren't accurate - possibly due to a buffer overflow / memory corruption.
+	//In some cases the vertices appear to be below the floor which shouldn't be possible once the unit vectors are scaled (and should simply hit the floor, but not pass beneath them)
+	if( _valid_vertexbuf_cache == false ) {
 		for( int j = 0; j < h; j++ ) {
-			float length = data[ i + j * h ];
-			
-			a = start_fov - static_cast< float >( i ) * a_space;
-			vert_a = start_vert_fov - static_cast< float >( j ) * vert_a_space;
-			
-			x = length;
-			y = 0;
-			z = 0;
-			
-			tmp_x = x * cos( dtor( a ) ); // - y *sin( but y=0)
-			tmp_y = x * sin( dtor( a ) ); // + y * cos( but y=0 )
-			tmp_z = z;
-			
-			x = tmp_x; y = tmp_y; z = tmp_z;
-			
-			tmp_z = - x * sin( dtor( vert_a ) );
-			tmp_x = x * cos( dtor( vert_a ) );
+			for( int i = 0; i < w; i++ ) {
+				
+				a = start_fov - static_cast< float >( i ) * a_space;
+				vert_a = start_vert_fov - static_cast< float >( j ) * vert_a_space;
+				
+				//calculate based on a unit vector, which is scaled later on (this reduces all the sin/cos/dtor calls)
+				x = 1;
+				y = 0;
+				z = 0;
 
-			x = tmp_x; y = tmp_y; z = tmp_z;
-			
-			buf = _vertexbuf + ( i + j * h  ) * 3;
-			
-			buf[ 0 ] = x;
-			buf[ 1 ] = y;
-			buf[ 2 ] = z;
-			
-			//TODO push into a buffer
-			//glVertex3f( x, y, z );
+				//rotate about z by a
+				tmp_x = x * cos( dtor( a ) ); // - y *sin( but y=0)
+				tmp_y = x * sin( dtor( a ) ); // + y * cos( but y=0 )
+				tmp_z = z;
+				
+				x = tmp_x; y = tmp_y; z = tmp_z;
+				
+				//rotate about x
+				tmp_z = - x * sin( dtor( vert_a ) );
+				tmp_x = x * cos( dtor( vert_a ) );
 
+				x = tmp_x;
+				y = tmp_y;
+				z = tmp_z;
+				
+				int index = i + j * w;
+				ColoredVertex* vertex = _vertexbuf_cache + index;
+				
+				vertex->x = x;
+				vertex->y = y;
+				vertex->z = z;
+				
+				//TODO move the quad generate to the same section as scalling code, and only insert a quad when the distance between vertices isn't too large (i.e. spanning from a wall to sky)
+				//It might also be possible to write a shader which would scale vertices and create quads instead of doing it here on the CPU.
+				
+				//skip top and left boarders
+				if( i == 0 || j == 0 )
+					continue;
+				
+				//decrement i and j, since the first boarders were skipped
+				//note: the width of this array is (w-1) since it contains QUADS between the vertices
+				GLushort* p = _vertexbuf_scaled_index + ( (i-1) + (j-1) * (w-1) ) * 4;
+				
+				//create quad growing adjacent point on top left (use width of `w' since these are VERTICES)
+				p[ 0 ] = i     + j * w;
+				p[ 1 ] = i - 1 + j * w;
+				p[ 2 ] = i - 1 + ( j - 1 ) * w;
+				p[ 3 ] = i     + ( j - 1 ) * w;
+				
+			}
+		}
+		_valid_vertexbuf_cache = true;
+	}
+	
+	//Scale cached unit vectors with depth-buffer
+	float* depth_data = ( float* )( _frame_data );
+	for( int j = 0; j < h; j++ ) {
+		for( int i = 0; i < w; i++ ) {
+			int index = i + j * w;
+			const ColoredVertex* unit_vertex = _vertexbuf_cache + index;
+			ColoredVertex* scaled_vertex = _vertexbuf_scaled + index;
+			const GLubyte* color = _frame_color_data + index * 4; //TODO might be buggy indexing
+			const float length = depth_data[ index ];
+			
+			//scale unitvectors with depth-buffer
+			scaled_vertex->x = unit_vertex->x * length;
+			scaled_vertex->y = unit_vertex->y * length;
+			scaled_vertex->z = unit_vertex->z * length;
+			
+			//colour the points
+			//TODO color is buggy
+			scaled_vertex->r = 0x00; //color[ 0 ];
+			scaled_vertex->g = 0x00; //color[ 1 ];
+			scaled_vertex->b = 0x00; //color[ 2 ];
+			scaled_vertex->a = 0xFF;
+			
 		}
 	}
-	glEnd();
-	
-	//TODO use vertex array buffer
-	glEnableClientState( GL_VERTEX_ARRAY );
 
-	glVertexPointer( 3, GL_FLOAT, 0, _vertexbuf );
-	glDrawArrays( GL_POINTS, 0, _width * _height );
-	
-	glDisableClientState( GL_VERTEX_ARRAY );
-	
-//	for( int i = 0; i < w; i++ ) {
-//		float z_a = h_fov / _width * static_cast< float >( i );
-//		for( int j = 0; j < h; j++ ) {
-//			float length = data[ i + j * w ];
-//			float a;
-//			//float z = cos( z_a ) * length;
-//			//TODO rename j to not conflict with loop
-//			int j = i + 1;
-//			if( j < _width/2 ) 
-//				a = center_horiz - w_fov / _width * static_cast< float >( _width/2 - 1 - j );
-//			else
-//				a = center_horiz + w_fov / _width * static_cast< float >( j - _width/2 );
-//			x = sin( dtor( a ) ) * length;
-//			y = cos( dtor( a ) ) * length;
-//			glBegin( GL_LINE_LOOP );
-//			glVertex3f( 0.0, 0.0, 0.0 );
-//			glVertex3f( x, y, 0.0 );
-//			glEnd();
-//			
-//		}
-//	}
-	
+
+	//draw then camera data
+	glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); //Can also be GL_FILL - but harder to debug
+	glInterleavedArrays( GL_C4UB_V3F, 0, _vertexbuf_scaled );
+	glDrawElements( GL_QUADS, 4 * (w-1) * (h-1), GL_UNSIGNED_SHORT, _vertexbuf_scaled_index );
+	glPopClientAttrib();
+
+
 }
 
 void StgModelCamera::Draw( uint32_t flags, StgCanvas* canvas )

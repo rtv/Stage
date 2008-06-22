@@ -2457,14 +2457,25 @@ class StgModelBlinkenlight : public StgModel
 };
 
 // CAMERA MODEL ----------------------------------------------------
+typedef struct {
+	// GL_C4UB_V3F
+	GLubyte r, g, b, a;
+	GLfloat x, y, z;
+} ColoredVertex;
+	
 class StgModelCamera : public StgModel
 {
 	private:
 		StgCanvas* _canvas;
 
-		char* _frame_data;  //opengl read buffer
-		char* _frame_color_data;  //opengl read buffer
-		float* _vertexbuf;   //vertex buffer for visualiation
+		GLfloat* _frame_data;  //opengl read buffer
+		GLubyte* _frame_color_data;  //opengl read buffer
+
+		bool _valid_vertexbuf_cache;
+		ColoredVertex* _vertexbuf_cache; //cached unit vectors with appropriate rotations (these must be scalled by z-buffer length)
+		ColoredVertex* _vertexbuf_scaled;   //vertex buffer for visualiation
+		GLushort* _vertexbuf_scaled_index; //indecies for scaled buffer
+	
 		int _width;         //width of buffer
 		int _height;        //height of buffer
 		static const int _depth = 4;
