@@ -105,6 +105,9 @@ overwritten.
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_File_Chooser.H>
 
+#include "file_manager.hh"
+#include "options_dlg.hh"
+
 
 static const char* MITEM_VIEW_DATA =      "&View/&Data";
 static const char* MITEM_VIEW_BLOCKS =    "&View/&Blocks";
@@ -147,6 +150,8 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(0,0,W,H,L)
 	canvas = new StgCanvas( this,0,30,W,H-30 );
 	resizable(canvas);
 	end();
+	
+	oDlg = NULL;
 
 	mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
 	mbar->add( "File/&Load World...", FL_CTRL + 'l', (Fl_Callback *)LoadCallback, this, FL_MENU_DIVIDER );
@@ -198,6 +203,8 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(0,0,W,H,L)
 StgWorldGui::~StgWorldGui()
 {
 	delete mbar;
+	if ( oDlg )
+		delete oDlg;
 	delete canvas;
 }
 
@@ -254,7 +261,7 @@ void StgWorldGui::Load( const char* filename )
 {
 	PRINT_DEBUG1( "%s.Load()", token );
 	
-	fileMan.newWorld( filename );
+	fileMan->newWorld( filename );
 
 	StgWorld::Load( filename );
 	
@@ -351,7 +358,7 @@ void StgWorldGui::LoadCallback( Fl_Widget* wid, StgWorldGui* world )
 	//bool success;
 	const char* pattern = "World Files (*.world)";
 	
-	worldsPath = world->fileMan.worldsRoot().c_str();
+	worldsPath = world->fileMan->worldsRoot().c_str();
 	Fl_File_Chooser fc( worldsPath, pattern, Fl_File_Chooser::CREATE, "Load World File..." );
 	fc.ok_label( "Load" );
 	
@@ -362,7 +369,7 @@ void StgWorldGui::LoadCallback( Fl_Widget* wid, StgWorldGui* world )
 	filename = fc.value();
 	
 	if (filename != NULL) { // chose something
-		if ( world->fileMan.readable( filename ) ) {
+		if ( world->fileMan->readable( filename ) ) {
 			// file is readable, clear and load
 
 			// if (initialized) {
@@ -513,25 +520,53 @@ void StgWorldGui::openOptionsCb( Fl_Widget* w, void* p ) {
 		options.push_back( o );
 	}
 	
-	OptionsDlg oDlg( options, 180, 250 );
-	oDlg.callback( optionsDlgCb, worldGui );
-	oDlg.display();
-	
-	printf("Dialog callback ended\n");
+	if ( !worldGui->oDlg ) {
+		OptionsDlg* oDlg = new OptionsDlg( 0, 0, 180, 250 );
+		// TODO - move initial coords to right edge of window
+		//printf("width: %d\n", worldGui->w());
+		oDlg->callback( optionsDlgCb, worldGui );
+		oDlg->setOptions( options );
+		oDlg->show();
+
+		worldGui->oDlg = oDlg;
+	}
+	else {
+		worldGui->oDlg->show(); // bring it to front
+	}
 }
 
 void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
 	OptionsDlg* oDlg = static_cast<OptionsDlg*>( w );
 	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
 	switch ( Fl::event() ) {
+		case FL_SHORTCUT:
+			if ( Fl::event_key() != FL_Escape ) 
+				break;
+			// otherwise, ESC pressed-> do as below
 		case FL_CLOSE: // clicked close button
+			// invalidate the oDlg pointer from the WorldGui
+			//   instance before the dialog is destroyed
+			worldGui->oDlg = NULL; 
 			oDlg->hide();
+			Fl::delete_widget( oDlg );
 			return;
 		default:
 			Option o = oDlg->changed();
 			printf( "\"%s\"[%d] changed to %d!\n", o.name().c_str(), o.id(), o.val() );			
 			// update flag(s)
 	}
+}
+
+void AboutCloseCb( Fl_Widget* w, void* p ) {
+	Fl_Window* win;
+	win = static_cast<Fl_Window*>( w );
+	Fl_Text_Display* textDisplay;
+	textDisplay = static_cast<Fl_Text_Display*>( p );
+	
+	Fl_Text_Buffer* tbuf = textDisplay->buffer();
+	textDisplay->buffer( NULL );
+	delete tbuf;
+	Fl::delete_widget( win );
 }
 
 void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world ) 
@@ -546,22 +581,23 @@ void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world )
 	const int pngH = 82;
 	//const int pngW = 264;
 	
-	Fl_Window win( Width, Height ); // make a window
+	Fl_Window* win = new Fl_Window( Width, Height ); // make a window
 
-	Fl_Box box( Spc, Spc, 
+	Fl_Box* box = new Fl_Box( Spc, Spc, 
 			   Width-2*Spc, pngH ); // widget that will contain image
 
 	
 	std::string fullpath;
-	fullpath = world->fileMan.fullPath( "stagelogo.png" );
-	Fl_PNG_Image png( fullpath.c_str() ); // load image into ram
-	box.image(png); // attach image to box
+	fullpath = world->fileMan->fullPath( "stagelogo.png" );
+	Fl_PNG_Image* png = new Fl_PNG_Image( fullpath.c_str() ); // load image into ram
+	box->image( png ); // attach image to box
 	
 	Fl_Text_Display* textDisplay;
 	textDisplay = new Fl_Text_Display( Spc, pngH+2*Spc,
 						  Width-2*Spc, Height-pngH-ButtonH-4*Spc );
 	textDisplay->box( FL_NO_BOX );
-	textDisplay->color(win.color());
+	textDisplay->color( win->color() );
+	win->callback( AboutCloseCb, textDisplay );
 	
 	const char* AboutText = 
 		"\n" 
@@ -574,17 +610,13 @@ void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world )
 	tbuf->append( AboutText );
 	textDisplay->buffer( tbuf );
 	
-	Fl_Return_Button button( (Width - ButtonW)/2, Height-Spc-ButtonH,
+	Fl_Return_Button* button;
+	button = new Fl_Return_Button( (Width - ButtonW)/2, Height-Spc-ButtonH,
 					  ButtonW, ButtonH,
 					  "&OK" );
-	button.callback( (Fl_Callback*)HelpAboutCallback );
+	button->callback( (Fl_Callback*)HelpAboutCallback );
 	
-	win.show();
-	while (win.shown())
-		Fl::wait();
-	
-	delete textDisplay;
-	delete tbuf;
+	win->show();
 }
 
 void StgWorldGui::HelpAboutCallback( Fl_Widget* wid ) {

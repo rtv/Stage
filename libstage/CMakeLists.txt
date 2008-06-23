@@ -27,6 +27,7 @@ add_library(stage SHARED
 	model_ranger.cc 
 	resource.cc
 	texture_manager.cc
+	option.hh
 	options_dlg.cc
 	options_dlg.hh
 )
@@ -68,5 +69,5 @@ INSTALL(TARGETS stagebinary stage
 	LIBRARY DESTINATION lib
 )
 
-INSTALL(FILES stage.hh file_manager.hh options_dlg.hh
+INSTALL(FILES stage.hh option.hh
         DESTINATION include/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR})

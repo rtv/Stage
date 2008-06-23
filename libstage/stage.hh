@@ -54,6 +54,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <iostream>
+#include <vector>
 
 // we use GLib's data structures extensively. Perhaps we'll move to
 // C++ STL types to lose this dependency one day.
@@ -75,8 +76,7 @@
 #include <GL/glu.h>
 #endif 
 
-#include "file_manager.hh"
-#include "options_dlg.hh"
+#include "option.hh"
 
 /** The Stage library uses its own namespace */
 namespace Stg 
@@ -87,6 +87,8 @@ namespace Stg
 	class StgWorld;
 	class StgWorldGui;
 	class StgModel;
+	class FileManager;
+	class OptionsDlg;
   
 	/** Initialize the Stage library */
 	void Init( int* argc, char** argv[] );
@@ -1090,7 +1092,7 @@ public:
 
 	virtual ~StgWorld();
 
-  FileManager fileMan;
+  FileManager* fileMan;
 
 	stg_usec_t SimTimeNow(void){ return sim_time;} ;
 	stg_usec_t RealTimeNow(void);
@@ -1164,7 +1166,6 @@ private:
   static uint32_t count;
   static GHashTable*  modelsbyid;
 
-
 public:
   
   /** Look up a model pointer by a unique model ID */
@@ -1234,7 +1235,8 @@ protected:
 	int gui_grid;
 	int gui_outline;
 	int gui_mask;
-
+	
+	
 	StgModel* parent; //< the model that owns this one, possibly NULL
 
 	/** GData datalist can contain arbitrary named data items. Can be used
@@ -1399,7 +1401,7 @@ protected:
 
   stg_model_type_t type;
 
-	public:
+public:
 
   static const char* typestr;
 
@@ -1440,7 +1442,7 @@ protected:
 	StgFlag* PopFlag();
 
 	int GetFlagCount(){ return g_list_length( flag_list ); }
-
+	
 	void DrawFlagList();
 
 	void AddBlinkenlight( stg_blinkenlight_t* b )
@@ -1999,6 +2001,7 @@ private:
   //int wf_section;
   StgCanvas* canvas;
   Fl_Menu_Bar* mbar;
+  OptionsDlg* oDlg;
   stg_usec_t interval_log[INTERVAL_LOG_LEN];
   
   stg_usec_t real_time_of_last_update;

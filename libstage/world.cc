@@ -52,6 +52,7 @@ described on the manual page for each model type.
 
 #include "stage_internal.hh"
 #include "region.hh"
+#include "file_manager.hh"
 
 
 // static data members
@@ -147,6 +148,8 @@ void StgWorld::Initialize( const char* token,
 	bzero( &this->extent, sizeof(this->extent));
 
 	this->real_time_now = 0;
+	
+	fileMan = new FileManager();
 }
 
 StgWorld::~StgWorld( void )
@@ -162,6 +165,8 @@ StgWorld::~StgWorld( void )
 	g_free( token );
 
 	world_list = g_list_remove( world_list, this );
+	
+	delete fileMan;
 }
 
 

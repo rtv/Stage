@@ -11,6 +11,9 @@ $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
 #include <string>
 #include <png.h>
 
+#include "file_manager.hh"
+#include "options_dlg.hh"
+
 using namespace Stg;
 
 static  const int checkImageWidth = 2;
@@ -159,7 +162,6 @@ StgModel* StgCanvas::Select( int x, int y )
 			// remove it from the selected list
 			selected_models = 
 				g_list_remove_link( selected_models, link );
-
 			mod->Disable();
 		}			  
 		else      
@@ -701,7 +703,7 @@ void StgCanvas::draw()
 		//TODO find a better home for loading textures
 		if( loaded_texture == false ) {
 			std::string fullpath;
-			fullpath = world->fileMan.fullPath( "stall.png" );
+			fullpath = world->fileMan->fullPath( "stall.png" );
 			if ( fullpath == "" ) {
 				PRINT_DEBUG( "Unable to load texture.\n" );
 			}
@@ -730,7 +732,7 @@ void StgCanvas::draw()
 		//glEnableClientState( GL_COLOR_ARRAY );
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		
+
 		if( ! canvas_init_done ) // do a bit of texture setup
 		{
 			canvas_init_done = true;

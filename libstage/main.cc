@@ -63,8 +63,8 @@ int main( int argc, char* argv[] )
 	}
 
  	if( loaded_world_file == false ) {
- 		// replace this with a loading dialog/window
- 		StgWorldGui* world = new StgWorldGui( 400, 300 );
+ 		// TODO: special window/loading dialog for this case
+ 		new StgWorldGui( 400, 300 );
  	}
 
 	
