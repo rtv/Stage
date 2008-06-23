@@ -28,6 +28,7 @@ ADD_DEFINITIONS( -DPROJECT=\\\"${PROJECT_NAME}\\\"
 # find the easy modules
 include(FindPkgConfig)
 pkg_search_module( GLIB REQUIRED glib-2.0 )
+pkg_search_module( LIBPNG REQUIRED libpng )
 find_package( OpenGL REQUIRED )
 
 # Look for player v${MIN_PLAYER} or higher and set flags
@@ -80,14 +81,14 @@ include_directories( .
 		     libstage 
 		     replace 
 		     ${GLIB_INCLUDE_DIRS} 
-		     ${FLTK_INCLUDE_DIR}
+                     ${LIBPNG_INCLUDE_DIRS}
 		     ${CMAKE_INCLUDE_PATH}
 )
 
 
 # all targets need these library directories
 link_directories(${GLIB_LIBRARY_DIRS}
-		 ${FLTK_LIBRARY_DIRS}
+                 ${LIBPNG_LIBRARY_DIRS}
 		 ${OPENGL_LIBRARY_DIRS}
 )
 
