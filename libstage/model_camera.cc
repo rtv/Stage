@@ -12,6 +12,7 @@
 //#define DEBUG 1
 #include "stage_internal.hh"
 #include <sstream>
+#include <iomanip>
 
 
 StgModelCamera::StgModelCamera( StgWorld* world, StgModel* parent ) 
@@ -130,11 +131,50 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 	return NULL; //_frame_data;
 }
 
+void StgModelCamera::PrintData( void ) const
+{
+	//create depth matrix
+	std::cout << "depth <- matrix( c( ";
+	for( int j = 0; j < _height; j++ ) {
+		for( int i = 0; i < _width; i++ ) {
+			int index = i + j * _width;
+			const GLubyte* color = _frame_color_data + index * 4; //TODO might be buggy indexing
+			const float length = _frame_data[ index ];	
+			if( i != 0 || j != 0 )
+				std::cout << " ,";
+			std::cout << length;
+		}
+	}
+	std::cout << "), " << std::dec << _width << ", " << _height << " )\n\n";
+	
+	//create color matrix
+	std::cout << "hex_cols <- matrix( c( ";
+	for( int j = 0; j < _height; j++ ) {
+		for( int i = 0; i < _width; i++ ) {
+			int index = i + j * _width;
+			const GLubyte* color = _frame_color_data + index * 4; //TODO might be buggy indexing
+			const float length = _frame_data[ index ];	
+			if( i != 0 || j != 0 )
+				std::cout << " ,";
+			std::cout << "\"#" 
+				<< std::setw( 2 ) << std::setfill('0') << std::hex << (int)color[ 0 ]
+			<< std::setw( 2 ) << std::setfill('0') << std::hex << (int)color[ 1 ]
+			<< std::setw( 2 ) << std::setfill('0') << std::hex << (int)color[ 2 ]
+			<< "\"" ;
+		}
+	}
+	std::cout << "), " << std::dec << _width << ", " << _height << " )\n\n";
+	
+	std::cout << std::endl;
+}
+
 //TODO create lines outlineing camera frustrum, then iterate over each depth measurement and create a square
 void StgModelCamera::DataVisualize( void )
 {
 	if( _frame_data == NULL )
 		return;
+	
+	//PrintData();
 	
 	float w_fov = _camera.horizFov();
 	float h_fov = _camera.vertFov();
@@ -233,9 +273,9 @@ void StgModelCamera::DataVisualize( void )
 			
 			//colour the points
 			//TODO color is buggy
-			scaled_vertex->r = 0x00; //color[ 0 ];
-			scaled_vertex->g = 0x00; //color[ 1 ];
-			scaled_vertex->b = 0x00; //color[ 2 ];
+			scaled_vertex->r = color[ 0 ];
+			scaled_vertex->g = color[ 1 ];
+			scaled_vertex->b = color[ 2 ];
 			scaled_vertex->a = 0xFF;
 			
 		}

@@ -1944,6 +1944,7 @@ class StgCanvas : public Fl_Gl_Window
 	void DrawRays();
 	void ClearRays();
 	void DrawGlobalGrid();
+	void DrawFloor(); //simpler floor compared to grid
 
 	public:
 
@@ -2482,6 +2483,8 @@ class StgModelCamera : public StgModel
 	
 		StgPerspectiveCamera _camera;
 		int _yaw_offset;
+	
+		void PrintData( void ) const;
 	
 	public:
 		StgModelCamera( StgWorld* world,

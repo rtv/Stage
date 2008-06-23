@@ -437,8 +437,21 @@ void StgCanvas::DrawGlobalGrid()
 	glDisable(GL_POLYGON_OFFSET_FILL );
 }
 
+void StgCanvas::DrawFloor()
+{
+	stg_bounds3d_t bounds = world->GetExtent();
+	glColor3f( 0.6, 0.6, 1.0 );
+	glBegin(GL_QUADS);
+	glVertex3f( bounds.x.min, bounds.y.min, 0 );
+	glVertex3f(  bounds.x.max, bounds.y.min, 0 );
+	glVertex3f(  bounds.x.max, bounds.y.max, 0 );
+	glVertex3f( bounds.x.min, bounds.y.max, 0 );
+	glEnd();
+}
+
 void StgCanvas::renderFrame( bool robot_camera )
 {	
+	//create a localy scopped showflags variable - WARNING: changing it will NOT change the class instance's value
 	uint32_t showflags = this->showflags;
 	if( robot_camera == true )
 		showflags = STG_SHOW_BLOCKS;
@@ -446,10 +459,13 @@ void StgCanvas::renderFrame( bool robot_camera )
 	if( ! (showflags & STG_SHOW_TRAILS) || robot_camera == true )
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	if( showflags & STG_SHOW_GRID && robot_camera == false )
+	if( robot_camera == true )
+		DrawFloor();
+	else if( showflags & STG_SHOW_GRID )
 		DrawGlobalGrid();
 
-	if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) && robot_camera == false )
+
+	if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
 	{
 	  glPushMatrix();	  
 	  glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
@@ -753,7 +769,7 @@ void StgCanvas::draw()
 		if( (showflags & STG_SHOW_FOLLOW)  && last_selection ) {
 			//Follow the selected robot
 			stg_pose_t gpose = last_selection->GetGlobalPose();
-			perspective_camera.setPose( gpose.x, gpose.y, 0.1 );
+			perspective_camera.setPose( gpose.x, gpose.y, 0.2 );
 			perspective_camera.setYaw( rtod( gpose.a ) - 90.0 );
 			
 		}
