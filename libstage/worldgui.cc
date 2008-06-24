@@ -134,7 +134,7 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(0,0,W,H,L)
 {
 	//size_range( 100,100 ); // set minimum window size
-
+	oDlg = NULL;
 	graphics = true;
 	paused = false;
 
@@ -150,53 +150,48 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(0,0,W,H,L)
 	canvas = new StgCanvas( this,0,30,W,H-30 );
 	resizable(canvas);
 	end();
-	
-	oDlg = NULL;
 
 	mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
-	mbar->add( "File/&Load World...", FL_CTRL + 'l', (Fl_Callback *)LoadCallback, this, FL_MENU_DIVIDER );
-	mbar->add( "File/&Save World", FL_CTRL + 's', (Fl_Callback *)SaveCallback, this );
-	mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback *)SaveAsCallback, this, FL_MENU_DIVIDER );
-	mbar->add( "File/E&xit", FL_CTRL+'q', (Fl_Callback *)QuitCallback, this );
+	mbar->add( "File/&Load World...", FL_CTRL + 'l', StgWorldGui::fileLoadCb, this, FL_MENU_DIVIDER );
+	mbar->add( "File/&Save World", FL_CTRL + 's', StgWorldGui::fileSaveCb, this );
+	mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', StgWorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
+	mbar->add( "File/E&xit", FL_CTRL+'q', StgWorldGui::fileExitCb, this );
 
 	mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
-	mbar->add( MITEM_VIEW_DATA,      'd', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_DATA,      'd', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_DATA ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_BLOCKS,    'b', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_BLOCKS,    'b', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_BLOCKS ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_GRID,      'g', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_GRID,      'g', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_GRID ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_OCCUPANCY, FL_ALT+'o', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_OCCUPANCY, FL_ALT+'o', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_OCCUPANCY ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_QUADTREE,  FL_ALT+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_QUADTREE,  FL_ALT+'t', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_QUADTREE ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_FOLLOW,    'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_FOLLOW,    'f', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOLLOW ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_CLOCK,    'c', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_CLOCK,    'c', StgWorldGui::viewToggleCb, canvas, 
 			  FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_PERSPECTIVE,   'r', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_PERSPECTIVE,   'r', StgWorldGui::viewToggleCb, canvas, 
 			  FL_MENU_TOGGLE| (canvas->use_perspective_camera ));
-
-	mbar->add( MITEM_VIEW_TRAILS,    't', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_TRAILS,    't', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));
-	
-	mbar->add( MITEM_VIEW_STATUS,    's', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_STATUS,    's', StgWorldGui::viewToggleCb, canvas, 
 			  FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_STATUS ? FL_MENU_VALUE : 0 ));
-
-	mbar->add( MITEM_VIEW_FOOTPRINTS,  FL_CTRL+'f', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_FOOTPRINTS,  FL_CTRL+'f', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOOTPRINT ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_ARROWS,    FL_CTRL+'a', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_ARROWS,    FL_CTRL+'a', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_ARROWS ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', (Fl_Callback*)view_toggle_cb, (void*)canvas, 
+	mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));
 	
-	mbar->add( "View/&Options", FL_CTRL + 'o', (Fl_Callback *)openOptionsCb, canvas );
+	mbar->add( "View/&Options", FL_CTRL + 'o', StgWorldGui::viewOptionsCb, this );
 
 	mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
-	mbar->add( "Help/&About Stage...", 0, (Fl_Callback *)About_cb, this );
+	mbar->add( "Help/&About Stage...", 0, StgWorldGui::helpAboutCb, this );
 	//mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
 
-	callback( (Fl_Callback*)WindowCallback, this );
+	callback( StgWorldGui::windowCb, this );
 	show();
 }
 
@@ -351,278 +346,6 @@ void StgWorldGui::UnLoad()
 //	canvas->camera.setPose( 0, 0 );
 }
 
-void StgWorldGui::LoadCallback( Fl_Widget* wid, StgWorldGui* world )
-{
-	const char* filename;
-	const char* worldsPath;
-	//bool success;
-	const char* pattern = "World Files (*.world)";
-	
-	worldsPath = world->fileMan->worldsRoot().c_str();
-	Fl_File_Chooser fc( worldsPath, pattern, Fl_File_Chooser::CREATE, "Load World File..." );
-	fc.ok_label( "Load" );
-	
-	fc.show();
-	while (fc.shown())
-		Fl::wait();
-	
-	filename = fc.value();
-	
-	if (filename != NULL) { // chose something
-		if ( world->fileMan->readable( filename ) ) {
-			// file is readable, clear and load
-
-			// if (initialized) {
-			world->Stop();
-			world->UnLoad();
-			// }
-			
-			// todo: make sure loading is successful
-			world->Load( filename );
-			world->Start(); // if (stopped)
-		}
-		else {
-			fl_alert( "Unable to read selected world file." );
-		}
-		
-
-	}
-}
-
-void StgWorldGui::SaveCallback( Fl_Widget* wid, StgWorldGui* world )
-{
-	// save to current file
-	bool success =  world->Save( NULL );
-	if ( !success ) {
-		fl_alert( "Error saving world file." );
-	}
-}
-
-void StgWorldGui::SaveAsCallback( Fl_Widget* wid, StgWorldGui* world )
-{
-	world->SaveAsDialog();
-}
-
-bool StgWorldGui::SaveAsDialog()
-{
-	const char* newFilename;
-	bool success = false;
-	const char* pattern = "World Files (*.world)";
-
-	Fl_File_Chooser fc( wf->filename, pattern, Fl_File_Chooser::CREATE, "Save File As..." );
-	fc.ok_label( "Save" );
-
-	fc.show();
-	while (fc.shown())
-		Fl::wait();
-
-	newFilename = fc.value();
-
-	if (newFilename != NULL) {
-		// todo: make sure file ends in .world
-		success = Save( newFilename );
-		if ( !success ) {
-			fl_alert( "Error saving world file." );
-		}
-	}
-
-	return success;
-}
-
-void StgWorldGui::QuitCallback( Fl_Widget* wid, StgWorldGui* world ) 
-{
-	bool done = world->CloseWindowQuery();
-	if (done) {
-		exit(0);
-	}
-}
-
-bool StgWorldGui::CloseWindowQuery()
-{
-	int choice;
-	
-	if ( wf ) {
-		// worldfile loaded, ask to save
-		choice = fl_choice("Do you want to save?",
-						   "&Cancel", // ->0: defaults to ESC
-						   "&Yes", // ->1
-						   "&No" // ->2
-						   );
-		
-		switch (choice) {
-			case 1: // Yes
-				if ( SaveAsDialog() ) {
-					return true;
-				}
-				else {
-					return false;
-				}
-			case 2: // No
-				return true;
-		}
-		
-		// Cancel
-		return false;
-	}
-	else {
-		// nothing is loaded, just quit
-		return true;
-	}
-}
-
-void StgWorldGui::WindowCallback( Fl_Widget* wid, StgWorldGui* world )
-{
-	switch ( Fl::event() ) {
-		case FL_SHORTCUT:
-			if ( Fl::event_key() == FL_Escape )
-				return;
-		case FL_CLOSE: // clicked close button
-			bool done = world->CloseWindowQuery();
-			if ( !done )
-				return;
-	}
-
-	exit(0);
-}
-
-void StgWorldGui::view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas ) 
-{
-	char picked[128];
-	menubar->item_pathname(picked, sizeof(picked)-1);
-
-	//printf("CALLBACK: You picked '%s'\n", picked);
-
-	// this is slow and a little ugly, but it's the least hacky approach I think
-	if( strcmp(picked, MITEM_VIEW_DATA ) == 0 ) canvas->InvertView( STG_SHOW_DATA );
-	else if( strcmp(picked, MITEM_VIEW_BLOCKS ) == 0 ) canvas->InvertView( STG_SHOW_BLOCKS );
-	else if( strcmp(picked, MITEM_VIEW_GRID ) == 0 ) canvas->InvertView( STG_SHOW_GRID );
-	else if( strcmp(picked, MITEM_VIEW_FOLLOW ) == 0 ) canvas->InvertView( STG_SHOW_FOLLOW );
-	else if( strcmp(picked, MITEM_VIEW_QUADTREE ) == 0 ) canvas->InvertView( STG_SHOW_QUADTREE );
-	else if( strcmp(picked, MITEM_VIEW_OCCUPANCY ) == 0 ) canvas->InvertView( STG_SHOW_OCCUPANCY );
-	else if( strcmp(picked, MITEM_VIEW_CLOCK ) == 0 ) canvas->InvertView( STG_SHOW_CLOCK );
-	else if( strcmp(picked, MITEM_VIEW_FOOTPRINTS ) == 0 ) canvas->InvertView( STG_SHOW_FOOTPRINT );
-	else if( strcmp(picked, MITEM_VIEW_ARROWS ) == 0 ) canvas->InvertView( STG_SHOW_ARROWS );
-	else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
-	else if( strcmp(picked, MITEM_VIEW_BLOCKSRISING ) == 0 ) canvas->InvertView( STG_SHOW_TRAILRISE );
-	else if( strcmp(picked, MITEM_VIEW_STATUS ) == 0 ) canvas->InvertView( STG_SHOW_STATUS );
-	else if( strcmp(picked, MITEM_VIEW_PERSPECTIVE ) == 0 ) { canvas->use_perspective_camera = ! canvas->use_perspective_camera; canvas->invalidate(); }
-	else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
-
-	//printf( "value: %d\n", item->value() );
-}
-
-void StgWorldGui::openOptionsCb( Fl_Widget* w, void* p ) {
-	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
-	
-	std::vector<Option> options;
-	for (int i=0; i<10; i++) {
-		Option o( i, "Option", i%2*true );
-		options.push_back( o );
-	}
-	
-	if ( !worldGui->oDlg ) {
-		OptionsDlg* oDlg = new OptionsDlg( 0, 0, 180, 250 );
-		// TODO - move initial coords to right edge of window
-		//printf("width: %d\n", worldGui->w());
-		oDlg->callback( optionsDlgCb, worldGui );
-		oDlg->setOptions( options );
-		oDlg->show();
-
-		worldGui->oDlg = oDlg;
-	}
-	else {
-		worldGui->oDlg->show(); // bring it to front
-	}
-}
-
-void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
-	OptionsDlg* oDlg = static_cast<OptionsDlg*>( w );
-	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
-	switch ( Fl::event() ) {
-		case FL_SHORTCUT:
-			if ( Fl::event_key() != FL_Escape ) 
-				break;
-			// otherwise, ESC pressed-> do as below
-		case FL_CLOSE: // clicked close button
-			// invalidate the oDlg pointer from the WorldGui
-			//   instance before the dialog is destroyed
-			worldGui->oDlg = NULL; 
-			oDlg->hide();
-			Fl::delete_widget( oDlg );
-			return;
-		default:
-			Option o = oDlg->changed();
-			printf( "\"%s\"[%d] changed to %d!\n", o.name().c_str(), o.id(), o.val() );			
-			// update flag(s)
-	}
-}
-
-void AboutCloseCb( Fl_Widget* w, void* p ) {
-	Fl_Window* win;
-	win = static_cast<Fl_Window*>( w );
-	Fl_Text_Display* textDisplay;
-	textDisplay = static_cast<Fl_Text_Display*>( p );
-	
-	Fl_Text_Buffer* tbuf = textDisplay->buffer();
-	textDisplay->buffer( NULL );
-	delete tbuf;
-	Fl::delete_widget( win );
-}
-
-void StgWorldGui::About_cb( Fl_Widget*, StgWorldGui* world ) 
-{
-	fl_register_images();
-	
-	const int Width = 400;
-	const int Height = 220;
-	const int Spc = 10;
-	const int ButtonH = 25;
-	const int ButtonW = 60;
-	const int pngH = 82;
-	//const int pngW = 264;
-	
-	Fl_Window* win = new Fl_Window( Width, Height ); // make a window
-
-	Fl_Box* box = new Fl_Box( Spc, Spc, 
-			   Width-2*Spc, pngH ); // widget that will contain image
-
-	
-	std::string fullpath;
-	fullpath = world->fileMan->fullPath( "stagelogo.png" );
-	Fl_PNG_Image* png = new Fl_PNG_Image( fullpath.c_str() ); // load image into ram
-	box->image( png ); // attach image to box
-	
-	Fl_Text_Display* textDisplay;
-	textDisplay = new Fl_Text_Display( Spc, pngH+2*Spc,
-						  Width-2*Spc, Height-pngH-ButtonH-4*Spc );
-	textDisplay->box( FL_NO_BOX );
-	textDisplay->color( win->color() );
-	win->callback( AboutCloseCb, textDisplay );
-	
-	const char* AboutText = 
-		"\n" 
-		"Part of the Player Project\n"
-		"http://playerstage.sourceforge.net\n"
-		"Copyright 2000-2008 Richard Vaughan and contributors";
-	
-	Fl_Text_Buffer* tbuf = new Fl_Text_Buffer;
-	tbuf->text( PACKAGE_STRING );
-	tbuf->append( AboutText );
-	textDisplay->buffer( tbuf );
-	
-	Fl_Return_Button* button;
-	button = new Fl_Return_Button( (Width - ButtonW)/2, Height-Spc-ButtonH,
-					  ButtonW, ButtonH,
-					  "&OK" );
-	button->callback( (Fl_Callback*)HelpAboutCallback );
-	
-	win->show();
-}
-
-void StgWorldGui::HelpAboutCallback( Fl_Widget* wid ) {
-	wid->window()->hide();
-}
-
 bool StgWorldGui::Save( const char* filename )
 {
 	PRINT_DEBUG1( "%s.Save()", token );
@@ -660,7 +383,6 @@ bool StgWorldGui::Save( const char* filename )
 	// TODO - error checking
 	return true;
 }
-
 
 bool StgWorldGui::Update()
 {
@@ -704,4 +426,300 @@ void StgWorldGui::DrawFloor()
 	PushColor( 1,1,1,1 );
 	g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Floor_cb, NULL );
 	PopColor();
+}
+
+
+void StgWorldGui::windowCb( Fl_Widget* w, void* p )
+{
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+
+	switch ( Fl::event() ) {
+		case FL_SHORTCUT:
+			if ( Fl::event_key() == FL_Escape )
+				return;
+		case FL_CLOSE: // clicked close button
+			bool done = worldGui->closeWindowQuery();
+			if ( !done )
+				return;
+	}
+
+	exit(0);
+}
+
+void StgWorldGui::fileLoadCb( Fl_Widget* w, void* p )
+{
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+
+	const char* filename;
+	const char* worldsPath;
+	//bool success;
+	const char* pattern = "World Files (*.world)";
+	
+	worldsPath = worldGui->fileMan->worldsRoot().c_str();
+	Fl_File_Chooser fc( worldsPath, pattern, Fl_File_Chooser::CREATE, "Load World File..." );
+	fc.ok_label( "Load" );
+	
+	fc.show();
+	while (fc.shown())
+		Fl::wait();
+	
+	filename = fc.value();
+	
+	if (filename != NULL) { // chose something
+		if ( worldGui->fileMan->readable( filename ) ) {
+			// file is readable, clear and load
+
+			// if (initialized) {
+			worldGui->Stop();
+			worldGui->UnLoad();
+			// }
+			
+			// todo: make sure loading is successful
+			worldGui->Load( filename );
+			worldGui->Start(); // if (stopped)
+		}
+		else {
+			fl_alert( "Unable to read selected world file." );
+		}
+		
+
+	}
+}
+
+void StgWorldGui::fileSaveCb( Fl_Widget* w, void* p )
+{
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+
+	// save to current file
+	bool success =  worldGui->Save( NULL );
+	if ( !success ) {
+		fl_alert( "Error saving world file." );
+	}
+}
+
+void StgWorldGui::fileSaveAsCb( Fl_Widget* w, void* p )
+{
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+
+	worldGui->saveAsDialog();
+}
+
+
+
+void StgWorldGui::fileExitCb( Fl_Widget* w, void* p ) 
+{
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+
+	bool done = worldGui->closeWindowQuery();
+	if (done) {
+		exit(0);
+	}
+}
+
+void StgWorldGui::viewToggleCb( Fl_Widget* w, void* p ) 
+{
+	Fl_Menu_Bar* menubar = static_cast<Fl_Menu_Bar*>( w );
+	StgCanvas* canvas = static_cast<StgCanvas*>( p );
+
+	char picked[128];
+	menubar->item_pathname(picked, sizeof(picked)-1);
+
+	//printf("CALLBACK: You picked '%s'\n", picked);
+
+	// this is slow and a little ugly, but it's the least hacky approach I think
+	if( strcmp(picked, MITEM_VIEW_DATA ) == 0 ) canvas->InvertView( STG_SHOW_DATA );
+	else if( strcmp(picked, MITEM_VIEW_BLOCKS ) == 0 ) canvas->InvertView( STG_SHOW_BLOCKS );
+	else if( strcmp(picked, MITEM_VIEW_GRID ) == 0 ) canvas->InvertView( STG_SHOW_GRID );
+	else if( strcmp(picked, MITEM_VIEW_FOLLOW ) == 0 ) canvas->InvertView( STG_SHOW_FOLLOW );
+	else if( strcmp(picked, MITEM_VIEW_QUADTREE ) == 0 ) canvas->InvertView( STG_SHOW_QUADTREE );
+	else if( strcmp(picked, MITEM_VIEW_OCCUPANCY ) == 0 ) canvas->InvertView( STG_SHOW_OCCUPANCY );
+	else if( strcmp(picked, MITEM_VIEW_CLOCK ) == 0 ) canvas->InvertView( STG_SHOW_CLOCK );
+	else if( strcmp(picked, MITEM_VIEW_FOOTPRINTS ) == 0 ) canvas->InvertView( STG_SHOW_FOOTPRINT );
+	else if( strcmp(picked, MITEM_VIEW_ARROWS ) == 0 ) canvas->InvertView( STG_SHOW_ARROWS );
+	else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
+	else if( strcmp(picked, MITEM_VIEW_BLOCKSRISING ) == 0 ) canvas->InvertView( STG_SHOW_TRAILRISE );
+	else if( strcmp(picked, MITEM_VIEW_STATUS ) == 0 ) canvas->InvertView( STG_SHOW_STATUS );
+	else if( strcmp(picked, MITEM_VIEW_PERSPECTIVE ) == 0 ) { canvas->use_perspective_camera = ! canvas->use_perspective_camera; canvas->invalidate(); }
+	else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
+
+	//printf( "value: %d\n", item->value() );
+}
+
+void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+	
+	std::vector<Option> options;
+	for (int i=0; i<10; i++) {
+		Option o( i, "Option", i%2*true );
+		options.push_back( o );
+	}
+	
+	if ( !worldGui->oDlg ) {
+		OptionsDlg* oDlg = new OptionsDlg( 0, 0, 180, 250 );
+		// TODO - move initial coords to right edge of window
+		//printf("width: %d\n", worldGui->w());
+		oDlg->callback( optionsDlgCb, worldGui );
+		oDlg->setOptions( options );
+		oDlg->show();
+
+		worldGui->oDlg = oDlg;
+	}
+	else {
+		worldGui->oDlg->show(); // bring it to front
+	}
+}
+
+void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
+	OptionsDlg* oDlg = static_cast<OptionsDlg*>( w );
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+
+	switch ( Fl::event() ) {
+		case FL_SHORTCUT:
+			if ( Fl::event_key() != FL_Escape ) 
+				break;
+			// otherwise, ESC pressed-> do as below
+		case FL_CLOSE: // clicked close button
+			// invalidate the oDlg pointer from the WorldGui
+			//   instance before the dialog is destroyed
+			worldGui->oDlg = NULL; 
+			oDlg->hide();
+			Fl::delete_widget( oDlg );
+			return;
+		default:
+			Option o = oDlg->changed();
+			printf( "\"%s\"[%d] changed to %d!\n", o.name().c_str(), o.id(), o.val() );			
+			// update flag(s)
+	}
+}
+
+
+void aboutOKBtnCb( Fl_Widget* w, void* p ) {
+	Fl_Return_Button* btn;
+	btn = static_cast<Fl_Return_Button*>( w );
+
+	btn->window()->do_callback();
+}
+
+void aboutCloseCb( Fl_Widget* w, void* p ) {
+	Fl_Window* win;
+	win = static_cast<Fl_Window*>( w );
+	Fl_Text_Display* textDisplay;
+	textDisplay = static_cast<Fl_Text_Display*>( p );
+	
+	Fl_Text_Buffer* tbuf = textDisplay->buffer();
+	textDisplay->buffer( NULL );
+	delete tbuf;
+	Fl::delete_widget( win );
+}
+
+void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p ) 
+{
+	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+
+	fl_register_images();
+	
+	const int Width = 400;
+	const int Height = 220;
+	const int Spc = 10;
+	const int ButtonH = 25;
+	const int ButtonW = 60;
+	const int pngH = 82;
+	//const int pngW = 264;
+	
+	Fl_Window* win = new Fl_Window( Width, Height ); // make a window
+
+	Fl_Box* box = new Fl_Box( Spc, Spc, 
+			   Width-2*Spc, pngH ); // widget that will contain image
+
+	
+	std::string fullpath;
+	fullpath = worldGui->fileMan->fullPath( "stagelogo.png" );
+	Fl_PNG_Image* png = new Fl_PNG_Image( fullpath.c_str() ); // load image into ram
+	box->image( png ); // attach image to box
+	
+	Fl_Text_Display* textDisplay;
+	textDisplay = new Fl_Text_Display( Spc, pngH+2*Spc,
+						  Width-2*Spc, Height-pngH-ButtonH-4*Spc );
+	textDisplay->box( FL_NO_BOX );
+	textDisplay->color( win->color() );
+	win->callback( aboutCloseCb, textDisplay );
+	
+	const char* AboutText = 
+		"\n" 
+		"Part of the Player Project\n"
+		"http://playerstage.sourceforge.net\n"
+		"Copyright 2000-2008 Richard Vaughan and contributors";
+	
+	Fl_Text_Buffer* tbuf = new Fl_Text_Buffer;
+	tbuf->text( PACKAGE_STRING );
+	tbuf->append( AboutText );
+	textDisplay->buffer( tbuf );
+	
+	Fl_Return_Button* button;
+	button = new Fl_Return_Button( (Width - ButtonW)/2, Height-Spc-ButtonH,
+					  ButtonW, ButtonH,
+					  "&OK" );
+	button->callback( aboutOKBtnCb );
+	
+	win->show();
+}
+
+
+bool StgWorldGui::saveAsDialog()
+{
+	const char* newFilename;
+	bool success = false;
+	const char* pattern = "World Files (*.world)";
+
+	Fl_File_Chooser fc( wf->filename, pattern, Fl_File_Chooser::CREATE, "Save File As..." );
+	fc.ok_label( "Save" );
+
+	fc.show();
+	while (fc.shown())
+		Fl::wait();
+
+	newFilename = fc.value();
+
+	if (newFilename != NULL) {
+		// todo: make sure file ends in .world
+		success = Save( newFilename );
+		if ( !success ) {
+			fl_alert( "Error saving world file." );
+		}
+	}
+
+	return success;
+}
+
+bool StgWorldGui::closeWindowQuery()
+{
+	int choice;
+	
+	if ( wf ) {
+		// worldfile loaded, ask to save
+		choice = fl_choice("Do you want to save?",
+						   "&Cancel", // ->0: defaults to ESC
+						   "&Yes", // ->1
+						   "&No" // ->2
+						   );
+		
+		switch (choice) {
+			case 1: // Yes
+				if ( saveAsDialog() ) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			case 2: // No
+				return true;
+		}
+		
+		// Cancel
+		return false;
+	}
+	else {
+		// nothing is loaded, just quit
+		return true;
+	}
 }

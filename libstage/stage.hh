@@ -2034,22 +2034,8 @@ public:
   { interval_real = usec; }
   
   
-  // static callback functions
-protected:
-  static void LoadCallback( Fl_Widget* wid, StgWorldGui* world );
-  static void SaveCallback( Fl_Widget* wid, StgWorldGui* world );
-  static void SaveAsCallback( Fl_Widget* wid, StgWorldGui* world );
-  static void QuitCallback( Fl_Widget* wid, StgWorldGui* world );
-  static void About_cb( Fl_Widget* wid, StgWorldGui* world );
-  static void HelpAboutCallback( Fl_Widget* wid );
-  static void view_toggle_cb( Fl_Menu_Bar* menubar, StgCanvas* canvas );
-  static void WindowCallback( Fl_Widget* wid, StgWorldGui* world );
-  static void openOptionsCb( Fl_Widget* w, void* p );
-  static void optionsDlgCb( Fl_Widget* w, void* p );
-  
-	bool SaveAsDialog();
-	bool CloseWindowQuery();
 
+protected:
 	virtual void PushColor( stg_color_t col )
 	{ canvas->PushColor( col ); } 
 
@@ -2063,6 +2049,23 @@ protected:
 	void DrawFloor();
 	
 	StgCanvas* GetCanvas( void ) { return canvas; }
+
+
+	// static callback functions
+	static void windowCb( Fl_Widget* w, void* p );
+	
+	static void fileLoadCb( Fl_Widget* w, void* p );
+	static void fileSaveCb( Fl_Widget* w, void* p );
+	static void fileSaveAsCb( Fl_Widget* w, void* p );
+	static void fileExitCb( Fl_Widget* w, void* p );
+	static void viewToggleCb( Fl_Widget* w, void* p );
+	static void viewOptionsCb( Fl_Widget* w, void* p );
+	static void optionsDlgCb( Fl_Widget* w, void* p );
+	static void helpAboutCb( Fl_Widget* w, void* p );
+  
+	// GUI functions
+	bool saveAsDialog();
+	bool closeWindowQuery();
 };
 
 
