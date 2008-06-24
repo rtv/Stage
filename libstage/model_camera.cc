@@ -14,6 +14,20 @@
 #include <sstream>
 #include <iomanip>
 
+//caclulate the corss product, and store results in the first vertex
+void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
+{	
+	float x3, y3, z3;
+	
+	x3 = y1 * z2 - z1 * y2;
+	y3 = z1 * x2 - x1 * z2;
+	z3 = x1 * y2 - y1 * x2;
+	
+	x1 = x3;
+	y1 = y3;
+	z1 = z3;
+}
+
 
 StgModelCamera::StgModelCamera( StgWorld* world, StgModel* parent ) 
   : StgModel( world, parent, MODEL_TYPE_CAMERA ),
@@ -103,7 +117,8 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 	glViewport( 0, 0, _width, _height );
 	_camera.update();
 	_camera.SetProjection();
-	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.1 );
+	//TODO reposition the camera so it isn't inside the model ( or don't draw the parent when calling renderframe )
+	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.5 ); //0.5 is a bit too high (but lower values can end up inside the model
 	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 + _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
 	_camera.Draw();
 	
@@ -236,6 +251,7 @@ void StgModelCamera::DataVisualize( void )
 				
 				//TODO move the quad generate to the same section as scalling code, and only insert a quad when the distance between vertices isn't too large (i.e. spanning from a wall to sky)
 				//It might also be possible to write a shader which would scale vertices and create quads instead of doing it here on the CPU.
+				//TODO: below this point may no longer be needed if we just draw perfectly square quads based off normal
 				
 				//skip top and left boarders
 				if( i == 0 || j == 0 )
@@ -256,6 +272,11 @@ void StgModelCamera::DataVisualize( void )
 		_valid_vertexbuf_cache = true;
 	}
 	
+	
+	glDisable (GL_CULL_FACE);
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	glBegin( GL_QUADS );
+	
 	//Scale cached unit vectors with depth-buffer
 	float* depth_data = ( float* )( _frame_data );
 	for( int j = 0; j < h; j++ ) {
@@ -263,7 +284,7 @@ void StgModelCamera::DataVisualize( void )
 			int index = i + j * w;
 			const ColoredVertex* unit_vertex = _vertexbuf_cache + index;
 			ColoredVertex* scaled_vertex = _vertexbuf_scaled + index;
-			const GLubyte* color = _frame_color_data + index * 4; //TODO might be buggy indexing
+			const GLubyte* color = _frame_color_data + index * 4; //make this const
 			const float length = depth_data[ index ];
 			
 			//scale unitvectors with depth-buffer
@@ -278,17 +299,36 @@ void StgModelCamera::DataVisualize( void )
 			scaled_vertex->b = color[ 2 ];
 			scaled_vertex->a = 0xFF;
 			
+			//create a quad based on the current camera pixel, and normal vector
+			//the quad size is porpotial to the depth distance
+			float x, y, z;
+			x = 0; y = 0.05 * length; z=0;
+			cross( x, y, z, unit_vertex->x, unit_vertex->y, unit_vertex->z );
+			
+			float y_height = 0.05 * length;
+			
+			glColor4ub( color[ 0 ], color[ 1 ], color[ 2 ], 0xFF );
+			glVertex3f( scaled_vertex->x - x, scaled_vertex->y - y_height, scaled_vertex->z - z );
+			glVertex3f( scaled_vertex->x - x, scaled_vertex->y + y_height, scaled_vertex->z - z );
+			glVertex3f( scaled_vertex->x + x, scaled_vertex->y + y_height, scaled_vertex->z + z );
+			glVertex3f( scaled_vertex->x + x, scaled_vertex->y - y_height, scaled_vertex->z + z );
+
 		}
 	}
 
+	glEnd();
+	return;
 
-	//draw then camera data
-	glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); //Can also be GL_FILL - but harder to debug
-	glInterleavedArrays( GL_C4UB_V3F, 0, _vertexbuf_scaled );
-	glDrawElements( GL_QUADS, 4 * (w-1) * (h-1), GL_UNSIGNED_SHORT, _vertexbuf_scaled_index );
-	glPopClientAttrib();
-
+	//TODO see if any of this can be used for the new method
+	//TODO: below this point may no longer be needed if we just draw perfectly square quads based off normal
+//	//draw then camera data
+//	glDisable (GL_CULL_FACE);
+//	glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
+//	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ); //Can also be GL_FILL - but harder to debug
+//	glInterleavedArrays( GL_C4UB_V3F, 0, vertices );
+//	glDrawElements( GL_QUADS, 4 * w * h, GL_UNSIGNED_SHORT, vertices_index );
+//	glPopClientAttrib();
+//	
 
 }
 
