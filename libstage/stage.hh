@@ -1165,6 +1165,9 @@ private:
   /** the number of models instatiated - used to assign unique IDs */
   static uint32_t count;
   static GHashTable*  modelsbyid;
+	
+	// Draw options
+	static Option ShowFlags;
 
 public:
   
@@ -1178,7 +1181,6 @@ public:
   uint32_t id;
 
 protected:
-
   // basic model
   static const bool DEFAULT_BLOBRETURN;
   static const bool DEFAULT_BOUNDARY;
@@ -1206,7 +1208,6 @@ protected:
   static const stg_color_t BUBBLE_FILL;
   static const stg_color_t BUBBLE_BORDER;
   static const stg_color_t BUBBLE_TEXT; 
-
 
   //const char* typestr;
 	stg_pose_t pose;
@@ -1704,6 +1705,8 @@ public:
 
 	// iff true, model may output some debugging visualizations and other info
 	bool debug;
+	
+	virtual const std::vector<Option*> getOptions();
 };
 
 // BLOCKS
@@ -2214,6 +2217,9 @@ private:
   stg_meters_t range_min, range_max;
   stg_radians_t fov;
   uint32_t resolution;
+	
+	// Options
+	static Option ShowLaserData;
   
 public:
   static const char* typestr;
@@ -2242,6 +2248,8 @@ public:
   
   // Set the user-tweakable configuration of the laser
   void SetConfig( stg_laser_cfg_t cfg );  
+	
+	virtual const std::vector<Option*> getOptions();
 };
 
 // \todo  GRIPPER MODEL --------------------------------------------------------

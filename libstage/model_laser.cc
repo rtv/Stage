@@ -33,6 +33,8 @@ const char StgModelLaser::DEFAULT_GEOM_COLOR[] = "blue";
 //const char COLOR[] = "steel blue";
 //const char FILL_COLOR[] = "powder blue";
 
+Option StgModelLaser::ShowLaserData( 0, "Show Laser Data", false );
+
 /**
   @ingroup model
   @defgroup model_laser Laser model 
@@ -355,5 +357,9 @@ void StgModelLaser::DataVisualize( void )
 	glPopMatrix();
 }
 
-
-
+const std::vector<Option*> StgModelLaser::getOptions() {
+	std::vector<Option*> drawOptions;
+	drawOptions.push_back( &ShowLaserData );
+	
+	return drawOptions;
+}

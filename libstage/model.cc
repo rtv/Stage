@@ -139,6 +139,7 @@ const stg_color_t StgModel::BUBBLE_TEXT = 0xFF000000; // black
 
 // static members
 uint32_t StgModel::count = 0;
+Option StgModel::ShowFlags( 0, "Show Flags", true );
 
 GHashTable* StgModel::modelsbyid = g_hash_table_new( NULL, NULL );
 
@@ -1712,3 +1713,12 @@ StgModel* StgModel::GetModel( const char* modelname )
 
 	return mod;
 }
+
+const std::vector<Option*> StgModel::getOptions() {
+	std::vector<Option*> drawOptions;
+	drawOptions.push_back( &ShowFlags );
+	
+	return drawOptions;
+}
+
+
