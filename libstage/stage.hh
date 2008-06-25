@@ -2480,12 +2480,14 @@ class StgModelCamera : public StgModel
 
 		bool _valid_vertexbuf_cache;
 		ColoredVertex* _vertexbuf_cache; //cached unit vectors with appropriate rotations (these must be scalled by z-buffer length)
-		ColoredVertex* _vertexbuf_scaled;   //vertex buffer for visualiation
-		GLushort* _vertexbuf_scaled_index; //indecies for scaled buffer
 	
 		int _width;         //width of buffer
 		int _height;        //height of buffer
 		static const int _depth = 4;
+	
+		int _camera_quads_size;
+		GLfloat* _camera_quads;
+		GLubyte* _camera_colors;
 	
 		StgPerspectiveCamera _camera;
 		int _yaw_offset;

@@ -447,12 +447,13 @@ void StgCanvas::DrawGlobalGrid()
 void StgCanvas::DrawFloor()
 {
 	stg_bounds3d_t bounds = world->GetExtent();
+	float z = 0;
 	glColor3f( 0.6, 0.6, 1.0 );
 	glBegin(GL_QUADS);
-	glVertex3f( bounds.x.min, bounds.y.min, 0 );
-	glVertex3f(  bounds.x.max, bounds.y.min, 0 );
-	glVertex3f(  bounds.x.max, bounds.y.max, 0 );
-	glVertex3f( bounds.x.min, bounds.y.max, 0 );
+	glVertex3f( bounds.x.min, bounds.y.min, z );
+	glVertex3f(  bounds.x.max, bounds.y.min, z );
+	glVertex3f(  bounds.x.max, bounds.y.max, z );
+	glVertex3f( bounds.x.min, bounds.y.max, z );
 	glEnd();
 	
 	glEnd();
@@ -720,7 +721,7 @@ void StgCanvas::draw()
 			//create floor texture
 			{
 				//TODO merge this code into the textureManager
-				int i, j, c;
+				int i, j;
 				for (i = 0; i < checkImageHeight; i++) 
 					for (j = 0; j < checkImageWidth; j++) 
 					{			

@@ -32,8 +32,19 @@ void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
 
 StgModelCamera::StgModelCamera( StgWorld* world, StgModel* parent ) 
   : StgModel( world, parent, MODEL_TYPE_CAMERA ),
-_frame_data( NULL ), _frame_color_data( NULL ), 
-_vertexbuf_scaled( NULL ),  _width( 0 ), _height( 0 ), _valid_vertexbuf_cache( false ), _yaw_offset( 0 )
+_canvas( NULL ),
+_frame_data( NULL ),
+_frame_color_data( NULL ),
+_valid_vertexbuf_cache( false ),
+_vertexbuf_cache( NULL ),
+_width( 0 ),
+_height( 0 ),
+_camera_quads_size( 0 ),
+_camera_quads( NULL ),
+_camera_colors( NULL ),
+_camera(),
+_yaw_offset( 0 )
+
 {
 	PRINT_DEBUG2( "Constructing StgModelCamera %d (%s)\n", 
 			id, typestr );
@@ -62,11 +73,12 @@ _vertexbuf_scaled( NULL ),  _width( 0 ), _height( 0 ), _valid_vertexbuf_cache( f
 StgModelCamera::~StgModelCamera()
 {
 	if( _frame_data != NULL ) {
+		//dont forget about GetFrame() //TODO merge these together
 		delete[] _frame_data;
 		delete[] _frame_color_data;
 		delete[] _vertexbuf_cache;
-		delete[] _vertexbuf_scaled;
-		delete[] _vertexbuf_scaled_index;
+		delete[] _camera_quads;
+		delete[] _camera_colors;
 	}
 }
 
@@ -101,18 +113,21 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 	
 	if( _frame_data == NULL ) {
 		if( _frame_data != NULL ) {
+			//don't forget about destructor
 			delete[] _frame_data;
 			delete[] _frame_color_data;
 			delete[] _vertexbuf_cache;
-			delete[] _vertexbuf_scaled;
-			delete[] _vertexbuf_scaled_index;
+			delete[] _camera_quads;
+			delete[] _camera_colors;
 		}
 		_frame_data = new GLfloat[ _width * _height ]; //assumes a max of depth 4
 		_frame_color_data = new GLubyte[ 4 * _width * _height ]; //for RGBA
 
 		_vertexbuf_cache = new ColoredVertex[ _width * _height ]; //for unit vectors
-		_vertexbuf_scaled = new ColoredVertex[ _width * _height ]; //scaled with z-buffer
-		_vertexbuf_scaled_index = new GLushort[ 4 * (_width-1) * (_height-1) ]; //for indicies to draw a quad
+		
+		_camera_quads_size = _height * _width * 4 * 3; //one quad per pixel, 3 vertex per quad
+		_camera_quads = new GLfloat[ _camera_quads_size ];
+		_camera_colors = new GLubyte[ _camera_quads_size ];
 	}
 
 	//TODO overcome issue when glviewport is set LARGER than the window side
@@ -154,44 +169,6 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 	return NULL; //_frame_data;
 }
 
-//TODO get rid of this
-void StgModelCamera::PrintData( void ) const
-{
-	//create depth matrix
-	std::cout << "depth <- matrix( c( ";
-	for( int j = 0; j < _height; j++ ) {
-		for( int i = 0; i < _width; i++ ) {
-			int index = i + j * _width;
-			const GLubyte* color = _frame_color_data + index * 4; //TODO might be buggy indexing
-			const float length = _frame_data[ index ];	
-			if( i != 0 || j != 0 )
-				std::cout << " ,";
-			std::cout << length;
-		}
-	}
-	std::cout << "), " << std::dec << _width << ", " << _height << " )\n\n";
-	
-	//create color matrix
-	std::cout << "hex_cols <- matrix( c( ";
-	for( int j = 0; j < _height; j++ ) {
-		for( int i = 0; i < _width; i++ ) {
-			int index = i + j * _width;
-			const GLubyte* color = _frame_color_data + index * 4; //TODO might be buggy indexing
-			const float length = _frame_data[ index ];	
-			if( i != 0 || j != 0 )
-				std::cout << " ,";
-			std::cout << "\"#" 
-				<< std::setw( 2 ) << std::setfill('0') << std::hex << (int)color[ 0 ]
-			<< std::setw( 2 ) << std::setfill('0') << std::hex << (int)color[ 1 ]
-			<< std::setw( 2 ) << std::setfill('0') << std::hex << (int)color[ 2 ]
-			<< "\"" ;
-		}
-	}
-	std::cout << "), " << std::dec << _width << ", " << _height << " )\n\n";
-	
-	std::cout << std::endl;
-}
-
 //TODO create lines outlineing camera frustrum, then iterate over each depth measurement and create a square
 void StgModelCamera::DataVisualize( void )
 {
@@ -209,17 +186,12 @@ void StgModelCamera::DataVisualize( void )
 	float start_fov = center_horiz + w_fov / 2.0 + 180.0; //start at right
 	float start_vert_fov = center_vert + h_fov / 2.0 + 90.0; //start at top
 		
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); //TODO this doesn't seem to work.
-
-	
 	int w = _width;
 	int h = _height;
 	float a_space = w_fov / w; //degrees between each sample
 	float vert_a_space = h_fov / h; //degrees between each vertical sample
 
-
-	//TODO - there are still some vertices which aren't accurate - possibly due to a buffer overflow / memory corruption.
-	//In some cases the vertices appear to be below the floor which shouldn't be possible once the unit vectors are scaled (and should simply hit the floor, but not pass beneath them)
+	//Create unit vectors representing a sphere - and cache it
 	if( _valid_vertexbuf_cache == false ) {
 		for( int j = 0; j < h; j++ ) {
 			for( int i = 0; i < w; i++ ) {
@@ -242,7 +214,8 @@ void StgModelCamera::DataVisualize( void )
 	glTranslatef( 0, 0, CAMERA_HEIGHT / 2.0 );
 	glDisable( GL_CULL_FACE );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	glBegin( GL_QUADS );
+	//glBegin( GL_QUADS );
+	
 	
 	//Scale cached unit vectors with depth-buffer
 	float* depth_data = ( float* )( _frame_data );
@@ -250,21 +223,12 @@ void StgModelCamera::DataVisualize( void )
 		for( int i = 0; i < w; i++ ) {
 			int index = i + j * w;
 			const ColoredVertex* unit_vertex = _vertexbuf_cache + index;
-			ColoredVertex* scaled_vertex = _vertexbuf_scaled + index;
-			const GLubyte* color = _frame_color_data + index * 4;
 			const float length = depth_data[ index ];
 			
 			//scale unitvectors with depth-buffer
-			scaled_vertex->x = unit_vertex->x * length;
-			scaled_vertex->y = unit_vertex->y * length;
-			scaled_vertex->z = unit_vertex->z * length;
-			
-			//colour the points
-			//TODO color is buggy
-			scaled_vertex->r = color[ 0 ];
-			scaled_vertex->g = color[ 1 ];
-			scaled_vertex->b = color[ 2 ];
-			scaled_vertex->a = 0xFF;
+			float sx = unit_vertex->x * length;
+			float sy = unit_vertex->y * length;
+			float sz = unit_vertex->z * length;
 			
 			//create a quad based on the current camera pixel, and normal vector
 			//the quad size is porpotial to the depth distance
@@ -273,18 +237,36 @@ void StgModelCamera::DataVisualize( void )
 			cross( x, y, z, unit_vertex->x, unit_vertex->y, unit_vertex->z );
 			
 			z = length * M_PI * vert_a_space / 360.0;
-
-			glColor4ub( color[ 0 ], color[ 1 ], color[ 2 ], 0xFF );
 			
-			glVertex3f( scaled_vertex->x - x, scaled_vertex->y - y, scaled_vertex->z - z );
-			glVertex3f( scaled_vertex->x - x, scaled_vertex->y - y, scaled_vertex->z + z );
-			glVertex3f( scaled_vertex->x + x, scaled_vertex->y + y, scaled_vertex->z + z );
-			glVertex3f( scaled_vertex->x + x, scaled_vertex->y + y, scaled_vertex->z - z );
+			GLfloat* p = _camera_quads + index * 4 * 3;
+			p[ 0 ] = sx - x; p[  1 ] = sy - y; p[  2 ] = sz - z;
+			p[ 3 ] = sx - x; p[  4 ] = sy - y; p[  5 ] = sz + z;
+			p[ 6 ] = sx + x; p[  7 ] = sy + y; p[  8 ] = sz + z;
+			p[ 9 ] = sx + x; p[ 10 ] = sy + y; p[ 11 ] = sz - z;
+
+			//copy color for each vertex
+			//TODO using a color index would be smarter
+			const GLubyte* color = _frame_color_data + index * 4;
+			for( int i = 0; i < 4; i++ ) {
+				GLubyte* cp = _camera_colors + index * 4 * 3 + i * 3;
+				memcpy( cp, color, sizeof( GLubyte ) * 3 );
+			}
 
 		}
 	}
 
-	glEnd();
+	glEnableClientState( GL_VERTEX_ARRAY );
+	glEnableClientState( GL_COLOR_ARRAY );
+	
+	glVertexPointer( 3, GL_FLOAT, 0, _camera_quads );
+	glColorPointer( 3, GL_UNSIGNED_BYTE, 0, _camera_colors );
+	glDrawArrays( GL_QUADS, 0, w * h * 4 );
+	
+	glDisableClientState( GL_COLOR_ARRAY );
+	glDisableClientState( GL_VERTEX_ARRAY );
+
+	
+//	glEnd();
 	glEnable(GL_CULL_FACE);
 	return;
 
