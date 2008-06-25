@@ -8,6 +8,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#define CAMERA_HEIGHT 0.5
 
 //#define DEBUG 1
 #include "stage_internal.hh"
@@ -114,26 +115,33 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 		_vertexbuf_scaled_index = new GLushort[ 4 * (_width-1) * (_height-1) ]; //for indicies to draw a quad
 	}
 
+	//TODO overcome issue when glviewport is set LARGER than the window side
+	//currently it just clips and draws outside areas black - resulting in bad glreadpixel data
+	if( _width > _canvas->w() )
+		_width = _canvas->w();
+	if( _height > _canvas->h() )
+		_height = _canvas->h();
+	
 	glViewport( 0, 0, _width, _height );
 	_camera.update();
 	_camera.SetProjection();
 	//TODO reposition the camera so it isn't inside the model ( or don't draw the parent when calling renderframe )
-	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, 0.5 ); //0.5 is a bit too high (but lower values can end up inside the model
+	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, CAMERA_HEIGHT ); //TODO use something smarter than a #define - make it configurable
 	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 + _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
 	_camera.Draw();
 	
 	_canvas->renderFrame( true );
 	
 	//read depth buffer
-		glReadPixels(0, 0, _width, _height,
+	glReadPixels(0, 0, _width, _height,
 					 GL_DEPTH_COMPONENT, //GL_RGB,
 					 GL_FLOAT, //GL_UNSIGNED_BYTE,
 					 _frame_data );
-		//transform length into linear length
-		float* data = ( float* )( _frame_data ); //TODO use static_cast here
-		int buf_size = _width * _height;
-		for( int i = 0; i < buf_size; i++ )
-			data[ i ] = _camera.realDistance( data[ i ] ) + 0.1;
+	//transform length into linear length
+	float* data = ( float* )( _frame_data ); //TODO use static_cast here
+	int buf_size = _width * _height;
+	for( int i = 0; i < buf_size; i++ )
+		data[ i ] = _camera.realDistance( data[ i ] );
 
 	//read color buffer
 	glReadPixels(0, 0, _width, _height,
@@ -146,6 +154,7 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 	return NULL; //_frame_data;
 }
 
+//TODO get rid of this
 void StgModelCamera::PrintData( void ) const
 {
 	//create depth matrix
@@ -197,20 +206,16 @@ void StgModelCamera::DataVisualize( void )
 	float center_horiz = - _yaw_offset;
 	float center_vert = 0; // - _pitch_offset;
 	
-	float start_fov = center_horiz + w_fov / 2.0; //start at right
-	float start_vert_fov = center_vert + h_fov / 2.0; //start at top
+	float start_fov = center_horiz + w_fov / 2.0 + 180.0; //start at right
+	float start_vert_fov = center_vert + h_fov / 2.0 + 90.0; //start at top
 		
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); //TODO this doesn't seem to work.
 
 	
 	int w = _width;
 	int h = _height;
-	float a;
-	float vert_a;
 	float a_space = w_fov / w; //degrees between each sample
 	float vert_a_space = h_fov / h; //degrees between each vertical sample
-	float x, y, z;
-	float tmp_x, tmp_y, tmp_z;
 
 
 	//TODO - there are still some vertices which aren't accurate - possibly due to a buffer overflow / memory corruption.
@@ -219,61 +224,23 @@ void StgModelCamera::DataVisualize( void )
 		for( int j = 0; j < h; j++ ) {
 			for( int i = 0; i < w; i++ ) {
 				
-				a = start_fov - static_cast< float >( i ) * a_space;
-				vert_a = start_vert_fov - static_cast< float >( j ) * vert_a_space;
-				
-				//calculate based on a unit vector, which is scaled later on (this reduces all the sin/cos/dtor calls)
-				x = 1;
-				y = 0;
-				z = 0;
-
-				//rotate about z by a
-				tmp_x = x * cos( dtor( a ) ); // - y *sin( but y=0)
-				tmp_y = x * sin( dtor( a ) ); // + y * cos( but y=0 )
-				tmp_z = z;
-				
-				x = tmp_x; y = tmp_y; z = tmp_z;
-				
-				//rotate about x
-				tmp_z = - x * sin( dtor( vert_a ) );
-				tmp_x = x * cos( dtor( vert_a ) );
-
-				x = tmp_x;
-				y = tmp_y;
-				z = tmp_z;
+				float a = start_fov - static_cast< float >( i ) * a_space;
+				float vert_a = start_vert_fov - static_cast< float >( h - j - 1 ) * vert_a_space;
 				
 				int index = i + j * w;
 				ColoredVertex* vertex = _vertexbuf_cache + index;
 				
-				vertex->x = x;
-				vertex->y = y;
-				vertex->z = z;
-				
-				//TODO move the quad generate to the same section as scalling code, and only insert a quad when the distance between vertices isn't too large (i.e. spanning from a wall to sky)
-				//It might also be possible to write a shader which would scale vertices and create quads instead of doing it here on the CPU.
-				//TODO: below this point may no longer be needed if we just draw perfectly square quads based off normal
-				
-				//skip top and left boarders
-				if( i == 0 || j == 0 )
-					continue;
-				
-				//decrement i and j, since the first boarders were skipped
-				//note: the width of this array is (w-1) since it contains QUADS between the vertices
-				GLushort* p = _vertexbuf_scaled_index + ( (i-1) + (j-1) * (w-1) ) * 4;
-				
-				//create quad growing adjacent point on top left (use width of `w' since these are VERTICES)
-				p[ 0 ] = i     + j * w;
-				p[ 1 ] = i - 1 + j * w;
-				p[ 2 ] = i - 1 + ( j - 1 ) * w;
-				p[ 3 ] = i     + ( j - 1 ) * w;
-				
+				//calculate and cache normal unit vectors of the sphere
+				vertex->x = -sin( dtor( vert_a ) ) * cos( dtor( a ) );
+				vertex->y = -sin( dtor( vert_a ) ) * sin( dtor( a ) );
+				vertex->z = -cos( dtor( vert_a ) );			
 			}
 		}
 		_valid_vertexbuf_cache = true;
 	}
 	
-	
-	glDisable (GL_CULL_FACE);
+	glTranslatef( 0, 0, CAMERA_HEIGHT / 2.0 );
+	glDisable( GL_CULL_FACE );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	glBegin( GL_QUADS );
 	
@@ -284,7 +251,7 @@ void StgModelCamera::DataVisualize( void )
 			int index = i + j * w;
 			const ColoredVertex* unit_vertex = _vertexbuf_cache + index;
 			ColoredVertex* scaled_vertex = _vertexbuf_scaled + index;
-			const GLubyte* color = _frame_color_data + index * 4; //make this const
+			const GLubyte* color = _frame_color_data + index * 4;
 			const float length = depth_data[ index ];
 			
 			//scale unitvectors with depth-buffer
@@ -302,21 +269,23 @@ void StgModelCamera::DataVisualize( void )
 			//create a quad based on the current camera pixel, and normal vector
 			//the quad size is porpotial to the depth distance
 			float x, y, z;
-			x = 0; y = 0.05 * length; z=0;
+			x = 0; y = 0; z = length * M_PI * a_space / 360.0;
 			cross( x, y, z, unit_vertex->x, unit_vertex->y, unit_vertex->z );
 			
-			float y_height = 0.05 * length;
-			
+			z = length * M_PI * vert_a_space / 360.0;
+
 			glColor4ub( color[ 0 ], color[ 1 ], color[ 2 ], 0xFF );
-			glVertex3f( scaled_vertex->x - x, scaled_vertex->y - y_height, scaled_vertex->z - z );
-			glVertex3f( scaled_vertex->x - x, scaled_vertex->y + y_height, scaled_vertex->z - z );
-			glVertex3f( scaled_vertex->x + x, scaled_vertex->y + y_height, scaled_vertex->z + z );
-			glVertex3f( scaled_vertex->x + x, scaled_vertex->y - y_height, scaled_vertex->z + z );
+			
+			glVertex3f( scaled_vertex->x - x, scaled_vertex->y - y, scaled_vertex->z - z );
+			glVertex3f( scaled_vertex->x - x, scaled_vertex->y - y, scaled_vertex->z + z );
+			glVertex3f( scaled_vertex->x + x, scaled_vertex->y + y, scaled_vertex->z + z );
+			glVertex3f( scaled_vertex->x + x, scaled_vertex->y + y, scaled_vertex->z - z );
 
 		}
 	}
 
 	glEnd();
+	glEnable(GL_CULL_FACE);
 	return;
 
 	//TODO see if any of this can be used for the new method

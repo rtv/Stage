@@ -20,7 +20,6 @@ static  const int checkImageWidth = 2;
 static  const int	checkImageHeight = 2;
 static  GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 static  GLuint texName;
-static bool canvas_init_done = false;
 
 void StgCanvas::TimerCallback( StgCanvas* c )
 {
@@ -360,6 +359,11 @@ int StgCanvas::handle(int event)
 				case ' ': // space bar
 					camera.resetAngle();
 					//invalidate();
+					if( Fl::event_state( FL_CTRL ) ) {
+						//do a complete reset
+						camera.setPose( 0.0, 0.0 );
+						camera.setScale( 10.0 );
+					}
 					redraw();
 					break;
 				case FL_Left:  camera.move( -10, 0 ); break;
@@ -439,6 +443,7 @@ void StgCanvas::DrawGlobalGrid()
 	glDisable(GL_POLYGON_OFFSET_FILL );
 }
 
+//draw the floor without any grid ( for robot's perspective camera model )
 void StgCanvas::DrawFloor()
 {
 	stg_bounds3d_t bounds = world->GetExtent();
@@ -448,6 +453,8 @@ void StgCanvas::DrawFloor()
 	glVertex3f(  bounds.x.max, bounds.y.min, 0 );
 	glVertex3f(  bounds.x.max, bounds.y.max, 0 );
 	glVertex3f( bounds.x.min, bounds.y.max, 0 );
+	glEnd();
+	
 	glEnd();
 }
 
@@ -687,31 +694,60 @@ void StgCanvas::draw()
 		// set gl state that won't change every redraw
 		glClearColor ( 0.7, 0.7, 0.8, 1.0);
 		//glClearColor ( 1,1,1,1 );
-		glDisable(GL_LIGHTING);
-		glEnable (GL_DEPTH_TEST);
-		glDepthFunc (GL_LESS);
+		glDisable( GL_LIGHTING );
+		glEnable( GL_DEPTH_TEST );
+		glDepthFunc( GL_LESS );
 		glCullFace( GL_BACK );
 		glEnable (GL_CULL_FACE);
 		glEnable( GL_BLEND );
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		glEnable( GL_LINE_SMOOTH );
-		glHint (GL_LINE_SMOOTH_HINT, GL_FASTEST);
-		glDepthMask(GL_TRUE);
+		glHint( GL_LINE_SMOOTH_HINT, GL_FASTEST );
+		glDepthMask( GL_TRUE );
 		glEnable( GL_TEXTURE_2D );
 
 
 		//TODO find a better home for loading textures
 		if( loaded_texture == false ) {
-			std::string fullpath;
-			fullpath = world->fileMan->fullPath( "stall.png" );
+			std::string fullpath = world->fileMan->fullPath( "stall.png" );
 			if ( fullpath == "" ) {
 				PRINT_DEBUG( "Unable to load texture.\n" );
 			}
 			
 			GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
-			
 			TextureManager::getInstance()._stall_texture_id = stall_id;
 
+			//create floor texture
+			{
+				//TODO merge this code into the textureManager
+				int i, j, c;
+				for (i = 0; i < checkImageHeight; i++) 
+					for (j = 0; j < checkImageWidth; j++) 
+					{			
+						int even = (i+j)%2;
+						checkImage[i][j][0] = (GLubyte) 255 - 10*even;
+						checkImage[i][j][1] = (GLubyte) 255 - 10*even;
+						checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
+						checkImage[i][j][3] = 255;
+					}
+				
+				
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+				glGenTextures(1, &texName);		 
+				glBindTexture(GL_TEXTURE_2D, texName);
+				glEnable(GL_TEXTURE_2D);
+				
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
+							 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+				
+				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+			}
+			
 			loaded_texture = true;
 		}
 
@@ -731,39 +767,7 @@ void StgCanvas::draw()
 		glEnableClientState( GL_VERTEX_ARRAY );
 		//glEnableClientState( GL_COLOR_ARRAY );
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-		if( ! canvas_init_done ) // do a bit of texture setup
-		{
-			canvas_init_done = true;
-			int i, j, c;
-			for (i = 0; i < checkImageHeight; i++) 
-				for (j = 0; j < checkImageWidth; j++) 
-				{			
-					int even = (i+j)%2;
-					checkImage[i][j][0] = (GLubyte) 255 - 10*even;
-					checkImage[i][j][1] = (GLubyte) 255 - 10*even;
-					checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
-					checkImage[i][j][3] = 255;
-				}
-			
-			
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			glGenTextures(1, &texName);		 
-			glBindTexture(GL_TEXTURE_2D, texName);
-			glEnable(GL_TEXTURE_2D);
-			
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			
-			
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
-						 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
-			
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-		}
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	}            
 
 	
