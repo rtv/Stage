@@ -1833,6 +1833,9 @@ class StgPerspectiveCamera : public StgCamera
 		//void SetProjection( float aspect ) const;
 		void update( void );
 
+		void strafe( float amount );
+		void forward( float amount );
+	
 		inline void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
 		inline void addPose( float x, float y, float z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
 		void move( float x, float y, float z );

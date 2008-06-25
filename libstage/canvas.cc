@@ -366,10 +366,18 @@ int StgCanvas::handle(int event)
 					}
 					redraw();
 					break;
-				case FL_Left:  camera.move( -10, 0 ); break;
-				case FL_Right: camera.move( 10, 0 );; break;
-				case FL_Down:    camera.move( 0, -10 );; break;
-				case FL_Up:  camera.move( 0, 10 );; break;
+				case FL_Left:
+					if( use_perspective_camera == false ) { camera.move( -10, 0 ); } 
+					else { perspective_camera.strafe( -0.5 ); } break;
+				case FL_Right: 
+					if( use_perspective_camera == false ) {camera.move( 10, 0 ); } 
+					else { perspective_camera.strafe( 0.5 ); } break;
+				case FL_Down:  
+					if( use_perspective_camera == false ) {camera.move( 0, -10 ); } 
+					else { perspective_camera.forward( -0.5 ); } break;
+				case FL_Up:  
+					if( use_perspective_camera == false ) {camera.move( 0, 10 ); } 
+					else { perspective_camera.forward( 0.5 ); } break;
 				default:
 							 return 0; // keypress unhandled
 			}

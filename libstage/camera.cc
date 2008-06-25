@@ -71,6 +71,18 @@ void StgPerspectiveCamera::update( void )
 }
 
 
+void StgPerspectiveCamera::strafe( float amount )
+{
+	_x += cos( dtor( _yaw ) ) * amount;
+	_y += sin( dtor( _yaw ) ) * amount;
+}
+
+void StgPerspectiveCamera::forward( float amount )
+{
+	_x += -sin( dtor( _yaw ) ) * amount;
+	_y += cos( dtor( _yaw ) ) * amount;
+}
+
 
 
 
