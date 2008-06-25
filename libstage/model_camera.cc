@@ -142,7 +142,7 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 	_camera.SetProjection();
 	//TODO reposition the camera so it isn't inside the model ( or don't draw the parent when calling renderframe )
 	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, CAMERA_HEIGHT ); //TODO use something smarter than a #define - make it configurable
-	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 + _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
+	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 - _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
 	_camera.Draw();
 	
 	_canvas->renderFrame( true );
