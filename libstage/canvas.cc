@@ -467,19 +467,40 @@ void StgCanvas::DrawFloor()
 	glEnd();
 }
 
-void StgCanvas::renderFrame( bool robot_camera )
-{	
-	//create a localy scopped showflags variable - WARNING: changing it will NOT change the class instance's value
-	uint32_t showflags = this->showflags;
-	if( robot_camera == true )
-		showflags = STG_SHOW_BLOCKS;
-	
-	if( ! (showflags & STG_SHOW_TRAILS) || robot_camera == true )
+void StgCanvas::DrawBlocks() 
+{
+	for( GList* it=world->StgWorld::children; it; it=it->next )
+	{
+		StgModel* mod = ((StgModel*)it->data);
+		
+		if( mod->displaylist == 0 )
+			mod->displaylist = glGenLists(1);
+		
+		if( mod->rebuild_displaylist )
+		{
+			//printf( "Model %s is dirty\n", mod->Token() );					 
+			mod->BuildDisplayList( showflags ); // ready to be rendered
+		}
+		
+		// move into this model's local coordinate frame
+		glPushMatrix();
+		gl_pose_shift( &mod->pose );
+		gl_pose_shift( &mod->geom.pose );
+		
+		// render the pre-recorded graphics for this model and
+		// its children
+		glCallList( mod->displaylist );
+		
+		glPopMatrix();
+	}
+}
+
+void StgCanvas::renderFrame()
+{		
+	if( ! (showflags & STG_SHOW_TRAILS) )
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	if( robot_camera == true )
-		DrawFloor();
-	else if( showflags & STG_SHOW_GRID )
+	if( showflags & STG_SHOW_GRID )
 		DrawGlobalGrid();
 
 
@@ -541,30 +562,7 @@ void StgCanvas::renderFrame( bool robot_camera )
 
 		if( showflags & STG_SHOW_BLOCKS )
 		{
-			for( GList* it=world->StgWorld::children; it; it=it->next )
-			{
-				StgModel* mod = ((StgModel*)it->data);
-
-				if( mod->displaylist == 0 )
-				  mod->displaylist = glGenLists(1);
-
-				if( mod->rebuild_displaylist )
-				  {
-					 //printf( "Model %s is dirty\n", mod->Token() );					 
-					 mod->BuildDisplayList( showflags ); // ready to be rendered
-				  }
-
-				// move into this model's local coordinate frame
-				glPushMatrix();
-				gl_pose_shift( &mod->pose );
-				gl_pose_shift( &mod->geom.pose );
-
-				// render the pre-recorded graphics for this model and
-				// its children
-				glCallList( mod->displaylist );
-
-				glPopMatrix();
-			}
+			DrawBlocks();
 		}
 
 		//mod->Draw( showflags ); // draw the stuff that changes every update

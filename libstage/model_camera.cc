@@ -140,7 +140,8 @@ bool StgModelCamera::GetFrame( void )
 	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 - _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
 	_camera.Draw();
 	
-	_canvas->renderFrame( true );
+	_canvas->DrawFloor();
+	_canvas->DrawBlocks();
 	
 	//read depth buffer
 	glReadPixels(0, 0, _width, _height,

@@ -1955,7 +1955,6 @@ class StgCanvas : public Fl_Gl_Window
 	void DrawRays();
 	void ClearRays();
 	void DrawGlobalGrid();
-	void DrawFloor(); //simpler floor compared to grid
 
 	public:
 
@@ -1968,8 +1967,9 @@ class StgCanvas : public Fl_Gl_Window
   void Screenshot();
 
 	void FixViewport(int W,int H);
-	//robot_camera = true
-	virtual void renderFrame( bool robot_camera = false );
+	void DrawFloor(); //simpler floor compared to grid
+	void DrawBlocks();
+	virtual void renderFrame();
 	virtual void draw();
 	virtual int handle( int event );
 	void resize(int X,int Y,int W,int H);
