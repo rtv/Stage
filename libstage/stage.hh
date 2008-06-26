@@ -1856,7 +1856,7 @@ class StgPerspectiveCamera : public StgCamera
 		inline float vertFov( void ) const { return _vert_fov; }
 		inline void addYaw( float yaw ) { _yaw += yaw; }
 		inline void setPitch( float pitch ) { _pitch = pitch; }
-		inline void addPitch( float pitch ) { _pitch += pitch; }
+		inline void addPitch( float pitch ) { _pitch += pitch; if( _pitch < 0 ) _pitch = 0; else if( _pitch > 180 ) _pitch = 180; }
 	
 		inline float realDistance( float z_buf_val ) const {
 			//formulat found at http://www.cs.unc.edu/~hoff/techrep/openglz.html

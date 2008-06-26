@@ -131,7 +131,7 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 
 
 
-StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(0,0,W,H,L)
+StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(W,H,L)
 {
 	//size_range( 100,100 ); // set minimum window size
 	oDlg = NULL;
