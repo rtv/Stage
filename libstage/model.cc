@@ -139,7 +139,10 @@ const stg_color_t StgModel::BUBBLE_TEXT = 0xFF000000; // black
 
 // static members
 uint32_t StgModel::count = 0;
-Option StgModel::ShowFlags( 0, "Show Flags", true );
+Option StgModel::ShowFlags( "Flags", true );
+Option StgModel::ShowVisData( "Sensor Visualizations", false );
+Option StgModel::ShowBlinken( "Show Blinkenlights", true );
+Option StgModel::ShowStatus( "Show Status", true );
 
 GHashTable* StgModel::modelsbyid = g_hash_table_new( NULL, NULL );
 
@@ -168,10 +171,11 @@ StgModel::StgModel( StgWorld* world,
 
  // Adding this model to its ancestor also gives this model a
   // sensible default name
-
-  StgAncestor* anc =  parent ? (StgAncestor*)parent : (StgAncestor*)world;
-
-  anc->AddChild( this );
+  if ( parent ) 
+ 	parent->AddChild( this );
+  else
+    world->AddChild( this );
+	
   world->AddModel( this );
   
   bzero( &pose, sizeof(pose));
@@ -889,6 +893,62 @@ void StgModel::DrawBlocks( )
 
 }
 
+void StgModel::DrawStatus( StgCanvas* canvas ) {
+	// draw speech bubble
+	if( say_string )
+	{
+		float stheta = -dtor( canvas->camera.getPitch() );
+		float sphi = dtor( canvas->camera.getYaw() );
+		float scale = canvas->camera.getScale();
+		
+		glPushMatrix();
+		
+		// move above the robot
+		glTranslatef( 0, 0, 0.5 );		
+		
+		// rotate to face screen
+		glRotatef( -rtod(global_pose.a + sphi), 0,0,1 );
+		glRotatef( rtod(stheta), 1,0,0 );
+		
+		const float m = 4 / scale; // margin
+		float w = gl_width( this->say_string ) / scale; // scaled text width
+		float h = gl_height() / scale; // scaled text height
+		
+		
+		// draw inside of bubble
+		PushColor( BUBBLE_FILL );
+		glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
+		glPolygonMode( GL_FRONT, GL_FILL );
+		glEnable( GL_POLYGON_OFFSET_FILL );
+		glPolygonOffset( 1.0, 1.0 );
+		gl_draw_octagon( w, h, m );
+		glDisable( GL_POLYGON_OFFSET_FILL );
+		PopColor();
+		// draw outline of bubble
+		PushColor( BUBBLE_BORDER );
+		glLineWidth( 1 );
+		glEnable( GL_LINE_SMOOTH );
+		glPolygonMode( GL_FRONT, GL_LINE );
+		gl_draw_octagon( w, h, m );
+		glPopAttrib();
+		PopColor();
+		
+		
+		// draw text
+		PushColor( BUBBLE_TEXT );
+		glTranslatef( 0, 0, 0.1 ); // draw text forwards of bubble
+		gl_draw_string( m, m, 0.0, this->say_string );
+		PopColor();
+		
+		glPopMatrix();
+	}
+	
+	if( stall )
+	{
+		DrawImage( TextureManager::getInstance()._stall_texture_id, canvas, 0.85 );
+	}
+}
+
 void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha )
 {
 	float stheta = -dtor( canvas->camera.getPitch() );
@@ -937,73 +997,20 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
 
 
 
-	if( flags & STG_SHOW_DATA )
+	if( ShowVisData )
 		DataVisualize();
 
 	if( gui_grid && (flags & STG_SHOW_GRID) )
 		DrawGrid();
 
-	if( flag_list ) 
+	if( ShowFlags ) 
 		DrawFlagList();
 
-	if( blinkenlights )
+	if( ShowBlinken )
 		DrawBlinkenlights();
-
 	
-	if ( flags & STG_SHOW_STATUS ) {
-		// draw speech bubble
-		if( say_string )
-		{
-			float stheta = -dtor( canvas->camera.getPitch() );
-			float sphi = dtor( canvas->camera.getYaw() );
-			float scale = canvas->camera.getScale();
-
-			glPushMatrix();
-
-			// move above the robot
-			glTranslatef( 0, 0, 0.5 );		
-
-			// rotate to face screen
-			glRotatef( -rtod(global_pose.a + sphi), 0,0,1 );
-			glRotatef( rtod(stheta), 1,0,0 );
-
-			const float m = 4 / scale; // margin
-			float w = gl_width( this->say_string ) / scale; // scaled text width
-			float h = gl_height() / scale; // scaled text height
-
-
-			// draw inside of bubble
-			PushColor( BUBBLE_FILL );
-			glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-			glPolygonMode( GL_FRONT, GL_FILL );
-			glEnable( GL_POLYGON_OFFSET_FILL );
-			glPolygonOffset( 1.0, 1.0 );
-			gl_draw_octagon( w, h, m );
-			glDisable( GL_POLYGON_OFFSET_FILL );
-			PopColor();
-			// draw outline of bubble
-			PushColor( BUBBLE_BORDER );
-			glLineWidth( 1 );
-			glEnable( GL_LINE_SMOOTH );
-			glPolygonMode( GL_FRONT, GL_LINE );
-			gl_draw_octagon( w, h, m );
-			glPopAttrib();
-			PopColor();
-
-
-			// draw text
-			PushColor( BUBBLE_TEXT );
-			glTranslatef( 0, 0, 0.1 ); // draw text forwards of bubble
-			gl_draw_string( m, m, 0.0, this->say_string );
-			PopColor();
-
-			glPopMatrix();
-		}
-
-		if( stall )
-		{
-			DrawImage( TextureManager::getInstance()._stall_texture_id, canvas, 0.85 );
-		}
+	if ( ShowStatus ) {
+		DrawStatus( canvas );
 	}
 
 	// shift up the CS to the top of this model
@@ -1717,6 +1724,9 @@ StgModel* StgModel::GetModel( const char* modelname )
 const std::vector<Option*> StgModel::getOptions() {
 	std::vector<Option*> drawOptions;
 	drawOptions.push_back( &ShowFlags );
+	drawOptions.push_back( &ShowVisData );
+	drawOptions.push_back( &ShowBlinken );
+	drawOptions.push_back( &ShowStatus );
 	
 	return drawOptions;
 }

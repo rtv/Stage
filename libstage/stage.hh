@@ -55,6 +55,8 @@
 #include <sys/time.h>
 #include <iostream>
 #include <vector>
+#include <map>
+#include <set>
 
 // we use GLib's data structures extensively. Perhaps we'll move to
 // C++ STL types to lose this dependency one day.
@@ -1015,6 +1017,7 @@ private:
 
 	//GHashTable* models_by_id; ///< the models that make up the world, indexed by id
 	GHashTable* models_by_name; ///< the models that make up the world, indexed by name
+	std::map< std::string, StgModel* > modelsByName;
 	GList* velocity_list; ///< a list of models that have non-zero velocity, for efficient updating
 
   //stg_usec_t wall_last_update; ///< the real time of the last update in ms
@@ -1024,8 +1027,6 @@ private:
 
 	int total_subs; ///< the total number of subscriptions to all models
 	double ppm; ///< the resolution of the world model in pixels per meter  
-
-	GList* update_list; //< the descendants that need Update() called
 
 	void StartUpdatingModel( StgModel* mod );
 	void StopUpdatingModel( StgModel* mod );
@@ -1055,6 +1056,7 @@ private:
 
 protected:
 	GHashTable* superregions;
+	GList* update_list; //< the descendants that need Update() called
 	stg_usec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
 
 	static void UpdateCb( StgWorld* world);
@@ -1168,6 +1170,9 @@ private:
 	
 	// Draw options
 	static Option ShowFlags;
+	static Option ShowVisData;
+	static Option ShowBlinken;
+	static Option ShowStatus;
 
 public:
   
@@ -1359,6 +1364,7 @@ protected:
 	virtual void Draw( uint32_t flags, StgCanvas* canvas );
 
 	virtual void DrawBlocks();
+	virtual void DrawStatus( StgCanvas* canvas );
 
 	///Draw the image stored in texture_id above the model
 	void DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha );
@@ -2033,13 +2039,11 @@ public:
   /** Get human readable string that describes the current simulation
 		time. */
   void ClockString( char* str, size_t maxlen );
-  
+
   /** Set the minimum real time interval between world updates, in
 		microeconds. */
   void SetRealTimeInterval( stg_usec_t usec )
   { interval_real = usec; }
-  
-  
 
 protected:
 	virtual void PushColor( stg_color_t col )
@@ -2072,6 +2076,8 @@ protected:
 	// GUI functions
 	bool saveAsDialog();
 	bool closeWindowQuery();
+	
+	std::set<Option*> DrawOptions;
 };
 
 

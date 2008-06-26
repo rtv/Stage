@@ -97,6 +97,8 @@ overwritten.
 
 #include "stage_internal.hh"
 #include "region.hh"
+#include "file_manager.hh"
+#include "options_dlg.hh"
 
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Shared_Image.H>
@@ -105,8 +107,7 @@ overwritten.
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_File_Chooser.H>
 
-#include "file_manager.hh"
-#include "options_dlg.hh"
+#include <set>
 
 
 static const char* MITEM_VIEW_DATA =      "&View/&Data";
@@ -204,52 +205,6 @@ StgWorldGui::~StgWorldGui()
 }
 
 
-void StgWorldGui::ClockString( char* str, size_t maxlen )
-{
-	const uint32_t usec_per_hour = 360000000;
-	const uint32_t usec_per_minute = 60000000;
-	const uint32_t usec_per_second = 1000000;
-	const uint32_t usec_per_msec = 1000;
-
-	uint32_t hours   = sim_time / usec_per_hour;
-	uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
-	uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
-	uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
-
-	// find the average length of the last few realtime intervals;
-	stg_usec_t average_real_interval = 0;
-	for( uint32_t i=0; i<INTERVAL_LOG_LEN; i++ )
-		average_real_interval += interval_log[i];
-	average_real_interval /= INTERVAL_LOG_LEN;
-
-	double localratio = (double)interval_sim / (double)average_real_interval;
-
-#ifdef DEBUG
-	if( hours > 0 )
-		snprintf( str, maxlen, "Time: %uh%02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
-				hours, minutes, seconds, msec,
-				localratio,
-				total_subs,
-				paused ? "--PAUSED--" : "" );
-	else
-		snprintf( str, maxlen, "Time: %02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
-				minutes, seconds, msec,
-				localratio,
-				total_subs,
-				paused ? "--PAUSED--" : "" );
-#else
-	if( hours > 0 )
-		snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.2f] %s",
-				hours, minutes, seconds, msec,
-				localratio,
-				paused ? "--PAUSED--" : "" );
-	else
-		snprintf( str, maxlen, "%02um%02u.%03us\t[%.2f] %s",
-				minutes, seconds, msec,
-				localratio,
-				paused ? "--PAUSED--" : "" );
-#endif
-}
 
 
 void StgWorldGui::Load( const char* filename )
@@ -416,6 +371,54 @@ bool StgWorldGui::Update()
   return val;
 }
 
+
+void StgWorldGui::ClockString( char* str, size_t maxlen )
+{
+	const uint32_t usec_per_hour = 360000000;
+	const uint32_t usec_per_minute = 60000000;
+	const uint32_t usec_per_second = 1000000;
+	const uint32_t usec_per_msec = 1000;
+	
+	uint32_t hours   = sim_time / usec_per_hour;
+	uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
+	uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
+	uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
+	
+	// find the average length of the last few realtime intervals;
+	stg_usec_t average_real_interval = 0;
+	for( uint32_t i=0; i<INTERVAL_LOG_LEN; i++ )
+		average_real_interval += interval_log[i];
+	average_real_interval /= INTERVAL_LOG_LEN;
+	
+	double localratio = (double)interval_sim / (double)average_real_interval;
+	
+#ifdef DEBUG
+	if( hours > 0 )
+		snprintf( str, maxlen, "Time: %uh%02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
+				 hours, minutes, seconds, msec,
+				 localratio,
+				 total_subs,
+				 paused ? "--PAUSED--" : "" );
+	else
+		snprintf( str, maxlen, "Time: %02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
+				 minutes, seconds, msec,
+				 localratio,
+				 total_subs,
+				 paused ? "--PAUSED--" : "" );
+#else
+	if( hours > 0 )
+		snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.2f] %s",
+				 hours, minutes, seconds, msec,
+				 localratio,
+				 paused ? "--PAUSED--" : "" );
+	else
+		snprintf( str, maxlen, "%02um%02u.%03us\t[%.2f] %s",
+				 minutes, seconds, msec,
+				 localratio,
+				 paused ? "--PAUSED--" : "" );
+#endif
+}
+
 void StgWorldGui::DrawTree( bool drawall )
 {  
 	g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Draw_cb, NULL );
@@ -427,6 +430,7 @@ void StgWorldGui::DrawFloor()
 	g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Floor_cb, NULL );
 	PopColor();
 }
+
 
 
 void StgWorldGui::windowCb( Fl_Widget* w, void* p )
@@ -504,8 +508,6 @@ void StgWorldGui::fileSaveAsCb( Fl_Widget* w, void* p )
 	worldGui->saveAsDialog();
 }
 
-
-
 void StgWorldGui::fileExitCb( Fl_Widget* w, void* p ) 
 {
 	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
@@ -548,11 +550,19 @@ void StgWorldGui::viewToggleCb( Fl_Widget* w, void* p )
 void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
 	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
 	
-	std::vector<Option> options;
-	for (int i=0; i<10; i++) {
-		Option o( i, "Option", i%2*true );
-		options.push_back( o );
+//	std::set<Option*, bool(*)(const Option*,const Option*)> options( compare );
+	std::set<Option*, optComp> options;
+	std::vector<Option*> modOpts;
+	for( GList* it=worldGui->update_list; it; it=it->next ) {
+		modOpts = ((StgModel*)it->data)->getOptions();
+		options.insert( modOpts.begin(), modOpts.end() );	
 	}
+
+//	std::vector<Option> options;
+//	std::set<Option*>::iterator it;
+//	for( it=optSet.begin(); it!=optSet.end(); it++ ) {
+//		options.push_back( **it );
+//	}
 	
 	if ( !worldGui->oDlg ) {
 		OptionsDlg* oDlg = new OptionsDlg( 0, 0, 180, 250 );
@@ -586,12 +596,21 @@ void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
 			Fl::delete_widget( oDlg );
 			return;
 		default:
-			Option o = oDlg->changed();
-			printf( "\"%s\"[%d] changed to %d!\n", o.name().c_str(), o.id(), o.val() );			
-			// update flag(s)
+			switch ( oDlg->event() ) {
+				case OptionsDlg::CHANGE: 
+				{
+					//Option* o = oDlg->changed();
+					//printf( "\"%s\" changed to %d!\n", o->name().c_str(), o->val() );			
+					break;
+				}
+				case OptionsDlg::CHANGE_ALL:
+					break;
+				case OptionsDlg::NO_EVENT:
+					break;
+			}
+
 	}
 }
-
 
 void aboutOKBtnCb( Fl_Widget* w, void* p ) {
 	Fl_Return_Button* btn;
@@ -663,7 +682,6 @@ void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p )
 	
 	win->show();
 }
-
 
 bool StgWorldGui::saveAsDialog()
 {

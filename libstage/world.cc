@@ -320,6 +320,7 @@ void StgWorld::UnLoad()
 	//g_hash_table_remove_all( models_by_id );
 		
 	g_hash_table_remove_all( models_by_name );
+	modelsByName.clear();
 	
 	g_list_free( velocity_list );
 	velocity_list = NULL;

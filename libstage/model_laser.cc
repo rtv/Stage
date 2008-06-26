@@ -33,7 +33,7 @@ const char StgModelLaser::DEFAULT_GEOM_COLOR[] = "blue";
 //const char COLOR[] = "steel blue";
 //const char FILL_COLOR[] = "powder blue";
 
-Option StgModelLaser::ShowLaserData( 0, "Show Laser Data", false );
+Option StgModelLaser::ShowLaserData( "Show Laser Data", true );
 
 /**
   @ingroup model
@@ -297,6 +297,9 @@ void StgModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
 
 void StgModelLaser::DataVisualize( void )
 {
+	if ( !ShowLaserData )
+		return;
+	
 	if( ! (samples && sample_count) )
 		return;
 
