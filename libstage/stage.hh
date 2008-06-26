@@ -55,8 +55,6 @@
 #include <sys/time.h>
 #include <iostream>
 #include <vector>
-#include <map>
-#include <set>
 
 // we use GLib's data structures extensively. Perhaps we'll move to
 // C++ STL types to lose this dependency one day.
@@ -1017,7 +1015,6 @@ private:
 
 	//GHashTable* models_by_id; ///< the models that make up the world, indexed by id
 	GHashTable* models_by_name; ///< the models that make up the world, indexed by name
-	std::map< std::string, StgModel* > modelsByName;
 	GList* velocity_list; ///< a list of models that have non-zero velocity, for efficient updating
 
   //stg_usec_t wall_last_update; ///< the real time of the last update in ms
@@ -2076,8 +2073,6 @@ protected:
 	// GUI functions
 	bool saveAsDialog();
 	bool closeWindowQuery();
-	
-	std::set<Option*> DrawOptions;
 };
 
 
