@@ -97,19 +97,14 @@ void StgModelCamera::Load( void )
 
 void StgModelCamera::Update( void )
 {   
-	GetFrame( true );
+	GetFrame();
 	StgModel::Update();
 }
 
-float* StgModelCamera::laser()
-{
-	return NULL;
-}
-
-const char* StgModelCamera::GetFrame( bool depth_buffer )
+bool StgModelCamera::GetFrame( void )
 {	
 	if( _width == 0 || _height == 0 )
-		return NULL;
+		return false;
 	
 	if( _frame_data == NULL ) {
 		if( _frame_data != NULL ) {
@@ -166,7 +161,7 @@ const char* StgModelCamera::GetFrame( bool depth_buffer )
 
 
 	_canvas->invalidate();
-	return NULL; //_frame_data;
+	return true;
 }
 
 //TODO create lines outlineing camera frustrum, then iterate over each depth measurement and create a square
@@ -174,8 +169,6 @@ void StgModelCamera::DataVisualize( void )
 {
 	if( _frame_data == NULL )
 		return;
-	
-	//PrintData();
 	
 	float w_fov = _camera.horizFov();
 	float h_fov = _camera.vertFov();

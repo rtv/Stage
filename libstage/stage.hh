@@ -2476,8 +2476,7 @@ class StgModelBlinkenlight : public StgModel
 
 // CAMERA MODEL ----------------------------------------------------
 typedef struct {
-	// GL_C4UB_V3F
-	GLubyte r, g, b, a;
+	// GL_V3F
 	GLfloat x, y, z;
 } ColoredVertex;
 	
@@ -2501,9 +2500,10 @@ class StgModelCamera : public StgModel
 		GLubyte* _camera_colors;
 	
 		StgPerspectiveCamera _camera;
-		int _yaw_offset;
-	
-		void PrintData( void ) const;
+		int _yaw_offset; //position camera is mounted at
+		
+		///Take a screenshot from the camera's perspective. return: true for sucess, and data is available via FrameDepth() / FrameColor()
+		bool GetFrame();
 	
 	public:
 		StgModelCamera( StgWorld* world,
@@ -2512,17 +2512,30 @@ class StgModelCamera : public StgModel
 		~StgModelCamera();
 
 		virtual void Load();
+	
+		///Capture a new frame ( calls GetFrame )
 		virtual void Update();
+	
+		///Draw Camera Model - TODO
 		virtual void Draw( uint32_t flags, StgCanvas* canvas );
+	
+		///Draw camera visualization
 		virtual void DataVisualize();
 	
+		///width of captured image
 		inline int getWidth( void ) const { return _width; }
 	
-		///Take a screenshot from the camera's perspective
-		const char* GetFrame( bool depth_buffer );
+		///height of captured image
+		inline int getHeight( void ) const { return _height; }
 	
-		///Imiate laser scan
-		float* laser();
+		///get reference to camera used
+		inline const StgPerspectiveCamera& getCamera( void ) const { return _camera; }
+	
+		///get a reference to camera depth buffer
+		inline const GLfloat* FrameDepth() const { return _frame_data; }
+	
+		///get a reference to camera color image. 3 bytes (RGB) per pixel
+		inline const GLubyte* FrameColor() const { return _frame_color_data; }
 };
 
 // POSITION MODEL --------------------------------------------------------
