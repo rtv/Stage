@@ -162,7 +162,6 @@ StgModel::StgModel( StgWorld* world,
   
   this->parent = parent;
   this->world = world;  
-  this->debug = false;
   this->type = type;
   this->id = StgModel::count++; // assign a unique ID and increment
 										  // the global model counter
@@ -1003,7 +1002,7 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
 	if( gui_grid && (flags & STG_SHOW_GRID) )
 		DrawGrid();
 
-	if( ShowFlags ) 
+	if( flag_list && ShowFlags ) 
 		DrawFlagList();
 
 	if( ShowBlinken )

@@ -113,9 +113,9 @@ void StgWorld::Initialize( const char* token,
 	this->ray_list = NULL;
 	this->quit_time = 0;
 
-	assert(token);
-	this->token = (char*)g_malloc(Stg::TOKEN_MAX);
-	snprintf( this->token, Stg::TOKEN_MAX, "%s", token );//this->id );
+	//assert(token);
+	//this->token = (char*)g_malloc(Stg::TOKEN_MAX);
+	//snprintf( this->token, Stg::TOKEN_MAX, "%s", token );//this->id );
 
 	this->quit = false;
 	this->updates = 0;
@@ -333,9 +333,7 @@ void StgWorld::UnLoad()
 	g_hash_table_foreach( superregions, (GHFunc)destroy_sregion, NULL );
 	g_hash_table_remove_all( superregions );
 
-	g_free( token );
-	this->token = (char*)g_malloc(Stg::TOKEN_MAX);  // necessary?
-	
+	token = NULL;
 }
 
 stg_usec_t StgWorld::RealTimeNow()

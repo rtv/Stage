@@ -132,7 +132,8 @@ static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 
 
 
-StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(W,H,L)
+StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(W,H,L),
+ShowAll( "Visualize all models", true )
 {
 	//size_range( 100,100 ); // set minimum window size
 	oDlg = NULL;
@@ -550,7 +551,6 @@ void StgWorldGui::viewToggleCb( Fl_Widget* w, void* p )
 void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
 	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
 	
-//	std::set<Option*, bool(*)(const Option*,const Option*)> options( compare );
 	std::set<Option*, optComp> options;
 	std::vector<Option*> modOpts;
 	for( GList* it=worldGui->update_list; it; it=it->next ) {
@@ -558,17 +558,12 @@ void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
 		options.insert( modOpts.begin(), modOpts.end() );	
 	}
 
-//	std::vector<Option> options;
-//	std::set<Option*>::iterator it;
-//	for( it=optSet.begin(); it!=optSet.end(); it++ ) {
-//		options.push_back( **it );
-//	}
-	
 	if ( !worldGui->oDlg ) {
-		OptionsDlg* oDlg = new OptionsDlg( 0, 0, 180, 250 );
-		// TODO - move initial coords to right edge of window
-		//printf("width: %d\n", worldGui->w());
+		int x = worldGui->w()+worldGui->x() + 10;
+		int y = worldGui->y();
+		OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
 		oDlg->callback( optionsDlgCb, worldGui );
+		oDlg->showAllOpt( &worldGui->ShowAll );
 		oDlg->setOptions( options );
 		oDlg->show();
 
@@ -583,32 +578,39 @@ void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
 	OptionsDlg* oDlg = static_cast<OptionsDlg*>( w );
 	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
 
+	// get event from dialog
+	OptionsDlg::event_t event;
+	event = oDlg->event();
+	
+	// Check FLTK events first
 	switch ( Fl::event() ) {
 		case FL_SHORTCUT:
 			if ( Fl::event_key() != FL_Escape ) 
-				break;
+				break; //return
 			// otherwise, ESC pressed-> do as below
 		case FL_CLOSE: // clicked close button
+			// override event to close
+			event = OptionsDlg::CLOSE;
+			break;
+	}
+	
+	switch ( event ) {
+		case OptionsDlg::CHANGE: 
+		{
+			//Option* o = oDlg->changed();
+			//printf( "\"%s\" changed to %d!\n", o->name().c_str(), o->val() );			
+			break;
+		}			
+		case OptionsDlg::CLOSE:
 			// invalidate the oDlg pointer from the WorldGui
 			//   instance before the dialog is destroyed
 			worldGui->oDlg = NULL; 
 			oDlg->hide();
 			Fl::delete_widget( oDlg );
-			return;
-		default:
-			switch ( oDlg->event() ) {
-				case OptionsDlg::CHANGE: 
-				{
-					//Option* o = oDlg->changed();
-					//printf( "\"%s\" changed to %d!\n", o->name().c_str(), o->val() );			
-					break;
-				}
-				case OptionsDlg::CHANGE_ALL:
-					break;
-				case OptionsDlg::NO_EVENT:
-					break;
-			}
-
+			return;	
+		case OptionsDlg::NO_EVENT:
+		case OptionsDlg::CHANGE_ALL:
+			break;
 	}
 }
 

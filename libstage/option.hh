@@ -10,11 +10,10 @@ namespace Stg {
 		std::string optName;
 		bool value;
 	public:
-		Option() { }
 		Option( std::string n, bool v ) : optName( n ), value( v ) { }
 		Option( const Option& o ) : optName( o.optName ), value( o.value ) { }
 		const std::string name() const { return optName; }
-		inline const bool val() const { return value; }
+		inline bool val() const { return value; }
 		inline operator bool() { return val(); }
 		inline bool operator<( const Option& rhs ) const
 			{ return optName<rhs.optName; } 

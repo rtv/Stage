@@ -4,22 +4,29 @@
 namespace Stg {
 
 	OptionsDlg::OptionsDlg( int x, int y, int w, int h ) :
-	Fl_Window( /*x,y,*/w, h, "Model Options" ),
+	Fl_Window( x,y, w,h, "Model Options" ),
 	changedItem( NULL ),
+	showAll( NULL ),
 	status( NO_EVENT ),
 	hm( w/6 ) {
-		scroll = new Fl_Scroll( 0, 0, w, h-btnH-2*vm );
+		showAllCheck = new Fl_Check_Button( 0,0, w,boxH );
+		showAllCheck->callback( checkChanged, this );
+		showAllCheck->deactivate();
+		
+		scroll = new Fl_Scroll( 0,boxH+vm, w,h-boxH-btnH-3*vm );
 		scroll->type( Fl_Scroll::VERTICAL );
 		scroll->end();
+
 		
-		button = new Fl_Button( hm, h-btnH-vm, w-2*hm, btnH, "Apply to all" );
-		button->callback( applyAllPress, this );
+		button = new Fl_Button( hm, h-btnH-vm, w-2*hm, btnH, "&Close" );
+		button->callback( closePress, this );
 		this->end();
 	}
 
 	OptionsDlg::~OptionsDlg() {
 		delete button;
 		delete scroll; // deletes members
+		delete showAllCheck;
 	}
 
 
@@ -27,19 +34,27 @@ namespace Stg {
 		Fl_Check_Button* check = static_cast<Fl_Check_Button*>( w );
 		OptionsDlg* oDlg = static_cast<OptionsDlg*>( p );
 		
-		int item = oDlg->scroll->find( check );
-		oDlg->options[ item ]->set( check->value() );
-		oDlg->changedItem = oDlg->options[ item ];
-		oDlg->status = CHANGE;
-		oDlg->do_callback();
-		oDlg->changedItem = NULL;
-		oDlg->status = NO_EVENT;
+		if ( check == oDlg->showAllCheck && oDlg->showAll ) {
+			oDlg->status = CHANGE_ALL;
+			oDlg->showAll->set( check->value() );
+			oDlg->do_callback();
+			oDlg->status = NO_EVENT;
+		}
+		else {
+			int item = oDlg->scroll->find( check );
+			oDlg->options[ item ]->set( check->value() );
+			oDlg->changedItem = oDlg->options[ item ];
+			oDlg->status = CHANGE;
+			oDlg->do_callback();
+			oDlg->changedItem = NULL;
+			oDlg->status = NO_EVENT;
+		}
 	}
 
-	void OptionsDlg::applyAllPress( Fl_Widget* w, void* p ) {
+	void OptionsDlg::closePress( Fl_Widget* w, void* p ) {
 		OptionsDlg* oDlg = static_cast<OptionsDlg*>( p );
 		
-		oDlg->status = CHANGE_ALL;
+		oDlg->status = CLOSE;
 		oDlg->do_callback();
 		oDlg->status = NO_EVENT;
 	}
@@ -76,6 +91,12 @@ namespace Stg {
 		options.clear();
 		options.insert( options.begin(), opts.begin(), opts.end() );
 		updateChecks();
+	}
+	
+	void OptionsDlg::showAllOpt( Option* opt ) {
+		showAll = opt;
+		showAllCheck->label( opt->name().c_str() );
+		showAllCheck->value( opt->val() );
 	}
 
 } // namespace Stg 
