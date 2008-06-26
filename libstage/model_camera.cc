@@ -15,6 +15,8 @@
 #include <sstream>
 #include <iomanip>
 
+Option StgModelCamera::ShowCamera( "Show Camera", true );
+
 //caclulate the corss product, and store results in the first vertex
 void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
 {	
@@ -165,10 +167,10 @@ bool StgModelCamera::GetFrame( void )
 	return true;
 }
 
-//TODO create lines outlineing camera frustrum, then iterate over each depth measurement and create a square
+//TODO create lines outlining camera frustrum, then iterate over each depth measurement and create a square
 void StgModelCamera::DataVisualize( void )
 {
-	if( _frame_data == NULL )
+	if( _frame_data == NULL || !ShowCamera )
 		return;
 	
 	float w_fov = _camera.horizFov();
@@ -282,3 +284,10 @@ void StgModelCamera::Draw( uint32_t flags, StgCanvas* canvas )
 	StgModel::Draw( flags, canvas );
 }
 
+
+const std::vector<Option*> StgModelCamera::getOptions() {
+	std::vector<Option*> drawOptions;
+	drawOptions.push_back( &ShowCamera );
+	
+	return drawOptions;
+}

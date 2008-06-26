@@ -2502,6 +2502,8 @@ class StgModelCamera : public StgModel
 		GLfloat* _camera_quads;
 		GLubyte* _camera_colors;
 	
+		static Option ShowCamera;
+	
 		StgPerspectiveCamera _camera;
 		int _yaw_offset; //position camera is mounted at
 		
@@ -2539,6 +2541,8 @@ class StgModelCamera : public StgModel
 	
 		///get a reference to camera color image. 3 bytes (RGB) per pixel
 		inline const GLubyte* FrameColor() const { return _frame_color_data; }
+	
+		virtual const std::vector<Option*> getOptions();
 };
 
 // POSITION MODEL --------------------------------------------------------
