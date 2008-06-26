@@ -73,7 +73,7 @@ namespace Stg {
 		scroll->begin();
 		Fl_Check_Button* check;
 		for ( unsigned int i=0; i<options.size(); i++ ) {
-			check = new Fl_Check_Button( 0,boxH*i, scroll->w(), boxH, options[ i ]->name().c_str() );
+			check = new Fl_Check_Button( 0,boxH*(i+1)+vm, scroll->w(), boxH, options[ i ]->name().c_str() );
 			if ( options[ i ]->val() )
 				check->set();
 			check->callback( checkChanged, this );
