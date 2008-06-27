@@ -4,7 +4,7 @@
 namespace Stg {
 
 	OptionsDlg::OptionsDlg( int x, int y, int w, int h ) :
-	Fl_Window( x,y, w,h, "Sensor Options" ),
+	Fl_Window( x,y, w,h, "Options" ),
 	changedItem( NULL ),
 	showAll( NULL ),
 	status( NO_EVENT ),

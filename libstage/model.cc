@@ -139,8 +139,7 @@ const stg_color_t StgModel::BUBBLE_TEXT = 0xFF000000; // black
 
 // static members
 uint32_t StgModel::count = 0;
-Option StgModel::ShowFlags( "Flags", true );
-Option StgModel::ShowVisData( "Sensor Visualizations", false );
+//Option StgModel::ShowVisData( "Sensor Visualizations", false );
 Option StgModel::ShowBlinken( "Show Blinkenlights", true );
 Option StgModel::ShowStatus( "Show Status", true );
 
@@ -238,13 +237,10 @@ StgModel::StgModel( StgWorld* world,
 
 	// now we can add the basic square shape
 	this->AddBlockRect( -0.5,-0.5,1,1 );
-	
-	
-	RegisterOption( &ShowFlags );
-	RegisterOption( &ShowFlags );
-	RegisterOption( &ShowVisData );
+		
+	//RegisterOption( &ShowVisData );
 	RegisterOption( &ShowBlinken );
-	RegisterOption( &ShowStatus );
+	//RegisterOption( &ShowStatus );
 
 	PRINT_DEBUG2( "finished model %s @ %p", 
 					  this->token, this );
@@ -900,6 +896,12 @@ void StgModel::DrawBlocks( )
 }
 
 void StgModel::DrawStatus( StgCanvas* canvas ) {
+	glPushMatrix();
+	
+	// move into this model's local coordinate frame
+	gl_pose_shift( &this->pose );
+	gl_pose_shift( &this->geom.pose );
+	
 	// draw speech bubble
 	if( say_string )
 	{
@@ -953,6 +955,8 @@ void StgModel::DrawStatus( StgCanvas* canvas ) {
 	{
 		DrawImage( TextureManager::getInstance()._stall_texture_id, canvas, 0.85 );
 	}
+	
+	glPopMatrix();
 }
 
 void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha )
@@ -1000,24 +1004,21 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
 	gl_pose_shift( &this->pose );
 	gl_pose_shift( &this->geom.pose );
 
-
-
-
-	if( ShowVisData )
-		DataVisualize();
-
-	if( gui_grid && (flags & STG_SHOW_GRID) )
-		DrawGrid();
-
-	if( flag_list && ShowFlags ) 
-		DrawFlagList();
-
-	if( ShowBlinken )
-		DrawBlinkenlights();
-	
-	if ( ShowStatus ) {
-		DrawStatus( canvas );
-	}
+//	if ( ShowVisData )
+//		DataVisualize();
+//
+//	if( gui_grid && (flags & STG_SHOW_GRID) )
+//		DrawGrid();
+//
+//	if( flag_list && ShowFlags ) 
+//		DrawFlagList();
+//
+//	if( ShowBlinken )
+//		DrawBlinkenlights();
+//	
+//	if ( ShowStatus ) {
+//		DrawStatus( canvas );
+//	}
 
 	// shift up the CS to the top of this model
 	//gl_coord_shift(  0,0, this->geom.size.z, 0 );
@@ -1030,55 +1031,66 @@ void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
 }
 
 void StgModel::DrawFlagList( void )
-{
-	glPushMatrix();
+{	
+	if ( flag_list ) {
+		glPushMatrix();
+		
+		// move into this model's local coordinate frame
+		gl_pose_shift( &this->pose );
+		gl_pose_shift( &this->geom.pose );
 
-	GLUquadric* quadric = gluNewQuadric();
-	glTranslatef(0,0,1); // jump up
-	stg_pose_t gpose = GetGlobalPose();
-	glRotatef( 180 + rtod(-gpose.a),0,0,1 );
-
-
-	GList* list = g_list_copy( flag_list );
-	list = g_list_reverse(list);
-
-	for( GList* item = list; item; item = item->next )
-	{
-
-		StgFlag* flag = (StgFlag*)item->data;
-
-		glTranslatef( 0, 0, flag->size/2.0 );
+		GLUquadric* quadric = gluNewQuadric();
+		glTranslatef(0,0,1); // jump up
+		stg_pose_t gpose = GetGlobalPose();
+		glRotatef( 180 + rtod(-gpose.a),0,0,1 );
 
 
-		PushColor( flag->color );
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		GList* list = g_list_copy( flag_list );
+		list = g_list_reverse(list);
 
-		gluQuadricDrawStyle( quadric, GLU_FILL );
-		gluSphere( quadric, flag->size/2.0, 4,2  );
+		for( GList* item = list; item; item = item->next )
+		{
 
-		// draw the edges darker version of the same color
-		double r,g,b,a;
-		stg_color_unpack( flag->color, &r, &g, &b, &a );
-		PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+			StgFlag* flag = (StgFlag*)item->data;
 
-		gluQuadricDrawStyle( quadric, GLU_LINE );
-		gluSphere( quadric, flag->size/2.0, 4,2 );
+			glTranslatef( 0, 0, flag->size/2.0 );
 
-		PopColor();
-		PopColor();
 
-		glTranslatef( 0, 0, flag->size/2.0 );
+			PushColor( flag->color );
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+			gluQuadricDrawStyle( quadric, GLU_FILL );
+			gluSphere( quadric, flag->size/2.0, 4,2  );
+
+			// draw the edges darker version of the same color
+			double r,g,b,a;
+			stg_color_unpack( flag->color, &r, &g, &b, &a );
+			PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+
+			gluQuadricDrawStyle( quadric, GLU_LINE );
+			gluSphere( quadric, flag->size/2.0, 4,2 );
+
+			PopColor();
+			PopColor();
+
+			glTranslatef( 0, 0, flag->size/2.0 );
+		}
+
+		g_list_free( list );
+
+		gluDeleteQuadric( quadric );
+		
+		glPopMatrix();
 	}
-
-	g_list_free( list );
-
-	gluDeleteQuadric( quadric );
-	glPopMatrix();
 }
 
 void StgModel::DrawBlinkenlights()
 {
 	glPushMatrix();
+	
+	// move into this model's local coordinate frame
+	gl_pose_shift( &this->pose );
+	gl_pose_shift( &this->geom.pose );
 
 	GLUquadric* quadric = gluNewQuadric();
 	//glTranslatef(0,0,1); // jump up
@@ -1145,22 +1157,34 @@ void StgModel::BuildDisplayList( uint32_t flags )
 
 void StgModel::DataVisualize( void )
 {
-	// do nothing - subclasses will do more here
+	// call DataVisualize on all children
+	for( GList* it=children; it; it=it->next )
+		((StgModel*)it->data)->DataVisualize();
 }
 
 void StgModel::DrawGrid( void )
 {
-	stg_bounds3d_t vol;
-	vol.x.min = -geom.size.x/2.0;
-	vol.x.max =  geom.size.x/2.0;
-	vol.y.min = -geom.size.y/2.0;
-	vol.y.max =  geom.size.y/2.0;
-	vol.z.min = 0;
-	vol.z.max = geom.size.z;
+	if ( gui_grid ) {
+		glPushMatrix();
+		
+		// move into this model's local coordinate frame
+		gl_pose_shift( &this->pose );
+		gl_pose_shift( &this->geom.pose );
+		
+		stg_bounds3d_t vol;
+		vol.x.min = -geom.size.x/2.0;
+		vol.x.max =  geom.size.x/2.0;
+		vol.y.min = -geom.size.y/2.0;
+		vol.y.max =  geom.size.y/2.0;
+		vol.z.min = 0;
+		vol.z.max = geom.size.z;
 
-	PushColor( 0,0,1,0.4 );
-	gl_draw_grid(vol);
-	PopColor();
+		PushColor( 0,0,1,0.4 );
+		gl_draw_grid(vol);
+		PopColor();
+		
+		glPopMatrix();
+	}
 }
 
 bool velocity_is_nonzero( stg_velocity_t* v )

@@ -1,3 +1,11 @@
+/** option.hh
+ Class that encapsulates a boolean and pairs it with a string description
+ Used to pass settings between the GUI and the drawing classes
+ 
+ Author: Jeremy Asher
+*/
+
+
 #ifndef _OPTION_H_
 #define _OPTION_H_
 
@@ -9,7 +17,6 @@ namespace Stg {
 	class Option {
 	private:
 		friend bool compare( const Option* lhs, const Option* rhs );
-		friend std::ostream& operator<<( std::ostream& os, const Option& opt );
 		
 		std::string optName;
 		bool value;
@@ -24,13 +31,6 @@ namespace Stg {
 		void set( bool val ) { value = val; }
 	};
 	
-//	std::ostream& operator<<( std::ostream& os, const Option& opt ) {
-//		os<<opt.optName;
-//		os<<": ";
-//		os<<opt.value;
-//		return os;
-//	}
-//	
 	// Comparator to dereference Option pointers and compare their strings
 	struct optComp {
 		inline bool operator()( const Option* lhs, const Option* rhs ) const

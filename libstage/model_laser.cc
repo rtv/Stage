@@ -306,6 +306,11 @@ void StgModelLaser::DataVisualize( void )
 		return;
 
 	glPushMatrix();
+	
+	// move into this model's local coordinate frame
+	gl_pose_shift( &this->pose );
+	gl_pose_shift( &this->geom.pose );
+	
 	//glTranslatef( 0,0, 0 ); // shoot the laser beam out at the right height
 	glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
 
@@ -359,5 +364,9 @@ void StgModelLaser::DataVisualize( void )
 	PopColor();
 	PopColor();
 	glDepthMask( GL_TRUE );
+		
 	glPopMatrix();
+	
+	// Call StgModel method to recurse on children
+	StgModel::DataVisualize();
 }

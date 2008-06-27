@@ -1165,14 +1165,12 @@ private:
   static uint32_t count;
   static GHashTable*  modelsbyid;
 	
-	// Draw options
-	std::vector<Option*> drawOptions;
-	static Option ShowFlags;
-	static Option ShowVisData;
-	static Option ShowBlinken;
-	static Option ShowStatus;
+  std::vector<Option*> drawOptions;
 
 public:
+	// Draw Options
+	static Option ShowBlinken;
+	static Option ShowStatus;
   
   /** Look up a model pointer by a unique model ID */
   static StgModel* LookupId( uint32_t id )
@@ -1240,6 +1238,7 @@ protected:
 	int gui_outline;
 	int gui_mask;
 	
+	/// Register an Option for pickup by the GUI
 	void RegisterOption( Option* opt ) { drawOptions.push_back( opt ); }
 	
 	
@@ -1961,6 +1960,8 @@ class StgCanvas : public Fl_Gl_Window
 	void DrawRays();
 	void ClearRays();
 	void DrawGlobalGrid();
+	
+	Option ShowFlags;
 
 	public:
 

@@ -284,103 +284,106 @@ void StgModelRanger::Update( void )
 	}   
 	}
 
-	// TODO: configurable ranger noise model
-	/*
-	   int ranger_noise_test( stg_ranger_sample_t* data, size_t count,  )
-	   {
-	   int s;
-	   for( s=0; s<count; s++ )
-	   {
-	// add 10mm random error
-	ranges[s].range *= 0.1 * drand48();
-	}
-	}
-	 */
+// TODO: configurable ranger noise model
+/*
+   int ranger_noise_test( stg_ranger_sample_t* data, size_t count,  )
+   {
+   int s;
+   for( s=0; s<count; s++ )
+   {
+// add 10mm random error
+ranges[s].range *= 0.1 * drand48();
+}
+}
+ */
 
-	void StgModelRanger::Print( char* prefix )
-	{
-		StgModel::Print( prefix );
+void StgModelRanger::Print( char* prefix )
+{
+	StgModel::Print( prefix );
 
-		printf( "\tRanges[ " );
+	printf( "\tRanges[ " );
 
-		for( unsigned int i=0; i<sensor_count; i++ )
-			printf( "%.2f ", samples[i] );
-		puts( " ]" );
-	}
+	for( unsigned int i=0; i<sensor_count; i++ )
+		printf( "%.2f ", samples[i] );
+	puts( " ]" );
+}
 
-	void StgModelRanger::DataVisualize( void )
-	{
-		if( ! (samples && sensors && sensor_count) )
-			return;
+void StgModelRanger::DataVisualize( void )
+{
+	if( ! (samples && sensors && sensor_count) )
+		return;
 
-		glPushMatrix();
+	glPushMatrix();
 
-		// move into this model's local coordinate frame
-		gl_pose_shift( &this->pose );
-		gl_pose_shift( &this->geom.pose );
+	// move into this model's local coordinate frame
+	gl_pose_shift( &this->pose );
+	gl_pose_shift( &this->geom.pose );
 
-		// if all models have the same number of sensors, this is fast
-		// as it will probably not use a system call or cause a cache
-		// miss
-		static float* pts = NULL;
-		size_t memsize =  9 * sensor_count * sizeof(float);
-		pts = (float*)g_realloc( pts, memsize );
-		bzero( pts, memsize );
+	// if all models have the same number of sensors, this is fast
+	// as it will probably not use a system call or cause a cache
+	// miss
+	static float* pts = NULL;
+	size_t memsize =  9 * sensor_count * sizeof(float);
+	pts = (float*)g_realloc( pts, memsize );
+	bzero( pts, memsize );
 
-		//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		//PushColor( 0,0,0,1 );
+	//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	//PushColor( 0,0,0,1 );
 
-		// calculate a triangle for each non-zero sensor range
-		for( unsigned int s=0; s<sensor_count; s++ ) 
+	// calculate a triangle for each non-zero sensor range
+	for( unsigned int s=0; s<sensor_count; s++ ) 
+	{ 
+		if( samples[s] > 0.0 ) 
 		{ 
-			if( samples[s] > 0.0 ) 
-			{ 
-				stg_ranger_sensor_t* rngr = &sensors[s];
+			stg_ranger_sensor_t* rngr = &sensors[s];
 
-				//double dx =  rngr->size.x/2.0;
-				//double dy =  rngr->size.y/2.0;
-				//double dz =  rngr->size.z/2.0;
+			//double dx =  rngr->size.x/2.0;
+			//double dy =  rngr->size.y/2.0;
+			//double dz =  rngr->size.z/2.0;
 
-				// DEBUG: draw a point for the sensor pose
-				glPointSize( 6 );
-				glBegin( GL_POINTS );
-				glVertex3f( rngr->pose.x, rngr->pose.y, rngr->pose.z );
-				glEnd();
+			// DEBUG: draw a point for the sensor pose
+			glPointSize( 6 );
+			glBegin( GL_POINTS );
+			glVertex3f( rngr->pose.x, rngr->pose.y, rngr->pose.z );
+			glEnd();
 
-				// sensor FOV 
-				double sidelen = samples[s];
-				double da = rngr->fov/2.0;
+			// sensor FOV 
+			double sidelen = samples[s];
+			double da = rngr->fov/2.0;
 
-				unsigned int index = s*9;
-				pts[index+0] = rngr->pose.x;
-				pts[index+1] = rngr->pose.y;
-				pts[index+2] = rngr->pose.z;
+			unsigned int index = s*9;
+			pts[index+0] = rngr->pose.x;
+			pts[index+1] = rngr->pose.y;
+			pts[index+2] = rngr->pose.z;
 
-				pts[index+3] = rngr->pose.x + sidelen*cos(rngr->pose.a - da );
-				pts[index+4] = rngr->pose.y + sidelen*sin(rngr->pose.a - da );
-				pts[index+5] = rngr->pose.z;
+			pts[index+3] = rngr->pose.x + sidelen*cos(rngr->pose.a - da );
+			pts[index+4] = rngr->pose.y + sidelen*sin(rngr->pose.a - da );
+			pts[index+5] = rngr->pose.z;
 
-				pts[index+6] = rngr->pose.x + sidelen*cos(rngr->pose.a + da );
-				pts[index+7] = rngr->pose.y + sidelen*sin(rngr->pose.a + da );
-				pts[index+8] = rngr->pose.z;
-			}
+			pts[index+6] = rngr->pose.x + sidelen*cos(rngr->pose.a + da );
+			pts[index+7] = rngr->pose.y + sidelen*sin(rngr->pose.a + da );
+			pts[index+8] = rngr->pose.z;
 		}
-
-		//PopColor();
-
-		// draw the filled triangles in transparent blue
-		glDepthMask( GL_FALSE );
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		PushColor( 0, 1, 0, 0.1 ); // transparent pale green       
-		glEnableClientState( GL_VERTEX_ARRAY );
-		glVertexPointer( 3, GL_FLOAT, 0, pts );
-		glDrawArrays( GL_TRIANGLES, 0, 3 * sensor_count );
-
-		// restore state 
-		glDepthMask( GL_TRUE );
-		PopColor();
-
-		glPopMatrix();
 	}
+
+	//PopColor();
+
+	// draw the filled triangles in transparent blue
+	glDepthMask( GL_FALSE );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	PushColor( 0, 1, 0, 0.1 ); // transparent pale green       
+	glEnableClientState( GL_VERTEX_ARRAY );
+	glVertexPointer( 3, GL_FLOAT, 0, pts );
+	glDrawArrays( GL_TRIANGLES, 0, 3 * sensor_count );
+
+	// restore state 
+	glDepthMask( GL_TRUE );
+	PopColor();
+	
+	glPopMatrix();
+	
+	// Call StgModel method to recurse on children
+	StgModel::DataVisualize();
+}
 
 

@@ -298,7 +298,8 @@ void StgModelFiducial::DataVisualize()
 		glPopMatrix();
 
 		PopColor();
-
-
 	}
+	
+	// Call StgModel method to recurse on children
+	StgModel::DataVisualize();
 }

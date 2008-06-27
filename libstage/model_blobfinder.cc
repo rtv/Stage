@@ -363,6 +363,8 @@ void StgModelBlobfinder::DataVisualize( void )
 
 	glPopMatrix();
 
+	// Call StgModel method to recurse on children
+	StgModel::DataVisualize();
 }
 
 

@@ -110,18 +110,19 @@ overwritten.
 #include <set>
 
 
-static const char* MITEM_VIEW_DATA =      "&View/&Display Sensor Data";
-static const char* MITEM_VIEW_BLOCKS =    "&View/&Blocks";
-static const char* MITEM_VIEW_GRID =      "&View/&Grid";
-static const char* MITEM_VIEW_OCCUPANCY = "&View/&Occupancy";
-static const char* MITEM_VIEW_QUADTREE =  "&View/&Tree";
-static const char* MITEM_VIEW_FOLLOW =    "&View/&Follow";
-static const char* MITEM_VIEW_CLOCK =     "&View/&Clock";
-static const char* MITEM_VIEW_FOOTPRINTS = "&View/T&rails/&Footprints";
-static const char* MITEM_VIEW_BLOCKSRISING =  "&View/T&rails/&Blocks rising";
-static const char* MITEM_VIEW_ARROWS =     "&View/T&rails/&Arrows rising";
-static const char* MITEM_VIEW_TRAILS =     "&View/&Trail";
-static const char* MITEM_VIEW_STATUS =     "&View/&Status";
+static const char* MITEM_VIEW_DATA =      "&View/&Display sensor data";
+static const char* MITEM_VIEW_BLOCKS =    "&View/Blocks";
+static const char* MITEM_VIEW_FLAGS =    "&View/Flags";
+static const char* MITEM_VIEW_GRID =      "&View/Grid";
+static const char* MITEM_VIEW_OCCUPANCY = "&View/Occupancy";
+static const char* MITEM_VIEW_QUADTREE =  "&View/Tree";
+static const char* MITEM_VIEW_FOLLOW =    "&View/Follow selected";
+static const char* MITEM_VIEW_CLOCK =     "&View/Clock";
+static const char* MITEM_VIEW_FOOTPRINTS = "&View/Trails/Footprints";
+static const char* MITEM_VIEW_BLOCKSRISING =  "&View/Trails/Blocks rising";
+static const char* MITEM_VIEW_ARROWS =     "&View/Trails/Arrows rising";
+static const char* MITEM_VIEW_TRAILS =     "&View/Trail";
+static const char* MITEM_VIEW_STATUS =     "&View/Status";
 static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
 
 // this should be set by CMake
@@ -160,16 +161,17 @@ ShowAll( "Visualize all models", true )
 	mbar->add( "File/E&xit", FL_CTRL+'q', StgWorldGui::fileExitCb, this );
 
 	mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
-	mbar->add( MITEM_VIEW_DATA,      'd', StgWorldGui::viewToggleCb, canvas, 
+	mbar->add( MITEM_VIEW_DATA, 'd', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_DATA ? FL_MENU_VALUE : 0 ));
-	mbar->add( "View/&Sensor options...", FL_CTRL + 'o', StgWorldGui::viewOptionsCb, this, FL_MENU_DIVIDER );
-	mbar->add( MITEM_VIEW_BLOCKS,    'b', StgWorldGui::viewToggleCb, canvas, 
+	mbar->add( MITEM_VIEW_BLOCKS, 'b', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_BLOCKS ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_GRID,      'g', StgWorldGui::viewToggleCb, canvas, 
+	mbar->add( 	MITEM_VIEW_FLAGS, 0, StgWorldGui::viewToggleCb, canvas, 
+			  FL_MENU_TOGGLE| (canvas->ShowFlags ? FL_MENU_VALUE : 0 ));
+	mbar->add( MITEM_VIEW_GRID, 'g', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_GRID ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_OCCUPANCY, FL_ALT+'o', StgWorldGui::viewToggleCb, canvas, 
+	mbar->add( MITEM_VIEW_OCCUPANCY, 'o', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_OCCUPANCY ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_QUADTREE,  FL_ALT+'t', StgWorldGui::viewToggleCb, canvas, 
+	mbar->add( MITEM_VIEW_QUADTREE,  FL_CTRL +'t', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_QUADTREE ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_FOLLOW,    'f', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOLLOW ? FL_MENU_VALUE : 0 ));
@@ -177,17 +179,17 @@ ShowAll( "Visualize all models", true )
 			  FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_PERSPECTIVE,   'r', StgWorldGui::viewToggleCb, canvas, 
 			  FL_MENU_TOGGLE| (canvas->use_perspective_camera ));
-	mbar->add( MITEM_VIEW_TRAILS,    't', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_STATUS,    's', StgWorldGui::viewToggleCb, canvas, 
 			  FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_STATUS ? FL_MENU_VALUE : 0 ));
+	mbar->add( MITEM_VIEW_TRAILS,    't', StgWorldGui::viewToggleCb, canvas, 
+			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_FOOTPRINTS,  FL_CTRL+'f', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOOTPRINT ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_ARROWS,    FL_CTRL+'a', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_ARROWS ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));
-	
+			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ) | FL_MENU_DIVIDER);
+	mbar->add( "View/Additional options...", FL_CTRL + 'o', StgWorldGui::viewOptionsCb, this );
 
 
 	mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
@@ -543,6 +545,7 @@ void StgWorldGui::viewToggleCb( Fl_Widget* w, void* p )
 	else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
 	else if( strcmp(picked, MITEM_VIEW_BLOCKSRISING ) == 0 ) canvas->InvertView( STG_SHOW_TRAILRISE );
 	else if( strcmp(picked, MITEM_VIEW_STATUS ) == 0 ) canvas->InvertView( STG_SHOW_STATUS );
+	else if( strcmp(picked, MITEM_VIEW_FLAGS ) == 0 ) canvas->ShowFlags.set( !canvas->ShowFlags );
 	else if( strcmp(picked, MITEM_VIEW_PERSPECTIVE ) == 0 ) { canvas->use_perspective_camera = ! canvas->use_perspective_camera; canvas->invalidate(); }
 	else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
 

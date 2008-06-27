@@ -31,8 +31,9 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 }
 
 
-	StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) 
-: Fl_Gl_Window(x,y,w,h)
+StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
+Fl_Gl_Window(x,y,w,h),
+ShowFlags( "Flags", true )
 {
 	end();
 
@@ -529,49 +530,77 @@ void StgCanvas::renderFrame()
 	for( GList* it=selected_models; it; it=it->next )
 		((StgModel*)it->data)->DrawSelected();
 	
-	// draw the models
-	if( showflags ) // if any bits are set there's something to draw
+
+	if( showflags & STG_SHOW_FOOTPRINT )
 	{
-		if( showflags & STG_SHOW_FOOTPRINT )
-		{
-			glDisable( GL_DEPTH_TEST );
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+		glDisable( GL_DEPTH_TEST );
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 
-			for( GList* it=world->StgWorld::children; it; it=it->next )
-			{
-				((StgModel*)it->data)->DrawTrailFootprint();
-			}
-			glEnable( GL_DEPTH_TEST );
-		}
-
-		if( showflags & STG_SHOW_TRAILRISE )
-		{
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-
-			for( GList* it=world->StgWorld::children; it; it=it->next )
-			{
-				((StgModel*)it->data)->DrawTrailBlocks();
-			}
-		}
-
-		if( showflags & STG_SHOW_ARROWS )
-		{
-			glEnable( GL_DEPTH_TEST );
-			for( GList* it=world->StgWorld::children; it; it=it->next )
-			{
-				((StgModel*)it->data)->DrawTrailArrows();
-			}
-		}
-
-		if( showflags & STG_SHOW_BLOCKS )
-		{
-			DrawBlocks();
-		}
-
-		//mod->Draw( showflags ); // draw the stuff that changes every update
-		// draw everything else
 		for( GList* it=world->StgWorld::children; it; it=it->next )
-			((StgModel*)it->data)->Draw( showflags, this );
+		{
+			((StgModel*)it->data)->DrawTrailFootprint();
+		}
+		glEnable( GL_DEPTH_TEST );
+	}
+
+	if( showflags & STG_SHOW_TRAILRISE )
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
+
+		for( GList* it=world->StgWorld::children; it; it=it->next )
+		{
+			((StgModel*)it->data)->DrawTrailBlocks();
+		}
+	}
+
+	if( showflags & STG_SHOW_ARROWS )
+	{
+		glEnable( GL_DEPTH_TEST );
+		for( GList* it=world->StgWorld::children; it; it=it->next )
+		{
+			((StgModel*)it->data)->DrawTrailArrows();
+		}
+	}
+
+	if( showflags & STG_SHOW_BLOCKS )
+	{
+		DrawBlocks();
+	}
+
+	//mod->Draw( showflags ); // draw the stuff that changes every update
+	// draw everything else
+	if( showflags & STG_SHOW_DATA ) {
+		for( GList* it=world->StgWorld::children; it; it=it->next ) {
+			glPushMatrix();
+			StgModel* mod = ((StgModel*)it->data);
+			// move into this model's local coordinate frame
+			gl_pose_shift( &mod->pose );
+			gl_pose_shift( &mod->geom.pose );
+			
+			mod->DataVisualize();
+			
+			glPopMatrix();
+		}
+	}
+	
+	if( showflags & STG_SHOW_GRID) {
+		for( GList* it=world->StgWorld::children; it; it=it->next )
+			((StgModel*)it->data)->DrawGrid();
+	}
+	
+	if( ShowFlags ) {
+		for( GList* it=world->StgWorld::children; it; it=it->next )
+			((StgModel*)it->data)->DrawFlagList();
+	}
+	
+	if( StgModel::ShowBlinken ) {
+		for( GList* it=world->StgWorld::children; it; it=it->next )
+			((StgModel*)it->data)->DrawBlinkenlights();
+	}
+	
+	if ( StgModel::ShowStatus ) {
+		for( GList* it=world->StgWorld::children; it; it=it->next )
+			((StgModel*)it->data)->DrawStatus( this );
 	}
 
 	if( world->GetRayList() )
@@ -590,7 +619,7 @@ void StgCanvas::renderFrame()
 		glEnable( GL_DEPTH_TEST );
 
 		world->ClearRays();
-	}   
+	} 
 
 	if( showflags & STG_SHOW_CLOCK )
 	{
