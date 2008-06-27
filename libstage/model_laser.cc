@@ -102,6 +102,8 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 
 	// don't allocate sample buffer memory until Update() is called
 	samples = NULL;
+	
+	RegisterOption( &ShowLaserData );
 }
 
 
@@ -358,11 +360,4 @@ void StgModelLaser::DataVisualize( void )
 	PopColor();
 	glDepthMask( GL_TRUE );
 	glPopMatrix();
-}
-
-const std::vector<Option*> StgModelLaser::getOptions() {
-	std::vector<Option*> drawOptions;
-	drawOptions.push_back( &ShowLaserData );
-	
-	return drawOptions;
 }

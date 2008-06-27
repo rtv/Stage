@@ -238,6 +238,13 @@ StgModel::StgModel( StgWorld* world,
 
 	// now we can add the basic square shape
 	this->AddBlockRect( -0.5,-0.5,1,1 );
+	
+	
+	RegisterOption( &ShowFlags );
+	RegisterOption( &ShowFlags );
+	RegisterOption( &ShowVisData );
+	RegisterOption( &ShowBlinken );
+	RegisterOption( &ShowStatus );
 
 	PRINT_DEBUG2( "finished model %s @ %p", 
 					  this->token, this );
@@ -1719,15 +1726,3 @@ StgModel* StgModel::GetModel( const char* modelname )
 
 	return mod;
 }
-
-const std::vector<Option*> StgModel::getOptions() {
-	std::vector<Option*> drawOptions;
-	drawOptions.push_back( &ShowFlags );
-	drawOptions.push_back( &ShowVisData );
-	drawOptions.push_back( &ShowBlinken );
-	drawOptions.push_back( &ShowStatus );
-	
-	return drawOptions;
-}
-
-

@@ -110,7 +110,7 @@ overwritten.
 #include <set>
 
 
-static const char* MITEM_VIEW_DATA =      "&View/&Data";
+static const char* MITEM_VIEW_DATA =      "&View/&Display Sensor Data";
 static const char* MITEM_VIEW_BLOCKS =    "&View/&Blocks";
 static const char* MITEM_VIEW_GRID =      "&View/&Grid";
 static const char* MITEM_VIEW_OCCUPANCY = "&View/&Occupancy";
@@ -162,6 +162,7 @@ ShowAll( "Visualize all models", true )
 	mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
 	mbar->add( MITEM_VIEW_DATA,      'd', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_DATA ? FL_MENU_VALUE : 0 ));
+	mbar->add( "View/&Sensor options...", FL_CTRL + 'o', StgWorldGui::viewOptionsCb, this, FL_MENU_DIVIDER );
 	mbar->add( MITEM_VIEW_BLOCKS,    'b', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_BLOCKS ? FL_MENU_VALUE : 0 ));
 	mbar->add( MITEM_VIEW_GRID,      'g', StgWorldGui::viewToggleCb, canvas, 
@@ -187,13 +188,14 @@ ShowAll( "Visualize all models", true )
 	mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', StgWorldGui::viewToggleCb, canvas, 
 			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ));
 	
-	mbar->add( "View/&Options", FL_CTRL + 'o', StgWorldGui::viewOptionsCb, this );
+
 
 	mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
 	mbar->add( "Help/&About Stage...", 0, StgWorldGui::helpAboutCb, this );
 	//mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
 
 	callback( StgWorldGui::windowCb, this );
+	
 	show();
 }
 
@@ -204,7 +206,6 @@ StgWorldGui::~StgWorldGui()
 		delete oDlg;
 	delete canvas;
 }
-
 
 
 
@@ -292,7 +293,7 @@ void StgWorldGui::Load( const char* filename )
 	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_STATUS );
 	(flags & STG_SHOW_STATUS) ? item->check() : item->clear();
 
-	
+	updateOptions();
 	// TODO - per model visualizations load
 }
 
@@ -550,13 +551,6 @@ void StgWorldGui::viewToggleCb( Fl_Widget* w, void* p )
 
 void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
 	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
-	
-	std::set<Option*, optComp> options;
-	std::vector<Option*> modOpts;
-	for( GList* it=worldGui->update_list; it; it=it->next ) {
-		modOpts = ((StgModel*)it->data)->getOptions();
-		options.insert( modOpts.begin(), modOpts.end() );	
-	}
 
 	if ( !worldGui->oDlg ) {
 		int x = worldGui->w()+worldGui->x() + 10;
@@ -564,7 +558,7 @@ void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
 		OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
 		oDlg->callback( optionsDlgCb, worldGui );
 		oDlg->showAllOpt( &worldGui->ShowAll );
-		oDlg->setOptions( options );
+		oDlg->setOptions( worldGui->drawOptions );
 		oDlg->show();
 
 		worldGui->oDlg = oDlg;
@@ -606,7 +600,7 @@ void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
 			//   instance before the dialog is destroyed
 			worldGui->oDlg = NULL; 
 			oDlg->hide();
-			Fl::delete_widget( oDlg );
+			//Fl::delete_widget( oDlg );
 			return;	
 		case OptionsDlg::NO_EVENT:
 		case OptionsDlg::CHANGE_ALL:
@@ -741,5 +735,20 @@ bool StgWorldGui::closeWindowQuery()
 	else {
 		// nothing is loaded, just quit
 		return true;
+	}
+}
+
+void StgWorldGui::updateOptions() {
+	std::set<Option*, optComp> options;
+	std::vector<Option*> modOpts;
+	for( GList* it=update_list; it; it=it->next ) {
+		modOpts = ((StgModel*)it->data)->getOptions();
+		options.insert( modOpts.begin(), modOpts.end() );	
+	}
+	
+	drawOptions.assign( options.begin(), options.end() );
+	
+	if ( oDlg ) {
+		oDlg->setOptions( drawOptions );
 	}
 }

@@ -4,7 +4,7 @@
 namespace Stg {
 
 	OptionsDlg::OptionsDlg( int x, int y, int w, int h ) :
-	Fl_Window( x,y, w,h, "Model Options" ),
+	Fl_Window( x,y, w,h, "Sensor Options" ),
 	changedItem( NULL ),
 	showAll( NULL ),
 	status( NO_EVENT ),
@@ -69,7 +69,8 @@ namespace Stg {
 
 
 	void OptionsDlg::updateChecks() {
-		scroll->clear();
+		if (scroll->children())
+			scroll->clear();
 		scroll->begin();
 		Fl_Check_Button* check;
 		for ( unsigned int i=0; i<options.size(); i++ ) {

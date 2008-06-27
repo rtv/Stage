@@ -1166,6 +1166,7 @@ private:
   static GHashTable*  modelsbyid;
 	
 	// Draw options
+	std::vector<Option*> drawOptions;
 	static Option ShowFlags;
 	static Option ShowVisData;
 	static Option ShowBlinken;
@@ -1238,6 +1239,8 @@ protected:
 	int gui_grid;
 	int gui_outline;
 	int gui_mask;
+	
+	void RegisterOption( Option* opt ) { drawOptions.push_back( opt ); }
 	
 	
 	StgModel* parent; //< the model that owns this one, possibly NULL
@@ -1709,7 +1712,7 @@ public:
 	// iff true, model may output some debugging visualizations and other info
 	bool debug;
 	
-	virtual const std::vector<Option*> getOptions();
+	const std::vector<Option*>& getOptions() const { return drawOptions; }
 };
 
 // BLOCKS
@@ -2014,6 +2017,8 @@ private:
   StgCanvas* canvas;
   Fl_Menu_Bar* mbar;
   OptionsDlg* oDlg;
+  std::vector<Option*> drawOptions;
+  void updateOptions();
   stg_usec_t interval_log[INTERVAL_LOG_LEN];
   
   stg_usec_t real_time_of_last_update;
@@ -2254,8 +2259,6 @@ public:
   
   // Set the user-tweakable configuration of the laser
   void SetConfig( stg_laser_cfg_t cfg );  
-	
-	virtual const std::vector<Option*> getOptions();
 };
 
 // \todo  GRIPPER MODEL --------------------------------------------------------
@@ -2544,8 +2547,6 @@ class StgModelCamera : public StgModel
 	
 		///get a reference to camera color image. 3 bytes (RGB) per pixel
 		inline const GLubyte* FrameColor() const { return _frame_color_data; }
-	
-		virtual const std::vector<Option*> getOptions();
 };
 
 // POSITION MODEL --------------------------------------------------------

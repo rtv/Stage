@@ -69,6 +69,8 @@ _yaw_offset( 0 )
 	memset( &geom, 0, sizeof(geom)); // no size
 	//TODO can't draw this as it blocks the laser
 	SetGeom( geom );
+	
+	RegisterOption( &ShowCamera );
 
 	Startup();
 }
@@ -287,12 +289,4 @@ void StgModelCamera::DataVisualize( void )
 void StgModelCamera::Draw( uint32_t flags, StgCanvas* canvas )
 {
 	StgModel::Draw( flags, canvas );
-}
-
-
-const std::vector<Option*> StgModelCamera::getOptions() {
-	std::vector<Option*> drawOptions;
-	drawOptions.push_back( &ShowCamera );
-	
-	return drawOptions;
 }
