@@ -88,10 +88,13 @@ StgModel* StgCanvas::Select( int x, int y )
   // TODO XX
   //return NULL;
 
+	
 	// render all models in a unique color
 	make_current(); // make sure the GL context is current
 	glClearColor ( 1,1,1,1 ); // white
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
 
 	glDisable(GL_DITHER);
 	glDisable(GL_BLEND); // turns off alpha blending, so we read back
@@ -115,10 +118,10 @@ StgModel* StgCanvas::Select( int x, int y )
 			//printf("mod->Id(): 0x%X, rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", modelId, rByte, gByte, bByte, aByte);
 			
 			glColor4ub( rByte, gByte, bByte, aByte );
-			mod->DrawPicker();			
+			mod->DrawPicker();
 		}
 	}
-
+	
 	// read the color of the pixel in the back buffer under the mouse
 	// pointer
 	GLint viewport[4];
@@ -141,8 +144,8 @@ StgModel* StgCanvas::Select( int x, int y )
 	modelId |= bByte << 16;
 	//modelId |= aByte << 24;
 	
-	//printf("Clicked rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", rByte, gByte, bByte, aByte);
-	//printf("-->model Id = 0x%X\n", modelId);
+//	printf("Clicked rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", rByte, gByte, bByte, aByte);
+//	printf("-->model Id = 0x%X\n", modelId);
 	
 	StgModel* mod = StgModel::LookupId( modelId );
 

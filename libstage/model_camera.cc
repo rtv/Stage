@@ -139,6 +139,9 @@ bool StgModelCamera::GetFrame( void )
 	if( _height > _canvas->h() )
 		_height = _canvas->h();
 	
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT,viewport);
+	
 	glViewport( 0, 0, _width, _height );
 	_camera.update();
 	_camera.SetProjection();
@@ -170,6 +173,7 @@ bool StgModelCamera::GetFrame( void )
 				 _frame_color_data );		
 
 
+	glViewport( viewport[0], viewport[1], viewport[2], viewport[3] );
 	_canvas->invalidate();
 	return true;
 }
