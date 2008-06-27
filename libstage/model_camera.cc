@@ -9,6 +9,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #define CAMERA_HEIGHT 0.5
+#define CAMERA_FAR_CLIP 8.0
 
 //#define DEBUG 1
 #include "stage_internal.hh"
@@ -90,6 +91,8 @@ void StgModelCamera::Load( void )
 	
 	_camera.setFov( wf->ReadLength( wf_entity, "horizfov",  _camera.horizFov() ), wf->ReadLength( wf_entity, "vertfov",  _camera.vertFov() ) );
 	_camera.setPitch( wf->ReadLength( wf_entity, "pitch", _camera.pitch() ) );
+	
+	_camera.setClip( wf->ReadLength( wf_entity, "nearclip",  _camera.nearClip() ), wf->ReadLength( wf_entity, "farclip",  CAMERA_FAR_CLIP ) );
 
 	_yaw_offset = wf->ReadLength( wf_entity, "yaw", _yaw_offset );
 	_width = wf->ReadLength( wf_entity, "width", _width );
@@ -142,6 +145,8 @@ bool StgModelCamera::GetFrame( void )
 	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 - _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
 	_camera.Draw();
 	
+	
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	_canvas->DrawFloor();
 	_canvas->DrawBlocks();
 	

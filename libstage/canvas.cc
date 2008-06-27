@@ -406,7 +406,7 @@ void StgCanvas::FixViewport(int W,int H)
 void StgCanvas::DrawGlobalGrid()
 {
 
-	
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	stg_bounds3d_t bounds = world->GetExtent();
 
    char str[16];	
@@ -490,16 +490,16 @@ void StgCanvas::DrawBlocks()
 		// render the pre-recorded graphics for this model and
 		// its children
 		glCallList( mod->displaylist );
-		
+				
 		glPopMatrix();
 	}
 }
 
 void StgCanvas::renderFrame()
-{		
+{
 	if( ! (showflags & STG_SHOW_TRAILS) )
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
+	
 	if( showflags & STG_SHOW_GRID )
 		DrawGlobalGrid();
 
@@ -525,7 +525,7 @@ void StgCanvas::renderFrame()
 	
 	for( GList* it=selected_models; it; it=it->next )
 		((StgModel*)it->data)->DrawSelected();
-
+	
 	// draw the models
 	if( showflags ) // if any bits are set there's something to draw
 	{

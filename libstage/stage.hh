@@ -1867,6 +1867,9 @@ class StgPerspectiveCamera : public StgCamera
 			return _z_near * _z_far / ( _z_far - z_buf_val * ( _z_far - _z_near ) );
 		}
 		inline void scroll( float dy ) { _z += dy; }
+		inline float nearClip( void ) const { return _z_near; }
+		inline float farClip( void ) const { return _z_far; }
+		inline void setClip( float near, float far ) { _z_far = far; _z_near = near; }
 };
 
 class StgOrthoCamera : public StgCamera
