@@ -218,17 +218,17 @@ bool StgWorldGui::Save( const char* filename )
 	
 	// use the window section for the rest
  	int window_section = wf->LookupEntity( "window" );
-
+	
  	if( window_section > 0 ) // section defined
 	  {
-		 wf->WriteTupleFloat( window_section, "size", 0, w() );
-		 wf->WriteTupleFloat( window_section, "size", 1, h() );
-		 		 
-		 canvas->Save( wf, window_section );
-
-		 // TODO - per model visualizations save 
+	    wf->WriteTupleFloat( window_section, "size", 0, w() );
+	    wf->WriteTupleFloat( window_section, "size", 1, h() );
+	    
+	    canvas->Save( wf, window_section );
+	    
+	    // TODO - per model visualizations save 
 	  }
-
+	
 	// TODO - error checking
 	return true;
 }

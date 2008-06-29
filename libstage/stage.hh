@@ -1232,15 +1232,12 @@ protected:
 
 	stg_bool_t disabled; //< if non-zero, the model is disabled
 
-	GList* d_list;
+  //	GList* d_list;
 	GList* blocks; //< list of stg_block_t structs that comprise a body
 
 	GArray* trail;
 
-	//  stg_trail_item_t* history;
-
 	bool rebuild_displaylist; //< iff true, regenerate block display list before redraw
-	bool data_dirty; //< iff true, regenerate data display list before redraw
 
 	stg_pose_t global_pose;
 
@@ -1375,11 +1372,11 @@ protected:
   GPtrArray* blinkenlights;
   void DrawBlinkenlights();
 
-	/** OpenGL display list identifier */
-	int displaylist;
+  /** OpenGL display list identifier */
+  int blocks_dl;
 
   /** Compile the display list for this model */
-  void BuildDisplayList();
+  //void BuildDisplayList();
   
   stg_model_type_t type;
 
@@ -2186,16 +2183,16 @@ typedef struct
  */
 typedef struct
 {
-	stg_meters_t range; ///< range to laser hit in meters
-	double reflectance; ///< intensity of the reflection 0.0 to 1.0
+  stg_meters_t range; ///< range to laser hit in meters
+  double reflectance; ///< intensity of the reflection 0.0 to 1.0
 } stg_laser_sample_t;
 
 typedef struct
 {
-	uint32_t sample_count;
-	uint32_t resolution;
-	stg_range_bounds_t range_bounds;
-	stg_radians_t fov;
+  uint32_t sample_count;
+  uint32_t resolution;
+  stg_range_bounds_t range_bounds;
+  stg_radians_t fov;
 } stg_laser_cfg_t;
 
 class StgModelLaser : public StgModel
@@ -2203,6 +2200,10 @@ class StgModelLaser : public StgModel
 private:
   int dl_debug_laser;
   
+  /** OpenGL displaylist for laser data */
+  int data_dl; 
+  bool data_dirty;
+
   stg_laser_sample_t* samples;
   uint32_t sample_count;
   stg_meters_t range_min, range_max;

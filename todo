@@ -1,11 +1,10 @@
 -- TODO --
 
 ESSENTIAL
+ - save bug = need to save > 1 time before changes take ! 
  - 3d ray tracing
- - GUI rotations
  - docs
  - finish CMake scripts
- - clean up graphics implementation
 
 NICE
  - gripper
@@ -16,8 +15,11 @@ NICE
 
 -- DONE --
 
+ - clean up graphics implementation
  - collapse all stg_X player drivers into a single driver with
 multiple interfaces. See note in stg_driver.cc
+
+ - GUI rotations
 
 -- Large Scale Robotics paper
  - 0.1M robots

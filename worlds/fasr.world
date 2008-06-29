@@ -21,11 +21,13 @@ paused 1
 # configure the GUI window
 window
 ( 
-  # size [ 698.000 628.000 ] 
-  center [6.990 -4.040] 
-  rotate [ 0.000 0.000 ]
-  scale 33.306 
+  size [ 671.000 413.000 ] 
+  center [-0.294 0.114] 
+  rotate [ -52.500 -18.500 ]
+  scale 27.525 
+  
   show_data 0
+  show_flags 1
 )
 
 # load an environment bitmap
@@ -58,10 +60,10 @@ define autorob pioneer2dx
  color "red"
 
  sicklaser( pose [ 0.040 0.000 0.000 ] samples 30 range_max 5 laser_return 2  )
-#camera( pose [ 0.000 0.000 0.000 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )
+ #camera( pose [ 0.000 0.000 0.000 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )
  ctrl "fasr"
 
-  say "Autolab"
+ # say "Autolab"
 )
 
 

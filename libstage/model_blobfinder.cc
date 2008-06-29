@@ -267,7 +267,7 @@ void StgModelBlobfinder::Update( void )
 
 	delete [] samples;
 
-	data_dirty = true;
+	//data_dirty = true;
 }
 
 
