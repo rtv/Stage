@@ -810,11 +810,9 @@ void StgModel::DrawTrailBlocks()
 		memcpy( &pose, &checkpoint->pose, sizeof(pose));
 		pose.z =  (world->sim_time - checkpoint->time) * timescale;
 
-		glPushMatrix();
-		gl_pose_shift( &pose );
-		gl_pose_shift( &geom.pose );
+		PushLocalCoords();
 		glCallList( displaylist);
-		glPopMatrix();
+		PopCoords();
 	}
 }
 
@@ -836,11 +834,9 @@ void StgModel::DrawTrailArrows()
 		memcpy( &pose, &checkpoint->pose, sizeof(pose));
 		pose.z =  (world->sim_time - checkpoint->time) * timescale;
 
-		glPushMatrix();
+		PushLocalCoords();
 
 		// set the height proportional to age
-
-		gl_pose_shift( &pose );
 
 		PushColor( checkpoint->color );
 
@@ -870,38 +866,52 @@ void StgModel::DrawTrailArrows()
 
 		PopColor();
 		PopColor();
-		glPopMatrix();
+		PopCoords();
 	}
 }
 
+void StgModel::DrawBlocksTree( )
+{
+  if( parent )
+	 PushLocalCoords();
+  
+  DrawBlocks();
+  LISTMETHOD( children, StgModel*, DrawBlocksTree );
+  
+  if( parent )
+	 PopCoords();
+}
+  
 
 void StgModel::DrawBlocks( )
 {
   //printf( "model %s drawing blocks\n", token );
-
 	LISTMETHOD( this->blocks, StgBlock*, Draw );
-
-	// recursively draw the tree below this model 
-	for( GList* it=children; it; it=it->next )
-	{
-		StgModel* child = ((StgModel*)it->data);
-
-		glPushMatrix();
-		gl_pose_shift( &child->pose );
-		gl_pose_shift( &child->geom.pose );
-		child->DrawBlocks();
-		glPopMatrix();
-	}
-
 }
 
-void StgModel::DrawStatus( StgCanvas* canvas ) {
-	glPushMatrix();
-	
-	// move into this model's local coordinate frame
-	gl_pose_shift( &this->pose );
-	gl_pose_shift( &this->geom.pose );
-	
+// move into this model's local coordinate frame
+void StgModel::PushLocalCoords()
+{
+  glPushMatrix();  
+  gl_pose_shift( &pose );
+  gl_pose_shift( &geom.pose );
+}
+
+void StgModel::PopCoords()
+{
+  glPopMatrix();
+}
+
+void StgModel::DrawStatusTree( StgCanvas* canvas ) 
+{
+  PushLocalCoords();
+  DrawStatus( canvas );
+  LISTMETHODARG( children, StgModel*, DrawStatusTree, canvas );  
+  PopCoords();
+}
+
+void StgModel::DrawStatus( StgCanvas* canvas ) 
+{
 	// draw speech bubble
 	if( say_string )
 	{
@@ -955,8 +965,6 @@ void StgModel::DrawStatus( StgCanvas* canvas ) {
 	{
 		DrawImage( TextureManager::getInstance()._stall_texture_id, canvas, 0.85 );
 	}
-	
-	glPopMatrix();
 }
 
 void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha )
@@ -1149,7 +1157,7 @@ void StgModel::DrawPicker( void )
 void StgModel::BuildDisplayList()
 {
 	glNewList( displaylist, GL_COMPILE );	
-	DrawBlocks();
+	DrawBlocksTree();
 	glEndList();
 
 	rebuild_displaylist = false; // we just did it
@@ -1162,44 +1170,31 @@ void StgModel::DataVisualize( void )
 
 void StgModel::DataVisualizeTree( void )
 {
-  // move into this model's local coordinate frame
-  glPushMatrix();
-  gl_pose_shift( &pose );
-  gl_pose_shift( &geom.pose );
-  
-  DataVisualize(); // virtual function overridden by most model types
-  
-  // recurse on children
-  for( GList* it=children; it; it=it->next )
-	 ((StgModel*)it->data)->DataVisualizeTree();
-  
-  // leave the local CF
-  glPopMatrix();
+  PushLocalCoords();
+  DataVisualize(); // virtual function overridden by most model types  
+  LISTMETHOD( children, StgModel*, DataVisualizeTree );
+  PopCoords();
 }
 
 
 void StgModel::DrawGrid( void )
 {
-	if ( gui_grid ) {
-		glPushMatrix();
-		
-		// move into this model's local coordinate frame
-		gl_pose_shift( &this->pose );
-		gl_pose_shift( &this->geom.pose );
-		
-		stg_bounds3d_t vol;
-		vol.x.min = -geom.size.x/2.0;
-		vol.x.max =  geom.size.x/2.0;
-		vol.y.min = -geom.size.y/2.0;
-		vol.y.max =  geom.size.y/2.0;
-		vol.z.min = 0;
-		vol.z.max = geom.size.z;
-
-		PushColor( 0,0,1,0.4 );
-		gl_draw_grid(vol);
-		PopColor();
-		
-		glPopMatrix();
+	if ( gui_grid ) 
+	  {
+		 PushLocalCoords();
+		 
+		 stg_bounds3d_t vol;
+		 vol.x.min = -geom.size.x/2.0;
+		 vol.x.max =  geom.size.x/2.0;
+		 vol.y.min = -geom.size.y/2.0;
+		 vol.y.max =  geom.size.y/2.0;
+		 vol.z.min = 0;
+		 vol.z.max = geom.size.z;
+		 
+		 PushColor( 0,0,1,0.4 );
+		 gl_draw_grid(vol);
+		 PopColor();		 
+		 PopCoords();
 	}
 }
 

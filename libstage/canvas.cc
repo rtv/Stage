@@ -482,15 +482,11 @@ void StgCanvas::DrawBlocks()
 		}
 		
 		// move into this model's local coordinate frame
-		glPushMatrix();
-		gl_pose_shift( &mod->pose );
-		gl_pose_shift( &mod->geom.pose );
-		
+		mod->PushLocalCoords();
 		// render the pre-recorded graphics for this model and
 		// its children
-		glCallList( mod->displaylist );
-				
-		glPopMatrix();
+		glCallList( mod->displaylist );				
+		mod->PopCoords();
 	}
 }
 
@@ -575,7 +571,7 @@ void StgCanvas::renderFrame()
 	
 	if ( StgModel::ShowStatus )
 	  for( GList* it=world->StgWorld::children; it; it=it->next )
-		 ((StgModel*)it->data)->DrawStatus( this );
+		 ((StgModel*)it->data)->DrawStatusTree( this );
 	
 	if( world->GetRayList() )
 	  {

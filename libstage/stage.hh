@@ -1333,8 +1333,13 @@ protected:
 	virtual void UpdatePose();
 	virtual void Draw( uint32_t flags, StgCanvas* canvas );
 
+	void DrawBlocksTree();
 	virtual void DrawBlocks();
 	virtual void DrawStatus( StgCanvas* canvas );
+	void DrawStatusTree( StgCanvas* canvas );
+
+  void PushLocalCoords();
+   void PopCoords();
 
 	///Draw the image stored in texture_id above the model
 	void DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha );
