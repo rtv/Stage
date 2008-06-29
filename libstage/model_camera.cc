@@ -16,7 +16,7 @@
 #include <sstream>
 #include <iomanip>
 
-Option StgModelCamera::ShowCamera( "Show Camera", true );
+Option StgModelCamera::ShowCamera( "Show Camera", "show_camera", "", true );
 
 //caclulate the corss product, and store results in the first vertex
 void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
@@ -184,6 +184,8 @@ void StgModelCamera::DataVisualize( void )
 	if( _frame_data == NULL || !ShowCamera )
 		return;
 	
+	// TODO - shift to global CS?
+
 	float w_fov = _camera.horizFov();
 	float h_fov = _camera.vertFov();
 	
@@ -287,9 +289,6 @@ void StgModelCamera::DataVisualize( void )
 //	glDrawElements( GL_QUADS, 4 * w * h, GL_UNSIGNED_SHORT, vertices_index );
 //	glPopClientAttrib();
 //	
-
-	// Call StgModel method to recurse on children
-	StgModel::DataVisualize();
 }
 
 void StgModelCamera::Draw( uint32_t flags, StgCanvas* canvas )

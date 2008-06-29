@@ -32,6 +32,10 @@
 #include <stdio.h> // for FILE ops
 #include <glib.h>
 
+//#include "stage.hh"
+
+namespace Stg {
+
   // Private property class
 struct CProperty
   {
@@ -60,7 +64,7 @@ struct CProperty
 // interface.  Global settings go in entity 0; every other entity
 // refers to a specific entity.  Parent/child relationships are
 // encoded in the form of entity/subentity relationships.
-class Stg::Worldfile
+class Worldfile
 {
   // Standard constructors/destructors
 public: Worldfile();
@@ -353,6 +357,8 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   // Conversion units
   private: double unit_length;
   private: double unit_angle;
+};
+
 };
 
 #endif

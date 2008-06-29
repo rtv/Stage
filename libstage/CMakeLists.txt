@@ -28,6 +28,7 @@ add_library(stage SHARED
 	resource.cc
 	texture_manager.cc
 	option.hh
+	option.cc
 	options_dlg.cc
 	options_dlg.hh
 )

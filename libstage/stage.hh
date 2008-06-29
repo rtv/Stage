@@ -532,20 +532,20 @@ namespace Stg
 	/** Print human-readable velocity on stdout */
 	void stg_print_velocity( stg_velocity_t* vel );
 
-	const uint32_t STG_SHOW_BLOCKS =     (1<<0);
-	const uint32_t STG_SHOW_DATA =       (1<<1);
-	const uint32_t STG_SHOW_GEOM =       (1<<2);
-	const uint32_t STG_SHOW_GRID =       (1<<3);
-	const uint32_t STG_SHOW_OCCUPANCY =  (1<<4);
-	const uint32_t STG_SHOW_TRAILS =     (1<<5);
-	const uint32_t STG_SHOW_FOLLOW =     (1<<6);
-	const uint32_t STG_SHOW_CLOCK =      (1<<7);
-	const uint32_t STG_SHOW_QUADTREE =   (1<<8);
-	const uint32_t STG_SHOW_ARROWS =     (1<<9);
-	const uint32_t STG_SHOW_FOOTPRINT =  (1<<10);
-	const uint32_t STG_SHOW_BLOCKS_2D =  (1<<10);
-	const uint32_t STG_SHOW_TRAILRISE =  (1<<11);
-	const uint32_t STG_SHOW_STATUS =     (1<<12);
+// 	const uint32_t STG_SHOW_BLOCKS =     (1<<0);
+// 	const uint32_t STG_SHOW_DATA =       (1<<1);
+// 	const uint32_t STG_SHOW_GEOM =       (1<<2);
+// 	const uint32_t STG_SHOW_GRID =       (1<<3);
+// 	const uint32_t STG_SHOW_OCCUPANCY =  (1<<4);
+// 	const uint32_t STG_SHOW_TRAILS =     (1<<5);
+// 	const uint32_t STG_SHOW_FOLLOW =     (1<<6);
+// 	const uint32_t STG_SHOW_CLOCK =      (1<<7);
+// 	const uint32_t STG_SHOW_QUADTREE =   (1<<8);
+// 	const uint32_t STG_SHOW_ARROWS =     (1<<9);
+// 	const uint32_t STG_SHOW_FOOTPRINT =  (1<<10);
+// 	const uint32_t STG_SHOW_BLOCKS_2D =  (1<<10);
+// 	const uint32_t STG_SHOW_TRAILRISE =  (1<<11);
+// 	const uint32_t STG_SHOW_STATUS =     (1<<12);
 
 	// forward declare
 	class StgWorld;
@@ -1182,36 +1182,7 @@ public:
   uint32_t id;
 
 protected:
-  // basic model
-  static const bool DEFAULT_BLOBRETURN;
-  static const bool DEFAULT_BOUNDARY;
-  static const stg_color_t DEFAULT_COLOR;
-  static const stg_joules_t DEFAULT_ENERGY_CAPACITY;
-  static const bool DEFAULT_ENERGY_CHARGEENABLE;
-  static const stg_watts_t DEFAULT_ENERGY_GIVERATE;
-  static const stg_meters_t DEFAULT_ENERGY_PROBERANGE;
-  static const stg_watts_t DEFAULT_ENERGY_TRICKLERATE;
-  static const stg_meters_t DEFAULT_GEOM_SIZEX;
-  static const stg_meters_t DEFAULT_GEOM_SIZEY;
-  static const stg_meters_t DEFAULT_GEOM_SIZEZ;
-  static const bool DEFAULT_GRID;
-  static const bool DEFAULT_GRIPPERRETURN;
-  static const stg_laser_return_t DEFAULT_LASERRETURN;
-  static const stg_meters_t DEFAULT_MAP_RESOLUTION;
-  static const stg_movemask_t DEFAULT_MASK;
-  static const stg_kg_t DEFAULT_MASS;
-  static const bool DEFAULT_NOSE;
-  static const bool DEFAULT_OBSTACLERETURN;
-  static const bool DEFAULT_OUTLINE;
-  static const bool DEFAULT_RANGERRETURN;
-  
-  // speech bubble colors
-  static const stg_color_t BUBBLE_FILL;
-  static const stg_color_t BUBBLE_BORDER;
-  static const stg_color_t BUBBLE_TEXT; 
-
-  //const char* typestr;
-	stg_pose_t pose;
+  stg_pose_t pose;
 	stg_velocity_t velocity;
 	stg_watts_t watts; //< power consumed by this model
 	stg_color_t color;
@@ -1402,10 +1373,12 @@ protected:
 	/** OpenGL display list identifier */
 	int displaylist;
 
-	/** Compile the display list for this model */
-	void BuildDisplayList( uint32_t flags );
-
+  /** Compile the display list for this model */
+  void BuildDisplayList();
+  
   stg_model_type_t type;
+
+  void DataVisualizeTree();
 
 public:
 
@@ -1709,7 +1682,7 @@ public:
 	StgModel* GetUnsubscribedModelOfType( stg_model_type_t type );
 
 	// iff true, model may output some debugging visualizations and other info
-	bool debug;
+	//bool debug;
 	
 	const std::vector<Option*>& getOptions() const { return drawOptions; }
 };
@@ -1933,37 +1906,51 @@ class StgOrthoCamera : public StgCamera
 		inline float getY() const { return _y; }
 };
 
+
 class StgCanvas : public Fl_Gl_Window
 {
-	friend class StgWorldGui; // allow access to private members
-	friend class StgModel;
-
-	private:
-	GlColorStack colorstack;
-
-	StgOrthoCamera camera;
-	StgPerspectiveCamera perspective_camera;
-	bool use_perspective_camera;
-
-	int startx, starty;
-	bool dragging;
-	bool rotating;
-	GList* selected_models; ///< a list of models that are currently
-	///selected by the user
-	StgModel* last_selection; ///< the most recently selected model
-	///(even if it is now unselected).
-	uint32_t showflags;
-	stg_msec_t interval; // window refresh interval in ms
-
-	GList* ray_list;
-	void RecordRay( double x1, double y1, double x2, double y2 );
-	void DrawRays();
-	void ClearRays();
-	void DrawGlobalGrid();
-	
-	Option ShowFlags;
-
-	public:
+  friend class StgWorldGui; // allow access to private members
+  friend class StgModel;
+  
+private:
+  GlColorStack colorstack;
+  
+  StgOrthoCamera camera;
+  StgPerspectiveCamera perspective_camera;
+  bool use_perspective_camera;
+  
+  int startx, starty;
+  bool dragging;
+  bool rotating;
+  GList* selected_models; ///< a list of models that are currently
+  ///selected by the user
+  StgModel* last_selection; ///< the most recently selected model
+    ///(even if it is now unselected).
+    
+  stg_msec_t interval; // window refresh interval in ms
+  
+  GList* ray_list;
+  void RecordRay( double x1, double y1, double x2, double y2 );
+  void DrawRays();
+  void ClearRays();
+  void DrawGlobalGrid();
+  
+  Option 
+	 showBlinken, 
+	 showBlocks, 
+	 showClock, 
+	 showData, 
+	 showFlags,
+	 showFollow,
+	 showFootprints, 
+	 showGrid, 
+	 showOccupancy, 
+	 showTrailArrows, 
+	 showTrailRise, 
+	 showTrails, 
+	 showTree;
+  
+public:
 
 	StgCanvas( StgWorldGui* world, int x, int y, int W,int H);
 	~StgCanvas();
@@ -1972,7 +1959,9 @@ class StgCanvas : public Fl_Gl_Window
 	StgWorldGui* world;
 
   void Screenshot();
-
+  
+  void CreateMenuItems( Fl_Menu_Bar* menu, std::string path );
+  
 	void FixViewport(int W,int H);
 	void DrawFloor(); //simpler floor compared to grid
 	void DrawBlocks();
@@ -1996,11 +1985,10 @@ class StgCanvas : public Fl_Gl_Window
 
 	void InvertView( uint32_t invertflags );
 
-	uint32_t GetShowFlags(){ return showflags; }
-
-	void SetShowFlags( uint32_t flags ){ showflags = flags; }
-
 	static void TimerCallback( StgCanvas* canvas );
+  
+  void Load( Worldfile* wf, int section );
+  void Save( Worldfile* wf, int section );
 };
 
 
@@ -2011,7 +1999,7 @@ class StgWorldGui : public StgWorld, public Fl_Window
 {
   friend class StgCanvas;
   friend class StgModelCamera;
-  
+
 private:
   bool paused; ///< the world only updates when this is false
   //int wf_section;
@@ -2068,15 +2056,13 @@ protected:
 	
 	StgCanvas* GetCanvas( void ) { return canvas; }
 
-
+private:
 	// static callback functions
-	static void windowCb( Fl_Widget* w, void* p );
-	
+	static void windowCb( Fl_Widget* w, void* p );	
 	static void fileLoadCb( Fl_Widget* w, void* p );
 	static void fileSaveCb( Fl_Widget* w, void* p );
 	static void fileSaveAsCb( Fl_Widget* w, void* p );
 	static void fileExitCb( Fl_Widget* w, void* p );
-	static void viewToggleCb( Fl_Widget* w, void* p );
 	static void viewOptionsCb( Fl_Widget* w, void* p );
 	static void optionsDlgCb( Fl_Widget* w, void* p );
 	static void helpAboutCb( Fl_Widget* w, void* p );
@@ -2210,18 +2196,6 @@ typedef struct
 class StgModelLaser : public StgModel
 {
 private:
-  // DEFAULT PARAMETERS FOR LASER MODEL
-  static const bool DEFAULT_FILLED;
-  static const stg_watts_t DEFAULT_WATTS; 
-  static const stg_size_t DEFAULT_SIZE;
-  static const stg_meters_t DEFAULT_MINRANGE;
-  static const stg_meters_t DEFAULT_MAXRANGE;
-  static const stg_radians_t DEFAULT_FOV;
-  static const unsigned int DEFAULT_SAMPLES;
-  static const stg_msec_t DEFAULT_INTERVAL_MS;
-  static const unsigned int DEFAULT_RESOLUTION;
-  static const char DEFAULT_GEOM_COLOR[];
-
   int dl_debug_laser;
   
   stg_laser_sample_t* samples;

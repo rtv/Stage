@@ -32,8 +32,20 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 
 
 StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
-Fl_Gl_Window(x,y,w,h),
-ShowFlags( "Flags", true )
+  Fl_Gl_Window(x,y,w,h),
+  showBlinken( "Blinkenlights", "show_blinkenlights", "", true ),
+  showBlocks( "Blocks", "show_blocks", "b", true  ),
+  showClock( "Clock", "show_clock", "c", true ),
+  showData( "Data", "show_data", "d", false ),
+  showFlags( "Flags", "show_flags", "f",  true ),
+  showFollow( "Follow", "show_follow", "F", false ),
+  showFootprints( "Footprints", "show_footprints", "f", false ),
+  showGrid( "Grid", "show_grid", "g", true ),
+  showTrailArrows( "Trails/Rising Arrows", "show_trailarrows", "#a", false ),
+  showTrailRise( "Trails/Rising blocks", "show_trailrise", "#r", false ),
+  showTrails( "Trails/Fast", "show_trailfast", "t", false ),
+  showTree( "Debug/Tree", "show_tree", "#T", false ),
+  showOccupancy( "Debug/Occupancy", "show_occupancy", "#O", false )
 {
 	end();
 
@@ -57,8 +69,6 @@ ShowFlags( "Flags", true )
 	dragging = false;
 	rotating = false;
 
-	showflags = STG_SHOW_CLOCK | STG_SHOW_BLOCKS | STG_SHOW_GRID | STG_SHOW_DATA | STG_SHOW_STATUS;
-
 	// // start the timer that causes regular redraws
  	Fl::add_timeout( ((double)interval/1000), 
 						  (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
@@ -67,21 +77,6 @@ ShowFlags( "Flags", true )
 
 StgCanvas::~StgCanvas()
 {
-}
-
-void StgCanvas::InvertView( uint32_t invertflags )
-{
-	showflags = (showflags ^ invertflags);
-
-	//   printf( "flags %u data %d grid %d blocks %d follow %d clock %d tree %d occ %d\n",
-	// 	  showflags, 
-	// 	  showflags & STG_SHOW_DATA,
-	// 	  showflags & STG_SHOW_GRID,
-	// 	  showflags & STG_SHOW_BLOCKS,
-	// 	  showflags & STG_SHOW_FOLLOW,
-	// 	  showflags & STG_SHOW_CLOCK,
-	// 	  showflags & STG_SHOW_QUADTREE,
-	// 	  showflags & STG_SHOW_OCCUPANCY );
 }
 
 StgModel* StgCanvas::Select( int x, int y )
@@ -483,7 +478,7 @@ void StgCanvas::DrawBlocks()
 		if( mod->rebuild_displaylist )
 		{
 			//printf( "Model %s is dirty\n", mod->Token() );					 
-			mod->BuildDisplayList( showflags ); // ready to be rendered
+			mod->BuildDisplayList(); // ready to be rendered
 		}
 		
 		// move into this model's local coordinate frame
@@ -501,127 +496,106 @@ void StgCanvas::DrawBlocks()
 
 void StgCanvas::renderFrame()
 {
-	if( ! (showflags & STG_SHOW_TRAILS) )
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
-	if( showflags & STG_SHOW_GRID )
-		DrawGlobalGrid();
-
-
-	if( (showflags & STG_SHOW_QUADTREE) || (showflags & STG_SHOW_OCCUPANCY) )
-	{
-	  glPushMatrix();	  
-	  glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
-	  
-	  glLineWidth( 1 );
-	  glPolygonMode( GL_FRONT, GL_LINE );
-	  colorstack.Push(1,0,0);
-	  
-	  if( showflags & STG_SHOW_OCCUPANCY )
-		 ((StgWorldGui*)world)->DrawTree( false );
-	  
-	  if( showflags & STG_SHOW_QUADTREE )
-		 ((StgWorldGui*)world)->DrawTree( true );
-	  
-	  colorstack.Pop();
-	  glPopMatrix();
-	}
-	
-	for( GList* it=selected_models; it; it=it->next )
-		((StgModel*)it->data)->DrawSelected();
-	
-
-	if( showflags & STG_SHOW_FOOTPRINT )
-	{
+  if( ! showTrails )
+	 glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  
+  if( showGrid )
+	 DrawGlobalGrid();
+  
+  if( showTree || showOccupancy )
+	 {
+		glPushMatrix();	  
+		glScalef( 1.0/world->Resolution(), 1.0/world->Resolution(), 0 );
+		
+		glLineWidth( 1 );
+		glPolygonMode( GL_FRONT, GL_LINE );
+		colorstack.Push(1,0,0);
+		
+		if( showOccupancy )
+		  ((StgWorldGui*)world)->DrawTree( false );
+		
+		if( showTree )
+		  ((StgWorldGui*)world)->DrawTree( true );
+		
+		colorstack.Pop();
+		glPopMatrix();
+	 }
+  
+  for( GList* it=selected_models; it; it=it->next )
+	 ((StgModel*)it->data)->DrawSelected();
+  
+  if( showFootprints )
+	 {
 		glDisable( GL_DEPTH_TEST );
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-
+		
 		for( GList* it=world->StgWorld::children; it; it=it->next )
-		{
-			((StgModel*)it->data)->DrawTrailFootprint();
-		}
+		  {
+			 ((StgModel*)it->data)->DrawTrailFootprint();
+		  }
 		glEnable( GL_DEPTH_TEST );
-	}
-
-	if( showflags & STG_SHOW_TRAILRISE )
-	{
+	 }
+  
+  if( showTrailRise )
+	 {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-
+		
 		for( GList* it=world->StgWorld::children; it; it=it->next )
-		{
-			((StgModel*)it->data)->DrawTrailBlocks();
-		}
-	}
-
-	if( showflags & STG_SHOW_ARROWS )
-	{
+		  {
+			 ((StgModel*)it->data)->DrawTrailBlocks();
+		  }
+	 }
+  
+  if( showTrailArrows )
+	 {
 		glEnable( GL_DEPTH_TEST );
 		for( GList* it=world->StgWorld::children; it; it=it->next )
-		{
-			((StgModel*)it->data)->DrawTrailArrows();
-		}
-	}
+		  ((StgModel*)it->data)->DrawTrailArrows();
+	 }
 
-	if( showflags & STG_SHOW_BLOCKS )
-	{
-		DrawBlocks();
-	}
-
-	//mod->Draw( showflags ); // draw the stuff that changes every update
-	// draw everything else
-	if( showflags & STG_SHOW_DATA ) {
-		for( GList* it=world->StgWorld::children; it; it=it->next ) {
-			glPushMatrix();
-			StgModel* mod = ((StgModel*)it->data);
-			// move into this model's local coordinate frame
-			gl_pose_shift( &mod->pose );
-			gl_pose_shift( &mod->geom.pose );
-			
-			mod->DataVisualize();
-			
-			glPopMatrix();
-		}
-	}
+  if( showBlocks )
+	 DrawBlocks();
+  
+  // draw the model-specific visualizations
+  if( showData ) 
+	 for( GList* it=world->StgWorld::children; it; it=it->next ) 
+		((StgModel*)it->data)->DataVisualizeTree();  
+  
+	if( showGrid ) 
+	  for( GList* it=world->StgWorld::children; it; it=it->next )
+		 ((StgModel*)it->data)->DrawGrid();
+		
+	if( showFlags ) 
+	  for( GList* it=world->StgWorld::children; it; it=it->next )
+		 ((StgModel*)it->data)->DrawFlagList();
+		
+	if( StgModel::ShowBlinken ) 
+	  for( GList* it=world->StgWorld::children; it; it=it->next )
+			((StgModel*)it->data)->DrawBlinkenlights();	
 	
-	if( showflags & STG_SHOW_GRID) {
-		for( GList* it=world->StgWorld::children; it; it=it->next )
-			((StgModel*)it->data)->DrawGrid();
-	}
+	if ( StgModel::ShowStatus )
+	  for( GList* it=world->StgWorld::children; it; it=it->next )
+		 ((StgModel*)it->data)->DrawStatus( this );
 	
-	if( ShowFlags ) {
-		for( GList* it=world->StgWorld::children; it; it=it->next )
-			((StgModel*)it->data)->DrawFlagList();
-	}
-	
-	if( StgModel::ShowBlinken ) {
-		for( GList* it=world->StgWorld::children; it; it=it->next )
-			((StgModel*)it->data)->DrawBlinkenlights();
-	}
-	
-	if ( StgModel::ShowStatus ) {
-		for( GList* it=world->StgWorld::children; it; it=it->next )
-			((StgModel*)it->data)->DrawStatus( this );
-	}
-
 	if( world->GetRayList() )
-	{
-		glDisable( GL_DEPTH_TEST );
-		PushColor( 0,0,0,0.5 );
-		for( GList* it = world->GetRayList(); it; it=it->next )
-		{
-			float* pts = (float*)it->data;
-			glBegin( GL_LINES );
-			glVertex2f( pts[0], pts[1] );
-			glVertex2f( pts[2], pts[3] );
-			glEnd();
-		}  
-		PopColor();
-		glEnable( GL_DEPTH_TEST );
-
-		world->ClearRays();
-	} 
-
-	if( showflags & STG_SHOW_CLOCK )
+	  {
+		 glDisable( GL_DEPTH_TEST );
+		 PushColor( 0,0,0,0.5 );
+		 for( GList* it = world->GetRayList(); it; it=it->next )
+			{
+			  float* pts = (float*)it->data;
+			  glBegin( GL_LINES );
+			  glVertex2f( pts[0], pts[1] );
+			  glVertex2f( pts[2], pts[3] );
+			  glEnd();
+			}  
+		 PopColor();
+		 glEnable( GL_DEPTH_TEST );
+		 
+		 world->ClearRays();
+	  } 
+	
+	if( showClock )
 	{
 		//use orthogonal projeciton without any zoom
 		glMatrixMode (GL_PROJECTION);
@@ -714,6 +688,74 @@ void StgCanvas::Screenshot()
   printf( "Saved %s\n", filename );
   
   delete [] pixels;
+}
+
+
+void StgCanvas::CreateMenuItems( Fl_Menu_Bar* menu, std::string path )
+{
+  showData.CreateMenuItem( menu, path );
+  showBlocks.CreateMenuItem( menu, path );
+  showFlags.CreateMenuItem( menu, path );
+  showClock.CreateMenuItem( menu, path );
+  showFlags.CreateMenuItem( menu, path );
+  showFollow.CreateMenuItem( menu, path );
+  showFootprints.CreateMenuItem( menu, path );
+  showGrid.CreateMenuItem( menu, path );
+  showOccupancy.CreateMenuItem( menu, path );
+  showTrailArrows.CreateMenuItem( menu, path );
+  showTrails.CreateMenuItem( menu, path );
+  showTrailRise.CreateMenuItem( menu, path );  
+  showTree.CreateMenuItem( menu, path );  
+}
+
+
+void StgCanvas::Load( Worldfile* wf, int sec )
+{
+  float x = wf->ReadTupleFloat(sec, "center", 0, 0 );
+  float y = wf->ReadTupleFloat(sec, "center", 1, 0 );
+  camera.setPose( x, y );
+  
+  camera.setPitch( wf->ReadTupleFloat( sec, "rotate", 0, 0 ) );
+  camera.setYaw( wf->ReadTupleFloat( sec, "rotate", 1, 0 ) );
+  camera.setScale( wf->ReadFloat(sec, "scale", camera.getScale() ) );
+  interval = wf->ReadInt(sec, "interval", interval );
+  
+  showData.Load( wf, sec );
+  showBlocks.Load( wf, sec );
+  showClock.Load( wf, sec );
+  showFollow.Load( wf, sec );
+  showFootprints.Load( wf, sec );
+  showGrid.Load( wf, sec );
+  showOccupancy.Load( wf, sec );
+  showTrailArrows.Load( wf, sec );
+  showTrailRise.Load( wf, sec );
+  showTrails.Load( wf, sec );
+  showTree.Load( wf, sec );
+
+  invalidate(); // we probably changed something
+}
+
+void StgCanvas::Save( Worldfile* wf, int sec )
+{
+  wf->WriteFloat( sec, "scale", camera.getScale() );
+  
+  wf->WriteTupleFloat( sec, "center", 0, camera.getX() );
+  wf->WriteTupleFloat( sec, "center", 1, camera.getY() );
+  
+  wf->WriteTupleFloat( sec, "rotate", 0, camera.getPitch()  );
+  wf->WriteTupleFloat( sec, "rotate", 1, camera.getYaw()  );
+  
+  showData.Save( wf, sec );
+  showBlocks.Save( wf, sec );
+  showClock.Save( wf, sec );
+  showFollow.Save( wf, sec );
+  showFootprints.Save( wf, sec );
+  showGrid.Save( wf, sec );
+  showOccupancy.Save( wf, sec );
+  showTrailArrows.Save( wf, sec );
+  showTrailRise.Save( wf, sec );
+  showTrails.Save( wf, sec );
+  showTree.Save( wf, sec );
 }
 
 
@@ -811,7 +853,7 @@ void StgCanvas::draw()
 
 	
 	if( use_perspective_camera == true ) {
-		if( (showflags & STG_SHOW_FOLLOW)  && last_selection ) {
+		if( showFollow  && last_selection ) {
 			//Follow the selected robot
 			stg_pose_t gpose = last_selection->GetGlobalPose();
 			perspective_camera.setPose( gpose.x, gpose.y, 0.2 );
@@ -819,7 +861,7 @@ void StgCanvas::draw()
 			
 		}
 		perspective_camera.Draw();
-	} else if( (showflags & STG_SHOW_FOLLOW)  && last_selection ) {
+	} else if( showFollow  && last_selection ) {
 		//Follow the selected robot
 		stg_pose_t gpose = last_selection->GetGlobalPose();
 		camera.setPose( gpose.x, gpose.y );

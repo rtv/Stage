@@ -2,7 +2,8 @@
  Class that encapsulates a boolean and pairs it with a string description
  Used to pass settings between the GUI and the drawing classes
  
- Author: Jeremy Asher
+ Author: Jeremy Asher, Richard Vaughan
+ SVN: $Id$
 */
 
 
@@ -10,31 +11,59 @@
 #define _OPTION_H_
 
 #include <string>
-#include <iostream>
+#include "worldfile.hh"
+
+#include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_Menu_Item.H>
 
 namespace Stg {
 
 	class Option {
 	private:
 		friend bool compare( const Option* lhs, const Option* rhs );
-		
-		std::string optName;
-		bool value;
+
+	  std::string optName;
+	  bool value;
+	  /** worldfile entry string for loading and saving this value */
+	  std::string wf_token; 
+	  std::string shortcut;
+	  Fl_Menu_Item* menu_item;
+	  
 	public:
-		Option( std::string n, bool v ) : optName( n ), value( v ) { }
-		Option( const Option& o ) : optName( o.optName ), value( o.value ) { }
-		const std::string name() const { return optName; }
+	  Option( std::string n, std::string tok, std::string key, bool v ) : 
+		 optName( n ), 
+		 wf_token( tok ), 
+		 value( v ), 
+		 shortcut( key ), 
+		 menu_item( NULL )
+	  { }
+	  
+	  Option( const Option& o ) : 
+		 optName( o.optName ), 
+		 wf_token( o.wf_token ), 
+		 shortcut( o.shortcut ), 
+		 value( o.value ) 
+	  { }
+
+	  const std::string name() const { return optName; }
 		inline bool val() const { return value; }
 		inline operator bool() { return val(); }
 		inline bool operator<( const Option& rhs ) const
 			{ return optName<rhs.optName; } 
-		void set( bool val ) { value = val; }
-	};
-	
-	// Comparator to dereference Option pointers and compare their strings
-	struct optComp {
-		inline bool operator()( const Option* lhs, const Option* rhs ) const
-			{ return lhs->operator<(*rhs); } 
+	  void Set( bool val );
+	  void Invert();
+
+	  // Comparator to dereference Option pointers and compare their strings
+	  struct optComp {
+		 inline bool operator()( const Option* lhs, const Option* rhs ) const
+		 { return lhs->operator<(*rhs); } 
+	  };
+	  
+	  static void ToggleCb( Fl_Menu_Bar* menubar, Option* opt );
+
+	  void Load( Worldfile* wf, int section );
+	  void Save( Worldfile* wf, int section );	  
+	  void CreateMenuItem( Fl_Menu_Bar* menu, std::string path );
 	};
 }
 	

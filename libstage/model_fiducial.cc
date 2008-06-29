@@ -299,7 +299,4 @@ void StgModelFiducial::DataVisualize()
 
 		PopColor();
 	}
-	
-	// Call StgModel method to recurse on children
-	StgModel::DataVisualize();
 }

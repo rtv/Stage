@@ -14,6 +14,8 @@
 
 namespace Stg {
 
+  //class Option;
+
 	class OptionsDlg : protected Fl_Window {
 	public:
 		enum event_t { NO_EVENT, CHANGE, CHANGE_ALL, CLOSE };
@@ -46,7 +48,7 @@ namespace Stg {
 		void hide() { Fl_Window::hide(); }
 		
 		void setOptions( const std::vector<Option*>& opts );
-		void setOptions( const std::set<Option*, optComp>& opts );
+	  void setOptions( const std::set<Option*, Option::optComp>& opts );
 		void clearOptions() { options.clear(); }
 		void showAllOpt( Option* opt );
 		const event_t event() const { return status; }

@@ -313,12 +313,6 @@ void StgModelRanger::DataVisualize( void )
 	if( ! (samples && sensors && sensor_count) )
 		return;
 
-	glPushMatrix();
-
-	// move into this model's local coordinate frame
-	gl_pose_shift( &this->pose );
-	gl_pose_shift( &this->geom.pose );
-
 	// if all models have the same number of sensors, this is fast
 	// as it will probably not use a system call or cause a cache
 	// miss
@@ -379,11 +373,6 @@ void StgModelRanger::DataVisualize( void )
 	// restore state 
 	glDepthMask( GL_TRUE );
 	PopColor();
-	
-	glPopMatrix();
-	
-	// Call StgModel method to recurse on children
-	StgModel::DataVisualize();
 }
 
 

@@ -109,32 +109,14 @@ overwritten.
 
 #include <set>
 
-
-static const char* MITEM_VIEW_DATA =      "&View/&Display sensor data";
-static const char* MITEM_VIEW_BLOCKS =    "&View/Blocks";
-static const char* MITEM_VIEW_FLAGS =    "&View/Flags";
-static const char* MITEM_VIEW_GRID =      "&View/Grid";
-static const char* MITEM_VIEW_OCCUPANCY = "&View/Occupancy";
-static const char* MITEM_VIEW_QUADTREE =  "&View/Tree";
-static const char* MITEM_VIEW_FOLLOW =    "&View/Follow selected";
-static const char* MITEM_VIEW_CLOCK =     "&View/Clock";
-static const char* MITEM_VIEW_FOOTPRINTS = "&View/Trails/Footprints";
-static const char* MITEM_VIEW_BLOCKSRISING =  "&View/Trails/Blocks rising";
-static const char* MITEM_VIEW_ARROWS =     "&View/Trails/Arrows rising";
-static const char* MITEM_VIEW_TRAILS =     "&View/Trail";
-static const char* MITEM_VIEW_STATUS =     "&View/Status";
-static const char* MITEM_VIEW_PERSPECTIVE = "&View/Perspective camera";
-
 // this should be set by CMake
 #ifndef PACKAGE_STRING
 #define PACKAGE_STRING "Stage-3.dev"
 #endif
 
-
-
-
-StgWorldGui::StgWorldGui(int W,int H,const char* L) : Fl_Window(W,H,L),
-ShowAll( "Visualize all models", true )
+	StgWorldGui::StgWorldGui(int W,int H,const char* L) : 
+	Fl_Window(W,H,L),
+	ShowAll( "Visualize all models", "show_vis", "", true )
 {
 	//size_range( 100,100 ); // set minimum window size
 	oDlg = NULL;
@@ -158,39 +140,15 @@ ShowAll( "Visualize all models", true )
 	mbar->add( "File/&Load World...", FL_CTRL + 'l', StgWorldGui::fileLoadCb, this, FL_MENU_DIVIDER );
 	mbar->add( "File/&Save World", FL_CTRL + 's', StgWorldGui::fileSaveCb, this );
 	mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', StgWorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
+
+	mbar->add( "File/Screenshots", 0,0,0, FL_SUBMENU );
+	//mbar->add( "File/Screenshots/
+
 	mbar->add( "File/E&xit", FL_CTRL+'q', StgWorldGui::fileExitCb, this );
 
 	mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
-	mbar->add( MITEM_VIEW_DATA, 'd', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_DATA ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_BLOCKS, 'b', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_BLOCKS ? FL_MENU_VALUE : 0 ));
-	mbar->add( 	MITEM_VIEW_FLAGS, 0, StgWorldGui::viewToggleCb, canvas, 
-			  FL_MENU_TOGGLE| (canvas->ShowFlags ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_GRID, 'g', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_GRID ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_OCCUPANCY, 'o', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_OCCUPANCY ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_QUADTREE,  FL_CTRL +'t', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_QUADTREE ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_FOLLOW,    'f', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOLLOW ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_CLOCK,    'c', StgWorldGui::viewToggleCb, canvas, 
-			  FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_CLOCK ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_PERSPECTIVE,   'r', StgWorldGui::viewToggleCb, canvas, 
-			  FL_MENU_TOGGLE| (canvas->use_perspective_camera ));
-	mbar->add( MITEM_VIEW_STATUS,    's', StgWorldGui::viewToggleCb, canvas, 
-			  FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_STATUS ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_TRAILS,    't', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILS ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_FOOTPRINTS,  FL_CTRL+'f', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_FOOTPRINT ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_ARROWS,    FL_CTRL+'a', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_ARROWS ? FL_MENU_VALUE : 0 ));
-	mbar->add( MITEM_VIEW_BLOCKSRISING,    FL_CTRL+'t', StgWorldGui::viewToggleCb, canvas, 
-			FL_MENU_TOGGLE| (canvas->showflags & STG_SHOW_TRAILRISE ? FL_MENU_VALUE : 0 ) | FL_MENU_DIVIDER);
-	mbar->add( "View/Additional options...", FL_CTRL + 'o', StgWorldGui::viewOptionsCb, this );
-
+	mbar->add( "View/Filter data...", FL_SHIFT + 'd', StgWorldGui::viewOptionsCb, this );
+	canvas->CreateMenuItems( mbar, "View" );
 
 	mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
 	mbar->add( "Help/&About Stage...", 0, StgWorldGui::helpAboutCb, this );
@@ -208,8 +166,6 @@ StgWorldGui::~StgWorldGui()
 		delete oDlg;
 	delete canvas;
 }
-
-
 
 void StgWorldGui::Load( const char* filename )
 {
@@ -242,61 +198,10 @@ void StgWorldGui::Load( const char* filename )
 	//larger than this size.
 	size( width,height );
 
-	float x = wf->ReadTupleFloat(window_section, "center", 0, 0 );
-	float y = wf->ReadTupleFloat(window_section, "center", 1, 0 );
-	canvas->camera.setPose( x, y );
-
-	canvas->camera.setPitch( wf->ReadTupleFloat( window_section, "rotate", 0, 0 ) );
-	canvas->camera.setYaw( wf->ReadTupleFloat( window_section, "rotate", 1, 0 ) );
-	canvas->camera.setScale( wf->ReadFloat(window_section, "scale", canvas->camera.getScale() ) );
-	canvas->interval = wf->ReadInt(window_section, "interval", canvas->interval );
-
-	// set the canvas visibilty flags   
-	uint32_t flags = canvas->GetShowFlags();
-	uint32_t grid = wf->ReadInt(window_section, "show_grid", flags & STG_SHOW_GRID ) ? STG_SHOW_GRID : 0;
-	uint32_t data = wf->ReadInt(window_section, "show_data", flags & STG_SHOW_DATA ) ? STG_SHOW_DATA : 0;
-	uint32_t follow = wf->ReadInt(window_section, "show_follow", flags & STG_SHOW_FOLLOW ) ? STG_SHOW_FOLLOW : 0;
-	uint32_t blocks = wf->ReadInt(window_section, "show_blocks", flags & STG_SHOW_BLOCKS ) ? STG_SHOW_BLOCKS : 0;
-	uint32_t quadtree = wf->ReadInt(window_section, "show_tree", flags & STG_SHOW_QUADTREE ) ? STG_SHOW_QUADTREE : 0;
-	uint32_t clock = wf->ReadInt(window_section, "show_clock", flags & STG_SHOW_CLOCK ) ? STG_SHOW_CLOCK : 0;
-	uint32_t trails = wf->ReadInt(window_section, "show_trails", flags & STG_SHOW_TRAILS ) ? STG_SHOW_TRAILS : 0;
-	uint32_t trailsrising = wf->ReadInt(window_section, "show_trails_rising", flags & STG_SHOW_TRAILRISE ) ? STG_SHOW_TRAILRISE : 0;
-	uint32_t arrows = wf->ReadInt(window_section, "show_arrows", flags & STG_SHOW_ARROWS ) ? STG_SHOW_ARROWS : 0;
-	uint32_t footprints = wf->ReadInt(window_section, "show_footprints", flags & STG_SHOW_FOOTPRINT ) ? STG_SHOW_FOOTPRINT : 0;
-	uint32_t status = wf->ReadInt(window_section, "show_status", flags & STG_SHOW_STATUS ) ? STG_SHOW_STATUS : 0;
-
-	canvas->SetShowFlags( grid | data | follow | blocks | quadtree | clock
-			| trails | arrows | footprints | trailsrising | status );
-	canvas->invalidate(); // we probably changed something
-
-	// fix the GUI menu checkboxes to match
-	flags = canvas->GetShowFlags();
-
-	Fl_Menu_Item* item = NULL;
-
-	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_DATA );
-	(flags & STG_SHOW_DATA) ? item->check() : item->clear();
-
-	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_GRID );
-	(flags & STG_SHOW_GRID) ? item->check() : item->clear();
-
-	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_BLOCKS );
-	(flags & STG_SHOW_BLOCKS) ? item->check() : item->clear();
-
-	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_FOLLOW );
-	(flags & STG_SHOW_FOLLOW) ? item->check() : item->clear();
-
-	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_OCCUPANCY );
-	(flags & STG_SHOW_OCCUPANCY) ? item->check() : item->clear();
-
-	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_QUADTREE );
-	(flags & STG_SHOW_QUADTREE) ? item->check() : item->clear();
-
-	item = (Fl_Menu_Item*)mbar->find_item( MITEM_VIEW_STATUS );
-	(flags & STG_SHOW_STATUS) ? item->check() : item->clear();
-
+	// configure the canvas
+	canvas->Load(  wf, window_section );
+	
 	updateOptions();
-	// TODO - per model visualizations load
 }
 
 void StgWorldGui::UnLoad() 
@@ -318,23 +223,8 @@ bool StgWorldGui::Save( const char* filename )
 	  {
 		 wf->WriteTupleFloat( window_section, "size", 0, w() );
 		 wf->WriteTupleFloat( window_section, "size", 1, h() );
-		 
-		 wf->WriteFloat( window_section, "scale", canvas->camera.getScale() );
-		 
-		 wf->WriteTupleFloat( window_section, "center", 0, canvas->camera.getX() );
-		 wf->WriteTupleFloat( window_section, "center", 1, canvas->camera.getY() );
-		 
-		 wf->WriteTupleFloat( window_section, "rotate", 0, canvas->camera.getPitch()  );
-		 wf->WriteTupleFloat( window_section, "rotate", 1, canvas->camera.getYaw()  );
-		 
-		 uint32_t flags = canvas->GetShowFlags();
-		 wf->WriteInt( window_section, "show_blocks", flags & STG_SHOW_BLOCKS );
-		 wf->WriteInt( window_section, "show_grid", flags & STG_SHOW_GRID );
-		 wf->WriteInt( window_section, "show_follow", flags & STG_SHOW_FOLLOW );
-		 wf->WriteInt( window_section, "show_data", flags & STG_SHOW_DATA );
-		 wf->WriteInt( window_section, "show_occupancy", flags & STG_SHOW_OCCUPANCY );
-		 wf->WriteInt( window_section, "show_tree", flags & STG_SHOW_QUADTREE );
-		 wf->WriteInt( window_section, "show_clock", flags & STG_SHOW_CLOCK );
+		 		 
+		 canvas->Save( wf, window_section );
 
 		 // TODO - per model visualizations save 
 	  }
@@ -522,35 +412,6 @@ void StgWorldGui::fileExitCb( Fl_Widget* w, void* p )
 	}
 }
 
-void StgWorldGui::viewToggleCb( Fl_Widget* w, void* p ) 
-{
-	Fl_Menu_Bar* menubar = static_cast<Fl_Menu_Bar*>( w );
-	StgCanvas* canvas = static_cast<StgCanvas*>( p );
-
-	char picked[128];
-	menubar->item_pathname(picked, sizeof(picked)-1);
-
-	//printf("CALLBACK: You picked '%s'\n", picked);
-
-	// this is slow and a little ugly, but it's the least hacky approach I think
-	if( strcmp(picked, MITEM_VIEW_DATA ) == 0 ) canvas->InvertView( STG_SHOW_DATA );
-	else if( strcmp(picked, MITEM_VIEW_BLOCKS ) == 0 ) canvas->InvertView( STG_SHOW_BLOCKS );
-	else if( strcmp(picked, MITEM_VIEW_GRID ) == 0 ) canvas->InvertView( STG_SHOW_GRID );
-	else if( strcmp(picked, MITEM_VIEW_FOLLOW ) == 0 ) canvas->InvertView( STG_SHOW_FOLLOW );
-	else if( strcmp(picked, MITEM_VIEW_QUADTREE ) == 0 ) canvas->InvertView( STG_SHOW_QUADTREE );
-	else if( strcmp(picked, MITEM_VIEW_OCCUPANCY ) == 0 ) canvas->InvertView( STG_SHOW_OCCUPANCY );
-	else if( strcmp(picked, MITEM_VIEW_CLOCK ) == 0 ) canvas->InvertView( STG_SHOW_CLOCK );
-	else if( strcmp(picked, MITEM_VIEW_FOOTPRINTS ) == 0 ) canvas->InvertView( STG_SHOW_FOOTPRINT );
-	else if( strcmp(picked, MITEM_VIEW_ARROWS ) == 0 ) canvas->InvertView( STG_SHOW_ARROWS );
-	else if( strcmp(picked, MITEM_VIEW_TRAILS ) == 0 ) canvas->InvertView( STG_SHOW_TRAILS );
-	else if( strcmp(picked, MITEM_VIEW_BLOCKSRISING ) == 0 ) canvas->InvertView( STG_SHOW_TRAILRISE );
-	else if( strcmp(picked, MITEM_VIEW_STATUS ) == 0 ) canvas->InvertView( STG_SHOW_STATUS );
-	else if( strcmp(picked, MITEM_VIEW_FLAGS ) == 0 ) canvas->ShowFlags.set( !canvas->ShowFlags );
-	else if( strcmp(picked, MITEM_VIEW_PERSPECTIVE ) == 0 ) { canvas->use_perspective_camera = ! canvas->use_perspective_camera; canvas->invalidate(); }
-	else PRINT_ERR1( "Unrecognized menu item \"%s\" not handled", picked );
-
-	//printf( "value: %d\n", item->value() );
-}
 
 void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
 	StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
@@ -742,7 +603,7 @@ bool StgWorldGui::closeWindowQuery()
 }
 
 void StgWorldGui::updateOptions() {
-	std::set<Option*, optComp> options;
+  std::set<Option*, Option::optComp> options;
 	std::vector<Option*> modOpts;
 	for( GList* it=update_list; it; it=it->next ) {
 		modOpts = ((StgModel*)it->data)->getOptions();

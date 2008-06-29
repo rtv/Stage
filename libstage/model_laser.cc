@@ -17,23 +17,23 @@
 #include "stage_internal.hh"
 
 // DEFAULT PARAMETERS FOR LASER MODEL
-const bool StgModelLaser::DEFAULT_FILLED = true;
-const stg_watts_t StgModelLaser::DEFAULT_WATTS = 17.5;
-const stg_size_t StgModelLaser::DEFAULT_SIZE = {0.15, 0.15, 0.2 };
-const stg_meters_t StgModelLaser::DEFAULT_MINRANGE = 0.0;
-const stg_meters_t StgModelLaser::DEFAULT_MAXRANGE = 8.0;
-const stg_radians_t StgModelLaser::DEFAULT_FOV = M_PI;
-const unsigned int StgModelLaser::DEFAULT_SAMPLES = 180;
-const stg_msec_t StgModelLaser::DEFAULT_INTERVAL_MS = 100;
-const unsigned int StgModelLaser::DEFAULT_RESOLUTION = 1;
+static const bool DEFAULT_FILLED = true;
+static const stg_watts_t DEFAULT_WATTS = 17.5;
+static const stg_size_t DEFAULT_SIZE = {0.15, 0.15, 0.2 };
+static const stg_meters_t DEFAULT_MINRANGE = 0.0;
+static const stg_meters_t DEFAULT_MAXRANGE = 8.0;
+static const stg_radians_t DEFAULT_FOV = M_PI;
+static const unsigned int DEFAULT_SAMPLES = 180;
+static const stg_msec_t DEFAULT_INTERVAL_MS = 100;
+static const unsigned int DEFAULT_RESOLUTION = 1;
 
-const char StgModelLaser::DEFAULT_GEOM_COLOR[] = "blue";
-//const char BRIGHT_COLOR[] = "blue";
-//const char CFG_COLOR[] = "light steel blue";
-//const char COLOR[] = "steel blue";
-//const char FILL_COLOR[] = "powder blue";
+static const char DEFAULT_GEOM_COLOR[] = "blue";
+//static const char BRIGHT_COLOR[] = "blue";
+//static const char CFG_COLOR[] = "light steel blue";
+//static const char COLOR[] = "steel blue";
+//static const char FILL_COLOR[] = "powder blue";
 
-Option StgModelLaser::ShowLaserData( "Show Laser Data", true );
+Option StgModelLaser::ShowLaserData( "Show Laser Data", "show_laser", "", true );
 
 /**
   @ingroup model
@@ -83,12 +83,12 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 			id, typestr );
 	
 	// sensible laser defaults 
-	interval = StgModelLaser::DEFAULT_INTERVAL_MS * thousand;
+	interval = DEFAULT_INTERVAL_MS * thousand;
 	laser_return = LaserVisible;
 
 	stg_geom_t geom;
 	memset( &geom, 0, sizeof(geom));
-	geom.size = StgModelLaser::DEFAULT_SIZE;
+	geom.size = DEFAULT_SIZE;
 	SetGeom( geom );
 
 	// set default color
@@ -237,7 +237,7 @@ void StgModelLaser::Startup(  void )
 	PRINT_DEBUG( "laser startup" );
 
 	// start consuming power
-	SetWatts( StgModelLaser::DEFAULT_WATTS );
+	SetWatts( DEFAULT_WATTS );
 }
 
 void StgModelLaser::Shutdown( void )
@@ -305,12 +305,6 @@ void StgModelLaser::DataVisualize( void )
 	if( ! (samples && sample_count) )
 		return;
 
-	glPushMatrix();
-	
-	// move into this model's local coordinate frame
-	gl_pose_shift( &this->pose );
-	gl_pose_shift( &this->geom.pose );
-	
 	//glTranslatef( 0,0, 0 ); // shoot the laser beam out at the right height
 	glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
 
@@ -364,9 +358,4 @@ void StgModelLaser::DataVisualize( void )
 	PopColor();
 	PopColor();
 	glDepthMask( GL_TRUE );
-		
-	glPopMatrix();
-	
-	// Call StgModel method to recurse on children
-	StgModel::DataVisualize();
 }

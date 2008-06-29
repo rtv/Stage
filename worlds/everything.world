@@ -54,15 +54,17 @@ puck( pose [-8.959 2.752 -461.643 ] color "orange" )
 #
 define trickedoutpioneer pioneer2dx
 (
-  sicklaser(  
+  sicklaser( alwayson 1 
     pose [0.030 0.000 0.000 ]
     fiducial( range_max 8 range_max_id 5 ) 
 
-      blobfinder( 
+      blobfinder( alwayson 1
         channel_count 6 
         channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
     )
   )
+
+  camera( alwayson 1 )
 
   fiducial_return 17
   gripper_return 0

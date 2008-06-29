@@ -61,7 +61,7 @@ define autorob pioneer2dx
 #camera( pose [ 0.000 0.000 0.000 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )
  ctrl "fasr"
 
-  # say "Autolab"
+  say "Autolab"
 )
 
 

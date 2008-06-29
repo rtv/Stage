@@ -110,38 +110,38 @@ TODO PLAN: single array of all polygon vertices - model just keeps an index
 
 
 //static const members
-const bool StgModel::DEFAULT_BLOBRETURN = true;
-const bool StgModel::DEFAULT_BOUNDARY = false;
-const stg_color_t StgModel::DEFAULT_COLOR = (0xFFFF0000); // solid red
-const stg_joules_t StgModel::DEFAULT_ENERGY_CAPACITY = 1000.0;
-const bool StgModel::DEFAULT_ENERGY_CHARGEENABLE = true;
-const stg_watts_t StgModel::DEFAULT_ENERGY_GIVERATE =  0.0;
-const stg_meters_t StgModel::DEFAULT_ENERGY_PROBERANGE = 0.0;
-const stg_watts_t StgModel::DEFAULT_ENERGY_TRICKLERATE = 0.1;
-const stg_meters_t StgModel::DEFAULT_GEOM_SIZEX = 0.10;
-const stg_meters_t StgModel::DEFAULT_GEOM_SIZEY = 0.10;
-const stg_meters_t StgModel::DEFAULT_GEOM_SIZEZ = 0.10;
-const bool StgModel::DEFAULT_GRID = false;
-const bool StgModel::DEFAULT_GRIPPERRETURN = false;
-const stg_laser_return_t StgModel::DEFAULT_LASERRETURN = LaserVisible;
-const stg_meters_t StgModel::DEFAULT_MAP_RESOLUTION = 0.1;
-const stg_movemask_t StgModel::DEFAULT_MASK = (STG_MOVE_TRANS | STG_MOVE_ROT);
-const stg_kg_t StgModel::DEFAULT_MASS = 10.0;
-const bool StgModel::DEFAULT_NOSE = false;
-const bool StgModel::DEFAULT_OBSTACLERETURN = true;
-const bool StgModel::DEFAULT_OUTLINE = true;
-const bool StgModel::DEFAULT_RANGERRETURN = true;
+static const bool DEFAULT_BLOBRETURN = true;
+static const bool DEFAULT_BOUNDARY = false;
+static const stg_color_t DEFAULT_COLOR = (0xFFFF0000); // solid red
+static const stg_joules_t DEFAULT_ENERGY_CAPACITY = 1000.0;
+static const bool DEFAULT_ENERGY_CHARGEENABLE = true;
+static const stg_watts_t DEFAULT_ENERGY_GIVERATE =  0.0;
+static const stg_meters_t DEFAULT_ENERGY_PROBERANGE = 0.0;
+static const stg_watts_t DEFAULT_ENERGY_TRICKLERATE = 0.1;
+static const stg_meters_t DEFAULT_GEOM_SIZEX = 0.10;
+static const stg_meters_t DEFAULT_GEOM_SIZEY = 0.10;
+static const stg_meters_t DEFAULT_GEOM_SIZEZ = 0.10;
+static const bool DEFAULT_GRID = false;
+static const bool DEFAULT_GRIPPERRETURN = false;
+static const stg_laser_return_t DEFAULT_LASERRETURN = LaserVisible;
+static const stg_meters_t DEFAULT_MAP_RESOLUTION = 0.1;
+static const stg_movemask_t DEFAULT_MASK = (STG_MOVE_TRANS | STG_MOVE_ROT);
+static const stg_kg_t DEFAULT_MASS = 10.0;
+static const bool DEFAULT_NOSE = false;
+static const bool DEFAULT_OBSTACLERETURN = true;
+static const bool DEFAULT_OUTLINE = true;
+static const bool DEFAULT_RANGERRETURN = true;
 
 // speech bubble colors
-const stg_color_t StgModel::BUBBLE_FILL = 0xFFC8C8FF; // light blue/grey
-const stg_color_t StgModel::BUBBLE_BORDER = 0xFF000000; // black
-const stg_color_t StgModel::BUBBLE_TEXT = 0xFF000000; // black
+static const stg_color_t BUBBLE_FILL = 0xFFC8C8FF; // light blue/grey
+static const stg_color_t BUBBLE_BORDER = 0xFF000000; // black
+static const stg_color_t BUBBLE_TEXT = 0xFF000000; // black
 
 // static members
 uint32_t StgModel::count = 0;
 //Option StgModel::ShowVisData( "Sensor Visualizations", false );
-Option StgModel::ShowBlinken( "Show Blinkenlights", true );
-Option StgModel::ShowStatus( "Show Status", true );
+Option StgModel::ShowBlinken( "Show Blinkenlights", "show_blinkenlights", "", true );
+Option StgModel::ShowStatus( "Show Status", "show_status", "", true );
 
 GHashTable* StgModel::modelsbyid = g_hash_table_new( NULL, NULL );
 
@@ -196,23 +196,23 @@ StgModel::StgModel( StgWorld* world,
 
 	this->displaylist = 0;
 
-	this->geom.size.x = StgModel::DEFAULT_GEOM_SIZEX;
-	this->geom.size.y = StgModel::DEFAULT_GEOM_SIZEX;
-	this->geom.size.z = StgModel::DEFAULT_GEOM_SIZEX;
+	this->geom.size.x = DEFAULT_GEOM_SIZEX;
+	this->geom.size.y = DEFAULT_GEOM_SIZEX;
+	this->geom.size.z = DEFAULT_GEOM_SIZEX;
 	memset( &this->geom.pose, 0, sizeof(this->geom.pose));
 
-	this->obstacle_return = StgModel::DEFAULT_OBSTACLERETURN;
-	this->ranger_return = StgModel::DEFAULT_RANGERRETURN;
-	this->blob_return = StgModel::DEFAULT_BLOBRETURN;
-	this->laser_return = StgModel::DEFAULT_LASERRETURN;
-	this->gripper_return = StgModel::DEFAULT_GRIPPERRETURN;
-	this->boundary = StgModel::DEFAULT_BOUNDARY;
-	this->color = StgModel::DEFAULT_COLOR;
-	this->map_resolution = StgModel::DEFAULT_MAP_RESOLUTION; // meters
-	this->gui_nose = StgModel::DEFAULT_NOSE;
-	this->gui_grid = StgModel::DEFAULT_GRID;
-	this->gui_outline = StgModel::DEFAULT_OUTLINE;
-	this->gui_mask = this->parent ? 0 : StgModel::DEFAULT_MASK;
+	this->obstacle_return = DEFAULT_OBSTACLERETURN;
+	this->ranger_return = DEFAULT_RANGERRETURN;
+	this->blob_return = DEFAULT_BLOBRETURN;
+	this->laser_return = DEFAULT_LASERRETURN;
+	this->gripper_return = DEFAULT_GRIPPERRETURN;
+	this->boundary = DEFAULT_BOUNDARY;
+	this->color = DEFAULT_COLOR;
+	this->map_resolution = DEFAULT_MAP_RESOLUTION; // meters
+	this->gui_nose = DEFAULT_NOSE;
+	this->gui_grid = DEFAULT_GRID;
+	this->gui_outline = DEFAULT_OUTLINE;
+	this->gui_mask = this->parent ? 0 : DEFAULT_MASK;
 
 	this->fiducial_return = 0;
 	this->fiducial_key = 0;
@@ -1146,7 +1146,7 @@ void StgModel::DrawPicker( void )
 	glPopMatrix(); // drop out of local coords
 }
 
-void StgModel::BuildDisplayList( uint32_t flags )
+void StgModel::BuildDisplayList()
 {
 	glNewList( displaylist, GL_COMPILE );	
 	DrawBlocks();
@@ -1156,11 +1156,27 @@ void StgModel::BuildDisplayList( uint32_t flags )
 }
 
 void StgModel::DataVisualize( void )
-{
-	// call DataVisualize on all children
-	for( GList* it=children; it; it=it->next )
-		((StgModel*)it->data)->DataVisualize();
+{  
+  // do nothing
 }
+
+void StgModel::DataVisualizeTree( void )
+{
+  // move into this model's local coordinate frame
+  glPushMatrix();
+  gl_pose_shift( &pose );
+  gl_pose_shift( &geom.pose );
+  
+  DataVisualize(); // virtual function overridden by most model types
+  
+  // recurse on children
+  for( GList* it=children; it; it=it->next )
+	 ((StgModel*)it->data)->DataVisualizeTree();
+  
+  // leave the local CF
+  glPopMatrix();
+}
+
 
 void StgModel::DrawGrid( void )
 {
