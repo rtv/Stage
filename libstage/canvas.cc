@@ -411,7 +411,7 @@ void StgCanvas::DrawGlobalGrid()
   stg_bounds3d_t bounds = world->GetExtent();
 
   char str[16];	
-  PushColor( 0,0,0,0.15 );
+  PushColor( 0.15, 0.15, 0.15, 1.0 ); // pale gray
   for( double i = floor(bounds.x.min); i < bounds.x.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
@@ -619,33 +619,23 @@ void StgCanvas::renderFrame()
 
 void StgCanvas::Screenshot()
 {
-  int viewport[4];
-  glGetIntegerv(GL_VIEWPORT, viewport);
 
-  int width = viewport[2];//w();
-  int height = viewport[3];//;;h();
+  int width = w();
+  int height = h();
   int depth = 4; // RGBA
 
- //  printf( "VP: %d %d %d %d  WIN %d %d\n",
-// 	  viewport[0],
-// 	  viewport[1],
-// 	  viewport[2],
-// 	  viewport[3],
-// 	  w(),
-// 	  h() );
+  // we use RGBA throughout, though we only need RGB, as the 4-byte
+  // pixels avoid a nasty word-alignment problem when indexing into
+  // the pixel array.
 
-  uint8_t* pixels = new uint8_t[ width * height * depth ]; 
-		 
+  // might save a bit of time as the image size rarely changes
+  static uint8_t* pixels = NULL;  
+  pixels = g_renew( uint8_t, pixels, width * height * depth );
+  
   glFlush(); // make sure the drawing is done
   // read the pixels from the screen
-  //glReadPixels( viewport[0], viewport[1], width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels );			 
   glReadPixels( 0,0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels );			 
   
-  // force the alpha channel to be maximum
-  for( int i=0; i<height; i++ )
-    for( int j=0; j<width; j++ )
-      pixels[ ((i * width + j) * depth)+3] = 0xFF; 
-
   static uint32_t count = 0;		 
   char filename[64];
   snprintf( filename, 63, "stage-%d.png", count++ );
@@ -664,6 +654,7 @@ void StgCanvas::Screenshot()
 
   png_init_io(pp, fp);
 
+  // need to invert the image as GL and PNG disagree on the row order
   png_bytep rowpointers[height];
   for( int i=0; i<height; i++ )
     rowpointers[i] = &pixels[ (height-1-i) * width * depth ];
@@ -686,8 +677,6 @@ void StgCanvas::Screenshot()
   fclose(fp);
   
   printf( "Saved %s\n", filename );
-  
-  delete [] pixels;
 }
 
 
