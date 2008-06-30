@@ -624,7 +624,7 @@ void StgCanvas::Screenshot()
 
   int width = viewport[2];//w();
   int height = viewport[3];//;;h();
-  int depth = 3; // RGB
+  int depth = 4; // RGBA
 
  //  printf( "VP: %d %d %d %d  WIN %d %d\n",
 // 	  viewport[0],
@@ -639,8 +639,13 @@ void StgCanvas::Screenshot()
   glFlush(); // make sure the drawing is done
   // read the pixels from the screen
   //glReadPixels( viewport[0], viewport[1], width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels );			 
-  glReadPixels( 0,0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels );			 
+  glReadPixels( 0,0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels );			 
   
+  // force the alpha channel to be maximum
+  for( int i=0; i<height; i++ )
+    for( int j=0; j<width; j++ )
+      pixels[ ((i * width + j) * depth)+3] = 0xFF; 
+
   static uint32_t count = 0;		 
   char filename[64];
   snprintf( filename, 63, "stage-%d.png", count++ );
@@ -668,10 +673,12 @@ void StgCanvas::Screenshot()
   //png_set_compression_level(pp, Z_DEFAULT_COMPRESSION);
   png_set_IHDR( pp, info, 
 		width, height, 8, 
-		PNG_COLOR_TYPE_RGB, 
+		PNG_COLOR_TYPE_RGBA, 
 		PNG_INTERLACE_NONE, 
 		PNG_COMPRESSION_TYPE_DEFAULT, 
 		PNG_FILTER_TYPE_DEFAULT);
+
+  png_set_strip_alpha(pp);
 
   png_write_png( pp, info, PNG_TRANSFORM_IDENTITY, NULL );
   png_destroy_write_struct(&pp, &info);
