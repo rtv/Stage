@@ -646,12 +646,13 @@ void StgCanvas::Screenshot()
       PRINT_ERR1( "Unable to open %s", filename );
     }
   
-  // write png header information
+  // create PNG data
   png_structp pp = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
   assert(pp);
   png_infop info = png_create_info_struct(pp);
   assert(info);
 
+  // setup the output file
   png_init_io(pp, fp);
 
   // need to invert the image as GL and PNG disagree on the row order
@@ -669,9 +670,9 @@ void StgCanvas::Screenshot()
 		PNG_COMPRESSION_TYPE_DEFAULT, 
 		PNG_FILTER_TYPE_DEFAULT);
 
-  png_set_strip_alpha(pp);
-
   png_write_png( pp, info, PNG_TRANSFORM_IDENTITY, NULL );
+
+  // free the PNG data - we reuse the pixel data next time.
   png_destroy_write_struct(&pp, &info);
   
   fclose(fp);

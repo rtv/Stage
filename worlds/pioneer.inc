@@ -127,7 +127,7 @@ define fancypioneer2dx pioneer2dx
   block[3].point[2] [ -0.083  0.140 ]
   block[3].point[3] [  0.083  0.140 ]
   block[3].z [0 0.165 ]
-  block[3].color "gray10"
+  block[3].color "gray15"
 
   # right wheel
   block[4].points 4
@@ -136,7 +136,7 @@ define fancypioneer2dx pioneer2dx
   block[4].point[2] [ -0.083  -0.177 ]
   block[4].point[3] [  0.083  -0.177 ]
   block[4].z [ 0 0.165 ]
-  block[4].color "gray10"
+  block[4].color "gray15"
 
   # castor
   block[5].points 4
@@ -145,7 +145,7 @@ define fancypioneer2dx pioneer2dx
   block[5].point[1] [ -0.1825 -0.012 ]
   block[5].point[0] [ -0.2475 -0.012 ]
   block[5].z [ 0 0.065 ]
-  block[5].color "gray10"
+  block[5].color "gray15"
 
   # lid
   block[6].points 22

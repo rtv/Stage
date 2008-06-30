@@ -51,7 +51,7 @@ define fancysicklaser sicklaser
   block[3].point[2] [  0.06  0.05 ]
   block[3].point[3] [ -0.02  0.05 ]
   block[3].z [0.02 0.12 ]  
-  #block[3].color "darkgray"
+  block[3].color "gray10"
 )
 
 
