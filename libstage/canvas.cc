@@ -1,8 +1,8 @@
 /** canvas.cc
-  Implement the main world viewing area in FLTK and OpenGL. 
-Author: Richard Vaughan (vaughan@sfu.ca)
-$Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
- */
+    Implement the main world viewing area in FLTK and OpenGL. 
+    Author: Richard Vaughan (vaughan@sfu.ca)
+    $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
+*/
 
 #include "stage_internal.hh"
 #include "texture_manager.hh"
@@ -26,8 +26,8 @@ void StgCanvas::TimerCallback( StgCanvas* c )
   c->redraw();
   
   Fl::repeat_timeout(((double)c->interval/1000),
-							 (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
-							 c);
+		     (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+		     c);
 }
 
 
@@ -46,34 +46,35 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   showTrailRise( "Trails/Rising blocks", "show_trailrise", "#r", false ),
   showTrails( "Trails/Fast", "show_trailfast", "t", false ),
   showTree( "Debug/Tree", "show_tree", "#T", false ),
-  showOccupancy( "Debug/Occupancy", "show_occupancy", "#O", false )
+  showOccupancy( "Debug/Occupancy", "show_occupancy", "#O", false ),
+  showScreenshots( "Save screenshots", "screenshots", "", false )
 {
-	end();
+  end();
 
-	//show(); // must do this so that the GL context is created before configuring GL
-	// but that line causes a segfault in Linux/X11! TODO: test in OS X
+  //show(); // must do this so that the GL context is created before configuring GL
+  // but that line causes a segfault in Linux/X11! TODO: test in OS X
 
-	this->world = world;
-	selected_models = NULL;
-	last_selection = NULL;
+  this->world = world;
+  selected_models = NULL;
+  last_selection = NULL;
 
-	use_perspective_camera = false;
-	perspective_camera.setPose( -3.0, 0.0, 1.0 );
-	perspective_camera.setPitch( 70.0 ); //look down
+  use_perspective_camera = false;
+  perspective_camera.setPose( -3.0, 0.0, 1.0 );
+  perspective_camera.setPitch( 70.0 ); //look down
 	
-	startx = starty = 0;
-	//panx = pany = stheta = sphi = 0.0;
-	//scale = 15.0;
-	interval = 50; //msec between redraws
+  startx = starty = 0;
+  //panx = pany = stheta = sphi = 0.0;
+  //scale = 15.0;
+  interval = 50; //msec between redraws
 
-	graphics = true;
-	dragging = false;
-	rotating = false;
+  graphics = true;
+  dragging = false;
+  rotating = false;
 
-	// // start the timer that causes regular redraws
- 	Fl::add_timeout( ((double)interval/1000), 
-			 (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
-			 this);
+  // // start the timer that causes regular redraws
+  Fl::add_timeout( ((double)interval/1000), 
+		   (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+		   this);
 }
 
 StgCanvas::~StgCanvas()
@@ -610,27 +611,35 @@ void StgCanvas::renderFrame()
       glMatrixMode (GL_MODELVIEW);
     }
 
-	
-  if( 0 )
+  
+  if( showScreenshots )
     Screenshot();
 }
 
 
 void StgCanvas::Screenshot()
 {
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT,viewport);
-  
-  int width = viewport[2] - viewport[0];
-  int height = viewport[3] - viewport[1];
+  int viewport[4];
+  glGetIntegerv(GL_VIEWPORT, viewport);
 
+  int width = viewport[2];//w();
+  int height = viewport[3];//;;h();
   int depth = 3; // RGB
-  
-  uint8_t* pixels= new uint8_t[ width * height * depth ]; 
+
+ //  printf( "VP: %d %d %d %d  WIN %d %d\n",
+// 	  viewport[0],
+// 	  viewport[1],
+// 	  viewport[2],
+// 	  viewport[3],
+// 	  w(),
+// 	  h() );
+
+  uint8_t* pixels = new uint8_t[ width * height * depth ]; 
 		 
   glFlush(); // make sure the drawing is done
   // read the pixels from the screen
-  glReadPixels( viewport[0], viewport[1], width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels );			 
+  //glReadPixels( viewport[0], viewport[1], width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels );			 
+  glReadPixels( 0,0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels );			 
   
   static uint32_t count = 0;		 
   char filename[64];
@@ -644,23 +653,29 @@ void StgCanvas::Screenshot()
   
   // write png header information
   png_structp pp = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+  assert(pp);
   png_infop info = png_create_info_struct(pp);
+  assert(info);
+
   png_init_io(pp, fp);
-  png_set_compression_level(pp, Z_DEFAULT_COMPRESSION);
+
+  png_bytep rowpointers[height];
+  for( int i=0; i<height; i++ )
+    rowpointers[i] = &pixels[ (height-1-i) * width * depth ];
+
+  png_set_rows( pp, info, rowpointers ); 
+
+  //png_set_compression_level(pp, Z_DEFAULT_COMPRESSION);
   png_set_IHDR( pp, info, 
 		width, height, 8, 
 		PNG_COLOR_TYPE_RGB, 
 		PNG_INTERLACE_NONE, 
 		PNG_COMPRESSION_TYPE_DEFAULT, 
 		PNG_FILTER_TYPE_DEFAULT);
-  png_write_info(pp, info);
+
+  png_write_png( pp, info, PNG_TRANSFORM_IDENTITY, NULL );
+  png_destroy_write_struct(&pp, &info);
   
-  // write pixels in reverse row order
-  for( int y=height-1; y >= 0; y-- )
-    png_write_row( pp, pixels + 3*y*width );
-  
-  png_write_end(pp, info);
-  png_destroy_write_struct(&pp, 0);
   fclose(fp);
   
   printf( "Saved %s\n", filename );
@@ -684,6 +699,7 @@ void StgCanvas::CreateMenuItems( Fl_Menu_Bar* menu, std::string path )
   showTrails.CreateMenuItem( menu, path );
   showTrailRise.CreateMenuItem( menu, path );  
   showTree.CreateMenuItem( menu, path );  
+  showScreenshots.CreateMenuItem( menu, path );  
 }
 
 
@@ -711,6 +727,7 @@ void StgCanvas::Load( Worldfile* wf, int sec )
   showTrailRise.Load( wf, sec );
   showTrails.Load( wf, sec );
   showTree.Load( wf, sec );
+  showScreenshots.Load( wf, sec );
 
   invalidate(); // we probably changed something
 }
@@ -741,6 +758,7 @@ void StgCanvas::Save( Worldfile* wf, int sec )
   showTrailRise.Save( wf, sec );
   showTrails.Save( wf, sec );
   showTree.Save( wf, sec );
+  showScreenshots.Save( wf, sec );
 }
 
 

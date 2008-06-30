@@ -21,7 +21,7 @@ paused 1
 # configure the GUI window
 window
 ( 
-  size [ 671.000 413.000 ] 
+  size [ 280.000 480.000 ] 
   center [-0.294 0.114] 
   rotate [ -52.500 -18.500 ]
   scale 27.525 

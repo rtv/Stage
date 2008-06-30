@@ -1938,19 +1938,20 @@ private:
   void DrawGlobalGrid();
   
   Option 
-	 showBlinken, 
-	 showBlocks, 
-	 showClock, 
-	 showData, 
-	 showFlags,
-	 showFollow,
-	 showFootprints, 
-	 showGrid, 
-	 showOccupancy, 
-	 showTrailArrows, 
-	 showTrailRise, 
-	 showTrails, 
-	 showTree;
+    showBlinken, 
+    showBlocks, 
+    showClock, 
+    showData, 
+    showFlags,
+    showFollow,
+    showFootprints, 
+    showGrid, 
+    showOccupancy, 
+    showScreenshots,
+    showTrailArrows, 
+    showTrailRise, 
+    showTrails, 
+    showTree;
   
 public:
 
