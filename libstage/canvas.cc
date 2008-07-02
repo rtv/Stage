@@ -433,6 +433,7 @@ void StgCanvas::DrawGlobalGrid()
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texName);
+  glColor3f( 1.0, 1.0, 1.0 );
 
   glBegin(GL_QUADS);
 
@@ -836,7 +837,7 @@ void StgCanvas::draw()
 	  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
 		       0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
 				
-	  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	}
 			
 	loaded_texture = true;
