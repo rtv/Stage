@@ -1915,7 +1915,6 @@ private:
   
   StgOrthoCamera camera;
   StgPerspectiveCamera perspective_camera;
-  bool use_perspective_camera;
   
   int startx, starty;
   bool dragging;
@@ -1949,6 +1948,7 @@ private:
     showTrailRise, 
     showTrails, 
     showTree,
+	perspectiveCam,
 	visualizeAll;
   
 public:

@@ -40,18 +40,19 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   showBlocks( "Blocks", "show_blocks", "b", true  ),
   showClock( "Clock", "show_clock", "c", true ),
   showData( "Data", "show_data", "d", false ),
-  showFlags( "Flags", "show_flags", "f",  true ),
-  showFollow( "Follow", "show_follow", "F", false ),
-  showFootprints( "Footprints", "show_footprints", "f", false ),
+  showFlags( "Flags", "show_flags", "l",  true ),
+  showFollow( "Follow", "show_follow", "f", false ),
+  showFootprints( "Footprints", "show_footprints", "o", false ),
   showGrid( "Grid", "show_grid", "g", true ),
-  showOccupancy( "Debug/Occupancy", "show_occupancy", "#O", false ),
+  showOccupancy( "Debug/Occupancy", "show_occupancy", "^o", false ),
   showScreenshots( "Save screenshots", "screenshots", "", false ),
-  showStatus( "Status", "show_status", "", true ),
-  showTrailArrows( "Trails/Rising Arrows", "show_trailarrows", "#a", false ),
-  showTrailRise( "Trails/Rising blocks", "show_trailrise", "#r", false ),
-  showTrails( "Trails/Fast", "show_trailfast", "t", false ),
-  showTree( "Debug/Tree", "show_tree", "#T", false ),
-  visualizeAll( "Visualize All", "vis_all", "", true )
+  showStatus( "Status", "show_status", "s", true ),
+  showTrailArrows( "Trails/Rising Arrows", "show_trailarrows", "^a", false ),
+  showTrailRise( "Trails/Rising blocks", "show_trailrise", "^r", false ),
+  showTrails( "Trails/Fast", "show_trailfast", "^f", false ),
+  showTree( "Debug/Tree", "show_tree", "^t", false ),
+  perspectiveCam( "Perspective camera", "show_perspective", "r", false ),
+  visualizeAll( "Visualize All", "vis_all", "^v", true ) 
 {
   end();
 
@@ -62,7 +63,6 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   selected_models = NULL;
   last_selection = NULL;
 
-  use_perspective_camera = false;
   perspective_camera.setPose( -3.0, 0.0, 1.0 );
   perspective_camera.setPitch( 70.0 ); //look down
 	
@@ -217,7 +217,7 @@ int StgCanvas::handle(int event)
 	}
       else
 	{
-	  if( use_perspective_camera == true ) {
+	  if( perspectiveCam == true ) {
 	    perspective_camera.scroll( Fl::event_dy() / 10.0 );
 	  } else {
 	    camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
@@ -233,7 +233,7 @@ int StgCanvas::handle(int event)
 	  int dx = Fl::event_x() - startx;
 	  int dy = Fl::event_y() - starty;
 
-	  if( use_perspective_camera == true ) {
+	  if( perspectiveCam == true ) {
 	    perspective_camera.addYaw( -dx );
 	    perspective_camera.addPitch( -dy );
 	  } else {
@@ -249,7 +249,7 @@ int StgCanvas::handle(int event)
 	  int dx = Fl::event_x() - startx;
 	  int dy = Fl::event_y() - starty;
 
-	  if( use_perspective_camera == true ) {
+	  if( perspectiveCam == true ) {
 	    perspective_camera.move( -dx, dy, 0.0 );
 	  } else {
 	    camera.move( -dx, dy );
@@ -372,16 +372,16 @@ int StgCanvas::handle(int event)
 	  redraw();
 	  break;
 	case FL_Left:
-	  if( use_perspective_camera == false ) { camera.move( -10, 0 ); } 
+	  if( perspectiveCam == false ) { camera.move( -10, 0 ); } 
 	  else { perspective_camera.strafe( -0.5 ); } break;
 	case FL_Right: 
-	  if( use_perspective_camera == false ) {camera.move( 10, 0 ); } 
+	  if( perspectiveCam == false ) {camera.move( 10, 0 ); } 
 	  else { perspective_camera.strafe( 0.5 ); } break;
 	case FL_Down:  
-	  if( use_perspective_camera == false ) {camera.move( 0, -10 ); } 
+	  if( perspectiveCam == false ) {camera.move( 0, -10 ); } 
 	  else { perspective_camera.forward( -0.5 ); } break;
 	case FL_Up:  
-	  if( use_perspective_camera == false ) {camera.move( 0, 10 ); } 
+	  if( perspectiveCam == false ) {camera.move( 0, 10 ); } 
 	  else { perspective_camera.forward( 0.5 ); } break;
 	default:
 	  return 0; // keypress unhandled
@@ -744,6 +744,7 @@ void StgCanvas::CreateMenuItems( Fl_Menu_Bar* menu, std::string path )
   showFootprints.CreateMenuItem( menu, path );
   showGrid.CreateMenuItem( menu, path );
   showStatus.CreateMenuItem( menu, path );
+  perspectiveCam.CreateMenuItem( menu, path );
   showOccupancy.CreateMenuItem( menu, path );
   showTrailArrows.CreateMenuItem( menu, path );
   showTrails.CreateMenuItem( menu, path );
@@ -817,7 +818,7 @@ void StgCanvas::draw()
   static bool loaded_texture = false;
 
   //Enable the following to debug camera model
-  //	if( loaded_texture == true && use_perspective_camera == true )
+  //	if( loaded_texture == true && perspectiveCam == true )
   //		return;
 
   if (!valid() ) 
@@ -888,7 +889,7 @@ void StgCanvas::draw()
       // install a font
       gl_font( FL_HELVETICA, 12 );
 
-      if( use_perspective_camera == true ) {
+      if( perspectiveCam == true ) {
 	perspective_camera.setAspect( static_cast< float >( w() ) / static_cast< float >( h() ) );
 	perspective_camera.SetProjection();
       } else {
@@ -905,7 +906,7 @@ void StgCanvas::draw()
     }            
 
 	
-  if( use_perspective_camera == true ) {
+  if( perspectiveCam == true ) {
     if( showFollow  && last_selection ) {
       //Follow the selected robot
       stg_pose_t gpose = last_selection->GetGlobalPose();
