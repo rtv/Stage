@@ -9,6 +9,8 @@
 #include "replace.h"
 
 #include <string>
+#include <map>
+#include <sstream>
 #include <png.h>
 
 #include "file_manager.hh"
@@ -478,6 +480,30 @@ void StgCanvas::DrawBlocks()
 
 void StgCanvas::renderFrame()
 {
+	//before drawing, order all models based on distance from camera
+	float x = camera.getX();
+	float y = camera.getY();
+	float sphi = dtor( camera.getYaw() );
+	
+	//estimate point of camera location - hard to do with orthogonal mode
+	x += -sin( sphi ) * 100;
+	y += -cos( sphi ) * 100;
+	
+	//store all models in a sorted multimap
+	std::multimap< float, StgModel* > ordered;
+	for( GList* it=world->StgWorld::children; it; it=it->next ) {
+		StgModel* ptr = (StgModel*) it->data;
+		stg_pose_t pose = ptr->GetPose();
+		
+		float dist = sqrt( ( x - pose.x ) * ( x - pose.x ) + ( y - pose.y ) * ( y - pose.y ) );
+		ordered.insert( std::pair< float, StgModel* >( dist, (StgModel*)it->data ) );
+	}
+	
+	//now the models can be iterated over with:
+	// for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ )
+	
+	
+	
   if( ! showTrails )
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
@@ -503,18 +529,17 @@ void StgCanvas::renderFrame()
       glPopMatrix();
     }
   
-  for( GList* it=selected_models; it; it=it->next )
-    ((StgModel*)it->data)->DrawSelected();
+	for( GList* it=selected_models; it; it=it->next )
+		((StgModel*)it->data)->DrawSelected();
   
   if( showFootprints )
     {
       glDisable( GL_DEPTH_TEST );
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 		
-      for( GList* it=world->StgWorld::children; it; it=it->next )
-	{
-	  ((StgModel*)it->data)->DrawTrailFootprint();
-	}
+		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+			i->second->DrawTrailFootprint();
+		}
       glEnable( GL_DEPTH_TEST );
     }
   
@@ -522,17 +547,19 @@ void StgCanvas::renderFrame()
     {
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 		
-      for( GList* it=world->StgWorld::children; it; it=it->next )
-	{
-	  ((StgModel*)it->data)->DrawTrailBlocks();
-	}
+		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+			i->second->DrawTrailBlocks();
+		}
+		
     }
   
   if( showTrailArrows )
     {
       glEnable( GL_DEPTH_TEST );
-      for( GList* it=world->StgWorld::children; it; it=it->next )
-	((StgModel*)it->data)->DrawTrailArrows();
+		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+			i->second->DrawTrailArrows();
+		}
+		
     }
 
   if( showBlocks )
@@ -545,25 +572,38 @@ void StgCanvas::renderFrame()
 			it = world->StgWorld::children;
 		else
 			it = selected_models;
-		for( ; it; it=it->next ) 
-			((StgModel*)it->data)->DataVisualizeTree();
+			for( ; it; it=it->next ) 
+				((StgModel*)it->data)->DataVisualizeTree();
+
+		
 	}
   
   if( showGrid ) 
-    for( GList* it=world->StgWorld::children; it; it=it->next )
-      ((StgModel*)it->data)->DrawGrid();
+	  for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+		  i->second->DrawGrid();
+	  }
+	
 		
   if( showFlags ) 
-    for( GList* it=world->StgWorld::children; it; it=it->next )
-      ((StgModel*)it->data)->DrawFlagList();
+	  for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+		  i->second->DrawFlagList();
+	  }
+	
 		
   if( showBlinken ) 
-    for( GList* it=world->StgWorld::children; it; it=it->next )
-      ((StgModel*)it->data)->DrawBlinkenlights();	
+	for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+		i->second->DrawBlinkenlights();
+	}
 	
-  if ( showStatus )
-    for( GList* it=world->StgWorld::children; it; it=it->next )
-      ((StgModel*)it->data)->DrawStatusTree( this );
+	
+	if ( showStatus ) {
+
+		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+			i->second->DrawStatusTree( this );
+		}
+		
+		std::cout << std::endl;
+	}
 	
   if( world->GetRayList() )
     {
