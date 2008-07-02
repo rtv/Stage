@@ -156,21 +156,21 @@ bool StgModelCamera::GetFrame( void )
 	_canvas->DrawBlocks();
 	
 	//read depth buffer
-//	glReadPixels(0, 0, _width, _height,
-//					 GL_DEPTH_COMPONENT, //GL_RGB,
-//					 GL_FLOAT, //GL_UNSIGNED_BYTE,
-//					 _frame_data );
+	glReadPixels(0, 0, _width, _height,
+					 GL_DEPTH_COMPONENT, //GL_RGB,
+					 GL_FLOAT, //GL_UNSIGNED_BYTE,
+					 _frame_data );
 	//transform length into linear length
 	float* data = ( float* )( _frame_data ); //TODO use static_cast here
 	int buf_size = _width * _height;
 	for( int i = 0; i < buf_size; i++ )
-		data[ i ] = 10;//_camera.realDistance( data[ i ] );
+		data[ i ] = _camera.realDistance( data[ i ] );
 
 	//read color buffer
-//	glReadPixels(0, 0, _width, _height,
-//				 GL_RGBA,
-//				 GL_UNSIGNED_BYTE,
-//				 _frame_color_data );		
+	glReadPixels(0, 0, _width, _height,
+				 GL_RGBA,
+				 GL_UNSIGNED_BYTE,
+				 _frame_color_data );		
 
 
 	glViewport( viewport[0], viewport[1], viewport[2], viewport[3] );
