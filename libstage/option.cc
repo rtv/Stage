@@ -2,6 +2,24 @@
 
 using namespace Stg;
 
+
+Option::Option( std::string n, std::string tok, std::string key, bool v ) : 
+optName( n ), 
+value( v ), 
+wf_token( tok ), 
+shortcut( key ), 
+menu_item( NULL )
+{ }
+
+Option::Option( const Option& o ) : 
+optName( o.optName ), 
+value( o.value ), 
+wf_token( o.wf_token ), 
+shortcut( o.shortcut ), 
+menu_item( o.menu_item )
+{ }
+
+
 void Option::Load( Worldfile* wf, int section )
 {
   Set( (bool)wf->ReadInt(section, wf_token.c_str(), value ));

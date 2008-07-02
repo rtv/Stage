@@ -42,12 +42,12 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   showFollow( "Follow", "show_follow", "F", false ),
   showFootprints( "Footprints", "show_footprints", "f", false ),
   showGrid( "Grid", "show_grid", "g", true ),
+  showOccupancy( "Debug/Occupancy", "show_occupancy", "#O", false ),
+  showScreenshots( "Save screenshots", "screenshots", "", false ),
   showTrailArrows( "Trails/Rising Arrows", "show_trailarrows", "#a", false ),
   showTrailRise( "Trails/Rising blocks", "show_trailrise", "#r", false ),
   showTrails( "Trails/Fast", "show_trailfast", "t", false ),
-  showTree( "Debug/Tree", "show_tree", "#T", false ),
-  showOccupancy( "Debug/Occupancy", "show_occupancy", "#O", false ),
-  showScreenshots( "Save screenshots", "screenshots", "", false )
+  showTree( "Debug/Tree", "show_tree", "#T", false )
 {
   end();
 

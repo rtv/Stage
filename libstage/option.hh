@@ -20,7 +20,7 @@ namespace Stg {
 
 	class Option {
 	private:
-		friend bool compare( const Option* lhs, const Option* rhs );
+	  friend bool compare( const Option* lhs, const Option* rhs );
 
 	  std::string optName;
 	  bool value;
@@ -30,20 +30,8 @@ namespace Stg {
 	  Fl_Menu_Item* menu_item;
 	  
 	public:
-	  Option( std::string n, std::string tok, std::string key, bool v ) : 
-		 optName( n ), 
-		 wf_token( tok ), 
-		 value( v ), 
-		 shortcut( key ), 
-		 menu_item( NULL )
-	  { }
-	  
-	  Option( const Option& o ) : 
-		 optName( o.optName ), 
-		 wf_token( o.wf_token ), 
-		 shortcut( o.shortcut ), 
-		 value( o.value ) 
-	  { }
+		Option( std::string n, std::string tok, std::string key, bool v );	  
+		Option( const Option& o );
 
 	  const std::string name() const { return optName; }
 		inline bool val() const { return value; }
