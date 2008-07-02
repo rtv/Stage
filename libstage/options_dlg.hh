@@ -48,7 +48,7 @@ namespace Stg {
 		void hide() { Fl_Window::hide(); }
 		
 		void setOptions( const std::vector<Option*>& opts );
-	  void setOptions( const std::set<Option*, Option::optComp>& opts );
+		void setOptions( const std::set<Option*, Option::optComp>& opts );
 		void clearOptions() { options.clear(); }
 		void showAllOpt( Option* opt );
 		const event_t event() const { return status; }

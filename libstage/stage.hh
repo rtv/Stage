@@ -1948,7 +1948,8 @@ private:
     showTrailArrows, 
     showTrailRise, 
     showTrails, 
-    showTree;
+    showTree,
+	visualizeAll;
   
 public:
 
@@ -2013,8 +2014,6 @@ private:
   stg_usec_t real_time_of_last_update;
   stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
 	
-  Option ShowAll;
-
 public:
   static const stg_msec_t DEFAULT_INTERVAL_REAL = 100; ///< real time between updates
 

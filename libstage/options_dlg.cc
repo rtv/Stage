@@ -4,7 +4,7 @@
 namespace Stg {
   
   OptionsDlg::OptionsDlg( int x, int y, int w, int h ) :
-	 Fl_Window( x,y, w,h, "Options" ),
+	 Fl_Window( x,y, w,h, "Filter" ),
 	 changedItem( NULL ),
 	 showAll( NULL ),
 	 status( NO_EVENT ),
@@ -12,7 +12,6 @@ namespace Stg {
   {
 	 showAllCheck = new Fl_Check_Button( 0,0, w,boxH );
 	 showAllCheck->callback( checkChanged, this );
-	 showAllCheck->deactivate();
 	 
 	 scroll = new Fl_Scroll( 0,boxH+vm, w,h-boxH-btnH-3*vm );
 	 scroll->type( Fl_Scroll::VERTICAL );

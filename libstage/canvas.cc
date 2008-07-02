@@ -48,7 +48,8 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   showTrailArrows( "Trails/Rising Arrows", "show_trailarrows", "#a", false ),
   showTrailRise( "Trails/Rising blocks", "show_trailrise", "#r", false ),
   showTrails( "Trails/Fast", "show_trailfast", "t", false ),
-  showTree( "Debug/Tree", "show_tree", "#T", false )
+  showTree( "Debug/Tree", "show_tree", "#T", false ),
+  visualizeAll( "Visualize All", "vis_all", "", true )
 {
   end();
 
@@ -537,9 +538,15 @@ void StgCanvas::renderFrame()
     DrawBlocks();
   
   // draw the model-specific visualizations
-  if( showData ) 
-    for( GList* it=world->StgWorld::children; it; it=it->next ) 
-      ((StgModel*)it->data)->DataVisualizeTree();  
+	if( showData ) {
+		GList* it;
+		if ( visualizeAll )
+			it = world->StgWorld::children;
+		else
+			it = selected_models;
+		for( ; it; it=it->next ) 
+			((StgModel*)it->data)->DataVisualizeTree();
+	}
   
   if( showGrid ) 
     for( GList* it=world->StgWorld::children; it; it=it->next )
@@ -685,6 +692,7 @@ void StgCanvas::Screenshot()
 void StgCanvas::CreateMenuItems( Fl_Menu_Bar* menu, std::string path )
 {
   showData.CreateMenuItem( menu, path );
+//  visualizeAll.CreateMenuItem( menu, path );
   showBlocks.CreateMenuItem( menu, path );
   showFlags.CreateMenuItem( menu, path );
   showClock.CreateMenuItem( menu, path );

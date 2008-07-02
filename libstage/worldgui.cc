@@ -115,8 +115,7 @@
 #endif
 
 StgWorldGui::StgWorldGui(int W,int H,const char* L) : 
-  Fl_Window(W,H,L),
-  ShowAll( "Visualize all models", "show_vis", "", true )
+  Fl_Window(W,H,L)
 {
   //size_range( 100,100 ); // set minimum window size
   oDlg = NULL;
@@ -421,8 +420,8 @@ void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
     int y = worldGui->y();
     OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
     oDlg->callback( optionsDlgCb, worldGui );
-    oDlg->showAllOpt( &worldGui->ShowAll );
     oDlg->setOptions( worldGui->drawOptions );
+    oDlg->showAllOpt( &worldGui->canvas->visualizeAll );
     oDlg->show();
 
     worldGui->oDlg = oDlg;
