@@ -1206,7 +1206,7 @@ protected:
 	int gui_mask;
 	
 	/// Register an Option for pickup by the GUI
-	void RegisterOption( Option* opt ) { drawOptions.push_back( opt ); }
+	void registerOption( Option* opt ) { drawOptions.push_back( opt ); }
 	
 	
 	StgModel* parent; //< the model that owns this one, possibly NULL
@@ -2094,6 +2094,7 @@ class StgModelBlobfinder : public StgModel
 		// predicate for ray tracing
 		static bool BlockMatcher( StgBlock* testblock, StgModel* finder );
 
+		static Option showBlobData;
 	public:
 
 		unsigned int scan_width;
@@ -2207,8 +2208,7 @@ private:
   stg_radians_t fov;
   uint32_t resolution;
 	
-	// Options
-	static Option ShowLaserData;
+	static Option showLaserData;
   
 public:
   static const char* typestr;
@@ -2380,7 +2380,9 @@ class StgModelFiducial : public StgModel
 		virtual void DataVisualize();
 
 		GArray* data;
-
+	
+		static Option showFiducialData;
+	
 	public:
   static const char* typestr;
   // constructor
@@ -2437,6 +2439,10 @@ class StgModelRanger : public StgModel
 		uint32_t sensor_count;
 		stg_ranger_sensor_t* sensors;
 		stg_meters_t* samples;
+	
+	private:
+	static Option showRangerData;
+	
 };
 
 // BLINKENLIGHT MODEL ----------------------------------------------------
@@ -2448,6 +2454,7 @@ class StgModelBlinkenlight : public StgModel
 		double period;
 		bool on;
 
+		static Option showBlinkenData;
 	public:
 
   static const char* typestr;
@@ -2458,7 +2465,7 @@ class StgModelBlinkenlight : public StgModel
 
 		virtual void Load();
 		virtual void Update();
-		virtual void Draw( uint32_t flags, StgCanvas* canvas );
+		virtual void DataVisualize();
 };
 
 // CAMERA MODEL ----------------------------------------------------
@@ -2486,7 +2493,7 @@ class StgModelCamera : public StgModel
 		GLfloat* _camera_quads;
 		GLubyte* _camera_colors;
 	
-		static Option ShowCamera;
+		static Option showCameraData;
 	
 		StgPerspectiveCamera _camera;
 		int _yaw_offset; //position camera is mounted at
@@ -2557,7 +2564,6 @@ class StgModelPosition : public StgModel
 		stg_position_drive_mode_t drive_mode;
 		stg_position_localization_mode_t localization_mode; ///< global or local mode
 		stg_velocity_t integration_error; ///< errors to apply in simple odometry model
-
 	public:
   static const char* typestr;
 		// constructor

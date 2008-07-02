@@ -48,6 +48,10 @@ enabled 1
 
 //#define DEBUG 1
 #include "stage_internal.hh"
+#include "option.hh"
+
+Option StgModelBlinkenlight::showBlinkenData( "Show Blink", "show_blinken", "", true );
+
 											
 StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world,
 														  StgModel* parent ) 
@@ -74,6 +78,8 @@ StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world,
 	this->on = true;
 
 	this->Startup();
+	
+	registerOption( &showBlinkenData );
 }
 
 StgModelBlinkenlight::~StgModelBlinkenlight()
@@ -99,11 +105,9 @@ void StgModelBlinkenlight::Update( void )
 }
 
 
-void StgModelBlinkenlight::Draw( uint32_t flags, StgCanvas* canvas )
+void StgModelBlinkenlight::DataVisualize()
 {
-	StgModel::Draw( flags, canvas );
-
-	if( on )
+	if( on && showBlinkenData )
 	{
 		glPushMatrix();
 		// move into this model's local coordinate frame      

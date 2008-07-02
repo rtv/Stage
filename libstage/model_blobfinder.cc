@@ -25,6 +25,8 @@ static const unsigned int DEFAULT_BLOBFINDERRESOLUTION = 1;
 static const unsigned int DEFAULT_BLOBFINDERSCANWIDTH = 80;
 static const unsigned int DEFAULT_BLOBFINDERSCANHEIGHT = 60;
 
+Option StgModelBlobfinder::showBlobData( "Show Blobfinder", "show_blob", "", true );
+
 /**
   @ingroup model
   @defgroup model_blobfinder Blobfinder model
@@ -97,6 +99,8 @@ StgModelBlobfinder::StgModelBlobfinder( StgWorld* world,
 
 	// leave the color filter array empty initally - this tracks all colors
 	colors = g_array_new( false, true, sizeof(stg_color_t) );
+	
+	registerOption( &showBlobData );
 }
 
 
@@ -298,6 +302,9 @@ void StgModelBlobfinder::Shutdown( void )
 
 void StgModelBlobfinder::DataVisualize( void )
 {
+	if ( !showBlobData )
+		return;
+	
 	if( debug )
 	{
 		// draw the FOV

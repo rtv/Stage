@@ -92,6 +92,8 @@ static const char RANGER_COLOR[] = "gray75";
 static const char RANGER_CONFIG_COLOR[] = "gray90";
 static const char RANGER_GEOM_COLOR[] = "orange";
 
+Option StgModelRanger::showRangerData( "Show Ranger Data", "show_ranger", "", true );
+
 
 StgModelRanger::StgModelRanger( StgWorld* world, 
 										  StgModel* parent ) 
@@ -135,6 +137,8 @@ StgModelRanger::StgModelRanger( StgWorld* world,
 		sensors[c].fov = (2.0*M_PI)/(sensor_count+1);
 		sensors[c].ray_count = DEFAULT_RANGER_RAYCOUNT;
 	}
+	
+	registerOption( &showRangerData );
 }
 
 StgModelRanger::~StgModelRanger()
@@ -310,6 +314,9 @@ void StgModelRanger::Print( char* prefix )
 
 void StgModelRanger::DataVisualize( void )
 {
+	if ( !showRangerData )
+		return;
+	
 	if( ! (samples && sensors && sensor_count) )
 		return;
 

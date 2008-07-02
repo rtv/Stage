@@ -16,7 +16,7 @@
 #include <sstream>
 #include <iomanip>
 
-Option StgModelCamera::ShowCamera( "Show Camera", "show_camera", "", true );
+Option StgModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true );
 
 //caclulate the corss product, and store results in the first vertex
 void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
@@ -70,7 +70,7 @@ _yaw_offset( 0 )
 	//TODO can't draw this as it blocks the laser
 	SetGeom( geom );
 	
-	RegisterOption( &ShowCamera );
+	registerOption( &showCameraData );
 
 	Startup();
 }
@@ -181,7 +181,7 @@ bool StgModelCamera::GetFrame( void )
 //TODO create lines outlining camera frustrum, then iterate over each depth measurement and create a square
 void StgModelCamera::DataVisualize( void )
 {
-	if( _frame_data == NULL || !ShowCamera )
+	if( _frame_data == NULL || !showCameraData )
 		return;
 	
 	// TODO - shift to global CS?

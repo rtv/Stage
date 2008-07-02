@@ -422,9 +422,8 @@ void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
     oDlg->callback( optionsDlgCb, worldGui );
     oDlg->setOptions( worldGui->drawOptions );
     oDlg->showAllOpt( &worldGui->canvas->visualizeAll );
-    oDlg->show();
-
     worldGui->oDlg = oDlg;
+    oDlg->show();
   }
   else {
     worldGui->oDlg->show(); // bring it to front

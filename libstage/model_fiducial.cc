@@ -23,6 +23,8 @@ const stg_meters_t DEFAULT_FIDUCIAL_RANGEMAXANON = 8.0;
 const stg_radians_t DEFAULT_FIDUCIAL_FOV = M_PI;
 const stg_watts_t DEFAULT_FIDUCIAL_WATTS = 10.0;
 
+Option StgModelFiducial::showFiducialData( "Show Fiducial", "show_fiducial", "", true );
+
 /** 
   @ingroup model
   @defgroup model_fiducial Fiducial detector model
@@ -85,6 +87,8 @@ StgModelFiducial::StgModelFiducial( StgWorld* world,
 	key = 0;
 
 	data = g_array_new( false, true, sizeof(stg_fiducial_t) );
+	
+	registerOption( &showFiducialData );
 }
 
 StgModelFiducial::~StgModelFiducial( void )
@@ -243,6 +247,9 @@ void StgModelFiducial::Load( void )
 
 void StgModelFiducial::DataVisualize()
 {
+	if ( !showFiducialData )
+		return;
+	
 	// draw the FOV
 	//    GLUquadric* quadric = gluNewQuadric();
 

@@ -81,7 +81,6 @@ const stg_position_control_mode_t POSITION_CONTROL_DEFAULT = STG_POSITION_CONTRO
 const stg_position_localization_mode_t POSITION_LOCALIZATION_DEFAULT = STG_POSITION_LOCALIZATION_GPS;
 const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIFFERENTIAL;
 
-
 StgModelPosition::StgModelPosition( StgWorld* world, 
 												StgModel* parent )
   : StgModel( world, parent, MODEL_TYPE_POSITION )
