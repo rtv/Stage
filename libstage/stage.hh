@@ -1168,10 +1168,6 @@ private:
   std::vector<Option*> drawOptions;
 
 public:
-	// Draw Options
-	static Option ShowBlinken;
-	static Option ShowStatus;
-  
   /** Look up a model pointer by a unique model ID */
   static StgModel* LookupId( uint32_t id )
   { 
@@ -1948,6 +1944,7 @@ private:
     showGrid, 
     showOccupancy, 
     showScreenshots,
+	showStatus,
     showTrailArrows, 
     showTrailRise, 
     showTrails, 

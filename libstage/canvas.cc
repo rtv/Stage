@@ -44,6 +44,7 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   showGrid( "Grid", "show_grid", "g", true ),
   showOccupancy( "Debug/Occupancy", "show_occupancy", "#O", false ),
   showScreenshots( "Save screenshots", "screenshots", "", false ),
+  showStatus( "Status", "show_status", "", true ),
   showTrailArrows( "Trails/Rising Arrows", "show_trailarrows", "#a", false ),
   showTrailRise( "Trails/Rising blocks", "show_trailrise", "#r", false ),
   showTrails( "Trails/Fast", "show_trailfast", "t", false ),
@@ -548,11 +549,11 @@ void StgCanvas::renderFrame()
     for( GList* it=world->StgWorld::children; it; it=it->next )
       ((StgModel*)it->data)->DrawFlagList();
 		
-  if( StgModel::ShowBlinken ) 
+  if( showBlinken ) 
     for( GList* it=world->StgWorld::children; it; it=it->next )
       ((StgModel*)it->data)->DrawBlinkenlights();	
 	
-  if ( StgModel::ShowStatus )
+  if ( showStatus )
     for( GList* it=world->StgWorld::children; it; it=it->next )
       ((StgModel*)it->data)->DrawStatusTree( this );
 	
@@ -691,6 +692,7 @@ void StgCanvas::CreateMenuItems( Fl_Menu_Bar* menu, std::string path )
   showFollow.CreateMenuItem( menu, path );
   showFootprints.CreateMenuItem( menu, path );
   showGrid.CreateMenuItem( menu, path );
+  showStatus.CreateMenuItem( menu, path );
   showOccupancy.CreateMenuItem( menu, path );
   showTrailArrows.CreateMenuItem( menu, path );
   showTrails.CreateMenuItem( menu, path );

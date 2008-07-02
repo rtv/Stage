@@ -139,9 +139,6 @@ static const stg_color_t BUBBLE_TEXT = 0xFF000000; // black
 
 // static members
 uint32_t StgModel::count = 0;
-//Option StgModel::ShowVisData( "Sensor Visualizations", false );
-Option StgModel::ShowBlinken( "Show Blinkenlights", "show_blinkenlights", "", true );
-Option StgModel::ShowStatus( "Show Status", "show_status", "", true );
 
 GHashTable* StgModel::modelsbyid = g_hash_table_new( NULL, NULL );
 
@@ -236,10 +233,6 @@ StgModel::StgModel( StgWorld* world,
   // now we can add the basic square shape
   this->AddBlockRect( -0.5,-0.5,1,1 );
 		
-  //RegisterOption( &ShowVisData );
-  RegisterOption( &ShowBlinken );
-  //RegisterOption( &ShowStatus );
-
   PRINT_DEBUG2( "finished model %s @ %p", 
 		this->token, this );
 }
