@@ -972,6 +972,7 @@ void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alp
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture( GL_TEXTURE_2D, texture_id );
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
   glColor4f( 1.0, 1.0, 1.0, alpha );
   glPushMatrix();
