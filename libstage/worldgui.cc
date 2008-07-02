@@ -212,8 +212,6 @@ void StgWorldGui::UnLoad()
 bool StgWorldGui::Save( const char* filename )
 {
   PRINT_DEBUG1( "%s.Save()", token );
-
-  StgWorld::Save( filename );
 	
   // use the window section for the rest
   int window_section = wf->LookupEntity( "window" );
@@ -227,6 +225,8 @@ bool StgWorldGui::Save( const char* filename )
 	    
       // TODO - per model visualizations save 
     }
+	
+	StgWorld::Save( filename );
 	
   // TODO - error checking
   return true;
