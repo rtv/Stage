@@ -365,9 +365,7 @@ int StgCanvas::handle(int event)
 	  camera.resetAngle();
 	  //invalidate();
 	  if( Fl::event_state( FL_CTRL ) ) {
-	    //do a complete reset
-	    camera.setPose( 0.0, 0.0 );
-	    camera.setScale( 10.0 );
+		  resetCamera();
 	  }
 	  redraw();
 	  break;
@@ -476,6 +474,36 @@ void StgCanvas::DrawFloor()
 void StgCanvas::DrawBlocks() 
 {
   LISTMETHOD( world->StgWorld::children, StgModel*, DrawBlocksTree );
+}
+
+void StgCanvas::resetCamera()
+{
+	float max_x = 0, max_y = 0, min_x = 0, min_y = 0;
+	
+	//TODO take orrientation ( `a' ) and geom.pose offset into consideration
+	for( GList* it=world->StgWorld::children; it; it=it->next ) {
+		StgModel* ptr = (StgModel*) it->data;
+		stg_pose_t pose = ptr->GetPose();
+		stg_geom_t geom = ptr->GetGeom();
+		
+		float tmp_min_x = pose.x - geom.size.x / 2.0;
+		float tmp_max_x = pose.x + geom.size.x / 2.0;
+		float tmp_min_y = pose.y - geom.size.y / 2.0;
+		float tmp_max_y = pose.y + geom.size.y / 2.0;
+		
+		if( tmp_min_x < min_x ) min_x = tmp_min_x;
+		if( tmp_max_x > max_x ) max_x = tmp_max_x;
+		if( tmp_min_y < min_y ) min_y = tmp_min_y;
+		if( tmp_max_y > max_y ) max_y = tmp_max_y;
+	}
+	
+	//do a complete reset
+	float x = ( min_x + max_x ) / 2.0;
+	float y = ( min_y + max_y ) / 2.0;
+	camera.setPose( x, y );
+	float scale_x = w() / (max_x - min_x) * 0.9;
+	float scale_y = h() / (max_y - min_y) * 0.9;
+	camera.setScale( scale_x < scale_y ? scale_x : scale_y );
 }
 
 void StgCanvas::renderFrame()

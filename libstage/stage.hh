@@ -1966,6 +1966,7 @@ public:
 	void FixViewport(int W,int H);
 	void DrawFloor(); //simpler floor compared to grid
 	void DrawBlocks();
+	void resetCamera();
 	virtual void renderFrame();
 	virtual void draw();
 	virtual int handle( int event );
