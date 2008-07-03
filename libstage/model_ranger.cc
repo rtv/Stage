@@ -93,6 +93,7 @@ static const char RANGER_CONFIG_COLOR[] = "gray90";
 static const char RANGER_GEOM_COLOR[] = "orange";
 
 Option StgModelRanger::showRangerData( "Show Ranger Data", "show_ranger", "", true );
+Option StgModelRanger::showRangerTransducers( "Show Ranger transducer locations", "show_ranger_transducers", "", false );
 
 
 StgModelRanger::StgModelRanger( StgWorld* world, 
@@ -139,6 +140,7 @@ StgModelRanger::StgModelRanger( StgWorld* world,
 	}
 	
 	registerOption( &showRangerData );
+	registerOption( &showRangerTransducers );
 }
 
 StgModelRanger::~StgModelRanger()
@@ -314,22 +316,38 @@ void StgModelRanger::Print( char* prefix )
 
 void StgModelRanger::DataVisualize( void )
 {
-	if ( !showRangerData )
-		return;
-	
 	if( ! (samples && sensors && sensor_count) )
 		return;
 
-	// if all models have the same number of sensors, this is fast
-	// as it will probably not use a system call or cause a cache
-	// miss
+	if( showRangerTransducers )
+	  {
+		 glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		 PushColor( 0,0,0,1 );
+		 
+		 for( unsigned int s=0; s<sensor_count; s++ ) 
+			{ 
+			  if( samples[s] > 0.0 ) 
+				 { 
+					stg_ranger_sensor_t* rngr = &sensors[s];
+
+					glPointSize( 4 );
+					glBegin( GL_POINTS );
+					glVertex3f( rngr->pose.x, rngr->pose.y, rngr->pose.z );
+					glEnd();
+				 }
+			}
+		 PopColor();
+	  }
+
+	if ( !showRangerData )
+		return;
+	
+	// if all models have the same number of sensors, this is fast as
+	// it will probably not use a system call
 	static float* pts = NULL;
 	size_t memsize =  9 * sensor_count * sizeof(float);
 	pts = (float*)g_realloc( pts, memsize );
 	bzero( pts, memsize );
-
-	//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	//PushColor( 0,0,0,1 );
 
 	// calculate a triangle for each non-zero sensor range
 	for( unsigned int s=0; s<sensor_count; s++ ) 
@@ -342,11 +360,6 @@ void StgModelRanger::DataVisualize( void )
 			//double dy =  rngr->size.y/2.0;
 			//double dz =  rngr->size.z/2.0;
 
-			// DEBUG: draw a point for the sensor pose
-			glPointSize( 6 );
-			glBegin( GL_POINTS );
-			glVertex3f( rngr->pose.x, rngr->pose.y, rngr->pose.z );
-			glEnd();
 
 			// sensor FOV 
 			double sidelen = samples[s];
@@ -366,9 +379,7 @@ void StgModelRanger::DataVisualize( void )
 			pts[index+8] = rngr->pose.z;
 		}
 	}
-
-	//PopColor();
-
+	
 	// draw the filled triangles in transparent blue
 	glDepthMask( GL_FALSE );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );

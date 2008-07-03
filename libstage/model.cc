@@ -1155,15 +1155,6 @@ void StgModel::DrawPicker( void )
   glPopMatrix(); // drop out of local coords
 }
 
-// void StgModel::BuildDisplayList()
-// {
-//   glNewList( blocks_dl, GL_COMPILE );	
-//   DrawBlocks();
-//   glEndList();
-
-//   rebuild_displaylist = false; // we just did it
-// }
-
 void StgModel::DataVisualize( void )
 {  
   // do nothing
@@ -1173,7 +1164,13 @@ void StgModel::DataVisualizeTree( void )
 {
   PushLocalCoords();
   DataVisualize(); // virtual function overridden by most model types  
+
+  // shift to top of this model
+  glTranslatef( 0,0, geom.size.z );
+
+  // and draw the children
   LISTMETHOD( children, StgModel*, DataVisualizeTree );
+
   PopCoords();
 }
 

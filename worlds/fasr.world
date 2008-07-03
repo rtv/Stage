@@ -21,10 +21,10 @@ paused 1
 # configure the GUI window
 window
 ( 
-  size [ 641.000 480.000 ] 
-  center [-0.294 0.114] 
-  rotate [ -52.500 -18.500 ]
-  scale 27.525 
+  size [ 1641.000 953.000 ] 
+  center [0.265 0.145] 
+  rotate [ -57.500 -29.500 ]
+  scale 62.271 
   
   show_data 0
   show_flags 1
@@ -60,7 +60,7 @@ define autorob pioneer2dx
  color "red"
 
  sicklaser( pose [ 0.040 0.000 0.000 ] samples 30 range_max 5 laser_return 2  )
- #camera( pose [ 0.000 0.000 0.000 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )
+ camera( pose [ 0.000 0.000 0.000 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )
  ctrl "fasr"
 
  # say "Autolab"
@@ -68,23 +68,23 @@ define autorob pioneer2dx
 
 
 autorob( pose [4.461 6.406 1.930]  )
-autorob( pose [6.635 6.458 -52.629] )
-autorob( pose [6.385 5.805 -87.082] )
-autorob( pose [7.004 5.327 170.536] )
-autorob( pose [5.770 6.492 -10.539] )
-autorob( pose [7.493 4.852 -156.719] )
-autorob( pose [5.078 6.853 -37.549] )
-autorob( pose [6.147 7.399 4.964] )
-autorob( pose [4.058 5.283 125.796] )
-autorob( pose [7.487 6.926 -40.634] )
+#autorob( pose [6.635 6.458 -52.629] )
+#autorob( pose [6.385 5.805 -87.082] )
+#autorob( pose [7.004 5.327 170.536] )
+#autorob( pose [5.770 6.492 -10.539] )
+#autorob( pose [7.493 4.852 -156.719] )
+#autorob( pose [5.078 6.853 -37.549] )
+#autorob( pose [6.147 7.399 4.964] )
+#autorob( pose [4.058 5.283 125.796] )
+#autorob( pose [7.487 6.926 -40.634] )
 
-autorob( pose [4.530 7.367 -113.456] )
-autorob( pose [6.071 5.138 -1.177] )
-autorob( pose [6.591 4.622 -68.007] )
-autorob( pose [5.454 7.540 135.162] )
-autorob( pose [4.707 5.855 -3.588] )
-autorob( pose [6.714 7.447 -73.332] )
-autorob( pose [5.582 5.724 -48.161] )
-autorob( pose [3.958 6.851 -102.651] )
-autorob( pose [5.127 5.109 23.582] )
-autorob( pose [7.534 5.825 -70.230] )
+#autorob( pose [4.530 7.367 -113.456] )
+#autorob( pose [6.071 5.138 -1.177] )
+#autorob( pose [6.591 4.622 -68.007] )
+#autorob( pose [5.454 7.540 135.162] )
+#autorob( pose [4.707 5.855 -3.588] )
+#autorob( pose [6.714 7.447 -73.332] )
+#autorob( pose [5.582 5.724 -48.161] )
+#autorob( pose [3.958 6.851 -102.651] )
+#autorob( pose [5.127 5.109 23.582] )
+#autorob( pose [7.534 5.825 -70.230] )

@@ -2208,8 +2208,9 @@ private:
   stg_meters_t range_min, range_max;
   stg_radians_t fov;
   uint32_t resolution;
-	
-	static Option showLaserData;
+  
+  static Option showLaserData;
+  static Option showLaserStrikes;
   
 public:
   static const char* typestr;
@@ -2443,6 +2444,7 @@ class StgModelRanger : public StgModel
 	
 	private:
 	static Option showRangerData;
+	static Option showRangerTransducers;
 	
 };
 
