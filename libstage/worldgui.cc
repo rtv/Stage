@@ -462,7 +462,7 @@ void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
     //   instance before the dialog is destroyed
     worldGui->oDlg = NULL; 
     oDlg->hide();
-    //Fl::delete_widget( oDlg );
+    Fl::delete_widget( oDlg );
     return;	
   case OptionsDlg::NO_EVENT:
   case OptionsDlg::CHANGE_ALL:
@@ -609,7 +609,6 @@ void StgWorldGui::updateOptions() {
   }
 	
   drawOptions.assign( options.begin(), options.end() );
-	
   if ( oDlg ) {
     oDlg->setOptions( drawOptions );
   }

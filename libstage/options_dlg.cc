@@ -80,11 +80,11 @@ namespace Stg {
 			check->callback( checkChanged, this );
 		}
 		scroll->end();
+		this->redraw();
 	}
 
 	void OptionsDlg::setOptions( const std::vector<Option*>& opts ) {
-		options.clear();
-		options.insert( options.begin(), opts.begin(), opts.end() );
+		options.assign( opts.begin(), opts.end() );
 		updateChecks();
 	}
 	

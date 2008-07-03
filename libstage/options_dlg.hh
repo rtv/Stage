@@ -16,7 +16,7 @@ namespace Stg {
 
   //class Option;
 
-	class OptionsDlg : protected Fl_Window {
+	class OptionsDlg : public Fl_Window {
 	public:
 		enum event_t { NO_EVENT, CHANGE, CHANGE_ALL, CLOSE };
 		
@@ -43,9 +43,6 @@ namespace Stg {
 	public:
 		OptionsDlg( int x, int y, int w, int h );
 		virtual ~OptionsDlg();
-		void callback( Fl_Callback* cb, void* p ) { Fl_Window::callback( cb, p ); }
-		void show() { Fl_Window::show(); }
-		void hide() { Fl_Window::hide(); }
 		
 		void setOptions( const std::vector<Option*>& opts );
 		void setOptions( const std::set<Option*, Option::optComp>& opts );
