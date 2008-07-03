@@ -36,13 +36,13 @@ namespace Stg {
 	 
 	 if ( check == oDlg->showAllCheck && oDlg->showAll ) {
 		oDlg->status = CHANGE_ALL;
-			oDlg->showAll->Set( check->value() );
+			oDlg->showAll->set( check->value() );
 			oDlg->do_callback();
 			oDlg->status = NO_EVENT;
 	 }
 	 else {
 		int item = oDlg->scroll->find( check );
-		oDlg->options[ item ]->Set( check->value() );
+		oDlg->options[ item ]->set( check->value() );
 			oDlg->changedItem = oDlg->options[ item ];
 			oDlg->status = CHANGE;
 			oDlg->do_callback();

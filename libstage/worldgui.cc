@@ -147,7 +147,7 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) :
 
   mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
   mbar->add( "View/Filter data...", FL_SHIFT + 'd', StgWorldGui::viewOptionsCb, this );
-  canvas->CreateMenuItems( mbar, "View" );
+  canvas->createMenuItems( mbar, "View" );
 
   mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
   mbar->add( "Help/&About Stage...", 0, StgWorldGui::helpAboutCb, this );

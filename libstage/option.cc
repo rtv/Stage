@@ -8,7 +8,8 @@ optName( n ),
 value( v ), 
 wf_token( tok ), 
 shortcut( key ), 
-menu_item( NULL )
+menu( NULL ),
+menuIndex( -1 )
 { }
 
 Option::Option( const Option& o ) : 
@@ -16,13 +17,14 @@ optName( o.optName ),
 value( o.value ), 
 wf_token( o.wf_token ), 
 shortcut( o.shortcut ), 
-menu_item( o.menu_item )
+menu( o.menu ),
+menuIndex( o.menuIndex )
 { }
 
 
 void Option::Load( Worldfile* wf, int section )
 {
-  Set( (bool)wf->ReadInt(section, wf_token.c_str(), value ));
+	set( (bool)wf->ReadInt( section, wf_token.c_str(), value ));
 }
 
 void Option::Save( Worldfile* wf, int section )
@@ -30,32 +32,30 @@ void Option::Save( Worldfile* wf, int section )
   wf->WriteInt(section, wf_token.c_str(), value );
 }
 
-void Option::CreateMenuItem( Fl_Menu_Bar* menu, std::string path )
+void toggleCb( Fl_Widget* w, void* p ) 
 {
-  path = path + "/" + optName;
-  menu->add( path.c_str(), shortcut.c_str(), 
-				 (Fl_Callback*)ToggleCb, this, 
+	//Fl_Menu_* menu = static_cast<Fl_Menu_*>( w );
+	Option* opt = static_cast<Option*>( p );
+	opt->invert();
+}
+
+void Option::createMenuItem( Fl_Menu_Bar* m, std::string path )
+{
+	menu = m;
+	path = path + "/" + optName;
+	// create a menu item and save its index
+	menuIndex = menu->add( path.c_str(), shortcut.c_str(), 
+				 toggleCb, this, 
 				 FL_MENU_TOGGLE | (value ? FL_MENU_VALUE : 0 ) );
-  
-  // find the menu item we just created and store it for later access
-  menu_item = (Fl_Menu_Item*)menu->find_item( path.c_str() );
 }		
 
-void Option::ToggleCb( Fl_Menu_Bar* menubar, Option* opt ) 
+void Option::set( bool val )
 {
-  opt->Invert();
-}
+	value = val;
 
-
-void Option::Invert()
-{
-  Set( !value );
-}
-
-void Option::Set( bool val )
-{
-  value = val;
-
-  if( menu_item )
-	 value ? menu_item->set() : menu_item->clear();
+	if( menu ) {
+		const Fl_Menu_Item* mArr = menu->menu();
+		Fl_Menu_Item* item = const_cast<Fl_Menu_Item*>( &mArr[ menuIndex ] );
+		value ? item->set() : item->clear();
+	}
 }

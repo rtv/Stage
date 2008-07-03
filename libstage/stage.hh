@@ -1961,7 +1961,7 @@ public:
 
   void Screenshot();
   
-  void CreateMenuItems( Fl_Menu_Bar* menu, std::string path );
+  void createMenuItems( Fl_Menu_Bar* menu, std::string path );
   
 	void FixViewport(int W,int H);
 	void DrawFloor(); //simpler floor compared to grid

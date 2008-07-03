@@ -20,38 +20,38 @@ namespace Stg {
 
 	class Option {
 	private:
-	  friend bool compare( const Option* lhs, const Option* rhs );
+		friend bool compare( const Option* lhs, const Option* rhs );
 
-	  std::string optName;
-	  bool value;
-	  /** worldfile entry string for loading and saving this value */
-	  std::string wf_token; 
-	  std::string shortcut;
-	  Fl_Menu_Item* menu_item;
+		std::string optName;
+		bool value;
+		/** worldfile entry string for loading and saving this value */
+		std::string wf_token; 
+		std::string shortcut;
+		Fl_Menu_* menu;
+		int menuIndex;
 	  
 	public:
 		Option( std::string n, std::string tok, std::string key, bool v );	  
 		Option( const Option& o );
 
-	  const std::string name() const { return optName; }
+		const std::string name() const { return optName; }
 		inline bool val() const { return value; }
 		inline operator bool() { return val(); }
 		inline bool operator<( const Option& rhs ) const
 			{ return optName<rhs.optName; } 
-	  void Set( bool val );
-	  void Invert();
+		void set( bool val );
+		void invert() { set( !value ); }
 
-	  // Comparator to dereference Option pointers and compare their strings
-	  struct optComp {
-		 inline bool operator()( const Option* lhs, const Option* rhs ) const
-		 { return lhs->operator<(*rhs); } 
-	  };
-	  
-	  static void ToggleCb( Fl_Menu_Bar* menubar, Option* opt );
+		// Comparator to dereference Option pointers and compare their strings
+		struct optComp {
+			inline bool operator()( const Option* lhs, const Option* rhs ) const
+				{ return lhs->operator<(*rhs); } 
+		};
 
-	  void Load( Worldfile* wf, int section );
-	  void Save( Worldfile* wf, int section );	  
-	  void CreateMenuItem( Fl_Menu_Bar* menu, std::string path );
+
+		void createMenuItem( Fl_Menu_Bar* menu, std::string path );
+		void Load( Worldfile* wf, int section );
+		void Save( Worldfile* wf, int section );	  
 	};
 }
 	

@@ -760,25 +760,25 @@ void StgCanvas::Screenshot()
 }
 
 
-void StgCanvas::CreateMenuItems( Fl_Menu_Bar* menu, std::string path )
+void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
 {
-  showData.CreateMenuItem( menu, path );
-//  visualizeAll.CreateMenuItem( menu, path );
-  showBlocks.CreateMenuItem( menu, path );
-  showFlags.CreateMenuItem( menu, path );
-  showClock.CreateMenuItem( menu, path );
-  showFlags.CreateMenuItem( menu, path );
-  showFollow.CreateMenuItem( menu, path );
-  showFootprints.CreateMenuItem( menu, path );
-  showGrid.CreateMenuItem( menu, path );
-  showStatus.CreateMenuItem( menu, path );
-  perspectiveCam.CreateMenuItem( menu, path );
-  showOccupancy.CreateMenuItem( menu, path );
-  showTrailArrows.CreateMenuItem( menu, path );
-  showTrails.CreateMenuItem( menu, path );
-  showTrailRise.CreateMenuItem( menu, path );  
-  showTree.CreateMenuItem( menu, path );  
-  showScreenshots.CreateMenuItem( menu, path );  
+  showData.createMenuItem( menu, path );
+//  visualizeAll.createMenuItem( menu, path );
+  showBlocks.createMenuItem( menu, path );
+  showFlags.createMenuItem( menu, path );
+  showClock.createMenuItem( menu, path );
+  showFlags.createMenuItem( menu, path );
+  showFollow.createMenuItem( menu, path );
+  showFootprints.createMenuItem( menu, path );
+  showGrid.createMenuItem( menu, path );
+  showStatus.createMenuItem( menu, path );
+  perspectiveCam.createMenuItem( menu, path );
+  showOccupancy.createMenuItem( menu, path );
+  showTrailArrows.createMenuItem( menu, path );
+  showTrails.createMenuItem( menu, path );
+  showTrailRise.createMenuItem( menu, path );  
+  showTree.createMenuItem( menu, path );  
+  showScreenshots.createMenuItem( menu, path );  
 }
 
 
