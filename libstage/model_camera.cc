@@ -159,10 +159,6 @@ void StgModelCamera::Update( void )
 {   
 	GetFrame();
 	StgModel::Update();
-	static float y = 0;
-	y += 0.1;
-//	setYaw( y );
-	setPitch( y );
 }
 
 bool StgModelCamera::GetFrame( void )
