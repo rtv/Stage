@@ -238,16 +238,11 @@ void StgModelCamera::DataVisualize( void )
 	if( _frame_data == NULL || !showCameraData )
 		return;
 
-	// TODO - shift to global CS?
-
 	float w_fov = _camera.horizFov();
 	float h_fov = _camera.vertFov();
 	
-	float center_horiz = - _yaw_offset;
-	float center_vert = - _pitch_offset;
-	
-	float start_fov = center_horiz + w_fov / 2.0 + 180.0; //start at right
-	float start_vert_fov = center_vert + h_fov / 2.0 + 90.0; //start at top
+	float start_fov = w_fov / 2.0 + 180.0; //start at right
+	float start_vert_fov = h_fov / 2.0 + 90.0; //start at top
 		
 	int w = _width;
 	int h = _height;
@@ -266,9 +261,21 @@ void StgModelCamera::DataVisualize( void )
 				ColoredVertex* vertex = _vertexbuf_cache + index;
 				
 				//calculate and cache normal unit vectors of the sphere
-				vertex->x = -sin( dtor( vert_a ) ) * cos( dtor( a ) );
-				vertex->y = -sin( dtor( vert_a ) ) * sin( dtor( a ) );
-				vertex->z = -cos( dtor( vert_a ) );			
+				float x = -sin( dtor( vert_a ) ) * cos( dtor( a ) );
+				float y = -sin( dtor( vert_a ) ) * sin( dtor( a ) );
+				float z = -cos( dtor( vert_a ) );
+				
+				//rotate them about the pitch and yaw offsets - keeping distortion of the sphere at the extremes
+				a = dtor( - _yaw_offset );
+				vertex->x = x * cos( a ) - y * sin( a );
+				vertex->y = x * sin( a ) + y * cos( a );
+				vertex->z = z;
+				
+				x = vertex->x; y = vertex->y; z = vertex->z;
+				a = dtor( _pitch_offset );
+				vertex->x = z * sin( a ) + x * cos( a );
+				vertex->y = y;
+				vertex->z = z * cos( a ) - x * sin( a );
 			}
 		}
 		_valid_vertexbuf_cache = true;
