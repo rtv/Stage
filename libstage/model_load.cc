@@ -1,4 +1,6 @@
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <limits.h> 
 #include <libgen.h> // for dirname()
 #include <string.h>

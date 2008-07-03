@@ -83,7 +83,7 @@ StgModelLaser::StgModelLaser( StgWorld* world,
 		id, typestr );
   
   // sensible laser defaults 
-  interval = DEFAULT_INTERVAL_MS * thousand;
+  interval = DEFAULT_INTERVAL_MS * (int)thousand;
   laser_return = LaserVisible;
 
   stg_geom_t geom;

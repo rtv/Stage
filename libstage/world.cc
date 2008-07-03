@@ -39,7 +39,9 @@ described on the manual page for each model type.
 
  */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 //#define DEBUG 
 

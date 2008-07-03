@@ -2451,7 +2451,7 @@ class StgModelBlinkenlight : public StgModel
 	private:
 		double dutycycle;
 		bool enabled;
-		double period;
+		stg_msec_t period;
 		bool on;
 
 		static Option showBlinkenData;

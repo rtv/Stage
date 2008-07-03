@@ -101,7 +101,9 @@
   - friction).
 */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 //#define DEBUG 0
 #include "stage_internal.hh"

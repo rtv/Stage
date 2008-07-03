@@ -96,9 +96,9 @@ void StgModelCamera::Load( void )
 	
 	_camera.setClip( wf->ReadLength( wf_entity, "nearclip",  _camera.nearClip() ), wf->ReadLength( wf_entity, "farclip",  CAMERA_FAR_CLIP ) );
 
-	_yaw_offset = wf->ReadLength( wf_entity, "yaw", _yaw_offset );
-	_width = wf->ReadLength( wf_entity, "width", _width );
-	_height = wf->ReadLength( wf_entity, "height", _height );
+	_yaw_offset = wf->ReadInt( wf_entity, "yaw", _yaw_offset );
+	_width = wf->ReadInt( wf_entity, "width", _width );
+	_height = wf->ReadInt( wf_entity, "height", _height );
 }
 
 

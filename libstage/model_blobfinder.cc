@@ -162,7 +162,7 @@ void StgModelBlobfinder::Load( void )
 	{
 		RemoveAllColors(); // empty the color list to start from scratch
 
-		unsigned int count = wf->ReadFloat( wf_entity, "colors_count", 0 );
+		unsigned int count = wf->ReadInt( wf_entity, "colors_count", 0 );
 
 		for( unsigned int c=0; c<count; c++ )
 		{
