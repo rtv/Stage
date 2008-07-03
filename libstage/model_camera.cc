@@ -9,6 +9,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #define CAMERA_HEIGHT 0.5
+#define CAMERA_NEAR_CLIP 0.2
 #define CAMERA_FAR_CLIP 8.0
 
 //#define DEBUG 1
@@ -17,6 +18,56 @@
 #include <iomanip>
 
 Option StgModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true );
+
+/**
+ @ingroup model
+ @defgroup model_camera Camera model 
+ The camera model simulates a camera
+ 
+ API: Stg::StgModelCamera
+ 
+ <h2>Worldfile properties</h2>
+ 
+ @par Summary and default values
+ 
+ @verbatim
+ camera
+ (
+ # laser properties
+ width 32
+ height 32
+ range_min 0.0
+ range_max 8.0
+ horizfov 60.0
+ vertfov 60.0
+ yaw 0.0
+ pitch 90.0
+ 
+ # model properties
+ size [0.15 0.15]
+ color "black"
+ watts 100.0 # TODO find watts for sony pan-tilt camera
+ )
+ @endverbatim
+ 
+ @par Details
+ - width int
+ - the number of pixel samples
+ - height int
+ - the number of pixel samples
+ - range_min float
+ -  the minimum range reported by the camera, in meters. Objects closer than this will not be displayed. The smaller the number, the less persision in depth - don't set this value too close to 0.
+ - range_max float
+ - the maximum range reported by the camera, in meters. Objects farther than this will not be displayed.
+ - horizfov float
+ - angle, in degrees, for the horizontal field of view.
+ - vertfov float
+ - angle, in degrees, for the vertical field of view.
+ - yaw float
+ - angle, in degrees, where the camera is panned to.
+ - pitch float
+ - angle, in degrees, where the camera is tilted to.
+ */
 
 //caclulate the corss product, and store results in the first vertex
 void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
@@ -40,13 +91,14 @@ _frame_data( NULL ),
 _frame_color_data( NULL ),
 _valid_vertexbuf_cache( false ),
 _vertexbuf_cache( NULL ),
-_width( 0 ),
-_height( 0 ),
+_width( 32 ),
+_height( 32 ),
 _camera_quads_size( 0 ),
 _camera_quads( NULL ),
 _camera_colors( NULL ),
 _camera(),
-_yaw_offset( 0 )
+_yaw_offset( 0.0 ),
+_pitch_offset( 0.0 )
 
 {
 	PRINT_DEBUG2( "Constructing StgModelCamera %d (%s)\n", 
@@ -62,7 +114,8 @@ _yaw_offset( 0 )
 	_canvas = world_gui->GetCanvas();
 	
 	// Set up sensible defaults
-
+	_camera.setPitch( 90.0 );
+	
 	SetColor( stg_lookup_color( "green" ) );
 
 	stg_geom_t geom;
@@ -92,11 +145,11 @@ void StgModelCamera::Load( void )
 	StgModel::Load();
 	
 	_camera.setFov( wf->ReadLength( wf_entity, "horizfov",  _camera.horizFov() ), wf->ReadLength( wf_entity, "vertfov",  _camera.vertFov() ) );
-	_camera.setPitch( wf->ReadLength( wf_entity, "pitch", _camera.pitch() ) );
 	
-	_camera.setClip( wf->ReadLength( wf_entity, "nearclip",  _camera.nearClip() ), wf->ReadLength( wf_entity, "farclip",  CAMERA_FAR_CLIP ) );
+	_camera.setClip( wf->ReadLength( wf_entity, "range_min",  CAMERA_NEAR_CLIP ), wf->ReadLength( wf_entity, "range_max",  CAMERA_FAR_CLIP ) );
 
-	_yaw_offset = wf->ReadInt( wf_entity, "yaw", _yaw_offset );
+	_yaw_offset = wf->ReadFloat( wf_entity, "yaw", _yaw_offset );
+	_pitch_offset = wf->ReadFloat( wf_entity, "pitch", _pitch_offset );
 	_width = wf->ReadInt( wf_entity, "width", _width );
 	_height = wf->ReadInt( wf_entity, "height", _height );
 }
@@ -106,6 +159,10 @@ void StgModelCamera::Update( void )
 {   
 	GetFrame();
 	StgModel::Update();
+	static float y = 0;
+	y += 0.1;
+//	setYaw( y );
+	setPitch( y );
 }
 
 bool StgModelCamera::GetFrame( void )
@@ -148,6 +205,7 @@ bool StgModelCamera::GetFrame( void )
 	//TODO reposition the camera so it isn't inside the model ( or don't draw the parent when calling renderframe )
 	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, CAMERA_HEIGHT ); //TODO use something smarter than a #define - make it configurable
 	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 - _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
+	_camera.setPitch( 90.0 - _pitch_offset );
 	_camera.Draw();
 	
 	
@@ -183,14 +241,14 @@ void StgModelCamera::DataVisualize( void )
 {
 	if( _frame_data == NULL || !showCameraData )
 		return;
-	
+
 	// TODO - shift to global CS?
 
 	float w_fov = _camera.horizFov();
 	float h_fov = _camera.vertFov();
 	
 	float center_horiz = - _yaw_offset;
-	float center_vert = 0; // - _pitch_offset;
+	float center_vert = - _pitch_offset;
 	
 	float start_fov = center_horiz + w_fov / 2.0 + 180.0; //start at right
 	float start_vert_fov = center_vert + h_fov / 2.0 + 90.0; //start at top
@@ -263,6 +321,7 @@ void StgModelCamera::DataVisualize( void )
 
 		}
 	}
+	
 
 	glEnableClientState( GL_VERTEX_ARRAY );
 	glEnableClientState( GL_COLOR_ARRAY );
@@ -272,23 +331,8 @@ void StgModelCamera::DataVisualize( void )
 	glDrawArrays( GL_QUADS, 0, w * h * 4 );
 	
 	glDisableClientState( GL_COLOR_ARRAY );
-	glDisableClientState( GL_VERTEX_ARRAY );
+//	glDisableClientState( GL_VERTEX_ARRAY ); //TODO FIXME - something is using vertex arrays without properly enabling it
 
-	
-//	glEnd();
-	glEnable(GL_CULL_FACE);
-
-
-	//TODO see if any of this can be used for the new method
-	//TODO: below this point may no longer be needed if we just draw perfectly square quads based off normal
-//	//draw then camera data
-//	glDisable (GL_CULL_FACE);
-//	glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT );
-//	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ); //Can also be GL_FILL - but harder to debug
-//	glInterleavedArrays( GL_C4UB_V3F, 0, vertices );
-//	glDrawElements( GL_QUADS, 4 * w * h, GL_UNSIGNED_SHORT, vertices_index );
-//	glPopClientAttrib();
-//	
 }
 
 void StgModelCamera::Draw( uint32_t flags, StgCanvas* canvas )

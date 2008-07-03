@@ -2497,7 +2497,8 @@ class StgModelCamera : public StgModel
 		static Option showCameraData;
 	
 		StgPerspectiveCamera _camera;
-		int _yaw_offset; //position camera is mounted at
+		float _yaw_offset; //position camera is mounted at
+		float _pitch_offset;
 		
 		///Take a screenshot from the camera's perspective. return: true for sucess, and data is available via FrameDepth() / FrameColor()
 		bool GetFrame();
@@ -2533,6 +2534,12 @@ class StgModelCamera : public StgModel
 	
 		///get a reference to camera color image. 3 bytes (RGB) per pixel
 		inline const GLubyte* FrameColor() const { return _frame_color_data; }
+	
+		///change the pitch
+	inline void setPitch( float pitch ) { _pitch_offset = pitch; _valid_vertexbuf_cache = false; }
+	
+		///change the yaw
+	inline void setYaw( float yaw ) { _yaw_offset = yaw; _valid_vertexbuf_cache = false; }
 };
 
 // POSITION MODEL --------------------------------------------------------
