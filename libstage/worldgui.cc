@@ -348,12 +348,12 @@ void StgWorldGui::fileLoadCb( Fl_Widget* w, void* p )
   StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
 
   const char* filename;
-  const char* worldsPath;
   //bool success;
   const char* pattern = "World Files (*.world)";
 	
-  worldsPath = worldGui->fileMan->worldsRoot().c_str();
-  Fl_File_Chooser fc( worldsPath, pattern, Fl_File_Chooser::CREATE, "Load World File..." );
+	std::string worldsPath( worldGui->fileMan->worldsRoot() );
+	worldsPath.append( "/" );
+  Fl_File_Chooser fc( worldsPath.c_str(), pattern, Fl_File_Chooser::CREATE, "Load World File..." );
   fc.ok_label( "Load" );
 	
   fc.show();
