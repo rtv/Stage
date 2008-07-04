@@ -329,7 +329,7 @@ void StgModelCamera::DataVisualize( void )
 	}
 	
 
-	glEnableClientState( GL_VERTEX_ARRAY );
+	//glEnableClientState( GL_VERTEX_ARRAY );
 	glEnableClientState( GL_COLOR_ARRAY );
 	
 	glVertexPointer( 3, GL_FLOAT, 0, _camera_quads );

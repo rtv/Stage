@@ -874,7 +874,7 @@ void StgCanvas::draw()
       glHint( GL_LINE_SMOOTH_HINT, GL_FASTEST );
       glDepthMask( GL_TRUE );
       glEnable( GL_TEXTURE_2D );
-
+		glEnableClientState( GL_VERTEX_ARRAY );
 
       //TODO find a better home for loading textures
       if( loaded_texture == false ) {

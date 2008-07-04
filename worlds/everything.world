@@ -18,8 +18,8 @@ gui_disable 0
 
 window( 
   size [ 1059.000 541.000 ] 
-  center [-3.707 -1.447] 
-  scale 25.877 # pixels per meter
+  center [-6.333 2.011] 
+  scale 80.217 # pixels per meter
 )
 
 floorplan( 
@@ -47,44 +47,44 @@ define puck model(
 
 puck( pose [-9.114 2.467 -105.501 ] color "red" )
 puck( pose [-9.045 2.624 -37.717 ] color "purple" )
-puck( pose [-8.959 2.752 -461.643 ] color "orange" )
+puck( pose [-8.959 2.752 -101.643 ] color "orange" )
+
+
+ranger( alwayson 1 )
+
+ sicklaser( pose [0.030 0.000 0.000 ] alwayson 1  )
 
 
 # extend the pioneer2dx definition from pioneer.inc
 #
 define trickedoutpioneer pioneer2dx
 (
-  sicklaser( alwayson 1
-    pose [0.030 0.000 0.000 ]
-    fiducial( range_max 8 range_max_id 5 ) 
+	ranger( alwayson 1 )
 
-      blobfinder( alwayson 1
+  sicklaser( pose [0.030 0.000 0.000 ] alwayson 1  )
+
+  fiducial( range_max 8 range_max_id 5 ) 
+
+  blobfinder( 
         channel_count 6 
         channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
+		  alwayson 1
     )
-  )
-
+  
+  #camera( alwayson 1 )
 
   fiducial_return 17
   gripper_return 0
 
   localization "gps"
   localization_origin [ 0 0 0 ]
-
-#  bumper( bcount 3  
-#	  blength 0.2
-#          bpose[0] [0 -0.165  90]
-#          bpose[1] [0  0.165 -90] 
-#          bpose[2] [-0.26  0 0] 
-#	  blength[2] 0.1 # set the length of a single bumper
-#        )
 )
 
 
 trickedoutpioneer
 (
   name "robot1"
-  pose [-10.071 3.186 -722.333]
+  pose [-10.071 3.186 -2.333]
 
   #gripper( pose [0.23 0.000 0.000] color "gray" )
   #speech()
@@ -105,21 +105,21 @@ trickedoutpioneer
   fiducial_return 18	
   color "blue"
   name "p2"
-  pose [-6.009 2.481 -194.220]
+  pose [-6.009 2.481 165.780]
 )
 
 trickedoutpioneer
 (
   color "green"
   name "p3"
-  pose [-6.492 2.156 -199.781]
+  pose [-6.492 2.156 160.219]
 )
 
 trickedoutpioneer
 (
   color "cyan"
   name "p4"
-  pose [-7.641 3.989 -487.216]
+  pose [-7.641 3.989 -127.216]
 )
 
 trickedoutpioneer
@@ -165,5 +165,5 @@ silly(
 
 roomba(
   name "roomba1"
-  pose [-9 0.5 0]
+  pose [-9.000 0.500 0.000]
 )

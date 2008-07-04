@@ -80,9 +80,12 @@ The ranger model allows configuration of the pose, size and view parameters of e
 #include <math.h>
 
 static const stg_watts_t DEFAULT_RANGER_WATTSPERSENSOR = 0.2;
-static const stg_meters_t DEFAULT_RANGER_SIZEX = 0.01;
-static const stg_meters_t DEFAULT_RANGER_SIZEY = 0.04;
-static const stg_meters_t DEFAULT_RANGER_SIZEZ = 0.04;
+static const stg_meters_t DEFAULT_RANGER_SIZEX = 0.4;
+static const stg_meters_t DEFAULT_RANGER_SIZEY = 0.4;
+static const stg_meters_t DEFAULT_RANGER_SIZEZ = 0.05;
+static const stg_meters_t DEFAULT_RANGER_TRANSDUCER_SIZEX = 0.01;
+static const stg_meters_t DEFAULT_RANGER_TRANSDUCER_SIZEY = 0.04;
+static const stg_meters_t DEFAULT_RANGER_TRANSDUCER_SIZEZ = 0.04;
 static const stg_meters_t DEFAULT_RANGER_RANGEMAX = 5.0;
 static const stg_meters_t DEFAULT_RANGER_RANGEMIN = 0.0;
 static const unsigned int DEFAULT_RANGER_RAYCOUNT = 3;
@@ -113,12 +116,16 @@ StgModelRanger::StgModelRanger( StgWorld* world,
 
 	stg_geom_t geom;
 	memset( &geom, 0, sizeof(geom)); // no size
+	geom.size.x = DEFAULT_RANGER_SIZEX;
+	geom.size.y = DEFAULT_RANGER_SIZEY;
+	geom.size.z = DEFAULT_RANGER_SIZEZ;
 	this->SetGeom( geom );
 
 	samples = NULL;
 	sensor_count = DEFAULT_RANGER_SENSORCOUNT;
 	sensors = new stg_ranger_sensor_t[sensor_count];
 
+	// spread the transducers around the ranger's body
 	double offset = MIN(geom.size.x, geom.size.y) / 2.0;
 
 	// create default ranger config
@@ -127,11 +134,11 @@ StgModelRanger::StgModelRanger( StgWorld* world,
 		sensors[c].pose.a = (2.0*M_PI)/sensor_count * c;
 		sensors[c].pose.x = offset * cos( sensors[c].pose.a );
 		sensors[c].pose.y = offset * sin( sensors[c].pose.a );
-		sensors[c].pose.z = 0;//geom.size.z / 2.0; // half way up
+		sensors[c].pose.z = geom.size.z / 2.0; // half way up
 
-		sensors[c].size.x = DEFAULT_RANGER_SIZEX;
-		sensors[c].size.y = DEFAULT_RANGER_SIZEY;
-		sensors[c].size.z = DEFAULT_RANGER_SIZEZ;
+		sensors[c].size.x = DEFAULT_RANGER_TRANSDUCER_SIZEX;
+		sensors[c].size.y = DEFAULT_RANGER_TRANSDUCER_SIZEY;
+		sensors[c].size.z = DEFAULT_RANGER_TRANSDUCER_SIZEZ;
 
 		sensors[c].bounds_range.min = DEFAULT_RANGER_RANGEMIN;
 		sensors[c].bounds_range.max = DEFAULT_RANGER_RANGEMAX;;
@@ -356,11 +363,6 @@ void StgModelRanger::DataVisualize( void )
 		{ 
 			stg_ranger_sensor_t* rngr = &sensors[s];
 
-			//double dx =  rngr->size.x/2.0;
-			//double dy =  rngr->size.y/2.0;
-			//double dz =  rngr->size.z/2.0;
-
-
 			// sensor FOV 
 			double sidelen = samples[s];
 			double da = rngr->fov/2.0;
@@ -384,12 +386,13 @@ void StgModelRanger::DataVisualize( void )
 	glDepthMask( GL_FALSE );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	PushColor( 0, 1, 0, 0.1 ); // transparent pale green       
-	glEnableClientState( GL_VERTEX_ARRAY );
+	//glEnableClientState( GL_VERTEX_ARRAY );
 	glVertexPointer( 3, GL_FLOAT, 0, pts );
 	glDrawArrays( GL_TRIANGLES, 0, 3 * sensor_count );
 
 	// restore state 
 	glDepthMask( GL_TRUE );
+	//glDisableClientState( GL_VERTEX_ARRAY );
 	PopColor();
 }
 

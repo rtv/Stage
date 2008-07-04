@@ -1181,7 +1181,7 @@ void StgModel::DataVisualizeTree( void )
   PushLocalCoords();
   DataVisualize(); // virtual function overridden by most model types  
 
-  // shift to top of this model
+  // shift to top of this model - why is this not necessary?
   glTranslatef( 0,0, geom.size.z );
 
   // and draw the children

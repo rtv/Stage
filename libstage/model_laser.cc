@@ -318,9 +318,18 @@ void StgModelLaser::DataVisualize( void )
       data_dirty = false;
 
       glNewList( data_dl, GL_COMPILE );
-      
+		//glEnableClientState( GL_VERTEX_ARRAY );     
       glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
       
+      PushColor( 0, 0, 1, 0.5 );
+      
+      glPointSize( 4.0 );
+
+		// DEBUG - draw the origin of the laser beams
+		glBegin( GL_POINTS );
+		glVertex2f( 0,0 );
+		glEnd();
+		
       // pack the laser hit points into a vertex array for fast rendering
       static float* pts = NULL;
       pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float));
@@ -328,9 +337,6 @@ void StgModelLaser::DataVisualize( void )
       pts[0] = 0.0;
       pts[1] = 0.0;
       
-      PushColor( 0, 0, 1, 0.5 );
-      
-      glPointSize( 4.0 );
       
       glVertexPointer( 2, GL_FLOAT, 0, pts );
       
@@ -379,7 +385,7 @@ void StgModelLaser::DataVisualize( void )
       glDepthMask( GL_TRUE );
 
 
-      
+		//glDisableClientState( GL_VERTEX_ARRAY );           
       glEndList();
     }
   

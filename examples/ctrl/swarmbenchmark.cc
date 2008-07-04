@@ -14,10 +14,6 @@
 #include "stage.hh"
 using namespace Stg;
 
-static double minfrontdistance = 0.750;
-static double speed = 0.400;
-static double turnrate = M_PI/3.0;
-
 typedef struct
 {
 	StgModelLaser* laser;
@@ -25,10 +21,10 @@ typedef struct
 	StgModelRanger* ranger;
 } robot_t;
 
-#define VSPEED 0.4 // meters per second
-#define WGAIN 1.0 // turn speed gain
+#define VSPEED 0.5 // meters per second
+#define WGAIN 1.5 // turn speed gain
 #define SAFE_DIST 0.6 // meters
-#define SAFE_ANGLE 0.25 // radians
+#define SAFE_ANGLE 1 // radians
 
 // forward declare
 int RangerUpdate( StgModel* mod, robot_t* robot );
@@ -48,8 +44,8 @@ extern "C" int Init( StgModel* mod )
   robot->ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, robot );
 
   // subscribe to the laser, though we don't use it for navigating
-  robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
-  assert( robot->laser );
+  //robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
+  //assert( robot->laser );
   //robot->laser->Subscribe();
 
   return 0; //ok
@@ -71,6 +67,8 @@ int RangerUpdate( StgModel* mod, robot_t* robot )
 		
 		dx += srange * cos( rgr->sensors[s].pose.a );
 		dy += srange * sin( rgr->sensors[s].pose.a );
+
+		//printf( "sensor %d angle= %.2f\n", s, rgr->sensors[s].pose.a );	 
 	 }
   
   if( (dx == 0) || (dy == 0) )
@@ -84,15 +82,21 @@ int RangerUpdate( StgModel* mod, robot_t* robot )
   double side_speed = 0.0;	   
   double turn_speed = WGAIN * resultant_angle;
   
-  int forward = rgr->sensor_count/2 -1 ;
+  //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
+
+  int forward = 0 ;
   // if the front is clear, drive forwards
-  if( (rgr->samples[forward-1] > SAFE_DIST/5.0) &&
-		(rgr->samples[forward  ] > SAFE_DIST) &&
-		(rgr->samples[forward+1] > SAFE_DIST/5.0) && 
+  if( (rgr->samples[0] > SAFE_DIST) &&
+		(rgr->samples[1] > SAFE_DIST/2.0) &&
+		(rgr->samples[2] > SAFE_DIST/5.0) && 
+		(rgr->samples[15] > SAFE_DIST/2.0) && 
+		(rgr->samples[14] > SAFE_DIST/5.0) && 
 		(fabs( resultant_angle ) < SAFE_ANGLE) )
 	 {
 		forward_speed = VSPEED;
 	 }
+
+  //printf( "forward angle = %.2f\n", rgr->sensors[forward].pose.a );
   
   // 	// send a command to the robot
   // 	stg_velocity_t vel;
