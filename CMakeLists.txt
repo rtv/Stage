@@ -80,6 +80,7 @@ ENDIF (APPLE)
 include_directories( . 
 		     libstage 
 		     replace 
+			 /opt/local/include/
 		     ${GLIB_INCLUDE_DIRS} 
                      ${LIBPNG_INCLUDE_DIRS}
 		     ${CMAKE_INCLUDE_PATH}

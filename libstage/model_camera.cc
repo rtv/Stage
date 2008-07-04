@@ -19,8 +19,8 @@
 
 Option StgModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true );
 
-static const stg_size_t DEFAULT_SIZE = {0.15, 0.15, 0.2 };
-static const char DEFAULT_GEOM_COLOR[] = "blue";
+static const stg_size_t DEFAULT_SIZE = {0.1, 0.07, 0.05 };
+static const char DEFAULT_GEOM_COLOR[] = "black";
 
 /**
  @ingroup model

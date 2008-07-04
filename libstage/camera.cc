@@ -14,8 +14,9 @@
 //perspective camera
 //perspective camera
 StgPerspectiveCamera::StgPerspectiveCamera( void ) : 
-		_x( 0 ), _y( 0 ), _z( 0 ), _pitch( 90 ), _yaw( 0 ), _z_near( 0.2 ), _z_far( 40.0 ), _vert_fov( 40 ), _horiz_fov( 60 ), _aspect( 1.0 )
+		_z_near( 0.2 ), _z_far( 40.0 ), _vert_fov( 40 ), _horiz_fov( 60 ), _aspect( 1.0 )
 {
+	setYaw( 90 );
 }
 
 void StgPerspectiveCamera::move( float x, float y, float z )

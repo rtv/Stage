@@ -1781,11 +1781,23 @@ class GlColorStack
 
 class StgCamera 
 {
+	protected:
+		float _pitch; //left-right (about y)
+		float _yaw; //up-down (about x)
+		float _x, _y, _z;
+	
 	public:
-		StgCamera() { }
+		StgCamera() : _pitch( 0 ), _yaw( 0 ), _x( 0 ), _y( 0 ), _z( 0 ) { }
 		virtual ~StgCamera() { }
 
 		virtual void Draw( void ) const = 0;
+
+		inline float yaw( void ) const { return _yaw; }
+		inline float pitch( void ) const { return _pitch; }
+	
+		inline float x( void ) const { return _x; }
+		inline float y( void ) const { return _y; }
+		inline float z( void ) const { return _z; }
 
 		//TODO data should be passed in somehow else. (at least min/max stuff)
 		//virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const = 0;
@@ -1794,9 +1806,6 @@ class StgCamera
 class StgPerspectiveCamera : public StgCamera
 {
 	private:
-		float _x, _y, _z;
-		float _pitch; //left-right (about y)
-		float _yaw; //up-down (about x)
 
 		float _z_near;
 		float _z_far;
@@ -1826,8 +1835,6 @@ class StgPerspectiveCamera : public StgCamera
 			_aspect = aspect;
 		}
 		inline void setYaw( float yaw ) { _yaw = yaw; }
-		inline float yaw( void ) const { return _yaw; }
-		inline float pitch( void ) const { return _pitch; }
 		inline float horizFov( void ) const { return _horiz_fov; }
 		inline float vertFov( void ) const { return _vert_fov; }
 		inline void addYaw( float yaw ) { _yaw += yaw; }
@@ -1848,13 +1855,10 @@ class StgPerspectiveCamera : public StgCamera
 class StgOrthoCamera : public StgCamera
 {
 	private:
-		float _x, _y, _z;
-		float _pitch; //left-right (about y)
-		float _yaw; //up-down (about x)
 		float _scale;
 
 	public:
-		StgOrthoCamera( void ) : _x( 0 ), _y( 0 ), _z( 0 ), _pitch( 0 ), _yaw( 0 ), _scale( 15 ) { }
+		StgOrthoCamera( void ) : _scale( 15 ) { }
 		virtual void Draw() const;
 		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;
 
@@ -1913,6 +1917,7 @@ class StgCanvas : public Fl_Gl_Window
 private:
   GlColorStack colorstack;
   
+  StgCamera* current_camera;
   StgOrthoCamera camera;
   StgPerspectiveCamera perspective_camera;
   

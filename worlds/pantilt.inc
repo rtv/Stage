@@ -17,6 +17,17 @@ define pantiltcamera camera
 )
 
 #TODO make a fancier model
-#define fancypantiltcamer pantiltcamera
-#(
-#)
+define fancypantiltcamer pantiltcamera
+(
+   blocks 1
+
+  # bottom
+  block[0].points 4
+  block[0].point[0] [ -2.1 0.07 ]
+  block[0].point[1] [ -2.1 -0.07 ]
+  block[0].point[2] [  2.1 -0.07 ]
+  block[0].point[3] [  2.1 0.07 ]
+  block[0].z [0 0.2 ]
+
+
+)

@@ -65,6 +65,7 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
 
   perspective_camera.setPose( -3.0, 0.0, 1.0 );
   perspective_camera.setPitch( 70.0 ); //look down
+  current_camera = &camera;
 	
   startx = starty = 0;
   //panx = pany = stheta = sphi = 0.0;
@@ -925,10 +926,12 @@ void StgCanvas::draw()
       if( perspectiveCam == true ) {
 	perspective_camera.setAspect( static_cast< float >( w() ) / static_cast< float >( h() ) );
 	perspective_camera.SetProjection();
+		  current_camera = &perspective_camera;
       } else {
 	stg_bounds3d_t extent = world->GetExtent();
 	camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
 	camera.Draw();
+		  current_camera = &camera;
       }
 
       // enable vertex arrays

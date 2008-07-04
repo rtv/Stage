@@ -915,9 +915,17 @@ void StgModel::DrawStatus( StgCanvas* canvas )
   // draw speech bubble
   if( say_string )
     {
-      float stheta = -dtor( canvas->camera.getPitch() );
-      float sphi = dtor( canvas->camera.getYaw() );
+      float stheta = -dtor( canvas->current_camera->pitch() );
+      float sphi = dtor( canvas->current_camera->yaw() );
       float scale = canvas->camera.getScale();
+		if( canvas->perspectiveCam == true ) {
+			sphi = atan2(
+						 ( pose.x - canvas->current_camera->x() )
+						 ,
+						 ( pose.y - canvas->current_camera->y() )
+						 );
+			stheta = -stheta;
+		}
 		
       glPushMatrix();
 		
@@ -969,8 +977,16 @@ void StgModel::DrawStatus( StgCanvas* canvas )
 
 void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha )
 {
-  float stheta = -dtor( canvas->camera.getPitch() );
-  float sphi = dtor( canvas->camera.getYaw() );
+  float stheta = -dtor( canvas->current_camera->pitch() );
+  float sphi = dtor( canvas->current_camera->yaw() );
+	if( canvas->perspectiveCam == true ) {
+		sphi = atan2(
+			( pose.x - canvas->current_camera->x() )
+			,
+			( pose.y - canvas->current_camera->y() )
+		);
+		stheta = -stheta;
+	}
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture( GL_TEXTURE_2D, texture_id );
