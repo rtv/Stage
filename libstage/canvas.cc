@@ -696,15 +696,18 @@ void StgCanvas::renderFrame()
 
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
-      colorstack.Push( 0.8,0.8,1.0 ); // pale blue
-      glRectf( -w()/2, -h()/2, -w()/2 +120, -h()/2+20 );
-      colorstack.Pop();
+		std::string clockstr = world->ClockString();
+		if( showFollow == true && last_selection )
+			clockstr.append( " --FOLLOW MODE--" );
 
-      char clockstr[50];
-      world->ClockString( clockstr, 50 );
-
+		int width = clockstr.length() * 7;
+		
+		colorstack.Push( 0.8,0.8,1.0 ); // pale blue
+		glRectf( -w()/2, -h()/2, -w()/2 + width, -h()/2+20 );
+		colorstack.Pop();
+		
       colorstack.Push( 0,0,0 ); // black
-      gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr );
+      gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr.c_str() );
       colorstack.Pop();
 
       glEnable( GL_DEPTH_TEST );

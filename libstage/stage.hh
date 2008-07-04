@@ -2048,7 +2048,7 @@ public:
   
   /** Get human readable string that describes the current simulation
 		time. */
-  void ClockString( char* str, size_t maxlen );
+	std::string ClockString( void );
 
   /** Set the minimum real time interval between world updates, in
 		microeconds. */

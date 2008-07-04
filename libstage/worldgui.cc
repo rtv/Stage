@@ -108,6 +108,8 @@
 #include <FL/Fl_File_Chooser.H>
 
 #include <set>
+#include <sstream>
+#include <iomanip>
 
 // this should be set by CMake
 #ifndef PACKAGE_STRING
@@ -271,7 +273,7 @@ bool StgWorldGui::Update()
 }
 
 
-void StgWorldGui::ClockString( char* str, size_t maxlen )
+std::string StgWorldGui::ClockString()
 {
   const uint32_t usec_per_hour = 360000000;
   const uint32_t usec_per_minute = 60000000;
@@ -290,32 +292,27 @@ void StgWorldGui::ClockString( char* str, size_t maxlen )
   average_real_interval /= INTERVAL_LOG_LEN;
 	
   double localratio = (double)interval_sim / (double)average_real_interval;
+
+	std::ostringstream status_stream;
+	status_stream.fill( '0' );
+	if( hours > 0 )
+		status_stream << hours << "h";
 	
-#ifdef DEBUG
-  if( hours > 0 )
-    snprintf( str, maxlen, "Time: %uh%02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
-	      hours, minutes, seconds, msec,
-	      localratio,
-	      total_subs,
-	      paused ? "--PAUSED--" : "" );
-  else
-    snprintf( str, maxlen, "Time: %02um%02u.%03us\t[%.6f]\tsubs: %d  %s",
-	      minutes, seconds, msec,
-	      localratio,
-	      total_subs,
-	      paused ? "--PAUSED--" : "" );
-#else
-  if( hours > 0 )
-    snprintf( str, maxlen, "%uh%02um%02u.%03us\t[%.2f] %s",
-	      hours, minutes, seconds, msec,
-	      localratio,
-	      paused ? "--PAUSED--" : "" );
-  else
-    snprintf( str, maxlen, "%02um%02u.%03us\t[%.2f] %s",
-	      minutes, seconds, msec,
-	      localratio,
-	      paused ? "--PAUSED--" : "" );
-#endif
+	localratio = 1;
+	
+	status_stream << std::setw( 2 ) << minutes << "m"
+	<< std::setw( 2 ) << seconds << "." << std::setprecision( 3 ) << std::setw( 3 ) << msec << "s ";
+	
+	char str[ 80 ];
+	snprintf( str, 80, "[%.2f]", localratio );
+	status_stream << str;
+
+	
+	if( paused == true )
+		status_stream << " --PAUSED--";
+	
+	
+	return status_stream.str();
 }
 
 void StgWorldGui::DrawTree( bool drawall )
