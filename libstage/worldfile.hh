@@ -268,7 +268,7 @@ protected: FILE* FileOpen(const char *filename, const char* method);
 
   // returns true iff the property exists in the file, so that you can
   // be sure that GetProperty() will work
-  bool PropertyExists( int section, char* token );
+  bool PropertyExists( int section, const char* token );
 
   // Set the value of an property.
   private: void SetPropertyValue( CProperty* property, int index, const char *value);

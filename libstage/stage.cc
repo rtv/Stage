@@ -193,7 +193,7 @@ stg_color_t Stg::stg_lookup_color(const char *name)
 
 	if( file == NULL )
 	{
-		char* searchfiles[] = {
+		const char* searchfiles[] = {
 			"./rgb.txt",
 #ifdef RGBFILE
 			RGBFILE,
@@ -205,7 +205,7 @@ stg_color_t Stg::stg_lookup_color(const char *name)
 				searchfiles[i];
 				i++ )
 		{
-			char* filename = searchfiles[i];
+			const char* filename = searchfiles[i];
 			PRINT_DEBUG1( "Attempting to open \"%s\"", filename );
 			if( (file = fopen( filename, "r")) )
 				break; // opened a file ok - jump out of for loop

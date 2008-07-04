@@ -275,50 +275,52 @@ int StgCanvas::handle(int event)
 		return 1;
 
 	case FL_PUSH: // button pressed
-		StgModel* mod = getModel( startx, starty );
-		startx = Fl::event_x();
-		starty = Fl::event_y();
-		selectedModel = false;
-		switch( Fl::event_button() )
-		{
-		case 1:			
-			if( mod ) { 
-				// clicked a model
-				if ( Fl::event_state( FL_SHIFT ) ) {
-					// holding shift, toggle selection
-					if ( selected( mod ) ) 
-						unSelect( mod );
-					else {
-						select( mod );
-						selectedModel = true; // selected a model
-					}
-				}
-				else {
-					if ( !selected( mod ) ) {
-						// clicked on an unselected model while
-						//  not holding shift, this is the new
-						//  selection
-						unSelectAll();
-						select( mod );
-					}
-					selectedModel = true; // selected a model
-				}
-			}
-			else {
-				// clicked on empty space, unselect all
-				unSelectAll();
-			}
-			return 1;
-		case 3:
-		{
-			// leave selections alone
-			// rotating handled within FL_DRAG
-			return 1;
+	  {
+	    StgModel* mod = getModel( startx, starty );
+	    startx = Fl::event_x();
+	    starty = Fl::event_y();
+	    selectedModel = false;
+	    switch( Fl::event_button() )
+	      {
+	      case 1:			
+		if( mod ) { 
+		  // clicked a model
+		  if ( Fl::event_state( FL_SHIFT ) ) {
+		    // holding shift, toggle selection
+		    if ( selected( mod ) ) 
+		      unSelect( mod );
+		    else {
+		      select( mod );
+		      selectedModel = true; // selected a model
+		    }
+		  }
+		  else {
+		    if ( !selected( mod ) ) {
+		      // clicked on an unselected model while
+		      //  not holding shift, this is the new
+		      //  selection
+		      unSelectAll();
+		      select( mod );
+		    }
+		    selectedModel = true; // selected a model
+		  }
 		}
-		default:
-			return 0;
-		}    
-
+		else {
+		  // clicked on empty space, unselect all
+		  unSelectAll();
+		}
+		return 1;
+	      case 3:
+		{
+		  // leave selections alone
+		  // rotating handled within FL_DRAG
+		  return 1;
+		}
+	      default:
+		return 0;
+	      }    
+	  }
+	  
 	case FL_DRAG: // mouse moved while button was pressed
 	{
 		int dx = Fl::event_x() - startx;
@@ -964,7 +966,6 @@ void StgCanvas::draw()
 
       glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     }            
-
 	
   if( perspectiveCam == true ) {
     if( showFollow  && last_selection ) {

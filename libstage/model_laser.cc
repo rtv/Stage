@@ -77,11 +77,11 @@ Option StgModelLaser::showLaserStrikes( "Show Laser Data", "show_laser_strikes",
 */
 
 StgModelLaser::StgModelLaser( StgWorld* world, 
-										StgModel* parent )
+			      StgModel* parent )
   : StgModel( world, parent, MODEL_TYPE_LASER )
 {
   PRINT_DEBUG2( "Constructing StgModelLaser %d (%s)\n", 
-					 id, typestr );
+		id, typestr );
   
   // sensible laser defaults 
   interval = DEFAULT_INTERVAL_MS * (int)thousand;
@@ -157,8 +157,8 @@ void StgModelLaser::SetConfig( stg_laser_cfg_t cfg )
 }
 
 static bool laser_raytrace_match( StgBlock* testblock, 
-											 StgModel* finder,
-											 const void* dummy )
+				  StgModel* finder,
+				  const void* dummy )
 {
   // Ignore the model that's looking and things that are invisible to
   // lasers
@@ -188,20 +188,20 @@ void StgModelLaser::Update( void )
       rayorg.a = bearing;
 
       Raytrace( rayorg, 
-					 range_max,
-					 laser_raytrace_match,
-					 NULL,
-					 &sample,
-					 true ); // z testing enabled
+		range_max,
+		laser_raytrace_match,
+		NULL,
+		&sample,
+		true ); // z testing enabled
 		
       samples[t].range = sample.range;
 
       // if we hit a model and it reflects brightly, we set
       // reflectance high, else low
       if( sample.block && ( sample.block->Model()->GetLaserReturn() >= LaserBright ) )	
-		  samples[t].reflectance = 1;
+	samples[t].reflectance = 1;
       else
-		  samples[t].reflectance = 0;
+	samples[t].reflectance = 0;
 
       // todo - lower bound on range      
       bearing += sample_incr;
@@ -211,22 +211,22 @@ void StgModelLaser::Update( void )
   if( resolution > 1 )
     {
       for( unsigned int t=resolution; t<sample_count; t+=resolution )
-		  for( unsigned int g=1; g<resolution; g++ )
-			 {
-				if( t >= sample_count )
-				  break;
+	for( unsigned int g=1; g<resolution; g++ )
+	  {
+	    if( t >= sample_count )
+	      break;
 
-				// copy the rightmost sample data into this point
-				memcpy( &samples[t-g],
-						  &samples[t-resolution],
-						  sizeof(stg_laser_sample_t));
+	    // copy the rightmost sample data into this point
+	    memcpy( &samples[t-g],
+		    &samples[t-resolution],
+		    sizeof(stg_laser_sample_t));
 
-				double left = samples[t].range;
-				double right = samples[t-resolution].range;
+	    double left = samples[t].range;
+	    double right = samples[t-resolution].range;
 
-				// linear range interpolation between the left and right samples
-				samples[t-g].range = (left-g*(left-right)/resolution);
-			 }
+	    // linear range interpolation between the left and right samples
+	    samples[t-g].range = (left-g*(left-right)/resolution);
+	  }
     }
 
   data_dirty = true;
@@ -310,7 +310,7 @@ void StgModelLaser::DataVisualize( void )
   if ( ! (showLaserData || showLaserStrikes) )
     return;
     
-	glPushMatrix();
+  glPushMatrix();
 	
   // we only regenerate the list if there's new data
   if( 1 /* (temp hack) data_dirty*/ )
@@ -318,17 +318,14 @@ void StgModelLaser::DataVisualize( void )
       data_dirty = false;
 
       glNewList( data_dl, GL_COMPILE );
-		//glEnableClientState( GL_VERTEX_ARRAY );     
+      //glEnableClientState( GL_VERTEX_ARRAY );     
       glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
-      
-      PushColor( 0, 0, 1, 0.5 );
-      
-      glPointSize( 4.0 );
-
-		// DEBUG - draw the origin of the laser beams
-		glBegin( GL_POINTS );
-		glVertex2f( 0,0 );
-		glEnd();
+            
+      // DEBUG - draw the origin of the laser beams
+      //glPointSize( 4.0 );
+      //glBegin( GL_POINTS );
+      //glVertex2f( 0,0 );
+      //glEnd();
 		
       // pack the laser hit points into a vertex array for fast rendering
       static float* pts = NULL;
@@ -337,59 +334,48 @@ void StgModelLaser::DataVisualize( void )
       pts[0] = 0.0;
       pts[1] = 0.0;
       
-      
-      glVertexPointer( 2, GL_FLOAT, 0, pts );
-      
+      PushColor( 0, 0, 1, 0.5 );
+
       for( unsigned int s=0; s<sample_count; s++ )
-		  {
-			 double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
-			 pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
-			 pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
+	{
+	  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
+	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
 	  
-			 // if the sample is unusually bright, draw a little blob
-			 if( samples[s].reflectance > 0 )
-				{
-				  glBegin( GL_POINTS );
-				  glVertex2f( pts[2*s+2], pts[2*s+3] );
-				  glEnd();
-	      
-				  // why doesn't this work?
-				  //glDrawArrays( GL_POINTS, 2*s+2, 1 );
-				}
+	  // if the sample is unusually bright, draw a little blob
+	  if( samples[s].reflectance > 0 )
+	    {
+	      glBegin( GL_POINTS );
+	      glVertex2f( pts[2*s+2], pts[2*s+3] );
+	      glEnd();
+	    }
 			 
-		  }
+	}
       PopColor();
       
-
       glDepthMask( GL_FALSE );
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
       
       // draw the filled polygon in transparent blue
-      PushColor( 0, 0, 1, 0.1 );
-
-		
+      PushColor( 0, 0, 1, 0.1 );		
+      glVertexPointer( 2, GL_FLOAT, 0, pts );      
       glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-  
-      // reset
       PopColor();
 
-		if( showLaserStrikes )
-		  {
-			 // draw the beam strike points in black
-			 PushColor( 0, 0, 0, 1.0 );
-			 glPointSize( 1.0 );
-			 glDrawArrays( GL_POINTS, 0, sample_count+1 );
-			 PopColor();
-		  }
+      if( showLaserStrikes )
+	{
+	  // draw the beam strike points in black
+	  PushColor( 0, 0, 0, 1.0 );
+	  glPointSize( 1.0 );
+	  glDrawArrays( GL_POINTS, 0, sample_count+1 );
+	  PopColor();
+	}
 
       glDepthMask( GL_TRUE );
-
-
-		//glDisableClientState( GL_VERTEX_ARRAY );           
       glEndList();
     } // end if ( data_dirty )
   
   glCallList( data_dl );
 	    
-	glPopMatrix();
+  glPopMatrix();
 }

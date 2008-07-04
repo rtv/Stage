@@ -1402,7 +1402,7 @@ CProperty* Worldfile::GetProperty(int entity, const char *name)
 }
 
 
-bool Worldfile::PropertyExists( int section, char* token )
+bool Worldfile::PropertyExists( int section, const char* token )
 {
   return( this->GetProperty( section, token ) ? true : false );
 }

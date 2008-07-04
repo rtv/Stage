@@ -170,12 +170,11 @@ void StgModelPosition::Load( void )
 	// specified
 	est_origin = this->GetGlobalPose();
 
-	keyword = "localization_origin";
 	if( wf->PropertyExists( wf_entity, keyword ) )
 	{  
-		est_origin.x = wf->ReadTupleLength( wf_entity, keyword, 0, est_origin.x );
-		est_origin.y = wf->ReadTupleLength( wf_entity, keyword, 1, est_origin.y );
-		est_origin.a = wf->ReadTupleAngle( wf_entity,keyword, 2, est_origin.a );
+		est_origin.x = wf->ReadTupleLength( wf_entity, "localization_origin", 0, est_origin.x );
+		est_origin.y = wf->ReadTupleLength( wf_entity, "localization_origin", 1, est_origin.y );
+		est_origin.a = wf->ReadTupleAngle( wf_entity, "localization_origin", 2, est_origin.a );
 
 		// compute our localization pose based on the origin and true pose
 		stg_pose_t gpose = this->GetGlobalPose();
@@ -195,15 +194,14 @@ void StgModelPosition::Load( void )
 	}
 
 	// odometry model parameters
-	keyword = "odom_error";
 	if( wf->PropertyExists( wf_entity, keyword ) )
 	{
 		integration_error.x = 
-			wf->ReadTupleLength( wf_entity, keyword, 0, integration_error.x );
+			wf->ReadTupleLength( wf_entity, "odom_error", 0, integration_error.x );
 		integration_error.y = 
-			wf->ReadTupleLength( wf_entity, keyword, 1, integration_error.y );
+			wf->ReadTupleLength( wf_entity, "odom_error", 1, integration_error.y );
 		integration_error.a 
-			= wf->ReadTupleAngle( wf_entity, keyword, 2, integration_error.a );
+			= wf->ReadTupleAngle( wf_entity, "odom_error", 2, integration_error.a );
 	}
 
 	// choose a localization model

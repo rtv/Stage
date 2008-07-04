@@ -14,13 +14,13 @@ void interact( StgWorldGui* wg )
   wg->Update();
 }
 
-void test( char* str, double a, double b )
+void test( const char* str, double a, double b )
 {
   if( fabs(a-b) > epsilon )
 	 printf( "FAIL %s expected %.3f saw %.3f\n", str, a, b );  
 }
 
-void test( char* str, stg_pose_t a, stg_pose_t b )
+void test( const char* str, stg_pose_t a, stg_pose_t b )
 {
   if( fabs(a.x-b.x) > epsilon )
 	 printf( "POSE FAIL %s expected pose.x %.3f saw pose.x %.3f\n", str, a.x, b.x );  

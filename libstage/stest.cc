@@ -25,8 +25,8 @@ typedef struct
 	StgModelLaser* laser;
 	StgModelPosition* position;
 	StgModelRanger* ranger;
-	StgModelFiducial* fiducial;
-	StgModelBlobfinder* blobfinder;
+  //StgModelFiducial* fiducial;
+  //StgModelBlobfinder* blobfinder;
 } robot_t;
 
 #define VSPEED 0.4 // meters per second
@@ -58,16 +58,16 @@ int main( int argc, char* argv[] )
 
 	for( int i=0; i<POPSIZE; i++ )
 	{
-		char* base = "r";
+		const char* base = "r";
 		sprintf( namebuf, "%s%d", base, i );
 		robots[i].position = (StgModelPosition*)world.GetModel( namebuf );
 		assert(robots[i].position);
 		robots[i].position->Subscribe();
 
-		robots[i].laser = (StgModelLaser*)
-			robots[i].position->GetUnsubscribedModelOfType( "laser" );	 
-		assert(robots[i].laser);
-		robots[i].laser->Subscribe();
+	// 	robots[i].laser = (StgModelLaser*)
+// 		robots[i].position->GetUnsubscribedModelOfType( MODEL_TYPE_LASER );	 
+// 		assert(robots[i].laser);
+		//robots[i].laser->Subscribe();
 
 		//        robots[i].fiducial = (StgModelFiducial*)
 		// 	 robots[i].position->GetUnsubscribedModelOfType( "fiducial" );	 
@@ -75,7 +75,7 @@ int main( int argc, char* argv[] )
 		//        robots[i].fiducial->Subscribe();
 
 		robots[i].ranger = (StgModelRanger*)
-			robots[i].position->GetUnsubscribedModelOfType( "ranger" );
+			robots[i].position->GetUnsubscribedModelOfType( MODEL_TYPE_RANGER );
 		assert(robots[i].ranger);
 		robots[i].ranger->Subscribe();
 
@@ -86,11 +86,10 @@ int main( int argc, char* argv[] )
 	}
 
 	// start the clock
-	//world.Start();
-	//puts( "done" );
+	//world.Start();readltime	//puts( "done" );
 
-	while( ! world.TestQuit() )
-		if( world.RealTimeUpdate() )
+	while( 1 )
+		if( world.Update() )
 			//   if( world.Update() )
 			for( int i=0; i<POPSIZE; i++ )
 			{

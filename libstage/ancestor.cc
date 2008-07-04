@@ -28,9 +28,17 @@ void StgAncestor::AddChild( StgModel* mod )
   
   // poke a name into the child  
   char* buf = new char[TOKEN_MAX];	
-  snprintf( buf, TOKEN_MAX, "%s.%s:%d", 
-				token, typetable[mod->type].token, child_type_counts[mod->type] );
-  
+
+  if( token ) // if this object has a name, use it
+    snprintf( buf, TOKEN_MAX, "%s.%s:%d", 
+	      token, 
+	      typetable[mod->type].token, 
+	      child_type_counts[mod->type] );
+  else
+    snprintf( buf, TOKEN_MAX, "%s:%d", 
+	      typetable[mod->type].token, 
+	      child_type_counts[mod->type] );
+    
   //printf( "%s generated a name for my child %s\n", token, buf );
 
   mod->SetToken( buf );

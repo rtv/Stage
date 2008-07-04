@@ -115,12 +115,17 @@
 #endif
 
 StgWorldGui::StgWorldGui(int W,int H,const char* L) : 
-  Fl_Window(W,H,L)
+  Fl_Window(W,H,L )
 {
   //size_range( 100,100 ); // set minimum window size
   oDlg = NULL;
   graphics = true;
   paused = false;
+
+  // improve the title bar to say "Stage: <worldfile name>"
+  std::string title = "Stage: ";
+  title += L;
+  label( title.c_str() );
 
   interval_real = (stg_usec_t)thousand * DEFAULT_INTERVAL_REAL;
 	
@@ -128,7 +133,7 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) :
     this->interval_log[i] = this->interval_real;
 
   // build the menus
-  mbar = new Fl_Menu_Bar(0,0, W, 30);// 640, 30);
+  mbar = new Fl_Menu_Bar(0,0, W, 30);
   mbar->textsize(12);
 
   canvas = new StgCanvas( this,0,30,W,H-30 );
@@ -165,6 +170,7 @@ StgWorldGui::~StgWorldGui()
     delete oDlg;
   delete canvas;
 }
+
 
 void StgWorldGui::Load( const char* filename )
 {
