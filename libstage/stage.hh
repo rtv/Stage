@@ -1870,6 +1870,12 @@ class StgOrthoCamera : public StgCamera
 			//adjust for pitch angle
 			y = y / cos( dtor( _pitch ) );
 
+			//don't allow huge values
+			if( y > 100 ) 
+				y = 100;
+			else if( y < -100 ) 
+				y = -100;
+
 			//adjust for yaw angle
 			_x += cos( dtor( _yaw ) ) * x;
 			_y += -sin( dtor( _yaw ) ) * x;
