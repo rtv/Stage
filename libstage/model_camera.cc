@@ -19,6 +19,9 @@
 
 Option StgModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true );
 
+static const stg_size_t DEFAULT_SIZE = {0.15, 0.15, 0.2 };
+static const char DEFAULT_GEOM_COLOR[] = "blue";
+
 /**
  @ingroup model
  @defgroup model_camera Camera model 
@@ -110,18 +113,17 @@ _pitch_offset( 0.0 )
 		printf( "Unable to use Camera Model - it must be run with a GUI world\n" );
 		assert( 0 );
 	}
-	
 	_canvas = world_gui->GetCanvas();
 	
-	// Set up sensible defaults
 	_camera.setPitch( 90.0 );
 	
-	SetColor( stg_lookup_color( "green" ) );
-
 	stg_geom_t geom;
-	memset( &geom, 0, sizeof(geom)); // no size
-	//TODO can't draw this as it blocks the laser
+	memset( &geom, 0, sizeof(geom));
+	geom.size = DEFAULT_SIZE;
 	SetGeom( geom );
+	
+	// set default color
+	SetColor( stg_lookup_color(DEFAULT_GEOM_COLOR));
 	
 	registerOption( &showCameraData );
 
@@ -198,8 +200,9 @@ bool StgModelCamera::GetFrame( void )
 	glViewport( 0, 0, _width, _height );
 	_camera.update();
 	_camera.SetProjection();
+	float height = GetGlobalPose().z;
 	//TODO reposition the camera so it isn't inside the model ( or don't draw the parent when calling renderframe )
-	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, CAMERA_HEIGHT ); //TODO use something smarter than a #define - make it configurable
+	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, height ); //TODO use something smarter than a #define - make it configurable
 	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 - _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
 	_camera.setPitch( 90.0 - _pitch_offset );
 	_camera.Draw();
