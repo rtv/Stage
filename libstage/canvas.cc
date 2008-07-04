@@ -201,12 +201,11 @@ void StgCanvas::CanvasToWorld( int px, int py,
 
 int StgCanvas::handle(int event) 
 {
-
-  switch(event) 
-    {
-    case FL_MOUSEWHEEL:
-      if( selected_models )
+	switch(event) 
 	{
+	case FL_MOUSEWHEEL:
+		if( selected_models )
+		{
 	  // rotate all selected models
 	  for( GList* it = selected_models; it; it=it->next )
 	    {
@@ -214,7 +213,7 @@ int StgCanvas::handle(int event)
 	      mod->AddToPose( 0,0,0, 0.1*(double)Fl::event_dy() );
 	    }
 	  redraw();
-	}
+		}
       else
 	{
 	  if( perspectiveCam == true ) {
@@ -759,6 +758,11 @@ void StgCanvas::Screenshot()
   printf( "Saved %s\n", filename );
 }
 
+void perspectiveCb( Fl_Widget* w, void* p ) 
+{
+	StgCanvas* canvas = static_cast<StgCanvas*>( p );
+	canvas->invalidate();
+}
 
 void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
 {
@@ -773,6 +777,7 @@ void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
   showGrid.createMenuItem( menu, path );
   showStatus.createMenuItem( menu, path );
   perspectiveCam.createMenuItem( menu, path );
+  perspectiveCam.menuCallback( perspectiveCb, this );
   showOccupancy.createMenuItem( menu, path );
   showTrailArrows.createMenuItem( menu, path );
   showTrails.createMenuItem( menu, path );

@@ -29,10 +29,11 @@ namespace Stg {
 		std::string shortcut;
 		Fl_Menu_* menu;
 		int menuIndex;
+		Fl_Callback* menuCb;
+		void* menuCbParam;
 	  
 	public:
 		Option( std::string n, std::string tok, std::string key, bool v );	  
-		Option( const Option& o );
 
 		const std::string name() const { return optName; }
 		inline bool val() const { return value; }
@@ -50,6 +51,8 @@ namespace Stg {
 
 
 		void createMenuItem( Fl_Menu_Bar* menu, std::string path );
+		void menuCallback( Fl_Callback* cb, void* p );
+		static void toggleCb( Fl_Widget* w, void* p );
 		void Load( Worldfile* wf, int section );
 		void Save( Worldfile* wf, int section );	  
 	};
