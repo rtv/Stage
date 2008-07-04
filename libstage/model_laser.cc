@@ -310,6 +310,8 @@ void StgModelLaser::DataVisualize( void )
   if ( ! (showLaserData || showLaserStrikes) )
     return;
     
+	glPushMatrix();
+	
   // we only regenerate the list if there's new data
   if( data_dirty )
     {	    
@@ -383,4 +385,5 @@ void StgModelLaser::DataVisualize( void )
   
   glCallList( data_dl );
 	    
+	glPopMatrix();
 }

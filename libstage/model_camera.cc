@@ -237,16 +237,17 @@ bool StgModelCamera::GetFrame( void )
 
 //TODO create lines outlining camera frustrum, then iterate over each depth measurement and create a square
 void StgModelCamera::DataVisualize( void )
-{
+{	
+	
 	if( _frame_data == NULL || !showCameraData )
 		return;
-
+	
 	float w_fov = _camera.horizFov();
 	float h_fov = _camera.vertFov();
-	
+
 	float start_fov = w_fov / 2.0 + 180.0; //start at right
 	float start_vert_fov = h_fov / 2.0 + 90.0; //start at top
-		
+
 	int w = _width;
 	int h = _height;
 	float a_space = w_fov / w; //degrees between each sample
@@ -284,7 +285,6 @@ void StgModelCamera::DataVisualize( void )
 		_valid_vertexbuf_cache = true;
 	}
 	
-	glTranslatef( 0, 0, CAMERA_HEIGHT / 2.0 );
 	glDisable( GL_CULL_FACE );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	//glBegin( GL_QUADS );
