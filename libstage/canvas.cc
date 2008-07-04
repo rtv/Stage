@@ -197,6 +197,15 @@ void StgCanvas::unSelectAll() {
 void StgCanvas::CanvasToWorld( int px, int py, 
 			       double *wx, double *wy, double* wz )
 {
+	if( px <= 0 )
+		px = 1;
+	else if( px >= w() )
+		px = w() - 1;
+	if( py <= 0 )
+		py = 1;
+	else if( py >= h() )
+		py = h() - 1;
+	
   int viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
 
