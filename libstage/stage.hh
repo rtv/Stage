@@ -1928,8 +1928,7 @@ private:
   StgPerspectiveCamera perspective_camera;
   
   int startx, starty;
-  bool dragging;
-  bool rotating;
+  bool selectedModel;
   GList* selected_models; ///< a list of models that are currently
   ///selected by the user
   StgModel* last_selection; ///< the most recently selected model
@@ -1986,7 +1985,11 @@ public:
 	void CanvasToWorld( int px, int py, 
 			double *wx, double *wy, double* wz );
 
-	StgModel* Select( int x, int y );
+	StgModel* getModel( int x, int y );
+	bool selected( StgModel* mod );
+	void select( StgModel* mod );
+	void unSelect( StgModel* mod );
+	void unSelectAll();
 
 	inline void PushColor( stg_color_t col )
 	{ colorstack.Push( col ); } 

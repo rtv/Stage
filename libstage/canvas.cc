@@ -73,8 +73,6 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   interval = 50; //msec between redraws
 
   graphics = true;
-  dragging = false;
-  rotating = false;
 
   // // start the timer that causes regular redraws
   Fl::add_timeout( ((double)interval/1000), 
@@ -86,12 +84,8 @@ StgCanvas::~StgCanvas()
 {
 }
 
-StgModel* StgCanvas::Select( int x, int y )
+StgModel* StgCanvas::getModel( int x, int y )
 {
-  // TODO XX
-  //return NULL;
-
-	
   // render all models in a unique color
   make_current(); // make sure the GL context is current
   glClearColor ( 1,1,1,1 ); // white
@@ -158,28 +152,45 @@ StgModel* StgCanvas::Select( int x, int y )
   glEnable(GL_DITHER);
   glEnable(GL_BLEND);
   glClearColor ( 0.7, 0.7, 0.8, 1.0);
-
-  if( mod ) // we clicked on a root model
-    {
-      // if it's already selected
-      if( GList* link = g_list_find( selected_models, mod ) )
-	{
-	  // remove it from the selected list
-	  selected_models = 
-	    g_list_remove_link( selected_models, link );
-	  mod->Disable();
-	}			  
-      else      
-	{
-	  last_selection = mod;
-	  selected_models = g_list_prepend( selected_models, mod );
-	  mod->Enable();
-	}
-
-      invalidate();
-    }
-
+  
   return mod;
+}
+
+bool StgCanvas::selected( StgModel* mod ) {
+	if( g_list_find( selected_models, mod ) )
+		return true;
+	else
+		return false;
+}
+
+void StgCanvas::select( StgModel* mod ) {
+	if( mod )
+    {
+		last_selection = mod;
+		selected_models = g_list_prepend( selected_models, mod );
+//		mod->Disable();
+    }
+}
+
+void StgCanvas::unSelect( StgModel* mod ) {
+	if( mod )
+	{
+		if ( GList* link = g_list_find( selected_models, mod ) ) 
+		{
+			// remove it from the selected list
+			selected_models = 
+			g_list_remove_link( selected_models, link );
+//			mod->Enable();
+		}
+	}  
+}
+
+void StgCanvas::unSelectAll() { 
+//	for( GList* it=selected_models; it; it=it->next )
+//		((StgModel*)it->data)->Enable();
+	
+	g_list_free( selected_models );
+	selected_models = NULL;
 }
 
 // convert from 2d window pixel to 3d world coordinates
@@ -207,194 +218,205 @@ int StgCanvas::handle(int event)
 	case FL_MOUSEWHEEL:
 		if( selected_models )
 		{
-	  // rotate all selected models
-	  for( GList* it = selected_models; it; it=it->next )
-	    {
-	      StgModel* mod = (StgModel*)it->data;
-	      mod->AddToPose( 0,0,0, 0.1*(double)Fl::event_dy() );
-	    }
-	  redraw();
+			// rotate all selected models
+			for( GList* it = selected_models; it; it=it->next )
+			{
+				StgModel* mod = (StgModel*)it->data;
+				mod->AddToPose( 0,0,0, 0.1*(double)Fl::event_dy() );
+			}
+			redraw();
 		}
-      else
-	{
-	  if( perspectiveCam == true ) {
-	    perspective_camera.scroll( Fl::event_dy() / 10.0 );
-	  } else {
-	    camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
-	  }
-	  invalidate();
-	  redraw();
-	}
-      return 1;
-
-    case FL_MOVE: // moused moved while no button was pressed
-      if( Fl::event_state( FL_CTRL ) )
-	{          
-	  int dx = Fl::event_x() - startx;
-	  int dy = Fl::event_y() - starty;
-
-	  if( perspectiveCam == true ) {
-	    perspective_camera.addYaw( -dx );
-	    perspective_camera.addPitch( -dy );
-	  } else {
-	    camera.pitch( 0.5 * static_cast<double>( dy ) );
-	    camera.yaw( 0.5 * static_cast<double>( dx ) );
-	  }
-
-	  invalidate();
-	  redraw();
-	}
-      else if( Fl::event_state( FL_ALT ) )
-	{   
-	  int dx = Fl::event_x() - startx;
-	  int dy = Fl::event_y() - starty;
-
-	  if( perspectiveCam == true ) {
-	    perspective_camera.move( -dx, dy, 0.0 );
-	  } else {
-	    camera.move( -dx, dy );
-
-	  }
-	  invalidate();
-
-	}
-
-      startx = Fl::event_x();
-      starty = Fl::event_y();
+		else
+		{
+			if( perspectiveCam == true ) {
+				perspective_camera.scroll( Fl::event_dy() / 10.0 );
+			}
+			else {
+				camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
+			}
+			invalidate();
+			redraw();
+		}
+		return 1;
 			
-      return 1;
+	case FL_MOVE: // moused moved while no button was pressed
+		if( Fl::event_state( FL_CTRL ) )
+		{          
+			int dx = Fl::event_x() - startx;
+			int dy = Fl::event_y() - starty;
 
-    case FL_PUSH: // button pressed
-      switch( Fl::event_button() )
+			if( perspectiveCam == true ) {
+				perspective_camera.addYaw( -dx );
+				perspective_camera.addPitch( -dy );
+			} 
+			else {
+				camera.pitch( 0.5 * static_cast<double>( dy ) );
+				camera.yaw( 0.5 * static_cast<double>( dx ) );
+			}
+			invalidate();
+			redraw();
+		}
+		else if( Fl::event_state( FL_ALT ) )
+		{   
+			int dx = Fl::event_x() - startx;
+			int dy = Fl::event_y() - starty;
+
+			if( perspectiveCam == true ) {
+				perspective_camera.move( -dx, dy, 0.0 );
+			} 
+			else {
+				camera.move( -dx, dy );
+			}
+			invalidate();
+
+		}
+		startx = Fl::event_x();
+		starty = Fl::event_y();
+		return 1;
+
+	case FL_PUSH: // button pressed
+		StgModel* mod = getModel( startx, starty );
+		startx = Fl::event_x();
+		starty = Fl::event_y();
+		selectedModel = false;
+		switch( Fl::event_button() )
+		{
+		case 1:			
+			if( mod ) { 
+				// clicked a model
+				if ( Fl::event_state( FL_SHIFT ) ) {
+					// holding shift, toggle selection
+					if ( selected( mod ) ) 
+						unSelect( mod );
+					else {
+						select( mod );
+						selectedModel = true; // selected a model
+					}
+				}
+				else {
+					if ( !selected( mod ) ) {
+						// clicked on an unselected model while
+						//  not holding shift, this is the new
+						//  selection
+						unSelectAll();
+						select( mod );
+					}
+					selectedModel = true; // selected a model
+				}
+			}
+			else {
+				// clicked on empty space, unselect all
+				unSelectAll();
+			}
+			return 1;
+		case 3:
+		{
+			// leave selections alone
+			// rotating handled within FL_DRAG
+			return 1;
+		}
+		default:
+			return 0;
+		}    
+
+	case FL_DRAG: // mouse moved while button was pressed
 	{
-	case 1:
-	  startx = Fl::event_x();
-	  starty = Fl::event_y();
-	  if( Select( startx, starty ) )
-	    dragging = true;	  
-	  return 1;
-	case 3:
-	  {
-	    startx = Fl::event_x();
-	    starty = Fl::event_y();
-	    if( Select( startx, starty ) )
-	      rotating = true;	  
-	    return 1;
-	  }
+		int dx = Fl::event_x() - startx;
+		int dy = Fl::event_y() - starty;
+
+		if ( Fl::event_state( FL_BUTTON1 ) ) {
+			// Left mouse button drag
+			if ( selectedModel ) {
+				// started dragging on a selected model
+				
+				double sx,sy,sz;
+				CanvasToWorld( startx, starty,
+							  &sx, &sy, &sz );
+				double x,y,z;
+				CanvasToWorld( Fl::event_x(), Fl::event_y(),
+							  &x, &y, &z );
+				// move all selected models to the mouse pointer
+				for( GList* it = selected_models; it; it=it->next )
+				{
+					StgModel* mod = (StgModel*)it->data;
+					mod->AddToPose( x-sx, y-sy, 0, 0 );
+				}
+			}
+			else {
+				// started dragging on empty space or an
+				//  unselected model, move the canvas
+				camera.move( -dx, dy );
+				invalidate(); // so the projection gets updated
+			}
+		}
+		else if ( Fl::event_state( FL_BUTTON3 ) ) {
+				// rotate all selected models
+				for( GList* it = selected_models; it; it=it->next )
+				{
+					StgModel* mod = (StgModel*)it->data;
+					mod->AddToPose( 0,0,0, 0.05*dx );
+				}
+		}
+		
+		startx = Fl::event_x();
+		starty = Fl::event_y();
+
+		redraw();
+		return 1;
+	} // end case FL_DRAG
+
+	case FL_RELEASE:   // mouse button released
+		
+		return 1;
+
+	case FL_FOCUS:
+	case FL_UNFOCUS:
+		//.... Return 1 if you want keyboard events, 0 otherwise
+		return 1;
+
+	case FL_KEYBOARD:
+		switch( Fl::event_key() )
+		{
+		case 'p': // pause
+			world->TogglePause();
+			break;
+		case ' ': // space bar
+			camera.resetAngle();
+			//invalidate();
+			if( Fl::event_state( FL_CTRL ) ) {
+				resetCamera();
+			}
+			redraw();
+			break;			
+		case FL_Left:
+			if( perspectiveCam == false ) { camera.move( -10, 0 ); } 
+			else { perspective_camera.strafe( -0.5 ); } break;
+		case FL_Right: 
+			if( perspectiveCam == false ) {camera.move( 10, 0 ); } 
+			else { perspective_camera.strafe( 0.5 ); } break;
+		case FL_Down:  
+			if( perspectiveCam == false ) {camera.move( 0, -10 ); } 
+			else { perspective_camera.forward( -0.5 ); } break;
+		case FL_Up:  
+			if( perspectiveCam == false ) {camera.move( 0, 10 ); } 
+			else { perspective_camera.forward( 0.5 ); } break;
+		default:
+			return 0; // keypress unhandled
+		}
+		
+		invalidate(); // update projection
+		return 1;
+			
+//	case FL_SHORTCUT:
+//		//... shortcut, key is in Fl::event_key(), ascii in Fl::event_text()
+//		//... Return 1 if you understand/use the shortcut event, 0 otherwise...
+//		return 1;
 	default:
-	  return 0;
-	}    
-
-    case FL_DRAG: // mouse moved while button was pressed
-      {
-	int dx = Fl::event_x() - startx;
-	int dy = Fl::event_y() - starty;
-
-	switch( Fl::event_button() )
-	  {
-	  case 1:
-	    if( dragging )
-	      {
-		assert(selected_models);
-
-		double sx,sy,sz;
-		CanvasToWorld( startx, starty,
-			       &sx, &sy, &sz );
-		double x,y,z;
-		CanvasToWorld( Fl::event_x(), Fl::event_y(),
-			       &x, &y, &z );
-
-		// move all selected models to the mouse pointer
-		for( GList* it = selected_models; it; it=it->next )
-		  {
-		    StgModel* mod = (StgModel*)it->data;
-		    mod->AddToPose( x-sx, y-sy, 0, 0 );
-		  }
-	      }
-	    else
-	      {
-		camera.move( -dx, dy );
-		invalidate(); // so the projection gets updated
-	      }
-	    break;	    
-	  case 3: // right button
-	    if( rotating )
-	      {
-		// move all selected models to the mouse pointer
-		for( GList* it = selected_models; it; it=it->next )
-		  {
-		    StgModel* mod = (StgModel*)it->data;
-		    mod->AddToPose( 0,0,0, 0.05*dx );
-		  }
-	      }
-	    break;
-	  }
-      }
-      startx = Fl::event_x();
-      starty = Fl::event_y();
-
-      redraw();
-      return 1; // end case FL_DRAG
-
-    case FL_RELEASE:   // mouse button released
-      // unselect everyone unless shift is pressed
-      if( ! Fl::event_state( FL_SHIFT ) )
-	{
-	  for( GList* it=selected_models; it; it=it->next )
-	    ((StgModel*)it->data)->Enable();
-
-	  g_list_free( selected_models );
-	  selected_models = NULL;
-	  dragging = false;
-	  rotating = false;
-	  redraw();
-	}
-      return 1;
-
-    case FL_FOCUS :
-    case FL_UNFOCUS :
-      //.... Return 1 if you want keyboard events, 0 otherwise
-      return 1;
-    case FL_KEYBOARD:
-      switch( Fl::event_key() )
-	{
-	case 'p': // pause
-	  world->TogglePause();
-	  break;
-	case ' ': // space bar
-	  camera.resetAngle();
-	  //invalidate();
-	  if( Fl::event_state( FL_CTRL ) ) {
-		  resetCamera();
-	  }
-	  redraw();
-	  break;
-	case FL_Left:
-	  if( perspectiveCam == false ) { camera.move( -10, 0 ); } 
-	  else { perspective_camera.strafe( -0.5 ); } break;
-	case FL_Right: 
-	  if( perspectiveCam == false ) {camera.move( 10, 0 ); } 
-	  else { perspective_camera.strafe( 0.5 ); } break;
-	case FL_Down:  
-	  if( perspectiveCam == false ) {camera.move( 0, -10 ); } 
-	  else { perspective_camera.forward( -0.5 ); } break;
-	case FL_Up:  
-	  if( perspectiveCam == false ) {camera.move( 0, 10 ); } 
-	  else { perspective_camera.forward( 0.5 ); } break;
-	default:
-	  return 0; // keypress unhandled
-	}
-      invalidate(); // update projection
-      return 1;
-      //case FL_SHORTCUT:
-      ///... shortcut, key is in Fl::event_key(), ascii in Fl::event_text()
-      // ... Return 1 if you understand/use the shortcut event, 0 otherwise...
-      //return 1;
-    default:
-      // pass other events to the base class...
-      //printf( "EVENT %d\n", event );
-      return Fl_Gl_Window::handle(event);
-    }
+		// pass other events to the base class...
+		//printf( "EVENT %d\n", event );
+		return Fl_Gl_Window::handle(event);
+			
+    } // end switch( event )
 }
 
 void StgCanvas::FixViewport(int W,int H) 
@@ -595,15 +617,17 @@ void StgCanvas::renderFrame()
   
   // draw the model-specific visualizations
 	if( showData ) {
-		GList* it;
-		if ( visualizeAll )
-			it = world->StgWorld::children;
-		else
-			it = selected_models;
-			for( ; it; it=it->next ) 
+		if ( visualizeAll ) {
+			for( GList* it = world->StgWorld::children; it; it=it->next ) 
 				((StgModel*)it->data)->DataVisualizeTree();
-
-		
+		}
+		else if ( selected_models ) {
+			for( GList* it = selected_models; it; it=it->next ) 
+				((StgModel*)it->data)->DataVisualizeTree();
+		}
+		else if ( last_selection ) {
+			last_selection->DataVisualizeTree();
+		}
 	}
   
   if( showGrid ) 
