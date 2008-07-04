@@ -313,7 +313,7 @@ void StgModelLaser::DataVisualize( void )
 	glPushMatrix();
 	
   // we only regenerate the list if there's new data
-  if( data_dirty )
+  if( 1 /* (temp hack) data_dirty*/ )
     {	    
       data_dirty = false;
 
@@ -387,7 +387,7 @@ void StgModelLaser::DataVisualize( void )
 
 		//glDisableClientState( GL_VERTEX_ARRAY );           
       glEndList();
-    }
+    } // end if ( data_dirty )
   
   glCallList( data_dl );
 	    
