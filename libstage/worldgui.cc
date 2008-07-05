@@ -119,10 +119,16 @@
 #include <sstream>
 #include <iomanip>
 
-// this should be set by CMake
-#ifndef PACKAGE_STRING
-#define PACKAGE_STRING "Stage-3.dev"
-#endif
+
+static  const char* AboutText = 
+  "\n" 
+  "Part of the Player Project\n"
+  "http://playerstage.org\n"
+  "\n"
+  "Copyright 2000-2008 Richard Vaughan, Brian Gerkey, "
+  "Andrew Howard, Reed Hedges, Toby Collett, "
+  "Alex Couture-Beil, Jeremy Asher "
+  "and contributors";
 
 StgWorldGui::StgWorldGui(int W,int H,const char* L) : 
   Fl_Window(W,H,L )
@@ -133,7 +139,8 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) :
   paused = false;
 
   // improve the title bar to say "Stage: <worldfile name>"
-  std::string title = "Stage: ";
+  std::string title = PROJECT;
+  title += ": ";
   title += L;
   label( title.c_str() );
 
@@ -506,8 +513,8 @@ void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p )
 
   fl_register_images();
 	
-  const int Width = 400;
-  const int Height = 220;
+  const int Width = 420;
+  const int Height = 300;
   const int Spc = 10;
   const int ButtonH = 25;
   const int ButtonW = 60;
@@ -531,16 +538,13 @@ void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p )
   textDisplay->box( FL_NO_BOX );
   textDisplay->color( win->color() );
   win->callback( aboutCloseCb, textDisplay );
-	
-  const char* AboutText = 
-    "\n" 
-    "Part of the Player Project\n"
-    "http://playerstage.sourceforge.net\n"
-    "Copyright 2000-2008 Richard Vaughan and contributors";
-	
+		
   Fl_Text_Buffer* tbuf = new Fl_Text_Buffer;
-  tbuf->text( PACKAGE_STRING );
+  tbuf->text( PROJECT );
+  tbuf->append( "-" );
+  tbuf->append( VERSION );
   tbuf->append( AboutText );
+  textDisplay->wrap_mode( true, 50 );
   textDisplay->buffer( tbuf );
 	
   Fl_Return_Button* button;
