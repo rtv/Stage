@@ -93,7 +93,9 @@ StgModel* StgCanvas::getModel( int x, int y )
   glClearColor ( 1,1,1,1 ); // white
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
+	glLoadIdentity();
+	current_camera->SetProjection();
+	current_camera->Draw();
 
   glDisable(GL_DITHER);
   glDisable(GL_BLEND); // turns off alpha blending, so we read back
@@ -155,6 +157,8 @@ StgModel* StgCanvas::getModel( int x, int y )
   glEnable(GL_BLEND);
   glClearColor ( 0.7, 0.7, 0.8, 1.0);
   
+	Screenshot();
+	
   return mod;
 }
 
@@ -284,7 +288,6 @@ int StgCanvas::handle(int event)
         clicked_empty_space = ( mod == NULL );
 				  empty_space_startx = startx;
 				  empty_space_starty = starty;
-			std::cout << "clicked: " << startx << " " << Fl::event_x() << std::endl;
 		if( mod ) { 
 		  // clicked a model
 		  if ( Fl::event_state( FL_SHIFT ) ) {

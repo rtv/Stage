@@ -1791,6 +1791,7 @@ class StgCamera
 		virtual ~StgCamera() { }
 
 		virtual void Draw( void ) const = 0;
+		virtual void SetProjection( void ) const = 0;
 
 		inline float yaw( void ) const { return _yaw; }
 		inline float pitch( void ) const { return _pitch; }
@@ -1857,10 +1858,16 @@ class StgOrthoCamera : public StgCamera
 	private:
 		float _scale;
 
+	float _pixels_width;
+	float _pixels_height;
+	float _y_min;
+	float _y_max;
+
 	public:
 		StgOrthoCamera( void ) : _scale( 15 ) { }
 		virtual void Draw() const;
-		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const;
+		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max );
+		virtual void SetProjection( void ) const;
 
 		inline void move( float x, float y ) {
 			//convert screen points into world points

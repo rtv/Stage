@@ -105,16 +105,25 @@ void StgOrthoCamera::Draw( void ) const
 
 }
 
-void StgOrthoCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const
+void StgOrthoCamera::SetProjection( void ) const
 {
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
-
-	glOrtho( -pixels_width/2.0 / _scale, pixels_width/2.0 / _scale,
-			-pixels_height/2.0 / _scale, pixels_height/2.0 / _scale,
-			y_min * _scale * 2, y_max * _scale * 2 );	
-
+	
+	glOrtho( -_pixels_width/2.0 / _scale, _pixels_width/2.0 / _scale,
+			-_pixels_height/2.0 / _scale, _pixels_height/2.0 / _scale,
+			_y_min * _scale * 2, _y_max * _scale * 2 );	
+	
 	glMatrixMode (GL_MODELVIEW);
+}
+
+void StgOrthoCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max )
+{
+	_pixels_width = pixels_width;
+	_pixels_height = pixels_height;
+	_y_min = y_min; 
+	_y_max = y_max;
+	SetProjection();
 }
 
 //TODO re-evaluate the way the camera is shifted when the mouse zooms - it might be possible to simplify
