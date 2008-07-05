@@ -125,10 +125,10 @@ static  const char* AboutText =
   "Part of the Player Project\n"
   "http://playerstage.org\n"
   "\n"
-  "Copyright 2000-2008 Richard Vaughan, Brian Gerkey, "
-  "Andrew Howard, Reed Hedges, Toby Collett, "
-  "Alex Couture-Beil, Jeremy Asher "
-  "and contributors";
+  "Copyright 2000-2008 Richard Vaughan,\n"
+  "  Brian Gerkey, Andrew Howard, Reed Hedges, \n"
+  "  Toby Collett, Alex Couture-Beil, Jeremy Asher \n"
+  "  and contributors";
 
 StgWorldGui::StgWorldGui(int W,int H,const char* L) : 
   Fl_Window(W,H,L )
@@ -544,7 +544,7 @@ void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p )
   tbuf->append( "-" );
   tbuf->append( VERSION );
   tbuf->append( AboutText );
-  textDisplay->wrap_mode( true, 50 );
+  //textDisplay->wrap_mode( true, 50 );
   textDisplay->buffer( tbuf );
 	
   Fl_Return_Button* button;

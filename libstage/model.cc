@@ -176,9 +176,10 @@ StgModel::StgModel( StgWorld* world,
   world->AddModel( this );
   
   bzero( &pose, sizeof(pose));
-  if( parent ) 
-    pose.z = parent->geom.size.z;
+  if( parent) pose.z += parent->geom.size.z;
+
   bzero( &global_pose, sizeof(global_pose));
+  this->gpose_dirty = true;
   
   this->trail = g_array_new( false, false, sizeof(stg_trail_item_t) );
 
@@ -186,7 +187,6 @@ StgModel::StgModel( StgWorld* world,
   this->disabled = false;
   this->blocks = NULL;
   this->rebuild_displaylist = true;
-  this->gpose_dirty = true;
   this->say_string = NULL;
   this->subs = 0;
   this->stall = false;
@@ -1267,6 +1267,9 @@ void StgModel::SetPose( stg_pose_t pose )
 {
   //PRINT_DEBUG5( "%s.SetPose(%.2f %.2f %.2f %.2f)", 
   //	this->token, pose->x, pose->y, pose->z, pose->a );
+
+  if( parent )
+    pose.z += parent->geom.size.z;
 
   // if the pose has changed, we need to do some work
   if( memcmp( &this->pose, &pose, sizeof(stg_pose_t) ) != 0 )
