@@ -1,6 +1,8 @@
 /** canvas.cc
     Implement the main world viewing area in FLTK and OpenGL. 
-    Author: Richard Vaughan (vaughan@sfu.ca)
+    Authors: Richard Vaughan (vaughan@sfu.ca)
+             Alex Couture-Beil (asc17@sfu.ca)
+             Jeremy Asher (jra11@sfu.ca)
     $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
 */
 
@@ -854,7 +856,6 @@ void StgCanvas::Load( Worldfile* wf, int sec )
 
 void StgCanvas::Save( Worldfile* wf, int sec )
 {
-  printf( "canvas save section %d\n", sec  );
   wf->WriteFloat( sec, "scale", camera.getScale() );
   
   wf->WriteTupleFloat( sec, "center", 0, camera.getX() );

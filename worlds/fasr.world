@@ -23,7 +23,7 @@ window
 ( 
   size [ 833.000 605.000 ] 
   center [0.000 0.000] 
-  rotate [ -47.500 -12.500 ]
+  rotate [ -45.500 4.000 ]
   scale 32.344 
   
   show_data 0
@@ -36,7 +36,7 @@ floorplan
   name "cave"
   size3 [16 16 0.6]
   pose [0.000 0.000 0.000]
-  bitmap "bitmaps/cave_compact.png"
+  bitmap "bitmaps/cave.png"
 )
 
 zone
@@ -69,7 +69,7 @@ define autorob pioneer2dx
 )
 
 
-autorob( pose [1.633 4.021 1.930]  )
+autorob( pose [3.273 4.908 1.930]  )
 #autorob( pose [6.635 6.458 -52.629] )
 #autorob( pose [6.385 5.805 -87.082] )
 #autorob( pose [7.004 5.327 170.536] )

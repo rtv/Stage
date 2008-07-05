@@ -7,13 +7,14 @@ define sicklaser laser
   range_min 0.0
   range_max 8.0
   fov 180.0
-  samples 180
+  samples 361
 
   #samples 90 # still useful but much faster to compute
 
   # generic model properties
   color "blue"
-  size [ 0.156 0.155 0.19 ] # dimensions from LMS200 data sheet	
+  size3 [ 0.156 0.155 0.19 ] # dimensions from LMS200 data sheet	
+  pose [ 0 0 0 ]
 )
 
 define fancysicklaser sicklaser

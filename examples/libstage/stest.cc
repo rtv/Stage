@@ -16,7 +16,6 @@ using namespace Stg;
 
 #include "config.h"
 
-double minfrontdistance = 0.750;
 double speed = 0.400;
 double turnrate = M_PI/3.0;
 
@@ -31,7 +30,7 @@ typedef struct
 
 #define VSPEED 0.4 // meters per second
 #define WGAIN 1.0 // turn speed gain
-#define SAFE_DIST 0/8 // meters
+#define SAFE_DIST 0.1 // meters
 #define SAFE_ANGLE 0.3 // radians
 
 int main( int argc, char* argv[] )
@@ -64,10 +63,10 @@ int main( int argc, char* argv[] )
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
-        robots[i].laser = (StgModelLaser*)
-        robots[i].position->GetUnsubscribedModelOfType( "laser" );	 
-        assert(robots[i].laser);
-        robots[i].laser->Subscribe();
+//         robots[i].laser = (StgModelLaser*)
+//         robots[i].position->GetUnsubscribedModelOfType( "laser" );	 
+//         assert(robots[i].laser);
+//         robots[i].laser->Subscribe();
 
 //        robots[i].fiducial = (StgModelFiducial*)
 // 	 robots[i].position->GetUnsubscribedModelOfType( "fiducial" );	 

@@ -1,3 +1,11 @@
+/** worldgui.cc
+    Implement a subclass of StgWorld that has an FLTK and OpenGL GUI
+    Authors: Richard Vaughan (vaughan@sfu.ca)
+             Alex Couture-Beil (asc17@sfu.ca)
+             Jeremy Asher (jra11@sfu.ca)
+    $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
+*/
+
 /** @defgroup worldgui World with Graphical User Interface
 
     The Stage window consists of a menu bar, a view of the simulated
@@ -576,21 +584,20 @@ bool StgWorldGui::closeWindowQuery()
 	
   if ( wf ) {
     // worldfile loaded, ask to save
-    choice = fl_choice("Do you want to save?",
+    choice = fl_choice("Quitting Stage",
 		       "&Cancel", // ->0: defaults to ESC
-		       "&Yes", // ->1
-		       "&No" // ->2
+		       "&Save, then quit", // ->1
+		       "&Quit without saving" // ->2
 		       );
 		
     switch (choice) {
-    case 1: // Yes
-      if ( saveAsDialog() ) {
-	return true;
-      }
-      else {
+    case 1: // Save before quitting
+      if ( saveAsDialog() ) 
+	return true;      
+      else 
 	return false;
-      }
-    case 2: // No
+      
+    case 2: // Quit without saving
       return true;
     }
 		

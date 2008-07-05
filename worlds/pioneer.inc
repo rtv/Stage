@@ -7,8 +7,6 @@
 # The Pioneer2DX sonar array
 define p2dx_sonar ranger
 (
-  #size3 [ 0.40 0.33 0.06 ] # matches the Pioneer 2-DX dimensions
-
   scount 16 # the number of transducers
 
   # define the pose of each transducer [xpos ypos heading]
@@ -52,6 +50,7 @@ define pioneer2dx position
 
   # use the sonar array defined above with a small vertical offset to
   # drop the sensors into the robot body
+
   #p2dx_sonar( pose4 [0.04 0 -0.03 0] ) 
 
   # differential steering model

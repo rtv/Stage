@@ -1,13 +1,18 @@
-SET( PLUGINS lasernoise source fasr sink swarmbenchmark )
 
-ADD_LIBRARY( lasernoise MODULE lasernoise.cc )
-ADD_LIBRARY( source MODULE source.cc )
-ADD_LIBRARY( fasr MODULE fasr.cc )
-ADD_LIBRARY( sink MODULE sink.cc )
-ADD_LIBRARY( swarmbenchmark MODULE swarmbenchmark.cc )
+SET( PLUGINS 
+     expand 
+     fasr 
+     lasernoise 
+     sink 
+     source 
+     wander
+)
 
-# link libstage to each plugin
+
+# create a library module for each plugin and link libstage to each
+
 foreach( PLUGIN ${PLUGINS} )
+  ADD_LIBRARY( ${PLUGIN} MODULE ${PLUGIN}.cc )
   TARGET_LINK_LIBRARIES( ${PLUGIN} stage )
 endforeach( PLUGIN )
 

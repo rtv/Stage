@@ -11,160 +11,36 @@ include "map.inc"
 # defines sick laser
 include "sick.inc"
 
-# set the resolution of the underlying raytrace model in meters
-resolution 0.02
-
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 10  # real-time interval between simulation updates in milliseconds 
+interval_real 20  # real-time interval between simulation updates in milliseconds 
 
 paused 0
 
 # configure the GUI window
 window
 (
-  size [ 1000.000 1000.000 ] 
-  center [0.019 -0.121]
-  rotate [ 0.000 0.000 ]
-  scale 54.571 
+  size [ 700.000 700.000 ] # in pixels
+  scale 37                 # pixels per meter
+  show_data 1              # 1=on 0=off
 )
 
 # load an environment bitmap
 floorplan
 ( 
   name "cave"
-  size3 [16 16 0.5]
-  pose [0.000 0.000 0.000]
+  size3 [16 16 1.5]
   bitmap "bitmaps/cave.png"
 )
 
-define rob fancypioneer2dx
+pioneer2dx
 (
- fancysicklaser( pose [ 0.040 0.000 0.000 ] samples 32 ) 
+  pose [ -6.5 -6.5 45 ] 
+  sicklaser( )#pose [ 0.040 0.000 0.000 ] ) 
 
- #ctrl "wander"
+  # can refer to the robot by this name
+  name "r0"
+
+  # remove this if you're using Player to control the robot	
+  ctrl "wander" 
 )
-
-
-define redrob rob( color "red" )
-define greenrob rob( color "green" )
-define magentarob rob( color "magenta" )
-define cyanrob rob( color "cyan" )
-define yellowrob rob( color "yellow" )
-define greenrob rob( color "green" )
-define bluerob rob( color "LightBlue" )
-define orangerob rob( color "orange" )
-define purplerob rob( color "purple" )
-define goldrob rob( color "gold" )
-define darkredrob rob( color "DarkRed" )
-
-redrob( pose [-5.845 4.401 158.268] )
-redrob( pose [-5.982 4.979 -52.629] )
-redrob( pose [-6.227 3.735 22.445] )
-redrob( pose [-6.567 4.915 156.191] )
-redrob( pose [-7.089 4.569 -109.062] )
-redrob( pose [-7.606 4.063 89.455] )
-redrob( pose [-7.638 4.786 -164.935] )
-redrob( pose [-5.401 3.923 -103.425] )
-redrob( pose [-6.487 4.205 -57.759] )
-redrob( pose [-6.997 3.895 -57.823] )
-
-bluerob( pose [-6.937 6.565 -113.456] )
-bluerob( pose [-6.243 5.709 -1.177] )
-bluerob( pose [-6.312 6.297 46.585] )
-bluerob( pose [-7.527 6.162 135.162] )
-bluerob( pose [-6.880 5.801 -3.588] )
-bluerob( pose [-7.611 6.835 93.535] )
-bluerob( pose [-7.624 5.532 -35.760] )
-bluerob( pose [-7.100 5.262 -17.538] )
-bluerob( pose [-7.415 7.485 -23.903] )
-bluerob( pose [-6.738 7.157 -17.092] )
-
-greenrob( pose [-4.888 4.831 -97.306] )
-greenrob( pose [-5.545 5.497 2.962] )
-greenrob( pose [-5.419 4.931 -120.224] )
-greenrob( pose [-5.515 5.994 -82.019] )
-greenrob( pose [-4.890 5.974 -143.143] )
-greenrob( pose [-4.826 5.423 54.528] )
-greenrob( pose [-4.401 5.935 70.753] )
-greenrob( pose [-3.658 5.798 0.097] )
-greenrob( pose [-4.059 5.368 -52.433] )
-greenrob( pose [-4.262 4.774 163.390] )
-
-magentarob( pose [-2.623 7.577 -37.146] )
-magentarob( pose [-2.740 6.912 -88.712] )
-magentarob( pose [-2.935 6.326 -17.092] )
-magentarob( pose [-2.114 7.596 160.525] )
-magentarob( pose [-2.193 7.049 108.959] )
-magentarob( pose [-2.271 6.521 -24.723] )
-magentarob( pose [-2.408 6.013 -157.467] )
-magentarob( pose [-3.013 5.759 -54.334] )
-magentarob( pose [-2.525 5.368 -17.092] )
-magentarob( pose [-3.111 5.192 -150.774] )
-
-yellowrob( pose [-7.548 3.355 150.967] )
-yellowrob( pose [-6.961 3.277 108.959] )
-yellowrob( pose [-7.645 2.749 -85.847] )
-yellowrob( pose [-7.039 2.691 153.832] )
-yellowrob( pose [-6.375 3.199 91.770] )
-yellowrob( pose [-6.473 2.651 179.615] )
-yellowrob( pose [-5.769 3.218 120.418] )
-yellowrob( pose [-5.867 2.671 -62.929] )
-yellowrob( pose [-5.261 3.179 -137.413] )
-yellowrob( pose [-5.261 2.573 -62.929] )
-
-goldrob( pose [-1.461 7.643 -32.379] )
-goldrob( pose [-0.849 7.618 63.122] )
-goldrob( pose [-1.527 7.120 80.311] )
-goldrob( pose [-0.921 7.085 60.257] )
-goldrob( pose [-1.484 6.566 156.697] )
-goldrob( pose [-0.899 6.611 162.426] )
-goldrob( pose [-1.716 6.058 -17.092] )
-goldrob( pose [-1.373 5.628 -17.092] )
-goldrob( pose [-1.969 5.606 -17.092] )
-goldrob( pose [-1.683 5.110 -17.092] )
-
-darkredrob( pose [-7.567 2.065 -45.740] )
-darkredrob( pose [-6.883 2.026 -74.388] )
-darkredrob( pose [-6.258 2.007 177.714] )
-darkredrob( pose [-5.398 2.104 176.750] )
-darkredrob( pose [-7.587 1.362 68.852] )
-darkredrob( pose [-6.805 1.381 23.015] )
-darkredrob( pose [-6.121 1.322 -51.469] )
-darkredrob( pose [-5.320 1.322 -120.224] )
-darkredrob( pose [-4.616 1.811 -176.557] )
-darkredrob( pose [-4.577 1.283 -17.092] )
-
-cyanrob( pose [-2.544 4.684 -166.061] )
-cyanrob( pose [-1.919 4.684 55.491] )
-cyanrob( pose [-2.525 4.117 -125.954] )
-cyanrob( pose [-1.919 4.078 -163.196] )
-cyanrob( pose [-2.564 3.472 137.607] )
-cyanrob( pose [-1.958 3.433 -153.638] )
-cyanrob( pose [-2.603 2.866 130.914] )
-cyanrob( pose [-1.958 2.886 149.066] )
-cyanrob( pose [-2.603 2.241 22.052] )
-cyanrob( pose [-1.997 2.202 8.691] )
-
-orangerob( pose [-7.567 0.678 129.012] )
-orangerob( pose [-6.805 0.619 83.176] )
-orangerob( pose [-6.160 0.619 159.562] )
-orangerob( pose [-5.476 0.619 74.581] )
-orangerob( pose [-4.811 0.599 -94.441] )
-orangerob( pose [-7.606 0.130 48.798] )
-orangerob( pose [-6.942 0.033 -5.633] )
-orangerob( pose [-6.336 0.072 -105.900] )
-orangerob( pose [-5.671 0.091 28.745] )
-orangerob( pose [-4.987 0.072 -45.740] )
-
-purplerob( pose [-3.873 1.694 -97.306] )
-purplerob( pose [-3.267 1.694 -177.520] )
-purplerob( pose [-3.912 1.127 -154.602] )
-purplerob( pose [-3.287 1.088 -114.495] )
-purplerob( pose [-4.049 0.599 -97.306] )
-purplerob( pose [-3.424 0.541 137.607] )
-purplerob( pose [-4.069 0.013 -117.360] )
-purplerob( pose [-3.365 -0.007 -60.064] )
-purplerob( pose [-2.623 1.635 -82.982] )
-purplerob( pose [-2.623 1.029 -17.092] )
-
 

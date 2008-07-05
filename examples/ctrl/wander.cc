@@ -11,7 +11,6 @@ typedef struct
 {
   StgModelPosition* pos;
   StgModelLaser* laser;
-  StgModelBlobfinder* blobfinder;
   int avoidcount, randcount;
 } robot_t;
 
@@ -23,26 +22,14 @@ extern "C" int Init( StgModel* mod )
 {
   robot_t* robot = new robot_t;
  
-  robot->pos = (StgModelPosition*)mod;
-
-  robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
-  assert( robot->laser );
-  robot->laser->Subscribe();
-
-  robot->blobfinder = (StgModelBlobfinder*)mod->GetModel( "blobfinder:0" );
-  assert( robot->blobfinder );
-  // robot->blobfinder->Subscribe();
-
   robot->avoidcount = 0;
   robot->randcount = 0;
   
+  robot->pos = (StgModelPosition*)mod;
+  robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
   robot->laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, robot );
-  //robot->pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, robot );
+  robot->laser->Subscribe(); // starts the laser 
 
-  robot->pos->AddFlag( new StgFlag( (stg_color_t)0xFFAA00AA, 1.0));
-  robot->pos->AddFlag( new StgFlag( (stg_color_t)0xFF0000AA, 0.5));
-  robot->pos->AddFlag( new StgFlag( (stg_color_t)0xFFAA0000, 0.2));
-  robot->pos->AddFlag( new StgFlag( (stg_color_t)0xFF00FFFF, 0.1));
   return 0; //ok
 }
 

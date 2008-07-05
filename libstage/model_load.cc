@@ -82,6 +82,7 @@ void StgModel::Load()
       stg_pose_t pose = GetPose();
       pose.x = wf->ReadTupleLength(wf_entity, "pose", 0, pose.x );
       pose.y = wf->ReadTupleLength(wf_entity, "pose", 1, pose.y );
+      pose.z = 0.0;
       pose.a =  wf->ReadTupleAngle(wf_entity, "pose", 2, pose.a );
       this->SetPose( pose );
     }
@@ -380,10 +381,10 @@ void StgModel::Save( void )
   wf->WriteTupleLength( wf_entity, "pose", 1, this->pose.y);
   wf->WriteTupleAngle( wf_entity, "pose", 2, this->pose.a);
 
-  wf->WriteTupleLength( wf_entity, "pose3", 0, this->pose.x);
-  wf->WriteTupleLength( wf_entity, "pose3", 1, this->pose.y);
-  wf->WriteTupleLength( wf_entity, "pose3", 2, this->pose.z);
-  wf->WriteTupleAngle( wf_entity, "pose3", 3, this->pose.a);
+  wf->WriteTupleLength( wf_entity, "pose4", 0, this->pose.x);
+  wf->WriteTupleLength( wf_entity, "pose4", 1, this->pose.y);
+  wf->WriteTupleLength( wf_entity, "pose4", 2, this->pose.z);
+  wf->WriteTupleAngle( wf_entity, "pose4", 3, this->pose.a);
 
   // call any type-specific save callbacks
   this->CallCallbacks( &this->save_hook );
@@ -394,8 +395,8 @@ void StgModel::Save( void )
 
 void StgModel::LoadControllerModule( char* lib )
 {
-  printf( "[Ctrl \"%s\"", lib );
-  fflush(stdout);
+  //printf( "[Ctrl \"%s\"", lib );
+  //fflush(stdout);
 
   /* Initialise libltdl. */
   int errors = lt_dlinit();
@@ -411,7 +412,7 @@ void StgModel::LoadControllerModule( char* lib )
 
   if(( handle = lt_dlopenext( lib ) ))
     {
-      printf( "]" );
+      //printf( "]" );
 
       this->initfunc = (ctrlinit_t*)lt_dlsym( handle, "Init" );
       if( this->initfunc  == NULL )

@@ -46,7 +46,7 @@ int main( int argc,  char* argv[] )
   stg_geom_t geom;
   bzero( &geom, sizeof(geom) );
 
-  if( 0 )
+  if( 1 )
   {
 	 StgModel mod( &world, NULL );
 	 

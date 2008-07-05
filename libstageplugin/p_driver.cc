@@ -170,7 +170,7 @@ extern bool player_quit;
 // init static vars
 StgWorldGui* StgDriver::world = NULL;
 
-int update_request = 0;
+//int update_request = 0;
 
 /* need the extern to avoid C++ name-mangling  */
 extern "C"
@@ -201,7 +201,7 @@ void StgDriver_Register(DriverTable* table)
       puts( copyright_notice );
     }
     
-  table->AddDriver( "stage", StgDriver_Init);
+  table->AddDriver( (char*)"stage", StgDriver_Init);
 }
   
 int player_driver_init(DriverTable* table)

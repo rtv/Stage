@@ -322,10 +322,10 @@ void StgModelLaser::DataVisualize( void )
       glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
             
       // DEBUG - draw the origin of the laser beams
-      //glPointSize( 4.0 );
-      //glBegin( GL_POINTS );
-      //glVertex2f( 0,0 );
-      //glEnd();
+      glPointSize( 4.0 );
+      glBegin( GL_POINTS );
+      glVertex2f( 0,0 );
+      glEnd();
 		
       // pack the laser hit points into a vertex array for fast rendering
       static float* pts = NULL;
