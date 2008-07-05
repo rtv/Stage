@@ -912,52 +912,63 @@ void StgModel::DrawStatusTree( StgCanvas* canvas )
 
 void StgModel::DrawStatus( StgCanvas* canvas ) 
 {
-  // draw speech bubble
-  if( say_string )
-    {
-      float stheta = -dtor( canvas->current_camera->pitch() );
-      float sphi = dtor( canvas->current_camera->yaw() );
-      float scale = canvas->camera.getScale();
-		if( canvas->perspectiveCam == true ) {
-			sphi = atan2(
-						 ( pose.x - canvas->current_camera->x() )
-						 ,
-						 ( pose.y - canvas->current_camera->y() )
-						 );
-			stheta = -stheta;
+	if( say_string )	  
+	{
+		float yaw, pitch, scale;
+
+		
+		float x,y,z;
+		x = canvas->current_camera->x() - pose.x;
+		y = canvas->current_camera->y() - pose.y;
+		z = canvas->current_camera->z() - pose.z - 0.5;
+		float dist = sqrt( exp2f(x) + exp2f(y) + exp2f(z) );
+		printf("x: %f, y: %f, z: %f, dist: %f, scale: %f\n", x, y, z, dist, scale);
+		
+		if ( canvas->perspectiveCam ) {
+			pitch = -canvas->current_camera->pitch();
+			yaw = -canvas->current_camera->yaw();			
+			scale = 500/dist;
 		}
+		else {
+			pitch = canvas->current_camera->pitch();
+			yaw = canvas->current_camera->yaw();			
+			scale = canvas->camera.getScale();
+		}
+	
+		float robotAngle = -rtod(pose.a);
 		
-      glPushMatrix();
+
 		
-      // move above the robot
-      glTranslatef( 0, 0, 0.5 );		
-		
-      // rotate to face screen
-      glRotatef( -rtod(global_pose.a + sphi), 0,0,1 );
-      glRotatef( rtod(stheta), 1,0,0 );
-		
-      const float m = 4 / scale; // margin
-      float w = gl_width( this->say_string ) / scale; // scaled text width
-      float h = gl_height() / scale; // scaled text height
-		
-		
-      // draw inside of bubble
-      PushColor( BUBBLE_FILL );
-      glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-      glPolygonMode( GL_FRONT, GL_FILL );
-      glEnable( GL_POLYGON_OFFSET_FILL );
-      glPolygonOffset( 1.0, 1.0 );
-      gl_draw_octagon( w, h, m );
-      glDisable( GL_POLYGON_OFFSET_FILL );
-      PopColor();
-      // draw outline of bubble
-      PushColor( BUBBLE_BORDER );
-      glLineWidth( 1 );
-      glEnable( GL_LINE_SMOOTH );
-      glPolygonMode( GL_FRONT, GL_LINE );
-      gl_draw_octagon( w, h, m );
-      glPopAttrib();
-      PopColor();
+		glPushMatrix();
+
+		// move above the robot
+		glTranslatef( 0, 0, 0.5 );		
+
+		// rotate to face screen
+		glRotatef( robotAngle - yaw, 0,0,1 );
+		glRotatef( -pitch, 1,0,0 );
+				
+		const float m = 4 / scale; // margin
+		float w = gl_width( this->say_string ) / scale; // scaled text width
+		float h = gl_height() / scale; // scaled text height
+
+		// draw inside of bubble
+		PushColor( BUBBLE_FILL );
+		glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
+		glPolygonMode( GL_FRONT, GL_FILL );
+		glEnable( GL_POLYGON_OFFSET_FILL );
+		glPolygonOffset( 1.0, 1.0 );
+		gl_draw_octagon( w, h, m );
+		glDisable( GL_POLYGON_OFFSET_FILL );
+		PopColor();
+		// draw outline of bubble
+		PushColor( BUBBLE_BORDER );
+		glLineWidth( 1 );
+		glEnable( GL_LINE_SMOOTH );
+		glPolygonMode( GL_FRONT, GL_LINE );
+		gl_draw_octagon( w, h, m );
+		glPopAttrib();
+		PopColor();
 		
 		
       // draw text
