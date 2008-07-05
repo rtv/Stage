@@ -1929,6 +1929,8 @@ private:
   
   int startx, starty;
   bool selectedModel;
+  bool clicked_empty_space;
+	int empty_space_startx, empty_space_starty;
   GList* selected_models; ///< a list of models that are currently
   ///selected by the user
   StgModel* last_selection; ///< the most recently selected model

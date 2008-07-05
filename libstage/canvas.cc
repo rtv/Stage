@@ -225,27 +225,14 @@ int StgCanvas::handle(int event)
 	switch(event) 
 	{
 	case FL_MOUSEWHEEL:
-		if( selected_models )
-		{
-			// rotate all selected models
-			for( GList* it = selected_models; it; it=it->next )
-			{
-				StgModel* mod = (StgModel*)it->data;
-				mod->AddToPose( 0,0,0, 0.1*(double)Fl::event_dy() );
-			}
-			redraw();
+		if( perspectiveCam == true ) {
+			perspective_camera.scroll( Fl::event_dy() / 10.0 );
 		}
-		else
-		{
-			if( perspectiveCam == true ) {
-				perspective_camera.scroll( Fl::event_dy() / 10.0 );
-			}
-			else {
-				camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
-			}
-			invalidate();
-			redraw();
+		else {
+			camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
 		}
+		invalidate();
+		redraw();
 		return 1;
 			
 	case FL_MOVE: // moused moved while no button was pressed
@@ -291,7 +278,11 @@ int StgCanvas::handle(int event)
 	    selectedModel = false;
 	    switch( Fl::event_button() )
 	      {
-	      case 1:			
+	      case 1:
+        clicked_empty_space = ( mod == NULL );
+				  empty_space_startx = startx;
+				  empty_space_starty = starty;
+			std::cout << "clicked: " << startx << " " << Fl::event_x() << std::endl;
 		if( mod ) { 
 		  // clicked a model
 		  if ( Fl::event_state( FL_SHIFT ) ) {
@@ -314,10 +305,7 @@ int StgCanvas::handle(int event)
 		    selectedModel = true; // selected a model
 		  }
 		}
-		else {
-		  // clicked on empty space, unselect all
-		  unSelectAll();
-		}
+		
 		return 1;
 	      case 3:
 		{
@@ -377,7 +365,10 @@ int StgCanvas::handle(int event)
 	} // end case FL_DRAG
 
 	case FL_RELEASE:   // mouse button released
-		
+			if( empty_space_startx == Fl::event_x() && empty_space_starty == Fl::event_y() && clicked_empty_space == true ) {
+			  // clicked on empty space, unselect all
+			  unSelectAll();
+			}
 		return 1;
 
 	case FL_FOCUS:
