@@ -484,7 +484,11 @@ void StgCanvas::DrawFloor()
 {
   stg_bounds3d_t bounds = world->GetExtent();
   float z = 0;
-  glColor3f( 0.6, 0.6, 1.0 );
+	
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(2.0, 2.0);
+	
+  glColor4f( 1.0, 1.0, 1.0, 1.0 );
   glBegin(GL_QUADS);
   glVertex3f( bounds.x.min, bounds.y.min, z );
   glVertex3f(  bounds.x.max, bounds.y.min, z );
@@ -561,6 +565,8 @@ void StgCanvas::renderFrame()
   
   if( showGrid )
     DrawGlobalGrid();
+  else
+    DrawFloor();
   
   if( showTree || showOccupancy )
     {
