@@ -13,8 +13,7 @@ define sicklaser laser
 
   # generic model properties
   color "blue"
-  size3 [ 0.156 0.155 0.19 ] # dimensions from LMS200 data sheet	
-  pose [ 0 0 0 ]
+  size [ 0.156 0.155 0.19 ] # dimensions from LMS200 data sheet	
 )
 
 define fancysicklaser sicklaser

@@ -37,10 +37,10 @@ define p2dx_sonar ranger
 define pioneer2dx position
 (
   # actual size
-  size3 [0.44 0.38 0.22] # sizes from MobileRobots' web site
+  size [0.44 0.38 0.22] # sizes from MobileRobots' web site
 
   # the pioneer's center of rotation is offset from its center of area
-  origin3 [-0.04 0 0 0]
+  origin [-0.04 0 0 0]
 
   # draw a nose on the robot so we can see which way it points
   gui_nose 1
@@ -51,7 +51,7 @@ define pioneer2dx position
   # use the sonar array defined above with a small vertical offset to
   # drop the sensors into the robot body
 
-  #p2dx_sonar( pose4 [0.04 0 -0.03 0] ) 
+  #p2dx_sonar( pose [0.04 0 -0.03 0] ) 
 
   # differential steering model
   drive "diff"
@@ -192,7 +192,7 @@ define amigo_sonar ranger
 
 define amigobot position
 (
-  size [.330 .280 0.25]
+  size [0.330 0.280 0.25]
   origin [0 0 0 0] # what should this value be? send email to vaughan@sfu.ca.
   amigo_sonar()
 )

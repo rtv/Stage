@@ -157,7 +157,8 @@ StgModel* StgCanvas::getModel( int x, int y )
   glEnable(GL_BLEND);
   glClearColor ( 0.7, 0.7, 0.8, 1.0);
   
-	Screenshot();
+  // useful for debugging the picker
+  //Screenshot();
 	
   return mod;
 }

@@ -1500,9 +1500,15 @@ void Worldfile::WriteInt(int entity, const char *name, int value)
 // Write a float
 void Worldfile::WriteFloat(int entity, const char *name, double value)
 {
-  char default_str[64];
-  snprintf(default_str, sizeof(default_str), "%.3f", value);
-  WriteString(entity, name, default_str);
+  if( fabs(value) < 0.001 ) // nearly 0
+	 WriteString(entity, name, "0" ); // compact zeros make the file
+												 // more readable
+  else
+	 {  
+		char default_str[64];
+		snprintf(default_str, sizeof(default_str), "%.3f", value);
+		WriteString(entity, name, default_str);
+	 }
 }
 
 
@@ -1531,9 +1537,17 @@ double Worldfile::ReadLength(int entity, const char *name, double value)
 // Write a length (includes units conversion)
 void Worldfile::WriteLength(int entity, const char *name, double value)
 {
-  char default_str[64];
-  snprintf(default_str, sizeof(default_str), "%.3f", value / this->unit_length);
-  WriteString(entity, name, default_str);
+  value /= this->unit_length;
+  
+  if( fabs(value) < 0.001 ) // nearly 0
+	 WriteString(entity, name, "0" ); // compact zeros make the file
+												 // more readable
+  else
+	 {  
+		char default_str[64];
+		snprintf(default_str, sizeof(default_str), "%.3f", value );
+		WriteString(entity, name, default_str);
+	 }
 }
 
 
@@ -1687,9 +1701,14 @@ double Worldfile::ReadTupleFloat(int entity, const char *name,
 void Worldfile::WriteTupleFloat(int entity, const char *name,
 				int index, double value)
 {
-  char default_str[64];
-  snprintf(default_str, sizeof(default_str), "%.3f", value);
-  WriteTupleString(entity, name, index, default_str);
+  if( fabs(value) < 0.001 ) // nearly 0
+	 WriteTupleString(entity, name, index, "0" ); 
+  else
+	 {  
+		char default_str[64];
+		snprintf(default_str, sizeof(default_str), "%.3f", value);
+		WriteTupleString(entity, name, index, default_str);
+	 }
 }
 
 
@@ -1710,11 +1729,17 @@ double Worldfile::ReadTupleLength(int entity, const char *name,
 void Worldfile::WriteTupleLength(int entity, const char *name,
 				 int index, double value)
 {
-  char default_str[64];
-  snprintf(default_str, sizeof(default_str), "%.3f", value / this->unit_length);
-  WriteTupleString(entity, name, index, default_str);
+  value /= this->unit_length;
+  
+  if( fabs(value) < 0.001 ) // nearly 0
+	 WriteTupleString(entity, name, index, "0" ); 
+  else
+	 {  
+		char default_str[64];
+		snprintf(default_str, sizeof(default_str), "%.3f", value );
+		WriteTupleString(entity, name, index, default_str);
+	 }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Read an angle from a tuple (includes unit conversion)
@@ -1733,9 +1758,16 @@ double Worldfile::ReadTupleAngle(int entity, const char *name,
 void Worldfile::WriteTupleAngle(int entity, const char *name,
 				int index, double value)
 {
-  char default_str[64];
-  snprintf(default_str, sizeof(default_str), "%.3f", value / this->unit_angle);
-  WriteTupleString(entity, name, index, default_str);
+  value /= this->unit_angle;
+  
+  if( fabs(value) < 0.001 ) // nearly 0
+	 WriteTupleString(entity, name, index, "0" ); 
+  else
+	 {  
+		char default_str[64];
+		snprintf(default_str, sizeof(default_str), "%.3f", value );
+		WriteTupleString(entity, name, index, default_str);
+	 }
 }
 
 

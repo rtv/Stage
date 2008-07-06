@@ -141,8 +141,8 @@ static const stg_color_t BUBBLE_TEXT = 0xFF000000; // black
 
 // static members
 uint32_t StgModel::count = 0;
-
 GHashTable* StgModel::modelsbyid = g_hash_table_new( NULL, NULL );
+
 
 // constructor
 StgModel::StgModel( StgWorld* world,
@@ -203,21 +203,20 @@ StgModel::StgModel( StgWorld* world,
   this->blob_return = DEFAULT_BLOBRETURN;
   this->laser_return = DEFAULT_LASERRETURN;
   this->gripper_return = DEFAULT_GRIPPERRETURN;
+  this->fiducial_return = 0;
+  this->fiducial_key = 0;
+
   this->boundary = DEFAULT_BOUNDARY;
   this->color = DEFAULT_COLOR;
   this->map_resolution = DEFAULT_MAP_RESOLUTION; // meters
+
   this->gui_nose = DEFAULT_NOSE;
   this->gui_grid = DEFAULT_GRID;
   this->gui_outline = DEFAULT_OUTLINE;
   this->gui_mask = this->parent ? 0 : DEFAULT_MASK;
 
-  this->fiducial_return = 0;
-  this->fiducial_key = 0;
-
   this->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
-
   this->flag_list = NULL;
-
   this->blinkenlights = g_ptr_array_new();
 
   bzero( &this->velocity, sizeof(velocity));
@@ -740,7 +739,8 @@ void StgModel::DrawSelected()
   stg_pose_t gpose = GetGlobalPose();
 
   char buf[64];
-  snprintf( buf, 63, "%s [%.2f,%.2f,%.2f]", token, gpose.x, gpose.y, rtod(gpose.a) );
+  snprintf( buf, 63, "%s [%.2f %.2f %.2f %.2f]", 
+				token, gpose.x, gpose.y, gpose.z, rtod(gpose.a) );
 
   PushColor( 0,0,0,1 ); // text color black
   gl_draw_string( 0.5,0.5,0.5, buf );

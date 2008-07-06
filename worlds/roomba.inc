@@ -1,7 +1,7 @@
 
 define roomba position
 (
-  size [0.33 0.33]
+  size [0.33 0.33 0.1]
 
   # this polygon approximates the circular shape of a Roomba
   polygons 1
@@ -29,4 +29,6 @@ define roomba position
 #          bpose[0] [0.12  0.12  45]
 #          bpose[1] [0.12 -0.12 -45] 
 #        )
+
+  color "gray90"
 )

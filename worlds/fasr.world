@@ -21,9 +21,9 @@ paused 1
 # configure the GUI window
 window
 ( 
-  size [ 833.000 605.000 ] 
-  center [0.000 0.000] 
-  rotate [ -45.500 4.000 ]
+  size [ 601.000 605.000 ] 
+  center [ 0 0 ] 
+  rotate [ 0 0 ]
   scale 32.344 
   
   show_data 0
@@ -34,15 +34,15 @@ window
 floorplan
 ( 
   name "cave"
-  size3 [16 16 0.6]
-  pose [0.000 0.000 0.000]
+  size [16.000 16.000 0.600]
+  pose [0 0 0 0]
   bitmap "bitmaps/cave.png"
 )
 
 zone
 (
   color "green"
-  pose [ -7.000 -7.000 0.000 ]
+  pose [ -7.000 -7.000 0 0 ]
   name "source"
   ctrl "source"
 )
@@ -50,43 +50,39 @@ zone
 zone
 (
   color "red"
-  pose [ 7.000 7.000 0.000 ]
+  pose [ 7.000 7.000 0 0 ]
   name "sink"
   ctrl "sink"
 )
 
 define autorob pioneer2dx
 (
- color "red"
-
- sicklaser( pose [ 0.040 0.000 0.000 ] samples 30 range_max 5 laser_return 2  
-	 
-   camera( pose [ 0.000 0.000 0.000 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )
- )
+ sicklaser( pose [ 0.040 0 0.220 0 ] samples 30 range_max 5 laser_return 2 )
  ctrl "fasr"
 
-# say "Autolab"
+ #camera( pose [ 0 0 0 0 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )
+ #say "Autolab"
 )
 
 
-autorob( pose [3.273 4.908 1.930]  )
-#autorob( pose [6.635 6.458 -52.629] )
-#autorob( pose [6.385 5.805 -87.082] )
-#autorob( pose [7.004 5.327 170.536] )
-#autorob( pose [5.770 6.492 -10.539] )
-#autorob( pose [7.493 4.852 -156.719] )
-#autorob( pose [5.078 6.853 -37.549] )
-#autorob( pose [6.147 7.399 4.964] )
-#autorob( pose [4.058 5.283 125.796] )
-#autorob( pose [7.487 6.926 -40.634] )
+autorob( pose [3.273 4.908 0  1.930]  )
+autorob( pose [6.635 6.458 0 -52.629] )
+autorob( pose [6.385 5.805 0 -87.082] )
+autorob( pose [7.004 5.327 0 170.536] )
+autorob( pose [5.770 6.492 0 -10.539] )
+autorob( pose [7.493 4.852 0 -156.719] )
+autorob( pose [5.078 6.853 0 -37.549] )
+autorob( pose [6.147 7.399 0 4.964] )
+autorob( pose [4.058 5.283 0 125.796] )
+autorob( pose [7.487 6.926 0 -40.634] )
 
-#autorob( pose [4.530 7.367 -113.456] )
-#autorob( pose [6.071 5.138 -1.177] )
-#autorob( pose [6.591 4.622 -68.007] )
-#autorob( pose [5.454 7.540 135.162] )
-#autorob( pose [4.707 5.855 -3.588] )
-#autorob( pose [6.714 7.447 -73.332] )
-#autorob( pose [5.582 5.724 -48.161] )
-#autorob( pose [3.958 6.851 -102.651] )
-#autorob( pose [5.127 5.109 23.582] )
-#autorob( pose [7.534 5.825 -70.230] )
+autorob( pose [4.530 7.367 0 -113.456] )
+autorob( pose [6.071 5.138 0 -1.177] )
+autorob( pose [6.591 4.622 0 -68.007] )
+autorob( pose [5.454 7.540 0 135.162] )
+autorob( pose [4.707 5.855 0 -3.588] )
+autorob( pose [6.714 7.447 0 -73.332] )
+autorob( pose [5.582 5.724 0 -48.161] )
+autorob( pose [3.958 6.851 0 -102.651] )
+autorob( pose [5.127 5.109 0 23.582] )
+autorob( pose [7.534 5.825 0 -70.230] )

@@ -46,17 +46,8 @@ void StgModel::Load()
       stg_geom_t geom = GetGeom();
       geom.pose.x = wf->ReadTupleLength(wf_entity, "origin", 0, geom.pose.x );
       geom.pose.y = wf->ReadTupleLength(wf_entity, "origin", 1, geom.pose.y );
-      geom.pose.a =  wf->ReadTupleAngle(wf_entity, "origin", 2, geom.pose.a );
-      this->SetGeom( geom );
-    }
-
-  if( wf->PropertyExists( wf_entity, "origin4" ) )
-    {
-      stg_geom_t geom = GetGeom();
-      geom.pose.x = wf->ReadTupleLength(wf_entity, "origin4", 0, geom.pose.x );
-      geom.pose.y = wf->ReadTupleLength(wf_entity, "origin4", 1, geom.pose.y );
-      geom.pose.z = wf->ReadTupleLength(wf_entity, "origin4", 2, geom.pose.z );
-      geom.pose.a =  wf->ReadTupleAngle(wf_entity, "origin4", 3, geom.pose.a );
+      geom.pose.z = wf->ReadTupleLength(wf_entity, "origin", 2, geom.pose.z );
+      geom.pose.a =  wf->ReadTupleAngle(wf_entity, "origin", 3, geom.pose.a );
       this->SetGeom( geom );
     }
 
@@ -65,15 +56,7 @@ void StgModel::Load()
       stg_geom_t geom = GetGeom();
       geom.size.x = wf->ReadTupleLength(wf_entity, "size", 0, geom.size.x );
       geom.size.y = wf->ReadTupleLength(wf_entity, "size", 1, geom.size.y );
-      this->SetGeom( geom );
-    }
-
-  if( wf->PropertyExists( wf_entity, "size3" ) )
-    {
-      stg_geom_t geom = GetGeom();
-      geom.size.x = wf->ReadTupleLength(wf_entity, "size3", 0, geom.size.x );
-      geom.size.y = wf->ReadTupleLength(wf_entity, "size3", 1, geom.size.y );
-      geom.size.z = wf->ReadTupleLength(wf_entity, "size3", 2, geom.size.z );
+      geom.size.z = wf->ReadTupleLength(wf_entity, "size", 2, geom.size.z );
       this->SetGeom( geom );
     }
 
@@ -82,19 +65,8 @@ void StgModel::Load()
       stg_pose_t pose = GetPose();
       pose.x = wf->ReadTupleLength(wf_entity, "pose", 0, pose.x );
       pose.y = wf->ReadTupleLength(wf_entity, "pose", 1, pose.y );
-      pose.z = 0.0;
-      pose.a =  wf->ReadTupleAngle(wf_entity, "pose", 2, pose.a );
-      this->SetPose( pose );
-    }
-
-  if( wf->PropertyExists( wf_entity, "pose4" ))
-    {
-      stg_pose_t pose = GetPose();
-      pose.x = wf->ReadTupleLength(wf_entity, "pose4", 0, pose.x );
-      pose.y = wf->ReadTupleLength(wf_entity, "pose4", 1, pose.y );
-      pose.z = wf->ReadTupleLength(wf_entity, "pose4", 2, pose.z );
-      pose.a = wf->ReadTupleAngle( wf_entity, "pose4", 3,  pose.a );
-
+      pose.z = wf->ReadTupleLength(wf_entity, "pose", 2, pose.z );
+      pose.a =  wf->ReadTupleAngle(wf_entity, "pose", 3, pose.a );
       this->SetPose( pose );
     }
 
@@ -103,6 +75,7 @@ void StgModel::Load()
       stg_velocity_t vel = GetVelocity();
       vel.x = wf->ReadTupleLength(wf_entity, "velocity", 0, vel.x );
       vel.y = wf->ReadTupleLength(wf_entity, "velocity", 1, vel.y );
+      vel.z = wf->ReadTupleLength(wf_entity, "velocity", 2, vel.z );
       vel.a = wf->ReadTupleAngle(wf_entity, "velocity", 3,  vel.a );
       this->SetVelocity( vel );
 
@@ -110,15 +83,6 @@ void StgModel::Load()
 	world->StartUpdatingModel( this );
     }
 
-  if( wf->PropertyExists( wf_entity, "velocity4" ))
-    {
-      stg_velocity_t vel = GetVelocity();
-      vel.x = wf->ReadTupleLength(wf_entity, "velocity4", 0, vel.x );
-      vel.y = wf->ReadTupleLength(wf_entity, "velocity4", 1, vel.y );
-      vel.z = wf->ReadTupleLength(wf_entity, "velocity4", 2, vel.z );
-      vel.a =  wf->ReadTupleAngle(wf_entity, "velocity4", 3,  vel.a );
-      this->SetVelocity( vel );
-    }
 
   if( wf->PropertyExists( wf_entity, "boundary" ))
     {
@@ -376,15 +340,28 @@ void StgModel::Save( void )
 		this->pose.y,
 		this->pose.a );
 
-  // right now we only save poses
-  wf->WriteTupleLength( wf_entity, "pose", 0, this->pose.x);
-  wf->WriteTupleLength( wf_entity, "pose", 1, this->pose.y);
-  wf->WriteTupleAngle( wf_entity, "pose", 2, this->pose.a);
+  if( wf->PropertyExists( wf_entity, "pose" ) )
+	 {
+		wf->WriteTupleLength( wf_entity, "pose", 0, this->pose.x);
+		wf->WriteTupleLength( wf_entity, "pose", 1, this->pose.y);
+		wf->WriteTupleLength( wf_entity, "pose", 2, this->pose.z);
+		wf->WriteTupleAngle( wf_entity, "pose", 3, this->pose.a);
+	 }
+  
+  if( wf->PropertyExists( wf_entity, "size" ) )
+	 {
+		wf->WriteTupleLength( wf_entity, "size", 0, this->geom.size.x);
+		wf->WriteTupleLength( wf_entity, "size", 1, this->geom.size.y);
+		wf->WriteTupleLength( wf_entity, "size", 2, this->geom.size.z);
+	 }
 
-  wf->WriteTupleLength( wf_entity, "pose4", 0, this->pose.x);
-  wf->WriteTupleLength( wf_entity, "pose4", 1, this->pose.y);
-  wf->WriteTupleLength( wf_entity, "pose4", 2, this->pose.z);
-  wf->WriteTupleAngle( wf_entity, "pose4", 3, this->pose.a);
+  if( wf->PropertyExists( wf_entity, "origin" ) )
+	 {
+		wf->WriteTupleLength( wf_entity, "origin", 0, this->geom.pose.x);
+		wf->WriteTupleLength( wf_entity, "origin", 1, this->geom.pose.y);
+		wf->WriteTupleLength( wf_entity, "origin", 2, this->geom.pose.z);
+		wf->WriteTupleAngle( wf_entity, "origin", 3, this->geom.pose.a);
+	 }
 
   // call any type-specific save callbacks
   this->CallCallbacks( &this->save_hook );

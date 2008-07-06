@@ -324,7 +324,7 @@ std::string StgWorldGui::ClockString()
 
 	
 	if( paused == true )
-		status_stream << " --PAUSED--";
+		status_stream << " [ PAUSED ]";
 	
 	
 	return status_stream.str();

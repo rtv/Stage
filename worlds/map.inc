@@ -1,6 +1,6 @@
 # map.inc - useful setup for a floorplan bitmap
 # Authors: Richard Vaughan
-# $id$
+# $Id$
 
 define floorplan model
 (
@@ -22,7 +22,7 @@ define floorplan model
 define zone model
 (
   color	"orange"
-  size3 [ 2 2 0.02 ]
+  size [ 2 2 0.02 ]
   obstacle_return 0
   laser_return 0
   ranger_return 0  

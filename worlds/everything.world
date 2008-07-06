@@ -13,7 +13,6 @@ include "roomba.inc"
 include "map.inc"
 include "sick.inc"
 
-
 gui_disable 0
 
 window( 
@@ -26,9 +25,9 @@ floorplan(
   bitmap "bitmaps/hospital_section.png" 
   #bitmap "bitmaps/hospital.png" 
   map_resolution 0.02
-  size3d [40 18 0.5] 
+  size [40 18 0.6] 
 
-  #size [160 60] 
+  #size [160 60 0.6] 
   name "hospital"
   color "gray50"
   gui_outline 1
@@ -37,7 +36,7 @@ floorplan(
 
 # a block for gripping
 define puck model(
-  size [ 0.08 0.08 ]
+  size [ 0.08 0.08 0.1 ]
   gripper_return 1
   gui_movemask 3
   gui_nose 0
@@ -45,14 +44,9 @@ define puck model(
 )
 
 
-puck( pose [-9.114 2.467 -105.501 ] color "red" )
-puck( pose [-9.045 2.624 -37.717 ] color "purple" )
-puck( pose [-8.959 2.752 -101.643 ] color "orange" )
-
-
-ranger( alwayson 1 )
-
- sicklaser( pose [0.030 0.000 0.000 ] alwayson 1  )
+puck( pose [-9.114 2.467 0 -105.501 ] color "red" )
+puck( pose [-9.045 2.624 0 -37.717 ] color "purple" )
+puck( pose [-8.959 2.752 0 -101.643 ] color "orange" )
 
 
 # extend the pioneer2dx definition from pioneer.inc
@@ -61,7 +55,7 @@ define trickedoutpioneer pioneer2dx
 (
 	ranger( alwayson 1 )
 
-  sicklaser( pose [0.030 0.000 0.000 ] alwayson 1  )
+  sicklaser( pose [0.030 0.000 0 0.000 ] alwayson 1  )
 
   fiducial( range_max 8 range_max_id 5 ) 
 
@@ -84,9 +78,9 @@ define trickedoutpioneer pioneer2dx
 trickedoutpioneer
 (
   name "robot1"
-  pose [-10.071 3.186 -2.333]
+  pose [-10.071 3.186 0 -2.333]
 
-  #gripper( pose [0.23 0.000 0.000] color "gray" )
+  #gripper( pose [0.23 0.000 0 0.000] color "gray" )
   #speech()
 )
 
@@ -105,42 +99,42 @@ trickedoutpioneer
   fiducial_return 18	
   color "blue"
   name "p2"
-  pose [-6.009 2.481 165.780]
+  pose [-6.009 2.481 0 165.780]
 )
 
 trickedoutpioneer
 (
   color "green"
   name "p3"
-  pose [-6.492 2.156 160.219]
+  pose [-6.492 2.156 0 160.219]
 )
 
 trickedoutpioneer
 (
   color "cyan"
   name "p4"
-  pose [-7.641 3.989 -127.216]
+  pose [-7.641 3.989 0 -127.216]
 )
 
 trickedoutpioneer
 (
   color "yellow"
   name "p5"
-  pose [-6.759 3.634 -110.414]
+  pose [-6.759 3.634 0 -110.414]
 )
 
 trickedoutpioneer
 (
   color "magenta"
   name "p6"
-  pose [-6.232 3.440 -135.449]
+  pose [-6.232 3.440 0 -135.449]
 )
 
 
 
 # a silly object to look at
 define silly position ( 	
-  size3d [0.3 0.3 0.5]
+  size [1 1 0.5]
   fiducial_return 22
   laser_return 2
   gui_outline 1
@@ -150,7 +144,7 @@ define silly position (
 
 silly( 	
   name "invader" 
-  pose3d [-6.754 0.791 0.3 0] 
+  pose [-6.754 0.791 0 0] 
   color "green"  
   bitmap "bitmaps/space_invader.png"
 )
@@ -158,12 +152,12 @@ silly(
 
 silly( 	
   name "ghost" 
-  pose3d [-6.060 0.794 0.6 0] 
+  pose [-6.060 0.794 0 0] 
   color "blue"  
   bitmap "bitmaps/ghost.png"
 )
 
 roomba(
   name "roomba1"
-  pose [-9.000 0.500 0.000]
+  pose [-9.000 0.500 0 0.000]
 )
