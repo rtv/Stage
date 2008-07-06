@@ -33,4 +33,4 @@ define roomba position
   color "gray50"
 )
 
-define create roomba( color "gray 90" )
+define create roomba( color "gray90" )

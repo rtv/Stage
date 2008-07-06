@@ -28,19 +28,32 @@ window
 floorplan
 ( 
   name "cave"
-  size [16 16 1.5]
+  size [16 16 0.6]
   bitmap "bitmaps/cave.png"
 )
 
 pioneer2dx
-(
+(		  
   pose [ -6.5 -6.5 0 45 ] 
-  sicklaser( pose [ 0.04 0 0 0 ] ) 
+  sicklaser( pose [0.04 0 0 0]
+
+#     model( size [0.1 0.1 0.1 ] color "red"
+#        model ( size [0.1 0.1 0.1 ] color "green"
+#	        model (size [0.1 0.1 0.1 ] color "blue" pose [0 0 0.03 0 ]
+#	          model (size [0.1 0.1 0.1 ] color "magenta"
+#             ) 
+#		     )
+#        )
+#     )
+  )
+
+ #pose [ 0.04 0 0 0 ] ) 
 
   # can refer to the robot by this name
   name "r0"
 
   # remove this if you're using Player to control the robot	
   ctrl "wander" 
+
 )
 

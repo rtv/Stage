@@ -18,8 +18,8 @@ gui_disable 0
 window
 ( 
   size [ 1059.000 541.000 ] 
-  center [-6.333 2.011] 
-  scale 80.217 # pixels per meter
+  center [0 0.042] 
+  scale 23.827 # pixels per meter
 
   show_data 1
 )
@@ -56,7 +56,7 @@ define trickedoutpioneer pioneer2dx
 (
 	ranger( alwayson 1 )
 
-  sicklaser( pose [0.030 0 0.220 0 ]  )
+  sicklaser( pose [0.030 0 0 0 ]  )
 
   fiducial( range_max 8 range_max_id 5 ) 
 
@@ -88,7 +88,7 @@ trickedoutpioneer
   color "red"
   name "redrobot_w_camera"
   pose [-5.645 3.034 0 -162.098]
-  camera()
+  camera( pose [0.060 0 0.190 0 ] )
 )
 
 trickedoutpioneer
@@ -149,12 +149,27 @@ silly(
 
 silly( 	
   name "ghost" 
-  pose [-6.060 0.794 0 0] 
+  pose [-5.583 -0.684 0 0] 
   color "blue"  
   bitmap "bitmaps/ghost.png"
 )
 
-roomba(
-  name "roomba1"
+create(
+  name "create0"
+  pose [-8.844 0.019 0 0]
+)
+
+create(
+  name "create1"
+  pose [-8.625 -0.527 0 0]
+)
+
+create(
+  name "create2"
+  pose [-8.501 -1.044 0 0]
+)
+ 
+create(
+  name "create3"
   pose [-9.000 0.500 0 0]
 )

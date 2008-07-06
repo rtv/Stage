@@ -341,7 +341,3 @@ void StgModelCamera::DataVisualize( void )
 
 }
 
-void StgModelCamera::Draw( uint32_t flags, StgCanvas* canvas )
-{
-	StgModel::Draw( flags, canvas );
-}

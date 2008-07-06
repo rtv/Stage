@@ -146,17 +146,17 @@ GHashTable* StgModel::modelsbyid = g_hash_table_new( NULL, NULL );
 
 // constructor
 StgModel::StgModel( StgWorld* world,
-		    StgModel* parent,
-		    const stg_model_type_t type )
+						  StgModel* parent,
+						  const stg_model_type_t type )
   : StgAncestor()
 {
   assert( modelsbyid );
   assert( world );
   
   PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %d ",
-		world->Token(), 
-		parent ? parent->Token() : "(null)",
-		type );
+					 world->Token(), 
+					 parent ? parent->Token() : "(null)",
+					 type );
   
   this->parent = parent;
   this->world = world;  
@@ -176,7 +176,6 @@ StgModel::StgModel( StgWorld* world,
   world->AddModel( this );
   
   bzero( &pose, sizeof(pose));
-  if( parent) pose.z += parent->geom.size.z;
 
   bzero( &global_pose, sizeof(global_pose));
   this->gpose_dirty = true;
@@ -194,8 +193,8 @@ StgModel::StgModel( StgWorld* world,
   this->blocks_dl = glGenLists( 1 );
 
   this->geom.size.x = DEFAULT_GEOM_SIZEX;
-  this->geom.size.y = DEFAULT_GEOM_SIZEX;
-  this->geom.size.z = DEFAULT_GEOM_SIZEX;
+  this->geom.size.y = DEFAULT_GEOM_SIZEY;
+  this->geom.size.z = DEFAULT_GEOM_SIZEZ;
   memset( &this->geom.pose, 0, sizeof(this->geom.pose));
 
   this->obstacle_return = DEFAULT_OBSTACLERETURN;
@@ -235,7 +234,7 @@ StgModel::StgModel( StgWorld* world,
   this->AddBlockRect( -0.5,-0.5,1,1 );
 		
   PRINT_DEBUG2( "finished model %s @ %p", 
-		this->token, this );
+					 this->token, this );
 }
 
 StgModel::~StgModel( void )
@@ -297,16 +296,16 @@ StgFlag* StgModel::PopFlag()
 
 
 void StgModel::AddBlock( stg_point_t* pts, 
-			 size_t pt_count,
-			 stg_meters_t zmin,
-			 stg_meters_t zmax,
-			 stg_color_t col,
-			 bool inherit_color )
+								 size_t pt_count,
+								 stg_meters_t zmin,
+								 stg_meters_t zmax,
+								 stg_color_t col,
+								 bool inherit_color )
 {
   blocks = 
     g_list_prepend( blocks, new StgBlock( this, pts, pt_count, 
-					  zmin, zmax, 
-					  col, inherit_color ));
+														zmin, zmax, 
+														col, inherit_color ));
 
   // force recreation of display lists before drawing
   NeedRedraw();
@@ -321,7 +320,7 @@ void StgModel::ClearBlocks( void )
 }
 
 void StgModel::AddBlockRect( double x, double y, 
-			     double width, double height )
+									  double width, double height )
 {  
   stg_point_t pts[4];
   pts[0].x = x;
@@ -339,64 +338,64 @@ void StgModel::AddBlockRect( double x, double y,
 
 
 void StgModel::Raytrace( stg_pose_t pose,
-			 stg_meters_t range, 
-			 stg_block_match_func_t func,
-			 const void* arg,
-			 stg_raytrace_sample_t* sample,
-			 bool ztest )
+								 stg_meters_t range, 
+								 stg_block_match_func_t func,
+								 const void* arg,
+								 stg_raytrace_sample_t* sample,
+								 bool ztest )
 {
   world->Raytrace( LocalToGlobal(pose),
-		   range,
-		   func,
-		   this,
-		   arg,
-		   sample,
-		   ztest );
+						 range,
+						 func,
+						 this,
+						 arg,
+						 sample,
+						 ztest );
 }
 
 void StgModel::Raytrace( stg_radians_t bearing,
-			 stg_meters_t range, 
-			 stg_block_match_func_t func,
-			 const void* arg,
-			 stg_raytrace_sample_t* sample,
-			 bool ztest )
+								 stg_meters_t range, 
+								 stg_block_match_func_t func,
+								 const void* arg,
+								 stg_raytrace_sample_t* sample,
+								 bool ztest )
 {
   stg_pose_t raystart;
   bzero( &raystart, sizeof(raystart));
   raystart.a = bearing;
 
   world->Raytrace( LocalToGlobal(raystart),
-		   range,
-		   func,
-		   this,
-		   arg,
-		   sample,
-		   ztest );
+						 range,
+						 func,
+						 this,
+						 arg,
+						 sample,
+						 ztest );
 }
 
 
 void StgModel::Raytrace( stg_radians_t bearing,
-			 stg_meters_t range, 
-			 stg_radians_t fov,
-			 stg_block_match_func_t func,
-			 const void* arg,
-			 stg_raytrace_sample_t* samples,
-			 uint32_t sample_count,
-			 bool ztest )
+								 stg_meters_t range, 
+								 stg_radians_t fov,
+								 stg_block_match_func_t func,
+								 const void* arg,
+								 stg_raytrace_sample_t* samples,
+								 uint32_t sample_count,
+								 bool ztest )
 {
   stg_pose_t raystart;
   bzero( &raystart, sizeof(raystart));
   raystart.a = bearing;
 
   world->Raytrace( LocalToGlobal(raystart),
-		   range,		   
-		   fov,
-		   func,
-		   this,
-		   arg,
-		   samples,
-		   sample_count,
-		   ztest );
+						 range,		   
+						 fov,
+						 func,
+						 this,
+						 arg,
+						 samples,
+						 sample_count,
+						 ztest );
 }
 
 // utility for g_free()ing everything in a list
@@ -463,7 +462,7 @@ bool StgModel::IsDescendent( StgModel* testmod )
     {
       StgModel* child = (StgModel*)it->data;
       if( child->IsDescendent( testmod ) )
-	return true;
+		  return true;
     }
 
   // neither mod nor a child of mod matches testmod
@@ -526,26 +525,25 @@ stg_pose_t StgModel::GetGlobalPose()
 { 
   //printf( "model %s global pose ", token );
 
-  if( this->gpose_dirty )
-    {
-      stg_pose_t parent_pose;
+  // if( this->gpose_dirty )
+  {
+	 stg_pose_t parent_pose;
 
-      // find my parent's pose
-      if( this->parent )
-	{
-	  parent_pose = parent->GetGlobalPose();	  
-	  stg_pose_sum( &global_pose, &parent_pose, &pose );
-
-	  // we are on top of our parent
-	  global_pose.z += parent->geom.size.z;
-	}
-      else
-	memcpy( &global_pose, &pose, sizeof(stg_pose_t));
-
-      this->gpose_dirty = false;
-      //printf( " WORK " );
-
-    }
+	 // find my parent's pose
+	 if( this->parent )
+		{
+		  parent_pose = parent->GetGlobalPose();	  
+		  stg_pose_sum( &global_pose, &parent_pose, &pose );
+			 
+		  // we are on top of our parent
+		  global_pose.z += parent->geom.size.z;
+		}
+	 else
+		memcpy( &global_pose, &pose, sizeof(stg_pose_t));
+		
+	 this->gpose_dirty = false;
+	 //printf( " WORK " );
+  }
   //else
   //printf( " CACHED " );
 
@@ -671,9 +669,9 @@ void StgModel::Print( char* prefix )
     printf( "Model ");
 
   printf( "%s:%s\n", 
-	  //			id, 
-	  world->Token(), 
-	  token );
+			 //			id, 
+			 world->Token(), 
+			 token );
 
   for( GList* it=children; it; it=it->next )
     ((StgModel*)it->data)->Print( prefix );
@@ -685,8 +683,8 @@ const char* StgModel::PrintWithPose()
 
   static char txt[256];
   snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",  
-	   token, 
-	   gpose.x, gpose.y, gpose.z, gpose.a  );
+			  token, 
+			  gpose.x, gpose.y, gpose.z, gpose.a  );
 
   return txt;
 }
@@ -811,8 +809,6 @@ void StgModel::DrawTrailBlocks()
 
 void StgModel::DrawTrailArrows()
 {
-  //  PushColor( color );
-
   double r,g,b,a;
 
   double dx = 0.2;
@@ -838,9 +834,9 @@ void StgModel::DrawTrailArrows()
       glPolygonOffset(1.0, 1.0);
 
       glBegin( GL_TRIANGLES );
-      glVertex3f( 0, -dy, 0);
-      glVertex3f( dx, 0, 0 );
-      glVertex3f( 0, +dy, 0 );
+       glVertex3f( 0, -dy, 0);
+       glVertex3f( dx, 0, 0 );
+       glVertex3f( 0, +dy, 0 );
       glEnd();
       glDisable(GL_POLYGON_OFFSET_FILL);
 
@@ -851,9 +847,9 @@ void StgModel::DrawTrailArrows()
 
       glDepthMask(GL_FALSE);
       glBegin( GL_TRIANGLES );
-      glVertex3f( 0, -dy, 0);
-      glVertex3f( dx, 0, 0 );
-      glVertex3f( 0, +dy, 0 );
+       glVertex3f( 0, -dy, 0);
+       glVertex3f( dx, 0, 0 );
+       glVertex3f( 0, +dy, 0 );
       glEnd();
       glDepthMask(GL_TRUE);
 
@@ -876,25 +872,58 @@ void StgModel::DrawBlocksTree( )
 
 void StgModel::DrawBlocks( )
 {
+  // testing - draw bounding box
+//   PushColor( color );
+
+//   // bottom
+//   glBegin( GL_LINE_LOOP );
+//   glVertex3f( -geom.size.x/2.0, -geom.size.y/2.0, 0 );
+//   glVertex3f( +geom.size.x/2.0, -geom.size.y/2.0, 0 );
+//   glVertex3f( +geom.size.x/2.0, +geom.size.y/2.0, 0 );
+//   glVertex3f( -geom.size.x/2.0, +geom.size.y/2.0, 0 );
+//   glEnd();
+
+//   // top
+//   glBegin( GL_LINE_LOOP );
+//   glVertex3f( -geom.size.x/2.0, -geom.size.y/2.0, geom.size.z );
+//   glVertex3f( +geom.size.x/2.0, -geom.size.y/2.0, geom.size.z );
+//   glVertex3f( +geom.size.x/2.0, +geom.size.y/2.0, geom.size.z );
+//   glVertex3f( -geom.size.x/2.0, +geom.size.y/2.0, geom.size.z );
+//   glEnd();
+
+//   PopColor();
+
   // TODO - fix this!
   //if( rebuild_displaylist )
-    {
-      rebuild_displaylist = false;
+  {
+	 //rebuild_displaylist = false;
       
-      glNewList( blocks_dl, GL_COMPILE );	
-      LISTMETHOD( this->blocks, StgBlock*, Draw );
-      glEndList();
-    }
+	 //glNewList( blocks_dl, GL_COMPILE );	
+	 LISTMETHOD( this->blocks, StgBlock*, Draw );
+	 //glEndList();
+  }
 
-  glCallList( blocks_dl );
+  //glCallList( blocks_dl );
 }
 
 // move into this model's local coordinate frame
 void StgModel::PushLocalCoords()
 {
   glPushMatrix();  
+  
+  if( parent )
+	 glTranslatef( 0,0, parent->geom.size.z );
+  
   gl_pose_shift( &pose );
   gl_pose_shift( &geom.pose );
+
+  // useful debug - draw a point at the local origin
+ //  PushColor( color );
+//   glPointSize( 5.0 );
+//   glBegin( GL_POINTS );
+//   glVertex2i( 0, 0 );
+//   glEnd();
+//   PopColor();
 }
 
 void StgModel::PopCoords()
@@ -912,8 +941,8 @@ void StgModel::DrawStatusTree( StgCanvas* canvas )
 
 void StgModel::DrawStatus( StgCanvas* canvas ) 
 {
-	if( say_string )	  
-	{
+  if( say_string )	  
+	 {
 		float yaw, pitch, scale;
 
 		
@@ -925,14 +954,14 @@ void StgModel::DrawStatus( StgCanvas* canvas )
 		printf("x: %f, y: %f, z: %f, dist: %f, scale: %f\n", x, y, z, dist, scale);
 		
 		if ( canvas->perspectiveCam ) {
-			pitch = -canvas->current_camera->pitch();
-			yaw = -canvas->current_camera->yaw();			
-			scale = 500/dist;
+		  pitch = -canvas->current_camera->pitch();
+		  yaw = -canvas->current_camera->yaw();			
+		  scale = 500/dist;
 		}
 		else {
-			pitch = canvas->current_camera->pitch();
-			yaw = canvas->current_camera->yaw();			
-			scale = canvas->camera.getScale();
+		  pitch = canvas->current_camera->pitch();
+		  yaw = canvas->current_camera->yaw();			
+		  scale = canvas->camera.getScale();
 		}
 	
 		float robotAngle = -rtod(pose.a);
@@ -990,14 +1019,14 @@ void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alp
 {
   float stheta = -dtor( canvas->current_camera->pitch() );
   float sphi = dtor( canvas->current_camera->yaw() );
-	if( canvas->perspectiveCam == true ) {
-		sphi = atan2(
-			( pose.x - canvas->current_camera->x() )
-			,
-			( pose.y - canvas->current_camera->y() )
-		);
-		stheta = -stheta;
-	}
+  if( canvas->perspectiveCam == true ) {
+	 sphi = atan2(
+					  ( pose.x - canvas->current_camera->x() )
+					  ,
+					  ( pose.y - canvas->current_camera->y() )
+					  );
+	 stheta = -stheta;
+  }
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture( GL_TEXTURE_2D, texture_id );
@@ -1029,104 +1058,61 @@ void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alp
   glDisable(GL_TEXTURE_2D);
 }
 
-
-void StgModel::Draw( uint32_t flags, Stg::StgCanvas* canvas )
-{
-  //PRINT_DEBUG1( "Drawing %s", token );
-
-  glPushMatrix();
-
-  // move into this model's local coordinate frame
-  gl_pose_shift( &this->pose );
-  gl_pose_shift( &this->geom.pose );
-
-  //	if ( ShowVisData )
-  //		DataVisualize();
-  //
-  //	if( gui_grid && (flags & STG_SHOW_GRID) )
-  //		DrawGrid();
-  //
-  //	if( flag_list && ShowFlags ) 
-  //		DrawFlagList();
-  //
-  //	if( ShowBlinken )
-  //		DrawBlinkenlights();
-  //	
-  //	if ( ShowStatus ) {
-  //		DrawStatus( canvas );
-  //	}
-
-  // shift up the CS to the top of this model
-  //gl_coord_shift(  0,0, this->geom.size.z, 0 );
-
-  // recursively draw the tree below this model 
-  for( GList* it=children; it; it=it->next )
-    ((StgModel*)it->data)->Draw( flags, canvas );
-
-  glPopMatrix(); // drop out of local coords
-}
-
 void StgModel::DrawFlagList( void )
 {	
-  if ( flag_list ) {
-    glPushMatrix();
+  if( flag_list  == NULL )
+	 return;
+  
+  PushLocalCoords();
+  
+  GLUquadric* quadric = gluNewQuadric();
+  glTranslatef(0,0,1); // jump up
+  stg_pose_t gpose = GetGlobalPose();
+  glRotatef( 180 + rtod(-gpose.a),0,0,1 );
+  
+  
+  GList* list = g_list_copy( flag_list );
+  list = g_list_reverse(list);
+  
+  for( GList* item = list; item; item = item->next )
+	 {
 		
-    // move into this model's local coordinate frame
-    gl_pose_shift( &this->pose );
-    gl_pose_shift( &this->geom.pose );
-
-    GLUquadric* quadric = gluNewQuadric();
-    glTranslatef(0,0,1); // jump up
-    stg_pose_t gpose = GetGlobalPose();
-    glRotatef( 180 + rtod(-gpose.a),0,0,1 );
-
-
-    GList* list = g_list_copy( flag_list );
-    list = g_list_reverse(list);
-
-    for( GList* item = list; item; item = item->next )
-      {
-
-	StgFlag* flag = (StgFlag*)item->data;
-
-	glTranslatef( 0, 0, flag->size/2.0 );
-
-
-	PushColor( flag->color );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-	gluQuadricDrawStyle( quadric, GLU_FILL );
-	gluSphere( quadric, flag->size/2.0, 4,2  );
-
-	// draw the edges darker version of the same color
-	double r,g,b,a;
-	stg_color_unpack( flag->color, &r, &g, &b, &a );
-	PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
-
-	gluQuadricDrawStyle( quadric, GLU_LINE );
-	gluSphere( quadric, flag->size/2.0, 4,2 );
-
-	PopColor();
-	PopColor();
-
-	glTranslatef( 0, 0, flag->size/2.0 );
-      }
-
-    g_list_free( list );
-
-    gluDeleteQuadric( quadric );
+		StgFlag* flag = (StgFlag*)item->data;
 		
-    glPopMatrix();
-  }
+		glTranslatef( 0, 0, flag->size/2.0 );
+		
+		
+		PushColor( flag->color );
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		
+		gluQuadricDrawStyle( quadric, GLU_FILL );
+		gluSphere( quadric, flag->size/2.0, 4,2  );
+		
+		// draw the edges darker version of the same color
+		double r,g,b,a;
+		stg_color_unpack( flag->color, &r, &g, &b, &a );
+		PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+		
+		gluQuadricDrawStyle( quadric, GLU_LINE );
+		gluSphere( quadric, flag->size/2.0, 4,2 );
+		
+		PopColor();
+		PopColor();
+		
+		glTranslatef( 0, 0, flag->size/2.0 );
+	 }
+  
+  g_list_free( list );
+  
+  gluDeleteQuadric( quadric );
+  
+  PopCoords();
 }
+
 
 void StgModel::DrawBlinkenlights()
 {
-  glPushMatrix();
-	
-  // move into this model's local coordinate frame
-  gl_pose_shift( &this->pose );
-  gl_pose_shift( &this->geom.pose );
+  PushLocalCoords();
 
   GLUquadric* quadric = gluNewQuadric();
   //glTranslatef(0,0,1); // jump up
@@ -1138,7 +1124,7 @@ void StgModel::DrawBlinkenlights()
   for( unsigned int i=0; i<blinkenlights->len; i++ )
     {
       stg_blinkenlight_t* b = 
-	(stg_blinkenlight_t*)g_ptr_array_index( blinkenlights, i );
+		  (stg_blinkenlight_t*)g_ptr_array_index( blinkenlights, i );
       assert(b);
 
       glTranslatef( b->pose.x, b->pose.y, b->pose.z );
@@ -1146,9 +1132,9 @@ void StgModel::DrawBlinkenlights()
       PushColor( b->color );
 
       if( b->enabled )
-	gluQuadricDrawStyle( quadric, GLU_FILL );
+		  gluQuadricDrawStyle( quadric, GLU_FILL );
       else
-	gluQuadricDrawStyle( quadric, GLU_LINE );
+		  gluQuadricDrawStyle( quadric, GLU_LINE );
 
       gluSphere( quadric, b->size/2.0, 8,8  );
 
@@ -1156,30 +1142,26 @@ void StgModel::DrawBlinkenlights()
     }
 
   gluDeleteQuadric( quadric );
-  glPopMatrix();
+
+  PopCoords();
 }
 
 void StgModel::DrawPicker( void )
 {
   //PRINT_DEBUG1( "Drawing %s", token );
-
-  glPushMatrix();
-
-  // move into this model's local coordinate frame
-  gl_pose_shift( &this->pose );
-  gl_pose_shift( &this->geom.pose );
+  PushLocalCoords();
 
   // draw the boxes
   for( GList* it=blocks; it; it=it->next )
     ((StgBlock*)it->data)->DrawSolid() ;
 
   // shift up the CS to the top of this model
-  gl_coord_shift(  0,0, this->geom.size.z, 0 );
+  //gl_coord_shift(  0,0, this->geom.size.z, 0 );
 
   // recursively draw the tree below this model 
   LISTMETHOD( this->children, StgModel*, DrawPicker );
 
-  glPopMatrix(); // drop out of local coords
+  PopCoords();
 }
 
 void StgModel::DataVisualize( void )
@@ -1191,9 +1173,6 @@ void StgModel::DataVisualizeTree( void )
 {
   PushLocalCoords();
   DataVisualize(); // virtual function overridden by most model types  
-
-  // shift to top of this model - why is this not necessary?
-  glTranslatef( 0,0, geom.size.z );
 
   // and draw the children
   LISTMETHOD( children, StgModel*, DataVisualizeTree );
@@ -1207,7 +1186,7 @@ void StgModel::DrawGrid( void )
   if ( gui_grid ) 
     {
       PushLocalCoords();
-		 
+		
       stg_bounds3d_t vol;
       vol.x.min = -geom.size.x/2.0;
       vol.x.max =  geom.size.x/2.0;
@@ -1263,13 +1242,21 @@ void StgModel::GPoseDirtyTree( void )
     ((StgModel*)it->data)->GPoseDirtyTree();
 }
 
+// find the Z-axis offset of this model, by recursively summing the
+// height of its parents and any Z poses shifts
+// stg_meters_t StgModel::BaseHeight()
+// {
+//   if( ! parent )
+// 	 return pose.z;
+
+//   return pose.z + parent->geom.size.z + parent->BaseHeight();
+// }
+
+
 void StgModel::SetPose( stg_pose_t pose )
 {
   //PRINT_DEBUG5( "%s.SetPose(%.2f %.2f %.2f %.2f)", 
   //	this->token, pose->x, pose->y, pose->z, pose->a );
-
-  if( parent )
-    pose.z += parent->geom.size.z;
 
   // if the pose has changed, we need to do some work
   if( memcmp( &this->pose, &pose, sizeof(stg_pose_t) ) != 0 )
@@ -1309,13 +1296,14 @@ void StgModel::AddToPose( stg_pose_t pose )
   this->AddToPose( pose.x, pose.y, pose.z, pose.a );
 }
 
-
 void StgModel::SetGeom( stg_geom_t geom )
 {
   //printf( "MODEL \"%s\" SET GEOM (%.2f %.2f %.2f)[%.2f %.2f]\n",
   //  this->token,
   //  geom->pose.x, geom->pose.y, geom->pose.a,
   //  geom->size.x, geom->size.y );
+
+  this->gpose_dirty = true;
 
   UnMap();
 
@@ -1471,14 +1459,14 @@ int StgModel::SetParent(  StgModel* newparent)
 
 
 static bool collision_match( StgBlock* testblock, 
-			     StgModel* finder )
+									  StgModel* finder )
 { 
   return( (testblock->Model() != finder) && testblock->Model()->ObstacleReturn()  );
 }	
 
 
 void StgModel::PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
-				 stg_meters_t ymin, stg_meters_t ymax )
+											stg_meters_t ymin, stg_meters_t ymax )
 {
   while( TestCollision( NULL, NULL ) )
     SetPose( random_pose( xmin,xmax, ymin, ymax ));		
@@ -1491,8 +1479,8 @@ StgModel* StgModel::TestCollision( stg_meters_t* hitx, stg_meters_t* hity )
 }
 
 StgModel* StgModel::TestCollision( stg_pose_t posedelta, 
-				   stg_meters_t* hitx,
-				   stg_meters_t* hity ) 
+											  stg_meters_t* hitx,
+											  stg_meters_t* hity ) 
 { 
   /*  stg_model_t* child_hit = NULL; */
 
@@ -1530,39 +1518,39 @@ StgModel* StgModel::TestCollision( stg_pose_t posedelta,
 
       // loop over all edges of the block
       for( unsigned int p=0; p < pt_count; p++ ) 
-	{ 
-	  // find the local poses of the ends of this block edge
-	  stg_point_t* pt1 = &pts[p];
-	  stg_point_t* pt2 = &pts[(p+1) % pt_count];
-	  double dx = pt2->x - pt1->x;
-	  double dy = pt2->y - pt1->y;
+		  { 
+			 // find the local poses of the ends of this block edge
+			 stg_point_t* pt1 = &pts[p];
+			 stg_point_t* pt2 = &pts[(p+1) % pt_count];
+			 double dx = pt2->x - pt1->x;
+			 double dy = pt2->y - pt1->y;
 
-	  // find the range and bearing to raytrace along the block edge
-	  double range = hypot( dx, dy );
-	  double bearing = atan2( dy,dx );
+			 // find the range and bearing to raytrace along the block edge
+			 double range = hypot( dx, dy );
+			 double bearing = atan2( dy,dx );
 
-	  stg_pose_t edgepose;
-	  bzero(&edgepose,sizeof(edgepose));
-	  edgepose.x = pt1->x;
-	  edgepose.y = pt1->y;
-	  edgepose.a = bearing;
+			 stg_pose_t edgepose;
+			 bzero(&edgepose,sizeof(edgepose));
+			 edgepose.x = pt1->x;
+			 edgepose.y = pt1->y;
+			 edgepose.a = bearing;
 
-	  // shift the edge ray vector by the local change in pose
-	  // 	  stg_pose_t raypose;	  
-	  // 	  stg_pose_sum( &raypose, posedelta, &edgepose );
+			 // shift the edge ray vector by the local change in pose
+			 // 	  stg_pose_t raypose;	  
+			 // 	  stg_pose_sum( &raypose, posedelta, &edgepose );
 
-	  // raytrace in local coordinates
-	  stg_raytrace_sample_t sample;
-	  Raytrace( pose_sum( posedelta, edgepose), 
-		    range,
-		    (stg_block_match_func_t)collision_match, 
-		    NULL, 
-		    &sample,
-		    true );
+			 // raytrace in local coordinates
+			 stg_raytrace_sample_t sample;
+			 Raytrace( pose_sum( posedelta, edgepose), 
+						  range,
+						  (stg_block_match_func_t)collision_match, 
+						  NULL, 
+						  &sample,
+						  true );
 
-	  if( sample.block )
-	    hitmod = sample.block->Model();	  
-	} 
+			 if( sample.block )
+				hitmod = sample.block->Model();	  
+		  } 
     } 
 
   // re-render myself
@@ -1586,7 +1574,7 @@ void StgModel::UpdatePose( void )
       checkpoint.time = world->sim_time;
 
       if( trail->len > 100 )
-	g_array_remove_index( trail, 0 );
+		  g_array_remove_index( trail, 0 );
 
       g_array_append_val( this->trail, checkpoint );
     }
@@ -1767,7 +1755,7 @@ StgModel* StgModel::GetUnsubscribedModelOfType( stg_model_type_t type )
 
       StgModel* found = child->GetUnsubscribedModelOfType( type );
       if( found )
-	return found;
+		  return found;
     }
 
   // nothing matching below this model

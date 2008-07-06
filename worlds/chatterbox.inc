@@ -3,23 +3,24 @@
 # Author: Richard T Vaughan (rtv) 
 # $Id: chatterbox.inc,v 1.5 2008-01-15 01:25:42 rtv Exp $
 
-define chatterbox position
+include "irobot.inc"
+
+define chatterbox create
 (
   # long range IRs
-  ranger(	
-    base -0.1	
+  ranger
+  (	
     scount 3
     spose[0] [  0.050  0.0   0 ]
     spose[1] [  0.0    0.050  90 ]
     spose[2] [  0.0   -0.050 270 ]
-
     sview [ 0 1.0 20 ]
     ssize [0.01 0.03 ]
   )
 
   # short rage IRs	
-  ranger(
-    base -0.1	
+  ranger
+  (
     scount 4
     spose[0] [  0.050  0.0   0 ]
     spose[1] [  0.035  0.035  30 ]
@@ -29,12 +30,4 @@ define chatterbox position
     sview [ 0 0.5 30 ]
     ssize [0.01 0.03 ]
   )
-
-
-  mass 0.5
-  size [0.12 0.12]
-  height 0.12
-  gui_nose 1
-
-  polygon[0].fill 0
 ) 

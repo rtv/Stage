@@ -551,6 +551,10 @@ void StgCanvas::renderFrame()
 	x += -sin( sphi ) * 100;
 	y += -cos( sphi ) * 100;
 	
+	// TODO - keep this map around in between frames, because the order
+	// changes slowly, and sorting an already-sorted list is
+	// usually very fast (rtv)
+
 	//store all models in a sorted multimap
 	std::multimap< float, StgModel* > ordered;
 	for( GList* it=world->StgWorld::children; it; it=it->next ) {
@@ -563,8 +567,6 @@ void StgCanvas::renderFrame()
 	
 	//now the models can be iterated over with:
 	// for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ )
-	
-	
 	
   if( ! showTrails )
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );

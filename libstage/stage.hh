@@ -1324,7 +1324,6 @@ protected:
 	virtual void Shutdown();
 	virtual void Update();
 	virtual void UpdatePose();
-	virtual void Draw( uint32_t flags, StgCanvas* canvas );
 
 	void DrawBlocksTree();
 	virtual void DrawBlocks();
@@ -1738,7 +1737,6 @@ class StgBlock
 		StgModel* mod; //< model to which this block belongs
 
 		stg_point_int_t* pts_global_pixels; //< points defining a polygon in global coords
-		//GLubyte* edge_indices;
 
 		stg_color_t color;
 		bool inherit_color;
@@ -2540,7 +2538,7 @@ class StgModelCamera : public StgModel
 		virtual void Update();
 	
 		///Draw Camera Model - TODO
-		virtual void Draw( uint32_t flags, StgCanvas* canvas );
+		//virtual void Draw( uint32_t flags, StgCanvas* canvas );
 	
 		///Draw camera visualization
 		virtual void DataVisualize();

@@ -57,13 +57,12 @@ zone
 
 define autorob pioneer2dx
 (
- sicklaser( pose [ 0.040 0 0.220 0 ] samples 30 range_max 5 laser_return 2 )
+ sicklaser( pose [ 0.040 0 0 0 ] samples 180 range_max 5 laser_return 2 )
  ctrl "fasr"
 
  #camera( pose [ 0 0 0 0 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )
  #say "Autolab"
 )
-
 
 autorob( pose [3.273 4.908 0  1.930]  )
 autorob( pose [6.635 6.458 0 -52.629] )

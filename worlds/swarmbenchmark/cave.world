@@ -24,7 +24,7 @@ window
 floorplan
 ( 
   name "cave"
-  size [16.000 16.000 1.500]
+  size [16.000 16.000 0.600]
   pose [0 0 0 0]
   bitmap "../bitmaps/cave.png"
 )
@@ -33,11 +33,11 @@ define rob pioneer2dx
 #define rob fancypioneer2dx  # alternative with more complex polygons
 (
 
- sicklaser( )#pose4 [ 0.040 0.000 0.01 0.000 ] samples 180 ) 
+ sicklaser( pose [ 0.040 0 0 0 ] samples 180 ) 
  # alternative laser  with more complex polygons
- # fancysicklaser( pose [ 0.040 0.000 0.000 ] samples 180 ) 
+ # fancysicklaser( pose [ 0.040 0 0 0 ] samples 180 ) 
 
- ranger( pose [ 0 0 0.170 0 ] )
+ ranger( pose [ 0 0 -0.050 0 ] )
 
  ctrl "expand" 
 )
