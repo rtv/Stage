@@ -9,25 +9,26 @@ interval_sim 100  # milliseconds per update step
 interval_real 0 # real-time milliseconds per update step
 
 include "pioneer.inc"
-include "roomba.inc"
+include "irobot.inc"
 include "map.inc"
 include "sick.inc"
 
 gui_disable 0
 
-window( 
+window
+( 
   size [ 1059.000 541.000 ] 
   center [-6.333 2.011] 
   scale 80.217 # pixels per meter
+
+  show_data 1
 )
 
-floorplan( 
+floorplan
+( 
   bitmap "bitmaps/hospital_section.png" 
-  #bitmap "bitmaps/hospital.png" 
   map_resolution 0.02
-  size [40 18 0.6] 
-
-  #size [160 60 0.6] 
+  size [40.000 18.000 0.600] 
   name "hospital"
   color "gray50"
   gui_outline 1
@@ -36,7 +37,7 @@ floorplan(
 
 # a block for gripping
 define puck model(
-  size [ 0.08 0.08 0.1 ]
+  size [ 0.080 0.080 0.100 ]
   gripper_return 1
   gui_movemask 3
   gui_nose 0
@@ -55,7 +56,7 @@ define trickedoutpioneer pioneer2dx
 (
 	ranger( alwayson 1 )
 
-  sicklaser( pose [0.030 0.000 0 0.000 ] alwayson 1  )
+  sicklaser( pose [0.030 0 0.220 0 ]  )
 
   fiducial( range_max 8 range_max_id 5 ) 
 
@@ -65,8 +66,6 @@ define trickedoutpioneer pioneer2dx
 		  alwayson 1
     )
   
-  #camera( alwayson 1 )
-
   fiducial_return 17
   gripper_return 0
 
@@ -88,16 +87,14 @@ trickedoutpioneer
 (
   color "red"
   name "redrobot_w_camera"
-  pose [-5.645 3.034 -162.098]
-  camera( alwayson 1 
-	  
-	  )
+  pose [-5.645 3.034 0 -162.098]
+  camera()
 )
 
 trickedoutpioneer
 (
   fiducial_return 18	
-  color "blue"
+  color "NavyBlue"
   name "p2"
   pose [-6.009 2.481 0 165.780]
 )
@@ -134,7 +131,7 @@ trickedoutpioneer
 
 # a silly object to look at
 define silly position ( 	
-  size [1 1 0.5]
+  size [1.000 1.000 0.500]
   fiducial_return 22
   laser_return 2
   gui_outline 1
@@ -159,5 +156,5 @@ silly(
 
 roomba(
   name "roomba1"
-  pose [-9.000 0.500 0 0.000]
+  pose [-9.000 0.500 0 0]
 )
