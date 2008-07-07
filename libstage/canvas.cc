@@ -69,7 +69,7 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   current_camera = &camera;
   setDirtyBuffer();
 	
-  startx = starty = 0;
+  startx = starty = -1;
   //panx = pany = stheta = sphi = 0.0;
   //scale = 15.0;
   interval = 50; //msec between redraws
@@ -255,35 +255,38 @@ int StgCanvas::handle(int event)
 		return 1;
 			
 	case FL_MOVE: // moused moved while no button was pressed
-		if( Fl::event_state( FL_CTRL ) )
-		{          
-			int dx = Fl::event_x() - startx;
-			int dy = Fl::event_y() - starty;
+		if ( startx >=0 ) {
+			// mouse pointing to valid value
+			
+			if( Fl::event_state( FL_CTRL ) )
+			{
+				int dx = Fl::event_x() - startx;
+				int dy = Fl::event_y() - starty;
 
-			if( perspectiveCam == true ) {
-				perspective_camera.addYaw( -dx );
-				perspective_camera.addPitch( -dy );
-			} 
-			else {
-				camera.setPitch( 0.5 * static_cast<double>( dy ) );
-				camera.setYaw( 0.5 * static_cast<double>( dx ) );
+				if( perspectiveCam == true ) {
+					perspective_camera.addYaw( -dx );
+					perspective_camera.addPitch( -dy );
+				} 
+				else {
+					camera.setPitch( 0.5 * static_cast<double>( dy ) );
+					camera.setYaw( 0.5 * static_cast<double>( dx ) );
+				}
+				invalidate();
+				redraw();
 			}
-			invalidate();
-			redraw();
-		}
-		else if( Fl::event_state( FL_ALT ) )
-		{   
-			int dx = Fl::event_x() - startx;
-			int dy = Fl::event_y() - starty;
+			else if( Fl::event_state( FL_ALT ) )
+			{   
+				int dx = Fl::event_x() - startx;
+				int dy = Fl::event_y() - starty;
 
-			if( perspectiveCam == true ) {
-				perspective_camera.move( -dx, dy, 0.0 );
-			} 
-			else {
-				camera.move( -dx, dy );
+				if( perspectiveCam == true ) {
+					perspective_camera.move( -dx, dy, 0.0 );
+				} 
+				else {
+					camera.move( -dx, dy );
+				}
+				invalidate();
 			}
-			invalidate();
-
 		}
 		startx = Fl::event_x();
 		starty = Fl::event_y();
