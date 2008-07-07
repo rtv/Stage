@@ -365,7 +365,12 @@ int StgCanvas::handle(int event)
 			else {
 				// started dragging on empty space or an
 				//  unselected model, move the canvas
-				camera.move( -dx, dy );
+				if( perspectiveCam == true ) {
+					perspective_camera.move( -dx, dy, 0.0 );
+				} 
+				else {
+					camera.move( -dx, dy );
+				}
 				invalidate(); // so the projection gets updated
 			}
 		}
