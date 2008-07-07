@@ -27,7 +27,7 @@ window
   rotate [ 0 0 ]
   scale 32.344 
 
-  pcam_loc [ 0 -4.000 2.000 ]
+  pcam_loc [ 0 -4 2 ]
   pcam_angle [ 70.000 0 ]
   pcam_on 0
   

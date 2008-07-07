@@ -87,10 +87,10 @@ void StgPerspectiveCamera::forward( float amount )
 }
 
 void StgPerspectiveCamera::Load( Worldfile* wf, int sec ) {
-	float x = wf->ReadTupleFloat(sec, "pcam_loc", 0, this->x() );
-	float y = wf->ReadTupleFloat(sec, "pcam_loc", 1, this->y() );
-	float z = wf->ReadTupleFloat(sec, "pcam_loc", 2, this->z() );
-	setPose( x, y, z );
+	float x_pos = wf->ReadTupleFloat(sec, "pcam_loc", 0, x() );
+	float y_pos = wf->ReadTupleFloat(sec, "pcam_loc", 1, y() );
+	float z_pos = wf->ReadTupleFloat(sec, "pcam_loc", 2, z() );
+	setPose( x_pos, y_pos, z_pos );
 	setPitch( wf->ReadTupleFloat( sec, "pcam_angle", 0, pitch() ) );
 	setYaw( wf->ReadTupleFloat( sec, "pcam_angle", 1, yaw() ) );
 }
@@ -206,11 +206,11 @@ void StgOrthoCamera::scale( float scale, float shift_x, float w, float shift_y, 
 }
 
 void StgOrthoCamera::Load( Worldfile* wf, int sec ) {
-	float x = wf->ReadTupleFloat(sec, "center", 0, 0 );
-	float y = wf->ReadTupleFloat(sec, "center", 1, 0 );
-	setPose( x, y );
-	setPitch( wf->ReadTupleFloat( sec, "rotate", 0, 0 ) );
-	setYaw( wf->ReadTupleFloat( sec, "rotate", 1, 0 ) );
+	float x_pos = wf->ReadTupleFloat(sec, "center", 0, x() );
+	float y_pos = wf->ReadTupleFloat(sec, "center", 1, y() );
+	setPose( x_pos, y_pos );
+	setPitch( wf->ReadTupleFloat( sec, "rotate", 0, pitch() ) );
+	setYaw( wf->ReadTupleFloat( sec, "rotate", 1, yaw() ) );
 	setScale( wf->ReadFloat(sec, "scale", scale() ) );
 }
 
