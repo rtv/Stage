@@ -24,6 +24,9 @@ ADD_DEFINITIONS( -DPROJECT=\\\"${PROJECT_NAME}\\\"
 		-DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"
 		-DVERSION=\\\"${VERSION}\\\" )
 
+# Create the pkgconfig file
+CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage.pc.in ${CMAKE_CURRENT_BINARY_DIR}/stage.pc @ONLY)
+INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage.pc DESTINATION lib/pkgconfig/)
 
 # find the easy modules
 include(FindPkgConfig)

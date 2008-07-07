@@ -1,4 +1,4 @@
-prefix=@prefix@
+prefix=@CMAKE_INSTALL_PREFIX@
 
 Name: stage
 Description: Stage robot simulation C library and Player plugin - part of the Player/Stage Project
