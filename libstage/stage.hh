@@ -1985,6 +1985,7 @@ public:
 	void InvertView( uint32_t invertflags );
 
 	static void TimerCallback( StgCanvas* canvas );
+	static void perspectiveCb( Fl_Widget* w, void* p );
   
   void Load( Worldfile* wf, int section );
   void Save( Worldfile* wf, int section );

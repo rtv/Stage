@@ -30,7 +30,7 @@ namespace Stg {
 		Fl_Menu_* menu;
 		int menuIndex;
 		Fl_Callback* menuCb;
-		void* menuCbParam;
+		Fl_Widget* menuCbWidget;
 	  
 	public:
 		Option( std::string n, std::string tok, std::string key, bool v );	  
@@ -51,7 +51,7 @@ namespace Stg {
 
 
 		void createMenuItem( Fl_Menu_Bar* menu, std::string path );
-		void menuCallback( Fl_Callback* cb, void* p );
+		void menuCallback( Fl_Callback* cb, Fl_Widget* w );
 		static void toggleCb( Fl_Widget* w, void* p );
 		void Load( Worldfile* wf, int section );
 		void Save( Worldfile* wf, int section );	  

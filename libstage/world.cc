@@ -256,7 +256,7 @@ void StgWorld::Load( const char* worldfile_path )
 		// vanilla model if the type is NULL.
 		stg_creator_t creator = NULL;
 		
-		printf( "creating model of type %s\n", typestr );
+		//printf( "creating model of type %s\n", typestr );
 
 		if( typestr ) // look up the string in the typetable
 		  for( int i=0; i<MODEL_TYPE_COUNT; i++ )

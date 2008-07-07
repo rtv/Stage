@@ -53,7 +53,7 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   showTrailRise( "Trails/Rising blocks", "show_trailrise", "^r", false ),
   showTrails( "Trails/Fast", "show_trailfast", "^f", false ),
   showTree( "Debug/Tree", "show_tree", "^t", false ),
-  perspectiveCam( "Perspective camera", "show_perspective", "r", false ),
+  perspectiveCam( "Perspective camera", "pcam_on", "r", false ),
   visualizeAll( "Visualize All", "vis_all", "^v", true ) 
 {
   end();
@@ -816,9 +816,18 @@ void StgCanvas::Screenshot()
   printf( "Saved %s\n", filename );
 }
 
-void perspectiveCb( Fl_Widget* w, void* p ) 
+void StgCanvas::perspectiveCb( Fl_Widget* w, void* p ) 
 {
-	StgCanvas* canvas = static_cast<StgCanvas*>( p );
+	StgCanvas* canvas = static_cast<StgCanvas*>( w );
+	Option* opt = static_cast<Option*>( p ); // perspectiveCam
+	if ( opt ) {
+		// Perspective mode is on, change camera
+		canvas->current_camera = &canvas->perspective_camera;
+	}
+	else {
+		canvas->current_camera = &canvas->camera;
+	}
+	
 	canvas->invalidate();
 }
 
@@ -865,6 +874,7 @@ void StgCanvas::Load( Worldfile* wf, int sec )
   showTrails.Load( wf, sec );
   showTree.Load( wf, sec );
   showScreenshots.Load( wf, sec );
+  perspectiveCam.Load( wf, sec );
 
   invalidate(); // we probably changed something
 }
@@ -889,6 +899,7 @@ void StgCanvas::Save( Worldfile* wf, int sec )
   showTrails.Save( wf, sec );
   showTree.Save( wf, sec );
   showScreenshots.Save( wf, sec );
+  perspectiveCam.Save( wf, sec );
 }
 
 

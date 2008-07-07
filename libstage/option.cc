@@ -34,12 +34,12 @@ void Option::toggleCb( Fl_Widget* w, void* p )
 	Option* opt = static_cast<Option*>( p );
 	opt->invert();
 	if ( opt->menuCb )
-		opt->menuCb( NULL, opt->menuCbParam );
+		opt->menuCb( opt->menuCbWidget, opt );
 }
 
-void Option::menuCallback( Fl_Callback* cb, void* p ) {
+void Option::menuCallback( Fl_Callback* cb, Fl_Widget* w ) {
 	menuCb = cb;
-	menuCbParam = p;
+	menuCbWidget = w;
 }
 
 void Option::createMenuItem( Fl_Menu_Bar* m, std::string path )
