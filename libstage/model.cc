@@ -941,77 +941,70 @@ void StgModel::DrawStatusTree( StgCanvas* canvas )
 
 void StgModel::DrawStatus( StgCanvas* canvas ) 
 {
-  if( say_string )	  
-	 {
-		float yaw, pitch, scale;
-
+	if( say_string )	  
+	{
+		float yaw, pitch;
+		pitch = canvas->current_camera->pitch();
+		yaw = canvas->current_camera->yaw();			
 		
-		float x,y,z;
-		x = canvas->current_camera->x() - pose.x;
-		y = canvas->current_camera->y() - pose.y;
-		z = canvas->current_camera->z() - pose.z - 0.5;
-		float dist = sqrt( exp2f(x) + exp2f(y) + exp2f(z) );
-		printf("x: %f, y: %f, z: %f, dist: %f, scale: %f\n", x, y, z, dist, scale);
-		
-		if ( canvas->perspectiveCam ) {
-		  pitch = -canvas->current_camera->pitch();
-		  yaw = -canvas->current_camera->yaw();			
-		  scale = 500/dist;
-		}
-		else {
-		  pitch = canvas->current_camera->pitch();
-		  yaw = canvas->current_camera->yaw();			
-		  scale = canvas->camera.scale();
-		}
-	
 		float robotAngle = -rtod(pose.a);
-		
-
-		
 		glPushMatrix();
-
+		
+		//TODO ask jeremy to fancy up the octagons
+		//const float m = 4; // margin
+		
+		float w = gl_width( this->say_string ); // scaled text width
+		float h = gl_height(); // scaled text height
+		
 		// move above the robot
 		glTranslatef( 0, 0, 0.5 );		
-
+		
 		// rotate to face screen
 		glRotatef( robotAngle - yaw, 0,0,1 );
 		glRotatef( -pitch, 1,0,0 );
+		
+		//get raster positition, add gl_width, then project back to world coords
+		glRasterPos3f( 0, 0, 0 );
+		GLfloat pos[ 4 ];
+		glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
+		
+		GLboolean valid;
+		glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
+		if( valid == true ) {
+			
+			{
+				GLdouble wx, wy, wz;
+				int viewport[4];
+				glGetIntegerv(GL_VIEWPORT, viewport);
 				
-		const float m = 4 / scale; // margin
-		float w = gl_width( this->say_string ) / scale; // scaled text width
-		float h = gl_height() / scale; // scaled text height
-
-		// draw inside of bubble
-		PushColor( BUBBLE_FILL );
-		glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-		glPolygonMode( GL_FRONT, GL_FILL );
-		glEnable( GL_POLYGON_OFFSET_FILL );
-		glPolygonOffset( 1.0, 1.0 );
-		gl_draw_octagon( w, h, m );
-		glDisable( GL_POLYGON_OFFSET_FILL );
-		PopColor();
-		// draw outline of bubble
-		PushColor( BUBBLE_BORDER );
-		glLineWidth( 1 );
-		glEnable( GL_LINE_SMOOTH );
-		glPolygonMode( GL_FRONT, GL_LINE );
-		gl_draw_octagon( w, h, m );
-		glPopAttrib();
-		PopColor();
-		
-		
-      // draw text
-      PushColor( BUBBLE_TEXT );
-      glTranslatef( 0, 0, 0.1 ); // draw text forwards of bubble
-      gl_draw_string( m, m, 0.0, this->say_string );
-      PopColor();
-		
-      glPopMatrix();
+				GLdouble modelview[16];
+				glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+				
+				GLdouble projection[16];	
+				glGetDoublev(GL_PROJECTION_MATRIX, projection);
+				
+				//get width and height in world coords
+				gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+				w = wx;
+				gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+				h = wy;
+			}
+			
+			glColor3f( 1, 0.8, 1 );
+			gl_draw_octagon( w, h, 0 );
+			
+			glColor3f( 0, 0, 0 );
+			//position text ontop of string (might be problematic if too large in perspective mode)
+			glTranslatef( 0, 0, 0.003 );
+			gl_draw_string( 0, 0, 0.0, this->say_string );
+			
+			glPopMatrix();
+		}
     }
 	
-  if( stall )
+	if( stall )
     {
-      DrawImage( TextureManager::getInstance()._stall_texture_id, canvas, 0.85 );
+		DrawImage( TextureManager::getInstance()._stall_texture_id, canvas, 0.85 );
     }
 }
 
