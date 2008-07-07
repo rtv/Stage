@@ -68,6 +68,7 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   perspective_camera.setPose( -3.0, 0.0, 1.0 );
   perspective_camera.setPitch( 70.0 ); //look down
   current_camera = &camera;
+  setDirtyBuffer();
 	
   startx = starty = 0;
   //panx = pany = stheta = sphi = 0.0;
@@ -213,6 +214,17 @@ void StgCanvas::CanvasToWorld( int px, int py,
 	else if( py >= h() )
 		py = h() - 1;
 	
+	//redraw the screen only if the camera model isn't active.
+	//TODO new selection technique will simply use drawfloor to result in z = 0 always and prevent strange behaviours near walls
+	//TODO refactor, so glReadPixels reads (then caches) the whole screen only when the camera changes.
+	if( true || dirtyBuffer() ) {
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		current_camera->SetProjection();
+		current_camera->Draw();
+		DrawFloor(); //call this rather than renderFrame for speed - this won't give correct z values
+		dirty_buffer = false;
+	}
+	
   int viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
 
@@ -220,11 +232,12 @@ void StgCanvas::CanvasToWorld( int px, int py,
   glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
 
   GLdouble projection[16];	
-  glGetDoublev(GL_PROJECTION_MATRIX, projection);	
+  glGetDoublev(GL_PROJECTION_MATRIX, projection);
 
   GLfloat pz;
   glReadPixels( px, h()-py, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz );
   gluUnProject( px, w()-py, pz, modelview, projection, viewport, wx,wy,wz );
+	
 }
 
 int StgCanvas::handle(int event) 

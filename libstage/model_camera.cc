@@ -232,6 +232,7 @@ bool StgModelCamera::GetFrame( void )
 
 	glViewport( viewport[0], viewport[1], viewport[2], viewport[3] );
 	_canvas->invalidate();
+	_canvas->setDirtyBuffer();
 	return true;
 }
 

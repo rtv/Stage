@@ -1931,7 +1931,8 @@ private:
   StgCamera* current_camera;
   StgOrthoCamera camera;
   StgPerspectiveCamera perspective_camera;
-  
+	bool dirty_buffer;
+	
   int startx, starty;
   bool selectedModel;
   bool clicked_empty_space;
@@ -1998,6 +1999,9 @@ public:
 	void unSelect( StgModel* mod );
 	void unSelectAll();
 
+	inline void setDirtyBuffer( void ) { dirty_buffer = true; }
+	inline bool dirtyBuffer( void ) const { return dirty_buffer; }
+	
 	inline void PushColor( stg_color_t col )
 	{ colorstack.Push( col ); } 
 
