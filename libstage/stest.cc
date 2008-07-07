@@ -14,7 +14,7 @@
 #include "stage.hh"
 using namespace Stg;
 
-#include "config.h"
+//#include "config.h"
 
 double minfrontdistance = 0.750;
 double speed = 0.400;
@@ -36,7 +36,7 @@ typedef struct
 
 int main( int argc, char* argv[] )
 { 
-	printf( "%s %s benchmarker\n", PACKAGE, VERSION );
+	//printf( "%s %s benchmarker\n", PACKAGE, VERSION );
 
 	if( argc < 3 )
 	{
