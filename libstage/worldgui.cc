@@ -138,12 +138,7 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) :
   graphics = true;
   paused = false;
 
-  // improve the title bar to say "Stage: <worldfile name>"
-  std::string title = PROJECT;
-  title += ": ";
-  if ( L )
-    title += L;
-  label( title.c_str() );
+  label( PROJECT );
 
   interval_real = (stg_usec_t)thousand * DEFAULT_INTERVAL_REAL;
 	
@@ -223,6 +218,14 @@ void StgWorldGui::Load( const char* filename )
 
   // configure the canvas
   canvas->Load(  wf, window_section );
+	
+  std::string title = PROJECT;
+  if ( wf->filename ) {
+    // improve the title bar to say "Stage: <worldfile name>"
+    title += ": ";		
+    title += wf->filename;
+  }
+  label( title.c_str() );
 	
   updateOptions();
 }
