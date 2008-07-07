@@ -212,9 +212,8 @@ void StgWorldGui::Load( const char* filename )
 
   int width =  (int)wf->ReadTupleFloat(window_section, "size", 0, w() );
   int height = (int)wf->ReadTupleFloat(window_section, "size", 1, h() );
-  // on OS X this behaves badly - prevents the Window manager resizing
-  //larger than this size.
   size( width,height );
+  size_range( 100, 100 ); // set min size to 100/100, max size to screen size
 
   // configure the canvas
   canvas->Load(  wf, window_section );
