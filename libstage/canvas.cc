@@ -65,8 +65,7 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   selected_models = NULL;
   last_selection = NULL;
 
-  perspective_camera.setPose( -3.0, 0.0, 1.0 );
-  perspective_camera.setPitch( 70.0 ); //look down
+  perspective_camera.setPose( 0.0, -4.0, 3.0 );
   current_camera = &camera;
   setDirtyBuffer();
 	
@@ -266,8 +265,8 @@ int StgCanvas::handle(int event)
 				perspective_camera.addPitch( -dy );
 			} 
 			else {
-				camera.pitch( 0.5 * static_cast<double>( dy ) );
-				camera.yaw( 0.5 * static_cast<double>( dx ) );
+				camera.setPitch( 0.5 * static_cast<double>( dy ) );
+				camera.setYaw( 0.5 * static_cast<double>( dx ) );
 			}
 			invalidate();
 			redraw();
@@ -556,9 +555,9 @@ void StgCanvas::resetCamera()
 void StgCanvas::renderFrame()
 {
 	//before drawing, order all models based on distance from camera
-	float x = camera.getX();
-	float y = camera.getY();
-	float sphi = dtor( camera.getYaw() );
+	float x = camera.x();
+	float y = camera.y();
+	float sphi = dtor( camera.yaw() );
 	
 	//estimate point of camera location - hard to do with orthogonal mode
 	x += -sin( sphi ) * 100;
@@ -681,7 +680,7 @@ void StgCanvas::renderFrame()
 		glPushMatrix();
 		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
 			//ensure two icons can't be in the exact same plane
-			if( camera.getPitch() == 0 )
+			if( camera.pitch() == 0 )
 				glTranslatef( 0, 0, 0.1 );
 			i->second->DrawStatusTree( this );
 		}
@@ -846,14 +845,9 @@ void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
 
 void StgCanvas::Load( Worldfile* wf, int sec )
 {
-  float x = wf->ReadTupleFloat(sec, "center", 0, 0 );
-  float y = wf->ReadTupleFloat(sec, "center", 1, 0 );
-  camera.setPose( x, y );
-  
-  camera.setPitch( wf->ReadTupleFloat( sec, "rotate", 0, 0 ) );
-  camera.setYaw( wf->ReadTupleFloat( sec, "rotate", 1, 0 ) );
-
-  camera.setScale( wf->ReadFloat(sec, "scale", camera.getScale() ) );
+  camera.Load( wf, sec );
+  perspective_camera.Load( wf, sec );		
+	
   interval = wf->ReadInt(sec, "interval", interval );
   
   showData.Load( wf, sec );
@@ -875,15 +869,9 @@ void StgCanvas::Load( Worldfile* wf, int sec )
 
 void StgCanvas::Save( Worldfile* wf, int sec )
 {
-  wf->WriteFloat( sec, "scale", camera.getScale() );
-  
-  wf->WriteTupleFloat( sec, "center", 0, camera.getX() );
-  wf->WriteTupleFloat( sec, "center", 1, camera.getY() );
-  
-  wf->WriteTupleFloat( sec, "rotate", 0, camera.getPitch()  );
-  wf->WriteTupleFloat( sec, "rotate", 1, camera.getYaw()  );
-  
-  wf->WriteFloat(sec, "scale", camera.getScale() );
+  camera.Save( wf, sec );
+  perspective_camera.Save( wf, sec );	
+	
   wf->WriteInt(sec, "interval", interval );
 
   showData.Save( wf, sec );

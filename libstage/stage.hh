@@ -1805,7 +1805,6 @@ class StgCamera
 class StgPerspectiveCamera : public StgCamera
 {
 	private:
-
 		float _z_near;
 		float _z_far;
 		float _vert_fov;
@@ -1849,6 +1848,9 @@ class StgPerspectiveCamera : public StgCamera
 		inline float nearClip( void ) const { return _z_near; }
 		inline float farClip( void ) const { return _z_far; }
 		inline void setClip( float near, float far ) { _z_far = far; _z_near = near; }
+	
+		void Load( Worldfile* wf, int sec );
+		void Save( Worldfile* wf, int sec );
 };
 
 class StgOrthoCamera : public StgCamera
@@ -1867,33 +1869,9 @@ class StgOrthoCamera : public StgCamera
 		virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max );
 		virtual void SetProjection( void ) const;
 
-		inline void move( float x, float y ) {
-			//convert screen points into world points
-			x = x / ( _scale );
-			y = y / ( _scale );
-
-			//adjust for pitch angle
-			y = y / cos( dtor( _pitch ) );
-
-			//don't allow huge values
-			if( y > 100 ) 
-				y = 100;
-			else if( y < -100 ) 
-				y = -100;
-
-			//adjust for yaw angle
-			_x += cos( dtor( _yaw ) ) * x;
-			_y += -sin( dtor( _yaw ) ) * x;
-
-			_x += sin( dtor( _yaw ) ) * y;
-			_y += cos( dtor( _yaw ) ) * y;
-		}
-
-		inline void yaw( float yaw ) { 
-			_yaw += yaw;
-		}
-
-		inline void pitch( float pitch ) {
+		void move( float x, float y );
+		inline void setYaw( float yaw ) { _yaw += yaw;	}
+		inline void setPitch( float pitch ) {
 			_pitch += pitch;
 			if( _pitch < -90 )
 				_pitch = -90;
@@ -1901,22 +1879,16 @@ class StgOrthoCamera : public StgCamera
 				_pitch = 0;
 		}
 
-		inline float getYaw( void ) const { return _yaw; }
-		inline float getPitch( void ) const { return _pitch; }
-
-		inline void setYaw( float yaw ) { _yaw = yaw; }
-		inline void setPitch( float pitch ) { _pitch = pitch; }
 		inline void setScale( float scale ) { _scale = scale; }
 		inline void setPose( float x, float y) { _x = x; _y = y; }
-
-
 
 		void scale( float scale, float shift_x = 0, float h = 0, float shift_y = 0, float w = 0 );	
 		inline void resetAngle( void ) { _pitch = _yaw = 0; }
 
-		inline float getScale() const { return _scale; }
-		inline float getX() const { return _x; }
-		inline float getY() const { return _y; }
+		inline float scale() const { return _scale; }
+
+		void Load( Worldfile* wf, int sec );
+		void Save( Worldfile* wf, int sec );
 };
 
 

@@ -22,9 +22,13 @@ paused 1
 window
 ( 
   size [ 601.000 605.000 ] 
+
   center [ 0 0 ] 
   rotate [ 0 0 ]
   scale 32.344 
+
+  pcam_loc [ 0 -4 2 ]
+  pcam_angle [ 70.000 0 ]
   
   show_data 0
   show_flags 1

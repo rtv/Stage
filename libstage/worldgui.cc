@@ -141,7 +141,8 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) :
   // improve the title bar to say "Stage: <worldfile name>"
   std::string title = PROJECT;
   title += ": ";
-  title += L;
+  if ( L )
+    title += L;
   label( title.c_str() );
 
   interval_real = (stg_usec_t)thousand * DEFAULT_INTERVAL_REAL;

@@ -961,7 +961,7 @@ void StgModel::DrawStatus( StgCanvas* canvas )
 		else {
 		  pitch = canvas->current_camera->pitch();
 		  yaw = canvas->current_camera->yaw();			
-		  scale = canvas->camera.getScale();
+		  scale = canvas->camera.scale();
 		}
 	
 		float robotAngle = -rtod(pose.a);
