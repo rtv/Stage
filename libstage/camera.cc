@@ -87,12 +87,12 @@ void StgPerspectiveCamera::forward( float amount )
 }
 
 void StgPerspectiveCamera::Load( Worldfile* wf, int sec ) {
-	float x = wf->ReadTupleFloat(sec, "pcam_loc", 0, 0 );
-	float y = wf->ReadTupleFloat(sec, "pcam_loc", 1, 0 );
-	float z = wf->ReadTupleFloat(sec, "pcam_loc", 2, 0 );
+	float x = wf->ReadTupleFloat(sec, "pcam_loc", 0, this->x() );
+	float y = wf->ReadTupleFloat(sec, "pcam_loc", 1, this->y() );
+	float z = wf->ReadTupleFloat(sec, "pcam_loc", 2, this->z() );
 	setPose( x, y, z );
-	setPitch( wf->ReadTupleFloat( sec, "pcam_angle", 0, 0 ) );
-	setYaw( wf->ReadTupleFloat( sec, "pcam_angle", 1, 0 ) );
+	setPitch( wf->ReadTupleFloat( sec, "pcam_angle", 0, pitch() ) );
+	setYaw( wf->ReadTupleFloat( sec, "pcam_angle", 1, yaw() ) );
 }
 
 void StgPerspectiveCamera::Save( Worldfile* wf, int sec ) {
