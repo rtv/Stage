@@ -28,6 +28,10 @@ ADD_DEFINITIONS( -DPROJECT=\\\"${PROJECT_NAME}\\\"
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage.pc.in ${CMAKE_CURRENT_BINARY_DIR}/stage.pc @ONLY)
 INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage.pc DESTINATION lib/pkgconfig/)
 
+# Create the config.h file
+SET(RGBFILE \"${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt\")
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
+
 # find the easy modules
 include(FindPkgConfig)
 pkg_search_module( GLIB REQUIRED glib-2.0 )
