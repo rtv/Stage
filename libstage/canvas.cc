@@ -711,7 +711,7 @@ void StgCanvas::renderFrame()
       glMatrixMode (GL_PROJECTION);
       glPushMatrix(); //save old projection
       glLoadIdentity ();
-      glOrtho( -w()/2.0, w()/2.0, -h()/2.0, h()/2.0, -100, 100 );	
+      glOrtho( 0, w(), 0, h(), -100, 100 );	
       glMatrixMode (GL_MODELVIEW);
 
       glPushMatrix();
@@ -724,16 +724,18 @@ void StgCanvas::renderFrame()
 
 		std::string clockstr = world->ClockString();
 		if( showFollow == true && last_selection )
-			clockstr.append( " --FOLLOW MODE--" );
+			clockstr.append( " [ FOLLOW MODE ]" );
 
-		int width = clockstr.length() * 7;
+		int margin = 3;
+		int width = gl_width( clockstr.c_str() ) + 2 * margin;
+		int height = gl_height() + 2 * margin;
 		
 		colorstack.Push( 0.8,0.8,1.0 ); // pale blue
-		glRectf( -w()/2, -h()/2, -w()/2 + width, -h()/2+20 );
+		glRectf( 0, 0, width, height );
 		colorstack.Pop();
 		
       colorstack.Push( 0,0,0 ); // black
-      gl_draw_string( -w()/2+4, -h()/2+4, 5, clockstr.c_str() );
+      gl_draw_string( margin, margin, 5, clockstr.c_str() );
       colorstack.Pop();
 
       glEnable( GL_DEPTH_TEST );
