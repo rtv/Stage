@@ -30,6 +30,7 @@ INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage.pc DESTINATION lib/pkgconfig/)
 SET(RGBFILE ${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt )
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
 
+
 # find the easy modules
 include(FindPkgConfig)
 pkg_search_module( GLIB REQUIRED glib-2.0 )
@@ -98,9 +99,6 @@ link_directories(${GLIB_LIBRARY_DIRS}
 		 ${OPENGL_LIBRARY_DIRS}
 )
 
-# generate a configuration header file in this dir
-# CONFIGURE_FILE( config.h.cmake config.h )
-
 # work through these subdirs
 ADD_SUBDIRECTORY(libstage)
 IF ( PLAYER_FOUND )
@@ -115,6 +113,7 @@ ADD_SUBDIRECTORY(worlds)
 
 # generate a cpack config file used to create packaged tarballs
 INCLUDE(InstallRequiredSystemLibraries)
+SET(CPACK_GENERATOR "TGZ")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Stage: A Multiple Robot Simulator")
 SET(CPACK_PACKAGE_VENDOR "The Player Project")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/DESCRIPTION.txt")

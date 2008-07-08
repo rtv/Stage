@@ -6,6 +6,9 @@ BUGS
 * 3d collision detection broken - e.g. fancypioneer2dx
 * [OSX only - FLTK bug?] loading window size constrains maximum window size
 
+* must build before building source package so that make
+  package_source picks up config.h
+
 INCOMPLETE
 
 * per-model visualization entries in view menu
