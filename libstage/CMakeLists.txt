@@ -1,17 +1,11 @@
 
 add_library(stage SHARED
-	world.cc 
-	worldgui.cc
-	worldfile.cc 
-	stage.cc 
-	typetable.cc 
-	stage.hh
-	file_manager.hh
-	file_manager.cc
 	ancestor.cc 
 	block.cc 
-	canvas.cc 
 	camera.cc
+	canvas.cc 
+	file_manager.cc
+	file_manager.hh
 	gl.cc 
 	glcolorstack.cc 
 	model.cc 
@@ -25,12 +19,18 @@ add_library(stage SHARED
 	model_position.cc 
 	model_props.cc 
 	model_ranger.cc 
-	resource.cc
-	texture_manager.cc
-	option.hh
 	option.cc
+	option.hh
 	options_dlg.cc
 	options_dlg.hh
+	resource.cc
+	stage.cc 
+	stage.hh
+	texture_manager.cc
+	typetable.cc 
+	world.cc 
+	worldfile.cc 
+	worldgui.cc
 )
 
 target_link_libraries( stage
