@@ -413,6 +413,9 @@ int StgCanvas::handle(int event)
 			//current_camera->reset();
 			if ( wf )
 				current_camera->Load( wf, wf->LookupEntity( "window" ) );
+			else
+				current_camera->reset();
+					
 			//invalidate();
 			if( Fl::event_state( FL_CTRL ) ) {
 				resetCamera();
