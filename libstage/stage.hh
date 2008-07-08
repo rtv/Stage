@@ -4,7 +4,8 @@
  *  Stage : a multi-robot simulator.  Part of the Player Project
  * 
  *  Copyright (C) 2001-2008 Richard Vaughan, Brian Gerkey, Andrew
- *  Howard
+ *  Howard, Toby Collett, Reed Hedges, Alex Couture-Beil, Jeremy
+ *  Asher, Pooya Karimian
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

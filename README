@@ -1,5 +1,5 @@
 ****************************************************************************
-* README.stage  - Richard Vaughan - Stage-2.0.1       
+* README.stage  - Richard Vaughan - Stage-3.0.0      
 *                                                                          
 * $Id: README,v 1.18 2006-03-29 05:13:44 rtv Exp $    
 ****************************************************************************
@@ -12,6 +12,9 @@ export PKG_CONFIG_PATH=$PLAYER/lib/pkgconfig
 export CMAKE_INCLUDE_PATH=/opt/local/include
 export CMAKE_LIBRARY_PATH=/opt/local/lib
 export CMAKE_INSTALL_PREFIX=$PLAYER
+
+cmake .
+make install
 
 ** Release Notes for 2.0.2 **
 

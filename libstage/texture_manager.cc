@@ -3,7 +3,7 @@
  *  Stage
  *
  *  Created by Alex Couture-Beil on 03/06/08.
- *
+ *  $Id$
  */
 
 #include "texture_manager.hh"

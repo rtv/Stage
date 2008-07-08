@@ -1,11 +1,6 @@
 #ifndef _FILE_MANAGER_HH_
 #define _FILE_MANAGER_HH_
 
-// Normally passed by build scripts
-#ifndef INSTALL_PREFIX
-#define INSTALL_PREFIX "."
-#endif
-
 #include <fstream>
 #include <string>
 #include <vector>

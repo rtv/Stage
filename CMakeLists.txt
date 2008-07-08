@@ -19,17 +19,12 @@ ENDIF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
 
 MESSAGE (STATUS "${PROJECT_NAME} version ${VERSION}")
 
-# define some preprocessor strings that the code is expecting
-ADD_DEFINITIONS( -DPROJECT=\\\"${PROJECT_NAME}\\\" 
-		-DINSTALL_PREFIX=\\\"${CMAKE_INSTALL_PREFIX}\\\"
-		-DVERSION=\\\"${VERSION}\\\" )
-
 # Create the pkgconfig file
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage.pc.in ${CMAKE_CURRENT_BINARY_DIR}/stage.pc @ONLY)
 INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage.pc DESTINATION lib/pkgconfig/)
 
 # Create the config.h file
-SET(RGBFILE \"${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt\")
+SET(RGBFILE ${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt )
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
 
 # find the easy modules

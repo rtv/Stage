@@ -1,6 +1,11 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-#define RGBFILE @RGBFILE@
+#define PROJECT "@PROJECT_NAME@"
+#define VERSION "@VERSION@"
+#define APIVERSION "@APIVERSION@"
+#define RGBFILE "@RGBFILE@"
+#define INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
 
 #endif
+

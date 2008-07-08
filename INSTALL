@@ -1,234 +1,146 @@
-Installation Instructions
-*************************
 
-Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2004, 2005,
-2006 Free Software Foundation, Inc.
+Stage v.3 build using CMake instructions
+Author: Richard Vaughan, 2008.4.11 $Id$
 
-This file is free documentation; the Free Software Foundation gives
-unlimited permission to copy, distribute and modify it.
+* Purpose *
 
-Basic Installation
-==================
+As an alternative to the GNU autotools build chain, Stage can also be
+buily with CMake. This has two main advantages: (i) it is much faster;
+(ii) CMake can create native build files for Windows and Mac OS X,
+which will help Stage become more portable.
 
-Briefly, the shell commands `./configure; make; make install' should
-configure, build, and install this package.  The following
-more-detailed instructions are generic; see the `README' file for
-instructions specific to this package.
 
-   The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation.  It uses
-those values to create a `Makefile' in each directory of the package.
-It may also create one or more `.h' files containing system-dependent
-definitions.  Finally, it creates a shell script `config.status' that
-you can run in the future to recreate the current configuration, and a
-file `config.log' containing compiler output (useful mainly for
-debugging `configure').
+* Configuring the build *
 
-   It can also use an optional file (typically called `config.cache'
-and enabled with `--cache-file=config.cache' or simply `-C') that saves
-the results of its tests to speed up reconfiguring.  Caching is
-disabled by default to prevent problems with accidental use of stale
-cache files.
+Unpack the distribution or check it out from SVN. Change directory to
+the top level of the Stage source tree.
 
-   If you need to do unusual things to compile the package, please try
-to figure out how `configure' could check whether to do them, and mail
-diffs or instructions to the address given in the `README' so they can
-be considered for the next release.  If you are using the cache, and at
-some point `config.cache' contains results you don't want to keep, you
-may remove or edit it.
+First, you may need to help CMake find your the libraries on which
+Stage depends. For example, if you use MacPorts on OS X, packages are
+usually installed in /opt/local, which is not in CMake's default
+system search path. Add your non-standard software directories to
+CMake's search paths by setting environment variables, e.g. in bash:
 
-   The file `configure.ac' (or `configure.in') is used to create
-`configure' by a program called `autoconf'.  You need `configure.ac' if
-you want to change it or regenerate `configure' using a newer version
-of `autoconf'.
+export CMAKE_INCLUDE_PATH=/opt/local/include
+export CMAKE_LIBRARY_PATH=/opt/local/lib
 
-The simplest way to compile this package is:
+If you want to use Player with Stage, install Player first, then make
+sure that pkg-config can find it. Test it like so:
 
-  1. `cd' to the directory containing the package's source code and type
-     `./configure' to configure the package for your system.
+pkg-config --modversion playercore
 
-     Running `configure' might take a while.  While running, it prints
-     some messages telling which features it is checking for.
+This should output the version number of the Player installation
+(probably 2.2.0 or later). If not, add the location of Player's
+pkg-config file to your PKG_CONFIG_PATH, eg. in bash:
 
-  2. Type `make' to compile the package.
+export PKG_CONFIG_PATH+=<Player installation prefix>/lib/pkgconfig
 
-  3. Optionally, type `make check' to run any self-tests that come with
-     the package.
+Now that the supporting software is set up, you can decide where you
+want to install Stage. The default installation directory varies by
+system, but is often /usr/local on Unix variants. This is easy and is
+often a good choice, but has the disadvantage that installation needs
+root/sudo priviliges. To install in the default location, do:
 
-  4. Type `make install' to install the programs and any data files and
-     documentation.
+  $ cmake .
 
-  5. You can remove the program binaries and object files from the
-     source code directory by typing `make clean'.  To also remove the
-     files that `configure' created (so you can compile the package for
-     a different kind of computer), type `make distclean'.  There is
-     also a `make maintainer-clean' target, but that is intended mainly
-     for the package's developers.  If you use it, you may have to get
-     all sorts of other programs in order to regenerate files that came
-     with the distribution.
+If you wish to install Stage elsewhere, define the CMAKE_INSTALL_PATH
+path variable when invoking cmake. To do this, use this command,
+substituting <prefix> with your chosen installation
+directory.
+	
+  $ cmake -DCMAKE_INSTALL_PREFIX=<prefix>
 
-Compilers and Options
-=====================
+For example to install in $HOME/playerstage, do:
 
-Some systems require unusual options for compilation or linking that the
-`configure' script does not know about.  Run `./configure --help' for
-details on some of the pertinent environment variables.
+  $ cmake -DCMAKE_INSTALL_PREFIX=$HOME/playerstage
 
-   You can give `configure' initial values for configuration parameters
-by setting variables in the command line or in the environment.  Here
-is an example:
+CMake will generate makefiles specifically for your machine. When this
+is done, you can inspect and edit the build settings using ccmake, or
+by editing the file CMakeCache.txt. 
 
-     ./configure CC=c99 CFLAGS=-g LIBS=-lposix
+* Building *
 
-   *Note Defining Variables::, for more details.
+In the top level directory of the source tree, do:
 
-Compiling For Multiple Architectures
-====================================
+ $ make
 
-You can compile the package for more than one kind of computer at the
-same time, by placing the object files for each architecture in their
-own directory.  To do this, you can use GNU `make'.  `cd' to the
-directory where you want the object files and executables to go and run
-the `configure' script.  `configure' automatically checks for the
-source code in the directory that `configure' is in and in `..'.
+* Installing *
 
-   With a non-GNU `make', it is safer to compile the package for one
-architecture at a time in the source code directory.  After you have
-installed the package for one architecture, use `make distclean' before
-reconfiguring for another architecture.
+In the top level directory of the source tree, do:
 
-Installation Names
-==================
+ $ make install
 
-By default, `make install' installs the package's commands under
-`/usr/local/bin', include files under `/usr/local/include', etc.  You
-can specify an installation prefix other than `/usr/local' by giving
-`configure' the option `--prefix=PREFIX'.
+(You may need to run this command as root or sudo, depending on the
+install location).
 
-   You can specify separate installation prefixes for
-architecture-specific files and architecture-independent files.  If you
-pass the option `--exec-prefix=PREFIX' to `configure', the package uses
-PREFIX as the prefix for installing programs and libraries.
-Documentation and other data files still use the regular prefix.
+Stage will install its components in various directories, for example:
 
-   In addition, if you use an unusual directory layout you can give
-options like `--bindir=DIR' to specify different values for particular
-kinds of files.  Run `configure --help' for a list of the directories
-you can set and what kinds of files go in them.
+<prefix>/bin    (executables, including the 'stage' program)
+<prefix>/lib    (libraries, including libstage)
+<prefix>/share  (contains data resources, such as images)
 
-   If the package supports it, you can cause programs to be installed
-with an extra prefix or suffix on their names by giving `configure' the
-option `--program-prefix=PREFIX' or `--program-suffix=SUFFIX'.
+* Setup *
 
-Optional Features
-=================
+You must ensure that the dynamic library libstage.so (or
+libstage.dylib, or libstage.dll, depending on your platform) can be
+found by your system's library loader. The method for doing this
+varies by platform.
 
-Some packages pay attention to `--enable-FEATURE' options to
-`configure', where FEATURE indicates an optional part of the package.
-They may also pay attention to `--with-PACKAGE' options, where PACKAGE
-is something like `gnu-as' or `x' (for the X Window System).  The
-`README' should mention any `--enable-' and `--with-' options that the
-package recognizes.
+On Linux, using BASH:
 
-   For packages that use the X Window System, `configure' can usually
-find the X include and library files automatically, but if it doesn't,
-you can use the `configure' options `--x-includes=DIR' and
-`--x-libraries=DIR' to specify their locations.
+  $ export LD_LIBRARY_PATH=<prefix>/lib
 
-Specifying the System Type
-==========================
+On OS X, using BASH:
 
-There may be some features `configure' cannot figure out automatically,
-but needs to determine by the type of machine the package will run on.
-Usually, assuming the package is built to be run on the _same_
-architectures, `configure' can figure that out, but if it prints a
-message saying it cannot guess the machine type, give it the
-`--build=TYPE' option.  TYPE can either be a short name for the system
-type, such as `sun4', or a canonical name which has the form:
+  $ export DYLD_LIBRARY_PATH=<prefix>/lib
 
-     CPU-COMPANY-SYSTEM
+If you plan to use Stage plugins, you also need to set the STAGEPATH
+environment variable to include the directory that contains your
+plugins. E.g. in BASH, do:
 
-where SYSTEM can have one of these forms:
+  $ export STAGEPATH=/usr/local/lib
 
-     OS KERNEL-OS
+If you installed Stage somewhere other than /usr/local, substitute
+your install prefix:
 
-   See the file `config.sub' for the possible values of each field.  If
-`config.sub' isn't included in this package, then this package doesn't
-need to know the machine type.
+  $ export STAGEPATH=<stage install prefix>/lib
 
-   If you are _building_ compiler tools for cross-compiling, you should
-use the option `--target=TYPE' to select the type of system they will
-produce code for.
+If you are using Stage with Player, you probably don't need to set the
+STAGEPATH. However, you may need to set the PLAYERPATH to include
+Stage's installed lib directory instead.
 
-   If you want to _use_ a cross compiler, that generates code for a
-platform different from the build platform, you should specify the
-"host" platform (i.e., that on which the generated programs will
-eventually be run) with `--host=TYPE'.
+* Testing *
 
-Sharing Defaults
-================
+To test your Stage installation, do:
 
-If you want to set default values for `configure' scripts to share, you
-can create a site shell script called `config.site' that gives default
-values for variables like `CC', `cache_file', and `prefix'.
-`configure' looks for `PREFIX/share/config.site' if it exists, then
-`PREFIX/etc/config.site' if it exists.  Or, you can set the
-`CONFIG_SITE' environment variable to the location of the site script.
-A warning: not all `configure' scripts look for a site script.
+<prefix>/bin/stage worlds/simple.world
 
-Defining Variables
-==================
+You should see a window appear, showing some robots. You can change
+the camera point of view by holding down the 'ctrl' key and moving the
+mouse pointer. If this works, you are ready to write your own robot
+simulations using libstage.
 
-Variables not defined in a site shell script can be set in the
-environment passed to `configure'.  However, some packages may run
-configure again during the build, and the customized values of these
-variables may be lost.  In order to avoid this problem, you should set
-them in the `configure' command line, using `VAR=value'.  For example:
+If you plan to use Stage plugins, you can test that plugins are
+working:
 
-     ./configure CC=/usr/local2/bin/gcc
+<prefix>/bin/stage worlds/fasr.world
 
-causes the specified `gcc' to be used as the C compiler (unless it is
-overridden in the site shell script).
+You should see a window appear, showing some robots. Try pressing the
+'p' key to pause and un-pause the simulation, to check that the robots
+are working. If this works, you are ready to write Stage plugins.
 
-Unfortunately, this technique does not work for `CONFIG_SHELL' due to
-an Autoconf bug.  Until the bug is fixed you can use this workaround:
+* Next steps *
 
-     CONFIG_SHELL=/bin/bash /bin/bash ./configure CONFIG_SHELL=/bin/bash
+- read the Stage manual, available from the Player Project website
+  (also buildable from the docsrc directory in the source tree
+  (requires doxygen)).
 
-`configure' Invocation
-======================
+- look at the examples provided in the worlds and examples
+  directories.
 
-`configure' recognizes the following options to control how it operates.
 
-`--help'
-`-h'
-     Print a summary of the options to `configure', and exit.
+Enjoy using Stage -- rtv
 
-`--version'
-`-V'
-     Print the version of Autoconf used to generate the `configure'
-     script, and exit.
-
-`--cache-file=FILE'
-     Enable the cache: use and save the results of the tests in FILE,
-     traditionally `config.cache'.  FILE defaults to `/dev/null' to
-     disable caching.
-
-`--config-cache'
-`-C'
-     Alias for `--cache-file=config.cache'.
-
-`--quiet'
-`--silent'
-`-q'
-     Do not print messages saying which checks are being made.  To
-     suppress all normal output, redirect it to `/dev/null' (any error
-     messages will still be shown).
-
-`--srcdir=DIR'
-     Look for the package's source code in directory DIR.  Usually
-     `configure' can determine that directory automatically.
-
-`configure' also accepts some other, not widely useful, options.  Run
-`configure --help' for more details.
+"All the world's a stage, and all the women merely players"
+  Wm. Shakespeare - "As you like it"
 

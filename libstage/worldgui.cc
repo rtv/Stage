@@ -103,11 +103,6 @@
 
 */
 
-#include "stage_internal.hh"
-#include "region.hh"
-#include "file_manager.hh"
-#include "options_dlg.hh"
-
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Shared_Image.H>
 #include <FL/Fl_PNG_Image.H>
@@ -118,6 +113,13 @@
 #include <set>
 #include <sstream>
 #include <iomanip>
+
+#include "stage_internal.hh"
+#include "region.hh"
+#include "file_manager.hh"
+#include "options_dlg.hh"
+#include "config.h" // build options from CMake
+
 
 
 static  const char* AboutText = 

@@ -1,5 +1,6 @@
 #include "file_manager.hh"
 #include "stage.hh" // to get PRINT_DEBUG
+#include "config.h" // to get INSTALL_PREFIX
 
 namespace Stg
 {
