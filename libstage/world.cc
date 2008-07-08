@@ -1,8 +1,7 @@
-
-/** @defgroup world Worlds
+/** @defgroup world World
 
   Stage simulates a 'world' composed of `models', defined in a `world
-  file'. 
+  file'.
 
 API: Stg::StgWorld
 
@@ -37,7 +36,7 @@ The Stage source distribution contains several example world files in
 <tt>(stage src)/worlds</tt> along with the worldfile properties
 described on the manual page for each model type.
 
- */
+*/
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -49,7 +48,7 @@ described on the manual page for each model type.
 #include <assert.h>
 #include <string.h> // for strdup(3)
 #include <locale.h> 
-#include <glib-object.h> // fior g_type_init() used by GDKPixbuf objects
+#include <glib-object.h> // for g_type_init() used by GDKPixbuf objects
 #include <limits.h>
 
 #include "stage_internal.hh"
@@ -286,8 +285,7 @@ void StgWorld::Load( const char* worldfile_path )
 		//printf( "created model %s\n", mod->Token() );
 
 		// configure the model with properties from the world file
-		mod->SetWorldfile( wf, entity );
-		mod->Load();
+		mod->Load(wf, entity );
 		
 		// record the model we created for this worlfile entry
 		g_hash_table_insert( entitytable, (gpointer)entity, mod );

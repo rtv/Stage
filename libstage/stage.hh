@@ -890,10 +890,10 @@ namespace Stg
 	 this->token = strdup( str );
   }
   
-	// PURE VIRTUAL - descendents must implement
-	virtual void PushColor( stg_color_t col ) = 0;
-	virtual void PushColor( double r, double g, double b, double a ) = 0;
-	virtual void PopColor() = 0; // does nothing
+//	// PURE VIRTUAL - descendents must implement
+//	virtual void PushColor( stg_color_t col ) = 0;
+//	virtual void PushColor( double r, double g, double b, double a ) = 0;
+//	virtual void PopColor() = 0; // does nothing
 };
 
 
@@ -959,19 +959,15 @@ const uint32_t INTERVAL_LOG_LEN = 32;
 class Region;
 class SuperRegion;
 
-/** WORLD CLASS */
+/// StgWorld class
 class StgWorld : public StgAncestor
 {
 	friend class StgModel; // allow access to private members
 	friend class StgBlock;
 	friend class StgTime;
-   friend class StgCanvas;
-
-public: 
-  static void UpdateAll();
+	friend class StgCanvas;
   
 private:
-	
   static GList* world_list;
   /** Update all existing worlds */
 
@@ -990,7 +986,7 @@ private:
 	// convert a distance in meters to a distance in world occupancy grid pixels
 	int32_t MetersToPixels( stg_meters_t x ){ return (int32_t)floor(x * ppm) ; };
 
-  void Initialize( const char* token, 
+	void Initialize( const char* token, 
 						 stg_msec_t interval_sim, 
 						 double ppm );
   
@@ -1014,7 +1010,6 @@ private:
   //stg_usec_t wall_last_update; ///< the real time of the last update in ms
 
 	bool dirty; ///< iff true, a gui redraw would be required
-
 
 	int total_subs; ///< the total number of subscriptions to all models
 	double ppm; ///< the resolution of the world model in pixels per meter  
@@ -1074,10 +1069,13 @@ protected:
 	void ClearRays();
 
 	long unsigned int updates; ///< the number of simulated time steps executed so far
+	
+	FileManager* fileMan;
 
 public:
-  static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
-  static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
+	static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
+	static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
+	static void UpdateAll();
   
 	StgWorld( const char* token = "MyWorld", 
 				 stg_msec_t interval_sim = DEFAULT_INTERVAL_SIM,
@@ -1085,13 +1083,11 @@ public:
 
 	virtual ~StgWorld();
 
-  FileManager* fileMan;
-
-	stg_usec_t SimTimeNow(void){ return sim_time;} ;
+	stg_usec_t SimTimeNow(void){ return sim_time; }
 	stg_usec_t RealTimeNow(void);
 	stg_usec_t RealTimeSinceStart(void);
-  //void PauseUntilNextUpdateTime(void);
-  //	void IdleUntilNextUpdateTime( int (*idler)(void) );
+//	void PauseUntilNextUpdateTime(void);
+//	void IdleUntilNextUpdateTime( int (*idler)(void) );
 
 	void AddBlock( StgBlock* block );
 	void RemoveBlock( StgBlock* block );
@@ -1112,28 +1108,27 @@ public:
 	void CancelQuit(){ quit = false; }
 	void CancelQuitAll(){ quit_all = false; }
 
-  /** Get the resolution in pixels-per-metre of the underlying
+	/** Get the resolution in pixels-per-metre of the underlying
 		discrete raytracing model */ 
 	double Resolution(){ return ppm; };
 
-  /** Returns a pointer to the model identified by ID, or NULL if
+	/** Returns a pointer to the model identified by ID, or NULL if
 		nonexistent */
-  //StgModel* GetModel( const stg_id_t id );
+	//StgModel* GetModel( const stg_id_t id );
 
-  /** Returns a pointer to the model identified by name, or NULL if
+	/** Returns a pointer to the model identified by name, or NULL if
 		nonexistent */
 	StgModel* GetModel( const char* name );
 
-  /** Return the 3D bounding box of the world, in meters */
-  stg_bounds3d_t GetExtent(){ return extent; };
+	/** Return the 3D bounding box of the world, in meters */
+	stg_bounds3d_t GetExtent(){ return extent; };
 
-  /** call func( model, arg ) for each model in the world */
+	/** call func( model, arg ) for each model in the world */
 	void ForEachModel( GHFunc func, void* arg )
 	{ g_hash_table_foreach( models_by_name, func, arg ); };
 
-  /** Return the number of times the world has been updated. */
-	long unsigned int GetUpdateCount()
-	{ return updates; }
+	/** Return the number of times the world has been updated. */
+	long unsigned int GetUpdateCount() { return updates; }
 };
 
 
@@ -1146,33 +1141,26 @@ typedef struct {
 typedef int ctrlinit_t( StgModel* mod );
 //typedef void ctrlupdate_t( StgModel* mod );
 
-// MODEL CLASS
+/// StgModel class
 class StgModel : public StgAncestor
 {
 	friend class StgAncestor;
 	friend class StgWorld;
 	friend class StgWorldGui;
 	friend class StgCanvas;
+	friend class StgBlock;
   
 private:
-  /** the number of models instatiated - used to assign unique IDs */
-  static uint32_t count;
-  static GHashTable*  modelsbyid;
-	
-  std::vector<Option*> drawOptions;
-
-public:
-  /** Look up a model pointer by a unique model ID */
-  static StgModel* LookupId( uint32_t id )
-  { 
-	 return (StgModel*)g_hash_table_lookup( modelsbyid, (void*)id ); 
-  }
-  
-  /** unique process-wide identifier for this model */
-  uint32_t id;
+	/** the number of models instatiated - used to assign unique IDs */
+	static uint32_t count;
+	static GHashTable*  modelsbyid;
+	/** unique process-wide identifier for this model */
+	uint32_t id;	
+	std::vector<Option*> drawOptions;
+	const std::vector<Option*>& getOptions() const { return drawOptions; }
 
 protected:
-  stg_pose_t pose;
+	stg_pose_t pose;
 	stg_velocity_t velocity;
 	stg_watts_t watts; //< power consumed by this model
 	stg_color_t color;
@@ -1222,7 +1210,7 @@ protected:
 
 	stg_bool_t disabled; //< if non-zero, the model is disabled
 
-  //	GList* d_list;
+//	GList* d_list;
 	GList* blocks; //< list of stg_block_t structs that comprise a body
 
 	GArray* trail;
@@ -1244,25 +1232,21 @@ protected:
 
 	StgWorld* world; // pointer to the world in which this model exists
   
-  /** Check to see if the given change in pose will yield a collision
+	/** Check to see if the given change in pose will yield a collision
 		with obstacles.  Returns a pointer to the first entity we are in
 		collision with, and stores the location of the hit in hitx,hity (if
 		non-null) Returns NULL if no collision. */
-  StgModel* TestCollision( stg_pose_t pose, 
+	StgModel* TestCollision( stg_pose_t pose, 
 									stg_meters_t* hitx,
 									stg_meters_t* hity );
-  
-  /** Check to see if the current pose is in  a collision
+
+	/** Check to see if the current pose is in  a collision
 		with obstacles.  Returns a pointer to the first entity we are in
 		collision with, and stores the location of the hit in hitx,hity (if
 		non-null) Returns NULL if no collision. */
-  StgModel* TestCollision( stg_meters_t* hitx,
+	StgModel* TestCollision( stg_meters_t* hitx,
 									stg_meters_t* hity );
   
-public:  void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
-										  stg_meters_t ymin, stg_meters_t ymax );
-  
-protected:
 	void Map();
 	void UnMap();
 
@@ -1270,7 +1254,6 @@ protected:
 	void UnMapWithChildren();
 
 	int TreeToPtrArray( GPtrArray* array );
-
 
 	/** raytraces a single ray from the point and heading identified by
 	  pose, in local coords */
@@ -1324,8 +1307,8 @@ protected:
 	virtual void DrawStatus( StgCanvas* canvas );
 	void DrawStatusTree( StgCanvas* canvas );
 
-  void PushLocalCoords();
-   void PopCoords();
+	void PushLocalCoords();
+	void PopCoords();
 
 	///Draw the image stored in texture_id above the model
 	void DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha );
@@ -1347,195 +1330,194 @@ protected:
 	void DrawGrid();
 	void UpdateIfDue();
   
-  /* hooks for attaching special callback functions (not used as
+	/* hooks for attaching special callback functions (not used as
 	  variables) */
-  char startup_hook, shutdown_hook, load_hook, save_hook, update_hook;
-  
-  ctrlinit_t* initfunc;
-  
-  GList* flag_list;
-  
-  Worldfile* wf;
-  int wf_entity;
-  
-  GPtrArray* blinkenlights;
-  void DrawBlinkenlights();
+	char startup_hook, shutdown_hook, load_hook, save_hook, update_hook;
 
-  /** OpenGL display list identifier */
-  int blocks_dl;
+	ctrlinit_t* initfunc;
 
-  /** Compile the display list for this model */
-  //void BuildDisplayList();
-  
-  stg_model_type_t type;
+	GList* flag_list;
 
-  void DataVisualizeTree();
+	Worldfile* wf;
+	int wf_entity;
 
-public:
+	GPtrArray* blinkenlights;
+	void DrawBlinkenlights();
 
-  static const char* typestr;
+	/** OpenGL display list identifier */
+	int blocks_dl;
 
-	// constructor
-  StgModel( StgWorld* world, StgModel* parent, stg_model_type_t type = MODEL_TYPE_PLAIN );
+	/** Compile the display list for this model */
+	//void BuildDisplayList();
 
-	// destructor
-	virtual ~StgModel();
+	stg_model_type_t type;
+	static const char* typestr;
 
-	void Say( const char* str );
-
-  /** Set the worldfile and worldfile entity ID - must be called
-		before Load() */
-  void Load( Worldfile* wf, int wf_entity )
-  {
-	 SetWorldfile( wf, wf_entity );
-	 Load(); // call virtual load
-  }
-
-  /** Set the worldfile and worldfile entity ID */
-  void SetWorldfile( Worldfile* wf, int wf_entity )
-  { this->wf = wf; this->wf_entity = wf_entity; }
-  
-  /** configure a model by reading from the current world file */
-   virtual void Load();
-  
-	/** save the state of the model to the current world file */
-	virtual void Save();
-
-	/** Should be called after all models are loaded, to do any last-minute setup */
-	void Init();
-
-
-	void AddFlag(  StgFlag* flag );
-	void RemoveFlag( StgFlag* flag );
-
-	void PushFlag( StgFlag* flag );
-	StgFlag* PopFlag();
-
-	int GetFlagCount(){ return g_list_length( flag_list ); }
+	void DataVisualizeTree();
+	
+	virtual void PushColor( stg_color_t col )
+	{ world->PushColor( col ); }
+	
+	virtual void PushColor( double r, double g, double b, double a )
+	{ world->PushColor( r,g,b,a ); }
+	
+	virtual void PopColor(){ world->PopColor(); }
 	
 	void DrawFlagList();
-
+public:
+	void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
+						  stg_meters_t ymin, stg_meters_t ymax );
+	
+	/** Look up a model pointer by a unique model ID */
+	static StgModel* LookupId( uint32_t id )
+	{ return (StgModel*)g_hash_table_lookup( modelsbyid, (void*)id ); }
+	
+	StgModel( StgWorld* world, StgModel* parent, stg_model_type_t type = MODEL_TYPE_PLAIN );
+	virtual ~StgModel();
+	
+	void Say( const char* str );
+	
+	void Load( Worldfile* wf, int wf_entity )
+	{
+		/** Set the worldfile and worldfile entity ID - must be called
+		 before Load() */
+		SetWorldfile( wf, wf_entity );
+		Load(); // call virtual load
+	}
+	
+	/** Set the worldfile and worldfile entity ID */
+	void SetWorldfile( Worldfile* wf, int wf_entity )
+	{ this->wf = wf; this->wf_entity = wf_entity; }
+	
+	/** configure a model by reading from the current world file */
+	virtual void Load();
+	
+	/** save the state of the model to the current world file */
+	virtual void Save();
+	
+	/** Should be called after all models are loaded, to do any last-minute setup */
+	void Init();
+	
+	void AddFlag(  StgFlag* flag );
+	void RemoveFlag( StgFlag* flag );
+	
+	void PushFlag( StgFlag* flag );
+	StgFlag* PopFlag();
+	
+	int GetFlagCount(){ return g_list_length( flag_list ); }
+	
 	void AddBlinkenlight( stg_blinkenlight_t* b )
 	{
 		g_ptr_array_add( this->blinkenlights, b );
 	}
-
+	
 	void ClearBlinkenlights()
 	{
 		g_ptr_array_set_size( this->blinkenlights, 0 );
 	}
-
-	virtual void PushColor( stg_color_t col )
-	{ world->PushColor( col ); }
-
-	virtual void PushColor( double r, double g, double b, double a )
-	{ world->PushColor( r,g,b,a ); }
-
-	virtual void PopColor(){ world->PopColor(); }
-
+	
 	void Enable(){ disabled = false; };
 	void Disable(){ disabled = true; };
-
+	
 	// Load a control program for this model from an external library
 	void LoadControllerModule( char* lib );
-
+	
 	// call this to ensure the GUI window is redrawn
 	void NeedRedraw();
-
+	
 	void AddBlock( stg_point_t* pts, 
-			size_t pt_count, 
-			stg_meters_t zmin, 
-			stg_meters_t zmax,
-			stg_color_t color,
-			bool inherit_color );
-
+				  size_t pt_count, 
+				  stg_meters_t zmin, 
+				  stg_meters_t zmax,
+				  stg_color_t color,
+				  bool inherit_color );
+	
 	void AddBlockRect( double x, double y, 
-			double width, double height );
-
+					  double width, double height );
+	
 	/** remove all blocks from this model, freeing their memory */
 	void ClearBlocks();
-
-  //const char* TypeStr(){ return this->typestr; }
+	
+	//const char* TypeStr(){ return this->typestr; }
 	StgModel* Parent(){ return this->parent; }
 	StgModel* GetModel( const char* name );
-	bool Stall(){ return this->stall; }
 	int GuiMask(){ return this->gui_mask; };
 	inline StgWorld* GetWorld(){ return this->world; }
-
+	
 	/// return the root model of the tree containing this model
 	StgModel* Root()
 	{ return(  parent ? parent->Root() : this ); }
-
+	
 	bool ObstacleReturn(){ return obstacle_return; }  
 	stg_laser_return_t GetLaserReturn(){ return laser_return; }
 	int GetRangerReturn(){ return ranger_return; }  
 	int FiducialReturn(){ return fiducial_return; }
 	int FiducialKey(){ return fiducial_key; }
-
+	
 	bool IsAntecedent( StgModel* testmod );
-
+	
 	// returns true if model [testmod] is a descendent of model [mod]
 	bool IsDescendent( StgModel* testmod );
-
+	
 	bool IsRelated( StgModel* mod2 );
-
+	
 	/** get the pose of a model in the global CS */
 	stg_pose_t GetGlobalPose();
-
+	
 	/** get the velocity of a model in the global CS */
 	stg_velocity_t GetGlobalVelocity();
-
+	
 	/* set the velocity of a model in the global coordinate system */
 	void SetGlobalVelocity(  stg_velocity_t gvel );
-
+	
 	/** subscribe to a model's data */
 	void Subscribe();
-
+	
 	/** unsubscribe from a model's data */
 	void Unsubscribe();
-
+	
 	/** set the pose of model in global coordinates */
 	void SetGlobalPose(  stg_pose_t gpose );
-
+	
 	/** set a model's velocity in its parent's coordinate system */
 	void SetVelocity(  stg_velocity_t vel );
-
+	
 	/** set a model's pose in its parent's coordinate system */
 	void SetPose(  stg_pose_t pose );
-
+	
 	/** add values to a model's pose in its parent's coordinate system */
 	void AddToPose(  stg_pose_t pose );
-
+	
 	/** add values to a model's pose in its parent's coordinate system */
 	void AddToPose(  double dy, double dy, double dz, double da );
-
+	
 	/** set a model's geometry (size and center offsets) */
 	void SetGeom(  stg_geom_t src );
-
+	
 	/** set a model's geometry (size and center offsets) */
 	void SetFiducialReturn(  int fid );
-
+	
 	/** set a model's fiducial key: only fiducial finders with a
-	  matching key can detect this model as a fiducial. */
+	 matching key can detect this model as a fiducial. */
 	void SetFiducialKey(  int key );
-
+	
 	stg_color_t GetColor(){ return color; }
-
+	
 	//  stg_laser_return_t GetLaserReturn(){ return laser_return; }
-
+	
 	/** Change a model's parent - experimental*/
 	int SetParent( StgModel* newparent);
-
+	
 	/** Get a model's geometry - it's size and local pose (offset from
-	  origin in local coords) */
+	 origin in local coords) */
 	stg_geom_t GetGeom(){ return geom; }
-
+	
 	/** Get the pose of a model in its parent's coordinate system  */
 	stg_pose_t GetPose(){ return pose; }
-
+	
 	/** Get a model's velocity (in its local reference frame) */
 	stg_velocity_t GetVelocity(){ return velocity; }
-
+	
 	// guess what these do?
 	void SetColor( stg_color_t col );
 	void SetMass( stg_kg_t mass );
@@ -1552,82 +1534,82 @@ public:
 	void SetGuiOutline( int val );
 	void SetWatts( stg_watts_t watts );
 	void SetMapResolution( stg_meters_t res );
-
+	
 	bool DataIsFresh(){ return this->data_fresh; }
-
+	
 	/* attach callback functions to data members. The function gets
-	   called when the member is changed using SetX() accessor method */
-
+	 called when the member is changed using SetX() accessor method */
+	
 	void AddCallback( void* address, 
-			stg_model_callback_t cb, 
-			void* user );
-
+					 stg_model_callback_t cb, 
+					 void* user );
+	
 	int RemoveCallback( void* member,
-			stg_model_callback_t callback );
-
+					   stg_model_callback_t callback );
+	
 	void CallCallbacks(  void* address );
-
+	
 	/* wrappers for the generic callback add & remove functions that hide
-	   some implementation detail */
-
+	 some implementation detail */
+	
 	void AddStartupCallback( stg_model_callback_t cb, void* user )
 	{ AddCallback( &startup_hook, cb, user ); };
-
+	
 	void RemoveStartupCallback( stg_model_callback_t cb )
 	{ RemoveCallback( &startup_hook, cb ); };
-
+	
 	void AddShutdownCallback( stg_model_callback_t cb, void* user )
 	{ AddCallback( &shutdown_hook, cb, user ); };
-
+	
 	void RemoveShutdownCallback( stg_model_callback_t cb )
 	{ RemoveCallback( &shutdown_hook, cb ); }
-
+	
 	void AddLoadCallback( stg_model_callback_t cb, void* user )
 	{ AddCallback( &load_hook, cb, user ); }
-
+	
 	void RemoveLoadCallback( stg_model_callback_t cb )
 	{ RemoveCallback( &load_hook, cb ); }
-
+	
 	void AddSaveCallback( stg_model_callback_t cb, void* user )
 	{ AddCallback( &save_hook, cb, user ); }
-
+	
 	void RemoveSaveCallback( stg_model_callback_t cb )
 	{ RemoveCallback( &save_hook, cb ); }
-
+	
 	void AddUpdateCallback( stg_model_callback_t cb, void* user )
 	{ AddCallback( &update_hook, cb, user ); }
-
+	
 	void RemoveUpdateCallback( stg_model_callback_t cb )
 	{ RemoveCallback( &update_hook, cb ); }
-
+	
 	/** named-property interface 
 	 */
 	void* GetProperty( char* key );
-
+	
 	/** @brief Set a named property of a Stage model.
-
-	  Set a property of a Stage model. 
-
-	  This function can set both predefined and user-defined
-	  properties of a model. Predefined properties are intrinsic to
-	  every model, such as pose and color. Every supported predefined
-	  properties has its identifying string defined as a preprocessor
-	  macro in stage.h. Users should use the macro instead of a
-	  hard-coded string, so that the compiler can help you to avoid
-	  mis-naming properties.
-
-	  User-defined properties allow the user to attach arbitrary data
-	  pointers to a model. User-defined property data is not copied,
-	  so the original pointer must remain valid. User-defined property
-	  names are simple strings. Names beginning with an underscore
-	  ('_') are reserved for internal libstage use: users should not
-	  use names beginning with underscore (at risk of causing very
-	  weird behaviour).
-
-	  Any callbacks registered for the named property will be called.      
-
-	  Returns 0 on success, or a positive error code on failure.
-
+	 
+	 Set a property of a Stage model. 
+	 
+	 This function can set both predefined and user-defined
+	 properties of a model. Predefined properties are intrinsic to
+	 every model, such as pose and color. Every supported predefined
+	 properties has its identifying string defined as a preprocessor
+	 macro in stage.h. Users should use the macro instead of a
+	 hard-coded string, so that the compiler can help you to avoid
+	 mis-naming properties.
+	 
+	 User-defined properties allow the user to attach arbitrary data
+	 pointers to a model. User-defined property data is not copied,
+	 so the original pointer must remain valid. User-defined property
+	 names are simple strings. Names beginning with an underscore
+	 ('_') are reserved for internal libstage use: users should not
+	 use names beginning with underscore (at risk of causing very
+	 weird behaviour).
+	 
+	 Any callbacks registered for the named property will be called.      
+	 
+	 Returns 0 on success, or a positive error code on failure.
+	 
 	 *CAUTION* The caller is responsible for making sure the pointer
 	 points to data of the correct type for the property, so use
 	 carefully. Check the docs or the equivalent
@@ -1636,118 +1618,117 @@ public:
 	 */ 
 	int SetProperty( char* key, void* data );
 	void UnsetProperty( char* key );
-
-
+	
 	void AddPropertyToggles( void* member, 
-			stg_model_callback_t callback_on,
-			void* arg_on,
-			stg_model_callback_t callback_off,
-			void* arg_off,
-			char* name,
-			char* label,
-			gboolean enabled );
-
+							stg_model_callback_t callback_on,
+							void* arg_on,
+							stg_model_callback_t callback_off,
+							void* arg_off,
+							char* name,
+							char* label,
+							gboolean enabled );
+	
 	virtual void Print( char* prefix );
 	virtual const char* PrintWithPose();
-
+	
 	/** Convert a pose in the world coordinate system into a model's
-	  local coordinate system. Overwrites [pose] with the new
-	  coordinate. */
+	 local coordinate system. Overwrites [pose] with the new
+	 coordinate. */
 	void GlobalToLocal( stg_pose_t* pose );
-
+	
 	/** Convert a pose in the model's local coordinate system into the
-	  world coordinate system. Overwrites [pose] with the new
-	  coordinate. */
+	 world coordinate system. Overwrites [pose] with the new
+	 coordinate. */
 	//void LocalToGlobal( stg_pose_t* pose );
-
+	
 	/** Return the global pose (i.e. pose in world coordinates) of a
-	  pose specified in the model's local coordinate system */
+	 pose specified in the model's local coordinate system */
 	stg_pose_t LocalToGlobal( stg_pose_t pose );
-
+	
 	/** Return the 3d point in world coordinates of a 3d point
-	  specified in the model's local coordinate system */
+	 specified in the model's local coordinate system */
 	stg_point3_t LocalToGlobal( stg_point3_t local );
-
+	
 	/** returns the first descendent of this model that is unsubscribed
-	  and has the type indicated by the string */
+	 and has the type indicated by the string */
 	StgModel* GetUnsubscribedModelOfType( stg_model_type_t type );
-
+	
 	// iff true, model may output some debugging visualizations and other info
 	//bool debug;
 	
-	const std::vector<Option*>& getOptions() const { return drawOptions; }
+	bool stalled(){ return this->stall; }
 };
 
 // BLOCKS
 class StgBlock
 {
-	public:
+public:
 
-		/** Block Constructor. A model's body is a list of these
-		  blocks. The point data is copied, so pts can safely be freed
-		  after constructing the block.*/
-		StgBlock( StgModel* mod,
-				stg_point_t* pts, 
-				size_t pt_count,
-				stg_meters_t height,
-				stg_meters_t z_offset,
-				stg_color_t color,
-				bool inherit_color );
+	/** Block Constructor. A model's body is a list of these
+	  blocks. The point data is copied, so pts can safely be freed
+	  after constructing the block.*/
+	StgBlock( StgModel* mod,
+			stg_point_t* pts, 
+			size_t pt_count,
+			stg_meters_t height,
+			stg_meters_t z_offset,
+			stg_color_t color,
+			bool inherit_color );
 
-		~StgBlock();
+	~StgBlock();
 
-		void Map();
-		void UnMap(); // draw the block into the world
+	void Map();
+	void UnMap(); // draw the block into the world
 
-		void DrawGlobal(); // draw the block in OpenGL using pts_global coords
-		void Draw(); // draw the block in OpenGL
-		//void Draw2D(); // draw the block in OpenGL
-		void DrawSolid(); // draw the block in OpenGL as a solid single color
-		void DrawFootPrint(); // draw the projection of the block onto the z=0 plane
+	void DrawGlobal(); // draw the block in OpenGL using pts_global coords
+	void Draw(); // draw the block in OpenGL
+	//void Draw2D(); // draw the block in OpenGL
+	void DrawSolid(); // draw the block in OpenGL as a solid single color
+	void DrawFootPrint(); // draw the projection of the block onto the z=0 plane
 
-		static void ScaleList( GList* blocks, stg_size_t* size );
-		void RecordRenderPoint( GSList** head, GSList* link, unsigned int* c1, unsigned int* c2 );
+	static void ScaleList( GList* blocks, stg_size_t* size );
+	void RecordRenderPoint( GSList** head, GSList* link, unsigned int* c1, unsigned int* c2 );
 
-		StgModel* Model(){ return mod; };
+	StgModel* Model(){ return mod; };
 
-		stg_point_t* Points( unsigned int *count )
-		{ if( count ) *count = pt_count; return pts; };	       
+	stg_point_t* Points( unsigned int *count )
+	{ if( count ) *count = pt_count; return pts; };	       
 
-		bool IntersectGlobalZ( stg_meters_t z )
-		{ return( z >= global_zmin &&  z <= global_zmax ); }
+	bool IntersectGlobalZ( stg_meters_t z )
+	{ return( z >= global_zmin &&  z <= global_zmax ); }
 
-		stg_color_t Color()
-		{ return( inherit_color ? mod->GetColor() : color ); }
+	stg_color_t Color()
+	{ return( inherit_color ? mod->GetColor() : color ); }
 
-	private:
-		stg_point_t* pts; //< points defining a polygon
-		size_t pt_count; //< the number of points
-		stg_meters_t zmin;
-		stg_meters_t zmax;
+private:
+	stg_point_t* pts; //< points defining a polygon
+	size_t pt_count; //< the number of points
+	stg_meters_t zmin;
+	stg_meters_t zmax;
 
-		stg_meters_t global_zmin;
-		stg_meters_t global_zmax;
+	stg_meters_t global_zmin;
+	stg_meters_t global_zmax;
 
-		StgModel* mod; //< model to which this block belongs
+	StgModel* mod; //< model to which this block belongs
 
-		stg_point_int_t* pts_global_pixels; //< points defining a polygon in global coords
+	stg_point_int_t* pts_global_pixels; //< points defining a polygon in global coords
 
-		stg_color_t color;
-		bool inherit_color;
+	stg_color_t color;
+	bool inherit_color;
 
-		GArray* rendered_points;
+	GArray* rendered_points;
 
-		inline void DrawTop();
-		inline void DrawSides();
+	inline void DrawTop();
+	inline void DrawSides();
 
-		inline void PushColor( stg_color_t col )
-		{ mod->PushColor( col ); }
+	inline void PushColor( stg_color_t col )
+	{ mod->PushColor( col ); }
 
-		inline void PushColor( double r, double g, double b, double a )
-		{ mod->PushColor( r,g,b,a ); }
+	inline void PushColor( double r, double g, double b, double a )
+	{ mod->PushColor( r,g,b,a ); }
 
-		inline void PopColor()
-		{ mod->PopColor(); }
+	inline void PopColor()
+	{ mod->PopColor(); }
 };
 
 // COLOR STACK CLASS
@@ -1892,68 +1873,66 @@ class StgOrthoCamera : public StgCamera
 		void Save( Worldfile* wf, int sec );
 };
 
-
 class StgCanvas : public Fl_Gl_Window
 {
-  friend class StgWorldGui; // allow access to private members
-  friend class StgModel;
+	friend class StgWorldGui; // allow access to private members
+	friend class StgModel;
   
 private:
-  GlColorStack colorstack;
-  
-  StgCamera* current_camera;
-  StgOrthoCamera camera;
-  StgPerspectiveCamera perspective_camera;
-  bool dirty_buffer;
+	GlColorStack colorstack;
+
+	StgCamera* current_camera;
+	StgOrthoCamera camera;
+	StgPerspectiveCamera perspective_camera;
+	bool dirty_buffer;
 	Worldfile* wf;
-	
-  int startx, starty;
-  bool selectedModel;
-  bool clicked_empty_space;
+
+	int startx, starty;
+	bool selectedModel;
+	bool clicked_empty_space;
 	int empty_space_startx, empty_space_starty;
-  GList* selected_models; ///< a list of models that are currently
-  ///selected by the user
-  StgModel* last_selection; ///< the most recently selected model
-    ///(even if it is now unselected).
-    
-  stg_msec_t interval; // window refresh interval in ms
+	GList* selected_models; ///< a list of models that are currently
+	///selected by the user
+	StgModel* last_selection; ///< the most recently selected model
+	///(even if it is now unselected).
+
+	stg_msec_t interval; // window refresh interval in ms
+
+	GList* ray_list;
+	void RecordRay( double x1, double y1, double x2, double y2 );
+	void DrawRays();
+	void ClearRays();
+	void DrawGlobalGrid();
   
-  GList* ray_list;
-  void RecordRay( double x1, double y1, double x2, double y2 );
-  void DrawRays();
-  void ClearRays();
-  void DrawGlobalGrid();
-  
-  Option 
-    showBlinken, 
-    showBlocks, 
-    showClock, 
-    showData, 
-    showFlags,
-    showFollow,
-    showFootprints, 
-    showGrid, 
-    showOccupancy, 
-    showScreenshots,
-	showStatus,
-    showTrailArrows, 
-    showTrailRise, 
-    showTrails, 
-    showTree,
-	pCamOn,
-	visualizeAll;
+	Option
+		showBlinken, 
+		showBlocks, 
+		showClock, 
+		showData, 
+		showFlags,
+		showFollow,
+		showFootprints, 
+		showGrid, 
+		showOccupancy, 
+		showScreenshots,
+		showStatus,
+		showTrailArrows, 
+		showTrailRise, 
+		showTrails, 
+		showTree,
+		pCamOn,
+		visualizeAll;
   
 public:
-
 	StgCanvas( StgWorldGui* world, int x, int y, int W,int H);
 	~StgCanvas();
 
 	bool graphics;
 	StgWorldGui* world;
 
-  void Screenshot();
+	void Screenshot();
   
-  void createMenuItems( Fl_Menu_Bar* menu, std::string path );
+	void createMenuItems( Fl_Menu_Bar* menu, std::string path );
   
 	void FixViewport(int W,int H);
 	void DrawFloor(); //simpler floor compared to grid
@@ -1993,70 +1972,27 @@ public:
   void Save( Worldfile* wf, int section );
 };
 
-
-/** Extends StgWorld to implements an FLTK / OpenGL graphical user
+/** Extends StgWorld to implement an FLTK / OpenGL graphical user
   interface.
  */
 class StgWorldGui : public StgWorld, public Fl_Window 
 {
-  friend class StgCanvas;
-  friend class StgModelCamera;
+	friend class StgCanvas;
+	friend class StgModelCamera;
 
 private:
-  bool paused; ///< the world only updates when this is false
-  //int wf_section;
-  StgCanvas* canvas;
-  Fl_Menu_Bar* mbar;
-  OptionsDlg* oDlg;
-  std::vector<Option*> drawOptions;
-  void updateOptions();
-  stg_usec_t interval_log[INTERVAL_LOG_LEN];
-  
-  stg_usec_t real_time_of_last_update;
-  stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
+	bool paused; ///< the world only updates when this is false
+	//int wf_section;
+	StgCanvas* canvas;
+	Fl_Menu_Bar* mbar;
+	OptionsDlg* oDlg;
+	std::vector<Option*> drawOptions;
+	void updateOptions();
+	stg_usec_t interval_log[INTERVAL_LOG_LEN];
+
+	stg_usec_t real_time_of_last_update;
+	stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
 	
-public:
-  static const stg_msec_t DEFAULT_INTERVAL_REAL = 100; ///< real time between updates
-
-  StgWorldGui(int W,int H,const char*L=0);
-  ~StgWorldGui();
-  
-  virtual bool Update();
-  
-  virtual void Load( const char* filename );
-  virtual void UnLoad();
-  virtual bool Save( const char* filename );
-  
-  
-  void Start(){ paused = false; };
-  void Stop(){ paused = true; };
-  void TogglePause(){ paused = !paused; };
-  
-  /** Get human readable string that describes the current simulation
-		time. */
-	std::string ClockString( void );
-
-  /** Set the minimum real time interval between world updates, in
-		microeconds. */
-  void SetRealTimeInterval( stg_usec_t usec )
-  { interval_real = usec; }
-
-protected:
-	virtual void PushColor( stg_color_t col )
-	{ canvas->PushColor( col ); } 
-
-	virtual void PushColor( double r, double g, double b, double a )
-	{ canvas->PushColor( r,g,b,a ); }
-
-	virtual void PopColor()
-	{ canvas->PopColor(); } 
-
-	void DrawTree( bool leaves );
-	void DrawFloor();
-	
-	StgCanvas* GetCanvas( void ) { return canvas; }
-
-private:
 	// static callback functions
 	static void windowCb( Fl_Widget* w, void* p );	
 	static void fileLoadCb( Fl_Widget* w, void* p );
@@ -2066,10 +2002,51 @@ private:
 	static void viewOptionsCb( Fl_Widget* w, void* p );
 	static void optionsDlgCb( Fl_Widget* w, void* p );
 	static void helpAboutCb( Fl_Widget* w, void* p );
-  
+	
 	// GUI functions
 	bool saveAsDialog();
 	bool closeWindowQuery();
+	
+protected:
+	virtual void PushColor( stg_color_t col )
+	{ canvas->PushColor( col ); } 
+
+	virtual void PushColor( double r, double g, double b, double a )
+	{ canvas->PushColor( r,g,b,a ); }
+
+	virtual void PopColor()
+	{ canvas->PopColor(); }
+
+	void DrawTree( bool leaves );
+	void DrawFloor();
+	
+	StgCanvas* GetCanvas( void ) { return canvas; }
+
+public:
+	static const stg_msec_t DEFAULT_INTERVAL_REAL = 100; ///< real time between updates
+	
+	StgWorldGui(int W,int H,const char*L=0);
+	~StgWorldGui();
+	
+	virtual bool Update();
+	
+	virtual void Load( const char* filename );
+	virtual void UnLoad();
+	virtual bool Save( const char* filename );
+	
+	
+	void Start(){ paused = false; };
+	void Stop(){ paused = true; };
+	void TogglePause(){ paused = !paused; };
+	
+	/** Get human readable string that describes the current simulation
+	 time. */
+	std::string ClockString( void );
+	
+	/** Set the minimum real time interval between world updates, in
+	 microeconds. */
+	void SetRealTimeInterval( stg_usec_t usec )
+	{ interval_real = usec; }
 };
 
 
@@ -2084,55 +2061,55 @@ typedef struct
 	stg_meters_t range;
 } stg_blobfinder_blob_t;
 
-
+/// StgModelBlobfinder class
 class StgModelBlobfinder : public StgModel
 {
-	private:
+private:
+	GArray* colors;
+	GArray* blobs;
 
-		GArray* colors;
-		GArray* blobs;
+	// predicate for ray tracing
+	static bool BlockMatcher( StgBlock* testblock, StgModel* finder );
 
-		// predicate for ray tracing
-		static bool BlockMatcher( StgBlock* testblock, StgModel* finder );
+	static Option showBlobData;
+	
+	virtual void DataVisualize();
 
-		static Option showBlobData;
-	public:
+public:
+	unsigned int scan_width;
+	unsigned int scan_height;
+	stg_meters_t range;
+	stg_radians_t fov;
+	stg_radians_t pan;
 
-		unsigned int scan_width;
-		unsigned int scan_height;
-		stg_meters_t range;
-		stg_radians_t fov;
-		stg_radians_t pan;
+	static  const char* typestr;
 
-  static  const char* typestr;
-
-  // constructor
-  StgModelBlobfinder( StgWorld* world,
+	// constructor
+	StgModelBlobfinder( StgWorld* world,
 							 StgModel* parent );
-  // destructor
-  ~StgModelBlobfinder();
-  
-  virtual void Startup();
-  virtual void Shutdown();
-		virtual void Update();
-		virtual void Load();
-		virtual void DataVisualize();
+	// destructor
+	~StgModelBlobfinder();
 
-		stg_blobfinder_blob_t* GetBlobs( unsigned int* count )
-		{ 
-			if( count ) *count = blobs->len;
-			return (stg_blobfinder_blob_t*)blobs->data;
-		}
+	virtual void Startup();
+	virtual void Shutdown();
+	virtual void Update();
+	virtual void Load();
 
-		/** Start finding blobs with this color.*/
-		void AddColor( stg_color_t col );
+	stg_blobfinder_blob_t* GetBlobs( unsigned int* count )
+	{ 
+		if( count ) *count = blobs->len;
+		return (stg_blobfinder_blob_t*)blobs->data;
+	}
 
-		/** Stop tracking blobs with this color */
-		void RemoveColor( stg_color_t col );
+	/** Start finding blobs with this color.*/
+	void AddColor( stg_color_t col );
 
-		/** Stop tracking all colors. Call this to clear the defaults, then
-		  add colors individually with AddColor(); */
-		void RemoveAllColors();
+	/** Stop tracking blobs with this color */
+	void RemoveColor( stg_color_t col );
+
+	/** Stop tracking all colors. Call this to clear the defaults, then
+	  add colors individually with AddColor(); */
+	void RemoveAllColors();
 };
 
 // ENERGY model --------------------------------------------------------------
@@ -2194,6 +2171,7 @@ typedef struct
   stg_radians_t fov;
 } stg_laser_cfg_t;
 
+/// StgModelLaser class
 class StgModelLaser : public StgModel
 {
 private:
@@ -2366,6 +2344,7 @@ typedef struct
 
 } stg_fiducial_t;
 
+/// StgModelFiducial class
 class StgModelFiducial : public StgModel
 {
 	private:
@@ -2418,6 +2397,7 @@ typedef struct
 	int ray_count;
 } stg_ranger_sensor_t;
 
+/// StgModelRanger class
 class StgModelRanger : public StgModel
 {
 	protected:
@@ -2477,6 +2457,7 @@ typedef struct {
 	GLfloat x, y, z;
 } ColoredVertex;
 	
+/// StgModelCamera class
 class StgModelCamera : public StgModel
 {
 	private:
@@ -2566,6 +2547,7 @@ typedef enum
 } stg_position_drive_mode_t;
 
 
+/// StgModelPosition class
 class StgModelPosition : public StgModel
 {
 	private:

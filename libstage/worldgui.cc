@@ -1,15 +1,15 @@
-/** worldgui.cc
-    Implement a subclass of StgWorld that has an FLTK and OpenGL GUI
+/* worldgui.cc
+    Implements a subclass of StgWorld that has an FLTK and OpenGL GUI
     Authors: Richard Vaughan (vaughan@sfu.ca)
              Alex Couture-Beil (asc17@sfu.ca)
              Jeremy Asher (jra11@sfu.ca)
-    $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
+    $Id: worldgui.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
 */
 
 /** @defgroup worldgui World with Graphical User Interface
 
-    The Stage window consists of a menu bar, a view of the simulated
-    world, and a status bar.
+    The Stage window consists of a menu bar and a view of the simulated
+    world.
 
     The world view shows part of the simulated world. You can zoom the
     view in and out, and scroll it to see more of the world. Simulated

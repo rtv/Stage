@@ -1,12 +1,3 @@
-/** option.hh
- Class that encapsulates a boolean and pairs it with a string description
- Used to pass settings between the GUI and the drawing classes
- 
- Author: Jeremy Asher, Richard Vaughan
- SVN: $Id$
-*/
-
-
 #ifndef _OPTION_H_
 #define _OPTION_H_
 
@@ -17,7 +8,13 @@
 #include <FL/Fl_Menu_Item.H>
 
 namespace Stg {
-
+	/** option.hh
+	 Class that encapsulates a boolean and pairs it with a string description
+	 Used to pass settings between the GUI and the drawing classes
+	 
+	 Author: Jeremy Asher, Richard Vaughan
+	 SVN: $Id$
+	 */	
 	class Option {
 	private:
 		friend bool compare( const Option* lhs, const Option* rhs );
