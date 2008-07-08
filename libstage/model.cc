@@ -947,6 +947,11 @@ void StgModel::DrawStatus( StgCanvas* canvas )
 		pitch = canvas->current_camera->pitch();
 		yaw = canvas->current_camera->yaw();			
 		
+		if( canvas->perspectiveCam == true ) {
+			pitch = -pitch;
+			yaw = -yaw;
+		}
+		
 		float robotAngle = -rtod(pose.a);
 		glPushMatrix();
 		
