@@ -28,8 +28,10 @@ INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage.pc DESTINATION lib/pkgconfig/)
 
 # Create the config.h file
 SET(RGBFILE ${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt )
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
 
+# config.h belongs with the source (and not in CMAKE_CURRENT_BINARY_DIR as in Brian's original version)
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in 
+					${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
 
 # find the easy modules
 include(FindPkgConfig)
@@ -86,9 +88,9 @@ ENDIF (APPLE)
 include_directories( . 
 		     libstage 
 		     replace 
-			 /opt/local/include/
+  			  /opt/local/include/
 		     ${GLIB_INCLUDE_DIRS} 
-                     ${LIBPNG_INCLUDE_DIRS}
+           ${LIBPNG_INCLUDE_DIRS}
 		     ${CMAKE_INCLUDE_PATH}
 )
 
@@ -96,30 +98,29 @@ include_directories( .
 # all targets need these library directories
 link_directories(${GLIB_LIBRARY_DIRS}
                  ${LIBPNG_LIBRARY_DIRS}
-		 ${OPENGL_LIBRARY_DIRS}
+		           ${OPENGL_LIBRARY_DIRS}
 )
 
 # work through these subdirs
 ADD_SUBDIRECTORY(libstage)
-IF ( PLAYER_FOUND )
-	ADD_SUBDIRECTORY(libstageplugin)
-ENDIF ( PLAYER_FOUND )	 
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(assets)
 ADD_SUBDIRECTORY(worlds)
 
-
+IF ( PLAYER_FOUND )
+  ADD_SUBDIRECTORY(libstageplugin)
+ENDIF ( PLAYER_FOUND )	 
 
 
 # generate a cpack config file used to create packaged tarballs
 INCLUDE(InstallRequiredSystemLibraries)
-SET(CPACK_GENERATOR "TGZ")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Stage: A Multiple Robot Simulator")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME}: A Multiple Robot Simulator")
 SET(CPACK_PACKAGE_VENDOR "The Player Project")
-SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/DESCRIPTION.txt")
-SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.txt")
-SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING.txt")
+#SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/DESCRIPTION.txt")
+#SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.txt")
+#SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING.txt")
 SET(CPACK_PACKAGE_VERSION_MAJOR "${V_MAJOR}")
 SET(CPACK_PACKAGE_VERSION_MINOR "${V_MINOR}")
 SET(CPACK_PACKAGE_VERSION_PATCH "${V_BUGFIX}")
+SET(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}-${V_MAJOR}.${V_MINOR}")
 INCLUDE(CPack)

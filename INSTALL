@@ -48,13 +48,13 @@ path variable when invoking cmake. To do this, use this command,
 substituting <prefix> with your chosen installation
 directory.
 	
-  $ cmake -DCMAKE_INSTALL_PREFIX=<prefix>
+  $ cmake -DCMAKE_INSTALL_PREFIX=<prefix> .
 
 For example to install in $HOME/playerstage, do:
 
-  $ cmake -DCMAKE_INSTALL_PREFIX=$HOME/playerstage
+  $ cmake -DCMAKE_INSTALL_PREFIX=$HOME/playerstage .
 
-CMake will generate makefiles specifically for your machine. When this
+Cmake will generate makefiles specifically for your machine. When this
 is done, you can inspect and edit the build settings using ccmake, or
 by editing the file CMakeCache.txt. 
 
