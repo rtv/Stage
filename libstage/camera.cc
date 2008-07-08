@@ -158,11 +158,12 @@ void StgOrthoCamera::move( float x, float y ) {
 		y = -100;
 	
 	//adjust for yaw angle
-	_x += cos( dtor( _yaw ) ) * x;
-	_y += -sin( dtor( _yaw ) ) * x;
+	float yaw = -dtor( _yaw );
+	_x += cos( yaw ) * x;
+	_y += -sin( yaw ) * x;
 	
-	_x += sin( dtor( _yaw ) ) * y;
-	_y += cos( dtor( _yaw ) ) * y;
+	_x += sin( yaw ) * y;
+	_y += cos( yaw ) * y;
 }
 
 //TODO re-evaluate the way the camera is shifted when the mouse zooms - it might be possible to simplify
