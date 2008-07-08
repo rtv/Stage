@@ -114,8 +114,8 @@ void StgOrthoCamera::Draw( void ) const
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
 
-	glRotatef( _pitch, 1.0, 0.0, 0.0 );
-	glRotatef( _yaw, 0.0, 0.0, 1.0 );
+	glRotatef( - _pitch, 1.0, 0.0, 0.0 );
+	glRotatef( - _yaw, 0.0, 0.0, 1.0 );
 
 	glTranslatef( - _x, - _y, 0.0 );
 	//zooming needs to happen in the Projection code (don't use glScale for zoom)

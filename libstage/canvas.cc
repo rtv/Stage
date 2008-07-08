@@ -268,8 +268,8 @@ int StgCanvas::handle(int event)
 					perspective_camera.addPitch( -dy );
 				} 
 				else {
-					camera.setPitch( 0.5 * static_cast<double>( dy ) );
-					camera.setYaw( 0.5 * static_cast<double>( dx ) );
+					camera.setPitch( - 0.5 * static_cast<double>( dy ) );
+					camera.setYaw( - 0.5 * static_cast<double>( dx ) );
 				}
 				invalidate();
 				redraw();
@@ -563,9 +563,9 @@ void StgCanvas::resetCamera()
 void StgCanvas::renderFrame()
 {
 	//before drawing, order all models based on distance from camera
-	float x = camera.x();
-	float y = camera.y();
-	float sphi = dtor( camera.yaw() );
+	float x = current_camera->x();
+	float y = current_camera->y();
+	float sphi = -dtor( current_camera->yaw() );
 	
 	//estimate point of camera location - hard to do with orthogonal mode
 	x += -sin( sphi ) * 100;

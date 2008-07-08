@@ -1874,9 +1874,9 @@ class StgOrthoCamera : public StgCamera
 		inline void setYaw( float yaw ) { _yaw += yaw;	}
 		inline void setPitch( float pitch ) {
 			_pitch += pitch;
-			if( _pitch < -90 )
-				_pitch = -90;
-			else if( _pitch > 0 )
+			if( _pitch > 90 )
+				_pitch = 90;
+			else if( _pitch < 0 )
 				_pitch = 0;
 		}
 

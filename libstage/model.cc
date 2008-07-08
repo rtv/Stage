@@ -944,13 +944,8 @@ void StgModel::DrawStatus( StgCanvas* canvas )
 	if( say_string )	  
 	{
 		float yaw, pitch;
-		pitch = canvas->current_camera->pitch();
-		yaw = canvas->current_camera->yaw();			
-		
-		if( canvas->perspectiveCam == true ) {
-			pitch = -pitch;
-			yaw = -yaw;
-		}
+		pitch = - canvas->current_camera->pitch();
+		yaw = - canvas->current_camera->yaw();			
 		
 		float robotAngle = -rtod(pose.a);
 		glPushMatrix();
@@ -1015,15 +1010,14 @@ void StgModel::DrawStatus( StgCanvas* canvas )
 
 void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha )
 {
-  float stheta = -dtor( canvas->current_camera->pitch() );
-  float sphi = dtor( canvas->current_camera->yaw() );
+  float stheta = dtor( canvas->current_camera->pitch() );
+  float sphi = - dtor( canvas->current_camera->yaw() );
   if( canvas->perspectiveCam == true ) {
 	 sphi = atan2(
 					  ( pose.x - canvas->current_camera->x() )
 					  ,
 					  ( pose.y - canvas->current_camera->y() )
 					  );
-	 stheta = -stheta;
   }
 
   glEnable(GL_TEXTURE_2D);
