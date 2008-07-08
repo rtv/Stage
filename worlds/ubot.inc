@@ -23,7 +23,7 @@ define ubot_ir reb_ir
 
 define ubot reb_position
 (
-  size [ 0.19	0.19 ]
+  size [ 0.19	0.19 0.19]
   offset [ 0.0	0.0 ]
   ubot_ir()
 )

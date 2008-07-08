@@ -9,25 +9,28 @@ include "sick.inc"
 window
 ( 
   size [ 500.000 500.000 ] 
-  center [-6 -7] 
-  rotate [ 0.000 0.000 ]
-  scale 26 
+  center [-0.077 -0.231] 
+  rotate [ 0 0 ]
+  scale 26.000 
+  show_data 1 # make sure we can see the effect of the controller
 )
 
 floorplan
 ( 
   name "cave"
-  size3 [16 16 0.5]
-  pose [0.000 0.000 0.000]
+  size [16.000 16.000 0.500]
   bitmap "bitmaps/cave.png"
 )
 
 pioneer2dx
 (
-  pose [ -7.000 -7.000 45.000 ]
+  pose [ -7.000 -7.000 0 45.000 ]
   sicklaser
   ( 
+     # plug the ../examples/ctrl/lasernoise.cc module into this laser
      ctrl "lasernoise" 
+
+	  alwayson 1 # don't wait for a subscriber
   ) 
 )
 
