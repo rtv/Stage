@@ -78,3 +78,5 @@ INSTALL(TARGETS stagebinary stage
 
 INSTALL(FILES stage.hh option.hh worldfile.hh
         DESTINATION include/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR})
+
+ADD_TEST( test1 ${EXECUTABLE_OUTPUT_PATH}stage ../worlds/fasr.world)
