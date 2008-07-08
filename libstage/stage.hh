@@ -1798,6 +1798,9 @@ class StgCamera
 		inline float x( void ) const { return _x; }
 		inline float y( void ) const { return _y; }
 		inline float z( void ) const { return _z; }
+	
+		virtual void reset() = 0;
+		virtual void Load( Worldfile* wf, int sec ) = 0;
 
 		//TODO data should be passed in somehow else. (at least min/max stuff)
 		//virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max ) const = 0;
@@ -1850,6 +1853,8 @@ class StgPerspectiveCamera : public StgCamera
 		inline float farClip( void ) const { return _z_far; }
 		inline void setClip( float near, float far ) { _z_far = far; _z_near = near; }
 	
+		inline void reset() { setPitch( 70 ); setYaw( 0 ); }
+	
 		void Load( Worldfile* wf, int sec );
 		void Save( Worldfile* wf, int sec );
 };
@@ -1871,8 +1876,10 @@ class StgOrthoCamera : public StgCamera
 		virtual void SetProjection( void ) const;
 
 		void move( float x, float y );
-		inline void setYaw( float yaw ) { _yaw += yaw;	}
-		inline void setPitch( float pitch ) {
+		inline void setYaw( float yaw ) { _yaw = yaw;	}
+		inline void setPitch( float pitch ) { _pitch = pitch; }
+		inline void addYaw( float yaw ) { _yaw += yaw;	}
+		inline void addPitch( float pitch ) {
 			_pitch += pitch;
 			if( _pitch > 90 )
 				_pitch = 90;
@@ -1884,7 +1891,7 @@ class StgOrthoCamera : public StgCamera
 		inline void setPose( float x, float y) { _x = x; _y = y; }
 
 		void scale( float scale, float shift_x = 0, float h = 0, float shift_y = 0, float w = 0 );	
-		inline void resetAngle( void ) { _pitch = _yaw = 0; }
+		inline void reset( void ) { _pitch = _yaw = 0; }
 
 		inline float scale() const { return _scale; }
 
@@ -1904,7 +1911,8 @@ private:
   StgCamera* current_camera;
   StgOrthoCamera camera;
   StgPerspectiveCamera perspective_camera;
-	bool dirty_buffer;
+  bool dirty_buffer;
+	Worldfile* wf;
 	
   int startx, starty;
   bool selectedModel;
@@ -1939,7 +1947,7 @@ private:
     showTrailRise, 
     showTrails, 
     showTree,
-	perspectiveCam,
+	pCamOn,
 	visualizeAll;
   
 public:

@@ -1012,7 +1012,7 @@ void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alp
 {
   float stheta = dtor( canvas->current_camera->pitch() );
   float sphi = - dtor( canvas->current_camera->yaw() );
-  if( canvas->perspectiveCam == true ) {
+  if( canvas->pCamOn == true ) {
 	 sphi = atan2(
 					  ( pose.x - canvas->current_camera->x() )
 					  ,

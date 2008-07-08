@@ -53,7 +53,7 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   showTrailRise( "Trails/Rising blocks", "show_trailrise", "^r", false ),
   showTrails( "Trails/Fast", "show_trailfast", "^f", false ),
   showTree( "Debug/Tree", "show_tree", "^t", false ),
-  perspectiveCam( "Perspective camera", "pcam_on", "r", false ),
+  pCamOn( "Perspective camera", "pcam_on", "r", false ),
   visualizeAll( "Visualize All", "vis_all", "^v", true ) 
 {
   end();
@@ -64,6 +64,7 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   this->world = world;
   selected_models = NULL;
   last_selection = NULL;
+  wf = NULL;
 
   perspective_camera.setPose( 0.0, -4.0, 3.0 );
   current_camera = &camera;
@@ -244,7 +245,7 @@ int StgCanvas::handle(int event)
 	switch(event) 
 	{
 	case FL_MOUSEWHEEL:
-		if( perspectiveCam == true ) {
+		if( pCamOn == true ) {
 			perspective_camera.scroll( Fl::event_dy() / 10.0 );
 		}
 		else {
@@ -263,13 +264,13 @@ int StgCanvas::handle(int event)
 				int dx = Fl::event_x() - startx;
 				int dy = Fl::event_y() - starty;
 
-				if( perspectiveCam == true ) {
+				if( pCamOn == true ) {
 					perspective_camera.addYaw( -dx );
 					perspective_camera.addPitch( -dy );
 				} 
 				else {
-					camera.setPitch( - 0.5 * static_cast<double>( dy ) );
-					camera.setYaw( - 0.5 * static_cast<double>( dx ) );
+					camera.addPitch( - 0.5 * static_cast<double>( dy ) );
+					camera.addYaw( - 0.5 * static_cast<double>( dx ) );
 				}
 				invalidate();
 				redraw();
@@ -279,7 +280,7 @@ int StgCanvas::handle(int event)
 				int dx = Fl::event_x() - startx;
 				int dy = Fl::event_y() - starty;
 
-				if( perspectiveCam == true ) {
+				if( pCamOn == true ) {
 					perspective_camera.move( -dx, dy, 0.0 );
 				} 
 				else {
@@ -365,7 +366,7 @@ int StgCanvas::handle(int event)
 			else {
 				// started dragging on empty space or an
 				//  unselected model, move the canvas
-				if( perspectiveCam == true ) {
+				if( pCamOn == true ) {
 					perspective_camera.move( -dx, dy, 0.0 );
 				} 
 				else {
@@ -409,7 +410,9 @@ int StgCanvas::handle(int event)
 			world->TogglePause();
 			break;
 		case ' ': // space bar
-			camera.resetAngle();
+			//current_camera->reset();
+			if ( wf )
+				current_camera->Load( wf, wf->LookupEntity( "window" ) );
 			//invalidate();
 			if( Fl::event_state( FL_CTRL ) ) {
 				resetCamera();
@@ -417,16 +420,16 @@ int StgCanvas::handle(int event)
 			redraw();
 			break;			
 		case FL_Left:
-			if( perspectiveCam == false ) { camera.move( -10, 0 ); } 
+			if( pCamOn == false ) { camera.move( -10, 0 ); } 
 			else { perspective_camera.strafe( -0.5 ); } break;
 		case FL_Right: 
-			if( perspectiveCam == false ) {camera.move( 10, 0 ); } 
+			if( pCamOn == false ) {camera.move( 10, 0 ); } 
 			else { perspective_camera.strafe( 0.5 ); } break;
 		case FL_Down:  
-			if( perspectiveCam == false ) {camera.move( 0, -10 ); } 
+			if( pCamOn == false ) {camera.move( 0, -10 ); } 
 			else { perspective_camera.forward( -0.5 ); } break;
 		case FL_Up:  
-			if( perspectiveCam == false ) {camera.move( 0, 10 ); } 
+			if( pCamOn == false ) {camera.move( 0, 10 ); } 
 			else { perspective_camera.forward( 0.5 ); } break;
 		default:
 			return 0; // keypress unhandled
@@ -558,6 +561,8 @@ void StgCanvas::resetCamera()
 	float scale_x = w() / (max_x - min_x) * 0.9;
 	float scale_y = h() / (max_y - min_y) * 0.9;
 	camera.setScale( scale_x < scale_y ? scale_x : scale_y );
+	
+	//TODO reset perspective cam
 }
 
 void StgCanvas::renderFrame()
@@ -827,7 +832,7 @@ void StgCanvas::Screenshot()
 void StgCanvas::perspectiveCb( Fl_Widget* w, void* p ) 
 {
 	StgCanvas* canvas = static_cast<StgCanvas*>( w );
-	Option* opt = static_cast<Option*>( p ); // perspectiveCam
+	Option* opt = static_cast<Option*>( p ); // pCamOn
 	if ( opt ) {
 		// Perspective mode is on, change camera
 		canvas->current_camera = &canvas->perspective_camera;
@@ -851,8 +856,8 @@ void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
   showFootprints.createMenuItem( menu, path );
   showGrid.createMenuItem( menu, path );
   showStatus.createMenuItem( menu, path );
-  perspectiveCam.createMenuItem( menu, path );
-  perspectiveCam.menuCallback( perspectiveCb, this );
+  pCamOn.createMenuItem( menu, path );
+  pCamOn.menuCallback( perspectiveCb, this );
   showOccupancy.createMenuItem( menu, path );
   showTrailArrows.createMenuItem( menu, path );
   showTrails.createMenuItem( menu, path );
@@ -864,6 +869,7 @@ void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
 
 void StgCanvas::Load( Worldfile* wf, int sec )
 {
+  this->wf = wf;
   camera.Load( wf, sec );
   perspective_camera.Load( wf, sec );		
 	
@@ -882,7 +888,7 @@ void StgCanvas::Load( Worldfile* wf, int sec )
   showTrails.Load( wf, sec );
   showTree.Load( wf, sec );
   showScreenshots.Load( wf, sec );
-  perspectiveCam.Load( wf, sec );
+  pCamOn.Load( wf, sec );
 
   invalidate(); // we probably changed something
 }
@@ -907,7 +913,7 @@ void StgCanvas::Save( Worldfile* wf, int sec )
   showTrails.Save( wf, sec );
   showTree.Save( wf, sec );
   showScreenshots.Save( wf, sec );
-  perspectiveCam.Save( wf, sec );
+  pCamOn.Save( wf, sec );
 }
 
 
@@ -916,7 +922,7 @@ void StgCanvas::draw()
   static bool loaded_texture = false;
 
   //Enable the following to debug camera model
-  //	if( loaded_texture == true && perspectiveCam == true )
+  //	if( loaded_texture == true && pCamOn == true )
   //		return;
 
   if (!valid() ) 
@@ -987,7 +993,7 @@ void StgCanvas::draw()
       // install a font
       gl_font( FL_HELVETICA, 12 );
 
-      if( perspectiveCam == true ) {
+      if( pCamOn == true ) {
 	perspective_camera.setAspect( static_cast< float >( w() ) / static_cast< float >( h() ) );
 	perspective_camera.SetProjection();
 		  current_camera = &perspective_camera;
@@ -1005,7 +1011,7 @@ void StgCanvas::draw()
       glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     }            
 	
-  if( perspectiveCam == true ) {
+  if( pCamOn == true ) {
     if( showFollow  && last_selection ) {
       //Follow the selected robot
       stg_pose_t gpose = last_selection->GetGlobalPose();
