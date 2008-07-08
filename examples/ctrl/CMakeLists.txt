@@ -1,6 +1,5 @@
 
 SET( PLUGINS 
-     expand 
      fasr 
      lasernoise 
      sink 

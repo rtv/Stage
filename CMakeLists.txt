@@ -103,11 +103,12 @@ link_directories(${GLIB_LIBRARY_DIRS}
 
 # work through these subdirs
 ADD_SUBDIRECTORY(libstage)
-ADD_SUBDIRECTORY(examples)
 IF ( PLAYER_FOUND )
 	ADD_SUBDIRECTORY(libstageplugin)
 ENDIF ( PLAYER_FOUND )	 
+ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(assets)
+ADD_SUBDIRECTORY(worlds)
 
 
 
