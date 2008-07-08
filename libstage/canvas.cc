@@ -1000,7 +1000,6 @@ void StgCanvas::draw()
       } else {
 	stg_bounds3d_t extent = world->GetExtent();
 	camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
-	camera.Draw();
 		  current_camera = &camera;
       }
 
@@ -1010,26 +1009,19 @@ void StgCanvas::draw()
 
       glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     }            
-	
-  if( pCamOn == true ) {
-    if( showFollow  && last_selection ) {
-      //Follow the selected robot
-      stg_pose_t gpose = last_selection->GetGlobalPose();
+
+  //Follow the selected robot	
+  if( showFollow  && last_selection ) {
+    stg_pose_t gpose = last_selection->GetGlobalPose();
+    if( pCamOn == true ) {
       perspective_camera.setPose( gpose.x, gpose.y, 0.2 );
       perspective_camera.setYaw( rtod( gpose.a ) - 90.0 );
-			
+    } else {
+      camera.setPose( gpose.x, gpose.y );
     }
-    perspective_camera.Draw();
-  } else if( showFollow  && last_selection ) {
-    //Follow the selected robot
-    stg_pose_t gpose = last_selection->GetGlobalPose();
-    camera.setPose( gpose.x, gpose.y );
-		
-    stg_bounds3d_t extent = world->GetExtent();
-    camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
-    camera.Draw();
   }
-	
+
+  current_camera->Draw();	
   renderFrame();
 }
 

@@ -190,8 +190,7 @@ void StgOrthoCamera::scale( float scale, float shift_x, float w, float shift_y, 
 	if( to_scale > 0 ) {
 		//zoom in
 		_scale *= factor;
-		move( shift_x * w / _scale * _scale, 
-				- shift_y * h / _scale * _scale );
+		move( shift_x * w, - shift_y * h );
 	}
 	else {
 		//zoom out
