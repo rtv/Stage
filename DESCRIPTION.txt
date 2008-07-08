@@ -1,0 +1,18 @@
+Stage
+=====
+
+Stage simulates a population of mobile robots, sensors and objects in
+a two-dimensional bitmapped environment. Stage is designed to support
+research into multi-agent autonomous systems, so it provides fairly
+simple, computationally cheap models of lots of devices rather than
+attempting to emulate any device with great fidelity
+
+Stage is part of the Player Project, and is maintained by Richard
+Vaughan (vaughan@sfu.ca).
+
+http://playerstage.org
+
+-- 
+Richard Vaughan (rtv)
+Burnaby, BC, Canada
+7 July 2008	 
