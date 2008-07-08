@@ -214,6 +214,8 @@ int main( int argc,  char* argv[] )
 //  	 }
   
 
-	while(true)
-	  world.Update();
+  for( unsigned long i=0; i<1000; i++ )
+	 world.Update();
+
+  return 0; // success
 }

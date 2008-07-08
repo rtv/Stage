@@ -61,15 +61,11 @@ set_target_properties( stagebinary PROPERTIES
 		       OUTPUT_NAME stage 
 )
 
-target_link_libraries( stagebinary
-		       stage
-) 
+target_link_libraries( stagebinary stage ) 
 
-add_executable( test test.cc )
-target_link_libraries( test stage )
+add_executable( stagetest test.cc )
+target_link_libraries( stagetest stage )
 
-add_executable( stest stest.cc )
-target_link_libraries( stest stage )
 
 INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin 
@@ -79,4 +75,4 @@ INSTALL(TARGETS stagebinary stage
 INSTALL(FILES stage.hh option.hh worldfile.hh
         DESTINATION include/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR})
 
-ADD_TEST( test1 ${EXECUTABLE_OUTPUT_PATH}stage ../worlds/fasr.world)
+ADD_TEST( test1 ${EXECUTABLE_OUTPUT_PATH}stagetest )

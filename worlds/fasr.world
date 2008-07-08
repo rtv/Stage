@@ -7,7 +7,7 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 10  # real-time interval between simulation updates in milliseconds 
+interval_real 0  # real-time interval between simulation updates in milliseconds 
 paused 1
 
 # configure the GUI window
@@ -54,7 +54,7 @@ zone
 
 define autorob pioneer2dx
 (
- sicklaser( pose [ 0.040 0 0 0 ] samples 180 range_max 5 laser_return 2 )
+ sicklaser( pose [ 0.040 0 0 0 ] samples 32 range_max 5 laser_return 2 )
  ctrl "fasr"
 
  #camera( pose [ 0 0 0 0 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )

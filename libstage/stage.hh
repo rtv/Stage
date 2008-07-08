@@ -37,13 +37,6 @@
   library
  */
 
-/**
-  \defgroup libstage libstage: the Stage Robot Simulation Library
-
-  Here is where I describe libstage for the developer.
-
- */
-/*@{*/
 
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
@@ -2619,7 +2612,5 @@ class StgModelPosition : public StgModel
 
 
 }; // end namespace stg
-
-/*@}*/
 
 #endif
