@@ -2,17 +2,9 @@
 # Authors: Richard Vaughanwo
 # $Id: fasr.world,v 1.4 2008-04-01 23:57:41 rtv Exp $
 
-# defines Pioneer-like robots
-include "pioneer.inc"
-
-# defines 'map' object used for floorplans
-include "map.inc"
-
-# defines sick laser
-include "sick.inc"
-
-# set the resolution of the underlying raytrace model in meters
-resolution 0.02
+include "inc/pioneer.inc"
+include "inc/map.inc"
+include "inc/sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 10  # real-time interval between simulation updates in milliseconds 

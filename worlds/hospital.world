@@ -1,10 +1,9 @@
-# hospitale.world - large world file example
+# hospital.world - large world file example
 # Authors: Richard Vaughan
 # $Id$
 
-# defines 'map' object used for floorplans
-include "map.inc"
-include "pioneer.inc"
+include "inc/map.inc"
+include "inc/pioneer.inc"
 
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02
@@ -14,16 +13,15 @@ interval_real 0  # real-time interval between simulation updates in milliseconds
 
 paused 1
 
-quit_time 60
+# quit_time 60
 
 # configure the GUI window
 window
 ( 
   size [ 640 480 ] 
-  #center [929.990 -377.040] 
-  #rotate [ 0.000 0.000 ]
-  #scale 20.806 
-
+  center [929.990 -377.040] 
+  rotate [ 0.000 0.000 ]
+  scale 20.806 
   show_data 0
 )
 

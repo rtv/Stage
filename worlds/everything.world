@@ -8,10 +8,10 @@ resolution     0.02
 interval_sim 100  # milliseconds per update step
 interval_real 0 # real-time milliseconds per update step
 
-include "pioneer.inc"
-include "irobot.inc"
-include "map.inc"
-include "sick.inc"
+include "inc/pioneer.inc"
+include "inc/irobot.inc"
+include "inc/map.inc"
+include "inc/sick.inc"
 
 gui_disable 0
 
