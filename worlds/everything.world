@@ -8,18 +8,18 @@ resolution     0.02
 interval_sim 100  # milliseconds per update step
 interval_real 0 # real-time milliseconds per update step
 
-include "inc/pioneer.inc"
-include "inc/irobot.inc"
-include "inc/map.inc"
-include "inc/sick.inc"
+include "pioneer.inc"
+include "irobot.inc"
+include "map.inc"
+include "sick.inc"
 
 gui_disable 0
 
 window
 ( 
   size [ 811.000 642.000 ] 
-  center [-7.037 1.609] 
-  scale 82.487 # pixels per meter
+  center [-7.205 1.437] 
+  scale 71.472 # pixels per meter
 
   show_data 1
 )
@@ -31,6 +31,7 @@ floorplan
   size [40.000 18.000 0.600] 
   name "hospital"
   color "gray50"
+  gui_grid 1
   gui_outline 1
 )
 
@@ -156,7 +157,7 @@ silly(
 
 create(
   name "create0"
-  pose [-8.844 0.019 0 0]
+  pose [-8.489 0.340 0 0]
 )
 
 create(
@@ -166,11 +167,11 @@ create(
 
 create(
   name "create2"
-  pose [-8.501 -1.044 0 0]
+  pose [-9.330 -0.631 0 0]
 )
  
 create(
   name "create3"
-  pose [-9.000 0.500 0 0]
+  pose [-9.313 0.477 0 0]
 )
 

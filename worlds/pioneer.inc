@@ -304,11 +304,7 @@ define pioneer3dx pioneer_base
   block[0].point[7] [-0.2 0.12]
 
   # Use the sonar array defined above
-  p3dx_sonar()  
-
-  # Use the laser lms200
-  sicklms200( pose [0.12 0 0] )
-
+  p3dx_sonar( pose [ 0 0 -0.03 0 ] )  
 ) 
 
 # The Pioneer3AT standard configuration
@@ -336,7 +332,7 @@ define pioneer3at pioneer_base
   block[0].point[7] [-0.2525 0.18]
 
   # Use the sonar array defined above
-  p3at_sonar()  
+  p3at_sonar( pose [ 0 0 -0.03 0 ] )  
 )
 
 

@@ -1,33 +1,26 @@
-# defines Pioneer-like robots
-include "p3dx.inc"
 
-# defines 'map' object used for floorplans
+include "pioneer.inc"
 include "map.inc"
 
 size [30 20]
 resolution 0.02
-gui_interval 20
 
-# configure the GUI window
 window
 ( 
-  size [ 800 600.000 ] 
-  center [0.0 0.0] 
-  scale 0.04
+  size [ 987.000 507.000 ] 
+  center [0.603 -0.075] 
+  scale 32.588
 )
 
-map
+floorplan
 ( 
   bitmap "bitmaps/mbicp.png"
-   size [28 10]
+   size [28.000 10.000 0.500]
   name "pruebaScan"
 )
 
-
-# create a robot
-pioneer3dx
+pioneer2dx
 (
   name "robot1"
-  color "red"
-  pose [8 0  180]
+  pose [8.000 0 0 180.000]
 )
