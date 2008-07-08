@@ -12,7 +12,7 @@ DOCDIR = $(prefix)/share/doc
 
 # build docs manually with 'make doc'
 doc:
-	doxygen $(srcdir)/stage.dox
+	doxygen stage.dox
 	cp stage_button.png stage
 
 # install the latest docs
@@ -26,4 +26,4 @@ clean:
 
 # copy the latest docs to the web server
 upload: 
-	./upload.sh stage-cvs stage
+	./upload.sh stage-svn stage
