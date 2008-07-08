@@ -17,9 +17,9 @@ gui_disable 0
 
 window
 ( 
-  size [ 1059.000 541.000 ] 
-  center [0 0.042] 
-  scale 23.827 # pixels per meter
+  size [ 811.000 642.000 ] 
+  center [-7.037 1.609] 
+  scale 82.487 # pixels per meter
 
   show_data 1
 )
@@ -141,7 +141,7 @@ define silly position (
 
 silly( 	
   name "invader" 
-  pose [-6.754 0.791 0 0] 
+  pose [-4.152 0.820 0 0] 
   color "green"  
   bitmap "bitmaps/space_invader.png"
 )
@@ -149,7 +149,7 @@ silly(
 
 silly( 	
   name "ghost" 
-  pose [-5.583 -0.684 0 0] 
+  pose [-4.067 -0.941 0 0] 
   color "blue"  
   bitmap "bitmaps/ghost.png"
 )
