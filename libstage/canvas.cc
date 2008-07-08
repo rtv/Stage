@@ -345,7 +345,7 @@ int StgCanvas::handle(int event)
 		int dx = Fl::event_x() - startx;
 		int dy = Fl::event_y() - starty;
 
-		if ( Fl::event_state( FL_BUTTON1 ) ) {
+		if ( Fl::event_state( FL_BUTTON1 ) && Fl::event_state( FL_CTRL ) == false ) {
 			// Left mouse button drag
 			if ( selectedModel ) {
 				// started dragging on a selected model
@@ -375,12 +375,12 @@ int StgCanvas::handle(int event)
 				invalidate(); // so the projection gets updated
 			}
 		}
-		else if ( Fl::event_state( FL_BUTTON3 ) ) {
+		else if ( Fl::event_state( FL_BUTTON3 ) || ( Fl::event_state( FL_BUTTON1 ) &&  Fl::event_state( FL_CTRL )  ) ) {
 				// rotate all selected models
 				for( GList* it = selected_models; it; it=it->next )
 				{
 					StgModel* mod = (StgModel*)it->data;
-					mod->AddToPose( 0,0,0, 0.05*dx );
+					mod->AddToPose( 0,0,0, 0.05*(dx+dy) );
 				}
 		}
 		
