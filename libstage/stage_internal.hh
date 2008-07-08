@@ -2,7 +2,7 @@
     files include this header 
     Author: Richard Vaughan (vaughan@sfu.ca)
     Date: 13 Jan 2008
-    $Id: stage_internal.hh,v 1.2 2008-01-15 01:16:49 rtv Exp $
+    $Id$
 */
 
 #ifndef STG_INTERNAL_H

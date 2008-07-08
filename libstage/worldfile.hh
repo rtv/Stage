@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.2 2008-01-15 01:16:49 rtv Exp $
+ * CVS info: $Id$
  */
 
 #ifndef WORLDFILE_HH

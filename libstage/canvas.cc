@@ -3,7 +3,7 @@
     Authors: Richard Vaughan (vaughan@sfu.ca)
              Alex Couture-Beil (asc17@sfu.ca)
              Jeremy Asher (jra11@sfu.ca)
-    $Id: canvas.cc,v 1.12 2008-03-03 07:01:12 rtv Exp $
+    $Id$
 */
 
 #include "stage_internal.hh"

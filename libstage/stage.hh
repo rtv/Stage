@@ -27,7 +27,7 @@
  * Desc: External header file for the Stage library
  * Author: Richard Vaughan (vaughan@sfu.ca) 
  * Date: 1 June 2003
- * CVS: $Id: stage.hh,v 1.15 2008-04-01 23:57:41 rtv Exp $
+ * CVS: $Id$
  */
 
 /*! \file stage.h 
