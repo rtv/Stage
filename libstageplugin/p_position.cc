@@ -293,7 +293,7 @@ void InterfacePosition::Publish( void )
   ppd.vel.pa = v.a;
   
   // etc
-  ppd.stall = this->mod->Stall();
+  ppd.stall = this->mod->Stalled();
   
   // publish this data
   this->driver->Publish( this->addr,

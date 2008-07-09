@@ -9,12 +9,15 @@
 
 #include "stage_internal.hh"
 
+#define DEBUG 1
+
 void StgModel::Load()
 {  
   assert( wf );
   assert( wf_entity );
 
   PRINT_DEBUG1( "Model \"%s\" loading...", token );
+  
 
   if( wf->PropertyExists( wf_entity, "debug" ) )
     {
@@ -27,16 +30,13 @@ void StgModel::Load()
     {
       char *name = (char*)wf->ReadString(wf_entity, "name", NULL );
       if( name )
-	{
-	  //printf( "changed %s to %s\n", this->token, token );
-	  this->token = strdup( name );
-	  world->AddModel( this ); // add this name to the world's table
-	}
+		  {
+			 printf( "adding name %s to %s\n", name, this->token );
+			 this->token = strdup( name );
+			 world->AddModel( this ); // add this name to the world's table
+		  }
       else
-	PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token );
-
-      // add this name to the table
-
+		  PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token );
     }
 
   //PRINT_WARN1( "%s::Load", token );

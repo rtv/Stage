@@ -1653,10 +1653,12 @@ public:
 	 and has the type indicated by the string */
 	StgModel* GetUnsubscribedModelOfType( stg_model_type_t type );
 	
-	// iff true, model may output some debugging visualizations and other info
+  // Iff true, model may output some debugging visualizations and other info
 	//bool debug;
 	
-	bool stalled(){ return this->stall; }
+  /** Returns the value of the model's stall boolean, which is true
+		iff the model has crashed into another model */
+	bool Stalled(){ return this->stall; }
 };
 
 // BLOCKS
