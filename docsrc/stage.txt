@@ -3,7 +3,6 @@
  * $Id: stage.txt,v 1.20 2008-02-24 23:24:40 rtv Exp $
 */
 
-
 /**
 \mainpage The Stage Robot Simulator
 
@@ -260,14 +259,14 @@ Install Stage using the CMake build tools: download and extract the tarball, the
 <li>If you plan to use Player with Stage, make sure Player is
  installed and working. See the Player documentation for instructions.
 
-<li>Download the latest Stage source tarball (stage-src-\<version\>.tgz)
+<li>Download the latest Stage source tarball (Stage-\<version\>-Source.tgz)
 from <a href="http://sourceforge.net/projects/playerstage">http://sourceforge.net/projects/playerstage</a>
 
 <li>Uncompress and expand the tarball: <br>
-    <tt>$ tar xzvf stage-\<version\>.tgz</tt>
+    <tt>$ tar xzvf Stage-\<version\>-Source.tgz</tt>
 
 <li>`cd' into Stage's source directory:<br>
-     <tt>$ cd stage-\<version\></tt>
+     <tt>$ cd Stage-\<version\>-Source</tt>
  
 <li>To configure Stage with default settings:<br>
 <tt>$ cmake .</tt><br>

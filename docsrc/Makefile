@@ -12,6 +12,7 @@ DOCDIR = $(prefix)/share/doc
 
 # build docs manually with 'make doc'
 doc:
+	./installpage.sh > install.txt
 	doxygen stage.dox
 	cp stage_button.png stage
 
