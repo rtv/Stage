@@ -605,22 +605,6 @@ namespace Stg
 	stg_cb_t* cb_create( stg_model_callback_t callback, void* arg );
 	void cb_destroy( stg_cb_t* cb );
 
-	typedef struct
-	{
-		StgModel* mod;
-		void* member;
-		char* name;
-		stg_model_callback_t callback_on;
-		stg_model_callback_t callback_off;
-		void* arg_on; // argument to callback_on
-		void* arg_off; // argument to callback_off
-		//int default_state; // disabled = 0
-		//GtkAction* action; // action associated with this toggle, may be NULL
-		char* path;
-	} stg_property_toggle_args_t;
-
-
-
 	/** defines a rectangle of [size] located at [pose] */
 	typedef struct
 	{
@@ -1618,16 +1602,7 @@ public:
 	 */ 
 	int SetProperty( char* key, void* data );
 	void UnsetProperty( char* key );
-	
-	void AddPropertyToggles( void* member, 
-							stg_model_callback_t callback_on,
-							void* arg_on,
-							stg_model_callback_t callback_off,
-							void* arg_off,
-							char* name,
-							char* label,
-							gboolean enabled );
-	
+		
 	virtual void Print( char* prefix );
 	virtual const char* PrintWithPose();
 	

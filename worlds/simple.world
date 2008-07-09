@@ -36,6 +36,6 @@ pioneer2dx
   sicklaser( pose [0.04 0 0 0] )
 
   # remove this if you're using Player to control the robot	
-  # ctrl "wander" 
+  ctrl "wander" 
 )
 
