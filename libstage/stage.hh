@@ -959,7 +959,7 @@ const uint32_t INTERVAL_LOG_LEN = 32;
 class Region;
 class SuperRegion;
 
-/// StgWorld class
+/// %StgWorld class
 class StgWorld : public StgAncestor
 {
 	friend class StgModel; // allow access to private members
@@ -1141,7 +1141,7 @@ typedef struct {
 typedef int ctrlinit_t( StgModel* mod );
 //typedef void ctrlupdate_t( StgModel* mod );
 
-/// StgModel class
+/// %StgModel class
 class StgModel : public StgAncestor
 {
 	friend class StgAncestor;
@@ -2063,7 +2063,7 @@ typedef struct
 	stg_meters_t range;
 } stg_blobfinder_blob_t;
 
-/// StgModelBlobfinder class
+/// %StgModelBlobfinder class
 class StgModelBlobfinder : public StgModel
 {
 private:
@@ -2173,7 +2173,7 @@ typedef struct
   stg_radians_t fov;
 } stg_laser_cfg_t;
 
-/// StgModelLaser class
+/// %StgModelLaser class
 class StgModelLaser : public StgModel
 {
 private:
@@ -2346,7 +2346,7 @@ typedef struct
 
 } stg_fiducial_t;
 
-/// StgModelFiducial class
+/// %StgModelFiducial class
 class StgModelFiducial : public StgModel
 {
 	private:
@@ -2399,7 +2399,7 @@ typedef struct
 	int ray_count;
 } stg_ranger_sensor_t;
 
-/// StgModelRanger class
+/// %StgModelRanger class
 class StgModelRanger : public StgModel
 {
 	protected:
@@ -2459,7 +2459,7 @@ typedef struct {
 	GLfloat x, y, z;
 } ColoredVertex;
 	
-/// StgModelCamera class
+/// %StgModelCamera class
 class StgModelCamera : public StgModel
 {
 	private:
@@ -2549,7 +2549,7 @@ typedef enum
 } stg_position_drive_mode_t;
 
 
-/// StgModelPosition class
+/// %StgModelPosition class
 class StgModelPosition : public StgModel
 {
 	private:

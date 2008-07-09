@@ -27,79 +27,87 @@
     @verbatim
     window
     (
-    # gui properties
-    center [0 0]
-    size [700 740]
-    scale 1.0
+      size [ 400 300 ]
+      
+      # camera options
+      center [ 0 0 ]
+      rotate [ 0 0 ]
+      scale 1.0
+ 
+      # perspective camera options
+      pcam_loc [ 0 -4 2 ]
+      pcam_angle [ 70 0 ]
+      pcam_on 0
 
-    # model properties do not apply to the gui window
+      # model properties do not apply to the gui window
     )
     @endverbatim
 
     @par Details
-    - title [string]
-    - the string displayed in the window title bar. Defaults to the worldfile file name.
-    - size [width:int width:int]
-    - size of the window in pixels
-    - center [x:float y:float]
-    - location of the center of the window in world coordinates (meters)
-    - scale [?:double]
-    - ratio of world to pixel coordinates (window zoom)
+    - size [ <width:int> <height:int> ]\n
+    size of the window in pixels
+    - center [ <x:float> <y:float> ]\n
+    location of the center of the window in world coordinates (meters)
+    - rotate [ <pitch:float> <yaw:float> ]\n
+	angle relative to straight up, angle of rotation (degrees)
+    - scale <float>\n
+    ratio of world to pixel coordinates (window zoom)
+    - pcam_loc [ <x:int> <y:int> <z:int> ]\n
+    location of the perspective camera (meters)
+    - pcam_angle [ <pitch:float> <yaw:float> ]\n
+    verticle and horizontal angle of the perspective camera
+    - pcam_on <int>\n
+    whether to start with the perspective camera enabled (0/1)
 
 
     <h2>Using the Stage window</h2>
-
+ 
 
     <h3>Scrolling the view</h3>
-
     <p>Left-click and drag on the background to move your view of the world.
 
     <h3>Zooming the view</h3>
-
-    <p>Right-click and drag on the background to zoom your view of the
-    world. When you press the right mouse button, a circle appears. Moving
-    the mouse adjusts the size of the circle; the current view is scaled
-    with the circle.
-
+    <p>Scroll the mouse wheel to zoom in or out on the mouse cursor.
+ 
     <h3>Saving the world</h3>
-
     <P>You can save the current pose of everything in the world, using the
     File/Save menu item. <b>Warning: the saved poses overwrite the current
     world file.</b> Make a copy of your world file before saving if you
-    want to keep the old poses.
-
-
-    <h3>Saving a screenshot</h3>
-
-    <p> The File/Export menu allows you to export a screenshot of the
-    current world view in JPEG or PNG format. The frame is saved in the
-    current directory with filename in the format "stage-(frame
-    number).(jpg/png)". 
-
-    You can also save sequences of screen shots. To start saving a
-    sequence, select the desired time interval from the same menu, then
-    select File/Export/Sequence of frames. The frames are saved in the
-    current directory with filenames in the format "stage-(sequence
-    number)-(frame number).(jpg/png)".
-
-    The frame and sequence numbers are reset to zero every time you run
-    Stage, so be careful to rename important frames before they are
-    overwritten.
-
+    want to keep the old poses.  Alternatively the File/Save As menu item
+    can be used to save to a new world file.
+ 
     <h3>Pausing and resuming the clock</h3>
-
-    <p>The Clock/Pause menu item allows you to stop the simulation clock,
-    freezing the world. Selecting this item again re-starts the clock.
-
+    <p>The simulation can be paused or resumed by pressing the space key.
+ 
+    <h3>Selecting models</h3>
+    <p>Models can be selected by clicking on them with the left mouse button.
+    It is possible to select multiple models by holding the shift key and 
+    clicking on multiple models.  Selected models can be moved by dragging or
+    rotated by right click dragging.  Selections can be cleared by clicking on
+    an empty location in the world.  After clearing the selection, the last
+    single model selected will be saved as the target for several view options
+    described below which affect a particular model.
 
     <h3>View options</h3>
-
-    <p>The View menu allows you to toggle rendering of a 1m grid, to help
-    you line up objects (View/Grid). You can control whether polygons are
-    filled (View/Fill polygons); turning this off slightly improves
-    graphics performance. The rest of the view menu contains options for
-    rendering of data and configuration for each type of model, and a
-    debug menu that enables visualization of some of the innards of Stage.
+    <p>The View menu provides access to a number of features affecting how
+    the world is rendered.  To the right of each option there is usually
+    a keyboard hotkey which can be pressed to quickly toggle the relevant
+    option.
+ 
+	<p>Sensor data visualizations can be toggled by the "Data" option.
+    The filter data option opens a dialog which provides the ability
+    to turn on and off visualizations of particular sensors.  The "Visualize All"
+    option in the dialog toggles whether sensor visualizations are enabled
+    for all models or only the currently selected ones.
+ 
+    <p>The "Follow" option keeps the view centered on the last selected model.
+ 
+    <p>The "Perspective camera" option switches from orthogonal viewing to perspective viewing. 
+	
+    <h3>Saving a screenshot</h3>
+    <p> To save a sequence of screenshots of the world, select the "Save
+    screenshots" option from the view menu to start recording images and
+    then select the option from the menu again to stop.
 
 */
 

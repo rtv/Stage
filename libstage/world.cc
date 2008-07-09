@@ -11,27 +11,21 @@ API: Stg::StgWorld
 
 @verbatim
 
-title "[defaults to worldfile filename]"
 interval_real   100
 interval_sim    100
-gui_interval    100
 resolution      0.02
 
 @endverbatim
 
 @par Details
-- name [string]
-- the name of the world, as displayed in the window title bar. Defaults to the worldfile file name.
-- interval_sim [milliseconds]
-- the length of each simulation update cycle in milliseconds.
-- interval_real [milliseconds]
-- the amount of real-world (wall-clock) time the siulator will attempt to spend on each simulation cycle.
-- gui_interval [milliseconds]
-- the amount of real-world time between GUI updates
-- resolution [meters]
-- specifies the resolution of the underlying bitmap model. Larger values speed up raytracing at the expense of fidelity in collision detection and sensing. 
-@par More examples
+- interval_sim <int>\n
+the length of each simulation update cycle in milliseconds.
+- interval_real <int>\n
+the amount of real-world (wall-clock) time the siulator will attempt to spend on each simulation cycle.
+- resolution <float>\n
+The resolution (in meters) of the underlying bitmap model. Larger values speed up raytracing at the expense of fidelity in collision detection and sensing. 
 
+@par More examples
 The Stage source distribution contains several example world files in
 <tt>(stage src)/worlds</tt> along with the worldfile properties
 described on the manual page for each model type.
