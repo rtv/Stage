@@ -1,91 +1,91 @@
 /** @defgroup model
 
-    The basic model simulates an object with basic properties; position,
-    size, velocity, color, visibility to various sensors, etc. The basic
-    model also has a body made up of a list of lines. Internally, the
-    basic model is used base class for all other model types. You can use
-    the basic model to simulate environmental objects.
+The basic model simulates an object with basic properties; position,
+size, velocity, color, visibility to various sensors, etc. The basic
+model also has a body made up of a list of lines. Internally, the
+basic model is used base class for all other model types. You can use
+the basic model to simulate environmental objects.
 
-    API: Stg::StgModel 
+API: Stg::StgModel 
 
-    <h2>Worldfile properties</h2>
+<h2>Worldfile properties</h2>
 
-    @par Summary and default values
+@par Summary and default values
 
-    @verbatim
-    model
-    (
-    pose [0 0 0]
-    size [1.0 1.0]
-    origin [0 0 0]
-    velocity [0 0 0]
+@verbatim
+model
+(
+  pose [ 0 0 ]
+  size [ 1.0 1.0 ]
+  origin [ 0 0 0]
+  velocity [0 0 0]
 
-    # body color
-    color "red" 
+  # body color
+  color "red" 
 
-    # determine how the model appears in various sensors
+  # determine how the model appears in various sensors
 
-    obstacle_return 1
-    laser_return 1
-    ranger_return 1
-    blobfinder_return 1
-    fiducial_return 1
-    gripper_return 0
+  obstacle_return 1
+  laser_return 1
+  ranger_return 1
+  blobfinder_return 1
+  fiducial_return 1
+  gripper_return 0
 
-    fiducial_key 0
+  fiducial_key 0
 
-    # GUI properties
-    gui_nose 0
-    gui_grid 0
-    gui_boundary 0
-    gui_movemask ?
+  # GUI properties
+  gui_nose 0
+  gui_grid 0
+  gui_boundary 0
+  gui_movemask ?
 
-    bitmap ""
-    )
-    @endverbatim
+  bitmap ""
+)
+@endverbatim
 
-    TODO PLAN: single array of all polygon vertices - model just keeps an index
+TODO PLAN: single array of all polygon vertices - model just keeps an index
 
-    @par Details
-    - pose [x_pos:float y_pos:float heading:float]
-    - specify the pose of the model in its parent's coordinate system
-    - size [x_size:float ysize:float]
-    - specify the size of the model
-    - origin [x_pos:float y_pos:float heading:float]
-    - specify the position of the object's center, relative to its pose
-    - velocity [x_speed:float y_speed:float rotation_speed:float]
-    - specify the initial velocity of the model. Not that if the model hits an obstacle, its velocity will be set to zero.
-    - color [colorname:string]
-    - specify the color of the object using a color name from the X11 database (rgb.txt)
-    - line_count [int]
-    - specify the number of lines that make up the model's body- line[index] [x1:float y1:float x2:float y2:float]
-    - creates a line from (x1,y1) to (x2,y2). A set of line_count lines defines the robot's body for the purposes of collision detection and rendering in the GUI window.
-    - bitmap [filename:string}
-    - alternative way to set the model's line_count and lines. The file must be a bitmap recognized by libgtkpixbuf (most popular formats are supported). The file is opened and parsed into a set of lines. Unless the bitmap_resolution option is used, the lines are scaled to fit inside the rectangle defined by the model's current size.
-    - gui_nose [bool]
-    - if 1, draw a nose on the model showing its heading (positive X axis)
-    - gui_grid [bool]
-    - if 1, draw a scaling grid over the model
-    - gui_movemask [int]
-    - define how the model can be moved by the mouse in the GUI window
-    - gui_boundary [bool]
-    - if 1, draw a bounding box around the model, indicating its size
-    - obstacle_return [bool]
-    - if 1, this model can collide with other models that have this property set
-    - blob_return [bool]
-    - if 1, this model can be detected in the blob_finder (depending on its color)
-    - ranger_return [bool]
-    - if 1, this model can be detected by ranger sensors
-    - laser_return [int]
-    - if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
-    - fiducial_return [fiducial_id:int]
-    - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
-    - fiducial_key [int]
-    - models are only detected by fiducialfinders if the fiducial_key values of model and fiducialfinder match. This allows you to have several independent types of fiducial in the same environment, each type only showing up in fiducialfinders that are "tuned" for it.
-    - ranger_return [bool]
-    - iff 1, this model can be detected by a ranger.
-    - gripper_return [bool]
-    - iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has moa non-zero obstacle_return.
+@par Details
+- pose [x_pos:float y_pos:float heading:float]
+- specify the pose of the model in its parent's coordinate system
+- size [x_size:float ysize:float]
+- specify the size of the model
+- origin [x_pos:float y_pos:float heading:float]
+- specify the position of the object's center, relative to its pose
+- velocity [x_speed:float y_speed:float rotation_speed:float]
+- specify the initial velocity of the model. Not that if the model hits an obstacle, its velocity will be set to zero.
+- color [colorname:string]
+- specify the color of the object using a color name from the X11 database (rgb.txt)
+- line_count [int]
+- specify the number of lines that make up the model's body- line[index] [x1:float y1:float x2:float y2:float]
+- creates a line from (x1,y1) to (x2,y2). A set of line_count lines defines the robot's body for the purposes of collision detection and rendering in the GUI window.
+- bitmap [filename:string}
+- alternative way to set the model's line_count and lines. The file must be a bitmap recognized by libgtkpixbuf (most popular formats are supported). The file is opened and parsed into a set of lines. Unless the bitmap_resolution option is used, the lines are scaled to fit inside the rectangle defined by the model's current size.
+- gui_nose [bool]
+- if 1, draw a nose on the model showing its heading (positive X axis)
+- gui_grid [bool]
+- if 1, draw a scaling grid over the model
+- gui_movemask [int]
+- define how the model can be moved by the mouse in the GUI window
+- gui_boundary [bool]
+- if 1, draw a bounding box around the model, indicating its size
+- obstacle_return [bool]
+- if 1, this model can collide with other models that have this property set
+- blob_return [bool]
+- if 1, this model can be detected in the blob_finder (depending on its color)
+- ranger_return [bool]
+- if 1, this model can be detected by ranger sensors
+- laser_return [int]
+- if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
+- fiducial_return [fiducial_id:int]
+- if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
+- fiducial_key [int]
+- models are only detected by fiducialfinders if the fiducial_key values of model and fiducialfinder match. This allows you to have several independent types of fiducial in the same environment, each type only showing up in fiducialfinders that are "tuned" for it.
+- ranger_return [bool]
+- iff 1, this model can be detected by a ranger.
+- gripper_return [bool]
+- iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has moa non-zero obstacle_return.
 
 */
 

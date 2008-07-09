@@ -8,106 +8,118 @@
 
 /** @defgroup worldgui World with Graphical User Interface
 
-    The Stage window consists of a menu bar and a view of the simulated
-    world.
+The Stage window consists of a menu bar and a view of the simulated
+world.
 
-    The world view shows part of the simulated world. You can zoom the
-    view in and out, and scroll it to see more of the world. Simulated
-    robot devices, obstacles, etc., are rendered as colored polygons. The
-    world view can also show visualizations of the data and configuration
-    of various sensor and actuator models. The View menu has options to
-    control which data and configurations are rendered.
+The world view shows part of the simulated world. You can zoom the
+view in and out, and scroll it to see more of the world. Simulated
+robot devices, obstacles, etc., are rendered as colored polygons. The
+world view can also show visualizations of the data and configuration
+of various sensor and actuator models. The View menu has options to
+control which data and configurations are rendered.
 
-    API: Stg::StgWorldGui
+API: Stg::StgWorldGui
 
-    <h2>Worldfile Properties</h2>
+<h2>Worldfile Properties</h2>
 
-    @par Summary and default values
+@par Summary and default values
 
-    @verbatim
-    window
-    (
-      size [ 400 300 ]
-      
-      # camera options
-      center [ 0 0 ]
-      rotate [ 0 0 ]
-      scale 1.0
- 
-      # perspective camera options
-      pcam_loc [ 0 -4 2 ]
-      pcam_angle [ 70 0 ]
-      pcam_on 0
+@verbatim
+window
+(
+  size [ 400 300 ]
+  
+  # camera options
+  center [ 0 0 ]
+  rotate [ 0 0 ]
+  scale 1.0
 
-      # model properties do not apply to the gui window
-    )
-    @endverbatim
+  # perspective camera options
+  pcam_loc [ 0 -4 2 ]
+  pcam_angle [ 70 0 ]
 
-    @par Details
-    - size [ <width:int> <height:int> ]\n
-    size of the window in pixels
-    - center [ <x:float> <y:float> ]\n
-    location of the center of the window in world coordinates (meters)
-    - rotate [ <pitch:float> <yaw:float> ]\n
-	angle relative to straight up, angle of rotation (degrees)
-    - scale <float>\n
-    ratio of world to pixel coordinates (window zoom)
-    - pcam_loc [ <x:int> <y:int> <z:int> ]\n
-    location of the perspective camera (meters)
-    - pcam_angle [ <pitch:float> <yaw:float> ]\n
-    verticle and horizontal angle of the perspective camera
-    - pcam_on <int>\n
-    whether to start with the perspective camera enabled (0/1)
+  # GUI options
+  show_data 0
+  show_flags 1
+  show_blocks 1
+  show_clock 1
+  show_footprints 0
+  show_grid 1
+  show_trailarrows 0
+  show_trailrise 0
+  show_trailfast 0
+  show_occupancy 0
+  show_tree 0
+  pcam_on 0
+  screenshots 0
+)
+@endverbatim
+
+@par Details
+- size [ <width:int> <height:int> ]\n
+size of the window in pixels
+- center [ <x:float> <y:float> ]\n
+location of the center of the window in world coordinates (meters)
+- rotate [ <pitch:float> <yaw:float> ]\n
+angle relative to straight up, angle of rotation (degrees)
+- scale <float>\n
+ratio of world to pixel coordinates (window zoom)
+- pcam_loc [ <x:int> <y:int> <z:int> ]\n
+location of the perspective camera (meters)
+- pcam_angle [ <pitch:float> <yaw:float> ]\n
+verticle and horizontal angle of the perspective camera
+- pcam_on <int>\n
+whether to start with the perspective camera enabled (0/1)
 
 
-    <h2>Using the Stage window</h2>
- 
+<h2>Using the Stage window</h2>
 
-    <h3>Scrolling the view</h3>
-    <p>Left-click and drag on the background to move your view of the world.
 
-    <h3>Zooming the view</h3>
-    <p>Scroll the mouse wheel to zoom in or out on the mouse cursor.
- 
-    <h3>Saving the world</h3>
-    <P>You can save the current pose of everything in the world, using the
-    File/Save menu item. <b>Warning: the saved poses overwrite the current
-    world file.</b> Make a copy of your world file before saving if you
-    want to keep the old poses.  Alternatively the File/Save As menu item
-    can be used to save to a new world file.
- 
-    <h3>Pausing and resuming the clock</h3>
-    <p>The simulation can be paused or resumed by pressing the space key.
- 
-    <h3>Selecting models</h3>
-    <p>Models can be selected by clicking on them with the left mouse button.
-    It is possible to select multiple models by holding the shift key and 
-    clicking on multiple models.  Selected models can be moved by dragging or
-    rotated by right click dragging.  Selections can be cleared by clicking on
-    an empty location in the world.  After clearing the selection, the last
-    single model selected will be saved as the target for several view options
-    described below which affect a particular model.
+<h3>Scrolling the view</h3>
+<p>Left-click and drag on the background to move your view of the world.
 
-    <h3>View options</h3>
-    <p>The View menu provides access to a number of features affecting how
-    the world is rendered.  To the right of each option there is usually
-    a keyboard hotkey which can be pressed to quickly toggle the relevant
-    option.
- 
-	<p>Sensor data visualizations can be toggled by the "Data" option.
-    The filter data option opens a dialog which provides the ability
-    to turn on and off visualizations of particular sensors.  The "Visualize All"
-    option in the dialog toggles whether sensor visualizations are enabled
-    for all models or only the currently selected ones.
- 
-    <p>The "Follow" option keeps the view centered on the last selected model.
- 
-    <p>The "Perspective camera" option switches from orthogonal viewing to perspective viewing. 
-	
-    <h3>Saving a screenshot</h3>
-    <p> To save a sequence of screenshots of the world, select the "Save
-    screenshots" option from the view menu to start recording images and
-    then select the option from the menu again to stop.
+<h3>Zooming the view</h3>
+<p>Scroll the mouse wheel to zoom in or out on the mouse cursor.
+
+<h3>Saving the world</h3>
+<P>You can save the current pose of everything in the world, using the
+File/Save menu item. <b>Warning: the saved poses overwrite the current
+world file.</b> Make a copy of your world file before saving if you
+want to keep the old poses.  Alternatively the File/Save As menu item
+can be used to save to a new world file.
+
+<h3>Pausing and resuming the clock</h3>
+<p>The simulation can be paused or resumed by pressing the space key.
+
+<h3>Selecting models</h3>
+<p>Models can be selected by clicking on them with the left mouse button.
+It is possible to select multiple models by holding the shift key and 
+clicking on multiple models.  Selected models can be moved by dragging or
+rotated by right click dragging.  Selections can be cleared by clicking on
+an empty location in the world.  After clearing the selection, the last
+single model selected will be saved as the target for several view options
+described below which affect a particular model.
+
+<h3>View options</h3>
+<p>The View menu provides access to a number of features affecting how
+the world is rendered.  To the right of each option there is usually
+a keyboard hotkey which can be pressed to quickly toggle the relevant
+option.
+
+<p>Sensor data visualizations can be toggled by the "Data" option.
+The filter data option opens a dialog which provides the ability
+to turn on and off visualizations of particular sensors.  The "Visualize All"
+option in the dialog toggles whether sensor visualizations are enabled
+for all models or only the currently selected ones.
+
+<p>The "Follow" option keeps the view centered on the last selected model.
+
+<p>The "Perspective camera" option switches from orthogonal viewing to perspective viewing. 
+
+<h3>Saving a screenshot</h3>
+<p> To save a sequence of screenshots of the world, select the "Save
+screenshots" option from the view menu to start recording images and
+then select the option from the menu again to stop.
 
 */
 

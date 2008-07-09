@@ -248,9 +248,8 @@ properly installed before you install Stage.</b>
 
 <h2>Quick start</h2>
 
-Install Player first, then Stage, using the standard GNU autotools
-build system: download and extract the tarballs, then <tt>./configure
-; make install</tt>.
+Install Stage using the CMake build tools: download and extract the tarball, then 
+<tt>cmake .; make install</tt>.
 
 <h2>Standard install procedure</h2>
 
@@ -262,7 +261,7 @@ build system: download and extract the tarballs, then <tt>./configure
  installed and working. See the Player documentation for instructions.
 
 <li>Download the latest Stage source tarball (stage-src-\<version\>.tgz)
-from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
+from <a href="http://sourceforge.net/projects/playerstage">http://sourceforge.net/projects/playerstage</a>
 
 <li>Uncompress and expand the tarball: <br>
     <tt>$ tar xzvf stage-\<version\>.tgz</tt>
@@ -271,13 +270,13 @@ from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
      <tt>$ cd stage-\<version\></tt>
  
 <li>To configure Stage with default settings:<br>
-<tt>$ ./configure</tt><br>
+<tt>$ cmake .</tt><br>
 
 <li>Compile Stage:<br>
 <tt>$ make</tt>
 
 <li>Test to see if Stage works by running the stest program:<br>
-<tt>src/stest worlds/simple.world robot1</tt><br>
+<tt>libstage/stest worlds/simple.world robot1</tt><br>
 If you see a robot running around, your build was successful. If not,
 you need to debug. See the <a href="http://playerstage.sf.net">website
 and user groups for debugging help</a>.
@@ -318,25 +317,13 @@ the documentation [@ref libstage] for details.
 
 <h2>Customized installations</h2>
 
-<p>Stage follows the standard GNU autotools conventions for build and
-install options. To see a list of all the available configuration
-options, do this:
+<p> todo
 
-<p><tt>./configure --help</tt>
+<p> export CMAKE_INSTALL_PREFIX=<prefix>
 
-<p>The most important option is <tt>--prefix</tt>, used
-to change the installation directory from the default (which varies
-from system to system, but is usually <tt>/usr/local</tt>). In
-general, Stage should get the same prefix you used to install Player. Prefixes must be absolute paths, i.e. a complete path starting with a '/'.
+<p> Prefixes must be absolute, expanded paths, i.e. a complete path starting with a '/' (not stage or $HOME/stage).
 
-<p>For example, you might want to install Stage your home directory
-because you don't have root access:
-
-<p><tt>$./configure --prefix=/home/harrison/PS</tt>
-
-<p><b>These instructions assume that Player was configured with the
-same prefix.</b> The command line to do this is probably the same, but you
-should check the Player instructions just in case.
+<p> todo: finding player
 
 \section References
 
@@ -450,75 +437,6 @@ Proceedings of the First International Conference on Genetic Agorithms
 and Their Applications.  Hillsdale, New Jersey. pp.16-23.
 
 */
-
-/**
-@ingroup stage
-@defgroup install Installation
-
-<b>Important: Stage is an extension to Player; Player must be properly
-installed before you can install Stage.</b>
-
-<h2>Quick start</h2>
-
-Install Player first, then Stage, using the standard GNU autotools
-build system: download and extract the tarballs, then <tt>./configure
-; make install</tt>.
-
-<h2>Standard install procedure</h2>
-
-<p>To install Stage in the default location, follow these steps:
-
-<ol>
-
-<li>Make sure Player is installed and working. See the Player
- documentation for instructions.
-
-<li>Download the latest Stage source tarball (stage-src-\<version\>.tgz)
-from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
-
-<li>Uncompress and expand the tarball: <br>
-    <tt>$ tar xzvf stage-\<version\>.tgz</tt>
-
-<li>`cd' into Stage's source directory:<br>
-     <tt>$ cd stage-\<version\></tt>
- 
-<li>To configure Stage with default settings:<br>
-<tt>$ ./configure</tt><br>
-
-<li>Compile Stage:<br>
-<tt>$ make</tt>
-
-<li>Install Stage. By default, Stage will be installed in
-<tt>/usr/local</tt> so you need to become root for this step. Remember
-to return to your normal user ID afterwards. <br> 
-<tt>$ make install</tt>
-
-</ol>
-
-<h2>Customized installations</h2>
-
-<p>Stage follows the standard GNU autotools conventions for build and
-install options. To see a list of all the available configuration
-options, do this:
-
-<p><tt>./configure --help</tt>
-
-<p>The most important option is <tt>--prefix</tt>, used
-to change the installation directory from the default (which varies
-from system to system, but is usually <tt>/usr/local</tt>). In
-general, Stage should get the same prefix you used to install Player. Prefixes must be absolute paths, i.e. a complete path starting with a '/'.
-
-<p>For example, you might want to install Stage your home directory
-because you don't have root access:
-
-<p><tt>$./configure --prefix=/home/harrison/PS</tt>
-
-<p><b>Remember: these instructions assume that Player was configured with the
-same prefix.</b> The command line to do this is probably the same, but you
-should check the Player instructions just in case.
-
-*/
-
 
 /**
 @page release Release Notes
