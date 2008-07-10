@@ -170,7 +170,14 @@ namespace Stg
 
 	/** Normalize an angle to within +/_ M_PI 
 	 */
-	inline double normalize( double a ){ return( atan2(sin(a), cos(a)));}
+	inline double normalize( double a )
+	{
+		//optimized version of return( atan2(sin(a), cos(a)));
+		while( a < -M_PI ) a += 2.0 * M_PI;
+		while( a > M_PI ) a -= 2.0 * M_PI;
+		return a;
+	}
+	
 
 	/** take binary sign of a, either -1, or 1 if >= 0 
 	 */
