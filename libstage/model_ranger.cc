@@ -25,30 +25,30 @@ API: Stg::StgModelRanger
 @verbatim
 ranger
 (
-# ranger properties
-scount 16
-spose[0] [? ? ?]
-spose[1] [? ? ?]
-spose[2] [? ? ?]
-spose[3] [? ? ?]
-spose[4] [? ? ?]
-spose[5] [? ? ?]
-spose[6] [? ? ?]
-spose[7] [? ? ?]
-spose[8] [? ? ?]
-spose[9] [? ? ?]
-spose[10] [? ? ?]
-spose[11] [? ? ?]
-spose[12] [? ? ?]
-spose[13] [? ? ?]
-spose[14] [? ? ?]
-spose[15] [? ? ?]
+  # ranger properties
+  scount 16
+  spose[0] [? ? ?]
+  spose[1] [? ? ?]
+  spose[2] [? ? ?]
+  spose[3] [? ? ?]
+  spose[4] [? ? ?]
+  spose[5] [? ? ?]
+  spose[6] [? ? ?]
+  spose[7] [? ? ?]
+  spose[8] [? ? ?]
+  spose[9] [? ? ?]
+  spose[10] [? ? ?]
+  spose[11] [? ? ?]
+  spose[12] [? ? ?]
+  spose[13] [? ? ?]
+  spose[14] [? ? ?]
+  spose[15] [? ? ?]
 
-ssize [0.01 0.03]
-sview [0.0 5.0 5.0]
+  ssize [0.01 0.03]
+  sview [0.0 5.0 5.0]
 
-# model properties
-watts 2.0
+  # model properties
+  watts 2.0
 )
 @endverbatim
 
@@ -57,11 +57,10 @@ watts 2.0
 The ranger model allows configuration of the pose, size and view parameters of each transducer seperately (using spose[index], ssize[index] and sview[index]). However, most users will set a common size and view (using ssize and sview), and just specify individual transducer poses.
 
 @par Details
-- scount int 
-- the number of range transducers
-- spose[\<transducer index\>] [float float float]
-- [x y theta] 
-- pose of the transducer relative to its parent.
+- scount <int>\n
+  the number of range transducers
+- spose[\<transducer index\>] [ x:<float> y:<float> theta:<float> ]\n
+  pose of the transducer relative to its parent.
 - ssize [float float]
 - [x y] 
 - size in meters. Has no effect on the data, but controls how the sensor looks in the Stage window.

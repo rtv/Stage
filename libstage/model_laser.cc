@@ -37,43 +37,44 @@ Option StgModelLaser::showLaserData( "Show Laser Data", "show_laser", "", true )
 Option StgModelLaser::showLaserStrikes( "Show Laser Data", "show_laser_strikes", "", false );
 
 /**
-   @ingroup model
-   @defgroup model_laser Laser model 
-   The laser model simulates a scanning laser rangefinder
+@ingroup model
+@defgroup model_laser Laser model 
+The laser model simulates a scanning laser rangefinder
 
-   API: Stg::StgModelLaser
+API: Stg::StgModelLaser
 
-   <h2>Worldfile properties</h2>
+<h2>Worldfile properties</h2>
 
-   @par Summary and default values
+@par Summary and default values
 
-   @verbatim
-   laser
-   (
-   # laser properties
-   samples 180
-   range_min 0.0
-   range_max 8.0
-   fov 180.0
+@verbatim
+laser
+(
+  # laser properties
+  samples 180
+  range_min 0.0
+  range_max 8.0
+  fov 3.14159
+  laser_sample_skip 1
 
-   # model properties
-   size [0.15 0.15]
-   color "blue"
-   watts 17.5 # approximately correct for SICK LMS200
-   )
-   @endverbatim
+  # model properties
+  size [ 0.15 0.15 0.2 ]
+  color "blue"
+  watts 17.5 # approximately correct for SICK LMS200
+)
+@endverbatim
 
-   @par Details
-   - samples int
-   - the number of laser samples per scan
-   - range_min float
-   -  the minimum range reported by the scanner, in meters. The scanner will detect objects closer than this, but report their range as the minimum.
-   - range_max float
-   - the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
-   - fov float
-   - the angular field of view of the scanner, in degrees. 
-   - laser_sample_skip
-   - Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
+@par Details
+- samples <int>\n
+  the number of laser samples per scan
+- range_min <float>\n
+  the minimum range reported by the scanner, in meters. The scanner will detect objects closer than this, but report their range as the minimum.
+- range_max <float>\n
+  the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
+- fov <float>\n
+  the angular field of view of the scanner, in radians. 
+- laser_sample_skip <int>\n
+  Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
 */
 
 StgModelLaser::StgModelLaser( StgWorld* world, 

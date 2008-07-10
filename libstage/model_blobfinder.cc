@@ -46,38 +46,32 @@ API: Stg::StgModelBlobfinder
 @par Summary and default values
 
 @verbatim
-ptz(
-# blobfinder MUST be a child of a PTZ model
 blobfinder
 (
-# blobfinder properties
-colors_count 6
-colors ["red" "green" "blue" "cyan" "yellow" "magenta" ]
-range 8.0
-ptz[0 0 60.0]
-image[80 60]
+  # blobfinder properties
+  colors_count 0
+  colors [ ]
+  image[ 80 60 ]
+  range 12.0
+  fov 3.14159/3.0
+  pan 0.0
 
-# model properties
-size3 [0 0 0]
-)
+  # model properties
+  size [ 0.0 0.0 0.0 ]
 )
 @endverbatim
 
 @par Details
-- colors_count int
-- number of colors being tracked
-- colors [ string ... ]
-- define the colors detected in each channel, using color names from the X11-style color database 
-The number of strings should match colors_count.
-- image [int int]
-- [width height]
-- dimensions of the image in pixels. This determines the blobfinder's 
-resolution
-- ptz [float float float]
-- [pan_angle tilt_angle zoom_angle] 
-- control the panning, tilt and fov angle (zoom) of the blobfinder. Tilt angle currently has no effect.
-- range float
-- maximum range of the sensor in meters.
+- colors_count <int>\n
+  number of colors being tracked
+- colors [ col1:<string> col2:<string> ... ]\n
+  A list of quoted strings defining the colors detected in each channel, using color names from the X11-style color database (ex. "black", "red").
+  The number of strings should match colors_count.
+- image [ width:<int> height:<int> ]\n
+  dimensions of the image in pixels. This determines the blobfinder's resolution
+- range <float>\n
+  maximum range of the sensor in meters.
+
  */
 
 

@@ -20,15 +20,15 @@
 #include "stage_internal.hh"
 
 /** 
-  @ingroup model
-  @defgroup model_position Position model 
+@ingroup model
+@defgroup model_position Position model 
 
-  The position model simulates a
-  mobile robot base. It can drive in one of two modes; either
-  <i>differential</i>, i.e. able to control its speed and turn rate by
-  driving left and roght wheels like a Pioneer robot, or
-  <i>omnidirectional</i>, i.e. able to control each of its three axes
-  independently.
+The position model simulates a
+mobile robot base. It can drive in one of two modes; either
+<i>differential</i>, i.e. able to control its speed and turn rate by
+driving left and roght wheels like a Pioneer robot, or
+<i>omnidirectional</i>, i.e. able to control each of its three axes
+independently.
 
 API: Stg::StgModelPosition
 
@@ -39,16 +39,16 @@ API: Stg::StgModelPosition
 @verbatim
 position
 (
-# position properties
-drive "diff"
-localization "gps"
-localization_origin [ <defaults to model's start pose> ]
+  # position properties
+  drive ""
+  localization ""
+  localization_origin [ <defaults to model's start pose> ]
 
-# odometry error model parameters, 
-# only used if localization is set to "odom"
-odom_error [0.03 0.03 0.05]
+  # odometry error model parameters, 
+  # only used if localization is set to "odom"
+  odom_error [0.03 0.03 0.05]
 
-# model properties
+  # model properties
 )
 @endverbatim
 
@@ -56,10 +56,10 @@ odom_error [0.03 0.03 0.05]
 Since Stage-1.6.5 the odom property has been removed. Stage will generate a warning if odom is defined in your worldfile. See localization_origin instead.
 
 @par Details
-- drive "diff", "omni" or "car"
-- select differential-steer mode (like a Pioneer), omnidirectional mode or carlike (velocity and steering angle).
-- localization "gps" or "odom"
-- if "gps" the position model reports its position with perfect accuracy. If "odom", a simple odometry model is used and position data drifts from the ground truth over time. The odometry model is parameterized by the odom_error property.
+- drive "diff", "omni" or "car"\n
+  select differential-steer model(like a Pioneer), omnidirectional mode or carlike (velocity and steering angle).
+- localization "gps" or "odom"\n
+  if "gps" the position model reports its position with perfect accuracy. If "odom", a simple odometry model is used and position data drifts from the ground truth over time. The odometry model is parameterized by the odom_error property.
 - localization_origin [x y theta]
 - set the origin of the localization coordinate system. By default, this is copied from the model's initial pose, so the robot reports its position relative to the place it started out. Tip: If localization_origin is set to [0 0 0] and localization is "gps", the model will return its true global position. This is unrealistic, but useful if you want to abstract away the details of localization. Be prepared to justify the use of this mode in your research! 
 - odom_error [x y theta]

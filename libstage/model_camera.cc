@@ -19,58 +19,60 @@
 
 Option StgModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true );
 
-static const stg_size_t DEFAULT_SIZE = {0.1, 0.07, 0.05 };
+static const stg_size_t DEFAULT_SIZE = { 0.1, 0.07, 0.05 };
 static const char DEFAULT_GEOM_COLOR[] = "black";
+static const float DEFAULT_HFOV = 70;
+static const float DEFAULT_VFOV = 40;
 
 /**
- @ingroup model
- @defgroup model_camera Camera model 
- The camera model simulates a camera
- 
- API: Stg::StgModelCamera
- 
- <h2>Worldfile properties</h2>
- 
- @par Summary and default values
- 
- @verbatim
- camera
- (
- # laser properties
- width 32
- height 32
- range_min 0.0
- range_max 8.0
- horizfov 60.0
- vertfov 60.0
- yaw 0.0
- pitch 90.0
- 
- # model properties
- size [0.15 0.15]
- color "black"
- watts 100.0 # TODO find watts for sony pan-tilt camera
- )
- @endverbatim
- 
- @par Details
- - width int
- - the number of pixel samples
- - height int
- - the number of pixel samples
- - range_min float
- -  the minimum range reported by the camera, in meters. Objects closer than this will not be displayed. The smaller the number, the less persision in depth - don't set this value too close to 0.
- - range_max float
- - the maximum range reported by the camera, in meters. Objects farther than this will not be displayed.
- - horizfov float
- - angle, in degrees, for the horizontal field of view.
- - vertfov float
- - angle, in degrees, for the vertical field of view.
- - yaw float
- - angle, in degrees, where the camera is panned to.
- - pitch float
- - angle, in degrees, where the camera is tilted to.
- */
+@ingroup model
+@defgroup model_camera Camera model 
+The camera model simulates a camera
+
+API: Stg::StgModelCamera
+
+<h2>Worldfile properties</h2>
+
+@par Summary and default values
+
+@verbatim
+camera
+(
+  # laser properties
+  width 32
+  height 32
+  range_min 0.2
+  range_max 8.0
+  horizfov 70.0
+  vertfov 40.0
+  yaw 0.0
+  pitch 0.0
+
+  # model properties
+  size [ 0.1 0.07 0.05 ]
+  color "black"
+  watts 100.0 # TODO find watts for sony pan-tilt camera
+)
+@endverbatim
+
+@par Details
+- width <int>\n
+  the number of pixel samples
+- height <int>\n
+  the number of pixel samples
+- range_min <float>\n
+  the minimum range reported by the camera, in meters. Objects closer than this will not be displayed. The smaller the number, the less persision in depth - don't set this value too close to 0.
+- range_max <float>\n
+  the maximum range reported by the camera, in meters. Objects farther than this will not be displayed.
+- horizfov <float>\n
+  angle, in degrees, for the horizontal field of view.
+- vertfov <float>\n
+  angle, in degrees, for the vertical field of view.
+- yaw <float>\n
+  angle, in degrees, where the camera is panned to.
+- pitch <float>\n
+  angle, in degrees, where the camera is tilted to.
+*/
 
 //caclulate the corss product, and store results in the first vertex
 void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
@@ -146,9 +148,13 @@ void StgModelCamera::Load( void )
 {
 	StgModel::Load();
 	
-	_camera.setFov( wf->ReadLength( wf_entity, "horizfov",  _camera.horizFov() ), wf->ReadLength( wf_entity, "vertfov",  _camera.vertFov() ) );
+	float horizFov =  wf->ReadFloat( wf_entity, "horizfov",  DEFAULT_HFOV );
+	float vertFov = wf->ReadFloat( wf_entity, "vertfov",  DEFAULT_VFOV );
+	_camera.setFov( horizFov, vertFov );
 	
-	_camera.setClip( wf->ReadLength( wf_entity, "range_min",  CAMERA_NEAR_CLIP ), wf->ReadLength( wf_entity, "range_max",  CAMERA_FAR_CLIP ) );
+	float range_min = wf->ReadLength( wf_entity, "range_min",  CAMERA_NEAR_CLIP );
+	float range_max = wf->ReadLength( wf_entity, "range_max",  CAMERA_FAR_CLIP );
+	_camera.setClip( range_min, range_max );
 
 	_yaw_offset = wf->ReadFloat( wf_entity, "yaw", _yaw_offset );
 	_pitch_offset = wf->ReadFloat( wf_entity, "pitch", _pitch_offset );

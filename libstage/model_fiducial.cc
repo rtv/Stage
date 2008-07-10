@@ -40,26 +40,26 @@ API: Stg::StgModelFiducial
 @verbatim
 fiducialfinder
 (
-# fiducialfinder properties
-range_min 0.0
-range_max 8.0
-range_max_id 5.0
-fov 180.0
+  # fiducialfinder properties
+  range_min 0.0
+  range_max 8.0
+  range_max_id 5.0
+  fov 3.14159
 
-# model properties
-size [0 0]
+  # model properties
+  size [ 0.1 0.1 0.1 ]
 )
 @endverbatim
 
 @par Details
-- range_min float
-- the minimum range reported by the sensor, in meters. The sensor will detect objects closer than this, but report their range as the minimum.
-- range_max float
-- the maximum range at which the sensor can detect a fiducial, in meters. The sensor may not be able to uinquely identify the fiducial, depending on the value of range_max_id.
-- range_max_id float
-- the maximum range at which the sensor can detect the ID of a fiducial, in meters.
-- fov float
-- the angular field of view of the scanner, in degrees. 
+- range_min <float>\n
+  the minimum range reported by the sensor, in meters. The sensor will detect objects closer than this, but report their range as the minimum.
+- range_max <float>\n
+  the maximum range at which the sensor can detect a fiducial, in meters. The sensor may not be able to uinquely identify the fiducial, depending on the value of range_max_id.
+- range_max_id <float>\n
+  the maximum range at which the sensor can detect the ID of a fiducial, in meters.
+- fov <float>
+  the angular field of view of the scanner, in radians.
 
  */
 

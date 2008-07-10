@@ -15,17 +15,13 @@ API: Stg::StgModel
 @verbatim
 model
 (
-  pose [ 0 0 0 0 ]
+  pose [ 0.0 0.0 0.0 0.0 ]
   size [ 0.1 0.1 0.1 ]
-  origin [ 0 0 0 0 ]
-  velocity [ 0 0 0 0 ]
+  origin [ 0.0 0.0 0.0 0.0 ]
+  velocity [ 0.0 0.0 0.0 0.0 ]
 
   color "red"
-  color_rgba [ 0 0 0 1 ]
- 
-  boundary 0
-  blocks -1
-  mass 10
+  color_rgba [ 0.0 0.0 0.0 1.0 ]
 
   # determine how the model appears in various sensors
   fiducial_return 0
@@ -36,21 +32,19 @@ model
   laser_return LaserVisible
   gripper_return 0
 
-
   # GUI properties
   gui_nose 0
   gui_grid 0
   gui_outline 1 ( was gui_boundary? )
   gui_movemask 0 top level or (STG_MOVE_TRANS | STG_MOVE_ROT);
 
+  boundary 0
+  blocks -1
+  mass 10.0
   bitmap ""
- 
   ctrl ""
- 
   map_resolution 0.1
- 
   say ""
- 
   alwayson 0
 )
 @endverbatim
