@@ -338,8 +338,6 @@ std::string StgWorldGui::ClockString()
 	if( hours > 0 )
 		status_stream << hours << "h";
 	
-	localratio = 1;
-	
 	status_stream << std::setw( 2 ) << minutes << "m"
 	<< std::setw( 2 ) << seconds << "." << std::setprecision( 3 ) << std::setw( 3 ) << msec << "s ";
 	
