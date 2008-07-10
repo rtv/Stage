@@ -3,8 +3,8 @@
 The basic model simulates an object with basic properties; position,
 size, velocity, color, visibility to various sensors, etc. The basic
 model also has a body made up of a list of lines. Internally, the
-basic model is used base class for all other model types. You can use
-the basic model to simulate environmental objects.
+basic model is used as the base class for all other model types. You
+can use the basic model to simulate environmental objects.
 
 API: Stg::StgModel 
 
@@ -15,30 +15,43 @@ API: Stg::StgModel
 @verbatim
 model
 (
-  pose [ 0 0 ]
-  size [ 1.0 1.0 ]
-  origin [ 0 0 0 ]
-  velocity [ 0 0 0 ]
+  pose [ 0 0 0 0 ]
+  size [ 0.1 0.1 0.1 ]
+  origin [ 0 0 0 0 ]
+  velocity [ 0 0 0 0 ]
 
-  # body color
-  color "red" 
+  color "red"
+  color_rgba [ 0 0 0 1 ]
+ 
+  boundary 0
+  blocks -1
+  mass 10
 
   # determine how the model appears in various sensors
-  obstacle_return 1
-  laser_return 1
-  ranger_return 1
-  blobfinder_return 1
-  fiducial_return 1
-  gripper_return 0
+  fiducial_return 0
   fiducial_key 0
+  obstacle_return 1
+  ranger_return 1
+  blob_return 1
+  laser_return LaserVisible
+  gripper_return 0
+
 
   # GUI properties
   gui_nose 0
   gui_grid 0
-  gui_boundary 0
-  gui_movemask ?
+  gui_outline 1 ( was gui_boundary? )
+  gui_movemask 0 top level or (STG_MOVE_TRANS | STG_MOVE_ROT);
 
   bitmap ""
+ 
+  ctrl ""
+ 
+  map_resolution 0.1
+ 
+  say ""
+ 
+  alwayson 0
 )
 @endverbatim
 
@@ -104,11 +117,10 @@ specify the pose of the model in its parent's coordinate system
 //#define DEBUG 0
 #include "stage_internal.hh"
 #include "texture_manager.hh"
-#include <limits.h> 
+//#include <limits.h> 
 
 
 //static const members
-static const bool DEFAULT_BLOBRETURN = true;
 static const bool DEFAULT_BOUNDARY = false;
 static const stg_color_t DEFAULT_COLOR = (0xFFFF0000); // solid red
 static const stg_joules_t DEFAULT_ENERGY_CAPACITY = 1000.0;
@@ -127,6 +139,7 @@ static const stg_movemask_t DEFAULT_MASK = (STG_MOVE_TRANS | STG_MOVE_ROT);
 static const stg_kg_t DEFAULT_MASS = 10.0;
 static const bool DEFAULT_NOSE = false;
 static const bool DEFAULT_OBSTACLERETURN = true;
+static const bool DEFAULT_BLOBRETURN = true;
 static const bool DEFAULT_OUTLINE = true;
 static const bool DEFAULT_RANGERRETURN = true;
 

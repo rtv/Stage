@@ -110,10 +110,10 @@ void StgModel::Load()
 
   if( wf->PropertyExists( wf_entity, "color_rgba" ))
     {      
-      double red   = wf->ReadTupleFloat( wf_entity, "color_rgba", 0, 0);
-      double green = wf->ReadTupleFloat( wf_entity, "color_rgba", 1, 0);
-      double blue  = wf->ReadTupleFloat( wf_entity, "color_rgba", 2, 0);
-      double alpha = wf->ReadTupleFloat( wf_entity, "color_rgba", 3, 0);
+      double red   = wf->ReadTupleFloat( wf_entity, "color_rgba", 0, 0 );
+      double green = wf->ReadTupleFloat( wf_entity, "color_rgba", 1, 0 );
+      double blue  = wf->ReadTupleFloat( wf_entity, "color_rgba", 2, 0 );
+      double alpha = wf->ReadTupleFloat( wf_entity, "color_rgba", 3, 1 );
 
       this->SetColor( stg_color_pack( red, green, blue, alpha ));
     }  
