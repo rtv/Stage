@@ -62,6 +62,7 @@ blobfinder
 @endverbatim
 
 @par Details
+ 
 - colors_count <int>\n
   number of colors being tracked
 - colors [ col1:<string> col2:<string> ... ]\n

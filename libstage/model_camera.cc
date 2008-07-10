@@ -56,6 +56,7 @@ camera
 @endverbatim
 
 @par Details
+ 
 - width <int>\n
   the number of pixel samples
 - height <int>\n

@@ -56,6 +56,7 @@ position
 Since Stage-1.6.5 the odom property has been removed. Stage will generate a warning if odom is defined in your worldfile. See localization_origin instead.
 
 @par Details
+ 
 - drive "diff", "omni" or "car"\n
   select differential-steer model(like a Pioneer), omnidirectional mode or carlike (velocity and steering angle).
 - localization "gps" or "odom"\n

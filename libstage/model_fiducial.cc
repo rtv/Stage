@@ -52,6 +52,7 @@ fiducialfinder
 @endverbatim
 
 @par Details
+ 
 - range_min <float>\n
   the minimum range reported by the sensor, in meters. The sensor will detect objects closer than this, but report their range as the minimum.
 - range_max <float>\n

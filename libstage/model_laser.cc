@@ -65,6 +65,7 @@ laser
 @endverbatim
 
 @par Details
+ 
 - samples <int>\n
   the number of laser samples per scan
 - range_min <float>\n

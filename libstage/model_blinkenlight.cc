@@ -38,6 +38,7 @@ enabled 1
 @par Notes
 
 @par Details
+ 
 - enabled int 
 - if 0, the light is off, else it is on
 - period int

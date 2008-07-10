@@ -57,6 +57,7 @@ ranger
 The ranger model allows configuration of the pose, size and view parameters of each transducer seperately (using spose[index], ssize[index] and sview[index]). However, most users will set a common size and view (using ssize and sview), and just specify individual transducer poses.
 
 @par Details
+ 
 - scount <int>\n
   the number of range transducers
 - spose[\<transducer index\>] [ x:<float> y:<float> theta:<float> ]\n
