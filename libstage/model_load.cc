@@ -185,7 +185,7 @@ void StgModel::Load()
 
   if( wf->PropertyExists( wf_entity, "blocks" ) )
     {
-      int blockcount = wf->ReadInt( wf_entity, "blocks", -1 );
+      int blockcount = wf->ReadInt( wf_entity, "blocks", 0 );
 
       this->UnMap();
       this->ClearBlocks();
