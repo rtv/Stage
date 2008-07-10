@@ -3,6 +3,7 @@
  * $Id: stage.txt,v 1.20 2008-02-24 23:24:40 rtv Exp $
 */
 
+
 /**
 \mainpage The Stage Robot Simulator
 
@@ -238,91 +239,6 @@ playerstage_users@lists.sourceforge.net and a user or developer may
 reply to you. <b>Remember that these mails go to hundreds of people</b>, so
 please be polite and give as much information as you can in your
 email.
-
-
-\page install Installation
-
-<b>Important: If you plan to use Stage with Player, Player must be
-properly installed before you install Stage.</b>
-
-<h2>Quick start</h2>
-
-Install Stage using the CMake build tools: download and extract the tarball, then 
-<tt>cmake .; make install</tt>.
-
-<h2>Standard install procedure</h2>
-
-<p>To install Stage in the default location, follow these steps:
-
-<ol>
-
-<li>If you plan to use Player with Stage, make sure Player is
- installed and working. See the Player documentation for instructions.
-
-<li>Download the latest Stage source tarball (Stage-\<version\>-Source.tgz)
-from <a href="http://sourceforge.net/projects/playerstage">http://sourceforge.net/projects/playerstage</a>
-
-<li>Uncompress and expand the tarball: <br>
-    <tt>$ tar xzvf Stage-\<version\>-Source.tgz</tt>
-
-<li>`cd' into Stage's source directory:<br>
-     <tt>$ cd Stage-\<version\>-Source</tt>
- 
-<li>To configure Stage with default settings:<br>
-<tt>$ cmake .</tt><br>
-
-<li>Compile Stage:<br>
-<tt>$ make</tt>
-
-<li>Test to see if Stage works by running the stest program:<br>
-<tt>libstage/stest worlds/simple.world robot1</tt><br>
-If you see a robot running around, your build was successful. If not,
-you need to debug. See the <a href="http://playerstage.sf.net">website
-and user groups for debugging help</a>.
-
-<li>Install Stage. By default, Stage will be installed in
-<tt>/usr/local</tt> so you need to become root for this step. Remember
-to return to your normal user ID afterwards. <br> 
-<tt>$ make install</tt>
-
-</ol>
-
-
-<h2>Player/Stage</h2>
-
-Stage can provide a population of simulated devices for the Player
-robot server. Player client programs can use the virtual Stage devices
-as if they were real Player robots. To do this, Stage provides the
-dynamically-loadable Player plugin driver "libstageplugin". Player
-using libstageplugin is known as "the Player/Stage system", or
-"Player/Stage", and often abbreviated to "P/S".
-
-To use Player/Stage, you run the "player" program with appropriate
-configuration files.  See the documentation [@ref player] for details
-and examples.
-
-<h2>Stage program</h2>
-
-Stage also provides the executable program "stage", which allows you
-to run Stage simulations without Player. There are pros and cons of
-using Player, so be sure to read the documentation [@ref stage] and
-[@ref player] to determine what's best for your project.
-
-<h2>libstage C++ library</h2>
-
-You can also create your own custom robot simulations independently of
-Player by using the libstage C++ library directly in your code. See
-the documentation [@ref libstage] for details.
-
-<h2>Customized installations</h2>
-
-<p> todo
-
-<p> export CMAKE_INSTALL_PREFIX=<prefix>
-
-<p> Prefixes must be absolute, expanded paths, i.e. a complete path starting with a '/' (not stage or $HOME/stage).
-
-<p> todo: finding player
 
 \section References
 

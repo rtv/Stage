@@ -1,5 +1,5 @@
 #!/bin/bash
 
-echo "/** \page installnew"
+echo "/** \page install Installation"
 ./Markdown.pl ../INSTALL
 echo "**/"

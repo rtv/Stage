@@ -17,21 +17,19 @@ model
 (
   pose [ 0 0 ]
   size [ 1.0 1.0 ]
-  origin [ 0 0 0]
-  velocity [0 0 0]
+  origin [ 0 0 0 ]
+  velocity [ 0 0 0 ]
 
   # body color
   color "red" 
 
   # determine how the model appears in various sensors
-
   obstacle_return 1
   laser_return 1
   ranger_return 1
   blobfinder_return 1
   fiducial_return 1
   gripper_return 0
-
   fiducial_key 0
 
   # GUI properties
@@ -44,12 +42,10 @@ model
 )
 @endverbatim
 
-TODO PLAN: single array of all polygon vertices - model just keeps an index
-
 @par Details
-- pose [x_pos:float y_pos:float heading:float]
-- specify the pose of the model in its parent's coordinate system
-- size [x_size:float ysize:float]
+- pose [x_pos:float y_pos:float heading:float]\n
+specify the pose of the model in its parent's coordinate system
+- size [x_size:float y_size:float]
 - specify the size of the model
 - origin [x_pos:float y_pos:float heading:float]
 - specify the position of the object's center, relative to its pose
@@ -85,7 +81,7 @@ TODO PLAN: single array of all polygon vertices - model just keeps an index
 - ranger_return [bool]
 - iff 1, this model can be detected by a ranger.
 - gripper_return [bool]
-- iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has moa non-zero obstacle_return.
+- iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has a non-zero obstacle_return.
 
 */
 
