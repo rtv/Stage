@@ -27,37 +27,38 @@ Please report bugs to the tracker and let us know what you do with Stage.
 Richard Vaughan (rtv) vaughan@sfu.ca 2006.2.26
 
 ### New Features
+
 Significant user-level changes include:
 
- - Stage is now implemented as the C library
- libstage. Using libstage, your programs can include a
- sophisticated robot simulator with a few lines of code. The
- Player plugin libstageplugin is a wrapper for libstage
- that provides simulation services to Player. Player with
- libstageplugin is the Player/Stage system.
+- Stage is now implemented as the C library
+  libstage. Using libstage, your programs can include a
+  sophisticated robot simulator with a few lines of code. The
+  Player plugin libstageplugin is a wrapper for libstage
+  that provides simulation services to Player. Player with
+  libstageplugin is the Player/Stage system.
 
- - Player clients can draw directly in the Stage window using the
-   graphics2d interface. libstage programs can use the internal
-   user graphics API.
+- Player clients can draw directly in the Stage window using the
+  graphics2d interface. libstage programs can use the internal
+  user graphics API.
 
- - Configurable odometry error in position model
+- Configurable odometry error in position model
 
- - Gripper model that can pick up anything. Any object can be made
-   grippable/pushable by setting the the gripper_return property.
- 
- - Pan-tilt-zoom (PTZ) model.
+- Gripper model that can pick up anything. Any object can be made
+  grippable/pushable by setting the the gripper_return property.
 
- - More and improved visualizations, including models leaving trails
-   over time
+- Pan-tilt-zoom (PTZ) model.
 
- - Any object can now have its shape specified by a bitmap file (JPG,
-   PNG, etc.).
+- More and improved visualizations, including models leaving trails
+  over time
 
- - Worldfile syntax has changed slightly, so you may need to edit your existing
-worlds to get them to work. Look at the example worlds in <tt>(stage
-src)/worlds</tt> to get the idea.
+- Any object can now have its shape specified by a bitmap file (JPG,
+  PNG, etc.).
 
- - Worlds can be very large (thousands of meters square).
+- Worldfile syntax has changed slightly, so you may need to edit your 
+  existing worlds to get them to work. Look at the example worlds in
+  <stage src>/worlds to get the idea.
+
+- Worlds can be very large (thousands of meters square).
 
 
 Version 1.6.1
@@ -80,58 +81,57 @@ and usable.
 ### Significant changes visible to the user
 
 1. Stage is now a Player plugin, instead of an executable. The key
-benefit of this is that all Player drivers are now available for
-use directly with Stage, including sophisticated drivers like
-AMCL, without needing passthrough drivers.
+   benefit of this is that all Player drivers are now available for
+   use directly with Stage, including sophisticated drivers like
+   AMCL, without needing passthrough drivers.
 
 2. Stage depends on Player 1.6 or newer.
 
 3. Worldfile syntax has a changed, so you need to edit your existing
-worlds to get them to work. Look at the example worlds in <stage
-src>/worlds to get the idea.
+   worlds to get them to work. Look at the example worlds in <stage
+   src>/worlds to get the idea.
 
 4. Any object can now have its shape specified by a bitmap file
 
 5. Several bitmap file formats are supported, using a third-party
-library. Load maps and robot bodies from JPG, PNG, etc. No more PNM
-troubles.
+   library. Load maps and robot bodies from JPG, PNG, etc. No more PNM
+   troubles.
 
 6. Worlds can now be very large (thousands of meters square).
 
 7. Several models are missing from this release - notably the gripper
-and puck. These will be available soon. Meanwhile, enjoy the full
-power of Player with the basic laser, sonar, position, fiducial and
-blobfinder models.
+   and puck. These will be available soon. Meanwhile, enjoy the full
+   power of Player with the basic laser, sonar, position, fiducial and
+   blobfinder models.
 
 8. Stage no longer depends on libRTK.
 
 9. Some models from previous versions may not yet be available in
-this release (e.g. gripper & puck), but we're working on them. Let us
-know which ones you need.
+   this release (e.g. gripper & puck), but we're working on them. Let us
+   know which ones you need.
 
 
 ### Significant changes under the hood
 
 1. The Stage simulation engine is now a library rather than an
-application. The library can be used to write custom robot
-simulations. This is very useful if you need to do synchronous control
-of robots (e.g for perfectly repeatable experiments), or dynamically
-create and destroy robots or other objects. You can't (yet) do this
-though Player. Refer to the libstage reference manual 
-(http://playerstage.sf.net/doc/stage_reference) for the API and 
-developer docs.
+   application. The library can be used to write custom robot
+   simulations. This is very useful if you need to do synchronous control
+   of robots (e.g for perfectly repeatable experiments), or dynamically
+   create and destroy robots or other objects. You can't (yet) do this
+   though Player. Refer to the libstage reference manual 
+   (http://playerstage.sf.net/doc/stage_reference) for the API and 
+   developer docs.
 
 2. Stage is now mostly written in C. A simple object-oriented system
-allows one level of inheritance for writing polymorphic model code.
+   allows one level of inheritance for writing polymorphic model code.
 
 3. The underlying occupancy grid model has changed from a simple
-fixed-size array to a sparse array of (almost) unlimited size
-(implemented with a hash table). To compensate for the performance hit
-of raytracing in the hash table, a three-level multiple-resolution
-approach is used. Raytracing is now usually _much_ faster than in
-Stage-1.3. To get an idea how this works, select the
-View/Debug/Raytrace menu item while a laser or ranger is producing
-data.
+   fixed-size array to a sparse array of (almost) unlimited size
+   (implemented with a hash table). To compensate for the performance hit
+   of raytracing in the hash table, a three-level multiple-resolution
+   approach is used. Raytracing is now usually _much_ faster than in
+   Stage-1.3. To get an idea how this works, select the
+   View/Debug/Raytrace menu item while a laser or ranger is producing
+   data.
 
-4. Most home-rolled data structures have been replaced by glib
-versions.
+4. Most home-rolled data structures have been replaced by glib versions.
