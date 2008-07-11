@@ -56,7 +56,7 @@ Significant user-level changes include:
 
 - Worldfile syntax has changed slightly, so you may need to edit your 
   existing worlds to get them to work. Look at the example worlds in
-  <stage src>/worlds to get the idea.
+  (stage src)/worlds to get the idea.
 
 - Worlds can be very large (thousands of meters square).
 
