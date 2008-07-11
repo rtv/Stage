@@ -6,6 +6,15 @@ This has two main advantages: (i) it is much faster; (ii) CMake can
 create native build files for Windows and Mac OS X, which will help 
 Stage become more portable.
 
+Dependencies
+------------
+Building Stage requires the following libraries:
+
+- FLTK 1.1.x 
+- OpenGL
+- GLib 2
+- libpng
+- ltdl (Libtool)
 
 Configuring the build
 ---------------------
