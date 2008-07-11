@@ -30,7 +30,7 @@
  * CVS: $Id$
  */
 
-/*! \file stage.h 
+/*! \file stage.hh
   Stage library header file
 
   This header file contains the external interface for the Stage
