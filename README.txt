@@ -67,27 +67,6 @@ you to rapidly build powerful robot controllers. These are easy to use
 with Stage.
 
 
-Authors
--------
-Stage was written by:
-
-- Richard Vaughan (vaughan@sfu.ca)
-- Brian Gerkey (gerkey@willowgarage.com)
-- Reed Hedges (hedges@mobilerobots.com)
-- Andrew Howard (andrew.b.howard@jpl.nasa.gov)
-- Toby Collett (tcollett+player@plan9.net.nz)
-- Pooya Karimian (pooyak@sfu.ca)
-- Jeremy Asher (jra11@sfu.ca)
-- Alex Couture-Beil (asc17@sfu.ca)
-
-
-Many patches and bug reports have been contributed by users around the
-world.
-
-Stage is part of the Player Project (http://playerstage.sourceforge.net),
-a community effort to develop Free Software tools for robotics research.
-
-
 Citations
 ---------
 If you use Stage in your work, we'd appreciate a citation. At the time 
