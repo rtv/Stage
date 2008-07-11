@@ -519,6 +519,7 @@ void StgCanvas::DrawFloor()
   stg_bounds3d_t bounds = world->GetExtent();
   float z = 0;
 	
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(2.0, 2.0);
 	

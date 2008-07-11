@@ -89,7 +89,7 @@ trickedoutpioneer
   color "red"
   name "redrobot_w_camera"
   pose [-5.645 3.034 0 -162.098]
-  camera( pose [0.060 0 0.190 0 ] )
+  camera( pose [ 0 0 0 0 ]  range [ 0.2 8.0 ] resolution [ 100 100 ] fov [ 70 40 ] direction [ 0 0 ] )
 )
 
 trickedoutpioneer

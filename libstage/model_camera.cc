@@ -39,14 +39,10 @@ API: Stg::StgModelCamera
 camera
 (
   # laser properties
-  width 32
-  height 32
-  range_min 0.2
-  range_max 8.0
-  horizfov 70.0
-  vertfov 40.0
-  yaw 0.0
-  pitch 0.0
+  resolution [ 32 32 ]
+  range [ 0.2 8.0 ]
+  fov [ 70.0 40.0 ]
+  direction [ 0.0 0.0 ]
 
   # model properties
   size [ 0.1 0.07 0.05 ]
@@ -57,22 +53,15 @@ camera
 
 @par Details
  
-- width <int>\n
-  the number of pixel samples
-- height <int>\n
-  the number of pixel samples
-- range_min <float>\n
-  the minimum range reported by the camera, in meters. Objects closer than this will not be displayed. The smaller the number, the less persision in depth - don't set this value too close to 0.
-- range_max <float>\n
-  the maximum range reported by the camera, in meters. Objects farther than this will not be displayed.
-- horizfov <float>\n
-  angle, in degrees, for the horizontal field of view.
-- vertfov <float>\n
-  angle, in degrees, for the vertical field of view.
-- yaw <float>\n
-  angle, in degrees, where the camera is panned to.
-- pitch <float>\n
-  angle, in degrees, where the camera is tilted to.
+- resolution [ width:<int> height:<int> ]\n
+  the resolution of the pixel samples
+- range [ min:<float> max:<float> ]\n
+  the range reported by the camera, in meters. Objects closer than `min', or farther than `max' will not be displayed. 
+  The smaller the `min' number, the less persision in depth - don't set this value too close to 0.
+- fov [ horizontal: <float> vertical: <float> ]\n
+  angle, in degrees, for the horizontal and vertical field of view.
+- direction [ yaw:<float> pitch:<float> ]
+  angle, in degrees, where the camera is looking. yaw is the left-right panning, and pitch is the up-down tilting.
 */
 
 //caclulate the corss product, and store results in the first vertex
@@ -149,18 +138,20 @@ void StgModelCamera::Load( void )
 {
 	StgModel::Load();
 	
-	float horizFov =  wf->ReadFloat( wf_entity, "horizfov",  DEFAULT_HFOV );
-	float vertFov = wf->ReadFloat( wf_entity, "vertfov",  DEFAULT_VFOV );
+	float horizFov =  wf->ReadTupleLength( wf_entity, "fov", 0, DEFAULT_HFOV );
+	float vertFov = wf->ReadTupleLength( wf_entity, "fov", 1, DEFAULT_VFOV );
 	_camera.setFov( horizFov, vertFov );
 	
-	float range_min = wf->ReadLength( wf_entity, "range_min",  CAMERA_NEAR_CLIP );
-	float range_max = wf->ReadLength( wf_entity, "range_max",  CAMERA_FAR_CLIP );
+	float range_min = wf->ReadTupleLength( wf_entity, "range", 0, CAMERA_NEAR_CLIP );
+	float range_max = wf->ReadTupleLength( wf_entity, "range", 1, CAMERA_FAR_CLIP );
 	_camera.setClip( range_min, range_max );
 
-	_yaw_offset = wf->ReadFloat( wf_entity, "yaw", _yaw_offset );
-	_pitch_offset = wf->ReadFloat( wf_entity, "pitch", _pitch_offset );
-	_width = wf->ReadInt( wf_entity, "width", _width );
-	_height = wf->ReadInt( wf_entity, "height", _height );
+	_yaw_offset = wf->ReadTupleLength( wf_entity, "direction", 0, _yaw_offset );
+	_pitch_offset = wf->ReadTupleLength( wf_entity, "direction", 1, _pitch_offset );
+	
+	_width = static_cast< int >( wf->ReadTupleLength( wf_entity, "resolution", 0, _width ) );
+	_height = static_cast< int >( wf->ReadTupleLength( wf_entity, "resolution", 1, _height ) );
+	
 }
 
 
