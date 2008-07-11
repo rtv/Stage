@@ -148,9 +148,12 @@ static  const char* AboutText =
   "http://playerstage.org\n"
   "\n"
   "Copyright 2000-2008 Richard Vaughan,\n"
-  "  Brian Gerkey, Andrew Howard, Reed Hedges, \n"
-  "  Toby Collett, Alex Couture-Beil, Jeremy Asher \n"
-  "  and contributors";
+  "Brian Gerkey, Andrew Howard, Reed Hedges, \n"
+  "Toby Collett, Alex Couture-Beil, Jeremy Asher \n"
+  "and contributors\n" 
+  "\n"
+  "Distributed under the terms of the \n"
+  "GNU General Public License v2";
 
 StgWorldGui::StgWorldGui(int W,int H,const char* L) : 
   Fl_Window(W,H,L )
@@ -537,7 +540,7 @@ void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p )
   fl_register_images();
 	
   const int Width = 420;
-  const int Height = 300;
+  const int Height = 330;
   const int Spc = 10;
   const int ButtonH = 25;
   const int ButtonW = 60;

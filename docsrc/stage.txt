@@ -81,9 +81,10 @@ Stage was written by:
 
 <ul>
 <li>Richard Vaughan <tt>(vaughan@sfu.ca)</tt>
-<li>Brian Gerkey <tt>(gerkey@sri.com)</tt>
+<li>Brian Gerkey <tt>(gerkey@willowgarage.com)</tt>
 <li>Reed Hedges <tt>(hedges@mobilerobots.com)</tt>
-<li>Andrew Howard  <tt>(ahoward@robotics.usc.edu)</tt>
+<li>Andrew Howard  <tt>(andrew.b.howard@jpl.nasa.gov)</tt>
+<li>Toby Collett <<tt>(tcollett+player@plan9.net.nz)</tt>
 <li>Pooya Karimian <tt>(pooyak@sfu.ca)</tt>
 <li>Jeremy Asher <tt>(jra11@sfu.ca)</tt>
 <li>Alex Couture-Beil <tt>(asc17@sfu.ca)</tt>

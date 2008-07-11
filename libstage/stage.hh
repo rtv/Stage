@@ -112,7 +112,7 @@ namespace Stg
 
 	/// Author string
 	const char AUTHORS[] =					
-		"Richard Vaughan, Brian Gerkey, Andrew Howard, Reed Hedges, Pooya Karimian and contributors.";
+		"Richard Vaughan, Brian Gerkey, Andrew Howard, Reed Hedges, Pooya Karimian, Toby Collett, Jeremy Asher, Alex Couture-Beil and contributors.";
 
 	/// Project website string
 	const char WEBSITE[] = "http://playerstage.org";
@@ -960,45 +960,49 @@ class StgWorld : public StgAncestor
   
 private:
   static GList* world_list;
-  /** Update all existing worlds */
+  
+  /** Coordinate system stack - experimental*/
+  GQueue* csstack;
+  
+  void PushPose();  
+  void PopPose();
+  stg_pose_t* PeekPose();
+  void ShiftPose( stg_pose_t* pose );
 
+  void DrawPose();
 
-	static bool quit_all; // quit all worlds ASAP  
-	static unsigned int next_id; //< initialized to zero, used tob
-	//allocate unique sequential world ids
-	static int AddBlockPixel( int x, int y, int z,
-			stg_render_info_t* rinfo ) ; //< used as a callback by StgModel
-
-  //stg_usec_t real_time_next_update;
-	stg_usec_t real_time_start;
-
-	bool quit; // quit this world ASAP
-
-	// convert a distance in meters to a distance in world occupancy grid pixels
-	int32_t MetersToPixels( stg_meters_t x ){ return (int32_t)floor(x * ppm) ; };
-
-	void Initialize( const char* token, 
+  static bool quit_all; ///< quit all worlds ASAP  
+  static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
+  static int AddBlockPixel( int x, int y, int z,
+									 stg_render_info_t* rinfo ) ; //< used as a callback by StgModel
+  
+  stg_usec_t real_time_start; ///< the real time at which this world was created
+  
+  bool quit; ///< quit this world ASAP
+  
+	///< convert a distance in meters to a distance in world occupancy grid pixels
+  int32_t MetersToPixels( stg_meters_t x ){ return (int32_t)floor(x * ppm) ; };
+  
+  /** Called by all constructors to set up the object */
+  void Initialize( const char* token, 
 						 stg_msec_t interval_sim, 
 						 double ppm );
   
-	virtual void PushColor( stg_color_t col ) { /* do nothing */  };
-	virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
-	virtual void PopColor(){ /* do nothing */  };
-
-	stg_usec_t real_time_now;
-
+  // dummy implementations to be overloaded by GUI subclasses
+  virtual void PushColor( stg_color_t col ) { /* do nothing */  };
+  virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
+  virtual void PopColor(){ /* do nothing */  };
+  
+  /** The current real time in microseconds */
+  stg_usec_t real_time_now;
+  
 	/** StgWorld::quit is set true when this simulation time is reached */
 	stg_usec_t quit_time;
 
 	bool destroy;
 
-  //stg_id_t id;
-
-	//GHashTable* models_by_id; ///< the models that make up the world, indexed by id
 	GHashTable* models_by_name; ///< the models that make up the world, indexed by name
 	GList* velocity_list; ///< a list of models that have non-zero velocity, for efficient updating
-
-  //stg_usec_t wall_last_update; ///< the real time of the last update in ms
 
 	bool dirty; ///< iff true, a gui redraw would be required
 
@@ -1298,6 +1302,9 @@ protected:
 	virtual void DrawStatus( StgCanvas* canvas );
 	void DrawStatusTree( StgCanvas* canvas );
 
+	void DrawOriginTree();
+	void DrawOrigin();
+
 	void PushLocalCoords();
 	void PopCoords();
 
@@ -1355,6 +1362,12 @@ protected:
 	virtual void PopColor(){ world->PopColor(); }
 	
 	void DrawFlagList();
+  
+  void PushMyPose();  
+  void PopPose();
+  void ShiftPose( stg_pose_t* pose );
+  void ShiftToTop();
+
 public:
 	void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
 						  stg_meters_t ymin, stg_meters_t ymax );

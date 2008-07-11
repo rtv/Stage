@@ -26,12 +26,7 @@ static const stg_radians_t DEFAULT_FOV = M_PI;
 static const unsigned int DEFAULT_SAMPLES = 180;
 static const stg_msec_t DEFAULT_INTERVAL_MS = 100;
 static const unsigned int DEFAULT_RESOLUTION = 1;
-
-static const char DEFAULT_GEOM_COLOR[] = "blue";
-//static const char BRIGHT_COLOR[] = "blue";
-//static const char CFG_COLOR[] = "light steel blue";
-//static const char COLOR[] = "steel blue";
-//static const char FILL_COLOR[] = "powder blue";
+static const char* DEFAULT_COLOR = "blue";
 
 Option StgModelLaser::showLaserData( "Show Laser Data", "show_laser", "", true );
 Option StgModelLaser::showLaserStrikes( "Show Laser Data", "show_laser_strikes", "", false );
@@ -55,12 +50,11 @@ laser
   range_min 0.0
   range_max 8.0
   fov 3.14159
-  laser_sample_skip 1
+  resolution 1
 
   # model properties
   size [ 0.15 0.15 0.2 ]
   color "blue"
-  watts 17.5 # approximately correct for SICK LMS200
 )
 @endverbatim
 
@@ -74,7 +68,7 @@ laser
   the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
 - fov <float>\n
   the angular field of view of the scanner, in radians. 
-- laser_sample_skip <int>\n
+- resolution <int>\n
   Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
 */
 
@@ -95,7 +89,7 @@ StgModelLaser::StgModelLaser( StgWorld* world,
   SetGeom( geom );
 
   // set default color
-  SetColor( stg_lookup_color(DEFAULT_GEOM_COLOR));
+  SetColor( stg_lookup_color(DEFAULT_COLOR));
 
   range_min    = DEFAULT_MINRANGE;
   range_max    = DEFAULT_MAXRANGE;
@@ -130,7 +124,7 @@ void StgModelLaser::Load( void )
   range_min = wf->ReadLength( wf_entity, "range_min", range_min);
   range_max = wf->ReadLength( wf_entity, "range_max", range_max );
   fov       = wf->ReadAngle( wf_entity, "fov",  fov );
-  resolution = wf->ReadInt( wf_entity, "laser_sample_skip",  resolution );
+  resolution = wf->ReadInt( wf_entity, "resolution",  resolution );
 
   if( resolution < 1 )
     {

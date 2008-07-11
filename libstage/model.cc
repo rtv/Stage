@@ -571,7 +571,7 @@ stg_pose_t StgModel::GetGlobalPose()
 // should one day do all this with affine transforms for neatness?
 stg_pose_t StgModel::LocalToGlobal( stg_pose_t pose )
 {  
-  return pose_sum( pose_sum( geom.pose, GetGlobalPose()), pose );
+  return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
 }
 
 stg_point3_t StgModel::LocalToGlobal( stg_point3_t point )
@@ -868,12 +868,67 @@ void StgModel::DrawTrailArrows()
     }
 }
 
+void StgModel::PushMyPose()
+{
+  world->PushPose();
+  world->ShiftPose( &pose );
+}
+
+void StgModel::PopPose()
+{
+  world->PopPose();
+}
+
+void StgModel::ShiftPose( stg_pose_t* pose )
+{
+  world->ShiftPose( pose );
+}
+
+void StgModel::ShiftToTop()
+{
+  stg_pose_t top;
+  bzero( &top, sizeof(top));  
+  top.z = geom.size.z;
+  ShiftPose( &top );
+}
+
+void StgModel::DrawOriginTree()
+{
+  PushMyPose();
+
+  world->DrawPose();
+  
+  ShiftToTop();
+
+  for( GList* it=children; it; it=it->next )
+	 ((StgModel*)it->data)->DrawOriginTree();
+  
+  PopPose();
+}
+ 
+void StgWorld::DrawPose()
+{
+  PushColor( 0,0,0,1 );
+  glPointSize( 4 );
+  
+  stg_pose_t* gpose = PeekPose();
+  
+  glBegin( GL_POINTS );
+  glVertex3f( gpose->x, gpose->y, gpose->z );
+  glEnd();
+  
+  PopColor();  
+}
+
+
 void StgModel::DrawBlocksTree( )
 {
   PushLocalCoords();
 
-  DrawBlocks();
   LISTMETHOD( children, StgModel*, DrawBlocksTree );
+
+  gl_pose_shift( &geom.pose );
+  DrawBlocks();
   
   PopCoords();
 }
@@ -904,13 +959,13 @@ void StgModel::DrawBlocks( )
 
   // TODO - fix this!
   //if( rebuild_displaylist )
-  {
+  //{
 	 //rebuild_displaylist = false;
       
 	 //glNewList( blocks_dl, GL_COMPILE );	
 	 LISTMETHOD( this->blocks, StgBlock*, Draw );
 	 //glEndList();
-  }
+	 //}
 
   //glCallList( blocks_dl );
 }
@@ -924,7 +979,7 @@ void StgModel::PushLocalCoords()
 	 glTranslatef( 0,0, parent->geom.size.z );
   
   gl_pose_shift( &pose );
-  gl_pose_shift( &geom.pose );
+  //gl_pose_shift( &geom.pose );
 
   // useful debug - draw a point at the local origin
  //  PushColor( color );

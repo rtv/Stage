@@ -94,6 +94,7 @@ StgWorld::StgWorld( const char* token,
   Initialize( token, interval_sim, ppm );
 }
 
+
 void StgWorld::Initialize( const char* token, 
 		stg_msec_t interval_sim, 
 		double ppm ) 
@@ -105,6 +106,12 @@ void StgWorld::Initialize( const char* token,
 	}
 	StgWorld::world_list = g_list_append( StgWorld::world_list, this );
 	
+	// initialize the global stack with the origin
+	this->csstack = g_queue_new();
+	stg_pose_t* pose_zero = new stg_pose_t;
+	bzero( pose_zero, sizeof(stg_pose_t));
+	g_queue_push_head( csstack, pose_zero );
+
 	this->ray_list = NULL;
 	this->quit_time = 0;
 
@@ -285,7 +292,7 @@ void StgWorld::Load( const char* worldfile_path )
 		g_hash_table_insert( entitytable, (gpointer)entity, mod );
 	}
 
-	// warn about unused WF linesa
+	// warn about unused WF lines
 	wf->WarnUnused();
 
 	// run through the loaded models and initialise them
@@ -686,3 +693,51 @@ void StgWorld::Extend( stg_point3_t pt )
 	extent.z.min = MIN( extent.z.min, pt.z );
 	extent.z.max = MAX( extent.z.max, pt.z );
 }
+
+
+// coordinate system stack - like OpenGL's matrix stack model
+
+/** Pop a copy of the current stack head onto the stack */
+void StgWorld::PushPose()
+{
+  stg_pose_t* newhead = new stg_pose_t;
+  
+  // copy the current head into the new head
+  memcpy( newhead, PeekPose(), sizeof(stg_pose_t));
+  
+  // and push the new head
+  g_queue_push_head( csstack, newhead );
+}
+
+/** Pop and free the pose at the head of the stack. */
+void StgWorld::PopPose()
+{
+  stg_pose_t* popped = (stg_pose_t*)g_queue_pop_head( csstack );
+  if( popped )
+	 delete popped;
+  else
+	 PRINT_WARN( "Empty CS stack popped" ); 
+}
+
+/** return a pointer to the pose at the head of the queue */
+stg_pose_t* StgWorld::PeekPose()
+{
+  return (stg_pose_t*)g_queue_peek_head( csstack );
+}
+
+void StgWorld::ShiftPose( stg_pose_t* p2 )
+{
+  stg_pose_t* p1 = PeekPose();
+  double cosa = cos(p1->a);
+  double sina = sin(p1->a);
+  
+  stg_pose_t result;  
+  result.x = p1->x + p2->x * cosa - p2->y * sina;
+  result.y = p1->y + p2->x * sina + p2->y * cosa;
+  result.z = p1->z + p2->z;
+  result.a = normalize(p1->a + p2->a);
+  
+  // copy the new pose onto the existing pose at head of stack
+  memcpy( p1, &result, sizeof(stg_pose_t));
+}
+

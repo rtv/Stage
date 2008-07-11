@@ -145,6 +145,7 @@ void StgBlock::Map()
 		local.z = zmin;
 
 		global = mod->LocalToGlobal( local );
+		//global = local;
 
 		pts_global_pixels[p].x = mod->GetWorld()->MetersToPixels( global.x );
 		pts_global_pixels[p].y = mod->GetWorld()->MetersToPixels( global.y );

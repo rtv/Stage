@@ -54,7 +54,7 @@ zone
 
 define autorob pioneer2dx
 (
- sicklaser( pose [ 1.040 0 0 0 ] origin [ 0 0 0 0 ] samples 32 range_max 5 laser_return 2  )
+ sicklaser( samples 32 range_max 5 laser_return 2  )
  ctrl "fasr"
 
  #camera( pose [ 0 0 0 0 ] width 100 height 100 horizfov 70 vertfov 40 yaw 0 )

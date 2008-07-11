@@ -410,7 +410,8 @@ int StgCanvas::handle(int event)
 			world->TogglePause();
 			break;
 		case ' ': // space bar
-			//current_camera->reset();
+
+		  //current_camera->reset();
 			if ( wf )
 				current_camera->Load( wf, wf->LookupEntity( "window" ) );
 			else
@@ -658,6 +659,10 @@ void StgCanvas::renderFrame()
 
   if( showBlocks )
     DrawBlocks();
+  
+  // useful debug - puts a point at the origin of each model
+  //for( GList* it = world->StgWorld::children; it; it=it->next ) 
+  // ((StgModel*)it->data)->DrawOriginTree();
   
   // draw the model-specific visualizations
 	if( showData ) {
