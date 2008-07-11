@@ -811,7 +811,7 @@ void StgModel::DrawTrailBlocks()
       pose.z =  (world->sim_time - checkpoint->time) * timescale;
 
       PushLocalCoords();
-      glCallList( blocks_dl);
+      DrawBlocks();
       PopCoords();
     }
 }
@@ -927,7 +927,6 @@ void StgModel::DrawBlocksTree( )
 
   LISTMETHOD( children, StgModel*, DrawBlocksTree );
 
-  gl_pose_shift( &geom.pose );
   DrawBlocks();
   
   PopCoords();
@@ -959,15 +958,19 @@ void StgModel::DrawBlocks( )
 
   // TODO - fix this!
   //if( rebuild_displaylist )
-  //{
-	 //rebuild_displaylist = false;
+	 {
+		rebuild_displaylist = false;
       
-	 //glNewList( blocks_dl, GL_COMPILE );	
-	 LISTMETHOD( this->blocks, StgBlock*, Draw );
-	 //glEndList();
-	 //}
+		glNewList( blocks_dl, GL_COMPILE );	
 
-  //glCallList( blocks_dl );
+		gl_pose_shift( &geom.pose );
+
+		LISTMETHOD( this->blocks, StgBlock*, Draw );
+		glEndList();
+	 }
+  
+	 //printf( "calling list for %s\n", token );
+  glCallList( blocks_dl );
 }
 
 // move into this model's local coordinate frame
@@ -979,7 +982,7 @@ void StgModel::PushLocalCoords()
 	 glTranslatef( 0,0, parent->geom.size.z );
   
   gl_pose_shift( &pose );
-  //gl_pose_shift( &geom.pose );
+
 
   // useful debug - draw a point at the local origin
  //  PushColor( color );
@@ -1323,7 +1326,7 @@ void StgModel::SetPose( stg_pose_t pose )
       this->pose = pose;
       this->pose.a = normalize(this->pose.a);
 
-      //this->NeedRedraw();
+      this->NeedRedraw();
       this->GPoseDirtyTree(); // global pose may have changed
 
       MapWithChildren();

@@ -31,7 +31,7 @@ void StgModel::Load()
       char *name = (char*)wf->ReadString(wf_entity, "name", NULL );
       if( name )
 		  {
-			 printf( "adding name %s to %s\n", name, this->token );
+			 //printf( "adding name %s to %s\n", name, this->token );
 			 this->token = strdup( name );
 			 world->AddModel( this ); // add this name to the world's table
 		  }

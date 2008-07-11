@@ -7,7 +7,7 @@ include "map.inc"         # defines 'floorplan' object used for obstacle maps
 include "sick.inc"        # defines sick laser
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 20  # real-time interval between simulation updates in milliseconds 
+interval_real 1  # real-time interval between simulation updates in milliseconds 
 
 paused 0
 
@@ -33,7 +33,7 @@ pioneer2dx
   name "r0"
 
   pose [ -6.5 -6.5 0 45 ] 
-  sicklaser( pose [0.04 0 0 0] )
+  sicklaser()
 
   # remove this if you're using Player to control the robot	
   ctrl "wander" 

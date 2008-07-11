@@ -21,7 +21,7 @@ typedef struct
 	StgModelRanger* ranger;
 } robot_t;
 
-#define VSPEED 0.5 // meters per second
+#define VSPEED 0.4 // meters per second
 #define WGAIN 1.5 // turn speed gain
 #define SAFE_DIST 0.6 // meters
 #define SAFE_ANGLE 1 // radians

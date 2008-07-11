@@ -2,8 +2,8 @@
 # Authors: Richard Vaughan
 # $Id$
 
-include "inc/map.inc"
-include "inc/pioneer.inc"
+include "../map.inc"
+include "../pioneer.inc"
 
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02

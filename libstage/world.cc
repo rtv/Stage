@@ -303,7 +303,7 @@ void StgWorld::Load( const char* worldfile_path )
 
 	stg_usec_t load_end_time = RealTimeNow();
 
-	printf( "[Load time %.3fsec]", 
+	printf( "[Load time %.3fsec]\n", 
 			  (load_end_time - load_start_time) / 1000000.0 );
 }
 

@@ -71,8 +71,6 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   setDirtyBuffer();
 	
   startx = starty = -1;
-  //panx = pany = stheta = sphi = 0.0;
-  //scale = 15.0;
   interval = 50; //msec between redraws
 
   graphics = true;
@@ -410,12 +408,15 @@ int StgCanvas::handle(int event)
 			world->TogglePause();
 			break;
 		case ' ': // space bar
+		  
+		  // if the worldfile doesn't have the fields you need, you get
+		  // a weird view.  need to think this through a bit before
+		  // eliminating the old behaviour - rtv
 
-		  //current_camera->reset();
-			if ( wf )
-				current_camera->Load( wf, wf->LookupEntity( "window" ) );
-			else
-				current_camera->reset();
+		  //if ( wf )
+		  //current_camera->Load( wf, wf->LookupEntity( "window" ) );
+		  //else
+		  current_camera->reset();
 					
 			//invalidate();
 			if( Fl::event_state( FL_CTRL ) ) {
@@ -867,9 +868,9 @@ void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
   pCamOn.createMenuItem( menu, path );
   pCamOn.menuCallback( perspectiveCb, this );
   showOccupancy.createMenuItem( menu, path );
-  showTrailArrows.createMenuItem( menu, path );
-  showTrails.createMenuItem( menu, path );
-  showTrailRise.createMenuItem( menu, path );  
+  //showTrailArrows.createMenuItem( menu, path ); // broken
+  showTrails.createMenuItem( menu, path ); 
+  // showTrailRise.createMenuItem( menu, path );  // broken
   showTree.createMenuItem( menu, path );  
   showScreenshots.createMenuItem( menu, path );  
 }
