@@ -138,19 +138,19 @@ void StgModelCamera::Load( void )
 {
 	StgModel::Load();
 	
-	float horizFov =  wf->ReadTupleLength( wf_entity, "fov", 0, DEFAULT_HFOV );
-	float vertFov = wf->ReadTupleLength( wf_entity, "fov", 1, DEFAULT_VFOV );
+	float horizFov =  wf->ReadTupleFloat( wf_entity, "fov", 0, DEFAULT_HFOV );
+	float vertFov = wf->ReadTupleFloat( wf_entity, "fov", 1, DEFAULT_VFOV );
 	_camera.setFov( horizFov, vertFov );
 	
 	float range_min = wf->ReadTupleLength( wf_entity, "range", 0, CAMERA_NEAR_CLIP );
 	float range_max = wf->ReadTupleLength( wf_entity, "range", 1, CAMERA_FAR_CLIP );
 	_camera.setClip( range_min, range_max );
 
-	_yaw_offset = wf->ReadTupleLength( wf_entity, "direction", 0, _yaw_offset );
-	_pitch_offset = wf->ReadTupleLength( wf_entity, "direction", 1, _pitch_offset );
+	_yaw_offset = wf->ReadTupleFloat( wf_entity, "direction", 0, _yaw_offset );
+	_pitch_offset = wf->ReadTupleFloat( wf_entity, "direction", 1, _pitch_offset );
 	
-	_width = static_cast< int >( wf->ReadTupleLength( wf_entity, "resolution", 0, _width ) );
-	_height = static_cast< int >( wf->ReadTupleLength( wf_entity, "resolution", 1, _height ) );
+	_width = static_cast< int >( wf->ReadTupleFloat( wf_entity, "resolution", 0, _width ) );
+	_height = static_cast< int >( wf->ReadTupleFloat( wf_entity, "resolution", 1, _height ) );
 	
 }
 

@@ -4,6 +4,7 @@
 EXTRA_DIST = \
 README \
 stage.txt \
+sourced.txt \
 header.html \
 stage.dox \
 stage_button.png 
@@ -12,7 +13,7 @@ DOCDIR = $(prefix)/share/doc
 
 # build docs manually with 'make doc'
 doc:
-	./installpage.sh > install.txt
+	./sourcedocs.sh > sourced.txt
 	doxygen stage.dox
 	cp stage_button.png stage
 
@@ -23,7 +24,7 @@ doc-install: doc
 
 # zap the built docs
 clean:
-	rm -rf stage
+	rm -rf stage sourced.txt
 
 # copy the latest docs to the web server
 upload: 
