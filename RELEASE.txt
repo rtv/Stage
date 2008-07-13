@@ -1,8 +1,49 @@
 Version 3.0.0
 -------------
-TODO
+Stage 3.0.0 consists of these components:
 
-Richard Vaughan (rtv) vaughan@sfu.ca 
+ * libstage - a robot simulation C++ library.
+ * libstageplugin - a simulation plugin for Player
+ * stage - a stand-alone robot simulator
+
+This is a a major new release of Stage. The main new features are:
+
+ * 2.5D models
+ * 3D user interface
+ * very much faster raytracing than 2.X series
+ * plugin code modules attach at run time to any model. Useful for data
+   filtering or complete robot controllers without Player (examples
+	included)
+ * 3D camera model, with color and depth for each pixel
+ * first "official" release of the libstage API
+ * save/save-as/reload file dialog box
+ * improved data visualization options
+ * select and drag/rotate multuple robots by shift-clicking
+
+libstageplugin still needs some work - currently it only supports
+position2d, laser and sonar interfaces It also uses too much
+CPU. Player/Stage users may choose to wait for libstageplugin to
+improve before trying Stage-3.0.
+
+Note that your Stage-2.0 world files will probably need to be updated
+to work with Stage-3.0. The main difference world file syntax is that
+poses and velocities are now specied as [x y z theta] instead of the
+old [x y theta]. Sizes are now specifed as [x y z] instead of [x y].
+
+Some useful parts of Stage 2.x have not yet been ported to 3.0,
+including
+
+* gripper & puck
+* wireless comms
+* audio comms
+* blinkenights
+
+This is the first release of a lot of new code. It has been used in my
+lab for a while now, but there are bound to be bugs and quirks. Please
+use the bug tracker and feature request system on Sourceforge to help
+us fix and improve Stage. As always, your patches are very welcome.
+
+Richard Vaughan (rtv) vaughan@sfu.ca - 2008.7.12
 
 Version 2.0.1
 -------------

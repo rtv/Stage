@@ -1802,7 +1802,7 @@ int StgModel::TreeToPtrArray( GPtrArray* array )
 
 StgModel* StgModel::GetUnsubscribedModelOfType( stg_model_type_t type )
 {
-  //   printf( "searching for %s in model %s with string %s\n", modelstr, token, typestr );
+  printf( "searching for type %d in model %s type %d\n", type, token, this->type );
   
   if( (this->type == type) && (this->subs == 0) )
     return this;

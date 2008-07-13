@@ -1,7 +1,6 @@
 
 Copyright Richard Vaughan and contributors 1998-2008.  
-Part of the Player Project (http://playerstage.sourceforge.net)
-
+Part of the Player Project (http://playerstage.org)
 
 License
 -------
@@ -70,7 +69,12 @@ with Stage.
 Citations
 ---------
 If you use Stage in your work, we'd appreciate a citation. At the time 
-of writing, the most suitable reference is:
+of writing, the most suitable reference is either:
+
+RIchard Vaughan. "Massively Multiple Robot Simulations in Stage", Swarm
+Intelligence (to appear 2008), Springer.
+
+Or, if you are using Player/Stage:
 
 Brian Gerkey, Richard T. Vaughan and Andrew Howard. "The Player/Stage 
 Project: Tools for Multi-Robot and Distributed Sensor Systems" 
@@ -90,12 +94,6 @@ with its 3D ODE-based simulation backend, Gazebo, it's called
 Player/Gazebo. Gazebo without Player is just "Gazebo". All this 
 software is part of the "Player Project".
 
-
-References
-----------
-
-
-
 Support
 -------
 Funding for Stage has been provided in part by:
@@ -105,7 +103,6 @@ Funding for Stage has been provided in part by:
 - NSERC (Canada)
 - NSF (USA)
 - Simon Fraser University (Canada)
-
 
 Names
 -----
