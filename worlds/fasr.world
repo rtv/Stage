@@ -56,7 +56,7 @@ define autorob pioneer2dx
 (
  sicklaser( samples 32 range_max 5 laser_return 2  
 	 
-#camera( pose [ 0 0 0 0 ]  range [ 0.2 8.0 ] resolution [ 100 100 ] fov [ 70 40 ] direction [ 0 0 ] )
+#camera( pose [ 0 0 0 0 ]  range [ 0.2 8.0 ] resolution [ 100 100 ] fov [ 70 40 ] pantilt [ 0 0 ] )
 	 )
  ctrl "fasr"
 
