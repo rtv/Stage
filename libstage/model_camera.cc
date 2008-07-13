@@ -42,7 +42,7 @@ camera
   resolution [ 32 32 ]
   range [ 0.2 8.0 ]
   fov [ 70.0 40.0 ]
-  direction [ 0.0 0.0 ]
+  pantilt [ 0.0 0.0 ]
 
   # model properties
   size [ 0.1 0.07 0.05 ]
@@ -60,8 +60,8 @@ camera
   The smaller the `min' number, the less persision in depth - don't set this value too close to 0.
 - fov [ horizontal: <float> vertical: <float> ]\n
   angle, in degrees, for the horizontal and vertical field of view.
-- direction [ yaw:<float> pitch:<float> ]
-  angle, in degrees, where the camera is looking. yaw is the left-right panning, and pitch is the up-down tilting.
+- pantilt [ pan:<float> tilt:<float> ]
+  angle, in degrees, where the camera is looking. pan is the left-right positioning, and tilt is the up-down positioning.
 */
 
 //caclulate the corss product, and store results in the first vertex
@@ -146,8 +146,8 @@ void StgModelCamera::Load( void )
 	float range_max = wf->ReadTupleLength( wf_entity, "range", 1, CAMERA_FAR_CLIP );
 	_camera.setClip( range_min, range_max );
 
-	_yaw_offset = wf->ReadTupleFloat( wf_entity, "direction", 0, _yaw_offset );
-	_pitch_offset = wf->ReadTupleFloat( wf_entity, "direction", 1, _pitch_offset );
+	_yaw_offset = wf->ReadTupleFloat( wf_entity, "pantilt", 0, _yaw_offset );
+	_pitch_offset = wf->ReadTupleFloat( wf_entity, "pantilt", 1, _pitch_offset );
 	
 	_width = static_cast< int >( wf->ReadTupleFloat( wf_entity, "resolution", 0, _width ) );
 	_height = static_cast< int >( wf->ReadTupleFloat( wf_entity, "resolution", 1, _height ) );
