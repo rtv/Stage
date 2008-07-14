@@ -16,6 +16,5 @@ terms of the GNU General Public License version 2 or later:
 
 
 Many patches and bug reports have been contributed by users around the
-world.  Stage is part of the Player Project 
-(http://playerstage.sourceforge.net), a community effort to develop 
-Free Software tools for robotics research.
+world.  Stage is part of the Player Project (http://playerstage.org), 
+a community effort to develop free Software tools for robotics research.

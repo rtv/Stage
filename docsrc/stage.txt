@@ -9,20 +9,20 @@
  
  If you're having problems and you can't find what you need in this manual, there are several places to find help. 
  
- First, please check the <a
- href=http://playerstage.sourceforge.net/doc/doc.html>online
+ First, please check the <a 
+ href="http://playerstage.sourceforge.net/doc/doc.html">online
  documentation page</a> to make sure you have the latest
  documentation. In particular, check the <a
- href=http://playerstage.sourceforge.net/doc/stage_user/faq.html>latest
+ href="http://playerstage.sourceforge.net/doc/stage_user/faq.html">latest
  online latest FAQ page</a>.
  
  Next, you should search <a
- href=http://sourceforge.net/mailarchive/forum.php?forum_id=8201>the
+ href="http://sourceforge.net/mailarchive/forum.php?forum_id=8201">the
  playerstage_users mailing list archive</a> to
  see if your questions have already been answered.
  
  Next, you should probably spend a few minutes with <a
- href=http://www.google.com>Google</a>. This often works well, as it
+ href="http://www.google.com">Google</a>. This often works well, as it
  picks up P/S conversations from all over the place.
  
  If you still need help, you can send email to the mailing list
