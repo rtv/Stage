@@ -30,7 +30,9 @@
  *  SVN: $Id$
  */
 
-/// defgroup libstage libstage: The Stage Robot Simulation Library
+/** \defgroup libstage libstage: The Stage Robot Simulation Library
+ *  Description of libstage for developers
+ */
 
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
