@@ -24,9 +24,10 @@ NAME=$2
 rm -f $DEST
 ln -s $NAME $DEST
 tar chzf $DEST.tgz $DEST
+rm $DEST
 
 # Copy tarball to website
 scp $DEST.tgz $SFUSER@shell.sourceforge.net:/home/groups/p/pl/playerstage/htdocs/doc/
 
 # Untar the file and re-jig the permissions
-ssh $_SFUSER@shell.sourceforge.net 'cd /home/groups/p/pl/playerstage/htdocs/doc/; tar xvzf '$DEST'.tgz; find . -type d | xargs chmod -fR 2775; find . -type f | xargs chmod -fR 664'
+ssh $_SFUSER@shell.sourceforge.net 'cd /home/groups/p/pl/playerstage/htdocs/doc/; tar xvzf '$DEST'.tgz --no-overwrite-dir; find '$DEST' -type d | xargs chmod 2775; find '$DEST' -type f | xargs chmod 664'

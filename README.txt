@@ -71,7 +71,7 @@ Citations
 If you use Stage in your work, we'd appreciate a citation. At the time 
 of writing, the most suitable reference is either:
 
-RIchard Vaughan. "Massively Multiple Robot Simulations in Stage", Swarm
+Richard Vaughan. "Massively Multiple Robot Simulations in Stage", Swarm
 Intelligence (to appear 2008), Springer.
 
 Or, if you are using Player/Stage:
