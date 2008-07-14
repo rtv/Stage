@@ -1487,7 +1487,7 @@ public:
 	void AddToPose(  stg_pose_t pose );
 	
 	/** add values to a model's pose in its parent's coordinate system */
-	void AddToPose(  double dy, double dy, double dz, double da );
+	void AddToPose(  double dx, double dy, double dz, double da );
 	
 	/** set a model's geometry (size and center offsets) */
 	void SetGeom(  stg_geom_t src );
