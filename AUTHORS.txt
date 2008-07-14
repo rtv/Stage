@@ -1,15 +1,21 @@
-# AUTHORS - list of authors. The Stage programs, libraries,
-# configuration scripts, examples and graphics are copyright these
-# authors, and may be used only under the terms of the GNU General
-# Public License version 2 or later.
-# $Id: AUTHORS,v 1.3 2004-09-19 00:34:12 rtv Exp $
 
-# Name			   (email)
-Richard Vaughan 	(rtv@sourceforge.net)
-Andrew Howard 		(inspectorg@sourceforge.net)
-Brian Gerkey		(gerkey@sourceforge.net)
-Reed Hedges
-Toby Collett
-Pooya Karimian
-Jeremy Asher
-Alex Couture-Beil 
+Authors
+-------
+The Stage programs, libraries, configuration scripts, examples and 
+graphics are copyright these authors, and may be used only under the 
+terms of the GNU General Public License version 2 or later:
+
+- Richard Vaughan (vaughan@sfu.ca)
+- Brian Gerkey (gerkey@willowgarage.com)
+- Reed Hedges (hedges@mobilerobots.com)
+- Andrew Howard (andrew.b.howard@jpl.nasa.gov)
+- Toby Collett (tcollett+player@plan9.net.nz)
+- Pooya Karimian (pooyak@sfu.ca)
+- Jeremy Asher (jra11@sfu.ca)
+- Alex Couture-Beil (asc17@sfu.ca)
+
+
+Many patches and bug reports have been contributed by users around the
+world.  Stage is part of the Player Project 
+(http://playerstage.sourceforge.net), a community effort to develop 
+Free Software tools for robotics research.

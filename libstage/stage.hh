@@ -23,20 +23,14 @@
  *
  */
 
-/* File: stage.h
- * Desc: External header file for the Stage library
- * Author: Richard Vaughan (vaughan@sfu.ca) 
- * Date: 1 June 2003
- * CVS: $Id$
+/** \file stage.hh
+ *  Desc: External header file for the Stage library
+ *  Author: Richard Vaughan (vaughan@sfu.ca) 
+ *  Date: 1 June 2003
+ *  SVN: $Id$
  */
 
-/*! \file stage.hh
-  Stage library header file
-
-  This header file contains the external interface for the Stage
-  library
- */
-
+/// defgroup libstage libstage: The Stage Robot Simulation Library
 
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
