@@ -49,52 +49,58 @@ InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr,
 
 void InterfaceBlobfinder::Publish( void )
 {
-  StgModelBlobfinder* blobmod = (StgModelBlobfinder*)this->mod;
-  uint32_t bcount = 0;
-  stg_blobfinder_blob_t* blobs = blobmod->GetBlobs( &bcount );
-  
   player_blobfinder_data_t bfd;
   bzero( &bfd, sizeof(bfd) );
-  
-  // and set the image width * height
-  bfd.width = blobmod->scan_width;
-  bfd.height = blobmod->scan_height;
-  bfd.blobs_count = bcount;
-  
-  // now run through the blobs, packing them into the player buffer
-  // counting the number of blobs in each channel and making entries
-  // in the acts header 
-  unsigned int b;
-  for( b=0; b<bcount; b++ )
-    {
-      // useful debug - leave in
-      /*
-	cout << "blob "
-	<< " channel: " <<  (int)blobs[b].channel
-	<< " area: " <<  blobs[b].area
-	<< " left: " <<  blobs[b].left
-	<< " right: " <<  blobs[b].right
-	<< " top: " <<  blobs[b].top
-	<< " bottom: " <<  blobs[b].bottom
-	<< endl;
-      */
-      
-		int dx = blobs[b].right - blobs[b].left;
-		int dy = blobs[b].top - blobs[b].bottom;
-		
-      bfd.blobs[b].x      = blobs[b].left + dx/2;
-      bfd.blobs[b].y      = blobs[b].bottom + dy/2; 
 
-      bfd.blobs[b].left   = blobs[b].left;
-      bfd.blobs[b].right  = blobs[b].right;
-      bfd.blobs[b].top    = blobs[b].top;
-      bfd.blobs[b].bottom = blobs[b].bottom;
-      
-      bfd.blobs[b].color = blobs[b].color;
-      bfd.blobs[b].area  = dx * dy;         
-      
-      bfd.blobs[b].range = blobs[b].range;          
-    }
+  StgModelBlobfinder* blobmod = (StgModelBlobfinder*)this->mod;
+  
+  uint32_t bcount = 0;
+  stg_blobfinder_blob_t* blobs = blobmod->GetBlobs( &bcount );
+	
+  if ( bcount > 0 )
+  {
+	  // and set the image width * height
+	  bfd.width = blobmod->scan_width;
+	  bfd.height = blobmod->scan_height;
+	  bfd.blobs_count = bcount;
+		
+	  bfd.blobs = new player_blobfinder_blob_t[ bcount ];
+	  
+	  // now run through the blobs, packing them into the player buffer
+	  // counting the number of blobs in each channel and making entries
+	  // in the acts header 
+	  unsigned int b;
+	  for( b=0; b<bcount; b++ )
+		{
+		  // useful debug - leave in
+		  /*
+		cout << "blob "
+		<< " channel: " <<  (int)blobs[b].channel
+		<< " area: " <<  blobs[b].area
+		<< " left: " <<  blobs[b].left
+		<< " right: " <<  blobs[b].right
+		<< " top: " <<  blobs[b].top
+		<< " bottom: " <<  blobs[b].bottom
+		<< endl;
+		  */
+		  
+			int dx = blobs[b].right - blobs[b].left;
+			int dy = blobs[b].top - blobs[b].bottom;
+			
+		  bfd.blobs[b].x      = blobs[b].left + dx/2;
+		  bfd.blobs[b].y      = blobs[b].bottom + dy/2; 
+
+		  bfd.blobs[b].left   = blobs[b].left;
+		  bfd.blobs[b].right  = blobs[b].right;
+		  bfd.blobs[b].top    = blobs[b].top;
+		  bfd.blobs[b].bottom = blobs[b].bottom;
+		  
+		  bfd.blobs[b].color = blobs[b].color;
+		  bfd.blobs[b].area  = dx * dy;         
+		  
+		  bfd.blobs[b].range = blobs[b].range;          
+		}
+  }
   
   // should change player interface to support variable-lenght blob data
   // size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);   
@@ -103,6 +109,8 @@ void InterfaceBlobfinder::Publish( void )
 								 PLAYER_MSGTYPE_DATA,
 								 PLAYER_BLOBFINDER_DATA_BLOBS,
 								 &bfd, sizeof(bfd), NULL);
+  if ( bfd.blobs )
+	  delete [] bfd.blobs;
 }
 
 int InterfaceBlobfinder::ProcessMessage( QueuePointer& resp_queue,

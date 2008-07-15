@@ -310,6 +310,11 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
  	case PLAYER_BLOBFINDER_CODE:
  	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
  	  break;
+			
+// 	case PLAYER_CAMERA_CODE:	  
+// 	  ifsrc = new InterfaceCamera( player_addr,  this, cf, section );
+// 	  break;
+			
 	  
 	case PLAYER_SIMULATION_CODE:
 	  ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
@@ -326,7 +331,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	case PLAYER_SONAR_CODE:
  	  ifsrc = new InterfaceSonar( player_addr,  this, cf, section );
  	  break;
-	  
+				  
 // 	case PLAYER_POWER_CODE:	  
 // 	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
 // 	  break;
@@ -363,9 +368,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 // 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
 // 	  break;	  
 
-// 	case PLAYER_SPEECH_CODE:
-// 	  ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );
-// 	  break;	  
+ 	case PLAYER_SPEECH_CODE:
+ 	  ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );
+ 	  break;	  
 
 // 	case PLAYER_BUMPER_CODE:
 // 	  ifsrc = new InterfaceBumper( player_addr,  this, cf, section );

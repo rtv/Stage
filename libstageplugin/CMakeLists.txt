@@ -3,6 +3,7 @@ link_directories( ${PLAYER_LIBDIR} )
 include_directories( ${PLAYER_INCLUDE_DIRS})
 
 add_library( stageplugin MODULE
+	     p_driver.h
 	     p_driver.cc
 	     p_blobfinder.cc
 	     p_simulation.cc
@@ -10,6 +11,7 @@ add_library( stageplugin MODULE
 	     p_fiducial.cc
 	     p_position.cc
 	     p_sonar.cc
+	     p_speech.cc
 	     stg_time.cc
 )
 

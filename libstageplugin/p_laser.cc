@@ -73,7 +73,7 @@ void InterfaceLaser::Publish( void )
   pdata.ranges = new float[pdata.ranges_count];
   pdata.intensity = new uint8_t[pdata.ranges_count];
   
-  for( int i=0; i<cfg.sample_count; i++ )
+  for( unsigned int i=0; i<cfg.sample_count; i++ )
     {
       //printf( "range %d %d\n", i, samples[i].range);
       pdata.ranges[i] = samples[i].range;

@@ -71,6 +71,8 @@ void InterfaceFiducial::Publish( void )
 
       //printf( "reporting %d fiducials\n",
       //      fcount );
+	
+	  pdata.fiducials = new player_fiducial_item_t[pdata.fiducials_count];
 		
       for( int i=0; i<(int)pdata.fiducials_count; i++ )
 		  {			 
@@ -80,22 +82,9 @@ void InterfaceFiducial::Publish( void )
 			 double xpos = fids[i].range * cos(fids[i].bearing);
 			 double ypos = fids[i].range * sin(fids[i].bearing);
 			 
-          /*
-				pdata.fiducials[i].pos[0] = xpos;
-				pdata.fiducials[i].pos[1] = ypos;
-				
-				// yaw only
-				pdata.fiducials[i].rot[2] = fids[i].geom.a;	      	  
-				// player can't handle per-fiducial size.
-				// we leave uncertainty (upose) at zero
-				*/
-			 
-          // I'm guessing at this, but the above doesn't compile, because
-          // there's no 'pos' or 'rot' fields - BPG
-			 
-			 pdata.fiducials[i].pose.px = fids[i].pose.x;
-			 pdata.fiducials[i].pose.py = fids[i].pose.y;
-			 pdata.fiducials[i].pose.pz = fids[i].pose.z;
+			 pdata.fiducials[i].pose.px = xpos;
+			 pdata.fiducials[i].pose.py = ypos;
+			 pdata.fiducials[i].pose.pz = 0.0;
 			 pdata.fiducials[i].pose.proll = 0.0;
 			 pdata.fiducials[i].pose.ppitch = 0.0;
 			 pdata.fiducials[i].pose.pyaw = fids[i].geom.a;
@@ -107,6 +96,9 @@ void InterfaceFiducial::Publish( void )
 								 PLAYER_MSGTYPE_DATA,
 								 PLAYER_FIDUCIAL_DATA_SCAN,
 								 &pdata, sizeof(pdata), NULL);
+
+  if ( pdata.fiducials )
+	  delete [] pdata.fiducials;
 }
 
 int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
