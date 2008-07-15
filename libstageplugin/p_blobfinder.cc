@@ -37,16 +37,11 @@
 
 #include "p_driver.h"
 
-extern "C" { 
-int blobfinder_init( stg_model_t* mod );
-}
-
-
 InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr, 
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( addr, driver, cf, section, blobfinder_init )
+  : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_BLOBFINDER )
 {
   // nothing to do for now
 }
@@ -54,25 +49,16 @@ InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr,
 
 void InterfaceBlobfinder::Publish( void )
 {
-  size_t len=0;
-  stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)mod->data;
-  
-  size_t bcount = mod->data_len / sizeof(stg_blobfinder_blob_t);
-  
-  // limit the number of samples to Player's maximum
-  if( bcount > PLAYER_BLOBFINDER_MAX_BLOBS )
-    bcount = PLAYER_BLOBFINDER_MAX_BLOBS;      
+  StgModelBlobfinder* blobmod = (StgModelBlobfinder*)this->mod;
+  uint32_t bcount = 0;
+  stg_blobfinder_blob_t* blobs = blobmod->GetBlobs( &bcount );
   
   player_blobfinder_data_t bfd;
-  memset( &bfd, 0, sizeof(bfd) );
-  
-  // get the configuration
-  stg_blobfinder_config_t *cfg = (stg_blobfinder_config_t*)mod->cfg;
-  assert(cfg);
+  bzero( &bfd, sizeof(bfd) );
   
   // and set the image width * height
-  bfd.width = cfg->scan_width;
-  bfd.height = cfg->scan_height;
+  bfd.width = blobmod->scan_width;
+  bfd.height = blobmod->scan_height;
   bfd.blobs_count = bcount;
   
   // now run through the blobs, packing them into the player buffer
@@ -81,10 +67,6 @@ void InterfaceBlobfinder::Publish( void )
   unsigned int b;
   for( b=0; b<bcount; b++ )
     {
-      // I'm not sure the ACTS-area is really just the area of the
-      // bounding box, or if it is in fact the pixel count of the
-      // actual blob. Here it's just the rectangular area.
-      
       // useful debug - leave in
       /*
 	cout << "blob "
@@ -97,38 +79,42 @@ void InterfaceBlobfinder::Publish( void )
 	<< endl;
       */
       
-      bfd.blobs[b].x      = blobs[b].xpos;
-      bfd.blobs[b].y      = blobs[b].ypos;
+		int dx = blobs[b].right - blobs[b].left;
+		int dy = blobs[b].top - blobs[b].bottom;
+		
+      bfd.blobs[b].x      = blobs[b].left + dx/2;
+      bfd.blobs[b].y      = blobs[b].bottom + dy/2; 
+
       bfd.blobs[b].left   = blobs[b].left;
       bfd.blobs[b].right  = blobs[b].right;
       bfd.blobs[b].top    = blobs[b].top;
       bfd.blobs[b].bottom = blobs[b].bottom;
       
       bfd.blobs[b].color = blobs[b].color;
-      bfd.blobs[b].area  = blobs[b].area;          
+      bfd.blobs[b].area  = dx * dy;         
       
       bfd.blobs[b].range = blobs[b].range;          
     }
   
   // should change player interface to support variable-lenght blob data
   // size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);   
-
-  this->driver->Publish( this->addr, NULL, 
-			 PLAYER_MSGTYPE_DATA,
-			 PLAYER_BLOBFINDER_DATA_BLOBS,
-			 &bfd, sizeof(bfd), NULL);
+  
+  this->driver->Publish( this->addr, 
+								 PLAYER_MSGTYPE_DATA,
+								 PLAYER_BLOBFINDER_DATA_BLOBS,
+								 &bfd, sizeof(bfd), NULL);
 }
 
-int InterfaceBlobfinder::ProcessMessage( MessageQueue* resp_queue,
-					 player_msghdr_t* hdr,
-					 void* data )
+int InterfaceBlobfinder::ProcessMessage( QueuePointer& resp_queue,
+													  player_msghdr_t* hdr,
+													  void* data )
 {
   // todo: handle configuration requests
   
   //else
   {
     // Don't know how to handle this message.
-    PRINT_WARN2( "stg_blobfindeer doesn't support msg with type/subtype %d/%d",
+    PRINT_WARN2( "stg_blobfinder doesn't support msg with type/subtype %d/%d",
 		 hdr->type, hdr->subtype);
     return(-1);
   }

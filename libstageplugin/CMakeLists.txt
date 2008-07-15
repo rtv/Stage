@@ -4,6 +4,7 @@ include_directories( ${PLAYER_INCLUDE_DIRS})
 
 add_library( stageplugin MODULE
 	     p_driver.cc
+	     p_blobfinder.cc
 	     p_simulation.cc
 	     p_laser.cc
 	     p_fiducial.cc
@@ -13,7 +14,6 @@ add_library( stageplugin MODULE
 )
 
 #	     p_graphics3d.cc
-#	     p_blobfinder.cc
 
 
 target_link_libraries( stageplugin

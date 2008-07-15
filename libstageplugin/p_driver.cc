@@ -307,10 +307,10 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
       
       switch( player_addr.interf )
 	{
-	  // 	case PLAYER_BLOBFINDER_CODE:
- 	  //ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
- 	  //break;
-
+ 	case PLAYER_BLOBFINDER_CODE:
+ 	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
+ 	  break;
+	  
 	case PLAYER_SIMULATION_CODE:
 	  ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
 	  break;
