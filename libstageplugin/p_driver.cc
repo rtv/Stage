@@ -311,9 +311,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
  	  //ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
  	  //break;
 
-         case PLAYER_SIMULATION_CODE:
-           ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
-           break;
+	case PLAYER_SIMULATION_CODE:
+	  ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
+	  break;
 	  
  	case PLAYER_LASER_CODE:	  
  	  ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
@@ -335,10 +335,10 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 //  	  ifsrc = new InterfacePtz( player_addr,  this, cf, section );
 //  	  break;
 	  
-// 	case PLAYER_FIDUCIAL_CODE:
-// 	  ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
-// 	  break;	  
-
+ 	case PLAYER_FIDUCIAL_CODE:
+ 	  ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
+ 	  break;	  
+	  
 // 	case PLAYER_LOCALIZE_CODE:
 // 	  ifsrc = new InterfaceLocalize( player_addr,  this, cf, section );
 // 	  break;	  

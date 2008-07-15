@@ -6,13 +6,13 @@ add_library( stageplugin MODULE
 	     p_driver.cc
 	     p_simulation.cc
 	     p_laser.cc
+	     p_fiducial.cc
 	     p_position.cc
 	     p_sonar.cc
 	     stg_time.cc
 )
 
 #	     p_graphics3d.cc
-#	     p_fiducial.cc
 #	     p_blobfinder.cc
 
 
