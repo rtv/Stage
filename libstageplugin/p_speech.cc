@@ -81,9 +81,6 @@ int InterfaceSpeech::ProcessMessage( QueuePointer & resp_queue,
 
 			mod->Say( pcmd->string );
 
-			this->driver->Publish(this->addr, resp_queue,
-								PLAYER_MSGTYPE_RESP_ACK, 
-								PLAYER_SPEECH_CMD_SAY);
 			return( 0 );
 		}
 		else

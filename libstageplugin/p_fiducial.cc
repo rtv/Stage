@@ -68,11 +68,7 @@ void InterfaceFiducial::Publish( void )
 		assert( fids );
 
 		pdata.fiducials_count = fidmod->fiducial_count;
-
-      //printf( "reporting %d fiducials\n",
-      //      fcount );
-	
-	  pdata.fiducials = new player_fiducial_item_t[pdata.fiducials_count];
+		pdata.fiducials = new player_fiducial_item_t[pdata.fiducials_count];
 		
       for( int i=0; i<(int)pdata.fiducials_count; i++ )
 		  {			 

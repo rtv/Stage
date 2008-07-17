@@ -10,6 +10,8 @@ SET( APIVERSION ${V_MAJOR}.${V_MINOR} )
 # minimum version of Player to build the plugin
 SET( MIN_PLAYER 2.1.0 )
 
+OPTION (BUILD_PLAYER_PLUGIN "Build Player plugin" ON)
+OPTION (BUILD_LSPTEST "Build Player plugin tests" OFF)
 
 cmake_minimum_required( VERSION 2.4 FATAL_ERROR )
 
@@ -59,7 +61,6 @@ ELSE (PKGCONFIG)
 	MESSAGE (STATUS "pkg-config not found, skipping Player plugin")
 ENDIF (PKGCONFIG)
 
-
 # find FLTK and set flags
 FIND_PROGRAM (FLTKCONFIG NAMES fltk-config)
 IF (FLTKCONFIG)
@@ -107,9 +108,9 @@ ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(assets)
 ADD_SUBDIRECTORY(worlds)
 
-IF ( PLAYER_FOUND )
+IF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )
   ADD_SUBDIRECTORY(libstageplugin)
-ENDIF ( PLAYER_FOUND )	 
+ENDIF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )	 
 
 
 # generate a cpack config file used to create packaged tarballs

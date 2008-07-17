@@ -568,6 +568,7 @@ void StgDriver::Update(void)
   for( int i=0; i<(int)this->devices->len; i++ )
   {
     Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
+	  
     assert( interface );
 	 
     switch( interface->addr.interf )

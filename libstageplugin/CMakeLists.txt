@@ -1,3 +1,4 @@
+MESSAGE( STATUS "Building Player plugin" )
 
 link_directories( ${PLAYER_LIBDIR} )
 include_directories( ${PLAYER_INCLUDE_DIRS})
@@ -25,6 +26,10 @@ target_link_libraries( stageplugin
 		       ${OPENGL_LIBRARIES}
 		       
 )
+
+IF (BUILD_LSPTEST)
+	ADD_SUBDIRECTORY(test)
+ENDIF (BUILD_LSPTEST)
 
 INSTALL(TARGETS stageplugin
 	LIBRARY DESTINATION lib
