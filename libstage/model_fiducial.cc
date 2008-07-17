@@ -79,6 +79,8 @@ StgModelFiducial::StgModelFiducial( StgWorld* world,
 	stg_geom_t geom;
 	memset( &geom, 0, sizeof(geom));
 	SetGeom( geom );
+	fiducials = NULL;
+	fiducial_count = 0;
 
 	// default parameters
 	min_range = DEFAULT_FIDUCIAL_RANGEMIN;
