@@ -1,4 +1,5 @@
-ADD_LIBRARY( expand MODULE expand.cc )
+SET( expandSrcs expand.cc )
+ADD_LIBRARY( expand MODULE ${expandSrcs} )
 TARGET_LINK_LIBRARIES( expand stage )
 SET_TARGET_PROPERTIES( expand PROPERTIES PREFIX "" )
 INSTALL( TARGETS expand DESTINATION lib)

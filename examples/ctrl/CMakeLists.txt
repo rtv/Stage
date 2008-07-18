@@ -1,9 +1,9 @@
 
-SET( PLUGINS 
-     fasr 
-     lasernoise 
-     sink 
-     source 
+SET( PLUGINS
+     fasr
+     lasernoise
+     sink
+     source
      wander
 )
 

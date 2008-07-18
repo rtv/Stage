@@ -68,7 +68,7 @@ IF (FLTKCONFIG)
         OUTPUT_VARIABLE FLTK_CFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE)
     EXECUTE_PROCESS (COMMAND fltk-config --ldflags --use-gl --use-images
-        OUTPUT_VARIABLE FLTK_LIBRARIES
+        OUTPUT_VARIABLE FLTK_LDFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE)
     MESSAGE (STATUS "Found FLTK")
     SET (FLTK_FOUND TRUE)
@@ -89,9 +89,9 @@ ENDIF (APPLE)
 include_directories( . 
 		     libstage 
 		     replace 
-  			  /opt/local/include/
-		     ${GLIB_INCLUDE_DIRS} 
-           ${LIBPNG_INCLUDE_DIRS}
+		     /opt/local/include/
+		     ${GLIB_INCLUDE_DIRS}
+		     ${LIBPNG_INCLUDE_DIRS}
 		     ${CMAKE_INCLUDE_PATH}
 )
 
@@ -99,7 +99,7 @@ include_directories( .
 # all targets need these library directories
 link_directories(${GLIB_LIBRARY_DIRS}
                  ${LIBPNG_LIBRARY_DIRS}
-		           ${OPENGL_LIBRARY_DIRS}
+                 ${OPENGL_LIBRARY_DIRS}
 )
 
 # work through these subdirs
