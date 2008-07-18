@@ -4,25 +4,28 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <libplayerc/playerc.h>
 
-class LSPLaserTest : public CPPUNIT_NS::TestFixture
-{
-	CPPUNIT_TEST_SUITE( LSPLaserTest );
-	CPPUNIT_TEST( testConfig );
-	CPPUNIT_TEST( testData );
-	CPPUNIT_TEST_SUITE_END();
-	
-protected:
-	playerc_laser_t* laserProxy;
-	playerc_client_t* client;
-	
-	void testConfig();
-	void testData();
-	
-public:
-	void setUp();
-	void tearDown();
-};
+#include "lsp_test_proxy.hh"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( LSPLaserTest );
+namespace lspTest {
+	class Laser : public Proxy
+	{
+		CPPUNIT_TEST_SUITE( Laser );
+		CPPUNIT_TEST( testConfig );
+		CPPUNIT_TEST( testData );
+		CPPUNIT_TEST_SUITE_END();
+		
+	protected:
+		playerc_laser_t* laserProxy;
+		
+		void testConfig();
+		void testData();
+		
+	public:
+		void setUp();
+		void tearDown();
+	};
+};
+	
+CPPUNIT_TEST_SUITE_REGISTRATION( lspTest::Laser );
 
 #endif

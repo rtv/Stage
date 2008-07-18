@@ -13,8 +13,12 @@ link_directories(
 
 SET( lspTestSrcs
 	lsp_test.cc
+	lsp_test_proxy.cc
+	lsp_test_proxy.hh
 	lsp_test_laser.cc
 	lsp_test_laser.hh
+	lsp_test_speech.cc
+	lsp_test_speech.hh
 )
 
 add_executable( lsp_test ${lspTestSrcs} )
