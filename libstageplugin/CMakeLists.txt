@@ -3,8 +3,7 @@ MESSAGE( STATUS "Building Player plugin" )
 link_directories( ${PLAYER_LIBDIR} )
 include_directories( ${PLAYER_INCLUDE_DIRS})
 
-add_library( stageplugin MODULE
-	     p_driver.h
+set( stagepluginSrcs p_driver.h
 	     p_driver.cc
 	     p_blobfinder.cc
 	     p_simulation.cc
@@ -16,6 +15,8 @@ add_library( stageplugin MODULE
 	     stg_time.cc
 )
 
+add_library( stageplugin MODULE ${stagepluginSrcs} )
+
 #	     p_graphics3d.cc
 
 
@@ -24,7 +25,7 @@ target_link_libraries( stageplugin
 		       ${PLAYER_LIBRARIES}
 		       playerutils
 		       ${OPENGL_LIBRARIES}
-		       
+
 )
 
 IF (BUILD_LSPTEST)
