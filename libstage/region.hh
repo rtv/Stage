@@ -35,8 +35,10 @@ public:
   stg_cell_t* GetCell( int32_t x, int32_t y )
   {
     uint32_t index = x + (y*REGIONWIDTH);
+#ifdef DEBUG
     assert( index >=0 );
-    assert( index < REGIONSIZE );    
+    assert( index < REGIONSIZE );
+#endif
     return &cells[index];    
   }
   

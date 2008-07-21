@@ -448,152 +448,172 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 		stg_raytrace_sample_t* sample,
 		bool ztest ) 
 {
- //  printf( "raytracing at [ %.2f %.2f %.2f %.2f ] for %.2f \n",
-// 	  pose.x,
-// 	  pose.y,
-// 	  pose.z,
-// 	  pose.a,
-// 	  range );
-
+	//  printf( "raytracing at [ %.2f %.2f %.2f %.2f ] for %.2f \n",
+	// 	  pose.x,
+	// 	  pose.y,
+	// 	  pose.z,
+	// 	  pose.a,
+	// 	  range );
+	
 	// initialize the sample
-  sample->pose = pose;
-  sample->range = range; // we might change this below
-  sample->block = NULL; // we might change this below
-  
-  // find the global integer bitmap address of the ray  
-  int32_t x = (int32_t)(pose.x*ppm);
-  int32_t y = (int32_t)(pose.y*ppm);
-  int32_t z = 0;
-  
-  int32_t xstart = x;
-  int32_t ystart = y;
-  
-  // and the x and y offsets of the ray
-  int32_t dx = (int32_t)(ppm*range * cos(pose.a));
-  int32_t dy = (int32_t)(ppm*range * sin(pose.a));
-  int32_t dz = 0;
-  
-  //   if( finder->debug )
-  //     RecordRay( pose.x, 
-  // 	       pose.y, 
-  // 	       pose.x + range.max * cos(pose.a),
-  // 	       pose.y + range.max * sin(pose.a) );
-  
-  // fast integer line 3d algorithm adapted from Cohen's code from
-  // Graphics Gems IV
-  int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;
-  sx = sgn(dx);  sy = sgn(dy);  sz = sgn(dz);
-  ax = abs(dx);  ay = abs(dy);  az = abs(dz);
-  bx = 2*ax;	 by = 2*ay;	bz = 2*az;
-  exy = ay-ax;   exz = az-ax;	ezy = ay-az;
-  n = ax+ay+az;
-  
-  //  printf( "Raytracing from (%d,%d,%d) steps (%d,%d,%d) %d\n",
-  //  x,y,z,  dx,dy,dz, n );
-  
-  // superregion coords
-  stg_point_int_t lastsup;
-  lastsup.x = INT_MAX; // an unlikely first raytrace
-  lastsup.y = INT_MAX;
-  
-  stg_point_int_t lastreg = {0,0};
-  lastsup.x = INT_MAX; // an unlikely first raytrace
-  lastsup.y = INT_MAX;
-  
-  SuperRegion* sr = NULL;
-  Region* r = NULL;
-  
-  //puts( "RAYTRACE" );
-  
-  while ( n-- ) 
+	sample->pose = pose;
+	sample->range = range; // we might change this below
+	sample->block = NULL; // we might change this below
+	
+	// find the global integer bitmap address of the ray  
+	int32_t x = (int32_t)(pose.x*ppm);
+	int32_t y = (int32_t)(pose.y*ppm);
+	int32_t z = 0;
+	
+	int32_t xstart = x;
+	int32_t ystart = y;
+	
+	// and the x and y offsets of the ray
+	int32_t dx = (int32_t)(ppm*range * cos(pose.a));
+	int32_t dy = (int32_t)(ppm*range * sin(pose.a));
+	int32_t dz = 0;
+	
+	//   if( finder->debug )
+	//     RecordRay( pose.x, 
+	// 	       pose.y, 
+	// 	       pose.x + range.max * cos(pose.a),
+	// 	       pose.y + range.max * sin(pose.a) );
+	
+	// fast integer line 3d algorithm adapted from Cohen's code from
+	// Graphics Gems IV
+	int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;
+	sx = sgn(dx);  sy = sgn(dy);  sz = sgn(dz);
+	ax = abs(dx);  ay = abs(dy);  az = abs(dz);
+	bx = 2*ax;	 by = 2*ay;	bz = 2*az;
+	exy = ay-ax;   exz = az-ax;	ezy = ay-az;
+	n = ax+ay+az;
+	
+	//  printf( "Raytracing from (%d,%d,%d) steps (%d,%d,%d) %d\n",
+	//  x,y,z,  dx,dy,dz, n );
+	
+	// superregion coords
+	stg_point_int_t lastsup;
+	lastsup.x = INT_MAX; // an unlikely first raytrace
+	lastsup.y = INT_MAX;
+	
+	stg_point_int_t lastreg = {0,0};
+	lastsup.x = INT_MAX; // an unlikely first raytrace
+	lastsup.y = INT_MAX;
+	
+	SuperRegion* sr = NULL;
+	Region* r = NULL;
+	bool nonempty_region = false;
+	
+	//puts( "RAYTRACE" );
+	
+	//bitmasks to calculate region, and cell values
+	static int32_t reg_coord_mask = ~ ( ( ~ 0x00 ) << SRBITS ); //this then needs to be shifted >> 
+	static int32_t cell_coord_mask = ~ ( ( ~ 0x00 ) << RBITS );
+
+	// superregion coords (must be updated every time x or y changes
+	// but only one variable changes at a time in the loop, so its 
+	// more efficient to compute at the end of the loop, when we know what's changed)
+	stg_point_int_t sup;
+	sup.x = x >> SRBITS;
+	sup.y = y >> SRBITS;
+	
+	// find the region coords inside this superregion (again: only updated when x or y changes)
+	stg_point_int_t reg;
+	reg.x = ( x & reg_coord_mask ) >> RBITS;
+	reg.y = ( y & reg_coord_mask ) >> RBITS;
+	
+	// compute the pixel offset inside this region (again: only updated when x or y changes)
+	stg_point_int_t cell;
+	cell.x = x & cell_coord_mask;
+	cell.y = y & cell_coord_mask;
+	
+	
+	while ( n-- ) 
     {         
-      // superregion coords
-      stg_point_int_t sup;
-      sup.x = x >> SRBITS;
-      sup.y = y >> SRBITS;
-      
-      //  printf( "pixel [%d %d]\tS[ %d %d ]\t",
-      //      x, y, sup.x, sup.y );
+		
+		//  printf( "pixel [%d %d]\tS[ %d %d ]\t",
+		//      x, y, sup.x, sup.y );
 
-      if( ! (sup.x == lastsup.x && sup.y == lastsup.y )) 
-	{
-	  sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
-	  lastsup = sup; // remember these coords
-	}
+		if( sr )
+		{	  
+			//  printf( "R[ %d %d ]\t", reg.x, reg.y );
+			
+			if( reg.x != lastreg.x || reg.y != lastreg.y )
+			{
+				r = sr->GetRegion( reg.x, reg.y );
+				lastreg = reg;
+				nonempty_region = ( r && r->count );
+			}
+			
+			if( nonempty_region )
+			{
+				//  printf( "C[ %d %d ]\t", cell.x, cell.y );
+				
+				for( GSList* list = r->GetCell( cell.x, cell.y )->list;
+					list;
+					list = list->next )      
+				{	      	      
+					StgBlock* block = (StgBlock*)list->data;
+					//assert( block );
+					
+					// if this block does not belong to the searching model and it
+					// matches the predicate and it's in the right z range
+					if( //block && (block->Model() != finder) && 
+					   (ztest ? block->IntersectGlobalZ( pose.z ) : true) &&
+					   (*func)( block, mod, arg ) )
+					{
+						// a hit!
+						sample->block = block;
+						sample->range = hypot( (x-xstart)/ppm, (y-ystart)/ppm );
+						return;
+					}
+				}
+			}
+		}      
+		
+		//      printf( "\t step %d n %d   pixel [ %d, %d ] block [ %d %d ] index [ %d %d ] \n", 
+		//      //coarse [ %d %d ]\n",
+		//      count++, n, x, y, blockx, blocky, b_dx, b_dy );
+		
+		// increment our pixel in the correct direction
+		if ( exy < 0 ) {
+			x += sx; exy += by; //exz += bz;
+				
+			//update super region
+			sup.x = x >> SRBITS;
+			if( sup.x != lastsup.x ) {
+				sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
+				lastsup = sup; // remember these coords
+			}
 
-      if( sr )
-	{	  
-	  // find the region coords inside this superregion
-	  stg_point_int_t reg;
-	  reg.x = (x - ( sup.x << SRBITS)) >> RBITS;
-	  reg.y = (y - ( sup.y << SRBITS)) >> RBITS;
-
-	  //  printf( "R[ %d %d ]\t", reg.x, reg.y );
-
-	  if( ! (reg.x == lastreg.x && reg.y == lastreg.y ))
-	    {
-	      r = sr->GetRegion( reg.x, reg.y );
-	      lastreg = reg;
-	    }
-
-	  if( r && r->count )
-	    {
-	      // compute the pixel offset inside this region
-	      stg_point_int_t cell;
-	      cell.x = x - ((sup.x << SRBITS) + (reg.x << RBITS));
-	      cell.y = y - ((sup.y << SRBITS) + (reg.y << RBITS));
-
-	      //  printf( "C[ %d %d ]\t", cell.x, cell.y );
-
-	      for( GSList* list = r->GetCell( cell.x, cell.y )->list;
-		   list;
-		   list = list->next )      
-		{	      	      
-		  StgBlock* block = (StgBlock*)list->data;
-		  assert( block );
-
-		  // if this block does not belong to the searching model and it
-		  // matches the predicate and it's in the right z range
-		  if( //block && (block->Model() != finder) && 
-		     (ztest ? block->IntersectGlobalZ( pose.z ) : true) &&
-		     (*func)( block, mod, arg ) )
-		    {
-		      // a hit!
-		      sample->block = block;
-		      sample->range = hypot( (x-xstart)/ppm, (y-ystart)/ppm );
-		      return;
-		    }
+			//the next two computations are only needed when sr is valid; 
+			//however, profiling shows it is faster without the if-branch
+			//recompute region x value - this can be skipped if sr == NULL, but might be cheaper without the if() cond
+			reg.x = ( x & reg_coord_mask ) >> RBITS;
+			
+			//recompute cell x value - can be skipped if sr == NULL
+			cell.x = x & cell_coord_mask;
 		}
-	    }
-	}      
-
-      //      printf( "\t step %d n %d   pixel [ %d, %d ] block [ %d %d ] index [ %d %d ] \n", 
-      //      //coarse [ %d %d ]\n",
-      //      count++, n, x, y, blockx, blocky, b_dx, b_dy );
-
-      // increment our pixel in the correct direction
-      if ( exy < 0 ) {
-	if ( exz < 0 ) {
-	  x += sx; exy += by; exz += bz;
-	}
-	else  {
-	  z += sz; exz -= bx; ezy += by;
-	}
-      }
-      else {
-	if ( ezy < 0 ) {
-	  z += sz;
-	  exz -= bx; ezy += by;
-	}
-	else  {
-	  y += sy; exy -= bx; ezy -= bz;
-	}
-      }
-      //     puts("");
+		else {
+				y += sy; exy -= bx; //ezy -= bz;
+				//update super region
+				sup.y = y >> SRBITS;
+				if( sup.y != lastsup.y ) {
+					sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
+					lastsup = sup; // remember these coords
+				}
+			
+			//same deal with profiling - it is faster without the if() cond
+			//recompute region y value - this can be skipped if sr == NULL
+			reg.y = ( y & reg_coord_mask ) >> RBITS;
+			
+			//recompute cell y value - can be skipped if sr == NULL
+			cell.y = y & cell_coord_mask;
+		}
     }
-
-  // hit nothing
-  return;
+	
+	// hit nothing
+	return;
 }
 
 static void _save_cb( gpointer key, gpointer data, gpointer user )

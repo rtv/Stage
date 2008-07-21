@@ -67,6 +67,7 @@ void StgBlock::DrawTop()
 	glPopMatrix();
 }       
 
+//TODO FIXME - this is really SLOW
 void StgBlock::DrawSides()
 {
 	// construct a strip that wraps around the polygon  
