@@ -62,11 +62,10 @@ void InterfaceLaser::Publish( void )
   memset( &pdata, 0, sizeof(pdata) );
 
   stg_laser_cfg_t cfg = mod->GetConfig();
-
   pdata.min_angle = -cfg.fov/2.0;
   pdata.max_angle = +cfg.fov/2.0;
+  pdata.resolution = cfg.fov / cfg.sample_count;
   pdata.max_range = cfg.range_bounds.max;
-  pdata.resolution = cfg.fov / (double)(cfg.sample_count-1);
   pdata.ranges_count = pdata.intensity_count = cfg.sample_count;
   pdata.id = this->scan_id++;
   
@@ -114,18 +113,22 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
 		    plc->resolution/1e2);
 
       stg_laser_cfg_t cfg = mod->GetConfig();
+     
+	  cfg.resolution = 1.0 / plc->resolution;
+	  cfg.range_bounds.max = plc->max_range;
+	  cfg.fov = plc->max_angle - plc->min_angle;
+	  cfg.interval = 1E6 / plc->scanning_frequency;
 
-      // tweak the parts that player knows about
-      cfg.fov = plc->max_angle - plc->min_angle;
+      PRINT_DEBUG4( "setting laser config: fov %.2f max_range %.2f " /
+				    "resolution %.2f interval %.2f",
+				    cfg.fov, cfg.range_bounds.max,
+				    cfg.resolution, cfg.interval );
       
-      // todo - test this
-      cfg.sample_count = (int)(cfg.fov / DTOR(plc->resolution/1e2));
-
-      PRINT_DEBUG2( "setting laser config: fov %.2f samples %d", 
-		    slc.fov, slc.samples );
-      
+	  // Range resolution is currently locked to the world setting
+	  //  and intensity values are always read.  The relevant settings
+	  //  are ignored.
+		
       mod->SetConfig( cfg );
-      
 
       this->driver->Publish(this->addr, resp_queue,
 			    PLAYER_MSGTYPE_RESP_ACK, 
@@ -153,9 +156,11 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
       memset(&plc,0,sizeof(plc));
       plc.min_angle = -cfg.fov/2.0;
       plc.max_angle = +cfg.fov/2.0;
+      plc.resolution = cfg.fov / cfg.sample_count;
       plc.max_range = cfg.range_bounds.max;
-      plc.resolution = (uint8_t)(RTOD(cfg.fov / (cfg.sample_count-1)) * 100);
+	  plc.range_res = 1.0; // todo
       plc.intensity = 1; // todo
+	  plc.scanning_frequency = 1E6 / cfg.interval;
 
       this->driver->Publish(this->addr, resp_queue,
 			    PLAYER_MSGTYPE_RESP_ACK, 

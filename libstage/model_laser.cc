@@ -141,6 +141,7 @@ stg_laser_cfg_t StgModelLaser::GetConfig()
   cfg.range_bounds.max = range_max;
   cfg.fov = fov;
   cfg.resolution = resolution;
+  cfg.interval = interval;
   return cfg;
 }
 
@@ -150,6 +151,7 @@ void StgModelLaser::SetConfig( stg_laser_cfg_t cfg )
   range_max = cfg.range_bounds.max;
   fov = cfg.fov;
   resolution = cfg.resolution;
+  interval = cfg.interval;
 }
 
 static bool laser_raytrace_match( StgBlock* testblock, 

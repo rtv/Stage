@@ -1196,8 +1196,8 @@ protected:
 
 	int subs;     //< the number of subscriptions to this model
 
-	stg_usec_t interval; //< time between updates in ms
-	stg_usec_t last_update; //< time of last update in ms
+	stg_usec_t interval; //< time between updates in us
+	stg_usec_t last_update; //< time of last update in us
 
 	stg_bool_t disabled; //< if non-zero, the model is disabled
 
@@ -2162,6 +2162,7 @@ typedef struct
   uint32_t resolution;
   stg_range_bounds_t range_bounds;
   stg_radians_t fov;
+  stg_usec_t interval;
 } stg_laser_cfg_t;
 
 /// %StgModelLaser class

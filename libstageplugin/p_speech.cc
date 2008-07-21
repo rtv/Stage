@@ -73,8 +73,8 @@ int InterfaceSpeech::ProcessMessage( QueuePointer & resp_queue,
 				   PLAYER_SPEECH_CMD_SAY, 
 				   this->addr))
 	{
-		if( hdr->size == sizeof(player_speech_cmd_t) )
-		{
+//		if( hdr->size == sizeof(player_speech_cmd_t) )
+//		{
 			player_speech_cmd_t* pcmd = (player_speech_cmd_t*)data;
 
 			// Pass it to stage:
@@ -82,14 +82,14 @@ int InterfaceSpeech::ProcessMessage( QueuePointer & resp_queue,
 			mod->Say( pcmd->string );
 
 			return( 0 );
-		}
-		else
-		{
-			PRINT_ERR2( "wrong size speech command packet (%d/%d bytes)",
-					  (int)hdr->size, (int)sizeof(player_speech_cmd_t) );
-
-			return( -1 );
-		}
+//		}
+//		else
+//		{
+//			PRINT_ERR2( "wrong size speech command packet (%d/%d bytes)",
+//					  (int)hdr->size, (int)sizeof(player_speech_cmd_t) );
+//
+//			return( -1 );
+//		}
 	}
 
 	PRINT_WARN2( "stage speech doesn't support message id:%d/%d",

@@ -11,6 +11,7 @@ namespace lspTest {
 	{
 		CPPUNIT_TEST_SUITE( Laser );
 		CPPUNIT_TEST( testConfig );
+		CPPUNIT_TEST( testGeom );
 		CPPUNIT_TEST( testData );
 		CPPUNIT_TEST_SUITE_END();
 		
@@ -18,8 +19,10 @@ namespace lspTest {
 		playerc_laser_t* laserProxy;
 		
 		void testConfig();
+		void testGeom();
 		void testData();
 		
+		static const double Delta;
 	public:
 		void setUp();
 		void tearDown();
