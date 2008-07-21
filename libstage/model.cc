@@ -635,7 +635,7 @@ void StgModel::UnMap()
 
   for( GList* it=blocks; it; it=it->next )
     ((StgBlock*)it->data)->UnMap();
-} 
+}
 
 
 void StgModel::Subscribe( void )
@@ -1589,9 +1589,9 @@ StgModel* StgModel::TestCollision( stg_pose_t posedelta,
 			 double bearing = atan2( dy,dx );
 
 			 stg_pose_t edgepose;
-			 bzero(&edgepose,sizeof(edgepose));
 			 edgepose.x = pt1->x;
 			 edgepose.y = pt1->y;
+             edgepose.z = 0;
 			 edgepose.a = bearing;
 
 			 // shift the edge ray vector by the local change in pose
@@ -1639,14 +1639,15 @@ void StgModel::UpdatePose( void )
     }
 
   // convert usec to sec
+  //TODO make this static-ish
   double interval = (double)world->interval_sim / 1e6;
 
   // find the change of pose due to our velocity vector
   stg_pose_t p;
-  bzero(&p,sizeof(p));
-  p.x += velocity.x * interval;
-  p.y += velocity.y * interval;
-  p.a += velocity.a * interval;
+  p.x = velocity.x * interval;
+  p.y = velocity.y * interval;
+  p.z = 0;
+  p.a = velocity.a * interval;
 
   // test to see if this pose change would cause us to crash
   StgModel* hitthing = this->TestCollision( p, NULL, NULL );
