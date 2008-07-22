@@ -115,9 +115,8 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
       stg_laser_cfg_t cfg = mod->GetConfig();
      
 	  cfg.resolution = 1.0 / plc->resolution;
-	  cfg.range_bounds.max = plc->max_range;
 	  cfg.fov = plc->max_angle - plc->min_angle;
-	  cfg.interval = 1E6 / plc->scanning_frequency;
+	  cfg.interval = 1.0E6 / plc->scanning_frequency;
 
       PRINT_DEBUG4( "setting laser config: fov %.2f max_range %.2f " /
 				    "resolution %.2f interval %.2f",
@@ -160,7 +159,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
       plc.max_range = cfg.range_bounds.max;
 	  plc.range_res = 1.0; // todo
       plc.intensity = 1; // todo
-	  plc.scanning_frequency = 1E6 / cfg.interval;
+	  plc.scanning_frequency = 1.0E6 / cfg.interval;
 
       this->driver->Publish(this->addr, resp_queue,
 			    PLAYER_MSGTYPE_RESP_ACK, 

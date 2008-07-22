@@ -23,6 +23,7 @@ namespace lspTest {
 		void testData();
 		
 		static const double Delta;
+		static const int Samples;
 	public:
 		void setUp();
 		void tearDown();

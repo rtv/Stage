@@ -3,6 +3,7 @@
 using namespace lspTest;
 
 const double Laser::Delta = 0.01;
+const int Laser::Samples = 361;
 
 void Laser::setUp() {
 	connect();
@@ -20,10 +21,10 @@ void Laser::tearDown() {
 void Laser::testConfig() {
 	double min = -M_PI/2;
 	double max = +M_PI/2;
-	double res = M_PI/361; // sick laser default
-	double range_res = 1;  // not being used by stage
+	double res = M_PI/Samples; // sick laser default
+	double range_res = 1;  // not being used by stage 
 	unsigned char intensity = 1; // not being used by stage
-	double freq = 1.0/1E4; // stage default
+	double freq = 10; // 10Hz / 100ms (stage default)
 	
 	CPPUNIT_ASSERT( playerc_laser_set_config( laserProxy, min, max, res, range_res, intensity, freq ) == 0 );
 	
@@ -53,12 +54,20 @@ void Laser::testGeom() {
 void Laser::testData() {
 	playerc_client_read( client );	
 	
-	printf("\nlaser: [%14.3f ] [%d]\n ", laserProxy->info.datatime, laserProxy->scan_count);
+	CPPUNIT_ASSERT( laserProxy->info.datatime > 0 );
+	CPPUNIT_ASSERT( laserProxy->scan_count == Samples );
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "min scan angle", -M_PI/2, laserProxy->scan[0][1], Delta );
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "max scan angle", M_PI/2, laserProxy->scan[Samples-1][1], Delta );
 	for ( int i = 0; i < laserProxy->scan_count; i++ ) {
-        printf("[%6.3f, %6.3f ] \n", laserProxy->scan[i][0], laserProxy->scan[i][1]);
+		double distance = laserProxy->scan[i][0];
+		CPPUNIT_ASSERT( distance <= laserProxy->max_range );
+		CPPUNIT_ASSERT( distance >= laserProxy->min_right );
+//        printf("[%6.3f, %6.3f ] \n", laserProxy->scan[i][0], laserProxy->scan[i][1]);
 	}
 	
-	// check first and last sample's angle
-	// check number of samples
+	laserProxy->info.fresh = 0;
+	playerc_client_read( client );
+	CPPUNIT_ASSERT( laserProxy->info.fresh == 1 );
+	
 	// check range of each is within max and min
 }
