@@ -49,7 +49,6 @@ described on the manual page for each model type.
 #include "region.hh"
 #include "file_manager.hh"
 
-
 // static data members
 unsigned int StgWorld::next_id = 0;
 bool StgWorld::quit_all = false;
@@ -81,15 +80,19 @@ void StgWorld::DestroySuperRegion( SuperRegion* sr )
 	delete sr;
 }
 
-void StgWorld::UpdateAll()
+bool StgWorld::UpdateAll()
 {  
-  for( GList* it = StgWorld::world_list; it; it=it->next )
-	 ((StgWorld*)it->data)->Update();
+	bool quit = true;
+	for( GList* it = StgWorld::world_list; it; it=it->next ) {
+		if( ((StgWorld*)it->data)->Update() == false )
+			quit = false;
+	}
+	return quit;
 }
 
 StgWorld::StgWorld( const char* token, 
 						  stg_msec_t interval_sim,
-						  double ppm )
+				   double ppm )
 {
   Initialize( token, interval_sim, ppm );
 }
@@ -223,9 +226,10 @@ void StgWorld::Load( const char* worldfile_path )
 	  wf->ReadInt( entity, "interval_sim", 
 		       (int)(this->interval_sim/thousand) );
 
-	if( wf->PropertyExists( entity, "quit_time" ) )
+	if( wf->PropertyExists( entity, "quit_time" ) ) {
 		this->quit_time = (stg_usec_t)million * 
-			wf->ReadInt( entity, "quit_time", 0 );
+			wf->ReadFloat( entity, "quit_time", 0 );
+	}
 
 	if( wf->PropertyExists( entity, "resolution" ) )
 		this->ppm = 
@@ -361,6 +365,12 @@ bool StgWorld::Update()
 {
   PRINT_DEBUG( "StgWorld::Update()" );
   
+	// if we've run long enough, exit
+	if( PastQuitTime() ) {
+		if( IsGUI() == false )
+			return true;		
+	}
+	
   // update any models that are due to be updated
   for( GList* it=this->update_list; it; it=it->next )
 	 ((StgModel*)it->data)->UpdateIfDue();
@@ -371,12 +381,8 @@ bool StgWorld::Update()
 
   this->sim_time += this->interval_sim;
   this->updates++;
-  
-  // if we've run long enough, set the quit flag
-  if( (quit_time > 0) && (sim_time >= quit_time) )
-	 quit = true;
-  
-  return true;
+	
+  return false;
 }
 
 void StgWorld::AddModel( StgModel*  mod  )

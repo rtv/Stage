@@ -165,6 +165,8 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) :
 
   label( PROJECT );
 
+  pause_time = false;
+	
   interval_real = (stg_usec_t)thousand * DEFAULT_INTERVAL_REAL;
 	
   for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
@@ -288,6 +290,12 @@ bool StgWorldGui::Update()
   if( real_time_of_last_update == 0 )
     real_time_of_last_update = RealTimeNow();
 
+  //pause the simulation if quit time is set
+  if( PastQuitTime() && pause_time == false ) {
+	  TogglePause();
+	  pause_time = true;
+  }
+	
   bool val = paused ? true : StgWorld::Update();
   
   stg_usec_t interval;

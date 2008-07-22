@@ -101,7 +101,8 @@ StgModelLaser::StgModelLaser( StgWorld* world,
   // don't allocate sample buffer memory until Update() is called
   samples = NULL;
 	
-  data_dl = glGenLists(1);
+  if( world->IsGUI() )
+    data_dl = glGenLists(1);
        
   registerOption( &showLaserData );
   registerOption( &showLaserStrikes );

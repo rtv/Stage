@@ -945,7 +945,7 @@ const uint32_t INTERVAL_LOG_LEN = 32;
 
 class Region;
 class SuperRegion;
-
+	
 /// %StgWorld class
 class StgWorld : public StgAncestor
 {
@@ -959,7 +959,7 @@ private:
   
   /** Coordinate system stack - experimental*/
   GQueue* csstack;
-  
+	
   void PushPose();  
   void PopPose();
   stg_pose_t* PeekPose();
@@ -988,6 +988,7 @@ private:
   virtual void PushColor( stg_color_t col ) { /* do nothing */  };
   virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
   virtual void PopColor(){ /* do nothing */  };
+
   
   /** The current real time in microseconds */
   stg_usec_t real_time_now;
@@ -1039,6 +1040,7 @@ protected:
 	static void UpdateCb( StgWorld* world);
 
   stg_usec_t sim_time; ///< the current sim time in this world in ms
+	inline bool PastQuitTime() const { return (quit_time > 0) && (sim_time >= quit_time); }
   
 	GList* ray_list;
 	// store rays traced for debugging purposes
@@ -1066,7 +1068,7 @@ protected:
 public:
 	static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
 	static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
-	static void UpdateAll();
+	static bool UpdateAll(); //returns true when time to quit, false otherwise
   
 	StgWorld( const char* token = "MyWorld", 
 				 stg_msec_t interval_sim = DEFAULT_INTERVAL_SIM,
@@ -1087,6 +1089,8 @@ public:
 
 	Worldfile* GetWorldFile(){ return wf; };
 
+	inline virtual bool IsGUI() { return false; }
+	
 	virtual void Load( const char* worldfile_path );
 	virtual void UnLoad();
 	virtual void Reload();
@@ -2000,6 +2004,9 @@ private:
 	bool saveAsDialog();
 	bool closeWindowQuery();
 	
+	// Quit time pause
+	bool pause_time;
+	
 protected:
 	virtual void PushColor( stg_color_t col )
 	{ canvas->PushColor( col ); } 
@@ -2027,6 +2034,7 @@ public:
 	virtual void UnLoad();
 	virtual bool Save( const char* filename );
 	
+	inline virtual bool IsGUI() { return true; }
 	
 	void Start(){ paused = false; };
 	void Stop(){ paused = true; };

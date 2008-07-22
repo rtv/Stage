@@ -199,7 +199,8 @@ StgModel::StgModel( StgWorld* world,
   this->subs = 0;
   this->stall = false;
 
-  this->blocks_dl = glGenLists( 1 );
+  if( world->IsGUI() ) 
+    this->blocks_dl = glGenLists( 1 );
 
   this->geom.size.x = DEFAULT_GEOM_SIZEX;
   this->geom.size.y = DEFAULT_GEOM_SIZEY;
