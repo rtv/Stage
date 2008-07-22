@@ -108,20 +108,20 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
       // TODO
       // int intensity = plc->intensity;
 
-      PRINT_DEBUG3( "requested laser config:\n %f %f %f",
-		    RTOD(plc->min_angle), RTOD(plc->max_angle), 
-		    plc->resolution/1e2);
-
       stg_laser_cfg_t cfg = mod->GetConfig();
+		
+	  printf( "laser config was: resolution %d, fov %.6f, interval %d\n", 
+			  cfg.resolution, cfg.fov, cfg.interval );
      
-	  cfg.resolution = 1.0 / plc->resolution;
 	  cfg.fov = plc->max_angle - plc->min_angle;
+	  cfg.resolution = cfg.fov / ( cfg.sample_count * plc->resolution );
+	  if ( cfg.resolution < 1 ) 
+		  cfg.resolution = 1;
 	  cfg.interval = 1.0E6 / plc->scanning_frequency;
-
-      PRINT_DEBUG4( "setting laser config: fov %.2f max_range %.2f " /
-				    "resolution %.2f interval %.2f",
-				    cfg.fov, cfg.range_bounds.max,
-				    cfg.resolution, cfg.interval );
+		
+		//PRINT_DEBUG3
+	  printf( "setting laser config: resolution %d, fov %.6f, interval %d\n", 
+			  cfg.resolution, cfg.fov, cfg.interval );
       
 	  // Range resolution is currently locked to the world setting
 	  //  and intensity values are always read.  The relevant settings
@@ -155,7 +155,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
       memset(&plc,0,sizeof(plc));
       plc.min_angle = -cfg.fov/2.0;
       plc.max_angle = +cfg.fov/2.0;
-      plc.resolution = cfg.fov / cfg.sample_count;
+      plc.resolution = cfg.fov / ( cfg.sample_count * cfg.resolution );
       plc.max_range = cfg.range_bounds.max;
 	  plc.range_res = 1.0; // todo
       plc.intensity = 1; // todo

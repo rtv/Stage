@@ -54,20 +54,23 @@ void Laser::testGeom() {
 void Laser::testData() {
 	playerc_client_read( client );	
 	
+	// verify that we're getting new data
+	laserProxy->info.fresh = 0;
+	playerc_client_read( client );
+	CPPUNIT_ASSERT_MESSAGE( "laser updating", laserProxy->info.fresh == 1 );
+	
 	CPPUNIT_ASSERT( laserProxy->info.datatime > 0 );
 	CPPUNIT_ASSERT( laserProxy->scan_count == Samples );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "min scan angle", -M_PI/2, laserProxy->scan[0][1], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "max scan angle", M_PI/2, laserProxy->scan[Samples-1][1], Delta );
+
 	for ( int i = 0; i < laserProxy->scan_count; i++ ) {
 		double distance = laserProxy->scan[i][0];
+
+		// check range of each sample is within max and min
 		CPPUNIT_ASSERT( distance <= laserProxy->max_range );
 		CPPUNIT_ASSERT( distance >= laserProxy->min_right );
-//        printf("[%6.3f, %6.3f ] \n", laserProxy->scan[i][0], laserProxy->scan[i][1]);
+
+		//        printf("[%6.3f, %6.3f ] \n", laserProxy->scan[i][0], laserProxy->scan[i][1]);
 	}
-	
-	laserProxy->info.fresh = 0;
-	playerc_client_read( client );
-	CPPUNIT_ASSERT( laserProxy->info.fresh == 1 );
-	
-	// check range of each is within max and min
 }
