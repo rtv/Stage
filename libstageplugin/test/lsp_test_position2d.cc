@@ -22,7 +22,7 @@ void Position2D::tearDown() {
 void Position2D::testGeom() {
 	CPPUNIT_ASSERT( playerc_position2d_get_geom( posProxy ) == 0 );
 	
-	// values for lsp_test.cfg/world (pioneer2dx)
+	// values from lsp_test.cfg/world (pioneer2dx)
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "geom pose (x)", -0.04, posProxy->pose[0], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "geom pose (y)", 0, posProxy->pose[1], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "geom pose (angle)", 0, posProxy->pose[2], Delta );
@@ -50,9 +50,9 @@ void Position2D::testData() {
 
 void Position2D::testMove() {
 	// Back the robot into the wall
-	CPPUNIT_ASSERT( playerc_position2d_set_cmd_vel( posProxy, -0.5, 0, 0, 1 ) == 0 );
-	// for 2 seconds, read and stop
-	sleep( 2 );
+	CPPUNIT_ASSERT( playerc_position2d_set_cmd_vel( posProxy, -3, 0, 0, 1 ) == 0 );
+	// for 500ms, read and stop
+	usleep( 500000 );
 	playerc_client_read( client );
 	CPPUNIT_ASSERT( playerc_position2d_set_cmd_vel( posProxy, 0, 0, 0, 1 ) == 0 );
 
@@ -64,16 +64,16 @@ void Position2D::testMove() {
 	// Make sure it's hitting the wall
 	CPPUNIT_ASSERT( posProxy->stall == 1 );
 	// Make sure the velocity is as specified
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "forward velocity", -0.5, posProxy->vx, Delta );
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "forward velocity", -3, posProxy->vx, Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "horizontal velocity", 0, posProxy->vy, Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "angular velocity", 0, posProxy->va, Delta );
 	
 	// Start turning left at 45 deg. / sec
-	CPPUNIT_ASSERT( playerc_position2d_set_cmd_vel( posProxy, 0, 0, M_PI/4, 1 ) == 0 );
-	// for 1 second, stop, and read
-	sleep( 1 );
+	CPPUNIT_ASSERT( playerc_position2d_set_cmd_vel( posProxy, 0, 0, M_PI/2, 1 ) == 0 );
+	// for 500ms, stop, and read
+	usleep( 500000 );
 	CPPUNIT_ASSERT( playerc_position2d_set_cmd_vel( posProxy, 0, 0, 0, 1 ) == 0 );
-	sleep( 1 );
+	usleep( 500000 );
 	playerc_client_read( client );
 
 	// Make sure odom still reads negative
@@ -94,7 +94,7 @@ void Position2D::testMove() {
 	CPPUNIT_ASSERT( playerc_position2d_set_cmd_pose( posProxy, 0, 0, 0, 1 ) == 0 );
 	sleep( 5 );
 	CPPUNIT_ASSERT( playerc_position2d_set_cmd_vel( posProxy, 0, 0, 0, 1 ) == 0 );
-	sleep( 1 );
+	usleep( 500000 );
 	playerc_client_read( client );
 	
 	// Make sure we've made progress
@@ -109,7 +109,7 @@ void Position2D::testMove() {
 	// Reset odometer and check position
 	playerc_client_read( client );
 	CPPUNIT_ASSERT( playerc_position2d_set_odom( posProxy, 0, 0, 0 ) == 0 );
-	sleep( 1 );
+	usleep( 500000 );
 	playerc_client_read( client );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (x)", 0, posProxy->px, Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (y)", 0, posProxy->py, Delta );
