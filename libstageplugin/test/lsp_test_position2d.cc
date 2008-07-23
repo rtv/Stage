@@ -107,7 +107,10 @@ void Position2D::testMove() {
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "angular velocity", 0, posProxy->va, 0.1 );
 	
 	// Reset odometer and check position
+	playerc_client_read( client );
 	CPPUNIT_ASSERT( playerc_position2d_set_odom( posProxy, 0, 0, 0 ) == 0 );
+	sleep( 1 );
+	playerc_client_read( client );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (x)", 0, posProxy->px, Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (y)", 0, posProxy->py, Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (angle)", 0, posProxy->pa, Delta );	

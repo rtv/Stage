@@ -411,7 +411,7 @@ void StgModelPosition::Update( void  )
 		case STG_POSITION_LOCALIZATION_ODOM:
 			{
 				// integrate our velocities to get an 'odometry' position estimate.
-				double dt = this->world->GetSimInterval()/1e3;
+				double dt = this->world->GetSimInterval()/1e6;
 
 				est_pose.a = normalize( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
 
@@ -432,6 +432,8 @@ void StgModelPosition::Update( void  )
 			break;
 	}
 
+	PRINT_DEBUG3( " READING POSITION: [ %.4f %.4f %.4f ]\n",
+				  est_pose.x, est_pose.y, est_pose.a );
 	StgModel::Update();
 }
 
@@ -497,7 +499,10 @@ void StgModelPosition::SetTurnSpeed( double a )
 void StgModelPosition::SetSpeed( stg_velocity_t vel ) 
 { 
 	control_mode = STG_POSITION_CONTROL_VELOCITY;
-	velocity = vel;
+	goal.x = vel.x;
+	goal.y = vel.y;
+	goal.z = vel.z;
+	goal.a = vel.a;
 }
 
 void StgModelPosition::GoTo( double x, double y, double a ) 

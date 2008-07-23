@@ -31,6 +31,7 @@ pioneer2dx
   # can refer to the robot by this name
   name "r0"
 
+  localization "odom"
   pose [ -7.490 -7.490 0 45.000 ] 
   sicklaser()
 )
