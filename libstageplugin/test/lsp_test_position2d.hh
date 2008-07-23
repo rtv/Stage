@@ -1,5 +1,5 @@
-#ifndef _LSP_LASER_TEST_H_
-#define _LSP_LASER_TEST_H_
+#ifndef _LSP_POSITION2D_TEST_H_
+#define _LSP_POSITION2D_TEST_H_
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <libplayerc/playerc.h>
@@ -7,28 +7,27 @@
 #include "lsp_test_proxy.hh"
 
 namespace lspTest {
-	class Laser : public Proxy
+	class Position2D : public Proxy
 	{
-		CPPUNIT_TEST_SUITE( Laser );
-		CPPUNIT_TEST( testConfig );
+		CPPUNIT_TEST_SUB_SUITE( Position2D, Proxy );
 		CPPUNIT_TEST( testGeom );
 		CPPUNIT_TEST( testData );
+		CPPUNIT_TEST( testMove );
 		CPPUNIT_TEST_SUITE_END();
 		
 	protected:
-		playerc_laser_t* laserProxy;
+		playerc_position2d_t* posProxy;
 		
-		void testConfig();
 		void testGeom();
 		void testData();
+		void testMove();
 		
-		static const int Samples;
 	public:
 		void setUp();
 		void tearDown();
 	};
 };
-	
-CPPUNIT_TEST_SUITE_REGISTRATION( lspTest::Laser );
+
+CPPUNIT_TEST_SUITE_REGISTRATION( lspTest::Position2D );
 
 #endif

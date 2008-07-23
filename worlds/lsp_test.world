@@ -1,9 +1,9 @@
 # lsp_test.world - test world for use with lsp_test 
 
 
-include "pioneer.inc"     # defines Pioneer-like robots
-include "map.inc"         # defines 'floorplan' object used for obstacle maps
-include "sick.inc"        # defines sick laser
+include "pioneer.inc"
+include "map.inc"
+include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 1  # real-time interval between simulation updates in milliseconds 
@@ -14,7 +14,7 @@ paused 0
 window
 (
   size [ 700.000 700.000 ] # in pixels
-  scale 37                 # pixels per meter
+  scale 37.000                 # pixels per meter
   show_data 1              # 1=on 0=off
 )
 
@@ -22,7 +22,7 @@ window
 floorplan
 ( 
   name "cave"
-  size [16 16 0.6]
+  size [16.000 16.000 0.600]
   bitmap "bitmaps/cave.png"
 )
 
@@ -31,7 +31,7 @@ pioneer2dx
   # can refer to the robot by this name
   name "r0"
 
-  pose [ -6.5 -6.5 0 45 ] 
+  pose [ -7.490 -7.490 0 45.000 ] 
   sicklaser()
 )
 

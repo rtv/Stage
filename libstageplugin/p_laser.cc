@@ -110,7 +110,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
 
       stg_laser_cfg_t cfg = mod->GetConfig();
 		
-	  printf( "laser config was: resolution %d, fov %.6f, interval %d\n", 
+	  PRINT_DEBUG3( "laser config was: resolution %d, fov %.6f, interval %d\n", 
 			  cfg.resolution, cfg.fov, cfg.interval );
      
 	  cfg.fov = plc->max_angle - plc->min_angle;
@@ -119,8 +119,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
 		  cfg.resolution = 1;
 	  cfg.interval = 1.0E6 / plc->scanning_frequency;
 		
-		//PRINT_DEBUG3
-	  printf( "setting laser config: resolution %d, fov %.6f, interval %d\n", 
+	  PRINT_DEBUG3( "setting laser config: resolution %d, fov %.6f, interval %d\n", 
 			  cfg.resolution, cfg.fov, cfg.interval );
       
 	  // Range resolution is currently locked to the world setting

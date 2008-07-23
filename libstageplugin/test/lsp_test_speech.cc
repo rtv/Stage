@@ -1,7 +1,5 @@
 #include "lsp_test_speech.hh"
 
-#include <stdio.h>
-
 using namespace lspTest;
 
 void Speech::setUp() {

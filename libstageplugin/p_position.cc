@@ -86,7 +86,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
     // convert from Player to Stage format
     player_position2d_cmd_pos_t* pcmd = (player_position2d_cmd_pos_t*)data;
 
-    mod->GoTo( pcmd->vel.px, pcmd->vel.py, pcmd->vel.pa );
+    mod->GoTo( pcmd->pos.px, pcmd->pos.py, pcmd->pos.pa );
     return 0;
   }
 
@@ -140,12 +140,12 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
   {
     if(hdr->size == 0)
     {
-      PRINT_WARN( "reset odom not implemented" );
       PRINT_DEBUG( "resetting odometry" );
 
-      stg_pose_t origin;
-      memset(&origin,0,sizeof(origin));
-      //stg_model_position_set_odom( this->mod, &origin );
+	  mod->est_pose.x = 0;
+	  mod->est_pose.y = 0;
+	  mod->est_pose.z = 0;
+	  mod->est_pose.a = 0;
 
       this->driver->Publish( this->addr, resp_queue, 
                              PLAYER_MSGTYPE_RESP_ACK,
@@ -166,17 +166,14 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
   {
     if(hdr->size == sizeof(player_position2d_set_odom_req_t))
     {
-      PRINT_WARN( "set odom not implemented" );
-
       player_position2d_set_odom_req_t* req = 
               (player_position2d_set_odom_req_t*)data;
 
-      stg_pose_t pose;
-      pose.x = req->pose.px;
-      pose.y = req->pose.py;
-      pose.a = req->pose.pa;
-
-      //stg_model_position_set_odom( this->mod, &pose );
+		
+	  mod->est_pose.x = req->pose.px;
+	  mod->est_pose.y = req->pose.py;
+	  //mod->est_pose.z = req->pose.pz;
+	  mod->est_pose.a = req->pose.pa;
 
       PRINT_DEBUG3( "set odometry to (%.2f,%.2f,%.2f)",
                     pose.x,

@@ -2,7 +2,6 @@
 
 using namespace lspTest;
 
-const double Laser::Delta = 0.01;
 const int Laser::Samples = 361;
 
 void Laser::setUp() {
@@ -46,7 +45,7 @@ void Laser::testGeom() {
 	// values for lsp_test.cfg/world (sicklaser)
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (x)", 0, laserProxy->pose[0], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (y)", 0, laserProxy->pose[1], Delta );
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (z)", 0, laserProxy->pose[2], Delta );
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (angle)", 0, laserProxy->pose[2], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "size (x)", 0.156, laserProxy->size[0], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "size (y)", 0.155, laserProxy->size[1], Delta );
 }

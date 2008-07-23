@@ -19,6 +19,8 @@ SET( lspTestSrcs
 	lsp_test_laser.hh
 	lsp_test_speech.cc
 	lsp_test_speech.hh
+	lsp_test_position2d.cc
+	lsp_test_position2d.hh
 )
 
 add_executable( lsp_test ${lspTestSrcs} )

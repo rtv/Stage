@@ -15,6 +15,8 @@ namespace lspTest {
 		
 		void connect();
 		void disconnect();
+		
+		static const double Delta;
 	};
 };
 
