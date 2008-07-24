@@ -21,7 +21,6 @@ namespace lspTest {
 			void testGeom();
 			void testData();
 			
-			static const int Samples;
 		public:
 			void setUp();
 			void tearDown();

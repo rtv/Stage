@@ -2,8 +2,6 @@
 
 using namespace lspTest;
 
-const int Fiducial::Samples = 361;
-
 void Fiducial::setUp() {
 	connect();
 	fiducialProxy = playerc_fiducial_create( client, 0 );
@@ -38,15 +36,19 @@ void Fiducial::testData() {
 	CPPUNIT_ASSERT_MESSAGE( "fiducial updating", fiducialProxy->info.fresh == 1 );
 	
 	CPPUNIT_ASSERT( fiducialProxy->info.datatime > 0 );
-//	CPPUNIT_ASSERT_EQUAL_MESSAGE( "fiducials_count", 1, fiducialProxy->fiducials_count ); // lsp_test.world
+
+	// Make sure we see exactly 1 robot with ID 2
+	CPPUNIT_ASSERT_EQUAL_MESSAGE( "fiducials_count", 1, fiducialProxy->fiducials_count ); // lsp_test.world
+	CPPUNIT_ASSERT( fiducialProxy->fiducials[0].id == 2 );
 	
-	printf("\nfiducials_count: %d\n", fiducialProxy->fiducials_count );
-	for ( int i = 0; i < fiducialProxy->fiducials_count; i++ ) {
-//		CPPUNIT_ASSERT( fiducialProxy->fiducials[i].id == 2 );
-		printf( "fiducial return: %d @ [ %6.4f %6.4f %6.4f ]\n",
-			    fiducialProxy->fiducials[i].id,
-			    fiducialProxy->fiducials[i].pose.px,
-			    fiducialProxy->fiducials[i].pose.py,
-			    fiducialProxy->fiducials[i].pose.pyaw );
-	}
+	
+	
+//	printf("\nfiducials_count: %d\n", fiducialProxy->fiducials_count );
+//	for ( int i = 0; i < fiducialProxy->fiducials_count; i++ ) {
+//		printf( "fiducial return: %d @ [ %6.4f %6.4f %6.4f ]\n",
+//			    fiducialProxy->fiducials[i].id,
+//			    fiducialProxy->fiducials[i].pose.px,
+//			    fiducialProxy->fiducials[i].pose.py,
+//			    fiducialProxy->fiducials[i].pose.pyaw );
+//	}
 }

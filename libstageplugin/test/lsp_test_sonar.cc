@@ -2,8 +2,6 @@
 
 using namespace lspTest;
 
-const int Sonar::Samples = 361;
-
 void Sonar::setUp() {
 	connect();
 	sonarProxy = playerc_sonar_create( client, 0 );
