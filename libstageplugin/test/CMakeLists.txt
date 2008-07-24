@@ -15,10 +15,12 @@ SET( lspTestSrcs
 	lsp_test.cc
 	lsp_test_proxy.cc
 	lsp_test_proxy.hh
-	lsp_test_laser.cc
-	lsp_test_laser.hh
+	lsp_test_simulation.cc
+	lsp_test_simulation.hh
 	lsp_test_speech.cc
 	lsp_test_speech.hh
+	lsp_test_laser.cc
+	lsp_test_laser.hh
 	lsp_test_sonar.cc
 	lsp_test_sonar.hh
 	lsp_test_fiducial.cc

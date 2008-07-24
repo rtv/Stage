@@ -64,5 +64,5 @@ trickedoutpioneer
   name "r1"
 
   fiducial_return 2
-  pose [ -5.085 -7.193 0 144.304 ] 
+  pose [ -5.085 -7.193 0 135 ] 
 )

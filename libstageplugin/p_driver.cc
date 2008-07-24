@@ -311,38 +311,30 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
  	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
  	  break;
 			
-// 	case PLAYER_CAMERA_CODE:	  
-// 	  ifsrc = new InterfaceCamera( player_addr,  this, cf, section );
-// 	  break;
+	case PLAYER_FIDUCIAL_CODE:
+		ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
+		break;
 			
+	case PLAYER_LASER_CODE:	  
+		ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
+		break;
+			
+	case PLAYER_POSITION2D_CODE:	  
+		ifsrc = new InterfacePosition( player_addr, this,  cf, section );
+		break;
 	  
 	case PLAYER_SIMULATION_CODE:
 	  ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
-	  break;
-	  
- 	case PLAYER_LASER_CODE:	  
- 	  ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
- 	  break;
-	  
-	case PLAYER_POSITION2D_CODE:	  
- 	  ifsrc = new InterfacePosition( player_addr, this,  cf, section );
-	  break;
+	  break;	  
 	  
 	case PLAYER_SONAR_CODE:
  	  ifsrc = new InterfaceSonar( player_addr,  this, cf, section );
  	  break;
-				  
-// 	case PLAYER_POWER_CODE:	  
-// 	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
-// 	  break;
-	  
-//  	case PLAYER_PTZ_CODE:
-//  	  ifsrc = new InterfacePtz( player_addr,  this, cf, section );
-//  	  break;
-	  
- 	case PLAYER_FIDUCIAL_CODE:
- 	  ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
- 	  break;	  
+			
+	case PLAYER_SPEECH_CODE:
+		ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );
+		break;	  
+			
 	  
 // 	case PLAYER_LOCALIZE_CODE:
 // 	  ifsrc = new InterfaceLocalize( player_addr,  this, cf, section );
@@ -366,15 +358,24 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 
 // 	case PLAYER_WIFI_CODE:
 // 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
-// 	  break;	  
+// 	  break;
+			
+// 	case PLAYER_CAMERA_CODE:	  
+// 	  ifsrc = new InterfaceCamera( player_addr,  this, cf, section );
+// 	  break;
 
- 	case PLAYER_SPEECH_CODE:
- 	  ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );
- 	  break;	  
+// 	case PLAYER_POWER_CODE:	  
+// 	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
+// 	  break;
+
+//  	case PLAYER_PTZ_CODE:
+//  	  ifsrc = new InterfacePtz( player_addr,  this, cf, section );
+//  	  break;
 
 // 	case PLAYER_BUMPER_CODE:
 // 	  ifsrc = new InterfaceBumper( player_addr,  this, cf, section );
 // 	  break;	  
+
 
 	default:
 	  PRINT_ERR1( "error: stage driver doesn't support interface type %d\n",

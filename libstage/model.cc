@@ -225,6 +225,7 @@ StgModel::StgModel( StgWorld* world,
   this->gui_mask = this->parent ? 0 : DEFAULT_MASK;
 
   this->callbacks = g_hash_table_new( g_int_hash, g_int_equal );
+  g_datalist_init( &this->props );
   this->flag_list = NULL;
   this->blinkenlights = g_ptr_array_new();
 
@@ -260,6 +261,8 @@ StgModel::~StgModel( void )
     world->children = g_list_remove( world->children, this );
   
   if( callbacks ) g_hash_table_destroy( callbacks );
+	
+  g_datalist_clear( &props );
 
   g_hash_table_remove( StgModel::modelsbyid, (void*)id );
 

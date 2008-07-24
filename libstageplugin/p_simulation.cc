@@ -46,7 +46,7 @@
 
 // CODE ------------------------------------------------------------
 
-#define DEBUG
+//#define DEBUG
 
 #include <libgen.h> // for dirname(3)
 #include <libplayercore/globals.h> // for player_argc & player_argv
@@ -147,123 +147,226 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
                                         player_msghdr_t* hdr,
                                         void* data)
 {
-  // Is it a request to set a model's pose?
-  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                           PLAYER_SIMULATION_REQ_SET_POSE2D, 
-                           this->addr))
-  {
-    player_simulation_pose2d_req_t* req = 
-            (player_simulation_pose2d_req_t*)data;
-
-    stg_pose_t pose;
-    pose.x = req->pose.px;
-    pose.y = req->pose.py;
-    pose.a = req->pose.pa;
-
-    // look up the named model
-
-    StgModel* mod = StgDriver::world->GetModel( req->name );
-
-    if( mod )
-      {
-	printf( "Stage: moving \"%s\" to (%.2f,%.2f,%.2f)\n",
-		req->name, pose.x, pose.y, pose.a );
+	// Is it a request to get a model's pose in 2D?
+	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+								  PLAYER_SIMULATION_REQ_GET_POSE2D, 
+								  this->addr))
+    {
+		player_simulation_pose2d_req_t* req = 
+			(player_simulation_pose2d_req_t*)data;
+		
+		PRINT_DEBUG1( "Stage: received request for the 2D position of object \"%s\"\n", req->name );
+		
+		// look up the named model	
+		StgModel* mod = StgDriver::world->GetModel( req->name );
+		
+		if( mod )
+		{
+			stg_pose_t pose = mod->GetPose();
+			
+			PRINT_DEBUG3( "Stage: returning location [ %.2f, %.2f, %.2f ]\n",
+						  pose.x, pose.y, pose.a );
+		
+			player_simulation_pose2d_req_t reply;
+			memcpy( &reply, req, sizeof(reply));
+			reply.pose.px = pose.x;
+			reply.pose.py = pose.y;
+			reply.pose.pa = pose.a;
+			
+			this->driver->Publish( this->addr, resp_queue, 
+								  PLAYER_MSGTYPE_RESP_ACK, 
+								  PLAYER_SIMULATION_REQ_GET_POSE2D,
+								  (void*)&reply, sizeof(reply), NULL );
+			return(0);
+		}
+		else
+		{
+			PRINT_WARN1( "Stage: GET_POSE2D request: simulation model \"%s\" not found", req->name );
+			return(-1);
+		}
+	}
 	
-	mod->SetPose( pose );
+	// Is it a request to set a model's pose in 2D?
+	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+						   PLAYER_SIMULATION_REQ_SET_POSE2D, 
+						   this->addr))
+	{
+		player_simulation_pose2d_req_t* req = 
+				(player_simulation_pose2d_req_t*)data;
+
+		// look up the named model
+		StgModel* mod = StgDriver::world->GetModel( req->name );
+
+		if( mod )
+		{
+			PRINT_DEBUG4( "Stage: moving \"%s\" to [ %.2f, %.2f, %.2f ]\n",
+						  req->name, req->pose.px, req->pose.py, req->pose.pa );
+			
+			stg_pose_t pose = mod->GetPose();
+			pose.x = req->pose.px;
+			pose.y = req->pose.py;
+			pose.a = req->pose.pa;
+			
+			mod->SetPose( pose );
+
+			this->driver->Publish(this->addr, resp_queue,
+						  PLAYER_MSGTYPE_RESP_ACK,
+						  PLAYER_SIMULATION_REQ_SET_POSE2D);
+			return(0);
+		}
+		else
+		{
+			PRINT_WARN1( "SETPOSE2D request: simulation model \"%s\" not found", req->name );
+			return(-1);
+		}
+	}
 	
-	this->driver->Publish(this->addr, resp_queue,
-			      PLAYER_MSGTYPE_RESP_ACK,
-			      PLAYER_SIMULATION_REQ_SET_POSE2D);
-	return(0);
-      }
-    else
-      {
-	PRINT_WARN1( "SETPOSE2D request: simulation model \"%s\" not found", req->name );
-	return(-1);
-      }
-  }
-  // Is it a request to set a model's pose?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+	// Is it a request to get a model's pose in 3D?
+	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+								  PLAYER_SIMULATION_REQ_GET_POSE3D, 
+								  this->addr))
+    {
+		player_simulation_pose3d_req_t* req = 
+		(player_simulation_pose3d_req_t*)data;
+		
+		PRINT_DEBUG1( "Stage: received request for the 3D position of object \"%s\"\n", req->name );
+		
+		// look up the named model	
+		StgModel* mod = StgDriver::world->GetModel( req->name );
+		
+		if( mod )
+		{
+			stg_pose_t pose = mod->GetPose();
+			
+			PRINT_DEBUG4( "Stage: returning location [ %.2f, %.2f, %.2f, %.2f ]\n",
+						  pose.x, pose.y, pose.z, pose.a );
+			
+			player_simulation_pose3d_req_t reply;
+			memcpy( &reply, req, sizeof(reply));
+			reply.pose.px = pose.x;
+			reply.pose.py = pose.y;
+			reply.pose.pz = pose.z;
+			reply.pose.proll = 0; // currently unused
+			reply.pose.ppitch = 0; // currently unused
+			reply.pose.pyaw = pose.a;
+			reply.simtime = mod->GetWorld()->SimTimeNow(); // time in microseconds
+			
+			this->driver->Publish( this->addr, resp_queue, 
+								  PLAYER_MSGTYPE_RESP_ACK, 
+								  PLAYER_SIMULATION_REQ_GET_POSE3D,
+								  (void*)&reply, sizeof(reply), NULL );
+			return(0);
+		}
+		else
+		{
+			PRINT_WARN1( "Stage: GET_POSE3D request: simulation model \"%s\" not found", req->name );
+			return(-1);
+		}
+	}
+	
+	// Is it a request to set a model's pose in 3D?
+	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+							 PLAYER_SIMULATION_REQ_SET_POSE3D, 
+							 this->addr))
+	{
+		player_simulation_pose3d_req_t* req = 
+		(player_simulation_pose3d_req_t*)data;
+		
+		// look up the named model
+		StgModel* mod = StgDriver::world->GetModel( req->name );
+		
+		if( mod )
+		{
+			PRINT_DEBUG5( "Stage: moving \"%s\" to [ %.2f, %.2f, %.2f %.2f ]\n",
+						  req->name, req->pose.px, req->pose.py, req->pose.pz, req->pose.pyaw );
+			
+			stg_pose_t pose = mod->GetPose();
+			pose.x = req->pose.px;
+			pose.y = req->pose.py;
+			pose.z = req->pose.pz;
+			pose.a = req->pose.pyaw;
+			// roll and pitch are unused
+			
+			mod->SetPose( pose );
+			
+			this->driver->Publish(this->addr, resp_queue,
+								  PLAYER_MSGTYPE_RESP_ACK,
+								  PLAYER_SIMULATION_REQ_SET_POSE3D);
+			return(0);
+		}
+		else
+		{
+			PRINT_WARN1( "SETPOSE2D request: simulation model \"%s\" not found", req->name );
+			return(-1);
+		}
+	}
+	
+	
+	// Is it a request to set a model's property?
+	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
 				PLAYER_SIMULATION_REQ_SET_PROPERTY, 
 				this->addr))
     {
+		player_simulation_property_req_t* req = 
+			(player_simulation_property_req_t*)data;
+      
+		// look up the named model      
+		StgModel* mod = StgDriver::world->GetModel( req->name );
+			
+		if( mod )
+		{
+			int ack = 
+			mod->SetProperty( req->prop, 
+					  (void*)req->value );
 
-      player_simulation_property_req_t* req = 
-	(player_simulation_property_req_t*)data;
-      
-      // look up the named model      
-      StgModel* mod = 
-	//stg_world_model_name_lookup( StgDriver::world, req->name );
-	StgDriver::world->GetModel( req->name );
-      
-      if( mod )
-	{
-	  int ack = 
-	    mod->SetProperty( req->prop, 
-			      (void*)req->value );
-	  
-	  this->driver->Publish(this->addr, resp_queue,
-				ack==0 ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
-				PLAYER_SIMULATION_REQ_SET_PROPERTY);
-	  return(0);
+			this->driver->Publish(this->addr, resp_queue,
+					ack==0 ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
+					PLAYER_SIMULATION_REQ_SET_PROPERTY);
+			return(0);
+		}
+		else
+		{
+			PRINT_WARN1( "SET_PROPERTY request: simulation model \"%s\" not found", req->name );
+			return(-1);
+		}
 	}
-      else
-	{
-	  PRINT_WARN1( "SET_PROPERTY request: simulation model \"%s\" not found", req->name );
-	  return(-1);
+
+	// Is it a request to get a model's property?
+	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+								  PLAYER_SIMULATION_REQ_GET_PROPERTY, 
+								  this->addr))
+    {
+		player_simulation_property_req_t* req = 
+			(player_simulation_property_req_t*)data;
+		
+		// look up the named model      
+		StgModel* mod = StgDriver::world->GetModel( req->name );
+		
+		if( mod )
+		{
+			
+			req->value = (char*)malloc( 2 );
+			req->value[0] = NULL;
+			//(char*)mod->GetProperty( req->prop );
+			
+			this->driver->Publish(this->addr, resp_queue,
+								  PLAYER_MSGTYPE_RESP_ACK,
+								  PLAYER_SIMULATION_REQ_GET_PROPERTY);
+			return(0);
+		}
+		else
+		{
+			PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
+			return(-1);
+		}
 	}
-    }
-  // Is it a request to get a model's pose?
-  else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                                PLAYER_SIMULATION_REQ_GET_POSE2D, 
-                                this->addr))
-    {
-      player_simulation_pose2d_req_t* req = 
-	(player_simulation_pose2d_req_t*)data;
-      
-      printf( "Stage: received request for position of object \"%s\"\n", req->name );
-      
-      // look up the named model	
-      StgModel* mod = 
-	//stg_world_model_name_lookup( StgDriver::world, req->name );
-	StgDriver::world->GetModel( req->name );
-      
-      if( mod )
+	
+	
+	else
 	{
-	  stg_pose_t pose = mod->GetPose();
-
-      printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
-              pose.x, pose.y, pose.a );
-
-
-      player_simulation_pose2d_req_t reply;
-      memcpy( &reply, req, sizeof(reply));
-      reply.pose.px = pose.x;
-      reply.pose.py = pose.y;
-      reply.pose.pa = pose.a;
-
-      /*
-         printf( "Stage: returning location (%d %d %d)\n",
-         reply.x, reply.y, reply.a );
-       */
-
-      this->driver->Publish( this->addr, resp_queue, 
-                             PLAYER_MSGTYPE_RESP_ACK, 
-                             PLAYER_SIMULATION_REQ_GET_POSE2D,
-                             (void*)&reply, sizeof(reply), NULL );
-      return(0);
-    }
-    else
-    {
-      PRINT_WARN1( "Stage: GET_POSE2D request: simulation model \"%s\" not found", req->name );
-      return(-1);
-    }
-  }
-  else
-  {
-    // Don't know how to handle this message.
-    PRINT_WARN2( "stg_simulation doesn't support msg with type/subtype %d/%d",
-		 hdr->type, hdr->subtype);
-    return(-1);
-  }
+		// Don't know how to handle this message.
+		PRINT_WARN2( "stg_simulation doesn't support msg with type/subtype %d/%d",
+			 hdr->type, hdr->subtype);
+		return(-1);
+	}
 }
