@@ -12,7 +12,7 @@ namespace lspTest {
 		CPPUNIT_TEST_SUB_SUITE( Position2D, Proxy );
 		CPPUNIT_TEST( testGeom );
 		CPPUNIT_TEST( testData );
-		CPPUNIT_TEST( testMove );
+//		CPPUNIT_TEST( testMove );
 		CPPUNIT_TEST_SUITE_END();
 		
 	protected:

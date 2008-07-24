@@ -26,13 +26,43 @@ floorplan
   bitmap "bitmaps/cave.png"
 )
 
-pioneer2dx
-(		  
-  # can refer to the robot by this name
-  name "r0"
+# extend the pioneer2dx definition from pioneer.inc
+#
+define trickedoutpioneer pioneer2dx
+(
+  ranger()
 
+  sicklaser( pose [ 0.03 0 0 0 ]  )
+
+  fiducial
+  (
+    pose [ -0.15 0 0 0 ]
+    range_max 8
+    range_max_id 5
+  ) 
+
+  blobfinder
+  ( 
+    channel_count 6 
+    channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
+  )
+    
   localization "odom"
-  pose [ -7.490 -7.490 0 45.000 ] 
-  sicklaser()
+  localization_origin [ 0 0 0 ]
 )
 
+trickedoutpioneer
+(		  
+  name "r0"
+
+  fiducial_return 1
+  pose [ -7.490 -7.490 0 45.000 ] 
+)
+
+trickedoutpioneer
+(		  
+  name "r1"
+
+  fiducial_return 2
+  pose [ -5.085 -7.193 0 144.304 ] 
+)

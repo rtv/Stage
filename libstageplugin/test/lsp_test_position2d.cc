@@ -22,7 +22,7 @@ void Position2D::tearDown() {
 void Position2D::testGeom() {
 	CPPUNIT_ASSERT( playerc_position2d_get_geom( posProxy ) == 0 );
 	
-	// values from lsp_test.cfg/world (pioneer2dx)
+	// values from pioneer.inc
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "geom pose (x)", -0.04, posProxy->pose[0], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "geom pose (y)", 0, posProxy->pose[1], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "geom pose (angle)", 0, posProxy->pose[2], Delta );

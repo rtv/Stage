@@ -42,8 +42,8 @@ void Laser::testConfig() {
 void Laser::testGeom() {
 	CPPUNIT_ASSERT( playerc_laser_get_geom( laserProxy ) == 0 );
 	
-	// values from lsp_test.cfg/world and sick.inc
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (x)", 0, laserProxy->pose[0], Delta );
+	// values from lsp_test.world and sick.inc
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (x)", 0.03, laserProxy->pose[0], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (y)", 0, laserProxy->pose[1], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (angle)", 0, laserProxy->pose[2], Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "size (x)", 0.156, laserProxy->size[0], Delta );

@@ -21,6 +21,8 @@ SET( lspTestSrcs
 	lsp_test_speech.hh
 	lsp_test_sonar.cc
 	lsp_test_sonar.hh
+	lsp_test_fiducial.cc
+	lsp_test_fiducial.hh
 	lsp_test_position2d.cc
 	lsp_test_position2d.hh
 )

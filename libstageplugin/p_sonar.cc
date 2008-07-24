@@ -119,6 +119,9 @@ int InterfaceSonar::ProcessMessage( QueuePointer & resp_queue,
 	  // fill in the geometry data formatted player-like
 	  pgeom.poses[i].px = mod->sensors[i].pose.x;	  
 	  pgeom.poses[i].py = mod->sensors[i].pose.y;	  
+	  pgeom.poses[i].pz = 0;
+	  pgeom.poses[i].ppitch = 0;
+ 	  pgeom.poses[i].proll = 0;
 	  pgeom.poses[i].pyaw = mod->sensors[i].pose.a;	    
 	}
       
