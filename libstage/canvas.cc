@@ -91,10 +91,9 @@ StgModel* StgCanvas::getModel( int x, int y )
   make_current(); // make sure the GL context is current
   glClearColor ( 1,1,1,1 ); // white
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	glLoadIdentity();
-	current_camera->SetProjection();
-	current_camera->Draw();
+  glLoadIdentity();
+  current_camera->SetProjection();
+  current_camera->Draw();
 
   glDisable(GL_DITHER);
   glDisable(GL_BLEND); // turns off alpha blending, so we read back
@@ -466,8 +465,6 @@ void StgCanvas::FixViewport(int W,int H)
 
 void StgCanvas::DrawGlobalGrid()
 {
-
-  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   stg_bounds3d_t bounds = world->GetExtent();
 
   char str[16];	
@@ -519,7 +516,6 @@ void StgCanvas::DrawFloor()
   stg_bounds3d_t bounds = world->GetExtent();
   float z = 0;
 	
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(2.0, 2.0);
 	
@@ -623,6 +619,7 @@ void StgCanvas::renderFrame()
 	((StgWorldGui*)world)->DrawTree( true );
 		
       colorstack.Pop();
+	  glPolygonMode( GL_FRONT, GL_FILL );
       glPopMatrix();
     }
   
@@ -632,7 +629,6 @@ void StgCanvas::renderFrame()
   if( showFootprints )
     {
       glDisable( GL_DEPTH_TEST );
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 		
 		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
 			i->second->DrawTrailFootprint();
@@ -642,12 +638,9 @@ void StgCanvas::renderFrame()
   
   if( showTrailRise )
     {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-		
 		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
 			i->second->DrawTrailBlocks();
 		}
-		
     }
   
   if( showTrailArrows )
@@ -742,8 +735,6 @@ void StgCanvas::renderFrame()
       glDisable( GL_DEPTH_TEST );
 
       // if trails are on, we need to clear the clock background
-
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
 		std::string clockstr = world->ClockString();
 		if( showFollow == true && last_selection )
@@ -954,7 +945,8 @@ void StgCanvas::draw()
       glHint( GL_LINE_SMOOTH_HINT, GL_FASTEST );
       glDepthMask( GL_TRUE );
       glEnable( GL_TEXTURE_2D );
-		glEnableClientState( GL_VERTEX_ARRAY );
+	  glEnableClientState( GL_VERTEX_ARRAY );
+	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
       //TODO find a better home for loading textures
       if( loaded_texture == false ) {

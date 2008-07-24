@@ -328,7 +328,6 @@ void StgModelRanger::DataVisualize( void )
 
 	if( showRangerTransducers )
 	  {
-		 glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		 PushColor( 0,0,0,1 );
 		 
 		 for( unsigned int s=0; s<sensor_count; s++ ) 
@@ -384,7 +383,6 @@ void StgModelRanger::DataVisualize( void )
 	
 	// draw the filled triangles in transparent blue
 	glDepthMask( GL_FALSE );
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	PushColor( 0, 1, 0, 0.1 ); // transparent pale green       
 	//glEnableClientState( GL_VERTEX_ARRAY );
 	glVertexPointer( 3, GL_FLOAT, 0, pts );

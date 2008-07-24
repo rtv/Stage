@@ -259,7 +259,7 @@ void StgModelFiducial::DataVisualize()
 	//    PushColor( 0,0,0,0.2  );
 
 	//    gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
-	//    //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
 	//    gluPartialDisk( quadric,
 	// 		   0, 
 	// 		   max_range_anon,
@@ -293,7 +293,7 @@ void StgModelFiducial::DataVisualize()
 		glPushMatrix();
 		gl_coord_shift( dx,dy,0,fid.geom.a );
 
-		glPolygonMode( GL_FRONT, GL_LINE );
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		glRectf( -fid.geom.x/2.0, -fid.geom.y/2.0,
 				fid.geom.x/2.0, fid.geom.y/2.0 );
 
@@ -305,6 +305,7 @@ void StgModelFiducial::DataVisualize()
 		gl_draw_string( 0,0,0, idstr );
 		PopColor();
 
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		glPopMatrix();
 
 		PopColor();

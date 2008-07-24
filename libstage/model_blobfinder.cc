@@ -308,7 +308,6 @@ void StgModelBlobfinder::DataVisualize( void )
 		PushColor( 0,0,0,0.2  );
 
 		gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
-		//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		gluPartialDisk( quadric,
 				0, 
 				range,
@@ -337,7 +336,6 @@ void StgModelBlobfinder::DataVisualize( void )
 	glScalef( 0.025, 0.025, 1 );
 
 	// draw a white screen with a black border
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	PushColor( 0xFFFFFFFF );
 	glRectf( 0,0, scan_width, scan_height );
 	PopColor();
@@ -350,7 +348,6 @@ void StgModelBlobfinder::DataVisualize( void )
 	PopColor();
 
 	// draw the blobs on the screen
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	for( unsigned int s=0; s<blobs->len; s++ )
 	{
 		stg_blobfinder_blob_t* b = 
@@ -362,7 +359,8 @@ void StgModelBlobfinder::DataVisualize( void )
 		//printf( "%u l %u t%u r %u b %u\n", s, b->left, b->top, b->right, b->bottom );
 		PopColor();
 	}
-
+	
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	glPopMatrix();
 }
 

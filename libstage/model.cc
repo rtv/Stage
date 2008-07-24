@@ -785,17 +785,15 @@ void StgModel::DrawTrailFootprint()
       stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
       PushColor( r, g, b, 0.1 );
 
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
       LISTMETHOD( this->blocks, StgBlock*, DrawFootPrint );
 
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
       PushColor( r/2, g/2, b/2, 0.1 );
       LISTMETHOD( this->blocks, StgBlock*, DrawFootPrint );
 
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
-
       PopColor();
       PopColor();
+	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
       glPopMatrix();
     }
 }
@@ -840,7 +838,6 @@ void StgModel::DrawTrailArrows()
 
       PushColor( checkpoint->color );
 
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(1.0, 1.0);
 
@@ -851,7 +848,7 @@ void StgModel::DrawTrailArrows()
       glEnd();
       glDisable(GL_POLYGON_OFFSET_FILL);
 
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
       stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
       PushColor( r/2, g/2, b/2, 1 ); // darker color
@@ -864,6 +861,7 @@ void StgModel::DrawTrailArrows()
       glEnd();
       glDepthMask(GL_TRUE);
 
+	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
       PopColor();
       PopColor();
       PopCoords();
@@ -1091,7 +1089,6 @@ void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alp
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture( GL_TEXTURE_2D, texture_id );
-  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
   glColor4f( 1.0, 1.0, 1.0, alpha );
   glPushMatrix();
@@ -1144,7 +1141,6 @@ void StgModel::DrawFlagList( void )
 		
 		
 		PushColor( flag->color );
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		
 		gluQuadricDrawStyle( quadric, GLU_FILL );
 		gluSphere( quadric, flag->size/2.0, 4,2  );
@@ -1179,8 +1175,6 @@ void StgModel::DrawBlinkenlights()
   //glTranslatef(0,0,1); // jump up
   //stg_pose_t gpose = GetGlobalPose();
   //glRotatef( 180 + rtod(-gpose.a),0,0,1 );
-
-  //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
   for( unsigned int i=0; i<blinkenlights->len; i++ )
     {

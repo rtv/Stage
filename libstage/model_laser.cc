@@ -353,7 +353,6 @@ void StgModelLaser::DataVisualize( void )
       PopColor();
       
       glDepthMask( GL_FALSE );
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
       
       // draw the filled polygon in transparent blue
       PushColor( 0, 0, 1, 0.1 );		

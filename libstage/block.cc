@@ -99,7 +99,6 @@ void StgBlock::Draw()
 	// draw filled color polygons  
 	stg_color_t color = Color();
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 	PushColor( color );
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glPolygonOffset(1.0, 1.0);
@@ -112,19 +111,19 @@ void StgBlock::Draw()
 	stg_color_unpack( color, &r, &g, &b, &a );
 	PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glDepthMask(GL_FALSE);
 	DrawTop();
 	DrawSides();
 	glDepthMask(GL_TRUE);
-
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	
 	PopColor();
 	PopColor();
 }
 
 void StgBlock::DrawSolid( void )
 {
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 	DrawSides();
 	DrawTop();
 }
