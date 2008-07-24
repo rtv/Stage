@@ -696,7 +696,7 @@ void StgCanvas::renderFrame()
 		glPushMatrix();
 		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
 			//ensure two icons can't be in the exact same plane
-			if( camera.pitch() == 0 )
+			if( camera.pitch() == 0 && !pCamOn )
 				glTranslatef( 0, 0, 0.1 );
 			i->second->DrawStatusTree( this );
 		}
