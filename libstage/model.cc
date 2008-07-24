@@ -705,6 +705,7 @@ void StgModel::Startup( void )
 {
   //printf( "Startup model %s\n", this->token );
 
+  // TODO:  this could be a callback
   if( initfunc )
     initfunc( this );
 

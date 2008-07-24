@@ -228,7 +228,7 @@ void StgModelFiducial::Update( void )
 
 	// TODO - add a fiducial-only hash table to the world to speed this
 	// up a lot for large populations
-	world->ForEachModel( (GHFunc)(StgModelFiducial::AddModelIfVisibleStatic), 
+	world->ForEachDescendant( (stg_model_callback_t)(StgModelFiducial::AddModelIfVisibleStatic), 
 			this );
 
 	PRINT_DEBUG2( "model %s saw %d fiducials", token, data->len );
@@ -309,4 +309,16 @@ void StgModelFiducial::DataVisualize()
 
 		PopColor();
 	}
+}
+
+void StgModelFiducial::Shutdown( void )
+{ 
+	PRINT_DEBUG( "fiducial shutdown" );
+	
+	// clear the data  
+	data = g_array_set_size( data, 0 );
+	fiducials = NULL;
+	fiducial_count = 0;
+	
+	StgModel::Shutdown();
 }

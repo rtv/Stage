@@ -848,13 +848,14 @@ namespace Stg
 
 	protected:
 	GList* children;
-  //GHashTable* child_types;
-  
 
 	char* token;
 	bool debug;
 
 	public:
+	
+	/** recursively call func( model, arg ) for each descendant */
+	void ForEachDescendant( stg_model_callback_t func, void* arg );
 
   /** array contains the number of each type of child model */
   unsigned int child_type_counts[MODEL_TYPE_COUNT];
@@ -1117,10 +1118,6 @@ public:
 
 	/** Return the 3D bounding box of the world, in meters */
 	stg_bounds3d_t GetExtent(){ return extent; };
-
-	/** call func( model, arg ) for each model in the world */
-	void ForEachModel( GHFunc func, void* arg )
-	{ g_hash_table_foreach( models_by_name, func, arg ); };
 
 	/** Return the number of times the world has been updated. */
 	long unsigned int GetUpdateCount() { return updates; }
@@ -2354,9 +2351,7 @@ class StgModelFiducial : public StgModel
 		void AddModelIfVisible( StgModel* him );
 
 		// static wrapper function can be used as a function pointer
-		static void AddModelIfVisibleStatic( gpointer key, 
-				StgModel* him, 
-				StgModelFiducial* me )
+		static int AddModelIfVisibleStatic( StgModel* him, StgModelFiducial* me )
 		{ if( him != me ) me->AddModelIfVisible( him ); };
 
 		virtual void Update();
@@ -2375,6 +2370,7 @@ class StgModelFiducial : public StgModel
   virtual ~StgModelFiducial();
   
 		virtual void Load();
+		void Shutdown( void );
 
 		stg_meters_t max_range_anon; //< maximum detection range
 		stg_meters_t max_range_id; ///< maximum range at which the ID can be read

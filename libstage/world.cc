@@ -622,9 +622,9 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	return;
 }
 
-static void _save_cb( gpointer key, gpointer data, gpointer user )
+static int _save_cb( StgModel* mod, void* dummy )
 {
-	((StgModel*)data)->Save();
+	mod->Save();
 }
 
 bool StgWorld::Save( const char *filename )
@@ -632,20 +632,20 @@ bool StgWorld::Save( const char *filename )
 	// ask every model to save itself
 	//g_hash_table_foreach( this->models_by_id, stg_model_save_cb, NULL );
 
-	ForEachModel( _save_cb, NULL );
+	ForEachDescendant( _save_cb, NULL );
 
 	return this->wf->Save( filename );
 }
 
-static void _reload_cb( gpointer key, gpointer data, gpointer user )
+static int _reload_cb(  StgModel* mod, void* dummy )
 {
-	((StgModel*)data)->Load();
+	mod->Load();
 }
 
 // reload the current worldfile
 void StgWorld::Reload( void )
 {
-	ForEachModel( _reload_cb, NULL );
+	ForEachDescendant( _reload_cb, NULL );
 }
 
 void StgWorld::StartUpdatingModel( StgModel* mod )

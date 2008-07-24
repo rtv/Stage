@@ -63,3 +63,12 @@ stg_pose_t StgAncestor::GetGlobalPose()
 	return pose;
 }
 
+void StgAncestor::ForEachDescendant( stg_model_callback_t func, void* arg )
+{
+	for( GList* it=children; it; it=it->next ) {
+		StgModel* mod = (StgModel*)it->data;
+		func( mod, arg );
+		mod->ForEachDescendant( func, arg );
+	}
+}
+
