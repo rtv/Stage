@@ -79,6 +79,7 @@ namespace Stg
 	class StgModel;
 	class FileManager;
 	class OptionsDlg;
+	class StgCamera;
   
 	/** Initialize the Stage library */
 	void Init( int* argc, char** argv[] );
@@ -1296,8 +1297,8 @@ protected:
 
 	void DrawBlocksTree();
 	virtual void DrawBlocks();
-	virtual void DrawStatus( StgCanvas* canvas );
-	void DrawStatusTree( StgCanvas* canvas );
+	virtual void DrawStatus( StgCamera* cam );
+	void DrawStatusTree( StgCamera* cam );
 
 	void DrawOriginTree();
 	void DrawOrigin();
@@ -1306,7 +1307,7 @@ protected:
 	void PopCoords();
 
 	///Draw the image stored in texture_id above the model
-	void DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha );
+	void DrawImage( uint32_t texture_id, Stg::StgCamera* cam, float alpha );
 
 
 	// static wrapper for DrawBlocks()
@@ -1315,7 +1316,7 @@ protected:
 			void* arg );
 
 	virtual void DrawPicker();
-	virtual void DataVisualize();
+	virtual void DataVisualize( StgCamera* cam );
 
 	virtual void DrawSelected(void);
 
@@ -1348,7 +1349,7 @@ protected:
 	stg_model_type_t type;
 	static const char* typestr;
 
-	void DataVisualizeTree();
+	void DataVisualizeTree( StgCamera* cam );
 	
 	virtual void PushColor( stg_color_t col )
 	{ world->PushColor( col ); }
@@ -2071,7 +2072,7 @@ private:
 
 	static Option showBlobData;
 	
-	virtual void DataVisualize();
+	virtual void DataVisualize( StgCamera* cam );
 
 public:
 	unsigned int scan_width;
@@ -2203,7 +2204,7 @@ public:
   virtual void Update();
   virtual void Load();
   virtual void Print( char* prefix );
-  virtual void DataVisualize();
+  virtual void DataVisualize( StgCamera* cam );
   
   uint32_t GetSampleCount(){ return sample_count; }
   
@@ -2352,10 +2353,10 @@ class StgModelFiducial : public StgModel
 
 		// static wrapper function can be used as a function pointer
 		static int AddModelIfVisibleStatic( StgModel* him, StgModelFiducial* me )
-		{ if( him != me ) me->AddModelIfVisible( him ); };
+			{ if( him != me ) me->AddModelIfVisible( him ); return 0; }
 
 		virtual void Update();
-		virtual void DataVisualize();
+		virtual void DataVisualize( StgCamera* cam );
 
 		GArray* data;
 	
@@ -2403,7 +2404,7 @@ class StgModelRanger : public StgModel
 		virtual void Startup();
 		virtual void Shutdown();
 		virtual void Update();
-		virtual void DataVisualize();
+		virtual void DataVisualize( StgCamera* cam );
 
 	public:
   static const char* typestr;
@@ -2446,7 +2447,7 @@ class StgModelBlinkenlight : public StgModel
 
 		virtual void Load();
 		virtual void Update();
-		virtual void DataVisualize();
+		virtual void DataVisualize( StgCamera* cam );
 };
 
 // CAMERA MODEL ----------------------------------------------------
@@ -2499,7 +2500,7 @@ class StgModelCamera : public StgModel
 		//virtual void Draw( uint32_t flags, StgCanvas* canvas );
 	
 		///Draw camera visualization
-		virtual void DataVisualize();
+		virtual void DataVisualize( StgCamera* cam );
 	
 		///width of captured image
 		inline int getWidth( void ) const { return _width; }

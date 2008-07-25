@@ -301,7 +301,7 @@ void StgModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
 }
 
 
-void StgModelLaser::DataVisualize( void )
+void StgModelLaser::DataVisualize( StgCamera* cam )
 {
   if( ! (samples && sample_count) )
     return;

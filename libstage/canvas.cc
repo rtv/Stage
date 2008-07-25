@@ -663,14 +663,14 @@ void StgCanvas::renderFrame()
 	if( showData ) {
 		if ( visualizeAll ) {
 			for( GList* it = world->StgWorld::children; it; it=it->next ) 
-				((StgModel*)it->data)->DataVisualizeTree();
+				((StgModel*)it->data)->DataVisualizeTree( current_camera );
 		}
 		else if ( selected_models ) {
 			for( GList* it = selected_models; it; it=it->next ) 
-				((StgModel*)it->data)->DataVisualizeTree();
+				((StgModel*)it->data)->DataVisualizeTree( current_camera );
 		}
 		else if ( last_selection ) {
-			last_selection->DataVisualizeTree();
+			last_selection->DataVisualizeTree( current_camera );
 		}
 	}
   
@@ -698,7 +698,7 @@ void StgCanvas::renderFrame()
 			//ensure two icons can't be in the exact same plane
 			if( camera.pitch() == 0 && !pCamOn )
 				glTranslatef( 0, 0, 0.1 );
-			i->second->DrawStatusTree( this );
+			i->second->DrawStatusTree( current_camera );
 		}
 		glPopMatrix();
 	}

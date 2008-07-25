@@ -248,7 +248,7 @@ void StgModelFiducial::Load( void )
 }  
 
 
-void StgModelFiducial::DataVisualize()
+void StgModelFiducial::DataVisualize( StgCamera* cam )
 {
 	if ( !showFiducialData )
 		return;

@@ -333,7 +333,20 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 			
 	case PLAYER_SPEECH_CODE:
 		ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );
-		break;	  
+		break;
+			
+	// 	case PLAYER_CAMERA_CODE:	  
+	// 	  ifsrc = new InterfaceCamera( player_addr,  this, cf, section );
+	// 	  break;
+
+	// 	  case PLAYER_GRAPHICS2D_CODE:
+	// 	  ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
+	// 	  break;	  
+	
+	//	case PLAYER_GRAPHICS3D_CODE:
+	//		ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
+	//		break;	  
+			
 			
 	  
 // 	case PLAYER_LOCALIZE_CODE:
@@ -343,25 +356,13 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 // 	case PLAYER_MAP_CODE:
 // 	  ifsrc = new InterfaceMap( player_addr,  this, cf, section );
 // 	  break;	  
-	  
-// 	  case PLAYER_GRAPHICS2D_CODE:
-// 	  ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
-// 	  break;	  
-
-// 	case PLAYER_GRAPHICS3D_CODE:
-	  //  ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
- 	  //break;	  
-	  
+	  	  
 // 	case PLAYER_GRIPPER_CODE:
 // 	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
 // 	  break;	  
 
 // 	case PLAYER_WIFI_CODE:
 // 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
-// 	  break;
-			
-// 	case PLAYER_CAMERA_CODE:	  
-// 	  ifsrc = new InterfaceCamera( player_addr,  this, cf, section );
 // 	  break;
 
 // 	case PLAYER_POWER_CODE:	  

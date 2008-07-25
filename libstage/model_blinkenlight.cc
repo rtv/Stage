@@ -106,7 +106,7 @@ void StgModelBlinkenlight::Update( void )
 }
 
 
-void StgModelBlinkenlight::DataVisualize()
+void StgModelBlinkenlight::DataVisualize( StgCamera* cam )
 {
 	if( on && showBlinkenData )
 	{

@@ -295,7 +295,7 @@ void StgModelBlobfinder::Shutdown( void )
 	StgModel::Shutdown();
 }
 
-void StgModelBlobfinder::DataVisualize( void )
+void StgModelBlobfinder::DataVisualize( StgCamera* cam )
 {
 	if ( !showBlobData )
 		return;
@@ -330,8 +330,16 @@ void StgModelBlobfinder::DataVisualize( void )
 	glRotatef( rtod(-gpose.a),0,0,1 );
 
 	// place the "screen" a little away from the robot
-	glTranslatef( -3.0, -2.0, 1.0 );
-
+	glTranslatef( -2.5, -1.5, 0.5 );
+	
+	// rotate to face screen
+	float yaw, pitch;
+	pitch = - cam->pitch();
+	yaw = - cam->yaw();
+	float robotAngle = -rtod(pose.a);
+	glRotatef( robotAngle - yaw, 0,0,1 );
+	glRotatef( -pitch, 1,0,0 );
+	
 	// convert blob pixels to meters scale - arbitrary
 	glScalef( 0.025, 0.025, 1 );
 

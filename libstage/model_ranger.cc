@@ -321,7 +321,7 @@ void StgModelRanger::Print( char* prefix )
 	puts( " ]" );
 }
 
-void StgModelRanger::DataVisualize( void )
+void StgModelRanger::DataVisualize( StgCamera* cam )
 {
 	if( ! (samples && sensors && sensor_count) )
 		return;

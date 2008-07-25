@@ -1001,21 +1001,21 @@ void StgModel::PopCoords()
   glPopMatrix();
 }
 
-void StgModel::DrawStatusTree( StgCanvas* canvas ) 
+void StgModel::DrawStatusTree( StgCamera* cam ) 
 {
   PushLocalCoords();
-  DrawStatus( canvas );
-  LISTMETHODARG( children, StgModel*, DrawStatusTree, canvas );  
+  DrawStatus( cam );
+  LISTMETHODARG( children, StgModel*, DrawStatusTree, cam );  
   PopCoords();
 }
 
-void StgModel::DrawStatus( StgCanvas* canvas ) 
+void StgModel::DrawStatus( StgCamera* cam ) 
 {
 	if( say_string )	  
 	{
 		float yaw, pitch;
-		pitch = - canvas->current_camera->pitch();
-		yaw = - canvas->current_camera->yaw();			
+		pitch = - cam->pitch();
+		yaw = - cam->yaw();			
 		
 		float robotAngle = -rtod(pose.a);
 		glPushMatrix();
@@ -1074,21 +1074,16 @@ void StgModel::DrawStatus( StgCanvas* canvas )
 	
 	if( stall )
     {
-		DrawImage( TextureManager::getInstance()._stall_texture_id, canvas, 0.85 );
+		DrawImage( TextureManager::getInstance()._stall_texture_id, cam, 0.85 );
     }
 }
 
-void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alpha )
+void StgModel::DrawImage( uint32_t texture_id, Stg::StgCamera* cam, float alpha )
 {
-  float stheta = dtor( canvas->current_camera->pitch() );
-  float sphi = - dtor( canvas->current_camera->yaw() );
-  if( canvas->pCamOn == true ) {
-	 sphi = atan2(
-					  ( pose.x - canvas->current_camera->x() )
-					  ,
-					  ( pose.y - canvas->current_camera->y() )
-					  );
-  }
+  float yaw, pitch;
+  pitch = - cam->pitch();
+  yaw = - cam->yaw();
+  float robotAngle = -rtod(pose.a);
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture( GL_TEXTURE_2D, texture_id );
@@ -1098,13 +1093,9 @@ void StgModel::DrawImage( uint32_t texture_id, Stg::StgCanvas* canvas, float alp
 
   glTranslatef( 0.0, 0.0, 0.75 );
 
-  //orient 2d sprites to face the camera (left-right)
-  float a = rtod( sphi + pose.a );
-  glRotatef( -a, 0.0, 0.0, 1.0 );
-
-  //orient to face camera (from top-front)
-  a = rtod( stheta );
-  glRotatef( -(90.0-a), 1.0, 0.0, 0.0 );
+  // rotate to face screen
+  glRotatef( robotAngle - yaw, 0,0,1 );
+  glRotatef( -pitch - 90, 1,0,0 );
 
   //draw a square, with the textured image
   glBegin(GL_QUADS);
@@ -1222,18 +1213,18 @@ void StgModel::DrawPicker( void )
   PopCoords();
 }
 
-void StgModel::DataVisualize( void )
+void StgModel::DataVisualize( StgCamera* cam )
 {  
   // do nothing
 }
 
-void StgModel::DataVisualizeTree( void )
+void StgModel::DataVisualizeTree( StgCamera* cam )
 {
   PushLocalCoords();
-  DataVisualize(); // virtual function overridden by most model types  
+  DataVisualize( cam ); // virtual function overridden by most model types  
 
   // and draw the children
-  LISTMETHOD( children, StgModel*, DataVisualizeTree );
+  LISTMETHODARG( children, StgModel*, DataVisualizeTree, cam );
 
   PopCoords();
 }

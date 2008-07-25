@@ -235,7 +235,7 @@ bool StgModelCamera::GetFrame( void )
 }
 
 //TODO create lines outlining camera frustrum, then iterate over each depth measurement and create a square
-void StgModelCamera::DataVisualize( void )
+void StgModelCamera::DataVisualize( StgCamera* cam )
 {	
 	
 	if( _frame_data == NULL || !showCameraData )
