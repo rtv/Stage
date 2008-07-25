@@ -327,10 +327,10 @@ void StgModelBlobfinder::DataVisualize( void )
 
 	// return to global rotation frame
 	stg_pose_t gpose = GetGlobalPose();
-	glRotatef( 180 + rtod(-gpose.a),0,0,1 );
+	glRotatef( rtod(-gpose.a),0,0,1 );
 
 	// place the "screen" a little away from the robot
-	glTranslatef( 0.5, 0.5, 1.0 );
+	glTranslatef( -3.0, -2.0, 1.0 );
 
 	// convert blob pixels to meters scale - arbitrary
 	glScalef( 0.025, 0.025, 1 );

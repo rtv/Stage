@@ -73,7 +73,7 @@ void InterfaceBlobfinder::Publish( void )
 	  for( b=0; b<bcount; b++ )
 		{
 		  // useful debug - leave in
-		
+		/*
 		cout << "blob "
 		<< " left: " <<  blobs[b].left
 		<< " right: " <<  blobs[b].right
@@ -81,7 +81,7 @@ void InterfaceBlobfinder::Publish( void )
 		<< " bottom: " <<  blobs[b].bottom
 		<< " color: " << hex << blobs[b].color << dec
 		<< endl;
-		  
+		  */
 		  
 			int dx = blobs[b].right - blobs[b].left;
 			int dy = blobs[b].top - blobs[b].bottom;
