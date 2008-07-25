@@ -197,7 +197,7 @@ void StgModelBlobfinder::Update( void )
 		//if( samples[s].block->Color() != 0xFFFF0000 )
 		//continue; // we saw nothing
 
-		unsigned int blobleft = s;
+		unsigned int right = s;
 		stg_color_t blobcol = samples[s].block->Color();
 
 		//printf( "blob start %d color %X\n", blobleft, blobcol );
@@ -212,7 +212,7 @@ void StgModelBlobfinder::Update( void )
 			s++;
 		}
 
-		unsigned int blobright = s-1;
+		unsigned int left = s - 1;
 
 		//if we have color filters in place, check to see if we're looking for this color
 		if( colors->len )
@@ -235,25 +235,25 @@ void StgModelBlobfinder::Update( void )
 
 		// find the average range to the blob;
 		stg_meters_t range = 0;
-		for( unsigned int t=blobleft; t<=blobright; t++ )
+		for( unsigned int t=right; t<=left; t++ )
 			range += samples[t].range;
-		range /= blobright-blobleft + 1;
+		range /= left-right + 1;
 
 		double startyangle = atan2( robotHeight/2.0, range );
 		double endyangle = -startyangle;
 		int blobtop = scan_height/2 - (int)(startyangle/yRadsPerPixel);
 		int blobbottom = scan_height/2 -(int)(endyangle/yRadsPerPixel);
 
-		blobtop = MIN( blobtop, (int)scan_height );
+		blobtop = MAX( blobtop, 0 );
 		blobbottom = MIN( blobbottom, (int)scan_height );
 
 		// fill in an array entry for this blob
 		stg_blobfinder_blob_t blob;
 		memset( &blob, 0, sizeof(blob) );
 		blob.color = blobcol;
-		blob.left = blobleft;
+		blob.left = scan_width - left - 1;
 		blob.top = blobtop;
-		blob.right = blobright;
+		blob.right = scan_width - right - 1;;
 		blob.bottom = blobbottom;
 		blob.range = range;
 
@@ -346,6 +346,7 @@ void StgModelBlobfinder::DataVisualize( void )
 	PushColor( 0xFF000000 );
 	glRectf( 0,0, scan_width, scan_height );
 	PopColor();
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
 	// draw the blobs on the screen
 	for( unsigned int s=0; s<blobs->len; s++ )
@@ -360,7 +361,6 @@ void StgModelBlobfinder::DataVisualize( void )
 		PopColor();
 	}
 	
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	glPopMatrix();
 }
 

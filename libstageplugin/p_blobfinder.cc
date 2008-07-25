@@ -73,20 +73,19 @@ void InterfaceBlobfinder::Publish( void )
 	  for( b=0; b<bcount; b++ )
 		{
 		  // useful debug - leave in
-		  /*
+		
 		cout << "blob "
-		<< " channel: " <<  (int)blobs[b].channel
-		<< " area: " <<  blobs[b].area
 		<< " left: " <<  blobs[b].left
 		<< " right: " <<  blobs[b].right
 		<< " top: " <<  blobs[b].top
 		<< " bottom: " <<  blobs[b].bottom
+		<< " color: " << hex << blobs[b].color << dec
 		<< endl;
-		  */
+		  
 		  
 			int dx = blobs[b].right - blobs[b].left;
 			int dy = blobs[b].top - blobs[b].bottom;
-			
+
 		  bfd.blobs[b].x      = blobs[b].left + dx/2;
 		  bfd.blobs[b].y      = blobs[b].bottom + dy/2; 
 

@@ -20,8 +20,8 @@ void Simulation::testPose2D() {
 	
 	// See if the robot "r1" is where it should be according to lsp_test.world
 	CPPUNIT_ASSERT( playerc_simulation_get_pose2d( simProxy, "r1", &x, &y, &a ) == 0 );
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (x)", -5.085, x, Delta );
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (y)", -7.193, y, Delta );
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (x)", -4.19, x, Delta );
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (y)", -5.71, y, Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (a)", 3*M_PI/4, a, Delta );
 
 	// Set pose to [ 0, 0, 0 ] and verify
@@ -41,8 +41,8 @@ void Simulation::testPose3D() {
 	
 	// See if the robot "r1" is where it should be according to lsp_test.world
 	CPPUNIT_ASSERT( playerc_simulation_get_pose3d( simProxy, "r1", &x, &y, &z, &roll, &pitch, &yaw, &time ) == 0 );
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (x)", -5.085, x, Delta );
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (y)", -7.193, y, Delta );
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (x)", -4.19, x, Delta );
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (y)", -5.71, y, Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (z)", 0, z, Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (roll)", 0, roll, Delta );
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE( "pose (pitch)", 0, pitch, Delta );

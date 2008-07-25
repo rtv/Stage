@@ -15,6 +15,8 @@ SET( lspTestSrcs
 	lsp_test.cc
 	lsp_test_proxy.cc
 	lsp_test_proxy.hh
+	lsp_test_blobfinder.cc
+	lsp_test_blobfinder.hh
 	lsp_test_simulation.cc
 	lsp_test_simulation.hh
 	lsp_test_speech.cc
