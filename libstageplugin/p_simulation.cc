@@ -332,34 +332,33 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 	}
 
 	// Is it a request to get a model's property?
-	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-								  PLAYER_SIMULATION_REQ_GET_PROPERTY, 
-								  this->addr))
-    {
-		player_simulation_property_req_t* req = 
-			(player_simulation_property_req_t*)data;
-		
-		// look up the named model      
-		StgModel* mod = StgDriver::world->GetModel( req->name );
-		
-		if( mod )
-		{
-			
-			req->value = (char*)malloc( 2 );
-			req->value[0] = NULL;
-			//(char*)mod->GetProperty( req->prop );
-			
-			this->driver->Publish(this->addr, resp_queue,
-								  PLAYER_MSGTYPE_RESP_ACK,
-								  PLAYER_SIMULATION_REQ_GET_PROPERTY);
-			return(0);
-		}
-		else
-		{
-			PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
-			return(-1);
-		}
-	}
+//	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
+//								  PLAYER_SIMULATION_REQ_GET_PROPERTY, 
+//								  this->addr))
+//    {
+//		player_simulation_property_req_t* req = 
+//			(player_simulation_property_req_t*)data;
+//		
+//		// look up the named model      
+//		StgModel* mod = StgDriver::world->GetModel( req->name );
+//		
+//		if( mod )
+//		{
+//			
+//			// This is probably wrong
+//			req->value = (char*)mod->GetProperty( req->prop );
+//			
+//			this->driver->Publish(this->addr, resp_queue,
+//								  PLAYER_MSGTYPE_RESP_ACK,
+//								  PLAYER_SIMULATION_REQ_GET_PROPERTY);
+//			return(0);
+//		}
+//		else
+//		{
+//			PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
+//			return(-1);
+//		}
+//	}
 	
 	
 	else
