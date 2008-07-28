@@ -1,17 +1,25 @@
-MESSAGE( STATUS "Building Player plugin tests" )
+message( STATUS "Building Player plugin tests" )
 
-pkg_search_module( PLAYERC REQUIRED playerc )
 pkg_search_module( CPPUNIT REQUIRED cppunit )
 
+find_path( PLAYERC_INCLUDE_DIR libplayerc/playerc.h DOC "libplayerc include dir" )
+find_library( PLAYERC_LIB playerc DOC "libplayerc lib" )
+
+IF (${PLAYERC_LIB} STREQUAL "PLAYERC_LIB-NOTFOUND")
+	message( FATAL_ERROR "libplayerc library not found, aborting" )
+ENDIF (${PLAYERC_LIB} STREQUAL "PLAYERC_LIB-NOTFOUND")
+
 include_directories(
-	${CPPUNIT_INCLUDE_PATH}
+	${CPPUNIT_INCLUDE_DIRS}
+	${PLAYERC_INCLUDE_DIR}
 )
 
-link_directories(
+link_directories( 
 	${CPPUNIT_LIBRARY_DIRS}
 )
 
-SET( lspTestSrcs
+
+set( lspTestSrcs
 	lsp_test.cc
 	lsp_test_proxy.cc
 	lsp_test_proxy.hh
@@ -32,7 +40,9 @@ SET( lspTestSrcs
 )
 
 add_executable( lsp_test ${lspTestSrcs} )
+
 target_link_libraries( lsp_test
-	${PLAYERC_LIBRARIES}
+	${PLAYERC_LIB}
 	${CPPUNIT_LIBRARIES}
+	dl
 )

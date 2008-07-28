@@ -1,3 +1,15 @@
+find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )
+find_library( LTDL_LIB ltdl DOC "Libtool lib" )
+
+IF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
+	message( FATAL_ERROR "Libtool library not found, aborting" )
+ENDIF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
+
+include_directories( 
+	${OPENGL_INCLUDE_DIR}
+	${LTDL_INCLUDE_DIR}
+)
+
 set( stageSrcs ancestor.cc
 	block.cc
 	camera.cc
@@ -37,7 +49,7 @@ target_link_libraries( stage
 		       ${GLIB_LIBRARIES}
 		       ${OPENGL_LIBRARIES}
 		       ${APPLE_LIBRARIES}
-		       ltdl
+		       ${LTDL_LIB}
 )
 
 # When linking stage, pass LDFLAGS from fltk-config

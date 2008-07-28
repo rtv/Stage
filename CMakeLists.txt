@@ -41,6 +41,10 @@ pkg_search_module( GLIB REQUIRED glib-2.0 )
 pkg_search_module( LIBPNG REQUIRED libpng )
 find_package( OpenGL REQUIRED )
 
+IF (NOT OPENGL_GLU_FOUND)
+	message(FATAL_ERROR "GLU not found, aborting")
+ENDIF (NOT OPENGL_GLU_FOUND)
+
 # Look for player v${MIN_PLAYER} or higher and set flags
 #  built-ins don't work properly, so use pkg-config directly
 FIND_PROGRAM (PKGCONFIG NAMES pkg-config)
@@ -98,8 +102,8 @@ include_directories( .
 
 # all targets need these library directories
 link_directories(${GLIB_LIBRARY_DIRS}
-                 ${LIBPNG_LIBRARY_DIRS}
-                 ${OPENGL_LIBRARY_DIRS}
+	${GLIB_LIBRARY_DIRS}
+	${LIBPNG_LIBRARY_DIRS}
 )
 
 # work through these subdirs
