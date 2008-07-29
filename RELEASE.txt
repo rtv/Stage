@@ -1,3 +1,22 @@
+Version 3.0.1
+-------------
+* Player plugin
+  * added unit test suite to verify functionality (build instructions
+    in libstageplugin/test directory)
+  * many bug fixes
+  * blobfinder, fiducial, laser, position2d, simulation, sonar, and 
+    speech interfaces are now working correctly
+* CMake script fixes
+  * OpenGL headers located properly
+  * FLTK sourced correctly
+  * dependency failures should show up before compiling
+* fixed bug where fiducial sensor would return duplicate results
+* fixed some rendering glitches
+* blobfinder now returns blobs in the correct horizontal order
+* blobfinder sensor visualization displays in the plane of the screen
+
+
+
 Version 3.0.0
 -------------
 Stage 3.0.0 consists of these components:
