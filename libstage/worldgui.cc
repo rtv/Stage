@@ -326,7 +326,7 @@ bool StgWorldGui::Update()
 
 std::string StgWorldGui::ClockString()
 {
-  const uint32_t usec_per_hour   = 3600000000;
+  const uint32_t usec_per_hour   = 3600000000U;
   const uint32_t usec_per_minute = 60000000;
   const uint32_t usec_per_second = 1000000;
   const uint32_t usec_per_msec = 1000;

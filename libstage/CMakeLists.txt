@@ -1,8 +1,11 @@
+message( STATUS "Checking for libtool" )
 find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )
 find_library( LTDL_LIB ltdl DOC "Libtool lib" )
 
 IF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
-	message( FATAL_ERROR "Libtool library not found, aborting" )
+	message( FATAL_ERROR "libtool library not found, aborting" )
+ELSE (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
+	message( STATUS "  found" )
 ENDIF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
 
 include_directories( 
