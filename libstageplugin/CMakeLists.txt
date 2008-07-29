@@ -1,7 +1,7 @@
 MESSAGE( STATUS "Building Player plugin" )
 
-link_directories( ${PLAYER_LIBDIR} )
-include_directories( ${PLAYER_INCLUDE_DIRS})
+link_directories( ${PLAYER_LIBRARY_DIRS} )
+include_directories( ${PLAYER_INCLUDE_DIRS} )
 
 set( stagepluginSrcs p_driver.h
 	     p_driver.cc
