@@ -39,47 +39,59 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
 include(FindPkgConfig)
 pkg_search_module( GLIB REQUIRED glib-2.0 )
 pkg_search_module( LIBPNG REQUIRED libpng )
+MESSAGE( STATUS "Checking for OpenGL" )
 find_package( OpenGL REQUIRED )
-
-IF (NOT OPENGL_GLU_FOUND)
-	message(FATAL_ERROR "GLU not found, aborting")
-ENDIF (NOT OPENGL_GLU_FOUND)
+IF ( OPENGL_FOUND )
+    IF ( NOT OPENGL_GLU_FOUND )
+        message( FATAL_ERROR "GLU not found, aborting" )
+    ELSE ( NOT OPENGL_GLU_FOUND )
+        MESSAGE( STATUS "OpenGL found" )
+    ENDIF ( NOT OPENGL_GLU_FOUND )
+ELSE ( OPENGL_FOUND )
+    MESSAGE( FATAL_ERROR "OpenGL not found, aborting" )
+ENDIF ( OPENGL_FOUND )
 
 # Look for player v${MIN_PLAYER} or higher and set flags
 #  built-ins don't work properly, so use pkg-config directly
-FIND_PROGRAM (PKGCONFIG NAMES pkg-config)
-IF (PKGCONFIG)
+MESSAGE( STATUS "Checking for Player" )
+IF ( NOT PKG_CONFIG )
+    FIND_PROGRAM ( PKG_CONFIG NAMES pkg-config )
+ENDIF ( NOT PKG_CONFIG )
+IF ( PKG_CONFIG )
 	EXECUTE_PROCESS (COMMAND pkg-config --atleast-version=${MIN_PLAYER} playercore --silence-errors
 		RESULT_VARIABLE PLAYER_NOT_FOUND)
 	IF (PLAYER_NOT_FOUND EQUAL 0)
 		# found the correct version
 		pkg_search_module( PLAYER playercore )
-		MESSAGE(STATUS "Player headers found in ${PLAYER_INCLUDE_DIRS}")
-		MESSAGE(STATUS "Player libs found in ${PLAYER_LIBRARY_DIRS}")
+		MESSAGE(STATUS "  Player headers found in ${PLAYER_INCLUDE_DIRS}")
+		MESSAGE(STATUS "  Player libs found in ${PLAYER_LIBRARY_DIRS}")
 		SET (PLAYER_FOUND TRUE)
 	ELSE (PLAYER_NOT_FOUND EQUAL 0)
-		MESSAGE(STATUS "Player >=v${MIN_PLAYER} not found, skipping Player plugin")
+		MESSAGE(STATUS "  Player >=v${MIN_PLAYER} not found, skipping Player plugin")
 		SET (PLAYER_FOUND FALSE)
 	ENDIF (PLAYER_NOT_FOUND EQUAL 0)
-ELSE (PKGCONFIG)
-	MESSAGE (STATUS "pkg-config not found, skipping Player plugin")
-ENDIF (PKGCONFIG)
+ELSE ( PKG_CONFIG )
+	MESSAGE (STATUS "  pkg-config not found, skipping Player plugin.  If pkg-config should be available, please specify its full path using the PKG_CONFIG variable.")
+ENDIF ( PKG_CONFIG )
 
 # find FLTK and set flags
-FIND_PROGRAM (FLTKCONFIG NAMES fltk-config)
-IF (FLTKCONFIG)
-    EXECUTE_PROCESS (COMMAND fltk-config --cxxflags --use-gl --use-images
+MESSAGE( STATUS "Looking for FLTK" )
+IF ( NOT FLTK_CONFIG )
+    FIND_PROGRAM ( FLTK_CONFIG NAMES fltk-config PATHS ${FLTK_CONFIG_PATH} )
+ENDIF ( NOT FLTK_CONFIG )
+IF ( FLTK_CONFIG )
+    MESSAGE (STATUS "  found, using ${FLTK_CONFIG}")
+    EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --cxxflags --use-gl --use-images
         OUTPUT_VARIABLE FLTK_CFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-    EXECUTE_PROCESS (COMMAND fltk-config --ldflags --use-gl --use-images
+        OUTPUT_STRIP_TRAILING_WHITESPACE )
+    EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --ldflags --use-gl --use-images
         OUTPUT_VARIABLE FLTK_LDFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-    MESSAGE (STATUS "Found FLTK")
+        OUTPUT_STRIP_TRAILING_WHITESPACE )
     SET (FLTK_FOUND TRUE)
-ELSE (FLTKCONFIG)
-    MESSAGE (FATAL_ERROR "FLTK not found, aborting")
-    SET (FLTK_FOUND FALSE)
-ENDIF (FLTKCONFIG)
+ELSE ( FLTK_CONFIG )
+    MESSAGE ( FATAL_ERROR "Unable to locate fltk-config.  FLTK is not properly installed, aborting.  If FLTK is installed, please specify full path of fltk-config using the FLTK_CONFIG variable." )
+    SET ( FLTK_FOUND FALSE )
+ENDIF ( FLTK_CONFIG )
 
 IF (APPLE)
 	# define flags to avoid the error:

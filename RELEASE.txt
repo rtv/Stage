@@ -1,5 +1,7 @@
 Version 3.0.1
 -------------
+This version incorporates a number of fixes made since the previous major release:
+
 * Player plugin
   * added unit test suite to verify functionality (build instructions
     in libstageplugin/test directory)
@@ -14,8 +16,6 @@ Version 3.0.1
 * fixed some rendering glitches
 * blobfinder now returns blobs in the correct horizontal order
 * blobfinder sensor visualization displays in the plane of the screen
-
-
 
 Version 3.0.0
 -------------
