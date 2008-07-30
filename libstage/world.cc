@@ -227,8 +227,8 @@ void StgWorld::Load( const char* worldfile_path )
 		       (int)(this->interval_sim/thousand) );
 
 	if( wf->PropertyExists( entity, "quit_time" ) ) {
-		this->quit_time = (stg_usec_t)million * 
-			wf->ReadFloat( entity, "quit_time", 0 );
+		this->quit_time = (stg_usec_t) ( million * 
+			wf->ReadFloat( entity, "quit_time", 0 ) );
 	}
 
 	if( wf->PropertyExists( entity, "resolution" ) )

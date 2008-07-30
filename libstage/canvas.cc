@@ -741,8 +741,8 @@ void StgCanvas::renderFrame()
 			clockstr.append( " [ FOLLOW MODE ]" );
 
 		int margin = 3;
-		int width = gl_width( clockstr.c_str() ) + 2 * margin;
-		int height = gl_height() + 2 * margin;
+		float width = gl_width( clockstr.c_str() ) + 2 * margin;
+		float height = gl_height() + 2 * margin;
 		
 		colorstack.Push( 0.8,0.8,1.0 ); // pale blue
 		glRectf( 0, 0, width, height );

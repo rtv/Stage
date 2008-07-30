@@ -114,10 +114,10 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
 			  cfg.resolution, cfg.fov, cfg.interval );
      
 	  cfg.fov = plc->max_angle - plc->min_angle;
-	  cfg.resolution = cfg.fov / ( cfg.sample_count * plc->resolution );
+	  cfg.resolution = (uint32_t) ( cfg.fov / ( cfg.sample_count * plc->resolution ) );
 	  if ( cfg.resolution < 1 ) 
 		  cfg.resolution = 1;
-	  cfg.interval = 1.0E6 / plc->scanning_frequency;
+	  cfg.interval = (stg_usec_t) ( 1.0E6 / plc->scanning_frequency );
 		
 	  PRINT_DEBUG3( "setting laser config: resolution %d, fov %.6f, interval %d\n", 
 			  cfg.resolution, cfg.fov, cfg.interval );
