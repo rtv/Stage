@@ -200,10 +200,9 @@ stg_color_t Stg::stg_lookup_color(const char *name)
 		if( file == NULL )
 		{
 
-			PRINT_ERR1("unable to open color database: %s",
-					strerror(errno));
-                        // Can't fclose(NULL)
-			//fclose(file);
+			PRINT_ERR1("unable to open color database: %s "
+					   "(try adding rgb.txt's location to your STAGEPATH)",
+					   strerror(errno));
 			exit(0);
 		}
 
