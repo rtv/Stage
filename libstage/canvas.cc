@@ -950,7 +950,7 @@ void StgCanvas::draw()
 
       //TODO find a better home for loading textures
       if( loaded_texture == false ) {
-	std::string fullpath = world->fileMan->fullPath( "stall.png" );
+    std::string fullpath = FileManager::findFile( "assets/stall.png" );
 	if ( fullpath == "" ) {
 	  PRINT_DEBUG( "Unable to load texture.\n" );
 	}

@@ -18,6 +18,7 @@
 
 #include "stage_internal.hh"
 #include "config.h" // results of cmake's system configuration tests
+#include "file_manager.hh"
 
 static bool init_called = false;
 
@@ -193,24 +194,9 @@ stg_color_t Stg::stg_lookup_color(const char *name)
 
 	if( file == NULL )
 	{
-		const char* searchfiles[] = {
-			"./rgb.txt",
-#ifdef RGBFILE
-			RGBFILE,
-#endif
-			"../rgb.txt",
-			NULL };
-
-		for( int i=0;
-				searchfiles[i];
-				i++ )
-		{
-			const char* filename = searchfiles[i];
-			PRINT_DEBUG1( "Attempting to open \"%s\"", filename );
-			if( (file = fopen( filename, "r")) )
-				break; // opened a file ok - jump out of for loop
-		}
-
+		std::string rgbFile = FileManager::findFile( "rgb.txt" );
+		file = fopen( rgbFile.c_str(), "r" );
+		
 		if( file == NULL )
 		{
 

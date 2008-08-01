@@ -1,6 +1,7 @@
 Version 3.0.1
 -------------
-This version incorporates a number of fixes made since the previous major release:
+This version incorporates a number of fixes made since the previous 
+major release:
 
 * Player plugin
   * added unit test suite to verify functionality (build instructions

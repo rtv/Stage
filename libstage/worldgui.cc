@@ -216,7 +216,7 @@ void StgWorldGui::Load( const char* filename )
 {
   PRINT_DEBUG1( "%s.Load()", token );
 	
-  fileMan->newWorld( filename );
+  fileMan.newWorld( filename );
 
   StgWorld::Load( filename );
 	
@@ -403,7 +403,7 @@ void StgWorldGui::fileLoadCb( Fl_Widget* w, void* p )
   //bool success;
   const char* pattern = "World Files (*.world)";
 	
-	std::string worldsPath( worldGui->fileMan->worldsRoot() );
+	std::string worldsPath = worldGui->fileMan.worldsRoot();
 	worldsPath.append( "/" );
   Fl_File_Chooser fc( worldsPath.c_str(), pattern, Fl_File_Chooser::CREATE, "Load World File..." );
   fc.ok_label( "Load" );
@@ -415,7 +415,7 @@ void StgWorldGui::fileLoadCb( Fl_Widget* w, void* p )
   filename = fc.value();
 	
   if (filename != NULL) { // chose something
-    if ( worldGui->fileMan->readable( filename ) ) {
+    if ( FileManager::readable( filename ) ) {
       // file is readable, clear and load
 
       // if (initialized) {
@@ -562,7 +562,7 @@ void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p )
 
 	
   std::string fullpath;
-  fullpath = worldGui->fileMan->fullPath( "stagelogo.png" );
+  fullpath = FileManager::findFile( "assets/stagelogo.png" );
   Fl_PNG_Image* png = new Fl_PNG_Image( fullpath.c_str() ); // load image into ram
   box->image( png ); // attach image to box
 	

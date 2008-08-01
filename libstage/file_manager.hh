@@ -1,7 +1,6 @@
 #ifndef _FILE_MANAGER_HH_
 #define _FILE_MANAGER_HH_
 
-#include <fstream>
 #include <string>
 #include <vector>
 
@@ -9,24 +8,30 @@ namespace Stg {
 
 	class FileManager {
 	private:
-		std::vector<std::string> paths;
-		std::string SharePath;
-		std::string AssetPath;
-		std::string CtrlPath;
 		std::string WorldsRoot;
-		
-		std::string stripFilename( std::string path );
+
+		std::string stripFilename( const std::string path );
 	public:
 		FileManager();
-		
-		std::string fullPath( std::string filename );
-		//std::string fullPathImage( std::string filename );
-		
+
+		/// Return the path where the current worldfile was loaded from
 		inline const std::string worldsRoot() const { return WorldsRoot; }
-		inline void newWorld( std::string worldfile ) { 
+		/// Update the worldfile path
+		inline void newWorld( const std::string worldfile ) {
 			WorldsRoot = stripFilename( worldfile ); }
-		
-		bool readable( std::string path );
+
+		/// Determine whether a file can be opened for reading
+		static bool readable( const std::string path );
+
+		/** Search for a file in the current directory, in the
+		 *  prefix/share/stage location, and in the locations specified by
+		 *  the STAGEPATH environment variable.  Returns the first match or
+		 *  the original filename if not found.
+		**/
+		static std::string findFile( const std::string filename );
+
+		/// Return the STAGEPATH environment variable
+		static std::string stagePath();
 	};
 
 };

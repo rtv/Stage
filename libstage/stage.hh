@@ -67,6 +67,7 @@
 #endif 
 
 #include "option.hh"
+#include "file_manager.hh"
 
 /** The Stage library uses its own namespace */
 namespace Stg 
@@ -77,7 +78,6 @@ namespace Stg
 	class StgWorld;
 	class StgWorldGui;
 	class StgModel;
-	class FileManager;
 	class OptionsDlg;
 	class StgCamera;
   
@@ -1065,7 +1065,7 @@ protected:
 
 	long unsigned int updates; ///< the number of simulated time steps executed so far
 	
-	FileManager* fileMan;
+	FileManager fileMan;
 
 public:
 	static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter

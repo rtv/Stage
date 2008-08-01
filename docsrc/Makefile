@@ -16,6 +16,7 @@ doc:
 	./sourcedocs.sh > sourced.txt
 	doxygen stage.dox
 	cp stage_button.png stage
+	rm -f sourced.txt
 
 # install the latest docs
 doc-install: doc 

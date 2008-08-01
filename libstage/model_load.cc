@@ -8,8 +8,9 @@
 #include <ltdl.h>
 
 #include "stage_internal.hh"
+#include "file_manager.hh"
 
-#define DEBUG 1
+//#define DEBUG
 
 void StgModel::Load()
 {  
@@ -379,11 +380,7 @@ void StgModel::LoadControllerModule( char* lib )
   int errors = lt_dlinit();
   assert(errors==0);
 
-  char* stagepath = getenv("STAGEPATH");
-  if( stagepath == NULL )
-    stagepath = (char*)".";
-
-  lt_dlsetsearchpath( stagepath );
+  lt_dlsetsearchpath( FileManager::stagePath().c_str() );
 
   lt_dlhandle handle = NULL;
 

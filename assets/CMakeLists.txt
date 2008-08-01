@@ -6,6 +6,6 @@ INSTALL(FILES ${pngs} rgb.txt
 )
 
 INSTALL(FILES rgb.txt 
-        DESTINATION share/stage/
+        DESTINATION share/stage
 )
 

@@ -153,8 +153,6 @@ void StgWorld::Initialize( const char* token,
 	bzero( &this->extent, sizeof(this->extent));
 
 	this->real_time_now = 0;
-	
-	fileMan = new FileManager();
 }
 
 StgWorld::~StgWorld( void )
@@ -170,8 +168,6 @@ StgWorld::~StgWorld( void )
 	g_free( token );
 
 	world_list = g_list_remove( world_list, this );
-	
-	delete fileMan;
 }
 
 
