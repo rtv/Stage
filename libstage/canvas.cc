@@ -739,17 +739,22 @@ void StgCanvas::renderFrame()
 		std::string clockstr = world->ClockString();
 		if( showFollow == true && last_selection )
 			clockstr.append( " [ FOLLOW MODE ]" );
-
-		int margin = 3;
-		float width = gl_width( clockstr.c_str() ) + 2 * margin;
-		float height = gl_height() + 2 * margin;
+		
+		fl_font( FL_HELVETICA, 12 );
+		float txtWidth = gl_width( clockstr.c_str() );
+		int txtHeight = gl_height();
+		
+		int width, height;
+		width = int( txtWidth / 10 ) * 10;
+		height = ( txtHeight / 5 + 1 ) * 5;
+		float margin = ( height - txtHeight ) * 0.75;
 		
 		colorstack.Push( 0.8,0.8,1.0 ); // pale blue
 		glRectf( 0, 0, width, height );
 		colorstack.Pop();
 		
       colorstack.Push( 0,0,0 ); // black
-      gl_draw_string( margin, margin, 5, clockstr.c_str() );
+      gl_draw_string( margin, margin, 0, clockstr.c_str() );
       colorstack.Pop();
 
       glEnable( GL_DEPTH_TEST );

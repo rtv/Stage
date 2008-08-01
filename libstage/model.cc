@@ -1020,6 +1020,7 @@ void StgModel::DrawStatus( StgCamera* cam )
 		float robotAngle = -rtod(pose.a);
 		glPushMatrix();
 		
+		fl_font( FL_HELVETICA, 12 );
 		float w = gl_width( this->say_string ); // scaled text width
 		float h = gl_height(); // scaled text height
 		
@@ -1079,7 +1080,7 @@ void StgModel::DrawStatus( StgCamera* cam )
 
 			PushColor( BUBBLE_TEXT );
 			// draw text inside the bubble
-			gl_draw_string( 2*m, 2*m, 0, this->say_string );
+			gl_draw_string( 2.5*m, 2.5*m, 0, this->say_string );
 			PopColor();
 			
 			glPopMatrix();
