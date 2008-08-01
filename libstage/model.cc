@@ -1020,9 +1020,6 @@ void StgModel::DrawStatus( StgCamera* cam )
 		float robotAngle = -rtod(pose.a);
 		glPushMatrix();
 		
-		//TODO ask jeremy to fancy up the octagons
-		//const float m = 4; // margin
-		
 		float w = gl_width( this->say_string ); // scaled text width
 		float h = gl_height(); // scaled text height
 		
@@ -1041,32 +1038,49 @@ void StgModel::DrawStatus( StgCamera* cam )
 		GLboolean valid;
 		glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
 		if( valid == true ) {
+			GLdouble wx, wy, wz;
+			int viewport[4];
+			glGetIntegerv(GL_VIEWPORT, viewport);
 			
-			{
-				GLdouble wx, wy, wz;
-				int viewport[4];
-				glGetIntegerv(GL_VIEWPORT, viewport);
-				
-				GLdouble modelview[16];
-				glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-				
-				GLdouble projection[16];	
-				glGetDoublev(GL_PROJECTION_MATRIX, projection);
-				
-				//get width and height in world coords
-				gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-				w = wx;
-				gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-				h = wy;
-			}
+			GLdouble modelview[16];
+			glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
 			
-			glColor3f( 1, 0.8, 1 );
-			gl_draw_octagon( w, h, 0 );
+			GLdouble projection[16];	
+			glGetDoublev(GL_PROJECTION_MATRIX, projection);
 			
-			glColor3f( 0, 0, 0 );
-			//position text ontop of string (might be problematic if too large in perspective mode)
-			glTranslatef( 0, 0, 0.003 );
-			gl_draw_string( 0, 0, 0.0, this->say_string );
+			//get width and height in world coords
+			gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+			w = wx;
+			gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+			h = wy;
+			
+			
+			// calculate speech bubble margin
+			const float m = h/10;
+			
+			// draw inside of bubble
+			PushColor( BUBBLE_FILL );
+			glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
+			glPolygonMode( GL_FRONT, GL_FILL );
+			glEnable( GL_POLYGON_OFFSET_FILL );
+			glPolygonOffset( 1.0, 1.0 );
+			gl_draw_octagon( w, h, m );
+			glDisable( GL_POLYGON_OFFSET_FILL );
+			PopColor();
+			
+			// draw outline of bubble
+			PushColor( BUBBLE_BORDER );
+			glLineWidth( 1 );
+			glEnable( GL_LINE_SMOOTH );
+			glPolygonMode( GL_FRONT, GL_LINE );
+			gl_draw_octagon( w, h, m );
+			glPopAttrib();
+			PopColor();
+
+			PushColor( BUBBLE_TEXT );
+			// draw text inside the bubble
+			gl_draw_string( 2*m, 2*m, 0, this->say_string );
+			PopColor();
 			
 			glPopMatrix();
 		}
