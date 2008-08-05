@@ -441,7 +441,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 }
 
 
-
+//TODO FIXME - there's a bug here ( the bug existsed before optimizations in revision 6893 ) reproducable with chatterbox on everything.world with walls near (0,0.6)
 void StgWorld::Raytrace( stg_pose_t pose, // global pose
 		stg_meters_t range,
 		stg_block_match_func_t func,
@@ -518,6 +518,8 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	stg_point_int_t sup;
 	sup.x = x >> SRBITS;
 	sup.y = y >> SRBITS;
+	//performed at the end of the loop ( for optimization )
+	sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
 	
 	// find the region coords inside this superregion (again: only updated when x or y changes)
 	stg_point_int_t reg;
