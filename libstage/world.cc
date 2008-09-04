@@ -498,9 +498,9 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 	lastsup.x = INT_MAX; // an unlikely first raytrace
 	lastsup.y = INT_MAX;
 	
-	stg_point_int_t lastreg = {0,0};
-	lastsup.x = INT_MAX; // an unlikely first raytrace
-	lastsup.y = INT_MAX;
+	stg_point_int_t lastreg;
+	lastreg.x = INT_MAX; // an unlikely first raytrace
+	lastreg.y = INT_MAX;
 	
 	SuperRegion* sr = NULL;
 	Region* r = NULL;
@@ -548,7 +548,7 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 				lastreg = reg;
 				nonempty_region = ( r && r->count );
 			}
-			
+
 			if( nonempty_region )
 			{
 				//  printf( "C[ %d %d ]\t", cell.x, cell.y );
