@@ -420,7 +420,10 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 	const int threshold = 127;
 
 	Fl_Shared_Image *img = Fl_Shared_Image::get(filename);
-	assert( img );
+	if( img == NULL ) {
+		std::cerr << "failed to open file: " << filename << std::endl;
+		assert( img );
+	}
 
 	//printf( "loaded image %s w %d h %d d %d count %d ld %d\n", 
 	//  filename, img->w(), img->h(), img->d(), img->count(), img->ld() );
