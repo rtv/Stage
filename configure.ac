@@ -80,24 +80,27 @@ dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
+dnl Disabling this check for now, only on the stage-ros branch
 dnl for libstageplugin, we need Player 2.1 or higher
-PKG_CHECK_MODULES( PLAYER, playercore >= 2.1.0,
- AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin])
- have_player=yes,
- AC_MSG_WARN([No suitable Player installation detected.])
- have_player=no
-)
+dnl PKG_CHECK_MODULES( PLAYER, playercore >= 2.1.0,
+dnl  AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin])
+dnl  have_player=yes,
+dnl  AC_MSG_WARN([No suitable Player installation detected.])
+dnl  have_player=no
+dnl )
+have_player=no
 AM_CONDITIONAL(HAVE_PLAYER, test "x$have_player" = "xyes")
 
 
 dnl for libplayerc examples, we need libplayerc
-PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0.1,
- AC_DEFINE(INCLUDE_PLAYERC,1,[building libplayerc examples])
- have_playerc=yes
- ,
- AC_MSG_WARN([libplayerc was not found. ])
- have_playerc=no
-)
+dnl PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0.1,
+dnl  AC_DEFINE(INCLUDE_PLAYERC,1,[building libplayerc examples])
+dnl  have_playerc=yes
+dnl  ,
+dnl  AC_MSG_WARN([libplayerc was not found. ])
+dnl  have_playerc=no
+dnl )
+have_playerc=no
 AM_CONDITIONAL(HAVE_PLAYERC, test "x$have_playerc" = "xyes")
 
 AC_OUTPUT(Makefile 
