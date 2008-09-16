@@ -52,7 +52,7 @@ zone
   ctrl "sink"
 )
 
-define autorob pioneer2dx
+define autorob fancypioneer2dx
 (
  sicklaser( samples 32 range_max 5 laser_return 2  
 	 

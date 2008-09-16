@@ -437,7 +437,7 @@ StgModel*  StgDriver::LocateModel( char* basename,
   // type (i.e. has the right initialization function) and has not
   // been used before
   //return( model_match( base_model, addr, typestr, this->devices ) );
-  return( base_model->GetUnsubscribedModelOfType( type ) );
+  return( base_model->GetUnusedModelOfType( type ) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

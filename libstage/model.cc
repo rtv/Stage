@@ -197,6 +197,7 @@ StgModel::StgModel( StgWorld* world,
   this->rebuild_displaylist = true;
   this->say_string = NULL;
   this->subs = 0;
+  this->used = false;
   this->stall = false;
 
   if( world->IsGUI() ) 
@@ -1826,6 +1827,32 @@ StgModel* StgModel::GetUnsubscribedModelOfType( stg_model_type_t type )
   // nothing matching below this model
   return NULL;
 }
+
+StgModel* StgModel::GetUnusedModelOfType( stg_model_type_t type )
+{
+  printf( "searching for type %d in model %s type %d\n", type, token, this->type );
+
+  if( (this->type == type) && (!this->used ) )
+  {
+    this->used = true;
+    return this;
+  }
+
+  // this model is no use. try children recursively
+  for( GList* it = children; it; it=it->next )
+    {
+      StgModel* child = (StgModel*)it->data;
+
+      StgModel* found = child->GetUnusedModelOfType( type );
+      if( found )
+		  return found;
+    }
+
+  // nothing matching below this model
+  return NULL;
+}
+
+
 
 StgModel* StgModel::GetModel( const char* modelname )
 {

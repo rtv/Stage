@@ -1197,6 +1197,7 @@ protected:
 	GHashTable* callbacks;
 
 	int subs;     //< the number of subscriptions to this model
+   bool used;    //< TRUE iff this model has been returned by GetUnusedModelOfType()
 
 	stg_usec_t interval; //< time between updates in us
 	stg_usec_t last_update; //< time of last update in us
@@ -1646,6 +1647,10 @@ public:
 	 and has the type indicated by the string */
 	StgModel* GetUnsubscribedModelOfType( stg_model_type_t type );
 	
+  /** returns the first descendent of this model that is unused
+		and has the type indicated by the string. This model is tagged as used. */
+  StgModel* GetUnusedModelOfType( stg_model_type_t type );
+  
   // Iff true, model may output some debugging visualizations and other info
 	//bool debug;
 	

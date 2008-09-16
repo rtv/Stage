@@ -8,6 +8,8 @@ ELSE (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
 	message( STATUS "  found" )
 ENDIF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
 
+message( STATUS "TODO: Check for fltk_images library" )
+
 include_directories( 
 	${OPENGL_INCLUDE_DIR}
 	${LTDL_INCLUDE_DIR}
