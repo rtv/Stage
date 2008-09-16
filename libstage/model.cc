@@ -1040,7 +1040,7 @@ void StgModel::DrawStatus( StgCamera* cam )
 		glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
 		if( valid == true ) {
 			GLdouble wx, wy, wz;
-			int viewport[4];
+			GLint viewport[4];
 			glGetIntegerv(GL_VIEWPORT, viewport);
 			
 			GLdouble modelview[16];
