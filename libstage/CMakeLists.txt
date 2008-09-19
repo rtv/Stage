@@ -65,7 +65,7 @@ set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK
 
 set_target_properties( stagebinary PROPERTIES
 		       OUTPUT_NAME stage
-             LINK_FLAGS "${FLTK_LDFLAGS}	  
+             LINK_FLAGS "${FLTK_LDFLAGS}"	  
 )
 
 target_link_libraries( stagebinary stage )
