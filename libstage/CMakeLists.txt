@@ -38,8 +38,7 @@ add_library(stage SHARED ${stageSrcs})
 target_link_libraries( stage
 		       ${GLIB_LIBRARIES}
 		       ${OPENGL_LIBRARIES}
-		       ${APPLE_LIBRARIES}
-		       ${LTDL_LIB}
+ 				 ${LTDL_LIB}
 )
 
 # When linking stage, pass LDFLAGS from fltk-config
@@ -66,6 +65,7 @@ set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK
 
 set_target_properties( stagebinary PROPERTIES
 		       OUTPUT_NAME stage
+             LINK_FLAGS "${FLTK_LDFLAGS}"
 )
 
 target_link_libraries( stagebinary stage )
