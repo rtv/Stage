@@ -57,7 +57,9 @@ int main( int argc, char* argv[] )
 		if( optindex > 0 )
 		{      
 			const char* worldfilename = argv[optindex];
-			StgWorld* world = ( usegui ? new StgWorldGui( 400, 300, worldfilename ) : new StgWorld( worldfilename ) );
+			StgWorld* world = ( usegui ? 
+									  new StgWorldGui( 400, 300, worldfilename ) : 
+									  new StgWorld( worldfilename ) );
 			world->Load( worldfilename );
 			loaded_world_file = true;
 		}

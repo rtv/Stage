@@ -36,77 +36,109 @@ SET(RGBFILE ${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt )
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in 
 					${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
 
+message( STATUS "Checking for libtool" )
+find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )
+find_library( LTDL_LIB ltdl DOC "Libtool lib" )
+
+IF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
+	message( FATAL_ERROR "libtool library not found, aborting" )
+ELSE (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
+	message( STATUS "  found" )
+ENDIF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
+
+include_directories( 
+	${OPENGL_INCLUDE_DIR}
+	${LTDL_INCLUDE_DIR}
+)
+
 # find the easy modules
 include(FindPkgConfig)
+
+MESSAGE( STATUS "Checking for required libraries..." )
+
+SET( INDENT "  * " )
 pkg_search_module( GLIB REQUIRED glib-2.0 )
+IF( GLIB_FOUND )
+  MESSAGE( ${INDENT} "Glib version ${GLIB_VERSION} detected at ${GLIB_PREFIX}" )
+  MESSAGE( "    GLIB_CFLAGS = ${GLIB_CFLAGS}" )
+  MESSAGE( "    GLIB_LDFLAGS = ${GLIB_LDFLAGS}" )
+ELSE( GLIB_FOUND )
+  MESSAGE( ${INDENT} "Glib not detected" )
+ENDIF( GLIB_FOUND )
+
 pkg_search_module( LIBPNG REQUIRED libpng )
-MESSAGE( STATUS "Checking for OpenGL" )
-find_package( OpenGL REQUIRED )
-IF ( OPENGL_FOUND )
-    IF ( NOT OPENGL_GLU_FOUND )
-        message( FATAL_ERROR "GLU not found, aborting" )
-    ELSE ( NOT OPENGL_GLU_FOUND )
-        MESSAGE( STATUS "OpenGL found" )
-    ENDIF ( NOT OPENGL_GLU_FOUND )
-ELSE ( OPENGL_FOUND )
-    MESSAGE( FATAL_ERROR "OpenGL not found, aborting" )
-ENDIF ( OPENGL_FOUND )
+IF( LIBPNG_FOUND )
+  MESSAGE( ${INDENT} "Libpng version ${LIBPNG_VERSION} detected at ${LIBPNG_PREFIX}" )
+  MESSAGE( "    LIBPNG_CFLAGS = ${LIBPNG_CFLAGS}" )
+  MESSAGE( "    LIBPNG_LDFLAGS = ${LIBPNG_LDFLAGS}" )
+ENDIF( LIBPNG_FOUND )
 
-# Look for player v${MIN_PLAYER} or higher and set flags
-#  built-ins don't work properly, so use pkg-config directly
-MESSAGE( STATUS "Checking for Player" )
-IF ( NOT PKG_CONFIG )
-    FIND_PROGRAM ( PKG_CONFIG NAMES pkg-config )
-ENDIF ( NOT PKG_CONFIG )
-IF ( PKG_CONFIG )
-	EXECUTE_PROCESS (COMMAND pkg-config --atleast-version=${MIN_PLAYER} playercore --silence-errors
-		RESULT_VARIABLE PLAYER_NOT_FOUND)
-	IF (PLAYER_NOT_FOUND EQUAL 0)
-		# found the correct version
-		pkg_search_module( PLAYER playercore )
-		MESSAGE(STATUS "  Player headers found in ${PLAYER_INCLUDE_DIRS}")
-		MESSAGE(STATUS "  Player libs found in ${PLAYER_LIBRARY_DIRS}")
-		SET (PLAYER_FOUND TRUE)
-	ELSE (PLAYER_NOT_FOUND EQUAL 0)
-		MESSAGE(STATUS "  Player >=v${MIN_PLAYER} not found, skipping Player plugin")
-		SET (PLAYER_FOUND FALSE)
-	ENDIF (PLAYER_NOT_FOUND EQUAL 0)
-ELSE ( PKG_CONFIG )
-	MESSAGE (STATUS "  pkg-config not found, skipping Player plugin.  If pkg-config should be available, please specify its full path using the PKG_CONFIG variable.")
-ENDIF ( PKG_CONFIG )
+## the FLTK package script is not useful - it finds an X11-based FLTK on OS X.
+## so we can't do this stuff
+#find_package( FLTK REQUIRED )
+#IF( NOT FLTK_FOUND )
+#  MESSAGE( FATAL_ERROR "OpenGL not found, aborting" )
+#ENDIF( NOT FLTK_FOUND )
+#MESSAGE( ${INDENT} "FLTK found at  ${OPENGL_INCLUDE_DIR}" )
 
-# find FLTK and set flags
-MESSAGE( STATUS "Looking for FLTK" )
+## and we have to do all this instead
 IF ( NOT FLTK_CONFIG )
-    FIND_PROGRAM ( FLTK_CONFIG NAMES fltk-config PATHS ${FLTK_CONFIG_PATH} )
+   FIND_PROGRAM ( FLTK_CONFIG NAMES fltk-config PATHS ${FLTK_CONFIG_PATH} )
 ENDIF ( NOT FLTK_CONFIG )
-IF ( FLTK_CONFIG )
-    MESSAGE (STATUS "  found, using ${FLTK_CONFIG}")
-    EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --cxxflags --use-gl --use-images
-        OUTPUT_VARIABLE FLTK_CFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE )
-    EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --ldflags --use-gl --use-images
-        OUTPUT_VARIABLE FLTK_LDFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE )
-    SET (FLTK_FOUND TRUE)
-ELSE ( FLTK_CONFIG )
-    MESSAGE ( FATAL_ERROR "Unable to locate fltk-config.  FLTK is not properly installed, aborting.  If FLTK is installed, please specify full path of fltk-config using the FLTK_CONFIG variable." )
-    SET ( FLTK_FOUND FALSE )
-ENDIF ( FLTK_CONFIG )
+IF ( NOT FLTK_CONFIG )
+  MESSAGE( FATAL_ERROR "Cannot find fltk-config, aborting" )
+ENDIF( NOT FLTK_CONFIG)
+		 
+EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --version
+  OUTPUT_VARIABLE FLTK_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE )
+MESSAGE( ${INDENT} "FLTK version ${FLTK_VERSION} detected via ${FLTK_CONFIG}")
+EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --cxxflags --use-gl --use-images
+  OUTPUT_VARIABLE FLTK_CFLAGS
+  OUTPUT_STRIP_TRAILING_WHITESPACE )
+EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --ldflags --use-gl --use-images
+  OUTPUT_VARIABLE FLTK_LDFLAGS
+  OUTPUT_STRIP_TRAILING_WHITESPACE )
+MESSAGE( "    FLTK_CFLAGS = ${FLTK_CFLAGS}")
+MESSAGE( "    FLTK_LDFLAGS = ${FLTK_LDFLAGS}")
+SET (FLTK_FOUND TRUE)
 
-IF (APPLE)
-	# define flags to avoid the error:
-	#  ld: cycle in dylib re-exports with /usr/X11R6/lib/libGL.dylib
-	MESSAGE(STATUS "Setting Apple specific flags")
-	# work around the OS X 10.5  X11/OpenGL library bug
-	SET(APPLE_LIBRARIES "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
-ENDIF (APPLE)
+#MESSAGE( ${INDENT} "Checking for OpenGL" )
+find_package( OpenGL REQUIRED )
+IF( NOT OPENGL_GLU_FOUND )
+  MESSAGE( FATAL_ERROR "OpenGL GLU not found, aborting" )
+ENDIF( NOT OPENGL_GLU_FOUND )
+MESSAGE( ${INDENT} "OpenGL GLU found at ${OPENGL_INCLUDE_DIR}" )
+MESSAGE( "    OPENGL_INCLUDE_DIR = ${OPENGL_INCLUDE_DIR}")
+MESSAGE( "    OPENGL_glu_LIBRARY = ${OPENGL_glu_LIBRARY}")
+
+
+MESSAGE( STATUS "Checking for optional libraries..." )
+
+pkg_search_module( PLAYER playercore>=2.1.0 ) 
+IF( PLAYER_FOUND )
+  MESSAGE( ${INDENT} "Player version ${PLAYER_VERSION} detected at ${PLAYER_PREFIX}" )
+  MESSAGE( "    PLAYER_CFLAGS: ${PLAYER_CFLAGS}" )
+  MESSAGE( "    PLAYER_LDFLAGS: ${PLAYER_LDFLAGS}" )
+ELSE( PLAYER_FOUND )
+  MESSAGE( ${INDENT} "Player not detected. If Player is installed but not detected, check your PKG_CONFIG_PATH." )
+ENDIF( PLAYER_FOUND )
+
+
+## this should not be necessary now that we do the FLTK config
+## carefully above. I'll leave the code here in case of trouble
+# IF (APPLE)
+#	# define flags to avoid the error:
+#	#  ld: cycle in dylib re-exports with /usr/X11R6/lib/libGL.dylib
+#	MESSAGE(STATUS "Setting Apple specific flags")
+#	# work around the OS X 10.5  X11/OpenGL library bug
+#	SET(APPLE_LIBRARIES "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
+#ENDIF (APPLE)
 
 # all targets need these include directories
 include_directories( . 
 		     libstage 
 		     replace 
-		     /opt/local/include/
 		     ${GLIB_INCLUDE_DIRS}
 		     ${LIBPNG_INCLUDE_DIRS}
 		     ${CMAKE_INCLUDE_PATH}

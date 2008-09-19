@@ -1,19 +1,4 @@
-message( STATUS "Checking for libtool" )
-find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )
-find_library( LTDL_LIB ltdl DOC "Libtool lib" )
-
-IF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
-	message( FATAL_ERROR "libtool library not found, aborting" )
-ELSE (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
-	message( STATUS "  found" )
-ENDIF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
-
-message( STATUS "TODO: Check for fltk_images library" )
-
-include_directories( 
-	${OPENGL_INCLUDE_DIR}
-	${LTDL_INCLUDE_DIR}
-)
+MESSAGE( STATUS "Configuring libstage" )
 
 set( stageSrcs ancestor.cc
 	block.cc
