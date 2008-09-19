@@ -71,15 +71,19 @@ IF( LIBPNG_FOUND )
   MESSAGE( ${INDENT} "Libpng version ${LIBPNG_VERSION} detected at ${LIBPNG_PREFIX}" )
   MESSAGE( "    LIBPNG_CFLAGS = ${LIBPNG_CFLAGS}" )
   MESSAGE( "    LIBPNG_LDFLAGS = ${LIBPNG_LDFLAGS}" )
+ELSE( LIBPNG_FOUND )
+  MESSAGE( ${INDENT} "Libpng not detected" )
 ENDIF( LIBPNG_FOUND )
 
 ## the FLTK package script is not useful - it finds an X11-based FLTK on OS X.
 ## so we can't do this stuff
 #find_package( FLTK REQUIRED )
-#IF( NOT FLTK_FOUND )
-#  MESSAGE( FATAL_ERROR "OpenGL not found, aborting" )
-#ENDIF( NOT FLTK_FOUND )
-#MESSAGE( ${INDENT} "FLTK found at  ${OPENGL_INCLUDE_DIR}" )
+#IF( FLTK_FOUND )
+#  MESSAGE( ${INDENT} "FLTK_LIBRARIES=${FLTK_LIBRARIES}" )
+#  MESSAGE( ${INDENT} "FLTK_INCLUDE_DIR=${FLTK_INCLUDE_DIR}" )
+#ELSE( FLTK_FOUND )
+#  MESSAGE( FATAL_ERROR "FLTK not found, aborting" )
+#ENDIF( FLTK_FOUND )
 
 ## and we have to do all this instead
 IF ( NOT FLTK_CONFIG )
@@ -93,10 +97,10 @@ EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --version
   OUTPUT_VARIABLE FLTK_VERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE )
 MESSAGE( ${INDENT} "FLTK version ${FLTK_VERSION} detected via ${FLTK_CONFIG}")
-EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --cxxflags --use-gl --use-images
+EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --use-gl --use-images --cxxflags 
   OUTPUT_VARIABLE FLTK_CFLAGS
   OUTPUT_STRIP_TRAILING_WHITESPACE )
-EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --ldflags --use-gl --use-images
+EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --use-gl --use-images --ldstaticflags
   OUTPUT_VARIABLE FLTK_LDFLAGS
   OUTPUT_STRIP_TRAILING_WHITESPACE )
 MESSAGE( "    FLTK_CFLAGS = ${FLTK_CFLAGS}")
