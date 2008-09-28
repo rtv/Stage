@@ -89,7 +89,6 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
                            PLAYER_GRAPHICS2D_CMD_CLEAR, 
                            this->addr))
     {
-      puts( "g2d: clearing figure" );
       stg_rtk_fig_clear( this->figs[index].stageFig );
       return 0; //ok
     }
