@@ -355,7 +355,7 @@ int laser_render_data( stg_model_t* mod, void* enabled )
   size_t sample_count = mod->data_len / sizeof(stg_laser_sample_t);
   stg_laser_config_t *cfg = (stg_laser_config_t*)mod->cfg;
   
-  if( samples == NULL | sample_count < 1 )
+  if( samples == NULL || sample_count < 1 )
     return 0;
 
   assert( cfg );
