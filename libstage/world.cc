@@ -394,14 +394,14 @@ bool StgWorld::Update()
 
   if( paused )
     return false;
+
+  // update any models with non-zero velocity
+  for( GList* it=this->velocity_list; it; it=it->next )
+    ((StgModel*)it->data)->UpdatePose();
   
   // update any models that are due to be updated
   for( GList* it=this->update_list; it; it=it->next )
     ((StgModel*)it->data)->UpdateIfDue();
-  
-  // update any models with non-zero velocity
-  for( GList* it=this->velocity_list; it; it=it->next )
-    ((StgModel*)it->data)->UpdatePose();
   
   this->sim_time += this->interval_sim;
   this->updates++;
