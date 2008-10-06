@@ -1094,6 +1094,21 @@ void StgModel::DrawStatus( StgCamera* cam )
     }
 }
 
+stg_meters_t StgModel::ModelHeight()
+{	
+	stg_meters_t m_child = 0; //max size of any child
+	for( GList* it=this->children; it; it=it->next )
+    {
+		StgModel* child = (StgModel*)it->data;
+		stg_meters_t tmp_h = child->ModelHeight();
+		if( tmp_h > m_child )
+			m_child = tmp_h;
+    }
+	
+	//height of model + max( child height )
+	return geom.size.z + m_child;
+}
+
 void StgModel::DrawImage( uint32_t texture_id, Stg::StgCamera* cam, float alpha )
 {
   float yaw, pitch;
@@ -1107,7 +1122,8 @@ void StgModel::DrawImage( uint32_t texture_id, Stg::StgCamera* cam, float alpha 
   glColor4f( 1.0, 1.0, 1.0, alpha );
   glPushMatrix();
 
-  glTranslatef( 0.0, 0.0, 0.75 );
+  //position image above the robot
+  glTranslatef( 0.0, 0.0, ModelHeight() + 0.3 );
 
   // rotate to face screen
   glRotatef( robotAngle - yaw, 0,0,1 );

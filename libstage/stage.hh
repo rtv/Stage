@@ -1310,6 +1310,8 @@ protected:
 	///Draw the image stored in texture_id above the model
 	void DrawImage( uint32_t texture_id, Stg::StgCamera* cam, float alpha );
 
+	///Returns the max height of the model
+	stg_meters_t ModelHeight();
 
 	// static wrapper for DrawBlocks()
 	static void DrawBlocks( gpointer dummykey, 
