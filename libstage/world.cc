@@ -441,7 +441,6 @@ void StgWorld::Raytrace( stg_pose_t pose, // global pose
 }
 
 
-//TODO FIXME - there's a bug here ( the bug existsed before optimizations in revision 6893 ) reproducable with chatterbox on everything.world with walls near (0,0.6)
 void StgWorld::Raytrace( stg_pose_t pose, // global pose
 		stg_meters_t range,
 		stg_block_match_func_t func,
