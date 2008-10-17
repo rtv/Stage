@@ -1338,7 +1338,8 @@ StgModel* StgModel::TestCollision( stg_pose_t* posedelta,
   StgModel* hitmod = NULL;
 
   // unrender myself - avoids a lot of self-hits
-  this->UnMap();
+  //this->UnMap();
+  this->UnMapWithChildren();
 
   // add the local geom offset
   //stg_pose_t local;
@@ -1389,7 +1390,8 @@ StgModel* StgModel::TestCollision( stg_pose_t* posedelta,
     } 
   
   // re-render myself
-  this->Map();
+  //this->Map();
+  this->MapWithChildren();
   return hitmod;  // done  
 }
 
@@ -1435,7 +1437,7 @@ void StgModel::UpdatePose( void )
        // XX 
        SetStall( true );
        //printf( "hit %s at %.2f %.2f\n",
-       //      hitthing->Token(), hitx, hity );
+             //hitthing->Token(), hitx, hity );
 
        //dd// 	  //memcpy( &mod->pose, &old_pose, sizeof(mod->pose));
        //this->SetPose( &old_pose );
