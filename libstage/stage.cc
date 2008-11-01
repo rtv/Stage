@@ -403,7 +403,7 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 					 unsigned int* heightp )
 {
   // TODO: make this a parameter
-  const int threshold = 127;
+  const int threshold = (int)(0.9*255);
   
   Fl_Shared_Image *img = Fl_Shared_Image::get(filename);
   assert( img );
