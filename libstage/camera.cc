@@ -12,8 +12,8 @@
 #include <iostream>
 
 // Perspective Camera
-StgPerspectiveCamera::StgPerspectiveCamera( void ) : 
-	StgCamera(),
+PerspectiveCamera::PerspectiveCamera( void ) : 
+	Camera(),
 	_z_near( 0.2 ), _z_far( 40.0 ),
 	_vert_fov( 70 ), _horiz_fov( 70 ),
 	_aspect( 1.0 )
@@ -21,7 +21,7 @@ StgPerspectiveCamera::StgPerspectiveCamera( void ) :
 	setPitch( 70.0 );
 }
 
-void StgPerspectiveCamera::move( float x, float y, float z )
+void PerspectiveCamera::move( float x, float y, float z )
 {
 	//scale relative to zoom level
 	x *= _z / 100.0;
@@ -35,7 +35,7 @@ void StgPerspectiveCamera::move( float x, float y, float z )
 	_y += cos( dtor( _yaw ) ) * y;
 	}
 
-void StgPerspectiveCamera::Draw( void ) const
+void PerspectiveCamera::Draw( void ) const
 {	
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
@@ -45,10 +45,9 @@ void StgPerspectiveCamera::Draw( void ) const
 
 	glTranslatef( - _x, - _y, - _z );
 	//zooming needs to happen in the Projection code (don't use glScale for zoom)
-
 }
 
-void StgPerspectiveCamera::SetProjection( void ) const
+void PerspectiveCamera::SetProjection( void ) const
 {
 //	SetProjection( pixels_width/pixels_height );
 	
@@ -69,24 +68,24 @@ void StgPerspectiveCamera::SetProjection( void ) const
 	
 }
 
-void StgPerspectiveCamera::update( void )
+void PerspectiveCamera::update( void )
 {	
 }
 
 
-void StgPerspectiveCamera::strafe( float amount )
+void PerspectiveCamera::strafe( float amount )
 {
 	_x += cos( dtor( _yaw ) ) * amount;
 	_y += sin( dtor( _yaw ) ) * amount;
 }
 
-void StgPerspectiveCamera::forward( float amount )
+void PerspectiveCamera::forward( float amount )
 {
 	_x += -sin( dtor( _yaw ) ) * amount;
 	_y += cos( dtor( _yaw ) ) * amount;
 }
 
-void StgPerspectiveCamera::Load( Worldfile* wf, int sec ) {
+void PerspectiveCamera::Load( Worldfile* wf, int sec ) {
 	float x_pos = wf->ReadTupleLength(sec, "pcam_loc", 0, x() );
 	float y_pos = wf->ReadTupleLength(sec, "pcam_loc", 1, y() );
 	float z_pos = wf->ReadTupleLength(sec, "pcam_loc", 2, z() );
@@ -95,7 +94,7 @@ void StgPerspectiveCamera::Load( Worldfile* wf, int sec ) {
 	setYaw( wf->ReadTupleFloat( sec, "pcam_angle", 1, yaw() ) );
 }
 
-void StgPerspectiveCamera::Save( Worldfile* wf, int sec ) {
+void PerspectiveCamera::Save( Worldfile* wf, int sec ) {
 	wf->WriteTupleFloat( sec, "pcam_loc", 0, x() );
 	wf->WriteTupleFloat( sec, "pcam_loc", 1, y() );
 	wf->WriteTupleFloat( sec, "pcam_loc", 2, z() );
@@ -109,7 +108,7 @@ void StgPerspectiveCamera::Save( Worldfile* wf, int sec ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Ortho camera
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void StgOrthoCamera::Draw( void ) const
+void OrthoCamera::Draw( void ) const
 {	
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity ();
@@ -122,7 +121,7 @@ void StgOrthoCamera::Draw( void ) const
 
 }
 
-void StgOrthoCamera::SetProjection( void ) const
+void OrthoCamera::SetProjection( void ) const
 {
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
@@ -134,7 +133,7 @@ void StgOrthoCamera::SetProjection( void ) const
 	glMatrixMode (GL_MODELVIEW);
 }
 
-void StgOrthoCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max )
+void OrthoCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max )
 {
 	_pixels_width = pixels_width;
 	_pixels_height = pixels_height;
@@ -143,7 +142,7 @@ void StgOrthoCamera::SetProjection( float pixels_width, float pixels_height, flo
 	SetProjection();
 }
 
-void StgOrthoCamera::move( float x, float y ) {
+void OrthoCamera::move( float x, float y ) {
 	//convert screen points into world points
 	x = x / ( _scale );
 	y = y / ( _scale );
@@ -167,7 +166,7 @@ void StgOrthoCamera::move( float x, float y ) {
 }
 
 //TODO re-evaluate the way the camera is shifted when the mouse zooms - it might be possible to simplify
-void StgOrthoCamera::scale( float scale, float shift_x, float w, float shift_y, float h )
+void OrthoCamera::scale( float scale, float shift_x, float w, float shift_y, float h )
 {
 	float to_scale = -scale;
 	const float old_scale = _scale;
@@ -205,7 +204,7 @@ void StgOrthoCamera::scale( float scale, float shift_x, float w, float shift_y, 
 	}
 }
 
-void StgOrthoCamera::Load( Worldfile* wf, int sec ) {
+void OrthoCamera::Load( Worldfile* wf, int sec ) {
 	float x_pos = wf->ReadTupleLength(sec, "center", 0, x() );
 	float y_pos = wf->ReadTupleLength(sec, "center", 1, y() );
 	setPose( x_pos, y_pos );
@@ -214,7 +213,7 @@ void StgOrthoCamera::Load( Worldfile* wf, int sec ) {
 	setScale( wf->ReadFloat(sec, "scale", scale() ) );
 }
 
-void StgOrthoCamera::Save( Worldfile* wf, int sec ) {
+void OrthoCamera::Save( Worldfile* wf, int sec ) {
 	wf->WriteTupleFloat( sec, "center", 0, x() );
 	wf->WriteTupleFloat( sec, "center", 1, y() );
 	wf->WriteTupleFloat( sec, "rotate", 0, pitch() );

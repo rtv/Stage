@@ -2,6 +2,7 @@ MESSAGE( STATUS "Configuring libstage" )
 
 set( stageSrcs ancestor.cc
 	block.cc
+	blockgroup.cc
 	camera.cc
 	canvas.cc
 	file_manager.cc
@@ -23,6 +24,7 @@ set( stageSrcs ancestor.cc
 	option.hh
 	options_dlg.cc
 	options_dlg.hh
+	region.cc
 	resource.cc
 	stage.cc
 	stage.hh

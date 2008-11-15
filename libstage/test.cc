@@ -50,36 +50,33 @@ int main( int argc,  char* argv[] )
   {
 	 StgModel mod( &world, NULL );
 	 
-	 // returned pose must be the same as the set pose
-	 stg_pose_t pose;
-      
-  for( stg_meters_t x=0; x<5; x+=0.1 )	 
-	 {
-		pose = new_pose( x, 0, 0, 0 );
-		mod.SetPose( pose );  		
-		test( "translate X",  mod.GetPose(), pose );		
-		interact( &world );
-	 }
-
-  for( stg_meters_t y=0; y<5; y+=0.1 )	 
-	 {
-		pose = new_pose( 0, y, 0, 0 );
-		mod.SetPose( pose );  		
-		test( "translate Y",  mod.GetPose(), pose );		
-		interact( &world );
-	 }
-
-  for( stg_meters_t z=0; z<5; z+=0.1 )	 
-	 {
-		pose = new_pose( 0, 0, z, 0 );
+	 for( stg_meters_t x=0; x<5; x+=0.1 )	 
+		{
+		  stg_pose_t pose( x, 0, 0, 0 );
+		  mod.SetPose( pose );  		
+		  test( "translate X",  mod.GetPose(), pose );		
+		  interact( &world );
+		}
+	 
+	 for( stg_meters_t y=0; y<5; y+=0.1 )	 
+		{
+		  stg_pose_t pose( 0, y, 0, 0 );
+		  mod.SetPose( pose );  		
+		  test( "translate Y",  mod.GetPose(), pose );		
+		  interact( &world );
+		}
+	 
+	 for( stg_meters_t z=0; z<5; z+=0.1 )	 
+		{
+		stg_pose_t pose( 0, 0, z, 0 );
 		mod.SetPose( pose );  		
 		test( "translate Z",  mod.GetPose(), pose );		
 		interact( &world );
-	 }
-  
-  for( stg_radians_t a=0; a<dtor(360); a+=dtor(2) )	 
+		}
+	 
+	 for( stg_radians_t a=0; a<dtor(360); a+=dtor(2) )	 
 	 {
-		pose = new_pose( 0, 0, 0, a );
+		stg_pose_t pose( 0, 0, 0, a );
 		mod.SetPose( pose );  		  
 		pose = mod.GetPose();		
 		test( "rotate",  mod.GetPose(), pose );
@@ -88,14 +85,13 @@ int main( int argc,  char* argv[] )
 
   for( stg_radians_t a=0; a<dtor(360); a+=dtor(2) )	 
 	 {
-		pose = new_pose( cos(a), sin(a), 0, 0 );
+		stg_pose_t pose( cos(a), sin(a), 0, 0 );
 		mod.SetPose( pose );  		
 		test( "translate X&Y",  mod.GetPose(), pose );		
 		interact( &world );
 	 }
 
-  mod.SetPose( new_pose( 0,0,0,0 ));  		
-
+  mod.SetPose( stg_pose_t( 0,0,0,0 ));  		
 
   for( stg_meters_t x=0.01; x<5; x+=0.1 )	 
 	 {
@@ -137,7 +133,7 @@ int main( int argc,  char* argv[] )
   
 
  #define POP 10
-  stg_velocity_t v = {0,0,0,0};
+  stg_velocity_t v( 0.0,0.0,0.0,0.0 );
 		  
   StgModel* m[POP]; 
   for( int i=0; i<POP; i++ )
@@ -148,7 +144,7 @@ int main( int argc,  char* argv[] )
 		m[i]->Subscribe();
 		//m[i]->SetGeom( geom );
 		
-		//m[i]->SetPose( random_pose( -5,5, -5,5 ) );		
+		//m[i]->SetPose( stg_pose_t::Random( -5,5, -5,5 ) );		
 		m[i]->PlaceInFreeSpace( 0, 10, 0, 10 );
 		m[i]->SetColor( lrand48() | 0xFF000000 );
 
@@ -187,7 +183,7 @@ int main( int argc,  char* argv[] )
 // 		StgModel* top = new StgModel( &world, m[i] );
 // 		top->SetGeom( geom );
 // 		//top->SetPose( new_pose( 0,0,0,0 ) );
-// 		//m[i]->SetPose( random_pose( -10,10, -10,10 ) );		
+// 		//m[i]->SetPose( sgtg_pose_t::Random( -10,10, -10,10 ) );		
 // 		//m[i]->PlaceInFreeSpace( -10, 10, -10, 10 );
 // 		top->SetColor( lrand48() | 0xFF000000 );
 		

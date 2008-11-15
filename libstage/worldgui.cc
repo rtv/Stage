@@ -135,73 +135,66 @@ then select the option from the menu again to stop.
 #include <iomanip>
 
 #include "stage_internal.hh"
-#include "region.hh"
 #include "file_manager.hh"
 #include "options_dlg.hh"
 #include "config.h" // build options from CMake
 
-
-
-static  const char* AboutText = 
-  "\n" 
-  "Part of the Player Project\n"
-  "http://playerstage.org\n"
-  "\n"
-  "Copyright 2000-2008 Richard Vaughan,\n"
-  "Brian Gerkey, Andrew Howard, Reed Hedges, \n"
-  "Toby Collett, Alex Couture-Beil, Jeremy Asher \n"
-  "and contributors\n" 
-  "\n"
-  "Distributed under the terms of the \n"
-  "GNU General Public License v2";
+static const char* AboutText = 
+	"\n" 
+	"Part of the Player Project\n"
+	"http://playerstage.org\n"
+	"\n"
+	"Copyright 2000-2008 Richard Vaughan,\n"
+	"Brian Gerkey, Andrew Howard, Reed Hedges, \n"
+	"Toby Collett, Alex Couture-Beil, Jeremy Asher \n"
+	"and contributors\n" 
+	"\n"
+	"Distributed under the terms of the \n"
+	"GNU General Public License v2";
 
 StgWorldGui::StgWorldGui(int W,int H,const char* L) : 
-  Fl_Window(W,H,L )
-{
-  //size_range( 100,100 ); // set minimum window size
-  oDlg = NULL;
-  graphics = true;
-  paused = false;
+  Fl_Window(W,H,L ),
+  oDlg( NULL ),
+  paused( false ),
+  //graphics( true ),
+  pause_time( false ),	
+  interval_real( (stg_usec_t)thousand * DEFAULT_INTERVAL_REAL ),
+  mbar( new Fl_Menu_Bar(0,0, W, 30)),
+  canvas( new StgCanvas( this,0,30,W,H-30 ) )
+  {
+	 for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
+		interval_log[i] = interval_real;
+	 
+	 resizable(canvas);
 
-  label( PROJECT );
+	 end();
 
-  pause_time = false;
-	
-  interval_real = (stg_usec_t)thousand * DEFAULT_INTERVAL_REAL;
-	
-  for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
-    this->interval_log[i] = this->interval_real;
-
-  // build the menus
-  mbar = new Fl_Menu_Bar(0,0, W, 30);
-  mbar->textsize(12);
-
-  canvas = new StgCanvas( this,0,30,W,H-30 );
-  resizable(canvas);
-  end();
-
-  mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "File/&Load World...", FL_CTRL + 'l', fileLoadCb, this, FL_MENU_DIVIDER );
-  mbar->add( "File/&Save World", FL_CTRL + 's', fileSaveCb, this );
-  mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', StgWorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
-
-  //mbar->add( "File/Screenshots", 0,0,0, FL_SUBMENU );
-  //mbar->add( "File/Screenshots/Save Frames, fileScreenshotSaveCb, this,FL_MENU_TOGGLE );
-
-  mbar->add( "File/E&xit", FL_CTRL+'q', StgWorldGui::fileExitCb, this );
-
-  mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "View/Filter data...", FL_SHIFT + 'd', StgWorldGui::viewOptionsCb, this );
-  canvas->createMenuItems( mbar, "View" );
-
-  mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "Help/&About Stage...", 0, StgWorldGui::helpAboutCb, this );
-  //mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
-
-  callback( StgWorldGui::windowCb, this );
-	
-  show();
-}
+	 label( PROJECT ),
+	 
+	 mbar->textsize(12);
+	 
+	 mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
+	 mbar->add( "File/&Load World...", FL_CTRL + 'l', fileLoadCb, this, FL_MENU_DIVIDER );
+	 mbar->add( "File/&Save World", FL_CTRL + 's', fileSaveCb, this );
+	 mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', StgWorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
+	 
+	 //mbar->add( "File/Screenshots", 0,0,0, FL_SUBMENU );
+	 //mbar->add( "File/Screenshots/Save Frames, fileScreenshotSaveCb, this,FL_MENU_TOGGLE );
+	 
+	 mbar->add( "File/E&xit", FL_CTRL+'q', StgWorldGui::fileExitCb, this );
+	 
+	 mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
+	 mbar->add( "View/Filter data...", FL_SHIFT + 'd', StgWorldGui::viewOptionsCb, this );
+	 canvas->createMenuItems( mbar, "View" );
+	 
+	 mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
+	 mbar->add( "Help/&About Stage...", 0, StgWorldGui::helpAboutCb, this );
+	 //mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
+	 
+	 callback( StgWorldGui::windowCb, this );
+	 
+	 show();
+  }
 
 StgWorldGui::~StgWorldGui()
 {
@@ -210,7 +203,6 @@ StgWorldGui::~StgWorldGui()
     delete oDlg;
   delete canvas;
 }
-
 
 void StgWorldGui::Load( const char* filename )
 {
@@ -364,15 +356,33 @@ std::string StgWorldGui::ClockString()
 	return status_stream.str();
 }
 
+// callback wrapper for SuperRegion::Draw()
+static void Draw_cb( gpointer dummykey, 
+							SuperRegion* sr, 
+							bool drawall )
+{
+  sr->Draw( drawall );
+}
+
+
 void StgWorldGui::DrawTree( bool drawall )
 {  
-  g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Draw_cb, NULL );
+  g_hash_table_foreach( superregions, (GHFunc)Draw_cb, (void*)drawall );
 }
+
+// callback wrapper for SuperRegion::Floor()
+static void Floor_cb( gpointer dummykey, 
+							 SuperRegion* sr, 
+							 gpointer dummyval )
+{
+  sr->Floor();
+}
+
 
 void StgWorldGui::DrawFloor()
 {
   PushColor( 1,1,1,1 );
-  g_hash_table_foreach( superregions, (GHFunc)SuperRegion::Floor_cb, NULL );
+  g_hash_table_foreach( superregions, (GHFunc)Floor_cb, NULL );
   PopColor();
 }
 
@@ -661,3 +671,13 @@ void StgWorldGui::updateOptions() {
     oDlg->setOptions( drawOptions );
   }
 }
+
+
+void StgWorldGui::PushColor( stg_color_t col )
+{ canvas->PushColor( col ); } 
+
+void StgWorldGui::PushColor( double r, double g, double b, double a )
+{ canvas->PushColor( r,g,b,a ); }
+
+void StgWorldGui::PopColor()
+{ canvas->PopColor(); }

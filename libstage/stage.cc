@@ -34,7 +34,11 @@ void Stg::Init( int* argc, char** argv[] )
 
 	if(!setlocale(LC_ALL,"POSIX"))
 		PRINT_WARN("Failed to setlocale(); config file may not be parse correctly\n" );
-						  
+						
+	if (!g_thread_supported ()) g_thread_init (NULL);
+
+	//g_thread_init( NULL );
+
 	RegisterModels();
 
 	init_called = true;
@@ -66,115 +70,11 @@ void Stg::stg_print_err( const char* err )
 }
 
 
-/** Visit every voxel along a vector from (x,y,z) to (x+dx, y+dy, z+dz).
-  Call the function for every voxel, passing in the current voxel
-  coordinates followed by the two arguments. Adapted from Graphics
-  Gems IV, algorithm by Cohen & Kaufman 1991 */
-int Stg::stg_line_3d( int32_t x, int32_t y, int32_t z,
-		int32_t dx, int32_t dy, int32_t dz,
-		stg_line3d_func_t visit_voxel,
-		void* arg )
-{
-	int n, sx, sy, sz, exy, exz, ezy, ax, ay, az, bx, by, bz;
-
-	sx = sgn(dx);  sy = sgn(dy);  sz = sgn(dz);
-	ax = abs(dx);  ay = abs(dy);  az = abs(dz);
-	bx = 2*ax;	   by = 2*ay;	  bz = 2*az;
-	exy = ay-ax;   exz = az-ax;	  ezy = ay-az;
-	n = ax+ay+az;
-	while ( n-- ) {
-		if((*visit_voxel)( x, y, z, arg ) )
-		{
-			return TRUE; // hit something!
-		}
-
-		if ( exy < 0 ) {
-			if ( exz < 0 ) {
-				x += sx;
-				exy += by; exz += bz;
-			}
-			else  {
-				z += sz;
-				exz -= bx; ezy += by;
-			}
-		}
-		else {
-			if ( ezy < 0 ) {
-				z += sz;
-				exz -= bx; ezy += by;
-			}
-			else  {
-				y += sy;
-				exy -= bx; ezy -= bz;
-			}
-		}
-	}
-
-	return FALSE; // hit nothing (leave vars not set)
-}
-
-int Stg::stg_polygon_3d( stg_point_int_t* pts, unsigned int pt_count,
-		stg_line3d_func_t visit_voxel,
-		void* arg )
-{
-	assert( pts );
-
-	for( unsigned int p=0; p<pt_count; p++ )
-	{
-		int32_t x = pts[p].x;
-		int32_t y = pts[p].y;
-
-		int32_t dx = pts[(p+1)%pt_count].x - x;
-		int32_t dy = pts[(p+1)%pt_count].y - y;
-
-		if( stg_line_3d( x, y, 0,
-					dx, dy, 0,
-					visit_voxel, arg ) )
-			return TRUE;
-	}
-	return FALSE;
-}
-
-void Stg::stg_print_geom( stg_geom_t* geom )
-{
-	printf( "geom pose: (%.2f,%.2f,%.2f) size: [%.2f,%.2f]\n",
-			geom->pose.x,
-			geom->pose.y,
-			geom->pose.a,
-			geom->size.x,
-			geom->size.y );
-}
-
-
-void Stg::stg_print_pose( stg_pose_t* pose )
-{
-	printf( "pose [x:%.3f y:%.3f a:%.3f]\n",
-			pose->x, pose->y, pose->a );
-}
 
 void Stg::stg_print_velocity( stg_velocity_t* vel )
 {
 	printf( "velocity [x:%.3f y:%.3f a:%.3f]\n",
 			vel->x, vel->y, vel->a );
-}
-
-stg_msec_t Stg::stg_realtime( void )
-{
-	struct timeval tv;
-	gettimeofday( &tv, NULL );
-	stg_msec_t timenow = (stg_msec_t)( tv.tv_sec*1e3 + tv.tv_usec/1e3 );
-	return timenow;
-}
-
-stg_msec_t Stg::stg_realtime_since_start( void )
-{
-	static stg_msec_t starttime = 0;
-	stg_msec_t timenow = stg_realtime();
-
-	if( starttime == 0 )
-		starttime = timenow;
-
-	return( timenow - starttime );
 }
 
 
@@ -199,7 +99,6 @@ stg_color_t Stg::stg_lookup_color(const char *name)
 		
 		if( file == NULL )
 		{
-
 			PRINT_ERR1("unable to open color database: %s "
 					   "(try adding rgb.txt's location to your STAGEPATH)",
 					   strerror(errno));
@@ -298,27 +197,6 @@ void Stg::stg_rotrects_normalize( stg_rotrect_t* rects, int num )
 	}
 }	
 
-stg_pose_t Stg::new_pose( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a )
-{
-  stg_pose_t p;
-  p.x = x;
-  p.y = y;
-  p.z = z;
-  p.a = a;
-  return p;
-};
-
-
-stg_pose_t Stg::random_pose( stg_meters_t xmin, stg_meters_t xmax, 
-									  stg_meters_t ymin, stg_meters_t ymax )
-{
-  return new_pose( xmin + drand48() * (xmax-xmin),
-						 ymin + drand48() * (ymax-ymin),
-						 0, 
-						 normalize( drand48() * (2.0 * M_PI) ));
-}
-
-
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void Stg::stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
 {
@@ -348,26 +226,21 @@ stg_pose_t Stg::pose_sum( stg_pose_t p1, stg_pose_t p2 )
 	return result;
 }
 
-// pb_* functions are only used inside this file
+// returns the resultant of vector [p1] and [p2] 
+stg_pose_t Stg::pose_scale( stg_pose_t p1, double sx, double sy, double sz )
+{
+  p1.x *= sx;
+  p1.y *= sy;
+  p1.z *= sz;  
+  return p1;
+}
 
-// static guchar* pb_get_pixel( GdkPixbuf* pb, int x, int y )
-// {
-//   guchar* pixels = gdk_pixbuf_get_pixels(pb);
-//   int rs = gdk_pixbuf_get_rowstride(pb);
-//   int ch = gdk_pixbuf_get_n_channels(pb);
-//   return( pixels + y * rs + x * ch );
-// }
 
 static guchar* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
 {
-	guchar* pixels = (guchar*)(img->data()[0]);
-	//int rs = gdk_pixbuf_get_rowstride(pb);
-	//int ch = gdk_pixbuf_get_n_channels(pb);
-
-	//unsigned int depth = img->d();
-	//unsigned int width = img->w();
-	unsigned int index = (y * img->w() * img->d()) + (x * img->d());
-	return( pixels + index );
+  guchar* pixels = (guchar*)(img->data()[0]);
+  unsigned int index = (y * img->w() * img->d()) + (x * img->d());
+  return( pixels + index );
 }
 
 static void pb_set_pixel( Fl_Shared_Image* pb, int x, int y, uint8_t val )
@@ -431,7 +304,7 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 	*rect_count = 0;
 	size_t allocation_unit = 1000;
 	size_t rects_allocated = allocation_unit;
-	*rects = (stg_rotrect_t*)g_new( stg_rotrect_t, rects_allocated );
+	*rects = (stg_rotrect_t*)calloc( sizeof(stg_rotrect_t), rects_allocated );
 
 	int img_width = img->w();//gdk_pixbuf_get_width(pb);
 	int img_height = img->h();//gdk_pixbuf_get_height(pb);
@@ -517,12 +390,6 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 
 	return 0; // ok
 }
-
-// void Stg::print_pointer( void* p, char* separator )
-// {
-//   printf( "%p%s", p, separator) ;
-// }
-
 
 // POINTS -----------------------------------------------------------
 

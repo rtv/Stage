@@ -1,281 +1,328 @@
-//#define DEBUG 1
+
 #include "stage_internal.hh"
 
-typedef struct
-{
-	GSList** head;
-	GSList* link;
-	unsigned int* counter1;
-	unsigned int* counter2;
-} stg_list_entry_t;
-
+//GPtrArray* StgBlock::global_verts = g_ptr_array_sized_new( 1024 );
 
 /** Create a new block. A model's body is a list of these
-  blocks. The point data is copied, so pts can safely be freed
-  after calling this.*/
-StgBlock::StgBlock( StgModel* mod,
-		stg_point_t* pts, 
-		size_t pt_count,
-		stg_meters_t zmin,
-		stg_meters_t zmax,
-		stg_color_t color,
-		bool inherit_color )
-{ 
-	this->mod = mod;
-	this->pt_count = pt_count;
-	this->pts = (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t));
-	// allocate space for the integer version of the block vertices
-	this->pts_global_pixels = new stg_point_int_t[pt_count];
+	 blocks. The point data is copied, so pts can safely be freed
+	 after calling this.*/
+StgBlock::StgBlock( StgModel* mod,  
+						  stg_point_t* pts, 
+						  size_t pt_count,
+						  stg_meters_t zmin,
+						  stg_meters_t zmax,
+						  stg_color_t color,
+						  bool inherit_color
+						  ) :
+  mod( mod ),
+  pt_count( pt_count ),
+  pts( (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t)) ),
+  color( color ),
+  inherit_color( inherit_color ),
+  rendered_cells( g_ptr_array_sized_new(32) ),
+  candidate_cells( g_ptr_array_sized_new(32) )
+  //  _gpts( NULL )
+{
+  assert( mod );
+  assert( pt_count > 0 );
+  assert( pts );
 
-	this->zmin = zmin;
-	this->zmax = zmax;
-	this->color = color;
-	this->inherit_color = inherit_color;
-	this->rendered_points = 
-		g_array_new( FALSE, FALSE, sizeof(stg_list_entry_t));
-
-	// flag these as unset until StgBlock::Map() is called.
-	this->global_zmin = -1;
-	this->global_zmax = -1;
+  local_z.min = zmin;
+  local_z.max = zmax;
+  
+  // add this block's global coords array to a global list
+  //g_ptr_array_add( global_verts, this );
 }
+
+/** A from-file  constructor */
+StgBlock::StgBlock(  StgModel* mod,  
+							Worldfile* wf, 
+							int entity) 
+  : mod( mod ),
+	 pts(NULL), 
+	 pt_count(0), 
+	 color(0),
+	 inherit_color(true),
+	 rendered_cells( g_ptr_array_sized_new(32) ), 
+	 candidate_cells( g_ptr_array_sized_new(32) )
+	 //	 _gpts( NULL )
+{
+  assert(mod);
+  assert(wf);
+  assert(entity);
+  
+  Load( wf, entity );
+
+  // add this block's global coords array to a global list
+  //g_ptr_array_add( global_verts, this );
+}
+
 
 StgBlock::~StgBlock()
 { 
-	this->UnMap();
-	g_free( pts );
-	g_array_free( rendered_points, TRUE );
+  if( mapped ) UnMap();
+  
+  stg_points_destroy( pts );
+  
+  g_ptr_array_free( rendered_cells, TRUE );
+  g_ptr_array_free( candidate_cells, TRUE );
 
-	//delete[] edge_indices;
+  //free( _gpts );
+  //g_ptr_array_remove( global_verts, this );
 }
 
-void Stg::stg_block_list_destroy( GList* list )
+stg_color_t StgBlock::GetColor()
 {
-	GList* it;
-	for( it=list; it; it=it->next )
-		delete (StgBlock*)it->data;
-	g_list_free( list );
+  return( inherit_color ? mod->color : color );
+}
+
+
+
+StgModel* StgBlock::TestCollision()
+{
+  //printf( "model %s block %p test collision...\n", mod->Token(), this );
+
+  // find the set of cells we would render into given the current global pose
+  GenerateCandidateCells();
+  
+  // for every cell we may be rendered into
+  for( int i=0; i<candidate_cells->len; i++ )
+	 {
+		Cell* cell = (Cell*)g_ptr_array_index(candidate_cells, i);
+		
+		// for every rendered into that cell
+		for( GSList* it = cell->list; it; it=it->next )
+		  {
+			 StgBlock* testblock = (StgBlock*)it->data;
+			 StgModel* testmod = testblock->mod;
+			 
+			 //printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
+			 
+			 // if the tested model is an obstacle and it's not attached to this model
+			 if( (testmod != this->mod) &&  
+					testmod->obstacle_return && 
+					!mod->IsRelated( testmod ))
+				{
+				  //puts( "HIT");
+				  return testmod; // bail immediately with the bad news
+				}		  
+		  }
+	 }
+  
+  //printf( "model %s block %p collision done. no hits.\n", mod->Token(), this );
+  return NULL; // no hit
+}
+
+
+void StgBlock::RemoveFromCellArray( GPtrArray* ptrarray )
+{  
+  for( unsigned int i=0; i<ptrarray->len; i++ )	 
+	 ((Cell*)g_ptr_array_index(ptrarray, i))->RemoveBlock( this );  
+}
+
+void StgBlock::AddToCellArray( GPtrArray* ptrarray )
+{  
+  for( unsigned int i=0; i<ptrarray->len; i++ )	 
+	 ((Cell*)g_ptr_array_index(ptrarray, i))->AddBlock( this );  
+}
+
+
+// used as a callback to gather an array of cells in a polygon
+void AppendCellToPtrArray( Cell* c, GPtrArray* a )
+{
+  g_ptr_array_add( a, c );
+}
+
+// used as a callback to gather an array of cells in a polygon
+void AddBlockToCell( Cell* c, StgBlock* block )
+{
+  c->AddBlock( block );
+}
+
+void StgBlock::Map()
+{
+  // TODO - if called often, we may not need to generate each time
+  GenerateCandidateCells();
+  SwitchToTestedCells();
+  return;
+
+  mapped = true;
+}
+
+void StgBlock::UnMap()
+{
+  RemoveFromCellArray( rendered_cells );
+  
+  g_ptr_array_set_size( rendered_cells, 0 );
+  mapped = false;
+}
+
+void StgBlock::SwitchToTestedCells()
+{
+  RemoveFromCellArray( rendered_cells );
+  AddToCellArray( candidate_cells );
+  
+  // switch current and candidate cell pointers
+  GPtrArray* tmp = rendered_cells;
+  rendered_cells = candidate_cells;
+  candidate_cells = tmp;
+
+  mapped = true;
+}
+
+void StgBlock::GenerateCandidateCells()
+
+{
+  stg_pose_t gpose = mod->GetGlobalPose();
+
+  stg_point3_t scale;
+  scale.x = mod->geom.size.x / mod->blockgroup.size.x;
+  scale.y = mod->geom.size.y / mod->blockgroup.size.y;
+  scale.z = mod->geom.size.z / mod->blockgroup.size.z;
+
+  g_ptr_array_set_size( candidate_cells, 0 );
+  
+  // compute the global location of the first point
+  stg_pose_t local( pts[0].x * scale.x, 
+						  pts[0].y * scale.y, 
+						  0, 0 );		
+  stg_pose_t first_gpose, last_gpose;
+  first_gpose = last_gpose = pose_sum( gpose, local );
+  
+  // store the block's absolute z bounds at this rendering
+  global_z.min = (scale.z * local_z.min) + last_gpose.z;
+  global_z.max = (scale.z * local_z.max) + last_gpose.z;		
+  
+  // now loop from the the second to the last
+  for( int p=1; p<pt_count; p++ )
+	 {
+		stg_pose_t local( pts[p].x * scale.x, 
+								pts[p].y * scale.y, 
+								0, 0 );		
+		
+		stg_pose_t gpose2 = pose_sum( gpose, local );
+		
+		// and render the shape of the block into the global cells			 
+		mod->world->ForEachCellInLine( last_gpose.x, last_gpose.y, 
+												 gpose2.x, gpose2.y, 
+												 (stg_cell_callback_t)AppendCellToPtrArray,
+												 candidate_cells );
+		last_gpose = gpose2;
+	 }
+  
+  // close the polygon
+  mod->world->ForEachCellInLine( last_gpose.x, last_gpose.y,
+											first_gpose.x, first_gpose.y,
+											(stg_cell_callback_t)AppendCellToPtrArray, 
+											candidate_cells );
+  
+  mapped = true;
 }
 
 
 void StgBlock::DrawTop()
 {
-	// draw a top that fits over the side strip
-	glPushMatrix();
-	glTranslatef( 0,0,zmax);
-	glVertexPointer( 2, GL_DOUBLE, 0, pts );
-	glDrawArrays( GL_POLYGON, 0, pt_count );
-	glPopMatrix();
+  // draw the top of the block - a polygon at the highest vertical
+  // extent
+  glBegin( GL_POLYGON);
+  for( int i=0; i<pt_count; i++ )
+	 glVertex3f( pts[i].x, pts[i].y, local_z.max );
+  glEnd();
 }       
 
-//TODO FIXME - this is really SLOW
 void StgBlock::DrawSides()
 {
-	// construct a strip that wraps around the polygon  
-	glBegin(GL_QUAD_STRIP);
-	for( unsigned int p=0; p<pt_count; p++)
-	{
-		glVertex3f( pts[p].x, pts[p].y, zmax );
-		glVertex3f( pts[p].x, pts[p].y, zmin );
-	}
-	// close the strip
-	glVertex3f( pts[0].x, pts[0].y, zmax );
-	glVertex3f( pts[0].x, pts[0].y, zmin );
-	glEnd();
+  // construct a strip that wraps around the polygon  
+  glBegin(GL_QUAD_STRIP);
+  for( unsigned int p=0; p<pt_count; p++)
+	 {
+		glVertex3f( pts[p].x, pts[p].y, local_z.max );
+		glVertex3f( pts[p].x, pts[p].y, local_z.min );
+	 }
+  // close the strip
+  glVertex3f( pts[0].x, pts[0].y, local_z.max );
+  glVertex3f( pts[0].x, pts[0].y, local_z.min );
+  glEnd();
 }
 
 void StgBlock::DrawFootPrint()
 {
-	glBegin(GL_POLYGON);
+  glBegin(GL_POLYGON);
+  for( unsigned int p=0; p<pt_count; p++ )
+	 glVertex2f( pts[p].x, pts[p].y );
+  glEnd();
+}
 
-	for( unsigned int p=0; p<pt_count; p++ )
-		glVertex2f( pts[p].x, pts[p].y );
+void StgBlock::Draw( StgModel* mod )
+{
+  // draw filled color polygons  
+  stg_color_t col = inherit_color ? mod->color : color; 
+  
+  mod->PushColor( col );
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1.0, 1.0);
+  DrawSides();
+  DrawTop();
+  glDisable(GL_POLYGON_OFFSET_FILL);
+  
+  //   // draw the block outline in a darker version of the same color
+  double r,g,b,a;
+  stg_color_unpack( col, &r, &g, &b, &a );
+  mod->PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+  
+  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  glDepthMask(GL_FALSE);
+  DrawTop();
+  DrawSides();
+  glDepthMask(GL_TRUE);
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  
+  mod->PopColor();
+  mod->PopColor();
+}
 
-	glEnd();
+void StgBlock::DrawSolid()
+{
+  DrawSides();
+  DrawTop();
 }
 
 
-void StgBlock::Draw()
+//#define DEBUG 1
+
+
+void StgBlock::Load( Worldfile* wf, int entity )
 {
-	// draw filled color polygons  
-	stg_color_t color = Color();
+  //printf( "StgBlock::Load entity %d\n", entity );
+  
+  if( pts )
+	 stg_points_destroy( pts );
+  
+  pt_count = wf->ReadInt( entity, "points", 0);
+  pts = stg_points_create( pt_count );
+  
+  //printf( "reading %d points\n",
+  //	 pt_count );
+  
+  char key[128];  
+  int p;
+  for( p=0; p<pt_count; p++ )	      {
+	 snprintf(key, sizeof(key), "point[%d]", p );
+	 
+	 pts[p].x = wf->ReadTupleLength(entity, key, 0, 0);
+	 pts[p].y = wf->ReadTupleLength(entity, key, 1, 0);
+  }
+  
+  local_z.min = wf->ReadTupleLength( entity, "z", 0, 0.0 );
+  local_z.max = wf->ReadTupleLength( entity, "z", 1, 1.0 );
+  
+  const char* colorstr = wf->ReadString( entity, "color", NULL );
+  if( colorstr )
+	 {
+		color = stg_lookup_color( colorstr );
+		inherit_color = false;
+	 }
+}
 
-	PushColor( color );
-	glEnable(GL_POLYGON_OFFSET_FILL);
-	glPolygonOffset(1.0, 1.0);
-	DrawSides();
-	DrawTop();
-	glDisable(GL_POLYGON_OFFSET_FILL);
-
-	//   // draw the block outline in a darker version of the same color
-	double r,g,b,a;
-	stg_color_unpack( color, &r, &g, &b, &a );
-	PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
-
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	glDepthMask(GL_FALSE);
-	DrawTop();
-	DrawSides();
-	glDepthMask(GL_TRUE);
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	
-	PopColor();
-	PopColor();
-}
-
-void StgBlock::DrawSolid( void )
-{
-	DrawSides();
-	DrawTop();
-}
-
-void StgBlock::Map()
-{
-	PRINT_DEBUG2( "%s mapping block with %d points", 
-			mod->Token(),
-			(int)pt_count );
-
-	// update the global coordinate list
-	stg_point3_t global;
-	stg_point3_t local;
-
-	for( unsigned int p=0; p<pt_count; p++ )
-	{
-		local.x = pts[p].x;
-		local.y = pts[p].y;
-		local.z = zmin;
-
-		global = mod->LocalToGlobal( local );
-		//global = local;
-
-		pts_global_pixels[p].x = mod->GetWorld()->MetersToPixels( global.x );
-		pts_global_pixels[p].y = mod->GetWorld()->MetersToPixels( global.y );
-
-		PRINT_DEBUG2("loc [%.2f %.2f]", 
-				pts[p].x,
-				pts[p].y );
-
-		PRINT_DEBUG2("glb [%d %d]", 
-				pts_global_pixels[p].x,
-				pts_global_pixels[p].y );
-	}
-
-	// store the block's global vertical bounds for inspection by the
-	// raytracer
-	global_zmin = global.z;
-	global_zmax = global.z + (zmax-zmin);
-
-	stg_render_info_t render_info;
-	render_info.world = mod->GetWorld();
-	render_info.block = this;
-
-	stg_polygon_3d( pts_global_pixels, pt_count,
-			(stg_line3d_func_t)StgWorld::AddBlockPixel,
-			(void*)&render_info );
-
-}
-
-void StgBlock::UnMap()
-{
-	PRINT_DEBUG2( "UnMapping block of model %s with %d points", 
-			mod->Token(),
-			(int)pt_count);
-
-	for( unsigned int p=0; p<rendered_points->len; p++ )    
-	{
-		stg_list_entry_t* pt = 
-			&g_array_index( rendered_points, stg_list_entry_t, p);
-
-		*pt->head = g_slist_delete_link( *pt->head, pt->link );
-
-		// decrement the region and superregion render counts
-		(*pt->counter1)--;
-		(*pt->counter2)--;
-	}
-
-	// forget the points we have unrendered (but keep their storage)
-	g_array_set_size( rendered_points,0 );
-}  
-
-void StgBlock::RecordRenderPoint( GSList** head, 
-		GSList* link, 
-		unsigned int* c1, 
-		unsigned int* c2 )
-{
-	// store this index in the block for later fast deletion
-	stg_list_entry_t el;
-	el.head = head;
-	el.link = link;
-	el.counter1 = c1;
-	el.counter2 = c2;
-	g_array_append_val( rendered_points, el );
-}
-
-
-void StgBlock::ScaleList( GList* blocks, 
-		stg_size_t* size )
-{
-	if( g_list_length( blocks ) < 1 )
-		return;
-
-	// assuming the blocks currently fit in a square +/- one billion units
-	double minx, miny, maxx, maxy;
-	minx = miny =  billion;
-	maxx = maxy = -billion;
-
-	double maxz = 0;
-
-	GList* it;
-	for( it=blocks; it; it=it->next ) // examine all the blocks
-	{
-		// examine all the points in the polygon
-		StgBlock* block = (StgBlock*)it->data;
-
-		block->UnMap(); // just in case
-
-		for( unsigned int p=0; p < block->pt_count; p++ )
-		{
-			stg_point_t* pt = &block->pts[p];
-			if( pt->x < minx ) minx = pt->x;
-			if( pt->y < miny ) miny = pt->y;
-			if( pt->x > maxx ) maxx = pt->x;
-			if( pt->y > maxy ) maxy = pt->y;
-
-			assert( ! isnan( pt->x ) );
-			assert( ! isnan( pt->y ) );
-		}      
-
-
-		if( block->zmax > maxz )
-			maxz = block->zmax;
-	}
-
-	// now normalize all lengths so that the lines all fit inside
-	// the specified rectangle
-	double scalex = (maxx - minx);
-	double scaley = (maxy - miny);
-
-	double scalez = size->z / maxz;
-
-	for( it=blocks; it; it=it->next ) // examine all the blocks again
-	{ 
-		StgBlock* block = (StgBlock*)it->data;
-
-		// scale all the points in the block
-		// TODO - scaling data in the block instead?
-		for( unsigned int p=0; p < block->pt_count; p++ )
-		{
-			stg_point_t* pt = &block->pts[p];
-
-			pt->x = ((pt->x - minx) / scalex * size->x) - size->x/2.0;
-			pt->y = ((pt->y - miny) / scaley * size->y) - size->y/2.0;
-
-			assert( ! isnan( pt->x ) );
-			assert( ! isnan( pt->y ) );
-		}
-
-		// todo - scale min properly
-		block->zmax *= scalez;
-		block->zmin *= scalez;
-	}
-}
-
+  
