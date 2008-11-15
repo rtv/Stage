@@ -19,7 +19,7 @@
 
 Option StgModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true );
 
-static const stg_size_t DEFAULT_SIZE = { 0.1, 0.07, 0.05 };
+static const stg_size_t DEFAULT_SIZE( 0.1, 0.07, 0.05 );
 static const char DEFAULT_GEOM_COLOR[] = "black";
 static const float DEFAULT_HFOV = 70;
 static const float DEFAULT_VFOV = 40;
@@ -235,7 +235,7 @@ bool StgModelCamera::GetFrame( void )
 }
 
 //TODO create lines outlining camera frustrum, then iterate over each depth measurement and create a square
-void StgModelCamera::DataVisualize( StgCamera* cam )
+void StgModelCamera::DataVisualize( Camera* cam )
 {	
 	
 	if( _frame_data == NULL || !showCameraData )

@@ -71,6 +71,9 @@ StgModelFiducial::StgModelFiducial( StgWorld* world,
 	PRINT_DEBUG2( "Constructing StgModelFiducial %d (%s)\n", 
 			id, typestr );
 
+	// assert that Update() is reentrant for this derived model
+	thread_safe = true;
+	
 	// sensible fiducial defaults 
 	//  interval = 200; // common for a SICK LMS200
 
@@ -100,9 +103,11 @@ StgModelFiducial::~StgModelFiducial( void )
 		g_array_free( data, true );
 }
 
-static bool fiducial_raytrace_match( StgBlock* testblock, StgModel* finder, const void* dummy )
+static bool fiducial_raytrace_match( StgModel* candidate, 
+												 StgModel* finder, 
+												 const void* dummy )
 {
-	return( ! finder->IsRelated( testblock->Model() ) );
+  return( ! finder->IsRelated( candidate ) );
 }	
 
 
@@ -160,18 +165,15 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
 
 
 	//printf( "bearing %.2f\n", RTOD(bearing) );
-
-	stg_raytrace_sample_t ray;
-
-	Raytrace( dtheta,
-			max_range_anon,
-			fiducial_raytrace_match,
-			NULL,
-			&ray,
-			false );
-
+	
+	stg_raytrace_result_t ray = Raytrace( dtheta,
+													  max_range_anon,
+													  fiducial_raytrace_match,
+													  NULL,
+													  false );
+	
 	range = ray.range;
-	StgModel* hitmod = ray.block->Model();
+	StgModel* hitmod = ray.mod;
 
 	//  printf( "ray hit %s and was seeking LOS to %s\n",
 	//hitmod ? hitmod->Token() : "null",
@@ -248,7 +250,7 @@ void StgModelFiducial::Load( void )
 }  
 
 
-void StgModelFiducial::DataVisualize( StgCamera* cam )
+void StgModelFiducial::DataVisualize( Camera* cam )
 {
 	if ( !showFiducialData )
 		return;

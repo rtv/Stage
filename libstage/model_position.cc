@@ -89,6 +89,9 @@ StgModelPosition::StgModelPosition( StgWorld* world,
 	PRINT_DEBUG2( "Constructing StgModelPosition %d (%s)\n", 
 			id, typestr );
 
+	// assert that Update() is reentrant for this derived model
+	thread_safe = true;
+	
 	// no power consumed until we're subscribed
 	this->SetWatts( 0 );
 
@@ -434,6 +437,7 @@ void StgModelPosition::Update( void  )
 
 	PRINT_DEBUG3( " READING POSITION: [ %.4f %.4f %.4f ]\n",
 				  est_pose.x, est_pose.y, est_pose.a );
+
 	StgModel::Update();
 }
 

@@ -106,7 +106,7 @@ void StgModelBlinkenlight::Update( void )
 }
 
 
-void StgModelBlinkenlight::DataVisualize( StgCamera* cam )
+void StgModelBlinkenlight::DataVisualize( Camera* cam )
 {
 	if( on && showBlinkenData )
 	{
@@ -115,7 +115,8 @@ void StgModelBlinkenlight::DataVisualize( StgCamera* cam )
 		gl_pose_shift( &this->pose );
 		gl_pose_shift( &this->geom.pose );
 		glLineWidth( 3 );
-		LISTMETHOD( this->blocks, StgBlock*, Draw );
+		// TODO
+		//LISTMETHOD( this->blocks, StgBlock*, Draw );
 		glLineWidth( 1 );
 		glPopMatrix(); // drop out of local coords
 	}

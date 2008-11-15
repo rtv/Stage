@@ -108,11 +108,11 @@ StgModelBlobfinder::~StgModelBlobfinder( void )
 		g_array_free( colors, true );
 }
 
-static bool blob_match( StgBlock* testblock, 
-		StgModel* finder,
-		const void* dummy )
+static bool blob_match( StgModel* candidate, 
+								StgModel* finder,
+								const void* dummy )
 { 
-	return( ! finder->IsRelated( testblock->Model() ));
+	return( ! finder->IsRelated( candidate ));
 }	
 
 
@@ -178,8 +178,8 @@ void StgModelBlobfinder::Update( void )
 	StgModel::Update();
 
 	// generate a scan for post-processing into a blob image
-
-	stg_raytrace_sample_t* samples = new stg_raytrace_sample_t[scan_width];
+	
+	stg_raytrace_result_t* samples = new stg_raytrace_result_t[scan_width];
 
 	Raytrace( pan, range, fov, blob_match, NULL, samples, scan_width, false );
 
@@ -191,22 +191,22 @@ void StgModelBlobfinder::Update( void )
 	// scan through the samples looking for color blobs
 	for(unsigned int s=0; s < scan_width; s++ )
 	{
-		if( samples[s].block == NULL  )
+		if( samples[s].mod == NULL  )
 			continue; // we saw nothing
 
 		//if( samples[s].block->Color() != 0xFFFF0000 )
 		//continue; // we saw nothing
-
+		
 		unsigned int right = s;
-		stg_color_t blobcol = samples[s].block->Color();
+		stg_color_t blobcol = samples[s].color;
 
 		//printf( "blob start %d color %X\n", blobleft, blobcol );
 
 		// loop until we hit the end of the blob
 		// there has to be a gap of >1 pixel to end a blob
 		// this avoids getting lots of crappy little blobs
-		while( s < scan_width && samples[s].block && 
-				ColorMatchIgnoreAlpha( samples[s].block->Color(), blobcol) )
+		while( s < scan_width && samples[s].mod && 
+				ColorMatchIgnoreAlpha( samples[s].color, blobcol) )
 		{
 			//printf( "%u blobcol %X block %p %s color %X\n", s, blobcol, samples[s].block, samples[s].block->Model()->Token(), samples[s].block->Color() );
 			s++;
@@ -295,7 +295,7 @@ void StgModelBlobfinder::Shutdown( void )
 	StgModel::Shutdown();
 }
 
-void StgModelBlobfinder::DataVisualize( StgCamera* cam )
+void StgModelBlobfinder::DataVisualize( Camera* cam )
 {
 	if ( !showBlobData )
 		return;

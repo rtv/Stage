@@ -108,6 +108,9 @@ StgModelRanger::StgModelRanger( StgWorld* world,
 
 	// Set up sensible defaults
 
+	// assert that Update() is reentrant for this derived model
+	thread_safe = true;
+	
 	stg_color_t col = stg_lookup_color( RANGER_CONFIG_COLOR );
 	this->SetColor( col );
 
@@ -255,14 +258,15 @@ void StgModelRanger::Load( void )
 	}
 }
 
-static bool ranger_match( StgBlock* block, StgModel* finder, const void* dummy )
+static bool ranger_match( StgModel* candidate, 
+								  StgModel* finder, const void* dummy )
 {
 	//printf( "ranger match sees %s %p %d \n", 
 	//    block->Model()->Token(), block->Model(), block->Model()->LaserReturn() );
 
 	// Ignore myself, my children, and my ancestors.
-	return( block->Model()->GetRangerReturn() && 
-			!block->Model()->IsRelated( finder ) );
+	return( candidate->GetRangerReturn() && 
+			!candidate->IsRelated( finder ) );
 }	
 
 void StgModelRanger::Update( void )
@@ -285,13 +289,11 @@ void StgModelRanger::Update( void )
 		// TODO - reinstate multi-ray rangers
 		//for( int r=0; r<sensors[t].ray_count; r++ )
 		//{	  
-		stg_raytrace_sample_t ray;
-		Raytrace( sensors[t].pose,
-				sensors[t].bounds_range.max,
-				ranger_match,
-				NULL,
-				&ray );
-
+	  stg_raytrace_result_t ray = Raytrace( sensors[t].pose,
+														 sensors[t].bounds_range.max,
+														 ranger_match,
+														 NULL );
+	  
 		samples[t] = MAX( ray.range, sensors[t].bounds_range.min );
 		//sensors[t].error = TODO;
 	}   
@@ -321,7 +323,7 @@ void StgModelRanger::Print( char* prefix )
 	puts( " ]" );
 }
 
-void StgModelRanger::DataVisualize( StgCamera* cam )
+void StgModelRanger::DataVisualize( Camera* cam )
 {
 	if( ! (samples && sensors && sensor_count) )
 		return;
@@ -381,16 +383,14 @@ void StgModelRanger::DataVisualize( StgCamera* cam )
 		}
 	}
 	
-	// draw the filled triangles in transparent blue
+	// draw the filled triangles in transparent pale green
 	glDepthMask( GL_FALSE );
-	PushColor( 0, 1, 0, 0.1 ); // transparent pale green       
-	//glEnableClientState( GL_VERTEX_ARRAY );
+	PushColor( 0, 1, 0, 0.1 );     
 	glVertexPointer( 3, GL_FLOAT, 0, pts );
 	glDrawArrays( GL_TRIANGLES, 0, 3 * sensor_count );
 
 	// restore state 
 	glDepthMask( GL_TRUE );
-	//glDisableClientState( GL_VERTEX_ARRAY );
 	PopColor();
 }
 

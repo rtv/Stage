@@ -39,9 +39,9 @@ void StgModel::Load()
       else
 		  PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token );
     }
-
+  
   //PRINT_WARN1( "%s::Load", token );
-
+  
   if( wf->PropertyExists( wf_entity, "origin" ) )
     {
       stg_geom_t geom = GetGeom();
@@ -79,16 +79,7 @@ void StgModel::Load()
       vel.z = wf->ReadTupleLength(wf_entity, "velocity", 2, vel.z );
       vel.a = wf->ReadTupleAngle(wf_entity, "velocity", 3,  vel.a );
       this->SetVelocity( vel );
-
-      if( vel.x || vel.y || vel.z || vel.a )
-	world->StartUpdatingModel( this );
     }
-
-
-  if( wf->PropertyExists( wf_entity, "boundary" ))
-    {
-      this->SetBoundary( wf->ReadInt(wf_entity, "boundary", this->boundary  ));
-    }	  
 
   if( wf->PropertyExists( wf_entity, "color" ))
     {      
@@ -118,148 +109,51 @@ void StgModel::Load()
 
       this->SetColor( stg_color_pack( red, green, blue, alpha ));
     }  
-
+  
   if( wf->PropertyExists( wf_entity, "bitmap" ) )
     {
       const char* bitmapfile = wf->ReadString( wf_entity, "bitmap", NULL );
       assert( bitmapfile );
 
-      char full[_POSIX_PATH_MAX];
+		if( has_default_block )
+		  {
+			 blockgroup.Clear();
+			 has_default_block = false;
+		  }
 
-      if( bitmapfile[0] == '/' )
-	strcpy( full, bitmapfile );
-      else
-	{
-	  char *tmp = strdup(wf->filename);
-	  snprintf( full, _POSIX_PATH_MAX,
-		    "%s/%s",  dirname(tmp), bitmapfile );
-	  free(tmp);
-	}
-
-      PRINT_DEBUG1( "attempting to load image %s", full );
-
-      stg_rotrect_t* rects = NULL;
-      unsigned int rect_count = 0;
-      unsigned int width, height;
-      if( stg_rotrects_from_image_file( full,
-					&rects,
-					&rect_count,
-					&width, &height ) )
-	{
-	  PRINT_ERR1( "failed to load rects from image file \"%s\"",
-		      full );
-	  return;
-	}
-
-      this->UnMap();
-      this->ClearBlocks();
-
-      //printf( "found %d rects\n", rect_count );
-
-      if( rects && (rect_count > 0) )
-	{
-	  //puts( "loading rects" );
-	  for( unsigned int r=0; r<rect_count; r++ )
-	    this->AddBlockRect( rects[r].pose.x, rects[r].pose.y, 
-				rects[r].size.x, rects[r].size.y );
-
-	  if( this->boundary )
-	    {
-	      // add thin bounding blocks
-	      double epsilon = 0.01;	      
-	      this->AddBlockRect(0,0, epsilon, height );	      
-	      this->AddBlockRect(0,0, width, epsilon );	      
-	      this->AddBlockRect(0, height-epsilon, width, epsilon );
-	      this->AddBlockRect(width-epsilon,0, epsilon, height );
-	    }     
-
-	  StgBlock::ScaleList( this->blocks, &this->geom.size );	  
-	  this->Map();
-	  this->NeedRedraw();
-
-	  g_free( rects );
-	}      
-
-      //printf( "model %s block count %d\n",
-      //      token, g_list_length( blocks ));
+		//puts( "clearing blockgroup" );
+		//blockgroup.Clear();
+		//puts( "loading bitmap" );
+		blockgroup.LoadBitmap( this, bitmapfile, wf );
     }
-
-  if( wf->PropertyExists( wf_entity, "blocks" ) )
+  
+  if( wf->PropertyExists( wf_entity, "boundary" ))
     {
-      int blockcount = wf->ReadInt( wf_entity, "blocks", 0 );
+      this->SetBoundary( wf->ReadInt(wf_entity, "boundary", this->boundary  ));
 
-      this->UnMap();
-      this->ClearBlocks();
+		if( boundary )
+		  {
+			 //PRINT_WARN1( "setting boundary for %s\n", token );
+			 
+			 blockgroup.CalcSize();
 
-      //printf( "expecting %d blocks\n", blockcount );
+			 double epsilon = 0.01;	      
+			 double width = blockgroup.size.x;
+			 double height = blockgroup.size.y;
+			 double dx = width/2.0;
+			 double dy = height/2.0;
+			 double dz = blockgroup.size.z;
 
-      char key[256];
-      for( int l=0; l<blockcount; l++ )
-	{	  	  
-	  snprintf(key, sizeof(key), "block[%d].points", l);
-	  int pointcount = wf->ReadInt(wf_entity,key,0);
+			 // add thin bounding blocks
+			 AddBlockRect(-dx,-dy, epsilon, height, dz );	      
+			 AddBlockRect(-dx,-dy, width, epsilon, dz );	      
+			 AddBlockRect(-dx, -dy+height-epsilon, width, epsilon, dz );
+			 AddBlockRect(-dx+width-epsilon,-dy, epsilon, height, dz );
+		  }     
+    }	  
 
-	  //printf( "expecting %d points in block %d\n",
-	  //pointcount, l );
-
-	  stg_point_t* pts = stg_points_create( pointcount );
-
-	  int p;
-	  for( p=0; p<pointcount; p++ )	      {
-	    snprintf(key, sizeof(key), "block[%d].point[%d]", l, p );
-
-	    pts[p].x = wf->ReadTupleLength(wf_entity, key, 0, 0);
-	    pts[p].y = wf->ReadTupleLength(wf_entity, key, 1, 0);
-
-	    //printf( "key %s x: %.2f y: %.2f\n",
-	    //      key, pt.x, pt.y );
-	  }
-
-	  // block Z axis
-	  snprintf(key, sizeof(key), "block[%d].z", l);
-
-	  stg_meters_t zmin = 
-	    wf->ReadTupleLength(wf_entity, key, 0, 0.0 );
-
-	  stg_meters_t zmax = 
-	    wf->ReadTupleLength(wf_entity, key, 1, 1.0 );
-
-	  // block color
-	  stg_color_t blockcol = this->color;
-	  bool inherit_color = true;
-
-	  snprintf(key, sizeof(key), "block[%d].color", l);
-
-	  const char* colorstr = wf->ReadString( wf_entity, key, NULL );
-	  if( colorstr )
-	    {
-	      blockcol = stg_lookup_color( colorstr );
-	      inherit_color = false;
-	    }
-
-	  this->AddBlock( pts, pointcount, zmin, zmax, blockcol, inherit_color );	
-
-	  stg_points_destroy( pts );
-	}
-
-      StgBlock::ScaleList( this->blocks, &this->geom.size );
-
-      if( this->boundary )
-	{
-	  // add thin bounding blocks
-	  double epsilon = 0.001;	      
-	  double width =  geom.size.x;
-	  double height = geom.size.y;
-	  this->AddBlockRect(-width/2.0, -height/2.0, epsilon, height );	      
-	  this->AddBlockRect(-width/2.0, -height/2.0, width, epsilon );	      
-	  this->AddBlockRect(-width/2.0, height/2.0-epsilon, width, epsilon );
-	  this->AddBlockRect(width/2.0-epsilon, -height/2.0, epsilon, height );
-	}     
-
-      this->Map();
-    }
-
-  if( wf->PropertyExists( wf_entity, "mass" ))
+  
+    if( wf->PropertyExists( wf_entity, "mass" ))
     this->SetMass( wf->ReadFloat(wf_entity, "mass", this->mass ));
 
   if( wf->PropertyExists( wf_entity, "fiducial_return" ))
@@ -301,13 +195,13 @@ void StgModel::Load()
   if( wf->PropertyExists( wf_entity, "ctrl" ))
     {
       char* lib = (char*)wf->ReadString(wf_entity, "ctrl", NULL );
-
+		
       if( !lib )
-	puts( "Error - NULL library name" );
+		  puts( "Error - NULL library name" );
       else
-	LoadControllerModule( lib );
+		  LoadControllerModule( lib );
     }
-
+  
   if( wf->PropertyExists( wf_entity, "say" ))
     this->Say( wf->ReadString(wf_entity, "say", NULL ));
 
@@ -318,8 +212,10 @@ void StgModel::Load()
   if( wf->PropertyExists( wf_entity, "alwayson" ))
     {
       if( wf->ReadInt( wf_entity, "alwayson", 0) > 0 )
-	Startup();
+		  Startup();
     }
+  
+  MapWithChildren();
 
   if( this->debug )
     printf( "Model \"%s\" is in debug mode\n", token );
@@ -406,6 +302,9 @@ void StgModel::LoadControllerModule( char* lib )
     }
 
   fflush(stdout);
+
+  // as we now have a controller, the world needs to call our update function
+  StartUpdating();
 }
 
 
