@@ -1,8 +1,8 @@
 PROJECT(Stage)
 
 SET( V_MAJOR 3 )
-SET( V_MINOR 0 )
-SET( V_BUGFIX 1 )
+SET( V_MINOR 1 )
+SET( V_BUGFIX 0 )
 
 SET( VERSION ${V_MAJOR}.${V_MINOR}.${V_BUGFIX} )
 SET( APIVERSION ${V_MAJOR}.${V_MINOR} )
@@ -57,7 +57,7 @@ include(FindPkgConfig)
 MESSAGE( STATUS "Checking for required libraries..." )
 
 SET( INDENT "  * " )
-pkg_search_module( GLIB REQUIRED glib-2.0 )
+pkg_search_module( GLIB REQUIRED gthread-2.0 )
 IF( GLIB_FOUND )
   MESSAGE( ${INDENT} "Glib version ${GLIB_VERSION} detected at ${GLIB_PREFIX}" )
   MESSAGE( "    GLIB_CFLAGS = ${GLIB_CFLAGS}" )

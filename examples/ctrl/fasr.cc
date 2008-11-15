@@ -45,9 +45,10 @@ typedef struct
 int LaserUpdate( StgModel* mod, robot_t* robot );
 int PositionUpdate( StgModel* mod, robot_t* robot );
 
+
 // Stage calls this when the model starts up
 extern "C" int Init( StgModel* mod )
-{
+{  
   robot_t* robot = new robot_t;
   robot->work_get = 0;
   robot->work_put = 0;
@@ -69,7 +70,7 @@ extern "C" int Init( StgModel* mod )
 
   robot->sink = mod->GetWorld()->GetModel( "sink" );
   assert(robot->sink);
-
+  
   return 0; //ok
 }
 
@@ -93,38 +94,61 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
   
   for (uint32_t i = 0; i < sample_count; i++)
     {
+
+		if( verbose ) printf( "%.3f ", scan[i].range );
+
       if( (i > (sample_count/4)) 
-	  && (i < (sample_count - (sample_count/4))) 
-	  && scan[i].range < minfrontdistance)
-	obstruction = true;
-      
+			 && (i < (sample_count - (sample_count/4))) 
+			 && scan[i].range < minfrontdistance)
+		  {
+			 if( verbose ) puts( "  obstruction!" );
+			 obstruction = true;
+		  }
+		
       if( scan[i].range < stopdist )
-	stop = true;
+		  {
+			 if( verbose ) puts( "  stopping!" );
+			 stop = true;
+		  }
       
       if( i > sample_count/2 )
-	minleft = MIN( minleft, scan[i].range );
+		  minleft = MIN( minleft, scan[i].range );
       else      
-	minright = MIN( minright, scan[i].range );
+		  minright = MIN( minright, scan[i].range );
     }
   
+  if( verbose ) 
+	 {
+		puts( "" );
+		printf( "minleft %.3f \n", minleft );
+		printf( "minright %.3f\n ", minright );
+	 }
+
   if( obstruction || stop || (robot->avoidcount>0) )
     {
-      if( verbose ) puts( "Avoid" );
+      if( verbose ) printf( "Avoid %d\n", robot->avoidcount );
+	  		
       robot->pos->SetXSpeed( stop ? 0.0 : avoidspeed );      
       
       /* once we start avoiding, select a turn direction and stick
 	 with it for a few iterations */
       if( robot->avoidcount < 1 )
         {
-	  if( verbose ) puts( "Avoid START" );
+			 if( verbose ) puts( "Avoid START" );
           robot->avoidcount = random() % avoidduration + avoidduration;
-
-	  if( minleft < minright  )
-	    robot->pos->SetTurnSpeed( -avoidturn );
-	  else
-	    robot->pos->SetTurnSpeed( +avoidturn );
+			 
+			 if( minleft < minright  )
+				{
+				  robot->pos->SetTurnSpeed( -avoidturn );
+				  if( verbose ) printf( "turning right %.2f\n", -avoidturn );
+				}
+			 else
+				{
+				  robot->pos->SetTurnSpeed( +avoidturn );
+				  if( verbose ) printf( "turning left %2f\n", +avoidturn );
+				}
         }
-
+		
       robot->avoidcount--;
     }
   else
@@ -140,18 +164,19 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
       int y = (pose.y + 8) / 4;
       
       double a_goal = 
-	dtor( robot->pos->GetFlagCount() ? have[y][x] : need[y][x] );
+		  dtor( robot->pos->GetFlagCount() ? have[y][x] : need[y][x] );
       
       double a_error = normalize( a_goal - pose.a );
- 
+		
       robot->pos->SetTurnSpeed(  a_error );
     }
-  
+ 
+ 
   return 0;
 }
 
 int PositionUpdate( StgModel* mod, robot_t* robot )
-{
+{  
   stg_pose_t pose = robot->pos->GetPose();
   
   //printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
@@ -159,27 +184,39 @@ int PositionUpdate( StgModel* mod, robot_t* robot )
   
   //pose.z += 0.0001;
   //robot->pos->SetPose( pose );
-
+  
   if( robot->pos->GetFlagCount() < payload && 
       hypot( -7-pose.x, -7-pose.y ) < 2.0 )
     {
       if( ++robot->work_get > workduration )
-	{
-	  robot->pos->PushFlag( robot->source->PopFlag() );
-	  robot->work_get = 0;
-	}	  
+		  {
+			 // protect source from concurrent access
+			 robot->source->Lock();
+
+			 // transfer a chunk from source to robot
+			 robot->pos->PushFlag( robot->source->PopFlag() );
+			 robot->source->Unlock();
+
+			 robot->work_get = 0;
+		  }	  
     }
   
   if( hypot( 7-pose.x, 7-pose.y ) < 1.0 )
     {
       if( ++robot->work_put > workduration )
-	{
-	  //puts( "dropping" );
-	  // transfer a chunk between robot and goal
-	  robot->sink->PushFlag( robot->pos->PopFlag() );
-	  robot->work_put = 0;
-	}
+		  {
+			 // protect sink from concurrent access
+			 robot->sink->Lock();
+
+			 //puts( "dropping" );
+			 // transfer a chunk between robot and goal
+			 robot->sink->PushFlag( robot->pos->PopFlag() );
+			 robot->sink->Unlock();
+
+			 robot->work_put = 0;
+		  }
     }
+  
   
   return 0; // run again
 }

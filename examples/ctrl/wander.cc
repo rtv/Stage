@@ -3,9 +3,11 @@ using namespace Stg;
 
 const double cruisespeed = 0.4; 
 const double avoidspeed = 0.05; 
-const double avoidturn = 1.0;
-const double minfrontdistance = 0.8;  
+const double avoidturn = 0.5;
+const double minfrontdistance = 0.6;  
 const bool verbose = false;
+const double stopdist = 0.3;
+const int avoidduration = 10;
 
 typedef struct
 {
@@ -33,6 +35,7 @@ extern "C" int Init( StgModel* mod )
   return 0; //ok
 }
 
+
 // inspect the laser data and decide what to do
 int LaserUpdate( StgModel* mod, robot_t* robot )
 {
@@ -41,44 +44,71 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
   stg_laser_sample_t* scan = robot->laser->GetSamples( &sample_count );
   assert(scan);
   
-  double newturnrate=0.0, newspeed=0.0;  
   bool obstruction = false;
-  
+  bool stop = false;
+
   // find the closest distance to the left and right and check if
   // there's anything in front
   double minleft = 1e6;
   double minright = 1e6;
-  
+
   for (uint32_t i = 0; i < sample_count; i++)
     {
-      if( scan[i].range < minfrontdistance)
-	obstruction = true;
+
+		if( verbose ) printf( "%.3f ", scan[i].range );
+
+      if( (i > (sample_count/3)) 
+			 && (i < (sample_count - (sample_count/3))) 
+			 && scan[i].range < minfrontdistance)
+		  {
+			 if( verbose ) puts( "  obstruction!" );
+			 obstruction = true;
+		  }
+		
+      if( scan[i].range < stopdist )
+		  {
+			 if( verbose ) puts( "  stopping!" );
+			 stop = true;
+		  }
       
       if( i > sample_count/2 )
-	minleft = MIN( minleft, scan[i].range );
+		  minleft = MIN( minleft, scan[i].range );
       else      
-	minright = MIN( minright, scan[i].range );
+		  minright = MIN( minright, scan[i].range );
     }
   
-  if( obstruction || robot->avoidcount )
-    {
-      if( verbose ) puts( "Avoid" );
+  if( verbose ) 
+	 {
+		puts( "" );
+		printf( "minleft %.3f \n", minleft );
+		printf( "minright %.3f\n ", minright );
+	 }
 
-      robot->pos->SetXSpeed( avoidspeed );
+  if( obstruction || stop || (robot->avoidcount>0) )
+    {
+      if( verbose ) printf( "Avoid %d\n", robot->avoidcount );
+	  		
+      robot->pos->SetXSpeed( stop ? 0.0 : avoidspeed );      
       
       /* once we start avoiding, select a turn direction and stick
 	 with it for a few iterations */
-      if( robot->avoidcount == 0 )
+      if( robot->avoidcount < 1 )
         {
-	  if( verbose ) puts( "Avoid START" );
-          robot->avoidcount = 5;
-	  
-	  if( minleft < minright  )
-	    robot->pos->SetTurnSpeed( -avoidturn );
-	  else
-	    robot->pos->SetTurnSpeed( +avoidturn );
+			 if( verbose ) puts( "Avoid START" );
+          robot->avoidcount = random() % avoidduration + avoidduration;
+			 
+			 if( minleft < minright  )
+				{
+				  robot->pos->SetTurnSpeed( -avoidturn );
+				  if( verbose ) printf( "turning right %.2f\n", -avoidturn );
+				}
+			 else
+				{
+				  robot->pos->SetTurnSpeed( +avoidturn );
+				  if( verbose ) printf( "turning left %2f\n", +avoidturn );
+				}
         }
-
+		
       robot->avoidcount--;
     }
   else
@@ -87,23 +117,9 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
 
       robot->avoidcount = 0;
       robot->pos->SetXSpeed( cruisespeed );	  
-      
-      /* update turnrate every few updates */
-      if( robot->randcount == 0 )
-	{
-	  if( verbose )puts( "Random turn" );
-	  
-	  /* make random int tween -30 and 30 */
-	  //newturnrate = dtor( rand() % 61 - 30 );
-	  
-	  robot->randcount = 20;
-	  
-	  robot->pos->SetTurnSpeed(  dtor( rand() % 11 - 5 ) );
-	}
-      
-      robot->randcount--;
+		robot->pos->SetTurnSpeed(  0 );
     }
-  
+      	    
   return 0;
 }
 
