@@ -553,10 +553,14 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
   // Read tokens from the file
   if (!LoadTokens(infile, include + 1))
     {
+		fclose( infile );
       //DumpTokens();
       free(fullpath);
       return false;
     }
+
+  // done with the include file
+  fclose( infile );
 
   // consume the rest of the include line XX a bit of a hack - assumes
   // that an include is the last thing on a line
