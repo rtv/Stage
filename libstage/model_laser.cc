@@ -19,7 +19,7 @@
 // DEFAULT PARAMETERS FOR LASER MODEL
 static const bool DEFAULT_FILLED = true;
 static const stg_watts_t DEFAULT_WATTS = 17.5;
-static const stg_size_t DEFAULT_SIZE = {0.15, 0.15, 0.2 };
+static const stg_size_t DEFAULT_SIZE( 0.15, 0.15, 0.2 );
 static const stg_meters_t DEFAULT_MINRANGE = 0.0;
 static const stg_meters_t DEFAULT_MAXRANGE = 8.0;
 static const stg_radians_t DEFAULT_FOV = M_PI;
@@ -71,36 +71,38 @@ laser
 - resolution <int>\n
   Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
 */
-
-StgModelLaser::StgModelLaser( StgWorld* world, 
-			      StgModel* parent )
-  : StgModel( world, parent, MODEL_TYPE_LASER )
-{
-  PRINT_DEBUG2( "Constructing StgModelLaser %d (%s)\n", 
-		id, typestr );
   
-  // sensible laser defaults 
+  StgModelLaser::StgModelLaser( StgWorld* world, 
+										  StgModel* parent )
+  : StgModel( world, parent, MODEL_TYPE_LASER ),
+	range_min( DEFAULT_MINRANGE ),
+	range_max( DEFAULT_MAXRANGE ),
+	fov( DEFAULT_FOV ),
+	sample_count( DEFAULT_SAMPLES ),
+	resolution( DEFAULT_RESOLUTION ),
+	data_dirty( true ),
+	samples( NULL ) 	// don't allocate sample buffer memory until Update() is called
+{
+  
+  PRINT_DEBUG2( "Constructing StgModelLaser %d (%s)\n", 
+					 id, typestr );
+  
+
+  // StgModel data members
   interval = DEFAULT_INTERVAL_MS * (int)thousand;
   laser_return = LaserVisible;
-
+  
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
   geom.size = DEFAULT_SIZE;
   SetGeom( geom );
+  
+  // assert that Update() is reentrant for this derived model
+  thread_safe = true;
 
   // set default color
   SetColor( stg_lookup_color(DEFAULT_COLOR));
-
-  range_min    = DEFAULT_MINRANGE;
-  range_max    = DEFAULT_MAXRANGE;
-  fov          = DEFAULT_FOV;
-  sample_count = DEFAULT_SAMPLES;
-  resolution   = DEFAULT_RESOLUTION;
-  data_dirty = true;
-
-  // don't allocate sample buffer memory until Update() is called
-  samples = NULL;
-	
+  
   if( world->IsGUI() )
     data_dl = glGenLists(1);
        
@@ -155,15 +157,13 @@ void StgModelLaser::SetConfig( stg_laser_cfg_t cfg )
   interval = cfg.interval;
 }
 
-static bool laser_raytrace_match( StgBlock* testblock, 
-				  StgModel* finder,
-				  const void* dummy )
+static bool laser_raytrace_match( StgModel* hit, 
+											 StgModel* finder,
+											 const void* dummy )
 {
   // Ignore the model that's looking and things that are invisible to
-  // lasers
-
-  if( (testblock->Model() != finder) &&
-      (testblock->Model()->GetLaserReturn() > 0 ) )
+  // lasers  
+  if( (hit != finder) && (hit->GetLaserReturn() > 0 ) )
     return true; // match!
 
   return false; // no match
@@ -179,29 +179,27 @@ void StgModelLaser::Update( void )
   stg_pose_t rayorg = geom.pose;
   bzero( &rayorg, sizeof(rayorg));
   rayorg.z += geom.size.z/2;
-
+  
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
-      stg_raytrace_sample_t sample;
-
       rayorg.a = bearing;
 
-      Raytrace( rayorg, 
-		range_max,
-		laser_raytrace_match,
-		NULL,
-		&sample,
-		true ); // z testing enabled
+      stg_raytrace_result_t sample = 
+		  Raytrace( rayorg, 
+						range_max,
+						laser_raytrace_match,
+						NULL,
+						true ); // z testing enabled
 		
       samples[t].range = sample.range;
 
       // if we hit a model and it reflects brightly, we set
       // reflectance high, else low
-      if( sample.block && ( sample.block->Model()->GetLaserReturn() >= LaserBright ) )	
-	samples[t].reflectance = 1;
+      if( sample.mod && ( sample.mod->GetLaserReturn() >= LaserBright ) )	
+		  samples[t].reflectance = 1;
       else
-	samples[t].reflectance = 0;
-
+		  samples[t].reflectance = 0;
+		
       // todo - lower bound on range      
       bearing += sample_incr;
     }
@@ -210,26 +208,26 @@ void StgModelLaser::Update( void )
   if( resolution > 1 )
     {
       for( unsigned int t=resolution; t<sample_count; t+=resolution )
-	for( unsigned int g=1; g<resolution; g++ )
-	  {
-	    if( t >= sample_count )
-	      break;
-
-	    // copy the rightmost sample data into this point
-	    memcpy( &samples[t-g],
-		    &samples[t-resolution],
-		    sizeof(stg_laser_sample_t));
-
-	    double left = samples[t].range;
-	    double right = samples[t-resolution].range;
-
-	    // linear range interpolation between the left and right samples
-	    samples[t-g].range = (left-g*(left-right)/resolution);
-	  }
+		  for( unsigned int g=1; g<resolution; g++ )
+			 {
+				if( t >= sample_count )
+				  break;
+				
+				// copy the rightmost sample data into this point
+				memcpy( &samples[t-g],
+						  &samples[t-resolution],
+						  sizeof(stg_laser_sample_t));
+				
+				double left = samples[t].range;
+				double right = samples[t-resolution].range;
+				
+				// linear range interpolation between the left and right samples
+				samples[t-g].range = (left-g*(left-right)/resolution);
+			 }
     }
-
+  
   data_dirty = true;
-
+  
   StgModel::Update();
 }
 
@@ -301,7 +299,7 @@ void StgModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
 }
 
 
-void StgModelLaser::DataVisualize( StgCamera* cam )
+void StgModelLaser::DataVisualize( Camera* cam )
 {
   if( ! (samples && sample_count) )
     return;
@@ -312,12 +310,12 @@ void StgModelLaser::DataVisualize( StgCamera* cam )
   glPushMatrix();
 	
   // we only regenerate the list if there's new data
-  if( 1 /* (temp hack) data_dirty*/ )
+  if( 1 ) // data_dirty ) // TODO - hmm, why doesn't this work?
     {	    
       data_dirty = false;
 
       glNewList( data_dl, GL_COMPILE );
-      //glEnableClientState( GL_VERTEX_ARRAY );     
+
       glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
             
       // DEBUG - draw the origin of the laser beams
@@ -336,20 +334,19 @@ void StgModelLaser::DataVisualize( StgCamera* cam )
       PushColor( 0, 0, 1, 0.5 );
 
       for( unsigned int s=0; s<sample_count; s++ )
-	{
-	  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
-	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
-	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
-	  
-	  // if the sample is unusually bright, draw a little blob
-	  if( samples[s].reflectance > 0 )
-	    {
-	      glBegin( GL_POINTS );
-	      glVertex2f( pts[2*s+2], pts[2*s+3] );
-	      glEnd();
-	    }
+		  {
+			 double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+			 pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
+			 pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
 			 
-	}
+			 // if the sample is unusually bright, draw a little blob
+			 if( samples[s].reflectance > 0 )
+				{
+				  glBegin( GL_POINTS );
+				  glVertex2f( pts[2*s+2], pts[2*s+3] );
+				  glEnd();
+				}			 
+		  }
       PopColor();
       
       glDepthMask( GL_FALSE );
@@ -359,16 +356,16 @@ void StgModelLaser::DataVisualize( StgCamera* cam )
       glVertexPointer( 2, GL_FLOAT, 0, pts );      
       glDrawArrays( GL_POLYGON, 0, sample_count+1 );
       PopColor();
-
+		
       if( showLaserStrikes )
-	{
-	  // draw the beam strike points in black
-	  PushColor( 0, 0, 0, 1.0 );
-	  glPointSize( 1.0 );
-	  glDrawArrays( GL_POINTS, 0, sample_count+1 );
-	  PopColor();
-	}
-
+		  {
+			 // draw the beam strike points in black
+			 PushColor( 0, 0, 0, 1.0 );
+			 glPointSize( 1.0 );
+			 glDrawArrays( GL_POINTS, 0, sample_count+1 );
+			 PopColor();
+		  }
+		
       glDepthMask( GL_TRUE );
       glEndList();
     } // end if ( data_dirty )
