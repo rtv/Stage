@@ -95,24 +95,6 @@ int RangerUpdate( StgModel* mod, robot_t* robot )
 	 {
 		forward_speed = VSPEED;
 	 }
-
-  //printf( "forward angle = %.2f\n", rgr->sensors[forward].pose.a );
-  
-  // 	// send a command to the robot
-  // 	stg_velocity_t vel;
-  // 	bzero(&vel,sizeof(vel));
-  //         vel.x = forward_speed;
-  // 	vel.y = side_speed;
-  // 	vel.z = 0;
-  // 	vel.a = turn_speed;
-  
-  //printf( "robot %s [%.2f %.2f %.2f %.2f]\n",
-  //robots[i].position->Token(), vel.x, vel.y, vel.z, vel.a );
-  
-  //  uint32_t bcount=0;
-  //stg_blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );
-  
-  //printf( "robot %s sees %u blobs\n", robots[i].blobfinder->Token(), bcount );	       
   
   robot->position->SetSpeed( forward_speed, side_speed, turn_speed );
 

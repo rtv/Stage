@@ -2,20 +2,25 @@
 # Authors: Richard Vaughan
 # $Id$
 
-include "pioneer.inc"     # defines Pioneer-like robots
-include "map.inc"         # defines 'floorplan' object used for obstacle maps
-include "sick.inc"        # defines sick laser
+include "pioneer.inc"
+include "map.inc"
+include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 1  # real-time interval between simulation updates in milliseconds 
+interval_real 0  # real-time interval between simulation updates in milliseconds 
 
 paused 0
+
+resolution 0.02
 
 # configure the GUI window
 window
 (
-  size [ 700.000 700.000 ] # in pixels
-  scale 37                 # pixels per meter
+  size [ 538.000 567.000 ] # in pixels
+  scale 60.269                 # pixels per meter
+  center [ 3.886  3.889 ]
+  rotate [ 0  0 ]
+  			
   show_data 1              # 1=on 0=off
 )
 
@@ -23,16 +28,20 @@ window
 floorplan
 ( 
   name "cave"
-  size [16 16 0.6]
-  bitmap "bitmaps/cave.png"
+  size [17.000 17.000 0.600]
+  pose [8.000 8.000 0 0 ]
+ #bitmap "bitmaps/cave.png"
+  bitmap "bitmaps/hospital.png"
 )
+
 
 pioneer2dx
 (		  
   # can refer to the robot by this name
   name "r0"
 
-  pose [ -6.5 -6.5 0 45 ] 
-  sicklaser()
-)
+  pose [ 0.892 0.800 0 56.500 ] 
+  sicklaser( samples 180 ) 
 
+  ctrl "wander"
+)

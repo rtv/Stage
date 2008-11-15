@@ -8,8 +8,10 @@ include "../sick.inc"
 
 resolution 0.02    # resolution of the underlying raytrace mode
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 100 # real-time interval between simulation updates in milliseconds 
+interval_real 0 # real-time interval between simulation updates in milliseconds 
 paused 1
+
+threadpool 2
 
 # configure the GUI window
 window
@@ -29,14 +31,14 @@ floorplan
   bitmap "../bitmaps/cave.png"
 )
 
-#define rob pioneer2dx
-define rob fancypioneer2dx  # alternative with more complex polygons
+define rob pioneer2dx
+#define rob fancypioneer2dx  # alternative with more complex polygons
 (
  origin [ 0 0 0 0 ]
 
  sicklaser( samples 180 ) 
  # alternative laser  with more complex polygons
-  fancysicklaser( samples 180 ) 
+ #fancysicklaser( samples 180 ) 
 
  ranger( pose [ 0 0 -0.050 0 ] )
 

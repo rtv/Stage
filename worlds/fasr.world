@@ -1,5 +1,5 @@
 # FASR demo world 
-# Authors: Richard Vaughanwo
+# Authors: Richard Vaughan
 # $Id: fasr.world,v 1.4 2008-04-01 23:57:41 rtv Exp $
 
 include "pioneer.inc"
@@ -7,24 +7,31 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 0  # real-time interval between simulation updates in milliseconds 
+interval_real 0 # real-time interval between simulation updates in milliseconds 
 paused 1
+
+resolution 0.02
+
+# threads don't help here as the per-robot update is very fast
+threadpool 0
 
 # configure the GUI window
 window
 ( 
-  size [ 601.000 605.000 ] 
+  size [ 600.000 600.000 ] 
 
-  center [ 0 0 ] 
+  center [ -0.118 -0.212 ] 
   rotate [ 0 0 ]
-  scale 32.344 
+  scale 30.883 
 
-  pcam_loc [ 0 -4 2 ]
+  pcam_loc [ 0 -4.000 2.000 ]
   pcam_angle [ 70.000 0 ]
   pcam_on 0
   
   show_data 0
   show_flags 1
+
+  interval 50
 )
 
 # load an environment bitmap
@@ -52,35 +59,42 @@ zone
   ctrl "sink"
 )
 
-define autorob fancypioneer2dx
-(
- sicklaser( samples 32 range_max 5 laser_return 2  
-	 
-#camera( pose [ 0 0 0 0 ]  range [ 0.2 8.0 ] resolution [ 100 100 ] fov [ 70 40 ] pantilt [ 0 0 ] )
-	 )
+define autorob pioneer2dx		  
+(		 
+ sicklaser( samples 36 range_max 5 laser_return 2  )
  ctrl "fasr"
-
- #say "Autolab"
 )
 
-autorob( pose [3.273 4.908 0  1.930] )
-autorob( pose [6.635 6.458 0 -52.629] )
-autorob( pose [6.385 5.805 0 -87.082] )
-autorob( pose [7.004 5.327 0 170.536] )
-autorob( pose [5.770 6.492 0 -10.539] )
-autorob( pose [7.493 4.852 0 -156.719] )
-autorob( pose [5.078 6.853 0 -37.549] )
-autorob( pose [6.147 7.399 0 4.964] )
-autorob( pose [4.058 5.283 0 125.796] )
-autorob( pose [7.487 6.926 0 -40.634] )
+autorob( pose [5.133 4.841 0  -179.934] )
+autorob( pose [6.381 5.316 0 -85.327] )
+autorob( pose [5.972 4.982 0 -41.506] )
+autorob( pose [7.627 6.296 0 -120.309] )
+autorob( pose [5.509 6.440 0 -104.877] )
+autorob( pose [7.024 6.433 0 125.724] )
+autorob( pose [5.688 4.291 0 -12.027] )
+autorob( pose [4.887 6.172 0 -144.634] )
+autorob( pose [7.135 5.076 0 -162.054] )
+autorob( pose [7.409 5.691 0 146.028] )
 
-autorob( pose [4.530 7.367 0 -113.456] )
-autorob( pose [6.071 5.138 0 -1.177] )
-autorob( pose [6.591 4.622 0 -68.007] )
-autorob( pose [5.454 7.540 0 135.162] )
-autorob( pose [4.707 5.855 0 -3.588] )
-autorob( pose [6.714 7.447 0 -73.332] )
-autorob( pose [5.582 5.724 0 -48.161] )
-autorob( pose [3.958 6.851 0 -102.651] )
-autorob( pose [5.127 5.109 0 23.582] )
-autorob( pose [7.534 5.825 0 -70.230] )
+autorob( pose [6.752 6.937 0 -103.060] )
+autorob( pose [6.546 4.535 0 -153.940] )
+autorob( pose [5.642 7.205 0 97.307] )
+autorob( pose [4.386 5.877 0 -35.838] )
+autorob( pose [4.892 4.191 0 63.840] )
+autorob( pose [4.516 5.050 0 -76.859] )
+autorob( pose [5.354 5.353 0 -63.787] )
+autorob( pose [7.566 6.939 0 57.242] )
+autorob( pose [7.604 4.795 0 -147.661] )
+autorob( pose [6.284 3.807 0 -145.026] )
+
+#autorob( pose [7.122 4.175 0 -31.440] )
+#autorob( pose [6.203 6.963 0 2.937] )
+#autorob( pose [6.800 5.897 0 -103.060] )
+#autorob( pose [6.331 6.450 0 -103.060] )
+#autorob( pose [5.974 5.725 0 -103.060] )
+#autorob( pose [4.151 7.272 0 53.540] )
+#autorob( pose [6.545 7.459 0 2.937] )
+#autorob( pose [7.225 7.459 0 34.450] )
+#autorob( pose [3.875 6.533 0 134.717] )
+#autorob( pose [3.944 5.045 0 -103.060] )
+#autorob( pose [4.634 6.897 0 -103.060] )

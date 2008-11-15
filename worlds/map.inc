@@ -23,6 +23,8 @@ define zone model
 (
   color	"orange"
   size [ 2 2 0.02 ]
+
+  # insensible to collision and range sensors
   obstacle_return 0
   laser_return 0
   ranger_return 0  
