@@ -176,9 +176,7 @@ void BlockGroup::BuildDisplayList( StgModel* mod )
 		else
 		  blk->DrawSolid();
 	 }
-  
-  //		LISTMETHOD( blocks, StgBlock*, DrawSolid );
-  
+
   glDepthMask(GL_TRUE);
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   

@@ -25,19 +25,22 @@ static  const int checkImageWidth = 2;
 static  const int	checkImageHeight = 2;
 static  GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 static  GLuint texName;
+static bool blur = true;
+
 
 void StgCanvas::TimerCallback( StgCanvas* c )
 {
-  c->redraw();
+  if( c->world->dirty )
+	 {
+		//puts( "timer redraw" );
+		c->redraw();
+		c->world->dirty = false;
+	 }
   
   Fl::repeat_timeout(((double)c->interval/1000),
 							(Fl_Timeout_Handler)StgCanvas::TimerCallback, 
 							c);
 }
-
-
-
-
 
 StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   Fl_Gl_Window(x,y,w,h),
@@ -76,13 +79,17 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
 	
   startx = starty = -1;
   interval = 50; //msec between redraws
+  
+  // enable accumulation buffer
+  mode( mode() | FL_ACCUM );
+  assert( can_do( FL_ACCUM ) );
 
   graphics = true;
   
-  // // start the timer that causes regular redraws
-  Fl::add_timeout( ((double)interval/1000), 
-						 (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
-						 this);
+//   // // start the timer that causes regular redraws
+//   Fl::add_timeout( ((double)interval/1000), 
+// 						 (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+// 						 this);
 
  
   GLenum status;
@@ -183,7 +190,9 @@ void StgCanvas::select( StgModel* mod ) {
     {
 		last_selection = mod;
 		selected_models = g_list_prepend( selected_models, mod );
+		
 		//		mod->Disable();
+		redraw();
     }
 }
 
@@ -196,6 +205,7 @@ void StgCanvas::unSelect( StgModel* mod ) {
 			 selected_models = 
 				g_list_remove_link( selected_models, link );
 			 //			mod->Enable();
+			 redraw();
 		  }
 	 }  
 }
@@ -415,6 +425,19 @@ int StgCanvas::handle(int event)
 		  {
 		  case 'p': // pause
 			 world->TogglePause();
+			 
+			 if( ! world->paused )
+				{
+				  // // start the timer that causes regular redraws
+				  Fl::add_timeout( ((double)interval/1000), 
+										 (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+										 this);
+				}
+			 else
+				{ // remove the timeout
+				  Fl::remove_timeout( (Fl_Timeout_Handler)StgCanvas::TimerCallback );
+				}
+
 			 break;
 		  case ' ': // space bar
 		  
@@ -503,16 +526,14 @@ void StgCanvas::DrawGlobalGrid()
   glColor3f( 1.0, 1.0, 1.0 );
 
   glBegin(GL_QUADS);
-
-  glTexCoord2f( bounds.x.min/2.0, bounds.y.min/2.0 ); 
-  glVertex2f( bounds.x.min, bounds.y.min );
-  glTexCoord2f( bounds.x.max/2.0, bounds.y.min/2.0); 
-  glVertex2f(  bounds.x.max, bounds.y.min );
-  glTexCoord2f( bounds.x.max/2.0, bounds.y.max/2.0 ); 
-  glVertex2f(  bounds.x.max, bounds.y.max );
-  glTexCoord2f( bounds.x.min/2.0, bounds.y.max/2.0 ); 
-  glVertex2f( bounds.x.min, bounds.y.max );
-
+    glTexCoord2f( bounds.x.min/2.0, bounds.y.min/2.0 ); 
+    glVertex2f( bounds.x.min, bounds.y.min );
+    glTexCoord2f( bounds.x.max/2.0, bounds.y.min/2.0); 
+    glVertex2f(  bounds.x.max, bounds.y.min );
+    glTexCoord2f( bounds.x.max/2.0, bounds.y.max/2.0 ); 
+    glVertex2f(  bounds.x.max, bounds.y.max );
+    glTexCoord2f( bounds.x.min/2.0, bounds.y.max/2.0 ); 
+    glVertex2f( bounds.x.min, bounds.y.max );
   glEnd();
 
   glDisable(GL_TEXTURE_2D);
@@ -628,10 +649,6 @@ void StgCanvas::renderFrame()
       glPopMatrix();
     }
 
-  if( showGrid )
-    DrawGlobalGrid();
-  else
-    DrawFloor();
   
   if( showFootprints )
     {
@@ -642,10 +659,95 @@ void StgCanvas::renderFrame()
 		}
       glEnable( GL_DEPTH_TEST );
     }
+  
+  if( showGrid )
+	 DrawGlobalGrid();
+  else
+	 DrawFloor();
 
   if( showBlocks )
-    DrawBlocks();
-  
+ 	 DrawBlocks();
+
+
+// MOTION BLUR
+//   if( showBlocks )
+// 	 {
+// 		DrawBlocks();
+		
+// 		static float count = 0; 
+		
+// 		if( ! blur )
+// 		  {
+// 			 blur = true;
+// 			 glClear( GL_ACCUM_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+// 			 glAccum( GL_LOAD, 1.0 );
+// 		  }
+// 		else
+// 		  {	
+// 			 glAccum( GL_MULT, 0.9 );
+// 			 glAccum( GL_ACCUM, 0.1 );
+			 
+// 			 glAccum( GL_RETURN, 1.1 );
+			 
+//  			 DrawBlocks(); // outline at current location
+// 		  }
+// 	 }
+
+// GRAY TRAILS
+//   if( showBlocks )
+// 	 {
+		
+// 		static float count = 0; 
+		
+// 		if( ! blur )
+// 		  {
+// 			 blur = true;
+// 			 glClear( GL_ACCUM_BUFFER_BIT );
+// 			 DrawBlocks();
+// 			 glAccum( GL_LOAD, 1.0 );
+// 		  }
+// 		else
+// 		  {	
+// 			 glAccum( GL_MULT, 0.9 );
+
+//  			 DrawBlocks();
+
+// 			 glAccum( GL_ACCUM, 0.1);
+
+// 			 glAccum( GL_RETURN, 1.0 );
+
+// 			 DrawBlocks();
+// 		  }
+// 	 }
+
+// PRETTY BLACK
+//   if( showBlocks )
+// 	 {
+		
+// 		static float count = 0; 
+		
+// 		if( ! blur )
+// 		  {
+// 			 blur = true;
+// 			 glClear( GL_ACCUM_BUFFER_BIT );
+// 			 DrawBlocks();
+// 			 glAccum( GL_LOAD, 1.0 );
+// 		  }
+// 		else
+// 		  {	
+// 			 glAccum( GL_MULT, 0.9 );
+// 			 glAccum( GL_RETURN, 1.0 );
+
+//  			 DrawBlocks();
+
+// 			 glAccum( GL_ACCUM, 0.1);
+
+// 			 glAccum( GL_RETURN, 1.0 );
+
+// 			 DrawBlocks();
+// 		  }
+// 	 }
+
   if( showTrailRise )
     {
 		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
@@ -908,6 +1010,12 @@ void StgCanvas::Load( Worldfile* wf, int sec )
   showScreenshots.Load( wf, sec );
   pCamOn.Load( wf, sec );
 
+  if( ! world->paused )
+	 // // start the timer that causes regular redraws
+	 Fl::add_timeout( ((double)interval/1000), 
+							(Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+							this);
+
   invalidate(); // we probably changed something
 }
 
@@ -937,6 +1045,9 @@ void StgCanvas::Save( Worldfile* wf, int sec )
 
 void StgCanvas::draw()
 {
+//   static unsigned long calls=0;
+//   printf( "Draw calls %lu\n", ++calls );
+
   static bool loaded_texture = false;
 
   //Enable the following to debug camera model
@@ -963,6 +1074,8 @@ void StgCanvas::draw()
       glEnable( GL_TEXTURE_2D );
 		glEnableClientState( GL_VERTEX_ARRAY );
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+		blur = false;
 
       //TODO find a better home for loading textures
       if( loaded_texture == false ) 

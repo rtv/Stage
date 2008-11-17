@@ -298,20 +298,35 @@ bool StgWorldGui::Update()
     Fl::check();
 
     timenow = RealTimeNow();
-    interval = timenow - real_time_of_last_update; // guaranteed to be >= 0
 	 
-    double sleeptime = (double)interval_real - (double)interval;
-	 
-    if( sleeptime > 0  ) 
-      usleep( (stg_usec_t)MIN(sleeptime,100000) ); // check the GUI at 10Hz min
-	 
+	 // if we're attempting to match some real time interval
+	 //if( interval_real > 0 )
+		{
+		  interval = timenow - real_time_of_last_update; // guaranteed to be >= 0
+		  
+		  double sleeptime = (double)interval_real - (double)interval;
+		  
+		  if( paused ) sleeptime = 20000; // spare the CPU if we're paused
+		  
+		  // printf( "real %.2f interval %.2f sleeptime %.2f\n", 
+		  //	 (double)interval_real,
+		  //	 (double)interval,
+		  //	 sleeptime );
+		  
+		  if( sleeptime > 0 ) 
+			 usleep( (stg_usec_t)MIN(sleeptime,20000) ); // check the GUI at 10Hz min
+		}
   } while( interval < interval_real );
   
+  // if( paused ) // gentle on the CPU when paused
+		 //usleep( 10000 );
   
   interval_log[updates%INTERVAL_LOG_LEN] =  timenow - real_time_of_last_update;
 
   real_time_of_last_update = timenow;
   
+  //puts( "FINSHED UPDATE" );
+
   return val;
 }
 

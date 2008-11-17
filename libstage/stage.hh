@@ -883,6 +883,9 @@ namespace Stg
 	 /** StgWorld::quit is set true when this simulation time is reached */
 	 stg_usec_t quit_time;
 
+	 // hint that the world needs to be redrawn if a GUI is attached
+	 void NeedRedraw(){ dirty = true; };
+
 	 void LoadModel( Worldfile* wf, int entity, GHashTable* entitytable );
 	 void LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable );
 	 void LoadBlockGroup( Worldfile* wf, int entity, GHashTable* entitytable );

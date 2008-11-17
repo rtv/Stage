@@ -23,11 +23,8 @@ window
   rotate [ 38.000 -36.500 ]
   scale 12.611 
 
-#  size [ 640 480 ] 
-#  center [929.990 -377.040] 
-#  rotate [ 0.000 0.000 ]
-#  scale 20.806 
   show_data 0
+  interval 200
 )
 
 # load an environment bitmap

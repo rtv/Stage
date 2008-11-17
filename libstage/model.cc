@@ -159,7 +159,6 @@ StgModel::StgModel( StgWorld* world,
 	 parent(parent),
 	 type(type),
     id( StgModel::count++ ),
-	 gpose_dirty(true),
 	 trail( g_array_new( false, false, sizeof(stg_trail_item_t) )),
 	 blocks_dl(0),
 	 data_fresh(false),
@@ -553,28 +552,20 @@ stg_pose_t StgModel::GetGlobalPose()
 { 
   //printf( "model %s global pose ", token );
 
-  // if( this->gpose_dirty )
-  {
-	 stg_pose_t parent_pose;
-
-	 // find my parent's pose
-	 if( this->parent )
-		{
-		  parent_pose = parent->GetGlobalPose();	  
-		  stg_pose_sum( &global_pose, &parent_pose, &pose );
-			 
-		  // we are on top of our parent
-		  global_pose.z += parent->geom.size.z;
-		}
-	 else
-		memcpy( &global_pose, &pose, sizeof(stg_pose_t));
+  stg_pose_t parent_pose;
+  
+  // find my parent's pose
+  if( this->parent )
+	 {
+		parent_pose = parent->GetGlobalPose();	  
+		stg_pose_sum( &global_pose, &parent_pose, &pose );
 		
-	 this->gpose_dirty = false;
-	 //printf( " WORK " );
-  }
-  //else
-  //printf( " CACHED " );
-
+		// we are on top of our parent
+		global_pose.z += parent->geom.size.z;
+	 }
+  else
+	 memcpy( &global_pose, &pose, sizeof(stg_pose_t));
+  
   //   PRINT_DEBUG4( "GET GLOBAL POSE [x:%.2f y:%.2f z:%.2f a:%.2f]",
   // 		global_pose.x,
   // 		global_pose.y,
@@ -1301,15 +1292,17 @@ void StgModel::NeedRedraw( void )
 
   if( parent )
     parent->NeedRedraw();
+  else
+	 world->NeedRedraw();
 }
 
-void StgModel::GPoseDirtyTree( void )
-{
-  this->gpose_dirty = true; // our global pose may have changed
+// void StgModel::GPoseDirtyTree( void )
+// {
+//   this->gpose_dirty = true; // our global pose may have changed
 
-  for( GList* it = this->children; it; it=it->next )
-    ((StgModel*)it->data)->GPoseDirtyTree();
-}
+//   for( GList* it = this->children; it; it=it->next )
+//     ((StgModel*)it->data)->GPoseDirtyTree();
+// }
 
 void StgModel::SetPose( stg_pose_t pose )
 {
@@ -1329,10 +1322,11 @@ void StgModel::SetPose( stg_pose_t pose )
       this->pose.a = normalize(this->pose.a);
 
       this->NeedRedraw();
-      this->GPoseDirtyTree(); // global pose may have changed
 
 		this->map_caches_are_invalid = true;
       MapWithChildren();
+
+		world->dirty = true;
     }
 
   // register a model change even if the pose didn't actually change
@@ -1364,8 +1358,6 @@ void StgModel::SetGeom( stg_geom_t geom )
   //  this->token,
   //  geom->pose.x, geom->pose.y, geom->pose.a,
   //  geom->size.x, geom->size.y );
-
-  this->gpose_dirty = true;
 
   UnMapWithChildren();
   
@@ -1553,8 +1545,11 @@ StgModel* StgModel::ConditionalMove( stg_pose_t newpose )
   if( hitmod )
 	 pose = startpose; // move failed - put me back where I started
   else
-	 CommitTestedPose(); // shift anyrecursively commit to blocks to the new pose
-  
+	 {
+		CommitTestedPose(); // shift anyrecursively commit to blocks to the new pose 
+		world->dirty = true; // need redraw
+	 }
+
   return hitmod;
 }
 

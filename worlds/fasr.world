@@ -8,12 +8,13 @@ include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 0 # real-time interval between simulation updates in milliseconds 
-paused 1
+paused 0
 
 resolution 0.02
 
 # threads don't help here as the per-robot update is very fast
 threadpool 0
+
 
 # configure the GUI window
 window
@@ -65,27 +66,27 @@ define autorob pioneer2dx
  ctrl "fasr"
 )
 
-autorob( pose [5.133 4.841 0  -179.934] )
-autorob( pose [6.381 5.316 0 -85.327] )
-autorob( pose [5.972 4.982 0 -41.506] )
-autorob( pose [7.627 6.296 0 -120.309] )
-autorob( pose [5.509 6.440 0 -104.877] )
-autorob( pose [7.024 6.433 0 125.724] )
-autorob( pose [5.688 4.291 0 -12.027] )
-autorob( pose [4.887 6.172 0 -144.634] )
-autorob( pose [7.135 5.076 0 -162.054] )
-autorob( pose [7.409 5.691 0 146.028] )
+autorob( pose [5.099 4.804 0  -73.937] )
+autorob( pose [6.471 5.304 0 14.941] )
+autorob( pose [5.937 4.858 0 -147.503] )
+autorob( pose [7.574 6.269 0 -111.715] )
+autorob( pose [5.664 5.938 0 -51.799] )
+autorob( pose [7.016 6.428 0 -128.279] )
+autorob( pose [5.911 4.040 0 -97.047] )
+autorob( pose [4.909 6.097 0 -44.366] )
+autorob( pose [6.898 4.775 0 -117.576] )
+autorob( pose [7.012 5.706 0 129.497] )
 
-autorob( pose [6.752 6.937 0 -103.060] )
-autorob( pose [6.546 4.535 0 -153.940] )
-autorob( pose [5.642 7.205 0 97.307] )
-autorob( pose [4.386 5.877 0 -35.838] )
-autorob( pose [4.892 4.191 0 63.840] )
-autorob( pose [4.516 5.050 0 -76.859] )
-autorob( pose [5.354 5.353 0 -63.787] )
-autorob( pose [7.566 6.939 0 57.242] )
-autorob( pose [7.604 4.795 0 -147.661] )
-autorob( pose [6.284 3.807 0 -145.026] )
+autorob( pose [6.616 6.893 0 170.743] )
+autorob( pose [6.451 4.189 0 -61.453] )
+autorob( pose [5.098 6.788 0 -61.295] )
+autorob( pose [4.374 5.163 0 -90.417] )
+autorob( pose [4.999 4.230 0 -42.157] )
+autorob( pose [4.331 4.217 0 -95.000] )
+autorob( pose [5.440 5.317 0 -26.545] )
+autorob( pose [7.518 6.973 0 163.239] )
+autorob( pose [7.559 4.764 0 -139.066] )
+autorob( pose [4.839 3.595 0 -179.567] )
 
 #autorob( pose [7.122 4.175 0 -31.440] )
 #autorob( pose [6.203 6.963 0 2.937] )
