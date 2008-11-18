@@ -361,11 +361,11 @@ void StgModel::AddBlockRect( stg_meters_t x,
 }
 
 
-stg_raytrace_result_t StgModel::Raytrace( stg_pose_t pose,
-														stg_meters_t range, 
-														stg_ray_test_func_t func,
+stg_raytrace_result_t StgModel::Raytrace( const stg_pose_t &pose,
+														const stg_meters_t range, 
+														const stg_ray_test_func_t func,
 														const void* arg,
-														bool ztest )
+														const bool ztest )
 {
   return world->Raytrace( LocalToGlobal(pose),
 								  range,
@@ -375,11 +375,11 @@ stg_raytrace_result_t StgModel::Raytrace( stg_pose_t pose,
 								  ztest );
 }
 
-stg_raytrace_result_t StgModel::Raytrace( stg_radians_t bearing,
-														stg_meters_t range, 
-														stg_ray_test_func_t func,
+stg_raytrace_result_t StgModel::Raytrace( const stg_radians_t bearing,
+														const stg_meters_t range, 
+														const stg_ray_test_func_t func,
 														const void* arg,
-														bool ztest )
+														const bool ztest )
 {
   stg_pose_t raystart;
   bzero( &raystart, sizeof(raystart));
@@ -394,14 +394,14 @@ stg_raytrace_result_t StgModel::Raytrace( stg_radians_t bearing,
 }
 
 
-void StgModel::Raytrace( stg_radians_t bearing,
-								 stg_meters_t range, 
-								 stg_radians_t fov,
-								 stg_ray_test_func_t func,
+void StgModel::Raytrace( const stg_radians_t bearing,
+								 const stg_meters_t range, 
+								 const stg_radians_t fov,
+								 const stg_ray_test_func_t func,
 								 const void* arg,
 								 stg_raytrace_result_t* samples,
-								 uint32_t sample_count,
-								 bool ztest )
+								 const uint32_t sample_count,
+								 const bool ztest )
 {
   stg_pose_t raystart;
   bzero( &raystart, sizeof(raystart));
@@ -550,21 +550,16 @@ void StgModel::SetGlobalVelocity( stg_velocity_t gv )
 // get the model's position in the global frame
 stg_pose_t StgModel::GetGlobalPose()
 { 
-  //printf( "model %s global pose ", token );
-
-  stg_pose_t parent_pose;
+  // if I'm a top level model, my global pose is my local pose
+  if( parent == NULL )
+	 return pose;
   
-  // find my parent's pose
-  if( this->parent )
-	 {
-		parent_pose = parent->GetGlobalPose();	  
-		stg_pose_sum( &global_pose, &parent_pose, &pose );
-		
-		// we are on top of our parent
-		global_pose.z += parent->geom.size.z;
-	 }
-  else
-	 memcpy( &global_pose, &pose, sizeof(stg_pose_t));
+  // otherwise  
+  
+  stg_pose_t global_pose = pose_sum( parent->GetGlobalPose(), pose );		
+  
+  // we are on top of our parent
+  global_pose.z += parent->geom.size.z;
   
   //   PRINT_DEBUG4( "GET GLOBAL POSE [x:%.2f y:%.2f z:%.2f a:%.2f]",
   // 		global_pose.x,
@@ -579,27 +574,27 @@ stg_pose_t StgModel::GetGlobalPose()
 // convert a pose in this model's local coordinates into global
 // coordinates
 // should one day do all this with affine transforms for neatness?
-stg_pose_t StgModel::LocalToGlobal( stg_pose_t pose )
+inline stg_pose_t StgModel::LocalToGlobal( stg_pose_t pose )
 {  
   return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
 }
 
-stg_point3_t StgModel::LocalToGlobal( stg_point3_t point )
-{
-  stg_pose_t pose;
-  pose.x = point.x;
-  pose.y = point.y;
-  pose.z = point.z;
-  pose.a = 0;
+// stg_point3_t StgModel::LocalToGlobal( stg_point3_t point )
+// {
+//   stg_pose_t pose;
+//   pose.x = point.x;
+//   pose.y = point.y;
+//   pose.z = point.z;
+//   pose.a = 0;
 
-  pose = LocalToGlobal( pose );
+//   pose = LocalToGlobal( pose );
 
-  point.x = pose.x;
-  point.y = pose.y;
-  point.z = pose.z;
+//   point.x = pose.x;
+//   point.y = pose.y;
+//   point.z = pose.z;
 
-  return point;
-}
+//   return point;
+// }
 
 void StgModel::MapWithChildren()
 {
@@ -623,28 +618,28 @@ void StgModel::UnMapWithChildren()
 // given an input point array in model local coordinates, return
 // an array with the same points in global coordinates. caller must
 // delete[] the points.
-stg_point_t* StgModel::LocalToGlobal( double scalex, 
-												  double scaley, 
-												  stg_point_t pts[], 
-												  uint32_t pt_count )
-{
-  stg_point_t* glob = new stg_point_t[pt_count];
+// stg_point_t* StgModel::LocalToGlobal( double scalex, 
+// 												  double scaley, 
+// 												  stg_point_t pts[], 
+// 												  uint32_t pt_count )
+// {
+//   stg_point_t* glob = new stg_point_t[pt_count];
   
-  stg_pose_t global_pose = GetGlobalPose();
+//   stg_pose_t global_pose = GetGlobalPose();
 
-  for( int p=0; p<pt_count; p++ )
-	 {
-		stg_pose_t local( pts[p].x * scalex, 
-								pts[p].y * scaley, 
-								0, 0 );		
-		stg_pose_t global = pose_sum( global_pose, local );
+//   for( int p=0; p<pt_count; p++ )
+// 	 {
+// 		stg_pose_t local( pts[p].x * scalex, 
+// 								pts[p].y * scaley, 
+// 								0, 0 );		
+// 		stg_pose_t global = pose_sum( global_pose, local );
 		
-		glob[p].x = global.x;
-		glob[p].y = global.y;
-	 }
+// 		glob[p].x = global.x;
+// 		glob[p].y = global.y;
+// 	 }
 
-  return glob;
-}
+//   return glob;
+// }
 
 
 void StgModel::Map()

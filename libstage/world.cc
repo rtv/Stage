@@ -143,10 +143,10 @@ StgWorld::StgWorld( const char* token,
 		PRINT_WARN( "Stg::Init() must be called before a StgWorld is created." );
 		exit(-1);
 	 }
+
+  bzero( &extent, sizeof(extent) );
   
   StgWorld::world_list = g_list_append( StgWorld::world_list, this );
-
-  bzero( &this->extent, sizeof(this->extent));
 }
 
 
@@ -483,24 +483,28 @@ void StgWorld::ClearRays()
 }
 
 
-void StgWorld::Raytrace( stg_pose_t pose, // global pose
-		stg_meters_t range,
-		stg_radians_t fov,
-		stg_ray_test_func_t func,
-		StgModel* model,			 
-		const void* arg,
-		stg_raytrace_result_t* samples, // preallocated storage for samples
-		uint32_t sample_count,
-		bool ztest )  // number of samples
+void StgWorld::Raytrace( const stg_pose_t &pose, // global pose
+								 const stg_meters_t range,
+								 const stg_radians_t fov,
+								 const stg_ray_test_func_t func,
+								 const StgModel* model,			 
+								 const void* arg,
+								 stg_raytrace_result_t* samples, // preallocated storage for samples
+								 const uint32_t sample_count,
+								 const bool ztest )  // number of samples
 {
-	pose.a -= fov/2.0; // direction of first ray
-	stg_radians_t angle_incr = fov/(double)sample_count;
-
-	for( uint32_t s=0; s < sample_count; s++ )
-	{
-		samples[s] = Raytrace( pose, range, func, model, arg, ztest );
-		pose.a += angle_incr;
-	}
+  // find the direction of the first ray
+  stg_pose_t raypose = pose;
+  raypose.a -= fov/2.0;
+  
+  // increment the ray direction by this much for each sample
+  stg_radians_t angle_incr = fov/(double)sample_count;
+    
+  for( uint32_t s=0; s < sample_count; s++ )
+	 {
+		samples[s] = Raytrace( raypose, range, func, model, arg, ztest );
+		raypose.a += angle_incr;
+	 }
 }
 
 
@@ -548,12 +552,12 @@ inline stg_point_int_t CELL( const stg_point_int_t& glob )
   return c;
 }
 
-stg_raytrace_result_t StgWorld::Raytrace( stg_pose_t gpose, 
-														stg_meters_t range,
-														stg_ray_test_func_t func,
-														StgModel* mod,		
+stg_raytrace_result_t StgWorld::Raytrace( const stg_pose_t &gpose, 
+														const stg_meters_t range,
+														const stg_ray_test_func_t func,
+														const StgModel* mod,		
 														const void* arg,
-														bool ztest ) 
+														const bool ztest ) 
 {
   stg_raytrace_result_t sample;
 
@@ -603,13 +607,8 @@ stg_raytrace_result_t StgWorld::Raytrace( stg_pose_t gpose,
 	//  x,y,  dx,dy, n );
 	
 	// superregion coords
-	stg_point_int_t lastsup;
-	lastsup.x = INT_MAX; // an unlikely first raytrace
-	lastsup.y = INT_MAX;
-	
-	stg_point_int_t lastreg;
-	lastreg.x = INT_MAX; // an unlikely first raytrace
-	lastreg.y = INT_MAX;
+	stg_point_int_t lastsup = {INT_MAX, INT_MAX };
+	stg_point_int_t lastreg = {INT_MAX, INT_MAX };
 	
 	SuperRegion* sr = NULL;
 	Region* r = NULL;
@@ -637,8 +636,7 @@ stg_raytrace_result_t StgWorld::Raytrace( stg_pose_t gpose,
 	sr = GetSuperRegionCached( sup ); // possibly NULL, but unlikely
 
 	while ( n-- ) 
-    {         
-		
+    {         	
 		//printf( "pixel [%d %d]\tS[ %d %d ]\t",
 		//	  x, y, sup.x, sup.y );
 		
@@ -690,7 +688,7 @@ stg_raytrace_result_t StgWorld::Raytrace( stg_pose_t gpose,
 				 //		mod, mod->Token(), ent->mod, ent->mod->Token(), x, y );
 				 
 					 // test the predicate we were passed
-					 if( (*func)( block->mod, mod, arg )) // TODO
+					if( (*func)( block->mod, (StgModel*)mod, arg )) // TODO
 					 {
 						// a hit!
 						sample.color = block->GetColor();

@@ -12,32 +12,6 @@ const uint32_t Region::SIZE = REGIONSIZE;
 const uint32_t SuperRegion::WIDTH = SUPERREGIONWIDTH;
 const uint32_t SuperRegion::SIZE = SUPERREGIONSIZE;
 
-//inline
-void Cell::RemoveBlock( StgBlock* b )
-{
-  // linear time removal, but these lists should be very short.
-  list = g_slist_remove( list, b );
-  
-  assert( region );
-  region->DecrementOccupancy();
-}
-
-void Cell::AddBlock( StgBlock* b )
-{
-  // constant time prepend
-  list = g_slist_prepend( list, b );
-
-  region->IncrementOccupancy();
-  b->RecordRendering( this );
-}
-
-void Cell::AddBlockNoRecord( StgBlock* b )
-{
-  list = g_slist_prepend( list, b );
-
-  // don't add this cell to the block - we assume it's already there
-}
-
 
 Region::Region() 
   : count(0)
@@ -49,29 +23,6 @@ Region::Region()
 Region::~Region()
 {
   delete[] cells;
-}
-
-inline void Region::DecrementOccupancy()
-{ 
-  assert( superregion );
-  superregion->DecrementOccupancy();
-  --count; 
-}
-
-inline void Region::IncrementOccupancy()
-{ 
-  assert( superregion );
-  superregion->IncrementOccupancy();
-  ++count; 
-}
-
-Cell* Region::GetCell( int32_t x, int32_t y )
-{
-  uint32_t index = x + (y*Region::WIDTH);
-  assert( x < Region::WIDTH );
-  assert( index >=0 );
-  assert( index < Region::SIZE );
-  return &cells[index];    
 }
 
 
@@ -89,25 +40,6 @@ SuperRegion::SuperRegion( int32_t x, int32_t y )
 SuperRegion::~SuperRegion()
 {
   // nothing to do
-}
-
-// get the region x,y from the region array
-Region* SuperRegion::GetRegion( int32_t x, int32_t y )
-{
-  int32_t index =  x + (y*SuperRegion::WIDTH);
-  assert( index >=0 );
-  assert( index < (int)SuperRegion::SIZE );
-  return &regions[ index ];
-} 
-
-inline void SuperRegion::DecrementOccupancy()
-{ 
-  --count; 
-}
-
-inline void SuperRegion::IncrementOccupancy()
-{ 
-  ++count; 
 }
 
 void SuperRegion::Draw( bool drawall )

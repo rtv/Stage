@@ -197,22 +197,9 @@ void Stg::stg_rotrects_normalize( stg_rotrect_t* rects, int num )
 	}
 }	
 
-// sets [result] to the pose of [p2] in [p1]'s coordinate system
-void Stg::stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
-{
-	double cosa = cos(p1->a);
-	double sina = sin(p1->a);
 
-	result->x = p1->x + p2->x * cosa - p2->y * sina;
-	result->y = p1->y + p2->x * sina + p2->y * cosa;
-	result->z = p1->z + p2->z;
-	result->a = normalize(p1->a + p2->a);
-
-	//  printf( "pose z %.2f\n", result->z );
-}
-
-// returns the resultant of vector [p1] and [p2] 
-stg_pose_t Stg::pose_sum( stg_pose_t p1, stg_pose_t p2 )
+// returns the pose of p2 in p1's coordinate system
+stg_pose_t Stg::pose_sum( const stg_pose_t& p1, const stg_pose_t& p2 )
 {
 	double cosa = cos(p1.a);
 	double sina = sin(p1.a);
@@ -227,12 +214,15 @@ stg_pose_t Stg::pose_sum( stg_pose_t p1, stg_pose_t p2 )
 }
 
 // returns the resultant of vector [p1] and [p2] 
-stg_pose_t Stg::pose_scale( stg_pose_t p1, double sx, double sy, double sz )
+stg_pose_t Stg::pose_scale( const stg_pose_t& p1, const double sx, const double sy, const double sz )
 {
-  p1.x *= sx;
-  p1.y *= sy;
-  p1.z *= sz;  
-  return p1;
+  stg_pose_t scaled;
+  scaled.x = p1.x * sx;
+  scaled.y = p1.y * sy;
+  scaled.z = p1.z * sz;
+  scaled.a = p1.a;
+  
+  return scaled;
 }
 
 

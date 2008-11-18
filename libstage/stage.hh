@@ -545,15 +545,11 @@ namespace Stg
   */
   stg_color_t stg_lookup_color(const char *name);
 
-  /** calculate the sum of [p1] and [p2], in [p1]'s coordinate system, and
-		copy the result into result. */
-  void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 );
-
   /** returns the sum of [p1] + [p2], in [p1]'s coordinate system */
-  stg_pose_t pose_sum( stg_pose_t p1, stg_pose_t p2 );
+  stg_pose_t pose_sum( const stg_pose_t& p1, const stg_pose_t& p2 );
   
   /** returns a new pose, with each axis scaled */
-  stg_pose_t pose_scale( stg_pose_t p1, double x, double y, double z );
+  stg_pose_t pose_scale( const stg_pose_t& p1, const double x, const double y, const double z );
 
 
   // PRETTY PRINTING -------------------------------------------------
@@ -929,22 +925,22 @@ namespace Stg
 	 SuperRegion* CreateSuperRegion( int32_t x, int32_t y );
 	 void DestroySuperRegion( SuperRegion* sr );
 	 
-	 stg_raytrace_result_t Raytrace( stg_pose_t pose, 			 
-												stg_meters_t range,
-												stg_ray_test_func_t func,
-												StgModel* finder,
+	 stg_raytrace_result_t Raytrace( const stg_pose_t& pose, 			 
+												const stg_meters_t range,
+												const stg_ray_test_func_t func,
+												const StgModel* finder,
 												const void* arg,
-												bool ztest );
+												const bool ztest );
   
-	 void Raytrace( stg_pose_t pose, 			 
-						 stg_meters_t range,
-						 stg_radians_t fov,
-						 stg_ray_test_func_t func,
-						 StgModel* finder,
+	 void Raytrace( const stg_pose_t &pose, 			 
+						 const stg_meters_t range,
+						 const stg_radians_t fov,
+						 const stg_ray_test_func_t func,
+						 const StgModel* finder,
 						 const void* arg,
 						 stg_raytrace_result_t* samples,
-						 uint32_t sample_count,
-						 bool ztest );
+						 const uint32_t sample_count,
+						 const bool ztest );
   
   protected:
 	 
@@ -1057,9 +1053,9 @@ namespace Stg
 	 /** Return the number of times the world has been updated. */
 	 long unsigned int GetUpdateCount() { return updates; }
   
-	 stg_point_t* LocalToGlobal( double scalex, double scaley, 
-										  stg_point_t pts[],
-										  uint32_t pt_count );
+// 	 stg_point_t* LocalToGlobal( double scalex, double scaley, 
+// 										  stg_point_t pts[],
+// 										  uint32_t pt_count );
   };
 
 class StgBlock
@@ -1333,37 +1329,37 @@ public:
   
 	 /** raytraces a single ray from the point and heading identified by
 		  pose, in local coords */
-	 stg_raytrace_result_t Raytrace( stg_pose_t pose,
-												stg_meters_t range, 
-												stg_ray_test_func_t func,
+	 stg_raytrace_result_t Raytrace( const stg_pose_t &pose,
+												const stg_meters_t range, 
+												const stg_ray_test_func_t func,
 												const void* arg,
-												bool ztest = true );
+												const bool ztest = true );
   
 	 /** raytraces multiple rays around the point and heading identified
 		  by pose, in local coords */
-	 void Raytrace( stg_pose_t pose,
-						 stg_meters_t range, 
-						 stg_radians_t fov, 
-						 stg_ray_test_func_t func,
+	 void Raytrace( const stg_pose_t &pose,
+						 const stg_meters_t range, 
+						 const stg_radians_t fov, 
+						 const stg_ray_test_func_t func,
 						 const void* arg,
 						 stg_raytrace_result_t* samples,
-						 uint32_t sample_count,
-						 bool ztest = true  );
+						 const uint32_t sample_count,
+						 const bool ztest = true  );
   
-	 stg_raytrace_result_t Raytrace( stg_radians_t bearing, 			 
-												stg_meters_t range,
-												stg_ray_test_func_t func,
+	 stg_raytrace_result_t Raytrace( const stg_radians_t bearing, 			 
+												const stg_meters_t range,
+												const stg_ray_test_func_t func,
 												const void* arg,
-												bool ztest = true );
+												const bool ztest = true );
   
-	 void Raytrace( stg_radians_t bearing, 			 
-						 stg_meters_t range,
-						 stg_radians_t fov,
-						 stg_ray_test_func_t func,
+	 void Raytrace( const stg_radians_t bearing, 			 
+						 const stg_meters_t range,
+						 const stg_radians_t fov,
+						 const stg_ray_test_func_t func,
 						 const void* arg,
 						 stg_raytrace_result_t* samples,
-						 uint32_t sample_count,
-						 bool ztest = true );
+						 const uint32_t sample_count,
+						 const bool ztest = true );
   
 
 	 /** Causes this model and its children to recompute their global
@@ -1430,10 +1426,10 @@ public:
 	 virtual void PopColor(){ world->PopColor(); }
 	
 	 void DrawFlagList();
-	 stg_point_t* LocalToGlobal( double scalex, 
-										  double scaley, 
-										  stg_point_t pts[], 
-										  uint32_t pt_count );	 
+// 	 stg_point_t* LocalToGlobal( double scalex, 
+// 										  double scaley, 
+// 										  stg_point_t pts[], 
+// 										  uint32_t pt_count );	 
 
 	 void DrawPose( stg_pose_t pose );
 

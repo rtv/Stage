@@ -135,11 +135,11 @@ public:
 	{ colorstack.Push( r,g,b,a ); }
 
 	void PopColor(){ colorstack.Pop(); } 
-
-	void InvertView( uint32_t invertflags );
-
-	static void TimerCallback( StgCanvas* canvas );
-	static void perspectiveCb( Fl_Widget* w, void* p );
+  
+  void InvertView( uint32_t invertflags );
+  
+  static void TimerCallback( StgCanvas* canvas );
+  static void perspectiveCb( Fl_Widget* w, void* p );
   
   void Load( Worldfile* wf, int section );
   void Save( Worldfile* wf, int section );
@@ -152,7 +152,7 @@ class Cell
   friend class SuperRegion;
   friend class StgWorld;
   friend class StgBlock;
-
+  
 private:
   Region* region;
   GSList* list;
@@ -161,10 +161,10 @@ public:
 	 : region( NULL),
 		list(NULL) 
   { /* do nothing */ }  
-
-  void RemoveBlock( StgBlock* b );  
-  void AddBlock( StgBlock* b );
-  void AddBlockNoRecord( StgBlock* b );
+  
+  inline void RemoveBlock( StgBlock* b );
+  inline void AddBlock( StgBlock* b );  
+  inline void AddBlockNoRecord( StgBlock* b );
 };
 
 // a bit of experimenting suggests that these values are fast. YMMV.
@@ -188,13 +188,17 @@ private:
   
   Cell cells[REGIONSIZE];
   SuperRegion* superregion;
-
+  
 public:
   unsigned long count; // number of blocks rendered into these cells
   
   Region();
   ~Region();
-  Cell* GetCell( int32_t x, int32_t y );
+  
+  Cell* GetCell( int32_t x, int32_t y )
+  { 
+	 return( &cells[x + (y*Region::WIDTH)] ); 
+  };
   
   void DecrementOccupancy();
   void IncrementOccupancy();
@@ -220,14 +224,58 @@ public:
   SuperRegion( int32_t x, int32_t y );
   ~SuperRegion();
   
-  Region* GetRegion( int32_t x, int32_t y );
+  Region* GetRegion( int32_t x, int32_t y )
+  {
+	 return( &regions[ x + (y*SuperRegion::WIDTH) ] );
+  };
   
   void Draw( bool drawall );
   void Floor();
-  void DecrementOccupancy();
-  void IncrementOccupancy();
+
+  void DecrementOccupancy(){ --count; };  
+  void IncrementOccupancy(){ ++count; };
 };
+  
+
+// INLINE METHOD DEFITIONS
+
+inline void Region::DecrementOccupancy()
+{ 
+  assert( superregion );
+  superregion->DecrementOccupancy();
+  --count; 
+}
+
+inline void Region::IncrementOccupancy()
+{ 
+  assert( superregion );
+  superregion->IncrementOccupancy();
+  ++count; 
+}
+
+inline void Cell::RemoveBlock( StgBlock* b )
+{
+  // linear time removal, but these lists should be very short.
+  list = g_slist_remove( list, b );
+  region->DecrementOccupancy();
+}
+
+inline void Cell::AddBlock( StgBlock* b )
+{
+  // constant time prepend
+  list = g_slist_prepend( list, b );	 
+  region->IncrementOccupancy();
+  b->RecordRendering( this );
+}
+
+inline void Cell::AddBlockNoRecord( StgBlock* b )
+{
+  list = g_slist_prepend( list, b );
+  // don't add this cell to the block - we assume it's already there
+}
 
 }; // namespace Stg
+
+
 
 #endif // STG_INTERNAL_H
