@@ -1,8 +1,11 @@
 /** canvas.cc
     Implement the main world viewing area in FLTK and OpenGL. 
-    Authors: Richard Vaughan (vaughan@sfu.ca)
-	 Alex Couture-Beil (asc17@sfu.ca)
-	 Jeremy Asher (jra11@sfu.ca)
+
+    Authors: 
+      Richard Vaughan (vaughan@sfu.ca)
+	   Alex Couture-Beil (asc17@sfu.ca)
+	   Jeremy Asher (jra11@sfu.ca)
+
     $Id$
 */
 
@@ -11,7 +14,7 @@
 #include "replace.h"
 
 #include <string>
-#include <map>
+//#include <map>
 #include <sstream>
 #include <png.h>
 #include <GLUT/glut.h>
@@ -85,21 +88,11 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   assert( can_do( FL_ACCUM ) );
 
   graphics = true;
-  
-//   // // start the timer that causes regular redraws
-//   Fl::add_timeout( ((double)interval/1000), 
-// 						 (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
-// 						 this);
-
- 
-  GLenum status;
-
-  
- 
 }
 
 StgCanvas::~StgCanvas()
-{
+{ 
+  // nothing to do
 }
 
 StgModel* StgCanvas::getModel( int x, int y )
@@ -469,6 +462,7 @@ int StgCanvas::handle(int event)
 			 if( pCamOn == false ) {camera.move( 0, 10 ); } 
 			 else { perspective_camera.forward( 0.5 ); } break;
 		  default:
+			 redraw(); // we probably set a display config - so need this
 			 return 0; // keypress unhandled
 		  }
 		
@@ -493,8 +487,10 @@ void StgCanvas::FixViewport(int W,int H)
   glViewport(0,0,W,H);
 }
 
-
-
+void StgCanvas::AddModel( StgModel*  mod  )
+{
+  models_sorted = g_list_append( models_sorted, mod );
+}
 
 void StgCanvas::DrawGlobalGrid()
 {
@@ -564,10 +560,10 @@ void StgCanvas::DrawFloor()
 
 void StgCanvas::DrawBlocks() 
 {
-  LISTMETHOD( world->StgWorld::children, StgModel*, DrawBlocksTree );
+  LISTMETHOD( models_sorted, StgModel*, DrawBlocksTree );
 }
 
-void StgCanvas::resetCamera()
+inline void StgCanvas::resetCamera()
 {
   float max_x = 0, max_y = 0, min_x = 0, min_y = 0;
 	
@@ -599,6 +595,27 @@ void StgCanvas::resetCamera()
   //TODO reset perspective cam
 }
 
+// used to sort a list of models by inverse distance from the x,y pose in [coords]
+gint compare_distance( StgModel* a, StgModel* b, double coords[2] )
+{
+  stg_pose_t a_pose = a->GetGlobalPose();
+  stg_pose_t b_pose = b->GetGlobalPose();
+  
+  double a_dist = hypot( coords[1] - a_pose.y,
+								 coords[0] - a_pose.x );
+  
+  double b_dist = hypot( coords[1] - b_pose.y,
+								 coords[0] - b_pose.x );
+  
+  if( a_dist < b_dist )
+	 return 1;
+
+  if( a_dist > b_dist )
+	 return -1;
+
+  return 0; // must be the same
+}
+
 void StgCanvas::renderFrame()
 {
   //before drawing, order all models based on distance from camera
@@ -610,23 +627,15 @@ void StgCanvas::renderFrame()
   x += -sin( sphi ) * 100;
   y += -cos( sphi ) * 100;
 	
-  // TODO - keep this map around in between frames, because the order
-  // changes slowly, and sorting an already-sorted list is
-  // usually very fast (rtv)
-
-  //store all models in a sorted multimap
-  std::multimap< float, StgModel* > ordered;
-  for( GList* it=world->StgWorld::children; it; it=it->next ) {
-	 StgModel* ptr = (StgModel*) it->data;
-	 stg_pose_t pose = ptr->GetPose();
-		
-	 float dist = sqrt( ( x - pose.x ) * ( x - pose.x ) + ( y - pose.y ) * ( y - pose.y ) );
-	 ordered.insert( std::pair< float, StgModel* >( dist, (StgModel*)it->data ) );
-  }
-	
-  //now the models can be iterated over with:
-  // for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ )
-	
+  double coords[2];
+  coords[0] = x;
+  coords[1] = y;
+  
+  // sort the list of models by inverse distance from the camera -
+  // probably doesn't change too much between frames so this is
+  // usually fast
+  models_sorted = g_list_sort_with_data( models_sorted, (GCompareDataFunc)compare_distance, coords );
+  
   glEnable( GL_DEPTH_TEST );
 
   if( ! showTrails )
@@ -635,7 +644,7 @@ void StgCanvas::renderFrame()
   if( showTree || showOccupancy )
     {
       glPushMatrix();	  
-
+		
 		GLfloat scale = 1.0/world->Resolution();
       glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
 												 // out for Z. look into it.
@@ -648,26 +657,21 @@ void StgCanvas::renderFrame()
 		
       glPopMatrix();
     }
-
   
   if( showFootprints )
-    {
-      glDisable( GL_DEPTH_TEST );
-		
-		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
-		  i->second->DrawTrailFootprint();
-		}
-      glEnable( GL_DEPTH_TEST );
-    }
+	 {
+		glDisable( GL_DEPTH_TEST );		
+		LISTMETHOD( models_sorted, StgModel*, DrawTrailFootprint );
+		glEnable( GL_DEPTH_TEST );
+	 }
   
   if( showGrid )
 	 DrawGlobalGrid();
   else
 	 DrawFloor();
-
+  
   if( showBlocks )
- 	 DrawBlocks();
-
+	 DrawBlocks();
 
 // MOTION BLUR
 //   if( showBlocks )
@@ -748,21 +752,21 @@ void StgCanvas::renderFrame()
 // 		  }
 // 	 }
 
-  if( showTrailRise )
-    {
-		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
-		  i->second->DrawTrailBlocks();
-		}
-    }
+//   if( showTrailRise )
+//     {
+// 		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+// 		  i->second->DrawTrailBlocks();
+// 		}
+//     }
   
-  if( showTrailArrows )
-    {
-      glEnable( GL_DEPTH_TEST );
-		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
-		  i->second->DrawTrailArrows();
-		}
+//   if( showTrailArrows )
+//     {
+//       glEnable( GL_DEPTH_TEST );
+// 		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+// 		  i->second->DrawTrailArrows();
+// 		}
 		
-    }
+//     }
 
 
   for( GList* it=selected_models; it; it=it->next )
@@ -789,34 +793,29 @@ void StgCanvas::renderFrame()
   }
   
   if( showGrid ) 
-	 for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
-		i->second->DrawGrid();
-	 }
-	
-		
+	 LISTMETHOD( models_sorted, StgModel*, DrawGrid );
+		  
   if( showFlags ) 
-	 for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
-		i->second->DrawFlagList();
-	 }
-	
-		
+	 LISTMETHOD( models_sorted, StgModel*, DrawFlagList );
+			
   if( showBlinken ) 
-	 for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
-		i->second->DrawBlinkenlights();
-	 }
-	
-	
-  if ( showStatus ) {
-	 glPushMatrix();
-	 for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+	 LISTMETHOD( models_sorted, StgModel*, DrawBlinkenlights );
+  
+  if( showStatus ) 
+	 {
+      glDisable( GL_DEPTH_TEST );
+
+		glPushMatrix();
 		//ensure two icons can't be in the exact same plane
 		if( camera.pitch() == 0 && !pCamOn )
 		  glTranslatef( 0, 0, 0.1 );
-		i->second->DrawStatusTree( current_camera );
-	 }
-	 glPopMatrix();
-  }
 	
+		LISTMETHODARG( models_sorted, StgModel*, DrawStatusTree, &camera );
+		
+      glEnable( GL_DEPTH_TEST );
+		glPopMatrix();
+	 }
+  
   if( world->GetRayList() )
     {
       glDisable( GL_DEPTH_TEST );

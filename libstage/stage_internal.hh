@@ -54,6 +54,8 @@ class StgCanvas : public Fl_Gl_Window
 private:
 	GlColorStack colorstack;
 
+   GList* models_sorted;
+
 	Camera* current_camera;
 	OrthoCamera camera;
 	PerspectiveCamera perspective_camera;
@@ -77,6 +79,8 @@ private:
 	void ClearRays();
 	void DrawGlobalGrid();
   
+  void AddModel( StgModel* mod );
+
 	Option
 		showBlinken, 
 		showBlocks, 

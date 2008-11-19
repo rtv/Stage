@@ -330,6 +330,14 @@ bool StgWorldGui::Update()
   return val;
 }
 
+void StgWorldGui::AddModel( StgModel*  mod  )
+{
+  if( mod->parent == NULL )
+	 canvas->AddModel( mod );
+  
+  StgWorld::AddModel( mod );
+}
+
 
 std::string StgWorldGui::ClockString()
 {

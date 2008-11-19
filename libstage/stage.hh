@@ -1899,6 +1899,8 @@ public:
 	 // Quit time pause
 	 bool pause_time;
 	
+	 virtual void AddModel( StgModel* mod );
+
   protected:
 	 virtual void PushColor( stg_color_t col );
 	 virtual void PushColor( double r, double g, double b, double a );
