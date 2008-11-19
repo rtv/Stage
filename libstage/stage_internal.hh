@@ -81,39 +81,41 @@ private:
   
   void AddModel( StgModel* mod );
 
-	Option
-		showBlinken, 
-		showBlocks, 
-		showClock, 
-		showData, 
-		showFlags,
-		showFollow,
-		showFootprints, 
-		showGrid, 
-		showOccupancy, 
-		showScreenshots,
-		showStatus,
-		showTrailArrows, 
-		showTrailRise, 
-		showTrails, 
-		showTree,
-		pCamOn,
-		visualizeAll;
+  Option showBlinken, 
+	 showBlocks, 
+	 showClock, 
+	 showData, 
+	 showFlags,
+	 showFollow,
+	 showFootprints, 
+	 showGrid, 
+	 showOccupancy, 
+	 showScreenshots,
+	 showStatus,
+	 showTrailArrows, 
+	 showTrailRise, 
+	 showTrails, 
+	 showTree,
+	 showBBoxes,
+	 showBlur,
+	 pCamOn,
+	 visualizeAll;
   
 public:
-	StgCanvas( StgWorldGui* world, int x, int y, int W,int H);
+	StgCanvas( StgWorldGui* world, int x, int y, int width, int height);
 	~StgCanvas();
 
 	bool graphics;
 	StgWorldGui* world;
 
 	void Screenshot();
-  
+  void InitGl();
 	void createMenuItems( Fl_Menu_Bar* menu, std::string path );
   
 	void FixViewport(int W,int H);
 	void DrawFloor(); //simpler floor compared to grid
 	void DrawBlocks();
+  void DrawBoundingBoxes();
 	void resetCamera();
 	virtual void renderFrame();
 	virtual void draw();

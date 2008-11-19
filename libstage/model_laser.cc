@@ -319,11 +319,13 @@ void StgModelLaser::DataVisualize( Camera* cam )
       glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height
             
       // DEBUG - draw the origin of the laser beams
+      PushColor( 0,0,0,1.0 );
       glPointSize( 4.0 );
       glBegin( GL_POINTS );
       glVertex2f( 0,0 );
       glEnd();
-		
+		PopColor();
+
       // pack the laser hit points into a vertex array for fast rendering
       static float* pts = NULL;
       pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float));

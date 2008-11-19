@@ -695,6 +695,10 @@ void StgWorldGui::updateOptions() {
   }
 }
 
+void StgWorldGui::DrawBoundingBoxTree()
+{
+  LISTMETHOD( StgWorld::children, StgModel*, DrawBoundingBoxTree );
+}
 
 void StgWorldGui::PushColor( stg_color_t col )
 { canvas->PushColor( col ); } 

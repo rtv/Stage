@@ -239,8 +239,17 @@ void StgWorld::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
   //g_hash_table_insert( blockgroups_by_entity, (gpointer)entity, mod->blockgroup );
 }
   
+// delete a model from the hash table
+static void destroy_sregion( gpointer dummy1, SuperRegion* sr, gpointer dummy2 )
+{
+	free(sr);
+}
+
 void StgWorld::Load( const char* worldfile_path )
 {
+  // note: must call Unload() before calling Load() if a world already
+  // exists TODO: unload doesn't clean up enough right now
+
   GHashTable* entitytable = g_hash_table_new( g_direct_hash, g_direct_equal );
 
 	printf( " [Loading %s]", worldfile_path );
@@ -338,11 +347,6 @@ static void destroy_model( gpointer dummy1, StgModel* mod, gpointer dummy2 )
 	free(mod);
 }
 
-// delete a model from the hash table
-static void destroy_sregion( gpointer dummy1, SuperRegion* sr, gpointer dummy2 )
-{
-	free(sr);
-}
 
 void StgWorld::UnLoad()
 {
@@ -876,7 +880,6 @@ void StgWorld::ForEachCellInLine( stg_meters_t x1, stg_meters_t y1,
 		  }
 	 }
 }
-
 
 void StgWorld::Extend( stg_point3_t pt )
 {

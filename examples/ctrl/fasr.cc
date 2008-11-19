@@ -32,6 +32,7 @@ typedef struct
 {
   StgModelPosition* pos;
   StgModelLaser* laser;
+  StgModelRanger* ranger;
   StgModelBlobfinder* blobfinder;
 
   StgModel *source, *sink;
@@ -58,6 +59,11 @@ extern "C" int Init( StgModel* mod )
   robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
   assert( robot->laser );
   robot->laser->Subscribe();
+
+  robot->ranger = (StgModelRanger*)mod->GetModel( "ranger:0" );
+  assert( robot->ranger );
+  robot->ranger->Subscribe();
+
 
   robot->avoidcount = 0;
   robot->randcount = 0;

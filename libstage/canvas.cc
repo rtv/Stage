@@ -30,6 +30,7 @@ static  GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 static  GLuint texName;
 static bool blur = true;
 
+static bool init_done = false;
 
 void StgCanvas::TimerCallback( StgCanvas* c )
 {
@@ -45,11 +46,14 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 							c);
 }
 
-StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
-  Fl_Gl_Window(x,y,w,h),
+StgCanvas::StgCanvas( StgWorldGui* world, 
+							 int x, int y, 
+							 int width, int height) :
+  Fl_Gl_Window( x, y, width, height ),
   // initialize Option objects
   showBlinken( "Blinkenlights", "show_blinkenlights", "", true ),
   showBlocks( "Blocks", "show_blocks", "b", true  ),
+  showBBoxes( "Debug/Bounding boxes", "show_boundingboxes", "^b", false  ),
   showClock( "Clock", "show_clock", "c", true ),
   showData( "Data", "show_data", "d", false ),
   showFlags( "Flags", "show_flags", "l",  true ),
@@ -63,32 +67,100 @@ StgCanvas::StgCanvas( StgWorldGui* world, int x, int y, int w, int h) :
   showTrailRise( "Trails/Rising blocks", "show_trailrise", "^r", false ),
   showTrails( "Trails/Fast", "show_trailfast", "^f", false ),
   showTree( "Debug/Tree", "show_tree", "^t", false ),
+  showBlur( "Trails/Blur", "show_trailblur", "^d", false ),
   pCamOn( "Perspective camera", "pcam_on", "r", false ),
-  visualizeAll( "Visualize All", "vis_all", "^v", true ) 
+  visualizeAll( "Visualize All", "vis_all", "^v", true ),
+  // and the rest
+  world( world ),
+  selected_models( NULL ),
+  last_selection( NULL ),
+  wf( NULL ),
+  startx( -1 ),
+  starty( -1 ),
+  interval(  50 ), //msec between redraws
+  graphics( true )
 {
   end();
-
+  
   //show(); // must do this so that the GL context is created before configuring GL
   // but that line causes a segfault in Linux/X11! TODO: test in OS X
-
-  this->world = world;
-  selected_models = NULL;
-  last_selection = NULL;
-  wf = NULL;
-
+  
   perspective_camera.setPose( 0.0, -4.0, 3.0 );
   current_camera = &camera;
   setDirtyBuffer();
 	
-  startx = starty = -1;
-  interval = 50; //msec between redraws
-  
   // enable accumulation buffer
   mode( mode() | FL_ACCUM );
   assert( can_do( FL_ACCUM ) );
-
-  graphics = true;
 }
+
+void StgCanvas::InitGl()
+{
+  valid(1);
+  FixViewport(w(), h());
+  
+  // set gl state that won't change every redraw
+  glClearColor ( 0.7, 0.7, 0.8, 1.0);
+  glDisable( GL_LIGHTING );
+  glEnable( GL_DEPTH_TEST );
+  glDepthFunc( GL_LESS );
+  glCullFace( GL_BACK );
+  glEnable (GL_CULL_FACE);
+  glEnable( GL_BLEND );
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+  glEnable( GL_LINE_SMOOTH );
+  glHint( GL_LINE_SMOOTH_HINT, GL_FASTEST );
+  glDepthMask( GL_TRUE );
+  glEnable( GL_TEXTURE_2D );
+  glEnableClientState( GL_VERTEX_ARRAY );
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  
+  // install a font
+  gl_font( FL_HELVETICA, 12 );  
+
+  blur = false;
+  
+  // load textures
+  std::string fullpath = FileManager::findFile( "assets/stall.png" );
+  if ( fullpath == "" ) 
+	 {
+		PRINT_DEBUG( "Unable to load texture.\n" );
+	 }
+  
+  GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
+  TextureManager::getInstance()._stall_texture_id = stall_id;
+  
+  //TODO merge this code into the textureManager?
+  int i, j;
+  for (i = 0; i < checkImageHeight; i++) 
+	 for (j = 0; j < checkImageWidth; j++) 
+		{			
+		  int even = (i+j)%2;
+		  checkImage[i][j][0] = (GLubyte) 255 - 10*even;
+		  checkImage[i][j][1] = (GLubyte) 255 - 10*even;
+		  checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
+		  checkImage[i][j][3] = 255;
+		}
+  
+  
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glGenTextures(1, &texName);		 
+  glBindTexture(GL_TEXTURE_2D, texName);
+  glEnable(GL_TEXTURE_2D);
+  
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
+					0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+  
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+  init_done = true; 
+}
+
 
 StgCanvas::~StgCanvas()
 { 
@@ -563,6 +635,20 @@ void StgCanvas::DrawBlocks()
   LISTMETHOD( models_sorted, StgModel*, DrawBlocksTree );
 }
 
+void StgCanvas::DrawBoundingBoxes() 
+{
+  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  glLineWidth( 2.0 );
+  glPointSize( 5.0 );
+  glDisable (GL_CULL_FACE);
+  
+  world->DrawBoundingBoxTree();
+  
+  glEnable (GL_CULL_FACE);
+  glLineWidth( 1.0 );
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+}
+
 inline void StgCanvas::resetCamera()
 {
   float max_x = 0, max_y = 0, min_x = 0, min_y = 0;
@@ -673,29 +759,32 @@ void StgCanvas::renderFrame()
   if( showBlocks )
 	 DrawBlocks();
 
+  if( showBBoxes )
+	 DrawBoundingBoxes();
+
 // MOTION BLUR
-//   if( showBlocks )
-// 	 {
-// 		DrawBlocks();
+   if( showBlur )
+ 	 {
+ 		DrawBlocks();
 		
-// 		static float count = 0; 
+ 		//static float count = 0; 
 		
-// 		if( ! blur )
-// 		  {
-// 			 blur = true;
-// 			 glClear( GL_ACCUM_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-// 			 glAccum( GL_LOAD, 1.0 );
-// 		  }
-// 		else
-// 		  {	
-// 			 glAccum( GL_MULT, 0.9 );
-// 			 glAccum( GL_ACCUM, 0.1 );
+ 		if( ! blur )
+ 		  {
+ 			 blur = true;
+ 			 glClear( GL_ACCUM_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+ 			 glAccum( GL_LOAD, 1.0 );
+ 		  }
+ 		else
+ 		  {	
+ 			 glAccum( GL_MULT, 0.9 );
+ 			 glAccum( GL_ACCUM, 0.1 );
 			 
-// 			 glAccum( GL_RETURN, 1.1 );
+ 			 glAccum( GL_RETURN, 1.1 );
 			 
-//  			 DrawBlocks(); // outline at current location
-// 		  }
-// 	 }
+  			 DrawBlocks(); // outline at current location
+ 		  }
+ 	 }
 
 // GRAY TRAILS
 //   if( showBlocks )
@@ -981,6 +1070,8 @@ void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
   //showTrailArrows.createMenuItem( menu, path ); // broken
   showTrails.createMenuItem( menu, path ); 
   // showTrailRise.createMenuItem( menu, path );  // broken
+  showBBoxes.createMenuItem( menu, path );
+  showBlur.createMenuItem( menu, path );
   showTree.createMenuItem( menu, path );  
   showScreenshots.createMenuItem( menu, path );  
 }
@@ -997,6 +1088,8 @@ void StgCanvas::Load( Worldfile* wf, int sec )
   showData.Load( wf, sec );
   showFlags.Load( wf, sec );
   showBlocks.Load( wf, sec );
+  showBBoxes.Load( wf, sec );
+  showBlur.Load( wf, sec );
   showClock.Load( wf, sec );
   showFollow.Load( wf, sec );
   showFootprints.Load( wf, sec );
@@ -1027,6 +1120,8 @@ void StgCanvas::Save( Worldfile* wf, int sec )
 
   showData.Save( wf, sec );
   showBlocks.Save( wf, sec );
+  showBBoxes.Save( wf, sec );
+  showBlur.Save( wf, sec );
   showClock.Save( wf, sec );
   showFlags.Save( wf, sec );
   showFollow.Save( wf, sec );
@@ -1047,7 +1142,6 @@ void StgCanvas::draw()
 //   static unsigned long calls=0;
 //   printf( "Draw calls %lu\n", ++calls );
 
-  static bool loaded_texture = false;
 
   //Enable the following to debug camera model
   //	if( loaded_texture == true && pCamOn == true )
@@ -1055,74 +1149,8 @@ void StgCanvas::draw()
 
   if (!valid() ) 
     { 
-      valid(1);
-      FixViewport(w(), h());
-		
-      // set gl state that won't change every redraw
-      glClearColor ( 0.7, 0.7, 0.8, 1.0);
-      glDisable( GL_LIGHTING );
-      glEnable( GL_DEPTH_TEST );
-      glDepthFunc( GL_LESS );
-      glCullFace( GL_BACK );
-      glEnable (GL_CULL_FACE);
-      glEnable( GL_BLEND );
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-      glEnable( GL_LINE_SMOOTH );
-      glHint( GL_LINE_SMOOTH_HINT, GL_FASTEST );
-      glDepthMask( GL_TRUE );
-      glEnable( GL_TEXTURE_2D );
-		glEnableClientState( GL_VERTEX_ARRAY );
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-		blur = false;
-
-      //TODO find a better home for loading textures
-      if( loaded_texture == false ) 
-		  {
-			 std::string fullpath = FileManager::findFile( "assets/stall.png" );
-			 if ( fullpath == "" ) {
-				PRINT_DEBUG( "Unable to load texture.\n" );
-			 }
-			 
-			 GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
-			 TextureManager::getInstance()._stall_texture_id = stall_id;
-			 
-			 //create floor texture
-			 {
-				//TODO merge this code into the textureManager
-				int i, j;
-				for (i = 0; i < checkImageHeight; i++) 
-				  for (j = 0; j < checkImageWidth; j++) 
-					 {			
-						int even = (i+j)%2;
-						checkImage[i][j][0] = (GLubyte) 255 - 10*even;
-						checkImage[i][j][1] = (GLubyte) 255 - 10*even;
-						checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
-						checkImage[i][j][3] = 255;
-					 }
-				
-				
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-				glGenTextures(1, &texName);		 
-				glBindTexture(GL_TEXTURE_2D, texName);
-				glEnable(GL_TEXTURE_2D);
-				
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
-								 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
-				
-				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-			 }
-			 
-			 loaded_texture = true;
-		  }
-		
-      // install a font
-      gl_font( FL_HELVETICA, 12 );
+		if( ! init_done )
+		  InitGl();
 		
       if( pCamOn == true ) 
 		  {

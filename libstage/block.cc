@@ -175,6 +175,9 @@ void StgBlock::GenerateCandidateCells()
 {
   stg_pose_t gpose = mod->GetGlobalPose();
 
+  // add local offset
+  gpose = pose_sum( gpose, mod->geom.pose );
+
   stg_point3_t scale;
   scale.x = mod->geom.size.x / mod->blockgroup.size.x;
   scale.y = mod->geom.size.y / mod->blockgroup.size.y;

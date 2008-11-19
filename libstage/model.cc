@@ -923,31 +923,56 @@ void StgModel::DrawPose( stg_pose_t pose )
 }
 
 void StgModel::DrawBlocks( )
-{
-  // testing - draw bounding box
-  //   PushColor( color );
-  
-  //   // bottom
-  //   glBegin( GL_LINE_LOOP );
-  //   glVertex3f( -geom.size.x/2.0, -geom.size.y/2.0, 0 );
-  //   glVertex3f( +geom.size.x/2.0, -geom.size.y/2.0, 0 );
-  //   glVertex3f( +geom.size.x/2.0, +geom.size.y/2.0, 0 );
-  //   glVertex3f( -geom.size.x/2.0, +geom.size.y/2.0, 0 );
-  //   glEnd();
-  
-  //   // top
-  //   glBegin( GL_LINE_LOOP );
-  //   glVertex3f( -geom.size.x/2.0, -geom.size.y/2.0, geom.size.z );
-  //   glVertex3f( +geom.size.x/2.0, -geom.size.y/2.0, geom.size.z );
-  //   glVertex3f( +geom.size.x/2.0, +geom.size.y/2.0, geom.size.z );
-  //   glVertex3f( -geom.size.x/2.0, +geom.size.y/2.0, geom.size.z );
-  //   glEnd();
-  
-  //   PopColor();
-  
+{ 
+  gl_pose_shift( &geom.pose );
   blockgroup.CallDisplayList( this );
+}
+
+void StgModel::DrawBoundingBoxTree()
+{
+  PushLocalCoords();
+  LISTMETHOD( children, StgModel*, DrawBoundingBoxTree );
+  DrawBoundingBox();
+  PopCoords();
+}
+
+void StgModel::DrawBoundingBox()
+{
+  gl_pose_shift( &geom.pose );  
+
+  PushColor( color );
   
-  //printf( "calling list for %s\n", token );
+  glBegin( GL_QUAD_STRIP );
+  
+  glVertex3f( -geom.size.x/2.0, -geom.size.y/2.0, geom.size.z );
+  glVertex3f( -geom.size.x/2.0, -geom.size.y/2.0, 0 );
+ 
+  glVertex3f( +geom.size.x/2.0, -geom.size.y/2.0, geom.size.z );
+  glVertex3f( +geom.size.x/2.0, -geom.size.y/2.0, 0 );
+ 
+  glVertex3f( +geom.size.x/2.0, +geom.size.y/2.0, geom.size.z );
+  glVertex3f( +geom.size.x/2.0, +geom.size.y/2.0, 0 );
+
+  glVertex3f( +geom.size.x/2.0, +geom.size.y/2.0, geom.size.z );
+  glVertex3f( +geom.size.x/2.0, +geom.size.y/2.0, 0 );
+
+  glVertex3f( -geom.size.x/2.0, +geom.size.y/2.0, geom.size.z );
+  glVertex3f( -geom.size.x/2.0, +geom.size.y/2.0, 0 );
+
+  glVertex3f( -geom.size.x/2.0, -geom.size.y/2.0, geom.size.z );
+  glVertex3f( -geom.size.x/2.0, -geom.size.y/2.0, 0 );
+
+  glEnd();
+
+  glBegin( GL_LINES );
+  glVertex2f( -0.02, 0 ); 
+  glVertex2f( +0.02, 0 ); 
+
+  glVertex2f( 0, -0.02 ); 
+  glVertex2f( 0, +0.02 ); 
+  glEnd();
+
+  PopColor();
 }
 
 // move into this model's local coordinate frame
@@ -959,14 +984,6 @@ void StgModel::PushLocalCoords()
 	 glTranslatef( 0,0, parent->geom.size.z );
   
   gl_pose_shift( &pose );
-
-  // useful debug - draw a point at the local origin
- //  PushColor( color );
-//   glPointSize( 5.0 );
-//   glBegin( GL_POINTS );
-//   glVertex2i( 0, 0 );
-//   glEnd();
-//   PopColor();
 }
 
 void StgModel::PopCoords()
@@ -984,8 +1001,8 @@ void StgModel::DrawStatusTree( Camera* cam )
 
 void StgModel::DrawStatus( Camera* cam ) 
 {
-	if( say_string )	  
-	{
+  if( say_string )	  
+	 {
 		float yaw, pitch;
 		pitch = - cam->pitch();
 		yaw = - cam->yaw();			
@@ -1011,59 +1028,58 @@ void StgModel::DrawStatus( Camera* cam )
 		
 		GLboolean valid;
 		glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
-		if( valid == true ) {
-			GLdouble wx, wy, wz;
-			GLint viewport[4];
-			glGetIntegerv(GL_VIEWPORT, viewport);
-			
-			GLdouble modelview[16];
-			glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-			
-			GLdouble projection[16];	
-			glGetDoublev(GL_PROJECTION_MATRIX, projection);
-			
+		if( valid ) 
+		  {
+			 GLdouble wx, wy, wz;
+			 GLint viewport[4];
+			 glGetIntegerv(GL_VIEWPORT, viewport);
+			 
+			 GLdouble modelview[16];
+			 glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+			 
+			 GLdouble projection[16];	
+			 glGetDoublev(GL_PROJECTION_MATRIX, projection);
+			 
 			//get width and height in world coords
-			gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-			w = wx;
-			gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-			h = wy;
-			
-			
-			// calculate speech bubble margin
-			const float m = h/10;
-			
-			// draw inside of bubble
-			PushColor( BUBBLE_FILL );
-			glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-			glPolygonMode( GL_FRONT, GL_FILL );
-			glEnable( GL_POLYGON_OFFSET_FILL );
-			glPolygonOffset( 1.0, 1.0 );
-			gl_draw_octagon( w, h, m );
-			glDisable( GL_POLYGON_OFFSET_FILL );
-			PopColor();
-			
-			// draw outline of bubble
-			PushColor( BUBBLE_BORDER );
-			glLineWidth( 1 );
-			glEnable( GL_LINE_SMOOTH );
-			glPolygonMode( GL_FRONT, GL_LINE );
-			gl_draw_octagon( w, h, m );
-			glPopAttrib();
-			PopColor();
-
-			PushColor( BUBBLE_TEXT );
-			// draw text inside the bubble
-			gl_draw_string( 2.5*m, 2.5*m, 0, this->say_string );
-			PopColor();
-			
-		}
+			 gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+			 w = wx;
+			 gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+			 h = wy;
+			 
+			 // calculate speech bubble margin
+			 const float m = h/10;
+			 
+			 // draw inside of bubble
+			 PushColor( BUBBLE_FILL );
+			 glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
+			 glPolygonMode( GL_FRONT, GL_FILL );
+			 glEnable( GL_POLYGON_OFFSET_FILL );
+			 glPolygonOffset( 1.0, 1.0 );
+			 gl_draw_octagon( w, h, m );
+			 glDisable( GL_POLYGON_OFFSET_FILL );
+			 PopColor();
+			 
+			 // draw outline of bubble
+			 PushColor( BUBBLE_BORDER );
+			 glLineWidth( 1 );
+			 glEnable( GL_LINE_SMOOTH );
+			 glPolygonMode( GL_FRONT, GL_LINE );
+			 gl_draw_octagon( w, h, m );
+			 glPopAttrib();
+			 PopColor();
+			 
+			 PushColor( BUBBLE_TEXT );
+			 // draw text inside the bubble
+			 gl_draw_string( 2.5*m, 2.5*m, 0, this->say_string );
+			 PopColor();			
+		  }
 		glPopMatrix();
-    }
-	
-	if( stall )
-    {
+	 }
+  
+  if( stall )
+	 {
 		DrawImage( TextureManager::getInstance()._stall_texture_id, cam, 0.85 );
-    }
+	 }
 }
 
 stg_meters_t StgModel::ModelHeight()
@@ -1228,7 +1244,6 @@ void StgModel::DataVisualizeTree( Camera* cam )
   PopCoords();
 }
 
-
 void StgModel::DrawGrid( void )
 {
   if ( gui_grid ) 
@@ -1249,7 +1264,6 @@ void StgModel::DrawGrid( void )
       PopCoords();
     }
 }
-
 
 inline bool velocity_is_zero( stg_velocity_t& v )
 {
@@ -1290,14 +1304,6 @@ void StgModel::NeedRedraw( void )
   else
 	 world->NeedRedraw();
 }
-
-// void StgModel::GPoseDirtyTree( void )
-// {
-//   this->gpose_dirty = true; // our global pose may have changed
-
-//   for( GList* it = this->children; it; it=it->next )
-//     ((StgModel*)it->data)->GPoseDirtyTree();
-// }
 
 void StgModel::SetPose( stg_pose_t pose )
 {

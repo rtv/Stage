@@ -131,7 +131,7 @@ define pioneer2dx_base pioneer_base
 
   # use the sonar array defined above with a small vertical offset to
   # drop the sensors into the robot body
-  p2dx_sonar( pose [0.04 0 -0.03 0] ) 
+  p2dx_sonar( pose [0 0 -0.03 0] ) 
 
   # differential steering model
   drive "diff"

@@ -1384,6 +1384,8 @@ public:
   
 	 void DrawBlocksTree();
 	 virtual void DrawBlocks();
+	 void DrawBoundingBox();
+	 void DrawBoundingBoxTree();
 	 virtual void DrawStatus( Camera* cam );
 	 void DrawStatusTree( Camera* cam );
   
@@ -1924,6 +1926,8 @@ public:
 	 virtual bool Save( const char* filename );
 	
 	 inline virtual bool IsGUI() { return true; }
+
+	 void DrawBoundingBoxTree();
 	
 	 void Start(){ paused = false; };
 	 void Stop(){ paused = true; };

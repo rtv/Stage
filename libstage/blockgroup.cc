@@ -190,8 +190,6 @@ void BlockGroup::CallDisplayList( StgModel* mod )
   if( displaylist == 0 )
 	 BuildDisplayList( mod );
   
-  //gl_pose_shift( &geom.pose );
-
   glCallList( displaylist );
 }
 
