@@ -372,6 +372,7 @@ void StgWorld::UnLoad()
 
 stg_usec_t StgWorld::RealTimeNow()
 {
+  // TODO - move to GLib's portable timing code, so we can port to Windows more easily?
 	struct timeval tv;
 	gettimeofday( &tv, NULL );  // slow system call: use sparingly
 

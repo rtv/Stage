@@ -267,6 +267,7 @@ void StgModel::Save( void )
 }
 
 
+// todo - use GLib's portable module code here
 void StgModel::LoadControllerModule( char* lib )
 {
   //printf( "[Ctrl \"%s\"", lib );
