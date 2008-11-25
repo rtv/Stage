@@ -17,7 +17,6 @@
 //#include <map>
 #include <sstream>
 #include <png.h>
-#include <GLUT/glut.h>
 
 #include "file_manager.hh"
 #include "options_dlg.hh"

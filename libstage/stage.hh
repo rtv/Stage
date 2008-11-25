@@ -61,8 +61,10 @@
 						 // except GLU for some reason
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
+#include <GLUT/glut.h>
 #else
 #include <GL/glu.h>
+#include <GL/glut.h>
 #endif 
 
 #include "option.hh"
