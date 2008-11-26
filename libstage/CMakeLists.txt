@@ -30,6 +30,7 @@ set( stageSrcs ancestor.cc
 	stage.hh
 	texture_manager.cc
 	typetable.cc
+	waypoint.cc
 	world.cc
 	worldfile.cc
 	worldgui.cc

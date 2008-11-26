@@ -77,6 +77,20 @@ extern "C" int Init( StgModel* mod )
   robot->sink = mod->GetWorld()->GetModel( "sink" );
   assert(robot->sink);
   
+  const uint32_t wp_count = 100;
+  Waypoint* wps = new Waypoint[wp_count];
+  
+  for( int i=0; i<wp_count; i++ )
+	 {
+		wps[i].pose.x = i / 12.5; 
+		wps[i].pose.y = 4.0*drand48() - 2.0; 
+		wps[i].pose.z = 0; 
+		wps[i].pose.a = 0; 
+		wps[i].color = stg_color_pack( 1,0,1,0 ); 
+	 }
+		 
+  robot->pos->SetWaypoints( wps, wp_count );
+  
   return 0; //ok
 }
 

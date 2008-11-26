@@ -760,7 +760,10 @@ void StgCanvas::renderFrame()
 
   if( showBBoxes )
 	 DrawBoundingBoxes();
-
+  
+  // TODO - finish this properly
+  LISTMETHOD( models_sorted, StgModel*, DrawWaypoints );
+  
 // MOTION BLUR
    if( showBlur )
  	 {
@@ -879,7 +882,7 @@ void StgCanvas::renderFrame()
 		last_selection->DataVisualizeTree( current_camera );
 	 }
   }
-  
+   
   if( showGrid ) 
 	 LISTMETHOD( models_sorted, StgModel*, DrawGrid );
 		  

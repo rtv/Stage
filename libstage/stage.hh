@@ -348,6 +348,17 @@ namespace Stg
 				  size.y );
 	 }
   };
+  
+  class Waypoint
+  {
+  public:
+	 Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, stg_color_t color ) ;
+	 Waypoint();
+	 void Draw();
+
+	 stg_pose_t pose;
+	 stg_color_t color;
+  };
 
   /** bound a range of values, from min to max */
   typedef struct
@@ -868,7 +879,7 @@ namespace Stg
 	 static GList* world_list; ///< all the worlds that exist
 	 static bool quit_all; ///< quit all worlds ASAP  
 	 static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
-  
+	 
 	 stg_usec_t real_time_start; ///< the real time at which this world was created
 	 bool destroy;
 	 bool quit; ///< quit this world ASAP  
@@ -1054,6 +1065,7 @@ namespace Stg
   
 	 /** Return the number of times the world has been updated. */
 	 long unsigned int GetUpdateCount() { return updates; }
+			
   
 // 	 stg_point_t* LocalToGlobal( double scalex, double scaley, 
 // 										  stg_point_t pts[],
@@ -1291,7 +1303,10 @@ public:
 
 	 GMutex* access_mutex;
 	 
-	 
+	 Waypoint* waypoints;
+	 uint32_t waypoint_count;	 
+	 void DrawWaypoints();
+
   public:
 	 void Lock()
 	 { 
@@ -1546,6 +1561,9 @@ public:
 	 bool IsDescendent( StgModel* testmod );
 	
 	 bool IsRelated( StgModel* mod2 );
+
+	 /** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
+	 Waypoint* SetWaypoints( Waypoint* wps, uint32_t count );
 	
 	 /** get the pose of a model in the global CS */
 	 stg_pose_t GetGlobalPose();

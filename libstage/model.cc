@@ -194,7 +194,9 @@ StgModel::StgModel( StgWorld* world,
 	 wf_entity(0),
 	 has_default_block( true ),
 	 map_caches_are_invalid( true ),
-	 thread_safe( false )
+	 thread_safe( false ),
+	 waypoints( NULL ),
+	 waypoint_count( 0 )
 {
   assert( modelsbyid );
   assert( world );
@@ -1677,3 +1679,34 @@ void StgModel::UnMap()
 }
 
 
+/** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
+Waypoint* StgModel::SetWaypoints( Waypoint* wps, uint32_t count )
+{
+  Waypoint* replaced = waypoints;
+  
+  waypoints = wps;
+  waypoint_count = count;
+  
+  return replaced;
+}
+
+
+void StgModel::DrawWaypoints()
+{
+  if( waypoints && waypoint_count )
+	 {
+		//PushLocalCoords();
+		
+		PushColor( color );
+		glPointSize( 3 );
+
+		//	puts( "drawing wps" );
+		
+		for( unsigned int i=0; i < waypoint_count; i++ )
+		  waypoints[i].Draw();
+		
+		//PopCoords();
+		// restore a sensible drawing color
+		PopColor();
+	 }
+}
