@@ -7,8 +7,8 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 0 # real-time interval between simulation updates in milliseconds 
-paused 0
+interval_real 50 # real-time interval between simulation updates in milliseconds 
+paused 1
 
 resolution 0.02
 
@@ -29,7 +29,7 @@ window
   pcam_angle [ 70.000 0 ]
   pcam_on 0
   
-  show_data 0
+  show_data 1
   show_flags 1
 
   interval 50
@@ -64,29 +64,32 @@ define autorob pioneer2dx
 (		 
  sicklaser( samples 32 range_max 5 laser_return 2  )
  ctrl "fasr"
+
+ localization "odom"
 )
 
 autorob( pose [5.099 4.804 0  -73.937] )
-autorob( pose [6.471 5.304 0 14.941] )
-autorob( pose [5.937 4.858 0 -147.503] )
-autorob( pose [7.574 6.269 0 -111.715] )
-autorob( pose [5.664 5.938 0 -51.799] )
-autorob( pose [7.016 6.428 0 -128.279] )
-autorob( pose [5.911 4.040 0 -97.047] )
-autorob( pose [4.909 6.097 0 -44.366] )
-autorob( pose [6.898 4.775 0 -117.576] )
-autorob( pose [7.012 5.706 0 129.497] )
+#autorob( pose [5.099 4.804 0  -73.937] localization_origin [5.099 4.804 0 -73.937] )
+#autorob( pose [6.471 5.304 0 14.941] )
+#autorob( pose [5.937 4.858 0 -147.503] )
+#autorob( pose [7.574 6.269 0 -111.715] )
+#autorob( pose [5.664 5.938 0 -51.799] )
+#autorob( pose [7.016 6.428 0 -128.279] )
+#autorob( pose [5.911 4.040 0 -97.047] )
+#autorob( pose [4.909 6.097 0 -44.366] )
+#autorob( pose [6.898 4.775 0 -117.576] )
+#autorob( pose [7.012 5.706 0 129.497] )
 
-autorob( pose [6.616 6.893 0 170.743] )
-autorob( pose [6.451 4.189 0 -61.453] )
-autorob( pose [5.098 6.788 0 -61.295] )
-autorob( pose [4.374 5.163 0 -90.417] )
-autorob( pose [4.999 4.230 0 -42.157] )
-autorob( pose [4.331 4.217 0 -95.000] )
-autorob( pose [5.440 5.317 0 -26.545] )
-autorob( pose [7.518 6.973 0 163.239] )
-autorob( pose [7.559 4.764 0 -139.066] )
-autorob( pose [4.839 3.595 0 -179.567] )
+#autorob( pose [6.616 6.893 0 170.743] )
+#autorob( pose [6.451 4.189 0 -61.453] )
+#autorob( pose [5.098 6.788 0 -61.295] )
+#autorob( pose [4.374 5.163 0 -90.417] )
+#autorob( pose [4.999 4.230 0 -42.157] )
+#autorob( pose [4.331 4.217 0 -95.000] )
+#autorob( pose [5.440 5.317 0 -26.545] )
+#autorob( pose [7.518 6.973 0 163.239] )
+#autorob( pose [7.559 4.764 0 -139.066] )
+#autorob( pose [4.839 3.595 0 -179.567] )
 
 #autorob( pose [7.122 4.175 0 -31.440] )
 #autorob( pose [6.203 6.963 0 2.937] )

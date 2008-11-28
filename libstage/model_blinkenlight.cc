@@ -56,7 +56,11 @@ Option StgModelBlinkenlight::showBlinkenData( "Show Blink", "show_blinken", "", 
 											
 StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world,
 														  StgModel* parent ) 
-		 : StgModel( world, parent, MODEL_TYPE_BLINKENLIGHT )
+  : StgModel( world, parent, MODEL_TYPE_BLINKENLIGHT ),
+	 dutycycle( 1.0 ),
+	 enabled( true ),
+	 period( 1000 ),
+	 on( true )
 {
 	PRINT_DEBUG2( "Constructing StgModelBlinkenlight %d (%s)\n", 
 			id, typestr );
@@ -73,10 +77,6 @@ StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world,
 	geom.size.z = 0.02;
 	this->SetGeom( geom );
 
-	this->dutycycle = 1.0;
-	this->enabled = true;
-	this->period = 1000;
-	this->on = true;
 
 	this->Startup();
 	
@@ -108,17 +108,10 @@ void StgModelBlinkenlight::Update( void )
 
 void StgModelBlinkenlight::DataVisualize( Camera* cam )
 {
+  // TODO XX
 	if( on && showBlinkenData )
 	{
-		glPushMatrix();
-		// move into this model's local coordinate frame      
-		gl_pose_shift( &this->pose );
-		gl_pose_shift( &this->geom.pose );
-		glLineWidth( 3 );
-		// TODO
 		//LISTMETHOD( this->blocks, StgBlock*, Draw );
-		glLineWidth( 1 );
-		glPopMatrix(); // drop out of local coords
 	}
 }
 

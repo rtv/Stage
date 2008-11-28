@@ -309,6 +309,8 @@ void StgModelLaser::DataVisualize( Camera* cam )
     
   glPushMatrix();
 	
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
   // we only regenerate the list if there's new data
   if( 1 ) // data_dirty ) // TODO - hmm, why doesn't this work?
     {	    

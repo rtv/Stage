@@ -9,10 +9,17 @@ void Stg::gl_coord_shift( double x, double y, double z, double a  )
 }
 
 // transform the current coordinate frame by the given pose
-void Stg::gl_pose_shift( stg_pose_t* pose )
+void Stg::gl_pose_shift( const stg_pose_t &pose )
 {
-	gl_coord_shift( pose->x, pose->y, pose->z, pose->a );
+	gl_coord_shift( pose.x, pose.y, pose.z, pose.a );
 }
+
+void Stg::gl_pose_inverse_shift( const stg_pose_t &pose )
+{
+  gl_coord_shift( 0,0,0, -pose.a );
+  gl_coord_shift( -pose.x, -pose.y, -pose.z, 0 );
+}
+
 
 // TODO - this could be faster, but we don't draw a lot of text
 void Stg::gl_draw_string( float x, float y, float z, const char *str ) 
@@ -45,6 +52,20 @@ void Stg::gl_draw_octagon( float w, float h, float m )
 	glEnd();
 }
 
+void Stg::gl_draw_vector( double x, double y, double z )
+{
+  glBegin( GL_LINES );
+  glVertex3f( 0,0,0 );
+  glVertex3f( x,y,z );
+  glEnd();
+}
+
+void Stg::gl_draw_origin( double len )
+{
+  gl_draw_vector( len,0,0 );
+  gl_draw_vector( 0,len,0 );
+  gl_draw_vector( 0,0,len );
+}
 
 void Stg::gl_draw_grid( stg_bounds3d_t vol )
 {

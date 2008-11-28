@@ -40,13 +40,13 @@ API: Stg::StgModelPosition
 position
 (
   # position properties
-  drive ""
-  localization ""
+  drive "diff"
+  localization "gps"
   localization_origin [ <defaults to model's start pose> ]
 
   # odometry error model parameters, 
   # only used if localization is set to "odom"
-  odom_error [0.03 0.03 0.05]
+  odom_error [0.03 0.03 0.00 0.05]
 
   # model properties
 )
@@ -84,7 +84,9 @@ const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIF
 
 StgModelPosition::StgModelPosition( StgWorld* world, 
 												StgModel* parent )
-  : StgModel( world, parent, MODEL_TYPE_POSITION )
+  : StgModel( world, parent, MODEL_TYPE_POSITION ),
+	 waypoints( NULL ),
+	 waypoint_count( 0 )
 {
 	PRINT_DEBUG2( "Constructing StgModelPosition %d (%s)\n", 
 			id, typestr );
@@ -178,14 +180,13 @@ void StgModelPosition::Load( void )
 	{  
 		est_origin.x = wf->ReadTupleLength( wf_entity, "localization_origin", 0, est_origin.x );
 		est_origin.y = wf->ReadTupleLength( wf_entity, "localization_origin", 1, est_origin.y );
-		est_origin.a = wf->ReadTupleAngle( wf_entity, "localization_origin", 2, est_origin.a );
+		est_origin.z = wf->ReadTupleLength( wf_entity, "localization_origin", 2, est_origin.z );
+		est_origin.a = wf->ReadTupleAngle( wf_entity, "localization_origin", 3, est_origin.a );
 
 		// compute our localization pose based on the origin and true pose
 		stg_pose_t gpose = this->GetGlobalPose();
 
 		est_pose.a = normalize( gpose.a - est_origin.a );
-		//double cosa = cos(est_pose.a);
-		//double sina = sin(est_pose.a);
 		double cosa = cos(est_origin.a);
 		double sina = sin(est_origin.a);
 		double dx = gpose.x - est_origin.x;
@@ -204,8 +205,10 @@ void StgModelPosition::Load( void )
 			wf->ReadTupleLength( wf_entity, "odom_error", 0, integration_error.x );
 		integration_error.y = 
 			wf->ReadTupleLength( wf_entity, "odom_error", 1, integration_error.y );
+		integration_error.z = 
+			wf->ReadTupleLength( wf_entity, "odom_error", 2, integration_error.z );
 		integration_error.a 
-			= wf->ReadTupleAngle( wf_entity, "odom_error", 2, integration_error.a );
+			= wf->ReadTupleAngle( wf_entity, "odom_error", 3, integration_error.a );
 	}
 
 	// choose a localization model
@@ -400,7 +403,6 @@ void StgModelPosition::Update( void  )
 				stg_pose_t gpose = this->GetGlobalPose();
 
 				est_pose.a = normalize( gpose.a - est_origin.a );
-				//est_pose.a =0;// normalize( gpose.a - est_origin.a );
 				double cosa = cos(est_origin.a);
 				double sina = sin(est_origin.a);
 				double dx = gpose.x - est_origin.x;
@@ -425,7 +427,6 @@ void StgModelPosition::Update( void  )
 
 				est_pose.x += dx * cosa + dy * sina;
 				est_pose.y -= dy * cosa - dx * sina;
-
 			}
 			break;
 
@@ -448,8 +449,6 @@ void StgModelPosition::Startup( void )
 	PRINT_DEBUG( "position startup" );
 
 	this->SetWatts( STG_POSITION_WATTS );
-
-	//stg_model_position_odom_reset( mod );
 }
 
 void StgModelPosition::Shutdown( void )
@@ -544,3 +543,74 @@ void StgModelPosition::SetOdom( stg_pose_t odom )
 	est_origin.a = da;
 } 
 
+/** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
+Waypoint* StgModelPosition::SetWaypoints( Waypoint* wps, uint32_t count )
+{
+  Waypoint* replaced = waypoints;
+  
+  waypoints = wps;
+  waypoint_count = count;
+  
+  return replaced;
+}
+
+void StgModelPosition::DataVisualize( Camera* cam )
+{
+  if( waypoints && waypoint_count )
+	 DrawWaypoints();
+
+  // vizualize my estimated pose 
+  glPushMatrix();
+  
+  // back into global coords
+  gl_pose_inverse_shift( GetGlobalPose() );
+
+  gl_pose_shift( est_origin );
+  PushColor( 1,0,0,1 ); // origin in red
+  gl_draw_origin( 0.5 );
+  PopColor();
+
+  gl_pose_shift( est_pose );
+  PushColor( 0,1,0,1 ); // pose in green
+  gl_draw_origin( 0.5 );
+  PopColor();
+
+  gl_pose_shift( geom.pose );
+  PushColor( 0,0,1,1 ); // offset in blue
+  gl_draw_origin( 0.5 );
+  PopColor();
+    
+  double r,g,b,a;
+  stg_color_unpack( color, &r, &g, &b, &a );
+  PushColor( r, g, b, 0.5 );
+  
+  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  blockgroup.DrawFootPrint();
+  PopColor();
+
+  glPopMatrix(); 
+}
+
+void StgModelPosition::DrawWaypoints()
+{
+  glPointSize( 3 );
+
+  // TRUE
+  glPushMatrix();
+  PushColor( color );
+
+  gl_pose_inverse_shift( pose );
+  gl_pose_shift( est_origin );
+  
+  for( unsigned int i=0; i < waypoint_count; i++ )
+	 waypoints[i].Draw();
+  
+  PopColor();
+  glPopMatrix();
+  
+  /*  printf( "pose [%.2f %.2f %.2f %.2f]  est_pose [%.2f %.2f %.2f %.2f] est_origin [%.2f %.2f %.2f %.2f]\n",
+			 pose.x, pose.y, pose.z, pose.a,
+			 est_pose.x, est_pose.y, est_pose.z, est_pose.a,
+			 est_origin.x, est_origin.y, est_origin.z, est_origin.a );  
+  */
+}

@@ -194,9 +194,7 @@ StgModel::StgModel( StgWorld* world,
 	 wf_entity(0),
 	 has_default_block( true ),
 	 map_caches_are_invalid( true ),
-	 thread_safe( false ),
-	 waypoints( NULL ),
-	 waypoint_count( 0 )
+	 thread_safe( false )
 {
   assert( modelsbyid );
   assert( world );
@@ -581,23 +579,6 @@ inline stg_pose_t StgModel::LocalToGlobal( stg_pose_t pose )
   return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
 }
 
-// stg_point3_t StgModel::LocalToGlobal( stg_point3_t point )
-// {
-//   stg_pose_t pose;
-//   pose.x = point.x;
-//   pose.y = point.y;
-//   pose.z = point.z;
-//   pose.a = 0;
-
-//   pose = LocalToGlobal( pose );
-
-//   point.x = pose.x;
-//   point.y = pose.y;
-//   point.z = pose.z;
-
-//   return point;
-// }
-
 void StgModel::MapWithChildren()
 {
   UnMap();
@@ -616,33 +597,6 @@ void StgModel::UnMapWithChildren()
   for( GList* it=children; it; it=it->next )
     ((StgModel*)it->data)->UnMapWithChildren();
 }
-
-// given an input point array in model local coordinates, return
-// an array with the same points in global coordinates. caller must
-// delete[] the points.
-// stg_point_t* StgModel::LocalToGlobal( double scalex, 
-// 												  double scaley, 
-// 												  stg_point_t pts[], 
-// 												  uint32_t pt_count )
-// {
-//   stg_point_t* glob = new stg_point_t[pt_count];
-  
-//   stg_pose_t global_pose = GetGlobalPose();
-
-//   for( int p=0; p<pt_count; p++ )
-// 	 {
-// 		stg_pose_t local( pts[p].x * scalex, 
-// 								pts[p].y * scaley, 
-// 								0, 0 );		
-// 		stg_pose_t global = pose_sum( global_pose, local );
-		
-// 		glob[p].x = global.x;
-// 		glob[p].y = global.y;
-// 	 }
-
-//   return glob;
-// }
-
 
 void StgModel::Map()
 {
@@ -773,7 +727,7 @@ void StgModel::DrawSelected()
   
   glRotatef( rtod(pose.a), 0,0,1 );
   
-  gl_pose_shift( &geom.pose );
+  gl_pose_shift( geom.pose );
   
   double dx = geom.size.x / 2.0 * 1.6;
   double dy = geom.size.y / 2.0 * 1.6;
@@ -804,8 +758,8 @@ void StgModel::DrawTrailFootprint()
       stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
 
       glPushMatrix();
-      gl_pose_shift( &checkpoint->pose );
-      gl_pose_shift( &geom.pose );
+      gl_pose_shift( checkpoint->pose );
+      gl_pose_shift( geom.pose );
 
       stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
       PushColor( r, g, b, 0.1 );
@@ -926,7 +880,7 @@ void StgModel::DrawPose( stg_pose_t pose )
 
 void StgModel::DrawBlocks( )
 { 
-  gl_pose_shift( &geom.pose );
+  gl_pose_shift( geom.pose );
   blockgroup.CallDisplayList( this );
 }
 
@@ -940,7 +894,7 @@ void StgModel::DrawBoundingBoxTree()
 
 void StgModel::DrawBoundingBox()
 {
-  gl_pose_shift( &geom.pose );  
+  gl_pose_shift( geom.pose );  
 
   PushColor( color );
   
@@ -985,7 +939,7 @@ void StgModel::PushLocalCoords()
   if( parent )
 	 glTranslatef( 0,0, parent->geom.size.z );
   
-  gl_pose_shift( &pose );
+  gl_pose_shift( pose );
 }
 
 void StgModel::PopCoords()
@@ -1676,37 +1630,4 @@ StgModel* StgModel::GetModel( const char* modelname )
 void StgModel::UnMap()
 {
   blockgroup.UnMap();
-}
-
-
-/** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
-Waypoint* StgModel::SetWaypoints( Waypoint* wps, uint32_t count )
-{
-  Waypoint* replaced = waypoints;
-  
-  waypoints = wps;
-  waypoint_count = count;
-  
-  return replaced;
-}
-
-
-void StgModel::DrawWaypoints()
-{
-  if( waypoints && waypoint_count )
-	 {
-		//PushLocalCoords();
-		
-		PushColor( color );
-		glPointSize( 3 );
-
-		//	puts( "drawing wps" );
-		
-		for( unsigned int i=0; i < waypoint_count; i++ )
-		  waypoints[i].Draw();
-		
-		//PopCoords();
-		// restore a sensible drawing color
-		PopColor();
-	 }
 }

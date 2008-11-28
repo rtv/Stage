@@ -762,7 +762,7 @@ void StgCanvas::renderFrame()
 	 DrawBoundingBoxes();
   
   // TODO - finish this properly
-  LISTMETHOD( models_sorted, StgModel*, DrawWaypoints );
+  //LISTMETHOD( models_sorted, StgModel*, DrawWaypoints );
   
 // MOTION BLUR
    if( showBlur )

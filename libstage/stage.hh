@@ -615,7 +615,8 @@ namespace Stg
   void RegisterModels();
 
   void gl_draw_grid( stg_bounds3d_t vol );
-  void gl_pose_shift( stg_pose_t* pose );
+  void gl_pose_shift( const stg_pose_t &pose );
+  void gl_pose_inverse_shift( const stg_pose_t &pose );
   void gl_coord_shift( double x, double y, double z, double a  );
 
   class StgFlag
@@ -632,6 +633,8 @@ namespace Stg
   void gl_draw_string( float x, float y, float z, const char *string);
   void gl_speech_bubble( float x, float y, float z, const char* str );
   void gl_draw_octagon( float w, float h, float m );
+  void gl_draw_vector( double x, double y, double z );
+  void gl_draw_origin( double len );
 
   typedef int(*stg_model_callback_t)(StgModel* mod, void* user );
   typedef int(*stg_cell_callback_t)(Cell* cell, void* user );
@@ -1303,10 +1306,6 @@ public:
 
 	 GMutex* access_mutex;
 	 
-	 Waypoint* waypoints;
-	 uint32_t waypoint_count;	 
-	 void DrawWaypoints();
-
   public:
 	 void Lock()
 	 { 
@@ -1562,9 +1561,6 @@ public:
 	
 	 bool IsRelated( StgModel* mod2 );
 
-	 /** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
-	 Waypoint* SetWaypoints( Waypoint* wps, uint32_t count );
-	
 	 /** get the pose of a model in the global CS */
 	 stg_pose_t GetGlobalPose();
 	
@@ -2464,12 +2460,19 @@ public:
   /// %StgModelPosition class
   class StgModelPosition : public StgModel
   {
+	 friend class StgCanvas;
+
   private:
 	 stg_pose_t goal; //< the current velocity or pose to reach, depending on the value of control_mode
 	 stg_position_control_mode_t control_mode;
 	 stg_position_drive_mode_t drive_mode;
 	 stg_position_localization_mode_t localization_mode; ///< global or local mode
 	 stg_velocity_t integration_error; ///< errors to apply in simple odometry model
+
+	 Waypoint* waypoints;
+	 uint32_t waypoint_count;	 
+	 void DrawWaypoints();
+
   public:
 	 static const char* typestr;
 	 // constructor
@@ -2482,7 +2485,12 @@ public:
 	 virtual void Shutdown();
 	 virtual void Update();
 	 virtual void Load();
+	 
+	 virtual void DataVisualize( Camera* cam );
 
+	 /** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
+	 Waypoint* SetWaypoints( Waypoint* wps, uint32_t count );
+	
 	 /** Set the current pose estimate.*/
 	 void SetOdom( stg_pose_t odom );
 
