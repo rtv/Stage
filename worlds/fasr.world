@@ -61,10 +61,9 @@ zone
   ctrl "sink"
 )
 
-define autorob walle		  
-#define autorob pioneer2dx		  
+define autorob pioneer2dx		  
 (		 
- #sicklaser( samples 32 range_max 5 laser_return 2  )
+ sicklaser( samples 32 range_max 5 laser_return 2  )
  ctrl "fasr"
 
  localization "odom"
