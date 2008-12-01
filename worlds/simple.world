@@ -5,6 +5,7 @@
 include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
+include "walle.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 0  # real-time interval between simulation updates in milliseconds 
@@ -28,7 +29,7 @@ window
 floorplan
 ( 
   name "cave"
-  size [17.000 17.000 0.600]
+  size [17.000 17.000 0.800]
   pose [8.000 8.000 0 0 ]
  bitmap "bitmaps/cave.png"
 )
@@ -44,3 +45,5 @@ pioneer2dx
 
   ctrl "wander"
 )
+
+walle( pose [ 3 3 0 ] ctrl "wander" )
