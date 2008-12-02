@@ -236,14 +236,14 @@ static guchar* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
 static void pb_set_pixel( Fl_Shared_Image* pb, int x, int y, uint8_t val )
 {
 	// bounds checking
-	int width = pb->w();//gdk_pixbuf_get_width(pb);
-	int height = pb->h();//gdk_pixbuf_get_height(pb);
+	int width = pb->w();
+	int height = pb->h();
 	if( x >=0 && x < width && y >= 0 && y < height )
 	{
 		// zeroing
 		guchar* pix = pb_get_pixel( pb, x, y );
-		unsigned int bytes_per_sample = 1;//gdk_pixbuf_get_bits_per_sample (pb) / 8;
-		unsigned int num_samples = pb->d();//gdk_pixbuf_get_n_channels(pb);
+		unsigned int bytes_per_sample = 1;
+		unsigned int num_samples = pb->d();
 		memset( pix, val, num_samples * bytes_per_sample );
 	}
 	else
@@ -253,8 +253,8 @@ static void pb_set_pixel( Fl_Shared_Image* pb, int x, int y, uint8_t val )
 // set all the pixels in a rectangle 
 static void pb_set_rect( Fl_Shared_Image* pb, int x, int y, int width, int height, uint8_t val )
 {
-	int bytes_per_sample = 1;//gdk_pixbuf_get_bits_per_sample (pb) / 8;
-	int num_samples = pb->d();//gdk_pixbuf_get_n_channels(pb);
+	int bytes_per_sample = 1;
+	int num_samples = pb->d();
 
 	int a, b;
 	for( a = y; a < y+height; a++ )

@@ -28,8 +28,8 @@ static const stg_msec_t DEFAULT_INTERVAL_MS = 100;
 static const unsigned int DEFAULT_RESOLUTION = 1;
 static const char* DEFAULT_COLOR = "blue";
 
-Option StgModelLaser::showLaserData( "Show Laser Data", "show_laser", "", true );
-Option StgModelLaser::showLaserStrikes( "Show Laser Data", "show_laser_strikes", "", false );
+Option StgModelLaser::showLaserData( "Laser scans", "show_laser", "", true );
+Option StgModelLaser::showLaserStrikes( "Laser strikes", "show_laser_strikes", "", false );
 
 /**
 @ingroup model
@@ -334,32 +334,35 @@ void StgModelLaser::DataVisualize( Camera* cam )
       
       pts[0] = 0.0;
       pts[1] = 0.0;
-      
-      PushColor( 0, 0, 1, 0.5 );
 
-      for( unsigned int s=0; s<sample_count; s++ )
-		  {
-			 double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
-			 pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
-			 pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
+      if( showLaserData )
+		  {      
+			 PushColor( 0, 0, 1, 0.5 );
 			 
-			 // if the sample is unusually bright, draw a little blob
-			 if( samples[s].reflectance > 0 )
+			 for( unsigned int s=0; s<sample_count; s++ )
 				{
-				  glBegin( GL_POINTS );
-				  glVertex2f( pts[2*s+2], pts[2*s+3] );
-				  glEnd();
-				}			 
+				  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+				  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
+				  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
+				  
+				  // if the sample is unusually bright, draw a little blob
+				  if( samples[s].reflectance > 0 )
+					 {
+						glBegin( GL_POINTS );
+						glVertex2f( pts[2*s+2], pts[2*s+3] );
+						glEnd();
+					 }			 
+				}
+			 PopColor();
+			 
+			 glDepthMask( GL_FALSE );
+			 
+			 // draw the filled polygon in transparent blue
+			 PushColor( 0, 0, 1, 0.1 );		
+			 glVertexPointer( 2, GL_FLOAT, 0, pts );      
+			 glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+			 PopColor();
 		  }
-      PopColor();
-      
-      glDepthMask( GL_FALSE );
-      
-      // draw the filled polygon in transparent blue
-      PushColor( 0, 0, 1, 0.1 );		
-      glVertexPointer( 2, GL_FLOAT, 0, pts );      
-      glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-      PopColor();
 		
       if( showLaserStrikes )
 		  {

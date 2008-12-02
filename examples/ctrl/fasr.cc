@@ -77,19 +77,19 @@ extern "C" int Init( StgModel* mod )
   assert(robot->sink);
     
   
-  const int waypoint_count = 100;
-  Waypoint* waypoints = new Waypoint[waypoint_count];
+//   const int waypoint_count = 100;
+//   Waypoint* waypoints = new Waypoint[waypoint_count];
   
-  for( int i=0; i<waypoint_count; i++ )
-	 {
-		waypoints[i].pose.x = i* 0.1;
-		waypoints[i].pose.y = drand48() * 4.0;
-		waypoints[i].pose.z = 0;
-		waypoints[i].pose.a = normalize( i/10.0 );
-		waypoints[i].color = stg_color_pack( 0,0,1,0 );
-	 }
+//   for( int i=0; i<waypoint_count; i++ )
+// 	 {
+// 		waypoints[i].pose.x = i* 0.1;
+// 		waypoints[i].pose.y = drand48() * 4.0;
+// 		waypoints[i].pose.z = 0;
+// 		waypoints[i].pose.a = normalize( i/10.0 );
+// 		waypoints[i].color = stg_color_pack( 0,0,1,0 );
+// 	 }
   
-  robot->pos->SetWaypoints( waypoints, waypoint_count );
+//   robot->pos->SetWaypoints( waypoints, waypoint_count );
 
   return 0; //ok
 }

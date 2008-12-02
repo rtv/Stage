@@ -497,22 +497,25 @@ void StgWorldGui::fileExitCb( Fl_Widget* w, void* p )
 }
 
 
-void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) {
+void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) 
+{
   StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
-
-  if ( !worldGui->oDlg ) {
-    int x = worldGui->w()+worldGui->x() + 10;
-    int y = worldGui->y();
-    OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
-    oDlg->callback( optionsDlgCb, worldGui );
-    oDlg->setOptions( worldGui->drawOptions );
-    oDlg->showAllOpt( &worldGui->canvas->visualizeAll );
-    worldGui->oDlg = oDlg;
-    oDlg->show();
-  }
-  else {
-    worldGui->oDlg->show(); // bring it to front
-  }
+  
+  if ( !worldGui->oDlg ) 
+	 {
+		int x = worldGui->w()+worldGui->x() + 10;
+		int y = worldGui->y();
+		OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
+		oDlg->callback( optionsDlgCb, worldGui );
+		oDlg->setOptions( worldGui->drawOptions );
+		oDlg->showAllOpt( &worldGui->canvas->visualizeAll );
+		worldGui->oDlg = oDlg;
+		oDlg->show();
+	 }
+  else 
+	 {
+		worldGui->oDlg->show(); // bring it to front
+	 }
 }
 
 void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
@@ -592,7 +595,6 @@ void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p )
 
   Fl_Box* box = new Fl_Box( Spc, Spc, 
 			    Width-2*Spc, pngH ); // widget that will contain image
-
 	
   std::string fullpath;
   fullpath = FileManager::findFile( "assets/stagelogo.png" );

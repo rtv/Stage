@@ -95,8 +95,8 @@ static const char RANGER_COLOR[] = "gray75";
 static const char RANGER_CONFIG_COLOR[] = "gray90";
 static const char RANGER_GEOM_COLOR[] = "orange";
 
-Option StgModelRanger::showRangerData( "Show Ranger Data", "show_ranger", "", true );
-Option StgModelRanger::showRangerTransducers( "Show Ranger transducer locations", "show_ranger_transducers", "", false );
+Option StgModelRanger::showRangerData( "Ranger ranges", "show_ranger", "", true );
+Option StgModelRanger::showRangerTransducers( "Ranger transducers", "show_ranger_transducers", "", false );
 
 
 StgModelRanger::StgModelRanger( StgWorld* world, 

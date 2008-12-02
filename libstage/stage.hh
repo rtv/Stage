@@ -2477,6 +2477,10 @@ public:
 	 uint32_t waypoint_count;	 
 	 void DrawWaypoints();
 
+  private:
+	 static Option showCoords;
+	 static Option showWaypoints;
+
   public:
 	 static const char* typestr;
 	 // constructor

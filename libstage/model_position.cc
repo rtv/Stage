@@ -82,6 +82,10 @@ const stg_position_control_mode_t POSITION_CONTROL_DEFAULT = STG_POSITION_CONTRO
 const stg_position_localization_mode_t POSITION_LOCALIZATION_DEFAULT = STG_POSITION_LOCALIZATION_GPS;
 const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIFFERENTIAL;
 
+Option StgModelPosition::showCoords( "Position Coordinates", "show_coords", "", false );
+Option StgModelPosition::showWaypoints( "Position Waypoints", "show_waypoints", "", false );
+
+
 StgModelPosition::StgModelPosition( StgWorld* world, 
 												StgModel* parent )
   : StgModel( world, parent, MODEL_TYPE_POSITION ),
@@ -126,6 +130,8 @@ StgModelPosition::StgModelPosition( StgWorld* world,
 		drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
 		STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
 
+	registerOption( &showCoords );
+	registerOption( &showWaypoints );
 }
 
 
@@ -556,60 +562,63 @@ Waypoint* StgModelPosition::SetWaypoints( Waypoint* wps, uint32_t count )
 
 void StgModelPosition::DataVisualize( Camera* cam )
 {
-  if( waypoints && waypoint_count )
+  if( showWaypoints && waypoints && waypoint_count )
 	 DrawWaypoints();
-
-  // vizualize my estimated pose 
-  glPushMatrix();
   
-  // back into global coords
-  gl_pose_inverse_shift( GetGlobalPose() );
-
-  gl_pose_shift( est_origin );
-  PushColor( 1,0,0,1 ); // origin in red
-  gl_draw_origin( 0.5 );
-
-  glEnable (GL_LINE_STIPPLE);
-  glLineStipple (3, 0xAAAA);
-
-  PushColor( 1,0,0,0.5 ); 
-  glBegin( GL_LINE_STRIP );
-  glVertex2f( 0,0 );
-  glVertex2f( est_pose.x, 0 );
-  glVertex2f( est_pose.x, est_pose.y );  
-  glEnd();
+  if( showCoords )
+	 {  
+		// vizualize my estimated pose 
+		glPushMatrix();
   
-  glDisable(GL_LINE_STIPPLE);
+		// back into global coords
+		gl_pose_inverse_shift( GetGlobalPose() );
 
-  char label[64];
-  snprintf( label, 64, "x:%.3f", est_pose.x );
-  gl_draw_string( est_pose.x / 2.0, -0.5, 0, label );
+		gl_pose_shift( est_origin );
+		PushColor( 1,0,0,1 ); // origin in red
+		gl_draw_origin( 0.5 );
 
-  snprintf( label, 64, "y:%.3f", est_pose.y );
-  gl_draw_string( est_pose.x + 0.5 , est_pose.y / 2.0, 0, (const char*)label );
+		glEnable (GL_LINE_STIPPLE);
+		glLineStipple (3, 0xAAAA);
+
+		PushColor( 1,0,0,0.5 ); 
+		glBegin( GL_LINE_STRIP );
+		glVertex2f( 0,0 );
+		glVertex2f( est_pose.x, 0 );
+		glVertex2f( est_pose.x, est_pose.y );  
+		glEnd();
+  
+		glDisable(GL_LINE_STIPPLE);
+
+		char label[64];
+		snprintf( label, 64, "x:%.3f", est_pose.x );
+		gl_draw_string( est_pose.x / 2.0, -0.5, 0, label );
+
+		snprintf( label, 64, "y:%.3f", est_pose.y );
+		gl_draw_string( est_pose.x + 0.5 , est_pose.y / 2.0, 0, (const char*)label );
 
 
-  PopColor();
+		PopColor();
 
-  gl_pose_shift( est_pose );
-  PushColor( 0,1,0,1 ); // pose in green
-  gl_draw_origin( 0.5 );
-  PopColor();
+		gl_pose_shift( est_pose );
+		PushColor( 0,1,0,1 ); // pose in green
+		gl_draw_origin( 0.5 );
+		PopColor();
 
-  gl_pose_shift( geom.pose );
-  PushColor( 0,0,1,1 ); // offset in blue
-  gl_draw_origin( 0.5 );
-  PopColor();
+		gl_pose_shift( geom.pose );
+		PushColor( 0,0,1,1 ); // offset in blue
+		gl_draw_origin( 0.5 );
+		PopColor();
     
-  double r,g,b,a;
-  stg_color_unpack( color, &r, &g, &b, &a );
-  PushColor( r, g, b, 0.5 );
+		double r,g,b,a;
+		stg_color_unpack( color, &r, &g, &b, &a );
+		PushColor( r, g, b, 0.5 );
   
-  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  blockgroup.DrawFootPrint( geom );
-  PopColor();
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		blockgroup.DrawFootPrint( geom );
+		PopColor();
 
-  glPopMatrix(); 
+		glPopMatrix(); 
+	 }
 }
 
 void StgModelPosition::DrawWaypoints()
