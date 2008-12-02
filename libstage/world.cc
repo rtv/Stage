@@ -46,7 +46,6 @@ described on the manual page for each model type.
 #include <limits.h>
 #include <libgen.h> // for dirname(3)
 #include "stage_internal.hh"
-//#include "region.hh"
 #include "file_manager.hh"
 
 // static data members

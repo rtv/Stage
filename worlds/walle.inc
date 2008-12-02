@@ -7,7 +7,7 @@
 
 define walle position 
 (
-  color "yellow"
+  color "gray50"
   drive "diff"		 	# Differential steering model.
 
   obstacle_return 1           	# Can hit things.
@@ -18,8 +18,8 @@ define walle position
 
   localization "gps"         	  
 
-  size [0.5 0.5 0.5]
-  origin [-0.25 -0.25 0 0 ]
+  size [0.35 0.5 0.5]
+  #origin [-0.25 -0.25 0 0 ]
 
   laser( pose [0.15 0 -0.27 0 ] size [0.01 0.01 0.01] alwayson 1 )
 
@@ -32,7 +32,7 @@ define walle position
     point[2] [ 0.9 0.75 ] 
     point[3] [ 0.1 0.75 ] 
     z [ 0.2 0.6 ]
-    color "yellow"
+	 #color "yellow"
   )
 
   # body top
@@ -44,7 +44,6 @@ define walle position
     point[2] [ 0.9 0.75 ] 
     point[3] [ 0.1 0.75 ] 
     z [ 0.6 0.7 ]
-    color "gray20"
   )
 
   # right wheel 
@@ -56,7 +55,6 @@ define walle position
     point[2] [ 0.0 0.25 ] 
     point[3] [ 0 0.0 ] 
     z [ 0.0 0.4 ]
-    color "gray23"
   )
 
   # right wheel 
@@ -68,7 +66,6 @@ define walle position
     point[2] [ 0 1 ] 
     point[3] [ 0 0.75 ] 
     z [ 0.0 0.4 ]
-    color "gray23"
   )
 
   # right eye front
@@ -80,7 +77,6 @@ define walle position
 	 point[2] [0.6 0.49]
 	 point[3] [0.6 0.30]
 	 z [0.8 0.95]
-    color "gray23"
   )
 
   # left eye front
@@ -92,7 +88,6 @@ define walle position
 	 point[2] [0.6 0.7]
 	 point[3] [0.6 0.51]
 	 z [0.8 0.95]
-    color "gray23"
   )
 
   # right eye rear
@@ -104,7 +99,6 @@ define walle position
 	 point[2] [0.25 0.49]
 	 point[3] [0.25 0.34]
 	 z [0.82 0.93]
-    color "gray28"
   )
 
   # neck
@@ -115,7 +109,6 @@ define walle position
 	 point[1] [0.4 0.55]
 	 point[0] [0.4 0.45]
 	 z [0.7 0.9]
-    color "gray28"
   )   
 
   # right eye rear
@@ -127,7 +120,6 @@ define walle position
 	 point[2] [0.25 0.66]
 	 point[3] [0.25 0.51]
 	 z [0.82 0.93]
-    color "gray28"
   )
 
   # right arm
@@ -139,7 +131,6 @@ define walle position
 	 point[2] [0.35 0.25]
 	 point[3] [0.35 0.18]
 	 z [0.55 0.65]
-    color "gray28"
   )
 
   # left arm
@@ -151,7 +142,6 @@ define walle position
 	 point[2] [1.1 0.75]
 	 point[3] [1.1 0.82]
 	 z [0.55 0.65]
-    color "gray28"
   )
 
   # left hand right finger
@@ -163,7 +153,6 @@ define walle position
 	 point[2] [1.2 0.70]
 	 point[3] [1.2 0.78]
 	 z [0.5 0.65]
-    color "gray28"
   )
 
   # left hand left finger
@@ -175,7 +164,6 @@ define walle position
 	 point[2] [1.2 0.79]
 	 point[3] [1.2 0.87]
 	 z [0.5 0.65]
-    color "gray28"
   )
 
   # right hand right finger
@@ -187,7 +175,6 @@ define walle position
 	 point[2] [1.2 0.13]
 	 point[3] [1.2 0.21]
 	 z [0.5 0.65]
-    color "gray28"
   )
 
   # right hand left finger
@@ -199,7 +186,6 @@ define walle position
 	 point[2] [1.2 0.22]
 	 point[3] [1.2 0.30]
 	 z [0.5 0.65]
-    color "gray28"
   )
 
 )

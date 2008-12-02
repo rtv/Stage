@@ -91,9 +91,17 @@ void BlockGroup::CalcSize()
 		size.z = MAX( block->local_z.max, size.z );
 	 }
   
-  // store these bounds for scaling purposes
+  // store these bounds for normalization purposes
   size.x = maxx-minx;
   size.y = maxy-miny;
+  
+  offset.x = minx + size.x/2.0;
+  offset.y = miny + size.y/2.0;
+  offset.z = 0; // todo?
+
+  // normalize blocks
+  //  for( GList* it = blocks; itl it=it->next )
+  //((StgBlock*)it->data)->Normalize( size.x, size.y, size.z, offset.x
 }
 
 
@@ -107,14 +115,36 @@ void BlockGroup::UnMap()
   LISTMETHOD( blocks, StgBlock*, UnMap );
 }
 
-void BlockGroup::DrawSolid()
+void BlockGroup::DrawSolid( const stg_geom_t & geom )
 {
+  glPushMatrix();
+
+  gl_pose_shift( geom.pose );
+
+  glScalef( geom.size.x / size.x,
+				geom.size.y / size.y,				
+				geom.size.z / size.z );
+  
+  glTranslatef( -offset.x, -offset.y, -offset.z );
+
   LISTMETHOD( blocks, StgBlock*, DrawSolid );
+
+  glPopMatrix();
 }
 
-void BlockGroup::DrawFootPrint()
+void BlockGroup::DrawFootPrint( const stg_geom_t & geom )
 {
+  glPushMatrix();
+  
+  glScalef( geom.size.x / size.x,
+				geom.size.y / size.y,				
+				geom.size.z / size.z );
+  
+  glTranslatef( -offset.x, -offset.y, -offset.z );
+
   LISTMETHOD( blocks, StgBlock*, DrawFootPrint);
+
+  glPopMatrix();
 }
 
 void BlockGroup::BuildDisplayList( StgModel* mod )
@@ -126,10 +156,16 @@ void BlockGroup::BuildDisplayList( StgModel* mod )
   
   glNewList( displaylist, GL_COMPILE );	
     
+
   stg_geom_t geom = mod->GetGeom();
+
+  gl_pose_shift( geom.pose );
+
   glScalef( geom.size.x / size.x,
 				geom.size.y / size.y,				
 				geom.size.z / size.z );
+  
+  glTranslatef( -offset.x, -offset.y, -offset.z );
   
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   glEnable(GL_POLYGON_OFFSET_FILL);

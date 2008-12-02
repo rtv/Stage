@@ -1182,7 +1182,8 @@ public:
 	 GList* blocks;
 	 uint32_t count;
 	 stg_size_t size;
-  
+	 stg_point3_t offset;
+
 	 BlockGroup();
 	 ~BlockGroup();
 
@@ -1198,11 +1199,14 @@ public:
 	 StgModel* TestCollision();
     void SwitchToTestedCells();
 	 
-		void Map();
+	 void Map();
 	 void UnMap();
-  
-	 void DrawSolid(); // draw the block in OpenGL as a solid single color
-	 void DrawFootPrint(); // draw the projection of the block onto the z=0 plane
+	 
+	 void DrawSolid( const stg_geom_t &geom); // draw the block in OpenGL as a solid single color
+	 void DrawFootPrint( const stg_geom_t &geom); // draw the
+																 // projection of the
+																 // block onto the z=0
+																 // plane
 
 	 void LoadBitmap( StgModel* mod, const char* bitmapfile, Worldfile *wf );
 	 void LoadBlock( StgModel* mod, Worldfile* wf, int entity );

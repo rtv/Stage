@@ -176,6 +176,7 @@ StgModel* StgCanvas::getModel( int x, int y )
   current_camera->SetProjection();
   current_camera->Draw();
 
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   glDisable(GL_DITHER);
   glDisable(GL_BLEND); // turns off alpha blending, so we read back
   // exactly what we write to a pixel
@@ -501,6 +502,9 @@ int StgCanvas::handle(int event)
 				{ // remove the timeout
 				  Fl::remove_timeout( (Fl_Timeout_Handler)StgCanvas::TimerCallback );
 				}
+
+			 redraw(); // in case something happened that will never be
+						  // drawn 'cos we cancelled the timeout
 
 			 break;
 		  case ' ': // space bar

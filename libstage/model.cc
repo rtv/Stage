@@ -764,12 +764,12 @@ void StgModel::DrawTrailFootprint()
       stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
       PushColor( r, g, b, 0.1 );
 
-		blockgroup.DrawFootPrint();
+		blockgroup.DrawFootPrint( geom );
 
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
       PushColor( r/2, g/2, b/2, 0.1 );
 
-		blockgroup.DrawFootPrint();
+		blockgroup.DrawFootPrint( geom );
 
       PopColor();
       PopColor();
@@ -880,7 +880,6 @@ void StgModel::DrawPose( stg_pose_t pose )
 
 void StgModel::DrawBlocks( )
 { 
-  gl_pose_shift( geom.pose );
   blockgroup.CallDisplayList( this );
 }
 
@@ -1176,7 +1175,7 @@ void StgModel::DrawPicker( void )
   PushLocalCoords();
 
   // draw the boxes
-  blockgroup.DrawSolid();
+  blockgroup.DrawSolid( geom );
 
   // recursively draw the tree below this model 
   LISTMETHOD( this->children, StgModel*, DrawPicker );

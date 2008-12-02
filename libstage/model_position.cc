@@ -568,6 +568,27 @@ void StgModelPosition::DataVisualize( Camera* cam )
   gl_pose_shift( est_origin );
   PushColor( 1,0,0,1 ); // origin in red
   gl_draw_origin( 0.5 );
+
+  glEnable (GL_LINE_STIPPLE);
+  glLineStipple (3, 0xAAAA);
+
+  PushColor( 1,0,0,0.5 ); 
+  glBegin( GL_LINE_STRIP );
+  glVertex2f( 0,0 );
+  glVertex2f( est_pose.x, 0 );
+  glVertex2f( est_pose.x, est_pose.y );  
+  glEnd();
+  
+  glDisable(GL_LINE_STIPPLE);
+
+  char label[64];
+  snprintf( label, 64, "x:%.3f", est_pose.x );
+  gl_draw_string( est_pose.x / 2.0, -0.5, 0, label );
+
+  snprintf( label, 64, "y:%.3f", est_pose.y );
+  gl_draw_string( est_pose.x + 0.5 , est_pose.y / 2.0, 0, (const char*)label );
+
+
   PopColor();
 
   gl_pose_shift( est_pose );
@@ -585,7 +606,7 @@ void StgModelPosition::DataVisualize( Camera* cam )
   PushColor( r, g, b, 0.5 );
   
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  blockgroup.DrawFootPrint();
+  blockgroup.DrawFootPrint( geom );
   PopColor();
 
   glPopMatrix(); 

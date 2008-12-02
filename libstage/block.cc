@@ -186,9 +186,11 @@ void StgBlock::GenerateCandidateCells()
   g_ptr_array_set_size( candidate_cells, 0 );
   
   // compute the global location of the first point
-  stg_pose_t local( pts[0].x * scale.x, 
-						  pts[0].y * scale.y, 
-						  0, 0 );		
+  stg_pose_t local( (pts[0].x - mod->blockgroup.offset.x) * scale.x ,
+						  (pts[0].y - mod->blockgroup.offset.y) * scale.y, 
+						  -mod->blockgroup.offset.z, 
+						  0 );
+
   stg_pose_t first_gpose, last_gpose;
   first_gpose = last_gpose = pose_sum( gpose, local );
   
@@ -199,9 +201,10 @@ void StgBlock::GenerateCandidateCells()
   // now loop from the the second to the last
   for( int p=1; p<pt_count; p++ )
 	 {
-		stg_pose_t local( pts[p].x * scale.x, 
-								pts[p].y * scale.y, 
-								0, 0 );		
+		stg_pose_t local( (pts[p].x - mod->blockgroup.offset.x) * scale.x ,
+								(pts[p].y - mod->blockgroup.offset.y) * scale.y, 
+								-mod->blockgroup.offset.z, 
+								0 );		
 		
 		stg_pose_t gpose2 = pose_sum( gpose, local );
 		
@@ -325,6 +328,8 @@ void StgBlock::Load( Worldfile* wf, int entity )
 		color = stg_lookup_color( colorstr );
 		inherit_color = false;
 	 }
+  else
+	 inherit_color = true;
 }
 
 	
