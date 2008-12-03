@@ -314,5 +314,18 @@ class InterfaceGraphics2d : public InterfaceModel
 };
 
 
+class InterfaceDio : public InterfaceModel
+{
+ public: 
+	 InterfaceDio( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceDio( void ){ /* TODO: clean up*/ };
+  
+  virtual int ProcessMessage( QueuePointer &resp_queue, 
+			      player_msghdr * hdr, 
+			      void * data );
+  
+  virtual void Publish( void );
+};
+
 
 #endif

@@ -1174,6 +1174,29 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
   /**@}*/
   
 
+  // INDICATOR MODEL --------------------------------------------------------
+
+  /** indicator configuration packet
+   */
+  typedef struct
+  {
+  } stg_indicator_config_t;
+  
+  typedef struct {
+	/** the command */
+    uint32_t count;
+    /** output bitfield */
+    uint32_t digout;
+  } stg_dio_cmd_t;
+
+  /** indicator data packet */
+  typedef struct
+  {
+	stg_polygon_t* polys;
+	int numPolys;
+	stg_bool_t on;
+  } stg_indicator_data_t;
+
 
 // MACROS ------------------------------------------------------
 // Some useful macros

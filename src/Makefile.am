@@ -44,6 +44,7 @@ libstage_la_SOURCES = \
 	model_wifi.cc \
 	model_speech.c \
 	model_audio.c \
+	model_indicator.c \
 	dijkstra.c \
 	dijkstra.h \
 	raytrace.c \
@@ -97,6 +98,7 @@ libstageplugin_la_SOURCES = \
 	p_map.cc \
 	p_simulation.cc \
 	p_blobfinder.cc \
+	p_dio.cc \
 	stg_time.cc \
 	stg_time.h
 

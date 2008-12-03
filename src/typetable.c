@@ -15,6 +15,7 @@ int wifi_init( stg_model_t* mod );
 int speech_init( stg_model_t* mod );
 int audio_init( stg_model_t* mod );
 int bumper_init( stg_model_t* mod );
+int indicator_init( stg_model_t* mod );
 
 // map worldfile keywords onto initialization functions
 stg_type_record_t typetable[] = 
@@ -31,6 +32,7 @@ stg_type_record_t typetable[] =
     { "wifi", wifi_init },       
     { "speech", speech_init },       
     { "audio", audio_init },       
+    { "indicator", indicator_init },
     { "bumper", bumper_init },       
     { NULL, 0, NULL } // this must be the last entry
   };
