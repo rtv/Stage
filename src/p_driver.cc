@@ -513,7 +513,7 @@ Interface* StgDriver::LookupDevice( player_devaddr_t addr )
 int StgDriver::Subscribe(QueuePointer &queue, player_devaddr_t addr)
 {
   if( addr.interf == PLAYER_SIMULATION_CODE )
-    return 0; // ok
+    return Driver::Subscribe(addr);
 
   Interface* device = this->LookupDevice( addr );
   
@@ -535,7 +535,7 @@ int StgDriver::Subscribe(QueuePointer &queue, player_devaddr_t addr)
 int StgDriver::Unsubscribe(QueuePointer &queue, player_devaddr_t addr)
 {
   if( addr.interf == PLAYER_SIMULATION_CODE )
-    return 0; // ok
+    return Driver::Unsubscribe(addr);
 
   Interface* device = this->LookupDevice( addr );
   
