@@ -13,8 +13,9 @@ paused 1
 
 resolution 0.02
 
-# threads don't help here as the per-robot update is very fast
-threadpool 0
+# threads may help here depending on your CPU
+threadpool 3
+# threadpool 2
 
 
 # configure the GUI window

@@ -49,10 +49,15 @@ StgCanvas::StgCanvas( StgWorldGui* world,
 							 int x, int y, 
 							 int width, int height) :
   Fl_Gl_Window( x, y, width, height ),
+  wf( NULL ),
+  startx( -1 ),
+  starty( -1 ),
+  selected_models( NULL ),
+  last_selection( NULL ),
+  interval(  50 ), //msec between redraws
   // initialize Option objects
   showBlinken( "Blinkenlights", "show_blinkenlights", "", true ),
   showBlocks( "Blocks", "show_blocks", "b", true  ),
-  showBBoxes( "Debug/Bounding boxes", "show_boundingboxes", "^b", false  ),
   showClock( "Clock", "show_clock", "c", true ),
   showData( "Data", "show_data", "d", false ),
   showFlags( "Flags", "show_flags", "l",  true ),
@@ -66,18 +71,13 @@ StgCanvas::StgCanvas( StgWorldGui* world,
   showTrailRise( "Trails/Rising blocks", "show_trailrise", "^r", false ),
   showTrails( "Trails/Fast", "show_trailfast", "^f", false ),
   showTree( "Debug/Tree", "show_tree", "^t", false ),
+  showBBoxes( "Debug/Bounding boxes", "show_boundingboxes", "^b", false  ),
   showBlur( "Trails/Blur", "show_trailblur", "^d", false ),
   pCamOn( "Perspective camera", "pcam_on", "r", false ),
   visualizeAll( "Visualize All", "vis_all", "^v", true ),
-  // and the rest
-  world( world ),
-  selected_models( NULL ),
-  last_selection( NULL ),
-  wf( NULL ),
-  startx( -1 ),
-  starty( -1 ),
-  interval(  50 ), //msec between redraws
-  graphics( true )
+  // and the rest 
+  graphics( true ),
+  world( world )
 {
   end();
   
@@ -524,6 +524,27 @@ int StgCanvas::handle(int event)
 			 }
 			 redraw();
 			 break;			
+
+		  case '[': // slow down
+			 if( world->interval_real == 0 )
+				world->interval_real = 10;
+			 else
+				{
+				  world->interval_real *= 1.2;
+				}
+			 break; // need the parens above
+
+		  case ']': // speed up
+			 if( world->interval_real == 0 )
+				putchar( 7 ); // bell!
+			 else
+				{
+				  world->interval_real *= 0.8;
+				  if( world->interval_real < 10 )
+					 world->interval_real = 0;
+				}
+			 break;
+
 		  case FL_Left:
 			 if( pCamOn == false ) { camera.move( -10, 0 ); } 
 			 else { perspective_camera.strafe( -0.5 ); } break;

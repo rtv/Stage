@@ -233,6 +233,7 @@ static guchar* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
   return( pixels + index );
 }
 
+/*
 static void pb_set_pixel( Fl_Shared_Image* pb, int x, int y, uint8_t val )
 {
 	// bounds checking
@@ -249,6 +250,7 @@ static void pb_set_pixel( Fl_Shared_Image* pb, int x, int y, uint8_t val )
 	else
 		PRINT_WARN4( "pb_set_pixel coordinate %d,%d out of range (image dimensions %d by %d)", x, y, width, height );
 }
+*/
 
 // set all the pixels in a rectangle 
 static void pb_set_rect( Fl_Shared_Image* pb, int x, int y, int width, int height, uint8_t val )

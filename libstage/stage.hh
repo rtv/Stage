@@ -288,6 +288,7 @@ namespace Stg
 	 stg_pose_t() : x(0.0), y(0.0), z(0.0), a(0.0)
 	 { /*empty*/ }		 
 
+	  virtual ~stg_pose_t(){};
 	  
 	 static stg_pose_t Random( stg_meters_t xmin, stg_meters_t xmax, 
 										stg_meters_t ymin, stg_meters_t ymax )
@@ -300,7 +301,7 @@ namespace Stg
 
 	 virtual void Print( const char* prefix )
 	 {
-		printf( "%d pose [x:%.3f y:%.3f a:%.3f]\n",
+		printf( "%s pose [x:%.3f y:%.3f z:%.3f a:%.3f]\n",
 				  prefix, x,y,z,a );
 	 }
   };
@@ -324,7 +325,7 @@ namespace Stg
 	 
 	 virtual void Print( const char* prefix )
 	 {
-		printf( "%d velocity [x:%.3f y:%.3f a:%.3f]\n",
+		printf( "%s velocity [x:%.3f y:%.3f z:%3.f a:%.3f]\n",
 				  prefix, x,y,z,a );
 	 }
   };
@@ -337,7 +338,7 @@ namespace Stg
 	 stg_pose_t pose; //< position
 	 stg_size_t size; //< extent
 	 
-	 virtual void Print( const char* prefix )
+	 void Print( const char* prefix )
 	 {
 		printf( "%s geom pose: (%.2f,%.2f,%.2f) size: [%.2f,%.2f]\n",
 				  prefix,
@@ -360,14 +361,18 @@ namespace Stg
 	 stg_color_t color;
   };
 
-  /** bound a range of values, from min to max */
-  typedef struct
+  /** bound a range of values, from min to max. min and max are initialized to zero. */
+  class  stg_bounds_t
   {
+  public:
 	 double min; //< smallest value in range
 	 double max; //< largest value in range
-  } stg_bounds_t;
-
-  /** bound a volume along the x,y,z axes */
+	 
+	 stg_bounds_t() : min(0), max(0) 
+	 { /* empty*/  };
+  };
+  
+  /** bound a volume along the x,y,z axes. All bounds initialized to zero. */
   typedef struct
   {
 	 stg_bounds_t x; //< volume extent along x axis
@@ -375,14 +380,8 @@ namespace Stg
 	 stg_bounds_t z; //< volume extent along z axis 
   } stg_bounds3d_t;
 
-  /** bound a range of range values, from min to max */
-  typedef struct
-  {
-	 stg_meters_t min; //< smallest value in range
-	 stg_meters_t max; //< largest value in range
-  } stg_range_bounds_t;
 
-  /** define a three-dimensional bounding box */
+  /** define a three-dimensional bounding box, initialized to zero */
   typedef struct
   {
 	 stg_bounds_t x, y, z;
@@ -394,7 +393,7 @@ namespace Stg
 	 stg_bounds_t range; //< min and max range of sensor
 	 stg_radians_t angle; //< width of viewing angle of sensor
   } stg_fov_t;
-
+  
   /** define a point on a 2d plane */
   typedef struct
   {
@@ -881,21 +880,44 @@ namespace Stg
   
 	 static GList* world_list; ///< all the worlds that exist
 	 static bool quit_all; ///< quit all worlds ASAP  
+	 static void UpdateCb( StgWorld* world);
 	 static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
 	 
-	 stg_usec_t real_time_start; ///< the real time at which this world was created
 	 bool destroy;
-	 bool quit; ///< quit this world ASAP  
-	 stg_usec_t real_time_now; ///< The current real time in microseconds
 	 bool dirty; ///< iff true, a gui redraw would be required
-	 int total_subs; ///< the total number of subscriptions to all models
-	 double ppm; ///< the resolution of the world model in pixels per meter  
 	 GHashTable* models_by_name; ///< the models that make up the world, indexed by name
- 
+	 double ppm; ///< the resolution of the world model in pixels per meter   
+	 bool quit; ///< quit this world ASAP  
 	 /** StgWorld::quit is set true when this simulation time is reached */
 	 stg_usec_t quit_time;
+	 stg_usec_t real_time_now; ///< The current real time in microseconds
+	 stg_usec_t real_time_start; ///< the real time at which this world was created
+	 GMutex* thread_mutex;
+	 GThreadPool *threadpool;
+	 int total_subs; ///< the total number of subscriptions to all models
+	 unsigned int update_jobs_pending;
+	 GList* velocity_list; ///< Models with non-zero velocity and should have their poses updated
+	 unsigned int worker_threads;
+	 GCond* worker_threads_done;
 
-	 // hint that the world needs to be redrawn if a GUI is attached
+  protected:	 
+  
+	 stg_bounds3d_t extent; ///< Describes the 3D volume of the world
+	 bool graphics;///< true iff we have a GUI
+	 stg_usec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
+	 GList* ray_list;///< List of rays traced for debug visualization
+	 stg_usec_t sim_time; ///< the current sim time in this world in ms
+	 GHashTable* superregions;
+	 SuperRegion* sr_cached; ///< The last superregion looked up by this world
+	 GList* update_list; ///< Models that have a subscriber or controller, and need to be updated
+	 long unsigned int updates; ///< the number of simulated time steps executed so far
+	 Worldfile* wf; ///< If set, points to the worldfile used to create this world
+
+  public:
+	 static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
+	 static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
+
+	 /** hint that the world needs to be redrawn if a GUI is attached */
 	 void NeedRedraw(){ dirty = true; };
 
 	 void LoadModel( Worldfile* wf, int entity, GHashTable* entitytable );
@@ -958,22 +980,6 @@ namespace Stg
 						 const uint32_t sample_count,
 						 const bool ztest );
   
-  protected:
-	 
-	 static void UpdateCb( StgWorld* world);
-  
-	 GHashTable* superregions;
-	 stg_usec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
-	 stg_usec_t sim_time; ///< the current sim time in this world in ms
-	 GList* ray_list;///< List of rays traced for debug visualization
-	 Worldfile* wf; ///< If set, points to the worldfile used to create this world
-	 bool graphics;///< true iff we have a GUI
-	 stg_bounds3d_t extent; ///< Describes the 3D volume of the world
-	 long unsigned int updates; ///< the number of simulated time steps executed so far
-	 FileManager fileMan; ///< Used to load and save worldfiles
-	 SuperRegion* sr_cached; ///< The last superregion looked up by this world
-	 GList* velocity_list; ///< Models with non-zero velocity and should have their poses updated
-	 GList* update_list; ///< Models that have a subscriber or controller, and need to be updated
 
 	 /** Enlarge the bounding volume to include this point */
 	 void Extend( stg_point3_t pt );
@@ -1011,54 +1017,44 @@ namespace Stg
 		velocity_list = g_list_remove( velocity_list, mod );
 	 }
 	 
-	 static void update_thread_entry( StgModel* mod, void* count );
+	 static void update_thread_entry( StgModel* mod, StgWorld* world );
 	 
-	 GMutex* thread_mutex;
-	 GCond* worker_threads_done;
-	 GThreadPool *threadpool;
-	 unsigned int worker_threads;
-
   public:
-	 static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
-	 static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
-	 static bool UpdateAll(); //returns true when time to quit, false otherwise
-  
+	 /** returns true when time to quit, false otherwise */
+	 static bool UpdateAll(); 
+	 
 	 StgWorld( const char* token = "MyWorld", 
 				  stg_msec_t interval_sim = DEFAULT_INTERVAL_SIM,
 				  double ppm = DEFAULT_PPM );
-  
+	 
 	 virtual ~StgWorld();
   
 	 stg_usec_t SimTimeNow(void){ return sim_time; }
 	 stg_usec_t RealTimeNow(void);
 	 stg_usec_t RealTimeSinceStart(void);
-  
+	 
 	 stg_usec_t GetSimInterval(){ return interval_sim; };
-  
+	 
 	 Worldfile* GetWorldFile(){ return wf; };
-  
+	 
 	 inline virtual bool IsGUI() { return false; }
-  
+	 
 	 virtual void Load( const char* worldfile_path );
 	 virtual void UnLoad();
 	 virtual void Reload();
 	 virtual bool Save( const char* filename );
 	 virtual bool Update(void);
-  
+	 
 	 bool TestQuit(){ return( quit || quit_all );  }
 	 void Quit(){ quit = true; }
 	 void QuitAll(){ quit_all = true; }
 	 void CancelQuit(){ quit = false; }
 	 void CancelQuitAll(){ quit_all = false; }
-
+	 
 	 /** Get the resolution in pixels-per-metre of the underlying
 		  discrete raytracing model */ 
 	 double Resolution(){ return ppm; };
-  
-	 /** Returns a pointer to the model identified by ID, or NULL if
-		  nonexistent */
-	 //StgModel* GetModel( const stg_id_t id );
-  
+   
 	 /** Returns a pointer to the model identified by name, or NULL if
 		  nonexistent */
 	 StgModel* GetModel( const char* name );
@@ -1068,11 +1064,6 @@ namespace Stg
   
 	 /** Return the number of times the world has been updated. */
 	 long unsigned int GetUpdateCount() { return updates; }
-			
-  
-// 	 stg_point_t* LocalToGlobal( double scalex, double scaley, 
-// 										  stg_point_t pts[],
-// 										  uint32_t pt_count );
   };
 
 class StgBlock
@@ -1130,16 +1121,18 @@ public:
   StgModel* TestCollision();
   
     void SwitchToTestedCells();
-	 
-	 void Load( Worldfile* wf, int entity );
-	 
-	 StgModel* mod; //< model to which this block belongs
-	 
-	 stg_color_t GetColor();
-	 
-  private:
-	 stg_point_t* pts; //< points defining a polygon
+  
+  void Load( Worldfile* wf, int entity );
+  
+  StgModel* GetModel(){ return mod; };
+  
+  stg_color_t GetColor();
+  
+private:
+   StgModel* mod; //< model to which this block belongs
+  
 	 size_t pt_count; //< the number of points
+    stg_point_t* pts; //< points defining a polygon
 	 
 	 stg_size_t size;
 
@@ -1173,19 +1166,26 @@ public:
 
   class BlockGroup
   {
- 
+	 friend class StgModel;
+
   private:
 	 int displaylist;
 	 void BuildDisplayList( StgModel* mod );
 
-  public:
 	 GList* blocks;
 	 uint32_t count;
 	 stg_size_t size;
 	 stg_point3_t offset;
+	 stg_meters_t minx, maxx, miny, maxy;
 
+  public:
 	 BlockGroup();
 	 ~BlockGroup();
+	 
+	 GList* GetBlocks(){ return blocks; };
+	 uint32_t GetCount(){ return count; };
+	 stg_size_t GetSize(){ return size; };
+	 stg_point3_t GetOffset(){ return offset; };
 
 	 /** establish the min and max of all the blocks, so we can scale this
 		  group later */
@@ -1231,85 +1231,87 @@ public:
 	 /** the number of models instatiated - used to assign unique IDs */
 	 static uint32_t count;
 	 static GHashTable*  modelsbyid;
-	 /** unique process-wide identifier for this model */
-	 uint32_t id;	
 	 std::vector<Option*> drawOptions;
 	 const std::vector<Option*>& getOptions() const { return drawOptions; }
 
   protected:
-	 static const char* typestr;
+	 //static const char* typestr;
   
-	 stg_pose_t pose;
-	 stg_velocity_t velocity;
-	 stg_watts_t watts; //< power consumed by this model
-	 stg_color_t color;
-	 stg_kg_t mass;
-	 stg_geom_t geom;
-	 stg_laser_return_t laser_return;
-	 int obstacle_return;
-	 int blob_return;
-	 int gripper_return;
-	 int ranger_return;
-	 int fiducial_return;
-	 int fiducial_key;
-	 int boundary;
-	 stg_meters_t map_resolution;
-	 stg_bool_t stall;
-	 StgModel* parent; //< the model that owns this one, possibly NUL
-	 GArray* trail;
-	 stg_pose_t global_pose;
-	 bool rebuild_displaylist; //< iff true, regenerate block display list before redraw
-	 bool gpose_dirty; //< set this to indicate that global pose may have changed  
-	 bool map_caches_are_invalid;
-	 int subs;     //< the number of subscriptions to this model
-	 bool used;    //< TRUE iff this model has been returned by GetUnusedModelOfType()  
-	 stg_usec_t interval; //< time between updates in us
-	 stg_usec_t last_update; //< time of last update in us  
-	 stg_bool_t disabled; //< if non-zero, the model is disabled  
-	 char* say_string;   //< if non-null, this string is displayed in the GUI 
-	 StgWorld* world; // pointer to the world in which this model exists
-	 ctrlinit_t* initfunc;
-	 GList* flag_list;
-	 Worldfile* wf;
-	 int wf_entity;
+	 GMutex* access_mutex;
 	 GPtrArray* blinkenlights;  
-	 int blocks_dl; //< OpenGL display list identifier   
-	 stg_model_type_t type;  
+	 bool blob_return;
 	 BlockGroup blockgroup;
-	 bool has_default_block;
-	 bool on_velocity_list;
-	 bool on_update_list;
+	 /**  OpenGL display list identifier for the blockgroup */
+	 int blocks_dl;
 
-	 int gui_nose;
-	 int gui_grid;
-	 int gui_outline;
-	 int gui_mask;
-  
-	 /* hooks for attaching special callback functions (not used as
-		 variables) */
-	 char startup_hook, shutdown_hook, load_hook, save_hook, update_hook;
-
-	 /** GData datalist can contain arbitrary named data items. Can be used
-		  by derived model types to store properties, and for user code
-		  to associate arbitrary items with a model. */
-	 GData* props;
+	 int boundary;
 
 	 /** callback functions can be attached to any field in this
 		  structure. When the internal function model_change(<mod>,<field>)
 		  is called, the callback is triggered */
 	 GHashTable* callbacks;
-  
-	 bool data_fresh; ///< this can be set to indicate that the model has
-	 ///new data that may be of interest to users. This
-	 ///allows polling the model instead of adding a
-	 ///data callback.  
-	 
+
+  	 stg_color_t color;
+	 /** This can be set to indicate that the model has new data that
+	   may be of interest to users. This allows polling the model
+	   instead of adding a data callback. */
+	 bool data_fresh;
+	 stg_bool_t disabled; //< if non-zero, the model is disabled  
+	 int fiducial_key;
+	 int fiducial_return;
+	 GList* flag_list;
+	 stg_geom_t geom;
+	 stg_pose_t global_pose;
+	 bool gpose_dirty; //< set this to indicate that global pose may have changed  
+	 bool gripper_return;
+	 int gui_grid;
+	 int gui_mask;
+	 int gui_nose;
+	 int gui_outline;
+	 bool has_default_block;
+	 /* hooks for attaching special callback functions (not used as
+		 variables) */
+	 char hook_load;
+	 char hook_save;
+	 char hook_shutdown;
+	 char hook_startup;
+	 char hook_update;
+	 /** unique process-wide identifier for this model */
+	 uint32_t id;	
+	 ctrlinit_t* initfunc;
+	 stg_usec_t interval; //< time between updates in us
+	 stg_laser_return_t laser_return;
+	 stg_usec_t last_update; //< time of last update in us  
+	 bool map_caches_are_invalid;
+	 stg_meters_t map_resolution;
+	 stg_kg_t mass;
+	 bool obstacle_return;
+	 bool on_update_list;
+	 bool on_velocity_list;
+	 StgModel* parent; //< the model that owns this one, possibly NUL
+	 /** GData datalist can contain arbitrary named data items. Can be used
+		  by derived model types to store properties, and for user code
+		  to associate arbitrary items with a model. */
+	 stg_pose_t pose;
+	 GData* props;
+	 bool ranger_return;
+	 bool rebuild_displaylist; //< iff true, regenerate block display list before redraw
+	 char* say_string;   //< if non-null, this string is displayed in the GUI 
+
+	 stg_bool_t stall;
 	 /** Thread safety flag. Iff true, Update() may be called in
 		  parallel with other models. Defaults to false for safety */
+	 int subs;     //< the number of subscriptions to this model
 	 bool thread_safe;
-
-	 GMutex* access_mutex;
-	 
+	 GArray* trail;
+	 stg_model_type_t type;  
+	 bool used;    //< TRUE iff this model has been returned by GetUnusedModelOfType()  
+	 stg_velocity_t velocity;
+	 stg_watts_t watts; //< power consumed by this model
+	 Worldfile* wf;
+	 int wf_entity;
+	 StgWorld* world; // pointer to the world in which this model exists
+  	 
   public:
 	 void Lock()
 	 { 
@@ -1657,34 +1659,34 @@ public:
 		 some implementation detail */
 	
 	 void AddStartupCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &startup_hook, cb, user ); };
+	 { AddCallback( &hook_startup, cb, user ); };
 	
 	 void RemoveStartupCallback( stg_model_callback_t cb )
-	 { RemoveCallback( &startup_hook, cb ); };
+	 { RemoveCallback( &hook_startup, cb ); };
 	
 	 void AddShutdownCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &shutdown_hook, cb, user ); };
+	 { AddCallback( &hook_shutdown, cb, user ); };
 	
 	 void RemoveShutdownCallback( stg_model_callback_t cb )
-	 { RemoveCallback( &shutdown_hook, cb ); }
+	 { RemoveCallback( &hook_shutdown, cb ); }
 	
 	 void AddLoadCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &load_hook, cb, user ); }
+	 { AddCallback( &hook_load, cb, user ); }
 	
 	 void RemoveLoadCallback( stg_model_callback_t cb )
-	 { RemoveCallback( &load_hook, cb ); }
+	 { RemoveCallback( &hook_load, cb ); }
 	
 	 void AddSaveCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &save_hook, cb, user ); }
+	 { AddCallback( &hook_save, cb, user ); }
 	
 	 void RemoveSaveCallback( stg_model_callback_t cb )
-	 { RemoveCallback( &save_hook, cb ); }
+	 { RemoveCallback( &hook_save, cb ); }
 	
 	 void AddUpdateCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &update_hook, cb, user ); }
+	 { AddCallback( &hook_update, cb, user ); }
 	
 	 void RemoveUpdateCallback( stg_model_callback_t cb )
-	 { RemoveCallback( &update_hook, cb ); }
+	 { RemoveCallback( &hook_update, cb ); }
 	
 	 /** named-property interface 
 	  */
@@ -1892,17 +1894,19 @@ public:
 	 friend class StgModelCamera;
 
   private:
-	 bool paused; ///< the world only updates when this is false
-	 //int wf_section;
+
 	 StgCanvas* canvas;
+	 std::vector<Option*> drawOptions;
+	 FileManager fileMan; ///< Used to load and save worldfiles
+	 stg_usec_t interval_log[INTERVAL_LOG_LEN];
+	 stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
 	 Fl_Menu_Bar* mbar;
 	 OptionsDlg* oDlg;
-	 std::vector<Option*> drawOptions;
-	 void updateOptions();
-	 stg_usec_t interval_log[INTERVAL_LOG_LEN];
-
+	 bool pause_time;
+	 bool paused; ///< the world only updates when this is false
 	 stg_usec_t real_time_of_last_update;
-	 stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
+
+	 void UpdateOptions();
 	
 	 // static callback functions
 	 static void windowCb( Fl_Widget* w, void* p );	
@@ -1917,10 +1921,7 @@ public:
 	 // GUI functions
 	 bool saveAsDialog();
 	 bool closeWindowQuery();
-	
-	 // Quit time pause
-	 bool pause_time;
-	
+		
 	 virtual void AddModel( StgModel* mod );
 
   protected:
@@ -1934,7 +1935,6 @@ public:
 	 StgCanvas* GetCanvas( void ) { return canvas; }
 
   public:
-	 static const stg_msec_t DEFAULT_INTERVAL_REAL = 100; ///< real time between updates
 	
 	 StgWorldGui(int W,int H,const char*L=0);
 	 ~StgWorldGui();
@@ -1952,7 +1952,10 @@ public:
 	 void Start(){ paused = false; };
 	 void Stop(){ paused = true; };
 	 void TogglePause(){ paused = !paused; };
-	
+	 
+	 /** show the window - need to call this if you don't Load(). */
+	 void Show(); 
+
 	 /** Get human readable string that describes the current simulation
 		  time. */
 	 std::string ClockString( void );
@@ -2081,7 +2084,7 @@ public:
   {
 	 uint32_t sample_count;
 	 uint32_t resolution;
-	 stg_range_bounds_t range_bounds;
+	 stg_bounds_t range_bounds;
 	 stg_radians_t fov;
 	 stg_usec_t interval;
   } stg_laser_cfg_t;
@@ -2090,8 +2093,6 @@ public:
   class StgModelLaser : public StgModel
   {
   private:
-	 int dl_debug_laser;
-  
 	 /** OpenGL displaylist for laser data */
 	 int data_dl; 
 	 bool data_dirty;

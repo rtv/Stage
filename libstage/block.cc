@@ -39,8 +39,8 @@ StgBlock::StgBlock(  StgModel* mod,
 							Worldfile* wf, 
 							int entity) 
   : mod( mod ),
-	 pts(NULL), 
 	 pt_count(0), 
+	 pts(NULL), 
 	 color(0),
 	 inherit_color(true),
 	 rendered_cells( g_ptr_array_sized_new(32) ), 
@@ -86,7 +86,7 @@ StgModel* StgBlock::TestCollision()
   GenerateCandidateCells();
   
   // for every cell we may be rendered into
-  for( int i=0; i<candidate_cells->len; i++ )
+  for( unsigned int i=0; i<candidate_cells->len; i++ )
 	 {
 		Cell* cell = (Cell*)g_ptr_array_index(candidate_cells, i);
 		
@@ -178,17 +178,21 @@ void StgBlock::GenerateCandidateCells()
   // add local offset
   gpose = pose_sum( gpose, mod->geom.pose );
 
+  stg_size_t bgsize = mod->blockgroup.GetSize();
+  stg_point3_t bgoffset = mod->blockgroup.GetOffset();
+
   stg_point3_t scale;
-  scale.x = mod->geom.size.x / mod->blockgroup.size.x;
-  scale.y = mod->geom.size.y / mod->blockgroup.size.y;
-  scale.z = mod->geom.size.z / mod->blockgroup.size.z;
+  scale.x = mod->geom.size.x / bgsize.x;
+  scale.y = mod->geom.size.y / bgsize.y;
+  scale.z = mod->geom.size.z / bgsize.z;
+
 
   g_ptr_array_set_size( candidate_cells, 0 );
   
   // compute the global location of the first point
-  stg_pose_t local( (pts[0].x - mod->blockgroup.offset.x) * scale.x ,
-						  (pts[0].y - mod->blockgroup.offset.y) * scale.y, 
-						  -mod->blockgroup.offset.z, 
+  stg_pose_t local( (pts[0].x - bgoffset.x) * scale.x ,
+						  (pts[0].y - bgoffset.y) * scale.y, 
+						  -bgoffset.z, 
 						  0 );
 
   stg_pose_t first_gpose, last_gpose;
@@ -199,11 +203,11 @@ void StgBlock::GenerateCandidateCells()
   global_z.max = (scale.z * local_z.max) + last_gpose.z;		
   
   // now loop from the the second to the last
-  for( int p=1; p<pt_count; p++ )
+  for( unsigned int p=1; p<pt_count; p++ )
 	 {
-		stg_pose_t local( (pts[p].x - mod->blockgroup.offset.x) * scale.x ,
-								(pts[p].y - mod->blockgroup.offset.y) * scale.y, 
-								-mod->blockgroup.offset.z, 
+		stg_pose_t local( (pts[p].x - bgoffset.x) * scale.x ,
+								(pts[p].y - bgoffset.y) * scale.y, 
+								-bgoffset.z, 
 								0 );		
 		
 		stg_pose_t gpose2 = pose_sum( gpose, local );
@@ -231,7 +235,7 @@ void StgBlock::DrawTop()
   // draw the top of the block - a polygon at the highest vertical
   // extent
   glBegin( GL_POLYGON);
-  for( int i=0; i<pt_count; i++ )
+  for( unsigned int i=0; i<pt_count; i++ )
 	 glVertex3f( pts[i].x, pts[i].y, local_z.max );
   glEnd();
 }       
@@ -311,8 +315,7 @@ void StgBlock::Load( Worldfile* wf, int entity )
   //	 pt_count );
   
   char key[128];  
-  int p;
-  for( p=0; p<pt_count; p++ )	      {
+  for( unsigned int p=0; p<pt_count; p++ )	      {
 	 snprintf(key, sizeof(key), "point[%d]", p );
 	 
 	 pts[p].x = wf->ReadTupleLength(entity, key, 0, 0);

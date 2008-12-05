@@ -7,9 +7,13 @@
 using namespace Stg;
 
 BlockGroup::BlockGroup() 
-  : blocks(NULL), 
+  : displaylist(0),
+	 blocks(NULL), 
 	 count(0), 
-	 displaylist(0)
+	 minx(0),
+	 maxx(0),
+	 miny(0),
+	 maxy(0)
 { /* empty */ }
 
 BlockGroup::~BlockGroup()
@@ -51,7 +55,7 @@ StgModel* BlockGroup::TestCollision()
   StgModel* hitmod = NULL;
   
   for( GList* it=blocks; it; it = it->next )
-	 if( hitmod = ((StgBlock*)it->data)->TestCollision())
+	 if( (hitmod = ((StgBlock*)it->data)->TestCollision()))
 		break; // bail on the earliest collision
   
   //printf( "blockgroup %p test collision done.\n", this );
@@ -65,7 +69,7 @@ StgModel* BlockGroup::TestCollision()
 void BlockGroup::CalcSize()
 {  
   // assuming the blocks currently fit in a square +/- one billion units
-  double minx, miny, maxx, maxy, minz, maxz;
+  //double minx, miny, maxx, maxy, minz, maxz;
   minx = miny =  billion;
   maxx = maxy = -billion;
   
@@ -152,8 +156,11 @@ void BlockGroup::BuildDisplayList( StgModel* mod )
   //printf( "display list for model %s\n", mod->token );
 
   if( displaylist == 0 )
-	 displaylist = glGenLists(1);
-  
+	 {
+		displaylist = glGenLists(1);
+		CalcSize();
+	 }
+
   glNewList( displaylist, GL_COMPILE );	
     
 
@@ -271,8 +278,8 @@ void BlockGroup::LoadBitmap( StgModel* mod, const char* bitmapfile, Worldfile* w
   if( rects && (rect_count > 0) )
 	 {
 		// shift the origin from bottom-left to center of the image
-		double dx = width/2.0;
-		double dy = height/2.0;
+		//double dx = width/2.0;
+		//double dy = height/2.0;
 		
 		//puts( "loading rects" );
 		for( unsigned int r=0; r<rect_count; r++ )
@@ -284,14 +291,23 @@ void BlockGroup::LoadBitmap( StgModel* mod, const char* bitmapfile, Worldfile* w
 			 double w = rects[r].size.x;
 			 double h = rects[r].size.y;
 			 
-			 pts[0].x = x - dx;
-			 pts[0].y = y - dy;
-			 pts[1].x = x + w - dx;
-			 pts[1].y = y -dy;
-			 pts[2].x = x + w -dx;
-			 pts[2].y = y + h -dy;
-			 pts[3].x = x - dx;
-			 pts[3].y = y + h -dy;							 
+// 			 pts[0].x = x - dx;
+// 			 pts[0].y = y - dy;
+// 			 pts[1].x = x + w - dx;
+// 			 pts[1].y = y -dy;
+// 			 pts[2].x = x + w -dx;
+// 			 pts[2].y = y + h -dy;
+// 			 pts[3].x = x - dx;
+// 			 pts[3].y = y + h -dy;							 
+
+			 pts[0].x = x;
+			 pts[0].y = y;
+			 pts[1].x = x + w;
+			 pts[1].y = y;
+			 pts[2].x = x + w;
+			 pts[2].y = y + h;
+			 pts[3].x = x;
+			 pts[3].y = y + h;							 
 			 
 			 // TODO fix this
 			 stg_color_t col = stg_color_pack( 1.0, 0,0,1.0 ); 

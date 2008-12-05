@@ -138,21 +138,15 @@ void StgModel::Load()
 			 blockgroup.CalcSize();
 
 			 double epsilon = 0.01;	      
-			 double width = blockgroup.size.x;
-			 double height = blockgroup.size.y;
-			 double dx = width/2.0;
-			 double dy = height/2.0;
-			 double dz = blockgroup.size.z;
+			 stg_size_t bgsize = blockgroup.GetSize();
 
-			 // add thin bounding blocks
-			 AddBlockRect(-dx,-dy, epsilon, height, dz );	      
-			 AddBlockRect(-dx,-dy, width, epsilon, dz );	      
-			 AddBlockRect(-dx, -dy+height-epsilon, width, epsilon, dz );
-			 AddBlockRect(-dx+width-epsilon,-dy, epsilon, height, dz );
+			 AddBlockRect(blockgroup.minx,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
+			 AddBlockRect(blockgroup.minx,blockgroup.miny, bgsize.x, epsilon, bgsize.z );	      
+  			 AddBlockRect(blockgroup.minx,blockgroup.maxy-epsilon, bgsize.x, epsilon, bgsize.z );	      
+  			 AddBlockRect(blockgroup.maxx-epsilon,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
 		  }     
     }	  
 
-  
     if( wf->PropertyExists( wf_entity, "mass" ))
     this->SetMass( wf->ReadFloat(wf_entity, "mass", this->mass ));
 
@@ -206,7 +200,7 @@ void StgModel::Load()
     this->Say( wf->ReadString(wf_entity, "say", NULL ));
 
   // call any type-specific load callbacks
-  this->CallCallbacks( &this->load_hook );
+  this->CallCallbacks( &this->hook_load );
 
   // MUST BE THE LAST THING LOADED
   if( wf->PropertyExists( wf_entity, "alwayson" ))
@@ -261,7 +255,7 @@ void StgModel::Save( void )
 	 }
 
   // call any type-specific save callbacks
-  this->CallCallbacks( &this->save_hook );
+  this->CallCallbacks( &this->hook_save );
 
   PRINT_DEBUG1( "Model \"%s\" saving complete.", token );
 }

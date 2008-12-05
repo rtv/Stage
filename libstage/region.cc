@@ -16,7 +16,7 @@ const uint32_t SuperRegion::SIZE = SUPERREGIONSIZE;
 Region::Region() 
   : count(0)
 { 
-  for( int i=0; i<Region::SIZE; i++ )
+  for( unsigned int i=0; i<Region::SIZE; i++ )
 	 cells[i].region = this;
 }
 
@@ -33,7 +33,7 @@ SuperRegion::SuperRegion( int32_t x, int32_t y )
   origin.y = y;
 
   // initialize the parent pointer for all my child regions
-  for( int i=0; i<SuperRegion::SIZE; i++ )
+  for( unsigned int i=0; i<SuperRegion::SIZE; i++ )
 	 regions[i].superregion = this;
 }
 

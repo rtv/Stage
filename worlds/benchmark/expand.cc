@@ -84,7 +84,6 @@ int RangerUpdate( StgModel* mod, robot_t* robot )
   
   //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
 
-  int forward = 0 ;
   // if the front is clear, drive forwards
   if( (rgr->samples[0] > SAFE_DIST) &&
 		(rgr->samples[1] > SAFE_DIST/2.0) &&

@@ -53,10 +53,6 @@ unsigned int StgWorld::next_id = 0;
 bool StgWorld::quit_all = false;
 GList* StgWorld::world_list = NULL;
 
-const unsigned int THREAD_COUNT = 8;
-
-gint update_jobs_pending=0;
-
 static guint PointIntHash( stg_point_int_t* pt )
 {
 	return( pt->x + (pt->y<<16 ));
@@ -65,6 +61,63 @@ static guint PointIntHash( stg_point_int_t* pt )
 static gboolean PointIntEqual( stg_point_int_t* p1, stg_point_int_t* p2 )
 {
 	return( memcmp( p1, p2, sizeof(stg_point_int_t) ) == 0 );
+}
+
+
+StgWorld::StgWorld( const char* token, 
+						  stg_msec_t interval_sim,
+						  double ppm )
+  : 
+  // private
+  destroy( false ),
+  dirty( true ),
+  models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
+  ppm( ppm ), // raytrace resolution
+  quit( false ),
+  quit_time( 0 ),
+  real_time_now( RealTimeNow() ),
+  real_time_start( real_time_now ),
+  thread_mutex( g_mutex_new() ),
+  threadpool( NULL ),
+  total_subs( 0 ), 
+  update_jobs_pending(0),
+  velocity_list( NULL ),
+  worker_threads( 0 ),
+  worker_threads_done( g_cond_new() ),
+
+  // protected
+  extent(),
+  graphics( false ), 
+  interval_sim( (stg_usec_t)thousand * interval_sim ),
+  ray_list( NULL ),  
+  sim_time( 0 ),
+  superregions( g_hash_table_new( (GHashFunc)PointIntHash, 
+											 (GEqualFunc)PointIntEqual ) ),
+  sr_cached(NULL),
+  update_list( NULL ),
+  updates( 0 ),
+  wf( NULL )
+{
+  if( ! Stg::InitDone() )
+	 {
+		PRINT_WARN( "Stg::Init() must be called before a StgWorld is created." );
+		exit(-1);
+	 }
+  
+  StgWorld::world_list = g_list_append( StgWorld::world_list, this );
+}
+
+
+StgWorld::~StgWorld( void )
+{
+	PRINT_DEBUG2( "destroying world %d %s", id, token );
+
+	if( wf ) delete wf;
+
+	g_hash_table_destroy( models_by_name );
+	g_free( token );
+
+	world_list = g_list_remove( world_list, this );
 }
 
 
@@ -94,71 +147,18 @@ bool StgWorld::UpdateAll()
   return quit;
 }
 
-void StgWorld::update_thread_entry( StgModel* mod, void* dummy )
+void StgWorld::update_thread_entry( StgModel* mod, StgWorld* world )
 {
   mod->Update();
   
-  g_mutex_lock( mod->world->thread_mutex );
+  g_mutex_lock( world->thread_mutex );
   
-  update_jobs_pending--;
+  world->update_jobs_pending--;
   
-  if( update_jobs_pending == 0 )
-	 g_cond_signal( mod->world->worker_threads_done );
+  if( world->update_jobs_pending == 0 )
+	 g_cond_signal( world->worker_threads_done );
   
-  g_mutex_unlock( mod->world->thread_mutex );
-}
-
-
-StgWorld::StgWorld( const char* token, 
-						  stg_msec_t interval_sim,
-						  double ppm )
-  : 
-  ray_list( NULL ),
-  quit_time( 0 ),
-  quit( false ),
-  updates( 0 ),
-  wf( NULL ),
-  graphics( false ), 
-  models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
-  sim_time( 0 ),
-  interval_sim( (stg_usec_t)thousand * interval_sim ),
-  ppm( ppm ), // raytrace resolution
-  real_time_start( RealTimeNow() ),
-  superregions( g_hash_table_new( (GHashFunc)PointIntHash, 
-											 (GEqualFunc)PointIntEqual ) ),
-  total_subs( 0 ),
-  destroy( false ),
-  real_time_now( 0 ),
-  velocity_list( NULL ),
-  update_list( NULL ),
-  sr_cached(NULL),
-  worker_threads( 0 ),
-  threadpool( NULL ),
-  thread_mutex( g_mutex_new() ),
-  worker_threads_done( g_cond_new() )
-{
-  if( ! Stg::InitDone() )
-	 {
-		PRINT_WARN( "Stg::Init() must be called before a StgWorld is created." );
-		exit(-1);
-	 }
-
-  bzero( &extent, sizeof(extent) );
-  
-  StgWorld::world_list = g_list_append( StgWorld::world_list, this );
-}
-
-
-StgWorld::~StgWorld( void )
-{
-	PRINT_DEBUG2( "destroying world %d %s", id, token );
-
-	if( wf ) delete wf;
-
-	g_hash_table_destroy( models_by_name );
-	g_free( token );
-
-	world_list = g_list_remove( world_list, this );
+  g_mutex_unlock( world->thread_mutex );
 }
 
 
@@ -293,7 +293,7 @@ void StgWorld::Load( const char* worldfile_path )
 			  
 			  if( threadpool == NULL )
 				 threadpool = g_thread_pool_new( (GFunc)update_thread_entry, 
-															NULL,
+															this,
 															worker_threads, 
 															true,
 															NULL );
@@ -334,9 +334,12 @@ void StgWorld::Load( const char* worldfile_path )
 	LISTMETHOD( children, StgModel*, InitRecursive );
 	
 	stg_usec_t load_end_time = RealTimeNow();
-	
-	printf( "[Load time %.3fsec]\n", 
-			  (load_end_time - load_start_time) / 1000000.0 );
+
+	if( debug )
+	  printf( "[Load time %.3fsec]\n", 
+				 (load_end_time - load_start_time) / 1000000.0 );
+	else
+	  putchar( '\n' );
 }
 
 
@@ -755,6 +758,7 @@ stg_raytrace_result_t StgWorld::Raytrace( const stg_pose_t &gpose,
 static int _save_cb( StgModel* mod, void* dummy )
 {
 	mod->Save();
+	return 0;
 }
 
 bool StgWorld::Save( const char *filename )
@@ -767,6 +771,7 @@ bool StgWorld::Save( const char *filename )
 static int _reload_cb(  StgModel* mod, void* dummy )
 {
 	mod->Load();
+	return 0;
 }
 
 // reload the current worldfile

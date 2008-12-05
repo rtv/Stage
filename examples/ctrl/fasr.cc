@@ -61,7 +61,7 @@ extern "C" int Init( StgModel* mod )
 
   robot->ranger = (StgModelRanger*)mod->GetModel( "ranger:0" );
   assert( robot->ranger );
-  robot->ranger->Subscribe();
+  //robot->ranger->Subscribe();
 
 
   robot->avoidcount = 0;

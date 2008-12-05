@@ -117,28 +117,6 @@ model
 //#define DEBUG 0
 #include "stage_internal.hh"
 #include "texture_manager.hh"
-//#include <limits.h> 
-
-
-//static const members
-static const bool DEFAULT_BOUNDARY = false;
-static const stg_color_t DEFAULT_COLOR = (0xFFFF0000); // solid red
-static const stg_joules_t DEFAULT_ENERGY_CAPACITY = 1000.0;
-static const bool DEFAULT_ENERGY_CHARGEENABLE = true;
-static const stg_watts_t DEFAULT_ENERGY_GIVERATE =  0.0;
-static const stg_meters_t DEFAULT_ENERGY_PROBERANGE = 0.0;
-static const stg_watts_t DEFAULT_ENERGY_TRICKLERATE = 0.1;
-static const bool DEFAULT_GRID = false;
-static const bool DEFAULT_GRIPPERRETURN = false;
-static const stg_laser_return_t DEFAULT_LASERRETURN = LaserVisible;
-static const stg_meters_t DEFAULT_MAP_RESOLUTION = 0.1;
-static const stg_movemask_t DEFAULT_MASK = (STG_MOVE_TRANS | STG_MOVE_ROT);
-static const stg_kg_t DEFAULT_MASS = 10.0;
-static const bool DEFAULT_NOSE = false;
-static const bool DEFAULT_OBSTACLERETURN = true;
-static const bool DEFAULT_BLOBRETURN = true;
-static const bool DEFAULT_OUTLINE = true;
-static const bool DEFAULT_RANGERRETURN = true;
 
 // speech bubble colors
 static const stg_color_t BUBBLE_FILL = 0xFFC8C8FF; // light blue/grey
@@ -154,47 +132,59 @@ GHashTable* StgModel::modelsbyid = g_hash_table_new( NULL, NULL );
 StgModel::StgModel( StgWorld* world,
 						  StgModel* parent,
 						  const stg_model_type_t type )
-  : StgAncestor(), 
-	 world(world),
-	 parent(parent),
-	 type(type),
-    id( StgModel::count++ ),
-	 trail( g_array_new( false, false, sizeof(stg_trail_item_t) )),
+  : StgAncestor(), 	 
+	 blinkenlights( g_ptr_array_new() ),
+	 blob_return(true),
+	 blockgroup(),
 	 blocks_dl(0),
+	 boundary(false),
+	 callbacks( g_hash_table_new( g_int_hash, g_int_equal ) ),
+	 color( 0xFFFF0000 ), // red
 	 data_fresh(false),
 	 disabled(false),
+	 fiducial_key(0),
+	 fiducial_return(0),
+	 flag_list(NULL),
+	 geom(),
+	 gripper_return(false),
+	 gui_grid(false),
+	 gui_mask( parent ? 0 : (STG_MOVE_TRANS | STG_MOVE_ROT) ),
+	 gui_nose(false),
+	 gui_outline(false),
+	 has_default_block( true ),
+	 hook_load(0),
+	 hook_save(0),
+	 hook_shutdown(0),
+	 hook_startup(0),
+	 hook_update(0),
+    id( StgModel::count++ ),
+	 initfunc(NULL),
+	 interval((stg_usec_t)1e4), // 10msec
+	 laser_return(LaserVisible),
+	 last_update(0),
+	 map_caches_are_invalid( true ),
+	 map_resolution(0.1),
+	 mass(0),
+	 obstacle_return(true),
+	 on_update_list( false ),
+	 on_velocity_list( false ),
+	 parent(parent),
+	 pose(),
+	 props(NULL),
+	 ranger_return(true),
 	 rebuild_displaylist(true),
 	 say_string(NULL),
-	 subs(0),
-	 used(false),
 	 stall(false),	 
-	 obstacle_return(DEFAULT_OBSTACLERETURN),
-	 ranger_return(DEFAULT_RANGERRETURN),
-	 blob_return(DEFAULT_BLOBRETURN),
-	 laser_return(DEFAULT_LASERRETURN),
-	 gripper_return(DEFAULT_GRIPPERRETURN),
-	 fiducial_return(0),
-	 fiducial_key(0),
-	 boundary(DEFAULT_BOUNDARY),
-	 color(DEFAULT_COLOR),
-	 map_resolution(DEFAULT_MAP_RESOLUTION),
-	 gui_nose(DEFAULT_NOSE),
-	 gui_grid(DEFAULT_GRID),
-	 gui_outline(DEFAULT_OUTLINE),
-	 gui_mask( parent ? 0 : DEFAULT_MASK),
-	 callbacks( g_hash_table_new( g_int_hash, g_int_equal ) ),
-	 flag_list(NULL),
-	 blinkenlights( g_ptr_array_new() ),
-	 last_update(0),
-	 interval((stg_usec_t)1e4), // 10msec
-	 initfunc(NULL),
+	 subs(0),
+	 thread_safe( false ),
+	 trail( g_array_new( false, false, sizeof(stg_trail_item_t) )),
+	 type(type),	
+	 used(false),
+	 velocity(),
+	 watts(0),
 	 wf(NULL),
-	 on_velocity_list( false ),
-	 on_update_list( false ),
 	 wf_entity(0),
-	 has_default_block( true ),
-	 map_caches_are_invalid( true ),
-	 thread_safe( false )
+	 world(world)
 {
   assert( modelsbyid );
   assert( world );
@@ -678,7 +668,7 @@ void StgModel::Startup( void )
 
   StartUpdating();
 
-  CallCallbacks( &startup_hook );
+  CallCallbacks( &hook_startup );
 }
 
 void StgModel::Shutdown( void )
@@ -687,7 +677,7 @@ void StgModel::Shutdown( void )
 
   StopUpdating();
 
-  CallCallbacks( &shutdown_hook );
+  CallCallbacks( &hook_shutdown );
 }
 
 void StgModel::UpdateIfDue( void )
@@ -706,7 +696,7 @@ void StgModel::Update( void )
   //   printf( "[%llu] %s update (%d subs)\n", 
   // 			 this->world->sim_time, this->token, this->subs );
 
-  CallCallbacks( &update_hook );
+  CallCallbacks( &hook_update );
   last_update = world->sim_time;
 }
 

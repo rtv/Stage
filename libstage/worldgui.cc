@@ -154,47 +154,50 @@ static const char* AboutText =
 
 StgWorldGui::StgWorldGui(int W,int H,const char* L) : 
   Fl_Window(W,H,L ),
-  oDlg( NULL ),
-  paused( false ),
-  //graphics( true ),
-  pause_time( false ),	
-  interval_real( (stg_usec_t)thousand * DEFAULT_INTERVAL_REAL ),
+  canvas( new StgCanvas( this,0,30,W,H-30 ) ),
+  drawOptions(),
+  fileMan(),
+  interval_log(),
+  interval_real( (stg_usec_t)1e5 ),
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
-  canvas( new StgCanvas( this,0,30,W,H-30 ) )
-  {
-	 for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
-		interval_log[i] = interval_real;
-	 
-	 resizable(canvas);
+  oDlg( NULL ),
+  pause_time( false ),	
+  paused( false ),
+  real_time_of_last_update( RealTimeNow() )
+{
+  for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
+	 interval_log[i] = interval_real;
+  
+  resizable(canvas);
+  
+  end();
+  
+  label( PROJECT );
+  
+  mbar->textsize(12);
+  
+  mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
+  mbar->add( "File/&Load World...", FL_CTRL + 'l', fileLoadCb, this, FL_MENU_DIVIDER );
+  mbar->add( "File/&Save World", FL_CTRL + 's', fileSaveCb, this );
+  mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', StgWorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
+  
+  //mbar->add( "File/Screenshots", 0,0,0, FL_SUBMENU );
+  //mbar->add( "File/Screenshots/Save Frames, fileScreenshotSaveCb, this,FL_MENU_TOGGLE );
+  
+  mbar->add( "File/E&xit", FL_CTRL+'q', StgWorldGui::fileExitCb, this );
+  
+  mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
+  mbar->add( "View/Filter data...", FL_SHIFT + 'd', StgWorldGui::viewOptionsCb, this );
+  canvas->createMenuItems( mbar, "View" );
+  
+  mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
+  mbar->add( "Help/&About Stage...", 0, StgWorldGui::helpAboutCb, this );
+  //mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
+  
+  callback( StgWorldGui::windowCb, this );	 
 
-	 end();
-
-	 label( PROJECT ),
-	 
-	 mbar->textsize(12);
-	 
-	 mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
-	 mbar->add( "File/&Load World...", FL_CTRL + 'l', fileLoadCb, this, FL_MENU_DIVIDER );
-	 mbar->add( "File/&Save World", FL_CTRL + 's', fileSaveCb, this );
-	 mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', StgWorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
-	 
-	 //mbar->add( "File/Screenshots", 0,0,0, FL_SUBMENU );
-	 //mbar->add( "File/Screenshots/Save Frames, fileScreenshotSaveCb, this,FL_MENU_TOGGLE );
-	 
-	 mbar->add( "File/E&xit", FL_CTRL+'q', StgWorldGui::fileExitCb, this );
-	 
-	 mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
-	 mbar->add( "View/Filter data...", FL_SHIFT + 'd', StgWorldGui::viewOptionsCb, this );
-	 canvas->createMenuItems( mbar, "View" );
-	 
-	 mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
-	 mbar->add( "Help/&About Stage...", 0, StgWorldGui::helpAboutCb, this );
-	 //mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
-	 
-	 callback( StgWorldGui::windowCb, this );
-	 
-	 show();
-  }
+	show();	
+}
 
 StgWorldGui::~StgWorldGui()
 {
@@ -202,6 +205,11 @@ StgWorldGui::~StgWorldGui()
   if ( oDlg )
     delete oDlg;
   delete canvas;
+}
+
+void StgWorldGui::Show()
+{
+  show(); // fltk
 }
 
 void StgWorldGui::Load( const char* filename )
@@ -245,7 +253,9 @@ void StgWorldGui::Load( const char* filename )
   }
   label( title.c_str() );
 	
-  updateOptions();
+  UpdateOptions();
+
+  show();
 }
 
 void StgWorldGui::UnLoad() 
@@ -279,9 +289,6 @@ bool StgWorldGui::Save( const char* filename )
 
 bool StgWorldGui::Update()
 {
-  if( real_time_of_last_update == 0 )
-    real_time_of_last_update = RealTimeNow();
-
   //pause the simulation if quit time is set
   if( PastQuitTime() && pause_time == false ) {
 	  TogglePause();
@@ -318,6 +325,9 @@ bool StgWorldGui::Update()
 		}
   } while( interval < interval_real );
   
+  
+  //printf( "interval_real %.20f\n", interval_real );
+
   // if( paused ) // gentle on the CPU when paused
 		 //usleep( 10000 );
   
@@ -579,7 +589,7 @@ void aboutCloseCb( Fl_Widget* w, void* p ) {
 
 void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p ) 
 {
-  StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+  // StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
 
   fl_register_images();
 	
@@ -683,18 +693,21 @@ bool StgWorldGui::closeWindowQuery()
   }
 }
 
-void StgWorldGui::updateOptions() {
+void StgWorldGui::UpdateOptions() 
+{
   std::set<Option*, Option::optComp> options;
   std::vector<Option*> modOpts;
-  for( GList* it=update_list; it; it=it->next ) {
-    modOpts = ((StgModel*)it->data)->getOptions();
-    options.insert( modOpts.begin(), modOpts.end() );	
-  }
+  
+  for( GList* it=update_list; it; it=it->next ) 
+	 {
+		modOpts = ((StgModel*)it->data)->getOptions();
+		options.insert( modOpts.begin(), modOpts.end() );	
+	 }
 	
   drawOptions.assign( options.begin(), options.end() );
-  if ( oDlg ) {
-    oDlg->setOptions( drawOptions );
-  }
+  
+  if ( oDlg ) 
+	 oDlg->setOptions( drawOptions );
 }
 
 void StgWorldGui::DrawBoundingBoxTree()

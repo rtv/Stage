@@ -75,13 +75,14 @@ laser
   StgModelLaser::StgModelLaser( StgWorld* world, 
 										  StgModel* parent )
   : StgModel( world, parent, MODEL_TYPE_LASER ),
+	data_dl(0),
+	data_dirty( true ),
+	samples( NULL ),	// don't allocate sample buffer memory until Update() is called
+	sample_count( DEFAULT_SAMPLES ),
 	range_min( DEFAULT_MINRANGE ),
 	range_max( DEFAULT_MAXRANGE ),
 	fov( DEFAULT_FOV ),
-	sample_count( DEFAULT_SAMPLES ),
-	resolution( DEFAULT_RESOLUTION ),
-	data_dirty( true ),
-	samples( NULL ) 	// don't allocate sample buffer memory until Update() is called
+	resolution( DEFAULT_RESOLUTION )
 {
   
   PRINT_DEBUG2( "Constructing StgModelLaser %d (%s)\n", 
@@ -334,41 +335,42 @@ void StgModelLaser::DataVisualize( Camera* cam )
       
       pts[0] = 0.0;
       pts[1] = 0.0;
-
-      if( showLaserData )
-		  {      
-			 PushColor( 0, 0, 1, 0.5 );
+		
+		PushColor( 0, 0, 1, 0.5 );
+		glDepthMask( GL_FALSE );
+		glPointSize( 2 );
+		
+		for( unsigned int s=0; s<sample_count; s++ )
+		  {
+			 double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+			 pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
+			 pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
 			 
-			 for( unsigned int s=0; s<sample_count; s++ )
+			 // if the sample is unusually bright, draw a little blob
+			 if( showLaserData && (samples[s].reflectance > 0) )
 				{
-				  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
-				  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
-				  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
-				  
-				  // if the sample is unusually bright, draw a little blob
-				  if( samples[s].reflectance > 0 )
-					 {
-						glBegin( GL_POINTS );
-						glVertex2f( pts[2*s+2], pts[2*s+3] );
-						glEnd();
-					 }			 
-				}
-			 PopColor();
-			 
-			 glDepthMask( GL_FALSE );
-			 
+				  glBegin( GL_POINTS );
+				  glVertex2f( pts[2*s+2], pts[2*s+3] );
+				  glEnd();
+				}			 
+		  }
+		
+		glVertexPointer( 2, GL_FLOAT, 0, pts );      
+		
+		PopColor();
+		
+		if( showLaserData )
+		  {      			 
 			 // draw the filled polygon in transparent blue
 			 PushColor( 0, 0, 1, 0.1 );		
-			 glVertexPointer( 2, GL_FLOAT, 0, pts );      
 			 glDrawArrays( GL_POLYGON, 0, sample_count+1 );
 			 PopColor();
 		  }
 		
       if( showLaserStrikes )
 		  {
-			 // draw the beam strike points in black
-			 PushColor( 0, 0, 0, 1.0 );
-			 glPointSize( 1.0 );
+			 // draw the beam strike points
+			 PushColor( 0, 0, 1, 0.8 );
 			 glDrawArrays( GL_POINTS, 0, sample_count+1 );
 			 PopColor();
 		  }

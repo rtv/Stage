@@ -21,8 +21,6 @@ define walle position
   size [0.35 0.5 0.5]
   #origin [-0.25 -0.25 0 0 ]
 
-  laser( pose [0.15 0 -0.27 0 ] size [0.01 0.01 0.01] alwayson 1 )
-
   # body bottom
   block 
   (

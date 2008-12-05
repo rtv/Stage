@@ -5,7 +5,6 @@
 include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
-include "walle.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 10  # real-time interval between simulation updates in milliseconds 
@@ -29,9 +28,9 @@ window
 floorplan
 ( 
   name "cave"
-  size [17.000 17.000 0.800]
-  pose [8.000 8.000 0 0 ]
- bitmap "bitmaps/cave.png"
+  size [16.000 16.000 0.800]
+  pose [8 8 0 0]
+  bitmap "bitmaps/cave.png"
 )
 
 
@@ -40,10 +39,8 @@ pioneer2dx
   # can refer to the robot by this name
   name "r0"
 
-  localization "odom"
-
   pose [ 0.892 0.800 0 56.500 ] 
-  sicklaser( samples 180 ) 
+  sicklaser() 
 
   ctrl "wander"
 )
