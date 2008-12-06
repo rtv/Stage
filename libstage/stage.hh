@@ -170,10 +170,11 @@ namespace Stg
 	*/
   inline double normalize( double a )
   {
-	 //optimized version of return( atan2(sin(a), cos(a)));
-	 while( a < -M_PI ) a += 2.0 * M_PI;
-	 while( a > M_PI ) a -= 2.0 * M_PI;
-	 return a;
+	 return( atan2(sin(a), cos(a)));
+	 // faster than return( atan2(sin(a), cos(a)));
+	 //while( a < -M_PI ) a += 2.0 * M_PI;
+	 //while( a > M_PI ) a -= 2.0 * M_PI;
+	 //return a;
   }
 	
 
@@ -927,7 +928,8 @@ namespace Stg
 	 SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
 	 SuperRegion* GetSuperRegion( const stg_point_int_t& coord );
 	 SuperRegion* GetSuperRegionCached( const stg_point_int_t& coord);
-  
+	 void ExpireSuperRegion( SuperRegion* sr );
+
 	 inline Cell* GetCell( const int32_t x, const int32_t y );
 	 
 	 void ForEachCellInPolygonGLfloat( const GLfloat pts[], 
@@ -960,7 +962,7 @@ namespace Stg
 	 virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
 	 virtual void PopColor(){ /* do nothing */  };
 	 
-	 SuperRegion* CreateSuperRegion( int32_t x, int32_t y );
+	 SuperRegion* CreateSuperRegion( stg_point_int_t origin );
 	 void DestroySuperRegion( SuperRegion* sr );
 	 
 	 stg_raytrace_result_t Raytrace( const stg_pose_t& pose, 			 

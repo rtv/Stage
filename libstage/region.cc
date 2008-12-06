@@ -14,24 +14,25 @@ const uint32_t SuperRegion::SIZE = SUPERREGIONSIZE;
 
 
 Region::Region() 
-  : count(0)
+  : count(0), cells(NULL)
 { 
-  for( unsigned int i=0; i<Region::SIZE; i++ )
-	 cells[i].region = this;
+  //for( unsigned int i=0; i<Region::SIZE; i++ )
+  //cells[i].region = this;
 }
 
 Region::~Region()
 {
-  delete[] cells;
+  if(cells)
+	 delete[] cells;
 }
 
 
-SuperRegion::SuperRegion( int32_t x, int32_t y )
-  : count(0)
+SuperRegion::SuperRegion( StgWorld* world, stg_point_int_t origin )
+  : count(0), origin(origin), world(world)	 
 {
-  origin.x = x;
-  origin.y = y;
-
+  //static int srcount=0;
+  //printf( "created SR number %d\n", ++srcount );
+  
   // initialize the parent pointer for all my child regions
   for( unsigned int i=0; i<SuperRegion::SIZE; i++ )
 	 regions[i].superregion = this;
@@ -39,7 +40,7 @@ SuperRegion::SuperRegion( int32_t x, int32_t y )
 
 SuperRegion::~SuperRegion()
 {
-  // nothing to do
+  //printf( "deleting SR %p at [%d,%d]\n", this, origin.x, origin.y );
 }
 
 void SuperRegion::Draw( bool drawall )
@@ -55,13 +56,20 @@ void SuperRegion::Draw( bool drawall )
   glColor3f( 0,1,0 );    
   for( unsigned int x=0; x<SuperRegion::WIDTH; x++ )
 	 for( unsigned int y=0; y<SuperRegion::WIDTH; y++ )
- 		glRecti( x<<RBITS, y<<RBITS, 
- 					(x+1)<<RBITS, (y+1)<<RBITS );
-  
+		glRecti( x<<RBITS, y<<RBITS, 
+					  (x+1)<<RBITS, (y+1)<<RBITS );
+
   // outline superregion
-  glColor3f( 0,0,1 );    
+  glColor3f( 0,0,1 );   
+ 
   glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
   
+  char buf[32];
+  snprintf( buf, 15, "%lu", count );
+  gl_draw_string( 1<<SBITS, 1<<SBITS, 0, buf );
+    
+  glColor3f( 1.0,0,0 );
+
   for( unsigned int x=0; x<SuperRegion::WIDTH; x++ )
 	 for( unsigned int y=0; y<SuperRegion::WIDTH; y++ )
 		{
@@ -70,7 +78,6 @@ void SuperRegion::Draw( bool drawall )
 		  if( r->count < 1 )
 			 continue;		  
 
-		  char buf[16];
 		  snprintf( buf, 15, "%lu", r->count );
 		  gl_draw_string( x<<RBITS, y<<RBITS, 0, buf );
 
@@ -84,7 +91,6 @@ void SuperRegion::Draw( bool drawall )
 					 
 					 if( ! drawall ) // draw a rectangle on the floor
 						{
-						  glColor3f( 1.0,0,0 );
 						  glRecti( xx, yy,
 									  xx+1, yy+1);
 						}

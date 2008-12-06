@@ -325,7 +325,7 @@ bool StgWorldGui::Update()
 		}
   } while( interval < interval_real );
   
-  
+  //printf( "\r \t\t timenow %lu", timenow );
   //printf( "interval_real %.20f\n", interval_real );
 
   // if( paused ) // gentle on the CPU when paused

@@ -192,7 +192,8 @@ private:
   static const uint32_t WIDTH;
   static const uint32_t SIZE;
   
-  Cell cells[REGIONSIZE];
+  //Cell cells[REGIONSIZE];
+  Cell* cells;
   SuperRegion* superregion;
   
 public:
@@ -203,7 +204,14 @@ public:
   
   Cell* GetCell( int32_t x, int32_t y )
   { 
-	 return( &cells[x + (y*Region::WIDTH)] ); 
+	 if( ! cells )
+		{
+		  cells = new Cell[REGIONSIZE];
+		  for( unsigned int i=0; i<Region::SIZE; i++ )
+			 cells[i].region = this;		  
+		}
+		return( &cells[x + (y*Region::WIDTH)] ); 
+
   };
   
   void DecrementOccupancy();
@@ -224,10 +232,11 @@ private:
   unsigned long count; // number of blocks rendered into these regions
   
   stg_point_int_t origin;
-  
+  StgWorld* world;
+
 public:
   
-  SuperRegion( int32_t x, int32_t y );
+  SuperRegion( StgWorld* world, stg_point_int_t origin );
   ~SuperRegion();
   
   Region* GetRegion( int32_t x, int32_t y )
@@ -237,8 +246,8 @@ public:
   
   void Draw( bool drawall );
   void Floor();
-
-  void DecrementOccupancy(){ --count; };  
+  
+  void DecrementOccupancy(){ --count; };
   void IncrementOccupancy(){ ++count; };
 };
   
@@ -250,7 +259,7 @@ inline void Region::DecrementOccupancy()
   assert( superregion );
   superregion->DecrementOccupancy();
   --count; 
-}
+};
 
 inline void Region::IncrementOccupancy()
 { 

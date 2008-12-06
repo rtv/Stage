@@ -121,9 +121,9 @@ StgWorld::~StgWorld( void )
 }
 
 
-SuperRegion* StgWorld::CreateSuperRegion( int32_t x, int32_t y )
+SuperRegion* StgWorld::CreateSuperRegion( stg_point_int_t origin )
 {
-	SuperRegion* sr = new SuperRegion( x, y );
+  SuperRegion* sr = new SuperRegion( this, origin );
 	g_hash_table_insert( superregions, &sr->origin, sr );
 
 	dirty = true; // force redraw
@@ -397,6 +397,7 @@ bool StgWorld::PastQuitTime()
   return( (quit_time > 0) && (sim_time >= quit_time) ); 
 }
 
+
 bool StgWorld::Update()
 {
   PRINT_DEBUG( "StgWorld::Update()" );
@@ -406,7 +407,7 @@ bool StgWorld::Update()
 		if( IsGUI() == false )
 			return true;		
 	}
-
+		
 	// upate all positions first
 	LISTMETHOD( velocity_list, StgModel*, UpdatePose );
 	
@@ -783,7 +784,7 @@ void StgWorld::Reload( void )
 SuperRegion* StgWorld::AddSuperRegion( const stg_point_int_t& sup )
 {
   //printf( "Creating super region [ %d %d ]\n", sup.x, sup.y );
-  SuperRegion* sr = CreateSuperRegion( sup.x, sup.y );
+  SuperRegion* sr = CreateSuperRegion( sup );
   
   // the bounds of the world have changed
   stg_point3_t pt;
@@ -799,6 +800,7 @@ SuperRegion* StgWorld::AddSuperRegion( const stg_point_int_t& sup )
   
   return sr;
 }
+
 
 inline SuperRegion* StgWorld::GetSuperRegionCached( const stg_point_int_t& sup )
 {
