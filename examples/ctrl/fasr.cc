@@ -16,7 +16,7 @@ double have[4][4] = {
   { 90, 180, 180, 180 },
   { 90, -90, 0, -90 },
   { 90, 90, 180, 90 },
-  { 0, 45, 0, 45} 
+  { 0, 45, 0, 0} 
 };
 
 double need[4][4] = {
@@ -186,8 +186,10 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
 		// oh what an awful bug - 5 hours to track this down. When using
 		// this controller in a world larger than 8*8 meters, a_goal can
 		// sometimes be NAN. Causing trouble WAY upstream. 
-		if( x > 3 ) x = 3;
-		if( y > 3 ) y = 3;
+ 		if( x > 3 ) x = 3;
+ 		if( y > 3 ) y = 3;
+ 		if( x < 0 ) x = 0;
+ 		if( y < 0 ) y = 0;
       
       double a_goal = 
 		  dtor( robot->pos->GetFlagCount() ? have[y][x] : need[y][x] );
