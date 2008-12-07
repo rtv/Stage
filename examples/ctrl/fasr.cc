@@ -182,12 +182,23 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
 
       int x = (pose.x + 8) / 4;
       int y = (pose.y + 8) / 4;
+
+		// oh what an awful bug - 5 hours to track this down. When using
+		// this controller in a world larger than 8*8 meters, a_goal can
+		// sometimes be NAN. Causing trouble WAY upstream. 
+		if( x > 3 ) x = 3;
+		if( y > 3 ) y = 3;
       
       double a_goal = 
 		  dtor( robot->pos->GetFlagCount() ? have[y][x] : need[y][x] );
       
+		assert( ! isnan(a_goal ) );
+		assert( ! isnan(pose.a ) );
+
       double a_error = normalize( a_goal - pose.a );
-		
+
+		assert( ! isnan(a_error) );
+
       robot->pos->SetTurnSpeed(  a_error );
     }
  

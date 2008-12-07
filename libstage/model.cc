@@ -566,7 +566,22 @@ stg_pose_t StgModel::GetGlobalPose()
 // should one day do all this with affine transforms for neatness?
 inline stg_pose_t StgModel::LocalToGlobal( stg_pose_t pose )
 {  
-  return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
+  stg_pose_t gpose = pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
+
+  if( isnan(gpose.x) || isnan(gpose.y) | isnan(gpose.z) || isnan(gpose.a ) )
+	 {
+		stg_pose_t g = GetGlobalPose();
+		stg_pose_t p = parent ? parent->GetPose() : stg_pose_t();
+
+		printf( "model %p %s gpose BAD [%.2f %.2f %.2f %.2f] pose [%.2f %.2f %.2f %.2f] globalpose [%.2f %.2f %.2f %.2f] parent [%.2f %.2f %.2f %.2f] \n", 
+				  this, token, gpose.x, gpose.y, gpose.z, gpose.a,
+				  pose.x, pose.y, pose.z, pose.a,
+				  g.x, g.y, g.z, g.a,
+				  p.x, p.y, p.z, p.a );
+		return gpose;
+		
+	 }
+  //return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
 }
 
 void StgModel::MapWithChildren()
@@ -1223,6 +1238,11 @@ void StgModel::SetVelocity( stg_velocity_t vel )
 // 			 vel.z,
 // 			 vel.a );
 
+  assert( ! isnan(vel.x) );
+  assert( ! isnan(vel.y) );
+  assert( ! isnan(vel.z) );
+  assert( ! isnan(vel.a) );
+
   this->velocity = vel;
   
   if( on_velocity_list && velocity_is_zero( vel ) ) 	 
@@ -1250,28 +1270,24 @@ void StgModel::NeedRedraw( void )
 	 world->NeedRedraw();
 }
 
-void StgModel::SetPose( stg_pose_t pose )
+void StgModel::SetPose( stg_pose_t newpose )
 {
   //PRINT_DEBUG5( "%s.SetPose(%.2f %.2f %.2f %.2f)", 
   //	this->token, pose->x, pose->y, pose->z, pose->a );
 
   // if the pose has changed, we need to do some work
-  if( memcmp( &this->pose, &pose, sizeof(stg_pose_t) ) != 0 )
+  if( memcmp( &pose, &newpose, sizeof(stg_pose_t) ) != 0 )
     {
-		//puts( "SETPOSE" );
-	  
-		//      UnMapWithChildren();
+      pose = newpose;
+      pose.a = normalize(pose.a);
 
-
-      pose.a = normalize( pose.a );
-      this->pose = pose;
-      this->pose.a = normalize(this->pose.a);
-
-      this->NeedRedraw();
-
-		this->map_caches_are_invalid = true;
+		if( isnan( pose.a ) )
+			 printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
+						token, pose.x, pose.y, pose.z, pose.a );
+		
+      NeedRedraw();
+		map_caches_are_invalid = true;
       MapWithChildren();
-
 		world->dirty = true;
     }
 
@@ -1483,6 +1499,10 @@ void StgModel::CommitTestedPose()
   
 StgModel* StgModel::ConditionalMove( stg_pose_t newpose )
 { 
+  if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
+	 printf( "ConditionalMove bad newpose %s [%.2f %.2f %.2f %.2f]\n",
+				token, newpose.x, newpose.y, newpose.z, newpose.a );
+
   stg_pose_t startpose = pose;
   pose = newpose; // do the move provisionally - we might undo it below
    
@@ -1495,6 +1515,11 @@ StgModel* StgModel::ConditionalMove( stg_pose_t newpose )
 		CommitTestedPose(); // shift anyrecursively commit to blocks to the new pose 
 		world->dirty = true; // need redraw
 	 }
+
+  
+  if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
+	 printf( "ConditionalMove bad pose %s [%.2f %.2f %.2f %.2f]\n",
+				token, pose.x, pose.y, pose.z, pose.a );
 
   return hitmod;
 }
@@ -1532,6 +1557,10 @@ void StgModel::UpdatePose( void )
   p.z = velocity.z * interval;
   p.a = velocity.a * interval;
     
+  if( isnan( p.x ) || isnan( p.y )  || isnan( p.z )  || isnan( p.a ) )
+	 printf( "UpdatePose bad vel %s [%.2f %.2f %.2f %.2f]\n",
+				token, p.x, p.y, p.z, p.a );
+
   // attempts to move to the new pose. If the move fails because we'd
   // hit another model, that model is returned.
   StgModel* hitthing = ConditionalMove( pose_sum( pose, p ) );

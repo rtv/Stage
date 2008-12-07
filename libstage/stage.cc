@@ -52,6 +52,17 @@ bool Stg::InitDone()
 	return init_called;
 }
 
+double Stg::normalize( double a )
+{
+  assert( ! isnan(a) );
+  
+  //return( atan2(sin(a), cos(a)));
+  // faster than return( atan2(sin(a), cos(a)));
+  while( a < -M_PI ) a += (2.0 * M_PI);
+  while( a > M_PI ) a -= (2.0 * M_PI);
+  return a;
+};
+
 
 void Stg::RegisterModel( stg_model_type_t type, 
 								 const char* name, 

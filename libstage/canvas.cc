@@ -592,20 +592,25 @@ void StgCanvas::DrawGlobalGrid()
 {
   stg_bounds3d_t bounds = world->GetExtent();
 
-  char str[16];	
-  PushColor( 0.15, 0.15, 0.15, 1.0 ); // pale gray
-  for( double i = floor(bounds.x.min); i < bounds.x.max; i++)
-    {
-      snprintf( str, 16, "%d", (int)i );
-      gl_draw_string(  i, 0, 0.00, str );
-    }
+//   printf( "bounds [%.2f %.2f] [%.2f %.2f] [%.2f %.2f]\n",
+// 			 bounds.x.min, bounds.x.max,
+// 			 bounds.y.min, bounds.y.max,
+// 			 bounds.z.min, bounds.z.max );
+
+  char str[64];	
+   PushColor( 0.15, 0.15, 0.15, 1.0 ); // pale gray
+   for( double i = floor(bounds.x.min); i < bounds.x.max; i++)
+     {
+       snprintf( str, 16, "%d", (int)i );
+       gl_draw_string(  i, 0, 0.00, str );
+	  }
 	
-  for( double i = floor(bounds.y.min); i < bounds.y.max; i++)
-    {
-      snprintf( str, 16, "%d", (int)i );
-      gl_draw_string(  0, i, 0.00, str );
-    }
-  PopColor();
+   for( double i = floor(bounds.y.min); i < bounds.y.max; i++)
+     {
+       snprintf( str, 16, "%d", (int)i );
+       gl_draw_string(  0, i, 0.00, str );
+     }
+   PopColor();
 	
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 

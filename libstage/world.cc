@@ -519,20 +519,22 @@ void StgWorld::Raytrace( const stg_pose_t &pose, // global pose
 // inline functions for converting from global cell coordinates to
 // superregions, regions and local cells
 
-inline int32_t SUPERREGION( const int32_t& x )
-{  
+inline int32_t SUPERREGION( const int32_t x )
+{ 
+  if( abs((x>>SRBITS) > 100 ) )
+	 printf( "MACRO[ %d %d ]", x, (x>>SRBITS) );
   return( x >> SRBITS );
 }
 
-inline int32_t REGION( const int32_t& x )
+inline int32_t REGION( const int32_t x )
 {  
   const int32_t _region_coord_mask = ~ ( ( ~ 0x00 ) << SRBITS );
   return( ( x & _region_coord_mask ) >> RBITS );
 }
 
-inline int32_t CELL( const int32_t& x )
+inline int32_t CELL( const int32_t x )
 {  
-  static const int32_t _cell_coord_mask = ~ ( ( ~ 0x00 ) << RBITS );
+  const int32_t _cell_coord_mask = ~ ( ( ~ 0x00 ) << RBITS );
   return( x & _cell_coord_mask );															  
 }
 
@@ -568,14 +570,14 @@ stg_raytrace_result_t StgWorld::Raytrace( const stg_pose_t &gpose,
 														const bool ztest ) 
 {
   stg_raytrace_result_t sample;
-
-  //  printf( "raytracing at [ %.2f %.2f %.2f %.2f ] for %.2f \n",
-	// 	  pose.x,
-	// 	  pose.y,
-	// 	  pose.z,
-	// 	  pose.a,
-	// 	  range );
-	
+  
+//   printf( "raytracing at [ %.2f %.2f %.2f %.2f ] for %.2f \n",
+// 			 gpose.x,
+// 			 gpose.y,
+// 			 gpose.z,
+// 			 gpose.a,
+// 			 range );
+  
 	// initialize the sample
 	sample.pose = gpose;
 	sample.range = range; // we might change this below
@@ -585,7 +587,7 @@ stg_raytrace_result_t StgWorld::Raytrace( const stg_pose_t &gpose,
 	stg_point_int_t glob;
 	glob.x = (int32_t)(gpose.x*ppm);
 	glob.y = (int32_t)(gpose.y*ppm);
-	
+		
 	// record our starting position
 	stg_point_int_t start = glob;
 	
@@ -640,6 +642,18 @@ stg_raytrace_result_t StgWorld::Raytrace( const stg_pose_t &gpose,
 	else if( dy > 0 )
 	  n++;
 	
+	if( abs(sup.x) > 20 )
+	  printf( "raytracing at [ %.2f %.2f %.2f %.2f ] GLOB( %d %d ) SUP( %d %d )\n",
+				 gpose.x,
+				 gpose.y,
+				 gpose.z,
+				 gpose.a,
+				 glob.x,
+				 glob.y,
+				 sup.x,
+				 sup.y );
+
+
 	// find the starting superregion 
 	sr = GetSuperRegionCached( sup ); // possibly NULL, but unlikely
 
@@ -784,6 +798,7 @@ void StgWorld::Reload( void )
 SuperRegion* StgWorld::AddSuperRegion( const stg_point_int_t& sup )
 {
   //printf( "Creating super region [ %d %d ]\n", sup.x, sup.y );
+
   SuperRegion* sr = CreateSuperRegion( sup );
   
   // the bounds of the world have changed
@@ -815,6 +830,8 @@ inline SuperRegion* StgWorld::GetSuperRegionCached( const stg_point_int_t& sup )
 
 inline SuperRegion* StgWorld::GetSuperRegion( const stg_point_int_t& sup )
 {
+  //printf( "SUP[ %d %d ] ", sup.x, sup.y );
+
   // no, so we try to fetch it out of the hash table
   SuperRegion* sr = (SuperRegion*)
 	 g_hash_table_lookup( superregions, (gpointer)&sup );		  
@@ -834,6 +851,8 @@ inline Cell* StgWorld::GetCell( const int32_t x, const int32_t y )
   stg_point_int_t glob;
   glob.x = x;
   glob.y = y;
+
+  //printf( "GC[ %d %d ] ", glob.x, glob.y );
 
   return( GetSuperRegionCached( SUPERREGION(glob) )
 			 ->GetRegion( REGION(x), REGION(y) )

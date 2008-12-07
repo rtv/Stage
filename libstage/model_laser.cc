@@ -176,7 +176,7 @@ void StgModelLaser::Update( void )
   double sample_incr = fov / (double)(sample_count-1);
 
   samples = g_renew( stg_laser_sample_t, samples, sample_count );
-
+  
   stg_pose_t rayorg = geom.pose;
   bzero( &rayorg, sizeof(rayorg));
   rayorg.z += geom.size.z/2;

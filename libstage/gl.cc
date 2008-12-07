@@ -21,10 +21,10 @@ void Stg::gl_pose_inverse_shift( const stg_pose_t &pose )
 }
 
 
-// TODO - this could be faster, but we don't draw a lot of text
 void Stg::gl_draw_string( float x, float y, float z, const char *str ) 
 {  
 	glRasterPos3f( x, y, z );
+	//printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str ); 
 	gl_draw(str);
 }
 

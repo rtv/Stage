@@ -472,41 +472,54 @@ void StgModelPosition::Shutdown( void )
 
 void StgModelPosition::SetSpeed( double x, double y, double a ) 
 { 
-	control_mode = STG_POSITION_CONTROL_VELOCITY;
-	goal.x = x;
-	goal.y = y;
-	goal.z = 0;
-	goal.a = a;
+  assert( ! isnan(x) );
+  assert( ! isnan(y) );
+  assert( ! isnan(a) );
+  
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.x = x;
+  goal.y = y;
+  goal.z = 0;
+  goal.a = a;
 }  
 
 void StgModelPosition::SetXSpeed( double x )
 { 
-	control_mode = STG_POSITION_CONTROL_VELOCITY;
-	goal.x = x;
+  assert( ! isnan(x) );
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.x = x;
 }  
 
 
 void StgModelPosition::SetYSpeed( double y )
 { 
-	control_mode = STG_POSITION_CONTROL_VELOCITY;
-	goal.y = y;
+  assert( ! isnan(y) );
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.y = y;
 }  
 
 void StgModelPosition::SetZSpeed( double z )
 { 
-	control_mode = STG_POSITION_CONTROL_VELOCITY;
-	goal.z = z;
+  assert( ! isnan(z) );
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.z = z;
 }  
 
 void StgModelPosition::SetTurnSpeed( double a )
 { 
-	control_mode = STG_POSITION_CONTROL_VELOCITY;
-	goal.a = a;
+  assert( ! isnan(a) );
+  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  goal.a = a;
 }  
 
 
 void StgModelPosition::SetSpeed( stg_velocity_t vel ) 
 { 
+  assert( ! isnan(vel.x) );
+  assert( ! isnan(vel.y) );
+  assert( ! isnan(vel.z) );
+  assert( ! isnan(vel.a) );
+
 	control_mode = STG_POSITION_CONTROL_VELOCITY;
 	goal.x = vel.x;
 	goal.y = vel.y;
@@ -516,6 +529,10 @@ void StgModelPosition::SetSpeed( stg_velocity_t vel )
 
 void StgModelPosition::GoTo( double x, double y, double a ) 
 {
+  assert( ! isnan(x) );
+  assert( ! isnan(y) );
+  assert( ! isnan(a) );
+
 	control_mode = STG_POSITION_CONTROL_POSITION;
 	goal.x = x;
 	goal.y = y;

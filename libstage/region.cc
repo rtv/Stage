@@ -14,7 +14,7 @@ const uint32_t SuperRegion::SIZE = SUPERREGIONSIZE;
 
 
 Region::Region() 
-  : count(0), cells(NULL)
+  : cells(NULL), count(0)
 { 
   //for( unsigned int i=0; i<Region::SIZE; i++ )
   //cells[i].region = this;
@@ -52,18 +52,66 @@ void SuperRegion::Draw( bool drawall )
 
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   
-  // outline regions
+  // outline superregion
+  glColor3f( 0,0,1 );   
+   glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
+
+	// outline regions
   glColor3f( 0,1,0 );    
   for( unsigned int x=0; x<SuperRegion::WIDTH; x++ )
 	 for( unsigned int y=0; y<SuperRegion::WIDTH; y++ )
-		glRecti( x<<RBITS, y<<RBITS, 
-					  (x+1)<<RBITS, (y+1)<<RBITS );
+		{
+		  Region* r = GetRegion(x,y);
 
-  // outline superregion
-  glColor3f( 0,0,1 );   
- 
-  glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
-  
+		  if( r->count )
+			 // outline regions with contents
+			 glRecti( x<<RBITS, y<<RBITS, 
+						 (x+1)<<RBITS, (y+1)<<RBITS );
+		  else if( r->cells )
+			 {
+				double left = x << RBITS;
+				double right = (x+1) << RBITS;
+				double bottom = y << RBITS;
+				double top = (y+1) << RBITS;
+				
+				double d = 3.0;
+
+				// draw little corner markers for regions with memory
+				// allocated but no contents
+				glBegin( GL_LINES );
+
+				glVertex2f( left, bottom );
+				glVertex2f( left+d, bottom );
+				
+				glVertex2f( left, bottom );
+				glVertex2f( left, bottom+d );
+
+
+				glVertex2f( left, top );
+				glVertex2f( left+d, top );
+
+				glVertex2f( left, top );
+				glVertex2f( left, top-d );
+
+
+
+				glVertex2f( right, top );
+				glVertex2f( right-d, top );
+
+				glVertex2f( right, top );
+				glVertex2f( right, top-d );
+
+
+				glVertex2f( right, bottom );
+				glVertex2f( right-d, bottom );
+				
+				glVertex2f( right, bottom );
+				glVertex2f( right, bottom+d );
+ 						 
+				glEnd();
+			 }			 
+		}
+
   char buf[32];
   snprintf( buf, 15, "%lu", count );
   gl_draw_string( 1<<SBITS, 1<<SBITS, 0, buf );
