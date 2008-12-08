@@ -567,22 +567,7 @@ stg_pose_t StgModel::GetGlobalPose()
 // should one day do all this with affine transforms for neatness?
 inline stg_pose_t StgModel::LocalToGlobal( stg_pose_t pose )
 {  
-  stg_pose_t gpose = pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
-
-  if( isnan(gpose.x) || isnan(gpose.y) | isnan(gpose.z) || isnan(gpose.a ) )
-	 {
-		stg_pose_t g = GetGlobalPose();
-		stg_pose_t p = parent ? parent->GetPose() : stg_pose_t();
-
-		printf( "model %p %s gpose BAD [%.2f %.2f %.2f %.2f] pose [%.2f %.2f %.2f %.2f] globalpose [%.2f %.2f %.2f %.2f] parent [%.2f %.2f %.2f %.2f] \n", 
-				  this, token, gpose.x, gpose.y, gpose.z, gpose.a,
-				  pose.x, pose.y, pose.z, pose.a,
-				  g.x, g.y, g.z, g.a,
-				  p.x, p.y, p.z, p.a );
-		return gpose;
-		
-	 }
-  //return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
+  return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
 }
 
 void StgModel::MapWithChildren()
