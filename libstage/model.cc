@@ -133,6 +133,7 @@ StgModel::StgModel( StgWorld* world,
 						  StgModel* parent,
 						  const stg_model_type_t type )
   : StgAncestor(), 	 
+	 access_mutex(NULL),
 	 blinkenlights( g_ptr_array_new() ),
 	 blob_return(true),
 	 blockgroup(),
