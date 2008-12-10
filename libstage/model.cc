@@ -419,25 +419,6 @@ void list_gfree( GList* list )
   g_list_free( list );
 }
 
-// // convert a global pose into the model's local coordinate system
-// void StgModel::GlobalToLocal( stg_pose_t* pose )
-// {
-//   // get model's global pose
-//   stg_pose_t org = GetGlobalPose();
-
-//   //printf( "g2l global origin %.2f %.2f %.2f\n",
-//   //  org.x, org.y, org.a );
-
-//   // compute global pose in local coords
-//   double sx =  (pose->x - org.x) * cos(org.a) + (pose->y - org.y) * sin(org.a);
-//   double sy = -(pose->x - org.x) * sin(org.a) + (pose->y - org.y) * cos(org.a);
-//   double sa = pose->a - org.a;
-
-//   pose->x = sx;
-//   pose->y = sy;
-//   pose->a = sa;
-// }
-
 // convert a global pose into the model's local coordinate system
 stg_pose_t StgModel::GlobalToLocal( stg_pose_t pose )
 {
@@ -562,9 +543,6 @@ stg_pose_t StgModel::GetGlobalPose()
 }
 
 
-// convert a pose in this model's local coordinates into global
-// coordinates
-// should one day do all this with affine transforms for neatness?
 inline stg_pose_t StgModel::LocalToGlobal( stg_pose_t pose )
 {  
   return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );

@@ -1,5 +1,8 @@
 MESSAGE( STATUS "Configuring libstage" )
 
+# for config.h
+include_directories(${PROJECT_BINARY_DIR})
+
 set( stageSrcs ancestor.cc
 	block.cc
 	blockgroup.cc
@@ -38,21 +41,14 @@ set( stageSrcs ancestor.cc
 
 add_library(stage SHARED ${stageSrcs})
 
+set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+
 target_link_libraries( stage
 		       ${GLIB_LIBRARIES}
 		       ${OPENGL_LIBRARIES}
  				 ${LTDL_LIB}
+				 ${FLTK_LIBS2}
 )
-
-# When linking stage, pass LDFLAGS from fltk-config
-#   use quotes to prevent spaces being parsed as a list of properties
-set_target_properties( stage PROPERTIES LINK_FLAGS "${FLTK_LDFLAGS}" )
-
-# When compiling stageSrcs, pass CFLAGS from fltk-config
-set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
-
-# for the config.h
-include_directories(${PROJECT_BINARY_DIR})
 
 # causes the shared library to have a version number
 set_target_properties( stage PROPERTIES
@@ -67,10 +63,7 @@ add_executable( stagebinary ${stagebinarySrcs} )
 # When compiling stagebinarySrcs, pass CFLAGS from fltk-config
 set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
-set_target_properties( stagebinary PROPERTIES
-		       OUTPUT_NAME stage
-             LINK_FLAGS "${FLTK_LDFLAGS}"	  
-)
+set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
 
 target_link_libraries( stagebinary stage )
 

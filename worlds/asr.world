@@ -41,7 +41,7 @@ floorplan
 ( 
   name "cave"
   size [100.000 100.000 0.600]
-  pose [0 0 0 0]
+  pose [0 0 0 50]
   bitmap "bitmaps/frieburg.png"
   boundary 0
 )

@@ -521,8 +521,6 @@ void StgWorld::Raytrace( const stg_pose_t &pose, // global pose
 
 inline int32_t SUPERREGION( const int32_t x )
 { 
-  if( abs((x>>SRBITS) > 100 ) )
-	 printf( "MACRO[ %d %d ]", x, (x>>SRBITS) );
   return( x >> SRBITS );
 }
 

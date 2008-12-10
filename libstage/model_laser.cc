@@ -164,10 +164,7 @@ static bool laser_raytrace_match( StgModel* hit,
 {
   // Ignore the model that's looking and things that are invisible to
   // lasers  
-  if( (hit != finder) && (hit->GetLaserReturn() > 0 ) )
-    return true; // match!
-
-  return false; // no match
+  return( (hit != finder) && (hit->GetLaserReturn() > 0 ) );
 }	
 
 void StgModelLaser::Update( void )
