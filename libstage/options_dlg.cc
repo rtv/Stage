@@ -4,12 +4,14 @@
 namespace Stg {
   
   OptionsDlg::OptionsDlg( int x, int y, int w, int h ) :
-	 Fl_Window( x,y, w,h, "Filter" ),
+	 Fl_Window( x,y, w,h, "Visualize" ),
 	 changedItem( NULL ),
 	 showAll( NULL ),
 	 status( NO_EVENT ),
 	 hm( w/6 ) 
   {
+	 set_non_modal(); // keep on top but do not grab all events
+
 	 showAllCheck = new Fl_Check_Button( 0,0, w,boxH );
 	 showAllCheck->callback( checkChanged, this );
 	 
@@ -34,21 +36,23 @@ namespace Stg {
 	 Fl_Check_Button* check = static_cast<Fl_Check_Button*>( w );
 	 OptionsDlg* oDlg = static_cast<OptionsDlg*>( p );
 	 
-	 if ( check == oDlg->showAllCheck && oDlg->showAll ) {
-		oDlg->status = CHANGE_ALL;
-			oDlg->showAll->set( check->value() );
-			oDlg->do_callback();
-			oDlg->status = NO_EVENT;
-	 }
-	 else {
-		int item = oDlg->scroll->find( check );
-		oDlg->options[ item ]->set( check->value() );
-			oDlg->changedItem = oDlg->options[ item ];
-			oDlg->status = CHANGE;
-			oDlg->do_callback();
-			oDlg->changedItem = NULL;
-			oDlg->status = NO_EVENT;
-	 }
+	 if ( check == oDlg->showAllCheck && oDlg->showAll ) 
+		{
+		  oDlg->status = CHANGE_ALL;
+		  oDlg->showAll->set( check->value() );
+		  oDlg->do_callback();
+		  oDlg->status = NO_EVENT;
+		}
+	 else 
+		{
+		  int item = oDlg->scroll->find( check );
+		  oDlg->options[ item ]->set( check->value() );
+		  oDlg->changedItem = oDlg->options[ item ];
+		  oDlg->status = CHANGE;
+		  oDlg->do_callback();
+		  oDlg->changedItem = NULL;
+		  oDlg->status = NO_EVENT;
+		}
   }
   
   void OptionsDlg::closePress( Fl_Widget* w, void* p ) {
@@ -59,13 +63,9 @@ namespace Stg {
 	 oDlg->status = NO_EVENT;
   }
 
-	int OptionsDlg::handle( int event ) {
-	//	switch ( event ) {
-	//		
-	//	}
-		
-		return Fl_Window::handle( event );
-	}
+// 	int OptionsDlg::handle( int event ) {
+// 		return Fl_Window::handle( event );
+// 	}
 
 
 	void OptionsDlg::updateChecks() {

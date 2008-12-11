@@ -74,7 +74,7 @@ StgCanvas::StgCanvas( StgWorldGui* world,
   showBBoxes( "Debug/Bounding boxes", "show_boundingboxes", "^b", false  ),
   showBlur( "Trails/Blur", "show_trailblur", "^d", false ),
   pCamOn( "Perspective camera", "pcam_on", "r", false ),
-  visualizeAll( "Visualize All", "vis_all", "^v", true ),
+  visualizeAll( "Selected only", "vis_all", "^v", false ),
   // and the rest 
   graphics( true ),
   world( world )
@@ -795,7 +795,7 @@ void StgCanvas::renderFrame()
   //LISTMETHOD( models_sorted, StgModel*, DrawWaypoints );
   
 // MOTION BLUR
-   if( showBlur )
+  if( 0  )//showBlur )
  	 {
  		DrawBlocks();
 		
@@ -819,7 +819,7 @@ void StgCanvas::renderFrame()
  	 }
 
 // GRAY TRAILS
-//   if( showBlocks )
+//   if( showBlur )
 // 	 {
 		
 // 		static float count = 0; 
@@ -846,7 +846,7 @@ void StgCanvas::renderFrame()
 // 	 }
 
 // PRETTY BLACK
-//   if( showBlocks )
+//   if( showBlur && showBlocks )
 // 	 {
 		
 // 		static float count = 0; 
@@ -900,7 +900,7 @@ void StgCanvas::renderFrame()
   
   // draw the model-specific visualizations
   if( showData ) {
-	 if ( visualizeAll ) {
+	 if ( ! visualizeAll ) {
 		for( GList* it = world->StgWorld::children; it; it=it->next ) 
 		  ((StgModel*)it->data)->DataVisualizeTree( current_camera );
 	 }
@@ -1051,7 +1051,6 @@ void StgCanvas::Screenshot()
 
   png_set_rows( pp, info, rowpointers ); 
 
-  //png_set_compression_level(pp, Z_DEFAULT_COMPRESSION);
   png_set_IHDR( pp, info, 
 					 width, height, 8, 
 					 PNG_COLOR_TYPE_RGBA, 
@@ -1061,7 +1060,7 @@ void StgCanvas::Screenshot()
 
   png_write_png( pp, info, PNG_TRANSFORM_IDENTITY, NULL );
 
-  // free the PNG data - we reuse the pixel data next time.
+  // free the PNG data - we reuse the pixel array next call.
   png_destroy_write_struct(&pp, &info);
   
   fclose(fp);

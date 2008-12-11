@@ -20,10 +20,10 @@ threadpool 0
 # configure the GUI window
 window
 ( 
-  size [ 1916.000 1156.000 ] 
+  size [ 967.000 744.000 ] 
 
-  center [ 1.814 5.214 ] 
-  rotate [ 0 0 ]
+  center [ 3.759 6.706 ] 
+  rotate [ 70.000 5.000 ]
   scale 71.081 
 
   pcam_loc [ 0 -4.000 2.000 ]
@@ -41,7 +41,7 @@ floorplan
 ( 
   name "cave"
   size [100.000 100.000 0.600]
-  pose [0 0 0 50]
+  pose [0 0 0 50.000]
   bitmap "bitmaps/frieburg.png"
   boundary 0
 )

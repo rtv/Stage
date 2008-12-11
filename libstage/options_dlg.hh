@@ -30,7 +30,7 @@ namespace Stg {
 		Fl_Check_Button* showAllCheck;
 		void updateChecks();
 		
-		virtual int handle( int event );
+	  //virtual int handle( int event );
 		static void checkChanged( Fl_Widget* w, void* p );
 		static void closePress( Fl_Widget* w, void* p );
 		
