@@ -168,6 +168,7 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) :
   for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
 	 interval_log[i] = interval_real;
   
+  Fl::scheme( "gtk+" );
   resizable(canvas);
   
   end();

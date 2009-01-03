@@ -10,7 +10,7 @@ using namespace Stg;
 
 const double DEVIATION = 0.05;
 
-double SimpleNormalDeviate( double mean, double stddev )
+double simple_normal_deviate( double mean, double stddev )
 {
   double x = 0.0;
   
@@ -29,7 +29,7 @@ int LaserUpdate( StgModelLaser* mod, void* dummy )
   
   if( scan )
     for( unsigned int i=0; i<sample_count; i++ )
-      scan[i].range *= SimpleNormalDeviate( 1.0, DEVIATION );
+      scan[i].range *= simple_normal_deviate( 1.0, DEVIATION );
   
   return 0; // run again
 }

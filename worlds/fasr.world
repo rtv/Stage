@@ -5,7 +5,6 @@
 include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
-include "walle.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 0 # real-time interval between simulation updates in milliseconds 
@@ -13,8 +12,8 @@ paused 1
 
 resolution 0.02
 
-# threads may help here depending on your CPU
-threadpool 3
+# threads may speed things up here depending on available CPU cores & workload 
+threadpool 0 
 # threadpool 2
 
 

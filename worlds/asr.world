@@ -34,6 +34,8 @@ window
   show_flags 1
 
   interval 50
+
+  screenshot_skip 10
 )
 
 # load an environment bitmap

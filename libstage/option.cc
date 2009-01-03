@@ -20,6 +20,7 @@ Fl_Menu_Item* getMenuItem( Fl_Menu_* menu, int i ) {
 
 void Option::Load( Worldfile* wf, int section )
 {
+  printf( "loading wf key %s\n", wf_token.c_str() );
 	set( (bool)wf->ReadInt( section, wf_token.c_str(), value ));
 }
 

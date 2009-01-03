@@ -129,6 +129,9 @@ void StgModelLaser::Load( void )
   range_max = wf->ReadLength( wf_entity, "range_max", range_max );
   fov       = wf->ReadAngle( wf_entity, "fov",  fov );
   resolution = wf->ReadInt( wf_entity, "resolution",  resolution );
+  
+  showLaserData.Load( wf, wf_entity );
+  showLaserStrikes.Load( wf, wf_entity );
 
   if( resolution < 1 )
     {

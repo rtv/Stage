@@ -191,7 +191,7 @@ void StgModel::Load()
       char* lib = (char*)wf->ReadString(wf_entity, "ctrl", NULL );
 		
       if( !lib )
-		  puts( "Error - NULL library name" );
+		  printf( "Error - NULL library name specified for model %s\n", token );
       else
 		  LoadControllerModule( lib );
     }

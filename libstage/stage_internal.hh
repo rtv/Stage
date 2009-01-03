@@ -104,10 +104,12 @@ private:
 public:
 	StgCanvas( StgWorldGui* world, int x, int y, int width, int height);
 	~StgCanvas();
-
-	bool graphics;
-	StgWorldGui* world;
-
+  
+  bool graphics;
+  StgWorldGui* world;
+  unsigned long frames_rendered_count;
+  int screenshot_frame_skip;
+  
 	void Screenshot();
   void InitGl();
 	void createMenuItems( Fl_Menu_Bar* menu, std::string path );

@@ -77,7 +77,9 @@ StgCanvas::StgCanvas( StgWorldGui* world,
   visualizeAll( "Selected only", "vis_all", "^v", false ),
   // and the rest 
   graphics( true ),
-  world( world )
+  world( world ),
+  frames_rendered_count( 0 ),
+  screenshot_frame_skip( 1 )
 {
   end();
   
@@ -1000,9 +1002,10 @@ void StgCanvas::renderFrame()
       glMatrixMode (GL_MODELVIEW);
     }
 
-  
-  if( showScreenshots )
+  if( showScreenshots && (frames_rendered_count % screenshot_frame_skip == 0) )
     Screenshot();
+
+  frames_rendered_count++; 
 }
 
 
@@ -1115,7 +1118,11 @@ void StgCanvas::Load( Worldfile* wf, int sec )
   perspective_camera.Load( wf, sec );		
 	
   interval = wf->ReadInt(sec, "interval", interval );
-  
+
+  screenshot_frame_skip = wf->ReadInt( sec, "screenshot_skip", screenshot_frame_skip );
+  if( screenshot_frame_skip < 1 )
+	 screenshot_frame_skip = 1; // avoids div-by-zero if poorly set
+
   showData.Load( wf, sec );
   showFlags.Load( wf, sec );
   showBlocks.Load( wf, sec );
