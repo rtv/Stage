@@ -5,7 +5,6 @@ SET( PLUGINS
      sink
      source
      wander
-	  trail
 )
 
 

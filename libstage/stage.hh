@@ -158,31 +158,25 @@ namespace Stg
 	*/
   const double billion = 1e9;
 
-  /** convert an angle in radians to degrees
-	*/
+  /** convert an angle in radians to degrees. */
   inline double rtod( double r ){ return( r*180.0/M_PI ); }
 
-  /** convert an angle in degrees to radians 
-	*/
+  /** convert an angle in degrees to radians. */
   inline double dtor( double d ){ return( d*M_PI/180.0 ); }
 
-  /** Normalize an angle to within +/_ M_PI 
-	*/
+  /** Normalize an angle to within +/_ M_PI. */
   double normalize( double a );
 
-  /** take binary sign of a, either -1, or 1 if >= 0 
-	*/
+  /** take binary sign of a, either -1, or 1 if >= 0 */
   inline int sgn( int a){ return( a<0 ? -1 : 1); }
 
-  /** take binary sign of a, either -1, or 1 if >= 0 
-	*/
+  /** take binary sign of a, either -1, or 1 if >= 0. */
   inline double sgn( double a){ return( a<0 ? -1.0 : 1.0); }
 
   // forward declare
   class StgModel;
 
-  /** Describe the image format used for saving screenshots 
-	*/
+  /** Describe the image format used for saving screenshots. */
   typedef enum {
 	 STG_IMAGE_FORMAT_PNG,
 	 STG_IMAGE_FORMAT_JPG
@@ -191,7 +185,7 @@ namespace Stg
   /** any integer value other than this is a valid fiducial ID */
   enum { FiducialNone = 0 };
 
-  /** Value that Uniquely identifies a model */
+  /** Value that uniquely identifies a model */
   typedef uint32_t stg_id_t;
 
   /** Metres: floating point unit of distance */
