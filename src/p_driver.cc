@@ -383,16 +383,8 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  break;	  
 	  
 	case PLAYER_GRAPHICS2D_CODE:
-          if(_stg_disable_gui)
-          {
-            PLAYER_WARN("Stage graphics2d interface disabled when not running GUI");
-            continue;
-          }
-          else
-          {
-            ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
-            break;	  
-          }
+      ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
+      break;
 
 	case PLAYER_GRIPPER_CODE:
 	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );

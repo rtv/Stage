@@ -41,6 +41,8 @@ using namespace std;
 - PLAYER_GRAPHICS2D_CMD_POLYGON
 */
 
+extern int _stg_disable_gui;
+
 static unsigned int rgb32_pack( player_color_t *pcol )
 {
   unsigned int col=0;
@@ -89,7 +91,8 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
                            PLAYER_GRAPHICS2D_CMD_CLEAR, 
                            this->addr))
     {
-      stg_rtk_fig_clear( this->figs[index].stageFig );
+	  if (!_stg_disable_gui)
+		  stg_rtk_fig_clear( this->figs[index].stageFig );
       return 0; //ok
     }
   
@@ -97,6 +100,9 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
                            PLAYER_GRAPHICS2D_CMD_POINTS, 
                            this->addr))
     {
+	  if (_stg_disable_gui)
+		  return 0; // Can't draw on nothing
+	  
       player_graphics2d_cmd_points_t* pcmd = 
 	(player_graphics2d_cmd_points_t*)data;
       
@@ -116,6 +122,9 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
                            PLAYER_GRAPHICS2D_CMD_POLYLINE, 
                            this->addr))
     {
+	  if (_stg_disable_gui)
+		  return 0; // Can't draw on nothing
+	  
       player_graphics2d_cmd_polyline_t* pcmd = 
 	(player_graphics2d_cmd_polyline_t*)data;
       
@@ -144,6 +153,9 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer &resp_queue,
                            PLAYER_GRAPHICS2D_CMD_POLYGON, 
                            this->addr))
     {
+	  if (_stg_disable_gui)
+		  return 0; // Can't draw on nothing
+	  
       player_graphics2d_cmd_polygon_t* pcmd = 
 	(player_graphics2d_cmd_polygon_t*)data;
       
@@ -217,9 +229,12 @@ int InterfaceGraphics2d::Subscribe(QueuePointer &queue, player_devaddr_t addr)
 	char figname[10];
 	snprintf(figname, 10, "g2d_fig%d", index); // Name the figures g2d_fig0 through g2d_fign.
 	
-	// Get or create a nice clean figure for the client to draw on.
-	figs[index].stageFig = stg_model_fig_get_or_create( mod, figname, "top", 99 );
-	stg_rtk_fig_clear( figs[index].stageFig );
+	if (!_stg_disable_gui) // Check there is a gui
+	{
+		// Get or create a nice clean figure for the client to draw on.
+		figs[index].stageFig = stg_model_fig_get_or_create( mod, figname, "top", 99 );
+		stg_rtk_fig_clear( figs[index].stageFig );
+	}
 	
 	return 0;
 }
@@ -242,8 +257,11 @@ int InterfaceGraphics2d::Unsubscribe(QueuePointer &queue, player_devaddr_t addr)
 		return -1;
 	}
 	
-	stg_rtk_fig_clear( figs[index].stageFig );
-	figs[index].queue = QueuePointer(); // Set to NULL.
+	if (!_stg_disable_gui) // Check there is a gui
+	{
+		stg_rtk_fig_clear( figs[index].stageFig );
+		figs[index].queue = QueuePointer(); // Set to NULL.
+	}
 	
 	return InterfaceModel::Unsubscribe(queue, addr);
 }
