@@ -335,7 +335,7 @@ int blobfinder_update( stg_model_t* mod )
 	      //PRINT_DEBUG3( "looking up %X - channel %d is %X",
 	      //	    col, c, cfg->channels[c] );
 
-	      if( cfg->channels[c] == col)
+	      if( (cfg->channels[c] & 0x00ffffff) == (col & 0x00ffffff))
 		{
 		  //printf("color %0X is channel %d\n", col, c);
 
@@ -413,7 +413,7 @@ int blobfinder_update( stg_model_t* mod )
 	  memset( &blob, 0, sizeof(blob) );
 
 	  blob.channel = blobcol-1;
-	  blob.color = cfg->channels[ blob.channel];
+	  blob.color = cfg->channels[ blob.channel] & 0x00ffffff;
 	  blob.xpos = xCenterOfBlob;
 	  blob.ypos = yCenterOfBlob;
 	  blob.left = blobleft;
