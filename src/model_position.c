@@ -217,6 +217,8 @@ void position_init( stg_model_t* mod )
 
   data.watchdog_timeout = -1;
   
+  data.wheelbase = 1.0;
+
   stg_model_set_data( mod, &data, sizeof(data));
   
 #if ! INCLUDE_GNOME
@@ -322,6 +324,13 @@ void position_load( stg_model_t* mod )
       data->max_speed.x = wf_read_tuple_length(mod->id, "max_speed", 0, data->max_speed.x );
       data->max_speed.y = wf_read_tuple_length(mod->id, "max_speed", 1, data->max_speed.y );
       data->max_speed.a = wf_read_tuple_angle(mod->id, "max_speed", 2, data->max_speed.a );
+    }
+
+  // did the user specify a wheelbase
+  if( wf_property_exists( mod->id, "wheelbase" ) )
+    {
+      data->wheelbase = 
+	wf_read_float( mod->id, "wheelbase", 1.0 );
     }
 
   // odometry model parameters
@@ -490,7 +499,7 @@ int position_update( stg_model_t* mod )
 		// car like steering model based on speed and turning angle
 		vel->x = cmd->x * cos(cmd->a);
 		vel->y = 0;
-		vel->a = cmd->x * sin(cmd->a)/1.0; // here 1.0 is the wheel base, this should be a config option
+		vel->a = cmd->x * sin(cmd->a)/data->wheelbase; 
 		break;
 		
 	      default:

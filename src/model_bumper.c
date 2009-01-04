@@ -303,7 +303,7 @@ int bumper_render_data( stg_model_t* mod, void* userp )
     }
   else
     if( dlen > 0 )
-      PRINT_WARN2( "data size doesn't match configuation (%l/%l bytes)",
+      PRINT_WARN2( "data size doesn't match configuation (%ld/%ld bytes)",
 		   (int)dlen,  (int)(rcount * sizeof(stg_bumper_sample_t) ));
 
   return 0; // keep running

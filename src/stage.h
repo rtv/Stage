@@ -1047,6 +1047,7 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     //stg_bool_t stall; ///< TRUE iff the robot can't move due to a collision
     stg_position_localization_mode_t localization; ///< global or local mode
     stg_msec_t watchdog_timeout; ///< time since last command after which we stop
+    stg_meters_t wheelbase; ///< wheelbase length (for "car" mode) in meters
   } stg_position_data_t;
   
   /** "position_cfg" property */
