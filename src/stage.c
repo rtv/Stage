@@ -180,7 +180,6 @@ stg_color_t stg_lookup_color(const char *name)
 
 	  PRINT_ERR1("unable to open color database: %s",
 		     strerror(errno));
-	  fclose(file);
 	  exit(0);
 	}
 
