@@ -1429,7 +1429,7 @@ int stg_model_update_pose( stg_model_t* mod )
 	  interval = 0.2 * interval; // slow down time
 	  
 	  // inch forward until we collide
-	  do
+	  for (int i=0; i<5; i++)
 	    {
 	      memcpy( &old_pose, &mod->pose, sizeof(old_pose));
 	      
@@ -1441,7 +1441,9 @@ int stg_model_update_pose( stg_model_t* mod )
 	      
 	      hitthing = stg_model_test_collision( mod, &hitx, &hity );
 	      
-	    } while( hitthing == NULL );
+	      if (hitthing != NULL)
+	        break;
+	    }
 	  
 	  //PRINT_WARN( "HIT something immovable!" );
 	  
