@@ -1,0 +1,99 @@
+# 
+# Desc : This is a stage model of the robotics lab in The University of Auckland,New Zealand
+# Authors : Nick Wong, Jui Chun(Jimmy) Peng Hsu
+# Date : 21 July 2008
+#
+
+# defines Pioneer-like robots
+include "pioneer.inc"
+
+# defines 'map' object used for floorplans
+include "map.inc"
+
+# defines sick laser
+include "sick.inc"
+
+# defines the models used in the lab
+include "uoa_robotics_lab_models.inc"
+
+# set the resolution of the underlying raytrace model in meters
+resolution 0.02
+
+interval_sim 100  # simulation timestep in milliseconds
+interval_real 100  # real-time interval between simulation updates in milliseconds 
+
+paused 0
+
+# configure the GUI window
+#size [ 745.000 448.000 ] 
+#center [-7.010 5.960] 
+#rotate [ 0.920 -0.430 ]
+#scale 28.806 
+
+
+# load an environment bitmap
+floorplan
+(
+  name "uoa_robotics_lab"
+  # The actual size of the lab
+  size [6.27 15.7 2]
+  pose [0.000 0.000 0.000 0.000]
+  bitmap "bitmaps/uoa_robotics_lab.png"
+)
+
+define autorob fancypioneer2dx
+(
+ color "red"
+ fancysicklaser( pose [ 0.040 0.000 0.000 0.000 ] samples 32 ) 
+
+ blinkenlight( pose [ 0.150 0.100 0.000 0.000 ] color "red" )
+ blinkenlight( pose [ 0.150 0.000 0.000 0.000 ] color "green" )
+ blinkenlight( pose [ 0.150 -0.1000.000  0.000 ] color "blue" )
+)
+
+autorob( pose [0.000 0.000 0.000] name "r0" )
+
+define t table
+(
+)
+
+define c1 chair1
+(
+)
+
+define c2 chair2
+(
+)
+
+define cab bigCabin
+(
+)
+
+# Place the tables and chairs according to the real lab
+
+t(pose [ -1.802 -2.433 0.000 88.808 ])
+t(pose [ 1.656 2.438 0.000 179.518 ])
+t(pose [ 1.868 -0.771 0.000 179.518 ])
+t(pose [ 1.805 -1.641 0.000 0.000 ])
+t(pose [ 1.465 1.525 0.000 0.000 ])
+t(pose [ -1.398 0.160 0.000 0.000 ])
+t(pose [ -1.371 3.391 0.000 0.000 ])
+t(pose [ -1.375 6.880 0.000 0.000 ])
+t(pose [ -1.392 1.054 0.000 179.518 ])
+t(pose [ -1.381 4.262 0.000 179.518 ])
+
+c1(pose [ -1.393 -2.615 0.000 83.079 ])
+
+c2(pose [ 1.655 -2.070 0.000 0.000 ])
+c2(pose [ 1.904 -0.260 0.000 179.518 ])
+c2(pose [ -1.267 1.458 0.000 177.617 ])
+c2(pose [ -1.481 -0.222 0.000 0.000 ])
+c2(pose [ 0.67 -3.58 0.000 0.000 ])
+c2(pose [ -1.489 2.975 0.000 0.000 ])
+c2(pose [ -1.472 6.475 0.000 0.000 ])
+c2(pose [ 1.787 2.974 0.000 -177.617 ])
+c2(pose [ -0.458 -4.329 0.000 -154.699 ])
+c2(pose [ -1.433 4.669 0.000 -177.617 ])
+
+# A big cabinet used to store robots
+cab(pose [ -1.849 -5.307 0.000 91.673 ])
