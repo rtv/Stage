@@ -28,6 +28,8 @@ target_link_libraries( stageplugin
 
 )
 
+set_source_files_properties( ${stagepluginSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+
 IF (BUILD_LSPTEST)
 	ADD_SUBDIRECTORY(test)
 ENDIF (BUILD_LSPTEST)

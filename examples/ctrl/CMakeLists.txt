@@ -10,9 +10,11 @@ SET( PLUGINS
 
 # create a library module for each plugin and link libstage to each
 
+
 foreach( PLUGIN ${PLUGINS} )
   ADD_LIBRARY( ${PLUGIN} MODULE ${PLUGIN}.cc )
   TARGET_LINK_LIBRARIES( ${PLUGIN} stage )
+  set_source_files_properties( ${PLUGIN}.cc PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 endforeach( PLUGIN )
 
 # delete the "lib" prefix from the plugin libraries

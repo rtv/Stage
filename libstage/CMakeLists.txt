@@ -71,6 +71,8 @@ set( stagetestSrcs test.cc )
 
 add_executable( stagetest ${stagetestSrcs} )
 target_link_libraries( stagetest stage )
+set_target_properties( stagetest PROPERTIES LINK_FLAGS "${FLTK_LDFLAGS}" )
+set_source_files_properties( ${stagetestSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
 
 INSTALL(TARGETS stagebinary stage

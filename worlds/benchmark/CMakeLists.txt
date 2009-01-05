@@ -1,5 +1,6 @@
 SET( expandSrcs expand.cc )
 ADD_LIBRARY( expand MODULE ${expandSrcs} )
 TARGET_LINK_LIBRARIES( expand stage )
+set_source_files_properties( ${expandSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 SET_TARGET_PROPERTIES( expand PROPERTIES PREFIX "" )
 INSTALL( TARGETS expand DESTINATION lib)
