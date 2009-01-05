@@ -21,7 +21,7 @@ double simple_normal_deviate( double mean, double stddev )
 }
 
 // process the laser data
-int LaserUpdate( StgModelLaser* mod, void* dummy )
+int LaserUpdate( ModelLaser* mod, void* dummy )
 {
   // get the data
   uint32_t sample_count=0;
@@ -36,7 +36,7 @@ int LaserUpdate( StgModelLaser* mod, void* dummy )
 
 // Stage calls this when the model starts up. we just add a callback to
 // the model that gets called just after the sensor update is done.
-extern "C" int Init( StgModel* mod )
+extern "C" int Init( Model* mod )
 {
   mod->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, NULL );
   return 0; // ok

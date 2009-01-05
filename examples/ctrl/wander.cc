@@ -11,24 +11,24 @@ const int avoidduration = 10;
 
 typedef struct
 {
-  StgModelPosition* pos;
-  StgModelLaser* laser;
+  ModelPosition* pos;
+  ModelLaser* laser;
   int avoidcount, randcount;
 } robot_t;
 
-int LaserUpdate( StgModel* mod, robot_t* robot );
-int PositionUpdate( StgModel* mod, robot_t* robot );
+int LaserUpdate( Model* mod, robot_t* robot );
+int PositionUpdate( Model* mod, robot_t* robot );
 
 // Stage calls this when the model starts up
-extern "C" int Init( StgModel* mod )
+extern "C" int Init( Model* mod )
 {
   robot_t* robot = new robot_t;
  
   robot->avoidcount = 0;
   robot->randcount = 0;
   
-  robot->pos = (StgModelPosition*)mod;
-  robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
+  robot->pos = (ModelPosition*)mod;
+  robot->laser = (ModelLaser*)mod->GetModel( "laser:0" );
   robot->laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, robot );
   robot->laser->Subscribe(); // starts the laser 
 
@@ -37,7 +37,7 @@ extern "C" int Init( StgModel* mod )
 
 
 // inspect the laser data and decide what to do
-int LaserUpdate( StgModel* mod, robot_t* robot )
+int LaserUpdate( Model* mod, robot_t* robot )
 {
   // get the data
   uint32_t sample_count=0;
@@ -123,9 +123,9 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
   return 0;
 }
 
-int PositionUpdate( StgModel* mod, robot_t* robot )
+int PositionUpdate( Model* mod, robot_t* robot )
 {
-  stg_pose_t pose = robot->pos->GetPose();
+  Pose pose = robot->pos->GetPose();
 
   printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
 	  pose.x, pose.y, pose.z, pose.a );

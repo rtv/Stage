@@ -16,9 +16,9 @@ using namespace Stg;
 
 typedef struct
 {
-	StgModelLaser* laser;
-	StgModelPosition* position;
-	StgModelRanger* ranger;
+	ModelLaser* laser;
+	ModelPosition* position;
+	ModelRanger* ranger;
 } robot_t;
 
 #define VSPEED 0.4 // meters per second
@@ -27,16 +27,16 @@ typedef struct
 #define SAFE_ANGLE 1 // radians
 
 // forward declare
-int RangerUpdate( StgModel* mod, robot_t* robot );
+int RangerUpdate( Model* mod, robot_t* robot );
 
 // Stage calls this when the model starts up
-extern "C" int Init( StgModel* mod )
+extern "C" int Init( Model* mod )
 {
   robot_t* robot = new robot_t;
-  robot->position = (StgModelPosition*)mod;
+  robot->position = (ModelPosition*)mod;
 
   // subscribe to the ranger, which we use for navigating
-  robot->ranger = (StgModelRanger*)mod->GetModel( "ranger:0" );
+  robot->ranger = (ModelRanger*)mod->GetModel( "ranger:0" );
   assert( robot->ranger );
   robot->ranger->Subscribe();
   
@@ -44,16 +44,16 @@ extern "C" int Init( StgModel* mod )
   robot->ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, robot );
 
   // subscribe to the laser, though we don't use it for navigating
-  //robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
+  //robot->laser = (ModelLaser*)mod->GetModel( "laser:0" );
   //assert( robot->laser );
   //robot->laser->Subscribe();
 
   return 0; //ok
 }
 
-int RangerUpdate( StgModel* mod, robot_t* robot )
+int RangerUpdate( Model* mod, robot_t* robot )
 {
-  StgModelRanger* rgr = robot->ranger;
+  ModelRanger* rgr = robot->ranger;
   
   if( rgr->samples == NULL )
 	 return 0;

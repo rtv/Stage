@@ -17,9 +17,9 @@
 #include <sstream>
 #include <iomanip>
 
-Option StgModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true );
+Option ModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true );
 
-static const stg_size_t DEFAULT_SIZE( 0.1, 0.07, 0.05 );
+static const Size DEFAULT_SIZE( 0.1, 0.07, 0.05 );
 static const char DEFAULT_GEOM_COLOR[] = "black";
 static const float DEFAULT_HFOV = 70;
 static const float DEFAULT_VFOV = 40;
@@ -29,7 +29,7 @@ static const float DEFAULT_VFOV = 40;
 @defgroup model_camera Camera model 
 The camera model simulates a camera
 
-API: Stg::StgModelCamera
+API: Stg::ModelCamera
 
 <h2>Worldfile properties</h2>
 
@@ -79,8 +79,8 @@ void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
 }
 
 
-StgModelCamera::StgModelCamera( StgWorld* world, StgModel* parent ) 
-  : StgModel( world, parent, MODEL_TYPE_CAMERA ),
+ModelCamera::ModelCamera( World* world, Model* parent ) 
+  : Model( world, parent, MODEL_TYPE_CAMERA ),
 _canvas( NULL ),
 _frame_data( NULL ),
 _frame_color_data( NULL ),
@@ -96,10 +96,10 @@ _yaw_offset( 0.0 ),
 _pitch_offset( 0.0 )
 
 {
-	PRINT_DEBUG2( "Constructing StgModelCamera %d (%s)\n", 
+	PRINT_DEBUG2( "Constructing ModelCamera %d (%s)\n", 
 			id, typestr );
 
-	StgWorldGui* world_gui = dynamic_cast< StgWorldGui* >( world );
+	WorldGui* world_gui = dynamic_cast< WorldGui* >( world );
 	
 	if( world_gui == NULL ) {
 		printf( "Unable to use Camera Model - it must be run with a GUI world\n" );
@@ -109,7 +109,7 @@ _pitch_offset( 0.0 )
 	
 	_camera.setPitch( 90.0 );
 	
-	stg_geom_t geom;
+	Geom geom;
 	memset( &geom, 0, sizeof(geom));
 	geom.size = DEFAULT_SIZE;
 	SetGeom( geom );
@@ -122,7 +122,7 @@ _pitch_offset( 0.0 )
 	Startup();
 }
 
-StgModelCamera::~StgModelCamera()
+ModelCamera::~ModelCamera()
 {
 	if( _frame_data != NULL ) {
 		//dont forget about GetFrame() //TODO merge these together
@@ -134,9 +134,9 @@ StgModelCamera::~StgModelCamera()
 	}
 }
 
-void StgModelCamera::Load( void )
+void ModelCamera::Load( void )
 {
-	StgModel::Load();
+	Model::Load();
 	
 	float horizFov =  wf->ReadTupleFloat( wf_entity, "fov", 0, DEFAULT_HFOV );
 	float vertFov = wf->ReadTupleFloat( wf_entity, "fov", 1, DEFAULT_VFOV );
@@ -155,13 +155,13 @@ void StgModelCamera::Load( void )
 }
 
 
-void StgModelCamera::Update( void )
+void ModelCamera::Update( void )
 {   
 	GetFrame();
-	StgModel::Update();
+	Model::Update();
 }
 
-bool StgModelCamera::GetFrame( void )
+bool ModelCamera::GetFrame( void )
 {	
 	if( _width == 0 || _height == 0 )
 		return false;
@@ -235,7 +235,7 @@ bool StgModelCamera::GetFrame( void )
 }
 
 //TODO create lines outlining camera frustrum, then iterate over each depth measurement and create a square
-void StgModelCamera::DataVisualize( Camera* cam )
+void ModelCamera::DataVisualize( Camera* cam )
 {	
 	
 	if( _frame_data == NULL || !showCameraData )

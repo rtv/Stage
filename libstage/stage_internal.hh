@@ -46,10 +46,10 @@ class GlColorStack
 };
 
 
-class StgCanvas : public Fl_Gl_Window
+class Canvas : public Fl_Gl_Window
 {
-	friend class StgWorldGui; // allow access to private members
-	friend class StgModel;
+	friend class WorldGui; // allow access to private members
+	friend class Model;
   
 private:
 	GlColorStack colorstack;
@@ -68,7 +68,7 @@ private:
 	int empty_space_startx, empty_space_starty;
 	GList* selected_models; ///< a list of models that are currently
 	///selected by the user
-	StgModel* last_selection; ///< the most recently selected model
+	Model* last_selection; ///< the most recently selected model
 	///(even if it is now unselected).
 
 	stg_msec_t interval; // window refresh interval in ms
@@ -79,7 +79,7 @@ private:
 	void ClearRays();
 	void DrawGlobalGrid();
   
-  void AddModel( StgModel* mod );
+  void AddModel( Model* mod );
 
   Option showBlinken, 
 	 showBlocks, 
@@ -102,11 +102,11 @@ private:
 	 visualizeAll;
   
 public:
-	StgCanvas( StgWorldGui* world, int x, int y, int width, int height);
-	~StgCanvas();
+	Canvas( WorldGui* world, int x, int y, int width, int height);
+	~Canvas();
   
   bool graphics;
-  StgWorldGui* world;
+  WorldGui* world;
   unsigned long frames_rendered_count;
   int screenshot_frame_skip;
   
@@ -127,10 +127,10 @@ public:
 	void CanvasToWorld( int px, int py, 
 			double *wx, double *wy, double* wz );
 
-	StgModel* getModel( int x, int y );
-	bool selected( StgModel* mod );
-	void select( StgModel* mod );
-	void unSelect( StgModel* mod );
+	Model* getModel( int x, int y );
+	bool selected( Model* mod );
+	void select( Model* mod );
+	void unSelect( Model* mod );
 	void unSelectAll();
 
 	inline void setDirtyBuffer( void ) { dirty_buffer = true; }
@@ -146,7 +146,7 @@ public:
   
   void InvertView( uint32_t invertflags );
   
-  static void TimerCallback( StgCanvas* canvas );
+  static void TimerCallback( Canvas* canvas );
   static void perspectiveCb( Fl_Widget* w, void* p );
   
   void Load( Worldfile* wf, int section );
@@ -158,8 +158,8 @@ class Cell
 {
   friend class Region;
   friend class SuperRegion;
-  friend class StgWorld;
-  friend class StgBlock;
+  friend class World;
+  friend class Block;
   
 private:
   Region* region;
@@ -170,9 +170,9 @@ public:
 		list(NULL) 
   { /* do nothing */ }  
   
-  inline void RemoveBlock( StgBlock* b );
-  inline void AddBlock( StgBlock* b );  
-  inline void AddBlockNoRecord( StgBlock* b );
+  inline void RemoveBlock( Block* b );
+  inline void AddBlock( Block* b );  
+  inline void AddBlockNoRecord( Block* b );
 };
 
 // a bit of experimenting suggests that these values are fast. YMMV.
@@ -223,8 +223,8 @@ public:
 
 class SuperRegion
 {
-  friend class StgWorld;
-  friend class StgModel;
+  friend class World;
+  friend class Model;
   
 private:
   static const uint32_t WIDTH;
@@ -234,11 +234,11 @@ private:
   unsigned long count; // number of blocks rendered into these regions
   
   stg_point_int_t origin;
-  StgWorld* world;
+  World* world;
 
 public:
   
-  SuperRegion( StgWorld* world, stg_point_int_t origin );
+  SuperRegion( World* world, stg_point_int_t origin );
   ~SuperRegion();
   
   Region* GetRegion( int32_t x, int32_t y )
@@ -270,14 +270,14 @@ inline void Region::IncrementOccupancy()
   ++count; 
 }
 
-inline void Cell::RemoveBlock( StgBlock* b )
+inline void Cell::RemoveBlock( Block* b )
 {
   // linear time removal, but these lists should be very short.
   list = g_slist_remove( list, b );
   region->DecrementOccupancy();
 }
 
-inline void Cell::AddBlock( StgBlock* b )
+inline void Cell::AddBlock( Block* b )
 {
   // constant time prepend
   list = g_slist_prepend( list, b );	 
@@ -285,7 +285,7 @@ inline void Cell::AddBlock( StgBlock* b )
   b->RecordRendering( this );
 }
 
-inline void Cell::AddBlockNoRecord( StgBlock* b )
+inline void Cell::AddBlockNoRecord( Block* b )
 {
   list = g_slist_prepend( list, b );
   // don't add this cell to the block - we assume it's already there

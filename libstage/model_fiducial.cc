@@ -23,7 +23,7 @@ const stg_meters_t DEFAULT_FIDUCIAL_RANGEMAXANON = 8.0;
 const stg_radians_t DEFAULT_FIDUCIAL_FOV = M_PI;
 const stg_watts_t DEFAULT_FIDUCIAL_WATTS = 10.0;
 
-Option StgModelFiducial::showFiducialData( "Show Fiducial", "show_fiducial", "", true );
+Option ModelFiducial::showFiducialData( "Show Fiducial", "show_fiducial", "", true );
 
 /** 
   @ingroup model
@@ -31,7 +31,7 @@ Option StgModelFiducial::showFiducialData( "Show Fiducial", "show_fiducial", "",
 
   The fiducial model simulates a fiducial-detecting device.
 
-API: Stg::StgModelFiducial
+API: Stg::ModelFiducial
 
 <h2>Worldfile properties</h2>
 
@@ -64,11 +64,11 @@ fiducialfinder
 
  */
 
-StgModelFiducial::StgModelFiducial( StgWorld* world, 
-												StgModel* parent )
-  : StgModel( world, parent, MODEL_TYPE_FIDUCIAL )
+ModelFiducial::ModelFiducial( World* world, 
+												Model* parent )
+  : Model( world, parent, MODEL_TYPE_FIDUCIAL )
 {
-	PRINT_DEBUG2( "Constructing StgModelFiducial %d (%s)\n", 
+	PRINT_DEBUG2( "Constructing ModelFiducial %d (%s)\n", 
 			id, typestr );
 
 	// assert that Update() is reentrant for this derived model
@@ -79,7 +79,7 @@ StgModelFiducial::StgModelFiducial( StgWorld* world,
 
 	this->ClearBlocks();
 
-	stg_geom_t geom;
+	Geom geom;
 	memset( &geom, 0, sizeof(geom));
 	SetGeom( geom );
 	fiducials = NULL;
@@ -97,42 +97,42 @@ StgModelFiducial::StgModelFiducial( StgWorld* world,
 	registerOption( &showFiducialData );
 }
 
-StgModelFiducial::~StgModelFiducial( void )
+ModelFiducial::~ModelFiducial( void )
 {
 	if( data )
 		g_array_free( data, true );
 }
 
-static bool fiducial_raytrace_match( StgModel* candidate, 
-												 StgModel* finder, 
+static bool fiducial_raytrace_match( Model* candidate, 
+												 Model* finder, 
 												 const void* dummy )
 {
   return( ! finder->IsRelated( candidate ) );
 }	
 
 
-void StgModelFiducial::AddModelIfVisible( StgModel* him )  
+void ModelFiducial::AddModelIfVisible( Model* him )  
 {
 	//PRINT_DEBUG2( "Fiducial %s is testing model %s", token, him->Token() );
 
 	// don't consider models with invalid returns  
-	if( him->FiducialReturn() == 0 )
+	if( him->vis.fiducial_return == 0 )
 	{
 		//PRINT_DEBUG1( "  but model %s has a zero fiducial ID", him->Token());
 		return;
 	}
 
 	// check to see if this neighbor has the right fiducial key
-	if( fiducial_key != him->FiducialKey() )
+	if( vis.fiducial_key != him->vis.fiducial_key )
 	{
 		//PRINT_DEBUG1( "  but model %s doesn't match the fiducial key", him->Token());
 		return;
 	}
 
-	stg_pose_t mypose = this->GetGlobalPose();
+	Pose mypose = this->GetGlobalPose();
 
 	// are we within range?
-	stg_pose_t hispose = him->GetGlobalPose();
+	Pose hispose = him->GetGlobalPose();
 	double dx = hispose.x - mypose.x;
 	double dy = hispose.y - mypose.y;
 	double range = hypot( dy, dx );
@@ -173,7 +173,7 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
 													  false );
 	
 	range = ray.range;
-	StgModel* hitmod = ray.mod;
+	Model* hitmod = ray.mod;
 
 	//  printf( "ray hit %s and was seeking LOS to %s\n",
 	//hitmod ? hitmod->Token() : "null",
@@ -182,7 +182,7 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
 	// if it was him, we can see him
 	if( hitmod == him )
 	{
-		stg_geom_t hisgeom = him->GetGeom();
+		Geom hisgeom = him->GetGeom();
 
 		// record where we saw him and what he looked like
 		stg_fiducial_t fid;
@@ -197,10 +197,10 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
 
 		// if he's within ID range, get his fiducial.return value, else
 		// we see value 0
-		fid.id = range < max_range_id ? hitmod->FiducialReturn() : 0;
+		fid.id = range < max_range_id ? hitmod->vis.fiducial_return : 0;
 
 		PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
-				him->Token(), him->FiducialReturn() );
+				him->Token(), him->vis.fiducial_return );
 
 		g_array_append_val( data, fid );
 	}
@@ -213,9 +213,9 @@ void StgModelFiducial::AddModelIfVisible( StgModel* him )
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
 //
-void StgModelFiducial::Update( void )
+void ModelFiducial::Update( void )
 {
-	StgModel::Update();
+	Model::Update();
 
 	PRINT_DEBUG( "fiducial update" );
 
@@ -230,17 +230,17 @@ void StgModelFiducial::Update( void )
 
 	// TODO - add a fiducial-only hash table to the world to speed this
 	// up a lot for large populations
-	world->ForEachDescendant( (stg_model_callback_t)(StgModelFiducial::AddModelIfVisibleStatic), 
+	world->ForEachDescendant( (stg_model_callback_t)(ModelFiducial::AddModelIfVisibleStatic), 
 			this );
 
 	PRINT_DEBUG2( "model %s saw %d fiducials", token, data->len );
 }
 
-void StgModelFiducial::Load( void )
+void ModelFiducial::Load( void )
 {  
 	PRINT_DEBUG( "fiducial load" );
 
-	StgModel::Load();
+	Model::Load();
 
 	// load fiducial-specific properties
 	min_range      = wf->ReadLength( wf_entity, "range_min",    min_range );
@@ -250,7 +250,7 @@ void StgModelFiducial::Load( void )
 }  
 
 
-void StgModelFiducial::DataVisualize( Camera* cam )
+void ModelFiducial::DataVisualize( Camera* cam )
 {
 	if ( !showFiducialData )
 		return;
@@ -314,7 +314,7 @@ void StgModelFiducial::DataVisualize( Camera* cam )
 	}
 }
 
-void StgModelFiducial::Shutdown( void )
+void ModelFiducial::Shutdown( void )
 { 
 	PRINT_DEBUG( "fiducial shutdown" );
 	
@@ -323,5 +323,5 @@ void StgModelFiducial::Shutdown( void )
 	fiducials = NULL;
 	fiducial_count = 0;
 	
-	StgModel::Shutdown();
+	Model::Shutdown();
 }

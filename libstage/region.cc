@@ -27,7 +27,7 @@ Region::~Region()
 }
 
 
-SuperRegion::SuperRegion( StgWorld* world, stg_point_int_t origin )
+SuperRegion::SuperRegion( World* world, stg_point_int_t origin )
   : count(0), origin(origin), world(world)	 
 {
   //static int srcount=0;
@@ -148,7 +148,7 @@ void SuperRegion::Draw( bool drawall )
 								 it;
 								 it=it->next )
 							 {
-								StgBlock* block = (StgBlock*)it->data;
+								Block* block = (Block*)it->data;
 						  
 								//printf( "zb %.2f %.2f\n", ent->zbounds.min, ent->zbounds.max );
 						  

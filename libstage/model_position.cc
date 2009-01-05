@@ -30,7 +30,7 @@ driving left and roght wheels like a Pioneer robot, or
 <i>omnidirectional</i>, i.e. able to control each of its three axes
 independently.
 
-API: Stg::StgModelPosition
+API: Stg::ModelPosition
 
 <h2>Worldfile properties</h2>
 
@@ -82,17 +82,17 @@ const stg_position_control_mode_t POSITION_CONTROL_DEFAULT = STG_POSITION_CONTRO
 const stg_position_localization_mode_t POSITION_LOCALIZATION_DEFAULT = STG_POSITION_LOCALIZATION_GPS;
 const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIFFERENTIAL;
 
-Option StgModelPosition::showCoords( "Position Coordinates", "show_coords", "", false );
-Option StgModelPosition::showWaypoints( "Position Waypoints", "show_waypoints", "", false );
+Option ModelPosition::showCoords( "Position Coordinates", "show_coords", "", false );
+Option ModelPosition::showWaypoints( "Position Waypoints", "show_waypoints", "", false );
 
 
-StgModelPosition::StgModelPosition( StgWorld* world, 
-												StgModel* parent )
-  : StgModel( world, parent, MODEL_TYPE_POSITION ),
+ModelPosition::ModelPosition( World* world, 
+												Model* parent )
+  : Model( world, parent, MODEL_TYPE_POSITION ),
 	 waypoints( NULL ),
 	 waypoint_count( 0 )
 {
-	PRINT_DEBUG2( "Constructing StgModelPosition %d (%s)\n", 
+	PRINT_DEBUG2( "Constructing ModelPosition %d (%s)\n", 
 			id, typestr );
 
 	// assert that Update() is reentrant for this derived model
@@ -102,7 +102,7 @@ StgModelPosition::StgModelPosition( StgWorld* world,
 	this->SetWatts( 0 );
 
 	// sensible position defaults
-	stg_velocity_t vel;
+	Velocity vel;
 	memset( &vel, 0, sizeof(vel));
 	this->SetVelocity( vel );
 
@@ -135,14 +135,14 @@ StgModelPosition::StgModelPosition( StgWorld* world,
 }
 
 
-StgModelPosition::~StgModelPosition( void )
+ModelPosition::~ModelPosition( void )
 {
 	// nothing to do 
 }
 
-void StgModelPosition::Load( void )
+void ModelPosition::Load( void )
 {
-	StgModel::Load();
+	Model::Load();
 
 	char* keyword = NULL;
 
@@ -190,7 +190,7 @@ void StgModelPosition::Load( void )
 		est_origin.a = wf->ReadTupleAngle( wf_entity, "localization_origin", 3, est_origin.a );
 
 		// compute our localization pose based on the origin and true pose
-		stg_pose_t gpose = this->GetGlobalPose();
+		Pose gpose = this->GetGlobalPose();
 
 		est_pose.a = normalize( gpose.a - est_origin.a );
 		double cosa = cos(est_origin.a);
@@ -244,13 +244,13 @@ void StgModelPosition::Load( void )
 	//model_change( mod, &mod->data );
 }
 
-void StgModelPosition::Update( void  )
+void ModelPosition::Update( void  )
 { 
 	PRINT_DEBUG1( "[%lu] position update", this->world->sim_time );
 
 	// stop by default
-	stg_velocity_t vel;
-	memset( &vel, 0, sizeof(stg_velocity_t) );
+	Velocity vel;
+	memset( &vel, 0, sizeof(Velocity) );
 
 	if( this->subs )   // no driving if noone is subscribed
 	{            
@@ -333,7 +333,7 @@ void StgModelPosition::Update( void  )
 								// position control anyhoo?
 
 								// start out with no velocity
-								stg_velocity_t calc;
+								Velocity calc;
 								memset( &calc, 0, sizeof(calc));
 
 								double close_enough = 0.02; // fudge factor
@@ -406,7 +406,7 @@ void StgModelPosition::Update( void  )
 		case STG_POSITION_LOCALIZATION_GPS:
 			{
 				// compute our localization pose based on the origin and true pose
-				stg_pose_t gpose = this->GetGlobalPose();
+				Pose gpose = this->GetGlobalPose();
 
 				est_pose.a = normalize( gpose.a - est_origin.a );
 				double cosa = cos(est_origin.a);
@@ -445,19 +445,19 @@ void StgModelPosition::Update( void  )
 	PRINT_DEBUG3( " READING POSITION: [ %.4f %.4f %.4f ]\n",
 				  est_pose.x, est_pose.y, est_pose.a );
 
-	StgModel::Update();
+	Model::Update();
 }
 
-void StgModelPosition::Startup( void )
+void ModelPosition::Startup( void )
 {
-	StgModel::Startup();
+	Model::Startup();
 
 	PRINT_DEBUG( "position startup" );
 
 	this->SetWatts( STG_POSITION_WATTS );
 }
 
-void StgModelPosition::Shutdown( void )
+void ModelPosition::Shutdown( void )
 {
 	PRINT_DEBUG( "position shutdown" );
 
@@ -467,10 +467,10 @@ void StgModelPosition::Shutdown( void )
 
 	this->SetWatts( 0 );
 
-	StgModel::Shutdown();
+	Model::Shutdown();
 }
 
-void StgModelPosition::SetSpeed( double x, double y, double a ) 
+void ModelPosition::SetSpeed( double x, double y, double a ) 
 { 
   assert( ! isnan(x) );
   assert( ! isnan(y) );
@@ -483,7 +483,7 @@ void StgModelPosition::SetSpeed( double x, double y, double a )
   goal.a = a;
 }  
 
-void StgModelPosition::SetXSpeed( double x )
+void ModelPosition::SetXSpeed( double x )
 { 
   assert( ! isnan(x) );
   control_mode = STG_POSITION_CONTROL_VELOCITY;
@@ -491,21 +491,21 @@ void StgModelPosition::SetXSpeed( double x )
 }  
 
 
-void StgModelPosition::SetYSpeed( double y )
+void ModelPosition::SetYSpeed( double y )
 { 
   assert( ! isnan(y) );
   control_mode = STG_POSITION_CONTROL_VELOCITY;
   goal.y = y;
 }  
 
-void StgModelPosition::SetZSpeed( double z )
+void ModelPosition::SetZSpeed( double z )
 { 
   assert( ! isnan(z) );
   control_mode = STG_POSITION_CONTROL_VELOCITY;
   goal.z = z;
 }  
 
-void StgModelPosition::SetTurnSpeed( double a )
+void ModelPosition::SetTurnSpeed( double a )
 { 
   assert( ! isnan(a) );
   control_mode = STG_POSITION_CONTROL_VELOCITY;
@@ -513,7 +513,7 @@ void StgModelPosition::SetTurnSpeed( double a )
 }  
 
 
-void StgModelPosition::SetSpeed( stg_velocity_t vel ) 
+void ModelPosition::SetSpeed( Velocity vel ) 
 { 
   assert( ! isnan(vel.x) );
   assert( ! isnan(vel.y) );
@@ -527,7 +527,7 @@ void StgModelPosition::SetSpeed( stg_velocity_t vel )
 	goal.a = vel.a;
 }
 
-void StgModelPosition::GoTo( double x, double y, double a ) 
+void ModelPosition::GoTo( double x, double y, double a ) 
 {
   assert( ! isnan(x) );
   assert( ! isnan(y) );
@@ -540,7 +540,7 @@ void StgModelPosition::GoTo( double x, double y, double a )
 	goal.a = a;
 }  
 
-void StgModelPosition::GoTo( stg_pose_t pose ) 
+void ModelPosition::GoTo( Pose pose ) 
 {
 	control_mode = STG_POSITION_CONTROL_POSITION;
 	goal = pose;
@@ -549,12 +549,12 @@ void StgModelPosition::GoTo( stg_pose_t pose )
 /** 
   Set the current odometry estimate 
  */
-void StgModelPosition::SetOdom( stg_pose_t odom )
+void ModelPosition::SetOdom( Pose odom )
 {
 	est_pose = odom;
 
 	// figure out where the implied origin is in global coords
-	stg_pose_t gp = GetGlobalPose();
+	Pose gp = GetGlobalPose();
 
 	double da = -odom.a + gp.a;
 	double dx = -odom.x * cos(da) + odom.y * sin(da);
@@ -567,7 +567,7 @@ void StgModelPosition::SetOdom( stg_pose_t odom )
 } 
 
 /** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
-Waypoint* StgModelPosition::SetWaypoints( Waypoint* wps, uint32_t count )
+Waypoint* ModelPosition::SetWaypoints( Waypoint* wps, uint32_t count )
 {
   Waypoint* replaced = waypoints;
   
@@ -577,7 +577,7 @@ Waypoint* StgModelPosition::SetWaypoints( Waypoint* wps, uint32_t count )
   return replaced;
 }
 
-void StgModelPosition::DataVisualize( Camera* cam )
+void ModelPosition::DataVisualize( Camera* cam )
 {
   if( showWaypoints && waypoints && waypoint_count )
 	 DrawWaypoints();
@@ -638,7 +638,7 @@ void StgModelPosition::DataVisualize( Camera* cam )
 	 }
 }
 
-void StgModelPosition::DrawWaypoints()
+void ModelPosition::DrawWaypoints()
 {
   glPointSize( 3 );
 

@@ -19,7 +19,7 @@
 // DEFAULT PARAMETERS FOR LASER MODEL
 static const bool DEFAULT_FILLED = true;
 static const stg_watts_t DEFAULT_WATTS = 17.5;
-static const stg_size_t DEFAULT_SIZE( 0.15, 0.15, 0.2 );
+static const Size DEFAULT_SIZE( 0.15, 0.15, 0.2 );
 static const stg_meters_t DEFAULT_MINRANGE = 0.0;
 static const stg_meters_t DEFAULT_MAXRANGE = 8.0;
 static const stg_radians_t DEFAULT_FOV = M_PI;
@@ -28,15 +28,15 @@ static const stg_msec_t DEFAULT_INTERVAL_MS = 100;
 static const unsigned int DEFAULT_RESOLUTION = 1;
 static const char* DEFAULT_COLOR = "blue";
 
-Option StgModelLaser::showLaserData( "Laser scans", "show_laser", "", true );
-Option StgModelLaser::showLaserStrikes( "Laser strikes", "show_laser_strikes", "", false );
+Option ModelLaser::showLaserData( "Laser scans", "show_laser", "", true );
+Option ModelLaser::showLaserStrikes( "Laser strikes", "show_laser_strikes", "", false );
 
 /**
 @ingroup model
 @defgroup model_laser Laser model 
 The laser model simulates a scanning laser rangefinder
 
-API: Stg::StgModelLaser
+API: Stg::ModelLaser
 
 <h2>Worldfile properties</h2>
 
@@ -72,9 +72,9 @@ laser
   Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
 */
   
-  StgModelLaser::StgModelLaser( StgWorld* world, 
-										  StgModel* parent )
-  : StgModel( world, parent, MODEL_TYPE_LASER ),
+  ModelLaser::ModelLaser( World* world, 
+										  Model* parent )
+  : Model( world, parent, MODEL_TYPE_LASER ),
 	data_dl(0),
 	data_dirty( true ),
 	samples( NULL ),	// don't allocate sample buffer memory until Update() is called
@@ -85,15 +85,14 @@ laser
 	resolution( DEFAULT_RESOLUTION )
 {
   
-  PRINT_DEBUG2( "Constructing StgModelLaser %d (%s)\n", 
+  PRINT_DEBUG2( "Constructing ModelLaser %d (%s)\n", 
 					 id, typestr );
   
 
-  // StgModel data members
+  // Model data members
   interval = DEFAULT_INTERVAL_MS * (int)thousand;
-  laser_return = LaserVisible;
   
-  stg_geom_t geom;
+  Geom geom;
   memset( &geom, 0, sizeof(geom));
   geom.size = DEFAULT_SIZE;
   SetGeom( geom );
@@ -112,7 +111,7 @@ laser
 }
 
 
-StgModelLaser::~StgModelLaser( void )
+ModelLaser::~ModelLaser( void )
 {
   if(samples)
     {
@@ -121,9 +120,9 @@ StgModelLaser::~StgModelLaser( void )
     }
 }
 
-void StgModelLaser::Load( void )
+void ModelLaser::Load( void )
 {  
-  StgModel::Load();
+  Model::Load();
   sample_count = wf->ReadInt( wf_entity, "samples", sample_count );
   range_min = wf->ReadLength( wf_entity, "range_min", range_min);
   range_max = wf->ReadLength( wf_entity, "range_max", range_max );
@@ -140,7 +139,7 @@ void StgModelLaser::Load( void )
     }
 }
 
-stg_laser_cfg_t StgModelLaser::GetConfig()
+stg_laser_cfg_t ModelLaser::GetConfig()
 { 
   stg_laser_cfg_t cfg;
   cfg.sample_count = sample_count;
@@ -152,7 +151,7 @@ stg_laser_cfg_t StgModelLaser::GetConfig()
   return cfg;
 }
 
-void StgModelLaser::SetConfig( stg_laser_cfg_t cfg )
+void ModelLaser::SetConfig( stg_laser_cfg_t cfg )
 { 
   range_min = cfg.range_bounds.min;
   range_max = cfg.range_bounds.max;
@@ -161,23 +160,23 @@ void StgModelLaser::SetConfig( stg_laser_cfg_t cfg )
   interval = cfg.interval;
 }
 
-static bool laser_raytrace_match( StgModel* hit, 
-											 StgModel* finder,
+static bool laser_raytrace_match( Model* hit, 
+											 Model* finder,
 											 const void* dummy )
 {
   // Ignore the model that's looking and things that are invisible to
   // lasers  
-  return( (hit != finder) && (hit->GetLaserReturn() > 0 ) );
+  return( (hit != finder) && (hit->vis.laser_return > 0 ) );
 }	
 
-void StgModelLaser::Update( void )
+void ModelLaser::Update( void )
 {     
   double bearing = -fov/2.0;
   double sample_incr = fov / (double)(sample_count-1);
 
   samples = g_renew( stg_laser_sample_t, samples, sample_count );
   
-  stg_pose_t rayorg = geom.pose;
+  Pose rayorg = geom.pose;
   bzero( &rayorg, sizeof(rayorg));
   rayorg.z += geom.size.z/2;
   
@@ -196,7 +195,7 @@ void StgModelLaser::Update( void )
 
       // if we hit a model and it reflects brightly, we set
       // reflectance high, else low
-      if( sample.mod && ( sample.mod->GetLaserReturn() >= LaserBright ) )	
+      if( sample.mod && ( sample.mod->vis.laser_return >= LaserBright ) )	
 		  samples[t].reflectance = 1;
       else
 		  samples[t].reflectance = 0;
@@ -229,13 +228,13 @@ void StgModelLaser::Update( void )
   
   data_dirty = true;
   
-  StgModel::Update();
+  Model::Update();
 }
 
 
-void StgModelLaser::Startup(  void )
+void ModelLaser::Startup(  void )
 { 
-  StgModel::Startup();
+  Model::Startup();
 
   PRINT_DEBUG( "laser startup" );
 
@@ -243,7 +242,7 @@ void StgModelLaser::Startup(  void )
   SetWatts( DEFAULT_WATTS );
 }
 
-void StgModelLaser::Shutdown( void )
+void ModelLaser::Shutdown( void )
 { 
   PRINT_DEBUG( "laser shutdown" );
 
@@ -257,12 +256,12 @@ void StgModelLaser::Shutdown( void )
       samples = NULL;
     }
 
-  StgModel::Shutdown();
+  Model::Shutdown();
 }
 
-void StgModelLaser::Print( char* prefix )
+void ModelLaser::Print( char* prefix )
 {
-  StgModel::Print( prefix );
+  Model::Print( prefix );
 
   printf( "\tRanges[ " );
 
@@ -285,13 +284,13 @@ void StgModelLaser::Print( char* prefix )
 }
 
 
-stg_laser_sample_t* StgModelLaser::GetSamples( uint32_t* count )
+stg_laser_sample_t* ModelLaser::GetSamples( uint32_t* count )
 { 
   if( count ) *count = sample_count;
   return samples;
 }
 
-void StgModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
+void ModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
 { 
   this->samples = g_renew( stg_laser_sample_t, this->samples, sample_count );
   memcpy( this->samples, samples, sample_count * sizeof(stg_laser_sample_t));
@@ -300,7 +299,7 @@ void StgModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
 }
 
 
-void StgModelLaser::DataVisualize( Camera* cam )
+void ModelLaser::DataVisualize( Camera* cam )
 {
   if( ! (samples && sample_count) )
     return;

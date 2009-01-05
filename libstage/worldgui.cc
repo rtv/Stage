@@ -1,5 +1,5 @@
 /* worldgui.cc
-    Implements a subclass of StgWorld that has an FLTK and OpenGL GUI
+    Implements a subclass of World that has an FLTK and OpenGL GUI
     Authors: Richard Vaughan (vaughan@sfu.ca)
              Alex Couture-Beil (asc17@sfu.ca)
              Jeremy Asher (jra11@sfu.ca)
@@ -18,7 +18,7 @@ world view can also show visualizations of the data and configuration
 of various sensor and actuator models. The View menu has options to
 control which data and configurations are rendered.
 
-API: Stg::StgWorldGui
+API: Stg::WorldGui
 
 <h2>Worldfile Properties</h2>
 
@@ -152,9 +152,9 @@ static const char* AboutText =
 	"Distributed under the terms of the \n"
 	"GNU General Public License v2";
 
-StgWorldGui::StgWorldGui(int W,int H,const char* L) : 
+WorldGui::WorldGui(int W,int H,const char* L) : 
   Fl_Window(W,H,L ),
-  canvas( new StgCanvas( this,0,30,W,H-30 ) ),
+  canvas( new Canvas( this,0,30,W,H-30 ) ),
   drawOptions(),
   fileMan(),
   interval_log(),
@@ -180,27 +180,27 @@ StgWorldGui::StgWorldGui(int W,int H,const char* L) :
   mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
   mbar->add( "File/&Load World...", FL_CTRL + 'l', fileLoadCb, this, FL_MENU_DIVIDER );
   mbar->add( "File/&Save World", FL_CTRL + 's', fileSaveCb, this );
-  mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', StgWorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
+  mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', WorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
   
   //mbar->add( "File/Screenshots", 0,0,0, FL_SUBMENU );
   //mbar->add( "File/Screenshots/Save Frames, fileScreenshotSaveCb, this,FL_MENU_TOGGLE );
   
-  mbar->add( "File/E&xit", FL_CTRL+'q', StgWorldGui::fileExitCb, this );
+  mbar->add( "File/E&xit", FL_CTRL+'q', WorldGui::fileExitCb, this );
   
   mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "View/Filter data...", FL_SHIFT + 'd', StgWorldGui::viewOptionsCb, this );
+  mbar->add( "View/Filter data...", FL_SHIFT + 'd', WorldGui::viewOptionsCb, this );
   canvas->createMenuItems( mbar, "View" );
   
   mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "Help/&About Stage...", 0, StgWorldGui::helpAboutCb, this );
+  mbar->add( "Help/&About Stage...", 0, WorldGui::helpAboutCb, this );
   //mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
   
-  callback( StgWorldGui::windowCb, this );	 
+  callback( WorldGui::windowCb, this );	 
 
 	show();	
 }
 
-StgWorldGui::~StgWorldGui()
+WorldGui::~WorldGui()
 {
   delete mbar;
   if ( oDlg )
@@ -208,18 +208,18 @@ StgWorldGui::~StgWorldGui()
   delete canvas;
 }
 
-void StgWorldGui::Show()
+void WorldGui::Show()
 {
   show(); // fltk
 }
 
-void StgWorldGui::Load( const char* filename )
+void WorldGui::Load( const char* filename )
 {
   PRINT_DEBUG1( "%s.Load()", token );
 	
   fileMan.newWorld( filename );
 
-  StgWorld::Load( filename );
+  World::Load( filename );
 	
   int world_section = 0; // use the top-level section for some parms
   // that traditionally live there
@@ -259,13 +259,13 @@ void StgWorldGui::Load( const char* filename )
   show();
 }
 
-void StgWorldGui::UnLoad() 
+void WorldGui::UnLoad() 
 {
-  StgWorld::UnLoad();
+  World::UnLoad();
   //	canvas->camera.setPose( 0, 0 );
 }
 
-bool StgWorldGui::Save( const char* filename )
+bool WorldGui::Save( const char* filename )
 {
   PRINT_DEBUG1( "%s.Save()", token );
 	
@@ -282,13 +282,13 @@ bool StgWorldGui::Save( const char* filename )
       // TODO - per model visualizations save 
     }
 	
-	StgWorld::Save( filename );
+	World::Save( filename );
 	
   // TODO - error checking
   return true;
 }
 
-bool StgWorldGui::Update()
+bool WorldGui::Update()
 {
   //pause the simulation if quit time is set
   if( PastQuitTime() && pause_time == false ) {
@@ -296,7 +296,7 @@ bool StgWorldGui::Update()
 	  pause_time = true;
   }
 	
-  bool val = paused ? true : StgWorld::Update();
+  bool val = paused ? true : World::Update();
   
   stg_usec_t interval;
   stg_usec_t timenow;
@@ -341,16 +341,16 @@ bool StgWorldGui::Update()
   return val;
 }
 
-void StgWorldGui::AddModel( StgModel*  mod  )
+void WorldGui::AddModel( Model*  mod  )
 {
   if( mod->parent == NULL )
 	 canvas->AddModel( mod );
   
-  StgWorld::AddModel( mod );
+  World::AddModel( mod );
 }
 
 
-std::string StgWorldGui::ClockString()
+std::string WorldGui::ClockString()
 {
   const uint32_t usec_per_hour   = 3600000000U;
   const uint32_t usec_per_minute = 60000000;
@@ -399,7 +399,7 @@ static void Draw_cb( gpointer dummykey,
 }
 
 
-void StgWorldGui::DrawTree( bool drawall )
+void WorldGui::DrawTree( bool drawall )
 {  
   g_hash_table_foreach( superregions, (GHFunc)Draw_cb, (void*)drawall );
 }
@@ -413,7 +413,7 @@ static void Floor_cb( gpointer dummykey,
 }
 
 
-void StgWorldGui::DrawFloor()
+void WorldGui::DrawFloor()
 {
   PushColor( 1,1,1,1 );
   g_hash_table_foreach( superregions, (GHFunc)Floor_cb, NULL );
@@ -422,9 +422,9 @@ void StgWorldGui::DrawFloor()
 
 
 
-void StgWorldGui::windowCb( Fl_Widget* w, void* p )
+void WorldGui::windowCb( Fl_Widget* w, void* p )
 {
-  StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+  WorldGui* worldGui = static_cast<WorldGui*>( p );
 
   switch ( Fl::event() ) {
   case FL_SHORTCUT:
@@ -439,9 +439,9 @@ void StgWorldGui::windowCb( Fl_Widget* w, void* p )
   exit(0);
 }
 
-void StgWorldGui::fileLoadCb( Fl_Widget* w, void* p )
+void WorldGui::fileLoadCb( Fl_Widget* w, void* p )
 {
-  StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+  WorldGui* worldGui = static_cast<WorldGui*>( p );
 
   const char* filename;
   //bool success;
@@ -479,9 +479,9 @@ void StgWorldGui::fileLoadCb( Fl_Widget* w, void* p )
   }
 }
 
-void StgWorldGui::fileSaveCb( Fl_Widget* w, void* p )
+void WorldGui::fileSaveCb( Fl_Widget* w, void* p )
 {
-  StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+  WorldGui* worldGui = static_cast<WorldGui*>( p );
 
   // save to current file
   bool success =  worldGui->Save( NULL );
@@ -490,16 +490,16 @@ void StgWorldGui::fileSaveCb( Fl_Widget* w, void* p )
   }
 }
 
-void StgWorldGui::fileSaveAsCb( Fl_Widget* w, void* p )
+void WorldGui::fileSaveAsCb( Fl_Widget* w, void* p )
 {
-  StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+  WorldGui* worldGui = static_cast<WorldGui*>( p );
 
   worldGui->saveAsDialog();
 }
 
-void StgWorldGui::fileExitCb( Fl_Widget* w, void* p ) 
+void WorldGui::fileExitCb( Fl_Widget* w, void* p ) 
 {
-  StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+  WorldGui* worldGui = static_cast<WorldGui*>( p );
 
   bool done = worldGui->closeWindowQuery();
   if (done) {
@@ -508,9 +508,9 @@ void StgWorldGui::fileExitCb( Fl_Widget* w, void* p )
 }
 
 
-void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p ) 
+void WorldGui::viewOptionsCb( Fl_Widget* w, void* p ) 
 {
-  StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+  WorldGui* worldGui = static_cast<WorldGui*>( p );
   
   if ( !worldGui->oDlg ) 
 	 {
@@ -529,9 +529,9 @@ void StgWorldGui::viewOptionsCb( Fl_Widget* w, void* p )
 	 }
 }
 
-void StgWorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
+void WorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
   OptionsDlg* oDlg = static_cast<OptionsDlg*>( w );
-  StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+  WorldGui* worldGui = static_cast<WorldGui*>( p );
 
   // get event from dialog
   OptionsDlg::event_t event;
@@ -588,9 +588,9 @@ void aboutCloseCb( Fl_Widget* w, void* p ) {
   Fl::delete_widget( win );
 }
 
-void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p ) 
+void WorldGui::helpAboutCb( Fl_Widget* w, void* p ) 
 {
-  // StgWorldGui* worldGui = static_cast<StgWorldGui*>( p );
+  // WorldGui* worldGui = static_cast<WorldGui*>( p );
 
   fl_register_images();
 	
@@ -636,7 +636,7 @@ void StgWorldGui::helpAboutCb( Fl_Widget* w, void* p )
   win->show();
 }
 
-bool StgWorldGui::saveAsDialog()
+bool WorldGui::saveAsDialog()
 {
   const char* newFilename;
   bool success = false;
@@ -662,7 +662,7 @@ bool StgWorldGui::saveAsDialog()
   return success;
 }
 
-bool StgWorldGui::closeWindowQuery()
+bool WorldGui::closeWindowQuery()
 {
   int choice;
 	
@@ -694,14 +694,14 @@ bool StgWorldGui::closeWindowQuery()
   }
 }
 
-void StgWorldGui::UpdateOptions() 
+void WorldGui::UpdateOptions() 
 {
   std::set<Option*, Option::optComp> options;
   std::vector<Option*> modOpts;
   
   for( GList* it=update_list; it; it=it->next ) 
 	 {
-		modOpts = ((StgModel*)it->data)->getOptions();
+		modOpts = ((Model*)it->data)->getOptions();
 		options.insert( modOpts.begin(), modOpts.end() );	
 	 }
 	
@@ -711,16 +711,16 @@ void StgWorldGui::UpdateOptions()
 	 oDlg->setOptions( drawOptions );
 }
 
-void StgWorldGui::DrawBoundingBoxTree()
+void WorldGui::DrawBoundingBoxTree()
 {
-  LISTMETHOD( StgWorld::children, StgModel*, DrawBoundingBoxTree );
+  LISTMETHOD( World::children, Model*, DrawBoundingBoxTree );
 }
 
-void StgWorldGui::PushColor( stg_color_t col )
+void WorldGui::PushColor( stg_color_t col )
 { canvas->PushColor( col ); } 
 
-void StgWorldGui::PushColor( double r, double g, double b, double a )
+void WorldGui::PushColor( double r, double g, double b, double a )
 { canvas->PushColor( r,g,b,a ); }
 
-void StgWorldGui::PopColor()
+void WorldGui::PopColor()
 { canvas->PopColor(); }

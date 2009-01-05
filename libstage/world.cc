@@ -1,34 +1,34 @@
 /** @defgroup world World
 
-  Stage simulates a 'world' composed of `models', defined in a `world
-  file'.
+    Stage simulates a 'world' composed of `models', defined in a `world
+    file'.
 
-API: Stg::StgWorld
+    API: Stg::World
 
-<h2>Worldfile properties</h2>
+    <h2>Worldfile properties</h2>
 
-@par Summary and default values
+    @par Summary and default values
 
-@verbatim
+    @verbatim
 
-interval_real   100
-interval_sim    100
-resolution      0.02
+    interval_real   100
+    interval_sim    100
+    resolution      0.02
 
-@endverbatim
+    @endverbatim
 
-@par Details
-- interval_sim <int>\n
-the length of each simulation update cycle in milliseconds.
-- interval_real <int>\n
-the amount of real-world (wall-clock) time the siulator will attempt to spend on each simulation cycle.
-- resolution <float>\n
-The resolution (in meters) of the underlying bitmap model. Larger values speed up raytracing at the expense of fidelity in collision detection and sensing. 
+    @par Details
+    - interval_sim <int>\n
+    the length of each simulation update cycle in milliseconds.
+    - interval_real <int>\n
+    the amount of real-world (wall-clock) time the siulator will attempt to spend on each simulation cycle.
+    - resolution <float>\n
+    The resolution (in meters) of the underlying bitmap model. Larger values speed up raytracing at the expense of fidelity in collision detection and sensing. 
 
-@par More examples
-The Stage source distribution contains several example world files in
-<tt>(stage src)/worlds</tt> along with the worldfile properties
-described on the manual page for each model type.
+    @par More examples
+    The Stage source distribution contains several example world files in
+    <tt>(stage src)/worlds</tt> along with the worldfile properties
+    described on the manual page for each model type.
 
 */
 
@@ -49,24 +49,24 @@ described on the manual page for each model type.
 #include "file_manager.hh"
 
 // static data members
-unsigned int StgWorld::next_id = 0;
-bool StgWorld::quit_all = false;
-GList* StgWorld::world_list = NULL;
+unsigned int World::next_id = 0;
+bool World::quit_all = false;
+GList* World::world_list = NULL;
 
 static guint PointIntHash( stg_point_int_t* pt )
 {
-	return( pt->x + (pt->y<<16 ));
+  return( pt->x + (pt->y<<16 ));
 }
 
 static gboolean PointIntEqual( stg_point_int_t* p1, stg_point_int_t* p2 )
 {
-	return( memcmp( p1, p2, sizeof(stg_point_int_t) ) == 0 );
+  return( memcmp( p1, p2, sizeof(stg_point_int_t) ) == 0 );
 }
 
 
-StgWorld::StgWorld( const char* token, 
-						  stg_msec_t interval_sim,
-						  double ppm )
+World::World( const char* token, 
+	      stg_msec_t interval_sim,
+	      double ppm )
   : 
   // private
   destroy( false ),
@@ -92,62 +92,62 @@ StgWorld::StgWorld( const char* token,
   ray_list( NULL ),  
   sim_time( 0 ),
   superregions( g_hash_table_new( (GHashFunc)PointIntHash, 
-											 (GEqualFunc)PointIntEqual ) ),
+				  (GEqualFunc)PointIntEqual ) ),
   sr_cached(NULL),
   update_list( NULL ),
   updates( 0 ),
   wf( NULL )
 {
   if( ! Stg::InitDone() )
-	 {
-		PRINT_WARN( "Stg::Init() must be called before a StgWorld is created." );
-		exit(-1);
-	 }
+    {
+      PRINT_WARN( "Stg::Init() must be called before a World is created." );
+      exit(-1);
+    }
   
-  StgWorld::world_list = g_list_append( StgWorld::world_list, this );
+  World::world_list = g_list_append( World::world_list, this );
 }
 
 
-StgWorld::~StgWorld( void )
+World::~World( void )
 {
-	PRINT_DEBUG2( "destroying world %d %s", id, token );
+  PRINT_DEBUG2( "destroying world %d %s", id, token );
 
-	if( wf ) delete wf;
+  if( wf ) delete wf;
 
-	g_hash_table_destroy( models_by_name );
-	g_free( token );
+  g_hash_table_destroy( models_by_name );
+  g_free( token );
 
-	world_list = g_list_remove( world_list, this );
+  world_list = g_list_remove( world_list, this );
 }
 
 
-SuperRegion* StgWorld::CreateSuperRegion( stg_point_int_t origin )
+SuperRegion* World::CreateSuperRegion( stg_point_int_t origin )
 {
   SuperRegion* sr = new SuperRegion( this, origin );
-	g_hash_table_insert( superregions, &sr->origin, sr );
+  g_hash_table_insert( superregions, &sr->origin, sr );
 
-	dirty = true; // force redraw
-	return sr;
+  dirty = true; // force redraw
+  return sr;
 }
 
-void StgWorld::DestroySuperRegion( SuperRegion* sr )
+void World::DestroySuperRegion( SuperRegion* sr )
 {
-	g_hash_table_remove( superregions, &sr->origin );
-	delete sr;
+  g_hash_table_remove( superregions, &sr->origin );
+  delete sr;
 }
 
-bool StgWorld::UpdateAll()
+bool World::UpdateAll()
 {  
   bool quit = true;
-  for( GList* it = StgWorld::world_list; it; it=it->next ) 
-	 {
-		if( ((StgWorld*)it->data)->Update() == false )
-		  quit = false;
-	 }
+  for( GList* it = World::world_list; it; it=it->next ) 
+    {
+      if( ((World*)it->data)->Update() == false )
+	quit = false;
+    }
   return quit;
 }
 
-void StgWorld::update_thread_entry( StgModel* mod, StgWorld* world )
+void World::update_thread_entry( Model* mod, World* world )
 {
   mod->Update();
   
@@ -156,46 +156,46 @@ void StgWorld::update_thread_entry( StgModel* mod, StgWorld* world )
   world->update_jobs_pending--;
   
   if( world->update_jobs_pending == 0 )
-	 g_cond_signal( world->worker_threads_done );
+    g_cond_signal( world->worker_threads_done );
   
   g_mutex_unlock( world->thread_mutex );
 }
 
 
-void StgWorld::RemoveModel( StgModel* mod )
+void World::RemoveModel( Model* mod )
 {
-	g_hash_table_remove( models_by_name, mod );
+  g_hash_table_remove( models_by_name, mod );
 }
 
 // wrapper to startup all models from the hash table
-void init_models( gpointer dummy1, StgModel* mod, gpointer dummy2 )
+void init_models( gpointer dummy1, Model* mod, gpointer dummy2 )
 {
-	mod->Init();
+  mod->Init();
 }
 
-void StgWorld::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
+void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
 { 
   // lookup the group in which this was defined
-  StgModel* mod = (StgModel*)g_hash_table_lookup( entitytable, 
-																	  (gpointer)wf->GetEntityParent( entity ) );
+  Model* mod = (Model*)g_hash_table_lookup( entitytable, 
+					    (gpointer)wf->GetEntityParent( entity ) );
   
   if( ! mod )
-	 PRINT_ERR( "block has no model for a parent" );
+    PRINT_ERR( "block has no model for a parent" );
   
   mod->LoadBlock( wf, entity );
 }
 
-void StgWorld::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
+void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
 { 
   int parent_entity = wf->GetEntityParent( entity );
   
   PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
-					 entity, parent_entity );
+		entity, parent_entity );
   
-  StgModel *mod, *parent;
+  Model *mod, *parent;
   
-  parent = (StgModel*)g_hash_table_lookup( entitytable, 
-														 (gpointer)parent_entity );
+  parent = (Model*)g_hash_table_lookup( entitytable, 
+					(gpointer)parent_entity );
   
   // find the creator function pointer in the hash table. use the
   // vanilla model if the type is NULL.
@@ -206,25 +206,25 @@ void StgWorld::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
   char *typestr = (char*)wf->GetEntityType(entity);      	  
 
   if( typestr ) // look up the string in the typetable
-	 for( int i=0; i<MODEL_TYPE_COUNT; i++ )
-		if( strcmp( typestr, typetable[i].token ) == 0 )
-		  {
-			 creator = typetable[i].creator;
-			 break;
-		  }
+    for( int i=0; i<MODEL_TYPE_COUNT; i++ )
+      if( strcmp( typestr, typetable[i].token ) == 0 )
+	{
+	  creator = typetable[i].creator;
+	  break;
+	}
   
   // if we found a creator function, call it
   if( creator )
-	 {
-		//printf( "creator fn: %p\n", creator );
-		mod = (*creator)( this, parent );
-	 }
+    {
+      //printf( "creator fn: %p\n", creator );
+      mod = (*creator)( this, parent );
+    }
   else
-	 {
-		PRINT_ERR1( "Unknown model type %s in world file.", 
-						typestr );
-		exit( 1 );
-	 }
+    {
+      PRINT_ERR1( "Unknown model type %s in world file.", 
+		  typestr );
+      exit( 1 );
+    }
   
   //printf( "created model %s\n", mod->Token() );
   
@@ -241,209 +241,209 @@ void StgWorld::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
 // delete a model from the hash table
 static void destroy_sregion( gpointer dummy1, SuperRegion* sr, gpointer dummy2 )
 {
-	free(sr);
+  free(sr);
 }
 
-void StgWorld::Load( const char* worldfile_path )
+void World::Load( const char* worldfile_path )
 {
   // note: must call Unload() before calling Load() if a world already
   // exists TODO: unload doesn't clean up enough right now
 
   GHashTable* entitytable = g_hash_table_new( g_direct_hash, g_direct_equal );
 
-	printf( " [Loading %s]", worldfile_path );
-	fflush(stdout);
+  printf( " [Loading %s]", worldfile_path );
+  fflush(stdout);
 
-	stg_usec_t load_start_time = RealTimeNow();
+  stg_usec_t load_start_time = RealTimeNow();
 
-	this->wf = new Worldfile();
-	wf->Load( worldfile_path );
-	PRINT_DEBUG1( "wf has %d entitys", wf->GetEntityCount() );
+  this->wf = new Worldfile();
+  wf->Load( worldfile_path );
+  PRINT_DEBUG1( "wf has %d entitys", wf->GetEntityCount() );
 
-	// end the output line of worldfile components
-	//puts("");
+  // end the output line of worldfile components
+  //puts("");
 
-	int entity = 0;
+  int entity = 0;
 
-	this->token = (char*)
-		wf->ReadString( entity, "name", token );
+  this->token = (char*)
+    wf->ReadString( entity, "name", token );
 
-	this->interval_sim = (stg_usec_t)thousand * 
-	  wf->ReadInt( entity, "interval_sim", 
-		       (int)(this->interval_sim/thousand) );
+  this->interval_sim = (stg_usec_t)thousand * 
+    wf->ReadInt( entity, "interval_sim", 
+		 (int)(this->interval_sim/thousand) );
 
-	if( wf->PropertyExists( entity, "quit_time" ) ) {
-		this->quit_time = (stg_usec_t) ( million * 
-			wf->ReadFloat( entity, "quit_time", 0 ) );
-	}
+  if( wf->PropertyExists( entity, "quit_time" ) ) {
+    this->quit_time = (stg_usec_t) ( million * 
+				     wf->ReadFloat( entity, "quit_time", 0 ) );
+  }
 
-	if( wf->PropertyExists( entity, "resolution" ) )
-		this->ppm = 
-		  1.0 / wf->ReadFloat( entity, "resolution", 1.0 / this->ppm );
+  if( wf->PropertyExists( entity, "resolution" ) )
+    this->ppm = 
+      1.0 / wf->ReadFloat( entity, "resolution", 1.0 / this->ppm );
 
-	//_stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
+  //_stg_disable_gui = wf->ReadInt( entity, "gui_disable", _stg_disable_gui );
 
-	if( wf->PropertyExists( entity, "threadpool" ) )
-	  {
-		 int count = wf->ReadInt( entity, "threadpool", worker_threads );
+  if( wf->PropertyExists( entity, "threadpool" ) )
+    {
+      int count = wf->ReadInt( entity, "threadpool", worker_threads );
 		 
-		 if( count && (count != (int)worker_threads) )
-			{
-			  worker_threads = count;
+      if( count && (count != (int)worker_threads) )
+	{
+	  worker_threads = count;
 			  
-			  if( threadpool == NULL )
-				 threadpool = g_thread_pool_new( (GFunc)update_thread_entry, 
-															this,
-															worker_threads, 
-															true,
-															NULL );
-			  else
-				 g_thread_pool_set_max_threads( threadpool, 
-														  worker_threads, 
-														  NULL );
+	  if( threadpool == NULL )
+	    threadpool = g_thread_pool_new( (GFunc)update_thread_entry, 
+					    this,
+					    worker_threads, 
+					    true,
+					    NULL );
+	  else
+	    g_thread_pool_set_max_threads( threadpool, 
+					   worker_threads, 
+					   NULL );
 
-			  printf( "[threadpool %u]", worker_threads );
-			}
-	  }
+	  printf( "[threadpool %u]", worker_threads );
+	}
+    }
 
-	// Iterate through entitys and create objects of the appropriate type
-	for( int entity = 1; entity < wf->GetEntityCount(); entity++ )
-	  {
-		 const char *typestr = (char*)wf->GetEntityType(entity);      	  
+  // Iterate through entitys and create objects of the appropriate type
+  for( int entity = 1; entity < wf->GetEntityCount(); entity++ )
+    {
+      const char *typestr = (char*)wf->GetEntityType(entity);      	  
 		 
-		 // don't load window entries here
-		 if( strcmp( typestr, "window" ) == 0 )
-			{
-			  /* do nothing here */
-			}
-		 //else if( strcmp( typestr, "blockgroup" ) == 0 )
-		 //LoadBlockGroup( wf, entity, entitytable );		
-		 else if( strcmp( typestr, "block" ) == 0 )
-			LoadBlock( wf, entity, entitytable );
-		 else
-			LoadModel( wf, entity, entitytable );
-	  }
+      // don't load window entries here
+      if( strcmp( typestr, "window" ) == 0 )
+	{
+	  /* do nothing here */
+	}
+      //else if( strcmp( typestr, "blockgroup" ) == 0 )
+      //LoadBlockGroup( wf, entity, entitytable );		
+      else if( strcmp( typestr, "block" ) == 0 )
+	LoadBlock( wf, entity, entitytable );
+      else
+	LoadModel( wf, entity, entitytable );
+    }
 	
 
-	// warn about unused WF lines
-	wf->WarnUnused();
+  // warn about unused WF lines
+  wf->WarnUnused();
 	
-	// now we're done with the worldfile entry lookup
-	g_hash_table_destroy( entitytable );
+  // now we're done with the worldfile entry lookup
+  g_hash_table_destroy( entitytable );
 	
-	LISTMETHOD( children, StgModel*, InitRecursive );
+  LISTMETHOD( children, Model*, InitRecursive );
 	
-	stg_usec_t load_end_time = RealTimeNow();
+  stg_usec_t load_end_time = RealTimeNow();
 
-	if( debug )
-	  printf( "[Load time %.3fsec]\n", 
-				 (load_end_time - load_start_time) / 1000000.0 );
-	else
-	  putchar( '\n' );
+  if( debug )
+    printf( "[Load time %.3fsec]\n", 
+	    (load_end_time - load_start_time) / 1000000.0 );
+  else
+    putchar( '\n' );
 }
 
 
 // delete a model from the hash table
-static void destroy_model( gpointer dummy1, StgModel* mod, gpointer dummy2 )
+static void destroy_model( gpointer dummy1, Model* mod, gpointer dummy2 )
 {
-	free(mod);
+  free(mod);
 }
 
 
-void StgWorld::UnLoad()
+void World::UnLoad()
 {
-	if( wf ) delete wf;
+  if( wf ) delete wf;
 
-	g_list_foreach( children, (GFunc)destroy_model, NULL );
-	g_list_free( children );
-	children = NULL;
+  g_list_foreach( children, (GFunc)destroy_model, NULL );
+  g_list_free( children );
+  children = NULL;
 	
-	g_hash_table_remove_all( models_by_name );
+  g_hash_table_remove_all( models_by_name );
 		
-	g_list_free( update_list );
-	update_list = NULL;
+  g_list_free( update_list );
+  update_list = NULL;
 	
-	g_list_free( ray_list );
-	ray_list = NULL;
+  g_list_free( ray_list );
+  ray_list = NULL;
 	
-	g_hash_table_foreach( superregions, (GHFunc)destroy_sregion, NULL );
-	g_hash_table_remove_all( superregions );
+  g_hash_table_foreach( superregions, (GHFunc)destroy_sregion, NULL );
+  g_hash_table_remove_all( superregions );
 
-	token = NULL;
+  token = NULL;
 }
 
-stg_usec_t StgWorld::RealTimeNow()
+stg_usec_t World::RealTimeNow()
 {
   // TODO - move to GLib's portable timing code, so we can port to Windows more easily?
-	struct timeval tv;
-	gettimeofday( &tv, NULL );  // slow system call: use sparingly
+  struct timeval tv;
+  gettimeofday( &tv, NULL );  // slow system call: use sparingly
 
-	return( tv.tv_sec*1000000 + tv.tv_usec );
+  return( tv.tv_sec*1000000 + tv.tv_usec );
 }
 
-stg_usec_t StgWorld::RealTimeSinceStart()
+stg_usec_t World::RealTimeSinceStart()
 {
-	stg_usec_t timenow = RealTimeNow();
+  stg_usec_t timenow = RealTimeNow();
 
-	// subtract the start time from the current time to get the elapsed
-	// time
+  // subtract the start time from the current time to get the elapsed
+  // time
 
-	return timenow - real_time_start;
+  return timenow - real_time_start;
 }
 
 
-bool StgWorld::PastQuitTime() 
+bool World::PastQuitTime() 
 { 
   return( (quit_time > 0) && (sim_time >= quit_time) ); 
 }
 
 
-bool StgWorld::Update()
+bool World::Update()
 {
-  PRINT_DEBUG( "StgWorld::Update()" );
+  PRINT_DEBUG( "World::Update()" );
   
-	// if we've run long enough, exit
-	if( PastQuitTime() ) {
-		if( IsGUI() == false )
-			return true;		
-	}
+  // if we've run long enough, exit
+  if( PastQuitTime() ) {
+    if( IsGUI() == false )
+      return true;		
+  }
 		
-	// upate all positions first
-	LISTMETHOD( velocity_list, StgModel*, UpdatePose );
+  // upate all positions first
+  LISTMETHOD( velocity_list, Model*, UpdatePose );
 	
-	// then update all sensors	
-	if( worker_threads == 0 ) // do all the work in this thread
-	  {
-		 LISTMETHOD( update_list, StgModel*, UpdateIfDue );
-	  }
-	else // use worker threads
-	  {
-		 // push the update for every model that needs it into the thread pool
-		 for( GList* it = update_list; it; it=it->next )
-			{
-			  StgModel* mod = (StgModel*)it->data;
+  // then update all sensors	
+  if( worker_threads == 0 ) // do all the work in this thread
+    {
+      LISTMETHOD( update_list, Model*, UpdateIfDue );
+    }
+  else // use worker threads
+    {
+      // push the update for every model that needs it into the thread pool
+      for( GList* it = update_list; it; it=it->next )
+	{
+	  Model* mod = (Model*)it->data;
 			  
-			  if( mod->UpdateDue()  )
-				 {
-					if( mod->thread_safe ) // do update in a worker thread
-					  {
-						 g_mutex_lock( thread_mutex );
-						 update_jobs_pending++;
-						 g_mutex_unlock( thread_mutex );						 
-						 g_thread_pool_push( threadpool, mod, NULL );
-					  }
-					else
-					  mod->Update(); // do update in this thread
-				 }
-			}	
+	  if( mod->UpdateDue()  )
+	    {
+	      if( mod->thread_safe ) // do update in a worker thread
+		{
+		  g_mutex_lock( thread_mutex );
+		  update_jobs_pending++;
+		  g_mutex_unlock( thread_mutex );						 
+		  g_thread_pool_push( threadpool, mod, NULL );
+		}
+	      else
+		mod->Update(); // do update in this thread
+	    }
+	}	
 		 
-		 // wait for all the last update job to complete - it will
-		 // signal the worker_threads_done condition var
-		 g_mutex_lock( thread_mutex );
-		 while( update_jobs_pending )
-			g_cond_wait( worker_threads_done, thread_mutex );
-		 g_mutex_unlock( thread_mutex );		 
-	  }
+      // wait for all the last update job to complete - it will
+      // signal the worker_threads_done condition var
+      g_mutex_lock( thread_mutex );
+      while( update_jobs_pending )
+	g_cond_wait( worker_threads_done, thread_mutex );
+      g_mutex_unlock( thread_mutex );		 
+    }
 
   this->sim_time += this->interval_sim;
   this->updates++;
@@ -452,67 +452,67 @@ bool StgWorld::Update()
 }
 
 
-void StgWorld::AddModel( StgModel*  mod  )
+void World::AddModel( Model*  mod  )
 {
-	g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
+  g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
 }
 
-StgModel* StgWorld::GetModel( const char* name )
+Model* World::GetModel( const char* name )
 {
-	PRINT_DEBUG1( "looking up model name %s in models_by_name", name );
-	StgModel* mod = (StgModel*)g_hash_table_lookup( this->models_by_name, name );
+  PRINT_DEBUG1( "looking up model name %s in models_by_name", name );
+  Model* mod = (Model*)g_hash_table_lookup( this->models_by_name, name );
 
-	if( mod == NULL )
-		PRINT_WARN1( "lookup of model name %s: no matching name", name );
+  if( mod == NULL )
+    PRINT_WARN1( "lookup of model name %s: no matching name", name );
 
-	return mod;
+  return mod;
 }
 
-void StgWorld::RecordRay( double x1, double y1, double x2, double y2 )
+void World::RecordRay( double x1, double y1, double x2, double y2 )
 {  
-	float* drawpts = new float[4];
-	drawpts[0] = x1;
-	drawpts[1] = y1;
-	drawpts[2] = x2;
-	drawpts[3] = y2;
-	ray_list = g_list_append( ray_list, drawpts );
+  float* drawpts = new float[4];
+  drawpts[0] = x1;
+  drawpts[1] = y1;
+  drawpts[2] = x2;
+  drawpts[3] = y2;
+  ray_list = g_list_append( ray_list, drawpts );
 }
 
-void StgWorld::ClearRays()
+void World::ClearRays()
 {
-	for( GList* it = ray_list; it; it=it->next )
-	{
-		float* pts = (float*)it->data;
-		delete [] pts;
-	}
+  for( GList* it = ray_list; it; it=it->next )
+    {
+      float* pts = (float*)it->data;
+      delete [] pts;
+    }
 
-	g_list_free(ray_list );
-	ray_list = NULL;
+  g_list_free(ray_list );
+  ray_list = NULL;
 }
 
 
-void StgWorld::Raytrace( const stg_pose_t &pose, // global pose
-								 const stg_meters_t range,
-								 const stg_radians_t fov,
-								 const stg_ray_test_func_t func,
-								 const StgModel* model,			 
-								 const void* arg,
-								 stg_raytrace_result_t* samples, // preallocated storage for samples
-								 const uint32_t sample_count,
-								 const bool ztest )  // number of samples
+void World::Raytrace( const Pose &pose, // global pose
+		      const stg_meters_t range,
+		      const stg_radians_t fov,
+		      const stg_ray_test_func_t func,
+		      const Model* model,			 
+		      const void* arg,
+		      stg_raytrace_result_t* samples, // preallocated storage for samples
+		      const uint32_t sample_count,
+		      const bool ztest )  // number of samples
 {
   // find the direction of the first ray
-  stg_pose_t raypose = pose;
+  Pose raypose = pose;
   raypose.a -= fov/2.0;
   
   // increment the ray direction by this much for each sample
   stg_radians_t angle_incr = fov/(double)sample_count;
     
   for( uint32_t s=0; s < sample_count; s++ )
-	 {
-		samples[s] = Raytrace( raypose, range, func, model, arg, ztest );
-		raypose.a += angle_incr;
-	 }
+    {
+      samples[s] = Raytrace( raypose, range, func, model, arg, ztest );
+      raypose.a += angle_incr;
+    }
 }
 
 
@@ -560,282 +560,283 @@ inline stg_point_int_t CELL( const stg_point_int_t& glob )
   return c;
 }
 
-stg_raytrace_result_t StgWorld::Raytrace( const stg_pose_t &gpose, 
-														const stg_meters_t range,
-														const stg_ray_test_func_t func,
-														const StgModel* mod,		
-														const void* arg,
-														const bool ztest ) 
+stg_raytrace_result_t World::Raytrace( const Pose &gpose, 
+				       const stg_meters_t range,
+				       const stg_ray_test_func_t func,
+				       const Model* mod,		
+				       const void* arg,
+				       const bool ztest ) 
 {
   stg_raytrace_result_t sample;
   
-//   printf( "raytracing at [ %.2f %.2f %.2f %.2f ] for %.2f \n",
-// 			 gpose.x,
-// 			 gpose.y,
-// 			 gpose.z,
-// 			 gpose.a,
-// 			 range );
+  //   printf( "raytracing at [ %.2f %.2f %.2f %.2f ] for %.2f \n",
+  // 			 gpose.x,
+  // 			 gpose.y,
+  // 			 gpose.z,
+  // 			 gpose.a,
+  // 			 range );
   
-	// initialize the sample
-	sample.pose = gpose;
-	sample.range = range; // we might change this below
-	sample.mod = NULL; // we might change this below
+  // initialize the sample
+  sample.pose = gpose;
+  sample.range = range; // we might change this below
+  sample.mod = NULL; // we might change this below
 	
-	// find the global integer bitmap address of the ray  
-	stg_point_int_t glob;
-	glob.x = (int32_t)(gpose.x*ppm);
-	glob.y = (int32_t)(gpose.y*ppm);
+  // find the global integer bitmap address of the ray  
+  stg_point_int_t glob;
+  glob.x = (int32_t)(gpose.x*ppm);
+  glob.y = (int32_t)(gpose.y*ppm);
 		
-	// record our starting position
-	stg_point_int_t start = glob;
+  // record our starting position
+  stg_point_int_t start = glob;
 	
-	// and the x and y offsets of the ray
-	int32_t dx = (int32_t)(ppm*range * cos(gpose.a));
-	int32_t dy = (int32_t)(ppm*range * sin(gpose.a));
+  // and the x and y offsets of the ray
+  int32_t dx = (int32_t)(ppm*range * cos(gpose.a));
+  int32_t dy = (int32_t)(ppm*range * sin(gpose.a));
 	
-	//   if( finder->debug )
-	//     RecordRay( pose.x, 
-	// 	       pose.y, 
-	// 	       pose.x + range.max * cos(pose.a),
-	// 	       pose.y + range.max * sin(pose.a) );
+  //   if( finder->debug )
+  //     RecordRay( pose.x, 
+  // 	       pose.y, 
+  // 	       pose.x + range.max * cos(pose.a),
+  // 	       pose.y + range.max * sin(pose.a) );
 	
-	// fast integer line 3d algorithm adapted from Cohen's code from
-	// Graphics Gems IV
+  // fast integer line 3d algorithm adapted from Cohen's code from
+  // Graphics Gems IV
 
-	int sx = sgn(dx);   // sgn() is a fast macro
-	int sy = sgn(dy);  
-	int ax = abs(dx); 
-	int ay = abs(dy);  
-	int bx = 2*ax;	
-	int by = 2*ay;	
-	int exy = ay-ax; 
-	int n = ax+ay;
+  int sx = sgn(dx);   // sgn() is a fast macro
+  int sy = sgn(dy);  
+  int ax = abs(dx); 
+  int ay = abs(dy);  
+  int bx = 2*ax;	
+  int by = 2*ay;	
+  int exy = ay-ax; 
+  int n = ax+ay;
 	
-	//  printf( "Raytracing from (%d,%d) steps (%d,%d) %d\n",
-	//  x,y,  dx,dy, n );
+  //  printf( "Raytracing from (%d,%d) steps (%d,%d) %d\n",
+  //  x,y,  dx,dy, n );
 	
-	// superregion coords
-	stg_point_int_t lastsup = {INT_MAX, INT_MAX };
-	stg_point_int_t lastreg = {INT_MAX, INT_MAX };
+  // superregion coords
+  stg_point_int_t lastsup = {INT_MAX, INT_MAX };
+  stg_point_int_t lastreg = {INT_MAX, INT_MAX };
 	
-	SuperRegion* sr = NULL;
-	Region* r = NULL;
-	bool nonempty_region = false;
+  SuperRegion* sr = NULL;
+  Region* r = NULL;
+  bool nonempty_region = false;
 	
-	// superregion coords (must be updated every time x or y changes
-	// but only one variable changes at a time in the loop, so its 
-	// more efficient to compute at the end of the loop, when we know what's changed)
-	stg_point_int_t sup = SUPERREGION( glob );
+  // superregion coords (must be updated every time x or y changes
+  // but only one variable changes at a time in the loop, so its 
+  // more efficient to compute at the end of the loop, when we know what's changed)
+  stg_point_int_t sup = SUPERREGION( glob );
 
-	// find the region coords inside this superregion (again: only updated when x or y changes)
-	stg_point_int_t reg = REGION( glob );
+  // find the region coords inside this superregion (again: only updated when x or y changes)
+  stg_point_int_t reg = REGION( glob );
 	
-	// compute the pixel offset inside this region (again: only updated when x or y changes)
-	stg_point_int_t cell = CELL( glob );
+  // compute the pixel offset inside this region (again: only updated when x or y changes)
+  stg_point_int_t cell = CELL( glob );
 		
-	// fix a little issue where rays are not drawn long enough when
-	// drawing to the right or up
-	if( dx > 0 )
-	  n++;
-	else if( dy > 0 )
-	  n++;
+  // fix a little issue where rays are not drawn long enough when
+  // drawing to the right or up
+  if( dx > 0 )
+    n++;
+  else if( dy > 0 )
+    n++;
 	
-	if( abs(sup.x) > 20 )
-	  printf( "raytracing at [ %.2f %.2f %.2f %.2f ] GLOB( %d %d ) SUP( %d %d )\n",
-				 gpose.x,
-				 gpose.y,
-				 gpose.z,
-				 gpose.a,
-				 glob.x,
-				 glob.y,
-				 sup.x,
-				 sup.y );
+  if( abs(sup.x) > 20 )
+    printf( "raytracing at [ %.2f %.2f %.2f %.2f ] GLOB( %d %d ) SUP( %d %d )\n",
+	    gpose.x,
+	    gpose.y,
+	    gpose.z,
+	    gpose.a,
+	    glob.x,
+	    glob.y,
+	    sup.x,
+	    sup.y );
 
 
-	// find the starting superregion 
-	sr = GetSuperRegionCached( sup ); // possibly NULL, but unlikely
+  // find the starting superregion 
+  sr = GetSuperRegionCached( sup ); // possibly NULL, but unlikely
 
-	while ( n-- ) 
+  while ( n-- ) 
     {         	
-		//printf( "pixel [%d %d]\tS[ %d %d ]\t",
-		//	  x, y, sup.x, sup.y );
+      //printf( "pixel [%d %d]\tS[ %d %d ]\t",
+      //	  x, y, sup.x, sup.y );
 		
-		if( sr )
-		{	  
-			//  printf( "R[ %d %d ]\t", reg.x, reg.y );
+      if( sr )
+	{	  
+	  //  printf( "R[ %d %d ]\t", reg.x, reg.y );
 			
-			if( reg.x != lastreg.x || reg.y != lastreg.y )
-			{
-			  r = sr->GetRegion( reg.x, reg.y );
-				lastreg = reg;
-				nonempty_region = ( r && r->count );
-			}
+	  if( reg.x != lastreg.x || reg.y != lastreg.y )
+	    {
+	      r = sr->GetRegion( reg.x, reg.y );
+	      lastreg = reg;
+	      nonempty_region = ( r && r->count );
+	    }
 
-			if( nonempty_region )
-			{
-			  //printf( "C[ %d %d ]\t", cell.x, cell.y );
+	  if( nonempty_region )
+	    {
+	      //printf( "C[ %d %d ]\t", cell.x, cell.y );
 			  
-			  Cell* c = r->GetCell( cell.x, cell.y );
-			  assert(c);
+	      Cell* c = r->GetCell( cell.x, cell.y );
+	      assert(c);
 			  
-			  for( GSList* list = c->list;
-					 list; 
-					 list = list->next )      
-				 {	      	      
-					StgBlock* block = (StgBlock*)list->data;
-					assert( block );
+	      for( GSList* list = c->list;
+		   list; 
+		   list = list->next )      
+		{	      	      
+		  Block* block = (Block*)list->data;
+		  assert( block );
 					
-					//printf( "ENT %p mod %p z [%.2f %.2f] color %X\n",
-					//		ent,
-					//		ent->mod, 
-					//		ent->zbounds.min, 
-					//		ent->zbounds.max, 
-					//		ent->color );
+		  //printf( "ENT %p mod %p z [%.2f %.2f] color %X\n",
+		  //		ent,
+		  //		ent->mod, 
+		  //		ent->zbounds.min, 
+		  //		ent->zbounds.max, 
+		  //		ent->color );
 					
-					// skip if not in the right z range
-					if( ztest && 
-						 ( gpose.z < block->global_z.min || 
-							gpose.z > block->global_z.max ) )
- 				 {
-					//max( "failed ztest: ray at %.2f block at [%.2f %.2f]\n",
-					//	 pose.z, ent->zbounds.min, ent->zbounds.max );
-					continue; 
-				 }
+		  // skip if not in the right z range
+		  if( ztest && 
+		      ( gpose.z < block->global_z.min || 
+			gpose.z > block->global_z.max ) )
+		    {
+		      //max( "failed ztest: ray at %.2f block at [%.2f %.2f]\n",
+		      //	 pose.z, ent->zbounds.min, ent->zbounds.max );
+		      continue; 
+		    }
 				 
-				 //printf( "RT: mod %p testing mod %p at %d %d\n",
-				 //		mod, ent->mod, x, y );
-				 // printf( "RT: mod %p %s testing mod %p %s at %d %d\n",
-				 //		mod, mod->Token(), ent->mod, ent->mod->Token(), x, y );
+		  //printf( "RT: mod %p testing mod %p at %d %d\n",
+		  //		mod, ent->mod, x, y );
+		  // printf( "RT: mod %p %s testing mod %p %s at %d %d\n",
+		  //		mod, mod->Token(), ent->mod, ent->mod->Token(), x, y );
 				 
-					 // test the predicate we were passed
-					if( (*func)( block->mod, (StgModel*)mod, arg )) // TODO
-					 {
-						// a hit!
-						sample.color = block->GetColor();
-						sample.mod = block->mod;
-						sample.range = hypot( (glob.x-start.x)/ppm, (glob.y-start.y)/ppm );
-						return sample;
-					 }
-				  }
-			}
-		}      
+		  // test the predicate we were passed
+		  if( (*func)( block->mod, (Model*)mod, arg )) // TODO
+		    {
+		      // a hit!
+		      sample.color = block->GetColor();
+		      sample.mod = block->mod;
+		      sample.range = hypot( (glob.x-start.x)/ppm, (glob.y-start.y)/ppm );
+		      return sample;
+		    }
+		}
+	    }
+	}      
 		
-		//      printf( "\t step %d n %d   pixel [ %d, %d ] block [ %d %d ] index [ %d %d ] \n", 
-		//      //coarse [ %d %d ]\n",
-		//      count++, n, x, y, blockx, blocky, b_dx, b_dy );
+      //      printf( "\t step %d n %d   pixel [ %d, %d ] block [ %d %d ] index [ %d %d ] \n", 
+      //      //coarse [ %d %d ]\n",
+      //      count++, n, x, y, blockx, blocky, b_dx, b_dy );
 		
-		// increment our pixel in the correct direction
-		if( exy < 0 ) // we're iterating along X
-		  {
-			 glob.x += sx; 
-			 exy += by;
+      // increment our pixel in the correct direction
+      if( exy < 0 ) // we're iterating along X
+	{
+	  glob.x += sx; 
+	  exy += by;
 			 
-			 sup.x = SUPERREGION( glob.x );
-			 if( sup.x != lastsup.x ) 
-				{
-				  sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
-				  lastsup = sup; // remember these coords
-				}
+	  sup.x = SUPERREGION( glob.x );
+	  if( sup.x != lastsup.x ) 
+	    {
+	      sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
+	      lastsup = sup; // remember these coords
+	    }
 			 
-			 // recompute current region and cell (we can skip these if
-			 // sr==NULL, but profiling suggests it's faster to do them
-			 // than add a conditional)
-			 reg.x = REGION( glob.x); 
-			 cell.x = CELL( glob.x ); 
-		  }
-		else  // we're iterating along Y
-		  {
-			 glob.y += sy; 
-			 exy -= bx; 
+	  // recompute current region and cell (we can skip these if
+	  // sr==NULL, but profiling suggests it's faster to do them
+	  // than add a conditional)
+	  reg.x = REGION( glob.x); 
+	  cell.x = CELL( glob.x ); 
+	}
+      else  // we're iterating along Y
+	{
+	  glob.y += sy; 
+	  exy -= bx; 
 			 
-			 sup.y = SUPERREGION( glob.y );
-			 if( sup.y != lastsup.y )
-				{
-				  sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
-				  lastsup = sup; // remember these coords
-				}
+	  sup.y = SUPERREGION( glob.y );
+	  if( sup.y != lastsup.y )
+	    {
+	      sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
+	      lastsup = sup; // remember these coords
+	    }
 			 
-			 // recompute current region and cell (we can skip these if
-			 // sr==NULL, but profiling suggests it's faster to do them
-			 // than add a conditional)
-			 reg.y = REGION( glob.y ); 			
-			 cell.y = CELL( glob.y );
-		  }
+	  // recompute current region and cell (we can skip these if
+	  // sr==NULL, but profiling suggests it's faster to do them
+	  // than add a conditional)
+	  reg.y = REGION( glob.y ); 			
+	  cell.y = CELL( glob.y );
+	}
     }
 	
-	// hit nothing
-	sample.mod = NULL;
-	return sample;
+  // hit nothing
+  sample.mod = NULL;
+  return sample;
 }
 
-static int _save_cb( StgModel* mod, void* dummy )
+static int _save_cb( Model* mod, void* dummy )
 {
-	mod->Save();
-	return 0;
+  mod->Save();
+  return 0;
 }
 
-bool StgWorld::Save( const char *filename )
+bool World::Save( const char *filename )
 {
-	ForEachDescendant( _save_cb, NULL );
+  ForEachDescendant( _save_cb, NULL );
 
-	return this->wf->Save( filename );
+  return this->wf->Save( filename );
 }
 
-static int _reload_cb(  StgModel* mod, void* dummy )
+static int _reload_cb(  Model* mod, void* dummy )
 {
-	mod->Load();
-	return 0;
+  mod->Load();
+  return 0;
 }
 
 // reload the current worldfile
-void StgWorld::Reload( void )
+void World::Reload( void )
 {
-	ForEachDescendant( _reload_cb, NULL );
+  ForEachDescendant( _reload_cb, NULL );
 }
 
-SuperRegion* StgWorld::AddSuperRegion( const stg_point_int_t& sup )
+SuperRegion* World::AddSuperRegion( const stg_point_int_t& sup )
 {
   //printf( "Creating super region [ %d %d ]\n", sup.x, sup.y );
-
   SuperRegion* sr = CreateSuperRegion( sup );
-  
+
   // the bounds of the world have changed
   stg_point3_t pt;
   pt.x = (sup.x << SRBITS) / ppm;
   pt.y = (sup.y << SRBITS) / ppm;
   pt.z = 0;
+  //printf( "lower left (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
   Extend( pt ); // lower left corner of the new superregion
   
   pt.x = ((sup.x+1) << SRBITS) / ppm;
   pt.y = ((sup.y+1) << SRBITS) / ppm;
   pt.z = 0;
+  //printf( "top right (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
   Extend( pt ); // top right corner of the new superregion
   
   return sr;
 }
 
 
-inline SuperRegion* StgWorld::GetSuperRegionCached( const stg_point_int_t& sup )
+inline SuperRegion* World::GetSuperRegionCached( const stg_point_int_t& sup )
 {
   // around 99% of the time the SR is the same as last
   // lookup - cache  gives a 4% overall speed up :)
   
   if( sr_cached && sr_cached->origin.x == sup.x && sr_cached->origin.y == sup.y )
-	 return sr_cached;
+    return sr_cached;
   //else
   return GetSuperRegion( sup);
 }
 
-inline SuperRegion* StgWorld::GetSuperRegion( const stg_point_int_t& sup )
+inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
 {
   //printf( "SUP[ %d %d ] ", sup.x, sup.y );
 
   // no, so we try to fetch it out of the hash table
   SuperRegion* sr = (SuperRegion*)
-	 g_hash_table_lookup( superregions, (gpointer)&sup );		  
+    g_hash_table_lookup( superregions, (gpointer)&sup );		  
   
   if( sr == NULL ) // no superregion exists! make a new one
-	 sr = AddSuperRegion( sup );
+    sr = AddSuperRegion( sup );
   
   // cache for next time around
   sr_cached = sr;
@@ -844,7 +845,7 @@ inline SuperRegion* StgWorld::GetSuperRegion( const stg_point_int_t& sup )
   return sr;
 }
 
-inline Cell* StgWorld::GetCell( const int32_t x, const int32_t y )
+inline Cell* World::GetCell( const int32_t x, const int32_t y )
 {
   stg_point_int_t glob;
   glob.x = x;
@@ -853,14 +854,14 @@ inline Cell* StgWorld::GetCell( const int32_t x, const int32_t y )
   //printf( "GC[ %d %d ] ", glob.x, glob.y );
 
   return( GetSuperRegionCached( SUPERREGION(glob) )
-			 ->GetRegion( REGION(x), REGION(y) )
-			 ->GetCell( CELL(x), CELL(y) )) ;
+	  ->GetRegion( REGION(x), REGION(y) )
+	  ->GetCell( CELL(x), CELL(y) )) ;
 }
 
-void StgWorld::ForEachCellInLine( stg_meters_t x1, stg_meters_t y1,
-											 stg_meters_t x2, stg_meters_t y2,
-											 stg_cell_callback_t cb,
-											 void* cb_arg )
+void World::ForEachCellInLine( stg_meters_t x1, stg_meters_t y1,
+			       stg_meters_t x2, stg_meters_t y2,
+			       stg_cell_callback_t cb,
+			       void* cb_arg )
 {  
   int32_t x = MetersToPixels( x1 ); // global pixel coords
   int32_t y = MetersToPixels( y1 );
@@ -883,36 +884,36 @@ void StgWorld::ForEachCellInLine( stg_meters_t x1, stg_meters_t y1,
   // fix a little issue where the edges are not drawn long enough
   // when drawing to the right or up
   if( (dx > 0) || ( dy > 0 ) )
-	 n++;
+    n++;
   
   while( n-- ) 
-	 {				
-		// find the cell at this location, then call the callback
-		// with the cell, block and user-defined argument
-		(*cb)( GetCell( x,y ), cb_arg );
+    {				
+      // find the cell at this location, then call the callback
+      // with the cell, block and user-defined argument
+      (*cb)( GetCell( x,y ), cb_arg );
 		
-		// cleverly skip to the next cell			 
-		if( exy < 0 ) 
-		  {
-			 x += sx;
-			 exy += by;
-		  }
-		else 
-		  {
-			 y += sy;
-			 exy -= bx; 
-		  }
-	 }
+      // cleverly skip to the next cell			 
+      if( exy < 0 ) 
+	{
+	  x += sx;
+	  exy += by;
+	}
+      else 
+	{
+	  y += sy;
+	  exy -= bx; 
+	}
+    }
 }
 
-void StgWorld::Extend( stg_point3_t pt )
+void World::Extend( stg_point3_t pt )
 {
-	extent.x.min = MIN( extent.x.min, pt.x);
-	extent.x.max = MAX( extent.x.max, pt.x );
-	extent.y.min = MIN( extent.y.min, pt.y );
-	extent.y.max = MAX( extent.y.max, pt.y );
-	extent.z.min = MIN( extent.z.min, pt.z );
-	extent.z.max = MAX( extent.z.max, pt.z );
+  extent.x.min = MIN( extent.x.min, pt.x);
+  extent.x.max = MAX( extent.x.max, pt.x );
+  extent.y.min = MIN( extent.y.min, pt.y );
+  extent.y.max = MAX( extent.y.max, pt.y );
+  extent.z.min = MIN( extent.z.min, pt.z );
+  extent.z.max = MAX( extent.z.max, pt.z );
 }
 
 

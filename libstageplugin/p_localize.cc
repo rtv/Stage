@@ -51,7 +51,7 @@ void InterfaceLocalize::Publish( void )
   player_localize_data_t loc;
   memset( &loc, 0, sizeof(loc));
 
-  stg_pose_t pose;
+  Pose pose;
   stg_model_get_pose( this->mod, &pose );
 
   // only 1 hypoth - it's the truth!

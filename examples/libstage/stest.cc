@@ -21,11 +21,11 @@ double turnrate = M_PI/3.0;
 
 typedef struct
 {
-  StgModelLaser* laser;
-  StgModelPosition* position;
-  StgModelRanger* ranger;
-  StgModelFiducial* fiducial;
-  StgModelBlobfinder* blobfinder;
+  ModelLaser* laser;
+  ModelPosition* position;
+  ModelRanger* ranger;
+  ModelFiducial* fiducial;
+  ModelBlobfinder* blobfinder;
 } robot_t;
 
 #define VSPEED 0.4 // meters per second
@@ -59,26 +59,26 @@ int main( int argc, char* argv[] )
     {
        char* base = "r";
        sprintf( namebuf, "%s%d", base, i );
-       robots[i].position = (StgModelPosition*)world.GetModel( namebuf );
+       robots[i].position = (ModelPosition*)world.GetModel( namebuf );
        assert(robots[i].position);
        robots[i].position->Subscribe();
        
-//         robots[i].laser = (StgModelLaser*)
+//         robots[i].laser = (ModelLaser*)
 //         robots[i].position->GetUnsubscribedModelOfType( "laser" );	 
 //         assert(robots[i].laser);
 //         robots[i].laser->Subscribe();
 
-//        robots[i].fiducial = (StgModelFiducial*)
+//        robots[i].fiducial = (ModelFiducial*)
 // 	 robots[i].position->GetUnsubscribedModelOfType( "fiducial" );	 
 //        assert(robots[i].fiducial);
 //        robots[i].fiducial->Subscribe();
        
-       robots[i].ranger = (StgModelRanger*)
+       robots[i].ranger = (ModelRanger*)
 	 robots[i].position->GetUnsubscribedModelOfType( "ranger" );
        assert(robots[i].ranger);
        robots[i].ranger->Subscribe();
 
-//        robots[i].blobfinder = (StgModelBlobfinder*)
+//        robots[i].blobfinder = (ModelBlobfinder*)
 // 	 robots[i].position->GetUnsubscribedModelOfType( "blobfinder" );
 //        assert(robots[i].blobfinder);
 //        robots[i].blobfinder->Subscribe();
@@ -96,7 +96,7 @@ int main( int argc, char* argv[] )
 	  
 	  //continue;
 
-	  StgModelRanger* rgr = robots[i].ranger;
+	  ModelRanger* rgr = robots[i].ranger;
  	  
 	  if( rgr->samples == NULL )
 	    continue;

@@ -64,7 +64,7 @@ extern "C" {
 			stg_model_add_callback( mod, &mod->load, wifi_load, NULL );
 
 			// sensible wifi defaults; it doesn't take up any physical space
-			stg_geom_t geom;
+			Geom geom;
 			geom.pose.x = 0.0;
 			geom.pose.y = 0.0;
 			geom.pose.a = 0.0;
@@ -97,11 +97,11 @@ extern "C" {
 			memcpy(&cfg, mod->cfg, sizeof(cfg));
 
 			// Retrieve current geometry
-			stg_geom_t geom;
+			Geom geom;
 			stg_model_get_geom( mod, &geom );
 
 			// get the sensor's pose in global coords
-			stg_pose_t pz;
+			Pose pz;
 			memcpy( &pz, &geom.pose, sizeof(pz) );
 			stg_model_local_to_global( mod, &pz );
 

@@ -179,9 +179,9 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
   {	
     if(hdr->size == 0)
     {
-      stg_geom_t geom = this->mod->GetGeom();
+      Geom geom = this->mod->GetGeom();
 
-      stg_pose_t pose = this->mod->GetPose();
+      Pose pose = this->mod->GetPose();
 
       // fill in the geometry data formatted player-like
       player_laser_geom_t pgeom;

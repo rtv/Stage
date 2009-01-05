@@ -49,9 +49,9 @@ public:
   }
   
   // add a block to a region cell specified in REGION coordinates
-  void AddBlock( StgModel* mod, 
+  void AddBlock( Model* mod, 
 					  stg_color_t col,
-					  stg_bounds_t zbounds,
+					  Bounds zbounds,
 					  int32_t x, int32_t y, 
 					  unsigned int* count2 )
   {
@@ -90,7 +90,7 @@ public:
 
 class Stg::SuperRegion
 {
-  friend class StgWorld;
+  friend class World;
  
 private:
   static const uint32_t SUPERREGIONWIDTH = 1<<SBITS;
@@ -124,9 +124,9 @@ public:
   } 
   
   // add a block to a cell specified in superregion coordinates
-  void AddBlock( StgModel* mod, 
+  void AddBlock( Model* mod, 
 					  stg_color_t col, 
-					  stg_bounds_t zbounds, 
+					  Bounds zbounds, 
 					  int32_t x, int32_t y )
   {
     GetRegion( x>>RBITS, y>>RBITS )

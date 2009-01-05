@@ -1,12 +1,12 @@
 
 #include "stage_internal.hh"
 
-//GPtrArray* StgBlock::global_verts = g_ptr_array_sized_new( 1024 );
+//GPtrArray* Block::global_verts = g_ptr_array_sized_new( 1024 );
 
 /** Create a new block. A model's body is a list of these
 	 blocks. The point data is copied, so pts can safely be freed
 	 after calling this.*/
-StgBlock::StgBlock( StgModel* mod,  
+Block::Block( Model* mod,  
 						  stg_point_t* pts, 
 						  size_t pt_count,
 						  stg_meters_t zmin,
@@ -35,7 +35,7 @@ StgBlock::StgBlock( StgModel* mod,
 }
 
 /** A from-file  constructor */
-StgBlock::StgBlock(  StgModel* mod,  
+Block::Block(  Model* mod,  
 							Worldfile* wf, 
 							int entity) 
   : mod( mod ),
@@ -58,7 +58,7 @@ StgBlock::StgBlock(  StgModel* mod,
 }
 
 
-StgBlock::~StgBlock()
+Block::~Block()
 { 
   if( mapped ) UnMap();
   
@@ -71,14 +71,14 @@ StgBlock::~StgBlock()
   //g_ptr_array_remove( global_verts, this );
 }
 
-stg_color_t StgBlock::GetColor()
+stg_color_t Block::GetColor()
 {
   return( inherit_color ? mod->color : color );
 }
 
 
 
-StgModel* StgBlock::TestCollision()
+Model* Block::TestCollision()
 {
   //printf( "model %s block %p test collision...\n", mod->Token(), this );
 
@@ -93,14 +93,14 @@ StgModel* StgBlock::TestCollision()
 		// for every rendered into that cell
 		for( GSList* it = cell->list; it; it=it->next )
 		  {
-			 StgBlock* testblock = (StgBlock*)it->data;
-			 StgModel* testmod = testblock->mod;
+			 Block* testblock = (Block*)it->data;
+			 Model* testmod = testblock->mod;
 			 
 			 //printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
 			 
 			 // if the tested model is an obstacle and it's not attached to this model
 			 if( (testmod != this->mod) &&  
-					testmod->obstacle_return && 
+					testmod->vis.obstacle_return && 
 					!mod->IsRelated( testmod ))
 				{
 				  //puts( "HIT");
@@ -114,13 +114,13 @@ StgModel* StgBlock::TestCollision()
 }
 
 
-void StgBlock::RemoveFromCellArray( GPtrArray* ptrarray )
+void Block::RemoveFromCellArray( GPtrArray* ptrarray )
 {  
   for( unsigned int i=0; i<ptrarray->len; i++ )	 
 	 ((Cell*)g_ptr_array_index(ptrarray, i))->RemoveBlock( this );  
 }
 
-void StgBlock::AddToCellArray( GPtrArray* ptrarray )
+void Block::AddToCellArray( GPtrArray* ptrarray )
 {  
   for( unsigned int i=0; i<ptrarray->len; i++ )	 
 	 ((Cell*)g_ptr_array_index(ptrarray, i))->AddBlock( this );  
@@ -134,12 +134,12 @@ void AppendCellToPtrArray( Cell* c, GPtrArray* a )
 }
 
 // used as a callback to gather an array of cells in a polygon
-void AddBlockToCell( Cell* c, StgBlock* block )
+void AddBlockToCell( Cell* c, Block* block )
 {
   c->AddBlock( block );
 }
 
-void StgBlock::Map()
+void Block::Map()
 {
   // TODO - if called often, we may not need to generate each time
   GenerateCandidateCells();
@@ -149,7 +149,7 @@ void StgBlock::Map()
   mapped = true;
 }
 
-void StgBlock::UnMap()
+void Block::UnMap()
 {
   RemoveFromCellArray( rendered_cells );
   
@@ -157,7 +157,7 @@ void StgBlock::UnMap()
   mapped = false;
 }
 
-void StgBlock::SwitchToTestedCells()
+void Block::SwitchToTestedCells()
 {
   RemoveFromCellArray( rendered_cells );
   AddToCellArray( candidate_cells );
@@ -170,15 +170,15 @@ void StgBlock::SwitchToTestedCells()
   mapped = true;
 }
 
-void StgBlock::GenerateCandidateCells()
+void Block::GenerateCandidateCells()
 
 {
-  stg_pose_t gpose = mod->GetGlobalPose();
+  Pose gpose = mod->GetGlobalPose();
 
   // add local offset
   gpose = pose_sum( gpose, mod->geom.pose );
 
-  stg_size_t bgsize = mod->blockgroup.GetSize();
+  Size bgsize = mod->blockgroup.GetSize();
   stg_point3_t bgoffset = mod->blockgroup.GetOffset();
 
   stg_point3_t scale;
@@ -190,12 +190,12 @@ void StgBlock::GenerateCandidateCells()
   g_ptr_array_set_size( candidate_cells, 0 );
   
   // compute the global location of the first point
-  stg_pose_t local( (pts[0].x - bgoffset.x) * scale.x ,
+  Pose local( (pts[0].x - bgoffset.x) * scale.x ,
 						  (pts[0].y - bgoffset.y) * scale.y, 
 						  -bgoffset.z, 
 						  0 );
 
-  stg_pose_t first_gpose, last_gpose;
+  Pose first_gpose, last_gpose;
   first_gpose = last_gpose = pose_sum( gpose, local );
   
   // store the block's absolute z bounds at this rendering
@@ -205,12 +205,12 @@ void StgBlock::GenerateCandidateCells()
   // now loop from the the second to the last
   for( unsigned int p=1; p<pt_count; p++ )
 	 {
-		stg_pose_t local( (pts[p].x - bgoffset.x) * scale.x ,
+		Pose local( (pts[p].x - bgoffset.x) * scale.x ,
 								(pts[p].y - bgoffset.y) * scale.y, 
 								-bgoffset.z, 
 								0 );		
 		
-		stg_pose_t gpose2 = pose_sum( gpose, local );
+		Pose gpose2 = pose_sum( gpose, local );
 		
 		// and render the shape of the block into the global cells			 
 		mod->world->ForEachCellInLine( last_gpose.x, last_gpose.y, 
@@ -230,7 +230,7 @@ void StgBlock::GenerateCandidateCells()
 }
 
 
-void StgBlock::DrawTop()
+void Block::DrawTop()
 {
   // draw the top of the block - a polygon at the highest vertical
   // extent
@@ -240,7 +240,7 @@ void StgBlock::DrawTop()
   glEnd();
 }       
 
-void StgBlock::DrawSides()
+void Block::DrawSides()
 {
   // construct a strip that wraps around the polygon  
   glBegin(GL_QUAD_STRIP);
@@ -255,7 +255,7 @@ void StgBlock::DrawSides()
   glEnd();
 }
 
-void StgBlock::DrawFootPrint()
+void Block::DrawFootPrint()
 {
   glBegin(GL_POLYGON);
   for( unsigned int p=0; p<pt_count; p++ )
@@ -263,7 +263,7 @@ void StgBlock::DrawFootPrint()
   glEnd();
 }
 
-void StgBlock::Draw( StgModel* mod )
+void Block::Draw( Model* mod )
 {
   // draw filled color polygons  
   stg_color_t col = inherit_color ? mod->color : color; 
@@ -291,7 +291,7 @@ void StgBlock::Draw( StgModel* mod )
   mod->PopColor();
 }
 
-void StgBlock::DrawSolid()
+void Block::DrawSolid()
 {
   DrawSides();
   DrawTop();
@@ -301,9 +301,9 @@ void StgBlock::DrawSolid()
 //#define DEBUG 1
 
 
-void StgBlock::Load( Worldfile* wf, int entity )
+void Block::Load( Worldfile* wf, int entity )
 {
-  //printf( "StgBlock::Load entity %d\n", entity );
+  //printf( "Block::Load entity %d\n", entity );
   
   if( pts )
 	 stg_points_destroy( pts );

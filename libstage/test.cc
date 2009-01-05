@@ -6,7 +6,7 @@ using namespace Stg;
 
 const double epsilon = 0.000001;
 
-void interact( StgWorldGui* wg )
+void interact( WorldGui* wg )
 {
   //for( int i=0; i<100; i++ )
   // wg->Cycle();
@@ -20,7 +20,7 @@ void test( const char* str, double a, double b )
 	 printf( "FAIL %s expected %.3f saw %.3f\n", str, a, b );  
 }
 
-void test( const char* str, stg_pose_t a, stg_pose_t b )
+void test( const char* str, Pose a, Pose b )
 {
   if( fabs(a.x-b.x) > epsilon )
 	 printf( "POSE FAIL %s expected pose.x %.3f saw pose.x %.3f\n", str, a.x, b.x );  
@@ -36,23 +36,23 @@ int main( int argc,  char* argv[] )
 {
   Init( &argc, &argv);
 
-  StgWorldGui world( 400,400, "Test" );
+  WorldGui world( 400,400, "Test" );
 
   world.SetRealTimeInterval( 10000 );
 
   world.Start();
 
 
-  stg_geom_t geom;
+  Geom geom;
   bzero( &geom, sizeof(geom) );
 
   if( 1 )
   {
-	 StgModel mod( &world, NULL );
+	 Model mod( &world, NULL );
 	 
 	 for( stg_meters_t x=0; x<5; x+=0.1 )	 
 		{
-		  stg_pose_t pose( x, 0, 0, 0 );
+		  Pose pose( x, 0, 0, 0 );
 		  mod.SetPose( pose );  		
 		  test( "translate X",  mod.GetPose(), pose );		
 		  interact( &world );
@@ -60,7 +60,7 @@ int main( int argc,  char* argv[] )
 	 
 	 for( stg_meters_t y=0; y<5; y+=0.1 )	 
 		{
-		  stg_pose_t pose( 0, y, 0, 0 );
+		  Pose pose( 0, y, 0, 0 );
 		  mod.SetPose( pose );  		
 		  test( "translate Y",  mod.GetPose(), pose );		
 		  interact( &world );
@@ -68,7 +68,7 @@ int main( int argc,  char* argv[] )
 	 
 	 for( stg_meters_t z=0; z<5; z+=0.1 )	 
 		{
-		stg_pose_t pose( 0, 0, z, 0 );
+		Pose pose( 0, 0, z, 0 );
 		mod.SetPose( pose );  		
 		test( "translate Z",  mod.GetPose(), pose );		
 		interact( &world );
@@ -76,7 +76,7 @@ int main( int argc,  char* argv[] )
 	 
 	 for( stg_radians_t a=0; a<dtor(360); a+=dtor(2) )	 
 	 {
-		stg_pose_t pose( 0, 0, 0, a );
+		Pose pose( 0, 0, 0, a );
 		mod.SetPose( pose );  		  
 		pose = mod.GetPose();		
 		test( "rotate",  mod.GetPose(), pose );
@@ -85,13 +85,13 @@ int main( int argc,  char* argv[] )
 
   for( stg_radians_t a=0; a<dtor(360); a+=dtor(2) )	 
 	 {
-		stg_pose_t pose( cos(a), sin(a), 0, 0 );
+		Pose pose( cos(a), sin(a), 0, 0 );
 		mod.SetPose( pose );  		
 		test( "translate X&Y",  mod.GetPose(), pose );		
 		interact( &world );
 	 }
 
-  mod.SetPose( stg_pose_t( 0,0,0,0 ));  		
+  mod.SetPose( Pose( 0,0,0,0 ));  		
 
   for( stg_meters_t x=0.01; x<5; x+=0.1 )	 
 	 {
@@ -133,18 +133,18 @@ int main( int argc,  char* argv[] )
   
 
  #define POP 10
-  stg_velocity_t v( 0.0,0.0,0.0,0.0 );
+  Velocity v( 0.0,0.0,0.0,0.0 );
 		  
-  StgModel* m[POP]; 
+  Model* m[POP]; 
   for( int i=0; i<POP; i++ )
 	 {
-		m[i] = new StgModelLaser( &world, NULL );
+		m[i] = new ModelLaser( &world, NULL );
 
 		//m[i]->Say( "Hello" );
 		m[i]->Subscribe();
 		//m[i]->SetGeom( geom );
 		
-		//m[i]->SetPose( stg_pose_t::Random( -5,5, -5,5 ) );		
+		//m[i]->SetPose( Pose::Random( -5,5, -5,5 ) );		
 		m[i]->PlaceInFreeSpace( 0, 10, 0, 10 );
 		m[i]->SetColor( lrand48() | 0xFF000000 );
 
@@ -157,12 +157,12 @@ int main( int argc,  char* argv[] )
 	 }
 
 
- //  stg_pose_t o = { 1, 2, 0, 0 };
-//   stg_pose_t p = {0,0,0,0};
+ //  Pose o = { 1, 2, 0, 0 };
+//   Pose p = {0,0,0,0};
 
 //   m[0]->SetPose( o );
 
-//   stg_pose_t q = m[0]->LocalToGlobal( p );
+//   Pose q = m[0]->LocalToGlobal( p );
 
 //   stg_print_pose( &o );
 //   stg_print_pose( &q );
@@ -180,7 +180,7 @@ int main( int argc,  char* argv[] )
 
 //   for( int i=0; i<POP; i++ )
 // 	 {
-// 		StgModel* top = new StgModel( &world, m[i] );
+// 		Model* top = new Model( &world, m[i] );
 // 		top->SetGeom( geom );
 // 		//top->SetPose( new_pose( 0,0,0,0 ) );
 // 		//m[i]->SetPose( sgtg_pose_t::Random( -10,10, -10,10 ) );		
@@ -196,7 +196,7 @@ int main( int argc,  char* argv[] )
 //   		//m[i]->SetColor( 0xFF00FF00 );
 
 
-//  		stg_velocity_t v = {0,0,0,0.1};
+//  		Velocity v = {0,0,0,0.1};
 		
 //  		m[i]->SetVelocity( v );
 								

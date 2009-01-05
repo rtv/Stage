@@ -59,7 +59,7 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
 	  this->mod->token );
   
   // create and render a map for this model
-  stg_geom_t geom;
+  Geom geom;
   stg_model_get_geom( this->mod, &geom );
   
   
@@ -81,7 +81,7 @@ int  InterfaceMap::HandleMsgReqInfo( MessageQueue* resp_queue,
   info.height = (uint32_t)(geom.size.y / mres);
   
   // origin of map center in global coords
-  stg_pose_t global;
+  Pose global;
   memcpy( &global, &geom.pose, sizeof(global)); 
   stg_model_local_to_global( this->mod, &global );
  
@@ -151,7 +151,7 @@ int InterfaceMap::HandleMsgReqData( MessageQueue* resp_queue,
 {
   // printf( "device %s received map data request\n", this->mod->token );
   
-  stg_geom_t geom;
+  Geom geom;
   stg_model_get_geom( this->mod, &geom );
   
   double mres = this->mod->map_resolution;

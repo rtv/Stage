@@ -25,7 +25,7 @@ static const unsigned int DEFAULT_BLOBFINDERRESOLUTION = 1;
 static const unsigned int DEFAULT_BLOBFINDERSCANWIDTH = 80;
 static const unsigned int DEFAULT_BLOBFINDERSCANHEIGHT = 60;
 
-Option StgModelBlobfinder::showBlobData( "Show Blobfinder", "show_blob", "", true );
+Option ModelBlobfinder::showBlobData( "Show Blobfinder", "show_blob", "", true );
 
 /**
   @ingroup model
@@ -39,7 +39,7 @@ Option StgModelBlobfinder::showBlobData( "Show Blobfinder", "show_blob", "", tru
   channel one, blue objects in channel two, etc. The color associated
   with each channel is configurable.
 
-API: Stg::StgModelBlobfinder
+API: Stg::ModelBlobfinder
 
 <h2>Worldfile properties</h2>
 
@@ -76,11 +76,11 @@ blobfinder
  */
 
 
-StgModelBlobfinder::StgModelBlobfinder( StgWorld* world, 
-													 StgModel* parent )
-  : StgModel( world, parent, MODEL_TYPE_BLOBFINDER )
+ModelBlobfinder::ModelBlobfinder( World* world, 
+													 Model* parent )
+  : Model( world, parent, MODEL_TYPE_BLOBFINDER )
 {
-	PRINT_DEBUG2( "Constructing StgModelBlobfinder %d (%s)\n", 
+	PRINT_DEBUG2( "Constructing ModelBlobfinder %d (%s)\n", 
 			id, typestr );
 
 	scan_width = DEFAULT_BLOBFINDERSCANWIDTH;
@@ -99,7 +99,7 @@ StgModelBlobfinder::StgModelBlobfinder( StgWorld* world,
 }
 
 
-StgModelBlobfinder::~StgModelBlobfinder( void )
+ModelBlobfinder::~ModelBlobfinder( void )
 {
 	if( blobs )
 		g_array_free( blobs, true );
@@ -108,8 +108,8 @@ StgModelBlobfinder::~StgModelBlobfinder( void )
 		g_array_free( colors, true );
 }
 
-static bool blob_match( StgModel* candidate, 
-								StgModel* finder,
+static bool blob_match( Model* candidate, 
+								Model* finder,
 								const void* dummy )
 { 
 	return( ! finder->IsRelated( candidate ));
@@ -121,13 +121,13 @@ static bool ColorMatchIgnoreAlpha( stg_color_t a, stg_color_t b )
 	return( (a & 0x00FFFFFF) == (b & 0x00FFFFFF ) );
 }
 
-void StgModelBlobfinder::StgModelBlobfinder::AddColor( stg_color_t col )
+void ModelBlobfinder::ModelBlobfinder::AddColor( stg_color_t col )
 {
 	g_array_append_val( colors, col );
 }
 
 /** Stop tracking blobs with this color */
-void StgModelBlobfinder::RemoveColor( stg_color_t col )
+void ModelBlobfinder::RemoveColor( stg_color_t col )
 {
 	for( unsigned int i=0; i<colors->len; i++ )
 		if( col ==  g_array_index( colors, stg_color_t, i ) )      
@@ -136,14 +136,14 @@ void StgModelBlobfinder::RemoveColor( stg_color_t col )
 
 /** Stop tracking all colors. Call this to clear the defaults, then
   add colors individually with AddColor(); */
-void StgModelBlobfinder::RemoveAllColors()
+void ModelBlobfinder::RemoveAllColors()
 {
 	g_array_set_size( colors, 0 );
 }
 
-void StgModelBlobfinder::Load( void )
+void ModelBlobfinder::Load( void )
 {  
-	StgModel::Load();
+	Model::Load();
 
 	Worldfile* wf = world->GetWorldFile();
 
@@ -173,9 +173,9 @@ void StgModelBlobfinder::Load( void )
 }
 
 
-void StgModelBlobfinder::Update( void )
+void ModelBlobfinder::Update( void )
 {     
-	StgModel::Update();
+	Model::Update();
 
 	// generate a scan for post-processing into a blob image
 	
@@ -270,9 +270,9 @@ void StgModelBlobfinder::Update( void )
 }
 
 
-void StgModelBlobfinder::Startup(  void )
+void ModelBlobfinder::Startup(  void )
 { 
-	StgModel::Startup();
+	Model::Startup();
 
 	PRINT_DEBUG( "blobfinder startup" );
 
@@ -280,7 +280,7 @@ void StgModelBlobfinder::Startup(  void )
 	SetWatts( DEFAULT_BLOBFINDERWATTS );
 }
 
-void StgModelBlobfinder::Shutdown( void )
+void ModelBlobfinder::Shutdown( void )
 { 
 
 	PRINT_DEBUG( "blobfinder shutdown" );
@@ -292,10 +292,10 @@ void StgModelBlobfinder::Shutdown( void )
 	if( blobs )
 		g_array_set_size( blobs, 0 );
 
-	StgModel::Shutdown();
+	Model::Shutdown();
 }
 
-void StgModelBlobfinder::DataVisualize( Camera* cam )
+void ModelBlobfinder::DataVisualize( Camera* cam )
 {
 	if ( !showBlobData )
 		return;
@@ -326,7 +326,7 @@ void StgModelBlobfinder::DataVisualize( Camera* cam )
 	glPushMatrix();
 
 	// return to global rotation frame
-	stg_pose_t gpose = GetGlobalPose();
+	Pose gpose = GetGlobalPose();
 	glRotatef( rtod(-gpose.a),0,0,1 );
 
 	// place the "screen" a little away from the robot

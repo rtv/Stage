@@ -123,7 +123,7 @@ int InterfacePtz::ProcessMessage( MessageQueue* resp_queue,
     {
       if(hdr->size == 0)
 	{
-	  stg_geom_t geom;
+	  Geom geom;
 	  stg_model_get_geom( this->mod,&geom );
 	  
 	  player_ptz_geom_t pgeom;

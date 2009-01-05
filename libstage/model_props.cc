@@ -3,19 +3,19 @@
 
 #define MATCH(A,B) (strcmp(A,B)== 0)
 
-void* StgModel::GetProperty( char* key )
+void* Model::GetProperty( char* key )
 {
 	// see if the key has the predefined-property prefix
 	if( strncmp( key, STG_MP_PREFIX, strlen(STG_MP_PREFIX)) == 0 )
 	{
-		if( MATCH( key, STG_MP_COLOR))            return (void*)&this->color;
-		if( MATCH( key, STG_MP_MASS))             return (void*)&this->mass;
-		if( MATCH( key, STG_MP_WATTS))            return (void*)&this->watts;
-		if( MATCH( key, STG_MP_FIDUCIAL_RETURN))  return (void*)&this->fiducial_return;
-		if( MATCH( key, STG_MP_LASER_RETURN))     return (void*)&this->laser_return;
-		if( MATCH( key, STG_MP_OBSTACLE_RETURN))  return (void*)&this->obstacle_return;
-		if( MATCH( key, STG_MP_RANGER_RETURN))    return (void*)&this->ranger_return;
-		if( MATCH( key, STG_MP_GRIPPER_RETURN))   return (void*)&this->gripper_return;
+		if( MATCH( key, STG_MP_COLOR))            return (void*)&color;
+		if( MATCH( key, STG_MP_MASS))             return (void*)&mass;
+		if( MATCH( key, STG_MP_WATTS))            return (void*)&watts;
+		if( MATCH( key, STG_MP_FIDUCIAL_RETURN))  return (void*)&vis.fiducial_return;
+		if( MATCH( key, STG_MP_LASER_RETURN))     return (void*)&vis.laser_return;
+		if( MATCH( key, STG_MP_OBSTACLE_RETURN))  return (void*)&vis.obstacle_return;
+		if( MATCH( key, STG_MP_RANGER_RETURN))    return (void*)&vis.ranger_return;
+		if( MATCH( key, STG_MP_GRIPPER_RETURN))   return (void*)&vis.gripper_return;
 
 		PRINT_WARN1( "Requested non-existent model core property \"%s\"", key );
 		return NULL;
@@ -25,7 +25,7 @@ void* StgModel::GetProperty( char* key )
 	return g_datalist_get_data( &this->props, key );
 }
 
-int StgModel::SetProperty( char* key,
+int Model::SetProperty( char* key,
 		void* data )
 {
 	// see if the key has the predefined-property prefix
@@ -84,7 +84,7 @@ int StgModel::SetProperty( char* key,
 }
 
 
-void StgModel::UnsetProperty( char* key )
+void Model::UnsetProperty( char* key )
 {
 	if( strncmp( key, STG_MP_PREFIX, strlen(STG_MP_PREFIX)) == 0 )
 		PRINT_WARN1( "Attempt to unset a model core property \"%s\" has no effect", key );

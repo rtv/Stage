@@ -138,10 +138,10 @@ int InterfaceGripper::ProcessMessage(MessageQueue* resp_queue,
     {
       // TODO: get pose in top-level model's CS instead.
       
-      stg_geom_t geom;
+      Geom geom;
       stg_model_get_geom( this->mod, &geom );
       
-      stg_pose_t pose;
+      Pose pose;
       stg_model_get_pose( this->mod, &pose);
       
       player_gripper_geom_t pgeom;

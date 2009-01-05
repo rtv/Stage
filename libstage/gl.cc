@@ -9,12 +9,12 @@ void Stg::gl_coord_shift( double x, double y, double z, double a  )
 }
 
 // transform the current coordinate frame by the given pose
-void Stg::gl_pose_shift( const stg_pose_t &pose )
+void Stg::gl_pose_shift( const Pose &pose )
 {
 	gl_coord_shift( pose.x, pose.y, pose.z, pose.a );
 }
 
-void Stg::gl_pose_inverse_shift( const stg_pose_t &pose )
+void Stg::gl_pose_inverse_shift( const Pose &pose )
 {
   gl_coord_shift( 0,0,0, -pose.a );
   gl_coord_shift( -pose.x, -pose.y, -pose.z, 0 );

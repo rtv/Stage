@@ -12,7 +12,7 @@ Waypoint::Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_
 
 Waypoint::Waypoint()
 { 
-  pose = stg_pose_t( 0,0,0,0 ); 
+  pose = Pose( 0,0,0,0 ); 
   color = 0; 
 };
 

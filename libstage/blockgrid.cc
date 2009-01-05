@@ -7,7 +7,7 @@ static const uint32_t NSIZE = 1<<NBITS;
 static const uint32_t NSQR = NSIZE*NSIZE;
 static const uint32_t MASK = NSIZE-1;
 
-StgBlockGrid::StgBlockGrid( uint32_t width, uint32_t height )
+BlockGrid::BlockGrid( uint32_t width, uint32_t height )
 {
 	this->width = width;
 	this->height = height;
@@ -16,7 +16,7 @@ StgBlockGrid::StgBlockGrid( uint32_t width, uint32_t height )
 	assert(this->cells);
 }    
 
-StgBlockGrid::~StgBlockGrid()
+BlockGrid::~BlockGrid()
 {
 	for( uint32_t x=0; x<width; x++ )
 		for( uint32_t y=0; y<height; y++ )
@@ -29,7 +29,7 @@ StgBlockGrid::~StgBlockGrid()
 	//delete[] map;
 }
 
-void StgBlockGrid::AddBlock( uint32_t x, uint32_t y, StgBlock* block )
+void BlockGrid::AddBlock( uint32_t x, uint32_t y, Block* block )
 {
 	//printf( "add block %u %u\n", x, y );
 
@@ -40,7 +40,7 @@ void StgBlockGrid::AddBlock( uint32_t x, uint32_t y, StgBlock* block )
 	}
 }
 
-void StgBlockGrid::RemoveBlock( uint32_t x, uint32_t y, StgBlock* block )
+void BlockGrid::RemoveBlock( uint32_t x, uint32_t y, Block* block )
 {
 	//printf( "remove block %u %u\n", x, y );
 
@@ -50,7 +50,7 @@ void StgBlockGrid::RemoveBlock( uint32_t x, uint32_t y, StgBlock* block )
 	}
 }
 
-GSList* StgBlockGrid::GetList( uint32_t x, uint32_t y )
+GSList* BlockGrid::GetList( uint32_t x, uint32_t y )
 {
 	if( x < width && y < height )
 		return cells[ x+y*width ];
@@ -58,14 +58,14 @@ GSList* StgBlockGrid::GetList( uint32_t x, uint32_t y )
 		return NULL;
 }
 
-void StgBlockGrid::GlobalRemoveBlock( StgBlock* block )
+void BlockGrid::GlobalRemoveBlock( Block* block )
 {
 	for( uint32_t x=0; x<width; x++ )
 		for( uint32_t y=0; y<height; y++ )
 			RemoveBlock(x,y,block );
 }
 
-void StgBlockGrid::Draw( bool drawall )
+void BlockGrid::Draw( bool drawall )
 {
 	for( uint32_t x=0; x<width; x++ )
 		for( uint32_t y=0; y<height; y++ )

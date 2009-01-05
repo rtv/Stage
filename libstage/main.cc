@@ -57,9 +57,9 @@ int main( int argc, char* argv[] )
 		if( optindex > 0 )
 		  {      
 			 const char* worldfilename = argv[optindex];
-			 StgWorld* world = ( usegui ? 
-										new StgWorldGui( 400, 300, worldfilename ) : 
-										new StgWorld( worldfilename ) );
+			 World* world = ( usegui ? 
+										new WorldGui( 400, 300, worldfilename ) : 
+										new World( worldfilename ) );
 			 world->Load( worldfilename );
 			 loaded_world_file = true;
 		  }
@@ -69,20 +69,20 @@ int main( int argc, char* argv[] )
   if( loaded_world_file == false ) 
 	 {
 		// TODO: special window/loading dialog for this case
-		new StgWorldGui( 400, 300 );
+		new WorldGui( 400, 300 );
 	 }
   
   if( usegui == true ) 
 	 {
 		//don't close the window once time has finished
 		while( true )
-		  StgWorld::UpdateAll();
+		  World::UpdateAll();
 	 } 
   else 
 	 {
 		//close program once time has completed
 		bool quit = false;
 		while( quit == false )
-		  quit = StgWorld::UpdateAll();
+		  quit = World::UpdateAll();
 	 }
 }

@@ -31,7 +31,7 @@ static bool blur = true;
 
 static bool init_done = false;
 
-void StgCanvas::TimerCallback( StgCanvas* c )
+void Canvas::TimerCallback( Canvas* c )
 {
   if( c->world->dirty )
 	 {
@@ -41,11 +41,11 @@ void StgCanvas::TimerCallback( StgCanvas* c )
 	 }
   
   Fl::repeat_timeout(((double)c->interval/1000),
-							(Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+							(Fl_Timeout_Handler)Canvas::TimerCallback, 
 							c);
 }
 
-StgCanvas::StgCanvas( StgWorldGui* world, 
+Canvas::Canvas( WorldGui* world, 
 							 int x, int y, 
 							 int width, int height) :
   Fl_Gl_Window( x, y, width, height ),
@@ -95,7 +95,7 @@ StgCanvas::StgCanvas( StgWorldGui* world,
   assert( can_do( FL_ACCUM ) );
 }
 
-void StgCanvas::InitGl()
+void Canvas::InitGl()
 {
   valid(1);
   FixViewport(w(), h());
@@ -163,12 +163,12 @@ void StgCanvas::InitGl()
 }
 
 
-StgCanvas::~StgCanvas()
+Canvas::~Canvas()
 { 
   // nothing to do
 }
 
-StgModel* StgCanvas::getModel( int x, int y )
+Model* Canvas::getModel( int x, int y )
 {
   // render all models in a unique color
   make_current(); // make sure the GL context is current
@@ -185,11 +185,11 @@ StgModel* StgCanvas::getModel( int x, int y )
 
   // render all top-level, draggable models in a color that is their
   // id 
-  for( GList* it= world->StgWorld::children; it; it=it->next )
+  for( GList* it= world->World::children; it; it=it->next )
     {
-      StgModel* mod = (StgModel*)it->data;
+      Model* mod = (Model*)it->data;
 		
-      if( mod->GuiMask() & (STG_MOVE_TRANS | STG_MOVE_ROT ))
+      if( mod->gui.mask & (STG_MOVE_TRANS | STG_MOVE_ROT ))
 		  {
 			 uint8_t rByte, gByte, bByte, aByte;
 			 uint32_t modelId = mod->id;
@@ -230,7 +230,7 @@ StgModel* StgCanvas::getModel( int x, int y )
   //	printf("Clicked rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", rByte, gByte, bByte, aByte);
   //	printf("-->model Id = 0x%X\n", modelId);
 	
-  StgModel* mod = StgModel::LookupId( modelId );
+  Model* mod = Model::LookupId( modelId );
 
   //printf("%p %s %d %x\n", mod, mod ? mod->Token() : "(none)", id, id );
 
@@ -245,14 +245,14 @@ StgModel* StgCanvas::getModel( int x, int y )
   return mod;
 }
 
-bool StgCanvas::selected( StgModel* mod ) {
+bool Canvas::selected( Model* mod ) {
   if( g_list_find( selected_models, mod ) )
 	 return true;
   else
 	 return false;
 }
 
-void StgCanvas::select( StgModel* mod ) {
+void Canvas::select( Model* mod ) {
   if( mod )
     {
 		last_selection = mod;
@@ -263,7 +263,7 @@ void StgCanvas::select( StgModel* mod ) {
     }
 }
 
-void StgCanvas::unSelect( StgModel* mod ) {
+void Canvas::unSelect( Model* mod ) {
   if( mod )
 	 {
 		if ( GList* link = g_list_find( selected_models, mod ) ) 
@@ -277,16 +277,16 @@ void StgCanvas::unSelect( StgModel* mod ) {
 	 }  
 }
 
-void StgCanvas::unSelectAll() { 
+void Canvas::unSelectAll() { 
   //	for( GList* it=selected_models; it; it=it->next )
-  //		((StgModel*)it->data)->Enable();
+  //		((Model*)it->data)->Enable();
 	
   g_list_free( selected_models );
   selected_models = NULL;
 }
 
 // convert from 2d window pixel to 3d world coordinates
-void StgCanvas::CanvasToWorld( int px, int py, 
+void Canvas::CanvasToWorld( int px, int py, 
 										 double *wx, double *wy, double* wz )
 {
   if( px <= 0 )
@@ -324,7 +324,7 @@ void StgCanvas::CanvasToWorld( int px, int py,
 	
 }
 
-int StgCanvas::handle(int event) 
+int Canvas::handle(int event) 
 {
   switch(event) 
 	 {
@@ -379,7 +379,7 @@ int StgCanvas::handle(int event)
 
 	 case FL_PUSH: // button pressed
 		{
-		  StgModel* mod = getModel( startx, starty );
+		  Model* mod = getModel( startx, starty );
 		  startx = Fl::event_x();
 		  starty = Fl::event_y();
 		  selectedModel = false;
@@ -443,7 +443,7 @@ int StgCanvas::handle(int event)
 				// move all selected models to the mouse pointer
 				for( GList* it = selected_models; it; it=it->next )
 				  {
-					 StgModel* mod = (StgModel*)it->data;
+					 Model* mod = (Model*)it->data;
 					 mod->AddToPose( x-sx, y-sy, 0, 0 );
 				  }
 			 }
@@ -463,7 +463,7 @@ int StgCanvas::handle(int event)
 			 // rotate all selected models
 			 for( GList* it = selected_models; it; it=it->next )
 				{
-				  StgModel* mod = (StgModel*)it->data;
+				  Model* mod = (Model*)it->data;
 				  mod->AddToPose( 0,0,0, 0.05*(dx+dy) );
 				}
 		  }
@@ -497,12 +497,12 @@ int StgCanvas::handle(int event)
 				{
 				  // // start the timer that causes regular redraws
 				  Fl::add_timeout( ((double)interval/1000), 
-										 (Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+										 (Fl_Timeout_Handler)Canvas::TimerCallback, 
 										 this);
 				}
 			 else
 				{ // remove the timeout
-				  Fl::remove_timeout( (Fl_Timeout_Handler)StgCanvas::TimerCallback );
+				  Fl::remove_timeout( (Fl_Timeout_Handler)Canvas::TimerCallback );
 				}
 
 			 redraw(); // in case something happened that will never be
@@ -579,41 +579,44 @@ int StgCanvas::handle(int event)
     } // end switch( event )
 }
 
-void StgCanvas::FixViewport(int W,int H) 
+void Canvas::FixViewport(int W,int H) 
 {
   glLoadIdentity();
   glViewport(0,0,W,H);
 }
 
-void StgCanvas::AddModel( StgModel*  mod  )
+void Canvas::AddModel( Model*  mod  )
 {
   models_sorted = g_list_append( models_sorted, mod );
 }
 
-void StgCanvas::DrawGlobalGrid()
+void Canvas::DrawGlobalGrid()
 {
+
   stg_bounds3d_t bounds = world->GetExtent();
 
-//   printf( "bounds [%.2f %.2f] [%.2f %.2f] [%.2f %.2f]\n",
-// 			 bounds.x.min, bounds.x.max,
-// 			 bounds.y.min, bounds.y.max,
-// 			 bounds.z.min, bounds.z.max );
-
+  /*   printf( "bounds [%.2f %.2f] [%.2f %.2f] [%.2f %.2f]\n",
+ 			 bounds.x.min, bounds.x.max,
+ 			 bounds.y.min, bounds.y.max,
+ 			 bounds.z.min, bounds.z.max );
+			 
+  */
+  
   char str[64];	
-   PushColor( 0.15, 0.15, 0.15, 1.0 ); // pale gray
-   for( double i = floor(bounds.x.min); i < bounds.x.max; i++)
-     {
-       snprintf( str, 16, "%d", (int)i );
-       gl_draw_string(  i, 0, 0.00, str );
-	  }
-	
-   for( double i = floor(bounds.y.min); i < bounds.y.max; i++)
-     {
-       snprintf( str, 16, "%d", (int)i );
-       gl_draw_string(  0, i, 0.00, str );
-     }
-   PopColor();
-	
+  PushColor( 0.15, 0.15, 0.15, 1.0 ); // pale gray
+  for( double i = floor(bounds.x.min); i < bounds.x.max; i++)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      gl_draw_string(  i, 0, 0.00, str );
+    }
+  
+  for( double i = floor(bounds.y.min); i < bounds.y.max; i++)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      gl_draw_string(  0, i, 0.00, str );
+    }
+  PopColor();
+  
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
   glEnable(GL_POLYGON_OFFSET_FILL);
@@ -642,7 +645,7 @@ void StgCanvas::DrawGlobalGrid()
 }
 
 //draw the floor without any grid ( for robot's perspective camera model )
-void StgCanvas::DrawFloor()
+void Canvas::DrawFloor()
 {
   stg_bounds3d_t bounds = world->GetExtent();
 	
@@ -661,12 +664,12 @@ void StgCanvas::DrawFloor()
   glEnd();
 }
 
-void StgCanvas::DrawBlocks() 
+void Canvas::DrawBlocks() 
 {
-  LISTMETHOD( models_sorted, StgModel*, DrawBlocksTree );
+  LISTMETHOD( models_sorted, Model*, DrawBlocksTree );
 }
 
-void StgCanvas::DrawBoundingBoxes() 
+void Canvas::DrawBoundingBoxes() 
 {
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   glLineWidth( 2.0 );
@@ -680,15 +683,15 @@ void StgCanvas::DrawBoundingBoxes()
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
 
-inline void StgCanvas::resetCamera()
+inline void Canvas::resetCamera()
 {
   float max_x = 0, max_y = 0, min_x = 0, min_y = 0;
 	
   //TODO take orrientation ( `a' ) and geom.pose offset into consideration
-  for( GList* it=world->StgWorld::children; it; it=it->next ) {
-	 StgModel* ptr = (StgModel*) it->data;
-	 stg_pose_t pose = ptr->GetPose();
-	 stg_geom_t geom = ptr->GetGeom();
+  for( GList* it=world->World::children; it; it=it->next ) {
+	 Model* ptr = (Model*) it->data;
+	 Pose pose = ptr->GetPose();
+	 Geom geom = ptr->GetGeom();
 		
 	 float tmp_min_x = pose.x - geom.size.x / 2.0;
 	 float tmp_max_x = pose.x + geom.size.x / 2.0;
@@ -713,10 +716,10 @@ inline void StgCanvas::resetCamera()
 }
 
 // used to sort a list of models by inverse distance from the x,y pose in [coords]
-gint compare_distance( StgModel* a, StgModel* b, double coords[2] )
+gint compare_distance( Model* a, Model* b, double coords[2] )
 {
-  stg_pose_t a_pose = a->GetGlobalPose();
-  stg_pose_t b_pose = b->GetGlobalPose();
+  Pose a_pose = a->GetGlobalPose();
+  Pose b_pose = b->GetGlobalPose();
   
   double a_dist = hypot( coords[1] - a_pose.y,
 								 coords[0] - a_pose.x );
@@ -733,7 +736,7 @@ gint compare_distance( StgModel* a, StgModel* b, double coords[2] )
   return 0; // must be the same
 }
 
-void StgCanvas::renderFrame()
+void Canvas::renderFrame()
 {
   //before drawing, order all models based on distance from camera
   float x = current_camera->x();
@@ -767,10 +770,10 @@ void StgCanvas::renderFrame()
 												 // out for Z. look into it.
 		
       if( showOccupancy )
-		  ((StgWorldGui*)world)->DrawTree( false );
+		  ((WorldGui*)world)->DrawTree( false );
 		
       if( showTree )
-		  ((StgWorldGui*)world)->DrawTree( true );
+		  ((WorldGui*)world)->DrawTree( true );
 		
       glPopMatrix();
     }
@@ -778,7 +781,7 @@ void StgCanvas::renderFrame()
   if( showFootprints )
 	 {
 		glDisable( GL_DEPTH_TEST );		
-		LISTMETHOD( models_sorted, StgModel*, DrawTrailFootprint );
+		LISTMETHOD( models_sorted, Model*, DrawTrailFootprint );
 		glEnable( GL_DEPTH_TEST );
 	 }
   
@@ -794,7 +797,7 @@ void StgCanvas::renderFrame()
 	 DrawBoundingBoxes();
   
   // TODO - finish this properly
-  //LISTMETHOD( models_sorted, StgModel*, DrawWaypoints );
+  //LISTMETHOD( models_sorted, Model*, DrawWaypoints );
   
 // MOTION BLUR
   if( 0  )//showBlur )
@@ -877,7 +880,7 @@ void StgCanvas::renderFrame()
 
 //   if( showTrailRise )
 //     {
-// 		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+// 		for( std::multimap< float, Model* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
 // 		  i->second->DrawTrailBlocks();
 // 		}
 //     }
@@ -885,7 +888,7 @@ void StgCanvas::renderFrame()
 //   if( showTrailArrows )
 //     {
 //       glEnable( GL_DEPTH_TEST );
-// 		for( std::multimap< float, StgModel* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
+// 		for( std::multimap< float, Model* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
 // 		  i->second->DrawTrailArrows();
 // 		}
 		
@@ -893,22 +896,22 @@ void StgCanvas::renderFrame()
 
 
   for( GList* it=selected_models; it; it=it->next )
-	 ((StgModel*)it->data)->DrawSelected();
+	 ((Model*)it->data)->DrawSelected();
 
   
   // useful debug - puts a point at the origin of each model
-  //for( GList* it = world->StgWorld::children; it; it=it->next ) 
-  // ((StgModel*)it->data)->DrawOriginTree();
+  //for( GList* it = world->World::children; it; it=it->next ) 
+  // ((Model*)it->data)->DrawOriginTree();
   
   // draw the model-specific visualizations
   if( showData ) {
 	 if ( ! visualizeAll ) {
-		for( GList* it = world->StgWorld::children; it; it=it->next ) 
-		  ((StgModel*)it->data)->DataVisualizeTree( current_camera );
+		for( GList* it = world->World::children; it; it=it->next ) 
+		  ((Model*)it->data)->DataVisualizeTree( current_camera );
 	 }
 	 else if ( selected_models ) {
 		for( GList* it = selected_models; it; it=it->next ) 
-		  ((StgModel*)it->data)->DataVisualizeTree( current_camera );
+		  ((Model*)it->data)->DataVisualizeTree( current_camera );
 	 }
 	 else if ( last_selection ) {
 		last_selection->DataVisualizeTree( current_camera );
@@ -916,13 +919,13 @@ void StgCanvas::renderFrame()
   }
    
   if( showGrid ) 
-	 LISTMETHOD( models_sorted, StgModel*, DrawGrid );
+	 LISTMETHOD( models_sorted, Model*, DrawGrid );
 		  
   if( showFlags ) 
-	 LISTMETHOD( models_sorted, StgModel*, DrawFlagList );
+	 LISTMETHOD( models_sorted, Model*, DrawFlagList );
 			
   if( showBlinken ) 
-	 LISTMETHOD( models_sorted, StgModel*, DrawBlinkenlights );
+	 LISTMETHOD( models_sorted, Model*, DrawBlinkenlights );
   
   if( showStatus ) 
 	 {
@@ -933,7 +936,7 @@ void StgCanvas::renderFrame()
 		if( camera.pitch() == 0 && !pCamOn )
 		  glTranslatef( 0, 0, 0.1 );
 	
-		LISTMETHODARG( models_sorted, StgModel*, DrawStatusTree, &camera );
+		LISTMETHODARG( models_sorted, Model*, DrawStatusTree, &camera );
 		
       glEnable( GL_DEPTH_TEST );
 		glPopMatrix();
@@ -1009,7 +1012,7 @@ void StgCanvas::renderFrame()
 }
 
 
-void StgCanvas::Screenshot()
+void Canvas::Screenshot()
 {
 
   int width = w();
@@ -1071,9 +1074,9 @@ void StgCanvas::Screenshot()
   printf( "Saved %s\n", filename );
 }
 
-void StgCanvas::perspectiveCb( Fl_Widget* w, void* p ) 
+void Canvas::perspectiveCb( Fl_Widget* w, void* p ) 
 {
-  StgCanvas* canvas = static_cast<StgCanvas*>( w );
+  Canvas* canvas = static_cast<Canvas*>( w );
   Option* opt = static_cast<Option*>( p ); // pCamOn
   if ( opt ) {
 	 // Perspective mode is on, change camera
@@ -1086,7 +1089,7 @@ void StgCanvas::perspectiveCb( Fl_Widget* w, void* p )
   canvas->invalidate();
 }
 
-void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
+void Canvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
 {
   showData.createMenuItem( menu, path );
   //  visualizeAll.createMenuItem( menu, path );
@@ -1111,7 +1114,7 @@ void StgCanvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
 }
 
 
-void StgCanvas::Load( Worldfile* wf, int sec )
+void Canvas::Load( Worldfile* wf, int sec )
 {
   this->wf = wf;
   camera.Load( wf, sec );
@@ -1143,13 +1146,13 @@ void StgCanvas::Load( Worldfile* wf, int sec )
   if( ! world->paused )
 	 // // start the timer that causes regular redraws
 	 Fl::add_timeout( ((double)interval/1000), 
-							(Fl_Timeout_Handler)StgCanvas::TimerCallback, 
+							(Fl_Timeout_Handler)Canvas::TimerCallback, 
 							this);
 
   invalidate(); // we probably changed something
 }
 
-void StgCanvas::Save( Worldfile* wf, int sec )
+void Canvas::Save( Worldfile* wf, int sec )
 {
   camera.Save( wf, sec );
   perspective_camera.Save( wf, sec );	
@@ -1175,7 +1178,7 @@ void StgCanvas::Save( Worldfile* wf, int sec )
 }
 
 
-void StgCanvas::draw()
+void Canvas::draw()
 {
 //   static unsigned long calls=0;
 //   printf( "Draw calls %lu\n", ++calls );
@@ -1209,7 +1212,7 @@ void StgCanvas::draw()
   //Follow the selected robot	
   if( showFollow  && last_selection ) 
 	 {
-		stg_pose_t gpose = last_selection->GetGlobalPose();
+		Pose gpose = last_selection->GetGlobalPose();
 		if( pCamOn == true )
 		  {
 			 perspective_camera.setPose( gpose.x, gpose.y, 0.2 );
@@ -1225,7 +1228,7 @@ void StgCanvas::draw()
   renderFrame();
 }
 
-void StgCanvas::resize(int X,int Y,int W,int H) 
+void Canvas::resize(int X,int Y,int W,int H) 
 {
   Fl_Gl_Window::resize(X,Y,W,H);
   FixViewport(W,H);

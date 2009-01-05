@@ -1,11 +1,11 @@
 #include "stage_internal.hh"
 
-int key_gen( StgModel* mod, void* address )
+int key_gen( Model* mod, void* address )
 {
 	return ((int*)address) - ((int*)mod);
 }
 
-void StgModel::AddCallback( void* address, 
+void Model::AddCallback( void* address, 
 		stg_model_callback_t cb, 
 		void* user )
 {
@@ -31,7 +31,7 @@ void StgModel::AddCallback( void* address,
 }
 
 
-int StgModel::RemoveCallback( void* member,
+int Model::RemoveCallback( void* member,
 		stg_model_callback_t callback )
 {
 	int key = key_gen( this, member );
@@ -77,7 +77,7 @@ int StgModel::RemoveCallback( void* member,
 }
 
 
-void StgModel::CallCallbacks(  void* address )
+void Model::CallCallbacks(  void* address )
 {
 	assert( address );
 

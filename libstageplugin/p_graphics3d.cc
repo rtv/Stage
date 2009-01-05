@@ -198,7 +198,7 @@ void InterfaceGraphics3d::Publish( void )
       glNewList( displaylist, GL_COMPILE );
 
       // move into the relevant model's coordinate frame
-      stg_pose_t gpose = mod->GetGlobalPose();
+      Pose gpose = mod->GetGlobalPose();
       
       glPushMatrix();
       glTranslatef( gpose.x, gpose.y, 0 ); 

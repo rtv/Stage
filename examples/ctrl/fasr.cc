@@ -29,37 +29,34 @@ double need[4][4] = {
 
 typedef struct
 {
-  StgModelPosition* pos;
-  StgModelLaser* laser;
-  StgModelRanger* ranger;
-  StgModelBlobfinder* blobfinder;
-
-  StgModel *source, *sink;
-
+  ModelPosition* pos;
+  ModelLaser* laser;
+  ModelRanger* ranger;
+  ModelBlobfinder* blobfinder;
+  Model *source, *sink;
   int avoidcount, randcount;
-
   int work_get, work_put;
 
 } robot_t;
 
-int LaserUpdate( StgModel* mod, robot_t* robot );
-int PositionUpdate( StgModel* mod, robot_t* robot );
+int LaserUpdate( Model* mod, robot_t* robot );
+int PositionUpdate( Model* mod, robot_t* robot );
 
 
 // Stage calls this when the model starts up
-extern "C" int Init( StgModel* mod )
+extern "C" int Init( Model* mod )
 {  
   robot_t* robot = new robot_t;
   robot->work_get = 0;
   robot->work_put = 0;
   
-  robot->pos = (StgModelPosition*)mod;
+  robot->pos = (ModelPosition*)mod;
 
-  robot->laser = (StgModelLaser*)mod->GetModel( "laser:0" );
+  robot->laser = (ModelLaser*)mod->GetModel( "laser:0" );
   assert( robot->laser );
   robot->laser->Subscribe();
 
-  robot->ranger = (StgModelRanger*)mod->GetModel( "ranger:0" );
+  robot->ranger = (ModelRanger*)mod->GetModel( "ranger:0" );
   assert( robot->ranger );
   //robot->ranger->Subscribe();
 
@@ -95,7 +92,7 @@ extern "C" int Init( StgModel* mod )
 }
 
 // inspect the laser data and decide what to do
-int LaserUpdate( StgModel* mod, robot_t* robot )
+int LaserUpdate( Model* mod, robot_t* robot )
 {
   // get the data
   uint32_t sample_count=0;
@@ -178,7 +175,7 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
       robot->avoidcount = 0;
       robot->pos->SetXSpeed( cruisespeed );	  
       
-      stg_pose_t pose = robot->pos->GetPose();
+      Pose pose = robot->pos->GetPose();
 
       int x = (pose.x + 8) / 4;
       int y = (pose.y + 8) / 4;
@@ -208,9 +205,9 @@ int LaserUpdate( StgModel* mod, robot_t* robot )
   return 0;
 }
 
-int PositionUpdate( StgModel* mod, robot_t* robot )
+int PositionUpdate( Model* mod, robot_t* robot )
 {  
-  stg_pose_t pose = robot->pos->GetPose();
+  Pose pose = robot->pos->GetPose();
   
   //printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
   //  pose.x, pose.y, pose.z, pose.a );

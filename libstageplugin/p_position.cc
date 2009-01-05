@@ -109,7 +109,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
   {
     if(hdr->size == 0)
     {
-      stg_geom_t geom = this->mod->GetGeom();
+      Geom geom = this->mod->GetGeom();
 
       // fill in the geometry data formatted player-like
       player_position2d_geom_t pgeom;
@@ -283,7 +283,7 @@ void InterfacePosition::Publish( void )
   //ppd.pos.pz = mod->est_pose.z;
   ppd.pos.pa = mod->est_pose.a;
 
-  stg_velocity_t v = mod->GetVelocity();
+  Velocity v = mod->GetVelocity();
 
   ppd.vel.px = v.x;
   ppd.vel.py = v.y;

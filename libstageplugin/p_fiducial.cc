@@ -108,8 +108,8 @@ int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
                            PLAYER_FIDUCIAL_REQ_GET_GEOM, 
                            this->addr))
     {
-      stg_geom_t geom = mod->GetGeom();
-      stg_pose_t pose = mod->GetPose();
+      Geom geom = mod->GetGeom();
+      Pose pose = mod->GetPose();
       
       // fill in the geometry data formatted player-like
       player_laser_geom_t pgeom;

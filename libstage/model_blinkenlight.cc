@@ -16,7 +16,7 @@
   @defgroup model_blinkenlight Blinkenlight model 
   Simulates a blinking light.
 
-API: Stg::StgModelBlinkenlight
+API: Stg::ModelBlinkenlight
 
 <h2>Worldfile properties</h2>
 
@@ -51,18 +51,18 @@ enabled 1
 #include "stage_internal.hh"
 #include "option.hh"
 
-Option StgModelBlinkenlight::showBlinkenData( "Show Blink", "show_blinken", "", true );
+Option ModelBlinkenlight::showBlinkenData( "Show Blink", "show_blinken", "", true );
 
 											
-StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world,
-														  StgModel* parent ) 
-  : StgModel( world, parent, MODEL_TYPE_BLINKENLIGHT ),
+ModelBlinkenlight::ModelBlinkenlight( World* world,
+														  Model* parent ) 
+  : Model( world, parent, MODEL_TYPE_BLINKENLIGHT ),
 	 dutycycle( 1.0 ),
 	 enabled( true ),
 	 period( 1000 ),
 	 on( true )
 {
-	PRINT_DEBUG2( "Constructing StgModelBlinkenlight %d (%s)\n", 
+	PRINT_DEBUG2( "Constructing ModelBlinkenlight %d (%s)\n", 
 			id, typestr );
 
 	// Set up sensible defaults
@@ -70,7 +70,7 @@ StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world,
 	this->SetColor( stg_lookup_color( "green" ) );
 
 
-	stg_geom_t geom;
+	Geom geom;
 	memset( &geom, 0, sizeof(geom)); // no size
 	geom.size.x = 0.02;
 	geom.size.y = 0.02;
@@ -83,13 +83,13 @@ StgModelBlinkenlight::StgModelBlinkenlight( StgWorld* world,
 	registerOption( &showBlinkenData );
 }
 
-StgModelBlinkenlight::~StgModelBlinkenlight()
+ModelBlinkenlight::~ModelBlinkenlight()
 {
 }
 
-void StgModelBlinkenlight::Load( void )
+void ModelBlinkenlight::Load( void )
 {
-  StgModel::Load();
+  Model::Load();
   
   this->dutycycle = wf->ReadFloat( wf_entity, "dutycycle", this->dutycycle );
   this->period = wf->ReadInt( wf_entity, "period", this->period );
@@ -97,21 +97,21 @@ void StgModelBlinkenlight::Load( void )
 }
 
 
-void StgModelBlinkenlight::Update( void )
+void ModelBlinkenlight::Update( void )
 {     
-	StgModel::Update();
+	Model::Update();
 
 	// invert
 	this->on = ! this->on;
 }
 
 
-void StgModelBlinkenlight::DataVisualize( Camera* cam )
+void ModelBlinkenlight::DataVisualize( Camera* cam )
 {
   // TODO XX
 	if( on && showBlinkenData )
 	{
-		//LISTMETHOD( this->blocks, StgBlock*, Draw );
+		//LISTMETHOD( this->blocks, Block*, Draw );
 	}
 }
 

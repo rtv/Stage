@@ -1,100 +1,94 @@
 /** @defgroup model
 
-The basic model simulates an object with basic properties; position,
-size, velocity, color, visibility to various sensors, etc. The basic
-model also has a body made up of a list of lines. Internally, the
-basic model is used as the base class for all other model types. You
-can use the basic model to simulate environmental objects.
+    The basic model simulates an object with basic properties; position,
+    size, velocity, color, visibility to various sensors, etc. The basic
+    model also has a body made up of a list of lines. Internally, the
+    basic model is used as the base class for all other model types. You
+    can use the basic model to simulate environmental objects.
 
-API: Stg::StgModel 
+    API: Stg::Model 
 
-<h2>Worldfile properties</h2>
+    <h2>Worldfile properties</h2>
 
-@par Summary and default values
+    @par Summary and default values
 
-@verbatim
-model
-(
-  pose [ 0.0 0.0 0.0 0.0 ]
-  size [ 0.1 0.1 0.1 ]
-  origin [ 0.0 0.0 0.0 0.0 ]
-  velocity [ 0.0 0.0 0.0 0.0 ]
+    @verbatim
+    model
+    (
+    pose [ 0.0 0.0 0.0 0.0 ]
+    size [ 0.1 0.1 0.1 ]
+    origin [ 0.0 0.0 0.0 0.0 ]
+    velocity [ 0.0 0.0 0.0 0.0 ]
 
-  color "red"
-  color_rgba [ 0.0 0.0 0.0 1.0 ]
-  bitmap ""
-  ctrl ""
+    color "red"
+    color_rgba [ 0.0 0.0 0.0 1.0 ]
+    bitmap ""
+    ctrl ""
 
-  # determine how the model appears in various sensors
-  fiducial_return 0
-  fiducial_key 0
-  obstacle_return 1
-  ranger_return 1
-  blob_return 1
-  laser_return LaserVisible
-  gripper_return 0
+    # determine how the model appears in various sensors
+    fiducial_return 0
+    fiducial_key 0
+    obstacle_return 1
+    ranger_return 1
+    blob_return 1
+    laser_return LaserVisible
+    gripper_return 0
 
-  # GUI properties
-  gui_nose 0
-  gui_grid 0
-  gui_outline 1
-  gui_movemask <0 if top level or (STG_MOVE_TRANS | STG_MOVE_ROT)>;
+    # GUI properties
+    gui_nose 0
+    gui_grid 0
+    gui_outline 1
+    gui_movemask <0 if top level or (STG_MOVE_TRANS | STG_MOVE_ROT)>;
 
-  blocks 0
-  block[0].points 0
-  block[0].point[0] [ 0.0 0.0 ]
-  block[0].z [ 0.0 1.0 ]
-  block[0].color "<color>"
+    boundary 0
+    mass 10.0
+    map_resolution 0.1
+    say ""
+    alwayson 0
+    )
+    @endverbatim
 
-  boundary 0
-  mass 10.0
-  map_resolution 0.1
-  say ""
-  alwayson 0
-)
-@endverbatim
-
-@par Details
+    @par Details
  
-- pose [ x:<float> y:<float> z:<float> heading:<float> ] \n
-  specify the pose of the model in its parent's coordinate system
-- size [ x:<float> y:<float> z:<float> ]\n
-  specify the size of the model in each dimension
-- origin [ x:<float> y:<float> z:<float> heading:<float> ]\n
-  specify the position of the object's center, relative to its pose
-- velocity [ x:<float> y:<float> z:<float> heading:<float> omega:<float> ]\n
-  Specify the initial velocity of the model. Note that if the model hits an obstacle, its velocity will be set to zero.
+    - pose [ x:<float> y:<float> z:<float> heading:<float> ] \n
+    specify the pose of the model in its parent's coordinate system
+    - size [ x:<float> y:<float> z:<float> ]\n
+    specify the size of the model in each dimension
+    - origin [ x:<float> y:<float> z:<float> heading:<float> ]\n
+    specify the position of the object's center, relative to its pose
+    - velocity [ x:<float> y:<float> z:<float> heading:<float> omega:<float> ]\n
+    Specify the initial velocity of the model. Note that if the model hits an obstacle, its velocity will be set to zero.
  
-- color <string>\n
-  specify the color of the object using a color name from the X11 database (rgb.txt)
-- bitmap filename:<string>\n
-  Draw the model by interpreting the lines in a bitmap (bmp, jpeg, gif, png supported). The file is opened and parsed into a set of lines.  The lines are scaled to fit inside the rectangle defined by the model's current size.
-- ctrl <string>\n
-  specify the controller module for the model
+    - color <string>\n
+    specify the color of the object using a color name from the X11 database (rgb.txt)
+    - bitmap filename:<string>\n
+    Draw the model by interpreting the lines in a bitmap (bmp, jpeg, gif, png supported). The file is opened and parsed into a set of lines.  The lines are scaled to fit inside the rectangle defined by the model's current size.
+    - ctrl <string>\n
+    specify the controller module for the model
  
-- fiducial_return fiducial_id:<int>\n
-  if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
-- fiducial_key <int>
-  models are only detected by fiducialfinders if the fiducial_key values of model and fiducialfinder match. This allows you to have several independent types of fiducial in the same environment, each type only showing up in fiducialfinders that are "tuned" for it.
-- obstacle_return <int>\n
-  if 1, this model can collide with other models that have this property set 
-- ranger_return <int>\n
-  if 1, this model can be detected by ranger sensors
-- blob_return <int>\n
-  if 1, this model can be detected in the blob_finder (depending on its color)
-- laser_return <int>\n
-  if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
-- gripper_return <int>\n
-  iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has a non-zero obstacle_return.
+    - fiducial_return fiducial_id:<int>\n
+    if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
+    - fiducial_key <int>
+    models are only detected by fiducialfinders if the fiducial_key values of model and fiducialfinder match. This allows you to have several independent types of fiducial in the same environment, each type only showing up in fiducialfinders that are "tuned" for it.
+    - obstacle_return <int>\n
+    if 1, this model can collide with other models that have this property set 
+    - ranger_return <int>\n
+    if 1, this model can be detected by ranger sensors
+    - blob_return <int>\n
+    if 1, this model can be detected in the blob_finder (depending on its color)
+    - laser_return <int>\n
+    if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
+    - gripper_return <int>\n
+    iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has a non-zero obstacle_return.
  
-- gui_nose <int>\n
-  if 1, draw a nose on the model showing its heading (positive X axis)
-- gui_grid <int>\n
-  if 1, draw a scaling grid over the model
-- gui_outline <int>\n
-  if 1, draw a bounding box around the model, indicating its size
-- gui_movemask <int>\n
-  define how the model can be moved by the mouse in the GUI window
+    - gui_nose <int>\n
+    if 1, draw a nose on the model showing its heading (positive X axis)
+    - gui_grid <int>\n
+    if 1, draw a scaling grid over the model
+    - gui_outline <int>\n
+    if 1, draw a bounding box around the model, indicating its size
+    - gui_movemask <int>\n
+    define how the model can be moved by the mouse in the GUI window
 
 */
 
@@ -124,76 +118,60 @@ static const stg_color_t BUBBLE_BORDER = 0xFF000000; // black
 static const stg_color_t BUBBLE_TEXT = 0xFF000000; // black
 
 // static members
-uint32_t StgModel::count = 0;
-GHashTable* StgModel::modelsbyid = g_hash_table_new( NULL, NULL );
+uint32_t Model::count = 0;
+GHashTable* Model::modelsbyid = g_hash_table_new( NULL, NULL );
 
 
 // constructor
-StgModel::StgModel( StgWorld* world,
-						  StgModel* parent,
-						  const stg_model_type_t type )
-  : StgAncestor(), 	 
-	 access_mutex(NULL),
-	 blinkenlights( g_ptr_array_new() ),
-	 blob_return(true),
-	 blockgroup(),
-	 blocks_dl(0),
-	 boundary(false),
-	 callbacks( g_hash_table_new( g_int_hash, g_int_equal ) ),
-	 color( 0xFFFF0000 ), // red
-	 data_fresh(false),
-	 disabled(false),
-	 fiducial_key(0),
-	 fiducial_return(0),
-	 flag_list(NULL),
-	 geom(),
-	 gripper_return(false),
-	 gui_grid(false),
-	 gui_mask( parent ? 0 : (STG_MOVE_TRANS | STG_MOVE_ROT) ),
-	 gui_nose(false),
-	 gui_outline(false),
-	 has_default_block( true ),
-	 hook_load(0),
-	 hook_save(0),
-	 hook_shutdown(0),
-	 hook_startup(0),
-	 hook_update(0),
-    id( StgModel::count++ ),
-	 initfunc(NULL),
-	 interval((stg_usec_t)1e4), // 10msec
-	 laser_return(LaserVisible),
-	 last_update(0),
-	 map_caches_are_invalid( true ),
-	 map_resolution(0.1),
-	 mass(0),
-	 obstacle_return(true),
-	 on_update_list( false ),
-	 on_velocity_list( false ),
-	 parent(parent),
-	 pose(),
-	 props(NULL),
-	 ranger_return(true),
-	 rebuild_displaylist(true),
-	 say_string(NULL),
-	 stall(false),	 
-	 subs(0),
-	 thread_safe( false ),
-	 trail( g_array_new( false, false, sizeof(stg_trail_item_t) )),
-	 type(type),	
-	 used(false),
-	 velocity(),
-	 watts(0),
-	 wf(NULL),
-	 wf_entity(0),
-	 world(world)
+Model::Model( World* world,
+	      Model* parent,
+	      const stg_model_type_t type )
+  : Ancestor(), 	 
+    access_mutex(NULL),
+    blinkenlights( g_ptr_array_new() ),
+    blockgroup(),
+    blocks_dl(0),
+    boundary(false),
+    callbacks( g_hash_table_new( g_int_hash, g_int_equal ) ),
+    color( 0xFFFF0000 ), // red
+    data_fresh(false),
+    disabled(false),
+    flag_list(NULL),
+    geom(),
+    has_default_block( true ),
+    id( Model::count++ ),
+    initfunc(NULL),
+    interval((stg_usec_t)1e4), // 10msec
+    last_update(0),
+    map_caches_are_invalid( true ),
+    map_resolution(0.1),
+    mass(0),
+    on_update_list( false ),
+    on_velocity_list( false ),
+    parent(parent),
+    pose(),
+    props(NULL),
+    rebuild_displaylist(true),
+    say_string(NULL),
+    stall(false),	 
+    subs(0),
+    thread_safe( false ),
+    trail( g_array_new( false, false, sizeof(stg_trail_item_t) )),
+    type(type),	
+    used(false),
+    velocity(),
+    watts(0),
+    wf(NULL),
+    wf_entity(0),
+    world(world)
 {
   assert( modelsbyid );
   assert( world );
   
   PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %d ",
-					 world->Token(), 
-					 parent ? parent->Token() : "(null)",
-					 type );
+		world->Token(), 
+		parent ? parent->Token() : "(null)",
+		type );
   
   g_hash_table_insert( modelsbyid, (void*)id, this );
   
@@ -202,8 +180,12 @@ StgModel::StgModel( StgWorld* world,
   if ( parent ) 
     parent->AddChild( this );
   else
-    world->AddChild( this );
-  
+    {
+      world->AddChild( this );
+      // top level models are draggable in the GUI
+      gui.mask = (STG_MOVE_TRANS | STG_MOVE_ROT);
+    }
+
   world->AddModel( this );
   
   g_datalist_init( &this->props );
@@ -211,11 +193,10 @@ StgModel::StgModel( StgWorld* world,
   // now we can add the basic square shape
   AddBlockRect( -0.5, -0.5, 1.0, 1.0, 1.0 );
 
-  PRINT_DEBUG2( "finished model %s @ %p", 
-					 this->token, this );
+  PRINT_DEBUG2( "finished model %s @ %p", this->token, this );
 }
 
-StgModel::~StgModel( void )
+Model::~Model( void )
 {
   UnMap(); // remove from the raytrace bitmap
 
@@ -231,21 +212,21 @@ StgModel::~StgModel( void )
 	
   g_datalist_clear( &props );
 
-  g_hash_table_remove( StgModel::modelsbyid, (void*)id );
+  g_hash_table_remove( Model::modelsbyid, (void*)id );
 
   world->RemoveModel( this );
 }
 
-void StgModel::StartUpdating()
+void Model::StartUpdating()
 {
   if( ! on_update_list )
-	 {
-		on_update_list = true;
-		world->StartUpdatingModel( this );
-	 }
+    {
+      on_update_list = true;
+      world->StartUpdatingModel( this );
+    }
 }
 
-void StgModel::StopUpdating()
+void Model::StopUpdating()
 {
   on_update_list = false;
   world->StopUpdatingModel( this );
@@ -254,7 +235,7 @@ void StgModel::StopUpdating()
 // this should be called after all models have loaded from the
 // worldfile - it's a chance to do any setup now that all models are
 // in existence
-void StgModel::Init()
+void Model::Init()
 {
   // init is called after the model is loaded
   blockgroup.CalcSize();
@@ -267,44 +248,44 @@ void StgModel::Init()
     Subscribe();
 }  
 
-void StgModel::InitRecursive()
+void Model::InitRecursive()
 {
   // init children first
-  LISTMETHOD( children, StgModel*, InitRecursive );
+  LISTMETHOD( children, Model*, InitRecursive );
   Init();
 }  
 
-void StgModel::AddFlag( StgFlag* flag )
+void Model::AddFlag( Flag* flag )
 {
   if( flag )
     flag_list = g_list_append( this->flag_list, flag );
 }
 
-void StgModel::RemoveFlag( StgFlag* flag )
+void Model::RemoveFlag( Flag* flag )
 {
   if( flag )
     flag_list = g_list_remove( this->flag_list, flag );
 }
 
-void StgModel::PushFlag( StgFlag* flag )
+void Model::PushFlag( Flag* flag )
 {
   if( flag )
     flag_list = g_list_prepend( flag_list, flag);
 }
 
-StgFlag* StgModel::PopFlag()
+Flag* Model::PopFlag()
 {
   if( flag_list == NULL )
     return NULL;
 
-  StgFlag* flag = (StgFlag*)flag_list->data;
+  Flag* flag = (Flag*)flag_list->data;
   flag_list = g_list_remove( flag_list, flag );
 
   return flag;
 }
 
 
-void StgModel::ClearBlocks( void )
+void Model::ClearBlocks( void )
 {
   UnMap();
   blockgroup.Clear();
@@ -314,23 +295,23 @@ void StgModel::ClearBlocks( void )
   NeedRedraw();
 }
 
-void StgModel::LoadBlock( Worldfile* wf, int entity )
+void Model::LoadBlock( Worldfile* wf, int entity )
 {
   if( has_default_block )
-	 {
-		blockgroup.Clear(); 
-		has_default_block = false;
-	 }
+    {
+      blockgroup.Clear(); 
+      has_default_block = false;
+    }
   
   blockgroup.LoadBlock( this, wf, entity );  
 }
 
 
-void StgModel::AddBlockRect( stg_meters_t x, 
-									  stg_meters_t y, 
-									  stg_meters_t dx, 
-									  stg_meters_t dy,
-									  stg_meters_t dz )
+void Model::AddBlockRect( stg_meters_t x, 
+			  stg_meters_t y, 
+			  stg_meters_t dx, 
+			  stg_meters_t dy,
+			  stg_meters_t dz )
 {  
   UnMap();
 
@@ -344,69 +325,69 @@ void StgModel::AddBlockRect( stg_meters_t x,
   pts[3].x = x;
   pts[3].y = y + dy;
   
-  blockgroup.AppendBlock( new StgBlock( this,
-													 pts, 4, 
-													 0, dz, 
-													 color,
-													 true ) );
+  blockgroup.AppendBlock( new Block( this,
+				     pts, 4, 
+				     0, dz, 
+				     color,
+				     true ) );
 }
 
 
-stg_raytrace_result_t StgModel::Raytrace( const stg_pose_t &pose,
-														const stg_meters_t range, 
-														const stg_ray_test_func_t func,
-														const void* arg,
-														const bool ztest )
+stg_raytrace_result_t Model::Raytrace( const Pose &pose,
+				       const stg_meters_t range, 
+				       const stg_ray_test_func_t func,
+				       const void* arg,
+				       const bool ztest )
 {
   return world->Raytrace( LocalToGlobal(pose),
-								  range,
-								  func,
-								  this,
-								  arg,
-								  ztest );
+			  range,
+			  func,
+			  this,
+			  arg,
+			  ztest );
 }
 
-stg_raytrace_result_t StgModel::Raytrace( const stg_radians_t bearing,
-														const stg_meters_t range, 
-														const stg_ray_test_func_t func,
-														const void* arg,
-														const bool ztest )
+stg_raytrace_result_t Model::Raytrace( const stg_radians_t bearing,
+				       const stg_meters_t range, 
+				       const stg_ray_test_func_t func,
+				       const void* arg,
+				       const bool ztest )
 {
-  stg_pose_t raystart;
+  Pose raystart;
   bzero( &raystart, sizeof(raystart));
   raystart.a = bearing;
 
   return world->Raytrace( LocalToGlobal(raystart),
-								  range,
-								  func,
-								  this,
-								  arg,
-								  ztest );
+			  range,
+			  func,
+			  this,
+			  arg,
+			  ztest );
 }
 
 
-void StgModel::Raytrace( const stg_radians_t bearing,
-								 const stg_meters_t range, 
-								 const stg_radians_t fov,
-								 const stg_ray_test_func_t func,
-								 const void* arg,
-								 stg_raytrace_result_t* samples,
-								 const uint32_t sample_count,
-								 const bool ztest )
+void Model::Raytrace( const stg_radians_t bearing,
+		      const stg_meters_t range, 
+		      const stg_radians_t fov,
+		      const stg_ray_test_func_t func,
+		      const void* arg,
+		      stg_raytrace_result_t* samples,
+		      const uint32_t sample_count,
+		      const bool ztest )
 {
-  stg_pose_t raystart;
+  Pose raystart;
   bzero( &raystart, sizeof(raystart));
   raystart.a = bearing;
 
   world->Raytrace( LocalToGlobal(raystart),
-						 range,		   
-						 fov,
-						 func,
-						 this,
-						 arg,
-						 samples,
-						 sample_count,
-						 ztest );
+		   range,		   
+		   fov,
+		   func,
+		   this,
+		   arg,
+		   samples,
+		   sample_count,
+		   ztest );
 }
 
 // utility for g_free()ing everything in a list
@@ -420,10 +401,10 @@ void list_gfree( GList* list )
 }
 
 // convert a global pose into the model's local coordinate system
-stg_pose_t StgModel::GlobalToLocal( stg_pose_t pose )
+Pose Model::GlobalToLocal( Pose pose )
 {
   // get model's global pose
-  stg_pose_t org = GetGlobalPose();
+  Pose org = GetGlobalPose();
   
   // compute global pose in local coords
   double sx =  (pose.x - org.x) * cos(org.a) + (pose.y - org.y) * sin(org.a);
@@ -440,7 +421,7 @@ stg_pose_t StgModel::GlobalToLocal( stg_pose_t pose )
 }
 
 
-void StgModel::Say( const char* str )
+void Model::Say( const char* str )
 {
   if( say_string )
     free( say_string );
@@ -448,29 +429,29 @@ void StgModel::Say( const char* str )
 }
 
 // returns true iff model [testmod] is an antecedent of this model
-bool StgModel::IsAntecedent( StgModel* testmod )
+bool Model::IsAntecedent( Model* testmod )
 {
   if( parent == NULL )
-	 return false;
+    return false;
   
   if( parent == testmod )
-	 return true;
+    return true;
   
   return parent->IsAntecedent( testmod );
 }
 
 // returns true iff model [testmod] is a descendent of this model
-bool StgModel::IsDescendent( StgModel* testmod )
+bool Model::IsDescendent( Model* testmod )
 {
   for( GList* it=this->children; it; it=it->next )
     {
-      StgModel* child = (StgModel*)it->data;
+      Model* child = (Model*)it->data;
 
-		if( child == testmod )
-		  return true;
+      if( child == testmod )
+	return true;
 		
-		if( child->IsDescendent( testmod ) )
-		  return true;
+      if( child->IsDescendent( testmod ) )
+	return true;
     }
 
   // neither mod nor a child of this matches testmod
@@ -478,20 +459,20 @@ bool StgModel::IsDescendent( StgModel* testmod )
 }
 
 // returns true iff model [mod1] and [mod2] are in the same model tree
-bool StgModel::IsRelated( StgModel* mod2 )
+bool Model::IsRelated( Model* mod2 )
 {
   return( (this == mod2) || IsAntecedent( mod2 ) || IsDescendent( mod2 ) );
 }
 
 // get the model's velocity in the global frame
-stg_velocity_t StgModel::GetGlobalVelocity()
+Velocity Model::GetGlobalVelocity()
 {
-  stg_pose_t gpose = GetGlobalPose();
+  Pose gpose = GetGlobalPose();
 
   double cosa = cos( gpose.a );
   double sina = sin( gpose.a );
 
-  stg_velocity_t gv;
+  Velocity gv;
   gv.x = velocity.x * cosa - velocity.y * sina;
   gv.y = velocity.x * sina + velocity.y * cosa;
   gv.a = velocity.a;
@@ -504,14 +485,14 @@ stg_velocity_t StgModel::GetGlobalVelocity()
 }
 
 // set the model's velocity in the global frame
-void StgModel::SetGlobalVelocity( stg_velocity_t gv )
+void Model::SetGlobalVelocity( Velocity gv )
 {
-  stg_pose_t gpose = GetGlobalPose();
+  Pose gpose = GetGlobalPose();
 
   double cosa = cos( gpose.a );
   double sina = sin( gpose.a );
 
-  stg_velocity_t lv;
+  Velocity lv;
   lv.x = gv.x * cosa + gv.y * sina;
   lv.y = -gv.x * sina + gv.y * cosa;
   lv.a = gv.a;
@@ -520,15 +501,15 @@ void StgModel::SetGlobalVelocity( stg_velocity_t gv )
 }
 
 // get the model's position in the global frame
-stg_pose_t StgModel::GetGlobalPose()
+Pose Model::GetGlobalPose()
 { 
   // if I'm a top level model, my global pose is my local pose
   if( parent == NULL )
-	 return pose;
+    return pose;
   
   // otherwise  
   
-  stg_pose_t global_pose = pose_sum( parent->GetGlobalPose(), pose );		
+  Pose global_pose = pose_sum( parent->GetGlobalPose(), pose );		
   
   // we are on top of our parent
   global_pose.z += parent->geom.size.z;
@@ -543,31 +524,31 @@ stg_pose_t StgModel::GetGlobalPose()
 }
 
 
-inline stg_pose_t StgModel::LocalToGlobal( stg_pose_t pose )
+inline Pose Model::LocalToGlobal( Pose pose )
 {  
   return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
 }
 
-void StgModel::MapWithChildren()
+void Model::MapWithChildren()
 {
   UnMap();
   Map();
 
   // recursive call for all the model's children
   for( GList* it=children; it; it=it->next )
-	 ((StgModel*)it->data)->MapWithChildren();
+    ((Model*)it->data)->MapWithChildren();
 }
 
-void StgModel::UnMapWithChildren()
+void Model::UnMapWithChildren()
 {
   UnMap();
 
   // recursive call for all the model's children
   for( GList* it=children; it; it=it->next )
-    ((StgModel*)it->data)->UnMapWithChildren();
+    ((Model*)it->data)->UnMapWithChildren();
 }
 
-void StgModel::Map()
+void Model::Map()
 {
   //PRINT_DEBUG1( "%s.Map()", token );
 
@@ -577,7 +558,7 @@ void StgModel::Map()
 } 
 
 
-void StgModel::Subscribe( void )
+void Model::Subscribe( void )
 {
   subs++;
   world->total_subs++;
@@ -589,7 +570,7 @@ void StgModel::Subscribe( void )
     this->Startup();
 }
 
-void StgModel::Unsubscribe( void )
+void Model::Unsubscribe( void )
 {
   subs--;
   world->total_subs--;
@@ -602,14 +583,14 @@ void StgModel::Unsubscribe( void )
 }
 
 
-void pose_invert( stg_pose_t* pose )
+void pose_invert( Pose* pose )
 {
   pose->x = -pose->x;
   pose->y = -pose->y;
   pose->a = pose->a;
 }
 
-void StgModel::Print( char* prefix )
+void Model::Print( char* prefix )
 {
   if( prefix )
     printf( "%s model ", prefix );
@@ -617,27 +598,27 @@ void StgModel::Print( char* prefix )
     printf( "Model ");
 
   printf( "%s:%s\n", 
-			 //			id, 
-			 world->Token(), 
-			 token );
+	  //			id, 
+	  world->Token(), 
+	  token );
 
   for( GList* it=children; it; it=it->next )
-    ((StgModel*)it->data)->Print( prefix );
+    ((Model*)it->data)->Print( prefix );
 }
 
-const char* StgModel::PrintWithPose()
+const char* Model::PrintWithPose()
 {
-  stg_pose_t gpose = GetGlobalPose();
+  Pose gpose = GetGlobalPose();
 
   static char txt[256];
   snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",  
-			  token, 
-			  gpose.x, gpose.y, gpose.z, gpose.a  );
+	   token, 
+	   gpose.x, gpose.y, gpose.z, gpose.a  );
 
   return txt;
 }
 
-void StgModel::Startup( void )
+void Model::Startup( void )
 {
   //printf( "Startup model %s\n", this->token );
 
@@ -647,49 +628,49 @@ void StgModel::Startup( void )
 
   StartUpdating();
 
-  CallCallbacks( &hook_startup );
+  CallCallbacks( &hooks.startup );
 }
 
-void StgModel::Shutdown( void )
+void Model::Shutdown( void )
 {
   //printf( "Shutdown model %s\n", this->token );
 
   StopUpdating();
 
-  CallCallbacks( &hook_shutdown );
+  CallCallbacks( &hooks.shutdown );
 }
 
-void StgModel::UpdateIfDue( void )
+void Model::UpdateIfDue( void )
 {
   if( UpdateDue() )
-	 Update();
+    Update();
 }
   
-bool StgModel::UpdateDue( void )
+bool Model::UpdateDue( void )
 {
   return( world->sim_time  >= (last_update + interval) );
 }
  
-void StgModel::Update( void )
+void Model::Update( void )
 {
   //   printf( "[%llu] %s update (%d subs)\n", 
   // 			 this->world->sim_time, this->token, this->subs );
 
-  CallCallbacks( &hook_update );
+  CallCallbacks( &hooks.update );
   last_update = world->sim_time;
 }
 
-void StgModel::DrawSelected()
+void Model::DrawSelected()
 {
   glPushMatrix();
   
   glTranslatef( pose.x, pose.y, pose.z+0.01 ); // tiny Z offset raises rect above grid
   
-  stg_pose_t gpose = GetGlobalPose();
+  Pose gpose = GetGlobalPose();
   
   char buf[64];
   snprintf( buf, 63, "%s [%.2f %.2f %.2f %.2f]", 
-				token, gpose.x, gpose.y, gpose.z, rtod(gpose.a) );
+	    token, gpose.x, gpose.y, gpose.z, rtod(gpose.a) );
   
   PushColor( 0,0,0,1 ); // text color black
   gl_draw_string( 0.5,0.5,0.5, buf );
@@ -718,7 +699,7 @@ void StgModel::DrawSelected()
 }
 
 
-void StgModel::DrawTrailFootprint()
+void Model::DrawTrailFootprint()
 {
   double r,g,b,a;
 
@@ -733,21 +714,21 @@ void StgModel::DrawTrailFootprint()
       stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
       PushColor( r, g, b, 0.1 );
 
-		blockgroup.DrawFootPrint( geom );
+      blockgroup.DrawFootPrint( geom );
 
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
       PushColor( r/2, g/2, b/2, 0.1 );
 
-		blockgroup.DrawFootPrint( geom );
+      blockgroup.DrawFootPrint( geom );
 
       PopColor();
       PopColor();
-	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
       glPopMatrix();
     }
 }
 
-void StgModel::DrawTrailBlocks()
+void Model::DrawTrailBlocks()
 {
   double timescale = 0.0000001;
 
@@ -755,19 +736,19 @@ void StgModel::DrawTrailBlocks()
     {
       stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
 
-      stg_pose_t pose;
+      Pose pose;
       memcpy( &pose, &checkpoint->pose, sizeof(pose));
       pose.z =  (world->sim_time - checkpoint->time) * timescale;
 
       PushLocalCoords();
       //blockgroup.Draw( this );
 
-		DrawBlocksTree();
+      DrawBlocksTree();
       PopCoords();
     }
 }
 
-void StgModel::DrawTrailArrows()
+void Model::DrawTrailArrows()
 {
   double r,g,b,a;
 
@@ -779,7 +760,7 @@ void StgModel::DrawTrailArrows()
     {
       stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
 
-      stg_pose_t pose;
+      Pose pose;
       memcpy( &pose, &checkpoint->pose, sizeof(pose));
       pose.z =  (world->sim_time - checkpoint->time) * timescale;
 
@@ -793,9 +774,9 @@ void StgModel::DrawTrailArrows()
       glPolygonOffset(1.0, 1.0);
 
       glBegin( GL_TRIANGLES );
-       glVertex3f( 0, -dy, 0);
-       glVertex3f( dx, 0, 0 );
-       glVertex3f( 0, +dy, 0 );
+      glVertex3f( 0, -dy, 0);
+      glVertex3f( dx, 0, 0 );
+      glVertex3f( 0, +dy, 0 );
       glEnd();
       glDisable(GL_POLYGON_OFFSET_FILL);
 
@@ -806,36 +787,36 @@ void StgModel::DrawTrailArrows()
 
       glDepthMask(GL_FALSE);
       glBegin( GL_TRIANGLES );
-       glVertex3f( 0, -dy, 0);
-       glVertex3f( dx, 0, 0 );
-       glVertex3f( 0, +dy, 0 );
+      glVertex3f( 0, -dy, 0);
+      glVertex3f( dx, 0, 0 );
+      glVertex3f( 0, +dy, 0 );
       glEnd();
       glDepthMask(GL_TRUE);
 
-	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
       PopColor();
       PopColor();
       PopCoords();
     }
 }
 
-void StgModel::DrawOriginTree()
+void Model::DrawOriginTree()
 {
   DrawPose( GetGlobalPose() );  
   for( GList* it=children; it; it=it->next )
-	 ((StgModel*)it->data)->DrawOriginTree();
+    ((Model*)it->data)->DrawOriginTree();
 }
  
 
-void StgModel::DrawBlocksTree( )
+void Model::DrawBlocksTree( )
 {
   PushLocalCoords();
-  LISTMETHOD( children, StgModel*, DrawBlocksTree );
+  LISTMETHOD( children, Model*, DrawBlocksTree );
   DrawBlocks();  
   PopCoords();
 }
   
-void StgModel::DrawPose( stg_pose_t pose )
+void Model::DrawPose( Pose pose )
 {
   PushColor( 0,0,0,1 );
   glPointSize( 4 );
@@ -847,20 +828,20 @@ void StgModel::DrawPose( stg_pose_t pose )
   PopColor();  
 }
 
-void StgModel::DrawBlocks( )
+void Model::DrawBlocks( )
 { 
   blockgroup.CallDisplayList( this );
 }
 
-void StgModel::DrawBoundingBoxTree()
+void Model::DrawBoundingBoxTree()
 {
   PushLocalCoords();
-  LISTMETHOD( children, StgModel*, DrawBoundingBoxTree );
+  LISTMETHOD( children, Model*, DrawBoundingBoxTree );
   DrawBoundingBox();
   PopCoords();
 }
 
-void StgModel::DrawBoundingBox()
+void Model::DrawBoundingBox()
 {
   gl_pose_shift( geom.pose );  
 
@@ -900,128 +881,128 @@ void StgModel::DrawBoundingBox()
 }
 
 // move into this model's local coordinate frame
-void StgModel::PushLocalCoords()
+void Model::PushLocalCoords()
 {
   glPushMatrix();  
   
   if( parent )
-	 glTranslatef( 0,0, parent->geom.size.z );
+    glTranslatef( 0,0, parent->geom.size.z );
   
   gl_pose_shift( pose );
 }
 
-void StgModel::PopCoords()
+void Model::PopCoords()
 {
   glPopMatrix();
 }
 
-void StgModel::DrawStatusTree( Camera* cam ) 
+void Model::DrawStatusTree( Camera* cam ) 
 {
   PushLocalCoords();
   DrawStatus( cam );
-  LISTMETHODARG( children, StgModel*, DrawStatusTree, cam );  
+  LISTMETHODARG( children, Model*, DrawStatusTree, cam );  
   PopCoords();
 }
 
-void StgModel::DrawStatus( Camera* cam ) 
+void Model::DrawStatus( Camera* cam ) 
 {
   if( say_string )	  
-	 {
-		float yaw, pitch;
-		pitch = - cam->pitch();
-		yaw = - cam->yaw();			
+    {
+      float yaw, pitch;
+      pitch = - cam->pitch();
+      yaw = - cam->yaw();			
+      
+      float robotAngle = -rtod(pose.a);
+      glPushMatrix();
 		
-		float robotAngle = -rtod(pose.a);
-		glPushMatrix();
+      fl_font( FL_HELVETICA, 12 );
+      float w = gl_width( this->say_string ); // scaled text width
+      float h = gl_height(); // scaled text height
 		
-		fl_font( FL_HELVETICA, 12 );
-		float w = gl_width( this->say_string ); // scaled text width
-		float h = gl_height(); // scaled text height
+      // move above the robot
+      glTranslatef( 0, 0, 0.5 );		
 		
-		// move above the robot
-		glTranslatef( 0, 0, 0.5 );		
+      // rotate to face screen
+      glRotatef( robotAngle - yaw, 0,0,1 );
+      glRotatef( -pitch, 1,0,0 );
 		
-		// rotate to face screen
-		glRotatef( robotAngle - yaw, 0,0,1 );
-		glRotatef( -pitch, 1,0,0 );
+      //get raster positition, add gl_width, then project back to world coords
+      glRasterPos3f( 0, 0, 0 );
+      GLfloat pos[ 4 ];
+      glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
 		
-		//get raster positition, add gl_width, then project back to world coords
-		glRasterPos3f( 0, 0, 0 );
-		GLfloat pos[ 4 ];
-		glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
-		
-		GLboolean valid;
-		glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
-		if( valid ) 
-		  {
-			 GLdouble wx, wy, wz;
-			 GLint viewport[4];
-			 glGetIntegerv(GL_VIEWPORT, viewport);
+      GLboolean valid;
+      glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
+      if( valid ) 
+	{
+	  GLdouble wx, wy, wz;
+	  GLint viewport[4];
+	  glGetIntegerv(GL_VIEWPORT, viewport);
 			 
-			 GLdouble modelview[16];
-			 glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+	  GLdouble modelview[16];
+	  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
 			 
-			 GLdouble projection[16];	
-			 glGetDoublev(GL_PROJECTION_MATRIX, projection);
+	  GLdouble projection[16];	
+	  glGetDoublev(GL_PROJECTION_MATRIX, projection);
 			 
-			//get width and height in world coords
-			 gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-			 w = wx;
-			 gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-			 h = wy;
+	  //get width and height in world coords
+	  gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+	  w = wx;
+	  gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+	  h = wy;
 			 
-			 // calculate speech bubble margin
-			 const float m = h/10;
+	  // calculate speech bubble margin
+	  const float m = h/10;
 			 
-			 // draw inside of bubble
-			 PushColor( BUBBLE_FILL );
-			 glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-			 glPolygonMode( GL_FRONT, GL_FILL );
-			 glEnable( GL_POLYGON_OFFSET_FILL );
-			 glPolygonOffset( 1.0, 1.0 );
-			 gl_draw_octagon( w, h, m );
-			 glDisable( GL_POLYGON_OFFSET_FILL );
-			 PopColor();
+	  // draw inside of bubble
+	  PushColor( BUBBLE_FILL );
+	  glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
+	  glPolygonMode( GL_FRONT, GL_FILL );
+	  glEnable( GL_POLYGON_OFFSET_FILL );
+	  glPolygonOffset( 1.0, 1.0 );
+	  gl_draw_octagon( w, h, m );
+	  glDisable( GL_POLYGON_OFFSET_FILL );
+	  PopColor();
 			 
-			 // draw outline of bubble
-			 PushColor( BUBBLE_BORDER );
-			 glLineWidth( 1 );
-			 glEnable( GL_LINE_SMOOTH );
-			 glPolygonMode( GL_FRONT, GL_LINE );
-			 gl_draw_octagon( w, h, m );
-			 glPopAttrib();
-			 PopColor();
+	  // draw outline of bubble
+	  PushColor( BUBBLE_BORDER );
+	  glLineWidth( 1 );
+	  glEnable( GL_LINE_SMOOTH );
+	  glPolygonMode( GL_FRONT, GL_LINE );
+	  gl_draw_octagon( w, h, m );
+	  glPopAttrib();
+	  PopColor();
 			 
-			 PushColor( BUBBLE_TEXT );
-			 // draw text inside the bubble
-			 gl_draw_string( 2.5*m, 2.5*m, 0, this->say_string );
-			 PopColor();			
-		  }
-		glPopMatrix();
-	 }
+	  PushColor( BUBBLE_TEXT );
+	  // draw text inside the bubble
+	  gl_draw_string( 2.5*m, 2.5*m, 0, this->say_string );
+	  PopColor();			
+	}
+      glPopMatrix();
+    }
   
   if( stall )
-	 {
-		DrawImage( TextureManager::getInstance()._stall_texture_id, cam, 0.85 );
-	 }
+    {
+      DrawImage( TextureManager::getInstance()._stall_texture_id, cam, 0.85 );
+    }
 }
 
-stg_meters_t StgModel::ModelHeight()
+stg_meters_t Model::ModelHeight()
 {	
-	stg_meters_t m_child = 0; //max size of any child
-	for( GList* it=this->children; it; it=it->next )
+  stg_meters_t m_child = 0; //max size of any child
+  for( GList* it=this->children; it; it=it->next )
     {
-		StgModel* child = (StgModel*)it->data;
-		stg_meters_t tmp_h = child->ModelHeight();
-		if( tmp_h > m_child )
-			m_child = tmp_h;
+      Model* child = (Model*)it->data;
+      stg_meters_t tmp_h = child->ModelHeight();
+      if( tmp_h > m_child )
+	m_child = tmp_h;
     }
 	
-	//height of model + max( child height )
-	return geom.size.z + m_child;
+  //height of model + max( child height )
+  return geom.size.z + m_child;
 }
 
-void StgModel::DrawImage( uint32_t texture_id, Camera* cam, float alpha )
+void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha )
 {
   float yaw, pitch;
   pitch = - cam->pitch();
@@ -1054,16 +1035,16 @@ void StgModel::DrawImage( uint32_t texture_id, Camera* cam, float alpha )
   glDisable(GL_TEXTURE_2D);
 }
 
-void StgModel::DrawFlagList( void )
+void Model::DrawFlagList( void )
 {	
   if( flag_list  == NULL )
-	 return;
+    return;
   
   PushLocalCoords();
   
   GLUquadric* quadric = gluNewQuadric();
   glTranslatef(0,0,1); // jump up
-  stg_pose_t gpose = GetGlobalPose();
+  Pose gpose = GetGlobalPose();
   glRotatef( 180 + rtod(-gpose.a),0,0,1 );
   
 
@@ -1071,30 +1052,30 @@ void StgModel::DrawFlagList( void )
   list = g_list_reverse(list);
   
   for( GList* item = list; item; item = item->next )
-	 {
+    {
 		
-		StgFlag* flag = (StgFlag*)item->data;
+      Flag* flag = (Flag*)item->data;
 		
-		glTranslatef( 0, 0, flag->size/2.0 );
+      glTranslatef( 0, 0, flag->size/2.0 );
 				
-		PushColor( flag->color );
+      PushColor( flag->color );
 		
-		gluQuadricDrawStyle( quadric, GLU_FILL );
-		gluSphere( quadric, flag->size/2.0, 4,2  );
+      gluQuadricDrawStyle( quadric, GLU_FILL );
+      gluSphere( quadric, flag->size/2.0, 4,2  );
 		
-		// draw the edges darker version of the same color
-		double r,g,b,a;
-		stg_color_unpack( flag->color, &r, &g, &b, &a );
-		PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+      // draw the edges darker version of the same color
+      double r,g,b,a;
+      stg_color_unpack( flag->color, &r, &g, &b, &a );
+      PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
 		
-		gluQuadricDrawStyle( quadric, GLU_LINE );
-		gluSphere( quadric, flag->size/2.0, 4,2 );
+      gluQuadricDrawStyle( quadric, GLU_LINE );
+      gluSphere( quadric, flag->size/2.0, 4,2 );
 		
-		PopColor();
-		PopColor();
+      PopColor();
+      PopColor();
 		
-		glTranslatef( 0, 0, flag->size/2.0 );
-	 }
+      glTranslatef( 0, 0, flag->size/2.0 );
+    }
   
   g_list_free( list );
   
@@ -1104,19 +1085,19 @@ void StgModel::DrawFlagList( void )
 }
 
 
-void StgModel::DrawBlinkenlights()
+void Model::DrawBlinkenlights()
 {
   PushLocalCoords();
 
   GLUquadric* quadric = gluNewQuadric();
   //glTranslatef(0,0,1); // jump up
-  //stg_pose_t gpose = GetGlobalPose();
+  //Pose gpose = GetGlobalPose();
   //glRotatef( 180 + rtod(-gpose.a),0,0,1 );
 
   for( unsigned int i=0; i<blinkenlights->len; i++ )
     {
       stg_blinkenlight_t* b = 
-		  (stg_blinkenlight_t*)g_ptr_array_index( blinkenlights, i );
+	(stg_blinkenlight_t*)g_ptr_array_index( blinkenlights, i );
       assert(b);
 
       glTranslatef( b->pose.x, b->pose.y, b->pose.z );
@@ -1124,9 +1105,9 @@ void StgModel::DrawBlinkenlights()
       PushColor( b->color );
 
       if( b->enabled )
-		  gluQuadricDrawStyle( quadric, GLU_FILL );
+	gluQuadricDrawStyle( quadric, GLU_FILL );
       else
-		  gluQuadricDrawStyle( quadric, GLU_LINE );
+	gluQuadricDrawStyle( quadric, GLU_LINE );
 
       gluSphere( quadric, b->size/2.0, 8,8  );
 
@@ -1138,7 +1119,7 @@ void StgModel::DrawBlinkenlights()
   PopCoords();
 }
 
-void StgModel::DrawPicker( void )
+void Model::DrawPicker( void )
 {
   //PRINT_DEBUG1( "Drawing %s", token );
   PushLocalCoords();
@@ -1147,30 +1128,30 @@ void StgModel::DrawPicker( void )
   blockgroup.DrawSolid( geom );
 
   // recursively draw the tree below this model 
-  LISTMETHOD( this->children, StgModel*, DrawPicker );
+  LISTMETHOD( this->children, Model*, DrawPicker );
 
   PopCoords();
 }
 
-void StgModel::DataVisualize( Camera* cam )
+void Model::DataVisualize( Camera* cam )
 {  
   // do nothing
 }
 
-void StgModel::DataVisualizeTree( Camera* cam )
+void Model::DataVisualizeTree( Camera* cam )
 {
   PushLocalCoords();
   DataVisualize( cam ); // virtual function overridden by most model types  
 
   // and draw the children
-  LISTMETHODARG( children, StgModel*, DataVisualizeTree, cam );
+  LISTMETHODARG( children, Model*, DataVisualizeTree, cam );
 
   PopCoords();
 }
 
-void StgModel::DrawGrid( void )
+void Model::DrawGrid( void )
 {
-  if ( gui_grid ) 
+  if ( gui.grid ) 
     {
       PushLocalCoords();
 		
@@ -1189,18 +1170,18 @@ void StgModel::DrawGrid( void )
     }
 }
 
-inline bool velocity_is_zero( stg_velocity_t& v )
+inline bool velocity_is_zero( Velocity& v )
 {
   return( !(v.x || v.y || v.z || v.a) );
 }
 
-void StgModel::SetVelocity( stg_velocity_t vel )
+void Model::SetVelocity( Velocity vel )
 {
-//   printf( "SetVelocity %.2f %.2f %.2f %.2f\n", 
-// 			 vel.x,
-// 			 vel.y,
-// 			 vel.z,
-// 			 vel.a );
+  //   printf( "SetVelocity %.2f %.2f %.2f %.2f\n", 
+  // 			 vel.x,
+  // 			 vel.y,
+  // 			 vel.z,
+  // 			 vel.a );
 
   assert( ! isnan(vel.x) );
   assert( ! isnan(vel.y) );
@@ -1210,60 +1191,60 @@ void StgModel::SetVelocity( stg_velocity_t vel )
   this->velocity = vel;
   
   if( on_velocity_list && velocity_is_zero( vel ) ) 	 
-	 {
-		world->StopUpdatingModelPose( this );
-		on_velocity_list = false;
-	 }
+    {
+      world->StopUpdatingModelPose( this );
+      on_velocity_list = false;
+    }
 
   if( (!on_velocity_list) && (!velocity_is_zero( vel )) ) 	 
-	 {
-		world->StartUpdatingModelPose( this );
-		on_velocity_list = true;
-	 }
+    {
+      world->StartUpdatingModelPose( this );
+      on_velocity_list = true;
+    }
 
   CallCallbacks( &this->velocity );
 }
 
-void StgModel::NeedRedraw( void )
+void Model::NeedRedraw( void )
 {
   this->rebuild_displaylist = true;
 
   if( parent )
     parent->NeedRedraw();
   else
-	 world->NeedRedraw();
+    world->NeedRedraw();
 }
 
-void StgModel::SetPose( stg_pose_t newpose )
+void Model::SetPose( Pose newpose )
 {
   //PRINT_DEBUG5( "%s.SetPose(%.2f %.2f %.2f %.2f)", 
   //	this->token, pose->x, pose->y, pose->z, pose->a );
 
   // if the pose has changed, we need to do some work
-  if( memcmp( &pose, &newpose, sizeof(stg_pose_t) ) != 0 )
+  if( memcmp( &pose, &newpose, sizeof(Pose) ) != 0 )
     {
       pose = newpose;
       pose.a = normalize(pose.a);
 
-		if( isnan( pose.a ) )
-			 printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
-						token, pose.x, pose.y, pose.z, pose.a );
+      if( isnan( pose.a ) )
+	printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
+		token, pose.x, pose.y, pose.z, pose.a );
 		
       NeedRedraw();
-		map_caches_are_invalid = true;
+      map_caches_are_invalid = true;
       MapWithChildren();
-		world->dirty = true;
+      world->dirty = true;
     }
 
   // register a model change even if the pose didn't actually change
   CallCallbacks( &this->pose );
 }
 
-void StgModel::AddToPose( double dx, double dy, double dz, double da )
+void Model::AddToPose( double dx, double dy, double dz, double da )
 {
   if( dx || dy || dz || da )
     {
-      stg_pose_t pose = GetPose();
+      Pose pose = GetPose();
       pose.x += dx;
       pose.y += dy;
       pose.z += dz;
@@ -1273,12 +1254,12 @@ void StgModel::AddToPose( double dx, double dy, double dz, double da )
     }
 }
 
-void StgModel::AddToPose( stg_pose_t pose )
+void Model::AddToPose( Pose pose )
 {
   this->AddToPose( pose.x, pose.y, pose.z, pose.a );
 }
 
-void StgModel::SetGeom( stg_geom_t geom )
+void Model::SetGeom( Geom geom )
 {
   //printf( "MODEL \"%s\" SET GEOM (%.2f %.2f %.2f)[%.2f %.2f]\n",
   //  this->token,
@@ -1289,120 +1270,120 @@ void StgModel::SetGeom( stg_geom_t geom )
   
   this->geom = geom;
   
-  //blockgroup.CalcSize();
+  blockgroup.CalcSize();
   
   NeedRedraw();
 
   MapWithChildren();
-
-  CallCallbacks( &this->geom );
+  
+  CallCallbacks( &geom );
 }
 
-void StgModel::SetColor( stg_color_t col )
+void Model::SetColor( stg_color_t col )
 {
   this->color = col;
   NeedRedraw();
-  CallCallbacks( &this->color );
+  CallCallbacks( &color );
 }
 
-void StgModel::SetMass( stg_kg_t mass )
+void Model::SetMass( stg_kg_t mass )
 {
   this->mass = mass;
-  CallCallbacks( &this->mass );
+  CallCallbacks( &mass );
 }
 
-void StgModel::SetStall( stg_bool_t stall )
+void Model::SetStall( stg_bool_t stall )
 {
   this->stall = stall;
-  CallCallbacks( &this->stall );
+  CallCallbacks( &stall );
 }
 
-void StgModel::SetGripperReturn( int val )
+void Model::SetGripperReturn( int val )
 {
-  this->gripper_return = val;
-  CallCallbacks( &this->gripper_return );
+  vis.gripper_return = val;
+  CallCallbacks( &vis.gripper_return );
 }
 
-void StgModel::SetFiducialReturn(  int val )
+void Model::SetFiducialReturn(  int val )
 {
-  this->fiducial_return = val;
-  CallCallbacks( &this->fiducial_return );
+  vis.fiducial_return = val;
+  CallCallbacks( &vis.fiducial_return );
 }
 
-void StgModel::SetFiducialKey( int key )
+void Model::SetFiducialKey( int key )
 {
-  this->fiducial_key = key;
-  CallCallbacks( &this->fiducial_key );
+  vis.fiducial_key = key;
+  CallCallbacks( &vis.fiducial_key );
 }
 
-void StgModel::SetLaserReturn( stg_laser_return_t val )
+void Model::SetLaserReturn( stg_laser_return_t val )
 {
-  this->laser_return = val;
-  CallCallbacks( &this->laser_return );
+  vis.laser_return = val;
+  CallCallbacks( &vis.laser_return );
 }
 
-void StgModel::SetObstacleReturn( int val )
+void Model::SetObstacleReturn( int val )
 {
-  this->obstacle_return = val;
-  CallCallbacks( &this->obstacle_return );
+  vis.obstacle_return = val;
+  CallCallbacks( &vis.obstacle_return );
 }
 
-void StgModel::SetBlobReturn( int val )
+void Model::SetBlobReturn( int val )
 {
-  this->blob_return = val;
-  CallCallbacks( &this->blob_return );
+  vis.blob_return = val;
+  CallCallbacks( &vis.blob_return );
 }
 
-void StgModel::SetRangerReturn( int val )
+void Model::SetRangerReturn( int val )
 {
-  this->ranger_return = val;
-  CallCallbacks( &this->ranger_return );
+  vis.ranger_return = val;
+  CallCallbacks( &vis.ranger_return );
 }
 
-void StgModel::SetBoundary( int val )
+void Model::SetBoundary( int val )
 {
-  this->boundary = val;
-  CallCallbacks( &this->boundary );
+  boundary = val;
+  CallCallbacks( &boundary );
 }
 
-void StgModel::SetGuiNose(  int val )
+void Model::SetGuiNose(  int val )
 {
-  this->gui_nose = val;
-  CallCallbacks( &this->gui_nose );
+  gui.nose = val;
+  CallCallbacks( &gui.nose );
 }
 
-void StgModel::SetGuiMask( int val )
+void Model::SetGuiMask( int val )
 {
-  this->gui_mask = val;
-  CallCallbacks( &this->gui_mask );
+  gui.mask = val;
+  CallCallbacks( &gui.mask );
 }
 
-void StgModel::SetGuiGrid(  int val )
+void Model::SetGuiGrid(  int val )
 {
-  this->gui_grid = val;
-  CallCallbacks( &this->gui_grid );
+  gui.grid = val;
+  CallCallbacks( &this->gui.grid );
 }
 
-void StgModel::SetGuiOutline( int val )
+void Model::SetGuiOutline( int val )
 {
-  this->gui_outline = val;
-  CallCallbacks( &this->gui_outline );
+  gui.outline = val;
+  CallCallbacks( &gui.outline );
 }
 
-void StgModel::SetWatts(  stg_watts_t watts )
+void Model::SetWatts(  stg_watts_t watts )
 {
-  this->watts = watts;
-  CallCallbacks( &this->watts );
+  watts = watts;
+  CallCallbacks( &watts );
 }
 
-void StgModel::SetMapResolution(  stg_meters_t res )
+void Model::SetMapResolution(  stg_meters_t res )
 {
-  this->map_resolution = res;
-  CallCallbacks( &this->map_resolution );
+  map_resolution = res;
+  CallCallbacks( &map_resolution );
 }
 
 // set the pose of model in global coordinates 
-void StgModel::SetGlobalPose( stg_pose_t gpose )
+void Model::SetGlobalPose( Pose gpose )
 {
   SetPose( parent ? parent->GlobalToLocal( gpose ) : gpose );
 
@@ -1410,7 +1391,7 @@ void StgModel::SetGlobalPose( stg_pose_t gpose )
   //      gpose->x, gpose->y, gpose->a, lpose.x, lpose.y, lpose.a );
 }
 
-int StgModel::SetParent(  StgModel* newparent)
+int Model::SetParent(  Model* newparent)
 {
   // remove the model from its old parent (if it has one)
   if( this->parent )
@@ -1427,113 +1408,113 @@ int StgModel::SetParent(  StgModel* newparent)
 }
 
 
-void StgModel::PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
-											stg_meters_t ymin, stg_meters_t ymax )
+void Model::PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
+			      stg_meters_t ymin, stg_meters_t ymax )
 {
   while( TestCollision() )
-    SetPose( stg_pose_t::Random( xmin,xmax, ymin, ymax ));		
+    SetPose( Pose::Random( xmin,xmax, ymin, ymax ));		
 }
 
 
-StgModel* StgModel::TestCollision()
+Model* Model::TestCollision()
 {
   //printf( "mod %s test collision...\n", token );
 
-  StgModel* hitmod = blockgroup.TestCollision();
+  Model* hitmod = blockgroup.TestCollision();
   
   if( hitmod == NULL ) 
     for( GList* it = children; it; it=it->next ) 
-		{ 
-		  hitmod = ((StgModel*)it->data)->TestCollision();
-		  if( hitmod )
-			 break;
-		}
+      { 
+	hitmod = ((Model*)it->data)->TestCollision();
+	if( hitmod )
+	  break;
+      }
   
   //printf( "mod %s test collision done.\n", token );
   return hitmod;  
 }
 
-void StgModel::CommitTestedPose()
+void Model::CommitTestedPose()
 {
   for( GList* it = children; it; it=it->next ) 
-	 ((StgModel*)it->data)->CommitTestedPose();
+    ((Model*)it->data)->CommitTestedPose();
   
   blockgroup.SwitchToTestedCells();
 }
   
-StgModel* StgModel::ConditionalMove( stg_pose_t newpose )
+Model* Model::ConditionalMove( Pose newpose )
 { 
   if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
-	 printf( "ConditionalMove bad newpose %s [%.2f %.2f %.2f %.2f]\n",
-				token, newpose.x, newpose.y, newpose.z, newpose.a );
+    printf( "ConditionalMove bad newpose %s [%.2f %.2f %.2f %.2f]\n",
+	    token, newpose.x, newpose.y, newpose.z, newpose.a );
 
-  stg_pose_t startpose = pose;
+  Pose startpose = pose;
   pose = newpose; // do the move provisionally - we might undo it below
    
-  StgModel* hitmod = TestCollision();
+  Model* hitmod = TestCollision();
  
   if( hitmod )
-	 pose = startpose; // move failed - put me back where I started
+    pose = startpose; // move failed - put me back where I started
   else
-	 {
-		CommitTestedPose(); // shift anyrecursively commit to blocks to the new pose 
-		world->dirty = true; // need redraw
-	 }
+    {
+      CommitTestedPose(); // shift anyrecursively commit to blocks to the new pose 
+      world->dirty = true; // need redraw
+    }
 
   
   if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
-	 printf( "ConditionalMove bad pose %s [%.2f %.2f %.2f %.2f]\n",
-				token, pose.x, pose.y, pose.z, pose.a );
+    printf( "ConditionalMove bad pose %s [%.2f %.2f %.2f %.2f]\n",
+	    token, pose.x, pose.y, pose.z, pose.a );
 
   return hitmod;
 }
 
-void StgModel::UpdatePose( void )
+void Model::UpdatePose( void )
 {
   if( disabled )
     return;
 
   if( velocity.x == 0 && velocity.y == 0 && velocity.a == 0 && velocity.z == 0 )
-	 return;
+    return;
 
   // TODO - control this properly, and maybe do it faster
   //if( 0 )
   //if( (world->updates % 10 == 0) )
-//     {
-//       stg_trail_item_t checkpoint;
-//       memcpy( &checkpoint.pose, &pose, sizeof(pose));
-//       checkpoint.color = color;
-//       checkpoint.time = world->sim_time;
+  //     {
+  //       stg_trail_item_t checkpoint;
+  //       memcpy( &checkpoint.pose, &pose, sizeof(pose));
+  //       checkpoint.color = color;
+  //       checkpoint.time = world->sim_time;
 
-//       if( trail->len > 100 )
-// 		  g_array_remove_index( trail, 0 );
+  //       if( trail->len > 100 )
+  // 		  g_array_remove_index( trail, 0 );
 
-//       g_array_append_val( this->trail, checkpoint );
-//     }
+  //       g_array_append_val( this->trail, checkpoint );
+  //     }
 
   // convert usec to sec
   double interval = (double)world->interval_sim / 1e6;
 
   // find the change of pose due to our velocity vector
-  stg_pose_t p;
+  Pose p;
   p.x = velocity.x * interval;
   p.y = velocity.y * interval;
   p.z = velocity.z * interval;
   p.a = velocity.a * interval;
     
   if( isnan( p.x ) || isnan( p.y )  || isnan( p.z )  || isnan( p.a ) )
-	 printf( "UpdatePose bad vel %s [%.2f %.2f %.2f %.2f]\n",
-				token, p.x, p.y, p.z, p.a );
+    printf( "UpdatePose bad vel %s [%.2f %.2f %.2f %.2f]\n",
+	    token, p.x, p.y, p.z, p.a );
 
   // attempts to move to the new pose. If the move fails because we'd
   // hit another model, that model is returned.
-  StgModel* hitthing = ConditionalMove( pose_sum( pose, p ) );
+  Model* hitthing = ConditionalMove( pose_sum( pose, p ) );
 
   SetStall( hitthing ? true : false );
 }
 
 
-int StgModel::TreeToPtrArray( GPtrArray* array )
+int Model::TreeToPtrArray( GPtrArray* array )
 {
   g_ptr_array_add( array, this );
 
@@ -1542,12 +1523,12 @@ int StgModel::TreeToPtrArray( GPtrArray* array )
   int added = 1;
 
   for(GList* it=children; it; it=it->next )
-    added += ((StgModel*)it->data)->TreeToPtrArray( array );
+    added += ((Model*)it->data)->TreeToPtrArray( array );
 
   return added;
 }
 
-StgModel* StgModel::GetUnsubscribedModelOfType( stg_model_type_t type )
+Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type )
 {
   printf( "searching for type %d in model %s type %d\n", type, token, this->type );
   
@@ -1557,35 +1538,35 @@ StgModel* StgModel::GetUnsubscribedModelOfType( stg_model_type_t type )
   // this model is no use. try children recursively
   for( GList* it = children; it; it=it->next )
     {
-      StgModel* child = (StgModel*)it->data;
+      Model* child = (Model*)it->data;
 
-      StgModel* found = child->GetUnsubscribedModelOfType( type );
+      Model* found = child->GetUnsubscribedModelOfType( type );
       if( found )
-		  return found;
+	return found;
     }
 
   // nothing matching below this model
   return NULL;
 }
 
-StgModel* StgModel::GetUnusedModelOfType( stg_model_type_t type )
+Model* Model::GetUnusedModelOfType( stg_model_type_t type )
 {
   printf( "searching for type %d in model %s type %d\n", type, token, this->type );
 
   if( (this->type == type) && (!this->used ) )
-  {
-    this->used = true;
-    return this;
-  }
+    {
+      this->used = true;
+      return this;
+    }
 
   // this model is no use. try children recursively
   for( GList* it = children; it; it=it->next )
     {
-      StgModel* child = (StgModel*)it->data;
+      Model* child = (Model*)it->data;
 
-      StgModel* found = child->GetUnusedModelOfType( type );
+      Model* found = child->GetUnusedModelOfType( type );
       if( found )
-		  return found;
+	return found;
     }
 
   // nothing matching below this model
@@ -1593,13 +1574,13 @@ StgModel* StgModel::GetUnusedModelOfType( stg_model_type_t type )
 }
 
 
-StgModel* StgModel::GetModel( const char* modelname )
+Model* Model::GetModel( const char* modelname )
 {
   // construct the full model name and look it up
   char* buf = new char[TOKEN_MAX];
   snprintf( buf, TOKEN_MAX, "%s.%s", this->token, modelname );
 
-  StgModel* mod = world->GetModel( buf );
+  Model* mod = world->GetModel( buf );
 
   if( mod == NULL )
     PRINT_WARN1( "Model %s not found", buf );
@@ -1609,7 +1590,7 @@ StgModel* StgModel::GetModel( const char* modelname )
   return mod;
 }
 
-void StgModel::UnMap()
+void Model::UnMap()
 {
   blockgroup.UnMap();
 }

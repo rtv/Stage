@@ -3,29 +3,29 @@
 
 // define constructor wrapping functions for use in the type table only
 
-static StgModel* CreateModel( StgWorld* world, StgModel* parent ) 
-{  return new StgModel( world, parent ); }    
+static Model* CreateModel( World* world, Model* parent ) 
+{  return new Model( world, parent ); }    
 
-static StgModel* CreateModelBlinkenlight( StgWorld* world, StgModel* parent ) 
-{  return new StgModelBlinkenlight( world, parent ); }    
+static Model* CreateModelBlinkenlight( World* world, Model* parent ) 
+{  return new ModelBlinkenlight( world, parent ); }    
 
-static StgModel* CreateModelPosition( StgWorld* world, StgModel* parent ) 
-{  return new StgModelPosition( world, parent ); }    
+static Model* CreateModelPosition( World* world, Model* parent ) 
+{  return new ModelPosition( world, parent ); }    
 
-static StgModel* CreateModelLaser( StgWorld* world, StgModel* parent ) 
-{  return new StgModelLaser( world, parent ); }    
+static Model* CreateModelLaser( World* world, Model* parent ) 
+{  return new ModelLaser( world, parent ); }    
 
-static StgModel* CreateModelRanger( StgWorld* world, StgModel* parent ) 
-{  return new StgModelRanger( world, parent ); }    
+static Model* CreateModelRanger( World* world, Model* parent ) 
+{  return new ModelRanger( world, parent ); }    
 
-static StgModel* CreateModelCamera( StgWorld* world, StgModel* parent ) 
-{  return new StgModelCamera( world, parent ); }    
+static Model* CreateModelCamera( World* world, Model* parent ) 
+{  return new ModelCamera( world, parent ); }    
 
-static StgModel* CreateModelFiducial( StgWorld* world, StgModel* parent ) 
-{  return new StgModelFiducial( world, parent ); }    
+static Model* CreateModelFiducial( World* world, Model* parent ) 
+{  return new ModelFiducial( world, parent ); }    
 
-static StgModel* CreateModelBlobfinder( StgWorld* world, StgModel* parent ) 
-{  return new StgModelBlobfinder( world, parent ); }    
+static Model* CreateModelBlobfinder( World* world, Model* parent ) 
+{  return new ModelBlobfinder( world, parent ); }    
 
 
 void Stg::RegisterModels()

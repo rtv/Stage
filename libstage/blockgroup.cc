@@ -21,7 +21,7 @@ BlockGroup::~BlockGroup()
   Clear();
 }
 
-void BlockGroup::AppendBlock( StgBlock* block )
+void BlockGroup::AppendBlock( Block* block )
 {
   blocks = g_list_append( blocks, block );
   ++count;
@@ -33,7 +33,7 @@ void BlockGroup::Clear()
 {
   while( blocks )
 	 {
-		delete (StgBlock*)blocks->data;
+		delete (Block*)blocks->data;
 		blocks = blocks->next;
 	 }
   
@@ -45,17 +45,17 @@ void BlockGroup::Clear()
 void BlockGroup::SwitchToTestedCells()
 {
   // confirm the tentative pose for all blocks
-  LISTMETHOD( blocks, StgBlock*, SwitchToTestedCells );  
+  LISTMETHOD( blocks, Block*, SwitchToTestedCells );  
 }
 
-StgModel* BlockGroup::TestCollision()
+Model* BlockGroup::TestCollision()
 {
   //printf( "blockgroup %p test collision...\n", this );
 
-  StgModel* hitmod = NULL;
+  Model* hitmod = NULL;
   
   for( GList* it=blocks; it; it = it->next )
-	 if( (hitmod = ((StgBlock*)it->data)->TestCollision()))
+	 if( (hitmod = ((Block*)it->data)->TestCollision()))
 		break; // bail on the earliest collision
   
   //printf( "blockgroup %p test collision done.\n", this );
@@ -76,12 +76,12 @@ void BlockGroup::CalcSize()
   size.z = 0.0; // grow to largest z we see
 
   if( blocks )
-	 ((StgBlock*)blocks->data)->mod->map_caches_are_invalid = true;
+	 ((Block*)blocks->data)->mod->map_caches_are_invalid = true;
   
   for( GList* it=blocks; it; it=it->next ) // examine all the blocks
 	 {
 		// examine all the points in the polygon
-		StgBlock* block = (StgBlock*)it->data;
+		Block* block = (Block*)it->data;
 		
 		for( unsigned int p=0; p < block->pt_count; p++ )
 		  {
@@ -105,21 +105,21 @@ void BlockGroup::CalcSize()
 
   // normalize blocks
   //  for( GList* it = blocks; itl it=it->next )
-  //((StgBlock*)it->data)->Normalize( size.x, size.y, size.z, offset.x
+  //((Block*)it->data)->Normalize( size.x, size.y, size.z, offset.x
 }
 
 
 void BlockGroup::Map()
 {
-  LISTMETHOD( blocks, StgBlock*, Map );
+  LISTMETHOD( blocks, Block*, Map );
 }
 
 void BlockGroup::UnMap()
 {
-  LISTMETHOD( blocks, StgBlock*, UnMap );
+  LISTMETHOD( blocks, Block*, UnMap );
 }
 
-void BlockGroup::DrawSolid( const stg_geom_t & geom )
+void BlockGroup::DrawSolid( const Geom & geom )
 {
   glPushMatrix();
 
@@ -131,12 +131,12 @@ void BlockGroup::DrawSolid( const stg_geom_t & geom )
   
   glTranslatef( -offset.x, -offset.y, -offset.z );
 
-  LISTMETHOD( blocks, StgBlock*, DrawSolid );
+  LISTMETHOD( blocks, Block*, DrawSolid );
 
   glPopMatrix();
 }
 
-void BlockGroup::DrawFootPrint( const stg_geom_t & geom )
+void BlockGroup::DrawFootPrint( const Geom & geom )
 {
   glPushMatrix();
   
@@ -146,12 +146,12 @@ void BlockGroup::DrawFootPrint( const stg_geom_t & geom )
   
   glTranslatef( -offset.x, -offset.y, -offset.z );
 
-  LISTMETHOD( blocks, StgBlock*, DrawFootPrint);
+  LISTMETHOD( blocks, Block*, DrawFootPrint);
 
   glPopMatrix();
 }
 
-void BlockGroup::BuildDisplayList( StgModel* mod )
+void BlockGroup::BuildDisplayList( Model* mod )
 {
   //printf( "display list for model %s\n", mod->token );
 
@@ -164,7 +164,7 @@ void BlockGroup::BuildDisplayList( StgModel* mod )
   glNewList( displaylist, GL_COMPILE );	
     
 
-  stg_geom_t geom = mod->GetGeom();
+  Geom geom = mod->GetGeom();
 
   gl_pose_shift( geom.pose );
 
@@ -182,7 +182,7 @@ void BlockGroup::BuildDisplayList( StgModel* mod )
   
   for( GList* it=blocks; it; it=it->next )
 	 {
-		StgBlock* blk = (StgBlock*)it->data;
+		Block* blk = (Block*)it->data;
 		
 		if( (!blk->inherit_color) && (blk->color != mod->color) )
 		  {
@@ -207,7 +207,7 @@ void BlockGroup::BuildDisplayList( StgModel* mod )
   
   for( GList* it=blocks; it; it=it->next )
 	 {
-		StgBlock* blk = (StgBlock*)it->data;
+		Block* blk = (Block*)it->data;
 		
 		if( (!blk->inherit_color) && (blk->color != mod->color) )
 		  {
@@ -228,7 +228,7 @@ void BlockGroup::BuildDisplayList( StgModel* mod )
   glEndList();
 }
 
-void BlockGroup::CallDisplayList( StgModel* mod )
+void BlockGroup::CallDisplayList( Model* mod )
 {
   if( displaylist == 0 )
 	 BuildDisplayList( mod );
@@ -236,12 +236,12 @@ void BlockGroup::CallDisplayList( StgModel* mod )
   glCallList( displaylist );
 }
 
-void BlockGroup::LoadBlock( StgModel* mod, Worldfile* wf, int entity )
+void BlockGroup::LoadBlock( Model* mod, Worldfile* wf, int entity )
 {
-  AppendBlock( new StgBlock( mod, wf, entity ));
+  AppendBlock( new Block( mod, wf, entity ));
 }				
   
-void BlockGroup::LoadBitmap( StgModel* mod, const char* bitmapfile, Worldfile* wf )
+void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
 {
   PRINT_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile );
   
@@ -312,7 +312,7 @@ void BlockGroup::LoadBitmap( StgModel* mod, const char* bitmapfile, Worldfile* w
 			 // TODO fix this
 			 stg_color_t col = stg_color_pack( 1.0, 0,0,1.0 ); 
 			 
-			 AppendBlock( new StgBlock( mod,
+			 AppendBlock( new Block( mod,
 												 pts,4,
 												 0,1,
 												 col,

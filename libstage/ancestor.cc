@@ -1,6 +1,6 @@
 #include "stage_internal.hh"
 
-StgAncestor::StgAncestor()
+Ancestor::Ancestor()
 {
 	token = NULL;
 	children = NULL;
@@ -11,19 +11,19 @@ StgAncestor::StgAncestor()
 	debug = false;
 }
 
-StgAncestor::~StgAncestor()
+Ancestor::~Ancestor()
 {
 	if( children )
 	{
 		for( GList* it = children; it; it=it->next )
-			delete (StgModel*)it->data;
+			delete (Model*)it->data;
 
 		g_list_free( children );
 	}
 
 }
 
-void StgAncestor::AddChild( StgModel* mod )
+void Ancestor::AddChild( Model* mod )
 {
   
   // poke a name into the child  
@@ -50,23 +50,23 @@ void StgAncestor::AddChild( StgModel* mod )
   delete[] buf;
 }
 
-void StgAncestor::RemoveChild( StgModel* mod )
+void Ancestor::RemoveChild( Model* mod )
 {
   child_type_counts[mod->type]--;
   children = g_list_remove( children, mod );
 }
 
-stg_pose_t StgAncestor::GetGlobalPose()
+Pose Ancestor::GetGlobalPose()
 {
-	stg_pose_t pose;
+	Pose pose;
 	bzero( &pose, sizeof(pose));
 	return pose;
 }
 
-void StgAncestor::ForEachDescendant( stg_model_callback_t func, void* arg )
+void Ancestor::ForEachDescendant( stg_model_callback_t func, void* arg )
 {
 	for( GList* it=children; it; it=it->next ) {
-		StgModel* mod = (StgModel*)it->data;
+		Model* mod = (Model*)it->data;
 		func( mod, arg );
 		mod->ForEachDescendant( func, arg );
 	}

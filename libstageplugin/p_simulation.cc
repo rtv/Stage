@@ -162,7 +162,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		
 		if( mod )
 		{
-			stg_pose_t pose = mod->GetPose();
+			Pose pose = mod->GetPose();
 			
 			PRINT_DEBUG3( "Stage: returning location [ %.2f, %.2f, %.2f ]\n",
 						  pose.x, pose.y, pose.a );
@@ -202,7 +202,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			PRINT_DEBUG4( "Stage: moving \"%s\" to [ %.2f, %.2f, %.2f ]\n",
 						  req->name, req->pose.px, req->pose.py, req->pose.pa );
 			
-			stg_pose_t pose = mod->GetPose();
+			Pose pose = mod->GetPose();
 			pose.x = req->pose.px;
 			pose.y = req->pose.py;
 			pose.a = req->pose.pa;
@@ -236,7 +236,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		
 		if( mod )
 		{
-			stg_pose_t pose = mod->GetPose();
+			Pose pose = mod->GetPose();
 			
 			PRINT_DEBUG4( "Stage: returning location [ %.2f, %.2f, %.2f, %.2f ]\n",
 						  pose.x, pose.y, pose.z, pose.a );
@@ -280,7 +280,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			PRINT_DEBUG5( "Stage: moving \"%s\" to [ %.2f, %.2f, %.2f %.2f ]\n",
 						  req->name, req->pose.px, req->pose.py, req->pose.pz, req->pose.pyaw );
 			
-			stg_pose_t pose = mod->GetPose();
+			Pose pose = mod->GetPose();
 			pose.x = req->pose.px;
 			pose.y = req->pose.py;
 			pose.z = req->pose.pz;

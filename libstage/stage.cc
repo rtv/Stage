@@ -82,7 +82,7 @@ void Stg::stg_print_err( const char* err )
 
 
 
-void Stg::stg_print_velocity( stg_velocity_t* vel )
+void Stg::stg_print_velocity( Velocity* vel )
 {
 	printf( "velocity [x:%.3f y:%.3f a:%.3f]\n",
 			vel->x, vel->y, vel->a );
@@ -210,12 +210,12 @@ void Stg::stg_rotrects_normalize( stg_rotrect_t* rects, int num )
 
 
 // returns the pose of p2 in p1's coordinate system
-stg_pose_t Stg::pose_sum( const stg_pose_t& p1, const stg_pose_t& p2 )
+Pose Stg::pose_sum( const Pose& p1, const Pose& p2 )
 {
 	double cosa = cos(p1.a);
 	double sina = sin(p1.a);
 
-	stg_pose_t result;
+	Pose result;
 	result.x = p1.x + p2.x * cosa - p2.y * sina;
 	result.y = p1.y + p2.x * sina + p2.y * cosa;
 	result.z = p1.z + p2.z;
@@ -225,9 +225,9 @@ stg_pose_t Stg::pose_sum( const stg_pose_t& p1, const stg_pose_t& p2 )
 }
 
 // returns the resultant of vector [p1] and [p2] 
-stg_pose_t Stg::pose_scale( const stg_pose_t& p1, const double sx, const double sy, const double sz )
+Pose Stg::pose_scale( const Pose& p1, const double sx, const double sy, const double sz )
 {
-  stg_pose_t scaled;
+  Pose scaled;
   scaled.x = p1.x * sx;
   scaled.y = p1.y * sy;
   scaled.z = p1.z * sz;
