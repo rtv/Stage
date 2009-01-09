@@ -1,8 +1,8 @@
 /*
  *  Player - One Hell of a Robot Server
  *  Copyright (C) 2004, 2005 Richard Vaughan
- *                      
- * 
+ *
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -28,7 +28,7 @@
 
 // DOCUMENTATION
 
-/** @addtogroup player 
+/** @addtogroup player
 @par Blobfinder interface
 - PLAYER_BLOBFINDER_DATA_BLOBS
 */
@@ -37,7 +37,7 @@
 
 #include "p_driver.h"
 
-InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr, 
+InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr,
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
@@ -52,23 +52,23 @@ void InterfaceBlobfinder::Publish( void )
   player_blobfinder_data_t bfd;
   bzero( &bfd, sizeof(bfd) );
 
-  StgModelBlobfinder* blobmod = (StgModelBlobfinder*)this->mod;
-  
+  ModelBlobfinder* blobmod = (ModelBlobfinder*)this->mod;
+
   uint32_t bcount = 0;
   stg_blobfinder_blob_t* blobs = blobmod->GetBlobs( &bcount );
-	
+
   if ( bcount > 0 )
   {
 	  // and set the image width * height
 	  bfd.width = blobmod->scan_width;
 	  bfd.height = blobmod->scan_height;
 	  bfd.blobs_count = bcount;
-		
+
 	  bfd.blobs = new player_blobfinder_blob_t[ bcount ];
-	  
+
 	  // now run through the blobs, packing them into the player buffer
 	  // counting the number of blobs in each channel and making entries
-	  // in the acts header 
+	  // in the acts header
 	  unsigned int b;
 	  for( b=0; b<bcount; b++ )
 		{
@@ -82,29 +82,29 @@ void InterfaceBlobfinder::Publish( void )
 		<< " color: " << hex << blobs[b].color << dec
 		<< endl;
 		  */
-		  
+
 			int dx = blobs[b].right - blobs[b].left;
 			int dy = blobs[b].top - blobs[b].bottom;
 
 		  bfd.blobs[b].x      = blobs[b].left + dx/2;
-		  bfd.blobs[b].y      = blobs[b].bottom + dy/2; 
+		  bfd.blobs[b].y      = blobs[b].bottom + dy/2;
 
 		  bfd.blobs[b].left   = blobs[b].left;
 		  bfd.blobs[b].right  = blobs[b].right;
 		  bfd.blobs[b].top    = blobs[b].top;
 		  bfd.blobs[b].bottom = blobs[b].bottom;
-		  
+
 		  bfd.blobs[b].color = blobs[b].color;
-		  bfd.blobs[b].area  = dx * dy;         
-		  
-		  bfd.blobs[b].range = blobs[b].range;          
+		  bfd.blobs[b].area  = dx * dy;
+
+		  bfd.blobs[b].range = blobs[b].range;
 		}
   }
-  
+
   // should change player interface to support variable-lenght blob data
-  // size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);   
-  
-  this->driver->Publish( this->addr, 
+  // size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);
+
+  this->driver->Publish( this->addr,
 								 PLAYER_MSGTYPE_DATA,
 								 PLAYER_BLOBFINDER_DATA_BLOBS,
 								 &bfd, sizeof(bfd), NULL);
@@ -117,7 +117,7 @@ int InterfaceBlobfinder::ProcessMessage( QueuePointer& resp_queue,
 													  void* data )
 {
   // todo: handle configuration requests
-  
+
   //else
   {
     // Don't know how to handle this message.

@@ -1,8 +1,8 @@
 /*
  *  Player - One Hell of a Robot Server
  *  Copyright (C) 2004, 2005 Richard Vaughan
- *                      
- * 
+ *
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -28,7 +28,7 @@
 
 // DOCUMENTATION ------------------------------------------------------------
 
-/** @addtogroup player 
+/** @addtogroup player
 @par Laser interface
 - PLAYER_LASER_DATA_SCAN
 - PLAYER_LASER_REQ_SET_CONFIG
@@ -38,26 +38,26 @@
 
 // CODE ----------------------------------------------------------------------
 
-#include "p_driver.h" 
+#include "p_driver.h"
 
-InterfaceLaser::InterfaceLaser( player_devaddr_t addr, 
+InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
   : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_LASER )
-{ 
+{
   this->scan_id = 0;
 }
 
 void InterfaceLaser::Publish( void )
 {
-  StgModelLaser* mod = (StgModelLaser*)this->mod;
+  ModelLaser* mod = (ModelLaser*)this->mod;
   stg_laser_sample_t* samples = mod->GetSamples();
 
   // don't publish anything until we have some real data
   if( samples == NULL )
     return;
-  
+
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
 
@@ -68,17 +68,17 @@ void InterfaceLaser::Publish( void )
   pdata.max_range = cfg.range_bounds.max;
   pdata.ranges_count = pdata.intensity_count = cfg.sample_count;
   pdata.id = this->scan_id++;
-  
+
   pdata.ranges = new float[pdata.ranges_count];
   pdata.intensity = new uint8_t[pdata.ranges_count];
-  
+
   for( unsigned int i=0; i<cfg.sample_count; i++ )
     {
       //printf( "range %d %d\n", i, samples[i].range);
       pdata.ranges[i] = samples[i].range;
       pdata.intensity[i] = (uint8_t)samples[i].reflectance;
     }
-  
+
   // Write laser data
   this->driver->Publish(this->addr,
 			PLAYER_MSGTYPE_DATA,
@@ -93,11 +93,11 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
 				   player_msghdr_t* hdr,
 				   void* data)
 {
-  StgModelLaser* mod = (StgModelLaser*)this->mod;
+  ModelLaser* mod = (ModelLaser*)this->mod;
 
   // Is it a request to set the laser's config?
-  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                           PLAYER_LASER_REQ_SET_CONFIG, 
+  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+                           PLAYER_LASER_REQ_SET_CONFIG,
                            this->addr))
   {
 
@@ -109,33 +109,33 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
       // int intensity = plc->intensity;
 
       stg_laser_cfg_t cfg = mod->GetConfig();
-		
-	  PRINT_DEBUG3( "laser config was: resolution %d, fov %.6f, interval %d\n", 
+
+	  PRINT_DEBUG3( "laser config was: resolution %d, fov %.6f, interval %d\n",
 			  cfg.resolution, cfg.fov, cfg.interval );
-     
+
 	  cfg.fov = plc->max_angle - plc->min_angle;
 	  cfg.resolution = (uint32_t) ( cfg.fov / ( cfg.sample_count * plc->resolution ) );
-	  if ( cfg.resolution < 1 ) 
+	  if ( cfg.resolution < 1 )
 		  cfg.resolution = 1;
 	  cfg.interval = (stg_usec_t) ( 1.0E6 / plc->scanning_frequency );
-		
-	  PRINT_DEBUG3( "setting laser config: resolution %d, fov %.6f, interval %d\n", 
+
+	  PRINT_DEBUG3( "setting laser config: resolution %d, fov %.6f, interval %d\n",
 			  cfg.resolution, cfg.fov, cfg.interval );
-      
+
 	  // Range resolution is currently locked to the world setting
 	  //  and intensity values are always read.  The relevant settings
 	  //  are ignored.
-		
+
       mod->SetConfig( cfg );
 
       this->driver->Publish(this->addr, resp_queue,
-			    PLAYER_MSGTYPE_RESP_ACK, 
+			    PLAYER_MSGTYPE_RESP_ACK,
 			    PLAYER_LASER_REQ_SET_CONFIG);
       return(0);
     }
     else
     {
-      PRINT_ERR2("config request len is invalid (%d != %d)", 
+      PRINT_ERR2("config request len is invalid (%d != %d)",
 		 (int)hdr->size, (int)sizeof(player_laser_config_t));
 
       return(-1);
@@ -145,7 +145,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
   else if (Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
                                  PLAYER_LASER_REQ_GET_CONFIG,
                                  this->addr))
-  {   
+  {
     if( hdr->size == 0 )
     {
       stg_laser_cfg_t cfg = mod->GetConfig();
@@ -161,7 +161,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
 	  plc.scanning_frequency = 1.0E6 / cfg.interval;
 
       this->driver->Publish(this->addr, resp_queue,
-			    PLAYER_MSGTYPE_RESP_ACK, 
+			    PLAYER_MSGTYPE_RESP_ACK,
 			    PLAYER_LASER_REQ_GET_CONFIG,
 			    (void*)&plc, sizeof(plc), NULL);
       return(0);
@@ -176,7 +176,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
   else if (Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
                                  PLAYER_LASER_REQ_GET_GEOM,
                                  this->addr))
-  {	
+  {
     if(hdr->size == 0)
     {
       Geom geom = this->mod->GetGeom();
@@ -192,7 +192,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
       pgeom.size.sw = geom.size.y;
 
       this->driver->Publish(this->addr, resp_queue,
-			    PLAYER_MSGTYPE_RESP_ACK, 
+			    PLAYER_MSGTYPE_RESP_ACK,
 			    PLAYER_LASER_REQ_GET_GEOM,
 			    (void*)&pgeom, sizeof(pgeom), NULL);
       return(0);

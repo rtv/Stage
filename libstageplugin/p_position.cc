@@ -60,7 +60,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
                                       player_msghdr_t* hdr,
                                       void* data)
 {
-  StgModelPosition* mod = (StgModelPosition*)this->mod;
+  ModelPosition* mod = (ModelPosition*)this->mod;
 
   // Is it a new motor command?
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
@@ -268,7 +268,7 @@ void InterfacePosition::Publish( void )
 {
   //puts( "publishing position data" ); 
 
-  StgModelPosition* mod = (StgModelPosition*)this->mod;
+  ModelPosition* mod = (ModelPosition*)this->mod;
   
   //printf( "stage position data: %.2f,%.2f,%.2f\n",
   //  data->pose.x, data->pose.y, data->pose.a );

@@ -47,31 +47,31 @@ StTime::~StTime()
 int StTime::GetTime(struct timeval* time)
 {
   PRINT_DEBUG( "get time" );
-  
+
   assert( this->driver );
-  
-  StgWorld* world = driver->world;
-  
+
+  World* world = driver->world;
+
   stg_usec_t usec = world->SimTimeNow();
   time->tv_sec  = (int)floor(usec/million);
   time->tv_usec = (int)rint(fmod(usec,million) * million);
-  
+
   PRINT_DEBUG2( "time now %ld sec %ld usec", time->tv_sec, time->tv_usec );
-  
+
   return 0;
 }
 
 int StTime::GetTimeDouble(double* time)
 {
   PRINT_DEBUG( "get time (double)" );
-  
+
   assert( this->driver );
-  
-  StgWorld* world = driver->world;
-  
+
+  World* world = driver->world;
+
   *time = world->SimTimeNow() / million;
-  
+
   PRINT_DEBUG1( "time now %f sec ", *time);
-  
+
   return 0;
 }

@@ -54,7 +54,7 @@ InterfaceSonar::InterfaceSonar( player_devaddr_t id,
 
 void InterfaceSonar::Publish( void )
 {
-  StgModelRanger* mod = (StgModelRanger*)this->mod;
+  ModelRanger* mod = (ModelRanger*)this->mod;
 
   if( mod->samples == NULL )
     return;
@@ -99,7 +99,7 @@ int InterfaceSonar::ProcessMessage( QueuePointer & resp_queue,
 			    PLAYER_SONAR_REQ_GET_GEOM, 
 			    this->addr) )
     {
-      StgModelRanger* mod = (StgModelRanger*)this->mod;
+      ModelRanger* mod = (ModelRanger*)this->mod;
 
       size_t rcount = mod->sensor_count;
       
