@@ -205,7 +205,7 @@ void ModelPosition::Load( void )
 	}
 
 	// odometry model parameters
-	if( wf->PropertyExists( wf_entity, keyword ) )
+	if( wf->PropertyExists( wf_entity, "odom_error" ) )
 	{
 		integration_error.x = 
 			wf->ReadTupleLength( wf_entity, "odom_error", 0, integration_error.x );
