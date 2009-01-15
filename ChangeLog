@@ -1,3 +1,15 @@
+2009-01-16: thjc
+	* 2.1.1 release
+		Fixes for gcc 4.3 compilation
+		fix for close of null file pointer
+		patch 2187145 - Added wheelbase option to position "car" model
+		patch 2234440 - makes blobfinder ignore colour alpha value
+		patch 2230769 - possible infinite loop in stg_model_update_pose
+		patch 2150737 - bumper detects collisions incorrectly
+		patch 2475933 - Allow graphics2d with gui disabled
+		patch 2124895, fix for subscription to simulation device
+		patch 2286925 DIO interface and indicator model
+
 2008-06-14: thjc
 	* 2.1.0 release
 		Player 2.1 compatibility release

@@ -4,7 +4,7 @@ dnl $Id: configure.ac,v 1.18.4.2 2008-03-29 00:52:53 thjc Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
-AC_INIT(stage,2.1.1-svn)
+AC_INIT(stage,2.1.1)
 
 AC_CONFIG_SRCDIR(src/stage.c)
 
@@ -88,7 +88,7 @@ AM_CONDITIONAL(HAVE_PLAYER, [test $have_player = yes])
 
 
 dnl for libplayerc examples, we need libplayerc
-PKG_CHECK_MODULES( PLAYERC, playerc >= 2.0.1,
+PKG_CHECK_MODULES( PLAYERC, playerc >= 2.1.0,
  AC_DEFINE(INCLUDE_PLAYERC,1,[building libplayerc examples])
  have_playerc=yes
  ,
