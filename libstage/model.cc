@@ -137,6 +137,7 @@ Model::Model( World* world,
     data_fresh(false),
     disabled(false),
     flag_list(NULL),
+	custom_visual_list( NULL ),
     geom(),
     has_default_block( true ),
     id( Model::count++ ),
@@ -896,6 +897,19 @@ void Model::PopCoords()
   glPopMatrix();
 }
 
+void Model::AddCustomVisualizer( CustomVisualizer* custom_visual )
+{
+	if( custom_visual )
+		custom_visual_list = g_list_append(custom_visual_list, custom_visual );
+}
+
+void Model::RemoveCustomVisualizer( CustomVisualizer* custom_visual )
+{
+	if( custom_visual )
+		custom_visual_list = g_list_remove(custom_visual_list, custom_visual );
+}
+
+
 void Model::DrawStatusTree( Camera* cam ) 
 {
   PushLocalCoords();
@@ -1142,6 +1156,11 @@ void Model::DataVisualizeTree( Camera* cam )
 {
   PushLocalCoords();
   DataVisualize( cam ); // virtual function overridden by most model types  
+
+  for( GList* item = custom_visual_list; item; item = item->next ) {
+    static_cast< CustomVisualizer* >( item->data )->DataVisualize( cam );
+  }
+
 
   // and draw the children
   LISTMETHODARG( children, Model*, DataVisualizeTree, cam );

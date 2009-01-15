@@ -34,6 +34,14 @@ public:
   }    
 };
 
+/** Abstract class for adding visualizations to models. DataVisualize must be overloaded, and is then called in the models local coord system */
+class CustomVisualizer {
+public:
+	//TODO allow user to specify name - which will show up in display filter
+	virtual ~CustomVisualizer( void ) { }
+	virtual void DataVisualize( Camera* cam ) = 0;
+};
+
 
 /* Hooks for attaching special callback functions (not used as
    variables - we just need unique addresses for them.) */  
@@ -116,6 +124,7 @@ protected:
       instead of adding a data callback. */
   bool data_fresh;
   stg_bool_t disabled; //< if non-zero, the model is disabled  
+  GList* custom_visual_list;
   GList* flag_list;
   Geom geom;
   Pose global_pose;
@@ -343,6 +352,11 @@ public:
   virtual ~Model();
 	
   void Say( const char* str );
+  /** Attach a user supplied visualization to a model */
+  void AddCustomVisualizer( CustomVisualizer* custom_visual );
+  /** remove user supplied visualization to a model - supply the same ptr passed to AddCustomVisualizer */
+  void RemoveCustomVisualizer( CustomVisualizer* custom_visual );
+
 	
   void Load( Worldfile* wf, int wf_entity )
   {
