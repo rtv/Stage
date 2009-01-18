@@ -1,6 +1,30 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+class Camera;
+
+/** energy data packet */
+class PowerPack
+{
+public:
+  PowerPack( Model* mod );
+
+  /** The model that owns this object */
+  Model* mod;
+    
+  /** Energy stored */
+  stg_joules_t stored;
+
+  /** Energy capacity */
+  stg_joules_t capacity;
+
+  /** TRUE iff the device is receiving energy from a charger */
+  bool charging;
+
+  /** OpenGL visualization of the powerpack state */
+  void Visualize( Camera* cam );
+};
+
 class Visibility
 {
 public:
@@ -76,7 +100,7 @@ public:
     nose = wf->ReadInt( wf_entity, "gui_nose", nose);    
     grid = wf->ReadInt( wf_entity, "gui_grid", grid);    
     outline = wf->ReadInt( wf_entity, "gui_outline", outline);    
-    mask = wf->ReadInt( wf_entity, "gui_mask", mask);    
+    mask = wf->ReadInt( wf_entity, "gui_movemask", mask);    
   }    
 
 };
@@ -129,7 +153,6 @@ protected:
   Geom geom;
   Pose global_pose;
   bool gpose_dirty; //< set this to indicate that global pose may have changed  
-
   /** Controls our appearance and functionality in the GUI, if used */
   GuiState gui;
   
@@ -156,6 +179,9 @@ protected:
   /** The pose of the model in it's parents coordinate frame, or the
       global coordinate frame is the parent is NULL. */
   Pose pose;
+
+  /** Optional attached PowerPack, defaults to NULL */
+  PowerPack* power_pack;
 
   /** GData datalist can contain arbitrary named data items. Can be used
       by derived model types to store properties, and for user code
@@ -699,45 +725,7 @@ public:
   void RemoveAllColors();
 };
 
-// ENERGY model --------------------------------------------------------------
 
-/** energy data packet */
-typedef struct
-{
-  /** estimate of current energy stored */
-  stg_joules_t stored;
-
-  /** TRUE iff the device is receiving energy from a charger */
-  stg_bool_t charging;
-
-  /** diatance to charging device */
-  stg_meters_t range;
-
-  /** an array of pointers to connected models */
-  GPtrArray* connections;
-} stg_energy_data_t;
-
-/** energy config packet (use this to set or get energy configuration)*/
-typedef struct
-{
-  /** maximum storage capacity */
-  stg_joules_t capacity;
-
-  /** When charging another device, supply this many Joules/sec at most*/
-  stg_watts_t give_rate;
-
-  /** When charging from another device, receive this many Joules/sec at most*/
-  stg_watts_t take_rate;
-
-  /** length of the charging probe */
-  stg_meters_t probe_range;
-
-  /**  iff TRUE, this device will supply power to connected devices */
-  stg_bool_t give;
-
-} stg_energy_config_t;
-
-// there is currently no energy command packet
 
 
 // LASER MODEL --------------------------------------------------------

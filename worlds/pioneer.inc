@@ -127,7 +127,7 @@ define pioneer2dx_base pioneer_base
   gui_nose 1
 
   # estimated mass in KG
-  mass 15.0 
+  mass 23.0 
 
   # use the sonar array defined above with a small vertical offset to
   # drop the sensors into the robot body

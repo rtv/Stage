@@ -69,8 +69,8 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
 
 
 
-const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
-const double STG_POSITION_WATTS = 2.0; // base cost of position device
+const double STG_POSITION_WATTS_KGMS = 10.0; // current per kg per meter per second
+const double STG_POSITION_WATTS = 1.0; // base cost of position device
 
 // simple odometry error model parameters. the error is selected at
 // random in the interval -MAX/2 to +MAX/2 at startup
@@ -385,13 +385,13 @@ void ModelPosition::Update( void  )
 			default:
 				PRINT_ERR1( "unrecognized position command mode %d", control_mode );
 		}
-
+		
 		// simple model of power consumption
-		// this->watts = STG_POSITION_WATTS + 
-		//fabs(vel->x) * STG_POSITION_WATTS_KGMS * this->mass + 
-		//fabs(vel->y) * STG_POSITION_WATTS_KGMS * this->mass + 
-		//fabs(vel->a) * STG_POSITION_WATTS_KGMS * this->mass;
-
+		watts = STG_POSITION_WATTS + 
+		  fabs(vel.x) * STG_POSITION_WATTS_KGMS * mass + 
+		  fabs(vel.y) * STG_POSITION_WATTS_KGMS * mass + 
+		  fabs(vel.a) * STG_POSITION_WATTS_KGMS * mass;
+		
 		//PRINT_DEBUG4( "model %s velocity (%.2f %.2f %.2f)",
 		//	    this->token, 
 		//	    this->velocity.x, 
@@ -636,6 +636,9 @@ void ModelPosition::DataVisualize( Camera* cam )
 
 		glPopMatrix(); 
 	 }
+
+  // inherit more viz
+  Model::DataVisualize( cam );
 }
 
 void ModelPosition::DrawWaypoints()

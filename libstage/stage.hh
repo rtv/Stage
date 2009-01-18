@@ -847,7 +847,7 @@ namespace Stg
   
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
-    stg_usec_t interval_sim; ///< temporal resolution: milliseconds that elapse between simulated time steps 
+    stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
     GList* ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in ms
     GHashTable* superregions;

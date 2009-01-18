@@ -7,7 +7,7 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 0 # real-time interval between simulation updates in milliseconds 
+interval_real 00 # real-time interval between simulation updates in milliseconds 
 paused 1
 
 resolution 0.02
@@ -22,7 +22,7 @@ window
 ( 
   size [ 600.000 600.000 ] 
 
-  center [ -0.118 -0.212 ] 
+  center [ -0.521 -0.218 ] 
   rotate [ 0 0 ]
   scale 30.883 
 
@@ -61,13 +61,20 @@ zone
   ctrl "sink"
 )
 
+#charger
+#(
+# pose
+#		  
+#)
+
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 32 range_max 5 laser_return 2  )
+ sicklaser( samples 32 range_max 5 laser_return 2 watts 30 )
  ctrl "fasr"
+ joules 1000000 
 )
 
-autorob( pose [5.099 4.804 0  -73.937] )
+autorob( pose [4.116 6.107 0  -147.323] )
 autorob( pose [6.471 5.304 0 14.941] )
 autorob( pose [5.937 4.858 0 -147.503] )
 autorob( pose [7.574 6.269 0 -111.715] )

@@ -27,6 +27,7 @@ set( stageSrcs ancestor.cc
 	option.hh
 	options_dlg.cc
 	options_dlg.hh
+	powerpack.cc
 	region.cc
 	resource.cc
 	stage.cc

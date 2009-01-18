@@ -19,6 +19,58 @@ void Model::Load()
 
   PRINT_DEBUG1( "Model \"%s\" loading...", token );
   
+  if( wf->PropertyExists( wf_entity, "joules" ) )
+	 {
+		if( !power_pack )
+		  power_pack = new PowerPack( this );
+		
+		power_pack->stored = 
+		  wf->ReadFloat( wf_entity, "joules", power_pack->stored );	 
+
+		/* assume that the store is full, so the capacity is the same as
+			the charge */
+		power_pack->capacity = power_pack->stored;
+	 }
+  
+  if( wf->PropertyExists( wf_entity, "joules_capacity" ) )
+	 {
+		if( !power_pack )
+		  power_pack = new PowerPack( this );
+		
+		power_pack->capacity = 
+		  wf->ReadFloat( wf_entity, "joules_stored", power_pack->capacity ); 
+		
+	 }
+
+  /** if the capacity has been specified, limit the store to the capacity */
+  if( power_pack && (power_pack->stored > power_pack->capacity) )
+	 {			 
+		power_pack->stored = power_pack->capacity;
+		PRINT_WARN3( "model %s energy storage exceeds capacity (%.2f / %.2f joules). Limited stored energy to max capactity.",
+						 token, 
+						 power_pack->stored, 
+						 power_pack->capacity );
+	 }  
+  
+  if( wf->PropertyExists( wf_entity, "watts" ) )
+	 {
+		watts = wf->ReadFloat( wf_entity, "watts", watts );
+		
+		if( watts > 0 )
+		  {
+			 // find a power pack attached to me or an ancestor in my tree
+			 while( (!power_pack) && parent )
+				{
+				  power_pack = parent->power_pack;
+				}
+			 
+			 if( power_pack == NULL )
+				{
+				  PRINT_WARN2( "worldfile requests %.2f watts for model %s, but can not find an energy source. Setting watts has no effect unless you also specify  a \"joules\" value for this model or an  ancestor.", watts, token );
+				  exit(-1);				  
+				}			 
+		  }
+	 }
 
   if( wf->PropertyExists( wf_entity, "debug" ) )
     {

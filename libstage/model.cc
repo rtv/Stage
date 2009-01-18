@@ -151,6 +151,7 @@ Model::Model( World* world,
     on_velocity_list( false ),
     parent(parent),
     pose(),
+	 power_pack( NULL ),
     props(NULL),
     rebuild_displaylist(true),
     say_string(NULL),
@@ -656,6 +657,25 @@ void Model::Update( void )
 {
   //   printf( "[%llu] %s update (%d subs)\n", 
   // 			 this->world->sim_time, this->token, this->subs );
+  
+  // f we're drawing current and a power pack has been installed
+  if( power_pack && (watts > 0) )
+	 {
+		// consume  energy stored in the power pack
+		stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
+		power_pack->stored -= consumed;
+
+		/*		
+		printf ( "%s current %.2f consumed %.6f ppack @ %p [ %.2f/%.2f (%.0f)\n",
+					token, 
+					watts, 
+					consumed, 
+					power_pack, 
+					power_pack->stored, 
+					power_pack->capacity, 
+					power_pack->stored / power_pack->capacity * 100.0 );
+		*/
+	 }
 
   CallCallbacks( &hooks.update );
   last_update = world->sim_time;
@@ -920,18 +940,19 @@ void Model::DrawStatusTree( Camera* cam )
 
 void Model::DrawStatus( Camera* cam ) 
 {
-  if( say_string )	  
+  
+
+  if( say_string || power_pack )	  
     {
       float yaw, pitch;
       pitch = - cam->pitch();
       yaw = - cam->yaw();			
       
-      float robotAngle = -rtod(pose.a);
+		Pose gpz = GetGlobalPose();
+
+      float robotAngle = -rtod(gpz.a);
       glPushMatrix();
 		
-      fl_font( FL_HELVETICA, 12 );
-      float w = gl_width( this->say_string ); // scaled text width
-      float h = gl_height(); // scaled text height
 		
       // move above the robot
       glTranslatef( 0, 0, 0.5 );		
@@ -939,61 +960,77 @@ void Model::DrawStatus( Camera* cam )
       // rotate to face screen
       glRotatef( robotAngle - yaw, 0,0,1 );
       glRotatef( -pitch, 1,0,0 );
+
+
+		//if( ! parent )
+		// glRectf( 0,0,1,1 );
 		
-      //get raster positition, add gl_width, then project back to world coords
-      glRasterPos3f( 0, 0, 0 );
-      GLfloat pos[ 4 ];
-      glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
-		
-      GLboolean valid;
-      glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
-      if( valid ) 
-	{
-	  GLdouble wx, wy, wz;
-	  GLint viewport[4];
-	  glGetIntegerv(GL_VIEWPORT, viewport);
+		if( power_pack && (power_pack->mod == this) )
+		  power_pack->Visualize( cam );
+
+		if( say_string )
+		  {
+			 //get raster positition, add gl_width, then project back to world coords
+			 glRasterPos3f( 0, 0, 0 );
+			 GLfloat pos[ 4 ];
+			 glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
 			 
-	  GLdouble modelview[16];
-	  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+			 GLboolean valid;
+			 glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
 			 
-	  GLdouble projection[16];	
-	  glGetDoublev(GL_PROJECTION_MATRIX, projection);
-			 
-	  //get width and height in world coords
-	  gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-	  w = wx;
-	  gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-	  h = wy;
-			 
-	  // calculate speech bubble margin
-	  const float m = h/10;
-			 
-	  // draw inside of bubble
-	  PushColor( BUBBLE_FILL );
-	  glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-	  glPolygonMode( GL_FRONT, GL_FILL );
-	  glEnable( GL_POLYGON_OFFSET_FILL );
-	  glPolygonOffset( 1.0, 1.0 );
-	  gl_draw_octagon( w, h, m );
-	  glDisable( GL_POLYGON_OFFSET_FILL );
-	  PopColor();
-			 
-	  // draw outline of bubble
-	  PushColor( BUBBLE_BORDER );
-	  glLineWidth( 1 );
-	  glEnable( GL_LINE_SMOOTH );
-	  glPolygonMode( GL_FRONT, GL_LINE );
-	  gl_draw_octagon( w, h, m );
-	  glPopAttrib();
-	  PopColor();
-			 
-	  PushColor( BUBBLE_TEXT );
-	  // draw text inside the bubble
-	  gl_draw_string( 2.5*m, 2.5*m, 0, this->say_string );
-	  PopColor();			
-	}
-      glPopMatrix();
-    }
+			 if( valid ) 
+				{
+				  
+				  fl_font( FL_HELVETICA, 12 );
+				  float w = gl_width( this->say_string ); // scaled text width
+				  float h = gl_height(); // scaled text height
+				  
+				  GLdouble wx, wy, wz;
+				  GLint viewport[4];
+				  glGetIntegerv(GL_VIEWPORT, viewport);
+				  
+				  GLdouble modelview[16];
+				  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+				  
+				  GLdouble projection[16];	
+				  glGetDoublev(GL_PROJECTION_MATRIX, projection);
+				  
+				  //get width and height in world coords
+				  gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+				  w = wx;
+				  gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+				  h = wy;
+				  
+				  // calculate speech bubble margin
+				  const float m = h/10;
+				  
+				  // draw inside of bubble
+				  PushColor( BUBBLE_FILL );
+				  glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
+				  glPolygonMode( GL_FRONT, GL_FILL );
+				  glEnable( GL_POLYGON_OFFSET_FILL );
+				  glPolygonOffset( 1.0, 1.0 );
+				  gl_draw_octagon( w, h, m );
+				  glDisable( GL_POLYGON_OFFSET_FILL );
+				  PopColor();
+				  
+				  // draw outline of bubble
+				  PushColor( BUBBLE_BORDER );
+				  glLineWidth( 1 );
+				  glEnable( GL_LINE_SMOOTH );
+				  glPolygonMode( GL_FRONT, GL_LINE );
+				  gl_draw_octagon( w, h, m );
+				  glPopAttrib();
+				  PopColor();
+				  
+				  PushColor( BUBBLE_TEXT );
+				  // draw text inside the bubble
+				  gl_draw_string( 2.5*m, 2.5*m, 0, this->say_string );
+				  PopColor();			
+				}
+		  }
+		glPopMatrix();
+	 }
   
   if( stall )
     {
@@ -1074,9 +1111,13 @@ void Model::DrawFlagList( void )
 				
       PushColor( flag->color );
 		
+
+      glEnable(GL_POLYGON_OFFSET_FILL);
+      glPolygonOffset(1.0, 1.0);
       gluQuadricDrawStyle( quadric, GLU_FILL );
       gluSphere( quadric, flag->size/2.0, 4,2  );
-		
+		glDisable(GL_POLYGON_OFFSET_FILL);
+
       // draw the edges darker version of the same color
       double r,g,b,a;
       stg_color_unpack( flag->color, &r, &g, &b, &a );
@@ -1149,7 +1190,20 @@ void Model::DrawPicker( void )
 
 void Model::DataVisualize( Camera* cam )
 {  
-  // do nothing
+//   if( power_pack )
+// 	 {
+// 		// back into global coords to get rid of my rotation
+// 		glPushMatrix();  
+// 		gl_pose_inverse_shift( GetGlobalPose() );
+
+// 		// shift to the top left corner of the model (roughly)
+// 		glTranslatef( pose.x - geom.size.x/2.0, 
+// 						  pose.y + geom.size.y/2.0, 
+// 						  pose.z + geom.size.z );
+
+// 		power_pack->Visualize( cam );
+// 		glPopMatrix();
+// 	 }
 }
 
 void Model::DataVisualizeTree( Camera* cam )
