@@ -2,23 +2,28 @@
 	 Simple model of energy storage
 	 Richard Vaughan
 	 Created 2009.1.15
-	 $Id$
+    SVN: $Id: stage.hh 7279 2009-01-18 00:10:21Z rtv $
 */
 
 #include "stage_internal.hh"
 
 PowerPack::PowerPack( Model* mod ) :
-  mod( mod), stored( 0.0 ), capacity( 0.0 )
+  mod( mod), stored( 0.0 ), capacity( 0.0 ), charging( false )
 { 
   // nothing to do 
 };
 
 
+void PowerPack::Print( char* prefix )
+{
+  printf( "%s stored %.2f/%.2f joules\n", prefix, stored, capacity );
+}
+
 /** OpenGL visualization of the powerpack state */
 void PowerPack::Visualize( Camera* cam )
 {
   const double height = 0.5;
-  const double width = 0.3;
+  const double width = 0.2;
 
   double percent = stored/capacity * 100.0;
 
@@ -42,13 +47,25 @@ void PowerPack::Visualize( Camera* cam )
   // outline the charge-o-meter
   glTranslatef( 0,0,0.001 );
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  glColor4f( 0,0,0,0.7 );
-  glRectf( 0,0,width, height );
 
+  glColor4f( 0,0,0,0.7 );
+  
+  glRectf( 0,0,width, height );
+  
   glBegin( GL_LINES );
   glVertex2f( 0, fullness );
   glVertex2f( width, fullness );
   glEnd();
+  
+  if( charging )
+	 {
+		glLineWidth( 6.0 );
+		glColor4f( 1,0,0,0.7 );
+		
+		glRectf( 0,0,width, height );
+		
+		glLineWidth( 1.0 );
+	 }
 
   // draw the percentage
   //gl_draw_string( -0.2, 0, 0, buf );

@@ -69,6 +69,7 @@ World::World( const char* token,
 	      double ppm )
   : 
   // private
+  chargers( NULL ),
   destroy( false ),
   dirty( true ),
   models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
@@ -310,20 +311,22 @@ void World::Load( const char* worldfile_path )
   for( int entity = 1; entity < wf->GetEntityCount(); entity++ )
     {
       const char *typestr = (char*)wf->GetEntityType(entity);      	  
-		 
+		
       // don't load window entries here
       if( strcmp( typestr, "window" ) == 0 )
-	{
-	  /* do nothing here */
-	}
+		  {
+			 /* do nothing here */
+		  }
       //else if( strcmp( typestr, "blockgroup" ) == 0 )
       //LoadBlockGroup( wf, entity, entitytable );		
       else if( strcmp( typestr, "block" ) == 0 )
-	LoadBlock( wf, entity, entitytable );
-      else
-	LoadModel( wf, entity, entitytable );
+		  LoadBlock( wf, entity, entitytable );
+		else if( strcmp( typestr, "charger" ) == 0 )
+		  LoadCharger( wf, entity );
+		else
+		  LoadModel( wf, entity, entitytable );
     }
-	
+  
 
   // warn about unused WF lines
   wf->WarnUnused();
@@ -340,6 +343,15 @@ void World::Load( const char* worldfile_path )
 	    (load_end_time - load_start_time) / 1000000.0 );
   else
     putchar( '\n' );
+}
+
+void World::LoadCharger( Worldfile* wf, int entity )
+{
+  Charger* chg = new Charger( this );
+  
+  chargers = g_list_prepend( chargers, chg );
+
+  chg->Load( wf, entity );
 }
 
 
@@ -916,5 +928,16 @@ void World::Extend( stg_point3_t pt )
   extent.z.max = MAX( extent.z.max, pt.z );
 }
 
+void World::TryCharge( PowerPack* pack, Pose pose )
+{
+  pack->charging = false;
+
+  // see if the pose lies within any of the charging rectangles
+  for( GList* it = chargers; it; it = it->next )
+	 {
+		Charger* chg = (Charger*)it->data;  	  	
+		chg->ChargeIfContained( pack, pose );
+	 }
+}
 
 

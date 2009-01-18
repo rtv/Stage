@@ -898,7 +898,9 @@ void Canvas::renderFrame()
   for( GList* it=selected_models; it; it=it->next )
 	 ((Model*)it->data)->DrawSelected();
 
-  
+  for( GList* it=world->chargers; it; it=it->next )
+	 ((Charger*)it->data)->Visualize();
+
   // useful debug - puts a point at the origin of each model
   //for( GList* it = world->World::children; it; it=it->next ) 
   // ((Model*)it->data)->DrawOriginTree();

@@ -659,22 +659,29 @@ void Model::Update( void )
   // 			 this->world->sim_time, this->token, this->subs );
   
   // f we're drawing current and a power pack has been installed
-  if( power_pack && (watts > 0) )
+  if( power_pack )
 	 {
-		// consume  energy stored in the power pack
-		stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
-		power_pack->stored -= consumed;
-
-		/*		
-		printf ( "%s current %.2f consumed %.6f ppack @ %p [ %.2f/%.2f (%.0f)\n",
-					token, 
-					watts, 
-					consumed, 
-					power_pack, 
-					power_pack->stored, 
-					power_pack->capacity, 
-					power_pack->stored / power_pack->capacity * 100.0 );
-		*/
+		if( watts > 0 )
+		  {
+			 // consume  energy stored in the power pack
+			 stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
+			 power_pack->stored -= consumed;
+			 
+			 /*		
+						printf ( "%s current %.2f consumed %.6f ppack @ %p [ %.2f/%.2f (%.0f)\n",
+						token, 
+						watts, 
+						consumed, 
+						power_pack, 
+						power_pack->stored, 
+						power_pack->capacity, 
+						power_pack->stored / power_pack->capacity * 100.0 );
+			 */
+		  }
+		
+		// I own this power pack, see if the world wants to recharge it */
+		if( power_pack->mod == this )
+		  world->TryCharge( power_pack, GetGlobalPose() );
 	 }
 
   CallCallbacks( &hooks.update );

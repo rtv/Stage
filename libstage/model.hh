@@ -23,6 +23,10 @@ public:
 
   /** OpenGL visualization of the powerpack state */
   void Visualize( Camera* cam );
+
+  /** Print human-readable status on stdout, prefixed with the
+		argument string */
+  void Print( char* prefix );
 };
 
 class Visibility

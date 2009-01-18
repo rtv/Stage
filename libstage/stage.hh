@@ -809,6 +809,23 @@ namespace Stg
   class Region;
   class SuperRegion;
   class BlockGroup;
+  class PowerPack;
+
+  /// %Charger class
+  class Charger
+  {
+	 World* world;
+	 stg_watts_t watts;
+	 stg_bounds3d_t volume;
+	 
+  public:
+	 Charger( World* world );
+	 void ChargeIfContained( PowerPack* pp, Pose pose );
+	 bool Contains( Pose pose );
+	 void Charge( PowerPack* pp );
+	 void Visualize();
+	 void Load( Worldfile* wf, int entity );
+  };
 
   /// %World class
   class World : public Ancestor
@@ -817,7 +834,8 @@ namespace Stg
     friend class Block;
     //friend class StgTime;
     friend class Canvas;
-  
+	 friend class Charger;
+
   private:
   
     static GList* world_list; ///< all the worlds that exist
@@ -825,6 +843,7 @@ namespace Stg
     static void UpdateCb( World* world);
     static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
 	 
+	 GList* chargers;
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
@@ -866,6 +885,7 @@ namespace Stg
     void LoadModel( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadBlockGroup( Worldfile* wf, int entity, GHashTable* entitytable );
+    void LoadCharger( Worldfile* wf, int entity );
 
     SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
     SuperRegion* GetSuperRegion( const stg_point_int_t& coord );
@@ -982,6 +1002,8 @@ namespace Stg
     void CancelQuit(){ quit = false; }
     void CancelQuitAll(){ quit_all = false; }
 	 
+	 void TryCharge( PowerPack* pp, Pose pose );
+
     /** Get the resolution in pixels-per-metre of the underlying
 	discrete raytracing model */ 
     double Resolution(){ return ppm; };
