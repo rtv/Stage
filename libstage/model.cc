@@ -943,7 +943,7 @@ void Model::AddCustomVisualizer( CustomVisualizer* custom_visual )
 	Canvas* canvas = world_gui->GetCanvas();
 	std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( custom_visual->name() );
 	if( i == canvas->_custom_options.end() ) {
-		Option* op = new Option( custom_visual->name(), custom_visual->name(), "", true );
+		Option* op = new Option( custom_visual->name(), custom_visual->name(), "", true, world );
 		canvas->_custom_options[ custom_visual->name() ] = op;
 		registerOption( op );
 	}

@@ -25,7 +25,8 @@ static const unsigned int DEFAULT_BLOBFINDERRESOLUTION = 1;
 static const unsigned int DEFAULT_BLOBFINDERSCANWIDTH = 80;
 static const unsigned int DEFAULT_BLOBFINDERSCANHEIGHT = 60;
 
-Option ModelBlobfinder::showBlobData( "Show Blobfinder", "show_blob", "", true );
+//TODO make instance attempt to register an option (as customvisualizations do)
+Option ModelBlobfinder::showBlobData( "Show Blobfinder", "show_blob", "", true, NULL );
 
 /**
   @ingroup model

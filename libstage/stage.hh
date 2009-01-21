@@ -1301,6 +1301,7 @@ namespace Stg
     friend class Canvas;
     friend class ModelCamera;
     friend class Model;
+    friend class Option;
 
   private:
 

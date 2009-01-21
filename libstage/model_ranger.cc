@@ -95,8 +95,9 @@ static const char RANGER_COLOR[] = "gray75";
 static const char RANGER_CONFIG_COLOR[] = "gray90";
 static const char RANGER_GEOM_COLOR[] = "orange";
 
-Option ModelRanger::showRangerData( "Ranger ranges", "show_ranger", "", true );
-Option ModelRanger::showRangerTransducers( "Ranger transducers", "show_ranger_transducers", "", false );
+//TODO make instance attempt to register an option (as customvisualizations do)
+Option ModelRanger::showRangerData( "Ranger ranges", "show_ranger", "", true, NULL );
+Option ModelRanger::showRangerTransducers( "Ranger transducers", "show_ranger_transducers", "", false, NULL );
 
 
 ModelRanger::ModelRanger( World* world, 

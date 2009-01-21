@@ -3,13 +3,14 @@
 using namespace Stg;
 
 
-Option::Option( std::string n, std::string tok, std::string key, bool v ) : 
+Option::Option( std::string n, std::string tok, std::string key, bool v, World* world ) : 
 optName( n ), 
 value( v ), 
 wf_token( tok ), 
 shortcut( key ), 
 menu( NULL ),
-menuCb( NULL )
+menuCb( NULL ),
+_world( world )
 { }
 
 Fl_Menu_Item* getMenuItem( Fl_Menu_* menu, int i ) {
@@ -60,5 +61,13 @@ void Option::set( bool val )
 	if( menu ) {
 		Fl_Menu_Item* item = getMenuItem( menu, menuIndex );
 		value ? item->set() : item->clear();
+	}
+
+	if( _world ) {
+		WorldGui* wg = dynamic_cast< WorldGui* >( _world );
+		if( wg == NULL ) return;
+		Canvas* canvas = wg->GetCanvas();
+		canvas->invalidate();
+		canvas->redraw();
 	}
 }

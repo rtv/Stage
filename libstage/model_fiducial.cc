@@ -23,7 +23,8 @@ const stg_meters_t DEFAULT_FIDUCIAL_RANGEMAXANON = 8.0;
 const stg_radians_t DEFAULT_FIDUCIAL_FOV = M_PI;
 const stg_watts_t DEFAULT_FIDUCIAL_WATTS = 10.0;
 
-Option ModelFiducial::showFiducialData( "Show Fiducial", "show_fiducial", "", true );
+//TODO make instance attempt to register an option (as customvisualizations do)
+Option ModelFiducial::showFiducialData( "Show Fiducial", "show_fiducial", "", true, NULL );
 
 /** 
   @ingroup model
@@ -38,9 +39,9 @@ API: Stg::ModelFiducial
 @par Summary and default values
 
 @verbatim
-fiducialfinder
+fiducial
 (
-  # fiducialfinder properties
+  # fiducial properties
   range_min 0.0
   range_max 8.0
   range_max_id 5.0
@@ -68,8 +69,8 @@ ModelFiducial::ModelFiducial( World* world,
 												Model* parent )
   : Model( world, parent, MODEL_TYPE_FIDUCIAL )
 {
-	PRINT_DEBUG2( "Constructing ModelFiducial %d (%s)\n", 
-			id, typestr );
+	//PRINT_DEBUG2( "Constructing ModelFiducial %d (%s)\n", 
+	//		id, typestr );
 
 	// assert that Update() is reentrant for this derived model
 	thread_safe = true;

@@ -51,7 +51,8 @@ enabled 1
 #include "stage_internal.hh"
 #include "option.hh"
 
-Option ModelBlinkenlight::showBlinkenData( "Show Blink", "show_blinken", "", true );
+//TODO make instance attempt to register an option (as customvisualizations do)
+Option ModelBlinkenlight::showBlinkenData( "Show Blink", "show_blinken", "", true, NULL );
 
 											
 ModelBlinkenlight::ModelBlinkenlight( World* world,

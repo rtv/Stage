@@ -82,8 +82,9 @@ const stg_position_control_mode_t POSITION_CONTROL_DEFAULT = STG_POSITION_CONTRO
 const stg_position_localization_mode_t POSITION_LOCALIZATION_DEFAULT = STG_POSITION_LOCALIZATION_GPS;
 const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIFFERENTIAL;
 
-Option ModelPosition::showCoords( "Position Coordinates", "show_coords", "", false );
-Option ModelPosition::showWaypoints( "Position Waypoints", "show_waypoints", "", false );
+//TODO make instance attempt to register an option (as customvisualizations do)
+Option ModelPosition::showCoords( "Position Coordinates", "show_coords", "", false, NULL );
+Option ModelPosition::showWaypoints( "Position Waypoints", "show_waypoints", "", false, NULL );
 
 
 ModelPosition::ModelPosition( World* world, 

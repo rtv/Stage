@@ -17,7 +17,8 @@
 #include <sstream>
 #include <iomanip>
 
-Option ModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true );
+//TODO make instance attempt to register an option (as customvisualizations do)
+Option ModelCamera::showCameraData( "Show Camera Data", "show_camera", "", true, NULL );
 
 static const Size DEFAULT_SIZE( 0.1, 0.07, 0.05 );
 static const char DEFAULT_GEOM_COLOR[] = "black";

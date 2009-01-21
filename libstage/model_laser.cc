@@ -28,8 +28,9 @@ static const stg_msec_t DEFAULT_INTERVAL_MS = 100;
 static const unsigned int DEFAULT_RESOLUTION = 1;
 static const char* DEFAULT_COLOR = "blue";
 
-Option ModelLaser::showLaserData( "Laser scans", "show_laser", "", true );
-Option ModelLaser::showLaserStrikes( "Laser strikes", "show_laser_strikes", "", false );
+//TODO make instance attempt to register an option (as customvisualizations do)
+Option ModelLaser::showLaserData( "Laser scans", "show_laser", "", true, NULL );
+Option ModelLaser::showLaserStrikes( "Laser strikes", "show_laser_strikes", "", false, NULL );
 
 /**
 @ingroup model
