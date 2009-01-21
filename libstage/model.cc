@@ -165,7 +165,8 @@ Model::Model( World* world,
     watts(0),
     wf(NULL),
     wf_entity(0),
-    world(world)
+    world(world),
+	world_gui( dynamic_cast< WorldGui* >( world ) )
 {
   assert( modelsbyid );
   assert( world );
@@ -926,14 +927,34 @@ void Model::PopCoords()
 
 void Model::AddCustomVisualizer( CustomVisualizer* custom_visual )
 {
-	if( custom_visual )
-		custom_visual_list = g_list_append(custom_visual_list, custom_visual );
+	if( !custom_visual )
+		return;
+
+	//Visualizations can only be added to stage when run in a GUI
+	if( world_gui == NULL ) {
+		printf( "Unable to add custom visualization - it must be run with a GUI world\n" );
+		return;
+	}
+
+	//save visual instance
+	custom_visual_list = g_list_append(custom_visual_list, custom_visual );
+
+	//register option for all instances which share the same name
+	Canvas* canvas = world_gui->GetCanvas();
+	std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( custom_visual->name() );
+	if( i == canvas->_custom_options.end() ) {
+		Option* op = new Option( custom_visual->name(), custom_visual->name(), "", true );
+		canvas->_custom_options[ custom_visual->name() ] = op;
+		registerOption( op );
+	}
 }
 
 void Model::RemoveCustomVisualizer( CustomVisualizer* custom_visual )
 {
 	if( custom_visual )
 		custom_visual_list = g_list_remove(custom_visual_list, custom_visual );
+
+	//TODO unregister option - tricky because there might still be instances attached to different models which have the same name
 }
 
 
@@ -1218,8 +1239,11 @@ void Model::DataVisualizeTree( Camera* cam )
   PushLocalCoords();
   DataVisualize( cam ); // virtual function overridden by most model types  
 
+  CustomVisualizer* vis;
   for( GList* item = custom_visual_list; item; item = item->next ) {
-    static_cast< CustomVisualizer* >( item->data )->DataVisualize( cam );
+    vis = static_cast< CustomVisualizer* >( item->data );
+	if( world_gui->GetCanvas()->_custom_options[ vis->name() ]->isEnabled() )
+		vis->DataVisualize( cam );
   }
 
 

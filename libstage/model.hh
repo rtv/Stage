@@ -68,6 +68,7 @@ public:
 	//TODO allow user to specify name - which will show up in display filter
 	virtual ~CustomVisualizer( void ) { }
 	virtual void DataVisualize( Camera* cam ) = 0;
+	virtual const std::string& name() = 0; //must return a name for visualization (careful not to return stack-memory)
 };
 
 
@@ -207,6 +208,7 @@ protected:
   Worldfile* wf;
   int wf_entity;
   World* world; // pointer to the world in which this model exists
+  WorldGui* world_gui; //pointer to the GUI world - NULL if running in non-gui mode
   	 
 public:
 

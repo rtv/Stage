@@ -8,6 +8,9 @@
 #ifndef STG_INTERNAL_H
 #define STG_INTERNAL_H
 
+#include <map>
+#include <string>
+
 // external definitions for libstage users
 #include "stage.hh" 
 
@@ -100,6 +103,8 @@ private:
 	 showBlur,
 	 pCamOn,
 	 visualizeAll;
+
+  std::map< std::string, Option* > _custom_options;
   
 public:
 	Canvas( WorldGui* world, int x, int y, int width, int height);

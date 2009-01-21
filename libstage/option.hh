@@ -33,6 +33,7 @@ namespace Stg {
 		Option( std::string n, std::string tok, std::string key, bool v );	  
 
 		const std::string name() const { return optName; }
+		inline bool isEnabled() const { return value; }
 		inline bool val() const { return value; }
 		inline operator bool() { return val(); }
 		inline bool operator<( const Option& rhs ) const

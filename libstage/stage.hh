@@ -1300,6 +1300,7 @@ namespace Stg
   {
     friend class Canvas;
     friend class ModelCamera;
+    friend class Model;
 
   private:
 
