@@ -11,7 +11,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-//#define DEBUG 1
+#define DEBUG 1
 
 #include <assert.h>
 #include <math.h>
@@ -235,6 +235,8 @@ void ModelFiducial::Update( void )
 			this );
 
 	PRINT_DEBUG2( "model %s saw %d fiducials", token, data->len );
+	fiducials = (stg_fiducial_t*)data->data;
+	fiducial_count = data->len;
 }
 
 void ModelFiducial::Load( void )
