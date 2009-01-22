@@ -45,8 +45,12 @@
 #include <glib-object.h> // for g_type_init() used by GDKPixbuf objects
 #include <limits.h>
 #include <libgen.h> // for dirname(3)
-#include "stage_internal.hh"
+
+#include "stage.hh"
 #include "file_manager.hh"
+#include "worldfile.hh"
+#include "region.hh"
+using namespace Stg;
 
 // static data members
 unsigned int World::next_id = 0;

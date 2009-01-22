@@ -1,5 +1,6 @@
 
-#include "stage_internal.hh"
+#include "stage.hh"
+using namespace Stg;
 
 #define MATCH(A,B) (strcmp(A,B)== 0)
 

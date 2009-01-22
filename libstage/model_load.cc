@@ -7,8 +7,10 @@
 #include <string.h>
 #include <ltdl.h> // for library module loading
 
-#include "stage_internal.hh"
+#include "stage.hh"
+#include "worldfile.hh"
 #include "file_manager.hh"
+using namespace Stg;
 
 //#define DEBUG
 

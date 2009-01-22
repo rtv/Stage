@@ -4,7 +4,9 @@
   Copyright Richard Vaughan 2008
 */
 
-#include "stage_internal.hh"
+#include "region.hh"
+#include "gl.hh"
+using namespace Stg;
 
 const uint32_t Region::WIDTH = REGIONWIDTH;
 const uint32_t Region::SIZE = REGIONSIZE;
@@ -114,7 +116,7 @@ void SuperRegion::Draw( bool drawall )
 
   char buf[32];
   snprintf( buf, 15, "%lu", count );
-  gl_draw_string( 1<<SBITS, 1<<SBITS, 0, buf );
+  Gl::draw_string( 1<<SBITS, 1<<SBITS, 0, buf );
     
   glColor3f( 1.0,0,0 );
 
@@ -127,7 +129,7 @@ void SuperRegion::Draw( bool drawall )
 			 continue;		  
 
 		  snprintf( buf, 15, "%lu", r->count );
-		  gl_draw_string( x<<RBITS, y<<RBITS, 0, buf );
+		  Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
 
 		  
 		  for( unsigned int p=0; p<Region::WIDTH; p++ )

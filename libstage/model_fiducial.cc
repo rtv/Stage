@@ -15,7 +15,12 @@
 
 #include <assert.h>
 #include <math.h>
-#include "stage_internal.hh"
+
+#include "stage.hh"
+#include "gl.hh"
+#include "option.hh"
+#include "worldfile.hh"
+using namespace Stg;
 
 const stg_meters_t DEFAULT_FIDUCIAL_RANGEMIN = 0.0;
 const stg_meters_t DEFAULT_FIDUCIAL_RANGEMAXID = 5.0;
@@ -176,9 +181,11 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 	range = ray.range;
 	Model* hitmod = ray.mod;
 
-	//  printf( "ray hit %s and was seeking LOS to %s\n",
-	//hitmod ? hitmod->Token() : "null",
-	//him->Token() );
+// 	printf( "ray hit %s and was seeking LOS to %s\n",
+// 			  hitmod ? hitmod->Token() : "null",
+// 			  him->Token() );
+
+	//assert( ! (hitmod == this) );
 
 	// if it was him, we can see him
 	if( hitmod == him )
@@ -296,7 +303,7 @@ void ModelFiducial::DataVisualize( Camera* cam )
 		glEnd();
 
 		glPushMatrix();
-		gl_coord_shift( dx,dy,0,fid.geom.a );
+		Gl::coord_shift( dx,dy,0,fid.geom.a );
 
 		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		glRectf( -fid.geom.x/2.0, -fid.geom.y/2.0,
@@ -307,7 +314,7 @@ void ModelFiducial::DataVisualize( Camera* cam )
 		snprintf(idstr, 31, "%d", fid.id );
 
 		PushColor( 0,0,0,1 ); // black
-		gl_draw_string( 0,0,0, idstr );
+		Gl::draw_string( 0,0,0, idstr );
 		PopColor();
 
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );

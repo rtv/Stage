@@ -1,4 +1,6 @@
-#include "stage_internal.hh"
+#include "canvas.hh"
+
+using namespace Stg;
 
 GlColorStack::GlColorStack()
 {

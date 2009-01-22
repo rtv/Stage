@@ -10,6 +10,7 @@
 #include <vector>
 #include <set>
 
+#include "stage.hh"
 #include "option.hh"
 
 namespace Stg {

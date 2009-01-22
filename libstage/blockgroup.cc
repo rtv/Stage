@@ -1,5 +1,8 @@
 
-#include "stage_internal.hh"
+#include "stage.hh"
+#include "gl.hh"
+#include "worldfile.hh"
+
 #include <libgen.h> // for dirname(3)
 
 #undef DEBUG
@@ -123,7 +126,7 @@ void BlockGroup::DrawSolid( const Geom & geom )
 {
   glPushMatrix();
 
-  gl_pose_shift( geom.pose );
+  Gl::pose_shift( geom.pose );
 
   glScalef( geom.size.x / size.x,
 				geom.size.y / size.y,				
@@ -166,7 +169,7 @@ void BlockGroup::BuildDisplayList( Model* mod )
 
   Geom geom = mod->GetGeom();
 
-  gl_pose_shift( geom.pose );
+  Gl::pose_shift( geom.pose );
 
   glScalef( geom.size.x / size.x,
 				geom.size.y / size.y,				

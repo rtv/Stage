@@ -1,5 +1,6 @@
 
-#include "stage_internal.hh"
+#include "stage.hh"
+using namespace Stg;
 
 Waypoint::Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, stg_color_t color ) 
   : color(color)

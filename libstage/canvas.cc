@@ -9,14 +9,17 @@
     $Id$
 */
 
-#include "stage_internal.hh"
+#include "stage.hh"
+#include "gl.hh"
+#include "canvas.hh"
+#include "worldfile.hh"
 #include "texture_manager.hh"
 #include "replace.h"
 
 #include <string>
-//#include <map>
 #include <sstream>
 #include <png.h>
+
 
 #include "file_manager.hh"
 #include "options_dlg.hh"
@@ -49,6 +52,12 @@ Canvas::Canvas( WorldGui* world,
 							 int x, int y, 
 							 int width, int height) :
   Fl_Gl_Window( x, y, width, height ),
+  colorstack(),  
+  models_sorted( NULL ),
+  current_camera( NULL ),
+  camera(),
+  perspective_camera(),
+  dirty_buffer( false ),  
   wf( NULL ),
   startx( -1 ),
   starty( -1 ),
@@ -79,8 +88,7 @@ Canvas::Canvas( WorldGui* world,
   graphics( true ),
   world( world ),
   frames_rendered_count( 0 ),
-  screenshot_frame_skip( 1 ),
-  models_sorted( NULL )
+  screenshot_frame_skip( 1 )
 {
   end();
   
@@ -608,13 +616,13 @@ void Canvas::DrawGlobalGrid()
   for( double i = floor(bounds.x.min); i < bounds.x.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
-      gl_draw_string(  i, 0, 0.00, str );
+		Gl::draw_string(  i, 0, 0.00, str );
     }
   
   for( double i = floor(bounds.y.min); i < bounds.y.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
-      gl_draw_string(  0, i, 0.00, str );
+		Gl::draw_string(  0, i, 0.00, str );
     }
   PopColor();
   
@@ -996,7 +1004,7 @@ void Canvas::renderFrame()
 		colorstack.Pop();
 		
       colorstack.Push( 0,0,0 ); // black
-      gl_draw_string( margin, margin, 0, clockstr.c_str() );
+		Gl::draw_string( margin, margin, 0, clockstr.c_str() );
       colorstack.Pop();
 
       glEnable( GL_DEPTH_TEST );

@@ -8,38 +8,40 @@
 #ifndef _TEXTURE_MANAGER_H_
 #define _TEXTURE_MANAGER_H_
 
-#include "stage_internal.hh"
+#include "stage.hh"
 
 #include <FL/Fl_Shared_Image.H>
 #include <glib.h>
 #include <iostream>
 
-///Singleton for loading textures (not threadsafe)
-class TextureManager {
-private:
-	TextureManager( void ) { }
-
-	//try to load filename from relative dir, then install path
-	Fl_Shared_Image* loadImage( const char* filename );
-	
-public:
-
-	//TODO figure out where to store standard textures
-	GLuint _stall_texture_id;
-	
-	//TODO make this threadsafe
-	inline static TextureManager& getInstance( void ) { 
+namespace Stg
+{
+  ///Singleton for loading textures (not threadsafe)
+  class TextureManager {
+  private:
+	 TextureManager( void ) { }
+	 
+	 //try to load filename from relative dir, then install path
+	 Fl_Shared_Image* loadImage( const char* filename );
+	 
+  public:
+	 
+	 //TODO figure out where to store standard textures
+	 GLuint _stall_texture_id;
+	 
+	 //TODO make this threadsafe
+	 inline static TextureManager& getInstance( void ) { 
 		static TextureManager* the_instance = NULL;
 		//TODO add a lock here
 		if( the_instance == NULL ) {
-			the_instance = new TextureManager;
+		  the_instance = new TextureManager;
 		}
 		return *the_instance;
-	}
-	
-	///load a texture on the GPU, returned value is the texture ID, or 0 for failure
-	GLuint loadTexture( const char *filename );
-	
-};
-
+	 }
+	 
+	 ///load a texture on the GPU, returned value is the texture ID, or 0 for failure
+	 GLuint loadTexture( const char *filename );
+	 
+  };
+}
 #endif //_TEXTURE_MANAGER_H_

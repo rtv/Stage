@@ -76,7 +76,12 @@
 */
 
 //#define DEBUG 1
-#include "stage_internal.hh"
+
+#include "stage.hh"
+#include "worldfile.hh"
+#include "option.hh"
+using namespace Stg;
+
 #include <math.h>
 
 static const stg_watts_t RANGER_WATTSPERSENSOR = 0.2;

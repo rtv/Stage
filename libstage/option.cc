@@ -1,5 +1,8 @@
-#include "stage_internal.hh"
 
+#include "stage.hh"
+#include "worldfile.hh"
+#include "option.hh"
+#include "canvas.hh"
 using namespace Stg;
 
 

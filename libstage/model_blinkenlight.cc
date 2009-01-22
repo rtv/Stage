@@ -48,8 +48,10 @@ enabled 1
  */
 
 //#define DEBUG 1
-#include "stage_internal.hh"
+#include "stage.hh"
+#include "worldfile.hh"
 #include "option.hh"
+using namespace Stg;
 
 //TODO make instance attempt to register an option (as customvisualizations do)
 Option ModelBlinkenlight::showBlinkenData( "Show Blink", "show_blinken", "", true, NULL );

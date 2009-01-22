@@ -6,8 +6,9 @@
 
 #include <getopt.h>
 
-#include "stage_internal.hh"
+#include "stage.hh"
 #include "config.h"
+using namespace Stg;
 
 /* options descriptor */
 static struct option longopts[] = {

@@ -25,7 +25,6 @@ set( stageSrcs ancestor.cc
 	model_props.cc
 	model_ranger.cc
 	option.cc
-	option.hh
 	options_dlg.cc
 	options_dlg.hh
 	powerpack.cc
@@ -82,7 +81,7 @@ INSTALL(TARGETS stagebinary stage
 	LIBRARY DESTINATION lib
 )
 
-INSTALL(FILES stage.hh option.hh worldfile.hh
+INSTALL(FILES stage.hh 
         DESTINATION include/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR})
 
 ADD_TEST( test1 ${EXECUTABLE_OUTPUT_PATH}stagetest )

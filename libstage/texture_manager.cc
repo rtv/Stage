@@ -6,9 +6,11 @@
  *  $Id$
  */
 
+#include <sstream>
+
 #include "texture_manager.hh"
 #include "file_manager.hh"
-#include <sstream>
+using namespace Stg;
 
 Fl_Shared_Image* TextureManager::loadImage( const char* filename )
 {	

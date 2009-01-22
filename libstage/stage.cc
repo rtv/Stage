@@ -16,9 +16,10 @@
 
 //#define DEBUG
 
-#include "stage_internal.hh"
+#include "stage.hh"
 #include "config.h" // results of cmake's system configuration tests
 #include "file_manager.hh"
+using namespace Stg;
 
 static bool init_called = false;
 

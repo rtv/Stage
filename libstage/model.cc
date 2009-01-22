@@ -109,8 +109,15 @@
 #endif
 
 //#define DEBUG 0
-#include "stage_internal.hh"
+#include "stage.hh"
+#include "gl.hh"
+
+#include <map>
+
+#include "worldfile.hh"
+#include "canvas.hh"
 #include "texture_manager.hh"
+using namespace Stg;
 
 // speech bubble colors
 static const stg_color_t BUBBLE_FILL = 0xFFC8C8FF; // light blue/grey
@@ -120,6 +127,42 @@ static const stg_color_t BUBBLE_TEXT = 0xFF000000; // black
 // static members
 uint32_t Model::count = 0;
 GHashTable* Model::modelsbyid = g_hash_table_new( NULL, NULL );
+
+Visibility::Visibility() : 
+  blob_return( true ),
+  fiducial_key( 0 ),
+  fiducial_return( 0 ),
+  gripper_return( false ),
+  laser_return( LaserVisible ),
+  obstacle_return( true ),
+  ranger_return( true )
+{ /* nothing do do */ }
+
+void Visibility::Load( Worldfile* wf, int wf_entity )
+{
+  blob_return = wf->ReadInt( wf_entity, "blob_return", blob_return);    
+  fiducial_key = wf->ReadInt( wf_entity, "fiducial_key", fiducial_key);
+  fiducial_return = wf->ReadInt( wf_entity, "fiducial_return", fiducial_return);
+  gripper_return = wf->ReadInt( wf_entity, "gripper_return", gripper_return);    
+  laser_return = (stg_laser_return_t)wf->ReadInt( wf_entity, "laser_return", laser_return);    
+  obstacle_return = wf->ReadInt( wf_entity, "obstacle_return", obstacle_return);    
+  ranger_return = wf->ReadInt( wf_entity, "ranger_return", ranger_return);    
+}    
+
+GuiState:: GuiState() :
+  grid( false ),
+  mask( 0 ),
+  nose( false ),
+  outline( false )
+{ /* nothing to do */}
+
+void GuiState::Load( Worldfile* wf, int wf_entity )
+{
+  nose = wf->ReadInt( wf_entity, "gui_nose", nose);    
+  grid = wf->ReadInt( wf_entity, "gui_grid", grid);    
+  outline = wf->ReadInt( wf_entity, "gui_outline", outline);    
+  mask = wf->ReadInt( wf_entity, "gui_movemask", mask);    
+}    
 
 
 // constructor
@@ -136,8 +179,8 @@ Model::Model( World* world,
     color( 0xFFFF0000 ), // red
     data_fresh(false),
     disabled(false),
-    flag_list(NULL),
 	custom_visual_list( NULL ),
+    flag_list(NULL),
     geom(),
     has_default_block( true ),
     id( Model::count++ ),
@@ -166,7 +209,7 @@ Model::Model( World* world,
     wf(NULL),
     wf_entity(0),
     world(world),
-	world_gui( dynamic_cast< WorldGui* >( world ) )
+	 world_gui( dynamic_cast< WorldGui* >( world ) )
 {
   assert( modelsbyid );
   assert( world );
@@ -467,6 +510,18 @@ bool Model::IsRelated( Model* mod2 )
   return( (this == mod2) || IsAntecedent( mod2 ) || IsDescendent( mod2 ) );
 }
 
+
+// bool Model::IsRelated( Model* that )
+// {
+//   if( this == that )
+// 	 return true;
+
+//   for( GList* it = children; it; it=it->next )
+// 	 {
+// 		if( 
+// 	 }
+
+
 // get the model's velocity in the global frame
 Velocity Model::GetGlobalVelocity()
 {
@@ -702,11 +757,11 @@ void Model::DrawSelected()
 	    token, gpose.x, gpose.y, gpose.z, rtod(gpose.a) );
   
   PushColor( 0,0,0,1 ); // text color black
-  gl_draw_string( 0.5,0.5,0.5, buf );
+  Gl::draw_string( 0.5,0.5,0.5, buf );
   
   glRotatef( rtod(pose.a), 0,0,1 );
   
-  gl_pose_shift( geom.pose );
+  Gl::pose_shift( geom.pose );
   
   double dx = geom.size.x / 2.0 * 1.6;
   double dy = geom.size.y / 2.0 * 1.6;
@@ -737,8 +792,8 @@ void Model::DrawTrailFootprint()
       stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
 
       glPushMatrix();
-      gl_pose_shift( checkpoint->pose );
-      gl_pose_shift( geom.pose );
+		Gl::pose_shift( checkpoint->pose );
+		Gl::pose_shift( geom.pose );
 
       stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
       PushColor( r, g, b, 0.1 );
@@ -872,7 +927,7 @@ void Model::DrawBoundingBoxTree()
 
 void Model::DrawBoundingBox()
 {
-  gl_pose_shift( geom.pose );  
+  Gl::pose_shift( geom.pose );  
 
   PushColor( color );
   
@@ -917,7 +972,7 @@ void Model::PushLocalCoords()
   if( parent )
     glTranslatef( 0,0, parent->geom.size.z );
   
-  gl_pose_shift( pose );
+  Gl::pose_shift( pose );
 }
 
 void Model::PopCoords()
@@ -943,7 +998,7 @@ void Model::AddCustomVisualizer( CustomVisualizer* custom_visual )
 	Canvas* canvas = world_gui->GetCanvas();
 	std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( custom_visual->name() );
 	if( i == canvas->_custom_options.end() ) {
-		Option* op = new Option( custom_visual->name(), custom_visual->name(), "", true, world );
+		Option* op = new Option( custom_visual->name(), custom_visual->name(), "", true, world_gui );
 		canvas->_custom_options[ custom_visual->name() ] = op;
 		registerOption( op );
 	}
@@ -1038,7 +1093,7 @@ void Model::DrawStatus( Camera* cam )
 				  glPolygonMode( GL_FRONT, GL_FILL );
 				  glEnable( GL_POLYGON_OFFSET_FILL );
 				  glPolygonOffset( 1.0, 1.0 );
-				  gl_draw_octagon( w, h, m );
+				  Gl::draw_octagon( w, h, m );
 				  glDisable( GL_POLYGON_OFFSET_FILL );
 				  PopColor();
 				  
@@ -1047,13 +1102,13 @@ void Model::DrawStatus( Camera* cam )
 				  glLineWidth( 1 );
 				  glEnable( GL_LINE_SMOOTH );
 				  glPolygonMode( GL_FRONT, GL_LINE );
-				  gl_draw_octagon( w, h, m );
+				  Gl::draw_octagon( w, h, m );
 				  glPopAttrib();
 				  PopColor();
 				  
 				  PushColor( BUBBLE_TEXT );
 				  // draw text inside the bubble
-				  gl_draw_string( 2.5*m, 2.5*m, 0, this->say_string );
+				  Gl::draw_string( 2.5*m, 2.5*m, 0, this->say_string );
 				  PopColor();			
 				}
 		  }
@@ -1268,7 +1323,7 @@ void Model::DrawGrid( void )
       vol.z.max = geom.size.z;
 		 
       PushColor( 0,0,1,0.4 );
-      gl_draw_grid(vol);
+		Gl::draw_grid(vol);
       PopColor();		 
       PopCoords();
     }

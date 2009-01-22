@@ -1,4 +1,5 @@
-#include "stage_internal.hh"
+#include "stage.hh"
+using namespace Stg;
 
 Flag::Flag( stg_color_t color, double size )
 { 

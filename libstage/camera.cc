@@ -7,7 +7,9 @@
  */
 
 
-#include "stage_internal.hh"
+#include "stage.hh"
+#include "worldfile.hh"
+using namespace Stg;
 
 #include <iostream>
 

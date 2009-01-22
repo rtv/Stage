@@ -13,7 +13,11 @@
 #define CAMERA_FAR_CLIP 8.0
 
 //#define DEBUG 1
-#include "stage_internal.hh"
+#include "canvas.hh"
+#include "worldfile.hh"
+
+using namespace Stg;
+
 #include <sstream>
 #include <iomanip>
 

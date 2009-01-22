@@ -134,10 +134,14 @@ then select the option from the menu again to stop.
 #include <sstream>
 #include <iomanip>
 
-#include "stage_internal.hh"
+#include "canvas.hh"
+#include "region.hh"
+#include "worldfile.hh"
 #include "file_manager.hh"
 #include "options_dlg.hh"
 #include "config.h" // build options from CMake
+
+using namespace Stg;
 
 static const char* AboutText = 
 	"\n" 
@@ -156,7 +160,7 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   Fl_Window(W,H,L ),
   canvas( new Canvas( this,0,30,W,H-30 ) ),
   drawOptions(),
-  fileMan(),
+  fileMan( new FileManager() ),
   interval_log(),
   interval_real( (stg_usec_t)1e5 ),
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
@@ -217,7 +221,7 @@ void WorldGui::Load( const char* filename )
 {
   PRINT_DEBUG1( "%s.Load()", token );
 	
-  fileMan.newWorld( filename );
+  fileMan->newWorld( filename );
 
   World::Load( filename );
 	
@@ -447,7 +451,7 @@ void WorldGui::fileLoadCb( Fl_Widget* w, void* p )
   //bool success;
   const char* pattern = "World Files (*.world)";
 	
-	std::string worldsPath = worldGui->fileMan.worldsRoot();
+	std::string worldsPath = worldGui->fileMan->worldsRoot();
 	worldsPath.append( "/" );
   Fl_File_Chooser fc( worldsPath.c_str(), pattern, Fl_File_Chooser::CREATE, "Load World File..." );
   fc.ok_label( "Load" );

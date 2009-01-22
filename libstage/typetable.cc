@@ -1,4 +1,5 @@
-#include "stage_internal.hh"
+#include "stage.hh"
+using namespace Stg;
 
 
 // define constructor wrapping functions for use in the type table only

@@ -32,8 +32,6 @@
 #include <stdio.h> // for FILE ops
 #include <glib.h>
 
-//#include "stage.hh"
-
 namespace Stg {
 
   // Private property class

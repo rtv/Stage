@@ -14,7 +14,11 @@
 //#define DEBUG 
 
 #include <sys/time.h>
-#include "stage_internal.hh"
+
+#include "stage.hh"
+#include "option.hh"
+#include "worldfile.hh"
+using namespace Stg;
 
 static const stg_watts_t DEFAULT_BLOBFINDERWATTS = 2.0;
 static const stg_meters_t DEFAULT_BLOBFINDERRANGE = 12.0;

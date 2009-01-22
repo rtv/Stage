@@ -5,7 +5,8 @@
     SVN: $Id: stage.hh 7279 2009-01-18 00:10:21Z rtv $
 */
 
-#include "stage_internal.hh"
+#include "stage.hh"
+using namespace Stg;
 
 PowerPack::PowerPack( Model* mod ) :
   mod( mod), stored( 0.0 ), capacity( 0.0 ), charging( false )

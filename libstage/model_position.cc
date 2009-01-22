@@ -17,7 +17,12 @@
 #include <stdlib.h>
 
 //#define DEBUG
-#include "stage_internal.hh"
+
+#include "stage.hh"
+#include "gl.hh"
+#include "option.hh"
+#include "worldfile.hh"
+using namespace Stg;
 
 /** 
 @ingroup model
@@ -589,11 +594,11 @@ void ModelPosition::DataVisualize( Camera* cam )
 		glPushMatrix();
   
 		// back into global coords
-		gl_pose_inverse_shift( GetGlobalPose() );
+		Gl::pose_inverse_shift( GetGlobalPose() );
 
-		gl_pose_shift( est_origin );
+		Gl::pose_shift( est_origin );
 		PushColor( 1,0,0,1 ); // origin in red
-		gl_draw_origin( 0.5 );
+		Gl::draw_origin( 0.5 );
 
 		glEnable (GL_LINE_STIPPLE);
 		glLineStipple (3, 0xAAAA);
@@ -609,22 +614,22 @@ void ModelPosition::DataVisualize( Camera* cam )
 
 		char label[64];
 		snprintf( label, 64, "x:%.3f", est_pose.x );
-		gl_draw_string( est_pose.x / 2.0, -0.5, 0, label );
+		Gl::draw_string( est_pose.x / 2.0, -0.5, 0, label );
 
 		snprintf( label, 64, "y:%.3f", est_pose.y );
-		gl_draw_string( est_pose.x + 0.5 , est_pose.y / 2.0, 0, (const char*)label );
+		Gl::draw_string( est_pose.x + 0.5 , est_pose.y / 2.0, 0, (const char*)label );
 
 
 		PopColor();
 
-		gl_pose_shift( est_pose );
+		Gl::pose_shift( est_pose );
 		PushColor( 0,1,0,1 ); // pose in green
-		gl_draw_origin( 0.5 );
+		Gl::draw_origin( 0.5 );
 		PopColor();
 
-		gl_pose_shift( geom.pose );
+		Gl::pose_shift( geom.pose );
 		PushColor( 0,0,1,1 ); // offset in blue
-		gl_draw_origin( 0.5 );
+		Gl::draw_origin( 0.5 );
 		PopColor();
     
 		double r,g,b,a;
@@ -650,8 +655,8 @@ void ModelPosition::DrawWaypoints()
   glPushMatrix();
   PushColor( color );
 
-  gl_pose_inverse_shift( pose );
-  gl_pose_shift( est_origin );
+  Gl::pose_inverse_shift( pose );
+  Gl::pose_shift( est_origin );
   
   for( unsigned int i=0; i < waypoint_count; i++ )
 	 waypoints[i].Draw();

@@ -40,8 +40,9 @@
 //#define DEBUG
 
 #include "replace.h" // for dirname(3)
-#include "stage_internal.hh"
-//#include "worldfile.hh"
+#include "stage.hh"
+#include "worldfile.hh"
+using namespace Stg;
 
 // the isblank() macro is not standard - it's a GNU extension
 // and it doesn't work for me, so here's an implementation - rtv

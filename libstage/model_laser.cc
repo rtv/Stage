@@ -14,7 +14,11 @@
 //#define DEBUG 
 
 #include <sys/time.h>
-#include "stage_internal.hh"
+
+#include "stage.hh"
+#include "worldfile.hh"
+#include "option.hh"
+using namespace Stg;
 
 // DEFAULT PARAMETERS FOR LASER MODEL
 static const bool DEFAULT_FILLED = true;

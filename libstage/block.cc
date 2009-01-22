@@ -1,7 +1,8 @@
 
-#include "stage_internal.hh"
+#include "region.hh"
+#include "worldfile.hh"
 
-//GPtrArray* Block::global_verts = g_ptr_array_sized_new( 1024 );
+using namespace Stg;
 
 /** Create a new block. A model's body is a list of these
 	 blocks. The point data is copied, so pts can safely be freed
