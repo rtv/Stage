@@ -79,7 +79,8 @@ Canvas::Canvas( WorldGui* world,
   graphics( true ),
   world( world ),
   frames_rendered_count( 0 ),
-  screenshot_frame_skip( 1 )
+  screenshot_frame_skip( 1 ),
+  models_sorted( NULL )
 {
   end();
   
