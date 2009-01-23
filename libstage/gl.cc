@@ -1,5 +1,5 @@
 
-#include "gl.hh"
+#include "stage.hh"
 using namespace Stg;
 
 // transform the current coordinate frame by the given pose

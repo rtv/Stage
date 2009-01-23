@@ -17,7 +17,6 @@
 #include <math.h>
 
 #include "stage.hh"
-#include "gl.hh"
 #include "option.hh"
 #include "worldfile.hh"
 using namespace Stg;

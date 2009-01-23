@@ -236,8 +236,8 @@ namespace Stg
   class Pose
   {
   public:
-    stg_meters_t x, y, z; //< location in 3 axes
-    stg_radians_t a; //< rotation about the z axis. 
+    stg_meters_t x, y, z;///< location in 3 axes
+    stg_radians_t a;///< rotation about the z axis. 
     
     Pose( stg_meters_t x, 
 	  stg_meters_t y, 
@@ -262,6 +262,9 @@ namespace Stg
 		   normalize( drand48() * (2.0 * M_PI) ));
     }
     
+	 /** Print pose in human-readable format on stdout
+		  @param prefix Character string to prepend to pose output 
+	 */
     virtual void Print( const char* prefix )
     {
       printf( "%s pose [x:%.3f y:%.3f z:%.3f a:%.3f]\n",
@@ -270,10 +273,15 @@ namespace Stg
   };
   
   
-  /** specify a 3 axis velocity in x, y and heading. */
+  /** Specify a 3 axis velocity in x, y and heading. 	*/
   class Velocity : public Pose
   {
   public:
+	 /** @param x x position in meters 
+		  @param y y position in meters 
+		  @param z z position in meters 
+		  @param a heading in radians 
+	 */
     Velocity( stg_meters_t x, 
 	      stg_meters_t y, 
 	      stg_meters_t z,
@@ -283,6 +291,9 @@ namespace Stg
     Velocity()
     { /*empty*/ }		 
     
+	 /** Print velocity in human-readable format on stdout
+		  @param prefix Character string to prepend to pose output 
+	 */
     virtual void Print( const char* prefix )
     {
       printf( "%s velocity [x:%.3f y:%.3f z:%3.f a:%.3f]\n",
@@ -290,13 +301,13 @@ namespace Stg
     }
   };
   
-  /** specify an object's basic geometry: position and rectangular
+  /** Specify an object's basic geometry: position and rectangular
       size.  */
   class Geom
   {
   public:
-    Pose pose; //< position
-    Size size; //< extent
+    Pose pose;///< position
+    Size size;///< extent
     
     void Print( const char* prefix )
     {
@@ -310,6 +321,8 @@ namespace Stg
     }
   };
   
+  /** Specify a point in space. Arrays of Waypoints can be attached to
+		Models and visualized. */
   class Waypoint
   {
   public:
@@ -321,27 +334,32 @@ namespace Stg
     stg_color_t color;
   };
   
-  /** bound a range of values, from min to max. min and max are initialized to zero. */
+  /** Bound a range of values, from min to max. min and max are initialized to zero. */
   class Bounds
   {
   public:
-    double max; //< largest value in range
-    double min; //< smallest value in range
+	 /// largest value in range, initially zero
+    double max; 
+	 /// smallest value in range, initially zero
+    double min;
     
     Bounds() : max(0), min(0)  
     { /* empty*/  };
   };
   
-  /** bound a volume along the x,y,z axes. All bounds initialized to zero. */
+  /** Bound a volume along the x,y,z axes. All bounds initialized to zero. */
   typedef struct
   {
-    Bounds x; //< volume extent along x axis
-    Bounds y; //< volume extent along y axis
-    Bounds z; //< volume extent along z axis 
+	 /// volume extent along x axis, intially zero
+    Bounds x; 
+	 /// volume extent along y axis, initially zero
+    Bounds y; 
+	 /// volume extent along z axis, initially zero
+    Bounds z; 
   } stg_bounds3d_t;
   
   
-  /** define a three-dimensional bounding box, initialized to zero */
+  /** Define a three-dimensional bounding box, initialized to zero */
   typedef struct
   {
     Bounds x, y, z;
@@ -350,8 +368,8 @@ namespace Stg
   /** define a field-of-view: an angle and range bounds */
   typedef struct
   {
-    Bounds range; //< min and max range of sensor
-    stg_radians_t angle; //< width of viewing angle of sensor
+    Bounds range; ///< min and max range of sensor
+    stg_radians_t angle; ///< width of viewing angle of sensor
   } stg_fov_t;
   
   /** define a point on a 2d plane */
@@ -398,9 +416,9 @@ namespace Stg
 
   typedef uint32_t stg_movemask_t;
 
-  const uint32_t STG_MOVE_TRANS = (1 << 0); //< bitmask for stg_movemask_t
-  const uint32_t STG_MOVE_ROT   = (1 << 1); //< bitmask for stg_movemask_t
-  const uint32_t STG_MOVE_SCALE = (1 << 2); //< bitmask for stg_movemask_t
+  const uint32_t STG_MOVE_TRANS = (1 << 0); ///< bitmask for stg_movemask_t
+  const uint32_t STG_MOVE_ROT   = (1 << 1); ///< bitmask for stg_movemask_t
+  const uint32_t STG_MOVE_SCALE = (1 << 2); ///< bitmask for stg_movemask_t
 
   const char STG_MP_PREFIX[] =             "_mp_";
   const char STG_MP_POSE[] =               "_mp_pose";
@@ -421,8 +439,25 @@ namespace Stg
     {
       LaserTransparent=0, ///<not detected by laser model 
       LaserVisible, ///< detected by laser with a reflected intensity of 0 
-      LaserBright  ////< detected by laser with a reflected intensity of 1 
+      LaserBright  ///< detected by laser with a reflected intensity of 1 
     } stg_laser_return_t;
+
+  
+  /** Convenient OpenGL drawing routines, used by visualization
+		code. */
+  namespace Gl
+  {
+	 void pose_shift( const Pose &pose );
+	 void pose_inverse_shift( const Pose &pose );
+	 void coord_shift( double x, double y, double z, double a  );
+	 void draw_grid( stg_bounds3d_t vol );
+	 /** Render a string at [x,y,z] in the current color */
+	 void draw_string( float x, float y, float z, const char *string);
+	 void draw_speech_bubble( float x, float y, float z, const char* str );
+	 void draw_octagon( float w, float h, float m );
+	 void draw_vector( double x, double y, double z );
+	 void draw_origin( double len );
+  }
 
 
   /** @brief Interface to the internal drawing system. */
@@ -1068,15 +1103,14 @@ namespace Stg
     stg_color_t GetColor();
   
   private:
-    Model* mod; //< model to which this block belongs
+    Model* mod; ///< model to which this block belongs
   
-    size_t pt_count; //< the number of points
-    stg_point_t* pts; //< points defining a polygon
+    size_t pt_count; ///< the number of points
+    stg_point_t* pts; ///< points defining a polygon
 	 
     Size size;
-
 	 
-    Bounds local_z; //<  z extent in local coords
+    Bounds local_z; ///<  z extent in local coords
 
     stg_color_t color;
     bool inherit_color;
@@ -1524,12 +1558,12 @@ protected:
       may be of interest to users. This allows polling the model
       instead of adding a data callback. */
   bool data_fresh;
-  stg_bool_t disabled; //< if non-zero, the model is disabled  
+  stg_bool_t disabled; ///< if non-zero, the model is disabled  
   GList* custom_visual_list;
   GList* flag_list;
   Geom geom;
   Pose global_pose;
-  bool gpose_dirty; //< set this to indicate that global pose may have changed  
+  bool gpose_dirty; ///< set this to indicate that global pose may have changed  
   /** Controls our appearance and functionality in the GUI, if used */
   GuiState gui;
   
@@ -1542,8 +1576,8 @@ protected:
   /** unique process-wide identifier for this model */
   uint32_t id;	
   ctrlinit_t* initfunc;
-  stg_usec_t interval; //< time between updates in us
-  stg_usec_t last_update; //< time of last update in us  
+  stg_usec_t interval; ///< time between updates in us
+  stg_usec_t last_update; ///< time of last update in us  
   bool map_caches_are_invalid;
   stg_meters_t map_resolution;
   stg_kg_t mass;
@@ -1564,19 +1598,19 @@ protected:
       by derived model types to store properties, and for user code
       to associate arbitrary items with a model. */
   GData* props;
-  bool rebuild_displaylist; //< iff true, regenerate block display list before redraw
-  char* say_string;   //< if non-null, this string is displayed in the GUI 
+  bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
+  char* say_string;   ///< if non-null, this string is displayed in the GUI 
 
   stg_bool_t stall;
   /** Thread safety flag. Iff true, Update() may be called in
       parallel with other models. Defaults to false for safety */
-  int subs;     //< the number of subscriptions to this model
+  int subs;    ///< the number of subscriptions to this model
   bool thread_safe;
   GArray* trail;
   stg_model_type_t type;  
-  bool used;    //< TRUE iff this model has been returned by GetUnusedModelOfType()  
+  bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
   Velocity velocity;
-  stg_watts_t watts; //< power consumed by this model
+  stg_watts_t watts;///< power consumed by this model
   Worldfile* wf;
   int wf_entity;
   World* world; // pointer to the world in which this model exists
@@ -2273,7 +2307,7 @@ public:
  */
 typedef struct
 {
-  stg_meters_t max_range_anon; //< maximum detection range
+  stg_meters_t max_range_anon;///< maximum detection range
   stg_meters_t max_range_id; ///< maximum range at which the ID can be read
   stg_meters_t min_range; ///< minimum detection range
   stg_radians_t fov; ///< field of view 
@@ -2325,7 +2359,7 @@ public:
   virtual void Load();
   void Shutdown( void );
 
-  stg_meters_t max_range_anon; //< maximum detection range
+  stg_meters_t max_range_anon;///< maximum detection range
   stg_meters_t max_range_id; ///< maximum range at which the ID can be read
   stg_meters_t min_range; ///< minimum detection range
   stg_radians_t fov; ///< field of view 
@@ -2504,7 +2538,7 @@ class ModelPosition : public Model
   friend class Canvas;
 
 private:
-  Pose goal; //< the current velocity or pose to reach, depending on the value of control_mode
+  Pose goal;///< the current velocity or pose to reach, depending on the value of control_mode
   stg_position_control_mode_t control_mode;
   stg_position_drive_mode_t drive_mode;
   stg_position_localization_mode_t localization_mode; ///< global or local mode

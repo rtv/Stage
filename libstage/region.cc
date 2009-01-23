@@ -5,7 +5,6 @@
 */
 
 #include "region.hh"
-#include "gl.hh"
 using namespace Stg;
 
 const uint32_t Region::WIDTH = REGIONWIDTH;

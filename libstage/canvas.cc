@@ -10,7 +10,6 @@
 */
 
 #include "stage.hh"
-#include "gl.hh"
 #include "canvas.hh"
 #include "worldfile.hh"
 #include "texture_manager.hh"

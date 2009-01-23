@@ -1,6 +1,5 @@
 
 #include "stage.hh"
-#include "gl.hh"
 #include "worldfile.hh"
 
 #include <libgen.h> // for dirname(3)

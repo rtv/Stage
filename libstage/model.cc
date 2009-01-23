@@ -108,12 +108,10 @@
 #define _GNU_SOURCE
 #endif
 
-//#define DEBUG 0
-#include "stage.hh"
-#include "gl.hh"
-
 #include <map>
 
+//#define DEBUG 0
+#include "stage.hh"
 #include "worldfile.hh"
 #include "canvas.hh"
 #include "texture_manager.hh"
