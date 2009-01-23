@@ -33,6 +33,7 @@ typedef struct
   ModelLaser* laser;
   ModelRanger* ranger;
   ModelBlobfinder* blobfinder;
+  ModelFiducial* fiducial;
   Model *source, *sink;
   int avoidcount, randcount;
   int work_get, work_put;
@@ -52,14 +53,17 @@ extern "C" int Init( Model* mod )
   
   robot->pos = (ModelPosition*)mod;
 
-  robot->laser = (ModelLaser*)mod->GetModel( "laser:0" );
+  robot->laser = (ModelLaser*)mod->GetUnusedModelOfType( MODEL_TYPE_LASER );
   assert( robot->laser );
   robot->laser->Subscribe();
 
-  robot->ranger = (ModelRanger*)mod->GetModel( "ranger:0" );
+  robot->fiducial = (ModelFiducial*)mod->GetUnusedModelOfType( MODEL_TYPE_FIDUCIAL );
+  assert( robot->fiducial );
+  robot->fiducial->Subscribe();
+
+  robot->ranger = (ModelRanger*)mod->GetUnusedModelOfType( MODEL_TYPE_RANGER );
   assert( robot->ranger );
   //robot->ranger->Subscribe();
-
 
   robot->avoidcount = 0;
   robot->randcount = 0;
@@ -73,21 +77,6 @@ extern "C" int Init( Model* mod )
   robot->sink = mod->GetWorld()->GetModel( "sink" );
   assert(robot->sink);
     
-  
-//   const int waypoint_count = 100;
-//   Waypoint* waypoints = new Waypoint[waypoint_count];
-  
-//   for( int i=0; i<waypoint_count; i++ )
-// 	 {
-// 		waypoints[i].pose.x = i* 0.1;
-// 		waypoints[i].pose.y = drand48() * 4.0;
-// 		waypoints[i].pose.z = 0;
-// 		waypoints[i].pose.a = normalize( i/10.0 );
-// 		waypoints[i].color = stg_color_pack( 0,0,1,0 );
-// 	 }
-  
-//   robot->pos->SetWaypoints( waypoints, waypoint_count );
-
   return 0; //ok
 }
 

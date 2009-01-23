@@ -1,3 +1,10 @@
+Version 3.1.0
+-------------
+
+XX TODO
+
+Richard Vaughan (rtv) vaughan@sfu.ca - 2009.X.X 
+
 Version 3.0.1
 -------------
 This version incorporates a number of fixes made since the previous 

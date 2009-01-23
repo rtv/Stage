@@ -1,10 +1,11 @@
 
 Build system
 ------------
-Stage is now built using the CMake build system (version 2.4.7 or newer). 
-This has two main advantages: (i) it is much faster; (ii) CMake can 
-create native build files for Windows and Mac OS X, which will help 
-Stage become more portable.
+Stage is now built using the CMake build system (version 2.4.7 or
+newer).  This has two main advantages over the old GNU
+autoconf/automake system: (i) it is much faster; (ii) CMake can create
+native build files for Windows and Mac OS X, which will help Stage
+become more portable.
 
 Dependencies
 ------------

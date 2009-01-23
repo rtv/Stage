@@ -4,7 +4,6 @@
 EXTRA_DIST = \
 README \
 stage.txt \
-sourced.txt \
 header.html \
 stage.dox \
 stage_button.png 

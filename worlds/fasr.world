@@ -75,9 +75,11 @@ zone
 
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 32 range_max 5 laser_return 2 watts 30 )
+ sicklaser( samples 32 range_max 5 laser_return 2 watts 30  )
+ fiducial( ) 
  ctrl "fasr"
  joules 1000000 
+ fiducial_return 1
 )
 
 autorob( pose [4.116 6.107 0  -147.323] )

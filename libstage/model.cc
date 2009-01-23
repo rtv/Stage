@@ -489,37 +489,34 @@ bool Model::IsAntecedent( Model* testmod )
 // returns true iff model [testmod] is a descendent of this model
 bool Model::IsDescendent( Model* testmod )
 {
+  if( this == testmod )
+	 return true;
+  
   for( GList* it=this->children; it; it=it->next )
     {
-      Model* child = (Model*)it->data;
-
-      if( child == testmod )
-	return true;
-		
+      Model* child = (Model*)it->data;		
       if( child->IsDescendent( testmod ) )
-	return true;
+		  return true;
     }
-
+  
   // neither mod nor a child of this matches testmod
   return false;
 }
 
-// returns true iff model [mod1] and [mod2] are in the same model tree
-bool Model::IsRelated( Model* mod2 )
+bool Model::IsRelated( Model* that )
 {
-  return( (this == mod2) || IsAntecedent( mod2 ) || IsDescendent( mod2 ) );
+  // is it me?
+  if( this == that )
+ 	 return true;
+  
+  // wind up to top-level object
+  Model* candidate = this;
+  while( candidate->parent )
+	 candidate = candidate->parent;
+  
+  // and recurse down the tree    
+  return candidate->IsDescendent( that );
 }
-
-
-// bool Model::IsRelated( Model* that )
-// {
-//   if( this == that )
-// 	 return true;
-
-//   for( GList* it = children; it; it=it->next )
-// 	 {
-// 		if( 
-// 	 }
 
 
 // get the model's velocity in the global frame
