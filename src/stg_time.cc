@@ -53,30 +53,30 @@ extern int update_request;
 int StgTime::GetTime(struct timeval* time)
 {
   PRINT_DEBUG( "get time" );
-  
+
   assert( this->driver );
-  
+
   stg_world_t* world = driver->world;
-  
+
   time->tv_sec  = (int)floor(world->sim_time / 1e3);
   time->tv_usec = (int)rint(fmod(world->sim_time,1e3) * 1e3);
-  
+
   PRINT_DEBUG2( "time now %ld sec %ld usec", time->tv_sec, time->tv_usec );
-  
+
   return 0;
 }
 
 int StgTime::GetTimeDouble(double* time)
 {
-  PRINT_DEBUG( "get time (double)" );
-  
+  //PRINT_DEBUG( "get time (double)" );
+
   assert( this->driver );
-  
+
   stg_world_t* world = driver->world;
-  
+
   *time = world->sim_time / 1e3;
-  
-  PRINT_DEBUG1( "time now %f sec ", *time);
-  
+
+  //PRINT_DEBUG1( "time now %f sec ", *time);
+
   return 0;
 }
