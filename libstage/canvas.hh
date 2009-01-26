@@ -84,7 +84,7 @@ private:
 	 visualizeAll;
   
 public:
-	Canvas( WorldGui* world, int x, int y, int width, int height);
+  Canvas( WorldGui* world, int x, int y, int width, int height);
 	~Canvas();
   
   bool graphics;

@@ -28,6 +28,7 @@
 
 
 #include "p_driver.h"
+using namespace Stg;
 
 /** @addtogroup player
 @par Speech interface

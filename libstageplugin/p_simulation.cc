@@ -52,6 +52,7 @@
 #include <libplayercore/globals.h> // for player_argc & player_argv
 
 #include "p_driver.h"
+using namespace Stg;
 
 // these are Player globals
 extern bool player_quiet_startup;

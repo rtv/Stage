@@ -150,6 +150,7 @@ The stage plugin driver provides the following device interfaces:
 #include <math.h>
 
 #include "p_driver.h"
+using namespace Stg;
 
 const char* copyright_notice =
 "\n * Part of the Player Project [http://playerstage.sourceforge.net]\n"

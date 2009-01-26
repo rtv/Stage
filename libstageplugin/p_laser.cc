@@ -39,6 +39,7 @@
 // CODE ----------------------------------------------------------------------
 
 #include "p_driver.h"
+using namespace Stg;
 
 InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 				StgDriver* driver,

@@ -26,8 +26,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include <math.h>
+
 #include "p_driver.h"
-#include "math.h"
+using namespace Stg;
 
 // Constructor
 StTime::StTime( StgDriver* driver )

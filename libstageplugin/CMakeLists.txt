@@ -15,9 +15,11 @@ set( stagepluginSrcs p_driver.h
 	     stg_time.cc
 )
 
+# TODO
+#	     p_graphics3d.cc
+
 add_library( stageplugin MODULE ${stagepluginSrcs} )
 
-#	     p_graphics3d.cc
 
 
 target_link_libraries( stageplugin
@@ -29,6 +31,9 @@ target_link_libraries( stageplugin
 )
 
 set_source_files_properties( ${stagepluginSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+
+# delete the "lib" prefix from the plugin
+SET_TARGET_PROPERTIES( stageplugin PROPERTIES PREFIX "" )
 
 IF (BUILD_LSPTEST)
 	ADD_SUBDIRECTORY(test)

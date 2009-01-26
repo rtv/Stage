@@ -7,8 +7,7 @@
 
 #include <libplayercore/playercore.h>
 
-#include "../libstage/stage_internal.hh"
-
+#include "../libstage/stage.hh"
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
 
@@ -39,15 +38,15 @@ class StgDriver : public Driver
   virtual void Update();
 
   /// all player devices share the same Stage world (for now)
-  static WorldGui* world;
+  static Stg::WorldGui* world;
 
   /// find the device record with this Player id
   Interface* LookupDevice( player_devaddr_t addr );
 
-  Model* LocateModel( char* basename,
-			 player_devaddr_t* addr,
-			 stg_model_type_t type );
-
+  Stg::Model* LocateModel( char* basename,
+									player_devaddr_t* addr,
+									Stg::stg_model_type_t type );
+  
  protected:
 
   /// an array of pointers to Interface objects, defined below
@@ -101,9 +100,9 @@ class InterfaceModel
 		  StgDriver* driver,
 		  ConfigFile* cf,
 		  int section,
-		  stg_model_type_t type );
+		  Stg::stg_model_type_t type );
 
-  Model* mod;
+  Stg::Model* mod;
 
   virtual ~InterfaceModel( void ){ /* TODO: clean up*/ };
 

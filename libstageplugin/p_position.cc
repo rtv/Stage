@@ -43,8 +43,7 @@
 // CODE ----------------------------------------------------------------------
 
 #include "p_driver.h"
-//#include "playerclient.h"
-
+using namespace Stg;
 
 InterfacePosition::InterfacePosition(  player_devaddr_t addr, 
 				       StgDriver* driver,

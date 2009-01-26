@@ -36,6 +36,7 @@
 // CODE
 
 #include "p_driver.h"
+using namespace Stg;
 
 InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr,
 				StgDriver* driver,

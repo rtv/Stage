@@ -45,6 +45,7 @@
 // CODE
 
 #include "p_driver.h"
+using namespace Stg;
 
 
 InterfaceFiducial::InterfaceFiducial(  player_devaddr_t addr,

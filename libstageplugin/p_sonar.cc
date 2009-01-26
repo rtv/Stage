@@ -37,6 +37,7 @@
 // CODE ----------------------------------------------------------------------
 
 #include "p_driver.h"
+using namespace Stg;
 
 //
 // SONAR INTERFACE

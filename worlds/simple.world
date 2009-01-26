@@ -7,9 +7,9 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 10  # real-time interval between simulation updates in milliseconds 
+interval_real 100  # real-time interval between simulation updates in milliseconds 
 
-paused 1
+paused 0
 
 resolution 0.02
 
@@ -17,7 +17,8 @@ resolution 0.02
 window
 (
   size [ 556.000 557.000 ] # in pixels
-  scale 28.116                 # pixels per meter
+  scale 28.116            
+     # pixels per meter
   center [ 8.058  7.757 ]
   rotate [ 0  0 ]
   			
@@ -42,6 +43,6 @@ pioneer2dx
   pose [ 0.892 0.800 0 56.500 ] 
   sicklaser() 
 
-  ctrl "wander"
+  #ctrl "wander"
 )
 
