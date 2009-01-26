@@ -401,21 +401,21 @@ int position_update(stg_model_t* mod) {
 				// differential-steering model, like a Pioneer
 				vel->x = cmd->x;
 				vel->y = 0;
-				vel->a = MIN( a_error, max_speed.a );
+				vel->a = MIN( a_error, data->max_speed.a );
 				break;
 
 			case STG_POSITION_DRIVE_OMNI:
 				// direct steering model, like an omnidirectional robot
 				vel->x = cmd->x;
 				vel->y = cmd->y;
-				vel->a = MIN( a_error, max_speed.a );
+				vel->a = MIN( a_error, data->max_speed.a );
 				break;
 
 			case STG_POSITION_DRIVE_CAR:
 				// car like steering model, same as differential here
 				vel->x = cmd->x * cos(cmd->a);
 				vel->y = 0;
-				vel->a = MIN( a_error, max_speed.a );
+				vel->a = MIN( a_error, data->max_speed.a );
 				break;
 
 			default:
