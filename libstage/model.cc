@@ -615,18 +615,20 @@ void Model::Subscribe( void )
 {
   subs++;
   world->total_subs++;
-
+  world->dirty = true; // need redraw
+  
   //printf( "subscribe to %s %d\n", token, subs );
-
+  
   // if this is the first sub, call startup
-  if( this->subs == 1 )
-    this->Startup();
+  if( subs == 1 )
+    Startup();
 }
 
 void Model::Unsubscribe( void )
 {
   subs--;
   world->total_subs--;
+  world->dirty = true; // need redraw
 
   printf( "unsubscribe from %s %d\n", token, subs );
 
@@ -1683,9 +1685,7 @@ int Model::TreeToPtrArray( GPtrArray* array )
 }
 
 Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type )
-{
-  printf( "searching for type %d in model %s type %d\n", type, token, this->type );
-  
+{  
   if( (this->type == type) && (this->subs == 0) )
     return this;
 
@@ -1705,7 +1705,7 @@ Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type )
 
 Model* Model::GetUnusedModelOfType( stg_model_type_t type )
 {
-  printf( "searching for type %d in model %s type %d\n", type, token, this->type );
+  //printf( "searching for type %d in model %s type %d\n", type, token, this->type );
 
   if( (this->type == type) && (!this->used ) )
     {

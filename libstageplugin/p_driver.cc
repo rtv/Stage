@@ -137,7 +137,6 @@ The stage plugin driver provides the following device interfaces:
 
 */
 
-
 // TODO - configs I should implement
 //  - PLAYER_SONAR_POWER_REQ
 //  - PLAYER_BLOBFINDER_SET_COLOR_REQ
@@ -148,15 +147,14 @@ The stage plugin driver provides the following device interfaces:
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
-
+#include "config.h"
 #include "p_driver.h"
 using namespace Stg;
 
 const char* copyright_notice =
 "\n * Part of the Player Project [http://playerstage.sourceforge.net]\n"
-" * Copyright 2000-2007 Richard Vaughan, Brian Gerkey and contributors.\n"
-" * Released under the GNU General Public License v2.\n"
-" **\n";
+" * Copyright 2000-2009 Richard Vaughan, Brian Gerkey and contributors.\n"
+" * Released under the GNU General Public License v2.\n";
 
 #define STG_DEFAULT_WORLDFILE "default.world"
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
@@ -195,7 +193,7 @@ Driver* StgDriver_Init(ConfigFile* cf, int section)
 // driver can support and how to create a driver instance.
 void StgDriver_Register(DriverTable* table)
 {
-  printf( "\n ** Stage plugin v%s **", "3.0dev" ); // XX TODO
+  printf( "\n ** %s plugin v%s **",  PROJECT, VERSION ); // XX TODO
 
   if( !player_quiet_startup )
     {
@@ -417,8 +415,8 @@ Model*  StgDriver::LocateModel( char* basename,
 				   player_devaddr_t* addr,
 				   stg_model_type_t type )
 {
-  printf( "attempting to find a model under model \"%s\" of type [%d]\n",
-			 basename, type );
+  //printf( "attempting to find a model under model \"%s\" of type [%d]\n",
+  //	 basename, type );
 
   Model* base_model = world->GetModel( basename );
 

@@ -224,22 +224,15 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
   {
     if(hdr->size == sizeof(player_position2d_position_mode_req_t))
     {
-      PRINT_WARN( "set control mode not implemented") ;
 
-      player_position2d_position_mode_req_t* req = 
-              (player_position2d_position_mode_req_t*)data;
+      //player_position2d_position_mode_req_t* req = 
+		//      (player_position2d_position_mode_req_t*)data;
 
-      stg_position_control_mode_t mode = (stg_position_control_mode_t)req->state;
+      //stg_position_control_mode_t mode = (stg_position_control_mode_t)req->state;
 
-      // XX should this be in cfg instead?
-      //cmd->mode = mode;
-      //model_change( mod, &mod->cmd );
-
-      
-
-      //stg_model_set_property( mod, "position_control", &mode, sizeof(mode));
 
       PRINT_WARN2( "Put model %s into %s control mode", this->mod->Token(), mod ? "POSITION" : "VELOCITY" );
+      PRINT_WARN( "set control mode not yet implemented") ;
 
       this->driver->Publish( this->addr, resp_queue, 
                              PLAYER_MSGTYPE_RESP_ACK, 

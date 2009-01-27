@@ -102,7 +102,7 @@ namespace Stg
 
   /// Copyright string
   const char COPYRIGHT[] =				       
-    "Copyright Richard Vaughan and contributors 2000-2008";
+    "Copyright Richard Vaughan and contributors 2000-2009";
 
   /// Author string
   const char AUTHORS[] =					
@@ -420,18 +420,18 @@ namespace Stg
   const uint32_t STG_MOVE_ROT   = (1 << 1); ///< bitmask for stg_movemask_t
   const uint32_t STG_MOVE_SCALE = (1 << 2); ///< bitmask for stg_movemask_t
 
-  const char STG_MP_PREFIX[] =             "_mp_";
-  const char STG_MP_POSE[] =               "_mp_pose";
-  const char STG_MP_VELOCITY[] =           "_mp_velocity";
-  const char STG_MP_GEOM[] =               "_mp_geom";
-  const char STG_MP_COLOR[] =              "_mp_color";
-  const char STG_MP_WATTS[] =              "_mp_watts";
-  const char STG_MP_FIDUCIAL_RETURN[] =    "_mp_fiducial_return";
-  const char STG_MP_LASER_RETURN[] =       "_mp_laser_return";
-  const char STG_MP_OBSTACLE_RETURN[] =    "_mp_obstacle_return";
-  const char STG_MP_RANGER_RETURN[] =      "_mp_ranger_return";
-  const char STG_MP_GRIPPER_RETURN[] =     "_mp_gripper_return";
-  const char STG_MP_MASS[] =               "_mp_mass";
+  const char MP_PREFIX[] =             "_mp_";
+  const char MP_POSE[] =               "_mp_pose";
+  const char MP_VELOCITY[] =           "_mp_velocity";
+  const char MP_GEOM[] =               "_mp_geom";
+  const char MP_COLOR[] =              "_mp_color";
+  const char MP_WATTS[] =              "_mp_watts";
+  const char MP_FIDUCIAL_RETURN[] =    "_mp_fiducial_return";
+  const char MP_LASER_RETURN[] =       "_mp_laser_return";
+  const char MP_OBSTACLE_RETURN[] =    "_mp_obstacle_return";
+  const char MP_RANGER_RETURN[] =      "_mp_ranger_return";
+  const char MP_GRIPPER_RETURN[] =     "_mp_gripper_return";
+  const char MP_MASS[] =               "_mp_mass";
 
 
   /// laser return value
@@ -472,20 +472,20 @@ namespace Stg
     } bounds3_t;
 
     typedef enum {
-      STG_D_DRAW_POINTS,
-      STG_D_DRAW_LINES,
-      STG_D_DRAW_LINE_STRIP,
-      STG_D_DRAW_LINE_LOOP,
-      STG_D_DRAW_TRIANGLES,
-      STG_D_DRAW_TRIANGLE_STRIP,
-      STG_D_DRAW_TRIANGLE_FAN,
-      STG_D_DRAW_QUADS,
-      STG_D_DRAW_QUAD_STRIP,
-      STG_D_DRAW_POLYGON,
-      STG_D_PUSH,
-      STG_D_POP,
-      STG_D_ROTATE,
-      STG_D_TRANSLATE,
+      DRAW_POINTS,
+      DRAW_LINES,
+      DRAW_LINE_STRIP,
+      DRAW_LINE_LOOP,
+      DRAW_TRIANGLES,
+      DRAW_TRIANGLE_STRIP,
+      DRAW_TRIANGLE_FAN,
+      DRAW_QUADS,
+      DRAW_QUAD_STRIP,
+      DRAW_POLYGON,
+      PUSH,
+      POP,
+      ROTATE,
+      TRANSLATE,
     } type_t;
 
     /** the start of all stg_d structures looks like this */
@@ -1919,10 +1919,15 @@ public:
 	
   /** set a model's geometry (size and center offsets) */
   void SetGeom(  Geom src );
-	
-  /** set a model's geometry (size and center offsets) */
+  
+  /** Set a model's fiducial return value. Values less than zero
+		are not detected by the fiducial sensor. */
   void SetFiducialReturn(  int fid );
-	
+  
+  /** Get a model's fiducial return value. */
+  int GetFiducialReturn()
+  { return vis.fiducial_return; }
+  
   /** set a model's fiducial key: only fiducial finders with a
       matching key can detect this model as a fiducial. */
   void SetFiducialKey(  int key );

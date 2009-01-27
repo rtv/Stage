@@ -164,11 +164,10 @@ int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
 										  this->addr))
     {
       // fill in the data formatted player-like
-#warning disabled this bit
-      player_fiducial_id_t pid;
-//      pid.id = mod->FiducialReturn();
-      pid.id = 0;
 
+      player_fiducial_id_t pid;
+		pid.id = mod->GetFiducialReturn();
+		
       // acknowledge, including the new ID
       this->driver->Publish(this->addr, resp_queue,
 									 PLAYER_MSGTYPE_RESP_ACK,
