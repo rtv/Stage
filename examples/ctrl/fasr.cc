@@ -34,7 +34,7 @@ private:
   ModelPosition* pos;
   ModelLaser* laser;
   ModelRanger* ranger;
-  ModelBlobfinder* blobfinder;
+  //ModelBlobfinder* blobfinder;
   ModelFiducial* fiducial;
   Model *source, *sink;
   int avoidcount, randcount;
@@ -46,17 +46,12 @@ private:
 
 public:
   Robot( ModelPosition* pos, 
-			ModelLaser* laser, 
-			ModelRanger* ranger, 
-			ModelFiducial* fiducial, 
-			ModelBlobfinder* blob,
 			Model* source,
 			Model* sink ) 
 	 : pos(pos), 
-		laser(laser), 
-		ranger(ranger), 
-		blobfinder(blobfinder), 
-		fiducial(fiducial), 
+		laser( (ModelLaser*)pos->GetUnusedModelOfType( MODEL_TYPE_LASER )),
+		ranger( (ModelRanger*)pos->GetUnusedModelOfType( MODEL_TYPE_RANGER )),
+		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( MODEL_TYPE_FIDUCIAL )),
 		source(source), 
 		sink(sink), 
 		avoidcount(0), 
@@ -65,9 +60,11 @@ public:
 		work_put(0)
   {
 	 // need at least these models to get any work done
-	 assert( pos );
+	 // (pos must be good, as we used it in the initialization list)
 	 assert( laser );
-	 
+	 assert( source );
+	 assert( sink );
+
 	 pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, this );
 	 laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, this );
 
@@ -82,10 +79,6 @@ public:
 extern "C" int Init( Model* mod )
 {  
   Robot* robot = new Robot( (ModelPosition*)mod,
-									 (ModelLaser*)mod->GetUnusedModelOfType( MODEL_TYPE_LASER ),
-									 (ModelRanger*)mod->GetUnusedModelOfType( MODEL_TYPE_RANGER ),
-									 (ModelFiducial*)mod->GetUnusedModelOfType( MODEL_TYPE_FIDUCIAL ),
-									 NULL,
 									 mod->GetWorld()->GetModel( "source" ),
 									 mod->GetWorld()->GetModel( "sink" ) );
     
