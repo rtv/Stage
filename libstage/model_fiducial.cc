@@ -177,45 +177,43 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 													  NULL,
 													  false );
 	
-	range = ray.range;
+	//range = ray.range;
 	Model* hitmod = ray.mod;
 
 // 	printf( "ray hit %s and was seeking LOS to %s\n",
 // 			  hitmod ? hitmod->Token() : "null",
 // 			  him->Token() );
 
-	//assert( ! (hitmod == this) );
-
 	// if it was him, we can see him
 	if( hitmod == him )
-	{
-		Geom hisgeom = him->GetGeom();
+	  {
+		 Geom hisgeom = him->GetGeom();
+		 
+		 // record where we saw him and what he looked like
+		 stg_fiducial_t fid;
+		 fid.mod = him;
+		 fid.range = range;
+		 fid.bearing = dtheta;
+		 fid.geom.x = hisgeom.size.x;
+		 fid.geom.y = hisgeom.size.y;
+		 fid.geom.a = normalize( hispose.a - mypose.a);
+		 
+		 // store the global pose of the fiducial (mainly for the GUI)
+		 memcpy( &fid.pose, &hispose, sizeof(fid.pose));
 
-		// record where we saw him and what he looked like
-		stg_fiducial_t fid;
-		fid.range = range;
-		fid.bearing = dtheta;
-		fid.geom.x = hisgeom.size.x;
-		fid.geom.y = hisgeom.size.y;
-		fid.geom.a = normalize( hispose.a - mypose.a);
-
-		// store the global pose of the fiducial (mainly for the GUI)
-		memcpy( &fid.pose, &hispose, sizeof(fid.pose));
-
-		// if he's within ID range, get his fiducial.return value, else
-		// we see value 0
-		fid.id = range < max_range_id ? hitmod->vis.fiducial_return : 0;
-
-		PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
-				him->Token(), him->vis.fiducial_return );
-
-		g_array_append_val( data, fid );
-	}
-
+		 // if he's within ID range, get his fiducial.return value, else
+		 // we see value 0
+		 fid.id = range < max_range_id ? hitmod->vis.fiducial_return : 0;
+		 
+		 PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
+							him->Token(), him->vis.fiducial_return );
+		 
+		 g_array_append_val( data, fid );
+	  }
+	
 	fiducials = (stg_fiducial_t*)data->data;
 	fiducial_count = data->len;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
@@ -265,22 +263,22 @@ void ModelFiducial::DataVisualize( Camera* cam )
 		return;
 	
 	// draw the FOV
-	//    GLUquadric* quadric = gluNewQuadric();
+	   GLUquadric* quadric = gluNewQuadric();
 
-	//    PushColor( 0,0,0,0.2  );
+	   PushColor( 0,0,0,0.2  );
 
-	//    gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
+	   gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
 
-	//    gluPartialDisk( quadric,
-	// 		   0, 
-	// 		   max_range_anon,
-	// 		   20, // slices	
-	// 		   1, // loops
-	// 		   rtod( M_PI/2.0 + fov/2.0), // start angle
-	// 		   rtod(-fov) ); // sweep angle
+	   gluPartialDisk( quadric,
+			   0, 
+			   max_range_anon,
+			   20, // slices	
+			   1, // loops
+			   rtod( M_PI/2.0 + fov/2.0), // start angle
+			   rtod(-fov) ); // sweep angle
 
-	//    gluDeleteQuadric( quadric );
-	//    PopColor();
+	   gluDeleteQuadric( quadric );
+	   PopColor();
 
 	if( data->len == 0 )
 		return;

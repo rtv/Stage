@@ -804,6 +804,9 @@ void Canvas::renderFrame()
   if( showBBoxes )
 	 DrawBoundingBoxes();
   
+  
+  LISTMETHOD( world->puck_list, Puck*, Draw );
+
   // TODO - finish this properly
   //LISTMETHOD( models_sorted, Model*, DrawWaypoints );
   

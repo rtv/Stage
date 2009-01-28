@@ -13,7 +13,7 @@ using namespace Stg;
 Charger::Charger( World* world ) 
   : world( world ), watts( 1000.0 )
 {
-  printf( "Charger constructed" );
+  //printf( "Charger constructed" );
 }
 
 void Charger::ChargeIfContained( PowerPack* pp, Pose pose )

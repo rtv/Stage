@@ -126,6 +126,37 @@ static const stg_color_t BUBBLE_TEXT = 0xFF000000; // black
 uint32_t Model::count = 0;
 GHashTable* Model::modelsbyid = g_hash_table_new( NULL, NULL );
 
+
+void Size::Load( Worldfile* wf, int section, const char* keyword )
+{
+  x = wf->ReadTupleLength( section, keyword, 0, x );
+  y = wf->ReadTupleLength( section, keyword, 1, y );
+  z = wf->ReadTupleLength( section, keyword, 2, z );
+}
+
+void Size::Save( Worldfile* wf, int section, const char* keyword )
+{
+  wf->WriteTupleLength( section, keyword, 0, x );
+  wf->WriteTupleLength( section, keyword, 1, y );
+  wf->WriteTupleLength( section, keyword, 2, z );
+}
+
+void Pose::Load( Worldfile* wf, int section, const char* keyword )
+{
+  x = wf->ReadTupleLength( section, keyword, 0, x );
+  y = wf->ReadTupleLength( section, keyword, 1, y );
+  z = wf->ReadTupleLength( section, keyword, 2, z );
+  a = wf->ReadTupleAngle(  section, keyword, 3, a );
+}
+
+void Pose::Save( Worldfile* wf, int section, const char* keyword )
+{
+  wf->WriteTupleLength( section, keyword, 0, x );
+  wf->WriteTupleLength( section, keyword, 1, y );
+  wf->WriteTupleLength( section, keyword, 2, z );
+  wf->WriteTupleAngle(  section, keyword, 3, a );
+}
+
 Visibility::Visibility() : 
   blob_return( true ),
   fiducial_key( 0 ),
@@ -166,7 +197,7 @@ void GuiState::Load( Worldfile* wf, int wf_entity )
 // constructor
 Model::Model( World* world,
 	      Model* parent,
-	      const stg_model_type_t type )
+				  const stg_model_type_t type )
   : Ancestor(), 	 
     access_mutex(NULL),
     blinkenlights( g_ptr_array_new() ),
@@ -177,7 +208,7 @@ Model::Model( World* world,
     color( 0xFFFF0000 ), // red
     data_fresh(false),
     disabled(false),
-	custom_visual_list( NULL ),
+	 custom_visual_list( NULL ),
     flag_list(NULL),
     geom(),
     has_default_block( true ),
@@ -705,7 +736,7 @@ bool Model::UpdateDue( void )
 {
   return( world->sim_time  >= (last_update + interval) );
 }
- 
+
 void Model::Update( void )
 {
   //   printf( "[%llu] %s update (%d subs)\n", 
@@ -1747,4 +1778,16 @@ Model* Model::GetModel( const char* modelname )
 void Model::UnMap()
 {
   blockgroup.UnMap();
+}
+
+void Model::BecomeParentOf( Model* child )
+{
+  if( child->parent )
+	 child->parent->RemoveChild( child );
+  
+  child->parent = this;
+  
+  this->AddChild( child );
+  
+  world->dirty = true; 
 }

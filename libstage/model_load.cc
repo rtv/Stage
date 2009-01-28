@@ -99,49 +99,38 @@ void Model::Load()
   if( wf->PropertyExists( wf_entity, "origin" ) )
     {
       Geom geom = GetGeom();
-      geom.pose.x = wf->ReadTupleLength(wf_entity, "origin", 0, geom.pose.x );
-      geom.pose.y = wf->ReadTupleLength(wf_entity, "origin", 1, geom.pose.y );
-      geom.pose.z = wf->ReadTupleLength(wf_entity, "origin", 2, geom.pose.z );
-      geom.pose.a =  wf->ReadTupleAngle(wf_entity, "origin", 3, geom.pose.a );
-      this->SetGeom( geom );
+		geom.pose.Load( wf, wf_entity, "origin" );
+      SetGeom( geom );
     }
-
+  
   if( wf->PropertyExists( wf_entity, "size" ) )
     {
       Geom geom = GetGeom();
-      geom.size.x = wf->ReadTupleLength(wf_entity, "size", 0, geom.size.x );
-      geom.size.y = wf->ReadTupleLength(wf_entity, "size", 1, geom.size.y );
-      geom.size.z = wf->ReadTupleLength(wf_entity, "size", 2, geom.size.z );
-      this->SetGeom( geom );
+		geom.size.Load( wf, wf_entity, "size" );
+      SetGeom( geom );
     }
-
+  
   if( wf->PropertyExists( wf_entity, "pose" ))
     {
       Pose pose = GetPose();
-      pose.x = wf->ReadTupleLength(wf_entity, "pose", 0, pose.x );
-      pose.y = wf->ReadTupleLength(wf_entity, "pose", 1, pose.y );
-      pose.z = wf->ReadTupleLength(wf_entity, "pose", 2, pose.z );
-      pose.a =  wf->ReadTupleAngle(wf_entity, "pose", 3, pose.a );
-      this->SetPose( pose );
+		pose.Load( wf, wf_entity, "pose" );
+      SetPose( pose );
     }
-
+  
   if( wf->PropertyExists( wf_entity, "velocity" ))
     {
       Velocity vel = GetVelocity();
-      vel.x = wf->ReadTupleLength(wf_entity, "velocity", 0, vel.x );
-      vel.y = wf->ReadTupleLength(wf_entity, "velocity", 1, vel.y );
-      vel.z = wf->ReadTupleLength(wf_entity, "velocity", 2, vel.z );
-      vel.a = wf->ReadTupleAngle(wf_entity, "velocity", 3,  vel.a );
-      this->SetVelocity( vel );
+		vel.Load( wf, wf_entity, "velocity" );
+      SetVelocity( vel );
     }
-
+  
   if( wf->PropertyExists( wf_entity, "color" ))
     {      
       stg_color_t col = 0xFFFF0000; // red;
       const char* colorstr = wf->ReadString( wf_entity, "color", NULL );
       if( colorstr )
-	{
-	  if( strcmp( colorstr, "random" ) == 0 )
+		  {
+			 if( strcmp( colorstr, "random" ) == 0 )
 	    {
 	      col = (uint32_t)random();
 	      col |= 0xFF000000; // set the alpha channel to max

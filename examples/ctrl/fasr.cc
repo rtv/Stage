@@ -1,16 +1,17 @@
 #include "stage.hh"
 using namespace Stg;
 
+const bool verbose = false;
+
+// navigation control params
 const double cruisespeed = 0.4; 
 const double avoidspeed = 0.05; 
 const double avoidturn = 0.5;
 const double minfrontdistance = 0.7;  
 const double stopdist = 0.5;
-const bool verbose = false;
 const int avoidduration = 10;
 const int workduration = 20;
 const int payload = 4;
-
 
 double have[4][4] = { 
   { 90, 180, 180, 180 },
@@ -25,10 +26,11 @@ double need[4][4] = {
   { -90, -90, 180, 180 },
   { -90, -180, -90, -90 }
 };
-  
 
-typedef struct
+
+class Robot
 {
+private:
   ModelPosition* pos;
   ModelLaser* laser;
   ModelRanger* ranger;
@@ -37,56 +39,72 @@ typedef struct
   Model *source, *sink;
   int avoidcount, randcount;
   int work_get, work_put;
+  
+  static int LaserUpdate( ModelLaser* mod, Robot* robot );
+  static int PositionUpdate( ModelPosition* mod, Robot* robot );
+  static int FiducialUpdate( ModelFiducial* mod, Robot* robot );
 
-} robot_t;
+public:
+  Robot( ModelPosition* pos, 
+			ModelLaser* laser, 
+			ModelRanger* ranger, 
+			ModelFiducial* fiducial, 
+			ModelBlobfinder* blob,
+			Model* source,
+			Model* sink ) 
+	 : pos(pos), 
+		laser(laser), 
+		ranger(ranger), 
+		blobfinder(blobfinder), 
+		fiducial(fiducial), 
+		source(source), 
+		sink(sink), 
+		avoidcount(0), 
+		randcount(0), 
+		work_get(0), 
+		work_put(0)
+  {
+	 // need at least these models to get any work done
+	 assert( pos );
+	 assert( laser );
+	 
+	 pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, this );
+	 laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, this );
 
-int LaserUpdate( Model* mod, robot_t* robot );
-int PositionUpdate( Model* mod, robot_t* robot );
+	 if( fiducial ) // optional
+		fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, this );
+  }
+};
+
 
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
 {  
-  robot_t* robot = new robot_t;
-  robot->work_get = 0;
-  robot->work_put = 0;
-  
-  robot->pos = (ModelPosition*)mod;
-
-  robot->laser = (ModelLaser*)mod->GetUnusedModelOfType( MODEL_TYPE_LASER );
-  assert( robot->laser );
-  robot->laser->Subscribe();
-
-  robot->fiducial = (ModelFiducial*)mod->GetUnusedModelOfType( MODEL_TYPE_FIDUCIAL );
-  assert( robot->fiducial );
-  robot->fiducial->Subscribe();
-
-  robot->ranger = (ModelRanger*)mod->GetUnusedModelOfType( MODEL_TYPE_RANGER );
-  assert( robot->ranger );
-  //robot->ranger->Subscribe();
-
-  robot->avoidcount = 0;
-  robot->randcount = 0;
-  
-  robot->laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, robot );
-  robot->pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, robot );
-
-  robot->source = mod->GetWorld()->GetModel( "source" );
-  assert(robot->source);
-
-  robot->sink = mod->GetWorld()->GetModel( "sink" );
-  assert(robot->sink);
+  Robot* robot = new Robot( (ModelPosition*)mod,
+									 (ModelLaser*)mod->GetUnusedModelOfType( MODEL_TYPE_LASER ),
+									 (ModelRanger*)mod->GetUnusedModelOfType( MODEL_TYPE_RANGER ),
+									 (ModelFiducial*)mod->GetUnusedModelOfType( MODEL_TYPE_FIDUCIAL ),
+									 NULL,
+									 mod->GetWorld()->GetModel( "source" ),
+									 mod->GetWorld()->GetModel( "sink" ) );
     
   return 0; //ok
 }
 
 // inspect the laser data and decide what to do
-int LaserUpdate( Model* mod, robot_t* robot )
+int Robot::LaserUpdate( ModelLaser* laser, Robot* robot )
 {
-  // get the data
+  if( laser->power_pack && laser->power_pack->charging )
+	 printf( "model %s power pack @%p is charging\n",
+				laser->Token(), laser->power_pack );
+  
+  // Get the data
   uint32_t sample_count=0;
-  stg_laser_sample_t* scan = robot->laser->GetSamples( &sample_count );
-  assert(scan);
+  stg_laser_sample_t* scan = laser->GetSamples( &sample_count );
+
+  if( scan == NULL )
+	 return 0;
   
   bool obstruction = false;
   bool stop = false;
@@ -194,9 +212,9 @@ int LaserUpdate( Model* mod, robot_t* robot )
   return 0;
 }
 
-int PositionUpdate( Model* mod, robot_t* robot )
+int Robot::PositionUpdate( ModelPosition* pos, Robot* robot )
 {  
-  Pose pose = robot->pos->GetPose();
+  Pose pose = pos->GetPose();
   
   //printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
   //  pose.x, pose.y, pose.z, pose.a );
@@ -204,7 +222,7 @@ int PositionUpdate( Model* mod, robot_t* robot )
   //pose.z += 0.0001;
   //robot->pos->SetPose( pose );
   
-  if( robot->pos->GetFlagCount() < payload && 
+  if( pos->GetFlagCount() < payload && 
       hypot( -7-pose.x, -7-pose.y ) < 2.0 )
     {
       if( ++robot->work_get > workduration )
@@ -213,7 +231,7 @@ int PositionUpdate( Model* mod, robot_t* robot )
 			 robot->source->Lock();
 
 			 // transfer a chunk from source to robot
-			 robot->pos->PushFlag( robot->source->PopFlag() );
+			 pos->PushFlag( robot->source->PopFlag() );
 			 robot->source->Unlock();
 
 			 robot->work_get = 0;
@@ -229,7 +247,7 @@ int PositionUpdate( Model* mod, robot_t* robot )
 
 			 //puts( "dropping" );
 			 // transfer a chunk between robot and goal
-			 robot->sink->PushFlag( robot->pos->PopFlag() );
+			 robot->sink->PushFlag( pos->PopFlag() );
 			 robot->sink->Unlock();
 
 			 robot->work_put = 0;
@@ -240,3 +258,27 @@ int PositionUpdate( Model* mod, robot_t* robot )
   return 0; // run again
 }
 
+
+
+int Robot::FiducialUpdate( ModelFiducial* mod, Robot* robot )
+{    
+  for( unsigned int i = 0; i < mod->fiducial_count; i++ )
+	 {
+		stg_fiducial_t* f = &mod->fiducials[i];
+		
+		//printf( "fiducial %d is %d at %.2f m %.2f radians\n",
+		//	  i, f->id, f->range, f->bearing );
+		
+		if( f->range < 1 )
+		  {
+			 printf( "attempt to grab model @%p %s\n",
+						f->mod, f->mod->Token() );
+			 	
+			 // working on picking up models
+			 //robot->pos->BecomeParentOf( f->mod );
+		  }
+		
+	 }						  
+  
+  return 0; // run again
+}

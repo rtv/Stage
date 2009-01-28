@@ -220,7 +220,7 @@ namespace Stg
   {
   public:
     stg_meters_t x, y, z;
-
+	 
     Size( stg_meters_t x, 
 	  stg_meters_t y, 
 	  stg_meters_t z )
@@ -230,6 +230,9 @@ namespace Stg
     /** default constructor uses default non-zero values */
     Size() : x( 0.1 ), y( 0.1 ), z( 0.1 )
     {/*empty*/}	
+
+	 void Load( Worldfile* wf, int section, const char* keyword );
+	 void Save( Worldfile* wf, int section, const char* keyword );
   };
   
   /** Specify a 3 axis position, in x, y and heading. */
@@ -270,6 +273,9 @@ namespace Stg
       printf( "%s pose [x:%.3f y:%.3f z:%.3f a:%.3f]\n",
 	      prefix, x,y,z,a );
     }
+	 
+	 void Load( Worldfile* wf, int section, const char* keyword );
+	 void Save( Worldfile* wf, int section, const char* keyword );
   };
   
   
@@ -778,8 +784,26 @@ namespace Stg
   /** Define a callback function type that can be attached to a
       record within a model and called whenever the record is set.*/
   typedef int (*stg_model_callback_t)( Model* mod, void* user );
+  
+  class Puck
+  {
+  private:
+	 void BuildDisplayList();
 
-
+  public:
+	 stg_color_t color;
+	 int displaylist;
+	 stg_meters_t height;
+	 Pose pose;
+	 stg_meters_t radius;
+	 
+	 Puck();
+	 void Load( Worldfile* wf, int section );
+	 void Save( Worldfile* wf, int section );
+	 
+	 void Draw();  
+  };
+  
   // ANCESTOR CLASS
   /** Base class for Model and World */
   class Ancestor
@@ -788,8 +812,12 @@ namespace Stg
 	 
   protected:
     GList* children;
-    char* token;
     bool debug;
+	 GList* puck_list;
+    char* token;
+	 
+	 void Load( Worldfile* wf, int section );
+	 void Save( Worldfile* wf, int section );
 	 
   public:
 	 
@@ -810,7 +838,7 @@ namespace Stg
     { return token; }
 	 
     void SetToken( const char* str )
-    { token = strdup( str ); } // teeny memory leak
+    { token = strdup( str ); } // little memory leak	 
   };
 
   /** raytrace sample
@@ -906,6 +934,7 @@ namespace Stg
     void LoadModel( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadBlockGroup( Worldfile* wf, int entity, GHashTable* entitytable );
+    void LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadCharger( Worldfile* wf, int entity );
 
     SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
@@ -1591,8 +1620,6 @@ protected:
       global coordinate frame is the parent is NULL. */
   Pose pose;
 
-  /** Optional attached PowerPack, defaults to NULL */
-  PowerPack* power_pack;
 
   /** GData datalist can contain arbitrary named data items. Can be used
       by derived model types to store properties, and for user code
@@ -1619,6 +1646,9 @@ protected:
 public:
 
   Visibility vis;
+
+  /** Optional attached PowerPack, defaults to NULL */
+  PowerPack* power_pack;
 
   void Lock()
   { 
@@ -1795,7 +1825,8 @@ public:
   /** remove user supplied visualization to a model - supply the same ptr passed to AddCustomVisualizer */
   void RemoveCustomVisualizer( CustomVisualizer* custom_visual );
 
-	
+  void BecomeParentOf( Model* child );
+
   void Load( Worldfile* wf, int wf_entity )
   {
     /** Set the worldfile and worldfile entity ID - must be called
@@ -2006,12 +2037,18 @@ public:
 	
   void RemoveSaveCallback( stg_model_callback_t cb )
   { RemoveCallback( &hooks.save, cb ); }
-	
+  
   void AddUpdateCallback( stg_model_callback_t cb, void* user )
-  { AddCallback( &hooks.update, cb, user ); }
+  { 
+	 AddCallback( &hooks.update, cb, user ); 
+    Subscribe(); // if attaching a callback here, assume we want updates to happen
+  }
 	
   void RemoveUpdateCallback( stg_model_callback_t cb )
-  { RemoveCallback( &hooks.update, cb ); }
+  { 
+	 RemoveCallback( &hooks.update, cb ); 
+	 Unsubscribe();
+  }
 	
   /** named-property interface 
    */
@@ -2331,8 +2368,8 @@ typedef struct
   stg_radians_t bearing; ///< bearing to the target 
   Pose geom; ///< size and relative angle of the target
   Pose pose; ///< Absolute accurate position of the target in world coordinates (it's cheating to use this in robot controllers!)
-  int id; ///< the identifier of the target, or -1 if none can be detected.
-
+  Model* mod; ///< Pointer to the model (real fiducial detectors can't do this!)
+  int id; ///< the fiducial identifier of the target (i.e. its fiducial_return value), or -1 if none can be detected.  
 } stg_fiducial_t;
 
 /// %ModelFiducial class

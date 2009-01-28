@@ -73,8 +73,12 @@ int Model::RemoveCallback( void* member,
 	{
 		//puts( "callback was not installed" );
 	}
+	
+	// return the number of callbacks now in the list. Useful for
+	// detecting when the list is empty.
+	//return g_list_length( cb_list );
 
-	return 0; //ok
+	return 0;
 }
 
 

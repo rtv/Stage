@@ -1,15 +1,14 @@
 #include "stage.hh"
 using namespace Stg;
 
-Ancestor::Ancestor()
+Ancestor::Ancestor() :
+  children( NULL ),
+  debug( false ),
+  puck_list( NULL ),
+  token( NULL )
 {
-	token = NULL;
-	children = NULL;
-	
-	for( int i=0; i<MODEL_TYPE_COUNT; i++ )
-	  child_type_counts[i] = 0;
-
-	debug = false;
+  for( int i=0; i<MODEL_TYPE_COUNT; i++ )
+	 child_type_counts[i] = 0;
 }
 
 Ancestor::~Ancestor()
@@ -20,8 +19,7 @@ Ancestor::~Ancestor()
 			delete (Model*)it->data;
 
 		g_list_free( children );
-	}
-
+	}	
 }
 
 void Ancestor::AddChild( Model* mod )
@@ -73,3 +71,12 @@ void Ancestor::ForEachDescendant( stg_model_callback_t func, void* arg )
 	}
 }
 
+
+
+void Ancestor::Load( Worldfile* wf, int section )
+{
+}
+
+void Ancestor::Save( Worldfile* wf, int section )
+{
+}

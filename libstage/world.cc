@@ -190,6 +190,19 @@ void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
   mod->LoadBlock( wf, entity );
 }
 
+void World::LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable )
+{ 
+//   // lookup the group in which this was defined
+//   Ancestor* anc = (Ancestor*)g_hash_table_lookup( entitytable, 
+// 																  (gpointer)wf->GetEntityParent( entity ) );
+  
+
+  Puck* puck = new Puck();
+  puck->Load( wf, entity );  
+  puck_list = g_list_prepend( puck_list, puck );
+}
+
+
 void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
 { 
   int parent_entity = wf->GetEntityParent( entity );
@@ -321,10 +334,10 @@ void World::Load( const char* worldfile_path )
 		  {
 			 /* do nothing here */
 		  }
-      //else if( strcmp( typestr, "blockgroup" ) == 0 )
-      //LoadBlockGroup( wf, entity, entitytable );		
       else if( strcmp( typestr, "block" ) == 0 )
 		  LoadBlock( wf, entity, entitytable );
+		else if( strcmp( typestr, "puck" ) == 0 )
+		  LoadPuck( wf, entity, entitytable );
 		else if( strcmp( typestr, "charger" ) == 0 )
 		  LoadCharger( wf, entity );
 		else
