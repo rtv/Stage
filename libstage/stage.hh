@@ -2643,11 +2643,8 @@ namespace Stg
 	 GList* items;
 	 
   public:
-	 ModelScooper( World* world, Model* parent );
-	 
-	 
-  
-  }
+	 ModelScooper( World* world, Model* parent );	 	  
+  };
 
 
 }; // end namespace stg
