@@ -62,6 +62,7 @@ private:
 	void DrawGlobalGrid();
   
   void AddModel( Model* mod );
+  void RemoveModel( Model* mod );
 
   Option showBlinken, 
 	 showBlocks, 

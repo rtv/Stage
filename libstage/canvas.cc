@@ -598,6 +598,12 @@ void Canvas::AddModel( Model*  mod  )
   models_sorted = g_list_append( models_sorted, mod );
 }
 
+void Canvas::RemoveModel( Model*  mod  )
+{
+  printf( "removing model %s from canvas list\n", mod->Token() );
+  models_sorted = g_list_remove( models_sorted, mod );
+}
+
 void Canvas::DrawGlobalGrid()
 {
 
@@ -675,6 +681,14 @@ void Canvas::DrawFloor()
 void Canvas::DrawBlocks() 
 {
   LISTMETHOD( models_sorted, Model*, DrawBlocksTree );
+  
+  // some models may be carried by others - this prevents them being drawn twice
+//   for( GList* it = models_sorted; it; it=it->next )
+// 	 {
+// 		Model* mod = (Model*)it->data;
+// 		if( mod->parent == NULL )
+// 		  mod->DrawBlocksTree();
+// 	 }
 }
 
 void Canvas::DrawBoundingBoxes() 

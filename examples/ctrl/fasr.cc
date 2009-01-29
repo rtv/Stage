@@ -262,13 +262,16 @@ int Robot::FiducialUpdate( ModelFiducial* mod, Robot* robot )
 		//printf( "fiducial %d is %d at %.2f m %.2f radians\n",
 		//	  i, f->id, f->range, f->bearing );
 		
+		//		if( 0 )
 		if( f->range < 1 )
 		  {
 			 printf( "attempt to grab model @%p %s\n",
 						f->mod, f->mod->Token() );
 			 	
 			 // working on picking up models
-			 //robot->pos->BecomeParentOf( f->mod );
+			 robot->pos->BecomeParentOf( f->mod );
+			 f->mod->SetPose( Pose(0,0,0,0) );
+			 f->mod->Disable();
 		  }
 		
 	 }						  

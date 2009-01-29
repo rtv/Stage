@@ -7,7 +7,7 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 0 # real-time interval between simulation updates in milliseconds 
+interval_real 30 # real-time interval between simulation updates in milliseconds 
 paused 1
 
 resolution 0.02
@@ -86,8 +86,8 @@ define autorob pioneer2dx
  fiducial_return 1
 )
 
-#autorob( pose [4.116 6.107 0  -147.323]   fiducial( range_max 3 ) )
-autorob( pose [4.116 6.107 0  -147.323] )
+autorob( pose [-1.768 2.263 0  -147.323]   fiducial( range_max 3 ) )
+#autorob( pose [4.116 6.107 0  -147.323] )
 autorob( pose [6.471 5.304 0 14.941] )
 autorob( pose [5.937 4.858 0 -147.503] )
 autorob( pose [7.574 6.269 0 -111.715] )
@@ -103,7 +103,7 @@ autorob( pose [6.451 4.189 0 -61.453] )
 autorob( pose [5.098 6.788 0 -61.295] )
 autorob( pose [4.374 5.163 0 -147.713] )
 autorob( pose [4.999 4.230 0 -125.236] )
-autorob( pose [4.007 4.249 0 78.789] )
+autorob( pose [-3.326 0.642 0 78.789] )
 autorob( pose [5.440 5.317 0 -26.545] )
 autorob( pose [7.518 6.973 0 163.239] )
 autorob( pose [7.559 4.764 0 -139.066] )

@@ -354,6 +354,13 @@ void WorldGui::AddModel( Model*  mod  )
 }
 
 
+void WorldGui::RemoveChild( Model* mod )
+{
+  canvas->RemoveModel( mod );
+
+  World::RemoveChild( mod );
+}
+
 std::string WorldGui::ClockString()
 {
   const uint32_t usec_per_hour   = 3600000000U;

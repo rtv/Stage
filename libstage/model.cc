@@ -1784,6 +1784,8 @@ void Model::BecomeParentOf( Model* child )
 {
   if( child->parent )
 	 child->parent->RemoveChild( child );
+  else
+	 world->RemoveChild( child );
   
   child->parent = this;
   
