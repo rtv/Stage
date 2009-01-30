@@ -666,61 +666,6 @@ namespace Stg
   typedef bool (*stg_ray_test_func_t)(Model* candidate, 
 												  Model* finder, 
 												  const void* arg );
-  
-  // TODO - some of this needs to be implemented, the rest junked.
-
-  /*   //  -------------------------------------------------------------- */
-
-  /*   // standard energy consumption of some devices in W. */
-  /*   // */
-  /*   // The MOTIONKG value is a hack to approximate cost of motion, as */
-  /*   // Stage does not yet have an acceleration model. */
-  /*   // */
-  /* #define STG_ENERGY_COST_LASER 20.0 // 20 Watts! (LMS200 - from SICK web site) */
-  /* #define STG_ENERGY_COST_FIDUCIAL 10.0 // 10 Watts */
-  /* #define STG_ENERGY_COST_RANGER 0.5 // 500mW (estimate) */
-  /* #define STG_ENERGY_COST_MOTIONKG 10.0 // 10 Watts per KG when moving  */
-  /* #define STG_ENERGY_COST_BLOB 4.0 // 4W (estimate) */
-
-  /*   typedef struct */
-  /*   { */
-  /*     stg_joules_t joules; // current energy stored in Joules/1000 */
-  /*     stg_watts_t watts; // current power expenditure in mW (mJoules/sec) */
-  /*     int charging; // 1 if we are receiving energy, -1 if we are */
-  /*     // supplying energy, 0 if we are neither charging nor */
-  /*     // supplying energy. */
-  /*     stg_meters_t range; // the range that our charging probe hit a charger */
-  /*   } stg_energy_data_t; */
-
-  /*   typedef struct */
-  /*   { */
-  /*     stg_joules_t capacity; // maximum energy we can store (we start fully charged) */
-  /*     stg_meters_t probe_range; // the length of our recharge probe */
-  /*     //Pose probe_pose; // TODO - the origin of our probe */
-
-  /*     stg_watts_t give_rate; // give this many Watts to a probe that hits me (possibly 0) */
-
-  /*     stg_watts_t trickle_rate; // this much energy is consumed or */
-  /*     // received by this device per second as a */
-  /*     // baseline trickle. Positive values mean */
-  /*     // that the device is just burning energy */
-  /*     // stayting alive, which is appropriate */
-  /*     // for most devices. Negative values mean */
-  /*     // that the device is receiving energy */
-  /*     // from the environment, simulating a */
-  /*     // solar cell or some other ambient energy */
-  /*     // collector */
-
-  /*   } stg_energy_config_t; */
-
-
-  /*   // BLINKENLIGHT ------------------------------------------------------------ */
-
-  /*   // a number of milliseconds, used for example as the blinkenlight interval */
-  /* #define STG_LIGHT_ON UINT_MAX */
-  /* #define STG_LIGHT_OFF 0 */
-
-  //typedef int stg_interval_ms_t;
 
   // list iterator macros
 #define LISTFUNCTION( LIST, TYPE, FUNC ) for( GList* it=LIST; it; it=it->next ) FUNC((TYPE)it->data);
@@ -860,22 +805,6 @@ namespace Stg
   class BlockGroup;
   class PowerPack;
 
-  /// %Charger class
-  class Charger
-  {
-	 World* world;
-	 stg_watts_t watts;
-	 stg_bounds3d_t volume;
-	 
-  public:
-	 Charger( World* world );
-	 void ChargeIfContained( PowerPack* pp, Pose pose );
-	 bool Contains( Pose pose );
-	 void Charge( PowerPack* pp );
-	 void Visualize();
-	 void Load( Worldfile* wf, int entity );
-  };
-
   /// %World class
   class World : public Ancestor
   {
@@ -883,7 +812,6 @@ namespace Stg
     friend class Block;
     //friend class StgTime;
     friend class Canvas;
-	 friend class Charger;
 
   private:
   
@@ -892,7 +820,6 @@ namespace Stg
     static void UpdateCb( World* world);
     static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
 	 
-	 GList* chargers;
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
@@ -935,7 +862,6 @@ namespace Stg
     void LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadBlockGroup( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable );
-    void LoadCharger( Worldfile* wf, int entity );
 
     SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
     SuperRegion* GetSuperRegion( const stg_point_int_t& coord );
@@ -1445,7 +1371,7 @@ namespace Stg
 	 /** Energy capacity */
 	 stg_joules_t capacity;
 
-	 /** TRUE iff the device is receiving energy from a charger */
+	 /** TRUE iff the device is receiving energy */
 	 bool charging;
 
 	 /** OpenGL visualization of the powerpack state */
@@ -1454,7 +1380,19 @@ namespace Stg
 	 /** Print human-readable status on stdout, prefixed with the
 		  argument string */
 	 void Print( char* prefix );
-  };
+	 
+	 /** Returns the energy capacity minus the current amount stored */
+	 stg_joules_t RemainingCapacity();
+	 
+	 /** Add to the energy store */
+	 void Add( stg_joules_t j );
+		
+	 /** Subtract from the energy store */
+	 void Subtract( stg_joules_t j );
+		
+	 /** Transfer some stored energy to another power pack */
+	 void TransferTo( PowerPack* dest, stg_joules_t amount );	 
+};
 
   class Visibility
   {
@@ -1557,7 +1495,8 @@ namespace Stg
 	 friend class Block;
 	 friend class Region;
 	 friend class BlockGroup;
-  
+	 friend class PowerPack;
+
   private:
 	 /** the number of models instatiated - used to assign unique IDs */
 	 static uint32_t count;
@@ -1584,7 +1523,7 @@ namespace Stg
 
 	 /** Default color of the model's blocks.*/
 	 stg_color_t color;
-
+	 
 	 /** This can be set to indicate that the model has new data that
 		  may be of interest to users. This allows polling the model
 		  instead of adding a data callback. */
@@ -1622,6 +1561,8 @@ namespace Stg
 		  global coordinate frame is the parent is NULL. */
 	 Pose pose;
 
+	 /** Optional attached PowerPack, defaults to NULL */
+	 PowerPack* power_pack;
 
 	 /** GData datalist can contain arbitrary named data items. Can be used
 		  by derived model types to store properties, and for user code
@@ -1640,6 +1581,15 @@ namespace Stg
 	 bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
 	 Velocity velocity;
 	 stg_watts_t watts;///< power consumed by this model
+	 
+	 /** If >0, this model can transfer energy to models that have
+		  watts_take >0 */
+	 stg_watts_t watts_give;
+
+	 /** If >0, this model can transfer energy from models that have
+		  watts_give >0 */
+	 stg_watts_t watts_take;
+	 
 	 Worldfile* wf;
 	 int wf_entity;
 	 World* world; // pointer to the world in which this model exists
@@ -1649,8 +1599,6 @@ namespace Stg
 
 	 Visibility vis;
 
-	 /** Optional attached PowerPack, defaults to NULL */
-	 PowerPack* power_pack;
 
 	 void Lock()
 	 { 
@@ -1801,8 +1749,10 @@ namespace Stg
 	 void DrawFlagList();
 
 	 void DrawPose( Pose pose );
-
+	 
   public:
+	 PowerPack* FindPowerPack();
+
 	 void RecordRenderPoint( GSList** head, GSList* link, 
 									 unsigned int* c1, unsigned int* c2 );
 

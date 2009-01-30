@@ -73,7 +73,6 @@ World::World( const char* token,
 	      double ppm )
   : 
   // private
-  chargers( NULL ),
   destroy( false ),
   dirty( true ),
   models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
@@ -338,8 +337,6 @@ void World::Load( const char* worldfile_path )
 		  LoadBlock( wf, entity, entitytable );
 		else if( strcmp( typestr, "puck" ) == 0 )
 		  LoadPuck( wf, entity, entitytable );
-		else if( strcmp( typestr, "charger" ) == 0 )
-		  LoadCharger( wf, entity );
 		else
 		  LoadModel( wf, entity, entitytable );
     }
@@ -361,16 +358,6 @@ void World::Load( const char* worldfile_path )
   else
     putchar( '\n' );
 }
-
-void World::LoadCharger( Worldfile* wf, int entity )
-{
-  Charger* chg = new Charger( this );
-  
-  chargers = g_list_prepend( chargers, chg );
-
-  chg->Load( wf, entity );
-}
-
 
 // delete a model from the hash table
 static void destroy_model( gpointer dummy1, Model* mod, gpointer dummy2 )
@@ -945,16 +932,5 @@ void World::Extend( stg_point3_t pt )
   extent.z.max = MAX( extent.z.max, pt.z );
 }
 
-void World::TryCharge( PowerPack* pack, Pose pose )
-{
-  pack->charging = false;
-
-  // see if the pose lies within any of the charging rectangles
-  for( GList* it = chargers; it; it = it->next )
-	 {
-		Charger* chg = (Charger*)it->data;  	  	
-		chg->ChargeIfContained( pack, pose );
-	 }
-}
 
 

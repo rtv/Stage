@@ -133,11 +133,21 @@ void Canvas::InitGl()
   std::string fullpath = FileManager::findFile( "assets/stall.png" );
   if ( fullpath == "" ) 
 	 {
-		PRINT_DEBUG( "Unable to load texture.\n" );
+		PRINT_DEBUG( "Unable to load stall texture.\n" );
 	 }
   
   GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
   TextureManager::getInstance()._stall_texture_id = stall_id;
+
+  fullpath = FileManager::findFile( "assets/mains.png" );
+  if ( fullpath == "" ) 
+	 {
+		PRINT_DEBUG( "Unable to load mains texture.\n" );
+	 }
+  
+  GLuint mains_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
+  TextureManager::getInstance()._mains_texture_id = mains_id;
+
   
   //TODO merge this code into the textureManager?
   int i, j;
@@ -922,9 +932,6 @@ void Canvas::renderFrame()
 
   for( GList* it=selected_models; it; it=it->next )
 	 ((Model*)it->data)->DrawSelected();
-
-  for( GList* it=world->chargers; it; it=it->next )
-	 ((Charger*)it->data)->Visualize();
 
   // useful debug - puts a point at the origin of each model
   //for( GList* it = world->World::children; it; it=it->next ) 

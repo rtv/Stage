@@ -234,7 +234,9 @@ Model::Model( World* world,
     type(type),	
     used(false),
     velocity(),
-    watts(0),
+    watts(0.0),
+	 watts_give(0.0),
+	 watts_take(0.0),	 
     wf(NULL),
     wf_entity(0),
     world(world),
@@ -743,31 +745,27 @@ void Model::Update( void )
   // 			 this->world->sim_time, this->token, this->subs );
   
   // f we're drawing current and a power pack has been installed
-  if( power_pack )
+  
+  PowerPack* pp = FindPowerPack();
+  if( pp && ( watts > 0 ))
 	 {
-		if( watts > 0 )
-		  {
-			 // consume  energy stored in the power pack
-			 stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
-			 power_pack->stored -= consumed;
-			 
-			 /*		
-						printf ( "%s current %.2f consumed %.6f ppack @ %p [ %.2f/%.2f (%.0f)\n",
-						token, 
-						watts, 
-						consumed, 
-						power_pack, 
-						power_pack->stored, 
-						power_pack->capacity, 
-						power_pack->stored / power_pack->capacity * 100.0 );
-			 */
-		  }
+		// consume  energy stored in the power pack
+		stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
+		pp->Subtract( consumed );
 		
-		// I own this power pack, see if the world wants to recharge it */
-		if( power_pack->mod == this )
-		  world->TryCharge( power_pack, GetGlobalPose() );
-	 }
+		/*		
+				printf ( "%s current %.2f consumed %.6f ppack @ %p [ %.2f/%.2f (%.0f)\n",
+				token, 
+				watts, 
+				consumed, 
+				power_pack, 
+				power_pack->stored, 
+				power_pack->capacity, 
+				power_pack->stored / power_pack->capacity * 100.0 );
+		*/
 
+	 }
+	   
   CallCallbacks( &hooks.update );
   last_update = world->sim_time;
 }
@@ -1051,7 +1049,9 @@ void Model::DrawStatusTree( Camera* cam )
 
 void Model::DrawStatus( Camera* cam ) 
 {
-  
+  // quick hack
+  if( power_pack && power_pack->stored < 0.0 )
+	 DrawImage( TextureManager::getInstance()._mains_texture_id, cam, 0.85 );
 
   if( say_string || power_pack )	  
     {
@@ -1076,7 +1076,7 @@ void Model::DrawStatus( Camera* cam )
 		//if( ! parent )
 		// glRectf( 0,0,1,1 );
 		
-		if( power_pack && (power_pack->mod == this) )
+		if( power_pack->stored > 0.0 )
 		  power_pack->Visualize( cam );
 
 		if( say_string )
@@ -1204,6 +1204,8 @@ void Model::DrawFlagList( void )
   
   PushLocalCoords();
   
+  glPolygonMode( GL_FRONT, GL_FILL );
+
   GLUquadric* quadric = gluNewQuadric();
   glTranslatef(0,0,1); // jump up
   Pose gpose = GetGlobalPose();
@@ -1606,17 +1608,37 @@ void Model::PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax,
 Model* Model::TestCollision()
 {
   //printf( "mod %s test collision...\n", token );
-
+  
   Model* hitmod = blockgroup.TestCollision();
   
   if( hitmod == NULL ) 
     for( GList* it = children; it; it=it->next ) 
       { 
-	hitmod = ((Model*)it->data)->TestCollision();
-	if( hitmod )
-	  break;
+		  hitmod = ((Model*)it->data)->TestCollision();
+		  if( hitmod )
+			 break;
       }
   
+  if( hitmod && (watts_take > 0.0) )
+	 {
+		PowerPack* pp = FindPowerPack();
+		
+		if( pp )
+		  {
+			 if( hitmod->FindPowerPack() && (hitmod->watts_give > 0.0) )
+				{		
+				  stg_watts_t rate = MIN( watts_take, hitmod->watts_give );
+				  stg_joules_t amount =  rate * (world->interval_sim * 1e-6);
+				  
+				  // move some joules from him to me
+				  hitmod->FindPowerPack()->TransferTo( FindPowerPack(), amount );
+				}
+			 else
+				pp->charging = false;
+		  }
+	 }
+		
+
   //printf( "mod %s test collision done.\n", token );
   return hitmod;  
 }
@@ -1792,4 +1814,15 @@ void Model::BecomeParentOf( Model* child )
   this->AddChild( child );
   
   world->dirty = true; 
+}
+
+PowerPack* Model::FindPowerPack()
+{
+  if( power_pack )
+	 return power_pack;
+
+  if( parent )
+	 return parent->FindPowerPack();
+
+  return NULL;
 }

@@ -28,6 +28,7 @@ namespace Stg
 	 
 	 //TODO figure out where to store standard textures
 	 GLuint _stall_texture_id;
+	 GLuint _mains_texture_id;
 	 
 	 //TODO make this threadsafe
 	 inline static TextureManager& getInstance( void ) { 

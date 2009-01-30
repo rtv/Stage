@@ -8,7 +8,6 @@ set( stageSrcs ancestor.cc
 	blockgroup.cc
 	camera.cc
 	canvas.cc
-	charger.cc
 	file_manager.cc
 	file_manager.hh
 	gl.cc

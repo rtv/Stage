@@ -22,9 +22,9 @@ window
 ( 
   size [ 600.000 599.000 ] 
 
-  center [ 0.051 -0.204 ] 
+  center [ 4.605 -2.392 ] 
   rotate [ 0 0 ]
-  scale 33.822 
+  scale 68.242 
 
   pcam_loc [ 0 -4.000 2.000 ]
   pcam_angle [ 70.000 0 ]
@@ -45,18 +45,6 @@ floorplan
   bitmap "bitmaps/cave.png"
 )
 
-charger
-(
-  volume [ 5 6 -2 -3 0 0.1 ]
-  watts 200
-)
-
-charger
-(
-  volume [ 5 6 -4 -5 0 0.1 ]
-  watts 200
-)
-
 zone
 (
   color "green"
@@ -73,11 +61,6 @@ zone
   ctrl "sink"
 )
 
-#puck( pose [ 0 0 0 0 ] )
-#puck( pose [ 1 0 0 0 ] )
-#puck( pose [ 2 0 0 0 ] )
-#puck( pose [ 3 0 0 0 ] )
-
 define autorob pioneer2dx		  
 (		 
  sicklaser( samples 32 range_max 5 laser_return 2 watts 30  )
@@ -86,9 +69,44 @@ define autorob pioneer2dx
  fiducial_return 1
 )
 
-autorob( pose [-1.768 2.263 0  -147.323]   fiducial( range_max 3 ) )
-#autorob( pose [4.116 6.107 0  -147.323] )
-autorob( pose [6.471 5.304 0 14.941] )
+define charging_bump model
+(
+  pose [0.210 0 -0.100 0 ] 
+  size [0.050 0.100 0.100] 
+  take_watts 300.0 
+  color "orange" 
+  obstacle_return 1
+)
+
+define charge_station model
+(  
+  color "yellow"
+  size [ 0.100 0.500 0.400 ]
+  joules -1  # infinite storage
+  give_watts 500
+)
+
+charge_station
+(
+   pose [ 7.941 -3.001 0 0 ]
+)
+
+autorob
+( 
+  pose [2.933 0.917 0  -147.323] 
+  color "magenta" 
+  joules 10000
+  joules_capacity 100000
+  charging_bump()
+)
+
+autorob
+( 
+  pose [5.757 -3.528 0 14.941]  
+  color "green" 
+  charging_bump( take_watts 0 give_watts 300.0 )
+)
+
 autorob( pose [5.937 4.858 0 -147.503] )
 autorob( pose [7.574 6.269 0 -111.715] )
 autorob( pose [5.664 5.938 0 107.666] )
@@ -103,7 +121,7 @@ autorob( pose [6.451 4.189 0 -61.453] )
 autorob( pose [5.098 6.788 0 -61.295] )
 autorob( pose [4.374 5.163 0 -147.713] )
 autorob( pose [4.999 4.230 0 -125.236] )
-autorob( pose [-3.326 0.642 0 78.789] )
+autorob( pose [3.533 4.220 0 78.789] )
 autorob( pose [5.440 5.317 0 -26.545] )
 autorob( pose [7.518 6.973 0 163.239] )
 autorob( pose [7.559 4.764 0 -139.066] )

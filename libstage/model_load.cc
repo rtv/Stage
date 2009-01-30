@@ -18,8 +18,9 @@ void Model::Load()
 {  
   assert( wf );
   assert( wf_entity );
-
+  
   PRINT_DEBUG1( "Model \"%s\" loading...", token );
+
   
   if( wf->PropertyExists( wf_entity, "joules" ) )
 	 {
@@ -33,17 +34,16 @@ void Model::Load()
 			the charge */
 		power_pack->capacity = power_pack->stored;
 	 }
-  
+
   if( wf->PropertyExists( wf_entity, "joules_capacity" ) )
 	 {
 		if( !power_pack )
 		  power_pack = new PowerPack( this );
 		
 		power_pack->capacity = 
-		  wf->ReadFloat( wf_entity, "joules_stored", power_pack->capacity ); 
-		
+		  wf->ReadFloat( wf_entity, "joules_stored", power_pack->capacity ); 		
 	 }
-
+  
   /** if the capacity has been specified, limit the store to the capacity */
   if( power_pack && (power_pack->stored > power_pack->capacity) )
 	 {			 
@@ -53,26 +53,22 @@ void Model::Load()
 						 power_pack->stored, 
 						 power_pack->capacity );
 	 }  
+
+  // use my own pack or an ancestor's for the other energy properties
+  PowerPack* pp = FindPowerPack();
   
-  if( wf->PropertyExists( wf_entity, "watts" ) )
-	 {
-		watts = wf->ReadFloat( wf_entity, "watts", watts );
-		
-		if( watts > 0 )
-		  {
-			 // find a power pack attached to me or an ancestor in my tree
-			 while( (!power_pack) && parent )
-				{
-				  power_pack = parent->power_pack;
-				}
-			 
-			 if( power_pack == NULL )
-				{
-				  PRINT_WARN2( "worldfile requests %.2f watts for model %s, but can not find an energy source. Setting watts has no effect unless you also specify  a \"joules\" value for this model or an  ancestor.", watts, token );
-				  exit(-1);				  
-				}			 
-		  }
-	 }
+  watts = wf->ReadFloat( wf_entity, "watts", watts );
+  if( (watts > 0) && !pp  )
+	 PRINT_WARN1( "Model %s: Setting \"watts\" has no effect unless \"joules\" is specified for this model or a parent", token );
+    
+  watts_give = wf->ReadFloat( wf_entity, "give_watts", watts_give );  
+  if( (watts_give > 0.0) && !pp)
+	 PRINT_WARN1( "Model %s: Setting \"watts_give\" has no effect unless \"joules\" is specified for this model or a parent", token );
+  
+  watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
+  if( (watts_take > 0.0) & !pp )
+	 PRINT_WARN1( "Model %s: Setting \"watts_take\" has no effect unless \"joules\" is specified for this model or a parent", token );    
+  
 
   if( wf->PropertyExists( wf_entity, "debug" ) )
     {

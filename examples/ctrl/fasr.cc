@@ -88,9 +88,9 @@ extern "C" int Init( Model* mod )
 // inspect the laser data and decide what to do
 int Robot::LaserUpdate( ModelLaser* laser, Robot* robot )
 {
-  if( laser->power_pack && laser->power_pack->charging )
-	 printf( "model %s power pack @%p is charging\n",
-				laser->Token(), laser->power_pack );
+//   if( laser->power_pack && laser->power_pack->charging )
+// 	 printf( "model %s power pack @%p is charging\n",
+// 				laser->Token(), laser->power_pack );
   
   // Get the data
   uint32_t sample_count=0;

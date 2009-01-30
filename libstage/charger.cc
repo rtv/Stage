@@ -80,7 +80,7 @@ void Charger::Visualize()
   glPopMatrix();
 
   // ?
-  glPolygonMode( GL_FRONT, GL_FILL );
+  //glPolygonMode( GL_FRONT, GL_FILL );
 }
 
 void swap( double &a, double &b )
