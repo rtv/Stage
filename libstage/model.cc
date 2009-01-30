@@ -1051,7 +1051,12 @@ void Model::DrawStatus( Camera* cam )
 {
   // quick hack
   if( power_pack && power_pack->stored < 0.0 )
-	 DrawImage( TextureManager::getInstance()._mains_texture_id, cam, 0.85 );
+	 {
+      glPushMatrix();
+      glTranslatef( 0.3, 0, 0.0 );		
+		DrawImage( TextureManager::getInstance()._mains_texture_id, cam, 0.85 );
+		glPopMatrix();
+	 }
 
   if( say_string || power_pack )	  
     {
