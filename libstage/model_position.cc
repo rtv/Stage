@@ -475,6 +475,11 @@ void ModelPosition::Shutdown( void )
 	Model::Shutdown();
 }
 
+void ModelPosition::Stop()
+{
+  SetSpeed( 0,0,0 );
+}
+
 void ModelPosition::SetSpeed( double x, double y, double a ) 
 { 
   assert( ! isnan(x) );

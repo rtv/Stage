@@ -22,7 +22,6 @@ Block::Block( Model* mod,
   inherit_color( inherit_color ),
   rendered_cells( g_ptr_array_sized_new(32) ),
   candidate_cells( g_ptr_array_sized_new(32) )
-  //  _gpts( NULL )
 {
   assert( mod );
   assert( pt_count > 0 );
@@ -30,9 +29,6 @@ Block::Block( Model* mod,
 
   local_z.min = zmin;
   local_z.max = zmax;
-  
-  // add this block's global coords array to a global list
-  //g_ptr_array_add( global_verts, this );
 }
 
 /** A from-file  constructor */
@@ -46,16 +42,12 @@ Block::Block(  Model* mod,
 	 inherit_color(true),
 	 rendered_cells( g_ptr_array_sized_new(32) ), 
 	 candidate_cells( g_ptr_array_sized_new(32) )
-	 //	 _gpts( NULL )
 {
   assert(mod);
   assert(wf);
   assert(entity);
   
   Load( wf, entity );
-
-  // add this block's global coords array to a global list
-  //g_ptr_array_add( global_verts, this );
 }
 
 
@@ -67,9 +59,6 @@ Block::~Block()
   
   g_ptr_array_free( rendered_cells, TRUE );
   g_ptr_array_free( candidate_cells, TRUE );
-
-  //free( _gpts );
-  //g_ptr_array_remove( global_verts, this );
 }
 
 stg_color_t Block::GetColor()
@@ -77,7 +66,27 @@ stg_color_t Block::GetColor()
   return( inherit_color ? mod->color : color );
 }
 
+GList* Block::AppendTouchingModels( GList* list )
+{
+  // for every cell we are rendered into
+  for( unsigned int i=0; i<rendered_cells->len; i++ )
+	 {
+		Cell* cell = (Cell*)g_ptr_array_index( rendered_cells, i);
+		
+		// for every block rendered into that cell
+		for( GSList* it = cell->list; it; it=it->next )
+		  {
+			 Block* testblock = (Block*)it->data;
+			 Model* testmod = testblock->mod;
+			 
+			 if( !mod->IsRelated( testmod ))
+				if( ! g_list_find( list, testmod ) )
+					 list = g_list_append( list, testmod );
+		  }
+	 }
 
+  return list;
+}
 
 Model* Block::TestCollision()
 {
@@ -86,8 +95,9 @@ Model* Block::TestCollision()
   // find the set of cells we would render into given the current global pose
   GenerateCandidateCells();
   
-  // for every cell we may be rendered into
-  for( unsigned int i=0; i<candidate_cells->len; i++ )
+  if( mod->vis.obstacle_return )
+	 // for every cell we may be rendered into
+	 for( unsigned int i=0; i<candidate_cells->len; i++ )
 	 {
 		Cell* cell = (Cell*)g_ptr_array_index(candidate_cells, i);
 		

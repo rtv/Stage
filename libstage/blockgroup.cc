@@ -50,6 +50,14 @@ void BlockGroup::SwitchToTestedCells()
   LISTMETHOD( blocks, Block*, SwitchToTestedCells );  
 }
 
+GList* BlockGroup::AppendTouchingModels( GList* list )
+{
+  for( GList* it=blocks; it; it = it->next )
+	 list = ((Block*)it->data)->AppendTouchingModels( list );
+  
+  return list;
+}
+
 Model* BlockGroup::TestCollision()
 {
   //printf( "blockgroup %p test collision...\n", this );

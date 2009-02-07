@@ -305,6 +305,8 @@ namespace Stg
       printf( "%s velocity [x:%.3f y:%.3f z:%3.f a:%.3f]\n",
 				  prefix, x,y,z,a );
     }
+	 
+	 bool IsZero(){ return( !(x || y || z || a )); };
   };
   
   /** Specify an object's basic geometry: position and rectangular
@@ -820,6 +822,7 @@ namespace Stg
     static void UpdateCb( World* world);
     static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
 	 
+    GList* charge_list; ///< Models which receive charge are listed here
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
@@ -933,13 +936,19 @@ namespace Stg
     bool PastQuitTime();
     
     void StartUpdatingModel( Model* mod )
-    { update_list = g_list_append( update_list, mod ); }
+    { 
+		if( ! g_list_find( update_list, mod ) )		  
+		  update_list = g_list_append( update_list, mod ); 
+	 }
     
     void StopUpdatingModel( Model* mod )
     { update_list = g_list_remove( update_list, mod ); }
     
     void StartUpdatingModelPose( Model* mod )
-    { velocity_list = g_list_append( velocity_list, mod ); }
+    { 
+		if( ! g_list_find( velocity_list, mod ) )
+		  velocity_list = g_list_append( velocity_list, mod ); 
+	 }
     
     void StopUpdatingModelPose( Model* mod )
     { velocity_list = g_list_remove( velocity_list, mod ); }
@@ -1047,8 +1056,12 @@ namespace Stg
     //   /** Prepare to render the block in a new position in global coordinates */
     //   void SetPoseTentative( const Pose pose );
     
+
+	 GList* AppendTouchingModels( GList* list );
+
+	 /** Returns the first model that shares a bitmap cell with this model */
     Model* TestCollision();
-  
+ 
     void SwitchToTestedCells();
   
     void Load( Worldfile* wf, int entity );
@@ -1122,9 +1135,13 @@ namespace Stg
     void CallDisplayList( Model* mod );
     void Clear() ; /** deletes all blocks from the group */
 	 
+	 	 GList* AppendTouchingModels( GList* list );
+	 //void AddTouchingModelsToList( GList* list );
+
     /** Returns a pointer to the first model detected to be colliding
 		  with a block in this group, or NULL, if none are detected. */
     Model* TestCollision();
+ 
     void SwitchToTestedCells();
 	 
     void Map();
@@ -1392,6 +1409,12 @@ namespace Stg
 		
 	 /** Transfer some stored energy to another power pack */
 	 void TransferTo( PowerPack* dest, stg_joules_t amount );	 
+
+	 double ProportionRemaining()
+	 { return( stored / capacity ); }
+
+	 void Print( const char* prefix )
+	 { printf( "%s PowerPack %.2f/%.2f J\n", prefix, stored, capacity ); }		
 };
 
   class Visibility
@@ -1631,10 +1654,17 @@ namespace Stg
 	 void registerOption( Option* opt )
 	 { drawOptions.push_back( opt ); }
 
+	 GList* AppendTouchingModels( GList* list );
+	 //void AddTouchingModelsToList( GList* list );
+
 	 /** Check to see if the current pose will yield a collision with
 		  obstacles.  Returns a pointer to the first entity we are in
 		  collision with, or NULL if no collision exists. */
 	 Model* TestCollision();
+
+	 /** Recursively call TestCollision() on this model and all its
+		  descendents */
+    Model* TestCollisionTree();
   
 	 void CommitTestedPose();
 
@@ -1690,6 +1720,7 @@ namespace Stg
 	 virtual void Shutdown();
 	 virtual void Update();
 	 virtual void UpdatePose();
+	 virtual void UpdateCharge();
 
 	 void StartUpdating();
 	 void StopUpdating();
@@ -1715,7 +1746,7 @@ namespace Stg
 	 void PopCoords();
   
 	 /** Draw the image stored in texture_id above the model */
-	 void DrawImage( uint32_t texture_id, Camera* cam, float alpha );
+	 void DrawImage( uint32_t texture_id, Camera* cam, float alpha, double width=1.0, double height=1.0 );
   
   
 	 /** static wrapper for DrawBlocks() */
@@ -2575,6 +2606,8 @@ namespace Stg
 	 void SetZSpeed( double z );
 	 void SetTurnSpeed( double a );
 	 void SetSpeed( Velocity vel );
+	 /** Set velocity along all axes to  to zero. */
+	 void Stop();
 
 	 /** Sets the control mode to STG_POSITION_CONTROL_POSITION and sets
 		  the goal pose */

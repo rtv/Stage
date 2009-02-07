@@ -41,7 +41,7 @@ void Model::Load()
 		  power_pack = new PowerPack( this );
 		
 		power_pack->capacity = 
-		  wf->ReadFloat( wf_entity, "joules_stored", power_pack->capacity ); 		
+		  wf->ReadFloat( wf_entity, "joules_capacity", power_pack->capacity ); 		
 	 }
   
   /** if the capacity has been specified, limit the store to the capacity */
@@ -53,7 +53,7 @@ void Model::Load()
 						 power_pack->stored, 
 						 power_pack->capacity );
 	 }  
-
+  
   // use my own pack or an ancestor's for the other energy properties
   PowerPack* pp = FindPowerPack();
   
@@ -65,11 +65,15 @@ void Model::Load()
   if( (watts_give > 0.0) && !pp)
 	 PRINT_WARN1( "Model %s: Setting \"watts_give\" has no effect unless \"joules\" is specified for this model or a parent", token );
   
+  if( watts_give ) // need to get the world to test this model for charging
+	 if( ! g_list_find( world->charge_list, this ) )
+		world->charge_list = g_list_append( world->charge_list, this );
+  
   watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
   if( (watts_take > 0.0) & !pp )
 	 PRINT_WARN1( "Model %s: Setting \"watts_take\" has no effect unless \"joules\" is specified for this model or a parent", token );    
   
-
+	 
   if( wf->PropertyExists( wf_entity, "debug" ) )
     {
       PRINT_WARN2( "debug property specified for model %d  %s\n",

@@ -27,14 +27,35 @@ void PowerPack::Visualize( Camera* cam )
   const double height = 0.5;
   const double width = 0.2;
   
+		// draw an electric zap
+// 		glPolygonMode( GL_FRONT, GL_LINE );
+// 		glBegin( GL_POLYGON );
+// 		glVertex2i( 0, 0 );
+// 		glVertex2i( 3, 2 );
+// 		glVertex2i( 1, 2 );
+// 		glEnd();
+
+// 		glVertex2i( 1, 3 );
+// 		glVertex2i( 0, 3 );
+// 		glVertex2i( 1, 5 );
+// 		glVertex2i( 3, 5 );
+// 		glVertex2i( 4, 3 );
+// 		glVertex2i( 5, 3 );
+// 		glVertex2i( 4, 4 );
+// 		glVertex2i( 5, 4);
+// 		glEnd();
+  //}
+
   double percent = stored/capacity * 100.0;
-		
+
+  const double alpha = 0.5;
+
 		if( percent > 50 )		
-		  glColor4f( 0,1,0, 0.7 ); // green
+		  glColor4f( 0,1,0, alpha ); // green
 		else if( percent > 25 )
-		  glColor4f( 1,0,1, 0.7 ); // magenta
+		  glColor4f( 1,0,1, alpha ); // magenta
 		else
-		  glColor4f( 1,0,0, 0.7 ); // red
+		  glColor4f( 1,0,0, alpha ); // red
 		
 		static char buf[6];
 		snprintf( buf, 6, "%.0f", percent );
@@ -59,6 +80,36 @@ void PowerPack::Visualize( Camera* cam )
 		glVertex2f( width, fullness );
 		glEnd();
 		
+		if( stored < 0.0 ) // inifinite supply!
+		  {
+			 // draw an arrow toward the top
+			 glBegin( GL_LINES );
+			 glVertex2f( width/3.0,     height/3.0 );
+			 glVertex2f( 2.0 * width/3, height/3.0 );
+
+			 glVertex2f( width/3.0,     height/3.0 );
+			 glVertex2f( width/3.0,     height - height/5.0 );
+
+			 glVertex2f( width/3.0,     height - height/5.0 );
+			 glVertex2f( 0,     height - height/5.0 );
+
+			 glVertex2f( 0,     height - height/5.0 );
+			 glVertex2f( width/2.0,     height );
+
+			 glVertex2f( width/2.0,     height );
+			 glVertex2f( width,     height - height/5.0 );
+
+			 glVertex2f( width,     height - height/5.0 );
+			 glVertex2f( 2.0 * width/3.0, height - height/5.0 );
+
+			 glVertex2f( 2.0 * width/3.0, height - height/5.0 );
+			 glVertex2f( 2.0 * width/3, height/3.0 );			 
+
+			 glEnd();
+			 
+		  }
+
+
 		if( charging )
 		  {
 			 glLineWidth( 6.0 );
@@ -85,8 +136,6 @@ stg_joules_t PowerPack::RemainingCapacity()
 void PowerPack::Add( stg_joules_t j )
 {
   stored += MIN( RemainingCapacity(), j );
-  
-  charging = true;
 }
 
 void PowerPack::Subtract( stg_joules_t j )
@@ -97,6 +146,9 @@ void PowerPack::Subtract( stg_joules_t j )
 
 void PowerPack::TransferTo( PowerPack* dest, stg_joules_t amount )
 {
+  //printf( "amount %.2f stored %.2f dest capacity %.2f\n",
+  //	 amount, stored, dest->RemainingCapacity() );
+
   // if stored is non-negative we can't transfer more than the stored
   // amount. If it is negative, we have infinite energy stored
   if( stored >= 0.0 )
@@ -105,10 +157,10 @@ void PowerPack::TransferTo( PowerPack* dest, stg_joules_t amount )
   // we can't transfer more than he can take
   amount = MIN( amount, dest->RemainingCapacity() );
  
-  printf( "%s receives %.3f J from %s\n",
-			 mod->Token(), amount, dest->mod->Token() );
+
+  //printf( "%s gives %.3f J to %s\n",
+  //	 mod->Token(), amount, dest->mod->Token() );
   
-   
   Subtract( amount );
   dest->Add( amount );
 }

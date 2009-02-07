@@ -139,7 +139,7 @@ void Canvas::InitGl()
   GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
   TextureManager::getInstance()._stall_texture_id = stall_id;
 
-  fullpath = FileManager::findFile( "assets/mains.png" );
+  fullpath = FileManager::findFile( "assets/mainspower.png" );
   if ( fullpath == "" ) 
 	 {
 		PRINT_DEBUG( "Unable to load mains texture.\n" );

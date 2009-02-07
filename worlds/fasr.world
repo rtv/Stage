@@ -7,24 +7,24 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 30 # real-time interval between simulation updates in milliseconds 
+interval_real 0 # real-time interval between simulation updates in milliseconds 
 paused 1
 
 resolution 0.02
 
 # threads may speed things up here depending on available CPU cores & workload 
-threadpool 0 
-# threadpool 2
+ threadpool 0 
+# threadpool 3
 
 
 # configure the GUI window
 window
 ( 
-  size [ 600.000 599.000 ] 
+  size [ 902.000 856.000 ] 
 
-  center [ 4.605 -2.392 ] 
+  center [ 6.726 -2.592 ] 
   rotate [ 0 0 ]
-  scale 68.242 
+  scale 116.966 
 
   pcam_loc [ 0 -4.000 2.000 ]
   pcam_angle [ 70.000 0 ]
@@ -61,80 +61,77 @@ zone
   ctrl "sink"
 )
 
-define autorob pioneer2dx		  
-(		 
- sicklaser( samples 32 range_max 5 laser_return 2 watts 30  )
- ctrl "fasr"
- joules 1000000 
- fiducial_return 1
-)
-
 define charging_bump model
 (
-  pose [0.210 0 -0.100 0 ] 
-  size [0.050 0.100 0.100] 
-  take_watts 300.0 
+  pose [0.240 0 -0.100 0 ] 
+  size [0.120 0.050 0.100] 
+  take_watts 1000.0 
   color "orange" 
-  obstacle_return 1
+  obstacle_return 0
+)
+
+define autorob pioneer2dx		  
+(		 
+ sicklaser( samples 32 range_max 5 laser_return 2 watts 30 )
+ ctrl "fasr"
+ joules 100000 
+ joules_capacity 400000 
+ fiducial_return 0
+ charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
 )
 
 define charge_station model
 (  
-  color "yellow"
-  size [ 0.100 0.500 0.400 ]
-  joules -1  # infinite storage
-  give_watts 500
+  size [ 0.100 0.300 0.100 ]
+	color "purple"
+
+   model( color "purple" size [0.100 0.100 0.400] pose [ 0 0.100 0 0 ] )
+
+	model( 
+   pose [ 0.010 0 0 0 ]
+   color "yellow"
+   size [ 0.050 0.100 0.100 ]
+   joules -1  # infinite storage
+   give_watts 1000
+   fiducial_return 2
+  )
+
+   model( color "purple" size [0.100 0.100 0.400] pose [ 0 -0.100 0 0 ] ) 
 )
 
-charge_station
-(
-   pose [ 7.941 -3.001 0 0 ]
-)
+charge_station(  pose [ 7.803 -1.332 0 34.377 ] )
+charge_station(  pose [ 7.940 -2.349 0 0 ] )
+charge_station(  pose [ 7.931 -3.367 0 0 ] )
+charge_station(  pose [ 7.931 -4.444 0 0 ] )
 
-autorob
-( 
-  pose [2.933 0.917 0  -147.323] 
-  color "magenta" 
-  joules 10000
-  joules_capacity 100000
-  charging_bump()
-)
-
-autorob
-( 
-  pose [5.757 -3.528 0 14.941]  
-  color "green" 
-  charging_bump( take_watts 0 give_watts 300.0 )
-)
-
-autorob( pose [5.937 4.858 0 -147.503] )
+autorob( pose [4.144 6.834 0 -98.076] )
 autorob( pose [7.574 6.269 0 -111.715] )
-autorob( pose [5.664 5.938 0 107.666] )
-autorob( pose [7.016 6.428 0 -128.279] )
+autorob( pose [5.615 6.185 0 107.666] )
+autorob( pose [7.028 6.502 0 -128.279] )
 autorob( pose [5.750 4.137 0 -97.047] )
 autorob( pose [4.909 6.097 0 -44.366] )
 autorob( pose [6.898 4.775 0 -117.576] )
-autorob( pose [7.012 5.706 0 129.497] )
-
-autorob( pose [6.616 6.893 0 170.743] )
+autorob( pose [7.394 5.595 0 129.497] )
+autorob( pose [6.468 6.708 0 170.743] )
 autorob( pose [6.451 4.189 0 -61.453] )
-autorob( pose [5.098 6.788 0 -61.295] )
-autorob( pose [4.374 5.163 0 -147.713] )
-autorob( pose [4.999 4.230 0 -125.236] )
-autorob( pose [3.533 4.220 0 78.789] )
-autorob( pose [5.440 5.317 0 -26.545] )
-autorob( pose [7.518 6.973 0 163.239] )
-autorob( pose [7.559 4.764 0 -139.066] )
-autorob( pose [5.940 6.768 0 77.301] )
 
-#autorob( pose [7.122 4.175 0 -31.440] )
-#autorob( pose [6.203 6.963 0 2.937] )
+autorob( pose [5.246 6.813 0 -61.295] )
+autorob( pose [4.127 5.388 0 -147.713] )
+autorob( pose [5.020 4.213 0 -125.236] )
+autorob( pose [3.286 4.715 0 78.789] )
+autorob( pose [5.440 5.317 0 -26.545] )
+autorob( pose [7.641 6.998 0 163.239] )
+autorob( pose [7.559 4.764 0 -139.066] )
+autorob( pose [5.471 7.446 0 77.301] )
+autorob( pose [7.122 4.175 0 -31.440] )
+autorob( pose [5.944 6.951 0 2.937] )
+
 #autorob( pose [6.800 5.897 0 -103.060] )
-#autorob( pose [6.331 6.450 0 -103.060] )
+#autorob( pose [6.405 5.291 0 -103.060] )
 #autorob( pose [5.974 5.725 0 -103.060] )
 #autorob( pose [4.151 7.272 0 53.540] )
 #autorob( pose [6.545 7.459 0 2.937] )
-#autorob( pose [7.225 7.459 0 34.450] )
+#autorob( pose [7.237 7.533 0 34.450] )
 #autorob( pose [3.875 6.533 0 134.717] )
-#autorob( pose [3.944 5.045 0 -103.060] )
+#autorob( pose [3.944 4.674 0 -103.060] )
 #autorob( pose [4.634 6.897 0 -103.060] )

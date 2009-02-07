@@ -73,6 +73,7 @@ World::World( const char* token,
 	      double ppm )
   : 
   // private
+  charge_list( NULL ),
   destroy( false ),
   dirty( true ),
   models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
@@ -426,6 +427,10 @@ bool World::Update()
 		
   // upate all positions first
   LISTMETHOD( velocity_list, Model*, UpdatePose );
+  
+  // test all models that supply charge to see if they are touching
+  // something that takes charge
+  LISTMETHOD( charge_list, Model*, UpdateCharge );
 	
   // then update all sensors	
   if( worker_threads == 0 ) // do all the work in this thread

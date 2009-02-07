@@ -175,14 +175,14 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 													  max_range_anon,
 													  fiducial_raytrace_match,
 													  NULL,
-													  false );
+													  true );
 	
 	//range = ray.range;
 	Model* hitmod = ray.mod;
 
-// 	printf( "ray hit %s and was seeking LOS to %s\n",
-// 			  hitmod ? hitmod->Token() : "null",
-// 			  him->Token() );
+ 	//printf( "ray hit %s and was seeking LOS to %s\n",
+	//	  hitmod ? hitmod->Token() : "null",
+	//	  him->Token() );
 
 	// if it was him, we can see him
 	if( hitmod == him )
@@ -262,23 +262,23 @@ void ModelFiducial::DataVisualize( Camera* cam )
 	if ( !showFiducialData )
 		return;
 	
-	// draw the FOV
-	   GLUquadric* quadric = gluNewQuadric();
+// 	// draw the FOV
+// 	   GLUquadric* quadric = gluNewQuadric();
 
-	   PushColor( 0,0,0,0.2  );
+// 	   PushColor( 0,0,0,0.2  );
 
-	   gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
+// 	   gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
 
-	   gluPartialDisk( quadric,
-			   0, 
-			   max_range_anon,
-			   20, // slices	
-			   1, // loops
-			   rtod( M_PI/2.0 + fov/2.0), // start angle
-			   rtod(-fov) ); // sweep angle
+// 	   gluPartialDisk( quadric,
+// 			   0, 
+// 			   max_range_anon,
+// 			   20, // slices	
+// 			   1, // loops
+// 			   rtod( M_PI/2.0 + fov/2.0), // start angle
+// 			   rtod(-fov) ); // sweep angle
 
-	   gluDeleteQuadric( quadric );
-	   PopColor();
+// 	   gluDeleteQuadric( quadric );
+// 	   PopColor();
 
 	if( data->len == 0 )
 		return;

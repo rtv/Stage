@@ -1050,13 +1050,13 @@ void Model::DrawStatusTree( Camera* cam )
 void Model::DrawStatus( Camera* cam ) 
 {
   // quick hack
-  if( power_pack && power_pack->stored < 0.0 )
-	 {
-      glPushMatrix();
-      glTranslatef( 0.3, 0, 0.0 );		
-		DrawImage( TextureManager::getInstance()._mains_texture_id, cam, 0.85 );
-		glPopMatrix();
-	 }
+//   if( power_pack && power_pack->stored < 0.0 )
+// 	 {
+//       glPushMatrix();
+//       glTranslatef( 0.3, 0, 0.0 );		
+// 		DrawImage( TextureManager::getInstance()._mains_texture_id, cam, 0.85 );
+// 		glPopMatrix();
+// 	 }
 
   if( say_string || power_pack )	  
     {
@@ -1081,7 +1081,7 @@ void Model::DrawStatus( Camera* cam )
 		//if( ! parent )
 		// glRectf( 0,0,1,1 );
 		
-		if( power_pack->stored > 0.0 )
+		//if( power_pack->stored > 0.0 )
 		  power_pack->Visualize( cam );
 
 		if( say_string )
@@ -1169,7 +1169,8 @@ stg_meters_t Model::ModelHeight()
   return geom.size.z + m_child;
 }
 
-void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha )
+
+void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha, double width, double height )
 {
   float yaw, pitch;
   pitch = - cam->pitch();
@@ -1192,15 +1193,16 @@ void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha )
   //draw a square, with the textured image
   glBegin(GL_QUADS);
   glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.25f, 0, -0.25f );
-  glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.25f, 0, -0.25f );
-  glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.25f, 0,  0.25f );
-  glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.25f, 0,  0.25f );
+  glTexCoord2f(width, 0.0f); glVertex3f( 0.25f, 0, -0.25f );
+  glTexCoord2f(width, height); glVertex3f( 0.25f, 0,  0.25f );
+  glTexCoord2f(0.0f, height); glVertex3f(-0.25f, 0,  0.25f );
   glEnd();
 
   glPopMatrix();
   glBindTexture( GL_TEXTURE_2D, 0 );
   glDisable(GL_TEXTURE_2D);
 }
+
 
 void Model::DrawFlagList( void )
 {	
@@ -1605,47 +1607,72 @@ int Model::SetParent(  Model* newparent)
 void Model::PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
 			      stg_meters_t ymin, stg_meters_t ymax )
 {
-  while( TestCollision() )
+  while( TestCollisionTree() )
     SetPose( Pose::Random( xmin,xmax, ymin, ymax ));		
 }
 
 
+GList* Model::AppendTouchingModels( GList* list )
+{
+  return blockgroup.AppendTouchingModels( list );
+}
+
 Model* Model::TestCollision()
 {
-  //printf( "mod %s test collision...\n", token );
-  
-  Model* hitmod = blockgroup.TestCollision();
+  //printf( "mod %s test collision...\n", token );  
+  return( blockgroup.TestCollision() );
+}
+
+Model* Model::TestCollisionTree()
+{  
+  Model* hitmod = TestCollision();
   
   if( hitmod == NULL ) 
     for( GList* it = children; it; it=it->next ) 
       { 
-		  hitmod = ((Model*)it->data)->TestCollision();
+		  hitmod = ((Model*)it->data)->TestCollisionTree();
 		  if( hitmod )
 			 break;
       }
   
-  if( hitmod && (watts_take > 0.0) )
-	 {
-		PowerPack* pp = FindPowerPack();
-		
-		if( pp )
-		  {
-			 if( hitmod->FindPowerPack() && (hitmod->watts_give > 0.0) )
-				{		
-				  stg_watts_t rate = MIN( watts_take, hitmod->watts_give );
-				  stg_joules_t amount =  rate * (world->interval_sim * 1e-6);
-				  
-				  // move some joules from him to me
-				  hitmod->FindPowerPack()->TransferTo( FindPowerPack(), amount );
-				}
-			 else
-				pp->charging = false;
-		  }
-	 }
-		
-
   //printf( "mod %s test collision done.\n", token );
   return hitmod;  
+}  
+
+void Model::UpdateCharge()
+{
+  //printf( "model %s is a charger. testing to see if anyone is touching\n",
+  //		 token );x
+
+  assert( watts_give > 0 );
+  
+  PowerPack* mypp = FindPowerPack();
+  assert( mypp );
+  
+  for( GList* touchers = AppendTouchingModels( NULL );
+		 touchers;
+		 touchers = touchers->next )
+	 {
+		Model* toucher = (Model*)touchers->data;
+				
+ 		PowerPack* hispp =toucher-> FindPowerPack();		
+ 		if( hispp && toucher->watts_take > 0.0) 
+ 		  {		
+ 			 //printf( "   toucher %s can take up to %.2f wats\n", 
+			 //		toucher->Token(), toucher->watts_take );
+			 
+ 			 stg_watts_t rate = MIN( watts_give, toucher->watts_take );
+ 			 stg_joules_t amount =  rate * (world->interval_sim * 1e-6);
+			 
+			 //printf ( "moving %.2f joules from %s to %s\n",
+			 //		 amount, token, toucher->token );
+
+ 			 // move some joules from me to him
+ 			 mypp->TransferTo( hispp, amount );
+ 			 hispp->charging = true;
+ 		  }
+ 	 }
+  
 }
 
 void Model::CommitTestedPose()
@@ -1665,7 +1692,7 @@ Model* Model::ConditionalMove( Pose newpose )
   Pose startpose = pose;
   pose = newpose; // do the move provisionally - we might undo it below
    
-  Model* hitmod = TestCollision();
+  Model* hitmod = TestCollisionTree();
  
   if( hitmod )
     pose = startpose; // move failed - put me back where I started
@@ -1683,13 +1710,17 @@ Model* Model::ConditionalMove( Pose newpose )
   return hitmod;
 }
 
+
 void Model::UpdatePose( void )
 {
   if( disabled )
     return;
 
-  if( velocity.x == 0 && velocity.y == 0 && velocity.a == 0 && velocity.z == 0 )
-    return;
+  if( velocity.IsZero() )	
+	 {
+		PRINT_WARN1( "model %s has velocity zero but its pose is being updated", token ); 
+		return;
+	 }
 
   // TODO - control this properly, and maybe do it faster
   //if( 0 )
