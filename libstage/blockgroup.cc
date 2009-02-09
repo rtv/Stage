@@ -27,8 +27,6 @@ void BlockGroup::AppendBlock( Block* block )
 {
   blocks = g_list_append( blocks, block );
   ++count;
-
-  block->mod->map_caches_are_invalid = true;
 }
 
 void BlockGroup::Clear()
@@ -84,9 +82,6 @@ void BlockGroup::CalcSize()
   maxx = maxy = -billion;
   
   size.z = 0.0; // grow to largest z we see
-
-  if( blocks )
-	 ((Block*)blocks->data)->mod->map_caches_are_invalid = true;
   
   for( GList* it=blocks; it; it=it->next ) // examine all the blocks
 	 {

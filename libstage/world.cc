@@ -77,6 +77,7 @@ World::World( const char* token,
   destroy( false ),
   dirty( true ),
   models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
+  powerpack_list( NULL ),
   ppm( ppm ), // raytrace resolution
   quit( false ),
   quit_time( 0 ),
@@ -192,15 +193,12 @@ void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
 
 void World::LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable )
 { 
-//   // lookup the group in which this was defined
-//   Ancestor* anc = (Ancestor*)g_hash_table_lookup( entitytable, 
-// 																  (gpointer)wf->GetEntityParent( entity ) );
-  
-
   Puck* puck = new Puck();
   puck->Load( wf, entity );  
   puck_list = g_list_prepend( puck_list, puck );
 }
+
+
 
 
 void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
@@ -424,14 +422,17 @@ bool World::Update()
     if( IsGUI() == false )
       return true;		
   }
-		
+  
   // upate all positions first
   LISTMETHOD( velocity_list, Model*, UpdatePose );
+  
+  // upate all powerpacks
+  LISTMETHOD( powerpack_list, PowerPack*, Update );
   
   // test all models that supply charge to see if they are touching
   // something that takes charge
   LISTMETHOD( charge_list, Model*, UpdateCharge );
-	
+  
   // then update all sensors	
   if( worker_threads == 0 ) // do all the work in this thread
     {
@@ -441,31 +442,31 @@ bool World::Update()
     {
       // push the update for every model that needs it into the thread pool
       for( GList* it = update_list; it; it=it->next )
-	{
-	  Model* mod = (Model*)it->data;
-			  
-	  if( mod->UpdateDue()  )
-	    {
-	      if( mod->thread_safe ) // do update in a worker thread
-		{
-		  g_mutex_lock( thread_mutex );
-		  update_jobs_pending++;
-		  g_mutex_unlock( thread_mutex );						 
-		  g_thread_pool_push( threadpool, mod, NULL );
-		}
-	      else
-		mod->Update(); // do update in this thread
-	    }
-	}	
-		 
+		  {
+			 Model* mod = (Model*)it->data;
+			 
+			 if( mod->UpdateDue()  )
+				{
+				  if( mod->thread_safe ) // do update in a worker thread
+					 {
+						g_mutex_lock( thread_mutex );
+						update_jobs_pending++;
+						g_mutex_unlock( thread_mutex );						 
+						g_thread_pool_push( threadpool, mod, NULL );
+					 }
+				  else
+					 mod->Update(); // do update in this thread
+				}
+		  }	
+		
       // wait for all the last update job to complete - it will
       // signal the worker_threads_done condition var
       g_mutex_lock( thread_mutex );
       while( update_jobs_pending )
-	g_cond_wait( worker_threads_done, thread_mutex );
+		  g_cond_wait( worker_threads_done, thread_mutex );
       g_mutex_unlock( thread_mutex );		 
     }
-
+  
   this->sim_time += this->interval_sim;
   this->updates++;
 	
@@ -938,4 +939,12 @@ void World::Extend( stg_point3_t pt )
 }
 
 
+void World::AddPowerPack( PowerPack* pp )
+{
+  powerpack_list = g_list_append( powerpack_list, pp ); 
+}
 
+void World::RemovePowerPack( PowerPack* pp )
+{
+  powerpack_list = g_list_remove( powerpack_list, pp ); 
+}

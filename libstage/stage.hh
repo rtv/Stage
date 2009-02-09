@@ -273,6 +273,8 @@ namespace Stg
       printf( "%s pose [x:%.3f y:%.3f z:%.3f a:%.3f]\n",
 				  prefix, x,y,z,a );
     }
+
+	 bool IsZero(){ return( !(x || y || z || a )); };
 	 
 	 void Load( Worldfile* wf, int section, const char* keyword );
 	 void Save( Worldfile* wf, int section, const char* keyword );
@@ -304,9 +306,7 @@ namespace Stg
     {
       printf( "%s velocity [x:%.3f y:%.3f z:%3.f a:%.3f]\n",
 				  prefix, x,y,z,a );
-    }
-	 
-	 bool IsZero(){ return( !(x || y || z || a )); };
+    }	 
   };
   
   /** Specify an object's basic geometry: position and rectangular
@@ -373,38 +373,38 @@ namespace Stg
     Bounds x, y, z;
   } stg_bbox3d_t;
   
-  /** define a field-of-view: an angle and range bounds */
+  /** Define a field-of-view: an angle and range bounds */
   typedef struct
   {
     Bounds range; ///< min and max range of sensor
     stg_radians_t angle; ///< width of viewing angle of sensor
   } stg_fov_t;
   
-  /** define a point on a 2d plane */
+  /** Define a point on a 2d plane */
   typedef struct
   {
     stg_meters_t x, y;
   } stg_point_t;
   
-  /** define a point in 3d space */
+  /** Define a point in 3d space */
   typedef struct
   {
     float x, y, z;
   } stg_vertex_t;
   
-  /** define vertex and its color */
+  /** Define vertex and its color */
   typedef struct
   {
     float x, y, z, r, g, b, a;
   } stg_colorvertex_t;
   
-  /** define a point in 3d space */
+  /** Define a point in 3d space */
   typedef struct
   {
     stg_meters_t x, y, z;
   } stg_point3_t;
 
-  /** define an integer point on the 2d plane */
+  /** Define an integer point on the 2d plane */
   typedef struct
   {
     int32_t x,y;
@@ -639,7 +639,7 @@ namespace Stg
   stg_cb_t* cb_create( stg_model_callback_t callback, void* arg );
   void cb_destroy( stg_cb_t* cb );
 
-  /** defines a rectangle of [size] located at [pose] */
+  /** Defines a rectangle of [size] located at [pose] */
   typedef struct
   {
     Pose pose;
@@ -846,6 +846,7 @@ namespace Stg
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
     stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
+	 GList* powerpack_list; ///< List of all the powerpacks attached to models in the world
     GList* ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in ms
     GHashTable* superregions;
@@ -924,6 +925,9 @@ namespace Stg
   
     virtual void AddModel( Model* mod );
     virtual void RemoveModel( Model* mod );
+
+    void AddPowerPack( PowerPack* pp );
+    void RemovePowerPack( PowerPack* pp );
   
     GList* GetRayList(){ return ray_list; };
     void ClearRays();
@@ -1371,13 +1375,12 @@ namespace Stg
   };
 
 
-  class Camera;
-
   /** energy data packet */
   class PowerPack
   {
   public:
 	 PowerPack( Model* mod );
+	 ~PowerPack();
 
 	 /** The model that owns this object */
 	 Model* mod;
@@ -1415,6 +1418,10 @@ namespace Stg
 
 	 void Print( const char* prefix )
 	 { printf( "%s PowerPack %.2f/%.2f J\n", prefix, stored, capacity ); }		
+
+	 /** Called exactly once for each pack on every world update
+		  cycle */
+	 void Update();
 };
 
   class Visibility
@@ -1571,7 +1578,6 @@ namespace Stg
 	 ctrlinit_t* initfunc;
 	 stg_usec_t interval; ///< time between updates in us
 	 stg_usec_t last_update; ///< time of last update in us  
-	 bool map_caches_are_invalid;
 	 stg_meters_t map_resolution;
 	 stg_kg_t mass;
 	 bool on_update_list;

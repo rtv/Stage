@@ -16,8 +16,10 @@ set( stageSrcs ancestor.cc
 	model_blinkenlight.cc
 	model_blobfinder.cc
 	model_callbacks.cc
+	model_draw.cc
 	model_camera.cc
 	model_fiducial.cc
+	model_getset.cc
 	model_laser.cc
 	model_load.cc
 	model_position.cc
