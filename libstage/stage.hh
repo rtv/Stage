@@ -732,25 +732,66 @@ namespace Stg
       record within a model and called whenever the record is set.*/
   typedef int (*stg_model_callback_t)( Model* mod, void* user );
   
-  class Puck
-  {
-  private:
-	 void BuildDisplayList();
+ //  class Puck
+//   {
+//   private:
+// 	 void BuildDisplayList();
 
-  public:
-	 stg_color_t color;
-	 int displaylist;
-	 stg_meters_t height;
-	 Pose pose;
-	 stg_meters_t radius;
+//   public:
+// 	 stg_color_t color;
+// 	 int displaylist;
+// 	 stg_meters_t height;
+// 	 Pose pose;
+// 	 stg_meters_t radius;
 	 
-	 Puck();
-	 void Load( Worldfile* wf, int section );
-	 void Save( Worldfile* wf, int section );
+// 	 Puck();
+// 	 void Load( Worldfile* wf, int section );
+// 	 void Save( Worldfile* wf, int section );
 	 
-	 void Draw();  
-  };
+// 	 void Draw();  
+//   };
   
+  
+ //  class EventQueue
+//   {
+//   private:
+// 	 GTree* future;
+
+// 	 static gint InstantCompare( stg_usec_t a, stg_usec_t b )
+// 	 {
+// 		if( a < b )
+// 		  return -1;
+		
+// 		if( a > b )
+// 		  return 1;
+
+// 		return 0; // they are equal
+// 	 }
+
+//   public:
+// 	 EventQueue()
+// 	 {
+// 		future = g_tree_new( InstantCompare );
+// 	 }
+
+// 	 RunInstant() ///< Updates all events due at the next instant
+// 	 {
+// 		GList* instant_list = 
+// 	 }
+	 
+// 	 QueueModel( Model* mod ) ///< Adds the model to the event queue
+// 	 {
+// 		g_tree_insert( mod->updatedue, g_list_prepend( g_tree_lookup( mod->updatedue ), mod ); );
+// 	 }
+
+// 	 DeQueueModel( Model* mod ) ///< removes the model from the event queue
+// 	 {
+// 		g_tree_insert( mod->updatedue, g_list_remove( g_tree_lookup( mod->updatedue ), mod ));		
+// 	 }
+	 
+//   };
+
+
   // ANCESTOR CLASS
   /** Base class for Model and World */
   class Ancestor
@@ -825,6 +866,7 @@ namespace Stg
     GList* charge_list; ///< Models which receive charge are listed here
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
+	 GList* event_list; //< 
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
     double ppm; ///< the resolution of the world model in pixels per meter   
     bool quit; ///< quit this world ASAP  
@@ -1418,10 +1460,6 @@ namespace Stg
 
 	 void Print( const char* prefix )
 	 { printf( "%s PowerPack %.2f/%.2f J\n", prefix, stored, capacity ); }		
-
-	 /** Called exactly once for each pack on every world update
-		  cycle */
-	 void Update();
 };
 
   class Visibility
@@ -1592,6 +1630,10 @@ namespace Stg
 
 	 /** Optional attached PowerPack, defaults to NULL */
 	 PowerPack* power_pack;
+
+	 /** list of powerpacks that this model is currently charging,
+		  initially NULL. */
+	 GList* pps_charging;
 
 	 /** GData datalist can contain arbitrary named data items. Can be used
 		  by derived model types to store properties, and for user code

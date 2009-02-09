@@ -829,7 +829,7 @@ void Canvas::renderFrame()
 	 DrawBoundingBoxes();
   
   
-  LISTMETHOD( world->puck_list, Puck*, Draw );
+  //LISTMETHOD( world->puck_list, Puck*, Draw );
 
   // TODO - finish this properly
   //LISTMETHOD( models_sorted, Model*, DrawWaypoints );

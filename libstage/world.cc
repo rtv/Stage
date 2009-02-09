@@ -191,12 +191,12 @@ void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
   mod->LoadBlock( wf, entity );
 }
 
-void World::LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable )
-{ 
-  Puck* puck = new Puck();
-  puck->Load( wf, entity );  
-  puck_list = g_list_prepend( puck_list, puck );
-}
+// void World::LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable )
+// { 
+//   Puck* puck = new Puck();
+//   puck->Load( wf, entity );  
+//   puck_list = g_list_prepend( puck_list, puck );
+// }
 
 
 
@@ -334,8 +334,8 @@ void World::Load( const char* worldfile_path )
 		  }
       else if( strcmp( typestr, "block" ) == 0 )
 		  LoadBlock( wf, entity, entitytable );
-		else if( strcmp( typestr, "puck" ) == 0 )
-		  LoadPuck( wf, entity, entitytable );
+// 		else if( strcmp( typestr, "puck" ) == 0 )
+// 		  LoadPuck( wf, entity, entitytable );
 		else
 		  LoadModel( wf, entity, entitytable );
     }
@@ -425,9 +425,6 @@ bool World::Update()
   
   // upate all positions first
   LISTMETHOD( velocity_list, Model*, UpdatePose );
-  
-  // upate all powerpacks
-  LISTMETHOD( powerpack_list, PowerPack*, Update );
   
   // test all models that supply charge to see if they are touching
   // something that takes charge

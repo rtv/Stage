@@ -29,7 +29,6 @@ set( stageSrcs ancestor.cc
 	options_dlg.cc
 	options_dlg.hh
 	powerpack.cc
-	puck.cc
 	region.cc
 	resource.cc
 	stage.cc
@@ -41,6 +40,10 @@ set( stageSrcs ancestor.cc
 	worldfile.cc
 	worldgui.cc
 )
+
+# TODO
+#	puck.cc
+
 
 add_library(stage SHARED ${stageSrcs})
 

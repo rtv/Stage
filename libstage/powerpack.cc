@@ -28,13 +28,6 @@ void PowerPack::Print( char* prefix )
   printf( "%s stored %.2f/%.2f joules\n", prefix, stored, capacity );
 }
 
-// this is called every world update cycle - can we get away without doing this?
-void PowerPack::Update()
-{ 
-  charging = false;
-}
-
-
 /** OpenGL visualization of the powerpack state */
 void PowerPack::Visualize( Camera* cam )
 {

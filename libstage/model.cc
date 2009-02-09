@@ -216,6 +216,7 @@ Model::Model( World* world,
     parent(parent),
     pose(),
 	 power_pack( NULL ),
+	 pps_charging(NULL),
     props(NULL),
     rebuild_displaylist(true),
     say_string(NULL),
@@ -782,8 +783,11 @@ void Model::UpdateCharge()
   PowerPack* mypp = FindPowerPack();
   assert( mypp );
   
-  // make sure we only charge a powerpack once
-  GList* ppacks_serviced = NULL;
+  // detach charger from all the packs charged last time
+  for( GList* it = pps_charging; it; it = it->next )
+	 ((PowerPack*)it->data)->charging = false;
+  g_list_free( pps_charging );
+  pps_charging = NULL;
   
   // run through and update all appropriate touchers
   for( GList* touchers = AppendTouchingModels( NULL );
@@ -807,6 +811,9 @@ void Model::UpdateCharge()
  			 // move some joules from me to him
  			 mypp->TransferTo( hispp, amount );
  			 hispp->charging = true;
+			 
+			 // remember who we are charging so we can detatch next time
+			 pps_charging = g_list_prepend( pps_charging, hispp );
  		  }
  	 }
 }
