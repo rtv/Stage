@@ -23,12 +23,6 @@ void Model::AddCallback( void* address,
 
 	// and replace the list in the hash table
 	g_hash_table_insert( callbacks, key, cb_list );
-
-	// if the callback was an update function, add this model to the
-	// world's list of models that need updating (if it's not there
-	// already)
-	//if( address == (void*)&update )
-	//stg_world_start_updating_model( world, this );
 }
 
 
@@ -76,9 +70,7 @@ int Model::RemoveCallback( void* member,
 	
 	// return the number of callbacks now in the list. Useful for
 	// detecting when the list is empty.
-	//return g_list_length( cb_list );
-
-	return 0;
+	return g_list_length( cb_list );
 }
 
 

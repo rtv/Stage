@@ -22,9 +22,9 @@ window
 ( 
   size [ 902.000 856.000 ] 
 
-  center [ 5.355 5.319 ] 
-  rotate [ 30.000 26.000 ]
-  scale 126.761 
+  center [ 3.982 5.051 ] 
+  rotate [ 0 0 ]
+  scale 168.655 
 
   pcam_loc [ 0 -4.000 2.000 ]
   pcam_angle [ 70.000 0 ]
@@ -79,12 +79,12 @@ define autorob pioneer2dx
  fiducial_return 0
  # charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
 
- gripper( pose [0.25 0 -0.22 0]  
+ gripper( pose [0.250 0 -0.220 0]  
           take_watts 1000.0 
           fiducial( range 3 )
           # paddles [ "closed" "up" ]
 			 obstacle_return 0 # cheating for simplicity
-			 autosnatch 0
+			 # autosnatch 1
          )
 )
 
@@ -94,14 +94,14 @@ define charge_station model
   color "purple"
   
   # side blocks to restrict view angle
-  model( color "purple" size [0.100 0.050 0.400] pose [ 0 0.100 0 0 ] )
-  model( color "purple" size [0.100 0.050 0.400] pose [ 0 -0.100 0 0 ] ) 
+  model( color "purple" size [0.100 0.050 0.250] pose [ 0 0.100 0 0 ] )
+  model( color "purple" size [0.100 0.050 0.250] pose [ 0 -0.100 0 0 ] ) 
 
   # the charging block
   model( 
     pose [ 0.010 0 0 0 ]
     color "yellow"
-    size [ 0.050 0.200 0.150 ]
+    size [ 0.050 0.200 0.100 ]
     joules -1  # provides infinite energy
     give_watts 1000 
     fiducial_return 2 # look for this in the fiducial sensor
@@ -114,7 +114,46 @@ charge_station(  pose [ 7.940 -2.349 0 0 ] )
 charge_station(  pose [ 7.931 -3.367 0 0 ] )
 charge_station(  pose [ 7.931 -4.444 0 0 ] )
 
-autorob( pose [4.144 6.834 0 -98.076] joules 300000 )
+define puck model (
+  size [0.120 0.120 0.100]  
+  color "violet" 
+  gripper_return 1 
+  obstacle_return 0 
+)
+
+puck( pose [ 4.519 6.829 0 0 ] )
+puck( pose [ 4.088 7.018 0 0 ] )
+puck( pose [ 4.409 7.207 0 0 ] )
+puck( pose [ 3.589 7.324 0 0 ] )
+puck( pose [ 3.729 6.893 0 0 ] )
+puck( pose [ 3.714 7.683 0 0 ] )
+puck( pose [ 3.869 7.275 0 0 ] )
+puck( pose [ 4.039 6.719 0 0 ] )
+puck( pose [ 4.269 6.704 0 0 ] )
+puck( pose [ 3.752 7.101 0 0 ] )
+puck( pose [ 4.243 7.033 0 0 ] )
+puck( pose [ 4.666 7.052 0 0 ] )
+puck( pose [ 3.820 6.629 0 0 ] )
+
+puck( pose [ 3.930 6.381 0 0 ] )
+puck( pose [ 4.560 6.269 0 0 ] )
+puck( pose [ 4.391 5.814 0 0 ] )
+puck( pose [ 3.475 5.926 0 0 ] )
+puck( pose [ 3.205 6.595 0 0 ] )
+puck( pose [ 3.549 6.393 0 0 ] )
+puck( pose [ 3.957 5.640 0 0 ] )
+puck( pose [ 3.825 5.781 0 0 ] )
+puck( pose [ 4.789 5.122 0 0 ] )
+puck( pose [ 4.167 5.850 0 0 ] )
+puck( pose [ 3.652 6.101 0 0 ] )
+puck( pose [ 3.957 5.966 0 0 ] )
+puck( pose [ 4.685 5.982 0 0 ] )
+puck( pose [ 4.274 6.152 0 0 ] )
+puck( pose [ 4.380 6.491 0 0 ] )
+puck( pose [ 4.870 6.449 0 0 ] )
+puck( pose [ 3.588 6.635 0 0 ] )
+
+autorob( pose [5.462 7.216 0 -163.478] joules 300000 )
 autorob( pose [7.574 6.269 0 -111.715] joules 100000 )
 autorob( pose [5.615 6.185 0 107.666] joules 200000 )
 autorob( pose [7.028 6.502 0 -128.279] joules 400000 )

@@ -2091,13 +2091,13 @@ namespace Stg
 	 void AddUpdateCallback( stg_model_callback_t cb, void* user )
 	 { 
 		AddCallback( &hooks.update, cb, user ); 
-		Subscribe(); // if attaching a callback here, assume we want updates to happen
+		//Subscribe(); // if attaching a callback here, assume we want updates to happen
 	 }
 	
 	 void RemoveUpdateCallback( stg_model_callback_t cb )
 	 { 
 		RemoveCallback( &hooks.update, cb ); 
-		Unsubscribe();
+		//Unsubscribe();
 	 }
 	
 	 /** named-property interface 
@@ -2326,6 +2326,7 @@ namespace Stg
 		CMD_DOWN    
 	 };
 	 
+
 	 /** gripper configuration 
 	  */
 	 struct config_t
@@ -2338,16 +2339,19 @@ namespace Stg
 		double paddle_position; ///< 0.0 = full open, 1.0 full closed
 		double lift_position; ///< 0.0 = full down, 1.0 full up
 		
-		stg_meters_t inner_break_beam_inset; ///< distance from the end of the paddle
-		stg_meters_t outer_break_beam_inset; ///< distance from the end of the paddle  
 		bool paddles_stalled; // true iff some solid object stopped
 		// the paddles closing or opening
 		
-		GSList *grip_stack;  ///< stack of items gripped
+		GList*grip_stack;  ///< stack of items gripped
 		int grip_stack_size; ///< maximum number of objects in stack, or -1 for unlimited
 		
 		double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.		
 		bool autosnatch; ///< if true, cycle the gripper through open-close-up-down automatically
+
+		double break_beam_inset[2]; ///< distance from the end of the paddle
+
+      Model* beam[2]; ///< points to a model detected by the beams
+      Model* contact[2]; ///< pointers to a model detected by the contacts		
 	 };
 	 
 	 
@@ -2361,17 +2365,14 @@ namespace Stg
       double paddle_position; ///< 0.0 = full open, 1.0 full closed
       double lift_position; ///< 0.0 = full down, 1.0 full up
 
-      stg_bool_t inner_break_beam; ///< non-zero iff beam is broken
-      stg_bool_t outer_break_beam; ///< non-zero iff beam is broken
-
-      stg_bool_t paddle_contacts[2]; ///< non-zero iff paddles touch something
 
       stg_bool_t paddles_stalled; // true iff some solid object stopped
   				// the paddles closing or opening
 
+      Model* beam[2]; ///< points to a model detected by the beams
+      Model* contact[2]; ///< pointers to a model detected by the contacts		
+
       int stack_count; ///< number of objects in stack
-
-
     };
 
   private:
@@ -2380,6 +2381,8 @@ namespace Stg
 	 
 	 void FixBlocks();
 	 void PositionPaddles();
+	 void UpdateBreakBeams();
+	 void UpdateContacts();
 
 	 config_t cfg;
 	 cmd_t cmd;
