@@ -416,6 +416,8 @@ public:
 		{
 		  robot->at_dest = true;
 
+		  robot->gripper->CommandOpen();
+
 		  if( ++robot->work_put > workduration )
 			 {
 				// protect sink from concurrent access
@@ -428,7 +430,6 @@ public:
 
 				robot->work_put = 0;
 
-				robot->gripper->CommandOpen();
 			 }
 		}
   
