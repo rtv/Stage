@@ -99,8 +99,8 @@ Canvas::Canvas( WorldGui* world,
   setDirtyBuffer();
 	
   // enable accumulation buffer
-  mode( mode() | FL_ACCUM );
-  assert( can_do( FL_ACCUM ) );
+  //mode( mode() | FL_ACCUM );
+  //assert( can_do( FL_ACCUM ) );
 }
 
 void Canvas::InitGl()
