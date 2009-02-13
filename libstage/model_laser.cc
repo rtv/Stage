@@ -127,7 +127,6 @@ ModelLaser::~ModelLaser( void )
 
 void ModelLaser::Load( void )
 {  
-  Model::Load();
   sample_count = wf->ReadInt( wf_entity, "samples", sample_count );
   range_min = wf->ReadLength( wf_entity, "range_min", range_min);
   range_max = wf->ReadLength( wf_entity, "range_max", range_max );
@@ -142,6 +141,8 @@ void ModelLaser::Load( void )
       PRINT_WARN( "laser resolution set < 1. Forcing to 1" );
       resolution = 1;
     }
+
+  Model::Load();
 }
 
 stg_laser_cfg_t ModelLaser::GetConfig()

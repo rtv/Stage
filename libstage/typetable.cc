@@ -28,6 +28,9 @@ static Model* CreateModelFiducial( World* world, Model* parent )
 static Model* CreateModelBlobfinder( World* world, Model* parent ) 
 {  return new ModelBlobfinder( world, parent ); }    
 
+static Model* CreateModelGripper( World* world, Model* parent ) 
+{  return new ModelGripper( world, parent ); }    
+
 
 void Stg::RegisterModels()
 {
@@ -39,6 +42,7 @@ void Stg::RegisterModels()
   RegisterModel( MODEL_TYPE_POSITION, "position", CreateModelPosition );
   RegisterModel( MODEL_TYPE_BLOBFINDER, "blobfinder", CreateModelBlobfinder );
   RegisterModel( MODEL_TYPE_BLINKENLIGHT, "blinkenlight", CreateModelBlinkenlight);
+  RegisterModel( MODEL_TYPE_GRIPPER, "gripper", CreateModelGripper);
 
 #if DEBUG // human-readable view of the table
   puts( "Stg::Typetable" );

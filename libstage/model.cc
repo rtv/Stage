@@ -374,11 +374,11 @@ void Model::LoadBlock( Worldfile* wf, int entity )
 }
 
 
-void Model::AddBlockRect( stg_meters_t x, 
-			  stg_meters_t y, 
-			  stg_meters_t dx, 
-			  stg_meters_t dy,
-			  stg_meters_t dz )
+Block* Model::AddBlockRect( stg_meters_t x, 
+									 stg_meters_t y, 
+									 stg_meters_t dx, 
+									 stg_meters_t dy,
+									 stg_meters_t dz )
 {  
   UnMap();
 
@@ -392,11 +392,15 @@ void Model::AddBlockRect( stg_meters_t x,
   pts[3].x = x;
   pts[3].y = y + dy;
   
-  blockgroup.AppendBlock( new Block( this,
-				     pts, 4, 
-				     0, dz, 
-				     color,
-				     true ) );
+  Block* newblock =  new Block( this,
+									 pts, 4, 
+									 0, dz, 
+									 color,
+									 true );
+
+  blockgroup.AppendBlock( newblock );
+
+  return newblock;
 }
 
 

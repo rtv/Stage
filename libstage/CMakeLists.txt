@@ -4,6 +4,7 @@ MESSAGE( STATUS "Configuring libstage" )
 include_directories(${PROJECT_BINARY_DIR})
 
 set( stageSrcs ancestor.cc
+	model_gripper.cc
 	block.cc
 	blockgroup.cc
 	camera.cc

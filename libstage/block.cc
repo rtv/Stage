@@ -61,6 +61,80 @@ Block::~Block()
   g_ptr_array_free( candidate_cells, TRUE );
 }
 
+void Block::Translate( double x, double y )
+{
+  for( unsigned int p=0; p<pt_count; p++)
+	 {
+		pts[p].x += x;
+		pts[p].y += y;
+	 }
+
+  // force redraw
+  mod->blockgroup.BuildDisplayList( mod );
+}
+
+
+double Block::CenterY()
+{
+  double min = billion;
+  double max = -billion;
+  
+  for( unsigned int p=0; p<pt_count; p++)
+	 {
+		if( pts[p].y > max ) max = pts[p].y;
+		if( pts[p].y < min ) min = pts[p].y;
+	 }
+		  
+  // return the value half way between max and min
+  return( min + (max - min)/2.0 );
+}
+
+double Block::CenterX()
+{
+  double min = billion;
+  double max = -billion;
+  
+  for( unsigned int p=0; p<pt_count; p++)
+	 {
+		if( pts[p].x > max ) max = pts[p].x;
+		if( pts[p].x < min ) min = pts[p].x;
+	 }
+		  
+  // return the value half way between maxx and min
+  return( min + (max - min)/2.0 );
+}
+
+void Block::SetCenter( double x, double y )
+{
+  // move the block by the distance required to bring its center to
+  // the requested position
+  Translate( x-CenterX(), y-CenterY() );
+}
+
+void Block::SetCenterY( double y )
+{
+  // move the block by the distance required to bring its center to
+  // the requested position
+  Translate( 0, y-CenterY() );
+}
+
+void Block::SetCenterX( double x )
+{
+  // move the block by the distance required to bring its center to
+  // the requested position
+  Translate( x-CenterX(), 0 );
+}
+
+void Block::SetZ( double min, double max )
+{
+  local_z.min = min;
+  local_z.max = max;
+
+  // force redraw
+  mod->blockgroup.BuildDisplayList( mod );
+}
+
+
 stg_color_t Block::GetColor()
 {
   return( inherit_color ? mod->color : color );

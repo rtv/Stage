@@ -7,7 +7,7 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 0 # real-time interval between simulation updates in milliseconds 
+interval_real 20 # real-time interval between simulation updates in milliseconds 
 paused 1
 
 resolution 0.02
@@ -22,9 +22,9 @@ window
 ( 
   size [ 902.000 856.000 ] 
 
-  center [ 6.726 -2.592 ] 
-  rotate [ 0 0 ]
-  scale 116.966 
+  center [ 5.355 5.319 ] 
+  rotate [ 30.000 26.000 ]
+  scale 126.761 
 
   pcam_loc [ 0 -4.000 2.000 ]
   pcam_angle [ 70.000 0 ]
@@ -77,26 +77,36 @@ define autorob pioneer2dx
  joules 100000 
  joules_capacity 400000 
  fiducial_return 0
- charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
+ # charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
+
+ gripper( pose [0.25 0 -0.22 0]  
+          take_watts 1000.0 
+          fiducial( range 3 )
+          # paddles [ "closed" "up" ]
+			 obstacle_return 0 # cheating for simplicity
+			 autosnatch 0
+         )
 )
 
 define charge_station model
 (  
   size [ 0.100 0.300 0.100 ]
-	color "purple"
+  color "purple"
+  
+  # side blocks to restrict view angle
+  model( color "purple" size [0.100 0.050 0.400] pose [ 0 0.100 0 0 ] )
+  model( color "purple" size [0.100 0.050 0.400] pose [ 0 -0.100 0 0 ] ) 
 
-   model( color "purple" size [0.100 0.100 0.400] pose [ 0 0.100 0 0 ] )
+  # the charging block
+  model( 
+    pose [ 0.010 0 0 0 ]
+    color "yellow"
+    size [ 0.050 0.200 0.150 ]
+    joules -1  # provides infinite energy
+    give_watts 1000 
+    fiducial_return 2 # look for this in the fiducial sensor
+   )
 
-	model( 
-   pose [ 0.010 0 0 0 ]
-   color "yellow"
-   size [ 0.050 0.100 0.100 ]
-   joules -1  # infinite storage
-   give_watts 1000
-   fiducial_return 2
-  )
-
-   model( color "purple" size [0.100 0.100 0.400] pose [ 0 -0.100 0 0 ] ) 
 )
 
 charge_station(  pose [ 7.803 -1.332 0 34.377 ] )
@@ -104,27 +114,28 @@ charge_station(  pose [ 7.940 -2.349 0 0 ] )
 charge_station(  pose [ 7.931 -3.367 0 0 ] )
 charge_station(  pose [ 7.931 -4.444 0 0 ] )
 
-autorob( pose [4.144 6.834 0 -98.076] )
-autorob( pose [7.574 6.269 0 -111.715] )
-autorob( pose [5.615 6.185 0 107.666] )
-autorob( pose [7.028 6.502 0 -128.279] )
-autorob( pose [5.750 4.137 0 -97.047] )
-autorob( pose [4.909 6.097 0 -44.366] )
-autorob( pose [6.898 4.775 0 -117.576] )
-autorob( pose [7.394 5.595 0 129.497] )
-autorob( pose [6.468 6.708 0 170.743] )
-autorob( pose [6.451 4.189 0 -61.453] )
+autorob( pose [4.144 6.834 0 -98.076] joules 300000 )
+autorob( pose [7.574 6.269 0 -111.715] joules 100000 )
+autorob( pose [5.615 6.185 0 107.666] joules 200000 )
+autorob( pose [7.028 6.502 0 -128.279] joules 400000 )
+autorob( pose [5.750 4.137 0 -97.047] joules 100000 )
+autorob( pose [4.909 6.097 0 -44.366] joules 200000 )
+autorob( pose [6.898 4.775 0 -117.576] joules 300000 )
+autorob( pose [7.394 5.595 0 129.497] joules 400000 )
+autorob( pose [6.468 6.708 0 170.743] joules 100000 )
+autorob( pose [6.451 4.189 0 -61.453] joules 200000 )
 
-autorob( pose [5.246 6.813 0 -61.295] )
-autorob( pose [4.127 5.388 0 -147.713] )
-autorob( pose [5.020 4.213 0 -125.236] )
-autorob( pose [3.286 4.715 0 78.789] )
-autorob( pose [5.440 5.317 0 -26.545] )
-autorob( pose [7.641 6.998 0 163.239] )
-autorob( pose [7.559 4.764 0 -139.066] )
-autorob( pose [5.471 7.446 0 77.301] )
-autorob( pose [7.122 4.175 0 -31.440] )
-autorob( pose [5.944 6.951 0 2.937] )
+autorob( pose [5.246 6.813 0 -61.295] joules 300000 )
+autorob( pose [4.127 5.388 0 -147.713] joules 400000 )
+autorob( pose [5.020 4.213 0 -125.236] joules 100000 )
+autorob( pose [3.286 4.715 0 78.789] joules 200000 )
+autorob( pose [5.440 5.317 0 -26.545] joules 300000 )
+autorob( pose [7.641 6.998 0 163.239] joules 400000 )
+
+#autorob( pose [7.559 4.764 0 -139.066] )
+#autorob( pose [5.471 7.446 0 77.301]  )
+#autorob( pose [7.122 4.175 0 -31.440]  )
+#autorob( pose [5.944 6.951 0 2.937] )
 
 #autorob( pose [6.800 5.897 0 -103.060] )
 #autorob( pose [6.405 5.291 0 -103.060] )

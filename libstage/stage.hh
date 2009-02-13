@@ -95,6 +95,7 @@ namespace Stg
     MODEL_TYPE_BLOBFINDER,
     MODEL_TYPE_BLINKENLIGHT,
     MODEL_TYPE_CAMERA,
+	 MODEL_TYPE_GRIPPER,
     MODEL_TYPE_COUNT // must be the last entry, to count the number of
     // types
   } stg_model_type_t;
@@ -1085,6 +1086,23 @@ namespace Stg
     void DrawSolid(); // draw the block in OpenGL as a solid single color
     void DrawFootPrint(); // draw the projection of the block onto the z=0 plane
 	 
+	 /** Translate all points in the block by the indicated amounts */
+	 void Translate( double x, double y );
+	 
+	 /** Return the center of the block on the X axis */
+	 double CenterX();
+	 /** Return the center of the block on the Y axis */
+	 double CenterY();
+
+	 /** Set the center of the block on the X axis */
+	 void SetCenterX( double y );
+	 /** Set the center of the block on the Y axis */
+	 void SetCenterY( double y );
+	 /** Set the center of the block */
+	 void SetCenter( double x, double y);
+
+	 void SetZ( double min, double max );
+
     void RecordRendering( Cell* cell )
     { g_ptr_array_add( rendered_cells, (gpointer)cell ); };
   
@@ -1154,11 +1172,12 @@ namespace Stg
   class BlockGroup
   {
     friend class Model;
+	 friend class Block;
 
   private:
     int displaylist;
-    void BuildDisplayList( Model* mod );
 
+    void BuildDisplayList( Model* mod );
     GList* blocks;
     uint32_t count;
     Size size;
@@ -1921,9 +1940,9 @@ namespace Stg
 
 	 /** Add a block to this model centered at [x,y] with extent [dx, dy,
 		  dz] */
-	 void AddBlockRect( stg_meters_t x, stg_meters_t y, 
-							  stg_meters_t dx, stg_meters_t dy, 
-							  stg_meters_t dz );
+	 Block* AddBlockRect( stg_meters_t x, stg_meters_t y, 
+								 stg_meters_t dx, stg_meters_t dy, 
+								 stg_meters_t dz );
 	
 	 /** remove all blocks from this model, freeing their memory */
 	 void ClearBlocks();
@@ -2277,86 +2296,130 @@ namespace Stg
 	 // Set the user-tweakable configuration of the laser
 	 void SetConfig( stg_laser_cfg_t cfg );  
   };
-
+  
   // \todo  GRIPPER MODEL --------------------------------------------------------
+  
+  
+  class ModelGripper : public Model
+  {
+  public:
 
-  //   typedef enum {
-  //     STG_GRIPPER_PADDLE_OPEN = 0, // default state
-  //     STG_GRIPPER_PADDLE_CLOSED, 
-  //     STG_GRIPPER_PADDLE_OPENING,
-  //     STG_GRIPPER_PADDLE_CLOSING,
-  //   } stg_gripper_paddle_state_t;
+	 enum paddle_state_t {
+		PADDLE_OPEN = 0, // default state
+		PADDLE_CLOSED, 
+		PADDLE_OPENING,
+		PADDLE_CLOSING,
+	 };
+	 
+	 enum lift_state_t {
+		LIFT_DOWN = 0, // default state
+		LIFT_UP, 
+		LIFT_UPPING, // verbed these to match the paddle state
+		LIFT_DOWNING, 
+	 };
+	 
+	 enum cmd_t {
+		CMD_NOOP = 0, // default state
+		CMD_OPEN, 
+		CMD_CLOSE,
+		CMD_UP, 
+		CMD_DOWN    
+	 };
+	 
+	 /** gripper configuration 
+	  */
+	 struct config_t
+	 {
+		Size paddle_size; ///< paddle dimensions 
+		
+		paddle_state_t paddles;
+		lift_state_t lift;
+		
+		double paddle_position; ///< 0.0 = full open, 1.0 full closed
+		double lift_position; ///< 0.0 = full down, 1.0 full up
+		
+		stg_meters_t inner_break_beam_inset; ///< distance from the end of the paddle
+		stg_meters_t outer_break_beam_inset; ///< distance from the end of the paddle  
+		bool paddles_stalled; // true iff some solid object stopped
+		// the paddles closing or opening
+		
+		GSList *grip_stack;  ///< stack of items gripped
+		int grip_stack_size; ///< maximum number of objects in stack, or -1 for unlimited
+		
+		double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.		
+		bool autosnatch; ///< if true, cycle the gripper through open-close-up-down automatically
+	 };
+	 
+	 
+    /** gripper data packet
+     */
+    struct data_t
+    {
+      paddle_state_t paddles;
+      lift_state_t lift;
 
-  //   typedef enum {
-  //     STG_GRIPPER_LIFT_DOWN = 0, // default state
-  //     STG_GRIPPER_LIFT_UP, 
-  //     STG_GRIPPER_LIFT_UPPING, // verbed these to match the paddle state
-  //     STG_GRIPPER_LIFT_DOWNING, 
-  //   } stg_gripper_lift_state_t;
+      double paddle_position; ///< 0.0 = full open, 1.0 full closed
+      double lift_position; ///< 0.0 = full down, 1.0 full up
 
-  //   typedef enum {
-  //     STG_GRIPPER_CMD_NOP = 0, // default state
-  //     STG_GRIPPER_CMD_OPEN, 
-  //     STG_GRIPPER_CMD_CLOSE,
-  //     STG_GRIPPER_CMD_UP, 
-  //     STG_GRIPPER_CMD_DOWN    
-  //   } stg_gripper_cmd_type_t;
+      stg_bool_t inner_break_beam; ///< non-zero iff beam is broken
+      stg_bool_t outer_break_beam; ///< non-zero iff beam is broken
 
-  //   /** gripper configuration packet
-  //    */
-  //   typedef struct
-  //   {
-  //     Size paddle_size; ///< paddle dimensions 
+      stg_bool_t paddle_contacts[2]; ///< non-zero iff paddles touch something
 
-  //     stg_gripper_paddle_state_t paddles;
-  //     stg_gripper_lift_state_t lift;
+      stg_bool_t paddles_stalled; // true iff some solid object stopped
+  				// the paddles closing or opening
 
-  //     double paddle_position; ///< 0.0 = full open, 1.0 full closed
-  //     double lift_position; ///< 0.0 = full down, 1.0 full up
-
-  //     stg_meters_t inner_break_beam_inset; ///< distance from the end of the paddle
-  //     stg_meters_t outer_break_beam_inset; ///< distance from the end of the paddle  
-  //     stg_bool_t paddles_stalled; // true iff some solid object stopped
-  // 				// the paddles closing or opening
-
-  //     GSList *grip_stack;  ///< stack of items gripped
-  //     int grip_stack_size; ///< maximum number of objects in stack, or -1 for unlimited
-
-  //     double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.
-
-  //   } stg_gripper_config_t;
-
-  //   /** gripper command packet
-  //    */
-  //   typedef struct
-  //   {
-  //     stg_gripper_cmd_type_t cmd;
-  //     int arg;
-  //   } stg_gripper_cmd_t;
-
-
-  //   /** gripper data packet
-  //    */
-  //   typedef struct
-  //   {
-  //     stg_gripper_paddle_state_t paddles;
-  //     stg_gripper_lift_state_t lift;
-
-  //     double paddle_position; ///< 0.0 = full open, 1.0 full closed
-  //     double lift_position; ///< 0.0 = full down, 1.0 full up
-
-  //     stg_bool_t inner_break_beam; ///< non-zero iff beam is broken
-  //     stg_bool_t outer_break_beam; ///< non-zero iff beam is broken
-
-  //     stg_bool_t paddle_contacts[2]; ///< non-zero iff paddles touch something
-
-  //     stg_bool_t paddles_stalled; // true iff some solid object stopped
-  // 				// the paddles closing or opening
-
-  //     int stack_count; ///< number of objects in stack
+      int stack_count; ///< number of objects in stack
 
 
-  //   } stg_gripper_data_t;
+    };
+
+  private:
+	 virtual void Update();
+	 virtual void DataVisualize( Camera* cam );
+	 
+	 void FixBlocks();
+	 void PositionPaddles();
+
+	 config_t cfg;
+	 cmd_t cmd;
+	 
+	 Block* paddle_left;
+	 Block* paddle_right;
+
+  public:	 
+	 static const char* typestr;
+	 static const Size size;
+
+	 // constructor
+	 ModelGripper( World* world,
+						 Model* parent );
+	 // destructor
+	 virtual ~ModelGripper();
+  
+	 virtual void Load();
+	 virtual void Save();
+
+	 void SetConfig( config_t & newcfg );
+
+	 /** Returns the static state of the gripper */
+	 config_t GetConfig(){ return cfg; };
+
+	 /** Returns the dynamic state of the gripper */
+	 data_t GetData();
+	 
+	 /** Set the current activity of the gripper. */
+	 void SetCommand( cmd_t cmd ) { this->cmd = cmd; }
+
+	 /** Command the gripper paddles to close. Wrapper for SetCommand( CMD_CLOSE ). */
+	 void CommandClose() { SetCommand( CMD_CLOSE ); }
+	 /** Command the gripper paddles to open. Wrapper for SetCommand( CMD_OPEN ). */
+	 void CommandOpen() { SetCommand( CMD_OPEN ); }
+	 /** Command the gripper lift to go up. Wrapper for SetCommand( CMD_UP ). */
+	 void CommandUp() { SetCommand( CMD_UP ); }
+	 /** Command the gripper lift to go down. Wrapper for SetCommand( CMD_DOWN ). */
+	 void CommandDown() { SetCommand( CMD_DOWN ); }
+  };
 
 
   // \todo BUMPER MODEL --------------------------------------------------------

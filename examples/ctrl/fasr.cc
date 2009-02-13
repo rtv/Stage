@@ -50,6 +50,7 @@ private:
   ModelRanger* ranger;
   ModelFiducial* fiducial;
   ModelBlobfinder* blobfinder;
+  ModelGripper* gripper;
   Model *source, *sink;
   int avoidcount, randcount;
   int work_get, work_put;
@@ -82,6 +83,7 @@ public:
 		ranger( (ModelRanger*)pos->GetUnusedModelOfType( MODEL_TYPE_RANGER )),
 		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( MODEL_TYPE_FIDUCIAL )),	
 		blobfinder( (ModelBlobfinder*)pos->GetUnusedModelOfType( MODEL_TYPE_BLOBFINDER )),
+		gripper( (ModelGripper*)pos->GetUnusedModelOfType( MODEL_TYPE_GRIPPER )),
 		source(source), 
 		sink(sink), 
 		avoidcount(0), 
@@ -133,6 +135,14 @@ extern "C" int Init( Model* mod )
 
 void Robot::Dock()
 {
+  // close the grippers so they can be pushed into the charger
+  ModelGripper::data_t gripper_data = gripper->GetData();
+  
+  if( gripper_data.paddles != ModelGripper::PADDLE_CLOSED )
+	 gripper->CommandClose();
+  else  if( gripper_data.lift != ModelGripper::LIFT_UP )
+	 gripper->CommandUp();  
+
   if( charger_ahoy )
 	 {
 		double a_goal = normalize( charger_bearing );				  
@@ -183,9 +193,30 @@ void Robot::Dock()
 
 void Robot::UnDock()
 {
-  if( charger_range < 0.3 )
- 	 pos->SetXSpeed( -0.05 );
+  const stg_meters_t gripper_distance = 0.2;
+  const stg_meters_t back_off_distance = 0.3;
+  const stg_meters_t back_off_speed = -0.05;
+
+  // back up a bit
+  if( charger_range < back_off_distance )
+ 	 pos->SetXSpeed( back_off_speed );
   else
+	 pos->SetXSpeed( 0.0 );
+  
+  // once we have backed off a bit, open and lower the gripper
+  ModelGripper::data_t gripper_data = gripper->GetData();
+  if( charger_range > gripper_distance )
+	 {
+		if( gripper_data.paddles != ModelGripper::PADDLE_OPEN )
+		  gripper->CommandOpen();
+		else if( gripper_data.lift != ModelGripper::LIFT_DOWN )
+		  gripper->CommandDown();  
+	 }
+    
+  // if the gripper is down and open and we're away from the charger, undock is finished
+  if( gripper_data.paddles == ModelGripper::PADDLE_OPEN &&
+		gripper_data.lift == ModelGripper::LIFT_DOWN &&
+		charger_range > back_off_distance )	 
 	 mode = MODE_WORK;  
 }
 

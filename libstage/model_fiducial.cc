@@ -262,7 +262,7 @@ void ModelFiducial::DataVisualize( Camera* cam )
 	if ( !showFiducialData )
 		return;
 	
-// 	// draw the FOV
+	// draw the FOV
 // 	   GLUquadric* quadric = gluNewQuadric();
 
 // 	   PushColor( 0,0,0,0.2  );
