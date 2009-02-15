@@ -50,6 +50,11 @@ void Stg::Gl::draw_octagon( float w, float h, float m )
 	glEnd();
 }
 
+void Stg::Gl::draw_centered_rect( float x, float y, float dx, float dy )
+{
+  glRectf( x-0.5*dx, y-0.5*dy, x+0.5*dx, y+0.5*dy );
+}
+
 void Stg::Gl::draw_vector( double x, double y, double z )
 {
   glBegin( GL_LINES );

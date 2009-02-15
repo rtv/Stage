@@ -24,7 +24,6 @@ using namespace Stg;
 static const bool DEFAULT_FILLED = true;
 static const stg_watts_t DEFAULT_WATTS = 17.5;
 static const Size DEFAULT_SIZE( 0.15, 0.15, 0.2 );
-static const stg_meters_t DEFAULT_MINRANGE = 0.0;
 static const stg_meters_t DEFAULT_MAXRANGE = 8.0;
 static const stg_radians_t DEFAULT_FOV = M_PI;
 static const unsigned int DEFAULT_SAMPLES = 180;
@@ -35,6 +34,8 @@ static const char* DEFAULT_COLOR = "blue";
 //TODO make instance attempt to register an option (as customvisualizations do)
 Option ModelLaser::showLaserData( "Laser scans", "show_laser", "", true, NULL );
 Option ModelLaser::showLaserStrikes( "Laser strikes", "show_laser_strikes", "", false, NULL );
+Option ModelLaser::showLaserFov( "Laser FOV", "show_laser_fov", "", false, NULL );
+Option ModelLaser::showLaserBeams( "Laser beams", "show_laser_beams", "", false, NULL );
 
 /**
 @ingroup model
@@ -52,7 +53,6 @@ laser
 (
   # laser properties
   samples 180
-  range_min 0.0
   range_max 8.0
   fov 3.14159
   resolution 1
@@ -67,8 +67,6 @@ laser
  
 - samples <int>\n
   the number of laser samples per scan
-- range_min <float>\n
-  the minimum range reported by the scanner, in meters. The scanner will detect objects closer than this, but report their range as the minimum.
 - range_max <float>\n
   the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
 - fov <float>\n
@@ -84,7 +82,6 @@ laser
 	data_dirty( true ),
 	samples( NULL ),	// don't allocate sample buffer memory until Update() is called
 	sample_count( DEFAULT_SAMPLES ),
-	range_min( DEFAULT_MINRANGE ),
 	range_max( DEFAULT_MAXRANGE ),
 	fov( DEFAULT_FOV ),
 	resolution( DEFAULT_RESOLUTION )
@@ -113,6 +110,8 @@ laser
        
   registerOption( &showLaserData );
   registerOption( &showLaserStrikes );
+  registerOption( &showLaserFov );
+  registerOption( &showLaserBeams );
 }
 
 
@@ -128,7 +127,6 @@ ModelLaser::~ModelLaser( void )
 void ModelLaser::Load( void )
 {  
   sample_count = wf->ReadInt( wf_entity, "samples", sample_count );
-  range_min = wf->ReadLength( wf_entity, "range_min", range_min);
   range_max = wf->ReadLength( wf_entity, "range_max", range_max );
   fov       = wf->ReadAngle( wf_entity, "fov",  fov );
   resolution = wf->ReadInt( wf_entity, "resolution",  resolution );
@@ -149,7 +147,6 @@ stg_laser_cfg_t ModelLaser::GetConfig()
 { 
   stg_laser_cfg_t cfg;
   cfg.sample_count = sample_count;
-  cfg.range_bounds.min = range_min;
   cfg.range_bounds.max = range_max;
   cfg.fov = fov;
   cfg.resolution = resolution;
@@ -159,7 +156,6 @@ stg_laser_cfg_t ModelLaser::GetConfig()
 
 void ModelLaser::SetConfig( stg_laser_cfg_t cfg )
 { 
-  range_min = cfg.range_bounds.min;
   range_max = cfg.range_bounds.max;
   fov = cfg.fov;
   resolution = cfg.resolution;
@@ -309,8 +305,8 @@ void ModelLaser::DataVisualize( Camera* cam )
 {
   if( ! (samples && sample_count) )
     return;
-
-  if ( ! (showLaserData || showLaserStrikes) )
+  
+  if ( ! (showLaserData || showLaserStrikes || showLaserFov || showLaserBeams ) )
     return;
     
   glPushMatrix();
@@ -379,6 +375,42 @@ void ModelLaser::DataVisualize( Camera* cam )
 			 glDrawArrays( GL_POINTS, 0, sample_count+1 );
 			 PopColor();
 		  }
+
+		if( showLaserFov )
+		  {
+			 for( unsigned int s=0; s<sample_count; s++ )
+				{
+				  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+				  pts[2*s+2] = (float)(range_max * cos(ray_angle) );
+				  pts[2*s+3] = (float)(range_max * sin(ray_angle) );			 
+				}
+
+			 glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+			 PushColor( 0, 0, 1, 0.5 );		
+			 glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+			 PopColor();
+			 //			 glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
+		  }			 
+		
+		if( showLaserBeams )
+		  {
+			 PushColor( 0, 0, 1, 0.5 );		
+			 glBegin( GL_LINES );
+			 
+			 for( unsigned int s=0; s<sample_count; s++ )
+				{
+				  
+				  glVertex2f( 0,0 );
+				  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+				  glVertex2f( samples[s].range * cos(ray_angle), 
+								  samples[s].range * sin(ray_angle) );
+				  
+				}
+			 glEnd();
+			 PopColor();
+		  }	
+
 		
       glDepthMask( GL_TRUE );
       glEndList();

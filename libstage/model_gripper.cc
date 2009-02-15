@@ -27,10 +27,12 @@ internal break-beams, similar to the the Pioneer gripper.
 gripper
 (
   # gripper properties
-  <none>
+  paddle_size [ 0.66 0.1 0.4 ]
+  paddle_state [ "open" "down" ]
+  autosnatch 0
 
   # model properties
-  size [0.12 0.28]
+  size [ 0.2 0.3 0.2 ]
 )
 @endverbatim
 
@@ -38,6 +40,12 @@ gripper
 
 @par Details
 
+- autosnatch < 0 or 1>\n
+  iff 1, gripper will close automatically when break beams are broken
+- paddle_size [ <float x> <float y < float z> ]\n
+  Gripper paddle size as a proportion of the model's body size (0.0 to 1.0)
+- paddle_state [ <string open/close> <string up/down> ]\n
+  Gripper arms state, either "open" or "closed", and lift state, either "up" or "down"
 */
 
 
@@ -46,6 +54,9 @@ gripper
 #include "stage.hh"
 #include "worldfile.hh"
 using namespace Stg;
+
+#include "option.hh"
+Option ModelGripper::showData( "Gripper data", "show_gripper_data", "", true, NULL );
 
 // TODO - simulate energy use when moving grippers
 
@@ -66,8 +77,7 @@ ModelGripper::ModelGripper( World* world,
   cfg.lift_position = 0.0;
   cfg.paddles_stalled = false;
   cfg.autosnatch = false;
-  cfg.grip_stack = NULL;
-  cfg.grip_stack_size = 1;
+  cfg.gripped = NULL;
 
   // place the break beam sensors at 1/4 and 3/4 the length of the paddle 
   cfg.break_beam_inset[0] = 3.0/4.0 * cfg.paddle_size.x;
@@ -88,10 +98,10 @@ ModelGripper::ModelGripper( World* world,
   geom.size.y = 0.3;
   geom.size.z = 0.2;
   SetGeom( geom );
-
-  //Startup();
  
   PositionPaddles();  
+
+  registerOption( &showData );
 }
 
 ModelGripper::~ModelGripper()
@@ -108,8 +118,8 @@ void ModelGripper::Load()
   cfg.paddle_size.y = wf->ReadTupleFloat( wf_entity, "paddle_size", 1, cfg.paddle_size.y );
   cfg.paddle_size.z = wf->ReadTupleFloat( wf_entity, "paddle_size", 2, cfg.paddle_size.z );
   
-  const char* paddles =  wf->ReadTupleString( wf_entity, "paddles", 0, NULL );
-  const char* lift =     wf->ReadTupleString( wf_entity, "paddles", 1, NULL );
+  const char* paddles =  wf->ReadTupleString( wf_entity, "paddle_state", 0, NULL );
+  const char* lift =     wf->ReadTupleString( wf_entity, "paddle_state", 1, NULL );
 
   if( paddles && strcmp( paddles, "closed" ) == 0 )
 	 {
@@ -135,8 +145,6 @@ void ModelGripper::Load()
 		cfg.lift = LIFT_DOWN;
 	 }
 	   
-  cfg.grip_stack_size = wf->ReadInt( wf_entity , "stack_size", cfg.grip_stack_size );
-  
   FixBlocks();
   
   // do this at the end to ensure that the blocks are resize correctly
@@ -149,14 +157,10 @@ void ModelGripper::Save()
 
   wf->WriteTupleFloat( wf_entity, "paddle_size", 0, cfg.paddle_size.x );
   wf->WriteTupleFloat( wf_entity, "paddle_size", 1, cfg.paddle_size.y );
-  wf->WriteTupleFloat( wf_entity, "paddle_size", 2, cfg.paddle_size.z );
-    
-  wf->WriteInt( wf_entity , "stack_size", cfg.grip_stack_size );
-}
+  wf->WriteTupleFloat( wf_entity, "paddle_size", 2, cfg.paddle_size.z );    
 
-void ModelGripper::DataVisualize( Camera* cam )
-{
-  /* do nothing */
+  wf->WriteTupleString( wf_entity, "paddle_state", 0, (cfg.paddles == PADDLE_CLOSED ) ? "closed" : "open" );
+  wf->WriteTupleString( wf_entity, "paddle_state", 1, (cfg.lift == LIFT_UP ) ? "up" : "down" );
 }
 
 void ModelGripper::FixBlocks()
@@ -259,16 +263,15 @@ void ModelGripper::Update()
 			 cfg.paddles = PADDLE_OPEN; // change state
 		  }
 		
-		// drop the thing at the head of the stack
-		if( cfg.grip_stack &&  
+		
+		// drop the thing we're carrying
+		if( cfg.gripped &&
 			 (cfg.paddle_position == 0.0 || cfg.paddle_position < cfg.close_limit ))
 		  {
-			 Model* head = (Model*)cfg.grip_stack->data;
-			 cfg.grip_stack = g_list_remove( cfg.grip_stack, head );
-			 
 			 // move it to the new location
-			 head->SetParent( NULL );	      
-			 head->SetPose( this->GetGlobalPose() );
+			 cfg.gripped->SetParent( NULL );	      
+			 cfg.gripped->SetPose( this->GetGlobalPose() );
+			 cfg.gripped = NULL;
 			 
 			 cfg.close_limit = 1.0;
 		  }
@@ -327,35 +330,6 @@ void ModelGripper::Update()
   Model::Update();
 }
 
-ModelGripper::data_t ModelGripper::GetData()
-{
-  data_t data;
-  
-  data.paddles = cfg.paddles;
-  data.paddle_position = cfg.paddle_position;
-  data.lift = cfg.lift;
-  data.lift_position = cfg.lift_position;
-  data.beam[0] = cfg.beam[0];
-  data.beam[1] = cfg.beam[1];
-
-  data.contact[0] = cfg.contact[0];
-  data.contact[1] = cfg.contact[1];
-
-  if( cfg.grip_stack )
-	 data.stack_count = g_list_length( cfg.grip_stack );
-  else
-	 data.stack_count = 0;
-    
-   data.paddles_stalled = cfg.paddles_stalled;
-	
-	return data;
-}
-
-
-void ModelGripper::SetConfig( config_t & cfg )
-{
-  this->cfg = cfg;
-}
 
 	
 static bool gripper_raytrace_match( Model* hit, 
@@ -473,8 +447,7 @@ void ModelGripper::UpdateContacts()
 			 if( !hit )
 				hit = cfg.contact[1];
 			 
-			 if( cfg.grip_stack_size > 0 && 
-				  (g_list_length( cfg.grip_stack ) < cfg.grip_stack_size) )
+			 if( cfg.gripped == NULL ) // if we're not carrying something already
 				{
 				  // get the global pose of the gripper for calculations of the gripped object position
 				  // and move it to be right between the paddles
@@ -489,7 +462,7 @@ void ModelGripper::UpdateContacts()
 				  hit->SetParent( this );
 				  hit->SetPose( Pose(0,0, -1.0 * geom.size.z ,0) );
 				  
-				  cfg.grip_stack = g_list_prepend( cfg.grip_stack, hit );
+				  cfg.gripped = hit;
 				  
 				  //       // calculate how far closed we can get the paddles now
 				  double puckw = hitgeom.size.y;
@@ -500,189 +473,76 @@ void ModelGripper::UpdateContacts()
 	 }
 }
 
-// int gripper_render_data(  stg_model_t* mod, void* userp )
-// {
-//   //puts( "gripper render data" );
 
-//   // only draw if someone is using the gripper
-//   if( mod->subs < 1 )
-//     return 0;
+void ModelGripper::DataVisualize( Camera* cam )
+{
+  // only draw if someone is using the gripper
+  if( subs < 1 )
+	 return;
+  
+  if( ! showData )
+	 return;
 
-//   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "gripper_data_fig" );  
-  
-//   if( ! fig )
-//     {
-//       fig = stg_model_fig_create( mod, "gripper_data_fig", "top", STG_LAYER_GRIPPERDATA );
-//       //stg_rtk_fig_color_rgb32( fig, gripper_col );
-//       stg_rtk_fig_color_rgb32( fig, 0xFF0000 ); // red
-  
-//     }
-//   else
-//     stg_rtk_fig_clear( fig );
+	// outline the sensor lights in black
+	PushColor( 0,0,0,1.0 ); // black
+	glTranslatef( 0,0, geom.size.z * cfg.paddle_size.z );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-//   //printf( "SUBS %d\n", mod->subs );
-  
-//   stg_gripper_data_t* data = (stg_gripper_data_t*)mod->data;
-//   assert(data);
-  
-//   stg_gripper_config_t *cfg = (stg_gripper_config_t*)mod->cfg;
-//   assert(cfg);
+   // different x location for each beam
+   double ibbx =  (geom.size.x - cfg.break_beam_inset[0] * geom.size.x) - geom.size.x/2.0;
+   double obbx =  (geom.size.x - cfg.break_beam_inset[1] * geom.size.x) - geom.size.x/2.0;
+	
+	// common y position
+	double invp = 1.0 - cfg.paddle_position;
+   double bby = 
+     invp * ((geom.size.y/2.0)-(geom.size.y*cfg.paddle_size.y));
+	
+	//   // size of the paddle indicator lights
+   double led_dx = cfg.paddle_size.y * 0.5 * geom.size.y;
+		
+	// paddle break beams
+  	Gl::draw_centered_rect( ibbx, bby+led_dx, led_dx, led_dx );
+  	Gl::draw_centered_rect( ibbx, -bby-led_dx, led_dx, led_dx );
+  	Gl::draw_centered_rect( obbx, bby+led_dx, led_dx, led_dx );
+  	Gl::draw_centered_rect( obbx, -bby-led_dx, led_dx, led_dx );
+	
+	// paddle contacts
+	double cx = ((1.0 - cfg.paddle_size.x/2.0) * geom.size.x) - geom.size.x/2.0;
+	double cy = (geom.size.y/2.0)-(geom.size.y * 0.8 * cfg.paddle_size.y);
+	double plen = cfg.paddle_size.x * geom.size.x;
+	double pwidth = 0.4 * cfg.paddle_size.y * geom.size.y;	
+	
+	Gl::draw_centered_rect( cx, invp * +cy, plen, pwidth );	
+	Gl::draw_centered_rect( cx, invp * -cy, plen, pwidth );
+	
+	// if the gripper detects anything, fill the lights in with yellow
+	if( cfg.beam[0] || cfg.beam[1] || cfg.contact[0] || cfg.contact[1] )
+	  {
+		 PushColor( 1,1,0,1.0 ); // yellow
+		 glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		 
+		 if( cfg.contact[0] )
+			Gl::draw_centered_rect( cx, invp * +cy, plen, pwidth );	
+		 
+		 if( cfg.contact[1] )
+			Gl::draw_centered_rect( cx, invp * -cy, plen, pwidth );	
+		 
+		 if( cfg.beam[0] )
+			{
+			  Gl::draw_centered_rect( ibbx, bby+led_dx, led_dx, led_dx );
+			  Gl::draw_centered_rect( ibbx, -bby-led_dx, led_dx, led_dx );	
+			}
+		 
+		 if( cfg.beam[1] )			  
+			{
+			  Gl::draw_centered_rect( obbx, bby+led_dx, led_dx, led_dx );
+			  Gl::draw_centered_rect( obbx, -bby-led_dx, led_dx, led_dx );	
+			}
 
-//   stg_geom_t *geom = &mod->geom;  
-  
-//   //stg_rtk_fig_rectangle( gui->data, 0,0,0, geom.size.x, geom.size.y, 0 );
-  
-//   // different x location for each beam
-//   double ibbx =  (geom->size.x - cfg->inner_break_beam_inset * geom->size.x) - geom->size.x/2.0;
-//   double obbx =  (geom->size.x - cfg->outer_break_beam_inset * geom->size.x) - geom->size.x/2.0;
-  
-//   // common y position
-//   double bby = 
-//     (1.0-data->paddle_position) * ((geom->size.y/2.0)-(geom->size.y*cfg->paddle_size.y));
-  
-//   // size of the paddle indicator lights
-//   double led_dx = cfg->paddle_size.y * 0.5 * geom->size.y;
-  
-  
-//   if( data->inner_break_beam )
-// 	{
-// 	  stg_rtk_fig_rectangle( fig, ibbx, bby+led_dx, 0, led_dx, led_dx, 1 );
-// 	  stg_rtk_fig_rectangle( fig, ibbx, -bby-led_dx, 0, led_dx, led_dx, 1 );
-// 	}
-//       else
-// 	{
-// 	  stg_rtk_fig_line( fig, ibbx, bby, ibbx, -bby );
-// 	  stg_rtk_fig_rectangle( fig, ibbx, bby+led_dx, 0, led_dx, led_dx, 0 );
-// 	  stg_rtk_fig_rectangle( fig, ibbx, -bby-led_dx, 0, led_dx, led_dx, 0 );
-// 	}
-      
-//       if( data->outer_break_beam )
-// 	{
-// 	  stg_rtk_fig_rectangle( fig, obbx, bby+led_dx, 0, led_dx, led_dx, 1 );
-// 	  stg_rtk_fig_rectangle( fig, obbx, -bby-led_dx, 0, led_dx, led_dx, 1 );
-// 	}
-//       else
-// 	{
-// 	  stg_rtk_fig_line( fig, obbx, bby, obbx, -bby );
-// 	  stg_rtk_fig_rectangle( fig, obbx, bby+led_dx, 0, led_dx, led_dx, 0 );
-// 	  stg_rtk_fig_rectangle( fig, obbx, -bby-led_dx, 0, led_dx, led_dx, 0 );
-// 	}
-      
-//       // draw the contact indicators
-//       stg_rtk_fig_rectangle( fig, 
-// 			     ((1.0 - cfg->paddle_size.x/2.0) * geom->size.x) - geom->size.x/2.0,
-// 			     (1.0 - cfg->paddle_position) * ((geom->size.y/2.0)-(geom->size.y*cfg->paddle_size.y)),
-// 			     0.0,
-// 			     cfg->paddle_size.x * geom->size.x,
-// 			     cfg->paddle_size.y/6.0 * geom->size.y, 
-// 			     data->paddle_contacts[0] );
-      
-//       stg_rtk_fig_rectangle( fig, 
-// 			     ((1.0 - cfg->paddle_size.x/2.0) * geom->size.x) - geom->size.x/2.0,
-// 			     (1.0 - cfg->paddle_position) * -((geom->size.y/2.0)-(geom->size.y*cfg->paddle_size.y)),
-// 			     0.0,
-// 			     cfg->paddle_size.x * geom->size.x,
-// 			     cfg->paddle_size.y/6.0 * geom->size.y, 
-// 			     data->paddle_contacts[1] );
-      
-//       //stg_rtk_fig_color_rgb32( fig,  gripper_col );      
+		 PopColor(); // yellow	  
+	  }
+		
+	  PopColor(); // black
+ }
 
-//       return 0; 
-// }
-
-
-// int gripper_render_cfg( stg_model_t* mod, void* user )
-// { 
-//   puts( "gripper render cfg" );
-//   stg_rtk_fig_t* fig = stg_model_get_fig( mod, "gripper_cfg_fig" );  
-  
-//   if( ! fig )
-//     {
-//       fig = stg_model_fig_create( mod, "gripper_cfg_fig", "top", 
-// 				  STG_LAYER_GRIPPERCONFIG );
-      
-//       stg_rtk_fig_color_rgb32( fig, stg_lookup_color( STG_GRIPPER_CFG_COLOR ));
-//     }
-//   else
-//     stg_rtk_fig_clear( fig );
-  
-//   stg_geom_t geom;
-//   stg_model_get_geom( mod, &geom );
-  
-//   // get the config and make sure it's the right size
-//   stg_gripper_config_t* cfg = (stg_gripper_config_t*)mod->cfg;
-//   assert( mod->cfg_len == sizeof(stg_gripper_config_t) );
-  
-//   // different x location for each beam
-//   double ibbx = (cfg->inner_break_beam_inset) * geom.size.x - geom.size.x/2.0;
-//   double obbx = (cfg->outer_break_beam_inset) * geom.size.x - geom.size.x/2.0;
-  
-//   // common y position
-//   double bby = 
-//     (1.0-cfg->paddle_position) * ((geom.size.y/2.0)-(geom.size.y*cfg->paddle_size.y));
-  
-//   // draw the position of the break beam sensors
-//   stg_rtk_fig_rectangle( fig, ibbx, bby, 0, 0.01, 0.01, 0 );
-//   stg_rtk_fig_rectangle( fig, obbx, bby, 0, 0.01, 0.01, 0 );
-
-//   return 0; //ok
-// }
-
-
-// int gripper_startup( stg_model_t* mod )
-// { 
-//   PRINT_DEBUG( "gripper startup" );
-//   stg_model_set_watts( mod, STG_GRIPPER_WATTS );
-//   return 0; // ok
-// }
-
-// int gripper_shutdown( stg_model_t* mod )
-// { 
-//   PRINT_DEBUG( "gripper shutdown" );
-//   stg_model_set_watts( mod, 0 );
-  
-//   // unrender the break beams & lights
-//   stg_model_fig_clear( mod, "gripper_data_fig" );
-//   return 0; // ok
-// }
-
-// void stg_print_gripper_config( stg_gripper_config_t* cfg ) 
-// {
-//   char* pstate;
-//   switch( cfg->paddles )
-//     {
-//     case STG_GRIPPER_PADDLE_OPEN: pstate = "OPEN"; break;
-//     case STG_GRIPPER_PADDLE_CLOSED: pstate = "CLOSED"; break;
-//     case STG_GRIPPER_PADDLE_OPENING: pstate = "OPENING"; break;
-//     case STG_GRIPPER_PADDLE_CLOSING: pstate = "CLOSING"; break;
-//     default: pstate = "*unknown*";
-//     }
-  
-//   char* lstate;
-//   switch( cfg->lift )
-//     {
-//     case STG_GRIPPER_LIFT_UP: lstate = "UP"; break;
-//     case STG_GRIPPER_LIFT_DOWN: lstate = "DOWN"; break;
-//     case STG_GRIPPER_LIFT_DOWNING: lstate = "DOWNING"; break;
-//     case STG_GRIPPER_LIFT_UPPING: lstate = "UPPING"; break;
-//     default: lstate = "*unknown*";
-//     }
-  
-//   printf("gripper state: paddles(%s)[%.2f] lift(%s)[%.2f] stall(%s)\n", 
-// 	 pstate, cfg->paddle_position, lstate, cfg->lift_position,
-// 	 cfg->paddles_stalled ? "true" : "false" );
-// }
-
-
-// int gripper_unrender_data( stg_model_t* mod, void* userp )
-// {
-//   stg_model_fig_clear( mod, "gripper_data_fig" );
-//   return 1; // callback just runs one time
-// }
-
-// int gripper_unrender_cfg( stg_model_t* mod, void* userp )
-// {
-//   stg_model_fig_clear( mod, "gripper_cfg_fig" );
-//   return 1; // callback just runs one time
-// }
 

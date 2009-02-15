@@ -466,6 +466,8 @@ namespace Stg
 	 void draw_octagon( float w, float h, float m );
 	 void draw_vector( double x, double y, double z );
 	 void draw_origin( double len );
+	 /** Draws a rectangle with center at x,y, with sides of length dx,dy */
+	 void draw_centered_rect( float x, float y, float dx, float dy );
   }
 
 
@@ -2233,7 +2235,8 @@ namespace Stg
 
 
   // LASER MODEL --------------------------------------------------------
-
+  
+  // TODO - move these into the class definition, like the gripper
   /** laser sample packet
 	*/
   typedef struct
@@ -2261,12 +2264,14 @@ namespace Stg
 
 	 stg_laser_sample_t* samples;
 	 uint32_t sample_count;
-	 stg_meters_t range_min, range_max;
+	 stg_meters_t range_max;
 	 stg_radians_t fov;
 	 uint32_t resolution;
   
 	 static Option showLaserData;
 	 static Option showLaserStrikes;
+	 static Option showLaserFov;
+	 static Option showLaserBeams;
   
   public:
 	 static const char* typestr;
@@ -2304,6 +2309,14 @@ namespace Stg
   {
   public:
 
+	//  class Viz : public CustomVisualizer
+// 	 {
+		
+
+// 	 };
+
+// 	 static Viz viz;
+
 	 enum paddle_state_t {
 		PADDLE_OPEN = 0, // default state
 		PADDLE_CLOSED, 
@@ -2326,7 +2339,7 @@ namespace Stg
 		CMD_DOWN    
 	 };
 	 
-
+	 
 	 /** gripper configuration 
 	  */
 	 struct config_t
@@ -2339,11 +2352,10 @@ namespace Stg
 		double paddle_position; ///< 0.0 = full open, 1.0 full closed
 		double lift_position; ///< 0.0 = full down, 1.0 full up
 		
+		Model* gripped;
+
 		bool paddles_stalled; // true iff some solid object stopped
 		// the paddles closing or opening
-		
-		GList*grip_stack;  ///< stack of items gripped
-		int grip_stack_size; ///< maximum number of objects in stack, or -1 for unlimited
 		
 		double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.		
 		bool autosnatch; ///< if true, cycle the gripper through open-close-up-down automatically
@@ -2353,28 +2365,7 @@ namespace Stg
       Model* beam[2]; ///< points to a model detected by the beams
       Model* contact[2]; ///< pointers to a model detected by the contacts		
 	 };
-	 
-	 
-    /** gripper data packet
-     */
-    struct data_t
-    {
-      paddle_state_t paddles;
-      lift_state_t lift;
-
-      double paddle_position; ///< 0.0 = full open, 1.0 full closed
-      double lift_position; ///< 0.0 = full down, 1.0 full up
-
-
-      stg_bool_t paddles_stalled; // true iff some solid object stopped
-  				// the paddles closing or opening
-
-      Model* beam[2]; ///< points to a model detected by the beams
-      Model* contact[2]; ///< pointers to a model detected by the contacts		
-
-      int stack_count; ///< number of objects in stack
-    };
-
+	 	 
   private:
 	 virtual void Update();
 	 virtual void DataVisualize( Camera* cam );
@@ -2390,6 +2381,8 @@ namespace Stg
 	 Block* paddle_left;
 	 Block* paddle_right;
 
+	 static Option showData;
+
   public:	 
 	 static const char* typestr;
 	 static const Size size;
@@ -2403,13 +2396,11 @@ namespace Stg
 	 virtual void Load();
 	 virtual void Save();
 
-	 void SetConfig( config_t & newcfg );
-
-	 /** Returns the static state of the gripper */
+	 /** Configure the gripper */
+	 void SetConfig( config_t & newcfg ){ this->cfg = cfg; FixBlocks(); }
+	 
+	 /** Returns the state of the gripper .*/
 	 config_t GetConfig(){ return cfg; };
-
-	 /** Returns the dynamic state of the gripper */
-	 data_t GetData();
 	 
 	 /** Set the current activity of the gripper. */
 	 void SetCommand( cmd_t cmd ) { this->cmd = cmd; }

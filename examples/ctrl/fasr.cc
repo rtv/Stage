@@ -115,7 +115,7 @@ public:
   void Dock()
   {
 	 // close the grippers so they can be pushed into the charger
-	 ModelGripper::data_t gripper_data = gripper->GetData();
+	 ModelGripper::config_t gripper_data = gripper->GetConfig();
   
 	 if( gripper_data.paddles != ModelGripper::PADDLE_CLOSED )
 		gripper->CommandClose();
@@ -183,7 +183,7 @@ public:
 		pos->SetXSpeed( 0.0 );
   
 	 // once we have backed off a bit, open and lower the gripper
-	 ModelGripper::data_t gripper_data = gripper->GetData();
+	 ModelGripper::config_t gripper_data = gripper->GetConfig();
 	 if( charger_range > gripper_distance )
 		{
 		  if( gripper_data.paddles != ModelGripper::PADDLE_OPEN )
@@ -284,7 +284,7 @@ public:
 		{
 		  if( verbose ) puts( "Cruise" );
 		
-		  ModelGripper::data_t gdata = gripper->GetData();
+		  ModelGripper::config_t gdata = gripper->GetConfig();
 					 
 		  //avoidcount = 0;
 		  pos->SetXSpeed( cruisespeed );	  
@@ -303,7 +303,7 @@ public:
 		  if( y < 0 ) y = 0;
 		
 		  double a_goal = 
-			 dtor( ( pos->GetFlagCount() || gdata.stack_count ) ? have[y][x] : need[y][x] );
+			 dtor( ( pos->GetFlagCount() || gdata.gripped ) ? have[y][x] : need[y][x] );
 		
 		  // if we are low on juice - find the direction to the recharger instead
 		  if( Hungry() )		 
@@ -481,8 +481,8 @@ public:
 
   static int GripperUpdate( ModelGripper* grip, Robot* robot )
   {
-	 ModelGripper::data_t gdata = grip->GetData();
-
+	 ModelGripper::config_t gdata = grip->GetConfig();
+	 
 	 printf( "BREAKBEAMS %s %s\n",
 				gdata.beam[0] ? gdata.beam[0]->Token() : "<null>", 
 				gdata.beam[1] ? gdata.beam[1]->Token() : "<null>" );
