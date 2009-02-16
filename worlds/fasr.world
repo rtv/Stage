@@ -20,11 +20,11 @@ resolution 0.02
 # configure the GUI window
 window
 ( 
-  size [ 1379.000 856.000 ] 
+  size [ 788.000 842.000 ] 
 
-  center [ 0.783 5.056 ] 
+  center [ 0.240 -0.382 ] 
   rotate [ 0 0 ]
-  scale 355.764 
+  scale 35.648 
 
   pcam_loc [ 0 -4.000 2.000 ]
   pcam_angle [ 70.000 0 ]
@@ -151,7 +151,7 @@ puck( pose [ 2.668 2.674 0 0 ] )
 puck( pose [ 0.549 2.367 0 0 ] )
 puck( pose [ 0.162 2.983 0 0 ] )
 puck( pose [ 1.067 3.367 0 0 ] )
-puck( pose [ 0.320 4.907 0 0 ] )
+puck( pose [ 1.412 3.604 0 0 ] )
 
 autorob( pose [5.418 7.478 0 -163.478] joules 300000 )
 autorob( pose [7.574 6.269 0 -111.715] joules 100000 )
@@ -165,7 +165,7 @@ autorob( pose [6.468 6.708 0 170.743] joules 100000 )
 autorob( pose [6.451 4.189 0 -61.453] joules 200000 )
 
 autorob( pose [5.060 6.868 0 -61.295] joules 300000 )
-autorob( pose [1.095 5.276 0 -147.713] joules 400000 )
+autorob( pose [4.161 5.544 0 -147.713] joules 400000 )
 autorob( pose [4.911 4.552 0 -125.236] joules 100000 )
 autorob( pose [3.985 6.474 0 -158.025] joules 200000 )
 autorob( pose [5.440 5.317 0 -26.545] joules 300000 )
