@@ -13,7 +13,8 @@ wf_token( tok ),
 shortcut( key ), 
 menu( NULL ),
 menuCb( NULL ),
-_world( world )
+_world( world ),
+htname( strdup(n.c_str()) )
 { }
 
 Fl_Menu_Item* getMenuItem( Fl_Menu_* menu, int i ) {

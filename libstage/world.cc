@@ -50,6 +50,7 @@
 #include "file_manager.hh"
 #include "worldfile.hh"
 #include "region.hh"
+#include "option.hh"
 using namespace Stg;
 
 // static data members
@@ -95,6 +96,7 @@ World::World( const char* token,
   extent(),
   graphics( false ), 
   interval_sim( (stg_usec_t)thousand * interval_sim ),
+  option_table( g_hash_table_new( g_str_hash, g_str_equal ) ), 
   ray_list( NULL ),  
   sim_time( 0 ),
   superregions( g_hash_table_new( (GHashFunc)PointIntHash, 
@@ -944,4 +946,10 @@ void World::AddPowerPack( PowerPack* pp )
 void World::RemovePowerPack( PowerPack* pp )
 {
   powerpack_list = g_list_remove( powerpack_list, pp ); 
+}
+
+/// Register an Option for pickup by the GUI
+void World:: RegisterOption( Option* opt )
+{
+  g_hash_table_insert( option_table, (void*)opt->htname, opt );
 }

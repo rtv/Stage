@@ -891,6 +891,7 @@ namespace Stg
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
     stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
+	 GHashTable* option_table; ///< GUI options (toggles) registered by models
 	 GList* powerpack_list; ///< List of all the powerpacks attached to models in the world
     GList* ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in ms
@@ -1051,6 +1052,9 @@ namespace Stg
   
     /** Return the number of times the world has been updated. */
     long unsigned int GetUpdateCount() { return updates; }
+
+	 /// Register an Option for pickup by the GUI
+	 void RegisterOption( Option* opt );	
   };
 
   class Block
@@ -1376,7 +1380,7 @@ namespace Stg
     stg_usec_t real_time_of_last_update;
 
     void UpdateOptions();
-	
+	 
     // static callback functions
     static void windowCb( Fl_Widget* w, void* p );	
     static void fileLoadCb( Fl_Widget* w, void* p );
@@ -1507,8 +1511,7 @@ namespace Stg
 	 virtual const std::string& name() = 0; //must return a name for visualization (careful not to return stack-memory)
   };
 
-
-
+  
   /* Hooks for attaching special callback functions (not used as
 	  variables - we just need unique addresses for them.) */  
   class CallbackHooks
@@ -1533,46 +1536,6 @@ namespace Stg
 	 GuiState();
 	 void Load( Worldfile* wf, int wf_entity );
   };
-
-  // class Option {
-  // private:
-  //   friend bool compare( const Option* lhs, const Option* rhs );
-  
-  //   std::string optName;
-  //   bool value;
-  //   /** worldfile entry string for loading and saving this value */
-  //   std::string wf_token; 
-  //   std::string shortcut;
-  //   Fl_Menu_* menu;
-  //   int menuIndex;
-  //   Fl_Callback* menuCb;
-  //   Fl_Widget* menuCbWidget;
-  
-  // public:
-  //   Option( std::string n, std::string tok, std::string key, bool v, WorldGui* worldgui );	  
-  
-  //   const std::string name() const { return optName; }
-  //   inline bool val() const { return value; }
-  //   inline operator bool() { return val(); }
-  //   inline bool operator<( const Option& rhs ) const
-  //   { return optName<rhs.optName; } 
-  //   void set( bool val );
-  //   void invert() { set( !value ); }
-  
-  //   // Comparator to dereference Option pointers and compare their strings
-  //   struct optComp {
-  // 	 inline bool operator()( const Option* lhs, const Option* rhs ) const
-  // 	 { return lhs->operator<(*rhs); } 
-  //   };
-  
-  
-  //   void createMenuItem( Fl_Menu_Bar* menu, std::string path );
-  // 		void menuCallback( Fl_Callback* cb, Fl_Widget* w );
-  //   static void toggleCb( Fl_Widget* w, void* p );
-  //   void Load( Worldfile* wf, int section );
-  //   void Save( Worldfile* wf, int section );	  
-  // };
-
 
   /// %Model class
   class Model : public Ancestor
@@ -1720,8 +1683,8 @@ namespace Stg
   protected:
 
 	 /// Register an Option for pickup by the GUI
-	 void registerOption( Option* opt )
-	 { drawOptions.push_back( opt ); }
+	 void RegisterOption( Option* opt );
+	 void registerOption( Option* opt ) { RegisterOption( opt) ; };
 
 	 GList* AppendTouchingModels( GList* list );
 	 //void AddTouchingModelsToList( GList* list );
@@ -1872,8 +1835,10 @@ namespace Stg
 	 virtual ~Model();
 	
 	 void Say( const char* str );
-	 /** Attach a user supplied visualization to a model */
+	 
+	 /** Attach a user supplied visualization to a model. */
 	 void AddCustomVisualizer( CustomVisualizer* custom_visual );
+
 	 /** remove user supplied visualization to a model - supply the same ptr passed to AddCustomVisualizer */
 	 void RemoveCustomVisualizer( CustomVisualizer* custom_visual );
 
@@ -2272,7 +2237,27 @@ namespace Stg
 	 static Option showLaserStrikes;
 	 static Option showLaserFov;
 	 static Option showLaserBeams;
-  
+	 
+// 	 class LaserScanVis : public CustomVisualizer 
+// 	 {
+// 	 public:
+// 		LaserScanVis( ModelLaser* laser ) : 
+// 		  CustomVisualizer(), 
+// 		  laser( laser )
+// 		{ /* nothing to do */ };
+		
+// 		virtual void DataVisualize( Camera* cam );
+		
+// 		// rtv - surely a static string member would be easier here?
+// 		//must return a name for visualization (careful not to return stack-memory)	
+
+// 		virtual const std::string& name() { return "LaserScanVisName"; } ; 
+
+// 	 private:
+// 		ModelLaser* laser;
+// 	 };
+
+
   public:
 	 static const char* typestr;
 	 // constructor

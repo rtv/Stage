@@ -1019,3 +1019,11 @@ PowerPack* Model::FindPowerPack()
 
   return NULL;
 }
+
+void Model::RegisterOption( Option* opt )
+{ 
+  drawOptions.push_back( opt ); 
+  
+  if( world->IsGUI() )
+	 world->RegisterOption( opt );
+}

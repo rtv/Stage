@@ -55,6 +55,8 @@ namespace Stg {
 		static void toggleCb( Fl_Widget* w, void* p );
 		void Load( Worldfile* wf, int section );
 		void Save( Worldfile* wf, int section );	  
+
+	  const char* htname;
 	};
 }
 	

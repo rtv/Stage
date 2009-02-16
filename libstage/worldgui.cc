@@ -519,6 +519,12 @@ void WorldGui::fileExitCb( Fl_Widget* w, void* p )
 }
 
 
+void list_option( char* name, Option* opt, void* dummy )
+{
+  printf( "option %s @ %p\n", name, opt );
+
+}
+
 void WorldGui::viewOptionsCb( Fl_Widget* w, void* p ) 
 {
   WorldGui* worldGui = static_cast<WorldGui*>( p );
@@ -538,6 +544,8 @@ void WorldGui::viewOptionsCb( Fl_Widget* w, void* p )
 	 {
 		worldGui->oDlg->show(); // bring it to front
 	 }
+  
+  //g_hash_table_foreach( worldGui->option_table, (GHFunc)list_option, NULL );  
 }
 
 void WorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {

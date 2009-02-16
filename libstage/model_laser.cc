@@ -108,10 +108,12 @@ laser
   if( world->IsGUI() )
     data_dl = glGenLists(1);
        
-  registerOption( &showLaserData );
-  registerOption( &showLaserStrikes );
-  registerOption( &showLaserFov );
-  registerOption( &showLaserBeams );
+  RegisterOption( &showLaserData );
+  RegisterOption( &showLaserStrikes );
+  RegisterOption( &showLaserFov );
+  RegisterOption( &showLaserBeams );
+  
+  //AddCustomVisualizer( new LaserScanVis( this ));
 }
 
 
@@ -420,3 +422,10 @@ void ModelLaser::DataVisualize( Camera* cam )
 	    
   glPopMatrix();
 }
+
+  
+// void ModelLaser::LaserScanVis::DataVisualize( Camera* cam )
+// {
+//   puts( "LSV DataVisualize" );
+//   laser->DataVisualize( cam );
+// }
