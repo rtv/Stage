@@ -508,63 +508,6 @@ int Canvas::handle(int event)
 	 case FL_KEYBOARD:
 		switch( Fl::event_key() )
 		  {
-		  case 'p': // pause
-			 world->TogglePause();
-			 
-			 if( ! world->paused )
-				{
-				  // // start the timer that causes regular redraws
-				  Fl::add_timeout( ((double)interval/1000), 
-										 (Fl_Timeout_Handler)Canvas::TimerCallback, 
-										 this);
-				}
-			 else
-				{ // remove the timeout
-				  Fl::remove_timeout( (Fl_Timeout_Handler)Canvas::TimerCallback );
-				}
-
-			 redraw(); // in case something happened that will never be
-						  // drawn 'cos we cancelled the timeout
-
-			 break;
-		  case ' ': // space bar
-		  
-			 // if the worldfile doesn't have the fields you need, you get
-			 // a weird view.  need to think this through a bit before
-			 // eliminating the old behaviour - rtv
-
-			 //if ( wf )
-			 //current_camera->Load( wf, wf->LookupEntity( "window" ) );
-			 //else
-			 current_camera->reset();
-					
-			 //invalidate();
-			 if( Fl::event_state( FL_CTRL ) ) {
-				resetCamera();
-			 }
-			 redraw();
-			 break;			
-
-		  case '[': // slow down
-			 if( world->interval_real == 0 )
-				world->interval_real = 10;
-			 else
-				{
-				  world->interval_real *= 1.2;
-				}
-			 break; // need the parens above
-
-		  case ']': // speed up
-			 if( world->interval_real == 0 )
-				putchar( 7 ); // bell!
-			 else
-				{
-				  world->interval_real *= 0.8;
-				  if( world->interval_real < 10 )
-					 world->interval_real = 0;
-				}
-			 break;
-
 		  case FL_Left:
 			 if( pCamOn == false ) { camera.move( -10, 0 ); } 
 			 else { perspective_camera.strafe( -0.5 ); } break;
@@ -595,6 +538,8 @@ int Canvas::handle(int event)
 		return Fl_Gl_Window::handle(event);
 			
     } // end switch( event )
+
+  return 0;
 }
 
 void Canvas::FixViewport(int W,int H) 
@@ -715,7 +660,7 @@ void Canvas::DrawBoundingBoxes()
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
 
-inline void Canvas::resetCamera()
+void Canvas::resetCamera()
 {
   float max_x = 0, max_y = 0, min_x = 0, min_y = 0;
 	

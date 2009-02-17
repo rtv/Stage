@@ -179,6 +179,8 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   
   label( PROJECT );
   
+  // make this menu's shortcuts work whoever has focus
+  mbar->global();
   mbar->textsize(12);
   
   mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
@@ -192,8 +194,18 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   mbar->add( "File/E&xit", FL_CTRL+'q', WorldGui::fileExitCb, this );
   
   mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
+
+  mbar->add( "View/Reset", ' ', (Fl_Callback*) WorldGui::resetViewCb, this );
+
   mbar->add( "View/Filter data...", FL_SHIFT + 'd', (Fl_Callback*)WorldGui::viewOptionsCb, this );
   canvas->createMenuItems( mbar, "View" );
+
+  mbar->add( "Run", 0,0,0, FL_SUBMENU );
+  mbar->add( "Run/Pause", 'p', (Fl_Callback*) WorldGui::pauseCb, this );
+  mbar->add( "Run/Faster", ']', (Fl_Callback*) WorldGui::fasterCb, this );
+  mbar->add( "Run/Slower", '[', (Fl_Callback*) WorldGui::slowerCb, this );
+  mbar->add( "Run/Realtime", '{', (Fl_Callback*) WorldGui::realtimeCb, this );
+  mbar->add( "Run/Fast", '}', (Fl_Callback*) WorldGui::fasttimeCb, this );
   
   mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
   mbar->add( "Help/&About Stage...", 0, WorldGui::helpAboutCb, this );
@@ -211,6 +223,7 @@ WorldGui::~WorldGui()
     delete oDlg;
   delete canvas;
 }
+
 
 void WorldGui::Show()
 {
@@ -529,6 +542,69 @@ static bool sort_option_pointer( Option* a, Option* b )
   // Option class overloads operator<. Nasty nasty C++ makes code less
   // readable IMHO.
   return (*a) < (*b);
+}
+
+void WorldGui::resetViewCb( Fl_Widget* w, WorldGui* worldGui )
+{
+  worldGui->canvas->current_camera->reset();
+  
+  if( Fl::event_state( FL_CTRL ) ) 
+	 {
+		worldGui->canvas->resetCamera();
+	 }
+  worldGui->canvas->redraw();
+}
+
+void WorldGui::slowerCb( Fl_Widget* w, WorldGui* wg )
+{
+  if( wg->interval_real == 0 )
+	 wg->interval_real = 10;
+  else
+	 {
+		wg->interval_real *= 1.2;
+	 }
+}
+
+void WorldGui::fasterCb( Fl_Widget* w, WorldGui* wg )
+{
+  if( wg->interval_real == 0 )
+	 putchar( 7 ); // bell!
+  else
+	 {
+		wg->interval_real *= 0.8;
+		if( wg->interval_real < 10 )
+		  wg->interval_real = 0;
+	 }
+}
+
+void WorldGui::realtimeCb( Fl_Widget* w, WorldGui* wg )
+{
+  wg->interval_real = wg->interval_sim;
+}
+
+void WorldGui::fasttimeCb( Fl_Widget* w, WorldGui* wg )
+{
+  wg->interval_real = 0;
+}
+
+void WorldGui::pauseCb( Fl_Widget* w, WorldGui* worldGui )
+{
+  worldGui->TogglePause();
+
+  if( ! worldGui->paused )
+	 {
+		// // start the timer that causes regular redraws
+		Fl::add_timeout( ((double)worldGui->canvas->interval/1000), 
+							  (Fl_Timeout_Handler)Canvas::TimerCallback, 
+							  worldGui->canvas );
+	 }
+  else
+	 { // remove the timeout
+		Fl::remove_timeout( (Fl_Timeout_Handler)Canvas::TimerCallback );
+	 }
+  
+  worldGui->canvas->redraw(); // in case something happened that will never be
+  // drawn 'cos we cancelled the timeout
 }
 
 void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* worldGui ) 

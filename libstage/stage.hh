@@ -1390,7 +1390,13 @@ namespace Stg
     static void viewOptionsCb( OptionsDlg* oDlg, WorldGui* worldGui  );
     static void optionsDlgCb( OptionsDlg* oDlg, WorldGui* worldGui  );
     static void helpAboutCb( Fl_Widget* w, void* p );
-	
+    static void pauseCb( Fl_Widget* w, WorldGui* worldGui );
+    static void fasterCb( Fl_Widget* w, WorldGui* worldGui );
+    static void slowerCb( Fl_Widget* w, WorldGui* worldGui );
+    static void realtimeCb( Fl_Widget* w, WorldGui* worldGui );
+    static void fasttimeCb( Fl_Widget* w, WorldGui* worldGui );
+	 static void resetViewCb( Fl_Widget* w, WorldGui* worldGui );
+
     // GUI functions
     bool saveAsDialog();
     bool closeWindowQuery();

@@ -16,9 +16,7 @@ namespace Stg {
 	 showAllCheck->callback( checkChanged, this );
 	 showAllCheck->box( FL_UP_FRAME );
 
-	 //scroll = new Fl_Scroll( 0,boxH+vm, w,h-boxH-btnH-3*vm );
  	 scroll = new Fl_Scroll( 0,boxH+vm, w,h-boxH-3*vm );
-	 //scroll->box( FL_ENGRAVED_BOX );
 	 resizable( scroll );
  	 scroll->type( Fl_Scroll::VERTICAL );
 	 scroll->end();
