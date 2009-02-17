@@ -1396,6 +1396,7 @@ namespace Stg
     static void realtimeCb( Fl_Widget* w, WorldGui* worldGui );
     static void fasttimeCb( Fl_Widget* w, WorldGui* worldGui );
 	 static void resetViewCb( Fl_Widget* w, WorldGui* worldGui );
+	 static void moreHelptCb( Fl_Widget* w, WorldGui* wg );
 
     // GUI functions
     bool saveAsDialog();

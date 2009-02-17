@@ -83,8 +83,7 @@ whether to start with the perspective camera enabled (0/1)
 
 <h3>Saving the world</h3>
 <P>You can save the current pose of everything in the world, using the
-File/Save menu item. <b>Warning: the saved poses overwrite the current
-world file.</b> Make a copy of your world file before saving if you
+File/Save menu item. <b>Warning: the saved poses overwrite the currentworld file.</b> Make a copy of your world file before saving if you
 want to keep the old poses.  Alternatively the File/Save As menu item
 can be used to save to a new world file.
 
@@ -156,6 +155,21 @@ static const char* AboutText =
 	"Distributed under the terms of the \n"
 	"GNU General Public License v2";
 
+static const char* MoreHelpText = 
+  "http://playerstage.org\n"
+  "\n"
+  "has these resources to help you:\n"
+  "\n"
+  "\t* A user manual including API documentation\n"
+  "\t* A bug and feature request tracking system\n"
+  "\t* Mailing lists for users and developers\n"
+  "\t* A Wiki"
+  "\n\n"
+  "The user manual is included with the Stage source code but\n"
+  "is not built by default. To build the manual, run \"make\"\n"
+  "in the directory \"docsrc\" to produce \"docsrc/stage/index.html\" .\n"
+  "(requires Doxygen and supporting programs to be installed first).\n";
+ 
 WorldGui::WorldGui(int W,int H,const char* L) : 
   Fl_Window(W,H,L ),
   canvas( new Canvas( this,0,30,W,H-30 ) ),
@@ -201,15 +215,15 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   canvas->createMenuItems( mbar, "View" );
 
   mbar->add( "Run", 0,0,0, FL_SUBMENU );
-  mbar->add( "Run/Pause", 'p', (Fl_Callback*) WorldGui::pauseCb, this );
+  mbar->add( "Run/Pause", 'p', (Fl_Callback*) WorldGui::pauseCb, this, FL_MENU_DIVIDER );
   mbar->add( "Run/Faster", ']', (Fl_Callback*) WorldGui::fasterCb, this );
   mbar->add( "Run/Slower", '[', (Fl_Callback*) WorldGui::slowerCb, this );
-  mbar->add( "Run/Realtime", '{', (Fl_Callback*) WorldGui::realtimeCb, this );
+  mbar->add( "Run/Realtime", '{', (Fl_Callback*) WorldGui::realtimeCb, this, FL_MENU_DIVIDER );
   mbar->add( "Run/Fast", '}', (Fl_Callback*) WorldGui::fasttimeCb, this );
   
   mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "Help/&About Stage...", 0, WorldGui::helpAboutCb, this );
-  //mbar->add( "Help/HTML Documentation", FL_CTRL + 'g', (Fl_Callback *)dummy_cb );
+  mbar->add( "Help/Getting help...", 0,  (Fl_Callback*)WorldGui::moreHelptCb, this, FL_MENU_DIVIDER );
+  mbar->add( "Help/&About Stage...", 0, (Fl_Callback*) WorldGui::helpAboutCb, this );
   
   callback( WorldGui::windowCb, this );	 
 
@@ -271,8 +285,6 @@ void WorldGui::Load( const char* filename )
   }
   label( title.c_str() );
 	
-  //UpdateOptions();
-
   show();
 }
 
@@ -699,8 +711,6 @@ void aboutCloseCb( Fl_Widget* w, void* p ) {
 
 void WorldGui::helpAboutCb( Fl_Widget* w, void* p ) 
 {
-  // WorldGui* worldGui = static_cast<WorldGui*>( p );
-
   fl_register_images();
 	
   const int Width = 420;
@@ -744,6 +754,32 @@ void WorldGui::helpAboutCb( Fl_Widget* w, void* p )
 	
   win->show();
 }
+
+void WorldGui::moreHelptCb( Fl_Widget* w, WorldGui* wg ) 
+{
+  const int Width =  500;
+  const int Height = 250;
+  const int Spc = 10;
+	
+  Fl_Window* win = new Fl_Window( Width, Height ); // make a window
+	  win->label( "Getting help with Stage" );
+
+  Fl_Text_Display* textDisplay;
+  textDisplay = new Fl_Text_Display( Spc, Spc,
+												 Width-2*Spc, Height-2*Spc );
+
+  win->resizable( textDisplay );
+  textDisplay->box( FL_NO_BOX );
+  textDisplay->color( win->color() );
+		
+  Fl_Text_Buffer* tbuf = new Fl_Text_Buffer;
+  tbuf->append( MoreHelpText );
+  // textDisplay->wrap_mode( true, 50 );
+  textDisplay->buffer( tbuf );
+	
+  win->show();
+}
+
 
 bool WorldGui::saveAsDialog()
 {
