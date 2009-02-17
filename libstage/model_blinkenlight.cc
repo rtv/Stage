@@ -83,7 +83,7 @@ ModelBlinkenlight::ModelBlinkenlight( World* world,
 
 	this->Startup();
 	
-	registerOption( &showBlinkenData );
+	RegisterOption( &showBlinkenData );
 }
 
 ModelBlinkenlight::~ModelBlinkenlight()

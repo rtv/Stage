@@ -100,7 +100,7 @@ ModelBlobfinder::ModelBlobfinder( World* world,
 	// leave the color filter array empty initally - this tracks all colors
 	colors = g_array_new( false, true, sizeof(stg_color_t) );
 	
-	registerOption( &showBlobData );
+	RegisterOption( &showBlobData );
 }
 
 

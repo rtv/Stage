@@ -192,7 +192,7 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   mbar->add( "File/E&xit", FL_CTRL+'q', WorldGui::fileExitCb, this );
   
   mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "View/Filter data...", FL_SHIFT + 'd', WorldGui::viewOptionsCb, this );
+  mbar->add( "View/Filter data...", FL_SHIFT + 'd', (Fl_Callback*)WorldGui::viewOptionsCb, this );
   canvas->createMenuItems( mbar, "View" );
   
   mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
@@ -258,7 +258,7 @@ void WorldGui::Load( const char* filename )
   }
   label( title.c_str() );
 	
-  UpdateOptions();
+  //UpdateOptions();
 
   show();
 }
@@ -518,40 +518,54 @@ void WorldGui::fileExitCb( Fl_Widget* w, void* p )
   }
 }
 
-
-void list_option( char* name, Option* opt, void* dummy )
+static void append_option( char* name, Option* opt, std::vector<Option*>* optv )
 {
-  printf( "option %s @ %p\n", name, opt );
-
+  //printf( "adding option %s @ %p\n", name, opt );
+  optv->push_back( opt );
 }
 
-void WorldGui::viewOptionsCb( Fl_Widget* w, void* p ) 
+static bool sort_option_pointer( Option* a, Option* b )
 {
-  WorldGui* worldGui = static_cast<WorldGui*>( p );
+  // Option class overloads operator<. Nasty nasty C++ makes code less
+  // readable IMHO.
+  return (*a) < (*b);
+}
+
+void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* worldGui ) 
+{
+  // the options dialog expects a std::vector of options (annoyingly)
+  std::vector<Option*> optvec;
+  // adds each option to the vector
+  g_hash_table_foreach( worldGui->option_table, 
+								(GHFunc)append_option, 
+								(void*)&optvec );  
   
+  // sort the vector by option label alphabetically
+  std::sort( optvec.begin(), optvec.end(), sort_option_pointer );
+
   if ( !worldGui->oDlg ) 
 	 {
 		int x = worldGui->w()+worldGui->x() + 10;
 		int y = worldGui->y();
 		OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
-		oDlg->callback( optionsDlgCb, worldGui );
-		oDlg->setOptions( worldGui->drawOptions );
+		oDlg->callback( (Fl_Callback*)optionsDlgCb, worldGui );
+		
+		oDlg->setOptions( optvec );
 		oDlg->showAllOpt( &worldGui->canvas->visualizeAll );
 		worldGui->oDlg = oDlg;
 		oDlg->show();
 	 }
   else 
 	 {
-		worldGui->oDlg->show(); // bring it to front
+		worldGui->oDlg->hide();
+		delete worldGui->oDlg;
+		worldGui->oDlg = NULL;
 	 }
-  
-  //g_hash_table_foreach( worldGui->option_table, (GHFunc)list_option, NULL );  
+ 
 }
 
-void WorldGui::optionsDlgCb( Fl_Widget* w, void* p ) {
-  OptionsDlg* oDlg = static_cast<OptionsDlg*>( w );
-  WorldGui* worldGui = static_cast<WorldGui*>( p );
-
+void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* worldGui ) 
+{
   // get event from dialog
   OptionsDlg::event_t event;
   event = oDlg->event();

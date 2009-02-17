@@ -1387,8 +1387,8 @@ namespace Stg
     static void fileSaveCb( Fl_Widget* w, void* p );
     static void fileSaveAsCb( Fl_Widget* w, void* p );
     static void fileExitCb( Fl_Widget* w, void* p );
-    static void viewOptionsCb( Fl_Widget* w, void* p );
-    static void optionsDlgCb( Fl_Widget* w, void* p );
+    static void viewOptionsCb( OptionsDlg* oDlg, WorldGui* worldGui  );
+    static void optionsDlgCb( OptionsDlg* oDlg, WorldGui* worldGui  );
     static void helpAboutCb( Fl_Widget* w, void* p );
 	
     // GUI functions
@@ -1684,7 +1684,6 @@ namespace Stg
 
 	 /// Register an Option for pickup by the GUI
 	 void RegisterOption( Option* opt );
-	 void registerOption( Option* opt ) { RegisterOption( opt) ; };
 
 	 GList* AppendTouchingModels( GList* list );
 	 //void AddTouchingModelsToList( GList* list );

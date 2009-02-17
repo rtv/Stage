@@ -78,6 +78,10 @@ ModelGripper::ModelGripper( World* world,
   cfg.paddles_stalled = false;
   cfg.autosnatch = false;
   cfg.gripped = NULL;
+  cfg.beam[0] = 0;
+  cfg.beam[1] = 0;
+  cfg.contact[0] = 0;
+  cfg.contact[1] = 0;
 
   // place the break beam sensors at 1/4 and 3/4 the length of the paddle 
   cfg.break_beam_inset[0] = 3.0/4.0 * cfg.paddle_size.x;
@@ -101,7 +105,7 @@ ModelGripper::ModelGripper( World* world,
  
   PositionPaddles();  
 
-  registerOption( &showData );
+  RegisterOption( &showData );
 }
 
 ModelGripper::~ModelGripper()
@@ -480,8 +484,8 @@ void ModelGripper::DataVisualize( Camera* cam )
   if( subs < 1 )
 	 return;
   
-  if( ! showData )
-	 return;
+  //if( ! showData )
+  //return;
 
 	// outline the sensor lights in black
 	PushColor( 0,0,0,1.0 ); // black

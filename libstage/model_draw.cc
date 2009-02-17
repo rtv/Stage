@@ -269,7 +269,7 @@ void Model::AddCustomVisualizer( CustomVisualizer* custom_visual )
 										 true, 
 										 world_gui );
 		canvas->_custom_options[ custom_visual->name() ] = op;
-		registerOption( op );
+		RegisterOption( op );
 	}
 }
 

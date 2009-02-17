@@ -1022,8 +1022,8 @@ PowerPack* Model::FindPowerPack()
 
 void Model::RegisterOption( Option* opt )
 { 
-  drawOptions.push_back( opt ); 
+  //drawOptions.push_back( opt ); 
   
-  if( world->IsGUI() )
-	 world->RegisterOption( opt );
+  //if( world->IsGUI() )
+  world->RegisterOption( opt );
 }

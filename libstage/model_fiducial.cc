@@ -99,7 +99,7 @@ ModelFiducial::ModelFiducial( World* world,
 
 	data = g_array_new( false, true, sizeof(stg_fiducial_t) );
 	
-	registerOption( &showFiducialData );
+	RegisterOption( &showFiducialData );
 }
 
 ModelFiducial::~ModelFiducial( void )

@@ -135,8 +135,8 @@ ModelPosition::ModelPosition( World* world,
 		drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
 		STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
 
-	registerOption( &showCoords );
-	registerOption( &showWaypoints );
+	RegisterOption( &showCoords );
+	RegisterOption( &showWaypoints );
 }
 
 

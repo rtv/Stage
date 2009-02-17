@@ -14,19 +14,19 @@ namespace Stg {
 
 	 showAllCheck = new Fl_Check_Button( 0,0, w,boxH );
 	 showAllCheck->callback( checkChanged, this );
-	 
-	 scroll = new Fl_Scroll( 0,boxH+vm, w,h-boxH-btnH-3*vm );
-	 scroll->type( Fl_Scroll::VERTICAL );
+	 showAllCheck->box( FL_UP_FRAME );
+
+	 //scroll = new Fl_Scroll( 0,boxH+vm, w,h-boxH-btnH-3*vm );
+ 	 scroll = new Fl_Scroll( 0,boxH+vm, w,h-boxH-3*vm );
+	 //scroll->box( FL_ENGRAVED_BOX );
+	 resizable( scroll );
+ 	 scroll->type( Fl_Scroll::VERTICAL );
 	 scroll->end();
 	 
-	 
-	 button = new Fl_Button( hm, h-btnH-vm, w-2*hm, btnH, "&Close" );
-	 button->callback( closePress, this );
 	 this->end();
   }
   
 	OptionsDlg::~OptionsDlg() {
-	  delete button;
 	  delete scroll; // deletes members
 	  delete showAllCheck;
 	}
@@ -55,19 +55,6 @@ namespace Stg {
 		}
   }
   
-  void OptionsDlg::closePress( Fl_Widget* w, void* p ) {
-	 OptionsDlg* oDlg = static_cast<OptionsDlg*>( p );
-		
-	 oDlg->status = CLOSE;
-	 oDlg->do_callback();
-	 oDlg->status = NO_EVENT;
-  }
-
-// 	int OptionsDlg::handle( int event ) {
-// 		return Fl_Window::handle( event );
-// 	}
-
-
 	void OptionsDlg::updateChecks() {
 		if (scroll->children())
 			scroll->clear();
@@ -84,15 +71,11 @@ namespace Stg {
 	}
 
 	void OptionsDlg::setOptions( const std::vector<Option*>& opts ) {
+	  options.clear();
 		options.assign( opts.begin(), opts.end() );
 		updateChecks();
 	}
 	
-  void OptionsDlg::setOptions( const std::set<Option*, Option::optComp>& opts ) {
-		options.clear();
-		options.insert( options.begin(), opts.begin(), opts.end() );
-		updateChecks();
-	}
 	
 	void OptionsDlg::showAllOpt( Option* opt ) {
 		showAll = opt;
