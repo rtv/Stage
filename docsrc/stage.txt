@@ -18,7 +18,7 @@
  
  Next, you should search <a
  href="http://sourceforge.net/mailarchive/forum.php?forum_id=8201">the
- playerstage_users mailing list archive</a> to
+ playerstage-users mailing list archive</a> to
  see if your questions have already been answered.
  
  Next, you should probably spend a few minutes with <a
@@ -26,7 +26,7 @@
  picks up P/S conversations from all over the place.
  
  If you still need help, you can send email to the mailing list
- playerstage_users@lists.sourceforge.net and a user or developer may
+ playerstage-users@lists.sourceforge.net and a user or developer may
  reply to you. <b>Remember that these mails go to hundreds of people</b>, so
  please be polite and give as much information as you can in your
  email.
