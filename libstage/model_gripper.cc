@@ -257,7 +257,7 @@ void ModelGripper::Update()
     }
   
   //   // move the paddles 
-  if( cfg.paddles == PADDLE_OPENING && !cfg.paddles_stalled  )
+  if( cfg.paddles == PADDLE_OPENING )// && !cfg.paddles_stalled  )
 	 {
 		cfg.paddle_position -= 0.05;
       
@@ -281,7 +281,7 @@ void ModelGripper::Update()
 		  }
 	 }
 
-  else if( cfg.paddles == PADDLE_CLOSING && !cfg.paddles_stalled  )
+  else if( cfg.paddles == PADDLE_CLOSING ) //&& !cfg.paddles_stalled  )
 	 {
 		cfg.paddle_position += 0.05;
 		//printf( "paddle position %.2f\n", cfg.paddle_position );

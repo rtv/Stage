@@ -6,20 +6,27 @@
 using namespace Stg;
 
 
-Option::Option( std::string n, std::string tok, std::string key, bool v, World* world ) : 
-optName( n ), 
-value( v ), 
-wf_token( tok ), 
-shortcut( key ), 
-menu( NULL ),
-menuCb( NULL ),
-_world( world ),
-htname( strdup(n.c_str()) )
-{ }
+Option::Option( std::string n, 
+					 std::string tok, 
+					 std::string key, 
+					 bool v, 
+					 World* world ) : 
+  optName( n ), 
+  value( v ), 
+  wf_token( tok ), 
+  shortcut( key ), 
+  menu( NULL ),
+  menuCb( NULL ),
+  _world( world ),
+  htname( strdup(n.c_str()) )
+{ 
+  /* do nothing */ 
+}
 
-Fl_Menu_Item* getMenuItem( Fl_Menu_* menu, int i ) {
-	const Fl_Menu_Item* mArr = menu->menu();
-	return const_cast<Fl_Menu_Item*>( &mArr[ i ] );
+Fl_Menu_Item* getMenuItem( Fl_Menu_* menu, int i ) 
+{
+  const Fl_Menu_Item* mArr = menu->menu();
+  return const_cast<Fl_Menu_Item*>( &mArr[ i ] );
 }
 
 
