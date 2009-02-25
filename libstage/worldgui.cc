@@ -132,6 +132,7 @@ then select the option from the menu again to stop.
 #include <set>
 #include <sstream>
 #include <iomanip>
+#include <algorithm> // for std::sort
 
 #include "canvas.hh"
 #include "region.hh"
