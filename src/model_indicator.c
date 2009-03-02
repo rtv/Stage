@@ -65,21 +65,7 @@ stg_polygon_t* indicator_copy_polygons( stg_polygon_t* source, size_t count )
 void indicator_load( stg_model_t* mod )
 {
 
-  stg_indicator_config_t* cfg = (stg_indicator_config_t*)mod->cfg;
 
-  // Take a copy of the polygon
-  stg_indicator_data_t data;
-  data.numPolys = mod->polygons_count;
-  data.polys = indicator_copy_polygons( mod->polygons, data.numPolys );
-  
-  // Set the indicator to off initially
-  data.on = FALSE;
-  stg_model_set_polygons( mod, NULL, 0 );
-  
-  // Store the updated data (includes copy of polygon and original state)
-  stg_model_set_data( mod, &data, sizeof(data) );
-
-  model_change( mod, &mod->cfg ); // Notify model has been changed.
 }
 
 int indicator_update( stg_model_t* mod );
@@ -214,6 +200,22 @@ int indicator_startup( stg_model_t* mod )
 
   // install the update function
   mod->f_update = indicator_update;
+  
+  stg_indicator_config_t* cfg = (stg_indicator_config_t*)mod->cfg;
+
+  // Take a copy of the polygon
+  stg_indicator_data_t data;
+  data.numPolys = mod->polygons_count;
+  data.polys = indicator_copy_polygons( mod->polygons, data.numPolys );
+  
+  // Set the indicator to off initially
+  data.on = FALSE;
+  stg_model_set_polygons( mod, NULL, 0 );
+  
+  // Store the updated data (includes copy of polygon and original state)
+  stg_model_set_data( mod, &data, sizeof(data) );
+
+  model_change( mod, &mod->cfg ); // Notify model has been changed.
 
   return 0; // ok
 }
