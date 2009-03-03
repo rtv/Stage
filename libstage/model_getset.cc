@@ -180,19 +180,12 @@ Pose Model::GetGlobalPose()
   if( parent == NULL )
     return pose;
   
-  // otherwise  
-  
+  // otherwise    
   Pose global_pose = pose_sum( parent->GetGlobalPose(), pose );		
   
   // we are on top of our parent
   global_pose.z += parent->geom.size.z;
   
-  //   PRINT_DEBUG4( "GET GLOBAL POSE [x:%.2f y:%.2f z:%.2f a:%.2f]",
-  // 		global_pose.x,
-  // 		global_pose.y,
-  // 		global_pose.z,
-  // 		global_pose.a );
-
   return global_pose;
 }
 

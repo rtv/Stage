@@ -368,9 +368,6 @@ public:
 		  printf( "unrecognized mode %u\n", robot->mode );		
 		}
   
-	 //if( robot->charger_ahoy )
-	 //return 1;
-	 //else
 	 return 0;
   }
 

@@ -53,17 +53,6 @@ bool Stg::InitDone()
 	return init_called;
 }
 
-double Stg::normalize( double a )
-{
-  assert( ! isnan(a) );
-  
-  //return( atan2(sin(a), cos(a)));
-  // faster than return( atan2(sin(a), cos(a)));
-  while( a < -M_PI ) a += (2.0 * M_PI);
-  while( a > M_PI ) a -= (2.0 * M_PI);
-  return a;
-};
-
 
 void Stg::RegisterModel( stg_model_type_t type, 
 								 const char* name, 
@@ -209,21 +198,6 @@ void Stg::stg_rotrects_normalize( stg_rotrect_t* rects, int num )
 	}
 }	
 
-
-// returns the pose of p2 in p1's coordinate system
-Pose Stg::pose_sum( const Pose& p1, const Pose& p2 )
-{
-	double cosa = cos(p1.a);
-	double sina = sin(p1.a);
-
-	Pose result;
-	result.x = p1.x + p2.x * cosa - p2.y * sina;
-	result.y = p1.y + p2.x * sina + p2.y * cosa;
-	result.z = p1.z + p2.z;
-	result.a = normalize(p1.a + p2.a);
-
-	return result;
-}
 
 // returns the resultant of vector [p1] and [p2] 
 Pose Stg::pose_scale( const Pose& p1, const double sx, const double sy, const double sz )

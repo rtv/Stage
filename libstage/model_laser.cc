@@ -105,9 +105,6 @@ laser
   // set default color
   SetColor( stg_lookup_color(DEFAULT_COLOR));
   
-  if( world->IsGUI() )
-    data_dl = glGenLists(1);
-       
   RegisterOption( &showLaserData );
   RegisterOption( &showLaserStrikes );
   RegisterOption( &showLaserFov );
@@ -320,6 +317,9 @@ void ModelLaser::DataVisualize( Camera* cam )
     {	    
       data_dirty = false;
 
+		if( data_dl < 1 )
+		  data_dl = glGenLists(1);
+       
       glNewList( data_dl, GL_COMPILE );
 
       glTranslatef( 0,0, geom.size.z/2.0 ); // shoot the laser beam out at the right height

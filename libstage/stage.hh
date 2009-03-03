@@ -158,7 +158,12 @@ namespace Stg
   inline double dtor( double d ){ return( d*M_PI/180.0 ); }
 
   /** Normalize an angle to within +/_ M_PI. */
-  double normalize( double a );
+  inline double normalize( const double a )
+  {
+	 static const double TWO_PI = 2.0 * M_PI;
+	 assert( ! isnan(a) );  
+	 return( fmod(a + M_PI, TWO_PI ) - M_PI);
+  };
 
   /** take binary sign of a, either -1, or 1 if >= 0 */
   inline int sgn( int a){ return( a<0 ? -1 : 1); }
@@ -562,8 +567,20 @@ namespace Stg
   stg_color_t stg_lookup_color(const char *name);
 
   /** returns the sum of [p1] + [p2], in [p1]'s coordinate system */
-  Pose pose_sum( const Pose& p1, const Pose& p2 );
-  
+  inline Pose pose_sum( const Pose& p1, const Pose& p2 )
+  {
+	 double cosa = cos(p1.a);
+	 double sina = sin(p1.a);
+	 
+	 Pose result;
+	 result.x = p1.x + p2.x * cosa - p2.y * sina;
+	 result.y = p1.y + p2.x * sina + p2.y * cosa;
+	 result.z = p1.z + p2.z;
+	 result.a = normalize(p1.a + p2.a);
+	 
+	 return result;
+  }
+
   /** returns a new pose, with each axis scaled */
   Pose pose_scale( const Pose& p1, const double x, const double y, const double z );
 
@@ -735,66 +752,6 @@ namespace Stg
       record within a model and called whenever the record is set.*/
   typedef int (*stg_model_callback_t)( Model* mod, void* user );
   
- //  class Puck
-//   {
-//   private:
-// 	 void BuildDisplayList();
-
-//   public:
-// 	 stg_color_t color;
-// 	 int displaylist;
-// 	 stg_meters_t height;
-// 	 Pose pose;
-// 	 stg_meters_t radius;
-	 
-// 	 Puck();
-// 	 void Load( Worldfile* wf, int section );
-// 	 void Save( Worldfile* wf, int section );
-	 
-// 	 void Draw();  
-//   };
-  
-  
- //  class EventQueue
-//   {
-//   private:
-// 	 GTree* future;
-
-// 	 static gint InstantCompare( stg_usec_t a, stg_usec_t b )
-// 	 {
-// 		if( a < b )
-// 		  return -1;
-		
-// 		if( a > b )
-// 		  return 1;
-
-// 		return 0; // they are equal
-// 	 }
-
-//   public:
-// 	 EventQueue()
-// 	 {
-// 		future = g_tree_new( InstantCompare );
-// 	 }
-
-// 	 RunInstant() ///< Updates all events due at the next instant
-// 	 {
-// 		GList* instant_list = 
-// 	 }
-	 
-// 	 QueueModel( Model* mod ) ///< Adds the model to the event queue
-// 	 {
-// 		g_tree_insert( mod->updatedue, g_list_prepend( g_tree_lookup( mod->updatedue ), mod ); );
-// 	 }
-
-// 	 DeQueueModel( Model* mod ) ///< removes the model from the event queue
-// 	 {
-// 		g_tree_insert( mod->updatedue, g_list_remove( g_tree_lookup( mod->updatedue ), mod ));		
-// 	 }
-	 
-//   };
-
-
   // ANCESTOR CLASS
   /** Base class for Model and World */
   class Ancestor
