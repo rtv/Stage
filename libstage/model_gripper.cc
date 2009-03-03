@@ -93,6 +93,9 @@ ModelGripper::ModelGripper( World* world,
 
   FixBlocks();
 
+  // Update() is not reentrant
+  thread_safe = false;
+
   // default size
   Geom geom;
   geom.pose.x = 0.0;
@@ -205,6 +208,8 @@ void ModelGripper::PositionPaddles()
 
 void ModelGripper::Update()
 {   
+  //return;
+  
   // no work to do if we're unsubscribed
   if( subs < 1 )
 	 {

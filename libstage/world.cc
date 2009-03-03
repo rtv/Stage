@@ -102,7 +102,9 @@ World::World( const char* token,
   superregions( g_hash_table_new( (GHashFunc)PointIntHash, 
 				  (GEqualFunc)PointIntEqual ) ),
   sr_cached(NULL),
-  update_list( NULL ),
+  // update_list( NULL ),
+  reentrant_update_list( NULL ),
+  nonreentrant_update_list( NULL ),
   updates( 0 ),
   wf( NULL )
 {
@@ -377,8 +379,11 @@ void World::UnLoad()
 	
   g_hash_table_remove_all( models_by_name );
 		
-  g_list_free( update_list );
-  update_list = NULL;
+  g_list_free( reentrant_update_list );
+  reentrant_update_list = NULL;
+
+  g_list_free( nonreentrant_update_list );
+  nonreentrant_update_list = NULL;
 	
   g_list_free( ray_list );
   ray_list = NULL;
@@ -432,29 +437,27 @@ bool World::Update()
   // something that takes charge
   LISTMETHOD( charge_list, Model*, UpdateCharge );
   
-  // then update all sensors	
+  // then update all models on the update lists
+  LISTMETHOD( nonreentrant_update_list, Model*, UpdateIfDue );
+  
   if( worker_threads == 0 ) // do all the work in this thread
     {
-      LISTMETHOD( update_list, Model*, UpdateIfDue );
+      LISTMETHOD( reentrant_update_list, Model*, UpdateIfDue );
     }
   else // use worker threads
     {
       // push the update for every model that needs it into the thread pool
-      for( GList* it = update_list; it; it=it->next )
+      for( GList* it = reentrant_update_list; it; it=it->next )
 		  {
 			 Model* mod = (Model*)it->data;
 			 
 			 if( mod->UpdateDue()  )
 				{
-				  if( mod->thread_safe ) // do update in a worker thread
-					 {
-						g_mutex_lock( thread_mutex );
-						update_jobs_pending++;
-						g_mutex_unlock( thread_mutex );						 
-						g_thread_pool_push( threadpool, mod, NULL );
-					 }
-				  else
-					 mod->Update(); // do update in this thread
+				  // printf( "updating model %s in WORKER thread\n", mod->Token() );
+				  g_mutex_lock( thread_mutex );
+				  update_jobs_pending++;
+				  g_mutex_unlock( thread_mutex );						 
+				  g_thread_pool_push( threadpool, mod, NULL );
 				}
 		  }	
 		
@@ -952,4 +955,42 @@ void World::RemovePowerPack( PowerPack* pp )
 void World:: RegisterOption( Option* opt )
 {
   g_hash_table_insert( option_table, (void*)opt->htname, opt );
+}
+
+void World::StartUpdatingModel( Model* mod )
+{ 
+  //if( ! g_list_find( update_list, mod ) )		  
+  // update_list = g_list_append( update_list, mod ); 
+  
+  if( mod->thread_safe )
+	 {
+		if( ! g_list_find( reentrant_update_list, mod ) )		  
+		  reentrant_update_list = g_list_append( reentrant_update_list, mod ); 
+	 }
+  else
+	 {
+		if( ! g_list_find( nonreentrant_update_list, mod ) )		  
+		  nonreentrant_update_list = g_list_append( nonreentrant_update_list, mod ); 
+	 }
+}
+
+void World::StopUpdatingModel( Model* mod )
+{ 
+  // update_list = g_list_remove( update_list, mod ); 
+  
+  if( mod->thread_safe )
+	 reentrant_update_list = g_list_remove( reentrant_update_list, mod ); 
+  else
+	 nonreentrant_update_list = g_list_remove( nonreentrant_update_list, mod ); 		
+}
+
+void World::StartUpdatingModelPose( Model* mod )
+{ 
+  if( ! g_list_find( velocity_list, mod ) )
+	 velocity_list = g_list_append( velocity_list, mod ); 
+}
+
+void World::StopUpdatingModelPose( Model* mod )
+{ 
+  velocity_list = g_list_remove( velocity_list, mod ); 
 }

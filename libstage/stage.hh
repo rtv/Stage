@@ -897,7 +897,11 @@ namespace Stg
     stg_usec_t sim_time; ///< the current sim time in this world in ms
     GHashTable* superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
-    GList* update_list; ///< Models that have a subscriber or controller, and need to be updated
+    // GList* update_list; ///< Models that have a subscriber or controller, and need to be updated
+	 
+    GList* reentrant_update_list; ///< It is safe to call these model's Update() in parallel
+    GList* nonreentrant_update_list; ///< It is NOT safe to call these model's Update() in parallel
+	 
     long unsigned int updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
 
@@ -984,24 +988,12 @@ namespace Stg
     /** Returns true iff the current time is greater than the time we
 		  should quit */
     bool PastQuitTime();
+	 
+    void StartUpdatingModel( Model* mod );  
+	 void StopUpdatingModel( Model* mod );
     
-    void StartUpdatingModel( Model* mod )
-    { 
-		if( ! g_list_find( update_list, mod ) )		  
-		  update_list = g_list_append( update_list, mod ); 
-	 }
-    
-    void StopUpdatingModel( Model* mod )
-    { update_list = g_list_remove( update_list, mod ); }
-    
-    void StartUpdatingModelPose( Model* mod )
-    { 
-		if( ! g_list_find( velocity_list, mod ) )
-		  velocity_list = g_list_append( velocity_list, mod ); 
-	 }
-    
-    void StopUpdatingModelPose( Model* mod )
-    { velocity_list = g_list_remove( velocity_list, mod ); }
+    void StartUpdatingModelPose( Model* mod );
+	 void StopUpdatingModelPose( Model* mod );
     
     static void update_thread_entry( Model* mod, World* world );
 	 

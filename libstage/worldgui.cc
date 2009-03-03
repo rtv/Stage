@@ -845,7 +845,13 @@ void WorldGui::UpdateOptions()
   std::set<Option*, Option::optComp> options;
   std::vector<Option*> modOpts;
   
-  for( GList* it=update_list; it; it=it->next ) 
+  for( GList* it=reentrant_update_list; it; it=it->next ) 
+	 {
+		modOpts = ((Model*)it->data)->getOptions();
+		options.insert( modOpts.begin(), modOpts.end() );	
+	 }
+
+  for( GList* it=nonreentrant_update_list; it; it=it->next ) 
 	 {
 		modOpts = ((Model*)it->data)->getOptions();
 		options.insert( modOpts.begin(), modOpts.end() );	

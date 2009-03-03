@@ -13,8 +13,8 @@ paused 1
 resolution 0.02
 
 # threads may speed things up here depending on available CPU cores & workload 
- threadpool 0 
-# threadpool 3
+# threadpool 0 
+ threadpool 0
 
 
 # configure the GUI window
@@ -72,7 +72,7 @@ define charging_bump model
 
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 32 range_max 5 laser_return 2 watts 30 )
+ sicklaser( samples 16 range_max 5 laser_return 2 watts 30 )
  ctrl "fasr"
  joules 100000 
  joules_capacity 400000 

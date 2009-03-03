@@ -14,6 +14,8 @@ OPTION (BUILD_PLAYER_PLUGIN "Build Player plugin" ON)
 OPTION (BUILD_LSPTEST "Build Player plugin tests" OFF)
 OPTION (CPACK_CFG "[release building] generate CPack configuration files" OFF)
 
+OPTION (BUILD_GUI "WARNING: turning this off breaks the build right now. Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 
+
 cmake_minimum_required( VERSION 2.4 FATAL_ERROR )
 
 IF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
@@ -75,6 +77,10 @@ ELSE( LIBPNG_FOUND )
   MESSAGE( ${INDENT} "Libpng not detected" )
 ENDIF( LIBPNG_FOUND )
 
+MESSAGE( STATUS "BUILD_GUI is ${BUILD_GUI}" )
+
+IF( BUILD_GUI )
+
 ## the FLTK package script is not useful - it finds an X11-based FLTK on OS X.
 ## so we can't do this stuff
 #find_package( FLTK REQUIRED )
@@ -125,6 +131,8 @@ MESSAGE( STATUS "    FLTK_LIBS = ${FLTK_LIBS}")
 
 SET (FLTK_FOUND TRUE)
 
+ENDIF( BUILD_GUI )
+
 #MESSAGE( ${INDENT} "Checking for OpenGL" )
 find_package( OpenGL REQUIRED )
 IF( NOT OPENGL_GLU_FOUND )
@@ -156,6 +164,8 @@ ENDIF( PLAYER_FOUND )
 #	# work around the OS X 10.5  X11/OpenGL library bug
 #	SET(APPLE_LIBRARIES "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
 #ENDIF (APPLE)
+
+MESSAGE( STATUS "Installation directory CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" )
 
 # all targets need these include directories
 include_directories( . 
