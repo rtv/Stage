@@ -169,4 +169,6 @@ void PowerPack::TransferTo( PowerPack* dest, stg_joules_t amount )
   
   Subtract( amount );
   dest->Add( amount );
+
+  mod->NeedRedraw();
 }
