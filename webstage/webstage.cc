@@ -195,12 +195,15 @@ int main( int argc, char** argv )
 		while( true )
 		  {
 			 World::UpdateAll();
-			 // TODO - push changes
- 			
-			 mws.Push( "monkey" );
-			 mws.Push( "punky" );
-			 mws.Push( "chunky" );
 			 
+			 // TODO - for all puppets....
+			 if( port == 8000 )
+				{
+				  mws.Push( "monkey" );
+				  mws.Push( "punky" );
+				  mws.Push( "chunky" );
+				}
+
 			 mws.Update();			
 		  }
 	 } 
