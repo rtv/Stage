@@ -50,8 +50,6 @@ int main( int argc, char* argv[] )
 	 }
   
   puts("");// end the first start-up line
-  
-  exit(0);
 
   // arguments at index [optindex] and later are not options, so they
   // must be world file names
