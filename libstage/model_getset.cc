@@ -235,4 +235,3 @@ void Model::SetPose( Pose newpose )
 
   CallCallbacks( &this->pose );
 }
-

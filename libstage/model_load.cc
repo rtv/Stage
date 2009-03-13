@@ -299,6 +299,8 @@ void Model::LoadControllerModule( char* lib )
 	{
 	  printf( "Libtool error: %s. Something is wrong with your plugin. Quitting\n",
 		  lt_dlerror() ); // report the error from libtool
+	  puts( "libtool error #1" );
+		fflush( stdout );
 	  exit(-1);
 	}
     }
@@ -308,6 +310,8 @@ void Model::LoadControllerModule( char* lib )
 	      lt_dlerror() ); // report the error from libtool
 
       PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", lib );
+		puts( "libtool error #2" );
+		fflush( stdout );
       exit(-1);
     }
 

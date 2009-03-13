@@ -4,9 +4,22 @@ localhost:8000=master
 localhost:8001=slave
 
 [master]
-monkey=slave:pioneer2dx
-chunky=slave:pioneer2dx
-punky=slave:pioneer2dx
+position:0=slave:position
+position:1=slave:position
+position:2=slave:position
+position:3=slave:position
+position:4=slave:position
+position:5=slave:position
+position:6=slave:position
+position:7=slave:position
+position:8=slave:position
+position:9=slave:position
+position:10=slave:position
+position:11=slave:position
+position:12=slave:position
+position:13=slave:position
+position:14=slave:position
+position:15=slave:position
 
 
 

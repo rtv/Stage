@@ -63,13 +63,22 @@ public:
 									std::string& error)
   { 
 	 printf( "create model name:%s type:%s\n", name.c_str(), type.c_str() ); 
+	 
+	 Model* mod = world->CreateModel( NULL, type.c_str() ); // top level models only for now
+	 
+	 // rename the model and store it by the new name
+	 mod->SetToken( name.c_str() );
+	 world->AddModel( mod );
+	 
+
+	 printf( "done." );
 	 return true;
   }
 
   virtual bool DeleteModel(const std::string& name,
 									std::string& error)
   {
-	 printf( "deletee model name:%s \n", name.c_str() ); 
+	 printf( "delete model name:%s \n", name.c_str() ); 
 	 return true;
   }
 
@@ -79,7 +88,7 @@ public:
 									const websim::Acceleration& a,
 									std::string& error)
   {
-	 printf( "set model PVA name:%s\n", name.c_str() ); 	 
+	 //printf( "set model PVA name:%s\n", name.c_str() ); 	 
 
 	 Model* mod = world->GetModel( name.c_str() );
 	 if( mod )
@@ -101,7 +110,7 @@ public:
 									websim::Acceleration& a,
 									std::string& error)
   {
-	 printf( "get model name:%s\n", name.c_str() ); 
+	 //printf( "get model name:%s\n", name.c_str() ); 
 
 	 Model* mod = world->GetModel( name.c_str() );
 	 if( mod )
@@ -123,6 +132,13 @@ public:
 				  name.c_str() );
 
 	 return true;
+  }
+
+
+  static void UpdatePuppetCb( std::string name, WebSim::Puppet* pup, void* arg )
+  {
+	 WebStage* ws = (WebStage*)arg;
+	 ws->Push( pup->name );
   }
 };
 
@@ -177,46 +193,27 @@ int main( int argc, char** argv )
 			 port, 
 			 fedfilename.c_str(), 
 			 worldfilename );
-
-  //websim::Pose p( 0,0,0,0,0,0 );
-  //		 websim::Velocity v( 0,0,0,0,0,0 );
-  //	 websim::Acceleration a( 0,0,0,0,0,0 );
 			 
   World* world = ( usegui ? 
 						 new WorldGui( 400, 300, worldfilename ) : 
 						 new World( worldfilename ) );
   world->Load( worldfilename );
 
-  WebStage mws( world, fedfilename, host, port );
+  WebStage ws( world, fedfilename, host, port );
 
-  if( usegui == true ) 
+  //close program once time has completed
+  bool quit = false;
+  while( ! quit )
 	 {
-		//don't close the window once time has finished
-		while( true )
-		  {
-			 World::UpdateAll();
-			 
-			 // TODO - for all puppets....
-			 if( port == 8000 )
-				{
-				  mws.Push( "monkey" );
-				  mws.Push( "punky" );
-				  mws.Push( "chunky" );
-				}
+		ws.ForEachPuppet( WebStage::UpdatePuppetCb, (void*)&ws );
 
-			 mws.Update();			
-		  }
-	 } 
-  else 
-	 {
-		//close program once time has completed
-		bool quit = false;
-		while( quit == false )
-		  {
-			 quit = World::UpdateAll();
-			 // TODO - push changes
- 			 // mws.SetPuppetPVA( "monkey", p, v, a );
-			 mws.Update();			
-		  }
+		// update Stage
+		//quit = world->Update();
+		world->Update();
+
+		ws.Update();			
 	 }
+
+  printf( "Webstage done.\n" );
+  return 0;			
 }

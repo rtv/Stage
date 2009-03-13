@@ -473,6 +473,7 @@ void WorldGui::windowCb( Fl_Widget* w, void* p )
       return;
   }
 
+  puts( "User closed window" );
   exit(0);
 }
 
@@ -540,6 +541,7 @@ void WorldGui::fileExitCb( Fl_Widget* w, void* p )
 
   bool done = worldGui->closeWindowQuery();
   if (done) {
+	 puts( "User exited via menu" );
     exit(0);
   }
 }

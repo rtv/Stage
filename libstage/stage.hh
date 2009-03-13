@@ -869,6 +869,7 @@ namespace Stg
     /** hint that the world needs to be redrawn if a GUI is attached */
     void NeedRedraw(){ dirty = true; };
 
+	 Model* CreateModel( Model* parent, const char* typestr );	 
     void LoadModel( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadBlockGroup( Worldfile* wf, int entity, GHashTable* entitytable );

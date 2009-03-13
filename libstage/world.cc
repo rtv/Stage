@@ -204,18 +204,9 @@ void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
 
 
 
-
-void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
-{ 
-  int parent_entity = wf->GetEntityParent( entity );
-  
-  PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
-		entity, parent_entity );
-  
-  Model *mod, *parent;
-  
-  parent = (Model*)g_hash_table_lookup( entitytable, 
-					(gpointer)parent_entity );
+Model* World::CreateModel( Model* parent, const char* typestr )
+{
+  Model* mod = NULL; // new model to return
   
   // find the creator function pointer in the hash table. use the
   // vanilla model if the type is NULL.
@@ -223,16 +214,13 @@ void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
   
   //printf( "creating model of type %s\n", typestr );
   
-  char *typestr = (char*)wf->GetEntityType(entity);      	  
-
-  if( typestr ) // look up the string in the typetable
-    for( int i=0; i<MODEL_TYPE_COUNT; i++ )
-      if( strcmp( typestr, typetable[i].token ) == 0 )
-	{
-	  creator = typetable[i].creator;
-	  break;
-	}
-  
+  for( int i=0; i<MODEL_TYPE_COUNT; i++ )
+	 if( strcmp( typestr, typetable[i].token ) == 0 )
+		{
+		  creator = typetable[i].creator;
+		  break;
+		}
+    
   // if we found a creator function, call it
   if( creator )
     {
@@ -242,15 +230,34 @@ void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
   else
     {
       PRINT_ERR1( "Unknown model type %s in world file.", 
-		  typestr );
+						typestr );
       exit( 1 );
     }
   
   //printf( "created model %s\n", mod->Token() );
   
+  return mod;
+}
+
+
+void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
+{ 
+  int parent_entity = wf->GetEntityParent( entity );
+  
+  PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
+		entity, parent_entity );
+  
+  Model* parent = (Model*)g_hash_table_lookup( entitytable, 
+															  (gpointer)parent_entity );
+    
+  char *typestr = (char*)wf->GetEntityType(entity);      	  
+  assert(typestr);
+  
+  Model* mod = CreateModel( parent, typestr );
+  
   // configure the model with properties from the world file
   mod->Load(wf, entity );
-  
+ 
   // record the model we created for this worlfile entry
   g_hash_table_insert( entitytable, (gpointer)entity, mod );
 
