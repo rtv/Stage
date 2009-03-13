@@ -14,7 +14,9 @@ OPTION (BUILD_PLAYER_PLUGIN "Build Player plugin" ON)
 OPTION (BUILD_LSPTEST "Build Player plugin tests" OFF)
 OPTION (CPACK_CFG "[release building] generate CPack configuration files" OFF)
 
-OPTION (BUILD_GUI "WARNING: turning this off breaks the build right now. Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 
+
+# todo
+# OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 
 
 cmake_minimum_required( VERSION 2.4 FATAL_ERROR )
 
@@ -79,7 +81,7 @@ ENDIF( LIBPNG_FOUND )
 
 MESSAGE( STATUS "BUILD_GUI is ${BUILD_GUI}" )
 
-IF( BUILD_GUI )
+#IF( BUILD_GUI )
 
 ## the FLTK package script is not useful - it finds an X11-based FLTK on OS X.
 ## so we can't do this stuff
@@ -131,7 +133,7 @@ MESSAGE( STATUS "    FLTK_LIBS = ${FLTK_LIBS}")
 
 SET (FLTK_FOUND TRUE)
 
-ENDIF( BUILD_GUI )
+# ENDIF( BUILD_GUI )
 
 #MESSAGE( ${INDENT} "Checking for OpenGL" )
 find_package( OpenGL REQUIRED )
@@ -154,6 +156,14 @@ ELSE( PLAYER_FOUND )
   MESSAGE( ${INDENT} "Player not detected. If Player is installed but not detected, check your PKG_CONFIG_PATH." )
 ENDIF( PLAYER_FOUND )
 
+pkg_search_module( WEBSIM websim )
+IF( WEBSIM_FOUND )
+  MESSAGE( STATUS ${INDENT} "WebSim version ${WEBSIM_VERSION} detected at ${WEBSIM_PREFIX}" )
+  MESSAGE( STATUS "    WEBSIM_CFLAGS = ${WEBSIM_CFLAGS}" )
+  MESSAGE( STATUS "    WEBSIM_LDFLAGS = ${WEBSIM_LDFLAGS}" )
+ELSE( WEBSIM_FOUND )
+  MESSAGE( ${INDENT} "WebSim not detected." )
+ENDIF( WEBSIM_FOUND )
 
 ## this should not be necessary now that we do the FLTK config
 ## carefully above. I'll leave the code here in case of trouble
@@ -174,6 +184,7 @@ include_directories( .
 		     ${GLIB_INCLUDE_DIRS}
 		     ${LIBPNG_INCLUDE_DIRS}
 		     ${CMAKE_INCLUDE_PATH}
+			  ${WEBSIM_INCLUDE_DIRS}
 )
 
 
@@ -181,6 +192,7 @@ include_directories( .
 link_directories(${GLIB_LIBRARY_DIRS}
 	${GLIB_LIBRARY_DIRS}
 	${LIBPNG_LIBRARY_DIRS}
+   ${WEBSIM_LIBRARY_DIRS}
 )
 
 # work through these subdirs
@@ -188,6 +200,10 @@ ADD_SUBDIRECTORY(libstage)
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(assets)
 ADD_SUBDIRECTORY(worlds)
+
+if( WEBSIM_FOUND )
+ADD_SUBDIRECTORY(webstage)		 
+endif( WEBSIM_FOUND )
 
 IF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )
   ADD_SUBDIRECTORY(libstageplugin)

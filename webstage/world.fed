@@ -1,0 +1,12 @@
+
+[federation]
+localhost:8000=master
+localhost:8001=slave
+
+[master]
+monkey=slave:pioneer2dx
+chunky=slave:pioneer2dx
+punky=slave:pioneer2dx
+
+
+

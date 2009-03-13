@@ -169,3 +169,8 @@ autorob( pose [5.418 7.478 0 -163.478] joules 300000 )
 #autorob( pose [3.875 6.533 0 134.717] )
 #autorob( pose [3.944 4.674 0 -103.060] )
 #autorob( pose [4.634 6.897 0 -103.060] )
+
+
+autorob( name "monkey" pose [5.418 7.478 0 -163.478] joules 300000 )
+autorob( name "chunky" pose [6.418 7.478 0 -163.478] joules 300000 )
+autorob( name "punky" pose [7.418 7.478 0 -163.478] joules 300000 )

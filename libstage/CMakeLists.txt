@@ -7,7 +7,6 @@ set( stageSrcs ancestor.cc
 	block.cc
 	blockgroup.cc
 	camera.cc
-	canvas.cc
 	file_manager.cc
 	file_manager.hh
 	gl.cc
@@ -27,8 +26,6 @@ set( stageSrcs ancestor.cc
 	model_props.cc
 	model_ranger.cc
 	option.cc
-	options_dlg.cc
-	options_dlg.hh
 	powerpack.cc
 	region.cc
 	resource.cc
@@ -39,12 +36,21 @@ set( stageSrcs ancestor.cc
 	waypoint.cc
 	world.cc
 	worldfile.cc
-	worldgui.cc
+   worldgui.cc 
+   canvas.cc 
+   options_dlg.cc
+   options_dlg.hh
 )
 
 # TODO
 #	puck.cc
 
+# todo - build without FLTK - tricky since we use its image loading, etc.
+#if( BUILD_GUI )
+#	 list( APPEND stageSrcs 
+#     # gui-only sources go here
+#        )
+#endif( BUILD_GUI )
 
 add_library(stage SHARED ${stageSrcs})
 

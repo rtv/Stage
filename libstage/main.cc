@@ -12,8 +12,10 @@ using namespace Stg;
 
 /* options descriptor */
 static struct option longopts[] = {
-	{ "gui",  no_argument,   NULL,  'g' },
-	//  { "fast",  no_argument,   NULL,  'f' },
+	{ "gui",  optional_argument,   NULL,  'g' },
+	{ "port",  required_argument,   NULL,  'p' },
+	{ "host",  required_argument,   NULL,  'h' },
+	{ "federation",  required_argument,   NULL,  'f' },
 	{ NULL, 0, NULL, 0 }
 };
 
@@ -27,17 +29,19 @@ int main( int argc, char* argv[] )
   int ch=0, optindex=0;
   bool usegui = true;
   
-  while ((ch = getopt_long(argc, argv, "gf", longopts, &optindex)) != -1)
+  while ((ch = getopt_long(argc, argv, "gfp:h:f:", longopts, &optindex)) != -1)
 	 {
 		switch( ch )
 		  {
 		  case 0: // long option given
-			 printf( "option %s given", longopts[optindex].name );
+			 printf( "option %s given\n", longopts[optindex].name );
 			 break;
 		  case 'g': 
 			 usegui = false;
 			 printf( "[GUI disabled]" );
 			 break;
+		  case 'p':
+			 printf( "PORT %d\n", atoi(optarg) );
 		  case '?':  
 			 break;
 		  default:
@@ -47,7 +51,8 @@ int main( int argc, char* argv[] )
   
   puts("");// end the first start-up line
   
-  
+  exit(0);
+
   // arguments at index [optindex] and later are not options, so they
   // must be world file names
   
