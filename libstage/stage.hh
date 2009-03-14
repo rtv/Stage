@@ -234,7 +234,7 @@ namespace Stg
     {/*empty*/}
 
     /** default constructor uses default non-zero values */
-    Size() : x( 0.1 ), y( 0.1 ), z( 0.1 )
+    Size() : x( 0.4 ), y( 0.4 ), z( 1.0 )
     {/*empty*/}	
 
 	 void Load( Worldfile* wf, int section, const char* keyword );

@@ -8,7 +8,7 @@ include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 0 # real-time interval between simulation updates in milliseconds 
-paused 1
+paused 0
 
 resolution 0.02
 

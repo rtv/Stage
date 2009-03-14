@@ -7,14 +7,14 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 20 # real-time interval between simulation updates in milliseconds 
-paused 1
+interval_real 0 # real-time interval between simulation updates in milliseconds 
+paused 0
 
 resolution 0.02
 
 # threads may speed things up here depending on available CPU cores & workload 
-# threadpool 0 
- threadpool 16
+threadpool 0 
+# threadpool 16
 
 
 # configure the GUI window
@@ -22,9 +22,9 @@ window
 ( 
   size [ 788.000 842.000 ] 
 
-  center [ 0.240 -0.382 ] 
+  center [ -0.354 -0.807 ] 
   rotate [ 0 0 ]
-  scale 35.648 
+  scale 38.889 
 
   pcam_loc [ 0 -4.000 2.000 ]
   pcam_angle [ 70.000 0 ]
@@ -72,7 +72,7 @@ define charging_bump model
 
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 361 range_max 5 laser_return 2 watts 30 )
+ sicklaser( samples 16 range_max 5 laser_return 2 watts 30 )
  ctrl "fasr"
  joules 100000 
  joules_capacity 400000 
@@ -176,13 +176,20 @@ define puck model (
 #autorob( pose [7.122 4.175 0 -31.440]  )
 #autorob( pose [5.944 6.951 0 2.937] )
 
-autorob( name "rob0" pose [6.800 5.897 0 -103.060] )
-autorob( name "rob1" pose [6.405 5.291 0 -103.060] )
-autorob( name "rob2" pose [5.974 5.725 0 -103.060] )
-autorob( name "rob3" pose [4.151 7.272 0 53.540] )
-autorob( name "rob4" pose [6.545 7.459 0 2.937] )
-autorob( name "rob5" pose [7.237 7.533 0 34.450] )
-autorob( name "rob6" pose [3.875 6.533 0 134.717] )
-autorob( name "rob7" pose [3.944 4.674 0 -103.060] )
-autorob( name "rob8" pose [4.634 6.897 0 -103.060] )
+autorob( name "rob00" pose [-4.954 -5.324 0 -103.060] )
+autorob( name "rob01" pose [-5.770 -4.443 0 -103.060] )
+autorob( name "rob02" pose [-2.217 -5.496 0 -103.060] )
+autorob( name "rob03" pose [-3.928 -4.145 0 53.540] )
+autorob( name "rob04" pose [-3.133 -1.518 0 2.937] )
+autorob( name "rob05" pose [-2.441 -1.444 0 34.450] )
+autorob( name "rob06" pose [-6.560 -2.472 0 134.717] )
+autorob( name "rob07" pose [-3.602 -6.799 0 -103.060] )
+autorob( name "rob08" pose [-2.968 -5.334 0 -103.060] )
+autorob( name "rob09" pose [-4.673 -4.005 0 -103.060] )
+autorob( name "rob10" pose [-0.073 -5.913 0 -103.060] )
+autorob( name "rob11" pose [-1.027 -5.520 0 -103.060] )
+autorob( name "rob12" pose [-6.441 -5.071 0 -103.060] )
+autorob( name "rob13" pose [0.039 -7.091 0 -103.060] )
+autorob( name "rob14" pose [-4.842 -6.586 0 -103.060] )
+autorob( name "rob15" pose [-2.878 -3.080 0 -103.060] )
 

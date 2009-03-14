@@ -203,37 +203,33 @@ int main( int argc, char** argv )
 
   puts( "entering main loop" );
 
-  ws.Go();
-  ws.Wait();			
+//   ws.Go();
+//   ws.Wait();			
 
-  puts( "through the sync" );
+//   puts( "through the sync" );
 
   
   //close program once time has completed
   bool quit = false;
   while( ! quit )
 	 {
-		// tell my friends to start simulating
-		ws.Go();
-		// todo - loop here to drain libevent's output?
-
-		puts( "go done" );
-
-		// update Stage
-		world->Update();
-
-		puts( "update done" );
-
 		// todo? check for changes?
 		// send my updates
-		ws.ForEachPuppet( WebStage::UpdatePuppetCb, (void*)&ws );
+		ws.ForEachPuppet( WebStage::UpdatePuppetCb, (void*)&ws );		
+		//puts( "pushes  done" );
 
-		puts( "pushes  done" );
+		// tell my friends to start simulating
+		ws.Go();
+		
+		// puts( "go done" );
+		
+		// update Stage
+		world->Update();
+		//puts( "update done" );
 
 		// wait for goes from all my friends
 		ws.Wait();			
-
-		puts( "wait done" );
+		//puts( "wait done" );
 	 }
 
   printf( "Webstage done.\n" );
