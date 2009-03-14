@@ -21,5 +21,14 @@ position:13=slave:position
 position:14=slave:position
 position:15=slave:position
 
+#[slave]
+#rob0=master:position
+#rob1=master:position
+#rob2=master:position
+#rob3=master:position
+#rob4=master:position
+#rob5=master:position
+#rob6=master:position
+#rob7=master:position
 
 

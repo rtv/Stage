@@ -16,12 +16,11 @@ static struct option longopts[] = {
 class WebStage : public websim::WebSim
 {
   Stg::World* world;
-
+  
 public:
   WebStage( Stg::World* world,
-				const std::string& fedfile,
-				const std::string& host, int port ) :
-	 websim::WebSim( fedfile, host, port ),
+				const std::string& host, const unsigned short port ) :
+	 websim::WebSim( host, port ),
 	 world(world)
   {
   }
@@ -199,19 +198,42 @@ int main( int argc, char** argv )
 						 new World( worldfilename ) );
   world->Load( worldfilename );
 
-  WebStage ws( world, fedfilename, host, port );
+  WebStage ws( world, host, port );
+  ws.LoadFederationFile( fedfilename );
 
+  puts( "entering main loop" );
+
+  ws.Go();
+  ws.Wait();			
+
+  puts( "through the sync" );
+
+  
   //close program once time has completed
   bool quit = false;
   while( ! quit )
 	 {
-		ws.ForEachPuppet( WebStage::UpdatePuppetCb, (void*)&ws );
+		// tell my friends to start simulating
+		ws.Go();
+		// todo - loop here to drain libevent's output?
+
+		puts( "go done" );
 
 		// update Stage
-		//quit = world->Update();
 		world->Update();
 
-		ws.Update();			
+		puts( "update done" );
+
+		// todo? check for changes?
+		// send my updates
+		ws.ForEachPuppet( WebStage::UpdatePuppetCb, (void*)&ws );
+
+		puts( "pushes  done" );
+
+		// wait for goes from all my friends
+		ws.Wait();			
+
+		puts( "wait done" );
 	 }
 
   printf( "Webstage done.\n" );

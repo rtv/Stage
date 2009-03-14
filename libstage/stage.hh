@@ -1382,7 +1382,8 @@ namespace Stg
     void Start(){ paused = false; };
     void Stop(){ paused = true; };
     void TogglePause(){ paused = !paused; };
-	 
+	 bool Paused(){ return( paused ); };
+
     /** show the window - need to call this if you don't Load(). */
     void Show(); 
 
