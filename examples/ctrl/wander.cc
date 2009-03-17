@@ -42,7 +42,9 @@ int LaserUpdate( Model* mod, robot_t* robot )
   // get the data
   uint32_t sample_count=0;
   stg_laser_sample_t* scan = robot->laser->GetSamples( &sample_count );
-  assert(scan);
+
+  if( ! scan )
+    return 0;
   
   bool obstruction = false;
   bool stop = false;

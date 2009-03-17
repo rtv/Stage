@@ -7,7 +7,7 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 100  # real-time interval between simulation updates in milliseconds 
+interval_real 50  # real-time interval between simulation updates in milliseconds 
 
 paused 0
 
@@ -43,6 +43,6 @@ pioneer2dx
   pose [ 0.892 0.800 0 56.500 ] 
   sicklaser() 
 
-  #ctrl "wander"
+  ctrl "wander"
 )
 
