@@ -13,8 +13,8 @@ paused 0
 resolution 0.02
 
 # threads may speed things up here depending on available CPU cores & workload 
- threadpool 0 
-# threadpool 16
+# threadpool 8 
+ threadpool 16
 
 
 # configure the GUI window

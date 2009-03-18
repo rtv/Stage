@@ -28,7 +28,7 @@ public:
   virtual ~WebStage()
   {}
   
-  void Push( std::string name )
+  void Push( const std::string& name )
   {
 	 Stg::Model* mod = world->GetModel( name.c_str() );
 	 if( mod )
@@ -104,12 +104,15 @@ public:
   }
 
   virtual bool GetModelPVA(const std::string& name, 
+									websim::Time& t,
 									websim::Pose& p,
 									websim::Velocity& v,
 									websim::Acceleration& a,
 									std::string& error)
   {
 	 //printf( "get model name:%s\n", name.c_str() ); 
+
+	 t = GetTime();
 
 	 Model* mod = world->GetModel( name.c_str() );
 	 if( mod )
@@ -133,8 +136,17 @@ public:
 	 return true;
   }
 
+  virtual websim::Time GetTime()
+  {
+	 stg_usec_t stgtime = world->SimTimeNow();
 
-  static void UpdatePuppetCb( std::string name, WebSim::Puppet* pup, void* arg )
+	 websim::Time t;
+	 t.sec = stgtime / 1e6;
+	 t.usec = stgtime - (t.sec * 1e6);
+	 return t;
+  }
+
+  static void UpdatePuppetCb( const std::string& name, WebSim::Puppet* pup, void* arg )
   {
 	 WebStage* ws = (WebStage*)arg;
 	 ws->Push( pup->name );
@@ -155,7 +167,8 @@ int main( int argc, char** argv )
   
   int ch=0, optindex=0;
   bool usegui = true;
-  
+  bool usefedfile = false;
+
   while ((ch = getopt_long(argc, argv, "gh:p:f:", longopts, &optindex)) != -1)
 	 {
 		switch( ch )
@@ -175,6 +188,7 @@ int main( int argc, char** argv )
 			 break;
 		  case 'f':
 			 fedfilename = optarg;
+			 usefedfile = true;
 			 break;
 		  case '?':  
 			 break;
@@ -199,22 +213,19 @@ int main( int argc, char** argv )
   world->Load( worldfilename );
 
   WebStage ws( world, host, port );
-  ws.LoadFederationFile( fedfilename );
+  
+  if( usefedfile )
+	 ws.LoadFederationFile( fedfilename );
 
   puts( "entering main loop" );
 
-//   ws.Go();
-//   ws.Wait();			
-
-//   puts( "through the sync" );
-
-  
   //close program once time has completed
   bool quit = false;
   while( ! quit )
 	 {
 		// todo? check for changes?
 		// send my updates
+
 		ws.ForEachPuppet( WebStage::UpdatePuppetCb, (void*)&ws );		
 		//puts( "pushes  done" );
 
