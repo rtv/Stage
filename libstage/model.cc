@@ -678,28 +678,27 @@ void Model::Update( void )
   //   printf( "[%llu] %s update (%d subs)\n", 
   // 			 this->world->sim_time, this->token, this->subs );
   
-  // f we're drawing current and a power pack has been installed
+  // if we're drawing current and a power pack has been installed
   
   PowerPack* pp = FindPowerPack();
   if( pp && ( watts > 0 ))
-	 {
-		// consume  energy stored in the power pack
-		stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
-		pp->Subtract( consumed );
-		
-		/*		
-				printf ( "%s current %.2f consumed %.6f ppack @ %p [ %.2f/%.2f (%.0f)\n",
-				token, 
-				watts, 
-				consumed, 
-				power_pack, 
-				power_pack->stored, 
-				power_pack->capacity, 
-				power_pack->stored / power_pack->capacity * 100.0 );
-		*/
-
-	 }
-	   
+    {
+      // consume  energy stored in the power pack
+      stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
+      pp->Subtract( consumed );
+      
+      /*		
+	printf ( "%s current %.2f consumed %.6f ppack @ %p [ %.2f/%.2f (%.0f)\n",
+	token, 
+	watts, 
+	consumed, 
+	power_pack, 
+	power_pack->stored, 
+	power_pack->capacity, 
+	power_pack->stored / power_pack->capacity * 100.0 );
+      */      
+    }
+  
   CallCallbacks( &hooks.update );
   last_update = world->sim_time;
 }
@@ -719,9 +718,6 @@ stg_meters_t Model::ModelHeight()
   //height of model + max( child height )
   return geom.size.z + m_child;
 }
-
-
-
 
 void Model::AddToPose( double dx, double dy, double dz, double da )
 {
@@ -832,9 +828,9 @@ void Model::CommitTestedPose()
   
 Model* Model::ConditionalMove( Pose newpose )
 { 
-  if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
-    printf( "ConditionalMove bad newpose %s [%.2f %.2f %.2f %.2f]\n",
-	    token, newpose.x, newpose.y, newpose.z, newpose.a );
+//   if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
+//     printf( "ConditionalMove bad newpose %s [%.2f %.2f %.2f %.2f]\n",
+// 	    token, newpose.x, newpose.y, newpose.z, newpose.a );
 
   Pose startpose = pose;
   pose = newpose; // do the move provisionally - we might undo it below
@@ -848,11 +844,10 @@ Model* Model::ConditionalMove( Pose newpose )
       CommitTestedPose(); // shift anyrecursively commit to blocks to the new pose 
       world->dirty = true; // need redraw
     }
-
   
-  if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
-    printf( "ConditionalMove bad pose %s [%.2f %.2f %.2f %.2f]\n",
-	    token, pose.x, pose.y, pose.z, pose.a );
+//   if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
+//     printf( "ConditionalMove bad pose %s [%.2f %.2f %.2f %.2f]\n",
+// 	    token, pose.x, pose.y, pose.z, pose.a );
 
   return hitmod;
 }
@@ -862,13 +857,13 @@ void Model::UpdatePose( void )
 {
   if( disabled )
     return;
-
-  if( velocity.IsZero() )	
-	 {
-		PRINT_WARN1( "model %s has velocity zero but its pose is being updated", token ); 
-		return;
-	 }
-
+  
+//   if( velocity.IsZero() )	
+//     {
+//       PRINT_WARN1( "model %s has velocity zero but its pose is being updated", token ); 
+//       return;
+//     }
+  
   // TODO - control this properly, and maybe do it faster
   //if( 0 )
   //if( (world->updates % 10 == 0) )

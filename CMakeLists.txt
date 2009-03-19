@@ -14,6 +14,7 @@ OPTION (BUILD_PLAYER_PLUGIN "Build Player plugin" ON)
 OPTION (BUILD_LSPTEST "Build Player plugin tests" OFF)
 OPTION (CPACK_CFG "[release building] generate CPack configuration files" OFF)
 
+add_definitions(-g -Wall)
 
 # todo
 # OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 

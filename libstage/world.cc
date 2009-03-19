@@ -78,7 +78,6 @@ World::World( const char* token,
   destroy( false ),
   dirty( true ),
   models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
-  powerpack_list( NULL ),
   ppm( ppm ), // raytrace resolution
   quit( false ),
   quit_time( 0 ),
@@ -97,12 +96,12 @@ World::World( const char* token,
   graphics( false ), 
   interval_sim( (stg_usec_t)thousand * interval_sim ),
   option_table( g_hash_table_new( g_str_hash, g_str_equal ) ), 
+  powerpack_list( NULL ),
   ray_list( NULL ),  
   sim_time( 0 ),
   superregions( g_hash_table_new( (GHashFunc)PointIntHash, 
 				  (GEqualFunc)PointIntEqual ) ),
   sr_cached(NULL),
-  // update_list( NULL ),
   reentrant_update_list( NULL ),
   nonreentrant_update_list( NULL ),
   updates( 0 ),
@@ -437,6 +436,8 @@ bool World::Update()
       return true;		
   }
   
+  dirty = true; // need redraw 
+
   // upate all positions first
   LISTMETHOD( velocity_list, Model*, UpdatePose );
   
@@ -999,5 +1000,6 @@ void World::StartUpdatingModelPose( Model* mod )
 
 void World::StopUpdatingModelPose( Model* mod )
 { 
-  velocity_list = g_list_remove( velocity_list, mod ); 
+  // TODO XX figure out how to handle velcoties a bit better
+  //velocity_list = g_list_remove( velocity_list, mod ); 
 }

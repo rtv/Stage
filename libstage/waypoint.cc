@@ -20,15 +20,15 @@ Waypoint::Waypoint()
 
 void Waypoint::Draw()
 {
- 	GLdouble d[4];
-
- 	d[0] = ((color & 0x00FF0000) >> 16) / 256.0;
- 	d[1] = ((color & 0x0000FF00) >> 8)  / 256.0;
- 	d[2] = ((color & 0x000000FF) >> 0)  / 256.0;
- 	d[3] = (((color & 0xFF000000) >> 24) / 256.0);
-
-   glColor4dv( d );
-
+  GLdouble d[4];
+  
+  d[0] = ((color & 0x00FF0000) >> 16) / 256.0;
+  d[1] = ((color & 0x0000FF00) >> 8)  / 256.0;
+  d[2] = ((color & 0x000000FF) >> 0)  / 256.0;
+  d[3] = (((color & 0xFF000000) >> 24) / 256.0);
+  
+  glColor4dv( d );
+  
   glBegin(GL_POINTS);
   glVertex3f( pose.x, pose.y, pose.z );
   glEnd();
