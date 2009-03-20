@@ -254,7 +254,7 @@ static void pb_set_rect( Fl_Shared_Image* pb, int x, int y, int width, int heigh
 		}
 }  
 
-// // returns TRUE if any channel in the pixel is non-zero
+// returns true if the value in the first channel is above threshold
 static gboolean pb_pixel_is_set( Fl_Shared_Image* img, int x, int y, int threshold )
 {
 	guchar* pixel = pb_get_pixel( img,x,y );

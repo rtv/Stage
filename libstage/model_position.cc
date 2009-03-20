@@ -662,7 +662,7 @@ void ModelPosition::DrawWaypoints()
   // draw lines connecting the waypoints
   if( waypoint_count > 1 )
     {
-      glBegin( GL_LINE_STRIP );
+      glBegin( GL_LINES );
       
       for( unsigned int i=1; i < waypoint_count; i++ )
 	{

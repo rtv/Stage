@@ -5,16 +5,16 @@
 using namespace Stg;
 
 /** Create a new block. A model's body is a list of these
-	 blocks. The point data is copied, so pts can safely be freed
-	 after calling this.*/
+    blocks. The point data is copied, so pts can safely be freed
+    after calling this.*/
 Block::Block( Model* mod,  
-						  stg_point_t* pts, 
-						  size_t pt_count,
-						  stg_meters_t zmin,
-						  stg_meters_t zmax,
-						  stg_color_t color,
-						  bool inherit_color
-						  ) :
+	      stg_point_t* pts, 
+	      size_t pt_count,
+	      stg_meters_t zmin,
+	      stg_meters_t zmax,
+	      stg_color_t color,
+	      bool inherit_color
+	      ) :
   mod( mod ),
   pt_count( pt_count ),
   pts( (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t)) ),
@@ -33,15 +33,15 @@ Block::Block( Model* mod,
 
 /** A from-file  constructor */
 Block::Block(  Model* mod,  
-							Worldfile* wf, 
-							int entity) 
+	       Worldfile* wf, 
+	       int entity) 
   : mod( mod ),
-	 pt_count(0), 
-	 pts(NULL), 
-	 color(0),
-	 inherit_color(true),
-	 rendered_cells( g_ptr_array_sized_new(32) ), 
-	 candidate_cells( g_ptr_array_sized_new(32) )
+    pt_count(0), 
+    pts(NULL), 
+    color(0),
+    inherit_color(true),
+    rendered_cells( g_ptr_array_sized_new(32) ), 
+    candidate_cells( g_ptr_array_sized_new(32) )
 {
   assert(mod);
   assert(wf);
@@ -64,10 +64,10 @@ Block::~Block()
 void Block::Translate( double x, double y )
 {
   for( unsigned int p=0; p<pt_count; p++)
-	 {
-		pts[p].x += x;
-		pts[p].y += y;
-	 }
+    {
+      pts[p].x += x;
+      pts[p].y += y;
+    }
 
   // force redraw
   mod->blockgroup.BuildDisplayList( mod );
@@ -80,10 +80,10 @@ double Block::CenterY()
   double max = -billion;
   
   for( unsigned int p=0; p<pt_count; p++)
-	 {
-		if( pts[p].y > max ) max = pts[p].y;
-		if( pts[p].y < min ) min = pts[p].y;
-	 }
+    {
+      if( pts[p].y > max ) max = pts[p].y;
+      if( pts[p].y < min ) min = pts[p].y;
+    }
 		  
   // return the value half way between max and min
   return( min + (max - min)/2.0 );
@@ -95,10 +95,10 @@ double Block::CenterX()
   double max = -billion;
   
   for( unsigned int p=0; p<pt_count; p++)
-	 {
-		if( pts[p].x > max ) max = pts[p].x;
-		if( pts[p].x < min ) min = pts[p].x;
-	 }
+    {
+      if( pts[p].x > max ) max = pts[p].x;
+      if( pts[p].x < min ) min = pts[p].x;
+    }
 		  
   // return the value half way between maxx and min
   return( min + (max - min)/2.0 );
@@ -144,20 +144,20 @@ GList* Block::AppendTouchingModels( GList* list )
 {
   // for every cell we are rendered into
   for( unsigned int i=0; i<rendered_cells->len; i++ )
-	 {
-		Cell* cell = (Cell*)g_ptr_array_index( rendered_cells, i);
+    {
+      Cell* cell = (Cell*)g_ptr_array_index( rendered_cells, i);
 		
-		// for every block rendered into that cell
-		for( GSList* it = cell->list; it; it=it->next )
-		  {
-			 Block* testblock = (Block*)it->data;
-			 Model* testmod = testblock->mod;
+      // for every block rendered into that cell
+      for( GSList* it = cell->list; it; it=it->next )
+	{
+	  Block* testblock = (Block*)it->data;
+	  Model* testmod = testblock->mod;
 			 
-			 if( !mod->IsRelated( testmod ))
-				if( ! g_list_find( list, testmod ) )
-					 list = g_list_append( list, testmod );
-		  }
-	 }
+	  if( !mod->IsRelated( testmod ))
+	    if( ! g_list_find( list, testmod ) )
+	      list = g_list_append( list, testmod );
+	}
+    }
 
   return list;
 }
@@ -170,29 +170,29 @@ Model* Block::TestCollision()
   GenerateCandidateCells();
   
   if( mod->vis.obstacle_return )
-	 // for every cell we may be rendered into
-	 for( unsigned int i=0; i<candidate_cells->len; i++ )
-	 {
-		Cell* cell = (Cell*)g_ptr_array_index(candidate_cells, i);
+    // for every cell we may be rendered into
+    for( unsigned int i=0; i<candidate_cells->len; i++ )
+      {
+	Cell* cell = (Cell*)g_ptr_array_index(candidate_cells, i);
 		
-		// for every rendered into that cell
-		for( GSList* it = cell->list; it; it=it->next )
-		  {
-			 Block* testblock = (Block*)it->data;
-			 Model* testmod = testblock->mod;
+	// for every rendered into that cell
+	for( GSList* it = cell->list; it; it=it->next )
+	  {
+	    Block* testblock = (Block*)it->data;
+	    Model* testmod = testblock->mod;
 			 
-			 //printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
+	    //printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
 			 
-			 // if the tested model is an obstacle and it's not attached to this model
-			 if( (testmod != this->mod) &&  
-					testmod->vis.obstacle_return && 
-					!mod->IsRelated( testmod ))
-				{
-				  //puts( "HIT");
-				  return testmod; // bail immediately with the bad news
-				}		  
-		  }
-	 }
+	    // if the tested model is an obstacle and it's not attached to this model
+	    if( (testmod != this->mod) &&  
+		testmod->vis.obstacle_return && 
+		!mod->IsRelated( testmod ))
+	      {
+		//puts( "HIT");
+		return testmod; // bail immediately with the bad news
+	      }		  
+	  }
+      }
   
   //printf( "model %s block %p collision done. no hits.\n", mod->Token(), this );
   return NULL; // no hit
@@ -202,13 +202,13 @@ Model* Block::TestCollision()
 void Block::RemoveFromCellArray( GPtrArray* ptrarray )
 {  
   for( unsigned int i=0; i<ptrarray->len; i++ )	 
-	 ((Cell*)g_ptr_array_index(ptrarray, i))->RemoveBlock( this );  
+    ((Cell*)g_ptr_array_index(ptrarray, i))->RemoveBlock( this );  
 }
 
 void Block::AddToCellArray( GPtrArray* ptrarray )
 {  
   for( unsigned int i=0; i<ptrarray->len; i++ )	 
-	 ((Cell*)g_ptr_array_index(ptrarray, i))->AddBlock( this );  
+    ((Cell*)g_ptr_array_index(ptrarray, i))->AddBlock( this );  
 }
 
 
@@ -276,9 +276,9 @@ void Block::GenerateCandidateCells()
   
   // compute the global location of the first point
   Pose local( (pts[0].x - bgoffset.x) * scale.x ,
-						  (pts[0].y - bgoffset.y) * scale.y, 
-						  -bgoffset.z, 
-						  0 );
+	      (pts[0].y - bgoffset.y) * scale.y, 
+	      -bgoffset.z, 
+	      0 );
 
   Pose first_gpose, last_gpose;
   first_gpose = last_gpose = pose_sum( gpose, local );
@@ -289,27 +289,27 @@ void Block::GenerateCandidateCells()
   
   // now loop from the the second to the last
   for( unsigned int p=1; p<pt_count; p++ )
-	 {
-		Pose local( (pts[p].x - bgoffset.x) * scale.x ,
-								(pts[p].y - bgoffset.y) * scale.y, 
-								-bgoffset.z, 
-								0 );		
+    {
+      Pose local( (pts[p].x - bgoffset.x) * scale.x ,
+		  (pts[p].y - bgoffset.y) * scale.y, 
+		  -bgoffset.z, 
+		  0 );		
 		
-		Pose gpose2 = pose_sum( gpose, local );
+      Pose gpose2 = pose_sum( gpose, local );
 		
-		// and render the shape of the block into the global cells			 
-		mod->world->ForEachCellInLine( last_gpose.x, last_gpose.y, 
-												 gpose2.x, gpose2.y, 
-												 (stg_cell_callback_t)AppendCellToPtrArray,
-												 candidate_cells );
-		last_gpose = gpose2;
-	 }
+      // and render the shape of the block into the global cells			 
+      mod->world->ForEachCellInLine( last_gpose.x, last_gpose.y, 
+				     gpose2.x, gpose2.y, 
+				     (stg_cell_callback_t)AppendCellToPtrArray,
+				     candidate_cells );
+      last_gpose = gpose2;
+    }
   
   // close the polygon
   mod->world->ForEachCellInLine( last_gpose.x, last_gpose.y,
-											first_gpose.x, first_gpose.y,
-											(stg_cell_callback_t)AppendCellToPtrArray, 
-											candidate_cells );
+				 first_gpose.x, first_gpose.y,
+				 (stg_cell_callback_t)AppendCellToPtrArray, 
+				 candidate_cells );
   
   mapped = true;
 }
@@ -321,7 +321,7 @@ void Block::DrawTop()
   // extent
   glBegin( GL_POLYGON);
   for( unsigned int i=0; i<pt_count; i++ )
-	 glVertex3f( pts[i].x, pts[i].y, local_z.max );
+    glVertex3f( pts[i].x, pts[i].y, local_z.max );
   glEnd();
 }       
 
@@ -330,10 +330,10 @@ void Block::DrawSides()
   // construct a strip that wraps around the polygon  
   glBegin(GL_QUAD_STRIP);
   for( unsigned int p=0; p<pt_count; p++)
-	 {
-		glVertex3f( pts[p].x, pts[p].y, local_z.max );
-		glVertex3f( pts[p].x, pts[p].y, local_z.min );
-	 }
+    {
+      glVertex3f( pts[p].x, pts[p].y, local_z.max );
+      glVertex3f( pts[p].x, pts[p].y, local_z.min );
+    }
   // close the strip
   glVertex3f( pts[0].x, pts[0].y, local_z.max );
   glVertex3f( pts[0].x, pts[0].y, local_z.min );
@@ -344,7 +344,7 @@ void Block::DrawFootPrint()
 {
   glBegin(GL_POLYGON);
   for( unsigned int p=0; p<pt_count; p++ )
-	 glVertex2f( pts[p].x, pts[p].y );
+    glVertex2f( pts[p].x, pts[p].y );
   glEnd();
 }
 
@@ -391,7 +391,7 @@ void Block::Load( Worldfile* wf, int entity )
   //printf( "Block::Load entity %d\n", entity );
   
   if( pts )
-	 stg_points_destroy( pts );
+    stg_points_destroy( pts );
   
   pt_count = wf->ReadInt( entity, "points", 0);
   pts = stg_points_create( pt_count );
@@ -401,10 +401,10 @@ void Block::Load( Worldfile* wf, int entity )
   
   char key[128];  
   for( unsigned int p=0; p<pt_count; p++ )	      {
-	 snprintf(key, sizeof(key), "point[%d]", p );
+    snprintf(key, sizeof(key), "point[%d]", p );
 	 
-	 pts[p].x = wf->ReadTupleLength(entity, key, 0, 0);
-	 pts[p].y = wf->ReadTupleLength(entity, key, 1, 0);
+    pts[p].x = wf->ReadTupleLength(entity, key, 0, 0);
+    pts[p].y = wf->ReadTupleLength(entity, key, 1, 0);
   }
   
   local_z.min = wf->ReadTupleLength( entity, "z", 0, 0.0 );
@@ -412,12 +412,12 @@ void Block::Load( Worldfile* wf, int entity )
   
   const char* colorstr = wf->ReadString( entity, "color", NULL );
   if( colorstr )
-	 {
-		color = stg_lookup_color( colorstr );
-		inherit_color = false;
-	 }
+    {
+      color = stg_lookup_color( colorstr );
+      inherit_color = false;
+    }
   else
-	 inherit_color = true;
+    inherit_color = true;
 }
 
 	

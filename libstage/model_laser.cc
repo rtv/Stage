@@ -38,57 +38,57 @@ Option ModelLaser::showLaserFov( "Laser FOV", "show_laser_fov", "", false, NULL 
 Option ModelLaser::showLaserBeams( "Laser beams", "show_laser_beams", "", false, NULL );
 
 /**
-@ingroup model
-@defgroup model_laser Laser model 
-The laser model simulates a scanning laser rangefinder
+   @ingroup model
+   @defgroup model_laser Laser model 
+   The laser model simulates a scanning laser rangefinder
 
-API: Stg::ModelLaser
+   API: Stg::ModelLaser
 
-<h2>Worldfile properties</h2>
+   <h2>Worldfile properties</h2>
 
-@par Summary and default values
+   @par Summary and default values
 
-@verbatim
-laser
-(
-  # laser properties
-  samples 180
-  range_max 8.0
-  fov 3.14159
-  resolution 1
+   @verbatim
+   laser
+   (
+   # laser properties
+   samples 180
+   range_max 8.0
+   fov 3.14159
+   resolution 1
 
-  # model properties
-  size [ 0.15 0.15 0.2 ]
-  color "blue"
-)
-@endverbatim
+   # model properties
+   size [ 0.15 0.15 0.2 ]
+   color "blue"
+   )
+   @endverbatim
 
-@par Details
+   @par Details
  
-- samples <int>\n
-  the number of laser samples per scan
-- range_max <float>\n
-  the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
-- fov <float>\n
-  the angular field of view of the scanner, in radians. 
-- resolution <int>\n
-  Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
+   - samples <int>\n
+   the number of laser samples per scan
+   - range_max <float>\n
+   the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
+   - fov <float>\n
+   the angular field of view of the scanner, in radians. 
+   - resolution <int>\n
+   Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
 */
   
-  ModelLaser::ModelLaser( World* world, 
-										  Model* parent )
+ModelLaser::ModelLaser( World* world, 
+			Model* parent )
   : Model( world, parent, MODEL_TYPE_LASER ),
-	data_dl(0),
-	data_dirty( true ),
-	samples( NULL ),	// don't allocate sample buffer memory until Update() is called
-	sample_count( DEFAULT_SAMPLES ),
-	range_max( DEFAULT_MAXRANGE ),
-	fov( DEFAULT_FOV ),
-	resolution( DEFAULT_RESOLUTION )
+    data_dl(0),
+    data_dirty( true ),
+    samples( NULL ),	// don't allocate sample buffer memory until Update() is called
+    sample_count( DEFAULT_SAMPLES ),
+    range_max( DEFAULT_MAXRANGE ),
+    fov( DEFAULT_FOV ),
+    resolution( DEFAULT_RESOLUTION )
 {
   
   PRINT_DEBUG2( "Constructing ModelLaser %d (%s)\n", 
-					 id, typestr );
+		id, typestr );
   
 
   // Model data members
@@ -162,8 +162,8 @@ void ModelLaser::SetConfig( stg_laser_cfg_t cfg )
 }
 
 static bool laser_raytrace_match( Model* hit, 
-											 Model* finder,
-											 const void* dummy )
+				  Model* finder,
+				  const void* dummy )
 {
   // Ignore the model that's looking and things that are invisible to
   // lasers  
@@ -186,20 +186,20 @@ void ModelLaser::Update( void )
       rayorg.a = bearing;
 
       stg_raytrace_result_t sample = 
-		  Raytrace( rayorg, 
-						range_max,
-						laser_raytrace_match,
-						NULL,
-						true ); // z testing enabled
+	Raytrace( rayorg, 
+		  range_max,
+		  laser_raytrace_match,
+		  NULL,
+		  true ); // z testing enabled
 		
       samples[t].range = sample.range;
 
       // if we hit a model and it reflects brightly, we set
       // reflectance high, else low
       if( sample.mod && ( sample.mod->vis.laser_return >= LaserBright ) )	
-		  samples[t].reflectance = 1;
+	samples[t].reflectance = 1;
       else
-		  samples[t].reflectance = 0;
+	samples[t].reflectance = 0;
 		
       // todo - lower bound on range      
       bearing += sample_incr;
@@ -209,22 +209,22 @@ void ModelLaser::Update( void )
   if( resolution > 1 )
     {
       for( unsigned int t=resolution; t<sample_count; t+=resolution )
-		  for( unsigned int g=1; g<resolution; g++ )
-			 {
-				if( t >= sample_count )
-				  break;
+	for( unsigned int g=1; g<resolution; g++ )
+	  {
+	    if( t >= sample_count )
+	      break;
 				
-				// copy the rightmost sample data into this point
-				memcpy( &samples[t-g],
-						  &samples[t-resolution],
-						  sizeof(stg_laser_sample_t));
+	    // copy the rightmost sample data into this point
+	    memcpy( &samples[t-g],
+		    &samples[t-resolution],
+		    sizeof(stg_laser_sample_t));
 				
-				double left = samples[t].range;
-				double right = samples[t-resolution].range;
+	    double left = samples[t].range;
+	    double right = samples[t-resolution].range;
 				
-				// linear range interpolation between the left and right samples
-				samples[t-g].range = (left-g*(left-right)/resolution);
-			 }
+	    // linear range interpolation between the left and right samples
+	    samples[t-g].range = (left-g*(left-right)/resolution);
+	  }
     }
   
   data_dirty = true;
@@ -317,8 +317,8 @@ void ModelLaser::DataVisualize( Camera* cam )
     {	    
       data_dirty = false;
 
-		if( data_dl < 1 )
-		  data_dl = glGenLists(1);
+      if( data_dl < 1 )
+	data_dl = glGenLists(1);
        
       glNewList( data_dl, GL_COMPILE );
 
@@ -330,7 +330,7 @@ void ModelLaser::DataVisualize( Camera* cam )
       glBegin( GL_POINTS );
       glVertex2f( 0,0 );
       glEnd();
-		PopColor();
+      PopColor();
 
       // pack the laser hit points into a vertex array for fast rendering
       static float* pts = NULL;
@@ -339,79 +339,79 @@ void ModelLaser::DataVisualize( Camera* cam )
       pts[0] = 0.0;
       pts[1] = 0.0;
 		
-		PushColor( 0, 0, 1, 0.5 );
-		glDepthMask( GL_FALSE );
-		glPointSize( 2 );
+      PushColor( 0, 0, 1, 0.5 );
+      glDepthMask( GL_FALSE );
+      glPointSize( 2 );
 		
-		for( unsigned int s=0; s<sample_count; s++ )
-		  {
-			 double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
-			 pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
-			 pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
+      for( unsigned int s=0; s<sample_count; s++ )
+	{
+	  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+	  pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
+	  pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
 			 
-			 // if the sample is unusually bright, draw a little blob
-			 if( showLaserData && (samples[s].reflectance > 0) )
-				{
-				  glBegin( GL_POINTS );
-				  glVertex2f( pts[2*s+2], pts[2*s+3] );
-				  glEnd();
-				}			 
-		  }
+	  // if the sample is unusually bright, draw a little blob
+	  if( showLaserData && (samples[s].reflectance > 0) )
+	    {
+	      glBegin( GL_POINTS );
+	      glVertex2f( pts[2*s+2], pts[2*s+3] );
+	      glEnd();
+	    }			 
+	}
 		
-		glVertexPointer( 2, GL_FLOAT, 0, pts );      
+      glVertexPointer( 2, GL_FLOAT, 0, pts );      
 		
-		PopColor();
+      PopColor();
 		
-		if( showLaserData )
-		  {      			 
-			 // draw the filled polygon in transparent blue
-			 PushColor( 0, 0, 1, 0.1 );		
-			 glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-			 PopColor();
-		  }
+      if( showLaserData )
+	{      			 
+	  // draw the filled polygon in transparent blue
+	  PushColor( 0, 0, 1, 0.1 );		
+	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+	  PopColor();
+	}
 		
       if( showLaserStrikes )
-		  {
-			 // draw the beam strike points
-			 PushColor( 0, 0, 1, 0.8 );
-			 glDrawArrays( GL_POINTS, 0, sample_count+1 );
-			 PopColor();
-		  }
+	{
+	  // draw the beam strike points
+	  PushColor( 0, 0, 1, 0.8 );
+	  glDrawArrays( GL_POINTS, 0, sample_count+1 );
+	  PopColor();
+	}
 
-		if( showLaserFov )
-		  {
-			 for( unsigned int s=0; s<sample_count; s++ )
-				{
-				  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
-				  pts[2*s+2] = (float)(range_max * cos(ray_angle) );
-				  pts[2*s+3] = (float)(range_max * sin(ray_angle) );			 
-				}
+      if( showLaserFov )
+	{
+	  for( unsigned int s=0; s<sample_count; s++ )
+	    {
+	      double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+	      pts[2*s+2] = (float)(range_max * cos(ray_angle) );
+	      pts[2*s+3] = (float)(range_max * sin(ray_angle) );			 
+	    }
 
-			 glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-			 PushColor( 0, 0, 1, 0.5 );		
-			 glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-			 PopColor();
-			 //			 glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	  PushColor( 0, 0, 1, 0.5 );		
+	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+	  PopColor();
+	  //			 glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-		  }			 
+	}			 
 		
-		if( showLaserBeams )
-		  {
-			 PushColor( 0, 0, 1, 0.5 );		
-			 glBegin( GL_LINES );
+      if( showLaserBeams )
+	{
+	  PushColor( 0, 0, 1, 0.5 );		
+	  glBegin( GL_LINES );
 			 
-			 for( unsigned int s=0; s<sample_count; s++ )
-				{
+	  for( unsigned int s=0; s<sample_count; s++ )
+	    {
 				  
-				  glVertex2f( 0,0 );
-				  double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
-				  glVertex2f( samples[s].range * cos(ray_angle), 
-								  samples[s].range * sin(ray_angle) );
+	      glVertex2f( 0,0 );
+	      double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+	      glVertex2f( samples[s].range * cos(ray_angle), 
+			  samples[s].range * sin(ray_angle) );
 				  
-				}
-			 glEnd();
-			 PopColor();
-		  }	
+	    }
+	  glEnd();
+	  PopColor();
+	}	
 
 		
       glDepthMask( GL_TRUE );

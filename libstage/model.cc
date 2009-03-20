@@ -1022,3 +1022,5 @@ void Model::RegisterOption( Option* opt )
   //if( world->IsGUI() )
   world->RegisterOption( opt );
 }
+
+

@@ -7,7 +7,7 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 50  # real-time interval between simulation updates in milliseconds 
+interval_real 0  # real-time interval between simulation updates in milliseconds 
 
 paused 0
 
@@ -44,5 +44,9 @@ pioneer2dx
   sicklaser() 
 
   ctrl "wander"
+
+  # report error-free position in world coordinates
+  localization "gps"
+  localization_origin [ 0 0 0 0 ]
 )
 
