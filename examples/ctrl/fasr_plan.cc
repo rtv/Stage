@@ -16,34 +16,11 @@ const bool verbose = false;
 const double cruisespeed = 0.4; 
 const double avoidspeed = 0.05; 
 const double avoidturn = 0.5;
-const double minfrontdistance = 0.7;  
-const double stopdist = 0.5;
+const double minfrontdistance = 0.4;  
+const double stopdist = 0.3;
 const int avoidduration = 10;
 const int workduration = 20;
 const int payload = 1;
-
-double have[4][4] = { 
-  //  { -120, -180, 180, 180 },
-  //{ -90, -120, 180, 90 },
-  { 90, 180, 180, 180 },
-  { 90, -90, 180, 90 },
-  { 90, 90, 180, 90 },
-  { 0, 45, 0, 0} 
-};
-
-double need[4][4] = {
-  { -120, -180, 180, 180 },
-  { -90, -120, 180, 90 },
-  { -90, -90, 180, 180 },
-  { -90, -180, -90, -90 }
-};
-
-double refuel[4][4] = {
-  {  0, 0, 45, 120 },
-  { 0,-90, -60, -160 },
-  { -90, -90, 180, 180 },
-  { -90, -180, -90, -90 }
-};
 
 typedef enum {
   MODE_WORK=0,
@@ -169,32 +146,63 @@ plan_t* SetupPlan( double robot_radius,
   img->release(); // frees all image resources
   
   plan_init(plan);
-  
   plan_compute_cspace(plan);
-  //print_cspace(plan);	 
-
-//   double x, y;
-//   plan_convert_waypoint( plan, plan->cells, &x, &y );
-//   printf( "cell 0 (%.2f, %.2f)\n", x, y );
-
-//   plan_convert_waypoint( plan, plan->cells + sy*sx -1, &x, &y );
-//   printf( "cell end (%.2f, %.2f)\n", x, y );
-
-//   plan_convert_waypoint( plan, plan->cells + sx, &x, &y );
-//   printf( "cell sx (%.2f, %.2f)\n", x, y );
-
-  //plan_convert_waypoint( plan, plan->cells, &x, &y );
-  //printf( "cell 0 (%.2f, %.2f)\n", x, y );
-
-  
-  //  getchar();
-
-
-  puts( "PLAN CREATED" );
 
   return plan;
 }
 
+
+class PointsVis : public CustomVisualizer 
+{
+public:
+  PointsVis( Model* mod ) : 
+	 mod( mod ),
+	 pts( NULL ),
+	 pt_count( 0 ),
+	 CustomVisualizer() 
+  { /* nothing to do */ };
+  
+  virtual void DataVisualize( Camera* cam )
+  {
+	 if( pt_count < 1 )
+		return;
+	 
+	 glPushMatrix();
+
+	 Gl::pose_inverse_shift( mod->GetGlobalPose() );
+	 
+	 glColor3f( 0,1,0 );
+
+	 glBegin( GL_POINTS );
+	 
+	 for( int i=0; i< pt_count; i++ )
+		glVertex2f( pts[2*i], pts[2*i+1] );
+	 
+	 glEnd();	 
+
+	 glPopMatrix();
+  }
+  
+  // rtv - surely a static string member would be easier here?
+  //must return a name for visualization (careful not to return stack-memory)	
+  
+  static const std::string n;
+  virtual const std::string& name() { return n; } ; 
+  
+  void SetPoints( double* pts, int pt_count )
+  {
+	 this->pts = pts;
+	 this->pt_count = pt_count;
+  }
+				
+private:
+  Model* mod;
+  double* pts;
+  int pt_count;
+};
+
+
+const std::string PointsVis::n = "PointsVisName";
 
 class Robot
 {
@@ -217,6 +225,14 @@ private:
 
   plan_t* plan;
   bool plan_done;
+
+  Model* goal;
+
+  GQueue* laser_history;
+  double* pts;
+  
+  PointsVis* vis;
+  bool havepath;
 
 public:
   Robot( ModelPosition* pos, 
@@ -241,7 +257,12 @@ public:
       mode(MODE_WORK),
       at_dest( false ),
       plan( NULL ),
-      plan_done( false )
+      plan_done( false ),
+		goal( NULL ),
+		laser_history( g_queue_new() ),
+		pts( NULL ),
+		vis( new PointsVis( laser ) ),
+		havepath( false )
   {
     // need at least these models to get any work done
     // (pos must be good, as we used it in the initialization list)
@@ -272,11 +293,13 @@ public:
     
     //planif( !plan )
       plan = SetupPlan( 0.3, // robot radius 
-			0.05, // safety dist
-			0.5, // max radius 
+			0.1, // safety dist
+			0.6, // max radius 
 			1.0, // dist penalty
 			"/Users/vaughan/PS/stage/trunk/worlds/bitmaps/cave_compact.png",
 			16.0, -8.0, -8.0, 250 );
+
+		laser->AddCustomVisualizer( vis );
   }
   
 
@@ -448,62 +471,61 @@ public:
 
   void Work()
   {
-    if( ! ObstacleAvoid() )
-      {
-	if( verbose ) puts( "Cruise" );
-		
-	ModelGripper::config_t gdata = gripper->GetConfig();
-					 
-	//avoidcount = 0;
-	pos->SetXSpeed( cruisespeed );	  
-		
-	Pose pose = pos->GetPose();
-		
-	int x = (pose.x + 8) / 4;
-	int y = (pose.y + 8) / 4;
-		
-	// oh what an awful bug - 5 hours to track this down. When using
-	// this controller in a world larger than 8*8 meters, a_goal can
-	// sometimes be NAN. Causing trouble WAY upstream. 
-	if( x > 3 ) x = 3;
-	if( y > 3 ) y = 3;
-	if( x < 0 ) x = 0;
-	if( y < 0 ) y = 0;
-		
-	double a_goal = 
-	  dtor( ( pos->GetFlagCount() || gdata.gripped ) ? have[y][x] : need[y][x] );
-		
-	// if we are low on juice - find the direction to the recharger instead
-	if( Hungry() )		 
-	  { 
-	    //puts( "hungry - using refuel map" );
-			 
-	    // use the refuel map
-	    a_goal = dtor( refuel[y][x] );
+	 Pose pose = pos->GetPose();
+	 plan_update_waypoints( plan, pose.x, pose.y );
 
-	    if( charger_ahoy ) // I see a charger while hungry!
-	      mode = MODE_DOCK;
-	  }
-	else
-	  {
-	    if( ! at_dest )
-	      {
-		if( gdata.beam[0] ) // inner break beam broken
-		  gripper->CommandClose();
-	      }
-	  }
+    if( ObstacleAvoid() )
+		{
+		  //pos->SetSpeed( 0,0,0 );
 		  
-	assert( ! isnan(a_goal ) );
-	assert( ! isnan(pose.a ) );
+		  Pose gpose = goal->GetGlobalPose();		  
+
+		  if( plan_do_global( plan, pose.x, pose.y, gpose.x, gpose.y ) < 0)
+			 {
+				havepath = false;
+			 }		 
+		}
+	 else
+      {
+		  if( verbose ) puts( "Cruise" );
 		  
-	double a_error = normalize( a_goal - pose.a );
-		
-	assert( ! isnan(a_error) );
-		
-	pos->SetTurnSpeed(  a_error );
+		  if( havepath )
+			 pos->SetXSpeed( cruisespeed );	  
+		  else
+			 pos->SetXSpeed( 0 );
+		  
+		  Pose pose = pos->GetPose();
+		  
+		  double gx,gy;
+		  plan_convert_waypoint( plan, plan->waypoints[1], &gx, &gy );
+		  
+		  double a_goal = atan2( gy-pose.y, gx-pose.x );
+		  
+		  // printf( "goal heading %.2f\n", a_goal );
+		  
+		  // if we are low on juice - find the direction to the recharger instead
+		  if( Hungry() )		 
+			 { 
+				//puts( "hungry - using refuel map" );
+				
+				// use the refuel map
+				//a_goal = dtor( refuel[y][x] );
+				
+				//if( charger_ahoy ) // I see a charger while hungry!
+				  //mode = MODE_DOCK;
+			 }
+		  
+		  double a_error = normalize( a_goal - pose.a );		  
+		  pos->SetTurnSpeed(  a_error );
       }  
   }
+  
 
+  typedef struct
+  {
+	 stg_laser_sample_t* scan;
+	 Pose pose;
+  } scan_record_t;
 
   // inspect the laser data and decide what to do
   static int LaserUpdate( ModelLaser* laser, Robot* robot )
@@ -514,73 +536,113 @@ public:
     
     uint32_t sample_count=0;
     stg_laser_sample_t* scan = laser->GetSamples( &sample_count );
-
+	 
     if( scan == NULL )
       return 0;
 
-    Pose gpose = laser->GetGlobalPose();
-
+	 scan_record_t* sr = new scan_record_t;
+	 sr->pose = laser->GetGlobalPose();
+	 
+	 // deep copy the samples
+	 sr->scan = new stg_laser_sample_t[sample_count];
+	 memcpy( sr->scan, scan, sample_count * sizeof(stg_laser_sample_t));
+	 
+	 // add the copy to the list
+	 g_queue_push_tail( robot->laser_history, sr );
+	 
+	 // take off the oldest scan and free it
+	 if( robot->laser_history->length > 10 )
+		{
+		  scan_record_t* old = (scan_record_t*)g_queue_pop_head( robot->laser_history );
+		  assert( old );
+		  delete[] old->scan;
+		  delete old;
+		}
+	 	 
     // fill the dynamic map
-    double pts[2*sample_count];
+    robot->pts = (double*)realloc( robot->pts, sizeof(double) * 2*sample_count*robot->laser_history->length );
     
     // project hit points from each scan
     // scan = this->scans;
     
     int scan_points_count = 0;
     
-    //for(int i=0;i<this->scans_count;i++,scan++)
-    // {
-
-    
     stg_laser_cfg_t cfg  = laser->GetConfig();
     
-    float b = -cfg.fov / 2.0; 
-    
-    for( unsigned int j=0; j<sample_count; j++ )
-      {
-	if( scan[j].range >= cfg.range_bounds.max )
-	  continue;
-	
-	double cs,sn;
-	cs = cos(gpose.a+b);
-	sn = sin(gpose.a+b);
-	
-	double lx,ly;
-	lx = gpose.x + scan[j].range*cs;
-	ly = gpose.y + scan[j].range*sn;
-	
-	//assert(this->scan_points_count*2 < this->scan_points_size);
-	pts[2*j  ] = lx;
-	pts[2*j+1] = ly;
-	scan_points_count++;
-      }
-    
-  //printf("setting %d hit points\n", this->scan_points_count);
-  plan_set_obstacles( robot->plan, pts, scan_points_count);
+	 for( int i = 0; i < robot->laser_history->length; i++ )
+		{
+		  scan_record_t* scr = (scan_record_t*)g_queue_peek_nth( robot->laser_history, i );
+		  stg_laser_sample_t* ascan = scr->scan;
+		  Pose apose = scr->pose;
+		  
+		  double amin = -cfg.fov / 2.0; 
+		  double aincr = cfg.fov / sample_count;
+		  
+		  for( unsigned int j=0; j<sample_count; j++ )
+			 {
+				if( ascan[j].range >= cfg.range_bounds.max )
+				  continue;
+				
+				double a = amin + j * aincr;
+				double cs,sn;
+				cs = cos(apose.a+a);
+				sn = sin(apose.a+a);
+				
+				double lx,ly;
+				lx = apose.x + ascan[j].range*cs;
+				ly = apose.y + ascan[j].range*sn;
+				
+				//assert(this->scan_points_count*2 < this->scan_points_size);
+				robot->pts[2*scan_points_count  ] = lx;
+				robot->pts[2*scan_points_count+1] = ly;
+				scan_points_count++;
+			 }
+		}
 
+	 //printf("setting %d hit points\n", scan_points_count);
+	 plan_set_obstacles( robot->plan, robot->pts, scan_points_count);
+	 
+	 robot->vis->SetPoints( robot->pts, scan_points_count );
+
+	 
+ // 	 Waypoint* wps = new Waypoint[scan_points_count];
+//      for( int j=0; j<scan_points_count; j++ )
+//        {
+//  		  wps[j].pose.x = pts[2*j];
+//  		  wps[j].pose.y = pts[2*j+1];
+//  		  wps[j].pose.z = 0;
+//  		  wps[j].pose.a = 0;
+//  		  wps[j].color = stg_color_pack( 0,1,0,0 );
+// 		 }
+	  
+// 	  Waypoint* oldp = ((ModelPosition*)robot->pos->GetWorld()->GetModel( "dummy" ))->SetWaypoints( wps, scan_points_count );
+// 	  if( oldp )
+// 		 delete[] oldp;
+	  
+//	 delete[] pts;
 
 
     switch( robot->mode )
       {
       case MODE_DOCK:
-	//puts( "DOCK" );
-	robot->Dock();
-	break;
-		
+		  //puts( "DOCK" );
+		  robot->Dock();
+		  break;
+		  
       case MODE_WORK:
-	//puts( "WORK" );
-	robot->Work();
-	break;
-
+		  //puts( "WORK" );
+		  robot->Work();
+		  break;
+		  
       case MODE_UNDOCK:
-	//puts( "UNDOCK" );
-	robot->UnDock();
-	break;
-		
+		  //puts( "UNDOCK" );
+		  robot->UnDock();
+		  break;
+		  
       default:
-	printf( "unrecognized mode %u\n", robot->mode );		
+		  printf( "unrecognized mode %u\n", robot->mode );		
       }
-  
+	 
     return 0;
   }
 
@@ -606,72 +668,122 @@ public:
     //printf( "planning from (%.2f %.2f) to (%.2f %.2f)\n",
     //    pose.x, pose.y, -4.0, 0.0 );
 
-    
-    if( 1 )//! robot->plan_done )
-      {     
-	if( plan_do_global( plan, pose.x, pose.y, -7,-7 ) < 0)
-	  {
-	    puts( "no global path" );	  
-	  }
-	else
-	  robot->plan_done = true;
-      }
-    
+	 Model* nextgoal = NULL;
+	 
+	 if( pos->GetFlagCount() )
+		nextgoal = robot->sink;
+	 else
+		nextgoal = robot->source;
+	 
+	 if( (robot->goal != nextgoal) )//|| !robot->plan_done)
+		{
+		  robot->goal = nextgoal;		  
+		  
+		  Pose gpose = robot->goal->GetGlobalPose();		  
+ 		  if( plan_do_global( plan, pose.x, pose.y, gpose.x, gpose.y ) < 0)
+ 			 {
+ 				puts( "no global path" );	  
+ 			 }
+		}
+		  
     //printf( "PATH_COUNT %d\n", plan->path_count );
+	 
+	 
+// 	 double vx, va;
+// 	 int rotatedir;
+	 
+// 	 plan_compute_diffdrive_cmds( plan,
+// 											&vx, &va, 
+// 											&rotatedir,
+// 											pose.x, pose.y, pose.a, // lx, ly, la
+//  											-7, -7, 0, // gx, gy, ga
+// 											0.1, 0.1, // goal_d, goal_a
+// 											1.0, 5.0, // maxd, dweight
+// 											0.0, 0.2, // tvmin, tvmax
+// 											0.0, 2, // avmin, avmax
+// 											0, 1 ); // amin, amax
 
+// // 	 double dx, da;
+// // 	 plan_get_carrot( plan, &dx, &da,
+// // 							pose.x, pose.y,
+// // 							2.0, 10 );
 
+// 	 pos->SetSpeed( vx, 0, va );
+
+	 
+// 	 if( plan_do_local( plan, pose.x, pose.y, 1.0 ) < 0 )
+// 		{
+// 		   puts( "no local path" );	  
+		  
+// 		  Pose gpose = robot->goal->GetGlobalPose();		  
+
+// 		  if( plan_do_global( plan, pose.x, pose.y, gpose.x, gpose.y ) < 0)
+// 			 {
+// 				robot->havepath = false;
+// 				puts( "no global path" );	  
+// 			 }
+// 		  else
+// 			 robot->havepath = true;
+// 		}
+// 	 else
+		robot->havepath = true;
+	 
     plan_update_waypoints( plan, pose.x, pose.y );
-
+	 
     //printf( "WAYPOINT_COUNT %d\n", plan->waypoint_count );
-
-
+	 	 
     Waypoint* wps = NULL;    
     stg_color_t col = pos->GetColor();
-
+	 
     if( plan->waypoint_count > 0 )
       {
-	wps = new Waypoint[plan->waypoint_count];
-	for( int i=0; i<plan->waypoint_count; i++ )
-	  {
-	    //plan_convert_waypoint( plan, plan->path[i], 
-	    //		   &wps[i].pose.x,
-	    //		   &wps[i].pose.y );
-	    
-	    plan_convert_waypoint( plan, plan->waypoints[i], 
-				   &wps[i].pose.x,
-				   &wps[i].pose.y );
-	    
-	    wps[i].color = col;
-	  }
+		  wps = new Waypoint[plan->waypoint_count];
+		  for( int i=0; i<plan->waypoint_count; i++ )
+			 {
+				//plan_convert_waypoint( plan, plan->path[i], 
+				//		   &wps[i].pose.x,
+				//		   &wps[i].pose.y );
+				
+				plan_convert_waypoint( plan, plan->waypoints[i], 
+											  &wps[i].pose.x,
+											  &wps[i].pose.y );
+				
+				wps[i].color = col;
+			 }
       }
-	
-    Waypoint* old = pos->SetWaypoints( wps, plan->waypoint_count );
-	
-    if( old )
-      delete[] old;
-      
+
+	 
+	 Waypoint* old = pos->SetWaypoints( wps, plan->waypoint_count );	
+	 if( old )
+		delete[] old;
+	 
+    
     //pose.z += 0.0001;
     //robot->pos->SetPose( pose );
   
+	 Pose psrc = robot->source->GetPose();
+	 
     if( pos->GetFlagCount() < payload && 
-	hypot( -7-pose.x, -7-pose.y ) < 2.0 )
+		  hypot(psrc.x-pose.x, psrc.y-pose.y ) < 2.0 )
       {
-	if( ++robot->work_get > workduration )
-	  {
-	    // protect source from concurrent access
-	    robot->source->Lock();
-
-	    // transfer a chunk from source to robot
-	    pos->PushFlag( robot->source->PopFlag() );
-	    robot->source->Unlock();
-
-	    robot->work_get = 0;	
-	  }	  
+		  if( ++robot->work_get > workduration )
+			 {
+				// protect source from concurrent access
+				robot->source->Lock();
+				
+				// transfer a chunk from source to robot
+				pos->PushFlag( robot->source->PopFlag() );
+				robot->source->Unlock();
+				
+				robot->work_get = 0;	
+			 }	  
       }
   
     robot->at_dest = false;
 
-    if( hypot( 7-pose.x, 7-pose.y ) < 1.0 )
+	 Pose psink = robot->sink->GetPose();
+
+    if( hypot( psink.x-pose.x, psink.y-pose.y ) < 1.0 )
       {
 	robot->at_dest = true;
 
@@ -769,6 +881,7 @@ extern "C" int Init( Model* mod )
     
   return 0; //ok
 }
+
 
 
 

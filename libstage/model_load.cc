@@ -246,12 +246,16 @@ void Model::Save( void )
 		this->pose.y,
 		this->pose.a );
 
+  // just in case
+  pose.a = normalize( pose.a );
+  geom.pose.a = normalize( geom.pose.a );
+  
   if( wf->PropertyExists( wf_entity, "pose" ) )
     {
       wf->WriteTupleLength( wf_entity, "pose", 0, this->pose.x);
       wf->WriteTupleLength( wf_entity, "pose", 1, this->pose.y);
       wf->WriteTupleLength( wf_entity, "pose", 2, this->pose.z);
-      wf->WriteTupleAngle( wf_entity, "pose", 3, this->pose.a);
+      wf->WriteTupleAngle( wf_entity, "pose", 3, this->pose.a );
     }
   
   if( wf->PropertyExists( wf_entity, "size" ) )

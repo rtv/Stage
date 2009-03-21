@@ -87,7 +87,7 @@ const stg_position_localization_mode_t POSITION_LOCALIZATION_DEFAULT = STG_POSIT
 const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIFFERENTIAL;
 
 Option ModelPosition::showCoords( "Position Coordinates", "show_coords", "", false, NULL );
-Option ModelPosition::showWaypoints( "Position Waypoints", "show_waypoints", "", false, NULL );
+Option ModelPosition::showWaypoints( "Position Waypoints", "show_waypoints", "", true, NULL );
 
 ModelPosition::ModelPosition( World* world, 
 			      Model* parent )
@@ -151,23 +151,23 @@ void ModelPosition::Load( void )
   if( wf->PropertyExists( wf_entity, "drive" ) )
     {
       const char* mode_str =  
-	wf->ReadString( wf_entity, "drive", NULL );
-
-      if( mode_str )
-	{
-	  if( strcmp( mode_str, "diff" ) == 0 )
-	    drive_mode = STG_POSITION_DRIVE_DIFFERENTIAL;
-	  else if( strcmp( mode_str, "omni" ) == 0 )
-	    drive_mode = STG_POSITION_DRIVE_OMNI;
-	  else if( strcmp( mode_str, "car" ) == 0 )
-	    drive_mode = STG_POSITION_DRIVE_CAR;
-	  else
-	    {
-	      PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\" or \"car\". Using \"diff\" as default.", mode_str );	      
-	    }
-	}
+		  wf->ReadString( wf_entity, "drive", NULL );
+		
+		if( mode_str )
+		  {
+			 if( strcmp( mode_str, "diff" ) == 0 )
+				drive_mode = STG_POSITION_DRIVE_DIFFERENTIAL;
+			 else if( strcmp( mode_str, "omni" ) == 0 )
+				drive_mode = STG_POSITION_DRIVE_OMNI;
+			 else if( strcmp( mode_str, "car" ) == 0 )
+				drive_mode = STG_POSITION_DRIVE_CAR;
+			 else
+				{
+				  PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\" or \"car\". Using \"diff\" as default.", mode_str );	      
+				}
+		  }
     }      
-
+  
   // load odometry if specified
   if( wf->PropertyExists( wf_entity, "odom" ) )
     {
@@ -183,12 +183,12 @@ void ModelPosition::Load( void )
   // specified
   est_origin = this->GetGlobalPose();
 
-  if( wf->PropertyExists( wf_entity, "localization_origin" ) )
-    {  
-      est_origin.x = wf->ReadTupleLength( wf_entity, "localization_origin", 0, est_origin.x );
-      est_origin.y = wf->ReadTupleLength( wf_entity, "localization_origin", 1, est_origin.y );
-      est_origin.z = wf->ReadTupleLength( wf_entity, "localization_origin", 2, est_origin.z );
-      est_origin.a = wf->ReadTupleAngle( wf_entity, "localization_origin", 3, est_origin.a );
+	if( wf->PropertyExists( wf_entity, "localization_origin" ) )
+	{  
+		est_origin.x = wf->ReadTupleLength( wf_entity, "localization_origin", 0, est_origin.x );
+		est_origin.y = wf->ReadTupleLength( wf_entity, "localization_origin", 1, est_origin.y );
+		est_origin.z = wf->ReadTupleLength( wf_entity, "localization_origin", 2, est_origin.z );
+		est_origin.a = wf->ReadTupleAngle( wf_entity, "localization_origin", 3, est_origin.a );
 
       // compute our localization pose based on the origin and true pose
       Pose gpose = this->GetGlobalPose();

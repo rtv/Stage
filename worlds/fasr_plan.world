@@ -72,7 +72,7 @@ define charging_bump model
 
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 180 range_max 5 laser_return 2 watts 30 fov 360)
+ sicklaser( samples 64 range_max 5 laser_return 2 watts 30 fov 180 size [0.3  0.3 0.2 ])
  ctrl "fasr_plan"
  joules 100000 
  joules_capacity 400000 
@@ -89,6 +89,8 @@ define autorob pioneer2dx
 
   localization "gps"
   localization_origin [ 0 0 0 0 ]
+
+  show_waypoints 1
 )
 
 define charge_station model
@@ -123,6 +125,8 @@ define puck model (
   gripper_return 1 
   obstacle_return 0 
 )
+
+position( pose [ 0 0 0 0 ] size [ 1 1 1 ] name "dummy" )
 
 #puck( pose [ 1.175 2.283 0 0 ] )
 #puck( pose [ 0.875 3.139 0 0 ] )
@@ -160,9 +164,9 @@ autorob( pose [5.418 7.478 0 -163.478] joules 300000 )
 autorob( pose [7.574 6.269 0 -111.715] joules 100000 )
 autorob( pose [5.615 6.185 0 107.666] joules 200000 )
 autorob( pose [7.028 6.502 0 -128.279] joules 400000 )
-autorob( pose [5.750 4.137 0 -97.047] joules 100000 )
-autorob( pose [4.909 6.097 0 -44.366] joules 200000 )
-autorob( pose [6.898 4.775 0 -117.576] joules 300000 )
+#autorob( pose [5.750 4.137 0 -97.047] joules 100000 )
+#autorob( pose [4.909 6.097 0 -44.366] joules 200000 )
+#autorob( pose [6.898 4.775 0 -117.576] joules 300000 )
 #autorob( pose [7.394 5.595 0 129.497] joules 400000 )
 #autorob( pose [6.468 6.708 0 170.743] joules 100000 )
 #autorob( pose [6.451 4.189 0 -61.453] joules 200000 )
