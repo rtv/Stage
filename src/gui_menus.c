@@ -193,7 +193,12 @@ void gui_action_about( GtkAction *action, gpointer user_data)
 
 
 // defined in gui_prefs.c
+#ifdef __SUNPRO_C
+#warning Very dirty hack yet it works fine
+#include "gui_prefs.c"
+#else
 GtkWidget* create_prefsdialog( void );
+#endif
 
 void gui_action_prefs( GtkAction *action, gpointer user_data)
 {

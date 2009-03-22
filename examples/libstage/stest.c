@@ -76,7 +76,7 @@ int main( int argc, char* argv[] )
       size_t laser_sample_count = 0;
 
       stg_laser_sample_t* laserdata = 
-	stg_model_get_data( laser, &laser_sample_count );
+	(stg_laser_sample_t*)(stg_model_get_data( laser, &laser_sample_count ));
       laser_sample_count /= sizeof(stg_laser_sample_t);
       
       // THIS IS ADAPTED FROM PLAYER'S RANDOMWALK C++ EXAMPLE

@@ -2,6 +2,7 @@
 #define _STAGE_PLAYER_DRIVER_H
 
 #include <unistd.h>
+#include <assert.h>
 #include <string.h>
 #include <math.h>
 
@@ -63,6 +64,8 @@ class Interface
             StgDriver* driver,
             ConfigFile* cf, 
             int section );
+	    
+  Interface() { assert(!"Interface(): This should never been used!"); }
   
   virtual ~Interface( void ){ /* TODO: clean up*/ };
 
@@ -101,6 +104,7 @@ class InterfaceModel : public Interface
 		  ConfigFile* cf, 
 		  int section, 
 		  stg_model_initializer_t init );
+  InterfaceModel() { assert(!"InterfaceModel(): This should never been used!"); }
   
   virtual ~InterfaceModel( void ){ /* TODO: clean up*/ };
 };
@@ -179,14 +183,14 @@ class InterfaceLaser : public InterfaceModel
 class InterfacePower : public InterfaceModel
 {
  public: 
-  InterfacePower( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  InterfacePower( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section ) { };
   virtual ~InterfacePower( void ){ /* TODO: clean up*/ };
   
   virtual int ProcessMessage( QueuePointer &resp_queue, 
 			      player_msghdr * hdr, 
-			      void * data );
+			      void * data ) { return -1; };
   
-  virtual void Publish( void );
+  virtual void Publish( void ) { };
 };
 
 class InterfaceFiducial : public InterfaceModel

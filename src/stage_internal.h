@@ -754,6 +754,11 @@ the worldfile c++ code */
 }
 #endif 
 
+// for compilers which dont define __FUNCTION__
+#ifndef __FUNCTION__
+#define __FUNCTION__ ""
+#endif
+
   // Error macros - output goes to stderr
 #define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
 #define PRINT_ERR1(m,a) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    

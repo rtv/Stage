@@ -1,0 +1,34 @@
+CC = suncc
+CXX = sunCC
+AR = ar
+RANLIB = ranlib
+CFLAGS = `pkg-config playercore gtk+-2.0 gdk-pixbuf-2.0 --cflags` -DHAVE_POLL -DHAVE_CONFIG_H -I.. -I../replace
+CXXFLAGS = `pkg-config playercore gtk+-2.0 --cflags` -DHAVE_POLL -DHAVE_CONFIG_H -I.. -I../replace
+LDFLAGS = -ljpeg -lm `pkg-config playercore gtk+-2.0 gdk-pixbuf-2.0 --libs`
+LIBSTAGE_OBJS = matrix.o model.o model_blobfinder.o model_bumper.o model_laser.o model_load.o model_position.o model_fiducial.o model_ranger.o model_gripper.o model_ptz.o model_wifi.o model_speech.o model_audio.o model_indicator.o dijkstra.o raytrace.o stage.o stagecpp.o typetable.o world.o worldfile.o rtk.o rtk_canvas.o rtk_fig.o rtk_region.o gui_menus.o gui.o
+LIBSTAGEPLUGIN_OBJS = p_bumper.o p_fiducial.o p_driver.o p_laser.o p_ptz.o p_wifi.o p_speech.o p_audio.o p_sonar.o p_graphics2d.o p_gripper.o p_localize.o p_position.o p_map.o p_simulation.o p_blobfinder.o p_dio.o stg_time.o
+
+stest: ../examples/libstage/stest.c libstageplugin.so
+	$(CXX) -o stest ../examples/libstage/stest.c -I. $(CFLAGS) -L. -lstageplugin $(LDFLAGS)
+
+libstageplugin.so: libstage.a $(LIBSTAGEPLUGIN_OBJS)
+	$(CXX) -G -o libstageplugin.so $(LIBSTAGEPLUGIN_OBJS) -L. -lstage $(LDFLAGS)
+
+libstage.a: $(LIBSTAGE_OBJS)
+	$(AR) r libstage.a $(LIBSTAGE_OBJS)
+	$(RANLIB) libstage.a
+
+%.o: %.c
+	$(CC) -c $< $(CFLAGS)
+
+%.o: %.cc
+	$(CXX) -c $< $(CXXFLAGS)
+
+clean:
+	rm -f *.so
+	rm -f *.o
+	rm -f *.a
+	rm -f core
+	rm -f .player
+	rm -f *.lreg
+	rm -f stest

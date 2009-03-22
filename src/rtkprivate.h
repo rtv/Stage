@@ -20,6 +20,11 @@
 #define FALSE 0
 #endif
 
+// for compilers which dont define __FUNCTION__
+#ifndef __FUNCTION__
+#define __FUNCTION__ ""
+#endif
+
 // Error macros
 #define PRINT_ERR(m)         printf("\rstg_rtk error : %s %s\n  "m"\n", \
                                     __FILE__, __FUNCTION__)

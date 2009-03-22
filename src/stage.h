@@ -871,14 +871,14 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
     STG_GRIPPER_PADDLE_OPEN = 0, // default state
     STG_GRIPPER_PADDLE_CLOSED, 
     STG_GRIPPER_PADDLE_OPENING,
-    STG_GRIPPER_PADDLE_CLOSING,
+    STG_GRIPPER_PADDLE_CLOSING
   } stg_gripper_paddle_state_t;
 
   typedef enum {
     STG_GRIPPER_LIFT_DOWN = 0, // default state
     STG_GRIPPER_LIFT_UP, 
     STG_GRIPPER_LIFT_UPPING, // verbed these to match the paddle state
-    STG_GRIPPER_LIFT_DOWNING, 
+    STG_GRIPPER_LIFT_DOWNING
   } stg_gripper_lift_state_t;
   
   typedef enum {
@@ -1181,8 +1181,9 @@ For help with libstage, please use the mailing list playerstage_users@lists.sour
    */
   typedef struct
   {
+    char _;
   } stg_indicator_config_t;
-  
+
   typedef struct {
 	/** the command */
     uint32_t count;
