@@ -8,9 +8,9 @@ SET( PLUGINS
 )
 
 # need plaer's wavefront planning library for this one
-if( PLAYER_FOUND )  
-  SET( PLUGINS ${PLUGINS} fasr_plan )
-endif( PLAYER_FOUND )
+#if( PLAYER_FOUND )  
+#  SET( PLUGINS ${PLUGINS} fasr_plan )
+#endif( PLAYER_FOUND )
 
 # create a library module for each plugin and link libstage to each
 

@@ -1720,7 +1720,8 @@ namespace Stg
 
 	 bool UpdateDue( void );
 	 void UpdateIfDue();
-  
+	 void CallUpdateCallbacks( void );
+
 	 void DrawBlocksTree();
 	 virtual void DrawBlocks();
 	 void DrawBoundingBox();
@@ -1938,7 +1939,10 @@ namespace Stg
 	 void SetFiducialKey(  int key );
 	
 	 stg_color_t GetColor(){ return color; }
-	
+	 
+	 /** return a model's unique process-wide identifier */
+	 uint32_t GetId() { return id; }
+	 
 	 //  stg_laser_return_t GetLaserReturn(){ return laser_return; }
 	
 	 /** Change a model's parent - experimental*/

@@ -1,6 +1,7 @@
 #include "stage.hh"
 using namespace Stg;
 
+
 void Model::SetGeom( Geom geom )
 {
   UnMapWithChildren();

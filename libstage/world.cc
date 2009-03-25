@@ -475,6 +475,9 @@ bool World::Update()
       while( update_jobs_pending )
 		  g_cond_wait( worker_threads_done, thread_mutex );
       g_mutex_unlock( thread_mutex );		 
+
+		// now call all the callbacks - ignores dueness, but not a big deal
+      LISTMETHOD( reentrant_update_list, Model*, CallUpdateCallbacks );
     }
   
   this->sim_time += this->interval_sim;

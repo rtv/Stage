@@ -665,7 +665,10 @@ void Model::Shutdown( void )
 void Model::UpdateIfDue( void )
 {
   if( UpdateDue() )
-    Update();
+	 {
+		Update();
+		CallUpdateCallbacks();
+	 }
 }
   
 bool Model::UpdateDue( void )
@@ -699,10 +702,15 @@ void Model::Update( void )
       */      
     }
   
+  //CallCallbacks( &hooks.update );
+  //last_update = world->sim_time;
+}
+
+void Model::CallUpdateCallbacks( void )
+{
   CallCallbacks( &hooks.update );
   last_update = world->sim_time;
 }
-
 
 stg_meters_t Model::ModelHeight()
 {	
