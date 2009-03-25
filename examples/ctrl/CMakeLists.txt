@@ -23,11 +23,11 @@ endforeach( PLUGIN )
 SET_TARGET_PROPERTIES( ${PLUGINS} PROPERTIES PREFIX "" )
 
 # need plaer's wavefront planning library for this one
-if( PLAYER_FOUND )  
-  link_directories( ${PLAYER_LIBRARY_DIRS} )
-  include_directories( ${PLAYER_INCLUDE_DIRS} )
-  target_link_libraries( fasr_plan "-lwavefront_standalone" )
-endif( PLAYER_FOUND )
+#if( PLAYER_FOUND )  
+#  link_directories( ${PLAYER_LIBRARY_DIRS} )
+#  include_directories( ${PLAYER_INCLUDE_DIRS} )
+#  target_link_libraries( fasr_plan "-lwavefront_standalone" )
+#endif( PLAYER_FOUND )
 
 
 # install in <prefix>/lib
