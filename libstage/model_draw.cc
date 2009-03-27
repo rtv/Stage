@@ -245,35 +245,36 @@ void Model::PopCoords()
   glPopMatrix();
 }
 
-void Model::AddCustomVisualizer( CustomVisualizer* custom_visual )
+void Model::AddVisualizer( Visualizer* custom_visual )
 {
 	if( !custom_visual )
 		return;
 
 	//Visualizations can only be added to stage when run in a GUI
-	if( world_gui == NULL ) {
-		printf( "Unable to add custom visualization - it must be run with a GUI world\n" );
-		return;
-	}
-
+	if( world_gui == NULL ) 
+	  {
+		 printf( "Unable to add custom visualization - it must be run with a GUI world\n" );
+		 return;
+	  }
+	
 	//save visual instance
 	custom_visual_list = g_list_append(custom_visual_list, custom_visual );
 
 	//register option for all instances which share the same name
 	Canvas* canvas = world_gui->GetCanvas();
-	std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( custom_visual->name() );
+	std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( custom_visual->GetMenuName() );
 	if( i == canvas->_custom_options.end() ) {
-		Option* op = new Option( custom_visual->name(), 
-										 custom_visual->name(), 
-										 "", 
-										 true, 
-										 world_gui );
-		canvas->_custom_options[ custom_visual->name() ] = op;
+	  Option* op = new Option( custom_visual->GetMenuName(), 
+										custom_visual->GetWorldfileName(), 
+										"", 
+										true, 
+										world_gui );
+		canvas->_custom_options[ custom_visual->GetMenuName() ] = op;
 		RegisterOption( op );
 	}
 }
 
-void Model::RemoveCustomVisualizer( CustomVisualizer* custom_visual )
+void Model::RemoveVisualizer( Visualizer* custom_visual )
 {
 	if( custom_visual )
 		custom_visual_list = g_list_remove(custom_visual_list, custom_visual );
@@ -537,20 +538,6 @@ void Model::DrawPicker( void )
 
 void Model::DataVisualize( Camera* cam )
 {  
-//   if( power_pack )
-// 	 {
-// 		// back into global coords to get rid of my rotation
-// 		glPushMatrix();  
-// 		gl_pose_inverse_shift( GetGlobalPose() );
-
-// 		// shift to the top left corner of the model (roughly)
-// 		glTranslatef( pose.x - geom.size.x/2.0, 
-// 						  pose.y + geom.size.y/2.0, 
-// 						  pose.z + geom.size.z );
-
-// 		power_pack->Visualize( cam );
-// 		glPopMatrix();
-// 	 }
 }
 
 void Model::DataVisualizeTree( Camera* cam )
@@ -558,13 +545,12 @@ void Model::DataVisualizeTree( Camera* cam )
   PushLocalCoords();
   DataVisualize( cam ); // virtual function overridden by most model types  
 
-  CustomVisualizer* vis;
+  Visualizer* vis;
   for( GList* item = custom_visual_list; item; item = item->next ) {
-    vis = static_cast< CustomVisualizer* >( item->data );
-	if( world_gui->GetCanvas()->_custom_options[ vis->name() ]->isEnabled() )
-		vis->DataVisualize( cam );
+    vis = static_cast<Visualizer* >( item->data );
+	if( world_gui->GetCanvas()->_custom_options[ vis->GetMenuName() ]->isEnabled() )
+	  vis->Visualize( this, cam );
   }
-
 
   // and draw the children
   LISTMETHODARG( children, Model*, DataVisualizeTree, cam );

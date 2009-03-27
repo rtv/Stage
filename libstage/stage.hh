@@ -1461,12 +1461,23 @@ namespace Stg
   };
 
   /** Abstract class for adding visualizations to models. DataVisualize must be overloaded, and is then called in the models local coord system */
-  class CustomVisualizer {
+  class Visualizer {
+  private:
+	 const std::string menu_name;
+	 const std::string worldfile_name;
+	 
   public:
-	 //TODO allow user to specify name - which will show up in display filter
-	 virtual ~CustomVisualizer( void ) { }
-	 virtual void DataVisualize( Camera* cam ) = 0;
-	 virtual const std::string& name() = 0; //must return a name for visualization (careful not to return stack-memory)
+	 Visualizer( const std::string& menu_name, 
+					 const std::string& worldfile_name ) 
+		: menu_name( menu_name ),
+		  worldfile_name( worldfile_name )
+	 { }
+	 
+	 virtual ~Visualizer( void ) { }
+	 virtual void Visualize( Model* mod, Camera* cam ) = 0;
+	 
+	 const std::string& GetMenuName() { return menu_name; }
+	 const std::string& GetWorldfileName() { return worldfile_name; }
   };
 
   
@@ -1759,6 +1770,13 @@ namespace Stg
 
 	 void DataVisualizeTree( Camera* cam );
 	
+	 void DrawFlagList();
+
+	 void DrawPose( Pose pose );
+
+	 void LoadDataBaseEntries( Worldfile* wf, int entity );
+	 
+  public:
 	 virtual void PushColor( stg_color_t col )
 	 { world->PushColor( col ); }
 	
@@ -1767,13 +1785,7 @@ namespace Stg
 	
 	 virtual void PopColor(){ world->PopColor(); }
 	
-	 void DrawFlagList();
 
-	 void DrawPose( Pose pose );
-
-	 void LoadDataBaseEntries( Worldfile* wf, int entity );
-	 
-  public:
 	 PowerPack* FindPowerPack();
 
 	 void RecordRenderPoint( GSList** head, GSList* link, 
@@ -1797,10 +1809,10 @@ namespace Stg
 	 void Say( const char* str );
 	 
 	 /** Attach a user supplied visualization to a model. */
-	 void AddCustomVisualizer( CustomVisualizer* custom_visual );
+	 void AddVisualizer( Visualizer* custom_visual );
 
 	 /** remove user supplied visualization to a model - supply the same ptr passed to AddCustomVisualizer */
-	 void RemoveCustomVisualizer( CustomVisualizer* custom_visual );
+	 void RemoveVisualizer( Visualizer* custom_visual );
 
 	 void BecomeParentOf( Model* child );
 
@@ -2182,10 +2194,28 @@ namespace Stg
 	 stg_usec_t interval;
   } stg_laser_cfg_t;
 
+
   /// %ModelLaser class
   class ModelLaser : public Model
   {
   private:
+	 
+	 class Vis : public Visualizer 
+	 {
+	 private:
+		static Option showArea;
+		static Option showStrikes;
+		static Option showFov;
+		static Option showBeams;
+		
+	 public:
+		Vis( World* world );
+		virtual ~Vis( void ){}
+		virtual void Visualize( Model* mod, Camera* cam );
+	 };
+	 
+	 Vis vis;
+
 	 /** OpenGL displaylist for laser data */
 	 int data_dl; 
 	 bool data_dirty;
@@ -2195,32 +2225,7 @@ namespace Stg
 	 stg_meters_t range_max;
 	 stg_radians_t fov;
 	 uint32_t resolution;
-  
-	 static Option showLaserData;
-	 static Option showLaserStrikes;
-	 static Option showLaserFov;
-	 static Option showLaserBeams;
-	 
-// 	 class LaserScanVis : public CustomVisualizer 
-// 	 {
-// 	 public:
-// 		LaserScanVis( ModelLaser* laser ) : 
-// 		  CustomVisualizer(), 
-// 		  laser( laser )
-// 		{ /* nothing to do */ };
-		
-// 		virtual void DataVisualize( Camera* cam );
-		
-// 		// rtv - surely a static string member would be easier here?
-// 		//must return a name for visualization (careful not to return stack-memory)	
-
-// 		virtual const std::string& name() { return "LaserScanVisName"; } ; 
-
-// 	 private:
-// 		ModelLaser* laser;
-// 	 };
-
-
+  	 
   public:
 	 static const char* typestr;
 	 // constructor
@@ -2235,7 +2240,6 @@ namespace Stg
 	 virtual void Update();
 	 virtual void Load();
 	 virtual void Print( char* prefix );
-	 virtual void DataVisualize( Camera* cam );
   
 	 uint32_t GetSampleCount(){ return sample_count; }
   
@@ -2256,14 +2260,6 @@ namespace Stg
   class ModelGripper : public Model
   {
   public:
-
-	//  class Viz : public CustomVisualizer
-// 	 {
-		
-
-// 	 };
-
-// 	 static Viz viz;
 
 	 enum paddle_state_t {
 		PADDLE_OPEN = 0, // default state
