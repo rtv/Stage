@@ -875,6 +875,8 @@ namespace Stg
     void LoadBlockGroup( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable );
 
+	 virtual Model* RecentlySelectedModel(){ return NULL; }
+
     SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
     SuperRegion* GetSuperRegion( const stg_point_int_t& coord );
     SuperRegion* GetSuperRegionCached( const stg_point_int_t& coord);
@@ -1369,13 +1371,14 @@ namespace Stg
     WorldGui(int W,int H,const char*L=0);
     ~WorldGui();
 	
-    virtual bool Update();
-	
+    virtual bool Update();	
     virtual void Load( const char* filename );
     virtual void UnLoad();
     virtual bool Save( const char* filename );
 	
     inline virtual bool IsGUI() { return true; }
+
+	 virtual Model* RecentlySelectedModel();
 
     void DrawBoundingBoxTree();
 	
@@ -1755,7 +1758,7 @@ namespace Stg
 	 static void DrawBlocks( gpointer dummykey, 
 									 Model* mod, 
 									 void* arg );
-  
+	 
 	 virtual void DrawPicker();
 	 virtual void DataVisualize( Camera* cam );
   

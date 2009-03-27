@@ -321,11 +321,7 @@ void Model::DrawStatus( Camera* cam )
       glRotatef( robotAngle - yaw, 0,0,1 );
       glRotatef( -pitch, 1,0,0 );
 
-
-		//if( ! parent )
-		// glRectf( 0,0,1,1 );
-		
-		//if( power_pack->stored > 0.0 )
+		if( power_pack )
 		  power_pack->Visualize( cam );
 
 		if( say_string )
@@ -339,8 +335,7 @@ void Model::DrawStatus( Camera* cam )
 			 glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
 			 
 			 if( valid ) 
-				{
-				  
+				{				  
 				  fl_font( FL_HELVETICA, 12 );
 				  float w = gl_width( this->say_string ); // scaled text width
 				  float h = gl_height(); // scaled text height

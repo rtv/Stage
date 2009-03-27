@@ -878,3 +878,6 @@ void WorldGui::PushColor( double r, double g, double b, double a )
 
 void WorldGui::PopColor()
 { canvas->PopColor(); }
+
+Model* WorldGui::RecentlySelectedModel()
+{ return canvas->last_selection; }
