@@ -1770,6 +1770,8 @@ namespace Stg
 	 void DrawFlagList();
 
 	 void DrawPose( Pose pose );
+
+	 void LoadDataBaseEntries( Worldfile* wf, int entity );
 	 
   public:
 	 PowerPack* FindPowerPack();

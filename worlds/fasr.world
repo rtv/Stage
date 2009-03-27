@@ -169,7 +169,7 @@ autorob( pose [4.161 5.544 0 -147.713] joules 400000 )
 autorob( pose [4.911 4.552 0 -125.236] joules 100000 )
 autorob( pose [3.985 6.474 0 -158.025] joules 200000 )
 autorob( pose [5.440 5.317 0 -26.545] joules 300000 )
-autorob( pose [6.362 5.632 0 163.239] joules 400000 )
+autorob( pose [6.362 5.632 0 163.239] joules 400000  db_count 3 db [ "foo<int>42" "bar<float>6.75" "bash<string>my old shoe" ] )
 
 #autorob( pose [7.559 4.764 0 -139.066] )
 #autorob( pose [5.471 7.446 0 77.301]  )

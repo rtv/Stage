@@ -198,17 +198,25 @@ void Model::Load()
 
   if( wf->PropertyExists( wf_entity, "map_resolution" ))
     this->SetMapResolution( wf->ReadFloat(wf_entity, "map_resolution", this->map_resolution ));
+  
+  
+  // populate the key-value database
+  if( wf->PropertyExists( wf_entity, "db_count" ) )
+		LoadDataBaseEntries( wf, wf_entity );
 
   if( wf->PropertyExists( wf_entity, "ctrl" ))
     {
       char* lib = (char*)wf->ReadString(wf_entity, "ctrl", NULL );
+
+      //char* argstr = (char*)wf->ReadString(wf_entity, "ctrl_argstr", NULL );
+
 		
       if( !lib )
-	printf( "Error - NULL library name specified for model %s\n", token );
+		  printf( "Error - NULL library name specified for model %s\n", token );
       else
-	LoadControllerModule( lib );
+		  LoadControllerModule( lib );
     }
-
+  
   
   if( wf->PropertyExists( wf_entity, "say" ))
     this->Say( wf->ReadString(wf_entity, "say", NULL ));
@@ -300,29 +308,77 @@ void Model::LoadControllerModule( char* lib )
 
       this->initfunc = (ctrlinit_t*)lt_dlsym( handle, "Init" );
       if( this->initfunc  == NULL )
-	{
-	  printf( "Libtool error: %s. Something is wrong with your plugin. Quitting\n",
-		  lt_dlerror() ); // report the error from libtool
-	  puts( "libtool error #1" );
-		fflush( stdout );
-	  exit(-1);
-	}
+		  {
+			 printf( "Libtool error: %s. Something is wrong with your plugin. Quitting\n",
+						lt_dlerror() ); // report the error from libtool
+			 puts( "libtool error #1" );
+			 fflush( stdout );
+			 exit(-1);
+		  }
     }
   else
     {
       printf( "Libtool error: %s. Can't open your plugin controller. Quitting\n",
-	      lt_dlerror() ); // report the error from libtool
-
+				  lt_dlerror() ); // report the error from libtool
+		
       PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", lib );
 		puts( "libtool error #2" );
 		fflush( stdout );
       exit(-1);
     }
-
+  
   fflush(stdout);
 
   // as we now have a controller, the world needs to call our update function
   StartUpdating();
 }
 
+ 
+ void Model::LoadDataBaseEntries( Worldfile* wf, int entity )
+ {
+	int entry_count = wf->ReadInt( entity, "db_count", 0 );
 
+	if( entry_count < 1 )
+	  return;
+
+	for( int e=0; e<entry_count; e++ )
+	  {
+		 const char* entry = wf->ReadTupleString( entity, "db", e, NULL );
+		 
+		 const size_t SZ = 64;
+		 char key[SZ], type[SZ], value[SZ];
+		 
+		 sscanf( entry, "%[^<]<%[^>]>%[^\"]", key, type, value );
+
+		 assert( key );
+		 assert( type );
+		 assert( value );
+
+		 printf( "\nkey: %s type: %s value: %s\n",
+					key, type, value );
+		 
+		 if( strcmp( type, "int" ) == 0 )
+			{
+			  int* i = new int( atoi(value) );
+			  SetProperty( strdup(key), (void*)i );
+			}
+		 else if( strcmp( type, "float" ) == 0 )			
+			{
+			  float* f = new float( strtod(value, NULL) );
+			  SetProperty( strdup(key), (void*)f );
+			}
+		 else if( strcmp( type, "string" ) == 0 )
+			SetProperty( strdup(key), (void*)strdup(value) );
+		 else
+			PRINT_ERR1( "unknown database entry type \"%s\"\n", type );
+		 
+// 		 int* i = (int*)GetProperty( key );
+// 		 float* f = (float*)GetProperty( key );
+// 		 char* c = (char*)GetProperty( key );
+
+// 		 printf( "property %s has int value %d\n", key, *i );
+// 		 printf( "property %s has float value %.2f\n", key, *f );
+// 		 printf( "property %s has char* value %s\n", key, c );
+	  }
+
+ }
