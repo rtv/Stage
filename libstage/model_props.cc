@@ -4,7 +4,7 @@ using namespace Stg;
 
 #define MATCH(A,B) (strcmp(A,B)== 0)
 
-void* Model::GetProperty( char* key )
+void* Model::GetProperty( const char* key )
 {
 	// see if the key has the predefined-property prefix
 	if( strncmp( key, MP_PREFIX, strlen(MP_PREFIX)) == 0 )

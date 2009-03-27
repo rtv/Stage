@@ -1623,6 +1623,7 @@ namespace Stg
 
 	 Visibility vis;
 
+	 stg_usec_t GetSimInterval(){ return world->interval_sim; }
 
 	 void Lock()
 	 { 
@@ -2044,8 +2045,48 @@ namespace Stg
 	
 	 /** named-property interface 
 	  */
-	 void* GetProperty( char* key );
-	
+	 void* GetProperty( const char* key );
+	 
+	 bool GetPropertyFloat( const char* key, float* f, float defaultval )
+	 { 
+		float* fp = (float*)GetProperty( key ); 
+		if( fp )
+		  {
+			 *f = *fp;
+			 return true;
+		  }
+		
+		*f = defaultval;
+		return false;
+	 }
+
+	 bool GetPropertyInt( const char* key, int* i, int defaultval )
+	 { 
+		int* ip = (int*)GetProperty( key ); 
+		if( ip )
+		  {
+			 *i = *ip;
+			 return true;
+		  }
+
+		*i = defaultval;
+		return false;
+	 }
+	 
+	 bool GetPropertyStr( const char* key, char** c, char* defaultval )
+	 {
+		char* cp = (char*)GetProperty( key ); 
+
+		if( cp )
+		  {
+			 *c = cp;
+			 return true;
+		  }
+		
+		*c = defaultval;
+		return false;
+	 }
+
 	 /** @brief Set a named property of a Stage model.
 	 
 		  Set a property of a Stage model. 
