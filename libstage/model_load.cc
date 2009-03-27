@@ -354,8 +354,8 @@ void Model::LoadControllerModule( char* lib )
 		 assert( type );
 		 assert( value );
 
-		 printf( "\nkey: %s type: %s value: %s\n",
-					key, type, value );
+		 //printf( "\nkey: %s type: %s value: %s\n",
+		 //		key, type, value );
 		 
 		 if( strcmp( type, "int" ) == 0 )
 			{
