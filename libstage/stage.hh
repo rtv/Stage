@@ -2035,60 +2035,17 @@ namespace Stg
 	 { RemoveCallback( &hooks.save, cb ); }
   
 	 void AddUpdateCallback( stg_model_callback_t cb, void* user )
-	 { 
-		AddCallback( &hooks.update, cb, user ); 
-		//Subscribe(); // if attaching a callback here, assume we want updates to happen
-	 }
+	 {	AddCallback( &hooks.update, cb, user ); }
 	
 	 void RemoveUpdateCallback( stg_model_callback_t cb )
-	 { 
-		RemoveCallback( &hooks.update, cb ); 
-		//Unsubscribe();
-	 }
+	 {	RemoveCallback( &hooks.update, cb ); }
 	
 	 /** named-property interface 
 	  */
-	 void* GetProperty( const char* key );
-	 
-	 bool GetPropertyFloat( const char* key, float* f, float defaultval )
-	 { 
-		float* fp = (float*)GetProperty( key ); 
-		if( fp )
-		  {
-			 *f = *fp;
-			 return true;
-		  }
-		
-		*f = defaultval;
-		return false;
-	 }
-
-	 bool GetPropertyInt( const char* key, int* i, int defaultval )
-	 { 
-		int* ip = (int*)GetProperty( key ); 
-		if( ip )
-		  {
-			 *i = *ip;
-			 return true;
-		  }
-
-		*i = defaultval;
-		return false;
-	 }
-	 
-	 bool GetPropertyStr( const char* key, char** c, char* defaultval )
-	 {
-		char* cp = (char*)GetProperty( key ); 
-
-		if( cp )
-		  {
-			 *c = cp;
-			 return true;
-		  }
-		
-		*c = defaultval;
-		return false;
-	 }
+	 void* GetProperty( const char* key );	 
+	 bool GetPropertyFloat( const char* key, float* f, float defaultval );	 
+	 bool GetPropertyInt( const char* key, int* i, int defaultval );	 
+	 bool GetPropertyStr( const char* key, char** c, char* defaultval );
 
 	 /** @brief Set a named property of a Stage model.
 	 
@@ -2120,8 +2077,12 @@ namespace Stg
 		  stg_model_set_<property>() function definition to see the type
 		  of data required for each property.
 	 */ 
-	 int SetProperty( char* key, void* data );
-	 void UnsetProperty( char* key );
+	 int SetProperty( const char* key, const void* data );
+	 void SetPropertyInt( const char* key, int i );
+	 void SetPropertyFloat( const char* key, float f );
+	 void SetPropertyStr( const char* key, const char* str );
+	 
+	 void UnsetProperty( const char* key );
 		
 	 virtual void Print( char* prefix );
 	 virtual const char* PrintWithPose();

@@ -26,8 +26,8 @@ void* Model::GetProperty( const char* key )
 	return g_datalist_get_data( &this->props, key );
 }
 
-int Model::SetProperty( char* key,
-		void* data )
+int Model::SetProperty( const char* key,
+								const void* data )
 {
 	// see if the key has the predefined-property prefix
 	if( strncmp( key, MP_PREFIX, strlen(MP_PREFIX)) == 0 )
@@ -80,15 +80,74 @@ int Model::SetProperty( char* key,
 	}
 
 	// otherwise it's an arbitary property and we store the pointer
-	g_datalist_set_data( &this->props, key, data );
+	g_datalist_set_data( &this->props, key, (void*)data );
 	return 0; // ok
 }
 
 
-void Model::UnsetProperty( char* key )
+void Model::UnsetProperty( const char* key )
 {
 	if( strncmp( key, MP_PREFIX, strlen(MP_PREFIX)) == 0 )
 		PRINT_WARN1( "Attempt to unset a model core property \"%s\" has no effect", key );
 	else
 		g_datalist_remove_data( &this->props, key );
 }
+
+
+bool Model::GetPropertyFloat( const char* key, float* f, float defaultval )
+{ 
+  float* fp = (float*)GetProperty( key ); 
+  if( fp )
+	 {
+		*f = *fp;
+		return true;
+	 }
+  
+  *f = defaultval;
+  return false;
+}
+
+bool Model::GetPropertyInt( const char* key, int* i, int defaultval )
+{ 
+  int* ip = (int*)GetProperty( key ); 
+  if( ip )
+	 {
+		*i = *ip;
+		return true;
+	 }
+  
+  *i = defaultval;
+  return false;
+}
+
+bool Model::GetPropertyStr( const char* key, char** c, char* defaultval )
+{
+  char* cp = (char*)GetProperty( key ); 
+  
+  if( cp )
+	 {
+		*c = cp;
+		return true;
+	 }
+  
+  *c = defaultval;
+  return false;
+}
+
+void Model::SetPropertyInt( const char* key, int i )
+{
+  int* ip = new int(i);
+  SetProperty( key, (void*)ip );
+}
+
+void Model::SetPropertyFloat( const char* key, float f )
+{
+  float* fp = new float(f);
+  SetProperty( key, (void*)fp );
+}
+
+void Model::SetPropertyStr( const char* key, const char* str )
+{
+  SetProperty( key, (void*)strdup(str) );
+}
+

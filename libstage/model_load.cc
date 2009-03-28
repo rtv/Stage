@@ -354,31 +354,14 @@ void Model::LoadControllerModule( char* lib )
 		 assert( type );
 		 assert( value );
 
-		 //printf( "\nkey: %s type: %s value: %s\n",
-		 //		key, type, value );
-		 
 		 if( strcmp( type, "int" ) == 0 )
-			{
-			  int* i = new int( atoi(value) );
-			  SetProperty( strdup(key), (void*)i );
-			}
+			SetPropertyInt( strdup(key), atoi(value) );
 		 else if( strcmp( type, "float" ) == 0 )			
-			{
-			  float* f = new float( strtod(value, NULL) );
-			  SetProperty( strdup(key), (void*)f );
-			}
+			SetPropertyFloat( strdup(key), strtod(value, NULL) );
 		 else if( strcmp( type, "string" ) == 0 )
-			SetProperty( strdup(key), (void*)strdup(value) );
+			SetPropertyStr( strdup(key), value );
 		 else
-			PRINT_ERR1( "unknown database entry type \"%s\"\n", type );
-		 
-// 		 int* i = (int*)GetProperty( key );
-// 		 float* f = (float*)GetProperty( key );
-// 		 char* c = (char*)GetProperty( key );
-
-// 		 printf( "property %s has int value %d\n", key, *i );
-// 		 printf( "property %s has float value %.2f\n", key, *f );
-// 		 printf( "property %s has char* value %s\n", key, c );
+			PRINT_ERR1( "unknown database entry type \"%s\"\n", type );		 
 	  }
 
  }
