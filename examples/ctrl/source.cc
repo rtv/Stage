@@ -21,14 +21,9 @@ extern "C" int Init( Model* mod )
 // inspect the laser data and decide what to do
 int Update( Model* mod, void* dummy )
 {
-  // protect access to this model from other controllers
-  mod->Lock();
-
   if( mod->GetWorld()->GetUpdateCount() % INTERVAL  == 0 )
     mod->PushFlag( new Flag( stg_color_pack( 1,1,0,0), flagsz ) );
 
-  mod->Unlock();
-  
   return 0; // run again
 }
 

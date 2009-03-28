@@ -7,10 +7,9 @@ int Update( Model* mod, void* dummy );
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
-{
-  
-  for( int i=0; i<5; i++ )
-    mod->PushFlag( new Flag( stg_color_pack( 1,1,0,0), 0.5 ) );
+{  
+  //for( int i=0; i<5; i++ )
+  // mod->PushFlag( new Flag( stg_color_pack( 1,1,0,0), 0.5 ) );
   
   mod->AddUpdateCallback( (stg_model_callback_t)Update, NULL );
 
@@ -20,14 +19,8 @@ extern "C" int Init( Model* mod )
 // inspect the laser data and decide what to do
 int Update( Model* mod, void* dummy )
 {
-  // protect access to this model from other controllers
-  mod->Lock();
-  
   if( mod->GetWorld()->GetUpdateCount() % INTERVAL  == 0 )
     mod->PopFlag();
-
-  mod->Unlock();
-  
   return 0; // run again
 }
 

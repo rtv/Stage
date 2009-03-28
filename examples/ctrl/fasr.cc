@@ -390,23 +390,18 @@ public:
   
 	 //pose.z += 0.0001;
 	 //robot->pos->SetPose( pose );
-  
+	 
 	 if( pos->GetFlagCount() < payload && 
 		  hypot( -7-pose.x, -7-pose.y ) < 2.0 )
 		{
 		  if( ++robot->work_get > workduration )
 			 {
-				// protect source from concurrent access
-				robot->source->Lock();
-
 				// transfer a chunk from source to robot
 				pos->PushFlag( robot->source->PopFlag() );
-				robot->source->Unlock();
-
 				robot->work_get = 0;	
-		 }	  
+			 }	  
 		}
-  
+	 
 	 robot->at_dest = false;
 
 	 if( hypot( 7-pose.x, 7-pose.y ) < 1.0 )
@@ -417,16 +412,10 @@ public:
 
 		  if( ++robot->work_put > workduration )
 			 {
-				// protect sink from concurrent access
-				robot->sink->Lock();
-
 				//puts( "dropping" );
 				// transfer a chunk between robot and goal
 				robot->sink->PushFlag( pos->PopFlag() );
-				robot->sink->Unlock();
-
 				robot->work_put = 0;
-
 			 }
 		}
   

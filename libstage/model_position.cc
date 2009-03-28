@@ -104,10 +104,9 @@ ModelPosition::ModelPosition( World* world,
   // no power consumed until we're subscribed
   this->SetWatts( 0 );
   
-  // sensible position defaults
-  Velocity vel;
-  memset( &vel, 0, sizeof(vel));
-  this->SetVelocity( vel );
+  // zero vel
+  Velocity v; // initially zero
+  this->SetVelocity( v );
   
   this->SetBlobReturn( TRUE );
   
@@ -655,7 +654,7 @@ void ModelPosition::DrawWaypoints()
   Gl::pose_inverse_shift( pose );
   Gl::pose_shift( est_origin );
   
-  glTranslatef( 0,0, 0.02 );
+  glTranslatef( 0,0,0.02 );
 
   // draw waypoints
   for( unsigned int i=0; i < waypoint_count; i++ )

@@ -72,10 +72,10 @@ void Stg::stg_print_err( const char* err )
 
 
 
-void Stg::stg_print_velocity( Velocity* vel )
+void Stg::stg_print_velocity( const Velocity& vel )
 {
 	printf( "velocity [x:%.3f y:%.3f a:%.3f]\n",
-			vel->x, vel->y, vel->a );
+			vel.x, vel.y, vel.a );
 }
 
 

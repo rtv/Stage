@@ -4,7 +4,7 @@ using namespace Stg;
 
 #define MATCH(A,B) (strcmp(A,B)== 0)
 
-void* Model::GetProperty( const char* key )
+void* Model::GetProperty( const char* key ) const
 {
 	// see if the key has the predefined-property prefix
 	if( strncmp( key, MP_PREFIX, strlen(MP_PREFIX)) == 0 )
@@ -23,7 +23,7 @@ void* Model::GetProperty( const char* key )
 	}
 
 	// otherwise it may be an arbitrary named property
-	return g_datalist_get_data( &this->props, key );
+	return g_datalist_get_data( (GData**)&this->props, key ); // cast to discard const
 }
 
 int Model::SetProperty( const char* key,
@@ -94,7 +94,7 @@ void Model::UnsetProperty( const char* key )
 }
 
 
-bool Model::GetPropertyFloat( const char* key, float* f, float defaultval )
+bool Model::GetPropertyFloat( const char* key, float* f, float defaultval ) const
 { 
   float* fp = (float*)GetProperty( key ); 
   if( fp )
@@ -107,7 +107,7 @@ bool Model::GetPropertyFloat( const char* key, float* f, float defaultval )
   return false;
 }
 
-bool Model::GetPropertyInt( const char* key, int* i, int defaultval )
+bool Model::GetPropertyInt( const char* key, int* i, int defaultval ) const
 { 
   int* ip = (int*)GetProperty( key ); 
   if( ip )
@@ -120,7 +120,7 @@ bool Model::GetPropertyInt( const char* key, int* i, int defaultval )
   return false;
 }
 
-bool Model::GetPropertyStr( const char* key, char** c, char* defaultval )
+bool Model::GetPropertyStr( const char* key, char** c, char* defaultval ) const
 {
   char* cp = (char*)GetProperty( key ); 
   

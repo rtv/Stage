@@ -153,10 +153,10 @@ namespace Stg
 
   /** convert an angle in radians to degrees. */
   inline double rtod( double r ){ return( r*180.0/M_PI ); }
-
+  
   /** convert an angle in degrees to radians. */
   inline double dtor( double d ){ return( d*M_PI/180.0 ); }
-
+  
   /** Normalize an angle to within +/_ M_PI. */
   inline double normalize( const double a )
   {
@@ -280,7 +280,8 @@ namespace Stg
 				  prefix, x,y,z,a );
     }
 
-	 bool IsZero(){ return( !(x || y || z || a )); };
+	 /* returns true iff all components of the velocity are zero. */
+	 bool IsZero() const { return( !(x || y || z || a )); };
 	 
 	 void Load( Worldfile* wf, int section, const char* keyword );
 	 void Save( Worldfile* wf, int section, const char* keyword );
@@ -565,7 +566,7 @@ namespace Stg
       database, a bright red color (0xF00) will be returned instead.
   */
   stg_color_t stg_lookup_color(const char *name);
-
+  
   /** returns the sum of [p1] + [p2], in [p1]'s coordinate system */
   inline Pose pose_sum( const Pose& p1, const Pose& p2 )
   {
@@ -590,11 +591,11 @@ namespace Stg
   /** Report an error, with a standard, friendly message header */
   void stg_print_err( const char* err );
   /** Print human-readable geometry on stdout */
-  void stg_print_geom( Geom* geom );
+  void stg_print_geom( const Geom& geom );
   /** Print human-readable pose on stdout */
-  void stg_print_pose( Pose* pose );
+  void stg_print_pose( const Pose& pose );
   /** Print human-readable velocity on stdout */
-  void stg_print_velocity( Velocity* vel );
+  void stg_print_velocity( const Velocity& vel );
 
   /** A model creator function. Each model type must define a function of this type. */
   typedef Model* (*stg_creator_t)( World*, Model* );
@@ -975,7 +976,7 @@ namespace Stg
 	 
     Worldfile* GetWorldFile(){ return wf; };
 	 
-    inline virtual bool IsGUI() { return false; }
+    virtual bool IsGUI() { return false; }
 	 
     virtual void Load( const char* worldfile_path );
     virtual void UnLoad();
@@ -989,7 +990,7 @@ namespace Stg
     void CancelQuit(){ quit = false; }
     void CancelQuitAll(){ quit_all = false; }
 	 
-	 void TryCharge( PowerPack* pp, Pose pose );
+	 void TryCharge( PowerPack* pp, const Pose& pose );
 
     /** Get the resolution in pixels-per-metre of the underlying
 		  discrete raytracing model */ 
@@ -1201,13 +1202,13 @@ namespace Stg
     virtual void Draw( void ) const = 0;
     virtual void SetProjection( void ) const = 0;
 
-    inline float yaw( void ) const { return _yaw; }
-    inline float pitch( void ) const { return _pitch; }
-	
-    inline float x( void ) const { return _x; }
-    inline float y( void ) const { return _y; }
-    inline float z( void ) const { return _z; }
-	
+	 float yaw( void ) const { return _yaw; }
+	 float pitch( void ) const { return _pitch; }
+	 
+	 float x( void ) const { return _x; }
+	 float y( void ) const { return _y; }
+	 float z( void ) const { return _z; }
+	 
     virtual void reset() = 0;
     virtual void Load( Worldfile* wf, int sec ) = 0;
 
@@ -1235,34 +1236,34 @@ namespace Stg
     void strafe( float amount );
     void forward( float amount );
 	
-    inline void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
-    inline void addPose( float x, float y, float z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
+     void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
+     void addPose( float x, float y, float z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
     void move( float x, float y, float z );
-    inline void setFov( float horiz_fov, float vert_fov ) { _horiz_fov = horiz_fov; _vert_fov = vert_fov; }
+     void setFov( float horiz_fov, float vert_fov ) { _horiz_fov = horiz_fov; _vert_fov = vert_fov; }
     ///update vertical fov based on window aspect and current horizontal fov
-    inline void setAspect( float aspect ) { 
+     void setAspect( float aspect ) { 
       //std::cout << "aspect: " << aspect << " vert: " << _vert_fov << " => " << aspect * _vert_fov << std::endl;
       //_vert_fov = aspect / _horiz_fov;
       _aspect = aspect;
     }
-    inline void setYaw( float yaw ) { _yaw = yaw; }
-    inline float horizFov( void ) const { return _horiz_fov; }
-    inline float vertFov( void ) const { return _vert_fov; }
-    inline void addYaw( float yaw ) { _yaw += yaw; }
-    inline void setPitch( float pitch ) { _pitch = pitch; }
-    inline void addPitch( float pitch ) { _pitch += pitch; if( _pitch < 0 ) _pitch = 0; else if( _pitch > 180 ) _pitch = 180; }
+     void setYaw( float yaw ) { _yaw = yaw; }
+     float horizFov( void ) const { return _horiz_fov; }
+     float vertFov( void ) const { return _vert_fov; }
+     void addYaw( float yaw ) { _yaw += yaw; }
+     void setPitch( float pitch ) { _pitch = pitch; }
+     void addPitch( float pitch ) { _pitch += pitch; if( _pitch < 0 ) _pitch = 0; else if( _pitch > 180 ) _pitch = 180; }
 	
-    inline float realDistance( float z_buf_val ) const {
+     float realDistance( float z_buf_val ) const {
       //formula found at http://www.cs.unc.edu/~hoff/techrep/openglz.html
       //Z = Zn*Zf / (Zf - z*(Zf-Zn))
       return _z_near * _z_far / ( _z_far - z_buf_val * ( _z_far - _z_near ) );
     }
-    inline void scroll( float dy ) { _z += dy; }
-    inline float nearClip( void ) const { return _z_near; }
-    inline float farClip( void ) const { return _z_far; }
-    inline void setClip( float near, float far ) { _z_far = far; _z_near = near; }
+     void scroll( float dy ) { _z += dy; }
+     float nearClip( void ) const { return _z_near; }
+     float farClip( void ) const { return _z_far; }
+     void setClip( float near, float far ) { _z_far = far; _z_near = near; }
 	
-    inline void reset() { setPitch( 70 ); setYaw( 0 ); }
+     void reset() { setPitch( 70 ); setYaw( 0 ); }
 	
     void Load( Worldfile* wf, int sec );
     void Save( Worldfile* wf, int sec );
@@ -1284,10 +1285,10 @@ namespace Stg
     virtual void SetProjection( void ) const;
   
     void move( float x, float y );
-    inline void setYaw( float yaw ) { _yaw = yaw;	}
-    inline void setPitch( float pitch ) { _pitch = pitch; }
-    inline void addYaw( float yaw ) { _yaw += yaw;	}
-    inline void addPitch( float pitch ) {
+     void setYaw( float yaw ) { _yaw = yaw;	}
+     void setPitch( float pitch ) { _pitch = pitch; }
+     void addYaw( float yaw ) { _yaw += yaw;	}
+     void addPitch( float pitch ) {
       _pitch += pitch;
       if( _pitch > 90 )
 		  _pitch = 90;
@@ -1295,13 +1296,13 @@ namespace Stg
 		  _pitch = 0;
     }
   
-    inline void setScale( float scale ) { _scale = scale; }
-    inline void setPose( float x, float y) { _x = x; _y = y; }
+     void setScale( float scale ) { _scale = scale; }
+     void setPose( float x, float y) { _x = x; _y = y; }
   
     void scale( float scale, float shift_x = 0, float h = 0, float shift_y = 0, float w = 0 );	
-    inline void reset( void ) { _pitch = _yaw = 0; }
+     void reset( void ) { _pitch = _yaw = 0; }
   
-    inline float scale() const { return _scale; }
+     float scale() const { return _scale; }
   
     void Load( Worldfile* wf, int sec );
     void Save( Worldfile* wf, int sec );
@@ -1376,7 +1377,7 @@ namespace Stg
     virtual void UnLoad();
     virtual bool Save( const char* filename );
 	
-    inline virtual bool IsGUI() { return true; }
+    virtual bool IsGUI() { return true; }
 
 	 virtual Model* RecentlySelectedModel();
 
@@ -1678,7 +1679,7 @@ namespace Stg
 	 void MapWithChildren();
 	 void UnMapWithChildren();
   
-	 int TreeToPtrArray( GPtrArray* array );
+	 int TreeToPtrArray( GPtrArray* array ) const;
   
 	 /** raytraces a single ray from the point and heading identified by
 		  pose, in local coords */
@@ -1731,7 +1732,7 @@ namespace Stg
 
 	 Model* ConditionalMove( Pose newpose );
 
-	 stg_meters_t ModelHeight();
+	 stg_meters_t ModelHeight() const;
 
 	 bool UpdateDue( void );
 	 void UpdateIfDue();
@@ -1790,7 +1791,7 @@ namespace Stg
 	 virtual void PopColor(){ world->PopColor(); }
 	
 
-	 PowerPack* FindPowerPack();
+	 PowerPack* FindPowerPack() const;
 
 	 void RecordRenderPoint( GSList** head, GSList* link, 
 									 unsigned int* c1, unsigned int* c2 );
@@ -1848,7 +1849,7 @@ namespace Stg
 	 void PushFlag( Flag* flag );
 	 Flag* PopFlag();
 	
-	 int GetFlagCount(){ return g_list_length( flag_list ); }
+	 int GetFlagCount() const { return g_list_length( flag_list ); }
   
 	 /** Add a pointer to a blinkenlight to the model. */
 	 void AddBlinkenlight( stg_blinkenlight_t* b )
@@ -1892,33 +1893,33 @@ namespace Stg
   
 	 /** Returns a pointer to this model's parent model, or NULL if this
 		  model has no parent */
-	 Model* Parent(){ return this->parent; }
+	 Model* Parent() const { return this->parent; }
 
-	 Model* GetModel( const char* name );
+	 Model* GetModel( const char* name ) const;
 	 //int GuiMask(){ return this->gui_mask; };
 
 	 /** Returns a pointer to the world that contains this model */
-	 World* GetWorld(){ return this->world; }
+	 World* GetWorld() const { return this->world; }
   
 	 /** return the root model of the tree containing this model */
 	 Model* Root(){ return(  parent ? parent->Root() : this ); }
   
-	 bool IsAntecedent( Model* testmod );
+	 bool IsAntecedent( const Model* testmod ) const;
 	
 	 /** returns true if model [testmod] is a descendent of this model */
-	 bool IsDescendent( Model* testmod );
+	 bool IsDescendent( const Model* testmod ) const;
 	
 	 /** returns true if model [testmod] is a descendent or antecedent of this model */
-	 bool IsRelated( Model* testmod );
+	 bool IsRelated( const Model* testmod ) const;
 
 	 /** get the pose of a model in the global CS */
-	 Pose GetGlobalPose();
+	 Pose GetGlobalPose() const;
 	
 	 /** get the velocity of a model in the global CS */
-	 Velocity GetGlobalVelocity();
+	 Velocity GetGlobalVelocity()  const;
 	
 	 /* set the velocity of a model in the global coordinate system */
-	 void SetGlobalVelocity(  Velocity gvel );
+	 void SetGlobalVelocity( const Velocity& gvel );
 	
 	 /** subscribe to a model's data */
 	 void Subscribe();
@@ -1927,54 +1928,55 @@ namespace Stg
 	 void Unsubscribe();
 	
 	 /** set the pose of model in global coordinates */
-	 void SetGlobalPose(  Pose gpose );
+	 void SetGlobalPose(  const Pose& gpose );
 	
 	 /** set a model's velocity in its parent's coordinate system */
-	 void SetVelocity(  Velocity vel );
+	 void SetVelocity(  const Velocity& vel );
 	
 	 /** set a model's pose in its parent's coordinate system */
-	 void SetPose(  Pose pose );
+	 void SetPose(  const Pose& pose );
 	
 	 /** add values to a model's pose in its parent's coordinate system */
-	 void AddToPose(  Pose pose );
+	 void AddToPose(  const Pose& pose );
 	
 	 /** add values to a model's pose in its parent's coordinate system */
 	 void AddToPose(  double dx, double dy, double dz, double da );
 	
 	 /** set a model's geometry (size and center offsets) */
-	 void SetGeom(  Geom src );
+	 void SetGeom(  const Geom& src );
   
 	 /** Set a model's fiducial return value. Values less than zero
 		  are not detected by the fiducial sensor. */
 	 void SetFiducialReturn(  int fid );
   
 	 /** Get a model's fiducial return value. */
-	 int GetFiducialReturn()
-	 { return vis.fiducial_return; }
+	 int GetFiducialReturn()  const { return vis.fiducial_return; }
   
 	 /** set a model's fiducial key: only fiducial finders with a
 		  matching key can detect this model as a fiducial. */
 	 void SetFiducialKey(  int key );
 	
-	 stg_color_t GetColor(){ return color; }
+	 stg_color_t GetColor() const { return color; }
 	 
 	 /** return a model's unique process-wide identifier */
-	 uint32_t GetId() { return id; }
+	 uint32_t GetId()  const { return id; }
 	 
 	 //  stg_laser_return_t GetLaserReturn(){ return laser_return; }
 	
 	 /** Change a model's parent - experimental*/
 	 int SetParent( Model* newparent);
 	
-	 /** Get a model's geometry - it's size and local pose (offset from
-		  origin in local coords) */
-	 Geom GetGeom(){ return geom; }
+	 /** Get (a copy of) the model's geometry - it's size and local
+		  pose (offset from origin in local coords). */
+	 Geom GetGeom() const { return geom; }
 	
-	 /** Get the pose of a model in its parent's coordinate system  */
-	 Pose GetPose(){ return pose; }
+	 /** Get (a copy of) the pose of a model in its parent's coordinate
+		  system.  */
+	 Pose GetPose() const { return pose; }
 	
-	 /** Get a model's velocity (in its local reference frame) */
-	 Velocity GetVelocity(){ return velocity; }
+	 /** Get (a copy of) the model's velocity in its local reference
+		  frame. */
+	 Velocity GetVelocity() const { return velocity; }
 	
 	 // guess what these do?
 	 void SetColor( stg_color_t col );
@@ -1993,7 +1995,7 @@ namespace Stg
 	 void SetWatts( stg_watts_t watts );
 	 void SetMapResolution( stg_meters_t res );
 	
-	 bool DataIsFresh(){ return this->data_fresh; }
+	 bool DataIsFresh() const { return this->data_fresh; }
 	
 	 /* attach callback functions to data members. The function gets
 		 called when the member is changed using SetX() accessor method */
@@ -2042,10 +2044,10 @@ namespace Stg
 	
 	 /** named-property interface 
 	  */
-	 void* GetProperty( const char* key );	 
-	 bool GetPropertyFloat( const char* key, float* f, float defaultval );	 
-	 bool GetPropertyInt( const char* key, int* i, int defaultval );	 
-	 bool GetPropertyStr( const char* key, char** c, char* defaultval );
+	 void* GetProperty( const char* key ) const;	 
+	 bool GetPropertyFloat( const char* key, float* f, float defaultval ) const;	 
+	 bool GetPropertyInt( const char* key, int* i, int defaultval ) const;	 
+	 bool GetPropertyStr( const char* key, char** c, char* defaultval ) const;
 
 	 /** @brief Set a named property of a Stage model.
 	 
@@ -2084,25 +2086,24 @@ namespace Stg
 	 
 	 void UnsetProperty( const char* key );
 		
-	 virtual void Print( char* prefix );
-	 virtual const char* PrintWithPose();
+	 virtual void Print( char* prefix ) const;
+	 virtual const char* PrintWithPose() const;
 	
-	 /** Convert a pose in the world coordinate system into a model's
-		  local coordinate system. Overwrites [pose] with the new
-		  coordinate. */
-	 Pose GlobalToLocal( const Pose pose );
-	
+	 /** Given a global pose, returns that pose in the model's local
+		  coordinate system. */
+	 Pose GlobalToLocal( const Pose& pose ) const;
+	 
 	 /** Return the global pose (i.e. pose in world coordinates) of a
 		  pose specified in the model's local coordinate system */
-	 Pose LocalToGlobal( const Pose pose );
+	 Pose LocalToGlobal( const Pose& pose ) const;
 	
 	 /** Return the 3d point in world coordinates of a 3d point
 		  specified in the model's local coordinate system */
-	 stg_point3_t LocalToGlobal( const stg_point3_t local );
+	 stg_point3_t LocalToGlobal( const stg_point3_t local ) const;
 	
 	 /** returns the first descendent of this model that is unsubscribed
 		  and has the type indicated by the string */
-	 Model* GetUnsubscribedModelOfType( const stg_model_type_t type );
+	 Model* GetUnsubscribedModelOfType( const stg_model_type_t type ) const;
 	
 	 /** returns the first descendent of this model that is unused
 		  and has the type indicated by the string. This model is tagged as used. */
@@ -2110,7 +2111,7 @@ namespace Stg
   
 	 /** Returns the value of the model's stall boolean, which is true
 		  iff the model has crashed into another model */
-	 bool Stalled(){ return this->stall; }
+	 bool Stalled() const { return this->stall; }
   };
 
 
@@ -2568,25 +2569,25 @@ namespace Stg
 	 virtual void DataVisualize( Camera* cam );
 	
 	 ///width of captured image
-	 inline int getWidth( void ) const { return _width; }
+	  int getWidth( void ) const { return _width; }
 	
 	 ///height of captured image
-	 inline int getHeight( void ) const { return _height; }
+	  int getHeight( void ) const { return _height; }
 	
 	 ///get reference to camera used
-	 inline const PerspectiveCamera& getCamera( void ) const { return _camera; }
+	  const PerspectiveCamera& getCamera( void ) const { return _camera; }
 	
 	 ///get a reference to camera depth buffer
-	 inline const GLfloat* FrameDepth() const { return _frame_data; }
+	  const GLfloat* FrameDepth() const { return _frame_data; }
 	
 	 ///get a reference to camera color image. 3 bytes (RGB) per pixel
-	 inline const GLubyte* FrameColor() const { return _frame_color_data; }
+	  const GLubyte* FrameColor() const { return _frame_color_data; }
 	
 	 ///change the pitch
-	 inline void setPitch( float pitch ) { _pitch_offset = pitch; _valid_vertexbuf_cache = false; }
+	  void setPitch( float pitch ) { _pitch_offset = pitch; _valid_vertexbuf_cache = false; }
 	
 	 ///change the yaw
-	 inline void setYaw( float yaw ) { _yaw_offset = yaw; _valid_vertexbuf_cache = false; }
+	  void setYaw( float yaw ) { _yaw_offset = yaw; _valid_vertexbuf_cache = false; }
   };
 
   // POSITION MODEL --------------------------------------------------------

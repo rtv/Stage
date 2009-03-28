@@ -2,11 +2,11 @@
 using namespace Stg;
 
 
-void Model::SetGeom( Geom geom )
+void Model::SetGeom( const Geom& g )
 {
   UnMapWithChildren();
   
-  this->geom = geom;
+  this->geom = g;
   
   blockgroup.CalcSize();
   
@@ -121,12 +121,12 @@ void Model::SetMapResolution(  stg_meters_t res )
 }
 
 // set the pose of model in global coordinates 
-void Model::SetGlobalPose( Pose gpose )
+void Model::SetGlobalPose( const Pose& gpose )
 {
   SetPose( parent ? parent->GlobalToLocal( gpose ) : gpose );
 }
 
-int Model::SetParent(  Model* newparent)
+int Model::SetParent( Model* newparent)
 {
   // remove the model from its old parent (if it has one)
   if( this->parent )
@@ -143,7 +143,7 @@ int Model::SetParent(  Model* newparent)
 }
 
 // get the model's velocity in the global frame
-Velocity Model::GetGlobalVelocity()
+Velocity Model::GetGlobalVelocity() const
 {
   Pose gpose = GetGlobalPose();
   
@@ -159,7 +159,7 @@ Velocity Model::GetGlobalVelocity()
 }
 
 // set the model's velocity in the global frame
-void Model::SetGlobalVelocity( Velocity gv )
+void Model::SetGlobalVelocity( const Velocity& gv )
 {
   Pose gpose = GetGlobalPose();
 
@@ -175,7 +175,7 @@ void Model::SetGlobalVelocity( Velocity gv )
 }
 
 // get the model's position in the global frame
-Pose Model::GetGlobalPose()
+Pose Model::GetGlobalPose() const
 { 
   // if I'm a top level model, my global pose is my local pose
   if( parent == NULL )
@@ -191,7 +191,7 @@ Pose Model::GetGlobalPose()
 }
 
 
-void Model::SetVelocity( Velocity vel )
+void Model::SetVelocity( const Velocity& vel )
 {
 //   assert( ! isnan(vel.x) );
 //   assert( ! isnan(vel.y) );
@@ -217,7 +217,7 @@ void Model::SetVelocity( Velocity vel )
 
 
 // set the model's pose in the local frame
-void Model::SetPose( Pose newpose )
+void Model::SetPose( const Pose& newpose )
 {
   // if the pose has changed, we need to do some work
   if( memcmp( &pose, &newpose, sizeof(Pose) ) != 0 )

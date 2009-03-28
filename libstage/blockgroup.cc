@@ -58,17 +58,12 @@ GList* BlockGroup::AppendTouchingModels( GList* list )
 
 Model* BlockGroup::TestCollision()
 {
-  //printf( "blockgroup %p test collision...\n", this );
-
   Model* hitmod = NULL;
   
   for( GList* it=blocks; it; it = it->next )
 	 if( (hitmod = ((Block*)it->data)->TestCollision()))
 		break; // bail on the earliest collision
-  
-  //printf( "blockgroup %p test collision done.\n", this );
-
-  return hitmod;
+  return hitmod; // NULL if no collision
 }
 
 
@@ -107,10 +102,6 @@ void BlockGroup::CalcSize()
   offset.x = minx + size.x/2.0;
   offset.y = miny + size.y/2.0;
   offset.z = 0; // todo?
-
-  // normalize blocks
-  //  for( GList* it = blocks; itl it=it->next )
-  //((Block*)it->data)->Normalize( size.x, size.y, size.z, offset.x
 }
 
 
@@ -282,11 +273,6 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
   
   if( rects && (rect_count > 0) )
 	 {
-		// shift the origin from bottom-left to center of the image
-		//double dx = width/2.0;
-		//double dy = height/2.0;
-		
-		//puts( "loading rects" );
 		for( unsigned int r=0; r<rect_count; r++ )
 		  {
 			 stg_point_t pts[4];
@@ -296,15 +282,6 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
 			 double w = rects[r].size.x;
 			 double h = rects[r].size.y;
 			 
-// 			 pts[0].x = x - dx;
-// 			 pts[0].y = y - dy;
-// 			 pts[1].x = x + w - dx;
-// 			 pts[1].y = y -dy;
-// 			 pts[2].x = x + w -dx;
-// 			 pts[2].y = y + h -dy;
-// 			 pts[3].x = x - dx;
-// 			 pts[3].y = y + h -dy;							 
-
 			 pts[0].x = x;
 			 pts[0].y = y;
 			 pts[1].x = x + w;
@@ -318,10 +295,10 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
 			 stg_color_t col = stg_color_pack( 1.0, 0,0,1.0 ); 
 			 
 			 AppendBlock( new Block( mod,
-												 pts,4,
-												 0,1,
-												 col,
-												 true ) );		 
+											 pts,4,
+											 0,1,
+											 col,
+											 true ) );		 
 		  }			 
 		free( rects );
 	 }  

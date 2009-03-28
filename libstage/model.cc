@@ -472,7 +472,7 @@ void list_gfree( GList* list )
 }
 
 // convert a global pose into the model's local coordinate system
-Pose Model::GlobalToLocal( Pose pose )
+Pose Model::GlobalToLocal( const Pose& pose ) const
 {
   // get model's global pose
   Pose org = GetGlobalPose();
@@ -500,7 +500,7 @@ void Model::Say( const char* str )
 }
 
 // returns true iff model [testmod] is an antecedent of this model
-bool Model::IsAntecedent( Model* testmod )
+bool Model::IsAntecedent( const Model* testmod ) const
 {
   if( parent == NULL )
     return false;
@@ -512,7 +512,7 @@ bool Model::IsAntecedent( Model* testmod )
 }
 
 // returns true iff model [testmod] is a descendent of this model
-bool Model::IsDescendent( Model* testmod )
+bool Model::IsDescendent( const Model* testmod ) const
 {
   if( this == testmod )
 	 return true;
@@ -528,14 +528,14 @@ bool Model::IsDescendent( Model* testmod )
   return false;
 }
 
-bool Model::IsRelated( Model* that )
+bool Model::IsRelated( const Model* that ) const
 {
   // is it me?
   if( this == that )
  	 return true;
   
   // wind up to top-level object
-  Model* candidate = this;
+  Model* candidate = (Model*)this;
   while( candidate->parent )
 	 candidate = candidate->parent;
   
@@ -543,9 +543,7 @@ bool Model::IsRelated( Model* that )
   return candidate->IsDescendent( that );
 }
 
-
-
-inline Pose Model::LocalToGlobal( Pose pose )
+inline Pose Model::LocalToGlobal( const Pose& pose ) const
 {  
   return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
 }
@@ -612,7 +610,7 @@ void pose_invert( Pose* pose )
   pose->a = pose->a;
 }
 
-void Model::Print( char* prefix )
+void Model::Print( char* prefix ) const
 {
   if( prefix )
     printf( "%s model ", prefix );
@@ -628,7 +626,7 @@ void Model::Print( char* prefix )
     ((Model*)it->data)->Print( prefix );
 }
 
-const char* Model::PrintWithPose()
+const char* Model::PrintWithPose() const
 {
   Pose gpose = GetGlobalPose();
 
@@ -678,6 +676,10 @@ bool Model::UpdateDue( void )
 
 void Model::Update( void )
 {
+  // NOTE - update callbacks are NOT called from here, as this method
+  //  may be called in multiple threads, and callbacks may not be
+  //  reentrant
+  
   //   printf( "[%llu] %s update (%d subs)\n", 
   // 			 this->world->sim_time, this->token, this->subs );
   
@@ -688,22 +690,8 @@ void Model::Update( void )
     {
       // consume  energy stored in the power pack
       stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
-      pp->Subtract( consumed );
-      
-      /*		
-	printf ( "%s current %.2f consumed %.6f ppack @ %p [ %.2f/%.2f (%.0f)\n",
-	token, 
-	watts, 
-	consumed, 
-	power_pack, 
-	power_pack->stored, 
-	power_pack->capacity, 
-	power_pack->stored / power_pack->capacity * 100.0 );
-      */      
+      pp->Subtract( consumed );      
     }
-  
-  //CallCallbacks( &hooks.update );
-  //last_update = world->sim_time;
 }
 
 void Model::CallUpdateCallbacks( void )
@@ -712,7 +700,7 @@ void Model::CallUpdateCallbacks( void )
   last_update = world->sim_time;
 }
 
-stg_meters_t Model::ModelHeight()
+stg_meters_t Model::ModelHeight() const
 {	
   stg_meters_t m_child = 0; //max size of any child
   for( GList* it=this->children; it; it=it->next )
@@ -729,24 +717,19 @@ stg_meters_t Model::ModelHeight()
 
 void Model::AddToPose( double dx, double dy, double dz, double da )
 {
-  if( dx || dy || dz || da )
-    {
-      Pose pose = GetPose();
-      pose.x += dx;
-      pose.y += dy;
-      pose.z += dz;
-      pose.a += da;
-
-      SetPose( pose );
-    }
+  Pose pose = this->GetPose();
+  pose.x += dx;
+  pose.y += dy;
+  pose.z += dz;
+  pose.a += da;
+  
+  this->SetPose( pose );
 }
 
-void Model::AddToPose( Pose pose )
+void Model::AddToPose( const Pose& pose )
 {
   this->AddToPose( pose.x, pose.y, pose.z, pose.a );
 }
-
-
 
 void Model::PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
 			      stg_meters_t ymin, stg_meters_t ymax )
@@ -836,10 +819,6 @@ void Model::CommitTestedPose()
   
 Model* Model::ConditionalMove( Pose newpose )
 { 
-//   if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
-//     printf( "ConditionalMove bad newpose %s [%.2f %.2f %.2f %.2f]\n",
-// 	    token, newpose.x, newpose.y, newpose.z, newpose.a );
-
   Pose startpose = pose;
   pose = newpose; // do the move provisionally - we might undo it below
    
@@ -853,10 +832,6 @@ Model* Model::ConditionalMove( Pose newpose )
       world->dirty = true; // need redraw
     }
   
-//   if( isnan( pose.x ) || isnan( pose.y )  || isnan( pose.z )  || isnan( pose.a ) )
-//     printf( "ConditionalMove bad pose %s [%.2f %.2f %.2f %.2f]\n",
-// 	    token, pose.x, pose.y, pose.z, pose.a );
-
   return hitmod;
 }
 
@@ -865,12 +840,6 @@ void Model::UpdatePose( void )
 {
   if( disabled )
     return;
-  
-//   if( velocity.IsZero() )	
-//     {
-//       PRINT_WARN1( "model %s has velocity zero but its pose is being updated", token ); 
-//       return;
-//     }
   
   // TODO - control this properly, and maybe do it faster
   //if( 0 )
@@ -897,9 +866,9 @@ void Model::UpdatePose( void )
   p.z = velocity.z * interval;
   p.a = velocity.a * interval;
     
-  if( isnan( p.x ) || isnan( p.y )  || isnan( p.z )  || isnan( p.a ) )
-    printf( "UpdatePose bad vel %s [%.2f %.2f %.2f %.2f]\n",
-	    token, p.x, p.y, p.z, p.a );
+  //if( isnan( p.x ) || isnan( p.y )  || isnan( p.z )  || isnan( p.a ) )
+  //printf( "UpdatePose bad vel %s [%.2f %.2f %.2f %.2f]\n",
+  //   token, p.x, p.y, p.z, p.a );
 
   // attempts to move to the new pose. If the move fails because we'd
   // hit another model, that model is returned.
@@ -909,9 +878,9 @@ void Model::UpdatePose( void )
 }
 
 
-int Model::TreeToPtrArray( GPtrArray* array )
+int Model::TreeToPtrArray( GPtrArray* array ) const
 {
-  g_ptr_array_add( array, this );
+  g_ptr_array_add( array, (void*)this );
 
   //printf( " added %s to array at %p\n", root->token, array );
 
@@ -923,10 +892,10 @@ int Model::TreeToPtrArray( GPtrArray* array )
   return added;
 }
 
-Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type )
+Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type ) const
 {  
   if( (this->type == type) && (this->subs == 0) )
-    return this;
+    return (Model*)this; // discard const
 
   // this model is no use. try children recursively
   for( GList* it = children; it; it=it->next )
@@ -959,7 +928,7 @@ Model* Model::GetUnusedModelOfType( stg_model_type_t type )
   if( (this->type == type) && (!this->used ) )
     {
       this->used = true;
-      return this;
+      return this; // discard const
     }
 
   // this model is no use. try children recursively
@@ -977,7 +946,7 @@ Model* Model::GetUnusedModelOfType( stg_model_type_t type )
 }
 
 
-Model* Model::GetModel( const char* modelname )
+Model* Model::GetModel( const char* modelname ) const
 {
   // construct the full model name and look it up
   char* buf = new char[TOKEN_MAX];
@@ -1012,7 +981,7 @@ void Model::BecomeParentOf( Model* child )
   world->dirty = true; 
 }
 
-PowerPack* Model::FindPowerPack()
+PowerPack* Model::FindPowerPack() const
 {
   if( power_pack )
 	 return power_pack;

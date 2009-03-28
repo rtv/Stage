@@ -34,25 +34,6 @@ void PowerPack::Visualize( Camera* cam )
   const double height = 0.5;
   const double width = 0.2;
   
-		// draw an electric zap
-// 		glPolygonMode( GL_FRONT, GL_LINE );
-// 		glBegin( GL_POLYGON );
-// 		glVertex2i( 0, 0 );
-// 		glVertex2i( 3, 2 );
-// 		glVertex2i( 1, 2 );
-// 		glEnd();
-
-// 		glVertex2i( 1, 3 );
-// 		glVertex2i( 0, 3 );
-// 		glVertex2i( 1, 5 );
-// 		glVertex2i( 3, 5 );
-// 		glVertex2i( 4, 3 );
-// 		glVertex2i( 5, 3 );
-// 		glVertex2i( 4, 4 );
-// 		glVertex2i( 5, 4);
-// 		glEnd();
-  //}
-  
   double percent = stored/capacity * 100.0;
   
   const double alpha = 0.5;
@@ -130,7 +111,7 @@ void PowerPack::Visualize( Camera* cam )
   //gl_draw_string( -0.2, 0, 0, buf );
   
   // ?
-  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  // glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
 
 
@@ -163,7 +144,6 @@ void PowerPack::TransferTo( PowerPack* dest, stg_joules_t amount )
   // we can't transfer more than he can take
   amount = MIN( amount, dest->RemainingCapacity() );
  
-
   //printf( "%s gives %.3f J to %s\n",
   //	 mod->Token(), amount, dest->mod->Token() );
   
