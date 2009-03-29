@@ -9,27 +9,43 @@
 #include "texture_manager.hh"
 using namespace Stg;
 
+
+stg_joules_t PowerPack::global_stored = 0.0;
+stg_joules_t PowerPack::global_input = 0.0;
+stg_joules_t PowerPack::global_capacity = 0.0;
+stg_joules_t PowerPack::global_dissipated = 0.0;
+stg_watts_t PowerPack::global_power = 0.0;
+stg_watts_t PowerPack::global_power_smoothed = 0.0;
+double PowerPack::global_smoothing_constant = 0.05;
+
+
 PowerPack::PowerPack( Model* mod ) :
-  mod( mod), stored( 0.0 ), capacity( 0.0 ), charging( false )
+  dissipation_vec(), 
+  event_vis( dissipation_vec ),
+  mod( mod), 
+  stored( 0.0 ), 
+  capacity( 0.0 ), 
+  charging( false )  
 { 
   // tell the world about this new pp
-  mod->world->AddPowerPack( this );
+  mod->world->AddPowerPack( this );  
+  //mod->AddVisualizer( &event_vis );
 };
 
 PowerPack::~PowerPack()
 {
-  // tell the world about this new pp
   mod->world->RemovePowerPack( this );
+  mod->RemoveVisualizer( &event_vis );
 }
 
 
-void PowerPack::Print( char* prefix )
+void PowerPack::Print( char* prefix ) const
 {
   printf( "%s stored %.2f/%.2f joules\n", prefix, stored, capacity );
 }
 
 /** OpenGL visualization of the powerpack state */
-void PowerPack::Visualize( Camera* cam )
+void PowerPack::Visualize( Camera* cam ) const
 {
   const double height = 0.5;
   const double width = 0.2;
@@ -107,6 +123,7 @@ void PowerPack::Visualize( Camera* cam )
 		glLineWidth( 1.0 );
 	 }
   
+    
   // draw the percentage
   //gl_draw_string( -0.2, 0, 0, buf );
   
@@ -115,20 +132,31 @@ void PowerPack::Visualize( Camera* cam )
 }
 
 
-stg_joules_t PowerPack::RemainingCapacity()
+stg_joules_t PowerPack::RemainingCapacity() const
 {
   return( capacity - stored );
 }
 
 void PowerPack::Add( stg_joules_t j )
 {
-  stored += MIN( RemainingCapacity(), j );
+  stg_joules_t amount = MIN( RemainingCapacity(), j );
+  stored += amount;
+  global_stored += amount;
+  
+  if( amount > 0 ) charging = true;
 }
 
 void PowerPack::Subtract( stg_joules_t j )
 {
-  if( stored >= 0.0 )
-	 stored -= MIN( stored, j );  
+  if( stored < 0 ) // infinte supply!
+	 {
+		global_input += j; // record energy entering the system
+		return;
+	 }
+  stg_joules_t amount = MIN( stored, j );  
+
+  stored -= amount;  
+  global_stored -= amount;
 }
 
 void PowerPack::TransferTo( PowerPack* dest, stg_joules_t amount )
@@ -151,4 +179,97 @@ void PowerPack::TransferTo( PowerPack* dest, stg_joules_t amount )
   dest->Add( amount );
 
   mod->NeedRedraw();
+}
+
+
+void PowerPack::SetCapacity( stg_joules_t cap )
+{
+  global_capacity -= capacity;
+  capacity = cap;
+  global_capacity += capacity;
+  
+  if( stored > cap )
+	 {
+		global_stored -= stored;
+		stored = cap;
+		global_stored += stored;		
+	 }
+}
+
+stg_joules_t PowerPack::GetCapacity() const
+{
+  return capacity;
+}
+
+stg_joules_t PowerPack::GetStored() const
+{
+  return stored;
+}
+
+void PowerPack::SetStored( stg_joules_t j ) 
+{
+  global_stored -= stored;
+  stored = j;
+  global_stored += stored;  
+}
+
+void PowerPack::Dissipate( stg_joules_t j )
+{
+  stg_joules_t amount = MIN( stored, j );
+  
+  Subtract( amount );
+  global_dissipated += amount;
+}
+
+void PowerPack::Dissipate( stg_joules_t j, const Pose& p )
+{
+  Dissipate( j );
+  DissEvent ev( j, p );
+  //dissipation_vec.push_back( ev );
+}
+
+
+//------------------------------------------------------------------------------
+// Dissipation Event class
+
+PowerPack::DissEvent::DissEvent( stg_joules_t j, const Pose& p )
+  : pose(p), joules(j)
+{
+  // empty
+}
+
+void PowerPack::DissEvent::Draw() const
+{
+  float scale = 0.1;
+  float delta = 0.05;
+  
+  glColor4f( 1,0,0, MIN( joules * scale, 1.0 ) );
+  glRectf( pose.x-delta, pose.y-delta, pose.x+delta, pose.z+delta );
+}
+
+//------------------------------------------------------------------------------
+// Dissipation Visualizer class
+
+PowerPack::DissipationVis::DissipationVis( std::vector<DissEvent>& events )
+  : Visualizer( "energy dissipation", "energy_dissipation" ),
+	 events( events )
+{ /* nothing to do */ }
+  
+
+void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
+{
+  // go into world coordinates
+  
+  glPushMatrix();
+   
+ 
+  // draw the dissipation events in world coordinates
+  for( std::vector<DissEvent>::const_iterator i = events.begin();
+		 i != events.end();
+		 i++ )
+	 {
+		i->Draw();
+	 }
+
+  glPopMatrix();
 }

@@ -690,7 +690,7 @@ void Model::Update( void )
     {
       // consume  energy stored in the power pack
       stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
-      pp->Subtract( consumed );      
+      pp->Dissipate( consumed, this->pose );      
     }
 }
 
@@ -776,7 +776,7 @@ void Model::UpdateCharge()
   
   // detach charger from all the packs charged last time
   for( GList* it = pps_charging; it; it = it->next )
-	 ((PowerPack*)it->data)->charging = false;
+	 ((PowerPack*)it->data)->ChargeStop();
   g_list_free( pps_charging );
   pps_charging = NULL;
   
@@ -798,10 +798,12 @@ void Model::UpdateCharge()
 			 
 			 //printf ( "moving %.2f joules from %s to %s\n",
 			 //		 amount, token, toucher->token );
-
+			 
+			 // set his charging flag
+			 hispp->ChargeStart();
+			 
  			 // move some joules from me to him
  			 mypp->TransferTo( hispp, amount );
- 			 hispp->charging = true;
 			 
 			 // remember who we are charging so we can detatch next time
 			 pps_charging = g_list_prepend( pps_charging, hispp );

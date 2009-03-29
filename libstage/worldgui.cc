@@ -390,9 +390,9 @@ void WorldGui::RemoveChild( Model* mod )
 std::string WorldGui::ClockString()
 {
   const uint32_t usec_per_hour   = 3600000000U;
-  const uint32_t usec_per_minute = 60000000;
-  const uint32_t usec_per_second = 1000000;
-  const uint32_t usec_per_msec = 1000;
+  const uint32_t usec_per_minute = 60000000U;
+  const uint32_t usec_per_second = 1000000U;
+  const uint32_t usec_per_msec = 1000U;
 	
   uint32_t hours   = sim_time / usec_per_hour;
   uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
@@ -415,11 +415,21 @@ std::string WorldGui::ClockString()
 	status_stream << std::setw( 2 ) << minutes << "m"
 	<< std::setw( 2 ) << seconds << "." << std::setprecision( 3 ) << std::setw( 3 ) << msec << "s ";
 	
-	char str[ 80 ];
-	snprintf( str, 80, "[%.2f]", localratio );
+	char str[ 256 ];
+	snprintf( str, 255, "[%.2f]", localratio );
+	status_stream << str;
+	
+	
+	snprintf( str, 255, "<stored: %.0f/%.0fKJ input: %.0fKJ dissipated: %.0fKJ power: %.2f(%.2f)W>",
+				 PowerPack::global_stored / 1e3,
+				 PowerPack::global_capacity /1e3,
+				 PowerPack::global_input / 1e3,
+				 PowerPack::global_dissipated / 1e3,
+				 PowerPack::global_power,
+				 PowerPack::global_power_smoothed );
+	
 	status_stream << str;
 
-	
 	if( paused == true )
 		status_stream << " [ PAUSED ]";
 	

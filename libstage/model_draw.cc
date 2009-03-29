@@ -312,8 +312,7 @@ void Model::DrawStatus( Camera* cam )
 
       float robotAngle = -rtod(gpz.a);
       glPushMatrix();
-		
-		
+				
       // move above the robot
       glTranslatef( 0, 0, 0.5 );		
 		

@@ -20,40 +20,30 @@ void Model::Load()
   assert( wf_entity );
   
   PRINT_DEBUG1( "Model \"%s\" loading...", token );
-
   
   if( wf->PropertyExists( wf_entity, "joules" ) )
 	 {
 		if( !power_pack )
 		  power_pack = new PowerPack( this );
 		
-		power_pack->stored = 
-		  wf->ReadFloat( wf_entity, "joules", power_pack->stored );	 
-
+		stg_joules_t j = wf->ReadFloat( wf_entity, "joules", 
+												  power_pack->GetStored() ) ;	 
+		
 		/* assume that the store is full, so the capacity is the same as
 			the charge */
-		power_pack->capacity = power_pack->stored;
+		power_pack->SetStored( j );
+		power_pack->SetCapacity( j );
 	 }
-
+  
   if( wf->PropertyExists( wf_entity, "joules_capacity" ) )
 	 {
 		if( !power_pack )
 		  power_pack = new PowerPack( this );
 		
-		power_pack->capacity = 
-		  wf->ReadFloat( wf_entity, "joules_capacity", power_pack->capacity ); 		
+		power_pack->SetCapacity( wf->ReadFloat( wf_entity, "joules_capacity",
+															 power_pack->GetCapacity() ) ); 		
 	 }
-  
-  /** if the capacity has been specified, limit the store to the capacity */
-  if( power_pack && (power_pack->stored > power_pack->capacity) )
-	 {			 
-		power_pack->stored = power_pack->capacity;
-		PRINT_WARN3( "model %s energy storage exceeds capacity (%.2f / %.2f joules). Limited stored energy to max capactity.",
-						 token, 
-						 power_pack->stored, 
-						 power_pack->capacity );
-	 }  
-  
+    
   // use my own pack or an ancestor's for the other energy properties
   PowerPack* pp = FindPowerPack();
   

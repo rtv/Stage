@@ -625,6 +625,26 @@ namespace Stg
     Flag( stg_color_t color, double size );
     Flag* Nibble( double portion );
   };
+  
+  /** Abstract class for adding visualizations to models. DataVisualize must be overloaded, and is then called in the models local coord system */
+  class Visualizer {
+  private:
+	 const std::string menu_name;
+	 const std::string worldfile_name;
+	 
+  public:
+	 Visualizer( const std::string& menu_name, 
+					 const std::string& worldfile_name ) 
+		: menu_name( menu_name ),
+		  worldfile_name( worldfile_name )
+	 { }
+	 
+	 virtual ~Visualizer( void ) { }
+	 virtual void Visualize( Model* mod, Camera* cam ) = 0;
+	 
+	 const std::string& GetMenuName() { return menu_name; }
+	 const std::string& GetWorldfileName() { return worldfile_name; }
+  };
 
 
   typedef int(*stg_model_callback_t)(Model* mod, void* user );
@@ -1403,35 +1423,79 @@ namespace Stg
     virtual void RemoveChild( Model* mod );	 
   };
 
-
   /** energy data packet */
   class PowerPack
   {
+	 friend class World;
+	 friend class WorldGui;
+	 
   public:
-	 PowerPack( Model* mod );
-	 ~PowerPack();
+	 class DissEvent 
+	 {
+	 public:
+		Pose pose;
+		stg_joules_t joules;
+		
+		DissEvent( stg_joules_t j, const Pose& p );		
+		~DissEvent() { /* empty */ };		
+		
+		void Draw() const;
+	 };
+	 
+	 
+
+  protected:
+
+	 std::vector<DissEvent> dissipation_vec;
+
+	 class DissipationVis : public Visualizer
+	 {
+	 private:
+		std::vector<DissEvent>& events;
+		
+	 public:
+		DissipationVis( std::vector<DissEvent>& events );
+		virtual ~DissipationVis(){ /* empty */ }
+		
+		virtual void Visualize( Model* mod, Camera* cam );		
+	 };
+	 
+	 DissipationVis event_vis;
 
 	 /** The model that owns this object */
 	 Model* mod;
     
 	 /** Energy stored */
 	 stg_joules_t stored;
-
+	 
 	 /** Energy capacity */
 	 stg_joules_t capacity;
-
+	 
 	 /** TRUE iff the device is receiving energy */
 	 bool charging;
+	 
 
+	 static stg_joules_t global_stored;
+	 static stg_joules_t global_capacity;
+	 static stg_joules_t global_dissipated;	 
+	 static stg_joules_t global_input;
+	 static stg_watts_t global_power;
+	 static stg_watts_t global_power_smoothed;
+	 static double global_smoothing_constant;
+
+  public:
+	 PowerPack( Model* mod );
+	 ~PowerPack();
+	 
 	 /** OpenGL visualization of the powerpack state */
-	 void Visualize( Camera* cam );
+	 void Visualize( Camera* cam ) const;
 
 	 /** Print human-readable status on stdout, prefixed with the
 		  argument string */
-	 void Print( char* prefix );
+	 void Print( char* prefix ) const;
 	 
 	 /** Returns the energy capacity minus the current amount stored */
-	 stg_joules_t RemainingCapacity();
+	 stg_joules_t RemainingCapacity() const;
 	 
 	 /** Add to the energy store */
 	 void Add( stg_joules_t j );
@@ -1442,11 +1506,28 @@ namespace Stg
 	 /** Transfer some stored energy to another power pack */
 	 void TransferTo( PowerPack* dest, stg_joules_t amount );	 
 
-	 double ProportionRemaining()
+	 double ProportionRemaining() const
 	 { return( stored / capacity ); }
 
-	 void Print( const char* prefix )
+	 void Print( const char* prefix ) const
 	 { printf( "%s PowerPack %.2f/%.2f J\n", prefix, stored, capacity ); }		
+	 
+	 stg_joules_t GetStored() const;
+	 stg_joules_t GetCapacity() const;
+	 void SetCapacity( stg_joules_t j );
+	 void SetStored( stg_joules_t j );	
+
+	 /** Returns true iff the device received energy at the last timestep */
+	 bool GetCharging() const { return charging; }
+	 
+	 void ChargeStart(){ charging = true; }
+	 void ChargeStop(){ charging = false; }
+
+	 /** Lose energy as work or heat */
+	 void Dissipate( stg_joules_t j );
+	 
+	 /** Lose energy as work or heat, and record the event */
+	 void Dissipate( stg_joules_t j, const Pose& p );
 };
 
   class Visibility
@@ -1464,25 +1545,6 @@ namespace Stg
 	 void Load( Worldfile* wf, int wf_entity );
   };
 
-  /** Abstract class for adding visualizations to models. DataVisualize must be overloaded, and is then called in the models local coord system */
-  class Visualizer {
-  private:
-	 const std::string menu_name;
-	 const std::string worldfile_name;
-	 
-  public:
-	 Visualizer( const std::string& menu_name, 
-					 const std::string& worldfile_name ) 
-		: menu_name( menu_name ),
-		  worldfile_name( worldfile_name )
-	 { }
-	 
-	 virtual ~Visualizer( void ) { }
-	 virtual void Visualize( Model* mod, Camera* cam ) = 0;
-	 
-	 const std::string& GetMenuName() { return menu_name; }
-	 const std::string& GetWorldfileName() { return worldfile_name; }
-  };
 
   
   /* Hooks for attaching special callback functions (not used as
