@@ -11,21 +11,13 @@ interval_real 100 # real-time milliseconds per update step
 # defines Pioneer-like robots
 include "pioneer.inc"
 
-
-
 include "roomba.inc"
-
-
 
 # defines 'map' object used for floorplans
 include "map.inc"
 
-
-
 # defines the laser model `sick_laser' configured like a Sick LMS-200
 include "sick.inc"
-
-
 
 size [40 20 ]
 
@@ -35,15 +27,14 @@ gui_menu_interval 20
 
 window( 
   size [ 755.000 684.000 ] 
-  center [-4.850 2.219] 
-  scale 0.012 
+  center [-7.707 2.553] 
+  scale 0.009 
 )
 
 map( 
   bitmap "bitmaps/hospital_section.png" 
   map_resolution 0.02
-  #size [40 18] 
-  size [24 10.8]
+  size [40 18] 
   name "hospital"
 )
 
@@ -99,9 +90,9 @@ define trickedoutpioneer pioneer2dx
 trickedoutpioneer
 (
   name "robot1"
-  pose [-7.945 1.849 -1077.732]
+  pose [-10.071 3.186 -722.333]
 
-  #gripper( pose [0.200 0.000 0.000] color "gray" )
+  gripper( pose [0.200 0.000 0.000] color "gray" )
   speech()
 )
 
@@ -109,21 +100,21 @@ trickedoutpioneer
 (
   color "red"
   name "p1"
-  pose [-3.521 1.441 -162.098]
+  pose [-5.645 3.034 -162.098]
 )
 
 trickedoutpioneer
 (
   color "blue"
   name "p2"
-  pose [-4.389 2.220 -194.220]
+  pose [-6.009 2.481 -194.220]
 )
 
 trickedoutpioneer
 (
   color "green"
   name "p3"
-  pose [-5.313 1.607 -199.781]
+  pose [-6.492 2.156 -199.781]
 )
 
 trickedoutpioneer
@@ -137,21 +128,21 @@ trickedoutpioneer
 (
   color "yellow"
   name "p5"
-  pose [-1.611 1.519 -110.414]
+  pose [-6.759 3.634 -110.414]
 )
 
 trickedoutpioneer
 (
   color "magenta"
   name "p6"
-  pose [-2.407 2.180 -135.449]
+  pose [-6.232 3.440 -135.449]
 )
 
 # a silly object to look at
 position( 	
   name "invader" 
   size [0.3 0.3]
-  pose [-7.006 1.457 0.000] 
+  pose [-6.754 0.791 0.000] 
   color "red"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/space_invader.png"
@@ -166,7 +157,7 @@ position(
 position( 	
   name "ghost" 
   size [0.3 0.3 ]
-  pose [-6.267 2.198 0.000] 
+  pose [-6.060 0.794 0.000] 
   color "blue"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/ghost.png"
@@ -182,5 +173,5 @@ position(
 
 roomba(
   name "roomba1"
-  pose [-9.000 0.500 0.000]
+  pose [-9 0.5 0]
 )
