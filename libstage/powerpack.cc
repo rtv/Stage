@@ -124,10 +124,7 @@ void PowerPack::Visualize( Camera* cam ) const
   
     
   // draw the percentage
-  //gl_draw_string( -0.2, 0, 0, buf );
-  
-  // ?
-  // glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  //gl_draw_string( -0.2, 0, 0, buf );  
 }
 
 
@@ -237,6 +234,7 @@ void PowerPack::Dissipate( stg_joules_t j, const Pose& p )
 //------------------------------------------------------------------------------
 // Dissipation Visualizer class
 
+stg_joules_t PowerPack::DissipationVis::global_peak_value = 0.0;
 
 PowerPack::DissipationVis::DissipationVis( stg_meters_t width, 
 														 stg_meters_t height,
@@ -274,7 +272,7 @@ void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
 		  stg_joules_t j = cells[ y*columns + x ];
 		  if( j > 0 )
 			 {
-				glColor4f( 1.0, 0, 0, j/peak_value );
+				glColor4f( 1.0, 0, 0, j/global_peak_value );
 				glRectf( x,y,x+1,y+1 );
 			 }
 		}
@@ -300,5 +298,10 @@ void PowerPack::DissipationVis::Accumulate( stg_meters_t x,
   
   (*j) += amount;
   if( (*j) > peak_value )
-	 peak_value  = (*j);
+	 {
+		peak_value  = (*j);
+		
+		if( peak_value > global_peak_value )
+		  global_peak_value  = peak_value;
+	 }
 }

@@ -147,7 +147,6 @@ void Canvas::InitGl()
   
   GLuint mains_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
   TextureManager::getInstance()._mains_texture_id = mains_id;
-
   
   //TODO merge this code into the textureManager?
   int i, j;
@@ -176,6 +175,8 @@ void Canvas::InitGl()
 					0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
   
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+  fl_font( FL_HELVETICA, 12 );
 
   init_done = true; 
 }
@@ -940,7 +941,9 @@ void Canvas::renderFrame()
     } 
 	
   if( showClock )
-    {
+    {		
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		
       //use orthogonal projeciton without any zoom
       glMatrixMode (GL_PROJECTION);
       glPushMatrix(); //save old projection
@@ -958,22 +961,31 @@ void Canvas::renderFrame()
 		if( showFollow == true && last_selection )
 		  clockstr.append( " [ FOLLOW MODE ]" );
 		
-		fl_font( FL_HELVETICA, 12 );
-		float txtWidth = gl_width( clockstr.c_str() );
+		float txtWidth = gl_width( clockstr.c_str());
+		if( txtWidth < 200 ) txtWidth = 200;
 		int txtHeight = gl_height();
 		
-		int width, height;
-		width = int( txtWidth / 10 ) * 10;
-		height = ( txtHeight / 5 + 1 ) * 5;
-		float margin = ( height - txtHeight ) * 0.75;
+		const int margin = 5;
+		int width, height;		
+		width = txtWidth + 2 * margin;
+		height = txtHeight + 2 * margin; 
 		
+		// TIME BOX
 		colorstack.Push( 0.8,0.8,1.0 ); // pale blue
 		glRectf( 0, 0, width, height );
-		colorstack.Pop();
-		
-      colorstack.Push( 0,0,0 ); // black
+		colorstack.Push( 0,0,0 ); // black
 		Gl::draw_string( margin, margin, 0, clockstr.c_str() );
+
+		// ENERGY BOX
+		colorstack.Push( 0.8,1.0,0.8,0.85 ); // pale green
+		glRectf( 0, height, width, 90 );
+      colorstack.Push( 0,0,0 ); // black
+		Gl::draw_string_multiline( margin, height + margin, txtWidth, 50, world->EnergyString().c_str(), (Fl_Align)( FL_ALIGN_LEFT | FL_ALIGN_BOTTOM) );
+
       colorstack.Pop();
+		colorstack.Pop();
+      colorstack.Pop();
+		colorstack.Pop();
 
       glEnable( GL_DEPTH_TEST );
       glPopMatrix();

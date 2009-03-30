@@ -325,6 +325,8 @@ void Model::DrawStatus( Camera* cam )
 
 		if( say_string )
 		  {
+			 glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
 			 //get raster positition, add gl_width, then project back to world coords
 			 glRasterPos3f( 0, 0, 0 );
 			 GLfloat pos[ 4 ];
@@ -335,7 +337,7 @@ void Model::DrawStatus( Camera* cam )
 			 
 			 if( valid ) 
 				{				  
-				  fl_font( FL_HELVETICA, 12 );
+				  //fl_font( FL_HELVETICA, 12 );
 				  float w = gl_width( this->say_string ); // scaled text width
 				  float h = gl_height(); // scaled text height
 				  
@@ -379,7 +381,7 @@ void Model::DrawStatus( Camera* cam )
 				  
 				  PushColor( BUBBLE_TEXT );
 				  // draw text inside the bubble
-				  Gl::draw_string( 2.5*m, 2.5*m, 0, this->say_string );
+				  Gl::draw_string( m, 2.5*m, 0, this->say_string );
 				  PopColor();			
 				}
 		  }

@@ -468,8 +468,11 @@ namespace Stg
 	 void draw_grid( stg_bounds3d_t vol );
 	 /** Render a string at [x,y,z] in the current color */
 	 void draw_string( float x, float y, float z, const char *string);
+	 void draw_string_multiline( float x, float y, float w, float h, 
+										  const char *string, Fl_Align align );
 	 void draw_speech_bubble( float x, float y, float z, const char* str );
 	 void draw_octagon( float w, float h, float m );
+	 void draw_octagon( float x, float y, float w, float h, float m );
 	 void draw_vector( double x, double y, double z );
 	 void draw_origin( double len );
 	 /** Draws a rectangle with center at x,y, with sides of length dx,dy */
@@ -1414,6 +1417,9 @@ namespace Stg
     /** Get human readable string that describes the current simulation
 		  time. */
     std::string ClockString( void );
+
+    /** Get human readable string that describes the current global energy state. */
+    std::string EnergyString( void );
 	
     /** Set the minimum real time interval between world updates, in
 		  microeconds. */
@@ -1437,8 +1443,10 @@ namespace Stg
 		unsigned int columns, rows;
 		stg_meters_t width, height;
 		stg_joules_t* cells;
-		double peak_value;
+		stg_joules_t peak_value;
 		double cellsize;
+		
+		static stg_joules_t global_peak_value; 
 
 	 public:
 		DissipationVis( stg_meters_t width, 

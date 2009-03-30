@@ -24,9 +24,16 @@ void Stg::Gl::pose_inverse_shift( const Pose &pose )
 
 void Stg::Gl::draw_string( float x, float y, float z, const char *str ) 
 {  
-	glRasterPos3f( x, y, z );
+  glRasterPos3f( x, y, z );
+  //printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str ); 
+  gl_draw( str );
+}
+
+void Stg::Gl::draw_string_multiline( float x, float y, float w, float h,  const char *str, Fl_Align align ) 
+{  
+  //glRasterPos3f( x, y, z );
 	//printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str ); 
-	gl_draw(str);
+  gl_draw(str, x, y, w, h, align ); // fltk function
 }
 
 void Stg::Gl::draw_speech_bubble( float x, float y, float z, const char* str )
@@ -49,6 +56,23 @@ void Stg::Gl::draw_octagon( float w, float h, float m )
 	glVertex2f( m, 0 );
 	glEnd();
 }
+
+// draw an octagon with center rectangle dimensions w/h
+//   and outside margin m
+void Stg::Gl::draw_octagon( float x, float y, float w, float h, float m )
+{
+	glBegin(GL_POLYGON);
+	glVertex2f( x + m+w, y );
+	glVertex2f( x+w+2*m, y+m );
+	glVertex2f( x+w+2*m, y+h+m );
+	glVertex2f( x+m+w, y+h+2*m );
+	glVertex2f( x+m, y+h+2*m );
+	glVertex2f( x, y+h+m );
+	glVertex2f( x, y+m );
+	glVertex2f( x+m, y );
+	glEnd();
+}
+
 
 void Stg::Gl::draw_centered_rect( float x, float y, float dx, float dy )
 {

@@ -406,35 +406,40 @@ std::string WorldGui::ClockString()
   average_real_interval /= INTERVAL_LOG_LEN;
 	
   double localratio = (double)interval_sim / (double)average_real_interval;
+  
+  std::string str;  
+  char buf[256];
 
-	std::ostringstream status_stream;
-	status_stream.fill( '0' );
-	if( hours > 0 )
-		status_stream << hours << "h";
-	
-	status_stream << std::setw( 2 ) << minutes << "m"
-	<< std::setw( 2 ) << seconds << "." << std::setprecision( 3 ) << std::setw( 3 ) << msec << "s ";
-	
-	char str[ 256 ];
-	snprintf( str, 255, "[%.2f]", localratio );
-	status_stream << str;
-	
-	
-	snprintf( str, 255, "<stored: %.0f/%.0fKJ input: %.0fKJ dissipated: %.0fKJ power: %.2fKW>",
-				 PowerPack::global_stored / 1e3,
-				 PowerPack::global_capacity /1e3,
-				 PowerPack::global_input / 1e3,
-				 PowerPack::global_dissipated / 1e3,
-				 (PowerPack::global_dissipated / (sim_time / 1e6)) / 1e3 );
-	
-	status_stream << str;
+  if( hours > 0 )
+	 {
+		snprintf( buf, 255, "%uh", hours );
+		str += buf;
+	 }
 
-	if( paused == true )
-		status_stream << " [ PAUSED ]";
-	
-	
-	return status_stream.str();
+  snprintf( buf, 255, "%um%02us%03umsec [%.2f]", minutes, seconds, msec, localratio );
+  str += buf;
+  
+  if( paused == true )
+	 str += " [ PAUSED ]";
+  
+  return str;
 }
+
+std::string WorldGui::EnergyString()
+{	
+  char str[512];
+  
+  snprintf( str, 255, "Energy\n  stored:   %.0f / %.0f KJ\n  input:    %.0f KJ\n  output:   %.0f KJ at %.2f KW\n",
+				PowerPack::global_stored / 1e3,
+				PowerPack::global_capacity /1e3,
+				PowerPack::global_input / 1e3,
+				PowerPack::global_dissipated / 1e3,
+				(PowerPack::global_dissipated / (sim_time / 1e6)) / 1e3 );
+  
+  std::string s( str );
+  return s;
+}
+
 
 // callback wrapper for SuperRegion::Draw()
 static void Draw_cb( gpointer dummykey, 
