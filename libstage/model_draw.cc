@@ -245,7 +245,7 @@ void Model::PopCoords()
   glPopMatrix();
 }
 
-void Model::AddVisualizer( Visualizer* custom_visual )
+void Model::AddVisualizer( Visualizer* custom_visual, bool on_by_default )
 {
 	if( !custom_visual )
 		return;
@@ -267,7 +267,7 @@ void Model::AddVisualizer( Visualizer* custom_visual )
 	  Option* op = new Option( custom_visual->GetMenuName(), 
 										custom_visual->GetWorldfileName(), 
 										"", 
-										true, 
+										on_by_default, 
 										world_gui );
 		canvas->_custom_options[ custom_visual->GetMenuName() ] = op;
 		RegisterOption( op );

@@ -20,8 +20,7 @@ double PowerPack::global_smoothing_constant = 0.05;
 
 
 PowerPack::PowerPack( Model* mod ) :
-  dissipation_vec(), 
-  event_vis( dissipation_vec ),
+  event_vis( 32,32,1.0 ),
   mod( mod), 
   stored( 0.0 ), 
   capacity( 0.0 ), 
@@ -29,7 +28,7 @@ PowerPack::PowerPack( Model* mod ) :
 { 
   // tell the world about this new pp
   mod->world->AddPowerPack( this );  
-  //mod->AddVisualizer( &event_vis );
+  mod->AddVisualizer( &event_vis, false );
 };
 
 PowerPack::~PowerPack()
@@ -219,57 +218,81 @@ void PowerPack::Dissipate( stg_joules_t j )
   
   Subtract( amount );
   global_dissipated += amount;
+
+  //stg_watts_t w = j / (interval / 1e6);
 }
 
 void PowerPack::Dissipate( stg_joules_t j, const Pose& p )
 {
   Dissipate( j );
-  DissEvent ev( j, p );
-  //dissipation_vec.push_back( ev );
-}
-
-
-//------------------------------------------------------------------------------
-// Dissipation Event class
-
-PowerPack::DissEvent::DissEvent( stg_joules_t j, const Pose& p )
-  : pose(p), joules(j)
-{
-  // empty
-}
-
-void PowerPack::DissEvent::Draw() const
-{
-  float scale = 0.1;
-  float delta = 0.05;
-  
-  glColor4f( 1,0,0, MIN( joules * scale, 1.0 ) );
-  glRectf( pose.x-delta, pose.y-delta, pose.x+delta, pose.z+delta );
+  event_vis.Accumulate( p.x, p.y, j );
 }
 
 //------------------------------------------------------------------------------
 // Dissipation Visualizer class
 
-PowerPack::DissipationVis::DissipationVis( std::vector<DissEvent>& events )
+
+PowerPack::DissipationVis::DissipationVis( stg_meters_t width, 
+														 stg_meters_t height,
+														 stg_meters_t cellsize )
   : Visualizer( "energy dissipation", "energy_dissipation" ),
-	 events( events )
+	 columns(width/cellsize),
+	 rows(height/cellsize),
+	 width(width),
+	 height(height),
+	 cells( new stg_joules_t[columns*rows] ),
+	 peak_value(0),
+	 cellsize(cellsize)
 { /* nothing to do */ }
-  
+
+PowerPack::DissipationVis::~DissipationVis()
+{
+  if( cells )
+	 delete[] cells;
+}
 
 void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
 {
   // go into world coordinates
   
   glPushMatrix();
-   
- 
-  // draw the dissipation events in world coordinates
-  for( std::vector<DissEvent>::const_iterator i = events.begin();
-		 i != events.end();
-		 i++ )
-	 {
-		i->Draw();
-	 }
+
+  Gl::pose_inverse_shift( mod->GetPose() );
+
+  glTranslatef( -width/2.0, -height/2.0, 0 );
+  glScalef( cellsize, cellsize, 1 );
+  
+  for( unsigned int y=0; y<rows; y++ )
+	 for( unsigned int x=0; x<columns; x++ )
+		{
+		  stg_joules_t j = cells[ y*columns + x ];
+		  if( j > 0 )
+			 {
+				glColor4f( 1.0, 0, 0, j/peak_value );
+				glRectf( x,y,x+1,y+1 );
+			 }
+		}
 
   glPopMatrix();
+}
+
+
+
+void PowerPack::DissipationVis::Accumulate( stg_meters_t x, 
+														  stg_meters_t y, 
+														  stg_joules_t amount )
+{
+  int ix = (x+width/2.0)/cellsize;
+  int iy = (y+height/2.0)/cellsize;
+
+  assert( ix >= 0 );
+  assert( ix < (int)columns );
+  assert( iy >= 0 );
+  assert( iy < (int)rows );
+
+  stg_joules_t* j = cells + (iy*columns + ix );
+  
+  (*j) += amount;
+  if( (*j) > peak_value )
+	 peak_value  = (*j);
 }

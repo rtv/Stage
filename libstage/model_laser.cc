@@ -218,7 +218,7 @@ ModelLaser::ModelLaser( World* world,
   // set default color
   SetColor( stg_lookup_color(DEFAULT_COLOR));
 
-  AddVisualizer( &vis );
+  AddVisualizer( &vis, true );
 }
 
 

@@ -690,7 +690,7 @@ void Model::Update( void )
     {
       // consume  energy stored in the power pack
       stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
-      pp->Dissipate( consumed, this->pose );      
+      pp->Dissipate( consumed, GetGlobalPose() );      
     }
 }
 

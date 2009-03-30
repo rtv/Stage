@@ -856,13 +856,13 @@ namespace Stg
     stg_usec_t quit_time;
     stg_usec_t real_time_now; ///< The current real time in microseconds
     stg_usec_t real_time_start; ///< the real time at which this world was created
-    GMutex* thread_mutex;
-    GThreadPool *threadpool;
+    GMutex* thread_mutex; ///< protect the worker thread management stuff
+    GThreadPool *threadpool; ///<worker threads for updating some sensor models in parallel
     int total_subs; ///< the total number of subscriptions to all models
     unsigned int update_jobs_pending;
     GList* velocity_list; ///< Models with non-zero velocity and should have their poses updated
-    unsigned int worker_threads;
-    GCond* worker_threads_done;
+    unsigned int worker_threads; ///< the number of worker threads to use
+    GCond* worker_threads_done; ///< signalled when there are no more updates for the worker threads to do
 
   protected:	 
   
@@ -872,7 +872,7 @@ namespace Stg
 	 GHashTable* option_table; ///< GUI options (toggles) registered by models
 	 GList* powerpack_list; ///< List of all the powerpacks attached to models in the world
     GList* ray_list;///< List of rays traced for debug visualization
-    stg_usec_t sim_time; ///< the current sim time in this world in ms
+    stg_usec_t sim_time; ///< the current sim time in this world in microseconds
     GHashTable* superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
     // GList* update_list; ///< Models that have a subscriber or controller, and need to be updated
@@ -1426,38 +1426,29 @@ namespace Stg
   /** energy data packet */
   class PowerPack
   {
-	 friend class World;
+	 //friend class World;
 	 friend class WorldGui;
 	 
-  public:
-	 class DissEvent 
-	 {
-	 public:
-		Pose pose;
-		stg_joules_t joules;
-		
-		DissEvent( stg_joules_t j, const Pose& p );		
-		~DissEvent() { /* empty */ };		
-		
-		void Draw() const;
-	 };
-	 
-	 
-
   protected:
-
-	 std::vector<DissEvent> dissipation_vec;
 
 	 class DissipationVis : public Visualizer
 	 {
 	 private:
-		std::vector<DissEvent>& events;
-		
+		unsigned int columns, rows;
+		stg_meters_t width, height;
+		stg_joules_t* cells;
+		double peak_value;
+		double cellsize;
+
 	 public:
-		DissipationVis( std::vector<DissEvent>& events );
-		virtual ~DissipationVis(){ /* empty */ }
-		
+		DissipationVis( stg_meters_t width, 
+							 stg_meters_t height, 
+							 stg_meters_t cellsize );
+
+		virtual ~DissipationVis();
 		virtual void Visualize( Model* mod, Camera* cam );		
+		
+		void Accumulate( stg_meters_t x, stg_meters_t y, stg_joules_t amount );
 	 };
 	 
 	 DissipationVis event_vis;
@@ -1876,7 +1867,7 @@ namespace Stg
 	 void Say( const char* str );
 	 
 	 /** Attach a user supplied visualization to a model. */
-	 void AddVisualizer( Visualizer* custom_visual );
+	 void AddVisualizer( Visualizer* custom_visual, bool on_by_default );
 
 	 /** remove user supplied visualization to a model - supply the same ptr passed to AddCustomVisualizer */
 	 void RemoveVisualizer( Visualizer* custom_visual );

@@ -420,13 +420,12 @@ std::string WorldGui::ClockString()
 	status_stream << str;
 	
 	
-	snprintf( str, 255, "<stored: %.0f/%.0fKJ input: %.0fKJ dissipated: %.0fKJ power: %.2f(%.2f)W>",
+	snprintf( str, 255, "<stored: %.0f/%.0fKJ input: %.0fKJ dissipated: %.0fKJ power: %.2fKW>",
 				 PowerPack::global_stored / 1e3,
 				 PowerPack::global_capacity /1e3,
 				 PowerPack::global_input / 1e3,
 				 PowerPack::global_dissipated / 1e3,
-				 PowerPack::global_power,
-				 PowerPack::global_power_smoothed );
+				 (PowerPack::global_dissipated / (sim_time / 1e6)) / 1e3 );
 	
 	status_stream << str;
 
