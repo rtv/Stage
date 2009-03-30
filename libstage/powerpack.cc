@@ -205,6 +205,11 @@ stg_joules_t PowerPack::GetStored() const
   return stored;
 }
 
+stg_joules_t PowerPack::GetDissipated() const
+{
+  return dissipated;
+}
+
 void PowerPack::SetStored( stg_joules_t j ) 
 {
   global_stored -= stored;
@@ -217,6 +222,7 @@ void PowerPack::Dissipate( stg_joules_t j )
   stg_joules_t amount = MIN( stored, j );
   
   Subtract( amount );
+  dissipated += amount;
   global_dissipated += amount;
 
   //stg_watts_t w = j / (interval / 1e6);

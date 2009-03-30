@@ -1465,6 +1465,8 @@ namespace Stg
 	 /** TRUE iff the device is receiving energy */
 	 bool charging;
 	 
+	 /** Energy dissipated */
+	 stg_joules_t dissipated;
 
 	 static stg_joules_t global_stored;
 	 static stg_joules_t global_capacity;
@@ -1505,6 +1507,7 @@ namespace Stg
 	 
 	 stg_joules_t GetStored() const;
 	 stg_joules_t GetCapacity() const;
+	 stg_joules_t GetDissipated() const;
 	 void SetCapacity( stg_joules_t j );
 	 void SetStored( stg_joules_t j );	
 
