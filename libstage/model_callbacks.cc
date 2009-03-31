@@ -1,19 +1,19 @@
 #include "stage.hh"
 using namespace Stg;
 
-int key_gen( Model* mod, void* address )
-{
-	return ((int*)address) - ((int*)mod);
-}
+// int key_gen( Model* mod, void* address )
+// {
+// 	return ((int*)address) - ((int*)mod);
+// }
 
 void Model::AddCallback( void* address, 
 		stg_model_callback_t cb, 
 		void* user )
 {
-	int* key = (int*)g_new( int, 1 );
-	*key = key_gen( this, address );
+  ///int* key = (int*)g_new( int, 1 );
+  //*key = key_gen( this, address );
 
-	GList* cb_list = (GList*)g_hash_table_lookup( callbacks, key );
+	GList* cb_list = (GList*)g_hash_table_lookup( callbacks, address );
 
 	//printf( "installing callback in model %s with key %d\n",
 	//  mod->token, *key );
@@ -22,16 +22,16 @@ void Model::AddCallback( void* address,
 	cb_list = g_list_prepend( cb_list, cb_create( cb, user ) );
 
 	// and replace the list in the hash table
-	g_hash_table_insert( callbacks, key, cb_list );
+	g_hash_table_insert( callbacks, address, cb_list );
 }
 
 
 int Model::RemoveCallback( void* member,
 		stg_model_callback_t callback )
 {
-	int key = key_gen( this, member );
+  //int key = key_gen( this, member );
 
-	GList* cb_list = (GList*)g_hash_table_lookup( callbacks, &key );
+	GList* cb_list = (GList*)g_hash_table_lookup( callbacks, member );
 
 	// find our callback in the list of stg_cbarg_t
 	GList* el = NULL;
@@ -52,7 +52,7 @@ int Model::RemoveCallback( void* member,
 		cb_list = g_list_remove( cb_list, el->data);
 
 		// store the new, shorter, list of callbacks
-		g_hash_table_insert( callbacks, &key, cb_list );
+		g_hash_table_insert( callbacks, member, cb_list );
 
 		// we're done with that
 		//free( el->data );
@@ -76,27 +76,31 @@ int Model::RemoveCallback( void* member,
 
 void Model::CallCallbacks(  void* address )
 {
+
 	assert( address );
 
-	int key = key_gen( this, address );
+	//int key = key_gen( this, address );
+	
+	//printf( "CallCallbacks for model %s %p key %p\n", this->Token(), this, address );
 
 	//printf( "Model %s has %d callbacks. Checking key %d\n", 
-	//  mod->token, g_hash_table_size( mod->callbacks ), key );
+	//	  this->token, g_hash_table_size( this->callbacks ), key );
 
-	GList* cbs = (GList*)g_hash_table_lookup( callbacks, &key );
+	GList* cbs = (GList*)g_hash_table_lookup( callbacks, address );
 
 	//printf( "key %d has %d callbacks registered\n",
-	//  key, g_list_length( cbs ) );
-
+	//	  key, g_list_length( cbs ) );
+	
 	// maintain a list of callbacks that should be cancelled
 	GList* doomed = NULL;
 
 	// for each callback in the list
 	while( cbs )
 	{  
-		stg_cb_t* cba = (stg_cb_t*)cbs->data;
+	  //printf( "cbs %p data %p cvs->next %p\n", cbs, cbs->data, cbs->next );
 
-		//puts( "calling..." );
+		stg_cb_t* cba = (stg_cb_t*)cbs->data;
+		assert( cba );
 
 		if( (cba->callback)( this, cba->arg ) )
 		{
@@ -121,6 +125,7 @@ void Model::CallCallbacks(  void* address )
 		g_list_free( doomed );
 	}
 
+	//puts( "Callbacks done" );
 }
 
 

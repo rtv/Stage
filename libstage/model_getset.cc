@@ -212,7 +212,7 @@ void Model::SetVelocity( const Velocity& vel )
       on_velocity_list = true;
     }
 
-  CallCallbacks( &this->velocity );
+  //CallCallbacks( &this->velocity );
 }
 
 

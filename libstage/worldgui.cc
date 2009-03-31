@@ -416,7 +416,7 @@ std::string WorldGui::ClockString()
 		str += buf;
 	 }
 
-  snprintf( buf, 255, "%um%02us%03umsec [%.2f]", minutes, seconds, msec, localratio );
+  snprintf( buf, 255, " %um %02us %03umsec [%.2f]", minutes, seconds, msec, localratio );
   str += buf;
   
   if( paused == true )

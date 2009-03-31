@@ -1432,8 +1432,8 @@ namespace Stg
   /** energy data packet */
   class PowerPack
   {
-	 //friend class World;
 	 friend class WorldGui;
+	 friend class Canvas;
 	 
   protected:
 
@@ -1554,11 +1554,13 @@ namespace Stg
   class CallbackHooks
   {
   public:
-	 char load;
-	 char save;
-	 char shutdown;
-	 char startup;
-	 char update;
+	 int flag_incr;
+	 int flag_decr;
+	 int load;
+	 int save;
+	 int shutdown;
+	 int startup;
+	 int update;
   };
 
   /** Records model state and functionality in the GUI, if used */
@@ -2105,7 +2107,19 @@ namespace Stg
 	
 	 void RemoveUpdateCallback( stg_model_callback_t cb )
 	 {	RemoveCallback( &hooks.update, cb ); }
+
+	 void AddFlagIncrCallback( stg_model_callback_t cb, void* user )
+	 {	AddCallback( &hooks.flag_incr, cb, user ); }
 	
+	 void RemoveFlagIncrCallback( stg_model_callback_t cb )
+	 {	RemoveCallback( &hooks.flag_incr, cb ); }
+
+	 void AddFlagDecrCallback( stg_model_callback_t cb, void* user )
+	 {	AddCallback( &hooks.flag_decr, cb, user ); }
+	
+	 void RemoveFlagDecrCallback( stg_model_callback_t cb )
+	 {	RemoveCallback( &hooks.flag_decr, cb ); }
+	 
 	 /** named-property interface 
 	  */
 	 void* GetProperty( const char* key ) const;	 

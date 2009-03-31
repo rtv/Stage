@@ -675,18 +675,6 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   else if( dy > 0 )
     n++;
 	
-  if( abs(sup.x) > 20 )
-    printf( "raytracing at [ %.2f %.2f %.2f %.2f ] GLOB( %d %d ) SUP( %d %d )\n",
-	    gpose.x,
-	    gpose.y,
-	    gpose.z,
-	    gpose.a,
-	    glob.x,
-	    glob.y,
-	    sup.x,
-	    sup.y );
-
-
   // find the starting superregion 
   sr = GetSuperRegionCached( sup ); // possibly NULL, but unlikely
 

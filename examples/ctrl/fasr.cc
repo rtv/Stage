@@ -14,7 +14,7 @@ const int workduration = 20;
 const int payload = 1;
 
 double have[4][4] = { 
-  //  { -120, -180, 180, 180 },
+  //  { -120, -180, 180, 180 }
   //{ -90, -120, 180, 90 },
   { 90, 180, 180, 180 },
   { 90, -90, 180, 90 },
@@ -94,6 +94,7 @@ public:
 	 pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, this );
 	 pos->Subscribe();
 
+
 	 // LaserUpdate() controls the robot, by reading from laser and
 	 // writing to position
 	 laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, this );
@@ -110,6 +111,9 @@ public:
 		  blobfinder->AddUpdateCallback( (stg_model_callback_t)BlobFinderUpdate, this );
 		  blobfinder->Subscribe();
 		}
+
+	 //pos->AddFlagIncrCallback( (stg_model_callback_t)FlagIncr, NULL );
+	 //pos->AddFlagDecrCallback( (stg_model_callback_t)FlagDecr, NULL );
 }
 
   void Dock()
@@ -480,18 +484,28 @@ public:
 
 	 return 0;
   }
+  
+  static int FlagIncr( Model* mod, Robot* robot )
+  {
+	 printf( "model %s collected flag\n", mod->Token() );
+	 return 0;
+  }
 
-
+  static int FlagDecr( Model* mod, Robot* robot )
+  {
+	 printf( "model %s dropped flag\n", mod->Token() );
+	 return 0;
+  }
 };
 
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
 {  
-  Robot* robot = new Robot( (ModelPosition*)mod,
-									 mod->GetWorld()->GetModel( "source" ),
-									 mod->GetWorld()->GetModel( "sink" ) );
-    
+  new Robot( (ModelPosition*)mod,
+				 mod->GetWorld()->GetModel( "source" ),
+				 mod->GetWorld()->GetModel( "sink" ) );
+  
   return 0; //ok
 }
 

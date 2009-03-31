@@ -197,7 +197,7 @@ Model::Model( World* world,
     blockgroup(),
     blocks_dl(0),
     boundary(false),
-    callbacks( g_hash_table_new( g_int_hash, g_int_equal ) ),
+    callbacks( g_hash_table_new( g_direct_hash, g_direct_equal ) ),
     color( 0xFFFF0000 ), // red
     data_fresh(false),
     disabled(false),
@@ -327,19 +327,28 @@ void Model::InitRecursive()
 void Model::AddFlag( Flag* flag )
 {
   if( flag )
-    flag_list = g_list_append( this->flag_list, flag );
+	 {
+		flag_list = g_list_append( this->flag_list, flag );		
+		CallCallbacks( &hooks.flag_incr );		
+	 }
 }
 
 void Model::RemoveFlag( Flag* flag )
 {
   if( flag )
-    flag_list = g_list_remove( this->flag_list, flag );
+	 {
+		flag_list = g_list_remove( this->flag_list, flag );
+		CallCallbacks( &hooks.flag_decr );
+	 }
 }
 
 void Model::PushFlag( Flag* flag )
 {
   if( flag )
-    flag_list = g_list_prepend( flag_list, flag);
+	 {
+		flag_list = g_list_prepend( flag_list, flag);
+		CallCallbacks( &hooks.flag_incr );
+	 }
 }
 
 Flag* Model::PopFlag()
@@ -347,8 +356,12 @@ Flag* Model::PopFlag()
   if( flag_list == NULL )
     return NULL;
 
+  printf( "pop flag" );
+
   Flag* flag = (Flag*)flag_list->data;
   flag_list = g_list_remove( flag_list, flag );
+
+  CallCallbacks( &hooks.flag_decr );
 
   return flag;
 }

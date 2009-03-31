@@ -125,7 +125,8 @@ void Canvas::InitGl()
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   
   // install a font
-  gl_font( FL_HELVETICA, 12 );  
+  //gl_font( FL_HELVETICA, 12 );  
+  gl_font( FL_COURIER, 12 );  
 
   blur = false;
   
@@ -955,8 +956,6 @@ void Canvas::renderFrame()
       glLoadIdentity();
       glDisable( GL_DEPTH_TEST );
 
-      // if trails are on, we need to clear the clock background
-
 		std::string clockstr = world->ClockString();
 		if( showFollow == true && last_selection )
 		  clockstr.append( " [ FOLLOW MODE ]" );
@@ -975,18 +974,22 @@ void Canvas::renderFrame()
 		glRectf( 0, 0, width, height );
 		colorstack.Push( 0,0,0 ); // black
 		Gl::draw_string( margin, margin, 0, clockstr.c_str() );
-
+		colorstack.Pop();
+		colorstack.Pop();
+		
 		// ENERGY BOX
-		colorstack.Push( 0.8,1.0,0.8,0.85 ); // pale green
-		glRectf( 0, height, width, 90 );
-      colorstack.Push( 0,0,0 ); // black
-		Gl::draw_string_multiline( margin, height + margin, txtWidth, 50, world->EnergyString().c_str(), (Fl_Align)( FL_ALIGN_LEFT | FL_ALIGN_BOTTOM) );
-
-      colorstack.Pop();
-		colorstack.Pop();
-      colorstack.Pop();
-		colorstack.Pop();
-
+		if( PowerPack::global_capacity > 0 )
+		  {
+			 colorstack.Push( 0.8,1.0,0.8,0.85 ); // pale green
+			 glRectf( 0, height, width, 90 );
+			 colorstack.Push( 0,0,0 ); // black
+			 Gl::draw_string_multiline( margin, height + margin, txtWidth, 50, 
+												 world->EnergyString().c_str(), 
+												 (Fl_Align)( FL_ALIGN_LEFT | FL_ALIGN_BOTTOM) );	 
+			 colorstack.Pop();
+			 colorstack.Pop();
+		  }
+			 
       glEnable( GL_DEPTH_TEST );
       glPopMatrix();
 

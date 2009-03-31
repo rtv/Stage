@@ -8,11 +8,7 @@ int Update( Model* mod, void* dummy );
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
 {  
-  //for( int i=0; i<5; i++ )
-  // mod->PushFlag( new Flag( stg_color_pack( 1,1,0,0), 0.5 ) );
-  
   mod->AddUpdateCallback( (stg_model_callback_t)Update, NULL );
-
   return 0; //ok
 }
 

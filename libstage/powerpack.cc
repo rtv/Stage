@@ -263,7 +263,7 @@ void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
 
   Gl::pose_inverse_shift( mod->GetPose() );
 
-  glTranslatef( -width/2.0, -height/2.0, 0 );
+  glTranslatef( -width/2.0, -height/2.0, 0.01 );
   glScalef( cellsize, cellsize, 1 );
   
   for( unsigned int y=0; y<rows; y++ )

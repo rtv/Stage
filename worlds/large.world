@@ -9,7 +9,7 @@ include "sick.inc"
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 0  # real-time interval between simulation updates in milliseconds 
 
-paused 0
+paused 1
 
 resolution 0.02
 
@@ -23,30 +23,38 @@ window
   rotate [ 0  0 ]
   			
   show_data 1              # 1=on 0=off
+  show_grid 0
 )
 
 # load an environment bitmap
 floorplan
 ( 
   name "cave"
-  size [160.000 160.000 0.800]
+  size [1000.000 700.000 0.600]
   pose [0 0 0 0]
   bitmap "bitmaps/SFU_800x600.png"
 )
 
 
-pioneer2dx
+define wanderer pioneer2dx
 (		  
-  # can refer to the robot by this name
-  name "r0"
-
-  pose [ 0.892 0.800 0 56.500 ] 
-  sicklaser() 
-
+  sicklaser( size [0.3 0.3 0.2 ] samples 32 ) 
   ctrl "wander"
 
   # report error-free position in world coordinates
   localization "gps"
   localization_origin [ 0 0 0 0 ]
 )
+
+wanderer( pose [ 0 0 0 0 ] )
+wanderer( pose [ 1 0 0 0 ] )
+wanderer( pose [ 2 0 0 0 ] )
+wanderer( pose [ 3 0 0 0 ] )
+wanderer( pose [ 4 0 0 0 ] )
+wanderer( pose [ 5 0 0 0 ] )
+wanderer( pose [ 6 0 0 0 ] )
+wanderer( pose [ 7 0 0 0 ] )
+wanderer( pose [ 8 0 0 0 ] )
+wanderer( pose [ 9 0 0 0 ] )
+
 
