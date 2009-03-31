@@ -125,8 +125,7 @@ void Canvas::InitGl()
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   
   // install a font
-  //gl_font( FL_HELVETICA, 12 );  
-  gl_font( FL_COURIER, 12 );  
+  gl_font( FL_HELVETICA, 12 );  
 
   blur = false;
   
@@ -177,7 +176,7 @@ void Canvas::InitGl()
   
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-  fl_font( FL_HELVETICA, 12 );
+  // fl_font( FL_HELVETICA, 16 );
 
   init_done = true; 
 }
@@ -983,7 +982,7 @@ void Canvas::renderFrame()
 			 colorstack.Push( 0.8,1.0,0.8,0.85 ); // pale green
 			 glRectf( 0, height, width, 90 );
 			 colorstack.Push( 0,0,0 ); // black
-			 Gl::draw_string_multiline( margin, height + margin, txtWidth, 50, 
+			 Gl::draw_string_multiline( margin, height + margin, width, 50, 
 												 world->EnergyString().c_str(), 
 												 (Fl_Align)( FL_ALIGN_LEFT | FL_ALIGN_BOTTOM) );	 
 			 colorstack.Pop();
@@ -1003,6 +1002,30 @@ void Canvas::renderFrame()
     Screenshot();
 
   frames_rendered_count++; 
+}
+
+
+void Canvas::EnterScreenCS()
+{
+  //use orthogonal projeciton without any zoom
+  glMatrixMode (GL_PROJECTION);
+  glPushMatrix(); //save old projection
+  glLoadIdentity ();
+  glOrtho( 0, w(), 0, h(), -100, 100 );	
+  glMatrixMode (GL_MODELVIEW);
+  
+  glPushMatrix();
+  glLoadIdentity();
+  glDisable( GL_DEPTH_TEST );
+}
+
+void Canvas::LeaveScreenCS()
+{
+  glEnable( GL_DEPTH_TEST );
+  glPopMatrix();
+  glMatrixMode (GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode (GL_MODELVIEW);
 }
 
 

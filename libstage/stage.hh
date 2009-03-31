@@ -475,6 +475,11 @@ namespace Stg
 	 void draw_octagon( float x, float y, float w, float h, float m );
 	 void draw_vector( double x, double y, double z );
 	 void draw_origin( double len );
+	 void draw_array( float x, float y, float w, float h, 
+							float* data, size_t len, size_t offset, 
+							float min, float max );
+	 void draw_array( float x, float y, float w, float h, 
+							float* data, size_t len, size_t offset );
 	 /** Draws a rectangle with center at x,y, with sides of length dx,dy */
 	 void draw_centered_rect( float x, float y, float dx, float dy );
   }
@@ -1380,6 +1385,7 @@ namespace Stg
 		
     virtual void AddModel( Model* mod );
 
+
   protected:
     virtual void PushColor( stg_color_t col );
     virtual void PushColor( double r, double g, double b, double a );
@@ -1388,8 +1394,6 @@ namespace Stg
     void DrawTree( bool leaves );
     void DrawFloor();
 	
-    Canvas* GetCanvas( void ) { return canvas; }
-
   public:
 	
     WorldGui(int W,int H,const char*L=0);
@@ -1411,6 +1415,8 @@ namespace Stg
     void TogglePause(){ paused = !paused; };
 	 bool Paused(){ return( paused ); };
 
+    Canvas* GetCanvas( void ) { return canvas; }
+
     /** show the window - need to call this if you don't Load(). */
     void Show(); 
 
@@ -1427,6 +1433,29 @@ namespace Stg
     { interval_real = usec; }
 
     virtual void RemoveChild( Model* mod );	 
+  };
+
+
+  class StripPlotVis : public Visualizer
+  {
+  private:
+	 
+	 Model* mod;
+	 float* data;
+	 size_t len;
+	 size_t count;
+	 unsigned int index;
+	 float x,y,w,h,min,max;
+	 stg_color_t fgcolor, bgcolor;
+	 
+  public:
+	 StripPlotVis( float x, float y, float w, float h, 
+						size_t len, 
+						stg_color_t fgcolor, stg_color_t bgcolor,
+						const char* name, const char* wfname );
+	 virtual ~StripPlotVis();
+	 virtual void Visualize( Model* mod, Camera* cam );		
+	 void AppendValue( float value );
   };
 
   /** energy data packet */
@@ -1460,6 +1489,8 @@ namespace Stg
 	 };
 	 
 	 DissipationVis event_vis;
+	 StripPlotVis output_vis;
+	 StripPlotVis stored_vis;
 
 	 /** The model that owns this object */
 	 Model* mod;

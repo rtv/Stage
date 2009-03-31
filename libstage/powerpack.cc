@@ -21,6 +21,8 @@ double PowerPack::global_smoothing_constant = 0.05;
 
 PowerPack::PowerPack( Model* mod ) :
   event_vis( 32,32,1.0 ),
+  output_vis( 0,100,200,40, 1200, stg_color_pack(1,0,0,0), stg_color_pack(0,0,0,0.5), "energy output", "energy_input" ),
+  stored_vis( 0,142,200,40, 1200, stg_color_pack(0,1,0,0), stg_color_pack(0,0,0,0.5), "energy stored", "energy_stored" ),
   mod( mod), 
   stored( 0.0 ), 
   capacity( 0.0 ), 
@@ -28,13 +30,18 @@ PowerPack::PowerPack( Model* mod ) :
 { 
   // tell the world about this new pp
   mod->world->AddPowerPack( this );  
+  
   mod->AddVisualizer( &event_vis, false );
-};
+  mod->AddVisualizer( &output_vis, true );
+  mod->AddVisualizer( &stored_vis, true );
+}
 
 PowerPack::~PowerPack()
 {
   mod->world->RemovePowerPack( this );
   mod->RemoveVisualizer( &event_vis );
+  mod->RemoveVisualizer( &output_vis );
+  mod->RemoveVisualizer( &stored_vis );
 }
 
 
@@ -222,6 +229,8 @@ void PowerPack::Dissipate( stg_joules_t j )
   dissipated += amount;
   global_dissipated += amount;
 
+  output_vis.AppendValue( amount );
+  stored_vis.AppendValue( stored );
   //stg_watts_t w = j / (interval / 1e6);
 }
 

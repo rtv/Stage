@@ -21,6 +21,47 @@ void Stg::Gl::pose_inverse_shift( const Pose &pose )
   coord_shift( -pose.x, -pose.y, -pose.z, 0 );
 }
 
+void Stg::Gl::draw_array( float x, float y, float w, float h, 
+								  float* data, size_t len, size_t offset,
+								  float min, float max )
+{
+  float sample_spacing = w / (float)len;
+  float yscale = h / (max-min);
+  
+  //printf( "min %.2f max %.2f\n", min, max );
+
+  glBegin( GL_LINE_STRIP );
+
+  for( unsigned int i=0; i<len; i++ )
+	 glVertex3f( x + (float)i*sample_spacing, y+(data[(i+offset)%len]-min)*yscale, 0.01 );
+  
+  glEnd();
+
+  
+  glColor3f( 0,0,0 );
+  char buf[64];
+  snprintf( buf, 63, "%.2f", min );
+  Gl::draw_string( x,y,0,buf );
+  snprintf( buf, 63, "%.2f", max );
+  Gl::draw_string( x,y+h-fl_height(),0,buf );
+
+}
+
+void Stg::Gl::draw_array( float x, float y, float w, float h, 
+								  float* data, size_t len, size_t offset )
+{
+  // wild initial bounds
+  float smallest = 1e16;
+  float largest = -1e16;
+  
+  for( size_t i=0; i<len; i++ )
+	 {
+		smallest = MIN( smallest, data[i] );
+		largest = MAX( largest, data[i] );
+	 }
+
+  draw_array( x,y,w,h,data,len,offset,smallest,largest );
+}
 
 void Stg::Gl::draw_string( float x, float y, float z, const char *str ) 
 {  

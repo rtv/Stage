@@ -356,8 +356,6 @@ Flag* Model::PopFlag()
   if( flag_list == NULL )
     return NULL;
 
-  printf( "pop flag" );
-
   Flag* flag = (Flag*)flag_list->data;
   flag_list = g_list_remove( flag_list, flag );
 
@@ -365,7 +363,6 @@ Flag* Model::PopFlag()
 
   return flag;
 }
-
 
 void Model::ClearBlocks( void )
 {

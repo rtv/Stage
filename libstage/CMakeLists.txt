@@ -3,7 +3,9 @@ MESSAGE( STATUS "Configuring libstage" )
 # for config.h
 include_directories(${PROJECT_BINARY_DIR})
 
-set( stageSrcs ancestor.cc
+set( stageSrcs    
+   vis_strip.cc
+   ancestor.cc
 	block.cc
 	blockgroup.cc
 	camera.cc

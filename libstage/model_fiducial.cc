@@ -28,7 +28,7 @@ const stg_radians_t DEFAULT_FIDUCIAL_FOV = M_PI;
 const stg_watts_t DEFAULT_FIDUCIAL_WATTS = 10.0;
 
 //TODO make instance attempt to register an option (as customvisualizations do)
-Option ModelFiducial::showFiducialData( "Show Fiducial", "show_fiducial", "", true, NULL );
+Option ModelFiducial::showFiducialData( "Show Fiducial", "show_fiducial", "", false, NULL );
 
 /** 
   @ingroup model

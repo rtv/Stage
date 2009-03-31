@@ -130,10 +130,15 @@ public:
 	void PopColor(){ colorstack.Pop(); } 
   
   void InvertView( uint32_t invertflags );
+
+  bool VisualizeAll(){ return ! visualizeAll; }
   
   static void TimerCallback( Canvas* canvas );
   static void perspectiveCb( Fl_Widget* w, void* p );
   
+  void EnterScreenCS();
+  void LeaveScreenCS();
+
   void Load( Worldfile* wf, int section );
   void Save( Worldfile* wf, int section );
 };
