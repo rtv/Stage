@@ -1511,9 +1511,6 @@ namespace Stg
 	 static stg_joules_t global_capacity;
 	 static stg_joules_t global_dissipated;	 
 	 static stg_joules_t global_input;
-	 static stg_watts_t global_power;
-	 static stg_watts_t global_power_smoothed;
-	 static double global_smoothing_constant;
 
   public:
 	 PowerPack( Model* mod );

@@ -14,10 +14,6 @@ stg_joules_t PowerPack::global_stored = 0.0;
 stg_joules_t PowerPack::global_input = 0.0;
 stg_joules_t PowerPack::global_capacity = 0.0;
 stg_joules_t PowerPack::global_dissipated = 0.0;
-stg_watts_t PowerPack::global_power = 0.0;
-stg_watts_t PowerPack::global_power_smoothed = 0.0;
-double PowerPack::global_smoothing_constant = 0.05;
-
 
 PowerPack::PowerPack( Model* mod ) :
   event_vis( 32,32,1.0 ),
@@ -26,7 +22,8 @@ PowerPack::PowerPack( Model* mod ) :
   mod( mod), 
   stored( 0.0 ), 
   capacity( 0.0 ), 
-  charging( false )  
+  charging( false ),
+  dissipated( 0.0 )
 { 
   // tell the world about this new pp
   mod->world->AddPowerPack( this );  
