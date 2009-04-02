@@ -527,26 +527,23 @@ void World::ClearRays()
 
 
 void World::Raytrace( const Pose &pose, // global pose
-		      const stg_meters_t range,
-		      const stg_radians_t fov,
-		      const stg_ray_test_func_t func,
-		      const Model* model,			 
-		      const void* arg,
-		      stg_raytrace_result_t* samples, // preallocated storage for samples
-		      const uint32_t sample_count,
-		      const bool ztest )  // number of samples
+							 const stg_meters_t range,
+							 const stg_radians_t fov,
+							 const stg_ray_test_func_t func,
+							 const Model* model,			 
+							 const void* arg,
+							 stg_raytrace_result_t* samples, // preallocated storage for samples
+							 const uint32_t sample_count, // number of samples
+							 const bool ztest ) 
 {
   // find the direction of the first ray
   Pose raypose = pose;
-  raypose.a -= fov/2.0;
-  
-  // increment the ray direction by this much for each sample
-  stg_radians_t angle_incr = fov/(double)sample_count;
-    
+  double starta = fov/2.0;
+
   for( uint32_t s=0; s < sample_count; s++ )
     {
+		raypose.a = s * fov / (double)sample_count) - starta;
       samples[s] = Raytrace( raypose, range, func, model, arg, ztest );
-      raypose.a += angle_incr;
     }
 }
 
@@ -613,6 +610,7 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   
   // initialize the sample
   sample.pose = gpose;
+  sample.pose.a = normalize( sample.pose.a );
   sample.range = range; // we might change this below
   sample.mod = NULL; // we might change this below
 	

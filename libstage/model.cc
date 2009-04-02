@@ -829,8 +829,11 @@ void Model::CommitTestedPose()
   blockgroup.SwitchToTestedCells();
 }
   
-Model* Model::ConditionalMove( Pose newpose )
+Model* Model::ConditionalMove( const Pose& newpose )
 { 
+  assert( newpose.a >= -M_PI );
+  assert( newpose.a <=  M_PI );
+
   Pose startpose = pose;
   pose = newpose; // do the move provisionally - we might undo it below
    
@@ -876,7 +879,7 @@ void Model::UpdatePose( void )
   p.x = velocity.x * interval;
   p.y = velocity.y * interval;
   p.z = velocity.z * interval;
-  p.a = velocity.a * interval;
+  p.a = normalize( velocity.a * interval );
     
   //if( isnan( p.x ) || isnan( p.y )  || isnan( p.z )  || isnan( p.a ) )
   //printf( "UpdatePose bad vel %s [%.2f %.2f %.2f %.2f]\n",
@@ -884,7 +887,11 @@ void Model::UpdatePose( void )
 
   // attempts to move to the new pose. If the move fails because we'd
   // hit another model, that model is returned.
-  Model* hitthing = ConditionalMove( pose_sum( pose, p ) );
+  Pose q = pose_sum( pose, p );
+  assert( q.a >= -M_PI );
+  assert( q.a <=  M_PI );
+
+  Model* hitthing = ConditionalMove( q );
 
   SetStall( hitthing ? true : false );
 }

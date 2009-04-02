@@ -561,7 +561,7 @@ void ModelPosition::SetOdom( Pose odom )
   // figure out where the implied origin is in global coords
   Pose gp = GetGlobalPose();
 
-  double da = -odom.a + gp.a;
+  double da = normalize( -odom.a + gp.a );
   double dx = -odom.x * cos(da) + odom.y * sin(da);
   double dy = -odom.y * cos(da) - odom.x * sin(da);
 

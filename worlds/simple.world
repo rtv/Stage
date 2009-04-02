@@ -7,7 +7,7 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 0  # real-time interval between simulation updates in milliseconds 
+interval_real 20  # real-time interval between simulation updates in milliseconds 
 
 paused 0
 
@@ -19,7 +19,7 @@ window
   size [ 556.000 557.000 ] # in pixels
   scale 28.116            
      # pixels per meter
-  center [ 8.058  7.757 ]
+  center [ 0.095  -0.301 ]
   rotate [ 0  0 ]
   			
   show_data 1              # 1=on 0=off
@@ -29,9 +29,9 @@ window
 floorplan
 ( 
   name "cave"
-  size [160.000 160.000 0.800]
+  size [16.000 16.000 0.800]
   pose [0 0 0 0]
-  bitmap "bitmaps/SFU_800x600.png"
+  bitmap "bitmaps/cave.png"
 )
 
 
@@ -40,7 +40,7 @@ pioneer2dx
   # can refer to the robot by this name
   name "r0"
 
-  pose [ 0.892 0.800 0 56.500 ] 
+  pose [ -7 -7 0 45 ] 
   sicklaser() 
 
   ctrl "wander"

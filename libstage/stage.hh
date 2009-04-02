@@ -158,11 +158,11 @@ namespace Stg
   inline double dtor( double d ){ return( d*M_PI/180.0 ); }
   
   /** Normalize an angle to within +/_ M_PI. */
-  inline double normalize( const double a )
+  inline double normalize( double a )
   {
-	 static const double TWO_PI = 2.0 * M_PI;
-	 assert( ! isnan(a) );  
-	 return( fmod(a + M_PI, TWO_PI ) - M_PI);
+	 while( a < -M_PI ) a += 2.0*M_PI;
+	 while( a >  M_PI ) a -= 2.0*M_PI;	 
+	 return a;
   };
 
   /** take binary sign of a, either -1, or 1 if >= 0 */
@@ -1827,7 +1827,7 @@ namespace Stg
 	 void StartUpdating();
 	 void StopUpdating();
 
-	 Model* ConditionalMove( Pose newpose );
+	 Model* ConditionalMove( const Pose& newpose );
 
 	 stg_meters_t ModelHeight() const;
 
