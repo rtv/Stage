@@ -228,7 +228,6 @@ void PowerPack::Dissipate( stg_joules_t j )
 
   output_vis.AppendValue( amount );
   stored_vis.AppendValue( stored );
-  //stg_watts_t w = j / (interval / 1e6);
 }
 
 void PowerPack::Dissipate( stg_joules_t j, const Pose& p )

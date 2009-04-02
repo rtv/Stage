@@ -10,12 +10,20 @@
 #include "config.h"
 using namespace Stg;
 
+const char* USAGE = 
+  "USAGE:  stage [options] [<worldfile>]\n"
+  "Available [options] are:\n"
+  "  --gui          : run without a GUI (same as -g)\n"
+  "  -g             : run without a GUI (same as --gui)\n"
+  "  --help         : print this message.\n"
+  "  -h             : print this message.\n"
+  "  -?             : print this message.\n"
+  " If <worldfile> is not specified, Stage starts with a file selector dialog";
+
 /* options descriptor */
 static struct option longopts[] = {
 	{ "gui",  optional_argument,   NULL,  'g' },
-	{ "port",  required_argument,   NULL,  'p' },
-	{ "host",  required_argument,   NULL,  'h' },
-	{ "federation",  required_argument,   NULL,  'f' },
+	{ "help",  optional_argument,   NULL,  'h' },
 	{ NULL, 0, NULL, 0 }
 };
 
@@ -29,7 +37,7 @@ int main( int argc, char* argv[] )
   int ch=0, optindex=0;
   bool usegui = true;
   
-  while ((ch = getopt_long(argc, argv, "gfp:h:f:", longopts, &optindex)) != -1)
+  while ((ch = getopt_long(argc, argv, "gh?", longopts, &optindex)) != -1)
 	 {
 		switch( ch )
 		  {
@@ -40,12 +48,15 @@ int main( int argc, char* argv[] )
 			 usegui = false;
 			 printf( "[GUI disabled]" );
 			 break;
-		  case 'p':
-			 printf( "PORT %d\n", atoi(optarg) );
+		  case 'h':  
 		  case '?':  
+			 puts( USAGE );
+			 exit(0);
 			 break;
 		  default:
 			 printf("unhandled option %c\n", ch );
+			 puts( USAGE );
+			 exit(0);
 		  }
 	 }
   
@@ -76,17 +87,10 @@ int main( int argc, char* argv[] )
 		new WorldGui( 400, 300 );
 	 }
   
-  if( usegui == true ) 
-	 {
-		//don't close the window once time has finished
-		while( true )
-		  World::UpdateAll();
-	 } 
-  else 
-	 {
-		//close program once time has completed
-		bool quit = false;
-		while( quit == false )
-		  quit = World::UpdateAll();
-	 }
+  if( usegui )
+	 while( true ) World::UpdateAll();
+  else
+	 while( ! World::UpdateAll() );
+
+  exit(0);
 }

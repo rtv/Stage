@@ -247,15 +247,12 @@ void Model::PopCoords()
 
 void Model::AddVisualizer( Visualizer* custom_visual, bool on_by_default )
 {
-	if( !custom_visual )
-		return;
-
-	//Visualizations can only be added to stage when run in a GUI
-	if( world_gui == NULL ) 
-	  {
-		 printf( "Unable to add custom visualization - it must be run with a GUI world\n" );
-		 return;
-	  }
+  if( !custom_visual )
+	 return;
+  
+  // If there's no GUI, ignore this request
+  if( ! world_gui ) 
+	 return;
 	
 	//save visual instance
 	custom_visual_list = g_list_append(custom_visual_list, custom_visual );
