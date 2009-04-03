@@ -294,10 +294,11 @@ void PowerPack::DissipationVis::Accumulate( stg_meters_t x,
   int ix = (x+width/2.0)/cellsize;
   int iy = (y+height/2.0)/cellsize;
 
-  assert( ix >= 0 );
-  assert( ix < (int)columns );
-  assert( iy >= 0 );
-  assert( iy < (int)rows );
+  // don't accumulate if we're outside the grid
+  if( ! ix >= 0 ) return;
+  if( ! ix < columns ) return;
+  if( ! iy >= 0 ) return;
+  if( ! iy < rows ) return;
 
   stg_joules_t* j = cells + (iy*columns + ix );
   

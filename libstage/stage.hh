@@ -2253,7 +2253,7 @@ namespace Stg
 	 stg_radians_t fov;
 	 stg_radians_t pan;
 
-	 static  const char* typestr;
+	 static const char* typestr;
 
 	 // constructor
 	 ModelBlobfinder( World* world,
@@ -2401,27 +2401,19 @@ namespace Stg
 	 struct config_t
 	 {
 		Size paddle_size; ///< paddle dimensions 
-		
 		paddle_state_t paddles;
-		lift_state_t lift;
-		
+		lift_state_t lift;		
 		double paddle_position; ///< 0.0 = full open, 1.0 full closed
 		double lift_position; ///< 0.0 = full down, 1.0 full up
-		
 		Model* gripped;
-
-		bool paddles_stalled; // true iff some solid object stopped
-		// the paddles closing or opening
-		
+		bool paddles_stalled; // true iff some solid object stopped the paddles closing or opening
 		double close_limit; ///< How far the gripper can close. If < 1.0, the gripper has its mouth full.		
 		bool autosnatch; ///< if true, cycle the gripper through open-close-up-down automatically
-
 		double break_beam_inset[2]; ///< distance from the end of the paddle
-
       Model* beam[2]; ///< points to a model detected by the beams
       Model* contact[2]; ///< pointers to a model detected by the contacts		
 	 };
-	 	 
+	 
   private:
 	 virtual void Update();
 	 virtual void DataVisualize( Camera* cam );
@@ -2460,7 +2452,6 @@ namespace Stg
 	 
 	 /** Set the current activity of the gripper. */
 	 void SetCommand( cmd_t cmd ) { this->cmd = cmd; }
-
 	 /** Command the gripper paddles to close. Wrapper for SetCommand( CMD_CLOSE ). */
 	 void CommandClose() { SetCommand( CMD_CLOSE ); }
 	 /** Command the gripper paddles to open. Wrapper for SetCommand( CMD_OPEN ). */
