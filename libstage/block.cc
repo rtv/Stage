@@ -314,6 +314,87 @@ void Block::GenerateCandidateCells()
   mapped = true;
 }
 
+void Block::Rasterize( uint8_t* data, unsigned int width, unsigned int height )
+{
+  Pose pose;// = mod->GetPose();
+  
+  // add local offset
+  pose = pose_sum( pose, mod->geom.pose );
+  
+  Size bgsize = mod->blockgroup.GetSize();
+
+  double scalex = (width-1) / bgsize.x;
+  double scaley = (height-1) / bgsize.y;
+ 
+  Rasterize( data, width, height, scalex, scaley, 0,0 );  
+}
+
+void swap( int& a, int& b )
+{
+  int tmp = a;
+  a = b;
+  b = tmp;
+}
+
+void Block::Rasterize( uint8_t* data, 
+							  unsigned int width, unsigned int height, 
+							  double scalex, double scaley, 
+							  double offsetx, double offsety )
+{
+  //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
+  //	 this, width, height, scalex, scaley, offsetx, offsety );
+
+  for( unsigned int p=0; p<pt_count; p++ )
+    {
+		int xa = round( (pts[p             ].x + offsetx) * scalex );
+		int ya = round( (pts[p             ].y + offsety) * scaley );
+		int xb = round( (pts[(p+1)%pt_count].x + offsetx) * scalex );
+		int yb = round( (pts[(p+1)%pt_count].y + offsety) * scaley );
+
+		//printf( "  line (%d,%d) to (%d,%d)\n", xa,ya,xb,yb );
+		
+  		bool steep = abs( yb-ya ) > abs( xb-xa );
+  		if( steep )
+  		  {
+  			 swap( xa, ya );
+  			 swap( xb, yb );
+  		  }
+		
+ 		if( xa > xb )
+ 		  {
+ 			 swap( xa, xb );
+ 			 swap( ya, yb );
+ 		  }
+		
+		int x;
+		float dydx = (float) (yb - ya) / (float) (xb - xa);
+		float y = ya;
+		for (x=xa; x<=xb; x++) 
+		  {
+			 if( steep )
+				{
+				  if( ! (round(y) >= 0) ) continue;
+				  if( ! (round(y) < (int)width) ) continue;
+				  if( ! (x >= 0) ) continue;
+				  if( ! (x < height) ) continue;
+				}
+			 else
+				{
+				  if( ! (x >= 0) ) continue;
+				  if( ! (x < (int)width) ) continue;
+				  if( ! (round(y) >= 0) ) continue;
+				  if( ! (round(y) < height) ) continue;
+				}
+			 
+			 if( steep )
+				data[ (int)round(y) + (x * width)] = 1;
+			 else
+				data[ x + ((int)round(y) * width)] = 1;
+			 y = y + dydx;
+		  }
+	 }
+}
+
 
 void Block::DrawTop()
 {

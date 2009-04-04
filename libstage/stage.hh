@@ -1121,6 +1121,14 @@ namespace Stg
   
     stg_color_t GetColor();
   
+	 void Rasterize( uint8_t* data, 
+						  unsigned int width, unsigned int height, 
+						  double scalex, double scaley, 
+						  double offsetx, double offsety );
+	 
+	 void Rasterize( uint8_t* data, 
+						  unsigned int width, unsigned int height );		
+	 
   private:
     Model* mod; ///< model to which this block belongs
   
@@ -1187,9 +1195,8 @@ namespace Stg
     void CallDisplayList( Model* mod );
     void Clear() ; /** deletes all blocks from the group */
 	 
-	 	 GList* AppendTouchingModels( GList* list );
-	 //void AddTouchingModelsToList( GList* list );
-
+	 GList* AppendTouchingModels( GList* list );
+	
     /** Returns a pointer to the first model detected to be colliding
 		  with a block in this group, or NULL, if none are detected. */
     Model* TestCollision();
@@ -1207,6 +1214,8 @@ namespace Stg
 
     void LoadBitmap( Model* mod, const char* bitmapfile, Worldfile *wf );
     void LoadBlock( Model* mod, Worldfile* wf, int entity );
+
+	 void Rasterize( uint8_t* data, unsigned int width, unsigned int height );
   };
 
 
@@ -1722,6 +1731,10 @@ namespace Stg
 	 Visibility vis;
 
 	 stg_usec_t GetSimInterval(){ return world->interval_sim; }
+	 
+	 /** Render the model's blocks as an occupancy grid into the
+		  preallocated array of width by height pixels */
+	 void Rasterize( uint8_t* data, unsigned int width, unsigned int height );
 
 	 void Lock()
 	 { 

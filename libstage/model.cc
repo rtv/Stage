@@ -1020,3 +1020,7 @@ void Model::RegisterOption( Option* opt )
 }
 
 
+void Model::Rasterize( uint8_t* data, unsigned int width, unsigned int height )
+{
+  blockgroup.Rasterize( data, width, height );
+}

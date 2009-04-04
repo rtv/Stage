@@ -502,6 +502,24 @@ public:
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
 {  
+  if( strcmp( mod->Token(), "r0" ) == 0 )
+	 {
+		const unsigned int dw = 60, dh = 30;
+		uint8_t* data = new uint8_t[dw*dh*2];
+		memset( data, 0, sizeof(uint8_t) * dw * dh );
+		
+		mod->GetWorld()->GetModel( "cave" )->Rasterize( data, dw, dh );
+		
+		putchar( '\n' );
+		for( unsigned int y=0; y<dh; y++ )
+		  {
+			 for( unsigned int x=0; x<dw; x++ )
+				putchar( data[x + ((dh-y-1)*dw)] ? 'O' : '.' );
+			 putchar( '\n' );
+		  }
+		delete data;
+	 }
+
   new Robot( (ModelPosition*)mod,
 				 mod->GetWorld()->GetModel( "source" ),
 				 mod->GetWorld()->GetModel( "sink" ) );

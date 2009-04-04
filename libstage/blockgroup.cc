@@ -305,3 +305,15 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
 
   CalcSize();
 }
+
+
+#include <math.h>                     /* for round() */
+extern void output (int x, int y);    /* forward declaration for user-defined output */
+
+
+
+void BlockGroup::Rasterize( uint8_t* data, unsigned int width, unsigned int height )
+{  
+  for( GList* it = blocks; it; it=it->next )
+	 ((Block*)it->data)->Rasterize( data, width, height );
+}
