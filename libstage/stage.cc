@@ -351,7 +351,7 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 			// inverting the original image.
 			stg_rotrect_t *latest = &(*rects)[(*rect_count)-1];
 			latest->pose.x = startx;
-			latest->pose.y = img_height - (starty + height);
+			latest->pose.y = img_height-1 - (starty + height);
 			latest->pose.a = 0.0;
 			latest->size.x = x - startx;
 			latest->size.y = height;

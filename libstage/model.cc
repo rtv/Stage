@@ -218,6 +218,7 @@ Model::Model( World* world,
 	 power_pack( NULL ),
 	 pps_charging(NULL),
     props(NULL),
+	 rastervis(),
     rebuild_displaylist(true),
     say_string(NULL),
     stall(false),	 
@@ -262,6 +263,8 @@ Model::Model( World* world,
   
   // now we can add the basic square shape
   AddBlockRect( -0.5, -0.5, 1.0, 1.0, 1.0 );
+
+  AddVisualizer( &rastervis, true );
 
   PRINT_DEBUG2( "finished model %s @ %p", this->token, this );
 }
@@ -1023,4 +1026,91 @@ void Model::RegisterOption( Option* opt )
 void Model::Rasterize( uint8_t* data, unsigned int width, unsigned int height )
 {
   blockgroup.Rasterize( data, width, height );
+  rastervis.SetData( data, width, height );
 }
+
+//***************************************************************
+// Raster data visualizer
+//
+Model::RasterVis::RasterVis() 
+  : Visualizer( "Rasterization", "raster_vis" ),
+	 data(NULL),
+	 width(0),
+	 height(0)
+{
+}
+
+void Model::RasterVis::Visualize( Model* mod, Camera* cam ) 
+{
+  if( data == NULL )
+	 return;
+
+  // go into world coordinates  
+  glPushMatrix();
+  mod->PushColor( 0,0,0,0.5 );
+
+  Gl::pose_inverse_shift( mod->GetGlobalPose() );
+
+  glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
+  glScalef( mod->geom.size.x / width, mod->geom.size.y / height, 1 );
+
+  glPolygonMode( GL_FRONT, GL_FILL );
+  for( unsigned int y=0; y<height; y++ )
+	 for( unsigned int x=0; x<width; x++ )
+		{
+		  // printf( "[%u %u] ", x, y );
+
+		  if( (x == (92/5)) && (y == (750/10) ))
+			 {
+				mod->PushColor( 1,0,0,0.5 );
+				glRectf( x, y, x+1, y+1 );
+				mod->PopColor();
+			 }
+			 else  if( data[ x + y*width ] )
+			 glRectf( x, y, x+1, y+1 );
+		}
+
+  glTranslatef( 0,0,0.01 );
+
+  mod->PushColor( 0,0,0,1 );
+  glPolygonMode( GL_FRONT, GL_LINE );
+  for( unsigned int y=0; y<height; y++ )
+	 for( unsigned int x=0; x<width; x++ )
+		{
+		  //if( data[ x + y*width ] )
+			 glRectf( x, y, x+1, y+1 );
+
+		  char buf[128];
+		  snprintf( buf, 127, "[%u x %u]", x, y );
+		  Gl::draw_string( x, y, 0, buf );		  
+		}
+
+
+  glPolygonMode( GL_FRONT, GL_FILL );
+
+  mod->PopColor();
+  mod->PopColor();
+
+  mod->PushColor( 0,0,0,1 );
+  char buf[128];
+  snprintf( buf, 127, "[%u x %u]", width, height );
+  glTranslatef( 0,0,0.01 );
+  Gl::draw_string( 1, height-1, 0, buf );
+  mod->PopColor();
+
+  glPopMatrix();
+}
+
+void Model::RasterVis::SetData( uint8_t* data, unsigned int width, unsigned int height )
+{
+  // copy the raster for test visualization
+  if( this->data ) 
+	 free( this->data );  
+  size_t len = sizeof(uint8_t) * width * height;
+  this->data = (uint8_t*)malloc( len );
+  memcpy( this->data, data, len );
+  this->width = width;
+  this->height = height;
+}
+
+

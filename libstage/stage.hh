@@ -1631,7 +1631,23 @@ namespace Stg
 	 static GHashTable*  modelsbyid;
 	 std::vector<Option*> drawOptions;
 	 const std::vector<Option*>& getOptions() const { return drawOptions; }
-  
+	 
+	 class RasterVis : public Visualizer
+	 {
+	 private:
+		uint8_t* data;
+		unsigned int width, height;
+		
+	 public:
+		RasterVis();
+		virtual ~RasterVis( void ){}
+		virtual void Visualize( Model* mod, Camera* cam );
+		
+		void SetData( uint8_t* data, 
+						  unsigned int width, 
+						  unsigned int height );
+	 };
+	 
   protected:
 	 GMutex* access_mutex;
 	 GPtrArray* blinkenlights;  
@@ -1699,6 +1715,10 @@ namespace Stg
 		  by derived model types to store properties, and for user code
 		  to associate arbitrary items with a model. */
 	 GData* props;
+
+	 /** Visualize the most recent rasterization operation performed by this model */
+	 RasterVis rastervis;
+
 	 bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
 	 char* say_string;   ///< if non-null, this string is displayed in the GUI 
 

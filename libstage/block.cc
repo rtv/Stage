@@ -316,24 +316,31 @@ void Block::GenerateCandidateCells()
 
 void Block::Rasterize( uint8_t* data, unsigned int width, unsigned int height )
 {
-  Pose pose;// = mod->GetPose();
-  
   // add local offset
-  pose = pose_sum( pose, mod->geom.pose );
+  // pose = pose_sum( pose, mod->geom.pose );
   
   Size bgsize = mod->blockgroup.GetSize();
 
-  double scalex = (width-1) / bgsize.x;
-  double scaley = (height-1) / bgsize.y;
+  double scalex = (double)(width) / (double)bgsize.x;
+  double scaley = (double)(height) / (double)bgsize.y;
+  //double scalex = (width) / bgsize.x;
+  //double scaley = (height) / bgsize.y;
  
   Rasterize( data, width, height, scalex, scaley, 0,0 );  
 }
 
-void swap( int& a, int& b )
+// void swap( int& a, int& b )
+// {
+//   int tmp = a;
+//   a = b;
+//   b = tmp;
+// }
+
+void swap( int* a, int* b )
 {
-  int tmp = a;
-  a = b;
-  b = tmp;
+  int foo = *a;
+  *a = *b;
+  *b = foo;
 }
 
 void Block::Rasterize( uint8_t* data, 
@@ -344,53 +351,86 @@ void Block::Rasterize( uint8_t* data,
   //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
   //	 this, width, height, scalex, scaley, offsetx, offsety );
 
-  for( unsigned int p=0; p<pt_count; p++ )
+  unsigned int W=0;
+
+//   W+=20;
+//   W /= 2;
+  
+//   printf( "W is %u", W ); 
+
+  for( W=0; W<pt_count; W++ )
     {
-		int xa = round( (pts[p             ].x + offsetx) * scalex );
-		int ya = round( (pts[p             ].y + offsety) * scaley );
-		int xb = round( (pts[(p+1)%pt_count].x + offsetx) * scalex );
-		int yb = round( (pts[(p+1)%pt_count].y + offsety) * scaley );
+		double px = pts[W             ].x;
+		double py = pts[(W+1)%pt_count].x;
+		unsigned int keep_W = W;
+
+ 		int xa = floor( (pts[W             ].x + offsetx) * scalex );
+ 		int ya = floor( (pts[W             ].y + offsety) * scaley );
+ 		int xb = floor( (pts[(W+1)%pt_count].x + offsetx) * scalex );
+ 		int yb = floor( (pts[(W+1)%pt_count].y + offsety) * scaley );
+
+		int keep_xa = xa;
+		int keep_xb = xb;
+		
 
 		//printf( "  line (%d,%d) to (%d,%d)\n", xa,ya,xb,yb );
 		
   		bool steep = abs( yb-ya ) > abs( xb-xa );
-  		if( steep )
+		if( steep )
+		  {
+			 swap( &xa, &ya );
+			 swap( &xb, &yb );
+		  }
+		
+  		if( xa > xb )
   		  {
-  			 swap( xa, ya );
-  			 swap( xb, yb );
+  			 swap( &xa, &xb );
+  			 swap( &ya, &yb );
   		  }
 		
- 		if( xa > xb )
- 		  {
- 			 swap( xa, xb );
- 			 swap( ya, yb );
- 		  }
-		
-		int x;
-		float dydx = (float) (yb - ya) / (float) (xb - xa);
-		float y = ya;
-		for (x=xa; x<=xb; x++) 
+		double dydx = (double) (yb - ya) / (double) (xb - xa);
+		double y = ya;
+		for(int x=xa; x<=xb; x++) 
 		  {
-			 if( steep )
-				{
-				  if( ! (round(y) >= 0) ) continue;
-				  if( ! (round(y) < (int)width) ) continue;
-				  if( ! (x >= 0) ) continue;
-				  if( ! (x < height) ) continue;
-				}
-			 else
-				{
-				  if( ! (x >= 0) ) continue;
-				  if( ! (x < (int)width) ) continue;
-				  if( ! (round(y) >= 0) ) continue;
-				  if( ! (round(y) < height) ) continue;
-				}
+		// 	 if( steep )
+// 				{
+// 				  if( ! (floor(y) >= 0) ) continue;
+// 				  if( ! (floor(y) < (int)width) ) continue;
+// 				  if( ! (x >= 0) ) continue;
+// 				  if( ! (x < (int)height) ) continue;
+// 				}
+// 			 else
+// 				{
+// 				  if( ! (x >= 0) ) continue;
+// 				  if( ! (x < (int)width) ) continue;
+// 				  if( ! (floor(y) >= 0) ) continue;
+// 				  if( ! (floor(y) < (int)height) ) continue;
+// 				}
 			 
 			 if( steep )
-				data[ (int)round(y) + (x * width)] = 1;
+				data[ (int)floor(y) + (x * width)] = 1;			 
 			 else
-				data[ x + ((int)round(y) * width)] = 1;
-			 y = y + dydx;
+				data[ x + ((int)floor(y) * width)] = 1;
+			 y += dydx;
+
+// 			 if( (floor(y) == 75) &&
+// 				  x == 119 )
+// 				{
+// 				  puts( "foo" );
+// 				  // while(1) {}
+
+// 				  printf( "W: %u keep_W: %u  px: %.4f\npy: %.4f\n",
+// 							 W, keep_W,
+// 							 px, py );
+
+// 				  printf( "XA: %.4f\nXB: %.4f\n",
+// 							 (pts[W             ].x + offsetx) * scalex,
+// 							 (pts[(W+1)%pt_count].x + offsetx) * scalex );
+
+// 				  printf( "KEEP: %d %d\n", keep_xa, keep_xb );
+// 				  printf( "NOW: %d %d\n", xa, xb );
+// 				}
+
 		  }
 	 }
 }

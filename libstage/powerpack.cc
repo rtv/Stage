@@ -266,7 +266,7 @@ void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
   
   glPushMatrix();
 
-  Gl::pose_inverse_shift( mod->GetPose() );
+  Gl::pose_inverse_shift( mod->GetGlobalPose() );
 
   glTranslatef( -width/2.0, -height/2.0, 0.01 );
   glScalef( cellsize, cellsize, 1 );

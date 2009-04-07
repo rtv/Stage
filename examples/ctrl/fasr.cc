@@ -504,7 +504,7 @@ extern "C" int Init( Model* mod )
 {  
   if( strcmp( mod->Token(), "r0" ) == 0 )
 	 {
-		const unsigned int dw = 60, dh = 30;
+		const unsigned int dw = 61, dh = 31;
 		uint8_t* data = new uint8_t[dw*dh*2];
 		memset( data, 0, sizeof(uint8_t) * dw * dh );
 		
