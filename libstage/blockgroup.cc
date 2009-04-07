@@ -270,9 +270,12 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
   
   //printf( "found %d rects in \"%s\" at %p\n", 
   //	  rect_count, full, rects );
-  
+			 
   if( rects && (rect_count > 0) )
 	 {
+		// TODO fix this
+		stg_color_t col = stg_color_pack( 1.0, 0,0,1.0 ); 
+		
 		for( unsigned int r=0; r<rect_count; r++ )
 		  {
 			 stg_point_t pts[4];
@@ -291,9 +294,6 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
 			 pts[3].x = x;
 			 pts[3].y = y + h;							 
 			 
-			 // TODO fix this
-			 stg_color_t col = stg_color_pack( 1.0, 0,0,1.0 ); 
-			 
 			 AppendBlock( new Block( mod,
 											 pts,4,
 											 0,1,
@@ -302,14 +302,9 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
 		  }			 
 		free( rects );
 	 }  
-
+  
   CalcSize();
 }
-
-
-#include <math.h>                     /* for round() */
-extern void output (int x, int y);    /* forward declaration for user-defined output */
-
 
 
 void BlockGroup::Rasterize( uint8_t* data, unsigned int width, unsigned int height )

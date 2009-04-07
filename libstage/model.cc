@@ -1025,6 +1025,7 @@ void Model::RegisterOption( Option* opt )
 
 void Model::Rasterize( uint8_t* data, unsigned int width, unsigned int height )
 {
+  rastervis.ClearPts();
   blockgroup.Rasterize( data, width, height );
   rastervis.SetData( data, width, height );
 }
@@ -1036,7 +1037,8 @@ Model::RasterVis::RasterVis()
   : Visualizer( "Rasterization", "raster_vis" ),
 	 data(NULL),
 	 width(0),
-	 height(0)
+	 height(0),
+	 pts(NULL)
 {
 }
 
@@ -1047,26 +1049,44 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 
   // go into world coordinates  
   glPushMatrix();
-  mod->PushColor( 0,0,0,0.5 );
+  mod->PushColor( 1,0,0,0.5 );
 
   Gl::pose_inverse_shift( mod->GetGlobalPose() );
 
+  glPushMatrix();
+
+  Size sz = mod->blockgroup.GetSize();
+  glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
+  glScalef( mod->geom.size.x / sz.x, mod->geom.size.y / sz.y, 1 );
+
+  // now we're in world meters coordinates
+  glPointSize( 4 );
+  glBegin( GL_POINTS );
+  for( GList* it=pts; it; it=it->next )
+	 {
+		stg_point_t* pt = (stg_point_t*)it->data;
+		glVertex2f( pt->x, pt->y );
+
+		char buf[128];
+		snprintf( buf, 127, "[%.2f x %.2f]", pt->x, pt->y );
+		Gl::draw_string( pt->x, pt->y, 0, buf );		  
+	 }
+  glEnd();
+
+  mod->PopColor();
+
+  glPopMatrix();
+  // go into bitmap pixel coords
   glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
   glScalef( mod->geom.size.x / width, mod->geom.size.y / height, 1 );
 
+  mod->PushColor( 0,0,0,0.5 );
   glPolygonMode( GL_FRONT, GL_FILL );
   for( unsigned int y=0; y<height; y++ )
 	 for( unsigned int x=0; x<width; x++ )
 		{
 		  // printf( "[%u %u] ", x, y );
-
-		  if( (x == (92/5)) && (y == (750/10) ))
-			 {
-				mod->PushColor( 1,0,0,0.5 );
-				glRectf( x, y, x+1, y+1 );
-				mod->PopColor();
-			 }
-			 else  if( data[ x + y*width ] )
+		  if( data[ x + y*width ] )
 			 glRectf( x, y, x+1, y+1 );
 		}
 
@@ -1077,9 +1097,9 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
   for( unsigned int y=0; y<height; y++ )
 	 for( unsigned int x=0; x<width; x++ )
 		{
-		  //if( data[ x + y*width ] )
+		  if( data[ x + y*width ] )
 			 glRectf( x, y, x+1, y+1 );
-
+		  
 // 		  char buf[128];
 // 		  snprintf( buf, 127, "[%u x %u]", x, y );
 // 		  Gl::draw_string( x, y, 0, buf );		  
@@ -1096,21 +1116,40 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
   snprintf( buf, 127, "[%u x %u]", width, height );
   glTranslatef( 0,0,0.01 );
   Gl::draw_string( 1, height-1, 0, buf );
+  
   mod->PopColor();
 
   glPopMatrix();
 }
 
-void Model::RasterVis::SetData( uint8_t* data, unsigned int width, unsigned int height )
+void Model::RasterVis::SetData( uint8_t* data, 
+										  unsigned int width, 
+										  unsigned int height )
 {
   // copy the raster for test visualization
   if( this->data ) 
-	 free( this->data );  
+	 delete[] this->data;  
   size_t len = sizeof(uint8_t) * width * height;
-  this->data = (uint8_t*)malloc( len );
+  printf( "allocating %lu bytes\n", len );
+  this->data = new uint8_t[len];
   memcpy( this->data, data, len );
   this->width = width;
   this->height = height;
 }
 
 
+void Model::RasterVis::AddPoint( stg_meters_t x, stg_meters_t y )
+{
+  stg_point_t* pt = new stg_point_t;
+  pt->x = x;
+  pt->y = y;
+  pts = g_list_prepend( pts, pt );
+}
+
+void Model::RasterVis::ClearPts()
+{
+  if( pts )
+	 for( GList* it=pts; it; it=it->next )
+		if( it->data )
+		  delete (stg_point_t*)it->data;
+}

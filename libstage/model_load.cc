@@ -147,16 +147,13 @@ void Model::Load()
     {
       const char* bitmapfile = wf->ReadString( wf_entity, "bitmap", NULL );
       assert( bitmapfile );
-
+		
       if( has_default_block )
-	{
-	  blockgroup.Clear();
-	  has_default_block = false;
-	}
-
-      //puts( "clearing blockgroup" );
-      //blockgroup.Clear();
-      //puts( "loading bitmap" );
+		  {
+			 blockgroup.Clear();
+			 has_default_block = false;
+		  }
+		
       blockgroup.LoadBitmap( this, bitmapfile, wf );
     }
   

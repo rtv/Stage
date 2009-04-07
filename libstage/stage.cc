@@ -284,8 +284,8 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 	size_t rects_allocated = allocation_unit;
 	*rects = (stg_rotrect_t*)calloc( sizeof(stg_rotrect_t), rects_allocated );
 
-	int img_width = img->w();//gdk_pixbuf_get_width(pb);
-	int img_height = img->h();//gdk_pixbuf_get_height(pb);
+	int img_width = img->w();
+	int img_height = img->h();
 
 	// if the caller wanted to know the dimensions
 	if( widthp ) *widthp = img_width;
@@ -355,6 +355,17 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 			latest->pose.a = 0.0;
 			latest->size.x = x - startx;
 			latest->size.y = height;
+
+			assert( latest->pose.x >= 0 );
+			assert( latest->pose.y >= 0 );
+			assert( latest->pose.x <= img_width );
+			assert( latest->pose.y <= img_height);
+			//assert( latest->size.x > 0 );
+			//assert( latest->size.y > 0 );
+
+			if( latest->size.x < 1  || latest->size.y < 1 )
+			  printf( "p [%.2f %.2f] s [%.2f %.2f]\n", 
+						 latest->pose.x, latest->pose.y, latest->size.x, latest->size.y );
 
 			//printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
 			//  *rect_count, 

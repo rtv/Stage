@@ -360,14 +360,17 @@ void Block::Rasterize( uint8_t* data,
 
   for( W=0; W<pt_count; W++ )
     {
-		double px = pts[W             ].x;
-		double py = pts[(W+1)%pt_count].x;
+		double px = pts[W].x;
+		double py = pts[W].y;
+
 		unsigned int keep_W = W;
 
  		int xa = floor( (pts[W             ].x + offsetx) * scalex );
  		int ya = floor( (pts[W             ].y + offsety) * scaley );
  		int xb = floor( (pts[(W+1)%pt_count].x + offsetx) * scalex );
  		int yb = floor( (pts[(W+1)%pt_count].y + offsety) * scaley );
+
+		mod->rastervis.AddPoint( px, py );
 
 		int keep_xa = xa;
 		int keep_xb = xb;

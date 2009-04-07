@@ -1637,7 +1637,8 @@ namespace Stg
 	 private:
 		uint8_t* data;
 		unsigned int width, height;
-		
+		GList* pts;
+
 	 public:
 		RasterVis();
 		virtual ~RasterVis( void ){}
@@ -1646,6 +1647,10 @@ namespace Stg
 		void SetData( uint8_t* data, 
 						  unsigned int width, 
 						  unsigned int height );
+
+		void AddPoint( stg_meters_t x, stg_meters_t y );
+		void ClearPts();
+		
 	 };
 	 
   protected:
