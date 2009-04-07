@@ -127,7 +127,7 @@ FILE *Worldfile::FileOpen(const char *filename, const char* method)
   // accordingly if found:
   char *stagepath = getenv("STAGEPATH");
   char *token = strtok(stagepath, ":");
-  char *fullpath = (char*) malloc(PATH_MAX);
+  char* fullpath = new char[PATH_MAX];
   char *tmp = strdup(filename);
   char *base = basename(tmp);
   while (token != NULL) {
@@ -509,7 +509,7 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
       // we need to make a copy of the filename.
       // There's no bounds-checking, but what the heck.
       char *tmp = strdup(this->filename);
-      fullpath = (char*) malloc(PATH_MAX);
+      fullpath = new char[PATH_MAX];
       memset(fullpath, 0, PATH_MAX);
       strcat( fullpath, dirname(tmp));
       strcat( fullpath, "/" );
@@ -523,7 +523,7 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
       // we need to make a copy of the filename.
       // There's no bounds-checking, but what the heck.
       char *tmp = strdup(this->filename);
-      fullpath = (char*) malloc(PATH_MAX);
+      fullpath = new char[PATH_MAX];
       getcwd(fullpath, PATH_MAX);
       strcat( fullpath, "/" );
       strcat( fullpath, dirname(tmp));
@@ -542,7 +542,8 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
     {
       PRINT_ERR2("unable to open include file %s : %s",
 		 fullpath, strerror(errno));
-      free(fullpath);
+      //free(fullpath);
+		delete[] fullpath;
       return false;
     }
 
@@ -556,7 +557,8 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
     {
 		fclose( infile );
       //DumpTokens();
-      free(fullpath);
+      //free(fullpath);
+		delete[] fullpath;
       return false;
     }
 
@@ -568,7 +570,7 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
   while ( ch != '\n' )
     ch = fgetc(file);
 
-  free(fullpath);
+  delete[] fullpath;
   return true;
 }
 
@@ -1628,7 +1630,7 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
       // we need to make a copy of the filename.
       // There's no bounds-checking, but what the heck.
       char *tmp = strdup(this->filename);
-      char *fullpath = (char*) malloc(PATH_MAX);
+		char* fullpath = new char[PATH_MAX];
       memset(fullpath, 0, PATH_MAX);
       strcat( fullpath, dirname(tmp));
       strcat( fullpath, "/" );
@@ -1644,7 +1646,7 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
       // we need to make a copy of the filename.
       // There's no bounds-checking, but what the heck.
       char *tmp = strdup(this->filename);
-      char *fullpath = (char*) malloc(PATH_MAX);
+		char* fullpath = new char[PATH_MAX];
       getcwd(fullpath, PATH_MAX);
       strcat( fullpath, "/" );
       strcat( fullpath, dirname(tmp));
