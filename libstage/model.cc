@@ -264,7 +264,7 @@ Model::Model( World* world,
   // now we can add the basic square shape
   AddBlockRect( -0.5, -0.5, 1.0, 1.0, 1.0 );
 
-  AddVisualizer( &rastervis, true );
+  AddVisualizer( &rastervis, false );
 
   PRINT_DEBUG2( "finished model %s @ %p", this->token, this );
 }
@@ -1080,9 +1080,9 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 		  //if( data[ x + y*width ] )
 			 glRectf( x, y, x+1, y+1 );
 
-		  char buf[128];
-		  snprintf( buf, 127, "[%u x %u]", x, y );
-		  Gl::draw_string( x, y, 0, buf );		  
+// 		  char buf[128];
+// 		  snprintf( buf, 127, "[%u x %u]", x, y );
+// 		  Gl::draw_string( x, y, 0, buf );		  
 		}
 
 
