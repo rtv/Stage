@@ -1053,29 +1053,34 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 
   Gl::pose_inverse_shift( mod->GetGlobalPose() );
 
-  glPushMatrix();
-
-  Size sz = mod->blockgroup.GetSize();
-  glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
-  glScalef( mod->geom.size.x / sz.x, mod->geom.size.y / sz.y, 1 );
-
-  // now we're in world meters coordinates
-  glPointSize( 4 );
-  glBegin( GL_POINTS );
-  for( GList* it=pts; it; it=it->next )
+  
+  if( pts )
 	 {
-		stg_point_t* pt = (stg_point_t*)it->data;
-		glVertex2f( pt->x, pt->y );
-
-		char buf[128];
-		snprintf( buf, 127, "[%.2f x %.2f]", pt->x, pt->y );
-		Gl::draw_string( pt->x, pt->y, 0, buf );		  
+		glPushMatrix();
+		Size sz = mod->blockgroup.GetSize();
+		glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
+		glScalef( mod->geom.size.x / sz.x, mod->geom.size.y / sz.y, 1 );
+		
+		// now we're in world meters coordinates
+		glPointSize( 4 );
+		glBegin( GL_POINTS );
+		for( GList* it=pts; it; it=it->next )
+		  {
+			 stg_point_t* pt = (stg_point_t*)it->data;
+			 assert( pt );
+			 glVertex2f( pt->x, pt->y );
+			 
+			 char buf[128];
+			 snprintf( buf, 127, "[%.2f x %.2f]", pt->x, pt->y );
+			 Gl::draw_string( pt->x, pt->y, 0, buf );		  
+		  }
+		glEnd();
+		
+		mod->PopColor();
+		
+		glPopMatrix();
 	 }
-  glEnd();
 
-  mod->PopColor();
-
-  glPopMatrix();
   // go into bitmap pixel coords
   glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
   glScalef( mod->geom.size.x / width, mod->geom.size.y / height, 1 );

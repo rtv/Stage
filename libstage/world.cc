@@ -992,3 +992,6 @@ void World::StopUpdatingModelPose( Model* mod )
   // TODO XX figure out how to handle velcoties a bit better
   //velocity_list = g_list_remove( velocity_list, mod ); 
 }
+
+stg_usec_t World::SimTimeNow(void)
+{ return sim_time; }

@@ -996,7 +996,7 @@ namespace Stg
 	 
     virtual ~World();
   
-    stg_usec_t SimTimeNow(void){ return sim_time; }
+    stg_usec_t SimTimeNow(void);
     stg_usec_t RealTimeNow(void);
     stg_usec_t RealTimeSinceStart(void);
 	 
