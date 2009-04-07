@@ -398,6 +398,8 @@ void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha, double wid
   yaw = - cam->yaw();
   float robotAngle = -rtod(pose.a);
 
+  glPolygonMode( GL_FRONT, GL_FILL );
+
   glEnable(GL_TEXTURE_2D);
   glBindTexture( GL_TEXTURE_2D, texture_id );
 
