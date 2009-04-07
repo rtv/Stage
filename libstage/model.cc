@@ -1152,4 +1152,7 @@ void Model::RasterVis::ClearPts()
 	 for( GList* it=pts; it; it=it->next )
 		if( it->data )
 		  delete (stg_point_t*)it->data;
+
+  g_list_free( pts );
+  pts = NULL;
 }
