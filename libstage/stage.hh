@@ -373,7 +373,6 @@ namespace Stg
     Bounds z; 
   } stg_bounds3d_t;
   
-  
   /** Define a three-dimensional bounding box, initialized to zero */
   typedef struct
   {
@@ -567,7 +566,6 @@ namespace Stg
 
   // MACROS ------------------------------------------------------
   // Some useful macros
-
 
   /** Look up the color in the X11 database.  (i.e. transform color
       name to color value).  If the color is not found in the
@@ -2768,11 +2766,6 @@ namespace Stg
 
 	 Waypoint* waypoints;
 	 uint32_t waypoint_count;	 
-	 void DrawWaypoints();
-
-  private:
-	 static Option showCoords;
-	 static Option showWaypoints;
 
   public:
 	 static const char* typestr;
@@ -2787,11 +2780,29 @@ namespace Stg
 	 virtual void Update();
 	 virtual void Load();
 	 
-	 virtual void DataVisualize( Camera* cam );
-
 	 /** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
 	 Waypoint* SetWaypoints( Waypoint* wps, uint32_t count );
 	
+	 class WaypointVis : public Visualizer
+	 {
+	 public:
+		WaypointVis();
+		virtual ~WaypointVis( void ){}
+		virtual void Visualize( Model* mod, Camera* cam );
+	 };
+	 
+	 WaypointVis wpvis;
+	 
+	 class PoseVis : public Visualizer
+	 {
+	 public:
+		PoseVis();
+		virtual ~PoseVis( void ){}
+		virtual void Visualize( Model* mod, Camera* cam );
+	 };
+	 
+	 PoseVis posevis;
+
 	 /** Set the current pose estimate.*/
 	 void SetOdom( Pose odom );
 

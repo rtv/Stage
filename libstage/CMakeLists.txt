@@ -4,7 +4,6 @@ MESSAGE( STATUS "Configuring libstage" )
 include_directories(${PROJECT_BINARY_DIR})
 
 set( stageSrcs    
-   vis_strip.cc
    ancestor.cc
 	block.cc
 	blockgroup.cc
@@ -35,6 +34,7 @@ set( stageSrcs
 	stage.hh
 	texture_manager.cc
 	typetable.cc
+   vis_strip.cc
 	waypoint.cc
 	world.cc
 	worldfile.cc

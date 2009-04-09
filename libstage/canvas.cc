@@ -574,13 +574,13 @@ void Canvas::DrawGlobalGrid()
   
   char str[64];	
   PushColor( 0.15, 0.15, 0.15, 1.0 ); // pale gray
-  for( double i = floor(bounds.x.min); i < bounds.x.max; i++)
+  for( double i = ceil(bounds.x.min); i < bounds.x.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
 		Gl::draw_string(  i, 0, 0.00, str );
     }
   
-  for( double i = floor(bounds.y.min); i < bounds.y.max; i++)
+  for( double i = ceil(bounds.y.min); i < bounds.y.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
 		Gl::draw_string(  0, i, 0.00, str );
@@ -610,7 +610,25 @@ void Canvas::DrawGlobalGrid()
 
   glDisable(GL_TEXTURE_2D);
   glEnable(GL_BLEND);
-	
+  
+//   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+//   glTranslatef( 0,0,0.1 );
+//   glColor3f( 0, 1.0, 0 );
+
+//   glBegin( GL_LINES );
+//   for( float x=bounds.x.min; x<=bounds.x.max; x++ )
+// 	 {
+// 		glVertex2f( ceil(x), bounds.y.min );
+// 		glVertex2f( ceil(x), bounds.y.max );
+// 	 }
+  
+//   	 for( float y=bounds.y.min; y<=bounds.y.max; y++ )
+// 	 {
+// 		glVertex2f(  bounds.x.min, ceil(y) );
+// 		glVertex2f(  bounds.x.max, ceil(y) );
+// 	 }
+//   glEnd();
+
   glDisable(GL_POLYGON_OFFSET_FILL );
 }
 

@@ -14,12 +14,12 @@ const char* USAGE =
   "USAGE:  stage [options] [<worldfile>]\n"
   "Available [options] are:\n"
   "  --clock        : print simulation time peridically on standard output\n"
-  "  -c             : print simulation time peridically on standard output\n"
+  "  -c             : short for --clock\n"
   "  --gui          : run without a GUI\n"
-  "  -g             : run without a GUI\n"
-  "  --help         : print this message.\n"
-  "  -h             : print this message.\n"
-  "  -?             : print this message.\n"
+  "  -g             : short for --gui\n"
+  "  --help         : print this message\n"
+  "  -h             : short for --help\n"
+  "  -?             : short for --help\n"
   " If <worldfile> is not specified, Stage starts with a file selector dialog";
 
 /* options descriptor */

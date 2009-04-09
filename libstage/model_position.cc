@@ -19,7 +19,6 @@
 //#define DEBUG
 
 #include "stage.hh"
-#include "option.hh"
 #include "worldfile.hh"
 using namespace Stg;
 
@@ -86,14 +85,13 @@ const stg_position_control_mode_t POSITION_CONTROL_DEFAULT = STG_POSITION_CONTRO
 const stg_position_localization_mode_t POSITION_LOCALIZATION_DEFAULT = STG_POSITION_LOCALIZATION_GPS;
 const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIFFERENTIAL;
 
-Option ModelPosition::showCoords( "Position Coordinates", "show_coords", "", false, NULL );
-Option ModelPosition::showWaypoints( "Position Waypoints", "show_waypoints", "", true, NULL );
-
 ModelPosition::ModelPosition( World* world, 
 			      Model* parent )
   : Model( world, parent, MODEL_TYPE_POSITION ),
     waypoints( NULL ),
-    waypoint_count( 0 )
+    waypoint_count( 0 ),
+	 wpvis(),
+	 posevis()
 {
   PRINT_DEBUG2( "Constructing ModelPosition %d (%s)\n", 
 		id, typestr );
@@ -132,8 +130,8 @@ ModelPosition::ModelPosition( World* world,
     drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
     STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
   
-  RegisterOption( &showCoords );
-  RegisterOption( &showWaypoints );
+  AddVisualizer( &wpvis, true );
+  AddVisualizer( &posevis, false );
 }
 
 
@@ -238,10 +236,6 @@ void ModelPosition::Load( void )
 	PRINT_ERR1( "no localization mode string specified for model \"%s\"", 
 		    this->token );
     }
-
-  // TODO
-  // we've probably poked the localization data, so we must let people know
-  //model_change( mod, &mod->data );
 }
 
 void ModelPosition::Update( void  )
@@ -252,7 +246,7 @@ void ModelPosition::Update( void  )
   Velocity vel;
   memset( &vel, 0, sizeof(Velocity) );
 
-  if( this->subs )   // no driving if noone is subscribed
+  if( this->subs ) // no driving if noone is subscribed
     {            
       switch( control_mode )
 	{
@@ -264,7 +258,6 @@ void ModelPosition::Update( void  )
 			  this->goal.x, 
 			  this->goal.y, 
 			  this->goal.a );
-
 
 	    switch( drive_mode )
 	      {
@@ -334,8 +327,6 @@ void ModelPosition::Update( void  )
 
 		  // start out with no velocity
 		  Velocity calc;
-		  memset( &calc, 0, sizeof(calc));
-
 		  double close_enough = 0.02; // fudge factor
 
 		  // if we're at the right spot
@@ -388,16 +379,16 @@ void ModelPosition::Update( void  )
 		
       // simple model of power consumption
       watts = STG_POSITION_WATTS + 
-	fabs(vel.x) * STG_POSITION_WATTS_KGMS * mass + 
-	fabs(vel.y) * STG_POSITION_WATTS_KGMS * mass + 
-	fabs(vel.a) * STG_POSITION_WATTS_KGMS * mass;
+		  fabs(vel.x) * STG_POSITION_WATTS_KGMS * mass + 
+		  fabs(vel.y) * STG_POSITION_WATTS_KGMS * mass + 
+		  fabs(vel.a) * STG_POSITION_WATTS_KGMS * mass;
 		
       //PRINT_DEBUG4( "model %s velocity (%.2f %.2f %.2f)",
       //	    this->token, 
       //	    this->velocity.x, 
       //	    this->velocity.y,
       //	    this->velocity.a );
-
+		
       this->SetVelocity( vel );
     }
 
@@ -421,21 +412,21 @@ void ModelPosition::Update( void  )
 
     case STG_POSITION_LOCALIZATION_ODOM:
       {
-	// integrate our velocities to get an 'odometry' position estimate.
-	double dt = this->world->GetSimInterval()/1e6;
-
-	est_pose.a = normalize( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
-
-	double cosa = cos(est_pose.a);
-	double sina = sin(est_pose.a);
-	double dx = (vel.x * dt) * (1.0 + integration_error.x );
-	double dy = (vel.y * dt) * (1.0 + integration_error.y );
-
-	est_pose.x += dx * cosa + dy * sina;
-	est_pose.y -= dy * cosa - dx * sina;
+		  // integrate our velocities to get an 'odometry' position estimate.
+		  double dt = this->world->GetSimInterval()/1e6;
+		  
+		  est_pose.a = normalize( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
+		  
+		  double cosa = cos(est_pose.a);
+		  double sina = sin(est_pose.a);
+		  double dx = (vel.x * dt) * (1.0 + integration_error.x );
+		  double dy = (vel.y * dt) * (1.0 + integration_error.y );
+		  
+		  est_pose.x += dx * cosa + dy * sina;
+		  est_pose.y -= dy * cosa - dx * sina;
       }
       break;
-
+		
     default:
       PRINT_ERR2( "unknown localization mode %d for model %s\n",
 		  localization_mode, this->token );
@@ -582,98 +573,108 @@ Waypoint* ModelPosition::SetWaypoints( Waypoint* wps, uint32_t count )
   return replaced;
 }
 
-void ModelPosition::DataVisualize( Camera* cam )
+ModelPosition::PoseVis::PoseVis()
+  : Visualizer( "Position coordinates", "show_position_coords" )
+{}
+
+void ModelPosition::PoseVis::Visualize( Model* mod, Camera* cam )
 {
-  if( showWaypoints && waypoints && waypoint_count )
-    DrawWaypoints();
+  ModelPosition* pos = dynamic_cast<ModelPosition*>(mod);
   
-  if( showCoords )
-    {  
-      // vizualize my estimated pose 
-      glPushMatrix();
+  // vizualize my estimated pose 
+  glPushMatrix();
   
-      // back into global coords
-      Gl::pose_inverse_shift( GetGlobalPose() );
-
-      Gl::pose_shift( est_origin );
-      PushColor( 1,0,0,1 ); // origin in red
-      Gl::draw_origin( 0.5 );
-
-      glEnable (GL_LINE_STIPPLE);
-      glLineStipple (3, 0xAAAA);
-
-      PushColor( 1,0,0,0.5 ); 
-      glBegin( GL_LINE_STRIP );
-      glVertex2f( 0,0 );
-      glVertex2f( est_pose.x, 0 );
-      glVertex2f( est_pose.x, est_pose.y );  
-      glEnd();
+  // back into global coords
+  Gl::pose_inverse_shift( pos->GetGlobalPose() );
+ 
+  Gl::pose_shift( pos->est_origin );
+  pos->PushColor( 1,0,0,1 ); // origin in red
+  Gl::draw_origin( 0.5 );
   
-      glDisable(GL_LINE_STIPPLE);
-
-      char label[64];
-      snprintf( label, 64, "x:%.3f", est_pose.x );
-      Gl::draw_string( est_pose.x / 2.0, -0.5, 0, label );
-
-      snprintf( label, 64, "y:%.3f", est_pose.y );
-      Gl::draw_string( est_pose.x + 0.5 , est_pose.y / 2.0, 0, (const char*)label );
-		
-      PopColor();
-
-      Gl::pose_shift( est_pose );
-      PushColor( 0,1,0,1 ); // pose in green
-      Gl::draw_origin( 0.5 );
-      PopColor();
-
-      Gl::pose_shift( geom.pose );
-      PushColor( 0,0,1,1 ); // offset in blue
-      Gl::draw_origin( 0.5 );
-      PopColor();
-    
-      double r,g,b,a;
-      stg_color_unpack( color, &r, &g, &b, &a );
-      PushColor( r, g, b, 0.5 );
+  glEnable (GL_LINE_STIPPLE);
+  glLineStipple (3, 0xAAAA);
   
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-      blockgroup.DrawFootPrint( geom );
-      PopColor();
-
-      glPopMatrix(); 
-    }
-
-  // inherit more viz
-  Model::DataVisualize( cam );
+  pos->PushColor( 1,0,0,0.5 ); 
+  glBegin( GL_LINE_STRIP );
+  glVertex2f( 0,0 );
+  glVertex2f( pos->est_pose.x, 0 );
+  glVertex2f( pos->est_pose.x, pos->est_pose.y );  
+  glEnd();
+  
+  glDisable(GL_LINE_STIPPLE);
+  
+  char label[64];
+  snprintf( label, 64, "x:%.3f", pos->est_pose.x );
+  Gl::draw_string( pos->est_pose.x / 2.0, -0.5, 0, label );
+  
+  snprintf( label, 64, "y:%.3f", pos->est_pose.y );
+  Gl::draw_string( pos->est_pose.x + 0.5 , pos->est_pose.y / 2.0, 0, (const char*)label );
+  
+  pos->PopColor();
+  
+  Gl::pose_shift( pos->est_pose );
+  pos->PushColor( 0,1,0,1 ); // pose in green
+  Gl::draw_origin( 0.5 );
+  pos->PopColor();
+  
+  Gl::pose_shift( pos->geom.pose );
+  pos->PushColor( 0,0,1,1 ); // offset in blue
+  Gl::draw_origin( 0.5 );
+  pos->PopColor();
+  
+  double r,g,b,a;
+  stg_color_unpack( pos->color, &r, &g, &b, &a );
+  pos->PushColor( r, g, b, 0.5 );
+  
+  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  pos->blockgroup.DrawFootPrint( pos->geom );
+  pos->PopColor();
+  
+  glPopMatrix(); 
 }
 
-void ModelPosition::DrawWaypoints()
+
+ModelPosition::WaypointVis::WaypointVis()
+  : Visualizer( "Position waypoints", "show_position_waypoints" )
+{}
+
+void ModelPosition::WaypointVis::Visualize( Model* mod, Camera* cam )
 {
+  ModelPosition* pos = dynamic_cast<ModelPosition*>(mod);
+
+  Waypoint* waypoints = pos->waypoints;
+  unsigned int waypoint_count = pos->waypoint_count;
+
+  if( (waypoints == NULL) || (waypoint_count < 1) )
+	 return;
+
   glPointSize( 5 );
   glPushMatrix();
-  PushColor( color );
+  pos->PushColor( pos->color );
   
-  Gl::pose_inverse_shift( pose );
-  Gl::pose_shift( est_origin );
+  Gl::pose_inverse_shift( pos->pose );
+  Gl::pose_shift( pos->est_origin );
   
   glTranslatef( 0,0,0.02 );
-
+  
   // draw waypoints
   for( unsigned int i=0; i < waypoint_count; i++ )
-    waypoints[i].Draw();
-  
+			waypoints[i].Draw();
+		 
   // draw lines connecting the waypoints
   if( waypoint_count > 1 )
     {
       glBegin( GL_LINES );
       
       for( unsigned int i=1; i < waypoint_count; i++ )
-	{
-	  glVertex2f( waypoints[i].pose.x,  waypoints[i].pose.y );
-	  glVertex2f( waypoints[i-1].pose.x,  waypoints[i-1].pose.y );
-	}
-      
+		  {
+			 glVertex2f( waypoints[i].pose.x,  waypoints[i].pose.y );
+			 glVertex2f( waypoints[i-1].pose.x,  waypoints[i-1].pose.y );
+		  }
+		
       glEnd();
     }
   
-  PopColor();
+  pos->PopColor();
   glPopMatrix();
 }
