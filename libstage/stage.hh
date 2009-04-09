@@ -864,6 +864,8 @@ namespace Stg
     stg_usec_t quit_time;
     stg_usec_t real_time_now; ///< The current real time in microseconds
     stg_usec_t real_time_start; ///< the real time at which this world was created
+	 bool show_clock; ///< iff true, print the sim time on stdout
+	 unsigned int show_clock_interval; ///< updates between clock xoutputs
     GMutex* thread_mutex; ///< protect the worker thread management stuff
     GThreadPool *threadpool; ///<worker threads for updating some sensor models in parallel
     int total_subs; ///< the total number of subscriptions to all models
@@ -1041,6 +1043,9 @@ namespace Stg
 
 	 /// Register an Option for pickup by the GUI
 	 void RegisterOption( Option* opt );	
+	 
+	 /// Control printing time to stdout
+	 void ShowClock( bool enable ){ show_clock = enable; };
   };
 
   class Block

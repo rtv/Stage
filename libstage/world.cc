@@ -83,6 +83,8 @@ World::World( const char* token,
   quit_time( 0 ),
   real_time_now( RealTimeNow() ),
   real_time_start( real_time_now ),
+  show_clock( false ),
+  show_clock_interval( 100 ), // 10 simulated seconds using defaults
   thread_mutex( g_mutex_new() ),
   threadpool( NULL ),
   total_subs( 0 ), 
@@ -506,7 +508,7 @@ bool World::Update()
       LISTMETHOD( reentrant_update_list, Model*, CallUpdateCallbacks );
     }
   
-  if( this->updates % 100 == 0 )
+  if( show_clock && ((this->updates % show_clock_interval) == 0) )
 	 {
 		printf( "\r[Stage: %s]", ClockString().c_str() );
 		fflush( stdout );

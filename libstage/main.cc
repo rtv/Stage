@@ -13,8 +13,10 @@ using namespace Stg;
 const char* USAGE = 
   "USAGE:  stage [options] [<worldfile>]\n"
   "Available [options] are:\n"
-  "  --gui          : run without a GUI (same as -g)\n"
-  "  -g             : run without a GUI (same as --gui)\n"
+  "  --clock        : print simulation time peridically on standard output\n"
+  "  -c             : print simulation time peridically on standard output\n"
+  "  --gui          : run without a GUI\n"
+  "  -g             : run without a GUI\n"
   "  --help         : print this message.\n"
   "  -h             : print this message.\n"
   "  -?             : print this message.\n"
@@ -23,6 +25,7 @@ const char* USAGE =
 /* options descriptor */
 static struct option longopts[] = {
 	{ "gui",  optional_argument,   NULL,  'g' },
+	{ "clock",  optional_argument,   NULL,  'c' },
 	{ "help",  optional_argument,   NULL,  'h' },
 	{ NULL, 0, NULL, 0 }
 };
@@ -36,13 +39,18 @@ int main( int argc, char* argv[] )
   
   int ch=0, optindex=0;
   bool usegui = true;
+  bool showclock = false;
   
-  while ((ch = getopt_long(argc, argv, "gh?", longopts, &optindex)) != -1)
+  while ((ch = getopt_long(argc, argv, "cgh?", longopts, &optindex)) != -1)
 	 {
 		switch( ch )
 		  {
 		  case 0: // long option given
 			 printf( "option %s given\n", longopts[optindex].name );
+			 break;
+		  case 'c': 
+			 showclock = true;
+			 printf( "[Clock enabled]" );
 			 break;
 		  case 'g': 
 			 usegui = false;
@@ -76,6 +84,7 @@ int main( int argc, char* argv[] )
 										new WorldGui( 400, 300, worldfilename ) : 
 										new World( worldfilename ) );
 			 world->Load( worldfilename );
+			 world->ShowClock( showclock );
 			 loaded_world_file = true;
 		  }
 		optindex++;
