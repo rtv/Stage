@@ -68,8 +68,7 @@ void Block::Translate( double x, double y )
       pts[p].x += x;
       pts[p].y += y;
     }
-
-  // force redraw
+  
   mod->blockgroup.BuildDisplayList( mod );
 }
 
@@ -363,7 +362,7 @@ void Block::Rasterize( uint8_t* data,
 		double px = pts[W].x;
 		double py = pts[W].y;
 
-		unsigned int keep_W = W;
+		//unsigned int keep_W = W;
 
  		int xa = floor( (pts[W             ].x + offsetx) * scalex );
  		int ya = floor( (pts[W             ].y + offsety) * scaley );
@@ -372,8 +371,8 @@ void Block::Rasterize( uint8_t* data,
 
 		mod->rastervis.AddPoint( px, py );
 
-		int keep_xa = xa;
-		int keep_xb = xb;
+		//int keep_xa = xa;
+		//int keep_xb = xb;
 		
 
 		//printf( "  line (%d,%d) to (%d,%d)\n", xa,ya,xb,yb );

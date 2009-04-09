@@ -355,7 +355,10 @@ bool WorldGui::Update()
 			 usleep( (stg_usec_t)MIN(sleeptime,20000) ); // check the GUI at 10Hz min
 		}
   } while( interval < interval_real );
-  
+ 
+//   if( !IsGUI() )
+// 	 printf( "[Stage: %s\n", ClockString().cstr()
+ 
   //printf( "\r \t\t timenow %lu", timenow );
   //printf( "interval_real %.20f\n", interval_real );
 
@@ -370,6 +373,29 @@ bool WorldGui::Update()
 
   return val;
 }
+
+std::string WorldGui::ClockString()
+{
+  std::string str = World::ClockString();
+  
+  // find the average length of the last few realtime intervals;
+  stg_usec_t average_real_interval = 0;
+  for( uint32_t i=0; i<INTERVAL_LOG_LEN; i++ )
+    average_real_interval += interval_log[i];
+  average_real_interval /= INTERVAL_LOG_LEN;
+  
+  double localratio = (double)interval_sim / (double)average_real_interval;
+  
+  char buf[32];
+  snprintf( buf, 32, " [%.2f]", localratio );
+  str + buf;
+  
+  if( paused == true )
+	 str += " [ PAUSED ]";
+  
+  return str;
+}
+
 
 void WorldGui::AddModel( Model*  mod  )
 {
@@ -387,43 +413,6 @@ void WorldGui::RemoveChild( Model* mod )
   World::RemoveChild( mod );
 }
 
-std::string WorldGui::ClockString()
-{
-  const uint32_t usec_per_hour   = 3600000000U;
-  const uint32_t usec_per_minute = 60000000U;
-  const uint32_t usec_per_second = 1000000U;
-  const uint32_t usec_per_msec = 1000U;
-	
-  uint32_t hours   = sim_time / usec_per_hour;
-  uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
-  uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
-  uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
-	
-  // find the average length of the last few realtime intervals;
-  stg_usec_t average_real_interval = 0;
-  for( uint32_t i=0; i<INTERVAL_LOG_LEN; i++ )
-    average_real_interval += interval_log[i];
-  average_real_interval /= INTERVAL_LOG_LEN;
-	
-  double localratio = (double)interval_sim / (double)average_real_interval;
-  
-  std::string str;  
-  char buf[256];
-
-  if( hours > 0 )
-	 {
-		snprintf( buf, 255, "%uh", hours );
-		str += buf;
-	 }
-
-  snprintf( buf, 255, " %um %02us %03umsec [%.2f]", minutes, seconds, msec, localratio );
-  str += buf;
-  
-  if( paused == true )
-	 str += " [ PAUSED ]";
-  
-  return str;
-}
 
 std::string WorldGui::EnergyString()
 {	

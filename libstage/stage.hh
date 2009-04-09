@@ -892,11 +892,16 @@ namespace Stg
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
 
   public:
+
     static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
     static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
 
     /** hint that the world needs to be redrawn if a GUI is attached */
     void NeedRedraw(){ dirty = true; };
+
+    /** Get human readable string that describes the current simulation
+		  time. */
+    virtual std::string ClockString( void );
 
 	 Model* CreateModel( Model* parent, const char* typestr );	 
     void LoadModel( Worldfile* wf, int entity, GHashTable* entitytable );
@@ -1393,9 +1398,9 @@ namespace Stg
     bool closeWindowQuery();
 		
     virtual void AddModel( Model* mod );
-
-
+  
   protected:
+
     virtual void PushColor( stg_color_t col );
     virtual void PushColor( double r, double g, double b, double a );
     virtual void PopColor();
@@ -1408,6 +1413,7 @@ namespace Stg
     WorldGui(int W,int H,const char*L=0);
     ~WorldGui();
 	
+	 virtual std::string ClockString();
     virtual bool Update();	
     virtual void Load( const char* filename );
     virtual void UnLoad();
@@ -1428,10 +1434,6 @@ namespace Stg
 
     /** show the window - need to call this if you don't Load(). */
     void Show(); 
-
-    /** Get human readable string that describes the current simulation
-		  time. */
-    std::string ClockString( void );
 
     /** Get human readable string that describes the current global energy state. */
     std::string EnergyString( void );

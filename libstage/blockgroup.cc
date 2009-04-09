@@ -149,6 +149,9 @@ void BlockGroup::DrawFootPrint( const Geom & geom )
 
 void BlockGroup::BuildDisplayList( Model* mod )
 {
+  if( ! mod->world->IsGUI() )
+	 return;
+
   //printf( "display list for model %s\n", mod->token );
 
   if( displaylist == 0 )

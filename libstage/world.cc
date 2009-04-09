@@ -425,6 +425,32 @@ bool World::PastQuitTime()
   return( (quit_time > 0) && (sim_time >= quit_time) ); 
 }
 
+std::string World::ClockString()
+{
+  const uint32_t usec_per_hour   = 3600000000U;
+  const uint32_t usec_per_minute = 60000000U;
+  const uint32_t usec_per_second = 1000000U;
+  const uint32_t usec_per_msec = 1000U;
+	
+  uint32_t hours   = sim_time / usec_per_hour;
+  uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
+  uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
+  uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
+	
+  std::string str;  
+  char buf[256];
+
+  if( hours > 0 )
+	 {
+		snprintf( buf, 255, "%uh", hours );
+		str += buf;
+	 }
+
+  snprintf( buf, 255, " %um %02us %03umsec", minutes, seconds, msec);
+  str += buf;
+  
+  return str;
+}
 
 bool World::Update()
 {
@@ -480,9 +506,16 @@ bool World::Update()
       LISTMETHOD( reentrant_update_list, Model*, CallUpdateCallbacks );
     }
   
+  if( this->updates % 100 == 0 )
+	 {
+		printf( "\r[Stage: %s]", ClockString().c_str() );
+		fflush( stdout );
+	 }
+
   this->sim_time += this->interval_sim;
   this->updates++;
 	
+
   return false;
 }
 
