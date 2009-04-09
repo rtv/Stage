@@ -684,7 +684,7 @@ void Model::UpdateIfDue( void )
   
 bool Model::UpdateDue( void )
 {
-  return( world->sim_time  >= (last_update + interval) );
+  return( (last_update == 0) || (world->sim_time  >= (last_update + interval)) );
 }
 
 void Model::Update( void )
@@ -705,12 +705,14 @@ void Model::Update( void )
       stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
       pp->Dissipate( consumed, GetGlobalPose() );      
     }
+
+  last_update = world->sim_time;
 }
 
 void Model::CallUpdateCallbacks( void )
 {
-  CallCallbacks( &hooks.update );
-  last_update = world->sim_time;
+  if( last_update == world->sim_time )
+	 CallCallbacks( &hooks.update );
 }
 
 stg_meters_t Model::ModelHeight() const
@@ -1135,7 +1137,7 @@ void Model::RasterVis::SetData( uint8_t* data,
   if( this->data ) 
 	 delete[] this->data;  
   size_t len = sizeof(uint8_t) * width * height;
-  printf( "allocating %lu bytes\n", len );
+  //printf( "allocating %lu bytes\n", len );
   this->data = new uint8_t[len];
   memcpy( this->data, data, len );
   this->width = width;

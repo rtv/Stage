@@ -477,12 +477,12 @@ void Block::Draw( Model* mod )
   // draw filled color polygons  
   stg_color_t col = inherit_color ? mod->color : color; 
   
-  mod->PushColor( col );
-  glEnable(GL_POLYGON_OFFSET_FILL);
-  glPolygonOffset(1.0, 1.0);
-  DrawSides();
-  DrawTop();
-  glDisable(GL_POLYGON_OFFSET_FILL);
+   mod->PushColor( col );
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(1.0, 1.0);
+   DrawSides();
+   DrawTop();
+   glDisable(GL_POLYGON_OFFSET_FILL);
   
   //   // draw the block outline in a darker version of the same color
   double r,g,b,a;
