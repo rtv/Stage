@@ -310,8 +310,12 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
 }
 
 
-void BlockGroup::Rasterize( uint8_t* data, unsigned int width, unsigned int height )
+void BlockGroup::Rasterize( uint8_t* data, 
+									 unsigned int width, 
+									 unsigned int height,
+									 stg_meters_t cellwidth,
+									 stg_meters_t cellheight )
 {  
   for( GList* it = blocks; it; it=it->next )
-	 ((Block*)it->data)->Rasterize( data, width, height );
+	 ((Block*)it->data)->Rasterize( data, width, height, cellwidth, cellheight );
 }

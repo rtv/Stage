@@ -388,7 +388,7 @@ std::string WorldGui::ClockString()
   
   char buf[32];
   snprintf( buf, 32, " [%.2f]", localratio );
-  str + buf;
+  str += buf;
   
   if( paused == true )
 	 str += " [ PAUSED ]";

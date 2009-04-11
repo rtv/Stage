@@ -50,7 +50,6 @@ Block::Block(  Model* mod,
   Load( wf, entity );
 }
 
-
 Block::~Block()
 { 
   if( mapped ) UnMap();
@@ -71,7 +70,6 @@ void Block::Translate( double x, double y )
   
   mod->blockgroup.BuildDisplayList( mod );
 }
-
 
 double Block::CenterY()
 {
@@ -254,6 +252,25 @@ void Block::SwitchToTestedCells()
   mapped = true;
 }
 
+stg_point_t Block::BlockPointToModelMeters( const stg_point_t& bpt )
+{
+  Pose gpose = mod->GetGlobalPose();
+  gpose = pose_sum( gpose, mod->geom.pose ); // add local offset
+  
+  Size bgsize = mod->blockgroup.GetSize();
+  stg_point3_t bgoffset = mod->blockgroup.GetOffset();
+  
+  stg_point3_t scale;
+  scale.x = mod->geom.size.x / bgsize.x;
+  scale.y = mod->geom.size.y / bgsize.y;
+  scale.z = mod->geom.size.z / bgsize.z;
+
+  stg_point_t mpt;
+  mpt.x = (bpt.x - bgoffset.x) * scale.x;
+  mpt.y = (bpt.y - bgoffset.y) * scale.y;
+  return mpt;
+}
+
 void Block::GenerateCandidateCells()
 
 {
@@ -313,88 +330,72 @@ void Block::GenerateCandidateCells()
   mapped = true;
 }
 
-void Block::Rasterize( uint8_t* data, unsigned int width, unsigned int height )
-{
-  // add local offset
-  // pose = pose_sum( pose, mod->geom.pose );
-  
-  Size bgsize = mod->blockgroup.GetSize();
-
-  double scalex = (double)(width) / (double)bgsize.x;
-  double scaley = (double)(height) / (double)bgsize.y;
-  //double scalex = (width) / bgsize.x;
-  //double scaley = (height) / bgsize.y;
- 
-  Rasterize( data, width, height, scalex, scaley, 0,0 );  
-}
-
-// void swap( int& a, int& b )
+// void Block::Rasterize( uint8_t* data, 
+// 							  unsigned int width, 
+// 							  unsigned int height,
+// 							  stg_meters_t cellwidth,
+// 							  stg_meters_t cellheight )
 // {
-//   int tmp = a;
-//   a = b;
-//   b = tmp;
+//   // add local offset
+//   // pose = pose_sum( pose, mod->geom.pose );
+  
+//   Size bgsize = mod->blockgroup.GetSize();
+  
+//   double scalex = (width*cellwidth) / bgsize.x;
+//   double scaley = (height*cellheight) / bgsize.y;
+ 
+//   Rasterize( data, width, height, scalex, scaley, 0,0 );  
 // }
 
-void swap( int* a, int* b )
+void swap( int& a, int& b )
 {
-  int foo = *a;
-  *a = *b;
-  *b = foo;
+  int tmp = a;
+  a = b;
+  b = tmp;
 }
 
-void Block::Rasterize( uint8_t* data, 
-							  unsigned int width, unsigned int height, 
-							  double scalex, double scaley, 
-							  double offsetx, double offsety )
-{
-  //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
-  //	 this, width, height, scalex, scaley, offsetx, offsety );
+// void Block::Rasterize( uint8_t* data, 
+// 							  unsigned int width, unsigned int height, 
+// 							  double scalex, double scaley, 
+// 							  double offsetx, double offsety )
+// {
+//   //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
+//   //	 this, width, height, scalex, scaley, offsetx, offsety );
 
-  unsigned int W=0;
+//   for( unsigned int i=0; i<pt_count; i++ )
+//     {
+// 		double px = pts[i].x;
+// 		double py = pts[i].y;
 
-//   W+=20;
-//   W /= 2;
-  
-//   printf( "W is %u", W ); 
+// 		//unsigned int keep_i = i;
 
-  for( W=0; W<pt_count; W++ )
-    {
-		double px = pts[W].x;
-		double py = pts[W].y;
+//  		int xa = floor( (pts[i             ].x + offsetx) * scalex );
+//  		int ya = floor( (pts[i             ].y + offsety) * scaley );
+//  		int xb = floor( (pts[(i+1)%pt_count].x + offsetx) * scalex );
+//  		int yb = floor( (pts[(i+1)%pt_count].y + offsety) * scaley );
 
-		//unsigned int keep_W = W;
+// 		mod->rastervis.AddPoint( px, py );
 
- 		int xa = floor( (pts[W             ].x + offsetx) * scalex );
- 		int ya = floor( (pts[W             ].y + offsety) * scaley );
- 		int xb = floor( (pts[(W+1)%pt_count].x + offsetx) * scalex );
- 		int yb = floor( (pts[(W+1)%pt_count].y + offsety) * scaley );
-
-		mod->rastervis.AddPoint( px, py );
-
-		//int keep_xa = xa;
-		//int keep_xb = xb;
+// 		//printf( "  line (%d,%d) to (%d,%d)\n", xa,ya,xb,yb );
 		
-
-		//printf( "  line (%d,%d) to (%d,%d)\n", xa,ya,xb,yb );
+//   		bool steep = abs( yb-ya ) > abs( xb-xa );
+// 		if( steep )
+// 		  {
+// 			 swap( xa, ya );
+// 			 swap( xb, yb );
+// 		  }
 		
-  		bool steep = abs( yb-ya ) > abs( xb-xa );
-		if( steep )
-		  {
-			 swap( &xa, &ya );
-			 swap( &xb, &yb );
-		  }
+//   		if( xa > xb )
+//   		  {
+//   			 swap( xa, xb );
+//   			 swap( ya, yb );
+//   		  }
 		
-  		if( xa > xb )
-  		  {
-  			 swap( &xa, &xb );
-  			 swap( &ya, &yb );
-  		  }
-		
-		double dydx = (double) (yb - ya) / (double) (xb - xa);
-		double y = ya;
-		for(int x=xa; x<=xb; x++) 
-		  {
-		// 	 if( steep )
+// 		double dydx = (double) (yb - ya) / (double) (xb - xa);
+// 		double y = ya;
+// 		for(int x=xa; x<=xb; x++) 
+// 		  {
+// 			 if( steep )
 // 				{
 // 				  if( ! (floor(y) >= 0) ) continue;
 // 				  if( ! (floor(y) < (int)width) ) continue;
@@ -409,34 +410,87 @@ void Block::Rasterize( uint8_t* data,
 // 				  if( ! (floor(y) < (int)height) ) continue;
 // 				}
 			 
+// 			 if( steep )
+// 				data[ (int)floor(y) + (x * width)] = 1;			 
+// 			 else
+// 				data[ x + ((int)floor(y) * width)] = 1;
+// 			 y += dydx;
+// 		  }
+// 	 }
+// }
+
+void Block::Rasterize( uint8_t* data, 
+							  unsigned int width, 
+							  unsigned int height, 
+							  stg_meters_t cellwidth,
+							  stg_meters_t cellheight )
+{
+  //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
+  //	 this, width, height, scalex, scaley, offsetx, offsety );
+
+  for( unsigned int i=0; i<pt_count; i++ )
+    {
+		// convert points from local to model coords
+		stg_point_t mpt1 = BlockPointToModelMeters( pts[i] );
+		stg_point_t mpt2 = BlockPointToModelMeters( pts[(i+1)%pt_count] );
+		
+		// record for debug visualization
+		mod->rastervis.AddPoint( mpt1.x, mpt1.y );
+		
+		// shift to the bottom left of the model
+		mpt1.x += mod->geom.size.x/2.0;
+		mpt1.y += mod->geom.size.y/2.0;
+		mpt2.x += mod->geom.size.x/2.0;
+		mpt2.y += mod->geom.size.y/2.0;
+		
+		// convert from meters to cells
+ 		int xa = floor( mpt1.x / cellwidth  );
+		int ya = floor( mpt1.y / cellheight );
+ 		int xb = floor( mpt2.x / cellwidth  );
+ 		int yb = floor( mpt2.y / cellheight );
+
+		//printf( "  line (%d,%d) to (%d,%d)\n", xa,ya,xb,yb );
+		
+  		bool steep = abs( yb-ya ) > abs( xb-xa );
+		if( steep )
+		  {
+			 swap( xa, ya );
+			 swap( xb, yb );
+		  }
+		
+  		if( xa > xb )
+  		  {
+  			 swap( xa, xb );
+  			 swap( ya, yb );
+  		  }
+		
+		double dydx = (double) (yb - ya) / (double) (xb - xa);
+		double y = ya;
+		for(int x=xa; x<=xb; x++) 
+		  {
+			 if( steep )
+				{
+				  if( ! (floor(y) >= 0) ) continue;
+				  if( ! (floor(y) < (int)width) ) continue;
+				  if( ! (x >= 0) ) continue;
+				  if( ! (x < (int)height) ) continue;
+				}
+			 else
+				{
+				  if( ! (x >= 0) ) continue;
+				  if( ! (x < (int)width) ) continue;
+				  if( ! (floor(y) >= 0) ) continue;
+				  if( ! (floor(y) < (int)height) ) continue;
+				}
+			 
 			 if( steep )
 				data[ (int)floor(y) + (x * width)] = 1;			 
 			 else
 				data[ x + ((int)floor(y) * width)] = 1;
 			 y += dydx;
-
-// 			 if( (floor(y) == 75) &&
-// 				  x == 119 )
-// 				{
-// 				  puts( "foo" );
-// 				  // while(1) {}
-
-// 				  printf( "W: %u keep_W: %u  px: %.4f\npy: %.4f\n",
-// 							 W, keep_W,
-// 							 px, py );
-
-// 				  printf( "XA: %.4f\nXB: %.4f\n",
-// 							 (pts[W             ].x + offsetx) * scalex,
-// 							 (pts[(W+1)%pt_count].x + offsetx) * scalex );
-
-// 				  printf( "KEEP: %d %d\n", keep_xa, keep_xb );
-// 				  printf( "NOW: %d %d\n", xa, xb );
-// 				}
-
 		  }
 	 }
 }
-
 
 void Block::DrawTop()
 {

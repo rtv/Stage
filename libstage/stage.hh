@@ -1128,14 +1128,15 @@ namespace Stg
     Model* GetModel(){ return mod; };
   
     stg_color_t GetColor();
-  
-	 void Rasterize( uint8_t* data, 
-						  unsigned int width, unsigned int height, 
-						  double scalex, double scaley, 
-						  double offsetx, double offsety );
+	 
+// 	 void Rasterize( uint8_t* data, 
+// 						  unsigned int width, unsigned int height, 
+// 						  double scalex, double scaley, 
+// 						  double offsetx, double offsety );
 	 
 	 void Rasterize( uint8_t* data, 
-						  unsigned int width, unsigned int height );		
+						  unsigned int width, unsigned int height,		
+						  stg_meters_t cellwidth, stg_meters_t cellheight );
 	 
   private:
     Model* mod; ///< model to which this block belongs
@@ -1169,6 +1170,11 @@ namespace Stg
 		  written, and the pointers to the rendered and potential cells are
 		  switched for next time (avoiding a memory copy).*/
     GPtrArray* candidate_cells;
+
+	 
+	 // find the position of a block's internal point in meters
+	 // relative to the model
+	 stg_point_t BlockPointToModelMeters( const stg_point_t& bpt );
   };
 
 
@@ -1222,15 +1228,16 @@ namespace Stg
 
     void LoadBitmap( Model* mod, const char* bitmapfile, Worldfile *wf );
     void LoadBlock( Model* mod, Worldfile* wf, int entity );
-
-	 void Rasterize( uint8_t* data, unsigned int width, unsigned int height );
+	 
+	 void Rasterize( uint8_t* data, 
+						  unsigned int width, unsigned int height,
+						  stg_meters_t cellwidth, stg_meters_t cellheight );
   };
 
 
   typedef int ctrlinit_t( Model* mod );
   //typedef void ctrlupdate_t( Model* mod );
-
-
+  
   // BLOCKS
 
   class Camera 
@@ -1642,6 +1649,7 @@ namespace Stg
 	 private:
 		uint8_t* data;
 		unsigned int width, height;
+		stg_meters_t cellwidth, cellheight;
 		GList* pts;
 
 	 public:
@@ -1651,7 +1659,9 @@ namespace Stg
 		
 		void SetData( uint8_t* data, 
 						  unsigned int width, 
-						  unsigned int height );
+						  unsigned int height,
+						  stg_meters_t cellwidth,
+						  stg_meters_t cellheight );
 
 		void AddPoint( stg_meters_t x, stg_meters_t y );
 		void ClearPts();
@@ -1764,7 +1774,9 @@ namespace Stg
 	 
 	 /** Render the model's blocks as an occupancy grid into the
 		  preallocated array of width by height pixels */
-	 void Rasterize( uint8_t* data, unsigned int width, unsigned int height );
+	 void Rasterize( uint8_t* data, 
+						  unsigned int width, unsigned int height,
+						  stg_meters_t cellwidth, stg_meters_t cellheight );
 
 	 void Lock()
 	 { 

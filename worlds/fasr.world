@@ -40,8 +40,11 @@ window
 floorplan
 ( 
   name "cave"
-  size [16.000 16.000 0.600]
   pose [0 0 0 0]
+  #size [1000.000 750.000 0.600]
+  #bitmap "bitmaps/SFU_medium_1.png"
+
+  size [16 16 0.600]
   bitmap "bitmaps/cave.png"
 )
 

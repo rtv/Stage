@@ -505,10 +505,11 @@ extern "C" int Init( Model* mod )
   if( strcmp( mod->Token(), "r0" ) == 0 )
 	 {
 		const unsigned int dw = 64, dh = 32;
+
 		uint8_t* data = new uint8_t[dw*dh*2];
 		memset( data, 0, sizeof(uint8_t) * dw * dh );
 		
-		mod->GetWorld()->GetModel( "cave" )->Rasterize( data, dw, dh );
+		mod->GetWorld()->GetModel( "cave" )->Rasterize( data, dw, dh, 0.25, 0.5 );
 		
 		putchar( '\n' );
 		for( unsigned int y=0; y<dh; y++ )

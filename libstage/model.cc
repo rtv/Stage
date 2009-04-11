@@ -1025,11 +1025,15 @@ void Model::RegisterOption( Option* opt )
 }
 
 
-void Model::Rasterize( uint8_t* data, unsigned int width, unsigned int height )
+void Model::Rasterize( uint8_t* data, 
+							  unsigned int width, 
+							  unsigned int height, 
+							  stg_meters_t cellwidth,
+							  stg_meters_t cellheight )
 {
   rastervis.ClearPts();
-  blockgroup.Rasterize( data, width, height );
-  rastervis.SetData( data, width, height );
+  blockgroup.Rasterize( data, width, height, cellwidth, cellheight );
+  rastervis.SetData( data, width, height, cellwidth, cellheight );
 }
 
 //***************************************************************
@@ -1040,6 +1044,8 @@ Model::RasterVis::RasterVis()
 	 data(NULL),
 	 width(0),
 	 height(0),
+	 cellwidth(0),
+	 cellheight(0),
 	 pts(NULL)
 {
 }
@@ -1060,8 +1066,8 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 	 {
 		glPushMatrix();
 		Size sz = mod->blockgroup.GetSize();
-		glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
-		glScalef( mod->geom.size.x / sz.x, mod->geom.size.y / sz.y, 1 );
+		//glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
+		//glScalef( mod->geom.size.x / sz.x, mod->geom.size.y / sz.y, 1 );
 		
 		// now we're in world meters coordinates
 		glPointSize( 4 );
@@ -1085,7 +1091,9 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 
   // go into bitmap pixel coords
   glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
-  glScalef( mod->geom.size.x / width, mod->geom.size.y / height, 1 );
+  //glScalef( mod->geom.size.x / width, mod->geom.size.y / height, 1 );
+
+  glScalef( cellwidth, cellheight, 1 );
 
   mod->PushColor( 0,0,0,0.5 );
   glPolygonMode( GL_FRONT, GL_FILL );
@@ -1131,7 +1139,9 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 
 void Model::RasterVis::SetData( uint8_t* data, 
 										  unsigned int width, 
-										  unsigned int height )
+										  unsigned int height,
+										  stg_meters_t cellwidth, 
+										  stg_meters_t cellheight )
 {
   // copy the raster for test visualization
   if( this->data ) 
@@ -1142,6 +1152,8 @@ void Model::RasterVis::SetData( uint8_t* data,
   memcpy( this->data, data, len );
   this->width = width;
   this->height = height;
+  this->cellwidth = cellwidth;
+  this->cellheight = cellheight;
 }
 
 
