@@ -209,7 +209,7 @@ namespace Stg
   typedef double stg_watts_t;
 
   /** boolean */
-  typedef uint32_t stg_bool_t;
+  typedef bool stg_bool_t;
 
   /** 32-bit ARGB color packed 0xAARRGGBB */
   typedef uint32_t stg_color_t;
@@ -358,26 +358,24 @@ namespace Stg
 	 /// smallest value in range, initially zero
     double min;
     
-    Bounds() : max(0), min(0)  
-    { /* empty*/  };
+    Bounds() : max(0), min(0) { /* empty*/  }
   };
-  
-  /** Bound a volume along the x,y,z axes. All bounds initialized to zero. */
-  typedef struct
+    
+  /** Define a three-dimensional bounding box, initialized to zero */
+  class stg_bounds3d_t
   {
+  public:
 	 /// volume extent along x axis, intially zero
     Bounds x; 
 	 /// volume extent along y axis, initially zero
     Bounds y; 
 	 /// volume extent along z axis, initially zero
     Bounds z; 
-  } stg_bounds3d_t;
-  
-  /** Define a three-dimensional bounding box, initialized to zero */
-  typedef struct
-  {
-    Bounds x, y, z;
-  } stg_bbox3d_t;
+
+	 stg_bounds3d_t() : x(), y(), z() {}
+	 stg_bounds3d_t( const Bounds& x, const Bounds& y, const Bounds& z) 
+		: x(x), y(y), z(z) {}
+  };
   
   /** Define a field-of-view: an angle and range bounds */
   typedef struct
@@ -391,59 +389,37 @@ namespace Stg
   {
   public:
     stg_meters_t x, y;
-	 
-	 // init
-	 stg_point_t( stg_meters_t x, stg_meters_t y ) 
-		: x(x), y(y){}
-	 
-	 // init
-	 stg_point_t() : x(0), y(0){}
-	 
-	 // copy
-	 stg_point_t( const stg_point_t& pt) : x(pt.x), y(pt.y){}
+	 stg_point_t( stg_meters_t x, stg_meters_t y ) : x(x), y(y){}	 
+	 stg_point_t() : x(0.0), y(0.0){}
   };
-  
+    
   /** Define a point in 3d space */
-  typedef struct
+  class stg_point3_t
   {
-    float x, y, z;
-  } stg_vertex_t;
-  
-  /** Define vertex and its color */
-  typedef struct
-  {
-    float x, y, z, r, g, b, a;
-  } stg_colorvertex_t;
-  
-  /** Define a point in 3d space */
-  typedef struct
-  {
-    stg_meters_t x, y, z;
-  } stg_point3_t;
+  public:
+    stg_meters_t x,y,z;
+	 stg_point3_t( int x, int y ) : x(x), y(y){}	 
+	 stg_point3_t() : x(0.0), y(0.0), z(0.0) {}
+  };
 
   /** Define an integer point on the 2d plane */
-  typedef struct
+  class stg_point_int_t
   {
-    int32_t x,y;
-  } stg_point_int_t;
-
-  /** Create an array of [count] points. Caller must free the returned
-      pointer, preferably with stg_points_destroy().  */
-  stg_point_t* stg_points_create( size_t count );
-
-  /** frees a point array */ 
-  void stg_points_destroy( stg_point_t* pts );
+  public:
+    int x,y;
+	 stg_point_int_t( int x, int y ) : x(x), y(y){}	 
+	 stg_point_int_t() : x(0), y(0){}
+  };
+  
 
   /** create an array of 4 points containing the corners of a unit
       square.  */
   stg_point_t* stg_unit_square_points_create();
-
-
-  typedef uint32_t stg_movemask_t;
-
-  const uint32_t STG_MOVE_TRANS = (1 << 0); ///< bitmask for stg_movemask_t
-  const uint32_t STG_MOVE_ROT   = (1 << 1); ///< bitmask for stg_movemask_t
-  const uint32_t STG_MOVE_SCALE = (1 << 2); ///< bitmask for stg_movemask_t
+  
+  typedef uint32_t stg_movemask_t;  
+  const stg_movemask_t STG_MOVE_TRANS = (1 << 0); ///< bitmask 
+  const stg_movemask_t STG_MOVE_ROT   = (1 << 1); ///< bitmask 
+  const stg_movemask_t STG_MOVE_SCALE = (1 << 2); ///< bitmask 
 
   const char MP_PREFIX[] =             "_mp_";
   const char MP_POSE[] =               "_mp_pose";
@@ -458,7 +434,6 @@ namespace Stg
   const char MP_GRIPPER_RETURN[] =     "_mp_gripper_return";
   const char MP_MASS[] =               "_mp_mass";
 
-
   /// laser return value
   typedef enum 
     {
@@ -466,7 +441,6 @@ namespace Stg
       LaserVisible, ///< detected by laser with a reflected intensity of 0 
       LaserBright  ///< detected by laser with a reflected intensity of 1 
     } stg_laser_return_t;
-
   
   /** Convenient OpenGL drawing routines, used by visualization
 		code. */
@@ -688,14 +662,17 @@ namespace Stg
   
   /** container for a callback function and a single argument, so
       they can be stored together in a list with a single pointer. */
-  typedef struct
+  class stg_cb_t
   {
+  public:
     stg_model_callback_t callback;
     void* arg;
-  } stg_cb_t;
-
-  stg_cb_t* cb_create( stg_model_callback_t callback, void* arg );
-  void cb_destroy( stg_cb_t* cb );
+	 
+	 stg_cb_t( stg_model_callback_t cb, void* arg ) 
+		: callback(cb), arg(arg) {}
+	 
+	 stg_cb_t() : callback(NULL), arg(NULL) {}
+  };
 
   /** Defines a rectangle of [size] located at [pose] */
   typedef struct
@@ -703,11 +680,6 @@ namespace Stg
     Pose pose;
     Size size;
   } stg_rotrect_t; // rotated rectangle
-
-  /** normalizes the set [rects] of [num] rectangles, so that they fit
-      exactly in a unit square.
-  */
-  void stg_rotrects_normalize( stg_rotrect_t* rects, int num );
 
   /** load the image file [filename] and convert it to an array of
       rectangles, filling in the number of rects, width and
@@ -824,7 +796,7 @@ namespace Stg
     { return token; }
 	 
     void SetToken( const char* str )
-    { token = strdup( str ); } // little memory leak	 
+    { token = strdup( str ); } // minor memory leak	 
   };
 
   /** raytrace sample
@@ -1177,10 +1149,9 @@ namespace Stg
 		  written, and the pointers to the rendered and potential cells are
 		  switched for next time (avoiding a memory copy).*/
     GPtrArray* candidate_cells;
-
 	 
-	 // find the position of a block's internal point in meters
-	 // relative to the model
+	 /** find the position of a block's point in model coordinates
+		  (m) */
 	 stg_point_t BlockPointToModelMeters( const stg_point_t& bpt );
 
 	 /** Update the cache of block points converted to model coordinates */

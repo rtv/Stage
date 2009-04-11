@@ -683,8 +683,8 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   //  x,y,  dx,dy, n );
 	
   // superregion coords
-  stg_point_int_t lastsup = {INT_MAX, INT_MAX };
-  stg_point_int_t lastreg = {INT_MAX, INT_MAX };
+  stg_point_int_t lastsup( INT_MAX, INT_MAX );
+  stg_point_int_t lastreg( INT_MAX, INT_MAX );
 	
   SuperRegion* sr = NULL;
   Region* r = NULL;

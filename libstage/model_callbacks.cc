@@ -19,7 +19,7 @@ void Model::AddCallback( void* address,
 	//  mod->token, *key );
 
 	// add the callback & argument to the list
-	cb_list = g_list_prepend( cb_list, cb_create( cb, user ) );
+	cb_list = g_list_prepend( cb_list, new stg_cb_t( cb, user ) );
 
 	// and replace the list in the hash table
 	g_hash_table_insert( callbacks, address, cb_list );
@@ -56,12 +56,7 @@ int Model::RemoveCallback( void* member,
 
 		// we're done with that
 		//free( el->data );
-		// TODO - fix leak of cb_t
-
-		// if we just removed a model's last update callback,
-		// remove this model from the world's update list
-		//if( (member == (void*)&update) && (cb_list == NULL) )
-		//stg_world_stop_updating_model( world, this );
+		// TODO - fix leak of stg_cb_t
 	}
 	else
 	{

@@ -152,53 +152,6 @@ stg_color_t Stg::stg_lookup_color(const char *name)
 		return (stg_color_t)0;
 }
 
-//////////////////////////////////////////////////////////////////////////
-// scale an array of rectangles so they fit in a unit square
-void Stg::stg_rotrects_normalize( stg_rotrect_t* rects, int num )
-{
-	// assuming the rectangles fit in a square +/- one billion units
-	double minx, miny, maxx, maxy;
-	minx = miny = billion;
-	maxx = maxy = -billion;
-
-	int r;
-	for( r=0; r<num; r++ )
-	{
-		// test the origin of the rect
-		if( rects[r].pose.x < minx ) minx = rects[r].pose.x;
-		if( rects[r].pose.y < miny ) miny = rects[r].pose.y;
-		if( rects[r].pose.x > maxx ) maxx = rects[r].pose.x;
-		if( rects[r].pose.y > maxy ) maxy = rects[r].pose.y;
-
-		// test the extremes of the rect
-		if( (rects[r].pose.x+rects[r].size.x)  < minx ) 
-			minx = (rects[r].pose.x+rects[r].size.x);
-
-		if( (rects[r].pose.y+rects[r].size.y)  < miny ) 
-			miny = (rects[r].pose.y+rects[r].size.y);
-
-		if( (rects[r].pose.x+rects[r].size.x)  > maxx ) 
-			maxx = (rects[r].pose.x+rects[r].size.x);
-
-		if( (rects[r].pose.y+rects[r].size.y)  > maxy ) 
-			maxy = (rects[r].pose.y+rects[r].size.y);
-	}
-
-	// now normalize all lengths so that the rects all fit inside
-	// rectangle from 0,0 to 1,1
-	double scalex = maxx - minx;
-	double scaley = maxy - miny;
-
-	for( r=0; r<num; r++ )
-	{ 
-		rects[r].pose.x = (rects[r].pose.x - minx) / scalex;
-		rects[r].pose.y = (rects[r].pose.y - miny) / scaley;
-		rects[r].size.x = rects[r].size.x / scalex;
-		rects[r].size.y = rects[r].size.y / scaley;
-	}
-}	
-
-
 // returns the resultant of vector [p1] and [p2] 
 Pose Stg::pose_scale( const Pose& p1, const double sx, const double sy, const double sz )
 {
@@ -218,25 +171,6 @@ static guchar* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
   unsigned int index = (y * img->w() * img->d()) + (x * img->d());
   return( pixels + index );
 }
-
-/*
-static void pb_set_pixel( Fl_Shared_Image* pb, int x, int y, uint8_t val )
-{
-	// bounds checking
-	int width = pb->w();
-	int height = pb->h();
-	if( x >=0 && x < width && y >= 0 && y < height )
-	{
-		// zeroing
-		guchar* pix = pb_get_pixel( pb, x, y );
-		unsigned int bytes_per_sample = 1;
-		unsigned int num_samples = pb->d();
-		memset( pix, val, num_samples * bytes_per_sample );
-	}
-	else
-		PRINT_WARN4( "pb_set_pixel coordinate %d,%d out of range (image dimensions %d by %d)", x, y, width, height );
-}
-*/
 
 // set all the pixels in a rectangle 
 static void pb_set_rect( Fl_Shared_Image* pb, int x, int y, int width, int height, uint8_t val )
@@ -363,9 +297,9 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 			//assert( latest->size.x > 0 );
 			//assert( latest->size.y > 0 );
 
-			if( latest->size.x < 1  || latest->size.y < 1 )
-			  printf( "p [%.2f %.2f] s [%.2f %.2f]\n", 
-						 latest->pose.x, latest->pose.y, latest->size.x, latest->size.y );
+// 			if( latest->size.x < 1  || latest->size.y < 1 )
+// 			  printf( "p [%.2f %.2f] s [%.2f %.2f]\n", 
+// 						 latest->pose.x, latest->pose.y, latest->size.x, latest->size.y );
 
 			//printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
 			//  *rect_count, 
@@ -382,20 +316,9 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 
 // POINTS -----------------------------------------------------------
 
-stg_point_t* Stg::stg_points_create( size_t count )
-{
-	return( (stg_point_t*)g_new( stg_point_t, count ));
-}
-
-void Stg::stg_points_destroy( stg_point_t* pts )
-{
-	g_free( pts );
-}
-
-
 stg_point_t* Stg::stg_unit_square_points_create( void )
 {
-	stg_point_t * pts = stg_points_create( 4 );
+	stg_point_t * pts = new stg_point_t[4];
 
 	pts[0].x = 0;
 	pts[0].y = 0;
@@ -407,22 +330,6 @@ stg_point_t* Stg::stg_unit_square_points_create( void )
 	pts[3].y = 1;
 
 	return pts;
-}
-
-
-// CALLBACKS -------------------------------------------------------
-
-stg_cb_t* Stg::cb_create( stg_model_callback_t callback, void* arg )
-{
-	stg_cb_t* cb = (stg_cb_t*)g_new( stg_cb_t, 1 );
-	cb->callback = callback;
-	cb->arg = arg;
-	return cb;
-}
-
-void Stg::cb_destroy( stg_cb_t* cb )
-{
-	free( cb );
 }
 
 // return a value based on val, but limited minval <= val >= maxval  

@@ -56,7 +56,7 @@ Block::~Block()
 { 
   if( mapped ) UnMap();
   
-  stg_points_destroy( pts );
+  if( pts ) delete[] pts;
   
   g_ptr_array_free( rendered_cells, TRUE );
   g_ptr_array_free( candidate_cells, TRUE );
@@ -349,29 +349,27 @@ void Block::Rasterize( uint8_t* data,
 		mpt2.y += mod->geom.size.y/2.0;
 		
 		// convert from meters to cells
- 		int xa = floor( mpt1.x / cellwidth  );
-		int ya = floor( mpt1.y / cellheight );
- 		int xb = floor( mpt2.x / cellwidth  );
- 		int yb = floor( mpt2.y / cellheight );
-
-		//printf( "  line (%d,%d) to (%d,%d)\n", xa,ya,xb,yb );
+		stg_point_int_t a( floor( mpt1.x / cellwidth  ),
+								 floor( mpt1.y / cellheight ));
+		stg_point_int_t b( floor( mpt2.x / cellwidth  ),
+								 floor( mpt2.y / cellheight ) );
 		
-  		bool steep = abs( yb-ya ) > abs( xb-xa );
+  		bool steep = abs( b.y-a.y ) > abs( b.x-a.x );
 		if( steep )
 		  {
-			 swap( xa, ya );
-			 swap( xb, yb );
+			 swap( a.x, a.y );
+			 swap( b.x, b.y );
 		  }
 		
-  		if( xa > xb )
+  		if( a.x > b.x )
   		  {
-  			 swap( xa, xb );
-  			 swap( ya, yb );
+  			 swap( a.x, b.x );
+  			 swap( a.y, b.y );
   		  }
 		
-		double dydx = (double) (yb - ya) / (double) (xb - xa);
-		double y = ya;
-		for(int x=xa; x<=xb; x++) 
+		double dydx = (double) (b.y - a.y) / (double) (b.x - a.x);
+		double y = a.y;
+		for(int x=a.x; x<=b.x; x++) 
 		  {
 			 if( steep )
 				{
@@ -473,10 +471,10 @@ void Block::Load( Worldfile* wf, int entity )
   //printf( "Block::Load entity %d\n", entity );
   
   if( pts )
-    stg_points_destroy( pts );
+    delete[] pts;
   
   pt_count = wf->ReadInt( entity, "points", 0);
-  pts = stg_points_create( pt_count );
+  pts = new stg_point_t[ pt_count ];
   
   //printf( "reading %d points\n",
   //	 pt_count );
