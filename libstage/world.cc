@@ -914,16 +914,26 @@ inline Cell* World::GetCell( const int32_t x, const int32_t y )
 	  ->GetCell( CELL(x), CELL(y) )) ;
 }
 
-void World::ForEachCellInLine( stg_meters_t x1, stg_meters_t y1,
-			       stg_meters_t x2, stg_meters_t y2,
-			       stg_cell_callback_t cb,
-			       void* cb_arg )
-{  
-  int32_t x = MetersToPixels( x1 ); // global pixel coords
-  int32_t y = MetersToPixels( y1 );
+void World::ForEachCellInPolygon( const stg_point_t pts[], 
+											 const unsigned int pt_count,
+											 stg_cell_callback_t cb,
+											 void* cb_arg )
+{
+  for( unsigned int i=0; i<pt_count; i++ )
+	 ForEachCellInLine( pts[i], pts[(i+1)%pt_count], cb, cb_arg );
+
+}
   
-  int32_t dx = MetersToPixels( x2 - x1 );
-  int32_t dy = MetersToPixels( y2 - y1 );
+void World::ForEachCellInLine( const stg_point_t& pt1,
+										 const stg_point_t& pt2,
+										 stg_cell_callback_t cb,
+										 void* cb_arg )
+{  
+  int32_t x = MetersToPixels( pt1.x ); // global pixel coords
+  int32_t y = MetersToPixels( pt1.y );
+  
+  int32_t dx = MetersToPixels( pt2.x - pt1.x );
+  int32_t dy = MetersToPixels( pt2.y - pt1.y );
   
   // line rasterization adapted from Cohen's 3D version in
   // Graphics Gems II. Should be very fast.

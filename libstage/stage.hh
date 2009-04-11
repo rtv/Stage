@@ -387,10 +387,21 @@ namespace Stg
   } stg_fov_t;
   
   /** Define a point on a 2d plane */
-  typedef struct
+  class stg_point_t
   {
+  public:
     stg_meters_t x, y;
-  } stg_point_t;
+	 
+	 // init
+	 stg_point_t( stg_meters_t x, stg_meters_t y ) 
+		: x(x), y(y){}
+	 
+	 // init
+	 stg_point_t() : x(0), y(0){}
+	 
+	 // copy
+	 stg_point_t( const stg_point_t& pt) : x(pt.x), y(pt.y){}
+  };
   
   /** Define a point in 3d space */
   typedef struct
@@ -919,17 +930,12 @@ namespace Stg
     inline Cell* GetCell( const int32_t x, const int32_t y );
 	 
     void ForEachCellInPolygon( const stg_point_t pts[], 
-										 const uint32_t pt_count,
+										 const unsigned int pt_count,
 										 stg_cell_callback_t cb,
 										 void* cb_arg );
   
-    void ForEachCellInLine( const stg_point_t pt1,
-									 const stg_point_t pt2, 
-									 stg_cell_callback_t cb,
-									 void* cb_arg );
-  
-    void ForEachCellInLine( stg_meters_t x1, stg_meters_t y1,
-									 stg_meters_t x2, stg_meters_t y2,
+    void ForEachCellInLine( const stg_point_t& pt1,
+									 const stg_point_t& pt2, 
 									 stg_cell_callback_t cb,
 									 void* cb_arg );
 		
@@ -1141,6 +1147,7 @@ namespace Stg
   private:
     Model* mod; ///< model to which this block belongs
   
+    stg_point_t* mpts; ///< cache of this->pts in model coordindates
     size_t pt_count; ///< the number of points
     stg_point_t* pts; ///< points defining a polygon
 	 
@@ -1175,6 +1182,12 @@ namespace Stg
 	 // find the position of a block's internal point in meters
 	 // relative to the model
 	 stg_point_t BlockPointToModelMeters( const stg_point_t& bpt );
+
+	 /** Update the cache of block points converted to model coordinates */
+	 stg_point_t* GetPointsInModelCoords();
+
+	 /** invalidate the cache of points in model coordinates */
+	 void InvalidateModelPointCache();
   };
 
 
@@ -1232,6 +1245,9 @@ namespace Stg
 	 void Rasterize( uint8_t* data, 
 						  unsigned int width, unsigned int height,
 						  stg_meters_t cellwidth, stg_meters_t cellheight );
+	 
+	 void InvalidateModelPointCache()
+	 { LISTMETHOD( blocks, Block*, InvalidateModelPointCache ); }
   };
 
 
@@ -2258,10 +2274,14 @@ namespace Stg
 		  pose specified in the model's local coordinate system */
 	 Pose LocalToGlobal( const Pose& pose ) const;
 	
-	 /** Return the 3d point in world coordinates of a 3d point
+// 	 /** Return the 3d point in world coordinates of a 3d point
+// 		  specified in the model's local coordinate system */
+// 	 stg_point3_t LocalToGlobal( const stg_point3_t local ) const;
+	 
+	 /** Return the 2d point in world coordinates of a 2d point
 		  specified in the model's local coordinate system */
-	 stg_point3_t LocalToGlobal( const stg_point3_t local ) const;
-	
+	 stg_point_t LocalToGlobal( const stg_point_t& pt) const;
+
 	 /** returns the first descendent of this model that is unsubscribed
 		  and has the type indicated by the string */
 	 Model* GetUnsubscribedModelOfType( const stg_model_type_t type ) const;

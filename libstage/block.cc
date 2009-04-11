@@ -8,14 +8,15 @@ using namespace Stg;
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
 Block::Block( Model* mod,  
-	      stg_point_t* pts, 
-	      size_t pt_count,
-	      stg_meters_t zmin,
-	      stg_meters_t zmax,
-	      stg_color_t color,
-	      bool inherit_color
-	      ) :
+				  stg_point_t* pts, 
+				  size_t pt_count,
+				  stg_meters_t zmin,
+				  stg_meters_t zmax,
+				  stg_color_t color,
+				  bool inherit_color
+				  ) :
   mod( mod ),
+  mpts(NULL),
   pt_count( pt_count ),
   pts( (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t)) ),
   color( color ),
@@ -36,6 +37,7 @@ Block::Block(  Model* mod,
 	       Worldfile* wf, 
 	       int entity) 
   : mod( mod ),
+	 mpts(NULL),
     pt_count(0), 
     pts(NULL), 
     color(0),
@@ -252,100 +254,68 @@ void Block::SwitchToTestedCells()
   mapped = true;
 }
 
-stg_point_t Block::BlockPointToModelMeters( const stg_point_t& bpt )
+inline stg_point_t Block::BlockPointToModelMeters( const stg_point_t& bpt )
 {
-  Pose gpose = mod->GetGlobalPose();
-  gpose = pose_sum( gpose, mod->geom.pose ); // add local offset
-  
   Size bgsize = mod->blockgroup.GetSize();
   stg_point3_t bgoffset = mod->blockgroup.GetOffset();
   
-  stg_point3_t scale;
-  scale.x = mod->geom.size.x / bgsize.x;
-  scale.y = mod->geom.size.y / bgsize.y;
-  scale.z = mod->geom.size.z / bgsize.z;
+  return stg_point_t( (bpt.x - bgoffset.x) * (mod->geom.size.x/bgsize.x),
+							 (bpt.y - bgoffset.y) * (mod->geom.size.y/bgsize.y));
+}
 
-  stg_point_t mpt;
-  mpt.x = (bpt.x - bgoffset.x) * scale.x;
-  mpt.y = (bpt.y - bgoffset.y) * scale.y;
-  return mpt;
+stg_point_t* Block::GetPointsInModelCoords()
+{
+  if( ! mpts )
+	 {
+		// no valid cache of model coord points, so generate them
+		mpts = new stg_point_t[pt_count];
+		
+		for( unsigned int i=0; i<pt_count; i++ )
+		  mpts[i] = BlockPointToModelMeters( pts[i] );
+	 }
+  
+  return mpts;
+}
+
+void Block::InvalidateModelPointCache()
+{
+  // this doesn't happen often, so this simple strategy isn't too wasteful
+  if( mpts )
+	 {  
+		delete[] mpts;
+		mpts = NULL;
+	 }
 }
 
 void Block::GenerateCandidateCells()
-
 {
-  Pose gpose = mod->GetGlobalPose();
-
-  // add local offset
-  gpose = pose_sum( gpose, mod->geom.pose );
-
-  Size bgsize = mod->blockgroup.GetSize();
-  stg_point3_t bgoffset = mod->blockgroup.GetOffset();
-
-  stg_point3_t scale;
-  scale.x = mod->geom.size.x / bgsize.x;
-  scale.y = mod->geom.size.y / bgsize.y;
-  scale.z = mod->geom.size.z / bgsize.z;
-
+  stg_point_t* mpts = GetPointsInModelCoords();
+  
+  // convert the mpts in model coords into global coords
+  stg_point_t* gpts = new stg_point_t[pt_count];
+  for( unsigned int i=0; i<pt_count; i++ )
+	 gpts[i] = mod->LocalToGlobal( mpts[i] );
 
   g_ptr_array_set_size( candidate_cells, 0 );
-  
-  // compute the global location of the first point
-  Pose local( (pts[0].x - bgoffset.x) * scale.x ,
-	      (pts[0].y - bgoffset.y) * scale.y, 
-	      -bgoffset.z, 
-	      0 );
 
-  Pose first_gpose, last_gpose;
-  first_gpose = last_gpose = pose_sum( gpose, local );
+  mod->world->
+	 ForEachCellInPolygon( gpts, pt_count,
+								  (stg_cell_callback_t)AppendCellToPtrArray,
+								  candidate_cells );
+  delete[] gpts;
+
+  // set global Z
+  Pose gpose = mod->GetGlobalPose();
+  gpose.z += mod->geom.pose.z;
+  double scalez = mod->geom.size.z /  mod->blockgroup.GetSize().z;
+  stg_meters_t z = gpose.z - mod->blockgroup.GetOffset().z;
   
   // store the block's absolute z bounds at this rendering
-  global_z.min = (scale.z * local_z.min) + last_gpose.z;
-  global_z.max = (scale.z * local_z.max) + last_gpose.z;		
-  
-  // now loop from the the second to the last
-  for( unsigned int p=1; p<pt_count; p++ )
-    {
-      Pose local( (pts[p].x - bgoffset.x) * scale.x ,
-		  (pts[p].y - bgoffset.y) * scale.y, 
-		  -bgoffset.z, 
-		  0 );		
-		
-      Pose gpose2 = pose_sum( gpose, local );
-		
-      // and render the shape of the block into the global cells			 
-      mod->world->ForEachCellInLine( last_gpose.x, last_gpose.y, 
-				     gpose2.x, gpose2.y, 
-				     (stg_cell_callback_t)AppendCellToPtrArray,
-				     candidate_cells );
-      last_gpose = gpose2;
-    }
-  
-  // close the polygon
-  mod->world->ForEachCellInLine( last_gpose.x, last_gpose.y,
-				 first_gpose.x, first_gpose.y,
-				 (stg_cell_callback_t)AppendCellToPtrArray, 
-				 candidate_cells );
+  global_z.min = (scalez * local_z.min) + z;
+  global_z.max = (scalez * local_z.max) + z;		
   
   mapped = true;
 }
-
-// void Block::Rasterize( uint8_t* data, 
-// 							  unsigned int width, 
-// 							  unsigned int height,
-// 							  stg_meters_t cellwidth,
-// 							  stg_meters_t cellheight )
-// {
-//   // add local offset
-//   // pose = pose_sum( pose, mod->geom.pose );
-  
-//   Size bgsize = mod->blockgroup.GetSize();
-  
-//   double scalex = (width*cellwidth) / bgsize.x;
-//   double scaley = (height*cellheight) / bgsize.y;
- 
-//   Rasterize( data, width, height, scalex, scaley, 0,0 );  
-// }
 
 void swap( int& a, int& b )
 {
@@ -353,71 +323,6 @@ void swap( int& a, int& b )
   a = b;
   b = tmp;
 }
-
-// void Block::Rasterize( uint8_t* data, 
-// 							  unsigned int width, unsigned int height, 
-// 							  double scalex, double scaley, 
-// 							  double offsetx, double offsety )
-// {
-//   //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
-//   //	 this, width, height, scalex, scaley, offsetx, offsety );
-
-//   for( unsigned int i=0; i<pt_count; i++ )
-//     {
-// 		double px = pts[i].x;
-// 		double py = pts[i].y;
-
-// 		//unsigned int keep_i = i;
-
-//  		int xa = floor( (pts[i             ].x + offsetx) * scalex );
-//  		int ya = floor( (pts[i             ].y + offsety) * scaley );
-//  		int xb = floor( (pts[(i+1)%pt_count].x + offsetx) * scalex );
-//  		int yb = floor( (pts[(i+1)%pt_count].y + offsety) * scaley );
-
-// 		mod->rastervis.AddPoint( px, py );
-
-// 		//printf( "  line (%d,%d) to (%d,%d)\n", xa,ya,xb,yb );
-		
-//   		bool steep = abs( yb-ya ) > abs( xb-xa );
-// 		if( steep )
-// 		  {
-// 			 swap( xa, ya );
-// 			 swap( xb, yb );
-// 		  }
-		
-//   		if( xa > xb )
-//   		  {
-//   			 swap( xa, xb );
-//   			 swap( ya, yb );
-//   		  }
-		
-// 		double dydx = (double) (yb - ya) / (double) (xb - xa);
-// 		double y = ya;
-// 		for(int x=xa; x<=xb; x++) 
-// 		  {
-// 			 if( steep )
-// 				{
-// 				  if( ! (floor(y) >= 0) ) continue;
-// 				  if( ! (floor(y) < (int)width) ) continue;
-// 				  if( ! (x >= 0) ) continue;
-// 				  if( ! (x < (int)height) ) continue;
-// 				}
-// 			 else
-// 				{
-// 				  if( ! (x >= 0) ) continue;
-// 				  if( ! (x < (int)width) ) continue;
-// 				  if( ! (floor(y) >= 0) ) continue;
-// 				  if( ! (floor(y) < (int)height) ) continue;
-// 				}
-			 
-// 			 if( steep )
-// 				data[ (int)floor(y) + (x * width)] = 1;			 
-// 			 else
-// 				data[ x + ((int)floor(y) * width)] = 1;
-// 			 y += dydx;
-// 		  }
-// 	 }
-// }
 
 void Block::Rasterize( uint8_t* data, 
 							  unsigned int width, 

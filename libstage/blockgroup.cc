@@ -102,6 +102,8 @@ void BlockGroup::CalcSize()
   offset.x = minx + size.x/2.0;
   offset.y = miny + size.y/2.0;
   offset.z = 0; // todo?
+
+  InvalidateModelPointCache();
 }
 
 

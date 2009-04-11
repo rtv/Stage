@@ -561,6 +561,12 @@ inline Pose Model::LocalToGlobal( const Pose& pose ) const
   return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
 }
 
+stg_point_t Model::LocalToGlobal( const stg_point_t& pt) const
+{  
+  Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
+  return stg_point_t( gpose.x, gpose.y );
+}
+
 void Model::MapWithChildren()
 {
   UnMap();
@@ -1159,10 +1165,7 @@ void Model::RasterVis::SetData( uint8_t* data,
 
 void Model::RasterVis::AddPoint( stg_meters_t x, stg_meters_t y )
 {
-  stg_point_t* pt = new stg_point_t;
-  pt->x = x;
-  pt->y = y;
-  pts = g_list_prepend( pts, pt );
+  pts = g_list_prepend( pts, new stg_point_t( x, y ) );
 }
 
 void Model::RasterVis::ClearPts()
