@@ -717,7 +717,8 @@ void Model::Update( void )
 
 void Model::CallUpdateCallbacks( void )
 {
-  if( last_update == world->sim_time )
+  // if we were updated this timestep, call the callbacks
+  if( last_update == world->sim_time ) 
 	 CallCallbacks( &hooks.update );
 }
 

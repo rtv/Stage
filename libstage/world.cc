@@ -573,7 +573,7 @@ void World::Raytrace( const Pose &pose, // global pose
 {
   // find the direction of the first ray
   Pose raypose = pose;
-  double starta = fov/2.0;
+  double starta = fov/2.0 - raypose.a;
 
   for( uint32_t s=0; s < sample_count; s++ )
     {
