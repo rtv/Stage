@@ -12,6 +12,7 @@ set( stageSrcs
 	file_manager.hh
 	gl.cc
 	glcolorstack.cc
+	logentry.cc
 	model.cc
 	model_blinkenlight.cc
 	model_blobfinder.cc

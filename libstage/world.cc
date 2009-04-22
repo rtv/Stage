@@ -53,6 +53,7 @@
 #include "option.hh"
 using namespace Stg;
 
+
 // static data members
 unsigned int World::next_id = 0;
 bool World::quit_all = false;
@@ -1040,3 +1041,13 @@ void World::StopUpdatingModelPose( Model* mod )
 
 stg_usec_t World::SimTimeNow(void)
 { return sim_time; }
+
+void World::Log( Model* mod )
+{
+  LogEntry( sim_time, mod);
+
+  printf( "log entry count %lu\n", LogEntry::Count() );
+  //LogEntry::Print();
+}
+
+

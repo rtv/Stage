@@ -279,6 +279,14 @@ namespace Stg
       printf( "%s pose [x:%.3f y:%.3f z:%.3f a:%.3f]\n",
 				  prefix, x,y,z,a );
     }
+	 
+	 std::string String()
+	 {
+		char buf[256];
+		snprintf( buf, 256, "[ %.3f %.3f %.3f %.3f ]",
+					 x,y,z,a );
+		return std::string(buf);
+	 }
 
 	 /* returns true iff all components of the velocity are zero. */
 	 bool IsZero() const { return( !(x || y || z || a )); };
@@ -818,6 +826,28 @@ namespace Stg
   class BlockGroup;
   class PowerPack;
 
+  class LogEntry
+  {
+	 stg_usec_t timestamp;
+	 Model* mod;
+	 Pose pose;
+	 
+  public:
+	 LogEntry( stg_usec_t timestamp, Model* mod );
+	 
+	 /** A log of all LogEntries ever created */
+	 static std::vector<LogEntry> log;
+	 
+	 /** Returns the number of logged entries */
+	 static size_t Count(){ return log.size(); }
+	 
+	 /** Clear the log */
+	 static void Clear(){ log.clear(); }
+
+	 /** Print the log on stdout */
+	 static void Print();
+  };
+
   /// %World class
   class World : public Ancestor
   {
@@ -878,6 +908,9 @@ namespace Stg
 
     static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
     static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
+
+	 /** Log the state of a Model */
+	 void Log( Model* mod );
 
     /** hint that the world needs to be redrawn if a GUI is attached */
     void NeedRedraw(){ dirty = true; };
@@ -1699,6 +1732,7 @@ namespace Stg
 	 ctrlinit_t* initfunc;
 	 stg_usec_t interval; ///< time between updates in us
 	 stg_usec_t last_update; ///< time of last update in us  
+	 bool log_state; ///< iff true, model state is logged
 	 stg_meters_t map_resolution;
 	 stg_kg_t mass;
 	 bool on_update_list;
@@ -1935,6 +1969,8 @@ namespace Stg
 	 void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
 									stg_meters_t ymin, stg_meters_t ymax );
 	
+	 std::string PoseString(){ return pose.String(); }
+
 	 /** Look up a model pointer by a unique model ID */
 	 static Model* LookupId( uint32_t id )
 	 { return (Model*)g_hash_table_lookup( modelsbyid, (void*)id ); }

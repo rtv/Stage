@@ -209,6 +209,7 @@ Model::Model( World* world,
     initfunc(NULL),
     interval((stg_usec_t)1e4), // 10msec
     last_update(0),
+	 log_state(false),
     map_resolution(0.1),
     mass(0),
     on_update_list( false ),
@@ -713,6 +714,9 @@ void Model::Update( void )
     }
 
   last_update = world->sim_time;
+  
+  if( log_state )
+	 world->Log( this );
 }
 
 void Model::CallUpdateCallbacks( void )

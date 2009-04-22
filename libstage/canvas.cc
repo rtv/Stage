@@ -357,90 +357,100 @@ int Canvas::handle(int event)
 		invalidate();
 		redraw();
 		return 1;
-			
+		
 	 case FL_MOVE: // moused moved while no button was pressed
-		if ( startx >=0 ) {
-		  // mouse pointing to valid value
-			
-		  if( Fl::event_state( FL_CTRL ) )
-			 {
-				int dx = Fl::event_x() - startx;
-				int dy = Fl::event_y() - starty;
-
-				if( pCamOn == true ) {
-				  perspective_camera.addYaw( -dx );
-				  perspective_camera.addPitch( -dy );
-				} 
-				else {
-				  camera.addPitch( - 0.5 * static_cast<double>( dy ) );
-				  camera.addYaw( - 0.5 * static_cast<double>( dx ) );
+		if( Fl::event_state( FL_META ) )
+		  {
+			 puts( "TODO: HANDLE HISTORY" );
+			 //world->paused = ! world->paused;
+			 return 1;
+		  }
+		
+		if ( startx >=0 ) 
+		  {
+			 // mouse pointing to valid value
+			 
+			 if( Fl::event_state( FL_CTRL ) )
+				{
+				  int dx = Fl::event_x() - startx;
+				  int dy = Fl::event_y() - starty;
+				  
+				  if( pCamOn == true ) {
+					 perspective_camera.addYaw( -dx );
+					 perspective_camera.addPitch( -dy );
+				  } 
+				  else {
+					 camera.addPitch( - 0.5 * static_cast<double>( dy ) );
+					 camera.addYaw( - 0.5 * static_cast<double>( dx ) );
+				  }
+				  invalidate();
+				  redraw();
 				}
-				invalidate();
-				redraw();
-			 }
-		  else if( Fl::event_state( FL_ALT ) )
-			 {   
-				int dx = Fl::event_x() - startx;
-				int dy = Fl::event_y() - starty;
-
-				if( pCamOn == true ) {
-				  perspective_camera.move( -dx, dy, 0.0 );
-				} 
-				else {
-				  camera.move( -dx, dy );
+			 else if( Fl::event_state( FL_ALT ) )
+				{   
+				  int dx = Fl::event_x() - startx;
+				  int dy = Fl::event_y() - starty;
+				  
+				  if( pCamOn == true ) {
+					 perspective_camera.move( -dx, dy, 0.0 );
+				  } 
+				  else {
+					 camera.move( -dx, dy );
+				  }
+				  invalidate();
 				}
-				invalidate();
-			 }
-		}
+		  }
 		startx = Fl::event_x();
 		starty = Fl::event_y();
 		return 1;
-
 	 case FL_PUSH: // button pressed
 		{
-		  Model* mod = getModel( startx, starty );
-		  startx = Fl::event_x();
-		  starty = Fl::event_y();
-		  selectedModel = false;
-		  switch( Fl::event_button() )
+		  //else
 			 {
-			 case 1:
-				clicked_empty_space = ( mod == NULL );
-				empty_space_startx = startx;
-				empty_space_starty = starty;
-				if( mod ) { 
-				  // clicked a model
-				  if ( Fl::event_state( FL_SHIFT ) ) {
-					 // holding shift, toggle selection
-					 if ( selected( mod ) ) 
-						unSelect( mod );
-					 else {
-						select( mod );
-						selectedModel = true; // selected a model
+				Model* mod = getModel( startx, starty );
+				startx = Fl::event_x();
+				starty = Fl::event_y();
+				selectedModel = false;
+				switch( Fl::event_button() )
+				  {
+				  case 1:
+					 clicked_empty_space = ( mod == NULL );
+					 empty_space_startx = startx;
+					 empty_space_starty = starty;
+					 if( mod ) { 
+						// clicked a model
+						if ( Fl::event_state( FL_SHIFT ) ) {
+						  // holding shift, toggle selection
+						  if ( selected( mod ) ) 
+							 unSelect( mod );
+						  else {
+							 select( mod );
+							 selectedModel = true; // selected a model
+						  }
+						}
+						else {
+						  if ( !selected( mod ) ) {
+							 // clicked on an unselected model while
+							 //  not holding shift, this is the new
+							 //  selection
+							 unSelectAll();
+							 select( mod );
+						  }
+						  selectedModel = true; // selected a model
+						}
 					 }
-				  }
-				  else {
-					 if ( !selected( mod ) ) {
-						// clicked on an unselected model while
-						//  not holding shift, this is the new
-						//  selection
-						unSelectAll();
-						select( mod );
+					 
+					 return 1;
+				  case 3:
+					 {
+						// leave selections alone
+						// rotating handled within FL_DRAG
+						return 1;
 					 }
-					 selectedModel = true; // selected a model
-				  }
-				}
-		
-				return 1;
-			 case 3:
-				{
-				  // leave selections alone
-				  // rotating handled within FL_DRAG
-				  return 1;
-				}
-			 default:
-				return 0;
-			 }    
+				  default:
+					 return 0;
+				  }    
+			 }
 		}
 	  
 	 case FL_DRAG: // mouse moved while button was pressed
