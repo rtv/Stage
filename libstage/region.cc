@@ -129,11 +129,10 @@ void SuperRegion::Draw( bool drawall )
 
 		  snprintf( buf, 15, "%lu", r->count );
 		  Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
-
 		  
 		  for( unsigned int p=0; p<Region::WIDTH; p++ )
 			 for( unsigned int q=0; q<Region::WIDTH; q++ )
-				if( r->cells[p+(q*Region::WIDTH)].list )
+				if( r->cells[p+(q*Region::WIDTH)].blocks.size() )
 				  {					 
 					 GLfloat xx = p+(x<<RBITS);
 					 GLfloat yy = q+(y<<RBITS);
@@ -145,11 +144,12 @@ void SuperRegion::Draw( bool drawall )
 						}
 					 else // draw a rectangular solid
 						{
-						  for( GSList* it =  r->cells[p+(q*Region::WIDTH)].list;
-								 it;
-								 it=it->next )
+						  Cell* c = &r->cells[p+(q*Region::WIDTH)];
+						  for( std::list<Block*>::iterator it = c->blocks.begin();
+								 it != c->blocks.end();
+								 ++it )					 
 							 {
-								Block* block = (Block*)it->data;
+								Block* block = *it;//(Block*)it->data;
 						  
 								//printf( "zb %.2f %.2f\n", ent->zbounds.min, ent->zbounds.max );
 						  

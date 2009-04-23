@@ -71,8 +71,8 @@ static gboolean PointIntEqual( stg_point_int_t* p1, stg_point_int_t* p2 )
 
 
 World::World( const char* token, 
-	      stg_msec_t interval_sim,
-	      double ppm )
+				  stg_msec_t interval_sim,
+				  double ppm )
   : 
   // private
   charge_list( NULL ),
@@ -103,7 +103,7 @@ World::World( const char* token,
   ray_list( NULL ),  
   sim_time( 0 ),
   superregions( g_hash_table_new( (GHashFunc)PointIntHash, 
-				  (GEqualFunc)PointIntEqual ) ),
+											 (GEqualFunc)PointIntEqual ) ),
   sr_cached(NULL),
   reentrant_update_list( NULL ),
   nonreentrant_update_list( NULL ),
@@ -154,7 +154,7 @@ bool World::UpdateAll()
   for( GList* it = World::world_list; it; it=it->next ) 
     {
       if( ((World*)it->data)->Update() == false )
-	quit = false;
+		  quit = false;
     }
   return quit;
 }
@@ -189,7 +189,7 @@ void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
 { 
   // lookup the group in which this was defined
   Model* mod = (Model*)g_hash_table_lookup( entitytable, 
-					    (gpointer)wf->GetEntityParent( entity ) );
+														  (gpointer)wf->GetEntityParent( entity ) );
   
   if( ! mod )
     PRINT_ERR( "block has no model for a parent" );
@@ -247,7 +247,7 @@ void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
   int parent_entity = wf->GetEntityParent( entity );
   
   PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
-		entity, parent_entity );
+					 entity, parent_entity );
   
   Model* parent = (Model*)g_hash_table_lookup( entitytable, 
 															  (gpointer)parent_entity );
@@ -299,11 +299,11 @@ void World::Load( const char* worldfile_path )
 
   this->interval_sim = (stg_usec_t)thousand * 
     wf->ReadInt( entity, "interval_sim", 
-		 (int)(this->interval_sim/thousand) );
+					  (int)(this->interval_sim/thousand) );
 
   if( wf->PropertyExists( entity, "quit_time" ) ) {
     this->quit_time = (stg_usec_t) ( million * 
-				     wf->ReadFloat( entity, "quit_time", 0 ) );
+												 wf->ReadFloat( entity, "quit_time", 0 ) );
   }
 
   if( wf->PropertyExists( entity, "resolution" ) )
@@ -317,22 +317,22 @@ void World::Load( const char* worldfile_path )
       int count = wf->ReadInt( entity, "threadpool", worker_threads );
 		 
       if( count && (count != (int)worker_threads) )
-	{
-	  worker_threads = count;
+		  {
+			 worker_threads = count;
 			  
-	  if( threadpool == NULL )
-	    threadpool = g_thread_pool_new( (GFunc)update_thread_entry, 
-					    this,
-					    worker_threads, 
-					    true,
-					    NULL );
-	  else
-	    g_thread_pool_set_max_threads( threadpool, 
-					   worker_threads, 
-					   NULL );
+			 if( threadpool == NULL )
+				threadpool = g_thread_pool_new( (GFunc)update_thread_entry, 
+														  this,
+														  worker_threads, 
+														  true,
+														  NULL );
+			 else
+				g_thread_pool_set_max_threads( threadpool, 
+														 worker_threads, 
+														 NULL );
 
-	  printf( "[threadpool %u]", worker_threads );
-	}
+			 printf( "[threadpool %u]", worker_threads );
+		  }
     }
 
   // Iterate through entitys and create objects of the appropriate type
@@ -347,8 +347,8 @@ void World::Load( const char* worldfile_path )
 		  }
       else if( strcmp( typestr, "block" ) == 0 )
 		  LoadBlock( wf, entity, entitytable );
-// 		else if( strcmp( typestr, "puck" ) == 0 )
-// 		  LoadPuck( wf, entity, entitytable );
+		// 		else if( strcmp( typestr, "puck" ) == 0 )
+		// 		  LoadPuck( wf, entity, entitytable );
 		else
 		  LoadModel( wf, entity, entitytable );
     }
@@ -366,7 +366,7 @@ void World::Load( const char* worldfile_path )
 
   if( debug )
     printf( "[Load time %.3fsec]\n", 
-	    (load_end_time - load_start_time) / 1000000.0 );
+				(load_end_time - load_start_time) / 1000000.0 );
   else
     putchar( '\n' );
 }
@@ -629,11 +629,11 @@ inline stg_point_int_t CELL( const stg_point_int_t& glob )
 }
 
 stg_raytrace_result_t World::Raytrace( const Pose &gpose, 
-				       const stg_meters_t range,
-				       const stg_ray_test_func_t func,
-				       const Model* mod,		
-				       const void* arg,
-				       const bool ztest ) 
+													const stg_meters_t range,
+													const stg_ray_test_func_t func,
+													const Model* mod,		
+													const void* arg,
+													const bool ztest ) 
 {
   stg_raytrace_result_t sample;
   
@@ -711,71 +711,73 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 	
   // find the starting superregion 
   sr = GetSuperRegionCached( sup ); // possibly NULL, but unlikely
-
+  
   while ( n-- ) 
     {         	
       //printf( "pixel [%d %d]\tS[ %d %d ]\t",
       //	  x, y, sup.x, sup.y );
 		
       if( sr )
-	{	  
-	  //  printf( "R[ %d %d ]\t", reg.x, reg.y );
-			
-	  if( reg.x != lastreg.x || reg.y != lastreg.y )
-	    {
-	      r = sr->GetRegion( reg.x, reg.y );
-	      lastreg = reg;
-	      nonempty_region = ( r && r->count );
-	    }
+		  {	  
+			 //  printf( "R[ %d %d ]\t", reg.x, reg.y );
+			 
+			 // if the region coordinate has changed since the last loop
+			 if( reg.x != lastreg.x || reg.y != lastreg.y )
+				{
+				  // lookup the new region
+				  r = sr->GetRegion( reg.x, reg.y );
+				  lastreg = reg;
+				  nonempty_region = ( r && r->count );
+				}
 
-	  if( nonempty_region )
-	    {
-	      //printf( "C[ %d %d ]\t", cell.x, cell.y );
-			  
-	      Cell* c = r->GetCell( cell.x, cell.y );
-	      assert(c);
-			  
-	      for( GSList* list = c->list;
-		   list; 
-		   list = list->next )      
-		{	      	      
-		  Block* block = (Block*)list->data;
-		  assert( block );
-					
-		  //printf( "ENT %p mod %p z [%.2f %.2f] color %X\n",
-		  //		ent,
-		  //		ent->mod, 
-		  //		ent->zbounds.min, 
-		  //		ent->zbounds.max, 
-		  //		ent->color );
-					
-		  // skip if not in the right z range
-		  if( ztest && 
-		      ( gpose.z < block->global_z.min || 
-			gpose.z > block->global_z.max ) )
-		    {
-		      //max( "failed ztest: ray at %.2f block at [%.2f %.2f]\n",
-		      //	 pose.z, ent->zbounds.min, ent->zbounds.max );
-		      continue; 
-		    }
+			 if( nonempty_region )
+				{
+				  //printf( "C[ %d %d ]\t", cell.x, cell.y );
+				  
+				  Cell* c = r->GetCellNoCreate( cell.x, cell.y );
+				  assert(c);
+				  
+				  for( std::list<Block*>::iterator it = c->blocks.begin();
+						 it != c->blocks.end();
+						 ++it )					 
+					 {	      	      
+						Block* block = *it;
+						assert( block );
 				 
-		  //printf( "RT: mod %p testing mod %p at %d %d\n",
-		  //		mod, ent->mod, x, y );
-		  // printf( "RT: mod %p %s testing mod %p %s at %d %d\n",
-		  //		mod, mod->Token(), ent->mod, ent->mod->Token(), x, y );
+						//printf( "ENT %p mod %p z [%.2f %.2f] color %X\n",
+						//		ent,
+						//		ent->mod, 
+						//		ent->zbounds.min, 
+						//		ent->zbounds.max, 
+						//		ent->color );
 				 
-		  // test the predicate we were passed
-		  if( (*func)( block->mod, (Model*)mod, arg )) // TODO
-		    {
-		      // a hit!
-		      sample.color = block->GetColor();
-		      sample.mod = block->mod;
-		      sample.range = hypot( (glob.x-start.x)/ppm, (glob.y-start.y)/ppm );
-		      return sample;
-		    }
-		}
-	    }
-	}      
+						// skip if not in the right z range
+						if( ztest && 
+							 ( gpose.z < block->global_z.min || 
+								gpose.z > block->global_z.max ) )
+						  {
+							 //max( "failed ztest: ray at %.2f block at [%.2f %.2f]\n",
+							 //	 pose.z, ent->zbounds.min, ent->zbounds.max );
+							 continue; 
+						  }
+				 
+						//printf( "RT: mod %p testing mod %p at %d %d\n",
+						//		mod, ent->mod, x, y );
+						// printf( "RT: mod %p %s testing mod %p %s at %d %d\n",
+						//		mod, mod->Token(), ent->mod, ent->mod->Token(), x, y );
+				 
+						// test the predicate we were passed
+						if( (*func)( block->mod, (Model*)mod, arg )) 
+						  {
+							 // a hit!
+							 sample.color = block->GetColor();
+							 sample.mod = block->mod;
+							 sample.range = hypot( (glob.x-start.x)/ppm, (glob.y-start.y)/ppm );
+							 return sample;
+						  }
+					 }
+				}
+		  }      
 		
       //      printf( "\t step %d n %d   pixel [ %d, %d ] block [ %d %d ] index [ %d %d ] \n", 
       //      //coarse [ %d %d ]\n",
@@ -783,41 +785,41 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 		
       // increment our pixel in the correct direction
       if( exy < 0 ) // we're iterating along X
-	{
-	  glob.x += sx; 
-	  exy += by;
+		  {
+			 glob.x += sx; 
+			 exy += by;
 			 
-	  sup.x = SUPERREGION( glob.x );
-	  if( sup.x != lastsup.x ) 
-	    {
-	      sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
-	      lastsup = sup; // remember these coords
-	    }
+			 sup.x = SUPERREGION( glob.x );
+			 if( sup.x != lastsup.x ) 
+				{
+				  sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
+				  lastsup = sup; // remember these coords
+				}
 			 
-	  // recompute current region and cell (we can skip these if
-	  // sr==NULL, but profiling suggests it's faster to do them
-	  // than add a conditional)
-	  reg.x = REGION( glob.x); 
-	  cell.x = CELL( glob.x ); 
-	}
+			 // recompute current region and cell (we can skip these if
+			 // sr==NULL, but profiling suggests it's faster to do them
+			 // than add a conditional)
+			 reg.x = REGION( glob.x); 
+			 cell.x = CELL( glob.x ); 
+		  }
       else  // we're iterating along Y
-	{
-	  glob.y += sy; 
-	  exy -= bx; 
+		  {
+			 glob.y += sy; 
+			 exy -= bx; 
 			 
-	  sup.y = SUPERREGION( glob.y );
-	  if( sup.y != lastsup.y )
-	    {
-	      sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
-	      lastsup = sup; // remember these coords
-	    }
+			 sup.y = SUPERREGION( glob.y );
+			 if( sup.y != lastsup.y )
+				{
+				  sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
+				  lastsup = sup; // remember these coords
+				}
 			 
-	  // recompute current region and cell (we can skip these if
-	  // sr==NULL, but profiling suggests it's faster to do them
-	  // than add a conditional)
-	  reg.y = REGION( glob.y ); 			
-	  cell.y = CELL( glob.y );
-	}
+			 // recompute current region and cell (we can skip these if
+			 // sr==NULL, but profiling suggests it's faster to do them
+			 // than add a conditional)
+			 reg.y = REGION( glob.y ); 			
+			 cell.y = CELL( glob.y );
+		  }
     }
 	
   // hit nothing
@@ -911,8 +913,8 @@ inline Cell* World::GetCell( const int32_t x, const int32_t y )
   //printf( "GC[ %d %d ] ", glob.x, glob.y );
 
   return( GetSuperRegionCached( SUPERREGION(glob) )
-	  ->GetRegion( REGION(x), REGION(y) )
-	  ->GetCell( CELL(x), CELL(y) )) ;
+			 ->GetRegion( REGION(x), REGION(y) )
+			 ->GetCellCreate( CELL(x), CELL(y) )) ;
 }
 
 void World::ForEachCellInPolygon( const stg_point_t pts[], 
@@ -961,15 +963,15 @@ void World::ForEachCellInLine( const stg_point_t& pt1,
 		
       // cleverly skip to the next cell			 
       if( exy < 0 ) 
-	{
-	  x += sx;
-	  exy += by;
-	}
+		  {
+			 x += sx;
+			 exy += by;
+		  }
       else 
-	{
-	  y += sy;
-	  exy -= bx; 
-	}
+		  {
+			 y += sy;
+			 exy -= bx; 
+		  }
     }
 }
 

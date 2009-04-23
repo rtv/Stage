@@ -139,26 +139,28 @@ stg_color_t Block::GetColor()
   return( inherit_color ? mod->color : color );
 }
 
-GList* Block::AppendTouchingModels( GList* list )
+GList* Block::AppendTouchingModels( GList* l )
 {
   // for every cell we are rendered into
   for( unsigned int i=0; i<rendered_cells->len; i++ )
     {
-      Cell* cell = (Cell*)g_ptr_array_index( rendered_cells, i);
+      Cell* c = (Cell*)g_ptr_array_index( rendered_cells, i);
 		
       // for every block rendered into that cell
-      for( GSList* it = cell->list; it; it=it->next )
-	{
-	  Block* testblock = (Block*)it->data;
-	  Model* testmod = testblock->mod;
+		for( std::list<Block*>::iterator it = c->blocks.begin();
+			  it != c->blocks.end();
+			  ++it )					 
+		  {
+			 //Block* testblock = *it;
+			 Model* testmod = (*it)->mod;
 			 
-	  if( !mod->IsRelated( testmod ))
-	    if( ! g_list_find( list, testmod ) )
-	      list = g_list_append( list, testmod );
-	}
+			 if( !mod->IsRelated( testmod ))
+				if( ! g_list_find( l, testmod ) )
+				  l = g_list_append( l, testmod );
+		  }
     }
-
-  return list;
+  
+  return l;
 }
 
 Model* Block::TestCollision()
@@ -172,25 +174,26 @@ Model* Block::TestCollision()
     // for every cell we may be rendered into
     for( unsigned int i=0; i<candidate_cells->len; i++ )
       {
-	Cell* cell = (Cell*)g_ptr_array_index(candidate_cells, i);
-		
-	// for every rendered into that cell
-	for( GSList* it = cell->list; it; it=it->next )
-	  {
-	    Block* testblock = (Block*)it->data;
-	    Model* testmod = testblock->mod;
-			 
-	    //printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
-			 
-	    // if the tested model is an obstacle and it's not attached to this model
-	    if( (testmod != this->mod) &&  
-		testmod->vis.obstacle_return && 
-		!mod->IsRelated( testmod ))
-	      {
-		//puts( "HIT");
-		return testmod; // bail immediately with the bad news
-	      }		  
-	  }
+		  Cell* c = (Cell*)g_ptr_array_index(candidate_cells, i);
+		  
+		  // for every rendered into that cell
+		  for( std::list<Block*>::iterator it = c->blocks.begin();
+				 it != c->blocks.end();
+				 ++it )					 
+			 {
+				Model* testmod = (*it)->mod;
+				
+				//printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
+				
+				// if the tested model is an obstacle and it's not attached to this model
+				if( (testmod != this->mod) &&  
+					 testmod->vis.obstacle_return && 
+					 !mod->IsRelated( testmod ))
+				  {
+					 //puts( "HIT");
+					 return testmod; // bail immediately with the bad news
+				  }		  
+			 }
       }
   
   //printf( "model %s block %p collision done. no hits.\n", mod->Token(), this );

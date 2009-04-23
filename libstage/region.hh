@@ -5,6 +5,9 @@
   Copyright Richard Vaughan 2008
 */
 
+#include <list> // STL containers
+// #include <vector>
+
 #include "stage.hh"
 
 namespace Stg 
@@ -21,6 +24,7 @@ namespace Stg
 #define SUPERREGIONWIDTH (1<<SBITS)
 #define SUPERREGIONSIZE SUPERREGIONWIDTH*SUPERREGIONWIDTH
 
+
 class Cell 
 {
   friend class Region;
@@ -29,13 +33,14 @@ class Cell
   friend class Block;
   
 private:
-  Region* region;
-  GSList* list;
+  Region* region;  
+  std::list<Block*> blocks;
+
 public:
   Cell() 
 	 : region( NULL),
-		list(NULL) 
-  { /* do nothing */ }  
+		blocks() 
+  { /* empty */ }  
   
   inline void RemoveBlock( Block* b );
   inline void AddBlock( Block* b );  
@@ -51,17 +56,16 @@ private:
   static const uint32_t WIDTH;
   static const uint32_t SIZE;
   
-  //Cell cells[REGIONSIZE];
   Cell* cells;
   SuperRegion* superregion;
-  
+
 public:
   unsigned long count; // number of blocks rendered into these cells
   
   Region();
   ~Region();
   
-  Cell* GetCell( int32_t x, int32_t y )
+  Cell* GetCellCreate( int32_t x, int32_t y )
   { 
 	 if( ! cells )
 		{
@@ -71,6 +75,11 @@ public:
 		}
 		return( &cells[x + (y*Region::WIDTH)] ); 
 
+  };
+  
+  Cell* GetCellNoCreate( int32_t x, int32_t y )
+  { 
+	 return( &cells[x + (y*Region::WIDTH)] ); 
   };
   
   void DecrementOccupancy();
@@ -127,22 +136,17 @@ inline void Region::IncrementOccupancy()
 inline void Cell::RemoveBlock( Block* b )
 {
   // linear time removal, but these lists should be very short.
-  list = g_slist_remove( list, b );
+  blocks.remove( b );
+
   region->DecrementOccupancy();
 }
 
 inline void Cell::AddBlock( Block* b )
 {
   // constant time prepend
-  list = g_slist_prepend( list, b );	 
+  blocks.push_front( b );
   region->IncrementOccupancy();
   b->RecordRendering( this );
-}
-
-inline void Cell::AddBlockNoRecord( Block* b )
-{
-  list = g_slist_prepend( list, b );
-  // don't add this cell to the block - we assume it's already there
 }
 
 
