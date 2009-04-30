@@ -564,13 +564,11 @@ bool World::Update()
 		fflush( stdout );
 	 }
 
-  this->updates++;
-  
   CallUpdateCallbacks();
   
+  this->updates++;  
   this->sim_time += this->interval_sim;
 	
-
   return false;
 }
 
