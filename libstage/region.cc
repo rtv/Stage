@@ -233,9 +233,7 @@ void SuperRegion::Draw( bool drawall )
 						}
 				  }
 		}
-  
-  
-  glPopMatrix();    
+    glPopMatrix();    
 }
 
 
@@ -247,3 +245,4 @@ void SuperRegion::Floor()
   glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
   glPopMatrix();    
 }
+

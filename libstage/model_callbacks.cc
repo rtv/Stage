@@ -54,9 +54,8 @@ int Model::RemoveCallback( void* member,
 		// store the new, shorter, list of callbacks
 		g_hash_table_insert( callbacks, member, cb_list );
 
-		// we're done with that
-		//free( el->data );
-		// TODO - fix leak of stg_cb_t
+		// we're done with the stored data
+		delete (stg_cb_t*)(el->data);
 	}
 	else
 	{

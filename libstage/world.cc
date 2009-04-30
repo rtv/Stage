@@ -95,6 +95,7 @@ World::World( const char* token,
   worker_threads_done( g_cond_new() ),
 
   // protected
+  cb_list(NULL),
   extent(),
   graphics( false ), 
   interval_sim( (stg_usec_t)thousand * interval_sim ),
@@ -455,6 +456,54 @@ std::string World::ClockString()
   return str;
 }
 
+void World::AddUpdateCallback( stg_world_callback_t cb, 
+										 void* user )
+{
+  // add the callback & argument to the list
+  std::pair<stg_world_callback_t,void*> p(cb, user);
+  cb_list.push_back( p );
+}
+
+int World::RemoveUpdateCallback( stg_world_callback_t cb, 
+											void* user )
+{
+  std::pair<stg_world_callback_t,void*> p( cb, user );
+  
+  std::list<std::pair<stg_world_callback_t,void*> >::iterator it;  
+  for( it = cb_list.begin();
+		 it != cb_list.end();
+		 it++ )
+	 {
+		if( (*it) == p )
+		  {
+			 cb_list.erase( it );		
+			 break;
+		  }
+	 }
+   
+  // return the number of callbacks now in the list. Useful for
+  // detecting when the list is empty.
+  return cb_list.size();
+}
+
+void World::CallUpdateCallbacks()
+{
+  
+  // for each callback in the list
+  for( std::list<std::pair<stg_world_callback_t,void*> >::iterator it = cb_list.begin();
+		 it != cb_list.end();
+		 it++ )
+	 {  
+		//printf( "cbs %p data %p cvs->next %p\n", cbs, cbs->data, cbs->next );
+		
+		if( ((*it).first )( this, (*it).second ) )
+		  {
+			 //printf( "callback returned TRUE - schedule removal from list\n" );
+			 it = cb_list.erase( it );
+		  }
+	 }      
+}
+
 bool World::Update()
 {
   PRINT_DEBUG( "World::Update()" );
@@ -515,8 +564,11 @@ bool World::Update()
 		fflush( stdout );
 	 }
 
-  this->sim_time += this->interval_sim;
   this->updates++;
+  
+  CallUpdateCallbacks();
+  
+  this->sim_time += this->interval_sim;
 	
 
   return false;
@@ -1051,5 +1103,4 @@ void World::Log( Model* mod )
   printf( "log entry count %lu\n", LogEntry::Count() );
   //LogEntry::Print();
 }
-
 

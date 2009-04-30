@@ -41,6 +41,8 @@
 #include <sys/time.h>
 #include <iostream>
 #include <vector>
+#include <list>
+//#include <pair>
 
 // we use GLib's data structures extensively. Perhaps we'll move to
 // C++ STL types to lose this dependency one day.
@@ -647,6 +649,7 @@ namespace Stg
 
 
   typedef int(*stg_model_callback_t)(Model* mod, void* user );
+  typedef int(*stg_world_callback_t)(World* world, void* user );
   typedef int(*stg_cell_callback_t)(Cell* cell, void* user );
   
   // return val, or minval if val < minval, or maxval if val > maxval
@@ -673,14 +676,18 @@ namespace Stg
   class stg_cb_t
   {
   public:
-    stg_model_callback_t callback;
+	 stg_model_callback_t callback;
     void* arg;
 	 
 	 stg_cb_t( stg_model_callback_t cb, void* arg ) 
 		: callback(cb), arg(arg) {}
+
+	 stg_cb_t( stg_world_callback_t cb, void* arg ) 
+		: callback(NULL), arg(arg) {}
 	 
 	 stg_cb_t() : callback(NULL), arg(NULL) {}
   };
+  
 
   /** Defines a rectangle of [size] located at [pose] */
   typedef struct
@@ -886,7 +893,8 @@ namespace Stg
     GCond* worker_threads_done; ///< signalled when there are no more updates for the worker threads to do
 
   protected:	 
-  
+
+	 std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
     stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
@@ -904,10 +912,20 @@ namespace Stg
     long unsigned int updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
 
+	 void CallUpdateCallbacks(); ///< Call all calbacks in cb_list, removing any that return true;
+
   public:
 
     static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
     static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
+
+	 /** Attach a callback function, to be called with the argument at
+		  the end of a complete update step */
+	 void AddUpdateCallback( stg_world_callback_t cb, void* user );
+
+	 /** Remove a callback function. Any argument data passed to
+		  AddUpdateCallback is not automatically freed. */
+	 int RemoveUpdateCallback( stg_world_callback_t cb, void* user );
 
 	 /** Log the state of a Model */
 	 void Log( Model* mod );
@@ -1630,6 +1648,7 @@ namespace Stg
 	 int shutdown;
 	 int startup;
 	 int update;
+	 int update_done;
   };
 
   /** Records model state and functionality in the GUI, if used */

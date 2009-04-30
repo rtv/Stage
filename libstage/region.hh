@@ -74,14 +74,37 @@ public:
 			 cells[i].region = this;		  
 		}
 		return( &cells[x + (y*Region::WIDTH)] ); 
+  }
 
-  };
+  Cell* GetCellCreate( const stg_point_int_t& c ) 
+  { 
+	 if( ! cells )
+		{
+		  cells = new Cell[REGIONSIZE];
+		  for( unsigned int i=0; i<Region::SIZE; i++ )
+			 cells[i].region = this;		  
+		}
+		return( &cells[c.x + (c.y*Region::WIDTH)] ); 
+  }
   
-  Cell* GetCellNoCreate( int32_t x, int32_t y )
+  Cell* GetCellNoCreate( int32_t x, int32_t y ) const
   { 
 	 return( &cells[x + (y*Region::WIDTH)] ); 
-  };
+  }
+
+  Cell* GetCellNoCreate( const stg_point_int_t& c ) const
+  { 
+	 return( &cells[c.x + (c.y*Region::WIDTH)] ); 
+  }
   
+//   Cell* GetCellNoCreateBoundsCheck( const stg_point_int_t& c ) const
+//   { 
+// 	 if( c.x < 0 || c.x > WIDTH || c.y < 0 || c.y > WIDTH )
+// 		return NULL;
+// 	 else
+// 		return( &cells[c.x + (c.y*Region::WIDTH)] ); 
+//   }
+   
   void DecrementOccupancy();
   void IncrementOccupancy();
 };
