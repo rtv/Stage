@@ -825,6 +825,27 @@ namespace Stg
   } stg_raytrace_result_t;
 
 
+  class Ray
+  {
+  public:
+	 //SuperRegion& sup;
+	 //Regiion& reg;
+	 //Cell& cell;
+	 //stg_point_int_t glob;
+	 //stg_point_int_t origin;
+	 //stg_point_int_t dest;
+
+	 Model* mod;
+	 Pose origin;
+	 stg_meters_t range;
+	 stg_ray_test_func_t func;
+	 void* arg;
+	 bool ztest;
+
+	 stg_raytrace_result_t result;	 
+  };
+
+		
   const uint32_t INTERVAL_LOG_LEN = 32;
 
   // defined in stage_internal.hh
@@ -975,6 +996,9 @@ namespace Stg
     SuperRegion* CreateSuperRegion( stg_point_int_t origin );
     void DestroySuperRegion( SuperRegion* sr );
 	 
+	 // trace a vector of rays all in one go
+	 void Raytrace( std::vector<Ray>& rays );
+
     stg_raytrace_result_t Raytrace( const Pose& pose, 			 
 												const stg_meters_t range,
 												const stg_ray_test_func_t func,
@@ -2298,7 +2322,10 @@ namespace Stg
 	 
 	 /** Return the global pose (i.e. pose in world coordinates) of a
 		  pose specified in the model's local coordinate system */
-	 Pose LocalToGlobal( const Pose& pose ) const;
+	 Pose LocalToGlobal( const Pose& pose ) const
+	 {  
+		return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
+    }
 	
 // 	 /** Return the 3d point in world coordinates of a 3d point
 // 		  specified in the model's local coordinate system */
@@ -2420,24 +2447,31 @@ namespace Stg
 		static Option showStrikes;
 		static Option showFov;
 		static Option showBeams;
-		
+
 	 public:
 		Vis( World* world );
 		virtual ~Vis( void ){}
 		virtual void Visualize( Model* mod, Camera* cam );
 	 };
-	 
+	 	 
 	 Vis vis;
+
+	 //class LaserRay : public Ray
 
 	 /** OpenGL displaylist for laser data */
 	 int data_dl; 
 	 bool data_dirty;
 
-	 stg_laser_sample_t* samples;
+	 //stg_laser_sample_t* samples;
 	 uint32_t sample_count;
+
+	 std::vector<stg_laser_sample_t> samples;
+
 	 stg_meters_t range_max;
 	 stg_radians_t fov;
 	 uint32_t resolution;
+
+	 std::vector<Ray> rays;
   	 
   public:
 	 static const char* typestr;
@@ -2458,7 +2492,7 @@ namespace Stg
   
 	 stg_laser_sample_t* GetSamples( uint32_t* count=NULL);
   
-	 void SetSamples( stg_laser_sample_t* samples, uint32_t count);
+	 //void SetSamples( stg_laser_sample_t* samples, uint32_t count);
   
 	 // Get the user-tweakable configuration of the laser
 	 stg_laser_cfg_t GetConfig( );

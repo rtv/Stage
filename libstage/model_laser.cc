@@ -1,6 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: model_laser.c
+// file: model_laser.c
 // Author: Richard Vaughan
 // Date: 10 June 2004
 //
@@ -91,10 +89,7 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
   ModelLaser* laser = dynamic_cast<ModelLaser*>(mod);
   unsigned int sample_count = 0;
   stg_laser_sample_t* samples = laser->GetSamples( &sample_count );
-  
-  if( ! (samples && sample_count) )
-	 return;
-  
+    
   glPushMatrix();
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   
@@ -193,11 +188,12 @@ ModelLaser::ModelLaser( World* world,
 	 vis( world ),
     data_dl(0),
     data_dirty( true ),
-    samples( NULL ),	// don't allocate sample buffer memory until Update() is called
     sample_count( DEFAULT_SAMPLES ),
+    samples(),
     range_max( DEFAULT_MAXRANGE ),
     fov( DEFAULT_FOV ),
-    resolution( DEFAULT_RESOLUTION )
+    resolution( DEFAULT_RESOLUTION ),
+	 rays()
 {
   
   PRINT_DEBUG2( "Constructing ModelLaser %d (%s)\n", 
@@ -212,6 +208,9 @@ ModelLaser::ModelLaser( World* world,
   geom.size = DEFAULT_SIZE;
   SetGeom( geom );
   
+  rays.resize( sample_count );
+  samples.resize( sample_count );
+
   // assert that Update() is reentrant for this derived model
   thread_safe = true;
 
@@ -224,11 +223,6 @@ ModelLaser::ModelLaser( World* world,
 
 ModelLaser::~ModelLaser( void )
 {
-  if(samples)
-    {
-      g_free( samples );
-      samples = NULL;
-    }
 }
 
 void ModelLaser::Load( void )
@@ -248,6 +242,9 @@ void ModelLaser::Load( void )
     }
 
   Model::Load();
+  
+  rays.resize(sample_count);
+  samples.resize(sample_count);
 }
 
 stg_laser_cfg_t ModelLaser::GetConfig()
@@ -267,6 +264,10 @@ void ModelLaser::SetConfig( stg_laser_cfg_t cfg )
   fov = cfg.fov;
   resolution = cfg.resolution;
   interval = cfg.interval;
+  sample_count = cfg.sample_count;
+
+  samples.resize( sample_count );
+  rays.resize( sample_count );
 }
 
 static bool laser_raytrace_match( Model* hit, 
@@ -278,62 +279,82 @@ static bool laser_raytrace_match( Model* hit,
   return( (hit != finder) && (hit->vis.laser_return > 0 ) );
 }	
 
+// void ModelLaser::SetSampleCount( unsigned int count )
+// {
+//   sample_count = count;
+  
+//   samples.resize( count );
+//   rays.resize( count );
+
 void ModelLaser::Update( void )
 {     
   double bearing = -fov/2.0;
   double sample_incr = fov / (double)(sample_count-1);
 
-  samples = g_renew( stg_laser_sample_t, samples, sample_count );
-  
   Pose rayorg = geom.pose;
   bzero( &rayorg, sizeof(rayorg));
   rayorg.z += geom.size.z/2;
   
+  assert( samples.size() == sample_count );
+  
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
       rayorg.a = bearing;
-
-      stg_raytrace_result_t sample = 
-	Raytrace( rayorg, 
-		  range_max,
-		  laser_raytrace_match,
-		  NULL,
-		  true ); // z testing enabled
 		
-      samples[t].range = sample.range;
+		// set up the ray
+		rays[t].origin = LocalToGlobal(rayorg);
 
+		// todo - do this constant stuff in advance
+		rays[t].func = laser_raytrace_match;
+		rays[t].arg = NULL;
+		rays[t].range = range_max;
+		rays[t].arg = NULL;
+		rays[t].ztest = true;
+		rays[t].mod = this;
+		
+      bearing += sample_incr;
+	 }
+  
+  // do the raytracing of all rays in one go (allows parallel implementation)
+  world->Raytrace( rays );
+  
+  // now process the results and fill in our samples
+  for( unsigned int t=0; t<sample_count; t += resolution )
+    {
+		stg_raytrace_result_t* r = &rays[t].result;
+		assert( r );
+
+      samples[t].range = r->range;
+		
       // if we hit a model and it reflects brightly, we set
       // reflectance high, else low
-      if( sample.mod && ( sample.mod->vis.laser_return >= LaserBright ) )	
-	samples[t].reflectance = 1;
+      if( r->mod && ( r->mod->vis.laser_return >= LaserBright ) )	
+		  samples[t].reflectance = 1;
       else
-	samples[t].reflectance = 0;
-		
-      // todo - lower bound on range      
-      bearing += sample_incr;
+		  samples[t].reflectance = 0;		
     }
-
+    
   // we may need to interpolate the samples we skipped 
   if( resolution > 1 )
     {
       for( unsigned int t=resolution; t<sample_count; t+=resolution )
-	for( unsigned int g=1; g<resolution; g++ )
-	  {
-	    if( t >= sample_count )
-	      break;
+		  for( unsigned int g=1; g<resolution; g++ )
+			 {
+				if( t >= sample_count )
+				  break;
 				
-	    // copy the rightmost sample data into this point
-	    memcpy( &samples[t-g],
-		    &samples[t-resolution],
-		    sizeof(stg_laser_sample_t));
+				// copy the rightmost sample data into this point
+				memcpy( &samples[t-g],
+						  &samples[t-resolution],
+						  sizeof(stg_laser_sample_t));
 				
-	    double left = samples[t].range;
-	    double right = samples[t-resolution].range;
+				double left = samples[t].range;
+				double right = samples[t-resolution].range;
 				
-	    // linear range interpolation between the left and right samples
-	    samples[t-g].range = (left-g*(left-right)/resolution);
-	  }
-    }
+				// linear range interpolation between the left and right samples
+				samples[t-g].range = (left-g*(left-right)/resolution);
+			 }
+	 }
   
   data_dirty = true;
   
@@ -358,13 +379,7 @@ void ModelLaser::Shutdown( void )
   // stop consuming power
   SetWatts( 0 );
 
-  // clear the data  
-  if(samples)
-    {
-      g_free( samples );
-      samples = NULL;
-    }
-
+  
   Model::Shutdown();
 }
 
@@ -373,22 +388,13 @@ void ModelLaser::Print( char* prefix )
   Model::Print( prefix );
 
   printf( "\tRanges[ " );
-
-  if( samples )
-    for( unsigned int i=0; i<sample_count; i++ )
+  for( unsigned int i=0; i<sample_count; i++ )
       printf( "%.2f ", samples[i].range );
-  else
-    printf( "<none until subscribed>" );
   puts( " ]" );
 
   printf( "\tReflectance[ " );
-
-  if( samples )
-    for( unsigned int i=0; i<sample_count; i++ )
-      printf( "%.2f ", samples[i].reflectance );
-  else
-    printf( "<none until subscribed>" );
-
+  for( unsigned int i=0; i<sample_count; i++ )
+	 printf( "%.2f ", samples[i].reflectance );
   puts( " ]" );
 }
 
@@ -396,17 +402,5 @@ void ModelLaser::Print( char* prefix )
 stg_laser_sample_t* ModelLaser::GetSamples( uint32_t* count )
 { 
   if( count ) *count = sample_count;
-  return samples;
+  return &samples[0];
 }
-
-void ModelLaser::SetSamples( stg_laser_sample_t* samples, uint32_t count)
-{ 
-  this->samples = g_renew( stg_laser_sample_t, this->samples, sample_count );
-  memcpy( this->samples, samples, sample_count * sizeof(stg_laser_sample_t));
-  this->sample_count = count;
-  this->data_dirty = true;
-}
-
-
-
-

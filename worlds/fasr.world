@@ -72,7 +72,7 @@ define charging_bump model
 
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 16 range_max 5 laser_return 2 watts 30 )
+ sicklaser( samples 180 range_max 5 laser_return 2 watts 30 )
  ctrl "fasr"
  joules 100000 
  joules_capacity 400000 

@@ -557,16 +557,16 @@ bool Model::IsRelated( const Model* that ) const
   return candidate->IsDescendent( that );
 }
 
-inline Pose Model::LocalToGlobal( const Pose& pose ) const
-{  
-  return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
-}
+// Pose Model::LocalToGlobal( const Pose& pose ) const
+// {  
+//   return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
+// }
 
 stg_point_t Model::LocalToGlobal( const stg_point_t& pt) const
-{  
-  Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
-  return stg_point_t( gpose.x, gpose.y );
-}
+ {  
+   Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
+   return stg_point_t( gpose.x, gpose.y );
+ }
 
 void Model::MapWithChildren()
 {

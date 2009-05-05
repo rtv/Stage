@@ -612,7 +612,18 @@ void World::ClearRays()
 }
 
 
-void World::Raytrace( const Pose &pose, // global pose
+void World::Raytrace( std::vector<Ray>& rays )
+{
+  for( std::vector<Ray>::iterator it = rays.begin();
+ 		 it != rays.end();
+ 		 ++it )					 
+ 	 {
+ 		Ray& r = *it;
+ 		r.result = Raytrace( r.origin, r.range, r.func, r.mod, r.arg, r.ztest );
+ 	 }
+}
+
+void World::Raytrace( const Pose &gpose, // global pose
 							 const stg_meters_t range,
 							 const stg_radians_t fov,
 							 const stg_ray_test_func_t func,
@@ -623,7 +634,7 @@ void World::Raytrace( const Pose &pose, // global pose
 							 const bool ztest ) 
 {
   // find the direction of the first ray
-  Pose raypose = pose;
+  Pose raypose = gpose;
   double starta = fov/2.0 - raypose.a;
 
   for( uint32_t s=0; s < sample_count; s++ )
@@ -711,6 +722,10 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   // and the x and y offsets of the ray
   int32_t dx = (int32_t)(ppm*range * cos(gpose.a));
   int32_t dy = (int32_t)(ppm*range * sin(gpose.a));
+
+//   // the number of regions we will travel through
+//   int32_t rdx = dx / Region::WIDTH;
+//   int32_t rdy = dy / Region::WIDTH;
 	
   //   if( finder->debug )
   //     RecordRay( pose.x, 
@@ -721,6 +736,7 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   // fast integer line 3d algorithm adapted from Cohen's code from
   // Graphics Gems IV
 
+  // cell unti
   int sx = sgn(dx);   // sgn() is a fast macro
   int sy = sgn(dy);  
   int ax = abs(dx); 
@@ -729,7 +745,17 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   int by = 2*ay;	
   int exy = ay-ax; 
   int n = ax+ay;
-	
+
+//   // region units
+//   int rsx = sgn(rdx);   // sgn() is a fast macro
+//   int rsy = sgn(rdy);  
+//   int rax = abs(rdx); 
+//   int ray = abs(rdy);  
+//   int rbx = 2*rax;	
+//   int rby = 2*ray;	
+//   int rexy = ray-rax; 
+//   int rn = rax+ray;
+
   //  printf( "Raytracing from (%d,%d) steps (%d,%d) %d\n",
   //  x,y,  dx,dy, n );
 	
