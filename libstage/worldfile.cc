@@ -68,11 +68,18 @@ using namespace Stg;
 //   return g_str_hash( prop->key );
 // }
 
+void destroy_property(gpointer value)
+{
+	CProperty * prop = reinterpret_cast<CProperty *> (value);
+	free(prop->key);
+	free(prop->values);
+	g_free(value);
 
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-Worldfile::Worldfile() 
+Worldfile::Worldfile()
 {
   this->filename = NULL;
 
@@ -96,7 +103,7 @@ Worldfile::Worldfile()
   this->unit_length = 1.0;
   this->unit_angle = M_PI / 180;
 
-  this->nametable = g_hash_table_new( g_str_hash, g_str_equal );
+  this->nametable = g_hash_table_new_full( g_str_hash, g_str_equal, NULL, destroy_property );
 }
 
 
@@ -157,13 +164,13 @@ bool Worldfile::Load(const char *filename)
 {
   // Shouldnt call load more than once,
   // so this should be null.
-  
+
   if(this->filename == NULL)
     {
       this->filename = strdup(filename);
     }
-  
-  
+
+
   // Open the file
   //FILE *file = fopen(this->filename, "r");
   FILE *file = FileOpen(this->filename, "r");
@@ -173,23 +180,23 @@ bool Worldfile::Load(const char *filename)
 		 this->filename, strerror(errno));
       return false;
     }
-  
+
   ClearTokens();
-  
+
   // Read tokens from the file
   if (!LoadTokens(file, 0))
     {
       //DumpTokens();
       return false;
     }
-  
+
   // Parse the tokens to identify entities
   if (!ParseTokens())
     {
       //DumpTokens();
       return false;
     }
-  
+
   // Dump contents and exit if this file is meant for debugging only.
   if (ReadInt(0, "test", 0) != 0)
     {
@@ -200,7 +207,7 @@ bool Worldfile::Load(const char *filename)
       DumpProperties();
       return false;
     }
-  
+
   // Work out what the length units are
   const char *unit = ReadString(0, "unit_length", "m");
   if (strcmp(unit, "m") == 0)
@@ -209,14 +216,14 @@ bool Worldfile::Load(const char *filename)
     this->unit_length = 0.01;
   else if (strcmp(unit, "mm") == 0)
     this->unit_length = 0.001;
-  
+
   // Work out what the angle units are
   unit = ReadString(0, "unit_angle", "degrees");
   if (strcmp(unit, "degrees") == 0)
     this->unit_angle = M_PI / 180;
   else if (strcmp(unit, "radians") == 0)
     this->unit_angle = 1;
-  
+
   return true;
 }
 
@@ -349,7 +356,7 @@ bool Worldfile::LoadTokens(FILE *file, int include)
       else if ( 0x0d == ch )
 	{
 	  ch = fgetc(file);
-	  if ( 0x0a != ch ) 
+	  if ( 0x0a != ch )
 	    ungetc(ch, file);
 	  line++;
 	  AddToken(TokenEOL, "\n", include);
@@ -357,7 +364,7 @@ bool Worldfile::LoadTokens(FILE *file, int include)
       else if ( 0x0a == ch )
 	{
 	  ch = fgetc(file);
-	  if ( 0x0d != ch ) 
+	  if ( 0x0d != ch )
 	    ungetc(ch, file);
 	  line++;
 	  AddToken(TokenEOL, "\n", include);
@@ -1335,7 +1342,7 @@ void Worldfile::ClearProperties()
 
   if( this->nametable )
     g_hash_table_destroy( this->nametable );
-  this->nametable = g_hash_table_new( g_str_hash, g_str_equal );
+  this->nametable = g_hash_table_new_full( g_str_hash, g_str_equal, NULL, destroy_property );
 }
 
 
@@ -1388,7 +1395,7 @@ void Worldfile::AddPropertyValue( CProperty* property, int index, int value_toke
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get an property 
+// Get an property
 CProperty* Worldfile::GetProperty(int entity, const char *name)
 {
   char key[128];
@@ -1431,7 +1438,7 @@ void Worldfile::SetPropertyValue( CProperty* property, int index, const char *va
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get the value of an property 
+// Get the value of an property
 const char *Worldfile::GetPropertyValue(CProperty* property, int index)
 {
   assert(property);
@@ -1511,7 +1518,7 @@ void Worldfile::WriteFloat(int entity, const char *name, double value)
 	 WriteString(entity, name, "0" ); // compact zeros make the file
 												 // more readable
   else
-	 {  
+	 {
 		char default_str[64];
 		snprintf(default_str, sizeof(default_str), "%.3f", value);
 		WriteString(entity, name, default_str);
@@ -1545,12 +1552,12 @@ double Worldfile::ReadLength(int entity, const char *name, double value)
 void Worldfile::WriteLength(int entity, const char *name, double value)
 {
   value /= this->unit_length;
-  
+
   if( fabs(value) < 0.001 ) // nearly 0
 	 WriteString(entity, name, "0" ); // compact zeros make the file
 												 // more readable
   else
-	 {  
+	 {
 		char default_str[64];
 		snprintf(default_str, sizeof(default_str), "%.3f", value );
 		WriteString(entity, name, default_str);
@@ -1709,9 +1716,9 @@ void Worldfile::WriteTupleFloat(int entity, const char *name,
 				int index, double value)
 {
   if( fabs(value) < 0.001 ) // nearly 0
-	 WriteTupleString(entity, name, index, "0" ); 
+	 WriteTupleString(entity, name, index, "0" );
   else
-	 {  
+	 {
 		char default_str[64];
 		snprintf(default_str, sizeof(default_str), "%.3f", value);
 		WriteTupleString(entity, name, index, default_str);
@@ -1737,11 +1744,11 @@ void Worldfile::WriteTupleLength(int entity, const char *name,
 				 int index, double value)
 {
   value /= this->unit_length;
-  
+
   if( fabs(value) < 0.001 ) // nearly 0
-	 WriteTupleString(entity, name, index, "0" ); 
+	 WriteTupleString(entity, name, index, "0" );
   else
-	 {  
+	 {
 		char default_str[64];
 		snprintf(default_str, sizeof(default_str), "%.3f", value );
 		WriteTupleString(entity, name, index, default_str);
@@ -1766,11 +1773,11 @@ void Worldfile::WriteTupleAngle(int entity, const char *name,
 				int index, double value)
 {
   value /= this->unit_angle;
-  
+
   if( fabs(value) < 0.001 ) // nearly 0
-	 WriteTupleString(entity, name, index, "0" ); 
+	 WriteTupleString(entity, name, index, "0" );
   else
-	 {  
+	 {
 		char default_str[64];
 		snprintf(default_str, sizeof(default_str), "%.3f", value );
 		WriteTupleString(entity, name, index, default_str);
