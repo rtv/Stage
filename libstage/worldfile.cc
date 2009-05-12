@@ -187,8 +187,11 @@ bool Worldfile::Load(const char *filename)
   if (!LoadTokens(file, 0))
     {
       //DumpTokens();
+      fclose(file);
       return false;
     }
+
+  fclose(file);
 
   // Parse the tokens to identify entities
   if (!ParseTokens())
