@@ -15,7 +15,7 @@ namespace Stg
 
 // a bit of experimenting suggests that these values are fast. YMMV.
 #define RBITS  4 // regions contain (2^RBITS)^2 pixels
-#define SBITS  4 // superregions contain (2^SBITS)^2 regions
+#define SBITS  6 // superregions contain (2^SBITS)^2 regions
 #define SRBITS (RBITS+SBITS)
 
 #define REGIONWIDTH (1<<RBITS)

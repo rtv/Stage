@@ -1127,4 +1127,4 @@ void World::Log( Model* mod )
   printf( "log entry count %lu\n", LogEntry::Count() );
   //LogEntry::Print();
 }
-
+ 

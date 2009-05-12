@@ -70,24 +70,6 @@ define charging_bump model
   obstacle_return 0
 )
 
-define autorob pioneer2dx		  
-(		 
- sicklaser( samples 180 range_max 5 laser_return 2 watts 30 )
- ctrl "fasr"
- joules 100000 
- joules_capacity 400000 
- fiducial_return 0
- # charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
-
- gripper( pose [0.250 0 -0.220 0]  
-          take_watts 1000.0 
-          fiducial( range 3 )
-          # paddles [ "closed" "up" ]
-			 obstacle_return 0 # cheating for simplicity
-			 # autosnatch 1
-         )
-)
-
 define charge_station model
 (  
   size [ 0.100 0.300 0.100 ]
@@ -152,6 +134,24 @@ define puck model (
 #puck( pose [ 0.162 2.983 0 0 ] )
 #puck( pose [ 1.067 3.367 0 0 ] )
 #puck( pose [ 1.412 3.604 0 0 ] )
+
+define autorob pioneer2dx		  
+(		 
+ sicklaser( samples 32 range_max 5 laser_return 2 watts 30 )
+ ctrl "fasr"
+ joules 100000 
+ joules_capacity 400000 
+ fiducial_return 0
+ # charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
+
+ gripper( pose [0.250 0 -0.220 0]  
+          take_watts 1000.0 
+          fiducial( range 3 )
+          # paddles [ "closed" "up" ]
+			 obstacle_return 0 # cheating for simplicity
+			 # autosnatch 1
+         )
+)
 
 autorob( pose [5.488 5.149 0 35.947] joules 300000 name "r0" )
 autorob( pose [6.431 5.593 0 -111.715] joules 100000 )

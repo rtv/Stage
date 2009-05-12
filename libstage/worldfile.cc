@@ -103,7 +103,9 @@ Worldfile::Worldfile()
   this->unit_length = 1.0;
   this->unit_angle = M_PI / 180;
 
-  this->nametable = g_hash_table_new_full( g_str_hash, g_str_equal, NULL, destroy_property );
+  // this attempt to fix memory leak breaks parsing of model properties - investigate
+  //this->nametable = g_hash_table_new_full( g_str_hash, g_str_equal, NULL, destroy_property );
+  this->nametable = g_hash_table_new( g_str_hash, g_str_equal );
 }
 
 
@@ -1345,7 +1347,10 @@ void Worldfile::ClearProperties()
 
   if( this->nametable )
     g_hash_table_destroy( this->nametable );
-  this->nametable = g_hash_table_new_full( g_str_hash, g_str_equal, NULL, destroy_property );
+
+  // this attempt to fix memory leak breaks parsing of model properties - investigate
+  //this->nametable = g_hash_table_new_full( g_str_hash, g_str_equal, NULL, destroy_property );
+  this->nametable = g_hash_table_new( g_str_hash, g_str_equal );
 }
 
 
