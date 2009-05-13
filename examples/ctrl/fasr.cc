@@ -50,7 +50,7 @@ private:
   ModelRanger* ranger;
   ModelFiducial* fiducial;
   ModelBlobfinder* blobfinder;
-  ModelGripper* gripper;
+  //ModelGripper* gripper;
   Model *source, *sink;
   int avoidcount, randcount;
   int work_get, work_put;
@@ -70,7 +70,7 @@ public:
 		ranger( (ModelRanger*)pos->GetUnusedModelOfType( MODEL_TYPE_RANGER )),
 		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( MODEL_TYPE_FIDUCIAL )),	
 		blobfinder( (ModelBlobfinder*)pos->GetUnusedModelOfType( MODEL_TYPE_BLOBFINDER )),
-		gripper( (ModelGripper*)pos->GetUnusedModelOfType( MODEL_TYPE_GRIPPER )),
+		//gripper( (ModelGripper*)pos->GetUnusedModelOfType( MODEL_TYPE_GRIPPER )),
 		source(source), 
 		sink(sink), 
 		avoidcount(0), 
@@ -104,7 +104,7 @@ public:
 	 fiducial->Subscribe();
 	 
 	 //gripper->AddUpdateCallback( (stg_model_callback_t)GripperUpdate, this );	 	 
-	 gripper->Subscribe();
+	 //gripper->Subscribe();
 	 
 	 if( blobfinder ) // optional
 		{
@@ -119,12 +119,12 @@ public:
   void Dock()
   {
 	 // close the grippers so they can be pushed into the charger
-	 ModelGripper::config_t gripper_data = gripper->GetConfig();
+	 //ModelGripper::config_t gripper_data = gripper->GetConfig();
   
-	 if( gripper_data.paddles != ModelGripper::PADDLE_CLOSED )
-		gripper->CommandClose();
-	 else  if( gripper_data.lift != ModelGripper::LIFT_UP )
-		gripper->CommandUp();  
+// 	 if( gripper_data.paddles != ModelGripper::PADDLE_CLOSED )
+// 		gripper->CommandClose();
+// 	 else  if( gripper_data.lift != ModelGripper::LIFT_UP )
+// 		gripper->CommandUp();  
 
 	 if( charger_ahoy )
 		{
@@ -176,7 +176,7 @@ public:
 
   void UnDock()
   {
-	 const stg_meters_t gripper_distance = 0.2;
+	 //const stg_meters_t gripper_distance = 0.2;
 	 const stg_meters_t back_off_distance = 0.3;
 	 const stg_meters_t back_off_speed = -0.05;
 
@@ -187,18 +187,18 @@ public:
 		pos->SetXSpeed( 0.0 );
   
 	 // once we have backed off a bit, open and lower the gripper
-	 ModelGripper::config_t gripper_data = gripper->GetConfig();
-	 if( charger_range > gripper_distance )
-		{
-		  if( gripper_data.paddles != ModelGripper::PADDLE_OPEN )
-			 gripper->CommandOpen();
-		  else if( gripper_data.lift != ModelGripper::LIFT_DOWN )
-			 gripper->CommandDown();  
-		}
+// 	 ModelGripper::config_t gripper_data = gripper->GetConfig();
+// 	 if( charger_range > gripper_distance )
+// 		{
+// 		  if( gripper_data.paddles != ModelGripper::PADDLE_OPEN )
+// 			 gripper->CommandOpen();
+// 		  else if( gripper_data.lift != ModelGripper::LIFT_DOWN )
+// 			 gripper->CommandDown();  
+// 		}
     
 	 // if the gripper is down and open and we're away from the charger, undock is finished
-	 if( gripper_data.paddles == ModelGripper::PADDLE_OPEN &&
-		  gripper_data.lift == ModelGripper::LIFT_DOWN &&
+	 if( //gripper_data.paddles == ModelGripper::PADDLE_OPEN &&
+		  //gripper_data.lift == ModelGripper::LIFT_DOWN &&
 		  charger_range > back_off_distance )	 
 		mode = MODE_WORK;  
   }
@@ -288,7 +288,7 @@ public:
 		{
 		  if( verbose ) puts( "Cruise" );
 		
-		  ModelGripper::config_t gdata = gripper->GetConfig();
+		  //ModelGripper::config_t gdata = gripper->GetConfig();
 					 
 		  //avoidcount = 0;
 		  pos->SetXSpeed( cruisespeed );	  
@@ -307,7 +307,7 @@ public:
 		  if( y < 0 ) y = 0;
 		
 		  double a_goal = 
-			 dtor( ( pos->GetFlagCount() || gdata.gripped ) ? have[y][x] : need[y][x] );
+			 dtor( ( pos->GetFlagCount() ) ? have[y][x] : need[y][x] );
 		
 		  // if we are low on juice - find the direction to the recharger instead
 		  if( Hungry() )		 
@@ -324,8 +324,8 @@ public:
 			 {
 				if( ! at_dest )
 				  {
-					 if( gdata.beam[0] ) // inner break beam broken
-						gripper->CommandClose();
+					 //if( gdata.beam[0] ) // inner break beam broken
+						//gripper->CommandClose();
 				  }
 			 }
 		  
@@ -412,7 +412,7 @@ public:
 		{
 		  robot->at_dest = true;
 
-		  robot->gripper->CommandOpen();
+		  //robot->gripper->CommandOpen();
 
 		  if( ++robot->work_put > workduration )
 			 {
@@ -469,21 +469,21 @@ public:
 	 return 0;
   }
 
-  static int GripperUpdate( ModelGripper* grip, Robot* robot )
-  {
-	 ModelGripper::config_t gdata = grip->GetConfig();
+//   static int GripperUpdate( ModelGripper* grip, Robot* robot )
+//   {
+// 	 ModelGripper::config_t gdata = grip->GetConfig();
 	 
-	 printf( "BREAKBEAMS %s %s\n",
-				gdata.beam[0] ? gdata.beam[0]->Token() : "<null>", 
-				gdata.beam[1] ? gdata.beam[1]->Token() : "<null>" );
+// 	 printf( "BREAKBEAMS %s %s\n",
+// 				gdata.beam[0] ? gdata.beam[0]->Token() : "<null>", 
+// 				gdata.beam[1] ? gdata.beam[1]->Token() : "<null>" );
 
-	 printf( "CONTACTS %s %s\n",
-				gdata.contact[0] ? gdata.contact[0]->Token() : "<null>", 
-				gdata.contact[1] ? gdata.contact[1]->Token() : "<null>");
+// 	 printf( "CONTACTS %s %s\n",
+// 				gdata.contact[0] ? gdata.contact[0]->Token() : "<null>", 
+// 				gdata.contact[1] ? gdata.contact[1]->Token() : "<null>");
 
 
-	 return 0;
-  }
+// 	 return 0;
+//   }
   
   static int FlagIncr( Model* mod, Robot* robot )
   {

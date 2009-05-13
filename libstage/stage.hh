@@ -1204,10 +1204,10 @@ namespace Stg
 	 void Rasterize( uint8_t* data, 
 						  unsigned int width, unsigned int height,		
 						  stg_meters_t cellwidth, stg_meters_t cellheight );
-	 
+
   private:
     Model* mod; ///< model to which this block belongs
-  
+
     stg_point_t* mpts; ///< cache of this->pts in model coordindates
     size_t pt_count; ///< the number of points
     stg_point_t* pts; ///< points defining a polygon
@@ -1583,9 +1583,8 @@ namespace Stg
 		virtual void Visualize( Model* mod, Camera* cam );		
 		
 		void Accumulate( stg_meters_t x, stg_meters_t y, stg_joules_t amount );
-	 };
-	 
-	 DissipationVis event_vis;
+	 } event_vis;
+
 	 StripPlotVis output_vis;
 	 StripPlotVis stored_vis;
 
@@ -1721,30 +1720,6 @@ namespace Stg
 	 std::vector<Option*> drawOptions;
 	 const std::vector<Option*>& getOptions() const { return drawOptions; }
 	 
-	 class RasterVis : public Visualizer
-	 {
-	 private:
-		uint8_t* data;
-		unsigned int width, height;
-		stg_meters_t cellwidth, cellheight;
-		GList* pts;
-
-	 public:
-		RasterVis();
-		virtual ~RasterVis( void ){}
-		virtual void Visualize( Model* mod, Camera* cam );
-		
-		void SetData( uint8_t* data, 
-						  unsigned int width, 
-						  unsigned int height,
-						  stg_meters_t cellwidth,
-						  stg_meters_t cellheight );
-
-		void AddPoint( stg_meters_t x, stg_meters_t y );
-		void ClearPts();
-		
-	 };
-	 
   protected:
 	 GMutex* access_mutex;
 	 GPtrArray* blinkenlights;  
@@ -1815,8 +1790,30 @@ namespace Stg
 	 GData* props;
 
 	 /** Visualize the most recent rasterization operation performed by this model */
-	 RasterVis rastervis;
+	 class RasterVis : public Visualizer
+	 {
+	 private:
+		uint8_t* data;
+		unsigned int width, height;
+		stg_meters_t cellwidth, cellheight;
+		GList* pts;
 
+	 public:
+		RasterVis();
+		virtual ~RasterVis( void ){}
+		virtual void Visualize( Model* mod, Camera* cam );
+		
+		void SetData( uint8_t* data, 
+						  unsigned int width, 
+						  unsigned int height,
+						  stg_meters_t cellwidth,
+						  stg_meters_t cellheight );
+
+		void AddPoint( stg_meters_t x, stg_meters_t y );
+		void ClearPts();
+		
+	 } rastervis;
+	 
 	 bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
 	 char* say_string;   ///< if non-null, this string is displayed in the GUI 
 
@@ -2009,6 +2006,7 @@ namespace Stg
 	 void LoadDataBaseEntries( Worldfile* wf, int entity );
 	 
   public:
+
 	 virtual void PushColor( stg_color_t col )
 	 { world->PushColor( col ); }
 	
@@ -2466,12 +2464,9 @@ namespace Stg
 		Vis( World* world );
 		virtual ~Vis( void ){}
 		virtual void Visualize( Model* mod, Camera* cam );
-	 };
+	 } vis;
 	 	 
-	 Vis vis;
 	 
-	 //class LaserRay : public Ray
-
 	 /** OpenGL displaylist for laser data */
 	 int data_dl; 
 	 bool data_dirty;

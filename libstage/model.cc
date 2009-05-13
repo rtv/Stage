@@ -235,7 +235,7 @@ Model::Model( World* world,
     wf(NULL),
     wf_entity(0),
     world(world),
-	 world_gui( dynamic_cast< WorldGui* >( world ) )
+	 world_gui( dynamic_cast<WorldGui*>( world ) )
 {
   assert( modelsbyid );
   assert( world );

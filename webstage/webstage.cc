@@ -55,6 +55,40 @@ public:
 		printf( "Warning: attempt to push PVA for unrecognized model \"%s\"\n",
 				  name.c_str() );
   }
+  
+  void Push()
+  {
+	 for( std::map<std::string,Puppet*>::iterator it = puppets.begin();
+			it != puppets.end();
+			it++ )
+		{
+		  Puppet* pup = it->second;
+		  assert(pup);
+		  
+		  Stg::Model* mod = world->GetModel( pup->name.c_str() );
+		  assert(mod);
+		  
+		  websim::Pose p;
+		  websim::Velocity v;
+		  websim::Acceleration a;
+		  
+		  Stg::Pose sp = mod->GetPose(); 
+		  p.x = sp.x;
+		  p.y = sp.y;
+		  p.z = sp.z;
+		  p.a = sp.a;
+		  
+		  Stg::Velocity sv = mod->GetVelocity(); 
+		  v.x = sv.x;
+		  v.y = sv.y;
+		  v.z = sv.z;
+		  v.a = sv.a;
+		  
+		  pup->Push( p,v,a );
+		  printf( "pushing puppet %s\n", pup->name.c_str() );
+		}
+  }
+
 
   // Interface to be implemented by simulators
   virtual bool CreateModel(const std::string& name, 
@@ -146,11 +180,12 @@ public:
 	 return t;
   }
 
-  static void UpdatePuppetCb( const std::string& name, WebSim::Puppet* pup, void* arg )
-  {
-	 WebStage* ws = (WebStage*)arg;
-	 ws->Push( pup->name );
-  }
+//   static void UpdatePuppetCb( const std::string& name, WebSim::Puppet* pup, void* arg )
+//   {
+// 	 WebStage* ws = (WebStage*)arg;
+// 	 ws->Push( pup->name );
+//   }
+
 };
 
 
@@ -224,9 +259,8 @@ int main( int argc, char** argv )
   while( ! quit )
 	 {
 		// todo? check for changes?
-		// send my updates
-
-		ws.ForEachPuppet( WebStage::UpdatePuppetCb, (void*)&ws );		
+		// send my updates		
+		ws.Push();
 		//puts( "pushes  done" );
 
 		// tell my friends to start simulating

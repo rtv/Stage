@@ -258,12 +258,6 @@ void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
   //g_hash_table_insert( blockgroups_by_entity, (gpointer)entity, mod->blockgroup );
 }
   
-// delete a model from the hash table
-static void destroy_sregion( gpointer dummy1, SuperRegion* sr, gpointer dummy2 )
-{
-  free(sr);
-}
-
 void World::Load( const char* worldfile_path )
 {
   // note: must call Unload() before calling Load() if a world already
