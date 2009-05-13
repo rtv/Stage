@@ -441,7 +441,12 @@ static void Draw_cb( gpointer dummykey,
 
 void WorldGui::DrawTree( bool drawall )
 {  
-  g_hash_table_foreach( superregions, (GHFunc)Draw_cb, (void*)drawall );
+  //g_hash_table_foreach( superregions, (GHFunc)Draw_cb, (void*)drawall );
+  
+  for( std::map<stg_point_int_t,SuperRegion*>::iterator it = superregions.begin();
+		 it != superregions.end();
+		 it++ )
+	 (*it).second->Draw( drawall );
 }
 
 // callback wrapper for SuperRegion::Floor()
@@ -456,7 +461,13 @@ static void Floor_cb( gpointer dummykey,
 void WorldGui::DrawFloor()
 {
   PushColor( 1,1,1,1 );
-  g_hash_table_foreach( superregions, (GHFunc)Floor_cb, NULL );
+  //g_hash_table_foreach( superregions, (GHFunc)Floor_cb, NULL );
+
+  for( std::map<stg_point_int_t,SuperRegion*>::iterator it = superregions.begin();
+		 it != superregions.end();
+		 it++ )
+	 (*it).second->Floor();
+
   PopColor();
 }
 

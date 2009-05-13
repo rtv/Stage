@@ -181,7 +181,7 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
   glPopMatrix();
 }
 
-
+	  
 ModelLaser::ModelLaser( World* world, 
 			Model* parent )
   : Model( world, parent, MODEL_TYPE_LASER ),
@@ -208,16 +208,16 @@ ModelLaser::ModelLaser( World* world,
   geom.size = DEFAULT_SIZE;
   SetGeom( geom );
   
-  rays.resize( sample_count );
-  samples.resize( sample_count );
-
   // assert that Update() is reentrant for this derived model
   thread_safe = true;
 
   // set default color
   SetColor( stg_lookup_color(DEFAULT_COLOR));
 
-  AddVisualizer( &vis, true );
+  // set up our data buffers and raytracing
+  SampleConfig();
+
+  AddVisualizer( &vis, true );  
 }
 
 
@@ -242,9 +242,8 @@ void ModelLaser::Load( void )
     }
 
   Model::Load();
-  
-  rays.resize(sample_count);
-  samples.resize(sample_count);
+
+  SampleConfig();
 }
 
 stg_laser_cfg_t ModelLaser::GetConfig()
@@ -266,8 +265,7 @@ void ModelLaser::SetConfig( stg_laser_cfg_t cfg )
   interval = cfg.interval;
   sample_count = cfg.sample_count;
 
-  samples.resize( sample_count );
-  rays.resize( sample_count );
+  SampleConfig();
 }
 
 static bool laser_raytrace_match( Model* hit, 
@@ -279,40 +277,40 @@ static bool laser_raytrace_match( Model* hit,
   return( (hit != finder) && (hit->vis.laser_return > 0 ) );
 }	
 
-// void ModelLaser::SetSampleCount( unsigned int count )
-// {
-//   sample_count = count;
+void ModelLaser::SampleConfig()
+{
+  samples.resize( sample_count );
+  rays.resize( sample_count );
   
-//   samples.resize( count );
-//   rays.resize( count );
+  for( unsigned int t=0; t<sample_count; ++t )
+	 {
+		// configure a normal ray with our laser-specific settings
+		rays[t].func = laser_raytrace_match; 
+		rays[t].arg = NULL;
+		rays[t].ztest = true;
+		rays[t].range = range_max;
+		rays[t].mod = this;
+	 }
+}
 
 void ModelLaser::Update( void )
 {     
+  assert( samples.size() == sample_count );
+  assert( rays.size() == sample_count );
+
   double bearing = -fov/2.0;
-  double sample_incr = fov / (double)(sample_count-1);
+  double sample_incr = fov / (double)sample_count;
 
   Pose rayorg = geom.pose;
-  bzero( &rayorg, sizeof(rayorg));
-  rayorg.z += geom.size.z/2;
+  rayorg.z += geom.size.z/2.0;
+  rayorg.a = bearing;
+  rayorg = LocalToGlobal(rayorg);
   
-  assert( samples.size() == sample_count );
-  
+  // set up the ray origins in global coords
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
-      rayorg.a = bearing;
-		
-		// set up the ray
-		rays[t].origin = LocalToGlobal(rayorg);
-
-		// todo - do this constant stuff in advance
-		rays[t].func = laser_raytrace_match;
-		rays[t].arg = NULL;
-		rays[t].range = range_max;
-		rays[t].arg = NULL;
-		rays[t].ztest = true;
-		rays[t].mod = this;
-		
-      bearing += sample_incr;
+		rays[t].origin = rayorg;		
+      rayorg.a += sample_incr;
 	 }
   
   // do the raytracing of all rays in one go (allows parallel implementation)
@@ -375,11 +373,7 @@ void ModelLaser::Startup(  void )
 void ModelLaser::Shutdown( void )
 { 
   PRINT_DEBUG( "laser shutdown" );
-
-  // stop consuming power
-  SetWatts( 0 );
-
-  
+  SetWatts( 0 );   // stop consuming power
   Model::Shutdown();
 }
 
@@ -401,6 +395,12 @@ void ModelLaser::Print( char* prefix )
 
 stg_laser_sample_t* ModelLaser::GetSamples( uint32_t* count )
 { 
+  // get a C style array from our vector
   if( count ) *count = sample_count;
   return &samples[0];
+}
+
+const std::vector<stg_laser_sample_t>& ModelLaser::GetSamples()
+{ 
+  return samples;
 }

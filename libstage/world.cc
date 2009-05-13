@@ -59,16 +59,6 @@ unsigned int World::next_id = 0;
 bool World::quit_all = false;
 GList* World::world_list = NULL;
 
-static guint PointIntHash( stg_point_int_t* pt )
-{
-  return( pt->x + (pt->y<<16 ));
-}
-
-static gboolean PointIntEqual( stg_point_int_t* p1, stg_point_int_t* p2 )
-{
-  return( memcmp( p1, p2, sizeof(stg_point_int_t) ) == 0 );
-}
-
 
 World::World( const char* token, 
 				  stg_msec_t interval_sim,
@@ -103,8 +93,9 @@ World::World( const char* token,
   powerpack_list( NULL ),
   ray_list( NULL ),  
   sim_time( 0 ),
-  superregions( g_hash_table_new( (GHashFunc)PointIntHash, 
-											 (GEqualFunc)PointIntEqual ) ),
+  superregions(),
+  // g_hash_table_new( (GHashFunc)PointIntHash, 
+  //					 (GEqualFunc)PointIntEqual ) ),
   sr_cached(NULL),
   reentrant_update_list( NULL ),
   nonreentrant_update_list( NULL ),
@@ -137,15 +128,14 @@ World::~World( void )
 SuperRegion* World::CreateSuperRegion( stg_point_int_t origin )
 {
   SuperRegion* sr = new SuperRegion( this, origin );
-  g_hash_table_insert( superregions, &sr->origin, sr );
-
+  superregions[ sr->origin ] = sr;
   dirty = true; // force redraw
   return sr;
 }
 
 void World::DestroySuperRegion( SuperRegion* sr )
 {
-  g_hash_table_remove( superregions, &sr->origin );
+  superregions.erase( sr->origin );
   delete sr;
 }
 
@@ -397,9 +387,10 @@ void World::UnLoad()
 	
   g_list_free( ray_list );
   ray_list = NULL;
-	
-  g_hash_table_foreach( superregions, (GHFunc)destroy_sregion, NULL );
-  g_hash_table_remove_all( superregions );
+
+  // todo
+  //g_hash_table_foreach( superregions, (GHFunc)destroy_sregion, NULL );
+  //g_hash_table_remove_all( superregions );
 
   token = NULL;
 }
@@ -614,13 +605,13 @@ void World::ClearRays()
 
 void World::Raytrace( std::vector<Ray>& rays )
 {
-  for( std::vector<Ray>::iterator it = rays.begin();
- 		 it != rays.end();
- 		 ++it )					 
- 	 {
- 		Ray& r = *it;
- 		r.result = Raytrace( r.origin, r.range, r.func, r.mod, r.arg, r.ztest );
- 	 }
+  for( unsigned int i=0; i<rays.size(); i++ )
+	 Raytrace( rays[i] );
+}
+
+inline void World::Raytrace( Ray& r )
+{
+  r.result = Raytrace( r.origin, r.range, r.func, r.mod, r.arg, r.ztest );
 }
 
 void World::Raytrace( const Pose &gpose, // global pose
@@ -707,7 +698,7 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   
   // initialize the sample
   sample.pose = gpose;
-  sample.pose.a = normalize( sample.pose.a );
+  //sample.pose.a = normalize( sample.pose.a ); 
   sample.range = range; // we might change this below
   sample.mod = NULL; // we might change this below
 	
@@ -722,10 +713,6 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   // and the x and y offsets of the ray
   int32_t dx = (int32_t)(ppm*range * cos(gpose.a));
   int32_t dy = (int32_t)(ppm*range * sin(gpose.a));
-
-//   // the number of regions we will travel through
-//   int32_t rdx = dx / Region::WIDTH;
-//   int32_t rdy = dy / Region::WIDTH;
 	
   //   if( finder->debug )
   //     RecordRay( pose.x, 
@@ -745,16 +732,6 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   int by = 2*ay;	
   int exy = ay-ax; 
   int n = ax+ay;
-
-//   // region units
-//   int rsx = sgn(rdx);   // sgn() is a fast macro
-//   int rsy = sgn(rdy);  
-//   int rax = abs(rdx); 
-//   int ray = abs(rdy);  
-//   int rbx = 2*rax;	
-//   int rby = 2*ray;	
-//   int rexy = ray-rax; 
-//   int rn = rax+ray;
 
   //  printf( "Raytracing from (%d,%d) steps (%d,%d) %d\n",
   //  x,y,  dx,dy, n );
@@ -820,13 +797,6 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 						Block* block = *it;
 						assert( block );
 				 
-						//printf( "ENT %p mod %p z [%.2f %.2f] color %X\n",
-						//		ent,
-						//		ent->mod, 
-						//		ent->zbounds.min, 
-						//		ent->zbounds.max, 
-						//		ent->color );
-				 
 						// skip if not in the right z range
 						if( ztest && 
 							 ( gpose.z < block->global_z.min || 
@@ -851,6 +821,7 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 							 sample.range = hypot( (glob.x-start.x)/ppm, (glob.y-start.y)/ppm );
 							 return sample;
 						  }
+						
 					 }
 				}
 		  }      
@@ -868,7 +839,7 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 			 sup.x = SUPERREGION( glob.x );
 			 if( sup.x != lastsup.x ) 
 				{
-				  sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
+				  sr = superregions[ sup ];
 				  lastsup = sup; // remember these coords
 				}
 			 
@@ -886,7 +857,7 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 			 sup.y = SUPERREGION( glob.y );
 			 if( sup.y != lastsup.y )
 				{
-				  sr = (SuperRegion*)g_hash_table_lookup( superregions, (void*)&sup );
+				  sr = superregions[ sup ];
 				  lastsup = sup; // remember these coords
 				}
 			 
@@ -965,10 +936,7 @@ inline SuperRegion* World::GetSuperRegionCached( const stg_point_int_t& sup )
 inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
 {
   //printf( "SUP[ %d %d ] ", sup.x, sup.y );
-
-  // no, so we try to fetch it out of the hash table
-  SuperRegion* sr = (SuperRegion*)
-    g_hash_table_lookup( superregions, (gpointer)&sup );		  
+  SuperRegion* sr = superregions[ sup ];
   
   if( sr == NULL ) // no superregion exists! make a new one
     sr = AddSuperRegion( sup );

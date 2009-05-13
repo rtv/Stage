@@ -53,7 +53,7 @@ InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 void InterfaceLaser::Publish( void )
 {
   ModelLaser* mod = (ModelLaser*)this->mod;
-  stg_laser_sample_t* samples = mod->GetSamples();
+  stg_laser_sample_t* samples = mod->GetSamples(NULL);
 
   // don't publish anything until we have some real data
   if( samples == NULL )

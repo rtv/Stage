@@ -97,6 +97,6 @@ INSTALL(TARGETS stagebinary stage
 )
 
 INSTALL(FILES stage.hh 
-        DESTINATION include/${PROJECT_NAME}-${V_MAJOR}.${V_MINOR})
+        DESTINATION include/${PROJECT_NAME}-${APIVERSION})
 
 ADD_TEST( test1 ${EXECUTABLE_OUTPUT_PATH}stagetest )

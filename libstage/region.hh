@@ -15,7 +15,7 @@ namespace Stg
 
 // a bit of experimenting suggests that these values are fast. YMMV.
 #define RBITS  4 // regions contain (2^RBITS)^2 pixels
-#define SBITS  6 // superregions contain (2^SBITS)^2 regions
+#define SBITS  5 // superregions contain (2^SBITS)^2 regions
 #define SRBITS (RBITS+SBITS)
 
 #define REGIONWIDTH (1<<RBITS)
@@ -107,7 +107,15 @@ public:
    
   void DecrementOccupancy();
   void IncrementOccupancy();
-};
+
+  bool Raytrace( int32_t x, int32_t y, 
+  					  int32_t dx, int32_t dy, 
+  					  const stg_ray_test_func_t func,
+  					  const Model* mod,		
+  					  const void* arg,
+  					  const bool ztest,
+					  stg_raytrace_result_t* res );
+	 };
 
  class SuperRegion
   {
@@ -140,7 +148,6 @@ public:
 	 void DecrementOccupancy(){ --count; };
 	 void IncrementOccupancy(){ ++count; };
   };
-
 
 inline void Region::DecrementOccupancy()
 { 

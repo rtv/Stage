@@ -42,6 +42,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <map>
 //#include <pair>
 
 // we use GLib's data structures extensively. Perhaps we'll move to
@@ -419,6 +420,10 @@ namespace Stg
     int x,y;
 	 stg_point_int_t( int x, int y ) : x(x), y(y){}	 
 	 stg_point_int_t() : x(0), y(0){}
+	 
+	 /** required to put these in sorted containers like std::map */
+	 bool operator<( const stg_point_int_t& other ) const
+	 { return ((x < other.x) || (y < other.y) ); }
   };
   
 
@@ -816,14 +821,18 @@ namespace Stg
 
   /** raytrace sample
    */
-  typedef struct
+  class RaytraceResult
   {
+  public:
     Pose pose; ///< location and direction of the ray origin
     stg_meters_t range; ///< range to beam hit in meters
     Model* mod; ///< the model struck by this beam
     stg_color_t color; ///< the color struck by this beam
-  } stg_raytrace_result_t;
 
+	 RaytraceResult() : pose(), range(0), mod(NULL), color() {}
+  };
+
+  typedef RaytraceResult stg_raytrace_result_t;
 
   class Ray
   {
@@ -842,7 +851,7 @@ namespace Stg
 	 void* arg;
 	 bool ztest;
 
-	 stg_raytrace_result_t result;	 
+	 RaytraceResult result;	 
   };
 
 		
@@ -923,9 +932,8 @@ namespace Stg
 	 GList* powerpack_list; ///< List of all the powerpacks attached to models in the world
     GList* ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in microseconds
-    GHashTable* superregions;
+	 std::map<stg_point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
-    // GList* update_list; ///< Models that have a subscriber or controller, and need to be updated
 	 
     GList* reentrant_update_list; ///< It is safe to call these model's Update() in parallel
     GList* nonreentrant_update_list; ///< It is NOT safe to call these model's Update() in parallel
@@ -996,8 +1004,11 @@ namespace Stg
     SuperRegion* CreateSuperRegion( stg_point_int_t origin );
     void DestroySuperRegion( SuperRegion* sr );
 	 
-	 // trace a vector of rays all in one go
+	 /** trace a vector of rays all in one go. */
 	 void Raytrace( std::vector<Ray>& rays );
+	 
+	 /** trace a ray. */
+	 void Raytrace( Ray& ray );
 
     stg_raytrace_result_t Raytrace( const Pose& pose, 			 
 												const stg_meters_t range,
@@ -1162,6 +1173,9 @@ namespace Stg
   
     void AddToCellArray( GPtrArray* ptrarray );
     void RemoveFromCellArray( GPtrArray* ptrarray );
+	 
+    //void AddToCellArray( std::vector<Cell*>& blocks );
+    //void RemoveFromCellArray( std::vector<Cell*>& blocks );
 
     void GenerateCandidateCells();
   
@@ -2455,7 +2469,7 @@ namespace Stg
 	 };
 	 	 
 	 Vis vis;
-
+	 
 	 //class LaserRay : public Ray
 
 	 /** OpenGL displaylist for laser data */
@@ -2473,6 +2487,9 @@ namespace Stg
 
 	 std::vector<Ray> rays;
   	 
+	 // set up data buffers after the config changes
+	 void SampleConfig();
+
   public:
 	 static const char* typestr;
 	 // constructor
@@ -2490,15 +2507,18 @@ namespace Stg
   
 	 uint32_t GetSampleCount(){ return sample_count; }
   
-	 stg_laser_sample_t* GetSamples( uint32_t* count=NULL);
-  
-	 //void SetSamples( stg_laser_sample_t* samples, uint32_t count);
-  
+	 /** returns an array of samples */
+	 stg_laser_sample_t* GetSamples( uint32_t* count );
+	 
+	 /** returns a const reference to a vector of samples */
+	 const std::vector<stg_laser_sample_t>& GetSamples();
+	 
 	 // Get the user-tweakable configuration of the laser
 	 stg_laser_cfg_t GetConfig( );
   
 	 // Set the user-tweakable configuration of the laser
 	 void SetConfig( stg_laser_cfg_t cfg );  
+
   };
   
   // \todo  GRIPPER MODEL --------------------------------------------------------

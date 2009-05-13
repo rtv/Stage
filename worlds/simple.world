@@ -9,7 +9,7 @@ include "sick.inc"
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 20  # real-time interval between simulation updates in milliseconds 
 
-quit_time 60
+quit_time 600
 
 paused 0
 
@@ -43,7 +43,7 @@ pioneer2dx
   name "r0"
 
   pose [ -7 -7 0 45 ] 
-  sicklaser() 
+  sicklaser( samples 361 ) 
 
   ctrl "wander"
 
