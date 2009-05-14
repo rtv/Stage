@@ -2248,6 +2248,7 @@ namespace Draw
     stg_position_drive_mode_t drive_mode;
     stg_position_localization_mode_t localization_mode; ///< global or local mode
     stg_velocity_t integration_error; ///< errors to apply in simple odometry model
+    stg_velocity_t integration_bias; ///< errors to apply in simple odometry model
     
   public:
     // constructor

@@ -46,7 +46,8 @@ position
  
   # odometry error model parameters, 
   # only used if localization is set to "odom"
-  odom_error [0.03 0.03 0.05]
+  # see description below for what the parameters mean
+  odom_error [0.01 0.05 0.01 0.02 0.01 0.02]
 
   # model properties
 )
@@ -62,8 +63,8 @@ Since Stage-1.6.5 the odom property has been removed. Stage will generate a warn
   - if "gps" the position model reports its position with perfect accuracy. If "odom", a simple odometry model is used and position data drifts from the ground truth over time. The odometry model is parameterized by the odom_error property.
 - localization_origin [x y theta]
   - set the origin of the localization coordinate system. By default, this is copied from the model's initial pose, so the robot reports its position relative to the place it started out. Tip: If localization_origin is set to [0 0 0] and localization is "gps", the model will return its true global position. This is unrealistic, but useful if you want to abstract away the details of localization. Be prepared to justify the use of this mode in your research! 
-- odom_error [x y theta]
-  - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
+- odom_error [x xstd  y ystd  theta thetastd]
+  - parameters for the odometry error model used when specifying localization "odom". Defines a gaussian error model with a mean and standard deviation.  A nonzero mean introduces a bias into the odometry, which is realistic for many robots.  The standard deviations are with respect to a standard length (1m) for x and y, and with respect to a full revolution for theta.  The exact interpretation of the parameters depends on the drive model.  For differential drive, theta and y contribute to angle errors, based on the amount of turn (theta) and amount of distance traveled (y).  Translational distance error is given by x.  For other drive models, only the bias term is used.  Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
 */
 
   
@@ -73,14 +74,33 @@ const double STG_POSITION_WATTS = 2.0; // base cost of position device
 
 // simple odometry error model parameters. the error is selected at
 // random in the interval -MAX/2 to +MAX/2 at startup
-const double STG_POSITION_INTEGRATION_ERROR_MAX_X = 0.03;
-const double STG_POSITION_INTEGRATION_ERROR_MAX_Y = 0.03;
-const double STG_POSITION_INTEGRATION_ERROR_MAX_A = 0.05;
+const double STG_POSITION_INTEGRATION_BIAS_X = 0.0;
+const double STG_POSITION_INTEGRATION_BIAS_Y = 0.0;
+const double STG_POSITION_INTEGRATION_BIAS_A = 0.0;
+const double STG_POSITION_INTEGRATION_ERROR_X = 0.03;
+const double STG_POSITION_INTEGRATION_ERROR_Y = 0.03;
+const double STG_POSITION_INTEGRATION_ERROR_A = 0.05;
 
 const stg_position_control_mode_t POSITION_CONTROL_DEFAULT = STG_POSITION_CONTROL_VELOCITY;
 const stg_position_localization_mode_t POSITION_LOCALIZATION_DEFAULT = STG_POSITION_LOCALIZATION_GPS;
 const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIFFERENTIAL;
 
+// return two random number from a zero-mean normalized gaussian
+// distribution.
+// to get mean A and std B, use A*y + B
+static void gauss_rand(double *y1, double *y2)
+{
+  double x1, x2, w;
+  do {
+    x1 = 2.0 * drand48() - 1.0;
+    x2 = 2.0 * drand48() - 1.0;
+    w = x1 * x1 + x2 * x2;
+  } while ( w >= 1.0 );
+
+  w = sqrt( (-2.0 * log( w ) ) / w );
+  *y1 = x1 * w;
+  *y2 = x2 * w;
+}
 
 StgModelPosition::StgModelPosition( StgWorld* world, 
 				    StgModel* parent,
@@ -111,18 +131,23 @@ StgModelPosition::StgModelPosition( StgWorld* world,
   // localization
   localization_mode = POSITION_LOCALIZATION_DEFAULT;  
 
-  integration_error.x =  
-    drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_X - 
-    STG_POSITION_INTEGRATION_ERROR_MAX_X/2.0;
+  integration_bias.x =  
+    drand48() * STG_POSITION_INTEGRATION_BIAS_X - 
+    STG_POSITION_INTEGRATION_BIAS_X/2.0;
   
-  integration_error.y =  
-    drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_Y - 
-    STG_POSITION_INTEGRATION_ERROR_MAX_Y/2.0;
+  integration_error.x = STG_POSITION_INTEGRATION_ERROR_X;
+
+  integration_bias.y =  
+    drand48() * STG_POSITION_INTEGRATION_BIAS_Y - 
+    STG_POSITION_INTEGRATION_BIAS_Y/2.0;
   
-  integration_error.a =  
-    drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
-    STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
+  integration_error.y = STG_POSITION_INTEGRATION_ERROR_Y;
+
+  integration_bias.a =  
+    drand48() * STG_POSITION_INTEGRATION_BIAS_A - 
+    STG_POSITION_INTEGRATION_BIAS_A/2.0;
   
+  integration_error.a = STG_POSITION_INTEGRATION_ERROR_A;
 }
 
  
@@ -200,15 +225,21 @@ void StgModelPosition::Load( void )
     }
 
   // odometry model parameters
-  keyword = "odom_error";
-  if( wf->PropertyExists( id, keyword ) )
+  keyword = "localization_origin"; 
+  if( wf->PropertyExists( this->id, keyword ) )
     {
+      integration_bias.x = 
+              wf->ReadTupleLength(this->id, keyword, 0, integration_bias.x );
       integration_error.x = 
-	wf->ReadTupleLength( id, keyword, 0, integration_error.x );
+              wf->ReadTupleLength(this->id, keyword, 1, integration_error.x );
+      integration_bias.y = 
+              wf->ReadTupleLength(this->id, keyword, 2, integration_bias.y );
       integration_error.y = 
-	wf->ReadTupleLength( id, keyword, 1, integration_error.y );
-      integration_error.a 
-	= wf->ReadTupleAngle( id, keyword, 2, integration_error.a );
+              wf->ReadTupleLength(this->id, keyword, 3, integration_error.y );
+      integration_bias.a = 
+              wf->ReadTupleAngle(this->id, keyword, 4, integration_bias.a );
+      integration_error.a = 
+              wf->ReadTupleAngle(this->id, keyword, 5, integration_error.a );
     }
 
   // choose a localization model
@@ -417,15 +448,42 @@ void StgModelPosition::Load( void )
     case STG_POSITION_LOCALIZATION_ODOM:
       {
 	// integrate our velocities to get an 'odometry' position estimate.
-	double dt = this->world->GetSimInterval()/1e3;
+	double dt = this->world->GetSimInterval()/1e6;
+        double oda = vel.a*dt;
+        double odx = vel.x*dt;
+        double ody = vel.y*dt;
+        double dx = 0;
+        double dy = 0;
+        
+      // differential drive odometry error model
+      if (control_mode == STG_POSITION_CONTROL_VELOCITY &&
+          drive_mode == STG_POSITION_DRIVE_DIFFERENTIAL)
+
+        {
+          double e1, e2;
+          gauss_rand(&e1, &e2);
+          double ooda = fabs(oda);
+          double oodx = fabs(odx);
+          double avar = integration_error.a * integration_error.a; // variance @ 1 rev (in rads)
+          double xvar = integration_error.x * integration_error.x; // variance @ 1 m (in m)
+          double yvar = integration_error.y * integration_error.y; // variance @ 1 m (in m)
+          
+          est_pose.a = normalize( est_pose.a + oda + 
+              ooda * integration_bias.a + oodx * integration_bias.y +
+              sqrt((ooda/(2*M_PI))*avar + oodx*yvar)*e1);
+
+          dx = odx + oodx*integration_bias.x + sqrt(oodx*xvar)*e2;
+        }
+      else                    // not a diff drive error model
+        {
+          est_pose.a = normalize( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
+          dx = (vel.x * dt) * (1.0 + integration_error.x );
+          dy = (vel.y * dt) * (1.0 + integration_error.y );
+        }
 	
-	est_pose.a = normalize( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
 	
 	double cosa = cos(est_pose.a);
 	double sina = sin(est_pose.a);
-	double dx = (vel.x * dt) * (1.0 + integration_error.x );
-	double dy = (vel.y * dt) * (1.0 + integration_error.y );
-	
 	est_pose.x += dx * cosa + dy * sina; 
 	est_pose.y -= dy * cosa - dx * sina;
 
