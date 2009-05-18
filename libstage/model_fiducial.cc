@@ -13,9 +13,6 @@
 
 //#define DEBUG 1
 
-#include <assert.h>
-#include <math.h>
-
 #include "stage.hh"
 #include "option.hh"
 #include "worldfile.hh"

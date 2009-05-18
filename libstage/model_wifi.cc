@@ -25,7 +25,6 @@
 
 
 #include <sys/time.h>
-#include <math.h>
 #include "gui.h"
 
 // Number pulled directly from my ass

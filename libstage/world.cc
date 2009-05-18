@@ -599,8 +599,15 @@ void World::ClearRays()
 
 void World::Raytrace( std::vector<Ray>& rays )
 {
-  for( unsigned int i=0; i<rays.size(); i++ )
-	 Raytrace( rays[i] );
+  rt_cells.clear();
+  rt_candidate_cells.clear();
+
+  //printf( "===================\n" );
+
+  for( std::vector<Ray>::iterator it = rays.begin();
+		 it != rays.end();
+		 ++it )
+	 Raytrace( *it );
 }
 
 inline void World::Raytrace( Ray& r )
@@ -629,51 +636,12 @@ void World::Raytrace( const Pose &gpose, // global pose
     }
 }
 
+// fast macros for converting from global cell coordinates to local coords
+#define GETCELL(X) (((int32_t)X) & ~((~0x00)<<RBITS ))
+#define GETREG(X) ((((int32_t)X) & ~((~0x00)<<SRBITS ))>>RBITS)
+#define GETSREG(X) (((int32_t)X)>>SRBITS)
 
-// inline functions for converting from global cell coordinates to
-// superregions, regions and local cells
-
-inline int32_t SUPERREGION( const int32_t x )
-{ 
-  return( x >> SRBITS );
-}
-
-inline int32_t REGION( const int32_t x )
-{  
-  const int32_t _region_coord_mask = ~ ( ( ~ 0x00 ) << SRBITS );
-  return( ( x & _region_coord_mask ) >> RBITS );
-}
-
-inline int32_t CELL( const int32_t x )
-{  
-  const int32_t _cell_coord_mask = ~ ( ( ~ 0x00 ) << RBITS );
-  return( x & _cell_coord_mask );															  
-}
-
-inline stg_point_int_t SUPERREGION( const stg_point_int_t& glob )
-{
-  stg_point_int_t sr;
-  sr.x = SUPERREGION( glob.x );
-  sr.y = SUPERREGION( glob.y );
-  return sr;
-}
-
-inline stg_point_int_t REGION( const stg_point_int_t& glob )
-{
-  stg_point_int_t reg;
-  reg.x = REGION( glob.x );
-  reg.y = REGION( glob.y );
-  return reg;
-}
-
-inline stg_point_int_t CELL( const stg_point_int_t& glob )
-{
-  stg_point_int_t c;
-  c.x = CELL( glob.x );
-  c.y = CELL( glob.y );
-  return c;
-}
-
+// Stage spends 50-99% of its time in this method.
 stg_raytrace_result_t World::Raytrace( const Pose &gpose, 
 													const stg_meters_t range,
 													const stg_ray_test_func_t func,
@@ -681,188 +649,249 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 													const void* arg,
 													const bool ztest ) 
 {
-  stg_raytrace_result_t sample;
-  
-  //   printf( "raytracing at [ %.2f %.2f %.2f %.2f ] for %.2f \n",
-  // 			 gpose.x,
-  // 			 gpose.y,
-  // 			 gpose.z,
-  // 			 gpose.a,
-  // 			 range );
+  rt_cells.clear();
+  rt_candidate_cells.clear();
   
   // initialize the sample
-  sample.pose = gpose;
-  //sample.pose.a = normalize( sample.pose.a ); 
-  sample.range = range; // we might change this below
-  sample.mod = NULL; // we might change this below
+  RaytraceResult sample( gpose, range );
 	
-  // find the global integer bitmap address of the ray  
-  stg_point_int_t glob;
-  glob.x = (int32_t)(gpose.x*ppm);
-  glob.y = (int32_t)(gpose.y*ppm);
-		
+  // our global position in (floating point) cell coordinates
+  stg_point_t glob( gpose.x * ppm, gpose.y * ppm );
+	
   // record our starting position
-  stg_point_int_t start = glob;
-	
+  const stg_point_int_t start( glob.x, glob.y );
+  
+  // eliminate a potential divide by zero
+  const double angle( gpose.a == 0.0 ? 1e-12 : gpose.a );
+  const double cosa(cos(angle));
+  const double sina(sin(angle));
+  const double tana(sina/cosa); // = tan(angle)
+
   // and the x and y offsets of the ray
-  int32_t dx = (int32_t)(ppm*range * cos(gpose.a));
-  int32_t dy = (int32_t)(ppm*range * sin(gpose.a));
-	
-  //   if( finder->debug )
-  //     RecordRay( pose.x, 
-  // 	       pose.y, 
-  // 	       pose.x + range.max * cos(pose.a),
-  // 	       pose.y + range.max * sin(pose.a) );
-	
+  const int dx( ppm * range * cosa);
+  const int dy( ppm * range * sina);
+  
   // fast integer line 3d algorithm adapted from Cohen's code from
-  // Graphics Gems IV
-
-  // cell unti
-  int sx = sgn(dx);   // sgn() is a fast macro
-  int sy = sgn(dy);  
-  int ax = abs(dx); 
-  int ay = abs(dy);  
-  int bx = 2*ax;	
-  int by = 2*ay;	
-  int exy = ay-ax; 
-  int n = ax+ay;
-
-  //  printf( "Raytracing from (%d,%d) steps (%d,%d) %d\n",
-  //  x,y,  dx,dy, n );
-	
-  // superregion coords
-  stg_point_int_t lastsup( INT_MAX, INT_MAX );
-  stg_point_int_t lastreg( INT_MAX, INT_MAX );
-	
-  SuperRegion* sr = NULL;
-  Region* r = NULL;
-  bool nonempty_region = false;
-	
-  // superregion coords (must be updated every time x or y changes
-  // but only one variable changes at a time in the loop, so its 
-  // more efficient to compute at the end of the loop, when we know what's changed)
-  stg_point_int_t sup = SUPERREGION( glob );
-
-  // find the region coords inside this superregion (again: only updated when x or y changes)
-  stg_point_int_t reg = REGION( glob );
-	
-  // compute the pixel offset inside this region (again: only updated when x or y changes)
-  stg_point_int_t cell = CELL( glob );
-		
+  // Graphics Gems IV  
+  const int sx(sgn(dx));   // sgn() is a fast macro
+  const int sy(sgn(dy));  
+  const int ax(abs(dx)); 
+  const int ay(abs(dy));  
+  const int bx(2*ax);	
+  const int by(2*ay);	
+  int exy(ay-ax); 
+  int n(ax+ay); // the manhattan distance to the goal cell
+  
+  const int rsize( Region::WIDTH );
+  
   // fix a little issue where rays are not drawn long enough when
   // drawing to the right or up
-  if( dx > 0 )
-    n++;
-  else if( dy > 0 )
-    n++;
-	
-  // find the starting superregion 
-  sr = GetSuperRegionCached( sup ); // possibly NULL, but unlikely
+  if( (dx > 0) || ( dy > 0 ) )
+	 n++;
   
-  while ( n-- ) 
-    {         	
-      //printf( "pixel [%d %d]\tS[ %d %d ]\t",
-      //	  x, y, sup.x, sup.y );
-		
-      if( sr )
-		  {	  
-			 //  printf( "R[ %d %d ]\t", reg.x, reg.y );
-			 
-			 // if the region coordinate has changed since the last loop
-			 if( reg.x != lastreg.x || reg.y != lastreg.y )
-				{
-				  // lookup the new region
-				  r = sr->GetRegion( reg.x, reg.y );
-				  lastreg = reg;
-				  nonempty_region = ( r && r->count );
-				}
+  // the distances between region crossings in X and Y
+  const double xjumpx( sx * rsize );
+  const double xjumpy( sx * rsize * tana );
+  const double yjumpx( sy * rsize / tana );
+  const double yjumpy( sy * rsize );
+  // manhattan distance between region crossings in X and Y
+  const double xjumpdist( fabs(xjumpx)+fabs(xjumpy) );
+  const double yjumpdist( fabs(yjumpx)+fabs(yjumpy) );
 
-			 if( nonempty_region )
-				{
-				  //printf( "C[ %d %d ]\t", cell.x, cell.y );
-				  
-				  Cell* c = r->GetCellNoCreate( cell.x, cell.y );
-				  assert(c);
+  // these are updated as we go along the ray
+  double xcrossx(0), xcrossy(0);
+  double ycrossx(0), ycrossy(0);
+  double distX(0), distY(0);
+  bool calculatecrossings( true );
+	 
+
+  // puts( "=======================" );
+
+  // Stage spends up to 95% of its time in this loop! It would be
+  // neater with more function calls encapsualting things, but even
+  // inline calls have a noticeable (2-3%) effect on performance  
+  while( n > 0  ) // while we are still not at the ray end
+    { 
+		SuperRegion* sr = 
+		  GetSuperRegionCached(GETSREG(glob.x), 
+									  GETSREG(glob.y));
+				
+		// coordinates of the region inside the superregion
+		int32_t rx = GETREG(glob.x);
+		int32_t ry = GETREG(glob.y);		
+		Region* r = &sr->regions[ rx + (ry*SuperRegion::WIDTH) ];
+
+		if( r->count ) // if the region contains any objects
+		  {
+			 // invalidate the region crossing points used to jump over
+			 // empty regions
+			 calculatecrossings = true;
+			 
+			 // convert from global cell to local cell coords
+			 int32_t cx = GETCELL(glob.x); 
+			 int32_t cy = GETCELL(glob.y);
+			 
+			 Cell* c = &r->cells[ cx + cy * Region::WIDTH ];
+			 assert(c); // should be a cell there 
+			 
+			 // while within the bounds of this region and while some ray remains
+			 // we'll tweak the cell pointer directly to move around quickly
+			 while( (cx>=0) && (cx<(int)Region::WIDTH) && 
+					  (cy>=0) && (cy<(int)Region::WIDTH) && 
+					  n > 0 )
+				{			 
+				  //printf( "cx %d cy %d\n", cx, cy );
 				  
 				  for( std::list<Block*>::iterator it = c->blocks.begin();
 						 it != c->blocks.end();
 						 ++it )					 
 					 {	      	      
 						Block* block = *it;
-						assert( block );
-				 
+						
 						// skip if not in the right z range
 						if( ztest && 
 							 ( gpose.z < block->global_z.min || 
-								gpose.z > block->global_z.max ) )
-						  {
-							 //max( "failed ztest: ray at %.2f block at [%.2f %.2f]\n",
-							 //	 pose.z, ent->zbounds.min, ent->zbounds.max );
-							 continue; 
-						  }
-				 
-						//printf( "RT: mod %p testing mod %p at %d %d\n",
-						//		mod, ent->mod, x, y );
-						// printf( "RT: mod %p %s testing mod %p %s at %d %d\n",
-						//		mod, mod->Token(), ent->mod, ent->mod->Token(), x, y );
-				 
+									 gpose.z > block->global_z.max ) )
+						  continue; 
+						
 						// test the predicate we were passed
 						if( (*func)( block->mod, (Model*)mod, arg )) 
 						  {
 							 // a hit!
 							 sample.color = block->GetColor();
 							 sample.mod = block->mod;
-							 sample.range = hypot( (glob.x-start.x)/ppm, (glob.y-start.y)/ppm );
+							 
+							 if( ax > ay ) // faster than the equivalent hypot() call
+								sample.range = fabs((glob.x-start.x) / cosa) / ppm;
+							 else
+								sample.range = fabs((glob.y-start.y) / sina) / ppm;
+							 
 							 return sample;
-						  }
-						
+						  }				  
 					 }
+				  
+				  // increment our cell in the correct direction
+				  if( exy < 0 ) // we're iterating along X
+					 {
+						glob.x += sx; // global coordinate
+						exy += by;						
+						c += sx; // move the cell left or right
+						cx += sx; // cell coordinate for bounds checking
+					 }
+				  else  // we're iterating along Y
+					 {
+						glob.y += sy; // global coordinate
+						exy -= bx;						
+						c += sy * Region::WIDTH; // move the cell up or down
+						cy += sy; // cell coordinate for bounds checking
+					 }			 
+				  n--; // decrement the manhattan distance remaining
+
+				  //rt_cells.push_back( stg_point_int_t( glob.x, glob.y ));
 				}
-		  }      
-		
-      //      printf( "\t step %d n %d   pixel [ %d, %d ] block [ %d %d ] index [ %d %d ] \n", 
-      //      //coarse [ %d %d ]\n",
-      //      count++, n, x, y, blockx, blocky, b_dx, b_dy );
-		
-      // increment our pixel in the correct direction
-      if( exy < 0 ) // we're iterating along X
-		  {
-			 glob.x += sx; 
-			 exy += by;
-			 
-			 sup.x = SUPERREGION( glob.x );
-			 if( sup.x != lastsup.x ) 
+				  
+			 //printf( "leaving populated region\n" );
+		  }							 
+		else // jump over the empty region
+		  {		  		  		  
+			 // on the first run, and when we've been iterating over cells,
+			 // we need to calculate the next crossing of region in each
+			 // axis
+			 if( calculatecrossings )
 				{
-				  sr = superregions[ sup ];
-				  lastsup = sup; // remember these coords
+				  calculatecrossings = false;
+				  
+				  // find the coordinate in cells of the bottom left corner of
+				  // the current region
+				  int ix = glob.x;
+				  int iy = glob.y;				  
+				  double regionx = ix/rsize*rsize;
+				  double regiony = iy/rsize*rsize;
+				  if( (glob.x < 0) && (ix % rsize) ) regionx -= rsize;
+				  if( (glob.y < 0) && (iy % rsize) ) regiony -= rsize;
+				  
+				  //double regionx = glob.x - fmod(glob.x,rsize);
+				  //double regiony = glob.y - fmod(glob.y,rsize);
+				  
+				  //printf( "region %.2f %.2f\n", regionx, regiony );
+				  
+				  // calculate the distance to the edge of the current region
+				  double xdx = sx < 0 ? 
+					 regionx - glob.x - 1.0 : // going left
+					 regionx + rsize - glob.x; // going right			 
+				  double xdy = xdx*tana;
+				  
+				  double ydy = sy < 0 ? 
+					 regiony - glob.y - 1.0 :  // going down
+					 regiony + rsize - glob.y; // going up		 
+				  double ydx = ydy/tana;
+				  
+				  // these stored hit points are updated as we go along
+				  xcrossx = glob.x+xdx;
+				  xcrossy = glob.y+xdy;
+				  
+				  ycrossx = glob.x+ydx;
+				  ycrossy = glob.y+ydy;
+				  
+				  // find the distances to the region crossing points
+				  // manhattan distance is faster than using hypot()
+				  distX = fabs(xdx)+fabs(xdy);
+				  distY = fabs(ydx)+fabs(ydy);		  
 				}
 			 
-			 // recompute current region and cell (we can skip these if
-			 // sr==NULL, but profiling suggests it's faster to do them
-			 // than add a conditional)
-			 reg.x = REGION( glob.x); 
-			 cell.x = CELL( glob.x ); 
-		  }
-      else  // we're iterating along Y
-		  {
-			 glob.y += sy; 
-			 exy -= bx; 
+// 			 printf( "globx %.2f globy %.2f\n", glob.x, glob.y );
+// 			 printf( "xcross (%.2f,%.2f) ycross(%.2f,%.2f)\n", xcrossx, xcrossy, ycrossx, ycrossy );
+// 			 printf( "distX  %.2f distY %.2f\n", distX, distY );
+// 			 printf( "xjumpdist  %.2f yjumpdist %.2f\n", xjumpdist, yjumpdist );
+// 			 puts( "" );
 			 
-			 sup.y = SUPERREGION( glob.y );
-			 if( sup.y != lastsup.y )
+			 if( distX < distY ) // crossing a region boundary left or right
 				{
-				  sr = superregions[ sup ];
-				  lastsup = sup; // remember these coords
-				}
-			 
-			 // recompute current region and cell (we can skip these if
-			 // sr==NULL, but profiling suggests it's faster to do them
-			 // than add a conditional)
-			 reg.y = REGION( glob.y ); 			
-			 cell.y = CELL( glob.y );
-		  }
-    }
-	
+				  //puts( "distX" );
+				  // move to the X crossing
+				  glob.x = xcrossx; 
+				  glob.y = xcrossy; 
+				  
+				  n -= distX; // decrement remaining manhattan distance
+				  
+				  // calculate the next region crossing
+				  xcrossx += xjumpx; 
+				  xcrossy += xjumpy;
+				  
+				  distY -= distX;
+				  distX = xjumpdist;
+				  
+				  //rt_candidate_cells.push_back( stg_point_int_t( xcrossx, xcrossy ));
+				}			 
+			 else // crossing a region boundary up or down
+				{		  
+				  //puts( "distY" );
+				  // move to the X crossing
+				  glob.x = ycrossx;
+				  glob.y = ycrossy;
+				  
+				  n -= distY; // decrement remaining manhattan distance				
+				  
+				  // calculate the next region crossing
+				  ycrossx += yjumpx;
+				  ycrossy += yjumpy;
+				  
+				  distX -= distY;
+				  distY = yjumpdist;
+				  
+				  //rt_candidate_cells.push_back( stg_point_int_t( ycrossx, ycrossy ));
+				}	
+
+// 			 if( (GETCELL(xcrossx) == GETCELL(ycrossx) ) &&
+// 				  (GETCELL(xcrossy) == GETCELL(ycrossy) ) )
+// 				printf( "SAME %d=%d %d=%d\n", 
+// 						  GETCELL(xcrossx), GETCELL(ycrossx),
+// 						  GETCELL(xcrossy), GETCELL(ycrossy) );
+						  
+			 //printf( "jumped to glob (%.2f %.2f)\n", glob.x, glob.y  );
+		  }			  	
+		//rt_cells.push_back( stg_point_int_t( glob.x, glob.y ));
+	 } 
   // hit nothing
   sample.mod = NULL;
   return sample;
@@ -916,16 +945,30 @@ SuperRegion* World::AddSuperRegion( const stg_point_int_t& sup )
 }
 
 
+
+inline SuperRegion* World::GetSuperRegionCached( int32_t x, int32_t y )
+{
+  // around 99% of the time the SR is the same as last
+  // lookup - cache  gives a 4% overall speed up :)
+  
+  if( sr_cached && sr_cached->origin.x == x && sr_cached->origin.y  == y )
+    return sr_cached;
+  //else
+  // delay constructing the object as long as possible
+  return GetSuperRegion( stg_point_int_t(x,y) );
+}
+
 inline SuperRegion* World::GetSuperRegionCached( const stg_point_int_t& sup )
 {
   // around 99% of the time the SR is the same as last
   // lookup - cache  gives a 4% overall speed up :)
   
-  if( sr_cached && sr_cached->origin.x == sup.x && sr_cached->origin.y == sup.y )
+  if( sr_cached && sr_cached->origin == sup )
     return sr_cached;
   //else
   return GetSuperRegion( sup);
 }
+
 
 inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
 {
@@ -942,17 +985,25 @@ inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
   return sr;
 }
 
-inline Cell* World::GetCell( const int32_t x, const int32_t y )
+inline Cell* World::GetCellNoCreate( const stg_point_int_t& glob )
 {
-  stg_point_int_t glob;
-  glob.x = x;
-  glob.y = y;
+  Region* r = GetSuperRegionCached( GETSREG(glob.x), GETSREG(glob.y) )
+	 ->GetRegionGlobal( glob );
+
+  if( r->count )
+	 return r->GetCellGlobalNoCreate( glob ) ;
+  return NULL;
+}
+
+inline Cell* World::GetCellCreate( const int32_t x, const int32_t y )
+{
+  stg_point_int_t glob( x, y );
 
   //printf( "GC[ %d %d ] ", glob.x, glob.y );
-
-  return( GetSuperRegionCached( SUPERREGION(glob) )
-			 ->GetRegion( REGION(x), REGION(y) )
-			 ->GetCellCreate( CELL(x), CELL(y) )) ;
+  
+  return( GetSuperRegionCached(  GETSREG(x), GETSREG(y)  )
+			 ->GetRegionGlobal( glob )
+			 ->GetCellGlobalCreate( glob )) ;
 }
 
 void World::ForEachCellInPolygon( const stg_point_t pts[], 
@@ -970,23 +1021,23 @@ void World::ForEachCellInLine( const stg_point_t& pt1,
 										 stg_cell_callback_t cb,
 										 void* cb_arg )
 {  
-  int32_t x = MetersToPixels( pt1.x ); // global pixel coords
-  int32_t y = MetersToPixels( pt1.y );
+  int x = MetersToPixels( pt1.x ); // global pixel coords
+  int y = MetersToPixels( pt1.y );
   
-  int32_t dx = MetersToPixels( pt2.x - pt1.x );
-  int32_t dy = MetersToPixels( pt2.y - pt1.y );
+  int dx = MetersToPixels( pt2.x - pt1.x );
+  int dy = MetersToPixels( pt2.y - pt1.y );
   
   // line rasterization adapted from Cohen's 3D version in
   // Graphics Gems II. Should be very fast.
   
-  int sx = sgn(dx);  // sgn() is a fast macro
-  int sy = sgn(dy);  
-  int ax = abs(dx);  
-  int ay = abs(dy);  
-  int bx = 2*ax;	
-  int by = 2*ay;	 
-  int exy = ay-ax; 
-  int n = ax+ay;
+  const int sx(sgn(dx));  
+  const int sy(sgn(dy));  
+  const int ax(abs(dx));  
+  const int ay(abs(dy));  
+  const int bx(2*ax);	
+  const int by(2*ay);	 
+  int exy(ay-ax); 
+  int n(ax+ay);
   
   // fix a little issue where the edges are not drawn long enough
   // when drawing to the right or up
@@ -995,9 +1046,9 @@ void World::ForEachCellInLine( const stg_point_t& pt1,
   
   while( n-- ) 
     {				
-      // find the cell at this location, then call the callback
+      // find or create the cell at this location, then call the callback
       // with the cell, block and user-defined argument
-      (*cb)( GetCell( x,y ), cb_arg );
+      (*cb)( GetCellCreate( x,y ), cb_arg );
 		
       // cleverly skip to the next cell			 
       if( exy < 0 ) 
@@ -1090,3 +1141,4 @@ void World::Log( Model* mod )
   //LogEntry::Print();
 }
  
+

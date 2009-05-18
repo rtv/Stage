@@ -126,7 +126,7 @@ int LaserUpdate( Model* mod, robot_t* robot )
 		robot->pos->SetSpeed( 0,0,0 );
 		robot->pos->SetTurnSpeed( 0 );
 	 }
-
+ 
   return 0;
 }
 

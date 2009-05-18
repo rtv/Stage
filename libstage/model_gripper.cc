@@ -50,7 +50,6 @@ gripper
 
 
 #include <sys/time.h>
-#include <math.h>
 #include "stage.hh"
 #include "worldfile.hh"
 using namespace Stg;

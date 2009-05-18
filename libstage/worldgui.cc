@@ -429,16 +429,6 @@ std::string WorldGui::EnergyString()
   return s;
 }
 
-
-// callback wrapper for SuperRegion::Draw()
-static void Draw_cb( gpointer dummykey, 
-							SuperRegion* sr, 
-							bool drawall )
-{
-  sr->Draw( drawall );
-}
-
-
 void WorldGui::DrawTree( bool drawall )
 {  
   //g_hash_table_foreach( superregions, (GHFunc)Draw_cb, (void*)drawall );
@@ -448,15 +438,6 @@ void WorldGui::DrawTree( bool drawall )
 		 it++ )
 	 (*it).second->Draw( drawall );
 }
-
-// callback wrapper for SuperRegion::Floor()
-static void Floor_cb( gpointer dummykey, 
-							 SuperRegion* sr, 
-							 gpointer dummyval )
-{
-  sr->Floor();
-}
-
 
 void WorldGui::DrawFloor()
 {
@@ -470,8 +451,6 @@ void WorldGui::DrawFloor()
 
   PopColor();
 }
-
-
 
 void WorldGui::windowCb( Fl_Widget* w, void* p )
 {

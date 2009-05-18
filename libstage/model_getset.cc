@@ -225,9 +225,9 @@ void Model::SetPose( const Pose& newpose )
       pose = newpose;
       pose.a = normalize(pose.a);
 
-      if( isnan( pose.a ) )
-		  printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
-					 token, pose.x, pose.y, pose.z, pose.a );
+//       if( isnan( pose.a ) )
+// 		  printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
+// 					 token, pose.x, pose.y, pose.z, pose.a );
 		
       NeedRedraw();
       MapWithChildren();

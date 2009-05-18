@@ -82,8 +82,6 @@
 #include "option.hh"
 using namespace Stg;
 
-#include <math.h>
-
 static const stg_watts_t RANGER_WATTSPERSENSOR = 0.2;
 static const stg_meters_t RANGER_SIZEX = 0.4;
 static const stg_meters_t RANGER_SIZEY = 0.4;

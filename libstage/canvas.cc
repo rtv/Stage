@@ -19,7 +19,7 @@
 #include <sstream>
 #include <png.h>
 
-
+#include "region.hh"
 #include "file_manager.hh"
 #include "options_dlg.hh"
 
@@ -784,6 +784,98 @@ void Canvas::renderFrame()
       glPopMatrix();
     }
   
+  if( ! world->rt_cells.empty() )
+	 {
+		glPushMatrix();	  		
+		GLfloat scale = 1.0/world->Resolution();
+      glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
+
+		world->PushColor( stg_color_pack( 0,0,1,0.5) );
+
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+
+		for( unsigned int i=0;
+			  i < world->rt_cells.size();
+			  i++ )
+		  {
+// 			 char str[128];
+// 			 snprintf( str, 128, "(%d,%d)", 
+// 						  world->rt_cells[i].x, 
+// 						  world->rt_cells[i].y );
+
+// 			 Gl::draw_string(  world->rt_cells[i].x+1, 
+// 									 world->rt_cells[i].y+1, 0.1, str );
+
+			 //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
+			 glRectf( world->rt_cells[i].x+0.3, world->rt_cells[i].y+0.3,
+						 world->rt_cells[i].x+0.7, world->rt_cells[i].y+0.7 );
+		  }
+		
+#if 0
+  		world->PushColor( stg_color_pack( 0,1,0,0.2) );
+  		glBegin( GL_LINE_STRIP );
+  		for( unsigned int i=0;
+  			  i < world->rt_cells.size();
+  			  i++ )
+  		  {			 
+  			 glVertex2f( world->rt_cells[i].x+0.5, world->rt_cells[i].y+0.5 );
+  		  }
+  		glEnd();
+  		world->PopColor();
+#endif
+		
+      glPopMatrix();
+		world->PopColor();
+
+		//world->rt_cells.clear();
+    }
+
+  if( ! world->rt_candidate_cells.empty() )
+	 {
+		glPushMatrix();	  		
+		GLfloat scale = 1.0/world->Resolution();
+      glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
+
+		world->PushColor( stg_color_pack( 1,0,0,0.5) );
+
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
+		for( unsigned int i=0;
+			  i < world->rt_candidate_cells.size();
+			  i++ )
+		  {
+// 			 char str[128];
+// 			 snprintf( str, 128, "(%d,%d)", 
+// 						  world->rt_candidate_cells[i].x, 
+// 						  world->rt_candidate_cells[i].y );
+
+// 			 Gl::draw_string(  world->rt_candidate_cells[i].x+1, 
+// 									 world->rt_candidate_cells[i].y+1, 0.1, str );
+			 
+			 //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
+			 glRectf( world->rt_candidate_cells[i].x, world->rt_candidate_cells[i].y,
+						 world->rt_candidate_cells[i].x+1, world->rt_candidate_cells[i].y+1 );
+		  }
+		
+ 		world->PushColor( stg_color_pack( 0,1,0,0.2) );
+ 		glBegin( GL_LINE_STRIP );
+ 		for( unsigned int i=0;
+ 			  i < world->rt_candidate_cells.size();
+ 			  i++ )
+ 		  {			 
+ 			 glVertex2f( world->rt_candidate_cells[i].x+0.5, world->rt_candidate_cells[i].y+0.5 );
+ 		  }
+ 		glEnd();
+ 		world->PopColor();
+
+      glPopMatrix();
+		world->PopColor();
+
+		//world->rt_cells.clear();
+    }
+
+
   if( showFootprints )
 	 {
 		glDisable( GL_DEPTH_TEST );		
@@ -801,8 +893,8 @@ void Canvas::renderFrame()
 
   if( showBBoxes )
 	 DrawBoundingBoxes();
-  
-  
+
+
   //LISTMETHOD( world->puck_list, Puck*, Draw );
 
   // TODO - finish this properly

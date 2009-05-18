@@ -297,13 +297,14 @@ void ModelLaser::Update( void )
 {     
   assert( samples.size() == sample_count );
   assert( rays.size() == sample_count );
-
+  
   double bearing = -fov/2.0;
-  double sample_incr = fov / (double)sample_count;
-
+  // make the first and last rays exactly at the extremes of the FOV
+  double sample_incr = fov / MAX(sample_count-1,1);
+  
   Pose rayorg = geom.pose;
   rayorg.z += geom.size.z/2.0;
-  rayorg.a = bearing;
+  rayorg.a = bearing;// + sample_incr/2.0;
   rayorg = LocalToGlobal(rayorg);
   
   // set up the ray origins in global coords

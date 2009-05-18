@@ -13,10 +13,6 @@
 
 
 #include <sys/time.h>
-#include <math.h>
-#include <stdlib.h>
-
-//#define DEBUG
 
 #include "stage.hh"
 #include "worldfile.hh"
@@ -468,9 +464,9 @@ void ModelPosition::Stop()
 
 void ModelPosition::SetSpeed( double x, double y, double a ) 
 { 
-  assert( ! isnan(x) );
-  assert( ! isnan(y) );
-  assert( ! isnan(a) );
+  //assert( ! isnan(x) );
+  //assert( ! isnan(y) );
+  //assert( ! isnan(a) );
   
   control_mode = STG_POSITION_CONTROL_VELOCITY;
   goal.x = x;
@@ -481,7 +477,7 @@ void ModelPosition::SetSpeed( double x, double y, double a )
 
 void ModelPosition::SetXSpeed( double x )
 { 
-  assert( ! isnan(x) );
+  //assert( ! isnan(x) );
   control_mode = STG_POSITION_CONTROL_VELOCITY;
   goal.x = x;
 }  
@@ -489,21 +485,21 @@ void ModelPosition::SetXSpeed( double x )
 
 void ModelPosition::SetYSpeed( double y )
 { 
-  assert( ! isnan(y) );
+  //assert( ! isnan(y) );
   control_mode = STG_POSITION_CONTROL_VELOCITY;
   goal.y = y;
 }  
 
 void ModelPosition::SetZSpeed( double z )
 { 
-  assert( ! isnan(z) );
+  //assert( ! isnan(z) );
   control_mode = STG_POSITION_CONTROL_VELOCITY;
   goal.z = z;
 }  
 
 void ModelPosition::SetTurnSpeed( double a )
 { 
-  assert( ! isnan(a) );
+  //assert( ! isnan(a) );
   control_mode = STG_POSITION_CONTROL_VELOCITY;
   goal.a = a;
 }  
@@ -511,10 +507,10 @@ void ModelPosition::SetTurnSpeed( double a )
 
 void ModelPosition::SetSpeed( Velocity vel ) 
 { 
-  assert( ! isnan(vel.x) );
-  assert( ! isnan(vel.y) );
-  assert( ! isnan(vel.z) );
-  assert( ! isnan(vel.a) );
+  //assert( ! isnan(vel.x) );
+  //assert( ! isnan(vel.y) );
+  //assert( ! isnan(vel.z) );
+  //assert( ! isnan(vel.a) );
 
   control_mode = STG_POSITION_CONTROL_VELOCITY;
   goal.x = vel.x;
@@ -525,9 +521,9 @@ void ModelPosition::SetSpeed( Velocity vel )
 
 void ModelPosition::GoTo( double x, double y, double a ) 
 {
-  assert( ! isnan(x) );
-  assert( ! isnan(y) );
-  assert( ! isnan(a) );
+  //assert( ! isnan(x) );
+  //assert( ! isnan(y) );
+  //assert( ! isnan(a) );
 
   control_mode = STG_POSITION_CONTROL_POSITION;
   goal.x = x;

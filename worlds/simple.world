@@ -9,7 +9,7 @@ include "sick.inc"
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 20  # real-time interval between simulation updates in milliseconds 
 
-quit_time 600
+quit_time 1800
 
 paused 0
 
@@ -19,9 +19,9 @@ resolution 0.02
 window
 (
   size [ 556.000 557.000 ] # in pixels
-  scale 28.116            
+  scale 29.162            
      # pixels per meter
-  center [ 0.095  -0.301 ]
+  center [ 0.095  -0.359 ]
   rotate [ 0  0 ]
   			
   show_data 1              # 1=on 0=off
@@ -41,9 +41,11 @@ pioneer2dx
 (		  
   # can refer to the robot by this name
   name "r0"
+  # size [ 0.050 0.050 0.050 ]
 
-  pose [ -7 -7 0 45 ] 
-  sicklaser( samples 361 ) 
+  #pose [ 0.329 0.284  0 108.025 ] 
+  pose [ -7.000 -7.000 0 45.000 ] 
+  sicklaser() 
 
   ctrl "wander"
 

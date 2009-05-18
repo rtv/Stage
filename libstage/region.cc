@@ -32,8 +32,9 @@ SuperRegion::SuperRegion( World* world, stg_point_int_t origin )
   : count(0), origin(origin), world(world)	 
 {
   //static int srcount=0;
-  //printf( "created SR number %d\n", ++srcount );
-  
+  //printf( "created SR number %d\n", ++srcount ); 
+  //  printf( "superregion at %d %d\n", origin.x, origin.y );
+ 
   // initialize the parent pointer for all my child regions
   for( unsigned int i=0; i<SuperRegion::SIZE; i++ )
 	 regions[i].superregion = this;
@@ -62,13 +63,13 @@ void SuperRegion::Draw( bool drawall )
   for( unsigned int x=0; x<SuperRegion::WIDTH; x++ )
 	 for( unsigned int y=0; y<SuperRegion::WIDTH; y++ )
 		{
-		  Region* r = GetRegion(x,y);
+		  Region* r = GetRegionLocal(x,y);
 
 		  if( r->count )
 			 // outline regions with contents
 			 glRecti( x<<RBITS, y<<RBITS, 
 						 (x+1)<<RBITS, (y+1)<<RBITS );
-		  else if( r->cells )
+		  else// if( r->cells )
 			 {
 				double left = x << RBITS;
 				double right = (x+1) << RBITS;
@@ -122,7 +123,7 @@ void SuperRegion::Draw( bool drawall )
   for( unsigned int x=0; x<SuperRegion::WIDTH; x++ )
 	 for( unsigned int y=0; y<SuperRegion::WIDTH; y++ )
 		{
-		  Region* r = GetRegion(x,y);
+		  Region* r = GetRegionLocal( x, y);
 		  
 		  if( r->count < 1 )
 			 continue;		  

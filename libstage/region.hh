@@ -5,9 +5,6 @@
   Copyright Richard Vaughan 2008
 */
 
-#include <list> // STL containers
-// #include <vector>
-
 #include "stage.hh"
 
 namespace Stg 
@@ -35,6 +32,7 @@ class Cell
 private:
   Region* region;  
   std::list<Block*> blocks;
+  bool boundary;
 
 public:
   Cell() 
@@ -45,21 +43,25 @@ public:
   inline void RemoveBlock( Block* b );
   inline void AddBlock( Block* b );  
   inline void AddBlockNoRecord( Block* b );
-};
+};  
 
 
 class Region
 {
-  friend class SuperRegion;
-  
-private:  
-  static const uint32_t WIDTH;
-  static const uint32_t SIZE;
+public:
   
   Cell* cells;
   SuperRegion* superregion;
 
-public:
+  static const uint32_t WIDTH;
+  static const uint32_t SIZE;
+
+  static int32_t CELL( const int32_t x )
+  {  
+	 const int32_t _cell_coord_mask = ~ ( ( ~ 0x00 ) << RBITS );
+	 return( x & _cell_coord_mask );															  
+  }
+
   unsigned long count; // number of blocks rendered into these cells
   
   Region();
@@ -73,10 +75,10 @@ public:
 		  for( unsigned int i=0; i<Region::SIZE; i++ )
 			 cells[i].region = this;		  
 		}
-		return( &cells[x + (y*Region::WIDTH)] ); 
+	 return( &cells[CELL(x) + (CELL(y)*Region::WIDTH)] ); 
   }
 
-  Cell* GetCellCreate( const stg_point_int_t& c ) 
+  Cell* GetCellGlobalCreate( const stg_point_int_t& c ) 
   { 
 	 if( ! cells )
 		{
@@ -84,38 +86,31 @@ public:
 		  for( unsigned int i=0; i<Region::SIZE; i++ )
 			 cells[i].region = this;		  
 		}
-		return( &cells[c.x + (c.y*Region::WIDTH)] ); 
+	 return( &cells[CELL(c.x) + (CELL(c.y)*Region::WIDTH)] ); 
   }
   
-  Cell* GetCellNoCreate( int32_t x, int32_t y ) const
+  Cell* GetCellGlobalNoCreate( int32_t x, int32_t y ) const
   { 
-	 return( &cells[x + (y*Region::WIDTH)] ); 
+	 return( &cells[CELL(x) + (CELL(y)*Region::WIDTH)] ); 
   }
 
-  Cell* GetCellNoCreate( const stg_point_int_t& c ) const
+  Cell* GetCellLocallNoCreate( int32_t x, int32_t y ) const
   { 
-	 return( &cells[c.x + (c.y*Region::WIDTH)] ); 
+	 return( &cells[x + y*Region::WIDTH] ); 
   }
   
-//   Cell* GetCellNoCreateBoundsCheck( const stg_point_int_t& c ) const
-//   { 
-// 	 if( c.x < 0 || c.x > WIDTH || c.y < 0 || c.y > WIDTH )
-// 		return NULL;
-// 	 else
-// 		return( &cells[c.x + (c.y*Region::WIDTH)] ); 
-//   }
-   
+
+  Cell* GetCellGlobalNoCreate( const stg_point_int_t& c ) const
+  { 
+	 return( &cells[CELL(c.x) + (CELL(c.y)*Region::WIDTH)] ); 
+  }
+     
+
+
   void DecrementOccupancy();
   void IncrementOccupancy();
-
-  bool Raytrace( int32_t x, int32_t y, 
-  					  int32_t dx, int32_t dy, 
-  					  const stg_ray_test_func_t func,
-  					  const Model* mod,		
-  					  const void* arg,
-  					  const bool ztest,
-					  stg_raytrace_result_t* res );
-	 };
+};
+  
 
  class SuperRegion
   {
@@ -133,14 +128,31 @@ public:
 	 World* world;
 	 
   public:
+
+	 static int32_t REGION( const int32_t x )
+	 {  
+		const int32_t _region_coord_mask = ~ ( ( ~ 0x00 ) << SRBITS );
+		return( ( x & _region_coord_mask ) >> RBITS );
+	 }
+	 	 
 	 
 	 SuperRegion( World* world, stg_point_int_t origin );
 	 ~SuperRegion();
 	 
-	 Region* GetRegion( int32_t x, int32_t y )
+	 Region* GetRegionGlobal( int32_t x, int32_t y )
+	 {
+		return( &regions[ REGION(x) + (REGION(y)*SuperRegion::WIDTH) ] );
+	 }
+
+	 Region* GetRegionLocal( int32_t x, int32_t y )
 	 {
 		return( &regions[ x + (y*SuperRegion::WIDTH) ] );
-	 };
+	 }
+
+	 Region* GetRegionGlobal( const stg_point_int_t& r )
+	 {
+		return( &regions[ REGION(r.x) + (REGION(r.y)*SuperRegion::WIDTH) ] );
+	 }
 	 
 	 void Draw( bool drawall );
 	 void Floor();

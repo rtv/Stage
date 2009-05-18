@@ -30,15 +30,18 @@
  *  SVN: $Id$
  */
 
+// C libs
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
 #include <assert.h>
-#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
+
+// C++ libs
+#include <cmath>
 #include <iostream>
 #include <vector>
 #include <list>
@@ -402,6 +405,9 @@ namespace Stg
     stg_meters_t x, y;
 	 stg_point_t( stg_meters_t x, stg_meters_t y ) : x(x), y(y){}	 
 	 stg_point_t() : x(0.0), y(0.0){}
+
+	 bool operator+=( const stg_point_t& other ) 
+	 { return ((x += other.x) && (y += other.y) ); }  
   };
     
   /** Define a point in 3d space */
@@ -424,6 +430,9 @@ namespace Stg
 	 /** required to put these in sorted containers like std::map */
 	 bool operator<( const stg_point_int_t& other ) const
 	 { return ((x < other.x) || (y < other.y) ); }
+
+	 bool operator==( const stg_point_int_t& other ) const
+	 { return ((x == other.x) && (y == other.y) ); }
   };
   
 
@@ -828,8 +837,11 @@ namespace Stg
     stg_meters_t range; ///< range to beam hit in meters
     Model* mod; ///< the model struck by this beam
     stg_color_t color; ///< the color struck by this beam
-
+	 
 	 RaytraceResult() : pose(), range(0), mod(NULL), color() {}
+	 RaytraceResult( const Pose& pose, 
+						  stg_meters_t range ) 
+		: pose(pose), range(range), mod(NULL), color() {}	 
   };
 
   typedef RaytraceResult stg_raytrace_result_t;
@@ -944,6 +956,10 @@ namespace Stg
 	 void CallUpdateCallbacks(); ///< Call all calbacks in cb_list, removing any that return true;
 
   public:
+	 
+	 // std::vector<stg_point_int_t> rt_regions;
+	 std::vector<stg_point_int_t> rt_cells;
+	 std::vector<stg_point_int_t> rt_candidate_cells;
 
     static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
     static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
@@ -955,7 +971,6 @@ namespace Stg
 	 /** Remove a callback function. Any argument data passed to
 		  AddUpdateCallback is not automatically freed. */
 	 int RemoveUpdateCallback( stg_world_callback_t cb, void* user );
-
 	 /** Log the state of a Model */
 	 void Log( Model* mod );
 
@@ -977,9 +992,12 @@ namespace Stg
     SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
     SuperRegion* GetSuperRegion( const stg_point_int_t& coord );
     SuperRegion* GetSuperRegionCached( const stg_point_int_t& coord);
+    SuperRegion* GetSuperRegionCached( int32_t x, int32_t y );
     void ExpireSuperRegion( SuperRegion* sr );
 
-    inline Cell* GetCell( const int32_t x, const int32_t y );
+    inline Cell* GetCellNoCreate( const stg_point_int_t& glob );
+    inline Cell* GetCellNoCreate( const int32_t x, const int32_t y );
+    inline Cell* GetCellCreate( const int32_t x, const int32_t y );
 	 
     void ForEachCellInPolygon( const stg_point_t pts[], 
 										 const unsigned int pt_count,
@@ -1135,6 +1153,22 @@ namespace Stg
 	 
     ~Block();
 	 
+	 
+// 	 bool RayTest(  const stg_ray_test_func_t func,
+// 						 const Model* mod,		
+// 						 const void* arg,
+// 						 const bool ztest,
+// 						 const stg_meters_t z )
+// 	 {
+// 		// optionally test z is in right range
+// 		if( ztest && ( z < global_z.min || 
+// 							z > global_z.max ) )
+// 		  return false;
+		
+// 		// test the predicate we were passed
+// 		return( (*func)( this->mod, (Model*)mod, arg )); 
+// 	 }
+
     /** render the block into the world's raytrace data structure */
     void Map(); 
 	 

@@ -1,20 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
+// Author: Richard Vaughan
+
 #include <errno.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <assert.h>
-#include <unistd.h>
-#include <math.h>
-#include <glib.h>
-#include <locale.h>
-
 #include <FL/Fl_Shared_Image.H>
-
-//#define DEBUG
 
 #include "stage.hh"
 #include "config.h" // results of cmake's system configuration tests
@@ -53,7 +40,6 @@ bool Stg::InitDone()
 	return init_called;
 }
 
-
 void Stg::RegisterModel( stg_model_type_t type, 
 								 const char* name, 
 								 stg_creator_t creator )
@@ -69,7 +55,6 @@ void Stg::stg_print_err( const char* err )
 	printf( "Stage error: %s\n", err );
 	//_stg_quit = TRUE;
 }
-
 
 
 void Stg::stg_print_velocity( const Velocity& vel )

@@ -329,13 +329,7 @@ public:
 				  }
 			 }
 		  
-		  assert( ! isnan(a_goal ) );
-		  assert( ! isnan(pose.a ) );
-		  
 		  double a_error = normalize( a_goal - pose.a );
-		
-		  assert( ! isnan(a_error) );
-		
 		  pos->SetTurnSpeed(  a_error );
 		}  
   }
