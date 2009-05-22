@@ -117,8 +117,8 @@ using namespace Stg;
 
 // static members
 uint32_t Model::count = 0;
-GHashTable* Model::modelsbyid = g_hash_table_new( NULL, NULL );
-
+//GHashTable* Model::modelsbyid = g_hash_table_new( NULL, NULL );
+std::map<stg_id_t,Model*> Model::modelsbyid;
 
 void Size::Load( Worldfile* wf, int section, const char* keyword )
 {
@@ -237,7 +237,7 @@ Model::Model( World* world,
     world(world),
 	 world_gui( dynamic_cast<WorldGui*>( world ) )
 {
-  assert( modelsbyid );
+  //assert( modelsbyid );
   assert( world );
   
   PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %d ",
@@ -245,7 +245,8 @@ Model::Model( World* world,
 		parent ? parent->Token() : "(null)",
 		type );
   
-  g_hash_table_insert( modelsbyid, (void*)id, this );
+  //g_hash_table_insert( modelsbyid, (void*)id, this );
+  modelsbyid[id] = this;
   
   // Adding this model to its ancestor also gives this model a
   // sensible default name
@@ -286,7 +287,8 @@ Model::~Model( void )
 	
   g_datalist_clear( &props );
 
-  g_hash_table_remove( Model::modelsbyid, (void*)id );
+  //g_hash_table_remove( Model::modelsbyid, (void*)id );
+  modelsbyid.erase(id);
 
   world->RemoveModel( this );
 }

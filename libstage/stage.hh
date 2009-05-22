@@ -46,7 +46,6 @@
 #include <vector>
 #include <list>
 #include <map>
-//#include <pair>
 
 // we use GLib's data structures extensively. Perhaps we'll move to
 // C++ STL types to lose this dependency one day.
@@ -996,22 +995,22 @@ namespace Stg
 
     inline Cell* GetCellNoCreate( const stg_point_int_t& glob );
     inline Cell* GetCellNoCreate( const int32_t x, const int32_t y );
-    inline Cell* GetCellCreate( const int32_t x, const int32_t y );
+    //inline Cell* GetCellCreate( const int32_t x, const int32_t y );
+    inline Cell* GetCellCreate( const stg_point_int_t& glob );
 	 
-    void ForEachCellInPolygon( const stg_point_t pts[], 
-										 const unsigned int pt_count,
-										 stg_cell_callback_t cb,
-										 void* cb_arg );
-  
-    void ForEachCellInLine( const stg_point_t& pt1,
-									 const stg_point_t& pt2, 
-									 stg_cell_callback_t cb,
-									 void* cb_arg );
-		
+	 /** add a Cell pointer to the vector for each cell on the line from
+		  pt1 to pt2 inclusive */
+    void ForEachCellInLine( const stg_point_int_t& pt1,
+									 const stg_point_int_t& pt2, 
+									 std::vector<Cell*>& cells );
+
     /** convert a distance in meters to a distance in world occupancy
 		  grid pixels */
     int32_t MetersToPixels( stg_meters_t x )
     { return (int32_t)floor(x * ppm); };
+
+    stg_point_int_t MetersToPixels( const stg_point_t& pt )
+    { return stg_point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); };
 	 
     // dummy implementations to be overloaded by GUI subclasses
     virtual void PushColor( stg_color_t col ) { /* do nothing */  };
@@ -1748,7 +1747,8 @@ namespace Stg
   private:
 	 /** the number of models instatiated - used to assign unique IDs */
 	 static uint32_t count;
-	 static GHashTable*  modelsbyid;
+	 //static GHashTable*  modelsbyid;
+	 static std::map<stg_id_t,Model*> modelsbyid;
 	 std::vector<Option*> drawOptions;
 	 const std::vector<Option*>& getOptions() const { return drawOptions; }
 	 
@@ -2046,7 +2046,6 @@ namespace Stg
 	 { world->PushColor( r,g,b,a ); }
 	
 	 virtual void PopColor(){ world->PopColor(); }
-	
 
 	 PowerPack* FindPowerPack() const;
 
@@ -2060,7 +2059,8 @@ namespace Stg
 
 	 /** Look up a model pointer by a unique model ID */
 	 static Model* LookupId( uint32_t id )
-	 { return (Model*)g_hash_table_lookup( modelsbyid, (void*)id ); }
+	 //{ return (Model*)g_hash_table_lookup( modelsbyid, (void*)id ); }
+	 { return modelsbyid[id]; }
 	
 	 /** Constructor */
 	 Model( World* world, 

@@ -293,30 +293,22 @@ void Block::InvalidateModelPointCache()
 	 }
 }
 
-// callback used below
-static void AppendCellToVector( Cell* c, std::vector<Cell*> * a )
-{
-  a->push_back( c );
-}
-
 void Block::GenerateCandidateCells()
 {
-  stg_point_t* mpts = GetPointsInModelCoords();
-
-  // convert the mpts in model coords into global coords
-  stg_point_t* gpts = new stg_point_t[pt_count];
-  for( unsigned int i=0; i<pt_count; i++ )
-	 gpts[i] = mod->LocalToGlobal( mpts[i] );
-
-  //g_ptr_array_set_size( candidate_cells, 0 );
   candidate_cells->clear();
 
-  mod->world->
-	 ForEachCellInPolygon( gpts, pt_count,
-								  (stg_cell_callback_t)AppendCellToVector,
-								  candidate_cells );
-  delete[] gpts;
+  stg_point_t* mpts = GetPointsInModelCoords();
 
+  // convert the mpts in model coords into global pixel coords
+  stg_point_int_t gpts[pt_count];
+  for( unsigned int i=0; i<pt_count; i++ )
+		gpts[i] = mod->world->MetersToPixels( mod->LocalToGlobal( mpts[i] ));
+  
+  for( unsigned int i=0; i<pt_count; i++ )
+	 mod->world->ForEachCellInLine( gpts[i], 
+											  gpts[(i+1)%pt_count], 
+											  *candidate_cells );  
+  
   // set global Z
   Pose gpose = mod->GetGlobalPose();
   gpose.z += mod->geom.pose.z;

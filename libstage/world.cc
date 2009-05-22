@@ -995,40 +995,34 @@ inline Cell* World::GetCellNoCreate( const stg_point_int_t& glob )
   return NULL;
 }
 
-inline Cell* World::GetCellCreate( const int32_t x, const int32_t y )
-{
-  stg_point_int_t glob( x, y );
+// inline Cell* World::GetCellCreate( const int32_t x, const int32_t y )
+// {
+//   stg_point_int_t glob( x, y );
 
-  //printf( "GC[ %d %d ] ", glob.x, glob.y );
+//   //printf( "GC[ %d %d ] ", glob.x, glob.y );
   
-  return( GetSuperRegionCached(  GETSREG(x), GETSREG(y)  )
+//   return( GetSuperRegionCached(  GETSREG(x), GETSREG(y)  )
+// 			 ->GetRegionGlobal( glob )
+// 			 ->GetCellGlobalCreate( glob )) ;
+// }
+
+inline Cell* World::GetCellCreate( const stg_point_int_t& glob )
+{
+  return( GetSuperRegionCached(  GETSREG(glob.x), GETSREG(glob.y)  )
 			 ->GetRegionGlobal( glob )
 			 ->GetCellGlobalCreate( glob )) ;
 }
 
-// TODO - each line end point is processed twice here - could save a
-// teeny bit of time if we did this more cleverly
-// also - replace C arrays with vectors?
-void World::ForEachCellInPolygon( const stg_point_t pts[], 
-											 const unsigned int pt_count,
-											 stg_cell_callback_t cb,
-											 void* cb_arg )
-{
-  for( unsigned int i=0; i<pt_count; i++ )
-	 ForEachCellInLine( pts[i], pts[(i+1)%pt_count], cb, cb_arg );
-
-}
   
-void World::ForEachCellInLine( const stg_point_t& pt1,
-										 const stg_point_t& pt2,
-										 stg_cell_callback_t cb,
-										 void* cb_arg )
+void World::ForEachCellInLine( const stg_point_int_t& start,
+										 const stg_point_int_t& end,
+										 std::vector<Cell*>& cells )
 {  
-  int x = MetersToPixels( pt1.x ); // global pixel coords
-  int y = MetersToPixels( pt1.y );
-  
-  int dx = MetersToPixels( pt2.x - pt1.x );
-  int dy = MetersToPixels( pt2.y - pt1.y );
+
+  int dx = end.x - start.x;
+  int dy = end.y - start.y;
+
+  stg_point_int_t cell = start;
   
   // line rasterization adapted from Cohen's 3D version in
   // Graphics Gems II. Should be very fast.
@@ -1049,23 +1043,18 @@ void World::ForEachCellInLine( const stg_point_t& pt1,
   
   while( n-- ) 
     {				
-      // find or create the cell at this location, then call the callback
-      // with the cell, block and user-defined argument
+      // find or create the cell at this location, then add it to the vector
+		cells.push_back( GetCellCreate( cell ) );
 
-		// TODO - could get rid of this callback, as we only ever use
-		// one function here we can speed it up a bit by having the code
-		// inline
-      (*cb)( GetCellCreate( x,y ), cb_arg );
-		
       // cleverly skip to the next cell			 
       if( exy < 0 ) 
 		  {
-			 x += sx;
+			 cell.x += sx;
 			 exy += by;
 		  }
       else 
 		  {
-			 y += sy;
+			 cell.y += sy;
 			 exy -= bx; 
 		  }
     }
