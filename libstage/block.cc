@@ -21,8 +21,8 @@ Block::Block( Model* mod,
   pts( (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t)) ),
   color( color ),
   inherit_color( inherit_color ),
-  rendered_cells( g_ptr_array_sized_new(32) ),
-  candidate_cells( g_ptr_array_sized_new(32) )
+  rendered_cells( new std::vector<Cell*> ), 
+  candidate_cells( new std::vector<Cell*> ) 
 {
   assert( mod );
   assert( pt_count > 0 );
@@ -42,8 +42,8 @@ Block::Block(  Model* mod,
     pts(NULL),
     color(0),
     inherit_color(true),
-    rendered_cells( g_ptr_array_sized_new(32) ),
-    candidate_cells( g_ptr_array_sized_new(32) )
+	 rendered_cells( new std::vector<Cell*> ), 
+	 candidate_cells( new std::vector<Cell*> ) 
 {
   assert(mod);
   assert(wf);
@@ -59,8 +59,8 @@ Block::~Block()
   if( pts ) delete[] pts;
   InvalidateModelPointCache();
 
-  g_ptr_array_free( rendered_cells, TRUE );
-  g_ptr_array_free( candidate_cells, TRUE );
+  delete rendered_cells;
+  delete candidate_cells;
 }
 
 void Block::Translate( double x, double y )
@@ -143,9 +143,10 @@ stg_color_t Block::GetColor()
 GList* Block::AppendTouchingModels( GList* l )
 {
   // for every cell we are rendered into
-  for( unsigned int i=0; i<rendered_cells->len; i++ )
+  for( unsigned int i=0; i<rendered_cells->size(); i++ )
     {
-      Cell* c = (Cell*)g_ptr_array_index( rendered_cells, i);
+      //Cell* c = (Cell*)g_ptr_array_index( rendered_cells, i);
+		Cell* c = (*rendered_cells)[i];
 
       // for every block rendered into that cell
 		for( std::list<Block*>::iterator it = c->blocks.begin();
@@ -173,10 +174,11 @@ Model* Block::TestCollision()
 
   if( mod->vis.obstacle_return )
     // for every cell we may be rendered into
-    for( unsigned int i=0; i<candidate_cells->len; i++ )
+    for( unsigned int i=0; i<candidate_cells->size(); i++ )
       {
-		  Cell* c = (Cell*)g_ptr_array_index(candidate_cells, i);
-
+		  //Cell* c = (Cell*)g_ptr_array_index(candidate_cells, i);
+		  Cell* c = (*candidate_cells)[i];
+		  
 		  // for every rendered into that cell
 		  for( std::list<Block*>::iterator it = c->blocks.begin();
 				 it != c->blocks.end();
@@ -202,24 +204,7 @@ Model* Block::TestCollision()
 }
 
 
-void Block::RemoveFromCellArray( GPtrArray* ptrarray )
-{
-  for( unsigned int i=0; i<ptrarray->len; i++ )
-    ((Cell*)g_ptr_array_index(ptrarray, i))->RemoveBlock( this );
-}
 
-void Block::AddToCellArray( GPtrArray* ptrarray )
-{
-  for( unsigned int i=0; i<ptrarray->len; i++ )
-    ((Cell*)g_ptr_array_index(ptrarray, i))->AddBlock( this );
-}
-
-
-// used as a callback to gather an array of cells in a polygon
-void AppendCellToPtrArray( Cell* c, GPtrArray* a )
-{
-  g_ptr_array_add( a, c );
-}
 
 // used as a callback to gather an array of cells in a polygon
 void AddBlockToCell( Cell* c, Block* block )
@@ -241,8 +226,25 @@ void Block::UnMap()
 {
   RemoveFromCellArray( rendered_cells );
 
-  g_ptr_array_set_size( rendered_cells, 0 );
+  //g_ptr_array_set_size( rendered_cells, 0 );
+  rendered_cells->clear();
   mapped = false;
+}
+
+void Block::RemoveFromCellArray( std::vector<Cell*> * cells )
+{
+  for( std::vector<Cell*>::iterator it = cells->begin();
+		 it != cells->end();
+		 ++it )	 
+	 (*it)->RemoveBlock( this);
+}
+
+void Block::AddToCellArray( std::vector<Cell*> * cells )
+{
+  for( std::vector<Cell*>::iterator it = cells->begin();
+		 it != cells->end();
+		 ++it )	 
+	 (*it)->AddBlock( this);
 }
 
 void Block::SwitchToTestedCells()
@@ -251,7 +253,7 @@ void Block::SwitchToTestedCells()
   AddToCellArray( candidate_cells );
 
   // switch current and candidate cell pointers
-  GPtrArray* tmp = rendered_cells;
+  std::vector<Cell*> * tmp = rendered_cells;
   rendered_cells = candidate_cells;
   candidate_cells = tmp;
 
@@ -291,6 +293,12 @@ void Block::InvalidateModelPointCache()
 	 }
 }
 
+// callback used below
+static void AppendCellToVector( Cell* c, std::vector<Cell*> * a )
+{
+  a->push_back( c );
+}
+
 void Block::GenerateCandidateCells()
 {
   stg_point_t* mpts = GetPointsInModelCoords();
@@ -300,11 +308,12 @@ void Block::GenerateCandidateCells()
   for( unsigned int i=0; i<pt_count; i++ )
 	 gpts[i] = mod->LocalToGlobal( mpts[i] );
 
-  g_ptr_array_set_size( candidate_cells, 0 );
+  //g_ptr_array_set_size( candidate_cells, 0 );
+  candidate_cells->clear();
 
   mod->world->
 	 ForEachCellInPolygon( gpts, pt_count,
-								  (stg_cell_callback_t)AppendCellToPtrArray,
+								  (stg_cell_callback_t)AppendCellToVector,
 								  candidate_cells );
   delete[] gpts;
 

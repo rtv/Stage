@@ -902,7 +902,6 @@ namespace Stg
   {
     friend class Model; // allow access to private members
     friend class Block;
-    //friend class StgTime;
     friend class Canvas;
 
   private:
@@ -1197,7 +1196,9 @@ namespace Stg
 	 void SetZ( double min, double max );
 
     void RecordRendering( Cell* cell )
-    { g_ptr_array_add( rendered_cells, (gpointer)cell ); };
+    { //g_ptr_array_add( rendered_cells, (gpointer)cell ); };
+		rendered_cells->push_back( cell );
+	 }
   
     stg_point_t* Points( unsigned int *count )
     { if( count ) *count = pt_count; return pts; };	       
@@ -1205,11 +1206,8 @@ namespace Stg
     //bool IntersectGlobalZ( stg_meters_t z )
     //{ return( z >= global_zmin &&  z <= global_zmax ); }
   
-    void AddToCellArray( GPtrArray* ptrarray );
-    void RemoveFromCellArray( GPtrArray* ptrarray );
-	 
-    //void AddToCellArray( std::vector<Cell*>& blocks );
-    //void RemoveFromCellArray( std::vector<Cell*>& blocks );
+    void AddToCellArray( std::vector<Cell*>* blocks );
+    void RemoveFromCellArray( std::vector<Cell*>* blocks );
 
     void GenerateCandidateCells();
   
@@ -1261,18 +1259,18 @@ namespace Stg
 	 
     bool mapped;
 	 
-    /** an array of pointers to cells into which this block has been
-		  rendered (speeds up UnMapping) */  
-    GPtrArray* rendered_cells;
-  
+    /** record the cells into which this block has been rendered to
+		  UnMapping them very quickly. */  
+	 std::vector<Cell*> * rendered_cells;
+
     /** When moving a model, we test for collisions by generating, for
 		  each block, a list of the cells in which it would be rendered if the
 		  move were to be successful. If no collision occurs, the move is
 		  allowed - the rendered cells are cleared, the potential cells are
 		  written, and the pointers to the rendered and potential cells are
 		  switched for next time (avoiding a memory copy).*/
-    GPtrArray* candidate_cells;
-	 
+	 std::vector<Cell*> * candidate_cells;
+
 	 /** find the position of a block's point in model coordinates
 		  (m) */
 	 stg_point_t BlockPointToModelMeters( const stg_point_t& bpt );

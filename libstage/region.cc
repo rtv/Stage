@@ -69,7 +69,7 @@ void SuperRegion::Draw( bool drawall )
 			 // outline regions with contents
 			 glRecti( x<<RBITS, y<<RBITS, 
 						 (x+1)<<RBITS, (y+1)<<RBITS );
-		  else// if( r->cells )
+		  else if( r->cells )
 			 {
 				double left = x << RBITS;
 				double right = (x+1) << RBITS;

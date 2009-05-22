@@ -1006,6 +1006,9 @@ inline Cell* World::GetCellCreate( const int32_t x, const int32_t y )
 			 ->GetCellGlobalCreate( glob )) ;
 }
 
+// TODO - each line end point is processed twice here - could save a
+// teeny bit of time if we did this more cleverly
+// also - replace C arrays with vectors?
 void World::ForEachCellInPolygon( const stg_point_t pts[], 
 											 const unsigned int pt_count,
 											 stg_cell_callback_t cb,
@@ -1048,6 +1051,10 @@ void World::ForEachCellInLine( const stg_point_t& pt1,
     {				
       // find or create the cell at this location, then call the callback
       // with the cell, block and user-defined argument
+
+		// TODO - could get rid of this callback, as we only ever use
+		// one function here we can speed it up a bit by having the code
+		// inline
       (*cb)( GetCellCreate( x,y ), cb_arg );
 		
       // cleverly skip to the next cell			 
