@@ -170,6 +170,177 @@ public:
 	 return true;
   }
 
+  virtual bool GetLaserData(const std::string& name,			
+  websim::Time& t,												
+  uint32_t& resolution,
+  double& fov,
+  websim::Pose& p,
+  std::vector<double>& ranges,													
+  std::string& error){
+
+
+	 t = GetTime();
+
+	 Model* mod = world->GetModel( name.c_str() );
+	 if( mod )
+		{
+                     ModelLaser* laser = (ModelLaser*)mod->GetModel("laser:0");  		
+                     
+		     if(laser){
+		     		uint32_t sample_count=0;
+  		     		stg_laser_sample_t* scan = laser->GetSamples( &sample_count );
+        	     		assert(scan);
+		     
+				stg_laser_cfg_t cfg = laser->GetConfig();
+		     		resolution =  cfg.resolution;
+				fov = cfg.fov;
+               	     		
+				for(unsigned int i=0;i<sample_count;i++)
+					ranges.push_back(scan[i].range);
+		     }else{
+
+				printf( "Warning: attempt to get laser data for unrecognized laser model of model \"%s\"\n",
+				  name.c_str() );
+  				return false;
+
+
+		          }
+	         	  
+		}
+	 else{
+		printf( "Warning: attempt to get laser data for unrecognized model \"%s\"\n",
+				  name.c_str() );
+  		return false;
+	     }
+
+  return true;
+
+  }					   
+  virtual bool GetLaserCfgData(const std::string& name,
+									websim::Time& t,
+									uint32_t& resolution,
+									double& fov,
+						 			websim::Pose& p,
+        								std::string& error)
+{
+
+	 t = GetTime();
+
+	 Model* mod = world->GetModel( name.c_str() );
+	 if( mod )
+		{
+                     ModelLaser* laser = (ModelLaser*)mod->GetModel("laser:0");  		
+                     
+		     if(laser){
+				stg_laser_cfg_t cfg = laser->GetConfig();
+		     		resolution =  cfg.resolution;
+				fov = cfg.fov;
+				//There is no way to access the position of the laser
+		     }else{
+
+				printf( "Warning: attempt to get laser config data for unrecognized laser model of model \"%s\"\n",
+				  name.c_str() );
+  				return false;
+
+
+		          }
+	         	  
+		}
+	 else{
+		printf( "Warning: attempt to get laser config data for unrecognized model \"%s\"\n",
+				  name.c_str() );
+  		return false;
+	     }
+
+  return true;
+
+  }					   
+  virtual bool GetRangerData(const std::string& name,
+									websim::Time& t,
+									std::vector<double>& ranges,									    std::string& response){
+	 t = GetTime();
+
+	 Model* mod = world->GetModel( name.c_str() );
+	 if( mod )
+		{
+                     ModelRanger* ranger = (ModelRanger*)mod->GetModel("ranger:0");  		
+                     
+		     if(ranger){
+					uint32_t count = ranger->sensor_count;
+					if(ranger->samples)
+						for(unsigned int i=0;i<count;i++)
+							ranges.push_back(ranger->samples[i]);
+					//std::copy(ranger->samples,ranger->samples+ranger->sensor_count,ranges.begin());
+				
+		     }else{
+
+				printf( "Warning: attempt to get ranger data for unrecognized ranger model of model \"%s\"\n",
+				  name.c_str() );
+  				return false;
+
+
+		          }
+	         	  
+		}
+	 else{
+		printf( "Warning: attempt to get ranger data for unrecognized model \"%s\"\n",
+				  name.c_str() );
+  		return false;
+	     }
+
+  return true;
+
+}
+
+   virtual bool GetRangerCfgData(const std::string& name,
+									websim::Time& t,
+									std::vector<websim::Pose>& p,
+									std::string& response)
+   {
+
+	
+	 t = GetTime();
+
+	 Model* mod = world->GetModel( name.c_str() );
+	 if( mod )
+		{
+                     ModelRanger* ranger = (ModelRanger*)mod->GetModel("ranger:0");  		
+                     
+		     if(ranger){
+					uint32_t count = ranger->sensor_count;
+					if(ranger->sensors)
+						for(unsigned int i=0;i<count;i++){
+							websim::Pose pos;
+							Pose rpos;
+							rpos = ranger->sensors[i].pose;
+							pos.x = rpos.x;
+							pos.y = rpos.y;
+							pos.z = rpos.z;
+							pos.a = rpos.a;
+							p.push_back(pos);					
+						}
+				
+		     }else{
+
+				printf( "Warning: attempt to get ranger Cfg data for unrecognized ranger model of model \"%s\"\n",
+				  name.c_str() );
+  				return false;
+
+
+		          }
+	         	  
+		}
+	 else{
+		printf( "Warning: attempt to get ranger Cfg data for unrecognized model \"%s\"\n",
+				  name.c_str() );
+  		return false;
+	     }
+
+  	return true;
+
+
+   }
+
   virtual websim::Time GetTime()
   {
 	 stg_usec_t stgtime = world->SimTimeNow();
