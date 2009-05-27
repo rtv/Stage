@@ -257,7 +257,9 @@ public:
   }					   
   virtual bool GetRangerData(const std::string& name,
 									websim::Time& t,
-									std::vector<double>& ranges,									    std::string& response){
+									std::vector<websim::Pose>& p,
+									std::vector<double>& ranges,
+  								        std::string& response){
 	 t = GetTime();
 
 	 Model* mod = world->GetModel( name.c_str() );
@@ -271,6 +273,18 @@ public:
 						for(unsigned int i=0;i<count;i++)
 							ranges.push_back(ranger->samples[i]);
 					//std::copy(ranger->samples,ranger->samples+ranger->sensor_count,ranges.begin());
+					
+					if(ranger->sensors)
+						for(unsigned int i=0;i<count;i++){
+							websim::Pose pos;
+							Pose rpos;
+							rpos = ranger->sensors[i].pose;
+							pos.x = rpos.x;
+							pos.y = rpos.y;
+							pos.z = rpos.z;
+							pos.a = rpos.a;
+							p.push_back(pos);					
+						}
 				
 		     }else{
 
@@ -291,55 +305,40 @@ public:
   return true;
 
 }
-
-   virtual bool GetRangerCfgData(const std::string& name,
-									websim::Time& t,
-									std::vector<websim::Pose>& p,
+   virtual bool GetModelExtent(const std::string& name,
+									double& x,
+									double& y,
+									double& z,
 									std::string& response)
-   {
-
+  {
+	if(name == "sim"){
 	
-	 t = GetTime();
+		stg_bounds3d_t ext = world->GetExtent();
+    	
+		x = ext.x.max - ext.x.min;
+		y = ext.y.max - ext.y.min;
+		z = ext.z.max - ext.z.min;
 
-	 Model* mod = world->GetModel( name.c_str() );
-	 if( mod )
-		{
-                     ModelRanger* ranger = (ModelRanger*)mod->GetModel("ranger:0");  		
-                     
-		     if(ranger){
-					uint32_t count = ranger->sensor_count;
-					if(ranger->sensors)
-						for(unsigned int i=0;i<count;i++){
-							websim::Pose pos;
-							Pose rpos;
-							rpos = ranger->sensors[i].pose;
-							pos.x = rpos.x;
-							pos.y = rpos.y;
-							pos.z = rpos.z;
-							pos.a = rpos.a;
-							p.push_back(pos);					
-						}
-				
-		     }else{
-
-				printf( "Warning: attempt to get ranger Cfg data for unrecognized ranger model of model \"%s\"\n",
-				  name.c_str() );
-  				return false;
-
-
-		          }
-	         	  
+	}
+	else
+	{
+		Model* mod = world->GetModel(name.c_str());
+		if(mod){
+			Geom ext = mod->GetGeom();
+    	
+			x = ext.size.x;
+			y = ext.size.y;
+			z = ext.size.z;
 		}
-	 else{
-		printf( "Warning: attempt to get ranger Cfg data for unrecognized model \"%s\"\n",
-				  name.c_str() );
-  		return false;
-	     }
+		else
+		{
+		  printf("Warning: attemp ti get the extent of unrecognized model \"%s\"\n", name.c_str());
+		  return false;		
+		}
+	}
 
-  	return true;
-
-
-   }
+	return true;
+  }
 
   virtual websim::Time GetTime()
   {
