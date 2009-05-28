@@ -806,7 +806,10 @@ namespace Stg
 	 void Save( Worldfile* wf, int section );
 	 
   public:
-	 
+    	
+    /** get the children of the this element */
+    GList* GetChildren(){ return children;}
+     
     /** recursively call func( model, arg ) for each descendant */
     void ForEachDescendant( stg_model_callback_t func, void* arg );
 	 
@@ -1874,6 +1877,9 @@ namespace Stg
 	 WorldGui* world_gui; //pointer to the GUI world - NULL if running in non-gui mode
 
   public:
+	
+         stg_model_type_t GetModelType(){return type;}
+	 const char* GetSayString(){return say_string;}
 
 	 Visibility vis;
 
@@ -2038,7 +2044,7 @@ namespace Stg
 	 void LoadDataBaseEntries( Worldfile* wf, int entity );
 	 
   public:
-
+         	
 	 virtual void PushColor( stg_color_t col )
 	 { world->PushColor( col ); }
 	
