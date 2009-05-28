@@ -332,8 +332,58 @@ public:
 		}
 		else
 		{
-		  printf("Warning: attemp ti get the extent of unrecognized model \"%s\"\n", name.c_str());
+		  printf("Warning: attemp to get the extent of unrecognized model \"%s\"\n", name.c_str());
 		  return false;		
+		}
+	}
+        GetModelTree();
+	return true;
+  }
+
+   static int CountRobots(Model * mod, int* n ){
+ 
+ 	if(n && mod->GetModelType() == MODEL_TYPE_POSITION)
+		(*n)++;
+  
+	return 0;
+   } 
+  
+   virtual bool GetNumberOfRobots(unsigned int& n)
+   {
+	
+	
+	world->ForEachDescendant((stg_model_callback_t)CountRobots, &n);	
+	return true;
+
+   }
+
+   virtual bool GetModelTree()
+  {
+	
+//	world->ForEachDescendant((stg_model_callback_t)printname, NULL);	
+
+	return true;
+  }
+  
+  virtual bool GetSayStrings(std::vector<std::string>& sayings)
+  {
+	unsigned int n=0;
+	this->GetNumberOfRobots(n);
+	
+	for(int i=0;i<n;i++){
+		char temp[128];
+		sprintf(temp,"position:%d",i);
+		Model *mod = world->GetModel(temp);
+		if(mod->GetSayString())
+		{	
+			
+			std::string str = temp;
+			str += " says: \" ";
+			str += mod->GetSayString();
+			str += " \"\n ";
+			
+			sayings.push_back(str);
+			
 		}
 	}
 
