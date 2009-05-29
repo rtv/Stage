@@ -1879,7 +1879,8 @@ namespace Stg
   public:
 	
          stg_model_type_t GetModelType(){return type;}
-	 const char* GetSayString(){return say_string;}
+	 
+	 std::string GetSayString(){return std::string(say_string);}
 
 	 Visibility vis;
 

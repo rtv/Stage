@@ -216,45 +216,6 @@ public:
   return true;
 
   }					   
-  virtual bool GetLaserCfgData(const std::string& name,
-									websim::Time& t,
-									uint32_t& resolution,
-									double& fov,
-						 			websim::Pose& p,
-        								std::string& error)
-{
-
-	 t = GetTime();
-
-	 Model* mod = world->GetModel( name.c_str() );
-	 if( mod )
-		{
-                     ModelLaser* laser = (ModelLaser*)mod->GetModel("laser:0");  		
-                     
-		     if(laser){
-				stg_laser_cfg_t cfg = laser->GetConfig();
-		     		resolution =  cfg.resolution;
-				fov = cfg.fov;
-				//There is no way to access the position of the laser
-		     }else{
-
-				printf( "Warning: attempt to get laser config data for unrecognized laser model of model \"%s\"\n",
-				  name.c_str() );
-  				return false;
-
-
-		          }
-	         	  
-		}
-	 else{
-		printf( "Warning: attempt to get laser config data for unrecognized model \"%s\"\n",
-				  name.c_str() );
-  		return false;
-	     }
-
-  return true;
-
-  }					   
   virtual bool GetRangerData(const std::string& name,
 									websim::Time& t,
 									std::vector<websim::Pose>& p,
@@ -309,6 +270,7 @@ public:
 									double& x,
 									double& y,
 									double& z,
+									websim::Pose& center,
 									std::string& response)
   {
 	if(name == "sim"){
@@ -329,6 +291,9 @@ public:
 			x = ext.size.x;
 			y = ext.size.y;
 			z = ext.size.z;
+			center.x = ext.pose.x;
+			center.y = ext.pose.y;
+			center.a = ext.pose.a;
 		}
 		else
 		{
@@ -374,13 +339,13 @@ public:
 		char temp[128];
 		sprintf(temp,"position:%d",i);
 		Model *mod = world->GetModel(temp);
-		if(mod->GetSayString())
+		if(mod->GetSayString() != "")
 		{	
 			
 			std::string str = temp;
 			str += " says: \" ";
 			str += mod->GetSayString();
-			str += " \"\n ";
+			str += " \" ";
 			
 			sayings.push_back(str);
 			
