@@ -106,7 +106,7 @@ define pioneer_base position
   fiducial_return 1           	# Seen as "1" fiducial finders
 
   localization "gps"         	  
-  localization_origin [0 0 0] 	# Start odometry at (0, 0, 0).
+  localization_origin [0 0 0 0] 	# Start odometry at (0, 0, 0).
 
   # alternative odometric localization with simple error model
   # localization "odom"         		# Change to "gps" to have impossibly perfect, global odometry
