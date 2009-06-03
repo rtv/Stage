@@ -54,6 +54,11 @@
 using namespace Stg;
 
 
+RaytraceResult Ray::Trace()
+{ 
+	return mod->world->Raytrace( origin, range, func, mod, arg, ztest );
+}
+
 // static data members
 unsigned int World::next_id = 0;
 bool World::quit_all = false;
@@ -597,24 +602,6 @@ void World::ClearRays()
 }
 
 
-void World::Raytrace( std::vector<Ray>& rays )
-{
-  rt_cells.clear();
-  rt_candidate_cells.clear();
-
-  //printf( "===================\n" );
-
-  for( std::vector<Ray>::iterator it = rays.begin();
-		 it != rays.end();
-		 ++it )
-	 Raytrace( *it );
-}
-
-inline void World::Raytrace( Ray& r )
-{
-  r.result = Raytrace( r.origin, r.range, r.func, r.mod, r.arg, r.ztest );
-}
-
 void World::Raytrace( const Pose &gpose, // global pose
 							 const stg_meters_t range,
 							 const stg_radians_t fov,
@@ -643,33 +630,39 @@ void World::Raytrace( const Pose &gpose, // global pose
 
 // Stage spends 50-99% of its time in this method.
 stg_raytrace_result_t World::Raytrace( const Pose &gpose, 
-													const stg_meters_t range,
-													const stg_ray_test_func_t func,
-													const Model* mod,		
-													const void* arg,
-													const bool ztest ) 
+																			 const stg_meters_t range,
+																			 const stg_ray_test_func_t func,
+																			 const Model* mod,		
+																			 const void* arg,
+																			 const bool ztest ) 
+{
+	Ray r( mod, gpose, range, func, arg, ztest );
+	return Raytrace( r );
+}
+		
+stg_raytrace_result_t World::Raytrace( const Ray& r )
 {
   //rt_cells.clear();
   //rt_candidate_cells.clear();
   
   // initialize the sample
-  RaytraceResult sample( gpose, range );
+  RaytraceResult sample( r.origin, r.range );
 	
   // our global position in (floating point) cell coordinates
-  stg_point_t glob( gpose.x * ppm, gpose.y * ppm );
+  stg_point_t glob( r.origin.x * ppm, r.origin.y * ppm );
 	
   // record our starting position
   const stg_point_int_t start( glob.x, glob.y );
   
   // eliminate a potential divide by zero
-  const double angle( gpose.a == 0.0 ? 1e-12 : gpose.a );
+  const double angle( r.origin.a == 0.0 ? 1e-12 : r.origin.a );
   const double cosa(cos(angle));
   const double sina(sin(angle));
   const double tana(sina/cosa); // = tan(angle)
 
   // and the x and y offsets of the ray
-  const int dx( ppm * range * cosa);
-  const int dy( ppm * range * sina);
+  const int dx( ppm * r.range * cosa);
+  const int dy( ppm * r.range * sina);
   
   // fast integer line 3d algorithm adapted from Cohen's code from
   // Graphics Gems IV  
@@ -719,9 +712,9 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 		// coordinates of the region inside the superregion
 		int32_t rx = GETREG(glob.x);
 		int32_t ry = GETREG(glob.y);		
-		Region* r = &sr->regions[ rx + (ry*SuperRegion::WIDTH) ];
+		Region* reg = &sr->regions[ rx + (ry*SuperRegion::WIDTH) ];
 
-		if( r->count ) // if the region contains any objects
+		if( reg->count ) // if the region contains any objects
 		  {
 			 // invalidate the region crossing points used to jump over
 			 // empty regions
@@ -731,7 +724,7 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 			 int32_t cx = GETCELL(glob.x); 
 			 int32_t cy = GETCELL(glob.y);
 			 
-			 Cell* c = &r->cells[ cx + cy * Region::WIDTH ];
+			 Cell* c = &reg->cells[ cx + cy * Region::WIDTH ];
 			 assert(c); // should be a cell there 
 			 
 			 // while within the bounds of this region and while some ray remains
@@ -749,13 +742,13 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 						Block* block = *it;
 						
 						// skip if not in the right z range
-						if( ztest && 
-							 ( gpose.z < block->global_z.min || 
-									 gpose.z > block->global_z.max ) )
+						if( r.ztest && 
+							 ( r.origin.z < block->global_z.min || 
+									 r.origin.z > block->global_z.max ) )
 						  continue; 
 						
 						// test the predicate we were passed
-						if( (*func)( block->mod, (Model*)mod, arg )) 
+						if( (*r.func)( block->mod, (Model*)r.mod, r.arg )) 
 						  {
 							 // a hit!
 							 sample.color = block->GetColor();

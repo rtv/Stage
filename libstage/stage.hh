@@ -851,13 +851,21 @@ namespace Stg
   class Ray
   {
   public:
-		Model* mod;
+		Ray( const Model* mod, const Pose& origin, const stg_meters_t range, const stg_ray_test_func_t func, const void* arg, const bool ztest ) :
+			mod(mod), origin(origin), range(range), func(func), arg(arg), ztest(ztest)
+		{}
+
+		Ray() : mod(NULL), origin(0,0,0,0), range(0), func(NULL), arg(NULL), ztest(true)
+		{}
+
+		const Model* mod;
 		Pose origin;
 		stg_meters_t range;
 		stg_ray_test_func_t func;
-		void* arg;
+		const void* arg;
 		bool ztest;		
-		RaytraceResult result;	 
+
+	 	RaytraceResult Trace();
   };
 		
   const uint32_t INTERVAL_LOG_LEN = 32;
@@ -1013,12 +1021,9 @@ namespace Stg
 	 
     SuperRegion* CreateSuperRegion( stg_point_int_t origin );
     void DestroySuperRegion( SuperRegion* sr );
-	 
-	 /** trace a vector of rays all in one go. */
-	 void Raytrace( std::vector<Ray>& rays );
-	 
+	 	 
 	 /** trace a ray. */
-	 void Raytrace( Ray& ray );
+	 stg_raytrace_result_t Raytrace( const Ray& ray );
 
     stg_raytrace_result_t Raytrace( const Pose& pose, 			 
 												const stg_meters_t range,
@@ -1737,6 +1742,7 @@ namespace Stg
 	 friend class Region;
 	 friend class BlockGroup;
 	 friend class PowerPack;
+	 friend class Ray;
 
   private:
 	 /** the number of models instatiated - used to assign unique IDs */
@@ -2499,8 +2505,9 @@ namespace Stg
 	 	
 		unsigned int sample_count;
 		std::vector<Sample> samples;
-  	std::vector<Ray> rays;
-		
+  	//std::vector<Ray> rays;
+		//Ray ray;
+
 		stg_meters_t range_max;
 		stg_radians_t fov;
 		uint32_t resolution;

@@ -190,7 +190,7 @@ ModelLaser::ModelLaser( World* world,
 	 vis( world ),
     sample_count( DEFAULT_SAMPLES ),
     samples(),
-		rays(),
+		//ray( this, ),
     range_max( DEFAULT_MAXRANGE ),
     fov( DEFAULT_FOV ),
     resolution( DEFAULT_RESOLUTION )
@@ -279,59 +279,43 @@ static bool laser_raytrace_match( Model* hit,
 void ModelLaser::SampleConfig()
 {
   samples.resize( sample_count );
-  rays.resize( sample_count );
-  
-  for( unsigned int t=0; t<sample_count; ++t )
-	 {
-		// configure a normal ray with our laser-specific settings
-		rays[t].func = laser_raytrace_match; 
-		rays[t].arg = NULL;
-		rays[t].ztest = true;
-		rays[t].range = range_max;
-		rays[t].mod = this;
-	 }
 }
 
 void ModelLaser::Update( void )
 {     
   assert( samples.size() == sample_count );
-  assert( rays.size() == sample_count );
+  //assert( rays.size() == sample_count );
   
   double bearing = -fov/2.0;
   // make the first and last rays exactly at the extremes of the FOV
   double sample_incr = fov / MAX(sample_count-1,1);
   
+	// find the global origin of our first emmitted ray
   Pose rayorg = geom.pose;
   rayorg.z += geom.size.z/2.0;
   rayorg.a = bearing;// + sample_incr/2.0;
   rayorg = LocalToGlobal(rayorg);
-  
-  // set up the ray origins in global coords
-  for( unsigned int t=0; t<sample_count; t += resolution )
-    {
-			rays[t].origin = rayorg;		
-      rayorg.a += sample_incr;
-		}
-  
-  // do the raytracing of all rays in one go (allows parallel implementation)
-  world->Raytrace( rays );
-  
-  // now process the results and fill in our samples
-  for( unsigned int t=0; t<sample_count; t += resolution )
-    {
-		stg_raytrace_result_t* r = &rays[t].result;
-		assert( r );
 
-      samples[t].range = r->range;
-		
+	// set up a ray to trace
+	Ray ray( this, rayorg, range_max, laser_raytrace_match, NULL, true );
+	
+	// trace the ray, incrementing its heading for each sample
+  for( unsigned int t=0; t<sample_count; t += resolution )
+    {
+			stg_raytrace_result_t r = ray.Trace();  
+			samples[t].range = r.range;
+			
       // if we hit a model and it reflects brightly, we set
       // reflectance high, else low
-      if( r->mod && ( r->mod->vis.laser_return >= LaserBright ) )	
-		  samples[t].reflectance = 1;
+      if( r.mod && ( r.mod->vis.laser_return >= LaserBright ) )	
+				samples[t].reflectance = 1;
       else
-		  samples[t].reflectance = 0;		
+				samples[t].reflectance = 0;		
+
+			// point the ray to the next angle
+			ray.origin.a += sample_incr;
     }
-    
+	
   // we may need to interpolate the samples we skipped 
   if( resolution > 1 )
     {
