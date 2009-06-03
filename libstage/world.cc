@@ -53,12 +53,6 @@
 #include "option.hh"
 using namespace Stg;
 
-
-RaytraceResult Ray::Trace()
-{ 
-	return mod->world->Raytrace( origin, range, func, mod, arg, ztest );
-}
-
 // static data members
 unsigned int World::next_id = 0;
 bool World::quit_all = false;

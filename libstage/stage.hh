@@ -864,8 +864,6 @@ namespace Stg
 		stg_ray_test_func_t func;
 		const void* arg;
 		bool ztest;		
-
-	 	RaytraceResult Trace();
   };
 		
   const uint32_t INTERVAL_LOG_LEN = 32;

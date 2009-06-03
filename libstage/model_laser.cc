@@ -302,7 +302,7 @@ void ModelLaser::Update( void )
 	// trace the ray, incrementing its heading for each sample
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
-			stg_raytrace_result_t r = ray.Trace();  
+			stg_raytrace_result_t r = world->Raytrace( ray );
 			samples[t].range = r.range;
 			
       // if we hit a model and it reflects brightly, we set
