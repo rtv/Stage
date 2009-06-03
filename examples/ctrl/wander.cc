@@ -41,7 +41,7 @@ int LaserUpdate( Model* mod, robot_t* robot )
 {
   // get the data
   uint32_t sample_count=0;
-  stg_laser_sample_t* scan = robot->laser->GetSamples( &sample_count );
+	ModelLaser::Sample* scan = robot->laser->GetSamples( &sample_count );
   if( ! scan )
     return 0;
   

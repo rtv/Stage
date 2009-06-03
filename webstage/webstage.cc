@@ -184,17 +184,17 @@ public:
 	 Model* mod = world->GetModel( name.c_str() );
 	 if( mod )
 		{
-                     ModelLaser* laser = (ModelLaser*)mod->GetModel("laser:0");  		
-                     
-		     if(laser){
-		     		uint32_t sample_count=0;
-  		     		stg_laser_sample_t* scan = laser->GetSamples( &sample_count );
-        	     		assert(scan);
-		     
-				stg_laser_cfg_t cfg = laser->GetConfig();
-		     		resolution =  cfg.resolution;
+			ModelLaser* laser = (ModelLaser*)mod->GetModel("laser:0");  		
+			
+			if(laser){
+				uint32_t sample_count=0;
+				ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
+				assert(scan);
+		    
+				ModelLaser::Config  cfg = laser->GetConfig();
+				resolution =  cfg.resolution;
 				fov = cfg.fov;
-               	     		
+        
 				for(unsigned int i=0;i<sample_count;i++)
 					ranges.push_back(scan[i].range);
 		     }else{
@@ -225,38 +225,33 @@ public:
 
 	 Model* mod = world->GetModel( name.c_str() );
 	 if( mod )
-		{
-                     ModelRanger* ranger = (ModelRanger*)mod->GetModel("ranger:0");  		
-                     
-		     if(ranger){
-					uint32_t count = ranger->sensor_count;
-					if(ranger->samples)
-						for(unsigned int i=0;i<count;i++)
-							ranges.push_back(ranger->samples[i]);
-					//std::copy(ranger->samples,ranger->samples+ranger->sensor_count,ranges.begin());
-					
-					if(ranger->sensors)
-						for(unsigned int i=0;i<count;i++){
-							websim::Pose pos;
-							Pose rpos;
-							rpos = ranger->sensors[i].pose;
-							pos.x = rpos.x;
-							pos.y = rpos.y;
-							pos.z = rpos.z;
-							pos.a = rpos.a;
-							p.push_back(pos);					
-						}
-				
-		     }else{
-
-				printf( "Warning: attempt to get ranger data for unrecognized ranger model of model \"%s\"\n",
-				  name.c_str() );
-  				return false;
-
-
-		          }
-	         	  
-		}
+		 {
+			 ModelRanger* ranger = (ModelRanger*)mod->GetModel("ranger:0");  		
+       
+			 if(ranger){
+				 uint32_t count = ranger->sensors.size();
+				 for(unsigned int i=0;i<count;i++)
+					 ranges.push_back(ranger->sensors[i].range);
+				 //std::copy(ranger->samples,ranger->samples+ranger->sensor_count,ranges.begin());
+				 
+				 for(unsigned int i=0;i<count;i++){
+					 websim::Pose pos;
+					 Pose rpos;
+					 rpos = ranger->sensors[i].pose;
+					 pos.x = rpos.x;
+					 pos.y = rpos.y;
+					 pos.z = rpos.z;
+					 pos.a = rpos.a;
+					 p.push_back(pos);					
+				 }
+				 
+			 }else{
+				 
+				 printf( "Warning: attempt to get ranger data for unrecognized ranger model of model \"%s\"\n",
+								 name.c_str() );
+				 return false;				 				 
+			 }	     
+		 }
 	 else{
 		printf( "Warning: attempt to get ranger data for unrecognized model \"%s\"\n",
 				  name.c_str() );
@@ -335,7 +330,7 @@ public:
 	unsigned int n=0;
 	this->GetNumberOfRobots(n);
 	
-	for(int i=0;i<n;i++){
+	for(unsigned int i=0;i<n;i++){
 		char temp[128];
 		sprintf(temp,"position:%d",i);
 		Model *mod = world->GetModel(temp);

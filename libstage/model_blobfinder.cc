@@ -81,36 +81,26 @@ blobfinder
  */
 
 
-ModelBlobfinder::ModelBlobfinder( World* world, 
-													 Model* parent )
-  : Model( world, parent, MODEL_TYPE_BLOBFINDER )
+	ModelBlobfinder::ModelBlobfinder( World* world, 
+																		Model* parent )
+  : Model( world, parent, MODEL_TYPE_BLOBFINDER ),
+									blobs(),
+									colors(),
+									fov( DEFAULT_BLOBFINDERFOV ),
+									pan( DEFAULT_BLOBFINDERPAN ),
+									range( DEFAULT_BLOBFINDERRANGE ),
+									scan_height( DEFAULT_BLOBFINDERSCANHEIGHT ),
+									scan_width( DEFAULT_BLOBFINDERSCANWIDTH )
 {
 	PRINT_DEBUG2( "Constructing ModelBlobfinder %d (%s)\n", 
-			id, typestr );
-
-	scan_width = DEFAULT_BLOBFINDERSCANWIDTH;
-	scan_height = DEFAULT_BLOBFINDERSCANHEIGHT;
-	fov = DEFAULT_BLOBFINDERFOV;
-	range = DEFAULT_BLOBFINDERRANGE;
-
+								id, typestr );	
 	ClearBlocks();
-
-	blobs = g_array_new( false, true, sizeof(stg_blobfinder_blob_t));
-
-	// leave the color filter array empty initally - this tracks all colors
-	colors = g_array_new( false, true, sizeof(stg_color_t) );
-	
 	RegisterOption( &showBlobData );
 }
 
 
 ModelBlobfinder::~ModelBlobfinder( void )
 {
-	if( blobs )
-		g_array_free( blobs, true );
-
-	if( colors )
-		g_array_free( colors, true );
 }
 
 static bool blob_match( Model* candidate, 
@@ -128,22 +118,26 @@ static bool ColorMatchIgnoreAlpha( stg_color_t a, stg_color_t b )
 
 void ModelBlobfinder::ModelBlobfinder::AddColor( stg_color_t col )
 {
-	g_array_append_val( colors, col );
+	colors.push_back( col );
 }
 
 /** Stop tracking blobs with this color */
 void ModelBlobfinder::RemoveColor( stg_color_t col )
 {
-	for( unsigned int i=0; i<colors->len; i++ )
-		if( col ==  g_array_index( colors, stg_color_t, i ) )      
-			g_array_remove_index_fast( colors, i );
+	for( std::vector<stg_color_t>::iterator it = colors.begin();
+			 it != colors.end();
+			 ++it )
+		{
+			if( (*it) ==  col  )
+				it = colors.erase(it);
+		}
 }
 
 /** Stop tracking all colors. Call this to clear the defaults, then
   add colors individually with AddColor(); */
 void ModelBlobfinder::RemoveAllColors()
 {
-	g_array_set_size( colors, 0 );
+	colors.clear();
 }
 
 void ModelBlobfinder::Load( void )
@@ -191,7 +185,7 @@ void ModelBlobfinder::Update( void )
 	// now the colors and ranges are filled in - time to do blob detection
 	double yRadsPerPixel = fov / scan_height;
 
-	g_array_set_size( blobs, 0 );
+	blobs.clear();
 
 	// scan through the samples looking for color blobs
 	for(unsigned int s=0; s < scan_width; s++ )
@@ -220,12 +214,12 @@ void ModelBlobfinder::Update( void )
 		unsigned int left = s - 1;
 
 		//if we have color filters in place, check to see if we're looking for this color
-		if( colors->len )
+		if( colors.size() )
 		{
 			bool found = false;
 
-			for( unsigned int c=0; c<colors->len; c++ )
-				if( ColorMatchIgnoreAlpha( blobcol, g_array_index( colors, stg_color_t, c )))
+			for( unsigned int c=0; c<colors.size(); c++ )
+				if( ColorMatchIgnoreAlpha( blobcol, colors[c]))
 				{
 					found = true;
 					break;
@@ -253,8 +247,7 @@ void ModelBlobfinder::Update( void )
 		blobbottom = MIN( blobbottom, (int)scan_height );
 
 		// fill in an array entry for this blob
-		stg_blobfinder_blob_t blob;
-		memset( &blob, 0, sizeof(blob) );
+		Blob blob;
 		blob.color = blobcol;
 		blob.left = scan_width - left - 1;
 		blob.top = blobtop;
@@ -266,12 +259,11 @@ void ModelBlobfinder::Update( void )
 		//  mod, blob.color, blob.xpos, blob.ypos );
 
 		// add the blob to our stash
-		g_array_append_val( blobs, blob );
+		//g_array_append_val( blobs, blob );
+		blobs.push_back( blob );
 	}
 
 	delete [] samples;
-
-	//data_dirty = true;
 }
 
 
@@ -294,8 +286,7 @@ void ModelBlobfinder::Shutdown( void )
 	SetWatts( 0 );
 
 	// clear the data - this will unrender it too
-	if( blobs )
-		g_array_set_size( blobs, 0 );
+	blobs.clear();
 
 	Model::Shutdown();
 }
@@ -362,10 +353,11 @@ void ModelBlobfinder::DataVisualize( Camera* cam )
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
 	// draw the blobs on the screen
-	for( unsigned int s=0; s<blobs->len; s++ )
+	for( unsigned int s=0; s<blobs.size(); s++ )
 	{
-		stg_blobfinder_blob_t* b = 
-			&g_array_index( blobs, stg_blobfinder_blob_t, s);
+		Blob* b = &blobs[s];
+		//stg_blobfinder_blob_t* b = 
+		//&g_array_index( blobs, stg_blobfinder_blob_t, s);
 
 		PushColor( b->color );
 		glRectf( b->left, b->top, b->right, b->bottom );

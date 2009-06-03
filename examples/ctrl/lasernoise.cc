@@ -25,7 +25,7 @@ int LaserUpdate( ModelLaser* mod, void* dummy )
 {
   // get the data
   uint32_t sample_count=0;
-  stg_laser_sample_t* scan = mod->GetSamples( &sample_count );
+	ModelLaser::Sample* scan = mod->GetSamples( &sample_count );
   
   if( scan )
     for( unsigned int i=0; i<sample_count; i++ )

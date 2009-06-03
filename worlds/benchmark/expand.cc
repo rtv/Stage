@@ -27,7 +27,7 @@ typedef struct
 #define SAFE_ANGLE 1 // radians
 
 // forward declare
-int RangerUpdate( Model* mod, robot_t* robot );
+int RangerUpdate( ModelRanger* mod, robot_t* robot );
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
@@ -51,23 +51,19 @@ extern "C" int Init( Model* mod )
   return 0; //ok
 }
 
-int RangerUpdate( Model* mod, robot_t* robot )
-{
-  ModelRanger* rgr = robot->ranger;
-  
-  if( rgr->samples == NULL )
-	 return 0;
-  
+int RangerUpdate( ModelRanger* rgr, robot_t* robot )
+{  	
   // compute the vector sum of the sonar ranges	      
   double dx=0, dy=0;
-  
-  for( unsigned int s=0; s< rgr->sensor_count; s++ )
-	 {
-		double srange = rgr->samples[s];
-		
-		dx += srange * cos( rgr->sensors[s].pose.a );
-		dy += srange * sin( rgr->sensors[s].pose.a );
-
+	
+	for( std::vector<ModelRanger::Sensor>::iterator it = rgr->sensors.begin();
+			 it != rgr->sensors.end();
+			 ++it )
+		{
+			ModelRanger::Sensor& s = *it;
+			dx += s.range * cos( s.pose.a );
+			dy += s.range * sin( s.pose.a );
+			
 		//printf( "sensor %d angle= %.2f\n", s, rgr->sensors[s].pose.a );	 
 	 }
   
@@ -85,11 +81,11 @@ int RangerUpdate( Model* mod, robot_t* robot )
   //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
 
   // if the front is clear, drive forwards
-  if( (rgr->samples[0] > SAFE_DIST) &&
-		(rgr->samples[1] > SAFE_DIST/2.0) &&
-		(rgr->samples[2] > SAFE_DIST/5.0) && 
-		(rgr->samples[15] > SAFE_DIST/2.0) && 
-		(rgr->samples[14] > SAFE_DIST/5.0) && 
+  if( (rgr->sensors[0].range > SAFE_DIST) &&
+		(rgr->sensors[1].range > SAFE_DIST/2.0) &&
+		(rgr->sensors[2].range > SAFE_DIST/5.0) && 
+		(rgr->sensors[15].range > SAFE_DIST/2.0) && 
+		(rgr->sensors[14].range > SAFE_DIST/5.0) && 
 		(fabs( resultant_angle ) < SAFE_ANGLE) )
 	 {
 		forward_speed = VSPEED;

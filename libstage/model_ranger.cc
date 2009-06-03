@@ -101,7 +101,6 @@ static const char RANGER_GEOM_COLOR[] = "orange";
 Option ModelRanger::showRangerData( "Ranger ranges", "show_ranger", "", true, NULL );
 Option ModelRanger::showRangerTransducers( "Ranger transducers", "show_ranger_transducers", "", false, NULL );
 
-
 ModelRanger::ModelRanger( World* world, 
 			  Model* parent ) 
   : Model( world, parent, MODEL_TYPE_RANGER )
@@ -121,23 +120,20 @@ ModelRanger::ModelRanger( World* world,
   this->ClearBlocks();
 
   Geom geom;
-  memset( &geom, 0, sizeof(geom)); // no size
   geom.size.x = RANGER_SIZEX;
   geom.size.y = RANGER_SIZEY;
   geom.size.z = RANGER_SIZEZ;
   this->SetGeom( geom );
 
-  samples = NULL;
-  sensor_count = RANGER_SENSORCOUNT;
-  sensors = new stg_ranger_sensor_t[sensor_count];
-
   // spread the transducers around the ranger's body
   double offset = MIN(geom.size.x, geom.size.y) / 2.0;
-
+	
+	sensors.resize( RANGER_SENSORCOUNT );
+	
   // create default ranger config
-  for( unsigned int c=0; c<sensor_count; c++ )
+  for( unsigned int c=0; c<sensors.size(); c++ )
     {
-      sensors[c].pose.a = (2.0*M_PI)/sensor_count * c;
+      sensors[c].pose.a = (2.0*M_PI)/sensors.size() * c;
       sensors[c].pose.x = offset * cos( sensors[c].pose.a );
       sensors[c].pose.y = offset * sin( sensors[c].pose.a );
       sensors[c].pose.z = geom.size.z / 2.0; // half way up
@@ -148,8 +144,10 @@ ModelRanger::ModelRanger( World* world,
 
       sensors[c].bounds_range.min = RANGER_RANGEMIN;
       sensors[c].bounds_range.max = RANGER_RANGEMAX;;
-      sensors[c].fov = (2.0*M_PI)/(sensor_count+1);
+      sensors[c].fov = (2.0*M_PI)/(sensors.size()+1);
       sensors[c].ray_count = RANGER_RAYCOUNT;
+
+			sensors[c].range = 0; // invalid range
     }
 	
   RegisterOption( &showRangerData );
@@ -158,8 +156,6 @@ ModelRanger::ModelRanger( World* world,
 
 ModelRanger::~ModelRanger()
 {
-  if( sensors )
-	 delete[] sensors;
 }
 
 void ModelRanger::Startup( void )
@@ -168,7 +164,7 @@ void ModelRanger::Startup( void )
 
   PRINT_DEBUG( "ranger startup" );
 
-  this->SetWatts( RANGER_WATTSPERSENSOR * sensor_count );
+  this->SetWatts( RANGER_WATTSPERSENSOR * sensors.size() );
 }
 
 
@@ -177,12 +173,6 @@ void ModelRanger::Shutdown( void )
   PRINT_DEBUG( "ranger shutdown" );
 
   this->SetWatts( 0 );
-
-  if( this->samples )
-    {
-      delete[] samples;
-      samples = NULL;
-    }
 
   Model::Shutdown();
 }
@@ -196,13 +186,12 @@ void ModelRanger::Load( void )
       PRINT_DEBUG( "Loading ranger array" );
 
       // Load the geometry of a ranger array
-      sensor_count = wf->ReadInt( wf_entity, "scount", 0);
+      int sensor_count = wf->ReadInt( wf_entity, "scount", 0);
       assert( sensor_count > 0 );
 		
       char key[256];
-		
-      if( sensors ) delete [] sensors;
-      sensors = new stg_ranger_sensor_t[sensor_count];
+	 
+			sensors.resize( sensor_count );
 
       Size common_size;
       common_size.x = wf->ReadTupleLength( wf_entity, "ssize", 0, RANGER_SIZEX );
@@ -213,52 +202,53 @@ void ModelRanger::Load( void )
       double common_fov = wf->ReadTupleAngle( wf_entity, "sview", 2, M_PI / (double)sensor_count );
 
       int common_ray_count = wf->ReadInt( wf_entity, "sraycount", sensors[0].ray_count );
-
+			
       // set all transducers with the common settings
-      for( unsigned int i = 0; i < sensor_count; i++)
-	{
-	  sensors[i].size.x = common_size.x;
-	  sensors[i].size.y = common_size.y;
-	  sensors[i].bounds_range.min = common_min;
-	  sensors[i].bounds_range.max = common_max;
-	  sensors[i].fov = common_fov;
-	  sensors[i].ray_count = common_ray_count;	  
-	}
+      for( unsigned int i = 0; i < sensors.size(); i++)
+				{
+					sensors[i].size.x = common_size.x;
+					sensors[i].size.y = common_size.y;
+					sensors[i].bounds_range.min = common_min;
+					sensors[i].bounds_range.max = common_max;
+					sensors[i].fov = common_fov;
+					sensors[i].ray_count = common_ray_count;	  
+					sensors[i].range = 0.0;
+				}
 
       // TODO - do this properly, without the hard-coded defaults
       // allow individual configuration of transducers
-      for( unsigned int i = 0; i < sensor_count; i++)
-	{
-	  snprintf(key, sizeof(key), "spose[%d]", i);
-	  sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
-	  sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
-	  sensors[i].pose.z = 0.0;
-	  sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 2, sensors[i].pose.a );
-
-	  snprintf(key, sizeof(key), "spose3[%d]", i);
-	  sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
-	  sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
-	  sensors[i].pose.z = wf->ReadTupleLength( wf_entity, key, 2, sensors[i].pose.z );
-	  sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 3, sensors[i].pose.a );
-
-	  /* 	  snprintf(key, sizeof(key), "ssize[%d]", i); */
-	  /* 	  sensors[i].size.x = wf->ReadTuplelength(mod->id, key, 0, 0.01); */
-	  /* 	  sensors[i].size.y = wf->ReadTuplelength(mod->id, key, 1, 0.05); */
-
-	  /* 	  snprintf(key, sizeof(key), "sview[%d]", i); */
-	  /* 	  sensors[i].bounds_range.min = */
-	  /* 	    wf->ReadTuplelength(mod->id, key, 0, 0); */
-	  /* 	  sensors[i].bounds_range.max =   // set up sensible defaults */
-
-	  /* 	    wf->ReadTuplelength(mod->id, key, 1, 5.0); */
-	  /* 	  sensors[i].fov */
-	  /* 	    = DTOR(wf->ReadTupleangle(mod->id, key, 2, 5.0 )); */
-
-
-	  /* 	  sensors[i].ray_count = common_ray_count; */
-
-	}
-
+      for( unsigned int i = 0; i < sensors.size(); i++)
+				{
+					snprintf(key, sizeof(key), "spose[%d]", i);
+					sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
+					sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
+					sensors[i].pose.z = 0.0;
+					sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 2, sensors[i].pose.a );
+					
+					snprintf(key, sizeof(key), "spose3[%d]", i);
+					sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
+					sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
+					sensors[i].pose.z = wf->ReadTupleLength( wf_entity, key, 2, sensors[i].pose.z );
+					sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 3, sensors[i].pose.a );
+					
+					/* 	  snprintf(key, sizeof(key), "ssize[%d]", i); */
+					/* 	  sensors[i].size.x = wf->ReadTuplelength(mod->id, key, 0, 0.01); */
+					/* 	  sensors[i].size.y = wf->ReadTuplelength(mod->id, key, 1, 0.05); */
+					
+					/* 	  snprintf(key, sizeof(key), "sview[%d]", i); */
+					/* 	  sensors[i].bounds_range.min = */
+					/* 	    wf->ReadTuplelength(mod->id, key, 0, 0); */
+					/* 	  sensors[i].bounds_range.max =   // set up sensible defaults */
+					
+					/* 	    wf->ReadTuplelength(mod->id, key, 1, 5.0); */
+					/* 	  sensors[i].fov */
+					/* 	    = DTOR(wf->ReadTupleangle(mod->id, key, 2, 5.0 )); */
+					
+					
+					/* 	  sensors[i].ray_count = common_ray_count; */
+					
+				}
+			
       PRINT_DEBUG1( "loaded %d ranger configs", (int)sensor_count );	  
     }
 }
@@ -270,36 +260,34 @@ static bool ranger_match( Model* candidate,
   //    block->Model()->Token(), block->Model(), block->Model()->LaserReturn() );
 
   // Ignore myself, my children, and my ancestors.
-  return( candidate->vis.ranger_return && 
-	  !candidate->IsRelated( finder ) );
+  return( candidate->vis.ranger_return && !candidate->IsRelated( finder ) );
 }	
 
 void ModelRanger::Update( void )
 {     
   Model::Update();
 
-  if( (sensors == NULL) || (sensor_count < 1 ))
-    return;
-
-  if( samples ==  NULL )
-    samples = new stg_meters_t[sensor_count];
-  assert( samples );
+	if( sensors.size() < 1 )
+		return;
 
   //PRINT_DEBUG2( "[%d] updating ranger %s", (int)world->sim_time_ms, token );
-
+	
   // raytrace new range data for all sensors
-  for( unsigned int t=0; t<sensor_count; t++ )
+  for( std::vector<Sensor>::iterator it = sensors.begin();
+			 it != sensors.end();
+			 ++it )
     {
-
+			Sensor& s = *it;
+			
       // TODO - reinstate multi-ray rangers
       //for( int r=0; r<sensors[t].ray_count; r++ )
       //{	  
-      stg_raytrace_result_t ray = Raytrace( sensors[t].pose,
-					    sensors[t].bounds_range.max,
-					    ranger_match,
-					    NULL );
-	  
-      samples[t] = MAX( ray.range, sensors[t].bounds_range.min );
+      stg_raytrace_result_t ray = Raytrace( s.pose,
+																						s.bounds_range.max,
+																						ranger_match,
+																						NULL );
+			
+      s.range = MAX( ray.range, s.bounds_range.min );
       //sensors[t].error = TODO;
     }   
 }
@@ -323,78 +311,77 @@ void ModelRanger::Print( char* prefix )
 
   printf( "\tRanges[ " );
 
-  for( unsigned int i=0; i<sensor_count; i++ )
-    printf( "%.2f ", samples[i] );
+  for( unsigned int i=0; i<sensors.size(); i++ )
+    printf( "%.2f ", sensors[i].range );
   puts( " ]" );
 }
 
 void ModelRanger::DataVisualize( Camera* cam )
 {
-  if( ! (samples && sensors && sensor_count) )
+  if( sensors.size() < 1 )
     return;
-
+	
   if( showRangerTransducers )
     {
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
       PushColor( 0,0,0,1 );
-		 
-      for( unsigned int s=0; s<sensor_count; s++ ) 
-	{ 
-	  if( samples[s] > 0.0 ) 
-	    { 
-	      stg_ranger_sensor_t* rngr = &sensors[s];
+			
+      for( unsigned int s=0; s<sensors.size(); s++ ) 
+				{ 
+					Sensor& rngr = sensors[s];
 
-	      glPointSize( 4 );
-	      glBegin( GL_POINTS );
-	      glVertex3f( rngr->pose.x, rngr->pose.y, rngr->pose.z );
-	      glEnd();
-	    }
-	}
+					if( rngr.range > 0.0 ) 
+						{ 
+							
+							glPointSize( 4 );
+							glBegin( GL_POINTS );
+							glVertex3f( rngr.pose.x, rngr.pose.y, rngr.pose.z );
+							glEnd();
+						}
+				}
       PopColor();
     }
-
+	
   if ( !showRangerData )
     return;
 	
-  // if all models have the same number of sensors, this is fast as
-  // it will probably not use a system call
-  static float* pts = NULL;
-  size_t memsize =  9 * sensor_count * sizeof(float);
-  pts = (float*)g_realloc( pts, memsize );
-  bzero( pts, memsize );
-
+  // if sequential models have the same number of sensors, this is
+  // fast as it will probably not use a system call
+	static std::vector<GLfloat> pts;
+	pts.resize( 9 * sensors.size() );
+	
   // calculate a triangle for each non-zero sensor range
-  for( unsigned int s=0; s<sensor_count; s++ ) 
+  for( unsigned int s=0; s<sensors.size(); s++ ) 
     { 
-      if( samples[s] > 0.0 ) 
-	{ 
-	  stg_ranger_sensor_t* rngr = &sensors[s];
-
-	  // sensor FOV 
-	  double sidelen = samples[s];
-	  double da = rngr->fov/2.0;
-
-	  unsigned int index = s*9;
-	  pts[index+0] = rngr->pose.x;
-	  pts[index+1] = rngr->pose.y;
-	  pts[index+2] = rngr->pose.z;
-
-	  pts[index+3] = rngr->pose.x + sidelen*cos(rngr->pose.a - da );
-	  pts[index+4] = rngr->pose.y + sidelen*sin(rngr->pose.a - da );
-	  pts[index+5] = rngr->pose.z;
-
-	  pts[index+6] = rngr->pose.x + sidelen*cos(rngr->pose.a + da );
-	  pts[index+7] = rngr->pose.y + sidelen*sin(rngr->pose.a + da );
-	  pts[index+8] = rngr->pose.z;
-	}
+			Sensor& rngr = sensors[s];
+			
+      if( rngr.range > 0.0 ) 
+				{ 
+					// sensor FOV 
+					double sidelen = rngr.range;
+					double da = rngr.fov/2.0;
+					
+					unsigned int index = s*9;
+					pts[index+0] = rngr.pose.x;
+					pts[index+1] = rngr.pose.y;
+					pts[index+2] = rngr.pose.z;
+					
+					pts[index+3] = rngr.pose.x + sidelen*cos(rngr.pose.a - da );
+					pts[index+4] = rngr.pose.y + sidelen*sin(rngr.pose.a - da );
+					pts[index+5] = rngr.pose.z;
+					
+					pts[index+6] = rngr.pose.x + sidelen*cos(rngr.pose.a + da );
+					pts[index+7] = rngr.pose.y + sidelen*sin(rngr.pose.a + da );
+					pts[index+8] = rngr.pose.z;
+				}
     }
 	
   // draw the filled triangles in transparent pale green
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   glDepthMask( GL_FALSE );
   PushColor( 0, 1, 0, 0.1 );     
-  glVertexPointer( 3, GL_FLOAT, 0, pts );
-  glDrawArrays( GL_TRIANGLES, 0, 3 * sensor_count );
+  glVertexPointer( 3, GL_FLOAT, 0, &pts[0] );
+  glDrawArrays( GL_TRIANGLES, 0, 3 * sensors.size() );
 
   // restore state 
   glDepthMask( GL_TRUE );

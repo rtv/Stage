@@ -56,7 +56,7 @@ void InterfaceBlobfinder::Publish( void )
   ModelBlobfinder* blobmod = (ModelBlobfinder*)this->mod;
 
   uint32_t bcount = 0;
-  stg_blobfinder_blob_t* blobs = blobmod->GetBlobs( &bcount );
+	ModelBlobfinder::Blob* blobs = blobmod->GetBlobs( &bcount );
 
   if ( bcount > 0 )
   {

@@ -847,27 +847,18 @@ namespace Stg
   };
 
   typedef RaytraceResult stg_raytrace_result_t;
-
+	
   class Ray
   {
   public:
-	 //SuperRegion& sup;
-	 //Regiion& reg;
-	 //Cell& cell;
-	 //stg_point_int_t glob;
-	 //stg_point_int_t origin;
-	 //stg_point_int_t dest;
-
-	 Model* mod;
-	 Pose origin;
-	 stg_meters_t range;
-	 stg_ray_test_func_t func;
-	 void* arg;
-	 bool ztest;
-
-	 RaytraceResult result;	 
+		Model* mod;
+		Pose origin;
+		stg_meters_t range;
+		stg_ray_test_func_t func;
+		void* arg;
+		bool ztest;		
+		RaytraceResult result;	 
   };
-
 		
   const uint32_t INTERVAL_LOG_LEN = 32;
 
@@ -2402,21 +2393,23 @@ namespace Stg
 
   // BLOBFINDER MODEL --------------------------------------------------------
 
-  /** blobfinder data packet 
-	*/
-  typedef struct
-  {
-	 stg_color_t color;
-	 uint32_t left, top, right, bottom;
-	 stg_meters_t range;
-  } stg_blobfinder_blob_t;
 
   /// %ModelBlobfinder class
   class ModelBlobfinder : public Model
   {
+	public:
+		/** Sample data */
+		class Blob
+		{
+		public:
+			stg_color_t color;
+			uint32_t left, top, right, bottom;
+			stg_meters_t range;
+		};
+
   private:
-	 GArray* colors;
-	 GArray* blobs;
+		std::vector<Blob> blobs;
+		std::vector<stg_color_t> colors;
 
 	 // predicate for ray tracing
 	 static bool BlockMatcher( Block* testblock, Model* finder );
@@ -2426,11 +2419,11 @@ namespace Stg
 	 virtual void DataVisualize( Camera* cam );
 
   public:
-	 unsigned int scan_width;
-	 unsigned int scan_height;
-	 stg_meters_t range;
 	 stg_radians_t fov;
 	 stg_radians_t pan;
+	 stg_meters_t range;
+	 unsigned int scan_height;
+	 unsigned int scan_width;
 
 	 static const char* typestr;
 
@@ -2444,12 +2437,12 @@ namespace Stg
 	 virtual void Shutdown();
 	 virtual void Update();
 	 virtual void Load();
-
-	 stg_blobfinder_blob_t* GetBlobs( unsigned int* count )
-	 { 
-		if( count ) *count = blobs->len;
-		return (stg_blobfinder_blob_t*)blobs->data;
-	 }
+		
+		Blob* GetBlobs( unsigned int* count )
+		{ 
+			if( count ) *count = blobs.size();
+			return &blobs[0];
+		}
 
 	 /** Start finding blobs with this color.*/
 	 void AddColor( stg_color_t col );
@@ -2463,32 +2456,31 @@ namespace Stg
   };
 
 
-
-
   // LASER MODEL --------------------------------------------------------
   
-  // TODO - move these into the class definition, like the gripper
-  /** laser sample packet
-	*/
-  typedef struct
-  {
-	 stg_meters_t range; ///< range to laser hit in meters
-	 double reflectance; ///< intensity of the reflection 0.0 to 1.0
-  } stg_laser_sample_t;
-
-  typedef struct
-  {
-	 uint32_t sample_count;
-	 uint32_t resolution;
-	 Bounds range_bounds;
-	 stg_radians_t fov;
-	 stg_usec_t interval;
-  } stg_laser_cfg_t;
-
-
   /// %ModelLaser class
   class ModelLaser : public Model
   {
+	public:
+		/** Laser range data */
+		class Sample
+		{
+		public:
+			stg_meters_t range; ///< range to laser hit in meters
+			double reflectance; ///< intensity of the reflection 0.0 to 1.0
+		};
+		
+		/** Convenience object for setting parameters using SetConfig/GetConfig */
+ 		class Config
+ 		{
+		public:
+ 			uint32_t sample_count; ///< Number of range samples
+ 			uint32_t resolution; ///< interpolation
+ 			Bounds range_bounds; ///< min and max ranges
+ 			stg_radians_t fov; ///< Field of view, centered about the pose angle
+ 			stg_usec_t interval; ///< Time interval  between updates (TODO: is this used?)
+ 		};
+		
   private:
 	 
 	 class Vis : public Visualizer 
@@ -2504,23 +2496,15 @@ namespace Stg
 		virtual ~Vis( void ){}
 		virtual void Visualize( Model* mod, Camera* cam );
 	 } vis;
-	 	 
-	 
-	 /** OpenGL displaylist for laser data */
-	 int data_dl; 
-	 bool data_dirty;
-
-	 //stg_laser_sample_t* samples;
-	 uint32_t sample_count;
-
-	 std::vector<stg_laser_sample_t> samples;
-
-	 stg_meters_t range_max;
-	 stg_radians_t fov;
-	 uint32_t resolution;
-
-	 std::vector<Ray> rays;
-  	 
+	 	
+		unsigned int sample_count;
+		std::vector<Sample> samples;
+  	std::vector<Ray> rays;
+		
+		stg_meters_t range_max;
+		stg_radians_t fov;
+		uint32_t resolution;
+    
 	 // set up data buffers after the config changes
 	 void SampleConfig();
 
@@ -2539,20 +2523,17 @@ namespace Stg
 	 virtual void Load();
 	 virtual void Print( char* prefix );
   
-	 uint32_t GetSampleCount(){ return sample_count; }
-  
 	 /** returns an array of samples */
-	 stg_laser_sample_t* GetSamples( uint32_t* count );
+	 Sample* GetSamples( uint32_t* count );
 	 
-	 /** returns a const reference to a vector of samples */
-	 const std::vector<stg_laser_sample_t>& GetSamples();
-	 
-	 // Get the user-tweakable configuration of the laser
-	 stg_laser_cfg_t GetConfig( );
-  
-	 // Set the user-tweakable configuration of the laser
-	 void SetConfig( stg_laser_cfg_t cfg );  
-
+		/** returns a const reference to a vector of samples */
+		const std::vector<Sample>& GetSamples();
+		
+		/** Get the user-tweakable configuration of the laser */
+		Config GetConfig( );
+		
+		/** Set the user-tweakable configuration of the laser */
+		void SetConfig( Config& cfg );  
   };
   
   // \todo  GRIPPER MODEL --------------------------------------------------------
@@ -2739,18 +2720,21 @@ namespace Stg
 
   // RANGER MODEL --------------------------------------------------------
 
-  typedef struct
-  {
-	 Pose pose;
-	 Size size;
-	 Bounds bounds_range;
-	 stg_radians_t fov;
-	 int ray_count;
-  } stg_ranger_sensor_t;
-
   /// %ModelRanger class
   class ModelRanger : public Model
   {
+	public:
+		class Sensor
+		{
+		public:
+			Pose pose;
+			Size size;
+			Bounds bounds_range;
+			stg_radians_t fov;
+			int ray_count;
+			stg_meters_t range;
+		};
+
   protected:
 
 	 virtual void Startup();
@@ -2768,11 +2752,9 @@ namespace Stg
 
 	 virtual void Load();
 	 virtual void Print( char* prefix );
-
-	 uint32_t sensor_count;
-	 stg_ranger_sensor_t* sensors;
-	 stg_meters_t* samples;
-	
+		
+		std::vector<Sensor> sensors;
+		
   private:
 	 static Option showRangerData;
 	 static Option showRangerTransducers;
@@ -2973,16 +2955,6 @@ namespace Stg
 	 Pose est_pose_error; ///< estimated error in position estimate
 	 Pose est_origin; ///< global origin of the local coordinate system
   };
-
-
-  class ModelScooper : public Model
-  {
-	 GList* items;
-	 
-  public:
-	 ModelScooper( World* world, Model* parent );	 	  
-  };
-
 
 }; // end namespace stg
 

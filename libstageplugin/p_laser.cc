@@ -53,8 +53,8 @@ InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 void InterfaceLaser::Publish( void )
 {
   ModelLaser* mod = (ModelLaser*)this->mod;
-  stg_laser_sample_t* samples = mod->GetSamples(NULL);
-
+	ModelLaser::Sample* samples = mod->GetSamples(NULL);
+	
   // don't publish anything until we have some real data
   if( samples == NULL )
     return;
@@ -62,7 +62,7 @@ void InterfaceLaser::Publish( void )
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
 
-  stg_laser_cfg_t cfg = mod->GetConfig();
+	ModelLaser::Config cfg = mod->GetConfig();
   pdata.min_angle = -cfg.fov/2.0;
   pdata.max_angle = +cfg.fov/2.0;
   pdata.resolution = cfg.fov / cfg.sample_count;
@@ -109,7 +109,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
       // TODO
       // int intensity = plc->intensity;
 
-      stg_laser_cfg_t cfg = mod->GetConfig();
+      ModelLaser::Config cfg = mod->GetConfig();
 
 	  PRINT_DEBUG3( "laser config was: resolution %d, fov %.6f, interval %d\n",
 			  cfg.resolution, cfg.fov, cfg.interval );
@@ -149,7 +149,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
   {
     if( hdr->size == 0 )
     {
-      stg_laser_cfg_t cfg = mod->GetConfig();
+      ModelLaser::Config cfg = mod->GetConfig();
 
       player_laser_config_t plc;
       memset(&plc,0,sizeof(plc));

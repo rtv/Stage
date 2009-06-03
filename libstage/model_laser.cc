@@ -87,18 +87,20 @@ ModelLaser::Vis::Vis( World* world )
 void ModelLaser::Vis::Visualize( Model* mod, Camera* cam ) 
 {
   ModelLaser* laser = dynamic_cast<ModelLaser*>(mod);
-  unsigned int sample_count = 0;
-  stg_laser_sample_t* samples = laser->GetSamples( &sample_count );
+	
+	const std::vector<Sample>& samples( laser->GetSamples() );
     
+	size_t sample_count = samples.size();
+
   glPushMatrix();
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   
   glTranslatef( 0,0, laser->GetGeom().size.z/2.0 ); // shoot the laser beam out at the right height
   
   // pack the laser hit points into a vertex array for fast rendering
-  static float* pts = NULL;
-  pts = (float*)g_realloc( pts, 2 * (sample_count+1) * sizeof(float));
-  
+	static std::vector<GLfloat> pts;
+	pts.resize( 2 * (sample_count+1) );
+
   pts[0] = 0.0;
   pts[1] = 0.0;
   
@@ -121,7 +123,7 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
 		  }			 
 	 }
   
-  glVertexPointer( 2, GL_FLOAT, 0, pts );      
+  glVertexPointer( 2, GL_FLOAT, 0, &pts[0] );       
   
   laser->PopColor();
   
@@ -186,20 +188,17 @@ ModelLaser::ModelLaser( World* world,
 			Model* parent )
   : Model( world, parent, MODEL_TYPE_LASER ),
 	 vis( world ),
-    data_dl(0),
-    data_dirty( true ),
     sample_count( DEFAULT_SAMPLES ),
     samples(),
+		rays(),
     range_max( DEFAULT_MAXRANGE ),
     fov( DEFAULT_FOV ),
-    resolution( DEFAULT_RESOLUTION ),
-	 rays()
+    resolution( DEFAULT_RESOLUTION )
 {
   
   PRINT_DEBUG2( "Constructing ModelLaser %d (%s)\n", 
 		id, typestr );
   
-
   // Model data members
   interval = DEFAULT_INTERVAL_MS * (int)thousand;
   
@@ -246,9 +245,9 @@ void ModelLaser::Load( void )
   SampleConfig();
 }
 
-stg_laser_cfg_t ModelLaser::GetConfig()
+ModelLaser::Config ModelLaser::GetConfig()
 { 
-  stg_laser_cfg_t cfg;
+  Config cfg;
   cfg.sample_count = sample_count;
   cfg.range_bounds.max = range_max;
   cfg.fov = fov;
@@ -257,14 +256,14 @@ stg_laser_cfg_t ModelLaser::GetConfig()
   return cfg;
 }
 
-void ModelLaser::SetConfig( stg_laser_cfg_t cfg )
+void ModelLaser::SetConfig( Config& cfg )
 { 
   range_max = cfg.range_bounds.max;
   fov = cfg.fov;
   resolution = cfg.resolution;
   interval = cfg.interval;
   sample_count = cfg.sample_count;
-
+	
   SampleConfig();
 }
 
@@ -310,9 +309,9 @@ void ModelLaser::Update( void )
   // set up the ray origins in global coords
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
-		rays[t].origin = rayorg;		
+			rays[t].origin = rayorg;		
       rayorg.a += sample_incr;
-	 }
+		}
   
   // do the raytracing of all rays in one go (allows parallel implementation)
   world->Raytrace( rays );
@@ -343,9 +342,7 @@ void ModelLaser::Update( void )
 				  break;
 				
 				// copy the rightmost sample data into this point
-				memcpy( &samples[t-g],
-						  &samples[t-resolution],
-						  sizeof(stg_laser_sample_t));
+				samples[t-g] = samples[t-resolution];
 				
 				double left = samples[t].range;
 				double right = samples[t-resolution].range;
@@ -354,8 +351,6 @@ void ModelLaser::Update( void )
 				samples[t-g].range = (left-g*(left-right)/resolution);
 			 }
 	 }
-  
-  data_dirty = true;
   
   Model::Update();
 }
@@ -389,19 +384,19 @@ void ModelLaser::Print( char* prefix )
 
   printf( "\tReflectance[ " );
   for( unsigned int i=0; i<sample_count; i++ )
-	 printf( "%.2f ", samples[i].reflectance );
+		printf( "%.2f ", samples[i].reflectance );
   puts( " ]" );
 }
 
 
-stg_laser_sample_t* ModelLaser::GetSamples( uint32_t* count )
+ModelLaser::Sample* ModelLaser::GetSamples( uint32_t* count )
 { 
   // get a C style array from our vector
   if( count ) *count = sample_count;
   return &samples[0];
 }
 
-const std::vector<stg_laser_sample_t>& ModelLaser::GetSamples()
+const std::vector<ModelLaser::Sample>& ModelLaser::GetSamples()
 { 
   return samples;
 }

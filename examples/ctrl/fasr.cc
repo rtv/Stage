@@ -215,7 +215,7 @@ public:
   
 	 // Get the data
 	 uint32_t sample_count=0;
-	 stg_laser_sample_t* scan = laser->GetSamples( &sample_count );
+	 ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
     
 	 for (uint32_t i = 0; i < sample_count; i++)
 		{		
@@ -453,7 +453,7 @@ public:
   static int BlobFinderUpdate( ModelBlobfinder* blobmod, Robot* robot )
   {  
 	 unsigned int blob_count = 0;
-	 stg_blobfinder_blob_t* blobs = blobmod->GetBlobs( &blob_count );
+	 ModelBlobfinder::Blob* blobs = blobmod->GetBlobs( &blob_count );
 
 	 if( blobs && (blob_count>0) )
 		{
