@@ -649,8 +649,8 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
 													const void* arg,
 													const bool ztest ) 
 {
-  rt_cells.clear();
-  rt_candidate_cells.clear();
+  //rt_cells.clear();
+  //rt_candidate_cells.clear();
   
   // initialize the sample
   RaytraceResult sample( gpose, range );
