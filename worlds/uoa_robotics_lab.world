@@ -48,10 +48,10 @@ define autorob fancypioneer2dx
 
  blinkenlight( pose [ 0.150 0.100 0.000 0.000 ] color "red" )
  blinkenlight( pose [ 0.150 0.000 0.000 0.000 ] color "green" )
- blinkenlight( pose [ 0.150 -0.1000.000  0.000 ] color "blue" )
+ blinkenlight( pose [ 0.150 -0.100 0.000  0.000 ] color "blue" )
 )
 
-autorob( pose [0.000 0.000 0.000] name "r0" )
+autorob( pose [0.000 0.000 0.000 0.000] name "r0" )
 
 define t table
 (
