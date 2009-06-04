@@ -293,7 +293,7 @@ void ModelLaser::Update( void )
 	// find the global origin of our first emmitted ray
   Pose rayorg = geom.pose;
   rayorg.z += geom.size.z/2.0;
-  rayorg.a = bearing;// + sample_incr/2.0;
+  rayorg.a = bearing;
   rayorg = LocalToGlobal(rayorg);
 
 	// set up a ray to trace

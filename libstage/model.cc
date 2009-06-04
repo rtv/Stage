@@ -847,6 +847,8 @@ void Model::CommitTestedPose()
   blockgroup.SwitchToTestedCells();
 }
   
+bool collisions_enabled( false );
+
 Model* Model::ConditionalMove( const Pose& newpose )
 { 
   assert( newpose.a >= -M_PI );
@@ -854,7 +856,9 @@ Model* Model::ConditionalMove( const Pose& newpose )
 
   Pose startpose = pose;
   pose = newpose; // do the move provisionally - we might undo it below
-   
+     
+  //  Model* hitmod = collisions_enabled ? TestCollisionTree() : NULL;
+
   Model* hitmod = TestCollisionTree();
  
   if( hitmod )

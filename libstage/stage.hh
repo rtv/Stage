@@ -927,7 +927,7 @@ namespace Stg
     GMutex* thread_mutex; ///< protect the worker thread management stuff
     GThreadPool *threadpool; ///<worker threads for updating some sensor models in parallel
     int total_subs; ///< the total number of subscriptions to all models
-    unsigned int update_jobs_pending;
+    //unsigned int update_jobs_pending;
     GList* velocity_list; ///< Models with non-zero velocity and should have their poses updated
     unsigned int worker_threads; ///< the number of worker threads to use
     GCond* worker_threads_done; ///< signalled when there are no more updates for the worker threads to do

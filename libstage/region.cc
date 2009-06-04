@@ -146,7 +146,7 @@ void SuperRegion::Draw( bool drawall )
 					 else // draw a rectangular solid
 						{
 						  Cell* c = &r->cells[p+(q*Region::WIDTH)];
-						  for( std::list<Block*>::iterator it = c->blocks.begin();
+						  for( std::vector<Block*>::iterator it = c->blocks.begin();
 								 it != c->blocks.end();
 								 ++it )					 
 							 {

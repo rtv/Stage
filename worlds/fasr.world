@@ -17,7 +17,7 @@ resolution 0.02
 
 # threads may speed things up here depending on available CPU cores & workload 
 # threadpool 8 
- threadpool 0
+threadpool 0
 
 
 # configure the GUI window

@@ -5,7 +5,7 @@ SET( PLUGINS
      sink
      source
      wander
-     
+#     sort     
 )
 
 # need plaer's wavefront planning library for this one

@@ -145,11 +145,10 @@ GList* Block::AppendTouchingModels( GList* l )
   // for every cell we are rendered into
   for( unsigned int i=0; i<rendered_cells->size(); i++ )
     {
-      //Cell* c = (Cell*)g_ptr_array_index( rendered_cells, i);
 		Cell* c = (*rendered_cells)[i];
 
       // for every block rendered into that cell
-		for( std::list<Block*>::iterator it = c->blocks.begin();
+		for( std::vector<Block*>::iterator it = c->blocks.begin();
 			  it != c->blocks.end();
 			  ++it )
 		  {
@@ -176,11 +175,10 @@ Model* Block::TestCollision()
     // for every cell we may be rendered into
     for( unsigned int i=0; i<candidate_cells->size(); i++ )
       {
-		  //Cell* c = (Cell*)g_ptr_array_index(candidate_cells, i);
 		  Cell* c = (*candidate_cells)[i];
 		  
 		  // for every rendered into that cell
-		  for( std::list<Block*>::iterator it = c->blocks.begin();
+		  for( std::vector<Block*>::iterator it = c->blocks.begin();
 				 it != c->blocks.end();
 				 ++it )
 			 {
@@ -203,15 +201,6 @@ Model* Block::TestCollision()
   return NULL; // no hit
 }
 
-
-
-
-// used as a callback to gather an array of cells in a polygon
-void AddBlockToCell( Cell* c, Block* block )
-{
-  c->AddBlock( block );
-}
-
 void Block::Map()
 {
   // TODO - if called often, we may not need to generate each time
@@ -225,8 +214,6 @@ void Block::Map()
 void Block::UnMap()
 {
   RemoveFromCellArray( rendered_cells );
-
-  //g_ptr_array_set_size( rendered_cells, 0 );
   rendered_cells->clear();
   mapped = false;
 }
@@ -300,7 +287,9 @@ void Block::GenerateCandidateCells()
   stg_point_t* mpts = GetPointsInModelCoords();
 
   // convert the mpts in model coords into global pixel coords
-  stg_point_int_t gpts[pt_count];
+  stg_point_int_t gpts[pt_count]; // should be plenty of room on the
+											 // stack (crosses fingers). I don't
+											 // want to pay for a malloc here.
   for( unsigned int i=0; i<pt_count; i++ )
 		gpts[i] = mod->world->MetersToPixels( mod->LocalToGlobal( mpts[i] ));
   

@@ -31,14 +31,15 @@ class Cell
   
 private:
   Region* region;  
-  std::list<Block*> blocks;
+  std::vector<Block*> blocks;
   bool boundary;
 
 public:
   Cell() 
 	 : region( NULL),
 		blocks() 
-  { /* empty */ }  
+  { 
+  }  
   
   inline void RemoveBlock( Block* b );
   inline void AddBlock( Block* b );  
@@ -175,18 +176,39 @@ inline void Region::IncrementOccupancy()
   ++count; 
 }
 
+inline  void printvec( std::vector<Block*>& vec )
+  {
+	 printf( "Vec: ");
+	 for( size_t i=0; i<vec.size(); i++ )
+		printf( "%p ", vec[i] );
+	 puts( "" );
+  }
+
 inline void Cell::RemoveBlock( Block* b )
 {
-  // linear time removal, but these lists should be very short.
-  blocks.remove( b );
-
+  // linear time removal, but these vectors are very short, usually 1
+  // or 2 elements.  Fast removal - our strategy is to copy the last
+  // item in the vector over the item we want to remove, then pop off
+  // the tail. This avoids moving the other items in the vector. Saves
+  // maybe 1 or 2% run time in my tests.
+  
+  // find the value in the vector     
+  //   printf( "\nremoving %p\n", b );
+  //   puts( "before" );
+  //   printvec( blocks );
+  
+  // copy the last item in the vector to overwrite this one
+  copy_backward( blocks.end(), blocks.end(), std::find( blocks.begin(), blocks.end(), b ));
+  blocks.pop_back(); // and remove the redundant copy at the end of
+							// the vector
+  
   region->DecrementOccupancy();
 }
 
 inline void Cell::AddBlock( Block* b )
 {
   // constant time prepend
-  blocks.push_front( b );
+  blocks.push_back( b );
   region->IncrementOccupancy();
   b->RecordRendering( this );
 }

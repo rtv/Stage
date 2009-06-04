@@ -360,12 +360,6 @@ public:
 	 return t;
   }
 
-//   static void UpdatePuppetCb( const std::string& name, WebSim::Puppet* pup, void* arg )
-//   {
-// 	 WebStage* ws = (WebStage*)arg;
-// 	 ws->Push( pup->name );
-//   }
-
 };
 
 

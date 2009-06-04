@@ -78,7 +78,7 @@ World::World( const char* token,
   thread_mutex( g_mutex_new() ),
   threadpool( NULL ),
   total_subs( 0 ), 
-  update_jobs_pending(0),
+  //update_jobs_pending(0),
   velocity_list( NULL ),
   worker_threads( 0 ),
   worker_threads_done( g_cond_new() ),
@@ -155,9 +155,10 @@ void World::update_thread_entry( Model* mod, World* world )
   
   g_mutex_lock( world->thread_mutex );
   
-  world->update_jobs_pending--;
-  
-  if( world->update_jobs_pending == 0 )
+//   world->update_jobs_pending--;  
+  //  if( world->update_jobs_pending == 0 )
+
+  if( g_thread_pool_unprocessed( world->threadpool ) < 1 )
     g_cond_signal( world->worker_threads_done );
   
   g_mutex_unlock( world->thread_mutex );
@@ -524,9 +525,9 @@ bool World::Update()
 			 if( mod->UpdateDue()  )
 				{
 				  // printf( "updating model %s in WORKER thread\n", mod->Token() );
-				  g_mutex_lock( thread_mutex );
-				  update_jobs_pending++;
-				  g_mutex_unlock( thread_mutex );						 
+				  //g_mutex_lock( thread_mutex );
+				  //update_jobs_pending++;
+				  //g_mutex_unlock( thread_mutex );						 
 				  g_thread_pool_push( threadpool, mod, NULL );
 				}
 		  }	
@@ -534,7 +535,7 @@ bool World::Update()
       // wait for all the last update job to complete - it will
       // signal the worker_threads_done condition var
       g_mutex_lock( thread_mutex );
-      while( update_jobs_pending )
+      while( g_thread_pool_unprocessed( threadpool ) ) //update_jobs_pending )
 		  g_cond_wait( worker_threads_done, thread_mutex );
       g_mutex_unlock( thread_mutex );		 
 
@@ -729,7 +730,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 				{			 
 				  //printf( "cx %d cy %d\n", cx, cy );
 				  
-				  for( std::list<Block*>::iterator it = c->blocks.begin();
+				  for( std::vector<Block*>::iterator it = c->blocks.begin();
 						 it != c->blocks.end();
 						 ++it )					 
 					 {	      	      
@@ -972,7 +973,7 @@ inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
   return sr;
 }
 
-inline Cell* World::GetCellNoCreate( const stg_point_int_t& glob )
+Cell* World::GetCellNoCreate( const stg_point_int_t& glob )
 {
   Region* r = GetSuperRegionCached( GETSREG(glob.x), GETSREG(glob.y) )
 	 ->GetRegionGlobal( glob );
@@ -982,18 +983,8 @@ inline Cell* World::GetCellNoCreate( const stg_point_int_t& glob )
   return NULL;
 }
 
-// inline Cell* World::GetCellCreate( const int32_t x, const int32_t y )
-// {
-//   stg_point_int_t glob( x, y );
 
-//   //printf( "GC[ %d %d ] ", glob.x, glob.y );
-  
-//   return( GetSuperRegionCached(  GETSREG(x), GETSREG(y)  )
-// 			 ->GetRegionGlobal( glob )
-// 			 ->GetCellGlobalCreate( glob )) ;
-// }
-
-inline Cell* World::GetCellCreate( const stg_point_int_t& glob )
+Cell* World::GetCellCreate( const stg_point_int_t& glob )
 {
   return( GetSuperRegionCached(  GETSREG(glob.x), GETSREG(glob.y)  )
 			 ->GetRegionGlobal( glob )
