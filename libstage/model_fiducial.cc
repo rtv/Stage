@@ -25,7 +25,7 @@ const stg_radians_t DEFAULT_FIDUCIAL_FOV = M_PI;
 const stg_watts_t DEFAULT_FIDUCIAL_WATTS = 10.0;
 
 //TODO make instance attempt to register an option (as customvisualizations do)
-Option ModelFiducial::showFiducialData( "Show Fiducial", "show_fiducial", "", false, NULL );
+Option ModelFiducial::showFiducialData( "Fiducials", "show_fiducial", "", false, NULL );
 
 /** 
   @ingroup model
@@ -68,7 +68,14 @@ fiducial
 
 ModelFiducial::ModelFiducial( World* world, 
 												Model* parent )
-  : Model( world, parent, MODEL_TYPE_FIDUCIAL )
+  : Model( world, parent, MODEL_TYPE_FIDUCIAL ),
+	fiducials(),
+	max_range_anon( DEFAULT_FIDUCIAL_RANGEMAXANON ),
+	max_range_id( DEFAULT_FIDUCIAL_RANGEMAXID ),
+	min_range( DEFAULT_FIDUCIAL_RANGEMIN ),
+	fov( DEFAULT_FIDUCIAL_FOV ),
+	heading( 0 ),
+	key( 0 )
 {
 	//PRINT_DEBUG2( "Constructing ModelFiducial %d (%s)\n", 
 	//		id, typestr );
@@ -84,25 +91,12 @@ ModelFiducial::ModelFiducial( World* world,
 	Geom geom;
 	memset( &geom, 0, sizeof(geom));
 	SetGeom( geom );
-	fiducials = NULL;
-	fiducial_count = 0;
 
-	// default parameters
-	min_range = DEFAULT_FIDUCIAL_RANGEMIN;
-	max_range_anon = DEFAULT_FIDUCIAL_RANGEMAXANON;
-	max_range_id = DEFAULT_FIDUCIAL_RANGEMAXID;
-	fov = DEFAULT_FIDUCIAL_FOV;
-	key = 0;
-
-	data = g_array_new( false, true, sizeof(stg_fiducial_t) );
-	
 	RegisterOption( &showFiducialData );
 }
 
 ModelFiducial::~ModelFiducial( void )
 {
-	if( data )
-		g_array_free( data, true );
 }
 
 static bool fiducial_raytrace_match( Model* candidate, 
@@ -187,7 +181,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 		 Geom hisgeom = him->GetGeom();
 		 
 		 // record where we saw him and what he looked like
-		 stg_fiducial_t fid;
+		 Fiducial fid;
 		 fid.mod = him;
 		 fid.range = range;
 		 fid.bearing = dtheta;
@@ -196,7 +190,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 		 fid.geom.a = normalize( hispose.a - mypose.a);
 		 
 		 // store the global pose of the fiducial (mainly for the GUI)
-		 memcpy( &fid.pose, &hispose, sizeof(fid.pose));
+		 fid.pose = hispose;
 
 		 // if he's within ID range, get his fiducial.return value, else
 		 // we see value 0
@@ -205,11 +199,8 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 		 PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
 							him->Token(), him->vis.fiducial_return );
 		 
-		 g_array_append_val( data, fid );
-	  }
-	
-	fiducials = (stg_fiducial_t*)data->data;
-	fiducial_count = data->len;
+		 fiducials.push_back( fid );
+	  }	
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -223,21 +214,14 @@ void ModelFiducial::Update( void )
 
 	if( subs < 1 )
 		return;
-
+	
 	// reset the array of detected fiducials
-	data = g_array_set_size( data, 0 );
-
-	// for all the objects in the world, test if we can see them as
-	// fiducials
-
-	// TODO - add a fiducial-only hash table to the world to speed this
-	// up a lot for large populations
-	world->ForEachDescendant( (stg_model_callback_t)(ModelFiducial::AddModelIfVisibleStatic), 
-			this );
-
-	PRINT_DEBUG2( "model %s saw %d fiducials", token, data->len );
-	fiducials = (stg_fiducial_t*)data->data;
-	fiducial_count = data->len;
+	fiducials.clear();
+	
+	for( std::set<Model*>::iterator it = world->models_with_fiducials.begin();
+			 it != world->models_with_fiducials.end();
+			 ++it )
+		AddModelIfVisible( *it );	
 }
 
 void ModelFiducial::Load( void )
@@ -258,74 +242,70 @@ void ModelFiducial::DataVisualize( Camera* cam )
 {
 	if ( !showFiducialData )
 		return;
+
+	PushColor( 1,0,1,0.7  ); // magenta, with a bit of alpha
 	
 	// draw the FOV
-// 	   GLUquadric* quadric = gluNewQuadric();
+// 	GLUquadric* quadric = gluNewQuadric();
+// 	gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
+	
+// 	gluPartialDisk( quadric,
+// 									0, 
+// 									max_range_anon,
+// 									20, // slices	
+// 									1, // loops
+// 									rtod( M_PI/2.0 + fov/2.0), // start angle
+// 									rtod(-fov) ); // sweep angle
+	
+// 	gluDeleteQuadric( quadric );
 
-// 	   PushColor( 0,0,0,0.2  );
+	// draw fuzzy dotted lines	
+	glLineWidth( 2.0 );
+	glLineStipple( 1, 0x00FF );
 
-// 	   gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
+	// draw lines to the fiducials
+	for( unsigned int f=0; f<fiducials.size(); f++ )
+		{
+			Fiducial& fid = fiducials[f];
+						
+			double dx = fid.range * cos( fid.bearing);
+			double dy = fid.range * sin( fid.bearing);
+			
+			
+			glEnable(GL_LINE_STIPPLE);
+			glBegin( GL_LINES );
+			glVertex2f( 0,0 );
+			glVertex2f( dx, dy );
+			glEnd();
+			glDisable(GL_LINE_STIPPLE);
+	 
+			PushColor( 1,0,1,1  ); // magenta, no alpha
 
-// 	   gluPartialDisk( quadric,
-// 			   0, 
-// 			   max_range_anon,
-// 			   20, // slices	
-// 			   1, // loops
-// 			   rtod( M_PI/2.0 + fov/2.0), // start angle
-// 			   rtod(-fov) ); // sweep angle
+			glPushMatrix();
+			Gl::coord_shift( dx,dy,0,fid.geom.a );
+			
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+			glRectf( -fid.geom.x/2.0, -fid.geom.y/2.0,
+							 fid.geom.x/2.0, fid.geom.y/2.0 );
+			
+			// show the fiducial ID
+			char idstr[32];
+			snprintf(idstr, 31, "%d", fid.id );
+			Gl::draw_string( 0,0,0, idstr );
 
-// 	   gluDeleteQuadric( quadric );
-// 	   PopColor();
-
-	if( data->len == 0 )
-		return;
-
-	// draw the fiducials
-
-	for( unsigned int f=0; f<data->len; f++ )
-	{
-		stg_fiducial_t fid = g_array_index( data, stg_fiducial_t, f );
-
-		PushColor( 0,0,0,0.7  );
-
-		double dx = fid.range * cos( fid.bearing);
-		double dy = fid.range * sin( fid.bearing);
-
-		glBegin( GL_LINES );
-		glVertex2f( 0,0 );
-		glVertex2f( dx, dy );
-		glEnd();
-
-		glPushMatrix();
-		Gl::coord_shift( dx,dy,0,fid.geom.a );
-
-		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-		glRectf( -fid.geom.x/2.0, -fid.geom.y/2.0,
-				fid.geom.x/2.0, fid.geom.y/2.0 );
-
-		// show the fiducial ID
-		char idstr[32];
-		snprintf(idstr, 31, "%d", fid.id );
-
-		PushColor( 0,0,0,1 ); // black
-		Gl::draw_string( 0,0,0, idstr );
-		PopColor();
-
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		glPopMatrix();
-
-		PopColor();
-	}
+			PopColor();
+			
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+			glPopMatrix();			
+		}
+				 
+	 PopColor();			 
+   glLineWidth( 1.0 );			 
 }
-
+	
 void ModelFiducial::Shutdown( void )
 { 
 	PRINT_DEBUG( "fiducial shutdown" );
-	
-	// clear the data  
-	data = g_array_set_size( data, 0 );
-	fiducials = NULL;
-	fiducial_count = 0;
-	
+	fiducials.clear();	
 	Model::Shutdown();
 }

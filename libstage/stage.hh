@@ -46,9 +46,10 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
 
-// we use GLib's data structures extensively. Perhaps we'll move to
-// C++ STL types to lose this dependency one day.
+// we use GLib's data structures extensively. Gradually we're moving
+// to C++ STL types. May be able to lose this dependency one day.
 #include <glib.h> 
 
 // FLTK Gui includes
@@ -597,7 +598,7 @@ namespace Stg
   }
 
   /** returns a new pose, with each axis scaled */
-  Pose pose_scale( const Pose& p1, const double x, const double y, const double z );
+  inline Pose pose_scale( const Pose& p1, const double x, const double y, const double z );
 
 
   // PRETTY PRINTING -------------------------------------------------
@@ -663,7 +664,7 @@ namespace Stg
 
   typedef int(*stg_model_callback_t)(Model* mod, void* user );
   typedef int(*stg_world_callback_t)(World* world, void* user );
-  typedef int(*stg_cell_callback_t)(Cell* cell, void* user );
+  //typedef int(*stg_cell_callback_t)(Cell* cell, void* user );
   
   // return val, or minval if val < minval, or maxval if val > maxval
   double constrain( double val, double minval, double maxval );
@@ -899,8 +900,9 @@ namespace Stg
   /// %World class
   class World : public Ancestor
   {
-    friend class Model; // allow access to private members
     friend class Block;
+    friend class Model; // allow access to private members
+    friend class ModelFiducial;
     friend class Canvas;
 
   private:
@@ -931,7 +933,11 @@ namespace Stg
     GList* velocity_list; ///< Models with non-zero velocity and should have their poses updated
     unsigned int worker_threads; ///< the number of worker threads to use
     GCond* worker_threads_done; ///< signalled when there are no more updates for the worker threads to do
-
+		
+		/** Keep a list of all models with detectable fiducials. This
+				avoids searching the whole world for fiducials. */
+		std::set<Model*> models_with_fiducials;
+		
   protected:	 
 
 	 std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
@@ -1148,22 +1154,6 @@ namespace Stg
 	 
     ~Block();
 	 
-	 
-// 	 bool RayTest(  const stg_ray_test_func_t func,
-// 						 const Model* mod,		
-// 						 const void* arg,
-// 						 const bool ztest,
-// 						 const stg_meters_t z )
-// 	 {
-// 		// optionally test z is in right range
-// 		if( ztest && ( z < global_z.min || 
-// 							z > global_z.max ) )
-// 		  return false;
-		
-// 		// test the predicate we were passed
-// 		return( (*func)( this->mod, (Model*)mod, arg )); 
-// 	 }
-
     /** render the block into the world's raytrace data structure */
     void Map(); 
 	 
@@ -1696,7 +1686,7 @@ namespace Stg
 	 bool ranger_return;
   
 	 Visibility();
-	 void Load( Worldfile* wf, int wf_entity );
+		void Load( Worldfile* wf, int wf_entity );
   };
 
 
@@ -2369,10 +2359,10 @@ namespace Stg
 	 /** Return the global pose (i.e. pose in world coordinates) of a
 		  pose specified in the model's local coordinate system */
 	 Pose LocalToGlobal( const Pose& pose ) const
-	 {  
-		return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
+		{  
+			return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
     }
-	
+		
 // 	 /** Return the 3d point in world coordinates of a 3d point
 // 		  specified in the model's local coordinate system */
 // 	 stg_point3_t LocalToGlobal( const stg_point3_t local ) const;
@@ -2541,9 +2531,7 @@ namespace Stg
 		void SetConfig( Config& cfg );  
   };
   
-  // \todo  GRIPPER MODEL --------------------------------------------------------
-  
-  
+  // GRIPPER MODEL --------------------------------------------------------  
   class ModelGripper : public Model
   {
   public:
@@ -2655,71 +2643,59 @@ namespace Stg
 
   // FIDUCIAL MODEL --------------------------------------------------------
 
-  /** fiducial config packet 
-	*/
-  typedef struct
-  {
-	 stg_meters_t max_range_anon;///< maximum detection range
-	 stg_meters_t max_range_id; ///< maximum range at which the ID can be read
-	 stg_meters_t min_range; ///< minimum detection range
-	 stg_radians_t fov; ///< field of view 
-	 stg_radians_t heading; ///< center of field of view
-
-	 /// only detects fiducials with a key string that matches this one
-	 /// (defaults to NULL)
-	 int key;
-  } stg_fiducial_config_t;
-
-  /** fiducial data packet 
-	*/
-  typedef struct
-  {
-	 stg_meters_t range; ///< range to the target
-	 stg_radians_t bearing; ///< bearing to the target 
-	 Pose geom; ///< size and relative angle of the target
-	 Pose pose; ///< Absolute accurate position of the target in world coordinates (it's cheating to use this in robot controllers!)
-	 Model* mod; ///< Pointer to the model (real fiducial detectors can't do this!)
-	 int id; ///< the fiducial identifier of the target (i.e. its fiducial_return value), or -1 if none can be detected.  
-  } stg_fiducial_t;
-
   /// %ModelFiducial class
   class ModelFiducial : public Model
   {
-  private:
+	public:  
+		/** Detected fiducial data */
+		class Fiducial
+		{
+		public:
+			stg_meters_t range; ///< range to the target
+			stg_radians_t bearing; ///< bearing to the target 
+			Pose geom; ///< size and relative angle of the target
+			Pose pose; ///< Absolute accurate position of the target in world coordinates (it's cheating to use this in robot controllers!)
+			Model* mod; ///< Pointer to the model (real fiducial detectors can't do this!)
+			int id; ///< the fiducial identifier of the target (i.e. its fiducial_return value), or -1 if none can be detected.  
+		};
+
+private:
 	 // if neighbor is visible, add him to the fiducial scan
 	 void AddModelIfVisible( Model* him );
-
-	 // static wrapper function can be used as a function pointer
-	 static int AddModelIfVisibleStatic( Model* him, ModelFiducial* me )
-	 { if( him != me ) me->AddModelIfVisible( him ); return 0; }
 
 	 virtual void Update();
 	 virtual void DataVisualize( Camera* cam );
 
-	 GArray* data;
-	
 	 static Option showFiducialData;
-	
+		
+		std::vector<Fiducial> fiducials;
+		
   public:
-	 static const char* typestr;
-	 // constructor
-	 ModelFiducial( World* world,
-						 Model* parent );
-	 // destructor
-	 virtual ~ModelFiducial();
-  
-	 virtual void Load();
-	 void Shutdown( void );
+		static const char* typestr;
+		
+		ModelFiducial( World* world, Model* parent );
+		virtual ~ModelFiducial();
+		
+		virtual void Load();
+		void Shutdown( void );
 
-	 stg_meters_t max_range_anon;///< maximum detection range
-	 stg_meters_t max_range_id; ///< maximum range at which the ID can be read
-	 stg_meters_t min_range; ///< minimum detection range
-	 stg_radians_t fov; ///< field of view 
-	 stg_radians_t heading; ///< center of field of view
-	 int key; ///< /// only detect fiducials with a key that matches this one (defaults 0)
-
-	 stg_fiducial_t* fiducials; ///< array of detected fiducials
-	 uint32_t fiducial_count; ///< the number of fiducials detected
+		stg_meters_t max_range_anon;///< maximum detection range
+		stg_meters_t max_range_id; ///< maximum range at which the ID can be read
+		stg_meters_t min_range; ///< minimum detection range
+		stg_radians_t fov; ///< field of view 
+		stg_radians_t heading; ///< center of field of view
+		int key; ///< /// only detect fiducials with a key that matches this one (defaults 0)
+		
+		
+		/** Access the dectected fiducials. C++ style. */
+		std::vector<Fiducial>& GetFiducials() { return fiducials; }
+		
+		/** Access the dectected fiducials, C style. */
+		 Fiducial* GetFiducials( unsigned int* count )
+		{
+			if( count ) *count = fiducials.size();
+			return &fiducials[0];
+		}
   };
 
 
@@ -2749,23 +2725,20 @@ namespace Stg
 
   public:
 	 static const char* typestr;
-	 // constructor
-	 ModelRanger( World* world,
-					  Model* parent );
-	 // destructor
-	 virtual ~ModelRanger();
 
-	 virtual void Load();
-	 virtual void Print( char* prefix );
+	 ModelRanger( World* world, Model* parent );
+		virtual ~ModelRanger();
+		
+		virtual void Load();
+		virtual void Print( char* prefix );
 		
 		std::vector<Sensor> sensors;
 		
   private:
-	 static Option showRangerData;
-	 static Option showRangerTransducers;
-	
+		static Option showRangerData;
+		static Option showRangerTransducers;		
   };
-
+	
   // BLINKENLIGHT MODEL ----------------------------------------------------
   class ModelBlinkenlight : public Model
   {

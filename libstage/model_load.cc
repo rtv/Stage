@@ -179,8 +179,10 @@ void Model::Load()
 
   if( wf->PropertyExists( wf_entity, "mass" ))
     this->SetMass( wf->ReadFloat(wf_entity, "mass", this->mass ));
-
+	
   vis.Load( wf, wf_entity );
+	SetFiducialReturn( vis.fiducial_return ); // may have some work to do
+
   gui.Load( wf, wf_entity );
 
   if( wf->PropertyExists( wf_entity, "map_resolution" ))

@@ -82,6 +82,7 @@ World::World( const char* token,
   velocity_list( NULL ),
   worker_threads( 0 ),
   worker_threads_done( g_cond_new() ),
+	models_with_fiducials(),
 
   // protected
   cb_list(NULL),

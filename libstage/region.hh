@@ -7,6 +7,9 @@
 
 #include "stage.hh"
 
+#include <algorithm>
+#include <vector>
+
 namespace Stg 
 {
 

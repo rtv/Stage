@@ -559,11 +559,6 @@ bool Model::IsRelated( const Model* that ) const
   return candidate->IsDescendent( that );
 }
 
-// Pose Model::LocalToGlobal( const Pose& pose ) const
-// {  
-//   return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
-// }
-
 stg_point_t Model::LocalToGlobal( const stg_point_t& pt) const
  {  
    Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
@@ -847,19 +842,15 @@ void Model::CommitTestedPose()
   blockgroup.SwitchToTestedCells();
 }
   
-bool collisions_enabled( false );
-
 Model* Model::ConditionalMove( const Pose& newpose )
 { 
   assert( newpose.a >= -M_PI );
   assert( newpose.a <=  M_PI );
 
-  Pose startpose = pose;
+  Pose startpose( pose );
   pose = newpose; // do the move provisionally - we might undo it below
      
-  //  Model* hitmod = collisions_enabled ? TestCollisionTree() : NULL;
-
-  Model* hitmod = TestCollisionTree();
+  Model* hitmod( TestCollisionTree() );
  
   if( hitmod )
     pose = startpose; // move failed - put me back where I started
@@ -892,30 +883,21 @@ void Model::UpdatePose( void )
 
   //       g_array_append_val( this->trail, checkpoint );
   //     }
-
+	
   // convert usec to sec
-  double interval = (double)world->interval_sim / 1e6;
-
+  double interval( (double)world->interval_sim / 1e6 );
+	
   // find the change of pose due to our velocity vector
-  Pose p;
-  p.x = velocity.x * interval;
-  p.y = velocity.y * interval;
-  p.z = velocity.z * interval;
-  p.a = normalize( velocity.a * interval );
-    
-  //if( isnan( p.x ) || isnan( p.y )  || isnan( p.z )  || isnan( p.a ) )
-  //printf( "UpdatePose bad vel %s [%.2f %.2f %.2f %.2f]\n",
-  //   token, p.x, p.y, p.z, p.a );
-
+  Pose p( velocity.x * interval,
+					velocity.y * interval,
+					velocity.z * interval,
+					normalize( velocity.a * interval ));
+	
   // attempts to move to the new pose. If the move fails because we'd
-  // hit another model, that model is returned.
-  Pose q = pose_sum( pose, p );
-  assert( q.a >= -M_PI );
-  assert( q.a <=  M_PI );
-
-  Model* hitthing = ConditionalMove( q );
-
-  SetStall( hitthing ? true : false );
+  // hit another model, that model is returned.	
+	// ConditionalMove() returns a pointer to the model we hit, or
+	// NULL. We use this as a boolean for SetStall()
+  SetStall( ConditionalMove( pose_sum( pose, p ) ) );
 }
 
 

@@ -425,26 +425,26 @@ public:
 
   static int FiducialUpdate( ModelFiducial* mod, Robot* robot )
   {    
-	 robot->charger_ahoy = false;
-  
-	 for( unsigned int i = 0; i < mod->fiducial_count; i++ )
-		{
-		  stg_fiducial_t* f = &mod->fiducials[i];
+		robot->charger_ahoy = false;
 		
+		std::vector<ModelFiducial::Fiducial>& fids = mod->GetFiducials();
+		
+		for( unsigned int i = 0; i < fids.size(); i++ )
+			{				
 		  //printf( "fiducial %d is %d at %.2f m %.2f radians\n",
 		  //	  i, f->id, f->range, f->bearing );		
 		
-		  if( f->id == 2 ) // I see a charging station
-			 {
-				// record that I've seen it and where it is
-				robot->charger_ahoy = true;
-				robot->charger_bearing = f->bearing;
-				robot->charger_range = f->range;
-				robot->charger_heading = f->geom.a;
-			 
-				//printf( "charger at %.2f radians\n", robot->charger_bearing );
-				break;
-			 }
+		  if( fids[i].id == 2 ) // I see a charging station
+				{
+					// record that I've seen it and where it is
+					robot->charger_ahoy = true;
+					robot->charger_bearing = fids[i].bearing;
+					robot->charger_range = fids[i].range;
+					robot->charger_heading = fids[i].geom.a;
+					
+					//printf( "charger at %.2f radians\n", robot->charger_bearing );
+					break;
+				}
 		}						  
  
 	 return 0; // run again

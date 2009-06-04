@@ -1,4 +1,4 @@
-MESSAGE( STATUS "Configuring Player plugin" )
+MESSAGE( STATUS "Configuring libstageplugin" )
 
 link_directories( ${PLAYER_LIBRARY_DIRS} )
 include_directories( ${PLAYER_INCLUDE_DIRS} )

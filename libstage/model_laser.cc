@@ -284,7 +284,6 @@ void ModelLaser::SampleConfig()
 void ModelLaser::Update( void )
 {     
   assert( samples.size() == sample_count );
-  //assert( rays.size() == sample_count );
   
   double bearing = -fov/2.0;
   // make the first and last rays exactly at the extremes of the FOV

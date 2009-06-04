@@ -61,38 +61,35 @@ void InterfaceFiducial::Publish( void )
   player_fiducial_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
 
-  ModelFiducial* fidmod = (ModelFiducial*)this->mod;
-
-  if( fidmod->fiducial_count > 0 )
+	unsigned int count=0;
+	ModelFiducial::Fiducial* fids = ((ModelFiducial*)mod)->GetFiducials( &count );																						assert( fids );
+	
+  if( count )
     {
-		stg_fiducial_t* fids = fidmod->fiducials;
-		assert( fids );
-
-		pdata.fiducials_count = fidmod->fiducial_count;
-		pdata.fiducials = new player_fiducial_item_t[pdata.fiducials_count];
-
-      for( int i=0; i<(int)pdata.fiducials_count; i++ )
-		  {
-			 pdata.fiducials[i].id = fids[i].id;
-
-			 // 2D x,y only
-			 double xpos = fids[i].range * cos(fids[i].bearing);
-			 double ypos = fids[i].range * sin(fids[i].bearing);
-
-			 pdata.fiducials[i].pose.px = xpos;
-			 pdata.fiducials[i].pose.py = ypos;
-			 pdata.fiducials[i].pose.pz = 0.0;
-			 pdata.fiducials[i].pose.proll = 0.0;
-			 pdata.fiducials[i].pose.ppitch = 0.0;
-			 pdata.fiducials[i].pose.pyaw = fids[i].geom.a;
-		  }
+			pdata.fiducials = new player_fiducial_item_t[count];
+			
+      for( unsigned int i=0; i<count; i++ )
+				{
+					pdata.fiducials[i].id = fids[i].id;
+					
+					// 2D x,y only
+					double xpos = fids[i].range * cos(fids[i].bearing);
+					double ypos = fids[i].range * sin(fids[i].bearing);
+					
+					pdata.fiducials[i].pose.px = xpos;
+					pdata.fiducials[i].pose.py = ypos;
+					pdata.fiducials[i].pose.pz = 0.0;
+					pdata.fiducials[i].pose.proll = 0.0;
+					pdata.fiducials[i].pose.ppitch = 0.0;
+					pdata.fiducials[i].pose.pyaw = fids[i].geom.a;
+				}
     }
-
+	
   // publish this data
   this->driver->Publish( this->addr,
-								 PLAYER_MSGTYPE_DATA,
-								 PLAYER_FIDUCIAL_DATA_SCAN,
-								 &pdata, sizeof(pdata), NULL);
+												 PLAYER_MSGTYPE_DATA,
+												 PLAYER_FIDUCIAL_DATA_SCAN,
+												 &pdata, sizeof(pdata), NULL);
 
   if ( pdata.fiducials )
 	  delete [] pdata.fiducials;

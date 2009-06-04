@@ -45,6 +45,14 @@ void Model::SetGripperReturn( int val )
 void Model::SetFiducialReturn(  int val )
 {
   vis.fiducial_return = val;
+	
+	// non-zero values mean we need to be in the world's set of
+	// detectable models
+	if( val == 0 )
+		world->models_with_fiducials.erase( this );
+	else
+		world->models_with_fiducials.insert( this );
+	
   CallCallbacks( &vis.fiducial_return );
 }
 
