@@ -128,9 +128,9 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
 
   // steal the global clock - a bit aggressive, but a simple approach
 
-  if( GlobalTime ) delete GlobalTime;
-  assert( (GlobalTime = new StTime( driver ) ));
-
+  delete GlobalTime;
+  GlobalTime = new StTime( driver );
+  assert(GlobalTime);
   // start the simulation
   // printf( "  Starting world clock... " ); fflush(stdout);
   //stg_world_resume( world );
