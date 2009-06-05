@@ -14,8 +14,6 @@ OPTION (BUILD_PLAYER_PLUGIN "Build Player plugin" ON)
 OPTION (BUILD_LSPTEST "Build Player plugin tests" OFF)
 OPTION (CPACK_CFG "[release building] generate CPack configuration files" OFF)
 
-add_definitions(-O2 -g -Wall)
-
 # todo - this doesn't work yet. Run Stage headless with -g.
 # OPTION (BUILD_GUI "Build FLTK-based GUI. If OFF, build a gui-less Stage useful e.g. for headless compute clusters." ON ) 
 
@@ -40,6 +38,10 @@ SET(RGBFILE ${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt )
 # config.h belongs with the source (and not in CMAKE_CURRENT_BINARY_DIR as in Brian's original version)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in 
 					${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
+
+# Enable -Wall by default
+SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 message( STATUS "Checking for libtool" )
 find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )

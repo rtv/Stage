@@ -730,6 +730,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 					  n > 0 )
 				{			 
 				  //printf( "cx %d cy %d\n", cx, cy );
+				  assert(c >= reg->cells);
 				  
 				  for( std::vector<Block*>::iterator it = c->blocks.begin();
 						 it != c->blocks.end();
@@ -759,6 +760,8 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 						  }				  
 					 }
 				  
+				  assert (sx >= -2 && sx < 2);
+				  assert (sy >= -2 && sy < 2);
 				  // increment our cell in the correct direction
 				  if( exy < 0 ) // we're iterating along X
 					 {
@@ -771,7 +774,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 					 {
 						glob.y += sy; // global coordinate
 						exy -= bx;						
-						c += sy * Region::WIDTH; // move the cell up or down
+						c += sy * static_cast<int> (Region::WIDTH); // move the cell up or down
 						cy += sy; // cell coordinate for bounds checking
 					 }			 
 				  n--; // decrement the manhattan distance remaining
