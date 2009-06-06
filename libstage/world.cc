@@ -60,8 +60,8 @@ GList* World::world_list = NULL;
 
 
 World::World( const char* token, 
-				  stg_msec_t interval_sim,
-				  double ppm )
+							stg_msec_t interval_sim,
+							double ppm )
   : 
   // private
   charge_list( NULL ),
@@ -145,7 +145,7 @@ bool World::UpdateAll()
   for( GList* it = World::world_list; it; it=it->next ) 
     {
       if( ((World*)it->data)->Update() == false )
-		  quit = false;
+				quit = false;
     }
   return quit;
 }
@@ -156,7 +156,7 @@ void World::update_thread_entry( Model* mod, World* world )
   
   g_mutex_lock( world->thread_mutex );
   
-//   world->update_jobs_pending--;  
+	//   world->update_jobs_pending--;  
   //  if( world->update_jobs_pending == 0 )
 
   if( g_thread_pool_unprocessed( world->threadpool ) < 1 )
@@ -181,7 +181,7 @@ void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
 { 
   // lookup the group in which this was defined
   Model* mod = (Model*)g_hash_table_lookup( entitytable, 
-														  (gpointer)wf->GetEntityParent( entity ) );
+																						(gpointer)wf->GetEntityParent( entity ) );
   
   if( ! mod )
     PRINT_ERR( "block has no model for a parent" );
@@ -209,11 +209,11 @@ Model* World::CreateModel( Model* parent, const char* typestr )
   //printf( "creating model of type %s\n", typestr );
   
   for( int i=0; i<MODEL_TYPE_COUNT; i++ )
-	 if( strcmp( typestr, typetable[i].token ) == 0 )
-		{
-		  creator = typetable[i].creator;
-		  break;
-		}
+		if( strcmp( typestr, typetable[i].token ) == 0 )
+			{
+				creator = typetable[i].creator;
+				break;
+			}
     
   // if we found a creator function, call it
   if( creator )
@@ -224,7 +224,7 @@ Model* World::CreateModel( Model* parent, const char* typestr )
   else
     {
       PRINT_ERR1( "Unknown model type %s in world file.", 
-						typestr );
+									typestr );
       exit( 1 );
     }
   
@@ -239,10 +239,10 @@ void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
   int parent_entity = wf->GetEntityParent( entity );
   
   PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
-					 entity, parent_entity );
+								entity, parent_entity );
   
   Model* parent = (Model*)g_hash_table_lookup( entitytable, 
-															  (gpointer)parent_entity );
+																							 (gpointer)parent_entity );
     
   char *typestr = (char*)wf->GetEntityType(entity);      	  
   assert(typestr);
@@ -285,11 +285,11 @@ void World::Load( const char* worldfile_path )
 
   this->interval_sim = (stg_usec_t)thousand * 
     wf->ReadInt( entity, "interval_sim", 
-					  (int)(this->interval_sim/thousand) );
+								 (int)(this->interval_sim/thousand) );
 
   if( wf->PropertyExists( entity, "quit_time" ) ) {
     this->quit_time = (stg_usec_t) ( million * 
-												 wf->ReadFloat( entity, "quit_time", 0 ) );
+																		 wf->ReadFloat( entity, "quit_time", 0 ) );
   }
 
   if( wf->PropertyExists( entity, "resolution" ) )
@@ -303,22 +303,22 @@ void World::Load( const char* worldfile_path )
       int count = wf->ReadInt( entity, "threadpool", worker_threads );
 		 
       if( count && (count != (int)worker_threads) )
-		  {
-			 worker_threads = count;
+				{
+					worker_threads = count;
 			  
-			 if( threadpool == NULL )
-				threadpool = g_thread_pool_new( (GFunc)update_thread_entry, 
-														  this,
-														  worker_threads, 
-														  true,
-														  NULL );
-			 else
-				g_thread_pool_set_max_threads( threadpool, 
-														 worker_threads, 
-														 NULL );
+					if( threadpool == NULL )
+						threadpool = g_thread_pool_new( (GFunc)update_thread_entry, 
+																						this,
+																						worker_threads, 
+																						true,
+																						NULL );
+					else
+						g_thread_pool_set_max_threads( threadpool, 
+																					 worker_threads, 
+																					 NULL );
 
-			 printf( "[threadpool %u]", worker_threads );
-		  }
+					printf( "[threadpool %u]", worker_threads );
+				}
     }
 
   // Iterate through entitys and create objects of the appropriate type
@@ -328,15 +328,15 @@ void World::Load( const char* worldfile_path )
 		
       // don't load window entries here
       if( strcmp( typestr, "window" ) == 0 )
-		  {
-			 /* do nothing here */
-		  }
+				{
+					/* do nothing here */
+				}
       else if( strcmp( typestr, "block" ) == 0 )
-		  LoadBlock( wf, entity, entitytable );
-		// 		else if( strcmp( typestr, "puck" ) == 0 )
-		// 		  LoadPuck( wf, entity, entitytable );
-		else
-		  LoadModel( wf, entity, entitytable );
+				LoadBlock( wf, entity, entitytable );
+			// 		else if( strcmp( typestr, "puck" ) == 0 )
+			// 		  LoadPuck( wf, entity, entitytable );
+			else
+				LoadModel( wf, entity, entitytable );
     }
   
 
@@ -352,7 +352,7 @@ void World::Load( const char* worldfile_path )
 
   if( debug )
     printf( "[Load time %.3fsec]\n", 
-				(load_end_time - load_start_time) / 1000000.0 );
+						(load_end_time - load_start_time) / 1000000.0 );
   else
     putchar( '\n' );
 }
@@ -431,10 +431,10 @@ std::string World::ClockString()
   char buf[256];
 
   if( hours > 0 )
-	 {
-		snprintf( buf, 255, "%uh", hours );
-		str += buf;
-	 }
+		{
+			snprintf( buf, 255, "%uh", hours );
+			str += buf;
+		}
 
   snprintf( buf, 255, " %um %02us %03umsec", minutes, seconds, msec);
   str += buf;
@@ -443,7 +443,7 @@ std::string World::ClockString()
 }
 
 void World::AddUpdateCallback( stg_world_callback_t cb, 
-										 void* user )
+															 void* user )
 {
   // add the callback & argument to the list
   std::pair<stg_world_callback_t,void*> p(cb, user);
@@ -451,21 +451,21 @@ void World::AddUpdateCallback( stg_world_callback_t cb,
 }
 
 int World::RemoveUpdateCallback( stg_world_callback_t cb, 
-											void* user )
+																 void* user )
 {
   std::pair<stg_world_callback_t,void*> p( cb, user );
   
   std::list<std::pair<stg_world_callback_t,void*> >::iterator it;  
   for( it = cb_list.begin();
-		 it != cb_list.end();
-		 it++ )
-	 {
-		if( (*it) == p )
-		  {
-			 cb_list.erase( it );		
-			 break;
-		  }
-	 }
+			 it != cb_list.end();
+			 it++ )
+		{
+			if( (*it) == p )
+				{
+					cb_list.erase( it );		
+					break;
+				}
+		}
    
   // return the number of callbacks now in the list. Useful for
   // detecting when the list is empty.
@@ -477,17 +477,17 @@ void World::CallUpdateCallbacks()
   
   // for each callback in the list
   for( std::list<std::pair<stg_world_callback_t,void*> >::iterator it = cb_list.begin();
-		 it != cb_list.end();
-		 it++ )
-	 {  
-		//printf( "cbs %p data %p cvs->next %p\n", cbs, cbs->data, cbs->next );
+			 it != cb_list.end();
+			 it++ )
+		{  
+			//printf( "cbs %p data %p cvs->next %p\n", cbs, cbs->data, cbs->next );
 		
-		if( ((*it).first )( this, (*it).second ) )
-		  {
-			 //printf( "callback returned TRUE - schedule removal from list\n" );
-			 it = cb_list.erase( it );
-		  }
-	 }      
+			if( ((*it).first )( this, (*it).second ) )
+				{
+					//printf( "callback returned TRUE - schedule removal from list\n" );
+					it = cb_list.erase( it );
+				}
+		}      
 }
 
 bool World::Update()
@@ -520,35 +520,35 @@ bool World::Update()
     {
       // push the update for every model that needs it into the thread pool
       for( GList* it = reentrant_update_list; it; it=it->next )
-		  {
-			 Model* mod = (Model*)it->data;
-			 
-			 if( mod->UpdateDue()  )
 				{
-				  // printf( "updating model %s in WORKER thread\n", mod->Token() );
-				  //g_mutex_lock( thread_mutex );
-				  //update_jobs_pending++;
-				  //g_mutex_unlock( thread_mutex );						 
-				  g_thread_pool_push( threadpool, mod, NULL );
-				}
-		  }	
+					Model* mod = (Model*)it->data;
+			 
+					if( mod->UpdateDue()  )
+						{
+							// printf( "updating model %s in WORKER thread\n", mod->Token() );
+							//g_mutex_lock( thread_mutex );
+							//update_jobs_pending++;
+							//g_mutex_unlock( thread_mutex );						 
+							g_thread_pool_push( threadpool, mod, NULL );
+						}
+				}	
 		
       // wait for all the last update job to complete - it will
       // signal the worker_threads_done condition var
       g_mutex_lock( thread_mutex );
       while( g_thread_pool_unprocessed( threadpool ) ) //update_jobs_pending )
-		  g_cond_wait( worker_threads_done, thread_mutex );
+				g_cond_wait( worker_threads_done, thread_mutex );
       g_mutex_unlock( thread_mutex );		 
 
-		// now call all the callbacks - ignores dueness, but not a big deal
+			// now call all the callbacks - ignores dueness, but not a big deal
       LISTMETHOD( reentrant_update_list, Model*, CallUpdateCallbacks );
     }
   
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
-	 {
-		printf( "\r[Stage: %s]", ClockString().c_str() );
-		fflush( stdout );
-	 }
+		{
+			printf( "\r[Stage: %s]", ClockString().c_str() );
+			fflush( stdout );
+		}
 
   CallUpdateCallbacks();
   
@@ -599,14 +599,14 @@ void World::ClearRays()
 
 
 void World::Raytrace( const Pose &gpose, // global pose
-							 const stg_meters_t range,
-							 const stg_radians_t fov,
-							 const stg_ray_test_func_t func,
-							 const Model* model,			 
-							 const void* arg,
-							 stg_raytrace_result_t* samples, // preallocated storage for samples
-							 const uint32_t sample_count, // number of samples
-							 const bool ztest ) 
+											const stg_meters_t range,
+											const stg_radians_t fov,
+											const stg_ray_test_func_t func,
+											const Model* model,			 
+											const void* arg,
+											stg_raytrace_result_t* samples, // preallocated storage for samples
+											const uint32_t sample_count, // number of samples
+											const bool ztest ) 
 {
   // find the direction of the first ray
   Pose raypose = gpose;
@@ -614,15 +614,10 @@ void World::Raytrace( const Pose &gpose, // global pose
 
   for( uint32_t s=0; s < sample_count; s++ )
     {
-		raypose.a = (s * fov / (double)sample_count) - starta;
+			raypose.a = (s * fov / (double)sample_count) - starta;
       samples[s] = Raytrace( raypose, range, func, model, arg, ztest );
     }
 }
-
-// fast macros for converting from global cell coordinates to local coords
-#define GETCELL(X) (((int32_t)X) & ~((~0x00)<<RBITS ))
-#define GETREG(X) ((((int32_t)X) & ~((~0x00)<<SRBITS ))>>RBITS)
-#define GETSREG(X) (((int32_t)X)>>SRBITS)
 
 // Stage spends 50-99% of its time in this method.
 stg_raytrace_result_t World::Raytrace( const Pose &gpose, 
@@ -657,32 +652,32 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   const double tana(sina/cosa); // = tan(angle)
 
   // and the x and y offsets of the ray
-  const int dx( ppm * r.range * cosa);
-  const int dy( ppm * r.range * sina);
+  const int32_t dx( ppm * r.range * cosa);
+  const int32_t dy( ppm * r.range * sina);
   
   // fast integer line 3d algorithm adapted from Cohen's code from
   // Graphics Gems IV  
-  const int sx(sgn(dx));   // sgn() is a fast macro
-  const int sy(sgn(dy));  
-  const int ax(abs(dx)); 
-  const int ay(abs(dy));  
-  const int bx(2*ax);	
-  const int by(2*ay);	
-  int exy(ay-ax); 
-  int n(ax+ay); // the manhattan distance to the goal cell
+  const int32_t sx(sgn(dx));   // sgn() is a fast macro
+  const int32_t sy(sgn(dy));  
+  const int32_t ax(abs(dx)); 
+  const int32_t ay(abs(dy));  
+  const int32_t bx(2*ax);	
+  const int32_t by(2*ay);	
+  int32_t exy(ay-ax); 
+  int32_t n(ax+ay); // the manhattan distance to the goal cell
   
-  const int rsize( Region::WIDTH );
+  //const int REGIONWIDTH( REGIONWIDTH );
   
   // fix a little issue where rays are not drawn long enough when
   // drawing to the right or up
   if( (dx > 0) || ( dy > 0 ) )
-	 n++;
+		n++;
   
   // the distances between region crossings in X and Y
-  const double xjumpx( sx * rsize );
-  const double xjumpy( sx * rsize * tana );
-  const double yjumpx( sy * rsize / tana );
-  const double yjumpy( sy * rsize );
+  const double xjumpx( sx * REGIONWIDTH );
+  const double xjumpy( sx * REGIONWIDTH * tana );
+  const double yjumpx( sy * REGIONWIDTH / tana );
+  const double yjumpy( sy * REGIONWIDTH );
   // manhattan distance between region crossings in X and Y
   const double xjumpdist( fabs(xjumpx)+fabs(xjumpy) );
   const double yjumpdist( fabs(yjumpx)+fabs(yjumpy) );
@@ -693,7 +688,6 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   double distX(0), distY(0);
   bool calculatecrossings( true );
 	 
-
   // puts( "=======================" );
 
   // Stage spends up to 95% of its time in this loop! It would be
@@ -701,189 +695,189 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   // inline calls have a noticeable (2-3%) effect on performance  
   while( n > 0  ) // while we are still not at the ray end
     { 
-		SuperRegion* sr = 
-		  GetSuperRegionCached(GETSREG(glob.x), 
-									  GETSREG(glob.y));
-				
-		// coordinates of the region inside the superregion
-		int32_t rx = GETREG(glob.x);
-		int32_t ry = GETREG(glob.y);		
-		Region* reg = &sr->regions[ rx + (ry*SuperRegion::WIDTH) ];
+			SuperRegion* sr = 
+				GetSuperRegionCached(GETSREG(glob.x), GETSREG(glob.y));
 
-		if( reg->count ) // if the region contains any objects
-		  {
-			 // invalidate the region crossing points used to jump over
-			 // empty regions
-			 calculatecrossings = true;
-			 
-			 // convert from global cell to local cell coords
-			 int32_t cx = GETCELL(glob.x); 
-			 int32_t cy = GETCELL(glob.y);
-			 
-			 Cell* c = &reg->cells[ cx + cy * Region::WIDTH ];
-			 assert(c); // should be a cell there 
-			 
-			 // while within the bounds of this region and while some ray remains
-			 // we'll tweak the cell pointer directly to move around quickly
-			 while( (cx>=0) && (cx<(int)Region::WIDTH) && 
-					  (cy>=0) && (cy<(int)Region::WIDTH) && 
-					  n > 0 )
-				{			 
-				  //printf( "cx %d cy %d\n", cx, cy );
-				  assert(c >= reg->cells);
-				  
-				  for( std::vector<Block*>::iterator it = c->blocks.begin();
-						 it != c->blocks.end();
-						 ++it )					 
-					 {	      	      
-						Block* block = *it;
-						
-						// skip if not in the right z range
-						if( r.ztest && 
-							 ( r.origin.z < block->global_z.min || 
-									 r.origin.z > block->global_z.max ) )
-						  continue; 
-						
-						// test the predicate we were passed
-						if( (*r.func)( block->mod, (Model*)r.mod, r.arg )) 
-						  {
-							 // a hit!
-							 sample.color = block->GetColor();
-							 sample.mod = block->mod;
-							 
-							 if( ax > ay ) // faster than the equivalent hypot() call
-								sample.range = fabs((glob.x-start.x) / cosa) / ppm;
-							 else
-								sample.range = fabs((glob.y-start.y) / sina) / ppm;
-							 
-							 return sample;
-						  }				  
-					 }
-				  
-				  assert (sx >= -2 && sx < 2);
-				  assert (sy >= -2 && sy < 2);
-				  // increment our cell in the correct direction
-				  if( exy < 0 ) // we're iterating along X
-					 {
-						glob.x += sx; // global coordinate
-						exy += by;						
-						c += sx; // move the cell left or right
-						cx += sx; // cell coordinate for bounds checking
-					 }
-				  else  // we're iterating along Y
-					 {
-						glob.y += sy; // global coordinate
-						exy -= bx;						
-						c += sy * static_cast<int> (Region::WIDTH); // move the cell up or down
-						cy += sy; // cell coordinate for bounds checking
-					 }			 
-				  n--; // decrement the manhattan distance remaining
+			// coordinates of the region inside the superregion
+			int32_t rx( GETREG(glob.x) );
+			int32_t ry( GETREG(glob.y) );		
+			Region* reg( &sr->regions[ rx + (ry*SUPERREGIONWIDTH) ] );
 
-				  //rt_cells.push_back( stg_point_int_t( glob.x, glob.y ));
-				}
-				  
-			 //printf( "leaving populated region\n" );
-		  }							 
-		else // jump over the empty region
-		  {		  		  		  
-			 // on the first run, and when we've been iterating over cells,
-			 // we need to calculate the next crossing of region in each
-			 // axis
-			 if( calculatecrossings )
+			if( reg->count ) // if the region contains any objects
 				{
-				  calculatecrossings = false;
-				  
-				  // find the coordinate in cells of the bottom left corner of
-				  // the current region
-				  int ix = glob.x;
-				  int iy = glob.y;				  
-				  double regionx = ix/rsize*rsize;
-				  double regiony = iy/rsize*rsize;
-				  if( (glob.x < 0) && (ix % rsize) ) regionx -= rsize;
-				  if( (glob.y < 0) && (iy % rsize) ) regiony -= rsize;
-				  
-				  //double regionx = glob.x - fmod(glob.x,rsize);
-				  //double regiony = glob.y - fmod(glob.y,rsize);
-				  
-				  //printf( "region %.2f %.2f\n", regionx, regiony );
-				  
-				  // calculate the distance to the edge of the current region
-				  double xdx = sx < 0 ? 
-					 regionx - glob.x - 1.0 : // going left
-					 regionx + rsize - glob.x; // going right			 
-				  double xdy = xdx*tana;
-				  
-				  double ydy = sy < 0 ? 
-					 regiony - glob.y - 1.0 :  // going down
-					 regiony + rsize - glob.y; // going up		 
-				  double ydx = ydy/tana;
-				  
-				  // these stored hit points are updated as we go along
-				  xcrossx = glob.x+xdx;
-				  xcrossy = glob.y+xdy;
-				  
-				  ycrossx = glob.x+ydx;
-				  ycrossy = glob.y+ydy;
-				  
-				  // find the distances to the region crossing points
-				  // manhattan distance is faster than using hypot()
-				  distX = fabs(xdx)+fabs(xdy);
-				  distY = fabs(ydx)+fabs(ydy);		  
-				}
+					// invalidate the region crossing points used to jump over
+					// empty regions
+					calculatecrossings = true;
 			 
-// 			 printf( "globx %.2f globy %.2f\n", glob.x, glob.y );
-// 			 printf( "xcross (%.2f,%.2f) ycross(%.2f,%.2f)\n", xcrossx, xcrossy, ycrossx, ycrossy );
-// 			 printf( "distX  %.2f distY %.2f\n", distX, distY );
-// 			 printf( "xjumpdist  %.2f yjumpdist %.2f\n", xjumpdist, yjumpdist );
-// 			 puts( "" );
+					// convert from global cell to local cell coords
+					int32_t cx( GETCELL(glob.x) ); 
+					int32_t cy( GETCELL(glob.y) );
 			 
-			 if( distX < distY ) // crossing a region boundary left or right
-				{
-				  //puts( "distX" );
-				  // move to the X crossing
-				  glob.x = xcrossx; 
-				  glob.y = xcrossy; 
+					Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
+					assert(c); // should be a cell there 
+			 
+					// while within the bounds of this region and while some ray remains
+					// we'll tweak the cell pointer directly to move around quickly
+					while( (cx>=0) && (cx<REGIONWIDTH) && 
+								 (cy>=0) && (cy<REGIONWIDTH) && 
+								 n > 0 )
+						{			 
+							//printf( "cx %d cy %d\n", cx, cy );
+							assert(c >= reg->cells);
+							assert(c < (reg->cells + REGIONSIZE) );
+											  
+							for( std::vector<Block*>::iterator it = c->blocks.begin();
+									 it != c->blocks.end();
+									 ++it )					 
+								{	      	      
+									Block* block = *it;
+						
+									// skip if not in the right z range
+									if( r.ztest && 
+											( r.origin.z < block->global_z.min || 
+												r.origin.z > block->global_z.max ) )
+										continue; 
+						
+									// test the predicate we were passed
+									if( (*r.func)( block->mod, (Model*)r.mod, r.arg )) 
+										{
+											// a hit!
+											sample.color = block->GetColor();
+											sample.mod = block->mod;
+							 
+											if( ax > ay ) // faster than the equivalent hypot() call
+												sample.range = fabs((glob.x-start.x) / cosa) / ppm;
+											else
+												sample.range = fabs((glob.y-start.y) / sina) / ppm;
+							 
+											return sample;
+										}				  
+								}
 				  
-				  n -= distX; // decrement remaining manhattan distance
-				  
-				  // calculate the next region crossing
-				  xcrossx += xjumpx; 
-				  xcrossy += xjumpy;
-				  
-				  distY -= distX;
-				  distX = xjumpdist;
-				  
-				  //rt_candidate_cells.push_back( stg_point_int_t( xcrossx, xcrossy ));
-				}			 
-			 else // crossing a region boundary up or down
-				{		  
-				  //puts( "distY" );
-				  // move to the X crossing
-				  glob.x = ycrossx;
-				  glob.y = ycrossy;
-				  
-				  n -= distY; // decrement remaining manhattan distance				
-				  
-				  // calculate the next region crossing
-				  ycrossx += yjumpx;
-				  ycrossy += yjumpy;
-				  
-				  distX -= distY;
-				  distY = yjumpdist;
-				  
-				  //rt_candidate_cells.push_back( stg_point_int_t( ycrossx, ycrossy ));
-				}	
+							assert (sx >= -2 && sx < 2);
+							assert (sy >= -2 && sy < 2);
+							// increment our cell in the correct direction
+							if( exy < 0 ) // we're iterating along X
+								{
+									glob.x += sx; // global coordinate
+									exy += by;						
+									c += sx; // move the cell left or right
+									cx += sx; // cell coordinate for bounds checking
+								}
+							else  // we're iterating along Y
+								{
+									glob.y += sy; // global coordinate
+									exy -= bx;						
+									c += sy * REGIONWIDTH; // move the cell up or down
+									cy += sy; // cell coordinate for bounds checking
+								}			 
+							n--; // decrement the manhattan distance remaining
 
-// 			 if( (GETCELL(xcrossx) == GETCELL(ycrossx) ) &&
-// 				  (GETCELL(xcrossy) == GETCELL(ycrossy) ) )
-// 				printf( "SAME %d=%d %d=%d\n", 
-// 						  GETCELL(xcrossx), GETCELL(ycrossx),
-// 						  GETCELL(xcrossy), GETCELL(ycrossy) );
+							//rt_cells.push_back( stg_point_int_t( glob.x, glob.y ));
+						}
+				  
+					//printf( "leaving populated region\n" );
+				}							 
+			else // jump over the empty region
+				{		  		  		  
+					// on the first run, and when we've been iterating over cells,
+					// we need to calculate the next crossing of region in each
+					// axis
+					if( calculatecrossings )
+						{
+							calculatecrossings = false;
+				  
+							// find the coordinate in cells of the bottom left corner of
+							// the current region
+							int32_t ix( glob.x );
+							int32_t iy( glob.y );				  
+							double regionx( ix/REGIONWIDTH*REGIONWIDTH );
+							double regiony( iy/REGIONWIDTH*REGIONWIDTH );
+							if( (glob.x < 0) && (ix % REGIONWIDTH) ) regionx -= REGIONWIDTH;
+							if( (glob.y < 0) && (iy % REGIONWIDTH) ) regiony -= REGIONWIDTH;
+				  
+							//double regionx = glob.x - fmod(glob.x,REGIONWIDTH);
+							//double regiony = glob.y - fmod(glob.y,REGIONWIDTH);
+				  
+							//printf( "region %.2f %.2f\n", regionx, regiony );
+							
+							// calculate the distance to the edge of the current region
+							double xdx( sx < 0 ? 
+													regionx - glob.x - 1.0 : // going left
+													regionx + REGIONWIDTH - glob.x ); // going right			 
+							double xdy( xdx*tana );
+							
+							double ydy( sy < 0 ? 
+													regiony - glob.y - 1.0 :  // going down
+													regiony + REGIONWIDTH - glob.y ); // going up		 
+							double ydx( ydy/tana );
+							
+							// these stored hit points are updated as we go along
+							xcrossx = glob.x+xdx;
+							xcrossy = glob.y+xdy;
+				  
+							ycrossx = glob.x+ydx;
+							ycrossy = glob.y+ydy;
+				  
+							// find the distances to the region crossing points
+							// manhattan distance is faster than using hypot()
+							distX = fabs(xdx)+fabs(xdy);
+							distY = fabs(ydx)+fabs(ydy);		  
+						}
+			 
+					// 			 printf( "globx %.2f globy %.2f\n", glob.x, glob.y );
+					// 			 printf( "xcross (%.2f,%.2f) ycross(%.2f,%.2f)\n", xcrossx, xcrossy, ycrossx, ycrossy );
+					// 			 printf( "distX  %.2f distY %.2f\n", distX, distY );
+					// 			 printf( "xjumpdist  %.2f yjumpdist %.2f\n", xjumpdist, yjumpdist );
+					// 			 puts( "" );
+			 
+					if( distX < distY ) // crossing a region boundary left or right
+						{
+							//puts( "distX" );
+							// move to the X crossing
+							glob.x = xcrossx; 
+							glob.y = xcrossy; 
+				  
+							n -= distX; // decrement remaining manhattan distance
+				  
+							// calculate the next region crossing
+							xcrossx += xjumpx; 
+							xcrossy += xjumpy;
+				  
+							distY -= distX;
+							distX = xjumpdist;
+				  
+							//rt_candidate_cells.push_back( stg_point_int_t( xcrossx, xcrossy ));
+						}			 
+					else // crossing a region boundary up or down
+						{		  
+							//puts( "distY" );
+							// move to the X crossing
+							glob.x = ycrossx;
+							glob.y = ycrossy;
+				  
+							n -= distY; // decrement remaining manhattan distance				
+				  
+							// calculate the next region crossing
+							ycrossx += yjumpx;
+							ycrossy += yjumpy;
+				  
+							distX -= distY;
+							distY = yjumpdist;
+				  
+							//rt_candidate_cells.push_back( stg_point_int_t( ycrossx, ycrossy ));
+						}	
+
+					// 			 if( (GETCELL(xcrossx) == GETCELL(ycrossx) ) &&
+					// 				  (GETCELL(xcrossy) == GETCELL(ycrossy) ) )
+					// 				printf( "SAME %d=%d %d=%d\n", 
+					// 						  GETCELL(xcrossx), GETCELL(ycrossx),
+					// 						  GETCELL(xcrossy), GETCELL(ycrossy) );
 						  
-			 //printf( "jumped to glob (%.2f %.2f)\n", glob.x, glob.y  );
-		  }			  	
-		//rt_cells.push_back( stg_point_int_t( glob.x, glob.y ));
-	 } 
+					//printf( "jumped to glob (%.2f %.2f)\n", glob.x, glob.y  );
+				}			  	
+			//rt_cells.push_back( stg_point_int_t( glob.x, glob.y ));
+		} 
   // hit nothing
   sample.mod = NULL;
   return sample;
@@ -936,8 +930,6 @@ SuperRegion* World::AddSuperRegion( const stg_point_int_t& sup )
   return sr;
 }
 
-
-
 inline SuperRegion* World::GetSuperRegionCached( int32_t x, int32_t y )
 {
   // around 99% of the time the SR is the same as last
@@ -977,28 +969,17 @@ inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
   return sr;
 }
 
-Cell* World::GetCellNoCreate( const stg_point_int_t& glob )
-{
-  Region* r = GetSuperRegionCached( GETSREG(glob.x), GETSREG(glob.y) )
-	 ->GetRegionGlobal( glob );
-
-  if( r->count )
-	 return r->GetCellGlobalNoCreate( glob ) ;
-  return NULL;
-}
-
-
-Cell* World::GetCellCreate( const stg_point_int_t& glob )
+Cell* World::GetCell( const stg_point_int_t& glob )
 {
   return( GetSuperRegionCached(  GETSREG(glob.x), GETSREG(glob.y)  )
-			 ->GetRegionGlobal( glob )
-			 ->GetCellGlobalCreate( glob )) ;
+					->GetRegion( GETREG(glob.x), GETREG(glob.y) )
+					->GetCell( GETCELL(glob.x), GETCELL(glob.y) )) ;
 }
 
   
 void World::ForEachCellInLine( const stg_point_int_t& start,
-										 const stg_point_int_t& end,
-										 std::vector<Cell*>& cells )
+															 const stg_point_int_t& end,
+															 std::vector<Cell*>& cells )
 {  
 
   int dx = end.x - start.x;
@@ -1025,20 +1006,20 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
   
   while( n-- ) 
     {				
-      // find or create the cell at this location, then add it to the vector
-		cells.push_back( GetCellCreate( cell ) );
+      // find the cell at this location, then add it to the vector
+			cells.push_back( GetCell( cell ) );
 
       // cleverly skip to the next cell			 
       if( exy < 0 ) 
-		  {
-			 cell.x += sx;
-			 exy += by;
-		  }
+				{
+					cell.x += sx;
+					exy += by;
+				}
       else 
-		  {
-			 cell.y += sy;
-			 exy -= bx; 
-		  }
+				{
+					cell.y += sy;
+					exy -= bx; 
+				}
     }
 }
 
@@ -1075,15 +1056,15 @@ void World::StartUpdatingModel( Model* mod )
   // update_list = g_list_append( update_list, mod ); 
   
   if( mod->thread_safe )
-	 {
-		if( ! g_list_find( reentrant_update_list, mod ) )		  
-		  reentrant_update_list = g_list_append( reentrant_update_list, mod ); 
-	 }
+		{
+			if( ! g_list_find( reentrant_update_list, mod ) )		  
+				reentrant_update_list = g_list_append( reentrant_update_list, mod ); 
+		}
   else
-	 {
-		if( ! g_list_find( nonreentrant_update_list, mod ) )		  
-		  nonreentrant_update_list = g_list_append( nonreentrant_update_list, mod ); 
-	 }
+		{
+			if( ! g_list_find( nonreentrant_update_list, mod ) )		  
+				nonreentrant_update_list = g_list_append( nonreentrant_update_list, mod ); 
+		}
 }
 
 void World::StopUpdatingModel( Model* mod )
@@ -1091,15 +1072,15 @@ void World::StopUpdatingModel( Model* mod )
   // update_list = g_list_remove( update_list, mod ); 
   
   if( mod->thread_safe )
-	 reentrant_update_list = g_list_remove( reentrant_update_list, mod ); 
+		reentrant_update_list = g_list_remove( reentrant_update_list, mod ); 
   else
-	 nonreentrant_update_list = g_list_remove( nonreentrant_update_list, mod ); 		
+		nonreentrant_update_list = g_list_remove( nonreentrant_update_list, mod ); 		
 }
 
 void World::StartUpdatingModelPose( Model* mod )
 { 
   if( ! g_list_find( velocity_list, mod ) )
-	 velocity_list = g_list_append( velocity_list, mod ); 
+		velocity_list = g_list_append( velocity_list, mod ); 
 }
 
 void World::StopUpdatingModelPose( Model* mod )

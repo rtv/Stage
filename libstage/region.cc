@@ -7,18 +7,12 @@
 #include "region.hh"
 using namespace Stg;
 
-const uint32_t Region::WIDTH = REGIONWIDTH;
-const uint32_t Region::SIZE = REGIONSIZE;
-
-const uint32_t SuperRegion::WIDTH = SUPERREGIONWIDTH;
-const uint32_t SuperRegion::SIZE = SUPERREGIONSIZE;
-
 
 Region::Region() 
-  : cells(NULL), count(0)
+  : cells(), count(0)
 { 
-  //for( unsigned int i=0; i<Region::SIZE; i++ )
-  //cells[i].region = this;
+  for( int i=0; i<REGIONSIZE; i++ )
+		cells[i].region = this;
 }
 
 Region::~Region()
@@ -27,6 +21,19 @@ Region::~Region()
 	 delete[] cells;
 }
 
+void Region::DecrementOccupancy()
+{ 
+	assert( superregion );
+	superregion->DecrementOccupancy();
+	--count; 
+}
+
+void Region::IncrementOccupancy()
+{ 
+	assert( superregion );
+	superregion->IncrementOccupancy();
+	++count; 
+}
 
 SuperRegion::SuperRegion( World* world, stg_point_int_t origin )
   : count(0), origin(origin), world(world)	 
@@ -36,7 +43,7 @@ SuperRegion::SuperRegion( World* world, stg_point_int_t origin )
   //  printf( "superregion at %d %d\n", origin.x, origin.y );
  
   // initialize the parent pointer for all my child regions
-  for( unsigned int i=0; i<SuperRegion::SIZE; i++ )
+  for( int i=0; i<SUPERREGIONSIZE; i++ )
 	 regions[i].superregion = this;
 }
 
@@ -60,10 +67,10 @@ void SuperRegion::Draw( bool drawall )
 
 	// outline regions
   glColor3f( 0,1,0 );    
-  for( unsigned int x=0; x<SuperRegion::WIDTH; x++ )
-	 for( unsigned int y=0; y<SuperRegion::WIDTH; y++ )
+  for( int x=0; x<SUPERREGIONWIDTH; x++ )
+	 for( int y=0; y<SUPERREGIONWIDTH; y++ )
 		{
-		  Region* r = GetRegionLocal(x,y);
+		  const Region* r = GetRegion(x,y);
 
 		  if( r->count )
 			 // outline regions with contents
@@ -120,10 +127,10 @@ void SuperRegion::Draw( bool drawall )
     
   glColor3f( 1.0,0,0 );
 
-  for( unsigned int x=0; x<SuperRegion::WIDTH; x++ )
-	 for( unsigned int y=0; y<SuperRegion::WIDTH; y++ )
+  for( int x=0; x<SUPERREGIONWIDTH; x++ )
+	 for( int y=0; y<SUPERREGIONWIDTH; y++ )
 		{
-		  Region* r = GetRegionLocal( x, y);
+		  const Region* r = GetRegion( x, y);
 		  
 		  if( r->count < 1 )
 			 continue;		  
@@ -131,9 +138,9 @@ void SuperRegion::Draw( bool drawall )
 		  snprintf( buf, 15, "%lu", r->count );
 		  Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
 		  
-		  for( unsigned int p=0; p<Region::WIDTH; p++ )
-			 for( unsigned int q=0; q<Region::WIDTH; q++ )
-				if( r->cells[p+(q*Region::WIDTH)].blocks.size() )
+		  for( int p=0; p<REGIONWIDTH; p++ )
+			 for( int q=0; q<REGIONWIDTH; q++ )
+				if( r->cells[p+(q*REGIONWIDTH)].blocks.size() )
 				  {					 
 					 GLfloat xx = p+(x<<RBITS);
 					 GLfloat yy = q+(y<<RBITS);
@@ -145,12 +152,12 @@ void SuperRegion::Draw( bool drawall )
 						}
 					 else // draw a rectangular solid
 						{
-						  Cell* c = &r->cells[p+(q*Region::WIDTH)];
+						  Cell* c = (Cell*)&r->cells[p+(q*REGIONWIDTH)];
 						  for( std::vector<Block*>::iterator it = c->blocks.begin();
 								 it != c->blocks.end();
 								 ++it )					 
 							 {
-								Block* block = *it;//(Block*)it->data;
+								Block* block = *it;
 						  
 								//printf( "zb %.2f %.2f\n", ent->zbounds.min, ent->zbounds.max );
 						  

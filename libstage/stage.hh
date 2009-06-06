@@ -999,10 +999,10 @@ namespace Stg
     SuperRegion* GetSuperRegionCached( int32_t x, int32_t y );
     void ExpireSuperRegion( SuperRegion* sr );
 
-    inline Cell* GetCellNoCreate( const stg_point_int_t& glob );
-    inline Cell* GetCellNoCreate( const int32_t x, const int32_t y );
+    inline Cell* GetCell( const stg_point_int_t& glob );
+    //inline Cell* GetCellNoCreate( const int32_t x, const int32_t y );
     //inline Cell* GetCellCreate( const int32_t x, const int32_t y );
-    inline Cell* GetCellCreate( const stg_point_int_t& glob );
+    //inline Cell* GetCellCreate( const stg_point_int_t& glob );
 	 
 	 /** add a Cell pointer to the vector for each cell on the line from
 		  pt1 to pt2 inclusive */

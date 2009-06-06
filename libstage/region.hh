@@ -14,16 +14,26 @@ namespace Stg
 {
 
 // a bit of experimenting suggests that these values are fast. YMMV.
-#define RBITS  4 // regions contain (2^RBITS)^2 pixels
-#define SBITS  5 // superregions contain (2^SBITS)^2 regions
-#define SRBITS (RBITS+SBITS)
+ 	const int32_t RBITS( 4 ); // regions contain (2^RBITS)^2 pixels
+ 	const int32_t SBITS( 5 );// superregions contain (2^SBITS)^2 regions
+ 	const int32_t SRBITS( RBITS+SBITS );
+		
+ 	const int32_t REGIONWIDTH( 1<<RBITS );
+ 	const int32_t REGIONSIZE( REGIONWIDTH*REGIONWIDTH );
 
-#define REGIONWIDTH (1<<RBITS)
-#define REGIONSIZE REGIONWIDTH*REGIONWIDTH
-
-#define SUPERREGIONWIDTH (1<<SBITS)
-#define SUPERREGIONSIZE SUPERREGIONWIDTH*SUPERREGIONWIDTH
-
+ 	const int32_t SUPERREGIONWIDTH( 1<<SBITS );
+ 	const int32_t SUPERREGIONSIZE( SUPERREGIONWIDTH*SUPERREGIONWIDTH );
+		
+	/** (x & CELLMASK) converts a global cell index into a local cell
+			index in a region */
+	const int32_t CELLMASK( ~((~0x00)<< RBITS ));
+	/** (x & REGIONMASK)converts a global cell index into a local cell
+			index in a region */
+	const int32_t REGIONMASK( ~((~0x00)<< SRBITS ));
+		
+	inline int32_t GETCELL( const int32_t x ) { return( x & CELLMASK); }
+	inline int32_t GETREG(  const int32_t x ) { return( ( x & REGIONMASK ) >> RBITS); }
+	inline int32_t GETSREG( const int32_t x ) { return( x >> SRBITS); }
 
 class Cell 
 {
@@ -44,87 +54,38 @@ public:
   { 
   }  
   
-  inline void RemoveBlock( Block* b );
-  inline void AddBlock( Block* b );  
-  inline void AddBlockNoRecord( Block* b );
+  void RemoveBlock( Block* b );
+  void AddBlock( Block* b );  
+  void AddBlockNoRecord( Block* b );
 };  
-
 
 class Region
 {
 public:
   
-  Cell* cells;
-  SuperRegion* superregion;
-
-  static const uint32_t WIDTH;
-  static const uint32_t SIZE;
-
-  static int32_t CELL( const int32_t x )
-  {  
-	 const int32_t _cell_coord_mask = ~ ( ( ~ 0x00 ) << RBITS );
-	 return( x & _cell_coord_mask );															  
-  }
-
+  Cell cells[ REGIONSIZE ];
+  SuperRegion* superregion;	
   unsigned long count; // number of blocks rendered into these cells
   
   Region();
   ~Region();
   
-  Cell* GetCellCreate( int32_t x, int32_t y )
+  Cell* GetCell( int32_t x, int32_t y ) const
   { 
-	 if( ! cells )
-		{
-		  cells = new Cell[REGIONSIZE];
-		  for( unsigned int i=0; i<Region::SIZE; i++ )
-			 cells[i].region = this;		  
-		}
-	 return( &cells[CELL(x) + (CELL(y)*Region::WIDTH)] ); 
+		return( (Cell*)&cells[ x + (y*REGIONWIDTH) ] ); 
   }
-
-  Cell* GetCellGlobalCreate( const stg_point_int_t& c ) 
-  { 
-	 if( ! cells )
-		{
-		  cells = new Cell[REGIONSIZE];
-		  for( unsigned int i=0; i<Region::SIZE; i++ )
-			 cells[i].region = this;		  
-		}
-	 return( &cells[CELL(c.x) + (CELL(c.y)*Region::WIDTH)] ); 
-  }
-  
-  Cell* GetCellGlobalNoCreate( int32_t x, int32_t y ) const
-  { 
-	 return( &cells[CELL(x) + (CELL(y)*Region::WIDTH)] ); 
-  }
-
-  Cell* GetCellLocallNoCreate( int32_t x, int32_t y ) const
-  { 
-	 return( &cells[x + y*Region::WIDTH] ); 
-  }
-  
-
-  Cell* GetCellGlobalNoCreate( const stg_point_int_t& c ) const
-  { 
-	 return( &cells[CELL(c.x) + (CELL(c.y)*Region::WIDTH)] ); 
-  }
-     
-
-
-  void DecrementOccupancy();
-  void IncrementOccupancy();
+       
+	void DecrementOccupancy();
+	void IncrementOccupancy();
 };
   
-
- class SuperRegion
+	class SuperRegion
   {
-	 friend class World;
-	 friend class Model;
+		friend class World;
+		friend class Model;
 	 
   private:
-	 static const uint32_t WIDTH;
-	 static const uint32_t SIZE;
-	 
+
 	 Region regions[SUPERREGIONSIZE];
 	 unsigned long count; // number of blocks rendered into these regions
 	 
@@ -133,31 +94,14 @@ public:
 	 
   public:
 
-	 static int32_t REGION( const int32_t x )
-	 {  
-		const int32_t _region_coord_mask = ~ ( ( ~ 0x00 ) << SRBITS );
-		return( ( x & _region_coord_mask ) >> RBITS );
-	 }
-	 	 
-	 
 	 SuperRegion( World* world, stg_point_int_t origin );
 	 ~SuperRegion();
-	 
-	 Region* GetRegionGlobal( int32_t x, int32_t y )
-	 {
-		return( &regions[ REGION(x) + (REGION(y)*SuperRegion::WIDTH) ] );
-	 }
-
-	 Region* GetRegionLocal( int32_t x, int32_t y )
-	 {
-		return( &regions[ x + (y*SuperRegion::WIDTH) ] );
-	 }
-
-	 Region* GetRegionGlobal( const stg_point_int_t& r )
-	 {
-		return( &regions[ REGION(r.x) + (REGION(r.y)*SuperRegion::WIDTH) ] );
-	 }
-	 
+		
+		const Region* GetRegion( int32_t x, int32_t y ) const
+		{
+			return( &regions[ x + (y*SUPERREGIONWIDTH) ] );
+		}
+		
 	 void Draw( bool drawall );
 	 void Floor();
 	 
@@ -165,21 +109,8 @@ public:
 	 void IncrementOccupancy(){ ++count; };
   };
 
-inline void Region::DecrementOccupancy()
-{ 
-  assert( superregion );
-  superregion->DecrementOccupancy();
-  --count; 
-};
 
-inline void Region::IncrementOccupancy()
-{ 
-  assert( superregion );
-  superregion->IncrementOccupancy();
-  ++count; 
-}
-
-inline  void printvec( std::vector<Block*>& vec )
+inline void printvec( std::vector<Block*>& vec )
   {
 	 printf( "Vec: ");
 	 for( size_t i=0; i<vec.size(); i++ )
