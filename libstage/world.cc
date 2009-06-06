@@ -651,7 +651,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   const double sina(sin(angle));
   const double tana(sina/cosa); // = tan(angle)
 
-  // and the x and y offsets of the ray
+  // the x and y components of the ray
   const int32_t dx( ppm * r.range * cosa);
   const int32_t dy( ppm * r.range * sina);
   
@@ -665,8 +665,6 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   const int32_t by(2*ay);	
   int32_t exy(ay-ax); 
   int32_t n(ax+ay); // the manhattan distance to the goal cell
-  
-  //const int REGIONWIDTH( REGIONWIDTH );
   
   // fix a little issue where rays are not drawn long enough when
   // drawing to the right or up
@@ -688,10 +686,8 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   double distX(0), distY(0);
   bool calculatecrossings( true );
 	 
-  // puts( "=======================" );
-
   // Stage spends up to 95% of its time in this loop! It would be
-  // neater with more function calls encapsualting things, but even
+  // neater with more function calls encapsulating things, but even
   // inline calls have a noticeable (2-3%) effect on performance  
   while( n > 0  ) // while we are still not at the ray end
     { 
@@ -701,7 +697,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 			// coordinates of the region inside the superregion
 			int32_t rx( GETREG(glob.x) );
 			int32_t ry( GETREG(glob.y) );		
-			Region* reg( &sr->regions[ rx + (ry*SUPERREGIONWIDTH) ] );
+			Region* reg( &sr->regions[ rx + ry * SUPERREGIONWIDTH ] );
 
 			if( reg->count ) // if the region contains any objects
 				{
@@ -796,11 +792,6 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 							if( (glob.x < 0) && (ix % REGIONWIDTH) ) regionx -= REGIONWIDTH;
 							if( (glob.y < 0) && (iy % REGIONWIDTH) ) regiony -= REGIONWIDTH;
 				  
-							//double regionx = glob.x - fmod(glob.x,REGIONWIDTH);
-							//double regiony = glob.y - fmod(glob.y,REGIONWIDTH);
-				  
-							//printf( "region %.2f %.2f\n", regionx, regiony );
-							
 							// calculate the distance to the edge of the current region
 							double xdx( sx < 0 ? 
 													regionx - glob.x - 1.0 : // going left
@@ -867,13 +858,6 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 				  
 							//rt_candidate_cells.push_back( stg_point_int_t( ycrossx, ycrossy ));
 						}	
-
-					// 			 if( (GETCELL(xcrossx) == GETCELL(ycrossx) ) &&
-					// 				  (GETCELL(xcrossy) == GETCELL(ycrossy) ) )
-					// 				printf( "SAME %d=%d %d=%d\n", 
-					// 						  GETCELL(xcrossx), GETCELL(ycrossx),
-					// 						  GETCELL(xcrossy), GETCELL(ycrossy) );
-						  
 					//printf( "jumped to glob (%.2f %.2f)\n", glob.x, glob.y  );
 				}			  	
 			//rt_cells.push_back( stg_point_int_t( glob.x, glob.y ));

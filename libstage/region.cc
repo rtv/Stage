@@ -17,8 +17,6 @@ Region::Region()
 
 Region::~Region()
 {
-  if(cells)
-	 delete[] cells;
 }
 
 void Region::DecrementOccupancy()
