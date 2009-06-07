@@ -216,7 +216,8 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   canvas->createMenuItems( mbar, "View" );
 
   mbar->add( "Run", 0,0,0, FL_SUBMENU );
-  mbar->add( "Run/Pause", 'p', (Fl_Callback*) WorldGui::pauseCb, this, FL_MENU_DIVIDER );
+  mbar->add( "Run/Pause", 'p', (Fl_Callback*) WorldGui::pauseCb, this );
+  mbar->add( "Run/One step", '.', (Fl_Callback*) WorldGui::onceCb, this, FL_MENU_DIVIDER );
   mbar->add( "Run/Faster", ']', (Fl_Callback*) WorldGui::fasterCb, this );
   mbar->add( "Run/Slower", '[', (Fl_Callback*) WorldGui::slowerCb, this );
   mbar->add( "Run/Realtime", '{', (Fl_Callback*) WorldGui::realtimeCb, this, FL_MENU_DIVIDER );
@@ -325,9 +326,20 @@ bool WorldGui::Update()
 	  TogglePause();
 	  pause_time = true;
   }
-	
-  bool val = paused ? true : World::Update();
+
+  bool val = true;
   
+  if( paused )	 
+	 {
+		if( steps > 0 )
+		  {
+			 val = World::Update();
+			 --steps;
+		  }
+	 }
+  else
+	 val = World::Update();
+	 
   stg_usec_t interval;
   stg_usec_t timenow;
   
@@ -336,34 +348,24 @@ bool WorldGui::Update()
     Fl::check();
 
     timenow = RealTimeNow();
-	 
-	 // if we're attempting to match some real time interval
-	 //if( interval_real > 0 )
-		{
-		  interval = timenow - real_time_of_last_update; // guaranteed to be >= 0
-		  
-		  double sleeptime = (double)interval_real - (double)interval;
-		  
-		  if( paused ) sleeptime = 20000; // spare the CPU if we're paused
-		  
-		  // printf( "real %.2f interval %.2f sleeptime %.2f\n", 
-		  //	 (double)interval_real,
-		  //	 (double)interval,
-		  //	 sleeptime );
-		  
-		  if( sleeptime > 0 ) 
-			 usleep( (stg_usec_t)MIN(sleeptime,20000) ); // check the GUI at 10Hz min
-		}
-  } while( interval < interval_real );
- 
-//   if( !IsGUI() )
-// 	 printf( "[Stage: %s\n", ClockString().cstr()
- 
-  //printf( "\r \t\t timenow %lu", timenow );
-  //printf( "interval_real %.20f\n", interval_real );
 
-  // if( paused ) // gentle on the CPU when paused
-		 //usleep( 10000 );
+	 // do
+	 {
+		interval = timenow - real_time_of_last_update; // guaranteed to be >= 0
+		
+		double sleeptime = (double)interval_real - (double)interval;
+		
+		if( paused ) sleeptime = 20000; // spare the CPU if we're paused
+		
+		// printf( "real %.2f interval %.2f sleeptime %.2f\n", 
+		//	 (double)interval_real,
+		//	 (double)interval,
+		//	 sleeptime );
+	  
+		if( (sleeptime > 0) || paused ) 
+		  usleep( (stg_usec_t)MIN(sleeptime,20000) ); // check the GUI at 10Hz min
+	 }
+  } while( interval < interval_real );
   
   interval_log[updates%INTERVAL_LOG_LEN] =  timenow - real_time_of_last_update;
 
@@ -613,6 +615,12 @@ void WorldGui::pauseCb( Fl_Widget* w, WorldGui* worldGui )
   
   worldGui->canvas->redraw(); // in case something happened that will never be
   // drawn 'cos we cancelled the timeout
+}
+
+void WorldGui::onceCb( Fl_Widget* w, WorldGui* worldGui )
+{
+  worldGui->paused = true;
+  worldGui->steps = 1; // number of steps to run  
 }
 
 void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* worldGui ) 

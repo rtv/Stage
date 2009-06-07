@@ -1474,6 +1474,7 @@ namespace Stg
     stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
     Fl_Menu_Bar* mbar;
     OptionsDlg* oDlg;
+	 unsigned int steps;
     bool pause_time;
     bool paused; ///< the world only updates when this is false
     stg_usec_t real_time_of_last_update;
@@ -1490,6 +1491,7 @@ namespace Stg
     static void optionsDlgCb( OptionsDlg* oDlg, WorldGui* worldGui  );
     static void helpAboutCb( Fl_Widget* w, void* p );
     static void pauseCb( Fl_Widget* w, WorldGui* worldGui );
+    static void onceCb( Fl_Widget* w, WorldGui* worldGui );
     static void fasterCb( Fl_Widget* w, WorldGui* worldGui );
     static void slowerCb( Fl_Widget* w, WorldGui* worldGui );
     static void realtimeCb( Fl_Widget* w, WorldGui* worldGui );
