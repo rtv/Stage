@@ -26,10 +26,10 @@ ln -s $NAME $DEST
 tar chzf $DEST.tgz $DEST
 
 # Copy tarball to website
-scp $DEST.tgz $SFUSER@shell.sourceforge.net:/home/groups/p/pl/playerstage/htdocs/doc/
+scp $DEST.tgz $SFUSER@web.sourceforge.net:/home/groups/p/pl/playerstage/htdocs/doc/
 
 # Untar the file and re-jig the permissions
-ssh $_SFUSER@shell.sourceforge.net 'cd /home/groups/p/pl/playerstage/htdocs/doc/; tar xvzf '$DEST'.tgz --no-overwrite-dir; find '$DEST' -type d | xargs chmod 2775; find '$DEST' -type f | xargs chmod 664'
+ssh $_SFUSER@web.sourceforge.net 'cd /home/groups/p/pl/playerstage/htdocs/doc/; tar xvzf '$DEST'.tgz --no-overwrite-dir; find '$DEST' -type d | xargs chmod 2775; find '$DEST' -type f | xargs chmod 664'
 
 # clean up
 rm $DEST $DEST.tgz

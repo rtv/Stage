@@ -87,17 +87,22 @@ File/Save menu item. <b>Warning: the saved poses overwrite the currentworld file
 want to keep the old poses.  Alternatively the File/Save As menu item
 can be used to save to a new world file.
 
-<h3>Pausing and resuming the clock</h3>
-<p>The simulation can be paused or resumed by pressing the space key.
+<h3>Pausing and resuming the clock</h3> <p>The simulation can be
+paused or resumed by pressing the 'p' key. Run one simulation step at
+a time by pressing the '.' (period) key. Hold down the '.' key to step
+repeatedly. Stepping leaves the simulation paused, so press 'p' to
+resume running. The initial paused/unpaused state can be set in the
+worldfile using the "paused" property. 
 
-<h3>Selecting models</h3>
-<p>Models can be selected by clicking on them with the left mouse button.
-It is possible to select multiple models by holding the shift key and 
-clicking on multiple models.  Selected models can be moved by dragging or
-rotated by right click dragging.  Selections can be cleared by clicking on
-an empty location in the world.  After clearing the selection, the last
-single model selected will be saved as the target for several view options
-described below which affect a particular model.
+<h3>Selecting models</h3> <p>Models can be selected by clicking on
+them with the left mouse button.  It is possible to select multiple
+models by holding the shift key and clicking on multiple models.
+Selected models can be moved by dragging or rotated by holding the
+right mouse button and moving the mouse. Selections can be cleared by
+clicking on an empty location in the world.  After clearing the
+selection, the last single model selected will be saved as the target
+for several view options described below which affect a particular
+model.
 
 <h3>View options</h3>
 <p>The View menu provides access to a number of features affecting how
@@ -105,11 +110,12 @@ the world is rendered.  To the right of each option there is usually
 a keyboard hotkey which can be pressed to quickly toggle the relevant
 option.
 
-<p>Sensor data visualizations can be toggled by the "Data" option.
-The filter data option opens a dialog which provides the ability
-to turn on and off visualizations of particular sensors.  The "Visualize All"
-option in the dialog toggles whether sensor visualizations are enabled
-for all models or only the currently selected ones.
+<p>Sensor data visualizations can be toggled by the "Data" option
+(shortcut 'd').  The filter data option (shortcut shift-'d') opens a
+dialog which enables turning on and off visualizations of particular
+sensors.  The "Visualize All" option in the dialog toggles whether
+sensor visualizations are enabled for all models or only the currently
+selected ones.
 
 <p>The "Follow" option keeps the view centered on the last selected model.
 

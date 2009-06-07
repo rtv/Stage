@@ -18,3 +18,9 @@ terms of the GNU General Public License version 2 or later:
 Many patches and bug reports have been contributed by users around the
 world.  Stage is part of the Player Project (http://playerstage.org), 
 a community effort to develop free Software tools for robotics research.
+
+Project Lead / Maintainer
+------------------------
+
+- Stage v3. : Richard Vaughan (vaughan@sfu.ca)
+- Stage v2. : Toby Collett (tcollett+player@plan9.net.nz)

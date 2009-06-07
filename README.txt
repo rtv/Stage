@@ -72,7 +72,7 @@ If you use Stage in your work, we'd appreciate a citation. At the time
 of writing, the most suitable reference is either:
 
 Richard Vaughan. "Massively Multiple Robot Simulations in Stage", Swarm
-Intelligence (to appear 2008), Springer.
+Intelligence 2(2-4):189-208, 2008. Springer.
 
 Or, if you are using Player/Stage:
 
@@ -85,14 +85,16 @@ http://www.isr.uc.pt/icar03/ .
 [gzipped postscript](http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.ps.gz), 
 [pdf](http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.pdf)
 
-Please help us keep track of what's being used out there by correctly 
-naming the Player/Stage components you use. Player used on its own is 
-called "Player". Player and Stage used together are referred to as 
-"the Player/Stage system" or just "Player/Stage". When libstage is 
-used without Player, it's just called "Stage". When Player is used 
-with its 3D ODE-based simulation backend, Gazebo, it's called 
-Player/Gazebo. Gazebo without Player is just "Gazebo". All this 
-software is part of the "Player Project".
+Please help us keep track of what's being used out there by correctly
+naming the Player/Stage components you use. Player used on its own is
+called "Player". Player and Stage used together are referred to as
+"the Player/Stage system" or just "Player/Stage". When Stage is used
+without Player, it's just called "Stage". When the Stage library is
+used to create your own custom simulator, it's called "libstage" or
+"the Stage library". When Player is used with its 3D ODE-based
+simulation backend, Gazebo, it's called Player/Gazebo. Gazebo without
+Player is just "Gazebo". All this software is part of the "Player
+Project".
 
 Support
 -------
@@ -101,6 +103,7 @@ Funding for Stage has been provided in part by:
 - DARPA (USA)
 - NASA (USA)
 - NSERC (Canada)
+- DRDC Suffield (Canada)
 - NSF (USA)
 - Simon Fraser University (Canada)
 
