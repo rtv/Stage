@@ -7,24 +7,24 @@ include "map.inc"
 include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
-interval_real 20  # real-time interval between simulation updates in milliseconds 
+interval_real 0  # real-time interval between simulation updates in milliseconds 
 
 quit_time 1800
 
-paused 0
+paused 1
 
 resolution 0.02
 
 # configure the GUI window
 window
 (
-  size [ 635.000 666.000 ] # in pixels
-  scale 46.931            
+  size [ 1460.000 1080.000 ] # in pixels
+  scale 48.240            
      # pixels per meter
-  center [ 0.349  -1.327 ]
+  center [ -2.827  -2.340 ]
   rotate [ 0  0 ]
   			
-  show_data 1              # 1=on 0=off
+  show_data 0              # 1=on 0=off
 )
 
 # load an environment bitmap
@@ -62,4 +62,38 @@ wanderer( pose [ -1.282 1.875 0 111.727 ] )
 wanderer( pose [ -3.071 0.661 0 171.887 ] )
 wanderer( pose [ -1.763 1.151 0 134.645 ] )
 wanderer( pose [ -1.764 -0.128 0 168.059 ] )
-wanderer( pose [ -2.084 -1.044 0 -143.239 ] )
+wanderer( pose [ -7.432 4.684 0 -143.239 ] )
+wanderer( pose [ -10.133 5.662 0 -143.239 ] )
+wanderer( pose [ -9.307 2.231 0 -143.239 ] )
+wanderer( pose [ -7.711 2.832 0 -143.239 ] )
+wanderer( pose [ -2.653 4.491 0 -143.239 ] )
+wanderer( pose [ -3.005 -4.112 0 -143.239 ] )
+wanderer( pose [ -6.550 0.739 0 -143.239 ] )
+wanderer( pose [ -5.203 -4.361 0 -143.239 ] )
+wanderer( pose [ -11.732 0.511 0 -143.239 ] )
+wanderer( pose [ -10.696 -3.511 0 -143.239 ] )
+wanderer( pose [ -8.271 -3.386 0 -143.239 ] )
+wanderer( pose [ -5.182 -1.873 0 -143.239 ] )
+wanderer( pose [ -9.494 0.531 0 -143.239 ] )
+wanderer( pose [ -6.384 3.040 0 -143.239 ] )
+wanderer( pose [ -4.208 -0.132 0 -143.239 ] )
+wanderer( pose [ -10.447 2.397 0 -143.239 ] )
+wanderer( pose [ -9.017 3.910 0 -143.239 ] )
+wanderer( pose [ -6.218 3.931 0 -143.239 ] )
+wanderer( pose [ -5.182 2.750 0 -143.239 ] )
+wanderer( pose [ -7.939 1.029 0 -143.239 ] )
+wanderer( pose [ -6.695 -2.350 0 -143.239 ] )
+wanderer( pose [ -5.513 -0.692 0 -143.239 ] )
+wanderer( pose [ -4.664 1.527 0 -143.239 ] )
+wanderer( pose [ -8.851 5.818 0 -143.239 ] )
+wanderer( pose [ -5.493 5.320 0 -143.239 ] )
+wanderer( pose [ -4.829 4.449 0 -143.239 ] )
+wanderer( pose [ -3.627 3.268 0 -143.239 ] )
+wanderer( pose [ -12.106 4.056 0 -143.239 ] )
+wanderer( pose [ -12.085 1.796 0 -143.239 ] )
+wanderer( pose [ -10.219 -0.857 0 -143.239 ] )
+wanderer( pose [ -8.934 -1.749 0 -143.239 ] )
+wanderer( pose [ -6.861 -4.527 0 -143.239 ] )
+wanderer( pose [ -11.235 -1.832 0 -143.239 ] )
+wanderer( pose [ -4.477 -3.200 0 -143.239 ] )
+wanderer( pose [ -7.027 -0.795 0 -143.239 ] )

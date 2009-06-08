@@ -59,13 +59,14 @@ class Region
 {
 public:
   
-  Cell* cells;//[ REGIONSIZE ];
+  Cell* cells;
   SuperRegion* superregion;	
   unsigned int count; // number of blocks rendered into these cells
   
   Region();
   ~Region();
-  
+
+  // lazy allocation of memory for Cells: wait until someone asks.
   Cell* GetCell( int32_t x, int32_t y )
   { 
 	 if( ! cells )
