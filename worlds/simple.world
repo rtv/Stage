@@ -18,10 +18,10 @@ resolution 0.02
 # configure the GUI window
 window
 (
-  size [ 556.000 557.000 ] # in pixels
-  scale 29.162            
+  size [ 635.000 666.000 ] # in pixels
+  scale 37.481            
      # pixels per meter
-  center [ 0.095  -0.359 ]
+  center [ -0.019  -0.282 ]
   rotate [ 0  0 ]
   			
   show_data 1              # 1=on 0=off
@@ -44,7 +44,7 @@ pioneer2dx
   # size [ 0.050 0.050 0.050 ]
 
   #pose [ 0.329 0.284  0 108.025 ] 
-  pose [ -7.000 -7.000 0 45.000 ] 
+  pose [ -7 -7 0 45 ] 
   sicklaser() 
 
   ctrl "wander"

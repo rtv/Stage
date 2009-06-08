@@ -25,9 +25,9 @@ window
 ( 
   size [ 788.000 842.000 ] 
 
-  center [ 0.121 -0.854 ] 
+  center [ 6.871 -3.092 ] 
   rotate [ 0 0 ]
-  scale 42.424 
+  scale 198.439 
 
   pcam_loc [ 0 -4.000 2.000 ]
   pcam_angle [ 70.000 0 ]
@@ -44,7 +44,7 @@ floorplan
 ( 
   name "cave"
   pose [0 0 0 0]
-  size [16 16 0.600]
+  size [16.000 16.000 0.600]
   bitmap "bitmaps/cave.png"
 )
 
@@ -94,10 +94,10 @@ define charge_station model
 
 )
 
-charge_station(  pose [ 7.803 -1.332 0 34.377 ] )
-charge_station(  pose [ 7.940 -2.349 0 0 ] )
-charge_station(  pose [ 7.931 -3.367 0 0 ] )
-charge_station(  pose [ 7.931 -4.444 0 0 ] )
+charge_station(  pose [ 7.936 -1.627 0 0 ] )
+charge_station(  pose [ 7.935 -2.616 0 0 ] )
+charge_station(  pose [ 7.931 -3.478 0 0 ] )
+charge_station(  pose [ 7.931 -4.615 0 0 ] )
 
 define puck model (
   size [0.120 0.120 0.100]  
@@ -157,16 +157,16 @@ define autorob pioneer2dx
 #         )
 )
 
-autorob( pose [5.488 5.149 0 35.947] joules 300000 name "r0" )
-autorob( pose [6.431 5.593 0 -111.715] joules 100000 )
-autorob( pose [5.615 6.185 0 107.666] joules 200000 )
-autorob( pose [7.028 6.502 0 -128.279] joules 400000 )
-autorob( pose [5.750 4.137 0 -97.047] joules 100000 )
-autorob( pose [4.909 6.097 0 -44.366] joules 200000 )
-autorob( pose [6.898 4.775 0 -117.576] joules 300000 )
-autorob( pose [7.394 5.595 0 129.497] joules 400000 )
-autorob( pose [5.422 7.030 0 170.743] joules 100000 )
-autorob( pose [6.451 4.189 0 -61.453] joules 200000 )
+autorob( pose [5.676 5.188 0 -19.596] joules 300000 name "r0" )
+autorob( pose [6.371 5.403 0 -102.139] joules 100000 )
+autorob( pose [5.509 6.300 0 164.865] joules 200000 )
+autorob( pose [6.926 6.331 0 -111.398] joules 400000 )
+autorob( pose [5.730 3.938 0 -93.939] joules 100000 )
+autorob( pose [4.925 6.078 0 -58.690] joules 200000 )
+autorob( pose [6.889 4.752 0 -103.252] joules 300000 )
+autorob( pose [7.220 5.671 0 -168.541] joules 400000 )
+autorob( pose [5.230 6.997 0 -145.485] joules 100000 )
+autorob( pose [6.529 4.005 0 -74.042] joules 200000 )
 
 #autorob( pose [5.060 6.868 0 -61.295] joules 300000 )
 #autorob( pose [4.161 5.544 0 -147.713] joules 400000 )

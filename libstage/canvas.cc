@@ -795,24 +795,32 @@ void Canvas::renderFrame()
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
 
+		glPointSize( 2 );
+		glBegin( GL_POINTS );
+
 		for( unsigned int i=0;
 			  i < world->rt_cells.size();
 			  i++ )
 		  {
-// 			 char str[128];
-// 			 snprintf( str, 128, "(%d,%d)", 
-// 						  world->rt_cells[i].x, 
-// 						  world->rt_cells[i].y );
+ 			 char str[128];
+ 			 snprintf( str, 128, "(%d,%d)", 
+ 						  world->rt_cells[i].x, 
+ 						  world->rt_cells[i].y );
 
-// 			 Gl::draw_string(  world->rt_cells[i].x+1, 
-// 									 world->rt_cells[i].y+1, 0.1, str );
+ 			 Gl::draw_string(  world->rt_cells[i].x+1, 
+ 									 world->rt_cells[i].y+1, 0.1, str );
 
 			 //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
-			 glRectf( world->rt_cells[i].x+0.3, world->rt_cells[i].y+0.3,
-						 world->rt_cells[i].x+0.7, world->rt_cells[i].y+0.7 );
+			 //glRectf( world->rt_cells[i].x+0.3, world->rt_cells[i].y+0.3,
+				//	 world->rt_cells[i].x+0.7, world->rt_cells[i].y+0.7 );
+
+				glVertex2f( world->rt_cells[i].x, world->rt_cells[i].y );
+				
 		  }
 		
-#if 0
+		glEnd();
+
+#if 1
   		world->PushColor( stg_color_pack( 0,1,0,0.2) );
   		glBegin( GL_LINE_STRIP );
   		for( unsigned int i=0;
@@ -827,8 +835,6 @@ void Canvas::renderFrame()
 		
       glPopMatrix();
 		world->PopColor();
-
-		//world->rt_cells.clear();
     }
 
   if( ! world->rt_candidate_cells.empty() )

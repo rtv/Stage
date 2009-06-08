@@ -643,7 +643,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   stg_point_t glob( r.origin.x * ppm, r.origin.y * ppm );
 	
   // record our starting position
-  const stg_point_int_t start( glob.x, glob.y );
+  const stg_point_t start( glob.x, glob.y );
   
   // eliminate a potential divide by zero
   const double angle( r.origin.a == 0.0 ? 1e-12 : r.origin.a );
@@ -651,9 +651,10 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   const double sina(sin(angle));
   const double tana(sina/cosa); // = tan(angle)
 
-  // the x and y components of the ray
-  const int32_t dx( ppm * r.range * cosa);
-  const int32_t dy( ppm * r.range * sina);
+  // the x and y components of the ray (these need to be doubles, or a
+	// very weird and rare bug is produced)
+  const double dx( ppm * r.range * cosa);
+  const double dy( ppm * r.range * sina);
   
   // fast integer line 3d algorithm adapted from Cohen's code from
   // Graphics Gems IV  
@@ -665,12 +666,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   const int32_t by(2*ay);	
   int32_t exy(ay-ax); 
   int32_t n(ax+ay); // the manhattan distance to the goal cell
-  
-  // fix a little issue where rays are not drawn long enough when
-  // drawing to the right or up
-  if( (dx > 0) || ( dy > 0 ) )
-		n++;
-  
+    
   // the distances between region crossings in X and Y
   const double xjumpx( sx * REGIONWIDTH );
   const double xjumpy( sx * REGIONWIDTH * tana );
