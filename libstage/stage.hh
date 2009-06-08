@@ -1182,7 +1182,7 @@ namespace Stg
 	 void SetZ( double min, double max );
 
     void RecordRendering( Cell* cell )
-    { //g_ptr_array_add( rendered_cells, (gpointer)cell ); };
+    {
 		rendered_cells->push_back( cell );
 	 }
   
@@ -1213,11 +1213,6 @@ namespace Stg
     Model* GetModel(){ return mod; };
   
     stg_color_t GetColor();
-	 
-// 	 void Rasterize( uint8_t* data, 
-// 						  unsigned int width, unsigned int height, 
-// 						  double scalex, double scaley, 
-// 						  double offsetx, double offsety );
 	 
 	 void Rasterize( uint8_t* data, 
 						  unsigned int width, unsigned int height,		

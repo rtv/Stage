@@ -42,7 +42,7 @@ private:
   Region* region;  
   std::vector<Block*> blocks;
   bool boundary;
-
+  
 public:
   Cell() 
 	 : region( NULL),
@@ -61,7 +61,7 @@ public:
   
   Cell* cells;
   SuperRegion* superregion;	
-  unsigned int count; // number of blocks rendered into these cells
+  unsigned long count; // number of blocks rendered into this region
   
   Region();
   ~Region();
@@ -78,39 +78,41 @@ public:
 
 		return( (Cell*)&cells[ x + y * REGIONWIDTH ] ); 
   }
-       
-	void DecrementOccupancy();
-	void IncrementOccupancy();
 };
   
-	class SuperRegion
+  class SuperRegion
   {
-		friend class World;
-		friend class Model;
+	 friend class World;
+	 friend class Model;	 
 	 
   private:
-
-	 Region regions[SUPERREGIONSIZE];
-	 unsigned long count; // number of blocks rendered into these regions
 	 
+	 Region* regions;	 
 	 stg_point_int_t origin;
 	 World* world;
 	 
   public:
-
+	 
 	 SuperRegion( World* world, stg_point_int_t origin );
 	 ~SuperRegion();
+	 
+	 // lazy allocation of regions: wait until someone asks
+	 const Region* GetRegion( int32_t x, int32_t y )
+	 {
+		if( ! regions )
+		  {
+			 regions = new Region[ SUPERREGIONSIZE ];
+			 for( int i=0; i<SUPERREGIONSIZE; i++ )
+				regions[i].superregion = this;
+		  }
 		
-		const Region* GetRegion( int32_t x, int32_t y ) const
-		{
-			return( &regions[ x + y * SUPERREGIONWIDTH ] );
-		}
-		
+		return( &regions[ x + y * SUPERREGIONWIDTH ] );
+	 }
+	 
 	 void Draw( bool drawall );
 	 void Floor();
 	 
-	 void DecrementOccupancy(){ --count; };
-	 void IncrementOccupancy(){ ++count; };
+	 unsigned long count; // number of blocks rendered into this superregion
   };
 
 
@@ -139,16 +141,18 @@ void Cell::RemoveBlock( Block* b )
   copy_backward( blocks.end(), blocks.end(), std::find( blocks.begin(), blocks.end(), b ));
   blocks.pop_back(); // and remove the redundant copy at the end of
 							// the vector
-  
-  region->DecrementOccupancy();
+
+  --region->count;
+  --region->superregion->count;  
 }
 
 void Cell::AddBlock( Block* b )
 {
-  // constant time prepend
-  blocks.push_back( b );
-  region->IncrementOccupancy();
+  blocks.push_back( b );  
   b->RecordRendering( this );
+
+  ++region->count;
+  ++region->superregion->count;
 }
 
 

@@ -19,30 +19,12 @@ Region::~Region()
 {
 }
 
-void Region::DecrementOccupancy()
-{ 
-	assert( superregion );
-	superregion->DecrementOccupancy();
-	--count; 
-}
-
-void Region::IncrementOccupancy()
-{ 
-	assert( superregion );
-	superregion->IncrementOccupancy();
-	++count; 
-}
-
 SuperRegion::SuperRegion( World* world, stg_point_int_t origin )
-  : count(0), origin(origin), world(world)	 
+  : regions(NULL), origin(origin), world(world), count(0)	 
 {
   //static int srcount=0;
   //printf( "created SR number %d\n", ++srcount ); 
-  //  printf( "superregion at %d %d\n", origin.x, origin.y );
- 
-  // initialize the parent pointer for all my child regions
-  for( int i=0; i<SUPERREGIONSIZE; i++ )
-	 regions[i].superregion = this;
+  //  printf( "superregion at %d %d\n", origin.x, origin.y ); 
 }
 
 SuperRegion::~SuperRegion()

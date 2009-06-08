@@ -693,7 +693,8 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 			// coordinates of the region inside the superregion
 			int32_t rx( GETREG(glob.x) );
 			int32_t ry( GETREG(glob.y) );		
-			Region* reg( &sr->regions[ rx + ry * SUPERREGIONWIDTH ] );
+			//Region* reg( &sr->regions[ rx + ry * SUPERREGIONWIDTH ] );
+			const Region* reg( sr->GetRegion( rx, ry ) );
 
 			if( reg->count ) // if the region contains any objects
 				{
@@ -706,7 +707,8 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 					int32_t cy( GETCELL(glob.y) );
 			 
 					Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
-					assert(c); // should be a cell there 
+					assert(c); // should be there since we know the region
+								  // contains objects
 			 
 					// while within the bounds of this region and while some ray remains
 					// we'll tweak the cell pointer directly to move around quickly
