@@ -8,7 +8,7 @@ include "sick.inc"
 
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 0 # real-time interval between simulation updates in milliseconds 
-paused 0
+paused 1
 
 # time to pause (in GUI mode) or quit (in headless mode) the simulation
 # quit_time 120
@@ -25,9 +25,9 @@ window
 ( 
   size [ 788.000 842.000 ] 
 
-  center [ 6.871 -3.092 ] 
+  center [ -0.067 -0.907 ] 
   rotate [ 0 0 ]
-  scale 198.439 
+  scale 40.786 
 
   pcam_loc [ 0 -4.000 2.000 ]
   pcam_angle [ 70.000 0 ]
@@ -94,10 +94,9 @@ define charge_station model
 
 )
 
-charge_station(  pose [ 7.936 -1.627 0 0 ] )
-charge_station(  pose [ 7.935 -2.616 0 0 ] )
-charge_station(  pose [ 7.931 -3.478 0 0 ] )
-charge_station(  pose [ 7.931 -4.615 0 0 ] )
+charge_station(  pose [ 7.940 -2.000 0 0 ] )
+charge_station(  pose [ 7.940 -3.000 0 0 ] )
+charge_station(  pose [ 7.940 -4.000 0 0 ] )
 
 define puck model (
   size [0.120 0.120 0.100]  
@@ -157,16 +156,16 @@ define autorob pioneer2dx
 #         )
 )
 
-autorob( pose [5.676 5.188 0 -19.596] joules 300000 name "r0" )
-autorob( pose [6.371 5.403 0 -102.139] joules 100000 )
-autorob( pose [5.509 6.300 0 164.865] joules 200000 )
-autorob( pose [6.926 6.331 0 -111.398] joules 400000 )
-autorob( pose [5.730 3.938 0 -93.939] joules 100000 )
-autorob( pose [4.925 6.078 0 -58.690] joules 200000 )
-autorob( pose [6.889 4.752 0 -103.252] joules 300000 )
-autorob( pose [7.220 5.671 0 -168.541] joules 400000 )
-autorob( pose [5.230 6.997 0 -145.485] joules 100000 )
-autorob( pose [6.529 4.005 0 -74.042] joules 200000 )
+autorob( pose [6.343 6.423 0 -108.404] joules 300000 name "r0" )
+autorob( pose [7.216 6.947 0 -102.139] joules 100000 )
+autorob( pose [7.308 6.329 0 -87.236] joules 200000 )
+autorob( pose [6.750 7.165 0 -111.398] joules 400000 )
+autorob( pose [6.382 7.678 0 -93.939] joules 100000 )
+autorob( pose [6.292 7.125 0 -58.690] joules 200000 )
+autorob( pose [7.699 6.780 0 -108.018] joules 300000 )
+autorob( pose [7.545 7.515 0 -168.541] joules 400000 )
+autorob( pose [7.017 7.707 0 -179.862] joules 100000 )
+autorob( pose [6.818 6.348 0 -74.042] joules 200000 )
 
 #autorob( pose [5.060 6.868 0 -61.295] joules 300000 )
 #autorob( pose [4.161 5.544 0 -147.713] joules 400000 )
