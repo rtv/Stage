@@ -1,0 +1,65 @@
+# simple.world - basic world file example
+# Authors: Richard Vaughan
+# $Id$
+
+include "pioneer.inc"
+include "map.inc"
+include "sick.inc"
+
+interval_sim 100  # simulation timestep in milliseconds
+interval_real 20  # real-time interval between simulation updates in milliseconds 
+
+quit_time 1800
+
+paused 0
+
+resolution 0.02
+
+# configure the GUI window
+window
+(
+  size [ 635.000 666.000 ] # in pixels
+  scale 46.931            
+     # pixels per meter
+  center [ 0.349  -1.327 ]
+  rotate [ 0  0 ]
+  			
+  show_data 1              # 1=on 0=off
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "cave"
+  size [200.000 130.000 0.800]
+  pose [0 0 0 0]
+  bitmap "bitmaps/SFU_800x600.png"
+)
+
+
+define wanderer pioneer2dx
+(		  
+  sicklaser( samples 32 ) 
+  ctrl "wander"
+
+  # report error-free position in world coordinates
+  localization "gps"
+  localization_origin [ 0 0 0 0 ]
+)
+
+wanderer( pose [ 2.022 0.847 0 0 ] )
+wanderer( pose [ -1.986 2.410 0 108.862 ] )
+wanderer( pose [ -1.259 -0.947 0 -91.673 ] )
+wanderer( pose [ 0.572 1.794 0 105.997 ] )
+wanderer( pose [ 0.671 -1.257 0 -80.214 ] )
+wanderer( pose [ 1.765 -0.661 0 -28.648 ] )
+wanderer( pose [ -0.532 1.129 0 97.403 ] )
+wanderer( pose [ -0.178 0.170 0 -37.242 ] )
+wanderer( pose [ -0.331 2.500 0 88.809 ] )
+wanderer( pose [ -0.213 -1.215 0 -57.296 ] )
+wanderer( pose [ 0.850 0.469 0 40.107 ] )
+wanderer( pose [ -1.282 1.875 0 111.727 ] )
+wanderer( pose [ -3.071 0.661 0 171.887 ] )
+wanderer( pose [ -1.763 1.151 0 134.645 ] )
+wanderer( pose [ -1.764 -0.128 0 168.059 ] )
+wanderer( pose [ -2.084 -1.044 0 -143.239 ] )
