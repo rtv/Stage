@@ -9,10 +9,10 @@ using namespace Stg;
 
 
 Region::Region() 
-  : cells(), count(0)
+  : cells(NULL), count(0)
 { 
-  for( int i=0; i<REGIONSIZE; i++ )
-		cells[i].region = this;
+  //for( int i=0; i<REGIONSIZE; i++ )
+  //	cells[i].region = this;
 }
 
 Region::~Region()

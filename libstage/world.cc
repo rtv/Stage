@@ -951,8 +951,8 @@ inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
 
 Cell* World::GetCell( const stg_point_int_t& glob )
 {
-  return( GetSuperRegionCached(  GETSREG(glob.x), GETSREG(glob.y)  )
-					->GetRegion( GETREG(glob.x), GETREG(glob.y) )
+  return( ((Region*)GetSuperRegionCached(  GETSREG(glob.x), GETSREG(glob.y)  )
+			 ->GetRegion( GETREG(glob.x), GETREG(glob.y) ))
 					->GetCell( GETCELL(glob.x), GETCELL(glob.y) )) ;
 }
 

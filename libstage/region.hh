@@ -59,15 +59,22 @@ class Region
 {
 public:
   
-  Cell cells[ REGIONSIZE ];
+  Cell* cells;//[ REGIONSIZE ];
   SuperRegion* superregion;	
-  unsigned long count; // number of blocks rendered into these cells
+  unsigned int count; // number of blocks rendered into these cells
   
   Region();
   ~Region();
   
-  Cell* GetCell( int32_t x, int32_t y ) const
+  Cell* GetCell( int32_t x, int32_t y )
   { 
+	 if( ! cells )
+		{
+		  cells = new Cell[REGIONSIZE];
+		  for( int i=0; i<REGIONSIZE; ++i )
+			 cells[i].region = this;
+		}
+
 		return( (Cell*)&cells[ x + y * REGIONWIDTH ] ); 
   }
        
