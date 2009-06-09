@@ -26,6 +26,19 @@ ENDIF (CMAKE_MAJOR_VERSION EQUAL 2 AND NOT CMAKE_MINOR_VERSION LESS 6)
 
 MESSAGE (STATUS "${PROJECT_NAME} version ${VERSION}")
 
+# Set where to find our internal CMake scripts
+SET (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake CACHE PATH "Location of CMake scripts")
+# Determine the operating system in detail
+INCLUDE (${PROJECT_CMAKE_DIR}/internal/FindOS.cmake)
+
+# Enable -Wall by default
+IF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
+    # Using -Wall on Windows causes MSVC to produce thousands of warnings in its
+    # own standard headers, dramatically slowing down the build.
+    SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+ENDIF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
+
 ENABLE_TESTING()
 
 # Create the pkgconfig file
