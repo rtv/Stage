@@ -168,6 +168,28 @@ class InterfaceLaser : public InterfaceModel
   virtual void Publish( void );
 };
 
+class InterfaceAio : public InterfaceModel
+{
+ public:
+  InterfaceAio( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceAio( void ){ /* TODO: clean up*/ };
+  virtual int ProcessMessage(QueuePointer & resp_queue,
+			      player_msghdr_t* hdr,
+			      void* data);
+  virtual void Publish( void );
+};
+
+
+class InterfaceDio : public InterfaceModel
+{
+public:
+	InterfaceDio(player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section);
+	virtual ~InterfaceDio();
+	virtual int ProcessMessage(QueuePointer & resp_queue, player_msghdr_t* hdr, void* data);
+	virtual void Publish();
+};
+
+
 class InterfacePower : public InterfaceModel
 {
  public:
@@ -193,6 +215,18 @@ class InterfaceFiducial : public InterfaceModel
                              void* data);
 };
 
+
+class InterfaceActArray : public InterfaceModel
+{
+ public:
+	 InterfaceActArray( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceActArray( void ){ /* TODO: clean up*/ };
+
+  virtual int ProcessMessage( QueuePointer & resp_queue,
+			      player_msghdr * hdr,
+			      void * data );
+  virtual void Publish( void );
+};
 
 class InterfaceBlobfinder : public InterfaceModel
 {

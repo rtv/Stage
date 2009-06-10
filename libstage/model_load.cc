@@ -135,6 +135,12 @@ void Model::Load()
 
   if( wf->PropertyExists( wf_entity, "color_rgba" ))
     {      
+      if (wf->GetProperty(wf_entity,"color_rgba")->value_count < 4)
+      {
+        PRINT_ERR1( "model %s color_rgba requires 4 values\n", this->token );
+      }
+      else
+      {
       double red   = wf->ReadTupleFloat( wf_entity, "color_rgba", 0, 0 );
       double green = wf->ReadTupleFloat( wf_entity, "color_rgba", 1, 0 );
       double blue  = wf->ReadTupleFloat( wf_entity, "color_rgba", 2, 0 );
@@ -142,6 +148,7 @@ void Model::Load()
 
       this->SetColor( stg_color_pack( red, green, blue, alpha ));
     }  
+    }
   
   if( wf->PropertyExists( wf_entity, "bitmap" ) )
     {
@@ -192,6 +199,18 @@ void Model::Load()
   // populate the key-value database
   if( wf->PropertyExists( wf_entity, "db_count" ) )
 		LoadDataBaseEntries( wf, wf_entity );
+
+  if (vis.gravity_return)
+  {
+    Velocity vel = GetVelocity();
+    this->SetVelocity( vel );
+    world->StartUpdatingModel( this );
+  }
+
+  if( wf->PropertyExists( wf_entity, "friction" ))
+  {
+    this->SetFriction( wf->ReadFloat(wf_entity, "friction", this->friction ));
+  }
 
   if( wf->PropertyExists( wf_entity, "ctrl" ))
     {
@@ -338,10 +357,6 @@ void Model::LoadControllerModule( char* lib )
 		 char key[SZ], type[SZ], value[SZ];
 		 
 		 sscanf( entry, "%[^<]<%[^>]>%[^\"]", key, type, value );
-
-		 assert( key );
-		 assert( type );
-		 assert( value );
 
 		 if( strcmp( type, "int" ) == 0 )
 			SetPropertyInt( strdup(key), atoi(value) );

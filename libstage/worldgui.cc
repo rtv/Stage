@@ -256,6 +256,9 @@ void WorldGui::Load( const char* filename )
 {
   PRINT_DEBUG1( "%s.Load()", token );
 	
+  // needs to happen before StgWorld load, or we segfault with GL calls on some graphics cards
+  Fl::check();
+
   fileMan->newWorld( filename );
 
   World::Load( filename );

@@ -102,6 +102,9 @@ namespace Stg
     MODEL_TYPE_BLINKENLIGHT,
     MODEL_TYPE_CAMERA,
 	 MODEL_TYPE_GRIPPER,
+	 MODEL_TYPE_ACTUATOR,
+	 MODEL_TYPE_LOADCELL,
+	 MODEL_TYPE_LIGHTINDICATOR,
     MODEL_TYPE_COUNT // must be the last entry, to count the number of
     // types
   } stg_model_type_t;
@@ -981,6 +984,9 @@ namespace Stg
     /** hint that the world needs to be redrawn if a GUI is attached */
     void NeedRedraw(){ dirty = true; };
 
+  /** Special model for the floor of the world */
+  Model* ground;
+
     /** Get human readable string that describes the current simulation
 		  time. */
     virtual std::string ClockString( void );
@@ -1127,6 +1133,9 @@ namespace Stg
 	 
 	 /// Control printing time to stdout
 	 void ShowClock( bool enable ){ show_clock = enable; };
+
+	/** Return the floor model */
+	Model* GetGround() {return ground;};
   };
 
   class Block
@@ -1681,6 +1690,8 @@ namespace Stg
 	 stg_laser_return_t laser_return;
 	 bool obstacle_return;
 	 bool ranger_return;
+	 bool gravity_return;
+	 bool sticky_return;
   
 	 Visibility();
 		void Load( Worldfile* wf, int wf_entity );
@@ -1756,6 +1767,7 @@ namespace Stg
 
 	 /** Default color of the model's blocks.*/
 	 stg_color_t color;
+	double friction;
 	 
 	 /** This can be set to indicate that the model has new data that
 		  may be of interest to users. This allows polling the model
@@ -1825,6 +1837,9 @@ namespace Stg
 						  unsigned int height,
 						  stg_meters_t cellwidth,
 						  stg_meters_t cellheight );
+
+	int subs;     //< the number of subscriptions to this model
+	int used;     //< the number of connections to this model
 
 		void AddPoint( stg_meters_t x, stg_meters_t y );
 		void ClearPts();
@@ -1924,6 +1939,10 @@ namespace Stg
 	 void MapWithChildren();
 	 void UnMapWithChildren();
   
+	// Find the root model, and map/unmap the whole tree.
+	void MapFromRoot();
+	void UnMapFromRoot();
+
 	 int TreeToPtrArray( GPtrArray* array ) const;
   
 	 /** raytraces a single ray from the point and heading identified by
@@ -2209,6 +2228,9 @@ namespace Stg
 	 /** return a model's unique process-wide identifier */
 	 uint32_t GetId()  const { return id; }
 	 
+	/** Get the total mass of a model and it's children recursively */
+	stg_kg_t GetTotalMass();
+
 	 //  stg_laser_return_t GetLaserReturn(){ return laser_return; }
 	
 	 /** Change a model's parent - experimental*/
@@ -2230,7 +2252,9 @@ namespace Stg
 	 void SetColor( stg_color_t col );
 	 void SetMass( stg_kg_t mass );
 	 void SetStall( stg_bool_t stall );
+	void SetGravityReturn( int val );
 	 void SetGripperReturn( int val );
+	void SetStickyReturn( int val );
 	 void SetLaserReturn( stg_laser_return_t val );
 	 void SetObstacleReturn( int val );
 	 void SetBlobReturn( int val );
@@ -2242,6 +2266,7 @@ namespace Stg
 	 void SetGuiOutline( int val );
 	 void SetWatts( stg_watts_t watts );
 	 void SetMapResolution( stg_meters_t res );
+	void SetFriction( double friction );
 	
 	 bool DataIsFresh() const { return this->data_fresh; }
 	
@@ -2376,6 +2401,7 @@ namespace Stg
 		  and has the type indicated by the string. This model is tagged as used. */
 	 Model* GetUnusedModelOfType( const stg_model_type_t type );
   
+
 	 /** Returns the value of the model's stall boolean, which is true
 		  iff the model has crashed into another model */
 	 bool Stalled() const { return this->stall; }
@@ -2445,6 +2471,8 @@ namespace Stg
 		  add colors individually with AddColor(); */
 	 void RemoveAllColors();
   };
+
+
 
 
   // LASER MODEL --------------------------------------------------------
@@ -2528,7 +2556,45 @@ namespace Stg
 		void SetConfig( Config& cfg );  
   };
   
-  // GRIPPER MODEL --------------------------------------------------------  
+
+// LOAD CELL MODEL --------------------------------------------------------
+
+/// %ModelLoadCell class
+class ModelLoadCell : public Model
+{
+private:
+public:
+  //static const char* typestr;
+  // constructor
+  ModelLoadCell( World* world,
+					  Model* parent );
+
+  // destructor
+  ~ModelLoadCell();
+
+  float GetVoltage();
+};
+
+
+// Light indicator model
+class ModelLightIndicator : public Model
+{
+public:
+	ModelLightIndicator(World* world, Model* parent);
+	~ModelLightIndicator();
+
+	void SetState(bool isOn);
+
+protected:
+	virtual void DrawBlocks();
+
+private:
+	bool m_IsOn;
+};
+
+// \todo  GRIPPER MODEL --------------------------------------------------------
+
+
   class ModelGripper : public Model
   {
   public:
@@ -2930,6 +2996,69 @@ private:
 	 Pose est_pose_error; ///< estimated error in position estimate
 	 Pose est_origin; ///< global origin of the local coordinate system
   };
+
+
+// ACTUATOR MODEL --------------------------------------------------------
+
+/** Define a actuator control method */
+typedef enum
+{ STG_ACTUATOR_CONTROL_VELOCITY,
+	STG_ACTUATOR_CONTROL_POSITION
+} stg_actuator_control_mode_t;
+
+/** Define an actuator type */
+typedef enum
+{ STG_ACTUATOR_TYPE_LINEAR,
+	STG_ACTUATOR_TYPE_ROTATIONAL
+} stg_actuator_type_t;
+
+
+/// %ModelActuator class
+class ModelActuator : public Model
+{
+	private:
+		double goal; //< the current velocity or pose to reach, depending on the value of control_mode
+		double pos;
+		double max_speed;
+		double min_position;
+		double max_position;
+		stg_actuator_control_mode_t control_mode;
+		stg_actuator_type_t actuator_type;
+		stg_point3_t axis;
+
+		Pose InitialPose;
+	public:
+		static const char* typestr;
+
+		// constructor
+		ModelActuator( World* world,
+								Model* parent );
+		// destructor
+		~ModelActuator();
+
+		virtual void Startup();
+		virtual void Shutdown();
+		virtual void Update();
+		virtual void Load();
+
+		/** Sets the control_mode to STG_ACTUATOR_CONTROL_VELOCITY and sets
+		  the goal velocity. */
+		void SetSpeed( double speed );
+
+		double GetSpeed() const {return goal;}
+
+		/** Sets the control mode to STG_ACTUATOR_CONTROL_POSITION and sets
+		  the goal pose */
+		void GoTo( double pose );
+
+		double GetPosition() const {return pos;};
+
+		double GetMaxPosition() const {return max_position;};
+
+		double GetMinPosition() const {return min_position;};
+
+};
+
 
 }; // end namespace stg
 

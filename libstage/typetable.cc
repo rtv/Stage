@@ -19,6 +19,9 @@ static Model* CreateModelLaser( World* world, Model* parent )
 static Model* CreateModelRanger( World* world, Model* parent ) 
 {  return new ModelRanger( world, parent ); }    
 
+static Model* CreateModelLoadCell( World* world, Model* parent )
+{  return new ModelLoadCell( world, parent ); }
+
 static Model* CreateModelCamera( World* world, Model* parent ) 
 {  return new ModelCamera( world, parent ); }    
 
@@ -31,6 +34,11 @@ static Model* CreateModelBlobfinder( World* world, Model* parent )
 static Model* CreateModelGripper( World* world, Model* parent ) 
 {  return new ModelGripper( world, parent ); }    
 
+static Model* CreateModelActuator( World* world, Model* parent )
+{  return new ModelActuator( world, parent ); }
+
+static Model* CreateModelLightIndicator( World* world, Model* parent )
+{  return new ModelLightIndicator( world, parent ); }
 
 void Stg::RegisterModels()
 {
@@ -43,6 +51,9 @@ void Stg::RegisterModels()
   RegisterModel( MODEL_TYPE_BLOBFINDER, "blobfinder", CreateModelBlobfinder );
   RegisterModel( MODEL_TYPE_BLINKENLIGHT, "blinkenlight", CreateModelBlinkenlight);
   RegisterModel( MODEL_TYPE_GRIPPER, "gripper", CreateModelGripper);
+  RegisterModel( MODEL_TYPE_ACTUATOR, "actuator", CreateModelActuator);
+  RegisterModel( MODEL_TYPE_LOADCELL,  "loadcell", CreateModelLoadCell );
+  RegisterModel( MODEL_TYPE_LIGHTINDICATOR,  "lightindicator", CreateModelLightIndicator );
 
 #if DEBUG // human-readable view of the table
   puts( "Stg::Typetable" );

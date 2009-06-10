@@ -4,7 +4,6 @@ MESSAGE( STATUS "Configuring libstage" )
 include_directories(${PROJECT_BINARY_DIR})
 
 set( stageSrcs    
-	world.cc
    ancestor.cc
 	block.cc
 	blockgroup.cc
@@ -15,6 +14,7 @@ set( stageSrcs
 	glcolorstack.cc
 	logentry.cc
 	model.cc
+	model_actuator.cc
 	model_blinkenlight.cc
 	model_blobfinder.cc
 	model_callbacks.cc
@@ -28,6 +28,8 @@ set( stageSrcs
 	model_position.cc
 	model_props.cc
 	model_ranger.cc
+	model_loadcell.cc
+	model_lightindicator.cc
 	option.cc
 	powerpack.cc
 	region.cc
@@ -38,6 +40,7 @@ set( stageSrcs
 	typetable.cc
    vis_strip.cc
 	waypoint.cc
+	world.cc
 	worldfile.cc
    worldgui.cc 
    canvas.cc 

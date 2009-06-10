@@ -33,6 +33,8 @@
     blob_return 1
     laser_return LaserVisible
     gripper_return 0
+    gravity_return 0
+    sticky_return 0
 
     # GUI properties
     gui_nose 0
@@ -90,18 +92,8 @@
     - gui_movemask <int>\n
     define how the model can be moved by the mouse in the GUI window
 
-*/
-
-/*
-  TODO
-
-  - friction float [WARNING: Friction model is not yet implemented;
-  - details may change] if > 0 the model can be pushed around by other
-  - moving objects. The value determines the proportion of velocity
-  - lost per second. For example, 0.1 would mean that the object would
-  - lose 10% of its speed due to friction per second. A value of zero
-  - (the default) means this model can not be pushed around (infinite
-  - friction).
+    - friction <float>\n
+    Determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction).
 */
 
 #ifndef _GNU_SOURCE
@@ -160,6 +152,9 @@ Visibility::Visibility() :
   ranger_return( true )
 { /* nothing do do */ }
 
+//static const members
+static const double DEFAULT_FRICTION = 0.0;
+
 void Visibility::Load( Worldfile* wf, int wf_entity )
 {
   blob_return = wf->ReadInt( wf_entity, "blob_return", blob_return);    
@@ -169,6 +164,8 @@ void Visibility::Load( Worldfile* wf, int wf_entity )
   laser_return = (stg_laser_return_t)wf->ReadInt( wf_entity, "laser_return", laser_return);    
   obstacle_return = wf->ReadInt( wf_entity, "obstacle_return", obstacle_return);    
   ranger_return = wf->ReadInt( wf_entity, "ranger_return", ranger_return);    
+  gravity_return = wf->ReadInt( wf_entity, "gravity_return", gravity_return);
+  sticky_return = wf->ReadInt( wf_entity, "sticky_return", sticky_return);
 }    
 
 GuiState:: GuiState() :
@@ -261,6 +258,7 @@ Model::Model( World* world,
 
   world->AddModel( this );
   
+  this->friction = DEFAULT_FRICTION;
   g_datalist_init( &this->props );
   
   // now we can add the basic square shape
@@ -575,6 +573,11 @@ void Model::MapWithChildren()
     ((Model*)it->data)->MapWithChildren();
 }
 
+void Model::MapFromRoot()
+{
+	Root()->MapWithChildren();
+}
+
 void Model::UnMapWithChildren()
 {
   UnMap();
@@ -582,6 +585,11 @@ void Model::UnMapWithChildren()
   // recursive call for all the model's children
   for( GList* it=children; it; it=it->next )
     ((Model*)it->data)->UnMapWithChildren();
+}
+
+void Model::UnMapFromRoot()
+{
+	Root()->UnMapWithChildren();
 }
 
 void Model::Map()
@@ -612,7 +620,7 @@ void Model::Unsubscribe( void )
   world->total_subs--;
   world->dirty = true; // need redraw
 
-  printf( "unsubscribe from %s %d\n", token, subs );
+  //printf( "unsubscribe from %s %d\n", token, subs );
 
   // if this is the last sub, call shutdown
   if( subs < 1 )
@@ -918,7 +926,7 @@ int Model::TreeToPtrArray( GPtrArray* array ) const
 Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type ) const
 {  
   if( (this->type == type) && (this->subs == 0) )
-    return (Model*)this; // discard const
+    return const_cast<Model*> (this); // discard const
 
   // this model is no use. try children recursively
   for( GList* it = children; it; it=it->next )
@@ -967,6 +975,17 @@ Model* Model::GetUnusedModelOfType( stg_model_type_t type )
   // nothing matching below this model
   return NULL;
 }
+
+stg_kg_t Model::GetTotalMass()
+{
+  stg_kg_t sum = mass;
+  for (GList* child = this->children; child; child = child->next) {
+	  Model* childModel = (Model*) child->data;
+    sum += childModel->GetTotalMass();
+  }
+  return sum;
+}
+
 
 
 Model* Model::GetModel( const char* modelname ) const
@@ -1033,6 +1052,12 @@ void Model::Rasterize( uint8_t* data,
   rastervis.ClearPts();
   blockgroup.Rasterize( data, width, height, cellwidth, cellheight );
   rastervis.SetData( data, width, height, cellwidth, cellheight );
+}
+
+void Model::SetFriction( double friction )
+{
+  this->friction = friction;
+  CallCallbacks( &this->friction );
 }
 
 //***************************************************************

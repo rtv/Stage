@@ -5,6 +5,7 @@ include_directories( ${PLAYER_INCLUDE_DIRS} )
 
 set( stagepluginSrcs p_driver.h
 	     p_driver.cc
+	     p_actarray.cc
 	     p_blobfinder.cc
 	     p_simulation.cc
 	     p_laser.cc
@@ -12,6 +13,8 @@ set( stagepluginSrcs p_driver.h
 	     p_position.cc
 	     p_sonar.cc
 	     p_speech.cc
+	     p_aio.cc
+	     p_dio.cc
 	     stg_time.cc
 )
 

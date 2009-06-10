@@ -199,6 +199,7 @@ ModelLaser::ModelLaser( World* world,
   PRINT_DEBUG2( "Constructing ModelLaser %d (%s)\n", 
 		id, typestr );
   
+
   // Model data members
   interval = DEFAULT_INTERVAL_MS * (int)thousand;
   
@@ -285,6 +286,8 @@ void ModelLaser::Update( void )
 {     
   assert( samples.size() == sample_count );
   
+  UnMapFromRoot(); // Don't raytrace self
+  
   double bearing = -fov/2.0;
   // make the first and last rays exactly at the extremes of the FOV
   double sample_incr = fov / MAX(sample_count-1,1);
@@ -335,6 +338,8 @@ void ModelLaser::Update( void )
 			 }
 	 }
   
+  MapFromRoot();
+
   Model::Update();
 }
 
