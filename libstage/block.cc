@@ -16,20 +16,23 @@ Block::Block( Model* mod,
 				  bool inherit_color
 				  ) :
   mod( mod ),
-  mpts(NULL),
+  mpts(),
   pt_count( pt_count ),
-  pts( (stg_point_t*)g_memdup( pts, pt_count * sizeof(stg_point_t)) ),
+  pts(),
+	local_z( zmin, zmax ),
   color( color ),
   inherit_color( inherit_color ),
   rendered_cells( new std::vector<Cell*> ), 
-  candidate_cells( new std::vector<Cell*> ) 
+  candidate_cells( new std::vector<Cell*> ),
+	gpts()
 {
   assert( mod );
   assert( pt_count > 0 );
-  assert( pts );
 
-  local_z.min = zmin;
-  local_z.max = zmax;
+	// copy the argument point data into the member vector
+	this->pts.reserve( pt_count );
+	for( size_t p=0; p<pt_count; p++ )
+		this->pts.push_back( pts[p] );	
 }
 
 /** A from-file  constructor */
@@ -37,13 +40,13 @@ Block::Block(  Model* mod,
 	       Worldfile* wf,
 	       int entity)
   : mod( mod ),
-	 mpts(NULL),
+		mpts(),
     pt_count(0),
-    pts(NULL),
+    pts(),
     color(0),
     inherit_color(true),
-	 rendered_cells( new std::vector<Cell*> ), 
-	 candidate_cells( new std::vector<Cell*> ) 
+		rendered_cells( new std::vector<Cell*> ), 
+		candidate_cells( new std::vector<Cell*> ) 
 {
   assert(mod);
   assert(wf);
@@ -56,10 +59,7 @@ Block::~Block()
 {
   if( mapped ) UnMap();
 
-  if( pts ) delete[] pts;
-  InvalidateModelPointCache();
-
-  delete rendered_cells;
+	delete rendered_cells;
   delete candidate_cells;
 }
 
@@ -256,48 +256,34 @@ inline stg_point_t Block::BlockPointToModelMeters( const stg_point_t& bpt )
 							 (bpt.y - bgoffset.y) * (mod->geom.size.y/bgsize.y));
 }
 
-stg_point_t* Block::GetPointsInModelCoords()
-{
-  if( ! mpts )
-	 {
-		// no valid cache of model coord points, so generate them
-		mpts = new stg_point_t[pt_count];
-
-		for( unsigned int i=0; i<pt_count; i++ )
-		  mpts[i] = BlockPointToModelMeters( pts[i] );
-	 }
-
-  return mpts;
-}
-
 void Block::InvalidateModelPointCache()
 {
-  // this doesn't happen often, so this simple strategy isn't too wasteful
-  if( mpts )
-	 {
-		delete[] mpts;
-		mpts = NULL;
-	 }
+	// this doesn't happen often, so this simple strategy isn't too wasteful
+	mpts.clear();
 }
 
 void Block::GenerateCandidateCells()
 {
   candidate_cells->clear();
-
-  stg_point_t* mpts = GetPointsInModelCoords();
-
+	
+  if( mpts.size() == 0 )
+		{
+			// no valid cache of model coord points, so generate them
+			mpts.resize( pt_count );
+			for( unsigned int i=0; i<pt_count; i++ )
+				mpts[i] = BlockPointToModelMeters( pts[i] );
+		}
+	
   // convert the mpts in model coords into global pixel coords
-  stg_point_int_t gpts[pt_count]; // should be plenty of room on the
-											 // stack (crosses fingers). I don't
-											 // want to pay for a malloc here.
+	gpts.resize(pt_count);
+	
   for( unsigned int i=0; i<pt_count; i++ )
 		gpts[i] = mod->world->MetersToPixels( mod->LocalToGlobal( mpts[i] ));
   
   for( unsigned int i=0; i<pt_count; i++ )
-	 mod->world->ForEachCellInLine( gpts[i], 
-											  gpts[(i+1)%pt_count], 
-											  *candidate_cells );  
-  
+		mod->world->ForEachCellInLine( gpts[i], 
+																	 gpts[(i+1)%pt_count], 
+																	 *candidate_cells );  
   // set global Z
   Pose gpose = mod->GetGlobalPose();
   gpose.z += mod->geom.pose.z;
@@ -464,11 +450,8 @@ void Block::Load( Worldfile* wf, int entity )
 {
   //printf( "Block::Load entity %d\n", entity );
 
-  if( pts )
-    delete[] pts;
-
   pt_count = wf->ReadInt( entity, "points", 0);
-  pts = new stg_point_t[ pt_count ];
+  pts.resize( pt_count );
 
   //printf( "reading %d points\n",
   //	 pt_count );

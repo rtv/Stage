@@ -757,7 +757,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 									c += sy * REGIONWIDTH; // move the cell up or down
 									cy += sy; // cell coordinate for bounds checking
 								}			 
-							n--; // decrement the manhattan distance remaining
+							--n; // decrement the manhattan distance remaining
 													 							
 							//rt_cells.push_back( stg_point_int_t( globx, globy ));
 						}					
@@ -945,46 +945,69 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
 															 const stg_point_int_t& end,
 															 std::vector<Cell*>& cells )
 {  
-
-  int dx = end.x - start.x;
-  int dy = end.y - start.y;
-
-  stg_point_int_t cell = start;
-  
   // line rasterization adapted from Cohen's 3D version in
-  // Graphics Gems II. Should be very fast.
-  
-  const int sx(sgn(dx));  
-  const int sy(sgn(dy));  
-  const int ax(abs(dx));  
-  const int ay(abs(dy));  
-  const int bx(2*ax);	
-  const int by(2*ay);	 
-  int exy(ay-ax); 
-  int n(ax+ay);
+  // Graphics Gems II. Should be very fast.  
+  const int32_t dx( end.x - start.x );
+	const int32_t dy( end.y - start.y );
+  const int32_t sx(sgn(dx));  
+  const int32_t sy(sgn(dy));  
+  const int32_t ax(abs(dx));  
+  const int32_t ay(abs(dy));  
+  const int32_t bx(2*ax);	
+  const int32_t by(2*ay);	 
+  int32_t exy(ay-ax); 
+  int32_t n(ax+ay);
+
+  int32_t globx(start.x);
+	int32_t globy(start.y);
   
   // fix a little issue where the edges are not drawn long enough
   // when drawing to the right or up
-  if( (dx > 0) || ( dy > 0 ) )
-    n++;
+	//  if( (dx > 0) || ( dy > 0 ) )
+  //  n++;
   
-  while( n-- ) 
+  while( n ) 
     {				
-      // find the cell at this location, then add it to the vector
-			cells.push_back( GetCell( cell ) );
+			Region* reg( GetSuperRegionCached( GETSREG(globx), GETSREG(globy) )
+									 ->GetRegion( GETREG(globx), GETREG(globy) ));
+			
+			// add all the required cells in this region before looking up
+			// another region			
+			int32_t cx( GETCELL(globx) ); 
+			int32_t cy( GETCELL(globy) );
+			
+			// need to call Region::GetCell() before using a Cell pointer
+			// directly, because the region allocates cells lazily, waiting
+			// for a call of this method
+			Cell* c = reg->GetCell( cx, cy );
 
-      // cleverly skip to the next cell			 
-      if( exy < 0 ) 
-				{
-					cell.x += sx;
-					exy += by;
+ 			while( (cx>=0) && (cx<REGIONWIDTH) && 
+ 						 (cy>=0) && (cy<REGIONWIDTH) && 
+ 						 n > 0 )
+ 				{					
+ 					// find the cell at this location, then add it to the vector
+ 					cells.push_back( c );
+					
+					// cleverly skip to the next cell (now it's safe to
+					// manipulate the cell pointer direcly)
+					if( exy < 0 ) 
+						{
+							globx += sx;
+							exy += by;
+							c += sx;
+							cx += sx;
+						}
+					else 
+						{
+							globy += sy;
+							exy -= bx; 
+							c += sy * REGIONWIDTH;
+							cy += sy;
+						}
+ 					--n;
 				}
-      else 
-				{
-					cell.y += sy;
-					exy -= bx; 
-				}
-    }
+
+		}
 }
 
 void World::Extend( stg_point3_t pt )

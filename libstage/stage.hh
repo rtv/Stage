@@ -370,12 +370,13 @@ namespace Stg
   class Bounds
   {
   public:
-	 /// largest value in range, initially zero
-    double max; 
-	 /// smallest value in range, initially zero
+		/// smallest value in range, initially zero
     double min;
+		/// largest value in range, initially zero
+    double max; 
     
-    Bounds() : max(0), min(0) { /* empty*/  }
+    Bounds() : min(0), max(0) { /* empty*/  }
+    Bounds( double min, double max ) : min(min), max(max) { /* empty*/  }
   };
     
   /** Define a three-dimensional bounding box, initialized to zero */
@@ -1006,9 +1007,6 @@ namespace Stg
     void ExpireSuperRegion( SuperRegion* sr );
 
     inline Cell* GetCell( const stg_point_int_t& glob );
-    //inline Cell* GetCellNoCreate( const int32_t x, const int32_t y );
-    //inline Cell* GetCellCreate( const int32_t x, const int32_t y );
-    //inline Cell* GetCellCreate( const stg_point_int_t& glob );
 	 
 	 /** add a Cell pointer to the vector for each cell on the line from
 		  pt1 to pt2 inclusive */
@@ -1164,75 +1162,58 @@ namespace Stg
     ~Block();
 	 
     /** render the block into the world's raytrace data structure */
-    void Map(); 
-	 
+    void Map(); 	 
     /** remove the block from the world's raytracing data structure */
-    void UnMap();
-	 
+    void UnMap();	 
     void Draw( Model* mod );  
     void DrawSolid(); // draw the block in OpenGL as a solid single color
-    void DrawFootPrint(); // draw the projection of the block onto the z=0 plane
-	 
-	 /** Translate all points in the block by the indicated amounts */
-	 void Translate( double x, double y );
-	 
-	 /** Return the center of the block on the X axis */
-	 double CenterX();
+    void DrawFootPrint(); // draw the projection of the block onto the z=0 plane	 
+		/** Translate all points in the block by the indicated amounts */
+		void Translate( double x, double y );	 
+		/** Return the center of the block on the X axis */
+		double CenterX();
 	 /** Return the center of the block on the Y axis */
-	 double CenterY();
-
-	 /** Set the center of the block on the X axis */
-	 void SetCenterX( double y );
-	 /** Set the center of the block on the Y axis */
-	 void SetCenterY( double y );
-	 /** Set the center of the block */
-	 void SetCenter( double x, double y);
-
-	 void SetZ( double min, double max );
+		double CenterY();
+		/** Set the center of the block on the X axis */
+		void SetCenterX( double y );
+		/** Set the center of the block on the Y axis */
+		void SetCenterY( double y );
+		/** Set the center of the block */
+		void SetCenter( double x, double y);
+		void SetZ( double min, double max );
 
     void RecordRendering( Cell* cell )
-    {
-		rendered_cells->push_back( cell );
-	 }
-  
+    { rendered_cells->push_back( cell ); }  
+
     stg_point_t* Points( unsigned int *count )
-    { if( count ) *count = pt_count; return pts; };	       
-  
-    //bool IntersectGlobalZ( stg_meters_t z )
-    //{ return( z >= global_zmin &&  z <= global_zmax ); }
-  
+    { if( count ) *count = pt_count; return &pts[0]; };	         
+
+		std::vector<stg_point_t>& Points()
+    { return pts; };	         
+
     void AddToCellArray( std::vector<Cell*>* blocks );
     void RemoveFromCellArray( std::vector<Cell*>* blocks );
+    void GenerateCandidateCells();  
+		GList* AppendTouchingModels( GList* list );
 
-    void GenerateCandidateCells();
-  
-    //   /** Prepare to render the block in a new position in global coordinates */
-    //   void SetPoseTentative( const Pose pose );
-    
-
-	 GList* AppendTouchingModels( GList* list );
-
-	 /** Returns the first model that shares a bitmap cell with this model */
-    Model* TestCollision();
- 
-    void SwitchToTestedCells();
-  
-    void Load( Worldfile* wf, int entity );
-  
-    Model* GetModel(){ return mod; };
-  
-    stg_color_t GetColor();
-	 
-	 void Rasterize( uint8_t* data, 
-						  unsigned int width, unsigned int height,		
-						  stg_meters_t cellwidth, stg_meters_t cellheight );
-
+		/** Returns the first model that shares a bitmap cell with this model */
+    Model* TestCollision(); 
+    void SwitchToTestedCells();  
+    void Load( Worldfile* wf, int entity );  
+    Model* GetModel(){ return mod; };  
+    stg_color_t GetColor();		
+		void Rasterize( uint8_t* data, 
+										unsigned int width, unsigned int height,		
+										stg_meters_t cellwidth, stg_meters_t cellheight );
+		
   private:
     Model* mod; ///< model to which this block belongs
 
-    stg_point_t* mpts; ///< cache of this->pts in model coordindates
+		std::vector<stg_point_t> mpts; ///< cache of this->pts in model coordindates
     size_t pt_count; ///< the number of points
-    stg_point_t* pts; ///< points defining a polygon
+
+		std::vector<stg_point_t> pts; ///< points defining a polygonx
+    //stg_point_t* pts; ///< points defining a polygon
 	 
     Size size;
 	 
@@ -1261,12 +1242,14 @@ namespace Stg
 		  switched for next time (avoiding a memory copy).*/
 	 std::vector<Cell*> * candidate_cells;
 
+		std::vector<stg_point_int_t> gpts;
+
 	 /** find the position of a block's point in model coordinates
 		  (m) */
 	 stg_point_t BlockPointToModelMeters( const stg_point_t& bpt );
 
 	 /** Update the cache of block points converted to model coordinates */
-	 stg_point_t* GetPointsInModelCoords();
+	 //stg_point_t* GetPointsInModelCoords();
 
 	 /** invalidate the cache of points in model coordinates */
 	 void InvalidateModelPointCache();

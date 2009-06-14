@@ -31,6 +31,10 @@ namespace Stg
 	inline int32_t GETREG(  const int32_t x ) { return( ( x & REGIONMASK ) >> RBITS); }
 	inline int32_t GETSREG( const int32_t x ) { return( x >> SRBITS); }
 
+	// this is slightly faster than the inline method above, but not as safe
+	//#define GETREG(X) (( (static_cast<int32_t>(X)) & REGIONMASK ) >> RBITS)
+
+
 class Cell 
 {
   friend class Region;
