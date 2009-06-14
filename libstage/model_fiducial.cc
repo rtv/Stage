@@ -218,7 +218,7 @@ void ModelFiducial::Update( void )
 	// reset the array of detected fiducials
 	fiducials.clear();
 	
-	for( std::set<Model*>::iterator it = world->models_with_fiducials.begin();
+	for( std::set<Model*>::iterator it( world->models_with_fiducials.begin() );
 			 it != world->models_with_fiducials.end();
 			 ++it )
 		AddModelIfVisible( *it );	

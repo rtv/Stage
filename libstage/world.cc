@@ -640,10 +640,14 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   RaytraceResult sample( r.origin, r.range );
 	
   // our global position in (floating point) cell coordinates
-  stg_point_t glob( r.origin.x * ppm, r.origin.y * ppm );
+  //stg_point_t glob( r.origin.x * ppm, r.origin.y * ppm );
+  double globx( r.origin.x * ppm );
+	double globy( r.origin.y * ppm );
 	
   // record our starting position
-  const stg_point_t start( glob.x, glob.y );
+  //const stg_point_t start( glob.x, glob.y );
+  const double startx( globx );
+	const double starty( globy );
   
   // eliminate a potential divide by zero
   const double angle( r.origin.a == 0.0 ? 1e-12 : r.origin.a );
@@ -664,7 +668,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   const int32_t ay(abs(dy));  
   const int32_t bx(2*ax);	
   const int32_t by(2*ay);	
-  int32_t exy(ay-ax); 
+  int32_t exy(ay-ax); // difference between x and y distances
   int32_t n(ax+ay); // the manhattan distance to the goal cell
     
   // the distances between region crossings in X and Y
@@ -672,6 +676,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   const double xjumpy( sx * REGIONWIDTH * tana );
   const double yjumpx( sy * REGIONWIDTH / tana );
   const double yjumpy( sy * REGIONWIDTH );
+
   // manhattan distance between region crossings in X and Y
   const double xjumpdist( fabs(xjumpx)+fabs(xjumpy) );
   const double yjumpdist( fabs(yjumpx)+fabs(yjumpy) );
@@ -681,188 +686,165 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   double ycrossx(0), ycrossy(0);
   double distX(0), distY(0);
   bool calculatecrossings( true );
-	 
+			
   // Stage spends up to 95% of its time in this loop! It would be
   // neater with more function calls encapsulating things, but even
   // inline calls have a noticeable (2-3%) effect on performance  
   while( n > 0  ) // while we are still not at the ray end
     { 
-			SuperRegion* sr = 
-				GetSuperRegionCached(GETSREG(glob.x), GETSREG(glob.y));
-
-			// coordinates of the region inside the superregion
-			int32_t rx( GETREG(glob.x) );
-			int32_t ry( GETREG(glob.y) );		
-			//Region* reg( &sr->regions[ rx + ry * SUPERREGIONWIDTH ] );
-			const Region* reg( sr->GetRegion( rx, ry ) );
-
+			Region* reg( GetSuperRegionCached( GETSREG(globx), GETSREG(globy) )
+									 ->GetRegion( GETREG(globx), GETREG(globy) ));
+			
 			if( reg->count ) // if the region contains any objects
 				{
 					// invalidate the region crossing points used to jump over
 					// empty regions
 					calculatecrossings = true;
-			 
+					
 					// convert from global cell to local cell coords
-					int32_t cx( GETCELL(glob.x) ); 
-					int32_t cy( GETCELL(glob.y) );
-			 
+					int32_t cx( GETCELL(globx) ); 
+					int32_t cy( GETCELL(globy) );
+					
 					Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
-					assert(c); // should be there since we know the region
-								  // contains objects
-			 
+					assert(c); // should be good: we know the region contains objects
+					
 					// while within the bounds of this region and while some ray remains
 					// we'll tweak the cell pointer directly to move around quickly
-					while( (cx>=0) && (cx<REGIONWIDTH) && 
-								 (cy>=0) && (cy<REGIONWIDTH) && 
-								 n > 0 )
+				 	while( (cx>=0) && (cx<REGIONWIDTH) && 
+ 								 (cy>=0) && (cy<REGIONWIDTH) && 
+ 								 n > 0 )
 						{			 
-							//printf( "cx %d cy %d\n", cx, cy );
-							assert(c >= reg->cells);
-							assert(c < (reg->cells + REGIONSIZE) );
-											  
-							for( std::vector<Block*>::iterator it = c->blocks.begin();
+							for( std::vector<Block*>::iterator it( c->blocks.begin() );
 									 it != c->blocks.end();
 									 ++it )					 
 								{	      	      
-									Block* block = *it;
-						
+									Block* block( *it );
+									
 									// skip if not in the right z range
 									if( r.ztest && 
 											( r.origin.z < block->global_z.min || 
 												r.origin.z > block->global_z.max ) )
 										continue; 
-						
+									
 									// test the predicate we were passed
 									if( (*r.func)( block->mod, (Model*)r.mod, r.arg )) 
 										{
 											// a hit!
 											sample.color = block->GetColor();
 											sample.mod = block->mod;
-							 
+											
 											if( ax > ay ) // faster than the equivalent hypot() call
-												sample.range = fabs((glob.x-start.x) / cosa) / ppm;
+												sample.range = fabs((globx-startx) / cosa) / ppm;
 											else
-												sample.range = fabs((glob.y-start.y) / sina) / ppm;
-							 
+												sample.range = fabs((globy-starty) / sina) / ppm;
+											
 											return sample;
 										}				  
 								}
-				  
-							assert (sx >= -2 && sx < 2);
-							assert (sy >= -2 && sy < 2);
+
 							// increment our cell in the correct direction
 							if( exy < 0 ) // we're iterating along X
 								{
-									glob.x += sx; // global coordinate
+									globx += sx; // global coordinate
 									exy += by;						
 									c += sx; // move the cell left or right
 									cx += sx; // cell coordinate for bounds checking
 								}
 							else  // we're iterating along Y
 								{
-									glob.y += sy; // global coordinate
+									globy += sy; // global coordinate
 									exy -= bx;						
 									c += sy * REGIONWIDTH; // move the cell up or down
 									cy += sy; // cell coordinate for bounds checking
 								}			 
 							n--; // decrement the manhattan distance remaining
-
-							//rt_cells.push_back( stg_point_int_t( glob.x, glob.y ));
-						}
-				  
+													 							
+							//rt_cells.push_back( stg_point_int_t( globx, globy ));
+						}					
 					//printf( "leaving populated region\n" );
 				}							 
 			else // jump over the empty region
 				{		  		  		  
-					// on the first run, and when we've been iterating over cells,
-					// we need to calculate the next crossing of region in each
-					// axis
+					// on the first run, and when we've been iterating over
+					// cells, we need to calculate the next crossing of a region
+					// boundary along each axis
 					if( calculatecrossings )
 						{
 							calculatecrossings = false;
-				  
+							
 							// find the coordinate in cells of the bottom left corner of
 							// the current region
-							int32_t ix( glob.x );
-							int32_t iy( glob.y );				  
+							int32_t ix( globx );
+							int32_t iy( globy );				  
 							double regionx( ix/REGIONWIDTH*REGIONWIDTH );
 							double regiony( iy/REGIONWIDTH*REGIONWIDTH );
-							if( (glob.x < 0) && (ix % REGIONWIDTH) ) regionx -= REGIONWIDTH;
-							if( (glob.y < 0) && (iy % REGIONWIDTH) ) regiony -= REGIONWIDTH;
-				  
+							if( (globx < 0) && (ix % REGIONWIDTH) ) regionx -= REGIONWIDTH;
+							if( (globy < 0) && (iy % REGIONWIDTH) ) regiony -= REGIONWIDTH;
+							
 							// calculate the distance to the edge of the current region
 							double xdx( sx < 0 ? 
-													regionx - glob.x - 1.0 : // going left
-													regionx + REGIONWIDTH - glob.x ); // going right			 
+													regionx - globx - 1.0 : // going left
+													regionx + REGIONWIDTH - globx ); // going right			 
 							double xdy( xdx*tana );
 							
 							double ydy( sy < 0 ? 
-													regiony - glob.y - 1.0 :  // going down
-													regiony + REGIONWIDTH - glob.y ); // going up		 
+													regiony - globy - 1.0 :  // going down
+													regiony + REGIONWIDTH - globy ); // going up		 
 							double ydx( ydy/tana );
 							
 							// these stored hit points are updated as we go along
-							xcrossx = glob.x+xdx;
-							xcrossy = glob.y+xdy;
-				  
-							ycrossx = glob.x+ydx;
-							ycrossy = glob.y+ydy;
-				  
+							xcrossx = globx+xdx;
+							xcrossy = globy+xdy;
+							
+							ycrossx = globx+ydx;
+							ycrossy = globy+ydy;
+							
 							// find the distances to the region crossing points
 							// manhattan distance is faster than using hypot()
 							distX = fabs(xdx)+fabs(xdy);
 							distY = fabs(ydx)+fabs(ydy);		  
 						}
-			 
-					// 			 printf( "globx %.2f globy %.2f\n", glob.x, glob.y );
-					// 			 printf( "xcross (%.2f,%.2f) ycross(%.2f,%.2f)\n", xcrossx, xcrossy, ycrossx, ycrossy );
-					// 			 printf( "distX  %.2f distY %.2f\n", distX, distY );
-					// 			 printf( "xjumpdist  %.2f yjumpdist %.2f\n", xjumpdist, yjumpdist );
-					// 			 puts( "" );
-			 
+					
 					if( distX < distY ) // crossing a region boundary left or right
 						{
-							//puts( "distX" );
 							// move to the X crossing
-							glob.x = xcrossx; 
-							glob.y = xcrossy; 
-				  
+							globx = xcrossx; 
+							globy = xcrossy; 
+							
 							n -= distX; // decrement remaining manhattan distance
-				  
+							
 							// calculate the next region crossing
 							xcrossx += xjumpx; 
 							xcrossy += xjumpy;
-				  
+							
 							distY -= distX;
 							distX = xjumpdist;
-				  
+							
 							//rt_candidate_cells.push_back( stg_point_int_t( xcrossx, xcrossy ));
 						}			 
 					else // crossing a region boundary up or down
 						{		  
-							//puts( "distY" );
 							// move to the X crossing
-							glob.x = ycrossx;
-							glob.y = ycrossy;
-				  
+							globx = ycrossx;
+							globy = ycrossy;
+							
 							n -= distY; // decrement remaining manhattan distance				
-				  
+							
 							// calculate the next region crossing
 							ycrossx += yjumpx;
 							ycrossy += yjumpy;
-				  
+							
 							distX -= distY;
 							distY = yjumpdist;
-				  
+
 							//rt_candidate_cells.push_back( stg_point_int_t( ycrossx, ycrossy ));
 						}	
-					//printf( "jumped to glob (%.2f %.2f)\n", glob.x, glob.y  );
 				}			  	
-			//rt_cells.push_back( stg_point_int_t( glob.x, glob.y ));
+			//rt_cells.push_back( stg_point_int_t( globx, globy ));
 		} 
-  // hit nothing
-  sample.mod = NULL;
-  return sample;
+	// hit nothing
+	sample.mod = NULL;
+	return sample;
 }
 
 static int _save_cb( Model* mod, void* dummy )

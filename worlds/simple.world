@@ -41,9 +41,6 @@ pioneer2dx
 (		  
   # can refer to the robot by this name
   name "r0"
-  # size [ 0.050 0.050 0.050 ]
-
-  #pose [ 0.329 0.284  0 108.025 ] 
   pose [ -7 -7 0 45 ] 
   sicklaser() 
 

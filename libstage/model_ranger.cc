@@ -267,13 +267,16 @@ void ModelRanger::Update( void )
 {     
   Model::Update();
 
+	if( subs < 1 )
+		return;
+
 	if( sensors.size() < 1 )
 		return;
 
   //PRINT_DEBUG2( "[%d] updating ranger %s", (int)world->sim_time_ms, token );
 	
   // raytrace new range data for all sensors
-  for( std::vector<Sensor>::iterator it = sensors.begin();
+  for( std::vector<Sensor>::iterator it( sensors.begin() );
 			 it != sensors.end();
 			 ++it )
     {
@@ -288,7 +291,6 @@ void ModelRanger::Update( void )
 																						NULL );
 			
       s.range = MAX( ray.range, s.bounds_range.min );
-      //sensors[t].error = TODO;
     }   
 }
 

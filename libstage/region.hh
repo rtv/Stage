@@ -14,7 +14,7 @@ namespace Stg
 {
 
 // a bit of experimenting suggests that these values are fast. YMMV.
- 	const int32_t RBITS( 4 ); // regions contain (2^RBITS)^2 pixels
+ 	const int32_t RBITS( 5 ); // regions contain (2^RBITS)^2 pixels
  	const int32_t SBITS( 5 );// superregions contain (2^SBITS)^2 regions
  	const int32_t SRBITS( RBITS+SBITS );
 		
@@ -97,7 +97,7 @@ public:
 	 ~SuperRegion();
 	 
 	 // lazy allocation of regions: wait until someone asks
-	 const Region* GetRegion( int32_t x, int32_t y )
+	 Region* GetRegion( int32_t x, int32_t y )
 	 {
 		if( ! regions )
 		  {

@@ -288,12 +288,12 @@ void ModelLaser::Update( void )
   
   UnMapFromRoot(); // Don't raytrace self
   
-  double bearing = -fov/2.0;
+  double bearing( -fov/2.0 );
   // make the first and last rays exactly at the extremes of the FOV
-  double sample_incr = fov / MAX(sample_count-1,1);
+  double sample_incr( fov / MAX(sample_count-1,1) );
   
 	// find the global origin of our first emmitted ray
-  Pose rayorg = geom.pose;
+  Pose rayorg( geom.pose );
   rayorg.z += geom.size.z/2.0;
   rayorg.a = bearing;
   rayorg = LocalToGlobal(rayorg);
@@ -304,7 +304,7 @@ void ModelLaser::Update( void )
 	// trace the ray, incrementing its heading for each sample
   for( unsigned int t=0; t<sample_count; t += resolution )
     {
-			stg_raytrace_result_t r = world->Raytrace( ray );
+			stg_raytrace_result_t r( world->Raytrace( ray ) );
 			samples[t].range = r.range;
 			
       // if we hit a model and it reflects brightly, we set
@@ -321,25 +321,25 @@ void ModelLaser::Update( void )
   // we may need to interpolate the samples we skipped 
   if( resolution > 1 )
     {
-      for( unsigned int t=resolution; t<sample_count; t+=resolution )
-		  for( unsigned int g=1; g<resolution; g++ )
-			 {
-				if( t >= sample_count )
-				  break;
-				
-				// copy the rightmost sample data into this point
-				samples[t-g] = samples[t-resolution];
-				
-				double left = samples[t].range;
-				double right = samples[t-resolution].range;
-				
-				// linear range interpolation between the left and right samples
-				samples[t-g].range = (left-g*(left-right)/resolution);
-			 }
-	 }
+      for( unsigned int t( resolution); t<sample_count; t+=resolution )
+				for( unsigned int g(1); g<resolution; g++ )
+					{
+						if( t >= sample_count )
+							break;
+						
+						// copy the rightmost sample data into this point
+						samples[t-g] = samples[t-resolution];
+						
+						double left = samples[t].range;
+						double right = samples[t-resolution].range;
+						
+						// linear range interpolation between the left and right samples
+						samples[t-g].range = (left-g*(left-right)/resolution);
+					}
+		}
   
   MapFromRoot();
-
+	
   Model::Update();
 }
 
