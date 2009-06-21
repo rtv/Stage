@@ -33,7 +33,7 @@ void Waypoint::Draw()
   glVertex3f( pose.x, pose.y, pose.z );
   glEnd();
 
-  stg_meters_t quiver_length = 0.1;
+  stg_meters_t quiver_length = 0.15;
 
   double dx = cos(pose.a) * quiver_length;
   double dy = sin(pose.a) * quiver_length;

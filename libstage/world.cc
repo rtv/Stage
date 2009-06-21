@@ -940,10 +940,10 @@ Cell* World::GetCell( const stg_point_int_t& glob )
 					->GetCell( GETCELL(glob.x), GETCELL(glob.y) )) ;
 }
 
-  
+
 void World::ForEachCellInLine( const stg_point_int_t& start,
-															 const stg_point_int_t& end,
-															 std::vector<Cell*>& cells )
+										 const stg_point_int_t& end,
+										 std::vector<Cell*>& cells )
 {  
   // line rasterization adapted from Cohen's 3D version in
   // Graphics Gems II. Should be very fast.  

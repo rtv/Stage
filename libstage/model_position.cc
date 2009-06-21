@@ -654,13 +654,16 @@ void ModelPosition::WaypointVis::Visualize( Model* mod, Camera* cam )
   glTranslatef( 0,0,0.02 );
   
   // draw waypoints
+  glLineWidth( 3 );
   for( unsigned int i=0; i < waypoint_count; i++ )
-			waypoints[i].Draw();
-		 
+	 waypoints[i].Draw();
+  glLineWidth( 1 );
+
   // draw lines connecting the waypoints
   if( waypoint_count > 1 )
     {
-      glBegin( GL_LINES );
+		pos->PushColor( 1,0,0,0.3 );
+		glBegin( GL_LINES );
       
       for( unsigned int i=1; i < waypoint_count; i++ )
 		  {
@@ -669,6 +672,8 @@ void ModelPosition::WaypointVis::Visualize( Model* mod, Camera* cam )
 		  }
 		
       glEnd();
+
+		pos->PopColor();
     }
   
   pos->PopColor();

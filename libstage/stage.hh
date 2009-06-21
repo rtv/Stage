@@ -1265,8 +1265,8 @@ namespace Stg
     int displaylist;
 
     void BuildDisplayList( Model* mod );
-    GList* blocks;
-    uint32_t count;
+	 
+	 std::vector<Block*> blocks;
     Size size;
     stg_point3_t offset;
     stg_meters_t minx, maxx, miny, maxy;
@@ -1275,8 +1275,8 @@ namespace Stg
     BlockGroup();
     ~BlockGroup();
 	 
-    GList* GetBlocks(){ return blocks; };
-    uint32_t GetCount(){ return count; };
+	 //std::vector<Block*>&GList* GetBlocks(){ return blocks; };
+    uint32_t GetCount(){ return blocks.size(); };
     Size GetSize(){ return size; };
     stg_point3_t GetOffset(){ return offset; };
 
@@ -1312,7 +1312,13 @@ namespace Stg
 						  stg_meters_t cellwidth, stg_meters_t cellheight );
 	 
 	 void InvalidateModelPointCache()
-	 { LISTMETHOD( blocks, Block*, InvalidateModelPointCache ); }
+	 {
+		for( std::vector<Block*>::iterator it( blocks.begin() );
+			  it != blocks.end();
+			  ++it )
+		  (*it)->InvalidateModelPointCache();
+	 }
+
   };
 
 

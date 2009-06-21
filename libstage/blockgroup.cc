@@ -7,11 +7,11 @@
 #undef DEBUG
 
 using namespace Stg;
+using namespace std;
 
 BlockGroup::BlockGroup() 
   : displaylist(0),
-	 blocks(NULL), 
-	 count(0), 
+	 blocks(), 
 	 minx(0),
 	 maxx(0),
 	 miny(0),
@@ -25,33 +25,46 @@ BlockGroup::~BlockGroup()
 
 void BlockGroup::AppendBlock( Block* block )
 {
-  blocks = g_list_append( blocks, block );
-  ++count;
+  blocks.push_back( block );
 }
 
 void BlockGroup::Clear()
 {
-  while( blocks )
-	 {
-		delete (Block*)blocks->data;
-		blocks = blocks->next;
-	 }
+//   while( blocks )
+// 	 {
+// 		delete (Block*)blocks->data;
+// 		blocks = blocks->next;
+// 	 }
   
-  g_list_free( blocks );
-  blocks = NULL;
+  //g_list_free( blocks );
+  //blocks = NULL;
+  
+  for( vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 delete *it;
+
+  blocks.clear();
 }
 
 
 void BlockGroup::SwitchToTestedCells()
 {
   // confirm the tentative pose for all blocks
-  LISTMETHOD( blocks, Block*, SwitchToTestedCells );  
+  //LISTMETHOD( blocks, Block*, SwitchToTestedCells );  
+
+  for( vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 (*it)->SwitchToTestedCells();
 }
 
 GList* BlockGroup::AppendTouchingModels( GList* list )
 {
-  for( GList* it=blocks; it; it = it->next )
-	 list = ((Block*)it->data)->AppendTouchingModels( list );
+  for( vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 list = (*it)->AppendTouchingModels( list );
   
   return list;
 }
@@ -60,9 +73,16 @@ Model* BlockGroup::TestCollision()
 {
   Model* hitmod = NULL;
   
-  for( GList* it=blocks; it; it = it->next )
-	 if( (hitmod = ((Block*)it->data)->TestCollision()))
-		break; // bail on the earliest collision
+  for( vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+ 	 if( (hitmod = (*it)->TestCollision()))
+ 		break; // bail on the earliest collision
+
+//   for( GList* it=blocks; it; it = it->next )
+// 	 if( (hitmod = ((Block*)it->data)->TestCollision()))
+// 		break; // bail on the earliest collision
+
   return hitmod; // NULL if no collision
 }
 
@@ -78,10 +98,13 @@ void BlockGroup::CalcSize()
   
   size.z = 0.0; // grow to largest z we see
   
-  for( GList* it=blocks; it; it=it->next ) // examine all the blocks
+  for( vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 //  for( GList* it=blocks; it; it=it->next ) // examine all the blocks
 	 {
 		// examine all the points in the polygon
-		Block* block = (Block*)it->data;
+		Block* block = *it;
 		
 		for( unsigned int p=0; p < block->pt_count; p++ )
 		  {
@@ -109,12 +132,22 @@ void BlockGroup::CalcSize()
 
 void BlockGroup::Map()
 {
-  LISTMETHOD( blocks, Block*, Map );
+  for( std::vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 (*it)->Map();
+  
+  //LISTMETHOD( blocks, Block*, Map );
 }
 
 void BlockGroup::UnMap()
 {
-  LISTMETHOD( blocks, Block*, UnMap );
+  for( std::vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 (*it)->UnMap();
+
+  //LISTMETHOD( blocks, Block*, UnMap );
 }
 
 void BlockGroup::DrawSolid( const Geom & geom )
@@ -128,8 +161,12 @@ void BlockGroup::DrawSolid( const Geom & geom )
 				geom.size.z / size.z );
   
   glTranslatef( -offset.x, -offset.y, -offset.z );
-
-  LISTMETHOD( blocks, Block*, DrawSolid );
+  
+  for( std::vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 (*it)->DrawSolid();
+  //  LISTMETHOD( blocks, Block*, DrawSolid );
 
   glPopMatrix();
 }
@@ -144,7 +181,11 @@ void BlockGroup::DrawFootPrint( const Geom & geom )
   
   glTranslatef( -offset.x, -offset.y, -offset.z );
 
-  LISTMETHOD( blocks, Block*, DrawFootPrint);
+  for( std::vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 (*it)->DrawFootPrint();
+//   LISTMETHOD( blocks, Block*, DrawFootPrint);
 
   glPopMatrix();
 }
@@ -181,9 +222,12 @@ void BlockGroup::BuildDisplayList( Model* mod )
   
   mod->PushColor( mod->color );
   
-  for( GList* it=blocks; it; it=it->next )
+  for( vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 //for( GList* it=blocks; it; it=it->next )
 	 {
-		Block* blk = (Block*)it->data;
+		Block* blk = (*it);
 		
 		if( (!blk->inherit_color) && (blk->color != mod->color) )
 		  {
@@ -206,9 +250,12 @@ void BlockGroup::BuildDisplayList( Model* mod )
   stg_color_unpack( mod->color, &r, &g, &b, &a );
   mod->PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
   
-  for( GList* it=blocks; it; it=it->next )
+  for( vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 //for( GList* it=blocks; it; it=it->next )
 	 {
-		Block* blk = (Block*)it->data;
+		Block* blk = *it;
 		
 		if( (!blk->inherit_color) && (blk->color != mod->color) )
 		  {
@@ -318,6 +365,9 @@ void BlockGroup::Rasterize( uint8_t* data,
 									 stg_meters_t cellwidth,
 									 stg_meters_t cellheight )
 {  
-  for( GList* it = blocks; it; it=it->next )
-	 ((Block*)it->data)->Rasterize( data, width, height, cellwidth, cellheight );
+  for( vector<Block*>::iterator it( blocks.begin() );
+		 it != blocks.end();
+		 ++it )
+	 //for( GList* it = blocks; it; it=it->next )
+	 (*it)->Rasterize( data, width, height, cellwidth, cellheight );
 }
