@@ -29,7 +29,6 @@ static const stg_msec_t DEFAULT_INTERVAL_MS = 100;
 static const unsigned int DEFAULT_RESOLUTION = 1;
 static const char* DEFAULT_COLOR = "blue";
 
-//TODO make instance attempt to register an option (as customvisualizations do)
 Option ModelLaser::Vis::showArea( "Laser scans", "show_laser", "", true, NULL );
 Option ModelLaser::Vis::showStrikes( "Laser strikes", "show_laser_strikes", "", false, NULL );
 Option ModelLaser::Vis::showFov( "Laser FOV", "show_laser_fov", "", false, NULL );
@@ -73,116 +72,6 @@ Option ModelLaser::Vis::showBeams( "Laser beams", "show_laser_beams", "", false,
    Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
 */
   
-// create static vis objects
-
-ModelLaser::Vis::Vis( World* world ) 
-  : Visualizer( "Laser", "laser_vis" )
-{
-  world->RegisterOption( &showArea );
-  world->RegisterOption( &showStrikes );
-  world->RegisterOption( &showFov );
-  world->RegisterOption( &showBeams );		  
-}
-
-void ModelLaser::Vis::Visualize( Model* mod, Camera* cam ) 
-{
-  ModelLaser* laser( dynamic_cast<ModelLaser*>(mod) );
-	
-	const std::vector<Sample>& samples( laser->GetSamples() );
-    
-	size_t sample_count( samples.size() );
-
-  glPushMatrix();
-  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-  
-  glTranslatef( 0,0, laser->GetGeom().size.z/2.0 ); // shoot the laser beam out at the right height
-  
-  // pack the laser hit points into a vertex array for fast rendering
-	static std::vector<GLfloat> pts;
-	pts.resize( 2 * (sample_count+1) );
-
-  pts[0] = 0.0;
-  pts[1] = 0.0;
-  
-  laser->PushColor( 1, 0, 0, 0.5 );
-  glDepthMask( GL_FALSE );
-  glPointSize( 2 );
-  
-  for( unsigned int s(0); s<sample_count; s++ )
-	 {
-		double ray_angle = (s * (laser->fov / (sample_count-1))) - laser->fov/2.0;
-		pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
-		pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
-		
-		// if the sample is unusually bright, draw a little blob
-		if( samples[s].reflectance > 0 )
-		  {
-			 glBegin( GL_POINTS );
-			 glVertex2f( pts[2*s+2], pts[2*s+3] );
-			 glEnd();
-		  }			 
-	 }
-  
-  glVertexPointer( 2, GL_FLOAT, 0, &pts[0] );       
-  
-  laser->PopColor();
-  
-  if( showArea )
-	 {
-		// draw the filled polygon in transparent blue
-		laser->PushColor( 0, 0, 1, 0.1 );		
-		glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-		laser->PopColor();  
-		//glDepthMask( GL_TRUE );
-	 }
-  
-  glDepthMask( GL_TRUE );
-
-  if( showStrikes )
-	 {
-		// draw the beam strike points
-		laser->PushColor( 0, 0, 1, 0.8 );
-		glDrawArrays( GL_POINTS, 0, sample_count+1 );
-		laser->PopColor();
-	 }
-  
-  if( showFov )
-	 {
-		for( unsigned int s(0); s<sample_count; s++ )
-		  {
-			 double ray_angle((s * (laser->fov / (sample_count-1))) - laser->fov/2.0);
-			 pts[2*s+2] = (float)(laser->range_max * cos(ray_angle) );
-			 pts[2*s+3] = (float)(laser->range_max * sin(ray_angle) );			 
-		  }
-		
-		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-		laser->PushColor( 0, 0, 1, 0.5 );		
-		glDrawArrays( GL_POLYGON, 0, sample_count+1 );
-		laser->PopColor();
-		//			 glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	 }			 
-  
-  if( showBeams )
-	 {
-		laser->PushColor( 0, 0, 1, 0.5 );		
-		glBegin( GL_LINES );
-		
-		for( unsigned int s(0); s<sample_count; s++ )
-		  {
-			 
-			 glVertex2f( 0,0 );
-			 double ray_angle((s * (laser->fov / (sample_count-1))) - laser->fov/2.0);
-			 glVertex2f( samples[s].range * cos(ray_angle), 
-							 samples[s].range * sin(ray_angle) );
-			 
-	    }
-		glEnd();
-		laser->PopColor();
-	 }	
-
-  glPopMatrix();
-}
-
 	  
 ModelLaser::ModelLaser( World* world, 
 			Model* parent )
@@ -190,7 +79,6 @@ ModelLaser::ModelLaser( World* world,
 	 vis( world ),
     sample_count( DEFAULT_SAMPLES ),
     samples(),
-		//ray( this, ),
     range_max( DEFAULT_MAXRANGE ),
     fov( DEFAULT_FOV ),
     resolution( DEFAULT_RESOLUTION )
@@ -199,14 +87,10 @@ ModelLaser::ModelLaser( World* world,
   PRINT_DEBUG2( "Constructing ModelLaser %d (%s)\n", 
 		id, typestr );
   
-
   // Model data members
   interval = DEFAULT_INTERVAL_MS * (int)thousand;
   
-  Geom geom;
-  memset( &geom, 0, sizeof(geom));
-  geom.size = DEFAULT_SIZE;
-  SetGeom( geom );
+  SetGeom( Geom( Pose(0,0,0,0), DEFAULT_SIZE) );
   
   // assert that Update() is reentrant for this derived model
   thread_safe = true;
@@ -388,3 +272,115 @@ const std::vector<ModelLaser::Sample>& ModelLaser::GetSamples()
 { 
   return samples;
 }
+
+
+// VIS -------------------------------------------------------------------
+
+ModelLaser::Vis::Vis( World* world ) 
+  : Visualizer( "Laser", "laser_vis" )
+{
+  world->RegisterOption( &showArea );
+  world->RegisterOption( &showStrikes );
+  world->RegisterOption( &showFov );
+  world->RegisterOption( &showBeams );		  
+}
+
+void ModelLaser::Vis::Visualize( Model* mod, Camera* cam ) 
+{
+  ModelLaser* laser( dynamic_cast<ModelLaser*>(mod) );
+	
+	const std::vector<Sample>& samples( laser->GetSamples() );
+    
+	size_t sample_count( samples.size() );
+
+  glPushMatrix();
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  
+  glTranslatef( 0,0, laser->GetGeom().size.z/2.0 ); // shoot the laser beam out at the right height
+  
+  // pack the laser hit points into a vertex array for fast rendering
+	static std::vector<GLfloat> pts;
+	pts.resize( 2 * (sample_count+1) );
+
+  pts[0] = 0.0;
+  pts[1] = 0.0;
+  
+  laser->PushColor( 1, 0, 0, 0.5 );
+  glDepthMask( GL_FALSE );
+  glPointSize( 2 );
+  
+  for( unsigned int s(0); s<sample_count; s++ )
+	 {
+		double ray_angle = (s * (laser->fov / (sample_count-1))) - laser->fov/2.0;
+		pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
+		pts[2*s+3] = (float)(samples[s].range * sin(ray_angle) );
+		
+		// if the sample is unusually bright, draw a little blob
+		if( samples[s].reflectance > 0 )
+		  {
+			 glBegin( GL_POINTS );
+			 glVertex2f( pts[2*s+2], pts[2*s+3] );
+			 glEnd();
+		  }			 
+	 }
+  
+  glVertexPointer( 2, GL_FLOAT, 0, &pts[0] );       
+  
+  laser->PopColor();
+  
+  if( showArea )
+	 {
+		// draw the filled polygon in transparent blue
+		laser->PushColor( 0, 0, 1, 0.1 );		
+		glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+		laser->PopColor();  
+		//glDepthMask( GL_TRUE );
+	 }
+  
+  glDepthMask( GL_TRUE );
+
+  if( showStrikes )
+	 {
+		// draw the beam strike points
+		laser->PushColor( 0, 0, 1, 0.8 );
+		glDrawArrays( GL_POINTS, 0, sample_count+1 );
+		laser->PopColor();
+	 }
+  
+  if( showFov )
+	 {
+		for( unsigned int s(0); s<sample_count; s++ )
+		  {
+			 double ray_angle((s * (laser->fov / (sample_count-1))) - laser->fov/2.0);
+			 pts[2*s+2] = (float)(laser->range_max * cos(ray_angle) );
+			 pts[2*s+3] = (float)(laser->range_max * sin(ray_angle) );			 
+		  }
+		
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		laser->PushColor( 0, 0, 1, 0.5 );		
+		glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+		laser->PopColor();
+		//			 glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	 }			 
+  
+  if( showBeams )
+	 {
+		laser->PushColor( 0, 0, 1, 0.5 );		
+		glBegin( GL_LINES );
+		
+		for( unsigned int s(0); s<sample_count; s++ )
+		  {
+			 
+			 glVertex2f( 0,0 );
+			 double ray_angle((s * (laser->fov / (sample_count-1))) - laser->fov/2.0);
+			 glVertex2f( samples[s].range * cos(ray_angle), 
+							 samples[s].range * sin(ray_angle) );
+			 
+	    }
+		glEnd();
+		laser->PopColor();
+	 }	
+
+  glPopMatrix();
+}
+

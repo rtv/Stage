@@ -2,14 +2,16 @@
 #include "stage.hh"
 using namespace Stg;
 
-Waypoint::Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, stg_color_t color ) 
-  : color(color)
+Waypoint::Waypoint( const Pose& pose, stg_color_t color ) 
+  : pose(pose), color(color)
 { 
-  pose.x = x; 
-  pose.y = y; 
-  pose.z = z; 
-  pose.a = a; 
 }
+
+Waypoint::Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, stg_color_t color ) 
+  : pose(x,y,z,a), color(color)
+{ 
+}
+
 
 Waypoint::Waypoint()
 { 

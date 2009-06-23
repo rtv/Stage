@@ -83,12 +83,8 @@
 using namespace Stg;
 
 static const stg_watts_t RANGER_WATTSPERSENSOR = 0.2;
-static const stg_meters_t RANGER_SIZEX = 0.4;
-static const stg_meters_t RANGER_SIZEY = 0.4;
-static const stg_meters_t RANGER_SIZEZ = 0.05;
-static const stg_meters_t RANGER_TRANSDUCER_SIZEX = 0.01;
-static const stg_meters_t RANGER_TRANSDUCER_SIZEY = 0.04;
-static const stg_meters_t RANGER_TRANSDUCER_SIZEZ = 0.04;
+static const Size RANGER_SIZE( 0.4, 0.4, 0.05 );
+static const Size RANGER_TRANSDUCER_SIZE( 0.01, 0.04, 0.04 );
 static const stg_meters_t RANGER_RANGEMAX = 5.0;
 static const stg_meters_t RANGER_RANGEMIN = 0.0;
 static const unsigned int RANGER_RAYCOUNT = 3;
@@ -119,11 +115,7 @@ ModelRanger::ModelRanger( World* world,
   // remove the polygon: ranger has no body
   this->ClearBlocks();
   
-  Geom geom;
-  geom.size.x = RANGER_SIZEX;
-  geom.size.y = RANGER_SIZEY;
-  geom.size.z = RANGER_SIZEZ;
-  this->SetGeom( geom );
+  this->SetGeom( Geom( Pose(), RANGER_SIZE ));
   
   // spread the transducers around the ranger's body
   double offset = MIN(geom.size.x, geom.size.y) / 2.0;
@@ -138,9 +130,7 @@ ModelRanger::ModelRanger( World* world,
       sensors[c].pose.y = offset * sin( sensors[c].pose.a );
       sensors[c].pose.z = geom.size.z / 2.0; // half way up
 
-      sensors[c].size.x = RANGER_TRANSDUCER_SIZEX;
-      sensors[c].size.y = RANGER_TRANSDUCER_SIZEY;
-      sensors[c].size.z = RANGER_TRANSDUCER_SIZEZ;
+      sensors[c].size = RANGER_TRANSDUCER_SIZE;
 
       sensors[c].bounds_range.min = RANGER_RANGEMIN;
       sensors[c].bounds_range.max = RANGER_RANGEMAX;;
@@ -194,8 +184,8 @@ void ModelRanger::Load( void )
 		sensors.resize( sensor_count );
 
       Size common_size;
-      common_size.x = wf->ReadTupleLength( wf_entity, "ssize", 0, RANGER_SIZEX );
-      common_size.y = wf->ReadTupleLength( wf_entity, "ssize", 1, RANGER_SIZEY );
+      common_size.x = wf->ReadTupleLength( wf_entity, "ssize", 0, RANGER_SIZE.x );
+      common_size.y = wf->ReadTupleLength( wf_entity, "ssize", 1, RANGER_SIZE.y );
 
       double common_min = wf->ReadTupleLength( wf_entity, "sview", 0, RANGER_RANGEMIN );
       double common_max = wf->ReadTupleLength( wf_entity, "sview", 1, RANGER_RANGEMAX );

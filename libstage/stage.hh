@@ -299,7 +299,10 @@ namespace Stg
 
 	 /* returns true iff all components of the velocity are zero. */
 	 bool IsZero() const { return( !(x || y || z || a )); };
-	 
+
+	 /** Set the pose to zero [0,0,0,0] */
+	 void Zero(){ x=y=z=a=0.0; }
+
 	 void Load( Worldfile* wf, int section, const char* keyword );
 	 void Save( Worldfile* wf, int section, const char* keyword );
   };
@@ -351,6 +354,12 @@ namespace Stg
 				  size.x,
 				  size.y );
     }
+	 
+	 /** Default constructor. Members pose and size use their default constructors. */
+	 Geom() : pose(), size() {}
+
+	 /** construct from a prior pose and size */
+	 Geom( const Pose& p, const Size& s ) : pose(p), size(s) {}
   };
   
   /** Specify a point in space. Arrays of Waypoints can be attached to
@@ -359,6 +368,7 @@ namespace Stg
   {
   public:
     Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, stg_color_t color ) ;
+    Waypoint( const Pose& pose, stg_color_t color ) ;
     Waypoint();
     void Draw();
     
@@ -419,7 +429,9 @@ namespace Stg
   {
   public:
     stg_meters_t x,y,z;
-	 stg_point3_t( int x, int y ) : x(x), y(y){}	 
+	 stg_point3_t( stg_meters_t x, stg_meters_t y, stg_meters_t z ) 
+		: x(x), y(y), z(z) {}	 
+	 //stg_point3_t( int x, int y ) : x(x), y(y), z(0.0) {}	 
 	 stg_point3_t() : x(0.0), y(0.0), z(0.0) {}
   };
 
@@ -1734,7 +1746,6 @@ namespace Stg
   private:
 	 /** the number of models instatiated - used to assign unique IDs */
 	 static uint32_t count;
-	 //static GHashTable*  modelsbyid;
 	 static std::map<stg_id_t,Model*> modelsbyid;
 	 std::vector<Option*> drawOptions;
 	 const std::vector<Option*>& getOptions() const { return drawOptions; }
@@ -2010,29 +2021,22 @@ namespace Stg
   
   
 	 /** static wrapper for DrawBlocks() */
-	 static void DrawBlocks( gpointer dummykey, 
-									 Model* mod, 
-									 void* arg );
+// 	 static void DrawBlocks( gpointer dummykey, 
+// 									 Model* mod, 
+// 									 void* arg );
 	 
 	 virtual void DrawPicker();
-	 virtual void DataVisualize( Camera* cam );
-  
+	 virtual void DataVisualize( Camera* cam );  
 	 virtual void DrawSelected(void);
   
 	 void DrawTrailFootprint();
 	 void DrawTrailBlocks();
 	 void DrawTrailArrows();
 	 void DrawGrid();
-  
-
-	 void DrawBlinkenlights();
-
+  	 void DrawBlinkenlights();
 	 void DataVisualizeTree( Camera* cam );
-	
 	 void DrawFlagList();
-
 	 void DrawPose( Pose pose );
-
 	 void LoadDataBaseEntries( Worldfile* wf, int entity );
 	 
   public:
@@ -2043,7 +2047,8 @@ namespace Stg
 	 virtual void PushColor( double r, double g, double b, double a )
 	 { world->PushColor( r,g,b,a ); }
 	
-	 virtual void PopColor(){ world->PopColor(); }
+	 virtual void PopColor()
+	 { world->PopColor(); }
 
 	 PowerPack* FindPowerPack() const;
 
@@ -2053,11 +2058,12 @@ namespace Stg
 	 void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
 									stg_meters_t ymin, stg_meters_t ymax );
 	
-	 std::string PoseString(){ return pose.String(); }
-
+	 /** Return a human-readable string describing the model's pose */
+	 std::string PoseString()
+	 { return pose.String(); }
+	 
 	 /** Look up a model pointer by a unique model ID */
 	 static Model* LookupId( uint32_t id )
-	 //{ return (Model*)g_hash_table_lookup( modelsbyid, (void*)id ); }
 	 { return modelsbyid[id]; }
 	
 	 /** Constructor */
@@ -2418,8 +2424,6 @@ namespace Stg
 	 {
 	 private:
 		//static Option showArea;
-
-
 	 public:
 		Vis( World* world );
 		virtual ~Vis( void ){}
@@ -2432,10 +2436,7 @@ namespace Stg
 
 	 // predicate for ray tracing
 	 static bool BlockMatcher( Block* testblock, Model* finder );
-
-	 static Option showBlobData;
-	
-	 // virtual void DataVisualize( Camera* cam );
+	 //static Option showBlobData;
 
   public:
 	 stg_radians_t fov;
@@ -2457,11 +2458,11 @@ namespace Stg
 	 virtual void Update();
 	 virtual void Load();
 		
-		Blob* GetBlobs( unsigned int* count )
-		{ 
-			if( count ) *count = blobs.size();
-			return &blobs[0];
-		}
+	 Blob* GetBlobs( unsigned int* count )
+	 { 
+		if( count ) *count = blobs.size();
+		return &blobs[0];
+	 }
 
 	 /** Start finding blobs with this color.*/
 	 void AddColor( stg_color_t col );
@@ -2520,8 +2521,6 @@ namespace Stg
 	 	
 		unsigned int sample_count;
 		std::vector<Sample> samples;
-  	//std::vector<Ray> rays;
-		//Ray ray;
 
 		stg_meters_t range_max;
 		stg_radians_t fov;
@@ -2545,17 +2544,17 @@ namespace Stg
 	 virtual void Load();
 	 virtual void Print( char* prefix );
   
-	 /** returns an array of samples */
+	 /** returns an array of range & reflectance samples */
 	 Sample* GetSamples( uint32_t* count );
 	 
-		/** returns a const reference to a vector of samples */
-		const std::vector<Sample>& GetSamples();
-		
-		/** Get the user-tweakable configuration of the laser */
-		Config GetConfig( );
-		
-		/** Set the user-tweakable configuration of the laser */
-		void SetConfig( Config& cfg );  
+	 /** returns a const reference to a vector of range and reflectance samples */
+	 const std::vector<Sample>& GetSamples();
+	 
+	 /** Get the user-tweakable configuration of the laser */
+	 Config GetConfig( );
+	 
+	 /** Set the user-tweakable configuration of the laser */
+	 void SetConfig( Config& cfg );  
   };
   
 
@@ -2903,36 +2902,36 @@ private:
 
   // POSITION MODEL --------------------------------------------------------
 
-  /** Define a position  control method */
-  typedef enum
-	 { STG_POSITION_CONTROL_VELOCITY, 
-		STG_POSITION_CONTROL_POSITION 
-	 } stg_position_control_mode_t;
-
-  /** Define a localization method */
-  typedef enum
-	 { STG_POSITION_LOCALIZATION_GPS, 
-		STG_POSITION_LOCALIZATION_ODOM 
-	 } stg_position_localization_mode_t;
-
-  /** Define a driving method */
-  typedef enum
-	 { STG_POSITION_DRIVE_DIFFERENTIAL, 
-		STG_POSITION_DRIVE_OMNI, 
-		STG_POSITION_DRIVE_CAR 
-	 } stg_position_drive_mode_t;
-
-
   /// %ModelPosition class
   class ModelPosition : public Model
   {
 	 friend class Canvas;
 
+  public:
+	 /** Define a position  control method */
+	 typedef enum
+		{ STG_POSITION_CONTROL_VELOCITY, 
+		  STG_POSITION_CONTROL_POSITION 
+		} ControlMode;
+	 
+	 /** Define a localization method */
+	 typedef enum
+		{ STG_POSITION_LOCALIZATION_GPS, 
+		  STG_POSITION_LOCALIZATION_ODOM 
+		} LocalizationMode;
+	 
+	 /** Define a driving method */
+	 typedef enum
+		{ STG_POSITION_DRIVE_DIFFERENTIAL, 
+		  STG_POSITION_DRIVE_OMNI, 
+		  STG_POSITION_DRIVE_CAR 
+		} DriveMode;
+	 
   private:
 	 Pose goal;///< the current velocity or pose to reach, depending on the value of control_mode
-	 stg_position_control_mode_t control_mode;
-	 stg_position_drive_mode_t drive_mode;
-	 stg_position_localization_mode_t localization_mode; ///< global or local mode
+	 ControlMode control_mode;
+	 DriveMode drive_mode;
+	 LocalizationMode localization_mode; ///< global or local mode
 	 Velocity integration_error; ///< errors to apply in simple odometry model
 
 	 Waypoint* waypoints;
@@ -2977,7 +2976,7 @@ private:
 	 /** Set the current pose estimate.*/
 	 void SetOdom( Pose odom );
 
-	 /** Sets the control_mode to STG_POSITION_CONTROL_VELOCITY and sets
+	 /** Sets the control_mode to CONTROL_VELOCITY and sets
 		  the goal velocity. */
 	 void SetSpeed( double x, double y, double a );
 	 void SetXSpeed( double x );
@@ -2988,7 +2987,7 @@ private:
 	 /** Set velocity along all axes to  to zero. */
 	 void Stop();
 
-	 /** Sets the control mode to STG_POSITION_CONTROL_POSITION and sets
+	 /** Sets the control mode to CONTROL_POSITION and sets
 		  the goal pose */
 	 void GoTo( double x, double y, double a );
 	 void GoTo( Pose pose );
@@ -3002,63 +3001,63 @@ private:
 
 // ACTUATOR MODEL --------------------------------------------------------
 
-/** Define a actuator control method */
-typedef enum
-{ STG_ACTUATOR_CONTROL_VELOCITY,
-	STG_ACTUATOR_CONTROL_POSITION
-} stg_actuator_control_mode_t;
-
-/** Define an actuator type */
-typedef enum
-{ STG_ACTUATOR_TYPE_LINEAR,
-	STG_ACTUATOR_TYPE_ROTATIONAL
-} stg_actuator_type_t;
-
-
 /// %ModelActuator class
 class ModelActuator : public Model
 {
-	private:
-		double goal; //< the current velocity or pose to reach, depending on the value of control_mode
-		double pos;
-		double max_speed;
-		double min_position;
-		double max_position;
-		stg_actuator_control_mode_t control_mode;
-		stg_actuator_type_t actuator_type;
-		stg_point3_t axis;
-
-		Pose InitialPose;
-	public:
-		static const char* typestr;
-
-		// constructor
-		ModelActuator( World* world,
-								Model* parent );
-		// destructor
-		~ModelActuator();
-
-		virtual void Startup();
-		virtual void Shutdown();
-		virtual void Update();
-		virtual void Load();
-
-		/** Sets the control_mode to STG_ACTUATOR_CONTROL_VELOCITY and sets
-		  the goal velocity. */
-		void SetSpeed( double speed );
-
-		double GetSpeed() const {return goal;}
-
-		/** Sets the control mode to STG_ACTUATOR_CONTROL_POSITION and sets
-		  the goal pose */
-		void GoTo( double pose );
-
-		double GetPosition() const {return pos;};
-
-		double GetMaxPosition() const {return max_position;};
-
-		double GetMinPosition() const {return min_position;};
-
+public:
+  /** Define a actuator control method */
+  typedef enum
+	 { STG_ACTUATOR_CONTROL_VELOCITY,
+		STG_ACTUATOR_CONTROL_POSITION
+	 } ControlMode;
+  
+  /** Define an actuator type */
+  typedef enum
+	 { STG_ACTUATOR_TYPE_LINEAR,
+		STG_ACTUATOR_TYPE_ROTATIONAL
+	 } ActuatorType;
+  
+private:
+  double goal; //< the current velocity or pose to reach, depending on the value of control_mode
+  double pos;
+  double max_speed;
+  double min_position;
+  double max_position;
+  ControlMode control_mode;
+  ActuatorType actuator_type;
+  stg_point3_t axis;
+  
+  Pose InitialPose;
+public:
+  static const char* typestr;
+  
+  // constructor
+  ModelActuator( World* world,
+					  Model* parent );
+  // destructor
+  ~ModelActuator();
+  
+  virtual void Startup();
+  virtual void Shutdown();
+  virtual void Update();
+  virtual void Load();
+  
+  /** Sets the control_mode to STG_ACTUATOR_CONTROL_VELOCITY and sets
+		the goal velocity. */
+  void SetSpeed( double speed );
+  
+  double GetSpeed() const {return goal;}
+  
+  /** Sets the control mode to STG_ACTUATOR_CONTROL_POSITION and sets
+		the goal pose */
+  void GoTo( double pose );
+  
+  double GetPosition() const {return pos;};
+  
+  double GetMaxPosition() const {return max_position;};
+  
+  double GetMinPosition() const {return min_position;};
+  
 };
 
 

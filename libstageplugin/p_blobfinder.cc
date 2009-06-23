@@ -54,10 +54,10 @@ void InterfaceBlobfinder::Publish( void )
   bzero( &bfd, sizeof(bfd) );
 
   ModelBlobfinder* blobmod = (ModelBlobfinder*)this->mod;
-
+  
   uint32_t bcount = 0;
-	ModelBlobfinder::Blob* blobs = blobmod->GetBlobs( &bcount );
-
+  const ModelBlobfinder::Blob* blobs = blobmod->GetBlobs( &bcount );
+  
   if ( bcount > 0 )
   {
 	  // and set the image width * height

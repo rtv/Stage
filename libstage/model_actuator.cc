@@ -55,32 +55,28 @@ actuator
 - axis
   if a linear actuator the axis that the actuator will move along
  */
-
-const double STG_ACTUATOR_WATTS_KGMS = 5.0; // cost per kg per meter per second
-const double STG_ACTUATOR_WATTS = 2.0; // base cost of position device
-
-const stg_actuator_control_mode_t ACTUATOR_CONTROL_DEFAULT = STG_ACTUATOR_CONTROL_VELOCITY;
-const stg_actuator_type_t ACTUATOR_TYPE_DEFAULT = STG_ACTUATOR_TYPE_LINEAR;
-
+  
+static const double STG_ACTUATOR_WATTS_KGMS = 5.0; // cost per kg per meter per second
+static const double STG_ACTUATOR_WATTS = 2.0; // base cost of position device
 
 ModelActuator::ModelActuator( World* world,
-												Model* parent )
+										Model* parent )
   : Model( world, parent, MODEL_TYPE_ACTUATOR ),
-  goal(0), pos(0), max_speed(1), min_position(0), max_position(1),
-  control_mode(ACTUATOR_CONTROL_DEFAULT),
-  actuator_type(ACTUATOR_TYPE_DEFAULT)
+	 goal(0), 
+	 pos(0), 
+	 max_speed(1), 
+	 min_position(0), 
+	 max_position(1),
+	 control_mode( STG_ACTUATOR_CONTROL_VELOCITY ),
+	 actuator_type( STG_ACTUATOR_TYPE_LINEAR ),
+	 axis(0,0,0)
 {
-	// no power consumed until we're subscribed
-	this->SetWatts( 0 );
-
-	// sensible position defaults
-	Velocity vel;
-	memset( &vel, 0, sizeof(vel));
-	this->SetVelocity( vel );
-	this->SetBlobReturn( TRUE );
-
-	memset(&axis,0,sizeof(axis));
-
+  // no power consumed until we're subscribed
+  this->SetWatts( 0 );
+  
+  // sensible position defaults
+  this->SetVelocity( Velocity(0,0,0,0) );
+  this->SetBlobReturn( TRUE );  
 }
 
 
@@ -165,11 +161,11 @@ void ModelActuator::Update( void  )
 	// update current position
 	Pose CurrentPose = GetPose();
 	// just need to get magnitude difference;
-	Pose PoseDiff;
-	PoseDiff.x = CurrentPose.x - InitialPose.x;
-	PoseDiff.y = CurrentPose.y - InitialPose.y;
-	PoseDiff.z = CurrentPose.z - InitialPose.z;
-	PoseDiff.a = CurrentPose.a - InitialPose.a;
+	Pose PoseDiff( CurrentPose.x - InitialPose.x,
+						CurrentPose.y - InitialPose.y,
+						CurrentPose.z - InitialPose.z,
+						CurrentPose.a - InitialPose.a );
+
 	switch (actuator_type)
 	{
 		case STG_ACTUATOR_TYPE_LINEAR:
@@ -277,7 +273,8 @@ void ModelActuator::Shutdown( void )
 
 	// safety features!
 	goal = 0;
-	bzero( &velocity, sizeof(velocity) );
+
+	velocity.Zero();
 
 	this->SetWatts( 0 );
 

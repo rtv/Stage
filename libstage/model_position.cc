@@ -68,29 +68,34 @@ using namespace Stg;
 
 
 
-const double STG_POSITION_WATTS_KGMS = 10.0; // current per kg per meter per second
-const double STG_POSITION_WATTS = 1.0; // base cost of position device
+static const double WATTS_KGMS = 10.0; // current per kg per meter per second
+static const double WATTS = 1.0; // base cost of position device
 
 // simple odometry error model parameters. the error is selected at
 // random in the interval -MAX/2 to +MAX/2 at startup
-const double STG_POSITION_INTEGRATION_ERROR_MAX_X = 0.03;
-const double STG_POSITION_INTEGRATION_ERROR_MAX_Y = 0.03;
-const double STG_POSITION_INTEGRATION_ERROR_MAX_A = 0.05;
-
-const stg_position_control_mode_t POSITION_CONTROL_DEFAULT = STG_POSITION_CONTROL_VELOCITY;
-const stg_position_localization_mode_t POSITION_LOCALIZATION_DEFAULT = STG_POSITION_LOCALIZATION_GPS;
-const stg_position_drive_mode_t POSITION_DRIVE_DEFAULT  = STG_POSITION_DRIVE_DIFFERENTIAL;
+static const double INTEGRATION_ERROR_MAX_X = 0.03;
+static const double INTEGRATION_ERROR_MAX_Y = 0.03;
+static const double INTEGRATION_ERROR_MAX_Z = 0.00; // note zero!
+static const double INTEGRATION_ERROR_MAX_A = 0.05;
 
 ModelPosition::ModelPosition( World* world, 
-			      Model* parent )
+										Model* parent )
   : Model( world, parent, MODEL_TYPE_POSITION ),
+	 goal(0,0,0,0),
+	 control_mode( STG_POSITION_CONTROL_VELOCITY ),
+	 drive_mode( STG_POSITION_DRIVE_DIFFERENTIAL ),
+	 localization_mode( STG_POSITION_LOCALIZATION_GPS ),
+	 integration_error( drand48() * INTEGRATION_ERROR_MAX_X - INTEGRATION_ERROR_MAX_X/2.0,
+							  drand48() * INTEGRATION_ERROR_MAX_Y - INTEGRATION_ERROR_MAX_Y/2.0,
+							  drand48() * INTEGRATION_ERROR_MAX_Z - INTEGRATION_ERROR_MAX_Z/2.0,
+							  drand48() * INTEGRATION_ERROR_MAX_A - INTEGRATION_ERROR_MAX_A/2.0 ),
     waypoints( NULL ),
     waypoint_count( 0 ),
 	 wpvis(),
 	 posevis()
 {
   PRINT_DEBUG2( "Constructing ModelPosition %d (%s)\n", 
-		id, typestr );
+					 id, typestr );
   
   // assert that Update() is reentrant for this derived model
   thread_safe = true;
@@ -98,33 +103,9 @@ ModelPosition::ModelPosition( World* world,
   // no power consumed until we're subscribed
   this->SetWatts( 0 );
   
-  // zero vel
-  Velocity v; // initially zero
-  this->SetVelocity( v );
+  this->SetVelocity( Velocity(0,0,0,0) );
   
   this->SetBlobReturn( TRUE );
-  
-  // configure the position-specific stuff
-  
-  // control
-  memset( &goal, 0, sizeof(goal));
-  drive_mode = POSITION_DRIVE_DEFAULT;
-  control_mode = POSITION_CONTROL_DEFAULT;
-  
-  // localization
-  localization_mode = POSITION_LOCALIZATION_DEFAULT;
-  
-  integration_error.x =  
-    drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_X - 
-    STG_POSITION_INTEGRATION_ERROR_MAX_X/2.0;
-  
-  integration_error.y =  
-    drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_Y - 
-    STG_POSITION_INTEGRATION_ERROR_MAX_Y/2.0;
-  
-  integration_error.a =  
-    drand48() * STG_POSITION_INTEGRATION_ERROR_MAX_A - 
-    STG_POSITION_INTEGRATION_ERROR_MAX_A/2.0;
   
   AddVisualizer( &wpvis, true );
   AddVisualizer( &posevis, false );
@@ -165,10 +146,10 @@ void ModelPosition::Load( void )
   if( wf->PropertyExists( wf_entity, "odom" ) )
     {
       PRINT_WARN1( "the odom property is specified for model \"%s\","
-		   " but this property is no longer available."
-		   " Use localization_origin instead. See the position"
-		   " entry in the manual or src/model_position.c for details.", 
-		   this->token );
+						 " but this property is no longer available."
+						 " Use localization_origin instead. See the position"
+						 " entry in the manual or src/model_position.c for details.", 
+						 this->token );
     }
 
   // set the starting pose as my initial odom position. This could be
@@ -176,8 +157,8 @@ void ModelPosition::Load( void )
   // specified
   est_origin = this->GetGlobalPose();
 
-	if( wf->PropertyExists( wf_entity, "localization_origin" ) )
-	{  
+  if( wf->PropertyExists( wf_entity, "localization_origin" ) )
+	 {  
 		est_origin.x = wf->ReadTupleLength( wf_entity, "localization_origin", 0, est_origin.x );
 		est_origin.y = wf->ReadTupleLength( wf_entity, "localization_origin", 1, est_origin.y );
 		est_origin.z = wf->ReadTupleLength( wf_entity, "localization_origin", 2, est_origin.z );
@@ -202,35 +183,35 @@ void ModelPosition::Load( void )
   if( wf->PropertyExists( wf_entity, "odom_error" ) )
     {
       integration_error.x = 
-	wf->ReadTupleLength( wf_entity, "odom_error", 0, integration_error.x );
+		  wf->ReadTupleLength( wf_entity, "odom_error", 0, integration_error.x );
       integration_error.y = 
-	wf->ReadTupleLength( wf_entity, "odom_error", 1, integration_error.y );
+		  wf->ReadTupleLength( wf_entity, "odom_error", 1, integration_error.y );
       integration_error.z = 
-	wf->ReadTupleLength( wf_entity, "odom_error", 2, integration_error.z );
+		  wf->ReadTupleLength( wf_entity, "odom_error", 2, integration_error.z );
       integration_error.a 
-	= wf->ReadTupleAngle( wf_entity, "odom_error", 3, integration_error.a );
+		  = wf->ReadTupleAngle( wf_entity, "odom_error", 3, integration_error.a );
     }
 
   // choose a localization model
   if( wf->PropertyExists( wf_entity, "localization" ) )
     {
       const char* loc_str =  
-	wf->ReadString( wf_entity, "localization", NULL );
+		  wf->ReadString( wf_entity, "localization", NULL );
 
       if( loc_str )
-	{
-	  if( strcmp( loc_str, "gps" ) == 0 )
-	    localization_mode = STG_POSITION_LOCALIZATION_GPS;
-	  else if( strcmp( loc_str, "odom" ) == 0 )
-	    localization_mode = STG_POSITION_LOCALIZATION_ODOM;
-	  else
-	    PRINT_ERR2( "unrecognized localization mode \"%s\" for model \"%s\"."
-			" Valid choices are \"gps\" and \"odom\".", 
-			loc_str, this->token );
-	}
+		  {
+			 if( strcmp( loc_str, "gps" ) == 0 )
+				localization_mode = STG_POSITION_LOCALIZATION_GPS;
+			 else if( strcmp( loc_str, "odom" ) == 0 )
+				localization_mode = STG_POSITION_LOCALIZATION_ODOM;
+			 else
+				PRINT_ERR2( "unrecognized localization mode \"%s\" for model \"%s\"."
+								" Valid choices are \"gps\" and \"odom\".", 
+								loc_str, this->token );
+		  }
       else
-	PRINT_ERR1( "no localization mode string specified for model \"%s\"", 
-		    this->token );
+		  PRINT_ERR1( "no localization mode string specified for model \"%s\"", 
+						  this->token );
     }
 }
 
@@ -239,145 +220,144 @@ void ModelPosition::Update( void  )
   PRINT_DEBUG1( "[%lu] position update", this->world->sim_time );
 
   // stop by default
-  Velocity vel;
-  memset( &vel, 0, sizeof(Velocity) );
-
+  Velocity vel(0,0,0,0);
+  
   if( this->subs ) // no driving if noone is subscribed
     {            
       switch( control_mode )
-	{
-	case STG_POSITION_CONTROL_VELOCITY :
-	  {
-	    PRINT_DEBUG( "velocity control mode" );
-	    PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
-			  this->token, 
-			  this->goal.x, 
-			  this->goal.y, 
-			  this->goal.a );
+		  {
+		  case STG_POSITION_CONTROL_VELOCITY :
+			 {
+				PRINT_DEBUG( "velocity control mode" );
+				PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
+								  this->token, 
+								  this->goal.x, 
+								  this->goal.y, 
+								  this->goal.a );
+		 
+				switch( drive_mode )
+				  {
+				  case STG_POSITION_DRIVE_DIFFERENTIAL:
+					 // differential-steering model, like a Pioneer
+					 vel.x = goal.x;
+					 vel.y = 0;
+					 vel.a = goal.a;
+					 break;
+			  
+				  case STG_POSITION_DRIVE_OMNI:
+					 // direct steering model, like an omnidirectional robot
+					 vel.x = goal.x;
+					 vel.y = goal.y;
+					 vel.a = goal.a;
+					 break;
+			  
+				  case STG_POSITION_DRIVE_CAR:
+					 // car like steering model based on speed and turning angle
+					 vel.x = goal.x * cos(goal.a);
+					 vel.y = 0;
+					 vel.a = goal.x * sin(goal.a)/1.0; // here 1.0 is the wheel base, this should be a config option
+					 break;
+			  
+				  default:
+					 PRINT_ERR1( "unknown steering mode %d", drive_mode );
+				  }
+			 } break;
+	  
+		  case STG_POSITION_CONTROL_POSITION:
+			 {
+				PRINT_DEBUG( "position control mode" );
+		 
+				double x_error = goal.x - est_pose.x;
+				double y_error = goal.y - est_pose.y;
+				double a_error = normalize( goal.a - est_pose.a );
+		 
+				PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
+		 
+				// speed limits for controllers
+				// TODO - have these configurable
+				double max_speed_x = 0.4;
+				double max_speed_y = 0.4;
+				double max_speed_a = 1.0;	      
+		 
+				switch( drive_mode )
+				  {
+				  case STG_POSITION_DRIVE_OMNI:
+					 {
+						// this is easy - we just reduce the errors in each axis
+						// independently with a proportional controller, speed
+						// limited
+						vel.x = MIN( x_error, max_speed_x );
+						vel.y = MIN( y_error, max_speed_y );
+						vel.a = MIN( a_error, max_speed_a );
+					 }
+					 break;
 
-	    switch( drive_mode )
-	      {
-	      case STG_POSITION_DRIVE_DIFFERENTIAL:
-		// differential-steering model, like a Pioneer
-		vel.x = goal.x;
-		vel.y = 0;
-		vel.a = goal.a;
-		break;
+				  case STG_POSITION_DRIVE_DIFFERENTIAL:
+					 {
+						// axes can not be controlled independently. We have to
+						// turn towards the desired x,y position, drive there,
+						// then turn to face the desired angle.  this is a
+						// simple controller that works ok. Could easily be
+						// improved if anyone needs it better. Who really does
+						// position control anyhoo?
 
-	      case STG_POSITION_DRIVE_OMNI:
-		// direct steering model, like an omnidirectional robot
-		vel.x = goal.x;
-		vel.y = goal.y;
-		vel.a = goal.a;
-		break;
+						// start out with no velocity
+						Velocity calc;
+						double close_enough = 0.02; // fudge factor
 
-	      case STG_POSITION_DRIVE_CAR:
-		// car like steering model based on speed and turning angle
-		vel.x = goal.x * cos(goal.a);
-		vel.y = 0;
-		vel.a = goal.x * sin(goal.a)/1.0; // here 1.0 is the wheel base, this should be a config option
-		break;
+						// if we're at the right spot
+						if( fabs(x_error) < close_enough && fabs(y_error) < close_enough )
+						  {
+							 PRINT_DEBUG( "TURNING ON THE SPOT" );
+							 // turn on the spot to minimize the error
+							 calc.a = MIN( a_error, max_speed_a );
+							 calc.a = MAX( a_error, -max_speed_a );
+						  }
+						else
+						  {
+							 PRINT_DEBUG( "TURNING TO FACE THE GOAL POINT" );
+							 // turn to face the goal point
+							 double goal_angle = atan2( y_error, x_error );
+							 double goal_distance = hypot( y_error, x_error );
 
-	      default:
-		PRINT_ERR1( "unknown steering mode %d", drive_mode );
-	      }
-	  } break;
+							 a_error = normalize( goal_angle - est_pose.a );
+							 calc.a = MIN( a_error, max_speed_a );
+							 calc.a = MAX( a_error, -max_speed_a );
 
-	case STG_POSITION_CONTROL_POSITION:
-	  {
-	    PRINT_DEBUG( "position control mode" );
+							 PRINT_DEBUG2( "steer errors: %.2f %.2f \n", a_error, goal_distance );
 
-	    double x_error = goal.x - est_pose.x;
-	    double y_error = goal.y - est_pose.y;
-	    double a_error = normalize( goal.a - est_pose.a );
+							 // if we're pointing about the right direction, move
+							 // forward
+							 if( fabs(a_error) < M_PI/16 )
+								{
+								  PRINT_DEBUG( "DRIVING TOWARDS THE GOAL" );
+								  calc.x = MIN( goal_distance, max_speed_x );
+								}
+						  }
 
-	    PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
+						// now set the underlying velocities using the normal
+						// diff-steer model
+						vel.x = calc.x;
+						vel.y = 0;
+						vel.a = calc.a;
+					 }
+					 break;
 
-	    // speed limits for controllers
-	    // TODO - have these configurable
-	    double max_speed_x = 0.4;
-	    double max_speed_y = 0.4;
-	    double max_speed_a = 1.0;	      
+				  default:
+					 PRINT_ERR1( "unknown steering mode %d", (int)drive_mode );
+				  }
+			 }
+			 break;
 
-	    switch( drive_mode )
-	      {
-	      case STG_POSITION_DRIVE_OMNI:
-		{
-		  // this is easy - we just reduce the errors in each axis
-		  // independently with a proportional controller, speed
-		  // limited
-		  vel.x = MIN( x_error, max_speed_x );
-		  vel.y = MIN( y_error, max_speed_y );
-		  vel.a = MIN( a_error, max_speed_a );
-		}
-		break;
-
-	      case STG_POSITION_DRIVE_DIFFERENTIAL:
-		{
-		  // axes can not be controlled independently. We have to
-		  // turn towards the desired x,y position, drive there,
-		  // then turn to face the desired angle.  this is a
-		  // simple controller that works ok. Could easily be
-		  // improved if anyone needs it better. Who really does
-		  // position control anyhoo?
-
-		  // start out with no velocity
-		  Velocity calc;
-		  double close_enough = 0.02; // fudge factor
-
-		  // if we're at the right spot
-		  if( fabs(x_error) < close_enough && fabs(y_error) < close_enough )
-		    {
-		      PRINT_DEBUG( "TURNING ON THE SPOT" );
-		      // turn on the spot to minimize the error
-		      calc.a = MIN( a_error, max_speed_a );
-		      calc.a = MAX( a_error, -max_speed_a );
-		    }
-		  else
-		    {
-		      PRINT_DEBUG( "TURNING TO FACE THE GOAL POINT" );
-		      // turn to face the goal point
-		      double goal_angle = atan2( y_error, x_error );
-		      double goal_distance = hypot( y_error, x_error );
-
-		      a_error = normalize( goal_angle - est_pose.a );
-		      calc.a = MIN( a_error, max_speed_a );
-		      calc.a = MAX( a_error, -max_speed_a );
-
-		      PRINT_DEBUG2( "steer errors: %.2f %.2f \n", a_error, goal_distance );
-
-		      // if we're pointing about the right direction, move
-		      // forward
-		      if( fabs(a_error) < M_PI/16 )
-			{
-			  PRINT_DEBUG( "DRIVING TOWARDS THE GOAL" );
-			  calc.x = MIN( goal_distance, max_speed_x );
-			}
-		    }
-
-		  // now set the underlying velocities using the normal
-		  // diff-steer model
-		  vel.x = calc.x;
-		  vel.y = 0;
-		  vel.a = calc.a;
-		}
-		break;
-
-	      default:
-		PRINT_ERR1( "unknown steering mode %d", (int)drive_mode );
-	      }
-	  }
-	  break;
-
-	default:
-	  PRINT_ERR1( "unrecognized position command mode %d", control_mode );
-	}
+		  default:
+			 PRINT_ERR1( "unrecognized position command mode %d", control_mode );
+		  }
 		
       // simple model of power consumption
-      watts = STG_POSITION_WATTS + 
-		  fabs(vel.x) * STG_POSITION_WATTS_KGMS * mass + 
-		  fabs(vel.y) * STG_POSITION_WATTS_KGMS * mass + 
-		  fabs(vel.a) * STG_POSITION_WATTS_KGMS * mass;
+      watts = WATTS + 
+		  fabs(vel.x) * WATTS_KGMS * mass + 
+		  fabs(vel.y) * WATTS_KGMS * mass + 
+		  fabs(vel.a) * WATTS_KGMS * mass;
 		
       //PRINT_DEBUG4( "model %s velocity (%.2f %.2f %.2f)",
       //	    this->token, 
@@ -392,16 +372,16 @@ void ModelPosition::Update( void  )
     {
     case STG_POSITION_LOCALIZATION_GPS:
       {
-	// compute our localization pose based on the origin and true pose
-	Pose gpose = this->GetGlobalPose();
+		  // compute our localization pose based on the origin and true pose
+		  Pose gpose = this->GetGlobalPose();
 
-	est_pose.a = normalize( gpose.a - est_origin.a );
-	double cosa = cos(est_origin.a);
-	double sina = sin(est_origin.a);
-	double dx = gpose.x - est_origin.x;
-	double dy = gpose.y - est_origin.y;
-	est_pose.x = dx * cosa + dy * sina;
-	est_pose.y = dy * cosa - dx * sina;
+		  est_pose.a = normalize( gpose.a - est_origin.a );
+		  double cosa = cos(est_origin.a);
+		  double sina = sin(est_origin.a);
+		  double dx = gpose.x - est_origin.x;
+		  double dy = gpose.y - est_origin.y;
+		  est_pose.x = dx * cosa + dy * sina;
+		  est_pose.y = dy * cosa - dx * sina;
 
       }
       break;
@@ -425,12 +405,12 @@ void ModelPosition::Update( void  )
 		
     default:
       PRINT_ERR2( "unknown localization mode %d for model %s\n",
-		  localization_mode, this->token );
+						localization_mode, this->token );
       break;
     }
 
   PRINT_DEBUG3( " READING POSITION: [ %.4f %.4f %.4f ]\n",
-		est_pose.x, est_pose.y, est_pose.a );
+					 est_pose.x, est_pose.y, est_pose.a );
 
   Model::Update();
 }
@@ -441,7 +421,7 @@ void ModelPosition::Startup( void )
 
   PRINT_DEBUG( "position startup" );
 
-  this->SetWatts( STG_POSITION_WATTS );
+  this->SetWatts( WATTS );
 }
 
 void ModelPosition::Shutdown( void )

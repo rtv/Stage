@@ -95,16 +95,9 @@ ModelGripper::ModelGripper( World* world,
   // Update() is not reentrant
   thread_safe = false;
 
-  // default size
-  Geom geom;
-  geom.pose.x = 0.0;
-  geom.pose.y = 0.0;
-  geom.pose.a = 0.0;
-  geom.size.x = 0.2;
-  geom.size.y = 0.3;
-  geom.size.z = 0.2;
-  SetGeom( geom );
- 
+  // set default size
+  SetGeom( Geom( Pose(0,0,0,0), Size( 0.2, 0.3, 0.2)));
+  
   PositionPaddles();  
 
   RegisterOption( &showData );

@@ -453,7 +453,7 @@ public:
   static int BlobFinderUpdate( ModelBlobfinder* blobmod, Robot* robot )
   {  
 	 unsigned int blob_count = 0;
-	 ModelBlobfinder::Blob* blobs = blobmod->GetBlobs( &blob_count );
+	 const ModelBlobfinder::Blob* blobs = blobmod->GetBlobs( &blob_count );
 
 	 if( blobs && (blob_count>0) )
 		{
