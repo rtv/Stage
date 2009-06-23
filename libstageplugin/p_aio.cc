@@ -66,7 +66,7 @@ int InterfaceAio::ProcessMessage(QueuePointer & resp_queue,
 				   player_msghdr_t* hdr,
 				   void* data)
 {
-  Stg::ModelLoadCell* mod = (Stg::ModelLoadCell*)this->mod;
+  //Stg::ModelLoadCell* mod = (Stg::ModelLoadCell*)this->mod;
 
   // Is it a request to set the voltage?
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
@@ -76,4 +76,5 @@ int InterfaceAio::ProcessMessage(QueuePointer & resp_queue,
 	player_aio_cmd* cmd = (player_aio_cmd*)data;
 	PRINT_WARN2( "Got request to set AIO voltage %d to %f. Should not happen, AIO currently only works for load cells!\n", cmd->id, cmd->voltage );
   }
+  return -1;
 }
