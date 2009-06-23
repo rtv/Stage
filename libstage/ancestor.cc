@@ -2,7 +2,7 @@
 using namespace Stg;
 
 Ancestor::Ancestor() :
-  children( NULL ),
+  children(),
   debug( false ),
   puck_list( NULL ),
   token( NULL )
@@ -13,13 +13,8 @@ Ancestor::Ancestor() :
 
 Ancestor::~Ancestor()
 {
-	if( children )
-	{
-		for( GList* it = children; it; it=it->next )
-			delete (Model*)it->data;
-
-		g_list_free( children );
-	}	
+  FOR_EACH( it, children )
+	 delete (*it);
 }
 
 void Ancestor::AddChild( Model* mod )
@@ -42,7 +37,7 @@ void Ancestor::AddChild( Model* mod )
 
   mod->SetToken( buf );
 
-  children = g_list_append( children, mod );
+  children.push_back( mod );
 
   child_type_counts[mod->type]++;
 
@@ -52,7 +47,9 @@ void Ancestor::AddChild( Model* mod )
 void Ancestor::RemoveChild( Model* mod )
 {
   child_type_counts[mod->type]--;
-  children = g_list_remove( children, mod );
+
+  //children = g_list_remove( children, mod );
+  children.erase( remove( children.begin(), children.end(), mod ) );
 }
 
 Pose Ancestor::GetGlobalPose()
@@ -64,11 +61,12 @@ Pose Ancestor::GetGlobalPose()
 
 void Ancestor::ForEachDescendant( stg_model_callback_t func, void* arg )
 {
-	for( GList* it=children; it; it=it->next ) {
-		Model* mod = (Model*)it->data;
+  FOR_EACH( it, children )
+	 {
+		Model* mod = (*it);
 		func( mod, arg );
 		mod->ForEachDescendant( func, arg );
-	}
+	 }
 }
 
 

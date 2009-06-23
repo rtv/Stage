@@ -15,8 +15,8 @@ void Model::AddCallback( void* address,
 
 	GList* cb_list = (GList*)g_hash_table_lookup( callbacks, address );
 
-	//printf( "installing callback in model %s with key %d\n",
-	//  mod->token, *key );
+	//printf( "installing callback in model %s with key %p\n",
+	//		  token, address );
 
 	// add the callback & argument to the list
 	cb_list = g_list_prepend( cb_list, new stg_cb_t( cb, user ) );
@@ -78,12 +78,12 @@ void Model::CallCallbacks(  void* address )
 	//printf( "CallCallbacks for model %s %p key %p\n", this->Token(), this, address );
 
 	//printf( "Model %s has %d callbacks. Checking key %d\n", 
-	//	  this->token, g_hash_table_size( this->callbacks ), key );
-
+	//		  this->token, g_hash_table_size( this->callbacks ), key );
+	
 	GList* cbs = (GList*)g_hash_table_lookup( callbacks, address );
-
-	//printf( "key %d has %d callbacks registered\n",
-	//	  key, g_list_length( cbs ) );
+	
+	//printf( "key %p has %d callbacks registered\n",
+	//	  address, g_list_length( cbs ) );
 	
 	// maintain a list of callbacks that should be cancelled
 	GList* doomed = NULL;
@@ -98,12 +98,12 @@ void Model::CallCallbacks(  void* address )
 
 		if( (cba->callback)( this, cba->arg ) )
 		{
-			//printf( "callback returned TRUE - schedule removal from list\n" );
+		  //printf( "callback returned TRUE - schedule removal from list\n" );
 			doomed = g_list_prepend( doomed, (void*)cba->callback );
 		}
 		else
 		{
-			//printf( "callback returned FALSE - keep in list\n" );
+		  //printf( "callback returned FALSE - keep in list\n" );
 		}
 
 		cbs = cbs->next;

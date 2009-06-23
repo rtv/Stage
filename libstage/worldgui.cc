@@ -857,18 +857,18 @@ void WorldGui::UpdateOptions()
   std::set<Option*, Option::optComp> options;
   std::vector<Option*> modOpts;
   
-  for( GList* it=reentrant_update_list; it; it=it->next ) 
+  FOR_EACH( it, reentrant_update_list )
 	 {
-		modOpts = ((Model*)it->data)->getOptions();
+		modOpts = (*it)->getOptions();
 		options.insert( modOpts.begin(), modOpts.end() );	
 	 }
-
-  for( GList* it=nonreentrant_update_list; it; it=it->next ) 
+  
+  FOR_EACH( it, nonreentrant_update_list )
 	 {
-		modOpts = ((Model*)it->data)->getOptions();
+		modOpts = (*it)->getOptions();
 		options.insert( modOpts.begin(), modOpts.end() );	
 	 }
-	
+  
   drawOptions.assign( options.begin(), options.end() );
   
   if ( oDlg ) 
@@ -877,7 +877,8 @@ void WorldGui::UpdateOptions()
 
 void WorldGui::DrawBoundingBoxTree()
 {
-  LISTMETHOD( World::children, Model*, DrawBoundingBoxTree );
+  FOR_EACH( it, World::children )
+	 (*it)->DrawBoundingBoxTree();
 }
 
 void WorldGui::PushColor( stg_color_t col )

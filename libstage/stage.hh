@@ -732,7 +732,12 @@ namespace Stg
 												  Model* finder, 
 												  const void* arg );
 
+  // STL container iterator macros
+#define VAR(V,init) __typeof(init) V=(init)
+#define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();I++)
+
   // list iterator macros
+  // todo: retire these along with glib
 #define LISTFUNCTION( LIST, TYPE, FUNC ) for( GList* it=LIST; it; it=it->next ) FUNC((TYPE)it->data);
 #define LISTMETHOD( LIST, TYPE, METHOD ) for( GList* it=LIST; it; it=it->next ) ((TYPE)it->data)->METHOD();
 #define LISTFUNCTIONARG( LIST, TYPE, FUNC, ARG ) for( GList* it=LIST; it; it=it->next ) FUNC((TYPE)it->data, ARG);
@@ -802,7 +807,7 @@ namespace Stg
     friend class Canvas; // allow Canvas access to our private members
 	 
   protected:
-    GList* children;
+	 std::vector<Model*> children;
     bool debug;
 	 GList* puck_list;
     char* token;
@@ -813,7 +818,7 @@ namespace Stg
   public:
     	
     /** get the children of the this element */
-    GList* GetChildren(){ return children;}
+	 std::vector<Model*>& GetChildren(){ return children;}
      
     /** recursively call func( model, arg ) for each descendant */
     void ForEachDescendant( stg_model_callback_t func, void* arg );
@@ -933,7 +938,6 @@ namespace Stg
     GMutex* thread_mutex; ///< protect the worker thread management stuff
     GThreadPool *threadpool; ///<worker threads for updating some sensor models in parallel
     int total_subs; ///< the total number of subscriptions to all models
-    //unsigned int update_jobs_pending;
     GList* velocity_list; ///< Models with non-zero velocity and should have their poses updated
     unsigned int worker_threads; ///< the number of worker threads to use
     GCond* worker_threads_done; ///< signalled when there are no more updates for the worker threads to do
@@ -955,8 +959,8 @@ namespace Stg
 	 std::map<stg_point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
 	 
-    GList* reentrant_update_list; ///< It is safe to call these model's Update() in parallel
-    GList* nonreentrant_update_list; ///< It is NOT safe to call these model's Update() in parallel
+	 std::vector<Model*> reentrant_update_list; ///< It is safe to call these model's Update() in parallel
+	 std::vector<Model*> nonreentrant_update_list; ///< It is NOT safe to call these model's Update() in parallel
 	 
     long unsigned int updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
@@ -965,7 +969,6 @@ namespace Stg
 
   public:
 	 
-	 // std::vector<stg_point_int_t> rt_regions;
 	 std::vector<stg_point_int_t> rt_cells;
 	 std::vector<stg_point_int_t> rt_candidate_cells;
 
@@ -1908,7 +1911,6 @@ namespace Stg
 	 void RegisterOption( Option* opt );
 
 	 GList* AppendTouchingModels( GList* list );
-	 //void AddTouchingModelsToList( GList* list );
 
 	 /** Check to see if the current pose will yield a collision with
 		  obstacles.  Returns a pointer to the first entity we are in

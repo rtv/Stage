@@ -275,17 +275,15 @@ Model::~Model( void )
 
   // children are removed in ancestor class
   
-  // remove from parent, if there is one
-  if( parent ) 
-    parent->children = g_list_remove( parent->children, this );
-  else
-    world->children = g_list_remove( world->children, this );
-  
+  // remove myself from my parent's child list, or the world's child
+  // list if I have no parent
+  std::vector<Model*>& vec  = parent ? parent->children : world->children;
+  vec.erase( remove( vec.begin(), vec.end(), this ));
+
   if( callbacks ) g_hash_table_destroy( callbacks );
 	
   g_datalist_clear( &props );
 
-  //g_hash_table_remove( Model::modelsbyid, (void*)id );
   modelsbyid.erase(id);
 
   world->RemoveModel( this );
@@ -324,7 +322,9 @@ void Model::Init()
 void Model::InitRecursive()
 {
   // init children first
-  LISTMETHOD( children, Model*, InitRecursive );
+  FOR_EACH( it, children )
+	 (*it)->Init();
+
   Init();
 }  
 
@@ -531,12 +531,9 @@ bool Model::IsDescendent( const Model* testmod ) const
   if( this == testmod )
 	 return true;
   
-  for( GList* it=this->children; it; it=it->next )
-    {
-      Model* child = (Model*)it->data;		
-      if( child->IsDescendent( testmod ) )
-		  return true;
-    }
+  FOR_EACH( it, children )
+	 if( (*it)->IsDescendent( testmod ) )
+		return true;
   
   // neither mod nor a child of this matches testmod
   return false;
@@ -569,8 +566,8 @@ void Model::MapWithChildren()
   Map();
 
   // recursive call for all the model's children
-  for( GList* it=children; it; it=it->next )
-    ((Model*)it->data)->MapWithChildren();
+  FOR_EACH( it, children )
+    (*it)->MapWithChildren();
 }
 
 void Model::MapFromRoot()
@@ -583,8 +580,8 @@ void Model::UnMapWithChildren()
   UnMap();
 
   // recursive call for all the model's children
-  for( GList* it=children; it; it=it->next )
-    ((Model*)it->data)->UnMapWithChildren();
+  FOR_EACH( it, children )
+    (*it)->UnMapWithChildren();
 }
 
 void Model::UnMapFromRoot()
@@ -647,8 +644,8 @@ void Model::Print( char* prefix ) const
 	  world->Token(), 
 	  token );
 
-  for( GList* it=children; it; it=it->next )
-    ((Model*)it->data)->Print( prefix );
+  FOR_EACH( it, children )
+    (*it)->Print( prefix );
 }
 
 const char* Model::PrintWithPose() const
@@ -734,12 +731,11 @@ void Model::CallUpdateCallbacks( void )
 stg_meters_t Model::ModelHeight() const
 {	
   stg_meters_t m_child = 0; //max size of any child
-  for( GList* it=this->children; it; it=it->next )
+  FOR_EACH( it, children )
     {
-      Model* child = (Model*)it->data;
-      stg_meters_t tmp_h = child->ModelHeight();
+      stg_meters_t tmp_h = (*it)->ModelHeight();
       if( tmp_h > m_child )
-	m_child = tmp_h;
+		  m_child = tmp_h;
     }
 	
   //height of model + max( child height )
@@ -786,10 +782,10 @@ Model* Model::TestCollisionTree()
 {  
   Model* hitmod = TestCollision();
   
-  if( hitmod == NULL ) 
-    for( GList* it = children; it; it=it->next ) 
+  if( hitmod == NULL ) 	 
+	 FOR_EACH( it, children )
       { 
-		  hitmod = ((Model*)it->data)->TestCollisionTree();
+		  hitmod = (*it)->TestCollisionTree();
 		  if( hitmod )
 			 break;
       }
@@ -844,8 +840,8 @@ void Model::UpdateCharge()
 
 void Model::CommitTestedPose()
 {
-  for( GList* it = children; it; it=it->next ) 
-    ((Model*)it->data)->CommitTestedPose();
+  FOR_EACH( it, children )
+    (*it)->CommitTestedPose();
   
   blockgroup.SwitchToTestedCells();
 }
@@ -917,8 +913,8 @@ int Model::TreeToPtrArray( GPtrArray* array ) const
 
   int added = 1;
 
-  for(GList* it=children; it; it=it->next )
-    added += ((Model*)it->data)->TreeToPtrArray( array );
+  FOR_EACH( it, children )
+	 added += (*it)->TreeToPtrArray( array );
 
   return added;
 }
@@ -929,15 +925,13 @@ Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type ) const
     return const_cast<Model*> (this); // discard const
 
   // this model is no use. try children recursively
-  for( GList* it = children; it; it=it->next )
-    {
-      Model* child = (Model*)it->data;
-
-      Model* found = child->GetUnsubscribedModelOfType( type );
-      if( found )
-	return found;
+  FOR_EACH( it, children )
+	 {
+		Model* found = (*it)->GetUnsubscribedModelOfType( type );
+		if( found )
+		  return found;
     }
-
+  
   // nothing matching below this model
   return NULL;
 }
@@ -963,13 +957,11 @@ Model* Model::GetUnusedModelOfType( stg_model_type_t type )
     }
 
   // this model is no use. try children recursively
-  for( GList* it = children; it; it=it->next )
+  FOR_EACH( it, children )
     {
-      Model* child = (Model*)it->data;
-
-      Model* found = child->GetUnusedModelOfType( type );
+      Model* found = (*it)->GetUnusedModelOfType( type );
       if( found )
-	return found;
+		  return found;
     }
 
   // nothing matching below this model
@@ -979,10 +971,10 @@ Model* Model::GetUnusedModelOfType( stg_model_type_t type )
 stg_kg_t Model::GetTotalMass()
 {
   stg_kg_t sum = mass;
-  for (GList* child = this->children; child; child = child->next) {
-	  Model* childModel = (Model*) child->data;
-    sum += childModel->GetTotalMass();
-  }
+  
+  FOR_EACH( it, children )
+	 sum += (*it)->GetTotalMass();
+
   return sum;
 }
 

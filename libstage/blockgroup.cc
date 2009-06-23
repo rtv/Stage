@@ -30,42 +30,23 @@ void BlockGroup::AppendBlock( Block* block )
 
 void BlockGroup::Clear()
 {
-//   while( blocks )
-// 	 {
-// 		delete (Block*)blocks->data;
-// 		blocks = blocks->next;
-// 	 }
-  
-  //g_list_free( blocks );
-  //blocks = NULL;
-  
-  for( vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
+  FOR_EACH( it, blocks )
 	 delete *it;
-
+  
   blocks.clear();
 }
-
 
 void BlockGroup::SwitchToTestedCells()
 {
   // confirm the tentative pose for all blocks
-  //LISTMETHOD( blocks, Block*, SwitchToTestedCells );  
-
-  for( vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
-	 (*it)->SwitchToTestedCells();
+  FOR_EACH( it, blocks )
+	 (*it)->SwitchToTestedCells();  
 }
 
 GList* BlockGroup::AppendTouchingModels( GList* list )
 {
-  for( vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
-	 list = (*it)->AppendTouchingModels( list );
-  
+  FOR_EACH( it, blocks )
+	 list = (*it)->AppendTouchingModels( list );  
   return list;
 }
 
@@ -73,15 +54,9 @@ Model* BlockGroup::TestCollision()
 {
   Model* hitmod = NULL;
   
-  for( vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
+  FOR_EACH( it, blocks )
  	 if( (hitmod = (*it)->TestCollision()))
  		break; // bail on the earliest collision
-
-//   for( GList* it=blocks; it; it = it->next )
-// 	 if( (hitmod = ((Block*)it->data)->TestCollision()))
-// 		break; // bail on the earliest collision
 
   return hitmod; // NULL if no collision
 }
@@ -98,10 +73,7 @@ void BlockGroup::CalcSize()
   
   size.z = 0.0; // grow to largest z we see
   
-  for( vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
-	 //  for( GList* it=blocks; it; it=it->next ) // examine all the blocks
+  FOR_EACH( it, blocks )
 	 {
 		// examine all the points in the polygon
 		Block* block = *it;
@@ -132,22 +104,14 @@ void BlockGroup::CalcSize()
 
 void BlockGroup::Map()
 {
-  for( std::vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
+  FOR_EACH( it, blocks )
 	 (*it)->Map();
-  
-  //LISTMETHOD( blocks, Block*, Map );
 }
 
 void BlockGroup::UnMap()
 {
-  for( std::vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
+  FOR_EACH( it, blocks )
 	 (*it)->UnMap();
-
-  //LISTMETHOD( blocks, Block*, UnMap );
 }
 
 void BlockGroup::DrawSolid( const Geom & geom )
@@ -162,11 +126,8 @@ void BlockGroup::DrawSolid( const Geom & geom )
   
   glTranslatef( -offset.x, -offset.y, -offset.z );
   
-  for( std::vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
+  FOR_EACH( it, blocks )
 	 (*it)->DrawSolid();
-  //  LISTMETHOD( blocks, Block*, DrawSolid );
 
   glPopMatrix();
 }
@@ -180,12 +141,9 @@ void BlockGroup::DrawFootPrint( const Geom & geom )
 				geom.size.z / size.z );
   
   glTranslatef( -offset.x, -offset.y, -offset.z );
-
-  for( std::vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
+  
+  FOR_EACH( it, blocks )
 	 (*it)->DrawFootPrint();
-//   LISTMETHOD( blocks, Block*, DrawFootPrint);
 
   glPopMatrix();
 }
@@ -222,10 +180,7 @@ void BlockGroup::BuildDisplayList( Model* mod )
   
   mod->PushColor( mod->color );
   
-  for( vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
-	 //for( GList* it=blocks; it; it=it->next )
+  FOR_EACH( it, blocks )
 	 {
 		Block* blk = (*it);
 		
@@ -250,10 +205,7 @@ void BlockGroup::BuildDisplayList( Model* mod )
   stg_color_unpack( mod->color, &r, &g, &b, &a );
   mod->PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
   
-  for( vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
-	 //for( GList* it=blocks; it; it=it->next )
+  FOR_EACH( it, blocks )
 	 {
 		Block* blk = *it;
 		
@@ -365,9 +317,6 @@ void BlockGroup::Rasterize( uint8_t* data,
 									 stg_meters_t cellwidth,
 									 stg_meters_t cellheight )
 {  
-  for( vector<Block*>::iterator it( blocks.begin() );
-		 it != blocks.end();
-		 ++it )
-	 //for( GList* it = blocks; it; it=it->next )
+  FOR_EACH( it, blocks )
 	 (*it)->Rasterize( data, width, height, cellwidth, cellheight );
 }

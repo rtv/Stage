@@ -152,15 +152,19 @@ void Model::DrawTrailArrows()
 void Model::DrawOriginTree()
 {
   DrawPose( GetGlobalPose() );  
-  for( GList* it=children; it; it=it->next )
-    ((Model*)it->data)->DrawOriginTree();
+
+  FOR_EACH( it, children )
+    (*it)->DrawOriginTree();
 }
  
 
 void Model::DrawBlocksTree( )
 {
   PushLocalCoords();
-  LISTMETHOD( children, Model*, DrawBlocksTree );
+
+  FOR_EACH( it, children )
+	 (*it)->DrawBlocksTree();
+
   DrawBlocks();  
   PopCoords();
 }
@@ -185,7 +189,10 @@ void Model::DrawBlocks( )
 void Model::DrawBoundingBoxTree()
 {
   PushLocalCoords();
-  LISTMETHOD( children, Model*, DrawBoundingBoxTree );
+  
+  FOR_EACH( it, children )
+	 (*it)->DrawBoundingBoxTree();
+
   DrawBoundingBox();
   PopCoords();
 }
@@ -284,7 +291,8 @@ void Model::DrawStatusTree( Camera* cam )
 {
   PushLocalCoords();
   DrawStatus( cam );
-  LISTMETHODARG( children, Model*, DrawStatusTree, cam );  
+  FOR_EACH( it, children )
+	 (*it)->DrawStatusTree( cam );  
   PopCoords();
 }
 
@@ -526,7 +534,8 @@ void Model::DrawPicker( void )
   blockgroup.DrawSolid( geom );
 
   // recursively draw the tree below this model 
-  LISTMETHOD( this->children, Model*, DrawPicker );
+  FOR_EACH( it, children )
+	 (*it)->DrawPicker();
 
   PopCoords();
 }
@@ -548,7 +557,8 @@ void Model::DataVisualizeTree( Camera* cam )
   }
 
   // and draw the children
-  LISTMETHODARG( children, Model*, DataVisualizeTree, cam );
+  FOR_EACH( it, children )
+	 (*it)->DataVisualizeTree( cam );
 
   PopCoords();
 }

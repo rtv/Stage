@@ -204,9 +204,9 @@ Model* Canvas::getModel( int x, int y )
 
   // render all top-level, draggable models in a color that is their
   // id 
-  for( GList* it= world->World::children; it; it=it->next )
+  FOR_EACH( it, world->World::children )
     {
-      Model* mod = (Model*)it->data;
+      Model* mod = (*it);
 		
       if( mod->gui.mask & (STG_MOVE_TRANS | STG_MOVE_ROT ))
 		  {
@@ -694,8 +694,9 @@ void Canvas::resetCamera()
   float max_x = 0, max_y = 0, min_x = 0, min_y = 0;
 	
   //TODO take orrientation ( `a' ) and geom.pose offset into consideration
-  for( GList* it=world->World::children; it; it=it->next ) {
-	 Model* ptr = (Model*) it->data;
+  FOR_EACH( it, world->World::children )
+	 {	 
+		Model* ptr = (*it);
 	 Pose pose = ptr->GetPose();
 	 Geom geom = ptr->GetGeom();
 		
@@ -1012,12 +1013,12 @@ void Canvas::renderFrame()
   // draw the model-specific visualizations
   if( showData ) {
 	 if ( ! visualizeAll ) {
-		for( GList* it = world->World::children; it; it=it->next ) 
-		  ((Model*)it->data)->DataVisualizeTree( current_camera );
+		FOR_EACH( it, world->World::children )
+		  (*it)->DataVisualizeTree( current_camera );
 	 }
 	 else if ( selected_models ) {
-		for( GList* it = selected_models; it; it=it->next ) 
-		  ((Model*)it->data)->DataVisualizeTree( current_camera );
+		FOR_EACH( it, world->World::children )
+		  (*it)->DataVisualizeTree( current_camera );
 	 }
 	 else if ( last_selection ) {
 		last_selection->DataVisualizeTree( current_camera );
