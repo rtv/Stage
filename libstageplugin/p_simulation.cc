@@ -111,7 +111,8 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
   // create a passel of Stage models in the local cache based on the
   // worldfile
 
-  StgDriver::world = new WorldGui( 800,840, "Player/Stage" );
+  // if the initial size is to large this crashes on some systems
+  StgDriver::world = new WorldGui( 400, 300, "Player/Stage" );
   assert(StgDriver::world);
 
   puts("");
