@@ -98,40 +98,40 @@ static const char RANGER_COLOR[] = "gray75";
 static const char RANGER_CONFIG_COLOR[] = "gray90";
 static const char RANGER_GEOM_COLOR[] = "orange";
 
+// static members
 Option ModelRanger::showRangerData( "Ranger ranges", "show_ranger", "", true, NULL );
 Option ModelRanger::showRangerTransducers( "Ranger transducers", "show_ranger_transducers", "", false, NULL );
 
 ModelRanger::ModelRanger( World* world, 
-			  Model* parent ) 
+								  Model* parent ) 
   : Model( world, parent, MODEL_TYPE_RANGER )
 {
   PRINT_DEBUG2( "Constructing ModelRanger %d (%s)\n", 
-		id, typestr );
-
+					 id, typestr );
+  
   // Set up sensible defaults
-
+  
   // assert that Update() is reentrant for this derived model
   thread_safe = true;
-	
-  stg_color_t col = stg_lookup_color( RANGER_CONFIG_COLOR );
-  this->SetColor( col );
-
+  
+  this->SetColor( stg_lookup_color( RANGER_CONFIG_COLOR ) );
+  
   // remove the polygon: ranger has no body
   this->ClearBlocks();
-
+  
   Geom geom;
   geom.size.x = RANGER_SIZEX;
   geom.size.y = RANGER_SIZEY;
   geom.size.z = RANGER_SIZEZ;
   this->SetGeom( geom );
-
+  
   // spread the transducers around the ranger's body
   double offset = MIN(geom.size.x, geom.size.y) / 2.0;
-	
-	sensors.resize( RANGER_SENSORCOUNT );
-	
+  
+  sensors.resize( RANGER_SENSORCOUNT );
+  
   // create default ranger config
-  for( unsigned int c=0; c<sensors.size(); c++ )
+  for( unsigned int c(0); c<sensors.size(); c++ )
     {
       sensors[c].pose.a = (2.0*M_PI)/sensors.size() * c;
       sensors[c].pose.x = offset * cos( sensors[c].pose.a );
@@ -147,7 +147,7 @@ ModelRanger::ModelRanger( World* world,
       sensors[c].fov = (2.0*M_PI)/(sensors.size()+1);
       sensors[c].ray_count = RANGER_RAYCOUNT;
 
-			sensors[c].range = 0; // invalid range
+		sensors[c].range = 0; // invalid range
     }
 	
   RegisterOption( &showRangerData );
@@ -191,7 +191,7 @@ void ModelRanger::Load( void )
 		
       char key[256];
 	 
-			sensors.resize( sensor_count );
+		sensors.resize( sensor_count );
 
       Size common_size;
       common_size.x = wf->ReadTupleLength( wf_entity, "ssize", 0, RANGER_SIZEX );
@@ -205,60 +205,58 @@ void ModelRanger::Load( void )
 			
       // set all transducers with the common settings
       for( unsigned int i = 0; i < sensors.size(); i++)
-				{
-					sensors[i].size.x = common_size.x;
-					sensors[i].size.y = common_size.y;
-					sensors[i].bounds_range.min = common_min;
-					sensors[i].bounds_range.max = common_max;
-					sensors[i].fov = common_fov;
-					sensors[i].ray_count = common_ray_count;	  
-					sensors[i].range = 0.0;
-				}
+		  {
+			 sensors[i].size.x = common_size.x;
+			 sensors[i].size.y = common_size.y;
+			 sensors[i].bounds_range.min = common_min;
+			 sensors[i].bounds_range.max = common_max;
+			 sensors[i].fov = common_fov;
+			 sensors[i].ray_count = common_ray_count;	  
+			 sensors[i].range = 0.0;
+		  }
 
       // TODO - do this properly, without the hard-coded defaults
       // allow individual configuration of transducers
       for( unsigned int i = 0; i < sensors.size(); i++)
-				{
-					snprintf(key, sizeof(key), "spose[%d]", i);
-					sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
-					sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
-					sensors[i].pose.z = 0.0;
-					sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 2, sensors[i].pose.a );
+		  {
+			 snprintf(key, sizeof(key), "spose[%d]", i);
+			 sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
+			 sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
+			 sensors[i].pose.z = 0.0;
+			 sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 2, sensors[i].pose.a );
 					
-					snprintf(key, sizeof(key), "spose3[%d]", i);
-					sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
-					sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
-					sensors[i].pose.z = wf->ReadTupleLength( wf_entity, key, 2, sensors[i].pose.z );
-					sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 3, sensors[i].pose.a );
+			 snprintf(key, sizeof(key), "spose3[%d]", i);
+			 sensors[i].pose.x = wf->ReadTupleLength( wf_entity, key, 0, sensors[i].pose.x );
+			 sensors[i].pose.y = wf->ReadTupleLength( wf_entity, key, 1, sensors[i].pose.y );
+			 sensors[i].pose.z = wf->ReadTupleLength( wf_entity, key, 2, sensors[i].pose.z );
+			 sensors[i].pose.a = wf->ReadTupleAngle( wf_entity, key, 3, sensors[i].pose.a );
 					
-					/* 	  snprintf(key, sizeof(key), "ssize[%d]", i); */
-					/* 	  sensors[i].size.x = wf->ReadTuplelength(mod->id, key, 0, 0.01); */
-					/* 	  sensors[i].size.y = wf->ReadTuplelength(mod->id, key, 1, 0.05); */
+			 /* 	  snprintf(key, sizeof(key), "ssize[%d]", i); */
+			 /* 	  sensors[i].size.x = wf->ReadTuplelength(mod->id, key, 0, 0.01); */
+			 /* 	  sensors[i].size.y = wf->ReadTuplelength(mod->id, key, 1, 0.05); */
 					
-					/* 	  snprintf(key, sizeof(key), "sview[%d]", i); */
-					/* 	  sensors[i].bounds_range.min = */
-					/* 	    wf->ReadTuplelength(mod->id, key, 0, 0); */
-					/* 	  sensors[i].bounds_range.max =   // set up sensible defaults */
+			 /* 	  snprintf(key, sizeof(key), "sview[%d]", i); */
+			 /* 	  sensors[i].bounds_range.min = */
+			 /* 	    wf->ReadTuplelength(mod->id, key, 0, 0); */
+			 /* 	  sensors[i].bounds_range.max =   // set up sensible defaults */
 					
-					/* 	    wf->ReadTuplelength(mod->id, key, 1, 5.0); */
-					/* 	  sensors[i].fov */
-					/* 	    = DTOR(wf->ReadTupleangle(mod->id, key, 2, 5.0 )); */
+			 /* 	    wf->ReadTuplelength(mod->id, key, 1, 5.0); */
+			 /* 	  sensors[i].fov */
+			 /* 	    = DTOR(wf->ReadTupleangle(mod->id, key, 2, 5.0 )); */
 					
 					
-					/* 	  sensors[i].ray_count = common_ray_count; */
+			 /* 	  sensors[i].ray_count = common_ray_count; */
 					
-				}
+		  }
 			
       PRINT_DEBUG1( "loaded %d ranger configs", (int)sensor_count );	  
     }
 }
 
 static bool ranger_match( Model* candidate, 
-			  Model* finder, const void* dummy )
+								  Model* finder, 
+								  const void* dummy )
 {
-  //printf( "ranger match sees %s %p %d \n", 
-  //    block->Model()->Token(), block->Model(), block->Model()->LaserReturn() );
-
   // Ignore myself, my children, and my ancestors.
   return( candidate->vis.ranger_return && !candidate->IsRelated( finder ) );
 }	
@@ -267,45 +265,30 @@ void ModelRanger::Update( void )
 {     
   Model::Update();
 
-	if( subs < 1 )
-		return;
+  if( subs < 1 )
+	 return;
 
-	if( sensors.size() < 1 )
-		return;
+  if( sensors.size() < 1 )
+	 return;
 
-  //PRINT_DEBUG2( "[%d] updating ranger %s", (int)world->sim_time_ms, token );
-	
   // raytrace new range data for all sensors
   for( std::vector<Sensor>::iterator it( sensors.begin() );
-			 it != sensors.end();
-			 ++it )
+		 it != sensors.end();
+		 ++it )
     {
-			Sensor& s = *it;
-			
+		Sensor& s = *it;
+		
       // TODO - reinstate multi-ray rangers
       //for( int r=0; r<sensors[t].ray_count; r++ )
       //{	  
       stg_raytrace_result_t ray = Raytrace( s.pose,
-																						s.bounds_range.max,
-																						ranger_match,
-																						NULL );
+														  s.bounds_range.max,
+														  ranger_match,
+														  NULL );
 			
       s.range = MAX( ray.range, s.bounds_range.min );
     }   
 }
-
-// TODO: configurable ranger noise model
-/*
-  int ranger_noise_test( stg_ranger_sample_t* data, size_t count,  )
-  {
-  int s;
-  for( s=0; s<count; s++ )
-  {
-  // add 10mm random error
-  ranges[s].range *= 0.1 * drand48();
-  }
-  }
-*/
 
 void ModelRanger::Print( char* prefix )
 {
@@ -329,18 +312,18 @@ void ModelRanger::DataVisualize( Camera* cam )
       PushColor( 0,0,0,1 );
 			
       for( unsigned int s=0; s<sensors.size(); s++ ) 
-				{ 
-					Sensor& rngr = sensors[s];
+		  { 
+			 Sensor& rngr = sensors[s];
 
-					if( rngr.range > 0.0 ) 
-						{ 
+			 if( rngr.range > 0.0 ) 
+				{ 
 							
-							glPointSize( 4 );
-							glBegin( GL_POINTS );
-							glVertex3f( rngr.pose.x, rngr.pose.y, rngr.pose.z );
-							glEnd();
-						}
+				  glPointSize( 4 );
+				  glBegin( GL_POINTS );
+				  glVertex3f( rngr.pose.x, rngr.pose.y, rngr.pose.z );
+				  glEnd();
 				}
+		  }
       PopColor();
     }
 	
@@ -349,33 +332,33 @@ void ModelRanger::DataVisualize( Camera* cam )
 	
   // if sequential models have the same number of sensors, this is
   // fast as it will probably not use a system call
-	static std::vector<GLfloat> pts;
-	pts.resize( 9 * sensors.size() );
+  static std::vector<GLfloat> pts;
+  pts.resize( 9 * sensors.size() );
 	
   // calculate a triangle for each non-zero sensor range
   for( unsigned int s=0; s<sensors.size(); s++ ) 
     { 
-			Sensor& rngr = sensors[s];
+		Sensor& rngr = sensors[s];
 			
       if( rngr.range > 0.0 ) 
-				{ 
-					// sensor FOV 
-					double sidelen = rngr.range;
-					double da = rngr.fov/2.0;
+		  { 
+			 // sensor FOV 
+			 double sidelen = rngr.range;
+			 double da = rngr.fov/2.0;
 					
-					unsigned int index = s*9;
-					pts[index+0] = rngr.pose.x;
-					pts[index+1] = rngr.pose.y;
-					pts[index+2] = rngr.pose.z;
+			 unsigned int index = s*9;
+			 pts[index+0] = rngr.pose.x;
+			 pts[index+1] = rngr.pose.y;
+			 pts[index+2] = rngr.pose.z;
 					
-					pts[index+3] = rngr.pose.x + sidelen*cos(rngr.pose.a - da );
-					pts[index+4] = rngr.pose.y + sidelen*sin(rngr.pose.a - da );
-					pts[index+5] = rngr.pose.z;
+			 pts[index+3] = rngr.pose.x + sidelen*cos(rngr.pose.a - da );
+			 pts[index+4] = rngr.pose.y + sidelen*sin(rngr.pose.a - da );
+			 pts[index+5] = rngr.pose.z;
 					
-					pts[index+6] = rngr.pose.x + sidelen*cos(rngr.pose.a + da );
-					pts[index+7] = rngr.pose.y + sidelen*sin(rngr.pose.a + da );
-					pts[index+8] = rngr.pose.z;
-				}
+			 pts[index+6] = rngr.pose.x + sidelen*cos(rngr.pose.a + da );
+			 pts[index+7] = rngr.pose.y + sidelen*sin(rngr.pose.a + da );
+			 pts[index+8] = rngr.pose.z;
+		  }
     }
 	
   // draw the filled triangles in transparent pale green

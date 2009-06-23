@@ -9,7 +9,8 @@ include "sick.inc"
 interval_sim 100  # simulation timestep in milliseconds
 interval_real 20  # real-time interval between simulation updates in milliseconds 
 
-quit_time 1800
+# time to pause (in GUI mode) or quit (in headless mode (-g)) the simulation
+quit_time 3600 # 1 hour of simulated time
 
 paused 0
 

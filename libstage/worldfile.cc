@@ -1768,6 +1768,8 @@ void Worldfile::WriteTupleLength(int entity, const char *name,
 double Worldfile::ReadTupleAngle(int entity, const char *name,
 				 int index, double value)
 {
+  //puts( name );
+
   CProperty* property = GetProperty(entity, name);
   if (property == NULL)
     return value;

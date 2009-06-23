@@ -1194,8 +1194,8 @@ namespace Stg
     void AddToCellArray( std::vector<Cell*>* blocks );
     void RemoveFromCellArray( std::vector<Cell*>* blocks );
     void GenerateCandidateCells();  
-		GList* AppendTouchingModels( GList* list );
-
+	 GList* AppendTouchingModels( GList* list );
+	 
 		/** Returns the first model that shares a bitmap cell with this model */
     Model* TestCollision(); 
     void SwitchToTestedCells();  
@@ -1275,7 +1275,6 @@ namespace Stg
     BlockGroup();
     ~BlockGroup();
 	 
-	 //std::vector<Block*>&GList* GetBlocks(){ return blocks; };
     uint32_t GetCount(){ return blocks.size(); };
     Size GetSize(){ return size; };
     stg_point3_t GetOffset(){ return offset; };
@@ -2413,6 +2412,18 @@ namespace Stg
 			stg_meters_t range;
 		};
 
+	 class Vis : public Visualizer 
+	 {
+	 private:
+		//static Option showArea;
+
+
+	 public:
+		Vis( World* world );
+		virtual ~Vis( void ){}
+		virtual void Visualize( Model* mod, Camera* cam );
+	 } vis;
+
   private:
 		std::vector<Blob> blobs;
 		std::vector<stg_color_t> colors;
@@ -2422,7 +2433,7 @@ namespace Stg
 
 	 static Option showBlobData;
 	
-	 virtual void DataVisualize( Camera* cam );
+	 // virtual void DataVisualize( Camera* cam );
 
   public:
 	 stg_radians_t fov;

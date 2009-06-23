@@ -18,11 +18,11 @@
 #include "worldfile.hh"
 using namespace Stg;
 
-const stg_meters_t DEFAULT_FIDUCIAL_RANGEMIN = 0.0;
-const stg_meters_t DEFAULT_FIDUCIAL_RANGEMAXID = 5.0;
-const stg_meters_t DEFAULT_FIDUCIAL_RANGEMAXANON = 8.0;
-const stg_radians_t DEFAULT_FIDUCIAL_FOV = M_PI;
-const stg_watts_t DEFAULT_FIDUCIAL_WATTS = 10.0;
+static const stg_meters_t DEFAULT_RANGEMIN = 0.0;
+static const stg_meters_t DEFAULT_RANGEMAXID = 5.0;
+static const stg_meters_t DEFAULT_RANGEMAXANON = 8.0;
+static const stg_radians_t DEFAULT_FOV = M_PI;
+static const stg_watts_t DEFAULT_WATTS = 10.0;
 
 //TODO make instance attempt to register an option (as customvisualizations do)
 Option ModelFiducial::showFiducialData( "Fiducials", "show_fiducial", "", true, NULL );
@@ -70,10 +70,10 @@ ModelFiducial::ModelFiducial( World* world,
 												Model* parent )
   : Model( world, parent, MODEL_TYPE_FIDUCIAL ),
 	fiducials(),
-	max_range_anon( DEFAULT_FIDUCIAL_RANGEMAXANON ),
-	max_range_id( DEFAULT_FIDUCIAL_RANGEMAXID ),
-	min_range( DEFAULT_FIDUCIAL_RANGEMIN ),
-	fov( DEFAULT_FIDUCIAL_FOV ),
+	max_range_anon( DEFAULT_RANGEMAXANON ),
+	max_range_id( DEFAULT_RANGEMAXID ),
+	min_range( DEFAULT_RANGEMIN ),
+	fov( DEFAULT_FOV ),
 	heading( 0 ),
 	key( 0 )
 {
@@ -162,14 +162,13 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 
 	//printf( "bearing %.2f\n", RTOD(bearing) );
 	
-	stg_raytrace_result_t ray = Raytrace( dtheta,
-													  max_range_anon,
-													  fiducial_raytrace_match,
-													  NULL,
-													  true );
+	stg_raytrace_result_t ray( Raytrace( dtheta,
+													 max_range_anon,
+													 fiducial_raytrace_match,
+													 NULL,
+													 true ) );
 	
-	//range = ray.range;
-	Model* hitmod = ray.mod;
+	Model* hitmod( ray.mod );
 
  	//printf( "ray hit %s and was seeking LOS to %s\n",
 	//	  hitmod ? hitmod->Token() : "null",
@@ -178,7 +177,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 	// if it was him, we can see him
 	if( hitmod == him )
 	  {
-		 Geom hisgeom = him->GetGeom();
+		 Geom hisgeom( him->GetGeom() );
 		 
 		 // record where we saw him and what he looked like
 		 Fiducial fid;

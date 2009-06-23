@@ -57,21 +57,21 @@ define trickedoutpioneer pioneer2dx
 (
 	ranger( alwayson 0 )
 
-  sicklaser( pose [0.030 0 0 0 ]  )
+  sicklaser( pose [0.030 0 0 0 ]  alwayson 0 )
 
   fiducial( range_max 8 range_max_id 5 ) 
 
   blobfinder( 
         channel_count 6 
         channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
-		  alwayson 0
+		  alwayson 1
     )
   
   fiducial_return 17
   gripper_return 0
 
   localization "gps"
-  localization_origin [ 0 0 0 ]
+  localization_origin [ 0 0 0 0 ]
 )
 
 

@@ -86,11 +86,11 @@ ModelLaser::Vis::Vis( World* world )
 
 void ModelLaser::Vis::Visualize( Model* mod, Camera* cam ) 
 {
-  ModelLaser* laser = dynamic_cast<ModelLaser*>(mod);
+  ModelLaser* laser( dynamic_cast<ModelLaser*>(mod) );
 	
 	const std::vector<Sample>& samples( laser->GetSamples() );
     
-	size_t sample_count = samples.size();
+	size_t sample_count( samples.size() );
 
   glPushMatrix();
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -108,7 +108,7 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
   glDepthMask( GL_FALSE );
   glPointSize( 2 );
   
-  for( unsigned int s=0; s<sample_count; s++ )
+  for( unsigned int s(0); s<sample_count; s++ )
 	 {
 		double ray_angle = (s * (laser->fov / (sample_count-1))) - laser->fov/2.0;
 		pts[2*s+2] = (float)(samples[s].range * cos(ray_angle) );
@@ -148,11 +148,11 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
   
   if( showFov )
 	 {
-		for( unsigned int s=0; s<sample_count; s++ )
+		for( unsigned int s(0); s<sample_count; s++ )
 		  {
-			 double ray_angle = (s * (laser->fov / (sample_count-1))) - laser->fov/2.0;
+			 double ray_angle((s * (laser->fov / (sample_count-1))) - laser->fov/2.0);
 			 pts[2*s+2] = (float)(laser->range_max * cos(ray_angle) );
-	      pts[2*s+3] = (float)(laser->range_max * sin(ray_angle) );			 
+			 pts[2*s+3] = (float)(laser->range_max * sin(ray_angle) );			 
 		  }
 		
 		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -167,11 +167,11 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
 		laser->PushColor( 0, 0, 1, 0.5 );		
 		glBegin( GL_LINES );
 		
-		for( unsigned int s=0; s<sample_count; s++ )
+		for( unsigned int s(0); s<sample_count; s++ )
 		  {
 			 
 			 glVertex2f( 0,0 );
-			 double ray_angle = (s * (laser->fov / (sample_count-1))) - laser->fov/2.0;
+			 double ray_angle((s * (laser->fov / (sample_count-1))) - laser->fov/2.0);
 			 glVertex2f( samples[s].range * cos(ray_angle), 
 							 samples[s].range * sin(ray_angle) );
 			 
@@ -297,46 +297,46 @@ void ModelLaser::Update( void )
   rayorg.z += geom.size.z/2.0;
   rayorg.a = bearing;
   rayorg = LocalToGlobal(rayorg);
-
-	// set up a ray to trace
-	Ray ray( this, rayorg, range_max, laser_raytrace_match, NULL, true );
-	
-	// trace the ray, incrementing its heading for each sample
-  for( unsigned int t=0; t<sample_count; t += resolution )
+  
+  // set up a ray to trace
+  Ray ray( this, rayorg, range_max, laser_raytrace_match, NULL, true );
+  
+  // trace the ray, incrementing its heading for each sample
+  for( unsigned int t(0); t<sample_count; t += resolution )
     {
-			stg_raytrace_result_t r( world->Raytrace( ray ) );
-			samples[t].range = r.range;
-			
+		stg_raytrace_result_t r( world->Raytrace( ray ) );
+		samples[t].range = r.range;
+		
       // if we hit a model and it reflects brightly, we set
       // reflectance high, else low
       if( r.mod && ( r.mod->vis.laser_return >= LaserBright ) )	
-				samples[t].reflectance = 1;
+		  samples[t].reflectance = 1;
       else
-				samples[t].reflectance = 0;		
-
-			// point the ray to the next angle
-			ray.origin.a += sample_incr;
+		  samples[t].reflectance = 0;		
+		
+		// point the ray to the next angle
+		ray.origin.a += sample_incr;
     }
-	
+  
   // we may need to interpolate the samples we skipped 
   if( resolution > 1 )
     {
       for( unsigned int t( resolution); t<sample_count; t+=resolution )
-				for( unsigned int g(1); g<resolution; g++ )
-					{
-						if( t >= sample_count )
-							break;
-						
-						// copy the rightmost sample data into this point
-						samples[t-g] = samples[t-resolution];
-						
-						double left = samples[t].range;
-						double right = samples[t-resolution].range;
-						
-						// linear range interpolation between the left and right samples
-						samples[t-g].range = (left-g*(left-right)/resolution);
-					}
-		}
+		  for( unsigned int g(1); g<resolution; g++ )
+			 {
+				if( t >= sample_count )
+				  break;
+				
+				// copy the rightmost sample data into this point
+				samples[t-g] = samples[t-resolution];
+				
+				double left( samples[t].range );
+				double right( samples[t-resolution].range );
+				
+				// linear range interpolation between the left and right samples
+				samples[t-g].range = (left-g*(left-right)/resolution);
+			 }
+	 }
   
   MapFromRoot();
 	

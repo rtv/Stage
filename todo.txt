@@ -1,4 +1,20 @@
+
+** Optimization **
+
+speed records:
+
+simple.world 3600 seconds in 17.35 seconds
+fasr.world 3600 seconds in 7.83 seconds (460 x real time)
 	
+
+** 3.1.0 RELEASE *
+
+ - feature freeze around July 1
+ - scan SF for patches
+ - fix world files
+ - docs for new models
+ - push docs to SF
+
 ** 3.0.0 RELEASE **
 
 BUGS
