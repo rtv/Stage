@@ -48,8 +48,7 @@ void Ancestor::RemoveChild( Model* mod )
 {
   child_type_counts[mod->type]--;
 
-  //children = g_list_remove( children, mod );
-  children.erase( remove( children.begin(), children.end(), mod ) );
+  children.erase( std::remove( children.begin(), children.end(), mod ) );
 }
 
 Pose Ancestor::GetGlobalPose()

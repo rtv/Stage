@@ -9,8 +9,10 @@ fasr.world 3600 seconds in 7.83 seconds (460 x real time)
 
 ** 3.1.0 RELEASE *
 
+ - visualizer option state in worldfile
  - blinkenlights vs lightindicator - resolve and fix interfaces
  - ranger transducer geometry correct?
+ - fix benchmark controller 
  - feature freeze around July 1
  - scan SF for patches
  - fix world files

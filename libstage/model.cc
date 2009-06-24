@@ -278,7 +278,7 @@ Model::~Model( void )
   // remove myself from my parent's child list, or the world's child
   // list if I have no parent
   std::vector<Model*>& vec  = parent ? parent->children : world->children;
-  vec.erase( remove( vec.begin(), vec.end(), this ));
+  vec.erase( std::remove( vec.begin(), vec.end(), this ));
 
   if( callbacks ) g_hash_table_destroy( callbacks );
 	

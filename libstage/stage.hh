@@ -2826,15 +2826,19 @@ private:
 	 virtual void DataVisualize( Camera* cam );
   };
 
-  // CAMERA MODEL ----------------------------------------------------
-  typedef struct {
+	
+// CAMERA MODEL ----------------------------------------------------
+
+/// %ModelCamera class
+class ModelCamera : public Model
+{
+public:
+  typedef struct 
+  {
 	 // GL_V3F
 	 GLfloat x, y, z;
   } ColoredVertex;
-	
-  /// %ModelCamera class
-  class ModelCamera : public Model
-  {
+  
   private:
 	 Canvas* _canvas;
 
@@ -3053,9 +3057,7 @@ public:
   void GoTo( double pose );
   
   double GetPosition() const {return pos;};
-  
   double GetMaxPosition() const {return max_position;};
-  
   double GetMinPosition() const {return min_position;};
   
 };
