@@ -23,7 +23,7 @@ public:
 	    const std::string& host, const unsigned short port ) :
     websim::WebSim( host, port ),
     world(world)
-  {
+  {	
   }
   
   virtual ~WebStage()
@@ -584,7 +584,7 @@ int main( int argc, char** argv )
   // initialize libstage - call this first
   Stg::Init( &argc, &argv );
 
-  printf( "WebStage built on %s %s\n", PROJECT, VERSION );
+  //printf( "WebStage built on %s %s\n", PROJECT, VERSION );
   
   std::string fedfilename = "";
   std::string host = "localhost";
@@ -638,9 +638,11 @@ int main( int argc, char** argv )
   world->Load( worldfilename );
 
   WebStage ws( world, host, port );
-  
+
   if( usefedfile )
 	 ws.LoadFederationFile( fedfilename );
+
+  ws.Startup( true );
 
   puts( "entering main loop" );
 
