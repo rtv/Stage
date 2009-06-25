@@ -20,19 +20,38 @@ class WebStage : public websim::WebSim
   
 public:
   WebStage( Stg::World* world,
-				const std::string& host, const unsigned short port ) :
-	 websim::WebSim( host, port ),
-	 world(world)
+	    const std::string& host, const unsigned short port ) :
+    websim::WebSim( host, port ),
+    world(world)
   {
   }
   
   virtual ~WebStage()
   {}
+
+  virtual std::string IdentificationString()
+  { return "WebStage"; }
+
+  virtual std::string VersionString()
+  { return Stg::Version(); }
   
+  virtual bool ClockStart()
+  {
+	world->Start();
+	return true;
+  }
+
+  virtual bool ClockStop()
+  {
+	world->Stop();
+	return true;
+  }
+
   void Push( const std::string& name )
   {
-	 Stg::Model* mod = world->GetModel( name.c_str() );
-	 if( mod )
+	Stg::Model* mod = world->GetModel( name.c_str() );
+
+	if( mod )
 		{
 		  websim::Pose p;
 		  websim::Velocity v;
@@ -93,7 +112,7 @@ public:
   virtual bool GetModelChildren(const std::string& model, 
 									std::vector<std::string>& children)
   {
-	GList* c;
+	std::vector<Model*> c;
 
 	if(model == "")
 	{
@@ -113,10 +132,12 @@ public:
 			
 	 }
 	
-	for(;c;c = c->next){
-		
-		children.push_back(std::string(((Model*)c->data)->Token()));
-	}
+	for( std::vector<Model*>::iterator it = c.begin();
+		 it != c.end();
+		 it++ )
+	  {		
+		children.push_back(std::string((*it)->Token()));
+	  }
 
 	return true;	
 	

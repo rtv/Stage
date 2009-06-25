@@ -47,6 +47,7 @@
 #include <list>
 #include <map>
 #include <set>
+#include <algorithm>
 
 // we use GLib's data structures extensively. Gradually we're moving
 // to C++ STL types. May be able to lose this dependency one day.
@@ -60,7 +61,7 @@
 #include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
-// except GLU for some reason
+// except GLU & GLUT
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
 #include <GLUT/glut.h>
@@ -90,6 +91,10 @@ namespace Stg
   /** returns true iff Stg::Init() has been called. */
   bool InitDone();
   
+  /** returns a human readable string indicating the libstage version
+	  number. */
+  const char* Version();
+
   /** Create unique identifying numbers for each type of model, and a
       count of the number of types. */
   typedef enum {
@@ -108,7 +113,6 @@ namespace Stg
     MODEL_TYPE_COUNT // must be the last entry, to count the number of
     // types
   } stg_model_type_t;
-
 
   /// Copyright string
   const char COPYRIGHT[] =				       
@@ -979,8 +983,15 @@ namespace Stg
 
 	 void CallUpdateCallbacks(); ///< Call all calbacks in cb_list, removing any that return true;
 
+    bool paused; ///< the world only updates when this is false
+
   public:
 	 
+    void Start(){ paused = false; };
+    void Stop(){ paused = true; };
+    void TogglePause(){ paused = !paused; };
+	bool Paused(){ return( paused ); };
+	
 	 std::vector<stg_point_int_t> rt_cells;
 	 std::vector<stg_point_int_t> rt_candidate_cells;
 
@@ -1483,7 +1494,6 @@ namespace Stg
     OptionsDlg* oDlg;
 	 unsigned int steps;
     bool pause_time;
-    bool paused; ///< the world only updates when this is false
     stg_usec_t real_time_of_last_update;
 
     void UpdateOptions();
@@ -1538,11 +1548,6 @@ namespace Stg
 
     void DrawBoundingBoxTree();
 	
-    void Start(){ paused = false; };
-    void Stop(){ paused = true; };
-    void TogglePause(){ paused = !paused; };
-	 bool Paused(){ return( paused ); };
-
     Canvas* GetCanvas( void ) { return canvas; }
 
     /** show the window - need to call this if you don't Load(). */

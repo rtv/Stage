@@ -5,7 +5,7 @@ SET( PLUGINS
      sink
      source
      wander
-#     sort     
+     rasterize
 )
 
 # need plaer's wavefront planning library for this one

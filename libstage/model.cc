@@ -1036,10 +1036,10 @@ void Model::RegisterOption( Option* opt )
 
 
 void Model::Rasterize( uint8_t* data, 
-							  unsigned int width, 
-							  unsigned int height, 
-							  stg_meters_t cellwidth,
-							  stg_meters_t cellheight )
+		       unsigned int width, 
+		       unsigned int height, 
+		       stg_meters_t cellwidth,
+		       stg_meters_t cellheight )
 {
   rastervis.ClearPts();
   blockgroup.Rasterize( data, width, height, cellwidth, cellheight );

@@ -78,7 +78,6 @@ World::World( const char* token,
   thread_mutex( g_mutex_new() ),
   threadpool( NULL ),
   total_subs( 0 ), 
-  //update_jobs_pending(0),
   velocity_list( NULL ),
   worker_threads( 0 ),
   worker_threads_done( g_cond_new() ),
@@ -98,7 +97,8 @@ World::World( const char* token,
   reentrant_update_list(),
   nonreentrant_update_list(),
   updates( 0 ),
-  wf( NULL )
+  wf( NULL ),
+  paused( false )
 {
   if( ! Stg::InitDone() )
     {
@@ -280,6 +280,9 @@ void World::Load( const char* worldfile_path )
 
   this->token = (char*)
     wf->ReadString( entity, "name", token );
+
+  this->paused = 
+    wf->ReadInt( entity, "paused", this->paused );
 
   this->interval_sim = (stg_usec_t)thousand * 
     wf->ReadInt( entity, "interval_sim", 
@@ -489,6 +492,9 @@ bool World::Update()
       return true;		
   }
   
+  if( paused ) 
+	return false;
+
   dirty = true; // need redraw 
 
   // upate all positions first
@@ -1068,7 +1074,7 @@ void World::Log( Model* mod )
 {
   LogEntry( sim_time, mod);
 
-  printf( "log entry count %lu\n", LogEntry::Count() );
+  printf( "log entry count %d\n", LogEntry::Count() );
   //LogEntry::Print();
 }
  

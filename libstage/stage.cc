@@ -13,6 +13,11 @@ static bool init_called = false;
 stg_typetable_entry_t Stg::typetable[MODEL_TYPE_COUNT];
 
 
+const char* Stg::Version()
+{ 
+  return VERSION; 
+}
+
 void Stg::Init( int* argc, char** argv[] )
 {
 	PRINT_DEBUG( "Stg::Init()" );

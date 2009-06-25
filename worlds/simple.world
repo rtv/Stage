@@ -35,6 +35,9 @@ floorplan
   size [16.000 16.000 0.800]
   pose [0 0 0 0]
   bitmap "bitmaps/cave.png"
+  
+  # runs the <stage_source>/examples/ctrl/rasterize.cc example
+  # ctrl "rasterize"
 )
 
 

@@ -1,5 +1,6 @@
 #include "stage.hh"
 using namespace Stg;
+//using names
 
 Ancestor::Ancestor() :
   children(),
@@ -47,7 +48,7 @@ void Ancestor::AddChild( Model* mod )
 void Ancestor::RemoveChild( Model* mod )
 {
   child_type_counts[mod->type]--;
-
+  
   children.erase( std::remove( children.begin(), children.end(), mod ) );
 }
 

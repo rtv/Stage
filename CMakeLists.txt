@@ -53,8 +53,8 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
 					${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
 
 # Enable -Wall by default
-SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall")
 
 message( STATUS "Checking for libtool" )
 find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )
@@ -190,7 +190,7 @@ ENDIF( WEBSIM_FOUND )
 #	SET(APPLE_LIBRARIES "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
 #ENDIF (APPLE)
 
-MESSAGE( STATUS "Installation directory CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" )
+MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" )
 
 # all targets need these include directories
 include_directories( . 

@@ -187,7 +187,6 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
   oDlg( NULL ),
   pause_time( false ),	
-  paused( false ),
   real_time_of_last_update( RealTimeNow() )
 {
   for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
@@ -265,9 +264,6 @@ void WorldGui::Load( const char* filename )
 	
   int world_section = 0; // use the top-level section for some parms
   // that traditionally live there
-
-  this->paused = 
-    wf->ReadInt( world_section, "paused", this->paused );
 
   this->interval_real = (stg_usec_t)thousand *  
     wf->ReadInt( world_section, "interval_real", (int)(this->interval_real/thousand) );
