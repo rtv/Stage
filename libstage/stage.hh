@@ -952,7 +952,7 @@ namespace Stg
 	 bool show_clock; ///< iff true, print the sim time on stdout
 	 unsigned int show_clock_interval; ///< updates between clock xoutputs
     GMutex* thread_mutex; ///< protect the worker thread management stuff
-    GThreadPool *threadpool; ///<worker threads for updating some sensor models in parallel
+    //GThreadPool *threadpool; ///<worker threads for updating some sensor models in parallel
     int total_subs; ///< the total number of subscriptions to all models
     GList* velocity_list; ///< Models with non-zero velocity and should have their poses updated
 	

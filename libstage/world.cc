@@ -14,22 +14,36 @@
     interval_real   100
     interval_sim    100
     resolution      0.02
+    threads         0
 
     @endverbatim
 
     @par Details
-    - interval_sim <int>\n
-    the length of each simulation update cycle in milliseconds.
-    - interval_real <int>\n
-    the amount of real-world (wall-clock) time the siulator will attempt to spend on each simulation cycle.
-    - resolution <float>\n
-    The resolution (in meters) of the underlying bitmap model. Larger values speed up raytracing at the expense of fidelity in collision detection and sensing. 
 
+    - interval_sim <int>\n
+    The length of each simulation update cycle in milliseconds.
+
+    - interval_real <int>\n
+    The amount of real-world (wall-clock) time the siulator will
+    attempt to spend on each simulation cycle.
+
+    - resolution <float>\n
+    The resolution (in meters) of the underlying bitmap model. Larger
+    values speed up raytracing at the expense of fidelity in collision
+    detection and sensing.
+
+    - threads <int>\n
+	 The number of worker threads to spawn. Some models can be updated
+	 in parallel (e.g. laser, ranger), and running 2 or more threads
+	 here may make the simulation run faster, depending on the number
+	 of CPU cores available and the worldfile. As a guideline, use one
+	 thread per core if you have high-resolution models, e.g. a laser
+	 with hundreds of samples
+	 
     @par More examples
     The Stage source distribution contains several example world files in
     <tt>(stage src)/worlds</tt> along with the worldfile properties
     described on the manual page for each model type.
-
 */
 
 #ifndef _GNU_SOURCE
@@ -76,7 +90,6 @@ World::World( const char* token,
   show_clock( false ),
   show_clock_interval( 100 ), // 10 simulated seconds using defaults
   thread_mutex( g_mutex_new() ),
-  //threadpool( NULL ),
   total_subs( 0 ), 
   velocity_list( NULL ),
   worker_threads( 0 ),
@@ -163,30 +176,31 @@ gpointer World::update_thread_entry( std::pair<World*,int> *thread_info )
 	  //puts( "worker waiting for start signal" );
 	  g_cond_wait( world->threads_start_cond, world->thread_mutex );
 	  g_mutex_unlock( world->thread_mutex );
-	  
 	  //puts( "worker thread awakes" );
-
-	  //r loop over the list of rentrant models for this thread
+	  
+	  // loop over the list of rentrant models for this thread
 	  FOR_EACH( it, world->reentrant_update_lists[thread_instance] )
-		{
-		  Model* mod = *it;
-		  //printf( "thread %d updating model %s (%p)\n", thread_instance, mod->Token(), mod );
-		  mod->UpdateIfDue();
-		  mod->CallUpdateCallbacks();
-		}
+		 {
+			Model* mod = *it;
+			//printf( "thread %d updating model %s (%p)\n", thread_instance, mod->Token(), mod );
+			
+			// TODO - some of this (Model::Update()) is not thread safe!
+			if( mod->UpdateDue() )
+			  mod->Update();
+		 }
 	  
 	  // done working, so increment the counter. If this was the last
 	  // thread to finish working, signal the main thread, which is
 	  // blocked waiting for this to happen
 	  g_mutex_lock( world->thread_mutex );	  
 	  if( --world->threads_working == 0 )
-		{
-		  //puts( "last worker signalling main thread" );
-		  g_cond_signal( world->threads_done_cond );
-		}
-	  //g_mutex_unlock( world->thread_mutex );	  
-    }
-
+		 {
+			//puts( "last worker signalling main thread" );
+			g_cond_signal( world->threads_done_cond );
+		 }
+	  // keep lock going round the loop
+	}
+  
   return NULL;
 }
 
@@ -341,7 +355,7 @@ void World::Load( const char* worldfile_path )
 							   NULL );		  
 			}
 		  
-		  printf( "[threadpool %u]", worker_threads );	
+		  printf( "[threads %u]", worker_threads );	
 		}
     }
 
@@ -529,7 +543,10 @@ bool World::Update()
   
   // then update all models on the update lists
   FOR_EACH( it, nonreentrant_update_list )
-	(*it)->UpdateIfDue();
+	 {
+		//printf( "thread MAIN updating model %s\n", (*it)->Token() );
+		(*it)->UpdateIfDue();
+	 }
   
   //printf( "nonre list length %d\n", g_list_length( nonreentrant_update_list ) );
   //printf( "re list length %d\n", g_list_length( reentrant_update_list ) );
@@ -555,13 +572,15 @@ bool World::Update()
 		  g_cond_wait( threads_done_cond, thread_mutex );
 		}
       g_mutex_unlock( thread_mutex );		 
-
 	  //puts( "main thread awakes" );
 
-	  // TODO - move this back here!
-	  // now call all the callbacks - ignores dueness, but not a big deal
-	  //FOR_EACH( it, reentrant_update_list )
-	  //(*it)->CallUpdateCallbacks();
+		// TODO: allow threadsafe callbacks to be called in worker
+		// threads
+
+		// now call all the callbacks in each list
+		FOR_EACH( it1, reentrant_update_lists )
+		  FOR_EACH( it2, *it1 )
+		  (*it2)->CallUpdateCallbacks();
     }
   
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
@@ -660,7 +679,6 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   RaytraceResult sample( r.origin, r.range );
 	
   // our global position in (floating point) cell coordinates
-  //stg_point_t glob( r.origin.x * ppm, r.origin.y * ppm );
   double globx( r.origin.x * ppm );
   double globy( r.origin.y * ppm );
 	
@@ -709,7 +727,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 			
   // Stage spends up to 95% of its time in this loop! It would be
   // neater with more function calls encapsulating things, but even
-  // inline calls have a noticeable (2-3%) effect on performance  
+  // inline calls have a noticeable (2-3%) effect on performance.
   while( n > 0  ) // while we are still not at the ray end
     { 
 	  Region* reg( GetSuperRegionCached( GETSREG(globx), GETSREG(globy) )
@@ -727,7 +745,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 					
 		  Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
 		  assert(c); // should be good: we know the region contains objects
-					
+
 		  // while within the bounds of this region and while some ray remains
 		  // we'll tweak the cell pointer directly to move around quickly
 		  while( (cx>=0) && (cx<REGIONWIDTH) && 
@@ -1106,7 +1124,7 @@ void World::Log( Model* mod )
 {
   LogEntry( sim_time, mod);
 
-  printf( "log entry count %d\n", LogEntry::Count() );
+  printf( "log entry count %u\n", (unsigned int)LogEntry::Count() );
   //LogEntry::Print();
 }
  

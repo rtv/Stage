@@ -168,10 +168,11 @@ void ModelLaser::SampleConfig()
 
 void ModelLaser::Update( void )
 {     
+  // removed UnMapFromRoot() optimization - though neat, it breaks
+  // thread-safety by messing with the Cell contents - rtv.
+
   assert( samples.size() == sample_count );
-  
-  UnMapFromRoot(); // Don't raytrace self
-  
+    
   double bearing( -fov/2.0 );
   // make the first and last rays exactly at the extremes of the FOV
   double sample_incr( fov / MAX(sample_count-1,1) );
@@ -222,8 +223,9 @@ void ModelLaser::Update( void )
 		  }
 	}
   
-  MapFromRoot();
-	
+  // removed MapFromRoot() optimization - though neat, it breaks
+  // thread-safety by messing with the Cell contents - rtv
+
   Model::Update();
 }
 

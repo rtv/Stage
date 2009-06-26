@@ -706,19 +706,20 @@ void Model::Update( void )
   // 			 this->world->sim_time, this->token, this->subs );
   
   // if we're drawing current and a power pack has been installed
+
   
   PowerPack* pp = FindPowerPack();
   if( pp && ( watts > 0 ))
-    {
-      // consume  energy stored in the power pack
-      stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
-      pp->Dissipate( consumed, GetGlobalPose() );      
-    }
-
+	 {
+		// consume  energy stored in the power pack
+		stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
+		pp->Dissipate( consumed, GetGlobalPose() );      
+	 }
+  
   last_update = world->sim_time;
   
   if( log_state )
-	 world->Log( this );
+ 	 world->Log( this );
 }
 
 void Model::CallUpdateCallbacks( void )

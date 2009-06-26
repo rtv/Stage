@@ -11,8 +11,6 @@ interval_sim 100  # simulation timestep in milliseconds
 interval_real 0 # real-time interval between simulation updates in milliseconds 
 paused 1
 
-threadpool 0
-
 # configure the GUI window
 window
 (
@@ -56,6 +54,8 @@ define orangerob rob( color "orange" )
 define purplerob rob( color "purple" )
 define goldrob rob( color "gold" )
 define darkredrob rob( color "DarkRed" )
+
+# 100 robots in assorted colors
 
 redrob( pose [-5.285 4.915 0 150.459] )
 redrob( pose [-4.458 5.785 0 -85.494] )
