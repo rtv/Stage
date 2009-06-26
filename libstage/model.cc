@@ -725,7 +725,7 @@ void Model::CallUpdateCallbacks( void )
 {
   // if we were updated this timestep, call the callbacks
   if( last_update == world->sim_time ) 
-	 CallCallbacks( &hooks.update );
+	CallCallbacks( &hooks.update );
 }
 
 stg_meters_t Model::ModelHeight() const

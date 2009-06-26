@@ -16,9 +16,7 @@ quit_time 3600 # 1 hour of simulated time
 resolution 0.02
 
 # threads may speed things up here depending on available CPU cores & workload 
-# threadpool 8 
-threadpool 0
-
+# threads 3
 
 # configure the GUI window
 window
@@ -28,10 +26,6 @@ window
   center [ -0.067 -0.907 ] 
   rotate [ 0 0 ]
   scale 40.786 
-
-  pcam_loc [ 0 -4.000 2.000 ]
-  pcam_angle [ 70.000 0 ]
-  pcam_on 0
   
   show_data 1
   show_flags 1
@@ -156,16 +150,16 @@ define autorob pioneer2dx
 #         )
 )
 
-autorob( pose [6.343 6.423 0 -108.404] joules 300000 name "r0" )
-autorob( pose [7.216 6.947 0 -102.139] joules 100000 )
-autorob( pose [7.308 6.329 0 -87.236] joules 200000 )
-autorob( pose [6.750 7.165 0 -111.398] joules 400000 )
-autorob( pose [6.382 7.678 0 -93.939] joules 100000 )
-autorob( pose [6.292 7.125 0 -58.690] joules 200000 )
-autorob( pose [7.699 6.780 0 -108.018] joules 300000 )
-autorob( pose [7.545 7.515 0 -168.541] joules 400000 )
-autorob( pose [7.017 7.707 0 -179.862] joules 100000 )
-autorob( pose [6.818 6.348 0 -74.042] joules 200000 )
+autorob( pose [-1.667 -2.152 0 -90.000] joules 300000 )
+autorob( pose [1.384 7.361 0 -0.139] joules 100000 )
+autorob( pose [-5.258 -5.871 0 -120.113] joules 200000 )
+autorob( pose [6.600 5.211 0 -89.911] joules 400000 )
+autorob( pose [-6.355 1.726 0 90.000] joules 100000 )
+autorob( pose [4.452 -1.179 0 164.286] joules 200000 )
+autorob( pose [4.820 -3.446 0 24.788] joules 300000 )
+autorob( pose [-0.187 3.065 0 -153.738] joules 400000 )
+autorob( pose [4.309 3.736 0 121.988] joules 100000 )
+autorob( pose [6.261 7.461 0 0] joules 200000 )
 
 #autorob( pose [5.060 6.868 0 -61.295] joules 300000 )
 #autorob( pose [4.161 5.544 0 -147.713] joules 400000 )

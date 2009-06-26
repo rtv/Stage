@@ -955,8 +955,11 @@ namespace Stg
     GThreadPool *threadpool; ///<worker threads for updating some sensor models in parallel
     int total_subs; ///< the total number of subscriptions to all models
     GList* velocity_list; ///< Models with non-zero velocity and should have their poses updated
-    unsigned int worker_threads; ///< the number of worker threads to use
-    GCond* worker_threads_done; ///< signalled when there are no more updates for the worker threads to do
+	
+	unsigned int worker_threads; ///< the number of worker threads to use
+	unsigned int threads_working; ///< the number of worker threads not yet finished
+    GCond* threads_start_cond; ///< signalled to unblock worker threads
+    GCond* threads_done_cond; ///< signalled by last worker thread to unblock main thread
 		
 		/** Keep a list of all models with detectable fiducials. This
 				avoids searching the whole world for fiducials. */
@@ -974,9 +977,9 @@ namespace Stg
     stg_usec_t sim_time; ///< the current sim time in this world in microseconds
 	 std::map<stg_point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
-	 
-	 std::vector<Model*> reentrant_update_list; ///< It is safe to call these model's Update() in parallel
-	 std::vector<Model*> nonreentrant_update_list; ///< It is NOT safe to call these model's Update() in parallel
+	
+	std::vector<Model*> nonreentrant_update_list; ///< It is NOT safe to call these model's Update() in parallel
+	std::vector<std::vector<Model*> > reentrant_update_lists;  ///< It is safe to call these model's Update() in parallel
 	 
     long unsigned int updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
@@ -1102,7 +1105,7 @@ namespace Stg
     void StartUpdatingModelPose( Model* mod );
 	 void StopUpdatingModelPose( Model* mod );
     
-    static void update_thread_entry( Model* mod, World* world );
+    static gpointer update_thread_entry( std::pair<World*,int>* info );
 	 
   public:
     /** returns true when time to quit, false otherwise */
@@ -1770,7 +1773,9 @@ namespace Stg
 	 /** callback functions can be attached to any field in this
 		  structure. When the internal function model_change(<mod>,<field>)
 		  is called, the callback is triggered */
-	 GHashTable* callbacks;
+	GHashTable* callbacks;
+	/** Dedicated storage for update callbacks - avoids looking them up in a hash table */
+	//std::vector<std::pair<stg_model_callback_t,void*> > update_callbacks;
 
 	 /** Default color of the model's blocks.*/
 	 stg_color_t color;

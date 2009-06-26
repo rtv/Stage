@@ -1,11 +1,18 @@
 
 ** Optimization **
 
-speed records:
+Timing benchmarks 3600 seconds of virtual time in real time seconds:
 
-simple.world 3600 seconds in 17.35 seconds
-fasr.world 3600 seconds in 7.83 seconds (460 x real time)
-	
+simple.world
+------------
+linux	8.89
+OS X	7.83 (before STL children)
+
+fasr.world
+----------
+linux	16.36
+OS X	17.35 (before STL children)
+
 
 ** 3.1.0 RELEASE *
 
@@ -19,12 +26,10 @@ fasr.world 3600 seconds in 7.83 seconds (460 x real time)
  - docs for new models
  - push docs to SF
 
-** 3.0.0 RELEASE **
-
 BUGS
 
-* 3d collision detection broken - e.g. fancypioneer2dx
-* [OSX only - FLTK bug?] loading window size constrains maximum window size
+* [OSX only - FLTK bug?] loading window size constrains maximum window
+  size
 
 * must build before building source package so that make
   package_source picks up config.h
@@ -33,12 +38,9 @@ INCOMPLETE
 
 * per-model visualization entries in view menu
 
-
 DESIRABLE FEATURES
 
 * add blocks to world w/o model?
-* energy model & recharging
-* runtime update rate UI
 
 
 ** FUTURE RELEASES **
@@ -49,3 +51,6 @@ DONE
 * saving worldfile adds newlines after includes
 * alpha properly done
 * Fix 3D panning and scrolling
+* 3d collision detection broken - e.g. fancypioneer2dx
+* energy model & recharging
+* runtime update rate UI

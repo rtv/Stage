@@ -268,6 +268,9 @@ void WorldGui::Load( const char* filename )
   this->interval_real = (stg_usec_t)thousand *  
     wf->ReadInt( world_section, "interval_real", (int)(this->interval_real/thousand) );
 
+  // this is a world property that's only load()ed in worldgui
+  this->paused = 
+    wf->ReadInt( world_section, "paused", this->paused );
 
   // use the window section for the rest
   int window_section = wf->LookupEntity( "window" );
@@ -853,11 +856,12 @@ void WorldGui::UpdateOptions()
   std::set<Option*, Option::optComp> options;
   std::vector<Option*> modOpts;
   
-  FOR_EACH( it, reentrant_update_list )
-	 {
-		modOpts = (*it)->getOptions();
-		options.insert( modOpts.begin(), modOpts.end() );	
-	 }
+  FOR_EACH( it1, reentrant_update_lists )
+	FOR_EACH( it2, (*it1) )
+	{
+	  modOpts = (*it2)->getOptions();
+	  options.insert( modOpts.begin(), modOpts.end() );	
+	}
   
   FOR_EACH( it, nonreentrant_update_list )
 	 {

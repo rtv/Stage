@@ -536,7 +536,7 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
       // There's no bounds-checking, but what the heck.
       char *tmp = strdup(this->filename);
       fullpath = new char[PATH_MAX];
-      getcwd(fullpath, PATH_MAX);
+      char* dummy = getcwd(fullpath, PATH_MAX);
       strcat( fullpath, "/" );
       strcat( fullpath, dirname(tmp));
       strcat( fullpath, "/" );
@@ -1662,7 +1662,7 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
       // There's no bounds-checking, but what the heck.
       char *tmp = strdup(this->filename);
 		char* fullpath = new char[PATH_MAX];
-      getcwd(fullpath, PATH_MAX);
+      char* dummy = getcwd(fullpath, PATH_MAX);
       strcat( fullpath, "/" );
       strcat( fullpath, dirname(tmp));
       strcat( fullpath, "/" );

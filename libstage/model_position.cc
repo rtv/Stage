@@ -98,7 +98,7 @@ ModelPosition::ModelPosition( World* world,
 					 id, typestr );
   
   // assert that Update() is reentrant for this derived model
-  thread_safe = true;
+  thread_safe = false;
 	
   // no power consumed until we're subscribed
   this->SetWatts( 0 );

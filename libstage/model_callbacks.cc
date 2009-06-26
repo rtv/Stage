@@ -1,35 +1,41 @@
 #include "stage.hh"
 using namespace Stg;
 
-// int key_gen( Model* mod, void* address )
-// {
-// 	return ((int*)address) - ((int*)mod);
-// }
 
 void Model::AddCallback( void* address, 
-		stg_model_callback_t cb, 
-		void* user )
+						 stg_model_callback_t cb, 
+						 void* user )
 {
-  ///int* key = (int*)g_new( int, 1 );
-  //*key = key_gen( this, address );
-
-	GList* cb_list = (GList*)g_hash_table_lookup( callbacks, address );
-
-	//printf( "installing callback in model %s with key %p\n",
-	//		  token, address );
-
-	// add the callback & argument to the list
-	cb_list = g_list_prepend( cb_list, new stg_cb_t( cb, user ) );
-
-	// and replace the list in the hash table
-	g_hash_table_insert( callbacks, address, cb_list );
+//   // treat update callbacks specially as they are so frequently called
+//   if( address == &hooks.update )
+// 	{
+// 	  // a dedicated vector avoids a hash table lookup 
+// 	  update_callbacks.push_back( std::pair<stg_model_callback_t,void*>( cb, user ) );	  
+// 	}
+//   else
+	{
+	  GList* cb_list = (GList*)g_hash_table_lookup( callbacks, address );
+	  
+	  //printf( "installing callback in model %s with key %p\n",
+	  //		  token, address );
+	  
+	  // add the callback & argument to the list
+	  cb_list = g_list_prepend( cb_list, new stg_cb_t( cb, user ) );
+	  
+	  // and replace the list in the hash table
+	  g_hash_table_insert( callbacks, address, cb_list );
+	}
 }
 
 
 int Model::RemoveCallback( void* member,
 		stg_model_callback_t callback )
 {
-  //int key = key_gen( this, member );
+
+  // XX TODO
+  //   if( address == &hooks.update )
+  // 	{
+  // 	  std::erase( std::remove( update_callbacks.begin(); update_callbacks.end(), 
 
 	GList* cb_list = (GList*)g_hash_table_lookup( callbacks, member );
 
@@ -72,6 +78,16 @@ void Model::CallCallbacks(  void* address )
 {
 
 	assert( address );
+	
+// 	// avoid a hash table lookup for 
+// 	if( address == &hooks.update )
+// 	  {
+// 		FOR_EACH( it, update_callbacks )
+// 		  (it->first)( this, it->second );	  
+
+// 		return;
+// 	  }
+
 
 	//int key = key_gen( this, address );
 	
