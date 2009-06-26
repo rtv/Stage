@@ -6,12 +6,12 @@ Timing benchmarks 3600 seconds of virtual time in real time seconds:
 simple.world
 ------------
 linux	8.89
-OS X	7.83 (before STL children)
+OS X	7.75
 
 fasr.world
 ----------
 linux	16.36
-OS X	17.35 (before STL children)
+OS X	17.04
 
 
 ** 3.1.0 RELEASE *

@@ -57,7 +57,7 @@ define trickedoutpioneer pioneer2dx
 (
 	ranger( alwayson 0 )
 
-  sicklaser( pose [0.030 0 0 0 ]  alwayson 0 )
+  sicklaser( pose [0.030 0 0 0 ]  alwayson 1 )
 
   fiducial( range_max 8 range_max_id 5 ) 
 
@@ -66,7 +66,7 @@ define trickedoutpioneer pioneer2dx
         channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
 		  alwayson 1
     )
-  
+
   fiducial_return 17
   gripper_return 0
 
@@ -81,7 +81,6 @@ trickedoutpioneer
   pose [-10.071 3.186 0 -2.333]
 
   #gripper( pose [0.23 0.000 0 0.000] color "gray" )
-  #speech()
 )
 
 #trickedoutpioneer
