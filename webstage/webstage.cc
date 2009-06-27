@@ -269,11 +269,14 @@ public:
 			 
 			 for(unsigned int i=0;i<n;i++){
 				websim::Fiducial fid;
+				fid.pos.x = fids[i].range*cos(fids[i].bearing);
+				fid.pos.y = fids[i].range*sin(fids[i].bearing);
 				fid.range = fids[i].range;
 				fid.bearing = fids[i].bearing;
 				fid.id = fids[i].id;
 
 				f.push_back(fid);
+				//printf("stage: fiducials:%d\n",f.size());
 			 }
 	
         	     	          	     		
@@ -477,7 +480,7 @@ public:
 
 }*/
 
-   virtual bool GetModelExtent(const std::string& name,
+   virtual bool GetModelGeometry(const std::string& name,
 									double& x,
 									double& y,
 									double& z,
@@ -587,7 +590,7 @@ int main( int argc, char** argv )
   //printf( "WebStage built on %s %s\n", PROJECT, VERSION );
   
   std::string fedfilename = "";
-  std::string host = "localhost";
+  std::string host = "192.168.1.210";
   unsigned short port = 8000;
   
   int ch=0, optindex=0;

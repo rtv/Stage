@@ -69,6 +69,7 @@ find_library( LTDL_LIB ltdl DOC "Libtool lib" )
 include_directories( 
 	${OPENGL_INCLUDE_DIR}
 	${LTDL_INCLUDE_DIR}
+
 )
 
 # find the easy modules
