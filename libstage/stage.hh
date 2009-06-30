@@ -940,7 +940,7 @@ namespace Stg
     static void UpdateCb( World* world);
     static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
 	 
-    GList* charge_list; ///< Models which receive charge are listed here
+	std::set<Model*> charge_list; ///< Models which receive charge are listed here
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
 	 GList* event_list; //< 
@@ -956,7 +956,7 @@ namespace Stg
 	 unsigned int show_clock_interval; ///< updates between clock xoutputs
     GMutex* thread_mutex; ///< protect the worker thread management stuff
     int total_subs; ///< the total number of subscriptions to all models
-	std::vector<Model*> velocity_list; ///< Models with non-zero velocity and should have their poses updated
+	std::set<Model*> velocity_list; ///< Models with non-zero velocity and should have their poses updated
 	
 	unsigned int worker_threads; ///< the number of worker threads to use
 	unsigned int threads_working; ///< the number of worker threads not yet finished
@@ -980,6 +980,7 @@ namespace Stg
 	 std::map<stg_point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
 	
+	// todo - test performance of std::set
 	std::vector<std::vector<Model*> > update_lists;  
 	 
     long unsigned int updates; ///< the number of simulated time steps executed so far
@@ -1105,6 +1106,9 @@ namespace Stg
     
 	void VelocityListAdd( Model* mod );
 	void VelocityListRemove( Model* mod );
+	
+	void ChargeListAdd( Model* mod );
+	void ChargeListRemove( Model* mod );
 
     static gpointer update_thread_entry( std::pair<World*,int>* info );
 	 

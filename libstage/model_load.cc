@@ -56,8 +56,9 @@ void Model::Load()
 	 PRINT_WARN1( "Model %s: Setting \"watts_give\" has no effect unless \"joules\" is specified for this model or a parent", token );
   
   if( watts_give ) // need to get the world to test this model for charging
-	 if( ! g_list_find( world->charge_list, this ) )
-		world->charge_list = g_list_append( world->charge_list, this );
+	//if( ! g_list_find( world->charge_list, this ) )
+	//world->charge_list = g_list_append( world->charge_list, this );
+	world->ChargeListAdd( this );
   
   watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
   if( (watts_take > 0.0) & !pp )

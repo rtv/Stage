@@ -78,7 +78,7 @@ World::World( const char* token,
 			  double ppm )
   : 
   // private
-  charge_list( NULL ),
+  charge_list(),
   destroy( false ),
   dirty( true ),
   models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
@@ -538,7 +538,8 @@ bool World::Update()
 
   // test all models that supply charge to see if they are touching
   // something that takes charge
-  LISTMETHOD( charge_list, Model*, UpdateCharge );
+  FOR_EACH( it, charge_list )
+	(*it)->UpdateCharge();
   
   // then update all models on the update lists
   FOR_EACH( it, update_lists[0] )
@@ -1091,12 +1092,22 @@ void World::UpdateListRemove( Model* mod )
 
 void World::VelocityListAdd( Model* mod )
 { 
-  velocity_list.push_back( mod );
+  velocity_list.insert( mod );
 }
 
 void World::VelocityListRemove( Model* mod )
 { 
-  velocity_list.erase( remove( velocity_list.begin(), velocity_list.end(), mod ));
+  velocity_list.erase( mod );
+}
+
+void World::ChargeListAdd( Model* mod )
+{ 
+  charge_list.insert( mod );
+}
+
+void World::ChargeListRemove( Model* mod )
+{ 
+  charge_list.erase( mod );
 }
 
 stg_usec_t World::SimTimeNow(void)
