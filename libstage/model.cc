@@ -209,7 +209,7 @@ Model::Model( World* world,
 	 log_state(false),
     map_resolution(0.1),
     mass(0),
-    on_update_list( false ),
+	//   on_update_list( false ),
     on_velocity_list( false ),
     parent(parent),
     pose(),
@@ -224,15 +224,16 @@ Model::Model( World* world,
     thread_safe( false ),
     trail( g_array_new( false, false, sizeof(stg_trail_item_t) )),
     type(type),	
+	update_list_num( -1 ),
     used(false),
     velocity(),
     watts(0.0),
-	 watts_give(0.0),
-	 watts_take(0.0),	 
+	watts_give(0.0),
+	watts_take(0.0),	 
     wf(NULL),
     wf_entity(0),
     world(world),
-	 world_gui( dynamic_cast<WorldGui*>( world ) )
+	world_gui( dynamic_cast<WorldGui*>( world ) )
 {
   //assert( modelsbyid );
   assert( world );
@@ -291,17 +292,17 @@ Model::~Model( void )
 
 void Model::StartUpdating()
 {
-  if( ! on_update_list )
-    {
-      on_update_list = true;
-      world->StartUpdatingModel( this );
-    }
+  if( update_list_num < 0 )
+	update_list_num = world->UpdateListAdd( this );
 }
 
 void Model::StopUpdating()
 {
-  on_update_list = false;
-  world->StopUpdatingModel( this );
+  if( update_list_num >= 0 )
+	{	
+	  world->UpdateListRemove( this );
+	  update_list_num = -1;
+	}
 }
 
 // this should be called after all models have loaded from the

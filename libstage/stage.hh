@@ -233,6 +233,9 @@ namespace Stg
   /** Obtain the components of a color */
   void stg_color_unpack( stg_color_t col, 
 								 double* r, double* g, double* b, double* a );
+  
+  //typedef std::vector<Model*> ModelPtrVec;
+  //typedef std::vector<Model&> ModelRefVec;
 
   /** specify a rectangular size */
   class Size
@@ -823,19 +826,19 @@ namespace Stg
     friend class Canvas; // allow Canvas access to our private members
 	 
   protected:
-	 std::vector<Model*> children;
+	std::vector<Model*> children;
     bool debug;
-	 GList* puck_list;
+	GList* puck_list;
     char* token;
-	 
+	
 	 void Load( Worldfile* wf, int section );
 	 void Save( Worldfile* wf, int section );
 	 
   public:
-    	
+	
     /** get the children of the this element */
-	 std::vector<Model*>& GetChildren(){ return children;}
-     
+	std::vector<Model*>& GetChildren(){ return children;}
+    
     /** recursively call func( model, arg ) for each descendant */
     void ForEachDescendant( stg_model_callback_t func, void* arg );
 	 
@@ -952,19 +955,18 @@ namespace Stg
 	 bool show_clock; ///< iff true, print the sim time on stdout
 	 unsigned int show_clock_interval; ///< updates between clock xoutputs
     GMutex* thread_mutex; ///< protect the worker thread management stuff
-    //GThreadPool *threadpool; ///<worker threads for updating some sensor models in parallel
     int total_subs; ///< the total number of subscriptions to all models
-    GList* velocity_list; ///< Models with non-zero velocity and should have their poses updated
+	std::vector<Model*> velocity_list; ///< Models with non-zero velocity and should have their poses updated
 	
 	unsigned int worker_threads; ///< the number of worker threads to use
 	unsigned int threads_working; ///< the number of worker threads not yet finished
     GCond* threads_start_cond; ///< signalled to unblock worker threads
     GCond* threads_done_cond; ///< signalled by last worker thread to unblock main thread
-		
-		/** Keep a list of all models with detectable fiducials. This
-				avoids searching the whole world for fiducials. */
-		std::set<Model*> models_with_fiducials;
-		
+	
+	/** Keep a list of all models with detectable fiducials. This
+		avoids searching the whole world for fiducials. */
+	std::set<Model*> models_with_fiducials;
+	
   protected:	 
 
 	 std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
@@ -978,8 +980,7 @@ namespace Stg
 	 std::map<stg_point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
 	
-	std::vector<Model*> nonreentrant_update_list; ///< It is NOT safe to call these model's Update() in parallel
-	std::vector<std::vector<Model*> > reentrant_update_lists;  ///< It is safe to call these model's Update() in parallel
+	std::vector<std::vector<Model*> > update_lists;  
 	 
     long unsigned int updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
@@ -1098,13 +1099,13 @@ namespace Stg
     /** Returns true iff the current time is greater than the time we
 		  should quit */
     bool PastQuitTime();
-	 
-    void StartUpdatingModel( Model* mod );  
-	 void StopUpdatingModel( Model* mod );
+	
+    int UpdateListAdd( Model* mod );  
+	void UpdateListRemove( Model* mod );
     
-    void StartUpdatingModelPose( Model* mod );
-	 void StopUpdatingModelPose( Model* mod );
-    
+	void VelocityListAdd( Model* mod );
+	void VelocityListRemove( Model* mod );
+
     static gpointer update_thread_entry( std::pair<World*,int>* info );
 	 
   public:
@@ -1808,7 +1809,7 @@ namespace Stg
 	 bool log_state; ///< iff true, model state is logged
 	 stg_meters_t map_resolution;
 	 stg_kg_t mass;
-	 bool on_update_list;
+	//bool on_update_list;
 	 bool on_velocity_list;
 
 	 /** Pointer to the parent of this model, possibly NULL. */
@@ -1868,6 +1869,9 @@ namespace Stg
 	 bool thread_safe;
 	 GArray* trail;
 	 stg_model_type_t type;  
+	/** The index into the world's vector of update lists. Initially
+	    -1, to indicate that it is not on a list yet. */
+	int update_list_num; 
 	 bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
 	 Velocity velocity;
 	 stg_watts_t watts;///< power consumed by this model

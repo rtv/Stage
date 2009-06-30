@@ -856,18 +856,13 @@ void WorldGui::UpdateOptions()
   std::set<Option*, Option::optComp> options;
   std::vector<Option*> modOpts;
   
-  FOR_EACH( it1, reentrant_update_lists )
+  FOR_EACH( it1, update_lists )
 	FOR_EACH( it2, (*it1) )
 	{
 	  modOpts = (*it2)->getOptions();
 	  options.insert( modOpts.begin(), modOpts.end() );	
 	}
   
-  FOR_EACH( it, nonreentrant_update_list )
-	 {
-		modOpts = (*it)->getOptions();
-		options.insert( modOpts.begin(), modOpts.end() );	
-	 }
   
   drawOptions.assign( options.begin(), options.end() );
   

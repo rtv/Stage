@@ -201,11 +201,11 @@ void Model::Load()
 		LoadDataBaseEntries( wf, wf_entity );
 
   if (vis.gravity_return)
-  {
-    Velocity vel = GetVelocity();
-    this->SetVelocity( vel );
-    world->StartUpdatingModel( this );
-  }
+	{
+	  Velocity vel = GetVelocity();
+	  this->SetVelocity( vel );
+	  StartUpdating();
+	}
 
   if( wf->PropertyExists( wf_entity, "friction" ))
   {

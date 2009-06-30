@@ -91,7 +91,7 @@ World::World( const char* token,
   show_clock_interval( 100 ), // 10 simulated seconds using defaults
   thread_mutex( g_mutex_new() ),
   total_subs( 0 ), 
-  velocity_list( NULL ),
+  velocity_list(),
   worker_threads( 0 ),
   threads_working( 0 ),
   threads_start_cond( g_cond_new() ),
@@ -109,8 +109,7 @@ World::World( const char* token,
   sim_time( 0 ),
   superregions(),
   sr_cached(NULL),
-  nonreentrant_update_list(),
-  reentrant_update_lists(1),
+  update_lists(1),
   updates( 0 ),
   wf( NULL ),
   paused( false )
@@ -179,7 +178,7 @@ gpointer World::update_thread_entry( std::pair<World*,int> *thread_info )
 	  //puts( "worker thread awakes" );
 	  
 	  // loop over the list of rentrant models for this thread
-	  FOR_EACH( it, world->reentrant_update_lists[thread_instance] )
+	  FOR_EACH( it, world->update_lists[thread_instance] )
 		 {
 			Model* mod = *it;
 			//printf( "thread %d updating model %s (%p)\n", thread_instance, mod->Token(), mod );
@@ -343,12 +342,12 @@ void World::Load( const char* worldfile_path )
 	  
 	  if( worker_threads > 0 )
 		{
-		  reentrant_update_lists.resize( worker_threads );
+		  update_lists.resize( worker_threads + 1 );
 
 		  // kick off count threads.
 		  for( unsigned int t=0; t<worker_threads; t++ )
 			{
-			  std::pair<World*,int> *p = new std::pair<World*,int>( this, t );
+			  std::pair<World*,int> *p = new std::pair<World*,int>( this, t+1 );
 			  g_thread_create( (GThreadFunc)World::update_thread_entry, 
 							   p,
 							   false, 
@@ -406,9 +405,8 @@ void World::UnLoad()
  
   g_hash_table_remove_all( models_by_name );
 		
-  reentrant_update_lists.clear();
-  nonreentrant_update_list.clear();
-
+  update_lists.resize(1);
+  
   g_list_free( ray_list );
   ray_list = NULL;
 
@@ -533,30 +531,23 @@ bool World::Update()
 	return false;
 
   dirty = true; // need redraw 
-
-  // upate all positions first
-  LISTMETHOD( velocity_list, Model*, UpdatePose );
   
+  // upate all positions first
+  FOR_EACH( it, velocity_list )
+	(*it)->UpdatePose();
+
   // test all models that supply charge to see if they are touching
   // something that takes charge
   LISTMETHOD( charge_list, Model*, UpdateCharge );
   
   // then update all models on the update lists
-  FOR_EACH( it, nonreentrant_update_list )
+  FOR_EACH( it, update_lists[0] )
 	 {
 		//printf( "thread MAIN updating model %s\n", (*it)->Token() );
 		(*it)->UpdateIfDue();
 	 }
   
-  //printf( "nonre list length %d\n", g_list_length( nonreentrant_update_list ) );
-  //printf( "re list length %d\n", g_list_length( reentrant_update_list ) );
-
-  if( worker_threads == 0 ) // do all the work in this thread
-    {
-	  FOR_EACH( it, reentrant_update_lists[0] )
-		(*it)->UpdateIfDue();
-    }
-  else // use worker threads
+  if( worker_threads > 0 )
     {
 	  g_mutex_lock( thread_mutex );
 	  threads_working = worker_threads; 
@@ -576,11 +567,11 @@ bool World::Update()
 
 		// TODO: allow threadsafe callbacks to be called in worker
 		// threads
-
+	  
 		// now call all the callbacks in each list
-		FOR_EACH( it1, reentrant_update_lists )
-		  FOR_EACH( it2, *it1 )
-		  (*it2)->CallUpdateCallbacks();
+	  for( unsigned int i=1; i<update_lists.size(); i++ )
+		FOR_EACH( it, update_lists[i] )
+		  (*it)->CallUpdateCallbacks();
     }
   
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
@@ -1076,45 +1067,36 @@ void World:: RegisterOption( Option* opt )
   g_hash_table_insert( option_table, (void*)opt->htname, opt );
 }
 
-void World::StartUpdatingModel( Model* mod )
-{ 
-  //printf( "Adding model %s to update list ", mod->Token() );
+int World::UpdateListAdd( Model* mod )
+{   
+  int index = 0;
   
-  int index = worker_threads > 0 ? mod->id%worker_threads : 0;
+  if( mod->thread_safe && worker_threads > 0 )
+	index = (random() % worker_threads) + 1;
   
+  update_lists[index].push_back( mod );
 
-  //   if( mod->thread_safe )
-  // 	printf( "reentrant[ %d ]\n", index );
-  //   else
-  // 	printf( " nonreentrant\n" );
+  //printf( "update_list[%d] added model %s\n", index, mod->Token() );
 
-  // choose the right update list
-  std::vector<Model*>& vec = mod->thread_safe ? reentrant_update_lists[index] : nonreentrant_update_list;  
-  // and add the model if not in the list already
-  if( find( vec.begin(), vec.end(), mod ) == vec.end() )		  
-	vec.push_back( mod );
+  return index;
 }
 
-void World::StopUpdatingModel( Model* mod )
+void World::UpdateListRemove( Model* mod )
 { 
-  int index = worker_threads > 0 ? mod->id%worker_threads : 0;
-
   // choose the right update list
-  std::vector<Model*>& vec = mod->thread_safe ? reentrant_update_lists[index] : nonreentrant_update_list;
+  std::vector<Model*>& vec = update_lists[ mod->update_list_num ];
   // and erase the model from it
   vec.erase( remove( vec.begin(), vec.end(), mod ));
 }
 
-void World::StartUpdatingModelPose( Model* mod )
+void World::VelocityListAdd( Model* mod )
 { 
-  if( ! g_list_find( velocity_list, mod ) )
-	velocity_list = g_list_append( velocity_list, mod ); 
+  velocity_list.push_back( mod );
 }
 
-void World::StopUpdatingModelPose( Model* mod )
+void World::VelocityListRemove( Model* mod )
 { 
-  // TODO XX figure out how to handle velcoties a bit better
-  //velocity_list = g_list_remove( velocity_list, mod ); 
+  velocity_list.erase( remove( velocity_list.begin(), velocity_list.end(), mod ));
 }
 
 stg_usec_t World::SimTimeNow(void)

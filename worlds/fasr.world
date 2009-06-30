@@ -11,7 +11,7 @@ interval_real 0 # real-time interval between simulation updates in milliseconds
 paused 1
 
 # time to pause (in GUI mode) or quit (in headless mode) the simulation
-quit_time 360 # 1 hour of simulated time
+quit_time 3600 # 1 hour of simulated time
 
 resolution 0.02
 
@@ -21,11 +21,11 @@ threads 0
 # configure the GUI window
 window
 ( 
-  size [ 788.000 842.000 ] 
+  size [ 600.000 600.000 ] 
 
-  center [ -0.067 -0.907 ] 
+  center [ 0.250 -0.680 ] 
   rotate [ 0 0 ]
-  scale 40.786 
+  scale 30.643 
   
   show_data 1
   show_flags 1
@@ -133,7 +133,7 @@ define puck model (
 
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 320 range_max 5 laser_return 2 watts 30 )
+ sicklaser( samples 32 range_max 5 laser_return 2 watts 30 )
  ctrl "fasr"
  joules 100000 
  joules_capacity 400000 

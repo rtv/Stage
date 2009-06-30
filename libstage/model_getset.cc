@@ -212,16 +212,17 @@ void Model::SetVelocity( const Velocity& vel )
   
   if( on_velocity_list && vel.IsZero() ) 	 
     {
-      world->StopUpdatingModelPose( this );
+      world->VelocityListRemove( this );
       on_velocity_list = false;
     }
 
   if( (!on_velocity_list) && (!vel.IsZero()) ) 	 
     {
-      world->StartUpdatingModelPose( this );
+      world->VelocityListAdd( this );
       on_velocity_list = true;
     }
 
+  // todo ?
   //CallCallbacks( &this->velocity );
 }
 
