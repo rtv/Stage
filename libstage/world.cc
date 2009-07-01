@@ -227,15 +227,6 @@ void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
   mod->LoadBlock( wf, entity );
 }
 
-// void World::LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable )
-// { 
-//   Puck* puck = new Puck();
-//   puck->Load( wf, entity );  
-//   puck_list = g_list_prepend( puck_list, puck );
-// }
-
-
-
 Model* World::CreateModel( Model* parent, const char* typestr )
 {
   Model* mod = NULL; // new model to return
@@ -370,8 +361,6 @@ void World::Load( const char* worldfile_path )
 		}
       else if( strcmp( typestr, "block" ) == 0 )
 		LoadBlock( wf, entity, entitytable );
-	  // 		else if( strcmp( typestr, "puck" ) == 0 )
-	  // 		  LoadPuck( wf, entity, entitytable );
 	  else
 		LoadModel( wf, entity, entitytable );
     }
@@ -744,7 +733,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 				 (cy>=0) && (cy<REGIONWIDTH) && 
 				 n > 0 )
 			{			 
-			  for( std::vector<Block*>::iterator it( c->blocks.begin() );
+			  for( BlockPtrVec::iterator it( c->blocks.begin() );
 				   it != c->blocks.end();
 				   ++it )					 
 				{	      	      
@@ -1085,7 +1074,7 @@ int World::UpdateListAdd( Model* mod )
 void World::UpdateListRemove( Model* mod )
 { 
   // choose the right update list
-  std::vector<Model*>& vec = update_lists[ mod->update_list_num ];
+  ModelPtrVec& vec = update_lists[ mod->update_list_num ];
   // and erase the model from it
   vec.erase( remove( vec.begin(), vec.end(), mod ));
 }

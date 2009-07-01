@@ -278,7 +278,7 @@ Model::~Model( void )
   
   // remove myself from my parent's child list, or the world's child
   // list if I have no parent
-  std::vector<Model*>& vec  = parent ? parent->children : world->children;
+  ModelPtrVec& vec  = parent ? parent->children : world->children;
   vec.erase( std::remove( vec.begin(), vec.end(), this ));
 
   if( callbacks ) g_hash_table_destroy( callbacks );
@@ -767,12 +767,10 @@ void Model::PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax,
     SetPose( Pose::Random( xmin,xmax, ymin, ymax ));		
 }
 
-
-GList* Model::AppendTouchingModels( GList* list )
+void Model::AppendTouchingModels( ModelPtrSet& touchers )
 {
-  return blockgroup.AppendTouchingModels( list );
+  blockgroup.AppendTouchingModels( touchers );
 }
-
 
 Model* Model::TestCollision()
 {
@@ -810,11 +808,18 @@ void Model::UpdateCharge()
   pps_charging = NULL;
   
   // run through and update all appropriate touchers
-  for( GList* touchers = AppendTouchingModels( NULL );
-		 touchers;
-		 touchers = touchers->next )
+  ModelPtrSet touchers;
+  AppendTouchingModels( touchers );
+
+  //  for( GList* touchers = AppendTouchingModels( NULL );
+  //	 touchers;
+  //	 touchers = touchers->next )
+  FOR_EACH( it, touchers )
+//   for( GList* touchers = AppendTouchingModels( NULL );
+// 		 touchers;
+// 		 touchers = touchers->next )
 	 {
-		Model* toucher = (Model*)touchers->data;		
+	   Model* toucher = (*it); //(Model*)touchers->data;		
  		PowerPack* hispp =toucher->FindPowerPack();		
 		
  		if( hispp && toucher->watts_take > 0.0) 
@@ -892,18 +897,19 @@ void Model::UpdatePose( void )
 	
   // convert usec to sec
   double interval( (double)world->interval_sim / 1e6 );
-	
+  
   // find the change of pose due to our velocity vector
   Pose p( velocity.x * interval,
-					velocity.y * interval,
-					velocity.z * interval,
-					normalize( velocity.a * interval ));
-	
+		  velocity.y * interval,
+		  velocity.z * interval,
+		  normalize( velocity.a * interval ));
+  
   // attempts to move to the new pose. If the move fails because we'd
   // hit another model, that model is returned.	
 	// ConditionalMove() returns a pointer to the model we hit, or
 	// NULL. We use this as a boolean for SetStall()
-  SetStall( ConditionalMove( pose_sum( pose, p ) ) );
+  //SetStall( ConditionalMove( pose_sum( pose, p ) ) );
+  SetStall( ConditionalMove( pose + p ) );
 }
 
 

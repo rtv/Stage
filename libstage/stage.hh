@@ -74,6 +74,7 @@
 namespace Stg 
 {
   // forward declare
+  class Block;
   class Canvas;
   class Cell;
   class Worldfile;
@@ -84,6 +85,15 @@ namespace Stg
   class Camera;
   class FileManager;
   class Option;
+    
+  /** Set of pointers to Models. */
+  typedef std::set<Model*> ModelPtrSet;
+  /** Vector of pointers to Models. */
+  typedef std::vector<Model*> ModelPtrVec;
+  /** Vector of pointers to Blocks. */
+  typedef std::vector<Block*> BlockPtrVec;
+  /** Vector of pointers to Cells.*/
+  typedef std::vector<Cell*> CellPtrVec;
 
   /** Initialize the Stage library */
   void Init( int* argc, char** argv[] );
@@ -106,10 +116,10 @@ namespace Stg
     MODEL_TYPE_BLOBFINDER,
     MODEL_TYPE_BLINKENLIGHT,
     MODEL_TYPE_CAMERA,
-	 MODEL_TYPE_GRIPPER,
-	 MODEL_TYPE_ACTUATOR,
-	 MODEL_TYPE_LOADCELL,
-	 MODEL_TYPE_LIGHTINDICATOR,
+	MODEL_TYPE_GRIPPER,
+	MODEL_TYPE_ACTUATOR,
+	MODEL_TYPE_LOADCELL,
+	MODEL_TYPE_LIGHTINDICATOR,
     MODEL_TYPE_COUNT // must be the last entry, to count the number of
     // types
   } stg_model_type_t;
@@ -184,13 +194,12 @@ namespace Stg
   /** take binary sign of a, either -1, or 1 if >= 0. */
   inline double sgn( double a){ return( a<0 ? -1.0 : 1.0); }
 
-
   /** Describe the image format used for saving screenshots. */
   typedef enum {
     STG_IMAGE_FORMAT_PNG,
     STG_IMAGE_FORMAT_JPG
   } stg_image_format_t;
-
+  
   /** any integer value other than this is a valid fiducial ID */
   enum { FiducialNone = 0 };
 
@@ -234,27 +243,24 @@ namespace Stg
   void stg_color_unpack( stg_color_t col, 
 								 double* r, double* g, double* b, double* a );
   
-  //typedef std::vector<Model*> ModelPtrVec;
-  //typedef std::vector<Model&> ModelRefVec;
-
   /** specify a rectangular size */
   class Size
   {
   public:
     stg_meters_t x, y, z;
-	 
+	
     Size( stg_meters_t x, 
-			 stg_meters_t y, 
-			 stg_meters_t z )
+		  stg_meters_t y, 
+		  stg_meters_t z )
       : x(x), y(y), z(z)
     {/*empty*/}
-
+	
     /** default constructor uses default non-zero values */
     Size() : x( 0.4 ), y( 0.4 ), z( 1.0 )
     {/*empty*/}	
-
-	 void Load( Worldfile* wf, int section, const char* keyword );
-	 void Save( Worldfile* wf, int section, const char* keyword );
+	
+	void Load( Worldfile* wf, int section, const char* keyword );
+	void Save( Worldfile* wf, int section, const char* keyword );
   };
   
   /** Specify a 3 axis position, in x, y and heading. */
@@ -265,9 +271,9 @@ namespace Stg
     stg_radians_t a;///< rotation about the z axis. 
     
     Pose( stg_meters_t x, 
-			 stg_meters_t y, 
-			 stg_meters_t z,
-			 stg_radians_t a ) 
+		  stg_meters_t y, 
+		  stg_meters_t z,
+		  stg_radians_t a ) 
       : x(x), y(y), z(z), a(a)
     { /*empty*/ }
     
@@ -279,39 +285,50 @@ namespace Stg
     /** return a random pose within the bounding rectangle, with z=0 and
 		  angle random */
     static Pose Random( stg_meters_t xmin, stg_meters_t xmax, 
-								stg_meters_t ymin, stg_meters_t ymax )
+						stg_meters_t ymin, stg_meters_t ymax )
     {		 
       return Pose( xmin + drand48() * (xmax-xmin),
-						 ymin + drand48() * (ymax-ymin),
-						 0, 
-						 normalize( drand48() * (2.0 * M_PI) ));
+				   ymin + drand48() * (ymax-ymin),
+				   0, 
+				   normalize( drand48() * (2.0 * M_PI) ));
     }
     
-	 /** Print pose in human-readable format on stdout
-		  @param prefix Character string to prepend to pose output 
-	 */
+	/** Print pose in human-readable format on stdout
+		@param prefix Character string to prepend to pose output 
+	*/
     virtual void Print( const char* prefix )
     {
       printf( "%s pose [x:%.3f y:%.3f z:%.3f a:%.3f]\n",
-				  prefix, x,y,z,a );
+			  prefix, x,y,z,a );
     }
-	 
-	 std::string String()
-	 {
-		char buf[256];
-		snprintf( buf, 256, "[ %.3f %.3f %.3f %.3f ]",
-					 x,y,z,a );
-		return std::string(buf);
-	 }
-
-	 /* returns true iff all components of the velocity are zero. */
-	 bool IsZero() const { return( !(x || y || z || a )); };
-
-	 /** Set the pose to zero [0,0,0,0] */
-	 void Zero(){ x=y=z=a=0.0; }
-
-	 void Load( Worldfile* wf, int section, const char* keyword );
-	 void Save( Worldfile* wf, int section, const char* keyword );
+	
+	std::string String()
+	{
+	  char buf[256];
+	  snprintf( buf, 256, "[ %.3f %.3f %.3f %.3f ]",
+				x,y,z,a );
+	  return std::string(buf);
+	}
+	
+	/* returns true iff all components of the velocity are zero. */
+	bool IsZero() const { return( !(x || y || z || a )); };
+	
+	/** Set the pose to zero [0,0,0,0] */
+	void Zero(){ x=y=z=a=0.0; }
+	
+	void Load( Worldfile* wf, int section, const char* keyword );
+	void Save( Worldfile* wf, int section, const char* keyword );
+	
+	inline Pose operator+( const Pose& p )
+	{
+	  const double cosa = cos(a);
+	  const double sina = sin(a);
+	  
+	  return Pose( x + p.x * cosa - p.y * sina,
+				   y + p.x * sina + p.y * cosa,
+				   z + p.z,
+				   normalize(a + p.a) );	 
+	}	
   };
   
   
@@ -424,24 +441,24 @@ namespace Stg
   {
   public:
     stg_meters_t x, y;
-	 stg_point_t( stg_meters_t x, stg_meters_t y ) : x(x), y(y){}	 
-	 stg_point_t() : x(0.0), y(0.0){}
-
-	 bool operator+=( const stg_point_t& other ) 
-	 { return ((x += other.x) && (y += other.y) ); }  
+	stg_point_t( stg_meters_t x, stg_meters_t y ) : x(x), y(y){}	 
+	stg_point_t() : x(0.0), y(0.0){}
+	
+	bool operator+=( const stg_point_t& other ) 
+	{ return ((x += other.x) && (y += other.y) ); }  
   };
-    
+  
   /** Define a point in 3d space */
   class stg_point3_t
   {
   public:
     stg_meters_t x,y,z;
-	 stg_point3_t( stg_meters_t x, stg_meters_t y, stg_meters_t z ) 
-		: x(x), y(y), z(z) {}	 
-	 //stg_point3_t( int x, int y ) : x(x), y(y), z(0.0) {}	 
-	 stg_point3_t() : x(0.0), y(0.0), z(0.0) {}
+	stg_point3_t( stg_meters_t x, stg_meters_t y, stg_meters_t z ) 
+	  : x(x), y(y), z(z) {}	 
+  
+	stg_point3_t() : x(0.0), y(0.0), z(0.0) {}
   };
-
+  
   /** Define an integer point on the 2d plane */
   class stg_point_int_t
   {
@@ -458,6 +475,7 @@ namespace Stg
 	 { return ((x == other.x) && (y == other.y) ); }
   };
   
+  typedef std::vector<stg_point_int_t> PointIntVec;
 
   /** create an array of 4 points containing the corners of a unit
       square.  */
@@ -588,42 +606,20 @@ namespace Stg
 
     /** Create a draw_t object of specified type from a vertex array */
     draw_t* create( type_t type,  
-						  vertex_t* verts,
-						  size_t vert_count );
+					vertex_t* verts,
+					size_t vert_count );
 
     /** Delete the draw_t object, deallocting its memory */
     void destroy( draw_t* d );
   } // end namespace draw
 
-
-  // MACROS ------------------------------------------------------
-  // Some useful macros
-
+  
   /** Look up the color in the X11 database.  (i.e. transform color
       name to color value).  If the color is not found in the
       database, a bright red color (0xF00) will be returned instead.
   */
   stg_color_t stg_lookup_color(const char *name);
-  
-  /** returns the sum of [p1] + [p2], in [p1]'s coordinate system */
-  inline Pose pose_sum( const Pose& p1, const Pose& p2 )
-  {
-	 double cosa = cos(p1.a);
-	 double sina = sin(p1.a);
-	 
-	 Pose result;
-	 result.x = p1.x + p2.x * cosa - p2.y * sina;
-	 result.y = p1.y + p2.x * sina + p2.y * cosa;
-	 result.z = p1.z + p2.z;
-	 result.a = normalize(p1.a + p2.a);
-	 
-	 return result;
-  }
-
-  /** returns a new pose, with each axis scaled */
-  inline Pose pose_scale( const Pose& p1, const double x, const double y, const double z );
-
-
+    
   // PRETTY PRINTING -------------------------------------------------
 
   /** Report an error, with a standard, friendly message header */
@@ -826,9 +822,8 @@ namespace Stg
     friend class Canvas; // allow Canvas access to our private members
 	 
   protected:
-	std::vector<Model*> children;
+	ModelPtrVec children;
     bool debug;
-	GList* puck_list;
     char* token;
 	
 	 void Load( Worldfile* wf, int section );
@@ -837,7 +832,7 @@ namespace Stg
   public:
 	
     /** get the children of the this element */
-	std::vector<Model*>& GetChildren(){ return children;}
+	ModelPtrVec& GetChildren(){ return children;}
     
     /** recursively call func( model, arg ) for each descendant */
     void ForEachDescendant( stg_model_callback_t func, void* arg );
@@ -940,7 +935,7 @@ namespace Stg
     static void UpdateCb( World* world);
     static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
 	 
-	std::set<Model*> charge_list; ///< Models which receive charge are listed here
+	ModelPtrSet charge_list; ///< Models which receive charge are listed here
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
 	 GList* event_list; //< 
@@ -956,7 +951,7 @@ namespace Stg
 	 unsigned int show_clock_interval; ///< updates between clock xoutputs
     GMutex* thread_mutex; ///< protect the worker thread management stuff
     int total_subs; ///< the total number of subscriptions to all models
-	std::set<Model*> velocity_list; ///< Models with non-zero velocity and should have their poses updated
+	ModelPtrSet velocity_list; ///< Models with non-zero velocity and should have their poses updated
 	
 	unsigned int worker_threads; ///< the number of worker threads to use
 	unsigned int threads_working; ///< the number of worker threads not yet finished
@@ -965,23 +960,23 @@ namespace Stg
 	
 	/** Keep a list of all models with detectable fiducials. This
 		avoids searching the whole world for fiducials. */
-	std::set<Model*> models_with_fiducials;
+	ModelPtrSet models_with_fiducials;
 	
   protected:	 
 
-	 std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
+	std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
     stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
-	 GHashTable* option_table; ///< GUI options (toggles) registered by models
-	 GList* powerpack_list; ///< List of all the powerpacks attached to models in the world
+	GHashTable* option_table; ///< GUI options (toggles) registered by models
+	GList* powerpack_list; ///< List of all the powerpacks attached to models in the world
     GList* ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in microseconds
-	 std::map<stg_point_int_t,SuperRegion*> superregions;
+	std::map<stg_point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
 	
 	// todo - test performance of std::set
-	std::vector<std::vector<Model*> > update_lists;  
+	std::vector<ModelPtrVec > update_lists;  
 	 
     long unsigned int updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
@@ -997,8 +992,8 @@ namespace Stg
     void TogglePause(){ paused = !paused; };
 	bool Paused(){ return( paused ); };
 	
-	 std::vector<stg_point_int_t> rt_cells;
-	 std::vector<stg_point_int_t> rt_candidate_cells;
+	 PointIntVec rt_cells;
+	 PointIntVec rt_candidate_cells;
 
     static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
     static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
@@ -1027,7 +1022,7 @@ namespace Stg
     void LoadModel( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable );
     void LoadBlockGroup( Worldfile* wf, int entity, GHashTable* entitytable );
-    void LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable );
+	//    void LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable );
 
 	 virtual Model* RecentlySelectedModel(){ return NULL; }
 
@@ -1043,7 +1038,7 @@ namespace Stg
 		  pt1 to pt2 inclusive */
     void ForEachCellInLine( const stg_point_int_t& pt1,
 									 const stg_point_int_t& pt2, 
-									 std::vector<Cell*>& cells );
+									 CellPtrVec& cells );
 
     /** convert a distance in meters to a distance in world occupancy
 		  grid pixels */
@@ -1225,10 +1220,11 @@ namespace Stg
 		std::vector<stg_point_t>& Points()
     { return pts; };	         
 
-    void AddToCellArray( std::vector<Cell*>* blocks );
-    void RemoveFromCellArray( std::vector<Cell*>* blocks );
+    void AddToCellArray( CellPtrVec* blocks );
+    void RemoveFromCellArray( CellPtrVec* blocks );
     void GenerateCandidateCells();  
-	 GList* AppendTouchingModels( GList* list );
+
+	void AppendTouchingModels( ModelPtrSet& touchers );
 	 
 		/** Returns the first model that shares a bitmap cell with this model */
     Model* TestCollision(); 
@@ -1266,7 +1262,7 @@ namespace Stg
 	 
     /** record the cells into which this block has been rendered to
 		  UnMapping them very quickly. */  
-	 std::vector<Cell*> * rendered_cells;
+	 CellPtrVec * rendered_cells;
 
     /** When moving a model, we test for collisions by generating, for
 		  each block, a list of the cells in which it would be rendered if the
@@ -1274,19 +1270,19 @@ namespace Stg
 		  allowed - the rendered cells are cleared, the potential cells are
 		  written, and the pointers to the rendered and potential cells are
 		  switched for next time (avoiding a memory copy).*/
-	 std::vector<Cell*> * candidate_cells;
-
-		std::vector<stg_point_int_t> gpts;
-
-	 /** find the position of a block's point in model coordinates
-		  (m) */
-	 stg_point_t BlockPointToModelMeters( const stg_point_t& bpt );
-
-	 /** Update the cache of block points converted to model coordinates */
-	 //stg_point_t* GetPointsInModelCoords();
-
-	 /** invalidate the cache of points in model coordinates */
-	 void InvalidateModelPointCache();
+	CellPtrVec * candidate_cells;
+	
+	PointIntVec gpts;
+	
+	/** find the position of a block's point in model coordinates
+		(m) */
+	stg_point_t BlockPointToModelMeters( const stg_point_t& bpt );
+	
+	/** Update the cache of block points converted to model coordinates */
+	//stg_point_t* GetPointsInModelCoords();
+	
+	/** invalidate the cache of points in model coordinates */
+	void InvalidateModelPointCache();
   };
 
 
@@ -1300,7 +1296,7 @@ namespace Stg
 
     void BuildDisplayList( Model* mod );
 	 
-	 std::vector<Block*> blocks;
+	 BlockPtrVec blocks;
     Size size;
     stg_point3_t offset;
     stg_meters_t minx, maxx, miny, maxy;
@@ -1320,7 +1316,7 @@ namespace Stg
     void CallDisplayList( Model* mod );
     void Clear() ; /** deletes all blocks from the group */
 	 
-	 GList* AppendTouchingModels( GList* list );
+	void AppendTouchingModels( ModelPtrSet& touchers );
 	
     /** Returns a pointer to the first model detected to be colliding
 		  with a block in this group, or NULL, if none are detected. */
@@ -1346,7 +1342,7 @@ namespace Stg
 	 
 	 void InvalidateModelPointCache()
 	 {
-		for( std::vector<Block*>::iterator it( blocks.begin() );
+		for( BlockPtrVec::iterator it( blocks.begin() );
 			  it != blocks.end();
 			  ++it )
 		  (*it)->InvalidateModelPointCache();
@@ -1939,7 +1935,7 @@ namespace Stg
 	 /// Register an Option for pickup by the GUI
 	 void RegisterOption( Option* opt );
 
-	 GList* AppendTouchingModels( GList* list );
+	 void AppendTouchingModels( ModelPtrSet& touchers );
 
 	 /** Check to see if the current pose will yield a collision with
 		  obstacles.  Returns a pointer to the first entity we are in
@@ -2393,10 +2389,10 @@ namespace Stg
 	 Pose GlobalToLocal( const Pose& pose ) const;
 	 
 	 /** Return the global pose (i.e. pose in world coordinates) of a
-		  pose specified in the model's local coordinate system */
-	 Pose LocalToGlobal( const Pose& pose ) const
-		{  
-			return pose_sum( pose_sum( GetGlobalPose(), geom.pose ), pose );
+		 pose specified in the model's local coordinate system */
+	Pose LocalToGlobal( const Pose& pose ) const
+	{  
+	  return( ( GetGlobalPose() + geom.pose ) + pose );
     }
 		
 // 	 /** Return the 3d point in world coordinates of a 3d point

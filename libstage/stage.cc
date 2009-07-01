@@ -127,9 +127,7 @@ stg_color_t Stg::stg_lookup_color(const char *name)
 
 			// map the name to the color in the table
 			g_hash_table_insert( table, (gpointer)colorname, (gpointer)col );
-
 		}
-
 		fclose(file);
 	}
 
@@ -141,19 +139,6 @@ stg_color_t Stg::stg_lookup_color(const char *name)
 	else
 		return (stg_color_t)0;
 }
-
-// returns the resultant of vector [p1] and [p2] 
-Pose Stg::pose_scale( const Pose& p1, const double sx, const double sy, const double sz )
-{
-  Pose scaled;
-  scaled.x = p1.x * sx;
-  scaled.y = p1.y * sy;
-  scaled.z = p1.z * sz;
-  scaled.a = p1.a;
-  
-  return scaled;
-}
-
 
 static guchar* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
 {
@@ -215,12 +200,10 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 	if( widthp ) *widthp = img_width;
 	if( heightp ) *heightp = img_height;
 
-
-	int y, x;
-	for(y = 0; y < img_height; y++)
-	{
-		for(x = 0; x < img_width; x++)
-		{
+	for(int y = 0; y < img_height; y++)
+	  {
+		for(int x = 0; x < img_width; x++)
+		  {
 			// skip blank (white) pixels
 			if(  pb_pixel_is_set( img,x,y, threshold) )
 				continue;

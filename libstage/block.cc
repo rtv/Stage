@@ -19,47 +19,47 @@ Block::Block( Model* mod,
   mpts(),
   pt_count( pt_count ),
   pts(),
-	local_z( zmin, zmax ),
+  local_z( zmin, zmax ),
   color( color ),
   inherit_color( inherit_color ),
-  rendered_cells( new std::vector<Cell*> ), 
-  candidate_cells( new std::vector<Cell*> ),
-	gpts()
+  rendered_cells( new CellPtrVec ), 
+  candidate_cells( new CellPtrVec ),
+  gpts()
 {
   assert( mod );
   assert( pt_count > 0 );
-
-	// copy the argument point data into the member vector
-	this->pts.reserve( pt_count );
-	for( size_t p=0; p<pt_count; p++ )
-		this->pts.push_back( pts[p] );	
+  
+  // copy the argument point data into the member vector
+  this->pts.reserve( pt_count );
+  for( size_t p=0; p<pt_count; p++ )
+	this->pts.push_back( pts[p] );	
 }
 
 /** A from-file  constructor */
 Block::Block(  Model* mod,
-	       Worldfile* wf,
-	       int entity)
+			   Worldfile* wf,
+			   int entity)
   : mod( mod ),
-		mpts(),
+	mpts(),
     pt_count(0),
     pts(),
     color(0),
     inherit_color(true),
-		rendered_cells( new std::vector<Cell*> ), 
-		candidate_cells( new std::vector<Cell*> ) 
+	rendered_cells( new CellPtrVec ), 
+	candidate_cells( new CellPtrVec ) 
 {
   assert(mod);
   assert(wf);
   assert(entity);
-
+  
   Load( wf, entity );
 }
 
 Block::~Block()
 {
   if( mapped ) UnMap();
-
-	delete rendered_cells;
+  
+  delete rendered_cells;
   delete candidate_cells;
 }
 
@@ -70,7 +70,7 @@ void Block::Translate( double x, double y )
       pts[p].x += x;
       pts[p].y += y;
     }
-
+  
   mod->blockgroup.BuildDisplayList( mod );
 }
 
@@ -78,13 +78,13 @@ double Block::CenterY()
 {
   double min = billion;
   double max = -billion;
-
+  
   for( unsigned int p=0; p<pt_count; p++)
     {
       if( pts[p].y > max ) max = pts[p].y;
       if( pts[p].y < min ) min = pts[p].y;
     }
-
+  
   // return the value half way between max and min
   return( min + (max - min)/2.0 );
 }
@@ -93,7 +93,7 @@ double Block::CenterX()
 {
   double min = billion;
   double max = -billion;
-
+  
   for( unsigned int p=0; p<pt_count; p++)
     {
       if( pts[p].x > max ) max = pts[p].x;
@@ -134,34 +134,21 @@ void Block::SetZ( double min, double max )
   mod->blockgroup.BuildDisplayList( mod );
 }
 
-
 stg_color_t Block::GetColor()
 {
   return( inherit_color ? mod->color : color );
 }
 
-GList* Block::AppendTouchingModels( GList* l )
+void Block::AppendTouchingModels( ModelPtrSet& touchers )
 {
   // for every cell we are rendered into
-  for( unsigned int i=0; i<rendered_cells->size(); i++ )
-    {
-		Cell* c = (*rendered_cells)[i];
-
-      // for every block rendered into that cell
-		for( std::vector<Block*>::iterator it = c->blocks.begin();
-			  it != c->blocks.end();
-			  ++it )
-		  {
-			 //Block* testblock = *it;
-			 Model* testmod = (*it)->mod;
-
-			 if( !mod->IsRelated( testmod ))
-				if( ! g_list_find( l, testmod ) )
-				  l = g_list_append( l, testmod );
-		  }
-    }
-
-  return l;
+  FOR_EACH( cell_it, *rendered_cells )
+	// for every block rendered into that cell
+	FOR_EACH( block_it, (*cell_it)->blocks )
+	{
+	  if( !mod->IsRelated( (*block_it)->mod ))
+		touchers.insert( (*block_it)->mod );
+	}
 }
 
 Model* Block::TestCollision()
@@ -170,33 +157,29 @@ Model* Block::TestCollision()
 
   // find the set of cells we would render into given the current global pose
   GenerateCandidateCells();
-
+  
   if( mod->vis.obstacle_return )
     // for every cell we may be rendered into
-    for( unsigned int i=0; i<candidate_cells->size(); i++ )
+	FOR_EACH( cell_it, *candidate_cells )
       {
-		  Cell* c = (*candidate_cells)[i];
-		  
-		  // for every rendered into that cell
-		  for( std::vector<Block*>::iterator it = c->blocks.begin();
-				 it != c->blocks.end();
-				 ++it )
-			 {
-				Model* testmod = (*it)->mod;
-
-				//printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
-
-				// if the tested model is an obstacle and it's not attached to this model
-				if( (testmod != this->mod) &&
-					 testmod->vis.obstacle_return &&
-					 !mod->IsRelated( testmod ))
-				  {
-					 //puts( "HIT");
-					 return testmod; // bail immediately with the bad news
-				  }
-			 }
+		// for every rendered into that cell
+		FOR_EACH( block_it, (*cell_it)->blocks )
+		  {
+			Model* testmod = (*block_it)->mod;
+			
+			//printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
+			
+			// if the tested model is an obstacle and it's not attached to this model
+			if( (testmod != this->mod) &&
+				testmod->vis.obstacle_return &&
+				!mod->IsRelated( testmod ))
+			  {
+				//puts( "HIT");
+				return testmod; // bail immediately with the bad news
+			  }
+		  }
       }
-
+  
   //printf( "model %s block %p collision done. no hits.\n", mod->Token(), this );
   return NULL; // no hit
 }
@@ -218,20 +201,16 @@ void Block::UnMap()
   mapped = false;
 }
 
-void Block::RemoveFromCellArray( std::vector<Cell*> * cells )
+void Block::RemoveFromCellArray( CellPtrVec *cells )
 {
-  for( std::vector<Cell*>::iterator it = cells->begin();
-		 it != cells->end();
-		 ++it )	 
-	 (*it)->RemoveBlock( this);
+  FOR_EACH( it, *cells )
+	(*it)->RemoveBlock( this);
 }
 
-void Block::AddToCellArray( std::vector<Cell*> * cells )
+void Block::AddToCellArray( CellPtrVec *cells )
 {
-  for( std::vector<Cell*>::iterator it = cells->begin();
-		 it != cells->end();
-		 ++it )	 
-	 (*it)->AddBlock( this);
+  FOR_EACH( it, *cells )
+	(*it)->AddBlock( this);
 }
 
 void Block::SwitchToTestedCells()
@@ -240,7 +219,7 @@ void Block::SwitchToTestedCells()
   AddToCellArray( candidate_cells );
 
   // switch current and candidate cell pointers
-  std::vector<Cell*> * tmp = rendered_cells;
+  CellPtrVec *tmp = rendered_cells;
   rendered_cells = candidate_cells;
   candidate_cells = tmp;
 
@@ -253,47 +232,47 @@ inline stg_point_t Block::BlockPointToModelMeters( const stg_point_t& bpt )
   stg_point3_t bgoffset = mod->blockgroup.GetOffset();
 
   return stg_point_t( (bpt.x - bgoffset.x) * (mod->geom.size.x/bgsize.x),
-							 (bpt.y - bgoffset.y) * (mod->geom.size.y/bgsize.y));
+					  (bpt.y - bgoffset.y) * (mod->geom.size.y/bgsize.y));
 }
 
 void Block::InvalidateModelPointCache()
 {
-	// this doesn't happen often, so this simple strategy isn't too wasteful
-	mpts.clear();
+  // this doesn't happen often, so this simple strategy isn't too wasteful
+  mpts.clear();
 }
 
 void Block::GenerateCandidateCells()
 {
   candidate_cells->clear();
-	
+  
   if( mpts.size() == 0 )
-		{
-			// no valid cache of model coord points, so generate them
-			mpts.resize( pt_count );
-			for( unsigned int i=0; i<pt_count; i++ )
-				mpts[i] = BlockPointToModelMeters( pts[i] );
-		}
-	
+	{
+	  // no valid cache of model coord points, so generate them
+	  mpts.resize( pt_count );
+	  for( unsigned int i=0; i<pt_count; i++ )
+		mpts[i] = BlockPointToModelMeters( pts[i] );
+	}
+  
   // convert the mpts in model coords into global pixel coords
-	gpts.resize(pt_count);
-	
-  for( unsigned int i=0; i<pt_count; i++ )
-		gpts[i] = mod->world->MetersToPixels( mod->LocalToGlobal( mpts[i] ));
+  gpts.resize(pt_count);
   
   for( unsigned int i=0; i<pt_count; i++ )
-		mod->world->ForEachCellInLine( gpts[i], 
-																	 gpts[(i+1)%pt_count], 
-																	 *candidate_cells );  
+	gpts[i] = mod->world->MetersToPixels( mod->LocalToGlobal( mpts[i] ));
+  
+  for( unsigned int i=0; i<pt_count; i++ )
+	mod->world->ForEachCellInLine( gpts[i], 
+								   gpts[(i+1)%pt_count], 
+								   *candidate_cells );  
   // set global Z
   Pose gpose = mod->GetGlobalPose();
   gpose.z += mod->geom.pose.z;
   double scalez = mod->geom.size.z /  mod->blockgroup.GetSize().z;
   stg_meters_t z = gpose.z - mod->blockgroup.GetOffset().z;
-
+  
   // store the block's absolute z bounds at this rendering
   global_z.min = (scalez * local_z.min) + z;
   global_z.max = (scalez * local_z.max) + z;
-
+  
   mapped = true;
 }
 
@@ -305,74 +284,74 @@ void swap( int& a, int& b )
 }
 
 void Block::Rasterize( uint8_t* data,
-							  unsigned int width,
-							  unsigned int height,
-							  stg_meters_t cellwidth,
-							  stg_meters_t cellheight )
+					   unsigned int width,
+					   unsigned int height,
+					   stg_meters_t cellwidth,
+					   stg_meters_t cellheight )
 {
   //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
   //	 this, width, height, scalex, scaley, offsetx, offsety );
-
+  
   for( unsigned int i=0; i<pt_count; i++ )
     {
-		// convert points from local to model coords
-		stg_point_t mpt1 = BlockPointToModelMeters( pts[i] );
-		stg_point_t mpt2 = BlockPointToModelMeters( pts[(i+1)%pt_count] );
-
-		// record for debug visualization
-		mod->rastervis.AddPoint( mpt1.x, mpt1.y );
-
-		// shift to the bottom left of the model
-		mpt1.x += mod->geom.size.x/2.0;
-		mpt1.y += mod->geom.size.y/2.0;
-		mpt2.x += mod->geom.size.x/2.0;
-		mpt2.y += mod->geom.size.y/2.0;
-
-		// convert from meters to cells
-		stg_point_int_t a( floor( mpt1.x / cellwidth  ),
-								 floor( mpt1.y / cellheight ));
-		stg_point_int_t b( floor( mpt2.x / cellwidth  ),
-								 floor( mpt2.y / cellheight ) );
-
-  		bool steep = abs( b.y-a.y ) > abs( b.x-a.x );
-		if( steep )
-		  {
-			 swap( a.x, a.y );
-			 swap( b.x, b.y );
-		  }
-
-  		if( a.x > b.x )
-  		  {
-  			 swap( a.x, b.x );
-  			 swap( a.y, b.y );
-  		  }
-
-		double dydx = (double) (b.y - a.y) / (double) (b.x - a.x);
-		double y = a.y;
-		for(int x=a.x; x<=b.x; x++)
-		  {
-			 if( steep )
-				{
-				  if( ! (floor(y) >= 0) ) continue;
-				  if( ! (floor(y) < (int)width) ) continue;
-				  if( ! (x >= 0) ) continue;
-				  if( ! (x < (int)height) ) continue;
-				}
-			 else
-				{
-				  if( ! (x >= 0) ) continue;
-				  if( ! (x < (int)width) ) continue;
-				  if( ! (floor(y) >= 0) ) continue;
-				  if( ! (floor(y) < (int)height) ) continue;
-				}
-
-			 if( steep )
-				data[ (int)floor(y) + (x * width)] = 1;
-			 else
-				data[ x + ((int)floor(y) * width)] = 1;
-			 y += dydx;
-		  }
-	 }
+	  // convert points from local to model coords
+	  stg_point_t mpt1 = BlockPointToModelMeters( pts[i] );
+	  stg_point_t mpt2 = BlockPointToModelMeters( pts[(i+1)%pt_count] );
+	  
+	  // record for debug visualization
+	  mod->rastervis.AddPoint( mpt1.x, mpt1.y );
+	  
+	  // shift to the bottom left of the model
+	  mpt1.x += mod->geom.size.x/2.0;
+	  mpt1.y += mod->geom.size.y/2.0;
+	  mpt2.x += mod->geom.size.x/2.0;
+	  mpt2.y += mod->geom.size.y/2.0;
+	  
+	  // convert from meters to cells
+	  stg_point_int_t a( floor( mpt1.x / cellwidth  ),
+						 floor( mpt1.y / cellheight ));
+	  stg_point_int_t b( floor( mpt2.x / cellwidth  ),
+						 floor( mpt2.y / cellheight ) );
+	  
+	  bool steep = abs( b.y-a.y ) > abs( b.x-a.x );
+	  if( steep )
+		{
+		  swap( a.x, a.y );
+		  swap( b.x, b.y );
+		}
+	  
+	  if( a.x > b.x )
+		{
+		  swap( a.x, b.x );
+		  swap( a.y, b.y );
+		}
+	  
+	  double dydx = (double) (b.y - a.y) / (double) (b.x - a.x);
+	  double y = a.y;
+	  for(int x=a.x; x<=b.x; x++)
+		{
+		  if( steep )
+			{
+			  if( ! (floor(y) >= 0) ) continue;
+			  if( ! (floor(y) < (int)width) ) continue;
+			  if( ! (x >= 0) ) continue;
+			  if( ! (x < (int)height) ) continue;
+			}
+		  else
+			{
+			  if( ! (x >= 0) ) continue;
+			  if( ! (x < (int)width) ) continue;
+			  if( ! (floor(y) >= 0) ) continue;
+			  if( ! (floor(y) < (int)height) ) continue;
+			}
+		  
+		  if( steep )
+			data[ (int)floor(y) + (x * width)] = 1;
+		  else
+			data[ x + ((int)floor(y) * width)] = 1;
+		  y += dydx;
+		}
+	}
 }
 
 void Block::DrawTop()
@@ -412,26 +391,26 @@ void Block::Draw( Model* mod )
 {
   // draw filled color polygons
   stg_color_t col = inherit_color ? mod->color : color;
-
-   mod->PushColor( col );
-   glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1.0, 1.0);
-   DrawSides();
-   DrawTop();
-   glDisable(GL_POLYGON_OFFSET_FILL);
-
+  
+  mod->PushColor( col );
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1.0, 1.0);
+  DrawSides();
+  DrawTop();
+  glDisable(GL_POLYGON_OFFSET_FILL);
+  
   //   // draw the block outline in a darker version of the same color
   double r,g,b,a;
   stg_color_unpack( col, &r, &g, &b, &a );
   mod->PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
-
+  
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   glDepthMask(GL_FALSE);
   DrawTop();
   DrawSides();
   glDepthMask(GL_TRUE);
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
+  
   mod->PopColor();
   mod->PopColor();
 }
@@ -442,10 +421,6 @@ void Block::DrawSolid()
   DrawTop();
 }
 
-
-//#define DEBUG 1
-
-
 void Block::Load( Worldfile* wf, int entity )
 {
   //printf( "Block::Load entity %d\n", entity );
@@ -455,18 +430,18 @@ void Block::Load( Worldfile* wf, int entity )
 
   //printf( "reading %d points\n",
   //	 pt_count );
-
+  
   char key[128];
   for( unsigned int p=0; p<pt_count; p++ )	      {
     snprintf(key, sizeof(key), "point[%d]", p );
-
+	
     pts[p].x = wf->ReadTupleLength(entity, key, 0, 0);
     pts[p].y = wf->ReadTupleLength(entity, key, 1, 0);
   }
-
+  
   local_z.min = wf->ReadTupleLength( entity, "z", 0, 0.0 );
   local_z.max = wf->ReadTupleLength( entity, "z", 1, 1.0 );
-
+  
   const char* colorstr = wf->ReadString( entity, "color", NULL );
   if( colorstr )
     {
@@ -476,6 +451,3 @@ void Block::Load( Worldfile* wf, int entity )
   else
     inherit_color = true;
 }
-
-
-

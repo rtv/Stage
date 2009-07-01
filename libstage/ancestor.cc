@@ -5,7 +5,6 @@ using namespace Stg;
 Ancestor::Ancestor() :
   children(),
   debug( false ),
-  puck_list( NULL ),
   token( NULL )
 {
   for( int i=0; i<MODEL_TYPE_COUNT; i++ )

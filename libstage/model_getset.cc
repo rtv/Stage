@@ -192,7 +192,7 @@ Pose Model::GetGlobalPose() const
     return pose;
   
   // otherwise    
-  Pose global_pose = pose_sum( parent->GetGlobalPose(), pose );		
+  Pose global_pose = parent->GetGlobalPose() + pose;		
   
   // we are on top of our parent
   global_pose.z += parent->geom.size.z;
