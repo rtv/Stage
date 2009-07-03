@@ -876,7 +876,7 @@ void WorldGui::DrawBoundingBoxTree()
 	 (*it)->DrawBoundingBoxTree();
 }
 
-void WorldGui::PushColor( stg_color_t col )
+void WorldGui::PushColor( Color col )
 { canvas->PushColor( col ); } 
 
 void WorldGui::PushColor( double r, double g, double b, double a )

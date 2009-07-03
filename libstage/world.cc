@@ -70,18 +70,19 @@ using namespace Stg;
 // static data members
 unsigned int World::next_id = 0;
 bool World::quit_all = false;
-GList* World::world_list = NULL;
-
+std::set<World*> World::world_set;
 
 World::World( const char* token, 
 			  stg_msec_t interval_sim,
 			  double ppm )
   : 
   // private
+  access_mutex(NULL),
   charge_list(),
   destroy( false ),
   dirty( true ),
   models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
+  models_with_fiducials(),
   ppm( ppm ), // raytrace resolution
   quit( false ),
   quit_time( 0 ),
@@ -90,13 +91,12 @@ World::World( const char* token,
   show_clock( false ),
   show_clock_interval( 100 ), // 10 simulated seconds using defaults
   thread_mutex( g_mutex_new() ),
-  total_subs( 0 ), 
-  velocity_list(),
-  worker_threads( 0 ),
   threads_working( 0 ),
   threads_start_cond( g_cond_new() ),
   threads_done_cond( g_cond_new() ),
-  models_with_fiducials(),
+  total_subs( 0 ), 
+  velocity_list(),
+  worker_threads( 0 ),
 
   // protected
   cb_list(NULL),
@@ -120,7 +120,7 @@ World::World( const char* token,
       exit(-1);
     }
   
-  World::world_list = g_list_append( World::world_list, this );
+  World::world_set.insert( this );
 }
 
 
@@ -133,7 +133,7 @@ World::~World( void )
   g_hash_table_destroy( models_by_name );
   g_free( token );
 
-  world_list = g_list_remove( world_list, this );
+  World::world_set.erase( this );
 }
 
 
@@ -154,9 +154,10 @@ void World::DestroySuperRegion( SuperRegion* sr )
 bool World::UpdateAll()
 {  
   bool quit = true;
-  for( GList* it = World::world_list; it; it=it->next ) 
+  
+  FOR_EACH( world_it, World::world_set )
     {
-      if( ((World*)it->data)->Update() == false )
+      if( (*world_it)->Update() == false )
 		quit = false;
     }
   return quit;
@@ -227,6 +228,8 @@ void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
   mod->LoadBlock( wf, entity );
 }
 
+
+
 Model* World::CreateModel( Model* parent, const char* typestr )
 {
   Model* mod = NULL; // new model to return
@@ -235,15 +238,19 @@ Model* World::CreateModel( Model* parent, const char* typestr )
   // vanilla model if the type is NULL.
   stg_creator_t creator = NULL;
   
-  //printf( "creating model of type %s\n", typestr );
+  // printf( "creating model of type %s\n", typestr );
   
-  for( int i=0; i<MODEL_TYPE_COUNT; i++ )
-	if( strcmp( typestr, typetable[i].token ) == 0 )
-	  {
-		creator = typetable[i].creator;
-		break;
-	  }
-    
+  std::map< std::string, stg_creator_t>::iterator it = 
+	Model::name_map.find( typestr );
+  
+  if( it == Model::name_map.end() )
+	PRINT_ERR1( "type %s not found in map\n", typestr );
+  else
+	{
+	  creator = it->second;
+	  //puts( "found creator in map" );
+	}
+
   // if we found a creator function, call it
   if( creator )
     {
@@ -283,9 +290,6 @@ void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
  
   // record the model we created for this worlfile entry
   g_hash_table_insert( entitytable, (gpointer)entity, mod );
-
-  // store the new model's blockgroup so we can find it for later blocks
-  //g_hash_table_insert( blockgroups_by_entity, (gpointer)entity, mod->blockgroup );
 }
   
 void World::Load( const char* worldfile_path )

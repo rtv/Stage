@@ -12,7 +12,7 @@ Block::Block( Model* mod,
 				  size_t pt_count,
 				  stg_meters_t zmin,
 				  stg_meters_t zmax,
-				  stg_color_t color,
+				  Color color,
 				  bool inherit_color
 				  ) :
   mod( mod ),
@@ -134,7 +134,7 @@ void Block::SetZ( double min, double max )
   mod->blockgroup.BuildDisplayList( mod );
 }
 
-stg_color_t Block::GetColor()
+Color Block::GetColor()
 {
   return( inherit_color ? mod->color : color );
 }
@@ -390,8 +390,10 @@ void Block::DrawFootPrint()
 void Block::Draw( Model* mod )
 {
   // draw filled color polygons
-  stg_color_t col = inherit_color ? mod->color : color;
+  Color col = inherit_color ? mod->color : color;
   
+  col.Print( "block color" );
+
   mod->PushColor( col );
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1.0, 1.0);
@@ -400,9 +402,10 @@ void Block::Draw( Model* mod )
   glDisable(GL_POLYGON_OFFSET_FILL);
   
   //   // draw the block outline in a darker version of the same color
-  double r,g,b,a;
-  stg_color_unpack( col, &r, &g, &b, &a );
-  mod->PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+  //double r,g,b,a;
+  //stg_color_unpack( col, &r, &g, &b, &a );
+  //mod->PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+  mod->PushColor( Color( col.r/2.0, col.g/2.0, col.b/2.0, col.a ));
   
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   glDepthMask(GL_FALSE);
@@ -445,7 +448,7 @@ void Block::Load( Worldfile* wf, int entity )
   const char* colorstr = wf->ReadString( entity, "color", NULL );
   if( colorstr )
     {
-      color = stg_lookup_color( colorstr );
+      color = Color( colorstr );
       inherit_color = false;
     }
   else

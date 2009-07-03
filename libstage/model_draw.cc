@@ -5,9 +5,9 @@
 using namespace Stg;
 
 // speech bubble colors
-static const stg_color_t BUBBLE_FILL = 0xFFC8C8FF; // light blue/grey
-static const stg_color_t BUBBLE_BORDER = 0xFF000000; // black
-static const stg_color_t BUBBLE_TEXT = 0xFF000000; // black
+static const Color BUBBLE_FILL( 1.0, 0.8, 0.8 );// light blue/grey
+static const Color BUBBLE_BORDER( 0,0,0 );  // black
+static const Color BUBBLE_TEXT( 0,0,0 ); // black
 
 void Model::DrawSelected()
 {
@@ -50,8 +50,6 @@ void Model::DrawSelected()
 
 void Model::DrawTrailFootprint()
 {
-  double r,g,b,a;
-
   for( int i=trail->len-1; i>=0; i-- )
     {
       stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
@@ -60,13 +58,15 @@ void Model::DrawTrailFootprint()
 		Gl::pose_shift( checkpoint->pose );
 		Gl::pose_shift( geom.pose );
 
-      stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
-      PushColor( r, g, b, 0.1 );
+		//stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
+		Color c = checkpoint->color;
+		c.a = 0.1;
+		PushColor( c );
 
       blockgroup.DrawFootPrint( geom );
 
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-      PushColor( r/2, g/2, b/2, 0.1 );
+      PushColor( c.r/2, c.g/2, c.b/2, 0.1 );
 
       blockgroup.DrawFootPrint( geom );
 
@@ -99,8 +99,6 @@ void Model::DrawTrailBlocks()
 
 void Model::DrawTrailArrows()
 {
-  double r,g,b,a;
-
   double dx = 0.2;
   double dy = 0.07;
   double timescale = 0.0000001;
@@ -131,8 +129,11 @@ void Model::DrawTrailArrows()
 
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-      stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
-      PushColor( r/2, g/2, b/2, 1 ); // darker color
+	  Color c = checkpoint->color;
+	  c.r /= 2.0;
+	  c.g /= 2.0;
+	  c.b /= 2.0;	  
+      PushColor( c ); // darker color
 
       glDepthMask(GL_FALSE);
       glBegin( GL_TRIANGLES );
@@ -470,9 +471,11 @@ void Model::DrawFlagList( void )
 		glDisable(GL_POLYGON_OFFSET_FILL);
 
       // draw the edges darker version of the same color
-      double r,g,b,a;
-      stg_color_unpack( flag->color, &r, &g, &b, &a );
-      PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+		Color c = flag->color;
+		c.r /= 2.0;
+		c.g /= 2.0;
+		c.b /= 2.0;
+		PushColor( c );
 		
       gluQuadricDrawStyle( quadric, GLU_LINE );
       gluSphere( quadric, flag->size/2.0, 4,2 );

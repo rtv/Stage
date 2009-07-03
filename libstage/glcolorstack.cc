@@ -46,14 +46,14 @@ void GlColorStack::Push( double r, double g, double b, double a )
 	Push( col );
 }
 
-void GlColorStack::Push( stg_color_t col )
+void GlColorStack::Push( Color col )
 {
 	GLdouble d[4];
 
-	d[0] = ((col & 0x00FF0000) >> 16) / 256.0;
-	d[1] = ((col & 0x0000FF00) >> 8)  / 256.0;
-	d[2] = ((col & 0x000000FF) >> 0)  / 256.0;
-	d[3] = (((col & 0xFF000000) >> 24) / 256.0);
+	d[0] = col.r;
+	d[1] = col.g;
+	d[2] = col.b;
+	d[3] = col.a;
 
 	Push( d );
 }

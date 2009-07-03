@@ -117,20 +117,16 @@ void Model::Load()
   
   if( wf->PropertyExists( wf_entity, "color" ))
     {      
-      stg_color_t col = 0xFFFF0000; // red;
+      Color col( 1,0,0 ); // red;
       const char* colorstr = wf->ReadString( wf_entity, "color", NULL );
       if( colorstr )
-		  {
-			 if( strcmp( colorstr, "random" ) == 0 )
-	    {
-	      col = (uint32_t)random();
-	      col |= 0xFF000000; // set the alpha channel to max
-	    }
-	  else
-	    col = stg_lookup_color( colorstr );
-
+		{
+		  if( strcmp( colorstr, "random" ) == 0 )
+			col = Color( drand48(), drand48(), drand48() );
+		  else
+			col = Color( colorstr );
+		}
 	  this->SetColor( col );
-	}
     }      
 
 
@@ -147,7 +143,7 @@ void Model::Load()
       double blue  = wf->ReadTupleFloat( wf_entity, "color_rgba", 2, 0 );
       double alpha = wf->ReadTupleFloat( wf_entity, "color_rgba", 3, 1 );
 
-      this->SetColor( stg_color_pack( red, green, blue, alpha ));
+      this->SetColor( Color( red, green, blue, alpha ));
     }  
     }
   

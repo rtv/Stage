@@ -92,45 +92,6 @@ charge_station(  pose [ 7.940 -2.000 0 0 ] )
 charge_station(  pose [ 7.940 -3.000 0 0 ] )
 charge_station(  pose [ 7.940 -4.000 0 0 ] )
 
-define puck model (
-  size [0.120 0.120 0.100]  
-  color "violet" 
-  gripper_return 1 
-  obstacle_return 0 
-)
-
-#puck( pose [ 1.175 2.283 0 0 ] )
-#puck( pose [ 0.875 3.139 0 0 ] )
-#puck( pose [ 1.043 2.825 0 0 ] )
-#puck( pose [ 1.349 2.734 0 0 ] )
-#puck( pose [ 2.625 3.068 0 0 ] )
-#puck( pose [ 0.447 2.689 0 0 ] )
-#puck( pose [ 0.143 3.308 0 0 ] )
-#puck( pose [ 0.334 3.441 0 0 ] )
-#puck( pose [ 1.439 3.218 0 0 ] )
-#puck( pose [ 0.747 2.741 0 0 ] )
-#puck( pose [ 0.955 2.086 0 0 ] )
-#puck( pose [ 1.781 2.593 0 0 ] )
-#puck( pose [ 1.068 2.476 0 0 ] )
-
-#puck( pose [ 0.488 3.190 0 0 ] )
-#puck( pose [ 1.708 3.198 0 0 ] )
-#puck( pose [ 1.440 2.416 0 0 ] )
-#puck( pose [ 1.140 3.045 0 0 ] )
-#puck( pose [ 0.682 2.969 0 0 ] )
-#puck( pose [ 2.205 3.268 0 0 ] )
-#puck( pose [ 1.990 2.312 0 0 ] )
-#puck( pose [ 0.646 3.486 0 0 ] )
-#puck( pose [ 1.670 2.907 0 0 ] )
-#puck( pose [ 2.091 2.830 0 0 ] )
-#puck( pose [ -0.103 2.564 0 0 ] )
-#puck( pose [ 1.950 3.462 0 0 ] )
-#puck( pose [ 2.668 2.674 0 0 ] )
-#puck( pose [ 0.549 2.367 0 0 ] )
-#puck( pose [ 0.162 2.983 0 0 ] )
-#puck( pose [ 1.067 3.367 0 0 ] )
-#puck( pose [ 1.412 3.604 0 0 ] )
-
 define autorob pioneer2dx		  
 (		 
  sicklaser( samples 32 range_max 5 laser_return 2 watts 30 )
@@ -139,15 +100,6 @@ define autorob pioneer2dx
  joules_capacity 400000 
  fiducial_return 0
  charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
-
- 
- #gripper( pose [0.250 0 -0.220 0]  
- #         take_watts 1000.0 
- # fiducial( range 3 )
- #         # paddles [ "closed" "up" ]
-#			 obstacle_return 0 # cheating for simplicity
-#			 # autosnatch 1
-#         )
 )
 
 autorob( pose [-1.667 -2.152 0 -90.000] joules 300000 )

@@ -1607,19 +1607,19 @@ return false;
  ///////////////////////////////////////////////////////////////////////////
  // Read a color (included text -> RGB conversion).
  // We look up the color in one of the common color databases.
-uint32_t Worldfile::ReadColor(int entity, const char *name, uint32_t value)
-{
-  CProperty* property;
-  const char *color;
+// uint32_t Worldfile::ReadColor(int entity, const char *name, uint32_t value)
+// {
+//   CProperty* property;
+//   const char *color;
 
-  property = GetProperty(entity, name);
-  if (property == NULL )
-    return value;
-  color = GetPropertyValue(property, 0);
+//   property = GetProperty(entity, name);
+//   if (property == NULL )
+//     return value;
+//   color = GetPropertyValue(property, 0);
 
-  // TODO: Hmmm, should do something with the default color here.
-  return stg_lookup_color(color);
-}
+//   // TODO: Hmmm, should do something with the default color here.
+//   return stg_lookup_color(color);
+// }
 
 
 ///////////////////////////////////////////////////////////////////////////

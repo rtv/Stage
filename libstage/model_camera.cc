@@ -120,7 +120,7 @@ _pitch_offset( 0.0 )
 	SetGeom( geom );
 	
 	// set default color
-	SetColor( stg_lookup_color(DEFAULT_GEOM_COLOR));
+	SetColor( Color( DEFAULT_GEOM_COLOR) );
 	
 	RegisterOption( &showCameraData );
 

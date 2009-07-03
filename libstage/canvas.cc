@@ -791,7 +791,7 @@ void Canvas::renderFrame()
 		GLfloat scale = 1.0/world->Resolution();
       glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
 
-		world->PushColor( stg_color_pack( 0,0,1,0.5) );
+		world->PushColor( Color( 0,0,1,0.5) );
 
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
@@ -822,7 +822,7 @@ void Canvas::renderFrame()
 		glEnd();
 
 #if 1
-  		world->PushColor( stg_color_pack( 0,1,0,0.2) );
+  		world->PushColor( Color( 0,1,0,0.2) );
   		glBegin( GL_LINE_STRIP );
   		for( unsigned int i=0;
   			  i < world->rt_cells.size();
@@ -844,7 +844,7 @@ void Canvas::renderFrame()
 		GLfloat scale = 1.0/world->Resolution();
       glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
 
-		world->PushColor( stg_color_pack( 1,0,0,0.5) );
+		world->PushColor( Color( 1,0,0,0.5) );
 
 		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
@@ -865,7 +865,7 @@ void Canvas::renderFrame()
 						 world->rt_candidate_cells[i].x+1, world->rt_candidate_cells[i].y+1 );
 		  }
 		
- 		world->PushColor( stg_color_pack( 0,1,0,0.2) );
+ 		world->PushColor( Color( 0,1,0,0.2) );
  		glBegin( GL_LINE_STRIP );
  		for( unsigned int i=0;
  			  i < world->rt_candidate_cells.size();

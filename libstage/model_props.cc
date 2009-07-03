@@ -61,7 +61,8 @@ int Model::SetProperty( const char* key,
 		}
 		if( MATCH( key, MP_COLOR ) )
 		{
-			this->SetColor( *(int*)data );
+		  float* f = (float*)data;
+		  this->SetColor( Color(f[0], f[1], f[2], f[3]));
 			return 0;
 		}
 		if( MATCH( key, MP_MASS ) )

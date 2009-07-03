@@ -88,7 +88,7 @@ ModelGripper::ModelGripper( World* world,
   
   cfg.close_limit = 1.0;
   
-  SetColor( stg_color_pack( 0.3, 0.3, 0.3, 0 ));
+  SetColor( Color(0.3, 0.3, 0.3, 1.0) );
 
   FixBlocks();
 

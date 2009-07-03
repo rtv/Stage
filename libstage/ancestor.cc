@@ -19,18 +19,21 @@ Ancestor::~Ancestor()
 
 void Ancestor::AddChild( Model* mod )
 {
-  
   // poke a name into the child  
   char* buf = new char[TOKEN_MAX];	
+  
+  //  printf( "adding child of type %d token %s\n", mod->type, mod->Token() );
+  
+  std::string typestr =  Model::type_map[ mod->type ];
 
   if( token ) // if this object has a name, use it
     snprintf( buf, TOKEN_MAX, "%s.%s:%d", 
-	      token, 
-	      typetable[mod->type].token, 
-	      child_type_counts[mod->type] );
+			  token, 
+			  typestr.c_str(),
+			  child_type_counts[mod->type] );
   else
     snprintf( buf, TOKEN_MAX, "%s:%d", 
-	      typetable[mod->type].token, 
+			  typestr.c_str(),
 	      child_type_counts[mod->type] );
     
   //printf( "%s generated a name for my child %s\n", token, buf );

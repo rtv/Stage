@@ -229,19 +229,29 @@ namespace Stg
 
   /** Watts: unit of power (energy/time) */
   typedef double stg_watts_t;
-
+  
   /** boolean */
   typedef bool stg_bool_t;
-
-  /** 32-bit ARGB color packed 0xAARRGGBB */
-  typedef uint32_t stg_color_t;
-
-  /** Specify a color from its components */
-  stg_color_t stg_color_pack( double r, double g, double b, double a );
-
-  /** Obtain the components of a color */
-  void stg_color_unpack( stg_color_t col, 
-								 double* r, double* g, double* b, double* a );
+  
+  class Color
+  {
+  public:
+	float r,g,b,a;
+	
+	Color( float r, float g, float b, float a=1.0 );
+	
+	/** Look up the color in the X11-style database. If the color is
+		not found in the database, a cheerful red color will be used
+		instead.  */
+	Color( const char* name );	
+	
+	Color();
+	
+	bool operator!=( const Color& other );
+	bool operator==( const Color& other );
+	static Color RandomColor();
+	void Print( const char* prefix );
+  };
   
   /** specify a rectangular size */
   class Size
@@ -391,13 +401,13 @@ namespace Stg
   class Waypoint
   {
   public:
-    Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, stg_color_t color ) ;
-    Waypoint( const Pose& pose, stg_color_t color ) ;
+    Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, Color color ) ;
+    Waypoint( const Pose& pose, Color color ) ;
     Waypoint();
     void Draw();
     
     Pose pose;
-    stg_color_t color;
+    Color color;
   };
   
   /** Bound a range of values, from min to max. min and max are initialized to zero. */
@@ -511,152 +521,43 @@ namespace Stg
 		code. */
   namespace Gl
   {
-	 void pose_shift( const Pose &pose );
-	 void pose_inverse_shift( const Pose &pose );
-	 void coord_shift( double x, double y, double z, double a  );
-	 void draw_grid( stg_bounds3d_t vol );
-	 /** Render a string at [x,y,z] in the current color */
-	 void draw_string( float x, float y, float z, const char *string);
-	 void draw_string_multiline( float x, float y, float w, float h, 
-										  const char *string, Fl_Align align );
-	 void draw_speech_bubble( float x, float y, float z, const char* str );
-	 void draw_octagon( float w, float h, float m );
-	 void draw_octagon( float x, float y, float w, float h, float m );
-	 void draw_vector( double x, double y, double z );
-	 void draw_origin( double len );
-	 void draw_array( float x, float y, float w, float h, 
-							float* data, size_t len, size_t offset, 
-							float min, float max );
-	 void draw_array( float x, float y, float w, float h, 
-							float* data, size_t len, size_t offset );
-	 /** Draws a rectangle with center at x,y, with sides of length dx,dy */
-	 void draw_centered_rect( float x, float y, float dx, float dy );
-  }
-
-
-  /** @brief Interface to the internal drawing system. */
-  namespace Draw
-  {
-    typedef struct {
-      double x, y, z;
-    } vertex_t;
-
-    typedef struct {
-      vertex_t min, max;
-    } bounds3_t;
-
-    typedef enum {
-      DRAW_POINTS,
-      DRAW_LINES,
-      DRAW_LINE_STRIP,
-      DRAW_LINE_LOOP,
-      DRAW_TRIANGLES,
-      DRAW_TRIANGLE_STRIP,
-      DRAW_TRIANGLE_FAN,
-      DRAW_QUADS,
-      DRAW_QUAD_STRIP,
-      DRAW_POLYGON,
-      PUSH,
-      POP,
-      ROTATE,
-      TRANSLATE,
-    } type_t;
-
-    /** the start of all stg_d structures looks like this */
-    typedef struct
-    {
-      type_t type;
-    } hdr_t;
-
-    /** push is just the header, but we define it for syntax checking */
-    typedef hdr_t push_t;
-    /** pop is just the header, but we define it for syntax checking */
-    typedef hdr_t pop_t;
-
-    /** stg_d draw command */
-    typedef struct
-    {
-      /** required type field */
-      type_t type;
-      /** number of vertices */
-      size_t vert_count;
-      /** array of vertex data follows at the end of this struct*/
-      vertex_t verts[];
-    } draw_t;
-
-    /** stg_d translate command */
-    typedef struct
-    {
-      /** required type field */
-      type_t type;
-      /** distance to translate, in 3 axes */
-      vertex_t vector;
-    } translate_t;
-
-    /** stg_d rotate command */
-    typedef struct
-    {
-      /** required type field */
-      type_t type;
-      /** vector about which we should rotate */
-      vertex_t vector;
-      /** angle to rotate */
-      stg_radians_t angle;
-    } rotate_t;
-
-    /** Create a draw_t object of specified type from a vertex array */
-    draw_t* create( type_t type,  
-					vertex_t* verts,
-					size_t vert_count );
-
-    /** Delete the draw_t object, deallocting its memory */
-    void destroy( draw_t* d );
-  } // end namespace draw
-
+	void pose_shift( const Pose &pose );
+	void pose_inverse_shift( const Pose &pose );
+	void coord_shift( double x, double y, double z, double a  );
+	void draw_grid( stg_bounds3d_t vol );
+	/** Render a string at [x,y,z] in the current color */
+	void draw_string( float x, float y, float z, const char *string);
+	void draw_string_multiline( float x, float y, float w, float h, 
+								const char *string, Fl_Align align );
+	void draw_speech_bubble( float x, float y, float z, const char* str );
+	void draw_octagon( float w, float h, float m );
+	void draw_octagon( float x, float y, float w, float h, float m );
+	void draw_vector( double x, double y, double z );
+	void draw_origin( double len );
+	void draw_array( float x, float y, float w, float h, 
+					 float* data, size_t len, size_t offset, 
+					 float min, float max );
+	void draw_array( float x, float y, float w, float h, 
+					 float* data, size_t len, size_t offset );
+	/** Draws a rectangle with center at x,y, with sides of length dx,dy */
+	void draw_centered_rect( float x, float y, float dx, float dy );
+  } // namespace Gl
   
-  /** Look up the color in the X11 database.  (i.e. transform color
-      name to color value).  If the color is not found in the
-      database, a bright red color (0xF00) will be returned instead.
-  */
-  stg_color_t stg_lookup_color(const char *name);
-    
-  // PRETTY PRINTING -------------------------------------------------
-
-  /** Report an error, with a standard, friendly message header */
-  void stg_print_err( const char* err );
-  /** Print human-readable geometry on stdout */
-  void stg_print_geom( const Geom& geom );
-  /** Print human-readable pose on stdout */
-  void stg_print_pose( const Pose& pose );
-  /** Print human-readable velocity on stdout */
-  void stg_print_velocity( const Velocity& vel );
-
+  
   /** A model creator function. Each model type must define a function of this type. */
   typedef Model* (*stg_creator_t)( World*, Model* );
+  typedef std::pair<const char*, stg_creator_t> TypeEntry;
   
-  typedef struct 
-  {
-    const char* token;
-    stg_creator_t creator;
-  } stg_typetable_entry_t;
-  
-  /** a global (to the namespace) table mapping names to model types */
-  extern stg_typetable_entry_t typetable[MODEL_TYPE_COUNT];
-
-  void RegisterModel( stg_model_type_t type, 
-							 const char* name, 
-							 stg_creator_t creator );
-
   void RegisterModels();
 
 
   class Flag
   {
   public:
-    stg_color_t color;
+    Color color;
     double size;
 
-    Flag( stg_color_t color, double size );
+    Flag( Color color, double size );
     Flag* Nibble( double portion );
   };
   
@@ -693,14 +594,14 @@ namespace Stg
     int enabled;
     Pose pose;
     stg_meters_t size; ///< rendered as a sphere with this diameter
-    stg_color_t color;
+    Color color;
     stg_msec_t period; ///< duration of a complete cycle
     double duty_cycle; ///< mark/space ratio
   } stg_blinkenlight_t;
 
   typedef struct {
     Pose pose;
-    stg_color_t color;
+    Color color;
     stg_usec_t time;
   } stg_trail_item_t;
   
@@ -862,7 +763,7 @@ namespace Stg
     Pose pose; ///< location and direction of the ray origin
     stg_meters_t range; ///< range to beam hit in meters
     Model* mod; ///< the model struck by this beam
-    stg_color_t color; ///< the color struck by this beam
+    Color color; ///< the color struck by this beam
 	 
 	 RaytraceResult() : pose(), range(0), mod(NULL), color() {}
 	 RaytraceResult( const Pose& pose, 
@@ -929,17 +830,23 @@ namespace Stg
     friend class Canvas;
 
   private:
-  
-    static GList* world_list; ///< all the worlds that exist
+	
+    static std::set<World*> world_set; ///< all the worlds that exist
     static bool quit_all; ///< quit all worlds ASAP  
     static void UpdateCb( World* world);
     static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
-	 
+
+	GMutex* access_mutex; ///< Used by Lock() and Unlock() to prevent parallel access to this model
+
 	ModelPtrSet charge_list; ///< Models which receive charge are listed here
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
-	 GList* event_list; //< 
+	// GList* event_list; //< 
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
+	/** Keep a list of all models with detectable fiducials. This
+		avoids searching the whole world for fiducials. */
+	ModelPtrSet models_with_fiducials;
+	
     double ppm; ///< the resolution of the world model in pixels per meter   
     bool quit; ///< quit this world ASAP  
 
@@ -947,20 +854,15 @@ namespace Stg
     stg_usec_t quit_time;
     stg_usec_t real_time_now; ///< The current real time in microseconds
     stg_usec_t real_time_start; ///< the real time at which this world was created
-	 bool show_clock; ///< iff true, print the sim time on stdout
-	 unsigned int show_clock_interval; ///< updates between clock xoutputs
+	bool show_clock; ///< iff true, print the sim time on stdout
+	unsigned int show_clock_interval; ///< updates between clock xoutputs
     GMutex* thread_mutex; ///< protect the worker thread management stuff
-    int total_subs; ///< the total number of subscriptions to all models
-	ModelPtrSet velocity_list; ///< Models with non-zero velocity and should have their poses updated
-	
-	unsigned int worker_threads; ///< the number of worker threads to use
 	unsigned int threads_working; ///< the number of worker threads not yet finished
     GCond* threads_start_cond; ///< signalled to unblock worker threads
     GCond* threads_done_cond; ///< signalled by last worker thread to unblock main thread
-	
-	/** Keep a list of all models with detectable fiducials. This
-		avoids searching the whole world for fiducials. */
-	ModelPtrSet models_with_fiducials;
+    int total_subs; ///< the total number of subscriptions to all models
+	ModelPtrSet velocity_list; ///< Models with non-zero velocity and should have their poses updated	
+	unsigned int worker_threads; ///< the number of worker threads to use
 	
   protected:	 
 
@@ -1049,7 +951,7 @@ namespace Stg
     { return stg_point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); };
 	 
     // dummy implementations to be overloaded by GUI subclasses
-    virtual void PushColor( stg_color_t col ) { /* do nothing */  };
+    virtual void PushColor( Color col ) { /* do nothing */  };
     virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
     virtual void PopColor(){ /* do nothing */  };
 	 
@@ -1163,6 +1065,21 @@ namespace Stg
 
 	/** Return the floor model */
 	Model* GetGround() {return ground;};
+	
+	void Lock()
+	{ 
+	  if( access_mutex == NULL )
+		access_mutex = g_mutex_new();
+	  
+	  assert( access_mutex );
+	  g_mutex_lock( access_mutex );
+	}
+	
+	void Unlock()
+	{ 
+	  assert( access_mutex );
+	  g_mutex_unlock( access_mutex );
+	}		
   };
 
   class Block
@@ -1182,7 +1099,7 @@ namespace Stg
 			  size_t pt_count,
 			  stg_meters_t zmin,
 			  stg_meters_t zmax,
-			  stg_color_t color,
+			  Color color,
 			  bool inherit_color );
   
     /** A from-file  constructor */
@@ -1231,7 +1148,7 @@ namespace Stg
     void SwitchToTestedCells();  
     void Load( Worldfile* wf, int entity );  
     Model* GetModel(){ return mod; };  
-    stg_color_t GetColor();		
+    Color GetColor();		
 		void Rasterize( uint8_t* data, 
 										unsigned int width, unsigned int height,		
 										stg_meters_t cellwidth, stg_meters_t cellheight );
@@ -1249,7 +1166,7 @@ namespace Stg
 	 
     Bounds local_z; ///<  z extent in local coords
 
-    stg_color_t color;
+    Color color;
     bool inherit_color;
 	 
     void DrawTop();
@@ -1404,39 +1321,39 @@ namespace Stg
     void strafe( float amount );
     void forward( float amount );
 	
-     void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
-     void addPose( float x, float y, float z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
+	void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
+	void addPose( float x, float y, float z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
     void move( float x, float y, float z );
-     void setFov( float horiz_fov, float vert_fov ) { _horiz_fov = horiz_fov; _vert_fov = vert_fov; }
+	void setFov( float horiz_fov, float vert_fov ) { _horiz_fov = horiz_fov; _vert_fov = vert_fov; }
     ///update vertical fov based on window aspect and current horizontal fov
-     void setAspect( float aspect ) { 
+	void setAspect( float aspect ) { 
       //std::cout << "aspect: " << aspect << " vert: " << _vert_fov << " => " << aspect * _vert_fov << std::endl;
       //_vert_fov = aspect / _horiz_fov;
       _aspect = aspect;
     }
-     void setYaw( float yaw ) { _yaw = yaw; }
-     float horizFov( void ) const { return _horiz_fov; }
-     float vertFov( void ) const { return _vert_fov; }
-     void addYaw( float yaw ) { _yaw += yaw; }
-     void setPitch( float pitch ) { _pitch = pitch; }
-     void addPitch( float pitch ) { _pitch += pitch; if( _pitch < 0 ) _pitch = 0; else if( _pitch > 180 ) _pitch = 180; }
+	void setYaw( float yaw ) { _yaw = yaw; }
+	float horizFov( void ) const { return _horiz_fov; }
+	float vertFov( void ) const { return _vert_fov; }
+	void addYaw( float yaw ) { _yaw += yaw; }
+	void setPitch( float pitch ) { _pitch = pitch; }
+	void addPitch( float pitch ) { _pitch += pitch; if( _pitch < 0 ) _pitch = 0; else if( _pitch > 180 ) _pitch = 180; }
 	
-     float realDistance( float z_buf_val ) const {
+	float realDistance( float z_buf_val ) const {
       //formula found at http://www.cs.unc.edu/~hoff/techrep/openglz.html
       //Z = Zn*Zf / (Zf - z*(Zf-Zn))
       return _z_near * _z_far / ( _z_far - z_buf_val * ( _z_far - _z_near ) );
     }
-     void scroll( float dy ) { _z += dy; }
-     float nearClip( void ) const { return _z_near; }
-     float farClip( void ) const { return _z_far; }
-     void setClip( float near, float far ) { _z_far = far; _z_near = near; }
+	void scroll( float dy ) { _z += dy; }
+	float nearClip( void ) const { return _z_near; }
+	float farClip( void ) const { return _z_far; }
+	void setClip( float near, float far ) { _z_far = far; _z_near = near; }
 	
-     void reset() { setPitch( 70 ); setYaw( 0 ); }
+	void reset() { setPitch( 70 ); setYaw( 0 ); }
 	
     void Load( Worldfile* wf, int sec );
     void Save( Worldfile* wf, int sec );
   };
-
+  
   class OrthoCamera : public Camera
   {
   private:
@@ -1496,12 +1413,12 @@ namespace Stg
     stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
     Fl_Menu_Bar* mbar;
     OptionsDlg* oDlg;
-	 unsigned int steps;
+	unsigned int steps;
     bool pause_time;
     stg_usec_t real_time_of_last_update;
-
+	
     void UpdateOptions();
-	 
+	
     // static callback functions
     static void windowCb( Fl_Widget* w, void* p );	
     static void fileLoadCb( Fl_Widget* w, void* p );
@@ -1517,21 +1434,21 @@ namespace Stg
     static void slowerCb( Fl_Widget* w, WorldGui* worldGui );
     static void realtimeCb( Fl_Widget* w, WorldGui* worldGui );
     static void fasttimeCb( Fl_Widget* w, WorldGui* worldGui );
-	 static void resetViewCb( Fl_Widget* w, WorldGui* worldGui );
-	 static void moreHelptCb( Fl_Widget* w, WorldGui* wg );
-
+	static void resetViewCb( Fl_Widget* w, WorldGui* worldGui );
+	static void moreHelptCb( Fl_Widget* w, WorldGui* wg );
+	
     // GUI functions
     bool saveAsDialog();
     bool closeWindowQuery();
-		
+	
     virtual void AddModel( Model* mod );
-  
+	
   protected:
-
-    virtual void PushColor( stg_color_t col );
+	
+    virtual void PushColor( Color col );
     virtual void PushColor( double r, double g, double b, double a );
     virtual void PopColor();
-
+	
     void DrawTree( bool leaves );
     void DrawFloor();
 	
@@ -1540,15 +1457,13 @@ namespace Stg
     WorldGui(int W,int H,const char*L=0);
     ~WorldGui();
 	
-	 virtual std::string ClockString();
+	virtual std::string ClockString();
     virtual bool Update();	
     virtual void Load( const char* filename );
     virtual void UnLoad();
-    virtual bool Save( const char* filename );
-	
-    virtual bool IsGUI() { return true; }
-
-	 virtual Model* RecentlySelectedModel();
+    virtual bool Save( const char* filename );	
+    virtual bool IsGUI() { return true; }	
+	virtual Model* RecentlySelectedModel();
 
     void DrawBoundingBoxTree();
 	
@@ -1579,19 +1494,19 @@ namespace Stg
 	 size_t count;
 	 unsigned int index;
 	 float x,y,w,h,min,max;
-	 stg_color_t fgcolor, bgcolor;
+	 Color fgcolor, bgcolor;
 	 
   public:
 	 StripPlotVis( float x, float y, float w, float h, 
 						size_t len, 
-						stg_color_t fgcolor, stg_color_t bgcolor,
+						Color fgcolor, Color bgcolor,
 						const char* name, const char* wfname );
 	 virtual ~StripPlotVis();
 	 virtual void Visualize( Model* mod, Camera* cam );		
 	 void AppendValue( float value );
   };
 
-  /** energy data packet */
+
   class PowerPack
   {
 	 friend class WorldGui;
@@ -1695,62 +1610,66 @@ namespace Stg
   class Visibility
   {
   public:
-	 bool blob_return;
-	 int fiducial_key;
-	 int fiducial_return;
-	 bool gripper_return;
-	 stg_laser_return_t laser_return;
-	 bool obstacle_return;
-	 bool ranger_return;
-	 bool gravity_return;
-	 bool sticky_return;
-  
-	 Visibility();
-		void Load( Worldfile* wf, int wf_entity );
+	bool blob_return;
+	int fiducial_key;
+	int fiducial_return;
+	bool gripper_return;
+	stg_laser_return_t laser_return;
+	bool obstacle_return;
+	bool ranger_return;
+	bool gravity_return;
+	bool sticky_return;
+	
+	Visibility();
+	void Load( Worldfile* wf, int wf_entity );
   };
 
-
-  
   /* Hooks for attaching special callback functions (not used as
-	  variables - we just need unique addresses for them.) */  
+	 variables - we just need unique addresses for them.) */  
   class CallbackHooks
   {
   public:
-	 int flag_incr;
-	 int flag_decr;
-	 int load;
-	 int save;
-	 int shutdown;
-	 int startup;
-	 int update;
-	 int update_done;
+	int flag_incr;
+	int flag_decr;
+	int load;
+	int save;
+	int shutdown;
+	int startup;
+	int update;
+	int update_done;
   };
-
+  
   /** Records model state and functionality in the GUI, if used */
   class GuiState
   {
   public:
-	 bool grid;
-	 unsigned int mask;
-	 bool nose;
-	 bool outline;
-  
-	 GuiState();
-	 void Load( Worldfile* wf, int wf_entity );
+	bool grid;
+	unsigned int mask;
+	bool nose;
+	bool outline;
+	
+	GuiState();
+	void Load( Worldfile* wf, int wf_entity );
   };
-
+  
   /// %Model class
   class Model : public Ancestor
   {
-	 friend class Ancestor;
-	 friend class World;
-	 friend class WorldGui;
-	 friend class Canvas;
-	 friend class Block;
-	 friend class Region;
-	 friend class BlockGroup;
-	 friend class PowerPack;
-	 friend class Ray;
+	friend class Ancestor;
+	friend class World;
+	friend class WorldGui;
+	friend class Canvas;
+	friend class Block;
+	friend class Region;
+	friend class BlockGroup;
+	friend class PowerPack;
+	friend class Ray;
+	
+  public:
+	/** Every class derived from Stg::Model must provide a "named
+		constructor" for its class, like this. */
+	static Model* Create( World* world, Model* parent )
+	{ return new  Model( world, parent ); }
 
   private:
 	 /** the number of models instatiated - used to assign unique IDs */
@@ -1779,7 +1698,7 @@ namespace Stg
 	//std::vector<std::pair<stg_model_callback_t,void*> > update_callbacks;
 
 	 /** Default color of the model's blocks.*/
-	 stg_color_t color;
+	 Color color;
 	double friction;
 	 
 	 /** This can be set to indicate that the model has new data that
@@ -1829,97 +1748,93 @@ namespace Stg
 	 /** GData datalist can contain arbitrary named data items. Can be used
 		  by derived model types to store properties, and for user code
 		  to associate arbitrary items with a model. */
-	 GData* props;
-
-	 /** Visualize the most recent rasterization operation performed by this model */
-	 class RasterVis : public Visualizer
-	 {
-	 private:
-		uint8_t* data;
-		unsigned int width, height;
-		stg_meters_t cellwidth, cellheight;
-		GList* pts;
-
-	 public:
-		RasterVis();
-		virtual ~RasterVis( void ){}
-		virtual void Visualize( Model* mod, Camera* cam );
-		
-		void SetData( uint8_t* data, 
-						  unsigned int width, 
-						  unsigned int height,
-						  stg_meters_t cellwidth,
-						  stg_meters_t cellheight );
-
-	int subs;     //< the number of subscriptions to this model
-	int used;     //< the number of connections to this model
-
-		void AddPoint( stg_meters_t x, stg_meters_t y );
-		void ClearPts();
-		
-	 } rastervis;
-	 
-	 bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
-	 char* say_string;   ///< if non-null, this string is displayed in the GUI 
-
-	 stg_bool_t stall;
-	 /** Thread safety flag. Iff true, Update() may be called in
-		  parallel with other models. Defaults to false for safety */
-	 int subs;    ///< the number of subscriptions to this model
-	 bool thread_safe;
-	 GArray* trail;
-	 stg_model_type_t type;  
+	GData* props;
+	
+	/** Visualize the most recent rasterization operation performed by this model */
+	class RasterVis : public Visualizer
+	{
+	private:
+	  uint8_t* data;
+	  unsigned int width, height;
+	  stg_meters_t cellwidth, cellheight;
+	  GList* pts;
+	  
+	public:
+	  RasterVis();
+	  virtual ~RasterVis( void ){}
+	  virtual void Visualize( Model* mod, Camera* cam );
+	  
+	  void SetData( uint8_t* data, 
+					unsigned int width, 
+					unsigned int height,
+					stg_meters_t cellwidth,
+					stg_meters_t cellheight );
+	  
+	  int subs;     //< the number of subscriptions to this model
+	  int used;     //< the number of connections to this model
+	  
+	  void AddPoint( stg_meters_t x, stg_meters_t y );
+	  void ClearPts();
+	  
+	} rastervis;
+	
+	bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
+	char* say_string;   ///< if non-null, this string is displayed in the GUI 
+	
+	stg_bool_t stall;
+	/** Thread safety flag. Iff true, Update() may be called in
+		parallel with other models. Defaults to false for safety */
+	int subs;    ///< the number of subscriptions to this model
+	bool thread_safe;
+	GArray* trail;
+	stg_model_type_t type;  
 	/** The index into the world's vector of update lists. Initially
 	    -1, to indicate that it is not on a list yet. */
 	int update_list_num; 
-	 bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
-	 Velocity velocity;
-	 stg_watts_t watts;///< power consumed by this model
-	 
-	 /** If >0, this model can transfer energy to models that have
-		  watts_take >0 */
-	 stg_watts_t watts_give;
-
-	 /** If >0, this model can transfer energy from models that have
-		  watts_give >0 */
-	 stg_watts_t watts_take;
-	 
-	 Worldfile* wf;
-	 int wf_entity;
-	 World* world; // pointer to the world in which this model exists
-	 WorldGui* world_gui; //pointer to the GUI world - NULL if running in non-gui mode
+	bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
+	Velocity velocity;
+	stg_watts_t watts;///< power consumed by this model
+	
+	/** If >0, this model can transfer energy to models that have
+		watts_take >0 */
+	stg_watts_t watts_give;
+	
+	/** If >0, this model can transfer energy from models that have
+		watts_give >0 */
+	stg_watts_t watts_take;
+	
+	Worldfile* wf;
+	int wf_entity;
+	World* world; // pointer to the world in which this model exists
+	WorldGui* world_gui; //pointer to the GUI world - NULL if running in non-gui mode
 
   public:
 	
-         stg_model_type_t GetModelType(){return type;}
-	 
-	 std::string GetSayString(){return std::string(say_string);}
-
-	 Visibility vis;
-
-	 stg_usec_t GetSimInterval(){ return world->interval_sim; }
-	 
-	 /** Render the model's blocks as an occupancy grid into the
-		  preallocated array of width by height pixels */
-	 void Rasterize( uint8_t* data, 
-						  unsigned int width, unsigned int height,
-						  stg_meters_t cellwidth, stg_meters_t cellheight );
-
-	 void Lock()
-	 { 
-		if( access_mutex == NULL )
-		  access_mutex = g_mutex_new();
-		
-		assert( access_mutex );
-		g_mutex_lock( access_mutex );
-	 }
-	 
-	 void Unlock()
-	 { 
-		assert( access_mutex );
-		g_mutex_unlock( access_mutex );
-	 }
-	 
+	stg_model_type_t GetModelType(){return type;}	 
+	std::string GetSayString(){return std::string(say_string);}
+	Visibility vis;
+	stg_usec_t GetSimInterval(){ return world->interval_sim; }
+	
+	/** Render the model's blocks as an occupancy grid into the
+		preallocated array of width by height pixels */
+	void Rasterize( uint8_t* data, 
+					unsigned int width, unsigned int height,
+					stg_meters_t cellwidth, stg_meters_t cellheight );
+	
+	void Lock()
+	{ 
+	  if( access_mutex == NULL )
+		access_mutex = g_mutex_new();
+	  
+	  assert( access_mutex );
+	  g_mutex_lock( access_mutex );
+	}
+	
+	void Unlock()
+	{ 
+	  assert( access_mutex );
+	  g_mutex_unlock( access_mutex );
+	}	
 
   private: 
 	 /** Private copy constructor declared but not defined, to make it
@@ -2030,65 +1945,58 @@ namespace Stg
 	 void PushLocalCoords();
 	 void PopCoords();
   
-	 /** Draw the image stored in texture_id above the model */
-	 void DrawImage( uint32_t texture_id, Camera* cam, float alpha, double width=1.0, double height=1.0 );
-  
-  
-	 /** static wrapper for DrawBlocks() */
-// 	 static void DrawBlocks( gpointer dummykey, 
-// 									 Model* mod, 
-// 									 void* arg );
-	 
-	 virtual void DrawPicker();
-	 virtual void DataVisualize( Camera* cam );  
-	 virtual void DrawSelected(void);
-  
-	 void DrawTrailFootprint();
-	 void DrawTrailBlocks();
-	 void DrawTrailArrows();
-	 void DrawGrid();
-  	 void DrawBlinkenlights();
-	 void DataVisualizeTree( Camera* cam );
-	 void DrawFlagList();
-	 void DrawPose( Pose pose );
-	 void LoadDataBaseEntries( Worldfile* wf, int entity );
-	 
+	/** Draw the image stored in texture_id above the model */
+	void DrawImage( uint32_t texture_id, Camera* cam, float alpha, double width=1.0, double height=1.0 );
+  	
+	virtual void DrawPicker();
+	virtual void DataVisualize( Camera* cam );  
+	virtual void DrawSelected(void);
+	
+	void DrawTrailFootprint();
+	void DrawTrailBlocks();
+	void DrawTrailArrows();
+	void DrawGrid();
+	void DrawBlinkenlights();
+	void DataVisualizeTree( Camera* cam );
+	void DrawFlagList();
+	void DrawPose( Pose pose );
+	void LoadDataBaseEntries( Worldfile* wf, int entity );
+	
   public:
-         	
-	 virtual void PushColor( stg_color_t col )
-	 { world->PushColor( col ); }
+	virtual void PushColor( Color col )
+	{ world->PushColor( col ); }
 	
-	 virtual void PushColor( double r, double g, double b, double a )
-	 { world->PushColor( r,g,b,a ); }
+	virtual void PushColor( double r, double g, double b, double a )
+	{ world->PushColor( r,g,b,a ); }
 	
-	 virtual void PopColor()
-	 { world->PopColor(); }
+	virtual void PopColor()
+	{ world->PopColor(); }
+	
+	PowerPack* FindPowerPack() const;
+	
+	void RecordRenderPoint( GSList** head, GSList* link, 
+							unsigned int* c1, unsigned int* c2 );
 
-	 PowerPack* FindPowerPack() const;
-
-	 void RecordRenderPoint( GSList** head, GSList* link, 
-									 unsigned int* c1, unsigned int* c2 );
-
-	 void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
-									stg_meters_t ymin, stg_meters_t ymax );
+	void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
+						   stg_meters_t ymin, stg_meters_t ymax );
 	
-	 /** Return a human-readable string describing the model's pose */
-	 std::string PoseString()
-	 { return pose.String(); }
-	 
-	 /** Look up a model pointer by a unique model ID */
-	 static Model* LookupId( uint32_t id )
-	 { return modelsbyid[id]; }
+	/** Return a human-readable string describing the model's pose */
+	std::string PoseString()
+	{ return pose.String(); }
 	
-	 /** Constructor */
-	 Model( World* world, 
-			  Model* parent, 
-			  stg_model_type_t type = MODEL_TYPE_PLAIN );
-
-	 /** Destructor */
-	 virtual ~Model();
+	/** Look up a model pointer by a unique model ID */
+	static Model* LookupId( uint32_t id )
+	{ return modelsbyid[id]; }
 	
-	 void Say( const char* str );
+	/** Constructor */
+	Model( World* world, 
+		   Model* parent, 
+		   stg_model_type_t type = MODEL_TYPE_PLAIN );
+	
+	/** Destructor */
+	virtual ~Model();
+	
+	void Say( const char* str );
 	 
 	 /** Attach a user supplied visualization to a model. */
 	 void AddVisualizer( Visualizer* custom_visual, bool on_by_default );
@@ -2233,7 +2141,7 @@ namespace Stg
 		  matching key can detect this model as a fiducial. */
 	 void SetFiducialKey(  int key );
 	
-	 stg_color_t GetColor() const { return color; }
+	 Color GetColor() const { return color; }
 	 
 	 /** return a model's unique process-wide identifier */
 	 uint32_t GetId()  const { return id; }
@@ -2259,7 +2167,7 @@ namespace Stg
 	 Velocity GetVelocity() const { return velocity; }
 	
 	 // guess what these do?
-	 void SetColor( stg_color_t col );
+	 void SetColor( Color col );
 	 void SetMass( stg_kg_t mass );
 	 void SetStall( stg_bool_t stall );
 	void SetGravityReturn( int val );
@@ -2398,8 +2306,7 @@ namespace Stg
 // 	 /** Return the 3d point in world coordinates of a 3d point
 // 		  specified in the model's local coordinate system */
 // 	 stg_point3_t LocalToGlobal( const stg_point3_t local ) const;
-	 
-	 /** Return the 2d point in world coordinates of a 2d point
+	 	 /** Return the 2d point in world coordinates of a 2d point
 		  specified in the model's local coordinate system */
 	 stg_point_t LocalToGlobal( const stg_point_t& pt) const;
 
@@ -2415,6 +2322,10 @@ namespace Stg
 	 /** Returns the value of the model's stall boolean, which is true
 		  iff the model has crashed into another model */
 	 bool Stalled() const { return this->stall; }
+
+	
+	static std::map< std::string, stg_creator_t> name_map;
+	static std::map< stg_model_type_t, std::string> type_map;
   };
 
 
@@ -2429,7 +2340,7 @@ namespace Stg
 		class Blob
 		{
 		public:
-			stg_color_t color;
+			Color color;
 			uint32_t left, top, right, bottom;
 			stg_meters_t range;
 		};
@@ -2446,7 +2357,7 @@ namespace Stg
 
   private:
 		std::vector<Blob> blobs;
-		std::vector<stg_color_t> colors;
+		std::vector<Color> colors;
 
 	 // predicate for ray tracing
 	 static bool BlockMatcher( Block* testblock, Model* finder );
@@ -2459,13 +2370,16 @@ namespace Stg
 	 unsigned int scan_height;
 	 unsigned int scan_width;
 
-	 static const char* typestr;
-
 	 // constructor
 	 ModelBlobfinder( World* world,
 							Model* parent );
 	 // destructor
 	 ~ModelBlobfinder();
+	
+	/** Every class derived from Stg::Model must provide a "named
+		constructor" for its class, like this. */
+	static Model* Create( World* world, Model* parent )
+	{ return new  ModelBlobfinder( world, parent ); }
 
 	 virtual void Startup();
 	 virtual void Shutdown();
@@ -2479,10 +2393,10 @@ namespace Stg
 	 }
 
 	 /** Start finding blobs with this color.*/
-	 void AddColor( stg_color_t col );
+	 void AddColor( Color col );
 
 	 /** Stop tracking blobs with this color */
-	 void RemoveColor( stg_color_t col );
+	 void RemoveColor( Color col );
 
 	 /** Stop tracking all colors. Call this to clear the defaults, then
 		  add colors individually with AddColor(); */
@@ -2528,8 +2442,7 @@ namespace Stg
 		static Option showBeams;
 
 	 public:
-		Vis( World* world );
-		virtual ~Vis( void ){}
+		Vis( World* world );		virtual ~Vis( void ){}
 		virtual void Visualize( Model* mod, Camera* cam );
 	 } vis;
 	 	
@@ -2544,14 +2457,18 @@ namespace Stg
 	 void SampleConfig();
 
   public:
-	 static const char* typestr;
 	 // constructor
 	 ModelLaser( World* world,
 					 Model* parent ); 
   
 	 // destructor
-	 ~ModelLaser();
-  
+	~ModelLaser();
+	
+	/** Every class derived from Stg::Model must provide a "named
+		constructor" for its class, like this. */
+	static Model* Create( World* world, Model* parent )
+	{ return new  ModelLaser( world, parent ); }
+
 	 virtual void Startup();
 	 virtual void Shutdown();
 	 virtual void Update();
@@ -2579,13 +2496,17 @@ class ModelLoadCell : public Model
 {
 private:
 public:
-  //static const char* typestr;
   // constructor
   ModelLoadCell( World* world,
 					  Model* parent );
 
   // destructor
   ~ModelLoadCell();
+  
+  /** Every class derived from Stg::Model must provide a "named
+	  constructor" for its class, like this. */
+  static Model* Create( World* world, Model* parent )
+  { return new  ModelLoadCell( world, parent ); }
 
   float GetVoltage();
 };
@@ -2597,7 +2518,12 @@ class ModelLightIndicator : public Model
 public:
 	ModelLightIndicator(World* world, Model* parent);
 	~ModelLightIndicator();
-
+  
+  /** Every class derived from Stg::Model must provide a "named
+	  constructor" for its class, like this. */
+  static Model* Create( World* world, Model* parent )
+  { return new  ModelLightIndicator( world, parent ); }
+  
 	void SetState(bool isOn);
 
 protected:
@@ -2673,7 +2599,6 @@ private:
 	 static Option showData;
 
   public:	 
-	 static const char* typestr;
 	 static const Size size;
 
 	 // constructor
@@ -2682,6 +2607,11 @@ private:
 	 // destructor
 	 virtual ~ModelGripper();
   
+	/** Every class derived from Stg::Model must provide a "named
+		constructor" for its class, like this. */
+	static Model* Create( World* world, Model* parent )
+	{ return new  ModelGripper( world, parent ); }
+
 	 virtual void Load();
 	 virtual void Save();
 
@@ -2748,12 +2678,15 @@ private:
 		
 		std::vector<Fiducial> fiducials;
 		
-  public:
-		static const char* typestr;
-		
+  public:		
 		ModelFiducial( World* world, Model* parent );
 		virtual ~ModelFiducial();
-		
+	
+	/** Every class derived from Stg::Model must provide a "named
+		constructor" for its class, like this. */
+	static Model* Create( World* world, Model* parent )
+	{ return new  ModelFiducial( world, parent ); }
+	
 		virtual void Load();
 		void Shutdown( void );
 
@@ -2800,21 +2733,24 @@ private:
 	 virtual void Shutdown();
 	 virtual void Update();
 	 virtual void DataVisualize( Camera* cam );
-
+	
   public:
-	 static const char* typestr;
-
 	 ModelRanger( World* world, Model* parent );
-		virtual ~ModelRanger();
-		
-		virtual void Load();
-		virtual void Print( char* prefix );
-		
-		std::vector<Sensor> sensors;
-		
+	virtual ~ModelRanger();
+	
+	/** Every class derived from Stg::Model must provide a "named
+		constructor" for its class, like this. */
+	static Model* Create( World* world, Model* parent )
+	{ return new  ModelRanger( world, parent ); }
+	
+	virtual void Load();
+	virtual void Print( char* prefix );
+	
+	std::vector<Sensor> sensors;
+	
   private:
-		static Option showRangerData;
-		static Option showRangerTransducers;		
+	static Option showRangerData;
+	static Option showRangerTransducers;		
   };
 	
   // BLINKENLIGHT MODEL ----------------------------------------------------
@@ -2828,12 +2764,15 @@ private:
 
 	 static Option showBlinkenData;
   public:
-
-	 static const char* typestr;
 	 ModelBlinkenlight( World* world,
 							  Model* parent );
 
 	 ~ModelBlinkenlight();
+	
+	/** Every class derived from Stg::Model must provide a "named
+		constructor" for its class, like this. */
+	static Model* Create( World* world, Model* parent )
+	{ return new  ModelBlinkenlight( world, parent ); }
 
 	 virtual void Load();
 	 virtual void Update();
@@ -2884,6 +2823,11 @@ public:
 					  Model* parent ); 
 
 	 ~ModelCamera();
+  
+  /** Every class derived from Stg::Model must provide a "named
+	  constructor" for its class, like this. */
+  static Model* Create( World* world, Model* parent )
+  { return new  ModelCamera( world, parent ); }
 
 	 virtual void Load();
 	
@@ -2956,12 +2900,16 @@ public:
 	 uint32_t waypoint_count;	 
 
   public:
-	 static const char* typestr;
 	 // constructor
 	 ModelPosition( World* world,
 						 Model* parent );
 	 // destructor
 	 ~ModelPosition();
+
+	/** Every class derived from Stg::Model must provide a "named
+		constructor" for its class, like this. */
+	static Model* Create( World* world, Model* parent )
+	{ return new  ModelPosition( world, parent ); }
 
 	 virtual void Startup();
 	 virtual void Shutdown();
@@ -3046,15 +2994,18 @@ private:
   stg_point3_t axis;
   
   Pose InitialPose;
-public:
-  static const char* typestr;
-  
+public:  
   // constructor
   ModelActuator( World* world,
 					  Model* parent );
   // destructor
   ~ModelActuator();
   
+  /** Every class derived from Stg::Model must provide a "named
+	  constructor" for its class, like this. */
+	static Model* Create( World* world, Model* parent )
+  { return new  ModelActuator( world, parent ); }
+
   virtual void Startup();
   virtual void Shutdown();
   virtual void Update();

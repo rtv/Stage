@@ -8,6 +8,7 @@ set( stageSrcs
 	block.cc
 	blockgroup.cc
 	camera.cc
+	color.cc
 	file_manager.cc
 	file_manager.hh
 	gl.cc
@@ -37,11 +38,11 @@ set( stageSrcs
 	stage.cc
 	stage.hh
 	texture_manager.cc
-	typetable.cc
-   vis_strip.cc
-	waypoint.cc
-	world.cc
-	worldfile.cc
+	typetable.cc		
+   vis_strip.cc			
+	waypoint.cc			
+	world.cc			
+	worldfile.cc		
    worldgui.cc 
    canvas.cc 
    options_dlg.cc

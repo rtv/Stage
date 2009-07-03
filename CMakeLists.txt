@@ -53,8 +53,10 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
 					${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
 
 # Enable -Wall by default
-SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall")
+#SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
+#SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall")
+SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 message( STATUS "Checking for libtool" )
 find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )

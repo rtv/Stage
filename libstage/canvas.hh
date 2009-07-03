@@ -16,7 +16,7 @@ class GlColorStack
 		void Push( GLdouble col[4] );
 		void Push( double r, double g, double b, double a );
 		void Push( double r, double g, double b );
-		void Push( stg_color_t col );
+		void Push( Color col );
 
 		void Pop();
 
@@ -121,7 +121,7 @@ public:
 	inline void setDirtyBuffer( void ) { dirty_buffer = true; }
 	inline bool dirtyBuffer( void ) const { return dirty_buffer; }
 	
-	inline void PushColor( stg_color_t col )
+	inline void PushColor( Color col )
 	{ colorstack.Push( col ); } 
 
 	void PushColor( double r, double g, double b, double a )

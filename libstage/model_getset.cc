@@ -17,11 +17,11 @@ void Model::SetGeom( const Geom& g )
   CallCallbacks( &geom );
 }
 
-void Model::SetColor( stg_color_t col )
+void Model::SetColor( Color col )
 {
   this->color = col;
   NeedRedraw();
-  CallCallbacks( &color );
+  CallCallbacks( &this->color );
 }
 
 void Model::SetMass( stg_kg_t mass )

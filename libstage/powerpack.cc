@@ -17,8 +17,8 @@ stg_joules_t PowerPack::global_dissipated = 0.0;
 
 PowerPack::PowerPack( Model* mod ) :
   event_vis( 32,32,1.0 ),
-  output_vis( 0,100,200,40, 1200, stg_color_pack(1,0,0,0), stg_color_pack(0,0,0,0.5), "energy output", "energy_input" ),
-  stored_vis( 0,142,200,40, 1200, stg_color_pack(0,1,0,0), stg_color_pack(0,0,0,0.5), "energy stored", "energy_stored" ),
+  output_vis( 0,100,200,40, 1200, Color(1,0,0), Color(0,0,0,0.5), "energy output", "energy_input" ),
+  stored_vis( 0,142,200,40, 1200, Color(0,1,0), Color(0,0,0,0.5), "energy stored", "energy_stored" ),
   mod( mod), 
   stored( 0.0 ), 
   capacity( 0.0 ), 

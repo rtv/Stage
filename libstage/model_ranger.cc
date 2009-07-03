@@ -110,7 +110,7 @@ ModelRanger::ModelRanger( World* world,
   // assert that Update() is reentrant for this derived model
   thread_safe = true;
   
-  this->SetColor( stg_lookup_color( RANGER_CONFIG_COLOR ) );
+  this->SetColor( Color( RANGER_CONFIG_COLOR ) );
   
   // remove the polygon: ranger has no body
   this->ClearBlocks();

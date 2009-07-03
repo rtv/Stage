@@ -111,20 +111,23 @@ static bool blob_match( Model* candidate,
 }	
 
 
-static bool ColorMatchIgnoreAlpha( stg_color_t a, stg_color_t b )
+static bool ColorMatchIgnoreAlpha( Color a, Color b )
 {
-	return( (a & 0x00FFFFFF) == (b & 0x00FFFFFF ) );
+  double epsilon = 1e-5; // small
+  return( fabs(a.r - b.r) < epsilon &&
+		  fabs(a.g - b.g) < epsilon &&
+		  fabs(a.b - b.b) < epsilon );
 }
 
-void ModelBlobfinder::ModelBlobfinder::AddColor( stg_color_t col )
+void ModelBlobfinder::ModelBlobfinder::AddColor( Color col )
 {
 	colors.push_back( col );
 }
 
 /** Stop tracking blobs with this color */
-void ModelBlobfinder::RemoveColor( stg_color_t col )
+void ModelBlobfinder::RemoveColor( Color col )
 {
-	for( std::vector<stg_color_t>::iterator it = colors.begin();
+	for( std::vector<Color>::iterator it = colors.begin();
 			 it != colors.end();
 			 ++it )
 		{
@@ -166,7 +169,7 @@ void ModelBlobfinder::Load( void )
 			if( ! colorstr )
 				break;
 			else
-				AddColor( stg_lookup_color( colorstr ));
+			  AddColor( Color( colorstr ));
 		}
 	}    
 }
@@ -194,7 +197,7 @@ void ModelBlobfinder::Update( void )
 			continue; // we saw nothing
 		 
 		 unsigned int right = s;
-		 stg_color_t blobcol = samples[s].color;
+		 Color blobcol = samples[s].color;
 		 
 		 //printf( "blob start %d color %X\n", blobleft, blobcol );
 		 
@@ -351,14 +354,14 @@ void ModelBlobfinder::Vis::Visualize( Model* mod, Camera* cam )
   glScalef( 0.025, 0.025, 1 );
   
   // draw a white screen with a black border
-  bf->PushColor( 0xFFFFFFFF );
+  bf->PushColor( 1,1,1,1 );
   glRectf( 0,0, bf->scan_width, bf->scan_height );
   bf->PopColor();
   
   glTranslatef(0,0,0.01 );
   
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  bf->PushColor( 0xFF000000 );
+  bf->PushColor( 1,0,0,1 );
   glRectf( 0,0, bf->scan_width, bf->scan_height );
   bf->PopColor();
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );

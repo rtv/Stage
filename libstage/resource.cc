@@ -1,7 +1,7 @@
 #include "stage.hh"
 using namespace Stg;
 
-Flag::Flag( stg_color_t color, double size )
+Flag::Flag( Color color, double size )
 { 
 	this->color = color;
 	this->size = size;

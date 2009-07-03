@@ -70,7 +70,7 @@ ModelBlinkenlight::ModelBlinkenlight( World* world,
 
 	// Set up sensible defaults
 
-	this->SetColor( stg_lookup_color( "green" ) );
+	this->SetColor( Color( "green" ) );
 
 
 	Geom geom;

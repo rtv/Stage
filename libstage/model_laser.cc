@@ -96,7 +96,7 @@ ModelLaser::ModelLaser( World* world,
   thread_safe = true;
 
   // set default color
-  SetColor( stg_lookup_color(DEFAULT_COLOR));
+  SetColor( Color(DEFAULT_COLOR));
 
   // set up our data buffers and raytracing
   SampleConfig();

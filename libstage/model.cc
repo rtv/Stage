@@ -112,6 +112,9 @@ uint32_t Model::count = 0;
 //GHashTable* Model::modelsbyid = g_hash_table_new( NULL, NULL );
 std::map<stg_id_t,Model*> Model::modelsbyid;
 
+std::map<std::string, stg_creator_t> Model::name_map;
+std::map<stg_model_type_t, std::string> Model::type_map;
+
 void Size::Load( Worldfile* wf, int section, const char* keyword )
 {
   x = wf->ReadTupleLength( section, keyword, 0, x );
@@ -186,8 +189,8 @@ void GuiState::Load( Worldfile* wf, int wf_entity )
 
 // constructor
 Model::Model( World* world,
-	      Model* parent,
-				  const stg_model_type_t type )
+			  Model* parent,
+			  const stg_model_type_t type )
   : Ancestor(), 	 
     access_mutex(NULL),
     blinkenlights( g_ptr_array_new() ),
@@ -195,10 +198,10 @@ Model::Model( World* world,
     blocks_dl(0),
     boundary(false),
     callbacks( g_hash_table_new( g_direct_hash, g_direct_equal ) ),
-    color( 0xFFFF0000 ), // red
+    color( 1,0,0 ), // red
     data_fresh(false),
     disabled(false),
-	 custom_visual_list( NULL ),
+	custom_visual_list( NULL ),
     flag_list(NULL),
     geom(),
     has_default_block( true ),
@@ -206,17 +209,16 @@ Model::Model( World* world,
     initfunc(NULL),
     interval((stg_usec_t)1e4), // 10msec
     last_update(0),
-	 log_state(false),
+	log_state(false),
     map_resolution(0.1),
     mass(0),
-	//   on_update_list( false ),
     on_velocity_list( false ),
     parent(parent),
     pose(),
-	 power_pack( NULL ),
-	 pps_charging(NULL),
+	power_pack( NULL ),
+	pps_charging(NULL),
     props(NULL),
-	 rastervis(),
+	rastervis(),
     rebuild_displaylist(true),
     say_string(NULL),
     stall(false),	 

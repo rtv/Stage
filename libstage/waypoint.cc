@@ -2,12 +2,12 @@
 #include "stage.hh"
 using namespace Stg;
 
-Waypoint::Waypoint( const Pose& pose, stg_color_t color ) 
+Waypoint::Waypoint( const Pose& pose, Color color ) 
   : pose(pose), color(color)
 { 
 }
 
-Waypoint::Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, stg_color_t color ) 
+Waypoint::Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, Color color ) 
   : pose(x,y,z,a), color(color)
 { 
 }
@@ -24,10 +24,10 @@ void Waypoint::Draw()
 {
   GLdouble d[4];
   
-  d[0] = ((color & 0x00FF0000) >> 16) / 256.0;
-  d[1] = ((color & 0x0000FF00) >> 8)  / 256.0;
-  d[2] = ((color & 0x000000FF) >> 0)  / 256.0;
-  d[3] = (((color & 0xFF000000) >> 24) / 256.0);
+  d[0] = color.r;
+  d[1] = color.g;
+  d[2] = color.b;
+  d[3] = color.a;
   
   glColor4dv( d );
   

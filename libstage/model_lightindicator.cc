@@ -27,19 +27,18 @@ void ModelLightIndicator::DrawBlocks()
 		Model::DrawBlocks();
 	}
 	else
-	{
-		stg_color_t currColour = this->GetColor();
-
+	  {
 		const double scaleFactor = 0.8;
-		double r = 0, g = 0, b = 0, a = 0;
-		stg_color_unpack(currColour, &r, &g, &b, &a);
-		r *= scaleFactor;
-		g *= scaleFactor;
-		b *= scaleFactor;
-
-		this->SetColor(stg_color_pack(r, g, b, a));
+		
+		Color keep = this->GetColor();
+		Color c = this->GetColor();
+		c.r *= scaleFactor;
+		c.g *= scaleFactor;
+		c.b *= scaleFactor;
+		
+		this->SetColor( c );
 		Model::DrawBlocks();
-
-		this->SetColor(currColour);
-	}
+		
+		this->SetColor( keep );
+	  }
 }

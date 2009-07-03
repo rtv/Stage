@@ -4,7 +4,7 @@
 
 using namespace Stg;
 
-const double epsilon = 0.000001;
+const double epsilon = 1e-5;
 
 void interact( WorldGui* wg )
 {
@@ -146,7 +146,7 @@ int main( int argc,  char* argv[] )
 		
 		//m[i]->SetPose( Pose::Random( -5,5, -5,5 ) );		
 		m[i]->PlaceInFreeSpace( 0, 10, 0, 10 );
-		m[i]->SetColor( lrand48() | 0xFF000000 );
+		m[i]->SetColor( Color::RandomColor() );
 
 		v.x = drand48() / 10.0;
 		v.y = drand48() / 10.0;

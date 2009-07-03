@@ -597,10 +597,10 @@ void ModelPosition::PoseVis::Visualize( Model* mod, Camera* cam )
   pos->PushColor( 0,0,1,1 ); // offset in blue
   Gl::draw_origin( 0.5 );
   pos->PopColor();
-  
-  double r,g,b,a;
-  stg_color_unpack( pos->color, &r, &g, &b, &a );
-  pos->PushColor( r, g, b, 0.5 );
+
+  Color c = pos->color;
+  c.a = 0.5;
+  pos->PushColor( c );
   
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   pos->blockgroup.DrawFootPrint( pos->geom );

@@ -8,7 +8,7 @@ using namespace Stg;
 
 StripPlotVis::StripPlotVis( float x, float y, float w, float h, 
 									 size_t len, 
-									 stg_color_t fgcolor, stg_color_t bgcolor,
+									 Color fgcolor, Color bgcolor,
 									 const char* name, const char* wfname )
   : Visualizer( name, wfname ),
 	 data( new float[len] ),

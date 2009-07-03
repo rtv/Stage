@@ -200,18 +200,27 @@ void BlockGroup::BuildDisplayList( Model* mod )
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   glDepthMask(GL_FALSE);
   
-  double r,g,b,a;
-  stg_color_unpack( mod->color, &r, &g, &b, &a );
-  mod->PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
-  
+  Color c = mod->color;
+  c.r /= 2.0;
+  c.g /= 2.0;
+  c.b /= 2.0;
+  mod->PushColor( c );
+
+  //c.Print( "color" );
+
+
   FOR_EACH( it, blocks )
 	{
 	  Block* blk = *it;
 		
 	  if( (!blk->inherit_color) && (blk->color != mod->color) )
 		{
-		  stg_color_unpack( blk->color, &r, &g, &b, &a );
-		  mod->PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+		  Color c = blk->color;
+		  c.r /= 2.0;
+		  c.g /= 2.0;
+		  c.b /= 2.0;
+		  mod->PushColor( c );
+		  //c.Print( "bar" );
 		  blk->DrawSolid();
 		  mod->PopColor();
 		}
@@ -277,7 +286,7 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
   if( rects && (rect_count > 0) )
 	{
 	  // TODO fix this
-	  stg_color_t col = stg_color_pack( 1.0, 0,0,1.0 ); 
+	  Color col( 1.0, 0.0, 1.0, 1.0 );
 		
 	  for( unsigned int r=0; r<rect_count; r++ )
 		{

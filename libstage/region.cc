@@ -141,9 +141,8 @@ void SuperRegion::Draw( bool drawall )
 						  
 								//printf( "zb %.2f %.2f\n", ent->zbounds.min, ent->zbounds.max );
 						  
-								double r,g,b,a;
-								stg_color_unpack( block->GetColor(), &r, &g, &b, &a );
-								glColor4f( r,g,b, 1.0 );
+								Color c = block->GetColor();
+								glColor4f( c.r, c.g, c.b, 1.0 );
 						  
 								glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 								glEnable(GL_POLYGON_OFFSET_FILL);
@@ -184,7 +183,7 @@ void SuperRegion::Draw( bool drawall )
 						  
 								glDisable(GL_POLYGON_OFFSET_FILL);
 						  
-								glColor4f( r/2.0,g/2.0,b/2.0, 1.0-a );
+								glColor4f( c.r/2.0, c.g/2.0, c.b/2.0, c.a );
 								glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 						  
 								// TOP
