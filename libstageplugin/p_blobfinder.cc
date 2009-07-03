@@ -95,7 +95,11 @@ void InterfaceBlobfinder::Publish( void )
 		  bfd.blobs[b].top    = blobs[b].top;
 		  bfd.blobs[b].bottom = blobs[b].bottom;
 
-		  bfd.blobs[b].color = blobs[b].color;
+		  bfd.blobs[b].color = 
+			 (uint8_t)(blobs[b].color.r*255.0) << 16 + 
+			 (uint8_t)(blobs[b].color.g*255.0) << 8 + 
+			 (uint8_t)(blobs[b].color.b*255.0);
+			 
 		  bfd.blobs[b].area  = dx * dy;
 
 		  bfd.blobs[b].range = blobs[b].range;

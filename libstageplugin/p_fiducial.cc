@@ -29,17 +29,17 @@
 // DOCUMENTATION
 
 /**
-@addtogroup player
-@par Fiducial interface
-- PLAYER_FIDUCIAL_DATA_SCAN
-- PLAYER_FIDUCIAL_REQ_GET_GEOM
-- PLAYER_FIDUCIAL_REQ_SET_ID
-- PLAYER_FIDUCIAL_REQ_GET_ID
+	@addtogroup player
+	@par Fiducial interface
+	- PLAYER_FIDUCIAL_DATA_SCAN
+	- PLAYER_FIDUCIAL_REQ_GET_GEOM
+	- PLAYER_FIDUCIAL_REQ_SET_ID
+	- PLAYER_FIDUCIAL_REQ_GET_ID
 */
 
 /* TODO
-- PLAYER_FIDUCIAL_REQ_SET_FOV
-- PLAYER_FIDUCIAL_REQ_GET_FOV
+	- PLAYER_FIDUCIAL_REQ_SET_FOV
+	- PLAYER_FIDUCIAL_REQ_GET_FOV
 */
 
 // CODE
@@ -49,9 +49,9 @@ using namespace Stg;
 
 
 InterfaceFiducial::InterfaceFiducial(  player_devaddr_t addr,
-				       StgDriver* driver,
-				       ConfigFile* cf,
-				       int section )
+													StgDriver* driver,
+													ConfigFile* cf,
+													int section )
   : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_FIDUCIAL )
 {
 }
@@ -60,39 +60,39 @@ void InterfaceFiducial::Publish( void )
 {
   player_fiducial_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
-
-	unsigned int count=0;
-	ModelFiducial::Fiducial* fids = ((ModelFiducial*)mod)->GetFiducials( &count );																						assert( fids );
-	
-  if( count )
+  
+  unsigned int count=0;
+  ModelFiducial::Fiducial* fids = ((ModelFiducial*)mod)->GetFiducials( &count );	
+  
+  if( fids && count )
     {
-			pdata.fiducials = new player_fiducial_item_t[count];
-			
+		pdata.fiducials = new player_fiducial_item_t[count];
+		
       for( unsigned int i=0; i<count; i++ )
-				{
-					pdata.fiducials[i].id = fids[i].id;
+		  {
+			 pdata.fiducials[i].id = fids[i].id;
 					
-					// 2D x,y only
-					double xpos = fids[i].range * cos(fids[i].bearing);
-					double ypos = fids[i].range * sin(fids[i].bearing);
+			 // 2D x,y only
+			 double xpos = fids[i].range * cos(fids[i].bearing);
+			 double ypos = fids[i].range * sin(fids[i].bearing);
 					
-					pdata.fiducials[i].pose.px = xpos;
-					pdata.fiducials[i].pose.py = ypos;
-					pdata.fiducials[i].pose.pz = 0.0;
-					pdata.fiducials[i].pose.proll = 0.0;
-					pdata.fiducials[i].pose.ppitch = 0.0;
-					pdata.fiducials[i].pose.pyaw = fids[i].geom.a;
-				}
+			 pdata.fiducials[i].pose.px = xpos;
+			 pdata.fiducials[i].pose.py = ypos;
+			 pdata.fiducials[i].pose.pz = 0.0;
+			 pdata.fiducials[i].pose.proll = 0.0;
+			 pdata.fiducials[i].pose.ppitch = 0.0;
+			 pdata.fiducials[i].pose.pyaw = fids[i].geom.a;
+		  }
     }
 	
   // publish this data
   this->driver->Publish( this->addr,
-												 PLAYER_MSGTYPE_DATA,
-												 PLAYER_FIDUCIAL_DATA_SCAN,
-												 &pdata, sizeof(pdata), NULL);
+								 PLAYER_MSGTYPE_DATA,
+								 PLAYER_FIDUCIAL_DATA_SCAN,
+								 &pdata, sizeof(pdata), NULL);
 
   if ( pdata.fiducials )
-	  delete [] pdata.fiducials;
+	 delete [] pdata.fiducials;
 }
 
 int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
@@ -177,45 +177,45 @@ int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
 		  {
 		  player_fiducial_fov_t* pfov = (player_fiducial_fov_t*)src;
 
-	  // convert from player to stage FOV packets
-	  stg_fiducial_config_t setcfg;
-	  memset( &setcfg, 0, sizeof(setcfg) );
-	  setcfg.min_range = (uint16_t)ntohs(pfov->min_range) / 1000.0;
-	  setcfg.max_range_id = (uint16_t)ntohs(pfov->max_range) / 1000.0;
-	  setcfg.max_range_anon = setcfg.max_range_id;
-	  setcfg.fov = DTOR((uint16_t)ntohs(pfov->view_angle));
+		  // convert from player to stage FOV packets
+		  stg_fiducial_config_t setcfg;
+		  memset( &setcfg, 0, sizeof(setcfg) );
+		  setcfg.min_range = (uint16_t)ntohs(pfov->min_range) / 1000.0;
+		  setcfg.max_range_id = (uint16_t)ntohs(pfov->max_range) / 1000.0;
+		  setcfg.max_range_anon = setcfg.max_range_id;
+		  setcfg.fov = DTOR((uint16_t)ntohs(pfov->view_angle));
 
-	  //printf( "setting fiducial FOV to min %f max %f fov %f\n",
-	  //  setcfg.min_range, setcfg.max_range_anon, setcfg.fov );
+		  //printf( "setting fiducial FOV to min %f max %f fov %f\n",
+		  //  setcfg.min_range, setcfg.max_range_anon, setcfg.fov );
 
-	  //stg_model_set_config( this->mod, &setcfg, sizeof(setcfg));
-	  stg_model_set_property( this->mod, "fiducial_cfg",
-				  &setcfg, sizeof(setcfg));
-	}
-      else
-	PRINT_ERR2("Incorrect packet size setting fiducial FOV (%d/%d)",
-		      (int)len, (int)sizeof(player_fiducial_fov_t) );
+		  //stg_model_set_config( this->mod, &setcfg, sizeof(setcfg));
+		  stg_model_set_property( this->mod, "fiducial_cfg",
+		  &setcfg, sizeof(setcfg));
+		  }
+		  else
+		  PRINT_ERR2("Incorrect packet size setting fiducial FOV (%d/%d)",
+		  (int)len, (int)sizeof(player_fiducial_fov_t) );
 
-      // deliberate no-break - SET_FOV needs the current FOV as a reply
+		  // deliberate no-break - SET_FOV needs the current FOV as a reply
 
-    case PLAYER_FIDUCIAL_GET_FOV:
-      {
-	stg_fiducial_config_t *cfg = (stg_fiducial_config_t*)
-	  stg_model_get_property_fixed( this->mod, "fiducial_cfg", sizeof(stg_fiducial_config_t));
-	assert(cfg);
+		  case PLAYER_FIDUCIAL_GET_FOV:
+		  {
+		  stg_fiducial_config_t *cfg = (stg_fiducial_config_t*)
+		  stg_model_get_property_fixed( this->mod, "fiducial_cfg", sizeof(stg_fiducial_config_t));
+		  assert(cfg);
 
-	// fill in the geometry data formatted player-like
-	player_fiducial_fov_t pfov;
-	pfov.min_range = htons((uint16_t)(1000.0 * cfg->min_range));
-	pfov.max_range = htons((uint16_t)(1000.0 * cfg->max_range_anon));
-	pfov.view_angle = htons((uint16_t)RTOD(cfg->fov));
+		  // fill in the geometry data formatted player-like
+		  player_fiducial_fov_t pfov;
+		  pfov.min_range = htons((uint16_t)(1000.0 * cfg->min_range));
+		  pfov.max_range = htons((uint16_t)(1000.0 * cfg->max_range_anon));
+		  pfov.view_angle = htons((uint16_t)RTOD(cfg->fov));
 
-	if( this->driver->PutReply(  this->id, client, PLAYER_MSGTYPE_RESP_ACK,
-				       &pfov, sizeof(pfov), NULL ) != 0 )
-	  DRIVER_ERROR("PutReply() failed for "
-		       "PLAYER_FIDUCIAL_GET_FOV or PLAYER_FIDUCIAL_SET_FOV");
-      }
-      break;
+		  if( this->driver->PutReply(  this->id, client, PLAYER_MSGTYPE_RESP_ACK,
+		  &pfov, sizeof(pfov), NULL ) != 0 )
+		  DRIVER_ERROR("PutReply() failed for "
+		  "PLAYER_FIDUCIAL_GET_FOV or PLAYER_FIDUCIAL_SET_FOV");
+		  }
+		  break;
   */
 
   else

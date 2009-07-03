@@ -11,7 +11,7 @@ OS X	7.75
 fasr.world
 ----------
 linux	16.36
-OS X	17.04
+OS X	16.20 (rev 7949)
 
 
 ** 3.1.0 RELEASE *
