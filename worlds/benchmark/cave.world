@@ -32,15 +32,13 @@ floorplan
 define rob pioneer2dx
 #define rob fancypioneer2dx  # alternative with more complex polygons
 (
- origin [ 0 0 0 0 ]
+ # origin [ 0 0 0 0 ]
 
- sicklaser( samples 180 ) 
+ # sicklaser( samples 180 ) 
  # alternative laser  with more complex polygons
  #fancysicklaser( samples 180 ) 
 
- ranger( pose [ 0 0 -0.050 0 ] )
-
- ctrl "expand" 
+ ctrl "expand_pioneer" 
 )
 
 define redrob rob( color "red" )

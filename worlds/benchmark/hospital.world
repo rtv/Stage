@@ -38,7 +38,7 @@ floorplan
 define swarmbot position
 (
   size [0.100 0.100 0.100]  
-  color "red"
+  color "random"
 
   ranger( pose [ 0 0 -0.010 0 ] 
 
@@ -57,7 +57,7 @@ define swarmbot position
   	  spose[11] [0 0 330]
      sview [ 0 2 30] )
 
-  ctrl "expand"
+  ctrl "expand_swarm"
 )
 
 
