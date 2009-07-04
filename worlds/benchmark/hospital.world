@@ -13,6 +13,9 @@ interval_real 0  # real-time interval between simulation updates in milliseconds
 
 paused 1
 
+# threads may help or hurt performance depending on your worldfile, machine and load
+threads 7
+
 # quit_time 60
 
 # configure the GUI window
@@ -24,7 +27,7 @@ window
   scale 12.611 
 
   show_data 0
-  interval 200
+  interval 400
 )
 
 # load an environment bitmap
@@ -40,7 +43,7 @@ define swarmbot position
   size [0.100 0.100 0.100]  
   color "random"
 
-  ranger( pose [ 0 0 -0.010 0 ] 
+  ranger( pose [ 0 0 -0.050 0 ] 
 
   	  scount 12 
   	  spose[0] [0 0 0]

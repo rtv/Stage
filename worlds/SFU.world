@@ -20,11 +20,9 @@ window
 (
   size [ 1460.000 1080.000 ] # in pixels
   scale 48.240            
-     # pixels per meter
   center [ -2.827  -2.340 ]
   rotate [ 0  0 ]
-  			
-  show_data 0              # 1=on 0=off
+  show_data 1              # 1=on 0=off
 )
 
 # load an environment bitmap
