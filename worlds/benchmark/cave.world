@@ -14,10 +14,10 @@ paused 1
 # configure the GUI window
 window
 (
-  size [ 701.000 694.000 ]
-  center [0.068 -0.129]
-  rotate [ 0 0 ]
-  scale 38.592 
+  size [ 1076.000 585.000 ]
+  center [-0.464 1.570]
+  rotate [ 58.500 17.500 ]
+  scale 53.439 
   interval 50
 )
 
@@ -29,14 +29,14 @@ floorplan
   bitmap "../bitmaps/cave.png"
 )
 
-define rob pioneer2dx
-#define rob fancypioneer2dx  # alternative with more complex polygons
+#define rob pioneer2dx
+define rob fancypioneer2dx  # alternative with more complex polygons
 (
  # origin [ 0 0 0 0 ]
 
  # sicklaser( samples 180 ) 
  # alternative laser  with more complex polygons
- #fancysicklaser( samples 180 ) 
+ fancysicklaser( samples 180 ) 
 
  ctrl "expand_pioneer" 
 )

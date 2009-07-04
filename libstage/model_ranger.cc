@@ -305,18 +305,19 @@ void ModelRanger::DataVisualize( Camera* cam )
 		  { 
 			 Sensor& rngr = sensors[s];
 
-			 if( rngr.range > 0.0 ) 
-				{ 
-							
-				  glPointSize( 4 );
-				  glBegin( GL_POINTS );
-				  glVertex3f( rngr.pose.x, rngr.pose.y, rngr.pose.z );
-				  glEnd();
-				}
+			 glPointSize( 4 );
+			 glBegin( GL_POINTS );
+			 glVertex3f( rngr.pose.x, rngr.pose.y, rngr.pose.z );
+			 glEnd();
+
+			 char buf[8];
+			 snprintf( buf, 8, "%d", s );
+			 Gl::draw_string( rngr.pose.x, rngr.pose.y, rngr.pose.z, buf );
+			 
 		  }
       PopColor();
     }
-	
+  
   if ( !showRangerData )
     return;
 	

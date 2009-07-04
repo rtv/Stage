@@ -24,8 +24,8 @@ typedef struct
 
 const double VSPEED = 0.2; // meters per second
 const double WGAIN = 1.0; // turn speed gain
-const double SAFE_DIST = 0.5; // meters
-const double SAFE_ANGLE = 1.0; // radians
+const double SAFE_DIST = 0.75; // meters
+const double SAFE_ANGLE = 0.5; // radians
 
 
 // forward declare
@@ -76,14 +76,14 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   double turn_speed = WGAIN * resultant_angle;
   
   //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
-
+  
   // if the front is clear, drive forwards
   if( (rgr->sensors[3].range > SAFE_DIST) && // forwards
 		(rgr->sensors[4].range > SAFE_DIST) &&
 		(rgr->sensors[5].range > SAFE_DIST/2.0) && //
-		(rgr->sensors[6].range > SAFE_DIST/5.0) && 
+		(rgr->sensors[6].range > SAFE_DIST/4.0) && 
 		(rgr->sensors[2].range > SAFE_DIST/2.0) && 
-		(rgr->sensors[1].range > SAFE_DIST/5.0) && 
+		(rgr->sensors[1].range > SAFE_DIST/4.0) && 
 		(fabs( resultant_angle ) < SAFE_ANGLE) )
 	 {
 		forward_speed = VSPEED;
