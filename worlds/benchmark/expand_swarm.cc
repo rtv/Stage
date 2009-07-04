@@ -85,7 +85,7 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
 
 		(rgr->sensors[9].range > SAFE_DIST/5.0) && 
 		(rgr->sensors[10].range > SAFE_DIST/3.0) && 
-		(rgr->sensors[11].range > SAFE_DIST/1.4) && 
+		(rgr->sensors[11].range > SAFE_DIST/1.5) && 
 		(fabs( resultant_angle ) < SAFE_ANGLE) )
 	 {
 		forward_speed = VSPEED;

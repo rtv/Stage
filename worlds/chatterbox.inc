@@ -4,6 +4,7 @@
 # $Id: chatterbox.inc,v 1.5 2008-01-15 01:25:42 rtv Exp $
 
 include "irobot.inc"
+include "hokuyo.inc"
 
 define chatterbox create
 (
@@ -51,7 +52,7 @@ define chatterbox create
 
 define laserchatterbox chatterbox
 (
- laser()
+ hokuyolaser()
 ) 
 
 

@@ -45,7 +45,6 @@ cb( name "cb06" pose [3.086 6.344 0 -108.654] )
 cb( name "cb07" pose [1.463 6.393 0 -108.654] )
 cb( name "cb08" pose [1.449 4.534 0 -108.654] )
 cb( name "cb09" pose [0.737 5.217 0 -108.654] )
-
 cb( name "cbr10" pose [1.085 -1.274 0 0] )
 cb( name "cbr11" pose [2.587 -1.832 0 0] )
 cb( name "cbr12" pose [1.812 -0.283 0 -53.892] )
