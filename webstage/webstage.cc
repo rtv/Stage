@@ -271,8 +271,8 @@ public:
 				websim::Fiducial fid;
 				fid.pos.x = fids[i].range*cos(fids[i].bearing);
 				fid.pos.y = fids[i].range*sin(fids[i].bearing);
-				fid.range = fids[i].range;
-				fid.bearing = fids[i].bearing;
+				//fid.range = fids[i].range;
+				//fid.bearing = fids[i].bearing;
 				fid.id = fids[i].id;
 
 				f.push_back(fid);
