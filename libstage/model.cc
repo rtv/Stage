@@ -910,7 +910,6 @@ void Model::UpdatePose( void )
   // hit another model, that model is returned.	
 	// ConditionalMove() returns a pointer to the model we hit, or
 	// NULL. We use this as a boolean for SetStall()
-  //SetStall( ConditionalMove( pose_sum( pose, p ) ) );
   SetStall( ConditionalMove( pose + p ) );
 }
 

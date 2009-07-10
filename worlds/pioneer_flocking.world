@@ -1,0 +1,116 @@
+# simple.world - basic world file example
+# Authors: Richard Vaughan
+# $Id$
+
+include "pioneer.inc"
+include "map.inc"
+
+interval_sim 100  # simulation timestep in milliseconds
+interval_real 0  # real-time interval between simulation updates in milliseconds 
+
+paused 1
+
+resolution 0.1
+
+threads 0
+
+# configure the GUI window
+window
+(
+  size [ 1460.000 1080.000 ] # in pixels
+  scale 20.739            
+  center [ -19.764  -9.624 ]
+  rotate [ 0  0 ]
+  show_data 1              # 1=on 0=off
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "cave"
+  size [100.000 100.000 0.800]
+  pose [0 0 0 0]
+  bitmap "bitmaps/cave.png"  
+)
+
+
+define flocker pioneer2dx
+(		  
+  color "random"
+  ctrl "pioneer_flocking"
+  fiducial_return 1
+  fiducial()
+)
+
+flocker( pose [ -18.646 -12.227 0 -136.345 ] )
+flocker( pose [ -18.397 -5.955 0 -154.426 ] )
+flocker( pose [ -23.906 -3.211 0 -154.678 ] )
+flocker( pose [ -23.827 -5.305 0 -154.646 ] )
+flocker( pose [ -20.134 -9.244 0 -138.746 ] )
+flocker( pose [ -17.917 -9.963 0 -136.113 ] )
+flocker( pose [ -21.435 -15.234 0 -132.914 ] )
+flocker( pose [ -19.855 -12.715 0 -135.463 ] )
+flocker( pose [ -19.469 -10.461 0 -138.243 ] )
+flocker( pose [ -26.846 -3.327 0 -154.674 ] )
+
+flocker( pose [ -22.825 -3.908 0 -154.605 ] )
+flocker( pose [ -22.463 -5.101 0 -154.629 ] )
+flocker( pose [ -18.861 -9.188 0 -139.232 ] )
+flocker( pose [ -20.792 -4.837 0 -154.426 ] )
+flocker( pose [ -19.744 -4.459 0 -154.226 ] )
+flocker( pose [ -22.129 -7.352 0 -154.226 ] )
+flocker( pose [ -17.200 -14.489 0 -132.929 ] )
+flocker( pose [ -21.850 -18.011 0 -131.557 ] )
+flocker( pose [ -17.337 -8.332 0 -155.150 ] )
+flocker( pose [ -19.748 -16.394 0 -132.939 ] )
+
+flocker( pose [ -19.851 -7.926 0 -155.150 ] )
+flocker( pose [ -20.464 -2.005 0 -154.226 ] )
+flocker( pose [ -16.959 -12.029 0 -133.737 ] )
+flocker( pose [ -22.534 -13.689 0 -134.865 ] )
+flocker( pose [ -20.836 -13.700 0 -134.554 ] )
+flocker( pose [ -22.786 -12.838 0 -135.578 ] )
+flocker( pose [ -21.336 -12.912 0 -135.257 ] )
+flocker( pose [ -22.677 -10.354 0 -136.964 ] )
+flocker( pose [ -16.068 -8.815 0 -136.583 ] )
+
+flocker( pose [ -17.060 -6.404 0 -154.672 ] )
+flocker( pose [ -21.984 -14.563 0 -133.736 ] )
+flocker( pose [ -23.005 -15.561 0 -131.990 ] )
+flocker( pose [ -18.483 -16.627 0 -131.557 ] )
+flocker( pose [ -20.194 -17.434 0 -130.896 ] )
+flocker( pose [ -22.073 -18.880 0 -130.234 ] )
+flocker( pose [ -22.955 -17.797 0 -130.896 ] )
+flocker( pose [ -22.193 -16.477 0 -130.999 ] )
+flocker( pose [ -21.201 -16.658 0 -131.981 ] )
+
+flocker( pose [ -22.150 -11.625 0 -136.304 ] )
+flocker( pose [ -19.741 -14.084 0 -134.388 ] )
+flocker( pose [ -19.012 -11.350 0 -137.587 ] )
+flocker( pose [ -20.621 -11.627 0 -136.086 ] )
+flocker( pose [ -21.192 -10.543 0 -136.824 ] )
+flocker( pose [ -19.974 -6.462 0 -154.674 ] )
+flocker( pose [ -18.840 -14.444 0 -135.746 ] )
+flocker( pose [ -21.592 -8.399 0 -154.440 ] )
+flocker( pose [ -17.260 -15.767 0 -136.384 ] )
+
+flocker( pose [ -18.032 -15.005 0 -136.073 ] )
+flocker( pose [ -17.922 -13.236 0 -136.053 ] )
+flocker( pose [ -17.439 -10.890 0 -138.105 ] )
+flocker( pose [ -21.522 -9.479 0 -137.228 ] )
+flocker( pose [ -22.011 -6.227 0 -154.674 ] )
+flocker( pose [ -17.704 -7.628 0 -154.426 ] )
+flocker( pose [ -23.065 -19.673 0 -129.572 ] )
+flocker( pose [ -21.749 -20.197 0 -130.234 ] )
+flocker( pose [ -20.475 -19.283 0 -130.896 ] )
+
+flocker( pose [ -19.304 -18.401 0 -131.531 ] )
+flocker( pose [ -18.125 -17.701 0 -132.118 ] )
+flocker( pose [ -16.510 -9.846 0 -138.239 ] )
+flocker( pose [ -24.567 -4.276 0 -154.660 ] )
+flocker( pose [ -25.200 -3.645 0 -154.674 ] )
+flocker( pose [ -23.179 -8.708 0 -156.108 ] )
+flocker( pose [ -20.921 -3.183 0 -154.678 ] )
+flocker( pose [ -25.495 -2.252 0 -154.629 ] )
+flocker( pose [ -20.682 -15.283 0 -133.299 ] )
+

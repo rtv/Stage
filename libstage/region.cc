@@ -7,21 +7,31 @@
 #include "region.hh"
 using namespace Stg;
 
+// static member for accumulating empty regions for occasional garbage
+// collection
+// std::set<Region*> Region::empty_regions;
 
-Region::Region() 
-  : cells(NULL), count(0)
+Region::Region() : 
+  cells( NULL ), 
+  count(0)
 { 
-  //for( int i=0; i<REGIONSIZE; i++ )
-  //	cells[i].region = this;
 }
 
 Region::~Region()
 {
+  if( cells )
+	 delete[] cells;
 }
 
-SuperRegion::SuperRegion( World* world, stg_point_int_t origin )
-  : regions(NULL), origin(origin), world(world), count(0)	 
+SuperRegion::SuperRegion( World* world, stg_point_int_t origin ) 
+  : regions( new Region[ SUPERREGIONSIZE ] ),
+	 origin(origin), 
+	 world(world), 
+	 count(0)	 
 {
+  for( int i=0; i<SUPERREGIONSIZE; i++ )
+	 regions[i].superregion = this;
+  
   //static int srcount=0;
   //printf( "created SR number %d\n", ++srcount ); 
   //  printf( "superregion at %d %d\n", origin.x, origin.y ); 
@@ -29,6 +39,9 @@ SuperRegion::SuperRegion( World* world, stg_point_int_t origin )
 
 SuperRegion::~SuperRegion()
 {
+  if( regions )
+	 delete[] regions;
+
   //printf( "deleting SR %p at [%d,%d]\n", this, origin.x, origin.y );
 }
 

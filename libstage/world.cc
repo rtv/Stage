@@ -160,6 +160,9 @@ bool World::UpdateAll()
       if( (*world_it)->Update() == false )
 		quit = false;
     }
+
+  //Region::GarbageCollect();
+
   return quit;
 }
 

@@ -5,6 +5,7 @@ SET( PLUGINS
      sink
      source
      wander
+	  pioneer_flocking
 #     rasterize
 )
 

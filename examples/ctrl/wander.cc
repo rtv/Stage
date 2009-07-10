@@ -4,7 +4,7 @@ using namespace Stg;
 const double cruisespeed = 0.4; 
 const double avoidspeed = 0.05; 
 const double avoidturn = 0.5;
-const double minfrontdistance = 0.6;  
+const double minfrontdistance = 1.0; // 0.6  
 const bool verbose = false;
 const double stopdist = 0.3;
 const int avoidduration = 10;
@@ -121,11 +121,11 @@ int LaserUpdate( Model* mod, robot_t* robot )
 		robot->pos->SetTurnSpeed(  0 );
     }
 
-  if( robot->pos->Stalled() )
-	 {
-		robot->pos->SetSpeed( 0,0,0 );
-		robot->pos->SetTurnSpeed( 0 );
-	 }
+ //  if( robot->pos->Stalled() )
+// 	 {
+// 		robot->pos->SetSpeed( 0,0,0 );
+// 		robot->pos->SetTurnSpeed( 0 );
+// 	 }
  
   return 0;
 }
