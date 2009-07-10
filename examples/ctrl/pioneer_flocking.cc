@@ -107,7 +107,13 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
 		if( robot->closest )
 		  turn_speed += FLOCK_WGAIN * robot->closest_heading_error;
 	 }
-  
+  else
+	 {
+		// front not clear. we might be stuck, so wiggle a bit
+		if( fabs(turn_speed) < 0.1 )
+		  turn_speed = drand48();
+	 }
+
   robot->position->SetSpeed( forward_speed, side_speed, turn_speed );
 
   return 0;
@@ -117,9 +123,7 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
 int FiducialUpdate( ModelFiducial* fid, robot_t* robot )
 {  	
   // find the closest teammate
-
-  //puts( "fiducial update" );
-    
+  
   double dist = 1e6; // big
   
   robot->closest = NULL;
@@ -137,36 +141,10 @@ int FiducialUpdate( ModelFiducial* fid, robot_t* robot )
   
   if( robot->closest ) // if we saw someone
 	 {
-		//printf( "model %s see closest %s\n", fid->Token(), robot->closest->mod->Token() );
-
 		robot->closest_bearing = robot->closest->bearing;
 		robot->closest_range = robot->closest->range;
 		robot->closest_heading_error = robot->closest->geom.a;
 	 }
-    
-//   if( (dx == 0) || (dy == 0) )
-// 	 return 0;
-    
-//   double resultant_angle = atan2( dy, dx );
-//   double forward_speed = 0.0;
-//   double side_speed = 0.0;	   
-//   double turn_speed = WGAIN * resultant_angle;
-  
-//   //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
-  
-//   // if the front is clear, drive forwards
-//   if( (rgr->sensors[3].range > SAFE_DIST) && // forwards
-// 		(rgr->sensors[4].range > SAFE_DIST) &&
-// 		(rgr->sensors[5].range > SAFE_DIST/2.0) && //
-// 		(rgr->sensors[6].range > SAFE_DIST/4.0) && 
-// 		(rgr->sensors[2].range > SAFE_DIST/2.0) && 
-// 		(rgr->sensors[1].range > SAFE_DIST/4.0) && 
-// 		(fabs( resultant_angle ) < SAFE_ANGLE) )
-// 	 {
-// 		forward_speed = VSPEED;
-// 	 }
-  
-//   robot->position->SetSpeed( forward_speed, side_speed, turn_speed );
 
   return 0;
 }
