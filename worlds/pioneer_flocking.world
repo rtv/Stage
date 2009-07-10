@@ -17,11 +17,11 @@ threads 0
 # configure the GUI window
 window
 (
-  size [ 1460.000 1080.000 ] # in pixels
-  scale 20.739            
-  center [ -19.764  -9.624 ]
+  size [ 809.000 751.000 ] # in pixels
+  scale 6.608            
+  center [ -0.332  -1.173 ]
   rotate [ 0  0 ]
-  show_data 1              # 1=on 0=off
+  show_data 0              # 1=on 0=off
 )
 
 # load an environment bitmap
