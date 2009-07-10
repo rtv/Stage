@@ -34,6 +34,37 @@ define p2dx_sonar ranger
   ssize [0.01 0.05]
 )
 
+define p2dx_sonar_front ranger
+(
+  scount 8 # the number of transducers
+
+  # define the pose of each transducer [xpos ypos heading]
+  spose[0] [ 0.075 0.130 90 ]
+  spose[1] [ 0.115 0.115 50 ]
+  spose[2] [ 0.150 0.080 30 ]
+  spose[3] [ 0.170 0.025 10 ]
+  spose[4] [ 0.170 -0.025 -10 ]
+  spose[5] [ 0.150 -0.080 -30 ]
+  spose[6] [ 0.115 -0.115 -50 ]
+  spose[7] [ 0.075 -0.130 -90 ]
+
+#  spose[8] [ -0.155 -0.130 -90 ]
+#  spose[9] [ -0.195 -0.115 -130 ]
+#  spose[10] [ -0.230 -0.080 -150 ]
+#  spose[11] [ -0.250 -0.025 -170 ]
+#  spose[12] [ -0.250 0.025 170 ]
+#  spose[13] [ -0.230 0.080 150 ]
+#  spose[14] [ -0.195 0.115 130 ]
+#  spose[15] [ -0.155 0.130 90 ]	
+		
+  # define the field of view of each transducer [range_min range_max view_angle]
+  sview [0 5.0 15]
+
+  # define the size of each transducer [xsize ysize] in meters
+  ssize [0.01 0.05]
+)
+
+
 # The Pioneer3DX sonar array
 define p3dx_sonar ranger
 (
@@ -115,7 +146,8 @@ define pioneer_base position
 )
 
 
-define pioneer2dx_base pioneer_base
+
+define pioneer2dx_base_no_sonar pioneer_base
 (
   # actual size
   size [0.44 0.38 0.22] # sizes from MobileRobots' web site
@@ -128,16 +160,45 @@ define pioneer2dx_base pioneer_base
 
   # estimated mass in KG
   mass 23.0 
-
-  # use the sonar array defined above with a small vertical offset to
-  # drop the sensors into the robot body
-  p2dx_sonar( pose [0 0 -0.03 0] ) 
-
   # differential steering model
   drive "diff"
  )
 
+
+define pioneer2dx_base pioneer2dx_base_no_sonar
+(
+  # use the sonar array defined above with a small vertical offset to
+  # drop the sensors into the robot body
+  p2dx_sonar( pose [0 0 -0.03 0] ) 
+)
+
+define pioneer2dx_base_front_sonar pioneer2dx_base_no_sonar
+(
+  # use the sonar array defined above with a small vertical offset to
+  # drop the sensors into the robot body
+  p2dx_sonar_front( pose [0 0 -0.03 0] ) 
+)
+
+
 define pioneer2dx pioneer2dx_base
+(  
+  # simplified Body shape:
+  block( 
+    points 8
+    point[0] [-0.2 0.12]
+    point[1] [-0.2 -0.12]
+    point[2] [-0.12 -0.2555]
+    point[3] [0.12 -0.2555]
+    point[4] [0.2 -0.12]
+    point[5] [0.2 0.12]
+    point[6] [0.12 0.2555]
+    point[7] [-0.12 0.2555]
+    z [0 0.22]
+  )
+)
+
+# as above, but with front sonar only
+define pioneer2dx_front_sonar pioneer2dx_base_front_sonar
 (  
   # simplified Body shape:
   block( 

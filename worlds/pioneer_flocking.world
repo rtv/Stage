@@ -34,7 +34,7 @@ floorplan
 )
 
 
-define flocker pioneer2dx
+define flocker pioneer2dx_front_sonar
 (		  
   color "random"
   ctrl "pioneer_flocking"
