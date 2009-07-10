@@ -12,7 +12,8 @@ paused 1
 
 resolution 0.1
 
-threads 0
+# this is very helpful if you have multiple CPUs
+# threads 7
 
 # configure the GUI window
 window
