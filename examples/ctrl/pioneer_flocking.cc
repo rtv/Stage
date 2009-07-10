@@ -1,9 +1,8 @@
 /////////////////////////////////
-// File: stest.c
-// Desc: Stage library test program
-// Created: 2004.9.15
+// File: pioneer_flocking.cc
+// Desc: Flocking behaviour, Stage controller demo
+// Created: 2009.7.8
 // Author: Richard Vaughan <vaughan@sfu.ca>
-// CVS: $Id: stest.cc,v 1.3 2008-02-01 03:11:02 rtv Exp $
 // License: GPL
 /////////////////////////////////
 
@@ -29,7 +28,7 @@ typedef struct
 } robot_t;
 
 
-const double VSPEED = 0.3; // meters per second
+const double VSPEED = 0.4; // meters per second
 const double EXPAND_WGAIN = 0.3; // turn speed gain
 const double FLOCK_WGAIN = 0.3; // turn speed gain
 const double SAFE_DIST = 1.0; // meters
@@ -59,11 +58,6 @@ extern "C" int Init( Model* mod )
   robot->fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, robot );
   robot->fiducial->Subscribe();
 
-  // subscribe to the laser, though we don't use it for navigating
-  //robot->laser = (ModelLaser*)mod->GetModel( "laser:0" );
-  //assert( robot->laser );
-  //robot->laser->Subscribe();
-
   return 0; //ok
 }
 
@@ -78,8 +72,6 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
 		ModelRanger::Sensor& s = rgr->sensors[i];
 		dx += s.range * cos( s.pose.a );
 		dy += s.range * sin( s.pose.a );
-		
-		//printf( "sensor %d angle= %.2f\n", s, rgr->sensors[s].pose.a );	 
 	 }
   
   if( (dx == 0) || (dy == 0) )
@@ -90,32 +82,30 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   double side_speed = 0.0;	   
   double turn_speed = EXPAND_WGAIN * resultant_angle;
   
-  //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
-  
   // if the front is clear, drive forwards
   if( (rgr->sensors[3].range > SAFE_DIST) && // forwards
-		(rgr->sensors[4].range > SAFE_DIST) &&
-		(rgr->sensors[5].range > SAFE_DIST/1.0) && //
-		(rgr->sensors[6].range > SAFE_DIST/2.0) && 
-		(rgr->sensors[2].range > SAFE_DIST/1.0) && 
-		(rgr->sensors[1].range > SAFE_DIST/2.0) && 
-		(fabs( resultant_angle ) < SAFE_ANGLE) )
-	 {
-		forward_speed = VSPEED;
-
-		// and steer to match the heading of the nearest robot
-		if( robot->closest )
-		  turn_speed += FLOCK_WGAIN * robot->closest_heading_error;
-	 }
+	  (rgr->sensors[4].range > SAFE_DIST) &&
+	  (rgr->sensors[5].range > SAFE_DIST ) && //
+	  (rgr->sensors[6].range > SAFE_DIST/2.0) && 
+	  (rgr->sensors[2].range > SAFE_DIST ) && 
+	  (rgr->sensors[1].range > SAFE_DIST/2.0) && 
+	  (fabs( resultant_angle ) < SAFE_ANGLE) )
+	{
+	  forward_speed = VSPEED;
+	  
+	  // and steer to match the heading of the nearest robot
+	  if( robot->closest )
+		turn_speed += FLOCK_WGAIN * robot->closest_heading_error;
+	}
   else
-	 {
-		// front not clear. we might be stuck, so wiggle a bit
-		if( fabs(turn_speed) < 0.1 )
-		  turn_speed = drand48();
-	 }
-
+	{
+	  // front not clear. we might be stuck, so wiggle a bit
+	  if( fabs(turn_speed) < 0.1 )
+		turn_speed = drand48();
+	}
+  
   robot->position->SetSpeed( forward_speed, side_speed, turn_speed );
-
+  
   return 0;
 }
 
@@ -129,22 +119,22 @@ int FiducialUpdate( ModelFiducial* fid, robot_t* robot )
   robot->closest = NULL;
   
   FOR_EACH( it, fid->GetFiducials() )
-	 {
-		ModelFiducial::Fiducial* other = &(*it);
-		
-		if( other->range < dist )
-		  {
-			 dist = other->range;
-			 robot->closest = other;
-		  }				
-	 }
+	{
+	  ModelFiducial::Fiducial* other = &(*it);
+	  
+	  if( other->range < dist )
+		{
+		  dist = other->range;
+		  robot->closest = other;
+		}				
+	}
   
   if( robot->closest ) // if we saw someone
-	 {
+	{
 		robot->closest_bearing = robot->closest->bearing;
 		robot->closest_range = robot->closest->range;
 		robot->closest_heading_error = robot->closest->geom.a;
-	 }
-
+	}
+  
   return 0;
 }
