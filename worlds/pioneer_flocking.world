@@ -10,9 +10,10 @@ interval_real 0  # real-time interval between simulation updates in milliseconds
 
 paused 1
 
+# low resolution gives fast raytracing. set this only as small as you need for your application
 resolution 0.1
 
-# this is very helpful if you have multiple CPUs
+# this is very helpful if you have multiple CPUs - a good value is <number of CPU cores> - 1
 # threads 7
 
 # configure the GUI window

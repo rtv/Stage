@@ -37,13 +37,27 @@ public:
   
   virtual bool ClockStart()
   {
+	puts( "[WebStage]  Clock start" );
 	world->Start();
 	return true;
   }
 
   virtual bool ClockStop()
   {
+	puts( "[WebStage]  Clock stop" );
 	world->Stop();
+	return true;
+  }
+
+  virtual bool ClockRunFor( double usec )
+  {
+	puts( "[WebStage]  Clock tick" );
+
+	world->paused = true;
+	// when paused, the world will run while steps > 0, decrementing
+	// steps each cycle.
+	world->steps = (usec * 1e6) / world->GetSimInterval();
+
 	return true;
   }
 
@@ -590,7 +604,7 @@ int main( int argc, char** argv )
   //printf( "WebStage built on %s %s\n", PROJECT, VERSION );
   
   std::string fedfilename = "";
-  std::string host = "192.168.1.210";
+  std::string host = "localhost";
   unsigned short port = 8000;
   
   int ch=0, optindex=0;

@@ -112,7 +112,8 @@ World::World( const char* token,
   update_lists(1),
   updates( 0 ),
   wf( NULL ),
-  paused( false )
+  paused( false ),
+  steps(0)
 {
   if( ! Stg::InitDone() )
     {
@@ -523,8 +524,16 @@ bool World::Update()
       return true;		
   }
   
-  if( paused ) 
-	return false;
+  if( paused )
+	{
+	  if( steps < 1 )	 
+		return true;
+	  else
+		{
+		  --steps;
+		  printf( "world::update (steps remaining %d)\n", steps );		  
+		}
+	}
 
   dirty = true; // need redraw 
   

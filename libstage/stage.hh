@@ -885,10 +885,12 @@ namespace Stg
 
 	 void CallUpdateCallbacks(); ///< Call all calbacks in cb_list, removing any that return true;
 
-    bool paused; ///< the world only updates when this is false
-
   public:
 	 
+    bool paused; ///< the world only updates when this is false or steps > 0
+	unsigned int steps; ///< When paused, stage updates while steps >
+						///0, decrementing steps with each update.
+
     void Start(){ paused = false; };
     void Stop(){ paused = true; };
     void TogglePause(){ paused = !paused; };
@@ -1413,7 +1415,6 @@ namespace Stg
     stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
     Fl_Menu_Bar* mbar;
     OptionsDlg* oDlg;
-	unsigned int steps;
     bool pause_time;
     stg_usec_t real_time_of_last_update;
 	

@@ -15,7 +15,6 @@ quit_time 3600 # 1 hour of simulated time
 
 resolution 0.02
 
-# extra threads may speed things up a little here depending on available CPU cores & workload 
 threads 0
 
 # configure the GUI window

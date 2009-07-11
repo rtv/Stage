@@ -31,15 +31,29 @@ SET (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake CACHE PATH "Location of CMake
 # Determine the operating system in detail
 INCLUDE (${PROJECT_CMAKE_DIR}/internal/FindOS.cmake)
 
-# Enable -Wall by default
+
+# Enable -Wall by default unless on Win or Solaris
 IF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
     # Using -Wall on Windows causes MSVC to produce thousands of warnings in its
     # own standard headers, dramatically slowing down the build.
-     #SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -g -Wall")
-     #SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -Wall")
-    SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall")
-    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall")
+    SET (WALL "-Wall" )
 ENDIF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
+
+#####################################
+# Build type cflags
+SET (CMAKE_CXX_FLAGS_RELEASE " -O3 -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
+SET (CMAKE_CXX_FLAGS_DEBUG " -ggdb  ${WALL} " CACHE INTERNAL "C Flags for debug" FORCE)
+SET (CMAKE_CXX_FLAGS_PROFILE " -O3 -ggdb -pg ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
+
+#####################################
+# Set the default build type
+IF (NOT CMAKE_BUILD_TYPE)
+  SET (CMAKE_BUILD_TYPE "release" CACHE STRING 
+    "Choose the type of build, options are: release (default) debug profile" FORCE)
+ENDIF (NOT CMAKE_BUILD_TYPE)
+STRING(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
+
+MESSAGE( STATUS "Build type ${CMAKE_BUILD_TYPE}" )
 
 ENABLE_TESTING()
 
@@ -47,28 +61,16 @@ ENABLE_TESTING()
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage.pc.in ${CMAKE_CURRENT_BINARY_DIR}/stage.pc @ONLY)
 INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage.pc DESTINATION lib/pkgconfig/)
 
-# Create the config.h file
 SET(RGBFILE ${CMAKE_INSTALL_PREFIX}/share/stage/rgb.txt )
 
+# Create the config.h file
 # config.h belongs with the source (and not in CMAKE_CURRENT_BINARY_DIR as in Brian's original version)
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in 
 					${CMAKE_CURRENT_SOURCE_DIR}/config.h @ONLY)
 
-# Enable -Wall by default
-#SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall")
-#SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall")
-SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall")
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-
 message( STATUS "Checking for libtool" )
 find_path( LTDL_INCLUDE_DIR ltdl.h DOC "Libtool include dir" )
 find_library( LTDL_LIB ltdl DOC "Libtool lib" )
-
-#IF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
-#	message( FATAL_ERROR "libtool library not found, aborting" )
-#ELSE (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
-#	message( STATUS "  found" )
-#ENDIF (${LTDL_LIB} STREQUAL "LTDL_LIB-NOTFOUND")
 
 include_directories( 
 	${OPENGL_INCLUDE_DIR}

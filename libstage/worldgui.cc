@@ -335,18 +335,8 @@ bool WorldGui::Update()
 	  pause_time = true;
   }
 
-  bool val = true;
+  bool val = World::Update(); 
   
-  if( paused )	 
-	 {
-		if( steps > 0 )
-		  {
-			 val = World::Update();
-			 --steps;
-		  }
-	 }
-  else
-	 val = World::Update();
 	 
   stg_usec_t interval;
   stg_usec_t timenow;
@@ -363,7 +353,7 @@ bool WorldGui::Update()
 		
 		double sleeptime = (double)interval_real - (double)interval;
 		
-		if( paused ) sleeptime = 20000; // spare the CPU if we're paused
+		if( paused ) sleeptime = 50000; // spare the CPU if we're paused
 		
 		// printf( "real %.2f interval %.2f sleeptime %.2f\n", 
 		//	 (double)interval_real,
@@ -627,6 +617,7 @@ void WorldGui::pauseCb( Fl_Widget* w, WorldGui* worldGui )
 
 void WorldGui::onceCb( Fl_Widget* w, WorldGui* worldGui )
 {
+  puts( "ONCE" );
   worldGui->paused = true;
   worldGui->steps = 1; // number of steps to run  
 }
