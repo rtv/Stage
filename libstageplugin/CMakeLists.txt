@@ -28,7 +28,6 @@ add_library( stageplugin MODULE ${stagepluginSrcs} )
 target_link_libraries( stageplugin
 		       stage
 		       ${PLAYER_LIBRARIES}
-		       playerutils
 		       ${OPENGL_LIBRARIES}
 
 )
