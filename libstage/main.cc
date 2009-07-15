@@ -27,6 +27,7 @@ static struct option longopts[] = {
 	{ "gui",  optional_argument,   NULL,  'g' },
 	{ "clock",  optional_argument,   NULL,  'c' },
 	{ "help",  optional_argument,   NULL,  'h' },
+	//   { "args", optional_argument, NULL, 'a' },
 	{ NULL, 0, NULL, 0 }
 };
 
@@ -56,15 +57,18 @@ int main( int argc, char* argv[] )
 			 usegui = false;
 			 printf( "[GUI disabled]" );
 			 break;
+//         case 'a':
+// 			 printf( "[ignoring unrecognized arguments]" );
+// 			 break;
 		  case 'h':  
 		  case '?':  
 			 puts( USAGE );
-			 exit(0);
+			 //			 exit(0);
 			 break;
 		  default:
 			 printf("unhandled option %c\n", ch );
 			 puts( USAGE );
-			 exit(0);
+			 //exit(0);
 		  }
 	 }
   

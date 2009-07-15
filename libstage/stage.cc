@@ -7,6 +7,9 @@
 #include "file_manager.hh"
 using namespace Stg;
 
+// static member - a vector command line arguments
+std::vector<std::string> World::args;
+
 static bool init_called = false;
 
 
@@ -18,6 +21,11 @@ const char* Stg::Version()
 void Stg::Init( int* argc, char** argv[] )
 {
   PRINT_DEBUG( "Stg::Init()" );
+  
+  // copy the command line args for controllers to inspect
+  World::args.clear();
+  for( int i=0; i<*argc; i++ )
+	 World::args.push_back( (*argv)[i] ); 
 
   // seed the RNG 
   srand48( time(NULL) );

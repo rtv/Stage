@@ -829,6 +829,11 @@ namespace Stg
     friend class ModelFiducial;
     friend class Canvas;
 
+  public: 
+	 /** contains the command line arguments passed to Stg::Init(), so
+		  that controllers can read them. */
+	 static std::vector<std::string> args;
+
   private:
 	
     static std::set<World*> world_set; ///< all the worlds that exist
