@@ -48,15 +48,6 @@ define p2dx_sonar_front ranger
   spose[6] [ 0.115 -0.115 -50 ]
   spose[7] [ 0.075 -0.130 -90 ]
 
-#  spose[8] [ -0.155 -0.130 -90 ]
-#  spose[9] [ -0.195 -0.115 -130 ]
-#  spose[10] [ -0.230 -0.080 -150 ]
-#  spose[11] [ -0.250 -0.025 -170 ]
-#  spose[12] [ -0.250 0.025 170 ]
-#  spose[13] [ -0.230 0.080 150 ]
-#  spose[14] [ -0.195 0.115 130 ]
-#  spose[15] [ -0.155 0.130 90 ]	
-		
   # define the field of view of each transducer [range_min range_max view_angle]
   sview [0 5.0 15]
 
