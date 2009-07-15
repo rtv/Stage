@@ -153,6 +153,7 @@ void PowerPack::Subtract( stg_joules_t j )
 		global_input += j; // record energy entering the system
 		return;
 	 }
+
   stg_joules_t amount = MIN( stored, j );  
 
   stored -= amount;  
@@ -220,7 +221,7 @@ void PowerPack::SetStored( stg_joules_t j )
 
 void PowerPack::Dissipate( stg_joules_t j )
 {
-  stg_joules_t amount = MIN( stored, j );
+  stg_joules_t amount = (stored < 0) ? j : MIN( stored, j );
   
   Subtract( amount );
   dissipated += amount;

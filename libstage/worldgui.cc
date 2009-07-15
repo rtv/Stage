@@ -337,7 +337,11 @@ bool WorldGui::Update()
 
   bool val = World::Update(); 
   
-	 
+  // if we're paused and counting down, we need to redraw the window
+  // because it's not drawn on a timer when paused.
+  if( steps )	 
+	 canvas->redraw(); // in case something happened that will never be
+	 	 	 
   stg_usec_t interval;
   stg_usec_t timenow;
   
@@ -346,7 +350,7 @@ bool WorldGui::Update()
     Fl::check();
 
     timenow = RealTimeNow();
-
+	 
 	 // do
 	 {
 		interval = timenow - real_time_of_last_update; // guaranteed to be >= 0

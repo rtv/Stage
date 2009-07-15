@@ -95,8 +95,9 @@ define autorob pioneer2dx
 (		 
  sicklaser( samples 32 range_max 5 laser_return 2 watts 30 )
  ctrl "fasr"
- joules 100000 
- joules_capacity 400000 
+ #joules 100000 
+ joules -1
+ #joules_capacity 400000 
  fiducial_return 0
  charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
 )
@@ -112,12 +113,6 @@ autorob( pose [-0.187 3.065 0 -153.738] joules 400000 )
 autorob( pose [4.309 3.736 0 121.988] joules 100000 )
 autorob( pose [6.261 7.461 0 0] joules 200000 )
 
-#autorob( pose [5.060 6.868 0 -61.295] joules 300000 )
-#autorob( pose [4.161 5.544 0 -147.713] joules 400000 )
-#autorob( pose [4.911 4.552 0 -125.236] joules 100000 )
-#autorob( pose [3.985 6.474 0 -158.025] joules 200000 )
-#autorob( pose [5.440 5.317 0 -26.545] joules 300000 )
-#autorob( pose [6.362 5.632 0 163.239] joules 400000 )
 
 #autorob( pose [7.559 4.764 0 -139.066] )
 #autorob( pose [5.471 7.446 0 77.301]  )

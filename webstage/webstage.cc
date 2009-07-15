@@ -7,11 +7,11 @@ using namespace Stg;
 
 /* options descriptor */
 static struct option longopts[] = {
-	{ "gui",  no_argument,   NULL,  'g' },
-	{ "port",  required_argument,   NULL,  'p' },
-	{ "host",  required_argument,   NULL,  'h' },
-	{ "federation",  required_argument,   NULL,  'f' },
-	{ NULL, 0, NULL, 0 }
+  { "gui",  no_argument,   NULL,  'g' },
+  { "port",  required_argument,   NULL,  'p' },
+  { "host",  required_argument,   NULL,  'h' },
+  { "federation",  required_argument,   NULL,  'f' },
+  { NULL, 0, NULL, 0 }
 };
 
 class WebStage : public websim::WebSim
@@ -20,7 +20,7 @@ class WebStage : public websim::WebSim
   
 public:
   WebStage( Stg::World* world,
-	    const std::string& host, const unsigned short port ) :
+				const std::string& host, const unsigned short port ) :
     websim::WebSim( host, port ),
     world(world)
   {	
@@ -37,35 +37,35 @@ public:
   
   virtual bool ClockStart()
   {
-	puts( "[WebStage]  Clock start" );
-	world->Start();
-	return true;
+	 puts( "[WebStage]  Clock start" );
+	 world->Start();
+	 return true;
   }
 
   virtual bool ClockStop()
   {
-	puts( "[WebStage]  Clock stop" );
-	world->Stop();
-	return true;
+	 puts( "[WebStage]  Clock stop" );
+	 world->Stop();
+	 return true;
   }
 
   virtual bool ClockRunFor( double usec )
   {
-	puts( "[WebStage]  Clock tick" );
+	 puts( "[WebStage]  Clock tick" );
 
-	world->paused = true;
-	// when paused, the world will run while steps > 0, decrementing
-	// steps each cycle.
-	world->steps = (usec * 1e6) / world->GetSimInterval();
+	 world->paused = true;
+	 // when paused, the world will run while steps > 0, decrementing
+	 // steps each cycle.
+	 world->steps = (usec * 1e6) / world->GetSimInterval();
 
-	return true;
+	 return true;
   }
 
   void Push( const std::string& name )
   {
-	Stg::Model* mod = world->GetModel( name.c_str() );
+	 Stg::Model* mod = world->GetModel( name.c_str() );
 
-	if( mod )
+	 if( mod )
 		{
 		  websim::Pose p;
 		  websim::Velocity v;
@@ -124,36 +124,36 @@ public:
   }
 
   virtual bool GetModelChildren(const std::string& model, 
-									std::vector<std::string>& children)
+										  std::vector<std::string>& children)
   {
-	std::vector<Model*> c;
+	 std::vector<Model*> c;
 
-	if(model == "")
-	{
-		c = world->GetChildren();
-	}
-	else
-	{
-		Stg::Model* mod = world->GetModel( model.c_str() );
-		if( mod ){
-			
-			c = mod->GetChildren();
-				
-		}else{
-			printf("Warning: Tried to get the children of unknown model:%s \n", model.c_str());
-			return false;
+	 if(model == "")
+		{
+		  c = world->GetChildren();
 		}
+	 else
+		{
+		  Stg::Model* mod = world->GetModel( model.c_str() );
+		  if( mod ){
 			
-	 }
+			 c = mod->GetChildren();
+				
+		  }else{
+			 printf("Warning: Tried to get the children of unknown model:%s \n", model.c_str());
+			 return false;
+		  }
+			
+		}
 	
-	for( std::vector<Model*>::iterator it = c.begin();
-		 it != c.end();
-		 it++ )
-	  {		
-		children.push_back(std::string((*it)->Token()));
-	  }
+	 for( std::vector<Model*>::iterator it = c.begin();
+			it != c.end();
+			it++ )
+		{		
+		  children.push_back(std::string((*it)->Token()));
+		}
 
-	return true;	
+	 return true;	
 	
   }
 
@@ -184,168 +184,165 @@ public:
 
   virtual bool GetModelData(const std::string& name,
 	
-								std::string& response,
-								websim::Format format,
-								void* xmlparent) {
-	std::string str;
-	websim::Time t = GetTime();
+									 std::string& response,
+									 websim::Format format,
+									 void* xmlparent) {
+	 std::string str;
+	 websim::Time t = GetTime();
 
-	Model*mod = world->GetModel( name.c_str() );
-	if(mod){
+	 Model*mod = world->GetModel( name.c_str() );
+	 if(mod){
 		stg_model_type_t type = mod->GetModelType();
 		if(type == MODEL_TYPE_POSITION){
 			
 								
 			
-			websim::Pose p;
-			websim::Velocity v;
-			websim::Acceleration a;
+		  websim::Pose p;
+		  websim::Velocity v;
+		  websim::Acceleration a;
 			
-			Stg::Pose sp = mod->GetPose(); 
-		  	p.x = sp.x;
-			p.y = sp.y;
-			p.z = sp.z;
-		  	p.a = sp.a;
+		  Stg::Pose sp = mod->GetPose(); 
+		  p.x = sp.x;
+		  p.y = sp.y;
+		  p.z = sp.z;
+		  p.a = sp.a;
 
-		  	Stg::Velocity sv = mod->GetVelocity(); 
-		  	v.x = sv.x;
-		  	v.y = sv.y;
-		  	v.z = sv.z;
-		  	v.a = sv.a;
+		  Stg::Velocity sv = mod->GetVelocity(); 
+		  v.x = sv.x;
+		  v.y = sv.y;
+		  v.z = sv.z;
+		  v.a = sv.a;
 		
-			WebSim::GetPVA(name, t, p, v, a, format, response, xmlparent);
+		  WebSim::GetPVA(name, t, p, v, a, format, response, xmlparent);
 			
 			
 
 		}else if(type == MODEL_TYPE_LASER){
 
- 			 uint32_t resolution;
-			 double fov;
-			 websim::Pose p;
-			 std::vector<double> ranges;												
+		  uint32_t resolution;
+		  double fov;
+		  websim::Pose p;
+		  std::vector<double> ranges;												
 			 
 
- 	                 ModelLaser* laser = (ModelLaser*)mod;  		
-        	         uint32_t sample_count=0;
-  		     	 std::vector<ModelLaser::Sample> scan = laser->GetSamples();
+		  ModelLaser* laser = (ModelLaser*)mod;  		
+		  uint32_t sample_count=0;
+		  std::vector<ModelLaser::Sample> scan = laser->GetSamples();
         	     	 
-		     	 ModelLaser::Config cfg = laser->GetConfig();
-		     	 resolution =  cfg.resolution;
-			 fov = cfg.fov;
+		  ModelLaser::Config cfg = laser->GetConfig();
+		  resolution =  cfg.resolution;
+		  fov = cfg.fov;
                	     		
-			 sample_count = scan.size();
-			 for(unsigned int i=0;i<sample_count;i++)
-				ranges.push_back(scan[i].range);
+		  sample_count = scan.size();
+		  for(unsigned int i=0;i<sample_count;i++)
+			 ranges.push_back(scan[i].range);
 			 
-			 WebSim::GetLaserData(name, t, resolution, fov, p, ranges, format, response, xmlparent);
+		  WebSim::GetLaserData(name, t, resolution, fov, p, ranges, format, response, xmlparent);
 			 
 
 		}else if(type == MODEL_TYPE_RANGER){
 
-			 std::vector<websim::Pose> p;
-			 std::vector<double> ranges;
+		  std::vector<websim::Pose> p;
+		  std::vector<double> ranges;
   			
-			 ModelRanger* ranger = (ModelRanger*)mod;  		
+		  ModelRanger* ranger = (ModelRanger*)mod;  		
                      
-			if(ranger){ 					
-				for(unsigned int i=0;i<ranger->sensors.size();i++){
-					//char str[10];
-					//sprintf(str,"size:%d",ranger->sensors.size());
-					//puts(str);
-					//puts("in the ranger loop");
-					websim::Pose pos;
-					Pose rpos;
-					rpos = ranger->sensors[i].pose;
-					pos.x = rpos.x;
-					pos.y = rpos.y;
-					pos.z = rpos.z;
-					pos.a = rpos.a;
-					p.push_back(pos);
+		  if(ranger){ 					
+			 for(unsigned int i=0;i<ranger->sensors.size();i++){
+				//char str[10];
+				//sprintf(str,"size:%d",ranger->sensors.size());
+				//puts(str);
+				//puts("in the ranger loop");
+				websim::Pose pos;
+				Pose rpos;
+				rpos = ranger->sensors[i].pose;
+				pos.x = rpos.x;
+				pos.y = rpos.y;
+				pos.z = rpos.z;
+				pos.a = rpos.a;
+				p.push_back(pos);
 
-					ranges.push_back(ranger->sensors[i].range);					
-				}
-			}
+				ranges.push_back(ranger->sensors[i].range);					
+			 }
+		  }
 			
-			WebSim::GetRangerData(name, t, p, ranges, format, response, xmlparent);
+		  WebSim::GetRangerData(name, t, p, ranges, format, response, xmlparent);
 
 
 		}else if(type == MODEL_TYPE_FIDUCIAL){
 
- 			 ModelFiducial::Fiducial* fids;
-			 unsigned int n=0;
-			 std::vector<websim::Fiducial> f;												
+		  ModelFiducial::Fiducial* fids;
+		  unsigned int n=0;
+		  std::vector<websim::Fiducial> f;												
 
- 	                 ModelFiducial* fiducial = (ModelFiducial*)mod;  		
+		  ModelFiducial* fiducial = (ModelFiducial*)mod;  		
         	        
 			 
-			 fids = fiducial->GetFiducials(&n);
+		  fids = fiducial->GetFiducials(&n);
      	     	 	           	     		
 			 
-			 for(unsigned int i=0;i<n;i++){
-				websim::Fiducial fid;
-				fid.pos.x = fids[i].range*cos(fids[i].bearing);
-				fid.pos.y = fids[i].range*sin(fids[i].bearing);
-				//fid.range = fids[i].range;
-				//fid.bearing = fids[i].bearing;
-				fid.id = fids[i].id;
+		  for(unsigned int i=0;i<n;i++){
+			 websim::Fiducial fid;
+			 fid.pos.x = fids[i].range*cos(fids[i].bearing);
+			 fid.pos.y = fids[i].range*sin(fids[i].bearing);
+			 //fid.range = fids[i].range;
+			 //fid.bearing = fids[i].bearing;
+			 fid.id = fids[i].id;
 
-				f.push_back(fid);
-				//printf("stage: fiducials:%d\n",f.size());
-			 }
+			 f.push_back(fid);
+			 //printf("stage: fiducials:%d\n",f.size());
+		  }
 	
         	     	          	     		
-			 WebSim::GetFiducialData(name, t, f, format, response, xmlparent);
+		  WebSim::GetFiducialData(name, t, f, format, response, xmlparent);
 			 
 
 		}else{
 			
-			//printf("Warning: Unkown model type\n");	
-			return false;
+		  //printf("Warning: Unkown model type\n");	
+		  return false;
 
 		}
-	}
-	else{
+	 }
+	 else{
 		printf("Warning: tried to get the data of unkown model:%s .\n", name.c_str()); 
 		return false;
-	}
-	return true;
+	 }
+	 return true;
   }
   
- bool GetModelType(const std::string& name, 
-        								
-        								std::string& type ){
-
-	Model*mod = world->GetModel( name.c_str() );
-	if(mod){
-		stg_model_type_t mtype = mod->GetModelType();
-		
-		if(mtype == MODEL_TYPE_POSITION){
-			type =  "Position";
-		}else if(mtype == MODEL_TYPE_LASER){
-			type =  "Laser";
-
-		}else if(mtype == MODEL_TYPE_RANGER){
-			type = "Ranger";
-
-		}else if(mtype == MODEL_TYPE_FIDUCIAL){
-			type = "Fiducial";
-
-		}else{
-			type = "";
-
-		}
-		
-		return true;
-	}	
-
-
-	return false;
-
-  }
+  bool GetModelType(const std::string& name,         								
+						  std::string& type )
+  {
+	 
+	 Model*mod = world->GetModel( name.c_str() );
+	 if(mod)
+		{
+		  switch( mod->GetModelType() )
+			 {
+			 case MODEL_TYPE_POSITION:
+				type =  "Position"; 
+				break;
+			 case MODEL_TYPE_LASER:
+				type =  "Laser"; 
+				break;
+			 case MODEL_TYPE_RANGER:
+				type = "Ranger"; 
+				break;
+			 case MODEL_TYPE_FIDUCIAL:
+				type = "Fiducial";
+				break;
+			 default:
+				type = "";
+			 }		
+		  return true;
+		}  	  
+  return false;  
+}
 
 
 
- virtual bool SetModelPVA(const std::string& name, 
+  virtual bool SetModelPVA(const std::string& name, 
 									const websim::Pose& p,
 									const websim::Velocity& v,
 									const websim::Acceleration& a,
@@ -367,38 +364,38 @@ public:
 	 return true;
   }
 
-  virtual bool GetModelPVA(const std::string& name, 
-									websim::Time& t,
-									websim::Pose& p,
-									websim::Velocity& v,
-									websim::Acceleration& a,
-									std::string& error)
-  {
-	 //printf( "get model name:%s\n", name.c_str() ); 
+virtual bool GetModelPVA(const std::string& name, 
+								 websim::Time& t,
+								 websim::Pose& p,
+								 websim::Velocity& v,
+								 websim::Acceleration& a,
+								 std::string& error)
+{
+  //printf( "get model name:%s\n", name.c_str() ); 
 
-	 t = GetTime();
+  t = GetTime();
 
-	 Model* mod = world->GetModel( name.c_str() );
-	 if( mod )
-		{
-		  Stg::Pose sp = mod->GetPose(); 
-		  p.x = sp.x;
-		  p.y = sp.y;
-		  p.z = sp.z;
-		  p.a = sp.a;
+  Model* mod = world->GetModel( name.c_str() );
+  if( mod )
+	 {
+		Stg::Pose sp = mod->GetPose(); 
+		p.x = sp.x;
+		p.y = sp.y;
+		p.z = sp.z;
+		p.a = sp.a;
 
-		  Stg::Velocity sv = mod->GetVelocity(); 
-		  v.x = sv.x;
-		  v.y = sv.y;
-		  v.z = sv.z;
-		  v.a = sv.a;
-		}
-	 else
-		printf( "Warning: attempt to set PVA for unrecognized model \"%s\"\n",
-				  name.c_str() );
+		Stg::Velocity sv = mod->GetVelocity(); 
+		v.x = sv.x;
+		v.y = sv.y;
+		v.z = sv.z;
+		v.a = sv.a;
+	 }
+  else
+	 printf( "Warning: attempt to set PVA for unrecognized model \"%s\"\n",
+				name.c_str() );
 
-	 return true;
-  }
+  return true;
+}
 /*
   virtual bool GetLaserData(const std::string& name,			
   websim::Time& t,												
@@ -410,188 +407,188 @@ public:
   void* parent){
 
 
-	 t = GetTime();
+  t = GetTime();
 
-	 Model* mod = world->GetModel( name.c_str() );
-	 if( mod )
-		{
-			ModelLaser* laser = (ModelLaser*)mod->GetModel("laser:0");  		
+  Model* mod = world->GetModel( name.c_str() );
+  if( mod )
+  {
+  ModelLaser* laser = (ModelLaser*)mod->GetModel("laser:0");  		
 			
-			if(laser){
-				uint32_t sample_count=0;
-				ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
-				assert(scan);
+  if(laser){
+  uint32_t sample_count=0;
+  ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
+  assert(scan);
 		    
-				ModelLaser::Config  cfg = laser->GetConfig();
-				resolution =  cfg.resolution;
-				fov = cfg.fov;
+  ModelLaser::Config  cfg = laser->GetConfig();
+  resolution =  cfg.resolution;
+  fov = cfg.fov;
         
-				for(unsigned int i=0;i<sample_count;i++)
-					ranges.push_back(scan[i].range);
-		     }else{
+  for(unsigned int i=0;i<sample_count;i++)
+  ranges.push_back(scan[i].range);
+  }else{
 
-				printf( "Warning: attempt to get laser data for unrecognized laser model of model \"%s\"\n",
-				  name.c_str() );
-  				return false;
+  printf( "Warning: attempt to get laser data for unrecognized laser model of model \"%s\"\n",
+  name.c_str() );
+  return false;
 
 
-		          }
+  }
 	         	  
-		}
-	 else{
-		printf( "Warning: attempt to get laser data for unrecognized model \"%s\"\n",
-				  name.c_str() );
-  		return false;
-	     }
+  }
+  else{
+  printf( "Warning: attempt to get laser data for unrecognized model \"%s\"\n",
+  name.c_str() );
+  return false;
+  }
 
   return true;
 
   }					   
   virtual bool GetRangerData(const std::string& name,
-									websim::Time& t,
-									std::vector<websim::Pose>& p,
-									std::vector<double>& ranges,
-  								        std::string& response,
-									xmlNode* parent){
-	 t = GetTime();
+  websim::Time& t,
+  std::vector<websim::Pose>& p,
+  std::vector<double>& ranges,
+  std::string& response,
+  xmlNode* parent){
+  t = GetTime();
 
-	 Model* mod = world->GetModel( name.c_str() );
-	 if( mod )
-		 {
-			 ModelRanger* ranger = (ModelRanger*)mod->GetModel("ranger:0");  		
+  Model* mod = world->GetModel( name.c_str() );
+  if( mod )
+  {
+  ModelRanger* ranger = (ModelRanger*)mod->GetModel("ranger:0");  		
        
-			 if(ranger){
-				 uint32_t count = ranger->sensors.size();
-				 for(unsigned int i=0;i<count;i++)
-					 ranges.push_back(ranger->sensors[i].range);
-				 //std::copy(ranger->samples,ranger->samples+ranger->sensor_count,ranges.begin());
+  if(ranger){
+  uint32_t count = ranger->sensors.size();
+  for(unsigned int i=0;i<count;i++)
+  ranges.push_back(ranger->sensors[i].range);
+  //std::copy(ranger->samples,ranger->samples+ranger->sensor_count,ranges.begin());
 				 
-				 for(unsigned int i=0;i<count;i++){
-					 websim::Pose pos;
-					 Pose rpos;
-					 rpos = ranger->sensors[i].pose;
-					 pos.x = rpos.x;
-					 pos.y = rpos.y;
-					 pos.z = rpos.z;
-					 pos.a = rpos.a;
-					 p.push_back(pos);					
-				 }
+  for(unsigned int i=0;i<count;i++){
+  websim::Pose pos;
+  Pose rpos;
+  rpos = ranger->sensors[i].pose;
+  pos.x = rpos.x;
+  pos.y = rpos.y;
+  pos.z = rpos.z;
+  pos.a = rpos.a;
+  p.push_back(pos);					
+  }
 				 
-			 }else{
+  }else{
 				 
-				 printf( "Warning: attempt to get ranger data for unrecognized ranger model of model \"%s\"\n",
-								 name.c_str() );
-				 return false;				 				 
-			 }	     
-		 }
-	 else{
-		printf( "Warning: attempt to get ranger data for unrecognized model \"%s\"\n",
-				  name.c_str() );
-  		return false;
-	     }
+  printf( "Warning: attempt to get ranger data for unrecognized ranger model of model \"%s\"\n",
+  name.c_str() );
+  return false;				 				 
+  }	     
+  }
+  else{
+  printf( "Warning: attempt to get ranger data for unrecognized model \"%s\"\n",
+  name.c_str() );
+  return false;
+  }
 
   return true;
 
-}*/
+  }*/
 
-   virtual bool GetModelGeometry(const std::string& name,
-									double& x,
-									double& y,
-									double& z,
-									websim::Pose& center,
-									std::string& response)
-  {
-	if(name == "sim"){
+virtual bool GetModelGeometry(const std::string& name,
+										double& x,
+										double& y,
+										double& z,
+										websim::Pose& center,
+										std::string& response)
+{
+  if(name == "sim"){
 	
-		stg_bounds3d_t ext = world->GetExtent();
+	 stg_bounds3d_t ext = world->GetExtent();
     	
-		x = ext.x.max - ext.x.min;
-		y = ext.y.max - ext.y.min;
-		z = ext.z.max - ext.z.min;
+	 x = ext.x.max - ext.x.min;
+	 y = ext.y.max - ext.y.min;
+	 z = ext.z.max - ext.z.min;
 
-	}
-	else
-	{
+  }
+  else
+	 {
 		Model* mod = world->GetModel(name.c_str());
 		if(mod){
-			Geom ext = mod->GetGeom();
+		  Geom ext = mod->GetGeom();
     	
-			x = ext.size.x;
-			y = ext.size.y;
-			z = ext.size.z;
-			center.x = ext.pose.x;
-			center.y = ext.pose.y;
-			center.a = ext.pose.a;
+		  x = ext.size.x;
+		  y = ext.size.y;
+		  z = ext.size.z;
+		  center.x = ext.pose.x;
+		  center.y = ext.pose.y;
+		  center.a = ext.pose.a;
 		}
 		else
-		{
-		  printf("Warning: attemp to get the extent of unrecognized model \"%s\"\n", name.c_str());
-		  return false;		
-		}
-	}
+		  {
+			 printf("Warning: attemp to get the extent of unrecognized model \"%s\"\n", name.c_str());
+			 return false;		
+		  }
+	 }
         
-	return true;
-  }
+  return true;
+}
 
-   static int CountRobots(Model * mod, int* n ){
+static int CountRobots(Model * mod, int* n ){
  
- 	if(n && mod->GetModelType() == MODEL_TYPE_POSITION)
-		(*n)++;
+  if(n && mod->GetModelType() == MODEL_TYPE_POSITION)
+	 (*n)++;
   
-	return 0;
-   } 
+  return 0;
+} 
   
-   virtual bool GetNumberOfRobots(unsigned int& n)
-   {
+virtual bool GetNumberOfRobots(unsigned int& n)
+{
 	
 	
-	world->ForEachDescendant((stg_model_callback_t)CountRobots, &n);	
-	return true;
+  world->ForEachDescendant((stg_model_callback_t)CountRobots, &n);	
+  return true;
 
-   }
+}
 /*
-   virtual bool GetModelTree()
+  virtual bool GetModelTree()
   {
 	
-//	world->ForEachDescendant((stg_model_callback_t)printname, NULL);	
+  //	world->ForEachDescendant((stg_model_callback_t)printname, NULL);	
 
-	return true;
+  return true;
   }
-  */
-  virtual bool GetSayStrings(std::vector<std::string>& sayings)
-  {
-	unsigned int n=0;
-	this->GetNumberOfRobots(n);
+*/
+virtual bool GetSayStrings(std::vector<std::string>& sayings)
+{
+  unsigned int n=0;
+  this->GetNumberOfRobots(n);
 	
-	for(unsigned int i=0;i<n;i++){
-		char temp[128];
-		sprintf(temp,"position:%d",i);
-		Model *mod = world->GetModel(temp);
-		if(mod->GetSayString() != "")
+  for(unsigned int i=0;i<n;i++){
+	 char temp[128];
+	 sprintf(temp,"position:%d",i);
+	 Model *mod = world->GetModel(temp);
+	 if(mod->GetSayString() != "")
 		{	
 			
-			std::string str = temp;
-			str += " says: \" ";
-			str += mod->GetSayString();
-			str += " \" ";
+		  std::string str = temp;
+		  str += " says: \" ";
+		  str += mod->GetSayString();
+		  str += " \" ";
 			
-			sayings.push_back(str);
+		  sayings.push_back(str);
 			
 		}
-	}
-
-	return true;
   }
 
-  virtual websim::Time GetTime()
-  {
-	 stg_usec_t stgtime = world->SimTimeNow();
+  return true;
+}
 
-	 websim::Time t;
-	 t.sec = stgtime / 1e6;
-	 t.usec = stgtime - (t.sec * 1e6);
-	 return t;
-  }
+virtual websim::Time GetTime()
+{
+  stg_usec_t stgtime = world->SimTimeNow();
+
+  websim::Time t;
+  t.sec = stgtime / 1e6;
+  t.usec = stgtime - (t.sec * 1e6);
+  return t;
+}
 
 };
 

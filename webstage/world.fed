@@ -1,7 +1,14 @@
 
+# federation entry
+# maps WebSim servers identified by host:port onto logical node names used below
+
 [federation]
 localhost:8000=pete
 localhost:8001=dud
+
+
+# node entries
+# these map models on the node to puppets on other hosts
 
 [pete]
 position:0=dud:model

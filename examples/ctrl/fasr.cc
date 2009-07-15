@@ -417,6 +417,8 @@ public:
 			 }
 		}
   
+
+	 //printf( "diss: %.2f\n", pos->FindPowerPack()->GetDissipated() );
   
 	 return 0; // run again
   }
