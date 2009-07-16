@@ -334,14 +334,16 @@ bool WorldGui::Update()
 	  TogglePause();
 	  pause_time = true;
   }
-
-  bool val = World::Update(); 
   
   // if we're paused and counting down, we need to redraw the window
   // because it's not drawn on a timer when paused.
-  if( steps )	 
-	 canvas->redraw(); // in case something happened that will never be
-	 	 	 
+  bool need_redraw = paused && (steps > 0);
+  
+  bool val = World::Update(); 
+  
+  if( need_redraw )
+	 canvas->redraw();
+ 	 
   stg_usec_t interval;
   stg_usec_t timenow;
   
@@ -599,24 +601,30 @@ void WorldGui::fasttimeCb( Fl_Widget* w, WorldGui* wg )
   wg->interval_real = 0;
 }
 
+void WorldGui::Start()
+{
+  World::Start();
+  
+  // start the timer that causes regular redraws
+  Fl::add_timeout( ((double)canvas->interval/1000), 
+						 (Fl_Timeout_Handler)Canvas::TimerCallback, 
+						 canvas );
+}
+
+void WorldGui::Stop()
+{
+  World::Stop();
+  
+  // remove the redraw timeout
+  Fl::remove_timeout( (Fl_Timeout_Handler)Canvas::TimerCallback );	
+
+  // drawn 'cos we cancelled the timeout
+  canvas->redraw(); // in case something happened that will never be
+}  
+
 void WorldGui::pauseCb( Fl_Widget* w, WorldGui* worldGui )
 {
   worldGui->TogglePause();
-
-  if( ! worldGui->paused )
-	 {
-		// // start the timer that causes regular redraws
-		Fl::add_timeout( ((double)worldGui->canvas->interval/1000), 
-							  (Fl_Timeout_Handler)Canvas::TimerCallback, 
-							  worldGui->canvas );
-	 }
-  else
-	 { // remove the timeout
-		Fl::remove_timeout( (Fl_Timeout_Handler)Canvas::TimerCallback );
-	 }
-  
-  worldGui->canvas->redraw(); // in case something happened that will never be
-  // drawn 'cos we cancelled the timeout
 }
 
 void WorldGui::onceCb( Fl_Widget* w, WorldGui* worldGui )

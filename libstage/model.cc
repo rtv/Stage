@@ -201,8 +201,8 @@ Model::Model( World* world,
     color( 1,0,0 ), // red
     data_fresh(false),
     disabled(false),
-	custom_visual_list( NULL ),
-    flag_list(NULL),
+	 custom_visual_list( NULL ),
+    flag_list(),
     geom(),
     has_default_block( true ),
     id( Model::count++ ),
@@ -335,7 +335,7 @@ void Model::AddFlag( Flag* flag )
 {
   if( flag )
 	 {
-		flag_list = g_list_append( this->flag_list, flag );		
+		flag_list.push_back( flag );		
 		CallCallbacks( &hooks.flag_incr );		
 	 }
 }
@@ -344,7 +344,8 @@ void Model::RemoveFlag( Flag* flag )
 {
   if( flag )
 	 {
-		flag_list = g_list_remove( this->flag_list, flag );
+		flag_list.erase( remove( flag_list.begin(), flag_list.end(), flag ));
+
 		CallCallbacks( &hooks.flag_decr );
 	 }
 }
@@ -353,18 +354,18 @@ void Model::PushFlag( Flag* flag )
 {
   if( flag )
 	 {
-		flag_list = g_list_prepend( flag_list, flag);
+		flag_list.push_front( flag);
 		CallCallbacks( &hooks.flag_incr );
 	 }
 }
 
 Flag* Model::PopFlag()
 {
-  if( flag_list == NULL )
+  if( flag_list.size() == 0 )
     return NULL;
 
-  Flag* flag = (Flag*)flag_list->data;
-  flag_list = g_list_remove( flag_list, flag );
+  Flag* flag = flag_list.front();
+  flag_list.pop_front();
 
   CallCallbacks( &hooks.flag_decr );
 

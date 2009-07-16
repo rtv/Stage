@@ -438,7 +438,7 @@ void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha, double wid
 
 void Model::DrawFlagList( void )
 {	
-  if( flag_list  == NULL )
+  if( flag_list.size() < 1 )
     return;
   
   PushLocalCoords();
@@ -450,43 +450,20 @@ void Model::DrawFlagList( void )
   Pose gpose = GetGlobalPose();
   glRotatef( 180 + rtod(-gpose.a),0,0,1 );
   
-
-  GList* list = g_list_copy( flag_list );
-  list = g_list_reverse(list);
   
-  for( GList* item = list; item; item = item->next )
-    {
-		
-      Flag* flag = (Flag*)item->data;
-		
-      glTranslatef( 0, 0, flag->size/2.0 );
-				
-      PushColor( flag->color );
-		
+  for( std::list<Flag*>::reverse_iterator it( flag_list.rbegin()); 
+		 it != flag_list.rend(); 
+		 it++ )
+    {		
+      Flag* flag = *it;
 
-      glEnable(GL_POLYGON_OFFSET_FILL);
-      glPolygonOffset(1.0, 1.0);
-      gluQuadricDrawStyle( quadric, GLU_FILL );
-      gluSphere( quadric, flag->size/2.0, 4,2  );
-		glDisable(GL_POLYGON_OFFSET_FILL);
+		glTranslatef( 0, 0, flag->size/2.0 );
+		
+		flag->Draw( quadric );
 
-      // draw the edges darker version of the same color
-		Color c = flag->color;
-		c.r /= 2.0;
-		c.g /= 2.0;
-		c.b /= 2.0;
-		PushColor( c );
-		
-      gluQuadricDrawStyle( quadric, GLU_LINE );
-      gluSphere( quadric, flag->size/2.0, 4,2 );
-		
-      PopColor();
-      PopColor();
-		
       glTranslatef( 0, 0, flag->size/2.0 );
     }
   
-  g_list_free( list );
   
   gluDeleteQuadric( quadric );
   
@@ -514,10 +491,10 @@ void Model::DrawBlinkenlights()
       PushColor( b->color );
 
       if( b->enabled )
-	gluQuadricDrawStyle( quadric, GLU_FILL );
+		  gluQuadricDrawStyle( quadric, GLU_FILL );
       else
-	gluQuadricDrawStyle( quadric, GLU_LINE );
-
+		  gluQuadricDrawStyle( quadric, GLU_LINE );
+		
       gluSphere( quadric, b->size/2.0, 8,8  );
 
       PopColor();

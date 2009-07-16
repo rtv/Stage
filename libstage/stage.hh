@@ -559,6 +559,10 @@ namespace Stg
 
     Flag( Color color, double size );
     Flag* Nibble( double portion );
+
+	 /** Draw the flag in OpenGl. Takes a quadric parameter to save
+		  creating the quadric for each flag */
+	 void Draw(  GLUquadric* quadric );
   };
   
   /** Abstract class for adding visualizations to models. DataVisualize must be overloaded, and is then called in the models local coord system */
@@ -896,10 +900,11 @@ namespace Stg
 	unsigned int steps; ///< When paused, stage updates while steps >
 						///0, decrementing steps with each update.
 
-    void Start(){ paused = false; };
-    void Stop(){ paused = true; };
-    void TogglePause(){ paused = !paused; };
-	bool Paused(){ return( paused ); };
+    virtual void Start(){ paused = false; };
+    virtual void Stop(){ paused = true; };
+    virtual void TogglePause(){ paused ? Start() : Stop(); };
+
+	 bool Paused(){ return( paused ); };
 	
 	 PointIntVec rt_cells;
 	 PointIntVec rt_candidate_cells;
@@ -1471,6 +1476,9 @@ namespace Stg
     virtual bool IsGUI() { return true; }	
 	virtual Model* RecentlySelectedModel();
 
+    virtual void Start();
+    virtual void Stop();
+	 
     void DrawBoundingBoxTree();
 	
     Canvas* GetCanvas( void ) { return canvas; }
@@ -1713,7 +1721,7 @@ namespace Stg
 	 bool data_fresh;
 	 stg_bool_t disabled; ///< if non-zero, the model is disabled  
 	 GList* custom_visual_list;
-	 GList* flag_list;
+	 std::list<Flag*> flag_list;
 	 Geom geom;
 	 Pose global_pose;
 	 bool gpose_dirty; ///< set this to indicate that global pose may have changed  
@@ -2040,7 +2048,7 @@ namespace Stg
 	 void PushFlag( Flag* flag );
 	 Flag* PopFlag();
 	
-	 int GetFlagCount() const { return g_list_length( flag_list ); }
+	 int GetFlagCount() const { return flag_list.size(); }
   
 	 /** Add a pointer to a blinkenlight to the model. */
 	 void AddBlinkenlight( stg_blinkenlight_t* b )
