@@ -18,6 +18,8 @@
 #include <string>
 #include <sstream>
 #include <png.h>
+#include <algorithm>
+#include <functional>      // For greater<int>( )
 
 #include "region.hh"
 #include "file_manager.hh"
@@ -52,7 +54,7 @@ Canvas::Canvas( WorldGui* world,
 							 int width, int height) :
   Fl_Gl_Window( x, y, width, height ),
   colorstack(),  
-  models_sorted( NULL ),
+  models_sorted(),
   current_camera( NULL ),
   camera(),
   perspective_camera(),
@@ -60,7 +62,7 @@ Canvas::Canvas( WorldGui* world,
   wf( NULL ),
   startx( -1 ),
   starty( -1 ),
-  selected_models( NULL ),
+  selected_models(),
   last_selection( NULL ),
   interval(  50 ), //msec between redraws
   // initialize Option objects
@@ -264,44 +266,34 @@ Model* Canvas::getModel( int x, int y )
   return mod;
 }
 
-bool Canvas::selected( Model* mod ) {
-  if( g_list_find( selected_models, mod ) )
-	 return true;
-  else
-	 return false;
+bool Canvas::selected( Model* mod ) 
+{
+  return( std::find( selected_models.begin(), selected_models.end(), mod ) != selected_models.end() );
 }
 
 void Canvas::select( Model* mod ) {
   if( mod )
     {
 		last_selection = mod;
-		selected_models = g_list_prepend( selected_models, mod );
+		selected_models.push_front( mod );
 		
 		//		mod->Disable();
 		redraw();
     }
 }
 
-void Canvas::unSelect( Model* mod ) {
+void Canvas::unSelect( Model* mod ) 
+{
   if( mod )
 	 {
-		if ( GList* link = g_list_find( selected_models, mod ) ) 
-		  {
-			 // remove it from the selected list
-			 selected_models = 
-				g_list_remove_link( selected_models, link );
-			 //			mod->Enable();
-			 redraw();
-		  }
-	 }  
+		selected_models.erase( std::remove( selected_models.begin(), selected_models.end(), mod ));
+		redraw();
+	 }
 }
 
-void Canvas::unSelectAll() { 
-  //	for( GList* it=selected_models; it; it=it->next )
-  //		((Model*)it->data)->Enable();
-	
-  g_list_free( selected_models );
-  selected_models = NULL;
+void Canvas::unSelectAll() 
+{ 
+  selected_models.clear();
 }
 
 // convert from 2d window pixel to 3d world coordinates
@@ -470,9 +462,9 @@ int Canvas::handle(int event)
 				CanvasToWorld( Fl::event_x(), Fl::event_y(),
 									&x, &y, &z );
 				// move all selected models to the mouse pointer
-				for( GList* it = selected_models; it; it=it->next )
+				FOR_EACH( it, selected_models )
 				  {
-					 Model* mod = (Model*)it->data;
+					 Model* mod = *it;
 					 mod->AddToPose( x-sx, y-sy, 0, 0 );
 				  }
 			 }
@@ -490,9 +482,9 @@ int Canvas::handle(int event)
 		  }
 		  else if ( Fl::event_state( FL_BUTTON3 ) || ( Fl::event_state( FL_BUTTON1 ) &&  Fl::event_state( FL_CTRL )  ) ) {
 			 // rotate all selected models
-			 for( GList* it = selected_models; it; it=it->next )
+			 FOR_EACH( it, selected_models )
 				{
-				  Model* mod = (Model*)it->data;
+				  Model* mod = *it;
 				  mod->AddToPose( 0,0,0, 0.05*(dx+dy) );
 				}
 		  }
@@ -561,13 +553,13 @@ void Canvas::FixViewport(int W,int H)
 
 void Canvas::AddModel( Model*  mod  )
 {
-  models_sorted = g_list_append( models_sorted, mod );
+  models_sorted.push_back( mod );
 }
 
 void Canvas::RemoveModel( Model*  mod  )
 {
   printf( "removing model %s from canvas list\n", mod->Token() );
-  models_sorted = g_list_remove( models_sorted, mod );
+  models_sorted.erase( std::remove( models_sorted.begin(), models_sorted.end(), mod ));
 }
 
 void Canvas::DrawGlobalGrid()
@@ -664,8 +656,9 @@ void Canvas::DrawFloor()
 
 void Canvas::DrawBlocks() 
 {
-  LISTMETHOD( models_sorted, Model*, DrawBlocksTree );
-  
+  FOR_EACH( it, models_sorted )
+	 (*it)->DrawBlocksTree();
+
   // some models may be carried by others - this prevents them being drawn twice
 //   for( GList* it = models_sorted; it; it=it->next )
 // 	 {
@@ -722,26 +715,28 @@ void Canvas::resetCamera()
   //TODO reset perspective cam
 }
 
-// used to sort a list of models by inverse distance from the x,y pose in [coords]
-gint compare_distance( Model* a, Model* b, double coords[2] )
+
+class DistFuncObj
 {
-  Pose a_pose = a->GetGlobalPose();
-  Pose b_pose = b->GetGlobalPose();
+  stg_meters_t x, y;
+  DistFuncObj( stg_meters_t x, stg_meters_t y ) 
+  : x(x), y(y) {}
   
-  double a_dist = hypot( coords[1] - a_pose.y,
-								 coords[0] - a_pose.x );
-  
-  double b_dist = hypot( coords[1] - b_pose.y,
-								 coords[0] - b_pose.x );
-  
-  if( a_dist < b_dist )
-	 return 1;
+  bool operator()(const Model* a, const Model* b ) const
+  { 
+	 Pose a_pose = a->GetGlobalPose();
+	 Pose b_pose = b->GetGlobalPose();
+	 
+	 stg_meters_t a_dist = hypot( y - a_pose.y,
+											x - a_pose.x );
+	 
+	 stg_meters_t b_dist = hypot( y - b_pose.y,
+											x - b_pose.x );
+	 
+	 return (  a_dist < b_dist );
+  }
+};
 
-  if( a_dist > b_dist )
-	 return -1;
-
-  return 0; // must be the same
-}
 
 void Canvas::renderFrame()
 {
@@ -754,15 +749,19 @@ void Canvas::renderFrame()
   x += -sin( sphi ) * 100;
   y += -cos( sphi ) * 100;
 	
-  double coords[2];
-  coords[0] = x;
-  coords[1] = y;
+  //double coords[2];
+  //coords[0] = x;
+  //coords[1] = y;
   
   // sort the list of models by inverse distance from the camera -
   // probably doesn't change too much between frames so this is
   // usually fast
-  models_sorted = g_list_sort_with_data( models_sorted, (GCompareDataFunc)compare_distance, coords );
+  // TODO
+  //models_sorted = g_list_sort_with_data( models_sorted, (GCompareDataFunc)compare_distance, coords );
   
+  // TODO: understand why this doesn't work and fix it - just cosmetic but important!
+  //std::sort( models_sorted.begin(), models_sorted.end(), DistFuncObj(x,y) );
+
   glEnable( GL_DEPTH_TEST );
 
   if( ! showTrails )
@@ -886,7 +885,10 @@ void Canvas::renderFrame()
   if( showFootprints )
 	 {
 		glDisable( GL_DEPTH_TEST );		
-		LISTMETHOD( models_sorted, Model*, DrawTrailFootprint );
+
+		FOR_EACH( it, models_sorted )
+		  (*it)->DrawTrailFootprint();
+
 		glEnable( GL_DEPTH_TEST );
 	 }
   
@@ -1000,8 +1002,8 @@ void Canvas::renderFrame()
 //     }
 
 
-  for( GList* it=selected_models; it; it=it->next )
-	 ((Model*)it->data)->DrawSelected();
+  FOR_EACH( it, selected_models )
+	 (*it)->DrawSelected();
 
   // useful debug - puts a point at the origin of each model
   //for( GList* it = world->World::children; it; it=it->next ) 
@@ -1013,7 +1015,7 @@ void Canvas::renderFrame()
 		FOR_EACH( it, world->World::children )
 		  (*it)->DataVisualizeTree( current_camera );
 	 }
-	 else if ( selected_models ) {
+	 else if ( selected_models.size() > 0 ) {
 		FOR_EACH( it, world->World::children )
 		  (*it)->DataVisualizeTree( current_camera );
 	 }
@@ -1023,14 +1025,17 @@ void Canvas::renderFrame()
   }
    
   if( showGrid ) 
-	 LISTMETHOD( models_sorted, Model*, DrawGrid );
-		  
+	 FOR_EACH( it, models_sorted )
+		(*it)->DrawGrid();
+  		  
   if( showFlags ) 
-	 LISTMETHOD( models_sorted, Model*, DrawFlagList );
-			
+	 FOR_EACH( it, models_sorted )
+		(*it)->DrawFlagList();
+
   if( showBlinken ) 
-	 LISTMETHOD( models_sorted, Model*, DrawBlinkenlights );
-  
+  	 FOR_EACH( it, models_sorted )
+		(*it)->DrawBlinkenlights();
+
   if( showStatus ) 
 	 {
       glDisable( GL_DEPTH_TEST );
@@ -1039,20 +1044,21 @@ void Canvas::renderFrame()
 		//ensure two icons can't be in the exact same plane
 		if( camera.pitch() == 0 && !pCamOn )
 		  glTranslatef( 0, 0, 0.1 );
-	
-		LISTMETHODARG( models_sorted, Model*, DrawStatusTree, &camera );
+		
+		FOR_EACH( it, models_sorted )
+		  (*it)->DrawStatusTree( &camera );
 		
       glEnable( GL_DEPTH_TEST );
 		glPopMatrix();
 	 }
   
-  if( world->GetRayList() )
+  if( world->ray_list.size() > 0 )
     {
       glDisable( GL_DEPTH_TEST );
       PushColor( 0,0,0,0.5 );
-      for( GList* it = world->GetRayList(); it; it=it->next )
+		FOR_EACH( it, world->ray_list )
 		  {
-			 float* pts = (float*)it->data;
+			 float* pts = *it;
 			 glBegin( GL_LINES );
 			 glVertex2f( pts[0], pts[1] );
 			 glVertex2f( pts[2], pts[3] );

@@ -12,7 +12,6 @@ set( stageSrcs
 	file_manager.cc
 	file_manager.hh
 	gl.cc
-	glcolorstack.cc
 	logentry.cc
 	model.cc
 	model_actuator.cc

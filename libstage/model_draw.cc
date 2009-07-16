@@ -253,9 +253,9 @@ void Model::PopCoords()
   glPopMatrix();
 }
 
-void Model::AddVisualizer( Visualizer* custom_visual, bool on_by_default )
+void Model::AddVisualizer( Visualizer* cv, bool on_by_default )
 {
-  if( !custom_visual )
+  if( !cv )
 	 return;
   
   // If there's no GUI, ignore this request
@@ -263,26 +263,28 @@ void Model::AddVisualizer( Visualizer* custom_visual, bool on_by_default )
 	 return;
 	
 	//save visual instance
-	custom_visual_list = g_list_append(custom_visual_list, custom_visual );
+	//cv_list = g_list_append(cv_list, cv );
+  cv_list.push_back( cv );
 
 	//register option for all instances which share the same name
 	Canvas* canvas = world_gui->GetCanvas();
-	std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( custom_visual->GetMenuName() );
+	std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( cv->GetMenuName() );
 	if( i == canvas->_custom_options.end() ) {
-	  Option* op = new Option( custom_visual->GetMenuName(), 
-										custom_visual->GetWorldfileName(), 
+	  Option* op = new Option( cv->GetMenuName(), 
+										cv->GetWorldfileName(), 
 										"", 
 										on_by_default, 
 										world_gui );
-		canvas->_custom_options[ custom_visual->GetMenuName() ] = op;
+		canvas->_custom_options[ cv->GetMenuName() ] = op;
 		RegisterOption( op );
 	}
 }
 
-void Model::RemoveVisualizer( Visualizer* custom_visual )
+void Model::RemoveVisualizer( Visualizer* cv )
 {
-	if( custom_visual )
-		custom_visual_list = g_list_remove(custom_visual_list, custom_visual );
+  if( cv )
+	  cv_list.erase( remove( cv_list.begin(), cv_list.end(), cv ));
+
 
 	//TODO unregister option - tricky because there might still be instances attached to different models which have the same name
 }
@@ -450,7 +452,6 @@ void Model::DrawFlagList( void )
   Pose gpose = GetGlobalPose();
   glRotatef( 180 + rtod(-gpose.a),0,0,1 );
   
-  
   for( std::list<Flag*>::reverse_iterator it( flag_list.rbegin()); 
 		 it != flag_list.rend(); 
 		 it++ )
@@ -529,13 +530,15 @@ void Model::DataVisualizeTree( Camera* cam )
   PushLocalCoords();
   DataVisualize( cam ); // virtual function overridden by most model types  
 
-  Visualizer* vis;
-  for( GList* item = custom_visual_list; item; item = item->next ) {
-    vis = static_cast<Visualizer* >( item->data );
-	if( world_gui->GetCanvas()->_custom_options[ vis->GetMenuName() ]->isEnabled() )
-	  vis->Visualize( this, cam );
-  }
-
+  for( std::list<Visualizer*>::iterator it = cv_list.begin();
+		 it != cv_list.end();
+		 it++ )
+	 {
+      Visualizer* vis = *it;
+		if( world_gui->GetCanvas()->_custom_options[ vis->GetMenuName() ]->isEnabled() )
+		  vis->Visualize( this, cam );
+	 }
+  
   // and draw the children
   FOR_EACH( it, children )
 	 (*it)->DataVisualizeTree( cam );

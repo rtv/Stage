@@ -656,13 +656,6 @@ namespace Stg
 #define VAR(V,init) __typeof(init) V=(init)
 #define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();I++)
 
-  // list iterator macros
-  // todo: retire these along with glib
-#define LISTFUNCTION( LIST, TYPE, FUNC ) for( GList* it=LIST; it; it=it->next ) FUNC((TYPE)it->data);
-#define LISTMETHOD( LIST, TYPE, METHOD ) for( GList* it=LIST; it; it=it->next ) ((TYPE)it->data)->METHOD();
-#define LISTFUNCTIONARG( LIST, TYPE, FUNC, ARG ) for( GList* it=LIST; it; it=it->next ) FUNC((TYPE)it->data, ARG);
-#define LISTMETHODARG( LIST, TYPE, METHOD, ARG ) for( GList* it=LIST; it; it=it->next ) ((TYPE)it->data)->METHOD(ARG);
-
   // Error macros - output goes to stderr
 #define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
 #define PRINT_ERR1(m,a) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
@@ -850,7 +843,6 @@ namespace Stg
 	ModelPtrSet charge_list; ///< Models which receive charge are listed here
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
-	// GList* event_list; //< 
     GHashTable* models_by_name; ///< the models that make up the world, indexed by name
 	/** Keep a list of all models with detectable fiducials. This
 		avoids searching the whole world for fiducials. */
@@ -879,13 +871,13 @@ namespace Stg
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
     stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
-	GHashTable* option_table; ///< GUI options (toggles) registered by models
-	GList* powerpack_list; ///< List of all the powerpacks attached to models in the world
-    GList* ray_list;///< List of rays traced for debug visualization
+	 GHashTable* option_table; ///< GUI options (toggles) registered by models
+	 std::list<PowerPack*> powerpack_list; ///< List of all the powerpacks attached to models in the world
+	 std::list<float*> ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in microseconds
-	std::map<stg_point_int_t,SuperRegion*> superregions;
+	 std::map<stg_point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
-	
+	 
 	// todo - test performance of std::set
 	std::vector<ModelPtrVec > update_lists;  
 	 
@@ -1000,7 +992,6 @@ namespace Stg
     void AddPowerPack( PowerPack* pp );
     void RemovePowerPack( PowerPack* pp );
   
-    GList* GetRayList(){ return ray_list; };
     void ClearRays();
   
     /** store rays traced for debugging purposes */
@@ -1720,7 +1711,7 @@ namespace Stg
 		  instead of adding a data callback. */
 	 bool data_fresh;
 	 stg_bool_t disabled; ///< if non-zero, the model is disabled  
-	 GList* custom_visual_list;
+	 std::list<Visualizer*> cv_list;
 	 std::list<Flag*> flag_list;
 	 Geom geom;
 	 Pose global_pose;
@@ -1757,7 +1748,7 @@ namespace Stg
 
 	 /** list of powerpacks that this model is currently charging,
 		  initially NULL. */
-	 GList* pps_charging;
+	 std::list<PowerPack*> pps_charging;
 
 	 /** GData datalist can contain arbitrary named data items. Can be used
 		  by derived model types to store properties, and for user code
@@ -1771,7 +1762,8 @@ namespace Stg
 	  uint8_t* data;
 	  unsigned int width, height;
 	  stg_meters_t cellwidth, cellheight;
-	  GList* pts;
+	  //GList* pts;
+	  std::vector<stg_point_t> pts;
 	  
 	public:
 	  RasterVis();

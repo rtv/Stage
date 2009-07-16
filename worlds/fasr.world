@@ -22,7 +22,7 @@ window
 ( 
   size [ 600.000 600.000 ] 
 
-  center [ 0.250 -0.680 ] 
+  center [ 0.217 -0.222 ] 
   rotate [ 0 0 ]
   scale 30.643 
   
@@ -102,15 +102,15 @@ define autorob pioneer2dx
  charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
 )
 
-autorob( pose [-1.667 -2.152 0 -90.000] joules 300000 )
+autorob( pose [-3.164 0.806 0 33.186] joules 300000 name "r0" )
 autorob( pose [1.384 7.361 0 -0.139] joules 100000 )
 autorob( pose [-5.258 -5.871 0 -120.113] joules 200000 )
 autorob( pose [6.600 5.211 0 -89.911] joules 400000 )
 autorob( pose [-6.355 1.726 0 90.000] joules 100000 )
-autorob( pose [4.452 -1.179 0 164.286] joules 200000 )
-autorob( pose [4.820 -3.446 0 24.788] joules 300000 )
-autorob( pose [-0.187 3.065 0 -153.738] joules 400000 )
-autorob( pose [4.309 3.736 0 121.988] joules 100000 )
+autorob( pose [-1.530 -2.099 0 82.171] joules 200000 )
+autorob( pose [4.661 -1.695 0 147.974] joules 300000 )
+autorob( pose [-0.947 2.798 0 124.147] joules 400000 )
+autorob( pose [3.573 6.962 0 -32.711] joules 100000 )
 autorob( pose [6.261 7.461 0 0] joules 200000 )
 
 

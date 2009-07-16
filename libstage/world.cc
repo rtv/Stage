@@ -104,8 +104,8 @@ World::World( const char* token,
   graphics( false ), 
   interval_sim( (stg_usec_t)thousand * interval_sim ),
   option_table( g_hash_table_new( g_str_hash, g_str_equal ) ), 
-  powerpack_list( NULL ),
-  ray_list( NULL ),  
+  powerpack_list(),
+  ray_list(),  
   sim_time( 0 ),
   superregions(),
   sr_cached(NULL),
@@ -404,8 +404,7 @@ void World::UnLoad()
 		
   update_lists.resize(1);
   
-  g_list_free( ray_list );
-  ray_list = NULL;
+  ray_list.clear();
 
   // todo
   //g_hash_table_foreach( superregions, (GHFunc)destroy_sregion, NULL );
@@ -618,19 +617,18 @@ void World::RecordRay( double x1, double y1, double x2, double y2 )
   drawpts[1] = y1;
   drawpts[2] = x2;
   drawpts[3] = y2;
-  ray_list = g_list_append( ray_list, drawpts );
+  ray_list.push_back( drawpts );
 }
 
 void World::ClearRays()
 {
-  for( GList* it = ray_list; it; it=it->next )
-    {
-      float* pts = (float*)it->data;
-      delete [] pts;
-    }
-
-  g_list_free(ray_list );
-  ray_list = NULL;
+  FOR_EACH( it, ray_list )
+	 {
+		float* pts = *it;
+		delete [] pts;
+	 }
+  
+  ray_list.clear();
 }
 
 
@@ -1059,12 +1057,12 @@ void World::Extend( stg_point3_t pt )
 
 void World::AddPowerPack( PowerPack* pp )
 {
-  powerpack_list = g_list_append( powerpack_list, pp ); 
+  powerpack_list.push_back( pp ); 
 }
 
 void World::RemovePowerPack( PowerPack* pp )
 {
-  powerpack_list = g_list_remove( powerpack_list, pp ); 
+  powerpack_list.erase( remove( powerpack_list.begin(), powerpack_list.end(), pp ));
 }
 
 /// Register an Option for pickup by the GUI

@@ -201,7 +201,7 @@ Model::Model( World* world,
     color( 1,0,0 ), // red
     data_fresh(false),
     disabled(false),
-	 custom_visual_list( NULL ),
+	 cv_list(),
     flag_list(),
     geom(),
     has_default_block( true ),
@@ -216,7 +216,7 @@ Model::Model( World* world,
     parent(parent),
     pose(),
 	power_pack( NULL ),
-	pps_charging(NULL),
+	pps_charging(),
     props(NULL),
 	rastervis(),
     rebuild_displaylist(true),
@@ -477,16 +477,6 @@ void Model::Raytrace( const stg_radians_t bearing,
 		   samples,
 		   sample_count,
 		   ztest );
-}
-
-// utility for g_free()ing everything in a list
-void list_gfree( GList* list )
-{
-  // free all the data in the list
-  LISTFUNCTION( list, gpointer, g_free );
-
-  // free the list elements themselves
-  g_list_free( list );
 }
 
 // convert a global pose into the model's local coordinate system
@@ -805,22 +795,15 @@ void Model::UpdateCharge()
   assert( mypp );
   
   // detach charger from all the packs charged last time
-  for( GList* it = pps_charging; it; it = it->next )
-	 ((PowerPack*)it->data)->ChargeStop();
-  g_list_free( pps_charging );
-  pps_charging = NULL;
-  
+  FOR_EACH( it, pps_charging )
+	 (*it)->ChargeStop();
+  pps_charging.clear();
+
   // run through and update all appropriate touchers
   ModelPtrSet touchers;
   AppendTouchingModels( touchers );
 
-  //  for( GList* touchers = AppendTouchingModels( NULL );
-  //	 touchers;
-  //	 touchers = touchers->next )
   FOR_EACH( it, touchers )
-//   for( GList* touchers = AppendTouchingModels( NULL );
-// 		 touchers;
-// 		 touchers = touchers->next )
 	 {
 	   Model* toucher = (*it); //(Model*)touchers->data;		
  		PowerPack* hispp =toucher->FindPowerPack();		
@@ -843,7 +826,7 @@ void Model::UpdateCharge()
  			 mypp->TransferTo( hispp, amount );
 			 
 			 // remember who we are charging so we can detatch next time
-			 pps_charging = g_list_prepend( pps_charging, hispp );
+			 pps_charging.push_front( hispp );
  		  }
  	 }
 }
@@ -1072,7 +1055,7 @@ Model::RasterVis::RasterVis()
 	 height(0),
 	 cellwidth(0),
 	 cellheight(0),
-	 pts(NULL)
+	 pts()
 {
 }
 
@@ -1088,7 +1071,7 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
   Gl::pose_inverse_shift( mod->GetGlobalPose() );
 
   
-  if( pts )
+  if( pts.size() > 0 )
 	 {
 		glPushMatrix();
 		Size sz = mod->blockgroup.GetSize();
@@ -1098,15 +1081,15 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 		// now we're in world meters coordinates
 		glPointSize( 4 );
 		glBegin( GL_POINTS );
-		for( GList* it=pts; it; it=it->next )
+		
+		FOR_EACH( it, pts )
 		  {
-			 stg_point_t* pt = (stg_point_t*)it->data;
-			 assert( pt );
-			 glVertex2f( pt->x, pt->y );
+			 stg_point_t& pt = *it;
+			 glVertex2f( pt.x, pt.y );
 			 
 			 char buf[128];
-			 snprintf( buf, 127, "[%.2f x %.2f]", pt->x, pt->y );
-			 Gl::draw_string( pt->x, pt->y, 0, buf );		  
+			 snprintf( buf, 127, "[%.2f x %.2f]", pt.x, pt.y );
+			 Gl::draw_string( pt.x, pt.y, 0, buf );		  
 		  }
 		glEnd();
 		
@@ -1185,16 +1168,10 @@ void Model::RasterVis::SetData( uint8_t* data,
 
 void Model::RasterVis::AddPoint( stg_meters_t x, stg_meters_t y )
 {
-  pts = g_list_prepend( pts, new stg_point_t( x, y ) );
+  pts.push_back( stg_point_t( x, y ) );
 }
 
 void Model::RasterVis::ClearPts()
 {
-  if( pts )
-	 for( GList* it=pts; it; it=it->next )
-		if( it->data )
-		  delete (stg_point_t*)it->data;
-
-  g_list_free( pts );
-  pts = NULL;
+  pts.clear();
 }
