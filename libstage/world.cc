@@ -81,7 +81,7 @@ World::World( const char* token,
   charge_list(),
   destroy( false ),
   dirty( true ),
-  models_by_name( g_hash_table_new( g_str_hash, g_str_equal ) ),
+  models_by_name(),// g_hash_table_new( g_str_hash, g_str_equal ) ),
   models_with_fiducials(),
   ppm( ppm ), // raytrace resolution
   quit( false ),
@@ -131,7 +131,7 @@ World::~World( void )
 
   if( wf ) delete wf;
 
-  g_hash_table_destroy( models_by_name );
+  //g_hash_table_destroy( models_by_name );
   g_free( token );
 
   World::world_set.erase( this );
@@ -211,7 +211,8 @@ gpointer World::update_thread_entry( std::pair<World*,int> *thread_info )
 
 void World::RemoveModel( Model* mod )
 {
-  g_hash_table_remove( models_by_name, mod );
+  //g_hash_table_remove( models_by_name, mod );
+  models_by_name.erase( mod->token );
 }
 
 // wrapper to startup all models from the hash table
@@ -400,8 +401,9 @@ void World::UnLoad()
 	delete (*it);
   children.clear();
  
-  g_hash_table_remove_all( models_by_name );
-		
+  //g_hash_table_remove_all( models_by_name );
+  models_by_name.clear();
+
   update_lists.resize(1);
   
   ray_list.clear();
@@ -596,13 +598,15 @@ bool World::Update()
 
 void World::AddModel( Model*  mod  )
 {
-  g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
+  //g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
+  models_by_name[mod->token] = mod;
 }
 
 Model* World::GetModel( const char* name )
 {
   PRINT_DEBUG1( "looking up model name %s in models_by_name", name );
-  Model* mod = (Model*)g_hash_table_lookup( this->models_by_name, name );
+  //Model* mod = (Model*)g_hash_table_lookup( this->models_by_name, name );
+  Model* mod = models_by_name[ name ];
 
   if( mod == NULL )
     PRINT_WARN1( "lookup of model name %s: no matching name", name );

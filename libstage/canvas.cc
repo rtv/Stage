@@ -759,7 +759,7 @@ void Canvas::renderFrame()
   // TODO
   //models_sorted = g_list_sort_with_data( models_sorted, (GCompareDataFunc)compare_distance, coords );
   
-  // TODO: understand why this doesn't work and fix it - just cosmetic but important!
+  // TODO: understand why this doesn't work and fix it - cosmetic but important!
   //std::sort( models_sorted.begin(), models_sorted.end(), DistFuncObj(x,y) );
 
   glEnable( GL_DEPTH_TEST );

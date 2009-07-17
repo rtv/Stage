@@ -46,6 +46,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <ext/hash_map>
 #include <set>
 #include <algorithm>
 
@@ -838,33 +839,42 @@ namespace Stg
     static void UpdateCb( World* world);
     static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
 
-	GMutex* access_mutex; ///< Used by Lock() and Unlock() to prevent parallel access to this model
-
-	ModelPtrSet charge_list; ///< Models which receive charge are listed here
+	 GMutex* access_mutex; ///< Used by Lock() and Unlock() to prevent parallel access to this model
+	 
+	 ModelPtrSet charge_list; ///< Models which receive charge are listed here
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
-    GHashTable* models_by_name; ///< the models that make up the world, indexed by name
-	/** Keep a list of all models with detectable fiducials. This
-		avoids searching the whole world for fiducials. */
-	ModelPtrSet models_with_fiducials;
+
+	 // functor for comparing C strings in a hash_map
+	 struct eqstr 
+	 {
+		bool operator()( const char* a, const char* b )
+		{ return( strcmp( a, b ) == 0 ); }
+	 };
+	 
+	 __gnu_cxx::hash_map<const char*, Model*, __gnu_cxx::hash<const char*>, eqstr > models_by_name; ///< the models that make up the world, indexed by name.
+	 
+	 /** Keep a list of all models with detectable fiducials. This
+		  avoids searching the whole world for fiducials. */
+	 ModelPtrSet models_with_fiducials;
 	
     double ppm; ///< the resolution of the world model in pixels per meter   
     bool quit; ///< quit this world ASAP  
-
+	 
     /** World::quit is set true when this simulation time is reached */
     stg_usec_t quit_time;
     stg_usec_t real_time_now; ///< The current real time in microseconds
     stg_usec_t real_time_start; ///< the real time at which this world was created
-	bool show_clock; ///< iff true, print the sim time on stdout
-	unsigned int show_clock_interval; ///< updates between clock xoutputs
+	 bool show_clock; ///< iff true, print the sim time on stdout
+	 unsigned int show_clock_interval; ///< updates between clock xoutputs
     GMutex* thread_mutex; ///< protect the worker thread management stuff
-	unsigned int threads_working; ///< the number of worker threads not yet finished
+	 unsigned int threads_working; ///< the number of worker threads not yet finished
     GCond* threads_start_cond; ///< signalled to unblock worker threads
     GCond* threads_done_cond; ///< signalled by last worker thread to unblock main thread
     int total_subs; ///< the total number of subscriptions to all models
-	ModelPtrSet velocity_list; ///< Models with non-zero velocity and should have their poses updated	
-	unsigned int worker_threads; ///< the number of worker threads to use
-	
+	 ModelPtrSet velocity_list; ///< Models with non-zero velocity and should have their poses updated	
+	 unsigned int worker_threads; ///< the number of worker threads to use
+	 
   protected:	 
 
 	std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
@@ -872,6 +882,7 @@ namespace Stg
     bool graphics;///< true iff we have a GUI
     stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
 	 GHashTable* option_table; ///< GUI options (toggles) registered by models
+	 //__gnu_cxx::hash_map<Option
 	 std::list<PowerPack*> powerpack_list; ///< List of all the powerpacks attached to models in the world
 	 std::list<float*> ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in microseconds
@@ -1112,34 +1123,46 @@ namespace Stg
 	 
     /** render the block into the world's raytrace data structure */
     void Map(); 	 
+	 
     /** remove the block from the world's raytracing data structure */
     void UnMap();	 
+	 
+	 /** draw the block in OpenGL as a solid single color */    void DrawSolid();
     void Draw( Model* mod );  
-    void DrawSolid(); // draw the block in OpenGL as a solid single color
-    void DrawFootPrint(); // draw the projection of the block onto the z=0 plane	 
-		/** Translate all points in the block by the indicated amounts */
-		void Translate( double x, double y );	 
-		/** Return the center of the block on the X axis */
-		double CenterX();
+
+	 /** draw the projection of the block onto the z=0 plane	*/
+    void DrawFootPrint(); 
+
+	 /** Translate all points in the block by the indicated amounts */
+	 void Translate( double x, double y );	 
+
+	 /** Return the center of the block on the X axis */
+	 double CenterX();
+
 	 /** Return the center of the block on the Y axis */
-		double CenterY();
-		/** Set the center of the block on the X axis */
-		void SetCenterX( double y );
-		/** Set the center of the block on the Y axis */
-		void SetCenterY( double y );
-		/** Set the center of the block */
-		void SetCenter( double x, double y);
-		void SetZ( double min, double max );
+	 double CenterY();
+
+	 /** Set the center of the block on the X axis */
+	 void SetCenterX( double y );
+
+	 /** Set the center of the block on the Y axis */
+	 void SetCenterY( double y );
+
+	 /** Set the center of the block */
+	 void SetCenter( double x, double y);	 
+
+	 /** Set the extent in Z of the block */
+	 void SetZ( double min, double max );
 
     void RecordRendering( Cell* cell )
     { rendered_cells->push_back( cell ); }  
 
     stg_point_t* Points( unsigned int *count )
     { if( count ) *count = pt_count; return &pts[0]; };	         
-
-		std::vector<stg_point_t>& Points()
+	 
+	 std::vector<stg_point_t>& Points()
     { return pts; };	         
-
+	 
     void AddToCellArray( CellPtrVec* blocks );
     void RemoveFromCellArray( CellPtrVec* blocks );
     void GenerateCandidateCells();  
