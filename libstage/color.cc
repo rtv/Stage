@@ -56,7 +56,8 @@ Color::Color( const char *name) :
 			break;
 
 			// it's a macro or comment line - ignore the line
-			if (line[0] == '!' || line[0] == '#' || line[0] == '%') 
+			// also ignore empty lines
+			if (line[0] == '!' || line[0] == '#' || line[0] == '%' || line[0] == '\0') 
 				continue;
 
 			// Trim the trailing space
