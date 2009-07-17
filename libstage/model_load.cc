@@ -301,7 +301,14 @@ void Model::LoadControllerModule( char* lib )
 
   /* Initialise libltdl. */
   int errors = lt_dlinit();
-  assert(errors==0);
+  if (errors)
+  {
+    printf( "Libtool error: %s. Failed to init libtool. Quitting\n",
+      lt_dlerror() ); // report the error from libtool
+    puts( "libtool error #1" );
+    fflush( stdout );
+    exit(-1);
+  }
 
   lt_dlsetsearchpath( FileManager::stagePath().c_str() );
 

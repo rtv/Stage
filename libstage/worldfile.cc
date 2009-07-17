@@ -537,6 +537,11 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
       char *tmp = strdup(this->filename);
       fullpath = new char[PATH_MAX];
       char* dummy = getcwd(fullpath, PATH_MAX);
+      if (!dummy)
+      {
+        PRINT_ERR2("unable to get cwd %d: %s", errno, strerror(errno));
+        return false;
+      }
       strcat( fullpath, "/" );
       strcat( fullpath, dirname(tmp));
       strcat( fullpath, "/" );
@@ -1663,6 +1668,12 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
       char *tmp = strdup(this->filename);
 		char* fullpath = new char[PATH_MAX];
       char* dummy = getcwd(fullpath, PATH_MAX);
+      if (!dummy)
+      {
+        PRINT_ERR2("unable to get cwd %d: %s", errno, strerror(errno));
+        return value;
+      }
+
       strcat( fullpath, "/" );
       strcat( fullpath, dirname(tmp));
       strcat( fullpath, "/" );
