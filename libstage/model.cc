@@ -109,7 +109,6 @@ using namespace Stg;
 
 // static members
 uint32_t Model::count = 0;
-//GHashTable* Model::modelsbyid = g_hash_table_new( NULL, NULL );
 std::map<stg_id_t,Model*> Model::modelsbyid;
 
 std::map<std::string, stg_creator_t> Model::name_map;
@@ -245,7 +244,6 @@ Model::Model( World* world,
 		parent ? parent->Token() : "(null)",
 		type );
   
-  //g_hash_table_insert( modelsbyid, (void*)id, this );
   modelsbyid[id] = this;
   
   // Adding this model to its ancestor also gives this model a

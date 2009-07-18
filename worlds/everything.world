@@ -80,7 +80,7 @@ trickedoutpioneer
   name "robot1"
   pose [-10.071 3.186 0 -2.333]
 
-  #gripper( pose [0.23 0.000 0 0.000] color "gray" )
+  gripper( pose [0.23 0.000 0 0.000] color "gray" )
 )
 
 #trickedoutpioneer
