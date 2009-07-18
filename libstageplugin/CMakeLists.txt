@@ -15,11 +15,9 @@ set( stagepluginSrcs p_driver.h
 	     p_speech.cc
 	     p_aio.cc
 	     p_dio.cc
+	     p_graphics.cc
 	     stg_time.cc
 )
-
-# TODO
-#	     p_graphics3d.cc
 
 add_library( stageplugin MODULE ${stagepluginSrcs} )
 

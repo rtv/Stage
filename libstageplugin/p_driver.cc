@@ -350,13 +350,13 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	// 	  ifsrc = new InterfaceCamera( player_addr,  this, cf, section );
 	// 	  break;
 
-	// 	  case PLAYER_GRAPHICS2D_CODE:
-	// 	  ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
-	// 	  break;
+	case PLAYER_GRAPHICS2D_CODE:
+		ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
+		break;
 
-	//	case PLAYER_GRAPHICS3D_CODE:
-	//		ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
-	//		break;
+	case PLAYER_GRAPHICS3D_CODE:
+		ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
+		break;
 
 
 
@@ -480,7 +480,7 @@ Interface* StgDriver::LookupDevice( player_devaddr_t addr )
 
 
 // subscribe to a device
-int StgDriver::Subscribe(player_devaddr_t addr)
+int StgDriver::Subscribe(QueuePointer &queue,player_devaddr_t addr)
 {
   if( addr.interf == PLAYER_SIMULATION_CODE )
     return 0; // ok
@@ -489,7 +489,8 @@ int StgDriver::Subscribe(player_devaddr_t addr)
 
   if( device )
     {
-      device->Subscribe();
+	  device->Subscribe();
+      device->Subscribe(queue);
       return Driver::Subscribe(addr);
     }
 
@@ -499,7 +500,7 @@ int StgDriver::Subscribe(player_devaddr_t addr)
 
 
 // unsubscribe to a device
-int StgDriver::Unsubscribe(player_devaddr_t addr)
+int StgDriver::Unsubscribe(QueuePointer &queue,player_devaddr_t addr)
 {
   if( addr.interf == PLAYER_SIMULATION_CODE )
     return 0; // ok
@@ -508,7 +509,8 @@ int StgDriver::Unsubscribe(player_devaddr_t addr)
 
   if( device )
     {
-      device->Unsubscribe();
+	  device->Unsubscribe();
+      device->Unsubscribe(queue);
       return Driver::Unsubscribe(addr);
     }
   else

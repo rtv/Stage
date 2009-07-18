@@ -30,8 +30,8 @@ class StgDriver : public Driver
   virtual int ProcessMessage(QueuePointer &resp_queue,
 			     player_msghdr * hdr,
 			     void * data);
-  virtual int Subscribe(player_devaddr_t addr);
-  virtual int Unsubscribe(player_devaddr_t addr);
+  virtual int Subscribe(QueuePointer &queue, player_devaddr_t addr);
+  virtual int Unsubscribe(QueuePointer &queue, player_devaddr_t addr);
 
   /// The server thread calls this method frequently. We use it to
   /// check for new commands and configs
@@ -77,8 +77,9 @@ class Interface
   virtual void Publish( void ){}; // do nothing
   virtual void Subscribe( void ){}; // do nothing
   virtual void Unsubscribe( void ){}; // do nothing
+  virtual void Subscribe( QueuePointer &queue ){}; // do nothing
+  virtual void Unsubscribe( QueuePointer &queue ){}; // do nothing};
 };
-
 
 class InterfaceSimulation : public Interface
 {
@@ -314,27 +315,38 @@ class InterfaceMap : public InterfaceModel
 			void * data );
 };
 
+class PlayerGraphics2dVis;
+class InterfaceGraphics2d : public InterfaceModel
+{
+ public:
+  InterfaceGraphics2d( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceGraphics2d( void );
+
+  void Subscribe(QueuePointer &queue);
+  void Unsubscribe(QueuePointer &queue);
+
+  virtual int ProcessMessage( QueuePointer & resp_queue,
+			      player_msghdr * hdr,
+			      void * data );
+
+  PlayerGraphics2dVis * vis;
+};
+
+class PlayerGraphics3dVis;
 class InterfaceGraphics3d : public InterfaceModel
 {
  public:
   InterfaceGraphics3d( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceGraphics3d( void );
 
+  void Subscribe(QueuePointer &queue);
+  void Unsubscribe(QueuePointer &queue);
+
   virtual int ProcessMessage( QueuePointer & resp_queue,
 			      player_msghdr * hdr,
 			      void * data );
-  virtual void Publish( void );
 
- private:
-
-  void StoreCommand( int type, void* data );
-
-  GList* commands; // list of drawing commands received since the last CLEAR
-  bool rebuild_displaylist;
-  int displaylist;
-
-  // clear the display
-  void Clear( void );
+  PlayerGraphics3dVis * vis;
 };
 
 /** Replaces Player's real time clock object */

@@ -31,8 +31,8 @@ Color::Color( const char *name) :
 	return; // red
   
   static FILE *file = NULL;
-  static GHashTable* table = g_hash_table_new( g_str_hash, g_str_equal );
-  
+  static std::map<std::string,Color> table;
+
   if( file == NULL )
 	{
 	  std::string rgbFile = FileManager::findFile( "rgb.txt" );
@@ -69,28 +69,22 @@ Color::Color( const char *name) :
 			int chars_matched = 0;
 			sscanf( line, "%d %d %d %n", &r, &g, &b, &chars_matched );
 			
-			Color* c = new Color( r / 255.0,
-								  g / 255.0,
-								  b / 255.0, 
-								  1.0 );
-
 			// Read the name
-			char* colorname = strdup( line + chars_matched );
-
+			const char* colorname = line + chars_matched;
+			
 			// map the name to the color in the table
-			g_hash_table_insert( table, (gpointer)colorname, (gpointer)c );
+			table[colorname] = Color( r/255.0, g/255.0, b/255.0 );
 		}
-		fclose(file);
+	  fclose(file);
 	}
   
-  // look up the colorname in the database  
-  //stg_color_t* found = (stg_color_t*)g_hash_table_lookup( table, name );
+  // look up the colorname in the database    
+  Color& found = table[name];
   
-  Color* found = (Color*)g_hash_table_lookup( table, name );  
-  this->r = found->r;
-  this->g = found->g;
-  this->b = found->b;
-  this->a = found->a;
+  this->r = found.r;
+  this->g = found.g;
+  this->b = found.b;
+  this->a = found.a;
 }
 
 bool Color::operator==( const Color& other )
