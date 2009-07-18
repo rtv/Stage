@@ -38,130 +38,95 @@
 - PLAYER_GRIPPER_REQ_GET_GEOM
 */
 
-extern "C" { 
-int gripper_init( stg_model_t* mod );
-}
+#include "p_driver.h"
+using namespace Stg;
 
-InterfaceGripper::InterfaceGripper( player_devaddr_t addr, 
-				    StgDriver* driver,
-				    ConfigFile* cf,
-				    int section )
-  
-  : InterfaceModel( addr, driver, cf, section, gripper_init )
+InterfaceGripper::InterfaceGripper( player_devaddr_t addr,
+				StgDriver* driver,
+				ConfigFile* cf,
+				int section )
+  : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_GRIPPER )
 {
   // nothing to do
 }
 
 void InterfaceGripper::Publish( void )
 {
-  stg_gripper_data_t* sdata = (stg_gripper_data_t*)mod->data;
-  assert(sdata);
+	ModelGripper * gmod = reinterpret_cast<ModelGripper*> (this->mod);
 
   player_gripper_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
   
   // set the proper bits
   pdata.beams = 0;
-  pdata.beams |=  sdata->outer_break_beam ? 0x04 : 0x00;
-  pdata.beams |=  sdata->inner_break_beam ? 0x08 : 0x00;
+  pdata.beams |=  gmod->GetConfig().beam[0] ? 0x04 : 0x00;
+  pdata.beams |=  gmod->GetConfig().beam[1] ? 0x08 : 0x00;
   
-  pdata.state = 0;  
-  pdata.state |= (sdata->paddles == STG_GRIPPER_PADDLE_OPEN) ? 0x01 : 0x00;
-  pdata.state |= (sdata->paddles == STG_GRIPPER_PADDLE_CLOSED) ? 0x02 : 0x00;
-  pdata.state |= ((sdata->paddles == STG_GRIPPER_PADDLE_OPENING) ||
-		  (sdata->paddles == STG_GRIPPER_PADDLE_CLOSING))  ? 0x04 : 0x00;
-  
-  pdata.state |= (sdata->lift == STG_GRIPPER_LIFT_UP) ? 0x10 : 0x00;
-  pdata.state |= (sdata->lift == STG_GRIPPER_LIFT_DOWN) ? 0x20 : 0x00;
-  pdata.state |= ((sdata->lift == STG_GRIPPER_LIFT_UPPING) ||
-		  (sdata->lift == STG_GRIPPER_LIFT_DOWNING))  ? 0x040 : 0x00;
-  
-  //pdata.state |= sdata->lift_error ? 0x80 : 0x00;
-  //pdata.state |= sdata->gripper_error ? 0x08 : 0x00;
-  
-  //this->driver->PutData( this->id, &pdata, sizeof(pdata), NULL); 
+  switch (gmod->GetConfig().paddles)
+  {
+	case ModelGripper::PADDLE_OPEN:
+		pdata.state = PLAYER_GRIPPER_STATE_OPEN;
+		break;
+	case ModelGripper::PADDLE_CLOSED:
+		pdata.state = PLAYER_GRIPPER_STATE_CLOSED;
+		break;
+	case ModelGripper::PADDLE_OPENING:
+	case ModelGripper::PADDLE_CLOSING:
+		pdata.state = PLAYER_GRIPPER_STATE_MOVING;
+		break;
+	default:
+		pdata.state = PLAYER_GRIPPER_STATE_ERROR;
+  }
   
   // Write data
-  this->driver->Publish(this->addr, NULL,
+  this->driver->Publish(this->addr,
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_GRIPPER_DATA_STATE,
-			(void*)&pdata, sizeof(pdata), NULL);
+			(void*)&pdata);
   
 }
 
-int InterfaceGripper::ProcessMessage(MessageQueue* resp_queue,
+int InterfaceGripper::ProcessMessage(QueuePointer& resp_queue,
 				     player_msghdr_t* hdr,				     
                                       void* data)
 {
-  // Is it a new motor command?
-  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, 
-                           PLAYER_GRIPPER_CMD_STATE, 
-                           this->addr))
-    {
-      if( hdr->size == sizeof(player_gripper_cmd_t) )
+	ModelGripper * gmod = reinterpret_cast<ModelGripper*> (this->mod);
+
+	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, PLAYER_GRIPPER_CMD_OPEN, this->addr))
 	{
-	  player_gripper_cmd_t* pcmd = (player_gripper_cmd_t*)data;
-
-	  // Pass it to stage:
-	  stg_gripper_cmd_t cmd; 
-	  cmd.cmd = STG_GRIPPER_CMD_NOP;
-	  cmd.arg = 0;
-	  
-	  switch( pcmd->cmd )
-	    {
-	    case GRIPclose: cmd.cmd = STG_GRIPPER_CMD_CLOSE; break;
-	    case GRIPopen:  cmd.cmd = STG_GRIPPER_CMD_OPEN; break;
-	    case LIFTup:    cmd.cmd = STG_GRIPPER_CMD_UP; break;
-	    case LIFTdown:  cmd.cmd = STG_GRIPPER_CMD_DOWN; break;
-
-	    default:
-	      PRINT_WARN1( "Stage: player gripper command %d is not implemented\n", 
-			   pcmd->cmd );
-	    }
-	  
-	  //cmd.cmd  = pcmd->cmd;
-	  cmd.arg = pcmd->arg;
-	  
-	  stg_model_set_cmd( this->mod, &cmd, sizeof(cmd));
+		gmod->CommandOpen();
+		return 0;
 	}
-      else
-	PRINT_ERR2( "wrong size gripper command packet (%d/%d bytes)",
-		    (int)hdr->size, (int)sizeof(player_gripper_cmd_t) );
+	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD, PLAYER_GRIPPER_CMD_CLOSE, this->addr))
+	{
+		gmod->CommandClose();
+		return 0;
+	}
 
-      return 0;
-    }
-
-  // is it a geometry request?  
-  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-                           PLAYER_GRIPPER_REQ_GET_GEOM,
-                           this->addr))
+	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, PLAYER_GRIPPER_REQ_GET_GEOM, this->addr))
     {
-      // TODO: get pose in top-level model's CS instead.
-      
-      Geom geom;
-      stg_model_get_geom( this->mod, &geom );
-      
-      Pose pose;
-      stg_model_get_pose( this->mod, &pose);
-      
-      player_gripper_geom_t pgeom;
-      pgeom.pose.px = pose.x;
-      pgeom.pose.py = pose.y;
-      pgeom.pose.pa = pose.a;      
-      pgeom.size.sw = geom.size.y;
-      pgeom.size.sl = geom.size.x;
-      
-      this->driver->Publish(this->addr, resp_queue,
-			    PLAYER_MSGTYPE_RESP_ACK, 
-			    PLAYER_GRIPPER_REQ_GET_GEOM,
-			    (void*)&pgeom, sizeof(pgeom), NULL);
-      return(0);
+		Geom geom = this->mod->GetGeom();
+		Pose pose = this->mod->GetPose();
 
-      
-    }
+		player_gripper_geom_t pgeom;
+		memset(&pgeom, 0, sizeof(pgeom));
+		
+		pgeom.pose.px = pose.x;
+		pgeom.pose.py = pose.y;
+		pgeom.pose.pz = pose.z;
+		pgeom.pose.pyaw = pose.a;
+		
+		pgeom.outer_size.sl = geom.size.x;
+		pgeom.outer_size.sw = geom.size.y;
+		pgeom.outer_size.sh = geom.size.z;
+		
+		pgeom.num_beams = 2;
 
-  PRINT_WARN2( "stage gripper doesn't support message id:%d/%d",
-	       hdr->type, hdr->subtype );
-  return -1;
+		this->driver->Publish(this->addr, resp_queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_GRIPPER_REQ_GET_GEOM, (void*)&pgeom);
+		return(0);
+	}
+
+	PRINT_WARN2( "stage gripper doesn't support message id:%d/%d", hdr->type, hdr->subtype );
+	return -1;
 }
 

@@ -368,9 +368,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 // 	  ifsrc = new InterfaceMap( player_addr,  this, cf, section );
 // 	  break;
 
-// 	case PLAYER_GRIPPER_CODE:
-// 	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
-// 	  break;
+	case PLAYER_GRIPPER_CODE:
+	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
+	  break;
 
 // 	case PLAYER_WIFI_CODE:
 // 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
