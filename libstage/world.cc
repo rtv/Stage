@@ -532,7 +532,7 @@ bool World::Update()
 	  else
 		{
 		  --steps;
-		  printf( "world::update (steps remaining %d)\n", steps );		  
+		  //printf( "world::update (steps remaining %d)\n", steps );		  
 		}
 	}
 

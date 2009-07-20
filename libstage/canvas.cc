@@ -1185,7 +1185,7 @@ void Canvas::Screenshot()
   FILE *fp = fopen( filename, "wb" );
   if( fp == NULL ) 
     {
-      PRINT_ERR1( "Unable to open %s", filename );
+		PRINT_ERR1( "Unable to open %s", filename );
     }
   
   // create PNG data

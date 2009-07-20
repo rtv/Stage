@@ -47,6 +47,7 @@
 #include <list>
 #include <map>
 #include <ext/hash_map>
+//#include <unordered_map>
 #include <set>
 #include <algorithm>
 
@@ -853,7 +854,9 @@ namespace Stg
 	 };
 	 
 	 __gnu_cxx::hash_map<const char*, Model*, __gnu_cxx::hash<const char*>, eqstr > models_by_name; ///< the models that make up the world, indexed by name.
-	 
+	 //tr1::unordered_map<const char*, Model*, __gnu_cxx::hash<const char*>, eqstr > models_by_name; ///< the models that make up the world, indexed by name.
+
+
 	 /** Keep a list of all models with detectable fiducials. This
 		  avoids searching the whole world for fiducials. */
 	 ModelPtrSet models_with_fiducials;
@@ -877,12 +880,11 @@ namespace Stg
 	 
   protected:	 
 
-	std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
+	 std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
     stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
 	 GHashTable* option_table; ///< GUI options (toggles) registered by models
-	 //__gnu_cxx::hash_map<Option
 	 std::list<PowerPack*> powerpack_list; ///< List of all the powerpacks attached to models in the world
 	 std::list<float*> ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in microseconds
@@ -1541,7 +1543,7 @@ namespace Stg
 	 friend class Canvas;
 	 
   protected:
-
+	 
 	 class DissipationVis : public Visualizer
 	 {
 	 private:

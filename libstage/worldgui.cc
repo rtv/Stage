@@ -629,7 +629,6 @@ void WorldGui::pauseCb( Fl_Widget* w, WorldGui* worldGui )
 
 void WorldGui::onceCb( Fl_Widget* w, WorldGui* worldGui )
 {
-  puts( "ONCE" );
   worldGui->paused = true;
   worldGui->steps = 1; // number of steps to run  
 }

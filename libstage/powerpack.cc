@@ -75,7 +75,7 @@ void PowerPack::Visualize( Camera* cam ) const
   glRectf( 0,0,width, fullness);
   
   // outline the charge-o-meter
-  glTranslatef( 0,0,0.001 );
+  glTranslatef( 0,0,0.1 );
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   
   glColor4f( 0,0,0,0.7 );
@@ -276,9 +276,12 @@ void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
 	 for( unsigned int x=0; x<columns; x++ )
 		{
 		  stg_joules_t j = cells[ y*columns + x ];
+
+		  //printf( "%d %d %.2f\n", x, y, j );
+
 		  if( j > 0 )
 			 {
-				glColor4f( 1.0, 0, 0, j/global_peak_value );
+				glColor4f( 1.0, 0, 0, j/global_peak_value );				
 				glRectf( x,y,x+1,y+1 );
 			 }
 		}
@@ -292,14 +295,14 @@ void PowerPack::DissipationVis::Accumulate( stg_meters_t x,
 														  stg_meters_t y, 
 														  stg_joules_t amount )
 {
-  int ix = (x+width/2.0)/cellsize;
-  int iy = (y+height/2.0)/cellsize;
+  //printf( "accumulate %.2f %.2f %.2f\n", x, y, amount );
+
+  unsigned int ix = (x+width/2.0)/cellsize;
+  unsigned int iy = (y+height/2.0)/cellsize;
 
   // don't accumulate if we're outside the grid
-  if( ! ix >= 0 ) return;
-  if( ! ix < columns ) return;
-  if( ! iy >= 0 ) return;
-  if( ! iy < rows ) return;
+  if( ix < 0 || ix >= columns || iy < 0 && iy >= rows )
+		return;
 
   stg_joules_t* j = cells + (iy*columns + ix );
   

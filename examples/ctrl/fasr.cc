@@ -506,7 +506,7 @@ extern "C" int Init( Model* mod )
 		memset( data, 0, sizeof(uint8_t) * dw * dh );
 		
 		mod->GetWorld()->GetModel( "cave" )->Rasterize( data, dw, dh, 0.25, 0.5 );
-		
+
 		putchar( '\n' );
 		for( unsigned int y=0; y<dh; y++ )
 		  {
@@ -515,6 +515,7 @@ extern "C" int Init( Model* mod )
 			 putchar( '\n' );
 		  }
 		delete data;
+		
 	 }
 
   new Robot( (ModelPosition*)mod,
