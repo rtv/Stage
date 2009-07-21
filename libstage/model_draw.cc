@@ -69,7 +69,6 @@ void Model::DrawTrailFootprint()
 			c.a = darkness;
 			PushColor( c );
 			
-
       blockgroup.DrawFootPrint( geom );
 			
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
