@@ -545,18 +545,19 @@ void WorldGui::fileExitCb( Fl_Widget* w, void* p )
   }
 }
 
-static void append_option( char* name, Option* opt, std::vector<Option*>* optv )
-{
-  //printf( "adding option %s @ %p\n", name, opt );
-  optv->push_back( opt );
-}
+// static void append_option( char* name, Option* opt, std::vector<Option*>* optv )
+// {
+//   //printf( "adding option %s @ %p\n", name, opt );
+//   optv->push_back( opt );
+// }
 
-static bool sort_option_pointer( Option* a, Option* b )
-{
-  // Option class overloads operator<. Nasty nasty C++ makes code less
-  // readable IMHO.
-  return (*a) < (*b);
-}
+// static bool sort_option_pointer( const Option* a, 
+// 											const Option* b ) const
+// {
+//   // Option class overloads operator<. Nasty nasty C++ makes code less
+//   // readable IMHO.
+//   return (*a) < (*b);
+// }
 
 void WorldGui::resetViewCb( Fl_Widget* w, WorldGui* worldGui )
 {
@@ -636,14 +637,15 @@ void WorldGui::onceCb( Fl_Widget* w, WorldGui* worldGui )
 void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* worldGui ) 
 {
   // the options dialog expects a std::vector of options (annoyingly)
-  std::vector<Option*> optvec;
+  // std::vector<Option*> optvec;
   // adds each option to the vector
-  g_hash_table_foreach( worldGui->option_table, 
-								(GHFunc)append_option, 
-								(void*)&optvec );  
+  //g_hash_table_foreach( worldGui->option_table, 
+  //						(GHFunc)append_option, 
+  //						(void*)&optvec );  
   
   // sort the vector by option label alphabetically
-  std::sort( optvec.begin(), optvec.end(), sort_option_pointer );
+  //std::sort();// worldGui->option_table.begin(), worldGui->option_table.end() );//, sort_option_pointer );
+  //std::sort();// worldGui->option_table.begin(), worldGui->option_table.end() );//, sort_option_pointer );
 
   if ( !worldGui->oDlg ) 
 	 {
@@ -652,7 +654,7 @@ void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* worldGui )
 		OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
 		oDlg->callback( (Fl_Callback*)optionsDlgCb, worldGui );
 		
-		oDlg->setOptions( optvec );
+		oDlg->setOptions( worldGui->option_table );
 		oDlg->showAllOpt( &worldGui->canvas->visualizeAll );
 		worldGui->oDlg = oDlg;
 		oDlg->show();
@@ -851,25 +853,6 @@ bool WorldGui::closeWindowQuery()
     // nothing is loaded, just quit
     return true;
   }
-}
-
-void WorldGui::UpdateOptions() 
-{
-  std::set<Option*, Option::optComp> options;
-  std::vector<Option*> modOpts;
-  
-  FOR_EACH( it1, update_lists )
-	FOR_EACH( it2, (*it1) )
-	{
-	  modOpts = (*it2)->getOptions();
-	  options.insert( modOpts.begin(), modOpts.end() );	
-	}
-  
-  
-  drawOptions.assign( options.begin(), options.end() );
-  
-  if ( oDlg ) 
-	 oDlg->setOptions( drawOptions );
 }
 
 void WorldGui::DrawBoundingBoxTree()

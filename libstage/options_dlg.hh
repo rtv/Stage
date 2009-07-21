@@ -41,7 +41,7 @@ namespace Stg {
 		OptionsDlg( int x, int y, int w, int h );
 		virtual ~OptionsDlg();
 		
-		void setOptions( const std::vector<Option*>& opts );
+		void setOptions( const std::set<Option*>& opts );
 		void clearOptions() { options.clear(); }
 		void showAllOpt( Option* opt );
 		const event_t event() const { return status; }

@@ -68,7 +68,7 @@ namespace Stg {
 		this->redraw();
 	}
 
-	void OptionsDlg::setOptions( const std::vector<Option*>& opts ) {
+	void OptionsDlg::setOptions( const std::set<Option*>& opts ) {
 	  options.clear();
 		options.assign( opts.begin(), opts.end() );
 		updateChecks();

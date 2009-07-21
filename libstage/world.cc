@@ -103,7 +103,8 @@ World::World( const char* token,
   extent(),
   graphics( false ), 
   interval_sim( (stg_usec_t)thousand * interval_sim ),
-  option_table( g_hash_table_new( g_str_hash, g_str_equal ) ), 
+  //option_table( g_hash_table_new( g_str_hash, g_str_equal ) ), 
+  option_table(),
   powerpack_list(),
   ray_list(),  
   sim_time( 0 ),
@@ -1072,7 +1073,8 @@ void World::RemovePowerPack( PowerPack* pp )
 /// Register an Option for pickup by the GUI
 void World:: RegisterOption( Option* opt )
 {
-  g_hash_table_insert( option_table, (void*)opt->htname, opt );
+  //g_hash_table_insert( option_table, (void*)opt->htname, opt );
+  option_table.insert( opt );
 }
 
 int World::UpdateListAdd( Model* mod )

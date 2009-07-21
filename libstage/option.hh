@@ -39,15 +39,19 @@ namespace Stg {
 		inline bool val() const { return value; }
 		inline operator bool() { return val(); }
 		inline bool operator<( const Option& rhs ) const
-			{ return optName<rhs.optName; } 
+			{
+			  puts( "comparing" );
+			  return optName<rhs.optName; 
+			} 
 		void set( bool val );
 		void invert() { set( !value ); }
 
-		// Comparator to dereference Option pointers and compare their strings
-		struct optComp {
-			inline bool operator()( const Option* lhs, const Option* rhs ) const
-				{ return lhs->operator<(*rhs); } 
-		};
+// 		// Comparator to dereference Option pointers and compare their strings
+// 		struct optComp {
+// 			inline bool operator()( const Option* a, const Option* b ) const
+// 			//{ return lhs->operator<(*rhs); } 
+// 				{ return a->optName < b->optName; } 
+// 		};
 
 
 		void createMenuItem( Fl_Menu_Bar* menu, std::string path );

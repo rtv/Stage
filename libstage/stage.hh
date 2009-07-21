@@ -884,7 +884,8 @@ namespace Stg
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
     stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
-	 GHashTable* option_table; ///< GUI options (toggles) registered by models
+	 //GHashTable* option_table; ///< GUI options (toggles) registered by models	 
+	 std::set<Option*> option_table; ///< GUI options (toggles) registered by models
 	 std::list<PowerPack*> powerpack_list; ///< List of all the powerpacks attached to models in the world
 	 std::list<float*> ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in microseconds
@@ -1443,8 +1444,6 @@ namespace Stg
     OptionsDlg* oDlg;
     bool pause_time;
     stg_usec_t real_time_of_last_update;
-	
-    void UpdateOptions();
 	
     // static callback functions
     static void windowCb( Fl_Widget* w, void* p );	
