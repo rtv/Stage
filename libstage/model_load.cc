@@ -226,6 +226,8 @@ void Model::Load()
   if( wf->PropertyExists( wf_entity, "say" ))
     this->Say( wf->ReadString(wf_entity, "say", NULL ));
   
+	trail_length = wf->ReadInt( wf_entity, "trail_length", trail_length );
+	trail_interval = wf->ReadInt( wf_entity, "trail_interval", trail_interval );
 
   // call any type-specific load callbacks
   this->CallCallbacks( &hooks.load );

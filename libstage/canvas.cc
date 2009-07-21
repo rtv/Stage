@@ -770,164 +770,166 @@ void Canvas::renderFrame()
   if( showTree || showOccupancy )
     {
       glPushMatrix();	  
-		
-		GLfloat scale = 1.0/world->Resolution();
+			
+			GLfloat scale = 1.0/world->Resolution();
       glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
-												 // out for Z. look into it.
-		
+			// out for Z. look into it.
+			
       if( showOccupancy )
-		  ((WorldGui*)world)->DrawTree( false );
-		
+				((WorldGui*)world)->DrawTree( false );
+			
       if( showTree )
-		  ((WorldGui*)world)->DrawTree( true );
-		
+				((WorldGui*)world)->DrawTree( true );
+			
       glPopMatrix();
     }
   
   if( ! world->rt_cells.empty() )
-	 {
-		glPushMatrix();	  		
-		GLfloat scale = 1.0/world->Resolution();
+		{
+			glPushMatrix();	  		
+			GLfloat scale = 1.0/world->Resolution();
       glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
-
-		world->PushColor( Color( 0,0,1,0.5) );
-
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-
-		glPointSize( 2 );
-		glBegin( GL_POINTS );
-
-		for( unsigned int i=0;
-			  i < world->rt_cells.size();
-			  i++ )
-		  {
- 			 char str[128];
- 			 snprintf( str, 128, "(%d,%d)", 
- 						  world->rt_cells[i].x, 
- 						  world->rt_cells[i].y );
-
- 			 Gl::draw_string(  world->rt_cells[i].x+1, 
- 									 world->rt_cells[i].y+1, 0.1, str );
-
-			 //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
-			 //glRectf( world->rt_cells[i].x+0.3, world->rt_cells[i].y+0.3,
-				//	 world->rt_cells[i].x+0.7, world->rt_cells[i].y+0.7 );
-
-				glVertex2f( world->rt_cells[i].x, world->rt_cells[i].y );
-				
-		  }
-		
-		glEnd();
-
+			
+			world->PushColor( Color( 0,0,1,0.5) );
+			
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+			
+			glPointSize( 2 );
+			glBegin( GL_POINTS );
+			
+			for( unsigned int i=0;
+					 i < world->rt_cells.size();
+					 i++ )
+				{
+					char str[128];
+					snprintf( str, 128, "(%d,%d)", 
+										world->rt_cells[i].x, 
+										world->rt_cells[i].y );
+					
+					Gl::draw_string(  world->rt_cells[i].x+1, 
+														world->rt_cells[i].y+1, 0.1, str );
+					
+					//printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
+					//glRectf( world->rt_cells[i].x+0.3, world->rt_cells[i].y+0.3,
+					//	 world->rt_cells[i].x+0.7, world->rt_cells[i].y+0.7 );
+					
+					glVertex2f( world->rt_cells[i].x, world->rt_cells[i].y );
+					
+				}
+			
+			glEnd();
+			
 #if 1
   		world->PushColor( Color( 0,1,0,0.2) );
   		glBegin( GL_LINE_STRIP );
   		for( unsigned int i=0;
-  			  i < world->rt_cells.size();
-  			  i++ )
+					 i < world->rt_cells.size();
+					 i++ )
   		  {			 
-  			 glVertex2f( world->rt_cells[i].x+0.5, world->rt_cells[i].y+0.5 );
+					glVertex2f( world->rt_cells[i].x+0.5, world->rt_cells[i].y+0.5 );
   		  }
   		glEnd();
   		world->PopColor();
 #endif
-		
+			
       glPopMatrix();
-		world->PopColor();
+			world->PopColor();
     }
-
+	
   if( ! world->rt_candidate_cells.empty() )
-	 {
-		glPushMatrix();	  		
-		GLfloat scale = 1.0/world->Resolution();
+		{
+			glPushMatrix();	  		
+			GLfloat scale = 1.0/world->Resolution();
       glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
-
-		world->PushColor( Color( 1,0,0,0.5) );
-
-		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
-		for( unsigned int i=0;
-			  i < world->rt_candidate_cells.size();
-			  i++ )
-		  {
-// 			 char str[128];
-// 			 snprintf( str, 128, "(%d,%d)", 
-// 						  world->rt_candidate_cells[i].x, 
-// 						  world->rt_candidate_cells[i].y );
-
-// 			 Gl::draw_string(  world->rt_candidate_cells[i].x+1, 
-// 									 world->rt_candidate_cells[i].y+1, 0.1, str );
-			 
-			 //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
-			 glRectf( world->rt_candidate_cells[i].x, world->rt_candidate_cells[i].y,
-						 world->rt_candidate_cells[i].x+1, world->rt_candidate_cells[i].y+1 );
-		  }
-		
- 		world->PushColor( Color( 0,1,0,0.2) );
- 		glBegin( GL_LINE_STRIP );
- 		for( unsigned int i=0;
- 			  i < world->rt_candidate_cells.size();
- 			  i++ )
- 		  {			 
- 			 glVertex2f( world->rt_candidate_cells[i].x+0.5, world->rt_candidate_cells[i].y+0.5 );
- 		  }
- 		glEnd();
- 		world->PopColor();
-
+			
+			world->PushColor( Color( 1,0,0,0.5) );
+			
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+			
+			for( unsigned int i=0;
+					 i < world->rt_candidate_cells.size();
+					 i++ )
+				{
+					// 			 char str[128];
+					// 			 snprintf( str, 128, "(%d,%d)", 
+					// 						  world->rt_candidate_cells[i].x, 
+					// 						  world->rt_candidate_cells[i].y );
+					
+					// 			 Gl::draw_string(  world->rt_candidate_cells[i].x+1, 
+					// 									 world->rt_candidate_cells[i].y+1, 0.1, str );
+					
+					//printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
+					glRectf( world->rt_candidate_cells[i].x, world->rt_candidate_cells[i].y,
+									 world->rt_candidate_cells[i].x+1, world->rt_candidate_cells[i].y+1 );
+				}
+			
+			world->PushColor( Color( 0,1,0,0.2) );
+			glBegin( GL_LINE_STRIP );
+			for( unsigned int i=0;
+					 i < world->rt_candidate_cells.size();
+					 i++ )
+				{			 
+					glVertex2f( world->rt_candidate_cells[i].x+0.5, world->rt_candidate_cells[i].y+0.5 );
+				}
+			glEnd();
+			world->PopColor();
+			
       glPopMatrix();
-		world->PopColor();
-
-		//world->rt_cells.clear();
+			world->PopColor();
+			
+			//world->rt_cells.clear();
     }
-
-
-  if( showFootprints )
-	 {
-		glDisable( GL_DEPTH_TEST );		
-
-		FOR_EACH( it, models_sorted )
-		  (*it)->DrawTrailFootprint();
-
-		glEnable( GL_DEPTH_TEST );
-	 }
+	
+	
   
   if( showGrid )
-	 DrawGlobalGrid();
+		DrawGlobalGrid();
   else
-	 DrawFloor();
+		DrawFloor();
   
+  if( showFootprints )
+		{
+			glDisable( GL_DEPTH_TEST );		
+			
+			FOR_EACH( it, models_sorted )
+				(*it)->DrawTrailFootprint();
+			
+			glEnable( GL_DEPTH_TEST );
+		}
+
   if( showBlocks )
-	 DrawBlocks();
-
+		DrawBlocks();
+	
   if( showBBoxes )
-	 DrawBoundingBoxes();
-
+		DrawBoundingBoxes();
+	
   // TODO - finish this properly
   //LISTMETHOD( models_sorted, Model*, DrawWaypoints );
+
+
   
-// MOTION BLUR
+	// MOTION BLUR
   if( 0  )//showBlur )
- 	 {
- 		DrawBlocks();
-		
- 		//static float count = 0; 
-		
- 		if( ! blur )
- 		  {
- 			 blur = true;
- 			 glClear( GL_ACCUM_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
- 			 glAccum( GL_LOAD, 1.0 );
- 		  }
- 		else
- 		  {	
- 			 glAccum( GL_MULT, 0.9 );
- 			 glAccum( GL_ACCUM, 0.1 );
-			 
- 			 glAccum( GL_RETURN, 1.1 );
-			 
-  			 DrawBlocks(); // outline at current location
- 		  }
+		{
+			DrawBlocks();
+			
+			//static float count = 0; 
+			
+			if( ! blur )
+				{
+					blur = true;
+					glClear( GL_ACCUM_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+					glAccum( GL_LOAD, 1.0 );
+				}
+			else
+				{	
+					glAccum( GL_MULT, 0.9 );
+					glAccum( GL_ACCUM, 0.1 );
+					
+					glAccum( GL_RETURN, 1.1 );
+					
+					DrawBlocks(); // outline at current location
+				}
  	 }
 
 // GRAY TRAILS
@@ -1137,7 +1139,7 @@ void Canvas::renderFrame()
 
 void Canvas::EnterScreenCS()
 {
-  //use orthogonal projeciton without any zoom
+  //use orthogonal projection without any zoom
   glMatrixMode (GL_PROJECTION);
   glPushMatrix(); //save old projection
   glLoadIdentity ();
@@ -1170,13 +1172,13 @@ void Canvas::Screenshot()
   // pixels avoid a nasty word-alignment problem when indexing into
   // the pixel array.
 
-  // might save a bit of time as the image size rarely changes
-  static uint8_t* pixels = NULL;  
-  pixels = g_renew( uint8_t, pixels, width * height * depth );
+  // might save a bit of time with a static var as the image size rarely changes
+  static std::vector<uint8_t> pixels;
+  pixels.resize( width * height * depth );
   
   glFlush(); // make sure the drawing is done
   // read the pixels from the screen
-  glReadPixels( 0,0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels );			 
+  glReadPixels( 0,0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0] );			 
   
   static uint32_t count = 0;		 
   char filename[64];
@@ -1185,7 +1187,7 @@ void Canvas::Screenshot()
   FILE *fp = fopen( filename, "wb" );
   if( fp == NULL ) 
     {
-		PRINT_ERR1( "Unable to open %s", filename );
+			PRINT_ERR1( "Unable to open %s", filename );
     }
   
   // create PNG data
@@ -1253,9 +1255,9 @@ void Canvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
   showOccupancy.createMenuItem( menu, path );
   //showTrailArrows.createMenuItem( menu, path ); // broken
   showTrails.createMenuItem( menu, path ); 
-  // showTrailRise.createMenuItem( menu, path );  // broken
+  //showTrailRise.createMenuItem( menu, path );  // broken
   showBBoxes.createMenuItem( menu, path );
-  showBlur.createMenuItem( menu, path );
+  //showBlur.createMenuItem( menu, path );
   showTree.createMenuItem( menu, path );  
   showScreenshots.createMenuItem( menu, path );  
 }

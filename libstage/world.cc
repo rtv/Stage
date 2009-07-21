@@ -222,11 +222,10 @@ void init_models( gpointer dummy1, Model* mod, gpointer dummy2 )
   mod->Init();
 }
 
-void World::LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable )
+void World::LoadBlock( Worldfile* wf, int entity )
 { 
   // lookup the group in which this was defined
-  Model* mod = (Model*)g_hash_table_lookup( entitytable, 
-											(gpointer)wf->GetEntityParent( entity ) );
+  Model* mod = models_by_wfentity[ wf->GetEntityParent( entity )];
   
   if( ! mod )
     PRINT_ERR( "block has no model for a parent" );
@@ -276,15 +275,14 @@ Model* World::CreateModel( Model* parent, const char* typestr )
 }
 
 
-void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
+void World::LoadModel( Worldfile* wf, int entity )
 { 
   int parent_entity = wf->GetEntityParent( entity );
   
   PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
 				entity, parent_entity );
   
-  Model* parent = (Model*)g_hash_table_lookup( entitytable, 
-											   (gpointer)parent_entity );
+  Model* parent = models_by_wfentity[ parent_entity ];
     
   char *typestr = (char*)wf->GetEntityType(entity);      	  
   assert(typestr);
@@ -295,15 +293,13 @@ void World::LoadModel( Worldfile* wf, int entity, GHashTable* entitytable )
   mod->Load(wf, entity );
  
   // record the model we created for this worlfile entry
-  g_hash_table_insert( entitytable, (gpointer)entity, mod );
+	models_by_wfentity[entity] = mod;
 }
   
 void World::Load( const char* worldfile_path )
 {
   // note: must call Unload() before calling Load() if a world already
   // exists TODO: unload doesn't clean up enough right now
-
-  GHashTable* entitytable = g_hash_table_new( g_direct_hash, g_direct_equal );
 
   printf( " [Loading %s]", worldfile_path );
   fflush(stdout);
@@ -366,30 +362,26 @@ void World::Load( const char* worldfile_path )
 		
       // don't load window entries here
       if( strcmp( typestr, "window" ) == 0 )
-		{
-		  /* do nothing here */
-		}
+				{
+					/* do nothing here */
+				}
       else if( strcmp( typestr, "block" ) == 0 )
-		LoadBlock( wf, entity, entitytable );
-	  else
-		LoadModel( wf, entity, entitytable );
+				LoadBlock( wf, entity );
+			else
+				LoadModel( wf, entity );
     }
-  
-
+	
   // warn about unused WF lines
   wf->WarnUnused();
 	
-  // now we're done with the worldfile entry lookup
-  g_hash_table_destroy( entitytable );
-	
   FOR_EACH( it, children )
-	(*it)->InitRecursive();
+		(*it)->InitRecursive();
 	
   stg_usec_t load_end_time = RealTimeNow();
-
+	
   if( debug )
     printf( "[Load time %.3fsec]\n", 
-			(load_end_time - load_start_time) / 1000000.0 );
+						(load_end_time - load_start_time) / 1e6 );
   else
     putchar( '\n' );
 }
@@ -404,7 +396,7 @@ void World::UnLoad()
  
   //g_hash_table_remove_all( models_by_name );
   models_by_name.clear();
-
+	models_by_wfentity.clear();
   update_lists.resize(1);
   
   ray_list.clear();

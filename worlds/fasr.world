@@ -87,10 +87,6 @@ define charge_station model
 
 )
 
-# rtv - test ones
-charge_station(  pose [ -7.940 2.000 0 0 ] )
-charge_station(  pose [ -7.940 3.000 0 0 ] )
-charge_station(  pose [ -7.940 4.000 0 0 ] )
 
 charge_station(  pose [ 7.940 -2.000 0 0 ] )
 charge_station(  pose [ 7.940 -3.000 0 0 ] )

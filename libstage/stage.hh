@@ -49,6 +49,7 @@
 #include <ext/hash_map>
 //#include <unordered_map>
 #include <set>
+#include <queue>
 #include <algorithm>
 
 // we use GLib's data structures extensively. Gradually we're moving
@@ -118,14 +119,13 @@ namespace Stg
     MODEL_TYPE_BLOBFINDER,
     MODEL_TYPE_BLINKENLIGHT,
     MODEL_TYPE_CAMERA,
-	MODEL_TYPE_GRIPPER,
-	MODEL_TYPE_ACTUATOR,
-	MODEL_TYPE_LOADCELL,
-	MODEL_TYPE_LIGHTINDICATOR,
-    MODEL_TYPE_COUNT // must be the last entry, to count the number of
-    // types
+		MODEL_TYPE_GRIPPER,
+		MODEL_TYPE_ACTUATOR,
+		MODEL_TYPE_LOADCELL,
+		MODEL_TYPE_LIGHTINDICATOR,
+    MODEL_TYPE_COUNT // must be the last entry, to count the number of types
   } stg_model_type_t;
-
+	
   /// Copyright string
   const char COPYRIGHT[] =				       
     "Copyright Richard Vaughan and contributors 2000-2009";
@@ -144,7 +144,7 @@ namespace Stg
   /// Project distribution license string
   const char LICENSE[] = 
     "Stage robot simulation library\n"					\
-    "Copyright (C) 2000-2008 Richard Vaughan and contributors\n"	\
+    "Copyright (C) 2000-2009 Richard Vaughan and contributors\n"	\
     "Part of the Player Project [http://playerstage.org]\n"		\
     "\n"								\
     "This program is free software; you can redistribute it and/or\n"	\
@@ -195,12 +195,6 @@ namespace Stg
 
   /** take binary sign of a, either -1, or 1 if >= 0. */
   inline double sgn( double a){ return( a<0 ? -1.0 : 1.0); }
-
-  /** Describe the image format used for saving screenshots. */
-  typedef enum {
-    STG_IMAGE_FORMAT_PNG,
-    STG_IMAGE_FORMAT_JPG
-  } stg_image_format_t;
   
   /** any integer value other than this is a valid fiducial ID */
   enum { FiducialNone = 0 };
@@ -300,9 +294,9 @@ namespace Stg
 						stg_meters_t ymin, stg_meters_t ymax )
     {		 
       return Pose( xmin + drand48() * (xmax-xmin),
-				   ymin + drand48() * (ymax-ymin),
-				   0, 
-				   normalize( drand48() * (2.0 * M_PI) ));
+									 ymin + drand48() * (ymax-ymin),
+									 0, 
+									 normalize( drand48() * (2.0 * M_PI) ));
     }
     
 	/** Print pose in human-readable format on stdout
@@ -605,30 +599,17 @@ namespace Stg
     double duty_cycle; ///< mark/space ratio
   } stg_blinkenlight_t;
 
-  typedef struct {
+  class TrailItem 
+	{																							
+	public:
+    stg_usec_t time;
     Pose pose;
     Color color;
-    stg_usec_t time;
-  } stg_trail_item_t;
-  
-  /** container for a callback function and a single argument, so
-      they can be stored together in a list with a single pointer. */
-  class stg_cb_t
-  {
-  public:
-	 stg_model_callback_t callback;
-    void* arg;
-	 
-	 stg_cb_t( stg_model_callback_t cb, void* arg ) 
-		: callback(cb), arg(arg) {}
 
-	 stg_cb_t( stg_world_callback_t cb, void* arg ) 
-		: callback(NULL), arg(arg) {}
-	 
-	 stg_cb_t() : callback(NULL), arg(NULL) {}
+		TrailItem( stg_usec_t time, Pose pose, Color color ) 
+			: time(time), pose(pose), color(color){}
   };
   
-
   /** Defines a rectangle of [size] located at [pose] */
   typedef struct
   {
@@ -853,9 +834,9 @@ namespace Stg
 		{ return( strcmp( a, b ) == 0 ); }
 	 };
 	 
-	 __gnu_cxx::hash_map<const char*, Model*, __gnu_cxx::hash<const char*>, eqstr > models_by_name; ///< the models that make up the world, indexed by name.
-	 //tr1::unordered_map<const char*, Model*, __gnu_cxx::hash<const char*>, eqstr > models_by_name; ///< the models that make up the world, indexed by name.
-
+		__gnu_cxx::hash_map<const char*, Model*, __gnu_cxx::hash<const char*>, eqstr > models_by_name; ///< the models that make up the world, indexed by name.
+		
+		std::map<int,Model*> models_by_wfentity;
 
 	 /** Keep a list of all models with detectable fiducials. This
 		  avoids searching the whole world for fiducials. */
@@ -884,7 +865,6 @@ namespace Stg
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
     stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
-	 //GHashTable* option_table; ///< GUI options (toggles) registered by models	 
 	 std::set<Option*> option_table; ///< GUI options (toggles) registered by models
 	 std::list<PowerPack*> powerpack_list; ///< List of all the powerpacks attached to models in the world
 	 std::list<float*> ray_list;///< List of rays traced for debug visualization
@@ -930,110 +910,109 @@ namespace Stg
 
     /** hint that the world needs to be redrawn if a GUI is attached */
     void NeedRedraw(){ dirty = true; };
-
-  /** Special model for the floor of the world */
-  Model* ground;
-
+		
+		/** Special model for the floor of the world */
+		Model* ground;
+		
     /** Get human readable string that describes the current simulation
-		  time. */
+				time. */
     virtual std::string ClockString( void );
+		
+		Model* CreateModel( Model* parent, const char* typestr );	 
+    void LoadModel( Worldfile* wf, int entity );
+    void LoadBlock( Worldfile* wf, int entity );
+    void LoadBlockGroup( Worldfile* wf, int entity );
 
-	 Model* CreateModel( Model* parent, const char* typestr );	 
-    void LoadModel( Worldfile* wf, int entity, GHashTable* entitytable );
-    void LoadBlock( Worldfile* wf, int entity, GHashTable* entitytable );
-    void LoadBlockGroup( Worldfile* wf, int entity, GHashTable* entitytable );
-	//    void LoadPuck( Worldfile* wf, int entity, GHashTable* entitytable );
-
-	 virtual Model* RecentlySelectedModel(){ return NULL; }
-
+		virtual Model* RecentlySelectedModel(){ return NULL; }
+		
     SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
     SuperRegion* GetSuperRegion( const stg_point_int_t& coord );
     SuperRegion* GetSuperRegionCached( const stg_point_int_t& coord);
     SuperRegion* GetSuperRegionCached( int32_t x, int32_t y );
     void ExpireSuperRegion( SuperRegion* sr );
-
+		
     inline Cell* GetCell( const stg_point_int_t& glob );
-	 
-	 /** add a Cell pointer to the vector for each cell on the line from
-		  pt1 to pt2 inclusive */
+		
+		/** add a Cell pointer to the vector for each cell on the line from
+				pt1 to pt2 inclusive */
     void ForEachCellInLine( const stg_point_int_t& pt1,
-									 const stg_point_int_t& pt2, 
-									 CellPtrVec& cells );
-
+														const stg_point_int_t& pt2, 
+														CellPtrVec& cells );
+		
     /** convert a distance in meters to a distance in world occupancy
-		  grid pixels */
+				grid pixels */
     int32_t MetersToPixels( stg_meters_t x )
     { return (int32_t)floor(x * ppm); };
-
+		
     stg_point_int_t MetersToPixels( const stg_point_t& pt )
     { return stg_point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); };
-	 
+		
     // dummy implementations to be overloaded by GUI subclasses
     virtual void PushColor( Color col ) { /* do nothing */  };
     virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
     virtual void PopColor(){ /* do nothing */  };
-	 
+		
     SuperRegion* CreateSuperRegion( stg_point_int_t origin );
     void DestroySuperRegion( SuperRegion* sr );
-	 	 
-	 /** trace a ray. */
-	 stg_raytrace_result_t Raytrace( const Ray& ray );
+	 	
+		/** trace a ray. */
+		stg_raytrace_result_t Raytrace( const Ray& ray );
 
     stg_raytrace_result_t Raytrace( const Pose& pose, 			 
-												const stg_meters_t range,
-												const stg_ray_test_func_t func,
-												const Model* finder,
-												const void* arg,
-												const bool ztest );
-  
+																		const stg_meters_t range,
+																		const stg_ray_test_func_t func,
+																		const Model* finder,
+																		const void* arg,
+																		const bool ztest );
+		
     void Raytrace( const Pose &pose, 			 
-						 const stg_meters_t range,
-						 const stg_radians_t fov,
-						 const stg_ray_test_func_t func,
-						 const Model* finder,
-						 const void* arg,
-						 stg_raytrace_result_t* samples,
-						 const uint32_t sample_count,
-						 const bool ztest );
-  
-
+									 const stg_meters_t range,
+									 const stg_radians_t fov,
+									 const stg_ray_test_func_t func,
+									 const Model* finder,
+									 const void* arg,
+									 stg_raytrace_result_t* samples,
+									 const uint32_t sample_count,
+									 const bool ztest );
+		
+		
     /** Enlarge the bounding volume to include this point */
     void Extend( stg_point3_t pt );
   
     virtual void AddModel( Model* mod );
     virtual void RemoveModel( Model* mod );
-
+		
     void AddPowerPack( PowerPack* pp );
     void RemovePowerPack( PowerPack* pp );
-  
+		
     void ClearRays();
   
     /** store rays traced for debugging purposes */
     void RecordRay( double x1, double y1, double x2, double y2 );
-
+		
     /** Returns true iff the current time is greater than the time we
-		  should quit */
+				should quit */
     bool PastQuitTime();
-	
+		
     int UpdateListAdd( Model* mod );  
-	void UpdateListRemove( Model* mod );
+		void UpdateListRemove( Model* mod );
     
-	void VelocityListAdd( Model* mod );
-	void VelocityListRemove( Model* mod );
-	
-	void ChargeListAdd( Model* mod );
-	void ChargeListRemove( Model* mod );
-
+		void VelocityListAdd( Model* mod );
+		void VelocityListRemove( Model* mod );
+		
+		void ChargeListAdd( Model* mod );
+		void ChargeListRemove( Model* mod );
+		
     static gpointer update_thread_entry( std::pair<World*,int>* info );
 	 
   public:
     /** returns true when time to quit, false otherwise */
     static bool UpdateAll(); 
-	 
+		
     World( const char* token = "MyWorld", 
-			  stg_msec_t interval_sim = DEFAULT_INTERVAL_SIM,
-			  double ppm = DEFAULT_PPM );
-	 
+					 stg_msec_t interval_sim = DEFAULT_INTERVAL_SIM,
+					 double ppm = DEFAULT_PPM );
+		
     virtual ~World();
   
     stg_usec_t SimTimeNow(void);
@@ -1718,18 +1697,43 @@ namespace Stg
 		  forming a solid boundary around the bounding box of the
 		  model. */
 	 int boundary;
-
-	 /** callback functions can be attached to any field in this
-		  structure. When the internal function model_change(<mod>,<field>)
-		  is called, the callback is triggered */
-	GHashTable* callbacks;
-	/** Dedicated storage for update callbacks - avoids looking them up in a hash table */
-	//std::vector<std::pair<stg_model_callback_t,void*> > update_callbacks;
-
-	 /** Default color of the model's blocks.*/
-	 Color color;
-	double friction;
-	 
+		
+		/** container for a callback function and a single argument, so
+				they can be stored together in a list with a single pointer. */
+	public:
+		class stg_cb_t
+		{
+		public:
+			stg_model_callback_t callback;
+			void* arg;
+			
+			stg_cb_t( stg_model_callback_t cb, void* arg ) 
+				: callback(cb), arg(arg) {}
+			
+			stg_cb_t( stg_world_callback_t cb, void* arg ) 
+				: callback(NULL), arg(arg) {}
+			
+			stg_cb_t() : callback(NULL), arg(NULL) {}
+			
+			/** for placing in a sorted container */
+			bool operator<( const stg_cb_t& other ) const
+			{ return ((void*)(callback)) < ((void*)(other.callback)); }
+			
+			/** for searching in a sorted container */
+			bool operator==( const stg_cb_t& other ) const
+			{ return( callback == other.callback);  }			
+		};
+		
+	protected:
+		/** A list of callback functions can be attached to any
+				address. When Model::CallCallbacks( void*) is called, the
+				callbacks are called.*/
+		std::map<void*, std::set<stg_cb_t> > callbacks;
+		
+		/** Default color of the model's blocks.*/
+		Color color;
+		double friction;
+		
 	 /** This can be set to indicate that the model has new data that
 		  may be of interest to users. This allows polling the model
 		  instead of adding a data callback. */
@@ -1786,7 +1790,6 @@ namespace Stg
 	  uint8_t* data;
 	  unsigned int width, height;
 	  stg_meters_t cellwidth, cellheight;
-	  //GList* pts;
 	  std::vector<stg_point_t> pts;
 	  
 	public:
@@ -1807,19 +1810,30 @@ namespace Stg
 	  void ClearPts();
 	  
 	} rastervis;
-	
-	bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
-	char* say_string;   ///< if non-null, this string is displayed in the GUI 
-	
-	stg_bool_t stall;
-	/** Thread safety flag. Iff true, Update() may be called in
-		parallel with other models. Defaults to false for safety */
-	int subs;    ///< the number of subscriptions to this model
-	bool thread_safe;
-	GArray* trail;
-	stg_model_type_t type;  
-	/** The index into the world's vector of update lists. Initially
-	    -1, to indicate that it is not on a list yet. */
+		
+		bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
+		char* say_string;   ///< if non-null, this string is displayed in the GUI 
+		
+		stg_bool_t stall;
+		/** Thread safety flag. Iff true, Update() may be called in
+				parallel with other models. Defaults to false for safety */
+		int subs;    ///< the number of subscriptions to this model
+		bool thread_safe;
+		
+		/** Cache of recent poses, used to draw the trail. */
+		std::list<TrailItem> trail;
+
+		/** The maxiumum length of the trail drawn. Default is 20, but can
+				be set in the world file using the tail_length model
+				property. */
+		unsigned int trail_length;
+
+		/** Number of world updates between trail records. */
+		long unsigned int trail_interval;
+
+		stg_model_type_t type;  
+		/** The index into the world's vector of update lists. Initially
+				-1, to indicate that it is not on a list yet. */
 	int update_list_num; 
 	bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
 	Velocity velocity;
@@ -2213,23 +2227,23 @@ namespace Stg
 	 void SetGuiGrid( int val );
 	 void SetGuiOutline( int val );
 	 void SetWatts( stg_watts_t watts );
-	 void SetMapResolution( stg_meters_t res );
-	void SetFriction( double friction );
+		void SetMapResolution( stg_meters_t res );
+		void SetFriction( double friction );
 	
 	 bool DataIsFresh() const { return this->data_fresh; }
 	
 	 /* attach callback functions to data members. The function gets
 		 called when the member is changed using SetX() accessor method */
-	
-	 void AddCallback( void* address, 
-							 stg_model_callback_t cb, 
-							 void* user );
-	
-	 int RemoveCallback( void* member,
-								stg_model_callback_t callback );
-	
-	 void CallCallbacks(  void* address );
-	
+		
+		void AddCallback( void* address, 
+											stg_model_callback_t cb, 
+											void* user );
+		
+		int RemoveCallback( void* member,
+												stg_model_callback_t callback );
+		
+		int CallCallbacks(  void* address );
+		
 	 /* wrappers for the generic callback add & remove functions that hide
 		 some implementation detail */
 	

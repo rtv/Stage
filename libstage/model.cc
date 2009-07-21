@@ -196,11 +196,11 @@ Model::Model( World* world,
     blockgroup(),
     blocks_dl(0),
     boundary(false),
-    callbacks( g_hash_table_new( g_direct_hash, g_direct_equal ) ),
+    callbacks(),// g_hash_table_new( g_direct_hash, g_direct_equal ) ),
     color( 1,0,0 ), // red
     data_fresh(false),
     disabled(false),
-	 cv_list(),
+		cv_list(),
     flag_list(),
     geom(),
     has_default_block( true ),
@@ -208,33 +208,35 @@ Model::Model( World* world,
     initfunc(NULL),
     interval((stg_usec_t)1e4), // 10msec
     last_update(0),
-	log_state(false),
+		log_state(false),
     map_resolution(0.1),
     mass(0),
     on_velocity_list( false ),
     parent(parent),
     pose(),
-	power_pack( NULL ),
-	pps_charging(),
+		power_pack( NULL ),
+		pps_charging(),
     props(NULL),
-	rastervis(),
+		rastervis(),
     rebuild_displaylist(true),
     say_string(NULL),
     stall(false),	 
     subs(0),
     thread_safe( false ),
-    trail( g_array_new( false, false, sizeof(stg_trail_item_t) )),
+    trail(),
+		trail_length(25),
+		trail_interval(5),
     type(type),	
-	update_list_num( -1 ),
+		update_list_num( -1 ),
     used(false),
     velocity(),
     watts(0.0),
-	watts_give(0.0),
-	watts_take(0.0),	 
+		watts_give(0.0),
+		watts_take(0.0),	 
     wf(NULL),
     wf_entity(0),
     world(world),
-	world_gui( dynamic_cast<WorldGui*>( world ) )
+		world_gui( dynamic_cast<WorldGui*>( world ) )
 {
   //assert( modelsbyid );
   assert( world );
@@ -281,7 +283,7 @@ Model::~Model( void )
   ModelPtrVec& vec  = parent ? parent->children : world->children;
   vec.erase( std::remove( vec.begin(), vec.end(), this ));
 
-  if( callbacks ) g_hash_table_destroy( callbacks );
+  //if( callbacks ) g_hash_table_destroy( callbacks );
 	
   g_datalist_clear( &props );
 
@@ -864,21 +866,14 @@ void Model::UpdatePose( void )
   if( disabled )
     return;
   
-  // TODO - control this properly, and maybe do it faster
-  //if( 0 )
-  //if( (world->updates % 10 == 0) )
-  //     {
-  //       stg_trail_item_t checkpoint;
-  //       memcpy( &checkpoint.pose, &pose, sizeof(pose));
-  //       checkpoint.color = color;
-  //       checkpoint.time = world->sim_time;
-
-  //       if( trail->len > 100 )
-  // 		  g_array_remove_index( trail, 0 );
-
-  //       g_array_append_val( this->trail, checkpoint );
-  //     }
-	
+ 	if( world->updates % trail_interval == 0 )
+		{
+			trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 
+			
+			if( trail.size() > trail_length )
+				trail.pop_front();
+		}	
+		
   // convert usec to sec
   double interval( (double)world->interval_sim / 1e6 );
   

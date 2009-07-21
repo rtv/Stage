@@ -494,7 +494,6 @@ public:
   }
 };
 
-
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
 {  
@@ -515,7 +514,6 @@ extern "C" int Init( Model* mod )
 			 putchar( '\n' );
 		  }
 		delete data;
-		
 	 }
 
   new Robot( (ModelPosition*)mod,

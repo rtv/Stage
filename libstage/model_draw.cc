@@ -50,26 +50,33 @@ void Model::DrawSelected()
 
 void Model::DrawTrailFootprint()
 {
-  for( int i=trail->len-1; i>=0; i-- )
+	double darkness = 0;
+	double fade = 0.5 / (double)(trail_length+1);
+
+	FOR_EACH( it, trail )
     {
-      stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
-
+			TrailItem& checkpoint = *it;
+			
       glPushMatrix();
-		Gl::pose_shift( checkpoint->pose );
-		Gl::pose_shift( geom.pose );
+			Pose pz = checkpoint.pose;
+			pz.z += 0.02;
+			Gl::pose_shift( pz );
+			Gl::pose_shift( geom.pose );
+			
+			darkness += fade;
 
-		//stg_color_unpack( checkpoint->color, &r, &g, &b, &a );
-		Color c = checkpoint->color;
-		c.a = 0.1;
-		PushColor( c );
+			Color c = checkpoint.color;
+			c.a = darkness;
+			PushColor( c );
+			
 
       blockgroup.DrawFootPrint( geom );
-
+			
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-      PushColor( c.r/2, c.g/2, c.b/2, 0.1 );
-
+      PushColor( c.r/2, c.g/2, c.b/2, darkness );
+			
       blockgroup.DrawFootPrint( geom );
-
+			
       PopColor();
       PopColor();
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -81,17 +88,14 @@ void Model::DrawTrailBlocks()
 {
   double timescale = 0.0000001;
 
-  for( int i=trail->len-1; i>=0; i-- )
+	FOR_EACH( it, trail )
     {
-      stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
+			TrailItem& checkpoint = *it;
 
-      Pose pose;
-      memcpy( &pose, &checkpoint->pose, sizeof(pose));
-      pose.z =  (world->sim_time - checkpoint->time) * timescale;
+      Pose pose = checkpoint.pose;
+      pose.z =  (world->sim_time - checkpoint.time) * timescale;
 
       PushLocalCoords();
-      //blockgroup.Draw( this );
-
       DrawBlocksTree();
       PopCoords();
     }
@@ -103,19 +107,18 @@ void Model::DrawTrailArrows()
   double dy = 0.07;
   double timescale = 0.0000001;
 
-  for( unsigned int i=0; i<trail->len; i++ )
+	FOR_EACH( it, trail )
     {
-      stg_trail_item_t* checkpoint = & g_array_index( trail, stg_trail_item_t, i );
+			TrailItem& checkpoint = *it;
 
-      Pose pose;
-      memcpy( &pose, &checkpoint->pose, sizeof(pose));
-      pose.z =  (world->sim_time - checkpoint->time) * timescale;
+      Pose pose = checkpoint.pose;
+      pose.z =  (world->sim_time - checkpoint.time) * timescale;
 
       PushLocalCoords();
 
       // set the height proportional to age
 
-      PushColor( checkpoint->color );
+      PushColor( checkpoint.color );
 
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(1.0, 1.0);
@@ -128,12 +131,12 @@ void Model::DrawTrailArrows()
       glDisable(GL_POLYGON_OFFSET_FILL);
 
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
-	  Color c = checkpoint->color;
-	  c.r /= 2.0;
-	  c.g /= 2.0;
-	  c.b /= 2.0;	  
-      PushColor( c ); // darker color
+			
+			Color c = checkpoint.color;
+			c.r /= 2.0;
+			c.g /= 2.0;
+			c.b /= 2.0;	  
+			PushColor( c ); // darker color
 
       glDepthMask(GL_FALSE);
       glBegin( GL_TRIANGLES );

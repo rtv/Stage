@@ -224,8 +224,8 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   mbar->add( "Run/Pause", 'p', (Fl_Callback*) WorldGui::pauseCb, this );
   mbar->add( "Run/One step", '.', (Fl_Callback*) WorldGui::onceCb, this, FL_MENU_DIVIDER );
   mbar->add( "Run/Faster", ']', (Fl_Callback*) WorldGui::fasterCb, this );
-  mbar->add( "Run/Slower", '[', (Fl_Callback*) WorldGui::slowerCb, this );
-  mbar->add( "Run/Realtime", '{', (Fl_Callback*) WorldGui::realtimeCb, this, FL_MENU_DIVIDER );
+  mbar->add( "Run/Slower", '[', (Fl_Callback*) WorldGui::slowerCb, this, FL_MENU_DIVIDER  );
+  mbar->add( "Run/Realtime", '{', (Fl_Callback*) WorldGui::realtimeCb, this );
   mbar->add( "Run/Fast", '}', (Fl_Callback*) WorldGui::fasttimeCb, this );
   
   mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
