@@ -3,6 +3,7 @@
 #include "worldfile.hh"
 
 #include <libgen.h> // for dirname(3)
+#include <limits.h> // for _POSIX_PATH_MAX
 
 #undef DEBUG
 

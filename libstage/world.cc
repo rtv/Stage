@@ -424,7 +424,8 @@ void World::UnLoad()
   token = NULL;
 }
 
-inline stg_usec_t World::RealTimeNow()
+// cant inline a symbol that is used externally
+stg_usec_t World::RealTimeNow()
 {
   struct timeval tv;
   gettimeofday( &tv, NULL );  // slow system call: use sparingly
