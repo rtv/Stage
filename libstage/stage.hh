@@ -52,6 +52,7 @@
 #include <queue>
 #include <algorithm>
 
+
 // FLTK Gui includes
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
@@ -2172,8 +2173,6 @@ namespace Stg
 	 
 	/** Get the total mass of a model and it's children recursively */
 	stg_kg_t GetTotalMass();
-
-	 //  stg_laser_return_t GetLaserReturn(){ return laser_return; }
 	
 	 /** Change a model's parent - experimental*/
 	 int SetParent( Model* newparent);

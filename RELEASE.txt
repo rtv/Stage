@@ -3,12 +3,9 @@ Version 3.1.0
 
 This minor release includes some major improvements, including:
 
-* Added or reinstated several models
+* Added or reinstated models
 	* grippers
   * linear actuator
-  * wifi
-  * load cell
-  * light indicator
 * Powerpacks models power consumption, charging and transferring
 * Models can provide occuapancy grids with Stg::Model::Rasterize()
 * WebStage is Stage with WebSim support
@@ -18,8 +15,9 @@ This minor release includes some major improvements, including:
 * More example controllers in <stage>/examples/ctrl
 * Faster raytracing
 * Replaced GLib-2.0 with STL, pthreads, etc.
+* Better docs (but still lots to do here)
 
-Richard Vaughan (rtv) vaughan@sfu.ca - 2009.X.X 
+Richard Vaughan (rtv) vaughan@sfu.ca - 2009.7.22
 
 Version 3.0.1
 -------------

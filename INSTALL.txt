@@ -13,9 +13,10 @@ Building Stage requires the following libraries:
 
 - FLTK 1.1.x 
 - OpenGL
-- GLib 2
 - libpng
 - ltdl (Libtool)
+
+(Since 3.1.0, Stage no longer depends on GLib-2)
 
 Configuring the build
 ---------------------
@@ -38,7 +39,7 @@ sure that pkg-config can find it. Test it like so:
 
 This should output the version number of the Player installation
 (probably 2.2.0 or later). If not, add the location of Player's
-pkg-config file to your `PKG_CONFIG_PATH`, eg. in bash:
+pkg-config file to your `PKG_CONFIG_PATH`, eg. in bash, and replacing <Player installation prefix> with the correct directory, do:
 
 	$ export PKG_CONFIG_PATH+=<Player installation prefix>/lib/pkgconfig
 
