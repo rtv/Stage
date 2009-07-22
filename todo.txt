@@ -19,8 +19,7 @@ OS X	16.20 (rev 7949)
  - visualizer option state in worldfile
  - blinkenlights vs lightindicator - resolve and fix interfaces
  - ranger transducer geometry correct?
- - fix benchmark controller 
- - feature freeze around July 1
+- feature freeze around July 1
  - scan SF for patches
  - fix world files
  - docs for new models
@@ -47,6 +46,7 @@ DESIRABLE FEATURES
 
 DONE
 
+* fix benchmark controller 
 * Viewing About Box stops simulation
 * saving worldfile adds newlines after includes
 * alpha properly done

@@ -4,8 +4,7 @@ MESSAGE( STATUS "Configuring libstage" )
 include_directories(${PROJECT_BINARY_DIR})
 
 set( stageSrcs    
-	model_props.cc
-   ancestor.cc
+  ancestor.cc
 	block.cc
 	blockgroup.cc
 	camera.cc
@@ -27,6 +26,7 @@ set( stageSrcs
 	model_laser.cc
 	model_load.cc
 	model_position.cc
+	model_props.cc
 	model_ranger.cc
 	model_loadcell.cc
 	model_lightindicator.cc
@@ -38,14 +38,14 @@ set( stageSrcs
 	stage.hh
 	texture_manager.cc
 	typetable.cc		
-   vis_strip.cc			
+  vis_strip.cc			
 	waypoint.cc			
 	world.cc			
 	worldfile.cc		
-   worldgui.cc 
-   canvas.cc 
-   options_dlg.cc
-   options_dlg.hh
+  worldgui.cc 
+  canvas.cc 
+  options_dlg.cc
+  options_dlg.hh
 )
 
 set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
