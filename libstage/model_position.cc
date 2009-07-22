@@ -105,7 +105,7 @@ ModelPosition::ModelPosition( World* world,
   
   this->SetVelocity( Velocity(0,0,0,0) );
   
-  this->SetBlobReturn( TRUE );
+  this->SetBlobReturn( true );
   
   AddVisualizer( &wpvis, true );
   AddVisualizer( &posevis, false );
@@ -286,9 +286,9 @@ void ModelPosition::Update( void  )
 						// this is easy - we just reduce the errors in each axis
 						// independently with a proportional controller, speed
 						// limited
-						vel.x = MIN( x_error, max_speed_x );
-						vel.y = MIN( y_error, max_speed_y );
-						vel.a = MIN( a_error, max_speed_a );
+						 vel.x = std::min( x_error, max_speed_x );
+						 vel.y = std::min( y_error, max_speed_y );
+						 vel.a = std::min( a_error, max_speed_a );
 					 }
 					 break;
 
@@ -310,8 +310,8 @@ void ModelPosition::Update( void  )
 						  {
 							 PRINT_DEBUG( "TURNING ON THE SPOT" );
 							 // turn on the spot to minimize the error
-							 calc.a = MIN( a_error, max_speed_a );
-							 calc.a = MAX( a_error, -max_speed_a );
+							 calc.a = std::min( a_error, max_speed_a );
+							 calc.a = std::max( a_error, -max_speed_a );
 						  }
 						else
 						  {
@@ -321,8 +321,8 @@ void ModelPosition::Update( void  )
 							 double goal_distance = hypot( y_error, x_error );
 
 							 a_error = normalize( goal_angle - est_pose.a );
-							 calc.a = MIN( a_error, max_speed_a );
-							 calc.a = MAX( a_error, -max_speed_a );
+							 calc.a = std::min( a_error, max_speed_a );
+							 calc.a = std::max( a_error, -max_speed_a );
 
 							 PRINT_DEBUG2( "steer errors: %.2f %.2f \n", a_error, goal_distance );
 
@@ -331,7 +331,7 @@ void ModelPosition::Update( void  )
 							 if( fabs(a_error) < M_PI/16 )
 								{
 								  PRINT_DEBUG( "DRIVING TOWARDS THE GOAL" );
-								  calc.x = MIN( goal_distance, max_speed_x );
+								  calc.x = std::min( goal_distance, max_speed_x );
 								}
 						  }
 

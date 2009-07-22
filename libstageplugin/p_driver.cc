@@ -267,10 +267,10 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 // configure the underlying driver to queue incoming commands and use a very long queue.
 
 StgDriver::StgDriver(ConfigFile* cf, int section)
-    : Driver(cf, section, false, 4096 )
+	: Driver(cf, section, false, 4096 ),
+		devices()
 {
   // init the array of device ids
-  this->devices = g_ptr_array_new();
 
   int device_count = cf->GetTupleCount( section, "provides" );
 
@@ -407,7 +407,8 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	    }
 
 	  // store the Interaface in our device list
-	  g_ptr_array_add( this->devices, ifsrc );
+	  //g_ptr_array_add( this->devices, ifsrc );
+		devices.push_back( ifsrc );
 	}
       else
 	{
@@ -464,17 +465,18 @@ int StgDriver::Setup()
 // todo - faster lookup with a better data structure
 Interface* StgDriver::LookupDevice( player_devaddr_t addr )
 {
-  for( int i=0; i<(int)this->devices->len; i++ )
+  //for( int i=0; i<(int)this->devices->len; i++ )
+	FOR_EACH( it, this->devices )
     {
-      Interface* candidate =
-	(Interface*)g_ptr_array_index( this->devices, i );
-
+      Interface* candidate = *it;
+				//(Interface*)g_ptr_array_index( this->devices, i );
+			
       if( candidate->addr.robot == addr.robot &&
-	  candidate->addr.interf == addr.interf &&
-	  candidate->addr.index == addr.index )
-	return candidate; // found
+					candidate->addr.interf == addr.interf &&
+					candidate->addr.index == addr.index )
+				return candidate; // found
     }
-
+	
   return NULL; // not found
 }
 
@@ -580,9 +582,10 @@ void StgDriver::Update(void)
 
   //  puts( "STG driver update" );
 
-  for( int i=0; i<(int)this->devices->len; i++ )
-  {
-    Interface* interface = (Interface*)g_ptr_array_index( this->devices, i );
+  //for( int i=0; i<(int)this->devices->len; i++ )
+	FOR_EACH( it, this->devices )
+		{		
+			Interface* interface = *it; //(Interface*)g_ptr_array_index( this->devices, i );
 
     assert( interface );
 

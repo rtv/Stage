@@ -52,35 +52,30 @@ void Model::DrawTrailFootprint()
 {
 	double darkness = 0;
 	double fade = 0.5 / (double)(trail_length+1);
-
+	
+	PushColor( 0,0,0,1 ); // dummy pushL just saving the color
+	
 	FOR_EACH( it, trail )
-    {
-			TrailItem& checkpoint = *it;
-			
-      glPushMatrix();
-			Pose pz = checkpoint.pose;
-			pz.z += 0.02;
-			Gl::pose_shift( pz );
-			Gl::pose_shift( geom.pose );
-			
-			darkness += fade;
+	  {
+		 TrailItem& checkpoint = *it;
+		 
+		 glPushMatrix();
+		 Pose pz = checkpoint.pose;
 
-			Color c = checkpoint.color;
-			c.a = darkness;
-			PushColor( c );
-			
-      blockgroup.DrawFootPrint( geom );
-			
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-      PushColor( c.r/2, c.g/2, c.b/2, darkness );
-			
-      blockgroup.DrawFootPrint( geom );
-			
-      PopColor();
-      PopColor();
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-      glPopMatrix();
+		 Gl::pose_shift( pz );
+		 Gl::pose_shift( geom.pose );
+		 		 
+		 darkness += fade;
+		 Color c = checkpoint.color;
+		 c.a = darkness;
+		 glColor4f( c.r, c.g, c.b, c.a );
+		 
+		 blockgroup.DrawFootPrint( geom );
+		 
+		 glPopMatrix();
     }
+	
+	PopColor();
 }
 
 void Model::DrawTrailBlocks()
@@ -88,15 +83,19 @@ void Model::DrawTrailBlocks()
   double timescale = 0.0000001;
 
 	FOR_EACH( it, trail )
-    {
-			TrailItem& checkpoint = *it;
+	  {
+		 TrailItem& checkpoint = *it;
+		 
+		 glPushMatrix();
+		 Pose pz = checkpoint.pose;
+		 pz.z =  (world->sim_time - checkpoint.time) * timescale;
+		 
+		 Gl::pose_shift( pz );
+		 Gl::pose_shift( geom.pose );
+		 
+		 DrawBlocks();
 
-      Pose pose = checkpoint.pose;
-      pose.z =  (world->sim_time - checkpoint.time) * timescale;
-
-      PushLocalCoords();
-      DrawBlocksTree();
-      PopCoords();
+		 glPopMatrix();
     }
 }
 
@@ -104,52 +103,35 @@ void Model::DrawTrailArrows()
 {
   double dx = 0.2;
   double dy = 0.07;
-  double timescale = 0.0000001;
+  double timescale = 1e-7;
+  
+  PushColor( 0,0,0,1 ); // dummy push
 
-	FOR_EACH( it, trail )
-    {
-			TrailItem& checkpoint = *it;
+  FOR_EACH( it, trail )
+	 {
+		TrailItem& checkpoint = *it;
 
-      Pose pose = checkpoint.pose;
-      pose.z =  (world->sim_time - checkpoint.time) * timescale;
-
-      PushLocalCoords();
-
-      // set the height proportional to age
-
-      PushColor( checkpoint.color );
-
-      glEnable(GL_POLYGON_OFFSET_FILL);
-      glPolygonOffset(1.0, 1.0);
-
-      glBegin( GL_TRIANGLES );
-      glVertex3f( 0, -dy, 0);
-      glVertex3f( dx, 0, 0 );
-      glVertex3f( 0, +dy, 0 );
-      glEnd();
-      glDisable(GL_POLYGON_OFFSET_FILL);
-
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-			
-			Color c = checkpoint.color;
-			c.r /= 2.0;
-			c.g /= 2.0;
-			c.b /= 2.0;	  
-			PushColor( c ); // darker color
-
-      glDepthMask(GL_FALSE);
-      glBegin( GL_TRIANGLES );
-      glVertex3f( 0, -dy, 0);
-      glVertex3f( dx, 0, 0 );
-      glVertex3f( 0, +dy, 0 );
-      glEnd();
-      glDepthMask(GL_TRUE);
-
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-      PopColor();
-      PopColor();
-      PopCoords();
-    }
+		glPushMatrix();
+		Pose pz = checkpoint.pose;
+		// set the height proportional to age
+		pz.z =  (world->sim_time - checkpoint.time) * timescale;
+		
+		Gl::pose_shift( pz );
+		Gl::pose_shift( geom.pose );
+		
+		Color& c = checkpoint.color;
+		glColor4f( c.r, c.g, c.b, c.a );
+		
+		glBegin( GL_TRIANGLES );
+		glVertex3f( 0, -dy, 0);
+		glVertex3f( dx, 0, 0 );
+		glVertex3f( 0, +dy, 0 );
+		glEnd();
+		
+		glPopMatrix();
+	 }
+  
+  PopColor();
 }
 
 void Model::DrawOriginTree()
@@ -474,39 +456,39 @@ void Model::DrawFlagList( void )
 }
 
 
-void Model::DrawBlinkenlights()
-{
-  PushLocalCoords();
+// void Model::DrawBlinkenlights()
+// {
+//   PushLocalCoords();
 
-  GLUquadric* quadric = gluNewQuadric();
-  //glTranslatef(0,0,1); // jump up
-  //Pose gpose = GetGlobalPose();
-  //glRotatef( 180 + rtod(-gpose.a),0,0,1 );
+//   GLUquadric* quadric = gluNewQuadric();
+//   //glTranslatef(0,0,1); // jump up
+//   //Pose gpose = GetGlobalPose();
+//   //glRotatef( 180 + rtod(-gpose.a),0,0,1 );
 
-  for( unsigned int i=0; i<blinkenlights->len; i++ )
-    {
-      stg_blinkenlight_t* b = 
-	(stg_blinkenlight_t*)g_ptr_array_index( blinkenlights, i );
-      assert(b);
+//   for( unsigned int i=0; i<blinkenlights->len; i++ )
+//     {
+//       stg_blinkenlight_t* b = 
+// 	(stg_blinkenlight_t*)g_ptr_array_index( blinkenlights, i );
+//       assert(b);
 
-      glTranslatef( b->pose.x, b->pose.y, b->pose.z );
+//       glTranslatef( b->pose.x, b->pose.y, b->pose.z );
 
-      PushColor( b->color );
+//       PushColor( b->color );
 
-      if( b->enabled )
-		  gluQuadricDrawStyle( quadric, GLU_FILL );
-      else
-		  gluQuadricDrawStyle( quadric, GLU_LINE );
+//       if( b->enabled )
+// 		  gluQuadricDrawStyle( quadric, GLU_FILL );
+//       else
+// 		  gluQuadricDrawStyle( quadric, GLU_LINE );
 		
-      gluSphere( quadric, b->size/2.0, 8,8  );
+//       gluSphere( quadric, b->size/2.0, 8,8  );
 
-      PopColor();
-    }
+//       PopColor();
+//     }
 
-  gluDeleteQuadric( quadric );
+//   gluDeleteQuadric( quadric );
 
-  PopCoords();
-}
+//   PopCoords();
+// }
 
 void Model::DrawPicker( void )
 {

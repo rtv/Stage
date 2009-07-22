@@ -39,6 +39,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <pthread.h> 
 
 // C++ libs
 #include <cmath>
@@ -47,14 +48,9 @@
 #include <list>
 #include <map>
 #include <ext/hash_map>
-//#include <unordered_map>
 #include <set>
 #include <queue>
 #include <algorithm>
-
-// we use GLib's data structures extensively. Gradually we're moving
-// to C++ STL types. May be able to lose this dependency one day.
-#include <glib.h> 
 
 // FLTK Gui includes
 #include <FL/Fl.H>
@@ -67,10 +63,10 @@
 // except GLU & GLUT
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
-#include <GLUT/glut.h>
+//#include <GLUT/glut.h>
 #else
 #include <GL/glu.h>
-#include <GL/glut.h>
+//#include <GL/glut.h>
 #endif 
 
 /** @brief The Stage library uses its own namespace */
@@ -703,10 +699,11 @@ namespace Stg
     friend class Canvas; // allow Canvas access to our private members
 	 
   protected:
-	ModelPtrVec children;
+	 ModelPtrVec children;
     bool debug;
     char* token;
-	
+	 pthread_mutex_t access_mutex; ///< Used by Lock() and Unlock() to prevent parallel access to this model
+
 	 void Load( Worldfile* wf, int section );
 	 void Save( Worldfile* wf, int section );
 	 
@@ -733,6 +730,9 @@ namespace Stg
 	 
     void SetToken( const char* str )
     { token = strdup( str ); } // minor memory leak	 
+
+	 void Lock(){ pthread_mutex_lock( &access_mutex ); }	
+	 void Unlock(){ pthread_mutex_unlock( &access_mutex ); }
   };
 
   /** raytrace sample
@@ -820,8 +820,6 @@ namespace Stg
     static bool quit_all; ///< quit all worlds ASAP  
     static void UpdateCb( World* world);
     static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
-
-	 GMutex* access_mutex; ///< Used by Lock() and Unlock() to prevent parallel access to this model
 	 
 	 ModelPtrSet charge_list; ///< Models which receive charge are listed here
     bool destroy;
@@ -851,10 +849,13 @@ namespace Stg
     stg_usec_t real_time_start; ///< the real time at which this world was created
 	 bool show_clock; ///< iff true, print the sim time on stdout
 	 unsigned int show_clock_interval; ///< updates between clock xoutputs
-    GMutex* thread_mutex; ///< protect the worker thread management stuff
+    //GMutex* thread_mutex; ///< protect the worker thread management stuff
+    pthread_mutex_t thread_mutex; ///< protect the worker thread management stuff
 	 unsigned int threads_working; ///< the number of worker threads not yet finished
-    GCond* threads_start_cond; ///< signalled to unblock worker threads
-    GCond* threads_done_cond; ///< signalled by last worker thread to unblock main thread
+    //GCond* threads_start_cond; ///< signalled to unblock worker threads
+    //GCond* threads_done_cond; ///< signalled by last worker thread to unblock main thread
+    pthread_cond_t threads_start_cond; ///< signalled to unblock worker threads
+    pthread_cond_t threads_done_cond; ///< signalled by last worker thread to unblock main thread
     int total_subs; ///< the total number of subscriptions to all models
 	 ModelPtrSet velocity_list; ///< Models with non-zero velocity and should have their poses updated	
 	 unsigned int worker_threads; ///< the number of worker threads to use
@@ -1003,7 +1004,7 @@ namespace Stg
 		void ChargeListAdd( Model* mod );
 		void ChargeListRemove( Model* mod );
 		
-    static gpointer update_thread_entry( std::pair<World*,int>* info );
+    static void* update_thread_entry( std::pair<World*,int>* info );
 	 
   public:
     /** returns true when time to quit, false otherwise */
@@ -1062,20 +1063,6 @@ namespace Stg
 	/** Return the floor model */
 	Model* GetGround() {return ground;};
 	
-	void Lock()
-	{ 
-	  if( access_mutex == NULL )
-		access_mutex = g_mutex_new();
-	  
-	  assert( access_mutex );
-	  g_mutex_lock( access_mutex );
-	}
-	
-	void Unlock()
-	{ 
-	  assert( access_mutex );
-	  g_mutex_unlock( access_mutex );
-	}		
   };
 
   class Block
@@ -1687,8 +1674,7 @@ namespace Stg
 	 const std::vector<Option*>& getOptions() const { return drawOptions; }
 	 
   protected:
-	 GMutex* access_mutex;
-	 GPtrArray* blinkenlights;  
+	 pthread_mutex_t access_mutex;
 	 BlockGroup blockgroup;
 	 /**  OpenGL display list identifier for the blockgroup */
 	 int blocks_dl;
@@ -1781,8 +1767,9 @@ namespace Stg
 	 /** GData datalist can contain arbitrary named data items. Can be used
 		  by derived model types to store properties, and for user code
 		  to associate arbitrary items with a model. */
-	GData* props;
-	
+	 //GData* props;
+	 std::map<const char*,const void*> props;
+
 	/** Visualize the most recent rasterization operation performed by this model */
 	class RasterVis : public Visualizer
 	{
@@ -1865,20 +1852,20 @@ namespace Stg
 					unsigned int width, unsigned int height,
 					stg_meters_t cellwidth, stg_meters_t cellheight );
 	
-	void Lock()
-	{ 
-	  if( access_mutex == NULL )
-		access_mutex = g_mutex_new();
+// 	void Lock()
+// 	{ 
+// 	  if( access_mutex == NULL )
+// 		access_mutex = g_mutex_new();
 	  
-	  assert( access_mutex );
-	  g_mutex_lock( access_mutex );
-	}
+// 	  assert( access_mutex );
+// 	  g_mutex_lock( access_mutex );
+// 	}
 	
-	void Unlock()
-	{ 
-	  assert( access_mutex );
-	  g_mutex_unlock( access_mutex );
-	}	
+// 	void Unlock()
+// 	{ 
+// 	  assert( access_mutex );
+// 	  g_mutex_unlock( access_mutex );
+// 	}	
 
   private: 
 	 /** Private copy constructor declared but not defined, to make it
@@ -1917,8 +1904,6 @@ namespace Stg
 	void MapFromRoot();
 	void UnMapFromRoot();
 
-	 int TreeToPtrArray( GPtrArray* array ) const;
-  
 	 /** raytraces a single ray from the point and heading identified by
 		  pose, in local coords */
 	 stg_raytrace_result_t Raytrace( const Pose &pose,
@@ -2000,26 +1985,21 @@ namespace Stg
 	void DrawTrailBlocks();
 	void DrawTrailArrows();
 	void DrawGrid();
-	void DrawBlinkenlights();
+	 //	void DrawBlinkenlights();
 	void DataVisualizeTree( Camera* cam );
 	void DrawFlagList();
 	void DrawPose( Pose pose );
 	void LoadDataBaseEntries( Worldfile* wf, int entity );
 	
   public:
-	virtual void PushColor( Color col )
-	{ world->PushColor( col ); }
-	
-	virtual void PushColor( double r, double g, double b, double a )
-	{ world->PushColor( r,g,b,a ); }
-	
-	virtual void PopColor()
-	{ world->PopColor(); }
+	 virtual void PushColor( Color col ){ world->PushColor( col ); }	
+	 virtual void PushColor( double r, double g, double b, double a ){ world->PushColor( r,g,b,a ); }	
+	 virtual void PopColor()	{ world->PopColor(); }
 	
 	PowerPack* FindPowerPack() const;
 	
-	void RecordRenderPoint( GSList** head, GSList* link, 
-							unsigned int* c1, unsigned int* c2 );
+	 //void RecordRenderPoint( GSList** head, GSList* link, 
+	 //					unsigned int* c1, unsigned int* c2 );
 
 	void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
 						   stg_meters_t ymin, stg_meters_t ymax );
@@ -2080,14 +2060,14 @@ namespace Stg
 	
 	 int GetFlagCount() const { return flag_list.size(); }
   
-	 /** Add a pointer to a blinkenlight to the model. */
-	 void AddBlinkenlight( stg_blinkenlight_t* b )
-	 { g_ptr_array_add( this->blinkenlights, b ); }
+// 	 /** Add a pointer to a blinkenlight to the model. */
+// 	 void AddBlinkenlight( stg_blinkenlight_t* b )
+// 	 { g_ptr_array_add( this->blinkenlights, b ); }
   
-	 /** Clear all blinkenlights from the model. Does not destroy the
-		  blinkenlight objects. */
-	 void ClearBlinkenlights()
-	 {  g_ptr_array_set_size( this->blinkenlights, 0 ); }
+// 	 /** Clear all blinkenlights from the model. Does not destroy the
+// 		  blinkenlight objects. */
+// 	 void ClearBlinkenlights()
+// 	 {  g_ptr_array_set_size( this->blinkenlights, 0 ); }
   
 	 /** Disable the model. Its pose will not change due to velocity
 		  until re-enabled using Enable(). This is used for example when
@@ -2291,7 +2271,7 @@ namespace Stg
 	 
 	 /** named-property interface 
 	  */
-	 void* GetProperty( const char* key ) const;	 
+	 const void* GetProperty( const char* key ) const;
 	 bool GetPropertyFloat( const char* key, float* f, float defaultval ) const;	 
 	 bool GetPropertyInt( const char* key, int* i, int defaultval ) const;	 
 	 bool GetPropertyStr( const char* key, char** c, char* defaultval ) const;
@@ -2787,10 +2767,10 @@ private:
 	static Model* Create( World* world, Model* parent )
 	{ return new  ModelRanger( world, parent ); }
 	
-	virtual void Load();
-	virtual void Print( char* prefix );
-	
-	std::vector<Sensor> sensors;
+	 virtual void Load();
+	 virtual void Print( char* prefix );
+	 
+	 std::vector<Sensor> sensors;
 	
   private:
 	static Option showRangerData;

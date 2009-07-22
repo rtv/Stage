@@ -139,7 +139,7 @@ stg_joules_t PowerPack::RemainingCapacity() const
 
 void PowerPack::Add( stg_joules_t j )
 {
-  stg_joules_t amount = MIN( RemainingCapacity(), j );
+  stg_joules_t amount = std::min( RemainingCapacity(), j );
   stored += amount;
   global_stored += amount;
   
@@ -154,7 +154,7 @@ void PowerPack::Subtract( stg_joules_t j )
 		return;
 	 }
 
-  stg_joules_t amount = MIN( stored, j );  
+  stg_joules_t amount = std::min( stored, j );  
 
   stored -= amount;  
   global_stored -= amount;
@@ -168,10 +168,10 @@ void PowerPack::TransferTo( PowerPack* dest, stg_joules_t amount )
   // if stored is non-negative we can't transfer more than the stored
   // amount. If it is negative, we have infinite energy stored
   if( stored >= 0.0 )
-	 amount = MIN( stored, amount );
+		amount = std::min( stored, amount );
   
   // we can't transfer more than he can take
-  amount = MIN( amount, dest->RemainingCapacity() );
+  amount = std::min( amount, dest->RemainingCapacity() );
  
   //printf( "%s gives %.3f J to %s\n",
   //	 mod->Token(), amount, dest->mod->Token() );
@@ -221,7 +221,7 @@ void PowerPack::SetStored( stg_joules_t j )
 
 void PowerPack::Dissipate( stg_joules_t j )
 {
-  stg_joules_t amount = (stored < 0) ? j : MIN( stored, j );
+  stg_joules_t amount = (stored < 0) ? j : std::min( stored, j );
   
   Subtract( amount );
   dissipated += amount;

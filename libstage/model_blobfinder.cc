@@ -243,8 +243,8 @@ void ModelBlobfinder::Update( void )
 		int blobtop = scan_height/2 - (int)(startyangle/yRadsPerPixel);
 		int blobbottom = scan_height/2 -(int)(endyangle/yRadsPerPixel);
 
-		blobtop = MAX( blobtop, 0 );
-		blobbottom = MIN( blobbottom, (int)scan_height );
+		blobtop = std::max( blobtop, 0 );
+		blobbottom = std::min( blobbottom, (int)scan_height );
 
 		// fill in an array entry for this blob
 		Blob blob;

@@ -236,9 +236,9 @@ public:
 			 }
 		
 		  if( i > sample_count/2 )
-			 minleft = MIN( minleft, scan[i].range );
+				minleft = std::min( minleft, scan[i].range );
 		  else      
-			 minright = MIN( minright, scan[i].range );
+				minright = std::min( minright, scan[i].range );
 		}
   
 	 if( verbose ) 

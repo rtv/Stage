@@ -76,7 +76,7 @@ ModelActuator::ModelActuator( World* world,
   
   // sensible position defaults
   this->SetVelocity( Velocity(0,0,0,0) );
-  this->SetBlobReturn( TRUE );  
+  this->SetBlobReturn(true);  
 }
 
 

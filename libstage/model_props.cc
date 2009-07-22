@@ -4,7 +4,7 @@ using namespace Stg;
 
 #define MATCH(A,B) (strcmp(A,B)== 0)
 
-void* Model::GetProperty( const char* key ) const
+const void* Model::GetProperty( const char* key ) const
 {
 	// see if the key has the predefined-property prefix
 	if( strncmp( key, MP_PREFIX, strlen(MP_PREFIX)) == 0 )
@@ -23,7 +23,9 @@ void* Model::GetProperty( const char* key ) const
 	}
 
 	// otherwise it may be an arbitrary named property
-	return g_datalist_get_data( (GData**)&this->props, key ); // cast to discard const
+	//return g_datalist_get_data( (GData**)&this->props, key ); // cast to discard const
+
+	return props.find(key)->second;
 }
 
 int Model::SetProperty( const char* key,
@@ -81,7 +83,9 @@ int Model::SetProperty( const char* key,
 	}
 
 	// otherwise it's an arbitary property and we store the pointer
-	g_datalist_set_data( &this->props, key, (void*)data );
+	//g_datalist_set_data( &this->props, key, (void*)data );
+	props[key] = data;
+
 	return 0; // ok
 }
 
@@ -91,7 +95,8 @@ void Model::UnsetProperty( const char* key )
 	if( strncmp( key, MP_PREFIX, strlen(MP_PREFIX)) == 0 )
 		PRINT_WARN1( "Attempt to unset a model core property \"%s\" has no effect", key );
 	else
-		g_datalist_remove_data( &this->props, key );
+	  //g_datalist_remove_data( &this->props, key );
+	  props.erase( key );
 }
 
 

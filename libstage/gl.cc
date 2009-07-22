@@ -36,7 +36,6 @@ void Stg::Gl::draw_array( float x, float y, float w, float h,
 	 glVertex3f( x + (float)i*sample_spacing, y+(data[(i+offset)%len]-min)*yscale, 0.01 );
   
   glEnd();
-
   
   glColor3f( 0,0,0 );
   char buf[64];
@@ -56,8 +55,8 @@ void Stg::Gl::draw_array( float x, float y, float w, float h,
   
   for( size_t i=0; i<len; i++ )
 	 {
-		smallest = MIN( smallest, data[i] );
-		largest = MAX( largest, data[i] );
+		smallest = std::min( smallest, data[i] );
+		largest = std::max( largest, data[i] );
 	 }
 
   draw_array( x,y,w,h,data,len,offset,smallest,largest );

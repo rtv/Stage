@@ -13,7 +13,7 @@ Flag* Flag::Nibble( double chunk )
 
 	if( size > 0 )
 	{
-		chunk = MIN( chunk, this->size );
+		chunk = std::min( chunk, this->size );
 		piece = new Flag( this->color, chunk );
 		this->size -= chunk;
 	}

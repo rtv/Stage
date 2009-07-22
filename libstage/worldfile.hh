@@ -30,7 +30,6 @@
 
 #include <stdint.h> // for portable int types eg. uint32_t
 #include <stdio.h> // for FILE ops
-#include <glib.h>
 
 namespace Stg {
 
@@ -341,13 +340,10 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   private: int entity_count;
   private: CEntity *entities;
 
-  
   // Property list
-  //private: int property_size;
   private: int property_count;
-  //private: CProperty *properties;
   
-  private: GHashTable* nametable;
+  private: CProperty *properties;
   
   // Name of the file we loaded
   public: char *filename;
@@ -355,6 +351,8 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   // Conversion units
   private: double unit_length;
   private: double unit_angle;
+
+private: std::map<std::string,CProperty*> nametable;	
 };
 
 };

@@ -38,11 +38,11 @@ GLuint TextureManager::loadTexture( const char *filename )
 	
 	//TODO check for correct width/height - or convert it.
 	
-	guchar* pixels = (guchar*)(img->data()[0]);
+	uint8_t* pixels = (uint8_t*)(img->data()[0]);
 	
 	//vertically flip the image
 	int img_size = img->w() * img->h() * img->d();
-	guchar* img_flip = new guchar[ img_size ];
+	uint8_t* img_flip = new uint8_t[ img_size ];
 	
 	const int row_width = img->w() * img->d();
 	for( int i = 0; i < img->h(); i++ )

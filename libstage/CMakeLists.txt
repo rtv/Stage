@@ -4,6 +4,7 @@ MESSAGE( STATUS "Configuring libstage" )
 include_directories(${PROJECT_BINARY_DIR})
 
 set( stageSrcs    
+	model_props.cc
    ancestor.cc
 	block.cc
 	blockgroup.cc
@@ -26,7 +27,6 @@ set( stageSrcs
 	model_laser.cc
 	model_load.cc
 	model_position.cc
-	model_props.cc
 	model_ranger.cc
 	model_loadcell.cc
 	model_lightindicator.cc
@@ -48,25 +48,14 @@ set( stageSrcs
    options_dlg.hh
 )
 
-# TODO
-#	puck.cc
-
-# todo - build without FLTK - tricky since we use its image loading, etc.
-#if( BUILD_GUI )
-#	 list( APPEND stageSrcs 
-#     # gui-only sources go here
-#        )
-#endif( BUILD_GUI )
-
+set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+ 
 add_library(stage SHARED ${stageSrcs})
 
-set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
-
 target_link_libraries( stage
-		       ${GLIB_LIBRARIES}
 		       ${OPENGL_LIBRARIES}
- 				 ${LTDL_LIB}
-				 ${FLTK_LIBS2}
+  				 ${LTDL_LIB}
+  				 ${FLTK_LIBS2}
 )
 
 # causes the shared library to have a version number

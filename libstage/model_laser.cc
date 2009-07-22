@@ -175,7 +175,7 @@ void ModelLaser::Update( void )
     
   double bearing( -fov/2.0 );
   // make the first and last rays exactly at the extremes of the FOV
-  double sample_incr( fov / MAX(sample_count-1,1) );
+  double sample_incr( fov / std::max(sample_count-1, (unsigned int)1) );
   
   // find the global origin of our first emmitted ray
   Pose rayorg( geom.pose );

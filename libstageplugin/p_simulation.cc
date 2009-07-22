@@ -102,11 +102,12 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
     }
 
   // a little sanity testing
-  if( !g_file_test( fullname, G_FILE_TEST_EXISTS ) )
-    {
-      PRINT_ERR1( "worldfile \"%s\" does not exist", worldfile_name );
-      return;
-    }
+	// XX TODO
+	//  if( !g_file_test( fullname, G_FILE_TEST_EXISTS ) )
+	//{
+	//  PRINT_ERR1( "worldfile \"%s\" does not exist", worldfile_name );
+	//  return;
+	//}
 
   // create a passel of Stage models in the local cache based on the
   // worldfile

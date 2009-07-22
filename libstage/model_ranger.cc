@@ -118,7 +118,7 @@ ModelRanger::ModelRanger( World* world,
   this->SetGeom( Geom( Pose(), RANGER_SIZE ));
   
   // spread the transducers around the ranger's body
-  double offset = MIN(geom.size.x, geom.size.y) / 2.0;
+  double offset = std::min(geom.size.x, geom.size.y) / 2.0;
   
   sensors.resize( RANGER_SENSORCOUNT );
   
@@ -276,7 +276,7 @@ void ModelRanger::Update( void )
 														  ranger_match,
 														  NULL );
 			
-      s.range = MAX( ray.range, s.bounds_range.min );
+      s.range = std::max( ray.range, s.bounds_range.min );
     }   
 }
 

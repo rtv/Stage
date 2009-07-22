@@ -188,19 +188,17 @@ void GuiState::Load( Worldfile* wf, int wf_entity )
 
 // constructor
 Model::Model( World* world,
-			  Model* parent,
-			  const stg_model_type_t type )
+				  Model* parent,
+				  const stg_model_type_t type )
   : Ancestor(), 	 
-    access_mutex(NULL),
-    blinkenlights( g_ptr_array_new() ),
     blockgroup(),
     blocks_dl(0),
     boundary(false),
-    callbacks(),// g_hash_table_new( g_direct_hash, g_direct_equal ) ),
+    callbacks(),
     color( 1,0,0 ), // red
     data_fresh(false),
     disabled(false),
-		cv_list(),
+	 cv_list(),
     flag_list(),
     geom(),
     has_default_block( true ),
@@ -216,7 +214,7 @@ Model::Model( World* world,
     pose(),
 		power_pack( NULL ),
 		pps_charging(),
-    props(NULL),
+    props(),
 		rastervis(),
     rebuild_displaylist(true),
     say_string(NULL),
@@ -224,19 +222,19 @@ Model::Model( World* world,
     subs(0),
     thread_safe( false ),
     trail(),
-		trail_length(25),
-		trail_interval(5),
+	 trail_length(50),
+	 trail_interval(5),
     type(type),	
-		update_list_num( -1 ),
+	 update_list_num( -1 ),
     used(false),
     velocity(),
     watts(0.0),
-		watts_give(0.0),
-		watts_take(0.0),	 
+	 watts_give(0.0),
+	 watts_take(0.0),	 
     wf(NULL),
     wf_entity(0),
     world(world),
-		world_gui( dynamic_cast<WorldGui*>( world ) )
+	 world_gui( dynamic_cast<WorldGui*>( world ) )
 {
   //assert( modelsbyid );
   assert( world );
@@ -262,8 +260,7 @@ Model::Model( World* world,
   world->AddModel( this );
   
   this->friction = DEFAULT_FRICTION;
-  g_datalist_init( &this->props );
-  
+    
   // now we can add the basic square shape
   AddBlockRect( -0.5, -0.5, 1.0, 1.0, 1.0 );
 
@@ -282,10 +279,6 @@ Model::~Model( void )
   // list if I have no parent
   ModelPtrVec& vec  = parent ? parent->children : world->children;
   vec.erase( std::remove( vec.begin(), vec.end(), this ));
-
-  //if( callbacks ) g_hash_table_destroy( callbacks );
-	
-  g_datalist_clear( &props );
 
   modelsbyid.erase(id);
 
@@ -701,7 +694,15 @@ void Model::Update( void )
   
   // if we're drawing current and a power pack has been installed
 
+  if( trail_length > 0 && world->updates % trail_interval == 0 )
+	 {
+		trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 
+		
+		if( trail.size() > trail_length )
+		  trail.pop_front();
+	 }	
   
+  // TODO - this is not thread-safe! fix!
   PowerPack* pp = FindPowerPack();
   if( pp && ( watts > 0 ))
 	 {
@@ -813,7 +814,7 @@ void Model::UpdateCharge()
  			 //printf( "   toucher %s can take up to %.2f wats\n", 
 			 //		toucher->Token(), toucher->watts_take );
 			 
- 			 stg_watts_t rate = MIN( watts_give, toucher->watts_take );
+				stg_watts_t rate = std::min( watts_give, toucher->watts_take );
  			 stg_joules_t amount =  rate * (world->interval_sim * 1e-6);
 			 
 			 //printf ( "moving %.2f joules from %s to %s\n",
@@ -865,15 +866,7 @@ void Model::UpdatePose( void )
 {
   if( disabled )
     return;
-  
- 	if( world->updates % trail_interval == 0 )
-		{
-			trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 
-			
-			if( trail.size() > trail_length )
-				trail.pop_front();
-		}	
-		
+    
   // convert usec to sec
   double interval( (double)world->interval_sim / 1e6 );
   
@@ -888,21 +881,6 @@ void Model::UpdatePose( void )
 	// ConditionalMove() returns a pointer to the model we hit, or
 	// NULL. We use this as a boolean for SetStall()
   SetStall( ConditionalMove( pose + p ) );
-}
-
-
-int Model::TreeToPtrArray( GPtrArray* array ) const
-{
-  g_ptr_array_add( array, (void*)this );
-
-  //printf( " added %s to array at %p\n", root->token, array );
-
-  int added = 1;
-
-  FOR_EACH( it, children )
-	 added += (*it)->TreeToPtrArray( array );
-
-  return added;
 }
 
 Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type ) const

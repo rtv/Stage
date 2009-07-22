@@ -367,7 +367,7 @@ bool WorldGui::Update()
 		//	 sleeptime );
 	  
 		if( (sleeptime > 0) || paused ) 
-		  usleep( (stg_usec_t)MIN(sleeptime,20000) ); // check the GUI at 10Hz min
+		  usleep( (stg_usec_t)std::min(sleeptime,20000.0) ); // check the GUI at 10Hz min
 	 }
   } while( interval < interval_real );
   

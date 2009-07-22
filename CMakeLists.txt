@@ -84,14 +84,6 @@ include(FindPkgConfig)
 MESSAGE( STATUS "Checking for required libraries..." )
 
 SET( INDENT "  * " )
-pkg_search_module( GLIB REQUIRED gthread-2.0 )
-IF( GLIB_FOUND )
-#  MESSAGE( STATUS ${INDENT} "Glib version ${GLIB_VERSION} detected at ${GLIB_PREFIX}" )
-#  MESSAGE( STATUS "    GLIB_CFLAGS = ${GLIB_CFLAGS}" )
-#  MESSAGE( STATUS "    GLIB_LDFLAGS = ${GLIB_LDFLAGS}" )
-ELSE( GLIB_FOUND )
-  MESSAGE( ${INDENT} "Glib not detected" )
-ENDIF( GLIB_FOUND )
 
 pkg_search_module( LIBPNG REQUIRED libpng )
 IF( LIBPNG_FOUND )
@@ -203,16 +195,14 @@ MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
 include_directories( . 
 		     libstage 
 		     replace 
-		     ${GLIB_INCLUDE_DIRS}
 		     ${LIBPNG_INCLUDE_DIRS}
 		     ${CMAKE_INCLUDE_PATH}
-			  ${WEBSIM_INCLUDE_DIRS}
+				 ${WEBSIM_INCLUDE_DIRS}
 )
 
 
 # all targets need these library directories
-link_directories(${GLIB_LIBRARY_DIRS}
-	${GLIB_LIBRARY_DIRS}
+link_directories( 
 	${LIBPNG_LIBRARY_DIRS}
    ${WEBSIM_LIBRARY_DIRS}
 )

@@ -468,7 +468,7 @@ void ModelGripper::UpdateContacts()
 				  //       // calculate how far closed we can get the paddles now
 				  double puckw = hitgeom.size.y;
 				  double gripperw = geom.size.y;	      
-				  cfg.close_limit = MAX( 0.0, 1.0 - puckw/(gripperw - cfg.paddle_size.y/2.0 ));
+				  cfg.close_limit = std::max( 0.0, 1.0 - puckw/(gripperw - cfg.paddle_size.y/2.0 ));
 				}
 		  }
 	 }

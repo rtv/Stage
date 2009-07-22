@@ -49,7 +49,7 @@ Color::Color( const char *name) :
 	  PRINT_DEBUG( "Success!" );
 	  
 	  // load the file into the hash table       
-	  while (TRUE)
+	  while(1)
 		{
 		  char line[1024];
 		  if (!fgets(line, sizeof(line), file))

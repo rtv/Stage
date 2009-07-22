@@ -50,7 +50,8 @@ class StgDriver : public Driver
  protected:
 
   /// an array of pointers to Interface objects, defined below
-  GPtrArray* devices;
+  //GPtrArray* devices;
+	std::vector<Interface*> devices;
 };
 
 

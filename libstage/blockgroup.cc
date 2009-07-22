@@ -86,7 +86,7 @@ void BlockGroup::CalcSize()
 		  if( pt->y > maxy ) maxy = pt->y;
 		}
 	  
-	  size.z = MAX( block->local_z.max, size.z );
+	  size.z = std::max( block->local_z.max, size.z );
 	}
   
   // store these bounds for normalization purposes

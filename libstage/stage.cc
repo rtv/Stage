@@ -33,7 +33,7 @@ void Stg::Init( int* argc, char** argv[] )
   if(!setlocale(LC_ALL,"POSIX"))
 	PRINT_WARN("Failed to setlocale(); config file may not be parse correctly\n" );
 						
-  if (!g_thread_supported ()) g_thread_init (NULL);
+  //if (!g_thread_supported ()) g_thread_init (NULL);
 	
   RegisterModels();
 	
@@ -48,9 +48,9 @@ bool Stg::InitDone()
   return init_called;
 }
 
-static inline guchar* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
+static inline uint8_t* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
 {
-  guchar* pixels = (guchar*)(img->data()[0]);
+  uint8_t* pixels = (uint8_t*)(img->data()[0]);
   unsigned int index = (y * img->w() * img->d()) + (x * img->d());
   return( pixels + index );
 }
@@ -66,15 +66,15 @@ static inline void pb_set_rect( Fl_Shared_Image* pb, int x, int y, int width, in
 	for( b = x; b < x+width; b++ )
 	  {	
 		// zeroing
-		guchar* pix = pb_get_pixel( pb, b, a );
+		uint8_t* pix = pb_get_pixel( pb, b, a );
 		memset( pix, val, num_samples * bytes_per_sample );
 	  }
 }  
 
 // returns true if the value in the first channel is above threshold
-static inline gboolean pb_pixel_is_set( Fl_Shared_Image* img, int x, int y, int threshold )
+static inline bool pb_pixel_is_set( Fl_Shared_Image* img, int x, int y, int threshold )
 {
-  guchar* pixel = pb_get_pixel( img,x,y );
+  uint8_t* pixel = pb_get_pixel( img,x,y );
   return( pixel[0] > threshold );
 }
 

@@ -77,7 +77,7 @@ namespace Stg
 	 void AddModel( Model* mod );
 	 void RemoveModel( Model* mod );
 
-	 Option showBlinken, 
+	 Option //showBlinken, 
 		showBlocks, 
 		showClock, 
 		showData, 
@@ -134,7 +134,7 @@ namespace Stg
 	 inline void setDirtyBuffer( void ) { dirty_buffer = true; }
 	 inline bool dirtyBuffer( void ) const { return dirty_buffer; }
 	
-	 inline void PushColor( Color col )
+	 void PushColor( Color col )
 	 { colorstack.Push( col ); } 
 
 	 void PushColor( double r, double g, double b, double a )

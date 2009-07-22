@@ -58,6 +58,6 @@ void StripPlotVis::AppendValue( float value )
   data[count%len] = value;
   count++;
   
-  min = MIN( value, min );
-  max = MAX( value, max );
+  min = std::min( value, min );
+  max = std::max( value, max );
 }

@@ -56,7 +56,6 @@
 #include <assert.h>
 #include <string.h> // for strdup(3)
 #include <locale.h> 
-#include <glib-object.h> // for g_type_init() used by GDKPixbuf objects
 #include <limits.h>
 #include <libgen.h> // for dirname(3)
 
@@ -77,7 +76,6 @@ World::World( const char* token,
 			  double ppm )
   : 
   // private
-  access_mutex(NULL),
   charge_list(),
   destroy( false ),
   dirty( true ),
@@ -90,10 +88,10 @@ World::World( const char* token,
   real_time_start( real_time_now ),
   show_clock( false ),
   show_clock_interval( 100 ), // 10 simulated seconds using defaults
-  thread_mutex( g_mutex_new() ),
+  thread_mutex(),
   threads_working( 0 ),
-  threads_start_cond( g_cond_new() ),
-  threads_done_cond( g_cond_new() ),
+  threads_start_cond(),
+  threads_done_cond(),
   total_subs( 0 ), 
   velocity_list(),
   worker_threads( 0 ),
@@ -121,20 +119,18 @@ World::World( const char* token,
       PRINT_WARN( "Stg::Init() must be called before a World is created." );
       exit(-1);
     }
-  
+ 
+  pthread_mutex_init( &thread_mutex, NULL );
+  pthread_cond_init( &threads_start_cond, NULL );
+  pthread_cond_init( &threads_done_cond, NULL );
+ 
   World::world_set.insert( this );
 }
-
 
 World::~World( void )
 {
   PRINT_DEBUG2( "destroying world %d %s", id, token );
-
   if( wf ) delete wf;
-
-  //g_hash_table_destroy( models_by_name );
-  g_free( token );
-
   World::world_set.erase( this );
 }
 
@@ -168,19 +164,26 @@ bool World::UpdateAll()
   return quit;
 }
 
-gpointer World::update_thread_entry( std::pair<World*,int> *thread_info )
+void* World::update_thread_entry( std::pair<World*,int> *thread_info )
 {
   World* world = thread_info->first;
   int thread_instance = thread_info->second;
 
-  g_mutex_lock( world->thread_mutex );
+  //g_mutex_lock( world->thread_mutex );
+  pthread_mutex_lock( &world->thread_mutex );
   
   while( 1 )
 	{
 	  // wait until the main thread signals us
 	  //puts( "worker waiting for start signal" );
-	  g_cond_wait( world->threads_start_cond, world->thread_mutex );
-	  g_mutex_unlock( world->thread_mutex );
+
+	  //g_cond_wait( world->threads_start_cond, world->thread_mutex );
+	  //g_mutex_unlock( world->thread_mutex );
+	  pthread_cond_wait( &world->threads_start_cond, &world->thread_mutex );
+	  pthread_mutex_unlock( &world->thread_mutex );
+
+
+
 	  //puts( "worker thread awakes" );
 	  
 	  // loop over the list of rentrant models for this thread
@@ -197,11 +200,15 @@ gpointer World::update_thread_entry( std::pair<World*,int> *thread_info )
 	  // done working, so increment the counter. If this was the last
 	  // thread to finish working, signal the main thread, which is
 	  // blocked waiting for this to happen
-	  g_mutex_lock( world->thread_mutex );	  
+
+	  //g_mutex_lock( world->thread_mutex );	  
+	  pthread_mutex_lock( &world->thread_mutex );	  
+
 	  if( --world->threads_working == 0 )
 		 {
 			//puts( "last worker signalling main thread" );
-			g_cond_signal( world->threads_done_cond );
+			//g_cond_signal( world->threads_done_cond );
+			pthread_cond_signal( &world->threads_done_cond );
 		 }
 	  // keep lock going round the loop
 	}
@@ -216,11 +223,11 @@ void World::RemoveModel( Model* mod )
   models_by_name.erase( mod->token );
 }
 
-// wrapper to startup all models from the hash table
-void init_models( gpointer dummy1, Model* mod, gpointer dummy2 )
-{
-  mod->Init();
-}
+// // wrapper to startup all models from the hash table
+// void init_models( gpointer dummy1, Model* mod, gpointer dummy2 )
+// {
+//   mod->Init();
+// }
 
 void World::LoadBlock( Worldfile* wf, int entity )
 { 
@@ -345,10 +352,19 @@ void World::Load( const char* worldfile_path )
 		  for( unsigned int t=0; t<worker_threads; t++ )
 			{
 			  std::pair<World*,int> *p = new std::pair<World*,int>( this, t+1 );
-			  g_thread_create( (GThreadFunc)World::update_thread_entry, 
-							   p,
-							   false, 
-							   NULL );		  
+			  // 			  g_thread_create( (GThreadFunc)World::update_thread_entry, 
+			  // 							   p,
+			  // 							   false, 
+			  // 							   NULL );		  
+			  
+				//normal posix pthread C function pointer
+				typedef void* (*func_ptr) (void*);
+
+			  pthread_t pt;
+			  pthread_create( &pt,
+												NULL,
+											  (func_ptr)World::update_thread_entry, 
+												p );
 			}
 		  
 		  printf( "[threads %u]", worker_threads );	
@@ -408,16 +424,14 @@ void World::UnLoad()
   token = NULL;
 }
 
-stg_usec_t World::RealTimeNow()
+inline stg_usec_t World::RealTimeNow()
 {
-  // TODO - move to GLib's portable timing code, so we can port to Windows more easily?
   struct timeval tv;
   gettimeofday( &tv, NULL );  // slow system call: use sparingly
-
   return( tv.tv_sec*1000000 + tv.tv_usec );
 }
 
-stg_usec_t World::RealTimeSinceStart()
+inline stg_usec_t World::RealTimeSinceStart()
 {
   stg_usec_t timenow = RealTimeNow();
 
@@ -549,20 +563,24 @@ bool World::Update()
   
   if( worker_threads > 0 )
     {
-	  g_mutex_lock( thread_mutex );
+		//g_mutex_lock( thread_mutex );
+	  pthread_mutex_lock( &thread_mutex );
 	  threads_working = worker_threads; 
 	  // unblock the workers - they are waiting on this condition var
 	  //puts( "main thread signalling workers" );
-	  g_cond_broadcast( threads_start_cond );
+	  //g_cond_broadcast( threads_start_cond );
+	  pthread_cond_broadcast( &threads_start_cond );
 
       // wait for all the last update job to complete - it will
       // signal the worker_threads_done condition var
       while( threads_working > 0  )
 		{
 		  //puts( "main thread waiting for workers to finish" );
-		  g_cond_wait( threads_done_cond, thread_mutex );
+		  //g_cond_wait( threads_done_cond, thread_mutex );
+		  pthread_cond_wait( &threads_done_cond, &thread_mutex );
 		}
-      g_mutex_unlock( thread_mutex );		 
+      //g_mutex_unlock( thread_mutex );		 
+      pthread_mutex_unlock( &thread_mutex );		 
 	  //puts( "main thread awakes" );
 
 		// TODO: allow threadsafe callbacks to be called in worker
@@ -1043,12 +1061,12 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
 
 void World::Extend( stg_point3_t pt )
 {
-  extent.x.min = MIN( extent.x.min, pt.x);
-  extent.x.max = MAX( extent.x.max, pt.x );
-  extent.y.min = MIN( extent.y.min, pt.y );
-  extent.y.max = MAX( extent.y.max, pt.y );
-  extent.z.min = MIN( extent.z.min, pt.z );
-  extent.z.max = MAX( extent.z.max, pt.z );
+  extent.x.min = std::min( extent.x.min, pt.x);
+  extent.x.max = std::max( extent.x.max, pt.x );
+  extent.y.min = std::min( extent.y.min, pt.y );
+  extent.y.max = std::max( extent.y.max, pt.y );
+  extent.z.min = std::min( extent.z.min, pt.z );
+  extent.z.max = std::max( extent.z.max, pt.z );
 }
 
 

@@ -14,6 +14,8 @@ SET( PLUGINS
 #  SET( PLUGINS ${PLUGINS} fasr_plan )
 #endif( PLAYER_FOUND )
 
+set_source_files_properties( ${PLUGINS} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+
 # create a library module for each plugin and link libstage to each
 
 foreach( PLUGIN ${PLUGINS} )

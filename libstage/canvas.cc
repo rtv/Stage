@@ -66,7 +66,7 @@ Canvas::Canvas( WorldGui* world,
   last_selection( NULL ),
   interval(  50 ), //msec between redraws
   // initialize Option objects
-  showBlinken( "Blinkenlights", "show_blinkenlights", "", true, world ),
+  //  showBlinken( "Blinkenlights", "show_blinkenlights", "", true, world ), 
   showBlocks( "Blocks", "show_blocks", "b", true, world ),
   showClock( "Clock", "show_clock", "c", true, world ),
   showData( "Data", "show_data", "d", false, world ),
@@ -91,8 +91,7 @@ Canvas::Canvas( WorldGui* world,
   frames_rendered_count( 0 ),
   screenshot_frame_skip( 1 )
 {
-  end();
-  
+  end();  
   //show(); // must do this so that the GL context is created before configuring GL
   // but that line causes a segfault in Linux/X11! TODO: test in OS X
   
@@ -888,15 +887,27 @@ void Canvas::renderFrame()
 		DrawFloor();
   
   if( showFootprints )
-		{
-			glDisable( GL_DEPTH_TEST );		
-			
-			FOR_EACH( it, models_sorted )
-				(*it)->DrawTrailFootprint();
-			
-			glEnable( GL_DEPTH_TEST );
-		}
+	 {
+		glDisable( GL_DEPTH_TEST ); // using alpha blending		
+		
+		FOR_EACH( it, models_sorted )
+		  (*it)->DrawTrailFootprint();
+		
+		  glEnable( GL_DEPTH_TEST );
+	 }
+  
+  if( showFlags ) 
+	 FOR_EACH( it, models_sorted )
+		(*it)->DrawFlagList();
 
+  if( showTrailArrows )
+	 FOR_EACH( it, models_sorted )
+		(*it)->DrawTrailArrows();  
+  
+  if( showTrailRise )
+	 FOR_EACH( it, models_sorted )
+		(*it)->DrawTrailBlocks();  
+    
   if( showBlocks )
 		DrawBlocks();
 	
@@ -905,8 +916,6 @@ void Canvas::renderFrame()
 	
   // TODO - finish this properly
   //LISTMETHOD( models_sorted, Model*, DrawWaypoints );
-
-
   
 	// MOTION BLUR
   if( 0  )//showBlur )
@@ -1030,18 +1039,8 @@ void Canvas::renderFrame()
 	 FOR_EACH( it, models_sorted )
 		(*it)->DrawGrid();
   		  
-  if( showFlags ) 
-	 FOR_EACH( it, models_sorted )
-		(*it)->DrawFlagList();
-
-  if( showBlinken ) 
-  	 FOR_EACH( it, models_sorted )
-		(*it)->DrawBlinkenlights();
-
   if( showStatus ) 
 	 {
-      glDisable( GL_DEPTH_TEST );
-
 		glPushMatrix();
 		//ensure two icons can't be in the exact same plane
 		if( camera.pitch() == 0 && !pCamOn )
@@ -1050,7 +1049,6 @@ void Canvas::renderFrame()
 		FOR_EACH( it, models_sorted )
 		  (*it)->DrawStatusTree( &camera );
 		
-      glEnable( GL_DEPTH_TEST );
 		glPopMatrix();
 	 }
   
@@ -1089,7 +1087,7 @@ void Canvas::renderFrame()
 
 		std::string clockstr = world->ClockString();
 		if( showFollow == true && last_selection )
-		  clockstr.append( " [ FOLLOW MODE ]" );
+		  clockstr.append( " [FOLLOW MODE]" );
 		
 		float txtWidth = gl_width( clockstr.c_str());
 		if( txtWidth < 200 ) txtWidth = 200;
@@ -1253,11 +1251,10 @@ void Canvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
   pCamOn.createMenuItem( menu, path );
   pCamOn.menuCallback( perspectiveCb, this );
   showOccupancy.createMenuItem( menu, path );
-  //showTrailArrows.createMenuItem( menu, path ); // broken
+  showTrailArrows.createMenuItem( menu, path );
   showTrails.createMenuItem( menu, path ); 
-  //showTrailRise.createMenuItem( menu, path );  // broken
+  showTrailRise.createMenuItem( menu, path );  // broken
   showBBoxes.createMenuItem( menu, path );
-  //showBlur.createMenuItem( menu, path );
   showTree.createMenuItem( menu, path );  
   showScreenshots.createMenuItem( menu, path );  
 }

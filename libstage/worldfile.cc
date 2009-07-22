@@ -68,44 +68,33 @@ using namespace Stg;
 //   return g_str_hash( prop->key );
 // }
 
-void destroy_property(gpointer value)
-{
-	CProperty * prop = reinterpret_cast<CProperty *> (value);
-	free(prop->key);
-	free(prop->values);
-	g_free(value);
+// void destroy_property(gpointer value)
+// {
+// 	CProperty * prop = reinterpret_cast<CProperty *> (value);
+// 	free(prop->key);
+// 	free(prop->values);
+// 	g_free(value);
 
-}
+// }
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-Worldfile::Worldfile()
+Worldfile::Worldfile() :
+  token_size( 0),
+  token_count( 0),
+  tokens( NULL),
+  macro_size( 0),
+  macro_count( 0),
+  macros( NULL),
+  entity_size( 0),
+  entity_count( 0),
+  entities( NULL),
+  property_count( 0),
+  filename( NULL),
+  unit_length( 1.0),
+  unit_angle( M_PI / 180),
+	nametable()
 {
-  this->filename = NULL;
-
-  this->token_size = 0;
-  this->token_count = 0;
-  this->tokens = NULL;
-
-  this->macro_count = 0;
-  this->macro_size = 0;
-  this->macros = NULL;
-
-  this->entity_count = 0;
-  this->entity_size = 0;
-  this->entities = NULL;
-
-  this->property_count = 0;
-  //this->property_size = 0;
-  //this->properties = NULL;
-
-  // Set defaults units
-  this->unit_length = 1.0;
-  this->unit_angle = M_PI / 180;
-
-  // this attempt to fix memory leak breaks parsing of model properties - investigate
-  //this->nametable = g_hash_table_new_full( g_str_hash, g_str_equal, NULL, destroy_property );
-  this->nametable = g_hash_table_new( g_str_hash, g_str_equal );
 }
 
 
@@ -117,8 +106,6 @@ Worldfile::~Worldfile()
   ClearMacros();
   ClearEntities();
   ClearTokens();
-
-  g_hash_table_destroy( this->nametable );
 
   if (this->filename)
     free(this->filename);
@@ -1326,7 +1313,7 @@ int Worldfile::LookupEntity(const char *type)
 }
 
 
-void PrintProp( char* key, CProperty* prop, void* user )
+void PrintProp( const char* key, CProperty* prop )
 {
   if( prop )
     printf( "Print key %s prop ent %d name %s\n", key, prop->entity, prop->name );
@@ -1338,7 +1325,8 @@ void Worldfile::DumpEntities()
 {
   printf("\n## begin entities\n");
 
-  g_hash_table_foreach( this->nametable, (GHFunc)PrintProp, NULL );
+	FOR_EACH( it, nametable )
+		PrintProp( it->first.c_str(), it->second );
 
   printf("## end entities\n");
 }
@@ -1350,12 +1338,7 @@ void Worldfile::ClearProperties()
 {
   this->property_count = 0;
 
-  if( this->nametable )
-    g_hash_table_destroy( this->nametable );
-
-  // this attempt to fix memory leak breaks parsing of model properties - investigate
-  //this->nametable = g_hash_table_new_full( g_str_hash, g_str_equal, NULL, destroy_property );
-  this->nametable = g_hash_table_new( g_str_hash, g_str_equal );
+	nametable.clear();
 }
 
 
@@ -1364,7 +1347,7 @@ void Worldfile::ClearProperties()
 CProperty* Worldfile::AddProperty(int entity, const char *name, int line)
 {
   //int i;
-  CProperty *property = g_new0( CProperty, 1 );
+  CProperty *property = new CProperty();
 
   property->entity = entity;
   property->name = name;
@@ -1377,10 +1360,9 @@ CProperty* Worldfile::AddProperty(int entity, const char *name, int line)
   snprintf( key, 127, "%d%s", entity, name );
   property->key = strdup( key );
 
-  // add this property to a hash table keyed by name for fast lookup
-  g_hash_table_insert( nametable, property->key, property );
+	nametable[ property->key ] = property;
 
-  //printf( "added key %s for prop %p entity %d name %s\n", key, property, property->entity, property->name );
+  //printf( "added key %s for prop %p entity %d name %s\n", property->key, property, property->entity, property->name );
 
   this->property_count++;
 
@@ -1416,15 +1398,13 @@ CProperty* Worldfile::GetProperty(int entity, const char *name)
 
   //  printf( "looking up key %s for entity %d name %s\n", key, entity, name );
 
-  // g_hash_table_foreach( this->nametable, (GHFunc)PrintProp, NULL );
-
-  CProperty* prop = (CProperty*)g_hash_table_lookup( this->nametable, key );
-
-  //  if( prop )
-  //     printf( "found entity %d name %s\n", prop->entity, prop->name );
-  //   else
-  //     printf( "key %s not found\n", key );
-
+  CProperty* prop = nametable[ key ];
+		
+// 	if( prop )
+// 		printf( "found entity %d name %s\n", prop->entity, prop->name );
+// 	else
+// 		printf( "key %s not found\n", key );
+	
   return prop;
 }
 

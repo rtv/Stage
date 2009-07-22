@@ -295,7 +295,6 @@ void Model::Save( void )
 }
 
 
-// todo - use GLib's portable module code here
 void Model::LoadControllerModule( char* lib )
 {
   //printf( "[Ctrl \"%s\"", lib );

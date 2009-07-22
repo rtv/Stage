@@ -11,7 +11,6 @@
 #include "stage.hh"
 
 #include <FL/Fl_Shared_Image.H>
-#include <glib.h>
 #include <iostream>
 
 namespace Stg
