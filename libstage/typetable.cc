@@ -25,7 +25,7 @@ void Stg::RegisterModels()
   Register( MODEL_TYPE_GRIPPER, "gripper", ModelGripper::Create );
   Register( MODEL_TYPE_LASER, "laser", ModelLaser::Create );
   Register( MODEL_TYPE_LIGHTINDICATOR, "lightindicator", ModelLightIndicator::Create );
-  Register( MODEL_TYPE_LOADCELL, "loadcel", ModelLoadCell::Create );
+  Register( MODEL_TYPE_LOADCELL, "loadcell", ModelLoadCell::Create );
   Register( MODEL_TYPE_POSITION, "position", ModelPosition::Create );
   Register( MODEL_TYPE_RANGER, "ranger",  ModelRanger::Create );
 }  
