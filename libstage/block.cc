@@ -160,26 +160,30 @@ Model* Block::TestCollision()
   
   if( mod->vis.obstacle_return )
     // for every cell we may be rendered into
-	FOR_EACH( cell_it, *candidate_cells )
+	 FOR_EACH( cell_it, *candidate_cells )
       {
-		// for every rendered into that cell
-		FOR_EACH( block_it, (*cell_it)->blocks )
-		  {
-			Model* testmod = (*block_it)->mod;
-			
-			//printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
-			
-			// if the tested model is an obstacle and it's not attached to this model
-			if( (testmod != this->mod) &&
-				testmod->vis.obstacle_return &&
-				!mod->IsRelated( testmod ))
-			  {
-				//puts( "HIT");
-				return testmod; // bail immediately with the bad news
-			  }
-		  }
-      }
-  
+		  // for every block rendered into that cell
+		  FOR_EACH( block_it, (*cell_it)->blocks )
+			 {
+				Block* testblock = *block_it;
+				Model* testmod = testblock->mod;
+				
+				//printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
+				
+				// if the tested model is an obstacle and it's not attached to this model
+				if( (testmod != this->mod) &&
+					 testmod->vis.obstacle_return &&
+					 (!mod->IsRelated( testmod )) && 
+					 // also must intersect in the Z range
+					 testblock->global_z.min <= global_z.max && 
+					 testblock->global_z.max >= global_z.min )
+				  {
+					 //puts( "HIT");
+					 return testmod; // bail immediately with the bad news
+				  }
+			 }
+		}
+
   //printf( "model %s block %p collision done. no hits.\n", mod->Token(), this );
   return NULL; // no hit
 }
