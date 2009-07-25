@@ -56,7 +56,8 @@ public:
 	 world->paused = true;
 	 // when paused, the world will run while steps > 0, decrementing
 	 // steps each cycle.
-	 world->steps = (usec * 1e6) / world->GetSimInterval();
+	 // TODO
+	 world->steps = 1;//(usec * 1e6) / world->GetSimInterval();
 
 	 return true;
   }

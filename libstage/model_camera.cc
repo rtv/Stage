@@ -324,10 +324,9 @@ void ModelCamera::DataVisualize( Camera* cam )
 			//TODO using a color index would be smarter
 			const GLubyte* color = _frame_color_data + index * 4;
 			for( int i = 0; i < 4; i++ ) {
-				GLubyte* cp = _camera_colors + index * 4 * 3 + i * 3;
+			  GLubyte* cp = _camera_colors + index * 4 * 3 + i * 3;
 				memcpy( cp, color, sizeof( GLubyte ) * 3 );
 			}
-
 		}
 	}
 	

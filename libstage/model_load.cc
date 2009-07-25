@@ -55,11 +55,10 @@ void Model::Load()
   if( (watts_give > 0.0) && !pp)
 	 PRINT_WARN1( "Model %s: Setting \"watts_give\" has no effect unless \"joules\" is specified for this model or a parent", token );
   
-  if( watts_give ) // need to get the world to test this model for charging
-	//if( ! g_list_find( world->charge_list, this ) )
-	//world->charge_list = g_list_append( world->charge_list, this );
-	world->ChargeListAdd( this );
-  
+  if( watts_give ) // need to get the world to test this model for charging others
+	 //world->ChargeListAdd( this );
+	 world->Enqueue( World::Event::ENERGY, interval_energy, this );
+
   watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
   if( (watts_take > 0.0) & !pp )
 	 PRINT_WARN1( "Model %s: Setting \"watts_take\" has no effect unless \"joules\" is specified for this model or a parent", token );    
@@ -201,7 +200,7 @@ void Model::Load()
 	{
 	  Velocity vel = GetVelocity();
 	  this->SetVelocity( vel );
-	  StartUpdating();
+	  //StartUpdating();
 	}
 
   if( wf->PropertyExists( wf_entity, "friction" ))
@@ -231,12 +230,12 @@ void Model::Load()
 
   // call any type-specific load callbacks
   this->CallCallbacks( &hooks.load );
-
+  
   // MUST BE THE LAST THING LOADED
   if( wf->PropertyExists( wf_entity, "alwayson" ))
     {
       if( wf->ReadInt( wf_entity, "alwayson", 0) > 0 )
-	Startup();
+		  Subscribe();
     }
   
   MapWithChildren();
@@ -318,9 +317,9 @@ void Model::LoadControllerModule( char* lib )
   if(( handle = lt_dlopenext( lib ) ))
     {
       //printf( "]" );
-
-      this->initfunc = (ctrlinit_t*)lt_dlsym( handle, "Init" );
-      if( this->initfunc  == NULL )
+		
+		stg_model_callback_t initfunc = (stg_model_callback_t)lt_dlsym( handle, "Init" );
+      if( initfunc  == NULL )
 		  {
 			 printf( "Libtool error: %s. Something is wrong with your plugin. Quitting\n",
 						lt_dlerror() ); // report the error from libtool
@@ -328,6 +327,8 @@ void Model::LoadControllerModule( char* lib )
 			 fflush( stdout );
 			 exit(-1);
 		  }
+		//else
+		AddCallback( &hooks.init, initfunc, NULL );
     }
   else
     {
@@ -343,7 +344,7 @@ void Model::LoadControllerModule( char* lib )
   fflush(stdout);
 
   // as we now have a controller, the world needs to call our update function
-  StartUpdating();
+  //StartUpdating();
 }
 
  

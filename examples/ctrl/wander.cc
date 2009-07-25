@@ -30,7 +30,9 @@ extern "C" int Init( Model* mod )
   robot->pos = (ModelPosition*)mod;
   robot->laser = (ModelLaser*)mod->GetModel( "laser:0" );
   robot->laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, robot );
-  robot->laser->Subscribe(); // starts the laser 
+  
+  robot->laser->Subscribe(); // starts the laser updates
+  robot->pos->Subscribe(); // starts the position updates
   
   for( unsigned int i=0; i< World::args.size(); i++ )
 	 printf( "\nargument %d is %s", i, World::args[i].c_str() );

@@ -25,7 +25,6 @@ static const Size DEFAULT_SIZE( 0.15, 0.15, 0.2 );
 static const stg_meters_t DEFAULT_MAXRANGE = 8.0;
 static const stg_radians_t DEFAULT_FOV = M_PI;
 static const unsigned int DEFAULT_SAMPLES = 180;
-static const stg_msec_t DEFAULT_INTERVAL_MS = 100;
 static const unsigned int DEFAULT_RESOLUTION = 1;
 static const char* DEFAULT_COLOR = "blue";
 
@@ -82,20 +81,15 @@ ModelLaser::ModelLaser( World* world,
     range_max( DEFAULT_MAXRANGE ),
     fov( DEFAULT_FOV ),
     resolution( DEFAULT_RESOLUTION )
-{
-  
+{  
   PRINT_DEBUG2( "Constructing ModelLaser %d (%s)\n", 
 				id, typestr );
-  
-  // Model data members
-  interval = DEFAULT_INTERVAL_MS * (int)thousand;
   
   SetGeom( Geom( Pose(0,0,0,0), DEFAULT_SIZE) );
   
   // assert that Update() is reentrant for this derived model
   thread_safe = true;
 
-  // set default color
   SetColor( Color(DEFAULT_COLOR));
 
   // set up our data buffers and raytracing

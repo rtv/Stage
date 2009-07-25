@@ -2,11 +2,11 @@
 using namespace Stg;
 
 
-void Model::SetGeom( const Geom& g )
+void Model::SetGeom( const Geom& val )
 {
   UnMapWithChildren();
   
-  this->geom = g;
+  geom = val;
   
   blockgroup.CalcSize();
   
@@ -17,22 +17,22 @@ void Model::SetGeom( const Geom& g )
   CallCallbacks( &geom );
 }
 
-void Model::SetColor( Color col )
+void Model::SetColor( Color val )
 {
-  this->color = col;
+  color = val;
   NeedRedraw();
-  CallCallbacks( &this->color );
+  CallCallbacks( &color );
 }
 
-void Model::SetMass( stg_kg_t mass )
+void Model::SetMass( stg_kg_t val )
 {
-  this->mass = mass;
+  mass = val;
   CallCallbacks( &mass );
 }
 
-void Model::SetStall( stg_bool_t stall )
+void Model::SetStall( stg_bool_t val )
 {
-  this->stall = stall;
+  stall = val;
   CallCallbacks( &stall );
 }
 
@@ -45,20 +45,20 @@ void Model::SetGripperReturn( int val )
 void Model::SetFiducialReturn(  int val )
 {
   vis.fiducial_return = val;
-	
-	// non-zero values mean we need to be in the world's set of
-	// detectable models
-	if( val == 0 )
+  
+  // non-zero values mean we need to be in the world's set of
+  // detectable models
+  if( val == 0 )
 		world->models_with_fiducials.erase( this );
-	else
-		world->models_with_fiducials.insert( this );
+  else
+	 world->models_with_fiducials.insert( this );
 	
   CallCallbacks( &vis.fiducial_return );
 }
 
-void Model::SetFiducialKey( int key )
+void Model::SetFiducialKey( int val )
 {
-  vis.fiducial_key = key;
+  vis.fiducial_key = val;
   CallCallbacks( &vis.fiducial_key );
 }
 
@@ -116,15 +116,15 @@ void Model::SetGuiOutline( int val )
   CallCallbacks( &gui.outline );
 }
 
-void Model::SetWatts(  stg_watts_t watts )
+void Model::SetWatts(  stg_watts_t val )
 {
-  watts = watts;
+  watts = val;
   CallCallbacks( &watts );
 }
 
-void Model::SetMapResolution(  stg_meters_t res )
+void Model::SetMapResolution(  stg_meters_t val )
 {
-  map_resolution = res;
+  map_resolution = val;
   CallCallbacks( &map_resolution );
 }
 
@@ -201,29 +201,28 @@ Pose Model::GetGlobalPose() const
 }
 
 
-void Model::SetVelocity( const Velocity& vel )
+void Model::SetVelocity( const Velocity& val )
 {
 //   assert( ! isnan(vel.x) );
 //   assert( ! isnan(vel.y) );
 //   assert( ! isnan(vel.z) );
 //   assert( ! isnan(vel.a) );
 
-  this->velocity = vel;
+  velocity = val;
   
-  if( on_velocity_list && vel.IsZero() ) 	 
-    {
-      world->VelocityListRemove( this );
-      on_velocity_list = false;
-    }
+//   if( on_velocity_list && vel.IsZero() ) 	 
+//     {
+//       world->VelocityListRemove( this );
+//       on_velocity_list = false;
+//     }
 
-  if( (!on_velocity_list) && (!vel.IsZero()) ) 	 
-    {
-      world->VelocityListAdd( this );
-      on_velocity_list = true;
-    }
+//   if( (!on_velocity_list) && (!vel.IsZero()) ) 	 
+//     {
+//       world->VelocityListAdd( this );
+//       on_velocity_list = true;
+//     }
 
-  // todo ?
-  //CallCallbacks( &this->velocity );
+  CallCallbacks( &velocity );
 }
 
 

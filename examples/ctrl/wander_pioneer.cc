@@ -43,26 +43,30 @@ int FiducialUpdate( ModelFiducial* fid, robot_t* robot );
 extern "C" int Init( Model* mod )
 {
   robot_t* robot = new robot_t;
-  robot->position = (ModelPosition*)mod;
 
-  // subscribe to the ranger, which we use for navigating
+  robot->position = (ModelPosition*)mod;
+  assert( robot->ranger );
+  
   robot->ranger = (ModelRanger*)mod->GetModel( "ranger:0" );
   assert( robot->ranger );
-  robot->ranger->Subscribe();
-  
-  // ask Stage to call into our ranger update function
+  // ask Stage to call into our ranger update function whenever the ranger is updated
   robot->ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, robot );
- 
+  
   robot->fiducial = (ModelFiducial*)mod->GetModel( "fiducial:0" ) ;
   assert( robot->fiducial );
+  // ask Stage to call into our fiducial update function whenever the fiducial is updated
   robot->fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, robot );
-  robot->fiducial->Subscribe();
-
+  
   // subscribe to the laser, though we don't use it for navigating
   //robot->laser = (ModelLaser*)mod->GetModel( "laser:0" );
   //assert( robot->laser );
+  
+  // start the models updating
+  robot->position->Subscribe();
+  robot->ranger->Subscribe();
+  robot->fiducial->Subscribe();
   //robot->laser->Subscribe();
-
+  
   return 0; //ok
 }
 

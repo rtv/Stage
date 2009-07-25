@@ -24,6 +24,8 @@ API: Stg::WorldGui
 
 @par Summary and default values
 
+speedup 1
+
 @verbatim
 window
 (
@@ -56,6 +58,11 @@ window
 @endverbatim
 
 @par Details
+ - speedup <int>\n
+ Stage will attempt to run at this multiple of real time. If -1,
+ Stage will run as fast as it can go, and not attempt to track real
+ time at all. 
+
 - size [ <width:int> <height:int> ]\n
 size of the window in pixels
 - center [ <x:float> <y:float> ]\n
@@ -184,13 +191,15 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   fileMan( new FileManager() ),
   interval_log(),
   interval_real( (stg_usec_t)1e5 ),
+  speedup(1.0), // real time
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
   oDlg( NULL ),
   pause_time( false ),	
   real_time_of_last_update( RealTimeNow() )
 {
-  for( unsigned int i=0; i<INTERVAL_LOG_LEN; i++ )
-	 interval_log[i] = interval_real;
+  interval_log.resize(16);
+  for( unsigned int i=0; i<interval_log.size(); i++ )
+  	 interval_log[i] = interval_real;
   
   Fl::scheme( "gtk+" );
   resizable(canvas);
@@ -265,8 +274,14 @@ void WorldGui::Load( const char* filename )
   int world_section = 0; // use the top-level section for some parms
   // that traditionally live there
 
+  // todo - remove this and use speedup instead
   this->interval_real = (stg_usec_t)thousand *  
-    wf->ReadInt( world_section, "interval_real", (int)(this->interval_real/thousand) );
+	 wf->ReadInt( world_section, "interval_real", (int)(this->interval_real/thousand) );
+  
+  this->speedup = wf->ReadFloat( world_section, "speedup", this->speedup );
+  
+  if( sgn(speedup) < 0 )
+	 interval_real = 0;
 
   // this is a world property that's only load()ed in worldgui
   this->paused = 
@@ -274,28 +289,27 @@ void WorldGui::Load( const char* filename )
 
   // use the window section for the rest
   int window_section = wf->LookupEntity( "window" );
-
-  if( window_section < 1) // no section defined
-    return;
-	
-
-  int width =  (int)wf->ReadTupleFloat(window_section, "size", 0, w() );
-  int height = (int)wf->ReadTupleFloat(window_section, "size", 1, h() );
-  size( width,height );
-  size_range( 100, 100 ); // set min size to 100/100, max size to screen size
-
-  // configure the canvas
-  canvas->Load(  wf, window_section );
-	
-  std::string title = PROJECT;
-  if ( wf->filename ) {
-    // improve the title bar to say "Stage: <worldfile name>"
-    title += ": ";		
-    title += wf->filename;
-  }
-  label( title.c_str() );
-	
-  show();
+  
+  if( window_section > 0 ) 
+	 {			
+		int width =  (int)wf->ReadTupleFloat(window_section, "size", 0, w() );
+		int height = (int)wf->ReadTupleFloat(window_section, "size", 1, h() );
+		size( width,height );
+		size_range( 100, 100 ); // set min size to 100/100, max size to screen size
+		
+		// configure the canvas
+		canvas->Load(  wf, window_section );
+		
+		std::string title = PROJECT;
+		if ( wf->filename ) {
+		  // improve the title bar to say "Stage: <worldfile name>"
+		  title += ": ";		
+		  title += wf->filename;
+		}
+		label( title.c_str() );
+	 }
+  
+  Show();
 }
 
 void WorldGui::UnLoad() 
@@ -343,10 +357,13 @@ bool WorldGui::Update()
   
   if( need_redraw )
 	 canvas->redraw();
- 	 
-  stg_usec_t interval;
-  stg_usec_t timenow;
   
+  stg_usec_t timenow;
+  stg_usec_t interval;
+
+  const double sleeptime_max = 1e4;
+  double sleeptime = sleeptime_max;
+
   do { // we loop over updating the GUI, sleeping if there's any spare
     // time
     Fl::check();
@@ -354,29 +371,23 @@ bool WorldGui::Update()
     timenow = RealTimeNow();
 	 
 	 // do
-	 {
+	 {		
 		interval = timenow - real_time_of_last_update; // guaranteed to be >= 0
+
+		if( ! paused ) 
+		  sleeptime = (double)interval_real - (double)interval;
 		
-		double sleeptime = (double)interval_real - (double)interval;
-		
-		if( paused ) sleeptime = 50000; // spare the CPU if we're paused
-		
-		// printf( "real %.2f interval %.2f sleeptime %.2f\n", 
-		//	 (double)interval_real,
-		//	 (double)interval,
-		//	 sleeptime );
-	  
-		if( (sleeptime > 0) || paused ) 
-		  usleep( (stg_usec_t)std::min(sleeptime,20000.0) ); // check the GUI at 10Hz min
+ 		if( sleeptime > 0)  
+ 		  usleep( (stg_usec_t)std::min(sleeptime,sleeptime_max) ); // check the GUI at 10Hz min		
 	 }
   } while( interval < interval_real );
   
-  interval_log[updates%INTERVAL_LOG_LEN] =  timenow - real_time_of_last_update;
-
-  real_time_of_last_update = timenow;
+  
+  interval_log[updates%interval_log.size()] =  interval;
+  
+real_time_of_last_update = timenow;
   
   //puts( "FINSHED UPDATE" );
-
   return val;
 }
 
@@ -386,11 +397,13 @@ std::string WorldGui::ClockString()
   
   // find the average length of the last few realtime intervals;
   stg_usec_t average_real_interval = 0;
-  for( uint32_t i=0; i<INTERVAL_LOG_LEN; i++ )
+  for( uint32_t i=0; i<interval_log.size(); i++ )
     average_real_interval += interval_log[i];
-  average_real_interval /= INTERVAL_LOG_LEN;
+  average_real_interval /= interval_log.size();
   
-  double localratio = (double)interval_sim / (double)average_real_interval;
+  // TODO
+  //double localratio = (double)interval_sim / (double)average_real_interval;
+  double localratio = (double)interval_track / (double)average_real_interval;
   
   char buf[32];
   snprintf( buf, 32, " [%.2f]", localratio );
@@ -545,20 +558,6 @@ void WorldGui::fileExitCb( Fl_Widget* w, void* p )
   }
 }
 
-// static void append_option( char* name, Option* opt, std::vector<Option*>* optv )
-// {
-//   //printf( "adding option %s @ %p\n", name, opt );
-//   optv->push_back( opt );
-// }
-
-// static bool sort_option_pointer( const Option* a, 
-// 											const Option* b ) const
-// {
-//   // Option class overloads operator<. Nasty nasty C++ makes code less
-//   // readable IMHO.
-//   return (*a) < (*b);
-// }
-
 void WorldGui::resetViewCb( Fl_Widget* w, WorldGui* worldGui )
 {
   worldGui->canvas->current_camera->reset();
@@ -594,7 +593,7 @@ void WorldGui::fasterCb( Fl_Widget* w, WorldGui* wg )
 
 void WorldGui::realtimeCb( Fl_Widget* w, WorldGui* wg )
 {
-  wg->interval_real = wg->interval_sim;
+  wg->interval_real = wg->interval_track;
 }
 
 void WorldGui::fasttimeCb( Fl_Widget* w, WorldGui* wg )

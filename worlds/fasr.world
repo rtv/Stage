@@ -6,8 +6,8 @@ include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
 
-interval_sim 100  # simulation timestep in milliseconds
 interval_real 0 # real-time interval between simulation updates in milliseconds 
+speedup 1
 paused 1
 
 # time to pause (in GUI mode) or quit (in headless mode) the simulation
@@ -20,11 +20,11 @@ threads 0
 # configure the GUI window
 window
 ( 
-  size [ 600.000 600.000 ] 
+  size [ 683.000 713.000 ] 
 
-  center [ 0.217 -0.222 ] 
+  center [ -0.180 -1.009 ] 
   rotate [ 0 0 ]
-  scale 30.643 
+  scale 35.284 
   
   show_data 1
   show_flags 1
@@ -102,21 +102,19 @@ define autorob pioneer2dx
  charging_bump( fiducial( range 3 pose [ 0 0 -0.100 0 ] ) )
 )
 
-autorob( pose [-3.164 0.806 0 33.186] joules 300000 name "r0" )
-autorob( pose [1.384 7.361 0 -0.139] joules 100000 )
-autorob( pose [-5.258 -5.871 0 -120.113] joules 200000 )
-autorob( pose [6.600 5.211 0 -89.911] joules 400000 )
-autorob( pose [-6.355 1.726 0 90.000] joules 100000 )
-autorob( pose [-1.530 -2.099 0 82.171] joules 200000 )
-autorob( pose [4.661 -1.695 0 147.974] joules 300000 )
-autorob( pose [-0.947 2.798 0 124.147] joules 400000 )
-autorob( pose [3.573 6.962 0 -32.711] joules 100000 )
-autorob( pose [6.261 7.461 0 0] joules 200000 )
+autorob( pose [7.062 -1.563 0 152.684] joules 300000 name "r0" )
+autorob( pose [-7.444 -7.348 0 125.831] joules 100000 name "r1" )
+autorob( pose [5.043 3.459 0 174.453] joules 200000 )
+autorob( pose [-3.501 -3.827 0 -117.456] joules 400000 )
+autorob( pose [-1.782 7.123 0 44.991] joules 100000 )
+autorob( pose [-6.224 4.313 0 35.145] joules 200000 )
+autorob( pose [-4.373 -4.515 0 -143.181] joules 300000 )
+autorob( pose [3.975 7.410 0 0] joules 400000 )
+autorob( pose [6.796 4.223 0 -89.994] joules 100000 )
+autorob( pose [-6.679 -4.488 0 90.003] joules 200000 )
 
-
-autorob( pose [7.559 4.764 0 -139.066] )
-autorob( pose [5.471 7.446 0 77.301]  )
-
+#autorob( pose [-5.333 -7.515 0 -1.811] )
+#autorob( pose [-1.496 1.724 0 -116.317]  )
 #autorob( pose [7.122 4.175 0 -31.440]  )
 #autorob( pose [5.944 6.951 0 2.937] )
 #autorob( pose [6.405 5.291 0 -103.060] )

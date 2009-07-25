@@ -389,7 +389,7 @@ void ModelPosition::Update( void  )
     case STG_POSITION_LOCALIZATION_ODOM:
       {
 		  // integrate our velocities to get an 'odometry' position estimate.
-		  double dt = this->world->GetSimInterval()/1e6;
+		  double dt = interval / 1e6; // update interval convert to seconds
 		  
 		  est_pose.a = normalize( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
 		  

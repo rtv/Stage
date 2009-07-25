@@ -52,7 +52,6 @@
 #include <queue>
 #include <algorithm>
 
-
 // FLTK Gui includes
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
@@ -581,7 +580,6 @@ namespace Stg
 
   typedef int(*stg_model_callback_t)(Model* mod, void* user );
   typedef int(*stg_world_callback_t)(World* world, void* user );
-  //typedef int(*stg_cell_callback_t)(Cell* cell, void* user );
   
   // return val, or minval if val < minval, or maxval if val > maxval
   double constrain( double val, double minval, double maxval );
@@ -772,7 +770,6 @@ namespace Stg
 		bool ztest;		
   };
 		
-  const uint32_t INTERVAL_LOG_LEN = 32;
 
   // defined in stage_internal.hh
   class Region;
@@ -822,7 +819,6 @@ namespace Stg
     static void UpdateCb( World* world);
     static unsigned int next_id; ///<initially zero, used to allocate unique sequential world ids
 	 
-	 ModelPtrSet charge_list; ///< Models which receive charge are listed here
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
 
@@ -850,15 +846,11 @@ namespace Stg
     stg_usec_t real_time_start; ///< the real time at which this world was created
 	 bool show_clock; ///< iff true, print the sim time on stdout
 	 unsigned int show_clock_interval; ///< updates between clock xoutputs
-    //GMutex* thread_mutex; ///< protect the worker thread management stuff
     pthread_mutex_t thread_mutex; ///< protect the worker thread management stuff
 	 unsigned int threads_working; ///< the number of worker threads not yet finished
-    //GCond* threads_start_cond; ///< signalled to unblock worker threads
-    //GCond* threads_done_cond; ///< signalled by last worker thread to unblock main thread
     pthread_cond_t threads_start_cond; ///< signalled to unblock worker threads
     pthread_cond_t threads_done_cond; ///< signalled by last worker thread to unblock main thread
     int total_subs; ///< the total number of subscriptions to all models
-	 ModelPtrSet velocity_list; ///< Models with non-zero velocity and should have their poses updated	
 	 unsigned int worker_threads; ///< the number of worker threads to use
 	 
   protected:	 
@@ -866,7 +858,7 @@ namespace Stg
 	 std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
-    stg_usec_t interval_sim; ///< temporal resolution: microseconds that elapse between simulated time steps 
+	 stg_usec_t interval_track;
 	 std::set<Option*> option_table; ///< GUI options (toggles) registered by models
 	 std::list<PowerPack*> powerpack_list; ///< List of all the powerpacks attached to models in the world
 	 std::list<float*> ray_list;///< List of rays traced for debug visualization
@@ -898,7 +890,7 @@ namespace Stg
 	 PointIntVec rt_candidate_cells;
 
     static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
-    static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
+    //static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
 
 	 /** Attach a callback function, to be called with the argument at
 		  the end of a complete update step */
@@ -995,33 +987,43 @@ namespace Stg
     /** Returns true iff the current time is greater than the time we
 				should quit */
     bool PastQuitTime();
-		
-    int UpdateListAdd( Model* mod );  
-		void UpdateListRemove( Model* mod );
-    
-		void VelocityListAdd( Model* mod );
-		void VelocityListRemove( Model* mod );
-		
-		void ChargeListAdd( Model* mod );
-		void ChargeListRemove( Model* mod );
-		
+				
     static void* update_thread_entry( std::pair<World*,int>* info );
+	 
+	 class Event
+	 {
+	 public:
+		typedef enum {POSE, ENERGY, UPDATE } type_t;
+		
+		Event( type_t type, stg_usec_t time, Model* mod ) 
+		  : type(type), time(time), mod(mod) {}
+
+		type_t type;
+		stg_usec_t time; // time that event occurs
+		Model* mod; // model to update
+		
+		static const char* TypeStr( type_t type );
+		bool operator<( const Event& other ) const;
+		bool operator==( const Event& other ) const;
+	 };
+	 
+	 std::vector<std::priority_queue<Event> > event_queues;
+	 void Enqueue( Event::type_t type, stg_usec_t delay, Model* mod );
 	 
   public:
     /** returns true when time to quit, false otherwise */
     static bool UpdateAll(); 
 		
     World( const char* token = "MyWorld", 
-					 stg_msec_t interval_sim = DEFAULT_INTERVAL_SIM,
-					 double ppm = DEFAULT_PPM );
+			  double ppm = DEFAULT_PPM );
 		
     virtual ~World();
-  
+  	 
     stg_usec_t SimTimeNow(void);
     stg_usec_t RealTimeNow(void);
     stg_usec_t RealTimeSinceStart(void);
 	 
-    stg_usec_t GetSimInterval(){ return interval_sim; };
+    //stg_usec_t GetSimInterval(){ return interval_sim; };
 	 
     Worldfile* GetWorldFile(){ return wf; };
 	 
@@ -1264,7 +1266,7 @@ namespace Stg
   };
 
 
-  typedef int ctrlinit_t( Model* mod );
+  //typedef int ctrlinit_t( Model* mod );
   //typedef void ctrlupdate_t( Model* mod );
   
   // BLOCKS
@@ -1405,8 +1407,14 @@ namespace Stg
     Canvas* canvas;
     std::vector<Option*> drawOptions;
     FileManager* fileMan; ///< Used to load and save worldfiles
-    stg_usec_t interval_log[INTERVAL_LOG_LEN];
+	 std::vector<stg_usec_t> interval_log;
+
     stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
+	 
+	 /** Stage attempts to run this many times faster than real
+		  time. If -1, Stage runs as fast as possible. */
+	 float speedup; 
+
     Fl_Menu_Bar* mbar;
     OptionsDlg* oDlg;
     bool pause_time;
@@ -1625,14 +1633,15 @@ namespace Stg
   class CallbackHooks
   {
   public:
-	int flag_incr;
-	int flag_decr;
-	int load;
-	int save;
-	int shutdown;
-	int startup;
-	int update;
-	int update_done;
+	 int flag_incr;
+	 int flag_decr;
+	 int init;
+	 int load;
+	 int save;
+	 int shutdown;
+	 int startup;
+	 int update;
+	 int update_done;
   };
   
   /** Records model state and functionality in the GUI, if used */
@@ -1742,14 +1751,15 @@ namespace Stg
   
 	 /** unique process-wide identifier for this model */
 	 uint32_t id;	
-	 ctrlinit_t* initfunc;
-	 stg_usec_t interval; ///< time between updates in us
+	 //	 ctrlinit_t* initfunc;
+	 stg_usec_t interval; ///< time between updates in usec	 
+	 stg_usec_t interval_energy; ///< time between updates of powerpack in usec
+	 stg_usec_t interval_pose; ///< time between updates of pose due to velocity in usec
+
 	 stg_usec_t last_update; ///< time of last update in us  
 	 bool log_state; ///< iff true, model state is logged
 	 stg_meters_t map_resolution;
 	 stg_kg_t mass;
-	//bool on_update_list;
-	 bool on_velocity_list;
 
 	 /** Pointer to the parent of this model, possibly NULL. */
 	 Model* parent; 
@@ -1845,7 +1855,7 @@ namespace Stg
 	stg_model_type_t GetModelType(){return type;}	 
 	std::string GetSayString(){return std::string(say_string);}
 	Visibility vis;
-	stg_usec_t GetSimInterval(){ return world->interval_sim; }
+	 //stg_usec_t GetSimInterval(){ return world->interval_sim; }
 	
 	/** Render the model's blocks as an occupancy grid into the
 		preallocated array of width by height pixels */
@@ -1948,18 +1958,16 @@ namespace Stg
 	 virtual void Startup();
 	 virtual void Shutdown();
 	 virtual void Update();
+	 virtual void SynchronousPostUpdate();
 	 virtual void UpdatePose();
 	 virtual void UpdateCharge();
-
-	 void StartUpdating();
-	 void StopUpdating();
 
 	 Model* ConditionalMove( const Pose& newpose );
 
 	 stg_meters_t ModelHeight() const;
 
-	 bool UpdateDue( void );
-	 void UpdateIfDue();
+	 //bool UpdateDue( void );
+	 //void UpdateIfDue();
 	 void CallUpdateCallbacks( void );
 
 	 void DrawBlocksTree();
@@ -2251,11 +2259,11 @@ namespace Stg
 	 { RemoveCallback( &hooks.save, cb ); }
   
 	 void AddUpdateCallback( stg_model_callback_t cb, void* user )
-	 {	AddCallback( &hooks.update, cb, user ); }
-	
+	 { AddCallback( &hooks.update, cb, user ); }
+	 
 	 void RemoveUpdateCallback( stg_model_callback_t cb )
 	 {	RemoveCallback( &hooks.update, cb ); }
-
+	 
 	 void AddFlagIncrCallback( stg_model_callback_t cb, void* user )
 	 {	AddCallback( &hooks.flag_incr, cb, user ); }
 	

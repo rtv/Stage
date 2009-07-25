@@ -94,7 +94,6 @@ public:
 	 pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, this );
 	 pos->Subscribe();
 
-
 	 // LaserUpdate() controls the robot, by reading from laser and
 	 // writing to position
 	 laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, this );

@@ -203,19 +203,20 @@ Model::Model( World* world,
     geom(),
     has_default_block( true ),
     id( Model::count++ ),
-    initfunc(NULL),
-    interval((stg_usec_t)1e4), // 10msec
+    interval((stg_usec_t)1e5), // 100msec
+    interval_energy((stg_usec_t)1e5), // 100msec
+    interval_pose((stg_usec_t)1e5), // 100msec
     last_update(0),
-		log_state(false),
+	 log_state(false),
     map_resolution(0.1),
     mass(0),
-    on_velocity_list( false ),
+    //on_velocity_list( false ),
     parent(parent),
     pose(),
-		power_pack( NULL ),
-		pps_charging(),
+	 power_pack( NULL ),
+	 pps_charging(),
     props(),
-		rastervis(),
+	 rastervis(),
     rebuild_displaylist(true),
     say_string(NULL),
     stall(false),	 
@@ -285,21 +286,6 @@ Model::~Model( void )
   world->RemoveModel( this );
 }
 
-void Model::StartUpdating()
-{
-  if( update_list_num < 0 )
-	update_list_num = world->UpdateListAdd( this );
-}
-
-void Model::StopUpdating()
-{
-  if( update_list_num >= 0 )
-	{	
-	  world->UpdateListRemove( this );
-	  update_list_num = -1;
-	}
-}
-
 // this should be called after all models have loaded from the
 // worldfile - it's a chance to do any setup now that all models are
 // in existence
@@ -311,15 +297,14 @@ void Model::Init()
   UnMap(); // remove any old cruft rendered during startup
   Map();
 
-  if( initfunc )
-    Subscribe();
+  CallCallbacks( &hooks.init );
 }  
 
 void Model::InitRecursive()
 {
   // init children first
   FOR_EACH( it, children )
-	 (*it)->Init();
+	 (*it)->InitRecursive();
 
   Init();
 }  
@@ -607,7 +592,7 @@ void Model::Unsubscribe( void )
   //printf( "unsubscribe from %s %d\n", token, subs );
 
   // if this is the last sub, call shutdown
-  if( subs < 1 )
+  if( subs == 0 )
     this->Shutdown();
 }
 
@@ -651,11 +636,12 @@ void Model::Startup( void )
 {
   //printf( "Startup model %s\n", this->token );
 
-  // TODO:  this could be a callback
-  if( initfunc )
-    initfunc( this );
-
-  StartUpdating();
+//   if( update_list_num < 0 )
+// 	update_list_num = world->UpdateListAdd( this );
+  
+  // put my first update in the world's queue
+  world->Enqueue( World::Event::UPDATE, interval, this );
+  world->Enqueue( World::Event::POSE, interval_pose, this );
 
   CallCallbacks( &hooks.startup );
 }
@@ -663,65 +649,54 @@ void Model::Startup( void )
 void Model::Shutdown( void )
 {
   //printf( "Shutdown model %s\n", this->token );
-
-  StopUpdating();
-
   CallCallbacks( &hooks.shutdown );
 }
 
-void Model::UpdateIfDue( void )
-{
-  if( UpdateDue() )
-	 {
-		Update();
-		CallUpdateCallbacks();
-	 }
-}
-  
-bool Model::UpdateDue( void )
-{
-  return( (last_update == 0) || (world->sim_time  >= (last_update + interval)) );
-}
 
 void Model::Update( void )
-{
-  // NOTE - update callbacks are NOT called from here, as this method
-  //  may be called in multiple threads, and callbacks may not be
-  //  reentrant
-  
-  //   printf( "[%llu] %s update (%d subs)\n", 
-  // 			 this->world->sim_time, this->token, this->subs );
+{ 
+  // empty - XX todo make this pure?
+}
+
+void Model::SynchronousPostUpdate( void )
+{  
+  CallUpdateCallbacks();
   
   // if we're drawing current and a power pack has been installed
-
+  PowerPack* pp = FindPowerPack();
+  if( pp && ( watts > 0 ))
+	 {
+		// consume  energy stored in the power pack
+		stg_joules_t consumed =  watts * (interval * 1e-6); 
+		pp->Dissipate( consumed, GetGlobalPose() );      
+	 }  
+  
   if( trail_length > 0 && world->updates % trail_interval == 0 )
 	 {
 		trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 
 		
 		if( trail.size() > trail_length )
 		  trail.pop_front();
-	 }	
-  
-  // TODO - this is not thread-safe! fix!
-  PowerPack* pp = FindPowerPack();
-  if( pp && ( watts > 0 ))
-	 {
-		// consume  energy stored in the power pack
-		stg_joules_t consumed =  watts * (world->interval_sim * 1e-6); 
-		pp->Dissipate( consumed, GetGlobalPose() );      
-	 }
-  
+	 }	  
+      
   last_update = world->sim_time;
+
+  if( subs > 0 )
+	 // put my next update in the world's queue  
+	 world->Enqueue( World::Event::UPDATE, interval, this );
+
+  //  getchar();
   
   if( log_state )
  	 world->Log( this );
 }
 
+
 void Model::CallUpdateCallbacks( void )
 {
   // if we were updated this timestep, call the callbacks
-  if( last_update == world->sim_time ) 
-	CallCallbacks( &hooks.update );
+  //if( last_update == world->sim_time ) 
+  CallCallbacks( &hooks.update );
 }
 
 stg_meters_t Model::ModelHeight() const
@@ -814,8 +789,8 @@ void Model::UpdateCharge()
  			 //printf( "   toucher %s can take up to %.2f wats\n", 
 			 //		toucher->Token(), toucher->watts_take );
 			 
-				stg_watts_t rate = std::min( watts_give, toucher->watts_take );
- 			 stg_joules_t amount =  rate * (world->interval_sim * 1e-6);
+			 stg_watts_t rate = std::min( watts_give, toucher->watts_take );
+ 			 stg_joules_t amount =  rate * interval_energy * 1e-6;
 			 
 			 //printf ( "moving %.2f joules from %s to %s\n",
 			 //		 amount, token, toucher->token );
@@ -830,6 +805,9 @@ void Model::UpdateCharge()
 			 pps_charging.push_front( hispp );
  		  }
  	 }
+  
+  // set up the next event
+  world->Enqueue( World::Event::ENERGY, interval_energy, this );
 }
 
 void Model::CommitTestedPose()
@@ -866,21 +844,24 @@ void Model::UpdatePose( void )
 {
   if( disabled )
     return;
-    
+  
   // convert usec to sec
-  double interval( (double)world->interval_sim / 1e6 );
+  double interval( (double)interval_pose / 1e6 );
   
   // find the change of pose due to our velocity vector
   Pose p( velocity.x * interval,
-		  velocity.y * interval,
-		  velocity.z * interval,
-		  normalize( velocity.a * interval ));
+			 velocity.y * interval,
+			 velocity.z * interval,
+			 normalize( velocity.a * interval ));
   
   // attempts to move to the new pose. If the move fails because we'd
   // hit another model, that model is returned.	
 	// ConditionalMove() returns a pointer to the model we hit, or
 	// NULL. We use this as a boolean for SetStall()
   SetStall( ConditionalMove( pose + p ) );
+
+  //if( ! velocity.IsZero() )
+  world->Enqueue( World::Event::POSE, interval_pose, this );
 }
 
 Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type ) const
@@ -1146,3 +1127,4 @@ void Model::RasterVis::ClearPts()
 {
   pts.clear();
 }
+

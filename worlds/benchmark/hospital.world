@@ -14,7 +14,7 @@ interval_real 0  # real-time interval between simulation updates in milliseconds
 paused 1
 
 # threads may help or hurt performance depending on your worldfile, machine and load
-threads 7
+# threads 7
 
 # quit_time 60
 
@@ -26,8 +26,8 @@ window
   rotate [ 38.000 -36.500 ]
   scale 12.611 
 
-  show_data 0
-  interval 400
+  show_data 1
+  interval 100
 )
 
 # load an environment bitmap

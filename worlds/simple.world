@@ -35,9 +35,6 @@ floorplan
   size [16.000 16.000 0.800]
   pose [0 0 0 0]
   bitmap "bitmaps/cave.png"
-  
-  # runs the <stage_source>/examples/ctrl/rasterize.cc example
-  # ctrl "rasterize"
 )
 
 
@@ -47,7 +44,9 @@ pioneer2dx
   name "r0"
   pose [ -7 -7 0 45 ] 
 
-  sicklaser() 
+  sicklaser(   
+     # ctrl "lasernoise"  # uncomment this line to run a laser noise generator
+  ) 
 
   ctrl "wander"
 
