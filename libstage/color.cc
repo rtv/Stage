@@ -48,7 +48,7 @@ Color::Color( const char *name) :
 	  
 	  PRINT_DEBUG( "Success!" );
 	  
-	  // load the file into the hash table       
+	  // load the file into the map
 	  while(1)
 		{
 		  char line[1024];

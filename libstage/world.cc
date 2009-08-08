@@ -204,7 +204,6 @@ bool World::UpdateAll()
 
 void World::RemoveModel( Model* mod )
 {
-  //g_hash_table_remove( models_by_name, mod );
   models_by_name.erase( mod->token );
 }
 
@@ -226,7 +225,7 @@ Model* World::CreateModel( Model* parent, const char* typestr )
 {
   Model* mod = NULL; // new model to return
   
-  // find the creator function pointer in the hash table. use the
+  // find the creator function pointer in the map. use the
   // vanilla model if the type is NULL.
   stg_creator_t creator = NULL;
   
@@ -376,16 +375,13 @@ void World::UnLoad()
 	delete (*it);
   children.clear();
  
-  //g_hash_table_remove_all( models_by_name );
   models_by_name.clear();
 	models_by_wfentity.clear();
   
   ray_list.clear();
 
-  // todo
-  //g_hash_table_foreach( superregions, (GHFunc)destroy_sregion, NULL );
-  //g_hash_table_remove_all( superregions );
-
+  // todo - clean up regions & superregions?
+	
   token = NULL;
 }
 
@@ -625,23 +621,25 @@ bool World::Update()
   return false;
 }
 
-
 void World::AddModel( Model*  mod  )
 {
-  //g_hash_table_insert( this->models_by_name, (gpointer)mod->Token(), mod );
   models_by_name[mod->token] = mod;
 }
 
-Model* World::GetModel( const char* name )
+Model* World::GetModel( const char* name ) const
 {
   PRINT_DEBUG1( "looking up model name %s in models_by_name", name );
-  //Model* mod = (Model*)g_hash_table_lookup( this->models_by_name, name );
-  Model* mod = models_by_name[ name ];
 
-  if( mod == NULL )
-    PRINT_WARN1( "lookup of model name %s: no matching name", name );
-
-  return mod;
+	std::map<std::string,Model*>::const_iterator it = 
+		models_by_name.find( name );
+	
+	if( it == models_by_name.end() )
+		{
+			PRINT_WARN1( "lookup of model name %s: no matching name", name );
+			return NULL;
+		}
+	else
+		return it->second; // the Model*
 }
 
 void World::RecordRay( double x1, double y1, double x2, double y2 )
@@ -1102,7 +1100,6 @@ void World::RemovePowerPack( PowerPack* pp )
 /// Register an Option for pickup by the GUI
 void World:: RegisterOption( Option* opt )
 {
-  //g_hash_table_insert( option_table, (void*)opt->htname, opt );
   option_table.insert( opt );
 }
 

@@ -58,25 +58,6 @@ using namespace Stg;
   PRINT_ERR2("%s:%d : " z, this->filename, l)
 
 
-
-// guint PropertyHash( const CProperty* prop )
-// {
-//   char key[128];
-//   snprintf( key, 127, "%d%s", prop->entity, prop->name );
-//   prop->key = strdup( key );
-
-//   return g_str_hash( prop->key );
-// }
-
-// void destroy_property(gpointer value)
-// {
-// 	CProperty * prop = reinterpret_cast<CProperty *> (value);
-// 	free(prop->key);
-// 	free(prop->values);
-// 	g_free(value);
-
-// }
-
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 Worldfile::Worldfile() :

@@ -42,7 +42,7 @@ struct CProperty
     // Name of property
     const char *name;
 
-    char* key; // this property's hash table key
+    char* key; // this property's map key
     
     // A list of token indexes
     int value_count;

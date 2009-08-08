@@ -47,7 +47,6 @@
 #include <vector>
 #include <list>
 #include <map>
-#include <ext/hash_map>
 #include <set>
 #include <queue>
 #include <algorithm>
@@ -822,20 +821,15 @@ namespace Stg
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
 
-	 // functor for comparing C strings in a hash_map
-	 struct eqstr 
-	 {
-		bool operator()( const char* a, const char* b )
-		{ return( strcmp( a, b ) == 0 ); }
-	 };
-	 
-		__gnu_cxx::hash_map<const char*, Model*, __gnu_cxx::hash<const char*>, eqstr > models_by_name; ///< the models that make up the world, indexed by name.
-		
-		std::map<int,Model*> models_by_wfentity;
+ 		/** pointers to the models that make up the world, indexed by name. */
+		std::map<std::string, Model*> models_by_name; 		
 
-	 /** Keep a list of all models with detectable fiducials. This
-		  avoids searching the whole world for fiducials. */
-	 ModelPtrSet models_with_fiducials;
+		/** pointers to the models that make up the world, indexed by worldfiel entry index */
+		std::map<int,Model*> models_by_wfentity;
+		
+		/** Keep a list of all models with detectable fiducials. This
+				avoids searching the whole world for fiducials. */
+		ModelPtrSet models_with_fiducials;
 	
     double ppm; ///< the resolution of the world model in pixels per meter   
     bool quit; ///< quit this world ASAP  
@@ -846,8 +840,9 @@ namespace Stg
     stg_usec_t real_time_start; ///< the real time at which this world was created
 	 bool show_clock; ///< iff true, print the sim time on stdout
 	 unsigned int show_clock_interval; ///< updates between clock xoutputs
+
     pthread_mutex_t thread_mutex; ///< protect the worker thread management stuff
-	 unsigned int threads_working; ///< the number of worker threads not yet finished
+		unsigned int threads_working; ///< the number of worker threads not yet finished
     pthread_cond_t threads_start_cond; ///< signalled to unblock worker threads
     pthread_cond_t threads_done_cond; ///< signalled by last worker thread to unblock main thread
     int total_subs; ///< the total number of subscriptions to all models
@@ -1049,7 +1044,7 @@ namespace Stg
    
     /** Returns a pointer to the model identified by name, or NULL if
 		  nonexistent */
-    Model* GetModel( const char* name );
+    Model* GetModel( const char* name ) const;
   
     /** Return the 3D bounding box of the world, in meters */
     stg_bounds3d_t GetExtent(){ return extent; };
@@ -1863,21 +1858,6 @@ namespace Stg
 					unsigned int width, unsigned int height,
 					stg_meters_t cellwidth, stg_meters_t cellheight );
 	
-// 	void Lock()
-// 	{ 
-// 	  if( access_mutex == NULL )
-// 		access_mutex = g_mutex_new();
-	  
-// 	  assert( access_mutex );
-// 	  g_mutex_lock( access_mutex );
-// 	}
-	
-// 	void Unlock()
-// 	{ 
-// 	  assert( access_mutex );
-// 	  g_mutex_unlock( access_mutex );
-// 	}	
-
   private: 
 	 /** Private copy constructor declared but not defined, to make it
 		  impossible to copy models. */

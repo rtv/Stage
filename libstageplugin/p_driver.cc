@@ -465,11 +465,9 @@ int StgDriver::Setup()
 // todo - faster lookup with a better data structure
 Interface* StgDriver::LookupDevice( player_devaddr_t addr )
 {
-  //for( int i=0; i<(int)this->devices->len; i++ )
 	FOR_EACH( it, this->devices )
     {
       Interface* candidate = *it;
-				//(Interface*)g_ptr_array_index( this->devices, i );
 			
       if( candidate->addr.robot == addr.robot &&
 					candidate->addr.interf == addr.interf &&
@@ -521,11 +519,8 @@ int StgDriver::Unsubscribe(QueuePointer &queue,player_devaddr_t addr)
 
 StgDriver::~StgDriver()
 {
-  // todo - when the sim thread exits, destroy the world. It's not
-  // urgent, because right now this only happens when Player quits.
-  // stg_world_destroy( StgDriver::world );
-
-  //puts( "Stage driver destroyed" );
+	delete world;
+  puts( "Stage driver destroyed" );
 }
 
 
@@ -535,15 +530,8 @@ int StgDriver::Shutdown()
 {
   //puts("Shutting stage driver down");
 
-  // Stop and join the driver thread
-  // this->StopThread(); // todo - the thread only runs in the sim instance
-
-  // shutting unsubscribe to data from all the devices
-  //for( int i=0; i<(int)this->devices->len; i++ )
-  //{
-  //  Interface* device = (Interface*)g_ptr_array_index( this->devices, i );
-  //  stg_model_unsubscribe( device->mod );
-  // }
+	FOR_EACH( it, this->devices )
+		(*it)->Unsubscribe();
 
   puts("Stage driver has been shutdown");
 
@@ -580,38 +568,35 @@ void StgDriver::Update(void)
 {
   Driver::ProcessMessages();
 
-  //  puts( "STG driver update" );
-
-  //for( int i=0; i<(int)this->devices->len; i++ )
 	FOR_EACH( it, this->devices )
 		{		
-			Interface* interface = *it; //(Interface*)g_ptr_array_index( this->devices, i );
-
-    assert( interface );
-
-    switch( interface->addr.interf )
-      {
-      case PLAYER_SIMULATION_CODE:
-		  world->Update();
-		  break;
-
-      default:
-		  {
-			 // Has enough time elapsed since the last time we published on this
-			 // interface?  This really needs some thought, as each model/interface
-			 // should have a configurable publishing rate. For now, I'm using the
-			 // world's update rate (which appears to be stored as msec).  - BPG
-			 double currtime;
-			 GlobalTime->GetTimeDouble(&currtime);
-			 if((currtime - interface->last_publish_time) >=
-				 (interface->publish_interval_msec / 1e3))
+			Interface* interface = *it;
+			
+			assert( interface );
+			
+			switch( interface->addr.interf )
 				{
-				  interface->Publish();
-				  interface->last_publish_time = currtime;
+				case PLAYER_SIMULATION_CODE:
+					world->Update();
+					break;
+					
+				default:
+					{
+						// Has enough time elapsed since the last time we published on this
+						// interface?  This really needs some thought, as each model/interface
+						// should have a configurable publishing rate. For now, I'm using the
+						// world's update rate (which appears to be stored as msec).  - BPG
+						double currtime;
+						GlobalTime->GetTimeDouble(&currtime);
+						if((currtime - interface->last_publish_time) >=
+							 (interface->publish_interval_msec / 1e3))
+							{
+								interface->Publish();
+								interface->last_publish_time = currtime;
+							}
+					}
 				}
-		  }
-      }
-  }
+		}
 }
 
 
