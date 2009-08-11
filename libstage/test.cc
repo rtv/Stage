@@ -37,11 +37,7 @@ int main( int argc,  char* argv[] )
   Init( &argc, &argv);
 
   WorldGui world( 400,400, "Test" );
-
-  world.SetRealTimeInterval( 10000 );
-
   world.Start();
-
 
   Geom geom;
   bzero( &geom, sizeof(geom) );

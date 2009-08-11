@@ -11,7 +11,7 @@
 using namespace Stg;
 
 const char* USAGE = 
-  "USAGE:  stage [options] [<worldfile>]\n"
+  "USAGE:  stage [options] <worldfile1> [worldfile2 ... worldfileN]\n"
   "Available [options] are:\n"
   "  --clock        : print simulation time peridically on standard output\n"
   "  -c             : short for --clock\n"
@@ -19,8 +19,7 @@ const char* USAGE =
   "  -g             : short for --gui\n"
   "  --help         : print this message\n"
   "  -h             : short for --help\n"
-  "  -?             : short for --help\n"
-  " If <worldfile> is not specified, Stage starts with a file selector dialog";
+  "  -?             : short for --help";
 
 /* options descriptor */
 static struct option longopts[] = {
@@ -77,7 +76,6 @@ int main( int argc, char* argv[] )
   // arguments at index [optindex] and later are not options, so they
   // must be world file names
   
-  bool loaded_world_file = false;
   optindex = optind; //points to first non-option
   while( optindex < argc )
 	 {
@@ -86,22 +84,18 @@ int main( int argc, char* argv[] )
 			 const char* worldfilename = argv[optindex];
 			 World* world = ( usegui ? 
 										new WorldGui( 400, 300, worldfilename ) : 
-										new World( worldfilename ) );
+									new World( worldfilename ) );
 			 world->Load( worldfilename );
 			 world->ShowClock( showclock );
-			 loaded_world_file = true;
+
+			 if( ! world->paused ) 
+				world->Start();
 		  }
 		optindex++;
 	 }
   
-  if( loaded_world_file == false ) 
-	 {
-		// TODO: special window/loading dialog for this case
-		new WorldGui( 400, 300 );
-	 }
-  
   if( usegui )
-	 while( true ) World::UpdateAll();
+	 Fl::run();	 
   else
 	 while( ! World::UpdateAll() );
 

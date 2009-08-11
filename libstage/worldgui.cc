@@ -190,7 +190,6 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   drawOptions(),
   fileMan( new FileManager() ),
   interval_log(),
-  interval_real( (stg_usec_t)1e5 ),
   speedup(1.0), // real time
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
   oDlg( NULL ),
@@ -199,7 +198,7 @@ WorldGui::WorldGui(int W,int H,const char* L) :
 {
   interval_log.resize(16);
   for( unsigned int i=0; i<interval_log.size(); i++ )
-  	 interval_log[i] = interval_real;
+  	 interval_log[i] = sim_interval;
   
   Fl::scheme( "gtk+" );
   resizable(canvas);
@@ -270,23 +269,12 @@ void WorldGui::Load( const char* filename )
   fileMan->newWorld( filename );
 
   World::Load( filename );
-	
-  int world_section = 0; // use the top-level section for some parms
-  // that traditionally live there
-
-  // todo - remove this and use speedup instead
-  this->interval_real = (stg_usec_t)thousand *  
-	 wf->ReadInt( world_section, "interval_real", (int)(this->interval_real/thousand) );
   
-  this->speedup = wf->ReadFloat( world_section, "speedup", this->speedup );
+  // worldgui exclusive properties live in the top-level section
+  int world_section = 0; 
+  speedup = wf->ReadFloat( world_section, "speedup", speedup );    
+  paused = wf->ReadInt( world_section, "paused", paused );
   
-  if( sgn(speedup) < 0 )
-	 interval_real = 0;
-
-  // this is a world property that's only load()ed in worldgui
-  this->paused = 
-    wf->ReadInt( world_section, "paused", this->paused );
-
   // use the window section for the rest
   int window_section = wf->LookupEntity( "window" );
   
@@ -315,13 +303,17 @@ void WorldGui::Load( const char* filename )
 void WorldGui::UnLoad() 
 {
   World::UnLoad();
-  //	canvas->camera.setPose( 0, 0 );
 }
 
 bool WorldGui::Save( const char* filename )
 {
   PRINT_DEBUG1( "%s.Save()", token );
-	
+  
+  // worldgui exclusive properties live in the top-level section
+  int world_section = 0; 
+  wf->WriteFloat( world_section, "speedup", speedup );    
+  wf->WriteInt( world_section, "paused", paused );
+
   // use the window section for the rest
   int window_section = wf->LookupEntity( "window" );
 	
@@ -341,54 +333,25 @@ bool WorldGui::Save( const char* filename )
   return true;
 }
 
+void WorldGui::UpdateCallback( WorldGui* world )
+{	
+  world->Update();
+}
+
 bool WorldGui::Update()
-{
-  //pause the simulation if quit time is set
-  if( PastQuitTime() && pause_time == false ) {
-	  TogglePause();
-	  pause_time = true;
-  }
-  
-  // if we're paused and counting down, we need to redraw the window
-  // because it's not drawn on a timer when paused.
-  bool need_redraw = paused && (steps > 0);
-  
-  bool val = World::Update(); 
-  
-  if( need_redraw )
-	 canvas->redraw();
-  
-  stg_usec_t timenow;
-  stg_usec_t interval;
+{  
+  double timeout = speedup > 0 ? (sim_interval/1e6) / speedup : 0;
+  Fl::repeat_timeout( timeout, (Fl_Timeout_Handler)UpdateCallback, this );
 
-  const double sleeptime_max = 1e4;
-  double sleeptime = sleeptime_max;
-
-  do { // we loop over updating the GUI, sleeping if there's any spare
-    // time
-    Fl::check();
-
-    timenow = RealTimeNow();
-	 
-	 // do
-	 {		
-		interval = timenow - real_time_of_last_update; // guaranteed to be >= 0
-
-		if( ! paused ) 
-		  sleeptime = (double)interval_real - (double)interval;
-		
- 		if( sleeptime > 0)  
- 		  usleep( (stg_usec_t)std::min(sleeptime,sleeptime_max) ); // check the GUI at 10Hz min		
-	 }
-  } while( interval < interval_real );
+  //printf( "speedup %.2f timeout %.6f\n", speedup, timeout );
   
-  
-  interval_log[updates%interval_log.size()] =  interval;
-  
-real_time_of_last_update = timenow;
-  
-  //puts( "FINSHED UPDATE" );
-  return val;
+  stg_usec_t timenow = RealTimeNow();	 
+  stg_usec_t interval = timenow - real_time_of_last_update; 
+  interval_log[updates%interval_log.size()] =  interval;  
+  real_time_of_last_update = timenow;
+   
+  // inherit
+  return World::Update();
 }
 
 std::string WorldGui::ClockString()
@@ -450,23 +413,17 @@ std::string WorldGui::EnergyString()
 
 void WorldGui::DrawTree( bool drawall )
 {  
-	FOR_EACH( it, superregions )
-//   for( std::map<stg_point_int_t,SuperRegion*>::iterator it = superregions.begin();
-// 		 it != superregions.end();
-// 		 it++ )
+  FOR_EACH( it, superregions )
 	 (*it).second->Draw( drawall );
 }
 
 void WorldGui::DrawFloor()
 {
   PushColor( 1,1,1,1 );
-
-	FOR_EACH( it, superregions )
-//   for( std::map<stg_point_int_t,SuperRegion*>::iterator it = superregions.begin();
-// 		 it != superregions.end();
-// 		 it++ )
+  
+  FOR_EACH( it, superregions )
 	 (*it).second->Floor();
-
+  
   PopColor();
 }
 
@@ -570,34 +527,25 @@ void WorldGui::resetViewCb( Fl_Widget* w, WorldGui* worldGui )
 
 void WorldGui::slowerCb( Fl_Widget* w, WorldGui* wg )
 {
-  if( wg->interval_real == 0 )
-	 wg->interval_real = 10;
-  else
-	 {
-		wg->interval_real *= 1.2;
-	 }
+  wg->speedup *= 0.8;  
 }
 
 void WorldGui::fasterCb( Fl_Widget* w, WorldGui* wg )
 {
-  if( wg->interval_real == 0 )
-	 putchar( 7 ); // bell!
+  if( wg->speedup <= 0 )
+	 putchar( 7 ); // bell - can go no faster
   else
-	 {
-		wg->interval_real *= 0.8;
-		if( wg->interval_real < 10 )
-		  wg->interval_real = 0;
-	 }
+	 wg->speedup *= 1.2;
 }
 
 void WorldGui::realtimeCb( Fl_Widget* w, WorldGui* wg )
 {
-  wg->interval_real = wg->interval_track;
+  wg->speedup = 1.0;
 }
 
 void WorldGui::fasttimeCb( Fl_Widget* w, WorldGui* wg )
 {
-  wg->interval_real = 0;
+  wg->speedup = -1;
 }
 
 void WorldGui::Start()
@@ -608,14 +556,16 @@ void WorldGui::Start()
   Fl::add_timeout( ((double)canvas->interval/1000), 
 						 (Fl_Timeout_Handler)Canvas::TimerCallback, 
 						 canvas );
+
+	Fl::add_timeout( 0.01, (Fl_Timeout_Handler)UpdateCallback, this );
 }
 
 void WorldGui::Stop()
 {
   World::Stop();
   
-  // remove the redraw timeout
   Fl::remove_timeout( (Fl_Timeout_Handler)Canvas::TimerCallback );	
+  Fl::remove_timeout( (Fl_Timeout_Handler)WorldGui::UpdateCallback );	
 
   // drawn 'cos we cancelled the timeout
   canvas->redraw(); // in case something happened that will never be

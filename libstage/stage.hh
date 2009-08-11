@@ -1003,8 +1003,21 @@ namespace Stg
 	 };
 	 
 	 std::vector<std::priority_queue<Event> > event_queues;
-	 void Enqueue( Event::type_t type, stg_usec_t delay, Model* mod );
+	 void Enqueue( unsigned int queue_num, Event::type_t type, stg_usec_t delay, Model* mod );
 	 
+	 /** The sim time of the next event in the queue. */
+	 //stg_usec_t time_of_next_event;
+	 uint32_t event_pending_count;
+	 
+	 stg_usec_t sim_interval;
+	 
+	 /** consume events from the queue up to and including the current sim_time */
+	 void ConsumeQueue( unsigned int queue_num );
+
+	 /** returns an event queue index number for a model to use for
+		  updates */
+	 unsigned int GetEventQueue( Model* mod );
+
   public:
     /** returns true when time to quit, false otherwise */
     static bool UpdateAll(); 
@@ -1403,8 +1416,6 @@ namespace Stg
     std::vector<Option*> drawOptions;
     FileManager* fileMan; ///< Used to load and save worldfiles
 	 std::vector<stg_usec_t> interval_log;
-
-    stg_usec_t interval_real;   ///< real-time interval between updates - set this to zero for 'as fast as possible
 	 
 	 /** Stage attempts to run this many times faster than real
 		  time. If -1, Stage runs as fast as possible. */
@@ -1416,6 +1427,8 @@ namespace Stg
     stg_usec_t real_time_of_last_update;
 	
     // static callback functions
+		static void UpdateCallback( WorldGui* world );
+
     static void windowCb( Fl_Widget* w, void* p );	
     static void fileLoadCb( Fl_Widget* w, void* p );
     static void fileSaveCb( Fl_Widget* w, void* p );
@@ -1472,13 +1485,7 @@ namespace Stg
     void Show(); 
 
     /** Get human readable string that describes the current global energy state. */
-    std::string EnergyString( void );
-	
-    /** Set the minimum real time interval between world updates, in
-		  microeconds. */
-    void SetRealTimeInterval( stg_usec_t usec )
-    { interval_real = usec; }
-
+    std::string EnergyString( void );	
     virtual void RemoveChild( Model* mod );	 
   };
 
@@ -1807,15 +1814,15 @@ namespace Stg
 		bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
 		char* say_string;   ///< if non-null, this string is displayed in the GUI 
 		
-		stg_bool_t stall;
-		/** Thread safety flag. Iff true, Update() may be called in
-				parallel with other models. Defaults to false for safety */
-		int subs;    ///< the number of subscriptions to this model
-		bool thread_safe;
-		
-		/** Cache of recent poses, used to draw the trail. */
-		std::list<TrailItem> trail;
-
+	 stg_bool_t stall;
+	 int subs;    ///< the number of subscriptions to this model
+	 /** Thread safety flag. Iff true, Update() may be called in
+		  parallel with other models. Defaults to false for safety */
+	 bool thread_safe;
+	 
+	 /** Cache of recent poses, used to draw the trail. */
+	 std::list<TrailItem> trail;
+	 
 		/** The maxiumum length of the trail drawn. Default is 20, but can
 				be set in the world file using the tail_length model
 				property. */
@@ -1825,13 +1832,13 @@ namespace Stg
 		long unsigned int trail_interval;
 
 		stg_model_type_t type;  
-		/** The index into the world's vector of update lists. Initially
-				-1, to indicate that it is not on a list yet. */
-	int update_list_num; 
-	bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
-	Velocity velocity;
-	stg_watts_t watts;///< power consumed by this model
-	
+	 /** The index into the world's vector of event queues. Initially
+		  -1, to indicate that it is not on a list yet. */
+	 int event_queue_num; 
+	 bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
+	 Velocity velocity;
+	 stg_watts_t watts;///< power consumed by this model
+	 
 	/** If >0, this model can transfer energy to models that have
 		watts_take >0 */
 	stg_watts_t watts_give;
@@ -1938,17 +1945,12 @@ namespace Stg
 	 virtual void Startup();
 	 virtual void Shutdown();
 	 virtual void Update();
-	 virtual void SynchronousPostUpdate();
 	 virtual void UpdatePose();
 	 virtual void UpdateCharge();
 
 	 Model* ConditionalMove( const Pose& newpose );
 
 	 stg_meters_t ModelHeight() const;
-
-	 //bool UpdateDue( void );
-	 //void UpdateIfDue();
-	 void CallUpdateCallbacks( void );
 
 	 void DrawBlocksTree();
 	 virtual void DrawBlocks();

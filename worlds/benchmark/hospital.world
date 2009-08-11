@@ -8,8 +8,7 @@ include "../pioneer.inc"
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02
 
-interval_sim 100  # simulation timestep in milliseconds
-interval_real 0  # real-time interval between simulation updates in milliseconds 
+speedup -1 # as fast as possible
 
 paused 1
 

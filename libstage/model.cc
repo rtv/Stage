@@ -210,7 +210,6 @@ Model::Model( World* world,
 	 log_state(false),
     map_resolution(0.1),
     mass(0),
-    //on_velocity_list( false ),
     parent(parent),
     pose(),
 	 power_pack( NULL ),
@@ -226,7 +225,7 @@ Model::Model( World* world,
 	 trail_length(50),
 	 trail_interval(5),
     type(type),	
-	 update_list_num( -1 ),
+	 event_queue_num( -1 ),
     used(false),
     velocity(),
     watts(0.0),
@@ -297,6 +296,14 @@ void Model::Init()
   UnMap(); // remove any old cruft rendered during startup
   Map();
 
+  if( FindPowerPack() )
+	 world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
+  
+  // find the queue for update events: zero if thread safe, else we
+  // ask the world to assign us to a queue  
+  if( event_queue_num < 1 ) 		
+	 event_queue_num = thread_safe ? world->GetEventQueue( this ) : 0;
+  
   CallCallbacks( &hooks.init );
 }  
 
@@ -322,8 +329,7 @@ void Model::RemoveFlag( Flag* flag )
 {
   if( flag )
 	 {
-		flag_list.erase( remove( flag_list.begin(), flag_list.end(), flag ));
-
+		flag_list.erase( remove( flag_list.begin(), flag_list.end(), flag ));		
 		CallCallbacks( &hooks.flag_decr );
 	 }
 }
@@ -341,12 +347,12 @@ Flag* Model::PopFlag()
 {
   if( flag_list.size() == 0 )
     return NULL;
-
+  
   Flag* flag = flag_list.front();
   flag_list.pop_front();
-
+  
   CallCallbacks( &hooks.flag_decr );
-
+  
   return flag;
 }
 
@@ -634,15 +640,13 @@ const char* Model::PrintWithPose() const
 
 void Model::Startup( void )
 {
-  //printf( "Startup model %s\n", this->token );
-
-//   if( update_list_num < 0 )
-// 	update_list_num = world->UpdateListAdd( this );
+  //printf( "Startup model %s\n", this->token );  
+  //printf( "model %s using queue %d\n", token, event_queue_num );
   
-  // put my first update in the world's queue
-  world->Enqueue( World::Event::UPDATE, interval, this );
-  world->Enqueue( World::Event::POSE, interval_pose, this );
-
+  // put my first events in the world's queue
+  world->Enqueue( event_queue_num, World::Event::UPDATE, interval, this );
+  world->Enqueue( 0, World::Event::POSE, interval_pose, this );
+  
   CallCallbacks( &hooks.startup );
 }
 
@@ -655,49 +659,14 @@ void Model::Shutdown( void )
 
 void Model::Update( void )
 { 
-  // empty - XX todo make this pure?
-}
-
-void Model::SynchronousPostUpdate( void )
-{  
-  CallUpdateCallbacks();
-  
-  // if we're drawing current and a power pack has been installed
-  PowerPack* pp = FindPowerPack();
-  if( pp && ( watts > 0 ))
-	 {
-		// consume  energy stored in the power pack
-		stg_joules_t consumed =  watts * (interval * 1e-6); 
-		pp->Dissipate( consumed, GetGlobalPose() );      
-	 }  
-  
-  if( trail_length > 0 && world->updates % trail_interval == 0 )
-	 {
-		trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 
-		
-		if( trail.size() > trail_length )
-		  trail.pop_front();
-	 }	  
-      
-  last_update = world->sim_time;
-
-  if( subs > 0 )
-	 // put my next update in the world's queue  
-	 world->Enqueue( World::Event::UPDATE, interval, this );
-
-  //  getchar();
-  
-  if( log_state )
- 	 world->Log( this );
-}
-
-
-void Model::CallUpdateCallbacks( void )
-{
-  // if we were updated this timestep, call the callbacks
-  //if( last_update == world->sim_time ) 
   CallCallbacks( &hooks.update );
+
+  last_update = world->sim_time;
+  
+  if( subs > 0 )
+	 world->Enqueue( event_queue_num, World::Event::UPDATE, interval, this );
 }
+
 
 stg_meters_t Model::ModelHeight() const
 {	
@@ -764,50 +733,58 @@ Model* Model::TestCollisionTree()
 }  
 
 void Model::UpdateCharge()
-{
-  assert( watts_give > 0 );
-  
+{  
   PowerPack* mypp = FindPowerPack();
   assert( mypp );
   
-  // detach charger from all the packs charged last time
-  FOR_EACH( it, pps_charging )
-	 (*it)->ChargeStop();
-  pps_charging.clear();
-
-  // run through and update all appropriate touchers
-  ModelPtrSet touchers;
-  AppendTouchingModels( touchers );
-
-  FOR_EACH( it, touchers )
+  if( watts > 0 ) // dissipation rate
 	 {
-	   Model* toucher = (*it); //(Model*)touchers->data;		
- 		PowerPack* hispp =toucher->FindPowerPack();		
+		// consume  energy stored in the power pack
+		stg_joules_t consumed =  watts * (interval_energy * 1e-6); 
+		mypp->Dissipate( consumed, GetGlobalPose() );      
+	 }  
+  
+  if( watts_give > 0 ) // transmission to other powerpacks max rate
+	 {  
+		// detach charger from all the packs charged last time
+		FOR_EACH( it, pps_charging )
+		  (*it)->ChargeStop();
+		pps_charging.clear();
 		
- 		if( hispp && toucher->watts_take > 0.0) 
- 		  {		
- 			 //printf( "   toucher %s can take up to %.2f wats\n", 
-			 //		toucher->Token(), toucher->watts_take );
+		// run through and update all appropriate touchers
+		ModelPtrSet touchers;
+		AppendTouchingModels( touchers );
+		
+		FOR_EACH( it, touchers )
+		  {
+			 Model* toucher = (*it); //(Model*)touchers->data;		
+			 PowerPack* hispp =toucher->FindPowerPack();		
 			 
-			 stg_watts_t rate = std::min( watts_give, toucher->watts_take );
- 			 stg_joules_t amount =  rate * interval_energy * 1e-6;
-			 
-			 //printf ( "moving %.2f joules from %s to %s\n",
-			 //		 amount, token, toucher->token );
-			 
-			 // set his charging flag
-			 hispp->ChargeStart();
-			 
- 			 // move some joules from me to him
- 			 mypp->TransferTo( hispp, amount );
-			 
-			 // remember who we are charging so we can detatch next time
-			 pps_charging.push_front( hispp );
- 		  }
- 	 }
+			 if( hispp && toucher->watts_take > 0.0) 
+				{		
+				  //printf( "   toucher %s can take up to %.2f wats\n", 
+				  //		toucher->Token(), toucher->watts_take );
+				  
+				  stg_watts_t rate = std::min( watts_give, toucher->watts_take );
+				  stg_joules_t amount =  rate * interval_energy * 1e-6;
+				  
+				  //printf ( "moving %.2f joules from %s to %s\n",
+				  //		 amount, token, toucher->token );
+				  
+				  // set his charging flag
+				  hispp->ChargeStart();
+				  
+				  // move some joules from me to him
+				  mypp->TransferTo( hispp, amount );
+				  
+				  // remember who we are charging so we can detatch next time
+				  pps_charging.push_front( hispp );
+				}
+		  }
+	 }
   
   // set up the next event
-  world->Enqueue( World::Event::ENERGY, interval_energy, this );
+  world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
 }
 
 void Model::CommitTestedPose()
@@ -859,9 +836,17 @@ void Model::UpdatePose( void )
 	// ConditionalMove() returns a pointer to the model we hit, or
 	// NULL. We use this as a boolean for SetStall()
   SetStall( ConditionalMove( pose + p ) );
+  
+  if( trail_length > 0 && world->updates % trail_interval == 0 )
+	 {
+		trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 
+		
+		if( trail.size() > trail_length )
+		  trail.pop_front();
+	 }	            
 
   //if( ! velocity.IsZero() )
-  world->Enqueue( World::Event::POSE, interval_pose, this );
+  world->Enqueue( 0, World::Event::POSE, interval_pose, this );
 }
 
 Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type ) const

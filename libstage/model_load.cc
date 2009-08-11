@@ -21,6 +21,9 @@ void Model::Load()
   
   PRINT_DEBUG1( "Model \"%s\" loading...", token );
   
+  // choose the thread to run in, if thread_safe > 0 
+  event_queue_num = wf->ReadInt( wf_entity, "event_queue", event_queue_num );
+
   if( wf->PropertyExists( wf_entity, "joules" ) )
 	 {
 		if( !power_pack )
@@ -55,10 +58,6 @@ void Model::Load()
   if( (watts_give > 0.0) && !pp)
 	 PRINT_WARN1( "Model %s: Setting \"watts_give\" has no effect unless \"joules\" is specified for this model or a parent", token );
   
-  if( watts_give ) // need to get the world to test this model for charging others
-	 //world->ChargeListAdd( this );
-	 world->Enqueue( World::Event::ENERGY, interval_energy, this );
-
   watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
   if( (watts_take > 0.0) & !pp )
 	 PRINT_WARN1( "Model %s: Setting \"watts_take\" has no effect unless \"joules\" is specified for this model or a parent", token );    

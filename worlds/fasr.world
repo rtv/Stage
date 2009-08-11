@@ -6,8 +6,7 @@ include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
 
-interval_real 0 # real-time interval between simulation updates in milliseconds 
-speedup 1
+speedup -1 # fast mode
 paused 1
 
 # time to pause (in GUI mode) or quit (in headless mode) the simulation
@@ -15,7 +14,7 @@ quit_time 3600 # 1 hour of simulated time
 
 resolution 0.02
 
-threads 2
+threads 0
 
 # configure the GUI window
 window

@@ -99,7 +99,9 @@ World::World( const char* token,
   wf( NULL ),
   paused( false ),
   steps(0),
-  event_queues(1)
+  event_queues(1),
+  //  time_of_next_event(0)
+  sim_interval( 1e5 ) // 100 msec
 {
   if( ! Stg::InitDone() )
     {
@@ -149,57 +151,41 @@ bool World::UpdateAll()
   return quit;
 }
 
-// void* World::update_thread_entry( std::pair<World*,int> *thread_info )
-// {
-//   World* world = thread_info->first;
-//   int thread_instance = thread_info->second;
+void* World::update_thread_entry( std::pair<World*,int> *thread_info )
+{
+  World* world = thread_info->first;
+  int thread_instance = thread_info->second;
 
-//   //g_mutex_lock( world->thread_mutex );
-//   pthread_mutex_lock( &world->thread_mutex );
+  pthread_mutex_lock( &world->thread_mutex );
   
-//   while( 1 )
-// 	{
-// 	  // wait until the main thread signals us
-// 	  //puts( "worker waiting for start signal" );
+  while( 1 )
+	{
+	  // wait until the main thread signals us
+	  //puts( "worker waiting for start signal" );
 
-// 	  //g_cond_wait( world->threads_start_cond, world->thread_mutex );
-// 	  //g_mutex_unlock( world->thread_mutex );
-// 	  pthread_cond_wait( &world->threads_start_cond, &world->thread_mutex );
-// 	  pthread_mutex_unlock( &world->thread_mutex );
+	  pthread_cond_wait( &world->threads_start_cond, &world->thread_mutex );
+	  pthread_mutex_unlock( &world->thread_mutex );
 
+	  //puts( "worker thread awakes" );
 
-
-// 	  //puts( "worker thread awakes" );
+	  // consume events on the queue up to the current sim time
+	  world->ConsumeQueue( thread_instance );
+	  	  
+	  // done working, so increment the counter. If this was the last
+	  // thread to finish working, signal the main thread, which is
+	  // blocked waiting for this to happen
 	  
-// 	  // loop over the list of rentrant models for this thread
-// 	  FOR_EACH( it, world->update_lists[thread_instance] )
-// 		 {
-// 			Model* mod = *it;
-// 			//printf( "thread %d updating model %s (%p)\n", thread_instance, mod->Token(), mod );
-			
-// 			// TODO - some of this (Model::Update()) is not thread safe!
-// 			//if( mod->UpdateDue() )
-// 			  mod->Update();
-// 		 }
-	  
-// 	  // done working, so increment the counter. If this was the last
-// 	  // thread to finish working, signal the main thread, which is
-// 	  // blocked waiting for this to happen
-
-// 	  //g_mutex_lock( world->thread_mutex );	  
-// 	  pthread_mutex_lock( &world->thread_mutex );	  
-
-// 	  if( --world->threads_working == 0 )
-// 		 {
-// 			//puts( "last worker signalling main thread" );
-// 			//g_cond_signal( world->threads_done_cond );
-// 			pthread_cond_signal( &world->threads_done_cond );
-// 		 }
-// 	  // keep lock going round the loop
-// 	}
+	  pthread_mutex_lock( &world->thread_mutex );	  
+	  if( --world->threads_working == 0 )
+		 {
+			//puts( "last worker signalling main thread" );
+			pthread_cond_signal( &world->threads_done_cond );
+		 }
+	  // keep lock going round the loop
+	}
   
-//   return NULL;
-// }
+  return NULL;
+}
 
 
 void World::RemoveModel( Model* mod )
@@ -315,26 +301,26 @@ void World::Load( const char* worldfile_path )
   if( worker_threads > 0 )
 	 {
 		PRINT_WARN( "\nmulti-thread support is experimental and may not work properly, if at all." );
-// 		update_lists.resize( worker_threads + 1 );
 		
-// 		// kick off count threads.
-// 		for( unsigned int t=0; t<worker_threads; t++ )
-// 		  {
-// 			 std::pair<World*,int> *p = new std::pair<World*,int>( this, t+1 );
+		event_queues.resize( worker_threads + 1 );
+		
+		// kick off the threads
+		for( unsigned int t=0; t<worker_threads; t++ )
+		  {
+			 std::pair<World*,int> *p = new std::pair<World*,int>( this, t+1 );
 			 
-// 			 //normal posix pthread C function pointer
-// 			 typedef void* (*func_ptr) (void*);
+			 //normal posix pthread C function pointer
+			 typedef void* (*func_ptr) (void*);
 			 
-// 			 pthread_t pt;
-// 			 pthread_create( &pt,
-// 								  NULL,
-// 								  (func_ptr)World::update_thread_entry, 
-// 								  p );
-// 		  }
+			 pthread_t pt;
+			 pthread_create( &pt,
+								  NULL,
+								  (func_ptr)World::update_thread_entry, 
+								  p );
+		  }
 		
 		printf( "[threads %u]", worker_threads );	
 	 }
-
 
   // Iterate through entitys and create objects of the appropriate type
   for( int entity = 1; entity < wf->GetEntityCount(); entity++ )
@@ -486,132 +472,121 @@ void World::CallUpdateCallbacks()
 	}      
 }
 
+void World::ConsumeQueue( unsigned int queue_num )
+{  
+  std::priority_queue<Event>& queue = event_queues[queue_num];
+
+  if( queue.empty() )
+	 return;
+
+  // update everything on the event queue that happens at this time or earlier
+  Event ev( queue.top() );    
+  while( ev.time <= sim_time ) 
+	 {
+		//   			 printf( "@ %llu next event <%s %llu %s>\n", 
+		//   						sim_time,
+		//  						ev.TypeStr( ev.type ),
+		//  						ev.time, 
+		//   						ev.mod->Token() );
+		
+		queue.pop();
+		
+		// only update events are allowed in queues other than zero
+		if( queue_num > 0 && ev.type != Event::UPDATE )
+		  PRINT_WARN1( "event type %d in async queue", queue_num );
+		
+		switch( ev.type )
+		  {
+		  case Event::UPDATE:				  
+			 ev.mod->Update();
+			 break;
+			 
+		  case Event::POSE:				  
+			 ev.mod->UpdatePose();
+			 break;
+			 
+		  case Event::ENERGY:				  
+			 ev.mod->UpdateCharge();
+			 break;
+			 
+		  default:
+			 PRINT_WARN1( "unknown event type %d", ev.type );
+		  }
+		
+		ev = queue.top();
+	 }
+}
+
+
 bool World::Update()
 {
   PRINT_DEBUG( "World::Update()" );
   
   // if we've run long enough, exit
-  if( PastQuitTime() ) {
-    if( IsGUI() == false )
-      return true;		
-  }
-  
-  if( paused )
-	{
-	  if( steps < 1 )	 
-		return true;
-	  else
-		{
-		  --steps;
-		  //printf( "world::update (steps remaining %d)\n", steps );		  
-		}
-	}
-
-  dirty = true; // need redraw 
-  
-  stg_usec_t next_time = 0;
-    
-  // TESTING
-  static unsigned int last_queue_len = 0;  
-  unsigned int queue_len = event_queues[0].size();
-  if( last_queue_len != 0 && last_queue_len != queue_len )
-	 {
-		printf( "queue length changed from %u to %u\n", last_queue_len, queue_len );
-		getchar();
-	 }
-  // END TESTING
-
-  last_queue_len = queue_len;
-
-  // update everything on the event queue that happens at this time or earlier
-  if( ! event_queues[0].empty() )
-	 {
-		Event ev( event_queues[0].top() );  
-		while( ev.time <= sim_time ) 
-		  {
-//   			 printf( "@ %llu next event <%s %llu %s>\n", 
-//   						sim_time,
-//  						ev.TypeStr( ev.type ),
-//  						ev.time, 
-//   						ev.mod->Token() );
-		 
-			 event_queues[0].pop();
-			 
-			 switch( ev.type )
-				{
-				case Event::UPDATE:				  
-				  ev.mod->Update();
-				  ev.mod->SynchronousPostUpdate();
-				  break;
-
-				case Event::POSE:				  
-				  ev.mod->UpdatePose();
-				  break;
-
-				case Event::ENERGY:				  
-				  ev.mod->UpdateCharge();
-				  break;
-				  
-				default:
-				  PRINT_WARN1( "unknown event type %d", ev.type );
-				}
-			 
-			 ev = event_queues[0].top();
-		  }
-
-		next_time = ev.time;		
-		
-		stg_usec_t step = next_time - sim_time;
-		// smoothed interval tracking
-		interval_track = 0.1 * step + 0.9 * interval_track;
-
-		// printf( "@ %llu done. (next event at %llu)\n\n", sim_time, next_time );
-	 }
-  
-
-  // world callbacks
-  CallUpdateCallbacks();
-
-  // move the clock on to the next event
-  sim_time = next_time;
-  this->updates++;  
-	
-    
-//   // then update all models on the update lists
-//   FOR_EACH( it, update_lists[0] )
+//   if( PastQuitTime() ) 
 // 	 {
-// 		//printf( "thread MAIN updating model %s\n", (*it)->Token() );
-// 		(*it)->UpdateIfDue();
+// 		if( IsGUI() == false )
+// 		  return true;		
 // 	 }
   
-//   if( worker_threads > 0 )
-//     {
-// 	  pthread_mutex_lock( &thread_mutex );
-// 	  threads_working = worker_threads; 
-// 	  // unblock the workers - they are waiting on this condition var
-// 	  //puts( "main thread signalling workers" );
-// 	  pthread_cond_broadcast( &threads_start_cond );
-
-//       // wait for all the last update job to complete - it will
-//       // signal the worker_threads_done condition var
-//       while( threads_working > 0  )
-// 		{
-// 		  //puts( "main thread waiting for workers to finish" );
-// 		  pthread_cond_wait( &threads_done_cond, &thread_mutex );
-// 		}
-//       pthread_mutex_unlock( &thread_mutex );		 
-// 	  //puts( "main thread awakes" );
-
-// 		// TODO: allow threadsafe callbacks to be called in worker
-// 		// threads
-	  
-//     }
-
-//   // do any sychronous updates we need to do
-//   for( unsigned int i=1; i<update_lists.size(); i++ )
-// 	 FOR_EACH( it, update_lists[i] )
-// 		(*it)->SynchronousPostUpdate();
+  if( event_pending_count < 1 )
+	 {
+		PRINT_WARN( "event queue(s) empty." );
+		return false;
+    }
     
+  //   if( paused )
+  // 	{
+  // 	  if( steps < 1 )	 
+  // 		return true;
+  // 	  else
+  // 		{
+  // 		  --steps;
+  // 		  //printf( "world::update (steps remaining %d)\n", steps );		  
+  // 		}
+  // 	}
+  
+  sim_time += sim_interval; 
+
+  // handle the zeroth queue synchronously in the main thread
+  ConsumeQueue( 0 );
+  
+  // handle all the remaining queues asynchronously in worker threads
+  if( worker_threads > 0 )
+    {
+		pthread_mutex_lock( &thread_mutex );
+		threads_working = worker_threads; 
+		// unblock the workers - they are waiting on this condition var
+		//puts( "main thread signalling workers" );
+		pthread_cond_broadcast( &threads_start_cond );
+	
+		// todo - take the 1th thread work here?
+	
+      // wait for all the last update job to complete - it will
+      // signal the worker_threads_done condition var
+      while( threads_working > 0  )
+		  {
+			 //puts( "main thread waiting for workers to finish" );
+			 pthread_cond_wait( &threads_done_cond, &thread_mutex );
+		  }
+      pthread_mutex_unlock( &thread_mutex );		 
+		//puts( "main thread awakes" );
+		
+		// TODO: allow threadsafe callbacks to be called in worker
+		// threads		
+    }
+			 			
+  //stg_usec_t step = time_of_next_event - sim_time;    
+  // smoothed interval tracking
+  //interval_track = 0.1 * step + 0.9 * interval_track;
+  dirty = true; // need redraw 
+  // printf( "@ %llu done. (next event at %llu)\n\n", sim_time, next_time );
+  
+  // world callbacks
+  CallUpdateCallbacks();
+  
+  ++updates;  
+  
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
 	{
 	  printf( "\r[Stage: %s]", ClockString().c_str() );
@@ -624,6 +599,13 @@ bool World::Update()
 void World::AddModel( Model*  mod  )
 {
   models_by_name[mod->token] = mod;
+}
+
+unsigned int World::GetEventQueue( Model* mod )
+{
+  if( worker_threads < 1 )
+	 return 0;
+  return( (random() % worker_threads) + 1);
 }
 
 Model* World::GetModel( const char* name ) const
@@ -1114,11 +1096,12 @@ void World::Log( Model* mod )
   //LogEntry::Print();
 }
 
-void World::Enqueue( Event::type_t type, stg_usec_t delay, Model* mod )
+void World::Enqueue( unsigned int queue_num, Event::type_t type, stg_usec_t delay, Model* mod )
 {
   //printf( "enqueue at %llu %p %s\n", sim_time + delay, mod, mod->Token() );
-
-  event_queues[0].push( Event( type, sim_time + delay, mod ) );
+  
+  event_queues[queue_num].push( Event( type, sim_time + delay, mod ) );
+  ++event_pending_count;
 }
 
 bool World::Event::operator<( const Event& other ) const 
