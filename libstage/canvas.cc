@@ -2,9 +2,9 @@
     Implement the main world viewing area in FLTK and OpenGL. 
 
     Authors: 
-      Richard Vaughan (vaughan@sfu.ca)
-	   Alex Couture-Beil (asc17@sfu.ca)
-	   Jeremy Asher (jra11@sfu.ca)
+    Richard Vaughan (vaughan@sfu.ca)
+    Alex Couture-Beil (asc17@sfu.ca)
+    Jeremy Asher (jra11@sfu.ca)
 
     $Id$
 */
@@ -38,20 +38,20 @@ static bool init_done = false;
 void Canvas::TimerCallback( Canvas* c )
 {
   if( c->world->dirty )
-	 {
-		//puts( "timer redraw" );
-		c->redraw();
-		c->world->dirty = false;
-	 }
+    {
+      //puts( "timer redraw" );
+      c->redraw();
+      c->world->dirty = false;
+    }
   
   Fl::repeat_timeout(((double)c->interval/1000),
-							(Fl_Timeout_Handler)Canvas::TimerCallback, 
-							c);
+		     (Fl_Timeout_Handler)Canvas::TimerCallback, 
+		     c);
 }
 
 Canvas::Canvas( WorldGui* world, 
-							 int x, int y, 
-							 int width, int height) :
+		int x, int y, 
+		int width, int height) :
   Fl_Gl_Window( x, y, width, height ),
   colorstack(),  
   models_sorted(),
@@ -64,7 +64,7 @@ Canvas::Canvas( WorldGui* world,
   starty( -1 ),
   selected_models(),
   last_selection( NULL ),
-  interval(  50 ), //msec between redraws
+  interval( 20 ), // msec between redraws
   // initialize Option objects
   //  showBlinken( "Blinkenlights", "show_blinkenlights", "", true, world ), 
   showBlocks( "Blocks", "show_blocks", "b", true, world ),
@@ -133,18 +133,18 @@ void Canvas::InitGl()
   // load textures
   std::string fullpath = FileManager::findFile( "assets/stall.png" );
   if ( fullpath == "" ) 
-	 {
-		PRINT_DEBUG( "Unable to load stall texture.\n" );
-	 }
+    {
+      PRINT_DEBUG( "Unable to load stall texture.\n" );
+    }
   
   GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
   TextureManager::getInstance()._stall_texture_id = stall_id;
 
   fullpath = FileManager::findFile( "assets/mainspower.png" );
   if ( fullpath == "" ) 
-	 {
-		PRINT_DEBUG( "Unable to load mains texture.\n" );
-	 }
+    {
+      PRINT_DEBUG( "Unable to load mains texture.\n" );
+    }
   
   GLuint mains_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
   TextureManager::getInstance()._mains_texture_id = mains_id;
@@ -152,14 +152,14 @@ void Canvas::InitGl()
   //TODO merge this code into the textureManager?
   int i, j;
   for (i = 0; i < checkImageHeight; i++) 
-	 for (j = 0; j < checkImageWidth; j++) 
-		{			
-		  int even = (i+j)%2;
-		  checkImage[i][j][0] = (GLubyte) 255 - 10*even;
-		  checkImage[i][j][1] = (GLubyte) 255 - 10*even;
-		  checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
-		  checkImage[i][j][3] = 255;
-		}
+    for (j = 0; j < checkImageWidth; j++) 
+      {			
+	int even = (i+j)%2;
+	checkImage[i][j][0] = (GLubyte) 255 - 10*even;
+	checkImage[i][j][1] = (GLubyte) 255 - 10*even;
+	checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
+	checkImage[i][j][3] = 255;
+      }
   
   
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -173,7 +173,7 @@ void Canvas::InitGl()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
-					0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+	       0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
   
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
@@ -210,19 +210,19 @@ Model* Canvas::getModel( int x, int y )
       Model* mod = (*it);
 		
       if( mod->gui.mask & (STG_MOVE_TRANS | STG_MOVE_ROT ))
-		  {
-			 uint8_t rByte, gByte, bByte, aByte;
-			 uint32_t modelId = mod->id;
-			 rByte = modelId;
-			 gByte = modelId >> 8;
-			 bByte = modelId >> 16;
-			 aByte = modelId >> 24;
+	{
+	  uint8_t rByte, gByte, bByte, aByte;
+	  uint32_t modelId = mod->id;
+	  rByte = modelId;
+	  gByte = modelId >> 8;
+	  bByte = modelId >> 16;
+	  aByte = modelId >> 24;
 
-			 //printf("mod->Id(): 0x%X, rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", modelId, rByte, gByte, bByte, aByte);
+	  //printf("mod->Id(): 0x%X, rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", modelId, rByte, gByte, bByte, aByte);
 			
-			 glColor4ub( rByte, gByte, bByte, aByte );
-			 mod->DrawPicker();
-		  }
+	  glColor4ub( rByte, gByte, bByte, aByte );
+	  mod->DrawPicker();
+	}
     }
 	
   // read the color of the pixel in the back buffer under the mouse
@@ -234,13 +234,13 @@ Model* Canvas::getModel( int x, int y )
   uint32_t modelId;
 	
   glReadPixels( x,viewport[3]-y,1,1,
-					 GL_RED,GL_UNSIGNED_BYTE,(void*)&rByte );
+		GL_RED,GL_UNSIGNED_BYTE,(void*)&rByte );
   glReadPixels( x,viewport[3]-y,1,1,
-					 GL_GREEN,GL_UNSIGNED_BYTE,(void*)&gByte );
+		GL_GREEN,GL_UNSIGNED_BYTE,(void*)&gByte );
   glReadPixels( x,viewport[3]-y,1,1,
-					 GL_BLUE,GL_UNSIGNED_BYTE,(void*)&bByte );
+		GL_BLUE,GL_UNSIGNED_BYTE,(void*)&bByte );
   glReadPixels( x,viewport[3]-y,1,1,
-					 GL_ALPHA,GL_UNSIGNED_BYTE,(void*)&aByte );
+		GL_ALPHA,GL_UNSIGNED_BYTE,(void*)&aByte );
 	
   modelId = rByte;
   modelId |= gByte << 8;
@@ -273,21 +273,21 @@ bool Canvas::selected( Model* mod )
 void Canvas::select( Model* mod ) {
   if( mod )
     {
-		last_selection = mod;
-		selected_models.push_front( mod );
+      last_selection = mod;
+      selected_models.push_front( mod );
 		
-		//		mod->Disable();
-		redraw();
+      //		mod->Disable();
+      redraw();
     }
 }
 
 void Canvas::unSelect( Model* mod ) 
 {
   if( mod )
-	 {
-		selected_models.erase( std::remove( selected_models.begin(), selected_models.end(), mod ));
-		redraw();
-	 }
+    {
+      selected_models.erase( std::remove( selected_models.begin(), selected_models.end(), mod ));
+      redraw();
+    }
 }
 
 void Canvas::unSelectAll() 
@@ -297,26 +297,26 @@ void Canvas::unSelectAll()
 
 // convert from 2d window pixel to 3d world coordinates
 void Canvas::CanvasToWorld( int px, int py, 
-										 double *wx, double *wy, double* wz )
+			    double *wx, double *wy, double* wz )
 {
   if( px <= 0 )
-	 px = 1;
+    px = 1;
   else if( px >= w() )
-	 px = w() - 1;
+    px = w() - 1;
   if( py <= 0 )
-	 py = 1;
+    py = 1;
   else if( py >= h() )
-	 py = h() - 1;
+    py = h() - 1;
 	
   //redraw the screen only if the camera model isn't active.
   //TODO new selection technique will simply use drawfloor to result in z = 0 always and prevent strange behaviours near walls
   //TODO refactor, so glReadPixels reads (then caches) the whole screen only when the camera changes.
   if( true || dirtyBuffer() ) {
-	 glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	 current_camera->SetProjection();
-	 current_camera->Draw();
-	 DrawFloor(); //call this rather than renderFrame for speed - this won't give correct z values
-	 dirty_buffer = false;
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    current_camera->SetProjection();
+    current_camera->Draw();
+    DrawFloor(); //call this rather than renderFrame for speed - this won't give correct z values
+    dirty_buffer = false;
   }
 	
   int viewport[4];
@@ -337,207 +337,207 @@ void Canvas::CanvasToWorld( int px, int py,
 int Canvas::handle(int event) 
 {
   switch(event) 
-	 {
-	 case FL_MOUSEWHEEL:
-		if( pCamOn == true ) {
-		  perspective_camera.scroll( Fl::event_dy() / 10.0 );
+    {
+    case FL_MOUSEWHEEL:
+      if( pCamOn == true ) {
+	perspective_camera.scroll( Fl::event_dy() / 10.0 );
+      }
+      else {
+	camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
+      }
+      invalidate();
+      redraw();
+      return 1;
+		
+    case FL_MOVE: // moused moved while no button was pressed
+      if( Fl::event_state( FL_META ) )
+	{
+	  puts( "TODO: HANDLE HISTORY" );
+	  //world->paused = ! world->paused;
+	  return 1;
+	}
+		
+      if ( startx >=0 ) 
+	{
+	  // mouse pointing to valid value
+			 
+	  if( Fl::event_state( FL_CTRL ) )
+	    {
+	      int dx = Fl::event_x() - startx;
+	      int dy = Fl::event_y() - starty;
+				  
+	      if( pCamOn == true ) {
+		perspective_camera.addYaw( -dx );
+		perspective_camera.addPitch( -dy );
+	      } 
+	      else {
+		camera.addPitch( - 0.5 * static_cast<double>( dy ) );
+		camera.addYaw( - 0.5 * static_cast<double>( dx ) );
+	      }
+	      invalidate();
+	      redraw();
+	    }
+	  else if( Fl::event_state( FL_ALT ) )
+	    {   
+	      int dx = Fl::event_x() - startx;
+	      int dy = Fl::event_y() - starty;
+				  
+	      if( pCamOn == true ) {
+		perspective_camera.move( -dx, dy, 0.0 );
+	      } 
+	      else {
+		camera.move( -dx, dy );
+	      }
+	      invalidate();
+	    }
+	}
+      startx = Fl::event_x();
+      starty = Fl::event_y();
+      return 1;
+    case FL_PUSH: // button pressed
+      {
+	//else
+	{
+	  Model* mod = getModel( startx, starty );
+	  startx = Fl::event_x();
+	  starty = Fl::event_y();
+	  selectedModel = false;
+	  switch( Fl::event_button() )
+	    {
+	    case 1:
+	      clicked_empty_space = ( mod == NULL );
+	      empty_space_startx = startx;
+	      empty_space_starty = starty;
+	      if( mod ) { 
+		// clicked a model
+		if ( Fl::event_state( FL_SHIFT ) ) {
+		  // holding shift, toggle selection
+		  if ( selected( mod ) ) 
+		    unSelect( mod );
+		  else {
+		    select( mod );
+		    selectedModel = true; // selected a model
+		  }
 		}
 		else {
-		  camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
+		  if ( !selected( mod ) ) {
+		    // clicked on an unselected model while
+		    //  not holding shift, this is the new
+		    //  selection
+		    unSelectAll();
+		    select( mod );
+		  }
+		  selectedModel = true; // selected a model
 		}
-		invalidate();
-		redraw();
-		return 1;
-		
-	 case FL_MOVE: // moused moved while no button was pressed
-		if( Fl::event_state( FL_META ) )
-		  {
-			 puts( "TODO: HANDLE HISTORY" );
-			 //world->paused = ! world->paused;
-			 return 1;
-		  }
-		
-		if ( startx >=0 ) 
-		  {
-			 // mouse pointing to valid value
-			 
-			 if( Fl::event_state( FL_CTRL ) )
-				{
-				  int dx = Fl::event_x() - startx;
-				  int dy = Fl::event_y() - starty;
-				  
-				  if( pCamOn == true ) {
-					 perspective_camera.addYaw( -dx );
-					 perspective_camera.addPitch( -dy );
-				  } 
-				  else {
-					 camera.addPitch( - 0.5 * static_cast<double>( dy ) );
-					 camera.addYaw( - 0.5 * static_cast<double>( dx ) );
-				  }
-				  invalidate();
-				  redraw();
-				}
-			 else if( Fl::event_state( FL_ALT ) )
-				{   
-				  int dx = Fl::event_x() - startx;
-				  int dy = Fl::event_y() - starty;
-				  
-				  if( pCamOn == true ) {
-					 perspective_camera.move( -dx, dy, 0.0 );
-				  } 
-				  else {
-					 camera.move( -dx, dy );
-				  }
-				  invalidate();
-				}
-		  }
-		startx = Fl::event_x();
-		starty = Fl::event_y();
-		return 1;
-	 case FL_PUSH: // button pressed
-		{
-		  //else
-			 {
-				Model* mod = getModel( startx, starty );
-				startx = Fl::event_x();
-				starty = Fl::event_y();
-				selectedModel = false;
-				switch( Fl::event_button() )
-				  {
-				  case 1:
-					 clicked_empty_space = ( mod == NULL );
-					 empty_space_startx = startx;
-					 empty_space_starty = starty;
-					 if( mod ) { 
-						// clicked a model
-						if ( Fl::event_state( FL_SHIFT ) ) {
-						  // holding shift, toggle selection
-						  if ( selected( mod ) ) 
-							 unSelect( mod );
-						  else {
-							 select( mod );
-							 selectedModel = true; // selected a model
-						  }
-						}
-						else {
-						  if ( !selected( mod ) ) {
-							 // clicked on an unselected model while
-							 //  not holding shift, this is the new
-							 //  selection
-							 unSelectAll();
-							 select( mod );
-						  }
-						  selectedModel = true; // selected a model
-						}
-					 }
+	      }
 					 
-					 return 1;
-				  case 3:
-					 {
-						// leave selections alone
-						// rotating handled within FL_DRAG
-						return 1;
-					 }
-				  default:
-					 return 0;
-				  }    
-			 }
-		}
+	      return 1;
+	    case 3:
+	      {
+		// leave selections alone
+		// rotating handled within FL_DRAG
+		return 1;
+	      }
+	    default:
+	      return 0;
+	    }    
+	}
+      }
 	  
-	 case FL_DRAG: // mouse moved while button was pressed
-		{
-		  int dx = Fl::event_x() - startx;
-		  int dy = Fl::event_y() - starty;
+    case FL_DRAG: // mouse moved while button was pressed
+      {
+	int dx = Fl::event_x() - startx;
+	int dy = Fl::event_y() - starty;
 
-		  if ( Fl::event_state( FL_BUTTON1 ) && Fl::event_state( FL_CTRL ) == false ) {
-			 // Left mouse button drag
-			 if ( selectedModel ) {
-				// started dragging on a selected model
+	if ( Fl::event_state( FL_BUTTON1 ) && Fl::event_state( FL_CTRL ) == false ) {
+	  // Left mouse button drag
+	  if ( selectedModel ) {
+	    // started dragging on a selected model
 				
-				double sx,sy,sz;
-				CanvasToWorld( startx, starty,
-									&sx, &sy, &sz );
-				double x,y,z;
-				CanvasToWorld( Fl::event_x(), Fl::event_y(),
-									&x, &y, &z );
-				// move all selected models to the mouse pointer
-				FOR_EACH( it, selected_models )
-				  {
-					 Model* mod = *it;
-					 mod->AddToPose( x-sx, y-sy, 0, 0 );
-				  }
-			 }
-			 else {
-				// started dragging on empty space or an
-				//  unselected model, move the canvas
-				if( pCamOn == true ) {
-				  perspective_camera.move( -dx, dy, 0.0 );
-				} 
-				else {
-				  camera.move( -dx, dy );
-				}
-				invalidate(); // so the projection gets updated
-			 }
-		  }
-		  else if ( Fl::event_state( FL_BUTTON3 ) || ( Fl::event_state( FL_BUTTON1 ) &&  Fl::event_state( FL_CTRL )  ) ) {
-			 // rotate all selected models
-			 FOR_EACH( it, selected_models )
-				{
-				  Model* mod = *it;
-				  mod->AddToPose( 0,0,0, 0.05*(dx+dy) );
-				}
-		  }
+	    double sx,sy,sz;
+	    CanvasToWorld( startx, starty,
+			   &sx, &sy, &sz );
+	    double x,y,z;
+	    CanvasToWorld( Fl::event_x(), Fl::event_y(),
+			   &x, &y, &z );
+	    // move all selected models to the mouse pointer
+	    FOR_EACH( it, selected_models )
+	      {
+		Model* mod = *it;
+		mod->AddToPose( x-sx, y-sy, 0, 0 );
+	      }
+	  }
+	  else {
+	    // started dragging on empty space or an
+	    //  unselected model, move the canvas
+	    if( pCamOn == true ) {
+	      perspective_camera.move( -dx, dy, 0.0 );
+	    } 
+	    else {
+	      camera.move( -dx, dy );
+	    }
+	    invalidate(); // so the projection gets updated
+	  }
+	}
+	else if ( Fl::event_state( FL_BUTTON3 ) || ( Fl::event_state( FL_BUTTON1 ) &&  Fl::event_state( FL_CTRL )  ) ) {
+	  // rotate all selected models
+	  FOR_EACH( it, selected_models )
+	    {
+	      Model* mod = *it;
+	      mod->AddToPose( 0,0,0, 0.05*(dx+dy) );
+	    }
+	}
 		
-		  startx = Fl::event_x();
-		  starty = Fl::event_y();
+	startx = Fl::event_x();
+	starty = Fl::event_y();
 
-		  redraw();
-		  return 1;
-		} // end case FL_DRAG
+	redraw();
+	return 1;
+      } // end case FL_DRAG
 
-	 case FL_RELEASE:   // mouse button released
-		if( empty_space_startx == Fl::event_x() && empty_space_starty == Fl::event_y() && clicked_empty_space == true ) {
-		  // clicked on empty space, unselect all
-		  unSelectAll();
-		}
-		return 1;
+    case FL_RELEASE:   // mouse button released
+      if( empty_space_startx == Fl::event_x() && empty_space_starty == Fl::event_y() && clicked_empty_space == true ) {
+	// clicked on empty space, unselect all
+	unSelectAll();
+      }
+      return 1;
 
-	 case FL_FOCUS:
-	 case FL_UNFOCUS:
-		//.... Return 1 if you want keyboard events, 0 otherwise
-		return 1;
+    case FL_FOCUS:
+    case FL_UNFOCUS:
+      //.... Return 1 if you want keyboard events, 0 otherwise
+      return 1;
 
-	 case FL_KEYBOARD:
-		switch( Fl::event_key() )
-		  {
-		  case FL_Left:
-			 if( pCamOn == false ) { camera.move( -10, 0 ); } 
-			 else { perspective_camera.strafe( -0.5 ); } break;
-		  case FL_Right: 
-			 if( pCamOn == false ) {camera.move( 10, 0 ); } 
-			 else { perspective_camera.strafe( 0.5 ); } break;
-		  case FL_Down:  
-			 if( pCamOn == false ) {camera.move( 0, -10 ); } 
-			 else { perspective_camera.forward( -0.5 ); } break;
-		  case FL_Up:  
-			 if( pCamOn == false ) {camera.move( 0, 10 ); } 
-			 else { perspective_camera.forward( 0.5 ); } break;
-		  default:
-			 redraw(); // we probably set a display config - so need this
-			 return 0; // keypress unhandled
-		  }
+    case FL_KEYBOARD:
+      switch( Fl::event_key() )
+	{
+	case FL_Left:
+	  if( pCamOn == false ) { camera.move( -10, 0 ); } 
+	  else { perspective_camera.strafe( -0.5 ); } break;
+	case FL_Right: 
+	  if( pCamOn == false ) {camera.move( 10, 0 ); } 
+	  else { perspective_camera.strafe( 0.5 ); } break;
+	case FL_Down:  
+	  if( pCamOn == false ) {camera.move( 0, -10 ); } 
+	  else { perspective_camera.forward( -0.5 ); } break;
+	case FL_Up:  
+	  if( pCamOn == false ) {camera.move( 0, 10 ); } 
+	  else { perspective_camera.forward( 0.5 ); } break;
+	default:
+	  redraw(); // we probably set a display config - so need this
+	  return 0; // keypress unhandled
+	}
 		
-		invalidate(); // update projection
-		return 1;
+      invalidate(); // update projection
+      return 1;
 			
-		//	case FL_SHORTCUT:
-		//		//... shortcut, key is in Fl::event_key(), ascii in Fl::event_text()
-		//		//... Return 1 if you understand/use the shortcut event, 0 otherwise...
-		//		return 1;
-	 default:
-		// pass other events to the base class...
-		//printf( "EVENT %d\n", event );
-		return Fl_Gl_Window::handle(event);
+      //	case FL_SHORTCUT:
+      //		//... shortcut, key is in Fl::event_key(), ascii in Fl::event_text()
+      //		//... Return 1 if you understand/use the shortcut event, 0 otherwise...
+      //		return 1;
+    default:
+      // pass other events to the base class...
+      //printf( "EVENT %d\n", event );
+      return Fl_Gl_Window::handle(event);
 			
     } // end switch( event )
 
@@ -567,9 +567,9 @@ void Canvas::DrawGlobalGrid()
   stg_bounds3d_t bounds = world->GetExtent();
 
   /*   printf( "bounds [%.2f %.2f] [%.2f %.2f] [%.2f %.2f]\n",
- 			 bounds.x.min, bounds.x.max,
- 			 bounds.y.min, bounds.y.max,
- 			 bounds.z.min, bounds.z.max );
+       bounds.x.min, bounds.x.max,
+       bounds.y.min, bounds.y.max,
+       bounds.z.min, bounds.z.max );
 			 
   */
   
@@ -578,13 +578,13 @@ void Canvas::DrawGlobalGrid()
   for( double i = ceil(bounds.x.min); i < bounds.x.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
-		Gl::draw_string(  i, 0, 0.00, str );
+      Gl::draw_string(  i, 0, 0.00, str );
     }
   
   for( double i = ceil(bounds.y.min); i < bounds.y.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
-		Gl::draw_string(  0, i, 0.00, str );
+      Gl::draw_string(  0, i, 0.00, str );
     }
   PopColor();
   
@@ -599,36 +599,36 @@ void Canvas::DrawGlobalGrid()
   glColor3f( 1.0, 1.0, 1.0 );
 
   glBegin(GL_QUADS);
-    glTexCoord2f( bounds.x.min/2.0, bounds.y.min/2.0 ); 
-    glVertex2f( bounds.x.min, bounds.y.min );
-    glTexCoord2f( bounds.x.max/2.0, bounds.y.min/2.0); 
-    glVertex2f(  bounds.x.max, bounds.y.min );
-    glTexCoord2f( bounds.x.max/2.0, bounds.y.max/2.0 ); 
-    glVertex2f(  bounds.x.max, bounds.y.max );
-    glTexCoord2f( bounds.x.min/2.0, bounds.y.max/2.0 ); 
-    glVertex2f( bounds.x.min, bounds.y.max );
+  glTexCoord2f( bounds.x.min/2.0, bounds.y.min/2.0 ); 
+  glVertex2f( bounds.x.min, bounds.y.min );
+  glTexCoord2f( bounds.x.max/2.0, bounds.y.min/2.0); 
+  glVertex2f(  bounds.x.max, bounds.y.min );
+  glTexCoord2f( bounds.x.max/2.0, bounds.y.max/2.0 ); 
+  glVertex2f(  bounds.x.max, bounds.y.max );
+  glTexCoord2f( bounds.x.min/2.0, bounds.y.max/2.0 ); 
+  glVertex2f( bounds.x.min, bounds.y.max );
   glEnd();
 
   glDisable(GL_TEXTURE_2D);
   glEnable(GL_BLEND);
   
-//   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-//   glTranslatef( 0,0,0.1 );
-//   glColor3f( 0, 1.0, 0 );
+  //   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  //   glTranslatef( 0,0,0.1 );
+  //   glColor3f( 0, 1.0, 0 );
 
-//   glBegin( GL_LINES );
-//   for( float x=bounds.x.min; x<=bounds.x.max; x++ )
-// 	 {
-// 		glVertex2f( ceil(x), bounds.y.min );
-// 		glVertex2f( ceil(x), bounds.y.max );
-// 	 }
+  //   glBegin( GL_LINES );
+  //   for( float x=bounds.x.min; x<=bounds.x.max; x++ )
+  // 	 {
+  // 		glVertex2f( ceil(x), bounds.y.min );
+  // 		glVertex2f( ceil(x), bounds.y.max );
+  // 	 }
   
-//   	 for( float y=bounds.y.min; y<=bounds.y.max; y++ )
-// 	 {
-// 		glVertex2f(  bounds.x.min, ceil(y) );
-// 		glVertex2f(  bounds.x.max, ceil(y) );
-// 	 }
-//   glEnd();
+  //   	 for( float y=bounds.y.min; y<=bounds.y.max; y++ )
+  // 	 {
+  // 		glVertex2f(  bounds.x.min, ceil(y) );
+  // 		glVertex2f(  bounds.x.max, ceil(y) );
+  // 	 }
+  //   glEnd();
 
   glDisable(GL_POLYGON_OFFSET_FILL );
 }
@@ -656,15 +656,15 @@ void Canvas::DrawFloor()
 void Canvas::DrawBlocks() 
 {
   FOR_EACH( it, models_sorted )
-	 (*it)->DrawBlocksTree();
+    (*it)->DrawBlocksTree();
 
   // some models may be carried by others - this prevents them being drawn twice
-//   for( GList* it = models_sorted; it; it=it->next )
-// 	 {
-// 		Model* mod = (Model*)it->data;
-// 		if( mod->parent == NULL )
-// 		  mod->DrawBlocksTree();
-// 	 }
+  //   for( GList* it = models_sorted; it; it=it->next )
+  // 	 {
+  // 		Model* mod = (Model*)it->data;
+  // 		if( mod->parent == NULL )
+  // 		  mod->DrawBlocksTree();
+  // 	 }
 }
 
 void Canvas::DrawBoundingBoxes() 
@@ -687,21 +687,21 @@ void Canvas::resetCamera()
 	
   //TODO take orrientation ( `a' ) and geom.pose offset into consideration
   FOR_EACH( it, world->World::children )
-	 {	 
-		Model* ptr = (*it);
-	 Pose pose = ptr->GetPose();
-	 Geom geom = ptr->GetGeom();
+    {	 
+      Model* ptr = (*it);
+      Pose pose = ptr->GetPose();
+      Geom geom = ptr->GetGeom();
 		
-	 float tmp_min_x = pose.x - geom.size.x / 2.0;
-	 float tmp_max_x = pose.x + geom.size.x / 2.0;
-	 float tmp_min_y = pose.y - geom.size.y / 2.0;
-	 float tmp_max_y = pose.y + geom.size.y / 2.0;
+      float tmp_min_x = pose.x - geom.size.x / 2.0;
+      float tmp_max_x = pose.x + geom.size.x / 2.0;
+      float tmp_min_y = pose.y - geom.size.y / 2.0;
+      float tmp_max_y = pose.y + geom.size.y / 2.0;
 		
-	 if( tmp_min_x < min_x ) min_x = tmp_min_x;
-	 if( tmp_max_x > max_x ) max_x = tmp_max_x;
-	 if( tmp_min_y < min_y ) min_y = tmp_min_y;
-	 if( tmp_max_y > max_y ) max_y = tmp_max_y;
-  }
+      if( tmp_min_x < min_x ) min_x = tmp_min_x;
+      if( tmp_max_x > max_x ) max_x = tmp_max_x;
+      if( tmp_min_y < min_y ) min_y = tmp_min_y;
+      if( tmp_max_y > max_y ) max_y = tmp_max_y;
+    }
 	
   //do a complete reset
   float x = ( min_x + max_x ) / 2.0;
@@ -719,20 +719,20 @@ class DistFuncObj
 {
   stg_meters_t x, y;
   DistFuncObj( stg_meters_t x, stg_meters_t y ) 
-  : x(x), y(y) {}
+    : x(x), y(y) {}
   
   bool operator()(const Model* a, const Model* b ) const
   { 
-	 Pose a_pose = a->GetGlobalPose();
-	 Pose b_pose = b->GetGlobalPose();
+    Pose a_pose = a->GetGlobalPose();
+    Pose b_pose = b->GetGlobalPose();
 	 
-	 stg_meters_t a_dist = hypot( y - a_pose.y,
-											x - a_pose.x );
+    stg_meters_t a_dist = hypot( y - a_pose.y,
+				 x - a_pose.x );
 	 
-	 stg_meters_t b_dist = hypot( y - b_pose.y,
-											x - b_pose.x );
+    stg_meters_t b_dist = hypot( y - b_pose.y,
+				 x - b_pose.x );
 	 
-	 return (  a_dist < b_dist );
+    return (  a_dist < b_dist );
   }
 };
 
@@ -764,257 +764,161 @@ void Canvas::renderFrame()
   glEnable( GL_DEPTH_TEST );
 
   if( ! showTrails )
-	 glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
   if( showTree || showOccupancy )
     {
       glPushMatrix();	  
 			
-			GLfloat scale = 1.0/world->Resolution();
+      GLfloat scale = 1.0/world->Resolution();
       glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
-			// out for Z. look into it.
+      // out for Z. look into it.
 			
       if( showOccupancy )
-				((WorldGui*)world)->DrawTree( false );
+	((WorldGui*)world)->DrawTree( false );
 			
       if( showTree )
-				((WorldGui*)world)->DrawTree( true );
+	((WorldGui*)world)->DrawTree( true );
 			
       glPopMatrix();
     }
   
   if( ! world->rt_cells.empty() )
-		{
-			glPushMatrix();	  		
-			GLfloat scale = 1.0/world->Resolution();
+    {
+      glPushMatrix();	  		
+      GLfloat scale = 1.0/world->Resolution();
       glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
 			
-			world->PushColor( Color( 0,0,1,0.5) );
+      world->PushColor( Color( 0,0,1,0.5) );
 			
-			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 			
-			glPointSize( 2 );
-			glBegin( GL_POINTS );
+      glPointSize( 2 );
+      glBegin( GL_POINTS );
 			
-			for( unsigned int i=0;
-					 i < world->rt_cells.size();
-					 i++ )
-				{
-					char str[128];
-					snprintf( str, 128, "(%d,%d)", 
-										world->rt_cells[i].x, 
-										world->rt_cells[i].y );
+      for( unsigned int i=0;
+	   i < world->rt_cells.size();
+	   i++ )
+	{
+	  char str[128];
+	  snprintf( str, 128, "(%d,%d)", 
+		    world->rt_cells[i].x, 
+		    world->rt_cells[i].y );
 					
-					Gl::draw_string(  world->rt_cells[i].x+1, 
-														world->rt_cells[i].y+1, 0.1, str );
+	  Gl::draw_string(  world->rt_cells[i].x+1, 
+			    world->rt_cells[i].y+1, 0.1, str );
 					
-					//printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
-					//glRectf( world->rt_cells[i].x+0.3, world->rt_cells[i].y+0.3,
-					//	 world->rt_cells[i].x+0.7, world->rt_cells[i].y+0.7 );
+	  //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
+	  //glRectf( world->rt_cells[i].x+0.3, world->rt_cells[i].y+0.3,
+	  //	 world->rt_cells[i].x+0.7, world->rt_cells[i].y+0.7 );
 					
-					glVertex2f( world->rt_cells[i].x, world->rt_cells[i].y );
+	  glVertex2f( world->rt_cells[i].x, world->rt_cells[i].y );
 					
-				}
+	}
 			
-			glEnd();
+      glEnd();
 			
 #if 1
-  		world->PushColor( Color( 0,1,0,0.2) );
-  		glBegin( GL_LINE_STRIP );
-  		for( unsigned int i=0;
-					 i < world->rt_cells.size();
-					 i++ )
-  		  {			 
-					glVertex2f( world->rt_cells[i].x+0.5, world->rt_cells[i].y+0.5 );
-  		  }
-  		glEnd();
-  		world->PopColor();
+      world->PushColor( Color( 0,1,0,0.2) );
+      glBegin( GL_LINE_STRIP );
+      for( unsigned int i=0;
+	   i < world->rt_cells.size();
+	   i++ )
+	{			 
+	  glVertex2f( world->rt_cells[i].x+0.5, world->rt_cells[i].y+0.5 );
+	}
+      glEnd();
+      world->PopColor();
 #endif
 			
       glPopMatrix();
-			world->PopColor();
+      world->PopColor();
     }
 	
   if( ! world->rt_candidate_cells.empty() )
-		{
-			glPushMatrix();	  		
-			GLfloat scale = 1.0/world->Resolution();
+    {
+      glPushMatrix();	  		
+      GLfloat scale = 1.0/world->Resolution();
       glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
 			
-			world->PushColor( Color( 1,0,0,0.5) );
+      world->PushColor( Color( 1,0,0,0.5) );
 			
-			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 			
-			for( unsigned int i=0;
-					 i < world->rt_candidate_cells.size();
-					 i++ )
-				{
-					// 			 char str[128];
-					// 			 snprintf( str, 128, "(%d,%d)", 
-					// 						  world->rt_candidate_cells[i].x, 
-					// 						  world->rt_candidate_cells[i].y );
+      for( unsigned int i=0;
+	   i < world->rt_candidate_cells.size();
+	   i++ )
+	{
+	  // 			 char str[128];
+	  // 			 snprintf( str, 128, "(%d,%d)", 
+	  // 						  world->rt_candidate_cells[i].x, 
+	  // 						  world->rt_candidate_cells[i].y );
 					
-					// 			 Gl::draw_string(  world->rt_candidate_cells[i].x+1, 
-					// 									 world->rt_candidate_cells[i].y+1, 0.1, str );
+	  // 			 Gl::draw_string(  world->rt_candidate_cells[i].x+1, 
+	  // 									 world->rt_candidate_cells[i].y+1, 0.1, str );
 					
-					//printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
-					glRectf( world->rt_candidate_cells[i].x, world->rt_candidate_cells[i].y,
-									 world->rt_candidate_cells[i].x+1, world->rt_candidate_cells[i].y+1 );
-				}
+	  //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
+	  glRectf( world->rt_candidate_cells[i].x, world->rt_candidate_cells[i].y,
+		   world->rt_candidate_cells[i].x+1, world->rt_candidate_cells[i].y+1 );
+	}
 			
-			world->PushColor( Color( 0,1,0,0.2) );
-			glBegin( GL_LINE_STRIP );
-			for( unsigned int i=0;
-					 i < world->rt_candidate_cells.size();
-					 i++ )
-				{			 
-					glVertex2f( world->rt_candidate_cells[i].x+0.5, world->rt_candidate_cells[i].y+0.5 );
-				}
-			glEnd();
-			world->PopColor();
+      world->PushColor( Color( 0,1,0,0.2) );
+      glBegin( GL_LINE_STRIP );
+      for( unsigned int i=0;
+	   i < world->rt_candidate_cells.size();
+	   i++ )
+	{			 
+	  glVertex2f( world->rt_candidate_cells[i].x+0.5, world->rt_candidate_cells[i].y+0.5 );
+	}
+      glEnd();
+      world->PopColor();
 			
       glPopMatrix();
-			world->PopColor();
+      world->PopColor();
 			
-			//world->rt_cells.clear();
+      //world->rt_cells.clear();
     }
 	
 	
   
   if( showGrid )
-		DrawGlobalGrid();
+    DrawGlobalGrid();
   else
-		DrawFloor();
+    DrawFloor();
   
   if( showFootprints )
-	 {
-		glDisable( GL_DEPTH_TEST ); // using alpha blending		
+    {
+      glDisable( GL_DEPTH_TEST ); // using alpha blending		
 		
-		FOR_EACH( it, models_sorted )
-		  (*it)->DrawTrailFootprint();
+      FOR_EACH( it, models_sorted )
+	(*it)->DrawTrailFootprint();
 		
-		  glEnable( GL_DEPTH_TEST );
-	 }
+      glEnable( GL_DEPTH_TEST );
+    }
   
   if( showFlags ) 
-	 FOR_EACH( it, models_sorted )
-		(*it)->DrawFlagList();
+    FOR_EACH( it, models_sorted )
+      (*it)->DrawFlagList();
 
   if( showTrailArrows )
-	 FOR_EACH( it, models_sorted )
-		(*it)->DrawTrailArrows();  
+    FOR_EACH( it, models_sorted )
+      (*it)->DrawTrailArrows();  
   
   if( showTrailRise )
-	 FOR_EACH( it, models_sorted )
-		(*it)->DrawTrailBlocks();  
+    FOR_EACH( it, models_sorted )
+      (*it)->DrawTrailBlocks();  
     
   if( showBlocks )
-		DrawBlocks();
+    DrawBlocks();
 	
   if( showBBoxes )
-		DrawBoundingBoxes();
+    DrawBoundingBoxes();
 	
   // TODO - finish this properly
   //LISTMETHOD( models_sorted, Model*, DrawWaypoints );
-  
-	// MOTION BLUR
-  if( 0  )//showBlur )
-		{
-			DrawBlocks();
-			
-			//static float count = 0; 
-			
-			if( ! blur )
-				{
-					blur = true;
-					glClear( GL_ACCUM_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-					glAccum( GL_LOAD, 1.0 );
-				}
-			else
-				{	
-					glAccum( GL_MULT, 0.9 );
-					glAccum( GL_ACCUM, 0.1 );
-					
-					glAccum( GL_RETURN, 1.1 );
-					
-					DrawBlocks(); // outline at current location
-				}
- 	 }
-
-// GRAY TRAILS
-//   if( showBlur )
-// 	 {
-		
-// 		static float count = 0; 
-		
-// 		if( ! blur )
-// 		  {
-// 			 blur = true;
-// 			 glClear( GL_ACCUM_BUFFER_BIT );
-// 			 DrawBlocks();
-// 			 glAccum( GL_LOAD, 1.0 );
-// 		  }
-// 		else
-// 		  {	
-// 			 glAccum( GL_MULT, 0.9 );
-
-//  			 DrawBlocks();
-
-// 			 glAccum( GL_ACCUM, 0.1);
-
-// 			 glAccum( GL_RETURN, 1.0 );
-
-// 			 DrawBlocks();
-// 		  }
-// 	 }
-
-// PRETTY BLACK
-//   if( showBlur && showBlocks )
-// 	 {
-		
-// 		static float count = 0; 
-		
-// 		if( ! blur )
-// 		  {
-// 			 blur = true;
-// 			 glClear( GL_ACCUM_BUFFER_BIT );
-// 			 DrawBlocks();
-// 			 glAccum( GL_LOAD, 1.0 );
-// 		  }
-// 		else
-// 		  {	
-// 			 glAccum( GL_MULT, 0.9 );
-// 			 glAccum( GL_RETURN, 1.0 );
-
-//  			 DrawBlocks();
-
-// 			 glAccum( GL_ACCUM, 0.1);
-
-// 			 glAccum( GL_RETURN, 1.0 );
-
-// 			 DrawBlocks();
-// 		  }
-// 	 }
-
-//   if( showTrailRise )
-//     {
-// 		for( std::multimap< float, Model* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
-// 		  i->second->DrawTrailBlocks();
-// 		}
-//     }
-  
-//   if( showTrailArrows )
-//     {
-//       glEnable( GL_DEPTH_TEST );
-// 		for( std::multimap< float, Model* >::reverse_iterator i = ordered.rbegin(); i != ordered.rend(); i++ ) {
-// 		  i->second->DrawTrailArrows();
-// 		}
-		
-//     }
-
 
   FOR_EACH( it, selected_models )
-	 (*it)->DrawSelected();
+    (*it)->DrawSelected();
 
   // useful debug - puts a point at the origin of each model
   //for( GList* it = world->World::children; it; it=it->next ) 
@@ -1022,48 +926,48 @@ void Canvas::renderFrame()
   
   // draw the model-specific visualizations
   if( showData ) {
-	 if ( ! visualizeAll ) {
-		FOR_EACH( it, world->World::children )
-		  (*it)->DataVisualizeTree( current_camera );
-	 }
-	 else if ( selected_models.size() > 0 ) {
-		FOR_EACH( it, world->World::children )
-		  (*it)->DataVisualizeTree( current_camera );
-	 }
-	 else if ( last_selection ) {
-		last_selection->DataVisualizeTree( current_camera );
-	 }
+    if ( ! visualizeAll ) {
+      FOR_EACH( it, world->World::children )
+	(*it)->DataVisualizeTree( current_camera );
+    }
+    else if ( selected_models.size() > 0 ) {
+      FOR_EACH( it, world->World::children )
+	(*it)->DataVisualizeTree( current_camera );
+    }
+    else if ( last_selection ) {
+      last_selection->DataVisualizeTree( current_camera );
+    }
   }
    
   if( showGrid ) 
-	 FOR_EACH( it, models_sorted )
-		(*it)->DrawGrid();
+    FOR_EACH( it, models_sorted )
+      (*it)->DrawGrid();
   		  
   if( showStatus ) 
-	 {
-		glPushMatrix();
-		//ensure two icons can't be in the exact same plane
-		if( camera.pitch() == 0 && !pCamOn )
-		  glTranslatef( 0, 0, 0.1 );
+    {
+      glPushMatrix();
+      //ensure two icons can't be in the exact same plane
+      if( camera.pitch() == 0 && !pCamOn )
+	glTranslatef( 0, 0, 0.1 );
 		
-		FOR_EACH( it, models_sorted )
-		  (*it)->DrawStatusTree( &camera );
+      FOR_EACH( it, models_sorted )
+	(*it)->DrawStatusTree( &camera );
 		
-		glPopMatrix();
-	 }
+      glPopMatrix();
+    }
   
   if( world->ray_list.size() > 0 )
     {
       glDisable( GL_DEPTH_TEST );
       PushColor( 0,0,0,0.5 );
-		FOR_EACH( it, world->ray_list )
-		  {
-			 float* pts = *it;
-			 glBegin( GL_LINES );
-			 glVertex2f( pts[0], pts[1] );
-			 glVertex2f( pts[2], pts[3] );
-			 glEnd();
-		  }  
+      FOR_EACH( it, world->ray_list )
+	{
+	  float* pts = *it;
+	  glBegin( GL_LINES );
+	  glVertex2f( pts[0], pts[1] );
+	  glVertex2f( pts[2], pts[3] );
+	  glEnd();
+	}  
       PopColor();
       glEnable( GL_DEPTH_TEST );
 		 
@@ -1072,7 +976,7 @@ void Canvas::renderFrame()
 	
   if( showClock )
     {		
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		
       //use orthogonal projeciton without any zoom
       glMatrixMode (GL_PROJECTION);
@@ -1085,39 +989,39 @@ void Canvas::renderFrame()
       glLoadIdentity();
       glDisable( GL_DEPTH_TEST );
 
-		std::string clockstr = world->ClockString();
-		if( showFollow == true && last_selection )
-		  clockstr.append( " [FOLLOW MODE]" );
+      std::string clockstr = world->ClockString();
+      if( showFollow == true && last_selection )
+	clockstr.append( " [FOLLOW MODE]" );
 		
-		float txtWidth = gl_width( clockstr.c_str());
-		if( txtWidth < 200 ) txtWidth = 200;
-		int txtHeight = gl_height();
+      float txtWidth = gl_width( clockstr.c_str());
+      if( txtWidth < 200 ) txtWidth = 200;
+      int txtHeight = gl_height();
 		
-		const int margin = 5;
-		int width, height;		
-		width = txtWidth + 2 * margin;
-		height = txtHeight + 2 * margin; 
+      const int margin = 5;
+      int width, height;		
+      width = txtWidth + 2 * margin;
+      height = txtHeight + 2 * margin; 
 		
-		// TIME BOX
-		colorstack.Push( 0.8,0.8,1.0 ); // pale blue
-		glRectf( 0, 0, width, height );
-		colorstack.Push( 0,0,0 ); // black
-		Gl::draw_string( margin, margin, 0, clockstr.c_str() );
-		colorstack.Pop();
-		colorstack.Pop();
+      // TIME BOX
+      colorstack.Push( 0.8,0.8,1.0 ); // pale blue
+      glRectf( 0, 0, width, height );
+      colorstack.Push( 0,0,0 ); // black
+      Gl::draw_string( margin, margin, 0, clockstr.c_str() );
+      colorstack.Pop();
+      colorstack.Pop();
 		
-		// ENERGY BOX
-		if( PowerPack::global_capacity > 0 )
-		  {
-			 colorstack.Push( 0.8,1.0,0.8,0.85 ); // pale green
-			 glRectf( 0, height, width, 90 );
-			 colorstack.Push( 0,0,0 ); // black
-			 Gl::draw_string_multiline( margin, height + margin, width, 50, 
-												 world->EnergyString().c_str(), 
-												 (Fl_Align)( FL_ALIGN_LEFT | FL_ALIGN_BOTTOM) );	 
-			 colorstack.Pop();
-			 colorstack.Pop();
-		  }
+      // ENERGY BOX
+      if( PowerPack::global_capacity > 0 )
+	{
+	  colorstack.Push( 0.8,1.0,0.8,0.85 ); // pale green
+	  glRectf( 0, height, width, 90 );
+	  colorstack.Push( 0,0,0 ); // black
+	  Gl::draw_string_multiline( margin, height + margin, width, 50, 
+				     world->EnergyString().c_str(), 
+				     (Fl_Align)( FL_ALIGN_LEFT | FL_ALIGN_BOTTOM) );	 
+	  colorstack.Pop();
+	  colorstack.Pop();
+	}
 			 
       glEnable( GL_DEPTH_TEST );
       glPopMatrix();
@@ -1185,7 +1089,7 @@ void Canvas::Screenshot()
   FILE *fp = fopen( filename, "wb" );
   if( fp == NULL ) 
     {
-			PRINT_ERR1( "Unable to open %s", filename );
+      PRINT_ERR1( "Unable to open %s", filename );
     }
   
   // create PNG data
@@ -1205,11 +1109,11 @@ void Canvas::Screenshot()
   png_set_rows( pp, info, rowpointers ); 
 
   png_set_IHDR( pp, info, 
-					 width, height, 8, 
-					 PNG_COLOR_TYPE_RGBA, 
-					 PNG_INTERLACE_NONE, 
-					 PNG_COMPRESSION_TYPE_DEFAULT, 
-					 PNG_FILTER_TYPE_DEFAULT);
+		width, height, 8, 
+		PNG_COLOR_TYPE_RGBA, 
+		PNG_INTERLACE_NONE, 
+		PNG_COMPRESSION_TYPE_DEFAULT, 
+		PNG_FILTER_TYPE_DEFAULT);
 
   png_write_png( pp, info, PNG_TRANSFORM_IDENTITY, NULL );
 
@@ -1226,11 +1130,11 @@ void Canvas::perspectiveCb( Fl_Widget* w, void* p )
   Canvas* canvas = static_cast<Canvas*>( w );
   Option* opt = static_cast<Option*>( p ); // pCamOn
   if ( opt ) {
-	 // Perspective mode is on, change camera
-	 canvas->current_camera = &canvas->perspective_camera;
+    // Perspective mode is on, change camera
+    canvas->current_camera = &canvas->perspective_camera;
   }
   else {
-	 canvas->current_camera = &canvas->camera;
+    canvas->current_camera = &canvas->camera;
   }
 	
   canvas->invalidate();
@@ -1270,7 +1174,7 @@ void Canvas::Load( Worldfile* wf, int sec )
 
   screenshot_frame_skip = wf->ReadInt( sec, "screenshot_skip", screenshot_frame_skip );
   if( screenshot_frame_skip < 1 )
-	 screenshot_frame_skip = 1; // avoids div-by-zero if poorly set
+    screenshot_frame_skip = 1; // avoids div-by-zero if poorly set
 
   showData.Load( wf, sec );
   showFlags.Load( wf, sec );
@@ -1290,10 +1194,10 @@ void Canvas::Load( Worldfile* wf, int sec )
   pCamOn.Load( wf, sec );
 
   if( ! world->paused )
-	 // // start the timer that causes regular redraws
-	 Fl::add_timeout( ((double)interval/1000), 
-							(Fl_Timeout_Handler)Canvas::TimerCallback, 
-							this);
+    // // start the timer that causes regular redraws
+    Fl::add_timeout( ((double)interval/1000), 
+		     (Fl_Timeout_Handler)Canvas::TimerCallback, 
+		     this);
 
   invalidate(); // we probably changed something
 }
@@ -1326,8 +1230,8 @@ void Canvas::Save( Worldfile* wf, int sec )
 
 void Canvas::draw()
 {
-//   static unsigned long calls=0;
-//   printf( "Draw calls %lu\n", ++calls );
+  //   static unsigned long calls=0;
+  //   printf( "Draw calls %lu\n", ++calls );
 
 
   //Enable the following to debug camera model
@@ -1336,39 +1240,39 @@ void Canvas::draw()
 
   if (!valid() ) 
     { 
-		if( ! init_done )
-		  InitGl();
+      if( ! init_done )
+	InitGl();
 		
       if( pCamOn == true ) 
-		  {
-			 perspective_camera.setAspect( static_cast< float >( w() ) / static_cast< float >( h() ) );
-			 perspective_camera.SetProjection();
-			 current_camera = &perspective_camera;
-		  } 
-		else 
-		  {
-			 stg_bounds3d_t extent = world->GetExtent();
-			 camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
-			 current_camera = &camera;
-		  }
+	{
+	  perspective_camera.setAspect( static_cast< float >( w() ) / static_cast< float >( h() ) );
+	  perspective_camera.SetProjection();
+	  current_camera = &perspective_camera;
+	} 
+      else 
+	{
+	  stg_bounds3d_t extent = world->GetExtent();
+	  camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
+	  current_camera = &camera;
+	}
 		
       glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     }            
 
   //Follow the selected robot	
   if( showFollow  && last_selection ) 
-	 {
-		Pose gpose = last_selection->GetGlobalPose();
-		if( pCamOn == true )
-		  {
-			 perspective_camera.setPose( gpose.x, gpose.y, 0.2 );
-			 perspective_camera.setYaw( rtod( gpose.a ) - 90.0 );
-		  } 
-		else 
-		  {
-			 camera.setPose( gpose.x, gpose.y );
-		  }
-	 }
+    {
+      Pose gpose = last_selection->GetGlobalPose();
+      if( pCamOn == true )
+	{
+	  perspective_camera.setPose( gpose.x, gpose.y, 0.2 );
+	  perspective_camera.setYaw( rtod( gpose.a ) - 90.0 );
+	} 
+      else 
+	{
+	  camera.setPose( gpose.x, gpose.y );
+	}
+    }
   
   current_camera->Draw();	
   renderFrame();

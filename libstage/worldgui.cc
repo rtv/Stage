@@ -212,37 +212,37 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   mbar->textsize(12);
   
   mbar->add( "&File", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "File/&Load World...", FL_CTRL + 'l', fileLoadCb, this, FL_MENU_DIVIDER );
-  mbar->add( "File/&Save World", FL_CTRL + 's', fileSaveCb, this );
-  mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', WorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
+  mbar->add( "File/&Load World...", FL_CTRL + 'l', (Fl_Callback*)fileLoadCb, this, FL_MENU_DIVIDER );
+  mbar->add( "File/&Save World", FL_CTRL + 's', (Fl_Callback*)fileSaveCb, this );
+  mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback*)WorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
   
   //mbar->add( "File/Screenshots", 0,0,0, FL_SUBMENU );
-  //mbar->add( "File/Screenshots/Save Frames, fileScreenshotSaveCb, this,FL_MENU_TOGGLE );
+  //mbar->add( "File/Screenshots/Save Frames, (Fl_Callback*)fileScreenshotSaveCb, this,FL_MENU_TOGGLE );
   
-  mbar->add( "File/E&xit", FL_CTRL+'q', WorldGui::fileExitCb, this );
+  mbar->add( "File/E&xit", FL_CTRL+'q', (Fl_Callback*)fileExitCb, this );
   
   mbar->add( "&View", 0, 0, 0, FL_SUBMENU );
 
-  mbar->add( "View/Reset", ' ', (Fl_Callback*) WorldGui::resetViewCb, this );
+  mbar->add( "View/Reset", ' ', (Fl_Callback*)resetViewCb, this );
 
-  mbar->add( "View/Filter data...", FL_SHIFT + 'd', (Fl_Callback*)WorldGui::viewOptionsCb, this );
+  mbar->add( "View/Filter data...", FL_SHIFT + 'd', (Fl_Callback*)viewOptionsCb, this );
   canvas->createMenuItems( mbar, "View" );
 
   mbar->add( "Run", 0,0,0, FL_SUBMENU );
-  mbar->add( "Run/Pause", 'p', (Fl_Callback*) WorldGui::pauseCb, this );
-  mbar->add( "Run/One step", '.', (Fl_Callback*) WorldGui::onceCb, this, FL_MENU_DIVIDER );
-  mbar->add( "Run/Faster", ']', (Fl_Callback*) WorldGui::fasterCb, this );
-  mbar->add( "Run/Slower", '[', (Fl_Callback*) WorldGui::slowerCb, this, FL_MENU_DIVIDER  );
-  mbar->add( "Run/Realtime", '{', (Fl_Callback*) WorldGui::realtimeCb, this );
-  mbar->add( "Run/Fast", '}', (Fl_Callback*) WorldGui::fasttimeCb, this );
+  mbar->add( "Run/Pause", 'p', (Fl_Callback*)pauseCb, this );
+  mbar->add( "Run/One step", '.', (Fl_Callback*)onceCb, this, FL_MENU_DIVIDER );
+  mbar->add( "Run/Faster", ']', (Fl_Callback*)fasterCb, this );
+  mbar->add( "Run/Slower", '[', (Fl_Callback*)slowerCb, this, FL_MENU_DIVIDER  );
+  mbar->add( "Run/Realtime", '{', (Fl_Callback*)realtimeCb, this );
+  mbar->add( "Run/Fast", '}', (Fl_Callback*)fasttimeCb, this );
   
   mbar->add( "&Help", 0, 0, 0, FL_SUBMENU );
-  mbar->add( "Help/Getting help...", 0,  (Fl_Callback*)WorldGui::moreHelptCb, this, FL_MENU_DIVIDER );
-  mbar->add( "Help/&About Stage...", 0, (Fl_Callback*) WorldGui::helpAboutCb, this );
+  mbar->add( "Help/Getting help...", 0,  (Fl_Callback*)moreHelptCb, this, FL_MENU_DIVIDER );
+  mbar->add( "Help/&About Stage...", 0, (Fl_Callback*)helpAboutCb, this );
   
-  callback( WorldGui::windowCb, this );	 
-
-	show();	
+  callback( (Fl_Callback*)windowCb, this );	 
+  
+  show();	
 }
 
 WorldGui::~WorldGui()
@@ -398,17 +398,15 @@ void WorldGui::RemoveChild( Model* mod )
 
 std::string WorldGui::EnergyString()
 {	
-  char str[512];
-  
+  char str[512]; 
   snprintf( str, 255, "Energy\n  stored:   %.0f / %.0f KJ\n  input:    %.0f KJ\n  output:   %.0f KJ at %.2f KW\n",
-				PowerPack::global_stored / 1e3,
-				PowerPack::global_capacity /1e3,
-				PowerPack::global_input / 1e3,
-				PowerPack::global_dissipated / 1e3,
-				(PowerPack::global_dissipated / (sim_time / 1e6)) / 1e3 );
+	    PowerPack::global_stored / 1e3,
+	    PowerPack::global_capacity /1e3,
+	    PowerPack::global_input / 1e3,
+	    PowerPack::global_dissipated / 1e3,
+	    (PowerPack::global_dissipated / (sim_time / 1e6)) / 1e3 );
   
-  std::string s( str );
-  return s;
+  return std::string( str );
 }
 
 void WorldGui::DrawTree( bool drawall )
@@ -427,16 +425,14 @@ void WorldGui::DrawFloor()
   PopColor();
 }
 
-void WorldGui::windowCb( Fl_Widget* w, void* p )
+void WorldGui::windowCb( Fl_Widget* w, WorldGui* wg )
 {
-  WorldGui* worldGui = static_cast<WorldGui*>( p );
-
   switch ( Fl::event() ) {
   case FL_SHORTCUT:
     if ( Fl::event_key() == FL_Escape )
       return;
   case FL_CLOSE: // clicked close button
-    bool done = worldGui->closeWindowQuery();
+    bool done = wg->closeWindowQuery();
     if ( !done )
       return;
   }
@@ -445,15 +441,13 @@ void WorldGui::windowCb( Fl_Widget* w, void* p )
   exit(0);
 }
 
-void WorldGui::fileLoadCb( Fl_Widget* w, void* p )
+void WorldGui::fileLoadCb( Fl_Widget* w, WorldGui* wg )
 {
-  WorldGui* worldGui = static_cast<WorldGui*>( p );
-
   const char* filename;
   //bool success;
   const char* pattern = "World Files (*.world)";
 	
-	std::string worldsPath = worldGui->fileMan->worldsRoot();
+	std::string worldsPath = wg->fileMan->worldsRoot();
 	worldsPath.append( "/" );
   Fl_File_Chooser fc( worldsPath.c_str(), pattern, Fl_File_Chooser::CREATE, "Load World File..." );
   fc.ok_label( "Load" );
@@ -469,13 +463,13 @@ void WorldGui::fileLoadCb( Fl_Widget* w, void* p )
       // file is readable, clear and load
 
       // if (initialized) {
-      worldGui->Stop();
-      worldGui->UnLoad();
+      wg->Stop();
+      wg->UnLoad();
       // }
 			
       // todo: make sure loading is successful
-      worldGui->Load( filename );
-      worldGui->Start(); // if (stopped)
+      wg->Load( filename );
+      wg->Start(); // if (stopped)
     }
     else {
       fl_alert( "Unable to read selected world file." );
@@ -485,44 +479,38 @@ void WorldGui::fileLoadCb( Fl_Widget* w, void* p )
   }
 }
 
-void WorldGui::fileSaveCb( Fl_Widget* w, void* p )
+void WorldGui::fileSaveCb( Fl_Widget* w, WorldGui* wg )
 {
-  WorldGui* worldGui = static_cast<WorldGui*>( p );
-
   // save to current file
-  bool success =  worldGui->Save( NULL );
+  bool success =  wg->Save( NULL );
   if ( !success ) {
     fl_alert( "Error saving world file." );
   }
 }
 
-void WorldGui::fileSaveAsCb( Fl_Widget* w, void* p )
+void WorldGui::fileSaveAsCb( Fl_Widget* w, WorldGui* wg )
 {
-  WorldGui* worldGui = static_cast<WorldGui*>( p );
-
-  worldGui->saveAsDialog();
+  wg->saveAsDialog();
 }
 
-void WorldGui::fileExitCb( Fl_Widget* w, void* p ) 
+void WorldGui::fileExitCb( Fl_Widget* w, WorldGui* wg ) 
 {
-  WorldGui* worldGui = static_cast<WorldGui*>( p );
-
-  bool done = worldGui->closeWindowQuery();
+  bool done = wg->closeWindowQuery();
   if (done) {
 	 puts( "User exited via menu" );
     exit(0);
   }
 }
 
-void WorldGui::resetViewCb( Fl_Widget* w, WorldGui* worldGui )
+void WorldGui::resetViewCb( Fl_Widget* w, WorldGui* wg )
 {
-  worldGui->canvas->current_camera->reset();
+  wg->canvas->current_camera->reset();
   
   if( Fl::event_state( FL_CTRL ) ) 
 	 {
-		worldGui->canvas->resetCamera();
+		wg->canvas->resetCamera();
 	 }
-  worldGui->canvas->redraw();
+  wg->canvas->redraw();
 }
 
 void WorldGui::slowerCb( Fl_Widget* w, WorldGui* wg )
@@ -571,52 +559,52 @@ void WorldGui::Stop()
   canvas->redraw(); // in case something happened that will never be
 }  
 
-void WorldGui::pauseCb( Fl_Widget* w, WorldGui* worldGui )
+void WorldGui::pauseCb( Fl_Widget* w, WorldGui* wg )
 {
-  worldGui->TogglePause();
+  wg->TogglePause();
 }
 
-void WorldGui::onceCb( Fl_Widget* w, WorldGui* worldGui )
+void WorldGui::onceCb( Fl_Widget* w, WorldGui* wg )
 {
-  worldGui->paused = true;
-  worldGui->steps = 1; // number of steps to run  
+  wg->paused = true;
+  wg->steps = 1; // number of steps to run  
 }
 
-void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* worldGui ) 
+void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* wg ) 
 {
   // the options dialog expects a std::vector of options (annoyingly)
   // std::vector<Option*> optvec;
   // adds each option to the vector
-  //g_hash_table_foreach( worldGui->option_table, 
+  //g_hash_table_foreach( wg->option_table, 
   //						(GHFunc)append_option, 
   //						(void*)&optvec );  
   
   // sort the vector by option label alphabetically
-  //std::sort();// worldGui->option_table.begin(), worldGui->option_table.end() );//, sort_option_pointer );
-  //std::sort();// worldGui->option_table.begin(), worldGui->option_table.end() );//, sort_option_pointer );
+  //std::sort();// wg->option_table.begin(), wg->option_table.end() );//, sort_option_pointer );
+  //std::sort();// wg->option_table.begin(), wg->option_table.end() );//, sort_option_pointer );
 
-  if ( !worldGui->oDlg ) 
+  if ( !wg->oDlg ) 
 	 {
-		int x = worldGui->w()+worldGui->x() + 10;
-		int y = worldGui->y();
+		int x = wg->w()+wg->x() + 10;
+		int y = wg->y();
 		OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
-		oDlg->callback( (Fl_Callback*)optionsDlgCb, worldGui );
+		oDlg->callback( (Fl_Callback*)optionsDlgCb, wg );
 		
-		oDlg->setOptions( worldGui->option_table );
-		oDlg->showAllOpt( &worldGui->canvas->visualizeAll );
-		worldGui->oDlg = oDlg;
+		oDlg->setOptions( wg->option_table );
+		oDlg->showAllOpt( &wg->canvas->visualizeAll );
+		wg->oDlg = oDlg;
 		oDlg->show();
 	 }
   else 
 	 {
-		worldGui->oDlg->hide();
-		delete worldGui->oDlg;
-		worldGui->oDlg = NULL;
+		wg->oDlg->hide();
+		delete wg->oDlg;
+		wg->oDlg = NULL;
 	 }
  
 }
 
-void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* worldGui ) 
+void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* wg ) 
 {
   // get event from dialog
   OptionsDlg::event_t event;
@@ -642,9 +630,9 @@ void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* worldGui )
       break;
     }			
   case OptionsDlg::CLOSE:
-    // invalidate the oDlg pointer from the WorldGui
+    // invalidate the oDlg pointer from the Wg
     //   instance before the dialog is destroyed
-    worldGui->oDlg = NULL; 
+    wg->oDlg = NULL; 
     oDlg->hide();
     Fl::delete_widget( oDlg );
     return;	
@@ -654,26 +642,20 @@ void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* worldGui )
   }
 }
 
-void aboutOKBtnCb( Fl_Widget* w, void* p ) {
-  Fl_Return_Button* btn;
-  btn = static_cast<Fl_Return_Button*>( w );
-
+void aboutOKBtnCb( Fl_Return_Button* btn, void* p ) 
+{
   btn->window()->do_callback();
 }
 
-void aboutCloseCb( Fl_Widget* w, void* p ) {
-  Fl_Window* win;
-  win = static_cast<Fl_Window*>( w );
-  Fl_Text_Display* textDisplay;
-  textDisplay = static_cast<Fl_Text_Display*>( p );
-	
+void aboutCloseCb( Fl_Window* win, Fl_Text_Display* textDisplay ) 
+{
   Fl_Text_Buffer* tbuf = textDisplay->buffer();
   textDisplay->buffer( NULL );
   delete tbuf;
   Fl::delete_widget( win );
 }
 
-void WorldGui::helpAboutCb( Fl_Widget* w, void* p ) 
+void WorldGui::helpAboutCb( Fl_Widget* w, WorldGui* wg ) 
 {
   fl_register_images();
 	
@@ -700,7 +682,7 @@ void WorldGui::helpAboutCb( Fl_Widget* w, void* p )
 				     Width-2*Spc, Height-pngH-ButtonH-4*Spc );
   textDisplay->box( FL_NO_BOX );
   textDisplay->color( win->color() );
-  win->callback( aboutCloseCb, textDisplay );
+  win->callback( (Fl_Callback*)aboutCloseCb, textDisplay );
 		
   Fl_Text_Buffer* tbuf = new Fl_Text_Buffer;
   tbuf->text( PROJECT );
@@ -714,7 +696,7 @@ void WorldGui::helpAboutCb( Fl_Widget* w, void* p )
   button = new Fl_Return_Button( (Width - ButtonW)/2, Height-Spc-ButtonH,
 				 ButtonW, ButtonH,
 				 "&OK" );
-  button->callback( aboutOKBtnCb );
+  button->callback( (Fl_Callback*)aboutOKBtnCb );
 	
   win->show();
 }
