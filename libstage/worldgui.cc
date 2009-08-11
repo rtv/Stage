@@ -369,7 +369,7 @@ std::string WorldGui::ClockString()
   double localratio = (double)interval_track / (double)average_real_interval;
   
   char buf[32];
-  snprintf( buf, 32, " [%.2f]", localratio );
+  snprintf( buf, 32, " [%.1f]", localratio );
   str += buf;
   
   if( paused == true )

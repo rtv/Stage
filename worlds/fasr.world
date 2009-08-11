@@ -6,7 +6,7 @@ include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
 
-speedup -1 # fast mode
+speedup 100 
 paused 1
 
 # time to pause (in GUI mode) or quit (in headless mode) the simulation
