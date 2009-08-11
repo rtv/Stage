@@ -351,7 +351,15 @@ bool WorldGui::Update()
   real_time_of_last_update = timenow;
    
   // inherit
-  return World::Update();
+  bool done = World::Update();
+  
+  if( done )
+	 {
+		quit_time = 0; // allows us to continue by un-pausing
+		Stop();
+	 }
+  
+  return done;
 }
 
 std::string WorldGui::ClockString()
@@ -364,9 +372,7 @@ std::string WorldGui::ClockString()
     average_real_interval += interval_log[i];
   average_real_interval /= interval_log.size();
   
-  // TODO
-  //double localratio = (double)interval_sim / (double)average_real_interval;
-  double localratio = (double)interval_track / (double)average_real_interval;
+  double localratio = (double)sim_interval / (double)average_real_interval;
   
   char buf[32];
   snprintf( buf, 32, " [%.1f]", localratio );
@@ -567,7 +573,9 @@ void WorldGui::pauseCb( Fl_Widget* w, WorldGui* wg )
 void WorldGui::onceCb( Fl_Widget* w, WorldGui* wg )
 {
   wg->paused = true;
-  wg->steps = 1; // number of steps to run  
+
+  // run exactly once
+  wg->World::Update();
 }
 
 void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* wg ) 

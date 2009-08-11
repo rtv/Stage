@@ -11,25 +11,59 @@
 
     @verbatim
 
-    resolution      0.02
-    threads         0
+	 name                     <worldfile name>
+	 interval_sim            100
+	 quit_time                 0
+    resolution                0.02
+	 show_clock                0
+	 show_clock_interval     100
+    threads                   0
 
     @endverbatim
 
     @par Details
 
+    - name <string>\n
+	 An identifying name for the world, used e.g. in the title bar of
+	 the GUI.
+
+    - interval_sim <float>\n
+	 The amount of simulation time run for each call of
+	 World::Update(). Each model has its own configurable update
+	 interval, which can be greater or less than this, but intervals
+	 shorter than this are not visible in the GUI or in World update
+	 callbacks. You are not likely to need to change the default of 100
+	 msec: this is used internally by clients such as Player and WebSim.
+
+    - quit_time <float>\n
+	 Stop the simulation after this many simulated seconds have
+	 elapsed. In libstage, World::Update() returns true. In Stage with
+	 a GUI, the simulation is paused. In Stage without a GUI, Stage
+	 quits.
+ 
     - resolution <float>\n
     The resolution (in meters) of the underlying bitmap model. Larger
     values speed up raytracing at the expense of fidelity in collision
-    detection and sensing.
+    detection and sensing. The default is often a reasonable choice.
 
-    - threads <int>\n
-    The number of worker threads to spawn. Some models can be updated
-    in parallel (e.g. laser, ranger), and running 2 or more threads
-    here may make the simulation run faster, depending on the number
-    of CPU cores available and the worldfile. As a guideline, use one
-    thread per core if you have high-resolution models, e.g. a laser
-    with hundreds of samples
+    - show_clock <int>\n
+     If non-zero, print the simulation time on stdout every
+     $show_clock_interval updates. Useful to watch the progress of
+     non-GUI simulations.
+
+	 - show_clock_interval <int>\n
+	 Sets the number of updates between printing the time on stdoutm,
+	 if $show_clock is enabled. The default is once every 10 simulated
+	 seconds. Smaller values slow the simulation down a little.
+
+    - threads <int>\n 
+    The number of worker threads to spawn. Some
+    models can be updated in parallel (e.g. laser, ranger), and
+    running 2 or more threads here may make the simulation run faster,
+    depending on the number of CPU cores available and the
+    worldfile. As a guideline, use one thread per core if you have
+    parallel-enabled high-resolution models, e.g. a laser with
+    hundreds or thousands of samples, or lots of models.
 	 
     @par More examples
     The Stage source distribution contains several example world files in
@@ -63,7 +97,7 @@ bool World::quit_all = false;
 std::set<World*> World::world_set;
 
 World::World( const char* token, 
-	      double ppm )
+				  double ppm )
   : 
   // private
   destroy( false ),
@@ -72,7 +106,6 @@ World::World( const char* token,
   models_with_fiducials(),
   ppm( ppm ), // raytrace resolution
   quit( false ),
-  quit_time( 0 ),
   real_time_now( RealTimeNow() ),
   real_time_start( real_time_now ),
   show_clock( false ),
@@ -88,9 +121,9 @@ World::World( const char* token,
   cb_list(NULL),
   extent(),
   graphics( false ), 
-  interval_track( 1e5 ),
   option_table(),
   powerpack_list(),
+  quit_time( 0 ),
   ray_list(),  
   sim_time( 0 ),
   superregions(),
@@ -98,9 +131,8 @@ World::World( const char* token,
   updates( 0 ),
   wf( NULL ),
   paused( false ),
-  steps(0),
-  event_queues(1),
-  sim_interval( 1e5 ) // 100 msec
+  event_queues(1), // use 1 thread by default
+  sim_interval( 1e5 ) // 100 msec has proved a good default
 {
   if( ! Stg::InitDone() )
     {
@@ -143,7 +175,7 @@ bool World::UpdateAll()
   FOR_EACH( world_it, World::world_set )
     {
       if( (*world_it)->Update() == false )
-	quit = false;
+		  quit = false;
     }
 
   return quit;
@@ -175,10 +207,10 @@ void* World::update_thread_entry( std::pair<World*,int> *thread_info )
 	  
       pthread_mutex_lock( &world->thread_mutex );	  
       if( --world->threads_working == 0 )
-	{
-	  //puts( "last worker signalling main thread" );
-	  pthread_cond_signal( &world->threads_done_cond );
-	}
+		  {
+			 //puts( "last worker signalling main thread" );
+			 pthread_cond_signal( &world->threads_done_cond );
+		  }
       // keep lock going round the loop
     }
   
@@ -232,7 +264,7 @@ Model* World::CreateModel( Model* parent, const char* typestr )
   else
     {
       PRINT_ERR1( "Unknown model type %s in world file.", 
-		  typestr );
+						typestr );
       exit( 1 );
     }
   
@@ -246,7 +278,7 @@ void World::LoadModel( Worldfile* wf, int entity )
   int parent_entity = wf->GetEntityParent( entity );
   
   PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
-		entity, parent_entity );
+					 entity, parent_entity );
   
   Model* parent = models_by_wfentity[ parent_entity ];
     
@@ -285,11 +317,20 @@ void World::Load( const char* worldfile_path )
     wf->ReadString( entity, "name", token );
 
   this->quit_time = (stg_usec_t)( million * 
-				  wf->ReadFloat( entity, "quit_time", 0 ) );
+											 wf->ReadFloat( entity, "quit_time", 0 ) );
   
   this->ppm = 
     1.0 / wf->ReadFloat( entity, "resolution", 1.0 / this->ppm );
   
+  this->show_clock = 
+	 wf->ReadInt( entity, "show_clock", this->show_clock );
+  
+  this->show_clock_interval = 
+	 wf->ReadInt( entity, "show_clock_interval", this->show_clock_interval );
+  
+  // read msec instead of usec: easier for user
+  this->sim_interval =
+	 1e3 * wf->ReadFloat( entity, "interval_sim", this->sim_interval / 1e3 );
   
   this->worker_threads = wf->ReadInt( entity, "threads",  this->worker_threads );  
   if( worker_threads > 0 )
@@ -300,18 +341,18 @@ void World::Load( const char* worldfile_path )
 		
       // kick off the threads
       for( unsigned int t=0; t<worker_threads; t++ )
-	{
-	  std::pair<World*,int> *p = new std::pair<World*,int>( this, t+1 );
+		  {
+			 std::pair<World*,int> *p = new std::pair<World*,int>( this, t+1 );
 			 
-	  //normal posix pthread C function pointer
-	  typedef void* (*func_ptr) (void*);
+			 //normal posix pthread C function pointer
+			 typedef void* (*func_ptr) (void*);
 			 
-	  pthread_t pt;
-	  pthread_create( &pt,
-			  NULL,
-			  (func_ptr)World::update_thread_entry, 
-			  p );
-	}
+			 pthread_t pt;
+			 pthread_create( &pt,
+								  NULL,
+								  (func_ptr)World::update_thread_entry, 
+								  p );
+		  }
 		
       printf( "[threads %u]", worker_threads );	
     }
@@ -323,13 +364,13 @@ void World::Load( const char* worldfile_path )
 		
       // don't load window entries here
       if( strcmp( typestr, "window" ) == 0 )
-	{
-	  /* do nothing here */
-	}
+		  {
+			 /* do nothing here */
+		  }
       else if( strcmp( typestr, "block" ) == 0 )
-	LoadBlock( wf, entity );
+		  LoadBlock( wf, entity );
       else
-	LoadModel( wf, entity );
+		  LoadModel( wf, entity );
     }
 	
   // warn about unused WF lines
@@ -342,7 +383,7 @@ void World::Load( const char* worldfile_path )
 	
   if( debug )
     printf( "[Load time %.3fsec]\n", 
-	    (load_end_time - load_start_time) / 1e6 );
+				(load_end_time - load_start_time) / 1e6 );
   else
     putchar( '\n' );
 }
@@ -417,7 +458,7 @@ std::string World::ClockString()
 }
 
 void World::AddUpdateCallback( stg_world_callback_t cb, 
-			       void* user )
+										 void* user )
 {
   // add the callback & argument to the list
   std::pair<stg_world_callback_t,void*> p(cb, user);
@@ -425,21 +466,17 @@ void World::AddUpdateCallback( stg_world_callback_t cb,
 }
 
 int World::RemoveUpdateCallback( stg_world_callback_t cb, 
-				 void* user )
+											void* user )
 {
   std::pair<stg_world_callback_t,void*> p( cb, user );
   
-  //   std::list<std::pair<stg_world_callback_t,void*> >::iterator it;  
-  //   for( it = cb_list.begin();
-  // 	   it != cb_list.end();
-  // 	   it++ )
   FOR_EACH( it, cb_list )
     {
       if( (*it) == p )
-	{
-	  cb_list.erase( it );		
-	  break;
-	}
+		  {
+			 cb_list.erase( it );		
+			 break;
+		  }
     }
   
   // return the number of callbacks now in the list. Useful for
@@ -449,20 +486,10 @@ int World::RemoveUpdateCallback( stg_world_callback_t cb,
 
 void World::CallUpdateCallbacks()
 {
-  
-  // for each callback in the list
-  //   for( std::list<std::pair<stg_world_callback_t,void*> >::iterator it = cb_list.begin();
-  // 	   it != cb_list.end();
-  // 	   it++ )
   FOR_EACH( it, cb_list )
     {  
-      //printf( "cbs %p data %p cvs->next %p\n", cbs, cbs->data, cbs->next );
-		
       if( ((*it).first )( this, (*it).second ) )
-	{
-	  //printf( "callback returned TRUE - schedule removal from list\n" );
-	  it = cb_list.erase( it );
-	}
+		  it = cb_list.erase( it );
     }      
 }
 
@@ -487,25 +514,25 @@ void World::ConsumeQueue( unsigned int queue_num )
 		
       // only update events are allowed in queues other than zero
       if( queue_num > 0 && ev.type != Event::UPDATE )
-	PRINT_WARN1( "event type %d in async queue", queue_num );
+		  PRINT_WARN1( "event type %d in async queue", queue_num );
 		
       switch( ev.type )
-	{
-	case Event::UPDATE:				  
-	  ev.mod->Update();
-	  break;
+		  {
+		  case Event::UPDATE:				  
+			 ev.mod->Update();
+			 break;
 			 
-	case Event::POSE:				  
-	  ev.mod->UpdatePose();
-	  break;
+		  case Event::POSE:				  
+			 ev.mod->UpdatePose();
+			 break;
 			 
-	case Event::ENERGY:				  
-	  ev.mod->UpdateCharge();
-	  break;
+		  case Event::ENERGY:				  
+			 ev.mod->UpdateCharge();
+			 break;
 			 
-	default:
-	  PRINT_WARN1( "unknown event type %d", ev.type );
-	}
+		  default:
+			 PRINT_WARN1( "unknown event type %d", ev.type );
+		  }
 		
       ev = queue.top();
     }
@@ -514,32 +541,18 @@ void World::ConsumeQueue( unsigned int queue_num )
 
 bool World::Update()
 {
-  PRINT_DEBUG( "World::Update()" );
+  //puts( "World::Update()" );
   
   // if we've run long enough, exit
-  //   if( PastQuitTime() ) 
-  // 	 {
-  // 		if( IsGUI() == false )
-  // 		  return true;		
-  // 	 }
+  if( PastQuitTime() ) 
+	 return true;		
   
   if( event_pending_count < 1 )
     {
       PRINT_WARN( "event queue(s) empty." );
       return false;
     }
-    
-  //   if( paused )
-  // 	{
-  // 	  if( steps < 1 )	 
-  // 		return true;
-  // 	  else
-  // 		{
-  // 		  --steps;
-  // 		  //printf( "world::update (steps remaining %d)\n", steps );		  
-  // 		}
-  // 	}
-  
+
   sim_time += sim_interval; 
 
   // handle the zeroth queue synchronously in the main thread
@@ -559,10 +572,10 @@ bool World::Update()
       // wait for all the last update job to complete - it will
       // signal the worker_threads_done condition var
       while( threads_working > 0  )
-	{
-	  //puts( "main thread waiting for workers to finish" );
-	  pthread_cond_wait( &threads_done_cond, &thread_mutex );
-	}
+		  {
+			 //puts( "main thread waiting for workers to finish" );
+			 pthread_cond_wait( &threads_done_cond, &thread_mutex );
+		  }
       pthread_mutex_unlock( &thread_mutex );		 
       //puts( "main thread awakes" );
 		
@@ -570,11 +583,7 @@ bool World::Update()
       // threads		
     }
 			 			
-  //stg_usec_t step = time_of_next_event - sim_time;    
-  // smoothed interval tracking
-  //interval_track = 0.1 * step + 0.9 * interval_track;
   dirty = true; // need redraw 
-  // printf( "@ %llu done. (next event at %llu)\n\n", sim_time, next_time );
   
   // world callbacks
   CallUpdateCallbacks();
@@ -641,14 +650,14 @@ void World::ClearRays()
 
 
 void World::Raytrace( const Pose &gpose, // global pose
-		      const stg_meters_t range,
-		      const stg_radians_t fov,
-		      const stg_ray_test_func_t func,
-		      const Model* model,			 
-		      const void* arg,
-		      stg_raytrace_result_t* samples, // preallocated storage for samples
-		      const uint32_t sample_count, // number of samples
-		      const bool ztest ) 
+							 const stg_meters_t range,
+							 const stg_radians_t fov,
+							 const stg_ray_test_func_t func,
+							 const Model* model,			 
+							 const void* arg,
+							 stg_raytrace_result_t* samples, // preallocated storage for samples
+							 const uint32_t sample_count, // number of samples
+							 const bool ztest ) 
 {
   // find the direction of the first ray
   Pose raypose = gpose;
@@ -663,11 +672,11 @@ void World::Raytrace( const Pose &gpose, // global pose
 
 // Stage spends 50-99% of its time in this method.
 stg_raytrace_result_t World::Raytrace( const Pose &gpose, 
-				       const stg_meters_t range,
-				       const stg_ray_test_func_t func,
-				       const Model* mod,		
-				       const void* arg,
-				       const bool ztest ) 
+													const stg_meters_t range,
+													const stg_ray_test_func_t func,
+													const Model* mod,		
+													const void* arg,
+													const bool ztest ) 
 {
   Ray r( mod, gpose, range, func, arg, ztest );
   return Raytrace( r );
@@ -734,154 +743,154 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   while( n > 0  ) // while we are still not at the ray end
     { 
       Region* reg( GetSuperRegionCached( GETSREG(globx), GETSREG(globy) )
-		   ->GetRegion( GETREG(globx), GETREG(globy) ));
+						 ->GetRegion( GETREG(globx), GETREG(globy) ));
 			
       if( reg->count ) // if the region contains any objects
-	{
-	  // invalidate the region crossing points used to jump over
-	  // empty regions
-	  calculatecrossings = true;
+		  {
+			 // invalidate the region crossing points used to jump over
+			 // empty regions
+			 calculatecrossings = true;
 					
-	  // convert from global cell to local cell coords
-	  int32_t cx( GETCELL(globx) ); 
-	  int32_t cy( GETCELL(globy) );
+			 // convert from global cell to local cell coords
+			 int32_t cx( GETCELL(globx) ); 
+			 int32_t cy( GETCELL(globy) );
 					
-	  Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
-	  assert(c); // should be good: we know the region contains objects
+			 Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
+			 assert(c); // should be good: we know the region contains objects
 
-	  // while within the bounds of this region and while some ray remains
-	  // we'll tweak the cell pointer directly to move around quickly
-	  while( (cx>=0) && (cx<REGIONWIDTH) && 
-		 (cy>=0) && (cy<REGIONWIDTH) && 
-		 n > 0 )
-	    {			 
-	      for( BlockPtrVec::iterator it( c->blocks.begin() );
-		   it != c->blocks.end();
-		   ++it )					 
-		{	      	      
-		  Block* block( *it );
-		  assert( block );
+			 // while within the bounds of this region and while some ray remains
+			 // we'll tweak the cell pointer directly to move around quickly
+			 while( (cx>=0) && (cx<REGIONWIDTH) && 
+					  (cy>=0) && (cy<REGIONWIDTH) && 
+					  n > 0 )
+				{			 
+				  for( BlockPtrVec::iterator it( c->blocks.begin() );
+						 it != c->blocks.end();
+						 ++it )					 
+					 {	      	      
+						Block* block( *it );
+						assert( block );
 
-		  // skip if not in the right z range
-		  if( r.ztest && 
-		      ( r.origin.z < block->global_z.min || 
-			r.origin.z > block->global_z.max ) )
-		    continue; 
+						// skip if not in the right z range
+						if( r.ztest && 
+							 ( r.origin.z < block->global_z.min || 
+								r.origin.z > block->global_z.max ) )
+						  continue; 
 									
-		  // test the predicate we were passed
-		  if( (*r.func)( block->mod, (Model*)r.mod, r.arg )) 
-		    {
-		      // a hit!
-		      sample.color = block->GetColor();
-		      sample.mod = block->mod;
+						// test the predicate we were passed
+						if( (*r.func)( block->mod, (Model*)r.mod, r.arg )) 
+						  {
+							 // a hit!
+							 sample.color = block->GetColor();
+							 sample.mod = block->mod;
 											
-		      if( ax > ay ) // faster than the equivalent hypot() call
-			sample.range = fabs((globx-startx) / cosa) / ppm;
-		      else
-			sample.range = fabs((globy-starty) / sina) / ppm;
+							 if( ax > ay ) // faster than the equivalent hypot() call
+								sample.range = fabs((globx-startx) / cosa) / ppm;
+							 else
+								sample.range = fabs((globy-starty) / sina) / ppm;
 											
-		      return sample;
-		    }				  
-		}
+							 return sample;
+						  }				  
+					 }
 
-	      // increment our cell in the correct direction
-	      if( exy < 0 ) // we're iterating along X
-		{
-		  globx += sx; // global coordinate
-		  exy += by;						
-		  c += sx; // move the cell left or right
-		  cx += sx; // cell coordinate for bounds checking
-		}
-	      else  // we're iterating along Y
-		{
-		  globy += sy; // global coordinate
-		  exy -= bx;						
-		  c += sy * REGIONWIDTH; // move the cell up or down
-		  cy += sy; // cell coordinate for bounds checking
-		}			 
-	      --n; // decrement the manhattan distance remaining
+				  // increment our cell in the correct direction
+				  if( exy < 0 ) // we're iterating along X
+					 {
+						globx += sx; // global coordinate
+						exy += by;						
+						c += sx; // move the cell left or right
+						cx += sx; // cell coordinate for bounds checking
+					 }
+				  else  // we're iterating along Y
+					 {
+						globy += sy; // global coordinate
+						exy -= bx;						
+						c += sy * REGIONWIDTH; // move the cell up or down
+						cy += sy; // cell coordinate for bounds checking
+					 }			 
+				  --n; // decrement the manhattan distance remaining
 													 							
-	      //rt_cells.push_back( stg_point_int_t( globx, globy ));
-	    }					
-	  //printf( "leaving populated region\n" );
-	}							 
+				  //rt_cells.push_back( stg_point_int_t( globx, globy ));
+				}					
+			 //printf( "leaving populated region\n" );
+		  }							 
       else // jump over the empty region
-	{		  		  		  
-	  // on the first run, and when we've been iterating over
-	  // cells, we need to calculate the next crossing of a region
-	  // boundary along each axis
-	  if( calculatecrossings )
-	    {
-	      calculatecrossings = false;
+		  {		  		  		  
+			 // on the first run, and when we've been iterating over
+			 // cells, we need to calculate the next crossing of a region
+			 // boundary along each axis
+			 if( calculatecrossings )
+				{
+				  calculatecrossings = false;
 							
-	      // find the coordinate in cells of the bottom left corner of
-	      // the current region
-	      int32_t ix( globx );
-	      int32_t iy( globy );				  
-	      double regionx( ix/REGIONWIDTH*REGIONWIDTH );
-	      double regiony( iy/REGIONWIDTH*REGIONWIDTH );
-	      if( (globx < 0) && (ix % REGIONWIDTH) ) regionx -= REGIONWIDTH;
-	      if( (globy < 0) && (iy % REGIONWIDTH) ) regiony -= REGIONWIDTH;
+				  // find the coordinate in cells of the bottom left corner of
+				  // the current region
+				  int32_t ix( globx );
+				  int32_t iy( globy );				  
+				  double regionx( ix/REGIONWIDTH*REGIONWIDTH );
+				  double regiony( iy/REGIONWIDTH*REGIONWIDTH );
+				  if( (globx < 0) && (ix % REGIONWIDTH) ) regionx -= REGIONWIDTH;
+				  if( (globy < 0) && (iy % REGIONWIDTH) ) regiony -= REGIONWIDTH;
 							
-	      // calculate the distance to the edge of the current region
-	      double xdx( sx < 0 ? 
-			  regionx - globx - 1.0 : // going left
-			  regionx + REGIONWIDTH - globx ); // going right			 
-	      double xdy( xdx*tana );
+				  // calculate the distance to the edge of the current region
+				  double xdx( sx < 0 ? 
+								  regionx - globx - 1.0 : // going left
+								  regionx + REGIONWIDTH - globx ); // going right			 
+				  double xdy( xdx*tana );
 							
-	      double ydy( sy < 0 ? 
-			  regiony - globy - 1.0 :  // going down
-			  regiony + REGIONWIDTH - globy ); // going up		 
-	      double ydx( ydy/tana );
+				  double ydy( sy < 0 ? 
+								  regiony - globy - 1.0 :  // going down
+								  regiony + REGIONWIDTH - globy ); // going up		 
+				  double ydx( ydy/tana );
 							
-	      // these stored hit points are updated as we go along
-	      xcrossx = globx+xdx;
-	      xcrossy = globy+xdy;
+				  // these stored hit points are updated as we go along
+				  xcrossx = globx+xdx;
+				  xcrossy = globy+xdy;
 							
-	      ycrossx = globx+ydx;
-	      ycrossy = globy+ydy;
+				  ycrossx = globx+ydx;
+				  ycrossy = globy+ydy;
 							
-	      // find the distances to the region crossing points
-	      // manhattan distance is faster than using hypot()
-	      distX = fabs(xdx)+fabs(xdy);
-	      distY = fabs(ydx)+fabs(ydy);		  
-	    }
+				  // find the distances to the region crossing points
+				  // manhattan distance is faster than using hypot()
+				  distX = fabs(xdx)+fabs(xdy);
+				  distY = fabs(ydx)+fabs(ydy);		  
+				}
 					
-	  if( distX < distY ) // crossing a region boundary left or right
-	    {
-	      // move to the X crossing
-	      globx = xcrossx; 
-	      globy = xcrossy; 
+			 if( distX < distY ) // crossing a region boundary left or right
+				{
+				  // move to the X crossing
+				  globx = xcrossx; 
+				  globy = xcrossy; 
 							
-	      n -= distX; // decrement remaining manhattan distance
+				  n -= distX; // decrement remaining manhattan distance
 							
-			  // calculate the next region crossing
-	      xcrossx += xjumpx; 
-	      xcrossy += xjumpy;
+				  // calculate the next region crossing
+				  xcrossx += xjumpx; 
+				  xcrossy += xjumpy;
 							
-	      distY -= distX;
-	      distX = xjumpdist;
+				  distY -= distX;
+				  distX = xjumpdist;
 							
-	      //rt_candidate_cells.push_back( stg_point_int_t( xcrossx, xcrossy ));
-	    }			 
-	  else // crossing a region boundary up or down
-	    {		  
-	      // move to the X crossing
-	      globx = ycrossx;
-	      globy = ycrossy;
+				  //rt_candidate_cells.push_back( stg_point_int_t( xcrossx, xcrossy ));
+				}			 
+			 else // crossing a region boundary up or down
+				{		  
+				  // move to the X crossing
+				  globx = ycrossx;
+				  globy = ycrossy;
 							
-	      n -= distY; // decrement remaining manhattan distance				
+				  n -= distY; // decrement remaining manhattan distance				
 							
-			  // calculate the next region crossing
-	      ycrossx += yjumpx;
-	      ycrossy += yjumpy;
+				  // calculate the next region crossing
+				  ycrossx += yjumpx;
+				  ycrossy += yjumpy;
 							
-	      distX -= distY;
-	      distY = yjumpdist;
+				  distX -= distY;
+				  distY = yjumpdist;
 
-	      //rt_candidate_cells.push_back( stg_point_int_t( ycrossx, ycrossy ));
-	    }	
-	}			  	
+				  //rt_candidate_cells.push_back( stg_point_int_t( ycrossx, ycrossy ));
+				}	
+		  }			  	
       //rt_cells.push_back( stg_point_int_t( globx, globy ));
     } 
   // hit nothing
@@ -978,14 +987,14 @@ inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
 Cell* World::GetCell( const stg_point_int_t& glob )
 {
   return( ((Region*)GetSuperRegionCached(  GETSREG(glob.x), GETSREG(glob.y)  )
-	   ->GetRegion( GETREG(glob.x), GETREG(glob.y) ))
-	  ->GetCell( GETCELL(glob.x), GETCELL(glob.y) )) ;
+			  ->GetRegion( GETREG(glob.x), GETREG(glob.y) ))
+			 ->GetCell( GETCELL(glob.x), GETCELL(glob.y) )) ;
 }
 
 
 void World::ForEachCellInLine( const stg_point_int_t& start,
-			       const stg_point_int_t& end,
-			       std::vector<Cell*>& cells )
+										 const stg_point_int_t& end,
+										 std::vector<Cell*>& cells )
 {  
   // line rasterization adapted from Cohen's 3D version in
   // Graphics Gems II. Should be very fast.  
@@ -1003,15 +1012,10 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
   int32_t globx(start.x);
   int32_t globy(start.y);
   
-  // fix a little issue where the edges are not drawn long enough
-  // when drawing to the right or up
-  //  if( (dx > 0) || ( dy > 0 ) )
-  //  n++;
-  
   while( n ) 
     {				
       Region* reg( GetSuperRegionCached( GETSREG(globx), GETSREG(globy) )
-		   ->GetRegion( GETREG(globx), GETREG(globy) ));
+						 ->GetRegion( GETREG(globx), GETREG(globy) ));
 			
       // add all the required cells in this region before looking up
       // another region			
@@ -1023,32 +1027,32 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
       // for a call of this method
       Cell* c = reg->GetCell( cx, cy );
 
+		// while inside the region, manipulate the Cell pointer directly
       while( (cx>=0) && (cx<REGIONWIDTH) && 
-	     (cy>=0) && (cy<REGIONWIDTH) && 
-	     n > 0 )
-	{					
-	  // find the cell at this location, then add it to the vector
-	  cells.push_back( c );
+				 (cy>=0) && (cy<REGIONWIDTH) && 
+				 n > 0 )
+		  {					
+			 // find the cell at this location, then add it to the vector
+			 cells.push_back( c );
 					
-	  // cleverly skip to the next cell (now it's safe to
-	  // manipulate the cell pointer direcly)
-	  if( exy < 0 ) 
-	    {
-	      globx += sx;
-	      exy += by;
-	      c += sx;
-	      cx += sx;
-	    }
-	  else 
-	    {
-	      globy += sy;
-	      exy -= bx; 
-	      c += sy * REGIONWIDTH;
-	      cy += sy;
-	    }
-	  --n;
-	}
-
+			 // cleverly skip to the next cell (now it's safe to
+			 // manipulate the cell pointer)
+			 if( exy < 0 ) 
+				{
+				  globx += sx;
+				  exy += by;
+				  c += sx;
+				  cx += sx;
+				}
+			 else 
+				{
+				  globy += sy;
+				  exy -= bx; 
+				  c += sy * REGIONWIDTH;
+				  cy += sy;
+				}
+			 --n;
+		  }
     }
 }
 
@@ -1108,13 +1112,13 @@ bool World::Event::operator<( const Event& other ) const
   if( time == other.time ) 
     {		
       if( type > other.type )
-	return true;
+		  return true;
 
       if( type == other.type ) 
-	{		
-	  if( mod < other.mod ) // tends to do children first
-	    return true;
-	}
+		  {		
+			 if( mod < other.mod ) // tends to do children first
+				return true;
+		  }
     }
 	    
   return false;

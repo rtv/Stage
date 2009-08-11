@@ -99,5 +99,6 @@ int main( int argc, char* argv[] )
   else
 	 while( ! World::UpdateAll() );
 
+  puts( "\n[Stage: done]" );
   exit(0);
 }

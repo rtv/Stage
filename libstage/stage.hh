@@ -834,15 +834,13 @@ namespace Stg
     double ppm; ///< the resolution of the world model in pixels per meter   
     bool quit; ///< quit this world ASAP  
 	 
-    /** World::quit is set true when this simulation time is reached */
-    stg_usec_t quit_time;
     stg_usec_t real_time_now; ///< The current real time in microseconds
     stg_usec_t real_time_start; ///< the real time at which this world was created
 	 bool show_clock; ///< iff true, print the sim time on stdout
-	 unsigned int show_clock_interval; ///< updates between clock xoutputs
+	 unsigned int show_clock_interval; ///< updates between clock outputs
 
     pthread_mutex_t thread_mutex; ///< protect the worker thread management stuff
-		unsigned int threads_working; ///< the number of worker threads not yet finished
+	 unsigned int threads_working; ///< the number of worker threads not yet finished
     pthread_cond_t threads_start_cond; ///< signalled to unblock worker threads
     pthread_cond_t threads_done_cond; ///< signalled by last worker thread to unblock main thread
     int total_subs; ///< the total number of subscriptions to all models
@@ -853,9 +851,11 @@ namespace Stg
 	 std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
     stg_bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
-	 stg_usec_t interval_track;
+
 	 std::set<Option*> option_table; ///< GUI options (toggles) registered by models
 	 std::list<PowerPack*> powerpack_list; ///< List of all the powerpacks attached to models in the world
+    /** World::quit is set true when this simulation time is reached */
+    stg_usec_t quit_time;
 	 std::list<float*> ray_list;///< List of rays traced for debug visualization
     stg_usec_t sim_time; ///< the current sim time in this world in microseconds
 	 std::map<stg_point_int_t,SuperRegion*> superregions;
@@ -871,9 +871,7 @@ namespace Stg
 
   public:
 	 
-    bool paused; ///< the world only updates when this is false or steps > 0
-	unsigned int steps; ///< When paused, stage updates while steps >
-						///0, decrementing steps with each update.
+    bool paused; ///< if true, the simulation is stopped
 
     virtual void Start(){ paused = false; };
     virtual void Stop(){ paused = true; };
@@ -1006,9 +1004,9 @@ namespace Stg
 	 void Enqueue( unsigned int queue_num, Event::type_t type, stg_usec_t delay, Model* mod );
 	 
 	 /** The sim time of the next event in the queue. */
-	 //stg_usec_t time_of_next_event;
-	 uint32_t event_pending_count;
-	 
+	 uint32_t event_pending_count;	 
+
+	 /** The amount of simulated time to run for each call to Update() */
 	 stg_usec_t sim_interval;
 	 
 	 /** consume events from the queue up to and including the current sim_time */
