@@ -11,7 +11,6 @@ define chatterbox create
  joules 100000 # todo
  joules_capacity 400000 # todo
  watts 100 # todo
- obstacle_return 0
  
 # charging connection
  model

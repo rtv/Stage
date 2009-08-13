@@ -330,7 +330,6 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
 	  laser->PushColor( 0, 0, 1, 0.1 );		
 	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
 	  laser->PopColor();  
-	  //glDepthMask( GL_TRUE );
 	}
   
   glDepthMask( GL_TRUE );
@@ -356,7 +355,6 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
 	  laser->PushColor( 0, 0, 1, 0.5 );		
 	  glDrawArrays( GL_POLYGON, 0, sample_count+1 );
 	  laser->PopColor();
-	  //			 glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	}			 
   
   if( showBeams )

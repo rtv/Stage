@@ -13,7 +13,7 @@ Block::Block( Model* mod,
 				  stg_meters_t zmin,
 				  stg_meters_t zmax,
 				  Color color,
-				  bool inherit_color
+				  bool inherit_color				  
 				  ) :
   mod( mod ),
   mpts(),
@@ -22,6 +22,7 @@ Block::Block( Model* mod,
   local_z( zmin, zmax ),
   color( color ),
   inherit_color( inherit_color ),
+  glow( 0.0 ),
   rendered_cells( new CellPtrVec ), 
   candidate_cells( new CellPtrVec ),
   gpts()
@@ -32,21 +33,21 @@ Block::Block( Model* mod,
   // copy the argument point data into the member vector
   this->pts.reserve( pt_count );
   for( size_t p=0; p<pt_count; p++ )
-	this->pts.push_back( pts[p] );	
+	 this->pts.push_back( pts[p] );	
 }
 
 /** A from-file  constructor */
 Block::Block(  Model* mod,
-			   Worldfile* wf,
-			   int entity)
+					Worldfile* wf,
+					int entity)
   : mod( mod ),
-	mpts(),
+	 mpts(),
     pt_count(0),
     pts(),
     color(0),
     inherit_color(true),
-	rendered_cells( new CellPtrVec ), 
-	candidate_cells( new CellPtrVec ) 
+	 rendered_cells( new CellPtrVec ), 
+	 candidate_cells( new CellPtrVec ) 
 {
   assert(mod);
   assert(wf);
@@ -405,10 +406,7 @@ void Block::Draw( Model* mod )
   DrawTop();
   glDisable(GL_POLYGON_OFFSET_FILL);
   
-  //   // draw the block outline in a darker version of the same color
-  //double r,g,b,a;
-  //stg_color_unpack( col, &r, &g, &b, &a );
-  //mod->PushColor( stg_color_pack( r/2.0, g/2.0, b/2.0, a ));
+  // draw the block outline in a darker version of the same color
   mod->PushColor( Color( col.r/2.0, col.g/2.0, col.b/2.0, col.a ));
   
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -417,7 +415,12 @@ void Block::Draw( Model* mod )
   DrawSides();
   glDepthMask(GL_TRUE);
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-  
+ 
+  if( glow > 0.0 )
+	 {
+		
+	 }
+ 
   mod->PopColor();
   mod->PopColor();
 }
@@ -457,4 +460,6 @@ void Block::Load( Worldfile* wf, int entity )
     }
   else
     inherit_color = true;
+
+  glow = wf->ReadFloat( entity, "glow", glow );
 }

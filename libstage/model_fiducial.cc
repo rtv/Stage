@@ -25,7 +25,8 @@ static const stg_radians_t DEFAULT_FOV = M_PI;
 static const stg_watts_t DEFAULT_WATTS = 10.0;
 
 //TODO make instance attempt to register an option (as customvisualizations do)
-Option ModelFiducial::showFiducialData( "Fiducials", "show_fiducial", "", true, NULL );
+Option ModelFiducial::showData( "Fiducials", "show_fiducial", "", true, NULL );
+Option ModelFiducial::showFov( "Fiducial FOV", "show_fiducial_fov", "", false, NULL );
 
 /** 
   @ingroup model
@@ -65,34 +66,35 @@ fiducial
   the angular field of view of the scanner, in radians.
 
  */
-
-ModelFiducial::ModelFiducial( World* world, 
-												Model* parent )
-  : Model( world, parent, MODEL_TYPE_FIDUCIAL ),
-	fiducials(),
-	max_range_anon( DEFAULT_RANGEMAXANON ),
-	max_range_id( DEFAULT_RANGEMAXID ),
-	min_range( DEFAULT_RANGEMIN ),
-	fov( DEFAULT_FOV ),
-	heading( 0 ),
-	key( 0 )
+  
+  ModelFiducial::ModelFiducial( World* world, 
+										  Model* parent ) : 
+  Model( world, parent, MODEL_TYPE_FIDUCIAL ),
+  fiducials(),
+  max_range_anon( DEFAULT_RANGEMAXANON ),
+  max_range_id( DEFAULT_RANGEMAXID ),
+  min_range( DEFAULT_RANGEMIN ),
+  fov( DEFAULT_FOV ),
+  heading( 0 ),
+  key( 0 )
 {
-	//PRINT_DEBUG2( "Constructing ModelFiducial %d (%s)\n", 
-	//		id, typestr );
-
-	// assert that Update() is reentrant for this derived model
-	thread_safe = true;
-	
-	// sensible fiducial defaults 
-	//  interval = 200; // common for a SICK LMS200
-
-	this->ClearBlocks();
-
-	Geom geom;
-	memset( &geom, 0, sizeof(geom));
-	SetGeom( geom );
-
-	RegisterOption( &showFiducialData );
+  //PRINT_DEBUG2( "Constructing ModelFiducial %d (%s)\n", 
+  //		id, typestr );
+  
+  // assert that Update() is reentrant for this derived model
+  thread_safe = true;
+  
+  // sensible fiducial defaults 
+  //  interval = 200; // common for a SICK LMS200
+  
+  this->ClearBlocks();
+  
+  Geom geom;
+  geom.Zero();
+  SetGeom( geom );
+  
+  RegisterOption( &showData );
+  RegisterOption( &showFov );
 }
 
 ModelFiducial::~ModelFiducial( void )
@@ -239,67 +241,69 @@ void ModelFiducial::Load( void )
 
 void ModelFiducial::DataVisualize( Camera* cam )
 {
-	if ( !showFiducialData )
-		return;
+	if( showFov )
+	  {
+		 PushColor( 1,0,1,0.2  ); // magenta, with a bit of alpha
 
-	PushColor( 1,0,1,0.7  ); // magenta, with a bit of alpha
+		 GLUquadric* quadric = gluNewQuadric();
+		 
+		 gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
+		 
+		 gluPartialDisk( quadric,
+							  0, 
+							  max_range_anon,
+							  20, // slices	
+							  1, // loops
+							  rtod( M_PI/2.0 + fov/2.0), // start angle
+							  rtod(-fov) ); // sweep angle
+		 
+		 gluDeleteQuadric( quadric );
+
+		 PopColor();
+	  }
 	
-	// draw the FOV
-// 	GLUquadric* quadric = gluNewQuadric();
-// 	gluQuadricDrawStyle( quadric, GLU_SILHOUETTE );
-	
-// 	gluPartialDisk( quadric,
-// 									0, 
-// 									max_range_anon,
-// 									20, // slices	
-// 									1, // loops
-// 									rtod( M_PI/2.0 + fov/2.0), // start angle
-// 									rtod(-fov) ); // sweep angle
-	
-// 	gluDeleteQuadric( quadric );
-
-	// draw fuzzy dotted lines	
-	glLineWidth( 2.0 );
-	glLineStipple( 1, 0x00FF );
-
-	// draw lines to the fiducials
-	for( unsigned int f=0; f<fiducials.size(); f++ )
-		{
-			Fiducial& fid = fiducials[f];
-						
-			double dx = fid.range * cos( fid.bearing);
-			double dy = fid.range * sin( fid.bearing);
-			
-			
-			glEnable(GL_LINE_STIPPLE);
-			glBegin( GL_LINES );
-			glVertex2f( 0,0 );
-			glVertex2f( dx, dy );
-			glEnd();
-			glDisable(GL_LINE_STIPPLE);
-	 
-			PushColor( 1,0,1,1  ); // magenta, no alpha
-
-			glPushMatrix();
-			Gl::coord_shift( dx,dy,0,fid.geom.a );
-			
-			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-			glRectf( -fid.geom.x/2.0, -fid.geom.y/2.0,
-							 fid.geom.x/2.0, fid.geom.y/2.0 );
-			
-			// show the fiducial ID
-			char idstr[32];
-			snprintf(idstr, 31, "%d", fid.id );
-			Gl::draw_string( 0,0,0, idstr );
-
-			PopColor();
-			
-			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-			glPopMatrix();			
-		}
-				 
-	 PopColor();			 
-   glLineWidth( 1.0 );			 
+	if( showData )
+	  {
+		 PushColor( 1,0,1,0.4  ); // magenta, with a bit of alpha
+		 
+		 // draw fuzzy dotted lines	
+		 glLineWidth( 2.0 );
+		 glLineStipple( 1, 0x00FF );
+		 
+		 // draw lines to the fiducials
+		 for( unsigned int f=0; f<fiducials.size(); f++ )
+			{
+			  Fiducial& fid = fiducials[f];
+			  
+			  double dx = fid.range * cos( fid.bearing);
+			  double dy = fid.range * sin( fid.bearing);
+			  
+			  glEnable(GL_LINE_STIPPLE);
+			  glBegin( GL_LINES );
+			  glVertex2f( 0,0 );
+			  glVertex2f( dx, dy );
+			  glEnd();
+			  glDisable(GL_LINE_STIPPLE);
+			  			  
+			  glPushMatrix();
+			  Gl::coord_shift( dx,dy,0,fid.geom.a );
+			  
+			  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+			  glRectf( -fid.geom.x/2.0, -fid.geom.y/2.0,
+						  fid.geom.x/2.0, fid.geom.y/2.0 );
+			  
+			  // show the fiducial ID
+			  char idstr[32];
+			  snprintf(idstr, 31, "%d", fid.id );
+			  Gl::draw_string( 0,0,0, idstr );
+			  
+			  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+			  glPopMatrix();			
+			}
+		 
+		 PopColor();			 
+		 glLineWidth( 1.0 );		
+	  }	 
 }
 	
 void ModelFiducial::Shutdown( void )

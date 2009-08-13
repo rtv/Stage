@@ -114,10 +114,10 @@ namespace Stg
     MODEL_TYPE_BLOBFINDER,
     MODEL_TYPE_BLINKENLIGHT,
     MODEL_TYPE_CAMERA,
-		MODEL_TYPE_GRIPPER,
-		MODEL_TYPE_ACTUATOR,
-		MODEL_TYPE_LOADCELL,
-		MODEL_TYPE_LIGHTINDICATOR,
+	 MODEL_TYPE_GRIPPER,
+	 MODEL_TYPE_ACTUATOR,
+	 MODEL_TYPE_LOADCELL,
+	 MODEL_TYPE_LIGHTINDICATOR,
     MODEL_TYPE_COUNT // must be the last entry, to count the number of types
   } stg_model_type_t;
 	
@@ -262,6 +262,9 @@ namespace Stg
 	
 	void Load( Worldfile* wf, int section, const char* keyword );
 	void Save( Worldfile* wf, int section, const char* keyword );
+	 
+	 void Zero()
+	 { x=y=z=0.0; }
   };
   
   /** Specify a 3 axis position, in x, y and heading. */
@@ -385,6 +388,12 @@ namespace Stg
 
 	 /** construct from a prior pose and size */
 	 Geom( const Pose& p, const Size& s ) : pose(p), size(s) {}
+	 
+	 void Zero()
+	 {
+		pose.Zero();
+		size.Zero();
+	 }
   };
   
   /** Specify a point in space. Arrays of Waypoints can be attached to
@@ -1159,26 +1168,22 @@ namespace Stg
 		
   private:
     Model* mod; ///< model to which this block belongs
-
-		std::vector<stg_point_t> mpts; ///< cache of this->pts in model coordindates
-    size_t pt_count; ///< the number of points
-
-		std::vector<stg_point_t> pts; ///< points defining a polygonx
-    //stg_point_t* pts; ///< points defining a polygon
-	 
-    Size size;
-	 
+	 std::vector<stg_point_t> mpts; ///< cache of this->pts in model coordindates
+    size_t pt_count; ///< the number of points	 
+	 std::vector<stg_point_t> pts; ///< points defining a polygonx	 
+    Size size;	 
     Bounds local_z; ///<  z extent in local coords
-
     Color color;
     bool inherit_color;
+	 
+	 /** experimental - range 0 - 1, render glowing */
+	 double glow;
 	 
     void DrawTop();
     void DrawSides();
 	 
     /** z extent in global coordinates */
-    Bounds global_z;
-	 
+    Bounds global_z;	 
     bool mapped;
 	 
     /** record the cells into which this block has been rendered to
@@ -2684,9 +2689,10 @@ private:
 	 virtual void Update();
 	 virtual void DataVisualize( Camera* cam );
 
-	 static Option showFiducialData;
-		
-		std::vector<Fiducial> fiducials;
+	 static Option showData;
+	 static Option showFov;
+	 
+	 std::vector<Fiducial> fiducials;
 		
   public:		
 		ModelFiducial( World* world, Model* parent );
