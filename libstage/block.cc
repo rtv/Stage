@@ -8,13 +8,12 @@ using namespace Stg;
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
 Block::Block( Model* mod,
-				  stg_point_t* pts,
-				  size_t pt_count,
-				  stg_meters_t zmin,
-				  stg_meters_t zmax,
-				  Color color,
-				  bool inherit_color				  
-				  ) :
+	      stg_point_t* pts,
+	      size_t pt_count,
+	      stg_meters_t zmin,
+	      stg_meters_t zmax,
+	      Color color,
+	      bool inherit_color ) :
   mod( mod ),
   mpts(),
   pt_count( pt_count ),
@@ -33,21 +32,21 @@ Block::Block( Model* mod,
   // copy the argument point data into the member vector
   this->pts.reserve( pt_count );
   for( size_t p=0; p<pt_count; p++ )
-	 this->pts.push_back( pts[p] );	
+    this->pts.push_back( pts[p] );	
 }
 
 /** A from-file  constructor */
 Block::Block(  Model* mod,
-					Worldfile* wf,
-					int entity)
+	       Worldfile* wf,
+	       int entity)
   : mod( mod ),
-	 mpts(),
+    mpts(),
     pt_count(0),
     pts(),
     color(0),
     inherit_color(true),
-	 rendered_cells( new CellPtrVec ), 
-	 candidate_cells( new CellPtrVec ) 
+    rendered_cells( new CellPtrVec ), 
+    candidate_cells( new CellPtrVec ) 
 {
   assert(mod);
   assert(wf);

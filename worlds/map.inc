@@ -12,7 +12,7 @@ define floorplan model
 
   gui_nose 0
   gui_grid 0
-  gui_movemask 0
+  gui_move 0
   gui_outline 0
   gripper_return 0
   fiducial_return 0
@@ -26,7 +26,7 @@ define zone model
 
   gui_nose 0
   gui_grid 0
-  gui_movemask 0
+  gui_move 0
   gui_outline 0
 
   # insensible to collision and range sensors

@@ -267,10 +267,9 @@ void Model::AddVisualizer( Visualizer* cv, bool on_by_default )
 void Model::RemoveVisualizer( Visualizer* cv )
 {
   if( cv )
-	  cv_list.erase( remove( cv_list.begin(), cv_list.end(), cv ));
-
-
-	//TODO unregister option - tricky because there might still be instances attached to different models which have the same name
+    cv_list.erase( remove( cv_list.begin(), cv_list.end(), cv ));
+  
+  //TODO unregister option - tricky because there might still be instances attached to different models which have the same name
 }
 
 
@@ -285,107 +284,98 @@ void Model::DrawStatusTree( Camera* cam )
 
 void Model::DrawStatus( Camera* cam ) 
 {
-  // quick hack
-//   if( power_pack && power_pack->stored < 0.0 )
-// 	 {
-//       glPushMatrix();
-//       glTranslatef( 0.3, 0, 0.0 );		
-// 		DrawImage( TextureManager::getInstance()._mains_texture_id, cam, 0.85 );
-// 		glPopMatrix();
-// 	 }
-
   if( say_string || power_pack )	  
     {
       float yaw, pitch;
       pitch = - cam->pitch();
       yaw = - cam->yaw();			
       
-		Pose gpz = GetGlobalPose();
-
+      Pose gpz = GetGlobalPose();
+      
       float robotAngle = -rtod(gpz.a);
       glPushMatrix();
-				
+      
       // move above the robot
       glTranslatef( 0, 0, 0.5 );		
-		
+      
       // rotate to face screen
       glRotatef( robotAngle - yaw, 0,0,1 );
       glRotatef( -pitch, 1,0,0 );
-
-		if( power_pack )
-		  power_pack->Visualize( cam );
-
-		if( say_string )
-		  {
-			 glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-
-			 //get raster positition, add gl_width, then project back to world coords
-			 glRasterPos3f( 0, 0, 0 );
-			 GLfloat pos[ 4 ];
-			 glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
-			 
-			 GLboolean valid;
-			 glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
-			 
-			 if( valid ) 
-				{				  
-				  //fl_font( FL_HELVETICA, 12 );
-				  float w = gl_width( this->say_string ); // scaled text width
-				  float h = gl_height(); // scaled text height
-				  
-				  GLdouble wx, wy, wz;
-				  GLint viewport[4];
-				  glGetIntegerv(GL_VIEWPORT, viewport);
-				  
-				  GLdouble modelview[16];
-				  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-				  
-				  GLdouble projection[16];	
-				  glGetDoublev(GL_PROJECTION_MATRIX, projection);
-				  
-				  //get width and height in world coords
-				  gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-				  w = wx;
-				  gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-				  h = wy;
-				  
-				  // calculate speech bubble margin
-				  const float m = h/10;
-				  
-				  // draw inside of bubble
-				  PushColor( BUBBLE_FILL );
-				  glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-				  glPolygonMode( GL_FRONT, GL_FILL );
-				  glEnable( GL_POLYGON_OFFSET_FILL );
-				  glPolygonOffset( 1.0, 1.0 );
-				  Gl::draw_octagon( w, h, m );
-				  glDisable( GL_POLYGON_OFFSET_FILL );
-				  PopColor();
-				  
-				  // draw outline of bubble
-				  PushColor( BUBBLE_BORDER );
-				  glLineWidth( 1 );
-				  glEnable( GL_LINE_SMOOTH );
-				  glPolygonMode( GL_FRONT, GL_LINE );
-				  Gl::draw_octagon( w, h, m );
-				  glPopAttrib();
-				  PopColor();
-				  
-				  PushColor( BUBBLE_TEXT );
-				  // draw text inside the bubble
-				  Gl::draw_string( m, 2.5*m, 0, this->say_string );
-				  PopColor();			
-				}
-		  }
-		glPopMatrix();
-	 }
+      
+      if( power_pack )
+	power_pack->Visualize( cam );
+      
+      if( say_string )
+	{
+	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	  
+	  //get raster positition, add gl_width, then project back to world coords
+	  glRasterPos3f( 0, 0, 0 );
+	  GLfloat pos[ 4 ];
+	  glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
+	  
+	  GLboolean valid;
+	  glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
+	  
+	  if( valid ) 
+	    {				  
+	      //fl_font( FL_HELVETICA, 12 );
+	      float w = gl_width( this->say_string ); // scaled text width
+	      float h = gl_height(); // scaled text height
+	      
+	      GLdouble wx, wy, wz;
+	      GLint viewport[4];
+	      glGetIntegerv(GL_VIEWPORT, viewport);
+	      
+	      GLdouble modelview[16];
+	      glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+	      
+	      GLdouble projection[16];	
+	      glGetDoublev(GL_PROJECTION_MATRIX, projection);
+	      
+	      //get width and height in world coords
+	      gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+	      w = wx;
+	      gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+	      h = wy;
+	      
+	      // calculate speech bubble margin
+	      const float m = h/10;
+	      
+	      // draw inside of bubble
+	      PushColor( BUBBLE_FILL );
+	      glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
+	      glPolygonMode( GL_FRONT, GL_FILL );
+	      glEnable( GL_POLYGON_OFFSET_FILL );
+	      glPolygonOffset( 1.0, 1.0 );
+	      Gl::draw_octagon( w, h, m );
+	      glDisable( GL_POLYGON_OFFSET_FILL );
+	      PopColor();
+	      
+	      // draw outline of bubble
+	      PushColor( BUBBLE_BORDER );
+	      glLineWidth( 1 );
+	      glEnable( GL_LINE_SMOOTH );
+	      glPolygonMode( GL_FRONT, GL_LINE );
+	      Gl::draw_octagon( w, h, m );
+	      glPopAttrib();
+	      PopColor();
+	      
+	      PushColor( BUBBLE_TEXT );
+	      // draw text inside the bubble
+	      Gl::draw_string( m, 2.5*m, 0, this->say_string );
+	      PopColor();			
+	    }
+	}
+      glPopMatrix();
+    }
   
   if( stall )
     {
       DrawImage( TextureManager::getInstance()._stall_texture_id, cam, 0.85 );
     }
   
-//   extern GLuint glowTex;
+  //   extern GLuint glowTex;
 //   extern GLuint checkTex;
   
 //   if( parent == NULL )

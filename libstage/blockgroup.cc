@@ -154,7 +154,6 @@ void BlockGroup::BuildDisplayList( Model* mod )
 	return;
 
   //printf( "display list for model %s\n", mod->token );
-
   if( displaylist == 0 )
 	{
 	  displaylist = glGenLists(1);
@@ -163,7 +162,6 @@ void BlockGroup::BuildDisplayList( Model* mod )
 
   glNewList( displaylist, GL_COMPILE );	
     
-
   Geom geom = mod->GetGeom();
 
   Gl::pose_shift( geom.pose );

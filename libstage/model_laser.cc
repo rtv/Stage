@@ -71,11 +71,11 @@ Option ModelLaser::Vis::showBeams( "Laser beams", "show_laser_beams", "", false,
    Only calculate the true range of every nth laser sample. The missing samples are filled in with a linear interpolation. Generally it would be better to use fewer samples, but some (poorly implemented!) programs expect a fixed number of samples. Setting this number > 1 allows you to reduce the amount of computation required for your fixed-size laser vector.
 */
   
-	  
+
 ModelLaser::ModelLaser( World* world, 
-						Model* parent )
+												Model* parent )
   : Model( world, parent, MODEL_TYPE_LASER ),
-	vis( world ),
+		vis( world ),
     sample_count( DEFAULT_SAMPLES ),
     samples(),
     range_max( DEFAULT_MAXRANGE ),

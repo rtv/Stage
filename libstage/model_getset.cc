@@ -98,10 +98,10 @@ void Model::SetGuiNose(  int val )
   CallCallbacks( &gui.nose );
 }
 
-void Model::SetGuiMask( int val )
+void Model::SetGuiMove( int val )
 {
-  gui.mask = val;
-  CallCallbacks( &gui.mask );
+  gui.move = val;
+  CallCallbacks( &gui.move );
 }
 
 void Model::SetGuiGrid(  int val )

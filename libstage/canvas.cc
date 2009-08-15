@@ -228,7 +228,7 @@ Model* Canvas::getModel( int x, int y )
     {
       Model* mod = (*it);
 		
-      if( mod->gui.mask & (STG_MOVE_TRANS | STG_MOVE_ROT ))
+      if( mod->gui.move )
 	{
 	  uint8_t rByte, gByte, bByte, aByte;
 	  uint32_t modelId = mod->id;

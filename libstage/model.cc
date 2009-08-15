@@ -172,7 +172,7 @@ void Visibility::Load( Worldfile* wf, int wf_entity )
 
 GuiState:: GuiState() :
   grid( false ),
-  mask( 0 ),
+  move( false ),
   nose( false ),
   outline( false )
 { /* nothing to do */}
@@ -182,14 +182,13 @@ void GuiState::Load( Worldfile* wf, int wf_entity )
   nose = wf->ReadInt( wf_entity, "gui_nose", nose);    
   grid = wf->ReadInt( wf_entity, "gui_grid", grid);    
   outline = wf->ReadInt( wf_entity, "gui_outline", outline);    
-  mask = wf->ReadInt( wf_entity, "gui_movemask", mask);    
+  move = wf->ReadInt( wf_entity, "gui_move", move );    
 }    
-
 
 // constructor
 Model::Model( World* world,
-				  Model* parent,
-				  const stg_model_type_t type )
+	      Model* parent,
+	      const stg_model_type_t type )
   : Ancestor(), 	 
     blockgroup(),
     blocks_dl(0),
@@ -254,7 +253,7 @@ Model::Model( World* world,
     {
       world->AddChild( this );
       // top level models are draggable in the GUI
-      gui.mask = (STG_MOVE_TRANS | STG_MOVE_ROT);
+      gui.move = true;
     }
 
   world->AddModel( this );

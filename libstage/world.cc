@@ -106,8 +106,6 @@ World::World( const char* token,
   models_with_fiducials(),
   ppm( ppm ), // raytrace resolution
   quit( false ),
-  real_time_now( RealTimeNow() ),
-  real_time_start( real_time_now ),
   show_clock( false ),
   show_clock_interval( 100 ), // 10 simulated seconds using defaults
   thread_mutex(),
@@ -302,8 +300,6 @@ void World::Load( const char* worldfile_path )
   printf( " [Loading %s]", worldfile_path );
   fflush(stdout);
 
-  stg_usec_t load_start_time = RealTimeNow();
-
   this->wf = new Worldfile();
   wf->Load( worldfile_path );
   PRINT_DEBUG1( "wf has %d entitys", wf->GetEntityCount() );
@@ -312,80 +308,74 @@ void World::Load( const char* worldfile_path )
   //puts("");
 
   int entity = 0;
-
+  
   this->token = (char*)
-    wf->ReadString( entity, "name", token );
-
-  this->quit_time = (stg_usec_t)( million * 
-											 wf->ReadFloat( entity, "quit_time", 0 ) );
+    wf->ReadString( entity, "name", this->token );
+  
+  this->quit_time = 
+    (stg_usec_t)( million * wf->ReadFloat( entity, "quit_time", this->quit_time ) );
   
   this->ppm = 
     1.0 / wf->ReadFloat( entity, "resolution", 1.0 / this->ppm );
   
   this->show_clock = 
-	 wf->ReadInt( entity, "show_clock", this->show_clock );
+    wf->ReadInt( entity, "show_clock", this->show_clock );
   
   this->show_clock_interval = 
-	 wf->ReadInt( entity, "show_clock_interval", this->show_clock_interval );
+    wf->ReadInt( entity, "show_clock_interval", this->show_clock_interval );
   
   // read msec instead of usec: easier for user
   this->sim_interval =
-	 1e3 * wf->ReadFloat( entity, "interval_sim", this->sim_interval / 1e3 );
+    1e3 * wf->ReadFloat( entity, "interval_sim", this->sim_interval / 1e3 );
   
   this->worker_threads = wf->ReadInt( entity, "threads",  this->worker_threads );  
   if( worker_threads > 0 )
     {
       PRINT_WARN( "\nmulti-thread support is experimental and may not work properly, if at all." );
-		
+      
       event_queues.resize( worker_threads + 1 );
-		
+      
       // kick off the threads
       for( unsigned int t=0; t<worker_threads; t++ )
-		  {
-			 std::pair<World*,int> *p = new std::pair<World*,int>( this, t+1 );
-			 
-			 //normal posix pthread C function pointer
-			 typedef void* (*func_ptr) (void*);
-			 
-			 pthread_t pt;
-			 pthread_create( &pt,
-								  NULL,
-								  (func_ptr)World::update_thread_entry, 
-								  p );
-		  }
-		
+	{
+	  std::pair<World*,int> *p = new std::pair<World*,int>( this, t+1 );
+	  
+	  //normal posix pthread C function pointer
+	  typedef void* (*func_ptr) (void*);
+	  
+	  pthread_t pt;
+	  pthread_create( &pt,
+			  NULL,
+			  (func_ptr)World::update_thread_entry, 
+			  p );
+	}
+      
       printf( "[threads %u]", worker_threads );	
     }
-
+  
   // Iterate through entitys and create objects of the appropriate type
   for( int entity = 1; entity < wf->GetEntityCount(); entity++ )
     {
       const char *typestr = (char*)wf->GetEntityType(entity);      	  
-		
+      
       // don't load window entries here
       if( strcmp( typestr, "window" ) == 0 )
-		  {
-			 /* do nothing here */
-		  }
+	{
+	  /* do nothing here */
+	}
       else if( strcmp( typestr, "block" ) == 0 )
-		  LoadBlock( wf, entity );
+	LoadBlock( wf, entity );
       else
-		  LoadModel( wf, entity );
+	LoadModel( wf, entity );
     }
-	
+  
   // warn about unused WF lines
   wf->WarnUnused();
-	
+  
   FOR_EACH( it, children )
     (*it)->InitRecursive();
-	
-  stg_usec_t load_end_time = RealTimeNow();
-	
-  if( debug )
-    printf( "[Load time %.3fsec]\n", 
-				(load_end_time - load_start_time) / 1e6 );
-  else
-    putchar( '\n' );
+  
+  putchar( '\n' );
 }
 
 void World::UnLoad()
@@ -406,31 +396,12 @@ void World::UnLoad()
   token = NULL;
 }
 
-// cant inline a symbol that is used externally
-stg_usec_t World::RealTimeNow()
-{
-  struct timeval tv;
-  gettimeofday( &tv, NULL );  // slow system call: use sparingly
-  return( tv.tv_sec*1000000 + tv.tv_usec );
-}
-
-inline stg_usec_t World::RealTimeSinceStart()
-{
-  stg_usec_t timenow = RealTimeNow();
-
-  // subtract the start time from the current time to get the elapsed
-  // time
-
-  return timenow - real_time_start;
-}
-
-
 bool World::PastQuitTime() 
 { 
   return( (quit_time > 0) && (sim_time >= quit_time) ); 
 }
 
-std::string World::ClockString()
+std::string World::ClockString() const
 {
   const uint32_t usec_per_hour   = 3600000000U;
   const uint32_t usec_per_minute = 60000000U;
@@ -458,7 +429,7 @@ std::string World::ClockString()
 }
 
 void World::AddUpdateCallback( stg_world_callback_t cb, 
-										 void* user )
+			       void* user )
 {
   // add the callback & argument to the list
   std::pair<stg_world_callback_t,void*> p(cb, user);
@@ -466,17 +437,17 @@ void World::AddUpdateCallback( stg_world_callback_t cb,
 }
 
 int World::RemoveUpdateCallback( stg_world_callback_t cb, 
-											void* user )
+				 void* user )
 {
   std::pair<stg_world_callback_t,void*> p( cb, user );
   
   FOR_EACH( it, cb_list )
     {
       if( (*it) == p )
-		  {
-			 cb_list.erase( it );		
-			 break;
-		  }
+	{
+	  cb_list.erase( it );		
+	  break;
+	}
     }
   
   // return the number of callbacks now in the list. Useful for
@@ -496,44 +467,22 @@ void World::CallUpdateCallbacks()
 void World::ConsumeQueue( unsigned int queue_num )
 {  
   std::priority_queue<Event>& queue = event_queues[queue_num];
-
+  
   if( queue.empty() )
     return;
-
+  
   // update everything on the event queue that happens at this time or earlier
   Event ev( queue.top() );    
-  while( ev.time <= sim_time ) 
+  while(  ev.time <= sim_time ) 
     {
-      //   			 printf( "@ %llu next event <%s %llu %s>\n", 
-      //   						sim_time,
-      //  						ev.TypeStr( ev.type ),
-      //  						ev.time, 
-      //   						ev.mod->Token() );
-		
-      queue.pop();
-		
+      // printf( "@ %llu next event <%s %llu %s>\n",  sim_time, ev.TypeStr( ev.type ), ev.time, ev.mod->Token() ); 
+      queue.pop();      
       // only update events are allowed in queues other than zero
       if( queue_num > 0 && ev.type != Event::UPDATE )
-		  PRINT_WARN1( "event type %d in async queue", queue_num );
-		
-      switch( ev.type )
-		  {
-		  case Event::UPDATE:				  
-			 ev.mod->Update();
-			 break;
-			 
-		  case Event::POSE:				  
-			 ev.mod->UpdatePose();
-			 break;
-			 
-		  case Event::ENERGY:				  
-			 ev.mod->UpdateCharge();
-			 break;
-			 
-		  default:
-			 PRINT_WARN1( "unknown event type %d", ev.type );
-		  }
-		
+	PRINT_WARN1( "event type %d in async queue", queue_num );
+      
+      //process the event and move to the next
+      ev.Execute();
       ev = queue.top();
     }
 }
@@ -1102,6 +1051,7 @@ void World::Enqueue( unsigned int queue_num, Event::type_t type, stg_usec_t dela
   ++event_pending_count;
 }
 
+
 bool World::Event::operator<( const Event& other ) const 
 {
   // sort by time, type, then model, in that order.
@@ -1133,5 +1083,26 @@ const char* World::Event::TypeStr( type_t type )
     case ENERGY: return "ENERGY";
     case UPDATE: return "UPDATE";
     default: return "<unknown>";
+    }
+}
+
+void World::Event::Execute()
+{
+  switch( type )
+    {
+    case UPDATE:				  
+      mod->Update();
+      break;
+      
+    case POSE:				  
+      mod->UpdatePose();
+      break;
+      
+    case ENERGY:				  
+      mod->UpdateCharge();
+      break;
+      
+    default:
+      PRINT_WARN1( "unknown event type %d", type );
     }
 }

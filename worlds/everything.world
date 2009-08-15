@@ -40,7 +40,7 @@ floorplan
 define puck model(
   size [ 0.080 0.080 0.100 ]
   gripper_return 1
-  gui_movemask 3
+  gui_move 1
   gui_nose 0
   fiducial_return 10
 )

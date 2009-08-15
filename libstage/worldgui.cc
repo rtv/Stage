@@ -194,7 +194,8 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   oDlg( NULL ),
   pause_time( false ),	
   real_time_interval( sim_interval ),
-  real_time_recorded( RealTimeNow() ),
+  real_time_now( RealTimeNow() ),
+  real_time_recorded( real_time_now ),
   timing_interval( 20 )
 {
   Fl::scheme( "gtk+" );
@@ -261,7 +262,9 @@ void WorldGui::Load( const char* filename )
   Fl::check();
 
   fileMan->newWorld( filename );
-
+  
+  stg_usec_t load_start_time = RealTimeNow();
+  
   World::Load( filename );
   
   // worldgui exclusive properties live in the top-level section
@@ -290,6 +293,12 @@ void WorldGui::Load( const char* filename )
 		}
 		label( title.c_str() );
 	 }
+ 
+  stg_usec_t load_end_time = RealTimeNow();
+	
+  if( debug )
+    printf( "[Load time %.3fsec]\n", 
+	    (load_end_time - load_start_time) / 1e6 );
   
   Show();
 }
@@ -352,15 +361,15 @@ bool WorldGui::Update()
   bool done = World::Update();
   
   if( done )
-	 {
-		quit_time = 0; // allows us to continue by un-pausing
-		Stop();
-	 }
+    {
+      quit_time = 0; // allows us to continue by un-pausing
+      Stop();
+    }
   
   return done;
 }
 
-std::string WorldGui::ClockString()
+std::string WorldGui::ClockString() const
 {
   std::string str = World::ClockString();
   
@@ -788,7 +797,7 @@ bool WorldGui::closeWindowQuery()
 void WorldGui::DrawBoundingBoxTree()
 {
   FOR_EACH( it, World::children )
-	 (*it)->DrawBoundingBoxTree();
+    (*it)->DrawBoundingBoxTree();
 }
 
 void WorldGui::PushColor( Color col )
@@ -800,5 +809,12 @@ void WorldGui::PushColor( double r, double g, double b, double a )
 void WorldGui::PopColor()
 { canvas->PopColor(); }
 
-Model* WorldGui::RecentlySelectedModel()
+Model* WorldGui::RecentlySelectedModel() const
 { return canvas->last_selection; }
+
+stg_usec_t WorldGui::RealTimeNow() const
+{
+  struct timeval tv;
+  gettimeofday( &tv, NULL );  // slow system call: use sparingly
+  return( tv.tv_sec*1000000 + tv.tv_usec );
+}
