@@ -873,7 +873,7 @@ namespace Stg
 	// todo - test performance of std::set
 	std::vector<ModelPtrVec > update_lists;  
 	 
-    long unsigned int updates; ///< the number of simulated time steps executed so far
+    uint64_t updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
 
 	 void CallUpdateCallbacks(); ///< Call all calbacks in cb_list, removing any that return true;
@@ -1070,7 +1070,7 @@ namespace Stg
     stg_bounds3d_t GetExtent(){ return extent; };
   
     /** Return the number of times the world has been updated. */
-    long unsigned int GetUpdateCount() { return updates; }
+    uint64_t GetUpdateCount() { return updates; }
 
 	 /// Register an Option for pickup by the GUI
 	 void RegisterOption( Option* opt );	
@@ -1427,8 +1427,18 @@ namespace Stg
     Fl_Menu_Bar* mbar;
     OptionsDlg* oDlg;
     bool pause_time;
-    stg_usec_t real_time_of_last_update;
-    
+
+	 /** The amount of real time elapsed between $timing_interval
+		  timesteps. */
+    stg_usec_t real_time_interval;
+	 
+	 /** The last recorded real time, sampled every $timing_interval
+		  updates. */
+    stg_usec_t real_time_recorded;
+	 
+	 /** Number of updates between measuring elapsed real time. */
+	 uint64_t timing_interval;
+
     // static callback functions
     static void UpdateCallback( WorldGui* wg );
     static void windowCb( Fl_Widget* w, WorldGui* wg );	
@@ -1829,11 +1839,11 @@ namespace Stg
 				be set in the world file using the tail_length model
 				property. */
 		unsigned int trail_length;
-
-		/** Number of world updates between trail records. */
-		long unsigned int trail_interval;
-
-		stg_model_type_t type;  
+	 
+	 /** Number of world updates between trail records. */
+	 uint64_t trail_interval;
+	 
+	 stg_model_type_t type;  
 	 /** The index into the world's vector of event queues. Initially
 		  -1, to indicate that it is not on a list yet. */
 	 int event_queue_num; 

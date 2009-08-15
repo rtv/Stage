@@ -384,24 +384,37 @@ void Model::DrawStatus( Camera* cam )
     {
       DrawImage( TextureManager::getInstance()._stall_texture_id, cam, 0.85 );
     }
+  
+//   extern GLuint glowTex;
+//   extern GLuint checkTex;
+  
+//   if( parent == NULL )
+//  	 {
+//  		glBlendFunc(GL_SRC_COLOR, GL_ONE );	
+//  		DrawImage( glowTex, cam, 1.0 );
+//  		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+//  	 }
 }
 
-void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha, double width, double height )
+void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha, 
+							  double width, double height )
 {
   float yaw, pitch;
   pitch = - cam->pitch();
   yaw = - cam->yaw();
-  float robotAngle = -rtod(pose.a);
+
+  float robotAngle = -rtod( GetGlobalPose().a);
 
   glPolygonMode( GL_FRONT, GL_FILL );
 
   glEnable(GL_TEXTURE_2D);
   glBindTexture( GL_TEXTURE_2D, texture_id );
 
-  glColor4f( 1.0, 1.0, 1.0, alpha );
+  glColor4f( 1.0, 1.0, 1.0, 1.0 );
   glPushMatrix();
 
   //position image above the robot
+  // TODO 
   glTranslatef( 0.0, 0.0, ModelHeight() + 0.3 );
 
   // rotate to face screen
@@ -416,9 +429,19 @@ void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha, double wid
   glTexCoord2f(0.0f, height); glVertex3f(-0.25f, 0,  0.25f );
   glEnd();
 
-  glPopMatrix();
   glBindTexture( GL_TEXTURE_2D, 0 );
   glDisable(GL_TEXTURE_2D);
+
+//   glPolygonMode( GL_FRONT, GL_LINE );
+//   glColor3f( 0,0,1 );
+//   glBegin(GL_QUADS);
+//   glVertex3f(-0.25f, 0, -0.25f );
+//   glVertex3f( 0.25f, 0, -0.25f );
+//   glVertex3f( 0.25f, 0,  0.25f );
+//   glVertex3f(-0.25f, 0,  0.25f );
+//   glEnd();
+
+  glPopMatrix();
 }
 
 

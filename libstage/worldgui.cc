@@ -189,17 +189,14 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   canvas( new Canvas( this,0,30,W,H-30 ) ),
   drawOptions(),
   fileMan( new FileManager() ),
-  interval_log(),
   speedup(1.0), // real time
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
   oDlg( NULL ),
   pause_time( false ),	
-  real_time_of_last_update( RealTimeNow() )
+  real_time_interval( sim_interval ),
+  real_time_recorded( RealTimeNow() ),
+  timing_interval( 20 )
 {
-  interval_log.resize(16);
-  for( unsigned int i=0; i<interval_log.size(); i++ )
-  	 interval_log[i] = sim_interval;
-  
   Fl::scheme( "gtk+" );
   resizable(canvas);
   
@@ -215,9 +212,6 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   mbar->add( "File/&Load World...", FL_CTRL + 'l', (Fl_Callback*)fileLoadCb, this, FL_MENU_DIVIDER );
   mbar->add( "File/&Save World", FL_CTRL + 's', (Fl_Callback*)fileSaveCb, this );
   mbar->add( "File/Save World &As...", FL_CTRL + FL_SHIFT + 's', (Fl_Callback*)WorldGui::fileSaveAsCb, this, FL_MENU_DIVIDER );
-  
-  //mbar->add( "File/Screenshots", 0,0,0, FL_SUBMENU );
-  //mbar->add( "File/Screenshots/Save Frames, (Fl_Callback*)fileScreenshotSaveCb, this,FL_MENU_TOGGLE );
   
   mbar->add( "File/E&xit", FL_CTRL+'q', (Fl_Callback*)fileExitCb, this );
   
@@ -345,11 +339,15 @@ bool WorldGui::Update()
 
   //printf( "speedup %.2f timeout %.6f\n", speedup, timeout );
   
-  stg_usec_t timenow = RealTimeNow();	 
-  stg_usec_t interval = timenow - real_time_of_last_update; 
-  interval_log[updates%interval_log.size()] =  interval;  
-  real_time_of_last_update = timenow;
-   
+  // occasionally we measure the real time elapsing, for reporting the
+  // run speed
+  if( updates % timing_interval == 0 )
+	 { 
+		stg_usec_t timenow = RealTimeNow();	 
+		real_time_interval = timenow - real_time_recorded; 
+		real_time_recorded = timenow;
+	 }   
+
   // inherit
   bool done = World::Update();
   
@@ -366,13 +364,7 @@ std::string WorldGui::ClockString()
 {
   std::string str = World::ClockString();
   
-  // find the average length of the last few realtime intervals;
-  stg_usec_t average_real_interval = 0;
-  for( uint32_t i=0; i<interval_log.size(); i++ )
-    average_real_interval += interval_log[i];
-  average_real_interval /= interval_log.size();
-  
-  double localratio = (double)sim_interval / (double)average_real_interval;
+  double localratio = (double)sim_interval / (double)(real_time_interval/timing_interval);
   
   char buf[32];
   snprintf( buf, 32, " [%.1f]", localratio );

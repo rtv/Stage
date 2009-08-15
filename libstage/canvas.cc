@@ -30,10 +30,12 @@ using namespace Stg;
 static  const int checkImageWidth = 2;
 static  const int	checkImageHeight = 2;
 static  GLubyte checkImage[checkImageHeight][checkImageWidth][4];
-static  GLuint texName;
 static bool blur = true;
 
 static bool init_done = false;
+
+//GLuint glowTex;
+GLuint checkTex;
 
 void Canvas::TimerCallback( Canvas* c )
 {
@@ -149,23 +151,42 @@ void Canvas::InitGl()
   GLuint mains_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
   TextureManager::getInstance()._mains_texture_id = mains_id;
   
-  //TODO merge this code into the textureManager?
+//   // generate a small glow texture
+//   GLubyte* pixels = new GLubyte[ 4 * 128 * 128 ];
+
+//   for( int x=0; x<128; x++ )
+//  	 for( int y=0; y<128; y++ )
+//  		{		  
+//  		  GLubyte* p = &pixels[ 4 * (128*y + x)];
+//  		  p[0] = (GLubyte)255; // red
+//  		  p[1] = (GLubyte)0; // green
+//  		  p[2] = (GLubyte)0; // blue
+//  		  p[3] = (GLubyte)128; // alpha
+//  		}
+
+
+//   glGenTextures(1, &glowTex );
+//   glBindTexture( GL_TEXTURE_2D, glowTex );
+  
+//   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, 
+// 					 GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+
+//   delete[] pixels;
+
+  // draw a check into a bitmap, then load that into a texture
   int i, j;
   for (i = 0; i < checkImageHeight; i++) 
     for (j = 0; j < checkImageWidth; j++) 
       {			
-	int even = (i+j)%2;
-	checkImage[i][j][0] = (GLubyte) 255 - 10*even;
-	checkImage[i][j][1] = (GLubyte) 255 - 10*even;
-	checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
-	checkImage[i][j][3] = 255;
+		  int even = (i+j)%2;
+		  checkImage[i][j][0] = (GLubyte) 255 - 10*even;
+		  checkImage[i][j][1] = (GLubyte) 255 - 10*even;
+		  checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
+		  checkImage[i][j][3] = 255;
       }
   
-  
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glGenTextures(1, &texName);		 
-  glBindTexture(GL_TEXTURE_2D, texName);
-  glEnable(GL_TEXTURE_2D);
+  glGenTextures(1, &checkTex );		 
+  glBindTexture(GL_TEXTURE_2D, checkTex);
   
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -173,12 +194,10 @@ void Canvas::InitGl()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
-	       0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+					0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
   
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-  // fl_font( FL_HELVETICA, 16 );
-
+    
   init_done = true; 
 }
 
@@ -574,7 +593,7 @@ void Canvas::DrawGlobalGrid()
   */
   
   char str[64];	
-  PushColor( 0.15, 0.15, 0.15, 1.0 ); // pale gray
+  PushColor( 0.2, 0.2, 0.2, 1.0 ); // pale gray
   for( double i = ceil(bounds.x.min); i < bounds.x.max; i++)
     {
       snprintf( str, 16, "%d", (int)i );
@@ -595,7 +614,7 @@ void Canvas::DrawGlobalGrid()
   glDisable(GL_BLEND);
 
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, texName);
+  glBindTexture(GL_TEXTURE_2D, checkTex );
   glColor3f( 1.0, 1.0, 1.0 );
 
   glBegin(GL_QUADS);
@@ -612,24 +631,6 @@ void Canvas::DrawGlobalGrid()
   glDisable(GL_TEXTURE_2D);
   glEnable(GL_BLEND);
   
-  //   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  //   glTranslatef( 0,0,0.1 );
-  //   glColor3f( 0, 1.0, 0 );
-
-  //   glBegin( GL_LINES );
-  //   for( float x=bounds.x.min; x<=bounds.x.max; x++ )
-  // 	 {
-  // 		glVertex2f( ceil(x), bounds.y.min );
-  // 		glVertex2f( ceil(x), bounds.y.max );
-  // 	 }
-  
-  //   	 for( float y=bounds.y.min; y<=bounds.y.max; y++ )
-  // 	 {
-  // 		glVertex2f(  bounds.x.min, ceil(y) );
-  // 		glVertex2f(  bounds.x.max, ceil(y) );
-  // 	 }
-  //   glEnd();
-
   glDisable(GL_POLYGON_OFFSET_FILL );
 }
 
