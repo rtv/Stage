@@ -40,7 +40,7 @@
     gui_nose 0
     gui_grid 0
     gui_outline 1
-    gui_movemask <0 if top level or (STG_MOVE_TRANS | STG_MOVE_ROT)>;
+    gui_move 0 (1 if the model has no parents);
 
     boundary 0
     mass 10.0
@@ -89,8 +89,8 @@
     if 1, draw a scaling grid over the model
     - gui_outline <int>\n
     if 1, draw a bounding box around the model, indicating its size
-    - gui_movemask <int>\n
-    define how the model can be moved by the mouse in the GUI window
+    - gui_move <int>\n
+    if 1, the model can be moved by the mouse in the GUI window
 
     - friction <float>\n
     Determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction).
