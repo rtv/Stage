@@ -310,17 +310,17 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
    	  ifsrc = new InterfaceActArray( player_addr,  this, cf, section );
    	  break;
 
-	case PLAYER_AIO_CODE:
-	  ifsrc = new InterfaceAio( player_addr,  this, cf, section );
-	  break;
+	// case PLAYER_AIO_CODE:
+	//   ifsrc = new InterfaceAio( player_addr,  this, cf, section );
+	//   break;
 
  	case PLAYER_BLOBFINDER_CODE:
  	  ifsrc = new InterfaceBlobfinder( player_addr,  this, cf, section );
  	  break;
 
-   	case PLAYER_DIO_CODE:
-   		ifsrc = new InterfaceDio(player_addr, this, cf, section);
-   		break;
+   	// case PLAYER_DIO_CODE:
+   	// 	ifsrc = new InterfaceDio(player_addr, this, cf, section);
+   	// 	break;
 
 	case PLAYER_FIDUCIAL_CODE:
 		ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );

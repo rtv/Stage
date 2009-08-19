@@ -171,7 +171,7 @@ void Visibility::Load( Worldfile* wf, int wf_entity )
 
 GuiState:: GuiState() :
   grid( false ),
-  move( false ),
+  move( false ),  
   nose( false ),
   outline( false )
 { /* nothing to do */}
@@ -1068,9 +1068,9 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 // 		  Gl::draw_string( x, y, 0, buf );		  
 		}
 
-
+	
   glPolygonMode( GL_FRONT, GL_FILL );
-
+	
   mod->PopColor();
   mod->PopColor();
 
