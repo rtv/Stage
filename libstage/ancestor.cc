@@ -6,11 +6,9 @@ Ancestor::Ancestor() :
   children(),
   debug( false ),
   token( NULL ),
-  access_mutex()
+  access_mutex(),
+  child_type_counts()
 {
-  for( int i=0; i<MODEL_TYPE_COUNT; i++ )
-	 child_type_counts[i] = 0;
-
   pthread_mutex_init( &access_mutex, NULL );
 }
 
@@ -27,7 +25,7 @@ void Ancestor::AddChild( Model* mod )
   
   //  printf( "adding child of type %d token %s\n", mod->type, mod->Token() );
   
-  std::string typestr =  Model::type_map[ mod->type ];
+  std::string typestr = mod->type;
 
   if( token ) // if this object has a name, use it
     snprintf( buf, TOKEN_MAX, "%s.%s:%d", 

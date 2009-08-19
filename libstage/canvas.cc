@@ -592,19 +592,42 @@ void Canvas::DrawGlobalGrid()
 			 
   */
   
+  /* simple scaling of axis labels - could be better */
+  int skip = 50 / (int)camera.scale();
+  if( skip < 1 ) skip = 1;
+  if( skip > 2 && skip % 2 ) skip += 1;
+
+  //printf( "scale %.4f\n", camera.scale() );
+
   char str[64];	
   PushColor( 0.2, 0.2, 0.2, 1.0 ); // pale gray
-  for( double i = ceil(bounds.x.min); i < bounds.x.max; i++)
+
+  for( double i=0; i < bounds.x.max; i+=skip)
     {
       snprintf( str, 16, "%d", (int)i );
       Gl::draw_string(  i, 0, 0.00, str );
     }
+
+  for( double i=0; i >= bounds.x.min; i-=skip)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      Gl::draw_string(  i, 0, 0.00, str );
+    }
+
   
-  for( double i = ceil(bounds.y.min); i < bounds.y.max; i++)
+  for( double i=0; i < bounds.y.max; i+=skip)
     {
       snprintf( str, 16, "%d", (int)i );
       Gl::draw_string(  0, i, 0.00, str );
     }
+
+  for( double i=0; i >= bounds.y.min; i-=skip)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      Gl::draw_string(  0, i, 0.00, str );
+    }
+
+
   PopColor();
   
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );

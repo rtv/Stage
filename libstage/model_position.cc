@@ -79,20 +79,21 @@ static const double INTEGRATION_ERROR_MAX_Z = 0.00; // note zero!
 static const double INTEGRATION_ERROR_MAX_A = 0.05;
 
 ModelPosition::ModelPosition( World* world, 
-										Model* parent )
-  : Model( world, parent, MODEL_TYPE_POSITION ),
-	 goal(0,0,0,0),
-	 control_mode( STG_POSITION_CONTROL_VELOCITY ),
-	 drive_mode( STG_POSITION_DRIVE_DIFFERENTIAL ),
-	 localization_mode( STG_POSITION_LOCALIZATION_GPS ),
-	 integration_error( drand48() * INTEGRATION_ERROR_MAX_X - INTEGRATION_ERROR_MAX_X/2.0,
-							  drand48() * INTEGRATION_ERROR_MAX_Y - INTEGRATION_ERROR_MAX_Y/2.0,
-							  drand48() * INTEGRATION_ERROR_MAX_Z - INTEGRATION_ERROR_MAX_Z/2.0,
-							  drand48() * INTEGRATION_ERROR_MAX_A - INTEGRATION_ERROR_MAX_A/2.0 ),
-    waypoints( NULL ),
-    waypoint_count( 0 ),
-	 wpvis(),
-	 posevis()
+										Model* parent,
+										const std::string& type ) : 
+  Model( world, parent, type ),
+  goal(0,0,0,0),
+  control_mode( STG_POSITION_CONTROL_VELOCITY ),
+  drive_mode( STG_POSITION_DRIVE_DIFFERENTIAL ),
+  localization_mode( STG_POSITION_LOCALIZATION_GPS ),
+  integration_error( drand48() * INTEGRATION_ERROR_MAX_X - INTEGRATION_ERROR_MAX_X/2.0,
+							drand48() * INTEGRATION_ERROR_MAX_Y - INTEGRATION_ERROR_MAX_Y/2.0,
+							drand48() * INTEGRATION_ERROR_MAX_Z - INTEGRATION_ERROR_MAX_Z/2.0,
+							drand48() * INTEGRATION_ERROR_MAX_A - INTEGRATION_ERROR_MAX_A/2.0 ),
+  waypoints( NULL ),
+  waypoint_count( 0 ),
+  wpvis(),
+  posevis()
 {
   PRINT_DEBUG2( "Constructing ModelPosition %d (%s)\n", 
 					 id, typestr );

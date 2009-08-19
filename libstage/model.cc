@@ -111,8 +111,7 @@ using namespace Stg;
 uint32_t Model::count = 0;
 std::map<stg_id_t,Model*> Model::modelsbyid;
 
-std::map<std::string, stg_creator_t> Model::name_map;
-std::map<stg_model_type_t, std::string> Model::type_map;
+std::map<std::string, creator_t> Model::name_map;
 
 void Size::Load( Worldfile* wf, int section, const char* keyword )
 {
@@ -187,16 +186,16 @@ void GuiState::Load( Worldfile* wf, int wf_entity )
 
 // constructor
 Model::Model( World* world,
-	      Model* parent,
-	      const stg_model_type_t type )
-  : Ancestor(), 	 
-    blockgroup(),
-    blocks_dl(0),
-    boundary(false),
-    callbacks(),
-    color( 1,0,0 ), // red
-    data_fresh(false),
-    disabled(false),
+				  Model* parent,
+				  const std::string& type ) :
+  Ancestor(), 	 
+  blockgroup(),
+  blocks_dl(0),
+  boundary(false),
+  callbacks(),
+  color( 1,0,0 ), // red
+  data_fresh(false),
+  disabled(false),
 	 cv_list(),
     flag_list(),
     geom(),
@@ -848,7 +847,7 @@ void Model::UpdatePose( void )
   world->Enqueue( 0, World::Event::POSE, interval_pose, this );
 }
 
-Model* Model::GetUnsubscribedModelOfType( stg_model_type_t type ) const
+Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const
 {  
   if( (this->type == type) && (this->subs == 0) )
     return const_cast<Model*> (this); // discard const
@@ -875,14 +874,14 @@ void Model::NeedRedraw( void )
     world->NeedRedraw();
 }
 
-Model* Model::GetUnusedModelOfType( stg_model_type_t type )
+Model* Model::GetUnusedModelOfType( const std::string& type )
 {
   //printf( "searching for type %d in model %s type %d\n", type, token, this->type );
-
+  
   if( (this->type == type) && (!this->used ) )
     {
       this->used = true;
-      return this; // discard const
+      return this;
     }
 
   // this model is no use. try children recursively
@@ -892,8 +891,9 @@ Model* Model::GetUnusedModelOfType( stg_model_type_t type )
       if( found )
 		  return found;
     }
-
+  
   // nothing matching below this model
+  if( ! parent )  PRINT_WARN1( "Request for unused model of type %s failed", type.c_str() );
   return NULL;
 }
 
@@ -907,7 +907,10 @@ stg_kg_t Model::GetTotalMass()
   return sum;
 }
 
-
+stg_kg_t Model::GetMassOfChildren()
+{
+  return( GetTotalMass() - mass);
+}
 
 Model* Model::GetModel( const char* modelname ) const
 {

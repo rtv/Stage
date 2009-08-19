@@ -78,10 +78,11 @@ blobfinder
 
  */
 
-
-ModelBlobfinder::ModelBlobfinder( World* world, 
-											 Model* parent )
-  : Model( world, parent, MODEL_TYPE_BLOBFINDER ),
+  
+  ModelBlobfinder::ModelBlobfinder( World* world, 
+												Model* parent,
+												const std::string& type ) : 
+  Model( world, parent, type ),
 						vis( world ),
 						blobs(),
 						colors(),

@@ -60,10 +60,11 @@ Option ModelGripper::showData( "Gripper data", "show_gripper_data", "", true, NU
 // TODO - simulate energy use when moving grippers
 
 ModelGripper::ModelGripper( World* world, 
-									 Model* parent )
-  : Model( world, parent, MODEL_TYPE_GRIPPER ),	 
-	 cfg(), // configured below
-	 cmd( CMD_NOOP )
+									 Model* parent,
+									 const std::string& type ) : 
+  Model( world, parent, type ),	 
+  cfg(), // configured below
+  cmd( CMD_NOOP )
 {
   // set up a gripper-specific config structure
   cfg.paddle_size.x = 0.66; // proportion of body length that is paddles

@@ -99,11 +99,12 @@ Option ModelRanger::showRangerData( "Ranger ranges", "show_ranger", "", true, NU
 Option ModelRanger::showRangerTransducers( "Ranger transducers", "show_ranger_transducers", "", false, NULL );
 
 ModelRanger::ModelRanger( World* world, 
-								  Model* parent ) 
-  : Model( world, parent, MODEL_TYPE_RANGER )
+								  Model* parent,
+								  const std::string& type ) 
+  : Model( world, parent, type )
 {
   PRINT_DEBUG2( "Constructing ModelRanger %d (%s)\n", 
-					 id, typestr );
+					 id, type );
   
   // Set up sensible defaults
   

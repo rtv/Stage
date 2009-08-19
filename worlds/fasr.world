@@ -58,6 +58,7 @@ zone
   ctrl "sink"
 )
 
+
 define charging_bump model
 (
   pose [0.240 0 -0.100 0 ] 

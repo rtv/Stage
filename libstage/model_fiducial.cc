@@ -68,8 +68,9 @@ fiducial
  */
   
   ModelFiducial::ModelFiducial( World* world, 
-										  Model* parent ) : 
-  Model( world, parent, MODEL_TYPE_FIDUCIAL ),
+										  Model* parent,
+										  const std::string& type ) : 
+  Model( world, parent, type ),
   fiducials(),
   max_range_anon( DEFAULT_RANGEMAXANON ),
   max_range_id( DEFAULT_RANGEMAXID ),

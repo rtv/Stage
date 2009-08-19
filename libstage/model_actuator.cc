@@ -60,16 +60,17 @@ static const double STG_ACTUATOR_WATTS_KGMS = 5.0; // cost per kg per meter per 
 static const double STG_ACTUATOR_WATTS = 2.0; // base cost of position device
 
 ModelActuator::ModelActuator( World* world,
-										Model* parent )
-  : Model( world, parent, MODEL_TYPE_ACTUATOR ),
-	 goal(0), 
-	 pos(0), 
-	 max_speed(1), 
-	 min_position(0), 
-	 max_position(1),
-	 control_mode( STG_ACTUATOR_CONTROL_VELOCITY ),
-	 actuator_type( STG_ACTUATOR_TYPE_LINEAR ),
-	 axis(0,0,0)
+										Model* parent,
+										const std::string& type ) : 
+  Model( world, parent, type ),
+  goal(0), 
+  pos(0), 
+  max_speed(1), 
+  min_position(0), 
+  max_position(1),
+  control_mode( STG_ACTUATOR_CONTROL_VELOCITY ),
+  actuator_type( STG_ACTUATOR_TYPE_LINEAR ),
+  axis(0,0,0)
 {
   // no power consumed until we're subscribed
   this->SetWatts( 0 );

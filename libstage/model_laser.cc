@@ -73,14 +73,15 @@ Option ModelLaser::Vis::showBeams( "Laser beams", "show_laser_beams", "", false,
   
 
 ModelLaser::ModelLaser( World* world, 
-												Model* parent )
-  : Model( world, parent, MODEL_TYPE_LASER ),
-		vis( world ),
-    sample_count( DEFAULT_SAMPLES ),
-    samples(),
-    range_max( DEFAULT_MAXRANGE ),
-    fov( DEFAULT_FOV ),
-    resolution( DEFAULT_RESOLUTION )
+								Model* parent,
+								const std::string& type ) :
+   Model( world, parent, type ), 
+	vis( world ),
+	sample_count( DEFAULT_SAMPLES ),
+	samples(),
+	range_max( DEFAULT_MAXRANGE ),
+	fov( DEFAULT_FOV ),
+	resolution( DEFAULT_RESOLUTION )
 {  
   PRINT_DEBUG2( "Constructing ModelLaser %d (%s)\n", 
 				id, typestr );

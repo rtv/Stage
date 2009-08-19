@@ -2,31 +2,34 @@
 using namespace Stg;
 
 
-static void Register( stg_model_type_t type,
-					  const char* desc, 
-					  stg_creator_t func )
+/* Template used to created named wrappers for model constructors */
+template <class T>
+Model* Creator( World* world, Model* parent, const std::string& type )
 {
-  Model::name_map[ desc ] = func;  
-  Model::type_map[ type ] = desc;
+  return new T( world, parent, type );
+}
+
+static void Register( const std::string& type,
+							 creator_t func )
+{
+  Model::name_map[ type ] = func;  
 }
 
 /** Map model names to named constructors for each model type */
 void Stg::RegisterModels()
 {
-  // the generic model
-  Register( MODEL_TYPE_PLAIN, "model", Model::Create );
+  // generic model
+  Register( "model", Creator<Model> );
   
-  // and the rest (in alphabetical order)
-  Register( MODEL_TYPE_ACTUATOR, "actuator", ModelActuator::Create );
-  Register( MODEL_TYPE_BLINKENLIGHT, "blinkenlight", ModelBlinkenlight::Create );
-  Register( MODEL_TYPE_BLOBFINDER, "blobfinder", ModelBlobfinder::Create );
-  Register( MODEL_TYPE_CAMERA, "camera", ModelCamera::Create );
-  Register( MODEL_TYPE_FIDUCIAL, "fiducial", ModelFiducial::Create );
-  Register( MODEL_TYPE_GRIPPER, "gripper", ModelGripper::Create );
-  Register( MODEL_TYPE_LASER, "laser", ModelLaser::Create );
-  Register( MODEL_TYPE_LIGHTINDICATOR, "lightindicator", ModelLightIndicator::Create );
-  Register( MODEL_TYPE_LOADCELL, "loadcell", ModelLoadCell::Create );
-  Register( MODEL_TYPE_POSITION, "position", ModelPosition::Create );
-  Register( MODEL_TYPE_RANGER, "ranger",  ModelRanger::Create );
+  Register( "actuator", Creator<ModelActuator> );
+  Register( "blinkenlight", Creator<ModelBlinkenlight> );
+  Register( "blobfinder", Creator<ModelBlobfinder> );
+  Register( "camera", Creator<ModelCamera> );
+  Register( "fiducial", Creator<ModelFiducial> );
+  Register( "gripper", Creator<ModelGripper> );
+  Register( "laser", Creator<ModelLaser> );
+  Register( "lightindicator", Creator<ModelLightIndicator> );
+  Register( "position", Creator<ModelPosition> );
+  Register( "ranger",  Creator<ModelRanger> );
 }  
 

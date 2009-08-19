@@ -232,37 +232,37 @@ void World::LoadBlock( Worldfile* wf, int entity )
 }
 
 
-Model* World::CreateModel( Model* parent, const char* typestr )
+Model* World::CreateModel( Model* parent, const std::string& typestr )
 {
   Model* mod = NULL; // new model to return
   
   // find the creator function pointer in the map. use the
   // vanilla model if the type is NULL.
-  stg_creator_t creator = NULL;
+  creator_t creator = NULL;
   
   // printf( "creating model of type %s\n", typestr );
   
-  std::map< std::string, stg_creator_t>::iterator it = 
+  std::map< std::string, creator_t>::iterator it = 
     Model::name_map.find( typestr );
   
   if( it == Model::name_map.end() )
-    PRINT_ERR1( "type %s not found in map\n", typestr );
+	 {
+		puts("");
+		PRINT_ERR1( "Model type %s not found in model typetable", typestr.c_str() );
+	 }
   else
-    {
-      creator = it->second;
-      //puts( "found creator in map" );
-    }
+	 creator = it->second;
 
   // if we found a creator function, call it
   if( creator )
     {
       //printf( "creator fn: %p\n", creator );
-      mod = (*creator)( this, parent );
+      mod = (*creator)( this, parent, typestr );
     }
   else
     {
       PRINT_ERR1( "Unknown model type %s in world file.", 
-						typestr );
+						typestr.c_str() );
       exit( 1 );
     }
   

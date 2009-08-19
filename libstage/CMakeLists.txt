@@ -28,7 +28,6 @@ set( stageSrcs
 	model_position.cc
 	model_props.cc
 	model_ranger.cc
-	model_loadcell.cc
 	model_lightindicator.cc
 	option.cc
 	powerpack.cc

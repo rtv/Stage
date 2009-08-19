@@ -44,7 +44,7 @@ int main( int argc,  char* argv[] )
 
   if( 1 )
   {
-	 Model mod( &world, NULL );
+	 Model mod( &world );
 	 
 	 for( stg_meters_t x=0; x<5; x+=0.1 )	 
 		{
@@ -134,7 +134,7 @@ int main( int argc,  char* argv[] )
   Model* m[POP]; 
   for( int i=0; i<POP; i++ )
 	 {
-		m[i] = new ModelLaser( &world, NULL );
+		m[i] = world.CreateModel( NULL, "laser" );
 
 		//m[i]->Say( "Hello" );
 		m[i]->Subscribe();

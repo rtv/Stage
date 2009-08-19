@@ -56,14 +56,15 @@ using namespace Stg;
 //TODO make instance attempt to register an option (as customvisualizations do)
 Option ModelBlinkenlight::showBlinkenData( "Show Blink", "show_blinken", "", true, NULL );
 
-											
+
 ModelBlinkenlight::ModelBlinkenlight( World* world,
-														  Model* parent ) 
-  : Model( world, parent, MODEL_TYPE_BLINKENLIGHT ),
-	 dutycycle( 1.0 ),
-	 enabled( true ),
-	 period( 1000 ),
-	 on( true )
+												  Model* parent,
+												  const std::string& type ) : 
+  Model( world, parent, type ),
+  dutycycle( 1.0 ),
+  enabled( true ),
+  period( 1000 ),
+  on( true )
 {
 	PRINT_DEBUG2( "Constructing ModelBlinkenlight %d (%s)\n", 
 			id, typestr );

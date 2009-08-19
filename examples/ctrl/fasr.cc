@@ -49,7 +49,7 @@ private:
   ModelLaser* laser;
   ModelRanger* ranger;
   ModelFiducial* fiducial;
-  ModelBlobfinder* blobfinder;
+  //ModelBlobfinder* blobfinder;
   //ModelGripper* gripper;
   Model *source, *sink;
   int avoidcount, randcount;
@@ -66,11 +66,11 @@ public:
 			Model* source,
 			Model* sink ) 
 	 : pos(pos), 
-		laser( (ModelLaser*)pos->GetUnusedModelOfType( MODEL_TYPE_LASER )),
-		ranger( (ModelRanger*)pos->GetUnusedModelOfType( MODEL_TYPE_RANGER )),
-		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( MODEL_TYPE_FIDUCIAL )),	
-		blobfinder( (ModelBlobfinder*)pos->GetUnusedModelOfType( MODEL_TYPE_BLOBFINDER )),
-		//gripper( (ModelGripper*)pos->GetUnusedModelOfType( MODEL_TYPE_GRIPPER )),
+		laser( (ModelLaser*)pos->GetUnusedModelOfType( "laser" )),
+		ranger( (ModelRanger*)pos->GetUnusedModelOfType( "ranger" )),
+		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
+		//blobfinder( (ModelBlobfinder*)pos->GetUnusedModelOfType( "blobfinder" )),
+		//gripper( (ModelGripper*)pos->GetUnusedModelOfType( "gripper" )),
 		source(source), 
 		sink(sink), 
 		avoidcount(0), 
@@ -89,6 +89,8 @@ public:
 	 assert( laser );
 	 assert( source );
 	 assert( sink );
+
+	 //	 pos->GetUnusedModelOfType( "laser" );
 	 
 	 // PositionUpdate() checks to see if we reached source or sink
 	 pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, this );
@@ -105,11 +107,8 @@ public:
 	 //gripper->AddUpdateCallback( (stg_model_callback_t)GripperUpdate, this );	 	 
 	 //gripper->Subscribe();
 	 
-	 if( blobfinder ) // optional
-		{
-		  blobfinder->AddUpdateCallback( (stg_model_callback_t)BlobFinderUpdate, this );
-		  blobfinder->Subscribe();
-		}
+	 //blobfinder->AddUpdateCallback( (stg_model_callback_t)BlobFinderUpdate, this );
+	 //blobfinder->Subscribe();
 
 	 //pos->AddFlagIncrCallback( (stg_model_callback_t)FlagIncr, NULL );
 	 //pos->AddFlagDecrCallback( (stg_model_callback_t)FlagDecr, NULL );

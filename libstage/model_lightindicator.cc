@@ -2,9 +2,11 @@
 
 using namespace Stg;
 
-ModelLightIndicator::ModelLightIndicator(World* world, Model* parent)
-	: Model(world, parent, MODEL_TYPE_LIGHTINDICATOR)
-	, m_IsOn(false)
+ModelLightIndicator::ModelLightIndicator( World* world, 
+														Model* parent,
+														const std::string& type ) : 
+  Model( world, parent, type ),
+  m_IsOn(false)
 {
 }
 

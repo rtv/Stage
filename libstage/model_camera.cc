@@ -84,22 +84,23 @@ void cross( float& x1, float& y1, float& z1, float x2, float y2, float z2 )
 }
 
 
-ModelCamera::ModelCamera( World* world, Model* parent ) 
-  : Model( world, parent, MODEL_TYPE_CAMERA ),
-_canvas( NULL ),
-_frame_data( NULL ),
-_frame_color_data( NULL ),
-_valid_vertexbuf_cache( false ),
-_vertexbuf_cache( NULL ),
-_width( 32 ),
-_height( 32 ),
-_camera_quads_size( 0 ),
-_camera_quads( NULL ),
-_camera_colors( NULL ),
-_camera(),
-_yaw_offset( 0.0 ),
-_pitch_offset( 0.0 )
-
+ModelCamera::ModelCamera( World* world, 
+								  Model* parent,
+								  const std::string& type ) : 
+  Model( world, parent, type ), 
+  _canvas( NULL ),
+  _frame_data( NULL ),
+  _frame_color_data( NULL ),
+  _valid_vertexbuf_cache( false ),
+  _vertexbuf_cache( NULL ),
+  _width( 32 ),
+  _height( 32 ),
+  _camera_quads_size( 0 ),
+  _camera_quads( NULL ),
+  _camera_colors( NULL ),
+  _camera(),
+  _yaw_offset( 0.0 ),
+  _pitch_offset( 0.0 )  
 {
 	PRINT_DEBUG2( "Constructing ModelCamera %d (%s)\n", 
 			id, typestr );
