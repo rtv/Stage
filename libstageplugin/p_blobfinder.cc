@@ -42,7 +42,7 @@ InterfaceBlobfinder::InterfaceBlobfinder( player_devaddr_t addr,
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_BLOBFINDER )
+  : InterfaceModel( addr, driver, cf, section, "blobfinder" )
 {
   // nothing to do for now
 }

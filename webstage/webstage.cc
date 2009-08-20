@@ -194,10 +194,8 @@ public:
 	 Model*mod = world->GetModel( name.c_str() );
 	 if(mod){
 		stg_model_type_t type = mod->GetModelType();
-		if(type == MODEL_TYPE_POSITION){
-			
-								
-			
+		if(type == "position") {
+
 		  websim::Pose p;
 		  websim::Velocity v;
 		  websim::Acceleration a;
@@ -218,7 +216,7 @@ public:
 			
 			
 
-		}else if(type == MODEL_TYPE_LASER){
+		}else if(type == "laser"){
 
 		  uint32_t resolution;
 		  double fov;
@@ -241,7 +239,7 @@ public:
 		  WebSim::GetLaserData(name, t, resolution, fov, p, ranges, format, response, xmlparent);
 			 
 
-		}else if(type == MODEL_TYPE_RANGER){
+		}else if(type == "ranger"){
 
 		  std::vector<websim::Pose> p;
 		  std::vector<double> ranges;
@@ -270,7 +268,7 @@ public:
 		  WebSim::GetRangerData(name, t, p, ranges, format, response, xmlparent);
 
 
-		}else if(type == MODEL_TYPE_FIDUCIAL){
+		}else if(type == "fiducial"){
 
 		  ModelFiducial::Fiducial* fids;
 		  unsigned int n=0;
@@ -312,36 +310,6 @@ public:
 	 return true;
   }
   
-  bool GetModelType(const std::string& name,         								
-						  std::string& type )
-  {
-	 
-	 Model*mod = world->GetModel( name.c_str() );
-	 if(mod)
-		{
-		  switch( mod->GetModelType() )
-			 {
-			 case MODEL_TYPE_POSITION:
-				type =  "Position"; 
-				break;
-			 case MODEL_TYPE_LASER:
-				type =  "Laser"; 
-				break;
-			 case MODEL_TYPE_RANGER:
-				type = "Ranger"; 
-				break;
-			 case MODEL_TYPE_FIDUCIAL:
-				type = "Fiducial";
-				break;
-			 default:
-				type = "";
-			 }		
-		  return true;
-		}  	  
-  return false;  
-}
-
-
 
   virtual bool SetModelPVA(const std::string& name, 
 									const websim::Pose& p,

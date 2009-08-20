@@ -227,7 +227,7 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 											StgDriver* driver,
 											ConfigFile* cf,
 											int section,
-											stg_model_type_t type )
+											const std::string& type )
   : Interface( addr, driver, cf, section )
 {
   char* model_name = (char*)cf->ReadString(section, "model", NULL );
@@ -426,7 +426,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 
 Model*  StgDriver::LocateModel( char* basename,
 				   player_devaddr_t* addr,
-				   stg_model_type_t type )
+				  const std::string& type )
 {
   //printf( "attempting to find a model under model \"%s\" of type [%d]\n",
   //	 basename, type );
@@ -440,7 +440,7 @@ Model*  StgDriver::LocateModel( char* basename,
       return NULL;
     }
 
-  if( type == MODEL_TYPE_PLAIN ) // if we don't care what type the model is
+  if( type == "" ) // if we don't care what type the model is
     return base_model;
 
   //  printf( "found base model %s\n", base_model->Token() );

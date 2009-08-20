@@ -45,7 +45,7 @@ InterfaceGripper::InterfaceGripper( player_devaddr_t addr,
 				StgDriver* driver,
 				ConfigFile* cf,
 				int section )
-  : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_GRIPPER )
+  : InterfaceModel( addr, driver, cf, section, "gripper" )
 {
   // nothing to do
 }

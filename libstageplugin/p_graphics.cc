@@ -181,7 +181,7 @@ public:
 
 InterfaceGraphics2d::InterfaceGraphics2d(player_devaddr_t addr,
 		StgDriver* driver, ConfigFile* cf, int section) :
-	InterfaceModel(addr, driver, cf, section, Stg::MODEL_TYPE_PLAIN) {
+	InterfaceModel(addr, driver, cf, section, "") {
 	vis = new PlayerGraphics2dVis;
 	mod->AddVisualizer( vis, true );
 }
@@ -275,7 +275,7 @@ void PlayerGraphics2dVis::RenderItem(Message & item) {
 
 InterfaceGraphics3d::InterfaceGraphics3d(player_devaddr_t addr,
 		StgDriver* driver, ConfigFile* cf, int section) :
-	InterfaceModel(addr, driver, cf, section, Stg::MODEL_TYPE_PLAIN) {
+	InterfaceModel(addr, driver, cf, section, "") {
 	vis = new PlayerGraphics3dVis;
 	mod->AddVisualizer( vis, true );
 }

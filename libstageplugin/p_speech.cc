@@ -41,7 +41,7 @@ InterfaceSpeech::InterfaceSpeech( player_devaddr_t addr,
                               ConfigFile* cf,
                               int section )
   
-  : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_PLAIN )
+  : InterfaceModel( addr, driver, cf, section, "" )
 {
   // nothing to do
 }

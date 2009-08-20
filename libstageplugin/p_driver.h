@@ -45,7 +45,7 @@ class StgDriver : public Driver
 
   Stg::Model* LocateModel( char* basename,
 									player_devaddr_t* addr,
-									Stg::stg_model_type_t type );
+									const std::string& type );
   
  protected:
 
@@ -102,7 +102,7 @@ class InterfaceModel
 		  StgDriver* driver,
 		  ConfigFile* cf,
 		  int section,
-		  Stg::stg_model_type_t type );
+		  const std::string& type );
 
   Stg::Model* mod;
 

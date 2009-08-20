@@ -50,7 +50,7 @@ InterfacePosition::InterfacePosition(  player_devaddr_t addr,
 				       ConfigFile* cf,
 				       int section )
 						   
-  : InterfaceModel( addr, driver, cf, section, MODEL_TYPE_POSITION )
+  : InterfaceModel( addr, driver, cf, section, "position" )
 {
   //puts( "InterfacePosition constructor" );
 }

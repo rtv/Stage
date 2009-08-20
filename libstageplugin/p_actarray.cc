@@ -46,7 +46,7 @@ InterfaceActArray::InterfaceActArray(  player_devaddr_t addr,
 				       ConfigFile* cf,
 				       int section )
 
-  : InterfaceModel( addr, driver, cf, section, Stg::MODEL_TYPE_ACTUATOR )
+  : InterfaceModel( addr, driver, cf, section, "actuator" )
 {
   //puts( "InterfacePosition constructor" );
 }
