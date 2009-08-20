@@ -134,7 +134,7 @@ void Block::SetZ( double min, double max )
   mod->blockgroup.BuildDisplayList( mod );
 }
 
-Color Block::GetColor()
+const Color& Block::GetColor()
 {
   return( inherit_color ? mod->color : color );
 }
@@ -248,7 +248,7 @@ void Block::InvalidateModelPointCache()
 void Block::GenerateCandidateCells()
 {
   candidate_cells->clear();
-  
+
   if( mpts.size() == 0 )
 	{
 	  // no valid cache of model coord points, so generate them

@@ -227,15 +227,11 @@ void Model::Load()
 	trail_length = wf->ReadInt( wf_entity, "trail_length", trail_length );
 	trail_interval = wf->ReadInt( wf_entity, "trail_interval", trail_interval );
 
+	this->alwayson = wf->ReadInt( wf_entity, "alwayson",  alwayson );
+
   // call any type-specific load callbacks
   this->CallCallbacks( &hooks.load );
   
-  // MUST BE THE LAST THING LOADED
-  if( wf->PropertyExists( wf_entity, "alwayson" ))
-    {
-      if( wf->ReadInt( wf_entity, "alwayson", 0) > 0 )
-		  Subscribe();
-    }
   
   MapWithChildren();
 

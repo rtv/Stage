@@ -9,10 +9,8 @@ include "sick.inc"
 speedup 10
 paused 1
 
-# time to pause (in GUI mode) or quit (in headless mode) the simulation
-
+# time at which to pause (in GUI mode) or quit (in headless mode) the simulation
 quit_time 3600 # 1 hour of simulated time
-
 
 resolution 0.02
 

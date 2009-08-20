@@ -7,19 +7,19 @@ simple.world
 ------------
 linux	8.89
 OS X	7.75
+     11.05 (rev 8210)
 
 fasr.world
 ----------
 linux	16.36
-OS X	16.20 (rev 7949)
+OS X	16.20 (rev 7949) 
+      19.94 (rev 8210 - new event queue is slower but more powerful and elegant)
 
 
-** 3.1.0 RELEASE *
+** 3.2.0 RELEASE *
 
  - visualizer option state in worldfile
  - blinkenlights vs lightindicator - resolve and fix interfaces
- - ranger transducer geometry correct?
- - feature freeze around July 1
  - scan SF for patches
  - fix world files
  - docs for new models
@@ -54,3 +54,10 @@ DONE
 * 3d collision detection broken - e.g. fancypioneer2dx
 * energy model & recharging
 * runtime update rate UI
+
+** 3.1.0 RELEASE *
+ - feature freeze around July 1
+ - scan SF for patches
+ - fix world files
+ - docs for new models
+ - push docs to SF

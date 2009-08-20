@@ -1037,7 +1037,7 @@ namespace Stg
     Model* GetModel( const char* name ) const;
   
     /** Return the 3D bounding box of the world, in meters */
-    stg_bounds3d_t GetExtent(){ return extent; };
+    const stg_bounds3d_t& GetExtent(){ return extent; };
   
     /** Return the number of times the world has been updated. */
     uint64_t GetUpdateCount() { return updates; }
@@ -1121,9 +1121,9 @@ namespace Stg
 	 std::vector<stg_point_t>& Points()
     { return pts; };	         
 	 
-    void AddToCellArray( CellPtrVec* blocks );
-    void RemoveFromCellArray( CellPtrVec* blocks );
-    void GenerateCandidateCells();  
+    inline void AddToCellArray( CellPtrVec* blocks );
+    inline void RemoveFromCellArray( CellPtrVec* blocks );
+    inline void GenerateCandidateCells();  
 
 	 void AppendTouchingModels( ModelPtrSet& touchers );
 	 
@@ -1132,7 +1132,7 @@ namespace Stg
     void SwitchToTestedCells();  
     void Load( Worldfile* wf, int entity );  
     Model* GetModel(){ return mod; };  
-    Color GetColor();		
+    const Color& GetColor();		
 	 void Rasterize( uint8_t* data, 
 						  unsigned int width, unsigned int height,		
 						  stg_meters_t cellwidth, stg_meters_t cellheight );
@@ -1203,8 +1203,8 @@ namespace Stg
     ~BlockGroup();
 	 
     uint32_t GetCount(){ return blocks.size(); };
-    Size GetSize(){ return size; };
-    stg_point3_t GetOffset(){ return offset; };
+    const Size& GetSize(){ return size; };
+    const stg_point3_t& GetOffset(){ return offset; };
 
     /** establish the min and max of all the blocks, so we can scale this
 		  group later */
@@ -1670,6 +1670,11 @@ namespace Stg
 	 
   protected:
 	 pthread_mutex_t access_mutex;
+
+	 /** If true, the model always has at least one subscription, so
+		  always runs. Defaults to false. */
+	 bool alwayson;
+
 	 BlockGroup blockgroup;
 	 /**  OpenGL display list identifier for the blockgroup */
 	 int blocks_dl;
@@ -1764,7 +1769,7 @@ namespace Stg
 		  by derived model types to store properties, and for user code
 		  to associate arbitrary items with a model. */
 	 //GData* props;
-	 std::map<const char*,const void*> props;
+	 std::map<std::string,const void*> props;
 
 	 /** Visualize the most recent rasterization operation performed by this model */
 	 class RasterVis : public Visualizer
@@ -1841,8 +1846,11 @@ namespace Stg
 	 const std::string& GetModelType() const {return type;}	 
 	 std::string GetSayString(){return std::string(say_string);}
 	 Visibility vis;
-	 //stg_usec_t GetSimInterval(){ return world->interval_sim; }
-	
+	 
+	 stg_usec_t GetUpdateInterval(){ return interval; }
+	 stg_usec_t GetEnergyInterval(){ return interval_energy; }
+	 stg_usec_t GetPoseInterval(){ return interval_pose; }
+	 
 	 /** Render the model's blocks as an occupancy grid into the
 		  preallocated array of width by height pixels */
 	 void Rasterize( uint8_t* data, 

@@ -495,7 +495,7 @@ public:
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
 {  
-#if 0		
+#if 1		
   // example using the model rasterizer
   if( strcmp( mod->Token(), "r0" ) == 0 )
 	 {

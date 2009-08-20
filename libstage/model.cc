@@ -189,6 +189,8 @@ Model::Model( World* world,
 				  Model* parent,
 				  const std::string& type ) :
   Ancestor(), 	 
+  access_mutex(),
+  alwayson(false),
   blockgroup(),
   blocks_dl(0),
   boundary(false),
@@ -303,6 +305,9 @@ void Model::Init()
 	 event_queue_num = thread_safe ? world->GetEventQueue( this ) : 0;
   
   CallCallbacks( &hooks.init );
+
+  if( alwayson )
+	 Subscribe();
 }  
 
 void Model::InitRecursive()

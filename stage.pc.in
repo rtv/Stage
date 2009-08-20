@@ -3,6 +3,6 @@ prefix=@CMAKE_INSTALL_PREFIX@
 Name: stage
 Description: Stage robot simulation program, C++ library and Player plugin - part of the Player/Stage Project
 Version: @VERSION@
-Requires: gthread-2.0 >= 2.4
-Libs: -L${prefix}/lib -lstage
-Cflags: -I${prefix}/include/Stage-@APIVERSION@
+Requires: 
+Libs: -L${prefix}/lib -lstage @FLTK_LDFLAGS@
+Cflags: -I${prefix}/include/Stage-@APIVERSION@ @FLTK_CFLAGS@ 

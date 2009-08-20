@@ -82,8 +82,10 @@ int Model::SetProperty( const char* key,
 		return 1; // error code
 	}
 
+	//printf( "setting property %s %p\n", key, data );
+
 	// otherwise it's an arbitary property and we store the pointer
-	//g_datalist_set_data( &this->props, key, (void*)data );
+	//g_datalist_set_data( &this->props, key, (void*)data );	
 	props[key] = data;
 
 	return 0; // ok
@@ -130,6 +132,8 @@ bool Model::GetPropertyStr( const char* key, char** c, char* defaultval ) const
 {
   char* cp = (char*)GetProperty( key ); 
   
+  //printf( "got model %s property string %s=%s\n", token, key, cp );
+
   if( cp )
 	 {
 		*c = cp;
@@ -154,6 +158,7 @@ void Model::SetPropertyFloat( const char* key, float f )
 
 void Model::SetPropertyStr( const char* key, const char* str )
 {
+  //printf( "set model %s string %s=%s\n", token, key, str );
   SetProperty( key, (void*)strdup(str) );
 }
 
