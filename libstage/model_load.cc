@@ -145,6 +145,16 @@ void Model::Load()
     }  
     }
   
+  if( wf->ReadInt( wf_entity, "noblocks", 0 ) )
+	 {
+      if( has_default_block )
+		  {
+			 blockgroup.Clear();
+			 has_default_block = false;
+			 blockgroup.CalcSize();
+		  }		
+	 }
+  
   if( wf->PropertyExists( wf_entity, "bitmap" ) )
     {
       const char* bitmapfile = wf->ReadString( wf_entity, "bitmap", NULL );
@@ -162,21 +172,21 @@ void Model::Load()
   if( wf->PropertyExists( wf_entity, "boundary" ))
     {
       this->SetBoundary( wf->ReadInt(wf_entity, "boundary", this->boundary  ));
-
+		
       if( boundary )
-	{
-	  //PRINT_WARN1( "setting boundary for %s\n", token );
+		  {
+			 //PRINT_WARN1( "setting boundary for %s\n", token );
 			 
-	  blockgroup.CalcSize();
-
-	  double epsilon = 0.01;	      
-	  Size bgsize = blockgroup.GetSize();
-
-	  AddBlockRect(blockgroup.minx,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
-	  AddBlockRect(blockgroup.minx,blockgroup.miny, bgsize.x, epsilon, bgsize.z );	      
-	  AddBlockRect(blockgroup.minx,blockgroup.maxy-epsilon, bgsize.x, epsilon, bgsize.z );	      
-	  AddBlockRect(blockgroup.maxx-epsilon,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
-	}     
+			 blockgroup.CalcSize();
+			 
+			 double epsilon = 0.01;	      
+			 Size bgsize = blockgroup.GetSize();
+			 
+			 AddBlockRect(blockgroup.minx,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
+			 AddBlockRect(blockgroup.minx,blockgroup.miny, bgsize.x, epsilon, bgsize.z );	      
+			 AddBlockRect(blockgroup.minx,blockgroup.maxy-epsilon, bgsize.x, epsilon, bgsize.z );	      
+			 AddBlockRect(blockgroup.maxx-epsilon,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
+		  }     
     }	  
 
   if( wf->PropertyExists( wf_entity, "mass" ))

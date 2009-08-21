@@ -525,17 +525,19 @@ void Model::DataVisualize( Camera* cam )
 void Model::DataVisualizeTree( Camera* cam )
 {
   PushLocalCoords();
-  DataVisualize( cam ); // virtual function overridden by most model types  
 
-  for( std::list<Visualizer*>::iterator it = cv_list.begin();
-		 it != cv_list.end();
-		 it++ )
+  if( subs > 0 )
 	 {
-      Visualizer* vis = *it;
-		if( world_gui->GetCanvas()->_custom_options[ vis->GetMenuName() ]->isEnabled() )
-		  vis->Visualize( this, cam );
+		DataVisualize( cam ); // virtual function overridden by some model types  
+		
+		FOR_EACH( it, cv_list )
+		  {
+			 Visualizer* vis = *it;
+			 if( world_gui->GetCanvas()->_custom_options[ vis->GetMenuName() ]->isEnabled() )
+				vis->Visualize( this, cam );
+		  }
 	 }
-  
+
   // and draw the children
   FOR_EACH( it, children )
 	 (*it)->DataVisualizeTree( cam );

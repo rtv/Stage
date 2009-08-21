@@ -2326,11 +2326,17 @@ namespace Stg
 		  and has the type indicated by the string. This model is tagged as used. */
 	 Model* GetUnusedModelOfType( const std::string& type );
   
-
 	 /** Returns the value of the model's stall boolean, which is true
 		  iff the model has crashed into another model */
 	 bool Stalled() const { return this->stall; }
 	 
+	 /** Returns the current number of subscriptions. If alwayson, this
+		  is never less than 1.*/
+	 unsigned int GetSubscriptionCount() const { return subs; }
+
+	 /** Returns true if the model has one or more subscribers, else false. */
+	 bool HasSubscribers() const { return( subs > 0 ); }	 
+
 	 static std::map< std::string, creator_t> name_map;	 
   };
 
@@ -2433,8 +2439,7 @@ namespace Stg
 		stg_usec_t interval; ///< Time interval  between updates (TODO: is this used?)
 	 };
 		
-  private:
-	 
+  private:	 
 	 class Vis : public Visualizer 
 	 {
 	 private:

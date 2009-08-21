@@ -657,6 +657,9 @@ void Model::Shutdown( void )
 {
   //printf( "Shutdown model %s\n", this->token );
   CallCallbacks( &hooks.shutdown );
+
+  // allows data visualizations to be cleared.
+  NeedRedraw();
 }
 
 
@@ -760,7 +763,7 @@ void Model::UpdateCharge()
 		
 		FOR_EACH( it, touchers )
 		  {
-			 Model* toucher = (*it); //(Model*)touchers->data;		
+			 Model* toucher = (*it);
 			 PowerPack* hispp =toucher->FindPowerPack();		
 			 
 			 if( hispp && toucher->watts_take > 0.0) 
