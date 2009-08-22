@@ -790,6 +790,7 @@ void Model::UpdateCharge()
 	 }
   
   // set up the next event
+  if( subs > 0 ) // TODO XX ? 
   world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
 }
 
@@ -852,7 +853,9 @@ void Model::UpdatePose( void )
 	 }	            
 
   //if( ! velocity.IsZero() )
-  world->Enqueue( 0, World::Event::POSE, interval_pose, this );
+
+  if( subs > 0 )// TODO XX ? 
+	 world->Enqueue( 0, World::Event::POSE, interval_pose, this );
 }
 
 Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const

@@ -18,12 +18,6 @@
 #include "worldfile.hh"
 using namespace Stg;
 
-static const stg_meters_t DEFAULT_RANGEMIN = 0.0;
-static const stg_meters_t DEFAULT_RANGEMAXID = 5.0;
-static const stg_meters_t DEFAULT_RANGEMAXANON = 8.0;
-static const stg_radians_t DEFAULT_FOV = M_PI;
-static const stg_watts_t DEFAULT_WATTS = 10.0;
-
 //TODO make instance attempt to register an option (as customvisualizations do)
 Option ModelFiducial::showData( "Fiducials", "show_fiducial", "", true, NULL );
 Option ModelFiducial::showFov( "Fiducial FOV", "show_fiducial_fov", "", false, NULL );
@@ -72,10 +66,10 @@ fiducial
 										  const std::string& type ) : 
   Model( world, parent, type ),
   fiducials(),
-  max_range_anon( DEFAULT_RANGEMAXANON ),
-  max_range_id( DEFAULT_RANGEMAXID ),
-  min_range( DEFAULT_RANGEMIN ),
-  fov( DEFAULT_FOV ),
+  max_range_anon( 8.0 ),
+  max_range_id( 5.0 ),
+  min_range( 0.0 ),
+  fov( M_PI ),
   heading( 0 ),
   key( 0 )
 {
@@ -178,32 +172,36 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 	//	  him->Token() );
 
 	// if it was him, we can see him
-	if( hitmod == him )
-	  {
-		 Geom hisgeom( him->GetGeom() );
-		 
-		 // record where we saw him and what he looked like
-		 Fiducial fid;
-		 fid.mod = him;
-		 fid.range = range;
-		 fid.bearing = dtheta;
-		 fid.geom.x = hisgeom.size.x;
-		 fid.geom.y = hisgeom.size.y;
-		 fid.geom.a = normalize( hispose.a - mypose.a);
-		 
-		 // store the global pose of the fiducial (mainly for the GUI)
-		 fid.pose = hispose;
+	if( hitmod != him )
+	  return;
 
-		 // if he's within ID range, get his fiducial.return value, else
-		 // we see value 0
-		 fid.id = range < max_range_id ? hitmod->vis.fiducial_return : 0;
-		 
-		 PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
-							him->Token(), him->vis.fiducial_return );
-		 
-		 fiducials.push_back( fid );
-	  }	
-}
+	assert( range >= 0 );
+	
+	// passed all the tests! record the fiducial hit
+	
+	Geom hisgeom( him->GetGeom() );
+	
+	// record where we saw him and what he looked like
+	Fiducial fid;
+	fid.mod = him;
+	fid.range = range;
+	fid.bearing = dtheta;
+	fid.geom.x = hisgeom.size.x;
+	fid.geom.y = hisgeom.size.y;
+	fid.geom.a = normalize( hispose.a - mypose.a);
+	
+	// store the global pose of the fiducial (mainly for the GUI)
+	fid.pose = hispose;
+	
+	// if he's within ID range, get his fiducial.return value, else
+	// we see value 0
+	fid.id = range < max_range_id ? hitmod->vis.fiducial_return : 0;
+	
+	PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
+					  him->Token(), him->vis.fiducial_return );
+	
+	fiducials.push_back( fid );
+}	
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
@@ -220,10 +218,8 @@ void ModelFiducial::Update( void )
 	// reset the array of detected fiducials
 	fiducials.clear();
 	
-	for( std::set<Model*>::iterator it( world->models_with_fiducials.begin() );
-			 it != world->models_with_fiducials.end();
-			 ++it )
-		AddModelIfVisible( *it );	
+	FOR_EACH( it, world->models_with_fiducials )
+	  AddModelIfVisible( *it );	
 }
 
 void ModelFiducial::Load( void )
@@ -272,9 +268,9 @@ void ModelFiducial::DataVisualize( Camera* cam )
 		 glLineStipple( 1, 0x00FF );
 		 
 		 // draw lines to the fiducials
-		 for( unsigned int f=0; f<fiducials.size(); f++ )
+		 FOR_EACH( it, fiducials )
 			{
-			  Fiducial& fid = fiducials[f];
+			  Fiducial& fid = *it;
 			  
 			  double dx = fid.range * cos( fid.bearing);
 			  double dy = fid.range * sin( fid.bearing);
