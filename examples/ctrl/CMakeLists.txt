@@ -1,8 +1,8 @@
 
 SET( PLUGINS
-	  convoy
+	 # convoy
      fasr
-	  fasr2
+	 # fasr2
      lasernoise
      sink
      source
