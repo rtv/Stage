@@ -49,18 +49,28 @@ public:
 	 return true;
   }
 
-  virtual bool ClockRunFor( double usec )
+  virtual bool ClockRunFor( uint32_t msec )
   {
 	 puts( "[WebStage]  Clock tick" );
-
+	 
 	 world->paused = true;
-	 // when paused, the world will run while steps > 0, decrementing
-	 // steps each cycle.
-	 // TODO
-	 world->steps = 1;//(usec * 1e6) / world->GetSimInterval();
+	 world->sim_interval = msec * 1e3; // usec
+	 world->Update();
 
 	 return true;
   }
+
+  virtual bool GetModelType( const std::string& name, std::string& type )
+  {
+	 Stg::Model* mod = world->GetModel( name.c_str() );
+
+	 if( ! mod )
+		return false;
+	 
+	 type = mod->GetModelType();
+	 return true;
+  }
+ 
 
   void Push( const std::string& name )
   {
@@ -193,7 +203,7 @@ public:
 
 	 Model*mod = world->GetModel( name.c_str() );
 	 if(mod){
-		stg_model_type_t type = mod->GetModelType();
+		std::string type = mod->GetModelType();
 		if(type == "position") {
 
 		  websim::Pose p;
@@ -333,232 +343,249 @@ public:
 	 return true;
   }
 
-virtual bool GetModelPVA(const std::string& name, 
-								 websim::Time& t,
-								 websim::Pose& p,
-								 websim::Velocity& v,
-								 websim::Acceleration& a,
-								 std::string& error)
-{
-  //printf( "get model name:%s\n", name.c_str() ); 
-
-  t = GetTime();
-
-  Model* mod = world->GetModel( name.c_str() );
-  if( mod )
-	 {
-		Stg::Pose sp = mod->GetPose(); 
-		p.x = sp.x;
-		p.y = sp.y;
-		p.z = sp.z;
-		p.a = sp.a;
-
-		Stg::Velocity sv = mod->GetVelocity(); 
-		v.x = sv.x;
-		v.y = sv.y;
-		v.z = sv.z;
-		v.a = sv.a;
-	 }
-  else
-	 printf( "Warning: attempt to set PVA for unrecognized model \"%s\"\n",
-				name.c_str() );
-
-  return true;
-}
-/*
-  virtual bool GetLaserData(const std::string& name,			
-  websim::Time& t,												
-  uint32_t& resolution,
-  double& fov,
-  websim::Pose& p,
-  std::vector<double>& ranges,													
-  std::string& error,
-  void* parent){
-
-
-  t = GetTime();
-
-  Model* mod = world->GetModel( name.c_str() );
-  if( mod )
+  virtual bool GetModelPVA(const std::string& name, 
+									websim::Time& t,
+									websim::Pose& p,
+									websim::Velocity& v,
+									websim::Acceleration& a,
+									std::string& error)
   {
-  ModelLaser* laser = (ModelLaser*)mod->GetModel("laser:0");  		
-			
-  if(laser){
-  uint32_t sample_count=0;
-  ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
-  assert(scan);
-		    
-  ModelLaser::Config  cfg = laser->GetConfig();
-  resolution =  cfg.resolution;
-  fov = cfg.fov;
-        
-  for(unsigned int i=0;i<sample_count;i++)
-  ranges.push_back(scan[i].range);
-  }else{
+	 //printf( "get model name:%s\n", name.c_str() ); 
 
-  printf( "Warning: attempt to get laser data for unrecognized laser model of model \"%s\"\n",
-  name.c_str() );
-  return false;
+	 t = GetTime();
 
+	 Model* mod = world->GetModel( name.c_str() );
+	 if( mod )
+		{
+		  Stg::Pose sp = mod->GetPose(); 
+		  p.x = sp.x;
+		  p.y = sp.y;
+		  p.z = sp.z;
+		  p.a = sp.a;
 
-  }
-	         	  
-  }
-  else{
-  printf( "Warning: attempt to get laser data for unrecognized model \"%s\"\n",
-  name.c_str() );
-  return false;
-  }
-
-  return true;
-
-  }					   
-  virtual bool GetRangerData(const std::string& name,
-  websim::Time& t,
-  std::vector<websim::Pose>& p,
-  std::vector<double>& ranges,
-  std::string& response,
-  xmlNode* parent){
-  t = GetTime();
-
-  Model* mod = world->GetModel( name.c_str() );
-  if( mod )
-  {
-  ModelRanger* ranger = (ModelRanger*)mod->GetModel("ranger:0");  		
-       
-  if(ranger){
-  uint32_t count = ranger->sensors.size();
-  for(unsigned int i=0;i<count;i++)
-  ranges.push_back(ranger->sensors[i].range);
-  //std::copy(ranger->samples,ranger->samples+ranger->sensor_count,ranges.begin());
-				 
-  for(unsigned int i=0;i<count;i++){
-  websim::Pose pos;
-  Pose rpos;
-  rpos = ranger->sensors[i].pose;
-  pos.x = rpos.x;
-  pos.y = rpos.y;
-  pos.z = rpos.z;
-  pos.a = rpos.a;
-  p.push_back(pos);					
-  }
-				 
-  }else{
-				 
-  printf( "Warning: attempt to get ranger data for unrecognized ranger model of model \"%s\"\n",
-  name.c_str() );
-  return false;				 				 
-  }	     
-  }
-  else{
-  printf( "Warning: attempt to get ranger data for unrecognized model \"%s\"\n",
-  name.c_str() );
-  return false;
-  }
-
-  return true;
-
-  }*/
-
-virtual bool GetModelGeometry(const std::string& name,
-										double& x,
-										double& y,
-										double& z,
-										websim::Pose& center,
-										std::string& response)
-{
-  if(name == "sim"){
-	
-	 stg_bounds3d_t ext = world->GetExtent();
-    	
-	 x = ext.x.max - ext.x.min;
-	 y = ext.y.max - ext.y.min;
-	 z = ext.z.max - ext.z.min;
-
-  }
-  else
-	 {
-		Model* mod = world->GetModel(name.c_str());
-		if(mod){
-		  Geom ext = mod->GetGeom();
-    	
-		  x = ext.size.x;
-		  y = ext.size.y;
-		  z = ext.size.z;
-		  center.x = ext.pose.x;
-		  center.y = ext.pose.y;
-		  center.a = ext.pose.a;
+		  Stg::Velocity sv = mod->GetVelocity(); 
+		  v.x = sv.x;
+		  v.y = sv.y;
+		  v.z = sv.z;
+		  v.a = sv.a;
 		}
-		else
-		  {
-			 printf("Warning: attemp to get the extent of unrecognized model \"%s\"\n", name.c_str());
-			 return false;		
+	 else
+		printf( "Warning: attempt to set PVA for unrecognized model \"%s\"\n",
+				  name.c_str() );
+
+	 return true;
+  }
+  /*
+	 virtual bool GetLaserData(const std::string& name,			
+	 websim::Time& t,												
+	 uint32_t& resolution,
+	 double& fov,
+	 websim::Pose& p,
+	 std::vector<double>& ranges,													
+	 std::string& error,
+	 void* parent){
+
+
+	 t = GetTime();
+
+	 Model* mod = world->GetModel( name.c_str() );
+	 if( mod )
+	 {
+	 ModelLaser* laser = (ModelLaser*)mod->GetModel("laser:0");  		
+			
+	 if(laser){
+	 uint32_t sample_count=0;
+	 ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
+	 assert(scan);
+		    
+	 ModelLaser::Config  cfg = laser->GetConfig();
+	 resolution =  cfg.resolution;
+	 fov = cfg.fov;
+        
+	 for(unsigned int i=0;i<sample_count;i++)
+	 ranges.push_back(scan[i].range);
+	 }else{
+
+	 printf( "Warning: attempt to get laser data for unrecognized laser model of model \"%s\"\n",
+	 name.c_str() );
+	 return false;
+
+
+	 }
+	         	  
+	 }
+	 else{
+	 printf( "Warning: attempt to get laser data for unrecognized model \"%s\"\n",
+	 name.c_str() );
+	 return false;
+	 }
+
+	 return true;
+
+	 }					   
+	 virtual bool GetRangerData(const std::string& name,
+	 websim::Time& t,
+	 std::vector<websim::Pose>& p,
+	 std::vector<double>& ranges,
+	 std::string& response,
+	 xmlNode* parent){
+	 t = GetTime();
+
+	 Model* mod = world->GetModel( name.c_str() );
+	 if( mod )
+	 {
+	 ModelRanger* ranger = (ModelRanger*)mod->GetModel("ranger:0");  		
+       
+	 if(ranger){
+	 uint32_t count = ranger->sensors.size();
+	 for(unsigned int i=0;i<count;i++)
+	 ranges.push_back(ranger->sensors[i].range);
+	 //std::copy(ranger->samples,ranger->samples+ranger->sensor_count,ranges.begin());
+				 
+	 for(unsigned int i=0;i<count;i++){
+	 websim::Pose pos;
+	 Pose rpos;
+	 rpos = ranger->sensors[i].pose;
+	 pos.x = rpos.x;
+	 pos.y = rpos.y;
+	 pos.z = rpos.z;
+	 pos.a = rpos.a;
+	 p.push_back(pos);					
+	 }
+				 
+	 }else{
+				 
+	 printf( "Warning: attempt to get ranger data for unrecognized ranger model of model \"%s\"\n",
+	 name.c_str() );
+	 return false;				 				 
+	 }	     
+	 }
+	 else{
+	 printf( "Warning: attempt to get ranger data for unrecognized model \"%s\"\n",
+	 name.c_str() );
+	 return false;
+	 }
+
+	 return true;
+
+	 }*/
+
+  virtual bool GetModelGeometry(const std::string& name,
+										  double& x,
+										  double& y,
+										  double& z,
+										  websim::Pose& center,
+										  std::string& response)
+  {
+	 if(name == "sim"){
+	
+		stg_bounds3d_t ext = world->GetExtent();
+    	
+		x = ext.x.max - ext.x.min;
+		y = ext.y.max - ext.y.min;
+		z = ext.z.max - ext.z.min;
+
+	 }
+	 else
+		{
+		  Model* mod = world->GetModel(name.c_str());
+		  if(mod){
+			 Geom ext = mod->GetGeom();
+    	
+			 x = ext.size.x;
+			 y = ext.size.y;
+			 z = ext.size.z;
+			 center.x = ext.pose.x;
+			 center.y = ext.pose.y;
+			 center.a = ext.pose.a;
+		  }
+		  else
+			 {
+				printf("Warning: attemp to get the extent of unrecognized model \"%s\"\n", name.c_str());
+				return false;		
+			 }
+		}
+        
+	 return true;
+  }
+
+  static int CountRobots(Model * mod, int* n ){
+ 
+	 if(n && mod->GetModelType() == "position")
+		(*n)++;
+  
+	 return 0;
+  } 
+  
+  virtual bool GetNumberOfRobots(unsigned int& n)
+  {
+	
+	
+	 world->ForEachDescendant((stg_model_callback_t)CountRobots, &n);	
+	 return true;
+
+  }
+  /*
+	 virtual bool GetModelTree()
+	 {
+	
+	 //	world->ForEachDescendant((stg_model_callback_t)printname, NULL);	
+
+	 return true;
+	 }
+  */
+  virtual bool GetSayStrings(std::vector<std::string>& sayings)
+  {
+	 unsigned int n=0;
+	 this->GetNumberOfRobots(n);
+	
+	 for(unsigned int i=0;i<n;i++){
+		char temp[128];
+		sprintf(temp,"position:%d",i);
+		Model *mod = world->GetModel(temp);
+		if(mod->GetSayString() != "")
+		  {	
+			
+			 std::string str = temp;
+			 str += " says: \" ";
+			 str += mod->GetSayString();
+			 str += " \" ";
+			
+			 sayings.push_back(str);
+			
 		  }
 	 }
-        
-  return true;
-}
 
-static int CountRobots(Model * mod, int* n ){
- 
-  if(n && mod->GetModelType() == MODEL_TYPE_POSITION)
-	 (*n)++;
-  
-  return 0;
-} 
-  
-virtual bool GetNumberOfRobots(unsigned int& n)
-{
-	
-	
-  world->ForEachDescendant((stg_model_callback_t)CountRobots, &n);	
-  return true;
+	 return true;
+  }
 
-}
-/*
-  virtual bool GetModelTree()
+  virtual websim::Time GetTime()
   {
-	
-  //	world->ForEachDescendant((stg_model_callback_t)printname, NULL);	
+	 stg_usec_t stgtime = world->SimTimeNow();
 
-  return true;
+	 websim::Time t;
+	 t.sec = stgtime / 1e6;
+	 t.usec = stgtime - (t.sec * 1e6);
+	 return t;
   }
-*/
-virtual bool GetSayStrings(std::vector<std::string>& sayings)
-{
-  unsigned int n=0;
-  this->GetNumberOfRobots(n);
-	
-  for(unsigned int i=0;i<n;i++){
-	 char temp[128];
-	 sprintf(temp,"position:%d",i);
-	 Model *mod = world->GetModel(temp);
-	 if(mod->GetSayString() != "")
-		{	
-			
-		  std::string str = temp;
-		  str += " says: \" ";
-		  str += mod->GetSayString();
-		  str += " \" ";
-			
-		  sayings.push_back(str);
-			
-		}
+  
+  // add an FLTK event loop update to WebSim's implementation
+  virtual void Wait()
+  {
+	 Fl::check();  
+	 
+	 while( unacknowledged_ticks || unacknowledged_pushes || ticks_remaining )
+		{			 
+		  printf( "event loop in wait (%d %d %d)\n",
+					 unacknowledged_ticks, unacknowledged_pushes, ticks_remaining );
+
+		  event_loop( EVLOOP_NONBLOCK );
+		  
+		  puts( "fl::check\n" );
+		  Fl::check();  
+		}    	 
   }
-
-  return true;
-}
-
-virtual websim::Time GetTime()
-{
-  stg_usec_t stgtime = world->SimTimeNow();
-
-  websim::Time t;
-  t.sec = stgtime / 1e6;
-  t.usec = stgtime - (t.sec * 1e6);
-  return t;
-}
-
+  
 };
 
 
@@ -636,20 +663,22 @@ int main( int argc, char** argv )
 		// todo? check for changes?
 		// send my updates		
 		ws.Push();
-		//puts( "pushes  done" );
+		//puts( "push  done" );
 
-		// tell my friends to start simulating
-		ws.Go();
+		// run one step of the simulation
+		ws.Tick();
 		
-		// puts( "go done" );
+		//puts( "tick done" );
 		
 		// update Stage
 		world->Update();
 		//puts( "update done" );
+	  
+		Fl::check();
 
-		// wait for goes from all my friends
+		// wait until everyone report simulation step done
 		ws.Wait();			
-		//puts( "wait done" );
+		puts( "wait done" );
 	 }
 
   printf( "Webstage done.\n" );

@@ -665,12 +665,9 @@ void Model::Shutdown( void )
 
 void Model::Update( void )
 { 
-  CallCallbacks( &hooks.update );
-
-  last_update = world->sim_time;
-  
-  if( subs > 0 )
-	 world->Enqueue( event_queue_num, World::Event::UPDATE, interval, this );
+  CallCallbacks( &hooks.update );  
+  last_update = world->sim_time;  
+  world->Enqueue( event_queue_num, World::Event::UPDATE, interval, this );
 }
 
 
@@ -790,7 +787,6 @@ void Model::UpdateCharge()
 	 }
   
   // set up the next event
-  if( subs > 0 ) // TODO XX ? 
   world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
 }
 
@@ -851,11 +847,8 @@ void Model::UpdatePose( void )
 		if( trail.size() > trail_length )
 		  trail.pop_front();
 	 }	            
-
-  //if( ! velocity.IsZero() )
-
-  if( subs > 0 )// TODO XX ? 
-	 world->Enqueue( 0, World::Event::POSE, interval_pose, this );
+  
+  world->Enqueue( 0, World::Event::POSE, interval_pose, this );
 }
 
 Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const

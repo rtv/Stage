@@ -39,7 +39,8 @@ extern "C" int Init( Model* mod )
   // subscribe to the ranger, which we use for navigating
   robot->ranger = (ModelRanger*)mod->GetModel( "ranger:0" );
   assert( robot->ranger );
-  
+
+
   // ask Stage to call into our ranger update function
   robot->ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, robot );
 

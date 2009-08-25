@@ -43,6 +43,7 @@ define swarmbot position
   color "random"
 
   ranger( pose [ 0 0 -0.050 0 ] 
+  alwayson 1
 
   	  scount 12 
   	  spose[0] [0 0 0]

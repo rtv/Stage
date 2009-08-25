@@ -477,12 +477,15 @@ void World::ConsumeQueue( unsigned int queue_num )
     {
       // printf( "@ %llu next event <%s %llu %s>\n",  sim_time, ev.TypeStr( ev.type ), ev.time, ev.mod->Token() ); 
       queue.pop();      
+		
       // only update events are allowed in queues other than zero
       if( queue_num > 0 && ev.type != Event::UPDATE )
-	PRINT_WARN1( "event type %d in async queue", queue_num );
+		  PRINT_WARN1( "event type %d in async queue", queue_num );
       
-      //process the event and move to the next
-      ev.Execute();
+		if( ev.mod->subs > 0 ) // no subscriptions means the event is discarded
+		  ev.Execute(); // simulate the event
+
+      // and move to the next
       ev = queue.top();
     }
 }
@@ -536,14 +539,14 @@ bool World::Update()
   
   // world callbacks
   CallUpdateCallbacks();
-  
-  ++updates;  
-  
+    
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
     {
       printf( "\r[Stage: %s]", ClockString().c_str() );
       fflush( stdout );
     }
+
+  ++updates;  
     
   return false;
 }
