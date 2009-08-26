@@ -46,9 +46,9 @@ void Canvas::TimerCallback( Canvas* c )
       c->world->dirty = false;
     }
   
-  Fl::repeat_timeout(((double)c->interval/1000),
-		     (Fl_Timeout_Handler)Canvas::TimerCallback, 
-		     c);
+  Fl::repeat_timeout( c->interval/1000.0,
+							 (Fl_Timeout_Handler)Canvas::TimerCallback, 
+							 c);
 }
 
 Canvas::Canvas( WorldGui* world, 

@@ -7,9 +7,6 @@
 
 #include "stage.hh"
 
-#include <algorithm>
-#include <vector>
-
 namespace Stg 
 {
 
@@ -33,7 +30,6 @@ namespace Stg
 
   // this is slightly faster than the inline method above, but not as safe
   //#define GETREG(X) (( (static_cast<int32_t>(X)) & REGIONMASK ) >> RBITS)
-
 
   class Cell 
   {

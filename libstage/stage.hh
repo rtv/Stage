@@ -1454,6 +1454,8 @@ namespace Stg
 	
     virtual void AddModel( Model* mod );
 	
+	 void SetTimeouts();
+
   protected:
 	
     virtual void PushColor( Color col );

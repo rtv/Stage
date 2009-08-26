@@ -52,19 +52,36 @@ void SuperRegion::Draw( bool drawall )
   
   // outline superregion
   glColor3f( 0,0,1 );   
-   glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
+  glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
+  
+  // outline regions
+  const Region* r = GetRegion(0,0);
+  char buf[32];
 
-	// outline regions
   glColor3f( 0,1,0 );    
-  for( int x=0; x<SUPERREGIONWIDTH; x++ )
-	 for( int y=0; y<SUPERREGIONWIDTH; y++ )
+  for( int y=0; y<SUPERREGIONWIDTH; y++ )
+	 for( int x=0; x<SUPERREGIONWIDTH; x++ )
 		{
-		  const Region* r = GetRegion(x,y);
-		  
 		  if( r->count )
-			 // outline regions with contents
-			 glRecti( x<<RBITS, y<<RBITS, 
-						 (x+1)<<RBITS, (y+1)<<RBITS );
+			 {
+				// outline regions with contents
+				glRecti( x<<RBITS, y<<RBITS, 
+							(x+1)<<RBITS, (y+1)<<RBITS );
+
+				snprintf( buf, 15, "%lu", r->count );
+				Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
+				
+				for( int p=0; p<REGIONWIDTH; p++ )
+				  for( int q=0; q<REGIONWIDTH; q++ )
+					 if( r->cells[p+(q*REGIONWIDTH)].blocks.size() )
+						{					 
+						  GLfloat xx = p+(x<<RBITS);
+						  GLfloat yy = q+(y<<RBITS);
+						  
+						  glRecti( xx, yy,
+									  xx+1, yy+1);
+						}
+			 }
 		  else if( ! r->cells.empty() )
 			 {
 				double left = x << RBITS;
@@ -94,22 +111,38 @@ void SuperRegion::Draw( bool drawall )
 				glVertex2f( right, bottom );
 				glVertex2f( right, bottom+d );
 				glEnd();
-			 }			 
-		}
+			 }
 
-  char buf[32];
+		  r++; // next region quickly
+		}
+  
   snprintf( buf, 15, "%lu", count );
   Gl::draw_string( 1<<SBITS, 1<<SBITS, 0, buf );
     
-  glColor3f( 1.0,0,0 );
+  glPopMatrix();    
+}
 
-  for( int x=0; x<SUPERREGIONWIDTH; x++ )
-	 for( int y=0; y<SUPERREGIONWIDTH; y++ )
-		{
-		  const Region* r = GetRegion( x, y);
-		  
+// TODO
+#if 0
+void SuperRegion::Draw( bool drawall )
+{
+  glEnable( GL_DEPTH_TEST );
+
+  glPushMatrix();
+  glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS,0);
+
+  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+  
+  r = GetRegion( 0, 0);
+
+  for( int y=0; y<SUPERREGIONWIDTH; y++ )
+	 for( int x=0; x<SUPERREGIONWIDTH; x++ )
+		{		  
 		  if( r->count < 1 )
-			 continue;		  
+			 {
+				r++;
+				continue;		  
+			 }
 
 		  snprintf( buf, 15, "%lu", r->count );
 		  Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
@@ -131,14 +164,11 @@ void SuperRegion::Draw( bool drawall )
 						  Cell* c = (Cell*)&r->cells[p+(q*REGIONWIDTH)];
 
 						  FOR_EACH( it, c->blocks )
-	// 					  for( std::vector<Block*>::iterator it = c->blocks.begin();
-// 								 it != c->blocks.end();
-// 								 ++it )					 
 							 {
 								Block* block = *it;
-						  
+								
 								//printf( "zb %.2f %.2f\n", ent->zbounds.min, ent->zbounds.max );
-						  
+								
 								Color c = block->GetColor();
 								glColor4f( c.r, c.g, c.b, 1.0 );
 						  
@@ -217,10 +247,12 @@ void SuperRegion::Draw( bool drawall )
 							 }
 						}
 				  }
+
+		  ++r;
 		}
     glPopMatrix();    
 }
-
+#endif
 
 //inline
 void SuperRegion::Floor()

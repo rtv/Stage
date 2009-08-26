@@ -342,9 +342,10 @@ void WorldGui::UpdateCallback( WorldGui* world )
 }
 
 bool WorldGui::Update()
-{  
-  double timeout = speedup > 0 ? (sim_interval/1e6) / speedup : 0;
-  Fl::repeat_timeout( timeout, (Fl_Timeout_Handler)UpdateCallback, this );
+{ 
+  if( speedup > 0 )
+	 Fl::repeat_timeout( (sim_interval/1e6) / speedup, (Fl_Timeout_Handler)UpdateCallback, this );
+  // else we're called by an idle callback
 
   //printf( "speedup %.2f timeout %.6f\n", speedup, timeout );
   
@@ -535,12 +536,16 @@ void WorldGui::fasterCb( Fl_Widget* w, WorldGui* wg )
 
 void WorldGui::realtimeCb( Fl_Widget* w, WorldGui* wg )
 {
+  //puts( "real time" );
   wg->speedup = 1.0;
+  wg->SetTimeouts();
 }
 
 void WorldGui::fasttimeCb( Fl_Widget* w, WorldGui* wg )
 {
+  //puts( "fast time" );
   wg->speedup = -1;
+  wg->SetTimeouts();  
 }
 
 void WorldGui::Start()
@@ -551,8 +556,27 @@ void WorldGui::Start()
   Fl::add_timeout( ((double)canvas->interval/1000), 
 						 (Fl_Timeout_Handler)Canvas::TimerCallback, 
 						 canvas );
+  
+  SetTimeouts();
+}
 
-	Fl::add_timeout( 0.01, (Fl_Timeout_Handler)UpdateCallback, this );
+
+void WorldGui::SetTimeouts()
+{
+  if( speedup > 0.0 )
+	 {
+		//puts( "removing idle" );
+		Fl::remove_idle( (Fl_Timeout_Handler)WorldGui::UpdateCallback, this );	  
+		Fl::remove_timeout( (Fl_Timeout_Handler)WorldGui::UpdateCallback, this );	  
+		Fl::add_timeout( (sim_interval/1e6) / speedup, (Fl_Timeout_Handler)UpdateCallback, this );
+	 }  
+  else
+	 {
+		//puts( "removing timeout" );
+		Fl::remove_timeout( (Fl_Timeout_Handler)WorldGui::UpdateCallback, this );	  
+		Fl::remove_idle( (Fl_Timeout_Handler)WorldGui::UpdateCallback, this );	  
+		Fl::add_idle( (Fl_Timeout_Handler)UpdateCallback, this );
+	 }
 }
 
 void WorldGui::Stop()

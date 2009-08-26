@@ -296,9 +296,6 @@ void Model::Init()
   UnMap(); // remove any old cruft rendered during startup
   Map();
 
-  if( FindPowerPack() )
-	 world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
-  
   // find the queue for update events: zero if thread safe, else we
   // ask the world to assign us to a queue  
   if( event_queue_num < 1 ) 		
@@ -649,7 +646,10 @@ void Model::Startup( void )
   // put my first events in the world's queue
   world->Enqueue( event_queue_num, World::Event::UPDATE, interval, this );
   world->Enqueue( 0, World::Event::POSE, interval_pose, this );
+  if( FindPowerPack() )
+	 world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
   
+
   CallCallbacks( &hooks.startup );
 }
 

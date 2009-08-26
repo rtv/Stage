@@ -83,6 +83,8 @@ define charge_station model
     joules -1  # provides infinite energy
     give_watts 1000 
     fiducial_return 2 # look for this in the fiducial sensor
+	 
+	 alwayson 1 # so we give charge without any explicit subscriber
    )
 
 )
