@@ -11,26 +11,25 @@ using namespace Stg;
 // collection
 // std::set<Region*> Region::empty_regions;
 
-Region::Region() : 
-  cells( NULL ), 
+Region::Region( SuperRegion* sr) : 
+  cells(), 
+  superregion(sr),
   count(0)
 { 
 }
 
 Region::~Region()
 {
-  if( cells )
-	 delete[] cells;
 }
 
 SuperRegion::SuperRegion( World* world, stg_point_int_t origin ) 
-  : regions( new Region[ SUPERREGIONSIZE ] ),
+  : regions(),
 	 origin(origin), 
 	 world(world), 
 	 count(0)	 
 {
-  for( int i=0; i<SUPERREGIONSIZE; i++ )
-	 regions[i].superregion = this;
+  // populate the regions
+  regions.insert( regions.begin(), SUPERREGIONSIZE, Region( this ) );			 
   
   //static int srcount=0;
   //printf( "created SR number %d\n", ++srcount ); 
@@ -39,9 +38,6 @@ SuperRegion::SuperRegion( World* world, stg_point_int_t origin )
 
 SuperRegion::~SuperRegion()
 {
-  if( regions )
-	 delete[] regions;
-
   //printf( "deleting SR %p at [%d,%d]\n", this, origin.x, origin.y );
 }
 
@@ -64,12 +60,12 @@ void SuperRegion::Draw( bool drawall )
 	 for( int y=0; y<SUPERREGIONWIDTH; y++ )
 		{
 		  const Region* r = GetRegion(x,y);
-
+		  
 		  if( r->count )
 			 // outline regions with contents
 			 glRecti( x<<RBITS, y<<RBITS, 
 						 (x+1)<<RBITS, (y+1)<<RBITS );
-		  else if( r->cells )
+		  else if( ! r->cells.empty() )
 			 {
 				double left = x << RBITS;
 				double right = (x+1) << RBITS;
@@ -81,35 +77,22 @@ void SuperRegion::Draw( bool drawall )
 				// draw little corner markers for regions with memory
 				// allocated but no contents
 				glBegin( GL_LINES );
-
 				glVertex2f( left, bottom );
 				glVertex2f( left+d, bottom );
-				
 				glVertex2f( left, bottom );
 				glVertex2f( left, bottom+d );
-
-
 				glVertex2f( left, top );
 				glVertex2f( left+d, top );
-
 				glVertex2f( left, top );
 				glVertex2f( left, top-d );
-
-
-
 				glVertex2f( right, top );
 				glVertex2f( right-d, top );
-
 				glVertex2f( right, top );
 				glVertex2f( right, top-d );
-
-
 				glVertex2f( right, bottom );
 				glVertex2f( right-d, bottom );
-				
 				glVertex2f( right, bottom );
 				glVertex2f( right, bottom+d );
- 						 
 				glEnd();
 			 }			 
 		}

@@ -304,7 +304,7 @@ void Canvas::unSelect( Model* mod )
 {
   if( mod )
     {
-      selected_models.erase( std::remove( selected_models.begin(), selected_models.end(), mod ));
+		EraseAll( mod, selected_models );
       redraw();
     }
 }
@@ -577,7 +577,7 @@ void Canvas::AddModel( Model*  mod  )
 void Canvas::RemoveModel( Model*  mod  )
 {
   printf( "removing model %s from canvas list\n", mod->Token() );
-  models_sorted.erase( std::remove( models_sorted.begin(), models_sorted.end(), mod ));
+  EraseAll( mod, models_sorted );
 }
 
 void Canvas::DrawGlobalGrid()

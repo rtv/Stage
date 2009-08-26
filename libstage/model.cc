@@ -277,8 +277,8 @@ Model::~Model( void )
   
   // remove myself from my parent's child list, or the world's child
   // list if I have no parent
-  ModelPtrSet& vec  = parent ? parent->children : world->children;
-  vec.erase( this );//std::remove( vec.begin(), vec.end(), this ));
+  ModelPtrVec& vec  = parent ? parent->children : world->children;
+  EraseAll( this, vec );
 
   modelsbyid.erase(id);
 
@@ -332,7 +332,7 @@ void Model::RemoveFlag( Flag* flag )
 {
   if( flag )
 	 {
-		flag_list.erase( remove( flag_list.begin(), flag_list.end(), flag ));		
+		EraseAll( flag, flag_list );
 		CallCallbacks( &hooks.flag_decr );
 	 }
 }

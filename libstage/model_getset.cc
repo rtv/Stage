@@ -49,9 +49,9 @@ void Model::SetFiducialReturn(  int val )
   // non-zero values mean we need to be in the world's set of
   // detectable models
   if( val == 0 )
-		world->models_with_fiducials.erase( this );
+	 world->FiducialErase( this );
   else
-	 world->models_with_fiducials.insert( this );
+	 world->FiducialInsert( this );
 	
   CallCallbacks( &vis.fiducial_return );
 }
@@ -135,17 +135,13 @@ void Model::SetGlobalPose( const Pose& gpose )
 }
 
 int Model::SetParent( Model* newparent)
-{
-  
+{  
   // remove the model from its old parent (if it has one)
   if( parent )
-    //this->parent->children = g_list_remove( this->parent->children, this );
-	 //parent->children.erase( remove( parent->children.begin(), parent->children.end(), this ) );
-	 parent->children.erase( this );
- 
+	 EraseAll( this, parent->children );
+  
   if( newparent )
-    //newparent->children = g_list_append( newparent->children, this );
-	 newparent->children.insert( this );
+	 newparent->children.push_back( this );
 
   // link from the model to its new parent
   this->parent = newparent;

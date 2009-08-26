@@ -206,13 +206,30 @@ void Block::UnMap()
 void Block::RemoveFromCellArray( CellPtrVec *cells )
 {
   FOR_EACH( it, *cells )
-	(*it)->RemoveBlock( this);
+	 {
+		Cell* cell = *it;
+		
+		// remove me from the cell
+		EraseAll( this, cell->blocks );		
+		--cell->region->count;
+		--cell->region->superregion->count;  	 	 
+	 }
 }
 
 void Block::AddToCellArray( CellPtrVec *cells )
 {
   FOR_EACH( it, *cells )
-	(*it)->AddBlock( this);
+	 {
+		Cell* cell = *it;
+
+		// record that I am rendered in this cell
+		rendered_cells->push_back( cell ); 
+		
+		// store me in the cell
+		cell->blocks.push_back( this );   
+		++cell->region->count;
+		++cell->region->superregion->count;		
+	 }
 }
 
 void Block::SwitchToTestedCells()

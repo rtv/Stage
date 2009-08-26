@@ -89,6 +89,9 @@ namespace Stg
   /** Set of pointers to Models. */
   typedef std::set<Model*> ModelPtrSet;
 
+  /** Set of pointers to Models. */
+  typedef std::vector<Model*> ModelPtrVec;
+
   /** Set of pointers to Blocks. */
   typedef std::set<Block*> BlockPtrSet;
 
@@ -615,6 +618,11 @@ namespace Stg
 #define VAR(V,init) __typeof(init) V=(init)
 #define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();I++)
 
+/** wrapper for Erase-Remove method of removing all instances of thing from container */
+  template <class T, class C>
+  void EraseAll( T thing, C& cont )
+  { cont.erase( std::remove( cont.begin(), cont.end(), thing ), cont.end() ); }
+  
   // Error macros - output goes to stderr
 #define PRINT_ERR(m) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
 #define PRINT_ERR1(m,a) fprintf( stderr, "\033[41merr\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
@@ -679,7 +687,7 @@ namespace Stg
     friend class Canvas; // allow Canvas access to our private members
 	 
   protected:
-	 ModelPtrSet children;
+	 ModelPtrVec children;
     bool debug;
     char* token;
 	 pthread_mutex_t access_mutex; ///< Used by Lock() and Unlock() to prevent parallel access to this model
@@ -690,7 +698,7 @@ namespace Stg
   public:
 	
     /** get the children of the this element */
-	 ModelPtrSet& GetChildren(){ return children;}
+	 ModelPtrVec& GetChildren(){ return children;}
     
     /** recursively call func( model, arg ) for each descendant */
     void ForEachDescendant( stg_model_callback_t func, void* arg );
@@ -812,8 +820,22 @@ namespace Stg
 		
 	 /** Keep a list of all models with detectable fiducials. This
 		  avoids searching the whole world for fiducials. */
-	 ModelPtrSet models_with_fiducials;
-	
+	 ModelPtrVec models_with_fiducials;
+	 
+	 /** Add a model to the set of models with non-zero fiducials, if not already there. */
+	 void FiducialInsert( Model* mod )
+	 { 
+		FiducialErase( mod ); // make sure it's not there already
+		models_with_fiducials.push_back( mod ); 
+	 }
+	 
+	 /** Remove a model from the set of models with non-zero fiducials, if it exists. */
+	 void FiducialErase( Model* mod )
+	 { 
+		//EraseAll<Model*,ModelPtrVec&>( mod, models_with_fiducials );
+		EraseAll( mod, models_with_fiducials );
+	 }
+
     double ppm; ///< the resolution of the world model in pixels per meter   
     bool quit; ///< quit this world ASAP  
 	 
@@ -842,7 +864,7 @@ namespace Stg
 	 std::map<stg_point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
 	 
-	 std::vector<ModelPtrSet> update_lists;  
+	 std::vector<ModelPtrVec> update_lists;  
 	 
     uint64_t updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
@@ -1110,9 +1132,6 @@ namespace Stg
 
 	 /** Set the extent in Z of the block */
 	 void SetZ( double min, double max );
-
-    void RecordRendering( Cell* cell )
-    { rendered_cells->push_back( cell ); }  
 
     stg_point_t* Points( unsigned int *count )
     { if( count ) *count = pt_count; return &pts[0]; };	         

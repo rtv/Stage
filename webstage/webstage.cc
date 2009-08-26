@@ -137,7 +137,7 @@ public:
   virtual bool GetModelChildren(const std::string& model, 
 										  std::vector<std::string>& children)
   {
-	 std::set<Model*> c;
+	 std::vector<Model*> c;
 
 	 if(model == "")
 		{
@@ -157,9 +157,7 @@ public:
 			
 		}
 	
-	 for( std::set<Model*>::iterator it = c.begin();
-			it != c.end();
-			it++ )
+	 FOR_EACH( it, c )
 		{		
 		  children.push_back(std::string((*it)->Token()));
 		}

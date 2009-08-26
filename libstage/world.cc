@@ -1024,7 +1024,7 @@ void World::AddPowerPack( PowerPack* pp )
 
 void World::RemovePowerPack( PowerPack* pp )
 {
-  powerpack_list.erase( remove( powerpack_list.begin(), powerpack_list.end(), pp ));
+  EraseAll( pp, powerpack_list );
 }
 
 /// Register an Option for pickup by the GUI

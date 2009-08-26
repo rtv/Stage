@@ -246,28 +246,27 @@ void Model::AddVisualizer( Visualizer* cv, bool on_by_default )
   if( ! world_gui ) 
 	 return;
 	
-	//save visual instance
-	//cv_list = g_list_append(cv_list, cv );
+  //save visual instance
   cv_list.push_back( cv );
-
-	//register option for all instances which share the same name
-	Canvas* canvas = world_gui->GetCanvas();
-	std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( cv->GetMenuName() );
-	if( i == canvas->_custom_options.end() ) {
-	  Option* op = new Option( cv->GetMenuName(), 
-										cv->GetWorldfileName(), 
-										"", 
-										on_by_default, 
-										world_gui );
-		canvas->_custom_options[ cv->GetMenuName() ] = op;
-		RegisterOption( op );
-	}
+  
+  //register option for all instances which share the same name
+  Canvas* canvas = world_gui->GetCanvas();
+  std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( cv->GetMenuName() );
+  if( i == canvas->_custom_options.end() ) {
+	 Option* op = new Option( cv->GetMenuName(), 
+									  cv->GetWorldfileName(), 
+									  "", 
+									  on_by_default, 
+									  world_gui );
+	 canvas->_custom_options[ cv->GetMenuName() ] = op;
+	 RegisterOption( op );
+  }
 }
 
 void Model::RemoveVisualizer( Visualizer* cv )
 {
   if( cv )
-    cv_list.erase( remove( cv_list.begin(), cv_list.end(), cv ));
+	 EraseAll( cv, cv_list );
   
   //TODO unregister option - tricky because there might still be instances attached to different models which have the same name
 }

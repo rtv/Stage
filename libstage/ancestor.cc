@@ -20,8 +20,16 @@ Ancestor::~Ancestor()
 
 void Ancestor::AddChild( Model* mod )
 {
+  // if the child is already there, this is a serious error
+  if( std::find( children.begin(), children.end(), mod ) != children.end() )
+	 {
+		PRINT_ERR2( "Attempting to add child %s to %s - child already exists",
+						mod->Token(), this->Token() );
+		exit( -1 );
+	 }
+  
   // poke a name into the child  
-  char* buf = new char[TOKEN_MAX];	
+  static char* buf = new char[TOKEN_MAX];	// allocated once
   
   //  printf( "adding child of type %d token %s\n", mod->type, mod->Token() );
   
@@ -41,18 +49,17 @@ void Ancestor::AddChild( Model* mod )
 
   mod->SetToken( buf );
 
-  children.insert( mod );
+  children.push_back( mod );
 
   child_type_counts[mod->type]++;
 
-  delete[] buf;
+  //delete[] buf; // no need to free the statically allocated buffer
 }
 
 void Ancestor::RemoveChild( Model* mod )
 {
   child_type_counts[mod->type]--;
-  
-  children.erase( mod );//std::remove( children.begin(), children.end(), mod ) );
+  EraseAll( mod, children );
 }
 
 Pose Ancestor::GetGlobalPose()

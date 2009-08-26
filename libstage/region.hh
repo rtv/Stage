@@ -45,12 +45,10 @@ namespace Stg
   private:
 	 Region* region;  
 	 std::vector<Block*> blocks;
-	 //std::set<Block*> blocks;
-	 bool boundary;
   
   public:
-	 Cell() 
-		: region( NULL),
+	 Cell( Region* reg ) 
+		: region( reg ),
 		  blocks() 
 	 { 
 	 }  
@@ -63,26 +61,22 @@ namespace Stg
   class Region
   {
   public:
-  
-	 Cell* cells;
+	 std::vector<Cell> cells;
+
 	 SuperRegion* superregion;	
 	 unsigned long count; // number of blocks rendered into this region
   
-	 Region();
+	 Region( SuperRegion* sr );
 	 ~Region();
 	 
 	 Cell* GetCell( int32_t x, int32_t y )
 	 {
-		if( ! cells )
-		  {
-			 cells = new Cell[REGIONSIZE];
-			 
-			 for( int i=0; i<REGIONSIZE; ++i )
-				cells[i].region = this;
-		  }
-
+		if( cells.empty() ) // lazy population of cells
+		  cells.insert( cells.begin(), REGIONSIZE, Cell( this ) );			 
+		
 		return( (Cell*)&cells[ x + y * REGIONWIDTH ] ); 
 	 }	 
+
   }; // end class Region
 
   class SuperRegion
@@ -92,7 +86,7 @@ namespace Stg
 	 
   private:
 	 
-	 Region* regions;	 
+	 std::vector<Region> regions;
 	 stg_point_int_t origin;
 	 World* world;
 	 
@@ -110,24 +104,4 @@ namespace Stg
 	 unsigned long count; // number of blocks rendered into this superregion
   }; // class SuperRegion;
   
-  void Cell::RemoveBlock( Block* b )
-  {
-	 // linear time removal, but these vectors are very short, usually 1
-	 // or 2 elements.	 
-	 blocks.erase( std::remove( blocks.begin(), blocks.end(), b ), blocks.end() );
-	 
-	 --region->count;
-	 --region->superregion->count;  	 	 
-  }
-  
-  void Cell::AddBlock( Block* b )
-  {
-	 blocks.push_back( b );  
-	 b->RecordRendering( this );
-	 
-	 ++region->count;
-	 ++region->superregion->count;
-  } 
-
-
 }; // namespace Stg
