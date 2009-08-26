@@ -45,6 +45,7 @@ namespace Stg
   private:
 	 Region* region;  
 	 std::vector<Block*> blocks;
+	 //std::set<Block*> blocks;
 	 bool boundary;
   
   public:
@@ -82,29 +83,7 @@ namespace Stg
 
 		return( (Cell*)&cells[ x + y * REGIONWIDTH ] ); 
 	 }	 
-
-	 
-	 /** Returns an initialized region, either from the top of the
-		  stack, or if the stack is empty, a newly constructed Region */
-	 //static Region* GetRegion( SuperRegion* superregion );
-	 // static std::stack<Region*> recycled_regions;
-
-// 	 static std::set<Region*> empty_regions;
-
-// 	 static void GarbageCollect()
-// 	 {
-// 		FOR_EACH( it, empty_regions )
-// 		  {
-// 			 Region* reg = *it;
-// 			 //delete reg;
-			 
-// 			 printf( "Garbage collecting region %p\n", reg );
-// 		  }
-		
-// 		empty_regions.clear();
-// 	 }
-		  
-  };
+  }; // end class Region
 
   class SuperRegion
   {
@@ -129,50 +108,26 @@ namespace Stg
 	 void Floor();
 	 
 	 unsigned long count; // number of blocks rendered into this superregion
-  };
-
-
-  // inline void printvec( std::vector<Block*>& vec )
-  //   {
-  // 	 printf( "Vec: ");
-  // 	 for( size_t i=0; i<vec.size(); i++ )
-  // 		printf( "%p ", vec[i] );
-  // 	 puts( "" );
-  //   }
-
+  }; // class SuperRegion;
+  
   void Cell::RemoveBlock( Block* b )
   {
 	 // linear time removal, but these vectors are very short, usually 1
-	 // or 2 elements.  Fast removal - our strategy is to copy the last
-	 // item in the vector over the item we want to remove, then pop off
-	 // the tail. This avoids moving the other items in the vector. Saves
-	 // maybe 1 or 2% run time in my tests.
-  
-	 // find the value in the vector     
-	 //   printf( "\nremoving %p\n", b );
-	 //   puts( "before" );
-	 //   printvec( blocks );
-  
-	 // copy the last item in the vector to overwrite this one
-	 copy_backward( blocks.end(), blocks.end(), std::find( blocks.begin(), blocks.end(), b ));
-	 blocks.pop_back(); // and remove the redundant copy at the end of
-	 // the vector
-
-	 --region->count;
-	 --region->superregion->count;  	 
+	 // or 2 elements.	 
+	 blocks.erase( std::remove( blocks.begin(), blocks.end(), b ), blocks.end() );
 	 
-// 	 if( region->count == 0 && region->candidate_count == 0 )
-// 		Region::empty_regions.insert( region );
+	 --region->count;
+	 --region->superregion->count;  	 	 
   }
-
+  
   void Cell::AddBlock( Block* b )
   {
 	 blocks.push_back( b );  
 	 b->RecordRendering( this );
-
+	 
 	 ++region->count;
 	 ++region->superregion->count;
-  }
+  } 
 
 
 }; // namespace Stg

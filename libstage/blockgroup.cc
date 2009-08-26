@@ -26,7 +26,7 @@ BlockGroup::~BlockGroup()
 
 void BlockGroup::AppendBlock( Block* block )
 {
-  blocks.push_back( block );
+  blocks.insert( block );
 }
 
 void BlockGroup::Clear()

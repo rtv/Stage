@@ -54,7 +54,7 @@ public:
 	 puts( "[WebStage]  Clock tick" );
 	 
 	 world->paused = true;
-	 world->sim_interval = msec * 1e3; // usec
+	 world->sim_interval = msec * 1e-3; // usec
 	 world->Update();
 
 	 return true;
@@ -137,7 +137,7 @@ public:
   virtual bool GetModelChildren(const std::string& model, 
 										  std::vector<std::string>& children)
   {
-	 std::vector<Model*> c;
+	 std::set<Model*> c;
 
 	 if(model == "")
 		{
@@ -157,7 +157,7 @@ public:
 			
 		}
 	
-	 for( std::vector<Model*>::iterator it = c.begin();
+	 for( std::set<Model*>::iterator it = c.begin();
 			it != c.end();
 			it++ )
 		{		
@@ -572,21 +572,18 @@ public:
   // add an FLTK event loop update to WebSim's implementation
   virtual void Wait()
   {
-	 Fl::check();  
-	 
-	 while( unacknowledged_ticks || unacknowledged_pushes || ticks_remaining )
-		{			 
-		  printf( "event loop in wait (%d %d %d)\n",
+	 do
+		{
+		  printf( " event loop in wait (%d %d %d)\r",
 					 unacknowledged_ticks, unacknowledged_pushes, ticks_remaining );
-
-		  event_loop( EVLOOP_NONBLOCK );
 		  
-		  puts( "fl::check\n" );
-		  Fl::check();  
-		}    	 
+		  event_loop( EVLOOP_NONBLOCK );		 
+		  Fl::check();  		  
+		}
+	 while( unacknowledged_ticks || unacknowledged_pushes || ticks_remaining );		  
   }
   
-};
+}; // close WebStage class
 
 
 int main( int argc, char** argv )
@@ -652,7 +649,10 @@ int main( int argc, char** argv )
   if( usefedfile )
 	 ws.LoadFederationFile( fedfilename );
 
-  ws.Startup( true );
+  ws.Startup( true ); // start http server
+  
+  if( ! world->paused ) 
+	 world->Start(); // start sumulation running
 
   puts( "entering main loop" );
 
@@ -671,14 +671,12 @@ int main( int argc, char** argv )
 		//puts( "tick done" );
 		
 		// update Stage
-		world->Update();
+		//world->Update();
 		//puts( "update done" );
 	  
-		Fl::check();
-
 		// wait until everyone report simulation step done
 		ws.Wait();			
-		puts( "wait done" );
+		//puts( "wait done" );
 	 }
 
   printf( "Webstage done.\n" );

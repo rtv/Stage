@@ -41,7 +41,7 @@ void Ancestor::AddChild( Model* mod )
 
   mod->SetToken( buf );
 
-  children.push_back( mod );
+  children.insert( mod );
 
   child_type_counts[mod->type]++;
 
@@ -52,7 +52,7 @@ void Ancestor::RemoveChild( Model* mod )
 {
   child_type_counts[mod->type]--;
   
-  children.erase( std::remove( children.begin(), children.end(), mod ) );
+  children.erase( mod );//std::remove( children.begin(), children.end(), mod ) );
 }
 
 Pose Ancestor::GetGlobalPose()

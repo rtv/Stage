@@ -193,8 +193,6 @@ void Block::Map()
   // TODO - if called often, we may not need to generate each time
   GenerateCandidateCells();
   SwitchToTestedCells();
-  return;
-
   mapped = true;
 }
 
@@ -226,6 +224,8 @@ void Block::SwitchToTestedCells()
   CellPtrVec *tmp = rendered_cells;
   rendered_cells = candidate_cells;
   candidate_cells = tmp;
+
+  // XXXX todo 
 
   mapped = true;
 }

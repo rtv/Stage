@@ -88,10 +88,10 @@ namespace Stg
   
   /** Set of pointers to Models. */
   typedef std::set<Model*> ModelPtrSet;
-  /** Vector of pointers to Models. */
-  typedef std::vector<Model*> ModelPtrVec;
-  /** Vector of pointers to Blocks. */
-  typedef std::vector<Block*> BlockPtrVec;
+
+  /** Set of pointers to Blocks. */
+  typedef std::set<Block*> BlockPtrSet;
+
   /** Vector of pointers to Cells.*/
   typedef std::vector<Cell*> CellPtrVec;
 
@@ -679,7 +679,7 @@ namespace Stg
     friend class Canvas; // allow Canvas access to our private members
 	 
   protected:
-	 ModelPtrVec children;
+	 ModelPtrSet children;
     bool debug;
     char* token;
 	 pthread_mutex_t access_mutex; ///< Used by Lock() and Unlock() to prevent parallel access to this model
@@ -690,7 +690,7 @@ namespace Stg
   public:
 	
     /** get the children of the this element */
-	 ModelPtrVec& GetChildren(){ return children;}
+	 ModelPtrSet& GetChildren(){ return children;}
     
     /** recursively call func( model, arg ) for each descendant */
     void ForEachDescendant( stg_model_callback_t func, void* arg );
@@ -842,8 +842,7 @@ namespace Stg
 	 std::map<stg_point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
 	 
-	 // todo - test performance of std::set
-	 std::vector<ModelPtrVec > update_lists;  
+	 std::vector<ModelPtrSet> update_lists;  
 	 
     uint64_t updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
@@ -1193,7 +1192,7 @@ namespace Stg
 
     void BuildDisplayList( Model* mod );
 	 
-	 BlockPtrVec blocks;
+	 BlockPtrSet blocks;
     Size size;
     stg_point3_t offset;
     stg_meters_t minx, maxx, miny, maxy;
@@ -1239,9 +1238,7 @@ namespace Stg
 	 
 	 void InvalidateModelPointCache()
 	 {
-		for( BlockPtrVec::iterator it( blocks.begin() );
-			  it != blocks.end();
-			  ++it )
+		FOR_EACH( it, blocks )
 		  (*it)->InvalidateModelPointCache();
 	 }
 

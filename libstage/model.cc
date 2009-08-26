@@ -277,8 +277,8 @@ Model::~Model( void )
   
   // remove myself from my parent's child list, or the world's child
   // list if I have no parent
-  ModelPtrVec& vec  = parent ? parent->children : world->children;
-  vec.erase( std::remove( vec.begin(), vec.end(), this ));
+  ModelPtrSet& vec  = parent ? parent->children : world->children;
+  vec.erase( this );//std::remove( vec.begin(), vec.end(), this ));
 
   modelsbyid.erase(id);
 
@@ -809,7 +809,9 @@ Model* Model::ConditionalMove( const Pose& newpose )
   Model* hitmod( TestCollisionTree() );
  
   if( hitmod )
-    pose = startpose; // move failed - put me back where I started
+	 {
+		pose = startpose; // move failed - put me back where I started
+	 }
   else
     {
       CommitTestedPose(); // shift anyrecursively commit to blocks to the new pose 

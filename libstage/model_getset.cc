@@ -136,14 +136,16 @@ void Model::SetGlobalPose( const Pose& gpose )
 
 int Model::SetParent( Model* newparent)
 {
+  
   // remove the model from its old parent (if it has one)
   if( parent )
     //this->parent->children = g_list_remove( this->parent->children, this );
-	 parent->children.erase( remove( parent->children.begin(), parent->children.end(), this ) );
+	 //parent->children.erase( remove( parent->children.begin(), parent->children.end(), this ) );
+	 parent->children.erase( this );
  
   if( newparent )
     //newparent->children = g_list_append( newparent->children, this );
-	 newparent->children.push_back( this );
+	 newparent->children.insert( this );
 
   // link from the model to its new parent
   this->parent = newparent;

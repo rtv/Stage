@@ -716,9 +716,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
 					  (cy>=0) && (cy<REGIONWIDTH) && 
 					  n > 0 )
 				{			 
-				  for( BlockPtrVec::iterator it( c->blocks.begin() );
-						 it != c->blocks.end();
-						 ++it )					 
+				  FOR_EACH( it, c->blocks )
 					 {	      	      
 						Block* block( *it );
 						assert( block );
@@ -946,7 +944,7 @@ Cell* World::GetCell( const stg_point_int_t& glob )
 
 void World::ForEachCellInLine( const stg_point_int_t& start,
 										 const stg_point_int_t& end,
-										 std::vector<Cell*>& cells )
+										 CellPtrVec& cells )
 {  
   // line rasterization adapted from Cohen's 3D version in
   // Graphics Gems II. Should be very fast.  
