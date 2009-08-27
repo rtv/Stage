@@ -94,8 +94,8 @@ namespace Stg
 	 Region* GetRegion( int32_t x, int32_t y )
 	 { return( &regions[ x + y * SUPERREGIONWIDTH ] ); }
 	 
-	 void Draw( bool drawall );
-	 void Floor();
+	 void DrawOccupancy();
+	 void DrawVoxels();
 	 
 	 unsigned long count; // number of blocks rendered into this superregion
   }; // class SuperRegion;

@@ -78,7 +78,9 @@ namespace Stg
 	 void RemoveModel( Model* mod );
 
 	 Option //showBlinken, 
+		showBBoxes,
 		showBlocks, 
+		showBlur,
 		showClock, 
 		showData, 
 		showFlags,
@@ -91,9 +93,7 @@ namespace Stg
 		showTrailArrows, 
 		showTrailRise, 
 		showTrails, 
-		showTree,
-		showBBoxes,
-		showBlur,
+		showVoxels,
 		pCamOn,
 		visualizeAll;
   

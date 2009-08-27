@@ -1462,9 +1462,9 @@ namespace Stg
     virtual void PushColor( double r, double g, double b, double a );
     virtual void PopColor();
 	
-    void DrawTree( bool leaves );
-    void DrawFloor();
-	
+    void DrawOccupancy();
+    void DrawVoxels();
+	 
   public:
 	
     WorldGui(int W,int H,const char*L=0);

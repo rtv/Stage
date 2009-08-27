@@ -417,20 +417,16 @@ std::string WorldGui::EnergyString()
   return std::string( str );
 }
 
-void WorldGui::DrawTree( bool drawall )
+void WorldGui::DrawOccupancy()
 {  
   FOR_EACH( it, superregions )
-	 (*it).second->Draw( drawall );
+	 (*it).second->DrawOccupancy();
 }
 
-void WorldGui::DrawFloor()
-{
-  PushColor( 1,1,1,1 );
-  
+void WorldGui::DrawVoxels()
+{  
   FOR_EACH( it, superregions )
-	 (*it).second->Floor();
-  
-  PopColor();
+	 (*it).second->DrawVoxels();
 }
 
 void WorldGui::windowCb( Fl_Widget* w, WorldGui* wg )
@@ -523,7 +519,13 @@ void WorldGui::resetViewCb( Fl_Widget* w, WorldGui* wg )
 
 void WorldGui::slowerCb( Fl_Widget* w, WorldGui* wg )
 {
-  wg->speedup *= 0.8;  
+  if( wg->speedup <= 0 )
+	 {
+		wg->speedup = 100.0;
+		wg->SetTimeouts();
+	 }
+  else
+	 wg->speedup *= 0.8;  
 }
 
 void WorldGui::fasterCb( Fl_Widget* w, WorldGui* wg )
