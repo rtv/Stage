@@ -56,8 +56,8 @@ actuator
   if a linear actuator the axis that the actuator will move along
  */
   
-static const double STG_ACTUATOR_WATTS_KGMS = 5.0; // cost per kg per meter per second
-static const double STG_ACTUATOR_WATTS = 2.0; // base cost of position device
+static const double WATTS_KGMS = 5.0; // cost per kg per meter per second
+static const double WATTS_BASE = 2.0; // base cost of position device
 
 ModelActuator::ModelActuator( World* world,
 										Model* parent,
@@ -68,12 +68,11 @@ ModelActuator::ModelActuator( World* world,
   max_speed(1), 
   min_position(0), 
   max_position(1),
-  control_mode( STG_ACTUATOR_CONTROL_VELOCITY ),
-  actuator_type( STG_ACTUATOR_TYPE_LINEAR ),
+  control_mode( CONTROL_VELOCITY ),
+  actuator_type( TYPE_LINEAR ),
   axis(0,0,0)
 {
-  // no power consumed until we're subscribed
-  this->SetWatts( 0 );
+  this->SetWatts( WATTS_BASE );
   
   // sensible position defaults
   this->SetVelocity( Velocity(0,0,0,0) );
@@ -100,9 +99,9 @@ void ModelActuator::Load( void )
 		if( type_str )
 		{
 			if( strcmp( type_str, "linear" ) == 0 )
-				actuator_type = STG_ACTUATOR_TYPE_LINEAR;
+				actuator_type = TYPE_LINEAR;
 			else if( strcmp( type_str, "rotational" ) == 0 )
-				actuator_type = STG_ACTUATOR_TYPE_ROTATIONAL;
+				actuator_type = TYPE_ROTATIONAL;
 			else
 			{
 				PRINT_ERR1( "invalid actuator type specified: \"%s\" - should be one of: \"linear\" or \"rotational\". Using \"linear\" as default.", type_str );
@@ -110,7 +109,7 @@ void ModelActuator::Load( void )
 		}
 	}
 
-	if (actuator_type == STG_ACTUATOR_TYPE_LINEAR)
+	if (actuator_type == TYPE_LINEAR)
 	{
 		// if we are a linear actuator find the axis we operate in
 		if( wf->PropertyExists( wf_entity, "axis" ) )
@@ -169,11 +168,11 @@ void ModelActuator::Update( void  )
 
 	switch (actuator_type)
 	{
-		case STG_ACTUATOR_TYPE_LINEAR:
+		case TYPE_LINEAR:
 		{
 			pos = PoseDiff.x * axis.x + PoseDiff.y * axis.y + PoseDiff.z * axis.z; // Dot product to find distance along axis
 		} break;
-		case STG_ACTUATOR_TYPE_ROTATIONAL:
+		case TYPE_ROTATIONAL:
 		{
 			pos = PoseDiff.a;
 		} break;
@@ -186,7 +185,7 @@ void ModelActuator::Update( void  )
 	{
 		switch( control_mode )
 		{
-			case STG_ACTUATOR_CONTROL_VELOCITY :
+			case CONTROL_VELOCITY :
 				{
 					PRINT_DEBUG( "actuator velocity control mode" );
 					PRINT_DEBUG2( "model %s command(%.2f)",
@@ -198,7 +197,7 @@ void ModelActuator::Update( void  )
 						velocity = goal;
 				} break;
 
-			case STG_ACTUATOR_CONTROL_POSITION:
+			case CONTROL_POSITION:
 				{
 					PRINT_DEBUG( "actuator position control mode" );
 
@@ -233,14 +232,14 @@ void ModelActuator::Update( void  )
 		Velocity outvel;
 		switch (actuator_type)
 		{
-			case STG_ACTUATOR_TYPE_LINEAR:
+			case TYPE_LINEAR:
 			{
 				outvel.x = axis.x * velocity;
 				outvel.y = axis.y * velocity;
 				outvel.z = axis.z * velocity;
 				outvel.a = 0;
 			} break;
-			case STG_ACTUATOR_TYPE_ROTATIONAL:
+			case TYPE_ROTATIONAL:
 			{
 				outvel.x = outvel.y = outvel.z = 0;
 				outvel.a = velocity;
@@ -263,9 +262,6 @@ void ModelActuator::Startup( void )
 	Model::Startup();
 
 	PRINT_DEBUG( "position startup" );
-
-	this->SetWatts( STG_ACTUATOR_WATTS );
-
 }
 
 void ModelActuator::Shutdown( void )
@@ -277,20 +273,18 @@ void ModelActuator::Shutdown( void )
 
 	velocity.Zero();
 
-	this->SetWatts( 0 );
-
 	Model::Shutdown();
 }
 
 void ModelActuator::SetSpeed( double speed)
 {
-	control_mode = STG_ACTUATOR_CONTROL_VELOCITY;
+	control_mode = CONTROL_VELOCITY;
 	goal = speed;
 }
 
 
 void ModelActuator::GoTo( double pos)
 {
-	control_mode = STG_ACTUATOR_CONTROL_POSITION;
+	control_mode = CONTROL_POSITION;
 	goal = pos;
 }

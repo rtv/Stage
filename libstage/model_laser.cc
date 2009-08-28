@@ -96,6 +96,9 @@ ModelLaser::ModelLaser( World* world,
   // set up our data buffers and raytracing
   SampleConfig();
 
+  // start consuming power
+  watts = DEFAULT_WATTS;
+
   AddVisualizer( &vis, true );  
 }
 
@@ -111,9 +114,6 @@ void ModelLaser::Load( void )
   fov       = wf->ReadAngle( wf_entity, "fov",  fov );
   resolution = wf->ReadInt( wf_entity, "resolution",  resolution );
   
-  //showLaserData.Load( wf, wf_entity );
-  //showLaserStrikes.Load( wf, wf_entity );
-
   if( resolution < 1 )
     {
       PRINT_WARN( "laser resolution set < 1. Forcing to 1" );
@@ -228,17 +228,12 @@ void ModelLaser::Update( void )
 void ModelLaser::Startup(  void )
 { 
   Model::Startup();
-
   PRINT_DEBUG( "laser startup" );
-
-  // start consuming power
-  SetWatts( DEFAULT_WATTS );
 }
 
 void ModelLaser::Shutdown( void )
 { 
   PRINT_DEBUG( "laser shutdown" );
-  SetWatts( 0 );   // stop consuming power
   Model::Shutdown();
 }
 

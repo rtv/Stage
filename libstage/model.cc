@@ -110,7 +110,6 @@ using namespace Stg;
 // static members
 uint32_t Model::count = 0;
 std::map<stg_id_t,Model*> Model::modelsbyid;
-
 std::map<std::string, creator_t> Model::name_map;
 
 void Size::Load( Worldfile* wf, int section, const char* keyword )
@@ -957,7 +956,7 @@ PowerPack* Model::FindPowerPack() const
 {
   if( power_pack )
 	 return power_pack;
-
+  
   if( parent )
 	 return parent->FindPowerPack();
 
@@ -1120,4 +1119,3 @@ void Model::RasterVis::ClearPts()
 {
   pts.clear();
 }
-

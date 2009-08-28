@@ -146,9 +146,6 @@ namespace Stg
     "The text of the license may also be available online at\n"		\
     "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html\n";
   
-  /** The maximum length of a Stage model identifier string */
-  const uint32_t TOKEN_MAX = 64;
-
   /** Convenient constant */
   const double thousand = 1e3;
 
@@ -695,8 +692,10 @@ namespace Stg
 	 void Load( Worldfile* wf, int section );
 	 void Save( Worldfile* wf, int section );
 	 
-  public:
-	
+  public:	
+	 /** The maximum length of a Stage model identifier string */
+	 static const uint32_t TOKEN_MAX = 64;
+	 	 
     /** get the children of the this element */
 	 ModelPtrVec& GetChildren(){ return children;}
     
@@ -704,7 +703,6 @@ namespace Stg
     void ForEachDescendant( stg_model_callback_t func, void* arg );
 		
     /** array contains the number of each type of child model */
-    //unsigned int child_type_counts[MODEL_TYPE_COUNT];
 	 std::map<std::string,unsigned int> child_type_counts;
 	 
     Ancestor();
@@ -1223,16 +1221,17 @@ namespace Stg
     uint32_t GetCount(){ return blocks.size(); };
     const Size& GetSize(){ return size; };
     const stg_point3_t& GetOffset(){ return offset; };
-
-    /** establish the min and max of all the blocks, so we can scale this
-		  group later */
+	 
+    /** Establish the min and max of all the blocks, so we can scale this
+		  group later. */
     void CalcSize();
+	 
     void AppendBlock( Block* block );
     void CallDisplayList( Model* mod );
     void Clear() ; /** deletes all blocks from the group */
 	 
 	 void AppendTouchingModels( ModelPtrSet& touchers );
-	
+	 
     /** Returns a pointer to the first model detected to be colliding
 		  with a block in this group, or NULL, if none are detected. */
     Model* TestCollision();
@@ -1242,11 +1241,11 @@ namespace Stg
     void Map();
     void UnMap();
 	 
-    void DrawSolid( const Geom &geom); // draw the block in OpenGL as a solid single color
-    void DrawFootPrint( const Geom &geom); // draw the
-    // projection of the
-    // block onto the z=0
-    // plane
+	 /** Draw the block in OpenGL as a solid single color. */
+    void DrawSolid( const Geom &geom); 
+
+	 /** Draw the projection of the block onto the z=0 plane. */
+	 void DrawFootPrint( const Geom &geom);
 
     void LoadBitmap( Model* mod, const char* bitmapfile, Worldfile *wf );
     void LoadBlock( Model* mod, Worldfile* wf, int entity );
@@ -1262,12 +1261,6 @@ namespace Stg
 	 }
 
   };
-
-
-  //typedef int ctrlinit_t( Model* mod );
-  //typedef void ctrlupdate_t( Model* mod );
-  
-  // BLOCKS
 
   class Camera 
   {
@@ -1419,8 +1412,8 @@ namespace Stg
 		  timesteps. */
     stg_usec_t real_time_interval;
 	 
-    stg_usec_t real_time_now; ///< The current real time in microseconds
-    //stg_usec_t real_time_start; ///< the real time at which this world was created
+	 /** The current real time in microseconds. */
+    stg_usec_t real_time_now; 
 
 	 /** The last recorded real time, sampled every $timing_interval
 		  updates. */
@@ -1547,6 +1540,7 @@ namespace Stg
 		
 		void Accumulate( stg_meters_t x, stg_meters_t y, stg_joules_t amount );
 	 } event_vis;
+	 
 
 	 StripPlotVis output_vis;
 	 StripPlotVis stored_vis;
@@ -1565,6 +1559,11 @@ namespace Stg
 	 
 	 /** Energy dissipated */
 	 stg_joules_t dissipated;
+	 
+	 // these are used to visualize the power draw
+	 stg_usec_t last_time;
+	 stg_joules_t last_joules;
+	 stg_watts_t last_watts;
 
 	 static stg_joules_t global_stored;
 	 static stg_joules_t global_capacity;
@@ -1576,7 +1575,7 @@ namespace Stg
 	 ~PowerPack();
 	 
 	 /** OpenGL visualization of the powerpack state */
-	 void Visualize( Camera* cam ) const;
+	 void Visualize( Camera* cam );
 
 	 /** Print human-readable status on stdout, prefixed with the
 		  argument string */
@@ -1816,7 +1815,7 @@ namespace Stg
 		void ClearPts();
 	  
 	 } rastervis;
-		
+	 
 	 bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
 	 char* say_string;   ///< if non-null, this string is displayed in the GUI 
 		
@@ -2849,21 +2848,21 @@ namespace Stg
   public:
 	 /** Define a position  control method */
 	 typedef enum
-		{ STG_POSITION_CONTROL_VELOCITY, 
-		  STG_POSITION_CONTROL_POSITION 
+		{ CONTROL_VELOCITY, 
+		  CONTROL_POSITION 
 		} ControlMode;
 	 
 	 /** Define a localization method */
 	 typedef enum
-		{ STG_POSITION_LOCALIZATION_GPS, 
-		  STG_POSITION_LOCALIZATION_ODOM 
+		{ LOCALIZATION_GPS, 
+		  LOCALIZATION_ODOM 
 		} LocalizationMode;
 	 
 	 /** Define a driving method */
 	 typedef enum
-		{ STG_POSITION_DRIVE_DIFFERENTIAL, 
-		  STG_POSITION_DRIVE_OMNI, 
-		  STG_POSITION_DRIVE_CAR 
+		{ DRIVE_DIFFERENTIAL, 
+		  DRIVE_OMNI, 
+		  DRIVE_CAR 
 		} DriveMode;
 	 
   private:
@@ -2942,14 +2941,14 @@ namespace Stg
   public:
 	 /** Define a actuator control method */
 	 typedef enum
-		{ STG_ACTUATOR_CONTROL_VELOCITY,
-		  STG_ACTUATOR_CONTROL_POSITION
+		{ CONTROL_VELOCITY,
+		  CONTROL_POSITION
 		} ControlMode;
   
 	 /** Define an actuator type */
 	 typedef enum
-		{ STG_ACTUATOR_TYPE_LINEAR,
-		  STG_ACTUATOR_TYPE_ROTATIONAL
+		{ TYPE_LINEAR,
+		  TYPE_ROTATIONAL
 		} ActuatorType;
   
   private:
@@ -2976,13 +2975,13 @@ namespace Stg
 	 virtual void Update();
 	 virtual void Load();
   
-	 /** Sets the control_mode to STG_ACTUATOR_CONTROL_VELOCITY and sets
+	 /** Sets the control_mode to CONTROL_VELOCITY and sets
 		  the goal velocity. */
 	 void SetSpeed( double speed );
   
 	 double GetSpeed() const {return goal;}
   
-	 /** Sets the control mode to STG_ACTUATOR_CONTROL_POSITION and sets
+	 /** Sets the control mode to CONTROL_POSITION and sets
 		  the goal pose */
 	 void GoTo( double pose );
   

@@ -48,7 +48,6 @@ pioneer2dx
      # ctrl "lasernoise"  # uncomment this line to run a laser noise generator
   )
  
-
   ctrl "wander"
 
   # report error-free position in world coordinates

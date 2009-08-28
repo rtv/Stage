@@ -83,9 +83,9 @@ ModelPosition::ModelPosition( World* world,
 										const std::string& type ) : 
   Model( world, parent, type ),
   goal(0,0,0,0),
-  control_mode( STG_POSITION_CONTROL_VELOCITY ),
-  drive_mode( STG_POSITION_DRIVE_DIFFERENTIAL ),
-  localization_mode( STG_POSITION_LOCALIZATION_GPS ),
+  control_mode( CONTROL_VELOCITY ),
+  drive_mode( DRIVE_DIFFERENTIAL ),
+  localization_mode( LOCALIZATION_GPS ),
   integration_error( drand48() * INTEGRATION_ERROR_MAX_X - INTEGRATION_ERROR_MAX_X/2.0,
 							drand48() * INTEGRATION_ERROR_MAX_Y - INTEGRATION_ERROR_MAX_Y/2.0,
 							drand48() * INTEGRATION_ERROR_MAX_Z - INTEGRATION_ERROR_MAX_Z/2.0,
@@ -101,11 +101,6 @@ ModelPosition::ModelPosition( World* world,
   // assert that Update() is reentrant for this derived model
   thread_safe = false;
 	
-  // no power consumed until we're subscribed
-  this->SetWatts( 0 );
-  
-  this->SetVelocity( Velocity(0,0,0,0) );
-  
   this->SetBlobReturn( true );
   
   AddVisualizer( &wpvis, true );
@@ -131,11 +126,11 @@ void ModelPosition::Load( void )
 		if( mode_str )
 		  {
 			 if( strcmp( mode_str, "diff" ) == 0 )
-				drive_mode = STG_POSITION_DRIVE_DIFFERENTIAL;
+				drive_mode = DRIVE_DIFFERENTIAL;
 			 else if( strcmp( mode_str, "omni" ) == 0 )
-				drive_mode = STG_POSITION_DRIVE_OMNI;
+				drive_mode = DRIVE_OMNI;
 			 else if( strcmp( mode_str, "car" ) == 0 )
-				drive_mode = STG_POSITION_DRIVE_CAR;
+				drive_mode = DRIVE_CAR;
 			 else
 				{
 				  PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\" or \"car\". Using \"diff\" as default.", mode_str );	      
@@ -202,9 +197,9 @@ void ModelPosition::Load( void )
       if( loc_str )
 		  {
 			 if( strcmp( loc_str, "gps" ) == 0 )
-				localization_mode = STG_POSITION_LOCALIZATION_GPS;
+				localization_mode = LOCALIZATION_GPS;
 			 else if( strcmp( loc_str, "odom" ) == 0 )
-				localization_mode = STG_POSITION_LOCALIZATION_ODOM;
+				localization_mode = LOCALIZATION_ODOM;
 			 else
 				PRINT_ERR2( "unrecognized localization mode \"%s\" for model \"%s\"."
 								" Valid choices are \"gps\" and \"odom\".", 
@@ -227,7 +222,7 @@ void ModelPosition::Update( void  )
     {            
       switch( control_mode )
 		  {
-		  case STG_POSITION_CONTROL_VELOCITY :
+		  case CONTROL_VELOCITY :
 			 {
 				PRINT_DEBUG( "velocity control mode" );
 				PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
@@ -238,21 +233,21 @@ void ModelPosition::Update( void  )
 		 
 				switch( drive_mode )
 				  {
-				  case STG_POSITION_DRIVE_DIFFERENTIAL:
+				  case DRIVE_DIFFERENTIAL:
 					 // differential-steering model, like a Pioneer
 					 vel.x = goal.x;
 					 vel.y = 0;
 					 vel.a = goal.a;
 					 break;
 			  
-				  case STG_POSITION_DRIVE_OMNI:
+				  case DRIVE_OMNI:
 					 // direct steering model, like an omnidirectional robot
 					 vel.x = goal.x;
 					 vel.y = goal.y;
 					 vel.a = goal.a;
 					 break;
 			  
-				  case STG_POSITION_DRIVE_CAR:
+				  case DRIVE_CAR:
 					 // car like steering model based on speed and turning angle
 					 vel.x = goal.x * cos(goal.a);
 					 vel.y = 0;
@@ -264,7 +259,7 @@ void ModelPosition::Update( void  )
 				  }
 			 } break;
 	  
-		  case STG_POSITION_CONTROL_POSITION:
+		  case CONTROL_POSITION:
 			 {
 				PRINT_DEBUG( "position control mode" );
 		 
@@ -282,7 +277,7 @@ void ModelPosition::Update( void  )
 		 
 				switch( drive_mode )
 				  {
-				  case STG_POSITION_DRIVE_OMNI:
+				  case DRIVE_OMNI:
 					 {
 						// this is easy - we just reduce the errors in each axis
 						// independently with a proportional controller, speed
@@ -293,7 +288,7 @@ void ModelPosition::Update( void  )
 					 }
 					 break;
 
-				  case STG_POSITION_DRIVE_DIFFERENTIAL:
+				  case DRIVE_DIFFERENTIAL:
 					 {
 						// axes can not be controlled independently. We have to
 						// turn towards the desired x,y position, drive there,
@@ -371,7 +366,7 @@ void ModelPosition::Update( void  )
 
   switch( localization_mode )
     {
-    case STG_POSITION_LOCALIZATION_GPS:
+    case LOCALIZATION_GPS:
       {
 		  // compute our localization pose based on the origin and true pose
 		  Pose gpose = this->GetGlobalPose();
@@ -387,7 +382,7 @@ void ModelPosition::Update( void  )
       }
       break;
 
-    case STG_POSITION_LOCALIZATION_ODOM:
+    case LOCALIZATION_ODOM:
       {
 		  // integrate our velocities to get an 'odometry' position estimate.
 		  double dt = interval / 1e6; // update interval convert to seconds
@@ -419,10 +414,8 @@ void ModelPosition::Update( void  )
 void ModelPosition::Startup( void )
 {
   Model::Startup();
-
+  
   PRINT_DEBUG( "position startup" );
-
-  this->SetWatts( WATTS );
 }
 
 void ModelPosition::Shutdown( void )
@@ -430,10 +423,8 @@ void ModelPosition::Shutdown( void )
   PRINT_DEBUG( "position shutdown" );
 
   // safety features!
-  bzero( &goal, sizeof(goal) );
-  bzero( &velocity, sizeof(velocity) );
-
-  this->SetWatts( 0 );
+  goal.Zero();
+  velocity.Zero();
 
   Model::Shutdown();
 }
@@ -449,7 +440,7 @@ void ModelPosition::SetSpeed( double x, double y, double a )
   //assert( ! isnan(y) );
   //assert( ! isnan(a) );
   
-  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  control_mode = CONTROL_VELOCITY;
   goal.x = x;
   goal.y = y;
   goal.z = 0;
@@ -459,7 +450,7 @@ void ModelPosition::SetSpeed( double x, double y, double a )
 void ModelPosition::SetXSpeed( double x )
 { 
   //assert( ! isnan(x) );
-  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  control_mode = CONTROL_VELOCITY;
   goal.x = x;
 }  
 
@@ -467,21 +458,21 @@ void ModelPosition::SetXSpeed( double x )
 void ModelPosition::SetYSpeed( double y )
 { 
   //assert( ! isnan(y) );
-  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  control_mode = CONTROL_VELOCITY;
   goal.y = y;
 }  
 
 void ModelPosition::SetZSpeed( double z )
 { 
   //assert( ! isnan(z) );
-  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  control_mode = CONTROL_VELOCITY;
   goal.z = z;
 }  
 
 void ModelPosition::SetTurnSpeed( double a )
 { 
   //assert( ! isnan(a) );
-  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  control_mode = CONTROL_VELOCITY;
   goal.a = a;
 }  
 
@@ -493,7 +484,7 @@ void ModelPosition::SetSpeed( Velocity vel )
   //assert( ! isnan(vel.z) );
   //assert( ! isnan(vel.a) );
 
-  control_mode = STG_POSITION_CONTROL_VELOCITY;
+  control_mode = CONTROL_VELOCITY;
   goal.x = vel.x;
   goal.y = vel.y;
   goal.z = vel.z;
@@ -506,7 +497,7 @@ void ModelPosition::GoTo( double x, double y, double a )
   //assert( ! isnan(y) );
   //assert( ! isnan(a) );
 
-  control_mode = STG_POSITION_CONTROL_POSITION;
+  control_mode = CONTROL_POSITION;
   goal.x = x;
   goal.y = y;
   goal.z = 0;
@@ -515,7 +506,7 @@ void ModelPosition::GoTo( double x, double y, double a )
 
 void ModelPosition::GoTo( Pose pose ) 
 {
-  control_mode = STG_POSITION_CONTROL_POSITION;
+  control_mode = CONTROL_POSITION;
   goal = pose;
 }  
 

@@ -23,7 +23,10 @@ PowerPack::PowerPack( Model* mod ) :
   stored( 0.0 ), 
   capacity( 0.0 ), 
   charging( false ),
-  dissipated( 0.0 )
+  dissipated( 0.0 ),
+  last_time(0),
+  last_joules(0.0),
+  last_watts(0.0)
 { 
   // tell the world about this new pp
   mod->world->AddPowerPack( this );  
@@ -48,7 +51,7 @@ void PowerPack::Print( char* prefix ) const
 }
 
 /** OpenGL visualization of the powerpack state */
-void PowerPack::Visualize( Camera* cam ) const
+void PowerPack::Visualize( Camera* cam ) 
 {
   const double height = 0.5;
   const double width = 0.2;
@@ -64,8 +67,7 @@ void PowerPack::Visualize( Camera* cam ) const
 		else
 		  glColor4f( 1,0,0, alpha ); // red
   
-  static char buf[6];
-  snprintf( buf, 6, "%.0f", percent );
+  //  snprintf( buf, 32, "%.0f", percent );
   
   glTranslatef( -width, 0.0, 0.0 );
   
@@ -126,9 +128,29 @@ void PowerPack::Visualize( Camera* cam ) const
 		glLineWidth( 1.0 );
 	 }
   
-    
-  // draw the percentage
-  //gl_draw_string( -0.2, 0, 0, buf );  
+  
+  // compute the instantaneous power output
+  stg_usec_t time_now = mod->world->SimTimeNow();
+  stg_usec_t delta_t = time_now - last_time;
+  stg_watts_t watts = last_watts;
+  
+  if( delta_t > 0 ) // some sim time elapsed 
+	 {
+		stg_joules_t delta_j = stored - last_joules;
+		stg_watts_t watts = (-1e6 * delta_j) / (double)delta_t;
+		
+		last_joules = stored;
+		last_time = time_now;    
+		last_watts = watts;
+	 }
+  
+  if( fabs(watts) > 1e-5 ) // any current
+	 {
+		glColor4f( 1,0,0,0.8 ); // red
+		char buf[32];
+		snprintf( buf, 32, "%.1fW", watts );  
+		Gl::draw_string( -0.05,height+0.05,0, buf );    
+	 }
 }
 
 

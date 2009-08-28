@@ -116,7 +116,7 @@ void Model::SetGuiOutline( int val )
   CallCallbacks( &gui.outline );
 }
 
-void Model::SetWatts(  stg_watts_t val )
+void Model::SetWatts( stg_watts_t val )
 {
   watts = val;
   CallCallbacks( &watts );

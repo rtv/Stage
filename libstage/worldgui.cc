@@ -607,13 +607,6 @@ void WorldGui::onceCb( Fl_Widget* w, WorldGui* wg )
 
 void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* wg ) 
 {
-  // the options dialog expects a std::vector of options (annoyingly)
-  // std::vector<Option*> optvec;
-  // adds each option to the vector
-  //g_hash_table_foreach( wg->option_table, 
-  //						(GHFunc)append_option, 
-  //						(void*)&optvec );  
-  
   // sort the vector by option label alphabetically
   //std::sort();// wg->option_table.begin(), wg->option_table.end() );//, sort_option_pointer );
   //std::sort();// wg->option_table.begin(), wg->option_table.end() );//, sort_option_pointer );

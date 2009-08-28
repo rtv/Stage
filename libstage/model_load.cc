@@ -47,40 +47,28 @@ void Model::Load()
 															 power_pack->GetCapacity() ) ); 		
 	 }
     
-  // use my own pack or an ancestor's for the other energy properties
-  PowerPack* pp = FindPowerPack();
-  
-  watts = wf->ReadFloat( wf_entity, "watts", watts );
-  if( (watts > 0) && !pp  )
-	 PRINT_WARN1( "Model %s: Setting \"watts\" has no effect unless \"joules\" is specified for this model or a parent", token );
-    
-  watts_give = wf->ReadFloat( wf_entity, "give_watts", watts_give );  
-  if( (watts_give > 0.0) && !pp)
-	 PRINT_WARN1( "Model %s: Setting \"watts_give\" has no effect unless \"joules\" is specified for this model or a parent", token );
-  
+  watts = wf->ReadFloat( wf_entity, "watts", watts );    
+  watts_give = wf->ReadFloat( wf_entity, "give_watts", watts_give );    
   watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
-  if( (watts_take > 0.0) & !pp )
-	 PRINT_WARN1( "Model %s: Setting \"watts_take\" has no effect unless \"joules\" is specified for this model or a parent", token );    
   
-	 
   if( wf->PropertyExists( wf_entity, "debug" ) )
     {
       PRINT_WARN2( "debug property specified for model %d  %s\n",
-		   wf_entity, this->token );
+						 wf_entity, this->token );
       this->debug = wf->ReadInt( wf_entity, "debug", this->debug );
     }
-
+  
   if( wf->PropertyExists( wf_entity, "name" ) )
     {
       char *name = (char*)wf->ReadString(wf_entity, "name", NULL );
       if( name )
-	{
-	  //printf( "adding name %s to %s\n", name, this->token );
-	  this->token = strdup( name );
-	  world->AddModel( this ); // add this name to the world's table
-	}
+		  {
+			 //printf( "adding name %s to %s\n", name, this->token );
+			 this->token = strdup( name );
+			 world->AddModel( this ); // add this name to the world's table
+		  }
       else
-	PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token );
+		  PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token );
     }
   
   //PRINT_WARN1( "%s::Load", token );
