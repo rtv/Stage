@@ -90,8 +90,7 @@ ModelPosition::ModelPosition( World* world,
 							drand48() * INTEGRATION_ERROR_MAX_Y - INTEGRATION_ERROR_MAX_Y/2.0,
 							drand48() * INTEGRATION_ERROR_MAX_Z - INTEGRATION_ERROR_MAX_Z/2.0,
 							drand48() * INTEGRATION_ERROR_MAX_A - INTEGRATION_ERROR_MAX_A/2.0 ),
-  waypoints( NULL ),
-  waypoint_count( 0 ),
+  waypoints(),
   wpvis(),
   posevis()
 {
@@ -530,17 +529,6 @@ void ModelPosition::SetOdom( Pose odom )
   est_origin.a = da;
 } 
 
-/** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
-Waypoint* ModelPosition::SetWaypoints( Waypoint* wps, uint32_t count )
-{
-  Waypoint* replaced = waypoints;
-  
-  waypoints = wps;
-  waypoint_count = count;
-  
-  return replaced;
-}
-
 ModelPosition::PoseVis::PoseVis()
   : Visualizer( "Position coordinates", "show_position_coords" )
 {}
@@ -609,11 +597,9 @@ ModelPosition::WaypointVis::WaypointVis()
 void ModelPosition::WaypointVis::Visualize( Model* mod, Camera* cam )
 {
   ModelPosition* pos = dynamic_cast<ModelPosition*>(mod);
+  const std::vector<Waypoint>& waypoints = pos->waypoints;
 
-  Waypoint* waypoints = pos->waypoints;
-  unsigned int waypoint_count = pos->waypoint_count;
-
-  if( (waypoints == NULL) || (waypoint_count < 1) )
+  if( waypoints.empty() )
 	 return;
 
   glPointSize( 5 );
@@ -627,20 +613,24 @@ void ModelPosition::WaypointVis::Visualize( Model* mod, Camera* cam )
   
   // draw waypoints
   glLineWidth( 3 );
-  for( unsigned int i=0; i < waypoint_count; i++ )
-	 waypoints[i].Draw();
+  FOR_EACH( it, waypoints )
+	 it->Draw();
   glLineWidth( 1 );
-
+  
   // draw lines connecting the waypoints
-  if( waypoint_count > 1 )
+  const unsigned int num = waypoints.size();  
+  if( num > 1 )
     {
 		pos->PushColor( 1,0,0,0.3 );
 		glBegin( GL_LINES );
       
-      for( unsigned int i=1; i < waypoint_count; i++ )
+      for( unsigned int i=1; i<num ; i++ )
 		  {
-			 glVertex2f( waypoints[i].pose.x,  waypoints[i].pose.y );
-			 glVertex2f( waypoints[i-1].pose.x,  waypoints[i-1].pose.y );
+			 Pose p = waypoints[i].pose;
+			 Pose o = waypoints[i-1].pose;
+
+			 glVertex2f( p.x, p.y );
+			 glVertex2f( o.x, o.y );
 		  }
 		
       glEnd();
@@ -650,4 +640,48 @@ void ModelPosition::WaypointVis::Visualize( Model* mod, Camera* cam )
   
   pos->PopColor();
   glPopMatrix();
+}
+
+ModelPosition::Waypoint::Waypoint( const Pose& pose, Color color ) 
+  : pose(pose), color(color)
+{ 
+}
+
+ModelPosition::Waypoint::Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, Color color ) 
+  : pose(x,y,z,a), color(color)
+{ 
+}
+
+
+ModelPosition::Waypoint::Waypoint()
+{ 
+  pose = Pose( 0,0,0,0 ); 
+  color = 0; 
+};
+
+
+void ModelPosition::Waypoint::Draw() const
+{
+  GLdouble d[4];
+  
+  d[0] = color.r;
+  d[1] = color.g;
+  d[2] = color.b;
+  d[3] = color.a;
+  
+  glColor4dv( d );
+  
+  glBegin(GL_POINTS);
+  glVertex3f( pose.x, pose.y, pose.z );
+  glEnd();
+
+  stg_meters_t quiver_length = 0.15;
+
+  double dx = cos(pose.a) * quiver_length;
+  double dy = sin(pose.a) * quiver_length;
+
+  glBegin(GL_LINES);
+  glVertex3f( pose.x, pose.y, pose.z );
+  glVertex3f( pose.x+dx, pose.y+dy, pose.z );
+  glEnd();	 
 }

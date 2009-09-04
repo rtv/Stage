@@ -142,7 +142,7 @@ void Pose::Save( Worldfile* wf, int section, const char* keyword )
   wf->WriteTupleAngle(  section, keyword, 3, a );
 }
 
-Visibility::Visibility() : 
+Model::Visibility::Visibility() : 
   blob_return( true ),
   fiducial_key( 0 ),
   fiducial_return( 0 ),
@@ -155,7 +155,7 @@ Visibility::Visibility() :
 //static const members
 static const double DEFAULT_FRICTION = 0.0;
 
-void Visibility::Load( Worldfile* wf, int wf_entity )
+void Model::Visibility::Load( Worldfile* wf, int wf_entity )
 {
   blob_return = wf->ReadInt( wf_entity, "blob_return", blob_return);    
   fiducial_key = wf->ReadInt( wf_entity, "fiducial_key", fiducial_key);
@@ -168,14 +168,14 @@ void Visibility::Load( Worldfile* wf, int wf_entity )
   sticky_return = wf->ReadInt( wf_entity, "sticky_return", sticky_return);
 }    
 
-GuiState:: GuiState() :
+Model::GuiState::GuiState() :
   grid( false ),
   move( false ),  
   nose( false ),
   outline( false )
 { /* nothing to do */}
 
-void GuiState::Load( Worldfile* wf, int wf_entity )
+void Model::GuiState::Load( Worldfile* wf, int wf_entity )
 {
   nose = wf->ReadInt( wf_entity, "gui_nose", nose);    
   grid = wf->ReadInt( wf_entity, "gui_grid", grid);    
@@ -342,7 +342,7 @@ void Model::PushFlag( Flag* flag )
 	 }
 }
 
-Flag* Model::PopFlag()
+Model::Flag* Model::PopFlag()
 {
   if( flag_list.size() == 0 )
     return NULL;
@@ -1118,4 +1118,43 @@ void Model::RasterVis::AddPoint( stg_meters_t x, stg_meters_t y )
 void Model::RasterVis::ClearPts()
 {
   pts.clear();
+}
+
+
+Model::Flag::Flag( Color color, double size )
+{ 
+	this->color = color;
+	this->size = size;
+}
+
+Model::Flag* Model::Flag::Nibble( double chunk )
+{
+	Flag* piece = NULL;
+
+	if( size > 0 )
+	{
+		chunk = std::min( chunk, this->size );
+		piece = new Flag( this->color, chunk );
+		this->size -= chunk;
+	}
+
+	return piece;
+}
+
+
+void Model::Flag::Draw(  GLUquadric* quadric )
+{
+  glColor4f( color.r, color.g, color.b, color.a );
+    
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1.0, 1.0);
+  gluQuadricDrawStyle( quadric, GLU_FILL );
+  gluSphere( quadric, size/2.0, 4,2  );
+  glDisable(GL_POLYGON_OFFSET_FILL);
+  
+  // draw the edges darker version of the same color
+  glColor4f( color.r/2.0, color.g/2.0, color.b/2.0, color.a/2.0 );
+    
+  gluQuadricDrawStyle( quadric, GLU_LINE );
+  gluSphere( quadric, size/2.0, 4,2 );
 }

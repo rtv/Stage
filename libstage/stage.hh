@@ -380,20 +380,6 @@ namespace Stg
 	 }
   };
   
-  /** Specify a point in space. Arrays of Waypoints can be attached to
-		Models and visualized. */
-  class Waypoint
-  {
-  public:
-    Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, Color color ) ;
-    Waypoint( const Pose& pose, Color color ) ;
-    Waypoint();
-    void Draw();
-    
-    Pose pose;
-    Color color;
-  };
-  
   /** Bound a range of values, from min to max. min and max are initialized to zero. */
   class Bounds
   {
@@ -524,19 +510,6 @@ namespace Stg
   
   void RegisterModels();
   
-  class Flag
-  {
-  public:
-    Color color;
-    double size;
-
-    Flag( Color color, double size );
-    Flag* Nibble( double portion );
-
-	 /** Draw the flag in OpenGl. Takes a quadric parameter to save
-		  creating the quadric for each flag */
-	 void Draw(  GLUquadric* quadric );
-  };
   
   /** Abstract class for adding visualizations to models. DataVisualize must be overloaded, and is then called in the models local coord system */
   class Visualizer {
@@ -575,16 +548,6 @@ namespace Stg
     double duty_cycle; ///< mark/space ratio
   } stg_blinkenlight_t;
 
-  class TrailItem 
-  {																							
-  public:
-    stg_usec_t time;
-    Pose pose;
-    Color color;
-
-	 TrailItem( stg_usec_t time, Pose pose, Color color ) 
-		: time(time), pose(pose), color(color){}
-  };
   
   /** Defines a rectangle of [size] located at [pose] */
   typedef struct
@@ -1191,9 +1154,6 @@ namespace Stg
 		  (m) */
 	 stg_point_t BlockPointToModelMeters( const stg_point_t& bpt );
 	
-	 /** Update the cache of block points converted to model coordinates */
-	 //stg_point_t* GetPointsInModelCoords();
-		
 	 /** invalidate the cache of points in model coordinates */
 	 void InvalidateModelPointCache();
   };
@@ -1618,52 +1578,7 @@ namespace Stg
 	 void Dissipate( stg_joules_t j, const Pose& p );
   };
 
-  class Visibility
-  {
-  public:
-	 bool blob_return;
-	 int fiducial_key;
-	 int fiducial_return;
-	 bool gripper_return;
-	 stg_laser_return_t laser_return;
-	 bool obstacle_return;
-	 bool ranger_return;
-	 bool gravity_return;
-	 bool sticky_return;
-	
-	 Visibility();
-	 void Load( Worldfile* wf, int wf_entity );
-  };
-
-  /* Hooks for attaching special callback functions (not used as
-	  variables - we just need unique addresses for them.) */  
-  class CallbackHooks
-  {
-  public:
-	 int flag_incr;
-	 int flag_decr;
-	 int init;
-	 int load;
-	 int save;
-	 int shutdown;
-	 int startup;
-	 int update;
-	 int update_done;
-  };
-  
-  /** Records model state and functionality in the GUI, if used */
-  class GuiState
-  {
-  public:
-	 bool grid;
-	 bool move;
-	 bool nose;
-	 bool outline;
-		
-	 GuiState();
-	 void Load( Worldfile* wf, int wf_entity );
-  };
-  
+   
   /// %Model class
   class Model : public Ancestor
   {
@@ -1727,6 +1642,20 @@ namespace Stg
 		{ return( callback == other.callback);  }			
 	 };
 		
+	 class Flag
+	 {
+	 public:
+		Color color;
+		double size;
+		
+		Flag( Color color, double size );
+		Flag* Nibble( double portion );
+		
+		/** Draw the flag in OpenGl. Takes a quadric parameter to save
+			 creating the quadric for each flag */
+		void Draw(  GLUquadric* quadric );
+	 };
+
   protected:
 	 /** A list of callback functions can be attached to any
 		  address. When Model::CallCallbacks( void*) is called, the
@@ -1748,13 +1677,39 @@ namespace Stg
 	 Pose global_pose;
 	 bool gpose_dirty; ///< set this to indicate that global pose may have changed  
 	 /** Controls our appearance and functionality in the GUI, if used */
-	 GuiState gui;
-  
+	 
+	 /** Records model state and functionality in the GUI, if used */
+	 class GuiState
+	 {
+	 public:
+		bool grid;
+		bool move;
+		bool nose;
+		bool outline;
+		
+		GuiState();
+		void Load( Worldfile* wf, int wf_entity );
+	 } gui;
+	 
 	 bool has_default_block;
   
 	 /* hooks for attaching special callback functions (not used as
 		 variables - we just need unique addresses for them.) */  
-	 CallbackHooks hooks;
+	 /* Hooks for attaching special callback functions (not used as
+		 variables - we just need unique addresses for them.) */  
+	 class CallbackHooks
+	 {
+	 public:
+		int flag_incr;
+		int flag_decr;
+		int init;
+		int load;
+		int save;
+		int shutdown;
+		int startup;
+		int update;
+		int update_done;
+	 } hooks;
   
 	 /** unique process-wide identifier for this model */
 	 uint32_t id;	
@@ -1826,6 +1781,17 @@ namespace Stg
 	 bool thread_safe;
 	 
 	 /** Cache of recent poses, used to draw the trail. */
+	 class TrailItem 
+	 {																							
+	 public:
+		stg_usec_t time;
+		Pose pose;
+		Color color;
+		
+		TrailItem( stg_usec_t time, Pose pose, Color color ) 
+		  : time(time), pose(pose), color(color){}
+	 };
+	
 	 std::list<TrailItem> trail;
 	 
 	 /** The maxiumum length of the trail drawn. Default is 20, but can
@@ -1862,7 +1828,23 @@ namespace Stg
 	 
 	 const std::string& GetModelType() const {return type;}	 
 	 std::string GetSayString(){return std::string(say_string);}
-	 Visibility vis;
+	 
+	 class Visibility
+	 {
+	 public:
+		bool blob_return;
+		int fiducial_key;
+		int fiducial_return;
+		bool gripper_return;
+		stg_laser_return_t laser_return;
+		bool obstacle_return;
+		bool ranger_return;
+		bool gravity_return;
+		bool sticky_return;
+		
+		Visibility();
+		void Load( Worldfile* wf, int wf_entity );
+	 } vis;
 	 
 	 stg_usec_t GetUpdateInterval(){ return interval; }
 	 stg_usec_t GetEnergyInterval(){ return interval_energy; }
@@ -2871,10 +2853,8 @@ namespace Stg
 	 DriveMode drive_mode;
 	 LocalizationMode localization_mode; ///< global or local mode
 	 Velocity integration_error; ///< errors to apply in simple odometry model
-
-	 Waypoint* waypoints;
-	 uint32_t waypoint_count;	 
-
+	 
+	 
   public:
 	 // constructor
 	 ModelPosition( World* world,
@@ -2887,10 +2867,23 @@ namespace Stg
 	 virtual void Shutdown();
 	 virtual void Update();
 	 virtual void Load();
+	 	
+	 /** Specify a point in space. Arrays of Waypoints can be attached to
+		  Models and visualized. */
+	 class Waypoint
+	 {
+	 public:
+		Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, Color color ) ;
+		Waypoint( const Pose& pose, Color color ) ;
+		Waypoint();
+		void Draw() const;
+		
+		Pose pose;
+		Color color;
+	 };
 	 
-	 /** Set the waypoint array pointer. Returns the old pointer, in case you need to free/delete[] it */
-	 Waypoint* SetWaypoints( Waypoint* wps, uint32_t count );
-	
+	 std::vector<Waypoint> waypoints;
+
 	 class WaypointVis : public Visualizer
 	 {
 	 public:

@@ -19,7 +19,7 @@ extern "C" int Init( Model* mod )
 int Update( Model* mod, void* dummy )
 {
   if( mod->GetWorld()->GetUpdateCount() % INTERVAL  == 0 )
-		mod->PushFlag( new Flag( Color( 1,1,0 ), FLAGSZ ) );
+	 mod->PushFlag( new Model::Flag( Color( 1,1,0 ), FLAGSZ ) );
 
   return 0; // run again
 }

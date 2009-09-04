@@ -32,19 +32,17 @@ set( stageSrcs
 	option.cc
 	powerpack.cc
 	region.cc
-	resource.cc
 	stage.cc
 	stage.hh
 	texture_manager.cc
 	typetable.cc		
-  vis_strip.cc			
-	waypoint.cc			
+   vis_strip.cc			
 	world.cc			
 	worldfile.cc		
-  worldgui.cc 
-  canvas.cc 
-  options_dlg.cc
-  options_dlg.hh
+   worldgui.cc 
+   canvas.cc 
+   options_dlg.cc
+   options_dlg.hh
 )
 
 set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
