@@ -19,7 +19,7 @@
  */
 /*
  * Desc: A class for reading in the world file.
- * Author: Andrew Howard
+ * Author: Andrew Howard, Richard Vaughan
  * Date: 15 Nov 2001
  * CVS info: $Id$
  */
@@ -33,26 +33,31 @@
 
 namespace Stg {
 
-  // Private property class
-struct CProperty
+  /// Private property class
+class CProperty
   {
-    // Index of entity this property belongs to
+	public:
+    /// Index of entity this property belongs to
     int entity;
 
-    // Name of property
-    const char *name;
-
-    char* key; // this property's map key
+    /// Name of property
+		std::string name;
     
-    // A list of token indexes
-    int value_count;
-    int *values;
+    /// A list of token indexes
+		std::vector<int> values;
 
-    // Line this property came from
+    /// Line this property came from
     int line;
 
-    // Flag set if property has been used
+    /// Flag set if property has been used
     bool used;
+		
+		CProperty( int entity, const char* name, int line ) :
+			entity(entity), 
+			name(name),
+			values(),
+			line(line),
+			used(false) {}
   };
 
 
@@ -219,12 +224,14 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   private: void ClearMacros();
 
   // Add a macro
-  private: int AddMacro(const char *macroname, const char *entityname,
+  private: void AddMacro(const char *macroname, const char *entityname,
                         int line, int starttoken, int endtoken);
 
   // Lookup a macro by name
-  // Returns -1 if there is no macro with this name.
-  private: int LookupMacro(const char *macroname);
+
+  // Returns a pointer to a macro with this name, or NULL if there is none..
+	class CMacro;
+  private: CMacro* LookupMacro(const char *macroname);
 
   // Dump the macro list for debugging
   private: void DumpMacros();
@@ -285,10 +292,11 @@ protected: FILE* FileOpen(const char *filename, const char* method);
     TokenOpenTuple, TokenCloseTuple,
     TokenSpace, TokenEOL
   };
-
+	
   // Token structure.
-  private: struct CToken
+private: class CToken
   {
+	public:
     // Non-zero if token is from an include file.
     int include;
     
@@ -296,65 +304,73 @@ protected: FILE* FileOpen(const char *filename, const char* method);
     int type;
 
     // Token value
-    char *value;
+		std::string value;
+
+		CToken( int include, int type, const char* value ) :
+			include(include), type(type), value(value) {}
   };
 
   // A list of tokens loaded from the file.
   // Modified values are written back into the token list.
-  private: int token_size, token_count;
-  private: CToken *tokens;
+	//private: int token_size, token_count;
+private: std::vector<CToken> tokens;
 
   // Private macro class
-  private: struct CMacro
+private: class CMacro
   {
+	public:
     // Name of macro
-    const char *macroname;
+		std::string macroname;
 
     // Name of entity
-    const char *entityname;
+		std::string entityname;
 
     // Line the macro definition starts on.
     int line;
     
     // Range of tokens in the body of the macro definition.
     int starttoken, endtoken;
-  };
 
-  // Macro list
-  private: int macro_size;
-  private: int macro_count;
-  private: CMacro *macros;
+		CMacro(const char *macroname, const char *entityname,
+					 int line, int starttoken, int endtoken) :
+			macroname(macroname),
+			entityname(entityname),
+			line(line),
+			starttoken(starttoken),
+			endtoken(endtoken) {}
+  };
+	
+  // Macro table
+  private: std::map<std::string,CMacro> macros;
   
   // Private entity class
-  private: struct CEntity
+  private: class CEntity
   {
+	public:
     // Parent entity
     int parent;
 
     // Type of entity (i.e. position, laser, etc).
-    const char *type;
+		std::string type;
+
+		CEntity( int parent, const char* type ) : parent(parent), type(type) {} 
   };
-
-  // Entity list
-  private: int entity_size;
-  private: int entity_count;
-  private: CEntity *entities;
-
-  // Property list
-  private: int property_count;
-  
-  private: CProperty *properties;
-  
-  // Name of the file we loaded
-  public: char *filename;
-
-  // Conversion units
-  public: double unit_length;
-  public: double unit_angle;
 	
-private: std::map<std::string,CProperty*> nametable;	
+  // Entity list
+private: std::vector<CEntity> entities;
+	
+  // Property list
+private: std::map<std::string,CProperty*> properties;	
+	
+  // Name of the file we loaded
+public: char *filename;
+	
+  // Conversion units
+public: double unit_length;
+public: double unit_angle;
+	
 };
-
+	
 };
 
 #endif

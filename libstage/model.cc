@@ -114,15 +114,15 @@ std::map<std::string, creator_t> Model::name_map;
 
 void Size::Load( Worldfile* wf, int section, const char* keyword )
 {
-	CProperty* prop = wf->GetProperty( section, keyword );	
+	if( CProperty* prop = wf->GetProperty( section, keyword ) )	
 	
-	if( prop )
+	//if( prop )
 		{
-			if( prop->value_count != 3 )
+			if( prop->values.size() != 3 )
 				{
 					puts( "" ); // newline
 					PRINT_ERR1( "Loading size. Need a vector of length 3: found %d.\n", 
-											prop->value_count ); 
+											(int)prop->values.size() ); 
 					exit(-1);
 				}
 			
@@ -145,11 +145,11 @@ void Pose::Load( Worldfile* wf, int section, const char* keyword )
 	
 	if( prop )
 		{
-			if( prop->value_count != 4 )
+			if( prop->values.size() != 4 )
 				{
 					puts( "" ); // newline
 					PRINT_ERR1( "Loading pose. Need a vector of length 4: found %d.\n", 
-											prop->value_count ); 
+											(int)prop->values.size() ); 
 					exit(-1);
 				}
 			

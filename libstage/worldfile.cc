@@ -61,21 +61,13 @@ using namespace Stg;
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 Worldfile::Worldfile() :
-  token_size( 0),
-  token_count( 0),
-  tokens( NULL),
-  macro_size( 0),
-  macro_count( 0),
-  macros( NULL),
-  entity_size( 0),
-  entity_count( 0),
-  entities( NULL),
-	properties(NULL),
-  property_count( 0),
+  tokens(),
+  macros(),
+  entities(),
+	properties(),
   filename( NULL),
-  unit_length( 1.0),
-  unit_angle( M_PI / 180),
-	nametable()
+  unit_length( 1.0 ),
+  unit_angle( M_PI / 180.0 )
 {
 }
 
@@ -241,19 +233,19 @@ bool Worldfile::Save(const char *filename)
 // Check for unused properties and print warnings
 bool Worldfile::WarnUnused()
 {
-	// bool unused = false;
-	// for (int i = 0; i < this->property_count; i++)
-  //   {
-  //     CProperty *property = this->properties + i;
-  //     if (!property->used)
-	// 			{
-	// 				unused = true;
-	// 				PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
-	// 										this->filename, property->line, property->name);
-	// 			}
-  //   }
-  //   return unused;
-  return false;
+	bool unused = false;
+
+	FOR_EACH( it, properties )
+		{
+			if( ! it->second->used )
+				{
+					PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
+											this->filename, it->second->line, it->second->name.c_str());
+					unused = true;
+				}
+		}
+	
+	return unused;
 }
 
 
@@ -476,7 +468,7 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
     return false;
 
   // This is the basic filename
-  filename = GetTokenValue(this->token_count - 1);
+  filename = GetTokenValue(this->tokens.size() - 1);
 
   // Now do some manipulation.  If its a relative path,
   // we append the path of the world file.
@@ -674,19 +666,19 @@ bool Worldfile::LoadTokenSpace(FILE *file, int *line, int include)
 // Save tokens to a file.
 bool Worldfile::SaveTokens(FILE *file)
 {
-  int i;
+  unsigned int i;
   CToken *token;
 
-  for (i = 0; i < this->token_count; i++)
+  for (i = 0; i < this->tokens.size(); i++)
     {
-      token = this->tokens + i;
+      token = &this->tokens[i];
 
       if (token->include > 0)
 	continue;
       if (token->type == TokenString)
-	fprintf(file, "\"%s\"", token->value);
+				fprintf(file, "\"%s\"", token->value.c_str());
       else
-	fprintf(file, "%s", token->value);
+				fprintf(file, "%s", token->value.c_str());
     }
   return true;
 }
@@ -696,18 +688,7 @@ bool Worldfile::SaveTokens(FILE *file)
 // Clear the token list
 void Worldfile::ClearTokens()
 {
-  int i;
-  CToken *token;
-
-  for (i = 0; i < this->token_count; i++)
-    {
-      token = this->tokens + i;
-      free(token->value);
-    }
-  free(this->tokens);
-  this->tokens = 0;
-  this->token_size = 0;
-  this->token_count = 0;
+	tokens.clear();
 }
 
 
@@ -715,17 +696,7 @@ void Worldfile::ClearTokens()
 // Add a token to the token list
 bool Worldfile::AddToken(int type, const char *value, int include)
 {
-  if (this->token_count >= this->token_size)
-    {
-      this->token_size += 1000;
-      this->tokens = (CToken*) realloc(this->tokens, this->token_size * sizeof(this->tokens[0]));
-    }
-
-  this->tokens[this->token_count].include = include;
-  this->tokens[this->token_count].type = type;
-  this->tokens[this->token_count].value = strdup(value);
-  this->token_count++;
-
+	tokens.push_back( CToken( include, type, value ));
   return true;
 }
 
@@ -734,11 +705,8 @@ bool Worldfile::AddToken(int type, const char *value, int include)
 // Set a token value in the token list
 bool Worldfile::SetTokenValue(int index, const char *value)
 {
-  assert(index >= 0 && index < this->token_count);
-
-  free(this->tokens[index].value);
-  this->tokens[index].value = strdup(value);
-
+  assert(index >= 0 && index < (int)this->tokens.size() );
+	tokens[index].value = value;
   return true;
 }
 
@@ -747,9 +715,8 @@ bool Worldfile::SetTokenValue(int index, const char *value)
 // Get the value of a token
 const char *Worldfile::GetTokenValue(int index)
 {
-  assert(index >= 0 && index < this->token_count);
-
-  return this->tokens[index].value;
+  assert(index >= 0 && index < (int)this->tokens.size());
+  return this->tokens[index].value.c_str();
 }
 
 
@@ -762,12 +729,14 @@ void Worldfile::DumpTokens()
   line = 1;
   printf("\n## begin tokens\n");
   printf("## %4d : ", line);
-  for (int i = 0; i < this->token_count; i++)
+
+	FOR_EACH( it, tokens )
+  //for (int i = 0; i < this->token_count; i++)
     {
-      if (this->tokens[i].value[0] == '\n')
-	printf("[\\n]\n## %4d : %02d ", ++line, this->tokens[i].include);
+      if ( it->value[0] == '\n')
+				printf("[\\n]\n## %4d : %02d ", ++line, it->include);
       else
-	printf("[%s] ", this->tokens[i].value);
+				printf("[%s] ", it->value.c_str());
     }
   printf("\n");
   printf("## end tokens\n");
@@ -790,40 +759,40 @@ bool Worldfile::ParseTokens()
   entity = AddEntity(-1, "");
   line = 1;
 
-  for (i = 0; i < this->token_count; i++)
+  for (i = 0; i < (int)this->tokens.size(); i++)
     {
-      token = this->tokens + i;
-
+      token = &this->tokens[0] + i;
+			
       switch (token->type)
-	{
-	case TokenWord:
-	  if (strcmp(token->value, "include") == 0)
-	    {
-	      if (!ParseTokenInclude(&i, &line))
-		return false;
-	    }
-	  else if (strcmp(token->value, "define") == 0)
-	    {
-	      if (!ParseTokenDefine(&i, &line))
-		return false;
-	    }
-	  else
-	    {
-	      if (!ParseTokenWord(entity, &i, &line))
-		return false;
-	    }
-	  break;
-	case TokenComment:
-	  break;
-	case TokenSpace:
-	  break;
-	case TokenEOL:
-	  line++;
-	  break;
-	default:
-	  PARSE_ERR("syntax error 1", line);
-	  return false;
-	}
+				{
+				case TokenWord:
+					if ( token->value == "include") 
+						{
+							if (!ParseTokenInclude(&i, &line))
+								return false;
+						}
+					else if ( token->value == "define" )
+						{
+							if (!ParseTokenDefine(&i, &line))
+								return false;
+						}
+					else
+						{
+							if (!ParseTokenWord(entity, &i, &line))
+								return false;
+						}
+					break;
+				case TokenComment:
+					break;
+				case TokenSpace:
+					break;
+				case TokenEOL:
+					line++;
+					break;
+				default:
+					PARSE_ERR("syntax error 1", line);
+					return false;
+				}
     }
   return true;
 }
@@ -835,25 +804,25 @@ bool Worldfile::ParseTokenInclude(int *index, int *line)
 {
   int i;
   CToken *token;
-
-  for (i = *index + 1; i < this->token_count; i++)
+	
+  for (i = *index + 1; i < (int)this->tokens.size(); i++)
     {
-      token = this->tokens + i;
-
+      token = &this->tokens[i];
+			
       switch (token->type)
-	{
-	case TokenString:
-	  break;
-	case TokenSpace:
-	  break;
-	case TokenEOL:
-	  *index = i;
-	  (*line)++;
-	  return true;
-	default:
-	  PARSE_ERR("syntax error in include statement", *line);
-	  return false;
-	}
+				{
+				case TokenString:
+					break;
+				case TokenSpace:
+					break;
+				case TokenEOL:
+					*index = i;
+					(*line)++;
+					return true;
+				default:
+					PARSE_ERR("syntax error in include statement", *line);
+					return false;
+				}
     }
   PARSE_ERR("incomplete include statement", *line);
   return false;
@@ -875,9 +844,9 @@ bool Worldfile::ParseTokenDefine(int *index, int *line)
   entityname = NULL;
   starttoken = -1;
 
-  for (i = *index + 1; i < this->token_count; i++)
+  for (i = *index + 1; i < (int)this->tokens.size(); i++)
     {
-      token = this->tokens + i;
+      token = &this->tokens[i];
 
       switch (token->type)
 	{
@@ -944,9 +913,9 @@ bool Worldfile::ParseTokenWord(int entity, int *index, int *line)
   int i;
   CToken *token;
 
-  for (i = *index + 1; i < this->token_count; i++)
+  for (i = *index + 1; i < (int)this->tokens.size(); i++)
     {
-      token = this->tokens + i;
+      token = &this->tokens[i];
 
       switch (token->type)
 	{
@@ -978,27 +947,26 @@ bool Worldfile::ParseTokenWord(int entity, int *index, int *line)
 bool Worldfile::ParseTokenEntity(int entity, int *index, int *line)
 {
   int i;
-  int macro;
+  //int macro;
   int name;
   CToken *token;
 
   name = *index;
-  macro = LookupMacro(GetTokenValue(name));
+  CMacro* macro = LookupMacro(GetTokenValue(name));
 
   // If the entity name is a macro...
-  if (macro >= 0)
+  if (macro )
     {
-      // This is a bit of a hack
-      int nentity = this->entity_count;
-      int mindex = this->macros[macro].starttoken;
-      int mline = this->macros[macro].line;
+      int nentity = this->entities.size();
+      int mindex = macro->starttoken;
+      int mline = macro->line;
       if (!ParseTokenEntity(entity, &mindex, &mline))
-	return false;
+				return false;
       entity = nentity;
 
-      for (i = *index + 1; i < this->token_count; i++)
-	{
-	  token = this->tokens + i;
+      for (i = *index + 1; i < (int)this->tokens.size(); i++)
+				{
+					token = &this->tokens[i];
 
 	  switch (token->type)
 	    {
@@ -1029,9 +997,9 @@ bool Worldfile::ParseTokenEntity(int entity, int *index, int *line)
   // If the entity name is not a macro...
   else
     {
-      for (i = *index + 1; i < this->token_count; i++)
+      for (i = *index + 1; i < (int)this->tokens.size(); i++)
 	{
-	  token = this->tokens + i;
+	  token = &this->tokens[i];
 
 	  switch (token->type)
 	    {
@@ -1076,9 +1044,9 @@ bool Worldfile::ParseTokenProperty(int entity, int *index, int *line)
   value = -1;
   count = 0;
 
-  for (i = *index + 1; i < this->token_count; i++)
+  for (i = *index + 1; i < (int)this->tokens.size(); i++)
     {
-      token = this->tokens + i;
+      token = &this->tokens[i];
 
       switch (token->type)
 	{
@@ -1113,14 +1081,14 @@ bool Worldfile::ParseTokenProperty(int entity, int *index, int *line)
 // Parse a tuple.
 bool Worldfile::ParseTokenTuple( CProperty* property, int *index, int *line)
 {
-  int i, count;
+  unsigned int i, count;
   CToken *token;
 
   count = 0;
 
-  for (i = *index + 1; i < this->token_count; i++)
+  for (i = *index + 1; i < this->tokens.size(); i++)
     {
-      token = this->tokens + i;
+      token = &this->tokens[i];
 
       switch (token->type)
 	{
@@ -1150,52 +1118,30 @@ bool Worldfile::ParseTokenTuple( CProperty* property, int *index, int *line)
 // Clear the macro list
 void Worldfile::ClearMacros()
 {
-  free(this->macros);
-  this->macros = NULL;
-  this->macro_size = 0;
-  this->macro_count = 0;
+	macros.clear();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Add a macro
-int Worldfile::AddMacro(const char *macroname, const char *entityname,
-			int line, int starttoken, int endtoken)
+void Worldfile::AddMacro(const char *macroname, const char *entityname,
+												 int line, int starttoken, int endtoken)
 {
-  if (this->macro_count >= this->macro_size)
-    {
-      this->macro_size += 100;
-      this->macros = (CMacro*)
-	realloc(this->macros, this->macro_size * sizeof(this->macros[0]));
-    }
-
-  int macro = this->macro_count;
-  this->macros[macro].macroname = macroname;
-  this->macros[macro].entityname = entityname;
-  this->macros[macro].line = line;
-  this->macros[macro].starttoken = starttoken;
-  this->macros[macro].endtoken = endtoken;
-  this->macro_count++;
-
-  return macro;
+	macros.insert( std::pair<std::string,CMacro>( macroname, CMacro( macroname, entityname, line, starttoken, endtoken )));
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Lookup a macro by name
 // Returns -1 if there is no macro with this name.
-int Worldfile::LookupMacro(const char *macroname)
+Worldfile::CMacro* Worldfile::LookupMacro(const char *macroname)
 {
-  int i;
-  CMacro *macro;
-
-  for (i = 0; i < this->macro_count; i++)
-    {
-      macro = this->macros + i;
-      if (strcmp(macro->macroname, macroname) == 0)
-	return i;
-    }
-  return -1;
+	std::map<std::string,CMacro>::iterator it = macros.find( macroname );
+	
+	if( it == macros.end() )
+		return NULL;
+	else
+		return &it->second;
 }
 
 
@@ -1204,11 +1150,13 @@ int Worldfile::LookupMacro(const char *macroname)
 void Worldfile::DumpMacros()
 {
   printf("\n## begin macros\n");
-  for (int i = 0; i < this->macro_count; i++)
-    {
-      CMacro *macro = this->macros + i;
 
-      printf("## [%s][%s]", macro->macroname, macro->entityname);
+	FOR_EACH( it, macros )
+		//for (int i = 0; i < this->macro_count; i++)
+    {
+      CMacro *macro = &(it->second);//this->macros + i;
+
+				printf("## [%s][%s]", macro->macroname.c_str(), macro->entityname.c_str());
       for (int j = macro->starttoken; j <= macro->endtoken; j++)
 	{
 	  if (this->tokens[j].type == TokenEOL)
@@ -1226,10 +1174,12 @@ void Worldfile::DumpMacros()
 // Clear the entity list
 void Worldfile::ClearEntities()
 {
-  free(this->entities);
-  this->entities = NULL;
-  this->entity_size = 0;
-  this->entity_count = 0;
+  // free(this->entities);
+  // this->entities = NULL;
+  // this->entity_size = 0;
+  // this->entity_count = 0;
+
+	this->entities.clear();
 }
 
 
@@ -1237,19 +1187,20 @@ void Worldfile::ClearEntities()
 // Add a entity
 int Worldfile::AddEntity(int parent, const char *type)
 {
-  if (this->entity_count >= this->entity_size)
-    {
-      this->entity_size += 100;
-      this->entities = (CEntity*)
-	realloc(this->entities, this->entity_size * sizeof(this->entities[0]));
-    }
+  // if (this->entity_count >= this->entity_size)
+  //   {
+  //     this->entity_size += 100;
+  //     this->entities = (CEntity*)
+	// realloc(this->entities, this->entity_size * sizeof(this->entities[0]));
+  //   }
 
-  int entity = this->entity_count;
-  this->entities[entity].parent = parent;
-  this->entities[entity].type = type;
-  this->entity_count++;
+  // int entity = this->entity_count;
+  // this->entities[entity].parent = parent;
+  // this->entities[entity].type = type;
+  // this->entity_count++;
 
-  return entity;
+	this->entities.push_back( CEntity( parent, type ));
+  return( entities.size()-1); // index of the new entity
 }
 
 
@@ -1257,7 +1208,7 @@ int Worldfile::AddEntity(int parent, const char *type)
 // Get the number of entities
 int Worldfile::GetEntityCount()
 {
-  return this->entity_count;
+  return this->entities.size();
 }
 
 
@@ -1265,7 +1216,7 @@ int Worldfile::GetEntityCount()
 // Get a entity's parent entity
 int Worldfile::GetEntityParent(int entity)
 {
-  if (entity < 0 || entity >= this->entity_count)
+  if (entity < 0 || entity >= (int)this->entities.size())
     return -1;
   return this->entities[entity].parent;
 }
@@ -1275,9 +1226,9 @@ int Worldfile::GetEntityParent(int entity)
 // Get a entity (returns the entity type value)
 const char *Worldfile::GetEntityType(int entity)
 {
-  if (entity < 0 || entity >= this->entity_count)
+  if (entity < 0 || entity >= (int)this->entities.size())
     return NULL;
-  return this->entities[entity].type;
+  return this->entities[entity].type.c_str();
 }
 
 
@@ -1298,7 +1249,7 @@ int Worldfile::LookupEntity(const char *type)
 void PrintProp( const char* key, CProperty* prop )
 {
   if( prop )
-    printf( "Print key %s prop ent %d name %s\n", key, prop->entity, prop->name );
+    printf( "Print key %s prop ent %d name %s\n", key, prop->entity, prop->name.c_str() );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1307,7 +1258,7 @@ void Worldfile::DumpEntities()
 {
   printf("\n## begin entities\n");
 
-	FOR_EACH( it, nametable )
+	FOR_EACH( it, properties )
 		PrintProp( it->first.c_str(), it->second );
 
   printf("## end entities\n");
@@ -1318,9 +1269,9 @@ void Worldfile::DumpEntities()
 // Clear the property list
 void Worldfile::ClearProperties()
 {
-  this->property_count = 0;
-
-	nametable.clear();
+	FOR_EACH( it, properties )
+		delete it->second;	
+	properties.clear();
 }
 
 
@@ -1328,27 +1279,14 @@ void Worldfile::ClearProperties()
 // Add an property
 CProperty* Worldfile::AddProperty(int entity, const char *name, int line)
 {
-  //int i;
-  CProperty *property = new CProperty();
-
-  property->entity = entity;
-  property->name = name;
-  property->value_count = 0;
-  property->values = NULL;
-  property->line = line;
-  property->used = false;
-
   char key[128];
   snprintf( key, 127, "%d%s", entity, name );
-  property->key = strdup( key );
 
-	nametable[ property->key ] = property;
+  CProperty *property = new CProperty( entity, name, line );
 
-  //printf( "added key %s for prop %p entity %d name %s\n", property->key, property, property->entity, property->name );
+	properties[ key ] = property;
 
-  this->property_count++;
-
-  return property;
+	return property;
 }
 
 
@@ -1358,14 +1296,11 @@ void Worldfile::AddPropertyValue( CProperty* property, int index, int value_toke
 {
   assert(property);
 
-  // Expand the array if it's too small
-  if (index >= property->value_count)
-    {
-      property->value_count = index + 1;
-      property->values = (int*) realloc(property->values, property->value_count * sizeof(int));
-    }
-
   // Set the relevant value
+	
+	if( index >= (int)property->values.size() )
+		property->values.resize( index+1 );
+
   property->values[index] = value_token;
 }
 
@@ -1380,9 +1315,9 @@ CProperty* Worldfile::GetProperty(int entity, const char *name)
 	
   //printf( "looking up key %s for entity %d name %s\n", key, entity, name );
 	
-	std::map<std::string,CProperty*>::iterator it = nametable.find( key );
+	std::map<std::string,CProperty*>::iterator it = properties.find( key );
 	
-	if( it == nametable.end() ) // not found
+	if( it == properties.end() ) // not found
 		return NULL;
 	else
 		return it->second;
@@ -1403,8 +1338,7 @@ void Worldfile::SetPropertyValue( CProperty* property, int index, const char *va
   //  printf( "property %s index %d value_count %d \n",
   //  property->key, index, property->value_count );
 
-  assert(index >= 0 && index < property->value_count);
-
+  assert(index >= 0 && index < (int)property->values.size() );
   // Set the relevant value
   SetTokenValue( property->values[index], value);
 }

@@ -284,7 +284,9 @@ void WorldGui::Load( const char* filename )
 		
 		// configure the canvas
 		canvas->Load(  wf, window_section );
-		
+		// warn about unused WF lines
+		wf->WarnUnused();
+  
 		std::string title = PROJECT;
 		if ( wf->filename ) {
 		  // improve the title bar to say "Stage: <worldfile name>"

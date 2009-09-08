@@ -6,13 +6,10 @@ include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
 
-interval_sim 100  # simulation timestep in milliseconds
-interval_real 20  # real-time interval between simulation updates in milliseconds 
-
 # time to pause (in GUI mode) or quit (in headless mode (-g)) the simulation
 quit_time 3600 # 1 hour of simulated time
 
-paused 0
+paused 1
 
 resolution 0.02
 
@@ -21,7 +18,7 @@ window
 (
   size [ 635.000 666.000 ] # in pixels
   scale 37.481            
-     # pixels per meter
+     # pixels per meteri
   center [ -0.019  -0.282 ]
   rotate [ 0  0 ]
   			

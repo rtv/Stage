@@ -118,7 +118,7 @@ void Model::Load()
 
   if( wf->PropertyExists( wf_entity, "color_rgba" ))
     {      
-      if (wf->GetProperty(wf_entity,"color_rgba")->value_count < 4)
+      if (wf->GetProperty(wf_entity,"color_rgba")->values.size() < 4)
       {
         PRINT_ERR1( "model %s color_rgba requires 4 values\n", this->token );
       }
@@ -187,8 +187,7 @@ void Model::Load()
 
   if( wf->PropertyExists( wf_entity, "map_resolution" ))
     this->SetMapResolution( wf->ReadFloat(wf_entity, "map_resolution", this->map_resolution ));
-  
-  
+    
   // populate the key-value database
   if( wf->PropertyExists( wf_entity, "db_count" ) )
 		LoadDataBaseEntries( wf, wf_entity );

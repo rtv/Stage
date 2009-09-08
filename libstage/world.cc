@@ -38,7 +38,7 @@
     - quit_time <float>\n
 	 Stop the simulation after this many simulated seconds have
 	 elapsed. In libstage, World::Update() returns true. In Stage with
-	 a GUI, the simulation is paused. In Stage without a GUI, Stage
+	 a GUI, the simulation is paused.wo In Stage without a GUI, Stage
 	 quits.
  
     - resolution <float>\n
@@ -368,9 +368,6 @@ void World::Load( const char* worldfile_path )
       else
 	LoadModel( wf, entity );
     }
-  
-  // warn about unused WF lines
-  wf->WarnUnused();
   
   FOR_EACH( it, children )
     (*it)->InitRecursive();
