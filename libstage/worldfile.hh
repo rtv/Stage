@@ -271,7 +271,7 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   private: void SetPropertyValue( CProperty* property, int index, const char *value);
 
   // Get the value of an property.
-  private: const char *GetPropertyValue( CProperty* property, int index);
+  public: const char *GetPropertyValue( CProperty* property, int index);
 
   // Dump the property list for debugging
   private: void DumpProperties();
@@ -349,9 +349,9 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   public: char *filename;
 
   // Conversion units
-  private: double unit_length;
-  private: double unit_angle;
-
+  public: double unit_length;
+  public: double unit_angle;
+	
 private: std::map<std::string,CProperty*> nametable;	
 };
 

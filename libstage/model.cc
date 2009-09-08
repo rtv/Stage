@@ -114,9 +114,22 @@ std::map<std::string, creator_t> Model::name_map;
 
 void Size::Load( Worldfile* wf, int section, const char* keyword )
 {
-  x = wf->ReadTupleLength( section, keyword, 0, x );
-  y = wf->ReadTupleLength( section, keyword, 1, y );
-  z = wf->ReadTupleLength( section, keyword, 2, z );
+	CProperty* prop = wf->GetProperty( section, keyword );	
+	
+	if( prop )
+		{
+			if( prop->value_count != 3 )
+				{
+					puts( "" ); // newline
+					PRINT_ERR1( "Loading size. Need a vector of length 3: found %d.\n", 
+											prop->value_count ); 
+					exit(-1);
+				}
+			
+			x = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
+			y = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
+			z = atof( wf->GetPropertyValue( prop, 2 )) * wf->unit_length;
+		}
 }
 
 void Size::Save( Worldfile* wf, int section, const char* keyword )
@@ -128,10 +141,23 @@ void Size::Save( Worldfile* wf, int section, const char* keyword )
 
 void Pose::Load( Worldfile* wf, int section, const char* keyword )
 {
-  x = wf->ReadTupleLength( section, keyword, 0, x );
-  y = wf->ReadTupleLength( section, keyword, 1, y );
-  z = wf->ReadTupleLength( section, keyword, 2, z );
-  a = wf->ReadTupleAngle(  section, keyword, 3, a );
+	CProperty* prop = wf->GetProperty( section, keyword );	
+	
+	if( prop )
+		{
+			if( prop->value_count != 4 )
+				{
+					puts( "" ); // newline
+					PRINT_ERR1( "Loading pose. Need a vector of length 4: found %d.\n", 
+											prop->value_count ); 
+					exit(-1);
+				}
+			
+			x = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
+			y = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
+			z = atof( wf->GetPropertyValue( prop, 2 )) * wf->unit_length;
+			a = atof( wf->GetPropertyValue( prop, 3 )) * wf->unit_angle;
+		}
 }
 
 void Pose::Save( Worldfile* wf, int section, const char* keyword )

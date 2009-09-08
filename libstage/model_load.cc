@@ -73,48 +73,48 @@ void Model::Load()
   
   //PRINT_WARN1( "%s::Load", token );
   
-  if( wf->PropertyExists( wf_entity, "origin" ) )
+  //if( wf->PropertyExists( wf_entity, "origin" ) )
     {
       Geom geom = GetGeom();
-		geom.pose.Load( wf, wf_entity, "origin" );
+			geom.pose.Load( wf, wf_entity, "origin" );
       SetGeom( geom );
     }
-  
-  if( wf->PropertyExists( wf_entity, "size" ) )
+		
+		//if( wf->PropertyExists( wf_entity, "size" ) )
     {
       Geom geom = GetGeom();
-		geom.size.Load( wf, wf_entity, "size" );
+			geom.size.Load( wf, wf_entity, "size" );
       SetGeom( geom );
     }
-  
-  if( wf->PropertyExists( wf_entity, "pose" ))
+		
+		//if( wf->PropertyExists( wf_entity, "pose" ))
     {
       Pose pose = GetPose();
-		pose.Load( wf, wf_entity, "pose" );
+			pose.Load( wf, wf_entity, "pose" );
       SetPose( pose );
     }
-  
-  if( wf->PropertyExists( wf_entity, "velocity" ))
+		
+		//if( wf->PropertyExists( wf_entity, "velocity" ))
     {
       Velocity vel = GetVelocity();
-		vel.Load( wf, wf_entity, "velocity" );
+			vel.Load( wf, wf_entity, "velocity" );
       SetVelocity( vel );
     }
-  
-  if( wf->PropertyExists( wf_entity, "color" ))
-    {      
-      Color col( 1,0,0 ); // red;
-      const char* colorstr = wf->ReadString( wf_entity, "color", NULL );
-      if( colorstr )
-		{
-		  if( strcmp( colorstr, "random" ) == 0 )
-			col = Color( drand48(), drand48(), drand48() );
-		  else
-			col = Color( colorstr );
-		}
-	  this->SetColor( col );
-    }      
-
+		
+		if( wf->PropertyExists( wf_entity, "color" ))
+			{      
+				Color col( 1,0,0 ); // red;
+				const char* colorstr = wf->ReadString( wf_entity, "color", NULL );
+				if( colorstr )
+					{
+						if( strcmp( colorstr, "random" ) == 0 )
+							col = Color( drand48(), drand48(), drand48() );
+						else
+							col = Color( colorstr );
+					}
+				this->SetColor( col );
+			}      
+		
 
   if( wf->PropertyExists( wf_entity, "color_rgba" ))
     {      

@@ -70,6 +70,7 @@ Worldfile::Worldfile() :
   entity_size( 0),
   entity_count( 0),
   entities( NULL),
+	properties(NULL),
   property_count( 0),
   filename( NULL),
   unit_length( 1.0),
@@ -240,16 +241,16 @@ bool Worldfile::Save(const char *filename)
 // Check for unused properties and print warnings
 bool Worldfile::WarnUnused()
 {
-  //   bool unused = false;
-  //   for (int i = 0; i < this->property_count; i++)
+	// bool unused = false;
+	// for (int i = 0; i < this->property_count; i++)
   //   {
   //     CProperty *property = this->properties + i;
   //     if (!property->used)
-  //     {
-  //       unused = true;
-  //       PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
-  //                   this->filename, property->line, property->name);
-  //     }
+	// 			{
+	// 				unused = true;
+	// 				PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
+	// 										this->filename, property->line, property->name);
+	// 			}
   //   }
   //   return unused;
   return false;
@@ -1376,18 +1377,16 @@ CProperty* Worldfile::GetProperty(int entity, const char *name)
 {
   char key[128];
   snprintf( key, 127, "%d%s", entity, name );
-
-  //  printf( "looking up key %s for entity %d name %s\n", key, entity, name );
-
-  CProperty* prop = nametable[ key ];
-		
-// 	if( prop )
-// 		printf( "found entity %d name %s\n", prop->entity, prop->name );
-// 	else
-// 		printf( "key %s not found\n", key );
 	
-  return prop;
-}
+  //printf( "looking up key %s for entity %d name %s\n", key, entity, name );
+	
+	std::map<std::string,CProperty*>::iterator it = nametable.find( key );
+	
+	if( it == nametable.end() ) // not found
+		return NULL;
+	else
+		return it->second;
+	}
 
 
 bool Worldfile::PropertyExists( int section, const char* token )
