@@ -288,7 +288,7 @@ void WorldGui::Load( const char* filename )
 		wf->WarnUnused();
   
 		std::string title = PROJECT;
-		if ( wf->filename ) {
+		if ( wf->filename.size() ) {
 		  // improve the title bar to say "Stage: <worldfile name>"
 		  title += ": ";		
 		  title += wf->filename;
@@ -763,7 +763,7 @@ bool WorldGui::saveAsDialog()
   bool success = false;
   const char* pattern = "World Files (*.world)";
 
-  Fl_File_Chooser fc( wf->filename, pattern, Fl_File_Chooser::CREATE, "Save File As..." );
+  Fl_File_Chooser fc( wf->filename.c_str(), pattern, Fl_File_Chooser::CREATE, "Save File As..." );
   fc.ok_label( "Save" );
 
   fc.show();

@@ -1713,7 +1713,6 @@ namespace Stg
   
 	 /** unique process-wide identifier for this model */
 	 uint32_t id;	
-	 //	 ctrlinit_t* initfunc;
 	 stg_usec_t interval; ///< time between updates in usec	 
 	 stg_usec_t interval_energy; ///< time between updates of powerpack in usec
 	 stg_usec_t interval_pose; ///< time between updates of pose due to velocity in usec

@@ -258,7 +258,7 @@ void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
 	strcpy( full, bitmapfile );
   else
 	{
-	  char *tmp = strdup(wf->filename);
+	  char *tmp = strdup(wf->filename.c_str());
 	  snprintf( full, _POSIX_PATH_MAX,
 				"%s/%s",  dirname(tmp), bitmapfile );
 	  free(tmp);

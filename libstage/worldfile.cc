@@ -1,6 +1,6 @@
 /*
  *  Stage : a multi-robot simulator.
- *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *  Copyright (C) 2001-2009 Richard Vaughan, Andrew Howard and Brian Gerkey.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -53,9 +53,9 @@ using namespace Stg;
 ///////////////////////////////////////////////////////////////////////////
 // Useful macros for dumping parser errors
 #define TOKEN_ERR(z, l)				\
-  PRINT_ERR2("%s:%d : " z, this->filename, l)
+  PRINT_ERR2("%s:%d : " z, this->filename.c_str(), l)
 #define PARSE_ERR(z, l)				\
-  PRINT_ERR2("%s:%d : " z, this->filename, l)
+  PRINT_ERR2("%s:%d : " z, this->filename.c_str(), l)
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ Worldfile::Worldfile() :
   macros(),
   entities(),
 	properties(),
-  filename( NULL),
+  filename(),
   unit_length( 1.0 ),
   unit_angle( M_PI / 180.0 )
 {
@@ -80,9 +80,6 @@ Worldfile::~Worldfile()
   ClearMacros();
   ClearEntities();
   ClearTokens();
-
-  if (this->filename)
-    free(this->filename);
 }
 
 FILE *Worldfile::FileOpen(const char *filename, const char* method)
@@ -125,22 +122,15 @@ FILE *Worldfile::FileOpen(const char *filename, const char* method)
 // Load world from file
 bool Worldfile::Load(const char *filename)
 {
-  // Shouldnt call load more than once,
-  // so this should be null.
-
-  if(this->filename == NULL)
-    {
-      this->filename = strdup(filename);
-    }
-
+  this->filename = filename;
 
   // Open the file
   //FILE *file = fopen(this->filename, "r");
-  FILE *file = FileOpen(this->filename, "r");
+  FILE *file = FileOpen(this->filename.c_str(), "r");
   if (!file)
     {
       PRINT_ERR2("unable to open world file %s : %s",
-		 this->filename, strerror(errno));
+					  this->filename.c_str(), strerror(errno));
       return false;
     }
 
@@ -203,7 +193,7 @@ bool Worldfile::Save(const char *filename)
 
   // If no filename is supplied, use default
   if (!filename)
-    filename = this->filename;
+    filename = this->filename.c_str();
 
   // Open file
   FILE *file = fopen(filename, "w+");
@@ -240,7 +230,7 @@ bool Worldfile::WarnUnused()
 			if( ! it->second->used )
 				{
 					PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
-											this->filename, it->second->line, it->second->name.c_str());
+									this->filename.c_str(), it->second->line, it->second->name.c_str());
 					unused = true;
 				}
 		}
@@ -481,7 +471,7 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
       // Note that dirname() modifies the contents, so
       // we need to make a copy of the filename.
       // There's no bounds-checking, but what the heck.
-      char *tmp = strdup(this->filename);
+      char *tmp = strdup(this->filename.c_str());
       fullpath = new char[PATH_MAX];
       memset(fullpath, 0, PATH_MAX);
       strcat( fullpath, dirname(tmp));
@@ -495,7 +485,7 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
       // Note that dirname() modifies the contents, so
       // we need to make a copy of the filename.
       // There's no bounds-checking, but what the heck.
-      char *tmp = strdup(this->filename);
+      char *tmp = strdup(this->filename.c_str());
       fullpath = new char[PATH_MAX];
       char* dummy = getcwd(fullpath, PATH_MAX);
       if (!dummy)
@@ -1312,21 +1302,31 @@ CProperty* Worldfile::GetProperty(int entity, const char *name)
 {
   char key[128];
   snprintf( key, 127, "%d%s", entity, name );
-	
+  
   //printf( "looking up key %s for entity %d name %s\n", key, entity, name );
+  
+  static char cache_key[128] = { 0 }; 
+  static CProperty* cache_property = NULL;
+  
+  if( strncmp( key, cache_key, 128 ) != 0 ) // different to last time
+	 {		
+		strncpy( cache_key, key, 128 ); // remember for next time		
+		
+		std::map<std::string,CProperty*>::iterator it = properties.find( key );	
+		if( it == properties.end() ) // not found
+		  cache_property = NULL;
+		else
+		  cache_property = it->second;		
+	 }
+  //else
+  // printf( "cache hit with %s\n", cache_key );
 	
-	std::map<std::string,CProperty*>::iterator it = properties.find( key );
-	
-	if( it == properties.end() ) // not found
-		return NULL;
-	else
-		return it->second;
-	}
-
+  return cache_property;
+}
 
 bool Worldfile::PropertyExists( int section, const char* token )
 {
-  return( this->GetProperty( section, token ) ? true : false );
+  return (bool)GetProperty( section, token );
 }
 
 
@@ -1342,7 +1342,6 @@ void Worldfile::SetPropertyValue( CProperty* property, int index, const char *va
   // Set the relevant value
   SetTokenValue( property->values[index], value);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the value of an property
@@ -1482,45 +1481,6 @@ double Worldfile::ReadAngle(int entity, const char *name, double value)
   return atof(GetPropertyValue(property, 0)) * this->unit_angle;
 }
 
-/* REMOVE?
-///////////////////////////////////////////////////////////////////////////
-// Read a boolean
-bool Worldfile::ReadBool(int entity, const char *name, bool value)
-{
-//return (bool) ReadInt(entity, name, value);
-CProperty* property = GetProperty(entity, name);
-if (property < 0)
-return value;
-const char *v = GetPropertyValue(property, 0);
-if (strcmp(v, "true") == 0 || strcmp(v, "yes") == 0)
-return true;
-else if (strcmp(v, "false") == 0 || strcmp(v, "no") == 0)
-return false;
-CProperty *pproperty = this->properties + property;
-PRINT_WARN3("worldfile %s:%d : '%s' is not a valid boolean value; assuming 'false'",
-this->filename, pproperty->line, v);
-return false;
-}
-*/
-
- ///////////////////////////////////////////////////////////////////////////
- // Read a color (included text -> RGB conversion).
- // We look up the color in one of the common color databases.
-// uint32_t Worldfile::ReadColor(int entity, const char *name, uint32_t value)
-// {
-//   CProperty* property;
-//   const char *color;
-
-//   property = GetProperty(entity, name);
-//   if (property == NULL )
-//     return value;
-//   color = GetPropertyValue(property, 0);
-
-//   // TODO: Hmmm, should do something with the default color here.
-//   return stg_lookup_color(color);
-// }
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Read a file name
 // Always returns an absolute path.
@@ -1543,7 +1503,7 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
       // Note that dirname() modifies the contents, so
       // we need to make a copy of the filename.
       // There's no bounds-checking, but what the heck.
-      char *tmp = strdup(this->filename);
+      char *tmp = strdup(this->filename.c_str());
 		char* fullpath = new char[PATH_MAX];
       memset(fullpath, 0, PATH_MAX);
       strcat( fullpath, dirname(tmp));
@@ -1559,7 +1519,7 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
       // Note that dirname() modifies the contents, so
       // we need to make a copy of the filename.
       // There's no bounds-checking, but what the heck.
-      char *tmp = strdup(this->filename);
+      char *tmp = strdup(this->filename.c_str());
 		char* fullpath = new char[PATH_MAX];
       char* dummy = getcwd(fullpath, PATH_MAX);
       if (!dummy)

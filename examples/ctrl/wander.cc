@@ -20,8 +20,14 @@ int LaserUpdate( Model* mod, robot_t* robot );
 int PositionUpdate( Model* mod, robot_t* robot );
 
 // Stage calls this when the model starts up
-extern "C" int Init( Model* mod )
+extern "C" int Init( Model* mod, char* argstr )
 {
+  // local arguments
+  printf( "\nWander controller initialised with argument string \"%s\"", argstr );
+  // global arguments
+  for( unsigned int i=0; i< World::args.size(); i++ )
+	 printf( "\nWorld argument %d is %s", i, World::args[i].c_str() );
+
   robot_t* robot = new robot_t;
  
   robot->avoidcount = 0;
@@ -34,8 +40,6 @@ extern "C" int Init( Model* mod )
   robot->laser->Subscribe(); // starts the laser updates
   robot->pos->Subscribe(); // starts the position updates
   
-  for( unsigned int i=0; i< World::args.size(); i++ )
-	 printf( "\nargument %d is %s", i, World::args[i].c_str() );
   
   return 0; //ok
 }

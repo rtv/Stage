@@ -73,39 +73,39 @@ void Model::Load()
   
   //PRINT_WARN1( "%s::Load", token );
   
-  //if( wf->PropertyExists( wf_entity, "origin" ) )
-    {
-      Geom geom = GetGeom();
-			geom.pose.Load( wf, wf_entity, "origin" );
-      SetGeom( geom );
-    }
-		
-		//if( wf->PropertyExists( wf_entity, "size" ) )
+  if( wf->PropertyExists( wf_entity, "origin" ) )
+	 {
+		Geom geom = GetGeom();
+		geom.pose.Load( wf, wf_entity, "origin" );
+		SetGeom( geom );
+	 }
+
+  if( wf->PropertyExists( wf_entity, "size" ) )
     {
       Geom geom = GetGeom();
 			geom.size.Load( wf, wf_entity, "size" );
       SetGeom( geom );
     }
 		
-		//if( wf->PropertyExists( wf_entity, "pose" ))
+  if( wf->PropertyExists( wf_entity, "pose" ))
     {
       Pose pose = GetPose();
-			pose.Load( wf, wf_entity, "pose" );
+		pose.Load( wf, wf_entity, "pose" );
       SetPose( pose );
     }
-		
-		//if( wf->PropertyExists( wf_entity, "velocity" ))
+  
+  if( wf->PropertyExists( wf_entity, "velocity" ))
     {
       Velocity vel = GetVelocity();
-			vel.Load( wf, wf_entity, "velocity" );
+		vel.Load( wf, wf_entity, "velocity" );
       SetVelocity( vel );
     }
-		
-		if( wf->PropertyExists( wf_entity, "color" ))
-			{      
-				Color col( 1,0,0 ); // red;
-				const char* colorstr = wf->ReadString( wf_entity, "color", NULL );
-				if( colorstr )
+  
+  if( wf->PropertyExists( wf_entity, "color" ))
+	 {      
+		Color col( 1,0,0 ); // red;
+		const char* colorstr = wf->ReadString( wf_entity, "color", NULL );
+		if( colorstr )
 					{
 						if( strcmp( colorstr, "random" ) == 0 )
 							col = Color( drand48(), drand48(), drand48() );
@@ -207,9 +207,6 @@ void Model::Load()
   if( wf->PropertyExists( wf_entity, "ctrl" ))
     {
       char* lib = (char*)wf->ReadString(wf_entity, "ctrl", NULL );
-
-      //char* argstr = (char*)wf->ReadString(wf_entity, "ctrl_argstr", NULL );
-
 		
       if( !lib )
 		  printf( "Error - NULL library name specified for model %s\n", token );
@@ -305,8 +302,12 @@ void Model::LoadControllerModule( char* lib )
   lt_dlsetsearchpath( FileManager::stagePath().c_str() );
 
   lt_dlhandle handle = NULL;
-
-  if(( handle = lt_dlopenext( lib ) ))
+  
+  // the library name is the first word in the string
+  char libname[256];
+  sscanf( lib, "%s %*s", libname );
+  
+  if(( handle = lt_dlopenext( libname ) ))
     {
       //printf( "]" );
 		
@@ -320,7 +321,7 @@ void Model::LoadControllerModule( char* lib )
 			 exit(-1);
 		  }
 		//else
-		AddCallback( &hooks.init, initfunc, NULL );
+		AddCallback( &hooks.init, initfunc, lib ); // pass complete string into initfunc
     }
   else
     {
