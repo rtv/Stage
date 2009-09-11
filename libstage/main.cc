@@ -18,6 +18,8 @@ const char* USAGE =
   "  --gui          : run without a GUI\n"
   "  -g             : short for --gui\n"
   "  --help         : print this message\n"
+  "  --args \"str\"   : define an argument string to be passed to all controllers\n"
+  "  -a \"str\"       : short for --args\n"
   "  -h             : short for --help\n"
   "  -?             : short for --help";
 
@@ -26,7 +28,7 @@ static struct option longopts[] = {
 	{ "gui",  optional_argument,   NULL,  'g' },
 	{ "clock",  optional_argument,   NULL,  'c' },
 	{ "help",  optional_argument,   NULL,  'h' },
-	//   { "args", optional_argument, NULL, 'a' },
+	{ "args",  required_argument,   NULL,  'a' },
 	{ NULL, 0, NULL, 0 }
 };
 
@@ -48,6 +50,9 @@ int main( int argc, char* argv[] )
 		  case 0: // long option given
 			 printf( "option %s given\n", longopts[optindex].name );
 			 break;
+		  case 'a':
+			 World::ctrlargs = std::string(optarg);
+			 break;
 		  case 'c': 
 			 showclock = true;
 			 printf( "[Clock enabled]" );
@@ -56,9 +61,6 @@ int main( int argc, char* argv[] )
 			 usegui = false;
 			 printf( "[GUI disabled]" );
 			 break;
-//         case 'a':
-// 			 printf( "[ignoring unrecognized arguments]" );
-// 			 break;
 		  case 'h':  
 		  case '?':  
 			 puts( USAGE );

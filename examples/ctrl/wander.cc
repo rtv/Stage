@@ -20,13 +20,14 @@ int LaserUpdate( Model* mod, robot_t* robot );
 int PositionUpdate( Model* mod, robot_t* robot );
 
 // Stage calls this when the model starts up
-extern "C" int Init( Model* mod, char* argstr )
+extern "C" int Init( Model* mod, CtrlArgs* args )
 {
   // local arguments
-  printf( "\nWander controller initialised with argument string \"%s\"", argstr );
-  // global arguments
-  for( unsigned int i=0; i< World::args.size(); i++ )
-	 printf( "\nWorld argument %d is %s", i, World::args[i].c_str() );
+  printf( "\nWander controller initialised with:\n"
+			 "\tworldfile string \"%s\"\n" 
+			 "\tcmdline string \"%s\"",
+			 args->worldfile.c_str(),
+			 args->cmdline.c_str() );
 
   robot_t* robot = new robot_t;
  

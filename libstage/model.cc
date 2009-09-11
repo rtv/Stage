@@ -54,47 +54,79 @@
  
     - pose [ x:<float> y:<float> z:<float> heading:<float> ] \n
     specify the pose of the model in its parent's coordinate system
-    - size [ x:<float> y:<float> z:<float> ]\n
-    specify the size of the model in each dimension
+
+    - size [ x:<float> y:<float> z:<float> ]\n specify the size of the
+    model in each dimension
+
     - origin [ x:<float> y:<float> z:<float> heading:<float> ]\n
     specify the position of the object's center, relative to its pose
-    - velocity [ x:<float> y:<float> z:<float> heading:<float> omega:<float> ]\n
-    Specify the initial velocity of the model. Note that if the model hits an obstacle, its velocity will be set to zero.
- 
-    - color <string>\n
-    specify the color of the object using a color name from the X11 database (rgb.txt)
-    - bitmap filename:<string>\n
-    Draw the model by interpreting the lines in a bitmap (bmp, jpeg, gif, png supported). The file is opened and parsed into a set of lines.  The lines are scaled to fit inside the rectangle defined by the model's current size.
-    - ctrl <string>\n
-    specify the controller module for the model
- 
-    - fiducial_return fiducial_id:<int>\n
-    if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
-    - fiducial_key <int>
-    models are only detected by fiducialfinders if the fiducial_key values of model and fiducialfinder match. This allows you to have several independent types of fiducial in the same environment, each type only showing up in fiducialfinders that are "tuned" for it.
-    - obstacle_return <int>\n
-    if 1, this model can collide with other models that have this property set 
-    - ranger_return <int>\n
-    if 1, this model can be detected by ranger sensors
-    - blob_return <int>\n
-    if 1, this model can be detected in the blob_finder (depending on its color)
-    - laser_return <int>\n
-    if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
-    - gripper_return <int>\n
-    iff 1, this model can be gripped by a gripper and can be pushed around by collisions with anything that has a non-zero obstacle_return.
- 
-    - gui_nose <int>\n
-    if 1, draw a nose on the model showing its heading (positive X axis)
-    - gui_grid <int>\n
-    if 1, draw a scaling grid over the model
-    - gui_outline <int>\n
-    if 1, draw a bounding box around the model, indicating its size
-    - gui_move <int>\n
-    if 1, the model can be moved by the mouse in the GUI window
 
-    - friction <float>\n
-    Determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction).
+    - velocity [ x:<float> y:<float> z:<float> heading:<float>
+    omega:<float> ]\n Specify the initial velocity of the model. Note
+    that if the model hits an obstacle, its velocity will be set to
+    zero.
+ 
+    - color <string>\n specify the color of the object using a color
+    name from the X11 database (rgb.txt)
+
+    - bitmap filename:<string>\n Draw the model by interpreting the
+    lines in a bitmap (bmp, jpeg, gif, png supported). The file is
+    opened and parsed into a set of lines.  The lines are scaled to
+    fit inside the rectangle defined by the model's current size.
+
+    - ctrl <string>\n Specify the controller module for the model, and
+    its argument string. For example, the string "foo bar bash" will
+    load libfoo.so, which will have its Init() function called with
+    the entire string as an argument (including the library name). It
+    is up to the controller to parse the string if it needs
+    arguments."
+ 
+    - fiducial_return fiducial_id:<int>\n if non-zero, this model is
+    detected by fiducialfinder sensors. The value is used as the
+    fiducial ID.
+
+    - fiducial_key <int> models are only detected by fiducialfinders
+    if the fiducial_key values of model and fiducialfinder match. This
+    allows you to have several independent types of fiducial in the
+    same environment, each type only showing up in fiducialfinders
+    that are "tuned" for it.
+
+    - obstacle_return <int>\n if 1, this model can collide with other
+    models that have this property set
+
+    - ranger_return <int>\n if 1, this model can be detected by ranger
+    sensors
+
+    - blob_return <int>\n if 1, this model can be detected in the
+    blob_finder (depending on its color)
+
+    - laser_return <int>\n if 0, this model is not detected by laser
+    sensors. if 1, the model shows up in a laser sensor with normal
+    (0) reflectance. If 2, it shows up with high (1) reflectance.
+
+    - gripper_return <int>\n iff 1, this model can be gripped by a
+    gripper and can be pushed around by collisions with anything that
+    has a non-zero obstacle_return.
+ 
+    - gui_nose <int>\n if 1, draw a nose on the model showing its
+      heading (positive X axis)
+
+    - gui_grid <int>\n if 1, draw a scaling grid over the model
+
+    - gui_outline <int>\n if 1, draw a bounding box around the model,
+    indicating its size
+
+    - gui_move <int>\n if 1, the model can be moved by the mouse in
+    the GUI window
 */
+
+// todo
+//     - friction <float>\n Determines the proportion of velocity lost
+//     per second. For example, 0.1 would mean that the object would lose
+//     10% of its speed due to friction per second. A value of zero (the
+//     default) means this model can not be pushed around (infinite
+//     friction).
+
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

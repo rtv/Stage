@@ -750,6 +750,15 @@ namespace Stg
 	 static void Print();
   };
 
+  class CtrlArgs
+  {
+  public:
+	 std::string worldfile;
+	 std::string cmdline;
+
+	 CtrlArgs( std::string w, std::string c ) : worldfile(w), cmdline(c) {}
+  };
+
   /// %World class
   class World : public Ancestor
   {
@@ -762,6 +771,7 @@ namespace Stg
 	 /** contains the command line arguments passed to Stg::Init(), so
 		  that controllers can read them. */
 	 static std::vector<std::string> args;
+	 static std::string ctrlargs;
 
   private:
 	
@@ -2062,7 +2072,7 @@ namespace Stg
   
 	 /** Load a control program for this model from an external
 		  library */
-	 void LoadControllerModule( char* lib );
+	 void LoadControllerModule( const char* lib );
 	
 	 /** Sets the redraw flag, so this model will be redrawn at the
 		  earliest opportunity */

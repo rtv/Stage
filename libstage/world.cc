@@ -95,6 +95,7 @@ using namespace Stg;
 unsigned int World::next_id = 0;
 bool World::quit_all = false;
 std::set<World*> World::world_set;
+std::string World::ctrlargs;
 
 World::World( const char* token, 
 				  double ppm )

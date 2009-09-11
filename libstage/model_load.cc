@@ -203,15 +203,19 @@ void Model::Load()
   {
     this->SetFriction( wf->ReadFloat(wf_entity, "friction", this->friction ));
   }
-
-  if( wf->PropertyExists( wf_entity, "ctrl" ))
-    {
-      char* lib = (char*)wf->ReadString(wf_entity, "ctrl", NULL );
-		
-      if( !lib )
-		  printf( "Error - NULL library name specified for model %s\n", token );
-      else
-		  LoadControllerModule( lib );
+  
+  if( CProperty* ctrlp = wf->GetProperty( wf_entity, "ctrl" ) )
+	 {
+		for( int index=0; index < ctrlp->values.size(); index++ )
+		  {
+			 
+			 const char* lib = wf->GetPropertyValue( ctrlp, index );
+			 
+			 if( !lib )
+				printf( "Error - NULL library name specified for model %s\n", token );
+			 else
+				LoadControllerModule( lib );
+		  }
     }
   
   
@@ -283,7 +287,7 @@ void Model::Save( void )
 }
 
 
-void Model::LoadControllerModule( char* lib )
+void Model::LoadControllerModule( const char* lib )
 {
   //printf( "[Ctrl \"%s\"", lib );
   //fflush(stdout);
@@ -321,7 +325,8 @@ void Model::LoadControllerModule( char* lib )
 			 exit(-1);
 		  }
 		//else
-		AddCallback( &hooks.init, initfunc, lib ); // pass complete string into initfunc
+		
+		AddCallback( &hooks.init, initfunc, new CtrlArgs(lib,World::ctrlargs) ); // pass complete string into initfunc
     }
   else
     {
