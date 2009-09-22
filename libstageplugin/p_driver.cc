@@ -577,7 +577,9 @@ void StgDriver::Update(void)
 			switch( interface->addr.interf )
 				{
 				case PLAYER_SIMULATION_CODE:
-					world->Update();
+				  //world->Update();
+				  // one round of FLTK's update loop.
+				  Fl::wait();
 					break;
 					
 				default:
