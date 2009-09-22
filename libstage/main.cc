@@ -51,6 +51,7 @@ int main( int argc, char* argv[] )
   
   StgWorld* world = usegui ? new StgWorldGui(800, 700, argv[0]) : new StgWorld();
   
+  world->Update();
   world->Load( argv[argc-1] );
   
   while( ! world->TestQuit() )
