@@ -31,7 +31,6 @@ SET (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake CACHE PATH "Location of CMake
 # Determine the operating system in detail
 INCLUDE (${PROJECT_CMAKE_DIR}/internal/FindOS.cmake)
 
-
 # Enable -Wall by default unless on Win or Solaris
 IF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
     # Using -Wall on Windows causes MSVC to produce thousands of warnings in its

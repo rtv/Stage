@@ -1,14 +1,13 @@
 
 SET( PLUGINS
-	 # convoy
      fasr
-	 # fasr2
      lasernoise
      sink
      source
      wander
+	  wander_pioneer
 	  pioneer_flocking
-#     rasterize
+     rasterize
 )
 
 # need plaer's wavefront planning library for this one

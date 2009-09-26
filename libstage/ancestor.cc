@@ -1,11 +1,13 @@
+#include <sstream> // for converting values to strings
+
 #include "stage.hh"
 using namespace Stg;
-//using names
+
 
 Ancestor::Ancestor() :
   children(),
   debug( false ),
-  token( NULL ),
+  token(),
   access_mutex(),
   child_type_counts()
 {
@@ -29,31 +31,23 @@ void Ancestor::AddChild( Model* mod )
 	 }
   
   // poke a name into the child  
-  static char* buf = new char[TOKEN_MAX];	// allocated once
+  std::ostringstream name;
   
   //  printf( "adding child of type %d token %s\n", mod->type, mod->Token() );
   
-  std::string typestr = mod->type;
-
-  if( token ) // if this object has a name, use it
-    snprintf( buf, TOKEN_MAX, "%s.%s:%d", 
-			  token, 
-			  typestr.c_str(),
-			  child_type_counts[mod->type] );
-  else
-    snprintf( buf, TOKEN_MAX, "%s:%d", 
-			  typestr.c_str(),
-	      child_type_counts[mod->type] );
-    
-  //printf( "%s generated a name for my child %s\n", token, buf );
-
-  mod->SetToken( buf );
-
+  // if this object has a name, use it
+  if( token.size() )
+	 name << this->token <<  '.';
+  
+  name <<  mod->type <<  ':' << child_type_counts[mod->type]; 
+  
+  //  printf( "%s generated a name for my child %s\n", Token(),  name.str().c_str() );
+  
+  mod->SetToken( name.str() );
+  
   children.push_back( mod );
-
-  child_type_counts[mod->type]++;
-
-  //delete[] buf; // no need to free the statically allocated buffer
+  
+  child_type_counts[mod->type]++;  
 }
 
 void Ancestor::RemoveChild( Model* mod )

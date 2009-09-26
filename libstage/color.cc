@@ -21,13 +21,10 @@ bool Color::operator!=( const Color& other )
 		  fabs(a-other.a) > epsilon );
 }
 
-Color::Color( const char *name) :
+Color::Color( const std::string& name) :
   r(1), g(0), b(0), a(1)
 {
-  if( name == NULL ) // no string?
-	return; // red
-  
-  if( strcmp( name, "" ) == 0 ) // empty string?
+  if( name == "" )  // empty string?
 	return; // red
   
   static FILE *file = NULL;

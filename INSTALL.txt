@@ -9,8 +9,9 @@ become more portable.
 
 Dependencies
 ------------
-Building Stage requires the following libraries:
+Building Stage requires the following tools and libraries:
 
+- pkg-config
 - FLTK 1.1.x 
 - OpenGL
 - libpng

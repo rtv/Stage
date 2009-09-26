@@ -19,7 +19,7 @@ void Model::DrawSelected()
   
   char buf[64];
   snprintf( buf, 63, "%s [%.2f %.2f %.2f %.2f]", 
-	    token, gpose.x, gpose.y, gpose.z, rtod(gpose.a) );
+				token.c_str(), gpose.x, gpose.y, gpose.z, rtod(gpose.a) );
   
   PushColor( 0,0,0,1 ); // text color black
   Gl::draw_string( 0.5,0.5,0.5, buf );
@@ -50,52 +50,52 @@ void Model::DrawSelected()
 
 void Model::DrawTrailFootprint()
 {
-	double darkness = 0;
-	double fade = 0.5 / (double)(trail_length+1);
+  double darkness = 0;
+  double fade = 0.5 / (double)(trail_length+1);
 	
-	PushColor( 0,0,0,1 ); // dummy pushL just saving the color
+  PushColor( 0,0,0,1 ); // dummy pushL just saving the color
 	
-	FOR_EACH( it, trail )
-	  {
-		 TrailItem& checkpoint = *it;
+  FOR_EACH( it, trail )
+	 {
+		TrailItem& checkpoint = *it;
 		 
-		 glPushMatrix();
-		 Pose pz = checkpoint.pose;
+		glPushMatrix();
+		Pose pz = checkpoint.pose;
 
-		 Gl::pose_shift( pz );
-		 Gl::pose_shift( geom.pose );
+		Gl::pose_shift( pz );
+		Gl::pose_shift( geom.pose );
 		 		 
-		 darkness += fade;
-		 Color c = checkpoint.color;
-		 c.a = darkness;
-		 glColor4f( c.r, c.g, c.b, c.a );
+		darkness += fade;
+		Color c = checkpoint.color;
+		c.a = darkness;
+		glColor4f( c.r, c.g, c.b, c.a );
 		 
-		 blockgroup.DrawFootPrint( geom );
+		blockgroup.DrawFootPrint( geom );
 		 
-		 glPopMatrix();
+		glPopMatrix();
     }
 	
-	PopColor();
+  PopColor();
 }
 
 void Model::DrawTrailBlocks()
 {
   double timescale = 0.0000001;
 
-	FOR_EACH( it, trail )
-	  {
-		 TrailItem& checkpoint = *it;
+  FOR_EACH( it, trail )
+	 {
+		TrailItem& checkpoint = *it;
 		 
-		 glPushMatrix();
-		 Pose pz = checkpoint.pose;
-		 pz.z =  (world->sim_time - checkpoint.time) * timescale;
+		glPushMatrix();
+		Pose pz = checkpoint.pose;
+		pz.z =  (world->sim_time - checkpoint.time) * timescale;
 		 
-		 Gl::pose_shift( pz );
-		 Gl::pose_shift( geom.pose );
+		Gl::pose_shift( pz );
+		Gl::pose_shift( geom.pose );
 		 
-		 DrawBlocks();
+		DrawBlocks();
 
-		 glPopMatrix();
+		glPopMatrix();
     }
 }
 
@@ -283,7 +283,7 @@ void Model::DrawStatusTree( Camera* cam )
 
 void Model::DrawStatus( Camera* cam ) 
 {
-  if( say_string || power_pack )	  
+  if( power_pack || !say_string.empty() )	  
     {
       float yaw, pitch;
       pitch = - cam->pitch();
@@ -302,70 +302,70 @@ void Model::DrawStatus( Camera* cam )
       glRotatef( -pitch, 1,0,0 );
       
       if( power_pack )
-	power_pack->Visualize( cam );
+		  power_pack->Visualize( cam );
       
-      if( say_string )
-	{
-	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+      if( !say_string.empty() )
+		  {
+			 glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+			 
+			 //get raster positition, add gl_width, then project back to world coords
+			 glRasterPos3f( 0, 0, 0 );
+			 GLfloat pos[ 4 ];
+			 glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
+			 
+			 GLboolean valid;
+			 glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
 	  
-	  //get raster positition, add gl_width, then project back to world coords
-	  glRasterPos3f( 0, 0, 0 );
-	  GLfloat pos[ 4 ];
-	  glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
-	  
-	  GLboolean valid;
-	  glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
-	  
-	  if( valid ) 
-	    {				  
-	      //fl_font( FL_HELVETICA, 12 );
-	      float w = gl_width( this->say_string ); // scaled text width
-	      float h = gl_height(); // scaled text height
+			 if( valid ) 
+				{				  
+				  //fl_font( FL_HELVETICA, 12 );
+				  float w = gl_width( this->say_string.c_str() ); // scaled text width
+				  float h = gl_height(); // scaled text height
+				  
+				  GLdouble wx, wy, wz;
+				  GLint viewport[4];
+				  glGetIntegerv(GL_VIEWPORT, viewport);
+				  
+				  GLdouble modelview[16];
+				  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+				  
+				  GLdouble projection[16];	
+				  glGetDoublev(GL_PROJECTION_MATRIX, projection);
 	      
-	      GLdouble wx, wy, wz;
-	      GLint viewport[4];
-	      glGetIntegerv(GL_VIEWPORT, viewport);
+				  //get width and height in world coords
+				  gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+				  w = wx;
+				  gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+				  h = wy;
 	      
-	      GLdouble modelview[16];
-	      glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+				  // calculate speech bubble margin
+				  const float m = h/10;
 	      
-	      GLdouble projection[16];	
-	      glGetDoublev(GL_PROJECTION_MATRIX, projection);
+				  // draw inside of bubble
+				  PushColor( BUBBLE_FILL );
+				  glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
+				  glPolygonMode( GL_FRONT, GL_FILL );
+				  glEnable( GL_POLYGON_OFFSET_FILL );
+				  glPolygonOffset( 1.0, 1.0 );
+				  Gl::draw_octagon( w, h, m );
+				  glDisable( GL_POLYGON_OFFSET_FILL );
+				  PopColor();
 	      
-	      //get width and height in world coords
-	      gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-	      w = wx;
-	      gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-	      h = wy;
+				  // draw outline of bubble
+				  PushColor( BUBBLE_BORDER );
+				  glLineWidth( 1 );
+				  glEnable( GL_LINE_SMOOTH );
+				  glPolygonMode( GL_FRONT, GL_LINE );
+				  Gl::draw_octagon( w, h, m );
+				  glPopAttrib();
+				  PopColor();
 	      
-	      // calculate speech bubble margin
-	      const float m = h/10;
-	      
-	      // draw inside of bubble
-	      PushColor( BUBBLE_FILL );
-	      glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-	      glPolygonMode( GL_FRONT, GL_FILL );
-	      glEnable( GL_POLYGON_OFFSET_FILL );
-	      glPolygonOffset( 1.0, 1.0 );
-	      Gl::draw_octagon( w, h, m );
-	      glDisable( GL_POLYGON_OFFSET_FILL );
-	      PopColor();
-	      
-	      // draw outline of bubble
-	      PushColor( BUBBLE_BORDER );
-	      glLineWidth( 1 );
-	      glEnable( GL_LINE_SMOOTH );
-	      glPolygonMode( GL_FRONT, GL_LINE );
-	      Gl::draw_octagon( w, h, m );
-	      glPopAttrib();
-	      PopColor();
-	      
-	      PushColor( BUBBLE_TEXT );
-	      // draw text inside the bubble
-	      Gl::draw_string( m, 2.5*m, 0, this->say_string );
-	      PopColor();			
-	    }
-	}
+				  PushColor( BUBBLE_TEXT );
+				  // draw text inside the bubble
+				  Gl::draw_string( m, 2.5*m, 0, this->say_string.c_str() );
+				  PopColor();			
+				}
+		  }
       glPopMatrix();
     }
   
@@ -375,14 +375,14 @@ void Model::DrawStatus( Camera* cam )
     }
   
   //   extern GLuint glowTex;
-//   extern GLuint checkTex;
+  //   extern GLuint checkTex;
   
-//   if( parent == NULL )
-//  	 {
-//  		glBlendFunc(GL_SRC_COLOR, GL_ONE );	
-//  		DrawImage( glowTex, cam, 1.0 );
-//  		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-//  	 }
+  //   if( parent == NULL )
+  //  	 {
+  //  		glBlendFunc(GL_SRC_COLOR, GL_ONE );	
+  //  		DrawImage( glowTex, cam, 1.0 );
+  //  		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+  //  	 }
 }
 
 void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha, 
@@ -421,14 +421,14 @@ void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha,
   glBindTexture( GL_TEXTURE_2D, 0 );
   glDisable(GL_TEXTURE_2D);
 
-//   glPolygonMode( GL_FRONT, GL_LINE );
-//   glColor3f( 0,0,1 );
-//   glBegin(GL_QUADS);
-//   glVertex3f(-0.25f, 0, -0.25f );
-//   glVertex3f( 0.25f, 0, -0.25f );
-//   glVertex3f( 0.25f, 0,  0.25f );
-//   glVertex3f(-0.25f, 0,  0.25f );
-//   glEnd();
+  //   glPolygonMode( GL_FRONT, GL_LINE );
+  //   glColor3f( 0,0,1 );
+  //   glBegin(GL_QUADS);
+  //   glVertex3f(-0.25f, 0, -0.25f );
+  //   glVertex3f( 0.25f, 0, -0.25f );
+  //   glVertex3f( 0.25f, 0,  0.25f );
+  //   glVertex3f(-0.25f, 0,  0.25f );
+  //   glEnd();
 
   glPopMatrix();
 }

@@ -46,13 +46,13 @@ extern "C" int Init( Model* mod )
   robot->position = (ModelPosition*)mod;
 
   // subscribe to the ranger, which we use for navigating
-  robot->ranger = (ModelRanger*)mod->GetModel( "ranger:0" );
+  robot->ranger = (ModelRanger*)mod->GetUnusedModelOfType( "ranger" );
   assert( robot->ranger );
   
   // ask Stage to call into our ranger update function
   robot->ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, robot );
  
-  robot->fiducial = (ModelFiducial*)mod->GetModel( "fiducial:0" ) ;
+  robot->fiducial = (ModelFiducial*)mod->GetUnusedModelOfType( "fiducial" ) ;
   assert( robot->fiducial );
   robot->fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, robot );
 

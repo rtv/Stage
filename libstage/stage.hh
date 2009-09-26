@@ -218,7 +218,7 @@ namespace Stg
 	 /** Look up the color in the X11-style database. If the color is
 		  not found in the database, a cheerful red color will be used
 		  instead.  */
-	 Color( const char* name );	
+	 Color( const std::string& name );	
 	
 	 Color();
 	
@@ -649,15 +649,15 @@ namespace Stg
   protected:
 	 ModelPtrVec children;
     bool debug;
-    char* token;
+	 std::string token;
 	 pthread_mutex_t access_mutex; ///< Used by Lock() and Unlock() to prevent parallel access to this model
 
 	 void Load( Worldfile* wf, int section );
 	 void Save( Worldfile* wf, int section );
 	 
   public:	
-	 /** The maximum length of a Stage model identifier string */
-	 static const uint32_t TOKEN_MAX = 64;
+	 /* The maximum length of a Stage model identifier string */
+	 //static const uint32_t TOKEN_MAX = 64;
 	 	 
     /** get the children of the this element */
 	 ModelPtrVec& GetChildren(){ return children;}
@@ -676,10 +676,13 @@ namespace Stg
     virtual Pose GetGlobalPose();
 	 
     const char* Token()
-    { return token; }
+    { return token.c_str(); }
 	 
-    void SetToken( const char* str )
-    { token = strdup( str ); } // minor memory leak	 
+    //const std::string& Token()
+    //{ return token; }
+	 
+    void SetToken( const std::string& str )
+    { token = str; } 
 
 	 void Lock(){ pthread_mutex_lock( &access_mutex ); }	
 	 void Unlock(){ pthread_mutex_unlock( &access_mutex ); }
@@ -941,6 +944,8 @@ namespace Stg
   
     virtual void AddModel( Model* mod );
     virtual void RemoveModel( Model* mod );
+
+    void AddModelName( Model* mod, const std::string& name );
 		
     void AddPowerPack( PowerPack* pp );
     void RemovePowerPack( PowerPack* pp );
@@ -994,8 +999,8 @@ namespace Stg
   public:
     /** returns true when time to quit, false otherwise */
     static bool UpdateAll(); 
-		
-    World( const char* token = "MyWorld", 
+	 
+    World( const std::string& name = "MyWorld", 
 			  double ppm = DEFAULT_PPM );
 		
     virtual ~World();
@@ -1026,7 +1031,7 @@ namespace Stg
    
     /** Returns a pointer to the model identified by name, or NULL if
 		  nonexistent */
-    Model* GetModel( const char* name ) const;
+    Model* GetModel( const std::string& name ) const;
   
     /** Return the 3D bounding box of the world, in meters */
     const stg_bounds3d_t& GetExtent(){ return extent; };
@@ -1078,7 +1083,6 @@ namespace Stg
 	 
 	 /** draw the block in OpenGL as a solid single color */    
 	 void DrawSolid();
-    void Draw( Model* mod );  
 
 	 /** draw the projection of the block onto the z=0 plane	*/
     void DrawFootPrint(); 
@@ -1217,7 +1221,7 @@ namespace Stg
 	 /** Draw the projection of the block onto the z=0 plane. */
 	 void DrawFootPrint( const Geom &geom);
 
-    void LoadBitmap( Model* mod, const char* bitmapfile, Worldfile *wf );
+    void LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile *wf );
     void LoadBlock( Model* mod, Worldfile* wf, int entity );
 	 
 	 void Rasterize( uint8_t* data, 
@@ -1781,7 +1785,7 @@ namespace Stg
 	 } rastervis;
 	 
 	 bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
-	 char* say_string;   ///< if non-null, this string is displayed in the GUI 
+	 std::string say_string;   ///< if non-null, this string is displayed in the GUI 
 		
 	 stg_bool_t stall;
 	 int subs;    ///< the number of subscriptions to this model
@@ -1815,7 +1819,7 @@ namespace Stg
 	 const std::string type;
 	 /** The index into the world's vector of event queues. Initially
 		  -1, to indicate that it is not on a list yet. */
-	 int event_queue_num; 
+	 unsigned int event_queue_num; 
 	 bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
 	 Velocity velocity;
 	 stg_watts_t watts;///< power consumed by this model
@@ -1838,6 +1842,10 @@ namespace Stg
 	 const std::string& GetModelType() const {return type;}	 
 	 std::string GetSayString(){return std::string(say_string);}
 	 
+    /** Returns a pointer to the model identified by name, or NULL if
+		  it doesn't exist in this world. */
+    Model* GetChild( const std::string& name ) const;
+
 	 class Visibility
 	 {
 	 public:
@@ -2011,7 +2019,7 @@ namespace Stg
 	 /** Destructor */
 	 virtual ~Model();
 	
-	 void Say( const char* str );
+	 void Say( const std::string& str );
 	 
 	 /** Attach a user supplied visualization to a model. */
 	 void AddVisualizer( Visualizer* custom_visual, bool on_by_default );
@@ -2094,9 +2102,6 @@ namespace Stg
 	 /** Returns a pointer to this model's parent model, or NULL if this
 		  model has no parent */
 	 Model* Parent() const { return this->parent; }
-
-	 Model* GetModel( const char* name ) const;
-	 //int GuiMask(){ return this->gui_mask; };
 
 	 /** Returns a pointer to the world that contains this model */
 	 World* GetWorld() const { return this->world; }

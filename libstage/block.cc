@@ -43,7 +43,7 @@ Block::Block(  Model* mod,
     mpts(),
     pt_count(0),
     pts(),
-    color(0),
+    color(),
     inherit_color(true),
     rendered_cells( new CellPtrVec ), 
     candidate_cells( new CellPtrVec ) 
@@ -408,39 +408,6 @@ void Block::DrawFootPrint()
   glEnd();
 }
 
-void Block::Draw( Model* mod )
-{
-  // draw filled color polygons
-  Color col = inherit_color ? mod->color : color;
-  
-  col.Print( "block color" );
-
-  mod->PushColor( col );
-  glEnable(GL_POLYGON_OFFSET_FILL);
-  glPolygonOffset(1.0, 1.0);
-  DrawSides();
-  DrawTop();
-  glDisable(GL_POLYGON_OFFSET_FILL);
-  
-  // draw the block outline in a darker version of the same color
-  mod->PushColor( Color( col.r/2.0, col.g/2.0, col.b/2.0, col.a ));
-  
-  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-  glDepthMask(GL_FALSE);
-  DrawTop();
-  DrawSides();
-  glDepthMask(GL_TRUE);
-  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
- 
-  if( glow > 0.0 )
-	 {
-		
-	 }
- 
-  mod->PopColor();
-  mod->PopColor();
-}
-
 void Block::DrawSolid()
 {
   DrawSides();
@@ -468,8 +435,8 @@ void Block::Load( Worldfile* wf, int entity )
   local_z.min = wf->ReadTupleLength( entity, "z", 0, 0.0 );
   local_z.max = wf->ReadTupleLength( entity, "z", 1, 1.0 );
   
-  const char* colorstr = wf->ReadString( entity, "color", NULL );
-  if( colorstr )
+  const std::string& colorstr = wf->ReadString( entity, "color", "" );
+  if( colorstr != "" )
     {
       color = Color( colorstr );
       inherit_color = false;

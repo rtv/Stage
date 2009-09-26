@@ -163,23 +163,23 @@ bool Worldfile::Load(const char *filename)
       DumpProperties();
       return false;
     }
-
+  
   // Work out what the length units are
-  const char *unit = ReadString(0, "unit_length", "m");
-  if (strcmp(unit, "m") == 0)
+  const std::string& unitl = ReadString(0, "unit_length", "m");
+  if(  unitl == "m")
     this->unit_length = 1.0;
-  else if (strcmp(unit, "cm") == 0)
+  else if( unitl == "cm")
     this->unit_length = 0.01;
-  else if (strcmp(unit, "mm") == 0)
+  else if( unitl == "mm") 
     this->unit_length = 0.001;
-
+  
   // Work out what the angle units are
-  unit = ReadString(0, "unit_angle", "degrees");
-  if (strcmp(unit, "degrees") == 0)
+  const std::string& unita = ReadString(0, "unit_angle", "degrees");
+  if(  unita == "degrees")
     this->unit_angle = M_PI / 180;
-  else if (strcmp(unit, "radians") == 0)
+  else if( unita == "radians")
     this->unit_angle = 1;
-
+  
   return true;
 }
 
@@ -1376,7 +1376,7 @@ void Worldfile::DumpProperties()
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a string
-const char *Worldfile::ReadString(int entity, const char *name, const char *value)
+const std::string Worldfile::ReadString(int entity, const char *name, const std::string& value)
 {
   CProperty* property = GetProperty(entity, name);
   if (property == NULL )
@@ -1387,12 +1387,12 @@ const char *Worldfile::ReadString(int entity, const char *name, const char *valu
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a string
-void Worldfile::WriteString(int entity, const char *name, const char *value)
+void Worldfile::WriteString(int entity, const char *name, const std::string &value)
 {
   CProperty* property = GetProperty(entity, name);
   if( property == NULL )
     return;
-  SetPropertyValue(property, 0, value);
+  SetPropertyValue(property, 0, value.c_str());
 }
 
 

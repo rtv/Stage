@@ -54,21 +54,21 @@ void Model::Load()
   if( wf->PropertyExists( wf_entity, "debug" ) )
     {
       PRINT_WARN2( "debug property specified for model %d  %s\n",
-						 wf_entity, this->token );
+						 wf_entity, this->token.c_str() );
       this->debug = wf->ReadInt( wf_entity, "debug", this->debug );
     }
   
   if( wf->PropertyExists( wf_entity, "name" ) )
     {
-      char *name = (char*)wf->ReadString(wf_entity, "name", NULL );
-      if( name )
+      const std::string& name = wf->ReadString(wf_entity, "name", token );
+      if( name != token )
 		  {
 			 //printf( "adding name %s to %s\n", name, this->token );
-			 this->token = strdup( name );
-			 world->AddModel( this ); // add this name to the world's table
+			 this->token = name ;
+			 world->AddModelName( this, name ); // add this name to the world's table
 		  }
       else
-		  PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token );
+		  PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token.c_str() );
     }
   
   //PRINT_WARN1( "%s::Load", token );
@@ -104,23 +104,22 @@ void Model::Load()
   if( wf->PropertyExists( wf_entity, "color" ))
 	 {      
 		Color col( 1,0,0 ); // red;
-		const char* colorstr = wf->ReadString( wf_entity, "color", NULL );
-		if( colorstr )
-					{
-						if( strcmp( colorstr, "random" ) == 0 )
-							col = Color( drand48(), drand48(), drand48() );
-						else
-							col = Color( colorstr );
-					}
-				this->SetColor( col );
-			}      
-		
-
+		const std::string& colorstr = wf->ReadString( wf_entity, "color", "" );
+		if( colorstr != "" )
+		  {
+			 if( colorstr == "random" )
+				col = Color( drand48(), drand48(), drand48() );
+			 else
+				col = Color( colorstr );
+		  }
+		this->SetColor( col );
+	 }        
+  
   if( wf->PropertyExists( wf_entity, "color_rgba" ))
     {      
       if (wf->GetProperty(wf_entity,"color_rgba")->values.size() < 4)
       {
-        PRINT_ERR1( "model %s color_rgba requires 4 values\n", this->token );
+        PRINT_ERR1( "model %s color_rgba requires 4 values\n", this->token.c_str() );
       }
       else
       {
@@ -145,8 +144,9 @@ void Model::Load()
   
   if( wf->PropertyExists( wf_entity, "bitmap" ) )
     {
-      const char* bitmapfile = wf->ReadString( wf_entity, "bitmap", NULL );
-      assert( bitmapfile );
+      const std::string bitmapfile = wf->ReadString( wf_entity, "bitmap", "" );
+		if( bitmapfile == "" )
+		  PRINT_WARN1( "model %s specified empty bitmap filename\n", token.c_str() );
 		
       if( has_default_block )
 		  {
@@ -206,13 +206,13 @@ void Model::Load()
   
   if( CProperty* ctrlp = wf->GetProperty( wf_entity, "ctrl" ) )
 	 {
-		for( int index=0; index < ctrlp->values.size(); index++ )
+		for( unsigned int index=0; index < ctrlp->values.size(); index++ )
 		  {
 			 
 			 const char* lib = wf->GetPropertyValue( ctrlp, index );
 			 
 			 if( !lib )
-				printf( "Error - NULL library name specified for model %s\n", token );
+				printf( "Error - NULL library name specified for model %s\n", token.c_str() );
 			 else
 				LoadControllerModule( lib );
 		  }
@@ -220,7 +220,7 @@ void Model::Load()
   
   
   if( wf->PropertyExists( wf_entity, "say" ))
-    this->Say( wf->ReadString(wf_entity, "say", NULL ));
+    this->Say( wf->ReadString(wf_entity, "say", "" ));
   
 	trail_length = wf->ReadInt( wf_entity, "trail_length", trail_length );
 	trail_interval = wf->ReadInt( wf_entity, "trail_interval", trail_interval );
@@ -234,9 +234,9 @@ void Model::Load()
   MapWithChildren();
 
   if( this->debug )
-    printf( "Model \"%s\" is in debug mode\n", token );
+    printf( "Model \"%s\" is in debug mode\n", token.c_str() );
 
-  PRINT_DEBUG1( "Model \"%s\" loading complete", token );
+  PRINT_DEBUG1( "Model \"%s\" loading complete", token.c_str() );
 }
 
 
@@ -340,9 +340,6 @@ void Model::LoadControllerModule( const char* lib )
     }
   
   fflush(stdout);
-
-  // as we now have a controller, the world needs to call our update function
-  //StartUpdating();
 }
 
  

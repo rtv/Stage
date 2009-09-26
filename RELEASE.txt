@@ -1,3 +1,25 @@
+Version 3.2.0
+-------------
+
+This minor release fixes many bugs, has some performance improvements
+and some significant internal and API changes, including:
+
+* introduced an internal event queue, so that there is no longer any
+  atomic world update interval. Each model can have its update
+  interval specified individually
+* worldfile syntax checking improved: poses and sizes are checked for
+  correct vector length
+* pkg-config file for libstage now contains correct dependencies,
+  making it much easier to build things using libstage
+* controllers can now take an argument string from the worldfile and
+  command line
+* better powerpack model 
+* cleaned up namespace quite a bit - controllers and simulators using
+  libstage may need some simple tweaks, but the design is cleaner and
+  more consistent. 
+
+Richard Vaughan (rtv) vaughan@sfu.ca - 2009.9.12
+
 Version 3.1.0
 -------------
 

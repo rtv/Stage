@@ -47,12 +47,12 @@ extern "C" int Init( Model* mod )
   robot->position = (ModelPosition*)mod;
   assert( robot->ranger );
   
-  robot->ranger = (ModelRanger*)mod->GetModel( "ranger:0" );
+  robot->ranger = (ModelRanger*)mod->GetUnusedModelOfType( "ranger" );
   assert( robot->ranger );
   // ask Stage to call into our ranger update function whenever the ranger is updated
   robot->ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, robot );
   
-  robot->fiducial = (ModelFiducial*)mod->GetModel( "fiducial:0" ) ;
+  robot->fiducial = (ModelFiducial*)mod->GetUnusedModelOfType( "fiducial" ) ;
   assert( robot->fiducial );
   // ask Stage to call into our fiducial update function whenever the fiducial is updated
   robot->fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, robot );

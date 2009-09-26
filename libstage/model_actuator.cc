@@ -87,28 +87,25 @@ ModelActuator::~ModelActuator( void )
 
 void ModelActuator::Load( void )
 {
-	Model::Load();
-	InitialPose = GetPose();
-
-	// load steering mode
-	if( wf->PropertyExists( wf_entity, "type" ) )
-	{
-		const char* type_str =
-			wf->ReadString( wf_entity, "type", NULL );
-
-		if( type_str )
-		{
-			if( strcmp( type_str, "linear" ) == 0 )
-				actuator_type = TYPE_LINEAR;
-			else if( strcmp( type_str, "rotational" ) == 0 )
-				actuator_type = TYPE_ROTATIONAL;
-			else
+  Model::Load();
+  InitialPose = GetPose();
+  
+  // load steering mode
+  if( wf->PropertyExists( wf_entity, "type" ) )
+	 {
+		const std::string&  type_str =
+		  wf->ReadString( wf_entity, "type", "linear" );
+		
+		if( type_str == "linear" )
+		  actuator_type = TYPE_LINEAR;
+		else if ( type_str ==  "rotational" )
+		  actuator_type = TYPE_ROTATIONAL;
+		else
 			{
-				PRINT_ERR1( "invalid actuator type specified: \"%s\" - should be one of: \"linear\" or \"rotational\". Using \"linear\" as default.", type_str );
+			  PRINT_ERR1( "invalid actuator type specified: \"%s\" - should be one of: \"linear\" or \"rotational\". Using \"linear\" as default.", type_str.c_str() );
 			}
-		}
-	}
-
+	 }
+    
 	if (actuator_type == TYPE_LINEAR)
 	{
 		// if we are a linear actuator find the axis we operate in

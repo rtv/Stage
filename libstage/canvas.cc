@@ -66,7 +66,7 @@ Canvas::Canvas( WorldGui* world,
   starty( -1 ),
   selected_models(),
   last_selection( NULL ),
-  interval( 20 ), // msec between redraws
+  interval( 40 ), // msec between redraws
   // initialize Option objects
   //  showBlinken( "Blinkenlights", "show_blinkenlights", "", true, world ), 
   showBBoxes( "Debug/Bounding boxes", "show_boundingboxes", "^b", false, world ),

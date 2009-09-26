@@ -493,7 +493,7 @@ public:
 };
 
 // Stage calls this when the model starts up
-extern "C" int Init( Model* mod, char* str )
+extern "C" int Init( Model* mod, CtrlArgs* args )
 {  
 #if 1		
   // example using the model rasterizer

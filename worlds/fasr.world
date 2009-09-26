@@ -28,7 +28,7 @@ window
   show_data 1
   show_flags 1
 
-  interval 50
+  # interval 50
 )
 
 # load an environment bitmap

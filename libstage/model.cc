@@ -274,7 +274,7 @@ Model::Model( World* world,
     props(),
 	 rastervis(),
     rebuild_displaylist(true),
-    say_string(NULL),
+    say_string(),
     stall(false),	 
     subs(0),
     thread_safe( false ),
@@ -282,7 +282,7 @@ Model::Model( World* world,
 	 trail_length(50),
 	 trail_interval(5),
     type(type),	
-	 event_queue_num( -1 ),
+	 event_queue_num( 0 ),
     used(false),
     velocity(),
     watts(0.0),
@@ -296,10 +296,10 @@ Model::Model( World* world,
   //assert( modelsbyid );
   assert( world );
   
-  PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %d ",
-		world->Token(), 
-		parent ? parent->Token() : "(null)",
-		type );
+  PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %s \n",
+					 world->Token(), 
+					 parent ? parent->Token() : "(null)",
+					 type.c_str() );
   
   modelsbyid[id] = this;
   
@@ -310,7 +310,7 @@ Model::Model( World* world,
   else
     {
       world->AddChild( this );
-      // top level models are draggable in the GUI
+      // top level models are draggable in the GUI by default
       gui.move = true;
     }
 
@@ -323,7 +323,7 @@ Model::Model( World* world,
 
   AddVisualizer( &rastervis, false );
 
-  PRINT_DEBUG2( "finished model %s @ %p", this->token, this );
+  PRINT_DEBUG2( "finished model %s @ %p", this->Token(), this );
 }
 
 Model::~Model( void )
@@ -355,8 +355,7 @@ void Model::Init()
 
   // find the queue for update events: zero if thread safe, else we
   // ask the world to assign us to a queue  
-  if( event_queue_num < 1 ) 		
-	 event_queue_num = thread_safe ? world->GetEventQueue( this ) : 0;
+  event_queue_num = thread_safe ? world->GetEventQueue( this ) : 0;
   
   CallCallbacks( &hooks.init );
 
@@ -366,7 +365,7 @@ void Model::Init()
 
 void Model::InitRecursive()
 {
-  // init children first
+  // must init children first
   FOR_EACH( it, children )
 	 (*it)->InitRecursive();
 
@@ -541,11 +540,9 @@ Pose Model::GlobalToLocal( const Pose& pose ) const
 }
 
 
-void Model::Say( const char* str )
+void Model::Say( const std::string& str )
 {
-  if( say_string )
-    free( say_string );
-  say_string = strdup( str );
+  say_string = str;
 }
 
 // returns true iff model [testmod] is an antecedent of this model
@@ -673,12 +670,12 @@ void Model::Print( char* prefix ) const
     printf( "%s model ", prefix );
   else
     printf( "Model ");
-
+  
   printf( "%s:%s\n", 
-	  //			id, 
-	  world->Token(), 
-	  token );
-
+			 //			id, 
+			 world->Token(), 
+			 token.c_str() );
+  
   FOR_EACH( it, children )
     (*it)->Print( prefix );
 }
@@ -689,8 +686,8 @@ const char* Model::PrintWithPose() const
 
   static char txt[256];
   snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",  
-	   token, 
-	   gpose.x, gpose.y, gpose.z, gpose.a  );
+			  token.c_str(), 
+			  gpose.x, gpose.y, gpose.z, gpose.a  );
 
   return txt;
 }
@@ -975,22 +972,6 @@ stg_kg_t Model::GetMassOfChildren()
   return( GetTotalMass() - mass);
 }
 
-Model* Model::GetModel( const char* modelname ) const
-{
-  // construct the full model name and look it up
-  char* buf = new char[TOKEN_MAX];
-  snprintf( buf, TOKEN_MAX, "%s.%s", this->token, modelname );
-
-  Model* mod = world->GetModel( buf );
-
-  if( mod == NULL )
-    PRINT_WARN1( "Model %s not found", buf );
-
-  delete[] buf;
-
-  return mod;
-}
-
 void Model::UnMap()
 {
   blockgroup.UnMap();
@@ -1046,6 +1027,23 @@ void Model::SetFriction( double friction )
   this->friction = friction;
   CallCallbacks( &this->friction );
 }
+
+Model* Model::GetChild( const std::string& modelname ) const
+{
+  // construct the full model name and look it up
+  //char* buf = new char[TOKEN_MAX];
+  //snprintf( buf, TOKEN_MAX, "%s.%s", this->token, modelname );
+  
+  std::string fullname = token + "." + modelname;
+  
+  Model* mod = world->GetModel( fullname );
+  
+  if( mod == NULL )
+	 PRINT_WARN1( "Model %s not found", fullname.c_str() );
+  
+   return mod;
+}
+
 
 //***************************************************************
 // Raster data visualizer

@@ -85,12 +85,12 @@ namespace Stg {
 
 	 // Check for unused properties and print warnings
   public: bool WarnUnused();
-
+	 
 	 // Read a string
-  public: const char *ReadString(int entity, const char *name, const char *value);
+  public: const std::string ReadString(int entity, const char* name, const std::string& value);
 
 	 // Write a string
-  public: void WriteString(int entity, const char *name, const char *value);
+  public: void WriteString(int entity, const char *name, const std::string& value );
 
 	 // Read an integer 
   public: int ReadInt(int entity, const char *name, int value);

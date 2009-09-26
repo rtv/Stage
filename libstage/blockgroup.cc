@@ -248,19 +248,19 @@ void BlockGroup::LoadBlock( Model* mod, Worldfile* wf, int entity )
   AppendBlock( new Block( mod, wf, entity ));
 }				
   
-void BlockGroup::LoadBitmap( Model* mod, const char* bitmapfile, Worldfile* wf )
+void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile* wf )
 {
   PRINT_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile );
   
   char full[_POSIX_PATH_MAX];
   
   if( bitmapfile[0] == '/' )
-	strcpy( full, bitmapfile );
+	 strncpy( full, bitmapfile.c_str(), _POSIX_PATH_MAX );
   else
 	{
 	  char *tmp = strdup(wf->filename.c_str());
 	  snprintf( full, _POSIX_PATH_MAX,
-				"%s/%s",  dirname(tmp), bitmapfile );
+					"%s/%s",  dirname(tmp), bitmapfile.c_str() );
 	  free(tmp);
 	}
   

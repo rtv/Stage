@@ -119,24 +119,20 @@ void ModelPosition::Load( void )
   // load steering mode
   if( wf->PropertyExists( wf_entity, "drive" ) )
     {
-      const char* mode_str =  
-		  wf->ReadString( wf_entity, "drive", NULL );
+      const std::string& mode_str =  
+		  wf->ReadString( wf_entity, "drive", "diff" );
 		
-		if( mode_str )
-		  {
-			 if( strcmp( mode_str, "diff" ) == 0 )
-				drive_mode = DRIVE_DIFFERENTIAL;
-			 else if( strcmp( mode_str, "omni" ) == 0 )
-				drive_mode = DRIVE_OMNI;
-			 else if( strcmp( mode_str, "car" ) == 0 )
-				drive_mode = DRIVE_CAR;
-			 else
-				{
-				  PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\" or \"car\". Using \"diff\" as default.", mode_str );	      
-				}
-		  }
-    }      
-  
+		if( mode_str == "diff" )
+		  drive_mode = DRIVE_DIFFERENTIAL;
+		else if( mode_str == "omni" )
+		  drive_mode = DRIVE_OMNI;
+		else if( mode_str == "car" )
+		  drive_mode = DRIVE_CAR;
+		else
+		  PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\" or \"car\". Using \"diff\" as default.", mode_str.c_str() );	      
+		
+	 }
+ 
   // load odometry if specified
   if( wf->PropertyExists( wf_entity, "odom" ) )
     {
@@ -144,7 +140,7 @@ void ModelPosition::Load( void )
 						 " but this property is no longer available."
 						 " Use localization_origin instead. See the position"
 						 " entry in the manual or src/model_position.c for details.", 
-						 this->token );
+						 this->token.c_str() );
     }
 
   // set the starting pose as my initial odom position. This could be
@@ -190,24 +186,18 @@ void ModelPosition::Load( void )
   // choose a localization model
   if( wf->PropertyExists( wf_entity, "localization" ) )
     {
-      const char* loc_str =  
-		  wf->ReadString( wf_entity, "localization", NULL );
-
-      if( loc_str )
-		  {
-			 if( strcmp( loc_str, "gps" ) == 0 )
-				localization_mode = LOCALIZATION_GPS;
-			 else if( strcmp( loc_str, "odom" ) == 0 )
-				localization_mode = LOCALIZATION_ODOM;
-			 else
-				PRINT_ERR2( "unrecognized localization mode \"%s\" for model \"%s\"."
-								" Valid choices are \"gps\" and \"odom\".", 
-								loc_str, this->token );
-		  }
-      else
-		  PRINT_ERR1( "no localization mode string specified for model \"%s\"", 
-						  this->token );
-    }
+      const std::string& loc_str =  
+		  wf->ReadString( wf_entity, "localization", "gps" );
+		
+		if( loc_str == "gps" )
+		  localization_mode = LOCALIZATION_GPS;
+		else if( loc_str == "odom" ) 
+		  localization_mode = LOCALIZATION_ODOM;
+		else
+		  PRINT_ERR2( "unrecognized localization mode \"%s\" for model \"%s\"."
+						  " Valid choices are \"gps\" and \"odom\".", 
+						  loc_str.c_str(), this->token.c_str() );
+	 }
 }
 
 void ModelPosition::Update( void  )
@@ -400,7 +390,7 @@ void ModelPosition::Update( void  )
 		
     default:
       PRINT_ERR2( "unknown localization mode %d for model %s\n",
-						localization_mode, this->token );
+						localization_mode, this->token.c_str() );
       break;
     }
 
@@ -654,9 +644,8 @@ ModelPosition::Waypoint::Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t 
 
 
 ModelPosition::Waypoint::Waypoint()
+  : pose(), color()
 { 
-  pose = Pose( 0,0,0,0 ); 
-  color = 0; 
 };
 
 

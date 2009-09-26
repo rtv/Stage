@@ -97,7 +97,7 @@ bool World::quit_all = false;
 std::set<World*> World::world_set;
 std::string World::ctrlargs;
 
-World::World( const char* token, 
+World::World( const std::string& name, 
 				  double ppm )
   : 
   // private
@@ -148,7 +148,7 @@ World::World( const char* token,
 
 World::~World( void )
 {
-  PRINT_DEBUG2( "destroying world %d %s", id, token );
+  PRINT_DEBUG2( "destroying world %d %s", id, token.c_str() );
   if( wf ) delete wf;
   World::world_set.erase( this );
 }
@@ -310,7 +310,7 @@ void World::Load( const char* worldfile_path )
 
   int entity = 0;
   
-  this->token = (char*)
+  this->token = 
     wf->ReadString( entity, "name", this->token );
   
   this->quit_time = 
@@ -391,7 +391,7 @@ void World::UnLoad()
 
   // todo - clean up regions & superregions?
 	
-  token = NULL;
+  token = "[unloaded]";
 }
 
 bool World::PastQuitTime() 
@@ -549,10 +549,16 @@ bool World::Update()
   return false;
 }
 
-void World::AddModel( Model*  mod  )
+void World::AddModel( Model*  mod )
 {
   models_by_name[mod->token] = mod;
 }
+
+void World::AddModelName( Model* mod, const std::string& name )
+{
+  models_by_name[name] = mod;
+}
+
 
 unsigned int World::GetEventQueue( Model* mod )
 {
@@ -561,16 +567,16 @@ unsigned int World::GetEventQueue( Model* mod )
   return( (random() % worker_threads) + 1);
 }
 
-Model* World::GetModel( const char* name ) const
+Model* World::GetModel( const std::string& name ) const
 {
-  PRINT_DEBUG1( "looking up model name %s in models_by_name", name );
+  PRINT_DEBUG1( "looking up model name %s in models_by_name", name.c_str() );
 
   std::map<std::string,Model*>::const_iterator it = 
     models_by_name.find( name );
 	
   if( it == models_by_name.end() )
     {
-      PRINT_WARN1( "lookup of model name %s: no matching name", name );
+      PRINT_WARN1( "lookup of model name %s: no matching name", name.c_str() );
       return NULL;
     }
   else
