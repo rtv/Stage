@@ -272,15 +272,13 @@ PowerPack::DissipationVis::DissipationVis( stg_meters_t width,
 	 rows(height/cellsize),
 	 width(width),
 	 height(height),
-	 cells( new stg_joules_t[columns*rows] ),
+	 cells( columns*rows ),
 	 peak_value(0),
 	 cellsize(cellsize)
 { /* nothing to do */ }
 
 PowerPack::DissipationVis::~DissipationVis()
 {
-  if( cells )
-	 delete[] cells;
 }
 
 void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
@@ -325,15 +323,15 @@ void PowerPack::DissipationVis::Accumulate( stg_meters_t x,
   // don't accumulate if we're outside the grid
   if( ix < 0 || ix >= columns || iy < 0 || iy >= rows )
 		return;
-
-  stg_joules_t* j = cells + (iy*columns + ix );
-  
-  (*j) += amount;
-  if( (*j) > peak_value )
+	
+  stg_joules_t& j = cells[ ix + (iy*columns) ];
+	
+  j += amount;
+  if( j > peak_value )
 	 {
-		peak_value  = (*j);
-		
-		if( peak_value > global_peak_value )
-		  global_peak_value  = peak_value;
+		 peak_value  = j;
+		 
+		 if( peak_value > global_peak_value )
+			 global_peak_value  = peak_value;
 	 }
 }

@@ -1498,10 +1498,12 @@ namespace Stg
 	 private:
 		unsigned int columns, rows;
 		stg_meters_t width, height;
-		stg_joules_t* cells;
-		stg_joules_t peak_value;
-		double cellsize;
-		
+		 
+		 std::vector<stg_joules_t> cells;
+		 
+		 stg_joules_t peak_value;
+		 double cellsize;
+		 
 		static stg_joules_t global_peak_value; 
 
 	 public:
