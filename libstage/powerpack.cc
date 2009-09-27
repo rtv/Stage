@@ -323,7 +323,7 @@ void PowerPack::DissipationVis::Accumulate( stg_meters_t x,
   unsigned int iy = (y+height/2.0)/cellsize;
 
   // don't accumulate if we're outside the grid
-  if( ix < 0 || ix >= columns || iy < 0 && iy >= rows )
+  if( ix < 0 || ix >= columns || iy < 0 || iy >= rows )
 		return;
 
   stg_joules_t* j = cells + (iy*columns + ix );
