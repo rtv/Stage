@@ -64,7 +64,7 @@ void InterfaceFiducial::Publish( void )
 	std::vector<ModelFiducial::Fiducial>& fids = 
 		((ModelFiducial*)mod)->GetFiducials();	
 	
-	pdata.fiducials_count = count;
+	pdata.fiducials_count = fids.size();
 
 	if( pdata.fiducials_count > 0 )
     {
