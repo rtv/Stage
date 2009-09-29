@@ -806,7 +806,6 @@ namespace Stg
 	 /** Remove a model from the set of models with non-zero fiducials, if it exists. */
 	 void FiducialErase( Model* mod )
 	 { 
-		//EraseAll<Model*,ModelPtrVec&>( mod, models_with_fiducials );
 		EraseAll( mod, models_with_fiducials );
 	 }
 
@@ -1113,8 +1112,7 @@ namespace Stg
 	 
 	 std::vector<stg_point_t>& Points()
     { return pts; };	         
-	 
-    inline void AddToCellArray( CellPtrVec* blocks );
+	     
     inline void RemoveFromCellArray( CellPtrVec* blocks );
     inline void GenerateCandidateCells();  
 
@@ -1149,7 +1147,10 @@ namespace Stg
     /** z extent in global coordinates */
     Bounds global_z;	 
     bool mapped;
-	 
+		
+		/** record the list entries for the cells where this block is rendered */
+		std::vector< std::list<Block*>::iterator > list_entries;
+
     /** record the cells into which this block has been rendered to
 		  UnMapping them very quickly. */  
 	 CellPtrVec * rendered_cells;
@@ -1676,7 +1677,7 @@ namespace Stg
 	 /** A list of callback functions can be attached to any
 		  address. When Model::CallCallbacks( void*) is called, the
 		  callbacks are called.*/
-	 std::map<void*, std::set<stg_cb_t> > callbacks;
+	 static std::map<void*, std::set<stg_cb_t> > callbacks;
 		
 	 /** Default color of the model's blocks.*/
 	 Color color;
@@ -1690,10 +1691,7 @@ namespace Stg
 	 std::list<Visualizer*> cv_list;
 	 std::list<Flag*> flag_list;
 	 Geom geom;
-	 Pose global_pose;
-	 bool gpose_dirty; ///< set this to indicate that global pose may have changed  
-	 /** Controls our appearance and functionality in the GUI, if used */
-	 
+
 	 /** Records model state and functionality in the GUI, if used */
 	 class GuiState
 	 {
@@ -1709,8 +1707,6 @@ namespace Stg
 	 
 	 bool has_default_block;
   
-	 /* hooks for attaching special callback functions (not used as
-		 variables - we just need unique addresses for them.) */  
 	 /* Hooks for attaching special callback functions (not used as
 		 variables - we just need unique addresses for them.) */  
 	 class CallbackHooks
@@ -1751,11 +1747,10 @@ namespace Stg
 	 /** list of powerpacks that this model is currently charging,
 		  initially NULL. */
 	 std::list<PowerPack*> pps_charging;
-
-	 /** GData datalist can contain arbitrary named data items. Can be used
-		  by derived model types to store properties, and for user code
-		  to associate arbitrary items with a model. */
-	 //GData* props;
+		
+		/** Props map can contain arbitrary named data items. Can be used
+				by derived model types to store properties, and for user code
+				to associate arbitrary items with a model. */
 	 std::map<std::string,const void*> props;
 
 	 /** Visualize the most recent rasterization operation performed by this model */
@@ -1886,7 +1881,7 @@ namespace Stg
 
   protected:
 
-	 /// Register an Option for pickup by the GUI
+		/** Register an Option for pickup by the GUI. */
 	 void RegisterOption( Option* opt );
 
 	 void AppendTouchingModels( ModelPtrSet& touchers );

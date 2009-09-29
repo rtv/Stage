@@ -10,12 +10,12 @@ resolution 0.02
 
 speedup -1 # as fast as possible
 
-paused 1
+paused 0
 
 # threads may help or hurt performance depending on your worldfile, machine and load
 # threads 7
 
-# quit_time 60
+quit_time 60
 
 # configure the GUI window
 window

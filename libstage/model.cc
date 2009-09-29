@@ -143,6 +143,7 @@ using namespace Stg;
 uint32_t Model::count = 0;
 std::map<stg_id_t,Model*> Model::modelsbyid;
 std::map<std::string, creator_t> Model::name_map;
+std::map<void*, std::set<Model::stg_cb_t> > Model::callbacks;
 
 void Size::Load( Worldfile* wf, int section, const char* keyword )
 {
@@ -251,7 +252,7 @@ Model::Model( World* world,
   blockgroup(),
   blocks_dl(0),
   boundary(false),
-  callbacks(),
+	//  callbacks(),
   color( 1,0,0 ), // red
   data_fresh(false),
   disabled(false),
@@ -350,9 +351,10 @@ void Model::Init()
   // init is called after the model is loaded
   blockgroup.CalcSize();
 
-  UnMap(); // remove any old cruft rendered during startup
+	// remove any old cruft rendered during startup
+  UnMap(); 
   Map();
-
+	
   // find the queue for update events: zero if thread safe, else we
   // ask the world to assign us to a queue  
   event_queue_num = thread_safe ? world->GetEventQueue( this ) : 0;

@@ -209,40 +209,48 @@ void Block::RemoveFromCellArray( CellPtrVec *cells )
 	 {
 		Cell* cell = *it;
 		
-		// remove me from the cell
-		EraseAll( this, cell->blocks );		
+		// TODO - make sure this block should logically always be in the
+		// cell, then we can use this optimisation
+		
+		// the vector usually has only 1 element, so this is a useful speedup
+		// std::vector<Block*>& v = cell->blocks;
+		// if( v.size() == 1 )
+		// 	{
+		// 		assert( v[0] == this );				
+		// 		v.clear();
+		// 	}
+		// else
+			// remove me from the cell
+			EraseAll( this, cell->blocks );		
+			// avoid the function call of EraseAll()
+			//v.erase( std::remove( v.begin(), v.end(), this ), v.end() ); 
+
 		--cell->region->count;
 		--cell->region->superregion->count;  	 	 
-	 }
-}
-
-void Block::AddToCellArray( CellPtrVec *cells )
-{
-  FOR_EACH( it, *cells )
-	 {
-		Cell* cell = *it;
-
-		// record that I am rendered in this cell
-		rendered_cells->push_back( cell ); 
-		
-		// store me in the cell
-		cell->blocks.push_back( this );   
-		++cell->region->count;
-		++cell->region->superregion->count;		
 	 }
 }
 
 void Block::SwitchToTestedCells()
 {
   RemoveFromCellArray( rendered_cells );
-  AddToCellArray( candidate_cells );
+
+	// render the block into each of the candidate cells
+  FOR_EACH( it, *candidate_cells )
+	 {
+		Cell* cell = *it;
+		// record that I am rendered in this cell
+		rendered_cells->push_back( cell ); 
+		// store me in the cell
+		cell->blocks.push_back( this );   
+		//list_entries.push_back( cell->blocks.insert( cell->blocks.begin(), this ) );
+		++cell->region->count;
+		++cell->region->superregion->count;		
+	 }
 
   // switch current and candidate cell pointers
   CellPtrVec *tmp = rendered_cells;
   rendered_cells = candidate_cells;
   candidate_cells = tmp;
-
-  // XXXX todo 
 
   mapped = true;
 }

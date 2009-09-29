@@ -40,8 +40,8 @@ namespace Stg
   
   private:
 	 Region* region;  
-	 std::vector<Block*> blocks;
-  
+		std::vector<Block*> blocks;		
+
   public:
 	 Cell( Region* reg ) 
 		: region( reg ),
