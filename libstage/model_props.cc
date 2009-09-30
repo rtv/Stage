@@ -21,11 +21,15 @@ const void* Model::GetProperty( const char* key ) const
 		PRINT_WARN1( "Requested non-existent model core property \"%s\"", key );
 		return NULL;
 	}
-
+	
 	// otherwise it may be an arbitrary named property
-	//return g_datalist_get_data( (GData**)&this->props, key ); // cast to discard const
-
-	return props.find(key)->second;
+	const std::map< std::string,const void* >::const_iterator& it 
+	  = props.find( key );
+	
+	if( it != props.end() )
+	  return it->second;
+	else
+	  return NULL;
 }
 
 int Model::SetProperty( const char* key,
