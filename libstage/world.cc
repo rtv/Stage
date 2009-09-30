@@ -385,8 +385,15 @@ void World::Load( const char* worldfile_path )
   
   // call all controller init functions
   FOR_EACH( it, models )
-	 (*it)->InitControllers();
-  
+	 {
+		// this is a hack and shouldn't be necessary
+		(*it)->UnMap();
+		(*it)->Map();
+		// to here
+
+		(*it)->InitControllers();
+	 }
+
   putchar( '\n' );
 }
 
