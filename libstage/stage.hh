@@ -786,10 +786,16 @@ namespace Stg
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
 
+	 /** pointers to the models in the world, indexed by id */
+	 //std::map<unsigned int, Model*> models_by_id;
+	 
+	 /** Pointers to all the models in this world. */
+	 std::set<Model*> models;
+
 	 /** pointers to the models that make up the world, indexed by name. */
 	 std::map<std::string, Model*> models_by_name; 		
 
-	 /** pointers to the models that make up the world, indexed by worldfiel entry index */
+	 /** pointers to the models that make up the world, indexed by worldfile entry index */
 	 std::map<int,Model*> models_by_wfentity;
 		
 	 /** Keep a list of all models with detectable fiducials. This
@@ -1840,7 +1846,7 @@ namespace Stg
 	 std::string GetSayString(){return std::string(say_string);}
 	 
     /** Returns a pointer to the model identified by name, or NULL if
-		  it doesn't exist in this world. */
+		  it doesn't exist in this model. */
     Model* GetChild( const std::string& name ) const;
 
 	 class Visibility
@@ -2044,9 +2050,12 @@ namespace Stg
 	 /** save the state of the model to the current world file */
 	 virtual void Save();
 	
-	 /** Should be called after all models are loaded, to do any last-minute setup */
-	 void Init();	
-	 void InitRecursive();
+	 // Should be called after all models are loaded, to do any last-minute setup */
+	 //void Init();	
+	 //void InitRecursive();
+
+	 /** Call Init() for all attached controllers. */
+	 void InitControllers();
 
 	 void AddFlag(  Flag* flag );
 	 void RemoveFlag( Flag* flag );

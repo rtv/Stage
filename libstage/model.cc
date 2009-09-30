@@ -343,36 +343,12 @@ Model::~Model( void )
   world->RemoveModel( this );
 }
 
-// this should be called after all models have loaded from the
-// worldfile - it's a chance to do any setup now that all models are
-// in existence
-void Model::Init()
-{
-  // init is called after the model is loaded
-  blockgroup.CalcSize();
 
-	// remove any old cruft rendered during startup
-  UnMap(); 
-  Map();
-	
-  // find the queue for update events: zero if thread safe, else we
-  // ask the world to assign us to a queue  
-  event_queue_num = thread_safe ? world->GetEventQueue( this ) : 0;
-  
+void Model::InitControllers()
+{
   CallCallbacks( &hooks.init );
+}
 
-  if( alwayson )
-	 Subscribe();
-}  
-
-void Model::InitRecursive()
-{
-  // must init children first
-  FOR_EACH( it, children )
-	 (*it)->InitRecursive();
-
-  Init();
-}  
 
 void Model::AddFlag( Flag* flag )
 {

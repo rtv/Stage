@@ -226,13 +226,17 @@ void Model::Load()
 	trail_interval = wf->ReadInt( wf_entity, "trail_interval", trail_interval );
 
 	this->alwayson = wf->ReadInt( wf_entity, "alwayson",  alwayson );
-
+	if( alwayson )
+	 Subscribe();
+	
   // call any type-specific load callbacks
   this->CallCallbacks( &hooks.load );
-  
-  
+    
+  // we may well have changed blocks or geometry
+  blockgroup.CalcSize();
+  UnMapWithChildren();
   MapWithChildren();
-
+	 
   if( this->debug )
     printf( "Model \"%s\" is in debug mode\n", token.c_str() );
 

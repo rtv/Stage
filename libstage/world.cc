@@ -103,6 +103,7 @@ World::World( const std::string& name,
   // private
   destroy( false ),
   dirty( true ),
+  models(),
   models_by_name(),
   models_with_fiducials(),
   ppm( ppm ), // raytrace resolution
@@ -216,8 +217,20 @@ void* World::update_thread_entry( std::pair<World*,int> *thread_info )
   return NULL;
 }
 
+void World::AddModel( Model*  mod )
+{
+  models.insert( mod );
+  models_by_name[mod->token] = mod;
+}
+
+void World::AddModelName( Model* mod, const std::string& name )
+{
+  models_by_name[name] = mod;
+}
+
 void World::RemoveModel( Model* mod )
 {
+  models.erase( mod );
   models_by_name.erase( mod->token );
 }
 
@@ -289,7 +302,7 @@ void World::LoadModel( Worldfile* wf, int entity )
   // configure the model with properties from the world file
   mod->Load(wf, entity );
  
-  // record the model we created for this worlfile entry
+  // record the model we created for this worldfile entry
   models_by_wfentity[entity] = mod;
 }
   
@@ -370,8 +383,9 @@ void World::Load( const char* worldfile_path )
 	LoadModel( wf, entity );
     }
   
-  FOR_EACH( it, children )
-    (*it)->InitRecursive();
+  // call all controller init functions
+  FOR_EACH( it, models )
+	 (*it)->InitControllers();
   
   putchar( '\n' );
 }
@@ -549,15 +563,6 @@ bool World::Update()
   return false;
 }
 
-void World::AddModel( Model*  mod )
-{
-  models_by_name[mod->token] = mod;
-}
-
-void World::AddModelName( Model* mod, const std::string& name )
-{
-  models_by_name[name] = mod;
-}
 
 
 unsigned int World::GetEventQueue( Model* mod )

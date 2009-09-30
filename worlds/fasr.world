@@ -46,7 +46,7 @@ zone
   color "green"
   pose [ -7.000 -7.000 0 0 ]
   name "source"
-  ctrl "source"
+  ctrl "dynamic"
 )
 
 zone
