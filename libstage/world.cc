@@ -490,7 +490,7 @@ void World::ConsumeQueue( unsigned int queue_num )
   if( queue.empty() )
     return;
   
-  printf( "event queue len %d\n", (int)queue.size() );
+  //printf( "event queue len %d\n", (int)queue.size() );
 
   // update everything on the event queue that happens at this time or earlier
   Event ev( queue.top() );    
