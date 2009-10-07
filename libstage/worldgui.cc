@@ -571,20 +571,16 @@ void WorldGui::Start()
 
 void WorldGui::SetTimeouts()
 {
-  if( speedup > 0.0 )
-	 {
-		//puts( "removing idle" );
-		Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );	  
-		Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback, this );	  
-		Fl::add_timeout( (sim_interval/1e6) / speedup, (Fl_Timeout_Handler)UpdateCallback, this );
-	 }  
-  else
-	 { // does no harm if they're not installed already
-		//puts( "removing timeout" );
-		Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback, this );	  
-		Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );	  
-		Fl::add_idle( (Fl_Timeout_Handler)UpdateCallback, this );
-	 }
+  // remove the old callback, wherever it was
+  Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );	  
+  Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback, this );	  
+  
+  if( speedup > 0.0 ) 
+	 // attempt some multiple of real time	 
+	 Fl::add_timeout( (sim_interval/1e6) / speedup, (Fl_Timeout_Handler)UpdateCallback, this );
+  else 
+	 // go as fast as possible
+	 Fl::add_idle( (Fl_Timeout_Handler)UpdateCallback, this );
 }
 
 void WorldGui::Stop()
@@ -606,7 +602,8 @@ void WorldGui::pauseCb( Fl_Widget* w, WorldGui* wg )
 
 void WorldGui::onceCb( Fl_Widget* w, WorldGui* wg )
 {
-  wg->paused = true;
+  //wg->paused = true;
+  wg->Stop();
 
   // run exactly once
   wg->World::Update();
