@@ -1404,7 +1404,6 @@ namespace Stg
 	 uint64_t timing_interval;
 
     // static callback functions
-    static void UpdateCallback( WorldGui* wg );
     static void windowCb( Fl_Widget* w, WorldGui* wg );	
     static void fileLoadCb( Fl_Widget* w, WorldGui* wg );
     static void fileSaveCb( Fl_Widget* w, WorldGui* wg );

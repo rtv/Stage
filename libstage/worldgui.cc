@@ -338,7 +338,7 @@ bool WorldGui::Save( const char* filename )
   return true;
 }
 
-void WorldGui::UpdateCallback( WorldGui* world )
+static void UpdateCallback( WorldGui* world )
 {	
   world->Update();
 }
@@ -542,14 +542,18 @@ void WorldGui::realtimeCb( Fl_Widget* w, WorldGui* wg )
 {
   //puts( "real time" );
   wg->speedup = 1.0;
-  wg->SetTimeouts();
+
+  if( !wg->paused ) 
+	 wg->SetTimeouts();
 }
 
 void WorldGui::fasttimeCb( Fl_Widget* w, WorldGui* wg )
 {
   //puts( "fast time" );
   wg->speedup = -1;
-  wg->SetTimeouts();  
+ 
+  if( !wg->paused ) 
+	 wg->SetTimeouts();  
 }
 
 void WorldGui::Start()
@@ -570,15 +574,15 @@ void WorldGui::SetTimeouts()
   if( speedup > 0.0 )
 	 {
 		//puts( "removing idle" );
-		Fl::remove_idle( (Fl_Timeout_Handler)WorldGui::UpdateCallback, this );	  
-		Fl::remove_timeout( (Fl_Timeout_Handler)WorldGui::UpdateCallback, this );	  
+		Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );	  
+		Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback, this );	  
 		Fl::add_timeout( (sim_interval/1e6) / speedup, (Fl_Timeout_Handler)UpdateCallback, this );
 	 }  
   else
-	 {
+	 { // does no harm if they're not installed already
 		//puts( "removing timeout" );
-		Fl::remove_timeout( (Fl_Timeout_Handler)WorldGui::UpdateCallback, this );	  
-		Fl::remove_idle( (Fl_Timeout_Handler)WorldGui::UpdateCallback, this );	  
+		Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback, this );	  
+		Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );	  
 		Fl::add_idle( (Fl_Timeout_Handler)UpdateCallback, this );
 	 }
 }
@@ -588,7 +592,8 @@ void WorldGui::Stop()
   World::Stop();
   
   Fl::remove_timeout( (Fl_Timeout_Handler)Canvas::TimerCallback );	
-  Fl::remove_timeout( (Fl_Timeout_Handler)WorldGui::UpdateCallback );	
+  Fl::remove_timeout( (Fl_Timeout_Handler)UpdateCallback );	
+  Fl::remove_idle( (Fl_Timeout_Handler)UpdateCallback, this );	  
 
   // drawn 'cos we cancelled the timeout
   canvas->redraw(); // in case something happened that will never be
