@@ -463,10 +463,10 @@ int World::RemoveUpdateCallback( stg_world_callback_t cb,
   FOR_EACH( it, cb_list )
     {
       if( (*it) == p )
-	{
-	  cb_list.erase( it );		
-	  break;
-	}
+		  {
+			 cb_list.erase( it );		
+			 break;
+		  }
     }
   
   // return the number of callbacks now in the list. Useful for
@@ -490,6 +490,8 @@ void World::ConsumeQueue( unsigned int queue_num )
   if( queue.empty() )
     return;
   
+  printf( "event queue len %d\n", (int)queue.size() );
+
   // update everything on the event queue that happens at this time or earlier
   Event ev( queue.top() );    
   while(  ev.time <= sim_time ) 
@@ -663,7 +665,6 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   double globy( r.origin.y * ppm );
 	
   // record our starting position
-  //const stg_point_t start( glob.x, glob.y );
   const double startx( globx );
   const double starty( globy );
   
