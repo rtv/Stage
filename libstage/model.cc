@@ -674,14 +674,19 @@ void Model::Startup( void )
 {
   //printf( "Startup model %s\n", this->token );  
   //printf( "model %s using queue %d\n", token, event_queue_num );
-  
-  // put my first events in the world's queue
-  world->Enqueue( event_queue_num, World::Event::UPDATE, interval, this );
-  world->Enqueue( 0, World::Event::POSE, interval_pose, this );
-  if( FindPowerPack() )
-	 world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
-  
 
+  // if we're thread safe, we can use an event queue >0  
+  if( thread_safe )
+	 event_queue_num = world->GetEventQueue( this );
+
+  // put my first update request in the world's queue
+  world->Enqueue( event_queue_num, interval, this );
+
+  world->active_velocity.insert( this );
+  
+  if( FindPowerPack() )
+	 world->active_energy.insert( this );
+  
   CallCallbacks( &hooks.startup );
 }
 
@@ -690,6 +695,9 @@ void Model::Shutdown( void )
   //printf( "Shutdown model %s\n", this->token );
   CallCallbacks( &hooks.shutdown );
 
+  world->active_energy.erase( this );
+  world->active_velocity.erase( this );
+  
   // allows data visualizations to be cleared.
   NeedRedraw();
 }
@@ -699,7 +707,7 @@ void Model::Update( void )
 { 
   CallCallbacks( &hooks.update );  
   last_update = world->sim_time;  
-  world->Enqueue( event_queue_num, World::Event::UPDATE, interval, this );
+  world->Enqueue( event_queue_num, interval, this );
 }
 
 
@@ -819,7 +827,7 @@ void Model::UpdateCharge()
 	 }
   
   // set up the next event
-  world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
+  //world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
 }
 
 void Model::CommitTestedPose()
@@ -856,6 +864,9 @@ Model* Model::ConditionalMove( const Pose& newpose )
 
 void Model::UpdatePose( void )
 {
+  if( velocity.IsZero() )
+	 return;
+
   if( disabled )
     return;
   
@@ -881,8 +892,6 @@ void Model::UpdatePose( void )
 		if( trail.size() > trail_length )
 		  trail.pop_front();
 	 }	            
-  
-  world->Enqueue( 0, World::Event::POSE, interval_pose, this );
 }
 
 Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const

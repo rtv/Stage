@@ -499,12 +499,8 @@ void World::ConsumeQueue( unsigned int queue_num )
       // printf( "@ %llu next event <%s %llu %s>\n",  sim_time, ev.TypeStr( ev.type ), ev.time, ev.mod->Token() ); 
       queue.pop();      
 		
-      // only update events are allowed in queues other than zero
-      if( queue_num > 0 && ev.type != Event::UPDATE )
-		  PRINT_WARN1( "event type %d in async queue", queue_num );
-      
 		if( ev.mod->subs > 0 ) // no subscriptions means the event is discarded
-		  ev.Execute(); // simulate the event
+		  ev.mod->Update(); // update the model
 
       // and move to the next
       ev = queue.top();
@@ -520,17 +516,11 @@ bool World::Update()
   if( PastQuitTime() ) 
 	 return true;		
   
-  if( event_pending_count < 1 )
-    {
-      PRINT_WARN( "event queue(s) empty." );
-      return false;
-    }
-
   sim_time += sim_interval; 
 
   // handle the zeroth queue synchronously in the main thread
   ConsumeQueue( 0 );
-  
+    
   // handle all the remaining queues asynchronously in worker threads
   if( worker_threads > 0 )
     {
@@ -560,7 +550,13 @@ bool World::Update()
   
   // world callbacks
   CallUpdateCallbacks();
-    
+  
+  FOR_EACH( it, active_velocity )
+	 (*it)->UpdatePose();
+
+  FOR_EACH( it, active_energy )
+	 (*it)->UpdateCharge();
+  
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
     {
       printf( "\r[Stage: %s]", ClockString().c_str() );
@@ -1061,12 +1057,11 @@ void World::Log( Model* mod )
   //LogEntry::Print();
 }
 
-void World::Enqueue( unsigned int queue_num, Event::type_t type, stg_usec_t delay, Model* mod )
+void World::Enqueue( unsigned int queue_num, stg_usec_t delay, Model* mod )
 {
   //printf( "enqueue at %llu %p %s\n", sim_time + delay, mod, mod->Token() );
   
-  event_queues[queue_num].push( Event( type, sim_time + delay, mod ) );
-  ++event_pending_count;
+  event_queues[queue_num].push( Event( sim_time + delay, mod ) );
 }
 
 
@@ -1077,50 +1072,18 @@ bool World::Event::operator<( const Event& other ) const
   if( time > other.time )
     return true;
   
-  if( time == other.time ) 
-    {		
-      if( type > other.type )
-		  return true;
+//   if( time == other.time ) 
+//     {		
+//       if( type > other.type )
+// 		  return true;
 
-      if( type == other.type ) 
-		  {		
-			 if( mod < other.mod ) // tends to do children first
-				return true;
-		  }
-    }
+//       if( type == other.type ) 
+// 		  {		
+// 			 if( mod < other.mod ) // tends to do children first
+// 				return true;
+// 		  }
+//     }
 	    
   return false;
 }
 
-
-const char* World::Event::TypeStr( type_t type )
-{
-  switch( type )
-    {
-    case POSE: return "POSE";
-    case ENERGY: return "ENERGY";
-    case UPDATE: return "UPDATE";
-    default: return "<unknown>";
-    }
-}
-
-void World::Event::Execute()
-{
-  switch( type )
-    {
-    case UPDATE:				  
-      mod->Update();
-      break;
-      
-    case POSE:				  
-      mod->UpdatePose();
-      break;
-      
-    case ENERGY:				  
-      mod->UpdateCharge();
-      break;
-      
-    default:
-      PRINT_WARN1( "unknown event type %d", type );
-    }
-}

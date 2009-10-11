@@ -969,27 +969,25 @@ namespace Stg
     class Event
     {
     public:
-      typedef enum {POSE, ENERGY, UPDATE } type_t;
       
-      Event( type_t type, stg_usec_t time, Model* mod ) 
-		  : type(type), time(time), mod(mod) {}
+      Event( stg_usec_t time, Model* mod ) 
+		  : time(time), mod(mod) {}
       
-      type_t type;
       stg_usec_t time; // time that event occurs
       Model* mod; // model to update
       
       /** Update the model appropriately, based on the event type. */
-      void Execute();
-      static const char* TypeStr( type_t type );
+      //void Execute();
+      //static const char* TypeStr( type_t type );
       bool operator<( const Event& other ) const;
       bool operator==( const Event& other ) const;
     };
     
 	 std::vector<std::priority_queue<Event> > event_queues;
-	 void Enqueue( unsigned int queue_num, Event::type_t type, stg_usec_t delay, Model* mod );
+	 void Enqueue( unsigned int queue_num, stg_usec_t delay, Model* mod );
 	 
-	 /** The sim time of the next event in the queue. */
-	 uint32_t event_pending_count;	 
+	 std::set<Model*> active_energy;
+	 std::set<Model*> active_velocity;
 
 	 /** The amount of simulated time to run for each call to Update() */
 	 stg_usec_t sim_interval;
