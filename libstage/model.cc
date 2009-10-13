@@ -904,6 +904,7 @@ void Model::UpdatePose( void )
   SetStall( ConditionalMove( pose + p ) );
 }
 
+
 void Model::UpdateTrail()
 {
 	trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 					
@@ -1009,9 +1010,6 @@ PowerPack* Model::FindPowerPack() const
 
 void Model::RegisterOption( Option* opt )
 { 
-  //drawOptions.push_back( opt ); 
-  
-  //if( world->IsGUI() )
   world->RegisterOption( opt );
 }
 
@@ -1036,8 +1034,6 @@ void Model::SetFriction( double friction )
 Model* Model::GetChild( const std::string& modelname ) const
 {
   // construct the full model name and look it up
-  //char* buf = new char[TOKEN_MAX];
-  //snprintf( buf, TOKEN_MAX, "%s.%s", this->token, modelname );
   
   std::string fullname = token + "." + modelname;
   
@@ -1074,7 +1070,6 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
   mod->PushColor( 1,0,0,0.5 );
 
   Gl::pose_inverse_shift( mod->GetGlobalPose() );
-
   
   if( pts.size() > 0 )
 	 {
@@ -1182,10 +1177,12 @@ void Model::RasterVis::ClearPts()
 }
 
 
-Model::Flag::Flag( Color color, double size )
+// define static member
+int Model::Flag::displaylist( 0 );
+
+Model::Flag::Flag( Color color, double size ) 
+	: color(color), size(size)
 { 
-	this->color = color;
-	this->size = size;
 }
 
 Model::Flag* Model::Flag::Nibble( double chunk )
@@ -1205,17 +1202,29 @@ Model::Flag* Model::Flag::Nibble( double chunk )
 
 void Model::Flag::Draw(  GLUquadric* quadric )
 {
-  glColor4f( color.r, color.g, color.b, color.a );
-    
-  glEnable(GL_POLYGON_OFFSET_FILL);
-  glPolygonOffset(1.0, 1.0);
-  gluQuadricDrawStyle( quadric, GLU_FILL );
-  gluSphere( quadric, size/2.0, 4,2  );
-  glDisable(GL_POLYGON_OFFSET_FILL);
-  
-  // draw the edges darker version of the same color
-  glColor4f( color.r/2.0, color.g/2.0, color.b/2.0, color.a/2.0 );
-    
-  gluQuadricDrawStyle( quadric, GLU_LINE );
-  gluSphere( quadric, size/2.0, 4,2 );
+	if( displaylist == 0 )
+		{
+			displaylist = glGenLists(1);
+			assert( displaylist > 0 );
+			
+			glNewList( displaylist, GL_COMPILE );	
+			
+			glColor4f( color.r, color.g, color.b, color.a );
+			
+			glEnable(GL_POLYGON_OFFSET_FILL);
+			glPolygonOffset(1.0, 1.0);
+			gluQuadricDrawStyle( quadric, GLU_FILL );
+			gluSphere( quadric, size/2.0, 4,2  );
+			glDisable(GL_POLYGON_OFFSET_FILL);
+			
+			// draw the edges darker version of the same color
+			glColor4f( color.r/2.0, color.g/2.0, color.b/2.0, color.a/2.0 );
+			
+			gluQuadricDrawStyle( quadric, GLU_LINE );
+			gluSphere( quadric, size/2.0, 4,2 );
+
+			glEndList();
+		}
+
+	glCallList( displaylist );
 }

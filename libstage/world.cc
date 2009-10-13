@@ -556,11 +556,11 @@ bool World::Update()
 
   FOR_EACH( it, active_energy )
 	 (*it)->UpdateCharge();
-	
+  
 	if( Model::trail_length > 0 && updates % Model::trail_interval == 0 )
 		FOR_EACH( it, active_velocity )
-			(*it)->UpdateTrail();
-	
+				(*it)->UpdateTrail();
+
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
     {
       printf( "\r[Stage: %s]", ClockString().c_str() );
@@ -571,8 +571,6 @@ bool World::Update()
     
   return false;
 }
-
-
 
 unsigned int World::GetEventQueue( Model* mod )
 {

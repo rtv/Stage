@@ -1667,6 +1667,7 @@ namespace Stg
 	 public:
 		Color color;
 		double size;
+		static int displaylist;
 		
 		Flag( Color color, double size );
 		Flag* Nibble( double portion );

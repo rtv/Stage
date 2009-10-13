@@ -128,9 +128,7 @@ void ModelBlobfinder::ModelBlobfinder::AddColor( Color col )
 /** Stop tracking blobs with this color */
 void ModelBlobfinder::RemoveColor( Color col )
 {
-	for( std::vector<Color>::iterator it = colors.begin();
-			 it != colors.end();
-			 ++it )
+	FOR_EACH( it, colors )
 		{
 			if( (*it) ==  col  )
 				it = colors.erase(it);

@@ -5,15 +5,10 @@
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02
 
-interval_sim 100  # milliseconds per update step
-interval_real 0 # real-time milliseconds per update step
-
 include "pioneer.inc"
 include "irobot.inc"
 include "map.inc"
 include "sick.inc"
-
-gui_disable 0
 
 window
 ( 
@@ -61,12 +56,6 @@ define trickedoutpioneer pioneer2dx
 
   fiducial( range_max 8 range_max_id 5 ) 
 
-  blobfinder( 
-        channel_count 6 
-        channels [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
-		  alwayson 1
-    )
-
   fiducial_return 17
   gripper_return 0
 
@@ -81,6 +70,12 @@ trickedoutpioneer
   pose [-10.071 3.186 0 -2.333]
 
   gripper( pose [0.23 0.000 -0.20 0.000] color "gray" )
+
+  blobfinder( 
+        colors_count 6 
+        colors [ "red" "blue" "green" "cyan" "yellow" "magenta" ]  
+		  alwayson 1
+    )
 )
 
 trickedoutpioneer

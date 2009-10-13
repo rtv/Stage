@@ -263,19 +263,17 @@ void ModelRanger::Update( void )
 	 return;
 
   // raytrace new range data for all sensors
-  for( std::vector<Sensor>::iterator it( sensors.begin() );
-		 it != sensors.end();
-		 ++it )
+	FOR_EACH( it, sensors )
     {
-		Sensor& s = *it;
-		
+			Sensor& s = *it;
+			
       // TODO - reinstate multi-ray rangers
       //for( int r=0; r<sensors[t].ray_count; r++ )
       //{	  
       stg_raytrace_result_t ray = Raytrace( s.pose,
-														  s.bounds_range.max,
-														  ranger_match,
-														  NULL );
+																						s.bounds_range.max,
+																						ranger_match,
+																						NULL );
 			
       s.range = std::max( ray.range, s.bounds_range.min );
     }   
