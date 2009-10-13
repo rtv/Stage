@@ -980,7 +980,7 @@ namespace Stg
       //void Execute();
       //static const char* TypeStr( type_t type );
       bool operator<( const Event& other ) const;
-      bool operator==( const Event& other ) const;
+			//      bool operator==( const Event& other ) const;
     };
     
 	 std::vector<std::priority_queue<Event> > event_queues;
@@ -1724,6 +1724,21 @@ namespace Stg
 		int startup;
 		int update;
 		int update_done;
+
+		 /* optimization: record the number of attached callbacks for pose
+				and velocity, so we can cheaply determine whether we need to
+				call a callback for SetPose() and SetVelocity(), which happen
+				very frequently. */
+		 int attached_velocity;
+		 int attached_pose;
+		 int attached_update;
+		 
+		 CallbackHooks() : 
+			 attached_velocity(0), 
+			 attached_pose(0), 
+			 attached_update(0) 
+		 {}
+
 	 } hooks;
   
 	 /** unique process-wide identifier for this model */
@@ -1818,11 +1833,17 @@ namespace Stg
 	 //stg_model_type_t type;  
 	 const std::string type;
 	 /** The index into the world's vector of event queues. Initially
-		  -1, to indicate that it is not on a list yet. */
-	 unsigned int event_queue_num; 
-	 bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
-	 Velocity velocity;
-	 stg_watts_t watts;///< power consumed by this model
+			 -1, to indicate that it is not on a list yet. */
+		unsigned int event_queue_num; 
+		bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
+		Velocity velocity;
+		
+		/** respond to velocity state by changing position. Initially
+				false, set to true by subclass, worldfile, or explcicit call
+				to Model::VelocityEnable(). */
+		bool velocity_enable;
+		
+		stg_watts_t watts;///< power consumed by this model
 	 
 	 /** If >0, this model can transfer energy to models that have
 		  watts_take >0 */
@@ -2141,6 +2162,12 @@ namespace Stg
 	 /** set a model's velocity in its parent's coordinate system */
 	 void SetVelocity(  const Velocity& vel );
 	
+		/** Enable update of model pose according to velocity state */
+		void VelocityEnable();
+
+		/** Disable update of model pose according to velocity state */
+		void VelocityDisable();
+
 	 /** set a model's pose in its parent's coordinate system */
 	 void SetPose(  const Pose& pose );
 	
@@ -2325,14 +2352,15 @@ namespace Stg
 	 Pose LocalToGlobal( const Pose& pose ) const
 	 {  
 		return( ( GetGlobalPose() + geom.pose ) + pose );
-    }
+	 }
 		
-	 // 	 /** Return the 3d point in world coordinates of a 3d point
-	 // 		  specified in the model's local coordinate system */
-	 // 	 stg_point3_t LocalToGlobal( const stg_point3_t local ) const;
+		/** Fill an array of global pixels from an array of local points. */
+		void LocalToPixels( const std::vector<stg_point_t>& local,
+												std::vector<stg_point_int_t>& pixels) const;
+		
 	 /** Return the 2d point in world coordinates of a 2d point
 		  specified in the model's local coordinate system */
-	 stg_point_t LocalToGlobal( const stg_point_t& pt) const;
+	 stg_point_t LocalToGlobal( const stg_point_t& pt) const;		
 
 	 /** returns the first descendent of this model that is unsubscribed
 		  and has the type indicated by the string */
@@ -2919,7 +2947,7 @@ namespace Stg
 
 	 /** Set the current pose estimate.*/
 	 void SetOdom( Pose odom );
-
+		
 	 /** Sets the control_mode to CONTROL_VELOCITY and sets
 		  the goal velocity. */
 	 void SetSpeed( double x, double y, double a );

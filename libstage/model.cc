@@ -66,6 +66,14 @@
     that if the model hits an obstacle, its velocity will be set to
     zero.
  
+		- velocity_enable int (defaults to 0)\n Most models ignore their
+		velocity state. This saves on processing time since most models
+		never have their velocity set to anything but zero. Some
+		subclasses (e.g. ModelPosition) change this default as they are
+		expecting to move. Users can specify a non-zero value here to
+		enable velocity control of this model. This achieves the same as
+		calling Model::VelocityEnable()
+
     - color <string>\n specify the color of the object using a color
     name from the X11 database (rgb.txt)
 
@@ -285,8 +293,9 @@ Model::Model( World* world,
     type(type),	
 	 event_queue_num( 0 ),
     used(false),
-    velocity(),
-    watts(0.0),
+	velocity(),
+	velocity_enable( false ),
+	watts(0.0),
 	 watts_give(0.0),
 	 watts_take(0.0),	 
     wf(NULL),
@@ -517,7 +526,6 @@ Pose Model::GlobalToLocal( const Pose& pose ) const
   return org;
 }
 
-
 void Model::Say( const std::string& str )
 {
   say_string = str;
@@ -569,6 +577,16 @@ stg_point_t Model::LocalToGlobal( const stg_point_t& pt) const
    Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
    return stg_point_t( gpose.x, gpose.y );
  }
+
+
+void Model::LocalToPixels( const std::vector<stg_point_t>& local,
+													 std::vector<stg_point_int_t>& global) const
+{
+	FOR_EACH( it, local )
+		global.push_back( world->MetersToPixels( LocalToGlobal( *it )));
+}
+
+
 
 void Model::MapWithChildren()
 {
@@ -681,9 +699,10 @@ void Model::Startup( void )
 
   // put my first update request in the world's queue
   world->Enqueue( event_queue_num, interval, this );
-
-  world->active_velocity.insert( this );
-  
+	
+	if( velocity_enable )
+		world->active_velocity.insert( this );
+	
   if( FindPowerPack() )
 	 world->active_energy.insert( this );
   
@@ -705,7 +724,9 @@ void Model::Shutdown( void )
 
 void Model::Update( void )
 { 
-  CallCallbacks( &hooks.update );  
+	if( hooks.attached_update )
+		CallCallbacks( &hooks.update );  
+
   last_update = world->sim_time;  
   world->Enqueue( event_queue_num, interval, this );
 }
@@ -715,11 +736,7 @@ stg_meters_t Model::ModelHeight() const
 {	
   stg_meters_t m_child = 0; //max size of any child
   FOR_EACH( it, children )
-    {
-      stg_meters_t tmp_h = (*it)->ModelHeight();
-      if( tmp_h > m_child )
-		  m_child = tmp_h;
-    }
+		m_child = std::max( m_child, (*it)->ModelHeight() );
 	
   //height of model + max( child height )
   return geom.size.z + m_child;
@@ -825,9 +842,6 @@ void Model::UpdateCharge()
 				}
 		  }
 	 }
-  
-  // set up the next event
-  //world->Enqueue( 0, World::Event::ENERGY, interval_energy, this );
 }
 
 void Model::CommitTestedPose()

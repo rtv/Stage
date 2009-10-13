@@ -90,7 +90,6 @@ define charge_station model
 
 )
 
-
 charge_station(  pose [ 7.940 -2.000 0 0 ] )
 charge_station(  pose [ 7.940 -3.000 0 0 ] )
 charge_station(  pose [ 7.940 -4.000 0 0 ] )
@@ -102,7 +101,7 @@ define autorob pioneer2dx
  joules 100000 
  joules_capacity 400000 
  fiducial_return 0
- charging_bump( fiducial( range_max 3 pose [ 0 0 -0.100 0 ] ) )
+ charging_bump( fiducial( range_max 5 pose [ 0 0 -0.100 0 ] ) )
 )
 
 autorob( pose [7.062 -1.563 0 152.684] joules 300000 name "r0" )

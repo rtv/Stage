@@ -48,10 +48,14 @@ namespace Stg
 		  blocks() 
 	 { 
 	 }  
-  
-	 inline void RemoveBlock( Block* b );
-	 inline void AddBlock( Block* b );  
-	 inline void AddBlockNoRecord( Block* b );
+		
+		// virtual void RemoveBlock( Block* b )
+		// {
+		// 	EraseAll( b, blocks );		
+		// }
+
+		//inline void AddBlock( Block* b );  
+		//inline void AddBlockNoRecord( Block* b );
   };  
 
   class Region

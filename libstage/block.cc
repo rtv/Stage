@@ -143,12 +143,12 @@ void Block::AppendTouchingModels( ModelPtrSet& touchers )
 {
   // for every cell we are rendered into
   FOR_EACH( cell_it, *rendered_cells )
-	// for every block rendered into that cell
-	FOR_EACH( block_it, (*cell_it)->blocks )
-	{
-	  if( !mod->IsRelated( (*block_it)->mod ))
-		touchers.insert( (*block_it)->mod );
-	}
+		// for every block rendered into that cell
+		FOR_EACH( block_it, (*cell_it)->blocks )
+		{
+			if( !mod->IsRelated( (*block_it)->mod ))
+				touchers.insert( (*block_it)->mod );
+		}
 }
 
 Model* Block::TestCollision()
@@ -208,30 +208,40 @@ void Block::RemoveFromCellArray( CellPtrVec *cells )
   FOR_EACH( it, *cells )
 	 {
 		Cell* cell = *it;
-		
-		// TODO - make sure this block should logically always be in the
-		// cell, then we can use this optimisation
-		
-		// the vector usually has only 1 element, so this is a useful speedup
-		// std::vector<Block*>& v = cell->blocks;
-		// if( v.size() == 1 )
-		// 	{
-		// 		assert( v[0] == this );				
-		// 		v.clear();
-		// 	}
-		// else
-			// remove me from the cell
-			EraseAll( this, cell->blocks );		
-			// avoid the function call of EraseAll()
-			//v.erase( std::remove( v.begin(), v.end(), this ), v.end() ); 
 
+		// this special-case test is faster for worlds with simple models, which
+		// are the ones we want to be really fast. It's a small extra cost
+		// for worlds with several models in each cell. It gives a 5%
+		// speed increase in fasr.world.
+		if( (cell->blocks.size() == 1) &&
+		 		(cell->blocks[0] == this) ) // special, common case
+		 	{
+		 		cell->blocks.clear(); // cheap
+		 	}
+		else // the general but relatively expensive case
+			{
+				EraseAll( this, cell->blocks );		
+			}
+		
 		--cell->region->count;
 		--cell->region->superregion->count;  	 	 
 	 }
+
+	//printf( "%d %d %.2f\n", count1, countmore, ((float)count1)/float(countmore));
 }
 
 void Block::SwitchToTestedCells()
 {
+	// todo: 
+
+	// 1. find the set of cells in rendered but not candidate and remove
+	// them
+
+	// 2. find the set of cells in candidate but not rendered and insert
+	// them
+
+	// .. and see if that is faster
+
   RemoveFromCellArray( rendered_cells );
 
 	// render the block into each of the candidate cells
@@ -242,7 +252,7 @@ void Block::SwitchToTestedCells()
 		rendered_cells->push_back( cell ); 
 		// store me in the cell
 		cell->blocks.push_back( this );   
-		//list_entries.push_back( cell->blocks.insert( cell->blocks.begin(), this ) );
+
 		++cell->region->count;
 		++cell->region->superregion->count;		
 	 }
@@ -283,11 +293,13 @@ void Block::GenerateCandidateCells()
 	}
   
   // convert the mpts in model coords into global pixel coords
-  gpts.resize(pt_count);
-  
-  for( unsigned int i=0; i<pt_count; i++ )
-	gpts[i] = mod->world->MetersToPixels( mod->LocalToGlobal( mpts[i] ));
-  
+  //gpts.resize(pt_count);
+  //for( unsigned int i=0; i<pt_count; i++ )
+	//gpts[i] = mod->world->MetersToPixels(  mod->LocalToGlobal( mpts[i] ));
+	
+	gpts.clear();
+	mod->LocalToPixels( mpts, gpts );
+ 
   for( unsigned int i=0; i<pt_count; i++ )
 	mod->world->ForEachCellInLine( gpts[i], 
 								   gpts[(i+1)%pt_count], 

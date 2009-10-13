@@ -198,7 +198,9 @@ void Model::Load()
 	  this->SetVelocity( vel );
 	  //StartUpdating();
 	}
-
+	
+	velocity_enable = wf->ReadInt( wf_entity, "enable_velocity", velocity_enable );
+	
   if( wf->PropertyExists( wf_entity, "friction" ))
   {
     this->SetFriction( wf->ReadFloat(wf_entity, "friction", this->friction ));

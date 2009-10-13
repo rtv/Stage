@@ -48,6 +48,9 @@ using namespace Stg;
     odom_error [0.03 0.03 0.00 0.05]
 
     # model properties
+
+		# update position according to the current velocity state
+		velocity_enable 1
     )
     @endverbatim
 
@@ -99,7 +102,10 @@ ModelPosition::ModelPosition( World* world,
   
   // assert that Update() is reentrant for this derived model
   thread_safe = false;
-	
+
+	// position devices respond to velocity settings by default
+	velocity_enable = true;
+
   this->SetBlobReturn( true );
   
   AddVisualizer( &wpvis, true );

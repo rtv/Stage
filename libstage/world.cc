@@ -1064,26 +1064,8 @@ void World::Enqueue( unsigned int queue_num, stg_usec_t delay, Model* mod )
   event_queues[queue_num].push( Event( sim_time + delay, mod ) );
 }
 
-
 bool World::Event::operator<( const Event& other ) const 
 {
-  // sort by time, type, then model, in that order.
-
-  if( time > other.time )
-    return true;
-  
-//   if( time == other.time ) 
-//     {		
-//       if( type > other.type )
-// 		  return true;
-
-//       if( type == other.type ) 
-// 		  {		
-// 			 if( mod < other.mod ) // tends to do children first
-// 				return true;
-// 		  }
-//     }
-	    
-  return false;
+  return( time > other.time );
 }
 

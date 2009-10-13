@@ -7,6 +7,16 @@ void Model::AddCallback( void* address,
 						 void* user )
 {
   callbacks[address].insert( stg_cb_t( cb, user ));
+	
+	// count the number of callbacks attached to pose and
+	// velocity. These are changed very often, so we avoid looking up
+	// the callbacks if these values are zero. */
+	if( address == &this->pose )
+		++hooks.attached_pose;
+	else if( address == &this->velocity )
+		++hooks.attached_velocity;	
+	else if( address == &this->hooks.update )
+		++hooks.attached_update;	
 }
 
 
@@ -17,6 +27,15 @@ int Model::RemoveCallback( void* address,
 	
 	callset.erase( stg_cb_t( callback, NULL) );
 	
+	// count the number of callbacks attached to pose and velocity. Can
+	// not go below zero.
+	if( address == &pose )
+		hooks.attached_pose = max( --hooks.attached_pose, 0 );
+	else if( address == &velocity )
+		hooks.attached_velocity = max( --hooks.attached_velocity, 0 );
+	else if( address == &hooks.update )
+		hooks.attached_update = max( --hooks.attached_update, 0 );
+
 	// return the number of callbacks remaining for this address. Useful
 	// for detecting when there are none.
 	return callset.size();

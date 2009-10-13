@@ -198,29 +198,24 @@ Pose Model::GetGlobalPose() const
   return global_pose;
 }
 
+void Model::VelocityEnable()
+{
+	velocity_enable = true;
+	world->active_velocity.insert( this );
+}
+
+void Model::VelocityDisable()
+{
+	velocity_enable = false;
+	world->active_velocity.erase( this );
+}
 
 void Model::SetVelocity( const Velocity& val )
 {
-//   assert( ! isnan(vel.x) );
-//   assert( ! isnan(vel.y) );
-//   assert( ! isnan(vel.z) );
-//   assert( ! isnan(vel.a) );
+  velocity = val;  
 
-  velocity = val;
-  
-//   if( on_velocity_list && vel.IsZero() ) 	 
-//     {
-//       world->VelocityListRemove( this );
-//       on_velocity_list = false;
-//     }
-
-//   if( (!on_velocity_list) && (!vel.IsZero()) ) 	 
-//     {
-//       world->VelocityListAdd( this );
-//       on_velocity_list = true;
-//     }
-
-  CallCallbacks( &velocity );
+	if( hooks.attached_velocity )
+		CallCallbacks( &velocity );
 }
 
 
@@ -242,5 +237,6 @@ void Model::SetPose( const Pose& newpose )
       world->dirty = true;
     }
 
-  CallCallbacks( &this->pose );
+	if( hooks.attached_pose )
+		CallCallbacks( &this->pose );
 }
