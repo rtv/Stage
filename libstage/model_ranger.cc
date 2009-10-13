@@ -254,14 +254,6 @@ static bool ranger_match( Model* candidate,
 
 void ModelRanger::Update( void )
 {     
-  Model::Update();
-
-  if( subs < 1 )
-	 return;
-
-  if( sensors.size() < 1 )
-	 return;
-
   // raytrace new range data for all sensors
 	FOR_EACH( it, sensors )
     {
@@ -277,6 +269,8 @@ void ModelRanger::Update( void )
 			
       s.range = std::max( ray.range, s.bounds_range.min );
     }   
+
+  Model::Update();
 }
 
 void ModelRanger::Print( char* prefix )

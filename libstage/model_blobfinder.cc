@@ -176,8 +176,6 @@ void ModelBlobfinder::Load( void )
 
 void ModelBlobfinder::Update( void )
 {     
-	Model::Update();
-
 	// generate a scan for post-processing into a blob image
 	
 	stg_raytrace_result_t* samples = new stg_raytrace_result_t[scan_width];
@@ -263,6 +261,8 @@ void ModelBlobfinder::Update( void )
 	}
 
 	delete [] samples;
+
+	Model::Update();
 }
 
 

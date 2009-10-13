@@ -201,15 +201,6 @@ void ModelGripper::PositionPaddles()
 
 void ModelGripper::Update()
 {   
-  //return;
-  
-  // no work to do if we're unsubscribed
-  if( subs < 1 )
-	 {
-		Model::Update();		
-		return;
-	 }
-  
   float start_paddle_position = cfg.paddle_position;
   float start_lift_position = cfg.lift_position;
 

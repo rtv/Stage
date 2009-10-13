@@ -208,8 +208,6 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 //
 void ModelFiducial::Update( void )
 {
-	Model::Update();
-
 	PRINT_DEBUG( "fiducial update" );
 
 	if( subs < 1 )
@@ -220,6 +218,8 @@ void ModelFiducial::Update( void )
 	
 	FOR_EACH( it, world->models_with_fiducials )
 	  AddModelIfVisible( *it );	
+
+	Model::Update();
 }
 
 void ModelFiducial::Load( void )

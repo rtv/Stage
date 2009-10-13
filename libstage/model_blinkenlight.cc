@@ -103,10 +103,9 @@ void ModelBlinkenlight::Load( void )
 
 void ModelBlinkenlight::Update( void )
 {     
-	Model::Update();
-
 	// invert
 	this->on = ! this->on;
+	Model::Update();
 }
 
 
