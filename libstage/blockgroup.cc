@@ -238,7 +238,7 @@ void BlockGroup::BuildDisplayList( Model* mod )
 void BlockGroup::CallDisplayList( Model* mod )
 {
   if( displaylist == 0 )
-	BuildDisplayList( mod );
+		BuildDisplayList( mod );
   
   glCallList( displaylist );
 }

@@ -10,8 +10,8 @@ speedup 10
 paused 1
 
 # time at which to pause (in GUI mode) or quit (in headless mode) the simulation
-#quit_time 3600 # 1 hour of simulated time
-quit_time 1800 # hour of simulated time
+quit_time 3600 # 1 hour of simulated time
+#quit_time 1800 # hour of simulated time
 
 resolution 0.02
 
@@ -102,6 +102,9 @@ define autorob pioneer2dx
  joules_capacity 400000 
  fiducial_return 0
  charging_bump( fiducial( range_max 5 pose [ 0 0 -0.100 0 ] ) )
+
+ # small speed optimization
+ trail_length 0
 )
 
 autorob( pose [7.062 -1.563 0 152.684] joules 300000 name "r0" )

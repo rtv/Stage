@@ -1,3 +1,10 @@
+Version 3.2.1
+-------------
+
+Bugfix release, contains mainly bugfixes but some performance tweaks.
+
+Richard Vaughan (rtv) vaughan@sfu.ca - 2009.10.13
+
 Version 3.2.0
 -------------
 

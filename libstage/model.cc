@@ -149,6 +149,8 @@ using namespace Stg;
 
 // static members
 uint32_t Model::count = 0;
+uint32_t Model::trail_length = 50;
+uint64_t Model::trail_interval = 5;
 std::map<stg_id_t,Model*> Model::modelsbyid;
 std::map<std::string, creator_t> Model::name_map;
 std::map<void*, std::set<Model::stg_cb_t> > Model::callbacks;
@@ -288,8 +290,6 @@ Model::Model( World* world,
     subs(0),
     thread_safe( false ),
     trail(),
-	 trail_length(50),
-	 trail_interval(5),
     type(type),	
 	 event_queue_num( 0 ),
     used(false),
@@ -582,11 +582,15 @@ stg_point_t Model::LocalToGlobal( const stg_point_t& pt) const
 void Model::LocalToPixels( const std::vector<stg_point_t>& local,
 													 std::vector<stg_point_int_t>& global) const
 {
+	Pose gpose = GetGlobalPose() + geom.pose;
+	
 	FOR_EACH( it, local )
-		global.push_back( world->MetersToPixels( LocalToGlobal( *it )));
+		{
+			Pose ptpose = gpose + Pose( it->x, it->y, 0, 0 );
+			global.push_back( stg_point_int_t( (int32_t)floor( ptpose.x * world->ppm) ,
+																				 (int32_t)floor( ptpose.y * world->ppm) ));
+		}
 }
-
-
 
 void Model::MapWithChildren()
 {
@@ -898,14 +902,14 @@ void Model::UpdatePose( void )
 	// ConditionalMove() returns a pointer to the model we hit, or
 	// NULL. We use this as a boolean for SetStall()
   SetStall( ConditionalMove( pose + p ) );
-  
-  if( trail_length > 0 && world->updates % trail_interval == 0 )
-	 {
-		trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 
-		
-		if( trail.size() > trail_length )
-		  trail.pop_front();
-	 }	            
+}
+
+void Model::UpdateTrail()
+{
+	trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 					
+	
+	if( trail.size() > trail_length )
+		trail.pop_front();
 }
 
 Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const

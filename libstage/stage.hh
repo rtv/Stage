@@ -1825,11 +1825,14 @@ namespace Stg
 	 /** The maxiumum length of the trail drawn. Default is 20, but can
 		  be set in the world file using the tail_length model
 		  property. */
-	 unsigned int trail_length;
+	 static unsigned int trail_length;
 	 
 	 /** Number of world updates between trail records. */
-	 uint64_t trail_interval;
+	 static uint64_t trail_interval;
 	 
+		/** Record the current pose in our trail. Delete the trail head if it is full. */
+		void UpdateTrail();
+
 	 //stg_model_type_t type;  
 	 const std::string type;
 	 /** The index into the world's vector of event queues. Initially

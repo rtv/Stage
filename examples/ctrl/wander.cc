@@ -23,11 +23,12 @@ int PositionUpdate( Model* mod, robot_t* robot );
 extern "C" int Init( Model* mod, CtrlArgs* args )
 {
   // local arguments
-  printf( "\nWander controller initialised with:\n"
-			 "\tworldfile string \"%s\"\n" 
-			 "\tcmdline string \"%s\"",
-			 args->worldfile.c_str(),
-			 args->cmdline.c_str() );
+	/*  printf( "\nWander controller initialised with:\n"
+			"\tworldfile string \"%s\"\n" 
+			"\tcmdline string \"%s\"",
+			args->worldfile.c_str(),
+			args->cmdline.c_str() );
+	*/
 
   robot_t* robot = new robot_t;
  

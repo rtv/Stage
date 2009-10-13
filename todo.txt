@@ -16,7 +16,7 @@ OS X	16.20 (rev 7949)
       19.94 (rev 8210 - new event queue is slower but more powerful and elegant)
 
 MBA 17.3
-
+MBA 23.2
 
 ** 3.2.0 RELEASE *
 

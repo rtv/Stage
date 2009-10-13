@@ -292,14 +292,9 @@ void Block::GenerateCandidateCells()
 		mpts[i] = BlockPointToModelMeters( pts[i] );
 	}
   
-  // convert the mpts in model coords into global pixel coords
-  //gpts.resize(pt_count);
-  //for( unsigned int i=0; i<pt_count; i++ )
-	//gpts[i] = mod->world->MetersToPixels(  mod->LocalToGlobal( mpts[i] ));
-	
 	gpts.clear();
 	mod->LocalToPixels( mpts, gpts );
- 
+	
   for( unsigned int i=0; i<pt_count; i++ )
 	mod->world->ForEachCellInLine( gpts[i], 
 								   gpts[(i+1)%pt_count], 
