@@ -593,6 +593,7 @@ void WorldGui::Stop()
 
   // drawn 'cos we cancelled the timeout
   canvas->redraw(); // in case something happened that will never be
+										// drawn otherwise
 }  
 
 void WorldGui::pauseCb( Fl_Widget* w, WorldGui* wg )

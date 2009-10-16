@@ -899,13 +899,13 @@ namespace Stg
     SuperRegion* GetSuperRegionCached( int32_t x, int32_t y );
     void ExpireSuperRegion( SuperRegion* sr );
 		
-    inline Cell* GetCell( const stg_point_int_t& glob );
+    //inline Cell* GetCell( const stg_point_int_t& glob );
 		
-	 /** add a Cell pointer to the vector for each cell on the line from
-		  pt1 to pt2 inclusive */
+		/** add a Cell pointer to the vector for each cell on the line from
+				pt1 to pt2 inclusive */
     void ForEachCellInLine( const stg_point_int_t& pt1,
-									 const stg_point_int_t& pt2, 
-									 CellPtrVec& cells );
+														const stg_point_int_t& pt2, 
+														CellPtrVec& cells );
 		
     /** convert a distance in meters to a distance in world occupancy
 		  grid pixels */

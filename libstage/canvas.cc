@@ -574,6 +574,7 @@ void Canvas::FixViewport(int W,int H)
 void Canvas::AddModel( Model*  mod  )
 {
   models_sorted.push_back( mod );
+	redraw();
 }
 
 void Canvas::RemoveModel( Model*  mod  )

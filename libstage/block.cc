@@ -240,7 +240,7 @@ void Block::SwitchToTestedCells()
 	// 2. find the set of cells in candidate but not rendered and insert
 	// them
 
-	// .. and see if that is faster
+	// .. and see if that is faster than the current method
 
   RemoveFromCellArray( rendered_cells );
 
@@ -395,8 +395,8 @@ void Block::DrawTop()
   // draw the top of the block - a polygon at the highest vertical
   // extent
   glBegin( GL_POLYGON);
-  for( unsigned int i=0; i<pt_count; i++ )
-    glVertex3f( pts[i].x, pts[i].y, local_z.max );
+	FOR_EACH( it, pts )
+		glVertex3f( it->x, it->y, local_z.max );
   glEnd();
 }
 
@@ -404,11 +404,12 @@ void Block::DrawSides()
 {
   // construct a strip that wraps around the polygon
   glBegin(GL_QUAD_STRIP);
-  for( unsigned int p=0; p<pt_count; p++)
-    {
-      glVertex3f( pts[p].x, pts[p].y, local_z.max );
-      glVertex3f( pts[p].x, pts[p].y, local_z.min );
-    }
+
+	FOR_EACH( it, pts )
+		{
+      glVertex3f( it->x, it->y, local_z.max );
+      glVertex3f( it->x, it->y, local_z.min );
+		}
   // close the strip
   glVertex3f( pts[0].x, pts[0].y, local_z.max );
   glVertex3f( pts[0].x, pts[0].y, local_z.min );
@@ -417,9 +418,9 @@ void Block::DrawSides()
 
 void Block::DrawFootPrint()
 {
-  glBegin(GL_POLYGON);
-  for( unsigned int p=0; p<pt_count; p++ )
-    glVertex2f( pts[p].x, pts[p].y );
+  glBegin(GL_POLYGON);	
+	FOR_EACH( it, pts )
+		glVertex2f( it->x, it->y );
   glEnd();
 }
 

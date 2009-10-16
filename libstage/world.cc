@@ -949,12 +949,12 @@ inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
   return sr;
 }
 
-Cell* World::GetCell( const stg_point_int_t& glob )
-{
-  return( ((Region*)GetSuperRegionCached(  GETSREG(glob.x), GETSREG(glob.y)  )
-			  ->GetRegion( GETREG(glob.x), GETREG(glob.y) ))
-			 ->GetCell( GETCELL(glob.x), GETCELL(glob.y) )) ;
-}
+//  Cell* World::GetCell( const stg_point_int_t& glob )
+// {
+//   return( ((Region*)GetSuperRegionCached(  GETSREG(glob.x), GETSREG(glob.y)  )
+// 			  ->GetRegion( GETREG(glob.x), GETREG(glob.y) ))
+// 			 ->GetCell( GETCELL(glob.x), GETCELL(glob.y) )) ;
+// }
 
 
 void World::ForEachCellInLine( const stg_point_int_t& start,
@@ -998,7 +998,7 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
 				 n > 0 )
 		  {					
 			 // find the cell at this location, then add it to the vector
-			 cells.push_back( c );
+				cells.push_back( c );
 					
 			 // cleverly skip to the next cell (now it's safe to
 			 // manipulate the cell pointer)
