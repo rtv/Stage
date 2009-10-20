@@ -84,12 +84,20 @@ int poll (struct pollfd *fds, unsigned long int nfds, int timeout);
   //        int (*compar)(const struct dirent **, const struct dirent **));
   //#endif //!HAVE_SCANDIR
 
+  /*
+
 #if !HAVE_DIRNAME
   char * dirname (char *path);
 #else
   #include <libgen.h> // for dirname(3)
 #endif // !HAVE_DIRNAME
 
+#if !HAVE_BASENAME
+  const char * basename (const char* filename);
+#else
+  #include <libgen.h> // for basename(3)
+#endif // !HAVE_BASENAME
+  */
 
 #ifdef __cplusplus
 }
