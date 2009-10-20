@@ -35,7 +35,7 @@ INCLUDE (${PROJECT_CMAKE_DIR}/internal/FindOS.cmake)
 IF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
     # Using -Wall on Windows causes MSVC to produce thousands of warnings in its
     # own standard headers, dramatically slowing down the build.
-    SET (WALL "-Wall" )
+    SET (WALL "-Wall " )
 ENDIF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
 
 #####################################

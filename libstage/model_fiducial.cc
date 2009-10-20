@@ -100,6 +100,8 @@ static bool fiducial_raytrace_match( Model* candidate,
 												 Model* finder, 
 												 const void* dummy )
 {
+  (void)dummy; // avoid warning about unused var
+
   return( ! finder->IsRelated( candidate ) );
 }	
 
@@ -238,6 +240,8 @@ void ModelFiducial::Load( void )
 
 void ModelFiducial::DataVisualize( Camera* cam )
 {
+  (void)cam; // avoid warning about unused var
+
 	if( showFov )
 	  {
 		 PushColor( 1,0,1,0.2  ); // magenta, with a bit of alpha

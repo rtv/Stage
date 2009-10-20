@@ -388,6 +388,8 @@ void Model::DrawStatus( Camera* cam )
 void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha, 
 							  double width, double height )
 {
+  (void)alpha; // avoid warning about unused var
+
   float yaw, pitch;
   pitch = - cam->pitch();
   yaw = - cam->yaw();
@@ -519,6 +521,7 @@ void Model::DrawPicker( void )
 
 void Model::DataVisualize( Camera* cam )
 {  
+  (void)cam; // avoid warning about unused var
 }
 
 void Model::DataVisualizeTree( Camera* cam )

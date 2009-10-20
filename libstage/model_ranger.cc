@@ -248,6 +248,8 @@ static bool ranger_match( Model* candidate,
 								  Model* finder, 
 								  const void* dummy )
 {
+  (void)dummy; // avoid warning about unused var
+
   // Ignore myself, my children, and my ancestors.
   return( candidate->vis.ranger_return && !candidate->IsRelated( finder ) );
 }	
@@ -286,6 +288,8 @@ void ModelRanger::Print( char* prefix )
 
 void ModelRanger::DataVisualize( Camera* cam )
 {
+  (void)cam; // avoid warning about unused var
+
   if( sensors.size() < 1 )
     return;
 	

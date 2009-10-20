@@ -108,7 +108,9 @@ static bool blob_match( Model* candidate,
 								Model* finder,
 								const void* dummy )
 { 
-	return( ! finder->IsRelated( candidate ));
+  (void)dummy; // avoid warning about unused var
+
+  return( ! finder->IsRelated( candidate ));
 }	
 
 
@@ -299,6 +301,7 @@ void ModelBlobfinder::Shutdown( void )
 ModelBlobfinder::Vis::Vis( World* world ) 
   : Visualizer( "Blobfinder", "blobfinder_vis" )
 {
+  
   //world->RegisterOption( &showArea );
   //world->RegisterOption( &showStrikes );
   //world->RegisterOption( &showFov );

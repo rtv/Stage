@@ -1058,10 +1058,13 @@ Model::RasterVis::RasterVis()
 	 cellheight(0),
 	 pts()
 {
+  
 }
 
 void Model::RasterVis::Visualize( Model* mod, Camera* cam ) 
 {
+  (void)cam; // avoid warning about unused var
+
   if( data == NULL )
 	 return;
 

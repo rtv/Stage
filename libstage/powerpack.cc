@@ -53,6 +53,8 @@ void PowerPack::Print( char* prefix ) const
 /** OpenGL visualization of the powerpack state */
 void PowerPack::Visualize( Camera* cam ) 
 {
+  (void)cam; // avoid warning about unused var
+
   const double height = 0.5;
   const double width = 0.2;
   
@@ -283,6 +285,8 @@ PowerPack::DissipationVis::~DissipationVis()
 
 void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
 {
+  (void)cam; // avoid warning about unused var
+
   // go into world coordinates
   
   glPushMatrix();
@@ -317,11 +321,11 @@ void PowerPack::DissipationVis::Accumulate( stg_meters_t x,
 {
   //printf( "accumulate %.2f %.2f %.2f\n", x, y, amount );
 
-  unsigned int ix = (x+width/2.0)/cellsize;
-  unsigned int iy = (y+height/2.0)/cellsize;
+  int ix = (x+width/2.0)/cellsize;
+  int iy = (y+height/2.0)/cellsize;
 
   // don't accumulate if we're outside the grid
-  if( ix < 0 || ix >= columns || iy < 0 || iy >= rows )
+  if( ix < 0 || ix >= int(columns) || iy < 0 || iy >= int(rows) )
 		return;
 	
   stg_joules_t& j = cells[ ix + (iy*columns) ];

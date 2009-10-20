@@ -78,8 +78,8 @@ namespace Stg
 
 	std::string FileManager::stripFilename( std::string path ) {
 		std::string pathChars( "\\/" );
-		size_t loc = path.find_last_of( pathChars );
-		if ( loc < 0 )
+                std::string::size_type loc = path.find_last_of( pathChars );
+		if ( loc == std::string::npos )
 			return path;
 		else
 			return path.substr( 0, loc );

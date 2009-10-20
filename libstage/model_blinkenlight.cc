@@ -111,6 +111,8 @@ void ModelBlinkenlight::Update( void )
 
 void ModelBlinkenlight::DataVisualize( Camera* cam )
 {
+  (void)cam; // avoid warning about unused var
+
   // TODO XX
 	if( on && showBlinkenData )
 	{

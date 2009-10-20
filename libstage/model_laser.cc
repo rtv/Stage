@@ -151,6 +151,8 @@ static bool laser_raytrace_match( Model* hit,
 																	Model* finder,
 																	const void* dummy )
 {
+  (void)dummy; // avoid warning about unused var
+
   // Ignore the model that's looking and things that are invisible to
   // lasers  
   return( (hit != finder) && (hit->vis.laser_return > 0 ) );
@@ -279,6 +281,8 @@ ModelLaser::Vis::Vis( World* world )
 
 void ModelLaser::Vis::Visualize( Model* mod, Camera* cam ) 
 {
+  (void)cam; // avoid warning about unused var
+
   ModelLaser* laser( dynamic_cast<ModelLaser*>(mod) );
 	
   const std::vector<Sample>& samples( laser->GetSamples() );

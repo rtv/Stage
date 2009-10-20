@@ -531,6 +531,8 @@ ModelPosition::PoseVis::PoseVis()
 
 void ModelPosition::PoseVis::Visualize( Model* mod, Camera* cam )
 {
+  (void)cam; // avoid warning about unused var
+
   ModelPosition* pos = dynamic_cast<ModelPosition*>(mod);
   
   // vizualize my estimated pose 
@@ -592,6 +594,8 @@ ModelPosition::WaypointVis::WaypointVis()
 
 void ModelPosition::WaypointVis::Visualize( Model* mod, Camera* cam )
 {
+  (void)cam; // avoid warning about unused var
+
   ModelPosition* pos = dynamic_cast<ModelPosition*>(mod);
   const std::vector<Waypoint>& waypoints = pos->waypoints;
 

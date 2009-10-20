@@ -333,7 +333,8 @@ namespace Stg
     Velocity( stg_meters_t x, 
 				  stg_meters_t y, 
 				  stg_meters_t z,
-				  stg_radians_t a ) 
+				  stg_radians_t a ) :
+		Pose( x, y, z, a )
     { /*empty*/ }
     
     Velocity()
@@ -917,8 +918,11 @@ namespace Stg
     { return stg_point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); };
 		
     // dummy implementations to be overloaded by GUI subclasses
-    virtual void PushColor( Color col ) { /* do nothing */  };
-    virtual void PushColor( double r, double g, double b, double a ) { /* do nothing */  };
+    virtual void PushColor( Color col ) 
+	 { /* do nothing */  (void)col; };
+    virtual void PushColor( double r, double g, double b, double a ) 
+	 { /* do nothing */ (void)r; (void)g; (void)b; (void)a; };
+	 
     virtual void PopColor(){ /* do nothing */  };
 		
     SuperRegion* CreateSuperRegion( stg_point_int_t origin );
@@ -1646,7 +1650,7 @@ namespace Stg
 		  : callback(cb), arg(arg) {}
 			
 		stg_cb_t( stg_world_callback_t cb, void* arg ) 
-		  : callback(NULL), arg(arg) {}
+		  : callback(NULL), arg(arg) { (void)cb; }
 			
 		stg_cb_t() : callback(NULL), arg(NULL) {}
 			
@@ -2634,7 +2638,7 @@ namespace Stg
 	 virtual void Save();
 
 	 /** Configure the gripper */
-	 void SetConfig( config_t & newcfg ){ this->cfg = cfg; FixBlocks(); }
+	 void SetConfig( config_t & newcfg ){ this->cfg = newcfg; FixBlocks(); }
 	 
 	 /** Returns the state of the gripper .*/
 	 config_t GetConfig(){ return cfg; };

@@ -25,6 +25,8 @@ PerspectiveCamera::PerspectiveCamera( void ) :
 
 void PerspectiveCamera::move( float x, float y, float z )
 {
+  (void)z; // avoid warning about unused var
+
 	//scale relative to zoom level
 	x *= _z / 100.0;
 	y *= _z / 100.0;

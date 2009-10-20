@@ -329,6 +329,8 @@ static bool gripper_raytrace_match( Model* hit,
 												Model* finder,
 												const void* dummy )
 {
+  (void)dummy; // avoid warning about unused var
+
   return( (hit != finder) && hit->vis.gripper_return );
   // can't use the normal relation check, because we may pick things
   // up and we must still see them.
@@ -469,6 +471,8 @@ void ModelGripper::UpdateContacts()
 
 void ModelGripper::DataVisualize( Camera* cam )
 {
+  (void)cam; // avoid warning about unused var
+
   // only draw if someone is using the gripper
   if( subs < 1 )
 	 return;
