@@ -36,7 +36,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <libgen.h>
+//#include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <pthread.h> 

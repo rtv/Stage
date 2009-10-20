@@ -90,13 +90,13 @@ int poll (struct pollfd *fds, unsigned long int nfds, int timeout);
   #include <libgen.h> // for dirname(3)
 #endif // !HAVE_DIRNAME
 
+  /*
 #if !HAVE_BASENAME
- #ifndef basename
   const char * basename (const char* filename);
- #endif
 #else
   #include <libgen.h> // for basename(3)
 #endif // !HAVE_BASENAME
+  */
 
 #ifdef __cplusplus
 }
