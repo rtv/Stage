@@ -96,7 +96,7 @@ FILE *Worldfile::FileOpen(const char *filename, const char* method)
   char *token = strtok(stagepath, ":");
   char* fullpath = new char[PATH_MAX];
   char *tmp = strdup(filename);
-  char *base = basename(tmp);
+  const char *base = basename(tmp);
   while (token != NULL) {
     // for each part of the path, try it:
     memset( fullpath, 0, PATH_MAX);

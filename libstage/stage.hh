@@ -976,13 +976,9 @@ namespace Stg
       stg_usec_t time; // time that event occurs
       Model* mod; // model to update
       
-      /** Update the model appropriately, based on the event type. */
-      //void Execute();
-      //static const char* TypeStr( type_t type );
       bool operator<( const Event& other ) const;
-			//      bool operator==( const Event& other ) const;
     };
-    
+	 
 	 std::vector<std::priority_queue<Event> > event_queues;
 	 void Enqueue( unsigned int queue_num, stg_usec_t delay, Model* mod );
 	 
