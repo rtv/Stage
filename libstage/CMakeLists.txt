@@ -72,14 +72,6 @@ set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
 
 target_link_libraries( stagebinary stage )
 
-set( stagetestSrcs test.cc )
-
-add_executable( stagetest ${stagetestSrcs} )
-target_link_libraries( stagetest stage )
-set_target_properties( stagetest PROPERTIES LINK_FLAGS "${FLTK_LDFLAGS}" )
-set_source_files_properties( ${stagetestSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
-
-
 INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
@@ -88,4 +80,3 @@ INSTALL(TARGETS stagebinary stage
 INSTALL(FILES stage.hh 
         DESTINATION include/${PROJECT_NAME}-${APIVERSION})
 
-ADD_TEST( test1 ${EXECUTABLE_OUTPUT_PATH}stagetest )
