@@ -188,10 +188,6 @@ void Model::Load()
   if( wf->PropertyExists( wf_entity, "map_resolution" ))
     this->SetMapResolution( wf->ReadFloat(wf_entity, "map_resolution", this->map_resolution ));
     
-  // populate the key-value database
-  if( wf->PropertyExists( wf_entity, "db_count" ) )
-		LoadDataBaseEntries( wf, wf_entity );
-
   if (vis.gravity_return)
 	{
 	  Velocity vel = GetVelocity();
@@ -348,31 +344,3 @@ void Model::LoadControllerModule( const char* lib )
   fflush(stdout);
 }
 
- 
- void Model::LoadDataBaseEntries( Worldfile* wf, int entity )
- {
-	int entry_count = wf->ReadInt( entity, "db_count", 0 );
-
-	if( entry_count < 1 )
-	  return;
-
-	for( int e=0; e<entry_count; e++ )
-	  {
-		 const char* entry = wf->ReadTupleString( entity, "db", e, NULL );
-		 
-		 const size_t SZ = 64;
-		 char key[SZ], type[SZ], value[SZ];
-		 
-		 sscanf( entry, "%[^<]<%[^>]>%[^\"]", key, type, value );
-
-		 if( strcmp( type, "int" ) == 0 )
-			SetPropertyInt( strdup(key), atoi(value) );
-		 else if( strcmp( type, "float" ) == 0 )			
-			SetPropertyFloat( strdup(key), strtod(value, NULL) );
-		 else if( strcmp( type, "string" ) == 0 )
-			SetPropertyStr( strdup(key), value );
-		 else
-			PRINT_ERR1( "unknown database entry type \"%s\"\n", type );		 
-	  }
-
- }

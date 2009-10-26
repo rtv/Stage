@@ -26,7 +26,6 @@ set( stageSrcs
 	model_lightindicator.cc
 	model_load.cc
 	model_position.cc
-	model_props.cc
 	model_ranger.cc
 	option.cc
 	powerpack.cc

@@ -2014,7 +2014,6 @@ namespace Stg
 	 void DataVisualizeTree( Camera* cam );
 	 void DrawFlagList();
 	 void DrawPose( Pose pose );
-	 void LoadDataBaseEntries( Worldfile* wf, int entity );
 	
   public:
 	 virtual void PushColor( Color col ){ world->PushColor( col ); }	
@@ -2301,49 +2300,6 @@ namespace Stg
 	 void RemoveFlagDecrCallback( stg_model_callback_t cb )
 	 {	RemoveCallback( &hooks.flag_decr, cb ); }
 	 
-	 /** named-property interface 
-	  */
-	 const void* GetProperty( const char* key ) const;
-	 bool GetPropertyFloat( const char* key, float* f, float defaultval ) const;	 
-	 bool GetPropertyInt( const char* key, int* i, int defaultval ) const;	 
-	 bool GetPropertyStr( const char* key, char** c, char* defaultval ) const;
-
-	 /** @brief Set a named property of a Stage model.
-	 
-		  Set a property of a Stage model. 
-	 
-		  This function can set both predefined and user-defined
-		  properties of a model. Predefined properties are intrinsic to
-		  every model, such as pose and color. Every supported predefined
-		  properties has its identifying string defined as a preprocessor
-		  macro in stage.h. Users should use the macro instead of a
-		  hard-coded string, so that the compiler can help you to avoid
-		  mis-naming properties.
-	 
-		  User-defined properties allow the user to attach arbitrary data
-		  pointers to a model. User-defined property data is not copied,
-		  so the original pointer must remain valid. User-defined property
-		  names are simple strings. Names beginning with an underscore
-		  ('_') are reserved for internal libstage use: users should not
-		  use names beginning with underscore (at risk of causing very
-		  weird behaviour).
-	 
-		  Any callbacks registered for the named property will be called.      
-	 
-		  Returns 0 on success, or a positive error code on failure.
-	 
-		  *CAUTION* The caller is responsible for making sure the pointer
-		  points to data of the correct type for the property, so use
-		  carefully. Check the docs or the equivalent
-		  stg_model_set_<property>() function definition to see the type
-		  of data required for each property.
-	 */ 
-	 int SetProperty( const char* key, const void* data );
-	 void SetPropertyInt( const char* key, int i );
-	 void SetPropertyFloat( const char* key, float f );
-	 void SetPropertyStr( const char* key, const char* str );
-	 
-	 void UnsetProperty( const char* key );
 		
 	 virtual void Print( char* prefix ) const;
 	 virtual const char* PrintWithPose() const;
