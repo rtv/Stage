@@ -466,6 +466,7 @@ namespace Stg
   stg_point_t* stg_unit_square_points_create();
   
   /** laser return value */
+
   typedef enum 
     {
       LaserTransparent=0, ///<not detected by laser model 
@@ -669,9 +670,6 @@ namespace Stg
     const char* Token()
     { return token.c_str(); }
 	 
-    //const std::string& Token()
-    //{ return token; }
-	 
     void SetToken( const std::string& str )
     { token = str; } 
 
@@ -777,9 +775,6 @@ namespace Stg
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
 
-	 /** pointers to the models in the world, indexed by id */
-	 //std::map<unsigned int, Model*> models_by_id;
-	 
 	 /** Pointers to all the models in this world. */
 	 std::set<Model*> models;
 
@@ -855,7 +850,6 @@ namespace Stg
 	 PointIntVec rt_candidate_cells;
 
     static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
-    //static const stg_msec_t DEFAULT_INTERVAL_SIM = 100;  ///< duration of sim timestep
 
 	 /** Attach a callback function, to be called with the argument at
 		  the end of a complete update step */
@@ -889,8 +883,6 @@ namespace Stg
     SuperRegion* GetSuperRegionCached( const stg_point_int_t& coord);
     SuperRegion* GetSuperRegionCached( int32_t x, int32_t y );
     void ExpireSuperRegion( SuperRegion* sr );
-		
-    //inline Cell* GetCell( const stg_point_int_t& glob );
 		
 		/** add a Cell pointer to the vector for each cell on the line from
 				pt1 to pt2 inclusive */
@@ -1284,11 +1276,7 @@ namespace Stg
     void move( float x, float y, float z );
 	 void setFov( float horiz_fov, float vert_fov ) { _horiz_fov = horiz_fov; _vert_fov = vert_fov; }
     ///update vertical fov based on window aspect and current horizontal fov
-	 void setAspect( float aspect ) { 
-      //std::cout << "aspect: " << aspect << " vert: " << _vert_fov << " => " << aspect * _vert_fov << std::endl;
-      //_vert_fov = aspect / _horiz_fov;
-      _aspect = aspect;
-    }
+	 void setAspect( float aspect ) { _aspect = aspect; }
 	 void setYaw( float yaw ) { _yaw = yaw; }
 	 float horizFov( void ) const { return _horiz_fov; }
 	 float vertFov( void ) const { return _vert_fov; }
@@ -1297,8 +1285,6 @@ namespace Stg
 	 void addPitch( float pitch ) { _pitch += pitch; if( _pitch < 0 ) _pitch = 0; else if( _pitch > 180 ) _pitch = 180; }
 	
 	 float realDistance( float z_buf_val ) const {
-      //formula found at http://www.cs.unc.edu/~hoff/techrep/openglz.html
-      //Z = Zn*Zf / (Zf - z*(Zf-Zn))
       return _z_near * _z_far / ( _z_far - z_buf_val * ( _z_far - _z_near ) );
     }
 	 void scroll( float dy ) { _z += dy; }
@@ -2068,10 +2054,6 @@ namespace Stg
 	 /** save the state of the model to the current world file */
 	 virtual void Save();
 	
-	 // Should be called after all models are loaded, to do any last-minute setup */
-	 //void Init();	
-	 //void InitRecursive();
-
 	 /** Call Init() for all attached controllers. */
 	 void InitControllers();
 
@@ -2082,16 +2064,7 @@ namespace Stg
 	 Flag* PopFlag();
 	
 	 int GetFlagCount() const { return flag_list.size(); }
-  
-	 // 	 /** Add a pointer to a blinkenlight to the model. */
-	 // 	 void AddBlinkenlight( stg_blinkenlight_t* b )
-	 // 	 { g_ptr_array_add( this->blinkenlights, b ); }
-  
-	 // 	 /** Clear all blinkenlights from the model. Does not destroy the
-	 // 		  blinkenlight objects. */
-	 // 	 void ClearBlinkenlights()
-	 // 	 {  g_ptr_array_set_size( this->blinkenlights, 0 ); }
-  
+    
 	 /** Disable the model. Its pose will not change due to velocity
 		  until re-enabled using Enable(). This is used for example when
 		  dragging a model with the mouse pointer. The model is enabled by
@@ -2374,7 +2347,6 @@ namespace Stg
 
 	 // predicate for ray tracing
 	 static bool BlockMatcher( Block* testblock, Model* finder );
-	 //static Option showBlobData;
 
   public:
 	 stg_radians_t fov;

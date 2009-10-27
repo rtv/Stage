@@ -1,3 +1,4 @@
+
 /** canvas.cc
     Implement the main world viewing area in FLTK and OpenGL. 
 
@@ -596,7 +597,7 @@ void Canvas::DrawGlobalGrid()
   */
   
   /* simple scaling of axis labels - could be better */
-  int skip = 50 / (int)camera.scale();
+  int skip = (int)( 50 / camera.scale());
   if( skip < 1 ) skip = 1;
   if( skip > 2 && skip % 2 ) skip += 1;
 
