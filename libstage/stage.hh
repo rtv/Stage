@@ -60,13 +60,11 @@
 #include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/gl.h> // FLTK takes care of platform-specific GL stuff
-// except GLU & GLUT
+// except GLU
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
-//#include <GLUT/glut.h>
 #else
 #include <GL/glu.h>
-//#include <GL/glut.h>
 #endif 
 
 /** @brief The Stage library uses its own namespace */
@@ -109,22 +107,22 @@ namespace Stg
 		number. */
   const char* Version();
 
-  /// Copyright string
+  /** Copyright string */
   const char COPYRIGHT[] =				       
     "Copyright Richard Vaughan and contributors 2000-2009";
 
-  /// Author string
+  /** Author string */
   const char AUTHORS[] =					
     "Richard Vaughan, Brian Gerkey, Andrew Howard, Reed Hedges, Pooya Karimian, Toby Collett, Jeremy Asher, Alex Couture-Beil and contributors.";
 
-  /// Project website string
+  /** Project website string */
   const char WEBSITE[] = "http://playerstage.org";
 
-  /// Project description string
+  /** Project description string */
   const char DESCRIPTION[] =				       
     "Robot simulation library\nPart of the Player Project";
 
-  /// Project distribution license string
+  /** Project distribution license string */
   const char LICENSE[] = 
     "Stage robot simulation library\n"					\
     "Copyright (C) 2000-2009 Richard Vaughan and contributors\n"	\
@@ -169,11 +167,11 @@ namespace Stg
 	 while( a >  M_PI ) a -= 2.0*M_PI;	 
 	 return a;
   };
-
+	
   /** take binary sign of a, either -1, or 1 if >= 0 */
   inline int sgn( int a){ return( a<0 ? -1 : 1); }
-
-  /** take binary sign of a, either -1, or 1 if >= 0. */
+	
+  /** take binary sign of a, either -1.0, or 1.0 if >= 0. */
   inline double sgn( double a){ return( a<0 ? -1.0 : 1.0); }
   
   /** any integer value other than this is a valid fiducial ID */
@@ -446,15 +444,19 @@ namespace Stg
   {
   public:
     int x,y;
-	 stg_point_int_t( int x, int y ) : x(x), y(y){}	 
-	 stg_point_int_t() : x(0), y(0){}
-	 
-	 /** required to put these in sorted containers like std::map */
-	 bool operator<( const stg_point_int_t& other ) const
-	 { return ((x < other.x) || (y < other.y) ); }
-
+		stg_point_int_t( int x, int y ) : x(x), y(y){}	 
+		stg_point_int_t() : x(0), y(0){}
+		
+		/** required to put these in sorted containers like std::map */
+		bool operator<( const stg_point_int_t& other ) const
+		{
+			if( x < other.x ) return true;
+			if( other.x < x ) return false;
+			return y < other.y;
+		}
+ 
 	 bool operator==( const stg_point_int_t& other ) const
-	 { return ((x == other.x) && (y == other.y) ); }
+		{ return ((x == other.x) && (y == other.y) ); }
   };
   
   typedef std::vector<stg_point_int_t> PointIntVec;
@@ -463,20 +465,7 @@ namespace Stg
       square.  */
   stg_point_t* stg_unit_square_points_create();
   
-  const char MP_PREFIX[] =             "_mp_";
-  const char MP_POSE[] =               "_mp_pose";
-  const char MP_VELOCITY[] =           "_mp_velocity";
-  const char MP_GEOM[] =               "_mp_geom";
-  const char MP_COLOR[] =              "_mp_color";
-  const char MP_WATTS[] =              "_mp_watts";
-  const char MP_FIDUCIAL_RETURN[] =    "_mp_fiducial_return";
-  const char MP_LASER_RETURN[] =       "_mp_laser_return";
-  const char MP_OBSTACLE_RETURN[] =    "_mp_obstacle_return";
-  const char MP_RANGER_RETURN[] =      "_mp_ranger_return";
-  const char MP_GRIPPER_RETURN[] =     "_mp_gripper_return";
-  const char MP_MASS[] =               "_mp_mass";
-
-  /// laser return value
+  /** laser return value */
   typedef enum 
     {
       LaserTransparent=0, ///<not detected by laser model 
@@ -1818,12 +1807,19 @@ namespace Stg
 		Pose pose;
 		Color color;
 		
-		TrailItem( stg_usec_t time, Pose pose, Color color ) 
-		  : time(time), pose(pose), color(color){}
+		TrailItem() 
+		  : time(0), pose(), color(){}
+		 
+		 //TrailItem( stg_usec_t time, Pose pose, Color color ) 
+		 //: time(time), pose(pose), color(color){}
 	 };
 	
-	 std::list<TrailItem> trail;
-	 
+		/** a ring buffer for storing recent poses */
+		std::vector<TrailItem> trail;
+
+		/** current position in the ring buffer */
+		unsigned int trail_index;
+
 	 /** The maxiumum length of the trail drawn. Default is 20, but can
 		  be set in the world file using the tail_length model
 		  property. */

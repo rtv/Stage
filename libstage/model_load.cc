@@ -221,6 +221,8 @@ void Model::Load()
     this->Say( wf->ReadString(wf_entity, "say", "" ));
   
 	trail_length = wf->ReadInt( wf_entity, "trail_length", trail_length );
+	trail.resize( trail_length );
+
 	trail_interval = wf->ReadInt( wf_entity, "trail_interval", trail_interval );
 
 	this->alwayson = wf->ReadInt( wf_entity, "alwayson",  alwayson );

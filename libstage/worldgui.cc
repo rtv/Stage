@@ -362,7 +362,11 @@ bool WorldGui::Update()
 
   // inherit
   bool done = World::Update();
-  
+
+	if( Model::trail_length > 0 && updates % Model::trail_interval == 0 )
+		FOR_EACH( it, active_velocity )
+			(*it)->UpdateTrail();
+
   if( done )
     {
       quit_time = 0; // allows us to continue by un-pausing

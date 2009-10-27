@@ -287,10 +287,11 @@ Model::Model( World* world,
     rebuild_displaylist(true),
     say_string(),
     stall(false),	 
-    subs(0),
-    thread_safe( false ),
-    trail(),
-    type(type),	
+	subs(0),
+	thread_safe( false ),
+	trail(trail_length),
+	trail_index(0),
+	type(type),	
 	 event_queue_num( 0 ),
     used(false),
 	velocity(),
@@ -907,10 +908,16 @@ void Model::UpdatePose( void )
 
 void Model::UpdateTrail()
 {
-	trail.push_back( TrailItem( world->sim_time, GetGlobalPose(), color ) ); 					
+	// get the current item and increment the counter
+	TrailItem* item = &trail[trail_index++];
 	
-	if( trail.size() > trail_length )
-		trail.pop_front();
+	// record the current info
+	item->time = world->sim_time;
+	item->pose = GetGlobalPose();
+	item->color = color;
+
+	// wrap around ring buffer
+	trail_index %= trail_length;
 }
 
 Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const

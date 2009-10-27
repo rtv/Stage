@@ -557,10 +557,6 @@ bool World::Update()
   FOR_EACH( it, active_energy )
 	 (*it)->UpdateCharge();
   
-	if( Model::trail_length > 0 && updates % Model::trail_interval == 0 )
-		FOR_EACH( it, active_velocity )
-				(*it)->UpdateTrail();
-
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
     {
       printf( "\r[Stage: %s]", ClockString().c_str() );
@@ -679,7 +675,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   
   // fast integer line 3d algorithm adapted from Cohen's code from
   // Graphics Gems IV  
-  const int32_t sx(sgn(dx));   // sgn() is a fast macro
+  const int32_t sx(sgn(dx));  
   const int32_t sy(sgn(dy));  
   const int32_t ax(abs(dx)); 
   const int32_t ay(abs(dy));  

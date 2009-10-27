@@ -55,24 +55,31 @@ void Model::DrawTrailFootprint()
 	
   PushColor( 0,0,0,1 ); // dummy pushL just saving the color
 	
-  FOR_EACH( it, trail )
-	 {
-		TrailItem& checkpoint = *it;
-		 
-		glPushMatrix();
-		Pose pz = checkpoint.pose;
-
-		Gl::pose_shift( pz );
-		Gl::pose_shift( geom.pose );
-		 		 
-		darkness += fade;
-		Color c = checkpoint.color;
-		c.a = darkness;
-		glColor4f( c.r, c.g, c.b, c.a );
-		 
-		blockgroup.DrawFootPrint( geom );
-		 
-		glPopMatrix();
+	// this loop could be faster, but optimzing vis is not a priority
+	for( unsigned int i=0; i<trail_length; i++ )
+		{
+			// find correct offset inside ring buffer
+			TrailItem& checkpoint = 
+				trail[ (i + trail_index) % trail_length ];
+			
+			// ignore invalid items
+			if( checkpoint.time == 0 )
+				continue;
+			
+			glPushMatrix();
+			Pose pz = checkpoint.pose;
+			
+			Gl::pose_shift( pz );
+			Gl::pose_shift( geom.pose );
+			
+			darkness += fade;
+			Color c = checkpoint.color;
+			c.a = darkness;
+			glColor4f( c.r, c.g, c.b, c.a );
+			
+			blockgroup.DrawFootPrint( geom );
+			
+			glPopMatrix();
     }
 	
   PopColor();

@@ -18,7 +18,8 @@ OS X	16.20 (rev 7949)
       14.5 (rev 8295) threads: 6: 13.7 3: 13.4
 
 MBA 17.3
-MBA 23.2
+MBA 23.1 (1 thread)
+MBA 19.3 (2 threads)
 
 ** 3.2.0 RELEASE *
 
