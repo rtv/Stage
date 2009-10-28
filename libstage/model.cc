@@ -33,8 +33,6 @@
     blob_return 1
     laser_return LaserVisible
     gripper_return 0
-    gravity_return 0
-    sticky_return 0
 
     # GUI properties
     gui_nose 0
@@ -135,7 +133,6 @@
 //     default) means this model can not be pushed around (infinite
 //     friction).
 
-
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -233,8 +230,6 @@ void Model::Visibility::Load( Worldfile* wf, int wf_entity )
   laser_return = (stg_laser_return_t)wf->ReadInt( wf_entity, "laser_return", laser_return);    
   obstacle_return = wf->ReadInt( wf_entity, "obstacle_return", obstacle_return);    
   ranger_return = wf->ReadInt( wf_entity, "ranger_return", ranger_return);    
-  gravity_return = wf->ReadInt( wf_entity, "gravity_return", gravity_return);
-  sticky_return = wf->ReadInt( wf_entity, "sticky_return", sticky_return);
 }    
 
 Model::GuiState::GuiState() :

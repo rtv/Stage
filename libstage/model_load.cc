@@ -187,13 +187,10 @@ void Model::Load()
 
   if( wf->PropertyExists( wf_entity, "map_resolution" ))
     this->SetMapResolution( wf->ReadFloat(wf_entity, "map_resolution", this->map_resolution ));
-    
-  if (vis.gravity_return)
-	{
-	  Velocity vel = GetVelocity();
-	  this->SetVelocity( vel );
-	  //StartUpdating();
-	}
+
+	// todo - look into this
+  //if (vis.gravity_return)
+	//this->SetVelocity( GetVelocity() );
 	
 	velocity_enable = wf->ReadInt( wf_entity, "enable_velocity", velocity_enable );
 	

@@ -513,7 +513,7 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
 				putchar( data[x + ((dh-y-1)*dw)] ? 'O' : '.' );
 			 putchar( '\n' );
 		  }
-		delete data;
+		delete[] data;
 	 }
 #endif
   

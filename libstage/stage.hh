@@ -1864,8 +1864,6 @@ namespace Stg
 		stg_laser_return_t laser_return;
 		bool obstacle_return;
 		bool ranger_return;
-		bool gravity_return;
-		bool sticky_return;
 		
 		Visibility();
 		void Load( Worldfile* wf, int wf_entity );
