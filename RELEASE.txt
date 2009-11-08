@@ -1,3 +1,20 @@
+Version 3.2.2
+-------------
+
+Bugfix, performance and cleanup release. This is the fastest Stage
+ever for most use cases. 
+
+Externally visible changes
+
+ - removed property database from models. This will break user code
+ that depends on it. The rationale for removing it is that it is not
+ useful to libstage users, and only to libstageplugin users who used
+ it for Player-based IPC. It should be provided by a Player
+ driver. Removing this little-used code is a useful clean up.
+
+Richard Vaughan (rtv) vaughan@sfu.ca - 2009.10.28
+
+
 Version 3.2.1
 -------------
 

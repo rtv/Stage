@@ -5,13 +5,14 @@ using namespace Stg;
 
 
 Ancestor::Ancestor() :
+  //access_mutex(),
+  child_type_counts(),
   children(),
   debug( false ),
-  token(),
-  access_mutex(),
-  child_type_counts()
+  props(),
+  token()
 {
-  pthread_mutex_init( &access_mutex, NULL );
+  //pthread_mutex_init( &access_mutex, NULL );
 }
 
 Ancestor::~Ancestor()

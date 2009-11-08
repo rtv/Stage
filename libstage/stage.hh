@@ -1,3 +1,4 @@
+
 #ifndef STG_H
 #define STG_H
 /*
@@ -639,42 +640,49 @@ namespace Stg
     friend class Canvas; // allow Canvas access to our private members
 	 
   protected:
+
+    /** array contains the number of each type of child model */
+	 std::map<std::string,unsigned int> child_type_counts;
+
 	 ModelPtrVec children;
+
     bool debug;
+
+	 /** A key-value database for users to associate arbitrary things with this object. */
+	 std::map<std::string,void*> props;
+
 	 std::string token;
-	 pthread_mutex_t access_mutex; ///< Used by Lock() and Unlock() to prevent parallel access to this model
 
 	 void Load( Worldfile* wf, int section );
-	 void Save( Worldfile* wf, int section );
-	 
+	 void Save( Worldfile* wf, int section );	 
+	 	 	 
   public:	
-	 /* The maximum length of a Stage model identifier string */
-	 //static const uint32_t TOKEN_MAX = 64;
-	 	 
+    Ancestor();
+    virtual ~Ancestor();
+	 
     /** get the children of the this element */
 	 ModelPtrVec& GetChildren(){ return children;}
     
     /** recursively call func( model, arg ) for each descendant */
     void ForEachDescendant( stg_model_callback_t func, void* arg );
-		
-    /** array contains the number of each type of child model */
-	 std::map<std::string,unsigned int> child_type_counts;
-	 
-    Ancestor();
-    virtual ~Ancestor();
 	 
     virtual void AddChild( Model* mod );
     virtual void RemoveChild( Model* mod );
     virtual Pose GetGlobalPose();
 	 
-    const char* Token()
-    { return token.c_str(); }
+    const char* Token(){ return token.c_str(); }
 	 
-    void SetToken( const std::string& str )
-    { token = str; } 
-
-	 void Lock(){ pthread_mutex_lock( &access_mutex ); }	
-	 void Unlock(){ pthread_mutex_unlock( &access_mutex ); }
+    void SetToken( const std::string& str ){ token = str; } 
+	 
+	 /** A key-value database for users to associate arbitrary things with this model. */
+	 void SetProperty( std::string& key, void* value ){ props[ key ] = value; }
+	 
+	 /** A key-value database for users to associate arbitrary things with this model. */
+	 void* GetProperty( std::string& key )
+	 {
+		std::map<std::string,void*>::iterator it = props.find( key );		
+		return( it == props.end() ? NULL : it->second );
+	 }
   };
 
   /** raytrace sample
@@ -1597,7 +1605,6 @@ namespace Stg
 	 const std::vector<Option*>& getOptions() const { return drawOptions; }
 	 
   protected:
-	 pthread_mutex_t access_mutex;
 
 	 /** If true, the model always has at least one subscription, so
 		  always runs. Defaults to false. */
@@ -1743,11 +1750,6 @@ namespace Stg
 		  initially NULL. */
 	 std::list<PowerPack*> pps_charging;
 		
-		/** Props map can contain arbitrary named data items. Can be used
-				by derived model types to store properties, and for user code
-				to associate arbitrary items with a model. */
-	 std::map<std::string,const void*> props;
-
 	 /** Visualize the most recent rasterization operation performed by this model */
 	 class RasterVis : public Visualizer
 	 {
