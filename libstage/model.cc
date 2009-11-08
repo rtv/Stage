@@ -252,12 +252,10 @@ Model::Model( World* world,
 				  Model* parent,
 				  const std::string& type ) :
   Ancestor(), 	 
-  //access_mutex(),
   alwayson(false),
   blockgroup(),
   blocks_dl(0),
   boundary(false),
-	//  callbacks(),
   color( 1,0,0 ), // red
   data_fresh(false),
   disabled(false),
