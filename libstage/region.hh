@@ -37,32 +37,23 @@ namespace Stg
 	 friend class SuperRegion;
 	 friend class World;
 	 friend class Block;
-  
+	 
   private:
 	 Region* region;  
-		std::vector<Block*> blocks;		
-
+	 std::vector<Block*> blocks;		
+	 
   public:
 	 Cell( Region* reg ) 
 		: region( reg ),
 		  blocks() 
-	 { 
-	 }  
-		
-		// virtual void RemoveBlock( Block* b )
-		// {
-		// 	EraseAll( b, blocks );		
-		// }
-
-		//inline void AddBlock( Block* b );  
-		//inline void AddBlockNoRecord( Block* b );
-  };  
-
+	 { /* nothing to do */ }  		
+  };  // class Cell
+  
   class Region
   {
   public:
 	 std::vector<Cell> cells;
-
+	 
 	 SuperRegion* superregion;	
 	 unsigned long count; // number of blocks rendered into this region
   
@@ -77,7 +68,7 @@ namespace Stg
 		return( (Cell*)&cells[ x + y * REGIONWIDTH ] ); 
 	 }	 
 
-  }; // end class Region
+  }; // class Region
 
   class SuperRegion
   {
