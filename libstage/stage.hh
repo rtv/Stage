@@ -783,6 +783,9 @@ namespace Stg
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
 
+	 /** Models that should be rendered into the background just-in-time, before sensing occurs */
+	 //std::vector<Model*> jit_render;
+
 	 /** Pointers to all the models in this world. */
 	 std::set<Model*> models;
 
@@ -887,9 +890,9 @@ namespace Stg
     virtual Model* RecentlySelectedModel(){ return NULL; }
 		
     SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
-    SuperRegion* GetSuperRegion( const stg_point_int_t& coord );
-    SuperRegion* GetSuperRegionCached( const stg_point_int_t& coord);
-    SuperRegion* GetSuperRegionCached( int32_t x, int32_t y );
+    //SuperRegion* GetSuperRegion( const stg_point_int_t& coord );
+    //SuperRegion* GetSuperRegionCached( const stg_point_int_t& coord);
+    SuperRegion* GetSuperRegion( int32_t x, int32_t y );
     void ExpireSuperRegion( SuperRegion* sr );
 		
 		/** add a Cell pointer to the vector for each cell on the line from
@@ -1609,6 +1612,9 @@ namespace Stg
 	 /** If true, the model always has at least one subscription, so
 		  always runs. Defaults to false. */
 	 bool alwayson;
+
+	 /** If true, the model is rendered lazily into the regions, to reduce memory use. */
+	 // bool background;
 
 	 BlockGroup blockgroup;
 	 /**  OpenGL display list identifier for the blockgroup */

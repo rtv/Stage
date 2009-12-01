@@ -51,26 +51,16 @@ void Model::Load()
   watts_give = wf->ReadFloat( wf_entity, "give_watts", watts_give );    
   watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
   
-  if( wf->PropertyExists( wf_entity, "debug" ) )
-    {
-      PRINT_WARN2( "debug property specified for model %d  %s\n",
-						 wf_entity, this->token.c_str() );
-      this->debug = wf->ReadInt( wf_entity, "debug", this->debug );
-    }
+  this->debug = wf->ReadInt( wf_entity, "debug", this->debug );
   
-  if( wf->PropertyExists( wf_entity, "name" ) )
-    {
-      const std::string& name = wf->ReadString(wf_entity, "name", token );
-      if( name != token )
-		  {
-			 //printf( "adding name %s to %s\n", name, this->token );
-			 this->token = name ;
-			 world->AddModelName( this, name ); // add this name to the world's table
-		  }
-      else
-		  PRINT_ERR1( "Name blank for model %s. Check your worldfile\n", this->token.c_str() );
-    }
-  
+  const std::string& name = wf->ReadString(wf_entity, "name", token );
+  if( name != token )
+	 {
+		//printf( "adding name %s to %s\n", name, this->token );
+		this->token = name ;
+		world->AddModelName( this, name ); // add this name to the world's table
+	 }
+
   //PRINT_WARN1( "%s::Load", token );
   
   if( wf->PropertyExists( wf_entity, "origin" ) )
@@ -176,23 +166,21 @@ void Model::Load()
 			 AddBlockRect(blockgroup.maxx-epsilon,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
 		  }     
     }	  
-
-  if( wf->PropertyExists( wf_entity, "mass" ))
-    this->SetMass( wf->ReadFloat(wf_entity, "mass", this->mass ));
-	
+  
+  stg_kg_t m = wf->ReadFloat(wf_entity, "mass", this->mass );
+  if( m != this->mass ) 
+	 SetMass( m );
+  	
   vis.Load( wf, wf_entity );
-	SetFiducialReturn( vis.fiducial_return ); // may have some work to do
-
+  SetFiducialReturn( vis.fiducial_return ); // may have some work to do
+  
   gui.Load( wf, wf_entity );
 
-  if( wf->PropertyExists( wf_entity, "map_resolution" ))
-    this->SetMapResolution( wf->ReadFloat(wf_entity, "map_resolution", this->map_resolution ));
-
-	// todo - look into this
-  //if (vis.gravity_return)
-	//this->SetVelocity( GetVelocity() );
-	
-	velocity_enable = wf->ReadInt( wf_entity, "enable_velocity", velocity_enable );
+  double res = wf->ReadFloat(wf_entity, "map_resolution", this->map_resolution );
+  if( res != this->map_resolution )
+    SetMapResolution( res );
+  
+  velocity_enable = wf->ReadInt( wf_entity, "enable_velocity", velocity_enable );
 	
   if( wf->PropertyExists( wf_entity, "friction" ))
   {
@@ -214,11 +202,11 @@ void Model::Load()
     }
   
   
-  if( wf->PropertyExists( wf_entity, "say" ))
-    this->Say( wf->ReadString(wf_entity, "say", "" ));
+
+  Say( wf->ReadString(wf_entity, "say", "" ));
   
-	trail_length = wf->ReadInt( wf_entity, "trail_length", trail_length );
-	trail.resize( trail_length );
+  trail_length = wf->ReadInt( wf_entity, "trail_length", trail_length );
+  trail.resize( trail_length );
 
 	trail_interval = wf->ReadInt( wf_entity, "trail_interval", trail_interval );
 

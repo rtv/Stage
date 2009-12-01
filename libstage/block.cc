@@ -2,6 +2,10 @@
 #include "worldfile.hh"
 
 using namespace Stg;
+using std::vector;
+
+static void canonicalize_winding(vector<stg_point_t>& pts);
+
 
 /** Create a new block. A model's body is a list of these
     blocks. The point data is copied, so pts can safely be freed
@@ -32,6 +36,7 @@ Block::Block( Model* mod,
   this->pts.reserve( pt_count );
   for( size_t p=0; p<pt_count; p++ )
     this->pts.push_back( pts[p] );	
+  canonicalize_winding(this->pts);
 }
 
 /** A from-file  constructor */
@@ -52,6 +57,7 @@ Block::Block(  Model* mod,
   assert(entity);
   
   Load( wf, entity );
+  canonicalize_winding(this->pts);
 }
 
 Block::~Block()
@@ -457,4 +463,93 @@ void Block::Load( Worldfile* wf, int entity )
     inherit_color = true;
   
   glow = wf->ReadFloat( entity, "glow", glow );
+}
+
+static
+/// util; puts angle into [0, 2pi)
+void positivize(stg_radians_t& angle)
+{
+    while (angle < 0) angle += 2 * M_PI;
+}
+
+static
+/// util; puts angle into -pi/2, pi/2
+void pi_ize(stg_radians_t& angle)
+{
+    while (angle < -M_PI) angle += 2 * M_PI;
+    while (M_PI < angle)  angle -= 2 * M_PI;
+}
+
+typedef stg_point_t V2;
+
+static
+/// util; How much was v1 rotated to get to v2?
+stg_radians_t angle_change(V2 v1, V2 v2)
+{
+    stg_radians_t a1 = atan2(v1.y, v1.x);
+    positivize(a1);
+
+    stg_radians_t a2 = atan2(v2.y, v2.x);
+    positivize(a2);
+
+    stg_radians_t angle_change = a2 - a1;
+    pi_ize(angle_change);
+
+    return angle_change;
+}
+
+static
+/// util; find vectors between adjacent points, pts[next] - pts[cur]
+vector<stg_point_t> find_vectors(vector<stg_point_t> const& pts)
+{
+    vector<stg_point_t> vs;
+    assert(2 <= pts.size());
+    for (unsigned i = 0, n = pts.size(); i < n; ++i)
+    {
+        unsigned j = (i + 1) % n;
+        vs.push_back(V2(pts[j].x - pts[i].x, pts[j].y - pts[i].y));
+    }
+    assert(vs.size() == pts.size());
+    return vs;
+}
+
+static
+/// util; finds sum of angle changes, from each vertex to the
+/// next one (in current ordering), wrapping around.
+stg_radians_t angles_sum(vector<stg_point_t> const& vs)
+{
+    stg_radians_t angle_sum = 0;
+    for (unsigned i = 0, n = vs.size(); i < n; ++i)
+    {
+        unsigned j = (i + 1) % n;
+        angle_sum += angle_change(vs[i], vs[j]);
+    }
+    return angle_sum;
+}
+
+static
+/// Util
+bool is_canonical_winding(vector<stg_point_t> const& ps)
+{
+    // reuse stg_point_t as vector
+    vector<stg_point_t> vs = find_vectors(ps);
+    stg_radians_t sum = angles_sum(vs);
+    bool bCanon = 0 < sum;
+
+    return bCanon;
+}
+
+static
+/// util; sums angle changes to see whether it's 2pi or -2pi.
+/// 2pi is counter-clockwise winding (which OpenGL requires),
+/// -2pi is clockwise. Reverses <pts> when winding is clockwise.
+// Note that a simple line that doubles back on itself has an
+// angle sum of 0, but that's intrinsic to a line - its winding could
+// be either way.
+void canonicalize_winding(vector<stg_point_t>& ps)
+{
+    if (not is_canonical_winding(ps))
+    {
+        std::reverse(ps.begin(), ps.end());
+    }
 }

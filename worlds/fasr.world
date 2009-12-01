@@ -15,7 +15,7 @@ quit_time 3600 # 1 hour of simulated time
 
 resolution 0.02
 
-#threads 2
+ threads 0
 
 # configure the GUI window
 window
@@ -35,7 +35,7 @@ window
 # load an environment bitmap
 floorplan
 ( 
-  name "cave"
+  name "cave" 
   pose [0 0 0 0]
   size [16.000 16.000 0.600]
   bitmap "bitmaps/cave.png"

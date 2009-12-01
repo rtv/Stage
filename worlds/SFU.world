@@ -9,7 +9,7 @@ include "sick.inc"
 speedup -1 # as fast as possible
 
 paused 0
-resolution 0.1
+resolution 0.05
 threads 0
 
 # configure the GUI window

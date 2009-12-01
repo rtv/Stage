@@ -32,6 +32,7 @@ window
 # load an environment bitmap
 floorplan
 ( 
+  background 0
   size [140.000 60.000 0.500]
   pose [0 0.500 0 0]
   bitmap "../bitmaps/hospital.png"
@@ -43,22 +44,22 @@ define swarmbot position
   color "random"
 
   ranger( pose [ 0 0 -0.050 0 ] 
-  alwayson 1
+  # alwayson 1
 
-  	  scount 12 
-  	  spose[0] [0 0 0]
-  	  spose[1] [0 0 30]
-  	  spose[2] [0 0 60]
-  	  spose[3] [0 0 90]
-  	  spose[4] [0 0 120]
-  	  spose[5] [0 0 150]
-  	  spose[6] [0 0 180]
-  	  spose[7] [0 0 210]
-  	  spose[8] [0 0 240]
-  	  spose[9] [0 0 270]
-  	  spose[10] [0 0 300]
-  	  spose[11] [0 0 330]
-     sview [ 0 2 30] )
+  scount 12 
+  spose[0] [0 0 0]
+  spose[1] [0 0 30]
+  spose[2] [0 0 60]
+  spose[3] [0 0 90]
+  spose[4] [0 0 120]
+  spose[5] [0 0 150]
+  spose[6] [0 0 180]
+  spose[7] [0 0 210]
+  spose[8] [0 0 240]
+  spose[9] [0 0 270]
+  spose[10] [0 0 300]
+  spose[11] [0 0 330]
+  sview [ 0 2 30] )
 
   ctrl "expand_swarm"
 )

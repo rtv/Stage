@@ -11,6 +11,8 @@ namespace Stg
 {
 
   // a bit of experimenting suggests that these values are fast. YMMV.
+  //const int32_t RBITS( 5 ); // regions contain (2^RBITS)^2 pixels
+  //const int32_t SBITS( 5 );// superregions contain (2^SBITS)^2 regions
   const int32_t RBITS( 5 ); // regions contain (2^RBITS)^2 pixels
   const int32_t SBITS( 5 );// superregions contain (2^SBITS)^2 regions
   const int32_t SRBITS( RBITS+SBITS );

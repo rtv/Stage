@@ -47,9 +47,9 @@
     detection and sensing. The default is often a reasonable choice.
 
     - show_clock <int>\n
-     If non-zero, print the simulation time on stdout every
-     $show_clock_interval updates. Useful to watch the progress of
-     non-GUI simulations.
+	 If non-zero, print the simulation time on stdout every
+	 $show_clock_interval updates. Useful to watch the progress of
+	 non-GUI simulations.
 
 	 - show_clock_interval <int>\n
 	 Sets the number of updates between printing the time on stdoutm,
@@ -103,6 +103,7 @@ World::World( const std::string& name,
   // private
   destroy( false ),
   dirty( true ),
+  //jit_render(),
   models(),
   models_by_name(),
   models_with_fiducials(),
@@ -351,18 +352,18 @@ void World::Load( const char* worldfile_path )
       
       // kick off the threads
       for( unsigned int t=0; t<worker_threads; t++ )
-	{
-	  std::pair<World*,int> *p = new std::pair<World*,int>( this, t+1 );
+		  {
+			 std::pair<World*,int> info( this, t+1 );
+
+			 //normal posix pthread C function pointer
+			 typedef void* (*func_ptr) (void*);
 	  
-	  //normal posix pthread C function pointer
-	  typedef void* (*func_ptr) (void*);
-	  
-	  pthread_t pt;
-	  pthread_create( &pt,
-			  NULL,
-			  (func_ptr)World::update_thread_entry, 
-			  p );
-	}
+			 pthread_t pt;
+			 pthread_create( &pt,
+								  NULL,
+								  (func_ptr)World::update_thread_entry, 
+								  &info );
+		  }
       
       printf( "[threads %u]", worker_threads );	
     }
@@ -374,13 +375,13 @@ void World::Load( const char* worldfile_path )
       
       // don't load window entries here
       if( strcmp( typestr, "window" ) == 0 )
-	{
-	  /* do nothing here */
-	}
+		  {
+			 /* do nothing here */
+		  }
       else if( strcmp( typestr, "block" ) == 0 )
-	LoadBlock( wf, entity );
+		  LoadBlock( wf, entity );
       else
-	LoadModel( wf, entity );
+		  LoadModel( wf, entity );
     }
   
   // call all controller init functions
@@ -448,7 +449,7 @@ std::string World::ClockString() const
 }
 
 void World::AddUpdateCallback( stg_world_callback_t cb, 
-			       void* user )
+										 void* user )
 {
   // add the callback & argument to the list
   std::pair<stg_world_callback_t,void*> p(cb, user);
@@ -456,7 +457,7 @@ void World::AddUpdateCallback( stg_world_callback_t cb,
 }
 
 int World::RemoveUpdateCallback( stg_world_callback_t cb, 
-				 void* user )
+											void* user )
 {
   std::pair<stg_world_callback_t,void*> p( cb, user );
   
@@ -705,7 +706,7 @@ stg_raytrace_result_t World::Raytrace( const Ray& r )
   // inline calls have a noticeable (2-3%) effect on performance.
   while( n > 0  ) // while we are still not at the ray end
     { 
-      Region* reg( GetSuperRegionCached( GETSREG(globx), GETSREG(globy) )
+      Region* reg( GetSuperRegion( GETSREG(globx), GETSREG(globy) )
 						 ->GetRegion( GETREG(globx), GETREG(globy) ));
 			
       if( reg->count ) // if the region contains any objects
@@ -903,55 +904,35 @@ SuperRegion* World::AddSuperRegion( const stg_point_int_t& sup )
   //printf( "top right (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
   Extend( pt ); // top right corner of the new superregion
   
+//   // map all jit models
+//   FOR_EACH( it, jit_render )
+// 	 (*it)->Map();
+
   return sr;
 }
 
-inline SuperRegion* World::GetSuperRegionCached( int32_t x, int32_t y )
+
+inline SuperRegion* World::GetSuperRegion( int32_t x, int32_t y )
 {
   // around 99% of the time the SR is the same as last
   // lookup - cache  gives a 4% overall speed up :)
   
   if( sr_cached && sr_cached->origin.x == x && sr_cached->origin.y  == y )
     return sr_cached;
-  //else
-  // delay constructing the object as long as possible
-  return GetSuperRegion( stg_point_int_t(x,y) );
-}
-
-inline SuperRegion* World::GetSuperRegionCached( const stg_point_int_t& sup )
-{
-  // around 99% of the time the SR is the same as last
-  // lookup - cache  gives a 4% overall speed up :)
   
-  if( sr_cached && sr_cached->origin == sup )
-    return sr_cached;
-  //else
-  return GetSuperRegion( sup);
-}
-
-
-inline SuperRegion* World::GetSuperRegion( const stg_point_int_t& sup )
-{
-  //printf( "SUP[ %d %d ] ", sup.x, sup.y );
-  SuperRegion* sr = superregions[ sup ];
+  stg_point_int_t pt(x,y);
+  
+  SuperRegion* sr = superregions[ pt ];
   
   if( sr == NULL ) // no superregion exists! make a new one
-    sr = AddSuperRegion( sup );
+    sr = AddSuperRegion( pt );
   
   // cache for next time around
   sr_cached = sr;
   
-  assert( sr ); 
+  //assert( sr ); 
   return sr;
 }
-
-//  Cell* World::GetCell( const stg_point_int_t& glob )
-// {
-//   return( ((Region*)GetSuperRegionCached(  GETSREG(glob.x), GETSREG(glob.y)  )
-// 			  ->GetRegion( GETREG(glob.x), GETREG(glob.y) ))
-// 			 ->GetCell( GETCELL(glob.x), GETCELL(glob.y) )) ;
-// }
-
 
 void World::ForEachCellInLine( const stg_point_int_t& start,
 										 const stg_point_int_t& end,
@@ -975,9 +956,9 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
   
   while( n ) 
     {				
-      Region* reg( GetSuperRegionCached( GETSREG(globx), GETSREG(globy) )
+      Region* reg( GetSuperRegion( GETSREG(globx), GETSREG(globy) )
 						 ->GetRegion( GETREG(globx), GETREG(globy) ));
-			
+
       // add all the required cells in this region before looking up
       // another region			
       int32_t cx( GETCELL(globx) ); 
@@ -994,7 +975,7 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
 				 n > 0 )
 		  {					
 			 // find the cell at this location, then add it to the vector
-				cells.push_back( c );
+			 cells.push_back( c );
 					
 			 // cleverly skip to the next cell (now it's safe to
 			 // manipulate the cell pointer)

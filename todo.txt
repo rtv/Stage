@@ -16,6 +16,7 @@ linux	16.36
 OS X	16.20 (rev 7949) 
       19.94 (rev 8210 - new event queue is slower but more powerful and elegant)
       14.5 (rev 8295) threads: 6: 13.7 3: 13.4
+		14.16 (rev 8329) threads 3: 13.4
 
 MBA 17.3
 MBA 23.1 (1 thread)
