@@ -163,6 +163,10 @@ Model* Block::TestCollision()
   GenerateCandidateCells();
   
   if( mod->vis.obstacle_return )
+  {
+    if ( global_z.min < 0 )
+      return this->mod->world->GetGround();
+	  
     // for every cell we may be rendered into
 	 FOR_EACH( cell_it, *candidate_cells )
       {
@@ -187,6 +191,7 @@ Model* Block::TestCollision()
 				  }
 			 }
 		}
+  }
 
   //printf( "model %s block %p collision done. no hits.\n", mod->Token(), this );
   return NULL; // no hit

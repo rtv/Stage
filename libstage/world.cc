@@ -146,11 +146,18 @@ World::World( const std::string& name,
   pthread_cond_init( &threads_done_cond, NULL );
  
   World::world_set.insert( this );
+  
+  ground = new Model(this, NULL, "model");
+  assert(ground);
+  ground->SetToken( "_ground_model" ); // allow users to identify this unique model
+  ground->ClearBlocks();
+  ground->SetGuiMove(false);
 }
 
 World::~World( void )
 {
   PRINT_DEBUG2( "destroying world %d %s", id, token.c_str() );
+  if( ground ) delete ground;
   if( wf ) delete wf;
   World::world_set.erase( this );
 }
