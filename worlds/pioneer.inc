@@ -1,4 +1,3 @@
-
 # Desc: Device definitions for Activemedia robots.
 # Author: Richard Vaughan, Andrew Howard,  Luis Riazuelo
 # Date: 10 Jun 2002

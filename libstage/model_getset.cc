@@ -192,8 +192,8 @@ Pose Model::GetGlobalPose() const
   // otherwise    
   Pose global_pose = parent->GetGlobalPose() + pose;		
   
-  // we are on top of our parent
-  global_pose.z += parent->geom.size.z;
+  if ( parent->stack_children ) // should we be on top of our parent?
+    global_pose.z += parent->geom.size.z;
   
   return global_pose;
 }

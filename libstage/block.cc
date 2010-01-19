@@ -24,7 +24,6 @@ Block::Block( Model* mod,
   local_z( zmin, zmax ),
   color( color ),
   inherit_color( inherit_color ),
-  glow( 0.0 ),
   rendered_cells( new CellPtrVec ), 
   candidate_cells( new CellPtrVec ),
   gpts()
@@ -460,10 +459,11 @@ void Block::Load( Worldfile* wf, int entity )
       inherit_color = false;
     }
   else
-    inherit_color = true;
-  
-  glow = wf->ReadFloat( entity, "glow", glow );
+    inherit_color = true;  
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// utility functions to ensure block winding is consistent and matches OpenGL's default
 
 static
 /// util; puts angle into [0, 2pi)

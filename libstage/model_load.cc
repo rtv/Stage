@@ -167,6 +167,9 @@ void Model::Load()
 		  }     
     }	  
   
+  this->stack_children =
+    wf->ReadInt( wf_entity, "stack_children", this->stack_children );
+  
   stg_kg_t m = wf->ReadFloat(wf_entity, "mass", this->mass );
   if( m != this->mass ) 
 	 SetMass( m );

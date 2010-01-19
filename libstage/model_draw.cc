@@ -233,7 +233,7 @@ void Model::PushLocalCoords()
 {
   glPushMatrix();  
   
-  if( parent )
+  if( parent && parent->stack_children )
     glTranslatef( 0,0, parent->geom.size.z );
   
   Gl::pose_shift( pose );

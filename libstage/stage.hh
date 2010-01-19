@@ -824,7 +824,7 @@ namespace Stg
     pthread_cond_t threads_done_cond; ///< signalled by last worker thread to unblock main thread
     int total_subs; ///< the total number of subscriptions to all models
 	 unsigned int worker_threads; ///< the number of worker threads to use
-	 
+    
   protected:	 
 
 	 std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
@@ -1134,9 +1134,6 @@ namespace Stg
     Bounds local_z; ///<  z extent in local coords
     Color color;
     bool inherit_color;
-	 
-	 /** experimental - range 0 - 1, render glowing */
-	 double glow;
 	 
     void DrawTop();
     void DrawSides();
@@ -1787,6 +1784,8 @@ namespace Stg
 	 bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
 	 std::string say_string;   ///< if non-null, this string is displayed in the GUI 
 		
+    bool stack_children; ///< whether child models should be stacked on top of this model or not
+
 	 stg_bool_t stall;
 	 int subs;    ///< the number of subscriptions to this model
 	 /** Thread safety flag. Iff true, Update() may be called in
@@ -1962,7 +1961,7 @@ namespace Stg
 	 /** Causes this model and its children to recompute their global
 		  position instead of using a cached pose in
 		  Model::GetGlobalPose()..*/
-	 void GPoseDirtyTree();
+	 //void GPoseDirtyTree();
 
 	 virtual void Startup();
 	 virtual void Shutdown();

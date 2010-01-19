@@ -45,6 +45,8 @@
     map_resolution 0.1
     say ""
     alwayson 0
+
+    stack_children 1
     )
     @endverbatim
 
@@ -124,6 +126,12 @@
 
     - gui_move <int>\n if 1, the model can be moved by the mouse in
     the GUI window
+
+    - stack_children <int>\n If non-zero (the default), the coordinate
+      system of child models is offset in z so that its origin is on
+      _top_ of this model, making it easy to stack models together. If
+      zero, the child coordinate system is not offset in z, making it
+      easy to define objects in a single local coordinate system.
 */
 
 // todo
@@ -278,6 +286,7 @@ Model::Model( World* world,
 	 rastervis(),
     rebuild_displaylist(true),
     say_string(),
+    stack_children( true ),
     stall(false),	 
 	subs(0),
 	thread_safe( false ),
