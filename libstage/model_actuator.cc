@@ -68,6 +68,7 @@ ModelActuator::ModelActuator( World* world,
   max_speed(1), 
   min_position(0), 
   max_position(1),
+  start_position(0),
   control_mode( CONTROL_VELOCITY ),
   actuator_type( TYPE_LINEAR ),
   axis(0,0,0)
@@ -144,6 +145,35 @@ void ModelActuator::Load( void )
 	if( wf->PropertyExists( wf_entity, "min_position" ) )
 	{
 		min_position = wf->ReadFloat( wf_entity, "min_position", 0 );
+	}
+
+	if( wf->PropertyExists( wf_entity, "start_position" ) )
+	{
+		start_position = wf->ReadFloat ( wf_entity, "start_position", 0 );
+		
+		Pose desired_pose = InitialPose;
+		
+		switch (actuator_type)
+		  {
+		  case TYPE_LINEAR:
+			 {				 
+				double cosa = cos(desired_pose.a);
+				double sina = sin(desired_pose.a);
+				
+				desired_pose.x += (axis.x * cosa - axis.y * sina) * start_position;
+				desired_pose.y += (axis.x * sina + axis.y * cosa) * start_position;
+				desired_pose.z += axis.z * start_position;
+				SetPose( desired_pose );
+			 } break;
+
+		  case TYPE_ROTATIONAL:
+			 {
+				desired_pose.a += start_position;
+				SetPose( desired_pose);
+			 }break;
+			default:
+			  PRINT_ERR1( "unrecognized actuator type %d", actuator_type );
+		  }
 	}
 
 }

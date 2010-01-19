@@ -2929,6 +2929,7 @@ namespace Stg
 	 double max_speed;
 	 double min_position;
 	 double max_position;
+	 double start_position;
 	 ControlMode control_mode;
 	 ActuatorType actuator_type;
 	 stg_point3_t axis;
