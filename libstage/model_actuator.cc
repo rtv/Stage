@@ -89,8 +89,7 @@ ModelActuator::~ModelActuator( void )
 void ModelActuator::Load( void )
 {
   Model::Load();
-  InitialPose = GetPose();
-  
+
   // load steering mode
   if( wf->PropertyExists( wf_entity, "type" ) )
 	 {
@@ -151,25 +150,25 @@ void ModelActuator::Load( void )
 	{
 		start_position = wf->ReadFloat ( wf_entity, "start_position", 0 );
 		
-		Pose desired_pose = InitialPose;
+		Pose DesiredPose = InitialPose;
 		
 		switch (actuator_type)
 		  {
 		  case TYPE_LINEAR:
 			 {				 
-				double cosa = cos(desired_pose.a);
-				double sina = sin(desired_pose.a);
+				double cosa = cos(DesiredPose.a);
+				double sina = sin(DesiredPose.a);
 				
-				desired_pose.x += (axis.x * cosa - axis.y * sina) * start_position;
-				desired_pose.y += (axis.x * sina + axis.y * cosa) * start_position;
-				desired_pose.z += axis.z * start_position;
-				SetPose( desired_pose );
+				DesiredPose.x += (axis.x * cosa - axis.y * sina) * start_position;
+				DesiredPose.y += (axis.x * sina + axis.y * cosa) * start_position;
+				DesiredPose.z += axis.z * start_position;
+				SetPose( DesiredPose );
 			 } break;
 
 		  case TYPE_ROTATIONAL:
 			 {
-				desired_pose.a += start_position;
-				SetPose( desired_pose);
+				DesiredPose.a += start_position;
+				SetPose( DesiredPose);
 			 }break;
 			default:
 			  PRINT_ERR1( "unrecognized actuator type %d", actuator_type );
@@ -197,7 +196,9 @@ void ModelActuator::Update( void  )
 	{
 		case TYPE_LINEAR:
 		{
-			pos = PoseDiff.x * axis.x + PoseDiff.y * axis.y + PoseDiff.z * axis.z; // Dot product to find distance along axis
+			// When the velocity is applied, it will automatically be rotated by the angle the model is at
+			// So, rotate the axis of movement by the model angle before doing a dot product to find the actuator position
+			pos = (PoseDiff.x * cosa - PoseDiff.y * sina)*axis.x + (PoseDiff.x * sina+ PoseDiff.y * cosa)* axis.y + PoseDiff.z * axis.z;
 		} break;
 		case TYPE_ROTATIONAL:
 		{

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_gripper.c,v $
 //  $Author: thjc $
-//  $Revision: 1.26.8.1 $
+//  $Revision$
 //
 ///////////////////////////////////////////////////////////////////////////
 

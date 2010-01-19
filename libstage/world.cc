@@ -1,3 +1,8 @@
+
+/**
+	$Id$ 
+ **/
+
 /** @defgroup world World
 
     Stage simulates a 'world' composed of `models', defined in a `world

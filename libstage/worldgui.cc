@@ -3,7 +3,7 @@
     Authors: Richard Vaughan (vaughan@sfu.ca)
              Alex Couture-Beil (asc17@sfu.ca)
              Jeremy Asher (jra11@sfu.ca)
-    SVN: $Id$
+    SVN: $Id: worldgui.cc 8329 2009-10-27 06:30:39Z rtv $
 */
 
 /** @defgroup worldgui World with Graphical User Interface

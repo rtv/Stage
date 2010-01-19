@@ -28,7 +28,7 @@
  *  Desc: External header file for the Stage library
  *  Author: Richard Vaughan (vaughan@sfu.ca) 
  *  Date: 1 June 2003
- *  SVN: $Id$
+ *  SVN: $Id: stage.hh 8516 2010-01-19 22:57:20Z rtv $
  */
 
 // C libs
@@ -2930,6 +2930,8 @@ namespace Stg
 	 double min_position;
 	 double max_position;
 	 double start_position;
+	 double cosa;
+	 double sina;
 	 ControlMode control_mode;
 	 ActuatorType actuator_type;
 	 stg_point3_t axis;

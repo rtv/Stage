@@ -1,6 +1,6 @@
 // Thin-as-possible C Wrappers for C++ worldfile calls, using a single static worldfile.
 // This is a hacky use of the old C++ worldfile code.
-// $Id$
+// $Id: stagecpp.cc 7151 2008-11-15 03:11:20Z rtv $
 
 #include "stage_internal.h"
 #include "gui.h"

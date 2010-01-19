@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id$
+ * CVS info: $Id: worldfile.cc 8313 2009-10-20 16:55:31Z rtv $
  */
 
 #include <assert.h>

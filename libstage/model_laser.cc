@@ -5,7 +5,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_laser.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.7 $
+//  $Revision$
 //
 ///////////////////////////////////////////////////////////////////////////
 

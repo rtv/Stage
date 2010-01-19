@@ -7,7 +7,7 @@
     Alex Couture-Beil (asc17@sfu.ca)
     Jeremy Asher (jra11@sfu.ca)
 
-    $Id$
+    $Id: canvas.cc 8330 2009-10-27 19:13:58Z rtv $
 */
 
 #include "stage.hh"

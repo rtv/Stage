@@ -3,7 +3,7 @@
  *  Stage
  *
  *  Created by Alex Couture-Beil on 03/06/08.
- *  $Id$
+ *  $Id: texture_manager.cc 8070 2009-07-22 06:41:10Z rtv $
  */
 
 #include <sstream>

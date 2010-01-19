@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_blinkenlight.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision$
 //
 ///////////////////////////////////////////////////////////////////////////
 
