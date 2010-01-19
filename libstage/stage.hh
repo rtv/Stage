@@ -108,6 +108,8 @@ namespace Stg
 		number. */
   const char* Version();
 
+  const int REVISION = $Rev$;
+
   /** Copyright string */
   const char COPYRIGHT[] =				       
     "Copyright Richard Vaughan and contributors 2000-2009";
