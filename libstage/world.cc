@@ -642,7 +642,7 @@ void World::Raytrace( const Pose &gpose, // global pose
   
   for( uint32_t s=0; s < sample_count; s++ )
     {
-      raypose.a = (s * fov / (double)sample_count) - starta;
+      raypose.a = (s * fov / (double)(sample_count-1)) - starta;
       samples[s] = Raytrace( raypose, range, func, model, arg, ztest );
     }
 }
