@@ -2,7 +2,7 @@
 	 Simple model of energy storage
 	 Richard Vaughan
 	 Created 2009.1.15
-    SVN: $Id: stage.hh 7279 2009-01-18 00:10:21Z rtv $
+    SVN: $Id$
 */
 
 #include "stage.hh"

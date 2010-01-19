@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh 8264 2009-09-26 01:28:12Z rtv $
+ * CVS info: $Id$
  */
 
 #ifndef WORLDFILE_HH

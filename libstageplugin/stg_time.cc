@@ -22,7 +22,7 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.cc,v 1.2 2008-01-15 01:25:42 rtv Exp $
+// CVS: $Id$
 //
 ///////////////////////////////////////////////////////////////////////////
 

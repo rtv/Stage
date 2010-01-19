@@ -14,7 +14,7 @@ namespace Stg {
 	 Used to pass settings between the GUI and the drawing classes
 	 
 	 Author: Jeremy Asher, Richard Vaughan
-	 SVN: $Id: option.hh 8061 2009-07-21 01:49:26Z rtv $
+	 SVN: $Id$
 	 */	
 	class Option {
 	private:

@@ -23,7 +23,7 @@
  * Desc: Speech player driver
  * Author: Pooya Karimian
  * Date: 21 March 2006
- * CVS: $Id: p_speech.cc,v 1.2 2008-01-15 01:25:42 rtv Exp $
+ * CVS: $Id$
  */
 
 

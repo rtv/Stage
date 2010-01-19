@@ -28,7 +28,7 @@
  *  Desc: External header file for the Stage library
  *  Author: Richard Vaughan (vaughan@sfu.ca) 
  *  Date: 1 June 2003
- *  SVN: $Id: stage.hh 8516 2010-01-19 22:57:20Z rtv $
+ *  SVN: $Id$
  */
 
 // C libs
@@ -107,8 +107,6 @@ namespace Stg
   /** returns a human readable string indicating the libstage version
 		number. */
   const char* Version();
-
-  const int REVISION = $Rev$;
 
   /** Copyright string */
   const char COPYRIGHT[] =				       

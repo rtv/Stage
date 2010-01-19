@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision$
 //
 ///////////////////////////////////////////////////////////////////////////
 

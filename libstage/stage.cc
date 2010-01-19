@@ -18,6 +18,7 @@ const char* Stg::Version()
   return VERSION; 
 }
 
+
 void Stg::Init( int* argc, char** argv[] )
 {
   PRINT_DEBUG( "Stg::Init()" );
