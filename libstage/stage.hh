@@ -2829,10 +2829,10 @@ namespace Stg
   private:
 	 Pose goal;///< the current velocity or pose to reach, depending on the value of control_mode
 	 ControlMode control_mode;
-	 DriveMode drive_mode;
+	 DriveMode drive_mode;	 
 	 LocalizationMode localization_mode; ///< global or local mode
 	 Velocity integration_error; ///< errors to apply in simple odometry model
-	 
+	 double wheelbase;
 	 
   public:
 	 // constructor

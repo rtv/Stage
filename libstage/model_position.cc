@@ -1,11 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: model_laser.c
+// File: model_position.cc
 // Author: Richard Vaughan
 // Date: 10 June 2004
 //
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/libstage/model_position.cc,v $
+// SVN info:
 //  $Author: rtv $
 //  $Revision$
 //
@@ -47,6 +46,9 @@ using namespace Stg;
     # only used if localization is set to "odom"
     odom_error [0.03 0.03 0.00 0.05]
 
+	 # only used if drive is set to "car"
+	 wheelbase 1.0
+
     # model properties
 
 		# update position according to the current velocity state
@@ -67,6 +69,7 @@ using namespace Stg;
     - set the origin of the localization coordinate system. By default, this is copied from the model's initial pose, so the robot reports its position relative to the place it started out. Tip: If localization_origin is set to [0 0 0 0] and localization is "gps", the model will return its true global position. This is unrealistic, but useful if you want to abstract away the details of localization. Be prepared to justify the use of this mode in your research! 
     - odom_error [x y z theta]
     - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
+    - wheelbase <float,meters>\nThe wheelbase used for the car steering model. Only used if drive is set to "car". Defaults to 1.0m\n
 */
 
 
@@ -94,6 +97,7 @@ ModelPosition::ModelPosition( World* world,
 							drand48() * INTEGRATION_ERROR_MAX_Z - INTEGRATION_ERROR_MAX_Z/2.0,
 							drand48() * INTEGRATION_ERROR_MAX_A - INTEGRATION_ERROR_MAX_A/2.0 ),
   waypoints(),
+  wheelbase( 1.0 ),
   wpvis(),
   posevis()
 {
@@ -138,7 +142,10 @@ void ModelPosition::Load( void )
 		  PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\" or \"car\". Using \"diff\" as default.", mode_str.c_str() );	      
 		
 	 }
- 
+  
+  // choose a wheelbase
+  this->wheelbase = wf->ReadFloat( wf_entity, "wheelbase", this->wheelbase );
+    
   // load odometry if specified
   if( wf->PropertyExists( wf_entity, "odom" ) )
     {
@@ -246,7 +253,7 @@ void ModelPosition::Update( void  )
 					 // car like steering model based on speed and turning angle
 					 vel.x = goal.x * cos(goal.a);
 					 vel.y = 0;
-					 vel.a = goal.x * sin(goal.a)/1.0; // here 1.0 is the wheel base, this should be a config option
+					 vel.a = goal.x * sin(goal.a)/wheelbase;
 					 break;
 			  
 				  default:
