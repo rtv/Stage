@@ -228,7 +228,7 @@ Model::Visibility::Visibility() :
   laser_return( LaserVisible ),
   obstacle_return( true ),
   ranger_return( true )
-{ /* nothing do do */ }
+{ /* nothing to do */ }
 
 //static const members
 static const double DEFAULT_FRICTION = 0.0;
@@ -261,8 +261,8 @@ void Model::GuiState::Load( Worldfile* wf, int wf_entity )
 
 // constructor
 Model::Model( World* world,
-				  Model* parent,
-				  const std::string& type ) :
+							Model* parent,
+							const std::string& type ) :
   Ancestor(), 	 
   alwayson(false),
   blockgroup(),
@@ -271,43 +271,43 @@ Model::Model( World* world,
   color( 1,0,0 ), // red
   data_fresh(false),
   disabled(false),
-	 cv_list(),
-    flag_list(),
-    geom(),
-    has_default_block( true ),
-    id( Model::count++ ),
-    interval((stg_usec_t)1e5), // 100msec
-    interval_energy((stg_usec_t)1e5), // 100msec
-    interval_pose((stg_usec_t)1e5), // 100msec
-    last_update(0),
-	 log_state(false),
-    map_resolution(0.1),
-    mass(0),
-    parent(parent),
-    pose(),
-	 power_pack( NULL ),
-	 pps_charging(),
-	 rastervis(),
-    rebuild_displaylist(true),
-    say_string(),
-    stack_children( true ),
-    stall(false),	 
+	cv_list(),
+	flag_list(),
+	geom(),
+	has_default_block( true ),
+	id( Model::count++ ),
+	interval((stg_usec_t)1e5), // 100msec
+	interval_energy((stg_usec_t)1e5), // 100msec
+	interval_pose((stg_usec_t)1e5), // 100msec
+	last_update(0),
+	log_state(false),
+	map_resolution(0.1),
+	mass(0),
+	parent(parent),
+	pose(),
+	power_pack( NULL ),
+	pps_charging(),
+	rastervis(),
+	rebuild_displaylist(true),
+	say_string(),
+	stack_children( true ),
+	stall(false),	 
 	subs(0),
 	thread_safe( false ),
 	trail(trail_length),
 	trail_index(0),
 	type(type),	
-	 event_queue_num( 0 ),
-    used(false),
+	event_queue_num( 0 ),
+	used(false),
 	velocity(),
 	velocity_enable( false ),
 	watts(0.0),
-	 watts_give(0.0),
-	 watts_take(0.0),	 
-    wf(NULL),
-    wf_entity(0),
-    world(world),
-	 world_gui( dynamic_cast<WorldGui*>( world ) )
+	watts_give(0.0),
+	watts_take(0.0),	 
+	wf(NULL),
+	wf_entity(0),
+	world(world),
+	world_gui( dynamic_cast<WorldGui*>( world ) )
 {
   //assert( modelsbyid );
   assert( world );
@@ -950,6 +950,11 @@ void Model::NeedRedraw( void )
     parent->NeedRedraw();
   else
     world->NeedRedraw();
+}
+
+void Model::Redraw( void )
+{
+	world->Redraw();
 }
 
 Model* Model::GetUnusedModelOfType( const std::string& type )

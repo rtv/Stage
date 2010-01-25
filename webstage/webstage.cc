@@ -72,67 +72,67 @@ public:
   }
  
 
-  void Push( const std::string& name )
-  {
-	 Stg::Model* mod = world->GetModel( name.c_str() );
+  // void Push( const std::string& name )
+  // {
+	//  Stg::Model* mod = world->GetModel( name.c_str() );
 
-	 if( mod )
-		{
-		  websim::Pose p;
-		  websim::Velocity v;
-		  websim::Acceleration a;
+	//  if( mod )
+	// 	{
+	// 	  websim::Pose p;
+	// 	  websim::Velocity v;
+	// 	  websim::Acceleration a;
 
-		  Stg::Pose sp = mod->GetPose(); 
-		  p.x = sp.x;
-		  p.y = sp.y;
-		  p.z = sp.z;
-		  p.a = sp.a;
+	// 	  Stg::Pose sp = mod->GetPose(); 
+	// 	  p.x = sp.x;
+	// 	  p.y = sp.y;
+	// 	  p.z = sp.z;
+	// 	  p.a = sp.a;
 		  
-		  Stg::Velocity sv = mod->GetVelocity(); 
-		  v.x = sv.x;
-		  v.y = sv.y;
-		  v.z = sv.z;
-		  v.a = sv.a;
+	// 	  Stg::Velocity sv = mod->GetVelocity(); 
+	// 	  v.x = sv.x;
+	// 	  v.y = sv.y;
+	// 	  v.z = sv.z;
+	// 	  v.a = sv.a;
 
-		  SetPuppetPVA( name, p, v, a );
-		}
-	 else
-		printf( "Warning: attempt to push PVA for unrecognized model \"%s\"\n",
-				  name.c_str() );
-  }
+	// 	  SetPuppetPVA( name, p, v, a );
+	// 	}
+	//  else
+	// 	printf( "Warning: attempt to push PVA for unrecognized model \"%s\"\n",
+	// 			  name.c_str() );
+  // }
   
-  void Push()
-  {
-	 for( std::map<std::string,Puppet*>::iterator it = puppets.begin();
-			it != puppets.end();
-			it++ )
-		{
-		  Puppet* pup = it->second;
-		  assert(pup);
+  // void Push()
+  // {
+	//  for( std::map<std::string,Puppet*>::iterator it = puppets.begin();
+	// 		it != puppets.end();
+	// 		it++ )
+	// 	{
+	// 	  Puppet* pup = it->second;
+	// 	  assert(pup);
 		  
-		  Stg::Model* mod = world->GetModel( pup->name.c_str() );
-		  assert(mod);
+	// 	  Stg::Model* mod = world->GetModel( pup->name.c_str() );
+	// 	  assert(mod);
 		  
-		  websim::Pose p;
-		  websim::Velocity v;
-		  websim::Acceleration a;
+	// 	  websim::Pose p;
+	// 	  websim::Velocity v;
+	// 	  websim::Acceleration a;
 		  
-		  Stg::Pose sp = mod->GetPose(); 
-		  p.x = sp.x;
-		  p.y = sp.y;
-		  p.z = sp.z;
-		  p.a = sp.a;
+	// 	  Stg::Pose sp = mod->GetPose(); 
+	// 	  p.x = sp.x;
+	// 	  p.y = sp.y;
+	// 	  p.z = sp.z;
+	// 	  p.a = sp.a;
 		  
-		  Stg::Velocity sv = mod->GetVelocity(); 
-		  v.x = sv.x;
-		  v.y = sv.y;
-		  v.z = sv.z;
-		  v.a = sv.a;
+	// 	  Stg::Velocity sv = mod->GetVelocity(); 
+	// 	  v.x = sv.x;
+	// 	  v.y = sv.y;
+	// 	  v.z = sv.z;
+	// 	  v.a = sv.a;
 		  
-		  pup->Push( p,v,a );
-		  printf( "pushing puppet %s\n", pup->name.c_str() );
-		}
-  }
+	// 	  pup->Push( p,v,a );
+	// 	  printf( "pushing puppet %s\n", pup->name.c_str() );
+	// 	}
+  // }
 
   virtual bool GetModelChildren(const std::string& model, 
 										  std::vector<std::string>& children)
@@ -190,6 +190,16 @@ public:
 	 printf( "delete model name:%s \n", name.c_str() ); 
 	 return true;
   }
+	
+	const websim::PVA ModToPVA( Model* mod )
+	{
+		// construct a PVA from Stage's values
+		Stg::Pose sp = mod->GetPose(); 
+		Stg::Velocity sv = mod->GetVelocity(); 		
+		return( websim::PVA( websim::Pose( sp.x, sp.y, sp.z, 0.0, 0.0, sp.a ),
+												 websim::Velocity( sv.x, sv.y, sv.z, 0.0, 0.0, sv.a ),
+												 websim::Acceleration() ));
+	}
 
   virtual bool GetModelData(const std::string& name,
 	
@@ -198,35 +208,18 @@ public:
 									 void* xmlparent) {
 	 std::string str;
 	 websim::Time t = GetTime();
-
+	 
 	 Model*mod = world->GetModel( name.c_str() );
 	 if(mod){
-		std::string type = mod->GetModelType();
-		if(type == "position") {
-
-		  websim::Pose p;
-		  websim::Velocity v;
-		  websim::Acceleration a;
-			
-		  Stg::Pose sp = mod->GetPose(); 
-		  p.x = sp.x;
-		  p.y = sp.y;
-		  p.z = sp.z;
-		  p.a = sp.a;
-
-		  Stg::Velocity sv = mod->GetVelocity(); 
-		  v.x = sv.x;
-		  v.y = sv.y;
-		  v.z = sv.z;
-		  v.a = sv.a;
-		
-		  WebSim::GetPVA(name, t, p, v, a, format, response, xmlparent);
-			
-			
-
-		}else if(type == "laser"){
-
-		  uint32_t resolution;
+		 std::string type = mod->GetModelType();
+		 if(type == "position") 
+			 {				 
+				 response = WebSim::FormatPVA( name, t, ModToPVA(mod), format );			
+				 return true;			
+			 }
+		 else if(type == "laser")
+			 {			 
+			 uint32_t resolution;
 		  double fov;
 		  websim::Pose p;
 		  std::vector<double> ranges;												
@@ -318,59 +311,68 @@ public:
 	 return true;
   }
   
-
   virtual bool SetModelPVA(const std::string& name, 
-									const websim::Pose& p,
-									const websim::Velocity& v,
-									const websim::Acceleration& a,
-									std::string& error)
+													 const websim::PVA& pva,
+													 std::string& response )
   {
 	 //printf( "set model PVA name:%s\n", name.c_str() ); 	 
 
 	 Model* mod = world->GetModel( name.c_str() );
 	 if( mod )
-		{
-		  mod->SetPose( Stg::Pose( p.x, p.y, p.z, p.a ));
-		  mod->SetVelocity( Stg::Velocity( v.x, v.y, v.z, v.a ));		 
-		  // stage doesn't model acceleration
+		 {
+			 mod->SetPose( Stg::Pose( pva.p.x,  pva.p.y,  pva.p.z,  pva.p.a ));
+			 mod->SetVelocity( Stg::Velocity(  pva.v.x,  pva.v.y,  pva.v.z,  pva.v.a ));		 
+			 // stage doesn't model acceleration
+
+			// force GUI update to see the change if Stage was paused
+			mod->Redraw();
+
+			response = "OK";
+			return true;
 		}
-	 else
-		printf( "Warning: attempt to set PVA for unrecognized model \"%s\"\n",
-				  name.c_str() );
-
-	 return true;
+	 //else
+	 
+	 printf( "Warning: attempt to set PVA for unrecognized model \"%s\"\n",
+							 name.c_str() );
+	 response = "unknown model " + name;
+	 return false;
   }
-
+	
   virtual bool GetModelPVA(const std::string& name, 
-									websim::Time& t,
-									websim::Pose& p,
-									websim::Velocity& v,
-									websim::Acceleration& a,
-									std::string& error)
+													 websim::Time& t,
+													 websim::PVA& pva,
+													 std::string& error )
   {
 	 //printf( "get model name:%s\n", name.c_str() ); 
 
 	 t = GetTime();
-
+	 
 	 Model* mod = world->GetModel( name.c_str() );
-	 if( mod )
-		{
-		  Stg::Pose sp = mod->GetPose(); 
-		  p.x = sp.x;
-		  p.y = sp.y;
-		  p.z = sp.z;
-		  p.a = sp.a;
 
-		  Stg::Velocity sv = mod->GetVelocity(); 
-		  v.x = sv.x;
-		  v.y = sv.y;
-		  v.z = sv.z;
-		  v.a = sv.a;
-		}
-	 else
-		printf( "Warning: attempt to set PVA for unrecognized model \"%s\"\n",
-				  name.c_str() );
+	 if( !mod  ) 
+		 {			 
+			 error = "attempt to set PVA for unrecognized model '" + name + "'";
+			 puts( error.c_str() );
+			 return false;
+		 }
 
+	 // else model is good	 
+	 
+	 // zero all fields
+	 pva.Zero();
+	 
+	 Stg::Pose sp = mod->GetPose(); 
+	 pva.p.x = sp.x;
+	 pva.p.y = sp.y;
+	 pva.p.z = sp.z;
+	 pva.p.a = sp.a;
+	 
+	 Stg::Velocity sv = mod->GetVelocity(); 
+	 pva.v.x = sv.x;
+	 pva.v.y = sv.y;
+	 pva.v.z = sv.z;
+	 pva.v.a = sv.a;
+	 
 	 return true;
   }
   /*
@@ -469,44 +471,37 @@ public:
 	 }*/
 
   virtual bool GetModelGeometry(const std::string& name,
-										  double& x,
-										  double& y,
-										  double& z,
-										  websim::Pose& center,
-										  std::string& response)
+																websim::Time& t,
+																websim::Geometry& geom,
+																std::string& error )
   {
-	 if(name == "sim"){
-	
-		stg_bounds3d_t ext = world->GetExtent();
-    	
-		x = ext.x.max - ext.x.min;
-		y = ext.y.max - ext.y.min;
-		z = ext.z.max - ext.z.min;
-
-	 }
-	 else
-		{
-		  Model* mod = world->GetModel(name.c_str());
-		  if(mod){
-			 Geom ext = mod->GetGeom();
-    	
-			 x = ext.size.x;
-			 y = ext.size.y;
-			 z = ext.size.z;
-			 center.x = ext.pose.x;
-			 center.y = ext.pose.y;
-			 center.a = ext.pose.a;
-		  }
-		  else
-			 {
-				printf("Warning: attemp to get the extent of unrecognized model \"%s\"\n", name.c_str());
+		if(name == "sim")
+			{
+				stg_bounds3d_t ext = world->GetExtent();    	
+				geom.extent.x = ext.x.max - ext.x.min;
+				geom.extent.y = ext.y.max - ext.y.min;
+				geom.extent.z = ext.z.max - ext.z.min;				
+				return true;
+			}
+		
+		Model* mod = world->GetModel(name.c_str());
+		if( !mod )
+			{
+				error = "Error: attempt to get the geometry of unrecognized model \"" + name + "\"";
+				puts( error.c_str() );
 				return false;		
-			 }
-		}
-        
-	 return true;
+			}
+		
+		Geom ext = mod->GetGeom();    	
+		geom.extent.x = ext.size.x;
+		geom.extent.y = ext.size.y;
+		geom.extent.z = ext.size.z;
+		geom.pose.x = ext.pose.x;
+		geom.pose.y = ext.pose.y;
+		geom.pose.a = ext.pose.a;
+		return true;
   }
-
+	
   static int CountRobots(Model * mod, int* n ){
  
 	 if(n && mod->GetModelType() == "position")
@@ -567,19 +562,12 @@ public:
 	 return t;
   }
   
-  // add an FLTK event loop update to WebSim's implementation
-  virtual void Wait()
-  {
-	 do
-		{
-		  printf( " event loop in wait (%d %d %d)\r",
-					 unacknowledged_ticks, unacknowledged_pushes, ticks_remaining );
-		  
-		  event_loop( EVLOOP_NONBLOCK );		 
-		  Fl::check();  		  
-		}
-	 while( unacknowledged_ticks || unacknowledged_pushes || ticks_remaining );		  
-  }
+	// add an FLTK event loop update to WebSim's implementation
+	virtual void Wait()
+	{
+	 	Check(); // nonblocking check for server events
+	 	Fl::check(); // nonblocking check for GUI events 		  
+	}
   
 }; // close WebStage class
 
@@ -644,15 +632,13 @@ int main( int argc, char** argv )
 
   WebStage ws( world, host, port );
 
-  if( usefedfile )
-	 ws.LoadFederationFile( fedfilename );
+  //if( usefedfile )
+		//	 ws.LoadFederationFile( fedfilename );
 
   ws.Startup( true ); // start http server
   
   if( ! world->paused ) 
 	 world->Start(); // start sumulation running
-
-  puts( "entering main loop" );
 
   //close program once time has completed
   bool quit = false;
@@ -660,11 +646,11 @@ int main( int argc, char** argv )
 	 {
 		// todo? check for changes?
 		// send my updates		
-		ws.Push();
+		//ws.Push();
 		//puts( "push  done" );
 
 		// run one step of the simulation
-		ws.Tick();
+		//ws.Tick();
 		
 		//puts( "tick done" );
 		
@@ -674,6 +660,9 @@ int main( int argc, char** argv )
 	  
 		// wait until everyone report simulation step done
 		ws.Wait();			
+
+		usleep(100); // TODO - loop sensibly here
+
 		//puts( "wait done" );
 	 }
 

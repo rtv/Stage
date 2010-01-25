@@ -560,6 +560,12 @@ void WorldGui::fasttimeCb( Fl_Widget* w, WorldGui* wg )
 	 wg->SetTimeouts();  
 }
 
+void WorldGui::Redraw()
+{
+	puts( "redrawing\n" );
+	canvas->redraw();
+}
+
 void WorldGui::Start()
 {
   World::Start();

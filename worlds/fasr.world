@@ -7,7 +7,7 @@ include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
 
-speedup 10
+speedup 10.000
 paused 1
 
 # time at which to pause (in GUI mode) or quit (in headless mode) the simulation
@@ -16,16 +16,16 @@ quit_time 3600 # 1 hour of simulated time
 
 resolution 0.02
 
- threads 0
+threads 0
 
 # configure the GUI window
 window
 ( 
   size [ 683.000 713.000 ] 
 
-  center [ -0.180 -1.009 ] 
+  center [ 1.477 -5.626 ] 
   rotate [ 0 0 ]
-  scale 35.284 
+  scale 19.306 
   
   show_data 1
   show_flags 1
@@ -63,7 +63,7 @@ define charging_bump model
 (
   pose [0.240 0 -0.100 0 ] 
   size [0.120 0.050 0.100] 
-  take_watts 1000.0 
+  take_watts 2000.0 
   color "orange" 
   obstacle_return 0
 )
@@ -83,7 +83,7 @@ define charge_station model
     color "yellow"
     size [ 0.050 0.200 0.100 ]
     joules -1  # provides infinite energy
-    give_watts 1000 
+    give_watts 2000 
     fiducial_return 2 # look for this in the fiducial sensor
 	 
 	 alwayson 1 # so we give charge without any explicit subscriber
@@ -91,9 +91,17 @@ define charge_station model
 
 )
 
-charge_station(  pose [ 7.940 -2.000 0 0 ] )
-charge_station(  pose [ 7.940 -3.000 0 0 ] )
-charge_station(  pose [ 7.940 -4.000 0 0 ] )
+charge_station(  pose [ 7.908 -2.510 0 0 ] )
+charge_station(  pose [ 7.920 -3.847 0 0 ] )
+charge_station(  pose [ 7.449 -4.974 0 -40.107 ] )
+charge_station(  pose [ 7.698 -1.432 0 31.513 ] )
+charge_station(  pose [ 5.162 -0.814 0 88.809 ] )
+
+charge_station(  pose [ 3.927 -0.693 0 88.808 ] )
+charge_station(  pose [ 6.427 -0.964 0 74.484 ] )
+#charge_station(  pose [ 4.964 -0.752 0 88.808 ] )
+#charge_station(  pose [ 3.832 -0.704 0 91.673 ] )
+#charge_station(  pose [ 7.949 -4.019 0 0 ] )
 
 define autorob pioneer2dx		  
 (		 
@@ -108,27 +116,51 @@ define autorob pioneer2dx
  # trail_length 0
 )
 
-autorob( pose [7.062 -1.563 0 152.684] joules 300000 name "r0" )
+autorob( pose [5.967 -3.269 0 152.684] joules 300000 name "r0" )
 autorob( pose [-7.444 -7.348 0 125.831] joules 100000 name "r1" )
 autorob( pose [5.043 3.459 0 174.453] joules 200000 )
 autorob( pose [-3.501 -3.827 0 -117.456] joules 400000 )
 autorob( pose [-1.782 7.123 0 44.991] joules 100000 )
+
 autorob( pose [-6.224 4.313 0 35.145] joules 200000 )
 autorob( pose [-4.373 -4.515 0 -143.181] joules 300000 )
 autorob( pose [3.975 7.410 0 0] joules 400000 )
 autorob( pose [6.796 4.223 0 -89.994] joules 100000 )
 autorob( pose [-6.679 -4.488 0 90.003] joules 200000 )
 
-#autorob( pose [-5.333 -7.515 0 -1.811] )
-#autorob( pose [-1.496 1.724 0 -116.317]  )
-#autorob( pose [7.122 4.175 0 -31.440]  )
-#autorob( pose [5.944 6.951 0 2.937] )
-#autorob( pose [6.405 5.291 0 -103.060] )
-#autorob( pose [5.974 5.725 0 -103.060] )
-#autorob( pose [4.151 7.272 0 53.540] )
-#autorob( pose [6.545 7.459 0 2.937] )
-#autorob( pose [7.237 7.533 0 34.450] )
-#autorob( pose [3.875 6.533 0 134.717] )
-#autorob( pose [3.944 4.674 0 -103.060] )
-#autorob( pose [4.634 6.897 0 -103.060] )
+autorob( pose [-5.333 -7.515 0 -1.811] )
+autorob( pose [-1.496 1.724 0 -116.317]  )
+autorob( pose [7.462 3.892 0 -31.440]  )
+autorob( pose [5.944 6.951 0 2.937] )
+autorob( pose [6.405 5.291 0 -103.060] )
+
+autorob( pose [5.974 5.725 0 -103.060] )
+autorob( pose [2.479 5.713 0 53.540] )
+autorob( pose [7.503 6.594 0 2.937] )
+autorob( pose [6.959 3.268 0 34.450] )
+autorob( pose [4.617 6.811 0 134.717] )
+
+autorob( pose [6.545 7.366 0 2.937] )
+autorob( pose [7.237 7.533 0 34.450] )
+autorob( pose [3.875 6.533 0 134.717] )
+autorob( pose [3.944 4.674 0 -103.060] )
+autorob( pose [4.776 5.792 0 -103.060] )
+
+autorob( pose [3.212 3.779 0 -103.060] )
+autorob( pose [2.982 6.577 0 -103.060] )
+autorob( pose [3.189 5.168 0 -103.060] )
+autorob( pose [2.027 6.472 0 -103.060] )
+autorob( pose [3.897 5.537 0 -103.060] )
+
+#autorob( pose [4.974 4.800 0 -103.060] )
+#autorob( pose [2.225 7.350 0 -103.060] )
+#autorob( pose [5.683 4.431 0 -103.060] )
+#autorob( pose [2.055 2.901 0 -103.060] )
+#autorob( pose [1.498 7.310 0 -103.060] )
+
+#autorob( pose [0.366 6.989 0 -103.060] )
+#autorob( pose [5.215 7.601 0 -103.060] )
+#autorob( pose [6.714 6.392 0 -103.060] )
+#autorob( pose [7.418 5.581 0 -103.060] )
+#autorob( pose [2.523 4.878 0 -103.060] )
 

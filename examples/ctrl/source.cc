@@ -1,7 +1,7 @@
 #include "stage.hh"
 using namespace Stg;
 
-const int INTERVAL = 200;
+const int INTERVAL = 100;
 const double FLAGSZ = 0.4;
 
 int Update( Model* mod, void* dummy );

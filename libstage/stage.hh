@@ -799,6 +799,7 @@ namespace Stg
 		  avoids searching the whole world for fiducials. */
 	 ModelPtrVec models_with_fiducials;
 	 
+				
 	 /** Add a model to the set of models with non-zero fiducials, if not already there. */
 	 void FiducialInsert( Model* mod )
 	 { 
@@ -855,8 +856,13 @@ namespace Stg
     virtual void Stop(){ paused = true; };
     virtual void TogglePause(){ paused ? Start() : Stop(); };
 
-	 bool Paused(){ return( paused ); };
-	
+		bool Paused(){ return( paused ); };
+		
+		/** Force the GUI to redraw the world, even if paused. This
+				imlementation does nothing, but can be overridden by
+				subclasses. */
+		virtual void Redraw( void ){ }; // does nothing
+
 	 PointIntVec rt_cells;
 	 PointIntVec rt_candidate_cells;
 
@@ -1424,7 +1430,10 @@ namespace Stg
 	
     WorldGui(int W,int H,const char*L=0);
     ~WorldGui();
-	
+
+		/** Forces the window to be redrawn, even if paused.*/
+		virtual void Redraw( void );
+
     virtual std::string ClockString() const;
     virtual bool Update();	
     virtual void Load( const char* filename );
@@ -2087,7 +2096,10 @@ namespace Stg
 	 /** Sets the redraw flag, so this model will be redrawn at the
 		  earliest opportunity */
 	 void NeedRedraw();
-	
+		
+		/** Force the GUI (if any) to redraw this model */
+		void Redraw();
+
 	 /** Add a block to this model by loading it from a worldfile
 		  entity */
 	 void LoadBlock( Worldfile* wf, int entity );

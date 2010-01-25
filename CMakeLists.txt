@@ -165,14 +165,6 @@ ELSE( PLAYER_FOUND )
   MESSAGE( ${INDENT} "Player not detected. If Player is installed but not detected, check your PKG_CONFIG_PATH." )
 ENDIF( PLAYER_FOUND )
 
-pkg_search_module( WEBSIM websim )
-IF( WEBSIM_FOUND )
-  MESSAGE( STATUS ${INDENT} "WebSim version ${WEBSIM_VERSION} detected at ${WEBSIM_PREFIX}" )
-#  MESSAGE( STATUS "    WEBSIM_CFLAGS = ${WEBSIM_CFLAGS}" )
-#  MESSAGE( STATUS "    WEBSIM_LDFLAGS = ${WEBSIM_LDFLAGS}" )
-ELSE( WEBSIM_FOUND )
-  MESSAGE( ${INDENT} "WebSim not detected." )
-ENDIF( WEBSIM_FOUND )
 
 ## this should not be necessary now that we do the FLTK config
 ## carefully above. I'll leave the code here in case of trouble
@@ -196,14 +188,12 @@ include_directories( .
 		     replace 
 		     ${LIBPNG_INCLUDE_DIRS}
 		     ${CMAKE_INCLUDE_PATH}
-				 ${WEBSIM_INCLUDE_DIRS}
 )
 
 
 # all targets need these library directories
 link_directories( 
 	${LIBPNG_LIBRARY_DIRS}
-   ${WEBSIM_LIBRARY_DIRS}
 )
 
 # work through these subdirs
@@ -211,10 +201,7 @@ ADD_SUBDIRECTORY(libstage)
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(assets)
 ADD_SUBDIRECTORY(worlds)
-
-# if( WEBSIM_FOUND )
-# ADD_SUBDIRECTORY(webstage)		 
-# endif( WEBSIM_FOUND )
+ADD_SUBDIRECTORY(webstage)		 
 
 IF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )
   ADD_SUBDIRECTORY(libstageplugin)
