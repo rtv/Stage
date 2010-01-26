@@ -10,7 +10,8 @@ static struct option longopts[] = {
   { "gui",  no_argument,   NULL,  'g' },
   { "port",  required_argument,   NULL,  'p' },
   { "host",  required_argument,   NULL,  'h' },
-  { "federation",  required_argument,   NULL,  'f' },
+  //{ "federation",  required_argument,   NULL,  'f' },
+  { "root",  required_argument,   NULL,  'r' },
   { NULL, 0, NULL, 0 }
 };
 
@@ -20,8 +21,10 @@ class WebStage : public websim::WebSim
   
 public:
   WebStage( Stg::World* world,
-				const std::string& host, const unsigned short port ) :
-    websim::WebSim( host, port ),
+				const std::string& host, 
+				const unsigned short port,
+				const std::string rootdir ) 
+	 : websim::WebSim( host, port, rootdir ),
     world(world)
   {	
   }
@@ -581,6 +584,8 @@ int main( int argc, char** argv )
   
   std::string fedfilename = "";
   std::string host = "localhost";
+  std::string rootdir = ".";
+
   unsigned short port = 8000;
   
   int ch=0, optindex=0;
@@ -608,6 +613,9 @@ int main( int argc, char** argv )
 			 fedfilename = optarg;
 			 usefedfile = true;
 			 break;
+		  case 'r':
+			 rootdir = std::string(optarg);
+			 printf( "rootdir set to %s\n", rootdir.c_str() );
 		  case '?':  
 			 break;
 		  default:
@@ -630,11 +638,11 @@ int main( int argc, char** argv )
 						 new World( worldfilename ) );
   world->Load( worldfilename );
 
-  WebStage ws( world, host, port );
+  WebStage ws( world, host, port, rootdir );
 
   //if( usefedfile )
 		//	 ws.LoadFederationFile( fedfilename );
-
+  
   ws.Startup( true ); // start http server
   
   if( ! world->paused ) 
