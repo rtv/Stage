@@ -234,11 +234,14 @@ void Model::Load()
 
 void Model::Save( void )
 {  
-  assert( wf );
+  //printf( "Model \"%s\" saving...\n", token.c_str() );
+
+  // some models were not loaded, so have no worldfile. Just bail here.
+  if( wf == NULL )
+	 return;
+
   assert( wf_entity );
 		
-  PRINT_DEBUG1( "Model \"%s\" saving...", token );
-
   PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
 		this->token,
 		this->pose.x,

@@ -13,7 +13,7 @@ paused 1
 resolution 0.1
 
 # this is very helpful if you have multiple CPUs - a good value is $(number of CPU cores) - 
-threads 2
+# threads 2
 
 # configure the GUI window
 window
@@ -29,8 +29,9 @@ window
 floorplan
 ( 
   name "cave"
-  size [100.000 100.000 0.800]
-  pose [0 0 0 0]
+#  size [100.000 100.000 0.800]
+    size [32.000 32.000 0.600]
+pose [-24 -16 0 0]
   bitmap "bitmaps/cave.png"  
 )
 
