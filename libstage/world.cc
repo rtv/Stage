@@ -400,7 +400,8 @@ void World::Load( const char* worldfile_path )
   // call all controller init functions
   FOR_EACH( it, models )
 	 {
-		// this is a hack and shouldn't be necessary
+		// all this is a hack and shouldn't be necessary
+		(*it)->blockgroup.CalcSize();
 		(*it)->UnMap();
 		(*it)->Map();
 		// to here

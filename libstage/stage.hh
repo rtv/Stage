@@ -521,7 +521,7 @@ namespace Stg
 	 virtual void Visualize( Model* mod, Camera* cam ) = 0;
 	 
 	 const std::string& GetMenuName() { return menu_name; }
-	 const std::string& GetWorldfileName() { return worldfile_name; }
+	 const std::string& GetWorldfileName() { return worldfile_name; }	 
   };
 
 

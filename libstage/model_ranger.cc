@@ -257,6 +257,7 @@ static bool ranger_match( Model* candidate,
 void ModelRanger::Update( void )
 {     
   // raytrace new range data for all sensors
+  printf( "Stage: " );
 	FOR_EACH( it, sensors )
     {
 			Sensor& s = *it;
@@ -264,15 +265,18 @@ void ModelRanger::Update( void )
       // TODO - reinstate multi-ray rangers
       //for( int r=0; r<sensors[t].ray_count; r++ )
       //{	  
-      stg_raytrace_result_t ray = Raytrace( s.pose,
-																						s.bounds_range.max,
-																						ranger_match,
-																						NULL );
+			stg_raytrace_result_t ray = Raytrace( s.pose,
+															  s.bounds_range.max,
+															  ranger_match,
+															  NULL );
 			
       s.range = std::max( ray.range, s.bounds_range.min );
-    }   
 
-  Model::Update();
+		printf( " %.3f (%.3f) ", s.range, s.pose.a );
+    }   
+	puts("");
+	
+	Model::Update();
 }
 
 void ModelRanger::Print( char* prefix )

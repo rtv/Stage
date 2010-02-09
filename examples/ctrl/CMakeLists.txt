@@ -1,6 +1,7 @@
 
 SET( PLUGINS
      fasr
+     fasr2
      lasernoise
      sink
      source
