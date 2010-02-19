@@ -41,11 +41,11 @@ using namespace std;
 
 // Fixed size memory allocator can be disabled to compare performance
 // Uses std new and delete instead if you turn it off
-#define USE_FSA_MEMORY 1
+#define USE_FSA_MEMORY 0
 
 // disable warning that debugging information has lines that are truncated
 // occurs in stl headers
-#pragma warning( disable : 4786 )
+//#pragma warning( disable : 4786 )
 
 // The AStar search class. UserState is the users state space type
 template <class UserState> class AStarSearch

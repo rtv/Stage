@@ -8,8 +8,8 @@ int Update( Model* mod, void* dummy );
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
 {  
-  mod->AddUpdateCallback( (stg_model_callback_t)Update, NULL );
-  mod->Subscribe();
+  //mod->AddUpdateCallback( (stg_model_callback_t)Update, NULL );
+  //mod->Subscribe();
   return 0; //ok
 }
 

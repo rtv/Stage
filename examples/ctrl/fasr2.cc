@@ -103,6 +103,42 @@ public:
 	 glPointSize(4);
 	 FOR_EACH( it, nodes ){ (*it)->Draw(); }
   }
+
+  stg_radians_t GoodDirection( const Pose& pose, stg_meters_t range )
+  {
+	 // find the node with the lowest value within range of the given
+	 // pose and return the absolute heading from pose that node 
+	 
+	 if( nodes.empty() )
+		return 0; // a null guess
+	 
+
+	 Node* best_node = NULL;
+
+	 // find the closest node
+	 FOR_EACH( it, nodes )
+		{
+		  Node* node = *it;
+		  double dist = hypot( node->pose.x - pose.x, node->pose.y - pose.y );
+		  
+		  // if it's in range, and either its the first we have found,
+		  // or it has a lower value than the current best
+		  if( dist < range &&  
+				( best_node == NULL || node->value < best_node->value ))
+			 {
+				best_node = node;
+			 }
+		}
+	 
+	 if( best_node == NULL )
+		{
+		  puts( "warning: no nodes in range" );
+		  return 0;
+		}
+	 //else
+	 return atan2( best_node->pose.y - pose.y,
+						best_node->pose.x - pose.x );
+  }
 };
 
 
@@ -143,7 +179,7 @@ void Node::Draw() const
 {
   // print value
   //char buf[32];
-  //snprintf( buf, 32, "%.2f", value );
+  //snprintf( buf, 32, "%.0f", value );
   //Gl::draw_string( pose.x, pose.y+0.2, 0.1, buf );
 
   glBegin( GL_POINTS );
@@ -192,7 +228,6 @@ private:
   double charger_range;
   double charger_heading;
   nav_mode_t mode;
-  bool at_dest;
 
   Graph graph;
   GraphVis graphvis;
@@ -203,7 +238,8 @@ private:
   static unsigned int map_width;
   static unsigned int map_height;
   static uint8_t* map_data;
-
+  static Model* map_model;
+	 
 public:
   Robot( ModelPosition* pos, 
 			Model* source,
@@ -223,7 +259,6 @@ public:
 		charger_range(0),
 		charger_heading(0),
 		mode(MODE_WORK),
-		at_dest( false ),
 		graph(),
 		graphvis( graph ),
 		last_node( NULL ),
@@ -254,12 +289,6 @@ public:
 	 //pos->AddFlagDecrCallback( (stg_model_callback_t)FlagDecr, NULL );
 	 
 	 pos->AddVisualizer( &graphvis, true );
-
-	 // get the map
-	 Model* cave = pos->GetWorld()->GetModel( "cave" );
-	 assert(cave);
-	 Geom g = cave->GetGeom();
-	 
 	 
 	 if( map_data == NULL )
 		{
@@ -269,11 +298,16 @@ public:
 		  // non-zero pixels
 		  memset( map_data, 0, sizeof(uint8_t) * map_width * map_height);
 		  
-		  cave->Rasterize( map_data, 
-								 map_width, 
-								 map_height, 
-								 g.size.x/(float)map_width, 
-								 g.size.y/(float)map_height );
+		  // get the map
+		  map_model = pos->GetWorld()->GetModel( "cave" );
+		  assert(map_model);
+		  Geom g = map_model->GetGeom();
+		  
+		  map_model->Rasterize( map_data, 
+										map_width, 
+										map_height, 
+										g.size.x/(float)map_width, 
+										g.size.y/(float)map_height );
 		  
 		  // 	 putchar( '\n' );
 		  // 	 for( unsigned int y=0; y<map_height; y++ )
@@ -299,9 +333,16 @@ public:
 				assert( (map_data[i] == 1) || (map_data[i] == 9) );		  
 			 }    	 
 		}
-
+	 
+	 Plan( source );
+	 //puts("");
+  }
+  
+  void Plan( Model* dest )
+  {
 	 Pose pose = pos->GetPose();
-	 Pose sp = source->GetPose();
+	 Pose sp = dest->GetPose();
+	 Geom g = map_model->GetGeom();
 	 
 	 point_t start( MetersToCell(pose.x, g.size.x, map_width), 
 						 MetersToCell(pose.y, g.size.y, map_height) );
@@ -320,23 +361,30 @@ public:
 								 path );
 	 
 	 //printf( "#%s:\n", result ? "PATH" : "NOPATH" );
+
+	 graph.nodes.clear();
 	 
-	 FOR_EACH( it, path )
-		{	
-		  //printf( "%d, %d\n", it->x, it->y );
-		  
-		  Node* node = new Node( Pose( CellToMeters(it->x, g.size.x, map_width ),
-												 CellToMeters(it->y, g.size.y, map_height),
-												 0, 0 ) );
-		  graph.AddNode( node );
-		  
-		  if( last_node )
-			 last_node->AddEdge( new Edge( node ) );
-		  
-		  last_node = node;
-		}
-	 
-	 //puts("");
+	 unsigned int dist = 0;
+	 //FOR_EACH( it, path )
+	 for( std::vector<point_t>::reverse_iterator rit = path.rbegin();
+			rit != path.rend();
+			++rit )			
+	 {	
+		//printf( "%d, %d\n", it->x, it->y );
+		
+		Node* node = new Node( Pose( CellToMeters(rit->x, g.size.x, map_width ),
+											  CellToMeters(rit->y, g.size.y, map_height),
+											  0, 0 ) );
+		
+		node->value = dist++;
+		
+		graph.AddNode( node );
+		
+		if( last_node )
+		  last_node->AddEdge( new Edge( node ) );
+		
+		last_node = node;
+	 }	 
   }
   
   void Dock()
@@ -506,14 +554,17 @@ public:
 // 		  if( y < 0 ) y = 0;
 
 
-		  Model* goal = pos->GetFlagCount() ? sink : source;
-		  Pose gp = goal->GetPose();
+		  //Model* goal = pos->GetFlagCount() ? sink : source;
+		  //Pose gp = goal->GetPose();
 		
 		  //printf( "seeking %s\n", goal->Token() );
 
 		  double a_goal = 
-			 // dtor( ( pos->GetFlagCount() ) ? have[y][x] : need[y][x] );		
-			 atan2( gp.y - pose.y, gp.x - pose.x );
+			 // dtor( ( pos->GetFlagCount() ) ? have[y][x] : need[y][x] );	// map
+			 //atan2( gp.y - pose.y, gp.x - pose.x ); // crow flies
+			 // use direction of lowest value node within range in graph 
+
+			 graph.GoodDirection( pose, 4.0 );
 
 		  // if we are low on juice - find the direction to the recharger instead
 		  if( Hungry() )		 
@@ -618,31 +669,26 @@ public:
 	 if( hypot( sourcepose.x-pose.x, sourcepose.y-pose.y ) < sourcegeom.size.x/2.0 &&
 		  pos->GetFlagCount() < PAYLOAD )
 		{
-		  if( ++robot->work_get > workduration )
-			 {
-				// transfer a chunk from source to robot
-				pos->PushFlag( robot->source->PopFlag() );
-				robot->work_get = 0;	
-			 }	  
+		  // transfer a chunk from source to robot
+		  pos->PushFlag( robot->source->PopFlag() );
+		  
+		  if( pos->GetFlagCount() == PAYLOAD )
+			 robot->Plan( robot->sink ); // we're done working
 		}
 	 
-	 robot->at_dest = false;
-
 	 // if we're close to the sink we lose a flag
 	 Pose sinkpose = robot->sink->GetPose();
+	 Geom sinkgeom = robot->sink->GetGeom();
 	 
-	 if( hypot( sinkpose.x-pose.x, sinkpose.y-pose.y ) < sourcegeom.size.x/2.0 &&
-		  pos->GetFlagCount() )
+	 if( hypot( sinkpose.x-pose.x, sinkpose.y-pose.y ) < sinkgeom.size.x/2.0 && 
+		  pos->GetFlagCount() > 0 )
 		{
-		  robot->at_dest = true;
+		  //puts( "dropping" );
+		  // transfer a chunk between robot and goal
+		  robot->sink->PushFlag( pos->PopFlag() );		  
 		  
-		  if( ++robot->work_put > workduration )
-			 {
-				//puts( "dropping" );
-				// transfer a chunk between robot and goal
-				robot->sink->PushFlag( pos->PopFlag() );
-				robot->work_put = 0;
-			 }
+		  if( pos->GetFlagCount() == 0 ) 
+			 robot->Plan( robot->source ); // we're done dropping off
 		}
   
 
@@ -682,7 +728,7 @@ public:
 
   
   static int FlagIncr( Model* mod, Robot* robot )
-  {
+ {
 	 printf( "model %s collected flag\n", mod->Token() );
 	 return 0;
   }
@@ -695,9 +741,10 @@ public:
 };
 
 
-unsigned int Robot::map_width( 100 );
-unsigned int Robot::map_height( 100 );
+unsigned int Robot::map_width( 50 );
+unsigned int Robot::map_height( 50 );
 uint8_t* Robot::map_data( NULL );
+Model* Robot::map_model( NULL );
 
 void split( const std::string& text, const std::string& separators, std::vector<std::string>& words)
 {
