@@ -3,6 +3,7 @@ using namespace Stg;
 
 const int INTERVAL = 100;
 const double FLAGSZ = 0.4;
+const unsigned int CAPACITY = 1;
 
 int Update( Model* mod, void* dummy );
 
@@ -18,7 +19,8 @@ extern "C" int Init( Model* mod )
 // inspect the laser data and decide what to do
 int Update( Model* mod, void* dummy )
 {
-  if( mod->GetWorld()->GetUpdateCount() % INTERVAL  == 0 )
+  if((  mod->GetWorld()->GetUpdateCount() % INTERVAL == 0 )
+	  && ( mod->GetFlagCount() < CAPACITY) )
 	 mod->PushFlag( new Model::Flag( Color( 1,1,0 ), FLAGSZ ) );
 
   return 0; // run again

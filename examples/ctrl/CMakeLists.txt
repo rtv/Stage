@@ -23,8 +23,17 @@ set_source_files_properties( ${PLUGINS} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}
 
 foreach( PLUGIN ${PLUGINS} )
   ADD_LIBRARY( ${PLUGIN} MODULE ${PLUGIN}.cc )
+endforeach( PLUGIN )
+				
+ADD_LIBRARY( fasr2 MODULE fasr2.cc astar/findpath.cpp )
+
+# add fasr2 to the list of plugins
+SET( PLUGINS ${PLUGINS} fasr2 )
+
+foreach( PLUGIN ${PLUGINS} )
   TARGET_LINK_LIBRARIES( ${PLUGIN} stage )
 endforeach( PLUGIN )
+
 
 # delete the "lib" prefix from the plugin libraries
 SET_TARGET_PROPERTIES( ${PLUGINS} PROPERTIES PREFIX "" )
@@ -37,6 +46,7 @@ SET_TARGET_PROPERTIES( ${PLUGINS} PROPERTIES PREFIX "" )
 #endif( PLAYER_FOUND )
 
 
+
 # install in <prefix>/lib
-install( TARGETS ${PLUGINS} DESTINATION lib)
+install( TARGETS ${PLUGINS} fasr2 DESTINATION lib)
 

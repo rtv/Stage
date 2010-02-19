@@ -317,6 +317,12 @@ namespace Stg
 						 z + p.z,
 						 normalize(a + p.a) );	 
 	 }	
+	 
+	 // a < b iff a is closer to the origin than b
+	 bool operator<( const Pose& other ) const
+	 {
+		return( hypot( y, x ) < hypot( other.y, other.x ));
+	 }
   };
   
   
@@ -504,7 +510,7 @@ namespace Stg
   void RegisterModels();
   
   
-  /** Abstract class for adding visualizations to models. DataVisualize must be overloaded, and is then called in the models local coord system */
+  /** Abstract class for adding visualizations to models. Visualize must be overloaded, and is then called in the models local coord system */
   class Visualizer {
   private:
 	 const std::string menu_name;
