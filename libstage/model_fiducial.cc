@@ -11,7 +11,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-//#define DEBUG 1
+#define DEBUG 0
 
 #include "stage.hh"
 #include "option.hh"
@@ -156,7 +156,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 	if( IsRelated( him ) )
 		return;
 
-	PRINT_DEBUG1( "  %s is a candidate. doing ray trace", him->Token());
+	//PRINT_DEBUG1( "  %s is a candidate. doing ray trace", him->Token());
 
 
 	//printf( "bearing %.2f\n", RTOD(bearing) );
@@ -168,7 +168,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 													 true ) );
 	
 	Model* hitmod( ray.mod );
-
+	
  	//printf( "ray hit %s and was seeking LOS to %s\n",
 	//	  hitmod ? hitmod->Token() : "null",
 	//	  him->Token() );
@@ -199,8 +199,8 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 	// we see value 0
 	fid.id = range < max_range_id ? hitmod->vis.fiducial_return : 0;
 	
-	PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
-					  him->Token(), him->vis.fiducial_return );
+	//PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
+	//			  him->Token(), him->vis.fiducial_return );
 	
 	fiducials.push_back( fid );
 }	
@@ -210,7 +210,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 //
 void ModelFiducial::Update( void )
 {
-	PRINT_DEBUG( "fiducial update" );
+  //PRINT_DEBUG( "fiducial update" );
 
 	if( subs < 1 )
 		return;

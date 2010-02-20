@@ -14,30 +14,8 @@ const double stopdist = 0.5;
 const int avoidduration = 10;
 const int workduration = 20;
 const int PAYLOAD = 1;
-const int TRAIL_LENGTH_MAX = 500;
 
-double have[4][4] = { 
-  //  { -120, -180, 180, 180 }
-  //{ -90, -120, 180, 90 },
-  { 90, 180, 180, 180 },
-  { 90, -90, 180, 90 },
-  { 90, 90, 180, 90 },
-  { 0, 45, 0, 0} 
-};
-
-double need[4][4] = {
-  { -120, -180, 180, 180 },
-  { -90, -120, 180, 90 },
-  { -90, -90, 180, 180 },
-  { -90, -180, -90, -90 }
-};
-
-double refuel[4][4] = {
-  {  0, 0, 45, 120 },
-  { 0,-90, -60, -160 },
-  { -90, -90, 180, 180 },
-  { -90, -180, -90, -90 }
-};
+//const int TRAIL_LENGTH_MAX = 500;
 
 typedef enum {
   MODE_WORK=0,
@@ -104,7 +82,7 @@ public:
 	 FOR_EACH( it, nodes ){ (*it)->Draw(); }
   }
 
-  stg_radians_t GoodDirection( const Pose& pose, stg_meters_t range )
+  bool GoodDirection( const Pose& pose, stg_meters_t range, stg_radians_t& heading_result )
   {
 	 // find the node with the lowest value within range of the given
 	 // pose and return the absolute heading from pose that node 
@@ -112,9 +90,9 @@ public:
 	 if( nodes.empty() )
 		return 0; // a null guess
 	 
-
+	 
 	 Node* best_node = NULL;
-
+	 
 	 // find the closest node
 	 FOR_EACH( it, nodes )
 		{
@@ -133,11 +111,14 @@ public:
 	 if( best_node == NULL )
 		{
 		  puts( "warning: no nodes in range" );
-		  return 0;
+		  return false;
 		}
+	 
 	 //else
-	 return atan2( best_node->pose.y - pose.y,
-						best_node->pose.x - pose.x );
+	 heading_result = atan2( best_node->pose.y - pose.y,
+									 best_node->pose.x - pose.x );
+
+	 return true;
   }
 };
 
@@ -221,6 +202,7 @@ private:
   ModelRanger* ranger;
   ModelFiducial* fiducial;
   Model *source, *sink;
+  Model* fuel_zone;
   int avoidcount, randcount;
   int work_get, work_put;
   bool charger_ahoy;
@@ -228,6 +210,8 @@ private:
   double charger_range;
   double charger_heading;
   nav_mode_t mode;
+
+  Model* goal;
 
   Graph graph;
   GraphVis graphvis;
@@ -243,13 +227,15 @@ private:
 public:
   Robot( ModelPosition* pos, 
 			Model* source,
-			Model* sink ) 
+			Model* sink,
+			Model* fuel) 
 	 : pos(pos), 
 		laser( (ModelLaser*)pos->GetUnusedModelOfType( "laser" )),
 		ranger( (ModelRanger*)pos->GetUnusedModelOfType( "ranger" )),
 		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
 		source(source), 
 		sink(sink), 
+		fuel_zone(fuel),
 		avoidcount(0), 
 		randcount(0), 
 		work_get(0), 
@@ -259,6 +245,7 @@ public:
 		charger_range(0),
 		charger_heading(0),
 		mode(MODE_WORK),
+		goal(source),
 		graph(),
 		graphvis( graph ),
 		last_node( NULL ),
@@ -283,7 +270,7 @@ public:
 	 laser->Subscribe();
 
 	 fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, this );	 	 
-	 fiducial->Subscribe();
+	 //fiducial->Subscribe();
 	 
 	 //pos->AddFlagIncrCallback( (stg_model_callback_t)FlagIncr, NULL );
 	 //pos->AddFlagDecrCallback( (stg_model_callback_t)FlagDecr, NULL );
@@ -334,7 +321,7 @@ public:
 			 }    	 
 		}
 	 
-	 Plan( source );
+	 //( goal );
 	 //puts("");
   }
   
@@ -400,7 +387,9 @@ public:
 		  //		  }
 		  // 		else
 
-		  if( charger_range > 0.5 )
+		  // a_goal *= 2.0;
+
+		  if( charger_range > 0.45 )
 			 {
 				if( !ObstacleAvoid() )
 				  {
@@ -423,7 +412,7 @@ public:
 		}			  
 	 else
 		{
-		  //printf( "docking but can't see a charger\n" );
+		  printf( "%s docking but can't see a charger\n", pos->Token() );
 		  pos->Stop();
 		  mode = MODE_WORK; // should get us back on track eventually
 		}
@@ -439,17 +428,21 @@ public:
   
   void UnDock()
   {
-	 const stg_meters_t back_off_distance = 0.3;
-	 const stg_meters_t back_off_speed = -0.05;
+	 const stg_meters_t back_off_distance = 0.6;
+	 const stg_meters_t back_off_speed = -0.02;
 	 
 	 // back up a bit
 	 if( charger_range < back_off_distance )
 		pos->SetXSpeed( back_off_speed );
 	 else
 		pos->SetXSpeed( 0.0 );
-  
+	 
 	 if( charger_range > back_off_distance )	 
-		mode = MODE_WORK;  
+		{
+		  mode = MODE_WORK;  
+		  SetGoal( pos->GetFlagCount() ? sink : source );
+		  fiducial->Unsubscribe();
+		}
   }
 
   bool ObstacleAvoid()
@@ -530,7 +523,16 @@ public:
 	 return false; // didn't have to avoid anything
   }
 
-
+  
+  void SetGoal( Model* goal )
+  {
+	 if( goal != this->goal )
+		{
+		  this->goal = goal;
+		  Plan( goal );
+		}
+  }
+	 
   void Work()
   {
 	 if( ! ObstacleAvoid() )
@@ -542,37 +544,46 @@ public:
 		
 		  Pose pose = pos->GetPose();
 		
-		  int x = (pose.x + 8) / 4;
- 		  int y = (pose.y + 8) / 4;
 		
-// 		  // oh what an awful bug - 5 hours to track this down. When using
-// 		  // this controller in a world larger than 8*8 meters, a_goal can
-// 		  // sometimes be NAN. Causing trouble WAY upstream. 
-// 		  if( x > 3 ) x = 3;
-// 		  if( y > 3 ) y = 3;
-// 		  if( x < 0 ) x = 0;
-// 		  if( y < 0 ) y = 0;
 
-
-		  //Model* goal = pos->GetFlagCount() ? sink : source;
-		  //Pose gp = goal->GetPose();
-		
-		  //printf( "seeking %s\n", goal->Token() );
-
-		  double a_goal = 
+		  double a_goal = 0;
+		  
 			 // dtor( ( pos->GetFlagCount() ) ? have[y][x] : need[y][x] );	// map
 			 //atan2( gp.y - pose.y, gp.x - pose.x ); // crow flies
 			 // use direction of lowest value node within range in graph 
 
-			 graph.GoodDirection( pose, 4.0 );
-
+		  
+		  //		  Model* goal = fuel_zone;
+		  
+		  if( Hungry() )
+			 SetGoal( fuel_zone );
+		  
+		  while( graph.GoodDirection( pose, 4.0, a_goal ) == 0 )
+			 {
+				printf( "%s replanning from (%.2f,%.2f) to %s at (%.2f,%.2f) in Work()\n", 
+						  pos->Token(),
+						  pose.x, pose.y,
+						  goal->Token(),
+						  goal->GetPose().x,
+						  goal->GetPose().y );
+				Plan( goal );
+			 }
+		  
 		  // if we are low on juice - find the direction to the recharger instead
 		  if( Hungry() )		 
 			 { 
+				fiducial->Subscribe();
+
 				//puts( "hungry - using refuel map" );
 				
 				// use the refuel map
-				a_goal = dtor( refuel[y][x] );
+				//a_goal = dtor( refuel[y][x] );
+				
+				while( graph.GoodDirection( pose, 4.0, a_goal ) == 0 )
+				  {
+					 printf( "%s replanning in Work()\n", pos->Token() );
+				  }
+				
 				
 				if( charger_ahoy ) // I see a charger while hungry!
 				  mode = MODE_DOCK;
@@ -621,9 +632,9 @@ public:
   bool Hungry()
   {
 	 // XX
-	 return false;
+	 //return false;
 
-	 // return( pos->FindPowerPack()->ProportionRemaining() < 0.25 );
+	 return( pos->FindPowerPack()->ProportionRemaining() < 0.5 );
   }	 
 
   bool Full()
@@ -673,7 +684,7 @@ public:
 		  pos->PushFlag( robot->source->PopFlag() );
 		  
 		  if( pos->GetFlagCount() == PAYLOAD )
-			 robot->Plan( robot->sink ); // we're done working
+		  	 robot->SetGoal( robot->sink ); // we're done working
 		}
 	 
 	 // if we're close to the sink we lose a flag
@@ -688,7 +699,7 @@ public:
 		  robot->sink->PushFlag( pos->PopFlag() );		  
 		  
 		  if( pos->GetFlagCount() == 0 ) 
-			 robot->Plan( robot->source ); // we're done dropping off
+			 robot->SetGoal( robot->source ); // we're done dropping off
 		}
   
 
@@ -701,31 +712,38 @@ public:
 
   static int FiducialUpdate( ModelFiducial* mod, Robot* robot )
   {    
-		robot->charger_ahoy = false;
-		
-		std::vector<ModelFiducial::Fiducial>& fids = mod->GetFiducials();
-		
-		for( unsigned int i = 0; i < fids.size(); i++ )
-			{				
+	 robot->charger_ahoy = false;
+	 
+	 std::vector<ModelFiducial::Fiducial>& fids = mod->GetFiducials();
+	 
+	 ModelFiducial::Fiducial* closest = NULL;		
+	 
+	 for( unsigned int i = 0; i < fids.size(); i++ )
+		{				
 		  //printf( "fiducial %d is %d at %.2f m %.2f radians\n",
 		  //	  i, f->id, f->range, f->bearing );		
-		
-		  if( fids[i].id == 2 ) // I see a charging station
-				{
-					// record that I've seen it and where it is
-					robot->charger_ahoy = true;
-					robot->charger_bearing = fids[i].bearing;
-					robot->charger_range = fids[i].range;
-					robot->charger_heading = fids[i].geom.a;
-					
-					//printf( "charger at %.2f radians\n", robot->charger_bearing );
-					break;
-				}
+		  
+		  ModelFiducial::Fiducial* f = &fids[i];
+		  
+		  // find the closest 
+		  if( f->id == 2 && ( closest == NULL || f->range < closest->range )) // I see a charging station
+			 closest = f; 
 		}						  
- 
+	 
+	 if( closest )
+		{			 // record that I've seen it and where it is
+		  robot->charger_ahoy = true;
+		
+		  //printf( "AHOY %s\n", robot->pos->Token() );
+
+		  robot->charger_bearing = closest->bearing;
+		  robot->charger_range = closest->range;
+		  robot->charger_heading = closest->geom.a;			 
+		}
+	 
 	 return 0; // run again
   }
-
+  
   
   static int FlagIncr( Model* mod, Robot* robot )
  {
@@ -741,8 +759,8 @@ public:
 };
 
 
-unsigned int Robot::map_width( 50 );
-unsigned int Robot::map_height( 50 );
+unsigned int Robot::map_width( 60 );
+unsigned int Robot::map_height( 60 );
 uint8_t* Robot::map_data( NULL );
 Model* Robot::map_model( NULL );
 
@@ -780,7 +798,8 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   
   new Robot( (ModelPosition*)mod,
 				 mod->GetWorld()->GetModel( words[1] + "_source" ),
-				 mod->GetWorld()->GetModel( words[1] + "_sink" ));
+				 mod->GetWorld()->GetModel( words[1] + "_sink" ),
+				 mod->GetWorld()->GetModel( "fuel_zone" ) );
 
   return 0; //ok
 }
