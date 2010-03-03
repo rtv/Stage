@@ -1,7 +1,6 @@
 
 SET( PLUGINS
      fasr
-     fasr2
      lasernoise
      sink
      source
@@ -17,7 +16,6 @@ SET( PLUGINS
 #  SET( PLUGINS ${PLUGINS} fasr_plan )
 #endif( PLAYER_FOUND )
 
-set_source_files_properties( ${PLUGINS} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
 # create a library module for each plugin and link libstage to each
 
@@ -29,6 +27,8 @@ ADD_LIBRARY( fasr2 MODULE fasr2.cc astar/findpath.cpp )
 
 # add fasr2 to the list of plugins
 SET( PLUGINS ${PLUGINS} fasr2 )
+
+set_source_files_properties( ${PLUGINS} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
 foreach( PLUGIN ${PLUGINS} )
   TARGET_LINK_LIBRARIES( ${PLUGIN} stage )

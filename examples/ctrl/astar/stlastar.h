@@ -29,6 +29,9 @@ given where due.
 //#include <conio.h>
 #include <assert.h>
 
+// some systems need this for uint8_t 
+#include <stdint.h>
+
 // stl includes
 #include <algorithm>
 #include <set>
@@ -111,7 +114,7 @@ public: // methods
 
 
 	// constructor just initialises private data
-	AStarSearch( int MaxNodes = 1000 ) :
+	AStarSearch( int MaxNodes = 2000 ) :
 		m_AllocateNodeCount(0),
 #if USE_FSA_MEMORY
 		m_FixedSizeAllocator( MaxNodes ),

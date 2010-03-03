@@ -128,7 +128,7 @@ bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch, MapS
 
 	// push each possible move except allowing the search to go backwards
 
-	if( (GetMap( x-1, y ) < 9) 
+	if( (GetMap( x-1, y ) < (unsigned int)9) 
 		&& !((parent_x == x-1) && (parent_y == y))
 	  ) 
 	{
@@ -238,38 +238,38 @@ bool astar( uint8_t* map,
 	#if DEBUG_LISTS
 
 			cout << "Steps:" << SearchSteps << "\n";
-
+			
 			int len = 0;
-
+			
 			cout << "Open:\n";
 			MapSearchNode *p = astarsearch.GetOpenListStart();
 			while( p )
-			{
-				len++;
-	#if !DEBUG_LIST_LENGTHS_ONLY			
-				((MapSearchNode *)p)->PrintNodeInfo();
-	#endif
-				p = astarsearch.GetOpenListNext();
-				
-			}
-
+				{
+					len++;
+#if !DEBUG_LIST_LENGTHS_ONLY			
+					((MapSearchNode *)p)->PrintNodeInfo();
+#endif
+					p = astarsearch.GetOpenListNext();
+					
+				}
+			
 			cout << "Open list has " << len << " nodes\n";
-
+			
 			len = 0;
-
+			
 			cout << "Closed:\n";
 			p = astarsearch.GetClosedListStart();
 			while( p )
-			{
-				len++;
-	#if !DEBUG_LIST_LENGTHS_ONLY			
-				p->PrintNodeInfo();
-	#endif			
-				p = astarsearch.GetClosedListNext();
-			}
-
+				{
+					len++;
+#if !DEBUG_LIST_LENGTHS_ONLY			
+					p->PrintNodeInfo();
+#endif			
+					p = astarsearch.GetClosedListNext();
+				}
+			
 			cout << "Closed list has " << len << " nodes\n";
-	#endif
+#endif
 
 		}
 		while( SearchState == AStarSearch<MapSearchNode>::SEARCH_STATE_SEARCHING );

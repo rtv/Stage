@@ -23,9 +23,9 @@ window
 ( 
   size [ 758.000 809.000 ] 
 
-  center [ -42.865 -43.165 ] 
+  center [ 0.114 -16.418 ] 
   rotate [ 0 0 ]
-  scale 51.926 
+  scale 5.533 
   
   show_data 1
   show_flags 1
