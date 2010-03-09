@@ -23,9 +23,9 @@ window
 ( 
   size [ 758.000 809.000 ] 
 
-  center [ -37.456 -47.457 ] 
+  center [ -9.226 10.939 ] 
   rotate [ 0 0 ]
-  scale 194.841 
+  scale 27.308 
   
   show_data 1
   show_flags 1
@@ -128,7 +128,7 @@ define charging_bump model
 
 define charge_station model
 (  
-  size [ 0.100 0.300 0.100 ]
+  size [ 0.100 0.300 0.300 ]
   color "purple"
   
   laser_return 0
@@ -139,28 +139,29 @@ define charge_station model
   #model( color "purple" size [0.100 0.050 0.250] pose [ 0 -0.100 0 0 ] ) 
 
   # the charging block
-  model( 
-    pose [ 0.010 0 0 0 ]
-    color "yellow"
-    size [ 0.050 0.150 0.100 ]
-    joules -1  # provides infinite energy
-    give_watts 2000 
-    # fiducial_return 2 # look for this in the fiducial sensor
+  #model( 
+   # pose [ 0.010 0 0 0 ]
+    #color "yellow"
+    #size [ 0.050 0.150 0.100 ]
+   
+   joules -1  # provides infinite energy
+   give_watts 8000 # high! 
+   fiducial_return 2 # look for this in the fiducial sensor
 	 
 	 alwayson 1 # so we give charge without any explicit subscriber
 
-	 laser_return 0
-	 obstacle_return 0
-   )
+	# laser_return 0
+	 #obstacle_return 0
+   #)
 
  # the set-up target
- model( 
-   pose [0.500 0 0 0 ] 
-   color "green"
-   size [0.100 0.100 0.015] 
-   fiducial_return 2 
-   obstacle_return 0
-  )
+ #model( 
+ #  pose [0.500 0 0 0 ] 
+ #  color "green"
+ #  size [0.100 0.100 0.015] 
+  # fiducial_return 2 
+  # obstacle_return 0
+  #)
 
 )
 
@@ -266,7 +267,7 @@ define autorob pioneer2dx
  joules 100000 
  joules_capacity 400000 
  fiducial_return 0
- charging_bump( obstacle_return 0 fiducial( ignore_zloc 1 range_max_id 9 range_max 9 fov 180 pose [ 0 0 -0.050 0 ] ) )
+ charging_bump( obstacle_return 0 fiducial( ignore_zloc 0 range_max_id 9 range_max 9 fov 180 pose [ 0 0 -0.050 0 ] ) )
 
  # small speed optimization
  # trail_length 0
@@ -284,26 +285,26 @@ define magentabot autorob( color "magenta" ctrl "fasr2 magenta" )
 #define bot autorob( ctrl "fasr2 " )"		  
 
 redbot( pose [-11.388 12.267 0 166.581] joules 200000 )
-redbot( pose [-12.867 11.964 0 135.003] joules 200000 )
+redbot( pose [-12.208 11.744 0 135.003] joules 200000 )
 redbot( pose [-12.289 10.814 0 147.497] joules 200000 )
 redbot( pose [-10.642 11.563 0 123.708] joules 200000 )
 redbot( pose [-11.378 11.274 0 143.281] joules 200000 )
 redbot( pose [-10.200 11.012 0 46.529] joules 200000 )
-redbot( pose [-12.921 13.355 0 168.778] joules 200000 )
-redbot( pose [-11.953 13.260 0 163.730] joules 200000 )
+redbot( pose [-13.067 13.575 0 168.778] joules 200000 )
+redbot( pose [-12.466 13.333 0 163.730] joules 200000 )
 redbot( pose [-13.740 12.740 0 157.546] joules 200000 )
 redbot( pose [-14.708 12.643 0 138.616] joules 200000 )
 
-#redbot( pose [-12.145 10.886 0 125.831] joules 100000 )
-#redbot( pose [-12.710 12.157 0 125.831] joules 100000 )
-#redbot( pose [-12.275 12.775 0 125.831] joules 100000 )
-#redbot( pose [-11.461 13.123 0 125.831] joules 100000 )
-#redbot( pose [-10.679 13.036 0 125.831] joules 100000 )
-#redbot( pose [-12.167 13.514 0 125.831] joules 100000 )
-#redbot( pose [-12.992 13.047 0 125.831] joules 100000 )
-#redbot( pose [-13.372 12.243 0 125.831] joules 100000 )
-#redbot( pose [-13.296 11.331 0 125.831] joules 100000 )
-#redbot( pose [-13.944 11.986 0 125.831] joules 100000 )
+redbot( pose [-12.841 10.666 0 125.831] joules 100000 )
+redbot( pose [-12.710 12.157 0 125.831] joules 100000 )
+redbot( pose [-12.275 12.775 0 125.831] joules 100000 )
+redbot( pose [-11.461 13.123 0 125.831] joules 100000 )
+redbot( pose [-10.679 13.036 0 125.831] joules 100000 )
+redbot( pose [-12.277 14.027 0 125.831] joules 100000 )
+redbot( pose [-13.981 13.377 0 125.831] joules 100000 )
+redbot( pose [-13.372 12.243 0 125.831] joules 100000 )
+redbot( pose [-13.296 11.331 0 125.831] joules 100000 )
+redbot( pose [-13.944 11.986 0 125.831] joules 100000 )
 
 #redbot( pose [-14.005 12.947 0 125.831] joules 100000 )
 #redbot( pose [-12.922 13.866 0 125.831] joules 100000 )
@@ -317,26 +318,26 @@ redbot( pose [-14.708 12.643 0 138.616] joules 200000 )
 #redbot( pose [-10.920 11.394 0 125.831] joules 100000 )
 
 bluebot( pose [-13.004 6.811 0 166.511] joules 200000 )
-bluebot( pose [-13.235 8.255 0 175.835] joules 200000 )
+bluebot( pose [-13.272 8.255 0 175.835] joules 200000 )
 bluebot( pose [-12.180 6.527 0 -132.938] joules 200000 )
 bluebot( pose [-9.958 7.989 0 171.172] joules 200000 )
 bluebot( pose [-12.369 9.016 0 170.270] joules 200000 )
-bluebot( pose [-10.799 7.509 0 -157.026] joules 200000 )
+bluebot( pose [-10.945 8.132 0 -157.026] joules 200000 )
 bluebot( pose [-11.453 8.651 0 -120.696] joules 200000 )
 bluebot( pose [-13.876 8.850 0 -177.508] joules 200000 )
-bluebot( pose [-11.314 5.949 0 -139.502] joules 200000 )
+bluebot( pose [-11.753 5.510 0 -139.502] joules 200000 )
 bluebot( pose [-10.242 8.631 0 160.986] joules 200000 )
 
-#bluebot( pose [-10.901 7.503 0 174.453] joules 200000 )
-#bluebot( pose [-12.063 7.960 0 174.453] joules 200000 )
-#bluebot( pose [-12.159 8.673 0 174.453] joules 200000 )
-#bluebot( pose [-12.039 7.399 0 174.453] joules 200000 )
-#bluebot( pose [-12.151 6.782 0 174.453] joules 200000 )
-#bluebot( pose [-11.574 6.213 0 174.453] joules 200000 )
-#bluebot( pose [-10.725 6.173 0 174.453] joules 200000 )
-#bluebot( pose [-10.019 5.829 0 174.453] joules 200000 )
-#bluebot( pose [-12.824 8.232 0 174.453] joules 200000 )
-#bluebot( pose [-9.930 7.369 0 174.453] joules 200000 )
+bluebot( pose [-10.901 7.503 0 174.453] joules 200000 )
+bluebot( pose [-12.063 7.960 0 174.453] joules 200000 )
+bluebot( pose [-12.159 8.673 0 174.453] joules 200000 )
+bluebot( pose [-12.039 7.399 0 174.453] joules 200000 )
+bluebot( pose [-11.455 6.855 0 174.453] joules 200000 )
+bluebot( pose [-11.574 6.213 0 174.453] joules 200000 )
+bluebot( pose [-10.725 6.173 0 174.453] joules 200000 )
+bluebot( pose [-10.019 5.829 0 174.453] joules 200000 )
+bluebot( pose [-12.824 7.756 0 174.453] joules 200000 )
+bluebot( pose [-9.930 7.369 0 174.453] joules 200000 )
 
 #bluebot( pose [-10.706 8.428 0 174.453] joules 200000 )
 #bluebot( pose [-12.069 9.308 0 174.453] joules 200000 )
@@ -360,16 +361,16 @@ cyanbot( pose [-3.733 17.894 0 54.588] joules 400000 )
 cyanbot( pose [-3.232 17.616 0 52.768] joules 400000 )
 cyanbot( pose [-2.570 20.624 0 20.367] joules 400000 )
 
-#cyanbot( pose [-3.635 20.622 0 -117.456] joules 400000 )
-#cyanbot( pose [-5.346 20.649 0 -117.456] joules 400000 )
-#cyanbot( pose [-4.518 21.397 0 -117.456] joules 400000 )
-#cyanbot( pose [-3.796 21.611 0 -117.456] joules 400000 )
-#cyanbot( pose [-3.074 19.927 0 -117.456] joules 400000 )
-#cyanbot( pose [-2.940 21.424 0 -117.456] joules 400000 )
-#cyanbot( pose [-2.326 20.756 0 -117.456] joules 400000 )
-#cyanbot( pose [-1.898 19.927 0 -117.456] joules 400000 )
-#cyanbot( pose [-1.737 19.125 0 -117.456] joules 400000 )
-#cyanbot( pose [-5.320 17.681 0 -117.456] joules 400000 )
+cyanbot( pose [-3.635 20.622 0 -117.456] joules 400000 )
+cyanbot( pose [-5.346 20.649 0 -117.456] joules 400000 )
+cyanbot( pose [-4.518 21.397 0 -117.456] joules 400000 )
+cyanbot( pose [-3.796 21.611 0 -117.456] joules 400000 )
+cyanbot( pose [-3.074 19.927 0 -117.456] joules 400000 )
+cyanbot( pose [-2.610 21.900 0 -117.456] joules 400000 )
+cyanbot( pose [-1.703 20.756 0 -117.456] joules 400000 )
+cyanbot( pose [-1.898 19.927 0 -117.456] joules 400000 )
+cyanbot( pose [-1.371 19.088 0 -117.456] joules 400000 )
+cyanbot( pose [-5.320 17.681 0 -117.456] joules 400000 )
 
 #cyanbot( pose [-4.708 18.475 0 -117.456] joules 400000 )
 #cyanbot( pose [-5.615 18.687 0 -117.456] joules 400000 )
@@ -382,8 +383,8 @@ cyanbot( pose [-2.570 20.624 0 20.367] joules 400000 )
 #cyanbot( pose [-2.198 18.082 0 -117.456] joules 400000 )
 #cyanbot( pose [-6.301 18.782 0 -117.456] joules 400000 )
 
-greenbot( pose [-36.953 -46.340 0 -41.980] joules 100000 )
-greenbot( pose [-37.595 -47.441 0 -119.991] joules 100000 )
+greenbot( pose [-43.968 -46.180 0 -41.980] joules 100000 )
+greenbot( pose [-2.601 -46.655 0 -119.991] joules 100000 )
 greenbot( pose [-8.902 2.142 0 -65.139] joules 200000 )
 greenbot( pose [-9.615 2.398 0 -73.426] joules 200000 )
 greenbot( pose [-8.619 0.004 0 -93.488] joules 200000 )
@@ -391,18 +392,18 @@ greenbot( pose [-9.230 1.231 0 -99.719] joules 200000 )
 greenbot( pose [-10.258 1.202 0 27.802] joules 200000 )
 greenbot( pose [-8.513 0.851 0 -96.070] joules 200000 )
 greenbot( pose [-10.890 1.197 0 160.446] joules 200000 )
-greenbot( pose [-10.591 1.693 0 46.259] joules 200000 )
+greenbot( pose [-11.214 1.949 0 46.259] joules 200000 )
 
-#greenbot( pose [-11.819 1.550 0 44.991] joules 100000 )
-#greenbot( pose [-12.401 2.181 0 44.991] joules 100000 )
-#greenbot( pose [-11.236 3.330 0 44.991] joules 100000 )
-#greenbot( pose [-12.078 3.298 0 44.991] joules 100000 )
-#greenbot( pose [-9.909 2.456 0 44.991] joules 100000 )
-#greenbot( pose [-10.734 4.123 0 44.991] joules 100000 )
-#greenbot( pose [-11.592 4.398 0 44.991] joules 100000 )
-#greenbot( pose [-12.903 2.877 0 44.991] joules 100000 )
-#greenbot( pose [-12.434 1.372 0 44.991] joules 100000 )
-#greenbot( pose [-10.555 3.358 0 44.991] joules 100000 )
+greenbot( pose [-11.819 1.550 0 44.991] joules 100000 )
+greenbot( pose [-12.401 2.181 0 44.991] joules 100000 )
+greenbot( pose [-11.236 3.330 0 44.991] joules 100000 )
+greenbot( pose [-12.078 3.298 0 44.991] joules 100000 )
+greenbot( pose [-10.275 2.456 0 44.991] joules 100000 )
+greenbot( pose [-10.734 4.123 0 44.991] joules 100000 )
+greenbot( pose [-11.592 4.398 0 44.991] joules 100000 )
+greenbot( pose [-12.903 2.877 0 44.991] joules 100000 )
+greenbot( pose [-12.434 1.372 0 44.991] joules 100000 )
+greenbot( pose [-10.555 3.358 0 44.991] joules 100000 )
 
 #greenbot( pose [-9.516 3.311 0 44.991] joules 100000 )
 #greenbot( pose [-12.308 3.949 0 44.991] joules 100000 )
@@ -417,7 +418,7 @@ greenbot( pose [-10.591 1.693 0 46.259] joules 200000 )
 
 yellowbot( pose [-15.567 5.300 0 -113.433] joules 200000 )
 yellowbot( pose [-13.218 5.200 0 -105.066] joules 200000 )
-yellowbot( pose [-15.890 6.463 0 -113.959] joules 200000 )
+yellowbot( pose [-16.146 6.573 0 -113.959] joules 200000 )
 yellowbot( pose [-15.829 3.428 0 -100.843] joules 200000 )
 yellowbot( pose [-13.943 3.757 0 -116.077] joules 200000 )
 yellowbot( pose [-13.589 6.170 0 -108.098] joules 200000 )
@@ -426,16 +427,16 @@ yellowbot( pose [-15.183 6.829 0 -100.002] joules 200000 )
 yellowbot( pose [-13.444 3.480 0 -97.678] joules 200000 )
 yellowbot( pose [-16.445 7.660 0 68.821] joules 200000 )
 
-#yellowbot( pose [-17.222 6.291 0 35.145] joules 200000 )
-#yellowbot( pose [-17.885 7.198 0 35.145] joules 200000 )
-#yellowbot( pose [-17.254 8.218 0 35.145] joules 200000 )
-#yellowbot( pose [-17.060 5.498 0 35.145] joules 200000 )
-#yellowbot( pose [-18.047 6.227 0 35.145] joules 200000 )
-#yellowbot( pose [-16.930 4.640 0 35.145] joules 200000 )
-#yellowbot( pose [-17.966 5.417 0 35.145] joules 200000 )
-#yellowbot( pose [-15.927 4.640 0 35.145] joules 200000 )
-#yellowbot( pose [-14.988 4.236 0 35.145] joules 200000 )
-#yellowbot( pose [-15.706 6.151 0 35.145] joules 200000 )
+yellowbot( pose [-17.222 6.291 0 35.145] joules 200000 )
+yellowbot( pose [-17.885 7.198 0 35.145] joules 200000 )
+yellowbot( pose [-17.254 8.218 0 35.145] joules 200000 )
+yellowbot( pose [-17.060 5.498 0 35.145] joules 200000 )
+yellowbot( pose [-18.047 6.227 0 35.145] joules 200000 )
+yellowbot( pose [-16.930 4.640 0 35.145] joules 200000 )
+yellowbot( pose [-17.966 5.417 0 35.145] joules 200000 )
+yellowbot( pose [-15.927 4.640 0 35.145] joules 200000 )
+yellowbot( pose [-14.988 4.236 0 35.145] joules 200000 )
+yellowbot( pose [-15.706 6.151 0 35.145] joules 200000 )
 
 #yellowbot( pose [-16.419 6.225 0 35.145] joules 200000 )
 #yellowbot( pose [-14.574 5.868 0 35.145] joules 200000 )
@@ -459,16 +460,16 @@ magentabot( pose [-8.410 14.496 0 -136.374] joules 300000 )
 magentabot( pose [-6.752 14.083 0 -101.104] joules 300000 )
 magentabot( pose [-8.752 15.271 0 -131.336] joules 300000 )
 
-#magentabot( pose [-9.099 17.489 0 -143.181] joules 300000 )
-#magentabot( pose [-9.610 15.854 0 -143.181] joules 300000 )
-#magentabot( pose [-9.589 16.569 0 -143.181] joules 300000 )
-#magentabot( pose [-10.059 15.221 0 -143.181] joules 300000 )
-#magentabot( pose [-10.264 16.099 0 -143.181] joules 300000 )
-#magentabot( pose [-9.814 17.325 0 -143.181] joules 300000 )
-#magentabot( pose [-8.180 16.447 0 -143.181] joules 300000 )
-#magentabot( pose [-8.629 17.999 0 -143.181] joules 300000 )
-#magentabot( pose [-9.467 18.142 0 -143.181] joules 300000 )
-#magentabot( pose [-9.079 16.263 0 -143.181] joules 300000 )
+magentabot( pose [-9.099 17.489 0 -143.181] joules 300000 )
+magentabot( pose [-9.610 15.854 0 -143.181] joules 300000 )
+magentabot( pose [-9.589 16.569 0 -143.181] joules 300000 )
+magentabot( pose [-10.059 15.221 0 -143.181] joules 300000 )
+magentabot( pose [-10.264 16.099 0 -143.181] joules 300000 )
+magentabot( pose [-9.814 17.325 0 -143.181] joules 300000 )
+magentabot( pose [-8.180 16.447 0 -143.181] joules 300000 )
+magentabot( pose [-8.629 17.999 0 -143.181] joules 300000 )
+magentabot( pose [-9.467 18.142 0 -143.181] joules 300000 )
+magentabot( pose [-9.079 16.263 0 -143.181] joules 300000 )
 
 #magentabot( pose [-9.196 15.409 0 -143.181] joules 300000 )
 #magentabot( pose [-9.598 14.812 0 -143.181] joules 300000 )

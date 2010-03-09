@@ -12,7 +12,7 @@ const double avoidturn = 0.5;
 const double minfrontdistance = 0.7;  
 const double stopdist = 0.5;
 const int avoidduration = 10;
-const int workduration = 20;
+//const int workduration = 20;
 const int PAYLOAD = 1;
 
 //const int TRAIL_LENGTH_MAX = 500;
@@ -275,8 +275,7 @@ public:
 	 fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, this );	 	 
 	 
 	 // we subscribe to the ranger device only while undocking (i.e. backing up)
-	 ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, this );	 	 
-	 
+	 //ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, this );	 	 	 
 	 
 	 pos->AddVisualizer( &graphvis, true );
 	 
@@ -383,6 +382,11 @@ public:
 		{
 		  double a_goal = normalize( charger_bearing );				  
 		
+			double orient = normalize( M_PI - (charger_bearing - charger_heading) );
+			//printf( "val %.2f\n", orient );
+
+			a_goal -= 2.0 * orient;
+
 		  // 		if( pos->Stalled() )
 		  //  		  {
 		  // 			 puts( "stalled. stopping" );
@@ -393,11 +397,11 @@ public:
 		  // a_goal *= 2.0;
 
 		  if( charger_range > 0.45 )
-			 {
-				if( !ObstacleAvoid() )
-				  {
-					 pos->SetXSpeed( cruisespeed );	  					 
-					 pos->SetTurnSpeed( a_goal );
+				{
+					if( !ObstacleAvoid() )
+						{
+							pos->SetXSpeed( cruisespeed );	  					 
+							pos->SetTurnSpeed( a_goal );
 				  }
 			 }
 		  else	
@@ -426,32 +430,44 @@ public:
 		  //printf( "fully charged, now back to work\n" );
 
 		  ranger->Subscribe(); // enable the sonar to see behind us
+			fiducial->Unsubscribe(); 
 		  mode = MODE_UNDOCK;
 		}
   }
 
-  
+
   void UnDock()
   {
-	 const stg_meters_t back_off_distance = 0.6;
+	 const stg_meters_t back_off_distance = 0.4;
 	 const stg_meters_t back_off_speed = -0.02;
+	 const stg_meters_t wait_distance = 0.2;
+	 const unsigned int BACK_SENSOR_FIRST = 10;
+	 const unsigned int BACK_SENSOR_LAST = 13;
 	 
-	 // back up a bit
+	 // stay put while anything is close behind 
+	 for( unsigned int s = BACK_SENSOR_FIRST; s <= BACK_SENSOR_LAST; ++s )
+		 if( ranger->sensors[s].range < wait_distance) 
+			 {
+				 pos->Say( "Waiting..." );
+				 pos->SetXSpeed( 0.0 );
+				 return;
+			 }	
+	 
+	 pos->Say( "" );
 	 if( charger_range < back_off_distance )
-		pos->SetXSpeed( back_off_speed );
+		 {
+			 pos->SetXSpeed( back_off_speed );
+		 }
 	 else
-		pos->SetXSpeed( 0.0 );
-	 
-	 if( charger_range > back_off_distance )	 
-		{
-		  mode = MODE_WORK;  
-		  SetGoal( pos->GetFlagCount() ? sink : source );
-
-		  fiducial->Unsubscribe();
-		  ranger->Unsubscribe();
-		}
-  }
-
+		 {
+			 mode = MODE_WORK;  
+			 SetGoal( pos->GetFlagCount() ? sink : source );
+			 
+			 fiducial->Unsubscribe();
+			 ranger->Unsubscribe();
+		 }
+	}
+	
   bool ObstacleAvoid()
   {
 	 bool obstruction = false;
@@ -547,7 +563,6 @@ public:
 		  if( verbose ) puts( "Cruise" );
 		
 		  //avoidcount = 0;
-		  pos->SetXSpeed( cruisespeed );	  
 		
 		  Pose pose = pos->GetPose();
 		
@@ -598,14 +613,21 @@ public:
 		  
 		  double a_error = normalize( a_goal - pose.a );
 		  pos->SetTurnSpeed(  a_error );
+			
+			//double a_error_size = fabs(a_error);
+			
+			//if( a_error_size < 1.0 )
+			//pos->SetXSpeed( (1.0 - a_error_size) *  cruisespeed );	  
+			//else
+			//pos->SetXSpeed( 0.0 );
+			pos->SetXSpeed( cruisespeed );
 		}  
   }
 
   
   static int RangerUpdate( ModelRanger* ranger, Robot* robot )
   {
-	 printf( "%s RANGER UPDATE", ranger->Token() );
-
+		//printf( "%s RANGER UPDATE", ranger->Token() );
 	 return 0;
   }
 

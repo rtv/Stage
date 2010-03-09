@@ -42,7 +42,7 @@ fiducial
   range_max 8.0
   range_max_id 5.0
   fov 3.14159
-  ignore_zloc
+  ignore_zloc 0
 
   # model properties
   size [ 0.1 0.1 0.1 ]
@@ -60,8 +60,8 @@ fiducial
 - fov <float>
   the angular field of view of the scanner, in radians.
 - ignore_zloc <1/0>\n
-  default is 0.  When set to 1, the fiducial finder ignores the z component when checking a fiducial.  Using the default behaviour, a short robot would not been seen
-  by a tall robot's fiducial finder.  With this flag set to 1, the fiducial finder will see the shorter robot.   
+  default is 0.  When set to 1, the fiducial finder ignores the z component when checking a fiducial.  Using the default behaviour, a short object would not been seen
+  by a fiducial finder placed on top of a tall robot.  With this flag set to 1, the fiducial finder will see the shorter robot.   
  */
   
   ModelFiducial::ModelFiducial( World* world, 
@@ -105,7 +105,6 @@ static bool fiducial_raytrace_match( Model* candidate,
 												 const void* dummy )
 {
   (void)dummy; // avoid warning about unused var
-
   return( ! finder->IsRelated( candidate ) );
 }	
 
@@ -114,14 +113,11 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 {
 	//PRINT_DEBUG2( "Fiducial %s is testing model %s", token, him->Token() );
 
-	// don't consider models with invalid returns  
-	if( him->vis.fiducial_return == 0 )
-	{
-		//PRINT_DEBUG1( "  but model %s has a zero fiducial ID", him->Token());
-		return;
-	}
-
+	// only non-zero IDs should ever be checked
+	assert( him->vis.fiducial_return != 0 );
+	
 	// check to see if this neighbor has the right fiducial key
+	// if keys are used extensively, then perhaps a vector per key would be faster
 	if( vis.fiducial_key != him->vis.fiducial_key )
 	{
 		//PRINT_DEBUG1( "  but model %s doesn't match the fiducial key", him->Token());
@@ -138,7 +134,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 
 	//  printf( "range to target %.2f m (
 
-	if( range > max_range_anon )
+	if( range >= max_range_anon )
 	{
 		//PRINT_DEBUG3( "  but model %s is %.2f m away, outside my range of %.2f m", 
 		//	    him->Token(),
@@ -164,23 +160,40 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 
 
 	//printf( "bearing %.2f\n", RTOD(bearing) );
-	
+
+	//If we've gotten to this point, a few things are true:
+	// 1. The fiducial is in the field of view of the finder.
+	// 2. The fiducial is in range of the finder.
+	//At this point the purpose of the ray trace is to start at the finder and see if there is anything
+	//in between the finder and the fiducial.  If we simply trace out to the distance we know the finder
+	//is at, then the resulting ray.mod can be one of three things:
+	// 1. A pointer to the model we're tracing to.  In this case the model is at the right Zloc to be 
+	//    returned by the ray tracer.
+	// 2. A pointer to another model that blocked the ray.
+	// 3. NULL.  If it's null, then it means that the ray traced to where the fiducial should be but
+	//    it's zloc was such that the ray didn't hit it.  However, we DO know its there, so we can 
+	//    return this as a hit.
+
+	//printf( "range %.2f\n", range );
+
 	stg_raytrace_result_t ray( Raytrace( dtheta,
-													 max_range_anon,
-													 fiducial_raytrace_match,
-													 NULL,
-													 ! ignore_zloc ) );
+																			 max_range_anon, // TODOscan only as far as the object
+																			 fiducial_raytrace_match,
+																			 NULL,
+																			 true ) );
 	
-	Model* hitmod( ray.mod );
+	// TODO
+	//if( ignore_zloc && ray.mod == NULL ) // i.e. we didn't hit anything *else*
+	//ray.mod = him; // so he was just at the wrong height
 	
- 	//printf( "ray hit %s and was seeking LOS to %s\n",
-	//	  hitmod ? hitmod->Token() : "null",
-	//	  him->Token() );
-
+	//printf( "ray hit %s and was seeking LOS to %s\n",
+	//			ray.mod ? ray.mod->Token() : "null",
+	//			him->Token() );
+	
 	// if it was him, we can see him
-	if( hitmod != him )
-	  return;
-
+	if( ray.mod != him )
+		return;
+	
 	assert( range >= 0 );
 	
 	// passed all the tests! record the fiducial hit
