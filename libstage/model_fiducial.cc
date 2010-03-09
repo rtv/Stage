@@ -42,6 +42,7 @@ fiducial
   range_max 8.0
   range_max_id 5.0
   fov 3.14159
+  ignore_zloc
 
   # model properties
   size [ 0.1 0.1 0.1 ]
@@ -58,7 +59,9 @@ fiducial
   the maximum range at which the sensor can detect the ID of a fiducial, in meters.
 - fov <float>
   the angular field of view of the scanner, in radians.
-
+- ignore_zloc <1/0>\n
+  default is 0.  When set to 1, the fiducial finder ignores the z component when checking a fiducial.  Using the default behaviour, a short robot would not been seen
+  by a tall robot's fiducial finder.  With this flag set to 1, the fiducial finder will see the shorter robot.   
  */
   
   ModelFiducial::ModelFiducial( World* world, 
@@ -71,7 +74,8 @@ fiducial
   min_range( 0.0 ),
   fov( M_PI ),
   heading( 0 ),
-  key( 0 )
+  key( 0 ),
+  ignore_zloc(false)
 {
   //PRINT_DEBUG2( "Constructing ModelFiducial %d (%s)\n", 
   //		id, typestr );
@@ -165,7 +169,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 													 max_range_anon,
 													 fiducial_raytrace_match,
 													 NULL,
-													 true ) );
+													 ! ignore_zloc ) );
 	
 	Model* hitmod( ray.mod );
 	
@@ -197,7 +201,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 	
 	// if he's within ID range, get his fiducial.return value, else
 	// we see value 0
-	fid.id = range < max_range_id ? hitmod->vis.fiducial_return : 0;
+	fid.id = range < max_range_id ? him->vis.fiducial_return : 0;
 	
 	//PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
 	//			  him->Token(), him->vis.fiducial_return );
@@ -231,10 +235,11 @@ void ModelFiducial::Load( void )
 	Model::Load();
 
 	// load fiducial-specific properties
-	min_range      = wf->ReadLength( wf_entity, "range_min",    min_range );
-	max_range_anon = wf->ReadLength( wf_entity, "range_max",    max_range_anon );
-	max_range_id   = wf->ReadLength( wf_entity, "range_max_id", max_range_id );
-	fov            = wf->ReadAngle( wf_entity, "fov",          fov );
+	min_range             = wf->ReadLength( wf_entity, "range_min",    min_range );
+	max_range_anon        = wf->ReadLength( wf_entity, "range_max",    max_range_anon );
+	max_range_id          = wf->ReadLength( wf_entity, "range_max_id", max_range_id );
+	fov                   = wf->ReadAngle ( wf_entity, "fov",          fov );
+  ignore_zloc            = wf->ReadInt   ( wf_entity, "ignore_zloc",  ignore_zloc);
 }  
 
 

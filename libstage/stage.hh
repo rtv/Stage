@@ -2663,7 +2663,7 @@ namespace Stg
 	 stg_radians_t fov; ///< field of view 
 	 stg_radians_t heading; ///< center of field of view
 	 int key; ///< /// only detect fiducials with a key that matches this one (defaults 0)
-		
+    bool ignore_zloc;  ///< Are we ignoring the Z-loc of the fiducials we detect compared to the fiducial detector?	
 		
 	 /** Access the dectected fiducials. C++ style. */
 	 std::vector<Fiducial>& GetFiducials() { return fiducials; }

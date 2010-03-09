@@ -255,6 +255,8 @@ public:
 	 // need at least these models to get any work done
 	 // (pos must be good, as we used it in the initialization list)
 	 assert( laser );
+	 assert( fiducial );
+	 assert( ranger );
 	 assert( source );
 	 assert( sink );
 
@@ -269,11 +271,12 @@ public:
 	 laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, this );
 	 laser->Subscribe();
 
+	 // we subscribe to the fiducial device only while docking
 	 fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, this );	 	 
-	 //fiducial->Subscribe();
 	 
-	 //pos->AddFlagIncrCallback( (stg_model_callback_t)FlagIncr, NULL );
-	 //pos->AddFlagDecrCallback( (stg_model_callback_t)FlagDecr, NULL );
+	 // we subscribe to the ranger device only while undocking (i.e. backing up)
+	 ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, this );	 	 
+	 
 	 
 	 pos->AddVisualizer( &graphvis, true );
 	 
@@ -421,6 +424,8 @@ public:
 	 if( Full() )
 		{
 		  //printf( "fully charged, now back to work\n" );
+
+		  ranger->Subscribe(); // enable the sonar to see behind us
 		  mode = MODE_UNDOCK;
 		}
   }
@@ -441,7 +446,9 @@ public:
 		{
 		  mode = MODE_WORK;  
 		  SetGoal( pos->GetFlagCount() ? sink : source );
+
 		  fiducial->Unsubscribe();
+		  ranger->Unsubscribe();
 		}
   }
 
@@ -592,6 +599,14 @@ public:
 		  double a_error = normalize( a_goal - pose.a );
 		  pos->SetTurnSpeed(  a_error );
 		}  
+  }
+
+  
+  static int RangerUpdate( ModelRanger* ranger, Robot* robot )
+  {
+	 printf( "%s RANGER UPDATE", ranger->Token() );
+
+	 return 0;
   }
 
 

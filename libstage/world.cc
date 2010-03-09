@@ -533,6 +533,9 @@ bool World::Update()
   
   sim_time += sim_interval; 
 
+  FOR_EACH( it, active_velocity )
+	 (*it)->UpdatePose();
+
   // handle the zeroth queue synchronously in the main thread
   ConsumeQueue( 0 );
     
@@ -566,9 +569,6 @@ bool World::Update()
   // world callbacks
   CallUpdateCallbacks();
   
-  FOR_EACH( it, active_velocity )
-	 (*it)->UpdatePose();
-
   FOR_EACH( it, active_energy )
 	 (*it)->UpdateCharge();
   

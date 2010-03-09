@@ -272,7 +272,7 @@ void ModelRanger::Update( void )
 			
       s.range = std::max( ray.range, s.bounds_range.min );
 
-		printf( " %.3f (%.3f) ", s.range, s.pose.a );
+		//printf( " %.3f (%.3f) ", s.range, s.pose.a );
     }   
 	puts("");
 	

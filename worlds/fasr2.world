@@ -23,9 +23,9 @@ window
 ( 
   size [ 758.000 809.000 ] 
 
-  center [ 0.114 -16.418 ] 
+  center [ -37.456 -47.457 ] 
   rotate [ 0 0 ]
-  scale 5.533 
+  scale 194.841 
   
   show_data 1
   show_flags 1
@@ -145,13 +145,22 @@ define charge_station model
     size [ 0.050 0.150 0.100 ]
     joules -1  # provides infinite energy
     give_watts 2000 
-    fiducial_return 2 # look for this in the fiducial sensor
+    # fiducial_return 2 # look for this in the fiducial sensor
 	 
 	 alwayson 1 # so we give charge without any explicit subscriber
 
 	 laser_return 0
 	 obstacle_return 0
    )
+
+ # the set-up target
+ model( 
+   pose [0.500 0 0 0 ] 
+   color "green"
+   size [0.100 0.100 0.015] 
+   fiducial_return 2 
+   obstacle_return 0
+  )
 
 )
 
@@ -257,7 +266,7 @@ define autorob pioneer2dx
  joules 100000 
  joules_capacity 400000 
  fiducial_return 0
- charging_bump( obstacle_return 0 fiducial( range_max_id 9 range_max 9 fov 180 pose [ 0 0 -0.050 0 ] ) )
+ charging_bump( obstacle_return 0 fiducial( ignore_zloc 1 range_max_id 9 range_max 9 fov 180 pose [ 0 0 -0.050 0 ] ) )
 
  # small speed optimization
  # trail_length 0
@@ -373,8 +382,8 @@ cyanbot( pose [-2.570 20.624 0 20.367] joules 400000 )
 #cyanbot( pose [-2.198 18.082 0 -117.456] joules 400000 )
 #cyanbot( pose [-6.301 18.782 0 -117.456] joules 400000 )
 
-greenbot( pose [-36.744 -47.036 0 117.485] joules 100000 )
-greenbot( pose [-37.050 -48.323 0 -85.614] joules 100000 )
+greenbot( pose [-36.953 -46.340 0 -41.980] joules 100000 )
+greenbot( pose [-37.595 -47.441 0 -119.991] joules 100000 )
 greenbot( pose [-8.902 2.142 0 -65.139] joules 200000 )
 greenbot( pose [-9.615 2.398 0 -73.426] joules 200000 )
 greenbot( pose [-8.619 0.004 0 -93.488] joules 200000 )
