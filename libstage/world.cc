@@ -200,10 +200,14 @@ void* World::update_thread_entry( std::pair<World*,int> *thread_info )
   World* world = thread_info->first;
   int thread_instance = thread_info->second;
 
+  //printf( "thread ID %d waiting for mutex\n", thread_instance );
+
   pthread_mutex_lock( &world->thread_mutex );
   
   while( 1 )
     {
+		//printf( "thread ID %d waiting for start\n", thread_instance );
+
       // wait until the main thread signals us
       //puts( "worker waiting for start signal" );
 
@@ -215,6 +219,8 @@ void* World::update_thread_entry( std::pair<World*,int> *thread_info )
       // consume events on the queue up to the current sim time
       world->ConsumeQueue( thread_instance );
 	  	  
+		//printf( "thread %d done\n", thread_instance );
+
       // done working, so increment the counter. If this was the last
       // thread to finish working, signal the main thread, which is
       // blocked waiting for this to happen
@@ -362,12 +368,20 @@ void World::Load( const char* worldfile_path )
       PRINT_WARN( "\nmulti-thread support is experimental and may not work properly, if at all." );
       
       event_queues.resize( worker_threads + 1 );
-      
+
+		//printf( "worker threads %d\n", worker_threads );
+		
+		// need data for each thread
+		// XX BUG! this shouldn't be a local var!
+		
       // kick off the threads
       for( unsigned int t=0; t<worker_threads; t++ )
 		  {
-			 std::pair<World*,int> info( this, t+1 );
-
+			 // a little configuration for each thread
+			 std::pair<World*,int>* infop = new std::pair<World*,int>( this, t+1 );
+			 
+			 //printf( "starting thread %d with ID %d \n", (int)t, info[t].second );
+			 
 			 //normal posix pthread C function pointer
 			 typedef void* (*func_ptr) (void*);
 	  
@@ -375,7 +389,7 @@ void World::Load( const char* worldfile_path )
 			 pthread_create( &pt,
 								  NULL,
 								  (func_ptr)World::update_thread_entry, 
-								  &info );
+								  infop );
 		  }
       
       printf( "[threads %u]", worker_threads );	

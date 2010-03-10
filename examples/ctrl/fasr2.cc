@@ -194,6 +194,8 @@ stg_meters_t CellToMeters( unsigned int c,  stg_meters_t size_m, unsigned int si
 }
 
 
+#include <pthread.h>
+
 class Robot
 {
 private:
@@ -210,6 +212,8 @@ private:
   double charger_range;
   double charger_heading;
   nav_mode_t mode;
+
+  static pthread_mutex_t planner_mutex;
 
   Model* goal;
 
@@ -341,6 +345,9 @@ public:
 	 //printf( "searching from (%.2f, %.2f) [%d, %d]\n", pose.x, pose.y, start.x, start.y );
 	 //printf( "searching to   (%.2f, %.2f) [%d, %d]\n", sp.x, sp.y, goal.x, goal.y );
 
+	 // astar() is not reentrant, so we protect it thus
+	 pthread_mutex_lock( &planner_mutex );
+
 	 std::vector<point_t> path;
 	 bool result = astar( map_data, 
 								 map_width, 
@@ -348,7 +355,9 @@ public:
 								 start,
 								 goal,
 								 path );
-	 
+
+	 pthread_mutex_unlock( &planner_mutex );
+
 	 //printf( "#%s:\n", result ? "PATH" : "NOPATH" );
 
 	 graph.nodes.clear();
@@ -385,7 +394,9 @@ public:
 			double orient = normalize( M_PI - (charger_bearing - charger_heading) );
 			//printf( "val %.2f\n", orient );
 
-			a_goal -= 2.0 * orient;
+			//if( fabs(orient) < M_PI/4.0 )
+			a_goal = normalize( a_goal - 2.0 * orient );
+
 
 		  // 		if( pos->Stalled() )
 		  //  		  {
@@ -396,7 +407,7 @@ public:
 
 		  // a_goal *= 2.0;
 
-		  if( charger_range > 0.45 )
+		  if( charger_range > 0.6 )
 				{
 					if( !ObstacleAvoid() )
 						{
@@ -428,9 +439,9 @@ public:
 	 if( Full() )
 		{
 		  //printf( "fully charged, now back to work\n" );
-
+		  
 		  ranger->Subscribe(); // enable the sonar to see behind us
-			fiducial->Unsubscribe(); 
+		  fiducial->Unsubscribe(); 
 		  mode = MODE_UNDOCK;
 		}
   }
@@ -582,12 +593,12 @@ public:
 		  
 		  while( graph.GoodDirection( pose, 4.0, a_goal ) == 0 )
 			 {
-				printf( "%s replanning from (%.2f,%.2f) to %s at (%.2f,%.2f) in Work()\n", 
-						  pos->Token(),
-						  pose.x, pose.y,
-						  goal->Token(),
-						  goal->GetPose().x,
-						  goal->GetPose().y );
+				//printf( "%s replanning from (%.2f,%.2f) to %s at (%.2f,%.2f) in Work()\n", 
+				//	  pos->Token(),
+				//	  pose.x, pose.y,
+				//	  goal->Token(),
+				//	  goal->GetPose().x,
+				//	  goal->GetPose().y );
 				Plan( goal );
 			 }
 		  
@@ -668,10 +679,7 @@ public:
 
   bool Hungry()
   {
-	 // XX
-	 //return false;
-
-	 return( pos->FindPowerPack()->ProportionRemaining() < 0.5 );
+	 return( pos->FindPowerPack()->ProportionRemaining() < 0.2 );
   }	 
 
   bool Full()
@@ -796,6 +804,8 @@ public:
 };
 
 
+// STATIC VARS
+pthread_mutex_t Robot::planner_mutex = PTHREAD_MUTEX_INITIALIZER;
 unsigned int Robot::map_width( 60 );
 unsigned int Robot::map_height( 60 );
 uint8_t* Robot::map_data( NULL );
