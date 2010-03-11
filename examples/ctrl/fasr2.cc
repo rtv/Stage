@@ -213,6 +213,8 @@ private:
   double charger_heading;
   nav_mode_t mode;
 
+  stg_radians_t docked_angle;
+
   static pthread_mutex_t planner_mutex;
 
   Model* goal;
@@ -228,6 +230,10 @@ private:
   static uint8_t* map_data;
   static Model* map_model;
 	 
+  bool fiducial_sub;
+  bool ranger_sub;
+  
+
 public:
   Robot( ModelPosition* pos, 
 			Model* source,
@@ -249,12 +255,15 @@ public:
 		charger_range(0),
 		charger_heading(0),
 		mode(MODE_WORK),
+		docked_angle(0),
 		goal(source),
 		graph(),
 		graphvis( graph ),
 		last_node( NULL ),
 		node_interval( 20 ),
-		node_interval_countdown( node_interval )
+		node_interval_countdown( node_interval ),
+		fiducial_sub(false),
+		ranger_sub(false)
   {
 	 // need at least these models to get any work done
 	 // (pos must be good, as we used it in the initialization list)
@@ -331,6 +340,37 @@ public:
 	 //puts("");
   }
   
+  void EnableRanger( bool on )
+  { 
+	 if( on && !ranger_sub )
+		{ 
+		  ranger_sub = true;
+		  ranger->Subscribe();
+		}
+	 
+	 if( !on && ranger_sub )
+		{
+		  ranger_sub = false;
+		  ranger->Unsubscribe();
+		}
+  }
+
+  void EnableFiducial( bool on )
+  { 
+	 if( on && !fiducial_sub )
+		{ 
+		  fiducial_sub = true;
+		  fiducial->Subscribe();
+		}
+	 
+	 if( !on && fiducial_sub )
+		{
+		  fiducial_sub = false;
+		  fiducial->Unsubscribe();
+		}
+  }
+
+
   void Plan( Model* dest )
   {
 	 Pose pose = pos->GetPose();
@@ -387,97 +427,117 @@ public:
   
   void Dock()
   {
+	 const stg_meters_t creep_distance = 0.5;
+	 
 	 if( charger_ahoy )
 		{
 		  double a_goal = normalize( charger_bearing );				  
-		
-			double orient = normalize( M_PI - (charger_bearing - charger_heading) );
-			//printf( "val %.2f\n", orient );
-
-			//if( fabs(orient) < M_PI/4.0 )
-			a_goal = normalize( a_goal - 2.0 * orient );
-
-
+		  
+		  double orient = normalize( M_PI - (charger_bearing - charger_heading) );
+		  //printf( "val %.2f\n", orient );
+		  
+		  //if( fabs(orient) < M_PI/4.0 )
+		  a_goal = normalize( a_goal - 2.0 * orient );
+		  
+		  
 		  // 		if( pos->Stalled() )
 		  //  		  {
 		  // 			 puts( "stalled. stopping" );
 		  //  			 pos->Stop();
 		  //		  }
 		  // 		else
-
+		  
 		  // a_goal *= 2.0;
-
-		  if( charger_range > 0.6 )
-				{
-					if( !ObstacleAvoid() )
-						{
-							pos->SetXSpeed( cruisespeed );	  					 
-							pos->SetTurnSpeed( a_goal );
+		  
+		  if( charger_range > creep_distance )
+			 {
+				if( !ObstacleAvoid() )
+				  {
+					 pos->SetXSpeed( cruisespeed );	  					 
+					 pos->SetTurnSpeed( a_goal );
 				  }
 			 }
 		  else	
 			 {			
 				pos->SetTurnSpeed( a_goal );
 				pos->SetXSpeed( 0.02 );	// creep towards it				 
-
+				
 				if( charger_range < 0.08 ) // close enough
-				  pos->Stop();
-
+				  {
+					 pos->Stop();
+					 docked_angle = pos->GetPose().a;
+				  }
+				
 				if( pos->Stalled() ) // touching
-				  pos->SetXSpeed( -0.01 ); // back off a bit			 
-
+				  pos->SetXSpeed( -0.01 ); // back off a bit			 				
 			 }			 
 		}			  
 	 else
 		{
 		  printf( "%s docking but can't see a charger\n", pos->Token() );
 		  pos->Stop();
+		  EnableFiducial( false );
 		  mode = MODE_WORK; // should get us back on track eventually
 		}
 
 	 // if the battery is charged, go back to work
 	 if( Full() )
 		{
-		  //printf( "fully charged, now back to work\n" );
-		  
-		  ranger->Subscribe(); // enable the sonar to see behind us
-		  fiducial->Unsubscribe(); 
+		  //printf( "fully charged, now back to work\n" );		  
 		  mode = MODE_UNDOCK;
+		  EnableRanger(true); // enable the sonar to see behind us
+		  //EnableFiducial(false);
 		}
   }
 
 
   void UnDock()
   {
-	 const stg_meters_t back_off_distance = 0.4;
+	 const stg_meters_t back_off_distance = 0.2;
 	 const stg_meters_t back_off_speed = -0.02;
+	 const stg_radians_t undock_rotate_speed = 0.3;
 	 const stg_meters_t wait_distance = 0.2;
 	 const unsigned int BACK_SENSOR_FIRST = 10;
 	 const unsigned int BACK_SENSOR_LAST = 13;
 	 
-	 // stay put while anything is close behind 
-	 for( unsigned int s = BACK_SENSOR_FIRST; s <= BACK_SENSOR_LAST; ++s )
-		 if( ranger->sensors[s].range < wait_distance) 
-			 {
-				 pos->Say( "Waiting..." );
-				 pos->SetXSpeed( 0.0 );
-				 return;
-			 }	
 	 
-	 pos->Say( "" );
 	 if( charger_range < back_off_distance )
-		 {
-			 pos->SetXSpeed( back_off_speed );
-		 }
+		{
+		  pos->SetXSpeed( back_off_speed );
+
+		  pos->Say( "" );
+		  
+		  // stay put while anything is close behind 
+		  for( unsigned int s = BACK_SENSOR_FIRST; s <= BACK_SENSOR_LAST; ++s )
+			 if( ranger->sensors[s].range < wait_distance) 
+				{
+				  pos->Say( "Waiting..." );
+				  pos->SetXSpeed( 0.0 );
+				  return;
+				}	
+		}
 	 else
-		 {
-			 mode = MODE_WORK;  
-			 SetGoal( pos->GetFlagCount() ? sink : source );
-			 
-			 fiducial->Unsubscribe();
-			 ranger->Unsubscribe();
-		 }
-	}
+		{ // we've backed up enough
+		  
+		  double heading_error = normalize( pos->GetPose().a - (docked_angle + M_PI ) );
+		  
+		  if( fabs( heading_error ) > 0.05 ) 
+			 {
+				// turn
+				pos->SetXSpeed( 0 );
+				pos->SetTurnSpeed( undock_rotate_speed * sgn(-heading_error) );
+			 }
+		  else
+			 {
+				// we're pointing the right way, so we're done
+				mode = MODE_WORK;  
+				SetGoal( pos->GetFlagCount() ? sink : source );
+				
+				EnableFiducial(false);
+				EnableRanger(false);
+			 }
+		}
+  }
 	
   bool ObstacleAvoid()
   {
@@ -605,7 +665,7 @@ public:
 		  // if we are low on juice - find the direction to the recharger instead
 		  if( Hungry() )		 
 			 { 
-				fiducial->Subscribe();
+				EnableFiducial(true);
 
 				//puts( "hungry - using refuel map" );
 				

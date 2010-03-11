@@ -327,7 +327,7 @@ void ModelFiducial::DataVisualize( Camera* cam )
 	
 void ModelFiducial::Shutdown( void )
 { 
-	PRINT_DEBUG( "fiducial shutdown" );
+  //PRINT_DEBUG( "fiducial shutdown" );
 	fiducials.clear();	
 	Model::Shutdown();
 }
