@@ -50,14 +50,14 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
 int LaserUpdate( Model* mod, robot_t* robot )
 {
   // get the data
-  uint32_t sample_count=0;
-	ModelLaser::Sample* scan = robot->laser->GetSamples( &sample_count );
-  if( ! scan )
+	const std::vector<ModelLaser::Sample>& scan = robot->laser->GetSamples();
+  uint32_t sample_count = scan.size();
+  if( ! sample_count < 1 )
     return 0;
   
   bool obstruction = false;
   bool stop = false;
-
+	
   // find the closest distance to the left and right and check if
   // there's anything in front
   double minleft = 1e6;

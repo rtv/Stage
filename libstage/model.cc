@@ -184,7 +184,7 @@ void Size::Load( Worldfile* wf, int section, const char* keyword )
 		}
 }
 
-void Size::Save( Worldfile* wf, int section, const char* keyword )
+void Size::Save( Worldfile* wf, int section, const char* keyword ) const
 {
   wf->WriteTupleLength( section, keyword, 0, x );
   wf->WriteTupleLength( section, keyword, 1, y );
@@ -980,7 +980,7 @@ Model* Model::GetUnusedModelOfType( const std::string& type )
   return NULL;
 }
 
-stg_kg_t Model::GetTotalMass()
+stg_kg_t Model::GetTotalMass() const
 {
   stg_kg_t sum = mass;
   
@@ -990,7 +990,7 @@ stg_kg_t Model::GetTotalMass()
   return sum;
 }
 
-stg_kg_t Model::GetMassOfChildren()
+stg_kg_t Model::GetMassOfChildren() const
 {
   return( GetTotalMass() - mass);
 }

@@ -509,8 +509,10 @@ public:
 		  pos->Say( "" );
 		  
 		  // stay put while anything is close behind 
+			const std::vector<ModelRanger::Sensor>& sensors = ranger->GetSensors();
+
 		  for( unsigned int s = BACK_SENSOR_FIRST; s <= BACK_SENSOR_LAST; ++s )
-			 if( ranger->sensors[s].range < wait_distance) 
+			 if( sensors[s].range < wait_distance) 
 				{
 				  pos->Say( "Waiting..." );
 				  pos->SetXSpeed( 0.0 );
@@ -551,9 +553,10 @@ public:
 	 double minright = 1e6;
   
 	 // Get the data
-	 uint32_t sample_count=0;
-	 ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
-    
+	 //ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
+	 const std::vector<ModelLaser::Sample>& scan = laser->GetSamples();
+    uint32_t sample_count = scan.size();
+
 	 for (uint32_t i = 0; i < sample_count; i++)
 		{		
 		  if( verbose ) printf( "%.3f ", scan[i].range );
@@ -715,8 +718,10 @@ public:
 	 // 	 printf( "model %s power pack @%p is charging\n",
 	 // 				laser->Token(), laser->power_pack );
   
-	 if( laser->GetSamples(NULL) == NULL )
-		return 0;
+	 //if( laser->GetSamples(NULL) == NULL )
+		//return 0;
+
+	 assert( laser->GetSamples().size() > 0 );
 
 	 switch( robot->mode )
 		{

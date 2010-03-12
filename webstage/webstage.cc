@@ -249,25 +249,25 @@ public:
 		  std::vector<double> ranges;
   			
 		  ModelRanger* ranger = (ModelRanger*)mod;  		
-                     
-		  if(ranger){ 					
-			 for(unsigned int i=0;i<ranger->sensors.size();i++){
-				//char str[10];
-				//sprintf(str,"size:%d",ranger->sensors.size());
-				//puts(str);
-				//puts("in the ranger loop");
-				websim::Pose pos;
-				Pose rpos;
-				rpos = ranger->sensors[i].pose;
+			
+			const std::vector<ModelRanger::Sensor>& sensors = ranger->GetSensors();
+      
+			FOR_EACH( it, sensors )
+				{				//char str[10];
+					//sprintf(str,"size:%d",ranger->sensors.size());
+					//puts(str);
+					//puts("in the ranger loop");
+					websim::Pose pos;
+					Pose rpos;
+					rpos = it->pose;
 				pos.x = rpos.x;
 				pos.y = rpos.y;
 				pos.z = rpos.z;
 				pos.a = rpos.a;
 				p.push_back(pos);
 
-				ranges.push_back(ranger->sensors[i].range);					
+				ranges.push_back(it->range);					
 			 }
-		  }
 			
 		  WebSim::GetRangerData(name, t, p, ranges, format, response, xmlparent);
 

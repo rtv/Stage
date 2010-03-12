@@ -597,7 +597,7 @@ bool World::Update()
   return false;
 }
 
-unsigned int World::GetEventQueue( Model* mod )
+unsigned int World::GetEventQueue( Model* mod ) const
 {
   if( worker_threads < 1 )
     return 0;
@@ -1052,9 +1052,6 @@ void World:: RegisterOption( Option* opt )
 {
   option_table.insert( opt );
 }
-
-stg_usec_t World::SimTimeNow(void)
-{ return sim_time; }
 
 void World::Log( Model* mod )
 {

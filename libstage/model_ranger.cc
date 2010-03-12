@@ -276,7 +276,7 @@ void ModelRanger::Update( void )
   Model::Update();
 }
 
-void ModelRanger::Print( char* prefix )
+void ModelRanger::Print( char* prefix ) const
 {
   Model::Print( prefix );
 

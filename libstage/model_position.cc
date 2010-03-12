@@ -88,6 +88,7 @@ ModelPosition::ModelPosition( World* world,
 										Model* parent,
 										const std::string& type ) : 
   Model( world, parent, type ),
+  // private
   goal(0,0,0,0),
   control_mode( CONTROL_VELOCITY ),
   drive_mode( DRIVE_DIFFERENTIAL ),
@@ -96,8 +97,9 @@ ModelPosition::ModelPosition( World* world,
 							drand48() * INTEGRATION_ERROR_MAX_Y - INTEGRATION_ERROR_MAX_Y/2.0,
 							drand48() * INTEGRATION_ERROR_MAX_Z - INTEGRATION_ERROR_MAX_Z/2.0,
 							drand48() * INTEGRATION_ERROR_MAX_A - INTEGRATION_ERROR_MAX_A/2.0 ),
-  waypoints(),
   wheelbase( 1.0 ),
+  //public
+  waypoints(),
   wpvis(),
   posevis()
 {

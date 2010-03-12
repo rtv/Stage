@@ -25,11 +25,12 @@ int LaserUpdate( ModelLaser* mod, void* dummy )
 {
   // get the data
   uint32_t sample_count=0;
-	ModelLaser::Sample* scan = mod->GetSamples( &sample_count );
   
-  if( scan )
-    for( unsigned int i=0; i<sample_count; i++ )
-      scan[i].range *= simple_normal_deviate( 1.0, DEVIATION );
+	const std::vector<ModelLaser::Sample>& scan = mod->GetSamples();
+	
+  if( scan.size()>0 )
+    FOR_EACH( it, scan )
+      it->range *= simple_normal_deviate( 1.0, DEVIATION );
   
   return 0; // run again
 }

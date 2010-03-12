@@ -63,9 +63,11 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   // compute the vector sum of the sonar ranges	      
   double dx=0, dy=0;
   
-  FOR_EACH( it, rgr->sensors )
+	const std::vector<ModelRanger::Sensor>& sensors = rgr->GetSensors();
+
+  FOR_EACH( it, sensors )
 	 {
-		ModelRanger::Sensor& s = *it;
+		const ModelRanger::Sensor& s = *it;
 		dx += s.range * cos( s.pose.a );
 		dy += s.range * sin( s.pose.a );
 		
@@ -83,12 +85,12 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
   
   // if the front is clear, drive forwards
-  if( (rgr->sensors[3].range > SAFE_DIST) && // forwards
-		(rgr->sensors[4].range > SAFE_DIST) &&
-		(rgr->sensors[5].range > SAFE_DIST/2.0) && //
-		(rgr->sensors[6].range > SAFE_DIST/4.0) && 
-		(rgr->sensors[2].range > SAFE_DIST/2.0) && 
-		(rgr->sensors[1].range > SAFE_DIST/4.0) && 
+  if( (sensors[3].range > SAFE_DIST) && // forwards
+		(sensors[4].range > SAFE_DIST) &&
+		(sensors[5].range > SAFE_DIST/2.0) && //
+		(sensors[6].range > SAFE_DIST/4.0) && 
+		(sensors[2].range > SAFE_DIST/2.0) && 
+		(sensors[1].range > SAFE_DIST/4.0) && 
 		(fabs( resultant_angle ) < SAFE_ANGLE) )
 	 {
 		forward_speed = VSPEED;

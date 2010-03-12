@@ -245,7 +245,7 @@ namespace Stg
     {/*empty*/}	
 	
 	 void Load( Worldfile* wf, int section, const char* keyword );
-	 void Save( Worldfile* wf, int section, const char* keyword );
+	 void Save( Worldfile* wf, int section, const char* keyword ) const;
 	 
 	 void Zero()
 	 { x=y=z=0.0; }
@@ -885,7 +885,7 @@ namespace Stg
     virtual void Stop(){ paused = true; };
     virtual void TogglePause(){ paused ? Start() : Stop(); };
 
-		bool Paused(){ return( paused ); };
+		bool Paused() const { return( paused ); };
 		
 		/** Force the GUI to redraw the world, even if paused. This
 				imlementation does nothing, but can be overridden by
@@ -922,11 +922,9 @@ namespace Stg
     void LoadBlock( Worldfile* wf, int entity );
     void LoadBlockGroup( Worldfile* wf, int entity );
     
-    virtual Model* RecentlySelectedModel(){ return NULL; }
+    virtual Model* RecentlySelectedModel() const { return NULL; }
 		
     SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
-    //SuperRegion* GetSuperRegion( const stg_point_int_t& coord );
-    //SuperRegion* GetSuperRegionCached( const stg_point_int_t& coord);
     SuperRegion* GetSuperRegion( int32_t x, int32_t y );
     void ExpireSuperRegion( SuperRegion* sr );
 		
@@ -938,10 +936,10 @@ namespace Stg
 		
     /** convert a distance in meters to a distance in world occupancy
 		  grid pixels */
-    int32_t MetersToPixels( stg_meters_t x )
+    int32_t MetersToPixels( stg_meters_t x ) const
     { return (int32_t)floor(x * ppm); };
 		
-    stg_point_int_t MetersToPixels( const stg_point_t& pt )
+    stg_point_int_t MetersToPixels( const stg_point_t& pt ) const
     { return stg_point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); };
 		
     // dummy implementations to be overloaded by GUI subclasses
@@ -1025,7 +1023,7 @@ namespace Stg
 
 	 /** returns an event queue index number for a model to use for
 		  updates */
-	 unsigned int GetEventQueue( Model* mod );
+	 unsigned int GetEventQueue( Model* mod ) const;
 
   public:
     /** returns true when time to quit, false otherwise */
@@ -1035,11 +1033,11 @@ namespace Stg
 			  double ppm = DEFAULT_PPM );
 		
     virtual ~World();
-  	 
-    stg_usec_t SimTimeNow(void);
-	 
-    Worldfile* GetWorldFile(){ return wf; };
-	 
+  	
+    stg_usec_t SimTimeNow(void) const { return sim_time; }
+		
+    Worldfile* GetWorldFile()	{ return wf; };
+		
     virtual bool IsGUI() const { return false; }
 	 
     virtual void Load( const char* worldfile_path );
@@ -1048,7 +1046,7 @@ namespace Stg
     virtual bool Save( const char* filename );
     virtual bool Update(void);
 	 
-    bool TestQuit(){ return( quit || quit_all );  }
+    bool TestQuit() const { return( quit || quit_all );  }
     void Quit(){ quit = true; }
     void QuitAll(){ quit_all = true; }
     void CancelQuit(){ quit = false; }
@@ -1058,17 +1056,17 @@ namespace Stg
 
     /** Get the resolution in pixels-per-metre of the underlying
 		  discrete raytracing model */ 
-    double Resolution(){ return ppm; };
+    double Resolution() const { return ppm; };
    
     /** Returns a pointer to the model identified by name, or NULL if
 		  nonexistent */
     Model* GetModel( const std::string& name ) const;
   
     /** Return the 3D bounding box of the world, in meters */
-    const stg_bounds3d_t& GetExtent(){ return extent; };
+    const stg_bounds3d_t& GetExtent() const { return extent; };
   
     /** Return the number of times the world has been updated. */
-    uint64_t GetUpdateCount() { return updates; }
+    uint64_t GetUpdateCount() const { return updates; }
 
 	 /// Register an Option for pickup by the GUI
 	 void RegisterOption( Option* opt );	
@@ -2216,10 +2214,10 @@ namespace Stg
 	 uint32_t GetId()  const { return id; }
 	 
 	 /** Get the total mass of a model and it's children recursively */
-	 stg_kg_t GetTotalMass();
+	 stg_kg_t GetTotalMass() const;
 	 
 	 /** Get the mass of this model's children recursively. */
-	 stg_kg_t GetMassOfChildren();
+	 stg_kg_t GetMassOfChildren() const;
 
 	 /** Change a model's parent - experimental*/
 	 int SetParent( Model* newparent);
@@ -2456,7 +2454,7 @@ namespace Stg
 		Bounds range_bounds; ///< min and max ranges
 		stg_radians_t fov; ///< Field of view, centered about the pose angle
 		stg_usec_t interval; ///< Time interval  between updates (TODO: is this used?)
-	 };
+	 }; 
 		
   private:	 
 	 class Vis : public Visualizer 
@@ -2472,12 +2470,12 @@ namespace Stg
 		virtual void Visualize( Model* mod, Camera* cam );
 	 } vis;
 	 	
-	 unsigned int sample_count;
-	 std::vector<Sample> samples;
-
-	 stg_meters_t range_max;
-	 stg_radians_t fov;
-	 uint32_t resolution;
+		unsigned int sample_count;
+		std::vector<Sample> samples;
+		
+		stg_meters_t range_max;
+		stg_radians_t fov;
+		uint32_t resolution;
     
 	 // set up data buffers after the config changes
 	 void SampleConfig();
@@ -2495,16 +2493,13 @@ namespace Stg
 	 virtual void Shutdown();
 	 virtual void Update();
 	 virtual void Load();
-	 virtual void Print( char* prefix );
+	 virtual void Print( char* prefix ) const;
   
-	 /** returns an array of range & reflectance samples */
-	 Sample* GetSamples( uint32_t* count );
-	 
 	 /** returns a const reference to a vector of range and reflectance samples */
-	 const std::vector<Sample>& GetSamples();
+	 const std::vector<Sample>& GetSamples() const;
 	 
 	 /** Get the user-tweakable configuration of the laser */
-	 Config GetConfig( );
+	 Config GetConfig( ) const;
 	 
 	 /** Set the user-tweakable configuration of the laser */
 	 void SetConfig( Config& cfg );  
@@ -2718,25 +2713,28 @@ namespace Stg
 	 };
 
   protected:
-
-	 virtual void Startup();
-	 virtual void Shutdown();
-	 virtual void Update();
-	 virtual void DataVisualize( Camera* cam );
-	
+		
+		virtual void Startup();
+		virtual void Shutdown();
+		virtual void Update();
+		virtual void DataVisualize( Camera* cam );
+		
   public:
-	 ModelRanger( World* world, Model* parent,
-					  const std::string& type );
-	 virtual ~ModelRanger();
-	
-	 virtual void Load();
-	 virtual void Print( char* prefix );
-	 
-	 std::vector<Sensor> sensors;
-	
+		ModelRanger( World* world, Model* parent,
+								 const std::string& type );
+		virtual ~ModelRanger();
+		
+		virtual void Load();
+		virtual void Print( char* prefix ) const;
+		
+		const std::vector<Sensor>& GetSensors() const
+		{ return sensors; }
+		
   private:
-	 static Option showRangerData;
-	 static Option showRangerTransducers;		
+		std::vector<Sensor> sensors;
+		
+		static Option showRangerData;
+		static Option showRangerTransducers;		
   };
 	
   // BLINKENLIGHT MODEL ----------------------------------------------------

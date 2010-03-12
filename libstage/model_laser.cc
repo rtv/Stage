@@ -125,7 +125,7 @@ void ModelLaser::Load( void )
   SampleConfig();
 }
 
-ModelLaser::Config ModelLaser::GetConfig()
+ModelLaser::Config ModelLaser::GetConfig() const
 { 
   Config cfg;
   cfg.sample_count = sample_count;
@@ -239,7 +239,7 @@ void ModelLaser::Shutdown( void )
   Model::Shutdown();
 }
 
-void ModelLaser::Print( char* prefix )
+void ModelLaser::Print( char* prefix ) const
 {
   Model::Print( prefix );
 
@@ -254,15 +254,7 @@ void ModelLaser::Print( char* prefix )
   puts( " ]" );
 }
 
-
-ModelLaser::Sample* ModelLaser::GetSamples( uint32_t* count )
-{ 
-  // get a C style array from our vector
-  if( count ) *count = sample_count;
-  return &samples[0];
-}
-
-const std::vector<ModelLaser::Sample>& ModelLaser::GetSamples()
+const std::vector<ModelLaser::Sample>& ModelLaser::GetSamples() const
 { 
   return samples;
 }

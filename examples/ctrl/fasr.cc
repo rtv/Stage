@@ -212,9 +212,9 @@ public:
 	 double minright = 1e6;
   
 	 // Get the data
-	 uint32_t sample_count=0;
-	 ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
-    
+	 const std::vector<ModelLaser::Sample>& scan = laser->GetSamples();
+	 uint32_t sample_count = scan.size();
+  
 	 for (uint32_t i = 0; i < sample_count; i++)
 		{		
 		  if( verbose ) printf( "%.3f ", scan[i].range );
@@ -339,10 +339,9 @@ public:
 	 //   if( laser->power_pack && laser->power_pack->charging )
 	 // 	 printf( "model %s power pack @%p is charging\n",
 	 // 				laser->Token(), laser->power_pack );
-  
-	 if( laser->GetSamples(NULL) == NULL )
-		return 0;
-
+		
+		assert( laser->GetSamples().size() > 0 );
+		
 	 switch( robot->mode )
 		{
 		case MODE_DOCK:
