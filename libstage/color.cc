@@ -12,7 +12,7 @@ Color::Color() :
   r(1.0), g(0.0), b(0.0), a(1.0) 
 {}
 
-bool Color::operator!=( const Color& other )
+bool Color::operator!=( const Color& other ) const
 {
   double epsilon = 1e-4; // small
   return( fabs(r-other.r) > epsilon ||
@@ -84,7 +84,7 @@ Color::Color( const std::string& name) :
   this->a = found.a;
 }
 
-bool Color::operator==( const Color& other )
+bool Color::operator==( const Color& other ) const
 {
   return( ! ((*this) != other) );
 }
@@ -94,7 +94,7 @@ Color Color::RandomColor()
   return Color(  drand48(), drand48(), drand48() );
 }
 
-void Color::Print( const char* prefix )
+void Color::Print( const char* prefix ) const
 {
   printf( "%s [%.2f %.2f %.2f %.2f]\n", prefix, r,g,b,a );
 } 

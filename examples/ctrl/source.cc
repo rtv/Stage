@@ -2,7 +2,7 @@
 using namespace Stg;
 
 const int INTERVAL = 100;
-const double FLAGSZ = 0.4;
+const double FLAGSZ = 0.25;
 const unsigned int CAPACITY = 1;
 
 int Update( Model* mod, void* dummy );

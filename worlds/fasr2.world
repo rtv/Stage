@@ -11,8 +11,8 @@ speedup -1.000 # 10.000
 paused 1
 
 # time at which to pause (in GUI mode) or quit (in headless mode) the simulation
-quit_time 3600 # 1 hour of simulated time
-#quit_time 1800 # hour of simulated time
+# quit_time 3600 # 1 hour of simulated time
+
 
 resolution 0.02
 
@@ -23,9 +23,9 @@ window
 ( 
   size [ 1226.000 1080.000 ] 
 
-  center [ -41.006 -43.393 ] 
+  center [ -40.702 -47.522 ] 
   rotate [ 0 0 ]
-  scale 53.216 
+  scale 22.245 
   
   show_data 1
   show_flags 1
@@ -145,68 +145,40 @@ define charge_station model
 )
 
 
-charge_station(  pose [ -43.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -37.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -39.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -41.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -38.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -40.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -42.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -47.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -46.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -44.500 -49.000 0 90.000 ] )
-charge_station(  pose [ -45.500 -49.000 0 90.000 ] )
 
-charge_station(  pose [ -37.000 -49.000 0 90.000 ] )
-charge_station(  pose [ -38.000 -49.000 0 90.000 ] )
-charge_station(  pose [ -39.000 -49.000 0 90.000 ] )
-charge_station(  pose [ -41.000 -49.000 0 90.000 ] )
-charge_station(  pose [ -40.000 -49.000 0 90.000 ] )
-charge_station(  pose [ -42.000 -49.000 0 90.000 ] )
-charge_station(  pose [ -43.000 -49.000 0 90.000 ] )
-charge_station(  pose [ -44.000 -49.006 0 90.000 ] )
-charge_station(  pose [ -45.000 -49.000 0 90.000 ] )
-charge_station(  pose [ -46.000 -49.007 0 90.000 ] )
-charge_station(  pose [ -47.000 -49.000 0 90.000 ] )
 
-charge_station(  pose [ -49.000 -47.500 0 0 ] )
-charge_station(  pose [ -49.000 -46.500 0 0 ] )
-charge_station(  pose [ -49.000 -45.500 0 0 ] )
-charge_station(  pose [ -49.000 -44.500 0 0 ] )
-charge_station(  pose [ -49.000 -43.500 0 0 ] )
-charge_station(  pose [ -49.000 -42.500 0 0 ] )
-charge_station(  pose [ -49.000 -41.500 0 0 ] )
-charge_station(  pose [ -49.000 -40.500 0 0 ] )
-charge_station(  pose [ -49.000 -39.500 0 0 ] )
-charge_station(  pose [ -49.000 -38.500 0 0 ] )
-charge_station(  pose [ -49.000 -37.500 0 0 ] )
-charge_station(  pose [ -49.000 -36.500 0 0 ] )
+charge_station(  pose [ -38.500 -49.9 0 90.000 ] )
+charge_station(  pose [ -39.500 -49.9 0 90.000 ] )
+charge_station(  pose [ -40.500 -49.9 0 90.000 ] )
+charge_station(  pose [ -41.500 -49.9 0 90.000 ] )
+charge_station(  pose [ -42.500 -49.9 0 90.000 ] )
+charge_station(  pose [ -43.500 -49.9 0 90.000 ] )
+charge_station(  pose [ -44.500 -49.9 0 90.000 ] )
+charge_station(  pose [ -45.500 -49.9 0 90.000 ] )
+charge_station(  pose [ -46.500 -49.9 0 90.000 ] )
+charge_station(  pose [ -47.500 -49.9 0 90.000 ] )
 
-#charge_station(  pose [ -49.000 -36.00 0 0 ] )
-#charge_station(  pose [ -49.000 -36.50 0 0 ] )
-charge_station(  pose [ -49.000 -37.000 0 0 ] )
-charge_station(  pose [ -49.000 -37.500 0 0 ] )
-charge_station(  pose [ -49.000 -38.000 0 0 ] )
-charge_station(  pose [ -49.000 -38.500 0 0 ] )
-charge_station(  pose [ -49.000 -39.000 0 0 ] )
-charge_station(  pose [ -49.000 -39.500 0 0 ] )
-charge_station(  pose [ -49.000 -40.000 0 0 ] )
-charge_station(  pose [ -49.000 -40.500 0 0 ] )
-charge_station(  pose [ -49.000 -41.000 0 0 ] )
-charge_station(  pose [ -49.000 -41.500 0 0 ] )
-charge_station(  pose [ -49.000 -42.000 0 0 ] )
-charge_station(  pose [ -49.000 -42.500 0 0 ] )
-charge_station(  pose [ -49.000 -43.000 0 0 ] )
-charge_station(  pose [ -49.000 -43.500 0 0 ] )
-charge_station(  pose [ -49.000 -44.000 0 0 ] )
-charge_station(  pose [ -49.000 -44.500 0 0 ] )
-charge_station(  pose [ -49.000 -45.000 0 0 ] )
-charge_station(  pose [ -49.000 -45.500 0 0 ] )
-charge_station(  pose [ -49.000 -46.000 0 0 ] )
-charge_station(  pose [ -49.000 -46.500 0 0 ] )
-charge_station(  pose [ -49.000 -47.000 0 0 ] )
-charge_station(  pose [ -49.000 -47.500 0 0 ] )
+#charge_station(  pose [ -38.00 -49.9 0 90.000 ] )
+#charge_station(  pose [ -39.00 -49.9 0 90.000 ] )
+#charge_station(  pose [ -40.00 -49.9 0 90.000 ] )
+#charge_station(  pose [ -41.00 -49.9 0 90.000 ] )
+#charge_station(  pose [ -42.00 -49.9 0 90.000 ] )
+#charge_station(  pose [ -43.00 -49.9 0 90.000 ] )
+#charge_station(  pose [ -44.00 -49.9 0 90.000 ] )
+#charge_station(  pose [ -45.00 -49.9 0 90.000 ] )
+#charge_station(  pose [ -46.00 -49.9 0 90.000 ] )
+#charge_station(  pose [ -47.0 -49.9 0 90.000 ] )
 
+charge_station(  pose [ -49.9 -38.500 0 0 ] )
+charge_station(  pose [ -49.9 -39.500 0 0 ] )
+charge_station(  pose [ -49.9 -40.500 0 0 ] )
+charge_station(  pose [ -49.9 -41.500 0 0 ] )
+charge_station(  pose [ -49.9 -42.500 0 0 ] )
+charge_station(  pose [ -49.9 -43.500 0 0 ] )
+charge_station(  pose [ -49.9 -44.500 0 0 ] )
+charge_station(  pose [ -49.9 -45.500 0 0 ] )
+charge_station(  pose [ -49.9 -46.500 0 0 ] )
+charge_station(  pose [ -49.9 -47.500 0 0 ] )
 
 zone( color "orange" 
 		pose [ -43.000 -43.000 0 0 ]
@@ -218,11 +190,11 @@ zone( color "orange"
 define buffer model
 (
   color "orange" 
-  size [ 0.900 13.000 1.000 ] 
+  size [ 0.100 13.000 1.000 ] 
 )
 
-buffer( pose [ -49.500 -42.500 0 0 ] )
-buffer( pose [ -42.595 -49.527 0 90.000 ] )
+#buffer( pose [ -49.543 -42.500 0 0 ] )
+#buffer( pose [ -42.595 -49.527 0 90.000 ] )
 
 define blinker model
 (
@@ -260,27 +232,27 @@ define yellowbot autorob( color "yellow" ctrl "fasr2 yellow" )
 define magentabot autorob( color "magenta" ctrl "fasr2 magenta" )		  
 
 
-redbot( pose [-11.388 12.267 0 166.581] kjoules 200 )
-redbot( pose [-12.208 11.744 0 135.003] kjoules 200 )
-redbot( pose [-12.289 10.814 0 147.497] kjoules 200 )
-redbot( pose [-10.642 11.563 0 123.708] kjoules 200 )
-redbot( pose [-11.378 11.274 0 143.281] kjoules 200 )
-redbot( pose [-10.200 11.012 0 46.529] kjoules 200 )
-redbot( pose [-13.006 13.061 0 168.778] kjoules 200 )
-redbot( pose [-12.466 13.333 0 163.730] kjoules 200 )
-redbot( pose [-13.740 12.740 0 157.546] kjoules 200 )
-redbot( pose [-15.434 11.856 0 138.616] kjoules 200 )
+redbot( pose [-11.388 12.267 0 166.581] kjoules 20 )
+redbot( pose [-12.208 11.744 0 135.003] kjoules 20 )
+redbot( pose [-12.289 10.814 0 147.497] kjoules 20 )
+redbot( pose [-10.642 11.563 0 123.708] kjoules 20 )
+redbot( pose [-11.378 11.274 0 143.281] kjoules 20 )
+redbot( pose [-10.200 11.012 0 46.529] kjoules 20 )
+redbot( pose [-13.006 13.061 0 168.778] kjoules 20 )
+redbot( pose [-12.466 13.333 0 163.730] kjoules 20 )
+redbot( pose [-13.740 12.740 0 157.546] kjoules 20 )
+redbot( pose [-15.434 11.856 0 138.616] kjoules 20 )
 
-redbot( pose [-12.841 10.666 0 125.831] kjoules 400 )
-redbot( pose [-12.710 12.157 0 125.831] kjoules 400 )
-redbot( pose [-12.214 12.593 0 125.831] kjoules 400 )
-redbot( pose [-11.461 13.123 0 125.831] kjoules 400 )
-redbot( pose [-10.679 13.036 0 125.831] kjoules 400 )
-redbot( pose [-12.277 14.027 0 125.831] kjoules 400 )
-redbot( pose [-13.981 13.377 0 125.831] kjoules 400 )
-redbot( pose [-13.372 12.243 0 125.831] kjoules 400 )
-redbot( pose [-13.296 11.331 0 125.831] kjoules 400 )
-redbot( pose [-13.944 11.986 0 125.831] kjoules 400 )
+redbot( pose [-12.841 10.666 0 125.831] kjoules 40 )
+redbot( pose [-12.710 12.157 0 125.831] kjoules 40 )
+redbot( pose [-12.214 12.593 0 125.831] kjoules 40 )
+redbot( pose [-11.461 13.123 0 125.831] kjoules 40 )
+redbot( pose [-10.679 13.036 0 125.831] kjoules 40 )
+redbot( pose [-12.277 14.027 0 125.831] kjoules 40 )
+redbot( pose [-13.981 13.377 0 125.831] kjoules 40 )
+redbot( pose [-13.372 12.243 0 125.831] kjoules 40 )
+redbot( pose [-13.296 11.331 0 125.831] kjoules 40 )
+redbot( pose [-13.944 11.986 0 125.831] kjoules 40 )
 
 #redbot( pose [-14.580 14.279 0 125.831] kjoules 400 )
 #redbot( pose [-12.922 13.866 0 125.831] kjoules 400 )

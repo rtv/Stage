@@ -12,7 +12,6 @@ const double avoidturn = 0.5;
 const double minfrontdistance = 0.7;  
 const double stopdist = 0.5;
 const int avoidduration = 10;
-//const int workduration = 20;
 const int PAYLOAD = 1;
 
 //const int TRAIL_LENGTH_MAX = 500;
@@ -218,6 +217,7 @@ private:
   static pthread_mutex_t planner_mutex;
 
   Model* goal;
+  Pose cached_goal_pose;
 
   Graph graph;
   GraphVis graphvis;
@@ -257,6 +257,7 @@ public:
 		mode(MODE_WORK),
 		docked_angle(0),
 		goal(source),
+		cached_goal_pose(),
 		graph(),
 		graphvis( graph ),
 		last_node( NULL ),
@@ -651,7 +652,10 @@ public:
 		  if( Hungry() )
 			 SetGoal( fuel_zone );
 		  
-		  while( graph.GoodDirection( pose, 4.0, a_goal ) == 0 )
+		  // if the graph failes to offer advice or the goal has moved a
+		  // ways since last time we planned
+		  if( (graph.GoodDirection( pose, 4.0, a_goal ) == 0) || 
+				(goal->GetPose().Distance2D( cached_goal_pose ) > 2.0) )
 			 {
 				//printf( "%s replanning from (%.2f,%.2f) to %s at (%.2f,%.2f) in Work()\n", 
 				//	  pos->Token(),
@@ -660,6 +664,7 @@ public:
 				//	  goal->GetPose().x,
 				//	  goal->GetPose().y );
 				Plan( goal );
+				cached_goal_pose = goal->GetPose();
 			 }
 		  
 		  // if we are low on juice - find the direction to the recharger instead

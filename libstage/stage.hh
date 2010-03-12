@@ -222,10 +222,10 @@ namespace Stg
 	
 	 Color();
 	
-	 bool operator!=( const Color& other );
-	 bool operator==( const Color& other );
+	 bool operator!=( const Color& other ) const;
+	 bool operator==( const Color& other ) const;
 	 static Color RandomColor();
-	 void Print( const char* prefix );
+	 void Print( const char* prefix ) const;
   };
   
   /** specify a rectangular size */
@@ -284,13 +284,13 @@ namespace Stg
 	 /** Print pose in human-readable format on stdout
 		  @param prefix Character string to prepend to pose output 
 	 */
-    virtual void Print( const char* prefix )
+    virtual void Print( const char* prefix ) const
     {
       printf( "%s pose [x:%.3f y:%.3f z:%.3f a:%.3f]\n",
 				  prefix, x,y,z,a );
     }
 	
-	 std::string String()
+	 std::string String() const
 	 {
 		char buf[256];
 		snprintf( buf, 256, "[ %.3f %.3f %.3f %.3f ]",
@@ -299,15 +299,17 @@ namespace Stg
 	 }
 	
 	 /* returns true iff all components of the velocity are zero. */
-	 bool IsZero() const { return( !(x || y || z || a )); };
+	 bool IsZero() const 
+	 { return( !(x || y || z || a )); };
 	
 	 /** Set the pose to zero [0,0,0,0] */
-	 void Zero(){ x=y=z=a=0.0; }
+	 void Zero()
+	 { x=y=z=a=0.0; }
 	
 	 void Load( Worldfile* wf, int section, const char* keyword );
 	 void Save( Worldfile* wf, int section, const char* keyword );
 	
-	 inline Pose operator+( const Pose& p )
+	 inline Pose operator+( const Pose& p ) const
 	 {
 		const double cosa = cos(a);
 		const double sina = sin(a);
@@ -322,6 +324,27 @@ namespace Stg
 	 bool operator<( const Pose& other ) const
 	 {
 		return( hypot( y, x ) < hypot( other.y, other.x ));
+	 }
+	 
+	 bool operator==( const Pose& other ) const
+	 {
+		return(  x==other.x && 
+					y==other.y && 
+					z==other.z && 
+					a==other.a );
+	 }
+
+	 bool operator!=( const Pose& other ) const
+	 {
+		return(  x!=other.x ||
+					y!=other.y || 
+					z!=other.z || 
+					a!=other.a );
+	 }
+	 
+	 stg_meters_t Distance2D( const Pose& other ) const
+	 {
+		return hypot( x-other.x, y-other.y );
 	 }
   };
   
