@@ -308,8 +308,8 @@ void Model::DrawStatus( Camera* cam )
       glRotatef( robotAngle - yaw, 0,0,1 );
       glRotatef( -pitch, 1,0,0 );
       
-      if( power_pack )
-		  power_pack->Visualize( cam );
+		//   if( power_pack )
+		//power_pack->Visualize( cam );
       
       if( !say_string.empty() )
 		  {

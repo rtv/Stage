@@ -77,7 +77,7 @@ public:
 
   void Draw() const
   { 
-	 glPointSize(4);
+	 glPointSize(3);
 	 FOR_EACH( it, nodes ){ (*it)->Draw(); }
   }
 
@@ -126,7 +126,7 @@ class GraphVis : public Visualizer
 {
 public:
   Graph& graph;
-  
+
   GraphVis( Graph& graph ) 
 	 : Visualizer( "graph", "vis_graph" ), graph(graph) {}
   virtual ~GraphVis(){}
@@ -140,7 +140,10 @@ public:
 
 	 //mod->PushColor( 1,0,0,1 );
 
-	 mod->PushColor( mod->GetColor() );
+	 Color c = mod->GetColor();
+	 c.a = 0.4;
+
+	 mod->PushColor( c );
 	 graph.Draw();
 	 mod->PopColor();
 
@@ -231,10 +234,11 @@ private:
   static Model* map_model;
 	 
   bool fiducial_sub;
+  bool laser_sub;
   bool ranger_sub;
-  
 
 public:
+
   Robot( ModelPosition* pos, 
 			Model* source,
 			Model* sink,
@@ -263,7 +267,8 @@ public:
 		last_node( NULL ),
 		node_interval( 20 ),
 		node_interval_countdown( node_interval ),
-		fiducial_sub(false),
+		fiducial_sub(false),		
+		laser_sub(false),
 		ranger_sub(false)
   {
 	 // need at least these models to get any work done
@@ -282,8 +287,8 @@ public:
 
 	 // LaserUpdate() controls the robot, by reading from laser and
 	 // writing to position
-	 laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, this );
-	 laser->Subscribe();
+	 //laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, this );
+	 EnableLaser(true);
 
 	 // we subscribe to the fiducial device only while docking
 	 fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, this );	 	 
@@ -312,15 +317,6 @@ public:
 										g.size.x/(float)map_width, 
 										g.size.y/(float)map_height );
 		  
-		  // 	 putchar( '\n' );
-		  // 	 for( unsigned int y=0; y<map_height; y++ )
-		  // 		{
-		  // 		  for( unsigned int x=0; x<map_width; x++ )
-		  // 			 printf( "%3d,", map_data[x + ((map_height-y-1)*map_width)] ? 999 : 1 );
-		  
-		  // 		  puts("");
-		  // 		}    	 
-		  
 		  // fix the node costs for astar: 0=>1, 1=>9
 		  
 		  unsigned int sz = map_width * map_height;	 
@@ -340,7 +336,9 @@ public:
 	 //( goal );
 	 //puts("");
   }
-  
+ 
+
+
   void EnableRanger( bool on )
   { 
 	 if( on && !ranger_sub )
@@ -353,6 +351,21 @@ public:
 		{
 		  ranger_sub = false;
 		  ranger->Unsubscribe();
+		}
+  }
+
+  void EnableLaser( bool on )
+  { 
+	 if( on && !laser_sub )
+		{ 
+		  laser_sub = true;
+		  laser->Subscribe();
+		}
+	 
+	 if( !on && laser_sub )
+		{
+		  laser_sub = false;
+		  laser->Unsubscribe();
 		}
   }
 
@@ -371,11 +384,13 @@ public:
 		}
   }
 
-
-  void Plan( Model* dest )
+  void Plan( Pose sp )
   {
+	 // change my color to that of my destination
+	 //pos->SetColor( dest->GetColor() );
+	 
 	 Pose pose = pos->GetPose();
-	 Pose sp = dest->GetPose();
+	 //Pose sp = dest->GetPose();
 	 Geom g = map_model->GetGeom();
 	 
 	 point_t start( MetersToCell(pose.x, g.size.x, map_width), 
@@ -432,24 +447,14 @@ public:
 	 
 	 if( charger_ahoy )
 		{
+		  // drive toward the charger
 		  double a_goal = normalize( charger_bearing );				  
 		  
+		  // helps to align with the way the charger is pointing
 		  double orient = normalize( M_PI - (charger_bearing - charger_heading) );
-		  //printf( "val %.2f\n", orient );
-		  
-		  //if( fabs(orient) < M_PI/4.0 )
+
 		  a_goal = normalize( a_goal - 2.0 * orient );
-		  
-		  
-		  // 		if( pos->Stalled() )
-		  //  		  {
-		  // 			 puts( "stalled. stopping" );
-		  //  			 pos->Stop();
-		  //		  }
-		  // 		else
-		  
-		  // a_goal *= 2.0;
-		  
+		  		  
 		  if( charger_range > creep_distance )
 			 {
 				if( !ObstacleAvoid() )
@@ -458,7 +463,7 @@ public:
 					 pos->SetTurnSpeed( a_goal );
 				  }
 			 }
-		  else	
+		  else	// we are very close!
 			 {			
 				pos->SetTurnSpeed( a_goal );
 				pos->SetXSpeed( 0.02 );	// creep towards it				 
@@ -467,6 +472,7 @@ public:
 				  {
 					 pos->Stop();
 					 docked_angle = pos->GetPose().a;
+					 EnableLaser( false );
 				  }
 				
 				if( pos->Stalled() ) // touching
@@ -487,7 +493,7 @@ public:
 		  //printf( "fully charged, now back to work\n" );		  
 		  mode = MODE_UNDOCK;
 		  EnableRanger(true); // enable the sonar to see behind us
-		  //EnableFiducial(false);
+		  EnableLaser(true);
 		}
   }
 
@@ -623,11 +629,12 @@ public:
 
   
   void SetGoal( Model* goal )
-  {
+  {	
 	 if( goal != this->goal )
 		{
 		  this->goal = goal;
-		  Plan( goal );
+		  Plan( goal->GetPose() );
+		  pos->SetColor( goal->GetColor() );
 		}
   }
 	 
@@ -641,8 +648,6 @@ public:
 		
 		  Pose pose = pos->GetPose();
 		
-		
-
 		  double a_goal = 0;
 		  
 			 // dtor( ( pos->GetFlagCount() ) ? have[y][x] : need[y][x] );	// map
@@ -666,8 +671,8 @@ public:
 				//	  goal->Token(),
 				//	  goal->GetPose().x,
 				//	  goal->GetPose().y );
-				Plan( goal );
-				cached_goal_pose = goal->GetPose();
+				Plan( goal->GetPose() );
+				cached_goal_pose = goal->GetPose();				
 			 }
 		  
 		  // if we are low on juice - find the direction to the recharger instead
@@ -711,41 +716,10 @@ public:
   }
 
 
-  // inspect the laser data and decide what to do
-  static int LaserUpdate( ModelLaser* laser, Robot* robot )
-  {
-	 //   if( laser->power_pack && laser->power_pack->charging )
-	 // 	 printf( "model %s power pack @%p is charging\n",
-	 // 				laser->Token(), laser->power_pack );
-  
-	 //if( laser->GetSamples(NULL) == NULL )
-		//return 0;
-
-	 assert( laser->GetSamples().size() > 0 );
-
-	 switch( robot->mode )
-		{
-		case MODE_DOCK:
-		  //puts( "DOCK" );
-		  robot->Dock();
-		  break;
-		
-		case MODE_WORK:
-		  //puts( "WORK" );
-		  robot->Work();
-		  break;
-
-		case MODE_UNDOCK:
-		  //puts( "UNDOCK" );
-		  robot->UnDock();
-		  break;
-		
-		default:
-		  printf( "unrecognized mode %u\n", robot->mode );		
-		}
-  
-	 return 0;
-  }
+//   // inspect the laser data and decide what to do
+//   static int LaserUpdate( ModelLaser* laser, Robot* robot )
+//   {
+//   }
 
   bool Hungry()
   {
@@ -819,6 +793,37 @@ public:
   
 
 	 //printf( "diss: %.2f\n", pos->FindPowerPack()->GetDissipated() );
+
+	 //   if( laser->power_pack && laser->power_pack->charging )
+	 // 	 printf( "model %s power pack @%p is charging\n",
+	 // 				laser->Token(), laser->power_pack );
+  
+	 //if( laser->GetSamples(NULL) == NULL )
+		//return 0;
+
+	 //assert( robot->laser->GetSamples().size() > 0 );
+
+	 switch( robot->mode )
+		{
+		case MODE_DOCK:
+		  //puts( "DOCK" );
+		  robot->Dock();
+		  break;
+		
+		case MODE_WORK:
+		  //puts( "WORK" );
+		  robot->Work();
+		  break;
+
+		case MODE_UNDOCK:
+		  //puts( "UNDOCK" );
+		  robot->UnDock();
+		  break;
+		
+		default:
+		  printf( "unrecognized mode %u\n", robot->mode );		
+		}
+  
   
 	 return 0; // run again
   }
@@ -876,8 +881,8 @@ public:
 
 // STATIC VARS
 pthread_mutex_t Robot::planner_mutex = PTHREAD_MUTEX_INITIALIZER;
-unsigned int Robot::map_width( 60 );
-unsigned int Robot::map_height( 60 );
+unsigned int Robot::map_width( 50 );
+unsigned int Robot::map_height( 50 );
 uint8_t* Robot::map_data( NULL );
 Model* Robot::map_model( NULL );
 
@@ -894,6 +899,9 @@ void split( const std::string& text, const std::string& separators, std::vector<
 		start = text.find_first_not_of(separators, stop+1);
 	 }
 }
+
+const std::string sources[] = {"red", "green", "blue", "cyan", "yellow", "magenta" };
+const unsigned int sources_count = 6;
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod, CtrlArgs* args )
@@ -912,10 +920,15 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   // expecting a task color name as the 1th argument
   assert( words.size() == 2 );
   assert( words[1].size() > 0 );
+
+  // pick a source at random
+  const std::string& color = sources[ rand() % sources_count ];
   
   new Robot( (ModelPosition*)mod,
-				 mod->GetWorld()->GetModel( words[1] + "_source" ),
-				 mod->GetWorld()->GetModel( words[1] + "_sink" ),
+				 //mod->GetWorld()->GetModel( words[1] + "_source" ),
+				 //mod->GetWorld()->GetModel( words[1] + "_sink" ),
+				 mod->GetWorld()->GetModel( color + "_source" ),
+				 mod->GetWorld()->GetModel( color + "_sink" ),
 				 mod->GetWorld()->GetModel( "fuel_zone" ) );
 
   return 0; //ok

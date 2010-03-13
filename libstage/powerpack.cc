@@ -16,7 +16,11 @@ stg_joules_t PowerPack::global_capacity = 0.0;
 stg_joules_t PowerPack::global_dissipated = 0.0;
 
 PowerPack::PowerPack( Model* mod ) :
-  event_vis( 32,32,1.0 ),
+  event_vis( 2.0 * std::max( fabs(ceil(mod->GetWorld()->GetExtent().x.max)),
+									  fabs(floor(mod->GetWorld()->GetExtent().x.min))),
+				 2.0 * std::max( fabs(ceil(mod->GetWorld()->GetExtent().y.max)),
+									  fabs(floor(mod->GetWorld()->GetExtent().y.min))), 
+				 1.0 ),				 
   output_vis( 0,100,200,40, 1200, Color(1,0,0), Color(0,0,0,0.5), "energy output", "energy_input" ),
   stored_vis( 0,142,200,40, 1200, Color(0,1,0), Color(0,0,0,0.5), "energy stored", "energy_stored" ),
   mod( mod), 
@@ -32,8 +36,8 @@ PowerPack::PowerPack( Model* mod ) :
   mod->world->AddPowerPack( this );  
   
   mod->AddVisualizer( &event_vis, false );
-  mod->AddVisualizer( &output_vis, true );
-  mod->AddVisualizer( &stored_vis, true );
+  mod->AddVisualizer( &output_vis, false );
+  mod->AddVisualizer( &stored_vis, false );
 }
 
 PowerPack::~PowerPack()

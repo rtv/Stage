@@ -150,6 +150,8 @@ void BlockGroup::DrawFootPrint( const Geom & geom )
 
 void BlockGroup::BuildDisplayList( Model* mod )
 {
+  //puts( "build" );
+
   if( ! mod->world->IsGUI() )
 	return;
 
@@ -237,8 +239,11 @@ void BlockGroup::BuildDisplayList( Model* mod )
 
 void BlockGroup::CallDisplayList( Model* mod )
 {
-  if( displaylist == 0 )
+  if( displaylist == 0 || mod->rebuild_displaylist )
+	 {
 		BuildDisplayList( mod );
+		mod->rebuild_displaylist = 0;
+	 }
   
   glCallList( displaylist );
 }
