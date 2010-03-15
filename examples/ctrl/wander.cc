@@ -37,7 +37,7 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   
   robot->pos = (ModelPosition*)mod;
   robot->laser = (ModelLaser*)mod->GetChild( "laser:0" );
-  robot->laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, robot );
+  robot->laser->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)LaserUpdate, robot );
   
   robot->laser->Subscribe(); // starts the laser updates
   robot->pos->Subscribe(); // starts the position updates

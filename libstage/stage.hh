@@ -841,7 +841,6 @@ namespace Stg
 		  avoids searching the whole world for fiducials. */
 	 ModelPtrVec models_with_fiducials;
 	 
-				
 	 /** Add a model to the set of models with non-zero fiducials, if not already there. */
 	 void FiducialInsert( Model* mod )
 	 { 
@@ -917,6 +916,7 @@ namespace Stg
 	 /** Remove a callback function. Any argument data passed to
 		  AddUpdateCallback is not automatically freed. */
 	 int RemoveUpdateCallback( stg_world_callback_t cb, void* user );
+
 	 /** Log the state of a Model */
 	 void Log( Model* mod );
 
@@ -1016,16 +1016,34 @@ namespace Stg
       Event( stg_usec_t time, Model* mod ) 
 		  : time(time), mod(mod) {}
       
-      stg_usec_t time; // time that event occurs
-      Model* mod; // model to update
+      stg_usec_t time; ///< time that event occurs
+      Model* mod; ///< model to update
       
+			/** order by time. Break ties by value of Model*. 
+					@param event to compare with this one. */
       bool operator<( const Event& other ) const;
     };
 	 
+		/** Queue of pending simulation events for the main thread to handle. */
 	 std::vector<std::priority_queue<Event> > event_queues;
+
+		/** Create a new simulation event to be handled in the future.
+
+				@param queue_num Specify which queue the event should be on. The main
+				thread is 0.  
+
+				@param delay The time from now until the event occurs, in
+				microseconds.
+
+				@param mod The model that should have its Update() method
+				called at the specified time.
+		*/
 	 void Enqueue( unsigned int queue_num, stg_usec_t delay, Model* mod );
 	 
+		/** Set of models that require energy calculations at each World::Update(). */
 	 std::set<Model*> active_energy;
+
+		/** Set of models that require their positions to be recalculated at each World::Update(). */
 	 std::set<Model*> active_velocity;
 
 	 /** The amount of simulated time to run for each call to Update() */
@@ -1047,22 +1065,53 @@ namespace Stg
 		
     virtual ~World();
   	
+		/** Returns the current simulated time in this world, in microseconds. */
     stg_usec_t SimTimeNow(void) const { return sim_time; }
 		
+		/** Returns a pointer to the currently-open worlddfile object, or
+				NULL if there is none. */
     Worldfile* GetWorldFile()	{ return wf; };
 		
+		/** Returns true iff this World implements a GUI. The base World
+				class returns false, but subclasses can override this
+				behaviour. */
     virtual bool IsGUI() const { return false; }
 	 
+		/** Open the file at the specified location, create a Worldfile
+				object, read the file and configure the world from the
+				contents, creating models as necessary. The created object
+				persists, and can be retrieved later with
+				World::GetWorldFile(). */
     virtual void Load( const char* worldfile_path );
+
     virtual void UnLoad();
+
     virtual void Reload();
+
+		/** Save the current world state into a worldfile with the given
+				filename.  @param Filename to save as. */
     virtual bool Save( const char* filename );
+
+		/** Run one simulation timestep. Advances the simulation clock,
+				executes all simulation updates due at the current time, then
+				queues up future events. */
     virtual bool Update(void);
 	 
+		/** Returns true iff either the local or global quit flag was set,
+				which usually happens because someone called Quit() or
+				QuitAll(). */
     bool TestQuit() const { return( quit || quit_all );  }
+		
+		/** Request the world quits simulation before the next timestep. */
     void Quit(){ quit = true; }
+
+		/** Requests all worlds quit simulation before the next timestep. */
     void QuitAll(){ quit_all = true; }
+
+		/** Cancel a local quit request. */
     void CancelQuit(){ quit = false; }
+
+		/** Cancel a global quit request. */
     void CancelQuitAll(){ quit_all = false; }
 	 
 	 void TryCharge( PowerPack* pp, const Pose& pose );
@@ -1663,7 +1712,7 @@ namespace Stg
 	 bool alwayson;
 
 	 /** If true, the model is rendered lazily into the regions, to reduce memory use. */
-	 // bool background;
+	 // TODO bool background;
 
 	 BlockGroup blockgroup;
 	 /**  OpenGL display list identifier for the blockgroup */
@@ -1715,24 +1764,56 @@ namespace Stg
 		void Draw(  GLUquadric* quadric );
 	 };
 
-  protected:
-	 /** A list of callback functions can be attached to any
-		  address. When Model::CallCallbacks( void*) is called, the
-		  callbacks are called.*/
-	 static std::map<void*, std::set<stg_cb_t> > callbacks;
+		typedef enum {
+			CB_FLAGDECR,
+			CB_FLAGINCR,
+			CB_GEOM,
+			CB_INIT,
+			CB_LOAD,
+			CB_PARENT,
+			CB_POSE,
+			CB_SAVE,
+			CB_SHUTDOWN,
+			CB_STARTUP,
+			CB_UPDATE,
+			CB_VELOCITY,
+			//CB_POSTUPDATE,
+			__CB_TYPE_COUNT // must be the last entry: counts the number of types
+		} callback_type_t;
 		
+  protected:
+		/** A list of callback functions can be attached to any
+				address. When Model::CallCallbacks( void*) is called, the
+				callbacks are called.*/
+		std::vector<std::set<stg_cb_t> > callbacks;
+		
+
 	 /** Default color of the model's blocks.*/
 	 Color color;
+		
+		/** Model the interaction between the model's blocks and the
+				surface they touch. @todo primitive at the moment */
 	 double friction;
 		
 	 /** This can be set to indicate that the model has new data that
 		  may be of interest to users. This allows polling the model
 		  instead of adding a data callback. */
 	 bool data_fresh;
-	 stg_bool_t disabled; ///< if non-zero, the model is disabled  
+
+		/** If set true, Update() is not called on this model. Useful
+				e.g. for temporarily disabling updates when dragging models
+				with the mouse.*/
+		stg_bool_t disabled; 
+
+		/** Container for Visualizers attached to this model. */
 	 std::list<Visualizer*> cv_list;
+
+		/** Container for flags attached to this model. */
 	 std::list<Flag*> flag_list;
-	 Geom geom;
+		
+		/** Specifies the the size of this model's bounding box, and the
+				offset of its local coordinate system wrt that its parent. */
+		Geom geom;
 
 	 /** Records model state and functionality in the GUI, if used */
 	 class GuiState
@@ -1748,37 +1829,7 @@ namespace Stg
 	 } gui;
 	 
 	 bool has_default_block;
-  
-	 /* Hooks for attaching special callback functions (not used as
-		 variables - we just need unique addresses for them.) */  
-	 class CallbackHooks
-	 {
-	 public:
-		int flag_incr;
-		int flag_decr;
-		int init;
-		int load;
-		int save;
-		int shutdown;
-		int startup;
-		int update;
-		int update_done;
-
-		 /* optimization: record the number of attached callbacks for pose
-				and velocity, so we can cheaply determine whether we need to
-				call a callback for SetPose() and SetVelocity(), which happen
-				very frequently. */
-		 int attached_velocity;
-		 int attached_pose;
-		 int attached_update;
-		 
-		 CallbackHooks() : 
-			 attached_velocity(0), 
-			 attached_pose(0), 
-			 attached_update(0) 
-		 {}
-
-	 } hooks;
+				
   
 	 /** unique process-wide identifier for this model */
 	 uint32_t id;	
@@ -2120,7 +2171,7 @@ namespace Stg
 	 void PushFlag( Flag* flag );
 	 Flag* PopFlag();
 	
-	 int GetFlagCount() const { return flag_list.size(); }
+	 unsigned int GetFlagCount() const { return flag_list.size(); }
     
 	 /** Disable the model. Its pose will not change due to velocity
 		  until re-enabled using Enable(). This is used for example when
@@ -2271,64 +2322,25 @@ namespace Stg
 	 void SetFriction( double friction );
 	
 	 bool DataIsFresh() const { return this->data_fresh; }
-	
-	 /* attach callback functions to data members. The function gets
-		 called when the member is changed using SetX() accessor method */
 		
-	 void AddCallback( void* address, 
-							 stg_model_callback_t cb, 
-							 void* user );
+		/* attach callback functions to data members. The function gets
+			 called when the member is changed using SetX() accessor method */
 		
-	 int RemoveCallback( void* member,
-								stg_model_callback_t callback );
+		/** Add a callback. The specified function is called whenever the
+				indicated model method is called, and passed the user
+				data.  @param cb Pointer the function to be called.  @param
+				user Pointer to arbitrary user data, passed to the callback
+				when called.
+		*/
+		void AddCallback( callback_type_t type, 
+											stg_model_callback_t cb, 
+											void* user );
 		
-	 int CallCallbacks(  void* address );
+		int RemoveCallback( callback_type_t type,
+												stg_model_callback_t callback );
 		
-	 /* wrappers for the generic callback add & remove functions that hide
-		 some implementation detail */
-	
-	 void AddStartupCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &hooks.startup, cb, user ); };
-	
-	 void RemoveStartupCallback( stg_model_callback_t cb )
-	 { RemoveCallback( &hooks.startup, cb ); };
-	
-	 void AddShutdownCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &hooks.shutdown, cb, user ); };
-	
-	 void RemoveShutdownCallback( stg_model_callback_t cb )
-	 { RemoveCallback( &hooks.shutdown, cb ); }
-	
-	 void AddLoadCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &hooks.load, cb, user ); }
-	
-	 void RemoveLoadCallback( stg_model_callback_t cb )
-	 { RemoveCallback( &hooks.load, cb ); }
-	
-	 void AddSaveCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &hooks.save, cb, user ); }
-	
-	 void RemoveSaveCallback( stg_model_callback_t cb )
-	 { RemoveCallback( &hooks.save, cb ); }
-  
-	 void AddUpdateCallback( stg_model_callback_t cb, void* user )
-	 { AddCallback( &hooks.update, cb, user ); }
-	 
-	 void RemoveUpdateCallback( stg_model_callback_t cb )
-	 {	RemoveCallback( &hooks.update, cb ); }
-	 
-	 void AddFlagIncrCallback( stg_model_callback_t cb, void* user )
-	 {	AddCallback( &hooks.flag_incr, cb, user ); }
-	
-	 void RemoveFlagIncrCallback( stg_model_callback_t cb )
-	 {	RemoveCallback( &hooks.flag_incr, cb ); }
-
-	 void AddFlagDecrCallback( stg_model_callback_t cb, void* user )
-	 {	AddCallback( &hooks.flag_decr, cb, user ); }
-	
-	 void RemoveFlagDecrCallback( stg_model_callback_t cb )
-	 {	RemoveCallback( &hooks.flag_decr, cb ); }
-	 
+		int CallCallbacks(  callback_type_t type );
+		
 		
 	 virtual void Print( char* prefix ) const;
 	 virtual const char* PrintWithPose() const;

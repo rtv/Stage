@@ -50,11 +50,11 @@ extern "C" int Init( Model* mod )
   assert( robot->ranger );
   
   // ask Stage to call into our ranger update function
-  robot->ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, robot );
+  robot->ranger->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)RangerUpdate, robot );
  
   robot->fiducial = (ModelFiducial*)mod->GetUnusedModelOfType( "fiducial" ) ;
   assert( robot->fiducial );
-  robot->fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, robot );
+  robot->fiducial->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)FiducialUpdate, robot );
 
   robot->fiducial->Subscribe();
   robot->ranger->Subscribe();

@@ -29,9 +29,9 @@ window
 floorplan
 ( 
   name "cave"
-#  size [100.000 100.000 0.800]
-    size [32.000 32.000 0.600]
-pose [-24 -16 0 0]
+  size [100.000 100.000 0.800]
+#    size [32.000 32.000 0.600]
+# pose [-24 -16 0 0]
   bitmap "bitmaps/cave.png"  
 )
 

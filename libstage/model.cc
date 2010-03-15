@@ -162,7 +162,7 @@ uint32_t Model::trail_length = 50;
 uint64_t Model::trail_interval = 5;
 std::map<stg_id_t,Model*> Model::modelsbyid;
 std::map<std::string, creator_t> Model::name_map;
-std::map<void*, std::set<Model::stg_cb_t> > Model::callbacks;
+//std::map<void*, std::set<Model::stg_cb_t> > Model::callbacks;
 
 void Size::Load( Worldfile* wf, int section, const char* keyword )
 {
@@ -268,6 +268,7 @@ Model::Model( World* world,
   blockgroup(),
   blocks_dl(0),
   boundary(false),
+	callbacks(__CB_TYPE_COUNT), 
   color( 1,0,0 ), // red
   data_fresh(false),
   disabled(false),
@@ -361,7 +362,7 @@ Model::~Model( void )
 
 void Model::InitControllers()
 {
-  CallCallbacks( &hooks.init );
+  CallCallbacks( CB_INIT );
 }
 
 
@@ -370,7 +371,7 @@ void Model::AddFlag( Flag* flag )
   if( flag )
 	 {
 		flag_list.push_back( flag );		
-		CallCallbacks( &hooks.flag_incr );		
+		CallCallbacks( CB_FLAGINCR );
 	 }
 }
 
@@ -379,17 +380,17 @@ void Model::RemoveFlag( Flag* flag )
   if( flag )
 	 {
 		EraseAll( flag, flag_list );
-		CallCallbacks( &hooks.flag_decr );
+		CallCallbacks( CB_FLAGDECR );
 	 }
 }
 
 void Model::PushFlag( Flag* flag )
 {
   if( flag )
-	 {
-		flag_list.push_front( flag);
-		CallCallbacks( &hooks.flag_incr );
-	 }
+		{
+			flag_list.push_front( flag);
+			CallCallbacks( CB_FLAGINCR );
+		}
 }
 
 Model::Flag* Model::PopFlag()
@@ -400,8 +401,8 @@ Model::Flag* Model::PopFlag()
   Flag* flag = flag_list.front();
   flag_list.pop_front();
   
-  CallCallbacks( &hooks.flag_decr );
-  
+	CallCallbacks( CB_FLAGDECR );
+
   return flag;
 }
 
@@ -716,13 +717,13 @@ void Model::Startup( void )
   if( FindPowerPack() )
 	 world->active_energy.insert( this );
   
-  CallCallbacks( &hooks.startup );
+	CallCallbacks( CB_STARTUP );
 }
 
 void Model::Shutdown( void )
 {
   //printf( "Shutdown model %s\n", this->token );
-  CallCallbacks( &hooks.shutdown );
+	CallCallbacks( CB_SHUTDOWN );
 
   world->active_energy.erase( this );
   world->active_velocity.erase( this );
@@ -734,9 +735,8 @@ void Model::Shutdown( void )
 
 void Model::Update( void )
 { 
-  if( hooks.attached_update )
-	 CallCallbacks( &hooks.update );  
-  
+	CallCallbacks( CB_UPDATE );
+
   last_update = world->sim_time;  
   world->Enqueue( event_queue_num, interval, this );
 }
@@ -1045,7 +1045,6 @@ void Model::Rasterize( uint8_t* data,
 void Model::SetFriction( double friction )
 {
   this->friction = friction;
-  CallCallbacks( &this->friction );
 }
 
 Model* Model::GetChild( const std::string& modelname ) const

@@ -283,19 +283,12 @@ public:
 	 //	 pos->GetUnusedModelOfType( "laser" );
 	 
 	 // PositionUpdate() checks to see if we reached source or sink
-	 pos->AddUpdateCallback( (stg_model_callback_t)UpdateCallback, this );
+	 pos->AddCallback(  Model::CB_UPDATE, (stg_model_callback_t)UpdateCallback, this );
 	 pos->Subscribe();
 	 
 	 
 	 // no other callbacks - we access all other data from the position
 	 // callback 
-
-	 // start with only the laser enabled - we switch laser, ranger and
-	 // fiducial on and off as needed to save energy and compute time
-	 
-	 //laser->AddUpdateCallback( (stg_model_callback_t)Robot::LaserUpdateCallback, this );
-
-
 	 EnableLaser(true);
 
 	 pos->AddVisualizer( &graphvis, true );

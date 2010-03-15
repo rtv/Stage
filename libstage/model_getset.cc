@@ -14,32 +14,28 @@ void Model::SetGeom( const Geom& val )
   
   MapWithChildren();
   
-  CallCallbacks( &geom );
+  CallCallbacks( CB_GEOM );
 }
 
 void Model::SetColor( Color val )
 {
   color = val;
   NeedRedraw();
-  CallCallbacks( &color );
 }
 
 void Model::SetMass( stg_kg_t val )
 {
   mass = val;
-  CallCallbacks( &mass );
 }
 
 void Model::SetStall( stg_bool_t val )
 {
   stall = val;
-  CallCallbacks( &stall );
 }
 
 void Model::SetGripperReturn( int val )
 {
   vis.gripper_return = val;
-  CallCallbacks( &vis.gripper_return );
 }
 
 void Model::SetFiducialReturn(  int val )
@@ -52,80 +48,66 @@ void Model::SetFiducialReturn(  int val )
 	 world->FiducialErase( this );
   else
 	 world->FiducialInsert( this );
-	
-  CallCallbacks( &vis.fiducial_return );
 }
 
 void Model::SetFiducialKey( int val )
 {
   vis.fiducial_key = val;
-  CallCallbacks( &vis.fiducial_key );
 }
 
 void Model::SetLaserReturn( stg_laser_return_t val )
 {
   vis.laser_return = val;
-  CallCallbacks( &vis.laser_return );
 }
 
 void Model::SetObstacleReturn( int val )
 {
   vis.obstacle_return = val;
-  CallCallbacks( &vis.obstacle_return );
 }
 
 void Model::SetBlobReturn( int val )
 {
   vis.blob_return = val;
-  CallCallbacks( &vis.blob_return );
 }
 
 void Model::SetRangerReturn( int val )
 {
   vis.ranger_return = val;
-  CallCallbacks( &vis.ranger_return );
 }
 
 void Model::SetBoundary( int val )
 {
   boundary = val;
-  CallCallbacks( &boundary );
 }
 
 void Model::SetGuiNose(  int val )
 {
   gui.nose = val;
-  CallCallbacks( &gui.nose );
 }
 
 void Model::SetGuiMove( int val )
 {
   gui.move = val;
-  CallCallbacks( &gui.move );
 }
 
 void Model::SetGuiGrid(  int val )
 {
   gui.grid = val;
-  CallCallbacks( &this->gui.grid );
 }
 
 void Model::SetGuiOutline( int val )
 {
   gui.outline = val;
-  CallCallbacks( &gui.outline );
 }
 
 void Model::SetWatts( stg_watts_t val )
 {
   watts = val;
-  CallCallbacks( &watts );
 }
 
 void Model::SetMapResolution(  stg_meters_t val )
 {
   map_resolution = val;
-  CallCallbacks( &map_resolution );
 }
 
 // set the pose of model in global coordinates 
@@ -146,7 +128,7 @@ int Model::SetParent( Model* newparent)
   // link from the model to its new parent
   this->parent = newparent;
 
-  CallCallbacks( &this->parent );
+	CallCallbacks( CB_PARENT );
   return 0; //ok
 }
 
@@ -213,9 +195,7 @@ void Model::VelocityDisable()
 void Model::SetVelocity( const Velocity& val )
 {
   velocity = val;  
-
-	if( hooks.attached_velocity )
-		CallCallbacks( &velocity );
+	CallCallbacks( CB_VELOCITY );
 }
 
 
@@ -237,6 +217,5 @@ void Model::SetPose( const Pose& newpose )
       world->dirty = true;
     }
 
-	if( hooks.attached_pose )
-		CallCallbacks( &this->pose );
+		CallCallbacks( CB_POSE );
 }

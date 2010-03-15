@@ -50,12 +50,12 @@ extern "C" int Init( Model* mod )
   robot->ranger = (ModelRanger*)mod->GetUnusedModelOfType( "ranger" );
   assert( robot->ranger );
   // ask Stage to call into our ranger update function whenever the ranger is updated
-  robot->ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, robot );
+  robot->ranger->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)RangerUpdate, robot );
   
   robot->fiducial = (ModelFiducial*)mod->GetUnusedModelOfType( "fiducial" ) ;
   assert( robot->fiducial );
   // ask Stage to call into our fiducial update function whenever the fiducial is updated
-  robot->fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, robot );
+  robot->fiducial->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)FiducialUpdate, robot );
   
   // subscribe to the laser, though we don't use it for navigating
   //robot->laser = (ModelLaser*)mod->GetModel( "laser:0" );

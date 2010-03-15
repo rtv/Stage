@@ -242,7 +242,7 @@ void Model::Load()
 	 Subscribe();
 	
   // call any type-specific load callbacks
-  this->CallCallbacks( &hooks.load );
+  this->CallCallbacks( CB_LOAD );
     
   // we may well have changed blocks or geometry
   blockgroup.CalcSize();
@@ -265,42 +265,42 @@ void Model::Save( void )
 	 return;
 
   assert( wf_entity );
-		
+	
   PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
-		this->token,
-		this->pose.x,
-		this->pose.y,
-		this->pose.a );
-
+								token,
+								pose.x,
+								pose.y,
+								pose.a );
+	
   // just in case
   pose.a = normalize( pose.a );
   geom.pose.a = normalize( geom.pose.a );
   
   if( wf->PropertyExists( wf_entity, "pose" ) )
     {
-      wf->WriteTupleLength( wf_entity, "pose", 0, this->pose.x);
-      wf->WriteTupleLength( wf_entity, "pose", 1, this->pose.y);
-      wf->WriteTupleLength( wf_entity, "pose", 2, this->pose.z);
-      wf->WriteTupleAngle( wf_entity, "pose", 3, this->pose.a );
+      wf->WriteTupleLength( wf_entity, "pose", 0, pose.x);
+      wf->WriteTupleLength( wf_entity, "pose", 1, pose.y);
+      wf->WriteTupleLength( wf_entity, "pose", 2, pose.z);
+      wf->WriteTupleAngle( wf_entity, "pose", 3, pose.a );
     }
   
   if( wf->PropertyExists( wf_entity, "size" ) )
     {
-      wf->WriteTupleLength( wf_entity, "size", 0, this->geom.size.x);
-      wf->WriteTupleLength( wf_entity, "size", 1, this->geom.size.y);
-      wf->WriteTupleLength( wf_entity, "size", 2, this->geom.size.z);
+      wf->WriteTupleLength( wf_entity, "size", 0, geom.size.x);
+      wf->WriteTupleLength( wf_entity, "size", 1, geom.size.y);
+      wf->WriteTupleLength( wf_entity, "size", 2, geom.size.z);
     }
   
   if( wf->PropertyExists( wf_entity, "origin" ) )
     {
-      wf->WriteTupleLength( wf_entity, "origin", 0, this->geom.pose.x);
-      wf->WriteTupleLength( wf_entity, "origin", 1, this->geom.pose.y);
-      wf->WriteTupleLength( wf_entity, "origin", 2, this->geom.pose.z);
-      wf->WriteTupleAngle( wf_entity, "origin", 3, this->geom.pose.a);
+      wf->WriteTupleLength( wf_entity, "origin", 0, geom.pose.x);
+      wf->WriteTupleLength( wf_entity, "origin", 1, geom.pose.y);
+      wf->WriteTupleLength( wf_entity, "origin", 2, geom.pose.z);
+      wf->WriteTupleAngle( wf_entity, "origin", 3, geom.pose.a);
     }
 
   // call any type-specific save callbacks
-  this->CallCallbacks( &hooks.save );
+  CallCallbacks( CB_SAVE );
 
   PRINT_DEBUG1( "Model \"%s\" saving complete.", token );
 }
@@ -345,7 +345,7 @@ void Model::LoadControllerModule( const char* lib )
 		  }
 		//else
 		
-		AddCallback( &hooks.init, initfunc, new CtrlArgs(lib,World::ctrlargs) ); // pass complete string into initfunc
+		AddCallback( CB_INIT, initfunc, new CtrlArgs(lib,World::ctrlargs) ); // pass complete string into initfunc
     }
   else
     {

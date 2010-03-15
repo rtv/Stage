@@ -43,7 +43,7 @@ extern "C" int Init( Model* mod )
   assert( robot->ranger );
   
   // ask Stage to call into our ranger update function
-  robot->ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, robot );
+  robot->ranger->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)RangerUpdate, robot );
   
   // subscribe to the laser, though we don't use it for navigating
   //robot->laser = (ModelLaser*)mod->GetUnusedModelOfType( "laser" );
