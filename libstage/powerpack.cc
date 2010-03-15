@@ -48,12 +48,6 @@ PowerPack::~PowerPack()
   mod->RemoveVisualizer( &stored_vis );
 }
 
-
-void PowerPack::Print( char* prefix ) const
-{
-  printf( "%s stored %.2f/%.2f joules\n", prefix, stored, capacity );
-}
-
 /** OpenGL visualization of the powerpack state */
 void PowerPack::Visualize( Camera* cam ) 
 {

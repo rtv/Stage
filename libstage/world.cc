@@ -539,6 +539,13 @@ void World::ConsumeQueue( unsigned int queue_num )
 
 bool World::Update()
 {
+  if( show_clock && ((this->updates % show_clock_interval) == 0) )
+    {
+      printf( "\r[Stage: %s]", ClockString().c_str() );
+      fflush( stdout );
+    }
+
+
   //puts( "World::Update()" );
   
   // if we've run long enough, exit
@@ -586,12 +593,6 @@ bool World::Update()
   FOR_EACH( it, active_energy )
 	 (*it)->UpdateCharge();
   
-  if( show_clock && ((this->updates % show_clock_interval) == 0) )
-    {
-      printf( "\r[Stage: %s]", ClockString().c_str() );
-      fflush( stdout );
-    }
-
   ++updates;  
     
   return false;

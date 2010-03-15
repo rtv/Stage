@@ -349,14 +349,15 @@ namespace Stg
   };
   
   
-  /** Specify a 3 axis velocity in x, y and heading. 	*/
+  /** Specify a 4 axis velocity: 3D vector in [x, y, z], plus rotation
+		about Z (yaw).*/
   class Velocity : public Pose
   {
   public:
-	 /** @param x x position in meters 
-		  @param y y position in meters 
-		  @param z z position in meters 
-		  @param a heading in radians 
+	 /** @param x velocity vector component along X axis (forward speed), in meters per second.
+		  @param y velocity vector component along Y axis (sideways speed), in meters per second.
+		  @param z velocity vector component along Z axis (vertical speed), in meters per second.
+		  @param a rotational velocity around Z axis (yaw), in radians per second.
 	 */
     Velocity( stg_meters_t x, 
 				  stg_meters_t y, 
@@ -368,13 +369,18 @@ namespace Stg
     Velocity()
     { /*empty*/ }		 
     
-	 /** Print velocity in human-readable format on stdout
-		  @param prefix Character string to prepend to pose output 
+	 /** Print velocity in human-readable format on stdout, with a
+		  prefix string 
+		  
+		  @param prefix Character string to prepend to output, or NULL.
 	 */
-    virtual void Print( const char* prefix )
+    virtual void Print( const char* prefix ) const
     {
-      printf( "%s velocity [x:%.3f y:%.3f z:%3.f a:%.3f]\n",
-				  prefix, x,y,z,a );
+		if( prefix )
+		  printf( "%s", prefix );
+		
+		printf( "velocity [x:%.3f y:%.3f z:%3.f a:%.3f]\n",
+				  x,y,z,a );		
     }	 
   };
   
@@ -386,10 +392,17 @@ namespace Stg
     Pose pose;///< position
     Size size;///< extent
     
-    void Print( const char* prefix )
+	 /** Print geometry in human-readable format on stdout, with a
+		  prefix string 
+		  
+		  @param prefix Character string to prepend to output, or NULL.
+	 */
+    void Print( const char* prefix ) const
     {
-      printf( "%s geom pose: (%.2f,%.2f,%.2f) size: [%.2f,%.2f]\n",
-				  prefix,
+		if( prefix )
+		  printf( "%s", prefix );
+		
+		printf( "geom pose: (%.2f,%.2f,%.2f) size: [%.2f,%.2f]\n",
 				  pose.x,
 				  pose.y,
 				  pose.a,
@@ -1577,10 +1590,6 @@ namespace Stg
 	 /** OpenGL visualization of the powerpack state */
 	 void Visualize( Camera* cam );
 
-	 /** Print human-readable status on stdout, prefixed with the
-		  argument string */
-	 void Print( char* prefix ) const;
-	 
 	 /** Returns the energy capacity minus the current amount stored */
 	 stg_joules_t RemainingCapacity() const;
 	 
@@ -1596,8 +1605,15 @@ namespace Stg
 	 double ProportionRemaining() const
 	 { return( stored / capacity ); }
 
+	 /** Print human-readable status on stdout, prefixed with the
+		  argument string, or NULL */
 	 void Print( const char* prefix ) const
-	 { printf( "%s PowerPack %.2f/%.2f J\n", prefix, stored, capacity ); }		
+	 { 
+		if( prefix )
+		  printf( "%s", prefix );
+
+		printf( "PowerPack %.2f/%.2f J\n", stored, capacity ); 
+	 }		
 	 
 	 stg_joules_t GetStored() const;
 	 stg_joules_t GetCapacity() const;

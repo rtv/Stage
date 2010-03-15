@@ -19,9 +19,9 @@ const int PAYLOAD = 1;
 typedef enum {
   MODE_WORK=0,
   MODE_DOCK,
-  MODE_UNDOCK
+  MODE_UNDOCK,
+  MODE_QUEUE
 } nav_mode_t;
-
 
 
 
@@ -34,7 +34,7 @@ public:
   double value;  
   std::vector<Edge*> edges;
   
-  Node( const Pose& pose )
+  Node( Pose pose )
 	 : pose(pose), value(0), edges() {}
   
   ~Node();
@@ -57,6 +57,7 @@ public:
   Edge( Node* to, double cost=1.0 ) 
 	 : to(to), cost(cost) {}  
 };
+
 
 class Graph
 {
@@ -109,7 +110,7 @@ public:
 	 
 	 if( best_node == NULL )
 		{
-		  puts( "warning: no nodes in range" );
+		  printf( "FASR warning: no nodes in range" );
 		  return false;
 		}
 	 
@@ -282,20 +283,21 @@ public:
 	 //	 pos->GetUnusedModelOfType( "laser" );
 	 
 	 // PositionUpdate() checks to see if we reached source or sink
-	 pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, this );
+	 pos->AddUpdateCallback( (stg_model_callback_t)UpdateCallback, this );
 	 pos->Subscribe();
+	 
+	 
+	 // no other callbacks - we access all other data from the position
+	 // callback 
 
-	 // LaserUpdate() controls the robot, by reading from laser and
-	 // writing to position
-	 //laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, this );
+	 // start with only the laser enabled - we switch laser, ranger and
+	 // fiducial on and off as needed to save energy and compute time
+	 
+	 //laser->AddUpdateCallback( (stg_model_callback_t)Robot::LaserUpdateCallback, this );
+
+
 	 EnableLaser(true);
 
-	 // we subscribe to the fiducial device only while docking
-	 fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, this );	 	 
-	 
-	 // we subscribe to the ranger device only while undocking (i.e. backing up)
-	 //ranger->AddUpdateCallback( (stg_model_callback_t)RangerUpdate, this );	 	 	 
-	 
 	 pos->AddVisualizer( &graphvis, true );
 	 
 	 if( map_data == NULL )
@@ -327,7 +329,7 @@ public:
 				else if( map_data[i] == 1 )
 				  map_data[i] = 9;
 				else
-				  printf( "bad value %d in map at index %d\n", (int)map_data[i], (int)i );
+				  printf( "FASR: bad value %d in map at index %d\n", (int)map_data[i], (int)i );
 				
 				assert( (map_data[i] == 1) || (map_data[i] == 9) );		  
 			 }    	 
@@ -413,8 +415,10 @@ public:
 								 path );
 
 	 pthread_mutex_unlock( &planner_mutex );
-
-	 //printf( "#%s:\n", result ? "PATH" : "NOPATH" );
+	 
+	 if( ! result )
+		printf( "FASR warning: plan failed to find path from (%.2f,%.2f) to (%.2f,%.2f)\n",
+				  pose.x, pose.y, sp.x, sp.y );
 
 	 graph.nodes.clear();
 	 
@@ -481,7 +485,7 @@ public:
 		}			  
 	 else
 		{
-		  printf( "%s docking but can't see a charger\n", pos->Token() );
+		  printf( "FASR: %s docking but can't see a charger\n", pos->Token() );
 		  pos->Stop();
 		  EnableFiducial( false );
 		  mode = MODE_WORK; // should get us back on track eventually
@@ -507,7 +511,10 @@ public:
 	 const unsigned int BACK_SENSOR_FIRST = 10;
 	 const unsigned int BACK_SENSOR_LAST = 13;
 	 
-	 
+	 // make sure the required sensors are running
+	 assert( ranger_sub );
+	 assert( fiducial_sub );
+
 	 if( charger_range < back_off_distance )
 		{
 		  pos->SetXSpeed( back_off_speed );
@@ -660,7 +667,7 @@ public:
 		  if( Hungry() )
 			 SetGoal( fuel_zone );
 		  
-		  // if the graph failes to offer advice or the goal has moved a
+		  // if the graph fails to offer advice or the goal has moved a
 		  // ways since last time we planned
 		  if( (graph.GoodDirection( pose, 4.0, a_goal ) == 0) || 
 				(goal->GetPose().Distance2D( cached_goal_pose ) > 2.0) )
@@ -708,18 +715,6 @@ public:
 		}  
   }
 
-  
-  static int RangerUpdate( ModelRanger* ranger, Robot* robot )
-  {
-		//printf( "%s RANGER UPDATE", ranger->Token() );
-	 return 0;
-  }
-
-
-//   // inspect the laser data and decide what to do
-//   static int LaserUpdate( ModelLaser* laser, Robot* robot )
-//   {
-//   }
 
   bool Hungry()
   {
@@ -730,68 +725,119 @@ public:
   {
 	 return( pos->FindPowerPack()->ProportionRemaining() > 0.95 );
   }	 
-
-  static int PositionUpdate( ModelPosition* pos, Robot* robot )
+  
+  // static callback wrapper
+  static int UpdateCallback( ModelLaser* laser, Robot* robot )
   {  
+	 return robot->Update();
+  }
+
+  int Update( void )
+  {
 	 Pose pose = pos->GetPose();
 
 #if 0	 
 	 // when countdown reaches zero
-	 if( --robot->node_interval_countdown == 0 )
+	 if( --node_interval_countdown == 0 )
 		{
 		  // reset countdown
-		  robot->node_interval_countdown = robot->node_interval;
+		  node_interval_countdown = node_interval;
 		  
 		  Node* node = new Node( pose );
-		  robot->graph.AddNode( node );
+		  graph.AddNode( node );
 		  
-		  if( robot->last_node )
-			 robot->last_node->AddEdge( new Edge( node ) );
+		  if( last_node )
+			 last_node->AddEdge( new Edge( node ) );
 		  
-		  robot->last_node = node;
+		  last_node = node;
 		  
 		  // limit the number of nodes
-		  while( robot->graph.nodes.size() > TRAIL_LENGTH_MAX )
-			 robot->graph.PopFront();			 
+		  while( graph.nodes.size() > TRAIL_LENGTH_MAX )
+			 graph.PopFront();			 
 		}
 #endif  
+
+	 
+	 // assume we can't see the charger
+	 charger_ahoy = false;
+	 
+	 // if the fiducial is enabled
+	 if( fiducial_sub ) 
+		{	 
+		  std::vector<ModelFiducial::Fiducial>& fids = fiducial->GetFiducials();
+		  
+		  if( fids.size() > 0 )
+			 {
+				ModelFiducial::Fiducial* closest = NULL;		
+				
+				for( unsigned int i = 0; i < fids.size(); i++ )
+				  {				
+					 //printf( "fiducial %d is %d at %.2f m %.2f radians\n",
+					 //	  i, f->id, f->range, f->bearing );		
+					 
+					 ModelFiducial::Fiducial* f = &fids[i];
+					 
+					 // find the closest 
+					 if( f->id == 2 && ( closest == NULL || f->range < closest->range )) // I see a charging station
+						closest = f; 
+				  }						  
+		  
+				if( closest )
+				  {			 // record that I've seen it and where it is
+					 charger_ahoy = true;
+					 
+					 //printf( "AHOY %s\n", pos->Token() );
+					 
+					 charger_bearing = closest->bearing;
+					 charger_range = closest->range;
+					 charger_heading = closest->geom.a;			 
+				  }
+			 }
+		}
+
 
 	 //printf( "Pose: [%.2f %.2f %.2f %.2f]\n",
 	 //  pose.x, pose.y, pose.z, pose.a );
   
 	 //pose.z += 0.0001;
-	 //robot->pos->SetPose( pose );
+	 //pos->SetPose( pose );
 	 
 	 // if we're close to the source we get a flag
-	 Pose sourcepose = robot->source->GetPose();
-	 Geom sourcegeom = robot->source->GetGeom();
+	 Pose sourcepose = source->GetPose();
+	 Geom sourcegeom = source->GetGeom();
 
-	 if( hypot( sourcepose.x-pose.x, sourcepose.y-pose.y ) < sourcegeom.size.x/2.0 &&
+	 stg_meters_t dest_dist = hypot( sourcepose.x-pose.x, sourcepose.y-pose.y );
+	 
+	 // if we're close, go get in line
+	 //	 if( dest_dist < sourcegeom.size.x )
+	 //  mode = MODE_QUEUE;
+
+	 
+	 if( dest_dist < sourcegeom.size.x/2.0 &&
 		  pos->GetFlagCount() < PAYLOAD )
 		{
 		  // transfer a chunk from source to robot
-		  pos->PushFlag( robot->source->PopFlag() );
+		  pos->PushFlag( source->PopFlag() );
 		  
 		  if( pos->GetFlagCount() == PAYLOAD )
-		  	 robot->SetGoal( robot->sink ); // we're done working
+		  	 SetGoal( sink ); // we're done working
 		}
 	 
 	 // if we're close to the sink we lose a flag
-	 Pose sinkpose = robot->sink->GetPose();
-	 Geom sinkgeom = robot->sink->GetGeom();
+	 Pose sinkpose = sink->GetPose();
+	 Geom sinkgeom = sink->GetGeom();
 	 
 	 if( hypot( sinkpose.x-pose.x, sinkpose.y-pose.y ) < sinkgeom.size.x/2.0 && 
 		  pos->GetFlagCount() > 0 )
 		{
 		  //puts( "dropping" );
 		  // transfer a chunk between robot and goal
-		  robot->sink->PushFlag( pos->PopFlag() );		  
+		  sink->PushFlag( pos->PopFlag() );		  
 		  
 		  if( pos->GetFlagCount() == 0 ) 
-			 robot->SetGoal( robot->source ); // we're done dropping off
+			 SetGoal( source ); // we're done dropping off
 		}
-  
-
+	 
 	 //printf( "diss: %.2f\n", pos->FindPowerPack()->GetDissipated() );
 
 	 //   if( laser->power_pack && laser->power_pack->charging )
@@ -801,27 +847,30 @@ public:
 	 //if( laser->GetSamples(NULL) == NULL )
 		//return 0;
 
-	 //assert( robot->laser->GetSamples().size() > 0 );
+	 //assert( laser->GetSamples().size() > 0 );
 
-	 switch( robot->mode )
+	 switch( mode )
 		{
 		case MODE_DOCK:
 		  //puts( "DOCK" );
-		  robot->Dock();
+		  Dock();
 		  break;
 		
 		case MODE_WORK:
 		  //puts( "WORK" );
-		  robot->Work();
+		  Work();
 		  break;
 
 		case MODE_UNDOCK:
 		  //puts( "UNDOCK" );
-		  robot->UnDock();
+		  UnDock();
 		  break;
 		
+		  //case MODE_QUEUE:
+		  //Queue();
+
 		default:
-		  printf( "unrecognized mode %u\n", robot->mode );		
+		  printf( "unrecognized mode %u\n", mode );		
 		}
   
   
@@ -829,40 +878,13 @@ public:
   }
 
 
+  void Queue()
+  {
+	 
 
-  static int FiducialUpdate( ModelFiducial* mod, Robot* robot )
-  {    
-	 robot->charger_ahoy = false;
-	 
-	 std::vector<ModelFiducial::Fiducial>& fids = mod->GetFiducials();
-	 
-	 ModelFiducial::Fiducial* closest = NULL;		
-	 
-	 for( unsigned int i = 0; i < fids.size(); i++ )
-		{				
-		  //printf( "fiducial %d is %d at %.2f m %.2f radians\n",
-		  //	  i, f->id, f->range, f->bearing );		
-		  
-		  ModelFiducial::Fiducial* f = &fids[i];
-		  
-		  // find the closest 
-		  if( f->id == 2 && ( closest == NULL || f->range < closest->range )) // I see a charging station
-			 closest = f; 
-		}						  
-	 
-	 if( closest )
-		{			 // record that I've seen it and where it is
-		  robot->charger_ahoy = true;
-		
-		  //printf( "AHOY %s\n", robot->pos->Token() );
-
-		  robot->charger_bearing = closest->bearing;
-		  robot->charger_range = closest->range;
-		  robot->charger_heading = closest->geom.a;			 
-		}
-	 
-	 return 0; // run again
   }
+
+
   
   
   static int FlagIncr( Model* mod, Robot* robot )
@@ -925,8 +947,6 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   const std::string& color = sources[ rand() % sources_count ];
   
   new Robot( (ModelPosition*)mod,
-				 //mod->GetWorld()->GetModel( words[1] + "_source" ),
-				 //mod->GetWorld()->GetModel( words[1] + "_sink" ),
 				 mod->GetWorld()->GetModel( color + "_source" ),
 				 mod->GetWorld()->GetModel( color + "_sink" ),
 				 mod->GetWorld()->GetModel( "fuel_zone" ) );

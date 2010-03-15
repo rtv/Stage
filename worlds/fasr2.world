@@ -16,7 +16,7 @@ paused 1
 
 resolution 0.02
 
-threads 0
+threads 8
 
 # configure the GUI window
 window

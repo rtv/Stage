@@ -734,9 +734,9 @@ void Model::Shutdown( void )
 
 void Model::Update( void )
 { 
-	if( hooks.attached_update )
-		CallCallbacks( &hooks.update );  
-
+  if( hooks.attached_update )
+	 CallCallbacks( &hooks.update );  
+  
   last_update = world->sim_time;  
   world->Enqueue( event_queue_num, interval, this );
 }
