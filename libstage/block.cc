@@ -69,10 +69,10 @@ Block::~Block()
 
 void Block::Translate( double x, double y )
 {
-  for( unsigned int p=0; p<pt_count; p++)
+	FOR_EACH( it, pts )
     {
-      pts[p].x += x;
-      pts[p].y += y;
+      it->x += x;
+      it->y += y;
     }
   
   mod->blockgroup.BuildDisplayList( mod );
@@ -83,10 +83,10 @@ double Block::CenterY()
   double min = billion;
   double max = -billion;
   
-  for( unsigned int p=0; p<pt_count; p++)
+	FOR_EACH( it, pts )
     {
-      if( pts[p].y > max ) max = pts[p].y;
-      if( pts[p].y < min ) min = pts[p].y;
+      if( it->y > max ) max = it->y;
+      if( it->y < min ) min = it->y;
     }
   
   // return the value half way between max and min
@@ -98,10 +98,10 @@ double Block::CenterX()
   double min = billion;
   double max = -billion;
   
-  for( unsigned int p=0; p<pt_count; p++)
+	FOR_EACH( it, pts )
     {
-      if( pts[p].x > max ) max = pts[p].x;
-      if( pts[p].x < min ) min = pts[p].x;
+      if( it->x > max ) max = it->x;
+      if( it->x < min ) min = it->x;
     }
 
   // return the value half way between maxx and min
@@ -297,8 +297,9 @@ void Block::GenerateCandidateCells()
 	 {
 		// no valid cache of model coord points, so generate them
 		mpts.resize( pt_count );
+
 		for( unsigned int i=0; i<pt_count; i++ )
-		  mpts[i] = BlockPointToModelMeters( pts[i] );
+			mpts[i] = BlockPointToModelMeters( pts[i] );
 	 }
   
   gpts.clear();

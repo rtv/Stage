@@ -157,18 +157,15 @@
 using namespace Stg;
 
 // static members
-uint32_t Model::count = 0;
-uint32_t Model::trail_length = 50;
-uint64_t Model::trail_interval = 5;
+uint32_t Model::count(0);
+uint32_t Model::trail_length(50);
+uint64_t Model::trail_interval(5);
 std::map<stg_id_t,Model*> Model::modelsbyid;
 std::map<std::string, creator_t> Model::name_map;
-//std::map<void*, std::set<Model::stg_cb_t> > Model::callbacks;
 
 void Size::Load( Worldfile* wf, int section, const char* keyword )
 {
 	if( CProperty* prop = wf->GetProperty( section, keyword ) )	
-	
-	//if( prop )
 		{
 			if( prop->values.size() != 3 )
 				{
@@ -268,7 +265,7 @@ Model::Model( World* world,
   blockgroup(),
   blocks_dl(0),
   boundary(false),
-	callbacks(__CB_TYPE_COUNT), 
+	callbacks(__CB_TYPE_COUNT), // one slot in the vector for each type
   color( 1,0,0 ), // red
   data_fresh(false),
   disabled(false),
@@ -427,10 +424,10 @@ void Model::LoadBlock( Worldfile* wf, int entity )
 
 
 Block* Model::AddBlockRect( stg_meters_t x, 
-									 stg_meters_t y, 
-									 stg_meters_t dx, 
-									 stg_meters_t dy,
-									 stg_meters_t dz )
+														stg_meters_t y, 
+														stg_meters_t dx, 
+														stg_meters_t dy,
+														stg_meters_t dz )
 {  
   UnMap();
 
@@ -445,10 +442,10 @@ Block* Model::AddBlockRect( stg_meters_t x,
   pts[3].y = y + dy;
   
   Block* newblock =  new Block( this,
-									 pts, 4, 
-									 0, dz, 
-									 color,
-									 true );
+																pts, 4, 
+																0, dz, 
+																color,
+																true );
 
   blockgroup.AppendBlock( newblock );
 

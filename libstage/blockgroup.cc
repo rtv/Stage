@@ -78,13 +78,12 @@ void BlockGroup::CalcSize()
 	  // examine all the points in the polygon
 	  Block* block = *it;
 	  
-	  for( unsigned int p=0; p < block->pt_count; p++ )
+		FOR_EACH( it, block->pts )
 		{
-		  stg_point_t* pt = &block->pts[p];
-		  if( pt->x < minx ) minx = pt->x;
-		  if( pt->y < miny ) miny = pt->y;
-		  if( pt->x > maxx ) maxx = pt->x;
-		  if( pt->y > maxy ) maxy = pt->y;
+		  if( it->x < minx ) minx = it->x;
+		  if( it->y < miny ) miny = it->y;
+		  if( it->x > maxx ) maxx = it->x;
+		  if( it->y > maxy ) maxy = it->y;
 		}
 	  
 	  size.z = std::max( block->local_z.max, size.z );

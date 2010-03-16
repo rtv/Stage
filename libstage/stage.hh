@@ -1198,17 +1198,11 @@ namespace Stg
 
 	 /** Set the extent in Z of the block */
 	 void SetZ( double min, double max );
-
-    stg_point_t* Points( unsigned int *count )
-    { if( count ) *count = pt_count; return &pts[0]; };	         
-	 
-	 std::vector<stg_point_t>& Points()
-    { return pts; };	         
-	     
+		
     inline void RemoveFromCellArray( CellPtrVec* blocks );
     inline void GenerateCandidateCells();  
-
-	 void AppendTouchingModels( ModelPtrSet& touchers );
+		
+		void AppendTouchingModels( ModelPtrSet& touchers );
 	 
 	 /** Returns the first model that shares a bitmap cell with this model */
     Model* TestCollision(); 
@@ -1262,32 +1256,32 @@ namespace Stg
 	 void InvalidateModelPointCache();
   };
 
-
+	
   class BlockGroup
   {
     friend class Model;
-	 friend class Block;
-
+		friend class Block;
+		
   private:
     int displaylist;
-
+		
     void BuildDisplayList( Model* mod );
-	 
-	 BlockPtrSet blocks;
+		
+		BlockPtrSet blocks;
     Size size;
     stg_point3_t offset;
     stg_meters_t minx, maxx, miny, maxy;
-
+		
   public:
     BlockGroup();
     ~BlockGroup();
-	 
+		
     uint32_t GetCount(){ return blocks.size(); };
     const Size& GetSize(){ return size; };
     const stg_point3_t& GetOffset(){ return offset; };
-	 
+		
     /** Establish the min and max of all the blocks, so we can scale this
-		  group later. */
+				group later. */
     void CalcSize();
 	 
     void AppendBlock( Block* block );
