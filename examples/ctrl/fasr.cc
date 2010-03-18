@@ -11,7 +11,7 @@ const double minfrontdistance = 0.7;
 const double stopdist = 0.5;
 const int avoidduration = 10;
 const int workduration = 20;
-const int payload = 1;
+const unsigned int payload = 1;
 
 double have[4][4] = { 
   //  { -120, -180, 180, 180 }

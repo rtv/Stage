@@ -11,8 +11,8 @@ const double avoidspeed = 0.05;
 const double avoidturn = 0.5;
 const double minfrontdistance = 0.7;  
 const double stopdist = 0.5;
-const int avoidduration = 10;
-const int PAYLOAD = 1;
+const unsigned int avoidduration = 10;
+const unsigned int PAYLOAD = 1;
 
 //const int TRAIL_LENGTH_MAX = 500;
 
@@ -25,7 +25,84 @@ typedef enum {
 
 
 
-class Edge;
+// abstract base class
+class Queue
+{
+public:
+  Queue() {};  
+  virtual ~Queue() {}
+  
+  virtual int Clear() = 0;
+  virtual int Position( const char* id ) = 0;  
+  virtual int Join( const char* id ) = 0;
+  virtual int Leave( const char* id ) = 0;
+};
+
+// on-host implementation
+#include <list>
+
+class LocalQueue : public Queue
+{
+public:
+  std::list<std::string> list;
+  //pthread_mutex_t* mutex;
+  
+  LocalQueue() :
+	 Queue(),
+	 list()
+	 //mutex( NULL )
+  {
+	 //pthread_mutex_init( &mutex, NULL );
+  }	
+  
+  virtual int Clear() 
+  { 
+	 list.clear(); 
+	 return 0;
+  }
+  
+  virtual int Position( const char* id ) 
+  {
+	 std::list<std::string>::iterator it( std::find( list.begin(), list.end(), std::string(id) ));	  
+
+	 if( it == list.end() )
+		return -1;
+	 else
+		return std::distance( list.begin(), it );
+  }  
+
+  virtual int Join( const char* id )
+  {
+	 list.push_back( id );
+	 return 0;
+  }
+
+  virtual int Leave( const char* id )
+  {
+	 list.erase( std::remove( list.begin(), list.end(), std::string(id)));
+	 return 0;
+  }
+  
+  virtual void Print( const char* prefix )
+  {
+	 printf( "%s queue:\n", prefix );
+	 FOR_EACH( it, list )
+		printf( "\t%s\n", it->c_str() );
+  }		
+};
+
+
+class Node;
+
+class Edge
+{
+public:
+  Node* to;
+  double cost;
+  
+  Edge( Node* to, double cost=1.0 ) 
+	 : to(to), cost(cost) {}  
+};
 
 class Node
 {
@@ -37,7 +114,11 @@ public:
   Node( Pose pose )
 	 : pose(pose), value(0), edges() {}
   
-  ~Node();
+  ~Node() 
+  { 
+	 FOR_EACH( it, edges )
+		{ delete *it; }
+  }
   
   void AddEdge( Edge* edge ) 
   { 
@@ -47,16 +128,6 @@ public:
   
   void Draw() const;
 }; 
-
-class Edge
-{
-public:
-  Node* to;
-  double cost;
-  
-  Edge( Node* to, double cost=1.0 ) 
-	 : to(to), cost(cost) {}  
-};
 
 
 class Graph
@@ -153,11 +224,6 @@ public:
 };
 
 
-Node::~Node() 
-{ 
-  FOR_EACH( it, edges )
-	 { delete *it; }
-}
 
 void Node::Draw() const
 {
@@ -166,9 +232,9 @@ void Node::Draw() const
   //snprintf( buf, 32, "%.0f", value );
   //Gl::draw_string( pose.x, pose.y+0.2, 0.1, buf );
 
-  glBegin( GL_POINTS );
-  glVertex2f( pose.x, pose.y );
-  glEnd();
+  //glBegin( GL_POINTS );
+  //glVertex2f( pose.x, pose.y );
+  //glEnd();
   
   glBegin( GL_LINES );
   FOR_EACH( it, edges )
@@ -237,6 +303,8 @@ private:
   bool fiducial_sub;
   bool laser_sub;
   bool ranger_sub;
+
+  static std::vector<LocalQueue> queues;
 
 public:
 
@@ -417,7 +485,7 @@ public:
 	 
 	 unsigned int dist = 0;
 	 //FOR_EACH( it, path )
-	 for( std::vector<point_t>::reverse_iterator rit = path.rbegin();
+	 for( std::vector<point_t>::const_reverse_iterator rit = path.rbegin();
 			rit != path.rend();
 			++rit )			
 	 {	
@@ -802,10 +870,11 @@ public:
 	 stg_meters_t dest_dist = hypot( sourcepose.x-pose.x, sourcepose.y-pose.y );
 	 
 	 // if we're close, go get in line
-	 //	 if( dest_dist < sourcegeom.size.x )
-	 //  mode = MODE_QUEUE;
+	 if( dest_dist < sourcegeom.size.x )
+		JoinQueue(0);
+	 else
+		LeaveQueue(0);
 
-	 
 	 if( dest_dist < sourcegeom.size.x/2.0 &&
 		  pos->GetFlagCount() < PAYLOAD )
 		{
@@ -871,12 +940,22 @@ public:
   }
 
 
-  void Queue()
-  {
-	 
+  void JoinQueue( unsigned int q )
+  {	 	 
+	 //puts( "joing queue" );
 
+	 if( queues[q].Position( pos->Token() ) < 0 )
+		{
+		  queues[q].Join( pos->Token() );
+		  queues[q].Print( "q0");		
+		}
   }
 
+
+  void LeaveQueue( unsigned int q )
+  {
+	 queues[q].Leave( pos->Token() );
+  }
 
   
   
@@ -901,6 +980,8 @@ unsigned int Robot::map_height( 50 );
 uint8_t* Robot::map_data( NULL );
 Model* Robot::map_model( NULL );
 
+std::vector<LocalQueue> Robot::queues(100);
+
 void split( const std::string& text, const std::string& separators, std::vector<std::string>& words)
 {
   int n = text.length();
@@ -917,6 +998,7 @@ void split( const std::string& text, const std::string& separators, std::vector<
 
 const std::string sources[] = {"red", "green", "blue", "cyan", "yellow", "magenta" };
 const unsigned int sources_count = 6;
+
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod, CtrlArgs* args )
