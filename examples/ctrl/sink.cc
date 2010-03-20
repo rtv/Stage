@@ -1,15 +1,15 @@
 #include "stage.hh"
 using namespace Stg;
 
-const int INTERVAL = 20;
+const int INTERVAL = 6000;
 
 int Update( Model* mod, void* dummy );
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod )
 {  
-  //mod->AddUpdateCallback( (stg_model_callback_t)Update, NULL );
-  //mod->Subscribe();
+  mod->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)Update, NULL );
+  mod->Subscribe();
   return 0; //ok
 }
 
@@ -17,7 +17,10 @@ extern "C" int Init( Model* mod )
 int Update( Model* mod, void* dummy )
 {
   if( mod->GetWorld()->GetUpdateCount() % INTERVAL  == 0 )
-    mod->PopFlag();
+	 // get rid of all the flags
+	 while( mod->GetFlagCount() )
+		mod->PopFlag();
+
   return 0; // run again
 }
 

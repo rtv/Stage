@@ -41,6 +41,18 @@ public:
 // on-host implementation
 #include <list>
 
+class Task
+{
+public:
+  Model* source;
+  Model* sink;
+  unsigned int participants;
+  
+  Task( Model* source, Model* sink ) 
+  : source(source), sink(sink), participants(0) 
+  {}
+};
+
 class LocalQueue : public Queue
 {
 public:
@@ -189,6 +201,9 @@ public:
 	 heading_result = atan2( best_node->pose.y - pose.y,
 									 best_node->pose.x - pose.x );
 
+	 // add a little bias
+	 heading_result = normalize( heading_result + 0.25 );
+
 	 return true;
   }
 };
@@ -268,12 +283,20 @@ stg_meters_t CellToMeters( unsigned int c,  stg_meters_t size_m, unsigned int si
 class Robot
 {
 private:
+  static std::vector<Robot*> robots;
+
+  long int wait_started_at;
+  
   ModelPosition* pos;
   ModelLaser* laser;
   ModelRanger* ranger;
   ModelFiducial* fiducial;
-  Model *source, *sink;
+  
+  unsigned int task;
+
+  //Model *source, *sink;
   Model* fuel_zone;
+  Model* pool_zone;
   int avoidcount, randcount;
   int work_get, work_put;
   bool charger_ahoy;
@@ -304,49 +327,63 @@ private:
   bool laser_sub;
   bool ranger_sub;
 
+  bool force_recharge;
+
   static std::vector<LocalQueue> queues;
 
-public:
+public:  
+  static std::vector<Task> tasks;
 
   Robot( ModelPosition* pos, 
-			Model* source,
-			Model* sink,
-			Model* fuel) 
-	 : pos(pos), 
-		laser( (ModelLaser*)pos->GetUnusedModelOfType( "laser" )),
-		ranger( (ModelRanger*)pos->GetUnusedModelOfType( "ranger" )),
-		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
-		source(source), 
-		sink(sink), 
-		fuel_zone(fuel),
-		avoidcount(0), 
-		randcount(0), 
-		work_get(0), 
-		work_put(0),
-		charger_ahoy(false),
-		charger_bearing(0),
-		charger_range(0),
-		charger_heading(0),
-		mode(MODE_WORK),
-		docked_angle(0),
-		goal(source),
-		cached_goal_pose(),
-		graph(),
-		graphvis( graph ),
-		last_node( NULL ),
-		node_interval( 20 ),
-		node_interval_countdown( node_interval ),
-		fiducial_sub(false),		
-		laser_sub(false),
-		ranger_sub(false)
+			Model* fuel,
+			Model* pool ) 
+	 : 
+	 wait_started_at(-1),
+	 pos(pos), 
+	 laser( (ModelLaser*)pos->GetUnusedModelOfType( "laser" )),
+	 ranger( (ModelRanger*)pos->GetUnusedModelOfType( "ranger" )),
+	 fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
+	 task(random() % tasks.size() ), // choose a task at random
+	 //source( tasks[task].source ), 
+	 //sink( tasks[task].sink ), 
+	 fuel_zone(fuel),
+	 pool_zone(pool),
+	 avoidcount(0), 
+	 randcount(0), 
+	 work_get(0), 
+	 work_put(0),
+	 charger_ahoy(false),
+	 charger_bearing(0),
+	 charger_range(0),
+	 charger_heading(0),
+	 mode(MODE_WORK),
+	 docked_angle(0),
+	 goal(tasks[task].source),
+	 cached_goal_pose(),
+	 graph(),
+	 graphvis( graph ),
+	 last_node( NULL ),
+	 node_interval( 20 ),
+	 node_interval_countdown( node_interval ),
+	 fiducial_sub(false),		
+	 laser_sub(false),
+	 ranger_sub(false),
+	 force_recharge( false )
   {
+	 // add myself to the static list of all robots
+	 robots.push_back( this );
+	 
 	 // need at least these models to get any work done
 	 // (pos must be good, as we used it in the initialization list)
 	 assert( laser );
 	 assert( fiducial );
 	 assert( ranger );
-	 assert( source );
-	 assert( sink );
+	 assert( goal );
+
+	 // match the color of my destination
+	 pos->SetColor( tasks[task].source->GetColor() );
+
+	 tasks[task].participants++;
 
 	 //	 pos->GetUnusedModelOfType( "laser" );
 	 
@@ -546,7 +583,7 @@ public:
 		}			  
 	 else
 		{
-		  printf( "FASR: %s docking but can't see a charger\n", pos->Token() );
+		  //printf( "FASR: %s docking but can't see a charger\n", pos->Token() );
 		  pos->Stop();
 		  EnableFiducial( false );
 		  mode = MODE_WORK; // should get us back on track eventually
@@ -559,9 +596,17 @@ public:
 		  mode = MODE_UNDOCK;
 		  EnableRanger(true); // enable the sonar to see behind us
 		  EnableLaser(true);
-		}
+		  EnableFiducial(true);
+		  force_recharge = false;		  
+		}	 
   }
 
+  void SetTask( unsigned int t )
+  {
+	 //tasks[task].participants--;
+	 task = t;
+	 tasks[task].participants++;
+  }
 
   void UnDock()
   {
@@ -608,7 +653,17 @@ public:
 			 {
 				// we're pointing the right way, so we're done
 				mode = MODE_WORK;  
-				SetGoal( pos->GetFlagCount() ? sink : source );
+				
+				// if we're not working on a drop-off
+				if( pos->GetFlagCount() == 0 )
+				  {
+					 // pick a new task at random
+					 SetTask( random() % tasks.size() );
+					 SetGoal( tasks[task].source );
+				  }
+				else
+				  SetGoal( tasks[task].sink );
+
 				
 				EnableFiducial(false);
 				EnableRanger(false);
@@ -627,7 +682,6 @@ public:
 	 double minright = 1e6;
   
 	 // Get the data
-	 //ModelLaser::Sample* scan = laser->GetSamples( &sample_count );
 	 const std::vector<ModelLaser::Sample>& scan = laser->GetSamples();
     uint32_t sample_count = scan.size();
 
@@ -779,7 +833,7 @@ public:
 
   bool Hungry()
   {
-	 return( pos->FindPowerPack()->ProportionRemaining() < 0.2 );
+	 return( force_recharge || pos->FindPowerPack()->ProportionRemaining() < 0.2 );
   }	 
 
   bool Full()
@@ -792,9 +846,29 @@ public:
   {  
 	 return robot->Update();
   }
-
+  
   int Update( void )
   {
+ 	 if(  strcmp( pos->Token(), "position:0") == 0 )
+ 		{
+		  static int seconds = 0;
+		  
+		  int timenow = pos->GetWorld()->SimTimeNow() / 1e6;
+		  
+		  if( timenow - seconds > 5 )
+			 {
+				seconds = timenow;
+				
+				// report the task participation		  
+				printf( "time: %d sec\n", seconds ); 
+						  
+				unsigned int sz = tasks.size(); 
+				for( unsigned int i=0; i<sz; ++i )
+				  printf( "\t task[%u] %3u (%s)\n", 
+							 i, tasks[i].participants, tasks[i].source->Token() );			 				
+			 }
+		}
+	 
 	 Pose pose = pos->GetPose();
 
 #if 0	 
@@ -863,43 +937,80 @@ public:
 	 //pose.z += 0.0001;
 	 //pos->SetPose( pose );
 	 
-	 // if we're close to the source we get a flag
-	 Pose sourcepose = source->GetPose();
-	 Geom sourcegeom = source->GetGeom();
+	 if( goal == tasks[task].source )
+		{
+		  // if we're close to the source we get a flag
+		  Pose sourcepose = goal->GetPose();
+		  Geom sourcegeom = goal->GetGeom();
+		  
+		  stg_meters_t dest_dist = hypot( sourcepose.x-pose.x, sourcepose.y-pose.y );
+		  
+		  // when we get close enough, we start waiting
+		  if( dest_dist < sourcegeom.size.x/2.0 ) // nearby
+			 if( wait_started_at < 0 && pos->GetFlagCount() == 0 ) 
+				{
+				  wait_started_at = pos->GetWorld()->SimTimeNow() / 1e6; // usec to seconds
+				  //printf( "%s begain waiting at %ld seconds\n", pos->Token(), wait_started_at );
+				}
+		  
+		  if( wait_started_at > 0 )
+			 {
+				long int waited = (pos->GetWorld()->SimTimeNow() / 1e6) - wait_started_at;
+				
+				
+				// leave with small probability
+				if( drand48() < 0.0005 )
+				  {
+					 //printf( "%s abandoning task %s after waiting %ld seconds\n",
+					 //		pos->Token(), goal->Token(), waited );
+					 
+					 force_recharge = true; // forces hungry to return true
+					 tasks[task].participants--;
+					 wait_started_at = -1;
+					 return 0;
+				  }
+			 }
 
-	 stg_meters_t dest_dist = hypot( sourcepose.x-pose.x, sourcepose.y-pose.y );
-	 
-	 // if we're close, go get in line
-	 if( dest_dist < sourcegeom.size.x )
-		JoinQueue(0);
+		  // when we get onto the square
+		  if( dest_dist < sourcegeom.size.x/2.0 &&				
+				pos->GetFlagCount() < PAYLOAD )
+			 {
+				
+				// transfer a chunk from source to robot
+				pos->PushFlag( goal->PopFlag() );
+
+				if( pos->GetFlagCount() == 1 && wait_started_at > 0 )
+				  {
+					 // stop waiting, since we have received our first flag
+					 wait_started_at = -1;
+				  } 			 
+
+				if( pos->GetFlagCount() == PAYLOAD )
+				  SetGoal( tasks[task].sink ); // we're done working
+			 }
+		}	 
+	 else if( goal == tasks[task].sink )
+		{			 
+		  // if we're close to the sink we lose a flag
+		  Pose sinkpose = goal->GetPose();
+		  Geom sinkgeom = goal->GetGeom();
+		  
+		  if( hypot( sinkpose.x-pose.x, sinkpose.y-pose.y ) < sinkgeom.size.x/2.0 && 
+				pos->GetFlagCount() > 0 )
+			 {
+				//puts( "dropping" );
+				// transfer a chunk between robot and goal
+				goal->PushFlag( pos->PopFlag() );		  
+				
+				if( pos->GetFlagCount() == 0 ) 
+				  SetGoal( tasks[task].source ); // we're done dropping off
+			 }
+		}
 	 else
-		LeaveQueue(0);
-
-	 if( dest_dist < sourcegeom.size.x/2.0 &&
-		  pos->GetFlagCount() < PAYLOAD )
 		{
-		  // transfer a chunk from source to robot
-		  pos->PushFlag( source->PopFlag() );
-		  
-		  if( pos->GetFlagCount() == PAYLOAD )
-		  	 SetGoal( sink ); // we're done working
+		  assert( goal == fuel_zone || goal == pool_zone );
 		}
-	 
-	 // if we're close to the sink we lose a flag
-	 Pose sinkpose = sink->GetPose();
-	 Geom sinkgeom = sink->GetGeom();
-	 
-	 if( hypot( sinkpose.x-pose.x, sinkpose.y-pose.y ) < sinkgeom.size.x/2.0 && 
-		  pos->GetFlagCount() > 0 )
-		{
-		  //puts( "dropping" );
-		  // transfer a chunk between robot and goal
-		  sink->PushFlag( pos->PopFlag() );		  
 		  
-		  if( pos->GetFlagCount() == 0 ) 
-			 SetGoal( source ); // we're done dropping off
-		}
-	 
 	 //printf( "diss: %.2f\n", pos->FindPowerPack()->GetDissipated() );
 
 	 //   if( laser->power_pack && laser->power_pack->charging )
@@ -981,6 +1092,8 @@ uint8_t* Robot::map_data( NULL );
 Model* Robot::map_model( NULL );
 
 std::vector<LocalQueue> Robot::queues(100);
+std::vector<Robot*> Robot::robots;
+std::vector<Task> Robot::tasks;
 
 void split( const std::string& text, const std::string& separators, std::vector<std::string>& words)
 {
@@ -996,9 +1109,6 @@ void split( const std::string& text, const std::string& separators, std::vector<
 	 }
 }
 
-const std::string sources[] = {"red", "green", "blue", "cyan", "yellow", "magenta" };
-const unsigned int sources_count = 6;
-
 
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod, CtrlArgs* args )
@@ -1009,22 +1119,26 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   std::vector<std::string> words;
   split( args->worldfile, std::string(" \t"), words );
   
-  //printf( "words size %u\n", words.size() );  
+  // printf( "words size %u\n", words.size() );  
   //FOR_EACH( it, words )
-  //printf( "word: %s\n", it->c_str() );
+  // printf( "word: %s\n", it->c_str() );
   //puts( "" );
   
   // expecting a task color name as the 1th argument
-  assert( words.size() == 2 );
-  assert( words[1].size() > 0 );
-
-  // pick a source at random
-  const std::string& color = sources[ rand() % sources_count ];
+  assert( words.size() > 1 );
   
+  if( Robot::tasks.size() == 0 )
+	 {
+		
+		World* w = mod->GetWorld();
+		for( unsigned int s=1; s<words.size(); s++ )
+		  Robot::tasks.push_back( Task( w->GetModel( words[s] + "_source"),
+												  w->GetModel( words[s] + "_sink") ) );			 
+	 }
+
   new Robot( (ModelPosition*)mod,
-				 mod->GetWorld()->GetModel( color + "_source" ),
-				 mod->GetWorld()->GetModel( color + "_sink" ),
-				 mod->GetWorld()->GetModel( "fuel_zone" ) );
+				 mod->GetWorld()->GetModel( "fuel_zone" ),
+				 mod->GetWorld()->GetModel( "pool_zone" ) );
 
   return 0; //ok
 }
