@@ -1127,8 +1127,10 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   // expecting a task color name as the 1th argument
   assert( words.size() > 1 );
   
+  // some init for only the first controller
   if( Robot::tasks.size() == 0 )
 	 {
+		srandom( time(NULL) );
 		
 		World* w = mod->GetWorld();
 		for( unsigned int s=1; s<words.size(); s++ )

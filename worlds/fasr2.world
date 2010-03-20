@@ -23,9 +23,9 @@ window
 ( 
   size [ 935.000 868.000 ] 
 
-  center [ -3.612 -5.382 ] 
+  center [ -3.025 -8.459 ] 
   rotate [ 0 0 ]
-  scale 7.038 
+  scale 6.445 
   
   show_data 1
   show_flags 1
@@ -45,69 +45,69 @@ floorplan
 
 
 zone( color "red"
-  pose [ 17.876 43.114 0 0 ]
+  pose [ 18 43 0 0 ]
   name "red_source"
-  ctrl "source 50 10"
+  ctrl "source 100 10"
 )
 
 zone( color "DarkRed"
-  pose [ 41.888 42.482 0 0 ]
+  pose [ 42 43 0 0 ]
   name "red_sink"
   ctrl "sink"
 )
 zone
 (
   color "green"
-  pose [ 45.076 -26.104 0 0 ]
+  pose [ 18 30 0 0 ]
   name "green_source"		  
   ctrl "source 200 10"
 )
 
 zone( color "DarkGreen"
-  pose [ -26.796 4.962 0 0 ]
+  pose [ 42 30 0 0 ]
   name "green_sink"		  
   ctrl "sink"
 )
 
 zone( color "blue"
-  pose [ 42.463 14.006 0 0 ]
+  pose [ 41.067 -24.784 0 0 ]
   name "blue_source"
   ctrl "source 200 10"
 )
 
 zone( color "DarkBlue"
-  pose [ 42.069 33.839 0 0 ]
+  pose [ 15.071 -40.948 0 0 ]
   name "blue_sink"
   ctrl "sink"
 )
 
 
 zone( color "yellow"
-  pose [ 20.687 -42.588 0 0 ]
+  pose [ -42.788 -30.478 0 0 ]
   name "yellow_source"
   ctrl "source 200 10"
 )
 
 zone( color_rgba [ 0.8 0.8 0 1 ]
-  pose [ -15.632 -42.596 0 0 ]
+  pose [ -42.671 37.896 0 0 ]
   name "yellow_sink"
   ctrl "sink"
 )
 
 zone( color "cyan"
-  pose [ -43.076 36.202 0 0 ]
+  pose [ -12.911 41.047 0 0 ]
   name "cyan_source"
   ctrl "source 200 10"
 )
 
 zone( color "DarkCyan"
-  pose [ -43.606 -31.133 0 0 ]
+  pose [ -12.109 -19.186 0 0 ]
   name "cyan_sink"
   ctrl "sink"
 )
 
 zone( color "magenta"
-  pose [ -12.135 43.772 0 0 ]
+  pose [ -29.173 9.319 0 0 ]
   name "magenta_source"
   ctrl "source 200 10" 
 )
@@ -123,7 +123,7 @@ define charging_bump model
 (
   pose [0.240 0 -0.100 0 ] 
   size [0.120 0.050 0.100] 
-  take_watts 24000.0 
+  take_watts 1000.0 
   color "orange" 
   obstacle_return 0
 )
@@ -142,7 +142,7 @@ define charge_station model
   #model( color "purple" size [0.100 0.050 0.250] pose [ 0 -0.100 0 0 ] ) 
    
    kjoules -1  # provides infinite energy
-   give_watts 80000 # high! 
+   give_watts 1000 
    alwayson 1 # so we give charge without any explicit subscriber
 )
 
@@ -224,7 +224,7 @@ define autorob pioneer2dx
 (		 
  sicklaser( samples 32 range_max 2 laser_return 2 watts 30  )
 # ctrl "fasr2"
- kjoules 100 
+ kjoules 400 
  kjoules_capacity 400 
  fiducial_return 0
  charging_bump( obstacle_return 0 fiducial( range_max_id 9 range_max 9 fov 180 pose [ 0 0 -0.050 0 ] ) )
@@ -237,203 +237,203 @@ define autorob pioneer2dx
 
 
 
-autorob( pose [-11.388 12.267 0 166.581] kjoules 400 )
-autorob( pose [-12.208 11.744 0 135.003] kjoules 400 )
-autorob( pose [-12.289 10.814 0 147.497] kjoules 400 )
-autorob( pose [-10.642 11.563 0 123.708] kjoules 400 )
-autorob( pose [-11.378 11.274 0 143.281] kjoules 400 )
-autorob( pose [-10.200 11.012 0 46.529] kjoules 400 )
-autorob( pose [-13.006 13.061 0 168.778] kjoules 400 )
-autorob( pose [-12.466 13.333 0 163.730] kjoules 400 )
-autorob( pose [-13.740 12.740 0 157.546] kjoules 400 )
-autorob( pose [-15.434 11.856 0 138.616] kjoules 400 )
+autorob( pose [-11.388 12.267 0 166.581]  )
+autorob( pose [-12.208 11.744 0 135.003]  )
+autorob( pose [-12.289 10.814 0 147.497]  )
+autorob( pose [-10.642 11.563 0 123.708]  )
+autorob( pose [-11.378 11.274 0 143.281]  )
+autorob( pose [-10.200 11.012 0 46.529]  )
+autorob( pose [-13.006 13.061 0 168.778]  )
+autorob( pose [-12.466 13.333 0 163.730]  )
+autorob( pose [-13.740 12.740 0 157.546]  )
+autorob( pose [-15.434 11.856 0 138.616]  )
 
-autorob( pose [-12.841 10.666 0 125.831] kjoules 400 )
-autorob( pose [-12.710 12.157 0 125.831] kjoules 400 )
-autorob( pose [-12.214 12.593 0 125.831] kjoules 400 )
-autorob( pose [-11.461 13.123 0 125.831] kjoules 400 )
-autorob( pose [-10.679 13.036 0 125.831] kjoules 400 )
-autorob( pose [-12.277 14.027 0 125.831] kjoules 400 )
-autorob( pose [-13.981 13.377 0 125.831] kjoules 400 )
-autorob( pose [-13.372 12.243 0 125.831] kjoules 400 )
-autorob( pose [-13.296 11.331 0 125.831] kjoules 400 )
-autorob( pose [-13.944 11.986 0 125.831] kjoules 400 )
+autorob( pose [-12.841 10.666 0 125.831]  )
+autorob( pose [-12.710 12.157 0 125.831]  )
+autorob( pose [-12.214 12.593 0 125.831]  )
+autorob( pose [-11.461 13.123 0 125.831]  )
+autorob( pose [-10.679 13.036 0 125.831]  )
+autorob( pose [-12.277 14.027 0 125.831]  )
+autorob( pose [-13.981 13.377 0 125.831]  )
+autorob( pose [-13.372 12.243 0 125.831]  )
+autorob( pose [-13.296 11.331 0 125.831]  )
+autorob( pose [-13.944 11.986 0 125.831]  )
 
-autorob( pose [-14.580 14.279 0 125.831] kjoules 400 )
-autorob( pose [-12.922 13.866 0 125.831] kjoules 400 )
-autorob( pose [-13.698 13.866 0 125.831] kjoules 400 )
-autorob( pose [-14.536 12.558 0 125.831] kjoules 400 )
-autorob( pose [-14.577 11.782 0 125.831] kjoules 400 )
-autorob( pose [-13.984 11.210 0 125.831] kjoules 400 )
-autorob( pose [-13.392 10.618 0 125.831] kjoules 400 )
-autorob( pose [-14.883 13.355 0 125.831] kjoules 400 )
-autorob( pose [-15.231 12.681 0 125.831] kjoules 400 )
-autorob( pose [-11.102 10.456 0 125.831] kjoules 400 )
+autorob( pose [-14.580 14.279 0 125.831]  )
+autorob( pose [-12.922 13.866 0 125.831]  )
+autorob( pose [-13.698 13.866 0 125.831]  )
+autorob( pose [-14.536 12.558 0 125.831]  )
+autorob( pose [-14.577 11.782 0 125.831]  )
+autorob( pose [-13.984 11.210 0 125.831]  )
+autorob( pose [-13.392 10.618 0 125.831]  )
+autorob( pose [-14.883 13.355 0 125.831]  )
+autorob( pose [-15.231 12.681 0 125.831]  )
+autorob( pose [-11.102 10.456 0 125.831]  )
 
-autorob( pose [-13.004 6.811 0 166.511] kjoules 200 )
-autorob( pose [-13.272 8.255 0 175.835] kjoules 200 )
-autorob( pose [-12.180 6.527 0 -132.938] kjoules 200 )
-autorob( pose [-9.625 8.080 0 171.172] kjoules 200 )
-autorob( pose [-12.844 9.141 0 170.270] kjoules 200 )
-autorob( pose [-11.369 8.011 0 -157.026] kjoules 200 )
-autorob( pose [-11.453 8.651 0 -120.696] kjoules 200 )
-autorob( pose [-13.876 8.850 0 -177.508] kjoules 200 )
-autorob( pose [-11.753 5.510 0 -139.502] kjoules 200 )
-autorob( pose [-10.121 8.843 0 160.986] kjoules 200 )
+autorob( pose [-13.004 6.811 0 166.511]  )
+autorob( pose [-13.272 8.255 0 175.835]  )
+autorob( pose [-12.180 6.527 0 -132.938]  )
+autorob( pose [-9.625 8.080 0 171.172]  )
+autorob( pose [-12.844 9.141 0 170.270]  )
+autorob( pose [-11.369 8.011 0 -157.026]  )
+autorob( pose [-11.453 8.651 0 -120.696]  )
+autorob( pose [-13.876 8.850 0 -177.508]  )
+autorob( pose [-11.753 5.510 0 -139.502]  )
+autorob( pose [-10.121 8.843 0 160.986]  )
 
-autorob( pose [-10.901 7.503 0 174.453] kjoules 200 )
-autorob( pose [-12.063 7.960 0 174.453] kjoules 200 )
-autorob( pose [-12.159 8.673 0 174.453] kjoules 200 )
-autorob( pose [-12.039 7.399 0 174.453] kjoules 200 )
-autorob( pose [-11.455 6.855 0 174.453] kjoules 200 )
-autorob( pose [-11.574 6.213 0 174.453] kjoules 200 )
-autorob( pose [-10.725 6.173 0 174.453] kjoules 200 )
-autorob( pose [-10.019 5.829 0 174.453] kjoules 200 )
-autorob( pose [-9.828 6.667 0 174.453] kjoules 200 )
-autorob( pose [-9.930 7.369 0 174.453] kjoules 200 )
+autorob( pose [-10.901 7.503 0 174.453]  )
+autorob( pose [-12.063 7.960 0 174.453]  )
+autorob( pose [-12.159 8.673 0 174.453]  )
+autorob( pose [-12.039 7.399 0 174.453]  )
+autorob( pose [-11.455 6.855 0 174.453]  )
+autorob( pose [-11.574 6.213 0 174.453]  )
+autorob( pose [-10.725 6.173 0 174.453]  )
+autorob( pose [-10.019 5.829 0 174.453]  )
+autorob( pose [-9.828 6.667 0 174.453]  )
+autorob( pose [-9.930 7.369 0 174.453]  )
 
-autorob( pose [-10.706 8.428 0 174.453] kjoules 200 )
-autorob( pose [-12.069 9.308 0 174.453] kjoules 200 )
-autorob( pose [-12.719 7.662 0 174.453] kjoules 200 )
-autorob( pose [-13.739 7.599 0 174.453] kjoules 200 )
-autorob( pose [-10.988 9.361 0 174.453] kjoules 200 )
-autorob( pose [-12.708 6.341 0 174.453] kjoules 200 )
-autorob( pose [-12.163 5.901 0 174.453] kjoules 200 )
-autorob( pose [-10.500 6.917 0 174.453] kjoules 200 )
-autorob( pose [-10.727 5.576 0 174.453] kjoules 200 )
-autorob( pose [-10.286 7.945 0 174.453] kjoules 200 )
+autorob( pose [-10.706 8.428 0 174.453]  )
+autorob( pose [-12.069 9.308 0 174.453]  )
+autorob( pose [-12.719 7.662 0 174.453]  )
+autorob( pose [-13.739 7.599 0 174.453]  )
+autorob( pose [-10.988 9.361 0 174.453]  )
+autorob( pose [-12.708 6.341 0 174.453]  )
+autorob( pose [-12.163 5.901 0 174.453]  )
+autorob( pose [-10.500 6.917 0 174.453]  )
+autorob( pose [-10.727 5.576 0 174.453]  )
+autorob( pose [-10.286 7.945 0 174.453]  )
 
-autorob( pose [-1.975 18.008 0 67.057] kjoules 400 )
-autorob( pose [-0.577 17.752 0 28.480] kjoules 400 )
-autorob( pose [0.185 18.933 0 64.025] kjoules 400 )
-autorob( pose [-4.470 20.502 0 5.703] kjoules 400 )
-autorob( pose [-3.229 21.138 0 5.731] kjoules 400 )
-autorob( pose [0.290 17.823 0 24.200] kjoules 400 )
-autorob( pose [-1.945 19.158 0 54.480] kjoules 400 )
-autorob( pose [-3.733 17.894 0 54.588] kjoules 400 )
-autorob( pose [-3.232 17.616 0 52.768] kjoules 400 )
-autorob( pose [-2.570 20.624 0 20.367] kjoules 400 )
+autorob( pose [-1.975 18.008 0 67.057]  )
+autorob( pose [-0.577 17.752 0 28.480]  )
+autorob( pose [0.185 18.933 0 64.025]  )
+autorob( pose [-4.470 20.502 0 5.703]  )
+autorob( pose [-3.229 21.138 0 5.731]  )
+autorob( pose [0.290 17.823 0 24.200]  )
+autorob( pose [-1.945 19.158 0 54.480]  )
+autorob( pose [-3.733 17.894 0 54.588]  )
+autorob( pose [-3.232 17.616 0 52.768]  )
+autorob( pose [-2.570 20.624 0 20.367]  )
 
-autorob( pose [-3.635 20.622 0 -117.456] kjoules 400 )
-autorob( pose [-5.346 20.649 0 -117.456] kjoules 400 )
-autorob( pose [-4.518 21.397 0 -117.456] kjoules 400 )
-autorob( pose [-3.796 21.611 0 -117.456] kjoules 400 )
-autorob( pose [-3.074 19.927 0 -117.456] kjoules 400 )
-autorob( pose [-2.610 21.900 0 -117.456] kjoules 400 )
-autorob( pose [-1.703 20.756 0 -117.456] kjoules 400 )
-autorob( pose [-1.898 19.927 0 -117.456] kjoules 400 )
-autorob( pose [-1.371 19.088 0 -117.456] kjoules 400 )
-autorob( pose [-5.320 17.681 0 -117.456] kjoules 400 )
+autorob( pose [-3.635 20.622 0 -117.456]  )
+autorob( pose [-5.346 20.649 0 -117.456]  )
+autorob( pose [-4.518 21.397 0 -117.456]  )
+autorob( pose [-3.796 21.611 0 -117.456]  )
+autorob( pose [-3.074 19.927 0 -117.456]  )
+autorob( pose [-2.610 21.900 0 -117.456]  )
+autorob( pose [-1.703 20.756 0 -117.456]  )
+autorob( pose [-1.898 19.927 0 -117.456]  )
+autorob( pose [-1.371 19.088 0 -117.456]  )
+autorob( pose [-5.320 17.681 0 -117.456]  )
 
-autorob( pose [-4.708 18.475 0 -117.456] kjoules 400 )
-autorob( pose [-5.615 18.687 0 -117.456] kjoules 400 )
-autorob( pose [-6.341 17.840 0 -117.456] kjoules 400 )
-autorob( pose [-3.521 18.825 0 -117.456] kjoules 400 )
-autorob( pose [-4.194 19.473 0 -117.456] kjoules 400 )
-autorob( pose [-5.192 19.564 0 -117.456] kjoules 400 )
-autorob( pose [-6.341 19.836 0 -117.456] kjoules 400 )
-autorob( pose [-2.742 19.050 0 -117.456] kjoules 400 )
-autorob( pose [-2.591 18.324 0 -108.862] kjoules 400 )
-autorob( pose [-6.301 18.782 0 -117.456] kjoules 400 )
+autorob( pose [-4.708 18.475 0 -117.456]  )
+autorob( pose [-5.615 18.687 0 -117.456]  )
+autorob( pose [-6.341 17.840 0 -117.456]  )
+autorob( pose [-3.521 18.825 0 -117.456]  )
+autorob( pose [-4.194 19.473 0 -117.456]  )
+autorob( pose [-5.192 19.564 0 -117.456]  )
+autorob( pose [-6.341 19.836 0 -117.456]  )
+autorob( pose [-2.742 19.050 0 -117.456]  )
+autorob( pose [-2.591 18.324 0 -108.862]  )
+autorob( pose [-6.301 18.782 0 -117.456]  )
 
-autorob( pose [-35.549 -47.514 0 -41.980] kjoules 40 )
-autorob( pose [-45.547 -46.397 0 -119.991] kjoules 40 )
-autorob( pose [-38.902 -42.142 0 -65.139] kjoules 40 )
-autorob( pose [-39.615 -42.398 0 -73.426] kjoules 40 )
-autorob( pose [-39.830 -40.428 0 -93.488] kjoules 40 )
-autorob( pose [-39.230 -41.231 0 -99.719] kjoules 40 )
-autorob( pose [-30.258 -41.202 0 27.802] kjoules 40 )
-autorob( pose [-38.513 -40.851 0 -96.070] kjoules 40 )
-autorob( pose [-30.890 -41.197 0 160.446] kjoules 40 )
-autorob( pose [-31.214 -41.949 0 46.259] kjoules 40 )
+autorob( pose [-7.032 9.327 0 -41.980]  )
+autorob( pose [-7.030 10.444 0 -119.991]  )
+autorob( pose [-10.385 14.699 0 -65.139]  )
+autorob( pose [-11.098 14.443 0 -73.426]  )
+autorob( pose [-11.275 16.451 0 -93.488]  )
+autorob( pose [-10.713 15.610 0 -99.719]  )
+autorob( pose [-8.736 10.849 0 27.802]  )
+autorob( pose [-9.958 16.028 0 -96.070]  )
+autorob( pose [-9.368 10.854 0 160.446]  )
+autorob( pose [-9.692 10.102 0 46.259]  )
 
 #100
 
-autorob( pose [-11.819 1.550 0 44.991] kjoules 400 )
-autorob( pose [-12.401 2.181 0 44.991] kjoules 400 )
-autorob( pose [-11.236 3.330 0 44.991] kjoules 400 )
-autorob( pose [-12.078 3.298 0 44.991] kjoules 400 )
-autorob( pose [-10.275 2.456 0 44.991] kjoules 400 )
-autorob( pose [-10.734 4.123 0 44.991] kjoules 400 )
-autorob( pose [-11.592 4.398 0 44.991] kjoules 400 )
-autorob( pose [-12.903 2.877 0 44.991] kjoules 400 )
-autorob( pose [-12.434 1.372 0 44.991] kjoules 400 )
-autorob( pose [-10.555 3.358 0 44.991] kjoules 400 )
+#autorob( pose [-11.819 1.550 0 44.991]  )
+#autorob( pose [-12.401 2.181 0 44.991]  )
+#autorob( pose [-11.236 3.330 0 44.991]  )
+#autorob( pose [-12.078 3.298 0 44.991]  )
+#autorob( pose [-10.275 2.456 0 44.991]  )
+#autorob( pose [-10.734 4.123 0 44.991]  )
+#autorob( pose [-11.592 4.398 0 44.991]  )
+#autorob( pose [-12.903 2.877 0 44.991]  )
+#autorob( pose [-12.434 1.372 0 44.991]  )
+#autorob( pose [-10.555 3.358 0 44.991]  )
 
-autorob( pose [-9.516 3.311 0 44.991] kjoules 400 )
-autorob( pose [-12.308 3.949 0 44.991] kjoules 400 )
-autorob( pose [-13.185 3.682 0 44.991] kjoules 400 )
-autorob( pose [-13.014 2.167 0 44.991] kjoules 400 )
-autorob( pose [-13.719 2.634 0 44.991] kjoules 400 )
-autorob( pose [-13.633 1.986 0 44.991] kjoules 400 )
-autorob( pose [-13.138 1.385 0 44.991] kjoules 400 )
-autorob( pose [-12.490 0.575 0 44.991] kjoules 400 )
-autorob( pose [-11.775 0.699 0 44.991] kjoules 400 )
-autorob( pose [-11.641 2.586 0 44.991] kjoules 400 )
+#autorob( pose [-9.516 3.311 0 44.991]  )
+#autorob( pose [-12.308 3.949 0 44.991]  )
+#autorob( pose [-13.185 3.682 0 44.991]  )
+#autorob( pose [-13.014 2.167 0 44.991]  )
+#autorob( pose [-13.719 2.634 0 44.991]  )
+#autorob( pose [-13.633 1.986 0 44.991]  )
+#autorob( pose [-13.138 1.385 0 44.991]  )
+#autorob( pose [-12.490 0.575 0 44.991]  )
+#autorob( pose [-11.775 0.699 0 44.991]  )
+#autorob( pose [-11.641 2.586 0 44.991]  )
 
-autorob( pose [-14.296 4.967 0 -113.433] kjoules 200 )
-autorob( pose [-13.218 5.200 0 -105.066] kjoules 200 )
-autorob( pose [-17.084 7.178 0 -113.959] kjoules 200 )
-autorob( pose [-15.829 3.428 0 -100.843] kjoules 200 )
-autorob( pose [-16.001 6.965 0 -116.077] kjoules 200 )
-autorob( pose [-13.589 6.170 0 -108.098] kjoules 200 )
-autorob( pose [-15.665 7.690 0 35.677] kjoules 200 )
-autorob( pose [-18.633 7.374 0 -100.002] kjoules 200 )
-autorob( pose [-14.987 3.480 0 -97.678] kjoules 200 )
-autorob( pose [-16.445 7.660 0 68.821] kjoules 200 )
+#autorob( pose [-14.296 4.967 0 -113.433]  )
+#autorob( pose [-13.218 5.200 0 -105.066]  )
+#autorob( pose [-17.084 7.178 0 -113.959]  )
+#autorob( pose [-15.829 3.428 0 -100.843]  )
+#autorob( pose [-16.001 6.965 0 -116.077]  )
+#autorob( pose [-13.589 6.170 0 -108.098]  )
+#autorob( pose [-15.665 7.690 0 35.677]  )
+#autorob( pose [-18.633 7.374 0 -100.002]  )
+#autorob( pose [-14.987 3.480 0 -97.678]  )
+#autorob( pose [-16.445 7.660 0 68.821]  )
 
-autorob( pose [-17.222 6.291 0 35.145] kjoules 200 )
-autorob( pose [-17.885 7.198 0 35.145] kjoules 200 )
-autorob( pose [-17.254 8.218 0 35.145] kjoules 200 )
-autorob( pose [-17.060 5.498 0 35.145] kjoules 200 )
-autorob( pose [-18.047 6.227 0 35.145] kjoules 200 )
-autorob( pose [-16.930 4.640 0 35.145] kjoules 200 )
-autorob( pose [-17.966 5.417 0 35.145] kjoules 200 )
-autorob( pose [-15.927 4.640 0 35.145] kjoules 200 )
-autorob( pose [-14.988 4.236 0 35.145] kjoules 200 )
-autorob( pose [-15.706 6.151 0 35.145] kjoules 200 )
+#autorob( pose [-17.222 6.291 0 35.145]  )
+#autorob( pose [-17.885 7.198 0 35.145]  )
+#autorob( pose [-17.254 8.218 0 35.145]  )
+#autorob( pose [-17.060 5.498 0 35.145]  )
+#autorob( pose [-18.047 6.227 0 35.145]  )
+#autorob( pose [-16.930 4.640 0 35.145]  )
+#autorob( pose [-17.966 5.417 0 35.145]  )
+#autorob( pose [-15.927 4.640 0 35.145]  )
+#autorob( pose [-14.988 4.236 0 35.145]  )
+#autorob( pose [-15.706 6.151 0 35.145]  )
 
-autorob( pose [-16.419 6.225 0 35.145] kjoules 200 )
-autorob( pose [-14.574 5.868 0 35.145] kjoules 200 )
-autorob( pose [-18.271 8.274 0 35.145] kjoules 200 )
-autorob( pose [-15.801 8.625 0 35.145] kjoules 200 )
-autorob( pose [-16.598 8.835 0 35.145] kjoules 200 )
-autorob( pose [-14.417 6.791 0 35.145] kjoules 200 )
-autorob( pose [-15.235 6.801 0 35.145] kjoules 200 )
-autorob( pose [-15.444 5.260 0 35.145] kjoules 200 )
-autorob( pose [-16.598 5.187 0 35.145] kjoules 200 )
-autorob( pose [-16.461 4.159 0 35.145] kjoules 200 )
+#autorob( pose [-16.419 6.225 0 35.145]  )
+#autorob( pose [-14.574 5.868 0 35.145]  )
+#autorob( pose [-18.271 8.274 0 35.145]  )
+#autorob( pose [-15.801 8.625 0 35.145]  )
+#autorob( pose [-16.598 8.835 0 35.145]  )
+#autorob( pose [-14.417 6.791 0 35.145]  )
+#autorob( pose [-15.235 6.801 0 35.145]  )
+#autorob( pose [-15.444 5.260 0 35.145]  )
+#autorob( pose [-16.598 5.187 0 35.145]  )
+#autorob( pose [-16.461 4.159 0 35.145]  )
 
-autorob( pose [-8.171 13.723 0 -139.469] kjoules 300 )
-autorob( pose [-8.887 12.177 0 -88.070] kjoules 300 )
-autorob( pose [-7.357 15.181 0 -94.395] kjoules 300 )
-autorob( pose [-7.970 15.169 0 -167.188] kjoules 300 )
-autorob( pose [-7.482 13.834 0 -94.067] kjoules 300 )
-autorob( pose [-8.009 13.153 0 -163.083] kjoules 300 )
-autorob( pose [-6.846 13.156 0 -137.774] kjoules 300 )
-autorob( pose [-8.349 14.435 0 -136.374] kjoules 300 )
-autorob( pose [-6.752 14.083 0 -101.104] kjoules 300 )
-autorob( pose [-6.452 15.332 0 -131.336] kjoules 300 )
+#autorob( pose [-8.171 13.723 0 -139.469]  )
+#autorob( pose [-8.887 12.177 0 -88.070]  )
+#autorob( pose [-7.357 15.181 0 -94.395]  )
+#autorob( pose [-7.970 15.169 0 -167.188]  )
+#autorob( pose [-7.482 13.834 0 -94.067]  )
+#autorob( pose [-8.009 13.153 0 -163.083]  )
+#autorob( pose [-6.846 13.156 0 -137.774]  )
+#autorob( pose [-8.349 14.435 0 -136.374]  )
+#autorob( pose [-6.752 14.083 0 -101.104]  )
+#autorob( pose [-6.452 15.332 0 -131.336]  )
 
-autorob( pose [-9.099 17.489 0 -143.181] kjoules 300 )
-autorob( pose [-9.610 15.854 0 -143.181] kjoules 300 )
-autorob( pose [-9.589 16.569 0 -143.181] kjoules 300 )
-autorob( pose [-10.059 15.221 0 -143.181] kjoules 300 )
-autorob( pose [-10.264 16.099 0 -143.181] kjoules 300 )
-autorob( pose [-9.814 17.325 0 -143.181] kjoules 300 )
-autorob( pose [-8.271 16.840 0 -143.181] kjoules 300 )
-autorob( pose [-8.629 17.999 0 -143.181] kjoules 300 )
-autorob( pose [-9.467 18.142 0 -143.181] kjoules 300 )
-autorob( pose [-9.079 16.263 0 -143.181] kjoules 300 )
+#autorob( pose [-9.099 17.489 0 -143.181]  )
+#autorob( pose [-9.610 15.854 0 -143.181]  )
+#autorob( pose [-9.589 16.569 0 -143.181]  )
+#autorob( pose [-10.059 15.221 0 -143.181]  )
+#autorob( pose [-10.264 16.099 0 -143.181]  )
+#autorob( pose [-9.814 17.325 0 -143.181]  )
+#autorob( pose [-8.271 16.840 0 -143.181]  )
+#autorob( pose [-8.629 17.999 0 -143.181]  )
+#autorob( pose [-9.467 18.142 0 -143.181]  )
+#autorob( pose [-9.079 16.263 0 -143.181]  )
 
-autorob( pose [-9.196 15.409 0 -143.181] kjoules 300 )
-autorob( pose [-9.598 14.812 0 -143.181] kjoules 300 )
-autorob( pose [-9.304 14.280 0 -143.181] kjoules 300 )
-autorob( pose [-8.946 13.737 0 -143.181] kjoules 300 )
-autorob( pose [-8.761 13.140 0 -143.181] kjoules 300 )
-autorob( pose [-8.153 12.629 0 -143.181] kjoules 300 )
-autorob( pose [-7.393 12.618 0 -143.181] kjoules 300 )
-autorob( pose [-8.467 15.712 0 -143.181] kjoules 300 )
-autorob( pose [-7.762 16.132 0 -143.181] kjoules 300 )
-autorob( pose [-8.794 14.855 0 -143.181] kjoules 300 )
+#autorob( pose [-9.196 15.409 0 -143.181]  )
+#autorob( pose [-9.598 14.812 0 -143.181]  )
+#autorob( pose [-9.304 14.280 0 -143.181]  )
+#autorob( pose [-8.946 13.737 0 -143.181]  )
+#autorob( pose [-8.761 13.140 0 -143.181]  )
+#autorob( pose [-8.153 12.629 0 -143.181]  )
+#autorob( pose [-7.393 12.618 0 -143.181]  )
+#autorob( pose [-8.467 15.712 0 -143.181]  )
+#autorob( pose [-7.762 16.132 0 -143.181]  )
+#autorob( pose [-8.794 14.855 0 -143.181]  )
 
