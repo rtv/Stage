@@ -53,16 +53,18 @@ InterfaceLaser::InterfaceLaser( player_devaddr_t addr,
 void InterfaceLaser::Publish( void )
 {
   ModelLaser* mod = (ModelLaser*)this->mod;
-	ModelLaser::Sample* samples = mod->GetSamples(NULL);
-	
+  
+  const std::vector<ModelLaser::Sample>& samples = mod->GetSamples();
+  
+  uint32_t sample_count = samples.size();
   // don't publish anything until we have some real data
-  if( samples == NULL )
+  if( sample_count == 0 )
     return;
 
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
-
-	ModelLaser::Config cfg = mod->GetConfig();
+  
+  ModelLaser::Config cfg = mod->GetConfig();
   pdata.min_angle = -cfg.fov/2.0;
   pdata.max_angle = +cfg.fov/2.0;
   pdata.resolution = cfg.fov / cfg.sample_count;

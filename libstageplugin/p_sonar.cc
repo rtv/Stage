@@ -60,17 +60,19 @@ void InterfaceSonar::Publish( void )
   player_sonar_data_t sonar;
   memset( &sonar, 0, sizeof(sonar) );
   
-  size_t count = mod->sensors.size();
+  const std::vector<Sensor>& sensors = mod->GetSensors();
+  
+  size_t count = sensors.size();
   
   if( count > 0 )
     {      
       //if( son->power_on ) // set with a sonar config
       {
-				sonar.ranges_count = count;
-				sonar.ranges = new float[count];
+		  sonar.ranges_count = count;
+		  sonar.ranges = new float[count];
 				
-				for( unsigned int i=0; i<count; i++ )
-					sonar.ranges[i] = mod->sensors[i].range;
+		  for( unsigned int i=0; i<count; i++ )
+					sonar.ranges[i] = sensors[i].range;
       } 
     }
   
@@ -94,8 +96,9 @@ int InterfaceSonar::ProcessMessage( QueuePointer & resp_queue,
 			    this->addr) )
     {
       ModelRanger* mod = (ModelRanger*)this->mod;
-
-      size_t count = mod->sensors.size();
+		
+		const std::vector<Sensor>& sensors = mod->GetSensors();  
+		size_t count = sensors.size();
       
       // convert the ranger data into Player-format sonar poses	
       player_sonar_geom_t pgeom;
@@ -107,12 +110,12 @@ int InterfaceSonar::ProcessMessage( QueuePointer & resp_queue,
       for( unsigned int i=0; i<count; i++ )
 				{
 					// fill in the geometry data formatted player-like
-					pgeom.poses[i].px = mod->sensors[i].pose.x;	  
-					pgeom.poses[i].py = mod->sensors[i].pose.y;	  
+					pgeom.poses[i].px = sensors[i].pose.x;	  
+					pgeom.poses[i].py = sensors[i].pose.y;	  
 					pgeom.poses[i].pz = 0;
 					pgeom.poses[i].ppitch = 0;
 					pgeom.poses[i].proll = 0;
-					pgeom.poses[i].pyaw = mod->sensors[i].pose.a;	    
+					pgeom.poses[i].pyaw = sensors[i].pose.a;	    
 				}
       
       this->driver->Publish( this->addr, resp_queue, 

@@ -16,7 +16,7 @@ quit_time 3600 # 1 hour of simulated time
 
 resolution 0.02
 
-threads 2
+threads 8
 
 # configure the GUI window
 window
@@ -44,14 +44,16 @@ floorplan
 
 zone
 (
+  size [ 2 2 0 ]
   color "green"
   pose [ -7.000 -7.000 0 0 ]
   name "source"
-  ctrl "source"
+  ctrl "source  100 1"
 )
 
 zone
 (
+  size [ 2 2 0 ]
   color "red"
   pose [ 7.000 7.000 0 0 ]
   name "sink"
@@ -84,7 +86,7 @@ define charge_station model
     size [ 0.050 0.200 0.100 ]
     joules -1  # provides infinite energy
     give_watts 2000 
-    fiducial_return 2 # look for this in the fiducial sensor
+    fiducial_return 2 # look for this in the fiducial senso
 	 
 	 alwayson 1 # so we give charge without any explicit subscriber
    )
