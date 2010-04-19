@@ -1285,6 +1285,10 @@ void Canvas::draw()
 void Canvas::resize(int X,int Y,int W,int H) 
 {
   Fl_Gl_Window::resize(X,Y,W,H);
-  FixViewport(W,H);
+
+	if( ! init_done ) // hack - should capture a create event to do this rather thann have it in multiple places
+		InitGl();
+	
+	FixViewport(W,H);
   invalidate();
 }

@@ -21,11 +21,11 @@ threads 8
 # configure the GUI window
 window
 ( 
-  size [ 935.000 868.000 ] 
+  size [ 657.000 724.000 ] 
 
-  center [ -3.025 -8.459 ] 
+  center [ 1.180 -7.280 ] 
   rotate [ 0 0 ]
-  scale 6.445 
+  scale 5.859 
   
   show_data 1
   show_flags 1
@@ -45,26 +45,26 @@ floorplan
 
 
 zone( color "red"
-  pose [ 18 43 0 0 ]
+  pose [ 18.000 43.000 0 0 ]
   name "red_source"
   ctrl "source 100 10"
 )
 
 zone( color "DarkRed"
-  pose [ 42 43 0 0 ]
+  pose [ 42.000 43.000 0 0 ]
   name "red_sink"
   ctrl "sink"
 )
 zone
 (
   color "green"
-  pose [ 18 30 0 0 ]
+  pose [ 18.000 30.000 0 0 ]
   name "green_source"		  
   ctrl "source 200 10"
 )
 
 zone( color "DarkGreen"
-  pose [ 42 30 0 0 ]
+  pose [ 42.000 30.000 0 0 ]
   name "green_sink"		  
   ctrl "sink"
 )

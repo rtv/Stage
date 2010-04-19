@@ -113,7 +113,7 @@ public:
   double cost;
   
   Edge( Node* to, double cost=1.0 ) 
-	 : to(to), cost(cost) {}  
+		: to(to), cost(cost) {}  
 };
 
 class Node
@@ -168,7 +168,7 @@ public:
   bool GoodDirection( const Pose& pose, stg_meters_t range, stg_radians_t& heading_result )
   {
 	 // find the node with the lowest value within range of the given
-	 // pose and return the absolute heading from pose that node 
+	 // pose and return the absolute heading from pose to that node 
 	 
 	 if( nodes.empty() )
 		return 0; // a null guess
@@ -184,7 +184,7 @@ public:
 		  
 		  // if it's in range, and either its the first we have found,
 		  // or it has a lower value than the current best
-		  if( dist < range &&  
+		  if( dist < range &&
 				( best_node == NULL || node->value < best_node->value ))
 			 {
 				best_node = node;
@@ -196,7 +196,7 @@ public:
 		  printf( "FASR warning: no nodes in range" );
 		  return false;
 		}
-	 
+
 	 //else
 	 heading_result = atan2( best_node->pose.y - pose.y,
 									 best_node->pose.x - pose.x );
@@ -250,14 +250,14 @@ void Node::Draw() const
   //glBegin( GL_POINTS );
   //glVertex2f( pose.x, pose.y );
   //glEnd();
-  
-  glBegin( GL_LINES );
-  FOR_EACH( it, edges )
-	 { 
-		glVertex2f( pose.x, pose.y );
-		glVertex2f( (*it)->to->pose.x, (*it)->to->pose.y );
-	 }
-  glEnd();
+
+	glBegin( GL_LINES );
+	FOR_EACH( it, edges )
+		{ 
+			glVertex2f( pose.x, pose.y );
+			glVertex2f( (*it)->to->pose.x, (*it)->to->pose.y );
+		}
+	glEnd();
 }
 
 unsigned int MetersToCell( stg_meters_t m,  stg_meters_t size_m, unsigned int size_c )
@@ -344,8 +344,6 @@ public:
 	 ranger( (ModelRanger*)pos->GetUnusedModelOfType( "ranger" )),
 	 fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
 	 task(random() % tasks.size() ), // choose a task at random
-	 //source( tasks[task].source ), 
-	 //sink( tasks[task].sink ), 
 	 fuel_zone(fuel),
 	 pool_zone(pool),
 	 avoidcount(0), 
