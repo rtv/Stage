@@ -189,7 +189,7 @@ zone( color "orange"
       gui_move 0
 )
 
-zone( color "gray5" 
+zone( color "wheat" 
 		pose [ -19.459 -42.499 0 0 ]
 		name "pool_zone"
 		size [ 1.000 1.000 0.010 ] 

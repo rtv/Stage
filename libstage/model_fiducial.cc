@@ -11,7 +11,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define DEBUG 0
+#undef DEBUG 
 
 #include "stage.hh"
 #include "option.hh"
@@ -252,7 +252,7 @@ void ModelFiducial::Load( void )
 	max_range_anon        = wf->ReadLength( wf_entity, "range_max",    max_range_anon );
 	max_range_id          = wf->ReadLength( wf_entity, "range_max_id", max_range_id );
 	fov                   = wf->ReadAngle ( wf_entity, "fov",          fov );
-  ignore_zloc            = wf->ReadInt   ( wf_entity, "ignore_zloc",  ignore_zloc);
+  ignore_zloc            = wf->ReadInt  ( wf_entity, "ignore_zloc",  ignore_zloc);
 }  
 
 
