@@ -114,17 +114,17 @@ public: // methods
 
 
 	// constructor just initialises private data
-	AStarSearch( int MaxNodes = 2000 ) :
-		m_AllocateNodeCount(0),
+ AStarSearch( int MaxNodes = 2000 ) :
 #if USE_FSA_MEMORY
-		m_FixedSizeAllocator( MaxNodes ),
+	m_FixedSizeAllocator( MaxNodes ),
 #endif
 		m_State( SEARCH_STATE_NOT_INITIALISED ),
 		m_CurrentSolutionNode( NULL ),
+		m_AllocateNodeCount(0),
 		m_CancelRequest( false )
-	{
-	}
-
+			{
+			}
+	
 	// call at any time to cancel the search and free up all the memory
 	void CancelSearch()
 	{
