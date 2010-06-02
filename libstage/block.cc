@@ -218,10 +218,10 @@ void Block::RemoveFromCellArray( CellPtrVec *cells )
 	 {
 		Cell* cell = *it;
 
-		// this special-case test is faster for worlds with simple models, which
-		// are the ones we want to be really fast. It's a small extra cost
-		// for worlds with several models in each cell. It gives a 5%
-		// speed increase in fasr.world.
+		// this special-case test is faster for worlds with simple models,
+		// which are the ones we want to be really fast. It's a small
+		// extra cost for worlds with several models in each cell. It
+		// gives a 5% overall speed increase in fasr.world.
 		if( (cell->blocks.size() == 1) &&
 			 (cell->blocks[0] == this) ) // special but common case
 		  {
