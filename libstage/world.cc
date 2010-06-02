@@ -508,7 +508,7 @@ void World::CallUpdateCallbacks()
   FOR_EACH( it, cb_list )
     {  
       if( ((*it).first )( this, (*it).second ) )
-		  it = cb_list.erase( it );
+				it = cb_list.erase( it );
     }      
 }
 

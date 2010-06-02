@@ -196,9 +196,9 @@ public:
     
 	 // if the gripper is down and open and we're away from the charger, undock is finished
 	 if( //gripper_data.paddles == ModelGripper::PADDLE_OPEN &&
-		  //gripper_data.lift == ModelGripper::LIFT_DOWN &&
-		  charger_range > back_off_distance )	 
-		mode = MODE_WORK;  
+		   //gripper_data.lift == ModelGripper::LIFT_DOWN &&
+		   charger_range > back_off_distance )	 
+		 mode = MODE_WORK;  
   }
 
   bool ObstacleAvoid()
@@ -449,18 +449,18 @@ public:
 	 return 0; // run again
   }
 
-  static int BlobFinderUpdate( ModelBlobfinder* blobmod, Robot* robot )
-  {  
-	 unsigned int blob_count = 0;
-	 const ModelBlobfinder::Blob* blobs = blobmod->GetBlobs( &blob_count );
+//   static int BlobFinderUpdate( ModelBlobfinder* blobmod, Robot* robot )
+//   {  
+// 	 unsigned int blob_count = 0;
+// 	 const ModelBlobfinder::Blob* blobs = blobmod->GetBlobs( &blob_count );
 
-	 if( blobs && (blob_count>0) )
-		{
-		  printf( "%s sees %u blobs\n", blobmod->Token(), blob_count );
-		}
+// 	 if( blobs && (blob_count>0) )
+// 		{
+// 		  printf( "%s sees %u blobs\n", blobmod->Token(), blob_count );
+// 		}
 
-	 return 0;
-  }
+// 	 return 0;
+//   }
 
 //   static int GripperUpdate( ModelGripper* grip, Robot* robot )
 //   {
@@ -478,17 +478,18 @@ public:
 // 	 return 0;
 //   }
   
-  static int FlagIncr( Model* mod, Robot* robot )
-  {
-	 printf( "model %s collected flag\n", mod->Token() );
-	 return 0;
-  }
+//   static int FlagIncr( Model* mod, Robot* robot )
+//   {
+// 	 printf( "model %s collected flag\n", mod->Token() );
+// 	 return 0;
+//   }
 
-  static int FlagDecr( Model* mod, Robot* robot )
-  {
-	 printf( "model %s dropped flag\n", mod->Token() );
-	 return 0;
-  }
+//   static int FlagDecr( Model* mod, Robot* robot )
+//   {
+// 	 printf( "model %s dropped flag\n", mod->Token() );
+// 	 return 0;
+//   }
+
 };
 
 // Stage calls this when the model starts up

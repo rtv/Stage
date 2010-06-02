@@ -126,38 +126,41 @@ bool MapSearchNode::GetSuccessors( AStarSearch<MapSearchNode> *astarsearch,
 	
 	MapSearchNode NewNode;
 
+	int ix = (int)x;
+	int iy = (int)y;
+
 	// push each possible move except allowing the search to go backwards
 
-	if( (GetMap( x-1, y ) < 9) 
-		&& !((parent_x == x-1) && (parent_y == y))
+	if( (GetMap( ix-1, iy ) < 9u) 
+			&& !((parent_x == ix-1) && (parent_y == iy))
 	  ) 
 	{
-		NewNode = MapSearchNode( x-1, y );
+		NewNode = MapSearchNode( ix-1, iy );
 		astarsearch->AddSuccessor( NewNode );
 	}	
 
-	if( (GetMap( x, y-1 ) < 9) 
-		&& !((parent_x == x) && (parent_y == y-1))
+	if( (GetMap( ix, iy-1 ) < 9u) 
+		&& !((parent_x == ix) && (parent_y == iy-1))
 	  ) 
 	{
-		NewNode = MapSearchNode( x, y-1 );
+		NewNode = MapSearchNode( ix, iy-1 );
 		astarsearch->AddSuccessor( NewNode );
 	}	
 
-	if( (GetMap( x+1, y ) < 9)
-		&& !((parent_x == x+1) && (parent_y == y))
+	if( (GetMap( ix+1, iy ) < 9u)
+		&& !((parent_x == ix+1) && (parent_y == iy))
 	  ) 
 	{
-		NewNode = MapSearchNode( x+1, y );
+		NewNode = MapSearchNode( ix+1, iy );
 		astarsearch->AddSuccessor( NewNode );
 	}	
 
 		
-	if( (GetMap( x, y+1 ) < 9) 
-		&& !((parent_x == x) && (parent_y == y+1))
+	if( (GetMap( ix, iy+1 ) < 9u) 
+		&& !((parent_x == ix) && (parent_y == iy+1))
 		)
 	{
-		NewNode = MapSearchNode( x, y+1 );
+		NewNode = MapSearchNode( ix, iy+1 );
 		astarsearch->AddSuccessor( NewNode );
 	}	
 
@@ -180,8 +183,8 @@ float MapSearchNode::GetCost( MapSearchNode &successor )
 #include "astar.h"
 
 bool astar( uint8_t* map, 
-				unsigned int width, 
-				unsigned int height,
+				uint32_t width, 
+				uint32_t height,
 				const point_t start, 
 				const point_t goal, 
 				std::vector<point_t>& path )

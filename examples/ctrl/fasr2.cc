@@ -162,14 +162,16 @@ private:
 	class GraphVis : public Visualizer
 	{
 	public:
-		Graph& graph;
+		Graph** graphpp;
 		
-		GraphVis( Graph& graph ) 
-			: Visualizer( "graph", "vis_graph" ), graph(graph) {}
+		GraphVis( Graph** graphpp ) 
+			: Visualizer( "graph", "vis_graph" ), graphpp(graphpp) {}
 		virtual ~GraphVis(){}
 		
 		virtual void Visualize( Model* mod, Camera* cam )
 		{
+			if( *graphpp == NULL )
+				return;
 			
 			glPushMatrix();
 			
@@ -181,7 +183,7 @@ private:
 			c.a = 0.4;
 			
 			mod->PushColor( c );
-			graph.Draw();
+			(*graphpp)->Draw();
 			mod->PopColor();
 			
 			glPopMatrix();
@@ -222,7 +224,7 @@ private:
   Model* goal;
   Pose cached_goal_pose;
 
-  Graph graph;
+  Graph* graphp;
   GraphVis graphvis;
   Node* last_node;
   unsigned int node_interval;
@@ -265,8 +267,8 @@ public:
 		docked_angle(0),
 		goal(tasks[task].source),
 		cached_goal_pose(),
-		graph(),
-		graphvis( graph ),
+		graphp(NULL),
+		graphvis( &graphp ),
 		last_node( NULL ),
 		node_interval( 20 ),
 		node_interval_countdown( node_interval ),
@@ -365,7 +367,42 @@ public:
 		Enable( fiducial, fiducial_sub, on );
   }
 
-  void Plan( Pose sp )
+	static std::map< std::pair<uint64_t,uint64_t>, Graph*> plancache;
+	
+	void CachePlan( const point_t& start, const point_t& goal, Graph* graph )
+	{
+		//printf( "cachibng plan from (%d,%d) to (%d,%d)\n", 
+		//			start.x, start.y, goal.x, goal.y );
+		
+		const uint64_t s = ((uint64_t)start.x << 32) + start.y;
+		const uint64_t g = ((uint64_t)goal.x << 32) + goal.y;
+		
+		std::pair<uint64_t,uint64_t> key(s,g);
+
+		// store in map
+		plancache[key] = graph;
+	}
+
+	Graph* LookupPlan( const point_t& start, const point_t& goal )
+	{
+		//printf( "looking up plan from (%d,%d) to (%d,%d)\n", 
+		//			start.x, start.y, goal.x, goal.y );
+		
+		const uint64_t s = ((uint64_t)start.x << 32) + start.y;
+		const uint64_t g = ((uint64_t)goal.x << 32) + goal.y;
+		
+		std::pair<uint64_t,uint64_t> key(s,g);
+
+		// store in map
+		Graph* plan = plancache[key];
+
+		//printf( "plan %s\n", plan ? "found" : "not found" );
+
+		return plan;
+	}
+
+
+ void Plan( Pose sp )
   {
 		// change my color to that of my destination
 		//pos->SetColor( dest->GetColor() );
@@ -382,46 +419,66 @@ public:
 		//printf( "searching to   (%.2f, %.2f) [%d, %d]\n", sp.x, sp.y, goal.x, goal.y );
 		
 		// astar() is not reentrant, so we protect it thus
+		
+		//graph.nodes.clear(); // whatever happens, we clear the old plan
+		
+
 		pthread_mutex_lock( &planner_mutex );
 		
-		std::vector<point_t> path;
-		bool result = astar( map_data, 
-												 map_width, 
-												 map_height, 
-												 start,
-												 goal,
-												 path );
-
+		// check to see if we have a path planned for these positions already
+		//printf( "plancache @ %p size %d\n", &plancache, (int)plancache.size() );
+		
+		graphp = LookupPlan( start, goal );
+		
+		if( ! graphp ) // no plan cached
+			{
+				std::vector<point_t> path;
+				bool result = astar( map_data, 
+														 map_width, 
+														 map_height, 
+														 start,
+														 goal,
+														 path );				
+				
+				//	if( ! result )
+				//printf( "FASR warning: plan failed to find path from (%.2f,%.2f) to (%.2f,%.2f)\n",
+				//				pose.x, pose.y, sp.x, sp.y );
+				
+				
+				graphp = new Graph();
+				
+				unsigned int dist = 0;
+				
+				for( std::vector<point_t>::const_reverse_iterator rit = path.rbegin();
+						 rit != path.rend();
+						 ++rit )			
+					{	
+						//printf( "%d, %d\n", it->x, it->y );
+						
+						Node* node = new Node( Pose( CellToMeters(rit->x, g.size.x, map_width ),
+																				 CellToMeters(rit->y, g.size.y, map_height),
+																				 0, 0 ),
+																	 dist++ ); // value stored at node
+						
+						graphp->AddNode( node );
+						
+						if( last_node )
+							last_node->AddEdge( new Edge( node ) );
+						
+						last_node = node;
+					}	 
+				
+				CachePlan( start, goal, graphp );
+			}
+		else
+			{
+				//puts( "FOUND CACHED PLAN" );
+			}
+				
 		pthread_mutex_unlock( &planner_mutex );
-	 
-		if( ! result )
-			printf( "FASR warning: plan failed to find path from (%.2f,%.2f) to (%.2f,%.2f)\n",
-							pose.x, pose.y, sp.x, sp.y );
-
-		graph.nodes.clear();
-	 
-		unsigned int dist = 0;
-
-		for( std::vector<point_t>::const_reverse_iterator rit = path.rbegin();
-				 rit != path.rend();
-				 ++rit )			
-			{	
-				//printf( "%d, %d\n", it->x, it->y );
-		 
-				Node* node = new Node( Pose( CellToMeters(rit->x, g.size.x, map_width ),
-																		 CellToMeters(rit->y, g.size.y, map_height),
-																		 0, 0 ),
-															 dist++ ); // value stored at node
+	}
+	
 		
-				graph.AddNode( node );
-		
-				if( last_node )
-					last_node->AddEdge( new Edge( node ) );
-		
-				last_node = node;
-			}	 
-  }
-  
   void Dock()
   {
 		const stg_meters_t creep_distance = 0.5;
@@ -650,7 +707,8 @@ public:
 				
 				// if the graph fails to offer advice or the goal has moved a
 				// ways since last time we planned
-				if( (graph.GoodDirection( pose, 4.0, a_goal ) == 0) || 
+				if( graphp == NULL || 
+						(graphp->GoodDirection( pose, 4.0, a_goal ) == 0) || 
 						(goal->GetPose().Distance2D( cached_goal_pose ) > 2.0) )
 					{
 						//printf( "%s replanning from (%.2f,%.2f) to %s at (%.2f,%.2f) in Work()\n", 
@@ -668,7 +726,7 @@ public:
 					{ 
 						EnableFiducial(true);
 				
-						while( graph.GoodDirection( pose, 4.0, a_goal ) == 0 )
+						while( graphp->GoodDirection( pose, 4.0, a_goal ) == 0 )
 							{
 								printf( "%s replanning in Work()\n", pos->Token() );
 							}
@@ -930,6 +988,8 @@ const unsigned int Robot::map_width( 50 );
 const unsigned int Robot::map_height( 50 );
 uint8_t* Robot::map_data( NULL );
 Model* Robot::map_model( NULL );
+
+std::map< std::pair<uint64_t,uint64_t>, Robot::Graph*> Robot::plancache;
 
 std::vector<Robot::Task> Robot::tasks;
 
