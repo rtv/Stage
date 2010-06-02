@@ -60,7 +60,7 @@ void InterfaceSonar::Publish( void )
   player_sonar_data_t sonar;
   memset( &sonar, 0, sizeof(sonar) );
   
-  const std::vector<Sensor>& sensors = mod->GetSensors();
+  const std::vector<ModelRanger::Sensor>& sensors = mod->GetSensors();
   
   size_t count = sensors.size();
   
@@ -97,7 +97,7 @@ int InterfaceSonar::ProcessMessage( QueuePointer & resp_queue,
     {
       ModelRanger* mod = (ModelRanger*)this->mod;
 		
-		const std::vector<Sensor>& sensors = mod->GetSensors();  
+		const std::vector<ModelRanger::Sensor>& sensors = mod->GetSensors();  
 		size_t count = sensors.size();
       
       // convert the ranger data into Player-format sonar poses	
