@@ -16,7 +16,7 @@ IF( WEBSIM_FOUND )
   INSTALL(TARGETS webstage RUNTIME DESTINATION bin )
 
 ELSE( WEBSIM_FOUND )
-  MESSAGE( ${INDENT} "WebSim not detected. If WebSim is installed but not detected, check your PKG_CONFIG_PATH." )
+  MESSAGE( STATUS ${INDENT} "WebSim not detected. If WebSim is installed but not detected, check your PKG_CONFIG_PATH." )
 ENDIF( WEBSIM_FOUND )
 
 
