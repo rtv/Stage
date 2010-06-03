@@ -491,8 +491,7 @@ public:
 				//puts( "FOUND CACHED PLAN" );
 			}
 				
-		printf( "hits/misses %.2f\n", hits/misses );
-
+		//printf( "hits/misses %.2f\n", hits/misses );
 		//pthread_mutex_unlock( &planner_mutex );
 	}
 	
