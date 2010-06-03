@@ -13,6 +13,7 @@ terms of the GNU General Public License version 2 or later:
 - Pooya Karimian (pooyak@sfu.ca)
 - Jeremy Asher (jra11@sfu.ca)
 - Alex Couture-Beil (asc17@sfu.ca)
+- Geoff Biggs (git@killbots.net)
 
 
 Many patches and bug reports have been contributed by users around the
