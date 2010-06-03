@@ -34,6 +34,7 @@ static  GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 static bool blur = true;
 
 static bool init_done = false;
+static bool texture_load_done = false;
 
 //GLuint glowTex;
 GLuint checkTex;
@@ -133,6 +134,14 @@ void Canvas::InitGl()
 
   blur = false;
   
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    
+  init_done = true; 
+}
+
+
+void Canvas::InitTextures()
+{
   // load textures
   std::string fullpath = FileManager::findFile( "assets/stall.png" );
   if ( fullpath == "" ) 
@@ -196,10 +205,8 @@ void Canvas::InitGl()
   
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
 					0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
-  
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    
-  init_done = true; 
+
+  texture_load_done = true;
 }
 
 
@@ -1246,6 +1253,8 @@ void Canvas::draw()
     { 
       if( ! init_done )
 		  InitGl();
+      if( ! texture_load_done )
+          InitTextures();
 		
       if( pCamOn == true ) 
 		  {

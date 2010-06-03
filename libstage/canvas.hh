@@ -110,6 +110,7 @@ namespace Stg
 
 	 void Screenshot();
 	 void InitGl();
+	 void InitTextures();
 	 void createMenuItems( Fl_Menu_Bar* menu, std::string path );
   
 	 void FixViewport(int W,int H);
