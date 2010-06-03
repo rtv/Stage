@@ -226,7 +226,6 @@ private:
 
   Graph* graphp;
   GraphVis graphvis;
-  Node* last_node;
   unsigned int node_interval;
   unsigned int node_interval_countdown;
   
@@ -269,7 +268,6 @@ public:
 		cached_goal_pose(),
 		graphp(NULL),
 		graphvis( &graphp ),
-		last_node( NULL ),
 		node_interval( 20 ),
 		node_interval_countdown( node_interval ),
 		fiducial_sub(false),		
@@ -369,15 +367,22 @@ public:
 
 	static std::map< std::pair<uint64_t,uint64_t>, Graph*> plancache;
 	
+
+	uint64_t Pt64( const point_t& pt)
+	{
+		// quantize the position a bit to reduce planning frequency
+		uint64_t x = pt.x / 2;
+		uint64_t y = pt.y / 2;
+		
+		return (x<<32) + y;
+	}
+
 	void CachePlan( const point_t& start, const point_t& goal, Graph* graph )
 	{
 		//printf( "cachibng plan from (%d,%d) to (%d,%d)\n", 
 		//			start.x, start.y, goal.x, goal.y );
-		
-		const uint64_t s = ((uint64_t)start.x << 32) + start.y;
-		const uint64_t g = ((uint64_t)goal.x << 32) + goal.y;
-		
-		std::pair<uint64_t,uint64_t> key(s,g);
+				
+		std::pair<uint64_t,uint64_t> key( Pt64(start),Pt64(goal));
 
 		// store in map
 		plancache[key] = graph;
@@ -388,10 +393,8 @@ public:
 		//printf( "looking up plan from (%d,%d) to (%d,%d)\n", 
 		//			start.x, start.y, goal.x, goal.y );
 		
-		const uint64_t s = ((uint64_t)start.x << 32) + start.y;
-		const uint64_t g = ((uint64_t)goal.x << 32) + goal.y;
 		
-		std::pair<uint64_t,uint64_t> key(s,g);
+		std::pair<uint64_t,uint64_t> key(Pt64(start),Pt64(goal));
 
 		// store in map
 		Graph* plan = plancache[key];
@@ -404,6 +407,9 @@ public:
 
  void Plan( Pose sp )
   {
+		static float hits = 0;
+		static float misses = 0;
+
 		// change my color to that of my destination
 		//pos->SetColor( dest->GetColor() );
 		
@@ -423,15 +429,22 @@ public:
 		//graph.nodes.clear(); // whatever happens, we clear the old plan
 		
 
-		pthread_mutex_lock( &planner_mutex );
+		//pthread_mutex_lock( &planner_mutex );
 		
 		// check to see if we have a path planned for these positions already
 		//printf( "plancache @ %p size %d\n", &plancache, (int)plancache.size() );
 		
+		//if( graphp )
+		//delete graphp;
+
 		graphp = LookupPlan( start, goal );
 		
+		
+
 		if( ! graphp ) // no plan cached
 			{
+				misses++;
+
 				std::vector<point_t> path;
 				bool result = astar( map_data, 
 														 map_width, 
@@ -449,6 +462,8 @@ public:
 				
 				unsigned int dist = 0;
 				
+				Node* last_node = NULL;
+
 				for( std::vector<point_t>::const_reverse_iterator rit = path.rbegin();
 						 rit != path.rend();
 						 ++rit )			
@@ -462,20 +477,23 @@ public:
 						
 						graphp->AddNode( node );
 						
-						if( last_node )
-							last_node->AddEdge( new Edge( node ) );
+ 						if( last_node )
+ 							last_node->AddEdge( new Edge( node ) );
 						
-						last_node = node;
+ 						last_node = node;
 					}	 
 				
 				CachePlan( start, goal, graphp );
 			}
 		else
 			{
+				hits++;
 				//puts( "FOUND CACHED PLAN" );
 			}
 				
-		pthread_mutex_unlock( &planner_mutex );
+		printf( "hits/misses %.2f\n", hits/misses );
+
+		//pthread_mutex_unlock( &planner_mutex );
 	}
 	
 		
@@ -708,7 +726,7 @@ public:
 				// if the graph fails to offer advice or the goal has moved a
 				// ways since last time we planned
 				if( graphp == NULL || 
-						(graphp->GoodDirection( pose, 4.0, a_goal ) == 0) || 
+						(graphp->GoodDirection( pose, 5.0, a_goal ) == 0) || 
 						(goal->GetPose().Distance2D( cached_goal_pose ) > 2.0) )
 					{
 						//printf( "%s replanning from (%.2f,%.2f) to %s at (%.2f,%.2f) in Work()\n", 
@@ -782,27 +800,6 @@ public:
 			}
 	 
 		Pose pose = pos->GetPose();
-
-#if 0	 
-		// when countdown reaches zero
-		if( --node_interval_countdown == 0 )
-			{
-				// reset countdown
-				node_interval_countdown = node_interval;
-		  
-				Node* node = new Node( pose );
-				graph.AddNode( node );
-		  
-				if( last_node )
-					last_node->AddEdge( new Edge( node ) );
-		  
-				last_node = node;
-		  
-				// limit the number of nodes
-				while( graph.nodes.size() > TRAIL_LENGTH_MAX )
-					graph.PopFront();			 
-			}
-#endif  
 
 	 
 		// assume we can't see the charger
