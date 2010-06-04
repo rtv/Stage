@@ -371,37 +371,22 @@ public:
 	uint64_t Pt64( const point_t& pt)
 	{
 		// quantize the position a bit to reduce planning frequency
-		uint64_t x = pt.x / 2;
-		uint64_t y = pt.y / 2;
+		uint64_t x = pt.x / 1;
+		uint64_t y = pt.y / 1;
 		
 		return (x<<32) + y;
 	}
-
+	
 	void CachePlan( const point_t& start, const point_t& goal, Graph* graph )
 	{
-		//printf( "cachibng plan from (%d,%d) to (%d,%d)\n", 
-		//			start.x, start.y, goal.x, goal.y );
-				
 		std::pair<uint64_t,uint64_t> key( Pt64(start),Pt64(goal));
-
-		// store in map
 		plancache[key] = graph;
 	}
-
+	
 	Graph* LookupPlan( const point_t& start, const point_t& goal )
 	{
-		//printf( "looking up plan from (%d,%d) to (%d,%d)\n", 
-		//			start.x, start.y, goal.x, goal.y );
-		
-		
 		std::pair<uint64_t,uint64_t> key(Pt64(start),Pt64(goal));
-
-		// store in map
-		Graph* plan = plancache[key];
-
-		//printf( "plan %s\n", plan ? "found" : "not found" );
-
-		return plan;
+		return plancache[key];		
 	}
 
 
@@ -438,8 +423,6 @@ public:
 		//delete graphp;
 
 		graphp = LookupPlan( start, goal );
-		
-		
 
 		if( ! graphp ) // no plan cached
 			{
@@ -726,7 +709,7 @@ public:
 				// ways since last time we planned
 				if( graphp == NULL || 
 						(graphp->GoodDirection( pose, 5.0, a_goal ) == 0) || 
-						(goal->GetPose().Distance2D( cached_goal_pose ) > 2.0) )
+						(goal->GetPose().Distance2D( cached_goal_pose ) > 0.5) )
 					{
 						//printf( "%s replanning from (%.2f,%.2f) to %s at (%.2f,%.2f) in Work()\n", 
 						//	  pos->Token(),
@@ -743,7 +726,7 @@ public:
 					{ 
 						EnableFiducial(true);
 				
-						while( graphp->GoodDirection( pose, 4.0, a_goal ) == 0 )
+						while( graphp->GoodDirection( pose, 5.0, a_goal ) == 0 )
 							{
 								printf( "%s replanning in Work()\n", pos->Token() );
 							}
@@ -907,7 +890,10 @@ public:
 					{
 						//puts( "dropping" );
 						// transfer a chunk between robot and goal
-						goal->PushFlag( pos->PopFlag() );		  
+
+						Model::Flag* f = pos->PopFlag();
+						f->SetColor( Color(0,1,0) ); // delivered flags are green
+						goal->PushFlag( f );		  
 				
 						if( pos->GetFlagCount() == 0 ) 
 							SetGoal( tasks[task].source ); // we're done dropping off

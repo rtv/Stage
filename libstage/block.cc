@@ -218,19 +218,41 @@ void Block::RemoveFromCellArray( CellPtrVec *cells )
 	 {
 		Cell* cell = *it;
 
-		// this special-case test is faster for worlds with simple models,
-		// which are the ones we want to be really fast. It's a small
-		// extra cost for worlds with several models in each cell. It
-		// gives a 5% overall speed increase in fasr.world.
-		if( (cell->blocks.size() == 1) &&
-			 (cell->blocks[0] == this) ) // special but common case
-		  {
-			 cell->blocks.clear(); // cheap
-		  }
-		else // the general but relatively expensive case
-		  {
-			 EraseAll( this, cell->blocks );		
-		  }
+ 		size_t len = cell->blocks.size();
+		if( len )
+			{
+#if 0		// Use conventional STL style		
+
+				// this special-case test is faster for worlds with simple models,
+				// which are the ones we want to be really fast. It's a small
+				// extra cost for worlds with several models in each cell. It
+				// gives a 5% overall speed increase in fasr.world.
+				
+				if( (cell->blocks.size() == 1) &&
+						(cell->blocks[0] == this) ) // special but common case
+					{
+						cell->blocks.clear(); // cheap
+					}
+				else // the general but relatively expensive case
+					{
+						EraseAll( this, cell->blocks );		
+					}
+#else		// attempt faster removal loop
+				// O(n) * low constant array element removal
+				// this C-style pointer work looks to be very slightly faster than the STL way
+				Block **start = &cell->blocks[0]; // start of array
+				Block **r     = &cell->blocks[0]; // read from here
+				Block **w     = &cell->blocks[0]; // write to here
+				
+				while( r < start + len ) // scan down array, skipping 'this' 
+					{
+						if( *r != this ) 
+							*w++ = *r;				
+						r++;
+					}
+				cell->blocks.resize( w-start );
+#endif
+			}
 		
 		--cell->region->count;
 		--cell->region->superregion->count;  	 	 
@@ -250,6 +272,9 @@ void Block::SwitchToTestedCells()
   // them
 
   // .. and see if that is faster than the current method
+
+	//printf( "rendered_cells %lu\n", rendered_cells->size() );
+	//printf( "candidate_cells %lu\n\n", candidate_cells->size() );	
 
   RemoveFromCellArray( rendered_cells );
 
@@ -306,9 +331,10 @@ void Block::GenerateCandidateCells()
   mod->LocalToPixels( mpts, gpts );
   
   for( unsigned int i=0; i<pt_count; i++ )
-	 mod->world->ForEachCellInLine( gpts[i], 
-											  gpts[(i+1)%pt_count], 
-											  *candidate_cells );  
+		mod->world->ForEachCellInLine( gpts[i], 
+																	 gpts[(i+1)%pt_count], 
+																	 *candidate_cells );  
+
   // set global Z
   Pose gpose = mod->GetGlobalPose();
   gpose.z += mod->geom.pose.z;

@@ -964,8 +964,8 @@ inline SuperRegion* World::GetSuperRegion( int32_t x, int32_t y )
 }
 
 void World::ForEachCellInLine( const stg_point_int_t& start,
-										 const stg_point_int_t& end,
-										 CellPtrVec& cells )
+															 const stg_point_int_t& end,
+															 CellPtrVec& cells )
 {  
   // line rasterization adapted from Cohen's 3D version in
   // Graphics Gems II. Should be very fast.  
@@ -1002,9 +1002,9 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
       while( (cx>=0) && (cx<REGIONWIDTH) && 
 				 (cy>=0) && (cy<REGIONWIDTH) && 
 				 n > 0 )
-		  {					
-			 // find the cell at this location, then add it to the vector
-			 cells.push_back( c );
+				{					
+					// find the cell at this location, then add it to the vector,				
+					cells.push_back( c );
 					
 			 // cleverly skip to the next cell (now it's safe to
 			 // manipulate the cell pointer)

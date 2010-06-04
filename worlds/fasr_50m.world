@@ -1,0 +1,441 @@
+
+# FASR demo world 
+# Authors: Richard Vaughan
+# $Id: fasr.world,v 1.4 2008-04-01 23:57:41 rtv Exp $
+
+include "pioneer.inc"
+include "map.inc"
+include "sick.inc"
+
+speedup -1.000 # 10.000
+paused 0
+
+# time at which to pause (in GUI mode) or quit (in headless mode) the simulation
+# quit_time 3600 # 1 hour of simulated time
+quit_time 500 
+
+
+resolution 0.02
+
+threads 4
+
+# configure the GUI window
+window
+( 
+  size [ 1055.000 1000.000 ] 
+
+  center [ 0.746 -1.956 ] 
+  rotate [ 0 0 ]
+  scale 14.438 
+  
+  show_data 0
+  show_flags 0
+
+  # interval 50
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "cave" 
+  pose [0 0 0 0]
+  size [50.000 50.000 0.600]
+  bitmap "bitmaps/cave.png"
+)
+
+
+define smallzone zone (  size [ 2.000 2.000 0.020 ] )
+
+smallzone( color "red"
+  pose [ 9.304 22.996 0 0 ]
+  name "red_source"
+  ctrl "source 50 10"
+)
+
+smallzone( color "DarkRed"
+  pose [ 22.746 23.241 0 0 ]
+  name "red_sink"
+  ctrl "sink"
+)
+smallzone
+(
+  color "green"
+  pose [ 9.567 17.430 0 0 ]
+  name "green_source"		  
+  ctrl "source 100 10"
+)
+
+smallzone( color "DarkGreen"
+  pose [ 22.913 17.035 0 0 ]
+  name "green_sink"		  
+  ctrl "sink"
+)
+
+smallzone( color "blue"
+  pose [ -6.474 -18.383 0 0 ]
+  name "blue_source"
+  ctrl "source 100 10"
+)
+
+smallzone( color "DarkBlue"
+  pose [ 23.469 -11.196 0 0 ]
+  name "blue_sink"
+  ctrl "sink"
+)
+
+
+smallzone( color "yellow"
+  pose [ -21.895 -9.333 0 0 ]
+  name "yellow_source"
+  ctrl "source 100 10"
+)
+
+smallzone( color_rgba [ 0.8 0.8 0 1 ]
+  pose [ -22.024 22.444 0 0 ]
+  name "yellow_sink"
+  ctrl "sink"
+)
+
+smallzone( color "cyan"
+  pose [ -14.288 1.781 0 0 ]
+  name "cyan_source"
+  ctrl "source 100 10"
+)
+
+smallzone( color "DarkCyan"
+  pose [ 23.173 13.886 0 0 ]
+  name "cyan_sink"
+  ctrl "sink"
+)
+
+smallzone( color "magenta"
+  pose [ -5.333 -3.861 0 0 ]
+  name "magenta_source"
+  ctrl "source 100 10" 
+)
+
+smallzone( color "DarkMagenta"
+  pose [ 22.228 -5.847 0 0 ]
+  name "magenta_sink"
+  ctrl "sink"
+)
+
+
+define charging_bump model
+(
+  pose [0.240 0 -0.100 0 ] 
+  size [0.120 0.050 0.100] 
+  take_watts 1000.0 
+  color "orange" 
+  obstacle_return 0
+)
+
+define charge_station model
+(  
+  size [ 0.100 0.100 0.300 ]
+  color "purple"
+  
+  laser_return 0
+  obstacle_return 0
+  fiducial_return 2 # look for this in the fiducial sensor
+
+  # side blocks to restrict view angle
+  #model( color "purple" size [0.100 0.050 0.250] pose [ 0 0.100 0 0 ] )
+  #model( color "purple" size [0.100 0.050 0.250] pose [ 0 -0.100 0 0 ] ) 
+   
+   kjoules -1  # provides infinite energy
+   give_watts 1000 
+   alwayson 1 # so we give charge without any explicit subscriber
+)
+
+
+
+
+charge_station(  pose [ -13.500 -24.900 0 90.000 ] )
+charge_station(  pose [ -14.500 -24.900 0 90.000 ] )
+charge_station(  pose [ -15.500 -24.900 0 90.000 ] )
+charge_station(  pose [ -16.500 -24.900 0 90.000 ] )
+charge_station(  pose [ -17.500 -24.900 0 90.000 ] )
+charge_station(  pose [ -18.500 -24.900 0 90.000 ] )
+charge_station(  pose [ -19.500 -24.900 0 90.000 ] )
+charge_station(  pose [ -20.500 -24.900 0 90.000 ] )
+charge_station(  pose [ -21.500 -24.900 0 90.000 ] )
+charge_station(  pose [ -22.500 -24.900 0 90.000 ] )
+
+#charge_station(  pose [ -38.00 -24.9 0 90.000 ] )
+#charge_station(  pose [ -39.00 -24.9 0 90.000 ] )
+#charge_station(  pose [ -40.00 -24.9 0 90.000 ] )
+#charge_station(  pose [ -41.00 -24.9 0 90.000 ] )
+#charge_station(  pose [ -42.00 -24.9 0 90.000 ] )
+#charge_station(  pose [ -43.00 -24.9 0 90.000 ] )
+#charge_station(  pose [ -44.00 -24.9 0 90.000 ] )
+#charge_station(  pose [ -45.00 -24.9 0 90.000 ] )
+#charge_station(  pose [ -46.00 -24.9 0 90.000 ] )
+#charge_station(  pose [ -47.0 -24.9 0 90.000 ] )
+
+charge_station(  pose [ -24.900 -13.500 0 0 ] )
+charge_station(  pose [ -24.900 -14.500 0 0 ] )
+charge_station(  pose [ -24.900 -15.500 0 0 ] )
+charge_station(  pose [ -24.900 -16.500 0 0 ] )
+charge_station(  pose [ -24.900 -17.500 0 0 ] )
+charge_station(  pose [ -24.900 -18.500 0 0 ] )
+charge_station(  pose [ -24.900 -19.500 0 0 ] )
+charge_station(  pose [ -24.900 -20.500 0 0 ] )
+charge_station(  pose [ -24.900 -21.500 0 0 ] )
+charge_station(  pose [ -24.900 -22.500 0 0 ] )
+
+smallzone( color "orange" 
+		pose [ -17.631 -17.663 0 0 ]
+		name "fuel_zone"
+		size [ 1.000 1.000 0.010 ] 
+      gui_move 1
+)
+
+smallzone( color "wheat" 
+		pose [ 1.773 -24.100 0 0 ]
+		name "pool_zone"
+		size [ 1.000 1.000 0.010 ] 
+      gui_move 1
+)
+
+define buffer model
+(
+  color "orange" 
+  size [ 0.100 13.000 1.000 ] 
+)
+
+#buffer( pose [ -49.543 -42.500 0 0 ] )
+#buffer( pose [ -42.595 -49.527 0 90.000 ] )
+
+define blinker model
+(
+  color "orange"
+  size [ 0.100 0.700 0.600 ]
+)
+
+#blinker( pose [ -36.066 -48.834 0 0 ] )
+#blinker( pose [ -36.990 -48.838 0 0 ] )
+#blinker( pose [ -38.063 -48.836 0 0 ] )
+#blinker( pose [ -39.020 -48.831 0 0 ] )
+#blinker( pose [ -40.012 -48.823 0 0 ] )
+#blinker( pose [ -41.035 -48.812 0 0 ] )
+#blinker( pose [ -42.047 -48.775 0 0 ] )
+#blinker( pose [ -43.026 -48.834 0 0 ] )
+
+define autorob pioneer2dx		  
+(		 
+ sicklaser( samples 32 range_max 2 laser_return 2 watts 30  )
+# ctrl "fasr2"
+ kjoules 400 
+ kjoules_capacity 400 
+ fiducial_return 0
+ charging_bump( obstacle_return 0 fiducial( range_max_id 9 range_max 9 fov 180 pose [ 0 0 -0.050 0 ] ) )
+
+ # small speed optimization
+ # trail_length 0
+ 
+ ctrl "fasr2 red green blue yellow cyan magenta" 
+)
+
+
+
+autorob( pose [5.782 6.484 0 -164.391]  )
+autorob( pose [8.716 7.849 0 -145.386]  )
+autorob( pose [18.196 22.065 0 -170.203]  )
+autorob( pose [6.568 -4.287 0 -1.784]  )
+autorob( pose [-21.074 2.574 0 110.475]  )
+autorob( pose [16.042 13.485 0 2.204]  )
+autorob( pose [-20.422 6.431 0 -89.882]  )
+autorob( pose [-20.020 2.334 0 -78.518]  )
+autorob( pose [-20.640 14.337 0 -86.730]  )
+autorob( pose [-23.477 20.502 0 80.906]  )
+
+autorob( pose [14.128 -12.265 0 26.429]  )
+autorob( pose [-19.500 -24.585 0 -90.019]  )
+autorob( pose [-23.532 3.374 0 91.229]  )
+autorob( pose [18.910 24.437 0 1.179]  )
+autorob( pose [-13.500 -24.586 0 -89.999]  )
+autorob( pose [11.411 10.480 0 -154.328]  )
+autorob( pose [14.511 24.096 0 7.177]  )
+autorob( pose [8.807 -17.864 0 -169.242]  )
+autorob( pose [-19.682 -17.687 0 21.778]  )
+autorob( pose [-17.500 -24.585 0 -90.001]  )
+
+autorob( pose [-22.500 -24.585 0 -89.998]  )
+autorob( pose [21.746 18.127 0 -19.240]  )
+autorob( pose [-7.054 1.943 0 -158.039]  )
+autorob( pose [-4.140 -4.460 0 162.638]  )
+autorob( pose [-21.803 -11.403 0 68.734]  )
+autorob( pose [19.557 16.770 0 -174.637]  )
+autorob( pose [12.084 16.377 0 -159.525]  )
+autorob( pose [22.218 -11.627 0 -153.382]  )
+autorob( pose [-21.801 -5.772 0 87.614]  )
+autorob( pose [7.249 -18.084 0 -172.409]  )
+
+autorob( pose [16.584 24.305 0 3.999]  )
+autorob( pose [10.481 16.212 0 178.709]  )
+autorob( pose [-24.456 -19.500 0 -118.117]  )
+autorob( pose [-15.500 -24.585 0 -90.003]  )
+autorob( pose [-21.500 -24.586 0 -90.007]  )
+autorob( pose [-3.964 7.720 0 24.926]  )
+autorob( pose [-2.780 -19.432 0 -178.338]  )
+autorob( pose [-8.160 5.508 0 42.584]  )
+autorob( pose [-23.605 13.647 0 89.519]  )
+autorob( pose [10.269 23.038 0 25.559]  )
+
+autorob( pose [0.150 6.074 0 -170.344]  )
+autorob( pose [13.625 13.412 0 2.376]  )
+autorob( pose [-12.041 3.622 0 50.631]  )
+autorob( pose [-20.413 5.172 0 -89.596]  )
+autorob( pose [12.304 23.709 0 12.900]  )
+autorob( pose [-3.744 4.423 0 -122.380]  )
+autorob( pose [18.700 -10.968 0 8.271]  )
+autorob( pose [9.843 17.152 0 -3.776]  )
+autorob( pose [11.604 21.625 0 174.293]  )
+autorob( pose [-24.584 -18.500 0 -179.999]  )
+
+autorob( pose [17.293 16.601 0 -177.139]  )
+autorob( pose [-21.413 8.502 0 -89.838]  )
+autorob( pose [-24.584 -20.500 0 -179.926]  )
+autorob( pose [9.164 -14.413 0 24.780]  )
+autorob( pose [2.086 11.344 0 4.183]  )
+autorob( pose [15.325 -14.654 0 -166.327]  )
+autorob( pose [0.993 9.107 0 -129.069]  )
+autorob( pose [-24.585 -13.500 0 -179.997]  )
+autorob( pose [-23.510 -17.566 0 -2.265]  )
+autorob( pose [20.494 24.377 0 -6.610]  )
+
+autorob( pose [-24.429 -16.500 0 -179.996]  )
+autorob( pose [-20.486 10.612 0 -88.573]  )
+autorob( pose [18.464 -5.610 0 179.760]  )
+autorob( pose [-21.187 -11.556 0 -103.659]  )
+autorob( pose [-23.565 5.428 0 90.654]  )
+autorob( pose [-20.394 -1.729 0 -90.428]  )
+autorob( pose [-23.144 -3.560 0 96.599]  )
+autorob( pose [16.262 -11.463 0 15.315]  )
+autorob( pose [-18.500 -24.585 0 -90.001]  )
+autorob( pose [-14.500 -24.585 0 -89.998]  )
+
+autorob( pose [15.838 18.472 0 2.181]  )
+autorob( pose [0.286 -4.161 0 -2.986]  )
+autorob( pose [11.410 17.326 0 20.635]  )
+autorob( pose [-13.273 1.218 0 -84.343]  )
+autorob( pose [-23.589 19.430 0 86.550]  )
+autorob( pose [20.054 22.485 0 -164.321]  )
+autorob( pose [-24.586 -22.500 0 -179.985]  )
+autorob( pose [13.904 -5.609 0 -179.629]  )
+autorob( pose [-24.585 -21.500 0 -179.921]  )
+autorob( pose [-21.166 -15.745 0 167.668]  )
+
+autorob( pose [-23.586 7.995 0 90.704]  )
+autorob( pose [17.275 -4.381 0 0.178]  )
+autorob( pose [-13.913 1.578 0 61.561]  )
+autorob( pose [22.242 23.878 0 -62.301]  )
+autorob( pose [10.540 21.804 0 165.310]  )
+autorob( pose [-5.834 6.991 0 22.896]  )
+autorob( pose [17.778 24.386 0 3.321]  )
+autorob( pose [10.268 13.092 0 7.525]  )
+autorob( pose [-24.586 -17.500 0 180.000]  )
+autorob( pose [17.018 11.257 0 -167.502]  )
+
+autorob( pose [4.624 -13.736 0 1.427]  )
+autorob( pose [21.722 -10.787 0 -4.463]  )
+autorob( pose [-0.166 9.880 0 24.494]  )
+autorob( pose [11.381 16.223 0 -133.560]  )
+autorob( pose [-12.907 0.810 0 -152.188]  )
+autorob( pose [-19.213 -16.317 0 154.047]  )
+autorob( pose [-16.500 -24.585 0 -90.000]  )
+autorob( pose [-20.500 -24.585 0 -90.020]  )
+autorob( pose [12.150 -5.610 0 -179.976]  )
+autorob( pose [-24.585 -14.504 0 179.199]  )
+
+#100
+
+#autorob( pose [-11.824 1.550 0 44.991]  )
+#autorob( pose [-12.401 2.181 0 44.991]  )
+#autorob( pose [-11.236 3.330 0 44.991]  )
+#autorob( pose [-12.078 3.298 0 44.991]  )
+#autorob( pose [-10.275 2.456 0 44.991]  )
+#autorob( pose [-10.734 4.123 0 44.991]  )
+#autorob( pose [-11.592 4.398 0 44.991]  )
+#autorob( pose [-12.903 2.877 0 44.991]  )
+#autorob( pose [-12.434 1.372 0 44.991]  )
+#autorob( pose [-10.555 3.358 0 44.991]  )
+
+#autorob( pose [-9.516 3.311 0 44.991]  )
+#autorob( pose [-12.308 3.949 0 44.991]  )
+#autorob( pose [-13.185 3.682 0 44.991]  )
+#autorob( pose [-13.014 2.167 0 44.991]  )
+#autorob( pose [-13.724 2.634 0 44.991]  )
+#autorob( pose [-13.633 1.986 0 44.991]  )
+#autorob( pose [-13.138 1.385 0 44.991]  )
+#autorob( pose [-12.490 0.575 0 44.991]  )
+#autorob( pose [-11.775 0.699 0 44.991]  )
+#autorob( pose [-11.641 2.586 0 44.991]  )
+
+#autorob( pose [-14.296 4.967 0 -113.433]  )
+#autorob( pose [-13.218 5.200 0 -105.066]  )
+#autorob( pose [-17.084 7.178 0 -113.959]  )
+#autorob( pose [-15.829 3.428 0 -100.843]  )
+#autorob( pose [-16.001 6.965 0 -116.077]  )
+#autorob( pose [-13.589 6.170 0 -108.098]  )
+#autorob( pose [-15.665 7.690 0 35.677]  )
+#autorob( pose [-18.633 7.374 0 -100.002]  )
+#autorob( pose [-14.987 3.480 0 -97.678]  )
+#autorob( pose [-16.445 7.660 0 68.821]  )
+
+#autorob( pose [-17.222 6.291 0 35.145]  )
+#autorob( pose [-17.885 7.248 0 35.145]  )
+#autorob( pose [-17.254 8.218 0 35.145]  )
+#autorob( pose [-17.060 5.498 0 35.145]  )
+#autorob( pose [-18.047 6.227 0 35.145]  )
+#autorob( pose [-16.930 4.640 0 35.145]  )
+#autorob( pose [-17.966 5.417 0 35.145]  )
+#autorob( pose [-15.927 4.640 0 35.145]  )
+#autorob( pose [-14.988 4.236 0 35.145]  )
+#autorob( pose [-15.706 6.151 0 35.145]  )
+
+#autorob( pose [-16.424 6.225 0 35.145]  )
+#autorob( pose [-14.574 5.868 0 35.145]  )
+#autorob( pose [-18.271 8.274 0 35.145]  )
+#autorob( pose [-15.801 8.625 0 35.145]  )
+#autorob( pose [-16.598 8.835 0 35.145]  )
+#autorob( pose [-14.417 6.791 0 35.145]  )
+#autorob( pose [-15.235 6.801 0 35.145]  )
+#autorob( pose [-15.444 5.260 0 35.145]  )
+#autorob( pose [-16.598 5.187 0 35.145]  )
+#autorob( pose [-16.461 4.159 0 35.145]  )
+
+#autorob( pose [-8.171 13.723 0 -139.469]  )
+#autorob( pose [-8.887 12.177 0 -88.070]  )
+#autorob( pose [-7.357 15.181 0 -94.395]  )
+#autorob( pose [-7.970 15.169 0 -167.188]  )
+#autorob( pose [-7.482 13.834 0 -94.067]  )
+#autorob( pose [-8.009 13.153 0 -163.083]  )
+#autorob( pose [-6.846 13.156 0 -137.774]  )
+#autorob( pose [-8.349 14.435 0 -136.374]  )
+#autorob( pose [-6.752 14.083 0 -101.104]  )
+#autorob( pose [-6.452 15.332 0 -131.336]  )
+
+#autorob( pose [-9.099 17.489 0 -143.181]  )
+#autorob( pose [-9.610 15.854 0 -143.181]  )
+#autorob( pose [-9.589 16.569 0 -143.181]  )
+#autorob( pose [-10.059 15.221 0 -143.181]  )
+#autorob( pose [-10.264 16.099 0 -143.181]  )
+#autorob( pose [-9.814 17.325 0 -143.181]  )
+#autorob( pose [-8.271 16.840 0 -143.181]  )
+#autorob( pose [-8.629 17.999 0 -143.181]  )
+#autorob( pose [-9.467 18.142 0 -143.181]  )
+#autorob( pose [-9.079 16.263 0 -143.181]  )
+
+#autorob( pose [-9.246 15.409 0 -143.181]  )
+#autorob( pose [-9.598 14.812 0 -143.181]  )
+#autorob( pose [-9.304 14.280 0 -143.181]  )
+#autorob( pose [-8.946 13.737 0 -143.181]  )
+#autorob( pose [-8.761 13.140 0 -143.181]  )
+#autorob( pose [-8.153 12.629 0 -143.181]  )
+#autorob( pose [-7.393 12.618 0 -143.181]  )
+#autorob( pose [-8.467 15.712 0 -143.181]  )
+#autorob( pose [-7.762 16.132 0 -143.181]  )
+#autorob( pose [-8.794 14.855 0 -143.181]  )
+

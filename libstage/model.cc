@@ -875,7 +875,7 @@ Model* Model::ConditionalMove( const Pose& newpose )
 	 }
   else
     {
-      CommitTestedPose(); // shift anyrecursively commit to blocks to the new pose 
+      CommitTestedPose(); //recursively commit to blocks to the new pose 
       world->dirty = true; // need redraw
     }
   
@@ -1193,11 +1193,8 @@ void Model::RasterVis::ClearPts()
 }
 
 
-// define static member
-int Model::Flag::displaylist( 0 );
-
 Model::Flag::Flag( Color color, double size ) 
-	: color(color), size(size)
+	: color(color), size(size), displaylist(0)
 { 
 }
 
@@ -1213,6 +1210,31 @@ Model::Flag* Model::Flag::Nibble( double chunk )
 	}
 
 	return piece;
+}
+
+
+void Model::Flag::SetColor( const Color& c )
+{
+	color = c;
+	
+	if( displaylist )
+		{
+			// force recreation of list
+			glDeleteLists( displaylist, 1 );
+			displaylist = 0;
+		}
+}
+
+void Model::Flag::SetSize( double sz )
+{
+	size = sz;
+	
+	if( displaylist )
+		{
+			// force recreation of list
+			glDeleteLists( displaylist, 1 );
+			displaylist = 0;
+		}
 }
 
 

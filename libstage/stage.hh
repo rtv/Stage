@@ -1745,11 +1745,18 @@ namespace Stg
 		
 	 class Flag
 	 {
-	 public:
+	 private:
 		Color color;
 		double size;
-		static int displaylist;
-		
+		int displaylist;
+
+	 public:
+		 void SetColor( const Color& col );
+		 void SetSize( double sz );
+		 
+		 Color GetColor(){ return color; }
+		 double GetSize(){ return size; }
+		 
 		Flag( Color color, double size );
 		Flag* Nibble( double portion );
 		

@@ -463,11 +463,11 @@ void Model::DrawFlagList( void )
     {		
       Flag* flag = *it;
 
-		glTranslatef( 0, 0, flag->size/2.0 );
-		
-		flag->Draw( quadric );
+			double sz = flag->GetSize();
 
-      glTranslatef( 0, 0, flag->size/2.0 );
+			glTranslatef( 0, 0, sz/2.0 );			
+			flag->Draw( quadric );			
+      glTranslatef( 0, 0, sz/2.0 );
     }
   
   
