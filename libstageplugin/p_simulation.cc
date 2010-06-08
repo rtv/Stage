@@ -314,6 +314,84 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			return(-1);
 		}
 	}
+
+	/* start of get/set property modifications */
+	// see line 2661 of player_interfaces.h for header names and stuff
+/*	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+									  PLAYER_SIMULATION_REQ_GET_PROPERTY,
+									  this->addr))
+	    {
+			player_simulation_pose2d_req_t* req =
+				(player_simulation_pose2d_req_t*)data;
+
+			PRINT_DEBUG1( "Stage: received request for the 2D position of object \"%s\"\n", req->name );
+
+			// look up the named model
+			Model* mod = StgDriver::world->GetModel( req->name );
+
+			if( mod )
+			{
+				Pose pose = mod->GetPose();
+
+				PRINT_DEBUG3( "Stage: returning location [ %.2f, %.2f, %.2f ]\n",
+							  pose.x, pose.y, pose.a );
+
+				player_simulation_pose2d_req_t reply;
+				memcpy( &reply, req, sizeof(reply));
+				reply.pose.px = pose.x;
+				reply.pose.py = pose.y;
+				reply.pose.pa = pose.a;
+
+				this->driver->Publish( this->addr, resp_queue,
+									  PLAYER_MSGTYPE_RESP_ACK,
+									  PLAYER_SIMULATION_REQ_GET_POSE2D,
+									  (void*)&reply, sizeof(reply), NULL );
+				return(0);
+			}
+			else
+			{
+				PRINT_WARN1( "Stage: GET_POSE2D request: simulation model \"%s\" not found", req->name );
+				return(-1);
+			}
+		}
+
+		// Is it a request to set a model's pose in 2D?
+		if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+							   PLAYER_SIMULATION_REQ_SET_PROPERTY,
+							   this->addr))
+		{
+			player_simulation_pose2d_req_t* req =
+					(player_simulation_pose2d_req_t*)data;
+
+			// look up the named model
+			Model* mod = StgDriver::world->GetModel( req->name );
+
+			if( mod )
+			{
+				PRINT_DEBUG4( "Stage: moving \"%s\" to [ %.2f, %.2f, %.2f ]\n",
+							  req->name, req->pose.px, req->pose.py, req->pose.pa );
+
+				Pose pose = mod->GetPose();
+				pose.x = req->pose.px;
+				pose.y = req->pose.py;
+				pose.a = req->pose.pa;
+
+				mod->SetPose( pose );
+
+				this->driver->Publish(this->addr, resp_queue,
+							  PLAYER_MSGTYPE_RESP_ACK,
+							  PLAYER_SIMULATION_REQ_SET_POSE2D);
+				return(0);
+			}
+			else
+			{
+				PRINT_WARN1( "SETPOSE2D request: simulation model \"%s\" not found", req->name );
+				return(-1);
+			}
+		}
+*/
+	/*end of get/set property modifications*/
+
 	else
 	{
 		// Don't know how to handle this message.
