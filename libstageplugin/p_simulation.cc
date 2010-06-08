@@ -42,7 +42,7 @@
 - PLAYER_SIMULATION_REQ_SET_PROPERTY_FLOAT
   - "mass" 0 <= N
   - "watts" 0 <= N
-*/
+ */
 
 // CODE ------------------------------------------------------------
 
@@ -68,41 +68,41 @@ extern PlayerTime* GlobalTime;
 // SIMULATION INTERFACE
 //
 InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
-					  StgDriver* driver,
-					  ConfigFile* cf,
-					  int section )
-  : Interface( addr, driver, cf, section )
+		StgDriver* driver,
+		ConfigFile* cf,
+		int section )
+: Interface( addr, driver, cf, section )
 {
-  printf( "a Stage world" ); fflush(stdout);
-  //puts( "InterfaceSimulation constructor" );
+	printf( "a Stage world" ); fflush(stdout);
+	//puts( "InterfaceSimulation constructor" );
 
-  Stg::Init( &player_argc, &player_argv );
+	Stg::Init( &player_argc, &player_argv );
 
-  const char* worldfile_name = cf->ReadString(section, "worldfile", NULL );
+	const char* worldfile_name = cf->ReadString(section, "worldfile", NULL );
 
-  if( worldfile_name == NULL )
-    {
-      PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
-		  "no \"model\" value defined. You must specify a "
-		  "model name that matches one of the models in "
-		  "the worldfile.",
-		  worldfile_name );
-      return; // error
-    }
+	if( worldfile_name == NULL )
+	{
+		PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
+				"no \"model\" value defined. You must specify a "
+				"model name that matches one of the models in "
+				"the worldfile.",
+				worldfile_name );
+		return; // error
+	}
 
-  char fullname[MAXPATHLEN];
+	char fullname[MAXPATHLEN];
 
-  if( worldfile_name[0] == '/' )
-    strcpy( fullname, worldfile_name );
-  else
-    {
-      char *tmp = strdup(cf->filename);
-      snprintf( fullname, MAXPATHLEN,
-		"%s/%s", dirname(tmp), worldfile_name );
-      free(tmp);
-    }
+	if( worldfile_name[0] == '/' )
+		strcpy( fullname, worldfile_name );
+	else
+	{
+		char *tmp = strdup(cf->filename);
+		snprintf( fullname, MAXPATHLEN,
+				"%s/%s", dirname(tmp), worldfile_name );
+		free(tmp);
+	}
 
-  // a little sanity testing
+	// a little sanity testing
 	// XX TODO
 	//  if( !g_file_test( fullname, G_FILE_TEST_EXISTS ) )
 	//{
@@ -110,65 +110,65 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
 	//  return;
 	//}
 
-  // create a passel of Stage models in the local cache based on the
-  // worldfile
+	// create a passel of Stage models in the local cache based on the
+	// worldfile
 
-  // if the initial size is to large this crashes on some systems
-  StgDriver::world = new WorldGui( 400, 300, "Player/Stage" );
-  assert(StgDriver::world);
+	// if the initial size is to large this crashes on some systems
+	StgDriver::world = new WorldGui( 400, 300, "Player/Stage" );
+	assert(StgDriver::world);
 
-  puts("");
-  StgDriver::world->Load( fullname );
-  //printf( " done.\n" );
+	puts("");
+	StgDriver::world->Load( fullname );
+	//printf( " done.\n" );
 
-  // poke the P/S name into the window title bar
-//   if( StgDriver::world )
-//     {
-//       char txt[128];
-//       snprintf( txt, 128, "Player/Stage: %s", StgDriver::world->token );
-//       StgDriverstg_world_set_title(StgDriver::world, txt );
-//     }
+	// poke the P/S name into the window title bar
+	//   if( StgDriver::world )
+	//     {
+	//       char txt[128];
+	//       snprintf( txt, 128, "Player/Stage: %s", StgDriver::world->token );
+	//       StgDriverstg_world_set_title(StgDriver::world, txt );
+	//     }
 
-  // steal the global clock - a bit aggressive, but a simple approach
+	// steal the global clock - a bit aggressive, but a simple approach
 
-  delete GlobalTime;
-  GlobalTime = new StTime( driver );
-  assert(GlobalTime);
-  // start the simulation
-  // printf( "  Starting world clock... " ); fflush(stdout);
-  //stg_world_resume( world );
+	delete GlobalTime;
+	GlobalTime = new StTime( driver );
+	assert(GlobalTime);
+	// start the simulation
+	// printf( "  Starting world clock... " ); fflush(stdout);
+	//stg_world_resume( world );
 
-  StgDriver::world->Start();
+	StgDriver::world->Start();
 
-  // this causes Driver::Update() to be called even when the device is
-  // not subscribed
-  driver->alwayson = TRUE;
+	// this causes Driver::Update() to be called even when the device is
+	// not subscribed
+	driver->alwayson = TRUE;
 
-  puts( "" ); // end the Stage startup line
+	puts( "" ); // end the Stage startup line
 }
 
 int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
-                                        player_msghdr_t* hdr,
-                                        void* data)
+		player_msghdr_t* hdr,
+		void* data)
 {
 	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, PLAYER_CAPABILTIES_REQ, addr))
 	{
 		PLAYER_ERROR1("%p\n", data);
-	    player_capabilities_req_t & cap_req = * reinterpret_cast<player_capabilities_req_t *> (data);
-	    if (cap_req.type == PLAYER_MSGTYPE_REQ && (cap_req.subtype == PLAYER_SIMULATION_REQ_SET_POSE3D || cap_req.subtype == PLAYER_SIMULATION_REQ_GET_POSE3D))
-	    {
-	    	this->driver->Publish(addr, resp_queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_CAPABILTIES_REQ);
-	    	return 0;
-	    }
+		player_capabilities_req_t & cap_req = * reinterpret_cast<player_capabilities_req_t *> (data);
+		if (cap_req.type == PLAYER_MSGTYPE_REQ && (cap_req.subtype == PLAYER_SIMULATION_REQ_SET_POSE3D || cap_req.subtype == PLAYER_SIMULATION_REQ_GET_POSE3D))
+		{
+			this->driver->Publish(addr, resp_queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_CAPABILTIES_REQ);
+			return 0;
+		}
 	}
 
 	// Is it a request to get a model's pose in 2D?
 	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-								  PLAYER_SIMULATION_REQ_GET_POSE2D,
-								  this->addr))
-    {
+			PLAYER_SIMULATION_REQ_GET_POSE2D,
+			this->addr))
+	{
 		player_simulation_pose2d_req_t* req =
-			(player_simulation_pose2d_req_t*)data;
+				(player_simulation_pose2d_req_t*)data;
 
 		PRINT_DEBUG1( "Stage: received request for the 2D position of object \"%s\"\n", req->name );
 
@@ -180,7 +180,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			Pose pose = mod->GetPose();
 
 			PRINT_DEBUG3( "Stage: returning location [ %.2f, %.2f, %.2f ]\n",
-						  pose.x, pose.y, pose.a );
+					pose.x, pose.y, pose.a );
 
 			player_simulation_pose2d_req_t reply;
 			memcpy( &reply, req, sizeof(reply));
@@ -189,9 +189,9 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			reply.pose.pa = pose.a;
 
 			this->driver->Publish( this->addr, resp_queue,
-								  PLAYER_MSGTYPE_RESP_ACK,
-								  PLAYER_SIMULATION_REQ_GET_POSE2D,
-								  (void*)&reply, sizeof(reply), NULL );
+					PLAYER_MSGTYPE_RESP_ACK,
+					PLAYER_SIMULATION_REQ_GET_POSE2D,
+					(void*)&reply, sizeof(reply), NULL );
 			return(0);
 		}
 		else
@@ -203,8 +203,8 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 
 	// Is it a request to set a model's pose in 2D?
 	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-						   PLAYER_SIMULATION_REQ_SET_POSE2D,
-						   this->addr))
+			PLAYER_SIMULATION_REQ_SET_POSE2D,
+			this->addr))
 	{
 		player_simulation_pose2d_req_t* req =
 				(player_simulation_pose2d_req_t*)data;
@@ -215,7 +215,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		if( mod )
 		{
 			PRINT_DEBUG4( "Stage: moving \"%s\" to [ %.2f, %.2f, %.2f ]\n",
-						  req->name, req->pose.px, req->pose.py, req->pose.pa );
+					req->name, req->pose.px, req->pose.py, req->pose.pa );
 
 			Pose pose = mod->GetPose();
 			pose.x = req->pose.px;
@@ -225,8 +225,8 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			mod->SetPose( pose );
 
 			this->driver->Publish(this->addr, resp_queue,
-						  PLAYER_MSGTYPE_RESP_ACK,
-						  PLAYER_SIMULATION_REQ_SET_POSE2D);
+					PLAYER_MSGTYPE_RESP_ACK,
+					PLAYER_SIMULATION_REQ_SET_POSE2D);
 			return(0);
 		}
 		else
@@ -238,11 +238,11 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 
 	// Is it a request to get a model's pose in 3D?
 	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-								  PLAYER_SIMULATION_REQ_GET_POSE3D,
-								  this->addr))
-    {
+			PLAYER_SIMULATION_REQ_GET_POSE3D,
+			this->addr))
+	{
 		player_simulation_pose3d_req_t* req =
-		(player_simulation_pose3d_req_t*)data;
+				(player_simulation_pose3d_req_t*)data;
 
 		PRINT_DEBUG1( "Stage: received request for the 3D position of object \"%s\"\n", req->name );
 
@@ -254,7 +254,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			Pose pose = mod->GetPose();
 
 			PRINT_DEBUG4( "Stage: returning location [ %.2f, %.2f, %.2f, %.2f ]\n",
-						  pose.x, pose.y, pose.z, pose.a );
+					pose.x, pose.y, pose.z, pose.a );
 
 			player_simulation_pose3d_req_t reply;
 			memcpy( &reply, req, sizeof(reply));
@@ -267,9 +267,9 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			reply.simtime = mod->GetWorld()->SimTimeNow(); // time in microseconds
 
 			this->driver->Publish( this->addr, resp_queue,
-								  PLAYER_MSGTYPE_RESP_ACK,
-								  PLAYER_SIMULATION_REQ_GET_POSE3D,
-								  (void*)&reply, sizeof(reply), NULL );
+					PLAYER_MSGTYPE_RESP_ACK,
+					PLAYER_SIMULATION_REQ_GET_POSE3D,
+					(void*)&reply, sizeof(reply), NULL );
 			return(0);
 		}
 		else
@@ -281,11 +281,11 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 
 	// Is it a request to set a model's pose in 3D?
 	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-							 PLAYER_SIMULATION_REQ_SET_POSE3D,
-							 this->addr))
+			PLAYER_SIMULATION_REQ_SET_POSE3D,
+			this->addr))
 	{
 		player_simulation_pose3d_req_t* req =
-		(player_simulation_pose3d_req_t*)data;
+				(player_simulation_pose3d_req_t*)data;
 
 		// look up the named model
 		Model* mod = StgDriver::world->GetModel( req->name );
@@ -293,7 +293,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		if( mod )
 		{
 			PRINT_DEBUG5( "Stage: moving \"%s\" to [ %.2f, %.2f, %.2f %.2f ]\n",
-						  req->name, req->pose.px, req->pose.py, req->pose.pz, req->pose.pyaw );
+					req->name, req->pose.px, req->pose.py, req->pose.pz, req->pose.pyaw );
 
 			Pose pose = mod->GetPose();
 			pose.x = req->pose.px;
@@ -305,8 +305,8 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			mod->SetPose( pose );
 
 			this->driver->Publish(this->addr, resp_queue,
-								  PLAYER_MSGTYPE_RESP_ACK,
-								  PLAYER_SIMULATION_REQ_SET_POSE3D);
+					PLAYER_MSGTYPE_RESP_ACK,
+					PLAYER_SIMULATION_REQ_SET_POSE3D);
 			return(0);
 		}
 		else
@@ -320,84 +320,117 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 
 	// see line 2661 of player_interfaces.h for header names and stuff
 	// Is it a request to set a model's property?
-		else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-					PLAYER_SIMULATION_REQ_SET_PROPERTY,
-					this->addr))
-	    {
-			player_simulation_property_req_t* req =
+	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+			PLAYER_SIMULATION_REQ_SET_PROPERTY,
+			this->addr))
+	{
+		player_simulation_property_req_t* req =
 				(player_simulation_property_req_t*)data;
 
-			/* check they want to set the colour. If they don't
-			 * then that's too bad for them. */
+		/* check they want to set the colour. If they don't
+		 * then that's too bad for them. */
 
-			//strncmp returns 0 if the strings match
-			if( strncmp(req->prop, "color", (size_t)req->prop_count) &&
-					strncmp(req->prop, "_mp_color", (size_t)req->prop_count) &&
-					strncmp(req->prop, "colour", (size_t)req->prop_count) )
-			{
-				PRINT_WARN1("Property \"%s\" is not accessible. Options are \"color\", \"_mp_color\", or \"colour\"", req->prop);
-				return(-1);
-			}
-
-			/* check the value given is an array of four floats */
-
-
-			// look up the named model
-			Model* mod = StgDriver::world->GetModel( req->name );
-
-			// if the requested model exists...
-			if( mod )
-			{
-				int ack = 0;
-				//mod->SetColor( req->prop, (void*)req->value );
-
-				this->driver->Publish(this->addr, resp_queue,
-						ack==0 ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
-						PLAYER_SIMULATION_REQ_SET_PROPERTY);
-				return(0);
-			}
-			else
-			{
-				PRINT_WARN1( "SET_PROPERTY request: simulation model \"%s\" not found", req->name );
-				return(-1);
-			}
+		//strncmp returns 0 if the strings match
+		if( strncmp(req->prop, "color", (size_t)req->prop_count) &&
+				strncmp(req->prop, "_mp_color", (size_t)req->prop_count) &&
+				strncmp(req->prop, "colour", (size_t)req->prop_count) )
+		{
+			PRINT_WARN1("Property \"%s\" is not accessible. Options are \"color\", \"_mp_color\", or \"colour\"", req->prop);
+			return(-1);
 		}
 
-		// Is it a request to get a model's property?
-	//	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-	//								  PLAYER_SIMULATION_REQ_GET_PROPERTY,
-	//								  this->addr))
-	//    {
-	//		player_simulation_property_req_t* req =
-	//			(player_simulation_property_req_t*)data;
-	//
-	//		// look up the named model
-	//		Model* mod = StgDriver::world->GetModel( req->name );
-	//
-	//		if( mod )
-	//		{
-	//
-	//			// This is probably wrong
-	//			req->value = (char*)mod->GetProperty( req->prop );
-	//
-	//			this->driver->Publish(this->addr, resp_queue,
-	//								  PLAYER_MSGTYPE_RESP_ACK,
-	//								  PLAYER_SIMULATION_REQ_GET_PROPERTY);
-	//			return(0);
-	//		}
-	//		else
-	//		{
-	//			PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
-	//			return(-1);
-	//		}
-	//	}
+		/* check the value given is an array of four floats */
+		if(req->value_count != sizeof(float)*4)
+		{
+			PRINT_WARN("value given by SetProperty must be an array of 4 floats\n");
+			return(-1);
+		}
+
+
+		// look up the named model
+		Model* mod = StgDriver::world->GetModel( req->name );
+
+		// if the requested model exists...
+		if( mod )
+		{
+			int ack = 0;
+			float *col = (float *)req->value;
+			Color newColour = Color(col[0], col[1], col[2], col[3]);
+
+			mod->SetColor(newColour);
+
+			this->driver->Publish(this->addr, resp_queue,
+					ack==0 ? PLAYER_MSGTYPE_RESP_ACK : PLAYER_MSGTYPE_RESP_NACK,
+							PLAYER_SIMULATION_REQ_SET_PROPERTY);
+			return(0);
+		}
+		else
+		{
+			PRINT_WARN1( "SET_PROPERTY request: simulation model \"%s\" not found", req->name );
+			return(-1);
+		}
+	}
+
+	// Is it a request to get a model's property?
+/*	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+			PLAYER_SIMULATION_REQ_GET_PROPERTY,
+			this->addr))
+	{
+		player_simulation_property_req_t* req =
+				(player_simulation_property_req_t*)data;
+
+		// check they want to set the colour. If they don't
+		 // then that's too bad for them.
+
+		//strncmp returns 0 if the strings match
+		if( strncmp(req->prop, "color", (size_t)req->prop_count) &&
+				strncmp(req->prop, "_mp_color", (size_t)req->prop_count) &&
+				strncmp(req->prop, "colour", (size_t)req->prop_count) )
+		{
+			PRINT_WARN1("Property \"%s\" is not accessible. Options are \"color\", \"_mp_color\", or \"colour\". These all change the colour.", req->prop);
+			return(-1);
+		}
+
+		// check the value given is an array of four floats
+		if(req->value_count != sizeof(float)*4)
+		{
+			PRINT_WARN("value given by SetProperty must be an array of 4 floats\n");
+			return(-1);
+		}
+
+		printf("req->value is %x, req->value_count is %d\n", &req->value, req->value_count);
+		// look up the named model
+		Model* mod = StgDriver::world->GetModel( req->name );
+
+		if( mod )
+		{
+			Color newColour = mod->GetColor();	//line 2279 of stage.hh
+			float *col = (float *)req->value;
+			col[0] = newColour.r;
+			col[1] = newColour.g;
+			col[2] = newColour.b;
+			col[3] = newColour.a;
+
+			this->driver->Publish(this->addr, resp_queue,
+					PLAYER_MSGTYPE_RESP_ACK,
+					PLAYER_SIMULATION_REQ_GET_PROPERTY);
+			printf("done driver things\n");
+			return(0);
+		}
+		else
+		{
+			PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
+			return(-1);
+		}
+	}
+*/
 	/*end of get/set property modifications*/
 
 	else
 	{
 		// Don't know how to handle this message.
 		PRINT_WARN2( "stg_simulation doesn't support msg with type/subtype %d/%d",
-			 hdr->type, hdr->subtype);
+				hdr->type, hdr->subtype);
 		return(-1);
 	}
 }
