@@ -377,6 +377,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		player_simulation_property_req_t* req =
 				(player_simulation_property_req_t*)data;
 
+
 		// check they want to set the colour. If they don't
 		// then that's too bad for them.
 
@@ -392,7 +393,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		// check the value given is an array of four floats
 		if(req->value_count != sizeof(float)*4)
 		{
-			PRINT_WARN("Value given by SetProperty must be an array of 4 floats\n");
+			PRINT_WARN("value given by GetProperty must be an array of 4 floats\n");
 			return(-1);
 		}
 
@@ -402,15 +403,29 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		if( mod )
 		{
 			Color newColour = mod->GetColor();	//line 2279 of stage.hh
-			float *col = (float *)req->value;
+			// make an array to hold it as floats
+			float col[4];
 			col[0] = newColour.r;
 			col[1] = newColour.g;
 			col[2] = newColour.b;
 			col[3] = newColour.a;
 
-			this->driver->Publish(this->addr, resp_queue,
+			//copy array of floats into memory provided in the req structure
+			memcpy(req->value, col, req->value_count);
+
+			//make a new structure and copy req into it
+
+			player_simulation_property_req_t reply;
+			memcpy( &reply, req, sizeof(reply));
+
+			//put col array into reply
+			memcpy(reply.value, col, reply.value_count);
+
+
+			this->driver->Publish( this->addr, resp_queue,
 					PLAYER_MSGTYPE_RESP_ACK,
-					PLAYER_SIMULATION_REQ_GET_PROPERTY);
+					PLAYER_SIMULATION_REQ_GET_PROPERTY,
+					(void*)&reply, sizeof(reply), NULL );
 			return(0);
 		}
 		else
