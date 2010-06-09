@@ -316,8 +316,6 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		}
 	}
 
-	/* start of get/set property modifications */
-
 	// see line 2661 of player_interfaces.h for header names and stuff
 	// Is it a request to set a model's property?
 	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
@@ -342,7 +340,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		/* check the value given is an array of four floats */
 		if(req->value_count != sizeof(float)*4)
 		{
-			PRINT_WARN("value given by SetProperty must be an array of 4 floats\n");
+			PRINT_WARN("Value given by SetProperty must be an array of 4 floats\n");
 			return(-1);
 		}
 
@@ -372,7 +370,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 	}
 
 	// Is it a request to get a model's property?
-/*	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
 			PLAYER_SIMULATION_REQ_GET_PROPERTY,
 			this->addr))
 	{
@@ -380,7 +378,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 				(player_simulation_property_req_t*)data;
 
 		// check they want to set the colour. If they don't
-		 // then that's too bad for them.
+		// then that's too bad for them.
 
 		//strncmp returns 0 if the strings match
 		if( strncmp(req->prop, "color", (size_t)req->prop_count) &&
@@ -394,11 +392,10 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		// check the value given is an array of four floats
 		if(req->value_count != sizeof(float)*4)
 		{
-			PRINT_WARN("value given by SetProperty must be an array of 4 floats\n");
+			PRINT_WARN("Value given by SetProperty must be an array of 4 floats\n");
 			return(-1);
 		}
 
-		printf("req->value is %x, req->value_count is %d\n", &req->value, req->value_count);
 		// look up the named model
 		Model* mod = StgDriver::world->GetModel( req->name );
 
@@ -414,7 +411,6 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			this->driver->Publish(this->addr, resp_queue,
 					PLAYER_MSGTYPE_RESP_ACK,
 					PLAYER_SIMULATION_REQ_GET_PROPERTY);
-			printf("done driver things\n");
 			return(0);
 		}
 		else
@@ -423,8 +419,6 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			return(-1);
 		}
 	}
-*/
-	/*end of get/set property modifications*/
 
 	else
 	{
