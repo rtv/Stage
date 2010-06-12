@@ -67,9 +67,9 @@ add_executable( stagebinary ${stagebinarySrcs} )
 # When compiling stagebinarySrcs, pass CFLAGS from fltk-config
 set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
-set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
+set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage LINK_FLAGS "${FLTK_LDFLAGS}" )
 
-target_link_libraries( stagebinary stage )
+target_link_libraries( stagebinary stage pthread )
 
 INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin
