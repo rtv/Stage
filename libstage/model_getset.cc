@@ -211,11 +211,11 @@ void Model::SetPose( const Pose& newpose )
 //       if( isnan( pose.a ) )
 // 		  printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
 // 					 token, pose.x, pose.y, pose.z, pose.a );
-		
+			
       NeedRedraw();
       MapWithChildren();
       world->dirty = true;
     }
-
-		CallCallbacks( CB_POSE );
+	
+	CallCallbacks( CB_POSE );
 }

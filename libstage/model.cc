@@ -342,18 +342,20 @@ Model::Model( World* world,
 
 Model::~Model( void )
 {
-  UnMap(); // remove from the raytrace bitmap
-
   // children are removed in ancestor class
   
   // remove myself from my parent's child list, or the world's child
   // list if I have no parent
-  ModelPtrVec& vec  = parent ? parent->children : world->children;
-  EraseAll( this, vec );
 
-  modelsbyid.erase(id);
+	if( world ) // if I'm not a worldless dummy model
+		{
+			UnMap(); // remove from the raytrace bitmap
 
-  world->RemoveModel( this );
+			ModelPtrVec& vec  = parent ? parent->children : world->children;
+			EraseAll( this, vec );			
+			modelsbyid.erase(id);			
+			world->RemoveModel( this );
+		}
 }
 
 
@@ -453,7 +455,7 @@ Block* Model::AddBlockRect( stg_meters_t x,
 }
 
 
-stg_raytrace_result_t Model::Raytrace( const Pose &pose,
+RaytraceResult Model::Raytrace( const Pose &pose,
 				       const stg_meters_t range, 
 				       const stg_ray_test_func_t func,
 				       const void* arg,
@@ -467,7 +469,7 @@ stg_raytrace_result_t Model::Raytrace( const Pose &pose,
 			  ztest );
 }
 
-stg_raytrace_result_t Model::Raytrace( const stg_radians_t bearing,
+RaytraceResult Model::Raytrace( const stg_radians_t bearing,
 				       const stg_meters_t range, 
 				       const stg_ray_test_func_t func,
 				       const void* arg,
@@ -491,7 +493,7 @@ void Model::Raytrace( const stg_radians_t bearing,
 		      const stg_radians_t fov,
 		      const stg_ray_test_func_t func,
 		      const void* arg,
-		      stg_raytrace_result_t* samples,
+		      RaytraceResult* samples,
 		      const uint32_t sample_count,
 		      const bool ztest )
 {

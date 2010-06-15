@@ -96,6 +96,30 @@
 #include "option.hh"
 using namespace Stg;
 
+// // function objects for comparing model positions
+bool World::ltx::operator()(const Model* a, const Model* b) const
+{
+	stg_meters_t ax = a->GetGlobalPose().x;
+	stg_meters_t bx = b->GetGlobalPose().x;
+	
+	if( ax == bx )
+		return a < b; // tie breaker
+	
+	return ax < bx;
+}
+bool World::lty::operator()(const Model* a, const Model* b) const
+{
+	stg_meters_t ay = a->GetGlobalPose().y;
+	stg_meters_t by = b->GetGlobalPose().y;
+	
+	if( ay == by )
+		return a < b; // tie breaker
+	
+	return ay < by;
+}
+		
+
+
 // static data members
 unsigned int World::next_id = 0;
 bool World::quit_all = false;
@@ -112,6 +136,8 @@ World::World( const std::string& name,
   models(),
   models_by_name(),
   models_with_fiducials(),
+  models_with_fiducials_byx(),
+  models_with_fiducials_byy(),
   ppm( ppm ), // raytrace resolution
   quit( false ),
   show_clock( false ),
@@ -536,7 +562,6 @@ void World::ConsumeQueue( unsigned int queue_num )
     }
 }
 
-
 bool World::Update()
 {
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
@@ -556,6 +581,22 @@ bool World::Update()
 
   FOR_EACH( it, active_velocity )
 	 (*it)->UpdatePose();
+	
+	
+	// rebuild the sets sorted by position on x,y axis
+#if( 1 )
+	models_with_fiducials_byx.clear(); 
+	models_with_fiducials_byy.clear(); 
+	
+ 	FOR_EACH( it, models_with_fiducials )
+		{
+			models_with_fiducials_byx.insert( *it ); 
+			models_with_fiducials_byy.insert( *it ); 
+		}
+#endif
+
+	//printf( "x %lu y %lu\n", models_with_fiducials_byy.size(),
+	//			models_with_fiducials_byx.size() );
 
   // handle the zeroth queue synchronously in the main thread
   ConsumeQueue( 0 );
@@ -649,7 +690,7 @@ void World::Raytrace( const Pose &gpose, // global pose
 							 const stg_ray_test_func_t func,
 							 const Model* model,			 
 							 const void* arg,
-							 stg_raytrace_result_t* samples, // preallocated storage for samples
+							 RaytraceResult* samples, // preallocated storage for samples
 							 const uint32_t sample_count, // number of samples
 							 const bool ztest ) 
 {
@@ -665,7 +706,7 @@ void World::Raytrace( const Pose &gpose, // global pose
 }
 
 // Stage spends 50-99% of its time in this method.
-stg_raytrace_result_t World::Raytrace( const Pose &gpose, 
+RaytraceResult World::Raytrace( const Pose &gpose, 
 													const stg_meters_t range,
 													const stg_ray_test_func_t func,
 													const Model* mod,		
@@ -676,7 +717,7 @@ stg_raytrace_result_t World::Raytrace( const Pose &gpose,
   return Raytrace( r );
 }
 		
-stg_raytrace_result_t World::Raytrace( const Ray& r )
+RaytraceResult World::Raytrace( const Ray& r )
 {
   //rt_cells.clear();
   //rt_candidate_cells.clear();

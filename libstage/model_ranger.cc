@@ -265,7 +265,7 @@ void ModelRanger::Update( void )
       //for( int r=0; r<sensors[t].ray_count; r++ )
       //{	  
 		
-		stg_raytrace_result_t ray = Raytrace( s.pose,
+		RaytraceResult ray = Raytrace( s.pose,
 														  s.bounds_range.max,
 														  ranger_match,
 														  NULL );

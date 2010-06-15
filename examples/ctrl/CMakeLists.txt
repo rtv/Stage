@@ -23,10 +23,10 @@ foreach( PLUGIN ${PLUGINS} )
 endforeach( PLUGIN )
 				
 ADD_LIBRARY( fasr2 MODULE fasr2.cc astar/findpath.cpp )
-ADD_LIBRARY( fasr3 MODULE fasr3.cc astar/findpath.cpp )
+ADD_LIBRARY( econ MODULE econ.cc astar/findpath.cpp )
 
 # add fasr2 to the list of plugins
-SET( PLUGINS ${PLUGINS} fasr2 fasr3)
+SET( PLUGINS ${PLUGINS} fasr2 econ )
 
 set_source_files_properties( ${PLUGINS} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
@@ -48,5 +48,5 @@ SET_TARGET_PROPERTIES( ${PLUGINS} PROPERTIES PREFIX "" )
 
 
 # install in <prefix>/lib
-install( TARGETS ${PLUGINS} fasr2 fasr3 DESTINATION lib)
+install( TARGETS ${PLUGINS} fasr2 econ DESTINATION lib)
 

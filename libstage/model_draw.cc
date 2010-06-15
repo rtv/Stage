@@ -15,11 +15,11 @@ void Model::DrawSelected()
   
   glTranslatef( pose.x, pose.y, pose.z+0.01 ); // tiny Z offset raises rect above grid
   
-  Pose gpose = GetGlobalPose();
+  Pose gp = GetGlobalPose();
   
   char buf[64];
   snprintf( buf, 63, "%s [%.2f %.2f %.2f %.2f]", 
-				token.c_str(), gpose.x, gpose.y, gpose.z, rtod(gpose.a) );
+				token.c_str(), gp.x, gp.y, gp.z, rtod(gp.a) );
   
   PushColor( 0,0,0,1 ); // text color black
   Gl::draw_string( 0.5,0.5,0.5, buf );
@@ -44,7 +44,82 @@ void Model::DrawSelected()
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   PopColor();
 
+
+	// testing
+
+	// highlight all fiducial robots within a certain range
+
+//  	Gl::pose_inverse_shift( gp );
+
+// 	double rng = 10.0;
+
+// 	Model left( gp.x - rng, gp.y, world );
+// 	Model right( gp.x + rng, gp.y, world );	
+// 	Model down( gp.x, gp.y - rng, world );
+// 	Model up( gp.x, gp.y + rng, world );
+	
+// 	std::set<Model*>::iterator xmin = world->models_with_fiducials_byx.lower_bound( &left );
+//  	std::set<Model*>::iterator xmax = world->models_with_fiducials_byx.upper_bound( &right );
+	
+//  	std::set<Model*>::iterator ymin = world->models_with_fiducials_byy.lower_bound( &down );
+// 	std::set<Model*>::iterator ymax = world->models_with_fiducials_byy.upper_bound( &up );
+
+	
+// 	PushColor( Color(1,0,0,0.5) );
+
+	
+// 	std::vector<Model*> candidates;
+// 	std::set<Model*> horiz, vert;
+		
+// 		while( xmin != xmax )
+// 			{
+// 				//candidates.insert( *xmin );
+// 				horiz.insert( *xmin);
+				
+// 				Pose op = (*xmin)->GetGlobalPose();		 		 
+// 				glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );
+				
+// 				xmin++;
+// 			}
+	
+// 	PopColor();
+	
+// 	PushColor( Color(0,0,1,0.5) );
+	
+// 	while( ymin != ymax )
+// 		{
+// 			vert.insert( *ymin );
+			
+// 			//			candidates.insert( *ymin );
+			
+// 			Pose op = (*ymin)->GetGlobalPose();
+// 			glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );			
+// 			ymin++;
+// 		}
+	
+// 	PopColor();
+			
+// 	PushColor( Color(0,1,0,0.5) );
+	
+// 	std::set_intersection( horiz.begin(), horiz.end(),
+// 												 vert.begin(), vert.end(),
+// 												 std::inserter( candidates, candidates.end() ) ); 
+	
+// 	//printf( "cand sz %lu\n", candidates.size() );
+
+// 	glTranslatef( 0,0,1.0 );
+
+// 	FOR_EACH( it, candidates )
+// 		{
+// 			Pose op = (*it)->GetGlobalPose();
+// 			glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );			
+// 		}
+	
+// 	PopColor();
+ 
+
   glPopMatrix();
+
 }
 
 

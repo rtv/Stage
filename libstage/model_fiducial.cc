@@ -176,7 +176,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 
 	//printf( "range %.2f\n", range );
 
-	stg_raytrace_result_t ray( Raytrace( dtheta,
+	RaytraceResult ray( Raytrace( dtheta,
 																			 max_range_anon, // TODOscan only as far as the object
 																			 fiducial_raytrace_match,
 																			 NULL,
@@ -209,6 +209,8 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 	fid.geom.y = hisgeom.size.y;
 	fid.geom.a = normalize( hispose.a - mypose.a);
 	
+	//fid.pose_rel = hispose - this->GetGlobalPose();
+
 	// store the global pose of the fiducial (mainly for the GUI)
 	fid.pose = hispose;
 	
@@ -222,6 +224,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 	fiducials.push_back( fid );
 }	
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
 //
@@ -231,12 +234,64 @@ void ModelFiducial::Update( void )
 
 	if( subs < 1 )
 		return;
-	
+
 	// reset the array of detected fiducials
 	fiducials.clear();
+
+#if( 1 )	
+	// BEGIN EXPERIMENT
 	
-	FOR_EACH( it, world->models_with_fiducials )
-	  AddModelIfVisible( *it );	
+	// find two sets of fiducial-bearing models, within sensor range on
+	// the two different axes
+	
+	double rng = max_range_anon;
+	Pose gp = GetGlobalPose();	
+	Model edge;	// dummy model used to find bounds in the sets
+	
+	edge.pose = Pose( gp.x-rng, gp.y, 0, 0 ); // LEFT
+	std::set<Model*,World::ltx>::iterator xmin = 
+		world->models_with_fiducials_byx.lower_bound( &edge );
+	
+	edge.pose = Pose( gp.x+rng, gp.y, 0, 0 ); // RIGHT
+	const std::set<Model*,World::ltx>::iterator xmax = 
+		world->models_with_fiducials_byx.upper_bound( &edge );
+	
+	edge.pose = Pose( gp.x, gp.y-rng, 0, 0 ); // BOTTOM
+	std::set<Model*,World::lty>::iterator ymin = 
+		world->models_with_fiducials_byy.lower_bound( &edge );
+	
+	edge.pose = Pose( gp.x, gp.y+rng, 0, 0 ); // TOP
+	const std::set<Model*,World::lty>::iterator ymax = 
+		world->models_with_fiducials_byy.upper_bound( &edge );
+		
+	// put these models into sets keyed on model pointer, rather than position
+	std::set<Model*> horiz, vert;
+	
+	for( ; xmin != xmax;  xmin++)
+		horiz.insert( *xmin);
+	
+	for( ; ymin != ymax; ymin++ )
+		vert.insert( *ymin );
+	
+	// the intersection of the sets is all the fiducials closeby
+	std::vector<Model*> candidates;
+	std::set_intersection( horiz.begin(), horiz.end(),
+												 vert.begin(), vert.end(),
+												 std::inserter( candidates, candidates.end() ) ); 
+	
+	//	printf( "cand sz %lu\n", candidates.size() );
+			
+	// create sets sorted by x and y position
+ 	FOR_EACH( it, candidates ) //world->models_with_fiducials )
+ 			AddModelIfVisible( *it );	
+#else
+	// create sets sorted by x and y position
+ 	FOR_EACH( it, world->models_with_fiducials )
+ 			AddModelIfVisible( *it );	
+
+#endif
+
+	// find the range of fiducials within range in X
 
 	Model::Update();
 }
