@@ -70,13 +70,13 @@ set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK
 # Apple seems to have trouble when libstage and stagebinary are linked against FLTK
 # Newer Linux distributions won't allow stagebinary to inherit libstage's links to fltk, so we need
 # to explicitly link on Linux
-if (NOT LINUX)
+if (NOT PROJECT_OS_LINUX)
 set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
 target_link_libraries( stagebinary stage )
-ELSE (NOT LINUX)
+ELSE (NOT PROJECT_OS_LINUX)
 set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage LINK_FLAGS "${FLTK_LDFLAGS}" )
 target_link_libraries( stagebinary stage pthread )
-ENDIF(NOT LINUX)
+ENDIF(NOT PROJECT_OS_LINUX)
 
 INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin
