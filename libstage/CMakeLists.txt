@@ -49,9 +49,9 @@ set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAG
 add_library(stage SHARED ${stageSrcs})
 
 target_link_libraries( stage
-		       ${OPENGL_LIBRARIES}
   				 ${LTDL_LIB}
-  				 ${FLTK_LIBS2}
+#		       ${OPENGL_LIBRARIES}
+#  				 ${FLTK_LIBS2}
 )
 
 # causes the shared library to have a version number
@@ -65,11 +65,12 @@ set( stagebinarySrcs main.cc )
 add_executable( stagebinary ${stagebinarySrcs} )
 
 # When compiling stagebinarySrcs, pass CFLAGS from fltk-config
-set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+#set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+#set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage LINK_FLAGS "${FLTK_LDFLAGS}" )
+#target_link_libraries( stagebinary stage pthread )
 
-set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage LINK_FLAGS "${FLTK_LDFLAGS}" )
-
-target_link_libraries( stagebinary stage pthread )
+set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
+target_link_libraries( stagebinary stage )
 
 INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin
