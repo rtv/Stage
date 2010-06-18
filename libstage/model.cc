@@ -24,6 +24,8 @@
     origin [ 0.0 0.0 0.0 0.0 ]
     velocity [ 0.0 0.0 0.0 0.0 ]
 
+		update_interval 100
+
     color "red"
     color_rgba [ 0.0 0.0 0.0 1.0 ]
     bitmap ""
@@ -70,6 +72,10 @@
     that if the model hits an obstacle, its velocity will be set to
     zero.
  
+    - update_interval float (defaults to 100) The amount of simulated
+      time in milliseconds between calls to Model::Update(). Controls
+      the frequency with which this model's data is generated.
+
 		- velocity_enable int (defaults to 0)\n Most models ignore their
 		velocity state. This saves on processing time since most models
 		never have their velocity set to anything but zero. Some

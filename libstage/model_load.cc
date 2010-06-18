@@ -229,6 +229,8 @@ void Model::Load()
     }
   
   
+	interval = wf->ReadFloat( wf_entity, "update_interval", interval );
+	
 
   Say( wf->ReadString(wf_entity, "say", "" ));
   
