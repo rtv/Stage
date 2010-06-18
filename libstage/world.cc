@@ -212,11 +212,17 @@ bool World::UpdateAll()
 {  
   bool quit = true;
   
+	puts( "updateall" );
+
   FOR_EACH( world_it, World::world_set )
     {
+			puts( "world" );
+
       if( (*world_it)->Update() == false )
 		  quit = false;
     }
+
+	printf( "quit = %d\n", quit );
 
   return quit;
 }
@@ -472,7 +478,7 @@ void World::UnLoad()
 
 bool World::PastQuitTime() 
 { 
-  return( (quit_time > 0) && (sim_time >= quit_time) ); 
+	return( (quit_time > 0) && (sim_time >= quit_time) ); 
 }
 
 std::string World::ClockString() const

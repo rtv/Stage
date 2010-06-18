@@ -70,7 +70,7 @@ location of the center of the window in world coordinates (meters)
 - rotate [ <pitch:float> <yaw:float> ]\n
 angle relative to straight up, angle of rotation (degrees)
 - scale <float>\n
-ratio of world to pixel coordinates (window zoom)
+ ratio of world to pixel coordinates (window zoom)
 - pcam_loc [ <x:int> <y:int> <z:int> ]\n
 location of the perspective camera (meters)
 - pcam_angle [ <pitch:float> <yaw:float> ]\n
@@ -437,6 +437,8 @@ void WorldGui::DrawVoxels()
 
 void WorldGui::windowCb( Fl_Widget* w, WorldGui* wg )
 {
+	puts( "callback" );
+
   switch ( Fl::event() ) {
   case FL_SHORTCUT:
     if ( Fl::event_key() == FL_Escape )
@@ -660,7 +662,7 @@ void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* wg )
       break; //return
     // otherwise, ESC pressed-> do as below
   case FL_CLOSE: // clicked close button
-    // override event to close
+    // override event to close		
     event = OptionsDlg::CLOSE;
     break;
   }

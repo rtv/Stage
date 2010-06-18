@@ -64,20 +64,15 @@ set( stagebinarySrcs main.cc )
 
 add_executable( stagebinary ${stagebinarySrcs} )
 
-# When compiling stagebinarySrcs, pass CFLAGS from fltk-config
-#set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
-#set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage LINK_FLAGS "${FLTK_LDFLAGS}" )
-#target_link_libraries( stagebinary stage pthread )
-
 # Apple seems to have trouble when libstage and stagebinary are linked against FLTK
 # Newer Linux distributions won't allow stagebinary to inherit libstage's links to fltk, so we need
 # to explicitly link on Linux
 if (APPLE)
-set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
-target_link_libraries( stagebinary stage )
+  set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
+  target_link_libraries( stagebinary stage )
 ELSE (APPLE)
-set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage LINK_FLAGS "${FLTK_LDFLAGS}" )
-target_link_libraries( stagebinary stage pthread )
+  set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage LINK_FLAGS "${FLTK_LDFLAGS}" )
+  target_link_libraries( stagebinary stage pthread )
 ENDIF(APPLE)
 
 INSTALL(TARGETS stagebinary stage

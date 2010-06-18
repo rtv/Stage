@@ -447,7 +447,8 @@ Block* Model::AddBlockRect( stg_meters_t x,
 																pts, 4, 
 																0, dz, 
 																color,
-																true );
+																true, 
+																false );
 
   blockgroup.AppendBlock( newblock );
 

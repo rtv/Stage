@@ -254,7 +254,7 @@ void BlockGroup::LoadBlock( Model* mod, Worldfile* wf, int entity )
   
 void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile* wf )
 {
-  PRINT_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile );
+  Print_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile );
   
   char full[_POSIX_PATH_MAX];
   
@@ -310,11 +310,10 @@ void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfil
 		  pts[3].y = y + h;							 
 			 
 		  AppendBlock( new Block( mod,
-															pts,4,
-															0,1,
-															col,
-															true,
-															false) );		 
+								  pts,4,
+								  0,1,
+								  col,
+								  true ) );		 
 		}			 
 	  free( rects );
 	}  

@@ -1168,12 +1168,13 @@ namespace Stg
 		  blocks. The point data is copied, so pts can safely be freed
 		  after constructing the block.*/
     Block( Model* mod,  
-			  stg_point_t* pts, 
-			  size_t pt_count,
-			  stg_meters_t zmin,
-			  stg_meters_t zmax,
-			  Color color,
-			  bool inherit_color );
+					 stg_point_t* pts, 
+					 size_t pt_count,
+					 stg_meters_t zmin,
+					 stg_meters_t zmax,
+					 Color color,
+					 bool inherit_color,
+					 bool wheel );
   
     /** A from-file  constructor */
     Block(  Model* mod,  Worldfile* wf, int entity);
@@ -1237,7 +1238,8 @@ namespace Stg
     Bounds local_z; ///<  z extent in local coords
     Color color;
     bool inherit_color;
-	 
+		bool wheel;
+
     void DrawTop();
     void DrawSides();
 	 
