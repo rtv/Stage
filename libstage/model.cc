@@ -72,7 +72,7 @@
     that if the model hits an obstacle, its velocity will be set to
     zero.
  
-    - update_interval float (defaults to 100) The amount of simulated
+    - update_interval int (defaults to 100) The amount of simulated
       time in milliseconds between calls to Model::Update(). Controls
       the frequency with which this model's data is generated.
 
