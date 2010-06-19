@@ -49,6 +49,14 @@ bool Stg::InitDone()
   return init_called;
 }
 
+const Color Color::blue( 0,0,1 );
+const Color Color::red( 1,0,0 );
+const Color Color::green( 0,1,0 );
+const Color Color::yellow( 1,1,0 );
+const Color Color::magenta( 1,0,1 );
+const Color Color::cyan( 0,1,1 );		
+
+
 static inline uint8_t* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
 {
   uint8_t* pixels = (uint8_t*)(img->data()[0]);

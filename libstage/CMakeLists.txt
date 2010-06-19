@@ -49,9 +49,9 @@ set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAG
 add_library(stage SHARED ${stageSrcs})
 
 target_link_libraries( stage
-		       ${OPENGL_LIBRARIES}
   				 ${LTDL_LIB}
-  				 ${FLTK_LIBS2}
+#		       ${OPENGL_LIBRARIES}
+#  				 ${FLTK_LIBS2}
 )
 
 # causes the shared library to have a version number
@@ -63,9 +63,6 @@ set_target_properties( stage PROPERTIES
 set( stagebinarySrcs main.cc )
 
 add_executable( stagebinary ${stagebinarySrcs} )
-
-# When compiling stagebinarySrcs, pass CFLAGS from fltk-config
-set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
 # Apple seems to have trouble when libstage and stagebinary are linked against FLTK
 # Newer Linux distributions won't allow stagebinary to inherit libstage's links to fltk, so we need

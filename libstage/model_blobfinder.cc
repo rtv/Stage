@@ -180,7 +180,7 @@ void ModelBlobfinder::Update( void )
 {     
 	// generate a scan for post-processing into a blob image
 	
-	stg_raytrace_result_t* samples = new stg_raytrace_result_t[scan_width];
+	RaytraceResult* samples = new RaytraceResult[scan_width];
 
 	Raytrace( pan, range, fov, blob_match, NULL, samples, scan_width, false );
 

@@ -359,7 +359,7 @@ void ModelGripper::UpdateBreakBeams()
 		double bbr = 
 		  (1.0 - cfg.paddle_position) * (geom.size.y - (geom.size.y * cfg.paddle_size.y * 2.0 ));
 		
-		stg_raytrace_result_t sample = 
+		RaytraceResult sample = 
 		  Raytrace( pz,  // ray origin
 						bbr, // range
 						gripper_raytrace_match, // match func
@@ -410,7 +410,7 @@ void ModelGripper::UpdateContacts()
   // paddle beam max range
   double bbr = cfg.paddle_size.x * geom.size.x; 
   
-  stg_raytrace_result_t leftsample = 
+  RaytraceResult leftsample = 
 	 Raytrace( lpz,  // ray origin
 				  bbr, // range
 				  gripper_raytrace_match, // match func
@@ -419,7 +419,7 @@ void ModelGripper::UpdateContacts()
   
   cfg.contact[0] = leftsample.mod;
   
-  stg_raytrace_result_t rightsample = 
+  RaytraceResult rightsample = 
 	 Raytrace( rpz,  // ray origin
 				  bbr, // range
 				  gripper_raytrace_match, // match func

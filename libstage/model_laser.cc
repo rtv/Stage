@@ -186,18 +186,20 @@ void ModelLaser::Update( void )
   // trace the ray, incrementing its heading for each sample
   for( unsigned int t(0); t<sample_count; t += resolution )
     {
-			stg_raytrace_result_t r( world->Raytrace( ray ) );
+			RaytraceResult r( world->Raytrace( ray ) );
 			samples[t].range = r.range;
 		
       // if we hit a model and it reflects brightly, we set
       // reflectance high, else low
       if( r.mod && ( r.mod->vis.laser_return >= LaserBright ) )	
-				samples[t].reflectance = 1;
+				samples[t].reflectance = 1.0;
       else
-				samples[t].reflectance = 0;		
+				samples[t].reflectance = 0.0;		
 		
 			// point the ray to the next angle
 			ray.origin.a += sample_incr;
+
+			
     }
   
   // we may need to interpolate the samples we skipped 
@@ -255,6 +257,11 @@ void ModelLaser::Print( char* prefix ) const
 }
 
 const std::vector<ModelLaser::Sample>& ModelLaser::GetSamples() const
+{ 
+  return samples;
+}
+
+std::vector<ModelLaser::Sample>& ModelLaser::GetSamples()
 { 
   return samples;
 }
