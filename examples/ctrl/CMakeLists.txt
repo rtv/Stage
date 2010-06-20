@@ -38,5 +38,5 @@ endforeach( PLUGIN )
 SET_TARGET_PROPERTIES( ${PLUGINS} PROPERTIES PREFIX "" )
 
 # install in <prefix>/lib
-install( TARGETS ${PLUGINS} fasr2 DESTINATION lib) 
+install( TARGETS ${PLUGINS} DESTINATION ${PROJECT_PLUGIN_DIR}) 
 
