@@ -10,4 +10,4 @@ TARGET_LINK_LIBRARIES( expand_pioneer stage )
 set_source_files_properties( ${expand_pioneerSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 SET_TARGET_PROPERTIES( expand_pioneer PROPERTIES PREFIX "" )
 
-INSTALL( TARGETS expand_swarm expand_pioneer DESTINATION lib)
+INSTALL( TARGETS expand_swarm expand_pioneer DESTINATION ${PROJECT_PLUGIN_DIR})

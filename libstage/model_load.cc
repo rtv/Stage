@@ -10,6 +10,7 @@
 #include "stage.hh"
 #include "worldfile.hh"
 #include "file_manager.hh"
+#include "config.h"
 using namespace Stg;
 
 //#define DEBUG
@@ -229,7 +230,7 @@ void Model::Load()
     }
   
   
-	interval = 1000 * wf->Readint( wf_entity, "update_interval", interval/1000 );
+	interval = 1000 * wf->ReadInt( wf_entity, "update_interval", interval/1000 );
 	
 
   Say( wf->ReadString(wf_entity, "say", "" ));
@@ -325,6 +326,9 @@ void Model::LoadControllerModule( const char* lib )
   }
 
   lt_dlsetsearchpath( FileManager::stagePath().c_str() );
+
+  // PLUGIN_PATH now defined in config.h
+  lt_dladdsearchdir( PLUGIN_PATH );
 
   lt_dlhandle handle = NULL;
   

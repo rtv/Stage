@@ -48,8 +48,8 @@ set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAG
  
 add_library(stage SHARED ${stageSrcs})
 
-target_link_libraries( stage
-  				 ${LTDL_LIB}
+target_link_libraries( stage  
+           ${LTDL_LIB}
 #		       ${OPENGL_LIBRARIES}   # is it safe to remove these permanently?
 #  				 ${FLTK_LIBS2}
 )
@@ -68,7 +68,6 @@ add_executable( stagebinary ${stagebinarySrcs} )
 # Newer Linux distributions won't allow stagebinary to inherit libstage's links to fltk, so we need
 # to explicitly link on Linux
 
-
 if (NOT PROJECT_OS_LINUX)
   set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
   target_link_libraries( stagebinary stage )
@@ -79,7 +78,7 @@ ENDIF(NOT PROJECT_OS_LINUX)
 
 INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION lib
+	LIBRARY DESTINATION ${PROJECT_LIB_DIR}
 )
 
 INSTALL(FILES stage.hh 
