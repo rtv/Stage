@@ -14,7 +14,7 @@ terms of the GNU General Public License version 2 or later:
 - Jeremy Asher (jra11@sfu.ca)
 - Alex Couture-Beil (asc17@sfu.ca)
 - Geoff Biggs (git@killbots.net)
-
+- Rich Mattes (jpgr87@github.com)
 
 Many patches and bug reports have been contributed by users around the
 world.  Stage is part of the Player Project (http://playerstage.org), 
