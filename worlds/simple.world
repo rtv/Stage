@@ -9,7 +9,7 @@ include "sick.inc"
 # time to pause (in GUI mode) or quit (in headless mode (-g)) the simulation
 quit_time 3600 # 1 hour of simulated time
 
-paused 1
+paused 0
 
 resolution 0.02
 

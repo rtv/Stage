@@ -30,9 +30,8 @@ SET( PLUGINS ${PLUGINS} fasr2 )
 set_source_files_properties( ${PLUGINS} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
 foreach( PLUGIN ${PLUGINS} )
-  TARGET_LINK_LIBRARIES( ${PLUGIN} stage )
+  TARGET_LINK_LIBRARIES( ${PLUGIN} stage ${OPENGL_LIBRARIES} )
 endforeach( PLUGIN )
-
 
 # delete the "lib" prefix from the plugin libraries
 SET_TARGET_PROPERTIES( ${PLUGINS} PROPERTIES PREFIX "" )
