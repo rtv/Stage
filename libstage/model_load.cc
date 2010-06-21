@@ -228,10 +228,9 @@ void Model::Load()
 				LoadControllerModule( lib );
 		  }
     }
-  
-  
+    
+	// internally interval is in usec, but we use msec in worldfiles
 	interval = 1000 * wf->ReadInt( wf_entity, "update_interval", interval/1000 );
-	
 
   Say( wf->ReadString(wf_entity, "say", "" ));
   
