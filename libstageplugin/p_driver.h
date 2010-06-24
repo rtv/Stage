@@ -104,12 +104,16 @@ class InterfaceModel
 		  int section,
 		  const std::string& type );
 
+  virtual ~InterfaceModel( void ){ Unsubscribe(); };
+
+  virtual void Subscribe( void );
+  virtual void Unsubscribe( void );
+
+ protected:
   Stg::Model* mod;
 
-  virtual ~InterfaceModel( void ){ /* TODO: clean up*/ };
-
-  virtual void Subscribe( void ){ this->mod->Subscribe(); };
-  virtual void Unsubscribe( void ){ this->mod->Unsubscribe(); };
+ private:
+  bool subscribed;
 };
 
 

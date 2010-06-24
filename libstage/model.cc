@@ -649,7 +649,7 @@ void Model::Subscribe( void )
   world->total_subs++;
   world->dirty = true; // need redraw
   
-  //printf( "subscribe to %s %d\n", token, subs );
+  //printf( "subscribe to %s %d\n", Token(), subs );
   
   // if this is the first sub, call startup
   if( subs == 1 )
@@ -662,7 +662,7 @@ void Model::Unsubscribe( void )
   world->total_subs--;
   world->dirty = true; // need redraw
 
-  //printf( "unsubscribe from %s %d\n", token, subs );
+  //printf( "unsubscribe from %s %d\n", Token(), subs );
 
   // if this is the last sub, call shutdown
   if( subs == 0 )
