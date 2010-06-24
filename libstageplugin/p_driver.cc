@@ -228,7 +228,7 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 											ConfigFile* cf,
 											int section,
 											const std::string& type )
-  : Interface( addr, driver, cf, section )
+  : Interface( addr, driver, cf, section ), mod( NULL ), subscribed( false )
 {
   char* model_name = (char*)cf->ReadString(section, "model", NULL );
 
@@ -261,6 +261,24 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 
   if( !player_quiet_startup )
     printf( "\"%s\"\n", this->mod->Token() );
+}
+
+void InterfaceModel::Subscribe()
+{
+  if( !subscribed && this->mod )
+    {
+      this->mod->Subscribe();
+      subscribed = true;
+    }
+}
+
+void InterfaceModel::Unsubscribe()
+{
+  if( subscribed )
+    {
+      this->mod->Unsubscribe();
+      subscribed = false;
+    }
 }
 
 
