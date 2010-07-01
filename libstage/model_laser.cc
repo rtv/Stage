@@ -284,9 +284,8 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
 
   ModelLaser* laser( dynamic_cast<ModelLaser*>(mod) );
 	
-  const std::vector<Sample>& samples( laser->GetSamples() );
-    
-  size_t sample_count( samples.size() );
+  const std::vector<Sample>& samples( laser->GetSamples() );    
+  const size_t sample_count( samples.size() );
 
   glPushMatrix();
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -313,6 +312,7 @@ void ModelLaser::Vis::Visualize( Model* mod, Camera* cam )
 			// if the sample is unusually bright, draw a little blob
 			if( samples[s].reflectance > 0 )
 				{
+					// this happens rarely so we can do it in immediate mode
 					glBegin( GL_POINTS );
 					glVertex2f( pts[2*s+2], pts[2*s+3] );
 					glEnd();

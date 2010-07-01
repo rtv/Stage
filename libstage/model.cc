@@ -169,7 +169,7 @@ uint64_t Model::trail_interval(5);
 std::map<stg_id_t,Model*> Model::modelsbyid;
 std::map<std::string, creator_t> Model::name_map;
 
-void Size::Load( Worldfile* wf, int section, const char* keyword )
+void Size::Load( Worldfile* wf, const int section, const char* keyword )
 {
 	if( CProperty* prop = wf->GetProperty( section, keyword ) )	
 		{
@@ -194,7 +194,7 @@ void Size::Save( Worldfile* wf, int section, const char* keyword ) const
   wf->WriteTupleLength( section, keyword, 2, z );
 }
 
-void Pose::Load( Worldfile* wf, int section, const char* keyword )
+void Pose::Load( Worldfile* wf, const int section, const char* keyword )
 {
 	CProperty* prop = wf->GetProperty( section, keyword );	
 	
@@ -215,7 +215,7 @@ void Pose::Load( Worldfile* wf, int section, const char* keyword )
 		}
 }
 
-void Pose::Save( Worldfile* wf, int section, const char* keyword )
+void Pose::Save( Worldfile* wf, const int section, const char* keyword )
 {
   wf->WriteTupleLength( section, keyword, 0, x );
   wf->WriteTupleLength( section, keyword, 1, y );
@@ -356,9 +356,8 @@ Model::~Model( void )
 	if( world ) // if I'm not a worldless dummy model
 		{
 			UnMap(); // remove from the raytrace bitmap
-
-			ModelPtrVec& vec  = parent ? parent->children : world->children;
-			EraseAll( this, vec );			
+			
+			EraseAll( this, parent ? parent->children : world->children );			
 			modelsbyid.erase(id);			
 			world->RemoveModel( this );
 		}
@@ -482,16 +481,12 @@ RaytraceResult Model::Raytrace( const stg_radians_t bearing,
 				       const void* arg,
 				       const bool ztest )
 {
-  Pose raystart;
-  bzero( &raystart, sizeof(raystart));
-  raystart.a = bearing;
-
-  return world->Raytrace( LocalToGlobal(raystart),
-			  range,
-			  func,
-			  this,
-			  arg,
-			  ztest );
+  return world->Raytrace( LocalToGlobal(Pose(0,0,0,bearing)),
+													range,
+													func,
+													this,
+													arg,
+													ztest );
 }
 
 
@@ -523,20 +518,15 @@ void Model::Raytrace( const stg_radians_t bearing,
 Pose Model::GlobalToLocal( const Pose& pose ) const
 {
   // get model's global pose
-  Pose org = GetGlobalPose();
+  const Pose org = GetGlobalPose();
   
   // compute global pose in local coords
-  double sx =  (pose.x - org.x) * cos(org.a) + (pose.y - org.y) * sin(org.a);
-  double sy = -(pose.x - org.x) * sin(org.a) + (pose.y - org.y) * cos(org.a);
-  double sz = pose.z - org.z;
-  double sa = pose.a - org.a;
+  const double sx =  (pose.x - org.x) * cos(org.a) + (pose.y - org.y) * sin(org.a);
+  const double sy = -(pose.x - org.x) * sin(org.a) + (pose.y - org.y) * cos(org.a);
+  const double sz = pose.z - org.z;
+  const double sa = pose.a - org.a;
   
-  org.x = sx;
-  org.y = sy;
-  org.z = sz;
-  org.a = sa;
-
-  return org;
+  return Pose( sx, sy, sz, sa );
 }
 
 void Model::Say( const std::string& str )
@@ -587,7 +577,7 @@ bool Model::IsRelated( const Model* that ) const
 
 stg_point_t Model::LocalToGlobal( const stg_point_t& pt) const
  {  
-   Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
+   const Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
    return stg_point_t( gpose.x, gpose.y );
  }
 
@@ -595,7 +585,7 @@ stg_point_t Model::LocalToGlobal( const stg_point_t& pt) const
 void Model::LocalToPixels( const std::vector<stg_point_t>& local,
 													 std::vector<stg_point_int_t>& global) const
 {
-	Pose gpose = GetGlobalPose() + geom.pose;
+	const Pose gpose = GetGlobalPose() + geom.pose;
 	
 	FOR_EACH( it, local )
 		{
@@ -695,8 +685,8 @@ void Model::Print( char* prefix ) const
 
 const char* Model::PrintWithPose() const
 {
-  Pose gpose = GetGlobalPose();
-
+  const Pose gpose = GetGlobalPose();
+	
   static char txt[256];
   snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",  
 			  token.c_str(), 
@@ -814,11 +804,10 @@ void Model::UpdateCharge()
   assert( mypp );
   
   if( watts > 0 ) // dissipation rate
-	 {
-		// consume  energy stored in the power pack
-		stg_joules_t consumed =  watts * (interval_energy * 1e-6); 
-		mypp->Dissipate( consumed, GetGlobalPose() );      
-	 }  
+		{
+			// consume  energy stored in the power pack
+			mypp->Dissipate( watts * (interval_energy * 1e-6), GetGlobalPose() );      
+		}  
   
   if( watts_give > 0 ) // transmission to other powerpacks max rate
 	 {  
@@ -841,8 +830,8 @@ void Model::UpdateCharge()
 				  //printf( "   toucher %s can take up to %.2f wats\n", 
 				  //		toucher->Token(), toucher->watts_take );
 				  
-				  stg_watts_t rate = std::min( watts_give, toucher->watts_take );
-				  stg_joules_t amount =  rate * interval_energy * 1e-6;
+				  const stg_watts_t rate = std::min( watts_give, toucher->watts_take );
+				  const stg_joules_t amount =  rate * interval_energy * 1e-6;
 				  
 				  //printf ( "moving %.2f joules from %s to %s\n",
 				  //		 amount, token, toucher->token );
@@ -873,7 +862,7 @@ Model* Model::ConditionalMove( const Pose& newpose )
   assert( newpose.a >= -M_PI );
   assert( newpose.a <=  M_PI );
 
-  Pose startpose( pose );
+  const Pose startpose( pose );
   pose = newpose; // do the move provisionally - we might undo it below
      
   Model* hitmod( TestCollisionTree() );
@@ -905,9 +894,9 @@ void Model::UpdatePose( void )
   
   // find the change of pose due to our velocity vector
   Pose p( velocity.x * interval,
-			 velocity.y * interval,
-			 velocity.z * interval,
-			 normalize( velocity.a * interval ));
+					velocity.y * interval,
+					velocity.z * interval,
+					normalize( velocity.a * interval ));
   
   // attempts to move to the new pose. If the move fails because we'd
   // hit another model, that model is returned.	
@@ -1057,7 +1046,7 @@ Model* Model::GetChild( const std::string& modelname ) const
 {
   // construct the full model name and look it up
   
-  std::string fullname = token + "." + modelname;
+  const std::string fullname = token + "." + modelname;
   
   Model* mod = world->GetModel( fullname );
   
@@ -1099,7 +1088,7 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
   if( pts.size() > 0 )
 	 {
 		glPushMatrix();
-		Size sz = mod->blockgroup.GetSize();
+		//Size sz = mod->blockgroup.GetSize();
 		//glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
 		//glScalef( mod->geom.size.x / sz.x, mod->geom.size.y / sz.y, 1 );
 		
@@ -1172,10 +1161,10 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 }
 
 void Model::RasterVis::SetData( uint8_t* data, 
-										  unsigned int width, 
-										  unsigned int height,
-										  stg_meters_t cellwidth, 
-										  stg_meters_t cellheight )
+																const unsigned int width, 
+																const unsigned int height,
+																const stg_meters_t cellwidth, 
+																const stg_meters_t cellheight )
 {
   // copy the raster for test visualization
   if( this->data ) 
@@ -1191,7 +1180,7 @@ void Model::RasterVis::SetData( uint8_t* data,
 }
 
 
-void Model::RasterVis::AddPoint( stg_meters_t x, stg_meters_t y )
+void Model::RasterVis::AddPoint( const stg_meters_t x, const stg_meters_t y )
 {
   pts.push_back( stg_point_t( x, y ) );
 }
@@ -1202,7 +1191,7 @@ void Model::RasterVis::ClearPts()
 }
 
 
-Model::Flag::Flag( Color color, double size ) 
+Model::Flag::Flag( const Color color, const double size ) 
 	: color(color), size(size), displaylist(0)
 { 
 }

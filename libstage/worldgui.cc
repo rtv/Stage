@@ -242,10 +242,9 @@ WorldGui::WorldGui(int W,int H,const char* L) :
 
 WorldGui::~WorldGui()
 {
-  delete mbar;
-  if ( oDlg )
-    delete oDlg;
-  delete canvas;
+	if( mbar ) delete mbar;
+  if( oDlg ) delete oDlg;
+  if( canvas ) delete canvas;
 }
 
 
@@ -263,22 +262,22 @@ void WorldGui::Load( const char* filename )
 
   fileMan->newWorld( filename );
   
-  stg_usec_t load_start_time = RealTimeNow();
+  const stg_usec_t load_start_time = RealTimeNow();
   
   World::Load( filename );
   
   // worldgui exclusive properties live in the top-level section
-  int world_section = 0; 
+  const int world_section = 0; 
   speedup = wf->ReadFloat( world_section, "speedup", speedup );    
   paused = wf->ReadInt( world_section, "paused", paused );
   
   // use the window section for the rest
-  int window_section = wf->LookupEntity( "window" );
+  const int window_section = wf->LookupEntity( "window" );
   
   if( window_section > 0 ) 
 	 {			
-		int width =  (int)wf->ReadTupleFloat(window_section, "size", 0, w() );
-		int height = (int)wf->ReadTupleFloat(window_section, "size", 1, h() );
+		const int width =  (int)wf->ReadTupleFloat(window_section, "size", 0, w() );
+		const int height = (int)wf->ReadTupleFloat(window_section, "size", 1, h() );
 		size( width,height );
 		size_range( 100, 100 ); // set min size to 100/100, max size to screen size
 		
@@ -296,7 +295,7 @@ void WorldGui::Load( const char* filename )
 		label( title.c_str() );
 	 }
  
-  stg_usec_t load_end_time = RealTimeNow();
+  const stg_usec_t load_end_time = RealTimeNow();
 	
   if( debug )
     printf( "[Load time %.3fsec]\n", 
@@ -315,12 +314,12 @@ bool WorldGui::Save( const char* filename )
   PRINT_DEBUG1( "%s.Save()", token );
   
   // worldgui exclusive properties live in the top-level section
-  int world_section = 0; 
+  const int world_section = 0; 
   wf->WriteFloat( world_section, "speedup", speedup );    
   wf->WriteInt( world_section, "paused", paused );
 
   // use the window section for the rest
-  int window_section = wf->LookupEntity( "window" );
+  const int window_section = wf->LookupEntity( "window" );
 	
   if( window_section > 0 ) // section defined
     {
@@ -355,13 +354,13 @@ bool WorldGui::Update()
   // run speed
   if( updates % timing_interval == 0 )
 	 { 
-		stg_usec_t timenow = RealTimeNow();	 
+		const stg_usec_t timenow = RealTimeNow();	 
 		real_time_interval = timenow - real_time_recorded; 
 		real_time_recorded = timenow;
 	 }   
 
   // inherit
-  bool done = World::Update();
+  const bool done = World::Update();
 
 	if( Model::trail_length > 0 && updates % Model::trail_interval == 0 )
 		FOR_EACH( it, active_velocity )
@@ -380,7 +379,8 @@ std::string WorldGui::ClockString() const
 {
   std::string str = World::ClockString();
   
-  double localratio = (double)sim_interval / (double)(real_time_interval/timing_interval);
+  const double localratio = 
+		(double)sim_interval / (double)(real_time_interval/timing_interval);
   
   char buf[32];
   snprintf( buf, 32, " [%.1f]", localratio );
@@ -405,12 +405,11 @@ void WorldGui::AddModel( Model*  mod  )
 void WorldGui::RemoveChild( Model* mod )
 {
   canvas->RemoveModel( mod );
-
   World::RemoveChild( mod );
 }
 
 
-std::string WorldGui::EnergyString()
+std::string WorldGui::EnergyString() const
 {	
   char str[512]; 
   snprintf( str, 255, "Energy\n  stored:   %.0f / %.0f KJ\n  input:    %.0f KJ\n  output:   %.0f KJ at %.2f KW\n",
@@ -423,13 +422,13 @@ std::string WorldGui::EnergyString()
   return std::string( str );
 }
 
-void WorldGui::DrawOccupancy()
+void WorldGui::DrawOccupancy() const
 {  
   FOR_EACH( it, superregions )
 	 (*it).second->DrawOccupancy();
 }
 
-void WorldGui::DrawVoxels()
+void WorldGui::DrawVoxels() const
 {  
   FOR_EACH( it, superregions )
 	 (*it).second->DrawVoxels();
@@ -437,8 +436,6 @@ void WorldGui::DrawVoxels()
 
 void WorldGui::windowCb( Fl_Widget* w, WorldGui* wg )
 {
-	puts( "callback" );
-
   switch ( Fl::event() ) {
   case FL_SHORTCUT:
     if ( Fl::event_key() == FL_Escape )
@@ -449,14 +446,13 @@ void WorldGui::windowCb( Fl_Widget* w, WorldGui* wg )
       return;
   }
 
-  puts( "User closed window" );
+  puts( "Stage: User closed window" );
   exit(0);
 }
 
 void WorldGui::fileLoadCb( Fl_Widget* w, WorldGui* wg )
 {
   const char* filename;
-  //bool success;
   const char* pattern = "World Files (*.world)";
 	
 	std::string worldsPath = wg->fileMan->worldsRoot();
@@ -494,7 +490,7 @@ void WorldGui::fileLoadCb( Fl_Widget* w, WorldGui* wg )
 void WorldGui::fileSaveCb( Fl_Widget* w, WorldGui* wg )
 {
   // save to current file
-  bool success =  wg->Save( NULL );
+  const bool success =  wg->Save( NULL );
   if ( !success ) {
     fl_alert( "Error saving world file." );
   }
@@ -507,7 +503,7 @@ void WorldGui::fileSaveAsCb( Fl_Widget* w, WorldGui* wg )
 
 void WorldGui::fileExitCb( Fl_Widget* w, WorldGui* wg ) 
 {
-  bool done = wg->closeWindowQuery();
+  const bool done = wg->closeWindowQuery();
   if (done) {
 	 puts( "User exited via menu" );
     exit(0);
@@ -652,8 +648,7 @@ void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* wg )
 void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* wg ) 
 {
   // get event from dialog
-  OptionsDlg::event_t event;
-  event = oDlg->event();
+  OptionsDlg::event_t event = oDlg->event();
 	
   // Check FLTK events first
   switch ( Fl::event() ) {
@@ -717,14 +712,14 @@ void WorldGui::helpAboutCb( Fl_Widget* w, WorldGui* wg )
   Fl_Box* box = new Fl_Box( Spc, Spc, 
 			    Width-2*Spc, pngH ); // widget that will contain image
 	
-  std::string fullpath;
-  fullpath = FileManager::findFile( "assets/stagelogo.png" );
-  Fl_PNG_Image* png = new Fl_PNG_Image( fullpath.c_str() ); // load image into ram
-  box->image( png ); // attach image to box
+  std::string fullpath = FileManager::findFile( "assets/stagelogo.png" );
 	
-  Fl_Text_Display* textDisplay;
-  textDisplay = new Fl_Text_Display( Spc, pngH+2*Spc,
-				     Width-2*Spc, Height-pngH-ButtonH-4*Spc );
+  box->image( new Fl_PNG_Image( fullpath.c_str() )); // load image and attach image to box
+	
+	Fl_Text_Display* textDisplay = 
+		new Fl_Text_Display( Spc, pngH+2*Spc,
+												 Width-2*Spc, Height-pngH-ButtonH-4*Spc );
+	
   textDisplay->box( FL_NO_BOX );
   textDisplay->color( win->color() );
   win->callback( (Fl_Callback*)aboutCloseCb, textDisplay );
@@ -737,10 +732,10 @@ void WorldGui::helpAboutCb( Fl_Widget* w, WorldGui* wg )
   //textDisplay->wrap_mode( true, 50 );
   textDisplay->buffer( tbuf );
 	
-  Fl_Return_Button* button;
-  button = new Fl_Return_Button( (Width - ButtonW)/2, Height-Spc-ButtonH,
-				 ButtonW, ButtonH,
-				 "&OK" );
+  Fl_Return_Button* button = 
+		new Fl_Return_Button( (Width - ButtonW)/2, Height-Spc-ButtonH,
+													ButtonW, ButtonH,
+													"&OK" );
   button->callback( (Fl_Callback*)aboutOKBtnCb );
 	
   win->show();
@@ -753,17 +748,17 @@ void WorldGui::moreHelptCb( Fl_Widget* w, WorldGui* wg )
   const int Spc = 10;
 	
   Fl_Window* win = new Fl_Window( Width, Height ); // make a window
-	  win->label( "Getting help with Stage" );
-
-  Fl_Text_Display* textDisplay;
-  textDisplay = new Fl_Text_Display( Spc, Spc,
+	win->label( "Getting help with Stage" );
+	
+	Fl_Text_Display* textDisplay =
+		new Fl_Text_Display( Spc, Spc,
 												 Width-2*Spc, Height-2*Spc );
-
+	
   win->resizable( textDisplay );
   textDisplay->box( FL_NO_BOX );
   textDisplay->color( win->color() );
 		
-  Fl_Text_Buffer* tbuf = new Fl_Text_Buffer;
+  Fl_Text_Buffer* tbuf = new Fl_Text_Buffer();
   tbuf->append( MoreHelpText );
   // textDisplay->wrap_mode( true, 50 );
   textDisplay->buffer( tbuf );

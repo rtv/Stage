@@ -1522,8 +1522,8 @@ namespace Stg
     virtual void PushColor( double r, double g, double b, double a );
     virtual void PopColor();
 	
-    void DrawOccupancy();
-    void DrawVoxels();
+    void DrawOccupancy() const;
+    void DrawVoxels() const;
 	 
   public:
 	
@@ -1554,7 +1554,7 @@ namespace Stg
     void Show(); 
 
     /** Get human readable string that describes the current global energy state. */
-    std::string EnergyString( void );	
+    std::string EnergyString( void ) const;	
     virtual void RemoveChild( Model* mod );	 
   };
 

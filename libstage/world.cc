@@ -99,8 +99,8 @@ using namespace Stg;
 // // function objects for comparing model positions
 bool World::ltx::operator()(const Model* a, const Model* b) const
 {
-	stg_meters_t ax = a->GetGlobalPose().x;
-	stg_meters_t bx = b->GetGlobalPose().x;
+	const stg_meters_t ax = a->GetGlobalPose().x;
+	const stg_meters_t bx = b->GetGlobalPose().x;
 	
 	if( ax == bx )
 		return a < b; // tie breaker
@@ -109,8 +109,8 @@ bool World::ltx::operator()(const Model* a, const Model* b) const
 }
 bool World::lty::operator()(const Model* a, const Model* b) const
 {
-	stg_meters_t ay = a->GetGlobalPose().y;
-	stg_meters_t by = b->GetGlobalPose().y;
+	const stg_meters_t ay = a->GetGlobalPose().y;
+	const stg_meters_t by = b->GetGlobalPose().y;
 	
 	if( ay == by )
 		return a < b; // tie breaker
@@ -127,7 +127,7 @@ std::set<World*> World::world_set;
 std::string World::ctrlargs;
 
 World::World( const std::string& name, 
-				  double ppm )
+							double ppm )
   : 
   // private
   destroy( false ),
@@ -212,17 +212,11 @@ bool World::UpdateAll()
 {  
   bool quit = true;
   
-	puts( "updateall" );
-
   FOR_EACH( world_it, World::world_set )
     {
-			puts( "world" );
-
       if( (*world_it)->Update() == false )
-		  quit = false;
+				quit = false;
     }
-
-	printf( "quit = %d\n", quit );
 
   return quit;
 }
@@ -230,8 +224,8 @@ bool World::UpdateAll()
 void* World::update_thread_entry( std::pair<World*,int> *thread_info )
 {
   World* world = thread_info->first;
-  int thread_instance = thread_info->second;
-
+  const int thread_instance = thread_info->second;
+	
   //printf( "thread ID %d waiting for mutex\n", thread_instance );
 
   pthread_mutex_lock( &world->thread_mutex );
@@ -339,14 +333,14 @@ Model* World::CreateModel( Model* parent, const std::string& typestr )
 
 void World::LoadModel( Worldfile* wf, int entity )
 { 
-  int parent_entity = wf->GetEntityParent( entity );
+  const int parent_entity = wf->GetEntityParent( entity );
   
   PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
 					 entity, parent_entity );
   
   Model* parent = models_by_wfentity[ parent_entity ];
     
-  char *typestr = (char*)wf->GetEntityType(entity);      	  
+  const char *typestr = (char*)wf->GetEntityType(entity);      	  
   assert(typestr);
   
   Model* mod = CreateModel( parent, typestr );
@@ -373,7 +367,7 @@ void World::Load( const char* worldfile_path )
   // end the output line of worldfile components
   //puts("");
 
-  int entity = 0;
+  const int entity = 0;
   
   this->token = 
     wf->ReadString( entity, "name", this->token );
@@ -403,25 +397,23 @@ void World::Load( const char* worldfile_path )
 
 		//printf( "worker threads %d\n", worker_threads );
 		
-		// need data for each thread
-		// XX BUG! this shouldn't be a local var!
-		
       // kick off the threads
       for( unsigned int t=0; t<worker_threads; t++ )
-		  {
-			 // a little configuration for each thread
-			 std::pair<World*,int>* infop = new std::pair<World*,int>( this, t+1 );
-			 
-			 //printf( "starting thread %d with ID %d \n", (int)t, info[t].second );
-			 
-			 //normal posix pthread C function pointer
-			 typedef void* (*func_ptr) (void*);
-	  
-			 pthread_t pt;
-			 pthread_create( &pt,
-								  NULL,
-								  (func_ptr)World::update_thread_entry, 
-								  infop );
+				{
+					// a little configuration for each thread can't be a local
+					// stack var, since it's accssed in the threads
+					std::pair<World*,int>* infop = new std::pair<World*,int>( this, t+1 );
+					
+					//printf( "starting thread %d with ID %d \n", (int)t, info[t].second );
+					
+					//normal posix pthread C function pointer
+					typedef void* (*func_ptr) (void*);
+					
+					pthread_t pt;
+					pthread_create( &pt,
+													NULL,
+													(func_ptr)World::update_thread_entry, 
+													infop );
 		  }
       
       printf( "[threads %u]", worker_threads );	
@@ -488,10 +480,10 @@ std::string World::ClockString() const
   const uint32_t usec_per_second = 1000000U;
   const uint32_t usec_per_msec = 1000U;
 	
-  uint32_t hours   = sim_time / usec_per_hour;
-  uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
-  uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
-  uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
+	const uint32_t hours   = sim_time / usec_per_hour;
+  const uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
+  const uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
+  const uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
 	
   std::string str;  
   char buf[256];
@@ -512,8 +504,7 @@ void World::AddUpdateCallback( stg_world_callback_t cb,
 										 void* user )
 {
   // add the callback & argument to the list
-  std::pair<stg_world_callback_t,void*> p(cb, user);
-  cb_list.push_back( p );
+  cb_list.push_back( std::pair<stg_world_callback_t,void*>(cb, user) );
 }
 
 int World::RemoveUpdateCallback( stg_world_callback_t cb, 
@@ -702,7 +693,7 @@ void World::Raytrace( const Pose &gpose, // global pose
 {
   // find the direction of the first ray
   Pose raypose = gpose;
-  double starta = fov/2.0 - raypose.a;
+  const double starta = fov/2.0 - raypose.a;
   
   for( uint32_t s=0; s < sample_count; s++ )
     {
@@ -719,8 +710,7 @@ RaytraceResult World::Raytrace( const Pose &gpose,
 													const void* arg,
 													const bool ztest ) 
 {
-  Ray r( mod, gpose, range, func, arg, ztest );
-  return Raytrace( r );
+  return Raytrace( Ray( mod, gpose, range, func, arg, ztest ));
 }
 		
 RaytraceResult World::Raytrace( const Ray& r )
@@ -863,24 +853,24 @@ RaytraceResult World::Raytrace( const Ray& r )
 							
 				  // find the coordinate in cells of the bottom left corner of
 				  // the current region
-				  int32_t ix( globx );
-				  int32_t iy( globy );				  
+				  const int32_t ix( globx );
+				  const int32_t iy( globy );				  
 				  double regionx( ix/REGIONWIDTH*REGIONWIDTH );
 				  double regiony( iy/REGIONWIDTH*REGIONWIDTH );
 				  if( (globx < 0) && (ix % REGIONWIDTH) ) regionx -= REGIONWIDTH;
 				  if( (globy < 0) && (iy % REGIONWIDTH) ) regiony -= REGIONWIDTH;
 							
 				  // calculate the distance to the edge of the current region
-				  double xdx( sx < 0 ? 
-								  regionx - globx - 1.0 : // going left
-								  regionx + REGIONWIDTH - globx ); // going right			 
-				  double xdy( xdx*tana );
-							
-				  double ydy( sy < 0 ? 
-								  regiony - globy - 1.0 :  // going down
-								  regiony + REGIONWIDTH - globy ); // going up		 
-				  double ydx( ydy/tana );
-							
+				  const double xdx( sx < 0 ? 
+														regionx - globx - 1.0 : // going left
+														regionx + REGIONWIDTH - globx ); // going right			 
+				  const double xdy( xdx*tana );
+					
+				  const double ydy( sy < 0 ? 
+														regiony - globy - 1.0 :  // going down
+														regiony + REGIONWIDTH - globy ); // going up		 
+				  const double ydx( ydy/tana );
+					
 				  // these stored hit points are updated as we go along
 				  xcrossx = globx+xdx;
 				  xcrossy = globy+xdy;
@@ -967,18 +957,18 @@ SuperRegion* World::AddSuperRegion( const stg_point_int_t& sup )
   SuperRegion* sr = CreateSuperRegion( sup );
 
   // the bounds of the world have changed
-  stg_point3_t pt;
-  pt.x = (sup.x << SRBITS) / ppm;
-  pt.y = (sup.y << SRBITS) / ppm;
-  pt.z = 0;
   //printf( "lower left (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
-  Extend( pt ); // lower left corner of the new superregion
-  
-  pt.x = ((sup.x+1) << SRBITS) / ppm;
-  pt.y = ((sup.y+1) << SRBITS) / ppm;
-  pt.z = 0;
+	
+	// set the lower left corner of the new superregion
+  Extend( stg_point3_t( (sup.x << SRBITS) / ppm,
+												(sup.y << SRBITS) / ppm,
+												0 ));
+	
+	// top right corner of the new superregion
+  Extend( stg_point3_t( ((sup.x+1) << SRBITS) / ppm,
+												((sup.y+1) << SRBITS) / ppm,
+												0 ));
   //printf( "top right (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
-  Extend( pt ); // top right corner of the new superregion
   
 //   // map all jit models
 //   FOR_EACH( it, jit_render )
@@ -988,7 +978,7 @@ SuperRegion* World::AddSuperRegion( const stg_point_int_t& sup )
 }
 
 
-inline SuperRegion* World::GetSuperRegion( int32_t x, int32_t y )
+inline SuperRegion* World::GetSuperRegion( const int32_t x, const int32_t y )
 {
   // around 99% of the time the SR is the same as last
   // lookup - cache  gives a 4% overall speed up :)
@@ -996,12 +986,12 @@ inline SuperRegion* World::GetSuperRegion( int32_t x, int32_t y )
   if( sr_cached && sr_cached->origin.x == x && sr_cached->origin.y  == y )
     return sr_cached;
   
-  stg_point_int_t pt(x,y);
+	//  stg_point_int_t pt(x,y);
   
-  SuperRegion* sr = superregions[ pt ];
+  SuperRegion* sr = superregions[ stg_point_int_t(x,y) ];
   
   if( sr == NULL ) // no superregion exists! make a new one
-    sr = AddSuperRegion( pt );
+    sr = AddSuperRegion( stg_point_int_t(x,y) );
   
   // cache for next time around
   sr_cached = sr;
