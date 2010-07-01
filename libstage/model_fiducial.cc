@@ -250,7 +250,7 @@ void ModelFiducial::Update( void )
 	
 	edge.pose = Pose( gp.x-rng, gp.y, 0, 0 ); // LEFT
 	std::set<Model*,World::ltx>::iterator xmin = 
-		world->models_with_fiducials_byx.lower_bound( &edge );
+		world->models_with_fiducials_byx.lower_bound( &edge ); // O(log(n))
 	
 	edge.pose = Pose( gp.x+rng, gp.y, 0, 0 ); // RIGHT
 	const std::set<Model*,World::ltx>::iterator xmax = 
@@ -273,16 +273,16 @@ void ModelFiducial::Update( void )
 	for( ; ymin != ymax; ymin++ )
 		vert.insert( *ymin );
 	
-	// the intersection of the sets is all the fiducials closeby
-	std::vector<Model*> candidates;
+	// the intersection of the sets is all the fiducials close by
+	std::vector<Model*> nearby;
 	std::set_intersection( horiz.begin(), horiz.end(),
 												 vert.begin(), vert.end(),
-												 std::inserter( candidates, candidates.end() ) ); 
+												 std::inserter( nearby, nearby.end() ) ); 
 	
-	//	printf( "cand sz %lu\n", candidates.size() );
+	//	printf( "cand sz %lu\n", nearby.size() );
 			
 	// create sets sorted by x and y position
- 	FOR_EACH( it, candidates ) //world->models_with_fiducials )
+ 	FOR_EACH( it, nearby ) 
  			AddModelIfVisible( *it );	
 #else
 	// create sets sorted by x and y position
