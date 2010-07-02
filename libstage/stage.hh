@@ -205,9 +205,6 @@ namespace Stg
   /** Watts: unit of power (energy/time) */
   typedef double stg_watts_t;
   
-  /** boolean */
-  typedef bool stg_bool_t;
-  
   class Color
   {
   public:

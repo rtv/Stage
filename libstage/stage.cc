@@ -57,7 +57,8 @@ const Color Color::magenta( 1,0,1 );
 const Color Color::cyan( 0,1,1 );		
 
 
-static inline uint8_t* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
+static inline uint8_t* pb_get_pixel( Fl_Shared_Image* img, 
+																		 const int x, const int y )
 {
   uint8_t* pixels = (uint8_t*)(img->data()[0]);
   unsigned int index = (y * img->w() * img->d()) + (x * img->d());
@@ -65,33 +66,36 @@ static inline uint8_t* pb_get_pixel( Fl_Shared_Image* img, int x, int y )
 }
 
 // set all the pixels in a rectangle 
-static inline void pb_set_rect( Fl_Shared_Image* pb, int x, int y, int width, int height, uint8_t val )
+static inline void pb_set_rect( Fl_Shared_Image* pb, 
+																const int x, const int y, 
+																const int width, const int height, 
+																const uint8_t val )
 {
-  int bytes_per_sample = 1;
-  int num_samples = pb->d();
-
-  int a, b;
-  for( a = y; a < y+height; a++ )
-	for( b = x; b < x+width; b++ )
-	  {	
-		// zeroing
-		uint8_t* pix = pb_get_pixel( pb, b, a );
-		memset( pix, val, num_samples * bytes_per_sample );
-	  }
+  const int bytes_per_sample = 1;
+  const int num_samples = pb->d();
+	
+  for( int a = y; a < y+height; a++ )
+		for( int b = x; b < x+width; b++ )
+			{	
+				// zeroing
+				uint8_t* pix = pb_get_pixel( pb, b, a );
+				memset( pix, val, num_samples * bytes_per_sample );
+			}
 }  
 
 // returns true if the value in the first channel is above threshold
-static inline bool pb_pixel_is_set( Fl_Shared_Image* img, int x, int y, int threshold )
+static inline bool pb_pixel_is_set( Fl_Shared_Image* img, 
+																		const int x, const int y, const int threshold )
 {
   uint8_t* pixel = pb_get_pixel( img,x,y );
   return( pixel[0] > threshold );
 }
 
 int Stg::stg_rotrects_from_image_file( const char* filename, 
-									   stg_rotrect_t** rects, 
-									   unsigned int* rect_count,
-									   unsigned int* widthp, 
-									   unsigned int* heightp )
+																			 stg_rotrect_t** rects, 
+																			 unsigned int* rect_count,
+																			 unsigned int* widthp, 
+																			 unsigned int* heightp )
 {
   // TODO: make this a parameter
   const int threshold = 127;
@@ -223,7 +227,7 @@ stg_point_t* Stg::stg_unit_square_points_create( void )
 }
 
 // return a value based on val, but limited minval <= val >= maxval  
-double Stg::constrain( double val, double minval, double maxval )
+double Stg::constrain( double val, const double minval, const double maxval )
 {
   if( val < minval )
 	return minval;
