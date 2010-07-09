@@ -21,11 +21,11 @@ threads 8
 # configure the GUI window
 window
 ( 
-  size [ 1070.000 712.000 ] 
+  size [ 936.000 767.000 ] 
 
-  center [ -28.543 -37.183 ] 
+  center [ -22.306 -34.136 ] 
   rotate [ 0 0 ]
-  scale 24.235 
+  scale 16.257 
   
   show_data 0
   show_flags 1
@@ -48,7 +48,7 @@ define smallzone zone
 )
 
 smallzone( color "red"
-  pose [ -32.00 -33.000 0 0 ]
+  pose [ -32.000 -33.000 0 0 ]
   name "red_source"
   ctrl "source 60 1"
 )
@@ -67,7 +67,7 @@ smallzone
 )
 
 smallzone( color "DarkGreen"
-  pose [ 0.000 -39.000 0 0 ]
+  pose [ 0 -39.000 0 0 ]
   name "green_sink"		  
   ctrl "sink"
 )

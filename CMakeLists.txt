@@ -30,7 +30,7 @@ MESSAGE (STATUS "${PROJECT_NAME} version ${VERSION}")
 SET (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake CACHE PATH "Location of CMake scripts")
 # Determine the operating system in detail
 INCLUDE (${PROJECT_CMAKE_DIR}/internal/FindOS.cmake)
-
+INCLUDE (${PROJECT_CMAKE_DIR}/internal/UninstallTarget.cmake)
 # Enable -Wall by default unless on Win or Solaris
 IF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
     # Using -Wall on Windows causes MSVC to produce thousands of warnings in its
@@ -40,9 +40,9 @@ ENDIF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
 
 #####################################
 # Build type cflags
-SET (CMAKE_CXX_FLAGS_RELEASE " -O3 -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
+SET (CMAKE_CXX_FLAGS_RELEASE "  -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
 SET (CMAKE_CXX_FLAGS_DEBUG " -ggdb  ${WALL} " CACHE INTERNAL "C Flags for debug" FORCE)
-SET (CMAKE_CXX_FLAGS_PROFILE " -O3 -ggdb -pg ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
+SET (CMAKE_CXX_FLAGS_PROFILE "  -ggdb -pg ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
 
 #####################################
 # Set the default build type
@@ -140,6 +140,16 @@ STRING(REGEX REPLACE "\n" ";" FLTK_LIBS "${FLTK_LIBS_NEWLINES}")
 #MESSAGE( STATUS "    FLTK_LDFLAGS = ${FLTK_LDFLAGS}")
 #MESSAGE( STATUS "    FLTK_LIBS = ${FLTK_LIBS}")
 
+STRING(REGEX REPLACE " -lGLU" "" TMP "${FLTK_LDFLAGS}")
+STRING(REGEX REPLACE " -lGL" "" TMP2 "${TMP}")
+STRING(REGEX REPLACE " -lpng" "" FLTK_LDFLAGS_PKGCONFIG "${TMP2}")
+
+
+STRING(REGEX REPLACE " -lgl" "" FLTK_LIBS_PKGCONFIG "${FLTK_LIBS}")
+STRING(REGEX REPLACE " -lglu" "" FLTK_LIBS_PKGCONFIG" "${FLTK_LIBS_PKGCONFIG}")
+STRING(REGEX REPLACE " -lpng" "" FLTK_LIBS_PKGCONFIG" "${FLTK_LIBS_PKGCONFIG}")
+
+
 SET (FLTK_FOUND TRUE)
 
 # ENDIF( BUILD_GUI )
@@ -178,7 +188,7 @@ ENDIF( PLAYER_FOUND )
 
 # Create the pkgconfig file
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage.pc.in ${CMAKE_CURRENT_BINARY_DIR}/stage.pc @ONLY)
-INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage.pc DESTINATION lib/pkgconfig/)
+INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage.pc DESTINATION ${PROJECT_LIB_DIR}/pkgconfig/)
 
 MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" )
 
