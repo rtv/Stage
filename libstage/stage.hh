@@ -1137,9 +1137,6 @@ namespace Stg
     /** Returns a pointer to the model identified by name, or NULL if
 		  nonexistent */
     Model* GetModel( const std::string& name ) const;
-
-    /** Returns a const reference to the set of models in the world. */
-    const std::set<Model*> GetAllModels() const { return models; };
   
     /** Return the 3D bounding box of the world, in meters */
     const stg_bounds3d_t& GetExtent() const { return extent; };
