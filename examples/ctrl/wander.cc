@@ -5,18 +5,18 @@ const double cruisespeed = 0.4;
 const double avoidspeed = 0.05; 
 const double avoidturn = 0.5;
 const double minfrontdistance = 1.0; // 0.6  
-const bool verbose = false;
+const bool verbose = true;
 const double stopdist = 0.3;
 const int avoidduration = 10;
 
 typedef struct
 {
   ModelPosition* pos;
-  ModelLaser* laser;
+  ModelRanger* ranger;
   int avoidcount, randcount;
 } robot_t;
 
-int LaserUpdate( Model* mod, robot_t* robot );
+int RangerUpdate( Model* mod, robot_t* robot );
 int PositionUpdate( Model* mod, robot_t* robot );
 
 // Stage calls this when the model starts up
@@ -36,21 +36,21 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   robot->randcount = 0;
   
   robot->pos = (ModelPosition*)mod;
-  robot->laser = (ModelLaser*)mod->GetChild( "laser:0" );
-  robot->laser->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)LaserUpdate, robot );
+  robot->ranger = (ModelRanger*)mod->GetChild( "ranger:0" );
+  robot->ranger->AddCallback( Model::CB_UPDATE, (model_callback_t)RangerUpdate, robot );
   
-  robot->laser->Subscribe(); // starts the laser updates
+  robot->ranger->Subscribe(); // starts the ranger updates
   robot->pos->Subscribe(); // starts the position updates
     
   return 0; //ok
 }
 
 
-// inspect the laser data and decide what to do
-int LaserUpdate( Model* mod, robot_t* robot )
+// inspect the ranger data and decide what to do
+int RangerUpdate( Model* mod, robot_t* robot )
 {
   // get the data
-	const std::vector<ModelLaser::Sample>& scan = robot->laser->GetSamples();
+	const std::vector<ModelRanger::Sensor::Sample>& scan = robot->ranger->GetSensors()[0].samples;
   uint32_t sample_count = scan.size();
   if( ! sample_count < 1 )
     return 0;

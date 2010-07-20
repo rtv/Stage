@@ -30,7 +30,7 @@
 #include "p_driver.h"
 
 extern "C" { 
-int wifi_init( stg_model_t* mod );
+int wifi_init( model_t* mod );
 }
 
 InterfaceWifi::InterfaceWifi( player_devaddr_t addr, 
@@ -45,7 +45,7 @@ InterfaceWifi::InterfaceWifi( player_devaddr_t addr,
 
 void InterfaceWifi::Publish( void )
 {
-  stg_wifi_data_t* sdata = (stg_wifi_data_t*)mod->data;
+  wifi_data_t* sdata = (wifi_data_t*)mod->data;
   assert(sdata);
 
   player_wifi_data_t pdata;

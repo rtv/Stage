@@ -326,8 +326,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 		ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
 		break;
 
+	case PLAYER_SONAR_CODE: // drop through as we use the same interface
 	case PLAYER_LASER_CODE:
-		ifsrc = new InterfaceLaser( player_addr,  this, cf, section );
+		ifsrc = new InterfaceRanger( player_addr,  this, cf, section );
 		break;
 
 	case PLAYER_POSITION2D_CODE:
@@ -337,10 +338,6 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	case PLAYER_SIMULATION_CODE:
 	  ifsrc = new InterfaceSimulation( player_addr, this, cf, section );
 	  break;
-
-	case PLAYER_SONAR_CODE:
- 	  ifsrc = new InterfaceSonar( player_addr,  this, cf, section );
- 	  break;
 
 	case PLAYER_SPEECH_CODE:
 		ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );

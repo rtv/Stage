@@ -35,7 +35,7 @@
 */
 
 extern "C" { 
-  int energy_init( stg_model_t* mod );
+  int energy_init( model_t* mod );
 }
 
 InterfacePower::InterfacePower( player_devaddr_t addr, 
@@ -51,9 +51,9 @@ InterfacePower::InterfacePower( player_devaddr_t addr,
 void InterfacePower::Publish( void )
 {
   size_t len = mod->data_len;
-  stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
+  energy_data_t* data = (energy_data_t*)mod->data;
   
-  stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;
+  energy_config_t* cfg = (energy_config_t*)mod->cfg;
   
   // translate stage data to player data packet
   player_power_data_t pen;

@@ -20,10 +20,10 @@
 #include "worldfile.hh"
 using namespace Stg;
 
-static const stg_watts_t DEFAULT_BLOBFINDERWATTS = 2.0;
-static const stg_meters_t DEFAULT_BLOBFINDERRANGE = 12.0;
-static const stg_radians_t DEFAULT_BLOBFINDERFOV = M_PI/3.0;
-static const stg_radians_t DEFAULT_BLOBFINDERPAN = 0.0;
+static const watts_t DEFAULT_BLOBFINDERWATTS = 2.0;
+static const meters_t DEFAULT_BLOBFINDERRANGE = 12.0;
+static const radians_t DEFAULT_BLOBFINDERFOV = M_PI/3.0;
+static const radians_t DEFAULT_BLOBFINDERPAN = 0.0;
 static const unsigned int DEFAULT_BLOBFINDERINTERVAL_MS = 100;
 static const unsigned int DEFAULT_BLOBFINDERRESOLUTION = 1;
 static const unsigned int DEFAULT_BLOBFINDERSCANWIDTH = 80;
@@ -232,7 +232,7 @@ void ModelBlobfinder::Update( void )
 		double robotHeight = 0.6; // meters
 
 		// find the average range to the blob;
-		stg_meters_t range = 0;
+		meters_t range = 0;
 		for( unsigned int t=right; t<=left; t++ )
 			range += samples[t].range;
 		range /= left-right + 1;
@@ -372,8 +372,8 @@ void ModelBlobfinder::Vis::Visualize( Model* mod, Camera* cam )
   for( unsigned int s=0; s<bf->blobs.size(); s++ )
 	 {
 		Blob* b = &bf->blobs[s];
-		//stg_blobfinder_blob_t* b = 
-		//&g_array_index( blobs, stg_blobfinder_blob_t, s);
+		//blobfinder_blob_t* b = 
+		//&g_array_index( blobs, blobfinder_blob_t, s);
 		
 		bf->PushColor( b->color );
 		glRectf( b->left, b->top, b->right, b->bottom );

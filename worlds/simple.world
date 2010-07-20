@@ -17,8 +17,8 @@ resolution 0.02
 window
 (
   size [ 635.000 666.000 ] # in pixels
-  scale 37.481   # pixels per meter
-  center [ -0.019  -0.282 ]
+  scale 158.097   # pixels per meter
+  center [ -6.737  -6.743 ]
   rotate [ 0  0 ]
   			
   show_data 1              # 1=on 0=off
@@ -38,10 +38,11 @@ pioneer2dx
 (		  
   # can refer to the robot by this name
   name "r0"
-  pose [ -7 -7 0 45 ] 
+  pose [ -7.000 -7.000 0 45.000 ] 
 
   sicklaser(   
-     # ctrl "lasernoise"  # uncomment this line to run a laser noise generator
+ #    # ctrl "lasernoise"  # uncomment this line to run a laser noise generator
+		 pose [ 0 0 0 0 ]
   )
  
   ctrl "wander"

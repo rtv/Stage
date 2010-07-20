@@ -4,115 +4,105 @@
 # CVS: $Id: pioneer.inc,v 1.30 2008-01-15 01:25:42 rtv Exp $
 
 # The Pioneer2DX sonar array
+
+#  prototype for p2dx sonar sensors
+define p2dxsonar sensor
+(
+  # define the size of each transducer [xsize ysize zsize] in meters
+  size [0.01 0.05 0.01 ] 
+  # define the range bounds [min max]
+  range [0 5.0]
+	# define the angular field of view in degrees
+	fov 15
+	# define the number of samples spread over the fov
+  samples 1
+	# define the color that ranges are drawn in the gui
+	color_rgba [ 0 1 0 0.2 ] 
+)
+
 define p2dx_sonar ranger
 (
-  scount 16 # the number of transducers
-
-  # define the pose of each transducer [xpos ypos heading]
-  spose[0] [ 0.075 0.130 90 ]
-  spose[1] [ 0.115 0.115 50 ]
-  spose[2] [ 0.150 0.080 30 ]
-  spose[3] [ 0.170 0.025 10 ]
-  spose[4] [ 0.170 -0.025 -10 ]
-  spose[5] [ 0.150 -0.080 -30 ]
-  spose[6] [ 0.115 -0.115 -50 ]
-  spose[7] [ 0.075 -0.130 -90 ]
-  spose[8] [ -0.155 -0.130 -90 ]
-  spose[9] [ -0.195 -0.115 -130 ]
-  spose[10] [ -0.230 -0.080 -150 ]
-  spose[11] [ -0.250 -0.025 -170 ]
-  spose[12] [ -0.250 0.025 170 ]
-  spose[13] [ -0.230 0.080 150 ]
-  spose[14] [ -0.195 0.115 130 ]
-  spose[15] [ -0.155 0.130 90 ]	
-		
-  # define the field of view of each transducer [range_min range_max view_angle]
-  sview [0 5.0 15]
-
-  # define the size of each transducer [xsize ysize] in meters
-  ssize [0.01 0.05]
+ # 16 transducers spread about the robot as follows
+ p2dxsonar( pose [ 0.075 0.130 0 90 ] )
+ p2dxsonar( pose [ 0.115 0.115 0 50 ] )
+ p2dxsonar( pose [ 0.150 0.080 0 30 ] )
+ p2dxsonar( pose [ 0.170 0.025 0 10 ] )
+ p2dxsonar( pose [ 0.170 -0.025 0 -10 ] )
+ p2dxsonar( pose [ 0.150 -0.080 0 -30 ] )
+ p2dxsonar( pose [ 0.115 -0.115 0 -50 ] )
+ p2dxsonar( pose [ 0.075 -0.130 0 -90 ] )
+ p2dxsonar( pose [ -0.155 -0.130 0 -90 ] )
+ p2dxsonar( pose [ -0.195 -0.115 0 -130 ] )
+ p2dxsonar( pose [ -0.230 -0.080 0 -150 ] )
+ p2dxsonar( pose [ -0.250 -0.025 0 -170 ] )
+ p2dxsonar( pose [ -0.250 0.025 0 170 ] )
+ p2dxsonar( pose [ -0.230 0.080 0 150 ] )
+ p2dxsonar( pose [ -0.195 0.115 0 130 ] )
+ p2dxsonar( pose [ -0.155 0.130 0 90 ]	 )
 )
 
 define p2dx_sonar_front ranger
 (
-  scount 8 # the number of transducers
-
-  # define the pose of each transducer [xpos ypos heading]
-  spose[0] [ 0.075 0.130 90 ]
-  spose[1] [ 0.115 0.115 50 ]
-  spose[2] [ 0.150 0.080 30 ]
-  spose[3] [ 0.170 0.025 10 ]
-  spose[4] [ 0.170 -0.025 -10 ]
-  spose[5] [ 0.150 -0.080 -30 ]
-  spose[6] [ 0.115 -0.115 -50 ]
-  spose[7] [ 0.075 -0.130 -90 ]
-
-  # define the field of view of each transducer [range_min range_max view_angle]
-  sview [0 5.0 15]
-
-  # define the size of each transducer [xsize ysize] in meters
-  ssize [0.01 0.05]
+ # 8 transducers spread about the robot as follows
+  p2dxsonar( pose [ 0.075 0.130 0 90 ] )
+  p2dxsonar( pose [ 0.115 0.115 0 50 ] )
+  p2dxsonar( pose [ 0.150 0.080 0 30 ] )
+  p2dxsonar( pose [ 0.170 0.025 0 10 ] )
+  p2dxsonar( pose [ 0.170 -0.025 0 -10 ] )
+  p2dxsonar( pose [ 0.150 -0.080 0 -30 ] )
+  p2dxsonar( pose [ 0.115 -0.115 0 -50 ] )
+  p2dxsonar( pose [ 0.075 -0.130 0 -90 ] )
 )
 
+#  prototype for p2dx sonar sensors
+define p3dxsonar sensor
+(
+  # define the size of each transducer [xsize ysize] in meters
+  size [0.01 0.04]
+  # define the field of view of each transducer [range_min range_max view_angle]
+  view [0.1 5.0 30]  # min (m), max (m), field of view (deg)
+ )
 
 # The Pioneer3DX sonar array
 define p3dx_sonar ranger
 (
-  scount 16
-
-  # define the pose of each transducer [xpos ypos heading]
-  spose[0] [ 0.069 0.136 90 ]
-  spose[1] [ 0.114 0.119 50 ]
-  spose[2] [ 0.148 0.078 30 ]
-  spose[3] [ 0.166 0.027 10 ]
-  spose[4] [ 0.166 -0.027 -10 ]
-  spose[5] [ 0.148 -0.078 -30 ]
-  spose[6] [ 0.114 -0.119 -50 ]
-  spose[7] [ 0.069 -0.136 -90 ]
-  spose[8] [ -0.157 -0.136 -90 ]
-  spose[9] [ -0.203 -0.119 -130 ]
-  spose[10] [ -0.237 -0.078 -150 ]
-  spose[11] [ -0.255 -0.027 -170 ]
-  spose[12] [ -0.255 0.027 170 ]
-  spose[13] [ -0.237 0.078 150 ]
-  spose[14] [ -0.103 0.119 130 ]
-  spose[15] [ -0.157 0.136 90 ]	
-		
-  # define the field of view of each transducer [range_min range_max view_angle]
-  sview [0.1 5.0 30]  # min (m), max (m), field of view (deg)
-
-  # define the size of each transducer [xsize ysize] in meters
-  ssize [0.01 0.04]
+  p3dxsonar ( pose [ 0.069 0.136 0 90 ] )
+  p3dxsonar ( pose [ 0.114 0.119 0 50 ] )
+  p3dxsonar ( pose [ 0.148 0.078 0 30 ] )
+  p3dxsonar ( pose [ 0.166 0.027 0 10 ] )
+  p3dxsonar ( pose [ 0.166 -0.027 0 -10 ] )
+  p3dxsonar ( pose [ 0.148 -0.078 0 -30 ] )
+  p3dxsonar ( pose [ 0.114 -0.119 0 -50 ] )
+  p3dxsonar ( pose [ 0.069 -0.136 0 -90 ] )
+  p3dxsonar ( pose [ -0.157 -0.136 0 -90 ] )
+  p3dxsonar ( pose [ -0.203 -0.119 0 -130 ] )
+  p3dxsonar ( pose [ -0.237 -0.078 0 -150 ] )
+  p3dxsonar ( pose [ -0.255 -0.027 0 -170 ] )
+  p3dxsonar ( pose [ -0.255 0.027 0 170 ] )
+  p3dxsonar ( pose [ -0.237 0.078 0 150 ] )
+  p3dxsonar ( pose [ -0.103 0.119 0 130 ] )
+  p3dxsonar ( pose [ -0.157 0.136 0 90 ] )
 )
 
 # The Pioneer3AT sonar array
 define p3at_sonar ranger
 (
-  scount 16
-
-  # define the pose of each transducer [xpos ypos heading]
-  spose[0] [0.147 0.136 90]
-  spose[1] [0.193 0.119 50]
-  spose[2] [0.227 0.079 30]
-  spose[3] [0.245 0.027 10]
-  spose[4] [0.245 -0.027 -10]
-  spose[5] [0.227 -0.079 -30]
-  spose[6] [0.193 -0.119 -50]
-  spose[7] [0.147 -0.136 -90]
-  spose[8] [-0.144 -0.136 -90]
-  spose[9] [-0.189 -0.119 -130]
-  spose[10] [-0.223 -0.079 -150]
-  spose[11] [-0.241 -0.027 -170]
-  spose[12] [-0.241 0.027 170]
-  spose[13] [-0.223 0.079 150]
-  spose[14] [-0.189 0.119 130]
-  spose[15] [-0.144 0.136 90]
-
-  # define the field of view of each transducer [range_min range_max view_angle]
-  sview [0.1 5.0 30]  # min (m), max (m), field of view (deg)
-
-  # define the size of each transducer [xsize ysize] in meters
-  ssize [0.01 0.04]
+  p3dxsonar ( pose [0.147 0.136 0 90] )
+  p3dxsonar ( pose [0.193 0.119 0 50] )
+  p3dxsonar ( pose [0.227 0.079 0 30] )
+  p3dxsonar ( pose [0.245 0.027 0 10] )
+  p3dxsonar ( pose [0.245 -0.027 0 -10] )
+  p3dxsonar ( pose [0.227 -0.079 0 -30] )
+  p3dxsonar ( pose [0.193 -0.119 0 -50] )
+  p3dxsonar ( pose [0.147 -0.136 0 -90] )
+  p3dxsonar ( pose [-0.144 -0.136 0 -90] )
+  p3dxsonar ( pose [-0.189 -0.119 0 -130] )
+  p3dxsonar ( pose [-0.223 -0.079 0 -150] )
+  p3dxsonar ( pose [-0.241 -0.027 0 -170] )
+  p3dxsonar ( pose [-0.241 0.027 0 170] )
+  p3dxsonar ( pose [-0.223 0.079 0 150] )
+  p3dxsonar ( pose [-0.189 0.119 0 130] )
+  p3dxsonar ( pose [-0.144 0.136 0 90] )
 )
 
 define pioneer_base position 
@@ -121,8 +111,7 @@ define pioneer_base position
   drive "diff"		 	# Differential steering model.
   gui_nose 1                  	# Draw a nose on the robot so we can see which way it points
   obstacle_return 1           	# Can hit things.
-  laser_return 1                 # reflects laser beams
-  ranger_return 1             	# reflects sonar beams
+  ranger_return 0.5            	# reflects sonar beams
   blob_return 1               	# Seen by blobfinders  
   fiducial_return 1           	# Seen as "1" fiducial finders
 
@@ -419,15 +408,14 @@ define pioneer3at pioneer_base
 # The AmigoBot sonar array
 define amigo_sonar ranger
 (
-  scount 8
-  spose[0] [ 0.073 0.105 90 ]
-  spose[1] [ 0.130 0.078 41 ]
-  spose[2] [ 0.154 0.030 15 ]
-  spose[3] [ 0.154 -0.030 -15 ]
-  spose[4] [ 0.130 -0.078 -41 ]	
-  spose[5] [ 0.073 -0.105 -90 ]
-  spose[6] [ -0.146 -0.060 -145 ]
-  spose[7] [ -0.146 0.060 145 ]
+  p2dxsonar ( pose [ 0.073 0.105 0 90 ] )
+  p2dxsonar ( pose [ 0.130 0.078 0 41 ] )
+  p2dxsonar ( pose [ 0.154 0.030 0 15 ] )
+  p2dxsonar ( pose [ 0.154 -0.030 0 -15 ] )
+  p2dxsonar ( pose [ 0.130 -0.078 0 -41 ]	)
+  p2dxsonar ( pose [ 0.073 -0.105 0 -90 ] )
+	p2dxsonar ( pose [ -0.146 -0.060 0 -145 ] )
+	p2dxsonar ( pose [ -0.146 0.060 0 145 ] )
 )
 
 define amigobot position

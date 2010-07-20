@@ -134,7 +134,7 @@ void Stg::Gl::draw_origin( double len )
   draw_vector( 0,0,len );
 }
 
-void Stg::Gl::draw_grid( stg_bounds3d_t vol )
+void Stg::Gl::draw_grid( bounds3d_t vol )
 {
 	glBegin(GL_LINES);
 

@@ -22,7 +22,6 @@ set( stageSrcs
 	model_fiducial.cc
 	model_getset.cc
 	model_gripper.cc
-	model_laser.cc
 	model_lightindicator.cc
 	model_load.cc
 	model_position.cc
@@ -36,13 +35,16 @@ set( stageSrcs
 	typetable.cc		
 	world.cc			
 	worldfile.cc		
-   canvas.cc 
-   options_dlg.cc
-   options_dlg.hh
-   vis_strip.cc			
-   worldgui.cc 
-   ancestor.cc
+  canvas.cc 
+  options_dlg.cc
+  options_dlg.hh
+  vis_strip.cc			
+  worldgui.cc 
+  ancestor.cc
 )
+
+#	model_laser.cc
+
 
 set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
  
@@ -50,14 +52,12 @@ add_library(stage SHARED ${stageSrcs})
 
 target_link_libraries( stage  
            ${LTDL_LIB}
-#		       ${OPENGL_LIBRARIES}   # is it safe to remove these permanently?
-#  				 ${FLTK_LIBS2}
 )
 
 # causes the shared library to have a version number
 set_target_properties( stage PROPERTIES
 		       VERSION ${VERSION}
-             LINK_FLAGS "${FLTK_LDFLAGS}"	  
+           LINK_FLAGS "${FLTK_LDFLAGS}"	  
 )
 
 set( stagebinarySrcs main.cc )

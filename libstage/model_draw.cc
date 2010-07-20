@@ -563,8 +563,8 @@ void Model::DrawFlagList( void )
 
 //   for( unsigned int i=0; i<blinkenlights->len; i++ )
 //     {
-//       stg_blinkenlight_t* b = 
-// 	(stg_blinkenlight_t*)g_ptr_array_index( blinkenlights, i );
+//       blinkenlight_t* b = 
+// 	(blinkenlight_t*)g_ptr_array_index( blinkenlights, i );
 //       assert(b);
 
 //       glTranslatef( b->pose.x, b->pose.y, b->pose.z );
@@ -635,7 +635,7 @@ void Model::DrawGrid( void )
     {
       PushLocalCoords();
 		
-      stg_bounds3d_t vol;
+      bounds3d_t vol;
       vol.x.min = -geom.size.x/2.0;
       vol.x.max =  geom.size.x/2.0;
       vol.y.min = -geom.size.y/2.0;

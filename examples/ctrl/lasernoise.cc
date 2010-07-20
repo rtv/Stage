@@ -39,7 +39,7 @@ int LaserUpdate( ModelLaser* mod, void* dummy )
 // the model that gets called just after the sensor update is done.
 extern "C" int Init( Model* mod )
 {
-  mod->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, NULL );
+  mod->AddUpdateCallback( (model_callback_t)LaserUpdate, NULL );
 
   // add this so we can see the effects immediately, without needing
   // anyone else to subscribe to the laser

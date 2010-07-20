@@ -17,7 +17,7 @@
 #define DEBUG_LIST_LENGTHS_ONLY 0
 
 using namespace std;
-
+//using namespace astar;
 
 // map helper functions
 
@@ -181,8 +181,9 @@ float MapSearchNode::GetCost( MapSearchNode &successor )
 // Main
 
 #include "astar.h"
+using namespace ast;
 
-bool astar( uint8_t* map, 
+bool ast::astar( uint8_t* map, 
 				uint32_t width, 
 				uint32_t height,
 				const point_t start, 

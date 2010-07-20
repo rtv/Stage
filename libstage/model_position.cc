@@ -656,7 +656,7 @@ ModelPosition::Waypoint::Waypoint( const Pose& pose, Color color )
 { 
 }
 
-ModelPosition::Waypoint::Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, Color color ) 
+ModelPosition::Waypoint::Waypoint( meters_t x, meters_t y, meters_t z, radians_t a, Color color ) 
   : pose(x,y,z,a), color(color)
 { 
 }
@@ -683,7 +683,7 @@ void ModelPosition::Waypoint::Draw() const
   glVertex3f( pose.x, pose.y, pose.z );
   glEnd();
 
-  stg_meters_t quiver_length = 0.15;
+  meters_t quiver_length = 0.15;
 
   double dx = cos(pose.a) * quiver_length;
   double dy = sin(pose.a) * quiver_length;

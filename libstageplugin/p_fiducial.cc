@@ -180,7 +180,7 @@ int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
 		  player_fiducial_fov_t* pfov = (player_fiducial_fov_t*)src;
 
 		  // convert from player to stage FOV packets
-		  stg_fiducial_config_t setcfg;
+		  fiducial_config_t setcfg;
 		  memset( &setcfg, 0, sizeof(setcfg) );
 		  setcfg.min_range = (uint16_t)ntohs(pfov->min_range) / 1000.0;
 		  setcfg.max_range_id = (uint16_t)ntohs(pfov->max_range) / 1000.0;
@@ -190,8 +190,8 @@ int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
 		  //printf( "setting fiducial FOV to min %f max %f fov %f\n",
 		  //  setcfg.min_range, setcfg.max_range_anon, setcfg.fov );
 
-		  //stg_model_set_config( this->mod, &setcfg, sizeof(setcfg));
-		  stg_model_set_property( this->mod, "fiducial_cfg",
+		  //model_set_config( this->mod, &setcfg, sizeof(setcfg));
+		  model_set_property( this->mod, "fiducial_cfg",
 		  &setcfg, sizeof(setcfg));
 		  }
 		  else
@@ -202,8 +202,8 @@ int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
 
 		  case PLAYER_FIDUCIAL_GET_FOV:
 		  {
-		  stg_fiducial_config_t *cfg = (stg_fiducial_config_t*)
-		  stg_model_get_property_fixed( this->mod, "fiducial_cfg", sizeof(stg_fiducial_config_t));
+		  fiducial_config_t *cfg = (fiducial_config_t*)
+		  model_get_property_fixed( this->mod, "fiducial_cfg", sizeof(fiducial_config_t));
 		  assert(cfg);
 
 		  // fill in the geometry data formatted player-like
@@ -223,7 +223,7 @@ int InterfaceFiducial::ProcessMessage(QueuePointer& resp_queue,
   else
     {
       // Don't know how to handle this message.
-      PRINT_WARN2( "stg_fiducial doesn't support msg with type/subtype %d/%d",
+      PRINT_WARN2( "fiducial doesn't support msg with type/subtype %d/%d",
 						 hdr->type, hdr->subtype);
       return(-1);
     }

@@ -90,6 +90,15 @@ void InterfaceLaser::Publish( void )
 
   delete [] pdata.ranges;
   delete [] pdata.intensity;
+
+
+	// publish ranger data
+	this->driver->Publish(this->addr,
+												PLAYER_MSGTYPE_DATA,
+												PLAYER_LASER_RANGERDATA_SCAN,
+												(void*)&pdata, sizeof(pdata), NULL);
+	
+
 }
 
 int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
@@ -120,7 +129,7 @@ int InterfaceLaser::ProcessMessage(QueuePointer & resp_queue,
 	  cfg.resolution = (uint32_t) ( cfg.fov / ( cfg.sample_count * plc->resolution ) );
 	  if ( cfg.resolution < 1 )
 		  cfg.resolution = 1;
-	  cfg.interval = (stg_usec_t) ( 1.0E6 / plc->scanning_frequency );
+	  cfg.interval = (usec_t) ( 1.0E6 / plc->scanning_frequency );
 
 	  PRINT_DEBUG3( "setting laser config: resolution %d, fov %.6f, interval %d\n",
 			  cfg.resolution, cfg.fov, cfg.interval );

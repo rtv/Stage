@@ -480,7 +480,7 @@ public:
   {
 		if(name == "sim")
 			{
-				stg_bounds3d_t ext = world->GetExtent();    	
+				bounds3d_t ext = world->GetExtent();    	
 				geom.extent.x = ext.x.max - ext.x.min;
 				geom.extent.y = ext.y.max - ext.y.min;
 				geom.extent.z = ext.z.max - ext.z.min;				
@@ -517,7 +517,7 @@ public:
   {
 	
 	
-	 world->ForEachDescendant((stg_model_callback_t)CountRobots, &n);	
+	 world->ForEachDescendant((model_callback_t)CountRobots, &n);	
 	 return true;
 
   }
@@ -525,7 +525,7 @@ public:
 	 virtual bool GetModelTree()
 	 {
 	
-	 //	world->ForEachDescendant((stg_model_callback_t)printname, NULL);	
+	 //	world->ForEachDescendant((model_callback_t)printname, NULL);	
 
 	 return true;
 	 }
@@ -557,7 +557,7 @@ public:
 
   virtual websim::Time GetTime()
   {
-	 stg_usec_t stgtime = world->SimTimeNow();
+	 usec_t stgtime = world->SimTimeNow();
 
 	 websim::Time t;
 	 t.sec = stgtime / 1e6;

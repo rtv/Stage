@@ -19,18 +19,18 @@ static const unsigned int PAYLOAD = 1;
 
 
 static unsigned int 
-MetersToCell( stg_meters_t m,  stg_meters_t size_m, unsigned int size_c )
+MetersToCell( meters_t m,  meters_t size_m, unsigned int size_c )
 {
   m += size_m / 2.0; // shift to local coords
   m /= size_m / (float)size_c; // scale
   return (unsigned int)floor(m); // quantize 
 }
 
-static stg_meters_t 
-CellToMeters( unsigned int c,  stg_meters_t size_m, unsigned int size_c )
+static meters_t 
+CellToMeters( unsigned int c,  meters_t size_m, unsigned int size_c )
 {
-  stg_meters_t cell_size = size_m/(float)size_c; 
-  stg_meters_t m = c * cell_size; // scale
+  meters_t cell_size = size_m/(float)size_c; 
+  meters_t m = c * cell_size; // scale
   m -= size_m / 2.0; // shift to local coords
 
   return m + cell_size/2.0; // offset to cell center
@@ -115,7 +115,7 @@ private:
 			FOR_EACH( it, nodes ){ (*it)->Draw(); }
 		}
 		
-		bool GoodDirection( const Pose& pose, stg_meters_t range, stg_radians_t& heading_result )
+		bool GoodDirection( const Pose& pose, meters_t range, radians_t& heading_result )
 		{
 			// find the node with the lowest value within range of the given
 			// pose and return the absolute heading from pose to that node 
@@ -143,7 +143,7 @@ private:
 	 
 			if( best_node == NULL )
 				{
-					printf( "FASR warning: no nodes in range" );
+					fprintf( stderr, "FASR warning: no nodes in range" );
 					return false;
 				}
 
@@ -217,7 +217,7 @@ private:
 		MODE_QUEUE
 	} mode;
 	
-  stg_radians_t docked_angle;
+  radians_t docked_angle;
 
   static pthread_mutex_t planner_mutex;
 
@@ -290,7 +290,7 @@ public:
 		EnableLaser(true);
 
 		// we access all other data from the position callback
-		pos->AddCallback(  Model::CB_UPDATE, (stg_model_callback_t)UpdateCallback, this );
+		pos->AddCallback(  Model::CB_UPDATE, (model_callback_t)UpdateCallback, this );
 		pos->Subscribe();
 
 		pos->AddVisualizer( &graphvis, true );
@@ -368,7 +368,7 @@ public:
 	static std::map< std::pair<uint64_t,uint64_t>, Graph*> plancache;
 	
 
-	uint64_t Pt64( const point_t& pt)
+	uint64_t Pt64( const ast::point_t& pt)
 	{
 		// quantize the position a bit to reduce planning frequency
 		uint64_t x = pt.x / 1;
@@ -377,13 +377,13 @@ public:
 		return (x<<32) + y;
 	}
 	
-	void CachePlan( const point_t& start, const point_t& goal, Graph* graph )
+	void CachePlan( const ast::point_t& start, const ast::point_t& goal, Graph* graph )
 	{
 		std::pair<uint64_t,uint64_t> key( Pt64(start),Pt64(goal));
 		plancache[key] = graph;
 	}
 	
-	Graph* LookupPlan( const point_t& start, const point_t& goal )
+	Graph* LookupPlan( const ast::point_t& start, const ast::point_t& goal )
 	{
 		std::pair<uint64_t,uint64_t> key(Pt64(start),Pt64(goal));
 		return plancache[key];		
@@ -401,9 +401,9 @@ public:
 		Pose pose = pos->GetPose();
 		Geom g = map_model->GetGeom();
 		
-		point_t start( MetersToCell(pose.x, g.size.x, map_width), 
+		ast::point_t start( MetersToCell(pose.x, g.size.x, map_width), 
 									 MetersToCell(pose.y, g.size.y, map_height) );
-		point_t goal( MetersToCell(sp.x, g.size.x, map_width),
+		ast::point_t goal( MetersToCell(sp.x, g.size.x, map_width),
 									MetersToCell(sp.y, g.size.y, map_height) );
 		
 		//printf( "searching from (%.2f, %.2f) [%d, %d]\n", pose.x, pose.y, start.x, start.y );
@@ -427,14 +427,14 @@ public:
 		if( ! graphp ) // no plan cached
 			{
 				misses++;
-
-				std::vector<point_t> path;
-				bool result = astar( map_data, 
-														 map_width, 
-														 map_height, 
-														 start,
-														 goal,
-														 path );				
+				
+				std::vector<ast::point_t> path;
+				bool result = ast::astar( map_data, 
+																		map_width, 
+																		map_height, 
+																		start,
+																		goal,
+																		path );				
 				
 				//	if( ! result )
 				//printf( "FASR warning: plan failed to find path from (%.2f,%.2f) to (%.2f,%.2f)\n",
@@ -447,7 +447,7 @@ public:
 				
 				Node* last_node = NULL;
 
-				for( std::vector<point_t>::const_reverse_iterator rit = path.rbegin();
+				for( std::vector<ast::point_t>::const_reverse_iterator rit = path.rbegin();
 						 rit != path.rend();
 						 ++rit )			
 					{	
@@ -481,7 +481,7 @@ public:
 		
   void Dock()
   {
-		const stg_meters_t creep_distance = 0.5;
+		const meters_t creep_distance = 0.5;
 	 
 		if( charger_ahoy )
 			{
@@ -542,10 +542,10 @@ public:
 
   void UnDock()
   {
-		const stg_meters_t back_off_distance = 0.2;
-		const stg_meters_t back_off_speed = -0.02;
-		const stg_radians_t undock_rotate_speed = 0.3;
-		const stg_meters_t wait_distance = 0.2;
+		const meters_t back_off_distance = 0.2;
+		const meters_t back_off_speed = -0.02;
+		const radians_t undock_rotate_speed = 0.3;
+		const meters_t wait_distance = 0.2;
 		const unsigned int BACK_SENSOR_FIRST = 10;
 		const unsigned int BACK_SENSOR_LAST = 13;
 	 
@@ -772,12 +772,12 @@ public:
 						seconds = timenow;
 				
 						// report the task participation		  
-						printf( "time: %d sec\n", seconds ); 
+						//						printf( "time: %d sec\n", seconds ); 
 						  
-						unsigned int sz = tasks.size(); 
-						for( unsigned int i=0; i<sz; ++i )
-							printf( "\t task[%u] %3u (%s)\n", 
-											i, tasks[i].participants, tasks[i].source->Token() );			 				
+// 						unsigned int sz = tasks.size(); 
+// 						for( unsigned int i=0; i<sz; ++i )
+// 							printf( "\t task[%u] %3u (%s)\n", 
+// 											i, tasks[i].participants, tasks[i].source->Token() );			 				
 					}
 			}
 	 
@@ -834,7 +834,7 @@ public:
 				Pose sourcepose = goal->GetPose();
 				Geom sourcegeom = goal->GetGeom();
 		  
-				stg_meters_t dest_dist = hypot( sourcepose.x-pose.x, sourcepose.y-pose.y );
+				meters_t dest_dist = hypot( sourcepose.x-pose.x, sourcepose.y-pose.y );
 		  
 				// when we get close enough, we start waiting
 				if( dest_dist < sourcegeom.size.x/2.0 ) // nearby
@@ -966,8 +966,8 @@ void Robot::Node::Draw() const
 
 // STATIC VARS
 pthread_mutex_t Robot::planner_mutex = PTHREAD_MUTEX_INITIALIZER;
-const unsigned int Robot::map_width( 50 );
-const unsigned int Robot::map_height( 50 );
+const unsigned int Robot::map_width( 32 );
+const unsigned int Robot::map_height( 32 );
 uint8_t* Robot::map_data( NULL );
 Model* Robot::map_model( NULL );
 

@@ -51,7 +51,7 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   info->interval = atoi( words[1].c_str() );
   info->capacity = atoi( words[2].c_str() );
 
-  mod->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)Update, info );  
+  mod->AddCallback( Model::CB_UPDATE, (model_callback_t)Update, info );  
   mod->Subscribe();
   return 0; //ok
 }

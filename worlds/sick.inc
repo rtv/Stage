@@ -1,17 +1,21 @@
 
-define sicklaser laser
+define sicklaser ranger
 (
-  # laser-specific properties
-  # factory settings for LMS200	
-  range_max 8.0
-  fov 180.0
-  samples 361
-
-  #samples 90 # still useful but much faster to compute
-
   # generic model properties
   color "blue"
   size [ 0.156 0.155 0.19 ] # dimensions from LMS200 data sheet	
+
+  # must define one or more sensor blocks
+  sensor
+  (				
+    # laser-specific properties
+    # factory settings for LMS200	
+    range [ 0.0 8.0 ]
+    fov 180.0
+    samples 361
+    #samples 90 # still useful but much faster to compute
+		color_rgba [ 0 0 1 0.4 ]
+	)
 )
 
 # extends sicklaser to add nice-looking but relatively expensive geometry

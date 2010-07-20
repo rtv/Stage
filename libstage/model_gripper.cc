@@ -449,9 +449,9 @@ void ModelGripper::UpdateContacts()
 				  Geom hitgeom = hit->GetGeom();
 				  //Pose hitgpose = hit->GetGlobalPose();
 				  
-				  //       stg_pose_t pose = {0,0,0};
-				  //       stg_model_local_to_global( lhit, &pose );
-				  //       stg_model_global_to_local( mod, &pose );
+				  //       pose_t pose = {0,0,0};
+				  //       model_local_to_global( lhit, &pose );
+				  //       model_global_to_local( mod, &pose );
 				  
 				  //       // grab the model we hit - very simple grip model for now
 				  hit->SetParent( this );

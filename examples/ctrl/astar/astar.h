@@ -1,4 +1,7 @@
 
+namespace ast
+{
+
 class point_t 
 { 
 public:
@@ -14,3 +17,4 @@ bool astar( uint8_t* map,
 				const point_t goal, 
 				std::vector<point_t>& path );
 
+}

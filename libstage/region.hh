@@ -80,12 +80,12 @@ namespace Stg
   private:
 	 
 	 std::vector<Region> regions;
-	 stg_point_int_t origin;
+	 point_int_t origin;
 	 World* world;
 	 
   public:
 	 
-	 SuperRegion( World* world, stg_point_int_t origin );
+	 SuperRegion( World* world, point_int_t origin );
 	 ~SuperRegion();
 	 
 	 Region* GetRegion( int32_t x, int32_t y )

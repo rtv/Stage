@@ -20,10 +20,10 @@ using namespace Stg;
 
 // DEFAULT PARAMETERS FOR LASER MODEL
 static const bool DEFAULT_FILLED = true;
-static const stg_watts_t DEFAULT_WATTS = 17.5;
+static const watts_t DEFAULT_WATTS = 17.5;
 static const Size DEFAULT_SIZE( 0.15, 0.15, 0.2 );
-static const stg_meters_t DEFAULT_MAXRANGE = 8.0;
-static const stg_radians_t DEFAULT_FOV = M_PI;
+static const meters_t DEFAULT_MAXRANGE = 8.0;
+static const radians_t DEFAULT_FOV = M_PI;
 static const unsigned int DEFAULT_SAMPLES = 180;
 static const unsigned int DEFAULT_RESOLUTION = 1;
 static const char* DEFAULT_COLOR = "blue";

@@ -129,7 +129,7 @@ int InterfaceSonar::ProcessMessage( QueuePointer & resp_queue,
   else
     {
       // Don't know how to handle this message.
-      PRINT_WARN2( "stg_sonar doesn't support msg with type/subtype %d/%d",
+      PRINT_WARN2( "sonar doesn't support msg with type/subtype %d/%d",
 									 hdr->type, hdr->subtype);
       return(-1);
     }    

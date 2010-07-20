@@ -4,7 +4,7 @@ using namespace Stg;
 // static data members
 std::vector<LogEntry> LogEntry::log;
 
-LogEntry::LogEntry( stg_usec_t timestamp, Model* mod ) :
+LogEntry::LogEntry( usec_t timestamp, Model* mod ) :
   timestamp( timestamp ),
   mod( mod ),
   pose( mod->GetPose() )

@@ -23,17 +23,17 @@ void Model::SetColor( Color val )
   NeedRedraw();
 }
 
-void Model::SetMass( stg_kg_t val )
+void Model::SetMass( kg_t val )
 {
   mass = val;
 }
 
-void Model::SetStall( stg_bool_t val )
+void Model::SetStall( bool val )
 {
   stall = val;
 }
 
-void Model::SetGripperReturn( int val )
+void Model::SetGripperReturn( bool val )
 {
   vis.gripper_return = val;
 }
@@ -55,57 +55,52 @@ void Model::SetFiducialKey( int val )
   vis.fiducial_key = val;
 }
 
-void Model::SetLaserReturn( stg_laser_return_t val )
-{
-  vis.laser_return = val;
-}
-
-void Model::SetObstacleReturn( int val )
+void Model::SetObstacleReturn( bool val )
 {
   vis.obstacle_return = val;
 }
 
-void Model::SetBlobReturn( int val )
+void Model::SetBlobReturn( bool val )
 {
   vis.blob_return = val;
 }
 
-void Model::SetRangerReturn( int val )
+void Model::SetRangerReturn( float val )
 {
   vis.ranger_return = val;
 }
 
-void Model::SetBoundary( int val )
+void Model::SetBoundary( bool val )
 {
   boundary = val;
 }
 
-void Model::SetGuiNose(  int val )
+void Model::SetGuiNose(  bool val )
 {
   gui.nose = val;
 }
 
-void Model::SetGuiMove( int val )
+void Model::SetGuiMove( bool val )
 {
   gui.move = val;
 }
 
-void Model::SetGuiGrid(  int val )
+void Model::SetGuiGrid(  bool val )
 {
   gui.grid = val;
 }
 
-void Model::SetGuiOutline( int val )
+void Model::SetGuiOutline( bool val )
 {
   gui.outline = val;
 }
 
-void Model::SetWatts( stg_watts_t val )
+void Model::SetWatts( watts_t val )
 {
   watts = val;
 }
 
-void Model::SetMapResolution(  stg_meters_t val )
+void Model::SetMapResolution(  meters_t val )
 {
   map_resolution = val;
 }

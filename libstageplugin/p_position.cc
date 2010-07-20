@@ -69,7 +69,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
     // convert from Player to Stage format
     player_position2d_cmd_vel_t* pcmd = (player_position2d_cmd_vel_t*)data;
 
-    //stg_position_cmd_t scmd; 
+    //position_cmd_t scmd; 
     //memset( &scmd, 0, sizeof(scmd));
 
     mod->SetSpeed( pcmd->vel.px, pcmd->vel.py, pcmd->vel.pa );
@@ -228,7 +228,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
       //player_position2d_position_mode_req_t* req = 
 		//      (player_position2d_position_mode_req_t*)data;
 
-      //stg_position_control_mode_t mode = (stg_position_control_mode_t)req->state;
+      //position_control_mode_t mode = (position_control_mode_t)req->state;
 
 
       PRINT_WARN2( "Put model %s into %s control mode", this->mod->Token(), mod ? "POSITION" : "VELOCITY" );
@@ -251,7 +251,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
   //else
   
   // Don't know how to handle this message.
-  PRINT_WARN2( "stg_position doesn't support msg with type %d subtype %d",
+  PRINT_WARN2( "position doesn't support msg with type %d subtype %d",
 	       hdr->type, hdr->subtype);
   return(-1);
 }

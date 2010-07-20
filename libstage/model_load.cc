@@ -30,7 +30,7 @@ void Model::Load()
 		if( !power_pack )
 		  power_pack = new PowerPack( this );
 		
-		stg_joules_t j = wf->ReadFloat( wf_entity, "joules", 
+		joules_t j = wf->ReadFloat( wf_entity, "joules", 
 												  power_pack->GetStored() ) ;	 
 		
 		/* assume that the store is full, so the capacity is the same as
@@ -53,7 +53,7 @@ void Model::Load()
 		if( !power_pack )
 		  power_pack = new PowerPack( this );
 		
-		stg_joules_t j = 1000.0 * wf->ReadFloat( wf_entity, "kjoules", 
+		joules_t j = 1000.0 * wf->ReadFloat( wf_entity, "kjoules", 
 															  power_pack->GetStored() ) ;	 
 		
 		/* assume that the store is full, so the capacity is the same as
@@ -195,7 +195,7 @@ void Model::Load()
   this->stack_children =
     wf->ReadInt( wf_entity, "stack_children", this->stack_children );
   
-  stg_kg_t m = wf->ReadFloat(wf_entity, "mass", this->mass );
+  kg_t m = wf->ReadFloat(wf_entity, "mass", this->mass );
   if( m != this->mass ) 
 	 SetMass( m );
   	
@@ -301,6 +301,8 @@ void Model::Save( void )
       wf->WriteTupleAngle( wf_entity, "origin", 3, geom.pose.a);
     }
 
+	vis.Save( wf, wf_entity );
+
   // call any type-specific save callbacks
   CallCallbacks( CB_SAVE );
 
@@ -339,7 +341,7 @@ void Model::LoadControllerModule( const char* lib )
     {
       //printf( "]" );
 		
-		stg_model_callback_t initfunc = (stg_model_callback_t)lt_dlsym( handle, "Init" );
+		model_callback_t initfunc = (model_callback_t)lt_dlsym( handle, "Init" );
       if( initfunc  == NULL )
 		  {
 			 printf( "Libtool error: %s. Something is wrong with your plugin. Quitting\n",

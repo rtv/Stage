@@ -126,7 +126,7 @@ int InterfaceBlobfinder::ProcessMessage( QueuePointer& resp_queue,
   //else
   {
     // Don't know how to handle this message.
-    PRINT_WARN2( "stg_blobfinder doesn't support msg with type/subtype %d/%d",
+    PRINT_WARN2( "blobfinder doesn't support msg with type/subtype %d/%d",
 		 hdr->type, hdr->subtype);
     return(-1);
   }

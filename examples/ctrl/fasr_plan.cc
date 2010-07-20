@@ -271,23 +271,23 @@ public:
     assert( sink );
 	 
     // PositionUpdate() checks to see if we reached source or sink
-    pos->AddUpdateCallback( (stg_model_callback_t)PositionUpdate, this );
+    pos->AddUpdateCallback( (model_callback_t)PositionUpdate, this );
     pos->Subscribe();
 
     // LaserUpdate() controls the robot, by reading from laser and
     // writing to position
-    laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, this );
+    laser->AddUpdateCallback( (model_callback_t)LaserUpdate, this );
     laser->Subscribe();
 
-    fiducial->AddUpdateCallback( (stg_model_callback_t)FiducialUpdate, this );	 	 
+    fiducial->AddUpdateCallback( (model_callback_t)FiducialUpdate, this );	 	 
     fiducial->Subscribe();
 	 
-    //gripper->AddUpdateCallback( (stg_model_callback_t)GripperUpdate, this );	 	 
+    //gripper->AddUpdateCallback( (model_callback_t)GripperUpdate, this );	 	 
     gripper->Subscribe();
 	 
     if( blobfinder ) // optional
       {
-	blobfinder->AddUpdateCallback( (stg_model_callback_t)BlobFinderUpdate, this );
+	blobfinder->AddUpdateCallback( (model_callback_t)BlobFinderUpdate, this );
 	blobfinder->Subscribe();
       }
     
@@ -363,9 +363,9 @@ public:
 
   void UnDock()
   {
-    const stg_meters_t gripper_distance = 0.2;
-    const stg_meters_t back_off_distance = 0.3;
-    const stg_meters_t back_off_speed = -0.05;
+    const meters_t gripper_distance = 0.2;
+    const meters_t back_off_distance = 0.3;
+    const meters_t back_off_speed = -0.05;
 
     // back up a bit
     if( charger_range < back_off_distance )
@@ -402,7 +402,7 @@ public:
   
     // Get the data
     uint32_t sample_count=0;
-    stg_laser_sample_t* scan = laser->GetSamples( &sample_count );
+    laser_sample_t* scan = laser->GetSamples( &sample_count );
     
     for (uint32_t i = 0; i < sample_count; i++)
       {		
@@ -523,7 +523,7 @@ public:
 
   typedef struct
   {
-	 stg_laser_sample_t* scan;
+	 laser_sample_t* scan;
 	 Pose pose;
   } scan_record_t;
 
@@ -535,7 +535,7 @@ public:
     // 				laser->Token(), laser->power_pack );
     
     uint32_t sample_count=0;
-    stg_laser_sample_t* scan = laser->GetSamples( &sample_count );
+    laser_sample_t* scan = laser->GetSamples( &sample_count );
 	 
     if( scan == NULL )
       return 0;
@@ -544,8 +544,8 @@ public:
 	 sr->pose = laser->GetGlobalPose();
 	 
 	 // deep copy the samples
-	 sr->scan = new stg_laser_sample_t[sample_count];
-	 memcpy( sr->scan, scan, sample_count * sizeof(stg_laser_sample_t));
+	 sr->scan = new laser_sample_t[sample_count];
+	 memcpy( sr->scan, scan, sample_count * sizeof(laser_sample_t));
 	 
 	 // add the copy to the list
 	 g_queue_push_tail( robot->laser_history, sr );
@@ -567,12 +567,12 @@ public:
     
     int scan_points_count = 0;
     
-    stg_laser_cfg_t cfg  = laser->GetConfig();
+    laser_cfg_t cfg  = laser->GetConfig();
     
 	 for( int i = 0; i < robot->laser_history->length; i++ )
 		{
 		  scan_record_t* scr = (scan_record_t*)g_queue_peek_nth( robot->laser_history, i );
-		  stg_laser_sample_t* ascan = scr->scan;
+		  laser_sample_t* ascan = scr->scan;
 		  Pose apose = scr->pose;
 		  
 		  double amin = -cfg.fov / 2.0; 
@@ -612,7 +612,7 @@ public:
 //  		  wps[j].pose.y = pts[2*j+1];
 //  		  wps[j].pose.z = 0;
 //  		  wps[j].pose.a = 0;
-//  		  wps[j].color = stg_color_pack( 0,1,0,0 );
+//  		  wps[j].color = color_pack( 0,1,0,0 );
 // 		 }
 	  
 // 	  Waypoint* oldp = ((ModelPosition*)robot->pos->GetWorld()->GetModel( "dummy" ))->SetWaypoints( wps, scan_points_count );
@@ -733,7 +733,7 @@ public:
     //printf( "WAYPOINT_COUNT %d\n", plan->waypoint_count );
 	 	 
     Waypoint* wps = NULL;    
-    stg_color_t col = pos->GetColor();
+    color_t col = pos->GetColor();
 	 
     if( plan->waypoint_count > 0 )
       {
@@ -816,7 +816,7 @@ public:
   
     for( unsigned int i = 0; i < mod->fiducial_count; i++ )
       {
-	stg_fiducial_t* f = &mod->fiducials[i];
+	fiducial_t* f = &mod->fiducials[i];
 		
 	//printf( "fiducial %d is %d at %.2f m %.2f radians\n",
 	//	  i, f->id, f->range, f->bearing );		
@@ -840,7 +840,7 @@ public:
   static int BlobFinderUpdate( ModelBlobfinder* blobmod, Robot* robot )
   {  
     unsigned int blob_count = 0;
-    stg_blobfinder_blob_t* blobs = blobmod->GetBlobs( &blob_count );
+    blobfinder_blob_t* blobs = blobmod->GetBlobs( &blob_count );
 
     if( blobs && (blob_count>0) )
       {

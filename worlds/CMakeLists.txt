@@ -1,4 +1,4 @@
-ADD_SUBDIRECTORY(benchmark)
+#ADD_SUBDIRECTORY(benchmark)
 
 FILE( GLOB cfgs "*.cfg" )
 FILE( GLOB worlds "*.world" )

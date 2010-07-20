@@ -63,7 +63,7 @@ Pose Ancestor::GetGlobalPose()
 	return pose;
 }
 
-void Ancestor::ForEachDescendant( stg_model_callback_t func, void* arg )
+void Ancestor::ForEachDescendant( model_callback_t func, void* arg )
 {
   FOR_EACH( it, children )
 	 {

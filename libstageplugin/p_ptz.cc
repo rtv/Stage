@@ -39,7 +39,7 @@
 #include "p_driver.h"
 
 extern "C" { 
-int ptz_init( stg_model_t* mod );
+int ptz_init( model_t* mod );
 }
 
 
@@ -56,10 +56,10 @@ InterfacePtz::InterfacePtz( player_devaddr_t addr,
 void InterfacePtz::Publish( void )
 {
   assert( this->mod->cfg );
-  assert( this->mod->cfg_len == sizeof(stg_ptz_config_t) );
+  assert( this->mod->cfg_len == sizeof(ptz_config_t) );
   
-  stg_ptz_config_t *scfg = (stg_ptz_config_t*)this->mod->cfg;
-  stg_ptz_data_t *sdata = (stg_ptz_data_t*)this->mod->data;
+  ptz_config_t *scfg = (ptz_config_t*)this->mod->cfg;
+  ptz_data_t *sdata = (ptz_data_t*)this->mod->data;
 
   player_ptz_data_t pdata;
   pdata.pan = sdata->pan;
@@ -80,11 +80,11 @@ int InterfacePtz::ProcessMessage( MessageQueue* resp_queue,
 					 void* data )
 {
   assert( this->mod->cfg );
-  assert( this->mod->cfg_len == sizeof(stg_ptz_config_t) );
+  assert( this->mod->cfg_len == sizeof(ptz_config_t) );
 
-  //stg_ptz_cmd_t* cmd = (stg_ptz_cmd_t*)this->mod->cmd;
+  //ptz_cmd_t* cmd = (ptz_cmd_t*)this->mod->cmd;
 
-  stg_ptz_config_t scfg;  
+  ptz_config_t scfg;  
   memcpy( &scfg, this->mod->cfg, sizeof(scfg));
 
   // Is it a new motor command?
@@ -109,7 +109,7 @@ int InterfacePtz::ProcessMessage( MessageQueue* resp_queue,
 	  //  scfg.tiltgoal,
 	  //  scfg.zoomgoal );		  
 
-	  stg_model_set_cfg( this->mod, &scfg, sizeof(scfg));
+	  model_set_cfg( this->mod, &scfg, sizeof(scfg));
 	}
       else
 	PRINT_ERR2( "wrong size ptz command packet (%d/%d bytes)",
@@ -124,7 +124,7 @@ int InterfacePtz::ProcessMessage( MessageQueue* resp_queue,
       if(hdr->size == 0)
 	{
 	  Geom geom;
-	  stg_model_get_geom( this->mod,&geom );
+	  model_get_geom( this->mod,&geom );
 	  
 	  player_ptz_geom_t pgeom;
 	  pgeom.pos.px = geom.pose.x;

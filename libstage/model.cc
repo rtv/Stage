@@ -35,9 +35,9 @@
     fiducial_return 0
     fiducial_key 0
     obstacle_return 1
-    ranger_return 1
+    ranger_return 1.0
     blob_return 1
-    laser_return LaserVisible
+    ranger_return 1.0
     gripper_return 0
 
     # GUI properties
@@ -112,15 +112,15 @@
     - obstacle_return <int>\n if 1, this model can collide with other
     models that have this property set
 
-    - ranger_return <int>\n if 1, this model can be detected by ranger
-    sensors
-
     - blob_return <int>\n if 1, this model can be detected in the
     blob_finder (depending on its color)
 
-    - laser_return <int>\n if 0, this model is not detected by laser
-    sensors. if 1, the model shows up in a laser sensor with normal
-    (0) reflectance. If 2, it shows up with high (1) reflectance.
+    - ranger_return <float>\n This model is detected with this
+    reflectance value by ranger_model sensors. If negative, this model
+    is invisible to ranger sensors, and does not block propogation of
+    range-sensing rays. This models an idealized reflectance sensor,
+    and replaces the normal/bright reflectance of deprecated laser
+    model. Defaults to 1.0.
 
     - gripper_return <int>\n iff 1, this model can be gripped by a
     gripper and can be pushed around by collisions with anything that
@@ -166,8 +166,73 @@ using namespace Stg;
 uint32_t Model::count(0);
 uint32_t Model::trail_length(50);
 uint64_t Model::trail_interval(5);
-std::map<stg_id_t,Model*> Model::modelsbyid;
+std::map<id_t,Model*> Model::modelsbyid;
 std::map<std::string, creator_t> Model::name_map;
+
+void Bounds::Load( Worldfile* wf, const int section, const char* keyword )
+{
+	if( CProperty* prop = wf->GetProperty( section, keyword ) )	
+		{
+			if( prop->values.size() != 2 )
+				{
+					puts( "" ); // newline
+					PRINT_ERR1( "Loading 1D bounds. Need a vector of length 2: found %d.\n", 
+											(int)prop->values.size() ); 
+					exit(-1);
+				}
+			
+			min = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
+			max = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
+		}
+}
+
+bool Color::Load( Worldfile* wf, const int section )
+{
+  if( wf->PropertyExists( section, "color" ))
+		{      
+			const std::string& colorstr = wf->ReadString( section, "color", "" );
+			if( colorstr != "" )
+				{
+					if( colorstr == "random" )
+						{
+							r = drand48();
+							g = drand48();
+							b = drand48();
+							a = 1.0;
+						}
+					else
+						{
+							Color c = Color( colorstr );
+							r = c.r;
+							g = c.g;
+							b = c.b;
+							a = c.a;
+						}
+				}
+			return true;
+		}        
+	
+  if( wf->PropertyExists( section, "color_rgba" ))
+    {      
+      if (wf->GetProperty(section,"color_rgba")->values.size() < 4)
+				{
+					PRINT_ERR1( "color_rgba requires 4 values, found %d\n", 
+											(int)wf->GetProperty(section,"color_rgba")->values.size() );
+					exit(-1);
+				}
+      else
+				{
+					r = wf->ReadTupleFloat( section, "color_rgba", 0, r );
+					g = wf->ReadTupleFloat( section, "color_rgba", 1, g );
+					b = wf->ReadTupleFloat( section, "color_rgba", 2, b );
+					a = wf->ReadTupleFloat( section, "color_rgba", 3, a );
+				}  
+			
+			return true;
+    }
+	
+	return false;
+}
 
 void Size::Load( Worldfile* wf, const int section, const char* keyword )
 {
@@ -228,9 +293,8 @@ Model::Visibility::Visibility() :
   fiducial_key( 0 ),
   fiducial_return( 0 ),
   gripper_return( false ),
-  laser_return( LaserVisible ),
   obstacle_return( true ),
-  ranger_return( true )
+  ranger_return( 1.0 )
 { /* nothing to do */ }
 
 //static const members
@@ -242,10 +306,20 @@ void Model::Visibility::Load( Worldfile* wf, int wf_entity )
   fiducial_key = wf->ReadInt( wf_entity, "fiducial_key", fiducial_key);
   fiducial_return = wf->ReadInt( wf_entity, "fiducial_return", fiducial_return);
   gripper_return = wf->ReadInt( wf_entity, "gripper_return", gripper_return);    
-  laser_return = (stg_laser_return_t)wf->ReadInt( wf_entity, "laser_return", laser_return);    
   obstacle_return = wf->ReadInt( wf_entity, "obstacle_return", obstacle_return);    
-  ranger_return = wf->ReadInt( wf_entity, "ranger_return", ranger_return);    
+  ranger_return = wf->ReadFloat( wf_entity, "ranger_return", ranger_return);    
 }    
+
+void Model::Visibility::Save( Worldfile* wf, int wf_entity )
+{
+  wf->WriteInt( wf_entity, "blob_return", blob_return);    
+  wf->WriteInt( wf_entity, "fiducial_key", fiducial_key);
+  wf->WriteInt( wf_entity, "fiducial_return", fiducial_return);
+  wf->WriteInt( wf_entity, "gripper_return", gripper_return);    
+  wf->WriteInt( wf_entity, "obstacle_return", obstacle_return);    
+  wf->WriteFloat( wf_entity, "ranger_return", ranger_return);    
+}    
+
 
 Model::GuiState::GuiState() :
   grid( false ),
@@ -280,9 +354,9 @@ Model::Model( World* world,
 	geom(),
 	has_default_block( true ),
 	id( Model::count++ ),
-	interval((stg_usec_t)1e5), // 100msec
-	interval_energy((stg_usec_t)1e5), // 100msec
-	interval_pose((stg_usec_t)1e5), // 100msec
+	interval((usec_t)1e5), // 100msec
+	interval_energy((usec_t)1e5), // 100msec
+	interval_pose((usec_t)1e5), // 100msec
 	last_update(0),
 	log_state(false),
 	map_resolution(0.1),
@@ -430,15 +504,15 @@ void Model::LoadBlock( Worldfile* wf, int entity )
 }
 
 
-Block* Model::AddBlockRect( stg_meters_t x, 
-														stg_meters_t y, 
-														stg_meters_t dx, 
-														stg_meters_t dy,
-														stg_meters_t dz )
+Block* Model::AddBlockRect( meters_t x, 
+														meters_t y, 
+														meters_t dx, 
+														meters_t dy,
+														meters_t dz )
 {  
   UnMap();
 
-  stg_point_t pts[4];
+  point_t pts[4];
   pts[0].x = x;
   pts[0].y = y;
   pts[1].x = x + dx;
@@ -462,8 +536,8 @@ Block* Model::AddBlockRect( stg_meters_t x,
 
 
 RaytraceResult Model::Raytrace( const Pose &pose,
-				       const stg_meters_t range, 
-				       const stg_ray_test_func_t func,
+				       const meters_t range, 
+				       const ray_test_func_t func,
 				       const void* arg,
 				       const bool ztest )
 {
@@ -475,9 +549,9 @@ RaytraceResult Model::Raytrace( const Pose &pose,
 			  ztest );
 }
 
-RaytraceResult Model::Raytrace( const stg_radians_t bearing,
-				       const stg_meters_t range, 
-				       const stg_ray_test_func_t func,
+RaytraceResult Model::Raytrace( const radians_t bearing,
+				       const meters_t range, 
+				       const ray_test_func_t func,
 				       const void* arg,
 				       const bool ztest )
 {
@@ -490,10 +564,10 @@ RaytraceResult Model::Raytrace( const stg_radians_t bearing,
 }
 
 
-void Model::Raytrace( const stg_radians_t bearing,
-		      const stg_meters_t range, 
-		      const stg_radians_t fov,
-		      const stg_ray_test_func_t func,
+void Model::Raytrace( const radians_t bearing,
+		      const meters_t range, 
+		      const radians_t fov,
+		      const ray_test_func_t func,
 		      const void* arg,
 		      RaytraceResult* samples,
 		      const uint32_t sample_count,
@@ -575,22 +649,22 @@ bool Model::IsRelated( const Model* that ) const
   return candidate->IsDescendent( that );
 }
 
-stg_point_t Model::LocalToGlobal( const stg_point_t& pt) const
+point_t Model::LocalToGlobal( const point_t& pt) const
  {  
    const Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
-   return stg_point_t( gpose.x, gpose.y );
+   return point_t( gpose.x, gpose.y );
  }
 
 
-void Model::LocalToPixels( const std::vector<stg_point_t>& local,
-													 std::vector<stg_point_int_t>& global) const
+void Model::LocalToPixels( const std::vector<point_t>& local,
+													 std::vector<point_int_t>& global) const
 {
 	const Pose gpose = GetGlobalPose() + geom.pose;
 	
 	FOR_EACH( it, local )
 		{
 			Pose ptpose = gpose + Pose( it->x, it->y, 0, 0 );
-			global.push_back( stg_point_int_t( (int32_t)floor( ptpose.x * world->ppm) ,
+			global.push_back( point_int_t( (int32_t)floor( ptpose.x * world->ppm) ,
 																				 (int32_t)floor( ptpose.y * world->ppm) ));
 		}
 }
@@ -738,9 +812,9 @@ void Model::Update( void )
 }
 
 
-stg_meters_t Model::ModelHeight() const
+meters_t Model::ModelHeight() const
 {	
-  stg_meters_t m_child = 0; //max size of any child
+  meters_t m_child = 0; //max size of any child
   FOR_EACH( it, children )
 		m_child = std::max( m_child, (*it)->ModelHeight() );
 	
@@ -764,8 +838,8 @@ void Model::AddToPose( const Pose& pose )
   this->AddToPose( pose.x, pose.y, pose.z, pose.a );
 }
 
-void Model::PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
-			      stg_meters_t ymin, stg_meters_t ymax )
+void Model::PlaceInFreeSpace( meters_t xmin, meters_t xmax, 
+			      meters_t ymin, meters_t ymax )
 {
   while( TestCollisionTree() )
     SetPose( Pose::Random( xmin,xmax, ymin, ymax ));		
@@ -830,8 +904,8 @@ void Model::UpdateCharge()
 				  //printf( "   toucher %s can take up to %.2f wats\n", 
 				  //		toucher->Token(), toucher->watts_take );
 				  
-				  const stg_watts_t rate = std::min( watts_give, toucher->watts_take );
-				  const stg_joules_t amount =  rate * interval_energy * 1e-6;
+				  const watts_t rate = std::min( watts_give, toucher->watts_take );
+				  const joules_t amount =  rate * interval_energy * 1e-6;
 				  
 				  //printf ( "moving %.2f joules from %s to %s\n",
 				  //		 amount, token, toucher->token );
@@ -975,9 +1049,9 @@ Model* Model::GetUnusedModelOfType( const std::string& type )
   return NULL;
 }
 
-stg_kg_t Model::GetTotalMass() const
+kg_t Model::GetTotalMass() const
 {
-  stg_kg_t sum = mass;
+  kg_t sum = mass;
   
   FOR_EACH( it, children )
 	 sum += (*it)->GetTotalMass();
@@ -985,7 +1059,7 @@ stg_kg_t Model::GetTotalMass() const
   return sum;
 }
 
-stg_kg_t Model::GetMassOfChildren() const
+kg_t Model::GetMassOfChildren() const
 {
   return( GetTotalMass() - mass);
 }
@@ -1029,8 +1103,8 @@ void Model::RegisterOption( Option* opt )
 void Model::Rasterize( uint8_t* data, 
 		       unsigned int width, 
 		       unsigned int height, 
-		       stg_meters_t cellwidth,
-		       stg_meters_t cellheight )
+		       meters_t cellwidth,
+		       meters_t cellheight )
 {
   rastervis.ClearPts();
   blockgroup.Rasterize( data, width, height, cellwidth, cellheight );
@@ -1098,7 +1172,7 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 		
 		FOR_EACH( it, pts )
 		  {
-			 stg_point_t& pt = *it;
+			 point_t& pt = *it;
 			 glVertex2f( pt.x, pt.y );
 			 
 			 char buf[128];
@@ -1163,8 +1237,8 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 void Model::RasterVis::SetData( uint8_t* data, 
 																const unsigned int width, 
 																const unsigned int height,
-																const stg_meters_t cellwidth, 
-																const stg_meters_t cellheight )
+																const meters_t cellwidth, 
+																const meters_t cellheight )
 {
   // copy the raster for test visualization
   if( this->data ) 
@@ -1180,9 +1254,9 @@ void Model::RasterVis::SetData( uint8_t* data,
 }
 
 
-void Model::RasterVis::AddPoint( const stg_meters_t x, const stg_meters_t y )
+void Model::RasterVis::AddPoint( const meters_t x, const meters_t y )
 {
-  pts.push_back( stg_point_t( x, y ) );
+  pts.push_back( point_t( x, y ) );
 }
 
 void Model::RasterVis::ClearPts()

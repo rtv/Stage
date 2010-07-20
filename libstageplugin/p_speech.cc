@@ -49,7 +49,7 @@ InterfaceSpeech::InterfaceSpeech( player_devaddr_t addr,
 void InterfaceSpeech::Publish( void )
 {
 /*
-  stg_speech_data_t* sdata = (stg_speech_data_t*)mod->data;
+  speech_data_t* sdata = (speech_data_t*)mod->data;
   assert(sdata);
 
   player_speech_cmd_t pdata;

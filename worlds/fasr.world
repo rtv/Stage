@@ -107,10 +107,10 @@ charge_station(  pose [ 6.427 -0.964 0 74.484 ] )
 
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 64 range_max 5 laser_return 2 watts 30 )
+ sicklaser( samples 64 range_max 3 laser_return 2 watts 30 )
  ctrl "fasr"
- kjoules 400 
- joules_capacity 400000 
+# kjoules 400 
+# joules_capacity 400000 
  fiducial_return 0
  charging_bump( fiducial( range_max 5 pose [ 0 0 -0.100 0 ] ) )
 
@@ -130,39 +130,39 @@ autorob( pose [3.975 7.410 0 0] kjoules 400 )
 autorob( pose [6.796 4.223 0 -89.994] kjoules 100 )
 autorob( pose [3.084 5.145 0 90.003] kjoules 200 )
 
-autorob( pose [3.907 4.602 0 -1.811] )
-autorob( pose [2.558 6.649 0 -116.317]  )
-autorob( pose [7.462 3.892 0 -31.440]  )
-autorob( pose [5.944 6.951 0 2.937] )
-autorob( pose [6.405 5.291 0 -103.060] )
+autorob( pose [3.907 4.602 0 -1.811] kjoules 100 )
+autorob( pose [2.558 6.649 0 -116.317] kjoules 100 )
+autorob( pose [7.462 3.892 0 -31.440]  kjoules 100)
+autorob( pose [5.944 6.951 0 2.937] kjoules 100)
+autorob( pose [6.405 5.291 0 -103.060] kjoules 100)
 
-autorob( pose [5.974 5.725 0 -103.060] )
-autorob( pose [2.479 5.713 0 53.540] )
-autorob( pose [7.503 6.594 0 2.937] )
-autorob( pose [6.959 3.268 0 34.450] )
-autorob( pose [4.617 6.811 0 134.717] )
+autorob( pose [5.974 5.725 0 -103.060] kjoules 250)
+autorob( pose [2.479 5.713 0 53.540] kjoules 250)
+autorob( pose [7.503 6.594 0 2.937] kjoules 250)
+autorob( pose [6.959 3.268 0 34.450] kjoules 250)
+autorob( pose [4.617 6.811 0 134.717] kjoules 250)
 
-#autorob( pose [6.545 7.366 0 2.937] )
-#autorob( pose [7.237 7.533 0 34.450] )
-#autorob( pose [3.875 6.533 0 134.717] )
-#autorob( pose [3.944 4.674 0 -103.060] )
-#autorob( pose [4.776 5.792 0 -103.060] )
+#autorob( pose [6.545 7.366 0 2.937] kjoules 350 )
+#autorob( pose [7.237 7.533 0 34.450] kjoules 350)
+#autorob( pose [3.875 6.533 0 134.717] kjoules 350)
+#autorob( pose [3.944 4.674 0 -103.060] kjoules 350)
+#autorob( pose [4.776 5.792 0 -103.060] kjoules 350)
 
-#autorob( pose [3.212 3.779 0 -103.060] )
-#autorob( pose [2.982 6.577 0 -103.060] )
-#autorob( pose [3.189 5.168 0 -103.060] )
-#autorob( pose [2.027 6.472 0 -103.060] )
-#autorob( pose [3.897 5.537 0 -103.060] )
+#autorob( pose [3.212 3.779 0 -103.060] kjoules 150)
+#autorob( pose [2.982 6.577 0 -103.060] kjoules 150)
+#autorob( pose [3.189 5.168 0 -103.060] kjoules 150)
+#autorob( pose [2.027 6.472 0 -103.060] kjoules 150)
+#autorob( pose [3.897 5.537 0 -103.060] kjoules 150)
 
-#autorob( pose [4.974 4.800 0 -103.060] )
-#autorob( pose [2.225 7.350 0 -103.060] )
-#autorob( pose [5.683 4.431 0 -103.060] )
-#autorob( pose [2.055 2.901 0 -103.060] )
-#autorob( pose [1.498 7.310 0 -103.060] )
+#autorob( pose [4.974 4.800 0 -103.060] kjoules 50)
+#autorob( pose [2.225 7.350 0 -103.060] kjoules 50 )
+#autorob( pose [5.683 4.431 0 -103.060] kjoules 50 )
+#autorob( pose [2.055 2.901 0 -103.060] kjoules 50 )
+#autorob( pose [1.498 7.310 0 -103.060] kjoules 50 )
 
-#autorob( pose [0.366 6.989 0 -103.060] )
-#autorob( pose [5.215 7.601 0 -103.060] )
-#autorob( pose [6.714 6.392 0 -103.060] )
-#autorob( pose [7.418 5.581 0 -103.060] )
-#autorob( pose [2.523 4.878 0 -103.060] )
+#autorob( pose [0.366 6.989 0 -103.060] kjoules 200)
+#autorob( pose [5.215 7.601 0 -103.060] kjoules 200)
+#autorob( pose [6.714 6.392 0 -103.060] kjoules 200)
+#autorob( pose [7.418 5.581 0 -103.060] kjoules 200)
+#autorob( pose [2.523 4.878 0 -103.060] kjoules 200)
 

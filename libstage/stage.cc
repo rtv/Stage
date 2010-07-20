@@ -91,8 +91,8 @@ static inline bool pb_pixel_is_set( Fl_Shared_Image* img,
   return( pixel[0] > threshold );
 }
 
-int Stg::stg_rotrects_from_image_file( const char* filename, 
-																			 stg_rotrect_t** rects, 
+int Stg::rotrects_from_image_file( const char* filename, 
+																			 rotrect_t** rects, 
 																			 unsigned int* rect_count,
 																			 unsigned int* widthp, 
 																			 unsigned int* heightp )
@@ -112,7 +112,7 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
   *rect_count = 0;
   size_t allocation_unit = 1000;
   size_t rects_allocated = allocation_unit;
-  *rects = (stg_rotrect_t*)calloc( sizeof(stg_rotrect_t), rects_allocated );
+  *rects = (rotrect_t*)calloc( sizeof(rotrect_t), rects_allocated );
 
   int img_width = img->w();
   int img_height = img->h();
@@ -170,14 +170,14 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 			{
 			  rects_allocated = (*rect_count) + allocation_unit;
 
-			  *rects = (stg_rotrect_t*)
-				realloc( *rects, rects_allocated * sizeof(stg_rotrect_t) );
+			  *rects = (rotrect_t*)
+				realloc( *rects, rects_allocated * sizeof(rotrect_t) );
 			}
 
 		  //  y-invert all the rectangles because we're using conventional
 		  // rather than graphics coordinates. this is much faster than
 		  // inverting the original image.
-		  stg_rotrect_t *latest = &(*rects)[(*rect_count)-1];
+		  rotrect_t *latest = &(*rects)[(*rect_count)-1];
 		  latest->pose.x = startx;
 		  latest->pose.y = img_height-1 - (starty + height);
 		  latest->pose.a = 0.0;
@@ -210,9 +210,9 @@ int Stg::stg_rotrects_from_image_file( const char* filename,
 
 // POINTS -----------------------------------------------------------
 
-stg_point_t* Stg::stg_unit_square_points_create( void )
+point_t* Stg::unit_square_points_create( void )
 {
-  stg_point_t * pts = new stg_point_t[4];
+  point_t * pts = new point_t[4];
 
   pts[0].x = 0;
   pts[0].y = 0;

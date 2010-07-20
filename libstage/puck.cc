@@ -4,7 +4,7 @@
 using namespace Stg;
 
 Puck::Puck() : 
-  color( stg_color_pack( 1,0,0,0) ),
+  color( color_pack( 1,0,0,0) ),
   displaylist( 0 ),
   height( 0.2 ),
   pose( 0,0,0,0 ),
@@ -51,7 +51,7 @@ void Puck::BuildDisplayList()
   
   // outline the sides in a darker shade
   double r,g,b,a;
-  stg_color_unpack( color, &r, &g, &b, &a );
+  color_unpack( color, &r, &g, &b, &a );
   glColor3f( r/2.0, g/2.0, b/2.0 );
   
   gluQuadricDrawStyle( q, GLU_LINE );

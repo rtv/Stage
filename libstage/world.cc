@@ -99,8 +99,8 @@ using namespace Stg;
 // // function objects for comparing model positions
 bool World::ltx::operator()(const Model* a, const Model* b) const
 {
-	const stg_meters_t ax = a->GetGlobalPose().x;
-	const stg_meters_t bx = b->GetGlobalPose().x;
+	const meters_t ax = a->GetGlobalPose().x;
+	const meters_t bx = b->GetGlobalPose().x;
 	
 	if( ax == bx )
 		return a < b; // tie breaker
@@ -109,8 +109,8 @@ bool World::ltx::operator()(const Model* a, const Model* b) const
 }
 bool World::lty::operator()(const Model* a, const Model* b) const
 {
-	const stg_meters_t ay = a->GetGlobalPose().y;
-	const stg_meters_t by = b->GetGlobalPose().y;
+	const meters_t ay = a->GetGlobalPose().y;
+	const meters_t by = b->GetGlobalPose().y;
 	
 	if( ay == by )
 		return a < b; // tie breaker
@@ -194,7 +194,7 @@ World::~World( void )
   World::world_set.erase( this );
 }
 
-SuperRegion* World::CreateSuperRegion( stg_point_int_t origin )
+SuperRegion* World::CreateSuperRegion( point_int_t origin )
 {
   SuperRegion* sr = new SuperRegion( this, origin );
   superregions[ sr->origin ] = sr;
@@ -291,6 +291,19 @@ void World::LoadBlock( Worldfile* wf, int entity )
   mod->LoadBlock( wf, entity );
 }
 
+void World::LoadSensor( Worldfile* wf, int entity )
+{ 
+  // lookup the group in which this was defined
+  ModelRanger* rgr = dynamic_cast<ModelRanger*>(models_by_wfentity[ wf->GetEntityParent( entity )]);
+  
+	//todo verify that the parent is indeed a ranger
+	
+  if( ! rgr )
+    PRINT_ERR( "block has no ranger model for a parent" );
+  
+  rgr->LoadSensor( wf, entity );
+}
+
 
 Model* World::CreateModel( Model* parent, const std::string& typestr )
 {
@@ -373,7 +386,7 @@ void World::Load( const char* worldfile_path )
     wf->ReadString( entity, "name", this->token );
   
   this->quit_time = 
-    (stg_usec_t)( million * wf->ReadFloat( entity, "quit_time", this->quit_time ) );
+    (usec_t)( million * wf->ReadFloat( entity, "quit_time", this->quit_time ) );
   
   this->ppm = 
     1.0 / wf->ReadFloat( entity, "resolution", 1.0 / this->ppm );
@@ -430,9 +443,11 @@ void World::Load( const char* worldfile_path )
 			 /* do nothing here */
 		  }
       else if( strcmp( typestr, "block" ) == 0 )
-		  LoadBlock( wf, entity );
-      else
-		  LoadModel( wf, entity );
+				LoadBlock( wf, entity );
+      else if( strcmp( typestr, "sensor" ) == 0 )
+				LoadSensor( wf, entity );
+			else
+				LoadModel( wf, entity );
     }
   
   // call all controller init functions
@@ -500,17 +515,17 @@ std::string World::ClockString() const
   return str;
 }
 
-void World::AddUpdateCallback( stg_world_callback_t cb, 
+void World::AddUpdateCallback( world_callback_t cb, 
 										 void* user )
 {
   // add the callback & argument to the list
-  cb_list.push_back( std::pair<stg_world_callback_t,void*>(cb, user) );
+  cb_list.push_back( std::pair<world_callback_t,void*>(cb, user) );
 }
 
-int World::RemoveUpdateCallback( stg_world_callback_t cb, 
+int World::RemoveUpdateCallback( world_callback_t cb, 
 											void* user )
 {
-  std::pair<stg_world_callback_t,void*> p( cb, user );
+  std::pair<world_callback_t,void*> p( cb, user );
   
   FOR_EACH( it, cb_list )
     {
@@ -682,9 +697,9 @@ void World::ClearRays()
 
 
 void World::Raytrace( const Pose &gpose, // global pose
-							 const stg_meters_t range,
-							 const stg_radians_t fov,
-							 const stg_ray_test_func_t func,
+							 const meters_t range,
+							 const radians_t fov,
+							 const ray_test_func_t func,
 							 const Model* model,			 
 							 const void* arg,
 							 RaytraceResult* samples, // preallocated storage for samples
@@ -704,8 +719,8 @@ void World::Raytrace( const Pose &gpose, // global pose
 
 // Stage spends 50-99% of its time in this method.
 RaytraceResult World::Raytrace( const Pose &gpose, 
-													const stg_meters_t range,
-													const stg_ray_test_func_t func,
+													const meters_t range,
+													const ray_test_func_t func,
 													const Model* mod,		
 													const void* arg,
 													const bool ztest ) 
@@ -838,7 +853,7 @@ RaytraceResult World::Raytrace( const Ray& r )
 					 }			 
 				  --n; // decrement the manhattan distance remaining
 													 							
-				  //rt_cells.push_back( stg_point_int_t( globx, globy ));
+				  //rt_cells.push_back( point_int_t( globx, globy ));
 				}					
 			 //printf( "leaving populated region\n" );
 		  }							 
@@ -899,7 +914,7 @@ RaytraceResult World::Raytrace( const Ray& r )
 				  distY -= distX;
 				  distX = xjumpdist;
 							
-				  //rt_candidate_cells.push_back( stg_point_int_t( xcrossx, xcrossy ));
+				  //rt_candidate_cells.push_back( point_int_t( xcrossx, xcrossy ));
 				}			 
 			 else // crossing a region boundary up or down
 				{		  
@@ -916,10 +931,10 @@ RaytraceResult World::Raytrace( const Ray& r )
 				  distX -= distY;
 				  distY = yjumpdist;
 
-				  //rt_candidate_cells.push_back( stg_point_int_t( ycrossx, ycrossy ));
+				  //rt_candidate_cells.push_back( point_int_t( ycrossx, ycrossy ));
 				}	
 		  }			  	
-      //rt_cells.push_back( stg_point_int_t( globx, globy ));
+      //rt_cells.push_back( point_int_t( globx, globy ));
     } 
   // hit nothing
   sample.mod = NULL;
@@ -951,7 +966,7 @@ void World::Reload( void )
   ForEachDescendant( _reload_cb, NULL );
 }
 
-SuperRegion* World::AddSuperRegion( const stg_point_int_t& sup )
+SuperRegion* World::AddSuperRegion( const point_int_t& sup )
 {
   //printf( "Creating super region [ %d %d ]\n", sup.x, sup.y );
   SuperRegion* sr = CreateSuperRegion( sup );
@@ -960,12 +975,12 @@ SuperRegion* World::AddSuperRegion( const stg_point_int_t& sup )
   //printf( "lower left (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
 	
 	// set the lower left corner of the new superregion
-  Extend( stg_point3_t( (sup.x << SRBITS) / ppm,
+  Extend( point3_t( (sup.x << SRBITS) / ppm,
 												(sup.y << SRBITS) / ppm,
 												0 ));
 	
 	// top right corner of the new superregion
-  Extend( stg_point3_t( ((sup.x+1) << SRBITS) / ppm,
+  Extend( point3_t( ((sup.x+1) << SRBITS) / ppm,
 												((sup.y+1) << SRBITS) / ppm,
 												0 ));
   //printf( "top right (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
@@ -986,12 +1001,12 @@ inline SuperRegion* World::GetSuperRegion( const int32_t x, const int32_t y )
   if( sr_cached && sr_cached->origin.x == x && sr_cached->origin.y  == y )
     return sr_cached;
   
-	//  stg_point_int_t pt(x,y);
+	//  point_int_t pt(x,y);
   
-  SuperRegion* sr = superregions[ stg_point_int_t(x,y) ];
+  SuperRegion* sr = superregions[ point_int_t(x,y) ];
   
   if( sr == NULL ) // no superregion exists! make a new one
-    sr = AddSuperRegion( stg_point_int_t(x,y) );
+    sr = AddSuperRegion( point_int_t(x,y) );
   
   // cache for next time around
   sr_cached = sr;
@@ -1000,8 +1015,8 @@ inline SuperRegion* World::GetSuperRegion( const int32_t x, const int32_t y )
   return sr;
 }
 
-void World::ForEachCellInLine( const stg_point_int_t& start,
-															 const stg_point_int_t& end,
+void World::ForEachCellInLine( const point_int_t& start,
+															 const point_int_t& end,
 															 CellPtrVec& cells )
 {  
   // line rasterization adapted from Cohen's 3D version in
@@ -1064,7 +1079,7 @@ void World::ForEachCellInLine( const stg_point_int_t& start,
     }
 }
 
-void World::Extend( stg_point3_t pt )
+void World::Extend( point3_t pt )
 {
   extent.x.min = std::min( extent.x.min, pt.x);
   extent.x.max = std::max( extent.x.max, pt.x );
@@ -1099,7 +1114,7 @@ void World::Log( Model* mod )
   //LogEntry::Print();
 }
 
-void World::Enqueue( unsigned int queue_num, stg_usec_t delay, Model* mod )
+void World::Enqueue( unsigned int queue_num, usec_t delay, Model* mod )
 {
   //printf( "enqueue at %llu %p %s\n", sim_time + delay, mod, mod->Token() );
   

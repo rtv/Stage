@@ -179,31 +179,31 @@ namespace Stg
   enum { FiducialNone = 0 };
 
   /** Value that uniquely identifies a model */
-  typedef uint32_t stg_id_t;
+  typedef uint32_t id_t;
 
   /** Metres: floating point unit of distance */
-  typedef double stg_meters_t;
+  typedef double meters_t;
 
   /** Radians: unit of angle */
-  typedef double stg_radians_t;
+  typedef double radians_t;
 
   /** time structure */
-  typedef struct timeval stg_time_t;
+  typedef struct timeval time_t;
 
   /** Milliseconds: unit of (short) time */
-  typedef unsigned long stg_msec_t;
+  typedef unsigned long msec_t;
 
   /** Microseconds: unit of (very short) time */
-  typedef uint64_t stg_usec_t;
+  typedef uint64_t usec_t;
 
   /** Kilograms: unit of mass */
-  typedef double stg_kg_t; // Kilograms (mass)
+  typedef double kg_t; // Kilograms (mass)
 
   /** Joules: unit of energy */
-  typedef double stg_joules_t;
+  typedef double joules_t;
 
   /** Watts: unit of power (energy/time) */
-  typedef double stg_watts_t;
+  typedef double watts_t;
   
   class Color
   {
@@ -226,17 +226,19 @@ namespace Stg
 
 		/** convenient constants */
 		static const Color blue, red, green, yellow, magenta, cyan;
+
+		bool Load( Worldfile* wf, int entity );
   };
   
   /** specify a rectangular size */
   class Size
   {
   public:
-    stg_meters_t x, y, z;
+    meters_t x, y, z;
 	
-    Size( stg_meters_t x, 
-			 stg_meters_t y, 
-			 stg_meters_t z )
+    Size( meters_t x, 
+			 meters_t y, 
+			 meters_t z )
       : x(x), y(y), z(z)
     {/*empty*/}
 	
@@ -255,13 +257,13 @@ namespace Stg
   class Pose
   {
   public:
-    stg_meters_t x, y, z;///< location in 3 axes
-    stg_radians_t a;///< rotation about the z axis. 
+    meters_t x, y, z;///< location in 3 axes
+    radians_t a;///< rotation about the z axis. 
     
-    Pose( stg_meters_t x, 
-			 stg_meters_t y, 
-			 stg_meters_t z,
-			 stg_radians_t a ) 
+    Pose( meters_t x, 
+			 meters_t y, 
+			 meters_t z,
+			 radians_t a ) 
       : x(x), y(y), z(z), a(a)
     { /*empty*/ }
     
@@ -272,8 +274,8 @@ namespace Stg
     
     /** return a random pose within the bounding rectangle, with z=0 and
 		  angle random */
-    static Pose Random( stg_meters_t xmin, stg_meters_t xmax, 
-								stg_meters_t ymin, stg_meters_t ymax )
+    static Pose Random( meters_t xmin, meters_t xmax, 
+								meters_t ymin, meters_t ymax )
     {		 
       return Pose( xmin + drand48() * (xmax-xmin),
 						 ymin + drand48() * (ymax-ymin),
@@ -342,7 +344,7 @@ namespace Stg
 					a!=other.a );
 	 }
 	 
-	 stg_meters_t Distance2D( const Pose& other ) const
+	 meters_t Distance2D( const Pose& other ) const
 	 {
 		return hypot( x-other.x, y-other.y );
 	 }
@@ -359,10 +361,10 @@ namespace Stg
 		  @param z velocity vector component along Z axis (vertical speed), in meters per second.
 		  @param a rotational velocity around Z axis (yaw), in radians per second.
 	 */
-    Velocity( stg_meters_t x, 
-				  stg_meters_t y, 
-				  stg_meters_t z,
-				  stg_radians_t a ) :
+    Velocity( meters_t x, 
+				  meters_t y, 
+				  meters_t z,
+				  radians_t a ) :
 		Pose( x, y, z, a )
     { /*empty*/ }
     
@@ -434,10 +436,12 @@ namespace Stg
     
     Bounds() : min(0), max(0) { /* empty*/  }
     Bounds( double min, double max ) : min(min), max(max) { /* empty*/  }
+
+		void Load( Worldfile* wf, int section, const char* keyword );
   };
     
   /** Define a three-dimensional bounding box, initialized to zero */
-  class stg_bounds3d_t
+  class bounds3d_t
   {
   public:
 	 /// volume extent along x axis, intially zero
@@ -447,8 +451,8 @@ namespace Stg
 	 /// volume extent along z axis, initially zero
     Bounds z; 
 
-	 stg_bounds3d_t() : x(), y(), z() {}
-	 stg_bounds3d_t( const Bounds& x, const Bounds& y, const Bounds& z) 
+	 bounds3d_t() : x(), y(), z() {}
+	 bounds3d_t( const Bounds& x, const Bounds& y, const Bounds& z) 
 		: x(x), y(y), z(z) {}
   };
   
@@ -456,66 +460,58 @@ namespace Stg
   typedef struct
   {
     Bounds range; ///< min and max range of sensor
-    stg_radians_t angle; ///< width of viewing angle of sensor
-  } stg_fov_t;
+    radians_t angle; ///< width of viewing angle of sensor
+  } fov_t;
   
   /** Define a point on a 2d plane */
-  class stg_point_t
+  class point_t
   {
   public:
-    stg_meters_t x, y;
-	 stg_point_t( stg_meters_t x, stg_meters_t y ) : x(x), y(y){}	 
-	 stg_point_t() : x(0.0), y(0.0){}
+    meters_t x, y;
+	 point_t( meters_t x, meters_t y ) : x(x), y(y){}	 
+	 point_t() : x(0.0), y(0.0){}
 	
-	 bool operator+=( const stg_point_t& other ) 
+	 bool operator+=( const point_t& other ) 
 	 { return ((x += other.x) && (y += other.y) ); }  
   };
   
   /** Define a point in 3d space */
-  class stg_point3_t
+  class point3_t
   {
   public:
-    stg_meters_t x,y,z;
-	 stg_point3_t( stg_meters_t x, stg_meters_t y, stg_meters_t z ) 
+    meters_t x,y,z;
+	 point3_t( meters_t x, meters_t y, meters_t z ) 
 		: x(x), y(y), z(z) {}	 
   
-	 stg_point3_t() : x(0.0), y(0.0), z(0.0) {}
+	 point3_t() : x(0.0), y(0.0), z(0.0) {}
   };
   
   /** Define an integer point on the 2d plane */
-  class stg_point_int_t
+  class point_int_t
   {
   public:
     int x,y;
-		stg_point_int_t( int x, int y ) : x(x), y(y){}	 
-		stg_point_int_t() : x(0), y(0){}
+		point_int_t( int x, int y ) : x(x), y(y){}	 
+		point_int_t() : x(0), y(0){}
 		
 		/** required to put these in sorted containers like std::map */
-		bool operator<( const stg_point_int_t& other ) const
+		bool operator<( const point_int_t& other ) const
 		{
 			if( x < other.x ) return true;
 			if( other.x < x ) return false;
 			return y < other.y;
 		}
  
-	 bool operator==( const stg_point_int_t& other ) const
+	 bool operator==( const point_int_t& other ) const
 		{ return ((x == other.x) && (y == other.y) ); }
   };
   
-  typedef std::vector<stg_point_int_t> PointIntVec;
+  typedef std::vector<point_int_t> PointIntVec;
 
   /** create an array of 4 points containing the corners of a unit
       square.  */
-  stg_point_t* stg_unit_square_points_create();
+  point_t* unit_square_points_create();
   
-  /** laser return value */
-
-  typedef enum 
-    {
-      LaserTransparent=0, ///<not detected by laser model 
-      LaserVisible, ///< detected by laser with a reflected intensity of 0 
-      LaserBright  ///< detected by laser with a reflected intensity of 1 
-    } stg_laser_return_t;
   
   /** Convenient OpenGL drawing routines, used by visualization
 		code. */
@@ -524,7 +520,7 @@ namespace Stg
 	 void pose_shift( const Pose &pose );
 	 void pose_inverse_shift( const Pose &pose );
 	 void coord_shift( double x, double y, double z, double a  );
-	 void draw_grid( stg_bounds3d_t vol );
+	 void draw_grid( bounds3d_t vol );
 	 /** Render a string at [x,y,z] in the current color */
 	 void draw_string( float x, float y, float z, const char *string);
 	 void draw_string_multiline( float x, float y, float w, float h, 
@@ -567,8 +563,8 @@ namespace Stg
   };
 
 
-  typedef int(*stg_model_callback_t)(Model* mod, void* user );
-  typedef int(*stg_world_callback_t)(World* world, void* user );
+  typedef int(*model_callback_t)(Model* mod, void* user );
+  typedef int(*world_callback_t)(World* world, void* user );
   
   // return val, or minval if val < minval, or maxval if val > maxval
   double constrain( double val, double minval, double maxval );
@@ -577,11 +573,11 @@ namespace Stg
   {
     int enabled;
     Pose pose;
-    stg_meters_t size; ///< rendered as a sphere with this diameter
+    meters_t size; ///< rendered as a sphere with this diameter
     Color color;
-    stg_msec_t period; ///< duration of a complete cycle
+    msec_t period; ///< duration of a complete cycle
     double duty_cycle; ///< mark/space ratio
-  } stg_blinkenlight_t;
+  } blinkenlight_t;
 
   
   /** Defines a rectangle of [size] located at [pose] */
@@ -589,15 +585,15 @@ namespace Stg
   {
     Pose pose;
     Size size;
-  } stg_rotrect_t; // rotated rectangle
+  } rotrect_t; // rotated rectangle
 
   /** load the image file [filename] and convert it to an array of
       rectangles, filling in the number of rects, width and
       height. Memory is allocated for the rectangle array [rects], so
       the caller must free [rects].
   */
-  int stg_rotrects_from_image_file( const char* filename, 
-												stg_rotrect_t** rects,
+  int rotrects_from_image_file( const char* filename, 
+												rotrect_t** rects,
 												unsigned int* rect_count,
 												unsigned int* widthp, 
 												unsigned int* heightp );
@@ -605,7 +601,7 @@ namespace Stg
   
   /** matching function should return true iff the candidate block is
       stops the ray, false if the block transmits the ray */
-  typedef bool (*stg_ray_test_func_t)(Model* candidate, 
+  typedef bool (*ray_test_func_t)(Model* candidate, 
 												  Model* finder, 
 												  const void* arg );
 
@@ -673,7 +669,7 @@ namespace Stg
 
   /** Define a callback function type that can be attached to a
       record within a model and called whenever the record is set.*/
-  typedef int (*stg_model_callback_t)( Model* mod, void* user );
+  typedef int (*model_callback_t)( Model* mod, void* user );
   
   // ANCESTOR CLASS
   /** Base class for Model and World */
@@ -706,7 +702,7 @@ namespace Stg
 	 ModelPtrVec& GetChildren(){ return children;}
     
     /** recursively call func( model, arg ) for each descendant */
-    void ForEachDescendant( stg_model_callback_t func, void* arg );
+    void ForEachDescendant( model_callback_t func, void* arg );
 	 
     virtual void AddChild( Model* mod );
     virtual void RemoveChild( Model* mod );
@@ -733,20 +729,20 @@ namespace Stg
   {
   public:
     Pose pose; ///< location and direction of the ray origin
-    stg_meters_t range; ///< range to beam hit in meters
+    meters_t range; ///< range to beam hit in meters
     Model* mod; ///< the model struck by this beam
     Color color; ///< the color struck by this beam
 	 
 	 RaytraceResult() : pose(), range(0), mod(NULL), color() {}
 	 RaytraceResult( const Pose& pose, 
-						  stg_meters_t range ) 
+						  meters_t range ) 
 		: pose(pose), range(range), mod(NULL), color() {}	 
   };
 	
   class Ray
   {
   public:
-	 Ray( const Model* mod, const Pose& origin, const stg_meters_t range, const stg_ray_test_func_t func, const void* arg, const bool ztest ) :
+	 Ray( const Model* mod, const Pose& origin, const meters_t range, const ray_test_func_t func, const void* arg, const bool ztest ) :
 		mod(mod), origin(origin), range(range), func(func), arg(arg), ztest(ztest)
 	 {}
 
@@ -755,8 +751,8 @@ namespace Stg
 		
 		const Model* mod;
 		Pose origin;
-		stg_meters_t range;
-		stg_ray_test_func_t func;
+		meters_t range;
+		ray_test_func_t func;
 		const void* arg;
 	 bool ztest;		
   };
@@ -770,12 +766,12 @@ namespace Stg
 
   class LogEntry
   {
-	 stg_usec_t timestamp;
+	 usec_t timestamp;
 	 Model* mod;
 	 Pose pose;
 	 
   public:
-	 LogEntry( stg_usec_t timestamp, Model* mod );
+	 LogEntry( usec_t timestamp, Model* mod );
 	 
 	 /** A log of all LogEntries ever created */
 	 static std::vector<LogEntry> log;
@@ -880,17 +876,17 @@ namespace Stg
     
   protected:	 
 
-	 std::list<std::pair<stg_world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
-    stg_bounds3d_t extent; ///< Describes the 3D volume of the world
+	 std::list<std::pair<world_callback_t,void*> > cb_list; ///< List of callback functions and arguments
+    bounds3d_t extent; ///< Describes the 3D volume of the world
     bool graphics;///< true iff we have a GUI
 
 	 std::set<Option*> option_table; ///< GUI options (toggles) registered by models
 	 std::list<PowerPack*> powerpack_list; ///< List of all the powerpacks attached to models in the world
     /** World::quit is set true when this simulation time is reached */
-    stg_usec_t quit_time;
+    usec_t quit_time;
 	 std::list<float*> ray_list;///< List of rays traced for debug visualization
-    stg_usec_t sim_time; ///< the current sim time in this world in microseconds
-	 std::map<stg_point_int_t,SuperRegion*> superregions;
+    usec_t sim_time; ///< the current sim time in this world in microseconds
+	 std::map<point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
 	 
 	 std::vector<ModelPtrVec> update_lists;  
@@ -922,11 +918,11 @@ namespace Stg
 
 	 /** Attach a callback function, to be called with the argument at
 		  the end of a complete update step */
-	 void AddUpdateCallback( stg_world_callback_t cb, void* user );
+	 void AddUpdateCallback( world_callback_t cb, void* user );
 
 	 /** Remove a callback function. Any argument data passed to
 		  AddUpdateCallback is not automatically freed. */
-	 int RemoveUpdateCallback( stg_world_callback_t cb, void* user );
+	 int RemoveUpdateCallback( world_callback_t cb, void* user );
 
 	 /** Log the state of a Model */
 	 void Log( Model* mod );
@@ -946,25 +942,27 @@ namespace Stg
     void LoadBlock( Worldfile* wf, int entity );
     void LoadBlockGroup( Worldfile* wf, int entity );
     
+		void LoadSensor( Worldfile* wf, int entity );
+
     virtual Model* RecentlySelectedModel() const { return NULL; }
 		
-    SuperRegion* AddSuperRegion( const stg_point_int_t& coord );
+    SuperRegion* AddSuperRegion( const point_int_t& coord );
     SuperRegion* GetSuperRegion( int32_t x, int32_t y );
     void ExpireSuperRegion( SuperRegion* sr );
 		
 		/** add a Cell pointer to the vector for each cell on the line from
 				pt1 to pt2 inclusive */
-    void ForEachCellInLine( const stg_point_int_t& pt1,
-														const stg_point_int_t& pt2, 
+    void ForEachCellInLine( const point_int_t& pt1,
+														const point_int_t& pt2, 
 														CellPtrVec& cells );
 		
     /** convert a distance in meters to a distance in world occupancy
 		  grid pixels */
-    int32_t MetersToPixels( stg_meters_t x ) const
+    int32_t MetersToPixels( meters_t x ) const
     { return (int32_t)floor(x * ppm); };
 		
-    stg_point_int_t MetersToPixels( const stg_point_t& pt ) const
-    { return stg_point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); };
+    point_int_t MetersToPixels( const point_t& pt ) const
+    { return point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); };
 		
     // dummy implementations to be overloaded by GUI subclasses
     virtual void PushColor( Color col ) 
@@ -974,23 +972,23 @@ namespace Stg
 	 
     virtual void PopColor(){ /* do nothing */  };
 		
-    SuperRegion* CreateSuperRegion( stg_point_int_t origin );
+    SuperRegion* CreateSuperRegion( point_int_t origin );
     void DestroySuperRegion( SuperRegion* sr );
 	 	
 	 /** trace a ray. */
 	 RaytraceResult Raytrace( const Ray& ray );
 
     RaytraceResult Raytrace( const Pose& pose, 			 
-												const stg_meters_t range,
-												const stg_ray_test_func_t func,
+												const meters_t range,
+												const ray_test_func_t func,
 												const Model* finder,
 												const void* arg,
 												const bool ztest );
 		
     void Raytrace( const Pose &pose, 			 
-						 const stg_meters_t range,
-						 const stg_radians_t fov,
-						 const stg_ray_test_func_t func,
+						 const meters_t range,
+						 const radians_t fov,
+						 const ray_test_func_t func,
 						 const Model* finder,
 						 const void* arg,
 						 RaytraceResult* samples,
@@ -999,7 +997,7 @@ namespace Stg
 		
 		
     /** Enlarge the bounding volume to include this point */
-    void Extend( stg_point3_t pt );
+    void Extend( point3_t pt );
   
     virtual void AddModel( Model* mod );
     virtual void RemoveModel( Model* mod );
@@ -1024,10 +1022,10 @@ namespace Stg
     {
     public:
       
-      Event( stg_usec_t time, Model* mod ) 
+      Event( usec_t time, Model* mod ) 
 		  : time(time), mod(mod) {}
       
-      stg_usec_t time; ///< time that event occurs
+      usec_t time; ///< time that event occurs
       Model* mod; ///< model to update
       
 			/** order by time. Break ties by value of Model*. 
@@ -1049,7 +1047,7 @@ namespace Stg
 				@param mod The model that should have its Update() method
 				called at the specified time.
 		*/
-	 void Enqueue( unsigned int queue_num, stg_usec_t delay, Model* mod );
+	 void Enqueue( unsigned int queue_num, usec_t delay, Model* mod );
 	 
 		/** Set of models that require energy calculations at each World::Update(). */
 	 std::set<Model*> active_energy;
@@ -1058,7 +1056,7 @@ namespace Stg
 	 std::set<Model*> active_velocity;
 
 	 /** The amount of simulated time to run for each call to Update() */
-	 stg_usec_t sim_interval;
+	 usec_t sim_interval;
 	 
 	 /** consume events from the queue up to and including the current sim_time */
 	 void ConsumeQueue( unsigned int queue_num );
@@ -1077,7 +1075,7 @@ namespace Stg
     virtual ~World();
   	
 		/** Returns the current simulated time in this world, in microseconds. */
-    stg_usec_t SimTimeNow(void) const { return sim_time; }
+    usec_t SimTimeNow(void) const { return sim_time; }
 		
 		/** Returns a pointer to the currently-open worlddfile object, or
 				NULL if there is none. */
@@ -1136,7 +1134,7 @@ namespace Stg
     Model* GetModel( const std::string& name ) const;
   
     /** Return the 3D bounding box of the world, in meters */
-    const stg_bounds3d_t& GetExtent() const { return extent; };
+    const bounds3d_t& GetExtent() const { return extent; };
   
     /** Return the number of times the world has been updated. */
     uint64_t GetUpdateCount() const { return updates; }
@@ -1165,10 +1163,10 @@ namespace Stg
 		  blocks. The point data is copied, so pts can safely be freed
 		  after constructing the block.*/
     Block( Model* mod,  
-					 stg_point_t* pts, 
+					 point_t* pts, 
 					 size_t pt_count,
-					 stg_meters_t zmin,
-					 stg_meters_t zmax,
+					 meters_t zmin,
+					 meters_t zmax,
 					 Color color,
 					 bool inherit_color,
 					 bool wheel );
@@ -1224,13 +1222,13 @@ namespace Stg
     const Color& GetColor();		
 	 void Rasterize( uint8_t* data, 
 						  unsigned int width, unsigned int height,		
-						  stg_meters_t cellwidth, stg_meters_t cellheight );
+						  meters_t cellwidth, meters_t cellheight );
 		
   private:
     Model* mod; ///< model to which this block belongs
-	 std::vector<stg_point_t> mpts; ///< cache of this->pts in model coordindates
+	 std::vector<point_t> mpts; ///< cache of this->pts in model coordindates
     size_t pt_count; ///< the number of points	 
-	 std::vector<stg_point_t> pts; ///< points defining a polygonx	 
+	 std::vector<point_t> pts; ///< points defining a polygonx	 
     Size size;	 
     Bounds local_z; ///<  z extent in local coords
     Color color;
@@ -1263,7 +1261,7 @@ namespace Stg
 	
 	 /** find the position of a block's point in model coordinates
 		  (m) */
-	 stg_point_t BlockPointToModelMeters( const stg_point_t& bpt );
+	 point_t BlockPointToModelMeters( const point_t& bpt );
 	
 	 /** invalidate the cache of points in model coordinates */
 	 void InvalidateModelPointCache();
@@ -1282,8 +1280,8 @@ namespace Stg
 		
 		BlockPtrSet blocks;
     Size size;
-    stg_point3_t offset;
-    stg_meters_t minx, maxx, miny, maxy;
+    point3_t offset;
+    meters_t minx, maxx, miny, maxy;
 		
   public:
     BlockGroup();
@@ -1291,7 +1289,7 @@ namespace Stg
 		
     uint32_t GetCount(){ return blocks.size(); };
     const Size& GetSize(){ return size; };
-    const stg_point3_t& GetOffset(){ return offset; };
+    const point3_t& GetOffset(){ return offset; };
 		
     /** Establish the min and max of all the blocks, so we can scale this
 				group later. */
@@ -1323,7 +1321,7 @@ namespace Stg
 	 
 	 void Rasterize( uint8_t* data, 
 						  unsigned int width, unsigned int height,
-						  stg_meters_t cellwidth, stg_meters_t cellheight );
+						  meters_t cellwidth, meters_t cellheight );
 	 
 	 void InvalidateModelPointCache()
 	 {
@@ -1463,7 +1461,7 @@ namespace Stg
     Canvas* canvas;
     std::vector<Option*> drawOptions;
     FileManager* fileMan; ///< Used to load and save worldfiles
-	 std::vector<stg_usec_t> interval_log;
+	 std::vector<usec_t> interval_log;
 	 
 	 /** Stage attempts to run this many times faster than real
 		  time. If -1, Stage runs as fast as possible. */
@@ -1475,14 +1473,14 @@ namespace Stg
 
 	 /** The amount of real time elapsed between $timing_interval
 		  timesteps. */
-    stg_usec_t real_time_interval;
+    usec_t real_time_interval;
 	 
 	 /** The current real time in microseconds. */
-    stg_usec_t real_time_now; 
+    usec_t real_time_now; 
 
 	 /** The last recorded real time, sampled every $timing_interval
 		  updates. */
-    stg_usec_t real_time_recorded;
+    usec_t real_time_recorded;
 	 
 	 /** Number of updates between measuring elapsed real time. */
 	 uint64_t timing_interval;
@@ -1541,7 +1539,7 @@ namespace Stg
     virtual void Start();
     virtual void Stop();
 	
-    stg_usec_t RealTimeNow(void) const;
+    usec_t RealTimeNow(void) const;
  
     void DrawBoundingBoxTree();
     
@@ -1590,24 +1588,24 @@ namespace Stg
 	 {
 	 private:
 		unsigned int columns, rows;
-		stg_meters_t width, height;
+		meters_t width, height;
 		 
-		 std::vector<stg_joules_t> cells;
+		 std::vector<joules_t> cells;
 		 
-		 stg_joules_t peak_value;
+		 joules_t peak_value;
 		 double cellsize;
 		 
-		static stg_joules_t global_peak_value; 
+		static joules_t global_peak_value; 
 
 	 public:
-		DissipationVis( stg_meters_t width, 
-							 stg_meters_t height, 
-							 stg_meters_t cellsize );
+		DissipationVis( meters_t width, 
+							 meters_t height, 
+							 meters_t cellsize );
 
 		virtual ~DissipationVis();
 		virtual void Visualize( Model* mod, Camera* cam );		
 		
-		void Accumulate( stg_meters_t x, stg_meters_t y, stg_joules_t amount );
+		void Accumulate( meters_t x, meters_t y, joules_t amount );
 	 } event_vis;
 	 
 
@@ -1618,26 +1616,27 @@ namespace Stg
 	 Model* mod;
     
 	 /** Energy stored */
-	 stg_joules_t stored;
+	 joules_t stored;
 	 
 	 /** Energy capacity */
-	 stg_joules_t capacity;
+	 joules_t capacity;
 	 
 	 /** TRUE iff the device is receiving energy */
 	 bool charging;
 	 
 	 /** Energy dissipated */
-	 stg_joules_t dissipated;
+	 joules_t dissipated;
 	 
 	 // these are used to visualize the power draw
-	 stg_usec_t last_time;
-	 stg_joules_t last_joules;
-	 stg_watts_t last_watts;
+	 usec_t last_time;
+	 joules_t last_joules;
+	 watts_t last_watts;
 
-	 static stg_joules_t global_stored;
-	 static stg_joules_t global_capacity;
-	 static stg_joules_t global_dissipated;	 
-	 static stg_joules_t global_input;
+  public:
+	 static joules_t global_stored;
+	 static joules_t global_capacity;
+	 static joules_t global_dissipated;	 
+	 static joules_t global_input;
 
   public:
 	 PowerPack( Model* mod );
@@ -1647,16 +1646,16 @@ namespace Stg
 	 void Visualize( Camera* cam );
 
 	 /** Returns the energy capacity minus the current amount stored */
-	 stg_joules_t RemainingCapacity() const;
+	 joules_t RemainingCapacity() const;
 	 
 	 /** Add to the energy store */
-	 void Add( stg_joules_t j );
+	 void Add( joules_t j );
 		
 	 /** Subtract from the energy store */
-	 void Subtract( stg_joules_t j );
+	 void Subtract( joules_t j );
 		
 	 /** Transfer some stored energy to another power pack */
-	 void TransferTo( PowerPack* dest, stg_joules_t amount );	 
+	 void TransferTo( PowerPack* dest, joules_t amount );	 
 
 	 double ProportionRemaining() const
 	 { return( stored / capacity ); }
@@ -1671,11 +1670,11 @@ namespace Stg
 		printf( "PowerPack %.2f/%.2f J\n", stored, capacity ); 
 	 }		
 	 
-	 stg_joules_t GetStored() const;
-	 stg_joules_t GetCapacity() const;
-	 stg_joules_t GetDissipated() const;
-	 void SetCapacity( stg_joules_t j );
-	 void SetStored( stg_joules_t j );	
+	 joules_t GetStored() const;
+	 joules_t GetCapacity() const;
+	 joules_t GetDissipated() const;
+	 void SetCapacity( joules_t j );
+	 void SetStored( joules_t j );	
 
 	 /** Returns true iff the device received energy at the last timestep */
 	 bool GetCharging() const { return charging; }
@@ -1684,10 +1683,10 @@ namespace Stg
 	 void ChargeStop(){ charging = false; }
 
 	 /** Lose energy as work or heat */
-	 void Dissipate( stg_joules_t j );
+	 void Dissipate( joules_t j );
 	 
 	 /** Lose energy as work or heat, and record the event */
-	 void Dissipate( stg_joules_t j, const Pose& p );
+	 void Dissipate( joules_t j, const Pose& p );
   };
 
    
@@ -1709,7 +1708,7 @@ namespace Stg
   private:
 	 /** the number of models instatiated - used to assign unique IDs */
 	 static uint32_t count;
-	 static std::map<stg_id_t,Model*> modelsbyid;
+	 static std::map<id_t,Model*> modelsbyid;
 	 std::vector<Option*> drawOptions;
 	 const std::vector<Option*>& getOptions() const { return drawOptions; }
 	 
@@ -1734,26 +1733,26 @@ namespace Stg
 	 /** container for a callback function and a single argument, so
 		  they can be stored together in a list with a single pointer. */
   public:
-	 class stg_cb_t
+	 class cb_t
 	 {
 	 public:
-		stg_model_callback_t callback;
+		model_callback_t callback;
 		void* arg;
 			
-		stg_cb_t( stg_model_callback_t cb, void* arg ) 
+		cb_t( model_callback_t cb, void* arg ) 
 		  : callback(cb), arg(arg) {}
 			
-		stg_cb_t( stg_world_callback_t cb, void* arg ) 
+		cb_t( world_callback_t cb, void* arg ) 
 		  : callback(NULL), arg(arg) { (void)cb; }
 			
-		stg_cb_t() : callback(NULL), arg(NULL) {}
+		cb_t() : callback(NULL), arg(NULL) {}
 			
 		/** for placing in a sorted container */
-		bool operator<( const stg_cb_t& other ) const
+		bool operator<( const cb_t& other ) const
 		{ return ((void*)(callback)) < ((void*)(other.callback)); }
 			
 		/** for searching in a sorted container */
-		bool operator==( const stg_cb_t& other ) const
+		bool operator==( const cb_t& other ) const
 		{ return( callback == other.callback);  }			
 	 };
 		
@@ -1800,7 +1799,7 @@ namespace Stg
 		/** A list of callback functions can be attached to any
 				address. When Model::CallCallbacks( void*) is called, the
 				callbacks are called.*/
-		std::vector<std::set<stg_cb_t> > callbacks;
+		std::vector<std::set<cb_t> > callbacks;
 		
 
 	 /** Default color of the model's blocks.*/
@@ -1818,7 +1817,7 @@ namespace Stg
 		/** If set true, Update() is not called on this model. Useful
 				e.g. for temporarily disabling updates when dragging models
 				with the mouse.*/
-		stg_bool_t disabled; 
+		bool disabled; 
 
 		/** Container for Visualizers attached to this model. */
 	 std::list<Visualizer*> cv_list;
@@ -1848,14 +1847,14 @@ namespace Stg
   
 	 /** unique process-wide identifier for this model */
 	 uint32_t id;	
-	 stg_usec_t interval; ///< time between updates in usec	 
-	 stg_usec_t interval_energy; ///< time between updates of powerpack in usec
-	 stg_usec_t interval_pose; ///< time between updates of pose due to velocity in usec
+	 usec_t interval; ///< time between updates in usec	 
+	 usec_t interval_energy; ///< time between updates of powerpack in usec
+	 usec_t interval_pose; ///< time between updates of pose due to velocity in usec
 
-	 stg_usec_t last_update; ///< time of last update in us  
+	 usec_t last_update; ///< time of last update in us  
 	 bool log_state; ///< iff true, model state is logged
-	 stg_meters_t map_resolution;
-	 stg_kg_t mass;
+	 meters_t map_resolution;
+	 kg_t mass;
 
 	 /** Pointer to the parent of this model, possibly NULL. */
 	 Model* parent; 
@@ -1877,8 +1876,8 @@ namespace Stg
 	 private:
 		uint8_t* data;
 		unsigned int width, height;
-		stg_meters_t cellwidth, cellheight;
-		std::vector<stg_point_t> pts;
+		meters_t cellwidth, cellheight;
+		std::vector<point_t> pts;
 	  
 	 public:
 		RasterVis();
@@ -1888,13 +1887,13 @@ namespace Stg
 		void SetData( uint8_t* data, 
 						  unsigned int width, 
 						  unsigned int height,
-						  stg_meters_t cellwidth,
-						  stg_meters_t cellheight );
+						  meters_t cellwidth,
+						  meters_t cellheight );
 	  
 		int subs;     //< the number of subscriptions to this model
 		int used;     //< the number of connections to this model
 	  
-		void AddPoint( stg_meters_t x, stg_meters_t y );
+		void AddPoint( meters_t x, meters_t y );
 		void ClearPts();
 	  
 	 } rastervis;
@@ -1904,7 +1903,7 @@ namespace Stg
 		
     bool stack_children; ///< whether child models should be stacked on top of this model or not
 
-	 stg_bool_t stall;
+	 bool stall;
 	 int subs;    ///< the number of subscriptions to this model
 	 /** Thread safety flag. Iff true, Update() may be called in
 		  parallel with other models. Defaults to false for safety */
@@ -1914,14 +1913,14 @@ namespace Stg
 	 class TrailItem 
 	 {																							
 	 public:
-		stg_usec_t time;
+		usec_t time;
 		Pose pose;
 		Color color;
 		
 		TrailItem() 
 		  : time(0), pose(), color(){}
 		 
-		 //TrailItem( stg_usec_t time, Pose pose, Color color ) 
+		 //TrailItem( usec_t time, Pose pose, Color color ) 
 		 //: time(time), pose(pose), color(color){}
 	 };
 	
@@ -1942,7 +1941,7 @@ namespace Stg
 		/** Record the current pose in our trail. Delete the trail head if it is full. */
 		void UpdateTrail();
 
-	 //stg_model_type_t type;  
+	 //model_type_t type;  
 	 const std::string type;
 	 /** The index into the world's vector of event queues. Initially
 			 -1, to indicate that it is not on a list yet. */
@@ -1955,15 +1954,15 @@ namespace Stg
 				to Model::VelocityEnable(). */
 		bool velocity_enable;
 		
-		stg_watts_t watts;///< power consumed by this model
+		watts_t watts;///< power consumed by this model
 	 
 	 /** If >0, this model can transfer energy to models that have
 		  watts_take >0 */
-	 stg_watts_t watts_give;
+	 watts_t watts_give;
 	
 	 /** If >0, this model can transfer energy from models that have
 		  watts_give >0 */
-	 stg_watts_t watts_take;
+	 watts_t watts_take;
 	
 	 Worldfile* wf;
 	 int wf_entity;
@@ -1982,27 +1981,28 @@ namespace Stg
 	 class Visibility
 	 {
 	 public:
-		bool blob_return;
-		int fiducial_key;
-		int fiducial_return;
-		bool gripper_return;
-		stg_laser_return_t laser_return;
-		bool obstacle_return;
-		bool ranger_return;
+		 bool blob_return;
+		 int fiducial_key;
+		 int fiducial_return;
+		 bool gripper_return;
+		 bool obstacle_return;
+		 float ranger_return; // 0 - 1
 		
 		Visibility();
+
 		void Load( Worldfile* wf, int wf_entity );
+		void Save( Worldfile* wf, int wf_entity );
 	 } vis;
 	 
-	 stg_usec_t GetUpdateInterval(){ return interval; }
-	 stg_usec_t GetEnergyInterval(){ return interval_energy; }
-	 stg_usec_t GetPoseInterval(){ return interval_pose; }
+	 usec_t GetUpdateInterval() const { return interval; }
+	 usec_t GetEnergyInterval() const { return interval_energy; }
+	 usec_t GetPoseInterval() const { return interval_pose; }
 	 
 	 /** Render the model's blocks as an occupancy grid into the
 		  preallocated array of width by height pixels */
 	 void Rasterize( uint8_t* data, 
 						  unsigned int width, unsigned int height,
-						  stg_meters_t cellwidth, stg_meters_t cellheight );
+						  meters_t cellwidth, meters_t cellheight );
 	
   private: 
 	 /** Private copy constructor declared but not defined, to make it
@@ -2044,32 +2044,32 @@ namespace Stg
 	 /** raytraces a single ray from the point and heading identified by
 		  pose, in local coords */
 	 RaytraceResult Raytrace( const Pose &pose,
-												const stg_meters_t range, 
-												const stg_ray_test_func_t func,
+												const meters_t range, 
+												const ray_test_func_t func,
 												const void* arg,
 												const bool ztest = true );
   
 	 /** raytraces multiple rays around the point and heading identified
 		  by pose, in local coords */
 	 void Raytrace( const Pose &pose,
-						 const stg_meters_t range, 
-						 const stg_radians_t fov, 
-						 const stg_ray_test_func_t func,
+						 const meters_t range, 
+						 const radians_t fov, 
+						 const ray_test_func_t func,
 						 const void* arg,
 						 RaytraceResult* samples,
 						 const uint32_t sample_count,
 						 const bool ztest = true  );
   
-	 RaytraceResult Raytrace( const stg_radians_t bearing, 			 
-												const stg_meters_t range,
-												const stg_ray_test_func_t func,
+	 RaytraceResult Raytrace( const radians_t bearing, 			 
+												const meters_t range,
+												const ray_test_func_t func,
 												const void* arg,
 												const bool ztest = true );
   
-	 void Raytrace( const stg_radians_t bearing, 			 
-						 const stg_meters_t range,
-						 const stg_radians_t fov,
-						 const stg_ray_test_func_t func,
+	 void Raytrace( const radians_t bearing, 			 
+						 const meters_t range,
+						 const radians_t fov,
+						 const ray_test_func_t func,
 						 const void* arg,
 						 RaytraceResult* samples,
 						 const uint32_t sample_count,
@@ -2089,7 +2089,7 @@ namespace Stg
 
 	 Model* ConditionalMove( const Pose& newpose );
 
-	 stg_meters_t ModelHeight() const;
+	 meters_t ModelHeight() const;
 
 	 void DrawBlocksTree();
 	 virtual void DrawBlocks();
@@ -2130,8 +2130,8 @@ namespace Stg
 	 //void RecordRenderPoint( GSList** head, GSList* link, 
 	 //					unsigned int* c1, unsigned int* c2 );
 
-	 void PlaceInFreeSpace( stg_meters_t xmin, stg_meters_t xmax, 
-									stg_meters_t ymin, stg_meters_t ymax );
+	 void PlaceInFreeSpace( meters_t xmin, meters_t xmax, 
+									meters_t ymin, meters_t ymax );
 	
 	 /** Return a human-readable string describing the model's pose */
 	 std::string PoseString()
@@ -2220,9 +2220,9 @@ namespace Stg
 
 	 /** Add a block to this model centered at [x,y] with extent [dx, dy,
 		  dz] */
-	 Block* AddBlockRect( stg_meters_t x, stg_meters_t y, 
-								 stg_meters_t dx, stg_meters_t dy, 
-								 stg_meters_t dz );
+	 Block* AddBlockRect( meters_t x, meters_t y, 
+								 meters_t dx, meters_t dy, 
+								 meters_t dz );
 	
 	 /** remove all blocks from this model, freeing their memory */
 	 void ClearBlocks();
@@ -2301,10 +2301,10 @@ namespace Stg
 	 uint32_t GetId()  const { return id; }
 	 
 	 /** Get the total mass of a model and it's children recursively */
-	 stg_kg_t GetTotalMass() const;
+	 kg_t GetTotalMass() const;
 	 
 	 /** Get the mass of this model's children recursively. */
-	 stg_kg_t GetMassOfChildren() const;
+	 kg_t GetMassOfChildren() const;
 
 	 /** Change a model's parent - experimental*/
 	 int SetParent( Model* newparent);
@@ -2323,22 +2323,22 @@ namespace Stg
 	
 	 // guess what these do?
 	 void SetColor( Color col );
-	 void SetMass( stg_kg_t mass );
-	 void SetStall( stg_bool_t stall );
-	 void SetGravityReturn( int val );
-	 void SetGripperReturn( int val );
-	 void SetStickyReturn( int val );
-	 void SetLaserReturn( stg_laser_return_t val );
-	 void SetObstacleReturn( int val );
-	 void SetBlobReturn( int val );
-	 void SetRangerReturn( int val );
-	 void SetBoundary( int val );
-	 void SetGuiNose( int val );
-	 void SetGuiMove( int val );
-	 void SetGuiGrid( int val );
-	 void SetGuiOutline( int val );
-	 void SetWatts( stg_watts_t watts );
-	 void SetMapResolution( stg_meters_t res );
+	 void SetMass( kg_t mass );
+	 void SetStall( bool stall );
+	 void SetGravityReturn( bool val );
+	 void SetGripperReturn( bool val );
+	 void SetStickyReturn( bool val );
+	 void SetRangerReturn( float val );
+	 void SetObstacleReturn( bool val );
+	 void SetBlobReturn( bool val );
+	 void SetRangerReturn( bool val );
+	 void SetBoundary( bool val );
+	 void SetGuiNose( bool val );
+	 void SetGuiMove( bool val );
+	 void SetGuiGrid( bool val );
+	 void SetGuiOutline( bool val );
+	 void SetWatts( watts_t watts );
+	 void SetMapResolution( meters_t res );
 	 void SetFriction( double friction );
 	
 	 bool DataIsFresh() const { return this->data_fresh; }
@@ -2353,11 +2353,11 @@ namespace Stg
 				when called.
 		*/
 		void AddCallback( callback_type_t type, 
-											stg_model_callback_t cb, 
+											model_callback_t cb, 
 											void* user );
 		
 		int RemoveCallback( callback_type_t type,
-												stg_model_callback_t callback );
+												model_callback_t callback );
 		
 		int CallCallbacks(  callback_type_t type );
 		
@@ -2377,12 +2377,12 @@ namespace Stg
 	 }
 		
 		/** Fill an array of global pixels from an array of local points. */
-		void LocalToPixels( const std::vector<stg_point_t>& local,
-												std::vector<stg_point_int_t>& pixels) const;
+		void LocalToPixels( const std::vector<point_t>& local,
+												std::vector<point_int_t>& pixels) const;
 		
 	 /** Return the 2d point in world coordinates of a 2d point
 		  specified in the model's local coordinate system */
-	 stg_point_t LocalToGlobal( const stg_point_t& pt) const;		
+	 point_t LocalToGlobal( const point_t& pt) const;		
 
 	 /** returns the first descendent of this model that is unsubscribed
 		  and has the type indicated by the string */
@@ -2429,7 +2429,7 @@ namespace Stg
 	 public:
 		Color color;
 		uint32_t left, top, right, bottom;
-		stg_meters_t range;
+		meters_t range;
 	 };
 
 	 class Vis : public Visualizer 
@@ -2450,9 +2450,9 @@ namespace Stg
 	 static bool BlockMatcher( Block* testblock, Model* finder );
 
   public:
-	 stg_radians_t fov;
-	 stg_radians_t pan;
-	 stg_meters_t range;
+	 radians_t fov;
+	 radians_t pan;
+	 meters_t range;
 	 unsigned int scan_height;
 	 unsigned int scan_width;
 	 
@@ -2488,83 +2488,82 @@ namespace Stg
 
 
 
-  // LASER MODEL --------------------------------------------------------
+//   // LASER MODEL --------------------------------------------------------
   
-  /// %ModelLaser class
-  class ModelLaser : public Model
-  {
-  public:
-	 /** Laser range data */
-	 class Sample
-	 {
-	 public:
-		stg_meters_t range; ///< range to laser hit in meters
-	  double reflectance; ///< intensity of the reflection 0.0 to 1.0
-	 };
+//   /// %ModelLaser class
+//   class ModelLaser : public Model
+//   {
+//   public:
+// 	 /** Laser range data */
+// 	 class Sample
+// 	 {
+// 	 public:
+// 		meters_t range; ///< range to laser hit in meters
+// 	  double reflectance; ///< intensity of the reflection 0.0 to 1.0
+// 	 };
 		
-	 /** Convenience object for setting parameters using SetConfig/GetConfig */
-	 class Config
-	 {
-	 public:
-		uint32_t sample_count; ///< Number of range samples
-		uint32_t resolution; ///< interpolation
-		Bounds range_bounds; ///< min and max ranges
-		stg_radians_t fov; ///< Field of view, centered about the pose angle
-		stg_usec_t interval; ///< Time interval  between updates (TODO: is this used?)
-	 }; 
+// 	 /** Convenience object for setting parameters using SetConfig/GetConfig */
+// 	 class Config
+// 	 {
+// 	 public:
+// 		uint32_t sample_count; ///< Number of range samples
+// 		uint32_t resolution; ///< interpolation
+// 		Bounds range_bounds; ///< min and max ranges
+// 		radians_t fov; ///< Field of view, centered about the pose angle
+// 	 }; 
 		
-  private:	 
-	 class Vis : public Visualizer 
-	 {
-	 private:
-		static Option showArea;
-		static Option showStrikes;
-		static Option showFov;
-		static Option showBeams;
+//   private:	 
+// 	 class Vis : public Visualizer 
+// 	 {
+// 	 private:
+// 		static Option showArea;
+// 		static Option showStrikes;
+// 		static Option showFov;
+// 		static Option showBeams;
 
-	 public:
-		Vis( World* world );		virtual ~Vis( void ){}
-		virtual void Visualize( Model* mod, Camera* cam );
-	 } vis;
+// 	 public:
+// 		Vis( World* world );		virtual ~Vis( void ){}
+// 		virtual void Visualize( Model* mod, Camera* cam );
+// 	 } vis;
 	 	
-		unsigned int sample_count;
-		std::vector<Sample> samples;
+// 		unsigned int sample_count;
+// 		std::vector<Sample> samples;
 		
-	public:
-		stg_meters_t range_max;
-		stg_radians_t fov;
-		uint32_t resolution;
+// 	public:
+// 		meters_t range_max;
+// 		radians_t fov;
+// 		uint32_t resolution;
     
-	 // set up data buffers after the config changes
-	 void SampleConfig();
+// 	 // set up data buffers after the config changes
+// 	 void SampleConfig();
 
-  public:
-	 // constructor
-	 ModelLaser( World* world,
-					 Model* parent,
-					 const std::string& type ); 
+//   public:
+// 	 // constructor
+// 	 ModelLaser( World* world,
+// 					 Model* parent,
+// 					 const std::string& type ); 
   
-	 // destructor
-	 ~ModelLaser();
+// 	 // destructor
+// 	 ~ModelLaser();
 	
-	 virtual void Startup();
-	 virtual void Shutdown();
-	 virtual void Update();
-	 virtual void Load();
-	 virtual void Print( char* prefix ) const;
+// 	 virtual void Startup();
+// 	 virtual void Shutdown();
+// 	 virtual void Update();
+// 	 virtual void Load();
+// 	 virtual void Print( char* prefix ) const;
   
-	 /** returns a const reference to a vector of range and reflectance samples */
-	 const std::vector<Sample>& GetSamples() const;
+// 	 /** returns a const reference to a vector of range and reflectance samples */
+// 	 const std::vector<Sample>& GetSamples() const;
 	 
-	 /** returns a mutable reference to a vector of range and reflectance samples */
-	 std::vector<Sample>& GetSamples();
+// 	 /** returns a mutable reference to a vector of range and reflectance samples */
+// 	 std::vector<Sample>& GetSamples();
 
-	 /** Get the user-tweakable configuration of the laser */
-	 Config GetConfig( ) const;
+// 	 /** Get the user-tweakable configuration of the laser */
+// 	 Config GetConfig( ) const;
 	 
-	 /** Set the user-tweakable configuration of the laser */
-	 void SetConfig( Config& cfg );  
-  };
+// 	 /** Set the user-tweakable configuration of the laser */
+// 	 void SetConfig( Config& cfg );  
+//   };
   
 
   // Light indicator model
@@ -2687,14 +2686,14 @@ namespace Stg
   //   typedef struct
   //   {
   //     Pose pose;
-  //     stg_meters_t length;
-  //   } stg_bumper_config_t;
+  //     meters_t length;
+  //   } bumper_config_t;
 
   //   typedef struct
   //   {
   //     Model* hit;
-  //     stg_point_t hit_point;
-  //   } stg_bumper_sample_t;
+  //     point_t hit_point;
+  //   } bumper_sample_t;
 
 
   // FIDUCIAL MODEL --------------------------------------------------------
@@ -2707,8 +2706,8 @@ namespace Stg
 	 class Fiducial
 	 {
 	 public:
-		stg_meters_t range; ///< range to the target
-		stg_radians_t bearing; ///< bearing to the target 
+		meters_t range; ///< range to the target
+		radians_t bearing; ///< bearing to the target 
 		Pose geom; ///< size and relative angle of the target
 		 Pose pose_rel; /// relative pose of the target in local coordinates		 
 		Pose pose; ///< Absolute accurate position of the target in world coordinates (it's cheating to use this in robot controllers!)
@@ -2737,11 +2736,11 @@ namespace Stg
 	 virtual void Load();
 	 void Shutdown( void );
 
-	 stg_meters_t max_range_anon;///< maximum detection range
-	 stg_meters_t max_range_id; ///< maximum range at which the ID can be read
-	 stg_meters_t min_range; ///< minimum detection range
-	 stg_radians_t fov; ///< field of view 
-	 stg_radians_t heading; ///< center of field of view
+	 meters_t max_range_anon;///< maximum detection range
+	 meters_t max_range_id; ///< maximum range at which the ID can be read
+	 meters_t min_range; ///< minimum detection range
+	 radians_t fov; ///< field of view 
+	 radians_t heading; ///< center of field of view
 	 int key; ///< /// only detect fiducials with a key that matches this one (defaults 0)
     bool ignore_zloc;  ///< Are we ignoring the Z-loc of the fiducials we detect compared to the fiducial detector?	
 		
@@ -2755,32 +2754,14 @@ namespace Stg
 		return &fiducials[0];
 	 }
   };
-
-
+	
+	
   // RANGER MODEL --------------------------------------------------------
-
+	
   /// %ModelRanger class
   class ModelRanger : public Model
   {
   public:
-	 class Sensor
-	 {
-	 public:
-		Pose pose;
-		Size size;
-		Bounds bounds_range;
-		stg_radians_t fov;
-		int ray_count;
-		stg_meters_t range;
-	 };
-
-  protected:
-		
-		virtual void Startup();
-		virtual void Shutdown();
-		virtual void Update();
-		virtual void DataVisualize( Camera* cam );
-		
   public:
 		ModelRanger( World* world, Model* parent,
 								 const std::string& type );
@@ -2789,14 +2770,77 @@ namespace Stg
 		virtual void Load();
 		virtual void Print( char* prefix ) const;
 		
+		class Vis : public Visualizer 
+		{
+		public:
+			static Option showArea;
+			static Option showStrikes;
+			static Option showFov;
+			static Option showBeams;
+			static Option showData;
+			static Option showTransducers;		
+			
+			Vis( World* world );		
+			virtual ~Vis( void ){}
+			virtual void Visualize( Model* mod, Camera* cam );
+		} vis;
+		
+		class Sensor
+		{		
+		public:
+			class Cfg {
+			public:
+				Pose pose; 
+				Size size;
+				Bounds range;
+				radians_t fov;
+				unsigned int sample_count;
+				Color col;
+
+				Cfg() : pose( 0,0,0,0 ), 
+								size( 0.02, 0.02, 0.02 ), // teeny transducer
+								range( 0.0, 5.0 ),
+								fov( 0.1 ), 
+								sample_count(1),
+								col( 0,1,0,0.3 ) {}
+				
+			} cfg;
+			
+			class	Sample 
+			{
+			public:
+				meters_t range; 
+				float reflectance; 
+				
+				Sample() : range(0.0), reflectance(0.0) {}
+			};
+			
+			std::vector<Sample> samples;
+			
+			void Update( ModelRanger* rgr );
+			
+			void Visualize( Vis* vis, ModelRanger* rgr ) const;
+		};
+
+		/** returns a const reference to a vector of range and reflectance samples */
 		const std::vector<Sensor>& GetSensors() const
 		{ return sensors; }
 		
-  private:
-		std::vector<Sensor> sensors;
+		/** returns a mutable reference to a vector of range and reflectance samples */
+		//std::vector<Sample>& GetSamples();
 		
-		static Option showRangerData;
-		static Option showRangerTransducers;		
+		void LoadSensor( Worldfile* wf, int entity );
+		
+  private:
+		std::vector<Sensor> sensors;		
+		
+  protected:
+		
+		virtual void Startup();
+		virtual void Shutdown();
+		virtual void Update();
+		//virtual void DataVisualize( Camera* cam );
+		
   };
 	
   // BLINKENLIGHT MODEL ----------------------------------------------------
@@ -2805,7 +2849,7 @@ namespace Stg
   private:
 	 double dutycycle;
 	 bool enabled;
-	 stg_msec_t period;
+	 msec_t period;
 	 bool on;
 
 	 static Option showBlinkenData;
@@ -2953,7 +2997,7 @@ namespace Stg
 	 class Waypoint
 	 {
 	 public:
-		Waypoint( stg_meters_t x, stg_meters_t y, stg_meters_t z, stg_radians_t a, Color color ) ;
+		Waypoint( meters_t x, meters_t y, meters_t z, radians_t a, Color color ) ;
 		Waypoint( const Pose& pose, Color color ) ;
 		Waypoint();
 		void Draw() const;
@@ -3035,7 +3079,7 @@ namespace Stg
 	 double sina;
 	 ControlMode control_mode;
 	 ActuatorType actuator_type;
-	 stg_point3_t axis;
+	 point3_t axis;
   
 	 Pose InitialPose;
   public:  

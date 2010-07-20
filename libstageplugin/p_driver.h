@@ -50,7 +50,6 @@ class StgDriver : public Driver
  protected:
 
   /// an array of pointers to Interface objects, defined below
-  //GPtrArray* devices;
 	std::vector<Interface*> devices;
 };
 
@@ -157,7 +156,21 @@ class InterfaceSpeech : public InterfaceModel
   virtual void Publish( void );
 };
 
-class InterfaceLaser : public InterfaceModel
+/* DEPRECATED */
+/* class InterfaceLaser : public InterfaceModel */
+/* { */
+/*   private: */
+/*     int scan_id; */
+/*  public: */
+/*   InterfaceLaser( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section ); */
+/*   virtual ~InterfaceLaser( void ){ /\* TODO: clean up*\/ }; */
+/*   virtual int ProcessMessage(QueuePointer & resp_queue, */
+/* 			      player_msghdr_t* hdr, */
+/* 			      void* data); */
+/*   virtual void Publish( void ); */
+/* }; */
+
+class InterfaceRanger : public InterfaceModel
 {
   private:
     int scan_id;
@@ -254,17 +267,18 @@ class InterfacePtz : public InterfaceModel
   virtual void Publish( void );
 };
 
-class InterfaceSonar : public InterfaceModel
-{
- public:
-  InterfaceSonar( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
-  virtual ~InterfaceSonar( void ){ /* TODO: clean up*/ };
+/* DEPRECATED */
+/* class InterfaceSonar : public InterfaceModel */
+/* { */
+/*  public: */
+/*   InterfaceSonar( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section ); */
+/*   virtual ~InterfaceSonar( void ){ /\* TODO: clean up*\/ }; */
 
-  virtual int ProcessMessage( QueuePointer & resp_queue,
-			      player_msghdr * hdr,
-			      void * data );
-  virtual void Publish( void );
-};
+/*   virtual int ProcessMessage( QueuePointer & resp_queue, */
+/* 			      player_msghdr * hdr, */
+/* 			      void * data ); */
+/*   virtual void Publish( void ); */
+/* }; */
 
 
 class InterfaceBumper : public InterfaceModel

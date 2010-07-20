@@ -137,7 +137,7 @@ int main( int argc, char* argv[] )
 	  }
 	
 // 	// send a command to the robot
-// 	stg_velocity_t vel;
+// 	velocity_t vel;
 // 	bzero(&vel,sizeof(vel));
 //         vel.x = forward_speed;
 // 	vel.y = side_speed;
@@ -148,7 +148,7 @@ int main( int argc, char* argv[] )
 	     //robots[i].position->Token(), vel.x, vel.y, vel.z, vel.a );
 	     
 	//  uint32_t bcount=0;     
-	//stg_blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );    
+	//blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );    
 
      //printf( "robot %s sees %u blobs\n", robots[i].blobfinder->Token(), bcount );	       
 

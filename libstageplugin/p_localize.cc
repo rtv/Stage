@@ -52,7 +52,7 @@ void InterfaceLocalize::Publish( void )
   memset( &loc, 0, sizeof(loc));
 
   Pose pose;
-  stg_model_get_pose( this->mod, &pose );
+  model_get_pose( this->mod, &pose );
 
   // only 1 hypoth - it's the truth!
   loc.hypoths_count = 1;

@@ -16,7 +16,7 @@ define floorplan model
   gui_outline 0
   gripper_return 0
   fiducial_return 0
-  laser_return 1
+  ranger_return 0.5
 )
 
 define zone model
@@ -31,6 +31,5 @@ define zone model
 
   # insensible to collision and range sensors
   obstacle_return 0
-  laser_return 0
-  ranger_return 0  
+  ranger_return -1  # transparent to range sensors
 )

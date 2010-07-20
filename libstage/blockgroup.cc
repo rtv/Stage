@@ -270,10 +270,10 @@ void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfil
   
   PRINT_DEBUG1( "attempting to load image %s", full );
   
-  stg_rotrect_t* rects = NULL;
+  rotrect_t* rects = NULL;
   unsigned int rect_count = 0;
   unsigned int width, height;
-  if( stg_rotrects_from_image_file( full,
+  if( rotrects_from_image_file( full,
 									&rects,
 									&rect_count,
 									&width, &height ) )
@@ -293,7 +293,7 @@ void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfil
 		
 	  for( unsigned int r=0; r<rect_count; r++ )
 		{
-		  stg_point_t pts[4];
+		  point_t pts[4];
 			 
 		  double x = rects[r].pose.x;
 		  double y = rects[r].pose.y;
@@ -326,8 +326,8 @@ void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfil
 void BlockGroup::Rasterize( uint8_t* data, 
 							unsigned int width, 
 							unsigned int height,
-							stg_meters_t cellwidth,
-							stg_meters_t cellheight )
+							meters_t cellwidth,
+							meters_t cellheight )
 {  
   FOR_EACH( it, blocks )
 	(*it)->Rasterize( data, width, height, cellwidth, cellheight );

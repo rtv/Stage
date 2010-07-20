@@ -594,7 +594,7 @@ void Canvas::RemoveModel( Model*  mod  )
 void Canvas::DrawGlobalGrid()
 {
 
-  stg_bounds3d_t bounds = world->GetExtent();
+  bounds3d_t bounds = world->GetExtent();
 
   /*   printf( "bounds [%.2f %.2f] [%.2f %.2f] [%.2f %.2f]\n",
        bounds.x.min, bounds.x.max,
@@ -671,7 +671,7 @@ void Canvas::DrawGlobalGrid()
 //draw the floor without any grid ( for robot's perspective camera model )
 void Canvas::DrawFloor()
 {
-  stg_bounds3d_t bounds = world->GetExtent();
+  bounds3d_t bounds = world->GetExtent();
 	
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(2.0, 2.0);
@@ -744,8 +744,8 @@ void Canvas::resetCamera()
 
 class DistFuncObj
 {
-  stg_meters_t x, y;
-  DistFuncObj( stg_meters_t x, stg_meters_t y ) 
+  meters_t x, y;
+  DistFuncObj( meters_t x, meters_t y ) 
     : x(x), y(y) {}
   
   bool operator()(const Model* a, const Model* b ) const
@@ -753,10 +753,10 @@ class DistFuncObj
     Pose a_pose = a->GetGlobalPose();
     Pose b_pose = b->GetGlobalPose();
 	 
-    stg_meters_t a_dist = hypot( y - a_pose.y,
+    meters_t a_dist = hypot( y - a_pose.y,
 											x - a_pose.x );
 	 
-    stg_meters_t b_dist = hypot( y - b_pose.y,
+    meters_t b_dist = hypot( y - b_pose.y,
 											x - b_pose.x );
 	 
     return (  a_dist < b_dist );
@@ -1264,7 +1264,7 @@ void Canvas::draw()
 		  } 
       else 
 		  {
-			 stg_bounds3d_t extent = world->GetExtent();
+			 bounds3d_t extent = world->GetExtent();
 			 camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
 			 current_camera = &camera;
 		  }

@@ -21,9 +21,9 @@ typedef struct
   ModelFiducial* fiducial;
 
   ModelFiducial::Fiducial* closest;  
-  stg_radians_t closest_bearing;
-  stg_meters_t closest_range;
-  stg_radians_t closest_heading_error; 
+  radians_t closest_bearing;
+  meters_t closest_range;
+  radians_t closest_heading_error; 
 
 } robot_t;
 
@@ -50,11 +50,11 @@ extern "C" int Init( Model* mod )
   assert( robot->ranger );
   
   // ask Stage to call into our ranger update function
-  robot->ranger->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)RangerUpdate, robot );
+  robot->ranger->AddCallback( Model::CB_UPDATE, (model_callback_t)RangerUpdate, robot );
  
   robot->fiducial = (ModelFiducial*)mod->GetUnusedModelOfType( "fiducial" ) ;
   assert( robot->fiducial );
-  robot->fiducial->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)FiducialUpdate, robot );
+  robot->fiducial->AddCallback( Model::CB_UPDATE, (model_callback_t)FiducialUpdate, robot );
 
   robot->fiducial->Subscribe();
   robot->ranger->Subscribe();

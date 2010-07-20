@@ -93,25 +93,25 @@ public:
 	 //	 pos->GetUnusedModelOfType( "laser" );
 	 
 	 // PositionUpdate() checks to see if we reached source or sink
-	 pos->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)PositionUpdate, this );
+	 pos->AddCallback( Model::CB_UPDATE, (model_callback_t)PositionUpdate, this );
 	 pos->Subscribe();
 
 	 // LaserUpdate() controls the robot, by reading from laser and
 	 // writing to position
-	 laser->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)LaserUpdate, this );
+	 laser->AddCallback( Model::CB_UPDATE, (model_callback_t)LaserUpdate, this );
 	 laser->Subscribe();
 
-	 fiducial->AddCallback( Model::CB_UPDATE, (stg_model_callback_t)FiducialUpdate, this );	 	 
+	 fiducial->AddCallback( Model::CB_UPDATE, (model_callback_t)FiducialUpdate, this );	 	 
 	 fiducial->Subscribe();
 	 
-	 //gripper->AddUpdateCallback( (stg_model_callback_t)GripperUpdate, this );	 	 
+	 //gripper->AddUpdateCallback( (model_callback_t)GripperUpdate, this );	 	 
 	 //gripper->Subscribe();
 	 
-	 //blobfinder->AddUpdateCallback( (stg_model_callback_t)BlobFinderUpdate, this );
+	 //blobfinder->AddUpdateCallback( (model_callback_t)BlobFinderUpdate, this );
 	 //blobfinder->Subscribe();
 
-	 //pos->AddFlagIncrCallback( (stg_model_callback_t)FlagIncr, NULL );
-	 //pos->AddFlagDecrCallback( (stg_model_callback_t)FlagDecr, NULL );
+	 //pos->AddFlagIncrCallback( (model_callback_t)FlagIncr, NULL );
+	 //pos->AddFlagDecrCallback( (model_callback_t)FlagDecr, NULL );
 }
 
   void Dock()
@@ -174,9 +174,9 @@ public:
 
   void UnDock()
   {
-	 //const stg_meters_t gripper_distance = 0.2;
-	 const stg_meters_t back_off_distance = 0.3;
-	 const stg_meters_t back_off_speed = -0.05;
+	 //const meters_t gripper_distance = 0.2;
+	 const meters_t back_off_distance = 0.3;
+	 const meters_t back_off_speed = -0.05;
 
 	 // back up a bit
 	 if( charger_range < back_off_distance )

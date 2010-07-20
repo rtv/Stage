@@ -4,17 +4,17 @@
 using namespace Stg;
 using std::vector;
 
-static void canonicalize_winding(vector<stg_point_t>& pts);
+static void canonicalize_winding(vector<point_t>& pts);
 
 
 /** Create a new block. A model's body is a list of these
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
 Block::Block( Model* mod,
-							stg_point_t* pts,
+							point_t* pts,
 							size_t pt_count,
-							stg_meters_t zmin,
-							stg_meters_t zmax,
+							meters_t zmin,
+							meters_t zmax,
 							Color color,
 							bool inherit_color,
 							bool wheel ) :
@@ -214,7 +214,7 @@ void Block::UnMap()
   mapped = false;
 }
 
-void Block::RemoveFromCellArray( CellPtrVec *cells )
+inline void Block::RemoveFromCellArray( CellPtrVec *cells )
 {
   FOR_EACH( it, *cells )
 	 {
@@ -301,12 +301,12 @@ void Block::SwitchToTestedCells()
   mapped = true;
 }
 
-inline stg_point_t Block::BlockPointToModelMeters( const stg_point_t& bpt )
+inline point_t Block::BlockPointToModelMeters( const point_t& bpt )
 {
   Size bgsize = mod->blockgroup.GetSize();
-  stg_point3_t bgoffset = mod->blockgroup.GetOffset();
+  point3_t bgoffset = mod->blockgroup.GetOffset();
 
-  return stg_point_t( (bpt.x - bgoffset.x) * (mod->geom.size.x/bgsize.x),
+  return point_t( (bpt.x - bgoffset.x) * (mod->geom.size.x/bgsize.x),
 							 (bpt.y - bgoffset.y) * (mod->geom.size.y/bgsize.y));
 }
 
@@ -341,7 +341,7 @@ void Block::GenerateCandidateCells()
   Pose gpose = mod->GetGlobalPose();
   gpose.z += mod->geom.pose.z;
   double scalez = mod->geom.size.z /  mod->blockgroup.GetSize().z;
-  stg_meters_t z = gpose.z - mod->blockgroup.GetOffset().z;
+  meters_t z = gpose.z - mod->blockgroup.GetOffset().z;
   
   // store the block's absolute z bounds at this rendering
   global_z.min = (scalez * local_z.min) + z;
@@ -360,8 +360,8 @@ void swap( int& a, int& b )
 void Block::Rasterize( uint8_t* data,
 							  unsigned int width,
 							  unsigned int height,
-							  stg_meters_t cellwidth,
-							  stg_meters_t cellheight )
+							  meters_t cellwidth,
+							  meters_t cellheight )
 {
   //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
   //	 this, width, height, scalex, scaley, offsetx, offsety );
@@ -369,8 +369,8 @@ void Block::Rasterize( uint8_t* data,
   for( unsigned int i=0; i<pt_count; i++ )
     {
 		// convert points from local to model coords
-		stg_point_t mpt1 = BlockPointToModelMeters( pts[i] );
-		stg_point_t mpt2 = BlockPointToModelMeters( pts[(i+1)%pt_count] );
+		point_t mpt1 = BlockPointToModelMeters( pts[i] );
+		point_t mpt2 = BlockPointToModelMeters( pts[(i+1)%pt_count] );
 	  
 		// record for debug visualization
 		mod->rastervis.AddPoint( mpt1.x, mpt1.y );
@@ -382,9 +382,9 @@ void Block::Rasterize( uint8_t* data,
 		mpt2.y += mod->geom.size.y/2.0;
 	  
 		// convert from meters to cells
-		stg_point_int_t a( floor( mpt1.x / cellwidth  ),
+		point_int_t a( floor( mpt1.x / cellwidth  ),
 								 floor( mpt1.y / cellheight ));
-		stg_point_int_t b( floor( mpt2.x / cellwidth  ),
+		point_int_t b( floor( mpt2.x / cellwidth  ),
 								 floor( mpt2.y / cellheight ) );
 	  
 		bool steep = abs( b.y-a.y ) > abs( b.x-a.x );
@@ -523,32 +523,32 @@ void Block::Load( Worldfile* wf, int entity )
 
 static
 /// util; puts angle into [0, 2pi)
-void positivize(stg_radians_t& angle)
+void positivize(radians_t& angle)
 {
     while (angle < 0) angle += 2 * M_PI;
 }
 
 static
 /// util; puts angle into -pi/2, pi/2
-void pi_ize(stg_radians_t& angle)
+void pi_ize(radians_t& angle)
 {
     while (angle < -M_PI) angle += 2 * M_PI;
     while (M_PI < angle)  angle -= 2 * M_PI;
 }
 
-typedef stg_point_t V2;
+typedef point_t V2;
 
 static
 /// util; How much was v1 rotated to get to v2?
-stg_radians_t angle_change(V2 v1, V2 v2)
+radians_t angle_change(V2 v1, V2 v2)
 {
-    stg_radians_t a1 = atan2(v1.y, v1.x);
+    radians_t a1 = atan2(v1.y, v1.x);
     positivize(a1);
 
-    stg_radians_t a2 = atan2(v2.y, v2.x);
+    radians_t a2 = atan2(v2.y, v2.x);
     positivize(a2);
 
-    stg_radians_t angle_change = a2 - a1;
+    radians_t angle_change = a2 - a1;
     pi_ize(angle_change);
 
     return angle_change;
@@ -556,9 +556,9 @@ stg_radians_t angle_change(V2 v1, V2 v2)
 
 static
 /// util; find vectors between adjacent points, pts[next] - pts[cur]
-vector<stg_point_t> find_vectors(vector<stg_point_t> const& pts)
+vector<point_t> find_vectors(vector<point_t> const& pts)
 {
-    vector<stg_point_t> vs;
+    vector<point_t> vs;
     assert(2 <= pts.size());
     for (unsigned i = 0, n = pts.size(); i < n; ++i)
     {
@@ -572,9 +572,9 @@ vector<stg_point_t> find_vectors(vector<stg_point_t> const& pts)
 static
 /// util; finds sum of angle changes, from each vertex to the
 /// next one (in current ordering), wrapping around.
-stg_radians_t angles_sum(vector<stg_point_t> const& vs)
+radians_t angles_sum(vector<point_t> const& vs)
 {
-    stg_radians_t angle_sum = 0;
+    radians_t angle_sum = 0;
     for (unsigned i = 0, n = vs.size(); i < n; ++i)
     {
         unsigned j = (i + 1) % n;
@@ -585,11 +585,11 @@ stg_radians_t angles_sum(vector<stg_point_t> const& vs)
 
 static
 /// Util
-bool is_canonical_winding(vector<stg_point_t> const& ps)
+bool is_canonical_winding(vector<point_t> const& ps)
 {
-    // reuse stg_point_t as vector
-    vector<stg_point_t> vs = find_vectors(ps);
-    stg_radians_t sum = angles_sum(vs);
+    // reuse point_t as vector
+    vector<point_t> vs = find_vectors(ps);
+    radians_t sum = angles_sum(vs);
     bool bCanon = 0 < sum;
 
     return bCanon;
@@ -602,7 +602,7 @@ static
 // Note that a simple line that doubles back on itself has an
 // angle sum of 0, but that's intrinsic to a line - its winding could
 // be either way.
-void canonicalize_winding(vector<stg_point_t>& ps)
+void canonicalize_winding(vector<point_t>& ps)
 {
     if (not is_canonical_winding(ps))
     {

@@ -67,7 +67,7 @@ namespace Stg
 	 Model* last_selection; ///< the most recently selected model
 	 ///(even if it is now unselected).
 
-	 stg_msec_t interval; // window refresh interval in ms
+	 msec_t interval; // window refresh interval in ms
 
 	 void RecordRay( double x1, double y1, double x2, double y2 );
 	 void DrawRays();

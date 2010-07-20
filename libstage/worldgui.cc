@@ -262,7 +262,7 @@ void WorldGui::Load( const char* filename )
 
   fileMan->newWorld( filename );
   
-  const stg_usec_t load_start_time = RealTimeNow();
+  const usec_t load_start_time = RealTimeNow();
   
   World::Load( filename );
   
@@ -295,7 +295,7 @@ void WorldGui::Load( const char* filename )
 		label( title.c_str() );
 	 }
  
-  const stg_usec_t load_end_time = RealTimeNow();
+  const usec_t load_end_time = RealTimeNow();
 	
   if( debug )
     printf( "[Load time %.3fsec]\n", 
@@ -354,7 +354,7 @@ bool WorldGui::Update()
   // run speed
   if( updates % timing_interval == 0 )
 	 { 
-		const stg_usec_t timenow = RealTimeNow();	 
+		const usec_t timenow = RealTimeNow();	 
 		real_time_interval = timenow - real_time_recorded; 
 		real_time_recorded = timenow;
 	 }   
@@ -843,7 +843,7 @@ void WorldGui::PopColor()
 Model* WorldGui::RecentlySelectedModel() const
 { return canvas->last_selection; }
 
-stg_usec_t WorldGui::RealTimeNow() const
+usec_t WorldGui::RealTimeNow() const
 {
   struct timeval tv;
   gettimeofday( &tv, NULL );  // slow system call: use sparingly

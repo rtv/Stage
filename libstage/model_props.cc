@@ -47,7 +47,7 @@ int Model::SetProperty( const char* key,
 		}
 		if( MATCH( key, MP_LASER_RETURN ) )
 		{
-			this->SetLaserReturn( *(stg_laser_return_t*)data );
+			this->SetLaserReturn( *(laser_return_t*)data );
 			return 0;
 		}
 		if( MATCH( key, MP_OBSTACLE_RETURN ) )

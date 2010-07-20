@@ -18,7 +18,7 @@ Region::~Region()
 {
 }
 
-SuperRegion::SuperRegion( World* world, stg_point_int_t origin ) 
+SuperRegion::SuperRegion( World* world, point_int_t origin ) 
   : regions(),
 	 origin(origin), 
 	 world(world), 

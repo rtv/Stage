@@ -10,10 +10,10 @@
 using namespace Stg;
 
 
-stg_joules_t PowerPack::global_stored = 0.0;
-stg_joules_t PowerPack::global_input = 0.0;
-stg_joules_t PowerPack::global_capacity = 0.0;
-stg_joules_t PowerPack::global_dissipated = 0.0;
+joules_t PowerPack::global_stored = 0.0;
+joules_t PowerPack::global_input = 0.0;
+joules_t PowerPack::global_capacity = 0.0;
+joules_t PowerPack::global_dissipated = 0.0;
 
 PowerPack::PowerPack( Model* mod ) :
   event_vis( 2.0 * std::max( fabs(ceil(mod->GetWorld()->GetExtent().x.max)),
@@ -130,14 +130,14 @@ void PowerPack::Visualize( Camera* cam )
   
   
   // compute the instantaneous power output
-  stg_usec_t time_now = mod->world->SimTimeNow();
-  stg_usec_t delta_t = time_now - last_time;
-  stg_watts_t watts = last_watts;
+  usec_t time_now = mod->world->SimTimeNow();
+  usec_t delta_t = time_now - last_time;
+  watts_t watts = last_watts;
   
   if( delta_t > 0 ) // some sim time elapsed 
 	 {
-		stg_joules_t delta_j = stored - last_joules;
-		stg_watts_t watts = (-1e6 * delta_j) / (double)delta_t;
+		joules_t delta_j = stored - last_joules;
+		watts_t watts = (-1e6 * delta_j) / (double)delta_t;
 		
 		last_joules = stored;
 		last_time = time_now;    
@@ -154,21 +154,21 @@ void PowerPack::Visualize( Camera* cam )
 }
 
 
-stg_joules_t PowerPack::RemainingCapacity() const
+joules_t PowerPack::RemainingCapacity() const
 {
   return( capacity - stored );
 }
 
-void PowerPack::Add( stg_joules_t j )
+void PowerPack::Add( joules_t j )
 {
-  stg_joules_t amount = std::min( RemainingCapacity(), j );
+  joules_t amount = std::min( RemainingCapacity(), j );
   stored += amount;
   global_stored += amount;
   
   if( amount > 0 ) charging = true;
 }
 
-void PowerPack::Subtract( stg_joules_t j )
+void PowerPack::Subtract( joules_t j )
 {
   if( stored < 0 ) // infinte supply!
 	 {
@@ -176,13 +176,13 @@ void PowerPack::Subtract( stg_joules_t j )
 		return;
 	 }
 
-  stg_joules_t amount = std::min( stored, j );  
+  joules_t amount = std::min( stored, j );  
 
   stored -= amount;  
   global_stored -= amount;
 }
 
-void PowerPack::TransferTo( PowerPack* dest, stg_joules_t amount )
+void PowerPack::TransferTo( PowerPack* dest, joules_t amount )
 {
   //printf( "amount %.2f stored %.2f dest capacity %.2f\n",
   //	 amount, stored, dest->RemainingCapacity() );
@@ -205,7 +205,7 @@ void PowerPack::TransferTo( PowerPack* dest, stg_joules_t amount )
 }
 
 
-void PowerPack::SetCapacity( stg_joules_t cap )
+void PowerPack::SetCapacity( joules_t cap )
 {
   global_capacity -= capacity;
   capacity = cap;
@@ -219,31 +219,31 @@ void PowerPack::SetCapacity( stg_joules_t cap )
 	 }
 }
 
-stg_joules_t PowerPack::GetCapacity() const
+joules_t PowerPack::GetCapacity() const
 {
   return capacity;
 }
 
-stg_joules_t PowerPack::GetStored() const
+joules_t PowerPack::GetStored() const
 {
   return stored;
 }
 
-stg_joules_t PowerPack::GetDissipated() const
+joules_t PowerPack::GetDissipated() const
 {
   return dissipated;
 }
 
-void PowerPack::SetStored( stg_joules_t j ) 
+void PowerPack::SetStored( joules_t j ) 
 {
   global_stored -= stored;
   stored = j;
   global_stored += stored;  
 }
 
-void PowerPack::Dissipate( stg_joules_t j )
+void PowerPack::Dissipate( joules_t j )
 {
-  stg_joules_t amount = (stored < 0) ? j : std::min( stored, j );
+  joules_t amount = (stored < 0) ? j : std::min( stored, j );
   
   Subtract( amount );
   dissipated += amount;
@@ -253,7 +253,7 @@ void PowerPack::Dissipate( stg_joules_t j )
   stored_vis.AppendValue( stored );
 }
 
-void PowerPack::Dissipate( stg_joules_t j, const Pose& p )
+void PowerPack::Dissipate( joules_t j, const Pose& p )
 {
   Dissipate( j );
   event_vis.Accumulate( p.x, p.y, j );
@@ -262,11 +262,11 @@ void PowerPack::Dissipate( stg_joules_t j, const Pose& p )
 //------------------------------------------------------------------------------
 // Dissipation Visualizer class
 
-stg_joules_t PowerPack::DissipationVis::global_peak_value = 0.0;
+joules_t PowerPack::DissipationVis::global_peak_value = 0.0;
 
-PowerPack::DissipationVis::DissipationVis( stg_meters_t width, 
-														 stg_meters_t height,
-														 stg_meters_t cellsize )
+PowerPack::DissipationVis::DissipationVis( meters_t width, 
+														 meters_t height,
+														 meters_t cellsize )
   : Visualizer( "energy dissipation", "energy_dissipation" ),
 	 columns(width/cellsize),
 	 rows(height/cellsize),
@@ -297,7 +297,7 @@ void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
   for( unsigned int y=0; y<rows; y++ )
 	 for( unsigned int x=0; x<columns; x++ )
 		{
-		  stg_joules_t j = cells[ y*columns + x ];
+		  joules_t j = cells[ y*columns + x ];
 
 		  //printf( "%d %d %.2f\n", x, y, j );
 
@@ -313,9 +313,9 @@ void PowerPack::DissipationVis::Visualize( Model* mod, Camera* cam )
 
 
 
-void PowerPack::DissipationVis::Accumulate( stg_meters_t x, 
-														  stg_meters_t y, 
-														  stg_joules_t amount )
+void PowerPack::DissipationVis::Accumulate( meters_t x, 
+														  meters_t y, 
+														  joules_t amount )
 {
   //printf( "accumulate %.2f %.2f %.2f\n", x, y, amount );
 
@@ -326,7 +326,7 @@ void PowerPack::DissipationVis::Accumulate( stg_meters_t x,
   if( ix < 0 || ix >= int(columns) || iy < 0 || iy >= int(rows) )
 		return;
 	
-  stg_joules_t& j = cells[ ix + (iy*columns) ];
+  joules_t& j = cells[ ix + (iy*columns) ];
 	
   j += amount;
   if( j > peak_value )

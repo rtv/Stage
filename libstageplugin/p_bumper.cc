@@ -42,7 +42,7 @@
 // BUMPER INTERFACE
 //
 extern "C" { 
-int bumper_init( stg_model_t* mod );
+int bumper_init( model_t* mod );
 }
 
 InterfaceBumper::InterfaceBumper( player_devaddr_t id, 
@@ -57,14 +57,14 @@ void InterfaceBumper::Publish( void )
 {
   
   size_t len = mod->data_len;
-  stg_bumper_sample_t* sdata = (stg_bumper_sample_t*)mod->data;
+  bumper_sample_t* sdata = (bumper_sample_t*)mod->data;
 
   player_bumper_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
   
   if( len > 0 )
     {      
-      size_t bcount = len / sizeof(stg_bumper_sample_t);
+      size_t bcount = len / sizeof(bumper_sample_t);
       
       // limit the number of samples to Player's maximum
       if( bcount > PLAYER_BUMPER_MAX_SAMPLES )
@@ -92,10 +92,10 @@ int InterfaceBumper::ProcessMessage( MessageQueue* resp_queue,
 			    this->addr) )
     {
       size_t cfglen = mod->cfg_len;
-      stg_bumper_config_t* cfgs = (stg_bumper_config_t*)mod->cfg;
+      bumper_config_t* cfgs = (bumper_config_t*)mod->cfg;
       assert( cfgs );
       
-      size_t bcount = cfglen / sizeof(stg_bumper_config_t);
+      size_t bcount = cfglen / sizeof(bumper_config_t);
       
       // convert the bumper data into Player-format bumper poses	
       player_bumper_geom_t pgeom;
@@ -127,7 +127,7 @@ int InterfaceBumper::ProcessMessage( MessageQueue* resp_queue,
   else
     {
       // Don't know how to handle this message.
-      PRINT_WARN2( "stg_bumper doesn't support msg with type/subtype %d/%d",
+      PRINT_WARN2( "bumper doesn't support msg with type/subtype %d/%d",
 		   hdr->type, hdr->subtype);
       return(-1);
     }    

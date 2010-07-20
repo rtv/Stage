@@ -54,7 +54,7 @@ int StTime::GetTime(struct timeval* time)
 
   World* world = driver->world;
 
-  stg_usec_t usec = world->SimTimeNow();
+  usec_t usec = world->SimTimeNow();
   time->tv_sec  = (int)floor(usec/million);
   time->tv_usec = (int)rint(fmod(usec,million) * million);
 
