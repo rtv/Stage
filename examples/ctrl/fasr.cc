@@ -46,7 +46,7 @@ class Robot
 {
 private:
   ModelPosition* pos;
-  ModelLaser* laser;
+  ModelRanger* laser;
   ModelRanger* ranger;
   ModelFiducial* fiducial;
   //ModelBlobfinder* blobfinder;
@@ -66,8 +66,8 @@ public:
 			Model* source,
 			Model* sink ) 
 	 : pos(pos), 
-		laser( (ModelLaser*)pos->GetUnusedModelOfType( "laser" )),
-		ranger( (ModelRanger*)pos->GetUnusedModelOfType( "ranger" )),
+		ranger( (ModelRanger*)pos->GetChild( "ranger:0" )),
+		laser( (ModelRanger*)pos->GetChild( "ranger:1" )),
 		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
 		//blobfinder( (ModelBlobfinder*)pos->GetUnusedModelOfType( "blobfinder" )),
 		//gripper( (ModelGripper*)pos->GetUnusedModelOfType( "gripper" )),
@@ -210,9 +210,11 @@ public:
 	 // there's anything in front
 	 double minleft = 1e6;
 	 double minright = 1e6;
-  
-	 // Get the data
-	 const std::vector<ModelLaser::Sample>& scan = laser->GetSamples();
+	 
+	 // Get the data from the first sensor of the laser 
+	 const std::vector<ModelRanger::Sensor::Sample>& scan = 
+		 laser->GetSamples();
+	 
 	 uint32_t sample_count = scan.size();
   
 	 for (uint32_t i = 0; i < sample_count; i++)
@@ -334,13 +336,13 @@ public:
 
 
   // inspect the laser data and decide what to do
-  static int LaserUpdate( ModelLaser* laser, Robot* robot )
+  static int LaserUpdate( ModelRanger* laser, Robot* robot )
   {
 	 //   if( laser->power_pack && laser->power_pack->charging )
 	 // 	 printf( "model %s power pack @%p is charging\n",
 	 // 				laser->Token(), laser->power_pack );
 		
-		assert( laser->GetSamples().size() > 0 );
+		//assert( laser->GetSamples().size() > 0 );
 		
 	 switch( robot->mode )
 		{

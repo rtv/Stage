@@ -195,8 +195,8 @@ private:
   long int wait_started_at;
   
   ModelPosition* pos;
-  ModelLaser* laser;
-  ModelRanger* ranger;
+  ModelRanger* laser;
+  ModelRanger* sonar;
   ModelFiducial* fiducial;
   
   unsigned int task;
@@ -236,7 +236,7 @@ private:
 	 
   bool fiducial_sub;
   bool laser_sub;
-  bool ranger_sub;
+  bool sonar_sub;
 
   bool force_recharge;
 
@@ -248,8 +248,8 @@ public:
 		: 
 		wait_started_at(-1),
 		pos(pos), 
-		laser( (ModelLaser*)pos->GetUnusedModelOfType( "laser" )),
-		ranger( (ModelRanger*)pos->GetUnusedModelOfType( "ranger" )),
+		laser( (ModelRanger*)pos->GetChild( "ranger:1" )),
+		sonar( (ModelRanger*)pos->GetChild( "ranger:0" )),
 		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
 		task(random() % tasks.size() ), // choose a task at random
 		fuel_zone(fuel),
@@ -272,14 +272,14 @@ public:
 		node_interval_countdown( node_interval ),
 		fiducial_sub(false),		
 		laser_sub(false),
-		ranger_sub(false),
+		sonar_sub(false),
 		force_recharge( false )
   {
 		// need at least these models to get any work done
 		// (pos must be good, as we used it in the initialization list)
 		assert( laser );
 		assert( fiducial );
-		assert( ranger );
+		assert( sonar );
 		assert( goal );
 
 		// match the color of my destination
@@ -350,9 +350,9 @@ public:
 			}
 	}
 	
-  void EnableRanger( bool on )
+  void EnableSonar( bool on )
   { 
-		Enable( ranger, ranger_sub, on );
+		Enable( sonar, sonar_sub, on );
   }
 
   void EnableLaser( bool on )
@@ -527,7 +527,7 @@ public:
 			{
 				//printf( "fully charged, now back to work\n" );		  
 				mode = MODE_UNDOCK;
-				EnableRanger(true); // enable the sonar to see behind us
+				EnableSonar(true); // enable the sonar to see behind us
 				EnableLaser(true);
 				EnableFiducial(true);
 				force_recharge = false;		  
@@ -550,7 +550,7 @@ public:
 		const unsigned int BACK_SENSOR_LAST = 13;
 	 
 		// make sure the required sensors are running
-		assert( ranger_sub );
+		assert( sonar_sub );
 		assert( fiducial_sub );
 
 		if( charger_range < back_off_distance )
@@ -560,10 +560,10 @@ public:
 				pos->Say( "" );
 		  
 				// stay put while anything is close behind 
-				const std::vector<ModelRanger::Sensor>& sensors = ranger->GetSensors();
+				const std::vector<ModelRanger::Sensor>& sensors = sonar->GetSensors();
 
 				for( unsigned int s = BACK_SENSOR_FIRST; s <= BACK_SENSOR_LAST; ++s )
-					if( sensors[s].range < wait_distance) 
+					if( sensors[s].samples[0].range < wait_distance) 
 						{
 							pos->Say( "Waiting..." );
 							pos->SetXSpeed( 0.0 );
@@ -598,7 +598,7 @@ public:
 
 				
 						EnableFiducial(false);
-						EnableRanger(false);
+						EnableSonar(false);
 					}
 			}
   }
@@ -614,8 +614,13 @@ public:
 		double minright = 1e6;
   
 		// Get the data
-		const std::vector<ModelLaser::Sample>& scan = laser->GetSamples();
+		//const std::vector<ModelLaser::Sample>& scan = laser->GetSamples();
+
+		const std::vector<ModelRanger::Sensor::Sample>& scan = 
+			laser->GetSensors()[0].samples;
+
     uint32_t sample_count = scan.size();
+
 
 		for (uint32_t i = 0; i < sample_count; i++)
 			{		
@@ -754,7 +759,7 @@ public:
   }	 
   
   // static callback wrapper
-  static int UpdateCallback( ModelLaser* laser, Robot* robot )
+  static int UpdateCallback( ModelRanger* laser, Robot* robot )
   {  
 		return robot->Update();
   }

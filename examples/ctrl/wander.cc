@@ -13,10 +13,12 @@ typedef struct
 {
   ModelPosition* pos;
   ModelRanger* ranger;
+  ModelRanger* laser;
   int avoidcount, randcount;
 } robot_t;
 
 int RangerUpdate( Model* mod, robot_t* robot );
+int LaserUpdate( Model* mod, robot_t* robot );
 int PositionUpdate( Model* mod, robot_t* robot );
 
 // Stage calls this when the model starts up
@@ -41,8 +43,31 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   
   robot->ranger->Subscribe(); // starts the ranger updates
   robot->pos->Subscribe(); // starts the position updates
+
+  robot->laser = (ModelRanger*)mod->GetChild( "ranger:1" );
+  robot->laser->AddCallback( Model::CB_UPDATE, (model_callback_t)LaserUpdate, robot );
+  robot->laser->Subscribe(); // starts the ranger updates
+
     
   return 0; //ok
+}
+
+
+// inspect the ranger data and decide what to do
+int LaserUpdate( Model* mod, robot_t* robot )
+{
+	//	puts( "laser update" );
+	
+	const std::vector<ModelRanger::Sensor::Sample>& scan = 
+		robot->laser->GetSensors()[0].samples;
+
+// 	printf( "laser samples:\n" );
+// 	FOR_EACH( it, scan )
+// 		{
+// 			printf( "[%.2f %.2f] ", it->range, it->reflectance );
+// 		}
+
+	return 0; // repeat
 }
 
 
@@ -128,7 +153,7 @@ int RangerUpdate( Model* mod, robot_t* robot )
 
       robot->avoidcount = 0;
       robot->pos->SetXSpeed( cruisespeed );	  
-		robot->pos->SetTurnSpeed(  0 );
+			robot->pos->SetTurnSpeed(  0 );
     }
 
  //  if( robot->pos->Stalled() )
@@ -137,7 +162,7 @@ int RangerUpdate( Model* mod, robot_t* robot )
 // 		robot->pos->SetTurnSpeed( 0 );
 // 	 }
     
-  return 0;
+  return 0; // run again
 }
 
 int PositionUpdate( Model* mod, robot_t* robot )

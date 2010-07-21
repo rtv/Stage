@@ -2797,6 +2797,8 @@ namespace Stg
 				unsigned int sample_count;
 				Color col;
 
+				std::string String();
+
 				Cfg() : pose( 0,0,0,0 ), 
 								size( 0.02, 0.02, 0.02 ), // teeny transducer
 								range( 0.0, 5.0 ),
@@ -2826,6 +2828,17 @@ namespace Stg
 		const std::vector<Sensor>& GetSensors() const
 		{ return sensors; }
 		
+		/** returns a vector of range samples from the indicated sensor
+				(defaults to zero) */
+		const std::vector<Sensor::Sample>& GetSamples( unsigned int sensor=0) const 
+		{ 
+			if( sensor < sensors.size() )
+				return sensors[sensor].samples;
+			
+			PRINT_ERR1( "invalid sensor index specified (%d)", sensor );
+			exit(-1);
+		}
+
 		/** returns a mutable reference to a vector of range and reflectance samples */
 		//std::vector<Sample>& GetSamples();
 		
