@@ -2896,7 +2896,7 @@ namespace Stg
 	 ///get a reference to camera depth buffer
 	 const GLfloat* FrameDepth() const { return _frame_data; }
 	
-	 ///get a reference to camera color image. 3 bytes (RGB) per pixel
+	 ///get a reference to camera color image. 4 bytes (RGBA) per pixel
 	 const GLubyte* FrameColor() const { return _frame_color_data; }
 	
 	 ///change the pitch
