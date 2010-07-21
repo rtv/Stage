@@ -16,7 +16,7 @@ using namespace Stg;
 
 typedef struct
 {
-	ModelLaser* laser;
+	ModelRanger* laser;
 	ModelPosition* position;
 	ModelRanger* ranger;
 } robot_t;
@@ -66,8 +66,8 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   FOR_EACH( it, sensors )
 	 {
 		const ModelRanger::Sensor& s = *it;
-		dx += s.range * cos( s.pose.a );
-		dy += s.range * sin( s.pose.a );
+		dx += s.samples[0].range * cos( s.cfg.pose.a );
+		dy += s.samples[0].range * sin( s.cfg.pose.a );
 		
 		//printf( "sensor %d angle= %.2f\n", s, rgr->sensors[s].pose.a );	 
 	 }
@@ -83,15 +83,15 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
 
   // if the front is clear, drive forwards
-  if( (sensors[0].range > SAFE_DIST) &&
+  if( (sensors[0].samples[0].range > SAFE_DIST) &&
 
-		(sensors[1].range > SAFE_DIST/1.5) &&
-		(sensors[2].range > SAFE_DIST/3.0) && 
-		(sensors[3].range > SAFE_DIST/5.0) && 
+		(sensors[1].samples[0].range > SAFE_DIST/1.5) &&
+		(sensors[2].samples[0].range > SAFE_DIST/3.0) && 
+		(sensors[3].samples[0].range > SAFE_DIST/5.0) && 
 
-		(sensors[9].range > SAFE_DIST/5.0) && 
-		(sensors[10].range > SAFE_DIST/3.0) && 
-		(sensors[11].range > SAFE_DIST/1.5) && 
+		(sensors[9].samples[0].range > SAFE_DIST/5.0) && 
+		(sensors[10].samples[0].range > SAFE_DIST/3.0) && 
+		(sensors[11].samples[0].range > SAFE_DIST/1.5) && 
 		(fabs( resultant_angle ) < SAFE_ANGLE) )
 	 {
 		forward_speed = VSPEED;

@@ -5,19 +5,17 @@ const double cruisespeed = 0.4;
 const double avoidspeed = 0.05; 
 const double avoidturn = 0.5;
 const double minfrontdistance = 1.0; // 0.6  
-const bool verbose = true;
+const bool verbose = false;
 const double stopdist = 0.3;
 const int avoidduration = 10;
 
 typedef struct
 {
   ModelPosition* pos;
-  ModelRanger* ranger;
   ModelRanger* laser;
   int avoidcount, randcount;
 } robot_t;
 
-int RangerUpdate( Model* mod, robot_t* robot );
 int LaserUpdate( Model* mod, robot_t* robot );
 int PositionUpdate( Model* mod, robot_t* robot );
 
@@ -38,17 +36,16 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   robot->randcount = 0;
   
   robot->pos = (ModelPosition*)mod;
-  robot->ranger = (ModelRanger*)mod->GetChild( "ranger:0" );
-  robot->ranger->AddCallback( Model::CB_UPDATE, (model_callback_t)RangerUpdate, robot );
-  
-  robot->ranger->Subscribe(); // starts the ranger updates
+
+	if( verbose )
+		robot->pos->AddCallback( Model::CB_UPDATE, (model_callback_t)PositionUpdate, robot );
+
   robot->pos->Subscribe(); // starts the position updates
 
   robot->laser = (ModelRanger*)mod->GetChild( "ranger:1" );
   robot->laser->AddCallback( Model::CB_UPDATE, (model_callback_t)LaserUpdate, robot );
   robot->laser->Subscribe(); // starts the ranger updates
-
-    
+   
   return 0; //ok
 }
 
@@ -56,28 +53,10 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
 // inspect the ranger data and decide what to do
 int LaserUpdate( Model* mod, robot_t* robot )
 {
-	//	puts( "laser update" );
-	
-	const std::vector<ModelRanger::Sensor::Sample>& scan = 
-		robot->laser->GetSensors()[0].samples;
-
-// 	printf( "laser samples:\n" );
-// 	FOR_EACH( it, scan )
-// 		{
-// 			printf( "[%.2f %.2f] ", it->range, it->reflectance );
-// 		}
-
-	return 0; // repeat
-}
-
-
-// inspect the ranger data and decide what to do
-int RangerUpdate( Model* mod, robot_t* robot )
-{
   // get the data
-	const std::vector<ModelRanger::Sensor::Sample>& scan = robot->ranger->GetSensors()[0].samples;
+	const std::vector<ModelRanger::Sensor::Sample>& scan = robot->laser->GetSamples();
   uint32_t sample_count = scan.size();
-  if( ! sample_count < 1 )
+  if( sample_count < 1 )
     return 0;
   
   bool obstruction = false;
@@ -160,8 +139,8 @@ int RangerUpdate( Model* mod, robot_t* robot )
 // 	 {
 // 		robot->pos->SetSpeed( 0,0,0 );
 // 		robot->pos->SetTurnSpeed( 0 );
-// 	 }
-    
+// }
+			
   return 0; // run again
 }
 
