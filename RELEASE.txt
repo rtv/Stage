@@ -1,3 +1,12 @@
+Version 4.0.0
+-------------
+
+Major new release since worldfile syntax and API have both changed due
+to a new unified ranger model. Laser model is now deprecated in favour
+of the ranger. This follows a similar change in Player 3, where laser
+interface support was deprecated but still in place due to lack of
+Stage support. This release fixes that.
+
 Version 3.2.2
 -------------
 
