@@ -14,8 +14,6 @@ const int workduration = 20;
 const unsigned int payload = 1;
 
 double have[4][4] = { 
-  //  { -120, -180, 180, 180 }
-  //{ -90, -120, 180, 90 },
   { 90, 180, 180, 180 },
   { 90, -90, 180, 90 },
   { 90, 90, 180, 90 },
@@ -496,31 +494,9 @@ public:
 // Stage calls this when the model starts up
 extern "C" int Init( Model* mod, CtrlArgs* args )
 {  
-#if 1		
-  // example using the model rasterizer
-  if( strcmp( mod->Token(), "r0" ) == 0 )
-	 {
-		const unsigned int dw = 64, dh = 32;
-		
-		uint8_t* data = new uint8_t[dw*dh*2];
-		memset( data, 0, sizeof(uint8_t) * dw * dh );
-		
-		mod->GetWorld()->GetModel( "cave" )->Rasterize( data, dw, dh, 0.25, 0.5 );
-		
-		putchar( '\n' );
-		for( unsigned int y=0; y<dh; y++ )
-		  {
-			 for( unsigned int x=0; x<dw; x++ )
-				putchar( data[x + ((dh-y-1)*dw)] ? 'O' : '.' );
-			 putchar( '\n' );
-		  }
-		delete[] data;
-	 }
-#endif
-  
   new Robot( (ModelPosition*)mod,
-				 mod->GetWorld()->GetModel( "source" ),
-				 mod->GetWorld()->GetModel( "sink" ) );
+						 mod->GetWorld()->GetModel( "source" ),
+						 mod->GetWorld()->GetModel( "sink" ) );
   
   return 0; //ok
 }
