@@ -68,8 +68,8 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   FOR_EACH( it, sensors )
 	 {
 		const ModelRanger::Sensor& s = *it;
-		dx += s.samples[0].range * cos( s.cfg.pose.a );
-		dy += s.samples[0].range * sin( s.cfg.pose.a );
+		dx += s.ranges[0] * cos( s.pose.a );
+		dy += s.ranges[0] * sin( s.pose.a );
 		
 		//printf( "sensor %d angle= %.2f\n", s, rgr->sensors[s].pose.a );	 
 	 }
@@ -85,12 +85,12 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   //printf( "resultant %.2f turn_speed %.2f\n", resultant_angle, turn_speed );
   
   // if the front is clear, drive forwards
-  if( (sensors[3].samples[0].range > SAFE_DIST) && // forwards
-		(sensors[4].samples[0].range > SAFE_DIST) &&
-		(sensors[5].samples[0].range > SAFE_DIST/2.0) && //
-		(sensors[6].samples[0].range > SAFE_DIST/4.0) && 
-		(sensors[2].samples[0].range > SAFE_DIST/2.0) && 
-		(sensors[1].samples[0].range > SAFE_DIST/4.0) && 
+  if( (sensors[3].ranges[0] > SAFE_DIST) && // forwards
+		(sensors[4].ranges[0] > SAFE_DIST) &&
+		(sensors[5].ranges[0] > SAFE_DIST/2.0) && //
+		(sensors[6].ranges[0] > SAFE_DIST/4.0) && 
+		(sensors[2].ranges[0] > SAFE_DIST/2.0) && 
+		(sensors[1].ranges[0] > SAFE_DIST/4.0) && 
 		(fabs( resultant_angle ) < SAFE_ANGLE) )
 	 {
 		forward_speed = VSPEED;

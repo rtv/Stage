@@ -2777,7 +2777,6 @@ namespace Stg
 			static Option showStrikes;
 			static Option showFov;
 			static Option showBeams;
-			static Option showData;
 			static Option showTransducers;		
 			
 			Vis( World* world );		
@@ -2788,59 +2787,55 @@ namespace Stg
 		class Sensor
 		{		
 		public:
-			class Cfg {
-			public:
-				Pose pose; 
-				Size size;
-				Bounds range;
-				radians_t fov;
-				unsigned int sample_count;
-				Color col;
-
-				std::string String();
-
-				Cfg() : pose( 0,0,0,0 ), 
-								size( 0.02, 0.02, 0.02 ), // teeny transducer
-								range( 0.0, 5.0 ),
-								fov( 0.1 ), 
-								sample_count(1),
-								col( 0,1,0,0.3 ) {}
-				
-			} cfg;
+			Pose pose; 
+			Size size;
+			Bounds range;
+			radians_t fov;
+			unsigned int sample_count;
+			Color col;
 			
-			class	Sample 
-			{
-			public:
-				meters_t range; 
-				float reflectance; 
-				
-				Sample() : range(0.0), reflectance(0.0) {}
-			};
+			std::vector<meters_t> ranges;
+			std::vector<float> intensities;
 			
-			std::vector<Sample> samples;
+			Sensor() : pose( 0,0,0,0 ), 
+								 size( 0.02, 0.02, 0.02 ), // teeny transducer
+								 range( 0.0, 5.0 ),
+								 fov( 0.1 ), 
+								 sample_count(1),
+								 col( 0,1,0,0.3 ) 
+			{}
 			
-			void Update( ModelRanger* rgr );
-			
+			void Update( ModelRanger* rgr );			
 			void Visualize( Vis* vis, ModelRanger* rgr ) const;
+			std::string String() const;			
+			void Load( Worldfile* wf, int entity );
 		};
 
 		/** returns a const reference to a vector of range and reflectance samples */
-		const std::vector<Sensor>& GetSensors() const
+			const std::vector<Sensor>& GetSensors() const
 		{ return sensors; }
 		
 		/** returns a vector of range samples from the indicated sensor
 				(defaults to zero) */
-		const std::vector<Sensor::Sample>& GetSamples( unsigned int sensor=0) const 
+		const std::vector<meters_t>& GetRanges( unsigned int sensor=0) const 
 		{ 
 			if( sensor < sensors.size() )
-				return sensors[sensor].samples;
+				return sensors[sensor].ranges;
 			
 			PRINT_ERR1( "invalid sensor index specified (%d)", sensor );
 			exit(-1);
 		}
-
-		/** returns a mutable reference to a vector of range and reflectance samples */
-		//std::vector<Sample>& GetSamples();
+		
+		/** returns a vector of intensitye samples from the indicated sensor
+				(defaults to zero) */
+		const std::vector<float_t>& GetIntensities( unsigned int sensor=0) const 
+		{ 
+			if( sensor < sensors.size() )
+				return sensors[sensor].intensities;
+			
+			PRINT_ERR1( "invalid sensor index specified (%d)", sensor );
+			exit(-1);
+		}
 		
 		void LoadSensor( Worldfile* wf, int entity );
 		
@@ -2851,9 +2846,7 @@ namespace Stg
 		
 		virtual void Startup();
 		virtual void Shutdown();
-		virtual void Update();
-		//virtual void DataVisualize( Camera* cam );
-		
+		virtual void Update();		
   };
 	
   // BLINKENLIGHT MODEL ----------------------------------------------------

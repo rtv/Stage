@@ -66,8 +66,8 @@ public:
 			Model* source,
 			Model* sink ) 
 	 : pos(pos), 
-		ranger( (ModelRanger*)pos->GetChild( "ranger:0" )),
 		laser( (ModelRanger*)pos->GetChild( "ranger:1" )),
+		ranger( (ModelRanger*)pos->GetChild( "ranger:0" )),
 		fiducial( (ModelFiducial*)pos->GetUnusedModelOfType( "fiducial" )),	
 		//blobfinder( (ModelBlobfinder*)pos->GetUnusedModelOfType( "blobfinder" )),
 		//gripper( (ModelGripper*)pos->GetUnusedModelOfType( "gripper" )),
@@ -212,33 +212,32 @@ public:
 	 double minright = 1e6;
 	 
 	 // Get the data from the first sensor of the laser 
-	 const std::vector<ModelRanger::Sensor::Sample>& scan = 
-		 laser->GetSamples();
+	 const std::vector<meters_t>& scan = laser->GetRanges();
 	 
 	 uint32_t sample_count = scan.size();
   
 	 for (uint32_t i = 0; i < sample_count; i++)
 		{		
-		  if( verbose ) printf( "%.3f ", scan[i].range );
+		  if( verbose ) printf( "%.3f ", scan[i] );
 		
 		  if( (i > (sample_count/4)) 
 				&& (i < (sample_count - (sample_count/4))) 
-				&& scan[i].range < minfrontdistance)
+				&& scan[i] < minfrontdistance)
 			 {
 				if( verbose ) puts( "  obstruction!" );
 				obstruction = true;
 			 }
 		
-		  if( scan[i].range < stopdist )
+		  if( scan[i] < stopdist )
 			 {
 				if( verbose ) puts( "  stopping!" );
 				stop = true;
 			 }
 		
 		  if( i > sample_count/2 )
-				minleft = std::min( minleft, scan[i].range );
+				minleft = std::min( minleft, scan[i] );
 		  else      
-				minright = std::min( minright, scan[i].range );
+				minright = std::min( minright, scan[i] );
 		}
   
 	 if( verbose ) 

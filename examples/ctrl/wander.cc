@@ -54,7 +54,7 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
 int LaserUpdate( Model* mod, robot_t* robot )
 {
   // get the data
-	const std::vector<ModelRanger::Sensor::Sample>& scan = robot->laser->GetSamples();
+	const std::vector<meters_t>& scan = robot->laser->GetRanges();
   uint32_t sample_count = scan.size();
   if( sample_count < 1 )
     return 0;
@@ -70,26 +70,26 @@ int LaserUpdate( Model* mod, robot_t* robot )
   for (uint32_t i = 0; i < sample_count; i++)
     {
 
-		if( verbose ) printf( "%.3f ", scan[i].range );
+		if( verbose ) printf( "%.3f ", scan[i] );
 
       if( (i > (sample_count/3)) 
 			 && (i < (sample_count - (sample_count/3))) 
-			 && scan[i].range < minfrontdistance)
+			 && scan[i] < minfrontdistance)
 		  {
 			 if( verbose ) puts( "  obstruction!" );
 			 obstruction = true;
 		  }
 		
-      if( scan[i].range < stopdist )
+      if( scan[i] < stopdist )
 		  {
 			 if( verbose ) puts( "  stopping!" );
 			 stop = true;
 		  }
       
       if( i > sample_count/2 )
-				minleft = std::min( minleft, scan[i].range );
+				minleft = std::min( minleft, scan[i] );
       else      
-				minright = std::min( minright, scan[i].range );
+				minright = std::min( minright, scan[i] );
     }
   
   if( verbose ) 

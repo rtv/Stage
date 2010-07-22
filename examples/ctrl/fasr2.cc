@@ -563,7 +563,7 @@ public:
 				const std::vector<ModelRanger::Sensor>& sensors = sonar->GetSensors();
 
 				for( unsigned int s = BACK_SENSOR_FIRST; s <= BACK_SENSOR_LAST; ++s )
-					if( sensors[s].samples[0].range < wait_distance) 
+					if( sensors[s].ranges[0] < wait_distance) 
 						{
 							pos->Say( "Waiting..." );
 							pos->SetXSpeed( 0.0 );
@@ -616,34 +616,33 @@ public:
 		// Get the data
 		//const std::vector<ModelLaser::Sample>& scan = laser->GetSamples();
 
-		const std::vector<ModelRanger::Sensor::Sample>& scan = 
-			laser->GetSensors()[0].samples;
+		const std::vector<meters_t>& scan = laser->GetRanges();
 
     uint32_t sample_count = scan.size();
 
 
 		for (uint32_t i = 0; i < sample_count; i++)
 			{		
-				if( verbose ) printf( "%.3f ", scan[i].range );
+				if( verbose ) printf( "%.3f ", scan[i] );
 		
 				if( (i > (sample_count/4)) 
 						&& (i < (sample_count - (sample_count/4))) 
-						&& scan[i].range < minfrontdistance)
+						&& scan[i] < minfrontdistance)
 					{
 						if( verbose ) puts( "  obstruction!" );
 						obstruction = true;
 					}
 		
-				if( scan[i].range < stopdist )
+				if( scan[i] < stopdist )
 					{
 						if( verbose ) puts( "  stopping!" );
 						stop = true;
 					}
 		
 				if( i > sample_count/2 )
-					minleft = std::min( minleft, scan[i].range );
+					minleft = std::min( minleft, scan[i] );
 				else      
-					minright = std::min( minright, scan[i].range );
+					minright = std::min( minright, scan[i] );
 			}
   
 		if( verbose ) 
