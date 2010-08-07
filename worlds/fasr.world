@@ -23,7 +23,7 @@ window
 ( 
   size [ 683.000 713.000 ] 
 
-  center [ -0.210 -0.945 ] 
+  center [ 0.207 -1.094 ] 
   rotate [ 0 0 ]
   scale 33.591 
   
@@ -44,7 +44,7 @@ floorplan
 
 zone
 (
-  size [ 2 2 0 ]
+  size [ 2.000 2.000 0 ]
   color "green"
   pose [ -7.000 -7.000 0 0 ]
   name "source"
@@ -53,7 +53,7 @@ zone
 
 zone
 (
-  size [ 2 2 0 ]
+  size [ 2.000 2.000 0 ]
   color "red"
   pose [ 7.000 7.000 0 0 ]
   name "sink"
@@ -96,7 +96,7 @@ define charge_station model
 charge_station(  pose [ 7.908 -2.510 0 0 ] )
 charge_station(  pose [ 7.920 -3.847 0 0 ] )
 charge_station(  pose [ 7.449 -4.974 0 -40.107 ] )
-charge_station(  pose [ 7.698 -1.432 0 31.513 ] )
+charge_station(  pose [ 8.680 -1.432 0 31.513 ] )
 charge_station(  pose [ 5.162 -0.814 0 88.809 ] )
 
 charge_station(  pose [ 3.927 -0.693 0 88.808 ] )
@@ -107,7 +107,7 @@ charge_station(  pose [ 6.427 -0.964 0 74.484 ] )
 
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 32 range_max 5 laser_return 2 watts 30 )
+ sicklaser( samples 64 range_max 5 laser_return 2 watts 30 )
  ctrl "fasr"
  kjoules 400 
  joules_capacity 400000 
