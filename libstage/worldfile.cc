@@ -82,12 +82,12 @@ Worldfile::~Worldfile()
   ClearTokens();
 }
 
-FILE *Worldfile::FileOpen(const char *filename, const char* method)
+FILE *Worldfile::FileOpen(const std::string& filename, const char* method)
 {
-  FILE *fp = fopen(filename, method);
+  FILE *fp = fopen(filename.c_str(), method);
   // if this opens, then we will go with it:
   if (fp) {
-    PRINT_DEBUG1( "Loading: %s", filename);
+    PRINT_DEBUG1( "Loading: %s", filename.c_str());
     return fp;
   }
   // else, search other places, and set this->filename
@@ -95,7 +95,7 @@ FILE *Worldfile::FileOpen(const char *filename, const char* method)
   char *stagepath = getenv("STAGEPATH");
   char *token = strtok(stagepath, ":");
   char* fullpath = new char[PATH_MAX];
-  char *tmp = strdup(filename);
+  char *tmp = strdup(filename.c_str());
   const char *base = basename(tmp);
   while (token != NULL) {
     // for each part of the path, try it:
@@ -106,8 +106,8 @@ FILE *Worldfile::FileOpen(const char *filename, const char* method)
     assert(strlen(fullpath) + 1 < PATH_MAX);
     fp = fopen(fullpath, method);
     if (fp) {
-      this->filename = fullpath;
-      PRINT_DEBUG1( "Loading: %s", filename);
+      this->filename = std::string(fullpath);
+      PRINT_DEBUG1( "Loading: %s", filename.c_str());
       free(tmp);
       return fp;
     }
@@ -120,7 +120,7 @@ FILE *Worldfile::FileOpen(const char *filename, const char* method)
 
 ///////////////////////////////////////////////////////////////////////////
 // Load world from file
-bool Worldfile::Load(const char *filename)
+bool Worldfile::Load(const std::string& filename )
 {
   this->filename = filename;
 
@@ -180,40 +180,38 @@ bool Worldfile::Load(const char *filename)
   else if( unita == "radians")
     this->unit_angle = 1;
   
+	printf( "f: %s\n", this->filename.c_str() );
+
   return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Save world to file
-bool Worldfile::Save(const char *filename)
+bool Worldfile::Save(const std::string& filename )
 {
   // Debugging
   //DumpProperties();
 
-  // If no filename is supplied, use default
-  if (!filename)
-    filename = this->filename.c_str();
-
   // Open file
-  FILE *file = fopen(filename, "w+");
+  FILE *file = fopen(filename.c_str(), "w+");
   //FILE *file = FileOpen(filename, "w+");
   if (!file)
     {
       PRINT_ERR2("unable to open world file %s : %s",
-		 filename, strerror(errno));
+								 filename.c_str(), strerror(errno));
       return false;
     }
-
+	
   // TODO - make a backup before saving the file
-
+	
   // Write the current set of tokens to the file
   if (!SaveTokens(file))
     {
       fclose(file);
       return false;
     }
-
+	
   fclose(file);
   return true;
 }

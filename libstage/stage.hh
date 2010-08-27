@@ -89,7 +89,7 @@ namespace Stg
   /** Set of pointers to Models. */
   typedef std::set<Model*> ModelPtrSet;
 
-  /** Set of pointers to Models. */
+  /** Vector of pointers to Models. */
   typedef std::vector<Model*> ModelPtrVec;
 
   /** Set of pointers to Blocks. */
@@ -98,7 +98,8 @@ namespace Stg
   /** Vector of pointers to Cells.*/
   typedef std::vector<Cell*> CellPtrVec;
 
-  /** Initialize the Stage library */
+  /** Initialize the Stage library. Stage will parse the argument
+			array looking for parameters in the conventnioal way. */
   void Init( int* argc, char** argv[] );
 
   /** returns true iff Stg::Init() has been called. */
@@ -592,11 +593,10 @@ namespace Stg
       height. Memory is allocated for the rectangle array [rects], so
       the caller must free [rects].
   */
-  int rotrects_from_image_file( const char* filename, 
-												rotrect_t** rects,
-												unsigned int* rect_count,
-												unsigned int* widthp, 
-												unsigned int* heightp );
+  int rotrects_from_image_file( const std::string& filename, 
+																std::vector<rotrect_t>& rects,
+																unsigned int& widthp, 
+																unsigned int& heightp );
 
   
   /** matching function should return true iff the candidate block is
@@ -1091,7 +1091,7 @@ namespace Stg
 				contents, creating models as necessary. The created object
 				persists, and can be retrieved later with
 				World::GetWorldFile(). */
-    virtual void Load( const char* worldfile_path );
+    virtual void Load( const std::string& worldfile_path );
 
     virtual void UnLoad();
 
@@ -1163,8 +1163,7 @@ namespace Stg
 		  blocks. The point data is copied, so pts can safely be freed
 		  after constructing the block.*/
     Block( Model* mod,  
-					 point_t* pts, 
-					 size_t pt_count,
+					 const std::vector<point_t>& pts,
 					 meters_t zmin,
 					 meters_t zmax,
 					 Color color,
@@ -1530,7 +1529,7 @@ namespace Stg
 
     virtual std::string ClockString() const;
     virtual bool Update();	
-    virtual void Load( const char* filename );
+    virtual void Load( const std::string& filename );
     virtual void UnLoad();
     virtual bool Save( const char* filename );	
     virtual bool IsGUI() const { return true; };	
@@ -1747,13 +1746,18 @@ namespace Stg
 			
 		cb_t() : callback(NULL), arg(NULL) {}
 			
-		/** for placing in a sorted container */
-		bool operator<( const cb_t& other ) const
-		{ return ((void*)(callback)) < ((void*)(other.callback)); }
-			
-		/** for searching in a sorted container */
-		bool operator==( const cb_t& other ) const
-		{ return( callback == other.callback);  }			
+		 /** for placing in a sorted container */
+		 bool operator<( const cb_t& other ) const
+		 {
+			 if( callback == other.callback )
+				 return( arg < other.arg );
+			 //else
+			 return ((void*)(callback)) < ((void*)(other.callback)); 
+		 }
+		 
+		 /** for searching in a sorted container */
+		 bool operator==( const cb_t& other ) const
+		 { return( callback == other.callback);  }			
 	 };
 		
 	 class Flag
@@ -1899,14 +1903,16 @@ namespace Stg
 	 } rastervis;
 	 
 	 bool rebuild_displaylist; ///< iff true, regenerate block display list before redraw
-	 std::string say_string;   ///< if non-null, this string is displayed in the GUI 
+	 std::string say_string;   ///< if non-empty, this string is displayed in the GUI 
 		
     bool stack_children; ///< whether child models should be stacked on top of this model or not
 
-	 bool stall;
+		bool stall; ///< Set to true iff the model collided with something else
 	 int subs;    ///< the number of subscriptions to this model
 	 /** Thread safety flag. Iff true, Update() may be called in
-		  parallel with other models. Defaults to false for safety */
+		  parallel with other models. Defaults to false for
+		  safety. Derived classes can set it true in their constructor to
+		  allow parallel Updates(). */
 	 bool thread_safe;
 	 
 	 /** Cache of recent poses, used to draw the trail. */

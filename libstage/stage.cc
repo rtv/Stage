@@ -7,11 +7,7 @@
 #include "file_manager.hh"
 using namespace Stg;
 
-// static member - a vector command line arguments
-std::vector<std::string> World::args;
-
 static bool init_called = false;
-
 
 const char* Stg::Version()
 { 
@@ -34,14 +30,12 @@ void Stg::Init( int* argc, char** argv[] )
   if(!setlocale(LC_ALL,"POSIX"))
 	PRINT_WARN("Failed to setlocale(); config file may not be parse correctly\n" );
 						
-  //if (!g_thread_supported ()) g_thread_init (NULL);
-	
   RegisterModels();
 	
-  init_called = true;
-	
-  // ask FLTK to load support for various image formats
+	  // ask FLTK to load support for various image formats
   fl_register_images();
+
+  init_called = true;
 }
 
 bool Stg::InitDone()
@@ -58,24 +52,25 @@ const Color Color::cyan( 0,1,1 );
 
 
 static inline uint8_t* pb_get_pixel( Fl_Shared_Image* img, 
-																		 const int x, const int y )
+																		 const unsigned int x, 
+																		 const unsigned int y )
 {
   uint8_t* pixels = (uint8_t*)(img->data()[0]);
-  unsigned int index = (y * img->w() * img->d()) + (x * img->d());
+  const unsigned int index = (y * img->w() * img->d()) + (x * img->d());
   return( pixels + index );
 }
 
 // set all the pixels in a rectangle 
 static inline void pb_set_rect( Fl_Shared_Image* pb, 
-																const int x, const int y, 
-																const int width, const int height, 
+																const unsigned int x, const unsigned int y, 
+																const unsigned int width, const unsigned int height, 
 																const uint8_t val )
 {
-  const int bytes_per_sample = 1;
-  const int num_samples = pb->d();
+  const unsigned int bytes_per_sample = 1;
+  const unsigned int num_samples = pb->d();
 	
-  for( int a = y; a < y+height; a++ )
-		for( int b = x; b < x+width; b++ )
+  for( unsigned int a = y; a < y+height; a++ )
+		for( unsigned int b = x; b < x+width; b++ )
 			{	
 				// zeroing
 				uint8_t* pix = pb_get_pixel( pb, b, a );
@@ -85,57 +80,48 @@ static inline void pb_set_rect( Fl_Shared_Image* pb,
 
 // returns true if the value in the first channel is above threshold
 static inline bool pb_pixel_is_set( Fl_Shared_Image* img, 
-																		const int x, const int y, const int threshold )
+																		const unsigned int x, 
+																		const unsigned int y, 
+																		const unsigned int threshold )
 {
-  uint8_t* pixel = pb_get_pixel( img,x,y );
-  return( pixel[0] > threshold );
+  return( pb_get_pixel( img,x,y )[0] > threshold );
 }
 
-int Stg::rotrects_from_image_file( const char* filename, 
-																			 rotrect_t** rects, 
-																			 unsigned int* rect_count,
-																			 unsigned int* widthp, 
-																			 unsigned int* heightp )
+int Stg::rotrects_from_image_file( const std::string& filename, 
+																	 std::vector<rotrect_t>& rects,
+																	 unsigned int& width, 
+																	 unsigned int& height )
 {
   // TODO: make this a parameter
   const int threshold = 127;
-
-  Fl_Shared_Image *img = Fl_Shared_Image::get(filename);
+	
+  Fl_Shared_Image *img = Fl_Shared_Image::get(filename.c_str());
   if( img == NULL ) {
-	std::cerr << "failed to open file: " << filename << std::endl;
-	assert( img );
+		std::cerr << "failed to open file: " << filename << std::endl;
+		assert( img );
   }
 
   //printf( "loaded image %s w %d h %d d %d count %d ld %d\n", 
   //  filename, img->w(), img->h(), img->d(), img->count(), img->ld() );
 
-  *rect_count = 0;
-  size_t allocation_unit = 1000;
-  size_t rects_allocated = allocation_unit;
-  *rects = (rotrect_t*)calloc( sizeof(rotrect_t), rects_allocated );
+  width = img->w();
+  height = img->h();
 
-  int img_width = img->w();
-  int img_height = img->h();
-
-  // if the caller wanted to know the dimensions
-  if( widthp ) *widthp = img_width;
-  if( heightp ) *heightp = img_height;
-
-  for(int y = 0; y < img_height; y++)
+  for(unsigned int y = 0; y < height; y++)
 	{
-	  for(int x = 0; x < img_width; x++)
+	  for(unsigned int x = 0; x < width; x++)
 		{
 		  // skip blank (white) pixels
 		  if(  pb_pixel_is_set( img,x,y, threshold) )
 			continue;
 
 		  // a rectangle starts from this point
-		  int startx = x;
-		  int starty = y;
-		  int height = img_height; // assume full height for starters
+		  unsigned int startx = x;
+		  unsigned int starty = y;
+		  unsigned int rheight = height; // assume full height for starters
 
 		  // grow the width - scan along the line until we hit an empty (white) pixel
-		  for( ; x < img_width &&  ! pb_pixel_is_set(img,x,y,threshold); x++ )
+		  for( ; x < width &&  ! pb_pixel_is_set(img,x,y,threshold); x++ )
 			{
 			  // handle horizontal cropping
 			  //double ppx = x * sx;
@@ -143,8 +129,8 @@ int Stg::rotrects_from_image_file( const char* filename,
 			  //continue;
 
 			  // look down to see how large a rectangle below we can make
-			  int yy  = y;
-			  while( ! pb_pixel_is_set(img,x,yy,threshold) && (yy < img_height-1) )
+			  unsigned int yy  = y;
+			  while( ! pb_pixel_is_set(img,x,yy,threshold) && (yy < height-1) )
 				{ 
 				  // handle vertical cropping
 				  //double ppy = (this->image->height - yy) * sy;
@@ -157,37 +143,29 @@ int Stg::rotrects_from_image_file( const char* filename,
 			  // now yy is the depth of a line of non-zero pixels
 			  // downward we store the smallest depth - that'll be the
 			  // height of the rectangle
-			  if( yy-y < height ) height = yy-y; // shrink the height to fit
+			  if( yy-y < rheight ) rheight = yy-y; // shrink the height to fit
 			} 
 
 		  // whiten the pixels we have used in this rect
-		  pb_set_rect( img, startx, starty, x-startx, height, 0xFF );
-
-		  // add this rectangle to the array
-		  (*rect_count)++;
-
-		  if( (*rect_count) > rects_allocated )
-			{
-			  rects_allocated = (*rect_count) + allocation_unit;
-
-			  *rects = (rotrect_t*)
-				realloc( *rects, rects_allocated * sizeof(rotrect_t) );
-			}
+		  pb_set_rect( img, startx, starty, x-startx, rheight, 0xFF );
 
 		  //  y-invert all the rectangles because we're using conventional
 		  // rather than graphics coordinates. this is much faster than
 		  // inverting the original image.
-		  rotrect_t *latest = &(*rects)[(*rect_count)-1];
-		  latest->pose.x = startx;
-		  latest->pose.y = img_height-1 - (starty + height);
-		  latest->pose.a = 0.0;
-		  latest->size.x = x - startx;
-		  latest->size.y = height;
 
-		  assert( latest->pose.x >= 0 );
-		  assert( latest->pose.y >= 0 );
-		  assert( latest->pose.x <= img_width );
-		  assert( latest->pose.y <= img_height);
+		  rotrect_t latest;// = &(*rects)[(*rect_count)-1];
+		  latest.pose.x = startx;
+		  latest.pose.y = height-1 - (starty + rheight);
+		  latest.pose.a = 0.0;
+		  latest.size.x = x - startx;
+		  latest.size.y = rheight;
+
+		  assert( latest.pose.x >= 0 );
+		  assert( latest.pose.y >= 0 );
+		  assert( latest.pose.x <= width );
+		  assert( latest.pose.y <= height);
+
+			rects.push_back( latest );
 		  //assert( latest->size.x > 0 );
 		  //assert( latest->size.y > 0 );
 
@@ -202,9 +180,7 @@ int Stg::rotrects_from_image_file( const char* filename,
 		}
 	}
 
-  if( img ) img->release(); // frees all image resources: the
-  // constructor is not available
-
+  if( img ) img->release(); // frees all resources for this image
   return 0; // ok
 }
 

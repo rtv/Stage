@@ -7,11 +7,11 @@ include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
 
-speedup 10.000
+speedup 20.000
 paused 1
 
 # time at which to pause (in GUI mode) or quit (in headless mode) the simulation
-quit_time 3600 # 1 hour of simulated time
+#quit_time 3600 # 1 hour of simulated time
 #quit_time 1800 # hour of simulated time
 
 resolution 0.02
@@ -23,11 +23,11 @@ window
 ( 
   size [ 683.000 713.000 ] 
 
-  center [ 0.207 -1.094 ] 
+  center [ -0.061 -0.975 ] 
   rotate [ 0 0 ]
   scale 33.591 
   
-  show_data 1
+  show_data 0
   show_flags 1
 
   # interval 50
@@ -96,7 +96,7 @@ define charge_station model
 charge_station(  pose [ 7.908 -2.510 0 0 ] )
 charge_station(  pose [ 7.920 -3.847 0 0 ] )
 charge_station(  pose [ 7.449 -4.974 0 -40.107 ] )
-charge_station(  pose [ 8.680 -1.432 0 31.513 ] )
+charge_station(  pose [ 14.217 -1.789 0 31.513 ] )
 charge_station(  pose [ 5.162 -0.814 0 88.809 ] )
 
 charge_station(  pose [ 3.927 -0.693 0 88.808 ] )
@@ -108,7 +108,7 @@ charge_station(  pose [ 6.427 -0.964 0 74.484 ] )
 define autorob pioneer2dx		  
 (		 
  sickbase( sensor( samples 32 range [0 3] fov 180 color_rgba [ 0 0 1 0.15 ] ) 
-  				 ranger_return 2 watts 30 )
+  				 ranger_return 2.000 watts 30 )
 
  ctrl "fasr"
 # kjoules 400 
@@ -120,29 +120,29 @@ define autorob pioneer2dx
  # trail_length 0
 )
 
-autorob( pose [5.880 4.141 0 152.684] kjoules 300 name "r0" )
-autorob( pose [4.542 5.641 0 125.831] kjoules 100 name "r1" )
-autorob( pose [5.043 3.459 0 174.453] kjoules 200 )
+autorob( pose [5.880 4.141 0 152.684] kjoules 500 name "r0" )
+autorob( pose [4.542 5.641 0 125.831] kjoules 500 name "r1" )
+autorob( pose [5.043 3.459 0 174.453] kjoules 600 )
 autorob( pose [5.173 4.759 0 -117.456] kjoules 400 )
-autorob( pose [3.230 7.036 0 44.991] kjoules 100 )
+autorob( pose [3.230 7.036 0 44.991] kjoules 800 )
 
-autorob( pose [3.757 6.187 0 35.145] kjoules 200 )
-autorob( pose [2.688 4.115 0 -143.181] kjoules 300 )
-autorob( pose [3.975 7.410 0 0] kjoules 400 )
-autorob( pose [6.796 4.223 0 -89.994] kjoules 100 )
-autorob( pose [3.084 5.145 0 90.003] kjoules 200 )
+autorob( pose [3.757 6.187 0 35.145] kjoules 600 )
+autorob( pose [2.688 4.115 0 -143.181] kjoules 500 )
+autorob( pose [3.975 7.410 0 0] kjoules 80 )
+autorob( pose [6.796 4.223 0 -89.994] kjoules 800 )
+autorob( pose [3.084 5.145 0 90.003] kjoules 600 )
 
-autorob( pose [3.907 4.602 0 -1.811] kjoules 100 )
-autorob( pose [2.558 6.649 0 -116.317] kjoules 100 )
-autorob( pose [7.462 3.892 0 -31.440]  kjoules 100)
-autorob( pose [5.944 6.951 0 2.937] kjoules 100)
-autorob( pose [6.405 5.291 0 -103.060] kjoules 100)
+autorob( pose [3.907 4.602 0 -1.811] kjoules 500 )
+autorob( pose [2.558 6.649 0 -116.317] kjoules 700 )
+autorob( pose [7.462 3.892 0 -31.440]  kjoules 900)
+autorob( pose [5.944 6.951 0 2.937] kjoules 900)
+autorob( pose [6.405 5.291 0 -103.060] kjoules 500)
 
-autorob( pose [5.974 5.725 0 -103.060] kjoules 250)
-autorob( pose [2.479 5.713 0 53.540] kjoules 250)
-autorob( pose [7.503 6.594 0 2.937] kjoules 250)
-autorob( pose [6.959 3.268 0 34.450] kjoules 250)
-autorob( pose [4.617 6.811 0 134.717] kjoules 250)
+autorob( pose [5.974 5.725 0 -103.060] kjoules 850)
+autorob( pose [2.479 5.713 0 53.540] kjoules 850)
+autorob( pose [7.503 6.594 0 2.937] kjoules 750)
+autorob( pose [6.959 3.268 0 34.450] kjoules 650)
+autorob( pose [4.617 6.811 0 134.717] kjoules 550)
 
 #autorob( pose [6.545 7.366 0 2.937] kjoules 350 )
 #autorob( pose [7.237 7.533 0 34.450] kjoules 350)

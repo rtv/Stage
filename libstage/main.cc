@@ -14,14 +14,14 @@ const char* USAGE =
   "USAGE:  stage [options] <worldfile1> [worldfile2 ... worldfileN]\n"
   "Available [options] are:\n"
   "  --clock        : print simulation time peridically on standard output\n"
-  "  -c             : short for --clock\n"
+  "  -c             : equivalent to --clock\n"
   "  --gui          : run without a GUI\n"
-  "  -g             : short for --gui\n"
+  "  -g             : equivalent to --gui\n"
   "  --help         : print this message\n"
   "  --args \"str\"   : define an argument string to be passed to all controllers\n"
-  "  -a \"str\"       : short for --args\n"
-  "  -h             : short for --help\n"
-  "  -?             : short for --help";
+  "  -a \"str\"       : equivalent to --args \"str\"\n"
+  "  -h             : equivalent to --help\n"
+  "  -?             : equivalent to --help";
 
 /* options descriptor */
 static struct option longopts[] = {

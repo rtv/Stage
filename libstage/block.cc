@@ -11,8 +11,7 @@ static void canonicalize_winding(vector<point_t>& pts);
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
 Block::Block( Model* mod,
-							point_t* pts,
-							size_t pt_count,
+							const std::vector<point_t>& pts,
 							meters_t zmin,
 							meters_t zmax,
 							Color color,
@@ -20,8 +19,7 @@ Block::Block( Model* mod,
 							bool wheel ) :
   mod( mod ),
   mpts(),
-  pt_count( pt_count ),
-  pts(),
+  pts(pts),
   local_z( zmin, zmax ),
   color( color ),
   inherit_color( inherit_color ),
@@ -31,12 +29,6 @@ Block::Block( Model* mod,
   gpts()
 {
   assert( mod );
-  assert( pt_count > 0 );
-  
-  // copy the argument point data into the member vector
-  this->pts.reserve( pt_count );
-  for( size_t p=0; p<pt_count; p++ )
-    this->pts.push_back( pts[p] );	
   canonicalize_winding(this->pts);
 }
 
@@ -46,7 +38,6 @@ Block::Block(  Model* mod,
 					int entity)
   : mod( mod ),
     mpts(),
-    pt_count(0),
     pts(),
     color(),
     inherit_color(true),
@@ -319,15 +310,18 @@ void Block::InvalidateModelPointCache()
 void Block::GenerateCandidateCells()
 {
   candidate_cells->clear();
-  
+	
+	const unsigned int pt_count = pts.size();
+	
   if( mpts.size() == 0 )
-	 {
+		{
 		// no valid cache of model coord points, so generate them
-		mpts.resize( pt_count );
-
-		for( unsigned int i=0; i<pt_count; i++ )
-			mpts[i] = BlockPointToModelMeters( pts[i] );
-	 }
+			mpts.resize( pts.size() );
+			
+			
+			for( unsigned int i=0; i<pt_count; i++ )
+				mpts[i] = BlockPointToModelMeters( pts[i] );
+		}
   
   gpts.clear();
   mod->LocalToPixels( mpts, gpts );
@@ -336,7 +330,7 @@ void Block::GenerateCandidateCells()
 		mod->world->ForEachCellInLine( gpts[i], 
 																	 gpts[(i+1)%pt_count], 
 																	 *candidate_cells );  
-
+	
   // set global Z
   Pose gpose = mod->GetGlobalPose();
   gpose.z += mod->geom.pose.z;
@@ -365,7 +359,8 @@ void Block::Rasterize( uint8_t* data,
 {
   //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
   //	 this, width, height, scalex, scaley, offsetx, offsety );
-  
+	
+	const unsigned int pt_count = pts.size();
   for( unsigned int i=0; i<pt_count; i++ )
     {
 		// convert points from local to model coords
@@ -490,16 +485,15 @@ void Block::DrawSolid()
 
 void Block::Load( Worldfile* wf, int entity )
 {
-  pt_count = wf->ReadInt( entity, "points", 0);
-  pts.resize( pt_count );
-  
+	const unsigned int pt_count = wf->ReadInt( entity, "points", 0);
+
   char key[128];
   for( unsigned int p=0; p<pt_count; p++ )	      
 	 {
 		snprintf(key, sizeof(key), "point[%d]", p );
 		
-		pts[p].x = wf->ReadTupleLength(entity, key, 0, 0);
-		pts[p].y = wf->ReadTupleLength(entity, key, 1, 0);
+		pts.push_back( point_t(  wf->ReadTupleLength(entity, key, 0, 0),
+														 wf->ReadTupleLength(entity, key, 1, 0) ));
 	 }
   
   local_z.min = wf->ReadTupleLength( entity, "z", 0, 0.0 );

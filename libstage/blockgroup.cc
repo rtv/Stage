@@ -255,69 +255,63 @@ void BlockGroup::LoadBlock( Model* mod, Worldfile* wf, int entity )
 void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile* wf )
 {
   PRINT_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile );
-  
-  char full[_POSIX_PATH_MAX];
+	
+	std::string full;
   
   if( bitmapfile[0] == '/' )
-	 strncpy( full, bitmapfile.c_str(), _POSIX_PATH_MAX );
+		full = bitmapfile;
   else
-	{
-	  char *tmp = strdup(wf->filename.c_str());
-	  snprintf( full, _POSIX_PATH_MAX,
-					"%s/%s",  dirname(tmp), bitmapfile.c_str() );
-	  free(tmp);
-	}
+		{
+			char* workaround_const = strdup(wf->filename.c_str());
+			full = std::string(dirname(workaround_const)) + "/" + bitmapfile;			
+			free( workaround_const );
+		}
   
   PRINT_DEBUG1( "attempting to load image %s", full );
-  
-  rotrect_t* rects = NULL;
-  unsigned int rect_count = 0;
+	
+	std::vector<rotrect_t> rects;
   unsigned int width, height;
   if( rotrects_from_image_file( full,
-									&rects,
-									&rect_count,
-									&width, &height ) )
+																rects,
+																width, 
+																height ) )
 	{
 	  PRINT_ERR1( "failed to load rects from image file \"%s\"",
-				  full );
+								full.c_str() );
 	  return;
 	}
   
   //printf( "found %d rects in \"%s\" at %p\n", 
   //	  rect_count, full, rects );
 			 
-  if( rects && (rect_count > 0) )
-	{
-	  // TODO fix this
-	  Color col( 1.0, 0.0, 1.0, 1.0 );
-		
-	  for( unsigned int r=0; r<rect_count; r++ )
+	// TODO fix this
+	Color col( 1.0, 0.0, 1.0, 1.0 );
+	
+	FOR_EACH( rect, rects )
 		{
-		  point_t pts[4];
-			 
-		  double x = rects[r].pose.x;
-		  double y = rects[r].pose.y;
-		  double w = rects[r].size.x;
-		  double h = rects[r].size.y;
-			 
-		  pts[0].x = x;
-		  pts[0].y = y;
-		  pts[1].x = x + w;
-		  pts[1].y = y;
-		  pts[2].x = x + w;
-		  pts[2].y = y + h;
-		  pts[3].x = x;
-		  pts[3].y = y + h;							 
-			 
-		  AppendBlock( new Block( mod,
-															pts,4,
+			std::vector<point_t> pts(4);
+			
+			double x = rect->pose.x;
+			double y = rect->pose.y;
+			double w = rect->size.x;
+			double h = rect->size.y;
+			
+			pts[0].x = x;
+			pts[0].y = y;
+			pts[1].x = x + w;
+			pts[1].y = y;
+			pts[2].x = x + w;
+			pts[2].y = y + h;
+			pts[3].x = x;
+			pts[3].y = y + h;							 
+			
+			AppendBlock( new Block( mod,
+															pts,
 															0,1,
 															col,
 															true,
 															false) );		 
 		}			 
-	  free( rects );
-	}  
   
   CalcSize();
 }

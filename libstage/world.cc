@@ -119,12 +119,12 @@ bool World::lty::operator()(const Model* a, const Model* b) const
 }
 		
 
-
 // static data members
 unsigned int World::next_id = 0;
 bool World::quit_all = false;
 std::set<World*> World::world_set;
 std::string World::ctrlargs;
+std::vector<std::string> World::args;
 
 World::World( const std::string& name, 
 							double ppm )
@@ -132,7 +132,6 @@ World::World( const std::string& name,
   // private
   destroy( false ),
   dirty( true ),
-  //jit_render(),
   models(),
   models_by_name(),
   models_with_fiducials(),
@@ -364,13 +363,13 @@ void World::LoadModel( Worldfile* wf, int entity )
   // record the model we created for this worldfile entry
   models_by_wfentity[entity] = mod;
 }
-  
-void World::Load( const char* worldfile_path )
+
+void World::Load( const std::string& worldfile_path )
 {
   // note: must call Unload() before calling Load() if a world already
   // exists TODO: unload doesn't clean up enough right now
 
-  printf( " [Loading %s]", worldfile_path );
+  printf( " [Loading %s]", worldfile_path.c_str() );
   fflush(stdout);
 
   this->wf = new Worldfile();
@@ -1048,34 +1047,34 @@ void World::ForEachCellInLine( const point_int_t& start,
       // need to call Region::GetCell() before using a Cell pointer
       // directly, because the region allocates cells lazily, waiting
       // for a call of this method
-      Cell* c = reg->GetCell( cx, cy );
-
-		// while inside the region, manipulate the Cell pointer directly
+      Cell* c( reg->GetCell( cx, cy ) );
+			
+			// while inside the region, manipulate the Cell pointer directly
       while( (cx>=0) && (cx<REGIONWIDTH) && 
-				 (cy>=0) && (cy<REGIONWIDTH) && 
-				 n > 0 )
+						 (cy>=0) && (cy<REGIONWIDTH) && 
+						 n > 0 )
 				{					
 					// find the cell at this location, then add it to the vector,				
 					cells.push_back( c );
 					
-			 // cleverly skip to the next cell (now it's safe to
-			 // manipulate the cell pointer)
-			 if( exy < 0 ) 
-				{
-				  globx += sx;
-				  exy += by;
-				  c += sx;
-				  cx += sx;
+					// cleverly skip to the next cell (now it's safe to
+					// manipulate the cell pointer)
+					if( exy < 0 ) 
+						{
+							globx += sx;
+							exy += by;
+							c += sx;
+							cx += sx;
+						}
+					else 
+						{
+							globy += sy;
+							exy -= bx; 
+							c += sy * REGIONWIDTH;
+							cy += sy;
+						}
+					--n;
 				}
-			 else 
-				{
-				  globy += sy;
-				  exy -= bx; 
-				  c += sy * REGIONWIDTH;
-				  cy += sy;
-				}
-			 --n;
-		  }
     }
 }
 

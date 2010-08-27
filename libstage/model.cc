@@ -512,7 +512,7 @@ Block* Model::AddBlockRect( meters_t x,
 {  
   UnMap();
 
-  point_t pts[4];
+	std::vector<point_t> pts(4);
   pts[0].x = x;
   pts[0].y = y;
   pts[1].x = x + dx;
@@ -523,7 +523,7 @@ Block* Model::AddBlockRect( meters_t x,
   pts[3].y = y + dy;
   
   Block* newblock =  new Block( this,
-																pts, 4, 
+																pts,
 																0, dz, 
 																color,
 																true, 
@@ -550,10 +550,10 @@ RaytraceResult Model::Raytrace( const Pose &pose,
 }
 
 RaytraceResult Model::Raytrace( const radians_t bearing,
-				       const meters_t range, 
-				       const ray_test_func_t func,
-				       const void* arg,
-				       const bool ztest )
+																const meters_t range, 
+																const ray_test_func_t func,
+																const void* arg,
+																const bool ztest )
 {
   return world->Raytrace( LocalToGlobal(Pose(0,0,0,bearing)),
 													range,
@@ -565,34 +565,30 @@ RaytraceResult Model::Raytrace( const radians_t bearing,
 
 
 void Model::Raytrace( const radians_t bearing,
-		      const meters_t range, 
-		      const radians_t fov,
-		      const ray_test_func_t func,
-		      const void* arg,
-		      RaytraceResult* samples,
-		      const uint32_t sample_count,
-		      const bool ztest )
+											const meters_t range, 
+											const radians_t fov,
+											const ray_test_func_t func,
+											const void* arg,
+											RaytraceResult* samples,
+											const uint32_t sample_count,
+											const bool ztest )
 {
-  Pose raystart;
-  bzero( &raystart, sizeof(raystart));
-  raystart.a = bearing;
-
-  world->Raytrace( LocalToGlobal(raystart),
-		   range,		   
-		   fov,
-		   func,
-		   this,
-		   arg,
-		   samples,
-		   sample_count,
-		   ztest );
+  world->Raytrace( LocalToGlobal(Pose( 0,0,0,bearing)),
+									 range,		   
+									 fov,
+									 func,
+									 this,
+									 arg,
+									 samples,
+									 sample_count,
+									 ztest );
 }
 
 // convert a global pose into the model's local coordinate system
 Pose Model::GlobalToLocal( const Pose& pose ) const
 {
   // get model's global pose
-  const Pose org = GetGlobalPose();
+  const Pose org( GetGlobalPose() );
   
   // compute global pose in local coords
   const double sx =  (pose.x - org.x) * cos(org.a) + (pose.y - org.y) * sin(org.a);
@@ -933,8 +929,8 @@ void Model::CommitTestedPose()
   
 Model* Model::ConditionalMove( const Pose& newpose )
 { 
-  assert( newpose.a >= -M_PI );
-  assert( newpose.a <=  M_PI );
+  //assert( newpose.a >= -M_PI );
+  //assert( newpose.a <=  M_PI );
 
   const Pose startpose( pose );
   pose = newpose; // do the move provisionally - we might undo it below

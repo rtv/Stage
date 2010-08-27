@@ -74,14 +74,14 @@ namespace Stg {
 
 	 // replacement for fopen() that checks STAGEPATH dirs for the named file
 	 // (thanks to  Douglas S. Blank <dblank@brynmawr.edu>)
-  protected: FILE* FileOpen(const char *filename, const char* method);
+  protected: FILE* FileOpen(const std::string& filename, const char* method);
 
 	 // Load world from file
-  public: bool Load(const char *filename);
+  public: bool Load(const std::string& filename );
 
 	 // Save world back into file
 	 // Set filename to NULL to save back into the original file
-  public: bool Save(const char *filename);
+  public: bool Save(const std::string& filename);
 
 	 // Check for unused properties and print warnings
   public: bool WarnUnused();

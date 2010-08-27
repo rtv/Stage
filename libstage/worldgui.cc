@@ -253,7 +253,7 @@ void WorldGui::Show()
   show(); // fltk
 }
 
-void WorldGui::Load( const char* filename )
+void WorldGui::Load( const std::string& filename )
 {
   PRINT_DEBUG1( "%s.Load()", token );
 	

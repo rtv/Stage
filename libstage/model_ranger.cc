@@ -25,31 +25,20 @@
    @verbatim
    ranger
    (
-   # ranger properties
-   scount 16
-   spose[0] [? ? ?]
-   spose[1] [? ? ?]
-   spose[2] [? ? ?]
-   spose[3] [? ? ?]
-   spose[4] [? ? ?]
-   spose[5] [? ? ?]
-   spose[6] [? ? ?]
-   spose[7] [? ? ?]
-   spose[8] [? ? ?]
-   spose[9] [? ? ?]
-   spose[10] [? ? ?]
-   spose[11] [? ? ?]
-   spose[12] [? ? ?]
-   spose[13] [? ? ?]
-   spose[14] [? ? ?]
-   spose[15] [? ? ?]
+      # ranger-specific properties
 
-   ssize [0.01 0.03]
-   sview [0.0 5.0 5.0]
+      sensor (
+         pose [ x y z a ]
+         size [  x y z ]
+				 fov a
+         range [min max]
+    )
 
-   # model properties
-   watts 2.0
+		 # generic model properties with non-default values
+     watts 2.0
+     color_rgba [ 0 1 0 0.15 ]
    )
+
    @endverbatim
 
    @par Notes
@@ -58,15 +47,13 @@
 
    @par Details
  
-   - scount <int>\n
-   the number of range transducers
-   - spose[\<transducer index\>] [ x:<float> y:<float> theta:<float> ]\n
+   - pose[\<transducer index\>] [ x:<float> y:<float> theta:<float> ]\n
    pose of the transducer relative to its parent.
    - ssize [float float]
-   - [x y] 
-   - size in meters. Has no effect on the data, but controls how the sensor looks in the Stage window.
-   - ssize[\<transducer index\>] [float float]
-   - per-transducer version of the ssize property. Overrides the common setting.
+     - [x y] 
+     - size in meters. Has no effect on the data, but controls how the sensor looks in the Stage window.
+   - size[\<transducer index\>] [float float]
+     -  per-transducer version of the ssize property. Overrides the common setting.
    - sview [float float float]
    - [range_min range_max fov] 
    - minimum range and maximum range in meters, field of view angle in degrees. Currently fov has no effect on the sensor model, other than being shown in the confgiuration graphic for the ranger device.
