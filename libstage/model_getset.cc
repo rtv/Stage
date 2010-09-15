@@ -120,15 +120,21 @@ int Model::SetParent( Model* newparent)
 {  
   // remove the model from its old parent (if it has one)
   if( parent )
-	 EraseAll( this, parent->children );
-  
-  if( newparent )
-	 newparent->children.push_back( this );
-
+	parent->RemoveChild( this );
+  else
+    world->RemoveChild( this );
   // link from the model to its new parent
   this->parent = newparent;
+  
+  if( newparent )
+    newparent->AddChild( this );
+  else
+    world->AddModel( this );
 
-	CallCallbacks( CB_PARENT );
+  CallCallbacks( CB_PARENT );
+
+  SetGlobalPose( oldPose ); // Needs to recalculate position due to change in parent
+  
   return 0; //ok
 }
 
