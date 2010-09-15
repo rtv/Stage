@@ -395,9 +395,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 // 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
 // 	  break;
 
-// 	case PLAYER_POWER_CODE:
-// 	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
-// 	  break;
+ 	case PLAYER_POWER_CODE:
+ 	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
+ 	  break;
 
 //  	case PLAYER_PTZ_CODE:
 //  	  ifsrc = new InterfacePtz( player_addr,  this, cf, section );

@@ -25,72 +25,64 @@
  * Date: 10 December 2004
  * CVS: $Id$
  */
-
-
-#include "p_driver.h"
+// DOCUMENTATION ------------------------------------------------------------
 
 /** @addtogroup player 
 @par Power interface
 - PLAYER_POWER_DATA_STATE
 */
 
-extern "C" { 
-  int energy_init( stg_model_t* mod );
-}
+// CODE ----------------------------------------------------------------------
+
+#include "p_driver.h"
+using namespace Stg;
 
 InterfacePower::InterfacePower( player_devaddr_t addr, 
 				  StgDriver* driver,
 				  ConfigFile* cf,
 				  int section )
-  : InterfaceModel( addr, driver, cf, section, energy_init )
+  : InterfaceModel( addr, driver, cf, section, "power" )
 { 
   // nothing to see here. move along.
 }
 
-
 void InterfacePower::Publish( void )
 {
-  size_t len = mod->data_len;
-  stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
-  
-  stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;
-  
+  Model* mod = this->mod;
+  PowerPack* pp = mod->FindPowerPack();
+
+  // don't publish anything if there is no power pack
+  if(! pp )
+    return;
+
   // translate stage data to player data packet
   player_power_data_t pen;
   pen.valid = 0;
 
-  pen.valid |= PLAYER_POWER_MASK_VOLTS;
-  pen.joules = data->stored;
+  pen.valid |= PLAYER_POWER_MASK_JOULES;
+  pen.joules = pp->GetStored();
 
   pen.valid |= PLAYER_POWER_MASK_CHARGING;
-  pen.charging = data->charging;
+  pen.charging = pp->GetCharging();
 
   pen.valid |= PLAYER_POWER_MASK_PERCENT;
-  pen.percent = 100.0 * data->stored / cfg->capacity;
+  pen.percent = pp->ProportionRemaining();
   
   //printf( "player power data: valid %d joules %.2f watts %.2f percent %.2f charging %d\n",
   //  pen.valid, pen.joules, pen.watts, pen.percent, pen.charging );
  
-  this->driver->Publish(this->addr, NULL,
+  this->driver->Publish(this->addr,
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_POWER_DATA_STATE,
 			(void*)&pen, sizeof(pen), NULL);
 }
 
-int InterfacePower::ProcessMessage(MessageQueue* resp_queue,
-				    player_msghdr_t* hdr,
-				    void* data)
+int InterfacePower::ProcessMessage(QueuePointer &resp_queue,
+                                      player_msghdr_t* hdr,
+                                      void* data)
 {
-  // Is it a request to set the laser's config?
-//   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, 
-//                            PLAYER_LASER_REQ_SET_CONFIG, 
-//                            this->addr))
-//   {
-
-//   }
-
   // Don't know how to handle this message.
-  PRINT_WARN2( "stage laser doesn't support message %d:%d.",
+  PRINT_WARN2( "stg_power doesn't support msg with type %d subtype %d",
 	       hdr->type, hdr->subtype);
   return(-1);
 }

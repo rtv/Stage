@@ -13,6 +13,7 @@ set( stagepluginSrcs
 	     p_laser.cc
 	     p_fiducial.cc
 	     p_position.cc
+	     p_power.cc
 	     p_sonar.cc
 	     p_speech.cc
 	     p_graphics.cc

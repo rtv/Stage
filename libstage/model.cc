@@ -972,6 +972,10 @@ Model* Model::GetUnusedModelOfType( const std::string& type )
       this->used = true;
       return this;
     }
+  else if( (type == "power") && (power_pack) )
+    {
+      return this;
+    }
 
   // this model is no use. try children recursively
   FOR_EACH( it, children )
