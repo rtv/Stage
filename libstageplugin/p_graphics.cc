@@ -232,6 +232,8 @@ int InterfaceGraphics2d::ProcessMessage(QueuePointer & resp_queue,
 			|| Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD,
 					PLAYER_GRAPHICS2D_CMD_POLYLINE, this->addr)
 			|| Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD,
+                                        PLAYER_GRAPHICS2D_CMD_MULTILINE, this->addr)
+			|| Message::MatchMessage(hdr, PLAYER_MSGTYPE_CMD,
 					PLAYER_GRAPHICS2D_CMD_POLYGON, this->addr)) {
 		Message msg(*hdr, data);
 		vis->AppendItem(resp_queue.get(), msg);
@@ -270,6 +272,24 @@ void PlayerGraphics2dVis::RenderItem(Message & item) {
 		glEnd();
 	}
 		break;
+
+        case PLAYER_GRAPHICS2D_CMD_MULTILINE: {
+                player_graphics2d_cmd_multiline_t
+                                & data =
+                                                *reinterpret_cast<player_graphics2d_cmd_multiline_t*> (item.GetPayload());
+                glPlayerColour(data.color);
+                glBegin(GL_LINES);
+                for (unsigned ii = 0; ii < data.points_count; ++ii)
+                        glVertex3f(data.points[ii].px, data.points[ii].py, 0);
+                glEnd();
+        }
+                break;
+
+
+
+
+
+
 	case PLAYER_GRAPHICS2D_CMD_POLYGON: {
 		player_graphics2d_cmd_polygon_t
 				& data =
