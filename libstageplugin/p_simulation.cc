@@ -79,6 +79,7 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
 	Stg::Init( &player_argc, &player_argv );
 
 	const char* worldfile_name = cf->ReadString(section, "worldfile", NULL );
+        StgDriver::usegui = cf->ReadBool(section, "usegui", 1 );
 
 	if( worldfile_name == NULL )
 	{
@@ -114,7 +115,7 @@ InterfaceSimulation::InterfaceSimulation( player_devaddr_t addr,
 	// worldfile
 
 	// if the initial size is to large this crashes on some systems
-	StgDriver::world = new WorldGui( 400, 300, "Player/Stage" );
+	StgDriver::world = ( StgDriver::usegui ? new WorldGui( 400, 300, worldfile_name ) : new World(worldfile_name));
 	assert(StgDriver::world);
 
 	puts("");
