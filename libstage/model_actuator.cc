@@ -78,6 +78,9 @@ ModelActuator::ModelActuator( World* world,
   // sensible position defaults
   this->SetVelocity( Velocity(0,0,0,0) );
   this->SetBlobReturn(true);  
+
+  // Allow the models to move
+  VelocityEnable();
 }
 
 
@@ -191,6 +194,9 @@ void ModelActuator::Update( void  )
 						CurrentPose.y - InitialPose.y,
 						CurrentPose.z - InitialPose.z,
 						CurrentPose.a - InitialPose.a );
+
+	cosa = cos(InitialPose.a);
+	sina = sin(InitialPose.a);
 
 	switch (actuator_type)
 	{
