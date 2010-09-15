@@ -901,7 +901,7 @@ void Model::UpdatePose( void )
     return;
   
   // convert usec to sec
-  double interval( (double)interval_pose / 1e6 );
+  double interval( (double)world->sim_interval / 1e6 );
   
   // find the change of pose due to our velocity vector
   Pose p( velocity.x * interval,
