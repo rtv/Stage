@@ -685,7 +685,7 @@ void Canvas::DrawFloor()
   glVertex2f( bounds.x.min, bounds.y.max );
   glEnd();
 	
-  glEnd();
+  //glEnd();
 }
 
 void Canvas::DrawBlocks() 
