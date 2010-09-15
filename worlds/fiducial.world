@@ -1,0 +1,114 @@
+# fiducial_z_ignore_test.world - basic worldfile illustrating the use of fiducials with the
+# ignore_fiducial_zloc flag set to 1.
+# The purpose of this flag on the fiducial finder is to change the behaviour of the fiducial finder
+# where the robots being detected are shorter than the robot equipped with the fiducial finder.
+# The default behaviour is for the fiducial finder to operate as normal.  When the ignore_fiducial_zloc
+# flag on the fiducial finder is set to 1, the finder will pick up robots of any height.  Standard
+# raytracing rules apply on the way to the robots.
+# 
+# The red robot can see the green robot and the blue robot.
+# The blue robot can only see the red robot.
+#
+# Authors: Tyler Gunn, University of Manitoba (tyler@egunn.com)
+# $Id$
+
+include "pioneer.inc"
+include "sick.inc"
+include "irobot.inc"
+
+# time to pause (in GUI mode) or quit (in headless mode (-g)) the simulation
+quit_time 3600 # 1 hour of simulated time
+
+paused 0
+
+resolution 0.02
+
+# configure the GUI window
+window
+(
+  size [ 635.000 666.000 ] # in pixels
+  scale 142.334            
+     # pixels per meteri
+  center [ -5.480  0.998 ]
+  rotate [ 26.000  16.500 ]
+  			
+  show_data 1              # 1=on 0=off
+)
+
+
+# This model represents the walls
+model
+(
+  # sombre, sensible, artistic
+  color "gray30"
+
+  # most maps will need a bounding box
+  boundary 1
+
+  gui_nose 0
+  gui_grid 0
+  gui_move 0
+  gui_outline 0
+  gripper_return 0
+  fiducial_return 0
+  laser_return 1
+
+  # Returns a hit in the "walls" digit
+  obstacle_return 1
+
+  size [16.000 16.000 0.800]
+  pose [0 0 0 0]
+  bitmap "bitmaps/cave.png"
+  name "Walls"
+)
+
+# This robot's fiducial finder can see the short robot.
+pioneer2dx
+(		  
+  # can refer to the robot by this name
+  name "r1"
+  pose [ -4.744 1.401 0 153.862 ] 
+
+#fiducial (
+#    alwayson 1
+#    range_min 0.0
+#    range_max 4.0
+#    range_max_id 4.0
+#    fiducial_key 1
+#    ignore_fiducial_zloc 1
+#    size [ 0.100 0.100 0.001 ]
+#  )
+  
+  fiducial_key 1
+  fiducial_return 1
+  
+  obstacle_return 1
+)
+
+# This robot uses the standard fiducial settings, and thus it cannot see the short robot.
+pioneer2dx
+(		  
+  # can refer to the robot by this name
+  name "r2"
+  pose [ -6.260 0.313 0 79.378 ] 
+  color "blue"
+
+  fiducial (
+    alwayson 1
+    range_min 0.0
+    range_max 4.0
+    range_max_id 4.0
+    fiducial_key 1
+    #ignore_fiducial_zloc 1
+    size [ 0.100 0.100 0.001 ]
+  )
+  
+  fiducial_key 1
+  fiducial_return 2
+  
+  obstacle_return 1
+)
+
+
+
+

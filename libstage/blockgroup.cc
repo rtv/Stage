@@ -250,6 +250,10 @@ void BlockGroup::CallDisplayList( Model* mod )
 void BlockGroup::LoadBlock( Model* mod, Worldfile* wf, int entity )
 {
   AppendBlock( new Block( mod, wf, entity ));
+  //TJG - Calculating size after load.  If we do not, and everything is initially stationary,
+  //some things like the fiducial finder won't work properly until the model moves, which would
+  //cause a size recalculation to occur.
+  CalcSize();
 }				
   
 void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile* wf )
