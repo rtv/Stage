@@ -279,7 +279,7 @@ class InterfaceBumper : public InterfaceModel
   virtual ~InterfaceBumper( void ){ /* TODO: clean up*/ };
 
   virtual int ProcessMessage( QueuePointer & resp_queue,
-			      player_msghdr * hdr,
+			      player_msghdr_t * hdr,
 			      void * data );
   virtual void Publish( void );
 };
