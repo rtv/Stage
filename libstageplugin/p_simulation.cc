@@ -445,7 +445,6 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 				//stg_usec_t is a typedef for uint64_t
 				stg_usec_t time = stageworld->SimTimeNow();
 				
-				
 
 				//copy array of floats into memory provided in the req structure
 				memcpy(req->value, &time, req->value_count);
