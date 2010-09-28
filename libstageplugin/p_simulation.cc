@@ -380,62 +380,103 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 				(player_simulation_property_req_t*)data;
 
 
-		// check they want to set the colour. If they don't
-		 // then that's too bad for them.
+		// check they want to set the colour. 
 
 		//strncmp returns 0 if the strings match
-		if( strncmp(req->prop, "color", (size_t)req->prop_count) &&
+		if( !(strncmp(req->prop, "color", (size_t)req->prop_count) &&
 				strncmp(req->prop, "_mp_color", (size_t)req->prop_count) &&
-				strncmp(req->prop, "colour", (size_t)req->prop_count) )
+				strncmp(req->prop, "colour", (size_t)req->prop_count)))
 		{
-			PRINT_WARN1("Property \"%s\" is not accessible. Options are \"color\", \"_mp_color\", or \"colour\". These all change the colour.", req->prop);
-			return(-1);
+			// check the value given is an array of four floats
+			if(req->value_count != sizeof(float)*4)
+			{
+				PRINT_WARN("value given by GetProperty must be an array of 4 floats\n");
+				return(-1);
+			}
+
+			// look up the named model
+			Model* mod = StgDriver::world->GetModel( req->name );
+
+			if( mod )
+			{
+				Color newColour = mod->GetColor();	//line 2279 of stage.hh
+				// make an array to hold it as floats
+				float col[4];
+				col[0] = newColour.r;
+				col[1] = newColour.g;
+				col[2] = newColour.b;
+				col[3] = newColour.a;
+
+				//copy array of floats into memory provided in the req structure
+				memcpy(req->value, col, req->value_count);
+
+				//make a new structure and copy req into it
+
+				player_simulation_property_req_t reply;
+				memcpy( &reply, req, sizeof(reply));
+
+				//put col array into reply
+				memcpy(reply.value, col, reply.value_count);
+
+
+				this->driver->Publish( this->addr, resp_queue,
+						PLAYER_MSGTYPE_RESP_ACK,
+						PLAYER_SIMULATION_REQ_GET_PROPERTY,
+						(void*)&reply, sizeof(reply), NULL );
+
+				return(0);
+			}
+			else
+			{
+				PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
+				return(-1);
+			}
 		}
-
-		// check the value given is an array of four floats
-		if(req->value_count != sizeof(float)*4)
+		else if( !( strncmp(req->prop, "simtime", (size_t)req->prop_count) && strncmp(req->prop, "sim_time", (size_t)req->prop_count)))
 		{
-			PRINT_WARN("value given by GetProperty must be an array of 4 floats\n");
-			return(-1);
-		}
+			//return simulation time
+			// look up the named model
+			Model* mod = StgDriver::world->GetModel( req->name );
 
-		// look up the named model
-		Model* mod = StgDriver::world->GetModel( req->name );
+			if( mod )
+			{
+				World *stageworld = mod->GetWorld();
+				
+				//stg_usec_t is a typedef for uint64_t
+				stg_usec_t time = stageworld->SimTimeNow();
+				
+				
 
-		if( mod )
-		{
-			Color newColour = mod->GetColor();	//line 2279 of stage.hh
-			// make an array to hold it as floats
-			float col[4];
-			col[0] = newColour.r;
-			col[1] = newColour.g;
-			col[2] = newColour.b;
-			col[3] = newColour.a;
+				//copy array of floats into memory provided in the req structure
+				memcpy(req->value, &time, req->value_count);
 
-			//copy array of floats into memory provided in the req structure
-			memcpy(req->value, col, req->value_count);
+				//make a new structure and copy req into it
+				player_simulation_property_req_t reply;
+				memcpy( &reply, req, sizeof(reply));
 
-			//make a new structure and copy req into it
-
-			player_simulation_property_req_t reply;
-			memcpy( &reply, req, sizeof(reply));
-
-			//put col array into reply
-			memcpy(reply.value, col, reply.value_count);
+				//put col array into reply
+				memcpy(reply.value, &time, reply.value_count);
 
 
-			this->driver->Publish( this->addr, resp_queue,
-					PLAYER_MSGTYPE_RESP_ACK,
-					PLAYER_SIMULATION_REQ_GET_PROPERTY,
-					(void*)&reply, sizeof(reply), NULL );
+				this->driver->Publish( this->addr, resp_queue,
+						PLAYER_MSGTYPE_RESP_ACK,
+						PLAYER_SIMULATION_REQ_GET_PROPERTY,
+						(void*)&reply, sizeof(reply), NULL );
 
-			return(0);
+				return(0);
+			}
+			else
+			{
+				PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
+				return(-1);
+			}
 		}
 		else
 		{
-			PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
+			PRINT_WARN1("Property \"%s\" is not accessible. Options are \"color\", \"_mp_color\", or \"colour\" for changing colour. \"simtime\" or \"sim_time\" for getting the simulation time.", req->prop);
 			return(-1);
 		}
+		
 	}
 
 	/*end of get/set property modifications*/
