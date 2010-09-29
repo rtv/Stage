@@ -390,7 +390,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 			// check the value given is an array of four floats
 			if(req->value_count != sizeof(float)*4)
 			{
-				PRINT_WARN("value given by GetProperty must be an array of 4 floats\n");
+				PRINT_WARN("Colour requires an array of 4 floats to store\n");
 				return(-1);
 			}
 
@@ -434,6 +434,13 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		}
 		else if( !( strncmp(req->prop, "simtime", (size_t)req->prop_count) && strncmp(req->prop, "sim_time", (size_t)req->prop_count)))
 		{
+			// check the value given is a uint64_t
+			if(req->value_count != sizeof(uint64_t))
+			{
+				PRINT_WARN("Simulation time requires a uint64_t to store\n");
+				return(-1);
+			}
+
 			//return simulation time
 			// look up the named model
 			Model* mod = StgDriver::world->GetModel( req->name );
@@ -444,7 +451,6 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 				
 				//stg_usec_t is a typedef for uint64_t
 				stg_usec_t time = stageworld->SimTimeNow();
-				
 
 				//copy array of floats into memory provided in the req structure
 				memcpy(req->value, &time, req->value_count);
