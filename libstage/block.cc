@@ -11,12 +11,13 @@ static void canonicalize_winding(vector<stg_point_t>& pts);
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
 Block::Block( Model* mod,
-				  stg_point_t* pts,
-				  size_t pt_count,
-				  stg_meters_t zmin,
-				  stg_meters_t zmax,
-				  Color color,
-				  bool inherit_color ) :
+							stg_point_t* pts,
+							size_t pt_count,
+							stg_meters_t zmin,
+							stg_meters_t zmax,
+							Color color,
+							bool inherit_color,
+							bool wheel ) :
   mod( mod ),
   mpts(),
   pt_count( pt_count ),
@@ -24,6 +25,7 @@ Block::Block( Model* mod,
   local_z( zmin, zmax ),
   color( color ),
   inherit_color( inherit_color ),
+	wheel(wheel),
   rendered_cells( new CellPtrVec ), 
   candidate_cells( new CellPtrVec ),
   gpts()
@@ -462,8 +464,28 @@ void Block::DrawFootPrint()
 
 void Block::DrawSolid()
 {
-  DrawSides();
-  DrawTop();
+// 	if( wheel )
+// 		{
+// 			glPushMatrix();
+
+// 			glRotatef( 90,0,1,0 );
+// 			glRotatef( 90,1,0,0 );
+
+// 			glTranslatef( -local_z.max /2.0, 0, 0 );
+
+
+// 			GLUquadric* quadric = gluNewQuadric();		
+// 			gluQuadricDrawStyle( quadric, GLU_FILL );
+// 			gluCylinder( quadric, local_z.max, local_z.max, size.x, 16, 16 );
+// 			gluDeleteQuadric( quadric );
+
+// 			glPopMatrix();
+// 		}
+//   else
+		{
+			DrawSides();
+			DrawTop();
+		}
 }
 
 void Block::Load( Worldfile* wf, int entity )
@@ -483,8 +505,8 @@ void Block::Load( Worldfile* wf, int entity )
   local_z.min = wf->ReadTupleLength( entity, "z", 0, 0.0 );
   local_z.max = wf->ReadTupleLength( entity, "z", 1, 1.0 );
   
-  const std::string& colorstr = wf->ReadString( entity, "color", "" );
-  
+  const std::string& colorstr = wf->ReadString( entity, "color", "" );  	
+
   if( colorstr != "" )
     {
       color = Color( colorstr );
@@ -492,6 +514,8 @@ void Block::Load( Worldfile* wf, int entity )
     }
   else
     inherit_color = true;  
+
+	wheel = wf->ReadInt( entity, "wheel", wheel );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

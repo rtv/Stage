@@ -40,6 +40,7 @@ Color::Color( const std::string& name) :
 		  PRINT_ERR1("unable to open color database: %s "
 					 "(try adding rgb.txt's location to your STAGEPATH)",
 					 strerror(errno));
+
 		  exit(0);
 		}
 	  

@@ -23,30 +23,19 @@ foreach( PLUGIN ${PLUGINS} )
 endforeach( PLUGIN )
 				
 ADD_LIBRARY( fasr2 MODULE fasr2.cc astar/findpath.cpp )
-#ADD_LIBRARY( fasr3 MODULE fasr3.cc astar/findpath.cpp )
 
 # add fasr2 to the list of plugins
-SET( PLUGINS ${PLUGINS} fasr2)# fasr3)
+SET( PLUGINS ${PLUGINS} fasr2 )
 
 set_source_files_properties( ${PLUGINS} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
 foreach( PLUGIN ${PLUGINS} )
-  TARGET_LINK_LIBRARIES( ${PLUGIN} stage )
+  TARGET_LINK_LIBRARIES( ${PLUGIN} stage ${OPENGL_LIBRARIES} )
 endforeach( PLUGIN )
-
 
 # delete the "lib" prefix from the plugin libraries
 SET_TARGET_PROPERTIES( ${PLUGINS} PROPERTIES PREFIX "" )
 
-# need plaer's wavefront planning library for this one
-#if( PLAYER_FOUND )  
-#  link_directories( ${PLAYER_LIBRARY_DIRS} )
-#  include_directories( ${PLAYER_INCLUDE_DIRS} )
-#  target_link_libraries( fasr_plan "-lwavefront_standalone" )
-#endif( PLAYER_FOUND )
-
-
-
 # install in <prefix>/lib
-install( TARGETS ${PLUGINS} fasr2 DESTINATION lib) #fasr3 
+install( TARGETS ${PLUGINS} DESTINATION ${PROJECT_PLUGIN_DIR}) 
 

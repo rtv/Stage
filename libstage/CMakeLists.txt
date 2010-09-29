@@ -48,10 +48,10 @@ set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAG
  
 add_library(stage SHARED ${stageSrcs})
 
-target_link_libraries( stage
-		       ${OPENGL_LIBRARIES}
-  				 ${LTDL_LIB}
-  				 ${FLTK_LIBS2}
+target_link_libraries( stage  
+           ${LTDL_LIB}
+#		       ${OPENGL_LIBRARIES}   # is it safe to remove these permanently?
+#  				 ${FLTK_LIBS2}
 )
 
 # causes the shared library to have a version number
@@ -61,19 +61,25 @@ set_target_properties( stage PROPERTIES
 )
 
 set( stagebinarySrcs main.cc )
+set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
 add_executable( stagebinary ${stagebinarySrcs} )
 
-# When compiling stagebinarySrcs, pass CFLAGS from fltk-config
-set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+# Apple seems to have trouble when libstage and stagebinary are linked against FLTK
+# Newer Linux distributions won't allow stagebinary to inherit libstage's links to fltk, so we need
+# to explicitly link on Linux
 
-set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
-
-target_link_libraries( stagebinary stage )
+if (NOT PROJECT_OS_LINUX)
+  set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
+  target_link_libraries( stagebinary stage )
+ELSE (NOT PROJECT_OS_LINUX)
+  set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage LINK_FLAGS "${FLTK_LDFLAGS}" )
+  target_link_libraries( stagebinary stage pthread )
+ENDIF(NOT PROJECT_OS_LINUX)
 
 INSTALL(TARGETS stagebinary stage
 	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION lib
+	LIBRARY DESTINATION ${PROJECT_LIB_DIR}
 )
 
 INSTALL(FILES stage.hh 

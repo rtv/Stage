@@ -226,6 +226,9 @@ namespace Stg
 	 bool operator==( const Color& other ) const;
 	 static Color RandomColor();
 	 void Print( const char* prefix ) const;
+
+		/** convenient constants */
+		static const Color blue, red, green, yellow, magenta, cyan;
   };
   
   /** specify a rectangular size */
@@ -742,8 +745,6 @@ namespace Stg
 						  stg_meters_t range ) 
 		: pose(pose), range(range), mod(NULL), color() {}	 
   };
-
-  typedef RaytraceResult stg_raytrace_result_t;
 	
   class Ray
   {
@@ -754,12 +755,12 @@ namespace Stg
 
 	 Ray() : mod(NULL), origin(0,0,0,0), range(0), func(NULL), arg(NULL), ztest(true)
 	 {}
-
-	 const Model* mod;
-	 Pose origin;
-	 stg_meters_t range;
-	 stg_ray_test_func_t func;
-	 const void* arg;
+		
+		const Model* mod;
+		Pose origin;
+		stg_meters_t range;
+		stg_ray_test_func_t func;
+		const void* arg;
 	 bool ztest;		
   };
 		
@@ -840,7 +841,20 @@ namespace Stg
 	 /** Keep a list of all models with detectable fiducials. This
 		  avoids searching the whole world for fiducials. */
 	 ModelPtrVec models_with_fiducials;
-	 
+		
+		struct ltx
+		{
+			bool operator()(const Model* a, const Model* b) const;
+		};
+		
+		struct lty
+		{
+			bool operator()(const Model* a, const Model* b) const;
+		};
+		
+		std::set<Model*,ltx> models_with_fiducials_byx;
+		std::set<Model*,lty> models_with_fiducials_byy;
+					 
 	 /** Add a model to the set of models with non-zero fiducials, if not already there. */
 	 void FiducialInsert( Model* mod )
 	 { 
@@ -967,9 +981,9 @@ namespace Stg
     void DestroySuperRegion( SuperRegion* sr );
 	 	
 	 /** trace a ray. */
-	 stg_raytrace_result_t Raytrace( const Ray& ray );
+	 RaytraceResult Raytrace( const Ray& ray );
 
-    stg_raytrace_result_t Raytrace( const Pose& pose, 			 
+    RaytraceResult Raytrace( const Pose& pose, 			 
 												const stg_meters_t range,
 												const stg_ray_test_func_t func,
 												const Model* finder,
@@ -982,7 +996,7 @@ namespace Stg
 						 const stg_ray_test_func_t func,
 						 const Model* finder,
 						 const void* arg,
-						 stg_raytrace_result_t* samples,
+						 RaytraceResult* samples,
 						 const uint32_t sample_count,
 						 const bool ztest );
 		
@@ -1123,6 +1137,9 @@ namespace Stg
     /** Returns a pointer to the model identified by name, or NULL if
 		  nonexistent */
     Model* GetModel( const std::string& name ) const;
+
+    /** Returns a const reference to the set of models in the world. */
+    const std::set<Model*> GetAllModels() const { return models; };
   
     /** Return the 3D bounding box of the world, in meters */
     const stg_bounds3d_t& GetExtent() const { return extent; };
@@ -1154,12 +1171,13 @@ namespace Stg
 		  blocks. The point data is copied, so pts can safely be freed
 		  after constructing the block.*/
     Block( Model* mod,  
-			  stg_point_t* pts, 
-			  size_t pt_count,
-			  stg_meters_t zmin,
-			  stg_meters_t zmax,
-			  Color color,
-			  bool inherit_color );
+					 stg_point_t* pts, 
+					 size_t pt_count,
+					 stg_meters_t zmin,
+					 stg_meters_t zmax,
+					 Color color,
+					 bool inherit_color,
+					 bool wheel );
   
     /** A from-file  constructor */
     Block(  Model* mod,  Worldfile* wf, int entity);
@@ -1223,7 +1241,8 @@ namespace Stg
     Bounds local_z; ///<  z extent in local coords
     Color color;
     bool inherit_color;
-	 
+		bool wheel;
+
     void DrawTop();
     void DrawSides();
 	 
@@ -1691,7 +1710,8 @@ namespace Stg
     friend class BlockGroup;
     friend class PowerPack;
     friend class Ray;
-	
+		friend class ModelFiducial;
+
   private:
 	 /** the number of models instatiated - used to assign unique IDs */
 	 static uint32_t count;
@@ -2029,7 +2049,7 @@ namespace Stg
 
 	 /** raytraces a single ray from the point and heading identified by
 		  pose, in local coords */
-	 stg_raytrace_result_t Raytrace( const Pose &pose,
+	 RaytraceResult Raytrace( const Pose &pose,
 												const stg_meters_t range, 
 												const stg_ray_test_func_t func,
 												const void* arg,
@@ -2042,11 +2062,11 @@ namespace Stg
 						 const stg_radians_t fov, 
 						 const stg_ray_test_func_t func,
 						 const void* arg,
-						 stg_raytrace_result_t* samples,
+						 RaytraceResult* samples,
 						 const uint32_t sample_count,
 						 const bool ztest = true  );
   
-	 stg_raytrace_result_t Raytrace( const stg_radians_t bearing, 			 
+	 RaytraceResult Raytrace( const stg_radians_t bearing, 			 
 												const stg_meters_t range,
 												const stg_ray_test_func_t func,
 												const void* arg,
@@ -2057,7 +2077,7 @@ namespace Stg
 						 const stg_radians_t fov,
 						 const stg_ray_test_func_t func,
 						 const void* arg,
-						 stg_raytrace_result_t* samples,
+						 RaytraceResult* samples,
 						 const uint32_t sample_count,
 						 const bool ztest = true );
   
@@ -2134,7 +2154,12 @@ namespace Stg
 	 
 	 /** Destructor */
 	 virtual ~Model();
-	
+		
+		/** Alternate constructor that created dummy models with only a pose */
+		Model() 
+			: parent(NULL), world(NULL) 
+		{}
+		
 	 void Say( const std::string& str );
 	 
 	 /** Attach a user supplied visualization to a model. */
@@ -2385,6 +2410,15 @@ namespace Stg
 	 bool HasSubscribers() const { return( subs > 0 ); }	 
 
 	 static std::map< std::string, creator_t> name_map;	 
+
+// 		class Neighbors
+// 		{
+// 			Model *left, *right, *up, *down;
+// 		public:
+// 			Neighbors() : left(NULL), right(NULL), up(NULL), down(NULL) {}
+// 		} nbors; // instance
+
+	 						
   };
 
 
@@ -2446,6 +2480,8 @@ namespace Stg
 		return &blobs[0];
 	 }
 
+     std::vector<Blob> GetBlobs() const { return blobs; }
+
 	 /** Start finding blobs with this color.*/
 	 void AddColor( Color col );
 
@@ -2471,7 +2507,7 @@ namespace Stg
 	 {
 	 public:
 		stg_meters_t range; ///< range to laser hit in meters
-		double reflectance; ///< intensity of the reflection 0.0 to 1.0
+	  double reflectance; ///< intensity of the reflection 0.0 to 1.0
 	 };
 		
 	 /** Convenience object for setting parameters using SetConfig/GetConfig */
@@ -2502,6 +2538,7 @@ namespace Stg
 		unsigned int sample_count;
 		std::vector<Sample> samples;
 		
+	public:
 		stg_meters_t range_max;
 		stg_radians_t fov;
 		uint32_t resolution;
@@ -2527,6 +2564,9 @@ namespace Stg
 	 /** returns a const reference to a vector of range and reflectance samples */
 	 const std::vector<Sample>& GetSamples() const;
 	 
+	 /** returns a mutable reference to a vector of range and reflectance samples */
+	 std::vector<Sample>& GetSamples();
+
 	 /** Get the user-tweakable configuration of the laser */
 	 Config GetConfig( ) const;
 	 
@@ -2678,6 +2718,7 @@ namespace Stg
 		stg_meters_t range; ///< range to the target
 		stg_radians_t bearing; ///< bearing to the target 
 		Pose geom; ///< size and relative angle of the target
+		 Pose pose_rel; /// relative pose of the target in local coordinates		 
 		Pose pose; ///< Absolute accurate position of the target in world coordinates (it's cheating to use this in robot controllers!)
 		Model* mod; ///< Pointer to the model (real fiducial detectors can't do this!)
 		int id; ///< the fiducial identifier of the target (i.e. its fiducial_return value), or -1 if none can be detected.  
@@ -2857,7 +2898,7 @@ namespace Stg
 	 ///get a reference to camera depth buffer
 	 const GLfloat* FrameDepth() const { return _frame_data; }
 	
-	 ///get a reference to camera color image. 3 bytes (RGB) per pixel
+	 ///get a reference to camera color image. 4 bytes (RGBA) per pixel
 	 const GLubyte* FrameColor() const { return _frame_color_data; }
 	
 	 ///change the pitch
@@ -3032,6 +3073,8 @@ namespace Stg
 	 double GetMaxPosition() const {return max_position;};
 	 double GetMinPosition() const {return min_position;};
   
+     ActuatorType GetType() const { return actuator_type; }
+     stg_point3_t GetAxis() const { return axis; }
   };
 
 

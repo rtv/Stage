@@ -316,8 +316,6 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		}
 	}
 
-	/* start of get/set property modifications */
-
 	// see line 2661 of player_interfaces.h for header names and stuff
 	// Is it a request to set a model's property?
 	else if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
@@ -342,7 +340,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		/* check the value given is an array of four floats */
 		if(req->value_count != sizeof(float)*4)
 		{
-			PRINT_WARN("value given by SetProperty must be an array of 4 floats\n");
+			PRINT_WARN("Value given by SetProperty must be an array of 4 floats\n");
 			return(-1);
 		}
 
@@ -378,6 +376,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 	{
 		player_simulation_property_req_t* req =
 				(player_simulation_property_req_t*)data;
+
 
 
 		// check they want to set the colour. 
@@ -475,6 +474,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 				PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
 				return(-1);
 			}
+
 		}
 		else
 		{
@@ -483,8 +483,6 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		}
 		
 	}
-
-	/*end of get/set property modifications*/
 
 	else
 	{
