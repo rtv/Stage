@@ -61,6 +61,7 @@ set_target_properties( stage PROPERTIES
 )
 
 set( stagebinarySrcs main.cc )
+set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
 add_executable( stagebinary ${stagebinarySrcs} )
 

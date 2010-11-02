@@ -1132,6 +1132,9 @@ namespace Stg
     /** Returns a pointer to the model identified by name, or NULL if
 		  nonexistent */
     Model* GetModel( const std::string& name ) const;
+
+    /** Returns a const reference to the set of models in the world. */
+    const std::set<Model*> GetAllModels() const { return models; };
   
     /** Return the 3D bounding box of the world, in meters */
     const bounds3d_t& GetExtent() const { return extent; };
@@ -2480,6 +2483,8 @@ namespace Stg
 		return &blobs[0];
 	 }
 
+     std::vector<Blob> GetBlobs() const { return blobs; }
+
 	 /** Start finding blobs with this color.*/
 	 void AddColor( Color col );
 
@@ -2946,7 +2951,7 @@ namespace Stg
 	 ///get a reference to camera depth buffer
 	 const GLfloat* FrameDepth() const { return _frame_data; }
 	
-	 ///get a reference to camera color image. 3 bytes (RGB) per pixel
+	 ///get a reference to camera color image. 4 bytes (RGBA) per pixel
 	 const GLubyte* FrameColor() const { return _frame_color_data; }
 	
 	 ///change the pitch
@@ -3121,6 +3126,8 @@ namespace Stg
 	 double GetMaxPosition() const {return max_position;};
 	 double GetMinPosition() const {return min_position;};
   
+     ActuatorType GetType() const { return actuator_type; }
+     stg_point3_t GetAxis() const { return axis; }
   };
 
 
