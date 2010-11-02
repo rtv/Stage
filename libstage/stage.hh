@@ -3127,7 +3127,7 @@ namespace Stg
 	 double GetMinPosition() const {return min_position;};
   
      ActuatorType GetType() const { return actuator_type; }
-     stg_point3_t GetAxis() const { return axis; }
+     point3_t GetAxis() const { return axis; }
   };
 
 
