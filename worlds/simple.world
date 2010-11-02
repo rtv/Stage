@@ -40,7 +40,8 @@ pioneer2dx
   name "r0"
   pose [ -6.432 -5.895 0 45.000 ] 
 
-  sicklaser( pose [ 0 0 0 0 ] )
+  # pioneer2dx's sonars	will be ranger:0 and the laser will be ranger:1
+  sicklaser( pose [ 0 0 0 0 ] ) 
  
   ctrl "wander"
 

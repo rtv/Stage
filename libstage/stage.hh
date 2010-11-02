@@ -670,7 +670,7 @@ namespace Stg
   /** Define a callback function type that can be attached to a
       record within a model and called whenever the record is set.*/
   typedef int (*model_callback_t)( Model* mod, void* user );
-  
+
   // ANCESTOR CLASS
   /** Base class for Model and World */
   class Ancestor
