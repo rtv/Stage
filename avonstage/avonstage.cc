@@ -43,12 +43,18 @@ static struct option longopts[] = {
 };
 
 
-uint64_t GetTime( Stg::Model* mod )
+
+uint64_t GetTimeWorld( Stg::World* world )
 {
-  Stg::usec_t stgtime = mod->GetWorld()->SimTimeNow();  
-  return (uint64_t)stgtime;
+  Stg::usec_t stgtime = world->SimTimeNow();  
+  return static_cast<uint64_t>(stgtime);
 }
 
+uint64_t GetTime( Stg::Model* mod )
+{
+  assert(mod);	
+  return GetTimeWorld( mod->GetWorld() );
+}
 
 int GetModelPVA( Stg::Model* mod, av_pva_t* pva  )
 {
@@ -79,6 +85,7 @@ int GetModelPVA( Stg::Model* mod, av_pva_t* pva  )
   
   return 0; // ok
 }
+
 
 int SetModelPVA(  Stg::Model* mod, av_pva_t* p  )
 {
@@ -132,19 +139,58 @@ int GetModelGeom(  Stg::Model* mod, av_geom_t* g )
   return 0; // ok
 }
 
+
 int RangerData( Stg::Model* mod, av_data_t* data )
 {
   assert(mod);
   assert(data);
   
+  /* Will set the data pointer in arg data to point to this static
+	  struct, thus avoiding dynamic memory allocation. This is deeply
+	  non-reentrant! but fast and simple code. */
+  static av_ranger_data_t rd;
+  bzero(&rd, sizeof(rd));  
   bzero(data, sizeof(av_data_t));
   
   data->time = GetTime(mod);  
   data->type = AV_MODEL_RANGER;
-  data->data = (void*)"{ dummy ranger data }";
+  data->data = (const void*)&rd;  
   
-  puts( "ranger data got" );  
+  Stg::ModelRanger* r = dynamic_cast<Stg::ModelRanger*>(mod);
   
+  const std::vector<Stg::ModelRanger::Sensor>& sensors = r->GetSensors();
+  
+  rd.transducer_count = sensors.size();
+  
+  assert( rd.transducer_count <= AV_RANGER_TRANSDUCERS_MAX );
+  
+  for( unsigned int s=0; s<rd.transducer_count; s++ )
+	 {
+		rd.transducers[s].pose[0] = sensors[s].pose.x;
+		rd.transducers[s].pose[1] = sensors[s].pose.y;
+		rd.transducers[s].pose[2] = sensors[s].pose.z;
+		rd.transducers[s].pose[3] = 0.0;
+		rd.transducers[s].pose[4] = 0.0;
+		rd.transducers[s].pose[5] = sensors[s].pose.a;		
+		
+		const std::vector<Stg::meters_t>& ranges = sensors[s].ranges;
+		const std::vector<float>& intensities = sensors[s].intensities;
+
+		assert( ranges.size() == intensities.size() );
+
+		rd.transducers[s].sample_count = ranges.size(); 
+		
+		printf( "ranges size %u\n", ranges.size() );
+		
+		for( unsigned int r=0; r<rd.transducers[s].sample_count; r++ )
+		  {
+			 rd.transducers[s].samples[r][AV_SAMPLE_BEARING] = 1.0; // XX
+			 rd.transducers[s].samples[r][AV_SAMPLE_AZIMUTH] = 1.0; // XX
+			 rd.transducers[s].samples[r][AV_SAMPLE_RANGE] = ranges[r];
+			 rd.transducers[s].samples[r][AV_SAMPLE_INTENSITY] = intensities[r];
+		  }
+	 }
+	  
   return 0; //ok
 }
 
@@ -276,6 +322,7 @@ int main( int argc, char* argv[] )
   
   // avon
   av_init( host.c_str(), port, rootdir.c_str(), verbose, PROJECT, VERSION );
+
   av_install_generic_callbacks( (av_pva_set_t)SetModelPVA,
 										  (av_pva_get_t)GetModelPVA,
 										  (av_geom_set_t)SetModelGeom,
@@ -299,6 +346,9 @@ int main( int argc, char* argv[] )
   world->Load( worldfilename );
   world->ShowClock( showclock );
 
+	// now we have a world object, we can install a clock callback
+	av_install_clock_callbacks( (av_clock_get_t)GetTimeWorld, world );
+	
   // start the http server
   av_startup();
   // register all models here  

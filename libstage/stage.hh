@@ -3122,12 +3122,12 @@ namespace Stg
 		  the goal pose */
 	 void GoTo( double pose );
   
-	 double GetPosition() const {return pos;};
-	 double GetMaxPosition() const {return max_position;};
-	 double GetMinPosition() const {return min_position;};
-  
-     ActuatorType GetType() const { return actuator_type; }
-     point3_t GetAxis() const { return axis; }
+		double GetPosition() const {return pos;};
+		double GetMaxPosition() const {return max_position;};
+		double GetMinPosition() const {return min_position;};
+		
+		ActuatorType GetType() const { return actuator_type; }
+		point3_t GetAxis() const { return axis; }
   };
 
 

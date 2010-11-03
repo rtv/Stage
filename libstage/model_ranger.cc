@@ -181,10 +181,10 @@ void ModelRanger::Update( void )
 
 void ModelRanger::Sensor::Update( ModelRanger* mod )
 {
-	//printf( "update sensor\n" );
-	
 	ranges.resize( sample_count );
 	intensities.resize( sample_count );
+
+	//printf( "update sensor, has ranges size %u\n", (unsigned int)ranges.size() );
 	
 	double bearing( sample_count > 1 ? -fov/2.0 : 0.0 );
 	// make the first and last rays exactly at the extremes of the FOV
