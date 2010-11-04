@@ -389,7 +389,7 @@ void ModelPosition::Update( void  )
     case LOCALIZATION_ODOM:
       {
 		  // integrate our velocities to get an 'odometry' position estimate.
-		  double dt = interval / 1e6; // update interval convert to seconds
+		  double dt = world->sim_interval / 1e6; // update interval convert to seconds
 		  
 		  est_pose.a = normalize( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
 		  
