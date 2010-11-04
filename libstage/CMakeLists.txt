@@ -52,6 +52,7 @@ add_library(stage SHARED ${stageSrcs})
 
 target_link_libraries( stage  
            ${LTDL_LIB}
+			  ${OPENGL_LIBRARIES}  # seems to be needed on some platforms
 )
 
 # causes the shared library to have a version number
