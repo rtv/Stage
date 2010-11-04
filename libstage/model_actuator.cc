@@ -78,6 +78,9 @@ ModelActuator::ModelActuator( World* world,
   // sensible position defaults
   this->SetVelocity( Velocity(0,0,0,0) );
   this->SetBlobReturn(true);  
+
+  // Allow the models to move
+  VelocityEnable();
 }
 
 
@@ -151,6 +154,9 @@ void ModelActuator::Load( void )
 		start_position = wf->ReadFloat ( wf_entity, "start_position", 0 );
 		
 		Pose DesiredPose = InitialPose;
+		
+		cosa = cos(InitialPose.a);
+		sina = sin(InitialPose.a);
 		
 		switch (actuator_type)
 		  {
