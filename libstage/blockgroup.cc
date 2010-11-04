@@ -250,6 +250,7 @@ void BlockGroup::CallDisplayList( Model* mod )
 void BlockGroup::LoadBlock( Model* mod, Worldfile* wf, int entity )
 {
   AppendBlock( new Block( mod, wf, entity ));
+  CalcSize();
 }				
   
 void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile* wf )
