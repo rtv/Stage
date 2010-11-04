@@ -252,34 +252,30 @@ Model* Canvas::getModel( int x, int y )
 		  }
     }
 	
+  glFlush(); // make sure the drawing is done
+
   // read the color of the pixel in the back buffer under the mouse
   // pointer
   GLint viewport[4];
   glGetIntegerv(GL_VIEWPORT,viewport);
 
-  uint8_t rByte, gByte, bByte, aByte;
+  uint8_t rgbaByte[4];
   uint32_t modelId;
 	
   glReadPixels( x,viewport[3]-y,1,1,
-					 GL_RED,GL_UNSIGNED_BYTE,(void*)&rByte );
-  glReadPixels( x,viewport[3]-y,1,1,
-					 GL_GREEN,GL_UNSIGNED_BYTE,(void*)&gByte );
-  glReadPixels( x,viewport[3]-y,1,1,
-					 GL_BLUE,GL_UNSIGNED_BYTE,(void*)&bByte );
-  glReadPixels( x,viewport[3]-y,1,1,
-					 GL_ALPHA,GL_UNSIGNED_BYTE,(void*)&aByte );
+					 GL_RGBA,GL_UNSIGNED_BYTE,&rgbaByte[0] );
 	
-  modelId = rByte;
-  modelId |= gByte << 8;
-  modelId |= bByte << 16;
-  //modelId |= aByte << 24;
+  modelId = rgbaByte[0];
+  modelId |= rgbaByte[1] << 8;
+  modelId |= rgbaByte[2] << 16;
+  //modelId |= rgbaByte[3] << 24;
 	
-  //	printf("Clicked rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", rByte, gByte, bByte, aByte);
+  //	printf("Clicked rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", rgbaByte[0], rgbaByte[1], rgbaByte[2], rgbaByte[3]);
   //	printf("-->model Id = 0x%X\n", modelId);
 	
   Model* mod = Model::LookupId( modelId );
 
-  //printf("%p %s %d %x\n", mod, mod ? mod->Token() : "(none)", id, id );
+  //printf("%p %s %d %x\n", mod, mod ? mod->Token() : "(none)", modelId, modelId );
 
   // put things back the way we found them
   glEnable(GL_DITHER);
