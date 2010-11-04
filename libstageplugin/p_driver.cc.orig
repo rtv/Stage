@@ -167,8 +167,7 @@ extern bool player_quiet_startup;
 extern bool player_quit;
 
 // init static vars
-World* StgDriver::world = NULL;
-bool StgDriver::usegui = true;
+WorldGui* StgDriver::world = NULL;
 
 //int update_request = 0;
 
@@ -575,11 +574,8 @@ void StgDriver::Update(void)
 			switch( interface->addr.interf )
 				{
 				case PLAYER_SIMULATION_CODE:
-					// one round of FLTK's update loop.
-					if (StgDriver::usegui)
-						Fl::wait();
-					else
-						StgDriver::world->Update();
+				  // one round of FLTK's update loop.
+				  Fl::wait();
 					break;
 					
 				default:
