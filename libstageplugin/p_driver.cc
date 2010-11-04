@@ -248,6 +248,9 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 				   &addr,
 				   type );
 
+  // Use same update interval as the model
+  this->publish_interval_msec = this->mod->GetUpdateInterval()/1000;
+    
   if( !this->mod )
     {
       printf( " ERROR! no model available for this device."
