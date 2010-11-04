@@ -557,20 +557,22 @@ void World::ConsumeQueue( unsigned int queue_num )
     return;
   
   //printf( "event queue len %d\n", (int)queue.size() );
-
+  
   // update everything on the event queue that happens at this time or earlier
-  Event ev( queue.top() );    
-  while(  ev.time <= sim_time ) 
+  do
     {
-      // printf( "@ %llu next event <%s %llu %s>\n",  sim_time, ev.TypeStr( ev.type ), ev.time, ev.mod->Token() ); 
-      queue.pop();      
-		
-		if( ev.mod->subs > 0 ) // no subscriptions means the event is discarded
-		  ev.mod->Update(); // update the model
-
-      // and move to the next
-      ev = queue.top();
+      Event ev( queue.top() );
+      if( ev.time > sim_time ) break;
+      queue.pop();
+      
+      //printf( "@ %llu next event ptr %p\n", sim_time, ev.mod );
+      //std::string modelType = ev.mod->GetModelType();
+      //printf( "@ %llu next event <%s %llu %s>\n",  sim_time, modelType.c_str(), ev.time, ev.mod->Token() ); 
+      
+      if( ev.mod->subs > 0 ) // no subscriptions means the event is discarded
+        ev.mod->Update(); // update the model
     }
+  while( !queue.empty() );
 }
 
 bool World::Update()
