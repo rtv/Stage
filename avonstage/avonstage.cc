@@ -164,30 +164,35 @@ int RangerData( Stg::Model* mod, av_data_t* data )
   
   assert( rd.transducer_count <= AV_RANGER_TRANSDUCERS_MAX );
   
-  for( unsigned int s=0; s<rd.transducer_count; s++ )
+  for( unsigned int c=0; c<rd.transducer_count; c++ )
 	 {
-		rd.transducers[s].pose[0] = sensors[s].pose.x;
-		rd.transducers[s].pose[1] = sensors[s].pose.y;
-		rd.transducers[s].pose[2] = sensors[s].pose.z;
-		rd.transducers[s].pose[3] = 0.0;
-		rd.transducers[s].pose[4] = 0.0;
-		rd.transducers[s].pose[5] = sensors[s].pose.a;		
+		av_ranger_transducer_data_t& t =	rd.transducers[c];
+		const Stg::ModelRanger::Sensor& s = sensors[c];
+
+		t.pose[0] = s.pose.x;
+		t.pose[1] = s.pose.y;
+		t.pose[2] = s.pose.z;
+		t.pose[3] = 0.0;
+		t.pose[4] = 0.0;
+		t.pose[5] = s.pose.a;		
 		
-		const std::vector<Stg::meters_t>& ranges = sensors[s].ranges;
-		const std::vector<float>& intensities = sensors[s].intensities;
+		const std::vector<Stg::meters_t>& ranges = s.ranges;
+		const std::vector<float>& intensities = s.intensities;
 
 		assert( ranges.size() == intensities.size() );
 
-		rd.transducers[s].sample_count = ranges.size(); 
-		
-		printf( "ranges size %u\n", ranges.size() );
-		
-		for( unsigned int r=0; r<rd.transducers[s].sample_count; r++ )
+		t.sample_count = ranges.size(); 
+				
+		const double fov_max = s.fov / 2.0;
+		const double fov_min = -fov_max;
+		const double delta = (fov_max - fov_min) / (double)t.sample_count;
+			  
+		for( unsigned int r=0; r<t.sample_count; r++ )
 		  {
-			 rd.transducers[s].samples[r][AV_SAMPLE_BEARING] = 1.0; // XX
-			 rd.transducers[s].samples[r][AV_SAMPLE_AZIMUTH] = 1.0; // XX
-			 rd.transducers[s].samples[r][AV_SAMPLE_RANGE] = ranges[r];
-			 rd.transducers[s].samples[r][AV_SAMPLE_INTENSITY] = intensities[r];
+			 t.samples[r][AV_SAMPLE_BEARING] = fov_min + r*delta;
+			 t.samples[r][AV_SAMPLE_AZIMUTH] = 0.0; // linear scanner
+			 t.samples[r][AV_SAMPLE_RANGE] = ranges[r];
+			 t.samples[r][AV_SAMPLE_INTENSITY] = intensities[r];
 		  }
 	 }
 	  
