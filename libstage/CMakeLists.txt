@@ -64,7 +64,18 @@ set_target_properties( stage PROPERTIES
 set( stagebinarySrcs main.cc )
 set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
 
-add_executable( stagebinary ${stagebinarySrcs} )
+# TODO: build an app bundle on OS X
+#set(MACOSX_BUNDLE_INFO_STRING "${PROJECT_NAME}")
+#set(MACOSX_BUNDLE_GUI_IDENTIFIER "org.playerstage.stage")
+#set(MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_NAME} Version ${VERSION}")
+#set(MACOSX_BUNDLE_BUNDLE_NAME ${PROJECT_NAME})
+#set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${VERSION})
+#set(MACOSX_BUNDLE_BUNDLE_VERSION ${VERSION})
+#set(MACOSX_BUNDLE_COPYRIGHT "Copyright 2010. All Rights Reserved.")
+
+# add_executable( stagebinary MACOSX_BUNDLE ${stagebinarySrcs} )
+
+add_executable( stagebinary MACOSX_BUNDLE ${stagebinarySrcs} )
 
 # Apple seems to have trouble when libstage and stagebinary are linked against FLTK
 # Newer Linux distributions won't allow stagebinary to inherit libstage's links to fltk, so we need
