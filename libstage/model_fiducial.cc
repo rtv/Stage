@@ -207,6 +207,7 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 	fid.bearing = dtheta;
 	fid.geom.x = hisgeom.size.x;
 	fid.geom.y = hisgeom.size.y;
+	fid.geom.z = hisgeom.size.z;
 	fid.geom.a = normalize( hispose.a - mypose.a);
 	
 	//fid.pose_rel = hispose - this->GetGlobalPose();

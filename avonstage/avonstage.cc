@@ -303,13 +303,13 @@ int FiducialData( Stg::Model* mod, av_msg_t* data )
 			fd.fiducials[i].pose[1] = 0.0; // no azimuth in Stage
 			fd.fiducials[i].pose[2] = sf[i].range;
 			
-			fd.fiducials[i].geom.pose[0] = sf[i].pose_rel.x;
-			fd.fiducials[i].geom.pose[1] = sf[i].pose_rel.y;
+			fd.fiducials[i].geom.pose[0] = 0.0; // sf[i].pose_rel.x;
+			fd.fiducials[i].geom.pose[1] = 0.0; // sf[i].pose_rel.y;
 			fd.fiducials[i].geom.pose[2] = 0.0;
 			fd.fiducials[i].geom.pose[3] = 0.0; 
 			fd.fiducials[i].geom.pose[4] = 0.0; 
-			fd.fiducials[i].geom.pose[5] = sf[i].pose_rel.a;
-
+			fd.fiducials[i].geom.pose[5] = sf[i].geom.a;
+			
 			fd.fiducials[i].geom.extent[0] = sf[i].geom.x;
 			fd.fiducials[i].geom.extent[1] = sf[i].geom.y;
 			fd.fiducials[i].geom.extent[2] = sf[i].geom.z;

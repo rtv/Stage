@@ -2720,7 +2720,7 @@ namespace Stg
 		meters_t range; ///< range to the target
 		radians_t bearing; ///< bearing to the target 
 		Pose geom; ///< size and relative angle of the target
-		 Pose pose_rel; /// relative pose of the target in local coordinates		 
+		 //Pose pose_rel; /// relative pose of the target in local coordinates		 
 		Pose pose; ///< Absolute accurate position of the target in world coordinates (it's cheating to use this in robot controllers!)
 		Model* mod; ///< Pointer to the model (real fiducial detectors can't do this!)
 		int id; ///< the fiducial identifier of the target (i.e. its fiducial_return value), or -1 if none can be detected.  

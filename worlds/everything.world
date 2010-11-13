@@ -50,11 +50,11 @@ puck( pose [-8.959 2.752 0 -101.643 ] color "orange" )
 #
 define trickedoutpioneer pioneer2dx
 (
-	ranger( alwayson 0 )
+	ranger( alwayson 1 )
 
   sicklaser( pose [0.030 0 0 0 ]  alwayson 1 )
 
-  fiducial( range_max 8 range_max_id 5 ) 
+  fiducial( range_max 8 range_max_id 5 alwayson 1 ) 
 
   fiducial_return 17
   gripper_return 0
