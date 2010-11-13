@@ -709,6 +709,8 @@ namespace Stg
     virtual Pose GetGlobalPose();
 	 
     const char* Token(){ return token.c_str(); }
+
+    const std::string& TokenStr(){ return token; }
 	 
     void SetToken( const std::string& str ){ token = str; } 
 	 

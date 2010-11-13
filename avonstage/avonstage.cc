@@ -153,7 +153,7 @@ int RangerData( Stg::Model* mod, av_msg_t* data )
   bzero(data, sizeof(av_msg_t));
   
   data->time = GetTime(mod);  
-  data->type = AV_MODEL_RANGER;
+  data->interface = AV_INTERFACE_RANGER;
   data->data = (const void*)&rd;  
   
   Stg::ModelRanger* r = dynamic_cast<Stg::ModelRanger*>(mod);
@@ -227,7 +227,7 @@ int RangerCfgGet( Stg::Model* mod, av_msg_t* data )
   bzero(&cfg,sizeof(cfg));
 
   data->time = GetTime(mod);  
-  data->type = AV_MODEL_RANGER;
+  data->interface = AV_INTERFACE_RANGER;
   data->data = (const void*)&cfg;  
  
   cfg.time = data->time;
@@ -286,7 +286,7 @@ int FiducialData( Stg::Model* mod, av_msg_t* data )
   bzero(data, sizeof(av_msg_t));
   
   data->time = GetTime(mod);  
-  data->type = AV_MODEL_FIDUCIAL;
+  data->interface = AV_INTERFACE_FIDUCIAL;
   data->data = (const void*)&fd;  
   
   Stg::ModelFiducial* fm = dynamic_cast<Stg::ModelFiducial*>(mod);
@@ -297,7 +297,7 @@ int FiducialData( Stg::Model* mod, av_msg_t* data )
 	
 	printf( "FIDUCIALS %u\n", fd.fiducial_count );
 
-	for( int i=0; i<fd.fiducial_count; i++ )
+	for( size_t i=0; i<fd.fiducial_count; i++ )
 		{
 			fd.fiducials[i].pose[0] = sf[i].bearing;
 			fd.fiducials[i].pose[1] = 0.0; // no azimuth in Stage
@@ -344,7 +344,7 @@ int FiducialCfgGet( Stg::Model* mod, av_msg_t* msg )
 	bzero(&cfg,sizeof(cfg));
 	
   msg->time = GetTime(mod);  
-  msg->type = AV_MODEL_FIDUCIAL;
+  msg->interface = AV_INTERFACE_FIDUCIAL;
   msg->data = (const void*)&cfg;  
 
 	//	cfg.time = msg->time;
@@ -370,23 +370,39 @@ int FiducialCfgGet( Stg::Model* mod, av_msg_t* msg )
 int RegisterModel( Stg::Model* mod, void* dummy )
 { 
   //printf( "[AvonStage] registering %s\n", mod->Token() );
+	
+	// expensive to test this here! XX todo optmize this for large pops
+	if( mod->TokenStr() == "_ground_model" )
+		return 0;
+	
+  av_interface_t interface = AV_INTERFACE_GENERIC;
+	
+	const char* prototype = "generic";
 
-  av_type_t type = AV_MODEL_GENERIC;
-  
   std::string str = mod->GetModelType();
   
 	//  if( str == "position" )
-	//type = AV_MODEL_POSITION2D;
+	//type = AV_INTERFACE_POSITION2D;
 	if( str == "ranger" )
-	 type = AV_MODEL_RANGER;
+		{
+			interface = AV_INTERFACE_RANGER;
+			prototype = (char*)"ranger";
+		}
   else if( str == "fiducial" )
-	 type = AV_MODEL_FIDUCIAL;
+		{
+			interface = AV_INTERFACE_FIDUCIAL;
+			prototype = "fiducial";
+		}
   
   Stg::Model* parent = mod->Parent();
   const char* parent_name = parent ? parent->Token() : NULL;
   
-  av_register_model( mod->Token(), type, parent_name, dynamic_cast<void*>(mod) );
+  av_register_model( mod->Token(), prototype, interface, parent_name, dynamic_cast<void*>(mod) );
   
+
+	// recursively register the model's children, if any
+	
+
   return 0; // ok
 }
 
@@ -479,13 +495,13 @@ int main( int argc, char* argv[] )
 										  (av_geom_set_t)SetModelGeom,
 										  (av_geom_get_t)GetModelGeom );
   
-  av_install_typed_callbacks( AV_MODEL_RANGER, 
+  av_install_interface_callbacks( AV_INTERFACE_RANGER, 
 										(av_data_get_t)RangerData,
 										(av_cmd_set_t)RangerCmd,
 										(av_cfg_set_t)RangerCfgSet,
 										(av_cfg_get_t)RangerCfgGet );
 
-  av_install_typed_callbacks( AV_MODEL_FIDUCIAL, 
+  av_install_interface_callbacks( AV_INTERFACE_FIDUCIAL, 
 										(av_data_get_t)FiducialData,
 										(av_cmd_set_t)FiducialCmd,
 										(av_cfg_set_t)FiducialCfgSet,
@@ -509,6 +525,7 @@ int main( int argc, char* argv[] )
 	
   // start the http server
   av_startup();
+
   // register all models here  
   world->ForEachDescendant( RegisterModel, NULL );
  
