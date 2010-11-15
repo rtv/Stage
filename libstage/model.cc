@@ -166,7 +166,7 @@ using namespace Stg;
 uint32_t Model::count(0);
 uint32_t Model::trail_length(50);
 uint64_t Model::trail_interval(5);
-std::map<id_t,Model*> Model::modelsbyid;
+std::map<Stg::id_t,Model*> Model::modelsbyid;
 std::map<std::string, creator_t> Model::name_map;
 
 void Bounds::Load( Worldfile* wf, const int section, const char* keyword )
