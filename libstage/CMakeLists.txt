@@ -72,10 +72,9 @@ set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK
 #set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${VERSION})
 #set(MACOSX_BUNDLE_BUNDLE_VERSION ${VERSION})
 #set(MACOSX_BUNDLE_COPYRIGHT "Copyright 2010. All Rights Reserved.")
-
 # add_executable( stagebinary MACOSX_BUNDLE ${stagebinarySrcs} )
 
-add_executable( stagebinary MACOSX_BUNDLE ${stagebinarySrcs} )
+add_executable( stagebinary ${stagebinarySrcs} )
 
 # Apple seems to have trouble when libstage and stagebinary are linked against FLTK
 # Newer Linux distributions won't allow stagebinary to inherit libstage's links to fltk, so we need

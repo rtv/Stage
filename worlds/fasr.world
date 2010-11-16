@@ -7,16 +7,16 @@ include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
 
-speedup 20.000
-paused 1
+speedup 0 # 20.000
+paused 0
 
 # time at which to pause (in GUI mode) or quit (in headless mode) the simulation
 #quit_time 3600 # 1 hour of simulated time
-#quit_time 1800 # hour of simulated time
+quit_time 1800 # 30 mins of simulated time
 
 resolution 0.02
 
-threads 8
+threads 0
 
 # configure the GUI window
 window

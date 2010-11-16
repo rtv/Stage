@@ -2808,7 +2808,7 @@ namespace Stg
 			Color col;
 			
 			std::vector<meters_t> ranges;
-			std::vector<float> intensities;
+			std::vector<float_t> intensities;
 			
 			Sensor() : pose( 0,0,0,0 ), 
 								 size( 0.02, 0.02, 0.02 ), // teeny transducer

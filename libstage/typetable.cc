@@ -2,7 +2,7 @@
 using namespace Stg;
 
 
-/* Template used to created named wrappers for model constructors */
+/* Create named wrappers for model constructors */
 template <class T>
 Model* Creator( World* world, Model* parent, const std::string& type )
 {
@@ -10,9 +10,9 @@ Model* Creator( World* world, Model* parent, const std::string& type )
 }
 
 static void Register( const std::string& type,
-							 creator_t func )
+											creator_t func )
 {
-  Model::name_map[ type ] = func;  
+  Model::name_map[type] = func;  
 }
 
 /** Map model names to named constructors for each model type */

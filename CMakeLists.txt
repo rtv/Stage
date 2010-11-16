@@ -40,7 +40,8 @@ ENDIF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
 
 #####################################
 # Build type cflags
-SET (CMAKE_CXX_FLAGS_RELEASE "  -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
+SET (OPTIMIZE "-O2")
+SET (CMAKE_CXX_FLAGS_RELEASE " ${OPTIMIZE} -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
 SET (CMAKE_CXX_FLAGS_DEBUG " -ggdb  ${WALL} " CACHE INTERNAL "C Flags for debug" FORCE)
 SET (CMAKE_CXX_FLAGS_PROFILE "  -ggdb -pg ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
 

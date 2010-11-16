@@ -646,10 +646,10 @@ bool Model::IsRelated( const Model* that ) const
 }
 
 point_t Model::LocalToGlobal( const point_t& pt) const
- {  
-   const Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
-   return point_t( gpose.x, gpose.y );
- }
+{  
+	const Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
+	return point_t( gpose.x, gpose.y );
+}
 
 
 void Model::LocalToPixels( const std::vector<point_t>& local,
@@ -661,7 +661,7 @@ void Model::LocalToPixels( const std::vector<point_t>& local,
 		{
 			Pose ptpose = gpose + Pose( it->x, it->y, 0, 0 );
 			global.push_back( point_int_t( (int32_t)floor( ptpose.x * world->ppm) ,
-																				 (int32_t)floor( ptpose.y * world->ppm) ));
+																		 (int32_t)floor( ptpose.y * world->ppm) ));
 		}
 }
 
