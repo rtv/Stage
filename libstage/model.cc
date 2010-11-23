@@ -339,55 +339,54 @@ void Model::GuiState::Load( Worldfile* wf, int wf_entity )
 // constructor
 Model::Model( World* world,
 							Model* parent,
-							const std::string& type ) :
+				  const std::string& type ) :
   Ancestor(), 	 
   alwayson(false),
   blockgroup(),
   blocks_dl(0),
   boundary(false),
-	callbacks(__CB_TYPE_COUNT), // one slot in the vector for each type
+  callbacks(__CB_TYPE_COUNT), // one slot in the vector for each type
   color( 1,0,0 ), // red
   data_fresh(false),
   disabled(false),
-	cv_list(),
-	flag_list(),
-	geom(),
-	has_default_block( true ),
-	id( Model::count++ ),
-	interval((usec_t)1e5), // 100msec
-	interval_energy((usec_t)1e5), // 100msec
-	interval_pose((usec_t)1e5), // 100msec
-	last_update(0),
-	log_state(false),
-	map_resolution(0.1),
-	mass(0),
-	parent(parent),
-	pose(),
-	power_pack( NULL ),
-	pps_charging(),
-	rastervis(),
-	rebuild_displaylist(true),
-	say_string(),
-	stack_children( true ),
-	stall(false),	 
-	subs(0),
-	thread_safe( false ),
-	trail(trail_length),
-	trail_index(0),
-	type(type),	
-	event_queue_num( 0 ),
-	used(false),
-	velocity(),
-	velocity_enable( false ),
-	watts(0.0),
-	watts_give(0.0),
-	watts_take(0.0),	 
-	wf(NULL),
-	wf_entity(0),
-	world(world),
-	world_gui( dynamic_cast<WorldGui*>( world ) )
+  cv_list(),
+  flag_list(),
+  geom(),
+  has_default_block( true ),
+  id( Model::count++ ),
+  interval((usec_t)1e5), // 100msec
+  interval_energy((usec_t)1e5), // 100msec
+  interval_pose((usec_t)1e5), // 100msec
+  last_update(0),
+  log_state(false),
+  map_resolution(0.1),
+  mass(0),
+  parent(parent),
+  pose(),
+  power_pack( NULL ),
+  pps_charging(),
+  rastervis(),
+  rebuild_displaylist(true),
+  say_string(),
+  stack_children( true ),
+  stall(false),	 
+  subs(0),
+  thread_safe( false ),
+  trail(trail_length),
+  trail_index(0),
+  type(type),	
+  event_queue_num( 0 ),
+  used(false),
+  velocity(),
+  velocity_enable( false ),
+  watts(0.0),
+  watts_give(0.0),
+  watts_take(0.0),	 
+  wf(NULL),
+  wf_entity(0),
+  world(world),
+  world_gui( dynamic_cast<WorldGui*>( world ) )
 {
-  //assert( modelsbyid );
   assert( world );
   
   PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %s \n",

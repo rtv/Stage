@@ -179,7 +179,7 @@ int RangerData( Stg::Model* mod, av_msg_t* data )
 		t.pose[5] = s.pose.a;		
 		
 		const std::vector<Stg::meters_t>& ranges = s.ranges;
-		const std::vector<float>& intensities = s.intensities;
+		const std::vector<double>& intensities = s.intensities;
 
 		assert( ranges.size() == intensities.size() );
 

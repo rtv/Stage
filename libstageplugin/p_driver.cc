@@ -106,7 +106,7 @@ driver
 driver
 (
   name "stage"
-  provides ["position2d:0" "laser:0"]
+  provides ["position2d:0" "ranger:0"]
   model "marvin"
 )
 
