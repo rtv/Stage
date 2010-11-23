@@ -433,64 +433,55 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 				return(-1);
 			}
 		}
-		else if( !( strncmp(req->prop, "simtime", (size_t)req->prop_count) && strncmp(req->prop, "sim_time", (size_t)req->prop_count)))
-		{
-			// check the value given is a uint64_t
-			if(req->value_count != sizeof(uint64_t))
+		else if( strncmp(req->prop, "time", (size_t)req->prop_count ) == 0 )
 			{
-				PRINT_WARN("Simulation time requires a uint64_t to store\n");
-				return(-1);
-			}
-
-			//return simulation time
-			// look up the named model
-			Model* mod = StgDriver::world->GetModel( req->name );
-
-			if( mod )
-			{
-				World *stageworld = mod->GetWorld();
+				// check the value given is a uint64_t
+				if(req->value_count != sizeof(uint64_t))
+					{
+						PRINT_WARN("Simulation time requires a uint64_t to store\n");
+						return(-1);
+					}
 				
-				//stg_usec_t is a typedef for uint64_t
-				stg_usec_t time = stageworld->SimTimeNow();
-
-				//copy array of floats into memory provided in the req structure
-				memcpy(req->value, &time, req->value_count);
-
-				//make a new structure and copy req into it
-				player_simulation_property_req_t reply;
-				memcpy( &reply, req, sizeof(reply));
-
-				//put col array into reply
-				memcpy(reply.value, &time, reply.value_count);
-
-
-				this->driver->Publish( this->addr, resp_queue,
-						PLAYER_MSGTYPE_RESP_ACK,
-						PLAYER_SIMULATION_REQ_GET_PROPERTY,
-						(void*)&reply, sizeof(reply), NULL );
-
-				return(0);
+				//return simulation time
+				// look up the named model
+				Model* mod = StgDriver::world->GetModel( req->name );
+				
+				if( mod )
+					{
+						//make a new structure and copy req into it
+						player_simulation_property_req_t reply;
+						memcpy( &reply, req, sizeof(reply));
+						
+						// and copy the time data
+						*(uint64_t*)&reply.value = mod->GetWorld()->SimTimeNow();
+						
+						this->driver->Publish( this->addr, resp_queue,
+																	 PLAYER_MSGTYPE_RESP_ACK,
+																	 PLAYER_SIMULATION_REQ_GET_PROPERTY,
+																	 (void*)&reply, sizeof(reply), NULL );
+						
+						return(0);
+					}
+				else
+					{
+						PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
+						return(-1);
+					}
+				
 			}
-			else
+		else
 			{
-				PRINT_WARN1( "GET_PROPERTY request: simulation model \"%s\" not found", req->name );
+				PRINT_WARN1("Property \"%s\" is not accessible. Options are \"color\", \"_mp_color\", or \"colour\" for changing colour. \"simtime\" or \"sim_time\" for getting the simulation time.", req->prop);
 				return(-1);
 			}
-
-		}
-		else
-		{
-			PRINT_WARN1("Property \"%s\" is not accessible. Options are \"color\", \"_mp_color\", or \"colour\" for changing colour. \"simtime\" or \"sim_time\" for getting the simulation time.", req->prop);
-			return(-1);
-		}
 		
 	}
-
+	
 	else
-	{
-		// Don't know how to handle this message.
-		PRINT_WARN2( "simulation doesn't support msg with type/subtype %d/%d",
-				hdr->type, hdr->subtype);
-		return(-1);
-	}
+		{
+			// Don't know how to handle this message.
+			PRINT_WARN2( "simulation doesn't support msg with type/subtype %d/%d",
+									 hdr->type, hdr->subtype);
+			return(-1);
+		}
 }
