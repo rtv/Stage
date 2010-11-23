@@ -43,17 +43,18 @@ set( stageSrcs
   ancestor.cc
 )
 
-#	model_laser.cc
-
-
 set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
  
 add_library(stage SHARED ${stageSrcs})
 
-target_link_libraries( stage  
-           ${LTDL_LIB}
-			  ${OPENGL_LIBRARIES}  # seems to be needed on some platforms
-)
+# if fltk-config didn't bring along the OpenGL dependencies (eg. on
+# Debian/Ubuntu), add them explicity 
+IF (NOT(${FLTK_LDFLAGS} MATCHES "-lGL"))
+  target_link_libraries( stage ${OPENGL_LIBRARIES}) 
+ENDIF (NOT(${FLTK_LDFLAGS} MATCHES "-lGL"))
+
+# libtool 
+target_link_libraries( stage ${LTDL_LIB} )
 
 # causes the shared library to have a version number
 set_target_properties( stage PROPERTIES
