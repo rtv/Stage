@@ -11,7 +11,9 @@ IF( AVON_FOUND )
   include_directories( ${AVON_INCLUDE_DIRS} )
   link_directories( ${AVON_LIBRARY_DIRS} )
   add_executable( avonstage avonstage.cc )
-  target_link_libraries( avonstage stage event ${AVON_LIBRARIES} )
+  target_link_libraries( avonstage stage ${AVON_LIBRARIES} )
+
+	set_target_properties( avonstage PROPERTIES LINK_FLAGS "${FLTK_LDFLAGS}" )
 
   INSTALL(TARGETS avonstage RUNTIME DESTINATION bin )
 

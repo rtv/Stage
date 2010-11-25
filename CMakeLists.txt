@@ -31,6 +31,7 @@ SET (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake CACHE PATH "Location of CMake
 # Determine the operating system in detail
 INCLUDE (${PROJECT_CMAKE_DIR}/internal/FindOS.cmake)
 INCLUDE (${PROJECT_CMAKE_DIR}/internal/UninstallTarget.cmake)
+
 # Enable -Wall by default unless on Win or Solaris
 IF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
     # Using -Wall on Windows causes MSVC to produce thousands of warnings in its
@@ -71,7 +72,6 @@ find_library( LTDL_LIB ltdl DOC "Libtool lib" )
 include_directories( 
 	${OPENGL_INCLUDE_DIR}
 	${LTDL_INCLUDE_DIR}
-
 )
 
 # find the easy modules
@@ -93,7 +93,7 @@ ENDIF( LIBPNG_FOUND )
 #MESSAGE( STATUS "BUILD_GUI is ${BUILD_GUI}" )
 #IF( BUILD_GUI )
 
-## the FLTK package script is not useful - it finds an X11-based FLTK on OS X.
+## the FLTK package script is not useful - it finds an X11-based FLTK on OSX.
 ## so we can't do this stuff
 #find_package( FLTK REQUIRED )
 #IF( FLTK_FOUND )
@@ -137,18 +137,9 @@ EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --use-gl --use-images --libs
 # replace the newlines with semicolons
 STRING(REGEX REPLACE "\n" ";" FLTK_LIBS "${FLTK_LIBS_NEWLINES}")
 
-#MESSAGE( STATUS "    FLTK_CFLAGS = ${FLTK_CFLAGS}")
-#MESSAGE( STATUS "    FLTK_LDFLAGS = ${FLTK_LDFLAGS}")
-#MESSAGE( STATUS "    FLTK_LIBS = ${FLTK_LIBS}")
-
-STRING(REGEX REPLACE " -lGLU" "" TMP "${FLTK_LDFLAGS}")
-STRING(REGEX REPLACE " -lGL" "" TMP2 "${TMP}")
-STRING(REGEX REPLACE " -lpng" "" FLTK_LDFLAGS_PKGCONFIG "${TMP2}")
-
-
-STRING(REGEX REPLACE " -lgl" "" FLTK_LIBS_PKGCONFIG "${FLTK_LIBS}")
-STRING(REGEX REPLACE " -lglu" "" FLTK_LIBS_PKGCONFIG" "${FLTK_LIBS_PKGCONFIG}")
-STRING(REGEX REPLACE " -lpng" "" FLTK_LIBS_PKGCONFIG" "${FLTK_LIBS_PKGCONFIG}")
+MESSAGE( STATUS "    FLTK_CFLAGS = ${FLTK_CFLAGS}")
+MESSAGE( STATUS "    FLTK_LDFLAGS = ${FLTK_LDFLAGS}")
+MESSAGE( STATUS "    FLTK_LIBS = ${FLTK_LIBS}")
 
 
 SET (FLTK_FOUND TRUE)
@@ -170,22 +161,11 @@ MESSAGE( STATUS "Checking for optional libraries..." )
 pkg_search_module( PLAYER playercore>=2.1.0 ) 
 IF( PLAYER_FOUND )
   MESSAGE( STATUS ${INDENT} "Player version ${PLAYER_VERSION} detected at ${PLAYER_PREFIX}" )
-#  MESSAGE( STATUS "    PLAYER_CFLAGS: ${PLAYER_CFLAGS}" )
-#  MESSAGE( STATUS "    PLAYER_LDFLAGS: ${PLAYER_LDFLAGS}"  )
+  MESSAGE( STATUS "    PLAYER_CFLAGS: ${PLAYER_CFLAGS}" )
+  MESSAGE( STATUS "    PLAYER_LDFLAGS: ${PLAYER_LDFLAGS}"  )
 ELSE( PLAYER_FOUND )
   MESSAGE(STATUS ${INDENT} "Player not detected. If Player is installed but not detected, check your PKG_CONFIG_PATH." )
 ENDIF( PLAYER_FOUND )
-
-
-## this should not be necessary now that we do the FLTK config
-## carefully above. I'll leave the code here in case of trouble
-# IF (APPLE)
-#	# define flags to avoid the error:
-#	#  ld: cycle in dylib re-exports with /usr/X11R6/lib/libGL.dylib
-#	MESSAGE(STATUS "Setting Apple specific flags")
-#	# work around the OS X 10.5  X11/OpenGL library bug
-#	SET(APPLE_LIBRARIES "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib")
-#ENDIF (APPLE)
 
 # Create the pkgconfig file
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage.pc.in ${CMAKE_CURRENT_BINARY_DIR}/stage.pc @ONLY)
@@ -212,7 +192,6 @@ ADD_SUBDIRECTORY(libstage)
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(assets)
 ADD_SUBDIRECTORY(worlds)
-# ADD_SUBDIRECTORY(webstage)		 
 ADD_SUBDIRECTORY(avonstage)		 
 
 IF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )
