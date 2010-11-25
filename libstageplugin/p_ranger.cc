@@ -20,9 +20,9 @@
  */
 
 /*
- * Desc: A plugin driver for Player that gives access to Stage devices.
+ * Desc: Ranger interface for Stage's player driver
  * Author: Richard Vaughan
- * Date: 10 December 2004
+ * Date: 25 November 2010
  * CVS: $Id$
  */
 
@@ -30,8 +30,8 @@
 
 /** @addtogroup player
 @par Ranger interface
-- PLAYER_RANGER_DATA_SCAN
-- PLAYER_RANGER_REQ_SET_CONFIG
+-	PLAYER_RANGER_DATA_RANGE
+- PLAYER_RANGER_DATA_INTENS
 - PLAYER_RANGER_REQ_GET_CONFIG
 - PLAYER_RANGER_REQ_GET_GEOM
 */
@@ -111,97 +111,53 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 {
   ModelRanger* mod = (ModelRanger*)this->mod;
 	
-  //   // Is it a request to set the ranger's config?
-  if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-													 PLAYER_RANGER_REQ_SET_CONFIG,
-													 this->addr))
+  // Is it a request to get the ranger's config?
+	if (Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
+														PLAYER_RANGER_REQ_GET_CONFIG,
+														this->addr))
 		{
-			puts( "WARNING: ranger cfg support is broken - fix coming soon" );
-			
-			player_ranger_config_t* plc = (player_ranger_config_t*)data;
-			
-			if( hdr->size == sizeof(player_ranger_config_t) )
-				{
-					PRINT_WARN( "setting ranger config not supported (TODO: fix)" );
+			if( hdr->size == 0 )
+				{			 
+					// the Player ranger config is a little weaker than Stage's
+					// natice device, so all we can do is warn about this.
+					PRINT_WARN( "stageplugin ranger config describes only the first sensor of the ranger." );
 					
-					//       // TODO
-					//       // int intensity = plc->intensity;
+					player_ranger_config_t prc;
+					bzero(&prc,sizeof(prc));
 					
-					//       ModelRanger::Config cfg = mod->GetConfig();
+					const ModelRanger::Sensor& s = mod->GetSensors()[0];
 					
-					// 	  PRINT_DEBUG3( "ranger config was: resolution %d, fov %.6f, interval %d\n",
-					// 			  cfg.resolution, cfg.fov, cfg.interval );
-					
-					// 	  cfg.fov = plc->max_angle - plc->min_angle;
-					// 	  cfg.resolution = (uint32_t) ( cfg.fov / ( cfg.sample_count * plc->resolution ) );
-					// 	  if ( cfg.resolution < 1 )
-					// 		  cfg.resolution = 1;
-					// 	  cfg.interval = (usec_t) ( 1.0E6 / plc->scanning_frequency );
-					
-					// 	  PRINT_DEBUG3( "setting ranger config: resolution %d, fov %.6f, interval %d\n",
-					// 			  cfg.resolution, cfg.fov, cfg.interval );
-					
-					// 	  // Range resolution is currently locked to the world setting
-					// 	  //  and intensity values are always read.  The relevant settings
-					// 	  //  are ignored.
-					
-					//       mod->SetConfig( cfg );
+					prc.min_angle = -s.fov/2.0;
+					prc.max_angle = +s.fov/2.0;
+					prc.angular_res = s.fov / (double)s.sample_count;
+					prc.max_range = s.range.max;
+					prc.min_range = s.range.min;
+					prc.range_res = 1.0 / mod->GetWorld()->Resolution();
+					prc.frequency = 1.0E6 / mod->GetInterval();
 					
 					this->driver->Publish(this->addr, resp_queue,
-																PLAYER_MSGTYPE_RESP_NACK, // TODO - change to ACK!
-																PLAYER_RANGER_REQ_SET_CONFIG);
+																PLAYER_MSGTYPE_RESP_ACK,
+																PLAYER_RANGER_REQ_GET_CONFIG,
+																(void*)&prc, sizeof(prc), NULL);
 					return(0);
-		  }
-		else
-		  {
-			 PRINT_ERR2("config request len is invalid (%d != %d)",
-							(int)hdr->size, (int)sizeof(player_ranger_config_t));
-			 return(-1);
-		  }
-	 }
-  // Is it a request to get the ranger's config?
-  else if (Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-											PLAYER_RANGER_REQ_GET_CONFIG,
-											this->addr))
-	 {
-     if( hdr->size == 0 )
-     {
-			 player_ranger_config_t prc;
-			 bzero(&prc,sizeof(prc));
-
-			 PRINT_WARN( "getting ranger config not fully supported (TODO: fix)" );
-			 
-			 const ModelRanger::Sensor& s = mod->GetSensors()[0];
-			 
-			 prc.min_angle = -s.fov/2.0;
-       prc.max_angle = +s.fov/2.0;
-       prc.angular_res = s.fov / (double)s.sample_count;
-       prc.max_range = s.range.max;
-			 prc.min_range = s.range.min;
-			 prc.range_res = 1.0; // todo
-			 prc.frequency = 1.0E6 / mod->GetInterval();
-			 
-       this->driver->Publish(this->addr, resp_queue,
-														 PLAYER_MSGTYPE_RESP_ACK,
-														 PLAYER_RANGER_REQ_GET_CONFIG,
-														 (void*)&prc, sizeof(prc), NULL);
-       return(0);
-     }
-     else
-     {
-       PRINT_ERR2("config request len is invalid (%d != %d)", (int)hdr->size,0);
-       return(-1);
-     }
-   }
+				}
+			else
+				{
+					PRINT_ERR2("config request len is invalid (%d != %d)", (int)hdr->size,0);
+					return(-1);
+				}
+		}
 	else // Is it a request to get the ranger's geom?
 	  if (Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-										 PLAYER_RANGER_REQ_GET_GEOM,
-										 this->addr))
-		 {
-		if(hdr->size == 0)
-		  {
-			 Geom geom = this->mod->GetGeom();
-			 Pose pose = this->mod->GetPose();
+															PLAYER_RANGER_REQ_GET_GEOM,
+															this->addr))
+			{
+				if(hdr->size == 0)
+					{
+						Geom geom = mod->GetGeom();
+						Pose pose = mod->GetPose();
+						
+			 const std::vector<ModelRanger::Sensor>& sensors = mod->GetSensors();
 			 
 			 // fill in the geometry data formatted player-like
 			 player_ranger_geom_t pgeom;
@@ -211,7 +167,29 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 			 pgeom.pose.pyaw = pose.a;
 			 pgeom.size.sl = geom.size.x;
 			 pgeom.size.sw = geom.size.y;
+			 			 
+			 pgeom.element_poses_count = pgeom.element_sizes_count = sensors.size();
+
+			 player_pose3d_t poses[ sensors.size() ];
+			 player_bbox3d_t sizes[ sensors.size() ];
 			 
+			 for( size_t s=0; s<pgeom.element_poses_count; s++ )
+				 {
+					 poses[s].px = sensors[s].pose.x;
+					 poses[s].py = sensors[s].pose.y;
+					 poses[s].pz = sensors[s].pose.z;
+					 poses[s].proll = 0.0;
+					 poses[s].ppitch = 0.0;
+					 poses[s].pyaw = sensors[s].pose.a;
+
+					 sizes[s].sw = sensors[s].size.x;
+					 sizes[s].sl = sensors[s].size.y;
+					 sizes[s].sh = sensors[s].size.z;
+				 }
+
+			 pgeom.element_poses = poses;
+			 pgeom.element_sizes = sizes;
+
 			 this->driver->Publish(this->addr, resp_queue,
 										  PLAYER_MSGTYPE_RESP_ACK,
 										  PLAYER_RANGER_REQ_GET_GEOM,

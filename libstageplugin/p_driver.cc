@@ -66,8 +66,8 @@ position
 
   pose [ 1 1 0 ]
 
-  # add a laser scanner on top of the robot
-  laser()
+  # add a range scanner on top of the robot
+  ranger()
 )
 
 # create a position model with a gripper attached to each side
@@ -101,8 +101,8 @@ driver
 )
 
 # Present a position interface on the default port (6665), connected
-# to the Stage position model "marvin", and a laser interface connected to
-# the laser child of "marvin".
+# to the Stage position model "marvin", and a ranger interface connected to
+# the ranger child of "marvin".
 driver
 (
   name "stage"
@@ -138,7 +138,6 @@ The stage plugin driver provides the following device interfaces:
 */
 
 // TODO - configs I should implement
-//  - PLAYER_SONAR_POWER_REQ
 //  - PLAYER_BLOBFINDER_SET_COLOR_REQ
 //  - PLAYER_BLOBFINDER_SET_IMAGER_PARAMS_REQ
 
@@ -330,8 +329,6 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 		ifsrc = new InterfaceFiducial( player_addr,  this, cf, section );
 		break;
 
-		//case PLAYER_SONAR_CODE: // drop through as we use the same interface
-		//case PLAYER_LASER_CODE:
 	case PLAYER_RANGER_CODE:
 		ifsrc = new InterfaceRanger( player_addr,  this, cf, section );
 		break;
