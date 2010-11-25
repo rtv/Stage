@@ -66,14 +66,11 @@ void InterfaceSonar::Publish( void )
   
   if( count > 0 )
     {      
-      //if( son->power_on ) // set with a sonar config
-      {
 		  sonar.ranges_count = count;
 		  sonar.ranges = new float[count];
 				
 		  for( unsigned int i=0; i<count; i++ )
 					sonar.ranges[i] = sensors[i].range;
-      } 
     }
   
   this->driver->Publish( this->addr,

@@ -1989,6 +1989,9 @@ namespace Stg
 		  it doesn't exist in this model. */
     Model* GetChild( const std::string& name ) const;
 
+		/** return the update interval in usec */
+		usec_t GetInterval(){ return interval; }
+		
 	 class Visibility
 	 {
 	 public:
@@ -2838,7 +2841,25 @@ namespace Stg
 		PRINT_ERR1( "invalid sensor index specified (%d)", sensor );
 		exit(-1);
 	 }
-	 
+		
+		/** returns a pointer to an array of ranges, and fills in the
+				argument with the array-length (C-style). */
+		meters_t* GetRangesArr( unsigned int sensor, uint32_t* count )
+		{
+			assert(count);
+			*count = sensors[sensor].ranges.size();
+			return &sensors[sensor].ranges[0];
+		}
+
+		/** returns a pointer to an array of intensities, and fills in the
+				argument with the array-length (C-style). */
+		meters_t* GetIntensitiesArr( unsigned int sensor, uint32_t* count )
+		{
+			assert(count);
+			*count = sensors[sensor].intensities.size();
+			return &sensors[sensor].intensities[0];
+		}
+		
 	 /** returns a vector of intensitye samples from the indicated sensor
 		  (defaults to zero) */
 	 const std::vector<double>& GetIntensities( unsigned int sensor=0) const 

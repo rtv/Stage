@@ -53,105 +53,104 @@ InterfaceRanger::InterfaceRanger( player_devaddr_t addr,
 void InterfaceRanger::Publish( void )
 {
   ModelRanger* rgr = dynamic_cast<ModelRanger*>(this->mod);
+	
+		// the Player interface dictates that if multiple sensor poses are
+	// given, then we have exactly one range reading per sensor. To give
+	// multiple ranges from the same origin, only one sensor is allowed.
   
-  { // limit scope
-	 // Write range data
-	 const std::vector<meters_t>& ranges = rgr->GetRanges();
-	 uint32_t range_count = ranges.size();
-	 
-	 player_ranger_data_range_t prange;
-	 memset( &prange, 0, sizeof(prange) );  
-	 
-	 if( range_count > 0 )
+	const std::vector<ModelRanger::Sensor>& sensors = rgr->GetSensors();
+	
+	player_ranger_data_range_t prange;
+	memset( &prange, 0, sizeof(prange) );  
+	
+	player_ranger_data_intns_t pintens;
+	memset( &pintens, 0, sizeof(pintens) );	
+	
+	std::vector<double> rv, iv;
+	
+	if( sensors.size() == 1 ) // a laser scanner type, with one beam origin and many ranges					
 		{
-		  prange.ranges = (meters_t*)&ranges[0];
-		  prange.ranges_count = ranges.size();
+			prange.ranges = rgr->GetRangesArr( 0, &prange.ranges_count );
+			pintens.intensities = rgr->GetIntensitiesArr( 0, &pintens.intensities_count );
 		}
-	 
-	 this->driver->Publish(this->addr,
-								  PLAYER_MSGTYPE_DATA,
-								  PLAYER_RANGER_DATA_RANGE,
-								  (void*)&prange, sizeof(prange), NULL);
-  }
-  
-  { // limit scope
-	 // Write intensity data
-	 const std::vector<double>& intensities = rgr->GetIntensities();
-	 uint32_t intensity_count = intensities.size();
-	 
-	 player_ranger_data_intns_t pintens;
-	 memset( &pintens, 0, sizeof(pintens) );	
-	 
-	 if( intensity_count > 0 )
-		{
-		  pintens.intensities = (double_t*)&intensities[0];
-		  pintens.intensities_count = intensities.size();
-		}	 	 
-  
-	 this->driver->Publish(this->addr,
-								  PLAYER_MSGTYPE_DATA,
-								  PLAYER_RANGER_DATA_INTNS,
-								  (void*)&pintens, sizeof(pintens), NULL);
-  }
-
-  // todo: shouldn't this be published?
-  
-//   const ModelRanger::Config& cfg = rgr->cfg;
-//   pdata.min_angle = -cfg.fov/2.0;
-//   pdata.max_angle = +cfg.fov/2.0;
-//   pdata.resolution = cfg.fov / cfg.sample_count;
-//   pdata.max_range = cfg.range_bounds.max;
-//   pdata.ranges_count = pdata.intensity_count = cfg.sample_count;
-//   pdata.id = this->scan_id++;
-  
-//   pdata.ranges = new float[pdata.ranges_count];
-//   pdata.intensity = new uint8_t[pdata.ranges_count];
+	else
+		{  // a sonar/IR type with one range per beam origin 	
+			FOR_EACH( it, sensors )
+				{
+					if( it->ranges.size() ) 
+						rv.push_back( it->ranges[0] );
+					
+					if( it->intensities.size() ) 
+						iv.push_back( it->intensities[0] );
+				}
+			
+			prange.ranges_count = rv.size();
+			prange.ranges = rv.size() ? &rv[0] : NULL;	
+			
+			pintens.intensities_count = iv.size();
+			pintens.intensities = iv.size() ? &iv[0] : NULL;
+		}
+	
+	if( prange.ranges_count )
+		this->driver->Publish(this->addr,
+													PLAYER_MSGTYPE_DATA,
+													PLAYER_RANGER_DATA_RANGE,
+													(void*)&prange, sizeof(prange), NULL);			
+		
+	if( pintens.intensities_count )
+		this->driver->Publish(this->addr,
+													PLAYER_MSGTYPE_DATA,
+													PLAYER_RANGER_DATA_INTNS,
+													(void*)&pintens, sizeof(pintens), NULL);		
 }
 
+
 int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
-				   player_msghdr_t* hdr,
-				   void* data)
+																		player_msghdr_t* hdr,
+																		void* data)
 {
   ModelRanger* mod = (ModelRanger*)this->mod;
-
+	
   //   // Is it a request to set the ranger's config?
   if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ,
-									PLAYER_RANGER_REQ_SET_CONFIG,
-									this->addr))
-	 {
-		puts( "WARNING: ranger cfg support is broken - fix coming soon" );
-		
-		player_ranger_config_t* plc = (player_ranger_config_t*)data;
-		
-		if( hdr->size == sizeof(player_ranger_config_t) )
-		  {
-			 //       // TODO
-			 //       // int intensity = plc->intensity;
-			 
-			 //       ModelRanger::Config cfg = mod->GetConfig();
-			 
-			 // 	  PRINT_DEBUG3( "ranger config was: resolution %d, fov %.6f, interval %d\n",
-			 // 			  cfg.resolution, cfg.fov, cfg.interval );
-			 
-			 // 	  cfg.fov = plc->max_angle - plc->min_angle;
-			 // 	  cfg.resolution = (uint32_t) ( cfg.fov / ( cfg.sample_count * plc->resolution ) );
-			 // 	  if ( cfg.resolution < 1 )
-			 // 		  cfg.resolution = 1;
-			 // 	  cfg.interval = (usec_t) ( 1.0E6 / plc->scanning_frequency );
-			 
-			 // 	  PRINT_DEBUG3( "setting ranger config: resolution %d, fov %.6f, interval %d\n",
-			 // 			  cfg.resolution, cfg.fov, cfg.interval );
-			 
-			 // 	  // Range resolution is currently locked to the world setting
-			 // 	  //  and intensity values are always read.  The relevant settings
-			 // 	  //  are ignored.
-			 
-			 //       mod->SetConfig( cfg );
-			 
-			 //       this->driver->Publish(this->addr, resp_queue,
-			 // 			    PLAYER_MSGTYPE_RESP_ACK,
-			 // 			    PLAYER_RANGER_REQ_SET_CONFIG);
-			 return(0);
+													 PLAYER_RANGER_REQ_SET_CONFIG,
+													 this->addr))
+		{
+			puts( "WARNING: ranger cfg support is broken - fix coming soon" );
+			
+			player_ranger_config_t* plc = (player_ranger_config_t*)data;
+			
+			if( hdr->size == sizeof(player_ranger_config_t) )
+				{
+					PRINT_WARN( "setting ranger config not supported (TODO: fix)" );
+					
+					//       // TODO
+					//       // int intensity = plc->intensity;
+					
+					//       ModelRanger::Config cfg = mod->GetConfig();
+					
+					// 	  PRINT_DEBUG3( "ranger config was: resolution %d, fov %.6f, interval %d\n",
+					// 			  cfg.resolution, cfg.fov, cfg.interval );
+					
+					// 	  cfg.fov = plc->max_angle - plc->min_angle;
+					// 	  cfg.resolution = (uint32_t) ( cfg.fov / ( cfg.sample_count * plc->resolution ) );
+					// 	  if ( cfg.resolution < 1 )
+					// 		  cfg.resolution = 1;
+					// 	  cfg.interval = (usec_t) ( 1.0E6 / plc->scanning_frequency );
+					
+					// 	  PRINT_DEBUG3( "setting ranger config: resolution %d, fov %.6f, interval %d\n",
+					// 			  cfg.resolution, cfg.fov, cfg.interval );
+					
+					// 	  // Range resolution is currently locked to the world setting
+					// 	  //  and intensity values are always read.  The relevant settings
+					// 	  //  are ignored.
+					
+					//       mod->SetConfig( cfg );
+					
+					this->driver->Publish(this->addr, resp_queue,
+																PLAYER_MSGTYPE_RESP_NACK, // TODO - change to ACK!
+																PLAYER_RANGER_REQ_SET_CONFIG);
+					return(0);
 		  }
 		else
 		  {
@@ -165,27 +164,27 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 											PLAYER_RANGER_REQ_GET_CONFIG,
 											this->addr))
 	 {
-		 puts( "WARNING: ranger GET CFG support is broken - fix coming soon" );
-
      if( hdr->size == 0 )
      {
-		 
-		 //       ModelRanger::Config cfg = mod->GetConfig();
-		 
-		 //       player_ranger_config_t plc;
-		 //       memset(&plc,0,sizeof(plc));
-//       plc.min_angle = -cfg.fov/2.0;
-//       plc.max_angle = +cfg.fov/2.0;
-//       plc.resolution = cfg.fov / ( cfg.sample_count * cfg.resolution );
-//       plc.max_range = cfg.range_bounds.max;
-// 	  plc.range_res = 1.0; // todo
-//       plc.intensity = 1; // todo
-// 	  plc.scanning_frequency = 1.0E6 / cfg.interval;
+			 player_ranger_config_t prc;
+			 bzero(&prc,sizeof(prc));
 
-//       this->driver->Publish(this->addr, resp_queue,
-// 			    PLAYER_MSGTYPE_RESP_ACK,
-// 			    PLAYER_RANGER_REQ_GET_CONFIG,
-// 			    (void*)&plc, sizeof(plc), NULL);
+			 PRINT_WARN( "getting ranger config not supported (TODO: fix)" );
+			 
+			 const ModelRanger::Sensor& s = mod->GetSensors()[0];
+			 
+			 prc.min_angle = -s.fov/2.0;
+       prc.max_angle = +s.fov/2.0;
+       prc.angular_res = s.fov / (double)s.sample_count;
+       prc.max_range = s.range.max;
+			 prc.min_range = s.range.min;
+			 prc.range_res = 1.0; // todo
+			 prc.frequency = 1.0E6 / mod->GetInterval();
+			 
+       this->driver->Publish(this->addr, resp_queue,
+														 PLAYER_MSGTYPE_RESP_ACK,
+														 PLAYER_RANGER_REQ_GET_CONFIG,
+														 (void*)&prc, sizeof(prc), NULL);
        return(0);
      }
      else
@@ -206,6 +205,7 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 			 
 			 // fill in the geometry data formatted player-like
 			 player_ranger_geom_t pgeom;
+			 bzero( &pgeom, sizeof(pgeom));
 			 pgeom.pose.px = pose.x;
 			 pgeom.pose.py = pose.y;
 			 pgeom.pose.pyaw = pose.a;
