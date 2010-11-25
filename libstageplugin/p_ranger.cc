@@ -169,7 +169,7 @@ int InterfaceRanger::ProcessMessage(QueuePointer & resp_queue,
 			 player_ranger_config_t prc;
 			 bzero(&prc,sizeof(prc));
 
-			 PRINT_WARN( "getting ranger config not supported (TODO: fix)" );
+			 PRINT_WARN( "getting ranger config not fully supported (TODO: fix)" );
 			 
 			 const ModelRanger::Sensor& s = mod->GetSensors()[0];
 			 
