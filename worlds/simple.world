@@ -41,13 +41,7 @@ pioneer2dx
   pose [ -6.432 -5.895 0 45.000 ] 
 
   # pioneer2dx's sonars	will be ranger:0 and the laser will be ranger:1
-  sicklaser( 
-              pose [ 0 0 0 0 ] 	
-
-							# uncomment the ctrl line to filter the data through 
-              # the plugin controller implemented in examples/ctr/lasernoise.cc
-              # ctrl "lasernoise" 
-            ) 
+  sicklaser( pose [ 0 0 0 0 ] ) 
  
   # demonstrate a plugin controller, implemented in examples/ctrl/wander.cc
   # you probably should comment this out when using simple.cfg with Player
