@@ -5,7 +5,7 @@ SET( PLUGINS
      source
      wander
 #	  wander_pioneer
-#	  pioneer_flocking
+	  pioneer_flocking
      rasterize
 	  dynamic
 )

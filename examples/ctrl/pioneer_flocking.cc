@@ -15,7 +15,6 @@ using namespace Stg;
 
 typedef struct
 {
-  ModelLaser* laser;
   ModelPosition* position;
   ModelRanger* ranger;
   ModelFiducial* fiducial;
@@ -73,8 +72,8 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   // use the front-facing sensors only
   for( unsigned int i=0; i < 8; i++ )
 	 {
-		dx += sensors[i].range * cos( sensors[i].pose.a );
-		dy += sensors[i].range * sin( sensors[i].pose.a );
+		dx += sensors[i].ranges[0] * cos( sensors[i].pose.a );
+		dy += sensors[i].ranges[0] * sin( sensors[i].pose.a );
 	 }
   
   if( (dx == 0) || (dy == 0) )
@@ -86,12 +85,12 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   double turn_speed = EXPAND_WGAIN * resultant_angle;
   
   // if the front is clear, drive forwards
-  if( (sensors[3].range > SAFE_DIST) && // forwards
-	  (sensors[4].range > SAFE_DIST) &&
-	  (sensors[5].range > SAFE_DIST ) && //
-	  (sensors[6].range > SAFE_DIST/2.0) && 
-	  (sensors[2].range > SAFE_DIST ) && 
-	  (sensors[1].range > SAFE_DIST/2.0) && 
+  if( (sensors[3].ranges[0] > SAFE_DIST) && // forwards
+	  (sensors[4].ranges[0] > SAFE_DIST) &&
+	  (sensors[5].ranges[0] > SAFE_DIST ) && //
+	  (sensors[6].ranges[0] > SAFE_DIST/2.0) && 
+	  (sensors[2].ranges[0] > SAFE_DIST ) && 
+	  (sensors[1].ranges[0] > SAFE_DIST/2.0) && 
 	  (fabs( resultant_angle ) < SAFE_ANGLE) )
 	{
 	  forward_speed = VSPEED;

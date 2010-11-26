@@ -5,7 +5,7 @@
 include "pioneer.inc"
 include "map.inc"
 
-speedup 100
+speedup 0
 
 paused 1
 
@@ -13,7 +13,7 @@ paused 1
 resolution 0.1
 
 # this is very helpful if you have multiple CPUs - a good value is $(number of CPU cores) - 
-# threads 2
+threads 4
 
 # configure the GUI window
 window
