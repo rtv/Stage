@@ -6,6 +6,20 @@
 include "irobot.inc"
 include "hokuyo.inc"
 
+define cbir sensor
+(
+  # define the size of each transducer [xsize ysize zsize] in meters
+  size [0.01 0.03 0.01 ] 
+  # define the range bounds [min max]
+  range [0 1.5]
+	# define the angular field of view in degrees
+	fov 20
+	# define the number of samples spread over the fov
+  samples 1
+	# define the color that ranges are drawn in the gui
+	color_rgba [ 0 1 0 0.2 ] 
+)
+
 define chatterbox create
 (
  joules 100000 # todo
@@ -21,19 +35,31 @@ define chatterbox create
 	color "yellow"
 	obstacle_return 0
  )
+
+ model( 
+        block( points 6  
+               point[0] [-3 -1.5 ]
+               point[1] [-3 0.5 ]
+               point[2] [-2 1.5 ]
+               point[3] [+2 1.5 ]
+               point[4] [+3 0.5 ]
+               point[5] [+3 -1.5 ]
+               z [0 0.05]
+							 )
+
+        pose [-0.03 0 0 90] 
+        size [0.25 0.20 0.05 ] 
+        color "gray" 
+   )
  
  ranger
  (	
-	scount 6
-	spose[0] [ 0.050  0.000   0]	# front forward
-	spose[1] [ 0.050  0.050  30]	# front left side
-	spose[2] [ 0.000  0.050  90]	# left side
-	spose[3] [-0.050  0.000 180]	# back backwards
-	spose[4] [ 0.000 -0.050 -90]	# right side
-	spose[5] [ 0.050 -0.050 -30]	# front right side
-	sview [ 0 1.5 20 ]
-	ssize [0.01 0.03 ]
-	watts 10 # todo
+  cbir( pose [ 0.050  0.000  0 0]	) # front forward
+  cbir( pose [ 0.050  0.050  0 30]	) # front left side 
+  cbir( pose [ 0.000  0.050  0 90]	) # left side
+  cbir( pose [-0.050  0.000 0 180]	) # back backwards
+  cbir( pose [ 0.000 -0.050 0 -90]	) # right side
+  cbir( pose [ 0.050 -0.050 0 -30]	) # front right side
  )
  
  fiducial

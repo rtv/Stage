@@ -6,7 +6,6 @@
 resolution 0.02 
 
 interval_sim 100  # milliseconds per update step
-interval_real 0 # real-time milliseconds per update step
 
 include "chatterbox.inc"
 include "map.inc"
@@ -23,7 +22,7 @@ window
 
 # load an environment bitmap
 floorplan
-(
+(	
   bitmap "bitmaps/autolab.png"
   size [20.000 20.000 0.500]
   boundary 1
@@ -35,37 +34,53 @@ define cb laserchatterbox
   ctrl "wander"
 )
 
-cb( name "cb00" pose [2.451 7.364 0 0] )
-cb( name "cb01" pose [2.321 6.221 0 -171.141] )
-cb( name "cb02" pose [3.459 5.556 0 -159.523] )
-cb( name "cb03" pose [1.917 5.630 0 -28.297] )
-cb( name "cb04" pose [3.298 4.715 0 -108.654] )
-cb( name "cb05" pose [2.545 4.875 0 -108.654] )
-cb( name "cb06" pose [3.086 6.344 0 -108.654] )
-cb( name "cb07" pose [1.463 6.393 0 -108.654] )
-cb( name "cb08" pose [1.449 4.534 0 -108.654] )
-cb( name "cb09" pose [0.737 5.217 0 -108.654] )
-cb( name "cbr10" pose [1.085 -1.274 0 0] )
-cb( name "cbr11" pose [2.587 -1.832 0 0] )
-cb( name "cbr12" pose [1.812 -0.283 0 -53.892] )
-cb( name "cbr13" pose [3.457 -2.077 0 -28.297] )
-cb( name "cbr14" pose [2.083 -1.401 0 -54.883] )
-cb( name "cbr15" pose [1.814 -2.200 0 -54.883] )
-cb( name "cbr16" pose [1.787 -0.883 0 -54.883] )
-cb( name "cbr17" pose [1.517 -1.703 0 -54.883] )
-cb( name "cbr18" pose [3.125 -1.565 0 -54.883] )
-cb( name "cbr19" pose [4.009 -1.680 0 -54.883] )
+define cbr cb
+(
+ color "red"
+)
 
-cb( name "cbr20" pose [-6.017 0.172 0 -54.883] )
-cb( name "cbr21" pose [-5.875 -0.860 0 -54.883] )
-cb( name "cbr22" pose [-6.766 -1.143 0 -54.883] )
-cb( name "cbr23" pose [-6.625 -0.407 0 -54.883] )
-cb( name "cbr24" pose [-7.021 0.540 0 -54.883] )
-cb( name "cbr25" pose [-7.671 -0.167 0 -54.883] )
-cb( name "cbr26" pose [-7.530 -1.001 0 -54.883] )
-cb( name "cbr27" pose [-7.445 -1.737 0 -54.883] )
-cb( name "cbr28" pose [-8.053 0.625 0 -54.883] )
-cb( name "cbr29" pose [-8.364 -0.450 0 -54.883] )
+define cbb cb
+(
+ color "red"
+)
+
+define cbg cb
+(
+ color "green"
+)
+
+cb( name "cbr0" pose [2.451 7.364 0 0] )
+cb( name "cbr1" pose [2.321 6.221 0 -171.141] )
+cb( name "cbr2" pose [3.459 5.556 0 -159.523] )
+cb( name "cbr3" pose [1.917 5.630 0 -28.297] )
+cb( name "cbr4" pose [3.298 4.715 0 -108.654] )
+cb( name "cbr5" pose [2.545 4.875 0 -108.654] )
+cb( name "cbr6" pose [3.086 6.344 0 -108.654] )
+cb( name "cbr7" pose [1.463 6.393 0 -108.654] )
+cb( name "cbr8" pose [1.449 4.534 0 -108.654] )
+cb( name "cbr9" pose [0.737 5.217 0 -108.654] )
+
+cb( name "cbb0" pose [1.085 -1.274 0 0] )
+cb( name "cbb1" pose [2.587 -1.832 0 0] )
+cb( name "cbb2" pose [1.812 -0.283 0 -53.892] )
+cb( name "cbb3" pose [3.457 -2.077 0 -28.297] )
+cb( name "cbb4" pose [2.083 -1.401 0 -54.883] )
+cb( name "cbb5" pose [1.814 -2.200 0 -54.883] )
+cb( name "cbb6" pose [1.787 -0.883 0 -54.883] )
+cb( name "cbb7" pose [1.517 -1.703 0 -54.883] )
+cb( name "cbb8" pose [3.125 -1.565 0 -54.883] )
+cb( name "cbb9" pose [4.009 -1.680 0 -54.883] )
+
+cb( name "cbg0" pose [-6.017 0.172 0 -54.883] )
+cb( name "cbg1" pose [-5.875 -0.860 0 -54.883] )
+cb( name "cbg2" pose [-6.766 -1.143 0 -54.883] )
+cb( name "cbg3" pose [-6.625 -0.407 0 -54.883] )
+cb( name "cbg4" pose [-7.021 0.540 0 -54.883] )
+cb( name "cbg5" pose [-7.671 -0.167 0 -54.883] )
+cb( name "cbg6" pose [-7.530 -1.001 0 -54.883] )
+cb( name "cbg7" pose [-7.445 -1.737 0 -54.883] )
+cb( name "cbg8" pose [-8.053 0.625 0 -54.883] )
+cb( name "cbg9" pose [-8.364 -0.450 0 -54.883] )
 
 charger( pose [-4.87 4.5 0 180] )
 charger( pose [-4.87 4.0 0 180] )
