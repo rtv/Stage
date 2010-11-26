@@ -28,4 +28,4 @@ clean:
 
 # copy the latest docs to the web server
 upload: 
-	./upload.sh stage-svn stage
+		ghp-import -p stage
