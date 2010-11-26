@@ -15,6 +15,7 @@ terms of the GNU General Public License version 2 or later:
 - Alex Couture-Beil (asc17@sfu.ca)
 - Geoff Biggs (git@killbots.net)
 - Rich Mattes (jpgr87@github.com)
+- Abbas Sadat (abbas.sadat@gmail.com)
 
 Many patches and bug reports have been contributed by users around the
 world.  Stage is part of the Player Project (http://playerstage.org), 
@@ -23,5 +24,5 @@ a community effort to develop free Software tools for robotics research.
 Project Lead / Maintainer
 ------------------------
 
-- Stage v3. : Richard Vaughan (vaughan@sfu.ca)
-- Stage v2. : Toby Collett (tcollett+player@plan9.net.nz)
+- Stage v4. : Richard Vaughan (vaughan@sfu.ca)
+- Stage v2,3. : Toby Collett (tcollett+player@plan9.net.nz)

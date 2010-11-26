@@ -25,6 +25,26 @@
  * CVS: $Id$
  */
 
+// DOCUMENTATION ------------------------------------------------------------
+
+/** @addtogroup player
+@par Graphics2D interface
+-	PLAYER_GRAPHICS2D_CMD_POINTS
+-	PLAYER_GRAPHICS2D_CMD_POLYGON
+-	PLAYER_GRAPHICS2D_CMD_POLYLINE
+-	PLAYER_GRAPHICS2D_CMD_CLEAR
+
+@par Graphics3D interface
+-	PLAYER_GRAPHICS3D_CMD_DRAW
+-	PLAYER_GRAPHICS3D_CMD_PUSH
+-	PLAYER_GRAPHICS3D_CMD_POP
+-	PLAYER_GRAPHICS3D_CMD_CLEAR
+-	PLAYER_GRAPHICS3D_CMD_TRANSLATE
+-	PLAYER_GRAPHICS3D_CMD_ROTATE
+
+*/
+
+
 #include "p_driver.h"
 
 #include <iostream>

@@ -17,7 +17,9 @@ Building Stage requires the following tools and libraries:
 - libpng
 - ltdl (Libtool)
 
-(Since 3.1.0, Stage no longer depends on GLib-2)
+The optional Player plugin requires Player >= 2.1.
+
+The optional Avonstage web-enabled binary requires Avon >= 0.1.
 
 Configuring the build
 ---------------------

@@ -30,18 +30,17 @@
 
 /** @addtogroup player
 @par Simulation interface
-- PLAYER_SIMULATION_REQ_SET_POSE2D
-- PLAYER_SIMULATION_REQ_GET_POSE2D
-- PLAYER_SIMULATION_REQ_SET_PROPERTY_INT
-  - "fiducial_return" 0-32767
-  - "laser_return" 0-2
-  - "gripper_return" 0-1
-  - "ranger_return" 0-1
-  - "obstacle_return" 0-1
-  - "color" 0xRRGGBB
-- PLAYER_SIMULATION_REQ_SET_PROPERTY_FLOAT
-  - "mass" 0 <= N
-  - "watts" 0 <= N
+- PLAYER_SIMULATION_REQ_GET_POSE2D	player_simulation_pose2d_req_t
+- PLAYER_SIMULATION_REQ_SET_POSE2D	player_simulation_pose2d_req_t
+- PLAYER_SIMULATION_REQ_GET_POSE3D	player_simulation_pose3d_req_t
+- PLAYER_SIMULATION_REQ_SET_POSE3D	player_simulation_pose3d_req_t
+- PLAYER_SIMULATION_REQ_SET_PROPERTY player_simulation_property_req_t
+  - (name) (prop) (value) (description)
+  - model "color" float[4] [0]=R, [1]=G, [2]=B, [3]=A
+- PLAYER_SIMULATION_REQ_GET_PROPERTY player_simulation_property_req_t
+  - (name) (prop) (value) (description)
+  -  model "color" float[4] [0]=R, [1]=G, [2]=B, [3]=A
+  - <unused> "time" uint64_t simulation time in usec
  */
 
 // CODE ------------------------------------------------------------
@@ -331,11 +330,9 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		 * then that's too bad for them. */
 
 		//strncmp returns 0 if the strings match
-		if( strncmp(req->prop, "color", (size_t)req->prop_count) &&
-				strncmp(req->prop, "_mp_color", (size_t)req->prop_count) &&
-				strncmp(req->prop, "colour", (size_t)req->prop_count) )
+		if( strncmp(req->prop, "color", (size_t)req->prop_count) )
 		{
-			PRINT_WARN1("Property \"%s\" is not accessible. Options are \"color\", \"_mp_color\", or \"colour\"", req->prop);
+			PRINT_WARN1("Property \"%s\" can not be set. Options are \"color\"", req->prop);
 			return(-1);
 		}
 
@@ -384,12 +381,10 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		// check they want to set the colour. 
 
 		//strncmp returns 0 if the strings match
-		if( !(strncmp(req->prop, "color", (size_t)req->prop_count) &&
-				strncmp(req->prop, "_mp_color", (size_t)req->prop_count) &&
-				strncmp(req->prop, "colour", (size_t)req->prop_count)))
-		{
-			// check the value given is an array of four floats
-			if(req->value_count != sizeof(float)*4)
+		if( !(strncmp(req->prop, "color", (size_t)req->prop_count) ))
+			{
+				// check the value given is an array of four floats
+				if(req->value_count != sizeof(float)*4)
 			{
 				PRINT_WARN("Colour requires an array of 4 floats to store\n");
 				return(-1);
