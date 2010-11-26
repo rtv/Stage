@@ -1,0 +1,9 @@
+digraph G {
+  compound=true
+  node [ fontsize="10", fontname="FreeSans.ttf"];
+  edge [ labelfontsize="10", labelfontname="FreeSans.ttf"];
+  subgraph clusterdir_a6c39068e9f7b96a2e6ba3e1b436ecad {
+    graph [ bgcolor="#ddddee", pencolor="black", label="libstageplugin" fontname="FreeSans.ttf", fontsize="10", URL="dir_a6c39068e9f7b96a2e6ba3e1b436ecad.html"]
+  dir_569fa0913218bd59dcb35cb63e967af8 [shape=box, label="test", style="filled", fillcolor="#eeeeff", pencolor="black", URL="dir_569fa0913218bd59dcb35cb63e967af8.html"];
+  }
+}

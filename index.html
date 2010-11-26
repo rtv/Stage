@@ -1,81 +1,243 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<html>
+<!-- $Id: header.html,v 1.5 2008-02-24 23:24:40 rtv Exp $ -->
 
-	<title>rtv/Stage @ GitHub</title>
-	
-	<style type="text/css">
-		body {
-  		margin-top: 1.0em;
-  		background-color: #cccccc;
-		  font-family: "Helvetica,Arial,FreeSans";
-  		color: #000000;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-		h1 { font-size: 3.8em; color: #333333; margin-bottom: 3px; }
-		h1 .small { font-size: 0.4em; }
-		h1 a { text-decoration: none }
-		h2 { font-size: 1.5em; color: #333333; }
-    h3 { text-align: center; color: #333333; }
-    a { color: #333333; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-		pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-	</style>
-	
-</head>
+<HEAD>
+
+
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=utf-8">
+<meta name="keywords" content="stage, robot, simulation, player, player/stage">
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+
+<style type="text/css">
+
+.floatright { float: right; margin: 0 0 1em 1em; }
+
+body {
+  font-family: sans-serif;
+  #font-family: Geneva, Verdana, Helvetica, Arial, sans-serif;
+  background-color: #FFF;
+  color:#000;
+}
+
+
+a:link { 
+	color: #A00;
+}
+
+a:visited { 
+	color: #800;
+}
+
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+
+.timestamp { text-align:right; background-color: #DDD; font-size:75%;}
+
+h1 { 
+  font-size:160%; 
+}
+
+h2 {
+  font-size:110%;
+  #color: #FFF;
+  #background-color: #666;
+  #padding:3px;
+}
+
+h3 { text-align:left; }
+
+img {
+  border: 0;
+}
+
+ul.menu { 
+    position:relative;
+    left:-2.5em;
+    margin-bottom:0px;
+    margin-top:0px;
+}
+
+ul.menu1 { 
+    position:relative;
+    left:-2.1em;
+    margin-bottom:0px;
+    margin-top:0px;
+}
+
+li.menu { 
+    list-style-type: none;
+    position:relative;
+    #left:-0.5em;
+}
+
+
+#sidebar { position: absolute; left:0px; padding:2em; top:0em; width:11em;}
+
+#content { position: absolute; left:12em; top:0em; padding-left:3em; padding-right:3em; padding-bottom:2em; margin-top:1em; margin-right:2em; }
+
+div.box { background-color:#EEE; border: 1px solid #000; padding: 0.5ex 0.4em 0.5ex 0.6em; margin:1em;  }
+div.box_light { background-color:#FFF; border: 1px solid #000; padding: 0.5ex 0.4em 0.5ex 0.6em; margin:1em;  }
+div.title { font-weight:bold;  margin-bottom:2px;}
+
+div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
+
+</style>
+
+<TITLE>Stage Manual</TITLE>
+
+</HEAD>
 
 <body>
-  <a href="http://github.com/rtv/Stage"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
 
-  <div id="container">
+<div id="sidebar"> 
 
-    <div class="download">
-      <a href="http://github.com/rtv/Stage/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/rtv/Stage/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
+<h2 style="text-align:center;">
+<a href="index.html"><img src="stage_button.png" alt="Stage logo image"></a>
+</h2>
 
-    <h1><a href="http://github.com/rtv/Stage">Stage</a>
-      <span class="small">by <a href="http://github.com/rtv">rtv</a></span></h1>
+<div class="box">
+<div class=title>Stage</div>
 
-    <div class="description">
-      multiple mobile robot simulator from the Player Project
-    </div>
-
-    <h2>License</h2>
-<p>GPL & LGPL</p>
-<h2>Contact</h2>
-<p>Richard Vaughan (vaughan@sfu.ca)
-<br/>      </p>
+<ul class=menu>
+<li class=menu><a href="index.html">Frontpage</a>
+<li class=menu><a href="release.html">Release</a>
+<li class=menu><a href="authors.html">Authors</a>
+<li class=menu><a href="modules.html">Contents</a>
+</div>
 
 
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/rtv/Stage/zipball/master">zip</a> or
-      <a href="http://github.com/rtv/Stage/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/rtv/Stage</pre>
-    </p>
+<div class="box">
+<div class=title>User</div>
+<ul class=menu>
+<li class=menu><a href="install.html">Installation</a>
+<li class=menu><a href="help.html">Help</a>
+<hr>
 
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/rtv/Stage">rtv/Stage</a>
-    </div>
+<!-- the lists of plugins and models come next -->
 
-  </div>
+<li class=menu><a href="group__world.html">World</a>
+<li class=menu><a href="group__worldgui.html">WorldGUI</a>
+<li class=menu><a href="group__model.html">Model</a>
+<ul class=menu1>
+<li class=menu><a href="group__model__actuator.html">actuator</a></li>
+<li class=menu><a href="group__model__blobfinder.html">blobfinder</a></li>
+<li class=menu><a href="group__model__camera.html">camera</a></li>
+<li class=menu><a href="group__model__fiducial.html">fiducial</a></li>
+<li class=menu><a href="group__model__gripper.html">gripper</a></li>
+<li class=menu><a href="group__model__laser.html">laser</a></li>
+<li class=menu><a href="group__model__position.html">position</a></li>
+<li class=menu><a href="group__model__ranger.html">ranger</a></li>
+<!--
+TODO
 
-  
+<li class=menu><a href="group__model__bumper.html">bumper</a></li>
+<li class=menu><a href="group__model__blinkenlight.html">blinkenlight</a></li>
+-->
+</ul>
+
+</div>
+
+<div class=box>
+<div class="title">Player</div>
+<li class=menu><a href="group__player.html">libstageplugin</a>
+</div>
+
+
+<div class=box>
+<div class="title">Developer</div>
+<a href="namespaces.html">libstage</a>
+</div>
+
+<div class=box_light>
+<!-- <a href="http://sourceforge.net"><img border=0 src="http://sourceforge.net/sflogo.php?group_id=42445&type=1"></a> -->
+<div class="title">Online</div>
+<a href="http://playerstage.org">Homepage</a><br>
+<a href="http://playerstage.sourceforge.net/wiki/Basic_FAQ">FAQ (Wiki)</a><br>
+<a href="http://sourceforge.net/project/showfiles.php?group_id=42445">Download</a><br>
+<a href="http://sourceforge.net/projects/playerstage">Project</a><br>
+<a href="http://sourceforge.net/tracker/?group_id=42445">Bugs</a><br>
+<a href="http://sourceforge.net/mail/?group_id=42445">Mailing Lists</a>
+</div>
+
+
+</div>
+
+<div id="content" >
+<!-- Generated by Doxygen 1.7.2 -->
+<div class="header">
+  <div class="headertitle">
+<h1>The Stage Robot Simulator </h1>  </div>
+</div>
+<div class="contents">
+<h3 class="version">4.0.0 </h3><p>Copyright Richard Vaughan and contributors 1998-2010 Part of the Player Project (<a href="http://playerstage.org">http://playerstage.org</a>)</p>
+<h2>License</h2>
+<p>This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License version 2 as published by the Free Software Foundation.</p>
+<p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</p>
+<p>A copy of the license is included with the sourcecode in the file 'COPYING". Copying and redistribution is permitted only under the terms of the license.</p>
+<h2>Introduction</h2>
+<p>Stage is a robot simulator. It provides a virtual world populated by mobile robots and sensors, along with various objects for the robots to sense and manipulate.</p>
+<p>There are three ways to use Stage: </p>
+<ol>
+<li>
+<p class="startli"></p>
+<p class="endli">The "stage" program: a standalone robot simulation program that loads your robot control program from a library that you provide. </p>
+</li>
+<li>
+<p class="startli"></p>
+<p class="endli">The Stage plugin for Player (libstageplugin) - provides a population of virtual robots for the popular Player networked robot interface system. </p>
+</li>
+<li>
+<p class="startli"></p>
+<p class="endli">Write your own simulator: the "libstage" C++ library makes it easy to create, run and customize a Stage simulation from inside your own programs. </p>
+</li>
+</ol>
+<h2>Models</h2>
+<p>Stage provides several sensor and actuator models, including sonar or infrared rangers, scanning laser rangefinder, color-blob tracking, fiducial tracking, bumpers, grippers and mobile robot bases with odometric or global localization.</p>
+<h2>Design</h2>
+<p>Stage was designed with multi-agent systems in mind, so it provides fairly simple, computationally cheap models of lots of devices rather than attempting to emulate any device with great fidelity. This design is intended to be useful compromise between conventional high-fidelity robot simulations, the minimal simulations described by Jakobi [4], and the grid-world simulations common in artificial life research [5]. We intend Stage to be just realistic enough to enable users to move controllers between Stage robots and real robots, while still being fast enough to simulate large populations. We also intend Stage to be comprehensible to undergraduate students, yet sophisticated enough for professional reseachers.</p>
+<p>Player also contains several useful 'virtual devices'; including some sensor pre-processing or sensor-integration algorithms that help you to rapidly build powerful robot controllers. These are easy to use with Stage.</p>
+<h2>Citations</h2>
+<p>If you use Stage in your work, we'd appreciate a citation. At the time of writing, the most suitable reference is either:</p>
+<p>Richard Vaughan. "Massively Multiple Robot Simulations in Stage", Swarm Intelligence 2(2-4):189-208, 2008. Springer.</p>
+<p>Or, if you are using Player/Stage:</p>
+<p>Brian Gerkey, Richard T. Vaughan and Andrew Howard. "The Player/Stage 
+Project: Tools for Multi-Robot and Distributed Sensor Systems" Proceedings of the 11th International Conference on Advanced Robotics, pages 317-323, Coimbra, Portugal, June 2003 (ICAR'03) <br/>
+ <a href="http://www.isr.uc.pt/icar03/">http://www.isr.uc.pt/icar03/</a> . </p>
+<p><a href="http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.ps.gz">gzipped postscript</a>, <a href="http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.pdf">pdf</a></p>
+<p>Please help us keep track of what's being used out there by correctly naming the Player/Stage components you use. Player used on its own is called "Player". Player and Stage used together are referred to as "the Player/Stage system" or just "Player/Stage". When Stage is used without Player, it's just called "Stage". When the Stage library is used to create your own custom simulator, it's called "libstage" or "the Stage library". When Player is used with its 3D ODE-based simulation backend, Gazebo, it's called Player/Gazebo. Gazebo without Player is just "Gazebo". All this software is part of the "Player
+Project".</p>
+<h2>Support</h2>
+<p>Funding for Stage has been provided in part by:</p>
+<ul>
+<li>
+DARPA (USA) </li>
+<li>
+NASA (USA) </li>
+<li>
+NSERC (Canada) </li>
+<li>
+DRDC Suffield (Canada) </li>
+<li>
+NSF (USA) </li>
+<li>
+Simon Fraser University (Canada) </li>
+</ul>
+<h2>Names</h2>
+<p>The names "Player" and "Stage" were inspired by the lines:</p>
+<pre><code>"All the world's a stage,  
+ And all the men and women merely players"
+</code></pre><p>from "As You Like It" by William Shakespeare.</p>
+<h2>References</h2>
+<p>[4] Nick Jakobi (1997) "Evolutionary Robotics and the Radical Envelope
+of Noise Hypothesis", Adaptive Behavior Volume 6, Issue 2. pp.325 - 368.</p>
+<p>[5] Stuart Wilson (1985) "Knowledge Growth in an Artificial Animal", Proceedings of the First International Conference on Genetic Agorithms and Their Applications. Hillsdale, New Jersey. pp.16-23. </p>
+</div>
+<hr class="footer"/><address class="footer"><small>Generated on Fri Nov 26 2010 13:13:30 for Stage by&#160;
+<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.2 </small></address>
 </body>
 </html>

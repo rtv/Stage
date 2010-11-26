@@ -1,0 +1,8 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$canvas_8cc.html" title="canvas.cc" alt="" coords="5,83,91,112"/>
+<area shape="rect" id="node5" href="$model__camera_8cc.html" title="model_camera.cc" alt="" coords="115,83,251,112"/>
+<area shape="rect" id="node7" href="$model__draw_8cc.html" title="model_draw.cc" alt="" coords="275,83,389,112"/>
+<area shape="rect" id="node9" href="$option_8cc.html" title="option.cc" alt="" coords="413,83,493,112"/>
+<area shape="rect" id="node11" href="$vis__strip_8cc.html" title="vis_strip.cc" alt="" coords="517,83,608,112"/>
+<area shape="rect" id="node13" href="$worldgui_8cc.html" title="worldgui.cc" alt="" coords="632,83,723,112"/>
+</map>

@@ -1,0 +1,17 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$canvas_8hh.html" title="canvas.hh" alt="" coords="465,83,551,112"/>
+<area shape="rect" id="node11" href="$option_8cc.html" title="option.cc" alt="" coords="779,160,859,189"/>
+<area shape="rect" id="node17" href="$options__dlg_8hh.html" title="options_dlg.hh" alt="" coords="185,83,300,112"/>
+<area shape="rect" id="node23" href="$model__blinkenlight_8cc.html" title="model_blinkenlight.cc" alt="" coords="625,83,783,112"/>
+<area shape="rect" id="node25" href="$model__blobfinder_8cc.html" title="model_blobfinder.cc" alt="" coords="807,83,956,112"/>
+<area shape="rect" id="node27" href="$model__fiducial_8cc.html" title="model_fiducial.cc" alt="" coords="980,83,1111,112"/>
+<area shape="rect" id="node29" href="$model__gripper_8cc.html" title="model_gripper.cc" alt="" coords="1135,83,1265,112"/>
+<area shape="rect" id="node31" href="$model__ranger_8cc.html" title="model_ranger.cc" alt="" coords="1289,83,1417,112"/>
+<area shape="rect" id="node34" href="$world_8cc.html" title="world.cc" alt="" coords="1441,83,1513,112"/>
+<area shape="rect" id="node5" href="$canvas_8cc.html" title="canvas.cc" alt="" coords="256,160,341,189"/>
+<area shape="rect" id="node7" href="$model__camera_8cc.html" title="model_camera.cc" alt="" coords="365,160,501,189"/>
+<area shape="rect" id="node9" href="$model__draw_8cc.html" title="model_draw.cc" alt="" coords="525,160,640,189"/>
+<area shape="rect" id="node13" href="$vis__strip_8cc.html" title="vis_strip.cc" alt="" coords="664,160,755,189"/>
+<area shape="rect" id="node15" href="$worldgui_8cc.html" title="worldgui.cc" alt="" coords="141,160,232,189"/>
+<area shape="rect" id="node20" href="$options__dlg_8cc.html" title="options_dlg.cc" alt="" coords="5,160,117,189"/>
+</map>

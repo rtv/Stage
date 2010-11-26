@@ -1,0 +1,5 @@
+<map id="G" name="G">
+<area shape="rect" id="node1" href="$classStg_1_1Camera.html" title="Stg::Camera" alt="" coords="7,32,108,61"/>
+<area shape="rect" id="node3" href="$classStg_1_1OrthoCamera.html" title="Stg::OrthoCamera" alt="" coords="177,5,316,35"/>
+<area shape="rect" id="node5" href="$classStg_1_1PerspectiveCamera.html" title="Stg::PerspectiveCamera" alt="" coords="159,59,335,88"/>
+</map>
