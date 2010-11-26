@@ -1,8 +1,8 @@
 /* 
-   File lasernoise.cc: laser noise plugin demo for Stage
+   File rangernoise.cc: ranger noise plugin demo for Stage
    Author: Richard Vaughan
    Date: 3 March 2008
-   CVS: $Id: lasernoise.cc,v 1.1 2008-03-04 02:09:56 rtv Exp $
+   CVS: $Id: rangernoise.cc,v 1.1 2008-03-04 02:09:56 rtv Exp $
 */
 
 #include "stage.hh"
@@ -20,17 +20,17 @@ double simple_normal_deviate( double mean, double stddev )
   return ( stddev * (x - 6.0) + mean );  
 }
 
-// process the laser data
-int LaserUpdate( ModelLaser* mod, void* dummy )
+// process the ranger data
+int RangerUpdate( ModelRanger* mod, void* dummy )
 {
   // get the data
   uint32_t sample_count=0;
   
-	const std::vector<ModelLaser::Sample>& scan = mod->GetSamples();
+	std::vector<meters_t>& scan = mod->GetRangesMutable();
 	
   if( scan.size()>0 )
     FOR_EACH( it, scan )
-      it->range *= simple_normal_deviate( 1.0, DEVIATION );
+      *it *= simple_normal_deviate( 1.0, DEVIATION );
   
   return 0; // run again
 }
@@ -39,10 +39,10 @@ int LaserUpdate( ModelLaser* mod, void* dummy )
 // the model that gets called just after the sensor update is done.
 extern "C" int Init( Model* mod )
 {
-  mod->AddUpdateCallback( (model_callback_t)LaserUpdate, NULL );
-
+	mod->AddCallback( Model::CB_UPDATE, (model_callback_t)RangerUpdate, NULL );
+	
   // add this so we can see the effects immediately, without needing
-  // anyone else to subscribe to the laser
+  // anyone else to subscribe to the ranger
   mod->Subscribe();
 
   return 0; // ok

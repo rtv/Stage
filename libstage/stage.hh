@@ -2756,9 +2756,20 @@ namespace Stg
 	 const std::vector<Sensor>& GetSensors() const
 	 { return sensors; }
 	 
-	 /** returns a vector of range samples from the indicated sensor
-		  (defaults to zero) */
+	 /** returns a const reference to the vector of range samples from
+		  the indicated sensor (defaults to zero) */
 	 const std::vector<meters_t>& GetRanges( unsigned int sensor=0) const 
+	 { 
+		if( sensor < sensors.size() )
+		  return sensors[sensor].ranges;
+		
+		PRINT_ERR1( "invalid sensor index specified (%d)", sensor );
+		exit(-1);
+	 }
+
+	 /** returns a mutable reference to the vector of range samples from
+		  the indicated sensor (defaults to zero). Mutating the range data in place allows controllers to act as filters. */
+	 std::vector<meters_t>& GetRangesMutable( unsigned int sensor=0) 
 	 { 
 		if( sensor < sensors.size() )
 		  return sensors[sensor].ranges;

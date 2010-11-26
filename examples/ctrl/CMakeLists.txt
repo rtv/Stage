@@ -6,8 +6,9 @@ SET( PLUGINS
      wander
 #	  wander_pioneer
 	  pioneer_flocking
-     rasterize
-	  dynamic
+    rasterize
+	  lasernoise
+    dynamic
 )
 
 # need plaer's wavefront planning library for this one
