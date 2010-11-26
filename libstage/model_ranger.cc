@@ -148,10 +148,9 @@ void ModelRanger::Sensor::Load( Worldfile* wf, int entity )
 	range.Load( wf, entity, "range" );
 	col.Load( wf, entity );		
 	fov = wf->ReadAngle( entity, "fov", fov );
-	sample_count = wf->ReadInt( entity, "samples", sample_count );
-
-	ranges.clear();
-	intensities.clear();
+	sample_count = wf->ReadInt( entity, "samples", sample_count );	
+	ranges.resize(sample_count);
+	intensities.resize(sample_count);
 }
 
 void ModelRanger::Load( void )

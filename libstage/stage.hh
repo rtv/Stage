@@ -2503,83 +2503,6 @@ namespace Stg
 
 
 
-
-//   // LASER MODEL --------------------------------------------------------
-  
-//   /// %ModelLaser class
-//   class ModelLaser : public Model
-//   {
-//   public:
-// 	 /** Laser range data */
-// 	 class Sample
-// 	 {
-// 	 public:
-// 		meters_t range; ///< range to laser hit in meters
-// 	  double reflectance; ///< intensity of the reflection 0.0 to 1.0
-// 	 };
-		
-// 	 /** Convenience object for setting parameters using SetConfig/GetConfig */
-// 	 class Config
-// 	 {
-// 	 public:
-// 		uint32_t sample_count; ///< Number of range samples
-// 		uint32_t resolution; ///< interpolation
-// 		Bounds range_bounds; ///< min and max ranges
-// 		radians_t fov; ///< Field of view, centered about the pose angle
-// 	 }; 
-		
-//   private:	 
-// 	 class Vis : public Visualizer 
-// 	 {
-// 	 private:
-// 		static Option showArea;
-// 		static Option showStrikes;
-// 		static Option showFov;
-// 		static Option showBeams;
-
-// 	 public:
-// 		Vis( World* world );		virtual ~Vis( void ){}
-// 		virtual void Visualize( Model* mod, Camera* cam );
-// 	 } vis;
-	 	
-// 		unsigned int sample_count;
-// 		std::vector<Sample> samples;
-		
-// 	public:
-// 		meters_t range_max;
-// 		radians_t fov;
-// 		uint32_t resolution;
-    
-// 	 // set up data buffers after the config changes
-// 	 void SampleConfig();
-
-//   public:
-// 	 // constructor
-// 	 ModelLaser( World* world,
-// 					 Model* parent,
-// 					 const std::string& type ); 
-  
-// 	 // destructor
-// 	 ~ModelLaser();
-	
-// 	 virtual void Startup();
-// 	 virtual void Shutdown();
-// 	 virtual void Update();
-// 	 virtual void Load();
-// 	 virtual void Print( char* prefix ) const;
-  
-// 	 /** returns a const reference to a vector of range and reflectance samples */
-// 	 const std::vector<Sample>& GetSamples() const;
-	 
-// 	 /** returns a mutable reference to a vector of range and reflectance samples */
-// 	 std::vector<Sample>& GetSamples();
-
-// 	 /** Get the user-tweakable configuration of the laser */
-// 	 Config GetConfig( ) const;
-	 
-// 	 /** Set the user-tweakable configuration of the laser */
-// 	 void SetConfig( Config& cfg );  
-//   };
   
 
   // Light indicator model
@@ -2818,7 +2741,9 @@ namespace Stg
 								 range( 0.0, 5.0 ),
 								 fov( 0.1 ), 
 								 sample_count(1),
-								 col( 0,1,0,0.3 ) 
+								 col( 0,1,0,0.3 ),
+								 ranges(sample_count),
+								 intensities(sample_count)
 			{}
 			
 			void Update( ModelRanger* rgr );			
