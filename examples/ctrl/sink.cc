@@ -10,7 +10,7 @@ int Delivery( Model* mod, void* dummy )
 
 	total++;
 
-	printf( "%.2f %d %.2f %.2f\n", 
+	printf( "Delivery: %.2f %d %.2f %.2f\n", 
 					mod->GetWorld()->SimTimeNow() / 1e6,
 					//mod->GetFlagCount(),
 					total,
