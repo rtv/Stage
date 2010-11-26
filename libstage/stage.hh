@@ -2742,8 +2742,8 @@ namespace Stg
 								 fov( 0.1 ), 
 								 sample_count(1),
 								 col( 0,1,0,0.3 ),
-								 ranges(sample_count),
-								 intensities(sample_count)
+								 ranges(),
+								 intensities()
 			{}
 			
 			void Update( ModelRanger* rgr );			

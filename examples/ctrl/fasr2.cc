@@ -563,7 +563,7 @@ public:
 				const std::vector<ModelRanger::Sensor>& sensors = sonar->GetSensors();
 
 				for( unsigned int s = BACK_SENSOR_FIRST; s <= BACK_SENSOR_LAST; ++s )
-					if( sensors[s].ranges[0] < wait_distance) 
+					if( sensors[s].ranges.size() < 1 || sensors[s].ranges[0] < wait_distance) 
 						{
 							pos->Say( "Waiting..." );
 							pos->SetXSpeed( 0.0 );
