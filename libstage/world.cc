@@ -410,7 +410,7 @@ void World::Load( const std::string& worldfile_path )
 		//printf( "worker threads %d\n", worker_threads );
 		
       // kick off the threads
-      for( unsigned int t=0; t<worker_threads; t++ )
+      for( unsigned int t=0; t<worker_threads; ++t )
 				{
 					// a little configuration for each thread can't be a local
 					// stack var, since it's accssed in the threads
@@ -432,7 +432,7 @@ void World::Load( const std::string& worldfile_path )
     }
   
   // Iterate through entitys and create objects of the appropriate type
-  for( int entity = 1; entity < wf->GetEntityCount(); entity++ )
+  for( int entity = 1; entity < wf->GetEntityCount(); ++entity )
     {
       const char *typestr = (char*)wf->GetEntityType(entity);      	  
       
@@ -711,7 +711,7 @@ void World::Raytrace( const Pose &gpose, // global pose
   Pose raypose = gpose;
   const double starta = fov/2.0 - raypose.a;
   
-  for( uint32_t s=0; s < sample_count; s++ )
+  for( uint32_t s=0; s < sample_count; ++s )
     {
       raypose.a = (s * fov / (double)(sample_count-1)) - starta;
       samples[s] = Raytrace( raypose, range, func, model, arg, ztest );
@@ -1082,7 +1082,7 @@ void World::ForEachCellInLine( const point_int_t& start,
 
 void World::Extend( point3_t pt )
 {
-  extent.x.min = std::min( extent.x.min, pt.x);
+  extent.x.min = std::min( extent.x.min, pt.x );
   extent.x.max = std::max( extent.x.max, pt.x );
   extent.y.min = std::min( extent.y.min, pt.y );
   extent.y.max = std::max( extent.y.max, pt.y );

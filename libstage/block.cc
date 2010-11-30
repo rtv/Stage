@@ -205,51 +205,19 @@ void Block::UnMap()
   mapped = false;
 }
 
+#include <algorithm>
+#include <functional>
+
 inline void Block::RemoveFromCellArray( CellPtrVec *cells )
 {
-  FOR_EACH( it, *cells )
-	 {
-		Cell* cell = *it;
-
- 		size_t len = cell->blocks.size();
-		if( len )
-			{
-#if 0		// Use conventional STL style		
-
-				// this special-case test is faster for worlds with simple models,
-				// which are the ones we want to be really fast. It's a small
-				// extra cost for worlds with several models in each cell. It
-				// gives a 5% overall speed increase in fasr.world.
-				
-				if( (cell->blocks.size() == 1) &&
-						(cell->blocks[0] == this) ) // special but common case
-					{
-						cell->blocks.clear(); // cheap
-					}
-				else // the general but relatively expensive case
-					{
-						EraseAll( this, cell->blocks );		
-					}
-#else		// attempt faster removal loop
-				// O(n) * low constant array element removal
-				// this C-style pointer work looks to be very slightly faster than the STL way
-				Block **start = &cell->blocks[0]; // start of array
-				Block **r     = &cell->blocks[0]; // read from here
-				Block **w     = &cell->blocks[0]; // write to here
-				
-				while( r < start + len ) // scan down array, skipping 'this' 
-					{
-						if( *r != this ) 
-							*w++ = *r;				
-						r++;
-					}
-				cell->blocks.resize( w-start );
-#endif
-			}
-		
-		--cell->region->count;
-		--cell->region->superregion->count;  	 	 
-	 }
+ 	//	FOR_EACH( it, *cells )
+	//	(*it)->RemoveBlock(this);
+	
+	// this is equivalent to the above commented code - experimenting
+	// with optimizations
+	std::for_each( cells->begin(), 
+								 cells->end(), 
+								 std::bind2nd( std::mem_fun(&Cell::RemoveBlock), this));
 
   //printf( "%d %d %.2f\n", count1, countmore, ((float)count1)/float(countmore));
 }
@@ -263,7 +231,7 @@ void Block::SwitchToTestedCells()
 
   // 2. find the set of cells in candidate but not rendered and insert
   // them
-
+ 
   // .. and see if that is faster than the current method
 
 	//printf( "rendered_cells %lu\n", rendered_cells->size() );
@@ -319,14 +287,14 @@ void Block::GenerateCandidateCells()
 			mpts.resize( pts.size() );
 			
 			
-			for( unsigned int i=0; i<pt_count; i++ )
+			for( unsigned int i=0; i<pt_count; ++i )
 				mpts[i] = BlockPointToModelMeters( pts[i] );
 		}
   
   gpts.clear();
   mod->LocalToPixels( mpts, gpts );
   
-  for( unsigned int i=0; i<pt_count; i++ )
+  for( unsigned int i=0; i<pt_count; ++i )
 		mod->world->ForEachCellInLine( gpts[i], 
 																	 gpts[(i+1)%pt_count], 
 																	 *candidate_cells );  
@@ -361,7 +329,7 @@ void Block::Rasterize( uint8_t* data,
   //	 this, width, height, scalex, scaley, offsetx, offsety );
 	
 	const unsigned int pt_count = pts.size();
-  for( unsigned int i=0; i<pt_count; i++ )
+  for( unsigned int i=0; i<pt_count; ++i )
     {
 		// convert points from local to model coords
 		point_t mpt1 = BlockPointToModelMeters( pts[i] );
@@ -397,7 +365,7 @@ void Block::Rasterize( uint8_t* data,
 	  
 		double dydx = (double) (b.y - a.y) / (double) (b.x - a.x);
 		double y = a.y;
-		for(int x=a.x; x<=b.x; x++)
+		for(int x=a.x; x<=b.x; ++x)
 		  {
 			 if( steep )
 				{
@@ -488,7 +456,7 @@ void Block::Load( Worldfile* wf, int entity )
 	const unsigned int pt_count = wf->ReadInt( entity, "points", 0);
 
   char key[128];
-  for( unsigned int p=0; p<pt_count; p++ )	      
+  for( unsigned int p=0; p<pt_count; ++p )	      
 	 {
 		snprintf(key, sizeof(key), "point[%d]", p );
 		

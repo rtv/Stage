@@ -49,6 +49,9 @@ namespace Stg
 		: region( reg ),
 		  blocks() 
 	 { /* nothing to do */ }  		
+
+		void RemoveBlock( Block* b );
+
   };  // class Cell
   
   class Region

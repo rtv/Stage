@@ -22,6 +22,13 @@ MBA 17.3
 MBA 23.1 (1 thread)
 MBA 19.3 (2 threads)
 
+Timing test FASR2.world 200 seconds
+-----------------------
+MBPi7 2 threads   
+
+32.3 (user 45.4) old FOR_EACH
+30.0 (user 44.2) new FOR_EACH
+
 ** 3.2.0 RELEASE *
 
  - visualizer option state in worldfile

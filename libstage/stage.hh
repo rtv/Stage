@@ -605,9 +605,13 @@ namespace Stg
 												  Model* finder, 
 												  const void* arg );
 
-  // STL container iterator macros
+  // STL container iterator macros - __typeof is a gcc extension, so
+  // this could be an issue one day.
 #define VAR(V,init) __typeof(init) V=(init)
-#define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();I++)
+//#define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();++I) NOTE:
+// this version assumes the container is not modified in the loop,
+// which I think is true everywhere it is used in Stage
+#define FOR_EACH(I,C) for(VAR(I,(C).begin()),ite=(C).end();(I)!=ite;++(I))
 
 /** wrapper for Erase-Remove method of removing all instances of thing from container */
   template <class T, class C>
@@ -1716,6 +1720,9 @@ namespace Stg
 	 std::vector<Option*> drawOptions;
 	 const std::vector<Option*>& getOptions() const { return drawOptions; }
 	 
+		/** EXP */
+		Model* hitmod; // thing we hit in a (parallel) collision test
+
   protected:
 
 	 /** If true, the model always has at least one subscription, so
@@ -2102,6 +2109,10 @@ namespace Stg
 	 virtual void UpdateCharge();
 
 	 Model* ConditionalMove( const Pose& newpose );
+	
+		// EXP
+		void ConditionalMove_calc( const Pose& newpose );
+		void ConditionalMove_commit( void );
 
 	 meters_t ModelHeight() const;
 

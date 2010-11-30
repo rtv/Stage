@@ -949,6 +949,24 @@ Model* Model::ConditionalMove( const Pose& newpose )
   return hitmod;
 }
 
+void Model::ConditionalMove_calc( const Pose& newpose )
+{ 
+  const Pose startpose( pose );
+  pose = newpose; // do the move provisionally - we might undo it below
+
+	this->hitmod = NULL;
+  this->hitmod = TestCollisionTree();
+ 
+  if( hitmod )
+		pose = startpose; // move failed - put me back where I started
+}
+
+void Model::ConditionalMove_commit()
+{ 
+	CommitTestedPose(); //recursively commit to blocks to the new pose 
+	world->dirty = true; // need redraw
+}
+
 
 void Model::UpdatePose( void )
 {
@@ -1189,8 +1207,8 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 
   mod->PushColor( 0,0,0,0.5 );
   glPolygonMode( GL_FRONT, GL_FILL );
-  for( unsigned int y=0; y<height; y++ )
-	 for( unsigned int x=0; x<width; x++ )
+  for( unsigned int y=0; y<height; ++y )
+	 for( unsigned int x=0; x<width; ++x )
 		{
 		  // printf( "[%u %u] ", x, y );
 		  if( data[ x + y*width ] )
@@ -1201,8 +1219,8 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 
   mod->PushColor( 0,0,0,1 );
   glPolygonMode( GL_FRONT, GL_LINE );
-  for( unsigned int y=0; y<height; y++ )
-	 for( unsigned int x=0; x<width; x++ )
+  for( unsigned int y=0; y<height; ++y )
+	 for( unsigned int x=0; x<width; ++x )
 		{
 		  if( data[ x + y*width ] )
 			 glRectf( x, y, x+1, y+1 );

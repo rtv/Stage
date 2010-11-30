@@ -51,8 +51,8 @@ void SuperRegion::DrawOccupancy()
   char buf[32];
 
   glColor3f( 0,1,0 );    
-  for( int y=0; y<SUPERREGIONWIDTH; y++ )
-	 for( int x=0; x<SUPERREGIONWIDTH; x++ )
+  for( int y=0; y<SUPERREGIONWIDTH; ++y )
+	 for( int x=0; x<SUPERREGIONWIDTH; ++x )
 		{
 		  if( r->count ) // region contains some occupied cells
 			 {
@@ -65,8 +65,8 @@ void SuperRegion::DrawOccupancy()
 				Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
 				
 				// draw a rectangle around each occupied cell
-				for( int p=0; p<REGIONWIDTH; p++ )
-				  for( int q=0; q<REGIONWIDTH; q++ )
+				for( int p=0; p<REGIONWIDTH; ++p )
+				  for( int q=0; q<REGIONWIDTH; ++q )
 					 if( r->cells[p+(q*REGIONWIDTH)].blocks.size() )
 						{					 
 						  GLfloat xx = p+(x<<RBITS);
@@ -105,7 +105,7 @@ void SuperRegion::DrawOccupancy()
 				glEnd();
 			 }
 
-		  r++; // next region quickly
+		  ++r; // next region quickly
 		}
   
   snprintf( buf, 15, "%lu", count );
@@ -162,12 +162,12 @@ void SuperRegion::DrawVoxels()
   
   Region* r = GetRegion( 0, 0);
   
-  for( int y=0; y<SUPERREGIONWIDTH; y++ )
-	 for( int x=0; x<SUPERREGIONWIDTH; x++ )
+  for( int y=0; y<SUPERREGIONWIDTH; ++y )
+	 for( int x=0; x<SUPERREGIONWIDTH; ++x )
 		{		  
 		  if( r->count )
-			 for( int p=0; p<REGIONWIDTH; p++ )
-				for( int q=0; q<REGIONWIDTH; q++ )
+			 for( int p=0; p<REGIONWIDTH; ++p )
+				for( int q=0; q<REGIONWIDTH; ++q )
 				  {
 					 Cell* c = (Cell*)&r->cells[p+(q*REGIONWIDTH)];
 					 
@@ -202,4 +202,47 @@ void SuperRegion::DrawVoxels()
 		  ++r;
 		}
   glPopMatrix();    
+}
+
+
+void Cell::RemoveBlock( Block* b )
+{
+	size_t len = blocks.size();
+	if( len )
+		{
+#if 0		// Use conventional STL style		
+			
+				// this special-case test is faster for worlds with simple models,
+				// which are the ones we want to be really fast. It's a small
+				// extra cost for worlds with several models in each cell. It
+				// gives a 5% overall speed increase in fasr.world.
+			
+			if( (blocks.size() == 1) &&
+					(blocks[0] == b) ) // special but common case
+				{
+					blocks.clear(); // cheap
+				}
+			else // the general but relatively expensive case
+				{
+					EraseAll( b, blocks );		
+				}
+#else		// attempt faster removal loop
+				// O(n) * low constant array element removal
+				// this C-style pointer work looks to be very slightly faster than the STL way
+			Block **start = &blocks[0]; // start of array
+			Block **r     = &blocks[0]; // read from here
+			Block **w     = &blocks[0]; // write to here
+			
+			while( r < start + len ) // scan down array, skipping 'this' 
+				{
+					if( *r != b ) 
+						*w++ = *r;				
+					++r;
+				}
+			blocks.resize( w-start );
+#endif
+		}
+	
+	--region->count;
+	--region->superregion->count;  	 	  
 }
