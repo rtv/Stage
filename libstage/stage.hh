@@ -495,16 +495,16 @@ namespace Stg
 		point_int_t( int x, int y ) : x(x), y(y){}	 
 		point_int_t() : x(0), y(0){}
 		
-		/** required to put these in sorted containers like std::map */
-		bool operator<( const point_int_t& other ) const
-		{
-			if( x < other.x ) return true;
-			if( other.x < x ) return false;
-			return y < other.y;
-		}
- 
-	 bool operator==( const point_int_t& other ) const
-		{ return ((x == other.x) && (y == other.y) ); }
+ 		/** required to put these in sorted containers like std::map */
+ 		bool operator<( const point_int_t& other ) const
+ 		{
+ 			if( x < other.x ) return true;
+ 			if( other.x < x ) return false;
+ 			return y < other.y;
+ 		}
+		
+ 	 bool operator==( const point_int_t& other ) const
+ 		{ return ((x == other.x) && (y == other.y) ); }
   };
   
   typedef std::vector<point_int_t> PointIntVec;
@@ -956,14 +956,9 @@ namespace Stg
     virtual Model* RecentlySelectedModel() const { return NULL; }
 		
     SuperRegion* AddSuperRegion( const point_int_t& coord );
-    SuperRegion* GetSuperRegion( int32_t x, int32_t y );
-    void ExpireSuperRegion( SuperRegion* sr );
-		
-		/** add a Cell pointer to the vector for each cell on the line from
-				pt1 to pt2 inclusive */
-//     void MapLine( const point_int_t& pt1,
-// 									const point_int_t& pt2, 
-// 									Block* block );
+    SuperRegion* GetSuperRegion( const point_int_t& org );
+    SuperRegion* GetSuperRegionCreate( const point_int_t& org );
+    //void ExpireSuperRegion( SuperRegion* sr );
 		
     /** convert a distance in meters to a distance in world occupancy
 		  grid pixels */

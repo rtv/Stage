@@ -11,8 +11,6 @@ namespace Stg
 {
 
   // a bit of experimenting suggests that these values are fast. YMMV.
-  //const int32_t RBITS( 5 ); // regions contain (2^RBITS)^2 pixels
-  //const int32_t SBITS( 5 );// superregions contain (2^SBITS)^2 regions
   const int32_t RBITS( 5 ); // regions contain (2^RBITS)^2 pixels
   const int32_t SBITS( 5 );// superregions contain (2^SBITS)^2 regions
   const int32_t SRBITS( RBITS+SBITS );
@@ -32,16 +30,12 @@ namespace Stg
 
   // this is slightly faster than the inline method above, but not as safe
   //#define GETREG(X) (( (static_cast<int32_t>(X)) & REGIONMASK ) >> RBITS)
-
-	//	class Region;
-
+	
   class Cell 
   {
-		//friend class Region;
 		friend class SuperRegion;
 		friend class World;
-		//friend class Block;
-	 
+		
   private:
 		std::vector<Block*> blocks;		
 		
@@ -66,7 +60,6 @@ namespace Stg
 
   private:
 		Cell* cells;
-		
 		unsigned long count; // number of blocks rendered into this region
 		
 		// vector of garbage collected cell arrays to reallocate before
@@ -105,16 +98,10 @@ namespace Stg
 
 		SuperRegion* superregion;	
 		
-		//bool Occupied() const { return( count > 0 ); }
-		//bool Used() const { return( cells ? true : false ); }
-
 	}; // class Region
 	
   class SuperRegion
   {
-		// friend class World;
-		// friend class Model;	 
-		
   private:
 		Region regions[SUPERREGIONSIZE];
 		
@@ -122,7 +109,7 @@ namespace Stg
 		World* world;
 		
 		unsigned long count; // number of blocks rendered into this superregion
-		
+
   public:	 
 	 SuperRegion( World* world, point_int_t origin );
 	 ~SuperRegion();
@@ -131,8 +118,6 @@ namespace Stg
 		{ 
 			return( &regions[ x + y * SUPERREGIONWIDTH ]);
 		}
-
-		//inline const Region* GetRegionImmut( int32_t x, int32_t y ) const;
 		
 		void DrawOccupancy() const;
 		void DrawVoxels() const;

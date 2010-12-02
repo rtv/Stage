@@ -58,8 +58,8 @@ SuperRegion::SuperRegion( World* world, point_int_t origin )
 	 world(world), 
 	 count(0)	 
 {
-	for( int32_t r=0; r<SUPERREGIONSIZE;r++)
-		regions[r].superregion = this;
+	for( int32_t c=0; c<SUPERREGIONSIZE;++c)
+		regions[c].superregion = this;
 }
 
 SuperRegion::~SuperRegion()
@@ -82,6 +82,8 @@ void SuperRegion::RemoveBlock()
 
 void SuperRegion::DrawOccupancy() const
 {
+	//printf( "SR origin (%d,%d) this %p\n", origin.x, origin.y, this );
+
   glPushMatrix();	    
   GLfloat scale = 1.0/world->Resolution();
   glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
@@ -95,70 +97,80 @@ void SuperRegion::DrawOccupancy() const
   glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
   
   // outline regions
-  const Region* r = &regions[0];
-  char buf[32];
-
-  glColor3f( 0,1,0 );    
-  for( int y=0; y<SUPERREGIONWIDTH; ++y )
-	 for( int x=0; x<SUPERREGIONWIDTH; ++x )
-		 {
-			 if( r->count ) // region contains some occupied cells
-				 {
-				// outline the region
-				glRecti( x<<RBITS, y<<RBITS, 
-							(x+1)<<RBITS, (y+1)<<RBITS );
-				
-				// show how many cells are occupied
-				snprintf( buf, 15, "%lu", r->count );
-				Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
-				
-				// draw a rectangle around each occupied cell
-				for( int p=0; p<REGIONWIDTH; ++p )
-				  for( int q=0; q<REGIONWIDTH; ++q )
-					 if( r->cells[p+(q*REGIONWIDTH)].blocks.size() )
-						{					 
-						  GLfloat xx = p+(x<<RBITS);
-						  GLfloat yy = q+(y<<RBITS);						  
-						  glRecti( xx, yy, xx+1, yy+1);
-						}
-				 }
-			 else if( r->cells ) // empty but used previously 
-				 {
-					double left = x << RBITS;
-					double right = (x+1) << RBITS;
-					double bottom = y << RBITS;
-					double top = (y+1) << RBITS;
-					
-					double d = 3.0;
-					
-					// draw little corner markers for regions with memory
-				// allocated but no contents
-					glBegin( GL_LINES );
-					glVertex2f( left, bottom );
-					glVertex2f( left+d, bottom );
-					glVertex2f( left, bottom );
-					glVertex2f( left, bottom+d );
-					glVertex2f( left, top );
-					glVertex2f( left+d, top );
-					glVertex2f( left, top );
-					glVertex2f( left, top-d );
-					glVertex2f( right, top );
-					glVertex2f( right-d, top );
-					glVertex2f( right, top );
-					glVertex2f( right, top-d );
-					glVertex2f( right, bottom );
-					glVertex2f( right-d, bottom );
-					glVertex2f( right, bottom );
-					glVertex2f( right, bottom+d );
-					glEnd();
-				}
+	if( regions )
+		{
+			const Region* r = &regions[0];
+			char buf[32];
 			
-		  ++r; // next region quickly
+			glColor3f( 0,1,0 );    
+			for( int y=0; y<SUPERREGIONWIDTH; ++y )
+				for( int x=0; x<SUPERREGIONWIDTH; ++x )
+					{
+						if( r->count ) // region contains some occupied cells
+							{
+								// outline the region
+								glRecti( x<<RBITS, y<<RBITS, 
+												 (x+1)<<RBITS, (y+1)<<RBITS );
+								
+								// show how many cells are occupied
+								snprintf( buf, 15, "%lu", r->count );
+								Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
+								
+								// draw a rectangle around each occupied cell
+								for( int p=0; p<REGIONWIDTH; ++p )
+									for( int q=0; q<REGIONWIDTH; ++q )
+										if( r->cells[p+(q*REGIONWIDTH)].blocks.size() )
+											{					 
+												GLfloat xx = p+(x<<RBITS);
+												GLfloat yy = q+(y<<RBITS);						  
+												glRecti( xx, yy, xx+1, yy+1);
+											}
+							}
+						else if( r->cells ) // empty but used previously 
+							{
+								double left = x << RBITS;
+								double right = (x+1) << RBITS;
+								double bottom = y << RBITS;
+								double top = (y+1) << RBITS;
+								
+								double d = 3.0;
+								
+								// draw little corner markers for regions with memory
+								// allocated but no contents
+								glBegin( GL_LINES );
+								glVertex2f( left, bottom );
+								glVertex2f( left+d, bottom );
+								glVertex2f( left, bottom );
+								glVertex2f( left, bottom+d );
+								glVertex2f( left, top );
+								glVertex2f( left+d, top );
+								glVertex2f( left, top );
+								glVertex2f( left, top-d );
+								glVertex2f( right, top );
+								glVertex2f( right-d, top );
+								glVertex2f( right, top );
+								glVertex2f( right, top-d );
+								glVertex2f( right, bottom );
+								glVertex2f( right-d, bottom );
+								glVertex2f( right, bottom );
+								glVertex2f( right, bottom+d );
+								glEnd();
+							}
+						
+						++r; // next region quickly
+					}			
 		}
-  
+	else
+		{  // outline region-collected superregion
+			glColor3f( 1,1,0 );   
+			glRecti( 0,0, (1<<SRBITS)-1, (1<<SRBITS)-1 );
+			glColor3f( 0,0,1 );   
+		}
+		
+	char buf[32];
   snprintf( buf, 15, "%lu", count );
   Gl::draw_string( 1<<SBITS, 1<<SBITS, 0, buf );
-    
+	
   glPopMatrix();    
 }
 

@@ -23,8 +23,6 @@ Fl_Shared_Image* TextureManager::loadImage( const char* filename )
 
 GLuint TextureManager::loadTexture( const char *filename )
 {
-	printf( "attemopt to load texture %s\n", filename );
-
 	GLuint texName;
 	Fl_Shared_Image *img = loadImage( filename );
 	if( img == NULL ) {

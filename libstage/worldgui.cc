@@ -424,14 +424,19 @@ std::string WorldGui::EnergyString() const
 
 void WorldGui::DrawOccupancy() const
 {  
+// 	int count=0;
+//   FOR_EACH( it, superregions )
+// 		printf( "sr %d [%d,%d]  %p\n", count++, it->first.x, it->first.y, it->second );
+// 	printf( "done\n" );
+
   FOR_EACH( it, superregions )
-	 (*it).second->DrawOccupancy();
+		it->second->DrawOccupancy();
 }
 
 void WorldGui::DrawVoxels() const
 {  
   FOR_EACH( it, superregions )
-	 (*it).second->DrawVoxels();
+		it->second->DrawVoxels();
 }
 
 void WorldGui::windowCb( Fl_Widget* w, WorldGui* wg )

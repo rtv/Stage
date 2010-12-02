@@ -458,7 +458,7 @@ void Block::MapLine( const point_int_t& start,
 
   while( n ) 
     {				
-      Region* reg( w->GetSuperRegion( GETSREG(globx), GETSREG(globy) )
+      Region* reg( w->GetSuperRegionCreate( point_int_t(GETSREG(globx), GETSREG(globy)))
 									 ->GetRegion( GETREG(globx), GETREG(globy) ));
 			
 			//printf( "REGION %p\n", reg );

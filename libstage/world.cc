@@ -196,14 +196,14 @@ World::~World( void )
 SuperRegion* World::CreateSuperRegion( point_int_t origin )
 {
   SuperRegion* sr = new SuperRegion( this, origin );
-  superregions[ origin ] = sr;
+  superregions[origin] = sr;
   dirty = true; // force redraw
   return sr;
 }
 
 void World::DestroySuperRegion( SuperRegion* sr )
 {
-  superregions.erase( sr->GetOrigin() );
+	superregions.erase( sr->GetOrigin() );
   delete sr;
 }
 
@@ -788,11 +788,15 @@ RaytraceResult World::Raytrace( const Ray& r )
   // inline calls have a noticeable (2-3%) effect on performance.
   while( n > 0  ) // while we are still not at the ray end
     { 
-      Region* reg( GetSuperRegion( GETSREG(globx), GETSREG(globy) )
-						 ->GetRegion( GETREG(globx), GETREG(globy) ));
+			SuperRegion* sr = GetSuperRegion( point_int_t(GETSREG(globx), GETSREG(globy)) );
+			//SuperRegion* sr = GetSuperRegion( point_int_t(GETSREG(globx), GETSREG(globy)) );
 			
-
-      if( reg->count ) // if the region contains any objects
+			Region* reg = NULL;
+			
+			if( sr ) 
+				reg = sr->GetRegion( GETREG(globx), GETREG(globy) );
+			
+      if( reg && reg->count ) // if the region contains any objects
 		  {
 				//assert( reg->cells.size() );
 
@@ -973,8 +977,9 @@ void World::Reload( void )
 
 SuperRegion* World::AddSuperRegion( const point_int_t& sup )
 {
-  //printf( "Creating super region [ %d %d ]\n", sup.x, sup.y );
   SuperRegion* sr = CreateSuperRegion( sup );
+
+  //printf( "Created super region [%d, %d] %p\n", sup.x, sup.y, sr );
 
   // the bounds of the world have changed
   //printf( "lower left (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
@@ -998,30 +1003,42 @@ SuperRegion* World::AddSuperRegion( const point_int_t& sup )
 }
 
 
-inline SuperRegion* World::GetSuperRegion( const int32_t x, const int32_t y )
+inline SuperRegion* World::GetSuperRegion( const point_int_t& org )
 {
   // around 99% of the time the SR is the same as last
   // lookup - cache  gives a 4% overall speed up :)
-
-	point_int_t org(x,y);
 	
   if( sr_cached && sr_cached->GetOrigin() == org )
 		return sr_cached;
 	
-	//  point_int_t pt(x,y);
-  
-  SuperRegion* sr = superregions[ org ];
-  
-  if( sr == NULL ) // no superregion exists! make a new one
-    sr = AddSuperRegion( org );  
-
-	assert( sr ); 
+  SuperRegion* sr = NULL;
 	
-  // cache for next time around
-  sr_cached = sr;
+	// I despise some STL syntax sometimes...
+	std::map<point_int_t,SuperRegion*>::iterator it = 
+		superregions.find(org);
+	
+	if( it != superregions.end() )
+		sr = it->second;
+  
+  if( sr ) sr_cached = sr;
   
   return sr;
 }
+
+SuperRegion* World::GetSuperRegionCreate( const point_int_t& org )
+{
+  SuperRegion* sr = GetSuperRegion(org);
+	
+  if( sr == NULL ) // no superregion exists! make a new one
+		{
+			sr = AddSuperRegion( org );  
+			assert( sr ); 
+			//sr_cached = sr;
+		}
+	
+  return sr;
+}
+
 
 void World::Extend( point3_t pt )
 {
