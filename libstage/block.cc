@@ -24,8 +24,7 @@ Block::Block( Model* mod,
   color( color ),
   inherit_color( inherit_color ),
 	wheel(wheel),
-  rendered_cells( new CellPtrVec ), 
-  candidate_cells( new CellPtrVec ),
+  rendered_cells(), 
   gpts()
 {
   assert( mod );
@@ -39,10 +38,12 @@ Block::Block(  Model* mod,
   : mod( mod ),
     mpts(),
     pts(),
+		local_z(),
     color(),
     inherit_color(true),
-    rendered_cells( new CellPtrVec ), 
-    candidate_cells( new CellPtrVec ) 
+		wheel(),
+    rendered_cells(),
+		gpts()
 {
   assert(mod);
   assert(wf);
@@ -55,9 +56,6 @@ Block::Block(  Model* mod,
 Block::~Block()
 {
   if( mapped ) UnMap();
-  
-  delete rendered_cells;
-  delete candidate_cells;
 }
 
 void Block::Translate( double x, double y )
@@ -139,9 +137,9 @@ const Color& Block::GetColor()
 void Block::AppendTouchingModels( ModelPtrSet& touchers )
 {
   // for every cell we are rendered into
-  FOR_EACH( cell_it, *rendered_cells )
-	 // for every block rendered into that cell
-	 FOR_EACH( block_it, (*cell_it)->blocks )
+  FOR_EACH( cell_it, rendered_cells )
+		// for every block rendered into that cell
+		FOR_EACH( block_it, (*cell_it)->GetBlocks() )
 	 {
 		if( !mod->IsRelated( (*block_it)->mod ))
 		  touchers.insert( (*block_it)->mod );
@@ -153,7 +151,7 @@ Model* Block::TestCollision()
   //printf( "model %s block %p test collision...\n", mod->Token(), this );
 
   // find the set of cells we would render into given the current global pose
-  GenerateCandidateCells();
+  //GenerateCandidateCells();
   
   if( mod->vis.obstacle_return )
   {
@@ -161,10 +159,10 @@ Model* Block::TestCollision()
       return this->mod->world->GetGround();
 	  
     // for every cell we may be rendered into
-	 FOR_EACH( cell_it, *candidate_cells )
+	 FOR_EACH( cell_it, rendered_cells )
       {
 		  // for every block rendered into that cell
-		  FOR_EACH( block_it, (*cell_it)->blocks )
+				FOR_EACH( block_it, (*cell_it)->GetBlocks() )
 			 {
 				Block* testblock = *block_it;
 				Model* testmod = testblock->mod;
@@ -192,72 +190,64 @@ Model* Block::TestCollision()
 
 void Block::Map()
 {
-  // TODO - if called often, we may not need to generate each time
-  GenerateCandidateCells();
-  SwitchToTestedCells();
-  mapped = true;
+	// clear out of the old cells
+  RemoveFromCellArray( rendered_cells );
+	
+	// now calculate the local coords of the block vertices
+	const unsigned int pt_count = pts.size();
+	
+  if( mpts.size() == 0 )
+		{
+			// no valid cache of model coord points, so generate them
+			mpts.resize( pts.size() );
+			
+			for( unsigned int i=0; i<pt_count; ++i )
+				mpts[i] = BlockPointToModelMeters( pts[i] );
+		}
+  
+	// now calculate the global pixel coords of the block vertices
+  gpts.clear();
+  mod->LocalToPixels( mpts, gpts );
+  
+  for( unsigned int i=0; i<pt_count; ++i )
+		MapLine( gpts[i], 
+						 gpts[(i+1)%pt_count] );
+	
+  // update the block's absolute z bounds at this rendering
+  Pose gpose = mod->GetGlobalPose();
+  gpose.z += mod->geom.pose.z;
+  double scalez = mod->geom.size.z /  mod->blockgroup.GetSize().z;
+  meters_t z = gpose.z - mod->blockgroup.GetOffset().z;  
+  global_z.min = (scalez * local_z.min) + z;
+  global_z.max = (scalez * local_z.max) + z;
+  
+  mapped = true;	
 }
 
 void Block::UnMap()
 {
   RemoveFromCellArray( rendered_cells );
-  rendered_cells->clear();
+  rendered_cells.clear();
   mapped = false;
 }
 
 #include <algorithm>
 #include <functional>
 
-inline void Block::RemoveFromCellArray( CellPtrVec *cells )
+inline void Block::RemoveFromCellArray( CellPtrVec& cells )
 {
  	//	FOR_EACH( it, *cells )
 	//	(*it)->RemoveBlock(this);
 	
 	// this is equivalent to the above commented code - experimenting
 	// with optimizations
-	std::for_each( cells->begin(), 
-								 cells->end(), 
+	std::for_each( cells.begin(), 
+								 cells.end(), 
 								 std::bind2nd( std::mem_fun(&Cell::RemoveBlock), this));
-
-  //printf( "%d %d %.2f\n", count1, countmore, ((float)count1)/float(countmore));
 }
 
 void Block::SwitchToTestedCells()
 {
-  // todo: 
-
-  // 1. find the set of cells in rendered but not candidate and remove
-  // them
-
-  // 2. find the set of cells in candidate but not rendered and insert
-  // them
- 
-  // .. and see if that is faster than the current method
-
-	//printf( "rendered_cells %lu\n", rendered_cells->size() );
-	//printf( "candidate_cells %lu\n\n", candidate_cells->size() );	
-
-  RemoveFromCellArray( rendered_cells );
-
-  // render the block into each of the candidate cells
-  FOR_EACH( it, *candidate_cells )
-	 {
-		Cell* cell = *it;
-		// record that I am rendered in this cell
-		rendered_cells->push_back( cell ); 
-		// store me in the cell
-		cell->blocks.push_back( this );   
-
-		++cell->region->count;
-		++cell->region->superregion->count;		
-	 }
-
-  // switch current and candidate cell pointers
-  CellPtrVec *tmp = rendered_cells;
-  rendered_cells = candidate_cells;
-  candidate_cells = tmp;
-
-  mapped = true;
 }
 
 inline point_t Block::BlockPointToModelMeters( const point_t& bpt )
@@ -273,43 +263,6 @@ void Block::InvalidateModelPointCache()
 {
   // this doesn't happen often, so this simple strategy isn't too wasteful
   mpts.clear();
-}
-
-void Block::GenerateCandidateCells()
-{
-  candidate_cells->clear();
-	
-	const unsigned int pt_count = pts.size();
-	
-  if( mpts.size() == 0 )
-		{
-		// no valid cache of model coord points, so generate them
-			mpts.resize( pts.size() );
-			
-			
-			for( unsigned int i=0; i<pt_count; ++i )
-				mpts[i] = BlockPointToModelMeters( pts[i] );
-		}
-  
-  gpts.clear();
-  mod->LocalToPixels( mpts, gpts );
-  
-  for( unsigned int i=0; i<pt_count; ++i )
-		mod->world->ForEachCellInLine( gpts[i], 
-																	 gpts[(i+1)%pt_count], 
-																	 *candidate_cells );  
-	
-  // set global Z
-  Pose gpose = mod->GetGlobalPose();
-  gpose.z += mod->geom.pose.z;
-  double scalez = mod->geom.size.z /  mod->blockgroup.GetSize().z;
-  meters_t z = gpose.z - mod->blockgroup.GetOffset().z;
-  
-  // store the block's absolute z bounds at this rendering
-  global_z.min = (scalez * local_z.min) + z;
-  global_z.max = (scalez * local_z.max) + z;
-  
-  mapped = true;
 }
 
 void swap( int& a, int& b )
@@ -478,6 +431,74 @@ void Block::Load( Worldfile* wf, int entity )
     inherit_color = true;  
 
 	wheel = wf->ReadInt( entity, "wheel", wheel );
+}
+
+
+void Block::MapLine( const point_int_t& start,
+										 const point_int_t& end )
+{  
+  // line rasterization adapted from Cohen's 3D version in
+  // Graphics Gems II. Should be very fast.  
+  const int32_t dx( end.x - start.x );
+  const int32_t dy( end.y - start.y );
+  const int32_t sx(sgn(dx));  
+  const int32_t sy(sgn(dy));  
+  const int32_t ax(abs(dx));  
+  const int32_t ay(abs(dy));  
+  const int32_t bx(2*ax);	
+  const int32_t by(2*ay);	 
+  int32_t exy(ay-ax); 
+  int32_t n(ax+ay);
+
+  int32_t globx(start.x);
+  int32_t globy(start.y);
+  
+
+	World* w = mod->GetWorld();
+
+  while( n ) 
+    {				
+      Region* reg( w->GetSuperRegion( GETSREG(globx), GETSREG(globy) )
+									 ->GetRegion( GETREG(globx), GETREG(globy) ));
+			
+			//printf( "REGION %p\n", reg );
+
+      // add all the required cells in this region before looking up
+      // another region			
+      int32_t cx( GETCELL(globx) ); 
+      int32_t cy( GETCELL(globy) );
+			
+      // need to call Region::GetCell() before using a Cell pointer
+      // directly, because the region allocates cells lazily, waiting
+      // for a call of this method
+      Cell* c( reg->GetCell( cx, cy ) );
+
+			// while inside the region, manipulate the Cell pointer directly
+      while( (cx>=0) && (cx<REGIONWIDTH) && 
+						 (cy>=0) && (cy<REGIONWIDTH) && 
+						 n > 0 )
+				{					
+					c->AddBlock(this);
+					
+					// cleverly skip to the next cell (now it's safe to
+					// manipulate the cell pointer)
+					if( exy < 0 ) 
+						{
+							globx += sx;
+							exy += by;
+							c += sx;
+							cx += sx;
+						}
+					else 
+						{
+							globy += sy;
+							exy -= bx; 
+							c += sy * REGIONWIDTH;
+							cy += sy;
+						}
+					--n;
+				}
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

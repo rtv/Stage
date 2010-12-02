@@ -57,7 +57,7 @@ ENDIF (NOT(${FLTK_LDFLAGS} MATCHES "-lGL"))
 # causes the shared library to have a version number
 set_target_properties( stage PROPERTIES
 		       VERSION ${VERSION}
-           LINK_FLAGS "${FLTK_LDFLAGS}"	  
+           LINK_FLAGS "${FLTK_LDFLAGS}"  
 )
 
 target_link_libraries( stage ${LTDL_LIB} )

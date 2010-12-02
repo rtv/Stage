@@ -33,7 +33,8 @@ namespace Stg
 			return std::string( stgPath );
 	}
 
-	std::string FileManager::findFile( const std::string filename ) {
+	std::string FileManager::findFile( const std::string filename ) 
+	{
 		PRINT_DEBUG1("FileManager: trying %s\n", filename.c_str());
 		if ( readable( filename ) )
 			return filename;

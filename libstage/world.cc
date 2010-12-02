@@ -196,14 +196,14 @@ World::~World( void )
 SuperRegion* World::CreateSuperRegion( point_int_t origin )
 {
   SuperRegion* sr = new SuperRegion( this, origin );
-  superregions[ sr->origin ] = sr;
+  superregions[ origin ] = sr;
   dirty = true; // force redraw
   return sr;
 }
 
 void World::DestroySuperRegion( SuperRegion* sr )
 {
-  superregions.erase( sr->origin );
+  superregions.erase( sr->GetOrigin() );
   delete sr;
 }
 
@@ -791,8 +791,11 @@ RaytraceResult World::Raytrace( const Ray& r )
       Region* reg( GetSuperRegion( GETSREG(globx), GETSREG(globy) )
 						 ->GetRegion( GETREG(globx), GETREG(globy) ));
 			
+
       if( reg->count ) // if the region contains any objects
 		  {
+				//assert( reg->cells.size() );
+
 			 // invalidate the region crossing points used to jump over
 			 // empty regions
 			 calculatecrossings = true;
@@ -800,7 +803,8 @@ RaytraceResult World::Raytrace( const Ray& r )
 			 // convert from global cell to local cell coords
 			 int32_t cx( GETCELL(globx) ); 
 			 int32_t cy( GETCELL(globy) );
-					
+
+			 //Cell* c = reg->GetCell(cx,cy);
 			 Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
 			 assert(c); // should be good: we know the region contains objects
 
@@ -998,86 +1002,25 @@ inline SuperRegion* World::GetSuperRegion( const int32_t x, const int32_t y )
 {
   // around 99% of the time the SR is the same as last
   // lookup - cache  gives a 4% overall speed up :)
-  
-  if( sr_cached && sr_cached->origin.x == x && sr_cached->origin.y  == y )
-    return sr_cached;
-  
+
+	point_int_t org(x,y);
+	
+  if( sr_cached && sr_cached->GetOrigin() == org )
+		return sr_cached;
+	
 	//  point_int_t pt(x,y);
   
-  SuperRegion* sr = superregions[ point_int_t(x,y) ];
+  SuperRegion* sr = superregions[ org ];
   
   if( sr == NULL ) // no superregion exists! make a new one
-    sr = AddSuperRegion( point_int_t(x,y) );
-  
+    sr = AddSuperRegion( org );  
+
+	assert( sr ); 
+	
   // cache for next time around
   sr_cached = sr;
   
-  //assert( sr ); 
   return sr;
-}
-
-void World::ForEachCellInLine( const point_int_t& start,
-															 const point_int_t& end,
-															 CellPtrVec& cells )
-{  
-  // line rasterization adapted from Cohen's 3D version in
-  // Graphics Gems II. Should be very fast.  
-  const int32_t dx( end.x - start.x );
-  const int32_t dy( end.y - start.y );
-  const int32_t sx(sgn(dx));  
-  const int32_t sy(sgn(dy));  
-  const int32_t ax(abs(dx));  
-  const int32_t ay(abs(dy));  
-  const int32_t bx(2*ax);	
-  const int32_t by(2*ay);	 
-  int32_t exy(ay-ax); 
-  int32_t n(ax+ay);
-
-  int32_t globx(start.x);
-  int32_t globy(start.y);
-  
-  while( n ) 
-    {				
-      Region* reg( GetSuperRegion( GETSREG(globx), GETSREG(globy) )
-						 ->GetRegion( GETREG(globx), GETREG(globy) ));
-
-      // add all the required cells in this region before looking up
-      // another region			
-      int32_t cx( GETCELL(globx) ); 
-      int32_t cy( GETCELL(globy) );
-			
-      // need to call Region::GetCell() before using a Cell pointer
-      // directly, because the region allocates cells lazily, waiting
-      // for a call of this method
-      Cell* c( reg->GetCell( cx, cy ) );
-			
-			// while inside the region, manipulate the Cell pointer directly
-      while( (cx>=0) && (cx<REGIONWIDTH) && 
-						 (cy>=0) && (cy<REGIONWIDTH) && 
-						 n > 0 )
-				{					
-					// find the cell at this location, then add it to the vector,				
-					cells.push_back( c );
-					
-					// cleverly skip to the next cell (now it's safe to
-					// manipulate the cell pointer)
-					if( exy < 0 ) 
-						{
-							globx += sx;
-							exy += by;
-							c += sx;
-							cx += sx;
-						}
-					else 
-						{
-							globy += sy;
-							exy -= bx; 
-							c += sy * REGIONWIDTH;
-							cy += sy;
-						}
-					--n;
-				}
-    }
 }
 
 void World::Extend( point3_t pt )

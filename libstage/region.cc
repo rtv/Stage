@@ -7,15 +7,49 @@
 #include "region.hh"
 using namespace Stg;
 
-Region::Region( SuperRegion* sr) : 
+std::vector<Cell*> Region::dead_pool;
+
+Region::Region() : 
   cells(), 
-  superregion(sr),
-  count(0)
-{ 
+  count(0),
+  superregion(NULL)
+{
 }
 
 Region::~Region()
 {
+	if( cells )
+		delete[] cells;
+}
+
+void Region::AddBlock()
+{ 
+
+	++count; 
+	assert(count>0);
+	superregion->AddBlock();
+}
+
+void Region::RemoveBlock()
+{
+	--count; 
+	assert(count>=0); 
+	superregion->RemoveBlock();
+	
+	// if there's nothing in this region, we can garbage collect the
+	// cells to keep memory usage under control
+	if( count == 0 )
+ 		{
+			if( cells )
+				{
+					// stash this on the pool for reuse
+					dead_pool.push_back(cells);					
+					//printf( "retiring cells @ %p (pool %u)\n", cells, dead_pool.size() );
+					cells = NULL;
+				}
+			else
+				PRINT_ERR( "region.count == 0 but cells == NULL" );			
+ 		}		
 }
 
 SuperRegion::SuperRegion( World* world, point_int_t origin ) 
@@ -24,15 +58,29 @@ SuperRegion::SuperRegion( World* world, point_int_t origin )
 	 world(world), 
 	 count(0)	 
 {
-  // populate the regions
-  regions.insert( regions.begin(), SUPERREGIONSIZE, Region( this ) );			   
+	for( int32_t r=0; r<SUPERREGIONSIZE;r++)
+		regions[r].superregion = this;
 }
 
 SuperRegion::~SuperRegion()
 {
 }
 
-void SuperRegion::DrawOccupancy()
+
+void SuperRegion::AddBlock()
+{ 
+	++count; 
+	assert(count>0);
+}
+
+void SuperRegion::RemoveBlock()
+{
+	--count; 
+	assert(count>=0); 
+}		
+
+
+void SuperRegion::DrawOccupancy() const
 {
   glPushMatrix();	    
   GLfloat scale = 1.0/world->Resolution();
@@ -47,15 +95,15 @@ void SuperRegion::DrawOccupancy()
   glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
   
   // outline regions
-  const Region* r = GetRegion(0,0);
+  const Region* r = &regions[0];
   char buf[32];
 
   glColor3f( 0,1,0 );    
   for( int y=0; y<SUPERREGIONWIDTH; ++y )
 	 for( int x=0; x<SUPERREGIONWIDTH; ++x )
-		{
-		  if( r->count ) // region contains some occupied cells
-			 {
+		 {
+			 if( r->count ) // region contains some occupied cells
+				 {
 				// outline the region
 				glRecti( x<<RBITS, y<<RBITS, 
 							(x+1)<<RBITS, (y+1)<<RBITS );
@@ -73,38 +121,38 @@ void SuperRegion::DrawOccupancy()
 						  GLfloat yy = q+(y<<RBITS);						  
 						  glRecti( xx, yy, xx+1, yy+1);
 						}
-			 }
-		  else if( ! r->cells.empty() ) // empty but used previously 
-			 {
-				double left = x << RBITS;
-				double right = (x+1) << RBITS;
-				double bottom = y << RBITS;
-				double top = (y+1) << RBITS;
-				
-				double d = 3.0;
-				
-				// draw little corner markers for regions with memory
+				 }
+			 else if( r->cells ) // empty but used previously 
+				 {
+					double left = x << RBITS;
+					double right = (x+1) << RBITS;
+					double bottom = y << RBITS;
+					double top = (y+1) << RBITS;
+					
+					double d = 3.0;
+					
+					// draw little corner markers for regions with memory
 				// allocated but no contents
-				glBegin( GL_LINES );
-				glVertex2f( left, bottom );
-				glVertex2f( left+d, bottom );
-				glVertex2f( left, bottom );
-				glVertex2f( left, bottom+d );
-				glVertex2f( left, top );
-				glVertex2f( left+d, top );
-				glVertex2f( left, top );
-				glVertex2f( left, top-d );
-				glVertex2f( right, top );
-				glVertex2f( right-d, top );
-				glVertex2f( right, top );
-				glVertex2f( right, top-d );
-				glVertex2f( right, bottom );
-				glVertex2f( right-d, bottom );
-				glVertex2f( right, bottom );
-				glVertex2f( right, bottom+d );
-				glEnd();
-			 }
-
+					glBegin( GL_LINES );
+					glVertex2f( left, bottom );
+					glVertex2f( left+d, bottom );
+					glVertex2f( left, bottom );
+					glVertex2f( left, bottom+d );
+					glVertex2f( left, top );
+					glVertex2f( left+d, top );
+					glVertex2f( left, top );
+					glVertex2f( left, top-d );
+					glVertex2f( right, top );
+					glVertex2f( right-d, top );
+					glVertex2f( right, top );
+					glVertex2f( right, top-d );
+					glVertex2f( right, bottom );
+					glVertex2f( right-d, bottom );
+					glVertex2f( right, bottom );
+					glVertex2f( right, bottom+d );
+					glEnd();
+				}
+			
 		  ++r; // next region quickly
 		}
   
@@ -115,7 +163,7 @@ void SuperRegion::DrawOccupancy()
 }
 
 
-static void DrawBlock( GLfloat x, GLfloat y, GLfloat zmin, GLfloat zmax )
+static inline void DrawBlock( GLfloat x, GLfloat y, GLfloat zmin, GLfloat zmax )
 {
   glBegin( GL_QUADS );
   
@@ -149,7 +197,7 @@ static void DrawBlock( GLfloat x, GLfloat y, GLfloat zmin, GLfloat zmax )
   glEnd();  
 } 
 
-void SuperRegion::DrawVoxels()
+void SuperRegion::DrawVoxels() const
 {
   glPushMatrix();	    
   GLfloat scale = 1.0/world->Resolution();
@@ -160,7 +208,7 @@ void SuperRegion::DrawVoxels()
   glEnable( GL_DEPTH_TEST );
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   
-  Region* r = GetRegion( 0, 0);
+  const Region* r = &regions[0];//GetRegion( 0, 0);
   
   for( int y=0; y<SUPERREGIONWIDTH; ++y )
 	 for( int x=0; x<SUPERREGIONWIDTH; ++x )
@@ -205,8 +253,23 @@ void SuperRegion::DrawVoxels()
 }
 
 
+//std::set<Block*> mapped_blocks;
+
+void Cell::AddBlock( Block* b )
+{			
+	blocks.push_back( b );   
+	b->rendered_cells.push_back(this);
+	region->AddBlock();
+
+	//mapped_blocks.insert(b);
+}
+
+
 void Cell::RemoveBlock( Block* b )
 {
+	//if( mapped_blocks.find(b) == mapped_blocks.end() )
+	//printf( "REMOVE BLOCK %p that was never mapped\n", b );
+
 	size_t len = blocks.size();
 	if( len )
 		{
@@ -243,6 +306,5 @@ void Cell::RemoveBlock( Block* b )
 #endif
 		}
 	
-	--region->count;
-	--region->superregion->count;  	 	  
+	region->RemoveBlock();
 }

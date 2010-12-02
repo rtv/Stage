@@ -836,7 +836,7 @@ void Model::AddToPose( const Pose& pose )
 void Model::PlaceInFreeSpace( meters_t xmin, meters_t xmax, 
 			      meters_t ymin, meters_t ymax )
 {
-  while( TestCollisionTree() )
+  while( TestCollision() )
     SetPose( Pose::Random( xmin,xmax, ymin, ymax ));		
 }
 
@@ -845,22 +845,17 @@ void Model::AppendTouchingModels( ModelPtrSet& touchers )
   blockgroup.AppendTouchingModels( touchers );
 }
 
-Model* Model::TestCollision()
-{
-  //printf( "mod %s test collision...\n", token );  
-  return( blockgroup.TestCollision() );
-}
 
-Model* Model::TestCollisionTree()
+Model* Model::TestCollision()
 {  
-  Model* hitmod = TestCollision();
+  Model* hitmod = blockgroup.TestCollision();
   
   if( hitmod == NULL ) 	 
 	 FOR_EACH( it, children )
-      { 
-		  hitmod = (*it)->TestCollisionTree();
-		  if( hitmod )
-			 break;
+		 { 
+			 hitmod = (*it)->TestCollision();
+			 if( hitmod )
+				 break;
       }
   
   //printf( "mod %s test collision done.\n", token );
@@ -918,55 +913,29 @@ void Model::UpdateCharge()
 	 }
 }
 
-void Model::CommitTestedPose()
-{
-  FOR_EACH( it, children )
-    (*it)->CommitTestedPose();
-  
-  blockgroup.SwitchToTestedCells();
-}
-  
-Model* Model::ConditionalMove( const Pose& newpose )
-{ 
-  //assert( newpose.a >= -M_PI );
-  //assert( newpose.a <=  M_PI );
-
-  const Pose startpose( pose );
-  pose = newpose; // do the move provisionally - we might undo it below
-     
-  Model* hitmod( TestCollisionTree() );
- 
-  if( hitmod )
-	 {
-		pose = startpose; // move failed - put me back where I started
-	 }
-  else
-    {
-      CommitTestedPose(); //recursively commit to blocks to the new pose 
-      world->dirty = true; // need redraw
-    }
-  
-  return hitmod;
-}
-
-void Model::ConditionalMove_calc( const Pose& newpose )
+Model* Model::Move( const Pose& newpose )
 { 
   const Pose startpose( pose );
   pose = newpose; // do the move provisionally - we might undo it below
-
-	this->hitmod = NULL;
-  this->hitmod = TestCollisionTree();
- 
-  if( hitmod )
-		pose = startpose; // move failed - put me back where I started
+  
+	UnMapWithChildren(); // remove from all blocks
+	MapWithChildren(); // render into blocks
+	
+	Model* hitmod = TestCollision();
+	
+	if( hitmod ) // crunch!
+		{
+			// put things back the way they were
+			// this is expensive, but it happens very rarely for most people
+			pose = startpose;
+			UnMapWithChildren();
+			MapWithChildren();
+		}
+	else
+		world->dirty = true; // need redraw	
+	
+	return hitmod;
 }
-
-void Model::ConditionalMove_commit()
-{ 
-	CommitTestedPose(); //recursively commit to blocks to the new pose 
-	world->dirty = true; // need redraw
-}
-
 
 void Model::UpdatePose( void )
 {
@@ -987,9 +956,9 @@ void Model::UpdatePose( void )
   
   // attempts to move to the new pose. If the move fails because we'd
   // hit another model, that model is returned.	
-	// ConditionalMove() returns a pointer to the model we hit, or
+	// Move() returns a pointer to the model we hit, or
 	// NULL. We use this as a boolean for SetStall()
-  SetStall( ConditionalMove( pose + p ) );
+  SetStall( Move( pose + p ) );
 }
 
 

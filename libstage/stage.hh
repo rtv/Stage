@@ -608,7 +608,10 @@ namespace Stg
   // STL container iterator macros - __typeof is a gcc extension, so
   // this could be an issue one day.
 #define VAR(V,init) __typeof(init) V=(init)
-//#define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();++I) NOTE:
+
+	//#define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();++I) 
+
+// NOTE:
 // this version assumes the container is not modified in the loop,
 // which I think is true everywhere it is used in Stage
 #define FOR_EACH(I,C) for(VAR(I,(C).begin()),ite=(C).end();(I)!=ite;++(I))
@@ -958,9 +961,9 @@ namespace Stg
 		
 		/** add a Cell pointer to the vector for each cell on the line from
 				pt1 to pt2 inclusive */
-    void ForEachCellInLine( const point_int_t& pt1,
-														const point_int_t& pt2, 
-														CellPtrVec& cells );
+//     void MapLine( const point_int_t& pt1,
+// 									const point_int_t& pt2, 
+// 									Block* block );
 		
     /** convert a distance in meters to a distance in world occupancy
 		  grid pixels */
@@ -1166,6 +1169,7 @@ namespace Stg
     friend class SuperRegion;
     friend class World;
     friend class Canvas;
+		friend class Cell;
   public:
   
     /** Block Constructor. A model's body is a list of these
@@ -1217,13 +1221,14 @@ namespace Stg
 	 /** Set the extent in Z of the block */
 	 void SetZ( double min, double max );
 		
-    inline void RemoveFromCellArray( CellPtrVec* blocks );
-    inline void GenerateCandidateCells();  
+    inline void RemoveFromCellArray( CellPtrVec& blocks );
+    //inline void GenerateCandidateCells();  
 		
 		void AppendTouchingModels( ModelPtrSet& touchers );
 	 
 	 /** Returns the first model that shares a bitmap cell with this model */
     Model* TestCollision(); 
+
     void SwitchToTestedCells();  
     void Load( Worldfile* wf, int entity );  
     Model* GetModel(){ return mod; };  
@@ -1252,10 +1257,10 @@ namespace Stg
 		
 		/** record the list entries for the cells where this block is rendered */
 		std::vector< std::list<Block*>::iterator > list_entries;
-
+		
     /** record the cells into which this block has been rendered to
-		  UnMapping them very quickly. */  
-	 CellPtrVec * rendered_cells;
+				UnMapping them very quickly. */  
+		CellPtrVec rendered_cells;
 
     /** When moving a model, we test for collisions by generating, for
 		  each block, a list of the cells in which it would be rendered if the
@@ -1263,7 +1268,7 @@ namespace Stg
 		  allowed - the rendered cells are cleared, the potential cells are
 		  written, and the pointers to the rendered and potential cells are
 		  switched for next time (avoiding a memory copy).*/
-	 CellPtrVec * candidate_cells;
+		//CellPtrVec * candidate_cells;
 	
 	 PointIntVec gpts;
 	
@@ -1273,6 +1278,11 @@ namespace Stg
 	
 	 /** invalidate the cache of points in model coordinates */
 	 void InvalidateModelPointCache();
+		
+		/** add a Cell pointer to the vector for each cell on the line from
+				pt1 to pt2 inclusive */
+    void MapLine( const point_int_t& pt1,
+									const point_int_t& pt2 );
   };
 
 	
@@ -2040,15 +2050,12 @@ namespace Stg
 	 void RegisterOption( Option* opt );
 
 	 void AppendTouchingModels( ModelPtrSet& touchers );
-
-	 /** Check to see if the current pose will yield a collision with
-		  obstacles.  Returns a pointer to the first entity we are in
-		  collision with, or NULL if no collision exists. */
+		
+		/** Check to see if the current pose will yield a collision with
+				obstacles.  Returns a pointer to the first entity we are in
+				collision with, or NULL if no collision exists.  Recursively
+				calls TestCollision() on all descendents. */		
 	 Model* TestCollision();
-
-	 /** Recursively call TestCollision() on this model and all its
-		  descendents */
-    Model* TestCollisionTree();
   
 	 void CommitTestedPose();
 
@@ -2108,11 +2115,11 @@ namespace Stg
 	 virtual void UpdatePose();
 	 virtual void UpdateCharge();
 
-	 Model* ConditionalMove( const Pose& newpose );
+	 Model* Move( const Pose& newpose );
 	
 		// EXP
-		void ConditionalMove_calc( const Pose& newpose );
-		void ConditionalMove_commit( void );
+		//void ConditionalMove_calc( const Pose& newpose );
+		//void ConditionalMove_commit( void );
 
 	 meters_t ModelHeight() const;
 
@@ -2245,10 +2252,10 @@ namespace Stg
 
 	 /** Add a block to this model centered at [x,y] with extent [dx, dy,
 		  dz] */
-	 Block* AddBlockRect( meters_t x, meters_t y, 
-								 meters_t dx, meters_t dy, 
-								 meters_t dz );
-	
+		Block*	AddBlockRect( meters_t x, meters_t y, 
+													meters_t dx, meters_t dy, 
+													meters_t dz );
+		
 	 /** remove all blocks from this model, freeing their memory */
 	 void ClearBlocks();
   

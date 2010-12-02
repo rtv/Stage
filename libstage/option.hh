@@ -32,7 +32,11 @@ namespace Stg {
 		World* _world;
 	  
 	public:
-		Option( std::string n, std::string tok, std::string key, bool v, World *world );	  
+		Option( const std::string& n, 
+						const std::string& tok,
+						const std::string& key, 
+						bool v, 
+						World *world );	  
 
 		const std::string name() const { return optName; }
 		inline bool isEnabled() const { return value; }
@@ -60,7 +64,7 @@ namespace Stg {
 		void Load( Worldfile* wf, int section );
 		void Save( Worldfile* wf, int section );	  
 
-	  const char* htname;
+		std::string htname;
 	};
 }
 	

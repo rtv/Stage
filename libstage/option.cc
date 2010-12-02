@@ -6,9 +6,9 @@
 using namespace Stg;
 
 
-Option::Option( std::string n, 
-					 std::string tok, 
-					 std::string key, 
+Option::Option( const std::string& n, 
+					 const std::string& tok, 
+					 const std::string& key, 
 					 bool v, 
 					 World* world ) : 
   optName( n ), 
@@ -18,7 +18,7 @@ Option::Option( std::string n,
   menu( NULL ),
   menuCb( NULL ),
   _world( world ),
-  htname( strdup(n.c_str()) )
+  htname( n )
 { 
   /* do nothing */ 
 }

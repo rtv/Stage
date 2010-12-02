@@ -33,71 +33,114 @@ namespace Stg
   // this is slightly faster than the inline method above, but not as safe
   //#define GETREG(X) (( (static_cast<int32_t>(X)) & REGIONMASK ) >> RBITS)
 
+	//	class Region;
+
   class Cell 
   {
-	 friend class Region;
-	 friend class SuperRegion;
-	 friend class World;
-	 friend class Block;
+		//friend class Region;
+		friend class SuperRegion;
+		friend class World;
+		//friend class Block;
 	 
   private:
-	 Region* region;  
-	 std::vector<Block*> blocks;		
-	 
+		std::vector<Block*> blocks;		
+		
   public:
-	 Cell( Region* reg ) 
-		: region( reg ),
-		  blocks() 
-	 { /* nothing to do */ }  		
-
+		Cell() 
+			: blocks(), 
+				region(NULL)
+		{ /* nothing to do */ }  				
+		
 		void RemoveBlock( Block* b );
+		void AddBlock( Block* b );
+				
+		const std::vector<Block*>& GetBlocks(){ return blocks; }
 
+		Region* region;  
   };  // class Cell
-  
+	
   class Region
   {
-  public:
-	 std::vector<Cell> cells;
-	 
-	 SuperRegion* superregion;	
-	 unsigned long count; // number of blocks rendered into this region
-  
-	 Region( SuperRegion* sr );
-	 ~Region();
-	 
-	 Cell* GetCell( int32_t x, int32_t y )
-	 {
-		if( cells.empty() ) // lazy population of cells
-		  cells.insert( cells.begin(), REGIONSIZE, Cell( this ) );			 
+		friend class SuperRegion;
+		friend class World; // for raytracing
+
+  private:
+		Cell* cells;
 		
-		return( (Cell*)&cells[ x + y * REGIONWIDTH ] ); 
-	 }	 
+		unsigned long count; // number of blocks rendered into this region
+		
+		// vector of garbage collected cell arrays to reallocate before
+		// using new in GetCell()
+		static std::vector<Cell*> dead_pool;
+		
+	public:
+		Region();
+		~Region();
+		
+		inline Cell* GetCell( int32_t x, int32_t y )
+		{	
+			if( cells == NULL )
+				{
+					assert(count == 0 );
+					
+					if( dead_pool.size() )
+						{
+							cells = dead_pool.back();
+							dead_pool.pop_back();
 
-  }; // class Region
+							//printf( "reusing cells @ %p (pool %u)\n", cells, dead_pool.size() );
+						}
+					else
+						cells = new Cell[REGIONSIZE];
+					
+					for( int32_t c=0; c<REGIONSIZE;++c)
+						cells[c].region = this;
+				}
+			
+			return( &cells[ x + y * REGIONWIDTH ] );
+		}
+		
+		inline void AddBlock();
+		inline void RemoveBlock(); 
 
+		SuperRegion* superregion;	
+		
+		//bool Occupied() const { return( count > 0 ); }
+		//bool Used() const { return( cells ? true : false ); }
+
+	}; // class Region
+	
   class SuperRegion
   {
-	 friend class World;
-	 friend class Model;	 
-	 
+		// friend class World;
+		// friend class Model;	 
+		
   private:
-	 
-	 std::vector<Region> regions;
-	 point_int_t origin;
-	 World* world;
-	 
-  public:
-	 
+		Region regions[SUPERREGIONSIZE];
+		
+		point_int_t origin;
+		World* world;
+		
+		unsigned long count; // number of blocks rendered into this superregion
+		
+  public:	 
 	 SuperRegion( World* world, point_int_t origin );
 	 ~SuperRegion();
-	 
-	 Region* GetRegion( int32_t x, int32_t y )
-	 { return( &regions[ x + y * SUPERREGIONWIDTH ] ); }
-	 
-	 void DrawOccupancy();
-	 void DrawVoxels();
-	 
-	 unsigned long count; // number of blocks rendered into this superregion
+		
+		inline Region* GetRegion( int32_t x, int32_t y )
+		{ 
+			return( &regions[ x + y * SUPERREGIONWIDTH ]);
+		}
+
+		//inline const Region* GetRegionImmut( int32_t x, int32_t y ) const;
+		
+		void DrawOccupancy() const;
+		void DrawVoxels() const;
+		
+		inline void AddBlock();
+		inline void RemoveBlock();		
+
+		const point_int_t& GetOrigin() const { return origin; }
   }; // class SuperRegion;
   
 }; // namespace Stg
