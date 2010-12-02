@@ -189,6 +189,7 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   canvas( new Canvas( this,0,30,W,H-30 ) ),
   drawOptions(),
   fileMan( new FileManager() ),
+	interval_log(),
   speedup(1.0), // real time
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
   oDlg( NULL ),
@@ -198,12 +199,11 @@ WorldGui::WorldGui(int W,int H,const char* L) :
   real_time_recorded( real_time_now ),
   timing_interval( 20 )
 {
-  Fl::scheme( "gtk+" );
+  Fl::scheme( "" );
   resizable(canvas);
-  
-  end();
-  
   label( PROJECT );
+
+  end();
   
   // make this menu's shortcuts work whoever has focus
   mbar->global();

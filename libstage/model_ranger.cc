@@ -235,7 +235,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	//glTranslatef( 0,0, ranger->GetGeom().size.z/2.0 ); // shoot the ranger beam out at the right height
 			
 	// pack the ranger hit points into a vertex array for fast rendering
-	static std::vector<GLfloat> pts;
+	std::vector<GLfloat> pts;
 	pts.resize( 2 * (sample_count+1) );
 	glVertexPointer( 2, GL_FLOAT, 0, &pts[0] );       
 	

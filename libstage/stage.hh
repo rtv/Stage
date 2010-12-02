@@ -725,11 +725,11 @@ namespace Stg
 	 void SetProperty( std::string& key, void* value ){ props[ key ] = value; }
 	 
 	 /** A key-value database for users to associate arbitrary things with this model. */
-	 void* GetProperty( std::string& key )
-	 {
-		std::map<std::string,void*>::iterator it = props.find( key );		
-		return( it == props.end() ? NULL : it->second );
-	 }
+		void* GetProperty( std::string& key )
+		{
+			std::map<std::string,void*>::iterator it = props.find( key );		
+			return( it == props.end() ? NULL : it->second );
+		}
   };
 
   /** raytrace sample
