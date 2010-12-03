@@ -782,25 +782,20 @@ RaytraceResult World::Raytrace( const Ray& r )
   double ycrossx(0), ycrossy(0);
   double distX(0), distY(0);
   bool calculatecrossings( true );
-			
+	
   // Stage spends up to 95% of its time in this loop! It would be
   // neater with more function calls encapsulating things, but even
   // inline calls have a noticeable (2-3%) effect on performance.
   while( n > 0  ) // while we are still not at the ray end
     { 
-			SuperRegion* sr = GetSuperRegion( point_int_t(GETSREG(globx), GETSREG(globy)) );
-			//SuperRegion* sr = GetSuperRegion( point_int_t(GETSREG(globx), GETSREG(globy)) );
-			
-			Region* reg = NULL;
-			
-			if( sr ) 
-				reg = sr->GetRegion( GETREG(globx), GETREG(globy) );
+			SuperRegion* sr( GetSuperRegion(point_int_t(GETSREG(globx),GETSREG(globy))));
+			Region* reg( sr ?	sr->GetRegion(GETREG(globx),GETREG(globy)) : NULL );
 			
       if( reg && reg->count ) // if the region contains any objects
-		  {
-				//assert( reg->cells.size() );
-
-			 // invalidate the region crossing points used to jump over
+				{
+					//assert( reg->cells.size() );
+					
+					// invalidate the region crossing points used to jump over
 			 // empty regions
 			 calculatecrossings = true;
 					
@@ -975,6 +970,81 @@ void World::Reload( void )
   ForEachDescendant( _reload_cb, NULL );
 }
 
+
+void World::MapPoly( const PointIntVec& pts, Block* block )
+{
+	const size_t pt_count = pts.size();
+	
+	for( size_t i(0); i<pt_count; ++i )
+		{
+			const point_int_t& start = pts[i];
+			const point_int_t& end = pts[(i+1)%pt_count];
+				
+				// line rasterization adapted from Cohen's 3D version in
+				// Graphics Gems II. Should be very fast.  
+				const int32_t dx( end.x - start.x );
+			const int32_t dy( end.y - start.y );
+			const int32_t sx(sgn(dx));  
+			const int32_t sy(sgn(dy));  
+			const int32_t ax(abs(dx));  
+			const int32_t ay(abs(dy));  
+			const int32_t bx(2*ax);	
+			const int32_t by(2*ay);	 
+			int32_t exy(ay-ax); 
+			int32_t n(ax+ay);
+			
+			int32_t globx(start.x);
+			int32_t globy(start.y);
+			
+			while( n ) 
+				{				
+					Region* reg( GetSuperRegionCreate( point_int_t(GETSREG(globx), 
+																												 GETSREG(globy)))
+											 ->GetRegion( GETREG(globx), 
+																		GETREG(globy)));
+					
+					//printf( "REGION %p\n", reg );
+					
+					// add all the required cells in this region before looking up
+					// another region			
+					int32_t cx( GETCELL(globx) ); 
+					int32_t cy( GETCELL(globy) );
+					
+					// need to call Region::GetCell() before using a Cell pointer
+					// directly, because the region allocates cells lazily, waiting
+					// for a call of this method
+					Cell* c( reg->GetCell( cx, cy ) );
+					
+					// while inside the region, manipulate the Cell pointer directly
+					while( (cx>=0) && (cx<REGIONWIDTH) && 
+								 (cy>=0) && (cy<REGIONWIDTH) && 
+								 n > 0 )
+						{					
+							c->AddBlock(block);
+							
+							// cleverly skip to the next cell (now it's safe to
+							// manipulate the cell pointer)
+							if( exy < 0 ) 
+								{
+									globx += sx;
+									exy += by;
+									c += sx;
+									cx += sx;
+								}
+							else 
+								{
+									globy += sy;
+									exy -= bx; 
+									c += sy * REGIONWIDTH;
+									cy += sy;
+								}
+							--n;
+						}
+				}
+		}
+}
+
+
 SuperRegion* World::AddSuperRegion( const point_int_t& sup )
 {
   SuperRegion* sr = CreateSuperRegion( sup );
@@ -1025,7 +1095,7 @@ inline SuperRegion* World::GetSuperRegion( const point_int_t& org )
   return sr;
 }
 
-SuperRegion* World::GetSuperRegionCreate( const point_int_t& org )
+inline SuperRegion* World::GetSuperRegionCreate( const point_int_t& org )
 {
   SuperRegion* sr = GetSuperRegion(org);
 	
@@ -1033,7 +1103,7 @@ SuperRegion* World::GetSuperRegionCreate( const point_int_t& org )
 		{
 			sr = AddSuperRegion( org );  
 			assert( sr ); 
-			//sr_cached = sr;
+			sr_cached = sr;
 		}
 	
   return sr;

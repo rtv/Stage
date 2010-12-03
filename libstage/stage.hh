@@ -609,7 +609,7 @@ namespace Stg
   // this could be an issue one day.
 #define VAR(V,init) __typeof(init) V=(init)
 
-	//#define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();++I) 
+//#define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();++I) 
 
 // NOTE:
 // this version assumes the container is not modified in the loop,
@@ -955,6 +955,10 @@ namespace Stg
 
     virtual Model* RecentlySelectedModel() const { return NULL; }
 		
+		/** call Cell::AddBlock(block) for each cell on the polygon */
+    void MapPoly( const PointIntVec& poly,
+									Block* block );
+
     SuperRegion* AddSuperRegion( const point_int_t& coord );
     SuperRegion* GetSuperRegion( const point_int_t& org );
     SuperRegion* GetSuperRegionCreate( const point_int_t& org );
@@ -1274,10 +1278,6 @@ namespace Stg
 	 /** invalidate the cache of points in model coordinates */
 	 void InvalidateModelPointCache();
 		
-		/** add a Cell pointer to the vector for each cell on the line from
-				pt1 to pt2 inclusive */
-    void MapLine( const point_int_t& pt1,
-									const point_int_t& pt2 );
   };
 
 	

@@ -194,29 +194,28 @@ void Block::Map()
   RemoveFromCellArray( rendered_cells );
 	
 	// now calculate the local coords of the block vertices
-	const unsigned int pt_count = pts.size();
+	const size_t pt_count(pts.size());
 	
   if( mpts.size() == 0 )
 		{
 			// no valid cache of model coord points, so generate them
 			mpts.resize( pts.size() );
 			
-			for( unsigned int i=0; i<pt_count; ++i )
+			for( size_t i=0; i<pt_count; ++i )
 				mpts[i] = BlockPointToModelMeters( pts[i] );
 		}
   
 	// now calculate the global pixel coords of the block vertices
   gpts.clear();
   mod->LocalToPixels( mpts, gpts );
-  
-  for( unsigned int i=0; i<pt_count; ++i )
-		MapLine( gpts[i], 
-						 gpts[(i+1)%pt_count] );
+	
+	// and render this block's polygon into the world
+	mod->GetWorld()->MapPoly( gpts, this );
 	
   // update the block's absolute z bounds at this rendering
-  Pose gpose = mod->GetGlobalPose();
+  Pose gpose( mod->GetGlobalPose() );
   gpose.z += mod->geom.pose.z;
-  double scalez = mod->geom.size.z /  mod->blockgroup.GetSize().z;
+  double scalez( mod->geom.size.z /  mod->blockgroup.GetSize().z );
   meters_t z = gpose.z - mod->blockgroup.GetOffset().z;  
   global_z.min = (scalez * local_z.min) + z;
   global_z.max = (scalez * local_z.max) + z;
@@ -281,8 +280,8 @@ void Block::Rasterize( uint8_t* data,
   //printf( "rasterize block %p : w: %u h: %u  scale %.2f %.2f  offset %.2f %.2f\n",
   //	 this, width, height, scalex, scaley, offsetx, offsety );
 	
-	const unsigned int pt_count = pts.size();
-  for( unsigned int i=0; i<pt_count; ++i )
+	const size_t pt_count = pts.size();
+  for( size_t i=0; i<pt_count; ++i )
     {
 		// convert points from local to model coords
 		point_t mpt1 = BlockPointToModelMeters( pts[i] );
@@ -406,10 +405,10 @@ void Block::DrawSolid()
 
 void Block::Load( Worldfile* wf, int entity )
 {
-	const unsigned int pt_count = wf->ReadInt( entity, "points", 0);
+	const size_t pt_count = wf->ReadInt( entity, "points", 0);
 
   char key[128];
-  for( unsigned int p=0; p<pt_count; ++p )	      
+  for( size_t p=0; p<pt_count; ++p )	      
 	 {
 		snprintf(key, sizeof(key), "point[%d]", p );
 		
@@ -434,72 +433,72 @@ void Block::Load( Worldfile* wf, int entity )
 }
 
 
-void Block::MapLine( const point_int_t& start,
-										 const point_int_t& end )
-{  
-  // line rasterization adapted from Cohen's 3D version in
-  // Graphics Gems II. Should be very fast.  
-  const int32_t dx( end.x - start.x );
-  const int32_t dy( end.y - start.y );
-  const int32_t sx(sgn(dx));  
-  const int32_t sy(sgn(dy));  
-  const int32_t ax(abs(dx));  
-  const int32_t ay(abs(dy));  
-  const int32_t bx(2*ax);	
-  const int32_t by(2*ay);	 
-  int32_t exy(ay-ax); 
-  int32_t n(ax+ay);
+// void Block::MapLine( const point_int_t& start,
+// 										 const point_int_t& end )
+// {  
+//   // line rasterization adapted from Cohen's 3D version in
+//   // Graphics Gems II. Should be very fast.  
+//   const int32_t dx( end.x - start.x );
+//   const int32_t dy( end.y - start.y );
+//   const int32_t sx(sgn(dx));  
+//   const int32_t sy(sgn(dy));  
+//   const int32_t ax(abs(dx));  
+//   const int32_t ay(abs(dy));  
+//   const int32_t bx(2*ax);	
+//   const int32_t by(2*ay);	 
+//   int32_t exy(ay-ax); 
+//   int32_t n(ax+ay);
 
-  int32_t globx(start.x);
-  int32_t globy(start.y);
-  
-
-	World* w = mod->GetWorld();
-
-  while( n ) 
-    {				
-      Region* reg( w->GetSuperRegionCreate( point_int_t(GETSREG(globx), GETSREG(globy)))
-									 ->GetRegion( GETREG(globx), GETREG(globy) ));
+//   int32_t globx(start.x);
+//   int32_t globy(start.y);
+	
+//   while( n ) 
+//     {				
+//       Region* reg( mod->GetWorld()
+// 									 ->GetSuperRegionCreate( point_int_t(GETSREG(globx), 
+// 																											 GETSREG(globy)))
+// 									 ->GetRegion( GETREG(globx), 
+// 																GETREG(globy)));
 			
-			//printf( "REGION %p\n", reg );
+// 			//printf( "REGION %p\n", reg );
 
-      // add all the required cells in this region before looking up
-      // another region			
-      int32_t cx( GETCELL(globx) ); 
-      int32_t cy( GETCELL(globy) );
+//       // add all the required cells in this region before looking up
+//       // another region			
+//       int32_t cx( GETCELL(globx) ); 
+//       int32_t cy( GETCELL(globy) );
 			
-      // need to call Region::GetCell() before using a Cell pointer
-      // directly, because the region allocates cells lazily, waiting
-      // for a call of this method
-      Cell* c( reg->GetCell( cx, cy ) );
+//       // need to call Region::GetCell() before using a Cell pointer
+//       // directly, because the region allocates cells lazily, waiting
+//       // for a call of this method
+//       Cell* c( reg->GetCell( cx, cy ) );
 
-			// while inside the region, manipulate the Cell pointer directly
-      while( (cx>=0) && (cx<REGIONWIDTH) && 
-						 (cy>=0) && (cy<REGIONWIDTH) && 
-						 n > 0 )
-				{					
-					c->AddBlock(this);
+// 			// while inside the region, manipulate the Cell pointer directly
+//       while( (cx>=0) && (cx<REGIONWIDTH) && 
+// 						 (cy>=0) && (cy<REGIONWIDTH) && 
+// 						 n > 0 )
+// 				{					
+// 					c->AddBlock(this);
 					
-					// cleverly skip to the next cell (now it's safe to
-					// manipulate the cell pointer)
-					if( exy < 0 ) 
-						{
-							globx += sx;
-							exy += by;
-							c += sx;
-							cx += sx;
-						}
-					else 
-						{
-							globy += sy;
-							exy -= bx; 
-							c += sy * REGIONWIDTH;
-							cy += sy;
-						}
-					--n;
-				}
-    }
-}
+// 					// cleverly skip to the next cell (now it's safe to
+// 					// manipulate the cell pointer)
+// 					if( exy < 0 ) 
+// 						{
+// 							globx += sx;
+// 							exy += by;
+// 							c += sx;
+// 							cx += sx;
+// 						}
+// 					else 
+// 						{
+// 							globy += sy;
+// 							exy -= bx; 
+// 							c += sy * REGIONWIDTH;
+// 							cy += sy;
+// 						}
+// 					--n;
+// 				}
+//     }
+// }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // utility functions to ensure block winding is consistent and matches OpenGL's default
