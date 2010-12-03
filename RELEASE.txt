@@ -1,3 +1,10 @@
+Version 4.0.1
+-------------
+- Bugfixes
+- more sparing use of memory to support very large worlds (square kms!)
+
+Richard Vaughan (rtv) vaughan@sfu.ca - 2010.12.2
+
 Version 4.0.0
 -------------
 
