@@ -12,19 +12,11 @@
 #include "file_manager.hh"
 using namespace Stg;
 
-Fl_Shared_Image* TextureManager::loadImage( const char* filename )
-{	
-	Fl_Shared_Image *img = NULL;
-
-	img = Fl_Shared_Image::get( filename );
-	
-	return img;
-}
-
 GLuint TextureManager::loadTexture( const char *filename )
 {
 	GLuint texName;
-	Fl_Shared_Image *img = loadImage( filename );
+	Fl_Shared_Image *img = Fl_Shared_Image::get( filename );
+
 	if( img == NULL ) {
 		fprintf( stderr, "unable to open image: %s\n", filename );
 		exit(-1);

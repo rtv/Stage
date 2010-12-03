@@ -160,6 +160,8 @@ void Canvas::InitTextures()
       PRINT_DEBUG( "Unable to load mains texture.\n" );
     }
   
+	printf( "mains icon %s\n", fullpath.c_str() );
+
   GLuint mains_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
   TextureManager::getInstance()._mains_texture_id = mains_id;
   

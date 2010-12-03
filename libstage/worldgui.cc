@@ -702,8 +702,6 @@ void aboutCloseCb( Fl_Window* win, Fl_Text_Display* textDisplay )
 
 void WorldGui::helpAboutCb( Fl_Widget* w, WorldGui* wg ) 
 {
-  fl_register_images();
-	
   const int Width = 420;
   const int Height = 330;
   const int Spc = 10;
