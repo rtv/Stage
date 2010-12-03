@@ -169,6 +169,9 @@ uint64_t Model::trail_interval(5);
 std::map<Stg::id_t,Model*> Model::modelsbyid;
 std::map<std::string, creator_t> Model::name_map;
 
+//static const members
+static const double DEFAULT_FRICTION = 0.0;
+
 void Bounds::Load( Worldfile* wf, const int section, const char* keyword )
 {
 	if( CProperty* prop = wf->GetProperty( section, keyword ) )	
@@ -297,8 +300,6 @@ Model::Visibility::Visibility() :
   ranger_return( 1.0 )
 { /* nothing to do */ }
 
-//static const members
-static const double DEFAULT_FRICTION = 0.0;
 
 void Model::Visibility::Load( Worldfile* wf, int wf_entity )
 {
@@ -341,6 +342,9 @@ Model::Model( World* world,
 							Model* parent,
 				  const std::string& type ) :
   Ancestor(), 	 
+	mapped(false),
+	drawOptions(),
+	//hitmod(NULL),
   alwayson(false),
   blockgroup(),
   blocks_dl(0),
@@ -351,6 +355,7 @@ Model::Model( World* world,
   disabled(false),
   cv_list(),
   flag_list(),
+	friction(DEFAULT_FRICTION),
   geom(),
   has_default_block( true ),
   id( Model::count++ ),
@@ -408,9 +413,7 @@ Model::Model( World* world,
     }
 
   world->AddModel( this );
-  
-  this->friction = DEFAULT_FRICTION;
-    
+      
   // now we can add the basic square shape
   AddBlockRect( -0.5, -0.5, 1.0, 1.0, 1.0 );
 
@@ -530,6 +533,8 @@ Block* Model::AddBlockRect( meters_t x,
 
   blockgroup.AppendBlock( newblock );
 
+	Map();
+	
   return newblock;
 }
 
@@ -695,10 +700,12 @@ void Model::UnMapFromRoot()
 
 void Model::Map()
 {
-  //PRINT_DEBUG1( "%s.Map()", token );
-
-  // render all blocks in the group at my global pose and size
-  blockgroup.Map();
+	if( ! mapped )
+		{
+			// render all blocks in the group at my global pose and size
+			blockgroup.Map();
+			mapped = true;
+		}
 } 
 
 
@@ -913,29 +920,6 @@ void Model::UpdateCharge()
 	 }
 }
 
-Model* Model::Move( const Pose& newpose )
-{ 
-  const Pose startpose( pose );
-  pose = newpose; // do the move provisionally - we might undo it below
-  
-	UnMapWithChildren(); // remove from all blocks
-	MapWithChildren(); // render into blocks
-	
-	Model* hitmod = TestCollision();
-	
-	if( hitmod ) // crunch!
-		{
-			// put things back the way they were
-			// this is expensive, but it happens very rarely for most people
-			pose = startpose;
-			UnMapWithChildren();
-			MapWithChildren();
-		}
-	else
-		world->dirty = true; // need redraw	
-	
-	return hitmod;
-}
 
 void Model::UpdatePose( void )
 {
@@ -949,16 +933,38 @@ void Model::UpdatePose( void )
   double interval( (double)world->sim_interval / 1e6 );
   
   // find the change of pose due to our velocity vector
-  Pose p( velocity.x * interval,
-					velocity.y * interval,
-					velocity.z * interval,
-					normalize( velocity.a * interval ));
+  const Pose p( velocity.x * interval,
+								velocity.y * interval,
+								velocity.z * interval,
+								normalize( velocity.a * interval ));
+	
+	// the pose we're trying to achieve (unless something stops us)
+	const Pose newpose( pose + p );
+	
+	// stash the original pose so we can put things back if we hit
+  const Pose startpose( pose );
+	
+  pose = newpose; // do the move provisionally - we might undo it below
   
-  // attempts to move to the new pose. If the move fails because we'd
-  // hit another model, that model is returned.	
-	// Move() returns a pointer to the model we hit, or
-	// NULL. We use this as a boolean for SetStall()
-  SetStall( Move( pose + p ) );
+	UnMapWithChildren(); // remove from all blocks
+	MapWithChildren(); // render into new blocks
+	
+	Model* hitmod = TestCollision();
+	
+	if( hitmod ) // crunch!
+		{
+			// put things back the way they were
+			// this is expensive, but it happens very rarely for most people
+			pose = startpose;
+			UnMapWithChildren();
+			MapWithChildren();
+			SetStall(true);
+		}
+	else
+		{
+			world->dirty = true; // need redraw	
+			SetStall(false);
+		}
 }
 
 
@@ -1048,7 +1054,11 @@ kg_t Model::GetMassOfChildren() const
 
 void Model::UnMap()
 {
-  blockgroup.UnMap();
+	if( mapped )
+		{
+			blockgroup.UnMap();
+			mapped = false;
+		}
 }
 
 void Model::BecomeParentOf( Model* child )

@@ -627,13 +627,13 @@ void ModelPosition::WaypointVis::Visualize( Model* mod, Camera* cam )
   glLineWidth( 1 );
   
   // draw lines connecting the waypoints
-  const unsigned int num = waypoints.size();  
+  const size_t num(waypoints.size());  
   if( num > 1 )
     {
 		pos->PushColor( 1,0,0,0.3 );
 		glBegin( GL_LINES );
       
-      for( unsigned int i=1; i<num ; i++ )
+		for( size_t i(1); i<num ; i++ )
 		  {
 			 Pose p = waypoints[i].pose;
 			 Pose o = waypoints[i-1].pose;

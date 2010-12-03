@@ -201,7 +201,7 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
 	World* world = mod->GetWorld();
 
   // trace the ray, incrementing its heading for each sample
-  for( unsigned int t(0); t<sample_count; t++ )
+  for( size_t t(0); t<sample_count; t++ )
     {
 			const RaytraceResult& r ( world->Raytrace( ray ) );
 			ranges[t] = r.range;
@@ -235,8 +235,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	//glTranslatef( 0,0, ranger->GetGeom().size.z/2.0 ); // shoot the ranger beam out at the right height
 			
 	// pack the ranger hit points into a vertex array for fast rendering
-	std::vector<GLfloat> pts;
-	pts.resize( 2 * (sample_count+1) );
+	GLfloat pts[2*(sample_count+1)];
 	glVertexPointer( 2, GL_FLOAT, 0, &pts[0] );       
 	
 	pts[0] = 0.0;
@@ -281,7 +280,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 				}	
 			else
 				{
-					for( unsigned int s(0); s<sample_count; s++ )
+					for( size_t s(0); s<sample_count; s++ )
 						{
 							double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
 							pts[2*s+2] = (float)(ranges[s] * cos(ray_angle) );
@@ -320,7 +319,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	
 	if( vis->showFov )
 		{
-			for( unsigned int s(0); s<sample_count; s++ )
+			for( size_t s(0); s<sample_count; s++ )
 				{
 					double ray_angle((s * (fov / (sample_count-1))) - fov/2.0);
 					pts[2*s+2] = (float)(range.max * cos(ray_angle) );
@@ -345,7 +344,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 			rgr->PushColor( c );		
 			glBegin( GL_LINES );
 			
-			for( unsigned int s(0); s<sample_count; s++ )
+			for( size_t s(0); s<sample_count; s++ )
 				{
 					
 					glVertex2f( 0,0 );
@@ -363,28 +362,28 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	glPopMatrix();
 }
 	
-	void ModelRanger::Print( char* prefix ) const
-	{
-		Model::Print( prefix );
-		
-		printf( "\tRanges " );
-		for( unsigned int i=0; i<sensors.size(); i++ )
-			{
-				printf( "[ " );
-				for( unsigned int j=0; j<sensors[i].ranges.size(); j++ )
-					printf( "%.2f ", sensors[i].ranges[j] );
-				
-				printf( " ]" );
-			}
-		
-		printf( "\n\tIntensities " );
-		for( unsigned int i=0; i<sensors.size(); i++ )
-			{
-				printf( "[ " );
-				for( unsigned int j=0; j<sensors[i].intensities.size(); j++ )
-					printf( "%.2f ", sensors[i].intensities[j] );
-				
-				printf( " ]" );
+void ModelRanger::Print( char* prefix ) const
+{
+	Model::Print( prefix );
+	
+	printf( "\tRanges " );
+	for( size_t i(0); i<sensors.size(); i++ )
+		{
+			printf( "[ " );
+			for( size_t j(0); j<sensors[i].ranges.size(); j++ )
+				printf( "%.2f ", sensors[i].ranges[j] );
+			
+			printf( " ]" );
+		}
+	
+	printf( "\n\tIntensities " );
+	for( size_t i(0); i<sensors.size(); i++ )
+		{
+			printf( "[ " );
+			for( size_t j(0); j<sensors[i].intensities.size(); j++ )
+				printf( "%.2f ", sensors[i].intensities[j] );
+			
+			printf( " ]" );
 		}
 	puts("");
 }
@@ -411,23 +410,19 @@ void ModelRanger::Vis::Visualize( Model* mod, Camera* cam )
 
   const std::vector<Sensor>& sensors( ranger->GetSensors() );    
 	
-	//glPushMatrix();
-	
 	FOR_EACH( it, sensors )
 		it->Visualize( this, ranger );
 	
-	//glPopMatrix();
-				
-	const unsigned int sensor_count = sensors.size();
+	const size_t sensor_count = sensors.size();
 
 	if( showTransducers )
 		{
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 			ranger->PushColor( 0,0,0,1 );
 			
-			for( unsigned int s=0; s<sensor_count; s++ ) 
+			for( size_t s(0); s<sensor_count; s++ ) 
 				{ 
-					const Sensor& rngr = sensors[s];
+					const Sensor& rngr(sensors[s]);
 					
 					glPointSize( 4 );
 					glBegin( GL_POINTS );

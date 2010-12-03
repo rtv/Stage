@@ -1717,16 +1717,20 @@ namespace Stg
     friend class PowerPack;
     friend class Ray;
 		friend class ModelFiducial;
-
+		
   private:
-	 /** the number of models instatiated - used to assign unique IDs */
-	 static uint32_t count;
-	 static std::map<id_t,Model*> modelsbyid;
-	 std::vector<Option*> drawOptions;
-	 const std::vector<Option*>& getOptions() const { return drawOptions; }
+		/** the number of models instatiated - used to assign unique IDs */
+		static uint32_t count;
+		static std::map<id_t,Model*> modelsbyid;
+
+		/** records if this model has been mapped into the world bitmap*/
+		bool mapped;
+
+		std::vector<Option*> drawOptions;
+		const std::vector<Option*>& getOptions() const { return drawOptions; }
 	 
 		/** EXP */
-		Model* hitmod; // thing we hit in a (parallel) collision test
+		// Model* hitmod; // thing we hit in a (parallel) collision test
 
   protected:
 
@@ -1826,10 +1830,6 @@ namespace Stg
 	 /** Default color of the model's blocks.*/
 	 Color color;
 		
-		/** Model the interaction between the model's blocks and the
-				surface they touch. @todo primitive at the moment */
-	 double friction;
-		
 	 /** This can be set to indicate that the model has new data that
 		  may be of interest to users. This allows polling the model
 		  instead of adding a data callback. */
@@ -1845,6 +1845,10 @@ namespace Stg
 
 		/** Container for flags attached to this model. */
 	 std::list<Flag*> flag_list;
+		
+		/** Model the interaction between the model's blocks and the
+				surface they touch. @todo primitive at the moment */
+	 double friction;
 		
 		/** Specifies the the size of this model's bounding box, and the
 				offset of its local coordinate system wrt that its parent. */
@@ -2110,7 +2114,7 @@ namespace Stg
 	 virtual void UpdatePose();
 	 virtual void UpdateCharge();
 
-	 Model* Move( const Pose& newpose );
+		//Model* Move( const Pose& newpose );
 	
 		// EXP
 		//void ConditionalMove_calc( const Pose& newpose );
