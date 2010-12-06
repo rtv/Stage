@@ -365,45 +365,58 @@ int FiducialCfgGet( Stg::Model* mod, av_msg_t* msg )
 
 	return 0; // ok
 }
- 
+
+
+typedef std::pair<std::string,av_interface_t> proto_iface_pair_t;
 
 int RegisterModel( Stg::Model* mod, void* dummy )
-{ 
-  //printf( "[AvonStage] registering %s\n", mod->Token() );
-	
+{ 	
 	// expensive to test this here! XX todo optmize this for large pops
 	if( mod->TokenStr() == "_ground_model" )
 		return 0;
 	
-  av_interface_t interface = AV_INTERFACE_GENERIC;
+	static std::map<std::string,proto_iface_pair_t> type_table;
 	
-	const char* prototype = "generic";
-
-  std::string str = mod->GetModelType();
-  
-	//  if( str == "position" )
-	//type = AV_INTERFACE_POSITION2D;
-	if( str == "ranger" )
+	if( type_table.size() == 0 ) // first call only
 		{
-			interface = AV_INTERFACE_RANGER;
-			prototype = (char*)"ranger";
+			type_table[ "model" ] = 
+				proto_iface_pair_t( "generic", AV_INTERFACE_GENERIC );
+			
+			type_table[ "position" ] = 
+				proto_iface_pair_t( "position2d", AV_INTERFACE_GENERIC );
+			
+			type_table[ "ranger" ] = 
+				proto_iface_pair_t( "ranger", AV_INTERFACE_RANGER );
+			
+			type_table[ "fiducial" ] = 
+				proto_iface_pair_t( "fiducial", AV_INTERFACE_FIDUCIAL );
 		}
-  else if( str == "fiducial" )
-		{
-			interface = AV_INTERFACE_FIDUCIAL;
-			prototype = "fiducial";
-		}
-  
-  Stg::Model* parent = mod->Parent();
-  const char* parent_name = parent ? parent->Token() : NULL;
-  
-  av_register_model( mod->Token(), prototype, interface, parent_name, dynamic_cast<void*>(mod) );
-  
-
-	// recursively register the model's children, if any
 	
+  printf( "[AvonStage] registering %s\n", mod->Token() );
+	
+	
+	// look up the model type in the table
 
-  return 0; // ok
+	const std::map<std::string,proto_iface_pair_t>::iterator it = 
+		type_table.find( mod->GetModelType() );
+
+	if( it != type_table.end() ) // if we found it in the table
+		{			
+			av_interface_t interface = it->second.second;	
+			const std::string& prototype = it->second.first;			
+			Stg::Model* parent = mod->Parent();
+			const char* parent_name = parent ? parent->Token() : NULL;
+			
+			av_register_model( mod->Token(), prototype.c_str(), interface, parent_name, dynamic_cast<void*>(mod) );
+			return 0; // ok	
+
+			// todo?? recursively register the model's children, if any			
+		}
+	
+	// else
+	printf( "Avonstage error: model type \"%s\" not found.\n", 
+					mod->GetModelType().c_str() );
+	return 1; //fail
 }
 
 int main( int argc, char* argv[] )
