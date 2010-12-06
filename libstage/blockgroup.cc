@@ -37,13 +37,6 @@ void BlockGroup::Clear()
   blocks.clear();
 }
 
-void BlockGroup::SwitchToTestedCells()
-{
-  // confirm the tentative pose for all blocks
-  FOR_EACH( it, blocks )
-	(*it)->SwitchToTestedCells();  
-}
-
 void BlockGroup::AppendTouchingModels( ModelPtrSet &v )
 {
   FOR_EACH( it, blocks )
@@ -107,10 +100,20 @@ void BlockGroup::Map()
 	(*it)->Map();
 }
 
+// defined in world.cc
+void SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next );
+
 void BlockGroup::UnMap()
 {
-  FOR_EACH( it, blocks )
-	(*it)->UnMap();
+	SuperRegion* sr = NULL;
+	
+	FOR_EACH( it, blocks )
+ 		{
+			// 			SwitchSuperRegionLock( sr, (*it)->GetSuperRegions() );
+ 			(*it)->UnMap();
+ 		}
+	
+//	if(sr) sr->Unlock();
 }
 
 void BlockGroup::DrawSolid( const Geom & geom )

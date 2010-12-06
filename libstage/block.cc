@@ -190,12 +190,9 @@ Model* Block::TestCollision()
 
 void Block::Map()
 {
-	// clear out of the old cells
-  RemoveFromCellArray( rendered_cells );
-	
-	// now calculate the local coords of the block vertices
+	// calculate the local coords of the block vertices
 	const size_t pt_count(pts.size());
-	
+
   if( mpts.size() == 0 )
 		{
 			// no valid cache of model coord points, so generate them
@@ -223,30 +220,17 @@ void Block::Map()
   mapped = true;	
 }
 
-void Block::UnMap()
-{
-  RemoveFromCellArray( rendered_cells );
-  rendered_cells.clear();
-  mapped = false;
-}
-
 #include <algorithm>
 #include <functional>
 
-inline void Block::RemoveFromCellArray( CellPtrVec& cells )
+void Block::UnMap()
 {
- 	//	FOR_EACH( it, *cells )
-	//	(*it)->RemoveBlock(this);
-	
-	// this is equivalent to the above commented code - experimenting
-	// with optimizations
-	std::for_each( cells.begin(), 
-								 cells.end(), 
+	std::for_each( rendered_cells.begin(), 
+								 rendered_cells.end(), 
 								 std::bind2nd( std::mem_fun(&Cell::RemoveBlock), this));
-}
-
-void Block::SwitchToTestedCells()
-{
+	
+  rendered_cells.clear();
+  mapped = false;
 }
 
 inline point_t Block::BlockPointToModelMeters( const point_t& bpt )
@@ -410,7 +394,7 @@ void Block::Load( Worldfile* wf, int entity )
   char key[128];
   for( size_t p=0; p<pt_count; ++p )	      
 	 {
-		snprintf(key, sizeof(key), "point[%d]", p );
+		 snprintf(key, sizeof(key), "point[%d]", (int)p );
 		
 		pts.push_back( point_t(  wf->ReadTupleLength(entity, key, 0, 0),
 														 wf->ReadTupleLength(entity, key, 1, 0) ));
@@ -432,74 +416,6 @@ void Block::Load( Worldfile* wf, int entity )
 	wheel = wf->ReadInt( entity, "wheel", wheel );
 }
 
-
-// void Block::MapLine( const point_int_t& start,
-// 										 const point_int_t& end )
-// {  
-//   // line rasterization adapted from Cohen's 3D version in
-//   // Graphics Gems II. Should be very fast.  
-//   const int32_t dx( end.x - start.x );
-//   const int32_t dy( end.y - start.y );
-//   const int32_t sx(sgn(dx));  
-//   const int32_t sy(sgn(dy));  
-//   const int32_t ax(abs(dx));  
-//   const int32_t ay(abs(dy));  
-//   const int32_t bx(2*ax);	
-//   const int32_t by(2*ay);	 
-//   int32_t exy(ay-ax); 
-//   int32_t n(ax+ay);
-
-//   int32_t globx(start.x);
-//   int32_t globy(start.y);
-	
-//   while( n ) 
-//     {				
-//       Region* reg( mod->GetWorld()
-// 									 ->GetSuperRegionCreate( point_int_t(GETSREG(globx), 
-// 																											 GETSREG(globy)))
-// 									 ->GetRegion( GETREG(globx), 
-// 																GETREG(globy)));
-			
-// 			//printf( "REGION %p\n", reg );
-
-//       // add all the required cells in this region before looking up
-//       // another region			
-//       int32_t cx( GETCELL(globx) ); 
-//       int32_t cy( GETCELL(globy) );
-			
-//       // need to call Region::GetCell() before using a Cell pointer
-//       // directly, because the region allocates cells lazily, waiting
-//       // for a call of this method
-//       Cell* c( reg->GetCell( cx, cy ) );
-
-// 			// while inside the region, manipulate the Cell pointer directly
-//       while( (cx>=0) && (cx<REGIONWIDTH) && 
-// 						 (cy>=0) && (cy<REGIONWIDTH) && 
-// 						 n > 0 )
-// 				{					
-// 					c->AddBlock(this);
-					
-// 					// cleverly skip to the next cell (now it's safe to
-// 					// manipulate the cell pointer)
-// 					if( exy < 0 ) 
-// 						{
-// 							globx += sx;
-// 							exy += by;
-// 							c += sx;
-// 							cx += sx;
-// 						}
-// 					else 
-// 						{
-// 							globy += sy;
-// 							exy -= bx; 
-// 							c += sy * REGIONWIDTH;
-// 							cy += sy;
-// 						}
-// 					--n;
-// 				}
-//     }
-// }
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // utility functions to ensure block winding is consistent and matches OpenGL's default
 
@@ -518,11 +434,9 @@ void pi_ize(radians_t& angle)
     while (M_PI < angle)  angle -= 2 * M_PI;
 }
 
-typedef point_t V2;
-
 static
 /// util; How much was v1 rotated to get to v2?
-radians_t angle_change(V2 v1, V2 v2)
+radians_t angle_change(point_t v1, point_t v2)
 {
     radians_t a1 = atan2(v1.y, v1.x);
     positivize(a1);
@@ -545,7 +459,7 @@ vector<point_t> find_vectors(vector<point_t> const& pts)
     for (unsigned i = 0, n = pts.size(); i < n; ++i)
     {
         unsigned j = (i + 1) % n;
-        vs.push_back(V2(pts[j].x - pts[i].x, pts[j].y - pts[i].y));
+        vs.push_back(point_t(pts[j].x - pts[i].x, pts[j].y - pts[i].y));
     }
     assert(vs.size() == pts.size());
     return vs;

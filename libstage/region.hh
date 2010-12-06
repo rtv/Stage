@@ -103,13 +103,12 @@ namespace Stg
   class SuperRegion
   {
   private:
-		Region regions[SUPERREGIONSIZE];
-		
+		unsigned long count; // number of blocks rendered into this superregion
+		pthread_mutex_t mutex;
 		point_int_t origin;
+		Region regions[SUPERREGIONSIZE];
 		World* world;
 		
-		unsigned long count; // number of blocks rendered into this superregion
-
   public:	 
 	 SuperRegion( World* world, point_int_t origin );
 	 ~SuperRegion();
@@ -121,6 +120,9 @@ namespace Stg
 		
 		void DrawOccupancy() const;
 		void DrawVoxels() const;
+
+		inline void Lock(){ pthread_mutex_lock( &mutex); }
+		inline void Unlock(){ pthread_mutex_unlock( &mutex); }
 		
 		inline void AddBlock();
 		inline void RemoveBlock();		

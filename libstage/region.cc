@@ -4,6 +4,7 @@
   Copyright Richard Vaughan 2008
 */
 
+#include <pthread.h>
 #include "region.hh"
 using namespace Stg;
 
@@ -53,11 +54,14 @@ void Region::RemoveBlock()
 }
 
 SuperRegion::SuperRegion( World* world, point_int_t origin ) 
-  : regions(),
-	 origin(origin), 
-	 world(world), 
-	 count(0)	 
+  : count(0),
+		mutex(),
+		origin(origin), 
+		regions(),
+		world(world)
 {
+	pthread_mutex_init(&mutex,NULL);
+
 	for( int32_t c=0; c<SUPERREGIONSIZE;++c)
 		regions[c].superregion = this;
 }
@@ -220,7 +224,7 @@ void SuperRegion::DrawVoxels() const
   glEnable( GL_DEPTH_TEST );
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   
-  const Region* r = &regions[0];//GetRegion( 0, 0);
+  const Region* r = &regions[0];
   
   for( int y=0; y<SUPERREGIONWIDTH; ++y )
 	 for( int x=0; x<SUPERREGIONWIDTH; ++x )
@@ -272,13 +276,16 @@ void Cell::AddBlock( Block* b )
 	blocks.push_back( b );   
 	b->rendered_cells.push_back(this);
 	region->AddBlock();
-
 	//mapped_blocks.insert(b);
 }
 
 
 void Cell::RemoveBlock( Block* b )
 {
+	//static unsigned int callcount(0);
+	//printf( "RemoveBlock calls %d\n", ++callcount );
+
+	//region->superregion->Lock();
 	//if( mapped_blocks.find(b) == mapped_blocks.end() )
 	//printf( "REMOVE BLOCK %p that was never mapped\n", b );
 
@@ -319,4 +326,6 @@ void Cell::RemoveBlock( Block* b )
 		}
 	
 	region->RemoveBlock();
+
+	//region->superregion->Unlock();
 }

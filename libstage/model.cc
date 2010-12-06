@@ -777,15 +777,20 @@ void Model::Startup( void )
   //printf( "model %s using queue %d\n", token, event_queue_num );
 
   // if we're thread safe, we can use an event queue >0  
-  if( thread_safe )
-	 event_queue_num = world->GetEventQueue( this );
+	event_queue_num = world->GetEventQueue( this );
 
   // put my first update request in the world's queue
-  world->Enqueue( event_queue_num, interval, this );
-	
+	 if( thread_safe )
+		 world->Enqueue( event_queue_num, interval, this );
+	 else
+		 world->Enqueue( 0, interval, this );
+	 
 	if( velocity_enable )
-		world->active_velocity.insert( this );
-	
+		{
+			world->active_velocity.insert( this );
+			world->active_velocity_threaded[event_queue_num].insert( this );
+		}
+
   if( FindPowerPack() )
 	 world->active_energy.insert( this );
   
@@ -800,6 +805,8 @@ void Model::Shutdown( void )
   world->active_energy.erase( this );
   world->active_velocity.erase( this );
   
+	world->active_velocity_threaded[event_queue_num].erase( this );
+
   // allows data visualizations to be cleared.
   NeedRedraw();
 }
@@ -807,12 +814,16 @@ void Model::Shutdown( void )
 
 void Model::Update( void )
 { 
-	CallCallbacks( CB_UPDATE );
-
+	//	CallCallbacks( CB_UPDATE );
+	
   last_update = world->sim_time;  
   world->Enqueue( event_queue_num, interval, this );
 }
 
+void Model::CallUpdateCallbacks( void )
+{
+	CallCallbacks( CB_UPDATE );
+}
 
 meters_t Model::ModelHeight() const
 {	
@@ -930,7 +941,7 @@ void Model::UpdatePose( void )
     return;
   
   // convert usec to sec
-  double interval( (double)world->sim_interval / 1e6 );
+  const double interval( (double)world->sim_interval / 1e6 );
   
   // find the change of pose due to our velocity vector
   const Pose p( velocity.x * interval,
@@ -949,7 +960,7 @@ void Model::UpdatePose( void )
 	UnMapWithChildren(); // remove from all blocks
 	MapWithChildren(); // render into new blocks
 	
-	Model* hitmod = TestCollision();
+	const Model* hitmod = TestCollision();
 	
 	if( hitmod ) // crunch!
 		{

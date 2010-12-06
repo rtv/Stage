@@ -1005,7 +1005,7 @@ namespace Stg
 		
 		
     /** Enlarge the bounding volume to include this point */
-    void Extend( point3_t pt );
+    inline void Extend( point3_t pt );
   
     virtual void AddModel( Model* mod );
     virtual void RemoveModel( Model* mod );
@@ -1044,6 +1044,9 @@ namespace Stg
 		/** Queue of pending simulation events for the main thread to handle. */
 	 std::vector<std::priority_queue<Event> > event_queues;
 
+		/** Queue of pending simulation events for the main thread to handle. */
+		std::vector<std::queue<Model*> > pending_update_callbacks;
+		
 		/** Create a new simulation event to be handled in the future.
 
 				@param queue_num Specify which queue the event should be on. The main
@@ -1055,17 +1058,27 @@ namespace Stg
 				@param mod The model that should have its Update() method
 				called at the specified time.
 		*/
-	 void Enqueue( unsigned int queue_num, usec_t delay, Model* mod );
-	 
+		void Enqueue( unsigned int queue_num, usec_t delay, Model* mod )
+		{  event_queues[queue_num].push( Event( sim_time + delay, mod ) ); }
+		
 		/** Set of models that require energy calculations at each World::Update(). */
 	 std::set<Model*> active_energy;
 
 		/** Set of models that require their positions to be recalculated at each World::Update(). */
 	 std::set<Model*> active_velocity;
-
+		
+		std::vector<std::set<Model*> > active_velocity_threaded;
+		
+		unsigned int thread_task;
+		
 	 /** The amount of simulated time to run for each call to Update() */
 	 usec_t sim_interval;
-	 
+		
+		// debug instrumentation - making sure the number of update callbacks
+		// in each thread is consistent with the number that have been
+		// registered globally
+		int update_cb_count;
+
 	 /** consume events from the queue up to and including the current sim_time */
 	 void ConsumeQueue( unsigned int queue_num );
 
@@ -1220,15 +1233,11 @@ namespace Stg
 	 /** Set the extent in Z of the block */
 	 void SetZ( double min, double max );
 		
-    inline void RemoveFromCellArray( CellPtrVec& blocks );
-    //inline void GenerateCandidateCells();  
-		
 		void AppendTouchingModels( ModelPtrSet& touchers );
 	 
 	 /** Returns the first model that shares a bitmap cell with this model */
     Model* TestCollision(); 
 
-    void SwitchToTestedCells();  
     void Load( Worldfile* wf, int entity );  
     Model* GetModel(){ return mod; };  
     const Color& GetColor();		
@@ -1260,14 +1269,8 @@ namespace Stg
     /** record the cells into which this block has been rendered to
 				UnMapping them very quickly. */  
 		CellPtrVec rendered_cells;
-
-    /** When moving a model, we test for collisions by generating, for
-		  each block, a list of the cells in which it would be rendered if the
-		  move were to be successful. If no collision occurs, the move is
-		  allowed - the rendered cells are cleared, the potential cells are
-		  written, and the pointers to the rendered and potential cells are
-		  switched for next time (avoiding a memory copy).*/
-		//CellPtrVec * candidate_cells;
+		
+		//std::set<SuperRegion*> rendered_superregions;
 	
 	 PointIntVec gpts;
 	
@@ -1318,8 +1321,6 @@ namespace Stg
 		  with a block in this group, or NULL, if none are detected. */
     Model* TestCollision();
  
-    void SwitchToTestedCells();
-	 
     void Map();
     void UnMap();
 	 
@@ -2102,23 +2103,14 @@ namespace Stg
 						 const uint32_t sample_count,
 						 const bool ztest = true );
   
-
-	 /** Causes this model and its children to recompute their global
-		  position instead of using a cached pose in
-		  Model::GetGlobalPose()..*/
-	 //void GPoseDirtyTree();
-
 	 virtual void Startup();
 	 virtual void Shutdown();
 	 virtual void Update();
 	 virtual void UpdatePose();
 	 virtual void UpdateCharge();
 
-		//Model* Move( const Pose& newpose );
-	
-		// EXP
-		//void ConditionalMove_calc( const Pose& newpose );
-		//void ConditionalMove_commit( void );
+		/** Calls CallCallback( CB_UPDATE ) */
+		void CallUpdateCallbacks( void );
 
 	 meters_t ModelHeight() const;
 
