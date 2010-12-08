@@ -430,7 +430,7 @@ void ModelRanger::Vis::Visualize( Model* mod, Camera* cam )
 					glEnd();
 					
 					char buf[8];
-					snprintf( buf, 8, "%d", s );
+					snprintf( buf, 8, "%d", (int)s );
 					Gl::draw_string( rngr.pose.x, rngr.pose.y, rngr.pose.z, buf );
 					
 				}
