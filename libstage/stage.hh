@@ -807,6 +807,18 @@ namespace Stg
   /// %World class
   class World : public Ancestor
   {
+	private: 
+		pthread_mutex_t bflock;
+		pthread_rwlock_t rwlock;
+
+	public:
+		//inline int Lock(){ return pthread_mutex_lock( &bflock ); }
+		//inline int Unlock(){ return pthread_mutex_unlock( &bflock ); }
+
+		inline int ReadLock(){ return pthread_mutex_lock( &bflock ); }
+		inline int WriteLock(){ return pthread_mutex_lock( &bflock ); }
+		inline int Unlock(){ return pthread_mutex_unlock( &bflock ); }
+		
     friend class Block;
     friend class Model; // allow access to private members
     friend class ModelFiducial;
@@ -854,7 +866,12 @@ namespace Stg
 			bool operator()(const Model* a, const Model* b) const;
 		};
 		
+		/** maintain a set of models with fiducials sorted by pose.x, for
+				quickly finding nearby fidcucials */
 		std::set<Model*,ltx> models_with_fiducials_byx;
+		
+		/** maintain a set of models with fiducials sorted by pose.y, for
+				quickly finding nearby fidcucials */
 		std::set<Model*,lty> models_with_fiducials_byy;
 					 
 	 /** Add a model to the set of models with non-zero fiducials, if not already there. */
@@ -875,9 +892,9 @@ namespace Stg
 	 
 	 bool show_clock; ///< iff true, print the sim time on stdout
 	 unsigned int show_clock_interval; ///< updates between clock outputs
-
-    pthread_mutex_t thread_mutex; ///< protect the worker thread management stuff
-	 unsigned int threads_working; ///< the number of worker threads not yet finished
+		
+    pthread_mutex_t sync_mutex; ///< protect the worker thread management stuff
+		unsigned int threads_working; ///< the number of worker threads not yet finished
     pthread_cond_t threads_start_cond; ///< signalled to unblock worker threads
     pthread_cond_t threads_done_cond; ///< signalled by last worker thread to unblock main thread
     int total_subs; ///< the total number of subscriptions to all models
@@ -1030,13 +1047,15 @@ namespace Stg
     {
     public:
       
-      Event( usec_t time, Model* mod ) 
-		  : time(time), mod(mod) {}
-      
+      Event( usec_t time, Model* mod, model_callback_t cb, void* arg ) 
+				: time(time), mod(mod), cb(cb), arg(arg) {}
+			
       usec_t time; ///< time that event occurs
-      Model* mod; ///< model to update
-      
-			/** order by time. Break ties by value of Model*. 
+      Model* mod; ///< model to pass into callback
+      model_callback_t cb;
+			void* arg;
+			
+			/** order by time. Break ties by value of Model*, then cb*. 
 					@param event to compare with this one. */
       bool operator<( const Event& other ) const;
     };
@@ -1058,8 +1077,8 @@ namespace Stg
 				@param mod The model that should have its Update() method
 				called at the specified time.
 		*/
-		void Enqueue( unsigned int queue_num, usec_t delay, Model* mod )
-		{  event_queues[queue_num].push( Event( sim_time + delay, mod ) ); }
+		void Enqueue( unsigned int queue_num, usec_t delay, Model* mod, model_callback_t cb, void* arg )
+		{  event_queues[queue_num].push( Event( sim_time + delay, mod, cb, arg ) ); }
 		
 		/** Set of models that require energy calculations at each World::Update(). */
 	 std::set<Model*> active_energy;
@@ -1069,7 +1088,7 @@ namespace Stg
 		
 		std::vector<std::set<Model*> > active_velocity_threaded;
 		
-		unsigned int thread_task;
+		//		unsigned int thread_task;
 		
 	 /** The amount of simulated time to run for each call to Update() */
 	 usec_t sim_interval;
@@ -2103,11 +2122,14 @@ namespace Stg
 						 const uint32_t sample_count,
 						 const bool ztest = true );
   
-	 virtual void Startup();
-	 virtual void Shutdown();
-	 virtual void Update();
-	 virtual void UpdatePose();
-	 virtual void UpdateCharge();
+		virtual void Startup();
+		virtual void Shutdown();
+		virtual void Update();
+		virtual void Move();
+		virtual void UpdateCharge();
+		
+		static int UpdateWrapper( Model* mod, void* arg ){ mod->Update(); return 0; }
+		static int MoveWrapper( Model* mod, void* arg ){ mod->Move(); return 0; }
 
 		/** Calls CallCallback( CB_UPDATE ) */
 		void CallUpdateCallbacks( void );
