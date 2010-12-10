@@ -344,7 +344,6 @@ Model::Model( World* world,
   Ancestor(), 	 
 	mapped(false),
 	drawOptions(),
-	//hitmod(NULL),
   alwayson(false),
   blockgroup(),
   blocks_dl(0),
@@ -698,17 +697,6 @@ void Model::UnMapFromRoot()
 	Root()->UnMapWithChildren();
 }
 
-void Model::Map()
-{
-	if( ! mapped )
-		{
-			// render all blocks in the group at my global pose and size
-			blockgroup.Map();
-			mapped = true;
-		}
-} 
-
-
 void Model::Subscribe( void )
 {
   subs++;
@@ -775,24 +763,21 @@ void Model::Startup( void )
 {
   //printf( "Startup model %s\n", this->token );  
   //printf( "model %s using queue %d\n", token, event_queue_num );
-
+	
   // if we're thread safe, we can use an event queue >0  
 	event_queue_num = world->GetEventQueue( this );
-
+	
   // put my first update request in the world's queue
-	 if( thread_safe )
-		 world->Enqueue( event_queue_num, interval, this );
-	 else
-		 world->Enqueue( 0, interval, this );
-	 
+	if( thread_safe )
+		world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
+	else
+		world->Enqueue( 0, interval, this, UpdateWrapper, NULL );
+	
 	if( velocity_enable )
-		{
-			world->active_velocity.insert( this );
-			world->active_velocity_threaded[event_queue_num].insert( this );
-		}
-
+		world->Enqueue( event_queue_num, interval, this, MoveWrapper, NULL);
+	
   if( FindPowerPack() )
-	 world->active_energy.insert( this );
+		world->active_energy.insert( this );
   
 	CallCallbacks( CB_STARTUP );
 }
@@ -803,9 +788,10 @@ void Model::Shutdown( void )
 	CallCallbacks( CB_SHUTDOWN );
 
   world->active_energy.erase( this );
-  world->active_velocity.erase( this );
-  
-	world->active_velocity_threaded[event_queue_num].erase( this );
+  //world->active_velocity.erase( this );
+	//world->active_velocity_threaded[event_queue_num].erase( this );
+
+	velocity_enable = false;
 
   // allows data visualizations to be cleared.
   NeedRedraw();
@@ -814,10 +800,23 @@ void Model::Shutdown( void )
 
 void Model::Update( void )
 { 
+	//printf( "Q%d model %p %s update\n", event_queue_num, this, Token() );
+
 	//	CallCallbacks( CB_UPDATE );
 	
   last_update = world->sim_time;  
-  world->Enqueue( event_queue_num, interval, this );
+	
+	if( subs > 0 ) // no subscriptions means we don't need to be updated
+		world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
+	
+	// if we updated the model then it needs to have its update
+	// callback called in series back in the main thread. It's
+	// not safe to run user callbacks in a worker thread, as
+	// they may make OpenGL calls or unsafe Stage API calls,
+	// etc. We queue up the callback into a queue specific to
+
+	if( ! callbacks[Model::CB_UPDATE].empty() )
+		world->pending_update_callbacks[event_queue_num].push(this);					
 }
 
 void Model::CallUpdateCallbacks( void )
@@ -932,50 +931,53 @@ void Model::UpdateCharge()
 }
 
 
-void Model::UpdatePose( void )
+void Model::Move( void )
 {
-  if( velocity.IsZero() )
-	 return;
+	//printf( "Q%d model %p %s move\n", event_queue_num, this, Token() );
+	
+	if( !velocity_enable )
+		return; // don't enqueue any more moves
+	
+  if( !velocity.IsZero() && !disabled )
+		{  
+			// convert usec to sec
+			const double interval( (double)world->sim_interval / 1e6 );
+			
+			// find the change of pose due to our velocity vector
+			const Pose p( velocity.x * interval,
+										velocity.y * interval,
+										velocity.z * interval,
+										normalize( velocity.a * interval ));
+			
+			// the pose we're trying to achieve (unless something stops us)
+			const Pose newpose( pose + p );
+			
+			// stash the original pose so we can put things back if we hit
+			const Pose startpose( pose );
+	
+			pose = newpose; // do the move provisionally - we might undo it below
+			
+			UnMapWithChildren(); // remove from all blocks
+			MapWithChildren(); // render into new blocks
+			
+			if( TestCollision() ) // crunch!
+				{
+					// put things back the way they were
+					// this is expensive, but it happens _very_ rarely for most people
+					pose = startpose;
+					UnMapWithChildren();
+					MapWithChildren();
+					SetStall(true);
+				}
+			else
+				{
+					world->dirty = true; // need redraw	
+					SetStall(false);
+				}
+		}
 
-  if( disabled )
-    return;
-  
-  // convert usec to sec
-  const double interval( (double)world->sim_interval / 1e6 );
-  
-  // find the change of pose due to our velocity vector
-  const Pose p( velocity.x * interval,
-								velocity.y * interval,
-								velocity.z * interval,
-								normalize( velocity.a * interval ));
-	
-	// the pose we're trying to achieve (unless something stops us)
-	const Pose newpose( pose + p );
-	
-	// stash the original pose so we can put things back if we hit
-  const Pose startpose( pose );
-	
-  pose = newpose; // do the move provisionally - we might undo it below
-  
-	UnMapWithChildren(); // remove from all blocks
-	MapWithChildren(); // render into new blocks
-	
-	const Model* hitmod = TestCollision();
-	
-	if( hitmod ) // crunch!
-		{
-			// put things back the way they were
-			// this is expensive, but it happens very rarely for most people
-			pose = startpose;
-			UnMapWithChildren();
-			MapWithChildren();
-			SetStall(true);
-		}
-	else
-		{
-			world->dirty = true; // need redraw	
-			SetStall(false);
-		}
+	// set up to move this again
+	world->Enqueue( event_queue_num, interval, this, MoveWrapper, NULL);
 }
 
 
@@ -1063,12 +1065,26 @@ kg_t Model::GetMassOfChildren() const
   return( GetTotalMass() - mass);
 }
 
+void Model::Map()
+{
+	if( ! mapped )
+		{
+			// render all blocks in the group at my global pose and size
+			blockgroup.Map();
+			mapped = true;
+		}
+} 
+
 void Model::UnMap()
 {
 	if( mapped )
 		{
+			world->WriteLock();
+
 			blockgroup.UnMap();
 			mapped = false;
+			
+			world->Unlock();
 		}
 }
 

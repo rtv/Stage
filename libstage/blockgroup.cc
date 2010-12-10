@@ -101,19 +101,12 @@ void BlockGroup::Map()
 }
 
 // defined in world.cc
-void SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next );
+//void SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next );
 
 void BlockGroup::UnMap()
 {
-	SuperRegion* sr = NULL;
-	
 	FOR_EACH( it, blocks )
- 		{
-			// 			SwitchSuperRegionLock( sr, (*it)->GetSuperRegions() );
- 			(*it)->UnMap();
- 		}
-	
-//	if(sr) sr->Unlock();
+		(*it)->UnMap();
 }
 
 void BlockGroup::DrawSolid( const Geom & geom )

@@ -118,10 +118,6 @@ bool World::lty::operator()(const Model* a, const Model* b) const
 	return ay < by;
 }
 		
-const unsigned int THREAD_TASK_MOVE = 0;
-const unsigned int THREAD_TASK_UPDATE = 1;
-const unsigned int THREAD_TASK_COUNT = 2;
-
 // static data members
 unsigned int World::next_id = 0;
 bool World::quit_all = false;
@@ -132,6 +128,8 @@ std::vector<std::string> World::args;
 World::World( const std::string& name, 
 							double ppm )
   : 
+	bflock(),
+	rwlock(),
   // private
   destroy( false ),
   dirty( true ),
@@ -144,7 +142,7 @@ World::World( const std::string& name,
   quit( false ),
   show_clock( false ),
   show_clock_interval( 100 ), // 10 simulated seconds using defaults
-  thread_mutex(),
+  sync_mutex(),
   threads_working( 0 ),
   threads_start_cond(),
   threads_done_cond(),
@@ -170,7 +168,7 @@ World::World( const std::string& name,
 	active_energy(),
 	active_velocity(),
 	active_velocity_threaded(),
-	thread_task(0),
+	//thread_task(0),
   sim_interval( 1e5 ), // 100 msec has proved a good default
 	update_cb_count(0)
 {
@@ -180,7 +178,10 @@ World::World( const std::string& name,
       exit(-1);
     }
  
-  pthread_mutex_init( &thread_mutex, NULL );
+  pthread_mutex_init( &bflock, NULL );
+  pthread_rwlock_init( &rwlock, NULL );
+
+  pthread_mutex_init( &sync_mutex, NULL );
   pthread_cond_init( &threads_start_cond, NULL );
   pthread_cond_init( &threads_done_cond, NULL );
  
@@ -238,7 +239,7 @@ void* World::update_thread_entry( std::pair<World*,int> *thread_info )
 	
   //printf( "thread ID %d waiting for mutex\n", thread_instance );
 
-  pthread_mutex_lock( &world->thread_mutex );  
+  pthread_mutex_lock( &world->sync_mutex );  
 
   while( 1 )
     {
@@ -247,50 +248,28 @@ void* World::update_thread_entry( std::pair<World*,int> *thread_info )
       // wait until the main thread signals us
       //puts( "worker waiting for start signal" );
 
-      pthread_cond_wait( &world->threads_start_cond, &world->thread_mutex );
+      pthread_cond_wait( &world->threads_start_cond, &world->sync_mutex );
 			
-			unsigned int task = world->thread_task;
 			
-      pthread_mutex_unlock( &world->thread_mutex );
+      pthread_mutex_unlock( &world->sync_mutex );
 
       //printf( "worker %u thread awakes for task %u\n", thread_instance, task );
-
-			switch(task)
-				{
-				case THREAD_TASK_UPDATE:
-					// consume events on the queue up to the current sim time
-					world->ConsumeQueue( thread_instance );
-					break;
-					
-				case THREAD_TASK_MOVE:
-					{
-						std::set<Model*>& tomove = 
-							world->active_velocity_threaded[thread_instance];
-						
-						for( std::set<Model*>::iterator it = tomove.begin();
-								 it != tomove.end();
-								 ++it )
-							(*it)->UpdatePose();
-					}
-					break;
-						
-				default:
-						PRINT_ERR1( "unrecognized worker thread task type %d\n", task );
-					break;
-				}
-
-		//printf( "thread %d done\n", thread_instance );
-
+			
+			world->ConsumeQueue( thread_instance );
+			
+			
+			//printf( "thread %d done\n", thread_instance );
+			
       // done working, so increment the counter. If this was the last
       // thread to finish working, signal the main thread, which is
       // blocked waiting for this to happen
-	  
-      pthread_mutex_lock( &world->thread_mutex );	  
+			
+      pthread_mutex_lock( &world->sync_mutex );	  
       if( --world->threads_working == 0 )
-		  {
-			 //puts( "last worker signalling main thread" );
-			 pthread_cond_signal( &world->threads_done_cond );
-		  }
+				{
+					//puts( "last worker signalling main thread" );
+					pthread_cond_signal( &world->threads_done_cond );
+				}
       // keep lock going round the loop
     }
   
@@ -629,50 +608,35 @@ void World::ConsumeQueue( unsigned int queue_num )
       Event ev( queue.top() );
       if( ev.time > sim_time ) break;
       queue.pop();
-      
-      //printf( "@ %llu next event ptr %p\n", sim_time, ev.mod );
+			
+      //printf( "Q%d @ %llu next event ptr %p cb %p\n", queue_num, sim_time, ev.mod, ev.cb );
       //std::string modelType = ev.mod->GetModelType();
       //printf( "@ %llu next event <%s %llu %s>\n",  sim_time, modelType.c_str(), ev.time, ev.mod->Token() ); 
       
-      if( ev.mod->subs > 0 ) // no subscriptions means the event is discarded
-        {
-					ev.mod->Update(); // update the model
-
-					// we updated the model, so it needs to have its update
-					// callback called in series back in the main thread. It's
-					// not safe to run user callbacks in a worker thread, as
-					// they may make OpenGL calls or unsafe Stage API calls,
-					// etc. We queue up the callback into a queue specific to
-					// this thread.
-					if( !ev.mod->callbacks[Model::CB_UPDATE].empty() )
-						pending_update_callbacks[queue_num].push(ev.mod);					
-				}
-
+			ev.cb( ev.mod, ev.arg); // call the event's callback on the model			
     }
   while( !queue.empty() );
 }
 
 bool World::Update()
 {
+  //puts( "World::Update()" );
+	
+  // if we've run long enough, exit
+  if( PastQuitTime() ) 
+		return true;		
+	
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
     {
       printf( "\r[Stage: %s]", ClockString().c_str() );
       fflush( stdout );
     }
-
-
-  //puts( "World::Update()" );
-  
-  // if we've run long enough, exit
-  if( PastQuitTime() ) 
-	 return true;		
-  
+	
   sim_time += sim_interval; 
-
-//   FOR_EACH( it, active_velocity )
-// 		(*it)->UpdatePose();
 	
-	
+	//   FOR_EACH( it, active_velocity )
+	// 		(*it)->UpdatePose();
+		
 	// rebuild the sets sorted by position on x,y axis
 	models_with_fiducials_byx.clear(); 
 	models_with_fiducials_byy.clear(); 
@@ -689,32 +653,29 @@ bool World::Update()
   // handle the zeroth queue synchronously in the main thread
   ConsumeQueue( 0 );
 	
-	for( thread_task=0; thread_task < THREAD_TASK_COUNT; ++thread_task )
-		{			
-			// handle all the remaining queues asynchronously in worker threads
-			if( worker_threads > 0 )
+	// handle all the remaining queues asynchronously in worker threads
+	if( worker_threads > 0 )
+		{
+			pthread_mutex_lock( &sync_mutex );
+			threads_working = worker_threads; 
+			// unblock the workers - they are waiting on this condition var
+			//puts( "main thread signalling workers" );
+			pthread_cond_broadcast( &threads_start_cond );
+			
+			// todo - take the 1th thread work here?
+			
+			// wait for all the last update job to complete - it will
+			// signal the worker_threads_done condition var
+			while( threads_working > 0  )
 				{
-					pthread_mutex_lock( &thread_mutex );
-					threads_working = worker_threads; 
-					// unblock the workers - they are waiting on this condition var
-					//puts( "main thread signalling workers" );
-					pthread_cond_broadcast( &threads_start_cond );
-					
-					// todo - take the 1th thread work here?
-					
-					// wait for all the last update job to complete - it will
-					// signal the worker_threads_done condition var
-					while( threads_working > 0  )
-						{
-							//puts( "main thread waiting for workers to finish" );
-							pthread_cond_wait( &threads_done_cond, &thread_mutex );
-						}
-					pthread_mutex_unlock( &thread_mutex );		 
-					//puts( "main thread awakes" );
-					
-					// TODO: allow threadsafe callbacks to be called in worker
-					// threads		
+					//puts( "main thread waiting for workers to finish" );
+					pthread_cond_wait( &threads_done_cond, &sync_mutex );
 				}
+			pthread_mutex_unlock( &sync_mutex );		 
+			//puts( "main thread awakes" );
+			
+			// TODO: allow threadsafe callbacks to be called in worker
+			// threads		
 		}
 
   dirty = true; // need redraw 
@@ -742,9 +703,8 @@ unsigned int World::GetEventQueue( Model* mod ) const
 Model* World::GetModel( const std::string& name ) const
 {
   PRINT_DEBUG1( "looking up model name %s in models_by_name", name.c_str() );
-
-  std::map<std::string,Model*>::const_iterator it = 
-    models_by_name.find( name );
+	
+  std::map<std::string,Model*>::const_iterator it( models_by_name.find( name ) );
 	
   if( it == models_by_name.end() )
     {
@@ -1050,22 +1010,30 @@ void World::Reload( void )
   ForEachDescendant( _reload_cb, NULL );
 }
 
-void SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next )
+SuperRegion* SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next )
 {
-	if( current != next )
-		{
-			//printf( "SR %p next %p\n", sr, nextsr );							
-			if(current) current->Unlock();
-			
-			current = next;														
-			current->Lock();
-		}
+	assert(next);
+	
+	if( current == next )
+		return current; // do nothing
+	
+	if(current)
+		current->Unlock();
+
+	next->Lock();	
+
+	return next;
 }
 
 void World::MapPoly( const PointIntVec& pts, Block* block )
 {
 	const size_t pt_count = pts.size();
 	
+	// skip the World::Lock() wrapper for speed
+	//pthread_mutex_lock( &bflock );
+
+	WriteLock();
+
 	for( size_t i(0); i<pt_count; ++i )
 		{
 			const point_int_t& start(pts[i] );
@@ -1087,18 +1055,18 @@ void World::MapPoly( const PointIntVec& pts, Block* block )
 			int32_t globx(start.x);
 			int32_t globy(start.y);
 			
-			SuperRegion* sr(NULL);
 			
 			while( n ) 
 				{				
-					SuperRegion* nextsr = 
-						GetSuperRegionCreate( point_int_t(GETSREG(globx), 
-																							GETSREG(globy)));
-
-					SwitchSuperRegionLock( sr, nextsr );
+					SuperRegion* sr( GetSuperRegionCreate( point_int_t(GETSREG(globx), 
+																														 GETSREG(globy))));					
+					assert(sr);
 					
 					Region* reg(sr->GetRegion( GETREG(globx), 
 																		 GETREG(globy)));					
+					
+					assert(reg);
+
 					//printf( "REGION %p\n", reg );
 					
 					// add all the required cells in this region before looking up
@@ -1136,9 +1104,12 @@ void World::MapPoly( const PointIntVec& pts, Block* block )
 								}
 							--n;
 						}
-				}
-			if(sr) sr->Unlock();
+				}			
 		}
+
+	// skip the World::Lock() wrapper for speed
+	//pthread_mutex_unlock( &bflock );
+	Unlock();
 }
 
 

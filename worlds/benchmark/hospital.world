@@ -13,7 +13,7 @@ speedup -1 # as fast as possible
 paused 0
 
 # threads may help or hurt performance depending on your worldfile, machine and load
- threads 2
+ threads 4
 
 quit_time 60
 
