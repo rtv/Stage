@@ -808,16 +808,16 @@ namespace Stg
   class World : public Ancestor
   {
 	private: 
-		pthread_mutex_t bflock;
-		pthread_rwlock_t rwlock;
+	 //pthread_mutex_t bflock;
+	 //pthread_rwlock_t rwlock;
 
 	public:
 		//inline int Lock(){ return pthread_mutex_lock( &bflock ); }
 		//inline int Unlock(){ return pthread_mutex_unlock( &bflock ); }
 
-		inline int ReadLock(){ return pthread_mutex_lock( &bflock ); }
-		inline int WriteLock(){ return pthread_mutex_lock( &bflock ); }
-		inline int Unlock(){ return pthread_mutex_unlock( &bflock ); }
+		//inline int ReadLock(){ return pthread_mutex_lock( &bflock ); }
+		//inline int WriteLock(){ return pthread_mutex_lock( &bflock ); }
+		//inline int Unlock(){ return pthread_mutex_unlock( &bflock ); }
 		
     friend class Block;
     friend class Model; // allow access to private members
@@ -1192,7 +1192,7 @@ namespace Stg
 	 Model* GetGround() {return ground;};
 	
   };
-
+  
   class Block
   {
     friend class BlockGroup;
@@ -1200,20 +1200,20 @@ namespace Stg
     friend class SuperRegion;
     friend class World;
     friend class Canvas;
-		friend class Cell;
+	 friend class Cell;
   public:
-  
+	 
     /** Block Constructor. A model's body is a list of these
 		  blocks. The point data is copied, so pts can safely be freed
 		  after constructing the block.*/
     Block( Model* mod,  
-					 const std::vector<point_t>& pts,
-					 meters_t zmin,
-					 meters_t zmax,
-					 Color color,
-					 bool inherit_color,
-					 bool wheel );
-  
+			  const std::vector<point_t>& pts,
+			  meters_t zmin,
+			  meters_t zmax,
+			  Color color,
+			  bool inherit_color,
+			  bool wheel );
+	 
     /** A from-file  constructor */
     Block(  Model* mod,  Worldfile* wf, int entity);
 	 
@@ -1287,7 +1287,7 @@ namespace Stg
 		
     /** record the cells into which this block has been rendered to
 				UnMapping them very quickly. */  
-		CellPtrVec rendered_cells;
+		CellPtrVec rendered_cells[2];
 		
 		//std::set<SuperRegion*> rendered_superregions;
 	

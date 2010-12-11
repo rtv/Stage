@@ -11,19 +11,19 @@ static void canonicalize_winding(vector<point_t>& pts);
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
 Block::Block( Model* mod,
-							const std::vector<point_t>& pts,
-							meters_t zmin,
-							meters_t zmax,
-							Color color,
-							bool inherit_color,
-							bool wheel ) :
+				  const std::vector<point_t>& pts,
+				  meters_t zmin,
+				  meters_t zmax,
+				  Color color,
+				  bool inherit_color,
+				  bool wheel ) :
   mod( mod ),
   mpts(),
   pts(pts),
   local_z( zmin, zmax ),
   color( color ),
   inherit_color( inherit_color ),
-	wheel(wheel),
+  wheel(wheel),
   rendered_cells(), 
   gpts()
 {
@@ -38,12 +38,12 @@ Block::Block(  Model* mod,
   : mod( mod ),
     mpts(),
     pts(),
-		local_z(),
+	 local_z(),
     color(),
     inherit_color(true),
-		wheel(),
+	 wheel(),
     rendered_cells(),
-		gpts()
+	 gpts()
 {
   assert(mod);
   assert(wf);
@@ -136,10 +136,12 @@ const Color& Block::GetColor()
 
 void Block::AppendTouchingModels( ModelPtrSet& touchers )
 {
+  unsigned int layer = mod->world->updates % 2;
+  
   // for every cell we are rendered into
-  FOR_EACH( cell_it, rendered_cells )
-		// for every block rendered into that cell
-		FOR_EACH( block_it, (*cell_it)->GetBlocks() )
+  FOR_EACH( cell_it, rendered_cells[layer] )
+	 // for every block rendered into that cell
+	 FOR_EACH( block_it, (*cell_it)->GetBlocks(layer) )
 	 {
 		if( !mod->IsRelated( (*block_it)->mod ))
 		  touchers.insert( (*block_it)->mod );
@@ -156,13 +158,15 @@ Model* Block::TestCollision()
   if( mod->vis.obstacle_return )
   {
     if ( global_z.min < 0 )
-      return this->mod->world->GetGround();
+      return mod->world->GetGround();
 	  
+	 unsigned int layer = mod->world->updates % 2;
+
     // for every cell we may be rendered into
-	 FOR_EACH( cell_it, rendered_cells )
+	 FOR_EACH( cell_it, rendered_cells[layer] )
       {
 		  // for every block rendered into that cell
-				FOR_EACH( block_it, (*cell_it)->GetBlocks() )
+				FOR_EACH( block_it, (*cell_it)->GetBlocks(layer) )
 			 {
 				Block* testblock = *block_it;
 				Model* testmod = testblock->mod;
@@ -225,11 +229,16 @@ void Block::Map()
 
 void Block::UnMap()
 {
-	std::for_each( rendered_cells.begin(), 
-								 rendered_cells.end(), 
-								 std::bind2nd( std::mem_fun(&Cell::RemoveBlock), this));
-	
-  rendered_cells.clear();
+//   std::for_each( rendered_cells.begin(), 
+// 					  rendered_cells.end(), 
+// 					  std::bind2nd( std::mem_fun(&Cell::RemoveBlock), this));
+  
+  unsigned int layer = mod->world->updates % 2;
+
+  FOR_EACH( it, rendered_cells[layer] )
+	 (*it)->RemoveBlock(this, layer );
+  
+  rendered_cells[layer].clear();
   mapped = false;
 }
 

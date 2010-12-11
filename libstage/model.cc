@@ -774,8 +774,9 @@ void Model::Startup( void )
 		world->Enqueue( 0, interval, this, UpdateWrapper, NULL );
 	
 	if( velocity_enable )
-		world->Enqueue( event_queue_num, interval, this, MoveWrapper, NULL);
-	
+	  //world->Enqueue( event_queue_num, interval, this, MoveWrapper, NULL);
+	  world->active_velocity.insert(this);
+
   if( FindPowerPack() )
 		world->active_energy.insert( this );
   
@@ -935,8 +936,8 @@ void Model::Move( void )
 {
 	//printf( "Q%d model %p %s move\n", event_queue_num, this, Token() );
 	
-	if( !velocity_enable )
-		return; // don't enqueue any more moves
+	//if( !velocity_enable )
+  //return; // don't enqueue any more moves
 	
   if( !velocity.IsZero() && !disabled )
 		{  
@@ -957,7 +958,7 @@ void Model::Move( void )
 	
 			pose = newpose; // do the move provisionally - we might undo it below
 			
-			UnMapWithChildren(); // remove from all blocks
+			//UnMapWithChildren(); // remove from all blocks
 			MapWithChildren(); // render into new blocks
 			
 			if( TestCollision() ) // crunch!
@@ -977,7 +978,7 @@ void Model::Move( void )
 		}
 
 	// set up to move this again
-	world->Enqueue( event_queue_num, interval, this, MoveWrapper, NULL);
+	//world->Enqueue( event_queue_num, interval, this, MoveWrapper, NULL);
 }
 
 
@@ -1077,15 +1078,11 @@ void Model::Map()
 
 void Model::UnMap()
 {
-	if( mapped )
-		{
-			world->WriteLock();
-
-			blockgroup.UnMap();
-			mapped = false;
-			
-			world->Unlock();
-		}
+  if( mapped )
+	 {
+		blockgroup.UnMap();
+		mapped = false;
+	 }
 }
 
 void Model::BecomeParentOf( Model* child )

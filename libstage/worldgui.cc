@@ -429,14 +429,21 @@ void WorldGui::DrawOccupancy() const
 // 		printf( "sr %d [%d,%d]  %p\n", count++, it->first.x, it->first.y, it->second );
 // 	printf( "done\n" );
 
+//  unsigned int layer( updates % 2 );
+
   FOR_EACH( it, superregions )
-		it->second->DrawOccupancy();
+	 {
+		it->second->DrawOccupancy(0);
+		it->second->DrawOccupancy(1);
+	 }
 }
 
 void WorldGui::DrawVoxels() const
 {  
+  unsigned int layer( updates % 2 );
+
   FOR_EACH( it, superregions )
-		it->second->DrawVoxels();
+		it->second->DrawVoxels( layer );
 }
 
 void WorldGui::windowCb( Fl_Widget* w, WorldGui* wg )

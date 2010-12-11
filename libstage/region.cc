@@ -39,28 +39,29 @@ void Region::RemoveBlock()
 	
 	// if there's nothing in this region, we can garbage collect the
 	// cells to keep memory usage under control
-	if( count == 0 )
+	/*	if( count == 0 )
  		{
 			if( cells )
-				{
-					// stash this on the pool for reuse
-					dead_pool.push_back(cells);					
-					//printf( "retiring cells @ %p (pool %u)\n", cells, dead_pool.size() );
-					cells = NULL;
-				}
+			  {
+				 // stash this on the pool for reuse
+				 dead_pool.push_back(cells);					
+				 //printf( "retiring cells @ %p (pool %u)\n", cells, dead_pool.size() );
+				 cells = NULL;
+			  }
 			else
-				PRINT_ERR( "region.count == 0 but cells == NULL" );			
+			  PRINT_ERR( "region.count == 0 but cells == NULL" );			
  		}		
+	*/
 }
 
 SuperRegion::SuperRegion( World* world, point_int_t origin ) 
   : count(0),
-		mutex(),
+		rwlock(),
 		origin(origin), 
 		regions(),
 		world(world)
 {
-	pthread_mutex_init(&mutex,NULL);
+	pthread_rwlock_init(&rwlock,NULL);
 
 	for( int32_t c=0; c<SUPERREGIONSIZE;++c)
 		regions[c].superregion = this;
@@ -84,7 +85,7 @@ void SuperRegion::RemoveBlock()
 }		
 
 
-void SuperRegion::DrawOccupancy() const
+void SuperRegion::DrawOccupancy( unsigned int layer ) const
 {
 	//printf( "SR origin (%d,%d) this %p\n", origin.x, origin.y, this );
 
@@ -101,80 +102,87 @@ void SuperRegion::DrawOccupancy() const
   glRecti( 0,0, 1<<SRBITS, 1<<SRBITS );
   
   // outline regions
-	if( regions )
-		{
-			const Region* r = &regions[0];
-			char buf[32];
-			
-			glColor3f( 0,1,0 );    
-			for( int y=0; y<SUPERREGIONWIDTH; ++y )
-				for( int x=0; x<SUPERREGIONWIDTH; ++x )
-					{
-						if( r->count ) // region contains some occupied cells
-							{
-								// outline the region
-								glRecti( x<<RBITS, y<<RBITS, 
-												 (x+1)<<RBITS, (y+1)<<RBITS );
-								
-								// show how many cells are occupied
-								snprintf( buf, 15, "%lu", r->count );
-								Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
-								
-								// draw a rectangle around each occupied cell
-								for( int p=0; p<REGIONWIDTH; ++p )
-									for( int q=0; q<REGIONWIDTH; ++q )
-										if( r->cells[p+(q*REGIONWIDTH)].blocks.size() )
-											{					 
-												GLfloat xx = p+(x<<RBITS);
-												GLfloat yy = q+(y<<RBITS);						  
-												glRecti( xx, yy, xx+1, yy+1);
-											}
-							}
-						else if( r->cells ) // empty but used previously 
-							{
-								double left = x << RBITS;
-								double right = (x+1) << RBITS;
-								double bottom = y << RBITS;
-								double top = (y+1) << RBITS;
-								
-								double d = 3.0;
-								
-								// draw little corner markers for regions with memory
-								// allocated but no contents
-								glBegin( GL_LINES );
-								glVertex2f( left, bottom );
-								glVertex2f( left+d, bottom );
-								glVertex2f( left, bottom );
-								glVertex2f( left, bottom+d );
-								glVertex2f( left, top );
-								glVertex2f( left+d, top );
-								glVertex2f( left, top );
-								glVertex2f( left, top-d );
-								glVertex2f( right, top );
-								glVertex2f( right-d, top );
-								glVertex2f( right, top );
-								glVertex2f( right, top-d );
-								glVertex2f( right, bottom );
-								glVertex2f( right-d, bottom );
-								glVertex2f( right, bottom );
-								glVertex2f( right, bottom+d );
-								glEnd();
-							}
-						
-						++r; // next region quickly
-					}			
-		}
-	else
-		{  // outline region-collected superregion
-			glColor3f( 1,1,0 );   
-			glRecti( 0,0, (1<<SRBITS)-1, (1<<SRBITS)-1 );
-			glColor3f( 0,0,1 );   
-		}
+  if( regions )
+	 {
+		const Region* r = &regions[0];
+		char buf[32];
 		
-	char buf[32];
+		if( layer > 0)
+		  {
+			 glTranslatef( 0.05, 0.05, 0);
+			 glColor3f( 1,0,1 );    
+		  }
+		else
+		  glColor3f( 0,1,0 );    
+		
+		for( int y=0; y<SUPERREGIONWIDTH; ++y )
+		  for( int x=0; x<SUPERREGIONWIDTH; ++x )
+			 {
+				if( r->count ) // region contains some occupied cells
+				  {
+					 // outline the region
+					 glRecti( x<<RBITS, y<<RBITS, 
+								 (x+1)<<RBITS, (y+1)<<RBITS );
+					 
+					 // show how many cells are occupied
+					 snprintf( buf, 15, "%lu", r->count );
+					 Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
+					 
+					 // draw a rectangle around each occupied cell
+					 for( int p=0; p<REGIONWIDTH; ++p )
+						for( int q=0; q<REGIONWIDTH; ++q )
+						  if( r->cells[p+(q*REGIONWIDTH)].blocks[layer].size() )
+							 {					 
+								GLfloat xx = p+(x<<RBITS);
+								GLfloat yy = q+(y<<RBITS);						  
+								glRecti( xx, yy, xx+1, yy+1);
+							 }
+				  }
+				/*				else if( r->cells ) // empty but used previously 
+				  {
+					 double left = x << RBITS;
+					 double right = (x+1) << RBITS;
+					 double bottom = y << RBITS;
+					 double top = (y+1) << RBITS;
+					 
+					 double d = 3.0;
+					 
+					 // draw little corner markers for regions with memory
+					 // allocated but no contents
+					 glBegin( GL_LINES );
+					 glVertex2f( left, bottom );
+					 glVertex2f( left+d, bottom );
+					 glVertex2f( left, bottom );
+					 glVertex2f( left, bottom+d );
+					 glVertex2f( left, top );
+					 glVertex2f( left+d, top );
+					 glVertex2f( left, top );
+					 glVertex2f( left, top-d );
+					 glVertex2f( right, top );
+					 glVertex2f( right-d, top );
+					 glVertex2f( right, top );
+					 glVertex2f( right, top-d );
+					 glVertex2f( right, bottom );
+					 glVertex2f( right-d, bottom );
+					 glVertex2f( right, bottom );
+					 glVertex2f( right, bottom+d );
+					 glEnd();
+				  }
+				*/
+				++r; // next region quickly
+			 }			
+	 }
+  else
+	 {  // outline region-collected superregion
+		glColor3f( 1,1,0 );   
+		glRecti( 0,0, (1<<SRBITS)-1, (1<<SRBITS)-1 );
+		glColor3f( 0,0,1 );   
+	 }
+  
+  char buf[32];
   snprintf( buf, 15, "%lu", count );
   Gl::draw_string( 1<<SBITS, 1<<SBITS, 0, buf );
-	
+  
   glPopMatrix();    
 }
 
@@ -213,7 +221,7 @@ static inline void DrawBlock( GLfloat x, GLfloat y, GLfloat zmin, GLfloat zmax )
   glEnd();  
 } 
 
-void SuperRegion::DrawVoxels() const
+void SuperRegion::DrawVoxels(unsigned int layer) const
 {
   glPushMatrix();	    
   GLfloat scale = 1.0/world->Resolution();
@@ -235,12 +243,12 @@ void SuperRegion::DrawVoxels() const
 				  {
 					 Cell* c = (Cell*)&r->cells[p+(q*REGIONWIDTH)];
 					 
-					 if( c->blocks.size() )
+					 if( c->blocks[layer].size() )
 						{					 
 						  GLfloat xx = p+(x<<RBITS);
 						  GLfloat yy = q+(y<<RBITS);
 						  
-						  FOR_EACH( it, c->blocks )
+						  FOR_EACH( it, c->blocks[layer] )
 							 {
 								Block* block = *it;
 								// first draw filled polygons
@@ -271,61 +279,65 @@ void SuperRegion::DrawVoxels() const
 
 //std::set<Block*> mapped_blocks;
 
-void Cell::AddBlock( Block* b )
+void Cell::AddBlock( Block* b, unsigned int i )
 {			
-	blocks.push_back( b );   
-	b->rendered_cells.push_back(this);
-	region->AddBlock();
-	//mapped_blocks.insert(b);
+  assert( index < 2 );
+  blocks[i].push_back( b );   
+  b->rendered_cells[i].push_back(this);
+  region->AddBlock();
 }
 
-
-void Cell::RemoveBlock( Block* b )
+void Cell::RemoveBlock( Block* b, unsigned int i )
 {
-	//static unsigned int callcount(0);
-	//printf( "RemoveBlock calls %d\n", ++callcount );
+//   assert( i<2 );
+  
+//   std::vector<Block*>& blks = blocks[i];
 
-	//region->superregion->Lock();
-	//if( mapped_blocks.find(b) == mapped_blocks.end() )
-	//printf( "REMOVE BLOCK %p that was never mapped\n", b );
+//   size_t len = blks.size();
+//   if( len )
+// 	 {
+// #if 0	
+// 		// Use conventional STL style		
+		
+// 		// this special-case test is faster for worlds with simple models,
+// 		// which are the ones we want to be really fast. It's a small
+// 		// extra cost for worlds with several models in each cell. It
+// 		// gives a 5% overall speed increase in fasr.world.
+		
+// 		if( (blks.size() == 1) &&
+// 			 (blks[0] == b) ) // special but common case
+// 		  {
+// 			 blks.clear(); // cheap
+// 		  }
+// 		else // the general but relatively expensive case
+// 		  {
+// 			 EraseAll( b, blocks );		
+// 		  }
+// #else		// attempt faster removal loop
+// 		// O(n) * low constant array element removal
+// 		// this C-style pointer work looks to be very slightly faster than the STL way
+// 		Block **start = &blks[0]; // start of array
+// 		Block **r     = &blks[0]; // read from here
+// 		Block **w     = &blks[0]; // write to here
+		
+// 		while( r < start + len ) // scan down array, skipping 'this' 
+// 		  {
+// 			 if( *r != b ) 
+// 				*w++ = *r;				
+// 			 ++r;
+// 		  }
+// 		blks.resize( w-start );
+// #endif
+// 	 }
+  
+//   region->RemoveBlock();
 
-	size_t len = blocks.size();
-	if( len )
-		{
-#if 0		// Use conventional STL style		
-			
-				// this special-case test is faster for worlds with simple models,
-				// which are the ones we want to be really fast. It's a small
-				// extra cost for worlds with several models in each cell. It
-				// gives a 5% overall speed increase in fasr.world.
-			
-			if( (blocks.size() == 1) &&
-					(blocks[0] == b) ) // special but common case
-				{
-					blocks.clear(); // cheap
-				}
-			else // the general but relatively expensive case
-				{
-					EraseAll( b, blocks );		
-				}
-#else		// attempt faster removal loop
-				// O(n) * low constant array element removal
-				// this C-style pointer work looks to be very slightly faster than the STL way
-			Block **start = &blocks[0]; // start of array
-			Block **r     = &blocks[0]; // read from here
-			Block **w     = &blocks[0]; // write to here
-			
-			while( r < start + len ) // scan down array, skipping 'this' 
-				{
-					if( *r != b ) 
-						*w++ = *r;				
-					++r;
-				}
-			blocks.resize( w-start );
-#endif
-		}
-	
-	region->RemoveBlock();
+  unsigned int cleared = blocks[i].size();
+  
+  blocks[i].clear();
+  
+  for( unsigned int j=0; j<cleared; ++j )
+	 region->RemoveBlock();
 
-	//region->superregion->Unlock();
+  //region->
 }

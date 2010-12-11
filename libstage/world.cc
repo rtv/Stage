@@ -128,8 +128,8 @@ std::vector<std::string> World::args;
 World::World( const std::string& name, 
 							double ppm )
   : 
-	bflock(),
-	rwlock(),
+  //bflock(),
+  //rwlock(),
   // private
   destroy( false ),
   dirty( true ),
@@ -178,8 +178,8 @@ World::World( const std::string& name,
       exit(-1);
     }
  
-  pthread_mutex_init( &bflock, NULL );
-  pthread_rwlock_init( &rwlock, NULL );
+  //pthread_mutex_init( &bflock, NULL );
+  //pthread_rwlock_init( &rwlock, NULL );
 
   pthread_mutex_init( &sync_mutex, NULL );
   pthread_cond_init( &threads_start_cond, NULL );
@@ -244,32 +244,32 @@ void* World::update_thread_entry( std::pair<World*,int> *thread_info )
   while( 1 )
     {
 		//printf( "thread ID %d waiting for start\n", thread_instance );
-
+		
       // wait until the main thread signals us
       //puts( "worker waiting for start signal" );
-
+		
       pthread_cond_wait( &world->threads_start_cond, &world->sync_mutex );
-			
-			
+		
+		
       pthread_mutex_unlock( &world->sync_mutex );
-
+		
       //printf( "worker %u thread awakes for task %u\n", thread_instance, task );
-			
-			world->ConsumeQueue( thread_instance );
-			
-			
-			//printf( "thread %d done\n", thread_instance );
-			
+		
+		world->ConsumeQueue( thread_instance );
+		
+		
+		//printf( "thread %d done\n", thread_instance );
+		
       // done working, so increment the counter. If this was the last
       // thread to finish working, signal the main thread, which is
       // blocked waiting for this to happen
-			
+		
       pthread_mutex_lock( &world->sync_mutex );	  
       if( --world->threads_working == 0 )
-				{
-					//puts( "last worker signalling main thread" );
-					pthread_cond_signal( &world->threads_done_cond );
-				}
+		  {
+			 //puts( "last worker signalling main thread" );
+			 pthread_cond_signal( &world->threads_done_cond );
+		  }
       // keep lock going round the loop
     }
   
@@ -634,9 +634,7 @@ bool World::Update()
 	
   sim_time += sim_interval; 
 	
-	//   FOR_EACH( it, active_velocity )
-	// 		(*it)->UpdatePose();
-		
+  
 	// rebuild the sets sorted by position on x,y axis
 	models_with_fiducials_byx.clear(); 
 	models_with_fiducials_byy.clear(); 
@@ -652,36 +650,40 @@ bool World::Update()
 
   // handle the zeroth queue synchronously in the main thread
   ConsumeQueue( 0 );
-	
-	// handle all the remaining queues asynchronously in worker threads
-	if( worker_threads > 0 )
-		{
-			pthread_mutex_lock( &sync_mutex );
-			threads_working = worker_threads; 
-			// unblock the workers - they are waiting on this condition var
-			//puts( "main thread signalling workers" );
-			pthread_cond_broadcast( &threads_start_cond );
-			
-			// todo - take the 1th thread work here?
-			
-			// wait for all the last update job to complete - it will
-			// signal the worker_threads_done condition var
-			while( threads_working > 0  )
-				{
-					//puts( "main thread waiting for workers to finish" );
-					pthread_cond_wait( &threads_done_cond, &sync_mutex );
-				}
-			pthread_mutex_unlock( &sync_mutex );		 
-			//puts( "main thread awakes" );
-			
-			// TODO: allow threadsafe callbacks to be called in worker
-			// threads		
-		}
-
+  
+  // handle all the remaining queues asynchronously in worker threads
+  if( worker_threads > 0 )
+	 {
+		pthread_mutex_lock( &sync_mutex );
+		threads_working = worker_threads; 
+		// unblock the workers - they are waiting on this condition var
+		//puts( "main thread signalling workers" );
+		pthread_cond_broadcast( &threads_start_cond );
+		pthread_mutex_unlock( &sync_mutex );		 
+		
+		// todo - take the 1th thread work here?
+		FOR_EACH( it, active_velocity )
+		  (*it)->Move();
+		
+		pthread_mutex_lock( &sync_mutex );
+		// wait for all the last update job to complete - it will
+		// signal the worker_threads_done condition var
+		while( threads_working > 0  )
+		  {
+			 //puts( "main thread waiting for workers to finish" );
+			 pthread_cond_wait( &threads_done_cond, &sync_mutex );
+		  }
+		pthread_mutex_unlock( &sync_mutex );		 
+		//puts( "main thread awakes" );
+		
+		// TODO: allow threadsafe callbacks to be called in worker
+		// threads		
+	 }
+  
   dirty = true; // need redraw 
-
-	// this stuff must be done in series here
- 
+  
+  // this stuff must be done in series here
+  
   // world callbacks
   CallUpdateCallbacks();
   
@@ -822,7 +824,9 @@ RaytraceResult World::Raytrace( const Ray& r )
   double ycrossx(0), ycrossy(0);
   double distX(0), distY(0);
   bool calculatecrossings( true );
-	
+  
+  unsigned int layer = updates % 2;
+
   // Stage spends up to 95% of its time in this loop! It would be
   // neater with more function calls encapsulating things, but even
   // inline calls have a noticeable (2-3%) effect on performance.
@@ -853,7 +857,7 @@ RaytraceResult World::Raytrace( const Ray& r )
 					  (cy>=0) && (cy<REGIONWIDTH) && 
 					  n > 0 )
 				{			 
-				  FOR_EACH( it, c->blocks )
+				  FOR_EACH( it, c->blocks[layer] )
 					 {	      	      
 						Block* block( *it );
 						assert( block );
@@ -1010,106 +1014,99 @@ void World::Reload( void )
   ForEachDescendant( _reload_cb, NULL );
 }
 
-SuperRegion* SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next )
-{
-	assert(next);
+// SuperRegion* SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next )
+// {
+// 	assert(next);
 	
-	if( current == next )
-		return current; // do nothing
+// 	if( current == next )
+// 		return current; // do nothing
 	
-	if(current)
-		current->Unlock();
+// 	if(current)
+// 		current->Unlock();
 
-	next->Lock();	
+// 	next->Lock();	
 
-	return next;
-}
+// 	return next;
+// }
 
 void World::MapPoly( const PointIntVec& pts, Block* block )
 {
-	const size_t pt_count = pts.size();
-	
-	// skip the World::Lock() wrapper for speed
-	//pthread_mutex_lock( &bflock );
-
-	WriteLock();
-
-	for( size_t i(0); i<pt_count; ++i )
-		{
-			const point_int_t& start(pts[i] );
-			const point_int_t& end(pts[(i+1)%pt_count]);
-			
-			// line rasterization adapted from Cohen's 3D version in
-			// Graphics Gems II. Should be very fast.  
-			const int32_t dx( end.x - start.x );
-			const int32_t dy( end.y - start.y );
-			const int32_t sx(sgn(dx));  
-			const int32_t sy(sgn(dy));  
-			const int32_t ax(abs(dx));  
-			const int32_t ay(abs(dy));  
-			const int32_t bx(2*ax);	
-			const int32_t by(2*ay);	 
-			int32_t exy(ay-ax); 
-			int32_t n(ax+ay);
-			
-			int32_t globx(start.x);
-			int32_t globy(start.y);
-			
-			
-			while( n ) 
-				{				
-					SuperRegion* sr( GetSuperRegionCreate( point_int_t(GETSREG(globx), 
-																														 GETSREG(globy))));					
-					assert(sr);
-					
-					Region* reg(sr->GetRegion( GETREG(globx), 
-																		 GETREG(globy)));					
-					
-					assert(reg);
-
-					//printf( "REGION %p\n", reg );
-					
-					// add all the required cells in this region before looking up
-					// another region			
-					int32_t cx( GETCELL(globx) ); 
-					int32_t cy( GETCELL(globy) );
-					
-					// need to call Region::GetCell() before using a Cell pointer
-					// directly, because the region allocates cells lazily, waiting
-					// for a call of this method
-					Cell* c( reg->GetCell( cx, cy ) );
-					
-					// while inside the region, manipulate the Cell pointer directly
-					while( (cx>=0) && (cx<REGIONWIDTH) && 
-								 (cy>=0) && (cy<REGIONWIDTH) && 
-								 n > 0 )
-						{					
-							c->AddBlock(block);
-							
-							// cleverly skip to the next cell (now it's safe to
-							// manipulate the cell pointer)
-							if( exy < 0 ) 
-								{
-									globx += sx;
-									exy += by;
-									c += sx;
-									cx += sx;
-								}
-							else 
-								{
-									globy += sy;
-									exy -= bx; 
-									c += sy * REGIONWIDTH;
-									cy += sy;
-								}
-							--n;
-						}
-				}			
-		}
-
-	// skip the World::Lock() wrapper for speed
-	//pthread_mutex_unlock( &bflock );
-	Unlock();
+  const size_t pt_count = pts.size();
+  
+  for( size_t i(0); i<pt_count; ++i )
+	 {
+		const point_int_t& start(pts[i] );
+		const point_int_t& end(pts[(i+1)%pt_count]);
+		
+		// line rasterization adapted from Cohen's 3D version in
+		// Graphics Gems II. Should be very fast.  
+		const int32_t dx( end.x - start.x );
+		const int32_t dy( end.y - start.y );
+		const int32_t sx(sgn(dx));  
+		const int32_t sy(sgn(dy));  
+		const int32_t ax(abs(dx));  
+		const int32_t ay(abs(dy));  
+		const int32_t bx(2*ax);	
+		const int32_t by(2*ay);	 
+		int32_t exy(ay-ax); 
+		int32_t n(ax+ay);
+		
+		int32_t globx(start.x);
+		int32_t globy(start.y);
+		
+		unsigned int layer( updates % 2 );
+		
+		while( n ) 
+		  {				
+			 SuperRegion* sr( GetSuperRegionCreate( point_int_t(GETSREG(globx), 
+																				 GETSREG(globy))));					
+			 assert(sr);
+			 
+			 Region* reg(sr->GetRegion( GETREG(globx), 
+												 GETREG(globy)));					
+			 
+			 assert(reg);
+			 
+			 //printf( "REGION %p\n", reg );
+			 
+			 // add all the required cells in this region before looking up
+			 // another region			
+			 int32_t cx( GETCELL(globx) ); 
+			 int32_t cy( GETCELL(globy) );
+			 
+			 // need to call Region::GetCell() before using a Cell pointer
+			 // directly, because the region allocates cells lazily, waiting
+			 // for a call of this method
+			 Cell* c( reg->GetCell( cx, cy ) );
+			 
+			 // while inside the region, manipulate the Cell pointer directly
+			 while( (cx>=0) && (cx<REGIONWIDTH) && 
+					  (cy>=0) && (cy<REGIONWIDTH) && 
+					  n > 0 )
+				{					
+				  c->AddBlock(block, layer ); // odd or even
+				  // timesteps render into different layers
+				  
+				  // cleverly skip to the next cell (now it's safe to
+				  // manipulate the cell pointer)
+				  if( exy < 0 ) 
+					 {
+						globx += sx;
+						exy += by;
+						c += sx;
+						cx += sx;
+					 }
+				  else 
+					 {
+						globy += sy;
+						exy -= bx; 
+						c += sy * REGIONWIDTH;
+						cy += sy;
+					 }
+				  --n;
+				}
+		  }			
+	 }
 }
 
 
