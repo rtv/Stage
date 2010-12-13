@@ -16,7 +16,7 @@ quit_time 2000
 
 resolution 0.02
 
-threads 4
+threads 3	 
 
 # configure the GUI window
 window

@@ -4,7 +4,9 @@ using namespace Stg;
 
 void Model::SetGeom( const Geom& val )
 {
-  UnMapWithChildren();
+	unsigned int layer = world->updates%2;
+
+  UnMapWithChildren(layer);
   
   geom = val;
   
@@ -12,7 +14,7 @@ void Model::SetGeom( const Geom& val )
   
   NeedRedraw();
   
-  MapWithChildren();
+  MapWithChildren(layer);
   
   CallCallbacks( CB_GEOM );
 }
@@ -216,7 +218,7 @@ void Model::SetPose( const Pose& newpose )
 // 					 token, pose.x, pose.y, pose.z, pose.a );
 			
       NeedRedraw();
-      MapWithChildren();
+      MapWithChildren(world->updates%2);
       world->dirty = true;
     }
 	

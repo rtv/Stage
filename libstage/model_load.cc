@@ -248,8 +248,8 @@ void Model::Load()
     
   // we may well have changed blocks or geometry
   blockgroup.CalcSize();
-  UnMapWithChildren();
-  MapWithChildren();
+  UnMapWithChildren(world->updates%2);
+  MapWithChildren(world->updates%2);
 	 
   if( this->debug )
     printf( "Model \"%s\" is in debug mode\n", token.c_str() );

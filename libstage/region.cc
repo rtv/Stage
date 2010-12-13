@@ -118,7 +118,7 @@ void SuperRegion::DrawOccupancy( unsigned int layer ) const
 		for( int y=0; y<SUPERREGIONWIDTH; ++y )
 		  for( int x=0; x<SUPERREGIONWIDTH; ++x )
 			 {
-				if( r->count ) // region contains some occupied cells
+				 if( r->count ) // region contains some occupied cells
 				  {
 					 // outline the region
 					 glRecti( x<<RBITS, y<<RBITS, 

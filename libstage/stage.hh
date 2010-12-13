@@ -146,6 +146,8 @@ namespace Stg
     "\n"								\
     "The text of the license may also be available online at\n"		\
     "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html\n";
+
+	const unsigned int LAYER_COUNT = 2;
   
   /** Convenient constant */
   const double thousand = 1e3;
@@ -974,7 +976,8 @@ namespace Stg
 		
 		/** call Cell::AddBlock(block) for each cell on the polygon */
     void MapPoly( const PointIntVec& poly,
-									Block* block );
+									Block* block,
+									unsigned int layer );
 
     SuperRegion* AddSuperRegion( const point_int_t& coord );
     SuperRegion* GetSuperRegion( const point_int_t& org );
@@ -1200,31 +1203,38 @@ namespace Stg
     friend class SuperRegion;
     friend class World;
     friend class Canvas;
-	 friend class Cell;
+		friend class Cell;
   public:
-	 
+		
     /** Block Constructor. A model's body is a list of these
-		  blocks. The point data is copied, so pts can safely be freed
-		  after constructing the block.*/
+				blocks. The point data is copied, so pts can safely be freed
+				after constructing the block.*/
     Block( Model* mod,  
-			  const std::vector<point_t>& pts,
-			  meters_t zmin,
-			  meters_t zmax,
-			  Color color,
-			  bool inherit_color,
-			  bool wheel );
-	 
+					 const std::vector<point_t>& pts,
+					 meters_t zmin,
+					 meters_t zmax,
+					 Color color,
+					 bool inherit_color,
+					 bool wheel );
+		
     /** A from-file  constructor */
     Block(  Model* mod,  Worldfile* wf, int entity);
-	 
+		
     ~Block();
 	 
     /** render the block into the world's raytrace data structure */
-    void Map(); 	 
+    void Map( unsigned int layer ); 	 
 	 
     /** remove the block from the world's raytracing data structure */
-    void UnMap();	 
+    void UnMap( unsigned int layer );	 
 	 
+ 		void UnMapAllLayers()
+ 		{ 
+ 			for( unsigned int i(0); i<LAYER_COUNT; ++i )
+ 				UnMap(i);
+ 		}
+
+
 	 /** draw the block in OpenGL as a solid single color */    
 	 void DrawSolid();
 
@@ -1340,9 +1350,15 @@ namespace Stg
 		  with a block in this group, or NULL, if none are detected. */
     Model* TestCollision();
  
-    void Map();
-    void UnMap();
-	 
+    void Map( unsigned int layer );
+    void UnMap( unsigned int layer );
+		
+ 		void UnMapAllLayers()
+ 		{ 
+ 			for( unsigned int i(0); i<LAYER_COUNT; ++i )
+ 				UnMap(i);
+ 		}
+
 	 /** Draw the block in OpenGL as a solid single color. */
     void DrawSolid( const Geom &geom); 
 
@@ -2078,15 +2094,15 @@ namespace Stg
   
 	 void CommitTestedPose();
 
-	 void Map();
-	 void UnMap();
+	 void Map( unsigned int layer );
+	 void UnMap( unsigned int layer );
 
-	 void MapWithChildren();
-	 void UnMapWithChildren();
+	 void MapWithChildren( unsigned int layer );
+	 void UnMapWithChildren( unsigned int layer );
   
 	 // Find the root model, and map/unmap the whole tree.
-	 void MapFromRoot();
-	 void UnMapFromRoot();
+	 void MapFromRoot( unsigned int layer );
+	 void UnMapFromRoot( unsigned int layer );
 
 	 /** raytraces a single ray from the point and heading identified by
 		  pose, in local coords */

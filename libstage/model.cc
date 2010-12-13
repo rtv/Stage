@@ -430,7 +430,8 @@ Model::~Model( void )
 
 	if( world ) // if I'm not a worldless dummy model
 		{
-			UnMap(); // remove from the raytrace bitmap
+			UnMap(0); // remove from the raytrace bitmap
+			UnMap(1); // remove from the raytrace bitmap
 			
 			EraseAll( this, parent ? parent->children : world->children );			
 			modelsbyid.erase(id);			
@@ -485,9 +486,10 @@ Model::Flag* Model::PopFlag()
   return flag;
 }
 
-void Model::ClearBlocks( void )
+void Model::ClearBlocks()
 {
-  UnMap();
+	blockgroup.UnMapAllLayers();
+
   blockgroup.Clear();
   //no need to Map() -  we have no blocks
   NeedRedraw();
@@ -511,8 +513,8 @@ Block* Model::AddBlockRect( meters_t x,
 														meters_t dy,
 														meters_t dz )
 {  
-  UnMap();
-
+  blockgroup.UnMapAllLayers();
+	
 	std::vector<point_t> pts(4);
   pts[0].x = x;
   pts[0].y = y;
@@ -532,7 +534,7 @@ Block* Model::AddBlockRect( meters_t x,
 
   blockgroup.AppendBlock( newblock );
 
-	Map();
+	Map( world->updates%2 );
 	
   return newblock;
 }
@@ -668,33 +670,33 @@ void Model::LocalToPixels( const std::vector<point_t>& local,
 		}
 }
 
-void Model::MapWithChildren()
+void Model::MapWithChildren( unsigned int layer )
 {
-  UnMap();
-  Map();
+  UnMap(layer);
+  Map(layer);
 
   // recursive call for all the model's children
   FOR_EACH( it, children )
-    (*it)->MapWithChildren();
+    (*it)->MapWithChildren(layer);
 }
 
-void Model::MapFromRoot()
+void Model::MapFromRoot( unsigned int layer )
 {
-	Root()->MapWithChildren();
+	Root()->MapWithChildren(layer);
 }
 
-void Model::UnMapWithChildren()
+void Model::UnMapWithChildren(unsigned int layer)
 {
-  UnMap();
+  UnMap(layer);
 
   // recursive call for all the model's children
   FOR_EACH( it, children )
-    (*it)->UnMapWithChildren();
+    (*it)->UnMapWithChildren(layer);
 }
 
-void Model::UnMapFromRoot()
+void Model::UnMapFromRoot(unsigned int layer)
 {
-	Root()->UnMapWithChildren();
+	Root()->UnMapWithChildren(layer);
 }
 
 void Model::Subscribe( void )
@@ -958,16 +960,18 @@ void Model::Move( void )
 	
 			pose = newpose; // do the move provisionally - we might undo it below
 			
+			const unsigned int layer( world->updates%2 );
+			
 			//UnMapWithChildren(); // remove from all blocks
-			MapWithChildren(); // render into new blocks
+			MapWithChildren(layer); // render into new blocks
 			
 			if( TestCollision() ) // crunch!
 				{
 					// put things back the way they were
 					// this is expensive, but it happens _very_ rarely for most people
 					pose = startpose;
-					UnMapWithChildren();
-					MapWithChildren();
+					UnMapWithChildren(layer);
+					MapWithChildren(layer);
 					SetStall(true);
 				}
 			else
@@ -1066,23 +1070,23 @@ kg_t Model::GetMassOfChildren() const
   return( GetTotalMass() - mass);
 }
 
-void Model::Map()
+void Model::Map( unsigned int layer )
 {
 	if( ! mapped )
 		{
 			// render all blocks in the group at my global pose and size
-			blockgroup.Map();
+			blockgroup.Map( layer );
 			mapped = true;
 		}
 } 
 
-void Model::UnMap()
+void Model::UnMap( unsigned int layer )
 {
   if( mapped )
-	 {
-		blockgroup.UnMap();
-		mapped = false;
-	 }
+		{
+			blockgroup.UnMap(layer);
+			mapped = false;
+		}
 }
 
 void Model::BecomeParentOf( Model* child )

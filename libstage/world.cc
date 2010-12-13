@@ -168,7 +168,6 @@ World::World( const std::string& name,
 	active_energy(),
 	active_velocity(),
 	active_velocity_threaded(),
-	//thread_task(0),
   sim_interval( 1e5 ), // 100 msec has proved a good default
 	update_cb_count(0)
 {
@@ -472,8 +471,8 @@ void World::Load( const std::string& worldfile_path )
 	 {
 		// all this is a hack and shouldn't be necessary
 		(*it)->blockgroup.CalcSize();
-		(*it)->UnMap();
-		(*it)->Map();
+		(*it)->UnMap(updates%2);
+		(*it)->Map(updates%2);
 		// to here
 
 		(*it)->InitControllers();
@@ -825,7 +824,7 @@ RaytraceResult World::Raytrace( const Ray& r )
   double distX(0), distY(0);
   bool calculatecrossings( true );
   
-  unsigned int layer = updates % 2;
+  unsigned int layer = (updates+1) % 2;
 
   // Stage spends up to 95% of its time in this loop! It would be
   // neater with more function calls encapsulating things, but even
@@ -1014,99 +1013,78 @@ void World::Reload( void )
   ForEachDescendant( _reload_cb, NULL );
 }
 
-// SuperRegion* SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next )
-// {
-// 	assert(next);
-	
-// 	if( current == next )
-// 		return current; // do nothing
-	
-// 	if(current)
-// 		current->Unlock();
-
-// 	next->Lock();	
-
-// 	return next;
-// }
-
-void World::MapPoly( const PointIntVec& pts, Block* block )
+void World::MapPoly( const PointIntVec& pts, Block* block, unsigned int layer )
 {
   const size_t pt_count = pts.size();
   
   for( size_t i(0); i<pt_count; ++i )
-	 {
-		const point_int_t& start(pts[i] );
-		const point_int_t& end(pts[(i+1)%pt_count]);
-		
-		// line rasterization adapted from Cohen's 3D version in
-		// Graphics Gems II. Should be very fast.  
-		const int32_t dx( end.x - start.x );
-		const int32_t dy( end.y - start.y );
-		const int32_t sx(sgn(dx));  
-		const int32_t sy(sgn(dy));  
-		const int32_t ax(abs(dx));  
-		const int32_t ay(abs(dy));  
-		const int32_t bx(2*ax);	
-		const int32_t by(2*ay);	 
-		int32_t exy(ay-ax); 
-		int32_t n(ax+ay);
-		
-		int32_t globx(start.x);
-		int32_t globy(start.y);
-		
-		unsigned int layer( updates % 2 );
-		
-		while( n ) 
-		  {				
-			 SuperRegion* sr( GetSuperRegionCreate( point_int_t(GETSREG(globx), 
-																				 GETSREG(globy))));					
-			 assert(sr);
-			 
-			 Region* reg(sr->GetRegion( GETREG(globx), 
-												 GETREG(globy)));					
-			 
-			 assert(reg);
-			 
-			 //printf( "REGION %p\n", reg );
-			 
-			 // add all the required cells in this region before looking up
-			 // another region			
-			 int32_t cx( GETCELL(globx) ); 
-			 int32_t cy( GETCELL(globy) );
-			 
-			 // need to call Region::GetCell() before using a Cell pointer
-			 // directly, because the region allocates cells lazily, waiting
-			 // for a call of this method
-			 Cell* c( reg->GetCell( cx, cy ) );
-			 
-			 // while inside the region, manipulate the Cell pointer directly
-			 while( (cx>=0) && (cx<REGIONWIDTH) && 
-					  (cy>=0) && (cy<REGIONWIDTH) && 
-					  n > 0 )
-				{					
-				  c->AddBlock(block, layer ); // odd or even
-				  // timesteps render into different layers
-				  
-				  // cleverly skip to the next cell (now it's safe to
-				  // manipulate the cell pointer)
-				  if( exy < 0 ) 
-					 {
-						globx += sx;
-						exy += by;
-						c += sx;
-						cx += sx;
-					 }
-				  else 
-					 {
-						globy += sy;
-						exy -= bx; 
-						c += sy * REGIONWIDTH;
-						cy += sy;
-					 }
-				  --n;
-				}
-		  }			
-	 }
+		{
+			const point_int_t& start(pts[i] );
+			const point_int_t& end(pts[(i+1)%pt_count]);
+			
+			// line rasterization adapted from Cohen's 3D version in
+			// Graphics Gems II. Should be very fast.  
+			const int32_t dx( end.x - start.x );
+			const int32_t dy( end.y - start.y );
+			const int32_t sx(sgn(dx));  
+			const int32_t sy(sgn(dy));  
+			const int32_t ax(abs(dx));  
+			const int32_t ay(abs(dy));  
+			const int32_t bx(2*ax);	
+			const int32_t by(2*ay);	 
+			int32_t exy(ay-ax); 
+			int32_t n(ax+ay);
+			
+			int32_t globx(start.x);
+			int32_t globy(start.y);
+			
+			while( n ) 
+				{				
+					Region* reg( GetSuperRegionCreate( point_int_t(GETSREG(globx), 
+																												 GETSREG(globy)))
+											 ->GetRegion( GETREG(globx), 
+																		GETREG(globy)));										
+					assert(reg);
+					
+					//printf( "REGION %p\n", reg );
+					
+					// add all the required cells in this region before looking up
+					// another region			
+					int32_t cx( GETCELL(globx) ); 
+					int32_t cy( GETCELL(globy) );
+					
+					// need to call Region::GetCell() before using a Cell pointer
+					// directly, because the region allocates cells lazily, waiting
+					// for a call of this method
+					Cell* c( reg->GetCell( cx, cy ) );
+					
+					// while inside the region, manipulate the Cell pointer directly
+					while( (cx>=0) && (cx<REGIONWIDTH) && 
+								 (cy>=0) && (cy<REGIONWIDTH) && 
+								 n > 0 )
+						{					
+							c->AddBlock(block, layer ); 
+							
+							// cleverly skip to the next cell (now it's safe to
+							// manipulate the cell pointer)
+							if( exy < 0 ) 
+								{
+									globx += sx;
+									exy += by;
+									c += sx;
+									cx += sx;
+								}
+							else 
+								{
+									globy += sy;
+									exy -= bx; 
+									c += sy * REGIONWIDTH;
+									cy += sy;
+								}
+							--n;
+						}
+				}			
+		}
 }
 
 

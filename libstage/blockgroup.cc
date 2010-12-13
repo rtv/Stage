@@ -94,19 +94,19 @@ void BlockGroup::CalcSize()
 }
 
 
-void BlockGroup::Map()
+void BlockGroup::Map( unsigned int layer )
 {
   FOR_EACH( it, blocks )
-	(*it)->Map();
+	(*it)->Map(layer);
 }
 
 // defined in world.cc
 //void SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next );
 
-void BlockGroup::UnMap()
+void BlockGroup::UnMap( unsigned int layer )
 {
 	FOR_EACH( it, blocks )
-		(*it)->UnMap();
+		(*it)->UnMap(layer);
 }
 
 void BlockGroup::DrawSolid( const Geom & geom )

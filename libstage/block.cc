@@ -55,7 +55,7 @@ Block::Block(  Model* mod,
 
 Block::~Block()
 {
-  if( mapped ) UnMap();
+  if( mapped ) UnMapAllLayers();
 }
 
 void Block::Translate( double x, double y )
@@ -192,11 +192,11 @@ Model* Block::TestCollision()
   return NULL; // no hit
 }
 
-void Block::Map()
+void Block::Map( unsigned int layer )
 {
 	// calculate the local coords of the block vertices
 	const size_t pt_count(pts.size());
-
+	
   if( mpts.size() == 0 )
 		{
 			// no valid cache of model coord points, so generate them
@@ -211,7 +211,7 @@ void Block::Map()
   mod->LocalToPixels( mpts, gpts );
 	
 	// and render this block's polygon into the world
-	mod->GetWorld()->MapPoly( gpts, this );
+	mod->world->MapPoly( gpts, this, layer );
 	
   // update the block's absolute z bounds at this rendering
   Pose gpose( mod->GetGlobalPose() );
@@ -227,16 +227,14 @@ void Block::Map()
 #include <algorithm>
 #include <functional>
 
-void Block::UnMap()
+void Block::UnMap( unsigned int layer )
 {
-//   std::for_each( rendered_cells.begin(), 
-// 					  rendered_cells.end(), 
-// 					  std::bind2nd( std::mem_fun(&Cell::RemoveBlock), this));
+	//   std::for_each( rendered_cells.begin(), 
+	// 					  rendered_cells.end(), 
+	// 					  std::bind2nd( std::mem_fun(&Cell::RemoveBlock), this));
   
-  unsigned int layer = mod->world->updates % 2;
-
   FOR_EACH( it, rendered_cells[layer] )
-	 (*it)->RemoveBlock(this, layer );
+		(*it)->RemoveBlock(this, layer );
   
   rendered_cells[layer].clear();
   mapped = false;
