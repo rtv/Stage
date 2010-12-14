@@ -167,7 +167,6 @@ World::World( const std::string& name,
 	pending_update_callbacks(),
 	active_energy(),
 	active_velocity(),
-	active_velocity_threaded(),
   sim_interval( 1e5 ), // 100 msec has proved a good default
 	update_cb_count(0)
 {
@@ -415,7 +414,6 @@ void World::Load( const std::string& worldfile_path )
   
   this->worker_threads = wf->ReadInt( entity, "threads",  this->worker_threads );  
 
-	active_velocity_threaded.resize( worker_threads + 1 );
 	pending_update_callbacks.resize( worker_threads + 1 );
 
   if( worker_threads > 0 )
@@ -769,7 +767,8 @@ RaytraceResult World::Raytrace( const Pose &gpose,
 {
   return Raytrace( Ray( mod, gpose, range, func, arg, ztest ));
 }
-		
+
+
 RaytraceResult World::Raytrace( const Ray& r )
 {
   //rt_cells.clear();
@@ -818,13 +817,13 @@ RaytraceResult World::Raytrace( const Ray& r )
   const double xjumpdist( fabs(xjumpx)+fabs(xjumpy) );
   const double yjumpdist( fabs(yjumpx)+fabs(yjumpy) );
 
+  const unsigned int layer( (updates+1) % 2 );
+  
   // these are updated as we go along the ray
   double xcrossx(0), xcrossy(0);
   double ycrossx(0), ycrossy(0);
   double distX(0), distY(0);
   bool calculatecrossings( true );
-  
-  unsigned int layer = (updates+1) % 2;
 
   // Stage spends up to 95% of its time in this loop! It would be
   // neater with more function calls encapsulating things, but even

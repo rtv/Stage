@@ -3,10 +3,9 @@ using namespace Stg;
 
 
 void Model::SetGeom( const Geom& val )
-{
-	unsigned int layer = world->updates%2;
-
-  UnMapWithChildren(layer);
+{  
+  UnMapWithChildren(0);
+  UnMapWithChildren(1);
   
   geom = val;
   
@@ -14,8 +13,9 @@ void Model::SetGeom( const Geom& val )
   
   NeedRedraw();
   
-  MapWithChildren(layer);
-  
+  MapWithChildren(0);
+  MapWithChildren(1);
+    
   CallCallbacks( CB_GEOM );
 }
 
@@ -218,7 +218,13 @@ void Model::SetPose( const Pose& newpose )
 // 					 token, pose.x, pose.y, pose.z, pose.a );
 			
       NeedRedraw();
-      MapWithChildren(world->updates%2);
+
+		UnMapWithChildren(0);
+		UnMapWithChildren(1);
+
+      MapWithChildren(0);
+      MapWithChildren(1);
+
       world->dirty = true;
     }
 	

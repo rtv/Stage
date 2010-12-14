@@ -55,7 +55,11 @@ Block::Block(  Model* mod,
 
 Block::~Block()
 {
-  if( mapped ) UnMapAllLayers();
+  if( mapped )
+	 {
+		UnMap(0);
+		UnMap(1);
+	 }
 }
 
 void Block::Translate( double x, double y )
@@ -368,10 +372,10 @@ void Block::DrawFootPrint()
   glEnd();
 }
 
-void Block::DrawSolid()
+void Block::DrawSolid( bool topview )
 {
-// 	if( wheel )
-// 		{
+// 	if( wheel )x
+  // 		{
 // 			glPushMatrix();
 
 // 			glRotatef( 90,0,1,0 );
@@ -388,10 +392,12 @@ void Block::DrawSolid()
 // 			glPopMatrix();
 // 		}
 //   else
-		{
-			DrawSides();
-			DrawTop();
-		}
+  {
+	 if( ! topview )
+		DrawSides();
+	 
+	 DrawTop();
+  }
 }
 
 void Block::Load( Worldfile* wf, int entity )

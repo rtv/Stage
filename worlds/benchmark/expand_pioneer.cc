@@ -46,8 +46,8 @@ extern "C" int Init( Model* mod )
   robot->ranger->AddCallback( Model::CB_UPDATE, (model_callback_t)RangerUpdate, robot );
   
   // subscribe to the laser, though we don't use it for navigating
-  //robot->laser = (ModelLaser*)mod->GetUnusedModelOfType( "ranger );
-  //assert( robot->laser );
+  robot->laser = (ModelRanger*)mod->GetUnusedModelOfType( "ranger" );
+  assert( robot->laser );
 
   // start the models updating
   robot->ranger->Subscribe();

@@ -147,8 +147,6 @@ namespace Stg
     "The text of the license may also be available online at\n"		\
     "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html\n";
 
-	const unsigned int LAYER_COUNT = 2;
-  
   /** Convenient constant */
   const double thousand = 1e3;
 
@@ -841,10 +839,7 @@ namespace Stg
 	 
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
-
-	 /** Models that should be rendered into the background just-in-time, before sensing occurs */
-	 //std::vector<Model*> jit_render;
-
+	 
 	 /** Pointers to all the models in this world. */
 	 std::set<Model*> models;
 
@@ -1089,10 +1084,6 @@ namespace Stg
 		/** Set of models that require their positions to be recalculated at each World::Update(). */
 	 std::set<Model*> active_velocity;
 		
-		std::vector<std::set<Model*> > active_velocity_threaded;
-		
-		//		unsigned int thread_task;
-		
 	 /** The amount of simulated time to run for each call to Update() */
 	 usec_t sim_interval;
 		
@@ -1227,16 +1218,9 @@ namespace Stg
 	 
     /** remove the block from the world's raytracing data structure */
     void UnMap( unsigned int layer );	 
-	 
- 		void UnMapAllLayers()
- 		{ 
- 			for( unsigned int i(0); i<LAYER_COUNT; ++i )
- 				UnMap(i);
- 		}
-
-
+	 	 
 	 /** draw the block in OpenGL as a solid single color */    
-	 void DrawSolid();
+	 void DrawSolid(bool topview);
 
 	 /** draw the projection of the block onto the z=0 plane	*/
     void DrawFootPrint(); 
@@ -1299,8 +1283,6 @@ namespace Stg
 				UnMapping them very quickly. */  
 		CellPtrVec rendered_cells[2];
 		
-		//std::set<SuperRegion*> rendered_superregions;
-	
 	 PointIntVec gpts;
 	
 	 /** find the position of a block's point in model coordinates
@@ -1353,12 +1335,6 @@ namespace Stg
     void Map( unsigned int layer );
     void UnMap( unsigned int layer );
 		
- 		void UnMapAllLayers()
- 		{ 
- 			for( unsigned int i(0); i<LAYER_COUNT; ++i )
- 				UnMap(i);
- 		}
-
 	 /** Draw the block in OpenGL as a solid single color. */
     void DrawSolid( const Geom &geom); 
 
@@ -1600,6 +1576,8 @@ namespace Stg
     /** Get human readable string that describes the current global energy state. */
     std::string EnergyString( void ) const;	
     virtual void RemoveChild( Model* mod );	 
+
+	 bool IsTopView();
   };
 
 
@@ -1752,7 +1730,7 @@ namespace Stg
     friend class BlockGroup;
     friend class PowerPack;
     friend class Ray;
-		friend class ModelFiducial;
+	 friend class ModelFiducial;
 		
   private:
 		/** the number of models instatiated - used to assign unique IDs */
@@ -1762,20 +1740,14 @@ namespace Stg
 		/** records if this model has been mapped into the world bitmap*/
 		bool mapped;
 
-		std::vector<Option*> drawOptions;
-		const std::vector<Option*>& getOptions() const { return drawOptions; }
+	 std::vector<Option*> drawOptions;
+	 const std::vector<Option*>& getOptions() const { return drawOptions; }
 	 
-		/** EXP */
-		// Model* hitmod; // thing we hit in a (parallel) collision test
-
   protected:
 
 	 /** If true, the model always has at least one subscription, so
 		  always runs. Defaults to false. */
 	 bool alwayson;
-
-	 /** If true, the model is rendered lazily into the regions, to reduce memory use. */
-	 // TODO bool background;
 
 	 BlockGroup blockgroup;
 	 /**  OpenGL display list identifier for the blockgroup */

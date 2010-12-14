@@ -155,6 +155,9 @@ namespace Stg
 
 	 void Load( Worldfile* wf, int section );
 	 void Save( Worldfile* wf, int section );
+	 
+	 bool IsTopView(){ return( (fabs( camera.yaw() ) < 0.1) && 
+										(fabs( camera.pitch() ) < 0.1) ); } 
   };
 
 } // namespace Stg

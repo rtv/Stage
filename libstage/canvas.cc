@@ -357,12 +357,13 @@ void Canvas::CanvasToWorld( int px, int py,
 
   GLfloat pz;
   glReadPixels( px, h()-py, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz );
-  gluUnProject( px, w()-py, pz, modelview, projection, viewport, wx,wy,wz );
-	
+  gluUnProject( px, w()-py, pz, modelview, projection, viewport, wx,wy,wz );	
 }
 
 int Canvas::handle(int event) 
 {
+  //printf( "cam %.2f %.2f\n", camera.yaw(), camera.pitch() );
+
   switch(event) 
     {
     case FL_MOUSEWHEEL:

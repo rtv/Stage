@@ -342,8 +342,8 @@ Model::Model( World* world,
 							Model* parent,
 				  const std::string& type ) :
   Ancestor(), 	 
-	mapped(false),
-	drawOptions(),
+  mapped(false),
+  drawOptions(),
   alwayson(false),
   blockgroup(),
   blocks_dl(0),
@@ -425,18 +425,20 @@ Model::~Model( void )
 {
   // children are removed in ancestor class
   
-  // remove myself from my parent's child list, or the world's child
-  // list if I have no parent
-
-	if( world ) // if I'm not a worldless dummy model
-		{
-			UnMap(0); // remove from the raytrace bitmap
-			UnMap(1); // remove from the raytrace bitmap
-			
-			EraseAll( this, parent ? parent->children : world->children );			
-			modelsbyid.erase(id);			
-			world->RemoveModel( this );
-		}
+  if( world ) // if I'm not a worldless dummy model
+	 {
+		UnMap(0); // remove from the movable model array
+		UnMap(1); // remove from the moveable model array
+	 		
+		// remove myself from my parent's child list, or the world's child
+		// list if I have no parent		
+		EraseAll( this, parent ? parent->children : world->children );			
+		
+		// erase from the static map of all models
+		modelsbyid.erase(id);			
+				
+		world->RemoveModel( this );
+	 }
 }
 
 
@@ -488,8 +490,8 @@ Model::Flag* Model::PopFlag()
 
 void Model::ClearBlocks()
 {
-	blockgroup.UnMapAllLayers();
-
+  blockgroup.UnMap(0);
+  blockgroup.UnMap(1);  
   blockgroup.Clear();
   //no need to Map() -  we have no blocks
   NeedRedraw();
@@ -513,9 +515,10 @@ Block* Model::AddBlockRect( meters_t x,
 														meters_t dy,
 														meters_t dz )
 {  
-  blockgroup.UnMapAllLayers();
-	
-	std::vector<point_t> pts(4);
+  UnMap(0);
+  UnMap(1);
+  
+  std::vector<point_t> pts(4);
   pts[0].x = x;
   pts[0].y = y;
   pts[1].x = x + dx;
@@ -526,16 +529,17 @@ Block* Model::AddBlockRect( meters_t x,
   pts[3].y = y + dy;
   
   Block* newblock =  new Block( this,
-																pts,
-																0, dz, 
-																color,
-																true, 
-																false );
-
+										  pts,
+										  0, dz, 
+										  color,
+										  true, 
+										  false );
+  
   blockgroup.AppendBlock( newblock );
-
-	Map( world->updates%2 );
-	
+  
+  Map(0);
+  Map(1);
+  
   return newblock;
 }
 
@@ -776,9 +780,8 @@ void Model::Startup( void )
 		world->Enqueue( 0, interval, this, UpdateWrapper, NULL );
 	
 	if( velocity_enable )
-	  //world->Enqueue( event_queue_num, interval, this, MoveWrapper, NULL);
 	  world->active_velocity.insert(this);
-
+	
   if( FindPowerPack() )
 		world->active_energy.insert( this );
   
@@ -788,14 +791,11 @@ void Model::Startup( void )
 void Model::Shutdown( void )
 {
   //printf( "Shutdown model %s\n", this->token );
-	CallCallbacks( CB_SHUTDOWN );
-
+  CallCallbacks( CB_SHUTDOWN );
+  
   world->active_energy.erase( this );
-  //world->active_velocity.erase( this );
-	//world->active_velocity_threaded[event_queue_num].erase( this );
-
-	velocity_enable = false;
-
+  world->active_velocity.erase( this );
+  
   // allows data visualizations to be cleared.
   NeedRedraw();
 }
@@ -935,54 +935,51 @@ void Model::UpdateCharge()
 
 
 void Model::Move( void )
-{
-	//printf( "Q%d model %p %s move\n", event_queue_num, this, Token() );
-	
-	//if( !velocity_enable )
-  //return; // don't enqueue any more moves
-	
-  if( !velocity.IsZero() && !disabled )
-		{  
-			// convert usec to sec
-			const double interval( (double)world->sim_interval / 1e6 );
-			
-			// find the change of pose due to our velocity vector
-			const Pose p( velocity.x * interval,
-										velocity.y * interval,
-										velocity.z * interval,
-										normalize( velocity.a * interval ));
-			
-			// the pose we're trying to achieve (unless something stops us)
-			const Pose newpose( pose + p );
-			
-			// stash the original pose so we can put things back if we hit
-			const Pose startpose( pose );
-	
-			pose = newpose; // do the move provisionally - we might undo it below
-			
-			const unsigned int layer( world->updates%2 );
-			
-			//UnMapWithChildren(); // remove from all blocks
-			MapWithChildren(layer); // render into new blocks
-			
-			if( TestCollision() ) // crunch!
-				{
-					// put things back the way they were
-					// this is expensive, but it happens _very_ rarely for most people
-					pose = startpose;
-					UnMapWithChildren(layer);
-					MapWithChildren(layer);
-					SetStall(true);
-				}
-			else
-				{
-					world->dirty = true; // need redraw	
-					SetStall(false);
-				}
-		}
+{  
+  if( velocity.IsZero() )
+	 return;
 
-	// set up to move this again
-	//world->Enqueue( event_queue_num, interval, this, MoveWrapper, NULL);
+  if( disabled )
+	 return;
+
+  // convert usec to sec
+  const double interval( (double)world->sim_interval / 1e6 );
+  
+  // find the change of pose due to our velocity vector
+  const Pose p( velocity.x * interval,
+					 velocity.y * interval,
+					 velocity.z * interval,
+					 normalize( velocity.a * interval ));
+  
+  // the pose we're trying to achieve (unless something stops us)
+  const Pose newpose( pose + p );
+  
+  // stash the original pose so we can put things back if we hit
+  const Pose startpose( pose );
+  
+  pose = newpose; // do the move provisionally - we might undo it below
+  
+  //const unsigned int layer( world->updates%2 );
+  
+  const unsigned int layer( world->updates%2 );
+  
+  UnMapWithChildren( layer ); // remove from all blocks
+  MapWithChildren( layer ); // render into new blocks
+  
+  if( TestCollision() ) // crunch!
+	 {
+		// put things back the way they were
+		// this is expensive, but it happens _very_ rarely for most people
+		pose = startpose;
+		UnMapWithChildren( layer );
+		MapWithChildren( layer );
+		SetStall(true);
+	 }
+  else
+	 {
+		world->dirty = true; // need redraw	
+		SetStall(false);
+	 }
 }
 
 
@@ -1072,21 +1069,21 @@ kg_t Model::GetMassOfChildren() const
 
 void Model::Map( unsigned int layer )
 {
-	if( ! mapped )
-		{
-			// render all blocks in the group at my global pose and size
-			blockgroup.Map( layer );
-			mapped = true;
-		}
+  if( ! mapped )
+	 {
+		// render all blocks in the group at my global pose and size
+		blockgroup.Map( layer );
+		mapped = true;
+	 }
 } 
 
 void Model::UnMap( unsigned int layer )
 {
   if( mapped )
-		{
-			blockgroup.UnMap(layer);
-			mapped = false;
-		}
+	 {
+		blockgroup.UnMap(layer);
+		mapped = false;
+	 }
 }
 
 void Model::BecomeParentOf( Model* child )

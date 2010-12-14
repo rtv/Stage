@@ -859,3 +859,6 @@ usec_t WorldGui::RealTimeNow() const
   gettimeofday( &tv, NULL );  // slow system call: use sparingly
   return( tv.tv_sec*1000000 + tv.tv_usec );
 }
+
+bool WorldGui::IsTopView()
+{ return canvas->IsTopView(); }

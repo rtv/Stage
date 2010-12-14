@@ -107,13 +107,22 @@ void SuperRegion::DrawOccupancy( unsigned int layer ) const
 		const Region* r = &regions[0];
 		char buf[32];
 		
-		if( layer > 0)
+		switch( layer )
 		  {
+		  case 0: // moveable 1
+			 glColor3f( 0,1,0 );    
+			 break;
+		  case 1: // moveable 2
 			 glTranslatef( 0.05, 0.05, 0);
-			 glColor3f( 1,0,1 );    
+			 glColor3f( 0,0,1 );    
+			 break;
+// 		  case 2: // fixed 
+// 			 glTranslatef( 0.1, 0.1, 0);
+// 			 glColor3f( 1,0,0 );    
+// 			 break;
+		  default:
+			 PRINT_ERR1( "error: wrong layer %d", layer );			 
 		  }
-		else
-		  glColor3f( 0,1,0 );    
 		
 		for( int y=0; y<SUPERREGIONWIDTH; ++y )
 		  for( int x=0; x<SUPERREGIONWIDTH; ++x )
@@ -128,7 +137,7 @@ void SuperRegion::DrawOccupancy( unsigned int layer ) const
 					 snprintf( buf, 15, "%lu", r->count );
 					 Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
 					 
-					 // draw a rectangle around each occupied cell
+					 // draw a rectangle around each occupied cell					 
 					 for( int p=0; p<REGIONWIDTH; ++p )
 						for( int q=0; q<REGIONWIDTH; ++q )
 						  if( r->cells[p+(q*REGIONWIDTH)].blocks[layer].size() )
@@ -241,14 +250,15 @@ void SuperRegion::DrawVoxels(unsigned int layer) const
 			 for( int p=0; p<REGIONWIDTH; ++p )
 				for( int q=0; q<REGIONWIDTH; ++q )
 				  {
-					 Cell* c = (Cell*)&r->cells[p+(q*REGIONWIDTH)];
+					 const std::vector<Block*>& blocks = 
+						r->cells[p+(q*REGIONWIDTH)].blocks[layer];
 					 
-					 if( c->blocks[layer].size() )
+					 if( blocks.size() )
 						{					 
 						  GLfloat xx = p+(x<<RBITS);
 						  GLfloat yy = q+(y<<RBITS);
 						  
-						  FOR_EACH( it, c->blocks[layer] )
+						  FOR_EACH( it, blocks )
 							 {
 								Block* block = *it;
 								// first draw filled polygons
@@ -279,65 +289,56 @@ void SuperRegion::DrawVoxels(unsigned int layer) const
 
 //std::set<Block*> mapped_blocks;
 
-void Cell::AddBlock( Block* b, unsigned int i )
+void Cell::AddBlock( Block* b, unsigned int layer )
 {			
-  assert( index < 2 );
-  blocks[i].push_back( b );   
-  b->rendered_cells[i].push_back(this);
+  assert( layer < 2 );
+  blocks[layer].push_back( b );   
+  b->rendered_cells[layer].push_back(this);
   region->AddBlock();
 }
 
-void Cell::RemoveBlock( Block* b, unsigned int i )
+void Cell::RemoveBlock( Block* b, unsigned int layer )
 {
-//   assert( i<2 );
+  assert( layer<2 );
   
-//   std::vector<Block*>& blks = blocks[i];
+  std::vector<Block*>& blks = blocks[layer];
 
-//   size_t len = blks.size();
-//   if( len )
-// 	 {
-// #if 0	
-// 		// Use conventional STL style		
+  size_t len = blks.size();
+  if( len )
+	 {
+#if 1	
+		// Use conventional STL style		
 		
-// 		// this special-case test is faster for worlds with simple models,
-// 		// which are the ones we want to be really fast. It's a small
-// 		// extra cost for worlds with several models in each cell. It
-// 		// gives a 5% overall speed increase in fasr.world.
+		// this special-case test is faster for worlds with simple models,
+		// which are the ones we want to be really fast. It's a small
+		// extra cost for worlds with several models in each cell. It
+		// gives a 5% overall speed increase in fasr.world.
 		
-// 		if( (blks.size() == 1) &&
-// 			 (blks[0] == b) ) // special but common case
-// 		  {
-// 			 blks.clear(); // cheap
-// 		  }
-// 		else // the general but relatively expensive case
-// 		  {
-// 			 EraseAll( b, blocks );		
-// 		  }
-// #else		// attempt faster removal loop
-// 		// O(n) * low constant array element removal
-// 		// this C-style pointer work looks to be very slightly faster than the STL way
-// 		Block **start = &blks[0]; // start of array
-// 		Block **r     = &blks[0]; // read from here
-// 		Block **w     = &blks[0]; // write to here
+		if( (blks.size() == 1) &&
+			 (blks[0] == b) ) // special but common case
+		  {
+			 blks.clear(); // cheap
+		  }
+		else // the general but relatively expensive case
+		  {
+			 EraseAll( b, blks );		
+		  }
+#else		// attempt faster removal loop
+		// O(n) * low constant array element removal
+		// this C-style pointer work looks to be very slightly faster than the STL way
+		Block **start = &blks[0]; // start of array
+		Block **r     = &blks[0]; // read from here
+		Block **w     = &blks[0]; // write to here
 		
-// 		while( r < start + len ) // scan down array, skipping 'this' 
-// 		  {
-// 			 if( *r != b ) 
-// 				*w++ = *r;				
-// 			 ++r;
-// 		  }
-// 		blks.resize( w-start );
-// #endif
-// 	 }
-  
-//   region->RemoveBlock();
+		while( r < start + len ) // scan down array, skipping 'this' 
+		  {
+			 if( *r != b ) 
+				*w++ = *r;				
+			 ++r;
+		  }
+		blks.resize( w-start );
+#endif
+	 }
 
-  unsigned int cleared = blocks[i].size();
-  
-  blocks[i].clear();
-  
-  for( unsigned int j=0; j<cleared; ++j )
-	 region->RemoveBlock();
-
-  //region->
+  region->RemoveBlock();
 }
