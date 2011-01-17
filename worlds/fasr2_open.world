@@ -16,7 +16,7 @@ paused 1
 
 resolution 0.02
 
-threads 8
+threads 4
 
 # configure the GUI window
 window
@@ -99,7 +99,7 @@ define charge_station model
   size [ 0.100 0.100 0.300 ]
   color "purple"
   
-  laser_return 0
+  ranger_return 0
   obstacle_return 0
   fiducial_return 2 # look for this in the fiducial sensor
 
@@ -175,7 +175,12 @@ define blinker model
 
 define autorob pioneer2dx		  
 (		 
- sicklaser( samples 32 range_max 2 laser_return 2 watts 30  )
+ # sicklaser( samples 32 range_max 2 ranger_return 2 watts 30  )
+
+ sickbase( sensor( samples 32  range [0 2] fov 180 color_rgba [ 0 0 1 0.15 ] ) 
+  				 ranger_return 2.000 watts 30 )
+
+
 # ctrl "fasr2"
  kjoules 400 
  kjoules_capacity 400 

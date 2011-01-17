@@ -146,7 +146,7 @@ namespace Stg
     "\n"								\
     "The text of the license may also be available online at\n"		\
     "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html\n";
-  
+
   /** Convenient constant */
   const double thousand = 1e3;
 
@@ -807,6 +807,18 @@ namespace Stg
   /// %World class
   class World : public Ancestor
   {
+	private: 
+	 //pthread_mutex_t bflock;
+	 //pthread_rwlock_t rwlock;
+
+	public:
+		//inline int Lock(){ return pthread_mutex_lock( &bflock ); }
+		//inline int Unlock(){ return pthread_mutex_unlock( &bflock ); }
+
+		//inline int ReadLock(){ return pthread_mutex_lock( &bflock ); }
+		//inline int WriteLock(){ return pthread_mutex_lock( &bflock ); }
+		//inline int Unlock(){ return pthread_mutex_unlock( &bflock ); }
+		
     friend class Block;
     friend class Model; // allow access to private members
     friend class ModelFiducial;
@@ -827,10 +839,7 @@ namespace Stg
 	 
     bool destroy;
     bool dirty; ///< iff true, a gui redraw would be required
-
-	 /** Models that should be rendered into the background just-in-time, before sensing occurs */
-	 //std::vector<Model*> jit_render;
-
+	 
 	 /** Pointers to all the models in this world. */
 	 std::set<Model*> models;
 
@@ -854,7 +863,12 @@ namespace Stg
 			bool operator()(const Model* a, const Model* b) const;
 		};
 		
+		/** maintain a set of models with fiducials sorted by pose.x, for
+				quickly finding nearby fidcucials */
 		std::set<Model*,ltx> models_with_fiducials_byx;
+		
+		/** maintain a set of models with fiducials sorted by pose.y, for
+				quickly finding nearby fidcucials */
 		std::set<Model*,lty> models_with_fiducials_byy;
 					 
 	 /** Add a model to the set of models with non-zero fiducials, if not already there. */
@@ -875,9 +889,9 @@ namespace Stg
 	 
 	 bool show_clock; ///< iff true, print the sim time on stdout
 	 unsigned int show_clock_interval; ///< updates between clock outputs
-
-    pthread_mutex_t thread_mutex; ///< protect the worker thread management stuff
-	 unsigned int threads_working; ///< the number of worker threads not yet finished
+		
+    pthread_mutex_t sync_mutex; ///< protect the worker thread management stuff
+		unsigned int threads_working; ///< the number of worker threads not yet finished
     pthread_cond_t threads_start_cond; ///< signalled to unblock worker threads
     pthread_cond_t threads_done_cond; ///< signalled by last worker thread to unblock main thread
     int total_subs; ///< the total number of subscriptions to all models
@@ -957,7 +971,8 @@ namespace Stg
 		
 		/** call Cell::AddBlock(block) for each cell on the polygon */
     void MapPoly( const PointIntVec& poly,
-									Block* block );
+									Block* block,
+									unsigned int layer );
 
     SuperRegion* AddSuperRegion( const point_int_t& coord );
     SuperRegion* GetSuperRegion( const point_int_t& org );
@@ -1005,7 +1020,7 @@ namespace Stg
 		
 		
     /** Enlarge the bounding volume to include this point */
-    void Extend( point3_t pt );
+    inline void Extend( point3_t pt );
   
     virtual void AddModel( Model* mod );
     virtual void RemoveModel( Model* mod );
@@ -1030,13 +1045,15 @@ namespace Stg
     {
     public:
       
-      Event( usec_t time, Model* mod ) 
-		  : time(time), mod(mod) {}
-      
+      Event( usec_t time, Model* mod, model_callback_t cb, void* arg ) 
+				: time(time), mod(mod), cb(cb), arg(arg) {}
+			
       usec_t time; ///< time that event occurs
-      Model* mod; ///< model to update
-      
-			/** order by time. Break ties by value of Model*. 
+      Model* mod; ///< model to pass into callback
+      model_callback_t cb;
+			void* arg;
+			
+			/** order by time. Break ties by value of Model*, then cb*. 
 					@param event to compare with this one. */
       bool operator<( const Event& other ) const;
     };
@@ -1044,6 +1061,9 @@ namespace Stg
 		/** Queue of pending simulation events for the main thread to handle. */
 	 std::vector<std::priority_queue<Event> > event_queues;
 
+		/** Queue of pending simulation events for the main thread to handle. */
+		std::vector<std::queue<Model*> > pending_update_callbacks;
+		
 		/** Create a new simulation event to be handled in the future.
 
 				@param queue_num Specify which queue the event should be on. The main
@@ -1055,17 +1075,23 @@ namespace Stg
 				@param mod The model that should have its Update() method
 				called at the specified time.
 		*/
-	 void Enqueue( unsigned int queue_num, usec_t delay, Model* mod );
-	 
+		void Enqueue( unsigned int queue_num, usec_t delay, Model* mod, model_callback_t cb, void* arg )
+		{  event_queues[queue_num].push( Event( sim_time + delay, mod, cb, arg ) ); }
+		
 		/** Set of models that require energy calculations at each World::Update(). */
 	 std::set<Model*> active_energy;
 
 		/** Set of models that require their positions to be recalculated at each World::Update(). */
 	 std::set<Model*> active_velocity;
-
+		
 	 /** The amount of simulated time to run for each call to Update() */
 	 usec_t sim_interval;
-	 
+		
+		// debug instrumentation - making sure the number of update callbacks
+		// in each thread is consistent with the number that have been
+		// registered globally
+		int update_cb_count;
+
 	 /** consume events from the queue up to and including the current sim_time */
 	 void ConsumeQueue( unsigned int queue_num );
 
@@ -1160,7 +1186,7 @@ namespace Stg
 	 Model* GetGround() {return ground;};
 	
   };
-
+  
   class Block
   {
     friend class BlockGroup;
@@ -1170,10 +1196,10 @@ namespace Stg
     friend class Canvas;
 		friend class Cell;
   public:
-  
+		
     /** Block Constructor. A model's body is a list of these
-		  blocks. The point data is copied, so pts can safely be freed
-		  after constructing the block.*/
+				blocks. The point data is copied, so pts can safely be freed
+				after constructing the block.*/
     Block( Model* mod,  
 					 const std::vector<point_t>& pts,
 					 meters_t zmin,
@@ -1181,20 +1207,20 @@ namespace Stg
 					 Color color,
 					 bool inherit_color,
 					 bool wheel );
-  
+		
     /** A from-file  constructor */
     Block(  Model* mod,  Worldfile* wf, int entity);
-	 
+		
     ~Block();
 	 
     /** render the block into the world's raytrace data structure */
-    void Map(); 	 
+    void Map( unsigned int layer ); 	 
 	 
     /** remove the block from the world's raytracing data structure */
-    void UnMap();	 
-	 
+    void UnMap( unsigned int layer );	 
+	 	 
 	 /** draw the block in OpenGL as a solid single color */    
-	 void DrawSolid();
+	 void DrawSolid(bool topview);
 
 	 /** draw the projection of the block onto the z=0 plane	*/
     void DrawFootPrint(); 
@@ -1220,15 +1246,11 @@ namespace Stg
 	 /** Set the extent in Z of the block */
 	 void SetZ( double min, double max );
 		
-    inline void RemoveFromCellArray( CellPtrVec& blocks );
-    //inline void GenerateCandidateCells();  
-		
 		void AppendTouchingModels( ModelPtrSet& touchers );
 	 
 	 /** Returns the first model that shares a bitmap cell with this model */
     Model* TestCollision(); 
 
-    void SwitchToTestedCells();  
     void Load( Worldfile* wf, int entity );  
     Model* GetModel(){ return mod; };  
     const Color& GetColor();		
@@ -1259,16 +1281,8 @@ namespace Stg
 		
     /** record the cells into which this block has been rendered to
 				UnMapping them very quickly. */  
-		CellPtrVec rendered_cells;
-
-    /** When moving a model, we test for collisions by generating, for
-		  each block, a list of the cells in which it would be rendered if the
-		  move were to be successful. If no collision occurs, the move is
-		  allowed - the rendered cells are cleared, the potential cells are
-		  written, and the pointers to the rendered and potential cells are
-		  switched for next time (avoiding a memory copy).*/
-		//CellPtrVec * candidate_cells;
-	
+		CellPtrVec rendered_cells[2];
+		
 	 PointIntVec gpts;
 	
 	 /** find the position of a block's point in model coordinates
@@ -1318,11 +1332,9 @@ namespace Stg
 		  with a block in this group, or NULL, if none are detected. */
     Model* TestCollision();
  
-    void SwitchToTestedCells();
-	 
-    void Map();
-    void UnMap();
-	 
+    void Map( unsigned int layer );
+    void UnMap( unsigned int layer );
+		
 	 /** Draw the block in OpenGL as a solid single color. */
     void DrawSolid( const Geom &geom); 
 
@@ -1564,6 +1576,8 @@ namespace Stg
     /** Get human readable string that describes the current global energy state. */
     std::string EnergyString( void ) const;	
     virtual void RemoveChild( Model* mod );	 
+
+	 bool IsTopView();
   };
 
 
@@ -1716,7 +1730,7 @@ namespace Stg
     friend class BlockGroup;
     friend class PowerPack;
     friend class Ray;
-		friend class ModelFiducial;
+	 friend class ModelFiducial;
 		
   private:
 		/** the number of models instatiated - used to assign unique IDs */
@@ -1726,20 +1740,14 @@ namespace Stg
 		/** records if this model has been mapped into the world bitmap*/
 		bool mapped;
 
-		std::vector<Option*> drawOptions;
-		const std::vector<Option*>& getOptions() const { return drawOptions; }
+	 std::vector<Option*> drawOptions;
+	 const std::vector<Option*>& getOptions() const { return drawOptions; }
 	 
-		/** EXP */
-		// Model* hitmod; // thing we hit in a (parallel) collision test
-
   protected:
 
 	 /** If true, the model always has at least one subscription, so
 		  always runs. Defaults to false. */
 	 bool alwayson;
-
-	 /** If true, the model is rendered lazily into the regions, to reduce memory use. */
-	 // TODO bool background;
 
 	 BlockGroup blockgroup;
 	 /**  OpenGL display list identifier for the blockgroup */
@@ -2058,15 +2066,15 @@ namespace Stg
   
 	 void CommitTestedPose();
 
-	 void Map();
-	 void UnMap();
+	 void Map( unsigned int layer );
+	 void UnMap( unsigned int layer );
 
-	 void MapWithChildren();
-	 void UnMapWithChildren();
+	 void MapWithChildren( unsigned int layer );
+	 void UnMapWithChildren( unsigned int layer );
   
 	 // Find the root model, and map/unmap the whole tree.
-	 void MapFromRoot();
-	 void UnMapFromRoot();
+	 void MapFromRoot( unsigned int layer );
+	 void UnMapFromRoot( unsigned int layer );
 
 	 /** raytraces a single ray from the point and heading identified by
 		  pose, in local coords */
@@ -2102,23 +2110,17 @@ namespace Stg
 						 const uint32_t sample_count,
 						 const bool ztest = true );
   
+		virtual void Startup();
+		virtual void Shutdown();
+		virtual void Update();
+		virtual void Move();
+		virtual void UpdateCharge();
+		
+		static int UpdateWrapper( Model* mod, void* arg ){ mod->Update(); return 0; }
+		static int MoveWrapper( Model* mod, void* arg ){ mod->Move(); return 0; }
 
-	 /** Causes this model and its children to recompute their global
-		  position instead of using a cached pose in
-		  Model::GetGlobalPose()..*/
-	 //void GPoseDirtyTree();
-
-	 virtual void Startup();
-	 virtual void Shutdown();
-	 virtual void Update();
-	 virtual void UpdatePose();
-	 virtual void UpdateCharge();
-
-		//Model* Move( const Pose& newpose );
-	
-		// EXP
-		//void ConditionalMove_calc( const Pose& newpose );
-		//void ConditionalMove_commit( void );
+		/** Calls CallCallback( CB_UPDATE ) */
+		void CallUpdateCallbacks( void );
 
 	 meters_t ModelHeight() const;
 

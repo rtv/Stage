@@ -12,6 +12,8 @@ speedup -1 # as fast as possible
 
 paused 1
 
+threads 7
+
 # configure the GUI window
 window
 (

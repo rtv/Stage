@@ -357,12 +357,13 @@ void Canvas::CanvasToWorld( int px, int py,
 
   GLfloat pz;
   glReadPixels( px, h()-py, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz );
-  gluUnProject( px, w()-py, pz, modelview, projection, viewport, wx,wy,wz );
-	
+  gluUnProject( px, w()-py, pz, modelview, projection, viewport, wx,wy,wz );	
 }
 
 int Canvas::handle(int event) 
 {
+  //printf( "cam %.2f %.2f\n", camera.yaw(), camera.pitch() );
+
   switch(event) 
     {
     case FL_MOUSEWHEEL:
@@ -938,20 +939,23 @@ void Canvas::renderFrame()
   // ((Model*)it->data)->DrawOriginTree();
   
   // draw the model-specific visualizations
-  if( showData ) {
-    if ( ! visualizeAll ) {
-      FOR_EACH( it, world->World::children )
-		  (*it)->DataVisualizeTree( current_camera );
-    }
-    else if ( selected_models.size() > 0 ) {
-      FOR_EACH( it, world->World::children )
-		  (*it)->DataVisualizeTree( current_camera );
-    }
-    else if ( last_selection ) {
-      last_selection->DataVisualizeTree( current_camera );
-    }
-  }
-   
+  if( world->sim_time > 0 )
+	 {
+		if( showData ) {
+		  if ( ! visualizeAll ) {
+			 FOR_EACH( it, world->World::children )
+				(*it)->DataVisualizeTree( current_camera );
+		  }
+		  else if ( selected_models.size() > 0 ) {
+			 FOR_EACH( it, world->World::children )
+				(*it)->DataVisualizeTree( current_camera );
+		  }
+		  else if ( last_selection ) {
+			 last_selection->DataVisualizeTree( current_camera );
+		  }
+		}
+	 }
+
   if( showGrid ) 
     FOR_EACH( it, models_sorted )
       (*it)->DrawGrid();

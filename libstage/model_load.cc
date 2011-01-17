@@ -245,12 +245,15 @@ void Model::Load()
 	
   // call any type-specific load callbacks
   this->CallCallbacks( CB_LOAD );
-    
+  
   // we may well have changed blocks or geometry
   blockgroup.CalcSize();
-  UnMapWithChildren();
-  MapWithChildren();
-	 
+  
+  UnMapWithChildren(0);
+  UnMapWithChildren(1);
+  MapWithChildren(0);
+  MapWithChildren(1);
+  
   if( this->debug )
     printf( "Model \"%s\" is in debug mode\n", token.c_str() );
 
@@ -350,7 +353,6 @@ void Model::LoadControllerModule( const char* lib )
 			 fflush( stdout );
 			 exit(-1);
 		  }
-		//else
 		
 		AddCallback( CB_INIT, initfunc, new CtrlArgs(lib,World::ctrlargs) ); // pass complete string into initfunc
     }

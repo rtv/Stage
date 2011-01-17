@@ -11,19 +11,19 @@ static void canonicalize_winding(vector<point_t>& pts);
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
 Block::Block( Model* mod,
-							const std::vector<point_t>& pts,
-							meters_t zmin,
-							meters_t zmax,
-							Color color,
-							bool inherit_color,
-							bool wheel ) :
+				  const std::vector<point_t>& pts,
+				  meters_t zmin,
+				  meters_t zmax,
+				  Color color,
+				  bool inherit_color,
+				  bool wheel ) :
   mod( mod ),
   mpts(),
   pts(pts),
   local_z( zmin, zmax ),
   color( color ),
   inherit_color( inherit_color ),
-	wheel(wheel),
+  wheel(wheel),
   rendered_cells(), 
   gpts()
 {
@@ -38,12 +38,12 @@ Block::Block(  Model* mod,
   : mod( mod ),
     mpts(),
     pts(),
-		local_z(),
+	 local_z(),
     color(),
     inherit_color(true),
-		wheel(),
+	 wheel(),
     rendered_cells(),
-		gpts()
+	 gpts()
 {
   assert(mod);
   assert(wf);
@@ -55,7 +55,11 @@ Block::Block(  Model* mod,
 
 Block::~Block()
 {
-  if( mapped ) UnMap();
+  if( mapped )
+	 {
+		UnMap(0);
+		UnMap(1);
+	 }
 }
 
 void Block::Translate( double x, double y )
@@ -136,10 +140,12 @@ const Color& Block::GetColor()
 
 void Block::AppendTouchingModels( ModelPtrSet& touchers )
 {
+  unsigned int layer = mod->world->updates % 2;
+  
   // for every cell we are rendered into
-  FOR_EACH( cell_it, rendered_cells )
-		// for every block rendered into that cell
-		FOR_EACH( block_it, (*cell_it)->GetBlocks() )
+  FOR_EACH( cell_it, rendered_cells[layer] )
+	 // for every block rendered into that cell
+	 FOR_EACH( block_it, (*cell_it)->GetBlocks(layer) )
 	 {
 		if( !mod->IsRelated( (*block_it)->mod ))
 		  touchers.insert( (*block_it)->mod );
@@ -156,13 +162,15 @@ Model* Block::TestCollision()
   if( mod->vis.obstacle_return )
   {
     if ( global_z.min < 0 )
-      return this->mod->world->GetGround();
+      return mod->world->GetGround();
 	  
+	 unsigned int layer = mod->world->updates % 2;
+
     // for every cell we may be rendered into
-	 FOR_EACH( cell_it, rendered_cells )
+	 FOR_EACH( cell_it, rendered_cells[layer] )
       {
 		  // for every block rendered into that cell
-				FOR_EACH( block_it, (*cell_it)->GetBlocks() )
+				FOR_EACH( block_it, (*cell_it)->GetBlocks(layer) )
 			 {
 				Block* testblock = *block_it;
 				Model* testmod = testblock->mod;
@@ -188,12 +196,9 @@ Model* Block::TestCollision()
   return NULL; // no hit
 }
 
-void Block::Map()
+void Block::Map( unsigned int layer )
 {
-	// clear out of the old cells
-  RemoveFromCellArray( rendered_cells );
-	
-	// now calculate the local coords of the block vertices
+	// calculate the local coords of the block vertices
 	const size_t pt_count(pts.size());
 	
   if( mpts.size() == 0 )
@@ -210,7 +215,7 @@ void Block::Map()
   mod->LocalToPixels( mpts, gpts );
 	
 	// and render this block's polygon into the world
-	mod->GetWorld()->MapPoly( gpts, this );
+	mod->world->MapPoly( gpts, this, layer );
 	
   // update the block's absolute z bounds at this rendering
   Pose gpose( mod->GetGlobalPose() );
@@ -223,30 +228,20 @@ void Block::Map()
   mapped = true;	
 }
 
-void Block::UnMap()
-{
-  RemoveFromCellArray( rendered_cells );
-  rendered_cells.clear();
-  mapped = false;
-}
-
 #include <algorithm>
 #include <functional>
 
-inline void Block::RemoveFromCellArray( CellPtrVec& cells )
+void Block::UnMap( unsigned int layer )
 {
- 	//	FOR_EACH( it, *cells )
-	//	(*it)->RemoveBlock(this);
-	
-	// this is equivalent to the above commented code - experimenting
-	// with optimizations
-	std::for_each( cells.begin(), 
-								 cells.end(), 
-								 std::bind2nd( std::mem_fun(&Cell::RemoveBlock), this));
-}
-
-void Block::SwitchToTestedCells()
-{
+	//   std::for_each( rendered_cells.begin(), 
+	// 					  rendered_cells.end(), 
+	// 					  std::bind2nd( std::mem_fun(&Cell::RemoveBlock), this));
+  
+  FOR_EACH( it, rendered_cells[layer] )
+		(*it)->RemoveBlock(this, layer );
+  
+  rendered_cells[layer].clear();
+  mapped = false;
 }
 
 inline point_t Block::BlockPointToModelMeters( const point_t& bpt )
@@ -377,10 +372,10 @@ void Block::DrawFootPrint()
   glEnd();
 }
 
-void Block::DrawSolid()
+void Block::DrawSolid( bool topview )
 {
-// 	if( wheel )
-// 		{
+// 	if( wheel )x
+  // 		{
 // 			glPushMatrix();
 
 // 			glRotatef( 90,0,1,0 );
@@ -397,10 +392,12 @@ void Block::DrawSolid()
 // 			glPopMatrix();
 // 		}
 //   else
-		{
-			DrawSides();
-			DrawTop();
-		}
+  {
+	 if( ! topview )
+		DrawSides();
+	 
+	 DrawTop();
+  }
 }
 
 void Block::Load( Worldfile* wf, int entity )
@@ -410,7 +407,7 @@ void Block::Load( Worldfile* wf, int entity )
   char key[128];
   for( size_t p=0; p<pt_count; ++p )	      
 	 {
-		snprintf(key, sizeof(key), "point[%d]", p );
+		 snprintf(key, sizeof(key), "point[%d]", (int)p );
 		
 		pts.push_back( point_t(  wf->ReadTupleLength(entity, key, 0, 0),
 														 wf->ReadTupleLength(entity, key, 1, 0) ));
@@ -432,74 +429,6 @@ void Block::Load( Worldfile* wf, int entity )
 	wheel = wf->ReadInt( entity, "wheel", wheel );
 }
 
-
-// void Block::MapLine( const point_int_t& start,
-// 										 const point_int_t& end )
-// {  
-//   // line rasterization adapted from Cohen's 3D version in
-//   // Graphics Gems II. Should be very fast.  
-//   const int32_t dx( end.x - start.x );
-//   const int32_t dy( end.y - start.y );
-//   const int32_t sx(sgn(dx));  
-//   const int32_t sy(sgn(dy));  
-//   const int32_t ax(abs(dx));  
-//   const int32_t ay(abs(dy));  
-//   const int32_t bx(2*ax);	
-//   const int32_t by(2*ay);	 
-//   int32_t exy(ay-ax); 
-//   int32_t n(ax+ay);
-
-//   int32_t globx(start.x);
-//   int32_t globy(start.y);
-	
-//   while( n ) 
-//     {				
-//       Region* reg( mod->GetWorld()
-// 									 ->GetSuperRegionCreate( point_int_t(GETSREG(globx), 
-// 																											 GETSREG(globy)))
-// 									 ->GetRegion( GETREG(globx), 
-// 																GETREG(globy)));
-			
-// 			//printf( "REGION %p\n", reg );
-
-//       // add all the required cells in this region before looking up
-//       // another region			
-//       int32_t cx( GETCELL(globx) ); 
-//       int32_t cy( GETCELL(globy) );
-			
-//       // need to call Region::GetCell() before using a Cell pointer
-//       // directly, because the region allocates cells lazily, waiting
-//       // for a call of this method
-//       Cell* c( reg->GetCell( cx, cy ) );
-
-// 			// while inside the region, manipulate the Cell pointer directly
-//       while( (cx>=0) && (cx<REGIONWIDTH) && 
-// 						 (cy>=0) && (cy<REGIONWIDTH) && 
-// 						 n > 0 )
-// 				{					
-// 					c->AddBlock(this);
-					
-// 					// cleverly skip to the next cell (now it's safe to
-// 					// manipulate the cell pointer)
-// 					if( exy < 0 ) 
-// 						{
-// 							globx += sx;
-// 							exy += by;
-// 							c += sx;
-// 							cx += sx;
-// 						}
-// 					else 
-// 						{
-// 							globy += sy;
-// 							exy -= bx; 
-// 							c += sy * REGIONWIDTH;
-// 							cy += sy;
-// 						}
-// 					--n;
-// 				}
-//     }
-// }
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // utility functions to ensure block winding is consistent and matches OpenGL's default
 
@@ -518,11 +447,9 @@ void pi_ize(radians_t& angle)
     while (M_PI < angle)  angle -= 2 * M_PI;
 }
 
-typedef point_t V2;
-
 static
 /// util; How much was v1 rotated to get to v2?
-radians_t angle_change(V2 v1, V2 v2)
+radians_t angle_change(point_t v1, point_t v2)
 {
     radians_t a1 = atan2(v1.y, v1.x);
     positivize(a1);
@@ -545,7 +472,7 @@ vector<point_t> find_vectors(vector<point_t> const& pts)
     for (unsigned i = 0, n = pts.size(); i < n; ++i)
     {
         unsigned j = (i + 1) % n;
-        vs.push_back(V2(pts[j].x - pts[i].x, pts[j].y - pts[i].y));
+        vs.push_back(point_t(pts[j].x - pts[i].x, pts[j].y - pts[i].y));
     }
     assert(vs.size() == pts.size());
     return vs;

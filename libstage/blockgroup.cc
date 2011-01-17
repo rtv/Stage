@@ -37,13 +37,6 @@ void BlockGroup::Clear()
   blocks.clear();
 }
 
-void BlockGroup::SwitchToTestedCells()
-{
-  // confirm the tentative pose for all blocks
-  FOR_EACH( it, blocks )
-	(*it)->SwitchToTestedCells();  
-}
-
 void BlockGroup::AppendTouchingModels( ModelPtrSet &v )
 {
   FOR_EACH( it, blocks )
@@ -101,16 +94,19 @@ void BlockGroup::CalcSize()
 }
 
 
-void BlockGroup::Map()
+void BlockGroup::Map( unsigned int layer )
 {
   FOR_EACH( it, blocks )
-	(*it)->Map();
+	(*it)->Map(layer);
 }
 
-void BlockGroup::UnMap()
+// defined in world.cc
+//void SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next );
+
+void BlockGroup::UnMap( unsigned int layer )
 {
-  FOR_EACH( it, blocks )
-	(*it)->UnMap();
+	FOR_EACH( it, blocks )
+		(*it)->UnMap(layer);
 }
 
 void BlockGroup::DrawSolid( const Geom & geom )
@@ -126,7 +122,7 @@ void BlockGroup::DrawSolid( const Geom & geom )
   glTranslatef( -offset.x, -offset.y, -offset.z );
   
   FOR_EACH( it, blocks )
-	(*it)->DrawSolid();
+	(*it)->DrawSolid(false);
 
   glPopMatrix();
 }
@@ -160,16 +156,20 @@ void BlockGroup::BuildDisplayList( Model* mod )
 	  displaylist = glGenLists(1);
 	  CalcSize();
 	}
-
+  
+  
   glNewList( displaylist, GL_COMPILE );	
     
+
+  // render each block as a polygon extruded into Z
+  
   Geom geom = mod->GetGeom();
-
+  
   Gl::pose_shift( geom.pose );
-
+  
   glScalef( geom.size.x / size.x,
-			geom.size.y / size.y,				
-			geom.size.z / size.z );
+				geom.size.y / size.y,				
+				geom.size.z / size.z );
   
   glTranslatef( -offset.x, -offset.y, -offset.z );
   
@@ -179,22 +179,26 @@ void BlockGroup::BuildDisplayList( Model* mod )
   
   mod->PushColor( mod->color );
   
+  //const bool topview =  dynamic_cast<WorldGui*>(mod->world)->IsTopView();
+  
   FOR_EACH( it, blocks )
-	{
-	  Block* blk = (*it);
+	 {
+		Block* blk = (*it);
 		
-	  if( (!blk->inherit_color) && (blk->color != mod->color) )
-		{
-		  mod->PushColor( blk->color );		
-		  blk->DrawSolid();
-		  mod->PopColor();
-		}
-	  else
-		blk->DrawSolid();
-	}
+		if( (!blk->inherit_color) && (blk->color != mod->color) )
+		  {
+			 mod->PushColor( blk->color );					 
+			 blk->DrawSolid(false);			
+			 mod->PopColor();
+		  }
+		else
+		  blk->DrawSolid(false);
+	 }
   
   mod->PopColor();
   
+  // outline each poly in a darker version of the same color
+
   glDisable(GL_POLYGON_OFFSET_FILL);
   
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -205,29 +209,25 @@ void BlockGroup::BuildDisplayList( Model* mod )
   c.g /= 2.0;
   c.b /= 2.0;
   mod->PushColor( c );
-
-  //c.Print( "color" );
-
-
+  
   FOR_EACH( it, blocks )
-	{
-	  Block* blk = *it;
+	 {
+		Block* blk = *it;
 		
-	  if( (!blk->inherit_color) && (blk->color != mod->color) )
-		{
-		  Color c = blk->color;
-		  c.r /= 2.0;
-		  c.g /= 2.0;
-		  c.b /= 2.0;
-		  mod->PushColor( c );
-		  //c.Print( "bar" );
-		  blk->DrawSolid();
-		  mod->PopColor();
-		}
-	  else
-		blk->DrawSolid();
-	}
-
+		if( (!blk->inherit_color) && (blk->color != mod->color) )
+		  {
+			 Color c = blk->color;
+			 c.r /= 2.0;
+			 c.g /= 2.0;
+			 c.b /= 2.0;
+			 mod->PushColor( c );
+			 blk->DrawSolid(false);
+			 mod->PopColor();
+		  }
+		else
+		  blk->DrawSolid(false);
+	 }
+  
   glDepthMask(GL_TRUE);
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   

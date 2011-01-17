@@ -118,7 +118,6 @@ bool World::lty::operator()(const Model* a, const Model* b) const
 	return ay < by;
 }
 		
-
 // static data members
 unsigned int World::next_id = 0;
 bool World::quit_all = false;
@@ -141,7 +140,7 @@ World::World( const std::string& name,
   quit( false ),
   show_clock( false ),
   show_clock_interval( 100 ), // 10 simulated seconds using defaults
-  thread_mutex(),
+  sync_mutex(),
   threads_working( 0 ),
   threads_start_cond(),
   threads_done_cond(),
@@ -163,7 +162,11 @@ World::World( const std::string& name,
   wf( NULL ),
   paused( false ),
   event_queues(1), // use 1 thread by default
-  sim_interval( 1e5 ) // 100 msec has proved a good default
+	pending_update_callbacks(),
+	active_energy(),
+	active_velocity(),
+  sim_interval( 1e5 ), // 100 msec has proved a good default
+	update_cb_count(0)
 {
   if( ! Stg::InitDone() )
     {
@@ -171,7 +174,7 @@ World::World( const std::string& name,
       exit(-1);
     }
  
-  pthread_mutex_init( &thread_mutex, NULL );
+  pthread_mutex_init( &sync_mutex, NULL );
   pthread_cond_init( &threads_start_cond, NULL );
   pthread_cond_init( &threads_done_cond, NULL );
  
@@ -220,6 +223,8 @@ bool World::UpdateAll()
   return quit;
 }
 
+
+
 void* World::update_thread_entry( std::pair<World*,int> *thread_info )
 {
   World* world = thread_info->first;
@@ -227,30 +232,32 @@ void* World::update_thread_entry( std::pair<World*,int> *thread_info )
 	
   //printf( "thread ID %d waiting for mutex\n", thread_instance );
 
-  pthread_mutex_lock( &world->thread_mutex );
-  
+  pthread_mutex_lock( &world->sync_mutex );  
+
   while( 1 )
     {
 		//printf( "thread ID %d waiting for start\n", thread_instance );
-
+		
       // wait until the main thread signals us
       //puts( "worker waiting for start signal" );
-
-      pthread_cond_wait( &world->threads_start_cond, &world->thread_mutex );
-      pthread_mutex_unlock( &world->thread_mutex );
-
-      //puts( "worker thread awakes" );
-
-      // consume events on the queue up to the current sim time
-      world->ConsumeQueue( thread_instance );
-	  	  
+		
+      pthread_cond_wait( &world->threads_start_cond, &world->sync_mutex );
+		
+		
+      pthread_mutex_unlock( &world->sync_mutex );
+		
+      //printf( "worker %u thread awakes for task %u\n", thread_instance, task );
+		
+		world->ConsumeQueue( thread_instance );
+		
+		
 		//printf( "thread %d done\n", thread_instance );
-
+		
       // done working, so increment the counter. If this was the last
       // thread to finish working, signal the main thread, which is
       // blocked waiting for this to happen
-	  
-      pthread_mutex_lock( &world->thread_mutex );	  
+		
+      pthread_mutex_lock( &world->sync_mutex );	  
       if( --world->threads_working == 0 )
 		  {
 			 //puts( "last worker signalling main thread" );
@@ -401,6 +408,9 @@ void World::Load( const std::string& worldfile_path )
     1e3 * wf->ReadFloat( entity, "interval_sim", this->sim_interval / 1e3 );
   
   this->worker_threads = wf->ReadInt( entity, "threads",  this->worker_threads );  
+
+	pending_update_callbacks.resize( worker_threads + 1 );
+
   if( worker_threads > 0 )
     {
       PRINT_WARN( "\nmulti-thread support is experimental and may not work properly, if at all." );
@@ -454,8 +464,8 @@ void World::Load( const std::string& worldfile_path )
 	 {
 		// all this is a hack and shouldn't be necessary
 		(*it)->blockgroup.CalcSize();
-		(*it)->UnMap();
-		(*it)->Map();
+		(*it)->UnMap(updates%2);
+		(*it)->Map(updates%2);
 		// to here
 
 		(*it)->InitControllers();
@@ -519,6 +529,7 @@ void World::AddUpdateCallback( world_callback_t cb,
 {
   // add the callback & argument to the list
   cb_list.push_back( std::pair<world_callback_t,void*>(cb, user) );
+
 }
 
 int World::RemoveUpdateCallback( world_callback_t cb, 
@@ -542,6 +553,31 @@ int World::RemoveUpdateCallback( world_callback_t cb,
 
 void World::CallUpdateCallbacks()
 {
+	// call model CB_UPDATE callbacks queued up by worker threads
+	size_t threads( pending_update_callbacks.size() );
+	int cbcount( 0 );
+	
+	for( size_t t(0); t<threads; ++t )
+		{
+			std::queue<Model*>& q( pending_update_callbacks[t] );
+			
+// 			printf( "pending callbacks for thread %u: %u\n", 
+// 							(unsigned int)t, 
+// 							(unsigned int)q.size() );
+			
+			cbcount += q.size();
+
+			while( ! q.empty() )
+				{
+					q.front()->CallUpdateCallbacks();
+					q.pop();
+				}
+		}
+	//	printf( "cb total %u (global %d)\n\n", (unsigned int)cbcount,update_cb_count );
+	
+	assert( update_cb_count >= cbcount );
+
+	// world callbacks
   FOR_EACH( it, cb_list )
     {  
       if( ((*it).first )( this, (*it).second ) )
@@ -564,40 +600,34 @@ void World::ConsumeQueue( unsigned int queue_num )
       Event ev( queue.top() );
       if( ev.time > sim_time ) break;
       queue.pop();
-      
-      //printf( "@ %llu next event ptr %p\n", sim_time, ev.mod );
+			
+      //printf( "Q%d @ %llu next event ptr %p cb %p\n", queue_num, sim_time, ev.mod, ev.cb );
       //std::string modelType = ev.mod->GetModelType();
       //printf( "@ %llu next event <%s %llu %s>\n",  sim_time, modelType.c_str(), ev.time, ev.mod->Token() ); 
       
-      if( ev.mod->subs > 0 ) // no subscriptions means the event is discarded
-        ev.mod->Update(); // update the model
+			ev.cb( ev.mod, ev.arg); // call the event's callback on the model			
     }
   while( !queue.empty() );
 }
 
 bool World::Update()
 {
+  //puts( "World::Update()" );
+	
+  // if we've run long enough, exit
+  if( PastQuitTime() ) 
+		return true;		
+	
   if( show_clock && ((this->updates % show_clock_interval) == 0) )
     {
       printf( "\r[Stage: %s]", ClockString().c_str() );
       fflush( stdout );
     }
-
-
-  //puts( "World::Update()" );
-  
-  // if we've run long enough, exit
-  if( PastQuitTime() ) 
-	 return true;		
-  
+	
   sim_time += sim_interval; 
-
-  FOR_EACH( it, active_velocity )
-	 (*it)->UpdatePose();
 	
-	
+  
 	// rebuild the sets sorted by position on x,y axis
-#if( 1 )
 	models_with_fiducials_byx.clear(); 
 	models_with_fiducials_byy.clear(); 
 	
@@ -606,40 +636,45 @@ bool World::Update()
 			models_with_fiducials_byx.insert( *it ); 
 			models_with_fiducials_byy.insert( *it ); 
 		}
-#endif
 
 	//printf( "x %lu y %lu\n", models_with_fiducials_byy.size(),
 	//			models_with_fiducials_byx.size() );
 
   // handle the zeroth queue synchronously in the main thread
   ConsumeQueue( 0 );
-    
+  
   // handle all the remaining queues asynchronously in worker threads
   if( worker_threads > 0 )
-    {
-      pthread_mutex_lock( &thread_mutex );
-      threads_working = worker_threads; 
-      // unblock the workers - they are waiting on this condition var
-      //puts( "main thread signalling workers" );
-      pthread_cond_broadcast( &threads_start_cond );
-	
-      // todo - take the 1th thread work here?
-	
-      // wait for all the last update job to complete - it will
-      // signal the worker_threads_done condition var
-      while( threads_working > 0  )
+	 {
+		pthread_mutex_lock( &sync_mutex );
+		threads_working = worker_threads; 
+		// unblock the workers - they are waiting on this condition var
+		//puts( "main thread signalling workers" );
+		pthread_cond_broadcast( &threads_start_cond );
+		pthread_mutex_unlock( &sync_mutex );		 
+		
+		// todo - take the 1th thread work here?
+		FOR_EACH( it, active_velocity )
+		  (*it)->Move();
+		
+		pthread_mutex_lock( &sync_mutex );
+		// wait for all the last update job to complete - it will
+		// signal the worker_threads_done condition var
+		while( threads_working > 0  )
 		  {
 			 //puts( "main thread waiting for workers to finish" );
-			 pthread_cond_wait( &threads_done_cond, &thread_mutex );
+			 pthread_cond_wait( &threads_done_cond, &sync_mutex );
 		  }
-      pthread_mutex_unlock( &thread_mutex );		 
-      //puts( "main thread awakes" );
+		pthread_mutex_unlock( &sync_mutex );		 
+		//puts( "main thread awakes" );
 		
-      // TODO: allow threadsafe callbacks to be called in worker
-      // threads		
-    }
-			 			
+		// TODO: allow threadsafe callbacks to be called in worker
+		// threads		
+	 }
+  
   dirty = true; // need redraw 
+  
+  // this stuff must be done in series here
   
   // world callbacks
   CallUpdateCallbacks();
@@ -662,9 +697,8 @@ unsigned int World::GetEventQueue( Model* mod ) const
 Model* World::GetModel( const std::string& name ) const
 {
   PRINT_DEBUG1( "looking up model name %s in models_by_name", name.c_str() );
-
-  std::map<std::string,Model*>::const_iterator it = 
-    models_by_name.find( name );
+	
+  std::map<std::string,Model*>::const_iterator it( models_by_name.find( name ) );
 	
   if( it == models_by_name.end() )
     {
@@ -728,7 +762,8 @@ RaytraceResult World::Raytrace( const Pose &gpose,
 {
   return Raytrace( Ray( mod, gpose, range, func, arg, ztest ));
 }
-		
+
+
 RaytraceResult World::Raytrace( const Ray& r )
 {
   //rt_cells.clear();
@@ -777,12 +812,14 @@ RaytraceResult World::Raytrace( const Ray& r )
   const double xjumpdist( fabs(xjumpx)+fabs(xjumpy) );
   const double yjumpdist( fabs(yjumpx)+fabs(yjumpy) );
 
+  const unsigned int layer( (updates+1) % 2 );
+  
   // these are updated as we go along the ray
   double xcrossx(0), xcrossy(0);
   double ycrossx(0), ycrossy(0);
   double distX(0), distY(0);
   bool calculatecrossings( true );
-	
+
   // Stage spends up to 95% of its time in this loop! It would be
   // neater with more function calls encapsulating things, but even
   // inline calls have a noticeable (2-3%) effect on performance.
@@ -813,7 +850,7 @@ RaytraceResult World::Raytrace( const Ray& r )
 					  (cy>=0) && (cy<REGIONWIDTH) && 
 					  n > 0 )
 				{			 
-				  FOR_EACH( it, c->blocks )
+				  FOR_EACH( it, c->blocks[layer] )
 					 {	      	      
 						Block* block( *it );
 						assert( block );
@@ -970,19 +1007,18 @@ void World::Reload( void )
   ForEachDescendant( _reload_cb, NULL );
 }
 
-
-void World::MapPoly( const PointIntVec& pts, Block* block )
+void World::MapPoly( const PointIntVec& pts, Block* block, unsigned int layer )
 {
-	const size_t pt_count = pts.size();
-	
-	for( size_t i(0); i<pt_count; ++i )
+  const size_t pt_count = pts.size();
+  
+  for( size_t i(0); i<pt_count; ++i )
 		{
-			const point_int_t& start = pts[i];
-			const point_int_t& end = pts[(i+1)%pt_count];
-				
-				// line rasterization adapted from Cohen's 3D version in
-				// Graphics Gems II. Should be very fast.  
-				const int32_t dx( end.x - start.x );
+			const point_int_t& start(pts[i] );
+			const point_int_t& end(pts[(i+1)%pt_count]);
+			
+			// line rasterization adapted from Cohen's 3D version in
+			// Graphics Gems II. Should be very fast.  
+			const int32_t dx( end.x - start.x );
 			const int32_t dy( end.y - start.y );
 			const int32_t sx(sgn(dx));  
 			const int32_t sy(sgn(dy));  
@@ -1001,7 +1037,8 @@ void World::MapPoly( const PointIntVec& pts, Block* block )
 					Region* reg( GetSuperRegionCreate( point_int_t(GETSREG(globx), 
 																												 GETSREG(globy)))
 											 ->GetRegion( GETREG(globx), 
-																		GETREG(globy)));
+																		GETREG(globy)));										
+					assert(reg);
 					
 					//printf( "REGION %p\n", reg );
 					
@@ -1020,7 +1057,7 @@ void World::MapPoly( const PointIntVec& pts, Block* block )
 								 (cy>=0) && (cy<REGIONWIDTH) && 
 								 n > 0 )
 						{					
-							c->AddBlock(block);
+							c->AddBlock(block, layer ); 
 							
 							// cleverly skip to the next cell (now it's safe to
 							// manipulate the cell pointer)
@@ -1040,7 +1077,7 @@ void World::MapPoly( const PointIntVec& pts, Block* block )
 								}
 							--n;
 						}
-				}
+				}			
 		}
 }
 
@@ -1056,19 +1093,15 @@ SuperRegion* World::AddSuperRegion( const point_int_t& sup )
 	
 	// set the lower left corner of the new superregion
   Extend( point3_t( (sup.x << SRBITS) / ppm,
-												(sup.y << SRBITS) / ppm,
-												0 ));
+										(sup.y << SRBITS) / ppm,
+										0 ));
 	
 	// top right corner of the new superregion
   Extend( point3_t( ((sup.x+1) << SRBITS) / ppm,
-												((sup.y+1) << SRBITS) / ppm,
-												0 ));
+										((sup.y+1) << SRBITS) / ppm,
+										0 ));
   //printf( "top right (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
   
-//   // map all jit models
-//   FOR_EACH( it, jit_render )
-// 	 (*it)->Map();
-
   return sr;
 }
 
@@ -1140,16 +1173,8 @@ void World:: RegisterOption( Option* opt )
 void World::Log( Model* mod )
 {
   LogEntry( sim_time, mod);
-
   printf( "log entry count %u\n", (unsigned int)LogEntry::Count() );
   //LogEntry::Print();
-}
-
-void World::Enqueue( unsigned int queue_num, usec_t delay, Model* mod )
-{
-  //printf( "enqueue at %llu %p %s\n", sim_time + delay, mod, mod->Token() );
-  
-  event_queues[queue_num].push( Event( sim_time + delay, mod ) );
 }
 
 bool World::Event::operator<( const Event& other ) const 

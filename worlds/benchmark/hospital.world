@@ -13,7 +13,7 @@ speedup -1 # as fast as possible
 paused 0
 
 # threads may help or hurt performance depending on your worldfile, machine and load
- threads 2
+ threads 7
 
 quit_time 60
 
@@ -26,7 +26,7 @@ window
   scale 12.611 
 
   show_data 1
-  interval 100
+  interval 200
 )
 
 # load an environment bitmap
