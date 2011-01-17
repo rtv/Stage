@@ -12,7 +12,7 @@ paused 0
 
 # time at which to pause (in GUI mode) or quit (in headless mode) the simulation
 # quit_time 3600 # 1 hour of simulated time
-quit_time 2000 
+# quit_time 2000 
 
 resolution 0.02
 

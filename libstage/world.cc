@@ -128,8 +128,6 @@ std::vector<std::string> World::args;
 World::World( const std::string& name, 
 							double ppm )
   : 
-  //bflock(),
-  //rwlock(),
   // private
   destroy( false ),
   dirty( true ),
@@ -176,9 +174,6 @@ World::World( const std::string& name,
       exit(-1);
     }
  
-  //pthread_mutex_init( &bflock, NULL );
-  //pthread_rwlock_init( &rwlock, NULL );
-
   pthread_mutex_init( &sync_mutex, NULL );
   pthread_cond_init( &threads_start_cond, NULL );
   pthread_cond_init( &threads_done_cond, NULL );
