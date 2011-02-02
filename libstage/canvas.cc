@@ -947,7 +947,7 @@ void Canvas::renderFrame()
 				(*it)->DataVisualizeTree( current_camera );
 		  }
 		  else if ( selected_models.size() > 0 ) {
-			 FOR_EACH( it, world->World::children )
+			 FOR_EACH( it, selected_models )
 				(*it)->DataVisualizeTree( current_camera );
 		  }
 		  else if ( last_selection ) {
