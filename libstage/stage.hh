@@ -1,6 +1,6 @@
 
-#ifndef STG_H
-#define STG_H
+#ifndef H
+#define H
 /*
  *  Stage : a multi-robot simulator. Part of the Player Project.
  * 
@@ -42,6 +42,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <pthread.h> 
+#include <arpa/inet.h>
 
 // C++ libs
 #include <cmath>
@@ -52,6 +53,7 @@
 #include <set>
 #include <queue>
 #include <algorithm>
+#include <iterator>
 
 // FLTK Gui includes
 #include <FL/Fl.H>
@@ -67,6 +69,12 @@
 #else
 #include <GL/glu.h>
 #endif 
+
+#include <config.h>
+#ifdef HAVE_BOOST_RANDOM
+#include <boost/random.hpp>
+#endif
+
 
 /** @brief The Stage library uses its own namespace */
 namespace Stg 
@@ -92,11 +100,20 @@ namespace Stg
   /** Vector of pointers to Models. */
   typedef std::vector<Model*> ModelPtrVec;
 
+  /** Iterator in a set of pointers to Models. */
+  typedef std::vector<Model*>::iterator ModelPtrVecIterator;
+
   /** Set of pointers to Blocks. */
   typedef std::set<Block*> BlockPtrSet;
 
   /** Vector of pointers to Cells.*/
   typedef std::vector<Cell*> CellPtrVec;
+
+#ifdef HAVE_BOOST_RANDOM
+  /** Define some types for the base boost random number generator. */
+  typedef boost::mt19937 BaseBoostGenerator;
+  typedef boost::mt19937 * BaseBoostGeneratorPtr;
+#endif
 
   /** Initialize the Stage library. Stage will parse the argument
 			array looking for parameters in the conventnioal way. */
@@ -884,6 +901,41 @@ namespace Stg
 		EraseAll( mod, models_with_fiducials );
 	 }
 
+    /** Keep a list of all models with WIFI.  This avoids searching the whole 
+        world for models with WIFI */
+    ModelPtrVec models_with_wifi;
+  
+  public:    
+    /** Add a model to the set of models with Wifi, if not already there. */
+    void WifiInsert( Model* mod )
+    {
+      if ( mod ) 
+      {
+        //Try to find the model in the vector
+        ModelPtrVecIterator location_iterator = std::find( models_with_wifi.begin(), models_with_wifi.end(), mod );
+
+        //Add it to the vec if it's not already there
+        if ( location_iterator == models_with_wifi.end() )
+          models_with_wifi.push_back(mod);
+      }
+    }//WifiInsert
+
+    /** Remove a model from the list of models with wifi, if it exists. */
+    void WifiErase( Model* mod )
+    {
+      if ( mod )
+        EraseAll( mod, models_with_wifi);
+    }//WifiErase
+
+    /** Get a pointer to the vector of all models with wifi */
+    ModelPtrVec* GetModelsWithWifi()
+    {
+      return &models_with_wifi;
+    }
+
+  private:
+
+
     double ppm; ///< the resolution of the world model in pixels per meter   
     bool quit; ///< quit this world ASAP  
 	 
@@ -1018,6 +1070,19 @@ namespace Stg
 						 const uint32_t sample_count,
 						 const bool ztest );
 		
+    //Raytracing specific to the WIFI model.
+    meters_t RaytraceWifi( const Pose &gpose, 
+              const meters_t range,
+              const ray_test_func_t func,
+              const Model* mod,		
+              const Model* target,		
+              const void* arg,
+              const bool ztest ); 
+		
+    meters_t RaytraceWifi( const Ray& r,
+                               const Model* target );
+
+    	
 		
     /** Enlarge the bounding volume to include this point */
     inline void Extend( point3_t pt );
@@ -3107,6 +3172,315 @@ namespace Stg
 		ActuatorType GetType() const { return actuator_type; }
 		point3_t GetAxis() const { return axis; }
   };
+  // WIFI MODEL --------------------------------------------------------
+  // Forward declare the wifi model so the comm system can make use of it.
+  class ModelWifi;
+  /**
+   * A base class for messages being passed between robots via Wifi.
+   *
+   */
+  class WifiMessageBase 
+  {
+    friend class ModelWifi;
+
+    protected:
+      std::string sender_mac;
+      in_addr_t sender_ip_in;
+      in_addr_t sender_netmask_in;
+      uint32_t sender_id;
+      
+      in_addr_t recipient_ip_in;
+      in_addr_t intended_recipient_ip_in;
+      in_addr_t recipient_netmask_in;
+      uint32_t  recipient_id;
+
+      std::string message;
+
+    public:
+      WifiMessageBase(){};
+      WifiMessageBase(const WifiMessageBase& toCopy);           ///< Copy constructor
+      WifiMessageBase& operator=(const WifiMessageBase& toCopy);///< Equals operator overload
+      virtual ~WifiMessageBase(){};
+
+      /**
+       * Clone a copy of the wifi message.  Used for making a deep copy of a wifi message and its subclasses
+       * when handling a pointer to the wifi message base class. 
+       */
+      virtual WifiMessageBase* Clone() { return new WifiMessageBase(*this); }; 
+
+      inline void SetMessage(const std::string & value) { message = value; };
+      inline const std::string & GetMessage() { return message; };
+
+      inline void SetSenderMac(const std::string & value) { sender_mac = value; };
+      inline const std::string & GetSenderMac() { return sender_mac; };
+
+      inline void SetSenderIp(in_addr_t value) { sender_ip_in = value; };
+      inline in_addr_t GetSenderIp() { return sender_ip_in; };
+
+      inline void SetSenderNetmask(in_addr_t value) { sender_netmask_in = value; };
+      inline in_addr_t GetSenderNetmask() { return sender_netmask_in; };
+
+      inline void SetSenderId(uint32_t value) { sender_id = value; };
+      inline uint32_t GetSenderId() { return sender_id; };
+
+      void SetBroadcastIp();
+      inline bool IsBroadcastIp() { return (recipient_ip_in & ~recipient_netmask_in) == ~recipient_netmask_in; };
+      inline void SetRecipientIp(in_addr_t value) { recipient_ip_in = value; };
+      inline in_addr_t GetRecipientIp() {return recipient_ip_in; };
+      inline void SetIntendedRecipientIp(in_addr_t value) { intended_recipient_ip_in = value; };
+      inline in_addr_t GetIntendedRecipientIp() {return intended_recipient_ip_in; };
+
+      inline void SetRecipientNetmask(in_addr_t value) { recipient_netmask_in = value; };
+      inline in_addr_t GetRecipientNetmask() { return recipient_netmask_in; };
+
+      inline void SetRecipientId(uint32_t value) { recipient_id = value; };
+      inline uint32_t GetRecipientId() {return recipient_id; };
+
+  };//end class WifiMessageBase
+
+ /**
+  * Interface for inter-robot communication
+  */
+  typedef void (*comm_rx_msg_fn_t)(WifiMessageBase * msg );
+
+  /**
+   * Communication class implements call-back based message passing for the Wifi model.
+   */
+  class Communication
+  {
+    private:
+    comm_rx_msg_fn_t ReceiveMsgFn;
+
+    void *arg;
+    
+    ModelWifi * wifi_p; ///< Pointer to the Wifi Model that this comm class is associated with
+
+    void SetMessageSender(WifiMessageBase * to_send); /// <<Set the sender props based on the fact we're sending it.
+    void SendMessage(WifiMessageBase * to_send); ///< Send wifi message to message addressee, taking into account robots in range.
+ 
+    public:
+    Communication( ModelWifi * parent_p );
+    ~Communication();
+  
+    void SendUnicastMessage(WifiMessageBase * to_send); ///< Send wifi message to specifc recipient if hey're in range.
+    void SendBroadcastMessage(WifiMessageBase * to_send); ///< Send wifi message to all robots in range.
+
+    bool IsReceiveMsgFnSet() { return this->ReceiveMsgFn; }; ///< Determine if receive message is set for robot.
+    void CallReceiveMsgFn(WifiMessageBase * msg) { this->ReceiveMsgFn( msg ); } ///< Call message receive Fn.
+    void SetReceiveMsgFn( comm_rx_msg_fn_t rxfn) { this->ReceiveMsgFn = rxfn; } ///< Set the receive message fn.
+
+  };//end class Communication
+
+
+  /**
+   * Enumerated type defining the different possible wifi models we can use.
+   */
+  enum WifiModelTypeEnum { FRIIS, ITU_INDOOR, LOG_DISTANCE, RAYTRACE, SIMPLE };
+
+  /**
+   * This class encapsulates the various configuration parameters of a robot using the simulated WIFI.
+   */
+  class WifiConfig
+  {
+    protected:
+      static const std::string MODEL_NAME_FRIIS;        ///< String constant used when parsing world file.
+      static const std::string MODEL_NAME_ITU_INDOOR;   ///< String constant used when parsing world file.
+      static const std::string MODEL_NAME_LOG_DISTANCE; ///< String constant used when parsing world file.
+      static const std::string MODEL_NAME_RAYTRACE;     ///< String constant used when parsing world file.
+      static const std::string MODEL_NAME_SIMPLE;       ///< String constant used when parsing world file.
+
+      std::string essid;    ///< Wifi network ESSID
+      std::string mac;      ///< MAC of the current WIFI interface
+      in_addr_t ip_in;      ///< IP address of the wifi interface
+      in_addr_t netmask_in; ///< Netmask of the inet address.
+      double power;         ///< Wifi transmission power
+      double sensitivity;   ///< Wifi transmission sensitivity
+      double freq;          ///< Wifi frequency
+      meters_t range;   ///< Range
+      WifiModelTypeEnum model; ///< Model type
+      double plc;           ///< distance power loss coefficient
+      double ple;           ///< path loss distance exponent
+      double sigma;         ///< standard derivation of gaussian random variable
+      double range_db;      ///< setting the individual ranges to render in render_cfg 
+      double wall_factor;   ///< Wall factor for use in raytracing
+      double power_dbm;     ///< Power loss in db/m
+      
+      /**
+       * The link success rate detemines the percent of time that
+       * links between two robots will be succesfully established.
+       * It can be used to simulate conditions where WIFI operation
+       * is erratic and prone to random failures.
+       * 100 = completely reliable linkups
+       * 0 = completely unreliable linkups
+       */
+      int link_success_rate;
+    public:
+      WifiConfig();
+
+      // All the setters
+      inline void SetEssid(const std::string & value) { essid = value; };
+      inline void SetMac(const std::string & value) {mac = value; };
+      inline void SetIp(const in_addr_t value) {ip_in = value; };
+      void        SetIp(const std::string & value) { ip_in = inet_addr(value.c_str()); };
+      inline void SetNetmask(const in_addr_t value) {netmask_in = value;};
+      void        SetNetmask(const std::string & value) { netmask_in = inet_addr(value.c_str()); }; 
+      inline void SetPower(const double value) {power = value; };
+      inline void SetSensitivity(const double value) {sensitivity = value; };
+      inline void SetFreq(const double value) {freq = value; };
+      inline void SetRange(const meters_t value) { range = value; };
+      inline void SetModel(WifiModelTypeEnum value) {model = value; };
+      void        SetModel(const std::string & value);
+      inline void SetPlc(const double value) {plc = value; };
+      inline void SetPle(const double value) {ple = value; };
+      inline void SetSigma(const double value) {sigma=value;};
+      inline void SetRangeDb(const double value) {range_db=value;};
+      inline void SetWallFactor(const double value) {wall_factor=value;};
+      inline void SetPowerDbm(const double value) {power_dbm = value;};
+      inline void SetLinkSuccessRate(const int value) { link_success_rate = value;};
+
+      //All the getters
+      inline std::string & GetEssid() { return essid; };
+      inline std::string & GetMac() { return mac; };
+      inline in_addr_t GetIp() { return ip_in; };
+      std::string  GetIpString() { std::string addr_str( inet_ntoa(*(struct in_addr *)&ip_in)); return addr_str; };
+      inline in_addr_t GetNetmask() { return netmask_in; };
+      std::string  GetNetmaskString() { std::string addr_str( inet_ntoa(*(struct in_addr *)&netmask_in)); return addr_str; };
+      inline double GetPower() { return power; };
+      inline double GetSensitivity() { return sensitivity; };
+      inline double GetFreq() { return freq; };
+      inline meters_t GetRange() { return range; };
+      inline WifiModelTypeEnum GetModel() { return model; };
+      const std::string & GetModelString();
+      inline double GetPlc() { return plc; };
+      inline double GetPle() { return ple; };
+      inline double GetSigma() { return sigma; };
+      inline double GetRangeDb() { return range_db; };
+      inline double GetWallFactor() { return wall_factor;};
+      inline double GetPowerDbm() { return power_dbm;};
+      inline int GetLinkSuccessRate() { return link_success_rate;};
+  };//end WifiConfig
+
+  /**
+   * Information about a robot that is the wifi neighbor of the current robot.
+   */
+  class WifiNeighbor 
+  {
+    protected:
+      uint32_t id;            ///< id of neighbor
+      Pose pose;              ///< global pose of corresponding neighbour.
+      std::string essid;      ///< essid of the neighbor
+      std::string mac;        ///< mac of the neighbor
+      in_addr_t ip_in;        ///< ip address of the neighbor
+      in_addr_t netmask_in;   ///< netmask of the neighbor
+      double freq;            ///< Neighbor's frequency
+      double db;              ///< Neighbor's signal-strength
+
+      Communication * comm;   ///< Neighbor's comm interface
+    public:
+      WifiNeighbor() { comm = NULL; };
+      ~WifiNeighbor() { comm = NULL; essid.clear(); mac.clear();};
+
+      //All the setters
+      inline void SetId(const uint32_t value) { id = value; };
+      inline void SetPose(const Pose & value) { pose = value; };
+      inline void SetEssid(const std::string & value) { essid = value; };
+      inline void SetMac(const std::string & value) { mac = value; };
+      inline void SetIp(const in_addr_t value) { ip_in = value; };
+      inline void SetNetmask(const in_addr_t value) { netmask_in = value; };
+      inline void SetFreq(const double value) { freq = value; };
+      inline void SetDb(const double value) {db = value; };
+      inline void SetCommunication(Communication * value) { comm = value; };
+
+      //All the geters
+      inline uint32_t GetId() { return id; };
+      inline Pose & GetPose() { return pose; };
+      inline std::string & GetEssid() { return essid; };
+      inline std::string & GetMac() { return mac; };
+      inline in_addr_t GetIp() { return ip_in; };
+      inline in_addr_t GetNetmask() { return netmask_in; };
+      inline double GetFreq() { return freq; };
+      inline double GetDb() { return db; };
+      inline Communication * GetCommunication() { return comm; };
+  };
+
+  /**
+   * Typedef defining a vector of neighbors
+   */
+  typedef std::vector<WifiNeighbor> WifiNeighborVec;
+
+  /** Wifi link information.
+  */
+  typedef struct
+  {
+    WifiNeighborVec neighbors;   ///< Information about each radio neighbor to the current wifi.
+  } wifi_data_t;
+
+  /**
+   * The Wifi Model class.
+   */
+  class ModelWifi : public Model
+  {
+    friend class Canvas;
+    friend class Communication;
+
+    private:
+    WifiConfig      wifi_config;   /* Wifi configuration parameters for the current WIFI interace. */
+    wifi_data_t link_data;     /* Link information for each neighbor */
+
+    void CompareModels( Model * value, Model * user );
+    bool DoesLinkSucceed();
+    std::string GetUniqueMac( World* world ); 
+    static Option showWifi;
+
+    unsigned int random_seed; ///< seed for the random number generator
+    
+#ifdef HAVE_BOOST_RANDOM
+    // Note: Although boost is not strictly required for random number generation, the quality of the random
+    // numbers available using the boost library is generally going to be higher.  
+
+    // We will use a random number generator unique to EACH 
+    BaseBoostGenerator random_generator; ///< Boost random number generator
+    
+    // Define a uniform random number distribution of integer values between
+    // 1 and 6 inclusive.
+    typedef boost::uniform_int<> uniform_distribution_type;
+    typedef boost::variate_generator<BaseBoostGenerator&, uniform_distribution_type> BoostRandomIntGenerator;
+
+    // Define a normal distribution of doubles for the log distance function.
+    typedef boost::normal_distribution<> normal_distribution_type;
+    typedef boost::variate_generator<BaseBoostGenerator&, normal_distribution_type> BoostNormalGenerator;
+
+    //Define the communication and normal distribution random number generators.
+    BoostRandomIntGenerator * comm_reliability_gen;
+    BoostNormalGenerator * normal_gen;
+#endif
+
+    public:
+    Communication comm;           ///< Inter-robot communication interface. 
+
+    // constructor
+    ModelWifi( World* world, Model* parent, const std::string& type );
+    // destructor
+    ~ModelWifi();
+
+    virtual void Startup();
+    virtual void Shutdown();
+    virtual void Update();
+    virtual void Load();
+    virtual void DataVisualize( Camera* cam );
+
+    /** returns the quality of link to each neighbor */
+    wifi_data_t* GetLinkInfo( );
+
+    /** Append link information to the light of neighbors */
+    void AppendLinkInfo( ModelWifi* mod, double db );
+
+    // Get the user-tweakable configuration of the wifi model
+    WifiConfig * GetConfig( ) { return &wifi_config; };
+
+    Communication * GetCommunication( ) { return &comm; };
+
+  };//end class ModelWifi
 
 
 }; // end namespace stg
