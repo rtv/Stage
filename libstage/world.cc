@@ -985,8 +985,8 @@ RaytraceResult World::Raytrace( const Ray& r )
 
 // Stage spends 50-99% of its time in this method.
 meters_t World::RaytraceWifi( const Pose &gpose, 
-      const stg_meters_t range,
-      const stg_ray_test_func_t func,
+      const meters_t range,
+      const ray_test_func_t func,
       const Model* mod,		
       const Model* target,		
       const void* arg,
@@ -1059,7 +1059,10 @@ meters_t World::RaytraceWifi( const Ray& r,
   // inline calls have a noticeable (2-3%) effect on performance.
   while( n > 0  ) // while we are still not at the ray end
   { 
-    Region* reg( GetSuperRegionCached( GETSREG(globx), GETSREG(globy) )
+    point_int_t point;
+    point.x = GETSREG(globx);
+    point.y = GETSREG(globy);
+    Region* reg( GetSuperRegion( point )
               ->GetRegion( GETREG(globx), GETREG(globy) ));
 			
     if( reg->count ) // if the region contains any objects
@@ -1140,7 +1143,7 @@ meters_t World::RaytraceWifi( const Ray& r,
         }			 
         --n; // decrement the manhattan distance remaining
 													 							
-				  //rt_cells.push_back( stg_point_int_t( globx, globy ));
+				  //rt_cells.push_back( point_int_t( globx, globy ));
       }//end while					
 			//printf( "leaving populated region\n" );
 		}							 
@@ -1201,7 +1204,7 @@ meters_t World::RaytraceWifi( const Ray& r,
         distY -= distX;
         distX = xjumpdist;
 							
-        //rt_candidate_cells.push_back( stg_point_int_t( xcrossx, xcrossy ));
+        //rt_candidate_cells.push_back( point_int_t( xcrossx, xcrossy ));
       }			 
       else // crossing a region boundary up or down
       {		  
@@ -1217,10 +1220,10 @@ meters_t World::RaytraceWifi( const Ray& r,
 							
         distX -= distY;
         distY = yjumpdist;
-        //rt_candidate_cells.push_back( stg_point_int_t( ycrossx, ycrossy ));
+        //rt_candidate_cells.push_back( point_int_t( ycrossx, ycrossy ));
       }//end cross region boundary up/down
     }//end calculatecrossings	
-    //rt_cells.push_back( stg_point_int_t( globx, globy ));
+    //rt_cells.push_back( point_int_t( globx, globy ));
   } 
 
   if (dist_pixels.x > dist_pixels.y) {

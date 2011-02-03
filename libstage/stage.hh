@@ -1,6 +1,6 @@
 
-#ifndef H
-#define H
+#ifndef STG_H
+#define STG_H
 /*
  *  Stage : a multi-robot simulator. Part of the Player Project.
  * 

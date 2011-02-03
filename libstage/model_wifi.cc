@@ -205,7 +205,7 @@ using namespace Stg;
 #define STG_DEFAULT_WIFI_WALL_FACTOR 1
 #define STG_DEFAULT_LINK_SUCCESS_RATE 100
 
-+//-----------------------WifiConfig stuff-----------------------------------
+//-----------------------WifiConfig stuff-----------------------------------
 
 const std::string WifiConfig::MODEL_NAME_FRIIS = "friis";
 const std::string WifiConfig::MODEL_NAME_ITU_INDOOR = "ITU indoor";
@@ -271,7 +271,7 @@ const std::string & WifiConfig::GetModelString()		{
 /**
  * Return list of link information.
  */
-stg_wifi_data_t* ModelWifi::GetLinkInfo( )
+wifi_data_t* ModelWifi::GetLinkInfo( )
 {
     return &link_data;
 }
@@ -361,7 +361,7 @@ ModelWifi::ModelWifi( World* world, Model* parent, const std::string& type )
 			// get the sensor's pose in global coords
   // Wifi is invisible
   SetObstacleReturn( 0 );
-  SetLaserReturn( LaserTransparent );
+  SetRangerReturn( false );
   SetBlobReturn( 0 );
   SetColor( Color() );
 
@@ -522,10 +522,10 @@ static bool wifi_raytrace_match( Model* hit, Model* finder,
   // Ignore the model that's looking and things that are invisible to
   // lasers  
   return( (!hit->IsRelated( finder )) && 
-          ( hit->vis.laser_return > 0) );
+          ( hit->vis.ranger_return > 0) );
 }//end wifi_raytrace_match
 
-stg_meters_t calc_distance( Model* mod1, 
+meters_t calc_distance( Model* mod1, 
                             Model* mod2, 
                             Pose* pose1,
                             Pose* pose2 )
@@ -582,6 +582,8 @@ bool ModelWifi::DoesLinkSucceed()
 #endif
     return !( random_num > wifi_config.GetLinkSuccessRate() );
 		}
+  return true;
+}
 void ModelWifi::CompareModels( Model * value, Model * user )
 {
   // 'user' is a wifi device
@@ -647,7 +649,7 @@ void ModelWifi::CompareModels( Model * value, Model * user )
 
     if ( loss <= ( cfg1->GetPowerDbm() - cfg2->GetSensitivity() ) )
     {
-      stg_meters_t me = calc_distance( mod1, mod2, &pose1, &pose2 );
+      meters_t me = calc_distance( mod1, mod2, &pose1, &pose2 );
       double new_loss = cfg1->GetWallFactor()*me*100+loss;
 
       if ( new_loss <=( cfg1->GetPowerDbm()-cfg2->GetSensitivity())  &&DoesLinkSucceed())
