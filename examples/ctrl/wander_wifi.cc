@@ -13,7 +13,7 @@ typedef struct
 {
   uint32_t id;
   ModelPosition* pos;
-  ModelLaser* laser;
+  ModelRanger* laser;
   ModelWifi* wifi;
   int avoidcount, randcount;
 } robot_t;
@@ -70,10 +70,10 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
   robot->randcount = 0;
   
   robot->pos = (ModelPosition*)mod;
-  robot->laser = (ModelLaser*)mod->GetChild( "laser:0" );
-  robot->laser->AddUpdateCallback( (stg_model_callback_t)LaserUpdate, robot );
+  robot->laser = (ModelRanger*)mod->GetChild( "laser:0" );
+  robot->laser->AddCallback( Model::CB_UPDATE, (model_callback_t)LaserUpdate, robot );
   robot->wifi = (ModelWifi*)mod->GetChild("wifi:0");
-  robot->wifi->AddUpdateCallback( (stg_model_callback_t)WifiUpdate, robot);
+  robot->wifi->AddCallback( Model::CB_UPDATE, (model_callback_t)WifiUpdate, robot);
   //robot->wifi->comm.SetArg( (void*)robot );    // set up the Rx function and argument
   //robot->wifi->comm.SetReceiveFn( ProcessData );
   robot->wifi->comm.SetReceiveMsgFn( ProcessMessage);
@@ -90,9 +90,9 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
 int LaserUpdate( Model* mod, robot_t* robot )
 {
   // get the data
-  uint32_t sample_count=0;
-	ModelLaser::Sample* scan = robot->laser->GetSamples( &sample_count );
-  if( ! scan )
+  uint32_t sample_count=robot->laser->GetSensors()[0].sample_count;
+  std::vector<meters_t> scan = robot->laser->GetRanges();
+  if( ! scan.size() )
     return 0;
   
   bool obstruction = false;
@@ -106,26 +106,26 @@ int LaserUpdate( Model* mod, robot_t* robot )
   for (uint32_t i = 0; i < sample_count; i++)
     {
 
-		if( verbose ) printf( "%.3f ", scan[i].range );
+		if( verbose ) printf( "%.3f ", scan[i] );
 
       if( (i > (sample_count/3)) 
 			 && (i < (sample_count - (sample_count/3))) 
-			 && scan[i].range < minfrontdistance)
+			 && scan[i] < minfrontdistance)
 		  {
 			 if( verbose ) puts( "  obstruction!" );
 			 obstruction = true;
 		  }
 		
-      if( scan[i].range < stopdist )
+      if( scan[i] < stopdist )
 		  {
 			 if( verbose ) puts( "  stopping!" );
 			 stop = true;
 		  }
       
       if( i > sample_count/2 )
-				minleft = std::min( minleft, scan[i].range );
+				minleft = std::min( minleft, scan[i] );
       else      
-				minright = std::min( minright, scan[i].range );
+				minright = std::min( minright, scan[i]);
     }
   
   if( verbose ) 

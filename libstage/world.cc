@@ -1088,8 +1088,9 @@ meters_t World::RaytraceWifi( const Ray& r,
         int hit=0;
 
         //Go through the blocks occupying the cell
-        FOR_EACH( it, c->blocks )
-        {	      	      
+
+        int layer = 0;
+        FOR_EACH( it, c->GetBlocks(layer) )        {
           Block* block( *it );
           assert( block );
 

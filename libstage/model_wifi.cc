@@ -361,7 +361,7 @@ ModelWifi::ModelWifi( World* world, Model* parent, const std::string& type )
 			// get the sensor's pose in global coords
   // Wifi is invisible
   SetObstacleReturn( 0 );
-  SetRangerReturn( false );
+  SetRangerReturn( 0.0f );
   SetBlobReturn( 0 );
   SetColor( Color() );
 
