@@ -795,7 +795,8 @@ void Model::Shutdown( void )
   
   world->active_energy.erase( this );
   world->active_velocity.erase( this );
-  
+	velocity_enable = false;
+
   // allows data visualizations to be cleared.
   NeedRedraw();
 }
