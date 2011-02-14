@@ -281,6 +281,9 @@ int FiducialData( Stg::Model* mod, av_msg_t* data )
   assert(mod);
   assert(data);
   
+	if( ! mod->HasSubscribers() )
+		mod->Subscribe();
+
   /* Will set the data pointer in arg data to point to this static
 	  struct, thus avoiding dynamic memory allocation. This is deeply
 	  non-reentrant! but fast and simple code. */
