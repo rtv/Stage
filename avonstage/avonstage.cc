@@ -13,6 +13,8 @@ extern "C" {
 #include "stage.hh"
 #include "config.h"
 
+const char* AVONSTAGE_VERSION = "1.0.0";
+
 const char* USAGE = 
   "USAGE:  stage [options] <worldfile1> [worldfile2 ... worldfileN]\n"
   "Available [options] are:\n"
@@ -110,9 +112,14 @@ int SetModelGeom(  Stg::Model* mod, av_geom_t* g )
   assert(mod);
   assert(g);
   
-  mod->SetGeom( Stg::Geom( Stg::Pose(g->pose[0], g->pose[1], g->pose[2], g->pose[5] ),
-									Stg::Size(g->extent[0], g->extent[1], g->extent[2] ) ));
-
+  mod->SetGeom( Stg::Geom( Stg::Pose(g->pose[0], 
+																		 g->pose[1], 
+																		 g->pose[2],
+																		 g->pose[5] ),
+													 Stg::Size(g->extent[0], 
+																		 g->extent[1], 
+																		 g->extent[2] )));
+	
   // force GUI update to see the change if Stage was paused
   mod->Redraw();
   
@@ -133,7 +140,7 @@ int GetModelGeom(  Stg::Model* mod, av_geom_t* g )
   g->pose[1] = ext.pose.y;
   g->pose[2] = ext.pose.a;
   g->extent[0] = ext.size.x;
-  g->extent[1]= ext.size.y;
+  g->extent[1] = ext.size.y;
   g->extent[2] = ext.size.z;
 
   return 0; // ok
@@ -506,8 +513,14 @@ int main( int argc, char* argv[] )
 			 port, 
 			 worldfilename );
   
+	char version[1024];
+	snprintf( version, 1024, "%s (%s-%s)",
+						AVONSTAGE_VERSION,
+						PROJECT,
+						VERSION );
+
   // avon
-  av_init( host.c_str(), port, rootdir.c_str(), verbose, PROJECT, VERSION );
+  av_init( host.c_str(), port, rootdir.c_str(), verbose, "AvonStage", version );
 
   av_install_generic_callbacks( (av_pva_set_t)SetModelPVA,
 										  (av_pva_get_t)GetModelPVA,
