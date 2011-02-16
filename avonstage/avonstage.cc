@@ -176,11 +176,73 @@ int RangerData( Stg::Model* mod, av_msg_t* data )
   
   rd.time = data->time;
 
-  for( unsigned int c=0; c<rd.transducer_count; c++ )
-	 {
-		av_ranger_transducer_data_t& t =	rd.transducers[c];
-		const Stg::ModelRanger::Sensor& s = sensors[c];
+	  
+  return 0; //ok
+}
 
+
+int RangerSet( Stg::Model* mod, av_msg_t* data )
+{
+  assert(mod);
+  assert(data);  
+  puts( "ranger set does nothing" );  
+  return 0; //ok
+}
+
+int RangerGet( Stg::Model* mod, av_msg_t* data )
+{
+  assert(mod);
+  assert(data);  
+
+  static av_ranger_t rgr;
+  bzero(&rgr,sizeof(rgr));
+
+  data->time = GetTime(mod);  
+  data->interface = AV_INTERFACE_RANGER;
+  data->data = (const void*)&rgr;  
+ 
+  rgr.time = data->time;
+  
+  Stg::ModelRanger* r = dynamic_cast<Stg::ModelRanger*>(mod);
+  
+  const std::vector<Stg::ModelRanger::Sensor>& sensors = r->GetSensors();
+  
+  rgr.transducer_count = sensors.size();
+  
+  assert( rgr.transducer_count <= AV_RANGER_TRANSDUCERS_MAX );
+  
+
+  for( unsigned int c=0; c<rgr.transducer_count; c++ )
+	 {		
+		// bearing
+		rgr.transducers[c].fov[0].min = -sensors[c].fov/2.0;
+		rgr.transducers[c].fov[0].max =  sensors[c].fov/2.0;
+		
+		//azimuth
+		rgr.transducers[c].fov[1].min = 0.0;
+		rgr.transducers[c].fov[1].max = 0.0;
+		
+		// range
+		rgr.transducers[c].fov[2].min = sensors[c].range.min;
+		rgr.transducers[c].fov[2].min = sensors[c].range.max;
+		
+		// pose 6dof
+		rgr.transducers[c].geom.pose[0] = sensors[c].pose.x;
+		rgr.transducers[c].geom.pose[1] = sensors[c].pose.y;
+		rgr.transducers[c].geom.pose[2] = sensors[c].pose.z;
+		rgr.transducers[c].geom.pose[3] = 0.0;
+		rgr.transducers[c].geom.pose[4] = 0.0;
+		rgr.transducers[c].geom.pose[5] = sensors[c].pose.a;
+
+		// extent 3dof
+		rgr.transducers[c].geom.extent[0] = sensors[c].size.x;
+		rgr.transducers[c].geom.extent[1] = sensors[c].size.y;
+		rgr.transducers[c].geom.extent[2] = sensors[c].size.z;
+
+		
+		av_ranger_transducer_data_t& t =	rgr.transducers[c];
+		const Stg::ModelRanger::Sensor& s = sensors[c];
+		
 		t.pose[0] = s.pose.x;
 		t.pose[1] = s.pose.y;
 		t.pose[2] = s.pose.z;
@@ -190,15 +252,15 @@ int RangerData( Stg::Model* mod, av_msg_t* data )
 		
 		const std::vector<Stg::meters_t>& ranges = s.ranges;
 		const std::vector<double>& intensities = s.intensities;
-
+		
 		assert( ranges.size() == intensities.size() );
-
+		
 		t.sample_count = ranges.size(); 
-				
+		
 		const double fov_max = s.fov / 2.0;
 		const double fov_min = -fov_max;
 		const double delta = (fov_max - fov_min) / (double)t.sample_count;
-			  
+		
 		for( unsigned int r=0; r<t.sample_count; r++ )
 		  {
 			 t.samples[r][AV_SAMPLE_BEARING] = fov_min + r*delta;
@@ -207,78 +269,6 @@ int RangerData( Stg::Model* mod, av_msg_t* data )
 			 t.samples[r][AV_SAMPLE_INTENSITY] = intensities[r];
 		  }
 	 }
-	  
-  return 0; //ok
-}
-
-int RangerCmd( Stg::Model* mod, av_msg_t* data )
-{
-  assert(mod);
-  assert(data);  
-  puts( "ranger command does nothing" );  
-  return 0; //ok
-}
-
-int RangerCfgSet( Stg::Model* mod, av_msg_t* data )
-{
-  assert(mod);
-  assert(data);  
-  puts( "ranger setcfg does nothing" );  
-  return 0; //ok
-}
-
-
-int RangerCfgGet( Stg::Model* mod, av_msg_t* data )
-{
-  assert(mod);
-  assert(data);  
-
-  static av_ranger_cfg_t cfg;
-  bzero(&cfg,sizeof(cfg));
-
-  data->time = GetTime(mod);  
-  data->interface = AV_INTERFACE_RANGER;
-  data->data = (const void*)&cfg;  
- 
-  cfg.time = data->time;
-  
-  Stg::ModelRanger* r = dynamic_cast<Stg::ModelRanger*>(mod);
-  
-  const std::vector<Stg::ModelRanger::Sensor>& sensors = r->GetSensors();
-  
-  cfg.transducer_count = sensors.size();
-  
-  assert( cfg.transducer_count <= AV_RANGER_TRANSDUCERS_MAX );
-  
-
-  for( unsigned int c=0; c<cfg.transducer_count; c++ )
-	 {		
-		// bearing
-		cfg.transducers[c].fov[0].min = -sensors[c].fov/2.0;
-		cfg.transducers[c].fov[0].max =  sensors[c].fov/2.0;
-		
-		//azimuth
-		cfg.transducers[c].fov[1].min = 0.0;
-		cfg.transducers[c].fov[1].max = 0.0;
-		
-		// range
-		cfg.transducers[c].fov[2].min = sensors[c].range.min;
-		cfg.transducers[c].fov[2].min = sensors[c].range.max;
-		
-		// pose 6dof
-		cfg.transducers[c].geom.pose[0] = sensors[c].pose.x;
-		cfg.transducers[c].geom.pose[1] = sensors[c].pose.y;
-		cfg.transducers[c].geom.pose[2] = sensors[c].pose.z;
-		cfg.transducers[c].geom.pose[3] = 0.0;
-		cfg.transducers[c].geom.pose[4] = 0.0;
-		cfg.transducers[c].geom.pose[5] = sensors[c].pose.a;
-
-		// extent 3dof
-		cfg.transducers[c].geom.extent[0] = sensors[c].size.x;
-		cfg.transducers[c].geom.extent[1] = sensors[c].size.y;
-		cfg.transducers[c].geom.extent[2] = sensors[c].size.z;
-	 }
-
   return 0; //ok
 }
 
@@ -331,15 +321,8 @@ int FiducialData( Stg::Model* mod, av_msg_t* data )
 	return 0;
 }
 
-int FiducialCmd( Stg::Model* mod, av_msg_t* data )
-{
-  assert(mod);
-  assert(data);  
-  puts( "fiducial command does nothing" );  
-  return 0; //ok
-}
 
-int FiducialCfgSet( Stg::Model* mod, av_msg_t* data )
+int FiducialSet( Stg::Model* mod, av_msg_t* data )
 {
   assert(mod);
   assert(data);  
@@ -348,7 +331,7 @@ int FiducialCfgSet( Stg::Model* mod, av_msg_t* data )
 }
 
 
-int FiducialCfgGet( Stg::Model* mod, av_msg_t* msg )
+int FiducialGet( Stg::Model* mod, av_msg_t* msg )
 {
 	assert(mod);
 	assert(msg);
@@ -380,7 +363,26 @@ int FiducialCfgGet( Stg::Model* mod, av_msg_t* msg )
 }
 
 
-typedef std::pair<std::string,av_interface_t> proto_iface_pair_t;
+class Reg
+{
+public:
+	std::string prototype;
+	av_interface_t interface;
+	av_prop_get_t getter;
+	av_prop_set_t setter;
+	
+	Reg( const std::string& prototype, 
+			 av_interface_t interface,
+			 av_prop_get_t getter,
+			 av_prop_set_t setter ) :
+		prototype(prototype), 
+		interface(interface),
+		getter(getter),
+		setter(setter)
+	{}
+};
+
+std::pair<std::string,av_interface_t> proto_iface_pair_t;
 
 int RegisterModel( Stg::Model* mod, void* dummy )
 { 	
@@ -388,26 +390,25 @@ int RegisterModel( Stg::Model* mod, void* dummy )
 	if( mod->TokenStr() == "_ground_model" )
 		return 0;
 	
-	static std::map<std::string,proto_iface_pair_t> type_table;
+	static std::map<std::string,Reg> type_table;
 	
 	if( type_table.size() == 0 ) // first call only
 		{
 			type_table[ "model" ] = 
-				proto_iface_pair_t( "generic", AV_INTERFACE_GENERIC );
+				Reg( "generic", AV_INTERFACE_GENERIC,NULL,NULL );
 			
 			type_table[ "position" ] = 
-				proto_iface_pair_t( "position2d", AV_INTERFACE_GENERIC );
+				Reg( "position2d", AV_INTERFACE_GENERIC,NULL,NULL );
 			
 			type_table[ "ranger" ] = 
-				proto_iface_pair_t( "ranger", AV_INTERFACE_RANGER );
+				Reg( "ranger", AV_INTERFACE_RANGER, RangerGet, RangerSet );
 			
 			type_table[ "fiducial" ] = 
-				proto_iface_pair_t( "fiducial", AV_INTERFACE_FIDUCIAL );
+				Reg( "fiducial", AV_INTERFACE_FIDUCIA, FiducualGet, FiducualSet );
 		}
 	
   printf( "[AvonStage] registering %s\n", mod->Token() );
-	
-	
+		
 	// look up the model type in the table
 
 	const std::map<std::string,proto_iface_pair_t>::iterator it = 
@@ -415,15 +416,17 @@ int RegisterModel( Stg::Model* mod, void* dummy )
 
 	if( it != type_table.end() ) // if we found it in the table
 		{			
-			av_interface_t interface = it->second.second;	
-			const std::string& prototype = it->second.first;			
 			Stg::Model* parent = mod->Parent();
 			const char* parent_name = parent ? parent->Token() : NULL;
 			
-			av_register_model( mod->Token(), prototype.c_str(), interface, parent_name, dynamic_cast<void*>(mod) );
-			return 0; // ok	
-
-			// todo?? recursively register the model's children, if any			
+			av_register_object( mod->Token(),
+													parent_name,  
+													it->prototype.c_str(), 
+													it->interface, 
+													it->getter,
+													it->setter,
+													dynamic_cast<void*>(mod) );
+			return 0; // ok
 		}
 	
 	// else
@@ -522,42 +525,24 @@ int main( int argc, char* argv[] )
   // avon
   av_init( host.c_str(), port, rootdir.c_str(), verbose, "AvonStage", version );
 
-  av_install_generic_callbacks( (av_pva_set_t)SetModelPVA,
-										  (av_pva_get_t)GetModelPVA,
-										  (av_geom_set_t)SetModelGeom,
-										  (av_geom_get_t)GetModelGeom );
-  
-  av_install_interface_callbacks( AV_INTERFACE_RANGER, 
-										(av_data_get_t)RangerData,
-										(av_cmd_set_t)RangerCmd,
-										(av_cfg_set_t)RangerCfgSet,
-										(av_cfg_get_t)RangerCfgGet );
-
-  av_install_interface_callbacks( AV_INTERFACE_FIDUCIAL, 
-										(av_data_get_t)FiducialData,
-										(av_cmd_set_t)FiducialCmd,
-										(av_cfg_set_t)FiducialCfgSet,
-										(av_cfg_get_t)FiducialCfgGet );
-
   
   // arguments at index [optindex] and later are not options, so they
   // must be world file names
   
-
   
   Stg::World* world = ( usegui ? 
-						 new Stg::WorldGui( 400, 300, worldfilename ) : 
-						 new Stg::World( worldfilename ) );
-
+												new Stg::WorldGui( 400, 300, worldfilename ) : 
+												new Stg::World( worldfilename ) );
+	
   world->Load( worldfilename );
   world->ShowClock( showclock );
-
+	
 	// now we have a world object, we can install a clock callback
 	av_install_clock_callbacks( (av_clock_get_t)GetTimeWorld, world );
 	
   // start the http server
   av_startup();
-
+	
   // register all models here  
   world->ForEachDescendant( RegisterModel, NULL );
  

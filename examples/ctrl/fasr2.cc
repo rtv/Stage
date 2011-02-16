@@ -448,7 +448,7 @@ public:
 				Node* last_node = NULL;
 
 				for( std::vector<ast::point_t>::const_reverse_iterator rit = path.rbegin();
-						 rit != path.rend();
+						 rit < path.rend();
 						 ++rit )			
 					{	
 						//printf( "%d, %d\n", it->x, it->y );
