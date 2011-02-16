@@ -436,10 +436,9 @@ public:
 																		goal,
 																		path );				
 				
-				//	if( ! result )
-				//printf( "FASR warning: plan failed to find path from (%.2f,%.2f) to (%.2f,%.2f)\n",
-				//				pose.x, pose.y, sp.x, sp.y );
-				
+				if( ! result )
+					printf( "FASR2 warning: plan failed to find path from (%.2f,%.2f) to (%.2f,%.2f)\n",
+									pose.x, pose.y, sp.x, sp.y );				
 				
 				graphp = new Graph();
 				
