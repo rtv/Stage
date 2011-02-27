@@ -22,7 +22,7 @@
     resolution                0.02
 	 show_clock                0
 	 show_clock_interval     100
-    threads                   0
+    threads                   1
 
     @endverbatim
 
@@ -61,14 +61,14 @@
 	 if $show_clock is enabled. The default is once every 10 simulated
 	 seconds. Smaller values slow the simulation down a little.
 
-    - threads <int>\n 
-    The number of worker threads to spawn. Some
+    - threads <int>\n The number of worker threads to spawn. Some
     models can be updated in parallel (e.g. laser, ranger), and
     running 2 or more threads here may make the simulation run faster,
     depending on the number of CPU cores available and the
     worldfile. As a guideline, use one thread per core if you have
     parallel-enabled high-resolution models, e.g. a laser with
-    hundreds or thousands of samples, or lots of models.
+    hundreds or thousands of samples, or lots of models. Defaults to
+    1. Values of less than 1 will be forced to 1.
 	 
     @par More examples
     The Stage source distribution contains several example world files in
@@ -145,7 +145,7 @@ World::World( const std::string& name,
   threads_start_cond(),
   threads_done_cond(),
   total_subs( 0 ), 
-  worker_threads( 0 ),
+  worker_threads( 1 ),
 
   // protected
   cb_list(NULL),
@@ -408,38 +408,38 @@ void World::Load( const std::string& worldfile_path )
     1e3 * wf->ReadFloat( entity, "interval_sim", this->sim_interval / 1e3 );
   
   this->worker_threads = wf->ReadInt( entity, "threads",  this->worker_threads );  
-
-	pending_update_callbacks.resize( worker_threads + 1 );
-
-  if( worker_threads > 0 )
+  if( this->worker_threads < 1 )
     {
-      PRINT_WARN( "\nmulti-thread support is experimental and may not work properly, if at all." );
-      
-      event_queues.resize( worker_threads + 1 );
-
-		//printf( "worker threads %d\n", worker_threads );
-		
-      // kick off the threads
-      for( unsigned int t=0; t<worker_threads; ++t )
-				{
-					// a little configuration for each thread can't be a local
-					// stack var, since it's accssed in the threads
-					std::pair<World*,int>* infop = new std::pair<World*,int>( this, t+1 );
-					
-					//printf( "starting thread %d with ID %d \n", (int)t, info[t].second );
-					
-					//normal posix pthread C function pointer
-					typedef void* (*func_ptr) (void*);
-					
-					pthread_t pt;
-					pthread_create( &pt,
-													NULL,
-													(func_ptr)World::update_thread_entry, 
-													infop );
-		  }
-      
-      printf( "[threads %u]", worker_threads );	
+      PRINT_WARN( "threads set to <1. Forcing to 1" );
+      this->worker_threads = 1;
     }
+  
+  pending_update_callbacks.resize( worker_threads + 1 );      
+  event_queues.resize( worker_threads + 1 );
+  
+  //printf( "worker threads %d\n", worker_threads );
+  
+  // kick off the threads
+  for( unsigned int t=0; t<worker_threads; ++t )
+    {
+      // a little configuration for each thread can't be a local
+      // stack var, since it's accssed in the threads
+      std::pair<World*,int>* infop = new std::pair<World*,int>( this, t+1 );
+      
+      //printf( "starting thread %d with ID %d \n", (int)t, info[t].second );
+      
+      //normal posix pthread C function pointer
+      typedef void* (*func_ptr) (void*);
+      
+      pthread_t pt;
+      pthread_create( &pt,
+		      NULL,
+		      (func_ptr)World::update_thread_entry, 
+		      infop );
+    }
+  
+  if( worker_threads > 1 ) 
+    printf( "[threads %u]", worker_threads );	
   
   // Iterate through entitys and create objects of the appropriate type
   for( int entity = 1; entity < wf->GetEntityCount(); ++entity )

@@ -85,7 +85,7 @@ set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
 # to explicitly link on Linux
 
 target_link_libraries( stagebinary stage )
-set_target_properties( stagebinary PROPERTIES LINK_FLAGS "${FLTK_LDFLAGS}" )
+#set_target_properties( stagebinary PROPERTIES LINK_FLAGS "${FLTK_LDFLAGS}" )
 
 IF(PROJECT_OS_LINUX)
   target_link_libraries( stagebinary stage pthread )
