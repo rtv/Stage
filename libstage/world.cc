@@ -22,7 +22,7 @@
     resolution                0.02
 	 show_clock                0
 	 show_clock_interval     100
-    threads                   1
+	 threads                   1
 
     @endverbatim
 
