@@ -148,7 +148,7 @@ World::World( const std::string& name,
   worker_threads( 1 ),
 
   // protected
-  cb_list(NULL),
+  cb_list(),
   extent(),
   graphics( false ), 
   option_table(),
