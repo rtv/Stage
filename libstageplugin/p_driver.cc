@@ -129,7 +129,8 @@ More examples can be found in the Stage source tree, in directory
   - where \<string\> is the filename of a Stage worldfile. Player will attempt to load the worldfile and attach interfaces to Stage models specified by the "model" keyword
 - model \<string\>
   - where \<string\> is the name of a Stage position model that will be controlled by this interface. Stage will search down the tree of models starting at the named model to find a previously-unassigned device of the right type.
-
+- usegui <\int\>
+  - if zero, Player/Stage runs with no GUI. If non-zero (the default), it runs with a GUI window.
 
 @par Provides
 

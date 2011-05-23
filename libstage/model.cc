@@ -237,7 +237,7 @@ bool Color::Load( Worldfile* wf, const int section )
 	return false;
 }
 
-void Size::Load( Worldfile* wf, const int section, const char* keyword )
+void Stg::Size::Load( Worldfile* wf, const int section, const char* keyword )
 {
 	if( CProperty* prop = wf->GetProperty( section, keyword ) )	
 		{
@@ -255,7 +255,7 @@ void Size::Load( Worldfile* wf, const int section, const char* keyword )
 		}
 }
 
-void Size::Save( Worldfile* wf, int section, const char* keyword ) const
+void Stg::Size::Save( Worldfile* wf, int section, const char* keyword ) const
 {
   wf->WriteTupleLength( section, keyword, 0, x );
   wf->WriteTupleLength( section, keyword, 1, y );
@@ -795,7 +795,8 @@ void Model::Shutdown( void )
   
   world->active_energy.erase( this );
   world->active_velocity.erase( this );
-  
+	velocity_enable = false;
+
   // allows data visualizations to be cleared.
   NeedRedraw();
 }

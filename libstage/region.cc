@@ -8,7 +8,7 @@
 #include "region.hh"
 using namespace Stg;
 
-std::vector<Cell*> Region::dead_pool;
+std::vector<Stg::Cell*> Region::dead_pool;
 
 Region::Region() : 
   cells(), 
@@ -289,7 +289,7 @@ void SuperRegion::DrawVoxels(unsigned int layer) const
 
 //std::set<Block*> mapped_blocks;
 
-void Cell::AddBlock( Block* b, unsigned int layer )
+void Stg::Cell::AddBlock( Block* b, unsigned int layer )
 {			
   assert( layer < 2 );
   blocks[layer].push_back( b );   
@@ -297,7 +297,7 @@ void Cell::AddBlock( Block* b, unsigned int layer )
   region->AddBlock();
 }
 
-void Cell::RemoveBlock( Block* b, unsigned int layer )
+void Stg::Cell::RemoveBlock( Block* b, unsigned int layer )
 {
   assert( layer<2 );
   

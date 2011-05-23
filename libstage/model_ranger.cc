@@ -70,7 +70,7 @@
 using namespace Stg;
 
 static const watts_t RANGER_WATTSPERSENSOR = 0.2;
-static const Size RANGER_SIZE( 0.15, 0.15, 0.2 ); // SICK LMS size
+static const Stg::Size RANGER_SIZE( 0.15, 0.15, 0.2 ); // SICK LMS size
 
 //static const Color RANGER_COLOR( 0,0,1 );
 static const Color RANGER_CONFIG_COLOR( 0,0,0.5 );

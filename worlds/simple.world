@@ -13,8 +13,6 @@ paused 1
 
 resolution 0.02
 
-threads 1
-
 # configure the GUI window
 window
 (

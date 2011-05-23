@@ -22,7 +22,7 @@ extern "C" int Init( Model* mod )
   printf( "\n[Rasterize] Raster of model \"%s\":\n", 
 	  mod->Token() );
   
-  Size modsz( mod->GetGeom().size );
+  Stg::Size modsz( mod->GetGeom().size );
 
   mod->Rasterize( data, dw, dh, 
 		  modsz.x / (float)dw, 

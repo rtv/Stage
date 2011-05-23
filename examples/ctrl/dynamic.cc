@@ -13,7 +13,7 @@ extern "C" int Init( Model* mod )
 		assert(child);
 
 		child->SetPose( Pose::Random( -1, 1, -1, 1 ) );
-		child->SetGeom( Geom( Pose(), Size( 0.1, 0.1, 0.1 ) ));
+		child->SetGeom( Geom( Pose(), Stg::Size( 0.1, 0.1, 0.1 ) ));
 		child->SetColor( Color(0,0,1,1) );
 	 }
   return 0; //ok
