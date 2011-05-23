@@ -75,5 +75,5 @@ int InterfaceWifi::ProcessMessage(QueuePointer& resp_queue,
                                   player_msghdr_t* hdr,
                                   void* data)
 {
-  // PROCESS INCOMING REQUESTS HERE
+  return -1;
 }

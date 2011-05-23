@@ -93,7 +93,7 @@ blobfinder
 						scan_width( DEFAULT_BLOBFINDERSCANWIDTH )
 {
   PRINT_DEBUG2( "Constructing ModelBlobfinder %d (%s)\n", 
-					 id, typestr );	
+					 id, type.c_str() );
   ClearBlocks();
   
   AddVisualizer( &this->vis, true );

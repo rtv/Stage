@@ -323,7 +323,7 @@ ModelWifi::ModelWifi( World* world, Model* parent, const std::string& type )
     comm(this)
 		{   
   PRINT_DEBUG2( "Constructing ModelWifi %d (%s)\n",
-            id, typestr );
+            id, type.c_str() );
   //Try to seed the RNG with /dev/random.  If the file is opened okay, then we can rely on /dev/random.
   //If it wasn't opened okay, then we'll rely on the standard fallback of using the time.  This isn't optimal in the least
   //and probably results in bad randomness on windows systems.  Oh well. :)

@@ -106,6 +106,7 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
                                 PLAYER_POSITION2D_REQ_GET_GEOM, 
                                 this->addr))
   {
+    printf("Got me a position2d request of size %d!\n", hdr->size);
     if(hdr->size == 0)
     {
       Geom geom = this->mod->GetGeom();
@@ -117,8 +118,9 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
       pgeom.pose.pyaw = geom.pose.a;
 
       pgeom.size.sl = geom.size.x; 
-      pgeom.size.sw = geom.size.y; 
+      pgeom.size.sw = geom.size.y;
 
+      printf("Pubrishing\n");
       this->driver->Publish( this->addr, resp_queue,
                              PLAYER_MSGTYPE_RESP_ACK, 
                              PLAYER_POSITION2D_REQ_GET_GEOM,
@@ -175,9 +177,9 @@ int InterfacePosition::ProcessMessage(QueuePointer &resp_queue,
 	  mod->est_pose.a = req->pose.pa;
 
       PRINT_DEBUG3( "set odometry to (%.2f,%.2f,%.2f)",
-                    pose.x,
-                    pose.y,
-                    pose.a );
+                    req->pose.px,
+                    req->pose.py,
+                    req->pose.pa );
 
       this->driver->Publish( this->addr, resp_queue, 
                              PLAYER_MSGTYPE_RESP_ACK, 

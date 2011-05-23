@@ -104,7 +104,7 @@ ModelPosition::ModelPosition( World* world,
   posevis()
 {
   PRINT_DEBUG2( "Constructing ModelPosition %d (%s)\n", 
-					 id, typestr );
+					 id, type.c_str() );
   
   // assert that Update() is reentrant for this derived model
   thread_safe = false;
@@ -217,7 +217,7 @@ void ModelPosition::Load( void )
 
 void ModelPosition::Update( void  )
 { 
-  PRINT_DEBUG1( "[%lu] position update", this->world->sim_time );
+  PRINT_DEBUG1( "[%lu] position update", this->world->SimTimeNow());
 
   // stop by default
   Velocity vel(0,0,0,0);
@@ -230,7 +230,7 @@ void ModelPosition::Update( void  )
 			 {
 				PRINT_DEBUG( "velocity control mode" );
 				PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
-								  this->token, 
+								  this->token.c_str(),
 								  this->goal.x, 
 								  this->goal.y, 
 								  this->goal.a );
