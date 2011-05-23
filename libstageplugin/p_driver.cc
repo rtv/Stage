@@ -516,7 +516,7 @@ Interface* StgDriver::LookupDevice( player_devaddr_t addr )
 int StgDriver::Subscribe(QueuePointer &queue,player_devaddr_t addr)
 {
   if( addr.interf == PLAYER_SIMULATION_CODE )
-    return 0; // ok
+    return 1; // unimplemented, let Player handle subscription
 
   Interface* device = this->LookupDevice( addr );
 
@@ -528,7 +528,7 @@ int StgDriver::Subscribe(QueuePointer &queue,player_devaddr_t addr)
     }
 
   puts( "failed to find a device" );
-  return 1; // error
+  return -1; // error
 }
 
 

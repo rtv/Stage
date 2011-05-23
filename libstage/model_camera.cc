@@ -103,7 +103,7 @@ ModelCamera::ModelCamera( World* world,
   _pitch_offset( 0.0 )  
 {
 	PRINT_DEBUG2( "Constructing ModelCamera %d (%s)\n", 
-			id, typestr );
+			id, type.c_str() );
 
 	WorldGui* world_gui = dynamic_cast< WorldGui* >( world );
 	

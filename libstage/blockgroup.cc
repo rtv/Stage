@@ -255,7 +255,7 @@ void BlockGroup::LoadBlock( Model* mod, Worldfile* wf, int entity )
   
 void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile* wf )
 {
-  PRINT_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile );
+  PRINT_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile.c_str() );
 	
 	std::string full;
   
@@ -268,7 +268,7 @@ void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfil
 			free( workaround_const );
 		}
   
-  PRINT_DEBUG1( "attempting to load image %s", full );
+  PRINT_DEBUG1( "attempting to load image %s", full.c_str() );
 	
 	std::vector<rotrect_t> rects;
   unsigned int width, height;

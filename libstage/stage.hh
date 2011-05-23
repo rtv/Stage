@@ -1,4 +1,4 @@
-
+//#define DEBUG 1
 #ifndef STG_H
 #define STG_H
 /*
