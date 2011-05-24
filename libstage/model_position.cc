@@ -61,15 +61,20 @@ using namespace Stg;
 
     @par Details
  
-    - drive "diff", "omni" or "car"\n
-    select differential-steer model(like a Pioneer), omnidirectional mode or carlike (velocity and steering angle).
-    - localization "gps" or "odom"\n
-    if "gps" the position model reports its position with perfect accuracy. If "odom", a simple odometry model is used and position data drifts from the ground truth over time. The odometry model is parameterized by the odom_error property.
+    - drive "diff", "omni" or "car"
+      -select differential-steer model(like a Pioneer), omnidirectional mode or carlike (velocity and steering angle).
+
+    - localization "gps" or "odom"
+      -if "gps" the position model reports its position with perfect accuracy. If "odom", a simple odometry model is used and position data drifts from the ground truth over time. The odometry model is parameterized by the odom_error property.
+
     - localization_origin [x y z theta]
-    - set the origin of the localization coordinate system. By default, this is copied from the model's initial pose, so the robot reports its position relative to the place it started out. Tip: If localization_origin is set to [0 0 0 0] and localization is "gps", the model will return its true global position. This is unrealistic, but useful if you want to abstract away the details of localization. Be prepared to justify the use of this mode in your research! 
+      - set the origin of the localization coordinate system. By default, this is copied from the model's initial pose, so the robot reports its position relative to the place it started out. Tip: If localization_origin is set to [0 0 0 0] and localization is "gps", the model will return its true global position. This is unrealistic, but useful if you want to abstract away the details of localization. Be prepared to justify the use of this mode in your research!
+
     - odom_error [x y z theta]
-    - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
-    - wheelbase <float,meters>\nThe wheelbase used for the car steering model. Only used if drive is set to "car". Defaults to 1.0m\n
+      - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
+
+    - wheelbase <float,meters>
+      -The wheelbase used for the car steering model. Only used if drive is set to "car". Defaults to 1.0m\n
 */
 
 
