@@ -88,7 +88,7 @@ target_link_libraries( stagebinary stage )
 
 IF(PROJECT_OS_LINUX)
   target_link_libraries( stagebinary stage pthread )
-  set_target_properties( stagebinary PROPERTIES LINK_FLAGS "${FLTK_LDFLAGS}")
+  set_target_properties( stagebinary PROPERTIES LINK_FLAGS "${FLTK_LDFLAGS}" )
 ENDIF(PROJECT_OS_LINUX)
 
 INSTALL(TARGETS stagebinary stage
