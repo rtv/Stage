@@ -40,12 +40,12 @@ gripper
 
 @par Details
 
-- autosnatch < 0 or 1>\n
-  iff 1, gripper will close automatically when break beams are broken
-- paddle_size [ <float x> <float y < float z> ]\n
-  Gripper paddle size as a proportion of the model's body size (0.0 to 1.0)
-- paddle_state [ <string open/close> <string up/down> ]\n
-  Gripper arms state, either "open" or "closed", and lift state, either "up" or "down"
+- autosnatch < 0 or 1>
+  - iff 1, gripper will close automatically when break beams are broken
+- paddle_size [ <float x> <float y < float z> ]
+  - Gripper paddle size as a proportion of the model's body size (0.0 to 1.0)
+- paddle_state [ <string open/close> <string up/down> ]
+  - Gripper arms state, either "open" or "closed", and lift state, either "up" or "down"
 */
 
 

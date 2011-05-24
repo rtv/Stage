@@ -50,10 +50,10 @@ actuator
 
 @par Details
 
-- type "linear" or "rotational"\n
-  the style of actuator. Rotational actuators may only rotate about the z axis (i.e. 'yaw')
+- type "linear" or "rotational"
+  - the style of actuator. Rotational actuators may only rotate about the z axis (i.e. 'yaw')
 - axis
-  if a linear actuator the axis that the actuator will move along
+  - if a linear actuator the axis that the actuator will move along
  */
   
 static const double WATTS_KGMS = 5.0; // cost per kg per meter per second

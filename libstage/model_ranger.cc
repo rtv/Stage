@@ -56,9 +56,9 @@
      -  per-transducer version of the ssize property. Overrides the common setting.
    - sview [float float float]
    - [range_min range_max fov] 
-   - minimum range and maximum range in meters, field of view angle in degrees. Currently fov has no effect on the sensor model, other than being shown in the confgiuration graphic for the ranger device.
+     - minimum range and maximum range in meters, field of view angle in degrees. Currently fov has no effect on the sensor model, other than being shown in the confgiuration graphic for the ranger device.
    - sview[\<transducer index\>] [float float float]
-   - per-transducer version of the sview property. Overrides the common setting.
+     - per-transducer version of the sview property. Overrides the common setting.
 
 */
 

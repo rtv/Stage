@@ -58,15 +58,15 @@ camera
 
 @par Details
  
-- resolution [ width:<int> height:<int> ]\n
-  the resolution of the pixel samples
-- range [ min:<float> max:<float> ]\n
-  the range reported by the camera, in meters. Objects closer than `min', or farther than `max' will not be displayed. 
-  The smaller the `min' number, the less persision in depth - don't set this value too close to 0.
-- fov [ horizontal: <float> vertical: <float> ]\n
-  angle, in degrees, for the horizontal and vertical field of view.
+- resolution [ width:<int> height:<int> ]
+  - The resolution of the pixel samples
+- range [ min:<float> max:<float> ]
+  - The range reported by the camera, in meters. Objects closer than `min', or farther than `max' will not be displayed.
+  - The smaller the `min' number, the less persision in depth - don't set this value too close to 0.
+- fov [ horizontal: <float> vertical: <float> ]
+  - Angle, in degrees, for the horizontal and vertical field of view.
 - pantilt [ pan:<float> tilt:<float> ]
-  angle, in degrees, where the camera is looking. pan is the left-right positioning, and tilt is the up-down positioning.
+  - Angle, in degrees, where the camera is looking. pan is the left-right positioning, and tilt is the up-down positioning.
 */
 
 //caclulate the corss product, and store results in the first vertex

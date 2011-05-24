@@ -66,15 +66,15 @@ blobfinder
 
 @par Details
  
-- colors_count <int>\n
-  number of colors being tracked
-- colors [ col1:<string> col2:<string> ... ]\n
-  A list of quoted strings defining the colors detected in each channel, using color names from the X11-style color database (ex. "black", "red").
-  The number of strings should match colors_count.
-- image [ width:<int> height:<int> ]\n
-  dimensions of the image in pixels. This determines the blobfinder's resolution
-- range <float>\n
-  maximum range of the sensor in meters.
+- colors_count <int>
+  - number of colors being tracked
+- colors [ col1:<string> col2:<string> ... ]
+  - A list of quoted strings defining the colors detected in each channel, using color names from the X11-style color database (ex. "black", "red").
+  - The number of strings should match colors_count.
+- image [ width:<int> height:<int> ]
+  - dimensions of the image in pixels. This determines the blobfinder's resolution
+- range <float>
+  - maximum range of the sensor in meters.
 
  */
 

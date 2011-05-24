@@ -25,13 +25,13 @@ API: Stg::ModelBlinkenlight
 @verbatim
 blinkenlight
 (
-# generic model properties
-size3 [0.02 0.02 0.02]
+  # generic model properties
+  size3 [0.02 0.02 0.02]
 
-# type-specific properties
-period 250
-dutycycle 1.0
-enabled 1
+  # type-specific properties
+  period 250
+  dutycycle 1.0
+  enabled 1
 )
 @endverbatim
 
@@ -40,11 +40,11 @@ enabled 1
 @par Details
  
 - enabled int 
-- if 0, the light is off, else it is on
+  - if 0, the light is off, else it is on
 - period int
-- the period of one on/of cycle, in msec
+  - the period of one on/of cycle, in msec
 - dutycycle float
-- the ratio of on-time to off-time
+  - the ratio of on-time to off-time
  */
 
 //#define DEBUG 1
