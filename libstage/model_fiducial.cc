@@ -51,17 +51,17 @@ fiducial
 
 @par Details
  
-- range_min <float>\n
-  the minimum range reported by the sensor, in meters. The sensor will detect objects closer than this, but report their range as the minimum.
-- range_max <float>\n
-  the maximum range at which the sensor can detect a fiducial, in meters. The sensor may not be able to uinquely identify the fiducial, depending on the value of range_max_id.
-- range_max_id <float>\n
-  the maximum range at which the sensor can detect the ID of a fiducial, in meters.
+- range_min <float>
+  - the minimum range reported by the sensor, in meters. The sensor will detect objects closer than this, but report their range as the minimum.
+- range_max <float>
+  - the maximum range at which the sensor can detect a fiducial, in meters. The sensor may not be able to uinquely identify the fiducial, depending on the value of range_max_id.
+- range_max_id <float>
+  - the maximum range at which the sensor can detect the ID of a fiducial, in meters.
 - fov <float>
-  the angular field of view of the scanner, in radians.
-- ignore_zloc <1/0>\n
-  default is 0.  When set to 1, the fiducial finder ignores the z component when checking a fiducial.  Using the default behaviour, a short object would not been seen
-  by a fiducial finder placed on top of a tall robot.  With this flag set to 1, the fiducial finder will see the shorter robot.   
+  - the angular field of view of the scanner, in radians.
+- ignore_zloc <1/0>
+  - default is 0.  When set to 1, the fiducial finder ignores the z component when checking a fiducial.  Using the default behaviour, a short object would not been seen
+    by a fiducial finder placed on top of a tall robot.  With this flag set to 1, the fiducial finder will see the shorter robot.
  */
   
   ModelFiducial::ModelFiducial( World* world, 

@@ -156,7 +156,7 @@ is used to specify how hard it is for the signal to penetrate obstacles.
   - standard deviation used by Log Distance Path Loss Model
 - range_db
   - parameter used for visualization of radio wave propagation. It is usually set to a negative value
-to visualize a certain db range.
+    to visualize a certain db range.
 - wall_factor
   - factor reflects the strength of obstacles
   - random_seed <int>\n
