@@ -152,13 +152,21 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		player_msghdr_t* hdr,
 		void* data)
 {
+#if defined PLAYER_CAPABILTIES_REQ
 	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, PLAYER_CAPABILTIES_REQ, addr))
+#else
+	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, PLAYER_CAPABILITIES_REQ, addr))
+#endif
 	{
 		PLAYER_ERROR1("%p\n", data);
 		player_capabilities_req_t & cap_req = * reinterpret_cast<player_capabilities_req_t *> (data);
 		if (cap_req.type == PLAYER_MSGTYPE_REQ && (cap_req.subtype == PLAYER_SIMULATION_REQ_SET_POSE3D || cap_req.subtype == PLAYER_SIMULATION_REQ_GET_POSE3D))
 		{
+#if defined PLAYER_CAPABILTIES_REQ
 			this->driver->Publish(addr, resp_queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_CAPABILTIES_REQ);
+#else
+			this->driver->Publish(addr, resp_queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_CAPABILITIES_REQ);
+#endif
 			return 0;
 		}
 	}
