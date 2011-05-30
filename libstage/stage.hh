@@ -1,4 +1,3 @@
-//#define DEBUG 1
 #ifndef STG_H
 #define STG_H
 /*
@@ -2644,6 +2643,7 @@ namespace Stg
   /// %ModelBumper class
   class ModelBumper : public Model
   {
+  public:
     class BumperConfig
     {
     	public:
@@ -2671,6 +2671,7 @@ namespace Stg
     BumperConfig* bumpers;
     BumperSample* samples;
     
+  protected:
     virtual void Startup();
     virtual void Shutdown();
     virtual void Update();

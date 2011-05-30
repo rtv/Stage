@@ -222,7 +222,7 @@ void ModelPosition::Load( void )
 
 void ModelPosition::Update( void  )
 { 
-  PRINT_DEBUG1( "[%lu] position update", this->world->SimTimeNow());
+  PRINT_DEBUG1( "[%lu] position update", this->world->SimTimeNow() );
 
   // stop by default
   Velocity vel(0,0,0,0);
@@ -235,7 +235,7 @@ void ModelPosition::Update( void  )
 			 {
 				PRINT_DEBUG( "velocity control mode" );
 				PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
-								  this->token.c_str(),
+								  this->token.c_str(), 
 								  this->goal.x, 
 								  this->goal.y, 
 								  this->goal.a );

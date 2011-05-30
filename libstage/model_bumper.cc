@@ -69,7 +69,7 @@ ModelBumper::ModelBumper( World* world,
     bumpervis()
 {
   PRINT_DEBUG2( "Constructing ModelBumper %d (%s)\n", 
-		id, typestr );
+		id, type.c_str() );
 
   // Set up sensible defaults
 
@@ -119,7 +119,6 @@ void ModelBumper::Shutdown( void )
 
 void ModelBumper::Load( void )
 {
-  printf("LOADING BUMPER");
   Model::Load();
 
   if( wf->PropertyExists( wf_entity, "bcount" ) )
@@ -170,7 +169,7 @@ static bool bumper_match( Model* candidate,
 }	
 
 void ModelBumper::Update( void )
-{     
+{
   Model::Update();
 
   if( (bumpers == NULL) || (bumper_count < 1 ))
@@ -194,7 +193,7 @@ void ModelBumper::Update( void )
 					    bumper_match,
 					    NULL,
 					    false );
-		  printf("Bumper Hit: %d\n", ray.mod!=NULL ? 1 : 0);
+					    
       samples[t].hit = ray.mod;
       if (ray.mod) {
         samples[t].hit_point = point_t(ray.pose.x, ray.pose.y);
@@ -239,10 +238,10 @@ void ModelBumper::BumperVis::Visualize( Model* mod, Camera* cam )
     {
       glPushMatrix();
       if (bump->samples[t].hit) {
-        thickness = 0.02;
+        thickness = 0.05;
         glColor3f(1.0f, 0.0f, 0.0f);
       } else {
-        thickness = 0.01;
+        thickness = 0.05;
         glColor3f(0.0f, 1.0f, 0.0f);
       }
       glRotatef(bump->bumpers[t].pose.a, 0, 0, 1);
