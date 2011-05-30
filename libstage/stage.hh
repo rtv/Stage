@@ -68,6 +68,8 @@
 #include <GL/glu.h>
 #endif 
 
+#define DEBUG 1
+
 /** @brief The Stage library uses its own namespace */
 namespace Stg 
 {
@@ -2638,21 +2640,53 @@ namespace Stg
 	 void CommandDown() { SetCommand( CMD_DOWN ); }
   };
 
-
-  // \todo BUMPER MODEL --------------------------------------------------------
-
-  //   typedef struct
-  //   {
-  //     Pose pose;
-  //     meters_t length;
-  //   } bumper_config_t;
-
-  //   typedef struct
-  //   {
-  //     Model* hit;
-  //     point_t hit_point;
-  //   } bumper_sample_t;
-
+  // BUMPER MODEL --------------------------------------------------------
+  /// %ModelBumper class
+  class ModelBumper : public Model
+  {
+    class BumperConfig
+    {
+    	public:
+    		Pose pose;
+    		meters_t length;
+		};
+  
+  	class BumperSample
+  	{
+			public:
+				Model* hit;
+				point_t hit_point;
+		};
+  	  
+  
+  public:
+    ModelBumper( World* world, 
+						 Model* parent,
+						 const std::string& type );
+    virtual ~ModelBumper();
+		
+    virtual void Load();
+    
+    uint32_t bumper_count;
+    BumperConfig* bumpers;
+    BumperSample* samples;
+    
+    virtual void Startup();
+    virtual void Shutdown();
+    virtual void Update();
+    virtual void Print (char *prefix);
+    
+    class BumperVis : public Visualizer
+    {
+    public:
+      BumperVis();
+      virtual ~BumperVis();
+      virtual void Visualize( Model* mod, Camera* cam);
+    } bumpervis;
+    
+  private:
+  	static Option showBumperData;
+  };
 
   // FIDUCIAL MODEL --------------------------------------------------------
 
