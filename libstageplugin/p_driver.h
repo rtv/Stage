@@ -225,6 +225,17 @@ class InterfaceRanger : public InterfaceModel
 /* 	virtual void Publish(); */
 /* }; */
 
+class InterfaceCamera : public InterfaceModel
+{
+  private:
+ public:
+  InterfaceCamera(player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
+  virtual ~InterfaceCamera( void ){ /* TODO: clean up*/ };
+  virtual int ProcessMessage(QueuePointer & resp_queue,
+			      player_msghdr_t* hdr,
+			      void* data);
+  virtual void Publish( void );
+};
 
 class InterfacePower : public InterfaceModel
 {

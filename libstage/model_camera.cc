@@ -43,7 +43,7 @@ API: Stg::ModelCamera
 @verbatim
 camera
 (
-  # laser properties
+  # camera properties
   resolution [ 32 32 ]
   range [ 0.2 8.0 ]
   fov [ 70.0 40.0 ]
@@ -62,7 +62,7 @@ camera
   - The resolution of the pixel samples
 - range [ min:<float> max:<float> ]
   - The range reported by the camera, in meters. Objects closer than `min', or farther than `max' will not be displayed.
-  - The smaller the `min' number, the less persision in depth - don't set this value too close to 0.
+  - The smaller the `min' number, the less precision in depth - don't set this value too close to 0.
 - fov [ horizontal: <float> vertical: <float> ]
   - Angle, in degrees, for the horizontal and vertical field of view.
 - pantilt [ pan:<float> tilt:<float> ]
@@ -130,14 +130,7 @@ ModelCamera::ModelCamera( World* world,
 
 ModelCamera::~ModelCamera()
 {
-	if( _frame_data != NULL ) {
-		//dont forget about GetFrame() //TODO merge these together
-		delete[] _frame_data;
-		delete[] _frame_color_data;
-		delete[] _vertexbuf_cache;
-		delete[] _camera_quads;
-		delete[] _camera_colors;
-	}
+	this->ClearBuffers();
 }
 
 void ModelCamera::Load( void )
@@ -172,25 +165,19 @@ bool ModelCamera::GetFrame( void )
 	if( _width == 0 || _height == 0 )
 		return false;
 	
-	if( _frame_data == NULL ) {
-		if( _frame_data != NULL ) {
-			//don't forget about destructor
-			delete[] _frame_data;
-			delete[] _frame_color_data;
-			delete[] _vertexbuf_cache;
-			delete[] _camera_quads;
-			delete[] _camera_colors;
-		}
-		_frame_data = new GLfloat[ _width * _height ]; //assumes a max of depth 4
-		_frame_color_data = new GLubyte[ 4 * _width * _height ]; //for RGBA
-
-		_vertexbuf_cache = new ColoredVertex[ _width * _height ]; //for unit vectors
-		
-		_camera_quads_size = _height * _width * 4 * 3; //one quad per pixel, 3 vertex per quad
-		_camera_quads = new GLfloat[ _camera_quads_size ];
-		_camera_colors = new GLubyte[ _camera_quads_size ];
+	// Make sure everything is uninitialized
+	if( _frame_data != NULL ) {
+		this->ClearBuffers();
 	}
+	_frame_data = new GLfloat[ _width * _height ]; //assumes a max of depth 4
+	_frame_color_data = new GLubyte[ 4 * _width * _height ]; //for RGBA
 
+	_vertexbuf_cache = new ColoredVertex[ _width * _height ]; //for unit vectors
+	
+	_camera_quads_size = _height * _width * 4 * 3; //one quad per pixel, 3 vertex per quad
+	_camera_quads = new GLfloat[ _camera_quads_size ];
+	_camera_colors = new GLubyte[ _camera_quads_size ];
+	
 	//TODO overcome issue when glviewport is set LARGER than the window side
 	//currently it just clips and draws outside areas black - resulting in bad glreadpixel data
 	if( _width > _canvas->w() )
@@ -198,7 +185,7 @@ bool ModelCamera::GetFrame( void )
 	if( _height > _canvas->h() )
 		_height = _canvas->h();
 	
-	GLint viewport[4];
+	GLint viewport[4] = {0, 0, 0, 0};
 	glGetIntegerv(GL_VIEWPORT,viewport);
 	
 	glViewport( 0, 0, _width, _height );
@@ -206,8 +193,10 @@ bool ModelCamera::GetFrame( void )
 	_camera.SetProjection();
 	float height = GetGlobalPose().z;
 	//TODO reposition the camera so it isn't inside the model ( or don't draw the parent when calling renderframe )
-	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, height ); //TODO use something smarter than a #define - make it configurable
-	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 - _yaw_offset ); //-90.0 points the camera infront of the robot instead of pointing right
+	//TODO use something smarter than a #define - make it configurable
+	_camera.setPose( parent->GetGlobalPose().x, parent->GetGlobalPose().y, height ); 
+	//Yaw of -90.0 points the camera infront of the robot instead of pointing right
+	_camera.setYaw( rtod( parent->GetGlobalPose().a ) - 90.0 - _yaw_offset ); 
 	_camera.setPitch( 90.0 - _pitch_offset );
 	_camera.Draw();
 	
@@ -222,7 +211,7 @@ bool ModelCamera::GetFrame( void )
 					 GL_FLOAT, //GL_UNSIGNED_BYTE,
 					 _frame_data );
 	//transform length into linear length
-	float* data = ( float* )( _frame_data ); //TODO use static_cast here
+	float* data = static_cast<float*>( _frame_data ); //TODO use static_cast here
 	int buf_size = _width * _height;
 	for( int i = 0; i < buf_size; i++ )
 		data[ i ] = _camera.realDistance( data[ i ] );
@@ -231,8 +220,7 @@ bool ModelCamera::GetFrame( void )
 	glReadPixels(0, 0, _width, _height,
 				 GL_RGBA,
 				 GL_UNSIGNED_BYTE,
-				 _frame_color_data );		
-
+				 _frame_color_data );
 
 	glViewport( viewport[0], viewport[1], viewport[2], viewport[3] );
 	_canvas->invalidate();
@@ -344,3 +332,27 @@ void ModelCamera::DataVisualize( Camera* cam )
 
 }
 
+void ModelCamera::ClearBuffers(void)
+{
+  // A little pedantic...
+	if( _frame_data != NULL ) {
+		delete[] _frame_data;
+		_frame_data = NULL;
+	}
+	if (_frame_color_data != NULL) {
+		delete[] _frame_color_data;
+		_frame_color_data = NULL;
+	}
+	if (_vertexbuf_cache != NULL){
+		delete[] _vertexbuf_cache;
+		_vertexbuf_cache = NULL;
+	}
+	if (_camera_quads != NULL){
+		delete[] _camera_quads;
+		_camera_quads = NULL;
+	}
+	if (_camera_colors != NULL){
+		delete[] _camera_colors;
+		_camera_colors = NULL;
+	}
+}

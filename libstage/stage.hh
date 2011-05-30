@@ -2937,6 +2937,9 @@ namespace Stg
 	
 	 ///change the yaw
 	 void setYaw( float yaw ) { _yaw_offset = yaw; _valid_vertexbuf_cache = false; }
+	 
+ private:
+   void ClearBuffers(void);
   };
 
   // POSITION MODEL --------------------------------------------------------

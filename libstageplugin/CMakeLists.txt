@@ -8,6 +8,7 @@ set( stagepluginSrcs
 	     p_driver.cc
 	     p_actarray.cc
 	     p_blobfinder.cc
+	     p_camera.cc
 	     p_fiducial.cc
 	     p_gps.cc
 	     p_graphics.cc

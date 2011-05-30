@@ -377,9 +377,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 		ifsrc = new InterfaceSpeech( player_addr,  this, cf, section );
 		break;
 
-	// 	case PLAYER_CAMERA_CODE:
-	// 	  ifsrc = new InterfaceCamera( player_addr,  this, cf, section );
-	// 	  break;
+	case PLAYER_CAMERA_CODE:
+		ifsrc = new InterfaceCamera( player_addr,  this, cf, section );
+		break;
 
 	case PLAYER_GRAPHICS2D_CODE:
 		ifsrc = new InterfaceGraphics2d( player_addr,  this, cf, section );
