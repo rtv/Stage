@@ -30,8 +30,8 @@ void Model::Load()
 		if( !power_pack )
 		  power_pack = new PowerPack( this );
 		
-		joules_t j = wf->ReadFloat( wf_entity, "joules", 
-												  power_pack->GetStored() ) ;	 
+		joules_t j = wf->ReadFloat( wf_entity, "joules",  
+		  power_pack->GetStored() ) ;	 
 		
 		/* assume that the store is full, so the capacity is the same as
 			the charge */
@@ -45,7 +45,7 @@ void Model::Load()
 		  power_pack = new PowerPack( this );
 		
 		power_pack->SetCapacity( wf->ReadFloat( wf_entity, "joules_capacity",
-															 power_pack->GetCapacity() ) ); 		
+		  power_pack->GetCapacity() ) ); 		
 	 }
 
   if( wf->PropertyExists( wf_entity, "kjoules" ) )
@@ -54,7 +54,7 @@ void Model::Load()
 		  power_pack = new PowerPack( this );
 		
 		joules_t j = 1000.0 * wf->ReadFloat( wf_entity, "kjoules", 
-															  power_pack->GetStored() ) ;	 
+		   power_pack->GetStored() ) ;	 
 		
 		/* assume that the store is full, so the capacity is the same as
 			the charge */
@@ -68,7 +68,7 @@ void Model::Load()
 		  power_pack = new PowerPack( this );
 		
 		power_pack->SetCapacity( 1000.0 * wf->ReadFloat( wf_entity, "kjoules_capacity",
-																		 power_pack->GetCapacity() ) ); 		
+		  power_pack->GetCapacity() ) ); 		
 	 }
 
     

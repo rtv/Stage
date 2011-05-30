@@ -135,6 +135,19 @@ More examples can be found in the Stage source tree, in directory
 @par Provides
 
 The stage plugin driver provides the following device interfaces:
+ - actarray
+ - blobfinder
+ - fiducial
+ - gps
+ - graphics2d
+ - graphics3d
+ - gripper
+ - localize
+ - position2d
+ - power
+ - ranger
+ - simulation
+ - speech 
 
 */
 
@@ -248,9 +261,6 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
 				   &addr,
 				   type );
 
-  // Use same update interval as the model
-  this->publish_interval_msec = this->mod->GetUpdateInterval()/1000;
-    
   if( !this->mod )
     {
       printf( " ERROR! no model available for this device."
@@ -259,7 +269,10 @@ InterfaceModel::InterfaceModel(  player_devaddr_t addr,
       exit(-1);
       return;
     }
-
+    
+  // Use same update interval as the model
+  this->publish_interval_msec = this->mod->GetUpdateInterval()/1000;
+    
   if( !player_quiet_startup )
     printf( "\"%s\"\n", this->mod->Token() );
 }
@@ -376,11 +389,13 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 		ifsrc = new InterfaceGraphics3d( player_addr,  this, cf, section );
 		break;
 
-
-
-// 	case PLAYER_LOCALIZE_CODE:
-// 	  ifsrc = new InterfaceLocalize( player_addr,  this, cf, section );
-// 	  break;
+ 	case PLAYER_LOCALIZE_CODE:
+ 	  ifsrc = new InterfaceLocalize( player_addr,  this, cf, section );
+ 	  break;
+ 	   	
+ 	case PLAYER_GPS_CODE:
+ 	  ifsrc = new InterfaceGPS( player_addr,  this, cf, section );
+ 	  break;
 
 // 	case PLAYER_MAP_CODE:
 // 	  ifsrc = new InterfaceMap( player_addr,  this, cf, section );
@@ -394,9 +409,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 // 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
 // 	  break;
 
-// 	case PLAYER_POWER_CODE:
-// 	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
-// 	  break;
+ 	case PLAYER_POWER_CODE:
+ 	  ifsrc = new InterfacePower( player_addr,  this, cf, section );
+ 	  break;
 
 //  	case PLAYER_PTZ_CODE:
 //  	  ifsrc = new InterfacePtz( player_addr,  this, cf, section );
@@ -424,7 +439,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	      return;
 	    }
 
-	  // store the Interaface in our device list
+	  // store the Interface in our device list
 	  //g_ptr_array_add( this->devices, ifsrc );
 		devices.push_back( ifsrc );
 	}

@@ -11,6 +11,22 @@
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
 
+// WGS84 Parameters (Used in GPS model)
+#define WGS84_A		6378137.0		// major axis
+#define WGS84_B		6356752.31424518	// minor axis
+#define WGS84_F		0.0033528107		// ellipsoid flattening
+#define WGS84_E		0.0818191908		// first eccentricity
+#define WGS84_EP	0.0820944379		// second eccentricity
+// UTM Parameters (Used in GPS model)
+#define UTM_K0		0.9996			// scale factor
+#define UTM_FE		500000.0		// false easting
+#define UTM_FN_N	0.0			// false northing on north hemisphere
+#define UTM_FN_S	10000000.0		// false northing on south hemisphere
+#define UTM_E2		(WGS84_E*WGS84_E)	// e^2
+#define UTM_E4		(UTM_E2*UTM_E2)		// e^4
+#define UTM_E6		(UTM_E4*UTM_E2)		// e^6
+#define UTM_EP2		(UTM_E2/(1-UTM_E2))	// e'^2
+
 // foward declare;
 class Interface;
 class StgTime;
@@ -235,7 +251,6 @@ class InterfaceFiducial : public InterfaceModel
                              void* data);
 };
 
-
 class InterfaceActArray : public InterfaceModel
 {
  public:
@@ -312,6 +327,27 @@ class InterfaceLocalize : public InterfaceModel
   virtual int ProcessMessage(QueuePointer & resp_queue,
                              player_msghdr_t* hdr,
                              void* data);
+};
+
+class InterfaceGPS : public InterfaceModel
+{
+ public:
+  InterfaceGPS( player_devaddr_t addr,
+		     StgDriver* driver,
+		     ConfigFile* cf,
+		     int section );
+
+  virtual ~InterfaceGPS( void ){ /* TODO: clean up*/ };
+
+  virtual void Publish( void );
+  virtual int ProcessMessage(QueuePointer & resp_queue,
+                             player_msghdr_t* hdr,
+                             void* data);
+ private:
+  void XYtoLatLon(double x, double y, double *lat, double *lon);
+  void UTM(double lat, double lon, double *x, double *y);
+  double latitude_origin;
+  double longitude_origin;
 };
 
 class InterfaceMap : public InterfaceModel

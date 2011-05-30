@@ -26,54 +26,60 @@
  * CVS: $Id$
  */
 
-// DOCUMENTATION ------------------------------------------------------------
+
+#include "p_driver.h"
+using namespace Stg;
 
 /** @addtogroup player 
-@par Localize interface
-- PLAYER_LOCALIZE_DATA_HYPOTHS
+@par Power interface
+- PLAYER_POWER_DATA_STATE
 */
 
-// CODE ----------------------------------------------------------------------
 
-#include "p_driver.h" 
-
-
-InterfaceLocalize::InterfaceLocalize( player_devaddr_t addr, 
-				StgDriver* driver,
-				ConfigFile* cf,
-				int section )
-  : InterfaceModel( addr, driver, cf, section, NULL )
+InterfacePower::InterfacePower( player_devaddr_t addr, 
+				  StgDriver* driver,
+				  ConfigFile* cf,
+				  int section )
+  : InterfaceModel( addr, driver, cf, section, "" )
 { 
+  // nothing to see here. move along.
 }
 
-void InterfaceLocalize::Publish( void )
+
+void InterfacePower::Publish( void )
 {
-  player_localize_data_t loc;
-  memset( &loc, 0, sizeof(loc));
+	PowerPack* pp = this->mod->FindPowerPack();
+  if (pp)
+  {
+		
+		// translate stage data to player data packet
+		player_power_data_t pen;
+		memset(&pen, 0, sizeof(player_power_data_t));
+		
+		pen.valid = 0;
 
-  Pose pose;
-  model_get_pose( this->mod, &pose );
+		pen.valid |= PLAYER_POWER_MASK_JOULES;
+		pen.joules = pp->GetStored();
 
-  // only 1 hypoth - it's the truth!
-  loc.hypoths_count = 1;
-  loc.hypoths[0].mean.px = pose.x;
-  loc.hypoths[0].mean.py = pose.y;
-  loc.hypoths[0].mean.pa = pose.a;
+		pen.valid |= PLAYER_POWER_MASK_CHARGING;
+		pen.charging = pp->GetCharging();
 
-  // Write localize data
-  this->driver->Publish(this->addr, NULL,
-			PLAYER_MSGTYPE_DATA,
-			PLAYER_LOCALIZE_DATA_HYPOTHS,
-			(void*)&loc, sizeof(loc), NULL);
+		pen.valid |= PLAYER_POWER_MASK_PERCENT;
+		pen.percent = 100.0 * pp->GetStored() / pp->GetCapacity();
+
+		this->driver->Publish(this->addr,
+				PLAYER_MSGTYPE_DATA,
+				PLAYER_POWER_DATA_STATE,
+				(void*)&pen, sizeof(pen), NULL);
+	}
 }
 
-
-int InterfaceLocalize::ProcessMessage(MessageQueue* resp_queue,
-				      player_msghdr_t* hdr,
-				      void* data)
+int InterfacePower::ProcessMessage(QueuePointer &resp_queue,
+				    player_msghdr_t* hdr,
+				    void* data)
 {
   // Don't know how to handle this message.
-  PRINT_WARN2( "stage localize doesn't support message %d:%d.",
+  PRINT_WARN2( "stage laser doesn't support message %d:%d.",
 	       hdr->type, hdr->subtype);
   return(-1);
 }

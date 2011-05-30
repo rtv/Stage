@@ -12,6 +12,7 @@ SET( MIN_PLAYER 2.1.0 )
 
 OPTION (BUILD_PLAYER_PLUGIN "Build Player plugin" ON)
 OPTION (BUILD_LSPTEST "Build Player plugin tests" OFF)
+OPTION (BUILD_AVONSTAGE "Build Avon Stage" ON)
 OPTION (CPACK_CFG "[release building] generate CPack configuration files" ON)
 
 # todo - this doesn't work yet. Run Stage headless with -g.
@@ -192,7 +193,9 @@ ADD_SUBDIRECTORY(libstage)
 ADD_SUBDIRECTORY(examples)
 ADD_SUBDIRECTORY(assets)
 ADD_SUBDIRECTORY(worlds)
-ADD_SUBDIRECTORY(avonstage)		 
+IF (BUILD_AVONSTAGE)
+	ADD_SUBDIRECTORY(avonstage)		 
+ENDIF(BUILD_AVONSTAGE)
 
 IF ( BUILD_PLAYER_PLUGIN AND PLAYER_FOUND )
   ADD_SUBDIRECTORY(libstageplugin)

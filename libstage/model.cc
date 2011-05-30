@@ -58,90 +58,124 @@
 
     @par Details
  
-    - pose [ x:<float> y:<float> z:<float> heading:<float> ] \n
-    specify the pose of the model in its parent's coordinate system
+    - pose [ x:<float> y:<float> z:<float> heading:<float> ]
+      - Specify the pose of the model in its parent's coordinate system
 
-    - size [ x:<float> y:<float> z:<float> ]\n specify the size of the
-    model in each dimension
+    - size [ x:<float> y:<float> z:<float> ]
+      - Specify the size of the model in each dimension
 
-    - origin [ x:<float> y:<float> z:<float> heading:<float> ]\n
-    specify the position of the object's center, relative to its pose
+    - origin [ x:<float> y:<float> z:<float> heading:<float> ]
+      - Specify the position of the object's center, relative to its pose
 
-    - velocity [ x:<float> y:<float> z:<float> heading:<float>
-    omega:<float> ]\n Specify the initial velocity of the model. Note
-    that if the model hits an obstacle, its velocity will be set to
-    zero.
+    - velocity [ x:<float> y:<float> z:<float> omega:<float> ] 
+      - Specify the initial velocity of the model. Note
+      that if the model hits an obstacle, its velocity will be set to
+      zero.
  
-    - update_interval int (defaults to 100) The amount of simulated
-      time in milliseconds between calls to Model::Update(). Controls
-      the frequency with which this model's data is generated.
+    - update_interval <int>  
+      - The amount of simulated time in milliseconds between calls to Model::Update(). 
+      Controls the frequency with which this model's data is generated.
+      - Default: 100
 
-		- velocity_enable int (defaults to 0)\n Most models ignore their
-		velocity state. This saves on processing time since most models
-		never have their velocity set to anything but zero. Some
-		subclasses (e.g. ModelPosition) change this default as they are
-		expecting to move. Users can specify a non-zero value here to
-		enable velocity control of this model. This achieves the same as
-		calling Model::VelocityEnable()
+    - velocity_enable <int>
+      - Most models ignore their velocity state. This saves on processing time 
+      since most models never have their velocity set to anything but zero. Some
+      subclasses (e.g. ModelPosition) change this default as they are
+      expecting to move. Users can specify a non-zero value here to
+      enable velocity control of this model. This achieves the same as
+      calling Model::VelocityEnable()
+      - Default: 0
 
-    - color <string>\n specify the color of the object using a color
-    name from the X11 database (rgb.txt)
+    - color <string>
+      - specify the color of the object using a color name from the X11 database (rgb.txt)
 
-    - bitmap filename:<string>\n Draw the model by interpreting the
-    lines in a bitmap (bmp, jpeg, gif, png supported). The file is
-    opened and parsed into a set of lines.  The lines are scaled to
-    fit inside the rectangle defined by the model's current size.
+    - bitmap filename:<string>
+      - Draw the model by interpreting the
+      lines in a bitmap (bmp, jpeg, gif, png supported). The file is
+      opened and parsed into a set of lines.  The lines are scaled to
+      fit inside the rectangle defined by the model's current size.
 
-    - ctrl <string>\n Specify the controller module for the model, and
-    its argument string. For example, the string "foo bar bash" will
-    load libfoo.so, which will have its Init() function called with
-    the entire string as an argument (including the library name). It
-    is up to the controller to parse the string if it needs
-    arguments."
+    - ctrl <string>
+      - Specify the controller module for the model, and
+      its argument string. For example, the string "foo bar bash" will
+      load libfoo.so, which will have its Init() function called with
+      the entire string as an argument (including the library name). It
+      is up to the controller to parse the string if it needs
+      arguments."
  
-    - fiducial_return fiducial_id:<int>\n if non-zero, this model is
-    detected by fiducialfinder sensors. The value is used as the
-    fiducial ID.
+    - fiducial_return fiducial_id:<int>
+      - If non-zero, this model is
+      detected by fiducialfinder sensors. The value is used as the
+      fiducial ID.
 
-    - fiducial_key <int> models are only detected by fiducialfinders
-    if the fiducial_key values of model and fiducialfinder match. This
-    allows you to have several independent types of fiducial in the
-    same environment, each type only showing up in fiducialfinders
-    that are "tuned" for it.
+    - fiducial_key <int>
+      -  models are only detected by fiducialfinders
+      if the fiducial_key values of model and fiducialfinder match. This
+      allows you to have several independent types of fiducial in the
+      same environment, each type only showing up in fiducialfinders
+      that are "tuned" for it.
 
-    - obstacle_return <int>\n if 1, this model can collide with other
-    models that have this property set
+    - obstacle_return <int>
+      - If 1, this model can collide with other models that have this property set
 
-    - blob_return <int>\n if 1, this model can be detected in the
-    blob_finder (depending on its color)
+    - blob_return <int>
+      - If 1, this model can be detected in the blob_finder (depending on its color)
 
-    - ranger_return <float>\n This model is detected with this
-    reflectance value by ranger_model sensors. If negative, this model
-    is invisible to ranger sensors, and does not block propogation of
-    range-sensing rays. This models an idealized reflectance sensor,
-    and replaces the normal/bright reflectance of deprecated laser
-    model. Defaults to 1.0.
+    - ranger_return <float>
+      - This model is detected with this
+      reflectance value by ranger_model sensors. If negative, this model
+      is invisible to ranger sensors, and does not block propogation of
+      range-sensing rays. This models an idealized reflectance sensor,
+      and replaces the normal/bright reflectance of deprecated laser
+      model. 
+      - Defaults to 1.0.
 
-    - gripper_return <int>\n iff 1, this model can be gripped by a
-    gripper and can be pushed around by collisions with anything that
-    has a non-zero obstacle_return.
+    - gripper_return <int>
+      - If 1, this model can be gripped by a
+      gripper and can be pushed around by collisions with anything that
+      has a non-zero obstacle_return.
  
-    - gui_nose <int>\n if 1, draw a nose on the model showing its
-      heading (positive X axis)
+    - gui_nose <int>
+      - If 1, draw a nose on the model showing its heading (positive X axis)
 
-    - gui_grid <int>\n if 1, draw a scaling grid over the model
+    - gui_grid <int>
+      - If 1, draw a scaling grid over the model
 
-    - gui_outline <int>\n if 1, draw a bounding box around the model,
-    indicating its size
+    - gui_outline <int>
+      - If 1, draw a bounding box around the model, indicating its size
 
-    - gui_move <int>\n if 1, the model can be moved by the mouse in
-    the GUI window
+    - gui_move <int>
+      - If 1, the model can be moved by the mouse in the GUI window
 
-    - stack_children <int>\n If non-zero (the default), the coordinate
+    - stack_children <int>
+      - If non-zero (the default), the coordinate
       system of child models is offset in z so that its origin is on
       _top_ of this model, making it easy to stack models together. If
       zero, the child coordinate system is not offset in z, making it
       easy to define objects in a single local coordinate system.
+
+    - joules <float>
+      - How much electrical energy the model has, given in joules
+
+    - joules_capacity <float>
+      - The total energy capacity of the model, given in joules
+      - Default: value given for "joules" or "kjoules" (assume full charge)
+
+    - kjoules <float>
+      - How much electrical energy the model has, given in kilojoules
+
+    - kjoules_capacity <float>
+      - The total energy capacity of the model, given in kilojoules.
+      - Default: value given for "joules" or "kjoules" (assume full charge)
+
+    - watts <float>
+      - The power consumed by the model
+
+    - watts_give <float>
+      - If > 0, this model can transfer energy to models that have watts_take > 0
+
+    - watts_take <float>
+      - If > 0, this model can transfer energy from models that have watts_give > 0
 */
 
 // todo
