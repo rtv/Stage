@@ -137,6 +137,8 @@ More examples can be found in the Stage source tree, in directory
 The stage plugin driver provides the following device interfaces:
  - actarray
  - blobfinder
+ - bumper
+ - camera
  - fiducial
  - gps
  - graphics2d
@@ -147,7 +149,8 @@ The stage plugin driver provides the following device interfaces:
  - power
  - ranger
  - simulation
- - speech 
+ - speech
+ - wifi
 
 */
 
