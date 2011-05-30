@@ -28,39 +28,50 @@
 
 
 #include "p_driver.h"
-
-extern "C" { 
-int wifi_init( model_t* mod );
-}
+using namespace Stg;
 
 InterfaceWifi::InterfaceWifi( player_devaddr_t addr, 
                               StgDriver* driver,
                               ConfigFile* cf,
                               int section )
   
-  : InterfaceModel( addr, driver, cf, section, wifi_init )
+  : InterfaceModel( addr, driver, cf, section, "wifi" )
 {
   // nothing to do
 }
 
 void InterfaceWifi::Publish( void )
 {
-  wifi_data_t* sdata = (wifi_data_t*)mod->data;
+
+  ModelWifi* wifi =  dynamic_cast<ModelWifi*>(this->mod);
+  wifi_data_t* sdata = wifi->GetLinkInfo();
+  WifiConfig* config = wifi->GetConfig();
+
   assert(sdata);
 
   player_wifi_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
-
   // Translate the Stage-formatted sdata into the Player-formatted pdata
-  
+
+
+  pdata.links_count = sdata->neighbors.size();
+  if (pdata.links_count > 0)
+	  pdata.links = new player_wifi_link_t[pdata.links_count];
+
+  for (unsigned int i = 0; i < pdata.links_count; i++)
+  {
+	  memcpy(pdata.links[i].essid, sdata->neighbors[i].GetEssid().c_str(), 32);
+	  pdata.links[i].freq = round(sdata->neighbors[i].GetFreq());
+  }
+
   // Publish it
-  this->driver->Publish(this->addr, NULL,
+  this->driver->Publish(this->addr,
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_WIFI_DATA_STATE,
 			(void*)&pdata, sizeof(pdata), NULL);
 }
 
-int InterfaceWifi::ProcessMessage(MessageQueue* resp_queue,
+int InterfaceWifi::ProcessMessage(QueuePointer& resp_queue,
                                   player_msghdr_t* hdr,
                                   void* data)
 {

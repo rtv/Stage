@@ -4,6 +4,7 @@ SET( PLUGINS
      sink
      source
      wander
+     wander_wifi
 #	  wander_pioneer
 	  pioneer_flocking
     rasterize

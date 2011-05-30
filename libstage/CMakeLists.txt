@@ -8,6 +8,7 @@ set( stageSrcs
 	blockgroup.cc
 	camera.cc
 	color.cc
+  communication.cc
 	file_manager.cc
 	file_manager.hh
 	gl.cc
@@ -27,6 +28,7 @@ set( stageSrcs
 	model_load.cc
 	model_position.cc
 	model_ranger.cc
+  model_wifi.cc
 	option.cc
 	powerpack.cc
 	region.cc
@@ -61,7 +63,7 @@ set_target_properties( stage PROPERTIES
            LINK_FLAGS "${FLTK_LDFLAGS}"  
 )
 
-target_link_libraries( stage ${LTDL_LIB} )
+target_link_libraries( stage ${LTDL_LIB} ${boostRandomLib})
 
 set( stagebinarySrcs main.cc )
 set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )

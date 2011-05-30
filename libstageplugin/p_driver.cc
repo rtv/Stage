@@ -405,9 +405,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  ifsrc = new InterfaceGripper( player_addr,  this, cf, section );
 	  break;
 
-// 	case PLAYER_WIFI_CODE:
-// 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
-// 	  break;
+ 	case PLAYER_WIFI_CODE:
+ 	  ifsrc = new InterfaceWifi( player_addr,  this, cf, section );
+ 	  break;
 
  	case PLAYER_POWER_CODE:
  	  ifsrc = new InterfacePower( player_addr,  this, cf, section );

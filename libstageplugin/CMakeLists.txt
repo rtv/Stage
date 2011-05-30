@@ -20,6 +20,7 @@ set( stagepluginSrcs
 	     p_ranger.cc			 
 	     p_speech.cc
 	     p_simulation.cc
+	     p_wifi.cc
 	     stg_time.cc
 )
 
