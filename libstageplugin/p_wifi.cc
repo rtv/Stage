@@ -51,17 +51,35 @@ void InterfaceWifi::Publish( void )
 
   player_wifi_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
+  
   // Translate the Stage-formatted sdata into the Player-formatted pdata
-
-
   pdata.links_count = sdata->neighbors.size();
+  printf("Got %d links\n", pdata.links_count);
+  
   if (pdata.links_count > 0)
+  {
 	  pdata.links = new player_wifi_link_t[pdata.links_count];
+	  memset(pdata.links, 0, sizeof(player_wifi_link_t)*pdata.links_count);	  
+  }
 
   for (unsigned int i = 0; i < pdata.links_count; i++)
   {
-	  memcpy(pdata.links[i].essid, sdata->neighbors[i].GetEssid().c_str(), 32);
+  	unsigned int len = sdata->neighbors[i].GetEssid().length();
+	  memcpy(pdata.links[i].essid, sdata->neighbors[i].GetEssid().c_str(), len);
+	  pdata.links[i].essid_count = len;
+	  
+	  len = sdata->neighbors[i].GetMac().length();
+	  memcpy(pdata.links[i].mac, sdata->neighbors[i].GetMac().c_str(), len);
+	  pdata.links[i].mac_count = len;
+	  
+	  in_addr_t ipaddr = sdata->neighbors[i].GetIp();
+	  char* ipstr = inet_ntoa(*(struct in_addr*) &ipaddr);
+	  len = strlen(ipstr);
+	  memcpy(&pdata.links[i].mac, ipstr, len);
+	  pdata.links[i].mac_count = len;
+	  
 	  pdata.links[i].freq = round(sdata->neighbors[i].GetFreq());
+	  pdata.links[i].level = sdata->neighbors[i].GetDb();
   }
 
   // Publish it
@@ -69,6 +87,8 @@ void InterfaceWifi::Publish( void )
 			PLAYER_MSGTYPE_DATA,
 			PLAYER_WIFI_DATA_STATE,
 			(void*)&pdata, sizeof(pdata), NULL);
+			
+	delete[] pdata.links;
 }
 
 int InterfaceWifi::ProcessMessage(QueuePointer& resp_queue,

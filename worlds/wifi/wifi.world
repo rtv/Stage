@@ -1,33 +1,33 @@
 include "map.inc"
-
-# size of the world in meters
-size [16 16]
+include "../sick.inc"
 
 # set the resolution of the underlying raytrace model in meters
 resolution 0.02
 
-gui_interval 40
 interval_sim 100
-interval_real 20
+
 # configure the GUI window
 window
 ( 
-  size [ 591.000 638.000 ] 
-  center [-0.010 -0.040] 
-  scale 0.028 
+  size [ 635.000 666.000 ] 
+  center [-0.040 -0.274] 
+  scale 36.995
+  rotate [0 0]
+  show_data 1
 )
 
 map
 (
-  bitmap "bitmaps/cave.png"
-  size [16 16]
   name "cave"
+  bitmap "../bitmaps/cave.png"
+  size [16.0 16.0 0.8]
+  pose [0 0 0 0]
 )
 
 # define a wifi-equipped robot
 define commbot position
 (
-  size [0.25 0.25]
+  size [0.25 0.25 0.25]
 )
 
 # create a robot
@@ -35,7 +35,7 @@ commbot
 (
   name "robot1"
   color "red"
-  laser()
+  sicklaser()
   wifi(
       ip "192.168.0.2"
       mac "08:00:20:ae:fd:7e"
@@ -45,7 +45,7 @@ commbot
       sensitivity -45
       range_db -45
       )
-  pose [-6.5 -6.5 0]
+  pose [-6.5 -6.5 0 0]
 )
 
 # create another robot
@@ -53,7 +53,7 @@ commbot
 (
   name "robot2"
   color "blue"
-  laser()
+  sicklaser()
   wifi(
       ip "192.168.0.4"
       mac "08:00:20:ae:fd:6b"
@@ -63,14 +63,14 @@ commbot
       sensitivity -40
       range_db -40
       )
-  pose [-3.5 -2.5 0]
+  pose [-3.5 -2.5 0 0]
 )
 
 commbot
 (
   name "robot3"
   color "green"
-  laser()
+  sicklaser()
   wifi(
       range 6
       ip "192.168.0.6"
@@ -81,5 +81,5 @@ commbot
       sensitivity -40
       range_db -40
       )
-  pose [6.5 6.5 45]
+  pose [6.5 6.5 0 45]
 )
