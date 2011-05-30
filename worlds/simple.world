@@ -45,7 +45,7 @@ pioneer2dx
  
   # demonstrate a plugin controller, implemented in examples/ctrl/wander.cc
   # you probably should comment this out when using simple.cfg with Player
-  # ctrl "wander"
+  ctrl "wander"
 
   # report error-free position in world coordinates
   localization "gps"
