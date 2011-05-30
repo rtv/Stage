@@ -8,7 +8,7 @@
 #include "region.hh"
 using namespace Stg;
 
-std::vector<Stg::Cell*> Region::dead_pool;
+std::vector<Stg::Cell*> Stg::Region::dead_pool;
 
 Region::Region() : 
   cells(), 
