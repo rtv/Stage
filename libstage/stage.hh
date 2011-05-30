@@ -67,8 +67,6 @@
 #include <GL/glu.h>
 #endif 
 
-#define DEBUG 1
-
 /** @brief The Stage library uses its own namespace */
 namespace Stg 
 {
