@@ -66,7 +66,7 @@ void Stg::Gl::draw_string( float x, float y, float z, const char *str )
 {  
   glRasterPos3f( x, y, z );
   //printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str ); 
-  gl_draw( str );
+  gl_draw( str ); // fltk function
 }
 
 void Stg::Gl::draw_string_multiline( float x, float y, float w, float h,  const char *str, Fl_Align align ) 

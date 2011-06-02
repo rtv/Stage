@@ -1,5 +1,5 @@
 /** 
-	 $Rev$ 
+    $Rev$ 
 **/
 
 /** @defgroup model
@@ -24,7 +24,7 @@
     origin [ 0.0 0.0 0.0 0.0 ]
     velocity [ 0.0 0.0 0.0 0.0 ]
 
-		update_interval 100
+    update_interval 100
 
     color "red"
     color_rgba [ 0.0 0.0 0.0 1.0 ]
@@ -73,16 +73,16 @@
     zero.
  
     - update_interval int (defaults to 100) The amount of simulated
-      time in milliseconds between calls to Model::Update(). Controls
-      the frequency with which this model's data is generated.
+    time in milliseconds between calls to Model::Update(). Controls
+    the frequency with which this model's data is generated.
 
-		- velocity_enable int (defaults to 0)\n Most models ignore their
-		velocity state. This saves on processing time since most models
-		never have their velocity set to anything but zero. Some
-		subclasses (e.g. ModelPosition) change this default as they are
-		expecting to move. Users can specify a non-zero value here to
-		enable velocity control of this model. This achieves the same as
-		calling Model::VelocityEnable()
+    - velocity_enable int (defaults to 0)\n Most models ignore their
+    velocity state. This saves on processing time since most models
+    never have their velocity set to anything but zero. Some
+    subclasses (e.g. ModelPosition) change this default as they are
+    expecting to move. Users can specify a non-zero value here to
+    enable velocity control of this model. This achieves the same as
+    calling Model::VelocityEnable()
 
     - color <string>\n specify the color of the object using a color
     name from the X11 database (rgb.txt)
@@ -127,7 +127,7 @@
     has a non-zero obstacle_return.
  
     - gui_nose <int>\n if 1, draw a nose on the model showing its
-      heading (positive X axis)
+    heading (positive X axis)
 
     - gui_grid <int>\n if 1, draw a scaling grid over the model
 
@@ -138,10 +138,10 @@
     the GUI window
 
     - stack_children <int>\n If non-zero (the default), the coordinate
-      system of child models is offset in z so that its origin is on
-      _top_ of this model, making it easy to stack models together. If
-      zero, the child coordinate system is not offset in z, making it
-      easy to define objects in a single local coordinate system.
+    system of child models is offset in z so that its origin is on
+    _top_ of this model, making it easy to stack models together. If
+    zero, the child coordinate system is not offset in z, making it
+    easy to define objects in a single local coordinate system.
 */
 
 // todo
@@ -172,87 +172,91 @@ std::map<std::string, creator_t> Model::name_map;
 //static const members
 static const double DEFAULT_FRICTION = 0.0;
 
-void Bounds::Load( Worldfile* wf, const int section, const char* keyword )
+Bounds& Bounds::Load( Worldfile* wf, const int section, const char* keyword )
 {
-	if( CProperty* prop = wf->GetProperty( section, keyword ) )	
-		{
-			if( prop->values.size() != 2 )
-				{
-					puts( "" ); // newline
-					PRINT_ERR1( "Loading 1D bounds. Need a vector of length 2: found %d.\n", 
-											(int)prop->values.size() ); 
-					exit(-1);
-				}
+  if( CProperty* prop = wf->GetProperty( section, keyword ) )	
+    {
+      if( prop->values.size() != 2 )
+	{
+	  puts( "" ); // newline
+	  PRINT_ERR1( "Loading 1D bounds. Need a vector of length 2: found %d.\n", 
+		      (int)prop->values.size() ); 
+	  exit(-1);
+	}
 			
-			min = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
-			max = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
-		}
+      min = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
+      max = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
+    }
+
+  return *this;
 }
 
 bool Color::Load( Worldfile* wf, const int section )
 {
   if( wf->PropertyExists( section, "color" ))
-		{      
-			const std::string& colorstr = wf->ReadString( section, "color", "" );
-			if( colorstr != "" )
-				{
-					if( colorstr == "random" )
-						{
-							r = drand48();
-							g = drand48();
-							b = drand48();
-							a = 1.0;
-						}
-					else
-						{
-							Color c = Color( colorstr );
-							r = c.r;
-							g = c.g;
-							b = c.b;
-							a = c.a;
-						}
-				}
-			return true;
-		}        
+    {      
+      const std::string& colorstr = wf->ReadString( section, "color", "" );
+      if( colorstr != "" )
+	{
+	  if( colorstr == "random" )
+	    {
+	      r = drand48();
+	      g = drand48();
+	      b = drand48();
+	      a = 1.0;
+	    }
+	  else
+	    {
+	      Color c = Color( colorstr );
+	      r = c.r;
+	      g = c.g;
+	      b = c.b;
+	      a = c.a;
+	    }
+	}
+      return true;
+    }        
 	
   if( wf->PropertyExists( section, "color_rgba" ))
     {      
       if (wf->GetProperty(section,"color_rgba")->values.size() < 4)
-				{
-					PRINT_ERR1( "color_rgba requires 4 values, found %d\n", 
-											(int)wf->GetProperty(section,"color_rgba")->values.size() );
-					exit(-1);
-				}
+	{
+	  PRINT_ERR1( "color_rgba requires 4 values, found %d\n", 
+		      (int)wf->GetProperty(section,"color_rgba")->values.size() );
+	  exit(-1);
+	}
       else
-				{
-					r = wf->ReadTupleFloat( section, "color_rgba", 0, r );
-					g = wf->ReadTupleFloat( section, "color_rgba", 1, g );
-					b = wf->ReadTupleFloat( section, "color_rgba", 2, b );
-					a = wf->ReadTupleFloat( section, "color_rgba", 3, a );
-				}  
+	{
+	  r = wf->ReadTupleFloat( section, "color_rgba", 0, r );
+	  g = wf->ReadTupleFloat( section, "color_rgba", 1, g );
+	  b = wf->ReadTupleFloat( section, "color_rgba", 2, b );
+	  a = wf->ReadTupleFloat( section, "color_rgba", 3, a );
+	}  
 			
-			return true;
+      return true;
     }
 	
-	return false;
+  return false;
 }
 
-void Stg::Size::Load( Worldfile* wf, const int section, const char* keyword )
+Stg::Size& Stg::Size::Load( Worldfile* wf, const int section, const char* keyword )
 {
-	if( CProperty* prop = wf->GetProperty( section, keyword ) )	
-		{
-			if( prop->values.size() != 3 )
-				{
-					puts( "" ); // newline
-					PRINT_ERR1( "Loading size. Need a vector of length 3: found %d.\n", 
-											(int)prop->values.size() ); 
-					exit(-1);
-				}
+  if( CProperty* prop = wf->GetProperty( section, keyword ) )	
+    {
+      if( prop->values.size() != 3 )
+	{
+	  puts( "" ); // newline
+	  PRINT_ERR1( "Loading size. Need a vector of length 3: found %d.\n", 
+		      (int)prop->values.size() ); 
+	  exit(-1);
+	}
 			
-			x = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
-			y = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
-			z = atof( wf->GetPropertyValue( prop, 2 )) * wf->unit_length;
-		}
+      x = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
+      y = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
+      z = atof( wf->GetPropertyValue( prop, 2 )) * wf->unit_length;
+    }
+
+  return *this;
 }
 
 void Stg::Size::Save( Worldfile* wf, int section, const char* keyword ) const
@@ -262,25 +266,27 @@ void Stg::Size::Save( Worldfile* wf, int section, const char* keyword ) const
   wf->WriteTupleLength( section, keyword, 2, z );
 }
 
-void Pose::Load( Worldfile* wf, const int section, const char* keyword )
+Pose& Pose::Load( Worldfile* wf, const int section, const char* keyword )
 {
-	CProperty* prop = wf->GetProperty( section, keyword );	
-	
-	if( prop )
-		{
-			if( prop->values.size() != 4 )
-				{
-					puts( "" ); // newline
-					PRINT_ERR1( "Loading pose. Need a vector of length 4: found %d.\n", 
-											(int)prop->values.size() ); 
-					exit(-1);
-				}
-			
-			x = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
-			y = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
-			z = atof( wf->GetPropertyValue( prop, 2 )) * wf->unit_length;
-			a = atof( wf->GetPropertyValue( prop, 3 )) * wf->unit_angle;
-		}
+  CProperty* prop = wf->GetProperty( section, keyword );	
+  
+  if( prop )
+    {
+      if( prop->values.size() != 4 )
+	{
+	  puts( "" ); // newline
+	  PRINT_ERR1( "Loading pose. Need a vector of length 4: found %d.\n", 
+		      (int)prop->values.size() ); 
+	  exit(-1);
+	}
+      
+      x = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
+      y = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
+      z = atof( wf->GetPropertyValue( prop, 2 )) * wf->unit_length;
+      a = atof( wf->GetPropertyValue( prop, 3 )) * wf->unit_angle;
+    }
+  
+  return *this;
 }
 
 void Pose::Save( Worldfile* wf, const int section, const char* keyword )
@@ -301,7 +307,7 @@ Model::Visibility::Visibility() :
 { /* nothing to do */ }
 
 
-void Model::Visibility::Load( Worldfile* wf, int wf_entity )
+Model::Visibility& Model::Visibility::Load( Worldfile* wf, int wf_entity )
 {
   blob_return = wf->ReadInt( wf_entity, "blob_return", blob_return);    
   fiducial_key = wf->ReadInt( wf_entity, "fiducial_key", fiducial_key);
@@ -309,6 +315,8 @@ void Model::Visibility::Load( Worldfile* wf, int wf_entity )
   gripper_return = wf->ReadInt( wf_entity, "gripper_return", gripper_return);    
   obstacle_return = wf->ReadInt( wf_entity, "obstacle_return", obstacle_return);    
   ranger_return = wf->ReadFloat( wf_entity, "ranger_return", ranger_return);    
+
+  return *this;
 }    
 
 void Model::Visibility::Save( Worldfile* wf, int wf_entity )
@@ -329,18 +337,20 @@ Model::GuiState::GuiState() :
   outline( false )
 { /* nothing to do */}
 
-void Model::GuiState::Load( Worldfile* wf, int wf_entity )
+Model::GuiState& Model::GuiState::Load( Worldfile* wf, int wf_entity )
 {
   nose = wf->ReadInt( wf_entity, "gui_nose", nose);    
   grid = wf->ReadInt( wf_entity, "gui_grid", grid);    
   outline = wf->ReadInt( wf_entity, "gui_outline", outline);    
   move = wf->ReadInt( wf_entity, "gui_move", move );    
+ 
+  return *this;
 }    
 
 // constructor
 Model::Model( World* world,
-							Model* parent,
-				  const std::string& type ) :
+	      Model* parent,
+	      const std::string& type ) :
   Ancestor(), 	 
   mapped(false),
   drawOptions(),
@@ -354,7 +364,7 @@ Model::Model( World* world,
   disabled(false),
   cv_list(),
   flag_list(),
-	friction(DEFAULT_FRICTION),
+  friction(DEFAULT_FRICTION),
   geom(),
   has_default_block( true ),
   id( Model::count++ ),
@@ -394,9 +404,9 @@ Model::Model( World* world,
   assert( world );
   
   PRINT_DEBUG3( "Constructing model world: %s parent: %s type: %s \n",
-					 world->Token(), 
-					 parent ? parent->Token() : "(null)",
-					 type.c_str() );
+		world->Token(), 
+		parent ? parent->Token() : "(null)",
+		type.c_str() );
   
   modelsbyid[id] = this;
   
@@ -426,19 +436,17 @@ Model::~Model( void )
   // children are removed in ancestor class
   
   if( world ) // if I'm not a worldless dummy model
-	 {
-		UnMap(0); // remove from the movable model array
-		UnMap(1); // remove from the moveable model array
-	 		
-		// remove myself from my parent's child list, or the world's child
-		// list if I have no parent		
-		EraseAll( this, parent ? parent->children : world->children );			
-		
-		// erase from the static map of all models
-		modelsbyid.erase(id);			
-				
-		world->RemoveModel( this );
-	 }
+    {
+      UnMap(); // remove from all layers
+      
+      // remove myself from my parent's child list, or the world's child
+      // list if I have no parent		
+      EraseAll( this, parent ? parent->children : world->children );			      
+      // erase from the static map of all models
+      modelsbyid.erase(id);			
+      
+      world->RemoveModel( this );
+    }
 }
 
 
@@ -451,28 +459,28 @@ void Model::InitControllers()
 void Model::AddFlag( Flag* flag )
 {
   if( flag )
-	 {
-		flag_list.push_back( flag );		
-		CallCallbacks( CB_FLAGINCR );
-	 }
+    {
+      flag_list.push_back( flag );		
+      CallCallbacks( CB_FLAGINCR );
+    }
 }
 
 void Model::RemoveFlag( Flag* flag )
 {
   if( flag )
-	 {
-		EraseAll( flag, flag_list );
-		CallCallbacks( CB_FLAGDECR );
-	 }
+    {
+      EraseAll( flag, flag_list );
+      CallCallbacks( CB_FLAGDECR );
+    }
 }
 
 void Model::PushFlag( Flag* flag )
 {
   if( flag )
-		{
-			flag_list.push_front( flag);
-			CallCallbacks( CB_FLAGINCR );
-		}
+    {
+      flag_list.push_front( flag);
+      CallCallbacks( CB_FLAGINCR );
+    }
 }
 
 Model::Flag* Model::PopFlag()
@@ -483,7 +491,7 @@ Model::Flag* Model::PopFlag()
   Flag* flag = flag_list.front();
   flag_list.pop_front();
   
-	CallCallbacks( CB_FLAGDECR );
+  CallCallbacks( CB_FLAGDECR );
 
   return flag;
 }
@@ -510,14 +518,13 @@ void Model::LoadBlock( Worldfile* wf, int entity )
 
 
 Block* Model::AddBlockRect( meters_t x, 
-														meters_t y, 
-														meters_t dx, 
-														meters_t dy,
-														meters_t dz )
+			    meters_t y, 
+			    meters_t dx, 
+			    meters_t dy,
+			    meters_t dz )
 {  
-  UnMap(0);
-  UnMap(1);
-  
+  UnMap();
+
   std::vector<point_t> pts(4);
   pts[0].x = x;
   pts[0].y = y;
@@ -529,26 +536,25 @@ Block* Model::AddBlockRect( meters_t x,
   pts[3].y = y + dy;
   
   Block* newblock =  new Block( this,
-										  pts,
-										  0, dz, 
-										  color,
-										  true, 
-										  false );
+				pts,
+				0, dz, 
+				color,
+				true, 
+				false );
   
   blockgroup.AppendBlock( newblock );
   
-  Map(0);
-  Map(1);
+  Map();
   
   return newblock;
 }
 
 
 RaytraceResult Model::Raytrace( const Pose &pose,
-				       const meters_t range, 
-				       const ray_test_func_t func,
-				       const void* arg,
-				       const bool ztest )
+				const meters_t range, 
+				const ray_test_func_t func,
+				const void* arg,
+				const bool ztest )
 {
   return world->Raytrace( LocalToGlobal(pose),
 			  range,
@@ -559,38 +565,38 @@ RaytraceResult Model::Raytrace( const Pose &pose,
 }
 
 RaytraceResult Model::Raytrace( const radians_t bearing,
-																const meters_t range, 
-																const ray_test_func_t func,
-																const void* arg,
-																const bool ztest )
+				const meters_t range, 
+				const ray_test_func_t func,
+				const void* arg,
+				const bool ztest )
 {
   return world->Raytrace( LocalToGlobal(Pose(0,0,0,bearing)),
-													range,
-													func,
-													this,
-													arg,
-													ztest );
+			  range,
+			  func,
+			  this,
+			  arg,
+			  ztest );
 }
 
 
 void Model::Raytrace( const radians_t bearing,
-											const meters_t range, 
-											const radians_t fov,
-											const ray_test_func_t func,
-											const void* arg,
-											RaytraceResult* samples,
-											const uint32_t sample_count,
-											const bool ztest )
+		      const meters_t range, 
+		      const radians_t fov,
+		      const ray_test_func_t func,
+		      const void* arg,
+		      RaytraceResult* samples,
+		      const uint32_t sample_count,
+		      const bool ztest )
 {
   world->Raytrace( LocalToGlobal(Pose( 0,0,0,bearing)),
-									 range,		   
-									 fov,
-									 func,
-									 this,
-									 arg,
-									 samples,
-									 sample_count,
-									 ztest );
+		   range,		   
+		   fov,
+		   func,
+		   this,
+		   arg,
+		   samples,
+		   sample_count,
+		   ztest );
 }
 
 // convert a global pose into the model's local coordinate system
@@ -598,14 +604,14 @@ Pose Model::GlobalToLocal( const Pose& pose ) const
 {
   // get model's global pose
   const Pose org( GetGlobalPose() );
+  const double cosa(cos(org.a));
+  const double sina(sin(org.a));
   
   // compute global pose in local coords
-  const double sx =  (pose.x - org.x) * cos(org.a) + (pose.y - org.y) * sin(org.a);
-  const double sy = -(pose.x - org.x) * sin(org.a) + (pose.y - org.y) * cos(org.a);
-  const double sz = pose.z - org.z;
-  const double sa = pose.a - org.a;
-  
-  return Pose( sx, sy, sz, sa );
+  return Pose( (pose.x - org.x) * cosa + (pose.y - org.y) * sina,
+	       -(pose.x - org.x) * sina + (pose.y - org.y) * cosa,
+	       pose.z - org.z,
+	       pose.a - org.a );
 }
 
 void Model::Say( const std::string& str )
@@ -629,11 +635,11 @@ bool Model::IsAntecedent( const Model* testmod ) const
 bool Model::IsDescendent( const Model* testmod ) const
 {
   if( this == testmod )
-	 return true;
+    return true;
   
   FOR_EACH( it, children )
-	 if( (*it)->IsDescendent( testmod ) )
-		return true;
+    if( (*it)->IsDescendent( testmod ) )
+      return true;
   
   // neither mod nor a child of this matches testmod
   return false;
@@ -643,12 +649,12 @@ bool Model::IsRelated( const Model* that ) const
 {
   // is it me?
   if( this == that )
- 	 return true;
+    return true;
   
   // wind up to top-level object
   Model* candidate = (Model*)this;
   while( candidate->parent )
-	 candidate = candidate->parent;
+    candidate = candidate->parent;
   
   // and recurse down the tree    
   return candidate->IsDescendent( that );
@@ -656,22 +662,23 @@ bool Model::IsRelated( const Model* that ) const
 
 point_t Model::LocalToGlobal( const point_t& pt) const
 {  
-	const Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
-	return point_t( gpose.x, gpose.y );
+  const Pose gpose = LocalToGlobal( Pose( pt.x, pt.y, 0, 0 ) );
+  return point_t( gpose.x, gpose.y );
 }
 
 
 void Model::LocalToPixels( const std::vector<point_t>& local,
-													 std::vector<point_int_t>& global) const
+			   std::vector<point_int_t>& global) const
 {
-	const Pose gpose = GetGlobalPose() + geom.pose;
-	
-	FOR_EACH( it, local )
-		{
-			Pose ptpose = gpose + Pose( it->x, it->y, 0, 0 );
-			global.push_back( point_int_t( (int32_t)floor( ptpose.x * world->ppm) ,
-																		 (int32_t)floor( ptpose.y * world->ppm) ));
-		}
+  const Pose gpose( GetGlobalPose() + geom.pose );
+  Pose ptpose;
+  
+  FOR_EACH( it, local )
+    {
+      ptpose = gpose + Pose( it->x, it->y, 0, 0 );
+      global.push_back( point_int_t( (int32_t)floor( ptpose.x * world->ppm) ,
+				     (int32_t)floor( ptpose.y * world->ppm) ));
+    }
 }
 
 void Model::MapWithChildren( unsigned int layer )
@@ -686,7 +693,7 @@ void Model::MapWithChildren( unsigned int layer )
 
 void Model::MapFromRoot( unsigned int layer )
 {
-	Root()->MapWithChildren(layer);
+  Root()->MapWithChildren(layer);
 }
 
 void Model::UnMapWithChildren(unsigned int layer)
@@ -700,7 +707,7 @@ void Model::UnMapWithChildren(unsigned int layer)
 
 void Model::UnMapFromRoot(unsigned int layer)
 {
-	Root()->UnMapWithChildren(layer);
+  Root()->UnMapWithChildren(layer);
 }
 
 void Model::Subscribe( void )
@@ -745,9 +752,9 @@ void Model::Print( char* prefix ) const
     printf( "Model ");
   
   printf( "%s:%s\n", 
-			 //			id, 
-			 world->Token(), 
-			 token.c_str() );
+	  //			id, 
+	  world->Token(), 
+	  token.c_str() );
   
   FOR_EACH( it, children )
     (*it)->Print( prefix );
@@ -759,8 +766,8 @@ const char* Model::PrintWithPose() const
 	
   static char txt[256];
   snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",  
-			  token.c_str(), 
-			  gpose.x, gpose.y, gpose.z, gpose.a  );
+	   token.c_str(), 
+	   gpose.x, gpose.y, gpose.z, gpose.a  );
 
   return txt;
 }
@@ -771,21 +778,21 @@ void Model::Startup( void )
   //printf( "model %s using queue %d\n", token, event_queue_num );
 	
   // if we're thread safe, we can use an event queue >0  
-	event_queue_num = world->GetEventQueue( this );
+  event_queue_num = world->GetEventQueue( this );
 	
   // put my first update request in the world's queue
-	if( thread_safe )
-		world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
-	else
-		world->Enqueue( 0, interval, this, UpdateWrapper, NULL );
-	
-	if( velocity_enable )
-	  world->active_velocity.insert(this);
-	
-  if( FindPowerPack() )
-		world->active_energy.insert( this );
+  if( thread_safe )
+    world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
+  else
+    world->Enqueue( 0, interval, this, UpdateWrapper, NULL );
   
-	CallCallbacks( CB_STARTUP );
+  if( velocity_enable )
+    world->EnableVelocity( this );
+  
+  if( FindPowerPack() )
+    world->EnableEnergy( this );
+  
+  CallCallbacks( CB_STARTUP );
 }
 
 void Model::Shutdown( void )
@@ -793,9 +800,9 @@ void Model::Shutdown( void )
   //printf( "Shutdown model %s\n", this->token );
   CallCallbacks( CB_SHUTDOWN );
   
-  world->active_energy.erase( this );
-  world->active_velocity.erase( this );
-	velocity_enable = false;
+  world->DisableEnergy( this );
+  world->DisableVelocity( this );
+  velocity_enable = false;
 
   // allows data visualizations to be cleared.
   NeedRedraw();
@@ -804,35 +811,35 @@ void Model::Shutdown( void )
 
 void Model::Update( void )
 { 
-	//printf( "Q%d model %p %s update\n", event_queue_num, this, Token() );
+  //printf( "Q%d model %p %s update\n", event_queue_num, this, Token() );
 
-	//	CallCallbacks( CB_UPDATE );
+  //	CallCallbacks( CB_UPDATE );
 	
   last_update = world->sim_time;  
 	
-	if( subs > 0 ) // no subscriptions means we don't need to be updated
-		world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
+  if( subs > 0 ) // no subscriptions means we don't need to be updated
+    world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
 	
-	// if we updated the model then it needs to have its update
-	// callback called in series back in the main thread. It's
-	// not safe to run user callbacks in a worker thread, as
-	// they may make OpenGL calls or unsafe Stage API calls,
-	// etc. We queue up the callback into a queue specific to
+  // if we updated the model then it needs to have its update
+  // callback called in series back in the main thread. It's
+  // not safe to run user callbacks in a worker thread, as
+  // they may make OpenGL calls or unsafe Stage API calls,
+  // etc. We queue up the callback into a queue specific to
 
-	if( ! callbacks[Model::CB_UPDATE].empty() )
-		world->pending_update_callbacks[event_queue_num].push(this);					
+  if( ! callbacks[Model::CB_UPDATE].empty() )
+    world->pending_update_callbacks[event_queue_num].push(this);					
 }
 
 void Model::CallUpdateCallbacks( void )
 {
-	CallCallbacks( CB_UPDATE );
+  CallCallbacks( CB_UPDATE );
 }
 
 meters_t Model::ModelHeight() const
 {	
   meters_t m_child = 0; //max size of any child
   FOR_EACH( it, children )
-		m_child = std::max( m_child, (*it)->ModelHeight() );
+    m_child = std::max( m_child, (*it)->ModelHeight() );
 	
   //height of model + max( child height )
   return geom.size.z + m_child;
@@ -840,13 +847,13 @@ meters_t Model::ModelHeight() const
 
 void Model::AddToPose( double dx, double dy, double dz, double da )
 {
-  Pose pose = this->GetPose();
-  pose.x += dx;
-  pose.y += dy;
-  pose.z += dz;
-  pose.a += da;
+  Pose p( this->pose );
+  p.x += dx;
+  p.y += dy;
+  p.z += dz;
+  p.a += da;
   
-  this->SetPose( pose );
+  this->SetPose( p );
 }
 
 void Model::AddToPose( const Pose& pose )
@@ -869,14 +876,14 @@ void Model::AppendTouchingModels( ModelPtrSet& touchers )
 
 Model* Model::TestCollision()
 {  
-  Model* hitmod = blockgroup.TestCollision();
+  Model* hitmod( blockgroup.TestCollision() );
   
   if( hitmod == NULL ) 	 
-	 FOR_EACH( it, children )
-		 { 
-			 hitmod = (*it)->TestCollision();
-			 if( hitmod )
-				 break;
+    FOR_EACH( it, children )
+      { 
+	hitmod = (*it)->TestCollision();
+	if( hitmod )
+	  break;
       }
   
   //printf( "mod %s test collision done.\n", token );
@@ -889,68 +896,68 @@ void Model::UpdateCharge()
   assert( mypp );
   
   if( watts > 0 ) // dissipation rate
-		{
-			// consume  energy stored in the power pack
-			mypp->Dissipate( watts * (interval_energy * 1e-6), GetGlobalPose() );      
-		}  
+    {
+      // consume  energy stored in the power pack
+      mypp->Dissipate( watts * (interval_energy * 1e-6), GetGlobalPose() );      
+    }  
   
   if( watts_give > 0 ) // transmission to other powerpacks max rate
-	 {  
-		// detach charger from all the packs charged last time
-		FOR_EACH( it, pps_charging )
-		  (*it)->ChargeStop();
-		pps_charging.clear();
+    {  
+      // detach charger from all the packs charged last time
+      FOR_EACH( it, pps_charging )
+	(*it)->ChargeStop();
+      pps_charging.clear();
 		
-		// run through and update all appropriate touchers
-		ModelPtrSet touchers;
-		AppendTouchingModels( touchers );
+      // run through and update all appropriate touchers
+      ModelPtrSet touchers;
+      AppendTouchingModels( touchers );
 		
-		FOR_EACH( it, touchers )
-		  {
-			 Model* toucher = (*it);
-			 PowerPack* hispp =toucher->FindPowerPack();		
+      FOR_EACH( it, touchers )
+	{
+	  Model* toucher = (*it);
+	  PowerPack* hispp =toucher->FindPowerPack();		
 			 
-			 if( hispp && toucher->watts_take > 0.0) 
-				{		
-				  //printf( "   toucher %s can take up to %.2f wats\n", 
-				  //		toucher->Token(), toucher->watts_take );
+	  if( hispp && toucher->watts_take > 0.0) 
+	    {		
+	      //printf( "   toucher %s can take up to %.2f wats\n", 
+	      //		toucher->Token(), toucher->watts_take );
 				  
-				  const watts_t rate = std::min( watts_give, toucher->watts_take );
-				  const joules_t amount =  rate * interval_energy * 1e-6;
+	      const watts_t rate = std::min( watts_give, toucher->watts_take );
+	      const joules_t amount =  rate * interval_energy * 1e-6;
 				  
-				  //printf ( "moving %.2f joules from %s to %s\n",
-				  //		 amount, token, toucher->token );
+	      //printf ( "moving %.2f joules from %s to %s\n",
+	      //		 amount, token, toucher->token );
 				  
-				  // set his charging flag
-				  hispp->ChargeStart();
+	      // set his charging flag
+	      hispp->ChargeStart();
 				  
-				  // move some joules from me to him
-				  mypp->TransferTo( hispp, amount );
+	      // move some joules from me to him
+	      mypp->TransferTo( hispp, amount );
 				  
-				  // remember who we are charging so we can detatch next time
-				  pps_charging.push_front( hispp );
-				}
-		  }
-	 }
+	      // remember who we are charging so we can detatch next time
+	      pps_charging.push_front( hispp );
+	    }
+	}
+    }
 }
 
 
 void Model::Move( void )
 {  
   if( velocity.IsZero() )
-	 return;
+    return;
 
   if( disabled )
-	 return;
+    return;
 
   // convert usec to sec
   const double interval( (double)world->sim_interval / 1e6 );
   
   // find the change of pose due to our velocity vector
   const Pose p( velocity.x * interval,
-					 velocity.y * interval,
-					 velocity.z * interval,
-					 normalize( velocity.a * interval ));
+		velocity.y * interval,
+		velocity.z * interval,
+		normalize( velocity.a * interval ));
   
   // the pose we're trying to achieve (unless something stops us)
   const Pose newpose( pose + p );
@@ -960,42 +967,41 @@ void Model::Move( void )
   
   pose = newpose; // do the move provisionally - we might undo it below
   
-  //const unsigned int layer( world->updates%2 );
-  
   const unsigned int layer( world->updates%2 );
   
   UnMapWithChildren( layer ); // remove from all blocks
   MapWithChildren( layer ); // render into new blocks
   
   if( TestCollision() ) // crunch!
-	 {
-		// put things back the way they were
-		// this is expensive, but it happens _very_ rarely for most people
-		pose = startpose;
-		UnMapWithChildren( layer );
-		MapWithChildren( layer );
-		SetStall(true);
-	 }
+    {
+      // put things back the way they were
+      // this is expensive, but it happens _very_ rarely for most people
+      pose = startpose;
+      UnMapWithChildren( layer );
+      MapWithChildren( layer );
+
+      SetStall(true);
+    }
   else
-	 {
-		world->dirty = true; // need redraw	
-		SetStall(false);
-	 }
+    {
+      world->dirty = true; // need redraw	
+      SetStall(false);
+    }
 }
 
 
 void Model::UpdateTrail()
 {
-	// get the current item and increment the counter
-	TrailItem* item = &trail[trail_index++];
+  // get the current item and increment the counter
+  TrailItem* item = &trail[trail_index++];
 	
-	// record the current info
-	item->time = world->sim_time;
-	item->pose = GetGlobalPose();
-	item->color = color;
+  // record the current info
+  item->time = world->sim_time;
+  item->pose = GetGlobalPose();
+  item->color = color;
 
-	// wrap around ring buffer
-	trail_index %= trail_length;
+  // wrap around ring buffer
+  trail_index %= trail_length;
 }
 
 Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const
@@ -1005,10 +1011,10 @@ Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const
 
   // this model is no use. try children recursively
   FOR_EACH( it, children )
-	 {
-		Model* found = (*it)->GetUnsubscribedModelOfType( type );
-		if( found )
-		  return found;
+    {
+      Model* found = (*it)->GetUnsubscribedModelOfType( type );
+      if( found )
+	return found;
     }
   
   // nothing matching below this model
@@ -1027,7 +1033,7 @@ void Model::NeedRedraw( void )
 
 void Model::Redraw( void )
 {
-	world->Redraw();
+  world->Redraw();
 }
 
 Model* Model::GetUnusedModelOfType( const std::string& type )
@@ -1045,7 +1051,7 @@ Model* Model::GetUnusedModelOfType( const std::string& type )
     {
       Model* found = (*it)->GetUnusedModelOfType( type );
       if( found )
-		  return found;
+	return found;
     }
   
   // nothing matching below this model
@@ -1058,7 +1064,7 @@ kg_t Model::GetTotalMass() const
   kg_t sum = mass;
   
   FOR_EACH( it, children )
-	 sum += (*it)->GetTotalMass();
+    sum += (*it)->GetTotalMass();
 
   return sum;
 }
@@ -1071,28 +1077,28 @@ kg_t Model::GetMassOfChildren() const
 void Model::Map( unsigned int layer )
 {
   if( ! mapped )
-	 {
-		// render all blocks in the group at my global pose and size
-		blockgroup.Map( layer );
-		mapped = true;
-	 }
+    {
+      // render all blocks in the group at my global pose and size
+      blockgroup.Map( layer );
+      mapped = true;
+    }
 } 
 
 void Model::UnMap( unsigned int layer )
 {
   if( mapped )
-	 {
-		blockgroup.UnMap(layer);
-		mapped = false;
-	 }
+    {
+      blockgroup.UnMap(layer);
+      mapped = false;
+    }
 }
 
 void Model::BecomeParentOf( Model* child )
 {
   if( child->parent )
-	 child->parent->RemoveChild( child );
+    child->parent->RemoveChild( child );
   else
-	 world->RemoveChild( child );
+    world->RemoveChild( child );
   
   child->parent = this;
   
@@ -1104,10 +1110,10 @@ void Model::BecomeParentOf( Model* child )
 PowerPack* Model::FindPowerPack() const
 {
   if( power_pack )
-	 return power_pack;
+    return power_pack;
   
   if( parent )
-	 return parent->FindPowerPack();
+    return parent->FindPowerPack();
 
   return NULL;
 }
@@ -1143,9 +1149,9 @@ Model* Model::GetChild( const std::string& modelname ) const
   Model* mod = world->GetModel( fullname );
   
   if( mod == NULL )
-	 PRINT_WARN1( "Model %s not found", fullname.c_str() );
+    PRINT_WARN1( "Model %s not found", fullname.c_str() );
   
-   return mod;
+  return mod;
 }
 
 
@@ -1154,12 +1160,12 @@ Model* Model::GetChild( const std::string& modelname ) const
 //
 Model::RasterVis::RasterVis() 
   : Visualizer( "Rasterization", "raster_vis" ),
-	 data(NULL),
-	 width(0),
-	 height(0),
-	 cellwidth(0),
-	 cellheight(0),
-	 pts()
+    data(NULL),
+    width(0),
+    height(0),
+    cellwidth(0),
+    cellheight(0),
+    pts()
 {
   
 }
@@ -1169,7 +1175,7 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
   (void)cam; // avoid warning about unused var
 
   if( data == NULL )
-	 return;
+    return;
 
   // go into world coordinates  
   glPushMatrix();
@@ -1178,31 +1184,31 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
   Gl::pose_inverse_shift( mod->GetGlobalPose() );
   
   if( pts.size() > 0 )
-	 {
-		glPushMatrix();
-		//Size sz = mod->blockgroup.GetSize();
-		//glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
-		//glScalef( mod->geom.size.x / sz.x, mod->geom.size.y / sz.y, 1 );
+    {
+      glPushMatrix();
+      //Size sz = mod->blockgroup.GetSize();
+      //glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
+      //glScalef( mod->geom.size.x / sz.x, mod->geom.size.y / sz.y, 1 );
 		
-		// now we're in world meters coordinates
-		glPointSize( 4 );
-		glBegin( GL_POINTS );
+      // now we're in world meters coordinates
+      glPointSize( 4 );
+      glBegin( GL_POINTS );
 		
-		FOR_EACH( it, pts )
-		  {
-			 point_t& pt = *it;
-			 glVertex2f( pt.x, pt.y );
+      FOR_EACH( it, pts )
+	{
+	  point_t& pt = *it;
+	  glVertex2f( pt.x, pt.y );
 			 
-			 char buf[128];
-			 snprintf( buf, 127, "[%.2f x %.2f]", pt.x, pt.y );
-			 Gl::draw_string( pt.x, pt.y, 0, buf );		  
-		  }
-		glEnd();
+	  char buf[128];
+	  snprintf( buf, 127, "[%.2f x %.2f]", pt.x, pt.y );
+	  Gl::draw_string( pt.x, pt.y, 0, buf );		  
+	}
+      glEnd();
 		
-		mod->PopColor();
+      mod->PopColor();
 		
-		glPopMatrix();
-	 }
+      glPopMatrix();
+    }
 
   // go into bitmap pixel coords
   glTranslatef( -mod->geom.size.x / 2.0, -mod->geom.size.y/2.0, 0 );
@@ -1213,27 +1219,27 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
   mod->PushColor( 0,0,0,0.5 );
   glPolygonMode( GL_FRONT, GL_FILL );
   for( unsigned int y=0; y<height; ++y )
-	 for( unsigned int x=0; x<width; ++x )
-		{
-		  // printf( "[%u %u] ", x, y );
-		  if( data[ x + y*width ] )
-			 glRectf( x, y, x+1, y+1 );
-		}
+    for( unsigned int x=0; x<width; ++x )
+      {
+	// printf( "[%u %u] ", x, y );
+	if( data[ x + y*width ] )
+	  glRectf( x, y, x+1, y+1 );
+      }
 
   glTranslatef( 0,0,0.01 );
 
   mod->PushColor( 0,0,0,1 );
   glPolygonMode( GL_FRONT, GL_LINE );
   for( unsigned int y=0; y<height; ++y )
-	 for( unsigned int x=0; x<width; ++x )
-		{
-		  if( data[ x + y*width ] )
-			 glRectf( x, y, x+1, y+1 );
+    for( unsigned int x=0; x<width; ++x )
+      {
+	if( data[ x + y*width ] )
+	  glRectf( x, y, x+1, y+1 );
 		  
-// 		  char buf[128];
-// 		  snprintf( buf, 127, "[%u x %u]", x, y );
-// 		  Gl::draw_string( x, y, 0, buf );		  
-		}
+	// 		  char buf[128];
+	// 		  snprintf( buf, 127, "[%u x %u]", x, y );
+	// 		  Gl::draw_string( x, y, 0, buf );		  
+      }
 
 	
   glPolygonMode( GL_FRONT, GL_FILL );
@@ -1253,14 +1259,14 @@ void Model::RasterVis::Visualize( Model* mod, Camera* cam )
 }
 
 void Model::RasterVis::SetData( uint8_t* data, 
-																const unsigned int width, 
-																const unsigned int height,
-																const meters_t cellwidth, 
-																const meters_t cellheight )
+				const unsigned int width, 
+				const unsigned int height,
+				const meters_t cellwidth, 
+				const meters_t cellheight )
 {
   // copy the raster for test visualization
   if( this->data ) 
-	 delete[] this->data;  
+    delete[] this->data;  
   size_t len = sizeof(uint8_t) * width * height;
   //printf( "allocating %lu bytes\n", len );
   this->data = new uint8_t[len];
@@ -1284,75 +1290,75 @@ void Model::RasterVis::ClearPts()
 
 
 Model::Flag::Flag( const Color color, const double size ) 
-	: color(color), size(size), displaylist(0)
+  : color(color), size(size), displaylist(0)
 { 
 }
 
 Model::Flag* Model::Flag::Nibble( double chunk )
 {
-	Flag* piece = NULL;
+  Flag* piece = NULL;
 
-	if( size > 0 )
-	{
-		chunk = std::min( chunk, this->size );
-		piece = new Flag( this->color, chunk );
-		this->size -= chunk;
-	}
+  if( size > 0 )
+    {
+      chunk = std::min( chunk, this->size );
+      piece = new Flag( this->color, chunk );
+      this->size -= chunk;
+    }
 
-	return piece;
+  return piece;
 }
 
 
 void Model::Flag::SetColor( const Color& c )
 {
-	color = c;
+  color = c;
 	
-	if( displaylist )
-		{
-			// force recreation of list
-			glDeleteLists( displaylist, 1 );
-			displaylist = 0;
-		}
+  if( displaylist )
+    {
+      // force recreation of list
+      glDeleteLists( displaylist, 1 );
+      displaylist = 0;
+    }
 }
 
 void Model::Flag::SetSize( double sz )
 {
-	size = sz;
+  size = sz;
 	
-	if( displaylist )
-		{
-			// force recreation of list
-			glDeleteLists( displaylist, 1 );
-			displaylist = 0;
-		}
+  if( displaylist )
+    {
+      // force recreation of list
+      glDeleteLists( displaylist, 1 );
+      displaylist = 0;
+    }
 }
 
 
 void Model::Flag::Draw(  GLUquadric* quadric )
 {
-	if( displaylist == 0 )
-		{
-			displaylist = glGenLists(1);
-			assert( displaylist > 0 );
+  if( displaylist == 0 )
+    {
+      displaylist = glGenLists(1);
+      assert( displaylist > 0 );
 			
-			glNewList( displaylist, GL_COMPILE );	
+      glNewList( displaylist, GL_COMPILE );	
 			
-			glColor4f( color.r, color.g, color.b, color.a );
+      glColor4f( color.r, color.g, color.b, color.a );
 			
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glPolygonOffset(1.0, 1.0);
-			gluQuadricDrawStyle( quadric, GLU_FILL );
-			gluSphere( quadric, size/2.0, 4,2  );
-			glDisable(GL_POLYGON_OFFSET_FILL);
+      glEnable(GL_POLYGON_OFFSET_FILL);
+      glPolygonOffset(1.0, 1.0);
+      gluQuadricDrawStyle( quadric, GLU_FILL );
+      gluSphere( quadric, size/2.0, 4,2  );
+      glDisable(GL_POLYGON_OFFSET_FILL);
 			
-			// draw the edges darker version of the same color
-			glColor4f( color.r/2.0, color.g/2.0, color.b/2.0, color.a/2.0 );
+      // draw the edges darker version of the same color
+      glColor4f( color.r/2.0, color.g/2.0, color.b/2.0, color.a/2.0 );
 			
-			gluQuadricDrawStyle( quadric, GLU_LINE );
-			gluSphere( quadric, size/2.0, 4,2 );
+      gluQuadricDrawStyle( quadric, GLU_LINE );
+      gluSphere( quadric, size/2.0, 4,2 );
 
-			glEndList();
-		}
+      glEndList();
+    }
 
-	glCallList( displaylist );
+  glCallList( displaylist );
 }

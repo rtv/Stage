@@ -47,9 +47,9 @@ void Model::SetFiducialReturn(  int val )
   // non-zero values mean we need to be in the world's set of
   // detectable models
   if( val == 0 )
-	 world->FiducialErase( this );
+    world->FiducialErase( this );
   else
-	 world->FiducialInsert( this );
+    world->FiducialInsert( this );
 }
 
 void Model::SetFiducialKey( int val )
@@ -119,7 +119,7 @@ int Model::SetParent( Model* newparent)
 
   // remove the model from its old parent (if it has one)
   if( parent )
-	parent->RemoveChild( this );
+    parent->RemoveChild( this );
   else
     world->RemoveChild( this );
   // link from the model to its new parent
@@ -140,33 +140,27 @@ int Model::SetParent( Model* newparent)
 // get the model's velocity in the global frame
 Velocity Model::GetGlobalVelocity() const
 {
-  Pose gpose = GetGlobalPose();
+  const Pose gpose(GetGlobalPose());  
+  const double cosa(cos(gpose.a));
+  const double sina(sin(gpose.a));
   
-  double cosa = cos( gpose.a );
-  double sina = sin( gpose.a );
-
-  Velocity gv;
-  gv.x = velocity.x * cosa - velocity.y * sina;
-  gv.y = velocity.x * sina + velocity.y * cosa;
-  gv.a = velocity.a;
-
-  return gv;
+  return Velocity( velocity.x * cosa - velocity.y * sina,
+		   velocity.x * sina + velocity.y * cosa,
+		   velocity.z,
+		   velocity.a );
 }
 
 // set the model's velocity in the global frame
 void Model::SetGlobalVelocity( const Velocity& gv )
 {
-  Pose gpose = GetGlobalPose();
-
-  double cosa = cos( gpose.a );
-  double sina = sin( gpose.a );
-
-  Velocity lv;
-  lv.x = gv.x * cosa + gv.y * sina;
-  lv.y = -gv.x * sina + gv.y * cosa;
-  lv.a = gv.a;
-
-  this->SetVelocity( lv );
+  const Pose gpose = GetGlobalPose();  
+  const double cosa(cos(gpose.a));
+  const double sina(sin(gpose.a));
+  
+  this->SetVelocity( Velocity( gv.x * cosa + gv.y * sina,
+			       -gv.x * sina + gv.y * cosa,
+			       gv.z,
+			       gv.a ));
 }
 
 // get the model's position in the global frame
@@ -187,20 +181,20 @@ Pose Model::GetGlobalPose() const
 
 void Model::VelocityEnable()
 {
-	velocity_enable = true;
-	world->active_velocity.insert( this );
+  velocity_enable = true;
+  world->EnableVelocity(this);
 }
 
 void Model::VelocityDisable()
 {
-	velocity_enable = false;
-	world->active_velocity.erase( this );
+  velocity_enable = false;
+  world->DisableVelocity( this );
 }
 
 void Model::SetVelocity( const Velocity& val )
 {
   velocity = val;  
-	CallCallbacks( CB_VELOCITY );
+  CallCallbacks( CB_VELOCITY );
 }
 
 
@@ -213,14 +207,14 @@ void Model::SetPose( const Pose& newpose )
       pose = newpose;
       pose.a = normalize(pose.a);
 
-//       if( isnan( pose.a ) )
-// 		  printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
-// 					 token, pose.x, pose.y, pose.z, pose.a );
+      //       if( isnan( pose.a ) )
+      // 		  printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
+      // 					 token, pose.x, pose.y, pose.z, pose.a );
 			
       NeedRedraw();
 
-		UnMapWithChildren(0);
-		UnMapWithChildren(1);
+      UnMapWithChildren(0);
+      UnMapWithChildren(1);
 
       MapWithChildren(0);
       MapWithChildren(1);
@@ -228,5 +222,5 @@ void Model::SetPose( const Pose& newpose )
       world->dirty = true;
     }
 	
-	CallCallbacks( CB_POSE );
+  CallCallbacks( CB_POSE );
 }

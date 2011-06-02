@@ -75,8 +75,9 @@ void Ancestor::ForEachDescendant( model_callback_t func, void* arg )
 
 
 
-void Ancestor::Load( Worldfile* wf, int section )
+Ancestor& Ancestor::Load( Worldfile* wf, int section )
 {
+  return *this;
 }
 
 void Ancestor::Save( Worldfile* wf, int section )

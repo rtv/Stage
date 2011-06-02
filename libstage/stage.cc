@@ -88,13 +88,11 @@ static inline bool pb_pixel_is_set( Fl_Shared_Image* img,
 }
 
 int Stg::rotrects_from_image_file( const std::string& filename, 
-																	 std::vector<rotrect_t>& rects,
-																	 unsigned int& width, 
-																	 unsigned int& height )
+				   std::vector<rotrect_t>& rects )
 {
   // TODO: make this a parameter
   const int threshold = 127;
-	
+  
   Fl_Shared_Image *img = Fl_Shared_Image::get(filename.c_str());
   if( img == NULL ) {
 		std::cerr << "failed to open file: " << filename << std::endl;
@@ -104,8 +102,8 @@ int Stg::rotrects_from_image_file( const std::string& filename,
   //printf( "loaded image %s w %d h %d d %d count %d ld %d\n", 
   //  filename, img->w(), img->h(), img->d(), img->count(), img->ld() );
 
-  width = img->w();
-  height = img->h();
+  const unsigned int width = img->w();
+  const unsigned height = img->h();
 
   for(unsigned int y = 0; y < height; y++)
 	{
