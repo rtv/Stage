@@ -149,7 +149,7 @@ void Canvas::InitTextures()
       PRINT_DEBUG( "Unable to load stall texture.\n" );
     }
  
-	printf( "stall icon %s\n", fullpath.c_str() );
+  //printf( "stall icon %s\n", fullpath.c_str() );
  
   GLuint stall_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
   TextureManager::getInstance()._stall_texture_id = stall_id;
@@ -160,7 +160,7 @@ void Canvas::InitTextures()
       PRINT_DEBUG( "Unable to load mains texture.\n" );
     }
   
-	printf( "mains icon %s\n", fullpath.c_str() );
+  //	printf( "mains icon %s\n", fullpath.c_str() );
 
   GLuint mains_id = TextureManager::getInstance().loadTexture( fullpath.c_str() );
   TextureManager::getInstance()._mains_texture_id = mains_id;

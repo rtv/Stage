@@ -20,6 +20,7 @@
     interval_sim            100
     quit_time                 0
     resolution                0.02
+
     show_clock                0
     show_clock_interval     100
     threads                   1
@@ -99,28 +100,20 @@ using namespace Stg;
 // // function objects for comparing model positions
 bool World::ltx::operator()(const Model* a, const Model* b) const
 {
-  const meters_t ax = a->GetGlobalPose().x;
-  const meters_t bx = b->GetGlobalPose().x;
-	
-  if( ax == bx )
-    return a < b; // tie breaker
-	
-  return ax < bx;
+  const meters_t ax( a->GetGlobalPose().x );
+  const meters_t bx( b->GetGlobalPose().x );  
+  return ( ax == bx ? a < b : ax < bx );
 }
 bool World::lty::operator()(const Model* a, const Model* b) const
 {
-  const meters_t ay = a->GetGlobalPose().y;
-  const meters_t by = b->GetGlobalPose().y;
-	
-  if( ay == by )
-    return a < b; // tie breaker
-	
-  return ay < by;
+  const meters_t ay( a->GetGlobalPose().y );
+  const meters_t by( b->GetGlobalPose().y );  
+  return ( ay == by ? a < b : ay < by );
 }
-		
+
 // static data members
-unsigned int World::next_id = 0;
-bool World::quit_all = false;
+unsigned int World::next_id(0);
+bool World::quit_all(false);
 std::set<World*> World::world_set;
 std::string World::ctrlargs;
 std::vector<std::string> World::args;
@@ -148,7 +141,7 @@ World::World( const std::string& name,
   worker_threads( 1 ),
 
   // protected
-  cb_list(NULL),
+  cb_list(),
   extent(),
   graphics( false ), 
   option_table(),
@@ -198,7 +191,7 @@ World::~World( void )
 
 SuperRegion* World::CreateSuperRegion( point_int_t origin )
 {
-  SuperRegion* sr = new SuperRegion( this, origin );
+  SuperRegion* sr( new SuperRegion( this, origin ) );
   superregions[origin] = sr;
   dirty = true; // force redraw
   return sr;
@@ -212,14 +205,14 @@ void World::DestroySuperRegion( SuperRegion* sr )
 
 bool World::UpdateAll()
 {  
-  bool quit = true;
+  bool quit( true );
   
   FOR_EACH( world_it, World::world_set )
     {
       if( (*world_it)->Update() == false )
 	quit = false;
     }
-
+  
   return quit;
 }
 
@@ -227,9 +220,9 @@ bool World::UpdateAll()
 
 void* World::update_thread_entry( std::pair<World*,int> *thread_info )
 {
-  World* world = thread_info->first;
-  const int thread_instance = thread_info->second;
-	
+  World* world( thread_info->first );
+  const int thread_instance( thread_info->second );
+  
   //printf( "thread ID %d waiting for mutex\n", thread_instance );
 
   pthread_mutex_lock( &world->sync_mutex );  
@@ -237,24 +230,20 @@ void* World::update_thread_entry( std::pair<World*,int> *thread_info )
   while( 1 )
     {
       //printf( "thread ID %d waiting for start\n", thread_instance );
-		
       // wait until the main thread signals us
       //puts( "worker waiting for start signal" );
-		
+      
       pthread_cond_wait( &world->threads_start_cond, &world->sync_mutex );
       pthread_mutex_unlock( &world->sync_mutex );
 		
       //printf( "worker %u thread awakes for task %u\n", thread_instance, task );
-		
       world->ConsumeQueue( thread_instance );
-		
-		
       //printf( "thread %d done\n", thread_instance );
-		
+      
       // done working, so increment the counter. If this was the last
       // thread to finish working, signal the main thread, which is
       // blocked waiting for this to happen
-		
+      
       pthread_mutex_lock( &world->sync_mutex );	  
       if( --world->threads_working == 0 )
 	{
@@ -287,7 +276,7 @@ void World::RemoveModel( Model* mod )
 void World::LoadBlock( Worldfile* wf, int entity )
 { 
   // lookup the group in which this was defined
-  Model* mod = models_by_wfentity[ wf->GetEntityParent( entity )];
+  Model* mod( models_by_wfentity[ wf->GetEntityParent( entity )]);
   
   if( ! mod )
     PRINT_ERR( "block has no model for a parent" );
@@ -298,7 +287,7 @@ void World::LoadBlock( Worldfile* wf, int entity )
 void World::LoadSensor( Worldfile* wf, int entity )
 { 
   // lookup the group in which this was defined
-  ModelRanger* rgr = dynamic_cast<ModelRanger*>(models_by_wfentity[ wf->GetEntityParent( entity )]);
+  ModelRanger* rgr( dynamic_cast<ModelRanger*>(models_by_wfentity[ wf->GetEntityParent( entity )]));
   
   //todo verify that the parent is indeed a ranger
 	
@@ -311,7 +300,7 @@ void World::LoadSensor( Worldfile* wf, int entity )
 
 Model* World::CreateModel( Model* parent, const std::string& typestr )
 {
-  Model* mod = NULL; // new model to return
+  Model* mod(NULL); // new model to return
   
   // find the creator function pointer in the map. use the
   // vanilla model if the type is NULL.
@@ -350,17 +339,17 @@ Model* World::CreateModel( Model* parent, const std::string& typestr )
 
 void World::LoadModel( Worldfile* wf, int entity )
 { 
-  const int parent_entity = wf->GetEntityParent( entity );
+  const int parent_entity( wf->GetEntityParent( entity ));
   
   PRINT_DEBUG2( "wf entity %d parent entity %d\n", 
 		entity, parent_entity );
   
-  Model* parent = models_by_wfentity[ parent_entity ];
+  Model* parent( models_by_wfentity[ parent_entity ]);
     
-  const char *typestr = (char*)wf->GetEntityType(entity);      	  
+  const char *typestr((char*)wf->GetEntityType(entity));      	  
   assert(typestr);
   
-  Model* mod = CreateModel( parent, typestr );
+  Model* mod( CreateModel( parent, typestr ));
   
   // configure the model with properties from the world file
   mod->Load(wf, entity );
@@ -384,7 +373,7 @@ void World::Load( const std::string& worldfile_path )
   // end the output line of worldfile components
   //puts("");
 
-  const int entity = 0;
+  const int entity(0);
   
   this->token = 
     wf->ReadString( entity, "name", this->token );
@@ -418,7 +407,7 @@ void World::Load( const std::string& worldfile_path )
   //printf( "worker threads %d\n", worker_threads );
   
   // kick off the threads
-  for( unsigned int t=0; t<worker_threads; ++t )
+  for( unsigned int t(0); t<worker_threads; ++t )
     {
       // a little configuration for each thread can't be a local
       // stack var, since it's accssed in the threads
@@ -440,7 +429,7 @@ void World::Load( const std::string& worldfile_path )
     printf( "[threads %u]", worker_threads );	
   
   // Iterate through entitys and create objects of the appropriate type
-  for( int entity = 1; entity < wf->GetEntityCount(); ++entity )
+  for( int entity(1); entity < wf->GetEntityCount(); ++entity )
     {
       const char *typestr = (char*)wf->GetEntityType(entity);      	  
       
@@ -497,15 +486,15 @@ bool World::PastQuitTime()
 
 std::string World::ClockString() const
 {
-  const uint32_t usec_per_hour   = 3600000000U;
-  const uint32_t usec_per_minute = 60000000U;
-  const uint32_t usec_per_second = 1000000U;
-  const uint32_t usec_per_msec = 1000U;
-	
-  const uint32_t hours   = sim_time / usec_per_hour;
-  const uint32_t minutes = (sim_time % usec_per_hour) / usec_per_minute;
-  const uint32_t seconds = (sim_time % usec_per_minute) / usec_per_second;
-  const uint32_t msec    = (sim_time % usec_per_second) / usec_per_msec;
+  const uint32_t usec_per_hour(3600000000U);
+  const uint32_t usec_per_minute(60000000U);
+  const uint32_t usec_per_second(1000000U);
+  const uint32_t usec_per_msec(1000U);
+  
+  const uint32_t hours(sim_time / usec_per_hour);
+  const uint32_t minutes((sim_time % usec_per_hour) / usec_per_minute);
+  const uint32_t seconds((sim_time % usec_per_minute) / usec_per_second);
+  const uint32_t msec((sim_time % usec_per_second) / usec_per_msec);
 	
   std::string str;  
   char buf[256];
@@ -585,7 +574,7 @@ void World::CallUpdateCallbacks()
 
 void World::ConsumeQueue( unsigned int queue_num )
 {  
-  std::priority_queue<Event>& queue = event_queues[queue_num];
+  std::priority_queue<Event>& queue( event_queues[queue_num] );
   
   if( queue.empty() )
     return;
@@ -705,7 +694,7 @@ Model* World::GetModel( const std::string& name ) const
 
 void World::RecordRay( double x1, double y1, double x2, double y2 )
 {  
-  float* drawpts = new float[4];
+  float* drawpts( new float[4] );
   drawpts[0] = x1;
   drawpts[1] = y1;
   drawpts[2] = x2;
@@ -715,11 +704,9 @@ void World::RecordRay( double x1, double y1, double x2, double y2 )
 
 void World::ClearRays()
 {
+  // destroy the C arrays first
   FOR_EACH( it, ray_list )
-    {
-      float* pts = *it;
-      delete [] pts;
-    }
+    delete [] *it;
   
   ray_list.clear();
 }
@@ -736,10 +723,10 @@ void World::Raytrace( const Pose &gpose, // global pose
 		      const bool ztest ) 
 {
   // find the direction of the first ray
-  Pose raypose = gpose;
-  const double starta = fov/2.0 - raypose.a;
+  Pose raypose( gpose );
+  const double starta( fov/2.0 - raypose.a );
   
-  for( uint32_t s=0; s < sample_count; ++s )
+  for( uint32_t s(0); s < sample_count; ++s )
     {
       raypose.a = (s * fov / (double)(sample_count-1)) - starta;
       samples[s] = Raytrace( raypose, range, func, model, arg, ztest );
@@ -765,7 +752,7 @@ RaytraceResult World::Raytrace( const Ray& r )
   
   // initialize the sample
   RaytraceResult sample( r.origin, r.range );
-	
+  
   // our global position in (floating point) cell coordinates
   double globx( r.origin.x * ppm );
   double globy( r.origin.y * ppm );
@@ -1003,7 +990,7 @@ void World::Reload( void )
 
 void World::MapPoly( const PointIntVec& pts, Block* block, unsigned int layer )
 {
-  const size_t pt_count = pts.size();
+  const size_t pt_count( pts.size() );
   
   for( size_t i(0); i<pt_count; ++i )
     {
@@ -1078,7 +1065,7 @@ void World::MapPoly( const PointIntVec& pts, Block* block, unsigned int layer )
 
 SuperRegion* World::AddSuperRegion( const point_int_t& sup )
 {
-  SuperRegion* sr = CreateSuperRegion( sup );
+  SuperRegion* sr( CreateSuperRegion( sup ) );
 
   //printf( "Created super region [%d, %d] %p\n", sup.x, sup.y, sr );
 
@@ -1108,12 +1095,11 @@ inline SuperRegion* World::GetSuperRegion( const point_int_t& org )
   if( sr_cached && sr_cached->GetOrigin() == org )
     return sr_cached;
 	
-  SuperRegion* sr = NULL;
-	
+  SuperRegion* sr(NULL);
+  
   // I despise some STL syntax sometimes...
-  std::map<point_int_t,SuperRegion*>::iterator it = 
-    superregions.find(org);
-	
+  std::map<point_int_t,SuperRegion*>::iterator it( superregions.find(org) );
+  
   if( it != superregions.end() )
     sr = it->second;
   
@@ -1124,15 +1110,14 @@ inline SuperRegion* World::GetSuperRegion( const point_int_t& org )
 
 inline SuperRegion* World::GetSuperRegionCreate( const point_int_t& org )
 {
-  SuperRegion* sr = GetSuperRegion(org);
-	
+  SuperRegion* sr( GetSuperRegion(org) );
+  
   if( sr == NULL ) // no superregion exists! make a new one
     {
       sr = AddSuperRegion( org );  
       assert( sr ); 
       sr_cached = sr;
     }
-	
   return sr;
 }
 
