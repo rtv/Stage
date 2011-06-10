@@ -152,7 +152,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		player_msghdr_t* hdr,
 		void* data)
 {
-	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, PLAYER_CAPABILTIES_REQ, addr))
+	if(Message::MatchMessage(hdr, PLAYER_MSGTYPE_REQ, PLAYER_CAPABILITIES_REQ, addr))
 	{
 		PLAYER_ERROR1("%p\n", data);
 		player_capabilities_req_t & cap_req = * reinterpret_cast<player_capabilities_req_t *> (data);
