@@ -33,100 +33,95 @@ namespace Stg
 	
   class Cell 
   {
-		friend class SuperRegion;
-		friend class World;
+    friend class SuperRegion;
+    friend class World;
 	 
   private:
-	 std::vector<Block*> blocks[2];		
+    std::vector<Block*> blocks[2];		
 	 
   public:
-	 Cell() 
-		: blocks(), 
-		  region(NULL)
-	 { /* nothing to do */ }  				
+    Cell() 
+      : blocks(), 
+	region(NULL)
+    { /* nothing to do */ }  				
 	 
-	 void RemoveBlock( Block* b, unsigned int index );
-	 void AddBlock( Block* b, unsigned int index );
+    void RemoveBlock( Block* b, unsigned int index );
+    void AddBlock( Block* b, unsigned int index );
 	 
-	 const std::vector<Block*>& GetBlocks( unsigned int index ){ return blocks[index]; }
+    const std::vector<Block*>& GetBlocks( unsigned int index ){ return blocks[index]; }
 	 
-	 Region* region;  
+    Region* region;  
   };  // class Cell
   
   class Region
   {
-	 friend class SuperRegion;
-	 friend class World; // for raytracing
+    friend class SuperRegion;
+    friend class World; // for raytracing
 	 
   private:
-	 Cell* cells;
-	 unsigned long count; // number of blocks rendered into this region
+    Cell* cells;
+    unsigned long count; // number of blocks rendered into this region
 	 
-	 // vector of garbage collected cell arrays to reallocate before
-	 // using new in GetCell()
-	 static std::vector<Cell*> dead_pool;
+    // vector of garbage collected cell arrays to reallocate before
+    // using new in GetCell()
+    static std::vector<Cell*> dead_pool;
 	 
   public:
-	 Region();
-	 ~Region();
+    Region();
+    ~Region();
 	 
-	 inline Cell* GetCell( int32_t x, int32_t y )
-	 {	
-		if( cells == NULL )
-		  {
-			 assert(count == 0 );
+    inline Cell* GetCell( int32_t x, int32_t y )
+    {	
+      if( cells == NULL )
+	{
+	  assert(count == 0 );
 			 
-			 if( dead_pool.size() )
-				{
-				  cells = dead_pool.back();
-				  dead_pool.pop_back();
-				  //printf( "reusing cells @ %p (pool %u)\n", cells, dead_pool.size() );
-				}
-			 else
-				cells = new Cell[REGIONSIZE];
+	  if( dead_pool.size() )
+	    {
+	      cells = dead_pool.back();
+	      dead_pool.pop_back();
+	      //printf( "reusing cells @ %p (pool %u)\n", cells, dead_pool.size() );
+	    }
+	  else
+	    cells = new Cell[REGIONSIZE];
 		  	 
-			 for( int32_t c=0; c<REGIONSIZE;++c)
-				cells[c].region = this;
-		  } 
-		return( &cells[ x + y * REGIONWIDTH ] );
-	 }
+	  for( int32_t c=0; c<REGIONSIZE;++c)
+	    cells[c].region = this;
+	} 
+      return( &cells[ x + y * REGIONWIDTH ] );
+    }
 	 	 
-	 inline void AddBlock();
-	 inline void RemoveBlock(); 
+    inline void AddBlock();
+    inline void RemoveBlock(); 
 	 
-	 SuperRegion* superregion;	
+    SuperRegion* superregion;	
 	 
   }; // class Region
   
   class SuperRegion
   {
   private:
-	 unsigned long count; // number of blocks rendered into this superregion
-	 pthread_rwlock_t rwlock;
-	 point_int_t origin;
-	 Region regions[SUPERREGIONSIZE];
-	 World* world;
+    unsigned long count; // number of blocks rendered into this superregion
+    point_int_t origin;
+    Region regions[SUPERREGIONSIZE];
+    World* world;
 	 
   public:	 
-	 SuperRegion( World* world, point_int_t origin );
-	 ~SuperRegion();
+    SuperRegion( World* world, point_int_t origin );
+    ~SuperRegion();
 	 
-	 inline Region* GetRegion( int32_t x, int32_t y )
-	 { 
-		return( &regions[ x + y * SUPERREGIONWIDTH ]);
-	 }
+    inline Region* GetRegion( int32_t x, int32_t y )
+    { 
+      return( &regions[ x + y * SUPERREGIONWIDTH ]);
+    }
 	 
-	 void DrawOccupancy(unsigned int layer) const;
-	 void DrawVoxels(unsigned int layer) const;
+    void DrawOccupancy(unsigned int layer) const;
+    void DrawVoxels(unsigned int layer) const;
+	 	 
+    inline void AddBlock();
+    inline void RemoveBlock();		
 	 
-	 inline void ReadLock(){ pthread_rwlock_rdlock( &rwlock); }
-	 inline void WriteLock(){ pthread_rwlock_wrlock( &rwlock); }
-	 inline void Unlock(){ pthread_rwlock_unlock( &rwlock); }
-	 
-	 inline void AddBlock();
-	 inline void RemoveBlock();		
-	 
-	 const point_int_t& GetOrigin() const { return origin; }
+    const point_int_t& GetOrigin() const { return origin; }
   }; // class SuperRegion;
   
-  }; // namespace Stg
+}; // namespace Stg

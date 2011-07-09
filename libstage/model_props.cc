@@ -6,30 +6,49 @@ using namespace Stg;
 
 const void* Model::GetProperty( const char* key ) const
 {
-	// see if the key has the predefined-property prefix
-	if( strncmp( key, MP_PREFIX, strlen(MP_PREFIX)) == 0 )
-	{
-		if( MATCH( key, MP_COLOR))            return (void*)&color;
-		if( MATCH( key, MP_MASS))             return (void*)&mass;
-		if( MATCH( key, MP_WATTS))            return (void*)&watts;
-		if( MATCH( key, MP_FIDUCIAL_RETURN))  return (void*)&vis.fiducial_return;
-		if( MATCH( key, MP_LASER_RETURN))     return (void*)&vis.laser_return;
-		if( MATCH( key, MP_OBSTACLE_RETURN))  return (void*)&vis.obstacle_return;
-		if( MATCH( key, MP_RANGER_RETURN))    return (void*)&vis.ranger_return;
-		if( MATCH( key, MP_GRIPPER_RETURN))   return (void*)&vis.gripper_return;
 
-		PRINT_WARN1( "Requested non-existent model core property \"%s\"", key );
-		return NULL;
+  // see if the key has the predefined-property prefix
+  if( strncmp( key, MP_PREFIX, strlen(MP_PREFIX)) == 0 )
+    {
+#if 0
+      TODO
+	static std::map<std::string, const void*> props;
+      
+      // first time in, populate the map
+      if( props.size() < 1 )
+	{
+	  props[MP_COLOR] = (void*)&color;
+	  props[MP_MASS] = (void*)&mass;
+	  props[MP_WATTS] = (void*)&watts;
+	  props[MP_FIDUCIAL_RETURN] = (void*)&vis.fiducial_return;
+	  props[MP_LASER_RETURN] = (void*)&vis.laser_return;
+	  props[MP_OBSTACLE_RETURN] = (void*)&vis.obstacle_return;
+	  props[MP_RANGER_RETURN] = (void*)&vis.ranger_return;
+	  props[MP_GRIPPER_RETURN] = (void*)&vis.gripper_return;
 	}
-	
-	// otherwise it may be an arbitrary named property
-	const std::map< std::string,const void* >::const_iterator& it 
-	  = props.find( key );
-	
-	if( it != props.end() )
-	  return it->second;
-	else
-	  return NULL;
+#endif      
+      
+      if( MATCH( key, MP_COLOR))            return (void*)&color;
+      if( MATCH( key, MP_MASS))             return (void*)&mass;
+      if( MATCH( key, MP_WATTS))            return (void*)&watts;
+      if( MATCH( key, MP_FIDUCIAL_RETURN))  return (void*)&vis.fiducial_return;
+      if( MATCH( key, MP_LASER_RETURN))     return (void*)&vis.laser_return;
+      if( MATCH( key, MP_OBSTACLE_RETURN))  return (void*)&vis.obstacle_return;
+      if( MATCH( key, MP_RANGER_RETURN))    return (void*)&vis.ranger_return;
+      if( MATCH( key, MP_GRIPPER_RETURN))   return (void*)&vis.gripper_return;
+      
+      PRINT_WARN1( "Requested non-existent model core property \"%s\"", key );
+      return NULL;
+    }
+  
+  // otherwise it may be an arbitrary named property
+  const std::map< std::string,const void* >::const_iterator& it 
+    = props.find( key );
+  
+  if( it != props.end() )
+    return it->second;
+  else
+    return NULL;
 }
 
 int Model::SetProperty( const char* key,

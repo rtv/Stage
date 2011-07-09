@@ -711,7 +711,6 @@ void World::ClearRays()
   ray_list.clear();
 }
 
-
 void World::Raytrace( const Pose &gpose, // global pose
 		      const meters_t range,
 		      const radians_t fov,
@@ -763,9 +762,9 @@ RaytraceResult World::Raytrace( const Ray& r )
   
   // eliminate a potential divide by zero
   const double angle( r.origin.a == 0.0 ? 1e-12 : r.origin.a );
-  const double cosa(cos(angle));
   const double sina(sin(angle));
-  const double tana(sina/cosa); // = tan(angle)
+  const double cosa(cos(angle));
+  const double tana(sina/cosa); // equivalent to tan(angle)
 
   // the x and y components of the ray (these need to be doubles, or a
   // very weird and rare bug is produced)
@@ -821,7 +820,6 @@ RaytraceResult World::Raytrace( const Ray& r )
 	  int32_t cx( GETCELL(globx) ); 
 	  int32_t cy( GETCELL(globy) );
 
-	  //Cell* c = reg->GetCell(cx,cy);
 	  Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
 	  assert(c); // should be good: we know the region contains objects
 
@@ -944,8 +942,7 @@ RaytraceResult World::Raytrace( const Ray& r )
 	      globx = ycrossx;
 	      globy = ycrossy;
 							
-	      n -= distY; // decrement remaining manhattan distance				
-							
+	      n -= distY; // decrement remaining manhattan distance 							
 	      // calculate the next region crossing
 	      ycrossx += yjumpx;
 	      ycrossy += yjumpy;

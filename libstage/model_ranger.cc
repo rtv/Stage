@@ -163,9 +163,13 @@ static bool ranger_match( Model* hit,
 			  const void* dummy )
 {
   (void)dummy; // avoid warning about unused var
-	
+  
   // Ignore the model that's looking and things that are invisible to
   // rangers 
+  
+  // small optimization to avoid recursive Model::IsRelated call in common cases
+  if( (hit == finder->Parent()) || (hit == finder) ) return false;
+  
   return( (!hit->IsRelated( finder )) && (sgn(hit->vis.ranger_return) != -1 ) );
 }	
 
@@ -184,14 +188,12 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
   intensities.resize( sample_count );
 
   //printf( "update sensor, has ranges size %u\n", (unsigned int)ranges.size() );
-	
-  double bearing( sample_count > 1 ? -fov/2.0 : 0.0 );
   // make the first and last rays exactly at the extremes of the FOV
   double sample_incr( fov / std::max(sample_count-1, (unsigned int)1) );
-	
+  
   // find the global origin of our first emmitted ray
-  Pose rayorg( pose );//mod->GetPose() );
-  rayorg.a += bearing;
+  Pose rayorg(pose);
+  rayorg.a += (sample_count > 1 ? -fov/2.0 : 0.0);
   rayorg.z += size.z/2.0;
   rayorg = mod->LocalToGlobal(rayorg);
   

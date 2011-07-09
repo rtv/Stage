@@ -92,9 +92,6 @@ namespace Stg
   /** Vector of pointers to Models. */
   typedef std::vector<Model*> ModelPtrVec;
 
-  /** Set of pointers to Blocks. */
-  typedef std::set<Block*> BlockPtrSet;
-
   /** Vector of pointers to Cells.*/
   typedef std::vector<Cell*> CellPtrVec;
 
@@ -1302,7 +1299,6 @@ namespace Stg
 		
     void BuildDisplayList( Model* mod );
 		
-    //BlockPtrSet blocks;
     std::vector<Block*> blocks;
     Size size;
     point3_t offset;
@@ -2835,7 +2831,7 @@ namespace Stg
 		
   private:
     std::vector<Sensor> sensors;		
-		
+    
   protected:
 		
     virtual void Startup();
