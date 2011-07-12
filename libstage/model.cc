@@ -784,15 +784,11 @@ void Model::Startup( void )
 {
   //printf( "Startup model %s\n", this->token );  
   //printf( "model %s using queue %d\n", token, event_queue_num );
-	
-  // if we're thread safe, we can use an event queue >0  
-  event_queue_num = world->GetEventQueue( this );
-	
-  // put my first update request in the world's queue
-  if( thread_safe )
-    world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
-  else
-    world->Enqueue( 0, interval, this, UpdateWrapper, NULL );
+  
+  // iff we're thread safe, we can use an event queue >0, else 0
+  event_queue_num =  thread_safe ? world->GetEventQueue( this ) : 0;
+  
+  world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
   
   if( velocity_enable )
     world->EnableVelocity( this );
