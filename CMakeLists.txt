@@ -42,9 +42,16 @@ ENDIF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
 #####################################
 # Build type cflags
 SET (OPTIMIZE "-O2")
-SET (CMAKE_CXX_FLAGS_RELEASE " ${OPTIMIZE} -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
-SET (CMAKE_CXX_FLAGS_DEBUG "-ggdb  ${WALL} " CACHE INTERNAL "C Flags for debug" FORCE)
-SET (CMAKE_CXX_FLAGS_PROFILE "  -ggdb -pg ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
+if( PROJECT_OS_OSX )
+    # needed for stage to work with fltk on snow leopard
+    SET (FORCE_ARCH "-arch i386" )
+else( PROJECT_OS_OSX )
+    SET (FORCE_ARCH "")
+endif( PROJECT_OS_OSX )
+SET (CMAKE_CXX_FLAGS_RELEASE " ${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
+SET (CMAKE_CXX_FLAGS_DEBUG " ${FORCE_ARCH} -ggdb  ${WALL} " CACHE INTERNAL "C Flags for debug" FORCE)
+SET (CMAKE_CXX_FLAGS_PROFILE " ${FORCE_ARCH} -ggdb -pg ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
+
 
 #####################################
 # Set the default build type
@@ -81,14 +88,14 @@ MESSAGE( STATUS "Checking for required libraries..." )
 
 SET( INDENT "  * " )
 
-pkg_search_module( LIBPNG REQUIRED libpng )
-IF( LIBPNG_FOUND )
-#  MESSAGE( STATUS ${INDENT} "Libpng version ${LIBPNG_VERSION} detected at ${LIBPNG_PREFIX}" )
-#  MESSAGE( STATUS "    LIBPNG_CFLAGS = ${LIBPNG_CFLAGS}" )
-#  MESSAGE( STATUS "    LIBPNG_LDFLAGS = ${LIBPNG_LDFLAGS}" )
-ELSE( LIBPNG_FOUND )
-  MESSAGE( ${INDENT} "Libpng not detected" )
-ENDIF( LIBPNG_FOUND )
+find_package( PNG REQUIRED )
+IF( PNG_FOUND )
+#  MESSAGE( STATUS ${INDENT} "PNG version ${PNG_VERSION} detected at ${PNG_PREFIX}" )
+#  MESSAGE( STATUS "    PNG_CFLAGS = ${PNG_CFLAGS}" )
+#  MESSAGE( STATUS "    PNG_LDFLAGS = ${PNG_LDFLAGS}" )
+ELSE( PNG_FOUND )
+  MESSAGE( ${INDENT} "PNG not detected" )
+ENDIF( PNG_FOUND )
 
 #MESSAGE( STATUS "BUILD_GUI is ${BUILD_GUI}" )
 #IF( BUILD_GUI )
@@ -177,14 +184,14 @@ MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
 include_directories( . 
 		     libstage 
 		     replace 
-		     ${LIBPNG_INCLUDE_DIRS}
+		     ${PNG_INCLUDE_DIRS}
 		     ${CMAKE_INCLUDE_PATH}
 )
 
 
 # all targets need these library directories
 link_directories( 
-	${LIBPNG_LIBRARY_DIRS}
+	${PNG_LIBRARY_DIRS}
 )
 
 # work through these subdirs
