@@ -1,3 +1,42 @@
+Quick start: Build Stage from RTV's Github 
+------------------------------------------
+
+[Tested 2011.8.5 on OS X 10.7 Lion]
+
+1) Install Stage's dependencies:
+
+ FLTK >=1.1
+ git
+ cmake
+ pkg-config
+
+On the Mac I use Homebrew, since MacPorts installs way more than Stage needs (http://mxcl.github.com/homebrew/)
+
+$ brew install --HEAD fltk cmake git pkg-config
+
+If you want to use Player/Stage, install and test Player now.
+
+2) Get and build Stage 
+
+$ mkdir stage4
+$ cd stage4
+$ git clone git://github.com/rtv/Stage.git
+$ export STG=$HOME/stg
+$ cmake -DCMAKE_INSTALL_PREFIX=$STG Stage
+$ make
+
+3) Install and set up environment
+
+$ make install
+$ export DYLD_LIBRARY_PATH=$STG/lib
+
+4) Run Stage
+$ stage Stage/worlds/simple.world
+
+5) Please report build issues, bugs or other problems  using the tracker at  http://github.com/rtv/Stage/issues
+ 
+
+--- Longer instructions ------------------------------------------
 
 Build system
 ------------
