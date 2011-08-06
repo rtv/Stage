@@ -672,6 +672,9 @@ bool World::Update()
 
 unsigned int World::GetEventQueue( Model* mod ) const
 {
+  // todo: there should be a policy that works faster than random, but
+  // random should do a good core load balancing.
+
   if( worker_threads < 1 )
     return 0;
   return( (random() % worker_threads) + 1);

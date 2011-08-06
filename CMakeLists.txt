@@ -42,16 +42,16 @@ ENDIF (NOT PROJECT_OS_WIN AND NOT PROJECT_OS_SOLARIS)
 #####################################
 # Build type cflags
 SET (OPTIMIZE "-O2")
-if( PROJECT_OS_OSX )
-    # needed for stage to work with fltk on snow leopard
-    SET (FORCE_ARCH "-arch i386" )
-else( PROJECT_OS_OSX )
-    SET (FORCE_ARCH "")
-endif( PROJECT_OS_OSX )
-SET (CMAKE_CXX_FLAGS_RELEASE " ${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
-SET (CMAKE_CXX_FLAGS_DEBUG " ${FORCE_ARCH} -ggdb  ${WALL} " CACHE INTERNAL "C Flags for debug" FORCE)
-SET (CMAKE_CXX_FLAGS_PROFILE " ${FORCE_ARCH} -ggdb -pg ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
 
+# uncomment this to force 32bit on OS X, for example if you can't build FLTK 64bit
+# e.g. using MacPorts on 10.6 Snow Leopard
+#if( PROJECT_OS_OSX )
+#  SET( FORCE_ARCH "-arch i386" )
+#endif( PROJECT_OS_OSX)
+
+SET (CMAKE_CXX_FLAGS_RELEASE " ${FORCE_ARCH} ${OPTIMIZE} -DNDEBUG ${WALL} " CACHE INTERNAL "C Flags for release" FORCE)
+SET (CMAKE_CXX_FLAGS_DEBUG " -ggdb  ${FORCE_ARCH} ${WALL} " CACHE INTERNAL "C Flags for debug" FORCE)
+SET (CMAKE_CXX_FLAGS_PROFILE " -ggdb -pg  ${FORCE_ARCH} ${WALL} " CACHE INTERNAL "C Flags for profile" FORCE)
 
 #####################################
 # Set the default build type
@@ -81,79 +81,35 @@ include_directories(
 	${LTDL_INCLUDE_DIR}
 )
 
-# find the easy modules
-include(FindPkgConfig)
 
 MESSAGE( STATUS "Checking for required libraries..." )
 
 SET( INDENT "  * " )
 
+find_package( JPEG REQUIRED )
+IF( JPEG_FOUND )
+  #MESSAGE( STATUS ${INDENT} "JPEG_INCLUDE_DIR = ${JPEG_INCLUDE_DIR}" )
+  #MESSAGE( STATUS ${INDENT} "JPEG_LIBRARIES = ${JPEG_LIBRARIES}" ) 
+ELSE( JPEG_FOUND )
+   MESSAGE( ${INDENT} "JPEG library not detected" )
+ENDIF( JPEG_FOUND )
+
 find_package( PNG REQUIRED )
 IF( PNG_FOUND )
-#  MESSAGE( STATUS ${INDENT} "PNG version ${PNG_VERSION} detected at ${PNG_PREFIX}" )
-#  MESSAGE( STATUS "    PNG_CFLAGS = ${PNG_CFLAGS}" )
-#  MESSAGE( STATUS "    PNG_LDFLAGS = ${PNG_LDFLAGS}" )
+#  MESSAGE( STATUS ${INDENT} "PNG_INCLUDE_DIR = ${PNG_INCLUDE_DIR}" )
+#  MESSAGE( STATUS ${INDENT} "PNG_LIBRARIES = ${PNG_LIBRARIES}" ) 
 ELSE( PNG_FOUND )
-  MESSAGE( ${INDENT} "PNG not detected" )
+   MESSAGE( ${INDENT} "PNG library not detected" )
 ENDIF( PNG_FOUND )
-
-#MESSAGE( STATUS "BUILD_GUI is ${BUILD_GUI}" )
-#IF( BUILD_GUI )
-
-## the FLTK package script is not useful - it finds an X11-based FLTK on OSX.
-## so we can't do this stuff
-#find_package( FLTK REQUIRED )
-#IF( FLTK_FOUND )
+   
+find_package( FLTK REQUIRED )
+IF( FLTK_FOUND )
 #  MESSAGE( STATUS ${INDENT} "FLTK_LIBRARIES=${FLTK_LIBRARIES}" )
 #  MESSAGE( STATUS ${INDENT} "FLTK_INCLUDE_DIR=${FLTK_INCLUDE_DIR}" )
-#ELSE( FLTK_FOUND )
-#  MESSAGE( FATAL_ERROR "FLTK not found, aborting" )
-#ENDIF( FLTK_FOUND )
+ELSE( FLTK_FOUND )
+  MESSAGE( FATAL_ERROR "FLTK not found, aborting" )
+ENDIF( FLTK_FOUND )
 
-## and we have to do all this instead
-IF ( NOT FLTK_CONFIG )
-   FIND_PROGRAM ( FLTK_CONFIG NAMES fltk-config PATHS ${FLTK_CONFIG_PATH} )
-ENDIF ( NOT FLTK_CONFIG )
-IF ( NOT FLTK_CONFIG )
-  MESSAGE( FATAL_ERROR "Cannot find fltk-config, aborting" )
-ENDIF( NOT FLTK_CONFIG)
-		 
-
-OPTION (LINK_FLTK_STATICALLY "Link to the FLTK libraries statically" OFF)
-IF (LINK_FLTK_STATICALLY)
-	SET (FLTK_CONFIG_CMD "--ldstaticflags")
-	MESSAGE (STATUS "Linking to FLTK statically.")
-ELSE (LINK_FLTK_STATICALLY)
-	SET (FLTK_CONFIG_CMD "--ldflags")
-	#MESSAGE (STATUS "Linking to FLTK dynamically.")
-ENDIF (LINK_FLTK_STATICALLY)
-
-EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --version
-  OUTPUT_VARIABLE FLTK_VERSION
-  OUTPUT_STRIP_TRAILING_WHITESPACE )
-MESSAGE( STATUS ${INDENT} "FLTK version ${FLTK_VERSION} detected via ${FLTK_CONFIG}")
-EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --use-gl --use-images --cxxflags 
-  OUTPUT_VARIABLE FLTK_CFLAGS
-  OUTPUT_STRIP_TRAILING_WHITESPACE )
-EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --use-gl --use-images ${FLTK_CONFIG_CMD}
-  OUTPUT_VARIABLE FLTK_LDFLAGS
-  OUTPUT_STRIP_TRAILING_WHITESPACE )
-EXECUTE_PROCESS ( COMMAND ${FLTK_CONFIG} --use-gl --use-images --libs
-  OUTPUT_VARIABLE FLTK_LIBS_NEWLINES
-  OUTPUT_STRIP_TRAILING_WHITESPACE )
-# replace the newlines with semicolons
-STRING(REGEX REPLACE "\n" ";" FLTK_LIBS "${FLTK_LIBS_NEWLINES}")
-
-MESSAGE( STATUS "    FLTK_CFLAGS = ${FLTK_CFLAGS}")
-MESSAGE( STATUS "    FLTK_LDFLAGS = ${FLTK_LDFLAGS}")
-MESSAGE( STATUS "    FLTK_LIBS = ${FLTK_LIBS}")
-
-
-SET (FLTK_FOUND TRUE)
-
-# ENDIF( BUILD_GUI )
-
-#MESSAGE( ${INDENT} "Checking for OpenGL" )
 find_package( OpenGL REQUIRED )
 IF( NOT OPENGL_GLU_FOUND )
   MESSAGE( FATAL_ERROR "OpenGL GLU not found, aborting" )
@@ -164,6 +120,10 @@ ENDIF( NOT OPENGL_GLU_FOUND )
 
 
 MESSAGE( STATUS "Checking for optional libraries..." )
+
+# Player does not have a CMake package, but does provide pkgconfig info
+
+include(FindPkgConfig)
 
 pkg_search_module( PLAYER playercore>=2.1.0 ) 
 IF( PLAYER_FOUND )
@@ -184,15 +144,12 @@ MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
 include_directories( . 
 		     libstage 
 		     replace 
-		     ${PNG_INCLUDE_DIRS}
+		     ${FLTK_INCLUDE_DIR}
+                     ${PNG_INCLUDE_DIR}
+                     ${JPEG_INCLUDE_DIR}
 		     ${CMAKE_INCLUDE_PATH}
 )
 
-
-# all targets need these library directories
-link_directories( 
-	${PNG_LIBRARY_DIRS}
-)
 
 # work through these subdirs
 ADD_SUBDIRECTORY(libstage)

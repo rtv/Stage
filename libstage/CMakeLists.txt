@@ -43,7 +43,7 @@ set( stageSrcs
   ancestor.cc
 )
 
-set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+#set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS" )
  
 add_library(stage SHARED ${stageSrcs})
 
@@ -57,10 +57,15 @@ ENDIF (NOT(${FLTK_LDFLAGS} MATCHES "-lGL"))
 # causes the shared library to have a version number
 set_target_properties( stage PROPERTIES
 		       VERSION ${VERSION}
-           LINK_FLAGS "${FLTK_LDFLAGS}"  
+#           LINK_FLAGS "${FLTK_LDFLAGS}"  
 )
 
-target_link_libraries( stage ${LTDL_LIB} )
+target_link_libraries( stage 
+                       ${LTDL_LIB} 
+                       ${JPEG_LIBRARIES} 
+                       ${PNG_LIBRARIES}
+                       ${FLTK_LIBRARIES}
+)
 
 set( stagebinarySrcs main.cc )
 set_source_files_properties( ${stagebinarySrcs} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
@@ -85,7 +90,6 @@ set_target_properties( stagebinary PROPERTIES OUTPUT_NAME stage )
 # to explicitly link on Linux
 
 target_link_libraries( stagebinary stage )
-#set_target_properties( stagebinary PROPERTIES LINK_FLAGS "${FLTK_LDFLAGS}" )
 
 IF(PROJECT_OS_LINUX)
   target_link_libraries( stagebinary stage pthread )
