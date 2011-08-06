@@ -1097,6 +1097,14 @@ namespace Stg
     /** returns true when time to quit, false otherwise */
     static bool UpdateAll(); 
 	 
+  /** run all worlds. 
+   *  If only non-gui worlds were created, UpdateAll() is 
+   *  repeatedly called. 
+   *  To simulate a gui world only a single gui world may 
+   *  have been created. This world is then simulated.
+   */
+  static void Run();
+	 
     World( const std::string& name = "MyWorld", 
 	   double ppm = DEFAULT_PPM );
 		

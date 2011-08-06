@@ -96,11 +96,8 @@ int main( int argc, char* argv[] )
 		optindex++;
 	 }
 
-  if( usegui )
-			Fl::run();	 
-  else
-	 while( ! World::UpdateAll() );
-
+  World::Run();  
+  
   puts( "\n[Stage: done]" );
 
 	return EXIT_SUCCESS;
