@@ -8,29 +8,29 @@
 #include "region.hh"
 using namespace Stg;
 
-std::vector<Stg::Cell*> Region::dead_pool;
+std::vector<Stg::Cell*> Stg::Region::dead_pool;
 
-Region::Region() : 
+Stg::Region::Region() : 
   cells(NULL), 
   count(0),
   superregion(NULL)
 {
 }
 
-Region::~Region()
+Stg::Region::~Region()
 {
   if( cells )
     delete[] cells;
 }
 
-void Region::AddBlock()
+void Stg::Region::AddBlock()
 { 
   ++count; 
   assert(count>0);
   superregion->AddBlock();
 }
 
-void Region::RemoveBlock()
+void Stg::Region::RemoveBlock()
 {
   --count; 
   assert(count>=0); 
