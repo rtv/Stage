@@ -158,7 +158,7 @@ int InterfaceSimulation::ProcessMessage(QueuePointer &resp_queue,
 		player_capabilities_req_t & cap_req = * reinterpret_cast<player_capabilities_req_t *> (data);
 		if (cap_req.type == PLAYER_MSGTYPE_REQ && (cap_req.subtype == PLAYER_SIMULATION_REQ_SET_POSE3D || cap_req.subtype == PLAYER_SIMULATION_REQ_GET_POSE3D))
 		{
-			this->driver->Publish(addr, resp_queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_CAPABILTIES_REQ);
+			this->driver->Publish(addr, resp_queue, PLAYER_MSGTYPE_RESP_ACK, PLAYER_CAPABILITIES_REQ);
 			return 0;
 		}
 	}
