@@ -1293,7 +1293,7 @@ void Model::RasterVis::ClearPts()
 }
 
 
-Model::Flag::Flag( const Color color, const double size ) 
+Model::Flag::Flag( const Color& color, const double size ) 
   : color(color), size(size), displaylist(0)
 { 
 }

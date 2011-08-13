@@ -59,7 +59,7 @@ void Ancestor::RemoveChild( Model* mod )
 Pose Ancestor::GetGlobalPose()
 {
 	Pose pose;
-	bzero( &pose, sizeof(pose));
+	memset( &pose, 0, sizeof(pose));
 	return pose;
 }
 

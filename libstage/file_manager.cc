@@ -7,7 +7,7 @@
 #include <sstream>
 #include <fstream>
 
-std::string searchDirs( const std::vector<std::string> dirs, const std::string filename ) {
+std::string searchDirs( const std::vector<std::string>& dirs, const std::string& filename ) {
 	for ( unsigned int i=0; i<dirs.size(); i++ ) {
 		std::string path = dirs[i] + '/' + filename;
 		PRINT_DEBUG1("FileManager: trying %s\n", path.c_str());
@@ -33,7 +33,7 @@ namespace Stg
 			return std::string( stgPath );
 	}
 
-	std::string FileManager::findFile( const std::string filename ) 
+	std::string FileManager::findFile( const std::string& filename ) 
 	{
 		PRINT_DEBUG1("FileManager: trying %s\n", filename.c_str());
 		if ( readable( filename ) )
@@ -65,7 +65,7 @@ namespace Stg
 		return searchDirs( paths, filename );
 	}
 
-	bool FileManager::readable( std::string path ) {
+	bool FileManager::readable( const std::string& path ) {
 		std::ifstream iFile;
 		iFile.open( path.c_str() );
 		if ( iFile.is_open() ) {
@@ -77,7 +77,7 @@ namespace Stg
 		}
 	}
 
-	std::string FileManager::stripFilename( std::string path ) {
+	std::string FileManager::stripFilename( const std::string& path ) {
 		std::string pathChars( "\\/" );
                 std::string::size_type loc = path.find_last_of( pathChars );
 		if ( loc == std::string::npos )

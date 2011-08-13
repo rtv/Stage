@@ -113,7 +113,8 @@ FILE *Worldfile::FileOpen(const std::string& filename, const char* method)
     }
     token = strtok(NULL, ":");
   }
-  free(tmp);
+  if( tmp ) free(tmp);
+  if( fullpath ) delete[] fullpath;
   return NULL;
 }
 
@@ -487,9 +488,11 @@ bool Worldfile::LoadTokenInclude(FILE *file, int *line, int include)
       fullpath = new char[PATH_MAX];
       char* dummy = getcwd(fullpath, PATH_MAX);
       if (!dummy)
-      {
-        PRINT_ERR2("unable to get cwd %d: %s", errno, strerror(errno));
-        return false;
+		  {
+			 PRINT_ERR2("unable to get cwd %d: %s", errno, strerror(errno));
+			 if(tmp) free(tmp);
+			 delete[] fullpath;
+			 return false;
       }
       strcat( fullpath, "/" );
       strcat( fullpath, dirname(tmp));
@@ -1023,16 +1026,11 @@ bool Worldfile::ParseTokenEntity(int entity, int *index, int *line)
 // Parse an property from the token list.
 bool Worldfile::ParseTokenProperty(int entity, int *index, int *line)
 {
-  int i;
-  CProperty* property;
-  int name, value, count;
-  CToken *token;
-
-  name = *index;
-  value = -1;
-  count = 0;
-
-  for (i = *index + 1; i < (int)this->tokens.size(); i++)
+  CProperty* property(NULL);
+  int name( *index );
+  CToken *token(NULL);
+  
+  for(int i = *index + 1; i < (int)this->tokens.size(); i++)
     {
       token = &this->tokens[i];
 
@@ -1508,7 +1506,7 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
       strcat( fullpath, "/" );
       strcat( fullpath, filename );
       assert(strlen(fullpath) + 1 < PATH_MAX);
-      free(tmp);
+      if(tmp) free(tmp);
       return fullpath;
     }
   else
@@ -1523,6 +1521,8 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
       if (!dummy)
       {
         PRINT_ERR2("unable to get cwd %d: %s", errno, strerror(errno));
+		  if( fullpath ) delete[] fullpath;
+		  if( tmp ) free(tmp);
         return value;
       }
 
