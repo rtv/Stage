@@ -56,7 +56,7 @@ void Ancestor::RemoveChild( Model* mod )
   EraseAll( mod, children );
 }
 
-Pose Ancestor::GetGlobalPose()
+Pose Ancestor::GetGlobalPose() const
 {
 	Pose pose;
 	memset( &pose, 0, sizeof(pose));
