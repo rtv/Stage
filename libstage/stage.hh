@@ -714,8 +714,8 @@ namespace Stg
 	 
     virtual void AddChild( Model* mod );
     virtual void RemoveChild( Model* mod );
-    virtual Pose GetGlobalPose();
-	 
+    virtual Pose GetGlobalPose() const;
+
     const char* Token(){ return token.c_str(); }
 
     const std::string& TokenStr(){ return token; }

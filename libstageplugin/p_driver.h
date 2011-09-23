@@ -108,6 +108,8 @@ class InterfaceModel
 
   virtual void Subscribe( void );
   virtual void Unsubscribe( void );
+  virtual void Subscribe( QueuePointer &queue );
+  virtual void Unsubscribe( QueuePointer &queue );
 
  protected:
   Stg::Model* mod;
