@@ -27,16 +27,10 @@ static unsigned int _map_width=0, _map_height=0;
 uint8_t GetMap( unsigned int x, unsigned int y )
 {
   assert(_map);
-  
-  if( x < 0 ||
-		x >= _map_width ||
-		y < 0 ||
-		y >= _map_height
-		)
-	 {
-		return 9;	 
-	 }
-  
+
+  if(x >= _map_width || y >= _map_height)
+		return 9;
+
 	return _map[(y*_map_width)+x];
 }
 
