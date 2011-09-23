@@ -73,9 +73,15 @@ The optional Player plugin requires Player >= 2.1.
 
 The optional Avonstage web-enabled binary requires Avon >= 0.1.
 
+On a typical Debian based Linux distribution (like Ubuntu & Mint) you can install above dependencies using this command: (assuming that you have already installed build tools like cmake and build-essentials)
+
+sudo apt-get install pkg-config libfltk1.1-dev libgl1-mesa-dev libglu1-mesa-dev libpng12-dev libtool 
+
+Please note that OpenGL libraries (gl1 & glu1) come with graphics card drivers and they are vendor based, therefore you need to inatall required drivers for your graphics card first. 
+
 Configuring the build
 ---------------------
-Unpack the distribution or check it out from SVN. Change directory to
+Unpack the distribution or check it out from Git. Change directory to
 the top level of the Stage source tree.
 
 First, you may need to help CMake find your the libraries on which
@@ -194,6 +200,8 @@ working:
 You should see a window appear, showing some robots. Try pressing the
 'p' key to pause and un-pause the simulation, to check that the robots
 are working. If this works, you are ready to write Stage plugins.
+
+(If the stage window is flicking or some texts are not shown properly on Linux, try to disable compiz, if it is enabled)
 
 Next steps
 ----------
