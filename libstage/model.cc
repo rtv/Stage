@@ -749,7 +749,7 @@ void pose_invert( Pose* pose )
 {
   pose->x = -pose->x;
   pose->y = -pose->y;
-  pose->a = pose->a;
+  // pose->a = pose->a;
 }
 
 void Model::Print( char* prefix ) const

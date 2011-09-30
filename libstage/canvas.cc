@@ -749,14 +749,11 @@ class DistFuncObj
   
   bool operator()(const Model* a, const Model* b ) const
   { 
-    Pose a_pose = a->GetGlobalPose();
-    Pose b_pose = b->GetGlobalPose();
+    const Pose a_pose = a->GetGlobalPose();
+    const Pose b_pose = b->GetGlobalPose();
 	 
-    meters_t a_dist = hypot( y - a_pose.y,
-											x - a_pose.x );
-	 
-    meters_t b_dist = hypot( y - b_pose.y,
-											x - b_pose.x );
+    const meters_t a_dist = hypot( y - a_pose.y, x - a_pose.x );	 
+    const meters_t b_dist = hypot( y - b_pose.y, x - b_pose.x );
 	 
     return (  a_dist < b_dist );
   }

@@ -813,6 +813,7 @@ namespace Stg
     friend class Model; // allow access to private members
     friend class ModelFiducial;
     friend class Canvas;
+    friend class WorkerThread;
 
   public: 
     /** contains the command line arguments passed to Stg::Init(), so
@@ -1277,6 +1278,7 @@ namespace Stg
 	UnMapping them very quickly. */  
     CellPtrVec rendered_cells[2];
 		
+    /** The current location of the polygon's vertices in global coords
     PointIntVec gpts;
 	
     /** find the position of a block's point in model coordinates

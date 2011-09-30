@@ -67,17 +67,17 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   // compute the vector sum of the sonar ranges	      
   double dx=0, dy=0;
   
-	const std::vector<ModelRanger::Sensor>& sensors = rgr->GetSensors();
+  const std::vector<ModelRanger::Sensor>& sensors = rgr->GetSensors();
 
   // use the front-facing sensors only
   for( unsigned int i=0; i < 8; i++ )
-	 {
-		dx += sensors[i].ranges[0] * cos( sensors[i].pose.a );
-		dy += sensors[i].ranges[0] * sin( sensors[i].pose.a );
-	 }
+    {
+      dx += sensors[i].ranges[0] * cos( sensors[i].pose.a );
+      dy += sensors[i].ranges[0] * sin( sensors[i].pose.a );
+    }
   
   if( (dx == 0) || (dy == 0) )
-	 return 0;
+    return 0;
     
   double resultant_angle = atan2( dy, dx );
   double forward_speed = 0.0;
@@ -86,25 +86,25 @@ int RangerUpdate( ModelRanger* rgr, robot_t* robot )
   
   // if the front is clear, drive forwards
   if( (sensors[3].ranges[0] > SAFE_DIST) && // forwards
-	  (sensors[4].ranges[0] > SAFE_DIST) &&
-	  (sensors[5].ranges[0] > SAFE_DIST ) && //
-	  (sensors[6].ranges[0] > SAFE_DIST/2.0) && 
-	  (sensors[2].ranges[0] > SAFE_DIST ) && 
-	  (sensors[1].ranges[0] > SAFE_DIST/2.0) && 
-	  (fabs( resultant_angle ) < SAFE_ANGLE) )
-	{
-	  forward_speed = VSPEED;
+      (sensors[4].ranges[0] > SAFE_DIST) &&
+      (sensors[5].ranges[0] > SAFE_DIST ) && //
+      (sensors[6].ranges[0] > SAFE_DIST/2.0) && 
+      (sensors[2].ranges[0] > SAFE_DIST ) && 
+      (sensors[1].ranges[0] > SAFE_DIST/2.0) && 
+      (fabs( resultant_angle ) < SAFE_ANGLE) )
+    {
+      forward_speed = VSPEED;
 	  
-	  // and steer to match the heading of the nearest robot
-	  if( robot->closest )
-		turn_speed += FLOCK_WGAIN * robot->closest_heading_error;
-	}
+      // and steer to match the heading of the nearest robot
+      if( robot->closest )
+	turn_speed += FLOCK_WGAIN * robot->closest_heading_error;
+    }
   else
-	{
-	  // front not clear. we might be stuck, so wiggle a bit
-	  if( fabs(turn_speed) < 0.1 )
-		turn_speed = drand48();
-	}
+    {
+      // front not clear. we might be stuck, so wiggle a bit
+      if( fabs(turn_speed) < 0.1 )
+	turn_speed = drand48();
+    }
   
   robot->position->SetSpeed( forward_speed, side_speed, turn_speed );
   
@@ -121,22 +121,22 @@ int FiducialUpdate( ModelFiducial* fid, robot_t* robot )
   robot->closest = NULL;
   
   FOR_EACH( it, fid->GetFiducials() )
-	{
-	  ModelFiducial::Fiducial* other = &(*it);
+    {
+      ModelFiducial::Fiducial* other = &(*it);
 	  
-	  if( other->range < dist )
-		{
-		  dist = other->range;
-		  robot->closest = other;
-		}				
-	}
+      if( other->range < dist )
+	{
+	  dist = other->range;
+	  robot->closest = other;
+	}				
+    }
   
   if( robot->closest ) // if we saw someone
-	{
-		robot->closest_bearing = robot->closest->bearing;
-		robot->closest_range = robot->closest->range;
-		robot->closest_heading_error = robot->closest->geom.a;
-	}
+    {
+      robot->closest_bearing = robot->closest->bearing;
+      robot->closest_range = robot->closest->range;
+      robot->closest_heading_error = robot->closest->geom.a;
+    }
   
   return 0;
 }

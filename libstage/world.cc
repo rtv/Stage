@@ -408,21 +408,18 @@ void World::Load( const std::string& worldfile_path )
   
   // kick off the threads
   for( unsigned int t(0); t<worker_threads; ++t )
-    {
-      // a little configuration for each thread can't be a local
-      // stack var, since it's accssed in the threads
-      std::pair<World*,int>* infop = new std::pair<World*,int>( this, t+1 );
-      
-      //printf( "starting thread %d with ID %d \n", (int)t, info[t].second );
-      
+    {      
       //normal posix pthread C function pointer
       typedef void* (*func_ptr) (void*);
       
+      // the pair<World*,int> is the configuration for each thread. it can't be a local
+      // stack var, since it's accssed in the threads
+
       pthread_t pt;
       pthread_create( &pt,
 		      NULL,
 		      (func_ptr)World::update_thread_entry, 
-		      infop );
+		      new std::pair<World*,int>( this, t+1 ) );
     }
   
   if( worker_threads > 1 ) 
@@ -501,7 +498,7 @@ std::string World::ClockString() const
 
   if( hours > 0 )
     {
-      snprintf( buf, 255, "%uh", hours );
+      snprintf( str.c_str(), 255, "%uh", hours );
       str += buf;
     }
 
@@ -767,7 +764,7 @@ RaytraceResult World::Raytrace( const Ray& r )
   const double angle( r.origin.a == 0.0 ? 1e-12 : r.origin.a );
   const double sina(sin(angle));
   const double cosa(cos(angle));
-  const double tana(sina/cosa); // equivalent to tan(angle)
+  const double tana(sina/cosa); // approximately tan(angle) but faster
 
   // the x and y components of the ray (these need to be doubles, or a
   // very weird and rare bug is produced)
