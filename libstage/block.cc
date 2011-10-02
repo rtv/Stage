@@ -24,8 +24,7 @@ Block::Block( Model* mod,
   color( color ),
   inherit_color( inherit_color ),
   wheel(wheel),
-  rendered_cells(), 
-  gpts()
+  rendered_cells() 
 {
   assert( mod );
   canonicalize_winding(this->pts);
@@ -42,8 +41,7 @@ Block::Block(  Model* mod,
     color(),
     inherit_color(true),
     wheel(),
-    rendered_cells(),
-    gpts()
+    rendered_cells()
 {
   assert(mod);
   assert(wf);
@@ -211,7 +209,7 @@ void Block::Map( unsigned int layer )
     }
   
   // now calculate the global pixel coords of the block vertices
-  gpts.clear();
+  PointIntVec gpts;
   mod->LocalToPixels( mpts, gpts );
 	
   // and render this block's polygon into the world
