@@ -1278,9 +1278,6 @@ namespace Stg
 	UnMapping them very quickly. */  
     CellPtrVec rendered_cells[2];
 		
-    /** The current location of the polygon's vertices in global coords
-    PointIntVec gpts;
-	
     /** find the position of a block's point in model coordinates
 	(m) */
     point_t BlockPointToModelMeters( const point_t& bpt );
