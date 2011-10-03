@@ -51,40 +51,52 @@ const Color Color::magenta( 1,0,1 );
 const Color Color::cyan( 0,1,1 );		
 
 
-static inline uint8_t* pb_get_pixel( Fl_Shared_Image* img, 
-				     const unsigned int x, 
-				     const unsigned int y )
-{
-  uint8_t* pixels = (uint8_t*)(img->data()[0]);
-  const unsigned int index = (y * img->w() * img->d()) + (x * img->d());
-  return( pixels + index );
-}
+// static inline uint8_t* pb_get_pixel( Fl_Shared_Image* img, 
+// 				     const unsigned int x, 
+// 				     const unsigned int y )
+// {
+//   uint8_t* pixels = (uint8_t*)(img->data()[0]);
+//   const unsigned int index = (y * img->w() * img->d()) + (x * img->d());
+//   return( pixels + index );
+// }
+
+ // // returns true if the value in the first channel is above threshold
+// static inline bool pb_pixel_is_set( Fl_Shared_Image* img, 
+// 				    const unsigned int x, 
+// 				    const unsigned int y, 
+// 				    const unsigned int threshold )
+// {
+//   return( pb_get_pixel( img,x,y )[0] > threshold );
+// }
 
 // set all the pixels in a rectangle 
 static inline void pb_set_rect( Fl_Shared_Image* pb, 
 				const unsigned int x, const unsigned int y, 
-				const unsigned int width, const unsigned int height, 
+				const unsigned int rwidth, const unsigned int rheight, 
 				const uint8_t val )
 {
   const unsigned int bytes_per_sample = 1;
-  const unsigned int num_samples = pb->d();
-	
-  for( unsigned int a = y; a < y+height; a++ )
-    for( unsigned int b = x; b < x+width; b++ )
-      {	
-	// zeroing
-	uint8_t* pix = pb_get_pixel( pb, b, a );
-	memset( pix, val, num_samples * bytes_per_sample );
-      }
+  const unsigned int depth = pb->d();
+  const unsigned int width = pb->w();
+  
+  for( unsigned int a = y; a < y+rheight; a++ )
+    {	
+      // zeroing
+      //uint8_t* pix = pb_get_pixel( pb, x, a );
+      uint8_t* pix = (uint8_t*)(pb->data()[0] + (y*width*depth) + x*depth);
+      memset( pix, val, rwidth * depth * bytes_per_sample );
+    }
 }  
 
-// returns true if the value in the first channel is above threshold
-static inline bool pb_pixel_is_set( Fl_Shared_Image* img, 
-				    const unsigned int x, 
-				    const unsigned int y, 
-				    const unsigned int threshold )
+
+static inline bool pixel_is_set( uint8_t* pixels,
+				 const unsigned int width,
+				 const unsigned int depth,
+				 const unsigned int x, 
+				 const unsigned int y,
+				 uint8_t threshold )
 {
-  return( pb_get_pixel( img,x,y )[0] > threshold );
+  return( (pixels + (y*width*depth) + x*depth)[0] > threshold );
 }
 
 int Stg::rotrects_from_image_file( const std::string& filename, 
@@ -107,13 +119,15 @@ int Stg::rotrects_from_image_file( const std::string& filename,
 
   const unsigned int width = img->w();
   const unsigned height = img->h();
+  const unsigned int depth = img->d();
+  uint8_t* pixels = (uint8_t*)img->data()[0];
 
   for(unsigned int y = 0; y < height; y++)
     {
       for(unsigned int x = 0; x < width; x++)
 	{
 	  // skip blank (white) pixels
-	  if(  pb_pixel_is_set( img,x,y, threshold) )
+	  if(  pixel_is_set( pixels, width, depth, x, y, threshold) )
 	    continue;
 
 	  // a rectangle starts from this point
@@ -122,24 +136,13 @@ int Stg::rotrects_from_image_file( const std::string& filename,
 	  unsigned int rheight = height; // assume full height for starters
 
 	  // grow the width - scan along the line until we hit an empty (white) pixel
-	  for( ; x < width &&  ! pb_pixel_is_set(img,x,y,threshold); x++ )
+	    for( ; x < width &&  ! pixel_is_set( pixels, width, depth, x, y, threshold); x++ )
 	    {
-	      // handle horizontal cropping
-	      //double ppx = x * sx;
-	      //if (ppx < this->crop_ax || ppx > this->crop_bx)
-	      //continue;
-
 	      // look down to see how large a rectangle below we can make
 	      unsigned int yy  = y;
-	      while( ! pb_pixel_is_set(img,x,yy,threshold) && (yy < height-1) )
-		{ 
-		  // handle vertical cropping
-		  //double ppy = (this->image->height - yy) * sy;
-		  //if (ppy < this->crop_ay || ppy > this->crop_by)
-		  //continue;
-
+	      //while( ! pb_pixel_is_set(img,x,yy,threshold) && (yy < height-1) )
+	      while( !  pixel_is_set( pixels, width, depth, x, yy, threshold) && (yy < height-1) )
 		  yy++;
-		} 	      
 
 	      // now yy is the depth of a line of non-zero pixels
 	      // downward we store the smallest depth - that'll be the
@@ -167,12 +170,6 @@ int Stg::rotrects_from_image_file( const std::string& filename,
 	  assert( latest.pose.y <= height);
 
 	  rects.push_back( latest );
-	  //assert( latest->size.x > 0 );
-	  //assert( latest->size.y > 0 );
-
-	  // 			if( latest->size.x < 1  || latest->size.y < 1 )
-	  // 			  printf( "p [%.2f %.2f] s [%.2f %.2f]\n", 
-	  // 						 latest->pose.x, latest->pose.y, latest->size.x, latest->size.y );
 
 	  //printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
 	  //  *rect_count, 
