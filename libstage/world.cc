@@ -498,7 +498,7 @@ std::string World::ClockString() const
 
   if( hours > 0 )
     {
-      snprintf( str.c_str(), 255, "%uh", hours );
+      snprintf( buf, 255, "%uh", hours );
       str += buf;
     }
 
