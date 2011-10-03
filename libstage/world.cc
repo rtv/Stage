@@ -1148,8 +1148,8 @@ void World:: RegisterOption( Option* opt )
 
 void World::Log( Model* mod )
 {
-  LogEntry( sim_time, mod);
-  printf( "log entry count %u\n", (unsigned int)LogEntry::Count() );
+  //LogEntry( sim_time, mod);
+  //printf( "log entry count %u\n", (unsigned int)LogEntry::Count() );
   //LogEntry::Print();
 }
 

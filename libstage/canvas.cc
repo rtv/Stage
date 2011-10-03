@@ -763,13 +763,13 @@ class DistFuncObj
 void Canvas::renderFrame()
 {
   //before drawing, order all models based on distance from camera
-  float x = current_camera->x();
-  float y = current_camera->y();
-  float sphi = -dtor( current_camera->yaw() );
+  //float x = current_camera->x();
+  //float y = current_camera->y();
+  //float sphi = -dtor( current_camera->yaw() );
 	
   //estimate point of camera location - hard to do with orthogonal mode
-  x += -sin( sphi ) * 100;
-  y += -cos( sphi ) * 100;
+  // x += -sin( sphi ) * 100;
+  //y += -cos( sphi ) * 100;
 	
   //double coords[2];
   //coords[0] = x;

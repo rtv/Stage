@@ -268,10 +268,10 @@ void ModelFiducial::Update( void )
 	// put these models into sets keyed on model pointer, rather than position
 	std::set<Model*> horiz, vert;
 	
-	for( ; xmin != xmax;  xmin++)
+	for( ; xmin != xmax;  ++xmin)
 		horiz.insert( *xmin);
 	
-	for( ; ymin != ymax; ymin++ )
+	for( ; ymin != ymax; ++ymin )
 		vert.insert( *ymin );
 	
 	// the intersection of the sets is all the fiducials close by
@@ -286,7 +286,6 @@ void ModelFiducial::Update( void )
  	FOR_EACH( it, nearby ) 
  			AddModelIfVisible( *it );	
 #else
-	// create sets sorted by x and y position
  	FOR_EACH( it, world->models_with_fiducials )
  			AddModelIfVisible( *it );	
 

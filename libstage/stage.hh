@@ -569,7 +569,10 @@ namespace Stg
   };
 
 
+  /** Define a callback function type that can be attached to a
+      record within a model and called whenever the record is set.*/
   typedef int(*model_callback_t)(Model* mod, void* user );
+
   typedef int(*world_callback_t)(World* world, void* user );
   
   // return val, or minval if val < minval, or maxval if val > maxval
@@ -675,9 +678,6 @@ namespace Stg
   class Block;
   class Model;
 
-  /** Define a callback function type that can be attached to a
-      record within a model and called whenever the record is set.*/
-  typedef int (*model_callback_t)( Model* mod, void* user );
 
   // ANCESTOR CLASS
   /** Base class for Model and World */
@@ -714,8 +714,8 @@ namespace Stg
 	 
     virtual void AddChild( Model* mod );
     virtual void RemoveChild( Model* mod );
-    virtual Pose GetGlobalPose();
-	 
+    virtual Pose GetGlobalPose() const;
+
     const char* Token(){ return token.c_str(); }
 
     const std::string& TokenStr(){ return token; }
@@ -1437,15 +1437,31 @@ namespace Stg
     float _y_max;
   
   public:
-    OrthoCamera( void ) : _scale( 15 ) { }
+    OrthoCamera( void ) : 
+		_scale( 15 ),
+		_pixels_width(0),
+		_pixels_height(0),
+		_y_min(0),
+		_y_max(0)
+	 { }
+	 
     virtual void Draw() const;
-    virtual void SetProjection( float pixels_width, float pixels_height, float y_min, float y_max );
+
+    virtual void SetProjection( float pixels_width, 
+										  float pixels_height, 
+										  float y_min,
+										  float y_max );
+	 
     virtual void SetProjection( void ) const;
-  
+	 
     void move( float x, float y );
+
     void setYaw( float yaw ) { _yaw = yaw;	}
+
     void setPitch( float pitch ) { _pitch = pitch; }
+
     void addYaw( float yaw ) { _yaw += yaw;	}
+
     void addPitch( float pitch ) {
       _pitch += pitch;
       if( _pitch > 90 )
@@ -1799,7 +1815,7 @@ namespace Stg
       Color GetColor(){ return color; }
       double GetSize(){ return size; }
 		 
-      Flag( Color color, double size );
+      Flag( const Color& color, double size );
       Flag* Nibble( double portion );
 		
       /** Draw the flag in OpenGl. Takes a quadric parameter to save
@@ -2185,10 +2201,11 @@ namespace Stg
     /** Destructor */
     virtual ~Model();
 		
-    /** Alternate constructor that created dummy models with only a pose */
-    Model() 
-      : parent(NULL), world(NULL) 
-    {}
+    /** Alternate constructor that creates dummy models with only a pose */
+	 Model() 
+		: mapped(false), alwayson(false), blocks_dl(0),
+		  boundary(false), data_fresh(false), disabled(true), friction(0), has_default_block(false), log_state(false), map_resolution(0), mass(0), parent(NULL), rebuild_displaylist(false), stack_children(true), stall(false), subs(0), thread_safe(false),trail_index(0), event_queue_num(0), used(false), velocity_enable(false), watts(0), watts_give(0),watts_take(0),wf(NULL), wf_entity(0), world(NULL)
+	 {}
 		
     void Say( const std::string& str );
 	 
