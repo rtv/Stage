@@ -37,7 +37,7 @@ void BlockGroup::Clear()
   blocks.clear();
 }
 
-void BlockGroup::AppendTouchingModels( ModelPtrSet &v )
+void BlockGroup::AppendTouchingModels( std::set<Model*>& v )
 {
   FOR_EACH( it, blocks )
     (*it)->AppendTouchingModels( v );  

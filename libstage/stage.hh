@@ -86,15 +86,6 @@ namespace Stg
   
   typedef Model* (*creator_t)( World*, Model*, const std::string& type );
   
-  /** Set of pointers to Models. */
-  typedef std::set<Model*> ModelPtrSet;
-
-  /** Vector of pointers to Models. */
-  typedef std::vector<Model*> ModelPtrVec;
-
-  /** Vector of pointers to Cells.*/
-  typedef std::vector<Cell*> CellPtrVec;
-
   /** Initialize the Stage library. Stage will parse the argument
       array looking for parameters in the conventnioal way. */
   void Init( int* argc, char** argv[] );
@@ -512,12 +503,9 @@ namespace Stg
     { return ((x == other.x) && (y == other.y) ); }
   };
   
-  typedef std::vector<point_int_t> PointIntVec;
-
   /** create an array of 4 points containing the corners of a unit
       square.  */
   point_t* unit_square_points_create();
-  
   
   /** Convenient OpenGL drawing routines, used by visualization
       code. */
@@ -692,7 +680,7 @@ namespace Stg
     /** array contains the number of each type of child model */
     std::map<std::string,unsigned int> child_type_counts;
 
-    ModelPtrVec children;
+    std::vector<Model*> children;
 
     bool debug;
 
@@ -709,7 +697,7 @@ namespace Stg
     virtual ~Ancestor();
 	 
     /** get the children of the this element */
-    ModelPtrVec& GetChildren(){ return children;}
+    std::vector<Model*>& GetChildren(){ return children;}
     
     /** recursively call func( model, arg ) for each descendant */
     void ForEachDescendant( model_callback_t func, void* arg );
@@ -851,7 +839,7 @@ namespace Stg
 		
     /** Keep a list of all models with detectable fiducials. This
 	avoids searching the whole world for fiducials. */
-    ModelPtrVec models_with_fiducials;
+    std::vector<Model*> models_with_fiducials;
 		
     struct ltx
     {
@@ -912,7 +900,7 @@ namespace Stg
     std::map<point_int_t,SuperRegion*> superregions;
     SuperRegion* sr_cached; ///< The last superregion looked up by this world
 	 
-    std::vector<ModelPtrVec> update_lists;  
+    std::vector< std::vector<Model*> > update_lists;  
 	 
     uint64_t updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
@@ -934,8 +922,8 @@ namespace Stg
 	subclasses. */
     virtual void Redraw( void ){ }; // does nothing
 
-    PointIntVec rt_cells;
-    PointIntVec rt_candidate_cells;
+    std::vector<point_int_t> rt_cells;
+    std::vector<point_int_t> rt_candidate_cells;
 
     static const int DEFAULT_PPM = 50;  // default resolution in pixels per meter
 
@@ -970,7 +958,7 @@ namespace Stg
     virtual Model* RecentlySelectedModel() const { return NULL; }
 		
     /** call Cell::AddBlock(block) for each cell on the polygon */
-    void MapPoly( const PointIntVec& poly,
+    void MapPoly( const std::vector<point_int_t>& poly,
 		  Block* block,
 		  unsigned int layer );
 
@@ -1250,7 +1238,7 @@ namespace Stg
     /** Set the extent in Z of the block */
     void SetZ( double min, double max );
 		
-    void AppendTouchingModels( ModelPtrSet& touchers );
+    void AppendTouchingModels( std::set<Model*>& touchers );
 	 
     /** Returns the first model that shares a bitmap cell with this model */
     Model* TestCollision(); 
@@ -1285,7 +1273,7 @@ namespace Stg
 		
     /** record the cells into which this block has been rendered to
 	UnMapping them very quickly. */  
-    CellPtrVec rendered_cells[2];
+    std::vector<Cell*> rendered_cells[2];
 		
     /** find the position of a block's point in model coordinates
 	(m) */
@@ -1328,7 +1316,7 @@ namespace Stg
     void CallDisplayList( Model* mod );
     void Clear() ; /** deletes all blocks from the group */
 	 
-    void AppendTouchingModels( ModelPtrSet& touchers );
+    void AppendTouchingModels( std::set<Model*>& touchers );
 	 
     /** Returns a pointer to the first model detected to be colliding
 	with a block in this group, or NULL, if none are detected. */
@@ -2088,7 +2076,7 @@ namespace Stg
     /** Register an Option for pickup by the GUI. */
     void RegisterOption( Option* opt );
 
-    void AppendTouchingModels( ModelPtrSet& touchers );
+    void AppendTouchingModels( std::set<Model*>& touchers );
 		
     /** Check to see if the current pose will yield a collision with
 	obstacles.  Returns a pointer to the first entity we are in

@@ -368,8 +368,8 @@ Model::Model( World* world,
   flag_list(),
   friction(DEFAULT_FRICTION),
   geom(),
-  has_default_block( true ),
-  id( Model::count++ ),
+  has_default_block(true),
+  id(Model::count++),
   interval((usec_t)1e5), // 100msec
   interval_energy((usec_t)1e5), // 100msec
   interval_pose((usec_t)1e5), // 100msec
@@ -379,22 +379,22 @@ Model::Model( World* world,
   mass(0),
   parent(parent),
   pose(),
-  power_pack( NULL ),
+  power_pack(NULL),
   pps_charging(),
   rastervis(),
   rebuild_displaylist(true),
   say_string(),
-  stack_children( true ),
+  stack_children(true),
   stall(false),	 
   subs(0),
-  thread_safe( false ),
+  thread_safe(false),
   trail(trail_length),
   trail_index(0),
   type(type),	
-  event_queue_num( 0 ),
+  event_queue_num(0),
   used(false),
   velocity(),
-  velocity_enable( false ),
+  velocity_enable(false),
   watts(0.0),
   watts_give(0.0),
   watts_take(0.0),	 
@@ -905,7 +905,7 @@ void Model::PlaceInFreeSpace( meters_t xmin, meters_t xmax,
     SetPose( Pose::Random( xmin,xmax, ymin, ymax ));		
 }
 
-void Model::AppendTouchingModels( ModelPtrSet& touchers )
+void Model::AppendTouchingModels( std::set<Model*>& touchers )
 {
   blockgroup.AppendTouchingModels( touchers );
 }
@@ -946,7 +946,7 @@ void Model::UpdateCharge()
       pps_charging.clear();
 		
       // run through and update all appropriate touchers
-      ModelPtrSet touchers;
+      std::set<Model*> touchers;
       AppendTouchingModels( touchers );
 		
       FOR_EACH( it, touchers )

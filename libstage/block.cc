@@ -136,7 +136,7 @@ const Color& Block::GetColor()
   return( inherit_color ? mod->color : color );
 }
 
-void Block::AppendTouchingModels( ModelPtrSet& touchers )
+void Block::AppendTouchingModels( std::set<Model*>& touchers )
 {
   unsigned int layer = mod->world->updates % 2;
   
@@ -209,7 +209,7 @@ void Block::Map( unsigned int layer )
     }
   
   // now calculate the global pixel coords of the block vertices
-  PointIntVec gpts;
+  std::vector<point_int_t> gpts;
   mod->LocalToPixels( mpts, gpts );
 	
   // and render this block's polygon into the world

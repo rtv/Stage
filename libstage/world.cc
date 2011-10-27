@@ -987,7 +987,7 @@ void World::Reload( void )
   ForEachDescendant( _reload_cb, NULL );
 }
 
-void World::MapPoly( const PointIntVec& pts, Block* block, unsigned int layer )
+void World::MapPoly( const std::vector<point_int_t>& pts, Block* block, unsigned int layer )
 {
   const size_t pt_count( pts.size() );
   
