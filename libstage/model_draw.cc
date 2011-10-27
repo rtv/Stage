@@ -19,7 +19,7 @@ void Model::DrawSelected()
   
   char buf[64];
   snprintf( buf, 63, "%s [%.2f %.2f %.2f %.2f]", 
-				token.c_str(), gp.x, gp.y, gp.z, rtod(gp.a) );
+	    Token(), gp.x, gp.y, gp.z, rtod(gp.a) );
   
   PushColor( 0,0,0,1 ); // text color black
   Gl::draw_string( 0.5,0.5,0.5, buf );

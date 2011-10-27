@@ -77,15 +77,11 @@ void Model::Load()
   watts_give = wf->ReadFloat( wf_entity, "give_watts", watts_give );    
   watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
   
-  this->debug = wf->ReadInt( wf_entity, "debug", this->debug );
+  debug = wf->ReadInt( wf_entity, "debug", debug );
   
   const std::string& name = wf->ReadString(wf_entity, "name", token );
   if( name != token )
-    {
-      //printf( "adding name %s to %s\n", name, this->token );
-      this->token = name ;
-      world->AddModelName( this, name ); // add this name to the world's table
-    }
+    SetToken( name );
   
   //PRINT_WARN1( "%s::Load", token );
   
@@ -123,7 +119,7 @@ void Model::Load()
     {      
       if (wf->GetProperty(wf_entity,"color_rgba")->values.size() < 4)
 	{
-	  PRINT_ERR1( "model %s color_rgba requires 4 values\n", this->token.c_str() );
+	  PRINT_ERR1( "model %s color_rgba requires 4 values\n", Token() );
 	}
       else
 	{
@@ -150,7 +146,7 @@ void Model::Load()
     {
       const std::string bitmapfile = wf->ReadString( wf_entity, "bitmap", "" );
       if( bitmapfile == "" )
-	PRINT_WARN1( "model %s specified empty bitmap filename\n", token.c_str() );
+	PRINT_WARN1( "model %s specified empty bitmap filename\n", Token() );
 		
       if( has_default_block )
 	{
@@ -212,7 +208,7 @@ void Model::Load()
 	  const char* lib = wf->GetPropertyValue( ctrlp, index );
 			 
 	  if( !lib )
-	    printf( "Error - NULL library name specified for model %s\n", token.c_str() );
+	    printf( "Error - NULL library name specified for model %s\n", Token() );
 	  else
 	    LoadControllerModule( lib );
 	}
@@ -244,15 +240,15 @@ void Model::Load()
   MapWithChildren(1);
   
   if( this->debug )
-    printf( "Model \"%s\" is in debug mode\n", token.c_str() );
+    printf( "Model \"%s\" is in debug mode\n", Token() );
 
-  PRINT_DEBUG1( "Model \"%s\" loading complete", token.c_str() );
+  PRINT_DEBUG1( "Model \"%s\" loading complete", Token() );
 }
 
 
 void Model::Save( void )
 {  
-  //printf( "Model \"%s\" saving...\n", token.c_str() );
+  //printf( "Model \"%s\" saving...\n", Token() );
 
   // some models were not loaded, so have no worldfile. Just bail here.
   if( wf == NULL )

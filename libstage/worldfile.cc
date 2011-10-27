@@ -181,7 +181,7 @@ bool Worldfile::Load(const std::string& filename )
   else if( unita == "radians")
     this->unit_angle = 1;
   
-	printf( "f: %s\n", this->filename.c_str() );
+  //printf( "f: %s\n", this->filename.c_str() );
 
   return true;
 }

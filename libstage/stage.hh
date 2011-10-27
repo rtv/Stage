@@ -604,7 +604,8 @@ namespace Stg
 				std::vector<rotrect_t>& rects );
   
   /** matching function should return true iff the candidate block is
-      stops the ray, false if the block transmits the ray */
+      stops the ray, false if the block transmits the ray
+  */
   typedef bool (*ray_test_func_t)(Model* candidate, 
 				  Model* finder, 
 				  const void* arg );
@@ -620,7 +621,8 @@ namespace Stg
   // which I think is true everywhere it is used in Stage
 #define FOR_EACH(I,C) for(VAR(I,(C).begin()),ite=(C).end();(I)!=ite;++(I))
 
-  /** wrapper for Erase-Remove method of removing all instances of thing from container */
+  /** wrapper for Erase-Remove method of removing all instances of thing from container
+   */
   template <class T, class C>
   void EraseAll( T thing, C& cont )
   { cont.erase( std::remove( cont.begin(), cont.end(), thing ), cont.end() ); }
@@ -711,16 +713,23 @@ namespace Stg
     
     /** recursively call func( model, arg ) for each descendant */
     void ForEachDescendant( model_callback_t func, void* arg );
-	 
+    
     virtual void AddChild( Model* mod );
     virtual void RemoveChild( Model* mod );
     virtual Pose GetGlobalPose() const;
+    
+    const char* Token() const { return token.c_str(); }
+    const std::string& TokenStr() const { return token; }
+    
+    virtual void SetToken( const std::string& str )
+    { 
+      //printf( "Ancestor::SetToken( %s )\n", str.c_str() );
 
-    const char* Token(){ return token.c_str(); }
-
-    const std::string& TokenStr(){ return token; }
-	 
-    void SetToken( const std::string& str ){ token = str; } 
+      if( str.size() > 0 ) 
+	token = str;
+      else
+	PRINT_ERR( "Ancestor::SetToken() called with zero length string. Ignored." );
+    } 
 	 
     /** A key-value database for users to associate arbitrary things with this model. */
     void SetProperty( std::string& key, void* value ){ props[ key ] = value; }
@@ -2014,6 +2023,20 @@ namespace Stg
     WorldGui* world_gui; //pointer to the GUI world - NULL if running in non-gui mode
 
   public:
+    
+    virtual void SetToken( const std::string& str )
+    { 
+      //printf( "Model::SetToken( %s )\n", str.c_str() );
+
+      if( str.size() > 0 ) 
+	{
+	  world->AddModelName( this, str );
+	  Ancestor::SetToken( str );
+	}
+      else
+	PRINT_ERR( "Model::SetToken() called with zero length string. Ignored." );
+    } 
+
 	 
     const std::string& GetModelType() const {return type;}	 
     std::string GetSayString(){return std::string(say_string);}
@@ -2193,7 +2216,8 @@ namespace Stg
     /** Constructor */
     Model( World* world, 
 	   Model* parent = NULL, 
-	   const std::string& type = "model" );
+	   const std::string& type = "model",
+	   const std::string& name = "" );
 	 
     /** Destructor */
     virtual ~Model();

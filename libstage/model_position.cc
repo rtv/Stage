@@ -155,7 +155,7 @@ void ModelPosition::Load( void )
 						 " but this property is no longer available."
 						 " Use localization_origin instead. See the position"
 						 " entry in the manual or src/model_position.c for details.", 
-						 this->token.c_str() );
+						 this->Token() );
     }
 
   // set the starting pose as my initial odom position. This could be
@@ -211,7 +211,7 @@ void ModelPosition::Load( void )
 		else
 		  PRINT_ERR2( "unrecognized localization mode \"%s\" for model \"%s\"."
 						  " Valid choices are \"gps\" and \"odom\".", 
-						  loc_str.c_str(), this->token.c_str() );
+						  loc_str.c_str(), this->Token() );
 	 }
 }
 
@@ -230,11 +230,11 @@ void ModelPosition::Update( void  )
 			 {
 				PRINT_DEBUG( "velocity control mode" );
 				PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
-								  this->token, 
-								  this->goal.x, 
-								  this->goal.y, 
-								  this->goal.a );
-		 
+					      this->Token(), 
+					      this->goal.x, 
+					      this->goal.y, 
+					      this->goal.a );
+				
 				switch( drive_mode )
 				  {
 				  case DRIVE_DIFFERENTIAL:
@@ -405,7 +405,7 @@ void ModelPosition::Update( void  )
 		
     default:
       PRINT_ERR2( "unknown localization mode %d for model %s\n",
-						localization_mode, this->token.c_str() );
+						localization_mode, Token() );
       break;
     }
 

@@ -183,7 +183,7 @@ World::World( const std::string& name,
 
 World::~World( void )
 {
-  PRINT_DEBUG2( "destroying world %d %s", id, token.c_str() );
+  PRINT_DEBUG2( "destroying world %d %s", id, Token() );
   if( ground ) delete ground;
   if( wf ) delete wf;
   World::world_set.erase( this );
@@ -269,8 +269,10 @@ void World::AddModelName( Model* mod, const std::string& name )
 
 void World::RemoveModel( Model* mod )
 {
-  models.erase( mod );
+  // remove all this model's names to the table
   models_by_name.erase( mod->token );
+
+  models.erase( mod );
 }
 
 void World::LoadBlock( Worldfile* wf, int entity )
@@ -372,11 +374,11 @@ void World::Load( const std::string& worldfile_path )
 
   // end the output line of worldfile components
   //puts("");
-
+  
   const int entity(0);
   
-  this->token = 
-    wf->ReadString( entity, "name", this->token );
+  // nothing gets added if the string is empty
+  this->SetToken( wf->ReadString( entity, "name", worldfile_path ));
   
   this->quit_time = 
     (usec_t)( million * wf->ReadFloat( entity, "quit_time", this->quit_time ) );

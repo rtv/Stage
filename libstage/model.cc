@@ -156,6 +156,7 @@
 #endif
 
 #include <map>
+#include <sstream> // for converting values to strings
 
 //#define DEBUG 0
 #include "stage.hh"
@@ -350,7 +351,8 @@ Model::GuiState& Model::GuiState::Load( Worldfile* wf, int wf_entity )
 // constructor
 Model::Model( World* world,
 	      Model* parent,
-	      const std::string& type ) :
+	      const std::string& type,
+	      const std::string& name ) :
   Ancestor(), 	 
   mapped(false),
   drawOptions(),
@@ -410,8 +412,42 @@ Model::Model( World* world,
   
   modelsbyid[id] = this;
   
-  // Adding this model to its ancestor also gives this model a
-  // sensible default name
+  if( name.size() ) // use a name if specified
+    {
+      //printf( "name set %s\n", name.c_str() );
+      SetToken( name );
+    }
+  else   // if a name was not specified make up a name based on the parent's
+    // name,  model type and the number of instances so far    
+    {
+      char buf[2048];
+      //  printf( "adding child of type %d token %s\n", mod->type, mod->Token() );
+      
+      // prefix with parent name if any, followed by the type name
+      // with a suffix of a colon and the parent's number of children
+      // of this type
+      if( parent )
+	{
+	  snprintf( buf, 2048, "%s.%s:%u",
+		    parent->Token(),
+		    type.c_str(),
+		    parent->child_type_counts[type] ); 
+	} 
+      else // no parent, so use the count of this type in the world
+	{
+	  snprintf( buf, 2048, "%s:%u",
+		    type.c_str() ,
+		    world->child_type_counts[type] ); 
+	}
+      
+      //printf( "generated name %s\n", buf );
+      SetToken( buf );
+    }
+  
+  //  printf( "%s generated a name for my child %s\n", Token(),  name.str().c_str() );
+  
+  world->AddModel( this );
+
   if ( parent ) 
     parent->AddChild( this );
   else
@@ -419,10 +455,8 @@ Model::Model( World* world,
       world->AddChild( this );
       // top level models are draggable in the GUI by default
       gui.move = true;
-    }
+    }        
 
-  world->AddModel( this );
-      
   // now we can add the basic square shape
   AddBlockRect( -0.5, -0.5, 1.0, 1.0, 1.0 );
 
@@ -760,9 +794,8 @@ void Model::Print( char* prefix ) const
     printf( "Model ");
   
   printf( "%s:%s\n", 
-	  //			id, 
 	  world->Token(), 
-	  token.c_str() );
+	  Token() );
   
   FOR_EACH( it, children )
     (*it)->Print( prefix );
@@ -774,7 +807,7 @@ const char* Model::PrintWithPose() const
 	
   static char txt[256];
   snprintf(txt, sizeof(txt), "%s @ [%.2f,%.2f,%.2f,%.2f]",  
-	   token.c_str(), 
+	   Token(), 
 	   gpose.x, gpose.y, gpose.z, gpose.a  );
 
   return txt;
