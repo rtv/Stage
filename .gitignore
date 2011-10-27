@@ -1,4 +1,9 @@
 build
 config.h
 *.swp
-#*#
+examples/ctrl/#wander.cc#
+libstage/#block.cc#
+libstage/#model_camera.cc#
+libstage/#model_position.cc#
+libstage/stagecpp.foo
+worlds/#simple.world#
