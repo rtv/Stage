@@ -3106,7 +3106,7 @@ namespace Stg
       } ActuatorType;
   
   private:
-    double goal; //< the current velocity or pose to reach, depending on the value of control_mode
+    double goal; //< the current velocity or pose to reach depending on the value of control_mode
     double pos;
     double max_speed;
     double min_position;
