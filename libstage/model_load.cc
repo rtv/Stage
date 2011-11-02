@@ -100,7 +100,7 @@ void Model::Load()
   
   if( wf->PropertyExists( wf_entity, "velocity" ))
     SetVelocity( GetVelocity().Load( wf, wf_entity, "velocity" ));
-  
+
   if( wf->PropertyExists( wf_entity, "color" ))
     {      
       Color col( 1,0,0 ); // red;

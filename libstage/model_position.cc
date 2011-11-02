@@ -49,6 +49,10 @@ using namespace Stg;
 	 # only used if drive is set to "car"
 	 wheelbase 1.0
 
+     # [ xmin xmax ymin ymax zmin zmax amin amax ]				
+     velocity_bounds [-1 1 -1 1 -1 1 -1 1 ]					
+     acceleration_bounds [-1 1 -1 1 -1 1 -1 1]
+
     # model properties
 
 		# update position according to the current velocity state
@@ -70,6 +74,8 @@ using namespace Stg;
     - odom_error [x y z theta]
     - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
     - wheelbase <float,meters>\nThe wheelbase used for the car steering model. Only used if drive is set to "car". Defaults to 1.0m\n
+    - velocity_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second, a in radians per second				- acceleration_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second squared, a in radians per second squared  
+
 */
 
 
@@ -98,6 +104,8 @@ ModelPosition::ModelPosition( World* world,
 							drand48() * INTEGRATION_ERROR_MAX_Z - INTEGRATION_ERROR_MAX_Z/2.0,
 							drand48() * INTEGRATION_ERROR_MAX_A - INTEGRATION_ERROR_MAX_A/2.0 ),
   wheelbase( 1.0 ),
+  acceleration_bounds(),
+  velocity_bounds(),
   //public
   waypoints(),
   wpvis(),
@@ -109,8 +117,18 @@ ModelPosition::ModelPosition( World* world,
   // assert that Update() is reentrant for this derived model
   thread_safe = false;
 
-	// position devices respond to velocity settings by default
-	velocity_enable = true;
+  // position devices respond to velocity settings by default
+  velocity_enable = true;
+  
+  // install sensible velocity and acceleration bounds
+  for( int i=0; i<4; i++ )
+    {
+      velocity_bounds[i].min = -1.0;
+      velocity_bounds[i].max =  1.0;
+
+      acceleration_bounds[i].min = -1.0;
+      acceleration_bounds[i].max =  1.0;
+    }
 
   this->SetBlobReturn( true );
   
@@ -212,7 +230,53 @@ void ModelPosition::Load( void )
 		  PRINT_ERR2( "unrecognized localization mode \"%s\" for model \"%s\"."
 						  " Valid choices are \"gps\" and \"odom\".", 
 						  loc_str.c_str(), this->Token() );
-	 }
+    }
+
+  if( wf->PropertyExists( wf_entity, "acceleration_bounds" ))
+    {
+      acceleration_bounds[0].min = 
+	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 0, acceleration_bounds[0].min );
+      acceleration_bounds[0].max = 
+	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 1, acceleration_bounds[0].max );
+
+      acceleration_bounds[1].min = 
+	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 2, acceleration_bounds[2].min );
+      acceleration_bounds[1].max = 
+	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 3, acceleration_bounds[2].max );
+
+      acceleration_bounds[2].min = 
+	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 4, acceleration_bounds[3].min );
+      acceleration_bounds[2].max = 
+	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 5, acceleration_bounds[3].max );
+
+      acceleration_bounds[3].min = 
+	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 6, acceleration_bounds[3].min );
+      acceleration_bounds[3].max = 
+	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 7, acceleration_bounds[3].max );
+    }
+
+  if( wf->PropertyExists( wf_entity, "velocity_bounds" ))
+    {
+      velocity_bounds[0].min = 
+	wf->ReadTupleLength( wf_entity, "velocity_bounds", 0, velocity_bounds[0].min );
+      velocity_bounds[0].max = 
+	wf->ReadTupleLength( wf_entity, "velocity_bounds", 1, velocity_bounds[0].max );
+
+      velocity_bounds[1].min = 
+	wf->ReadTupleLength( wf_entity, "velocity_bounds", 2, velocity_bounds[2].min );
+      velocity_bounds[1].max = 
+	wf->ReadTupleLength( wf_entity, "velocity_bounds", 3, velocity_bounds[2].max );
+
+      velocity_bounds[2].min = 
+	wf->ReadTupleLength( wf_entity, "velocity_bounds", 4, velocity_bounds[3].min );
+      velocity_bounds[2].max = 
+	wf->ReadTupleLength( wf_entity, "velocity_bounds", 5, velocity_bounds[3].max );
+
+      velocity_bounds[3].min = 
+	wf->ReadTupleLength( wf_entity, "velocity_bounds", 6, velocity_bounds[3].min );
+      velocity_bounds[3].max = 
+	wf->ReadTupleLength( wf_entity, "velocity_bounds", 7, velocity_bounds[3].max );
+    }
 }
 
 void ModelPosition::Update( void  )
@@ -225,8 +289,72 @@ void ModelPosition::Update( void  )
   if( this->subs ) // no driving if noone is subscribed
     {            
       switch( control_mode )
-		  {
-		  case CONTROL_VELOCITY :
+	{
+	case CONTROL_ACCELERATION:
+	  {
+	    // respect the accel bounds;	    
+	    goal.x = std::min( goal.x, acceleration_bounds[0].max );
+	    goal.x = std::max( goal.x, acceleration_bounds[0].min );
+	    
+	    goal.y = std::min( goal.y, acceleration_bounds[1].max );
+	    goal.y = std::max( goal.y, acceleration_bounds[1].min );
+	    
+	    goal.z = std::min( goal.z, acceleration_bounds[2].max );
+	    goal.z = std::max( goal.z, acceleration_bounds[2].min );
+	    
+	    goal.a = std::min( goal.a, acceleration_bounds[3].max );
+	    goal.a = std::max( goal.a, acceleration_bounds[3].min );
+
+	    vel = this->velocity; // we're modifying the current velocity
+
+	    // convert usec to sec
+	    const double interval( (double)world->sim_interval / 1e6 );
+
+	    PRINT_DEBUG( "acceleration control mode" );
+	    PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
+			  this->Token(), 
+			  this->goal.x, 
+			  this->goal.y, 
+			  //this->goal.z, 
+			  this->goal.a );
+	    
+	    switch( drive_mode )
+	      {
+	      case DRIVE_DIFFERENTIAL:
+		// differential-steering model, like a Pioneer
+		vel.x += goal.x * interval;
+		vel.y = 0;
+		vel.a += goal.a * interval;
+		break;
+		
+	      case DRIVE_OMNI:
+		// direct steering model, like an omnidirectional robot
+		vel.x += goal.x * interval;
+		vel.y += goal.y * interval;
+		vel.a += goal.a * interval;
+		break;
+				
+	      case DRIVE_CAR:
+		PRINT_ERR( "car drive not supported in accelerartion control [to do]" );
+		// // car like steering model based on speed and turning angle				
+		// vel.x = goal.x * cos(goal.a);
+		// vel.y = 0;
+		// vel.a = goal.x * sin(goal.a)/wheelbase;
+		break;
+		
+	      default:
+		PRINT_ERR1( "unknown steering mode %d", drive_mode );
+	      }
+
+	    // printf( "interval %.3f vel: %.2f %.2f %.2f\taccel: %.2f %.2f %.2f\n", 
+	    // 	    interval, 
+	    // 	    vel.x, vel.y, vel.a,
+	    // 	    goal.x, goal.y, goal.a );
+
+	  } break;
+	  
+	  
+	case CONTROL_VELOCITY :
 			 {
 				PRINT_DEBUG( "velocity control mode" );
 				PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
@@ -364,7 +492,23 @@ void ModelPosition::Update( void  )
       //	    this->velocity.x, 
       //	    this->velocity.y,
       //	    this->velocity.a );
-		
+      
+      // respect velocity bounds
+      vel.x = std::min( vel.x, velocity_bounds[0].max );
+      vel.x = std::max( vel.x, velocity_bounds[0].min );
+      
+      vel.y = std::min( vel.y, velocity_bounds[1].max );
+      vel.y = std::max( vel.y, velocity_bounds[1].min );
+      
+      vel.z = std::min( vel.z, velocity_bounds[2].max );
+      vel.z = std::max( vel.z, velocity_bounds[2].min );
+      
+      vel.a = std::min( vel.a, velocity_bounds[3].max );
+      vel.a = std::max( vel.a, velocity_bounds[3].min );
+
+            printf( "final vel: %.2f %.2f %.2f\n", 
+            vel.x, vel.y, vel.a );
+
       this->SetVelocity( vel );
     }
 
@@ -513,6 +657,17 @@ void ModelPosition::GoTo( Pose pose )
   control_mode = CONTROL_POSITION;
   goal = pose;
 }  
+
+void ModelPosition::SetAcceleration( double x, double y, double a )
+{
+  control_mode = CONTROL_ACCELERATION;
+  goal.x = x;
+  goal.y = y;
+  goal.z = 0;
+  goal.a = a;
+
+  printf( "accel %.2f %.2f %.2f\n", goal.x, goal.y, goal.a );
+}
 
 /** 
     Set the current odometry estimate 

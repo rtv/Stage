@@ -351,10 +351,10 @@ namespace Stg
 	@param z velocity vector component along Z axis (vertical speed), in meters per second.
 	@param a rotational velocity around Z axis (yaw), in radians per second.
     */
-    Velocity( meters_t x, 
-	      meters_t y, 
-	      meters_t z,
-	      radians_t a ) :
+    Velocity( double x, 
+	      double y, 
+	      double z,
+	      double a ) :
       Pose( x, y, z, a )
     { /*empty*/ }
     
@@ -363,7 +363,7 @@ namespace Stg
     
     /** Print velocity in human-readable format on stdout, with a
 	prefix string 
-		  
+	
 	@param prefix Character string to prepend to output, or NULL.
     */
     
@@ -377,12 +377,13 @@ namespace Stg
     {
       if( prefix )
 	printf( "%s", prefix );
-		
+      
       printf( "velocity [x:%.3f y:%.3f z:%3.f a:%.3f]\n",
 	      x,y,z,a );		
     }	 
   };
   
+ 
   /** Specify an object's basic geometry: position and rectangular
       size.  */
   class Geom
@@ -1989,7 +1990,7 @@ namespace Stg
     unsigned int event_queue_num; 
     bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
     Velocity velocity;
-		
+	
     /** respond to velocity state by changing position. Initially
 	false, set to true by subclass, worldfile, or explcicit call
 	to Model::VelocityEnable(). */
@@ -2327,7 +2328,7 @@ namespace Stg
 	
     /** set a model's velocity in its parent's coordinate system */
     void SetVelocity(  const Velocity& vel );
-	
+
     /** Enable update of model pose according to velocity state */
     void VelocityEnable();
 
@@ -2978,7 +2979,8 @@ namespace Stg
   public:
     /** Define a position  control method */
     typedef enum
-      { CONTROL_VELOCITY, 
+      { CONTROL_ACCELERATION,
+	CONTROL_VELOCITY, 
 	CONTROL_POSITION 
       } ControlMode;
 	 
@@ -3002,7 +3004,13 @@ namespace Stg
     LocalizationMode localization_mode; ///< global or local mode
     Velocity integration_error; ///< errors to apply in simple odometry model
     double wheelbase;
-	 
+    
+    /** Set the min and max acceleration in all 4 DOF */
+    Bounds acceleration_bounds[4];
+
+    /** Set the min and max velocity in all 4 DOF */
+    Bounds velocity_bounds[4];
+
   public:
     // constructor
     ModelPosition( World* world,
@@ -3066,6 +3074,11 @@ namespace Stg
 	the goal pose */
     void GoTo( double x, double y, double a );
     void GoTo( Pose pose );
+    
+    /** Sets the control mode to CONTROL_ACCELERATION and sets the
+	current accelerations to x, y (meters per second squared) and
+	a (radians per second squared) */
+    void SetAcceleration( double x, double y, double a );
 
     // localization state
     Pose est_pose; ///< position estimate in local coordinates

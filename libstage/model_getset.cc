@@ -197,7 +197,6 @@ void Model::SetVelocity( const Velocity& val )
   CallCallbacks( CB_VELOCITY );
 }
 
-
 // set the model's pose in the local frame
 void Model::SetPose( const Pose& newpose )
 {

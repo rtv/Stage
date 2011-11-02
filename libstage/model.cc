@@ -989,6 +989,12 @@ void Model::Move( void )
 
   // convert usec to sec
   const double interval( (double)world->sim_interval / 1e6 );
+
+  // find the change in velcity due to our acceleration vector
+  // velocity.x *= 1.0 + acceleration.x * interval;
+  //velocity.y *= 1.0 + acceleration.y * interval;
+  //velocity.z *= 1.0 + acceleration.z * interval;
+  //velocity.a *= 1.0 + acceleration.a * interval;
   
   // find the change of pose due to our velocity vector
   const Pose p( velocity.x * interval,
