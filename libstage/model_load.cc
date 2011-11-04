@@ -123,11 +123,14 @@ void Model::Load()
 	}
       else
 	{
-	  double red   = wf->ReadTupleFloat( wf_entity, "color_rgba", 0, 0 );
-	  double green = wf->ReadTupleFloat( wf_entity, "color_rgba", 1, 0 );
-	  double blue  = wf->ReadTupleFloat( wf_entity, "color_rgba", 2, 0 );
-	  double alpha = wf->ReadTupleFloat( wf_entity, "color_rgba", 3, 1 );
-
+	  
+	  double red=1.0, blue=0.0, green=0.0, alpha=1.0;
+	  if( wf->ReadTuple( wf_entity, "color_rgba", 0, 4, "ffff", 
+			     &red, &green, &blue, &alpha ) != 4 )
+	    PRINT_ERR( "failed to read 4 floats for \"color_rgba\"" );	      	  
+	  else
+	    printf( "read four floats ok\n" );
+	  
 	  this->SetColor( Color( red, green, blue, alpha ));
 	}  
     }

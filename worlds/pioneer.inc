@@ -125,8 +125,8 @@ define pioneer_base position
 
   # four DOF kinematics limits
   # [ xmin xmax ymin ymax zmin zmax amin amax ]				
-  velocity_bounds [-0.5 0.5 0 0 0 0 -2.0 2.0 ]					
-  acceleration_bounds [-0.5 0.5 0 0 0 0 -1 1.0 ]
+  velocity_bounds [-0.5 0.5 0 0 0 0 -90.0 90.0 ]					
+  acceleration_bounds [-0.5 0.5 0 0 0 0 -90 90.0 ]
 )
 
 

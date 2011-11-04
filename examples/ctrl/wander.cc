@@ -54,7 +54,7 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
 int LaserUpdate( Model* mod, robot_t* robot )
 {
   // get the data
-  const std::vector<meters_t>& scan = robot->laser->GetRanges();
+  const std::vector<meters_t>& scan = robot->laser->GetSensors()[0].ranges;
   uint32_t sample_count = scan.size();
   if( sample_count < 1 )
     return 0;

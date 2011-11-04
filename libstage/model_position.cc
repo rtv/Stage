@@ -50,8 +50,8 @@ using namespace Stg;
     wheelbase 1.0
 
     # [ xmin xmax ymin ymax zmin zmax amin amax ]				
-    velocity_bounds [-1 1 -1 1 -1 1 -1 1 ]					
-    acceleration_bounds [-1 1 -1 1 -1 1 -1 1]
+    velocity_bounds [-1 1 -1 1 -1 1 -90 90 ]					
+    acceleration_bounds [-1 1 -1 1 -1 1 -90 90]
 
     # model properties
 
@@ -74,7 +74,7 @@ using namespace Stg;
     - odom_error [x y z theta]
     - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
     - wheelbase <float,meters>\nThe wheelbase used for the car steering model. Only used if drive is set to "car". Defaults to 1.0m\n
-    - velocity_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second, a in radians per second				- acceleration_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second squared, a in radians per second squared  
+    - velocity_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second, a in degrees per second				- acceleration_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second squared, a in degrees per second squared  
 
 */
 
@@ -121,7 +121,7 @@ ModelPosition::ModelPosition( World* world,
   velocity_enable = true;
   
   // install sensible velocity and acceleration bounds
-  for( int i=0; i<4; i++ )
+  for( int i=0; i<3; i++ )
     {
       velocity_bounds[i].min = -1.0;
       velocity_bounds[i].max =  1.0;
@@ -129,6 +129,13 @@ ModelPosition::ModelPosition( World* world,
       acceleration_bounds[i].min = -1.0;
       acceleration_bounds[i].max =  1.0;
     }
+
+      velocity_bounds[3].min = -M_PI/2.0;
+      velocity_bounds[3].max =  M_PI/2.0;
+
+      acceleration_bounds[3].min = -M_PI/2.0;
+      acceleration_bounds[3].max =  M_PI/2.0;
+
 
   this->SetBlobReturn( true );
   
@@ -183,10 +190,13 @@ void ModelPosition::Load( void )
 
   if( wf->PropertyExists( wf_entity, "localization_origin" ) )
     {  
-      est_origin.x = wf->ReadTupleLength( wf_entity, "localization_origin", 0, est_origin.x );
-      est_origin.y = wf->ReadTupleLength( wf_entity, "localization_origin", 1, est_origin.y );
-      est_origin.z = wf->ReadTupleLength( wf_entity, "localization_origin", 2, est_origin.z );
-      est_origin.a = wf->ReadTupleAngle( wf_entity, "localization_origin", 3, est_origin.a );
+      est_origin.Load( wf, wf_entity, "localization_origin" );
+
+      // wf->ReadTuple( wf_entity, "localization_origin", 0, 4, "llla", 
+      // 		     &est_origin.x,
+      // 		     &est_origin.y,
+      // 		     &est_origin.z,
+      // 		     &est_origin.a );
 
       // compute our localization pose based on the origin and true pose
       Pose gpose = this->GetGlobalPose();
@@ -206,14 +216,16 @@ void ModelPosition::Load( void )
   // odometry model parameters
   if( wf->PropertyExists( wf_entity, "odom_error" ) )
     {
-      integration_error.x = 
-	wf->ReadTupleLength( wf_entity, "odom_error", 0, integration_error.x );
-      integration_error.y = 
-	wf->ReadTupleLength( wf_entity, "odom_error", 1, integration_error.y );
-      integration_error.z = 
-	wf->ReadTupleLength( wf_entity, "odom_error", 2, integration_error.z );
-      integration_error.a 
-	= wf->ReadTupleAngle( wf_entity, "odom_error", 3, integration_error.a );
+      integration_error.Load( wf, wf_entity, "localization_origin" );
+
+      // integration_error.x = 
+      // 	wf->ReadTupleLength( wf_entity, "odom_error", 0, integration_error.x );
+      // integration_error.y = 
+      // 	wf->ReadTupleLength( wf_entity, "odom_error", 1, integration_error.y );
+      // integration_error.z = 
+      // 	wf->ReadTupleLength( wf_entity, "odom_error", 2, integration_error.z );
+      // integration_error.a 
+      // 	= wf->ReadTupleAngle( wf_entity, "odom_error", 3, integration_error.a );
     }
 
   // choose a localization model
@@ -231,51 +243,31 @@ void ModelPosition::Load( void )
 		    " Valid choices are \"gps\" and \"odom\".", 
 		    loc_str.c_str(), this->Token() );
     }
-
+  
   if( wf->PropertyExists( wf_entity, "acceleration_bounds" ))
     {
-      acceleration_bounds[0].min = 
-	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 0, acceleration_bounds[0].min );
-      acceleration_bounds[0].max = 
-	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 1, acceleration_bounds[0].max );
-
-      acceleration_bounds[1].min = 
-	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 2, acceleration_bounds[2].min );
-      acceleration_bounds[1].max = 
-	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 3, acceleration_bounds[2].max );
-
-      acceleration_bounds[2].min = 
-	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 4, acceleration_bounds[3].min );
-      acceleration_bounds[2].max = 
-	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 5, acceleration_bounds[3].max );
-
-      acceleration_bounds[3].min = 
-	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 6, acceleration_bounds[3].min );
-      acceleration_bounds[3].max = 
-	wf->ReadTupleLength( wf_entity, "acceleration_bounds", 7, acceleration_bounds[3].max );
+      wf->ReadTuple( wf_entity, "acceleration_bounds", 0, 8, "llllllaa",
+		     &acceleration_bounds[0].min,
+		     &acceleration_bounds[0].max,
+		     &acceleration_bounds[1].min,
+		     &acceleration_bounds[1].max,
+		     &acceleration_bounds[2].min,
+		     &acceleration_bounds[2].max,
+		     &acceleration_bounds[3].min,
+		     &acceleration_bounds[3].max );
     }
-
+  
   if( wf->PropertyExists( wf_entity, "velocity_bounds" ))
     {
-      velocity_bounds[0].min = 
-	wf->ReadTupleLength( wf_entity, "velocity_bounds", 0, velocity_bounds[0].min );
-      velocity_bounds[0].max = 
-	wf->ReadTupleLength( wf_entity, "velocity_bounds", 1, velocity_bounds[0].max );
-
-      velocity_bounds[1].min = 
-	wf->ReadTupleLength( wf_entity, "velocity_bounds", 2, velocity_bounds[2].min );
-      velocity_bounds[1].max = 
-	wf->ReadTupleLength( wf_entity, "velocity_bounds", 3, velocity_bounds[2].max );
-
-      velocity_bounds[2].min = 
-	wf->ReadTupleLength( wf_entity, "velocity_bounds", 4, velocity_bounds[3].min );
-      velocity_bounds[2].max = 
-	wf->ReadTupleLength( wf_entity, "velocity_bounds", 5, velocity_bounds[3].max );
-
-      velocity_bounds[3].min = 
-	wf->ReadTupleLength( wf_entity, "velocity_bounds", 6, velocity_bounds[3].min );
-      velocity_bounds[3].max = 
-	wf->ReadTupleLength( wf_entity, "velocity_bounds", 7, velocity_bounds[3].max );
+      wf->ReadTuple( wf_entity, "velocity_bounds", 0, 8, "llllllaa",
+		     &velocity_bounds[0].min,
+		     &velocity_bounds[0].max,
+		     &velocity_bounds[1].min,
+		     &velocity_bounds[1].max,
+		     &velocity_bounds[2].min,
+		     &velocity_bounds[2].max,
+		     &velocity_bounds[3].min,
+		     &velocity_bounds[3].max );
     }
 }
 

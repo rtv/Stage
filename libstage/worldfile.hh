@@ -105,13 +105,19 @@ namespace Stg {
   public: void WriteFloat(int entity, const char *name, double value);
 
 	 // Read a length (includes unit conversion)
-  public: double ReadLength(int entity, const char *name, double value);
+  public: double ReadLength(int entity, const char *name, double value)
+    {
+      return (ReadFloat( entity, name, value/unit_length ) * unit_length);
+    }
 
 	 // Write a length (includes units conversion)
   public: void WriteLength(int entity, const char *name, double value);
   
 	 // Read an angle (includes unit conversion)
-  public: double ReadAngle(int entity, const char *name, double value);
+  public: double ReadAngle(int entity, const char *name, double value)
+    {
+      return (ReadFloat( entity, name, value/unit_angle ) * unit_angle);
+    }
 
 	 // Read a boolean
 	 // REMOVE? public: bool ReadBool(int entity, const char *name, bool value);
@@ -127,35 +133,33 @@ namespace Stg {
 	 // Read a string from a tuple
   public: const char *ReadTupleString(int entity, const char *name,
                                       int index, const char *value);
-  
-	 // Write a string to a tuple
+    
+    // Read a series of values from a tuplee
+  public: int ReadTuple( const int entity, const char* name, 
+			 const unsigned int first, const unsigned int num, const char* format, ... );
+    
+    // Read a series of values from a tuplee
+  public: void WriteTuple( int entity, const char* name, 
+			   int first, int num, const char format, ... );
+    
+    // Write a string to a tuple
   public: void WriteTupleString(int entity, const char *name,
                                 int index, const char *value);
-  
-	 // Read a float from a tuple
+    
+    void WriteTupleFloat(int entity, const char *name,
+				    int index, double value);
+
+    // Read a float from a tuple
   public: double ReadTupleFloat(int entity, const char *name,
                                 int index, double value);
 
-	 // Write a float to a tuple
-  public: void WriteTupleFloat(int entity, const char *name,
-                               int index, double value);
-
-	 // Read a length from a tuple (includes units conversion)
+    // Read a float from a tuple
   public: double ReadTupleLength(int entity, const char *name,
-                                 int index, double value);
-
-	 // Write a to a tuple length (includes units conversion)
-  public: void WriteTupleLength(int entity, const char *name,
-                                int index, double value);
-
-	 // Read an angle form a tuple (includes units conversion)
-  public: double ReadTupleAngle(int entity, const char *name,
-                                int index, double value);
-
-	 // Write an angle to a tuple (includes units conversion)
-  public: void WriteTupleAngle(int entity, const char *name,
-                               int index, double value);
-
+                                int index, double value)
+    {
+      return ( ReadTupleFloat( entity, name, index, value ) * unit_length );
+    }
+          
 
 	 ////////////////////////////////////////////////////////////////////////////
 	 // Private methods used to load stuff from the world file
@@ -278,7 +282,7 @@ namespace Stg {
   private: void SetPropertyValue( CProperty* property, int index, const char *value);
 
 	 // Get the value of an property.
-  public: const char *GetPropertyValue( CProperty* property, int index);
+  public:  const char *GetPropertyValue( CProperty* property, int index);
 
 	 // Dump the property list for debugging
   private: void DumpProperties();

@@ -1,6 +1,6 @@
 /*
  *  Stage : a multi-robot simulator.
- *  Copyright (C) 2001-2009 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *  Copyright (C) 2001-2011 Richard Vaughan, Andrew Howard and Brian Gerkey.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1416,15 +1416,15 @@ void Worldfile::WriteInt(int entity, const char *name, int value)
 // Write a float
 void Worldfile::WriteFloat(int entity, const char *name, double value)
 {
+  // compact zeros make the file more readable
   if( fabs(value) < 0.001 ) // nearly 0
-	 WriteString(entity, name, "0" ); // compact zeros make the file
-												 // more readable
+    WriteString(entity, name, "0" ); 
   else
-	 {
-		char default_str[64];
-		snprintf(default_str, sizeof(default_str), "%.3f", value);
-		WriteString(entity, name, default_str);
-	 }
+    {
+      char default_str[64];
+      snprintf(default_str, sizeof(default_str), "%.3f", value);
+      WriteString(entity, name, default_str);
+    }
 }
 
 
@@ -1438,44 +1438,6 @@ double Worldfile::ReadFloat(int entity, const char *name, double value)
   return atof(GetPropertyValue(property, 0));
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Read a length (includes unit conversion)
-double Worldfile::ReadLength(int entity, const char *name, double value)
-{
-  CProperty* property = GetProperty(entity, name);
-  if (property == NULL )
-    return value;
-  return atof(GetPropertyValue(property, 0)) * this->unit_length;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Write a length (includes units conversion)
-void Worldfile::WriteLength(int entity, const char *name, double value)
-{
-  value /= this->unit_length;
-
-  if( fabs(value) < 0.001 ) // nearly 0
-	 WriteString(entity, name, "0" ); // compact zeros make the file
-												 // more readable
-  else
-	 {
-		char default_str[64];
-		snprintf(default_str, sizeof(default_str), "%.3f", value );
-		WriteString(entity, name, default_str);
-	 }
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Read an angle (includes unit conversion)
-double Worldfile::ReadAngle(int entity, const char *name, double value)
-{
-  CProperty* property = GetProperty(entity, name);
-  if (property == NULL )
-    return value;
-  return atof(GetPropertyValue(property, 0)) * this->unit_angle;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a file name
@@ -1580,84 +1542,106 @@ double Worldfile::ReadTupleFloat(int entity, const char *name,
   return atof(GetPropertyValue(property, index));
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Read a series of floats from a tuple (experimental)
+int Worldfile::ReadTuple( const int entity, const char *name,
+			 const unsigned int first, const unsigned int count, const char* format, ... )
+{
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
+    return 0;
+  
+  if( property->values.size() < first+count )
+    {
+      PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %u to %u - tuple has length %u\n",
+		  name, first, first+count-1, (unsigned int)property->values.size() );
+      exit(-1);
+    }
+  
+  va_list args;
+  va_start( args, format );
+  
+  if( strlen(format) != count )
+    {
+      PRINT_ERR2( "format string length %u does not match argument count %u", 
+		  (unsigned int)strlen(format), count );
+      exit(-1);
+    }
+  
+  for( unsigned int i=0; i<count; i++ )
+    {
+      const char* val = GetPropertyValue(property, first+i);
+      
+      switch( format[i] )
+	{
+	case 'f': // float
+	  *va_arg( args, double* ) = atof(val);
+	  break;
+	  
+	case 'l': //length
+	  *va_arg( args, double* ) = atof(val) * unit_length;
+	  break;
+	  
+	case 'a': // angle
+	  *va_arg( args, double* ) = atof(val) * unit_angle;
+	  break;
+	  
+	case 's': // string
+	  *va_arg( args, char** ) = strdup(val);
+	  break;
+	  
+	default:
+	  PRINT_ERR3( "Unknown format character %c in string %s loading %s",
+		      format[i], format, name );
+	}
+    }
+
+  va_end( args );
+  
+  return count;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a float to a tuple
 void Worldfile::WriteTupleFloat(int entity, const char *name,
 				int index, double value)
 {
-  if( fabs(value) < 0.001 ) // nearly 0
-	 WriteTupleString(entity, name, index, "0" );
+  if( fabs(value) < 0.0001 ) // nearly 0
+    WriteTupleString(entity, name, index, "0" );
   else
-	 {
-		char default_str[64];
-		snprintf(default_str, sizeof(default_str), "%.3f", value);
-		WriteTupleString(entity, name, index, default_str);
-	 }
+    {
+      char default_str[64];
+      snprintf(default_str, sizeof(default_str), "%.3f", value);
+      WriteTupleString(entity, name, index, default_str);
+    }
 }
 
+// ///////////////////////////////////////////////////////////////////////////
+// // Read a series of floats from a tuple (experimental)
+// void Worldfile::WriteTupleFloats(int entity, const char *name,
+// 				 int first, int count, ... )
+// {
+//   CProperty* property = GetProperty(entity, name);
+//   if (property == NULL )
+//     return 0;
 
-///////////////////////////////////////////////////////////////////////////
-// Read a length from a tuple (includes unit conversion)
-double Worldfile::ReadTupleLength(int entity, const char *name,
-				  int index, double value)
-{
-  CProperty* property = GetProperty(entity, name);
-  if (property == NULL )
-    return value;
-  return atof(GetPropertyValue(property, index)) * this->unit_length;
-}
+//   if( property->values.size() < first+count )
+//     {
+//       PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %d to %d - tuple has length %d\n",
+// 		  name, first, first+count-1, property->values.size() );
+//       return 0;
+//     }
 
+//   va_list args;
+//   va_start( args, count );
 
-///////////////////////////////////////////////////////////////////////////
-// Write a length to a tuple (includes unit conversion)
-void Worldfile::WriteTupleLength(int entity, const char *name,
-				 int index, double value)
-{
-  value /= this->unit_length;
-
-  if( fabs(value) < 0.001 ) // nearly 0
-	 WriteTupleString(entity, name, index, "0" );
-  else
-	 {
-		char default_str[64];
-		snprintf(default_str, sizeof(default_str), "%.3f", value );
-		WriteTupleString(entity, name, index, default_str);
-	 }
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Read an angle from a tuple (includes unit conversion)
-double Worldfile::ReadTupleAngle(int entity, const char *name,
-				 int index, double value)
-{
-  //puts( name );
-
-  CProperty* property = GetProperty(entity, name);
-  if (property == NULL)
-    return value;
-  return atof(GetPropertyValue(property, index)) * this->unit_angle;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Write an angle to a tuple (includes unit conversion)
-void Worldfile::WriteTupleAngle(int entity, const char *name,
-				int index, double value)
-{
-  value /= this->unit_angle;
-
-  if( fabs(value) < 0.001 ) // nearly 0
-	 WriteTupleString(entity, name, index, "0" );
-  else
-	 {
-		char default_str[64];
-		snprintf(default_str, sizeof(default_str), "%.3f", value );
-		WriteTupleString(entity, name, index, default_str);
-	 }
-}
-
-
-
-
+//   for( int i=first; i<first+count; i++ )
+//     {
+//       double val = va_arg( args, double );      
+//       WriteTupleFloat( entity, name, i, val );
+//     }
+    
+//   va_end( args );
+// }
 

@@ -173,22 +173,10 @@ std::map<std::string, creator_t> Model::name_map;
 //static const members
 static const double DEFAULT_FRICTION = 0.0;
 
+
 Bounds& Bounds::Load( Worldfile* wf, const int section, const char* keyword )
 {
-  if( CProperty* prop = wf->GetProperty( section, keyword ) )	
-    {
-      if( prop->values.size() != 2 )
-	{
-	  puts( "" ); // newline
-	  PRINT_ERR1( "Loading 1D bounds. Need a vector of length 2: found %d.\n", 
-		      (int)prop->values.size() ); 
-	  exit(-1);
-	}
-			
-      min = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
-      max = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
-    }
-
+  wf->ReadTuple( section, keyword, 0, 2, "ll", &min, &max );
   return *this;
 }
 
@@ -242,60 +230,32 @@ bool Color::Load( Worldfile* wf, const int section )
 
 Stg::Size& Stg::Size::Load( Worldfile* wf, const int section, const char* keyword )
 {
-  if( CProperty* prop = wf->GetProperty( section, keyword ) )	
-    {
-      if( prop->values.size() != 3 )
-	{
-	  puts( "" ); // newline
-	  PRINT_ERR1( "Loading size. Need a vector of length 3: found %d.\n", 
-		      (int)prop->values.size() ); 
-	  exit(-1);
-	}
-			
-      x = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
-      y = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
-      z = atof( wf->GetPropertyValue( prop, 2 )) * wf->unit_length;
-    }
-
+  wf->ReadTuple( section, keyword, 0, 3, "lll", &x, &y, &z );
   return *this;
 }
 
 void Stg::Size::Save( Worldfile* wf, int section, const char* keyword ) const
 {
-  wf->WriteTupleLength( section, keyword, 0, x );
-  wf->WriteTupleLength( section, keyword, 1, y );
-  wf->WriteTupleLength( section, keyword, 2, z );
+  double s = wf->unit_length;
+  wf->WriteTupleFloat( section, keyword, 0, x/s );
+  wf->WriteTupleFloat( section, keyword, 1, y/s) ;
+  wf->WriteTupleFloat( section, keyword, 2, z/s );
 }
 
 Pose& Pose::Load( Worldfile* wf, const int section, const char* keyword )
 {
-  CProperty* prop = wf->GetProperty( section, keyword );	
-  
-  if( prop )
-    {
-      if( prop->values.size() != 4 )
-	{
-	  puts( "" ); // newline
-	  PRINT_ERR1( "Loading pose. Need a vector of length 4: found %d.\n", 
-		      (int)prop->values.size() ); 
-	  exit(-1);
-	}
-      
-      x = atof( wf->GetPropertyValue( prop, 0 )) * wf->unit_length;
-      y = atof( wf->GetPropertyValue( prop, 1 )) * wf->unit_length;
-      z = atof( wf->GetPropertyValue( prop, 2 )) * wf->unit_length;
-      a = atof( wf->GetPropertyValue( prop, 3 )) * wf->unit_angle;
-    }
-  
+  wf->ReadTuple( section, keyword, 0, 4, "llla", &x, &y, &z, &a );
   return *this;
 }
 
 void Pose::Save( Worldfile* wf, const int section, const char* keyword )
 {
-  wf->WriteTupleLength( section, keyword, 0, x );
-  wf->WriteTupleLength( section, keyword, 1, y );
-  wf->WriteTupleLength( section, keyword, 2, z );
-  wf->WriteTupleAngle(  section, keyword, 3, a );
+  double s = wf->unit_length;
+  double t = wf->unit_angle;
+  wf->WriteTupleFloat( section, keyword, 0, x/s );
+  wf->WriteTupleFloat( section, keyword, 1, y/s );
+  wf->WriteTupleFloat( section, keyword, 1, z/s );
+  wf->WriteTupleFloat( section, keyword, 3, a/t );
 }
 
 Model::Visibility::Visibility() : 

@@ -210,7 +210,7 @@ public:
 	 double minright = 1e6;
 	 
 	 // Get the data from the first sensor of the laser 
-	 const std::vector<meters_t>& scan = laser->GetRanges();
+	 const std::vector<meters_t>& scan = laser->GetSensors()[0].ranges;
 	 
 	 uint32_t sample_count = scan.size();
   

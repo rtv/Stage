@@ -2804,57 +2804,10 @@ namespace Stg
     /** returns a const reference to a vector of range and reflectance samples */
     const std::vector<Sensor>& GetSensors() const
     { return sensors; }
-	 
-    /** returns a const reference to the vector of range samples from
-	the indicated sensor (defaults to zero) */
-    const std::vector<meters_t>& GetRanges( unsigned int sensor=0) const 
-    { 
-      if( sensor < sensors.size() )
-	return sensors[sensor].ranges;
-		
-      PRINT_ERR1( "invalid sensor index specified (%d)", sensor );
-      exit(-1);
-    }
 
-    /** returns a mutable reference to the vector of range samples from
-	the indicated sensor (defaults to zero). Mutating the range data in place allows controllers to act as filters. */
-    std::vector<meters_t>& GetRangesMutable( unsigned int sensor=0) 
-    { 
-      if( sensor < sensors.size() )
-	return sensors[sensor].ranges;
-		
-      PRINT_ERR1( "invalid sensor index specified (%d)", sensor );
-      exit(-1);
-    }
-		
-    /** returns a pointer to an array of ranges, and fills in the
-	argument with the array-length (C-style). */
-    meters_t* GetRangesArr( unsigned int sensor, uint32_t* count )
-    {
-      assert(count);
-      *count = sensors[sensor].ranges.size();
-      return &sensors[sensor].ranges[0];
-    }
-
-    /** returns a pointer to an array of intensities, and fills in the
-	argument with the array-length (C-style). */
-    meters_t* GetIntensitiesArr( unsigned int sensor, uint32_t* count )
-    {
-      assert(count);
-      *count = sensors[sensor].intensities.size();
-      return &sensors[sensor].intensities[0];
-    }
-		
-    /** returns a vector of intensitye samples from the indicated sensor
-	(defaults to zero) */
-    const std::vector<double>& GetIntensities( unsigned int sensor=0) const 
-    { 
-      if( sensor < sensors.size() )
-	return sensors[sensor].intensities;
-		
-      PRINT_ERR1( "invalid sensor index specified (%d)", sensor );
-      exit(-1);
-    }
+    /** returns a mutable reference to a vector of range and reflectance samples */
+    std::vector<Sensor>& GetSensorsMutable() 
+    { return sensors; }
 	 
     void LoadSensor( Worldfile* wf, int entity );
 		

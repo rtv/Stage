@@ -24,7 +24,7 @@ double simple_normal_deviate( double mean, double stddev )
 int RangerUpdate( ModelRanger* mod, void* dummy )
 {
   // get the data
-	std::vector<meters_t>& scan = mod->GetRangesMutable();
+	std::vector<meters_t>& scan = mod->GetSensorsMutable()[0].ranges;
 	
   if( scan.size()>0 )
     FOR_EACH( it, scan )

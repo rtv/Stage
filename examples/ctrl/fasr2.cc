@@ -615,7 +615,7 @@ public:
 		// Get the data
 		//const std::vector<ModelLaser::Sample>& scan = laser->GetSamples();
 
-		const std::vector<meters_t>& scan = laser->GetRanges();
+		const std::vector<meters_t>& scan = laser->GetSensors()[0].ranges;
 
     uint32_t sample_count = scan.size();
 

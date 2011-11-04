@@ -402,13 +402,16 @@ void Block::Load( Worldfile* wf, int entity )
   for( size_t p=0; p<pt_count; ++p )	      
     {
       snprintf(key, sizeof(key), "point[%d]", (int)p );
-		
-      pts.push_back( point_t(  wf->ReadTupleLength(entity, key, 0, 0),
-			       wf->ReadTupleLength(entity, key, 1, 0) ));
+      
+      point_t pt( 0, 0 );      
+      wf->ReadTuple( entity, key, 0, 2, "ll", &pt.x, &pt.y );
+      pts.push_back( pt );
     }
   
-  local_z.min = wf->ReadTupleLength( entity, "z", 0, 0.0 );
-  local_z.max = wf->ReadTupleLength( entity, "z", 1, 1.0 );
+
+  wf->ReadTuple( entity, "z", 0, 2, "ll", &local_z.min, &local_z.max );
+  //local_z.min = wf->ReadTupleLength( entity, "z", 0, 0.0 );
+  //local_z.max = wf->ReadTupleLength( entity, "z", 1, 1.0 );
   
   const std::string& colorstr = wf->ReadString( entity, "color", "" );  	
 
