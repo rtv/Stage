@@ -180,52 +180,9 @@ Bounds& Bounds::Load( Worldfile* wf, const int section, const char* keyword )
   return *this;
 }
 
-bool Color::Load( Worldfile* wf, const int section )
+double Bounds::Constrain( double value )
 {
-  if( wf->PropertyExists( section, "color" ))
-    {      
-      const std::string& colorstr = wf->ReadString( section, "color", "" );
-      if( colorstr != "" )
-	{
-	  if( colorstr == "random" )
-	    {
-	      r = drand48();
-	      g = drand48();
-	      b = drand48();
-	      a = 1.0;
-	    }
-	  else
-	    {
-	      Color c = Color( colorstr );
-	      r = c.r;
-	      g = c.g;
-	      b = c.b;
-	      a = c.a;
-	    }
-	}
-      return true;
-    }        
-	
-  if( wf->PropertyExists( section, "color_rgba" ))
-    {      
-      if (wf->GetProperty(section,"color_rgba")->values.size() < 4)
-	{
-	  PRINT_ERR1( "color_rgba requires 4 values, found %d\n", 
-		      (int)wf->GetProperty(section,"color_rgba")->values.size() );
-	  exit(-1);
-	}
-      else
-	{
-	  r = wf->ReadTupleFloat( section, "color_rgba", 0, r );
-	  g = wf->ReadTupleFloat( section, "color_rgba", 1, g );
-	  b = wf->ReadTupleFloat( section, "color_rgba", 2, b );
-	  a = wf->ReadTupleFloat( section, "color_rgba", 3, a );
-	}  
-			
-      return true;
-    }
-	
-  return false;
+  return Stg::constrain( value, min, max );
 }
 
 Stg::Size& Stg::Size::Load( Worldfile* wf, const int section, const char* keyword )
@@ -739,12 +696,12 @@ void Model::Unsubscribe( void )
 }
 
 
-void pose_invert( Pose* pose )
-{
-  pose->x = -pose->x;
-  pose->y = -pose->y;
-  // pose->a = pose->a;
-}
+// void pose_invert( Pose* pose )
+// {
+//   pose->x = -pose->x;
+//   pose->y = -pose->y;
+//   // pose->a = pose->a;
+// }
 
 void Model::Print( char* prefix ) const
 {

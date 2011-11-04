@@ -8,6 +8,7 @@
 #include "region.hh"
 using namespace Stg;
 
+// static member
 std::vector<Stg::Cell*> Stg::Region::dead_pool;
 
 Stg::Region::Region() : 
@@ -294,7 +295,7 @@ void Stg::Cell::RemoveBlock( Block* b, unsigned int layer )
   const size_t len( blks.size() );
   if( len )
     {
-#if 1	
+#if 0	
       // Use conventional STL style		
 		
       // this special-case test is faster for worlds with simple models,

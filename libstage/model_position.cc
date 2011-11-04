@@ -171,7 +171,7 @@ void ModelPosition::Load( void )
     }
   
   // choose a wheelbase
-  this->wheelbase = wf->ReadFloat( wf_entity, "wheelbase", this->wheelbase );
+  this->wheelbase = wf->ReadLength( wf_entity, "wheelbase", this->wheelbase );
     
   // load odometry if specified
   if( wf->PropertyExists( wf_entity, "odom" ) )
@@ -187,46 +187,25 @@ void ModelPosition::Load( void )
   // overwritten below if the localization_origin property is
   // specified
   est_origin = this->GetGlobalPose();
+  est_origin.Load( wf, wf_entity, "localization_origin" );
+  
+  // compute our localization pose based on the origin and true pose
+  const Pose gpose = this->GetGlobalPose();
+  
+  est_pose.a = normalize( gpose.a - est_origin.a );
+  const double cosa = cos(est_origin.a);
+  const double sina = sin(est_origin.a);
+  const double dx = gpose.x - est_origin.x;
+  const double dy = gpose.y - est_origin.y;
+  est_pose.x = dx * cosa + dy * sina;
+  est_pose.y = dy * cosa - dx * sina;
+  
+  // zero position error: assume we know exactly where we are on startup
+  memset( &est_pose_error, 0, sizeof(est_pose_error));
 
-  if( wf->PropertyExists( wf_entity, "localization_origin" ) )
-    {  
-      est_origin.Load( wf, wf_entity, "localization_origin" );
-
-      // wf->ReadTuple( wf_entity, "localization_origin", 0, 4, "llla", 
-      // 		     &est_origin.x,
-      // 		     &est_origin.y,
-      // 		     &est_origin.z,
-      // 		     &est_origin.a );
-
-      // compute our localization pose based on the origin and true pose
-      Pose gpose = this->GetGlobalPose();
-
-      est_pose.a = normalize( gpose.a - est_origin.a );
-      double cosa = cos(est_origin.a);
-      double sina = sin(est_origin.a);
-      double dx = gpose.x - est_origin.x;
-      double dy = gpose.y - est_origin.y;
-      est_pose.x = dx * cosa + dy * sina;
-      est_pose.y = dy * cosa - dx * sina;
-
-      // zero position error: assume we know exactly where we are on startup
-      memset( &est_pose_error, 0, sizeof(est_pose_error));
-    }
-
+  
   // odometry model parameters
-  if( wf->PropertyExists( wf_entity, "odom_error" ) )
-    {
-      integration_error.Load( wf, wf_entity, "localization_origin" );
-
-      // integration_error.x = 
-      // 	wf->ReadTupleLength( wf_entity, "odom_error", 0, integration_error.x );
-      // integration_error.y = 
-      // 	wf->ReadTupleLength( wf_entity, "odom_error", 1, integration_error.y );
-      // integration_error.z = 
-      // 	wf->ReadTupleLength( wf_entity, "odom_error", 2, integration_error.z );
-      // integration_error.a 
-      // 	= wf->ReadTupleAngle( wf_entity, "odom_error", 3, integration_error.a );
-    }
+  integration_error.Load( wf, wf_entity, "odom_error" );
 
   // choose a localization model
   if( wf->PropertyExists( wf_entity, "localization" ) )
@@ -244,31 +223,27 @@ void ModelPosition::Load( void )
 		    loc_str.c_str(), this->Token() );
     }
   
-  if( wf->PropertyExists( wf_entity, "acceleration_bounds" ))
-    {
-      wf->ReadTuple( wf_entity, "acceleration_bounds", 0, 8, "llllllaa",
-		     &acceleration_bounds[0].min,
-		     &acceleration_bounds[0].max,
-		     &acceleration_bounds[1].min,
-		     &acceleration_bounds[1].max,
-		     &acceleration_bounds[2].min,
-		     &acceleration_bounds[2].max,
-		     &acceleration_bounds[3].min,
-		     &acceleration_bounds[3].max );
-    }
+  // if the property does not exist, these have no effect on the argument list
+
+  wf->ReadTuple( wf_entity, "acceleration_bounds", 0, 8, "llllllaa",
+		 &acceleration_bounds[0].min,
+		 &acceleration_bounds[0].max,
+		 &acceleration_bounds[1].min,
+		 &acceleration_bounds[1].max,
+		 &acceleration_bounds[2].min,
+		 &acceleration_bounds[2].max,
+		 &acceleration_bounds[3].min,
+		 &acceleration_bounds[3].max );
   
-  if( wf->PropertyExists( wf_entity, "velocity_bounds" ))
-    {
-      wf->ReadTuple( wf_entity, "velocity_bounds", 0, 8, "llllllaa",
-		     &velocity_bounds[0].min,
-		     &velocity_bounds[0].max,
-		     &velocity_bounds[1].min,
-		     &velocity_bounds[1].max,
-		     &velocity_bounds[2].min,
-		     &velocity_bounds[2].max,
-		     &velocity_bounds[3].min,
-		     &velocity_bounds[3].max );
-    }
+  wf->ReadTuple( wf_entity, "velocity_bounds", 0, 8, "llllllaa",
+		 &velocity_bounds[0].min,
+		 &velocity_bounds[0].max,
+		 &velocity_bounds[1].min,
+		 &velocity_bounds[1].max,
+		 &velocity_bounds[2].min,
+		 &velocity_bounds[2].max,
+		 &velocity_bounds[3].min,
+		 &velocity_bounds[3].max );
 }
 
 void ModelPosition::Update( void  )
@@ -486,17 +461,10 @@ void ModelPosition::Update( void  )
       //	    this->velocity.a );
       
       // respect velocity bounds
-      vel.x = std::min( vel.x, velocity_bounds[0].max );
-      vel.x = std::max( vel.x, velocity_bounds[0].min );
-      
-      vel.y = std::min( vel.y, velocity_bounds[1].max );
-      vel.y = std::max( vel.y, velocity_bounds[1].min );
-      
-      vel.z = std::min( vel.z, velocity_bounds[2].max );
-      vel.z = std::max( vel.z, velocity_bounds[2].min );
-      
-      vel.a = std::min( vel.a, velocity_bounds[3].max );
-      vel.a = std::max( vel.a, velocity_bounds[3].min );
+      vel.x = velocity_bounds[0].Constrain( vel.x );
+      vel.y = velocity_bounds[1].Constrain( vel.y );
+      vel.z = velocity_bounds[2].Constrain( vel.z );
+      vel.a = velocity_bounds[3].Constrain( vel.a );
 
       // printf( "final vel: %.2f %.2f %.2f\n", 
       // vel.x, vel.y, vel.a );
@@ -576,10 +544,6 @@ void ModelPosition::Stop()
 
 void ModelPosition::SetSpeed( double x, double y, double a ) 
 { 
-  //assert( ! isnan(x) );
-  //assert( ! isnan(y) );
-  //assert( ! isnan(a) );
-  
   control_mode = CONTROL_VELOCITY;
   goal.x = x;
   goal.y = y;
@@ -589,41 +553,30 @@ void ModelPosition::SetSpeed( double x, double y, double a )
 
 void ModelPosition::SetXSpeed( double x )
 { 
-  //assert( ! isnan(x) );
   control_mode = CONTROL_VELOCITY;
   goal.x = x;
 }  
 
-
 void ModelPosition::SetYSpeed( double y )
 { 
-  //assert( ! isnan(y) );
   control_mode = CONTROL_VELOCITY;
   goal.y = y;
 }  
 
 void ModelPosition::SetZSpeed( double z )
 { 
-  //assert( ! isnan(z) );
   control_mode = CONTROL_VELOCITY;
   goal.z = z;
 }  
 
 void ModelPosition::SetTurnSpeed( double a )
 { 
-  //assert( ! isnan(a) );
   control_mode = CONTROL_VELOCITY;
   goal.a = a;
 }  
 
-
 void ModelPosition::SetSpeed( Velocity vel ) 
 { 
-  //assert( ! isnan(vel.x) );
-  //assert( ! isnan(vel.y) );
-  //assert( ! isnan(vel.z) );
-  //assert( ! isnan(vel.a) );
-
   control_mode = CONTROL_VELOCITY;
   goal.x = vel.x;
   goal.y = vel.y;
@@ -633,10 +586,6 @@ void ModelPosition::SetSpeed( Velocity vel )
 
 void ModelPosition::GoTo( double x, double y, double a ) 
 {
-  //assert( ! isnan(x) );
-  //assert( ! isnan(y) );
-  //assert( ! isnan(a) );
-
   control_mode = CONTROL_POSITION;
   goal.x = x;
   goal.y = y;
@@ -650,15 +599,13 @@ void ModelPosition::GoTo( Pose pose )
   goal = pose;
 }  
 
-void ModelPosition::SetAcceleration( double x, double y, double a )
+void ModelPosition::SetAcceleration( double x, double y,  double a )
 {
   control_mode = CONTROL_ACCELERATION;
   goal.x = x;
   goal.y = y;
   goal.z = 0;
   goal.a = a;
-
-  printf( "accel %.2f %.2f %.2f\n", goal.x, goal.y, goal.a );
 }
 
 /** 
@@ -669,11 +616,10 @@ void ModelPosition::SetOdom( Pose odom )
   est_pose = odom;
 
   // figure out where the implied origin is in global coords
-  Pose gp = GetGlobalPose();
-
-  double da = normalize( -odom.a + gp.a );
-  double dx = -odom.x * cos(da) + odom.y * sin(da);
-  double dy = -odom.y * cos(da) - odom.x * sin(da);
+  const Pose gp = GetGlobalPose();
+  const double da = normalize( -odom.a + gp.a );
+  const double dx = -odom.x * cos(da) + odom.y * sin(da);
+  const double dy = -odom.y * cos(da) - odom.x * sin(da);
 
   // origin of our estimated pose
   est_origin.x = gp.x + dx;

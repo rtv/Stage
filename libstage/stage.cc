@@ -234,12 +234,8 @@ point_t* Stg::unit_square_points_create( void )
 // return a value based on val, but limited minval <= val >= maxval  
 double Stg::constrain( double val, const double minval, const double maxval )
 {
-  if( val < minval )
-    return minval;
-
-  if( val > maxval )
-    return maxval;
-
+  if( val < minval ) return minval;
+  if( val > maxval ) return maxval;
   return val;
 }
 

@@ -1,10 +1,12 @@
 #include "stage.hh"
+#include "worldfile.hh"
 using namespace Stg;
 
 #include "file_manager.hh"
+
 #include <errno.h>
 
-Color::Color( float r, float g, float b, float a )
+Color::Color( double r, double g, double b, double a )
   : r(r),g(g),b(b),a(a) 
 {}
 
@@ -16,9 +18,9 @@ bool Color::operator!=( const Color& other ) const
 {
   double epsilon = 1e-4; // small
   return( fabs(r-other.r) > epsilon ||
-		  fabs(g-other.g) > epsilon ||
-		  fabs(b-other.b) > epsilon ||
-		  fabs(a-other.a) > epsilon );
+	  fabs(g-other.g) > epsilon ||
+	  fabs(b-other.b) > epsilon ||
+	  fabs(a-other.a) > epsilon );
 }
 
 Color::Color( const std::string& name) :
@@ -99,4 +101,34 @@ void Color::Print( const char* prefix ) const
 {
   printf( "%s [%.2f %.2f %.2f %.2f]\n", prefix, r,g,b,a );
 } 
+
+const Color& Color::Load( Worldfile* wf, const int section )
+{
+  if( wf->PropertyExists( section, "color" ))
+    {      
+      const std::string& colorstr = wf->ReadString( section, "color", "" );
+      if( colorstr != "" )
+	{
+	  if( colorstr == "random" )
+	    {
+	      r = drand48();
+	      g = drand48();
+	      b = drand48();
+	      a = 1.0;
+	    }
+	  else
+	    {
+	      Color c = Color( colorstr );
+	      r = c.r;
+	      g = c.g;
+	      b = c.b;
+	      a = c.a;
+	    }
+	}
+    }        
+  else
+    wf->ReadTuple( section, "color_rgba", 0, 4, "ffff", &r, &g, &b, &a );
+  
+  return *this;
+}
 

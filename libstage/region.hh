@@ -47,7 +47,7 @@ namespace Stg
 	 
     void RemoveBlock( Block* b, unsigned int index );
     void AddBlock( Block* b, unsigned int index );
-	 
+    
     inline const std::vector<Block*>& GetBlocks( unsigned int index ){ return blocks[index]; }
 	 
     Region* region;  

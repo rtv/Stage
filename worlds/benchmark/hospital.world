@@ -41,8 +41,8 @@ define ir sensor
 (
   samples 1
   range [0 2]
-	fov 30
-  color_rgba [1 0 0 1]
+  fov 30
+  color_rgba [1 0 0 0.3]
 )
 
 define swarmbot position

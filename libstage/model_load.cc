@@ -115,25 +115,7 @@ void Model::Load()
       this->SetColor( col );
     }        
   
-  if( wf->PropertyExists( wf_entity, "color_rgba" ))
-    {      
-      if (wf->GetProperty(wf_entity,"color_rgba")->values.size() < 4)
-	{
-	  PRINT_ERR1( "model %s color_rgba requires 4 values\n", Token() );
-	}
-      else
-	{
-	  
-	  double red=1.0, blue=0.0, green=0.0, alpha=1.0;
-	  if( wf->ReadTuple( wf_entity, "color_rgba", 0, 4, "ffff", 
-			     &red, &green, &blue, &alpha ) != 4 )
-	    PRINT_ERR( "failed to read 4 floats for \"color_rgba\"" );	      	  
-	  else
-	    printf( "read four floats ok\n" );
-	  
-	  this->SetColor( Color( red, green, blue, alpha ));
-	}  
-    }
+  this->SetColor( GetColor().Load( wf, wf_entity ) );
   
   if( wf->ReadInt( wf_entity, "noblocks", 0 ) )
     {

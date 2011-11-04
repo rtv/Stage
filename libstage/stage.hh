@@ -197,9 +197,9 @@ namespace Stg
   class Color
   {
   public:
-    float r,g,b,a;
+    double r,g,b,a;
 	
-    Color( float r, float g, float b, float a=1.0 );
+    Color( double r, double g, double b, double a=1.0 );
 	
     /** Look up the color in the X11-style database. If the color is
 	not found in the database, a cheerful red color will be used
@@ -216,7 +216,7 @@ namespace Stg
     /** convenient constants */
     static const Color blue, red, green, yellow, magenta, cyan;
 
-    bool Load( Worldfile* wf, int entity );
+    const Color& Load( Worldfile* wf, int entity );
   };
   
   /** specify a rectangular size */
@@ -436,6 +436,9 @@ namespace Stg
     Bounds( double min, double max ) : min(min), max(max) { /* empty*/  }
 
     Bounds& Load( Worldfile* wf, int section, const char* keyword );
+
+    // returns value, but no smaller than min and no larger than max.
+    double Constrain( double value );
   };
     
   /** Define a three-dimensional bounding box, initialized to zero */
