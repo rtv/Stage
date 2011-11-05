@@ -23,6 +23,10 @@ OS X	16.20 (rev 7949)
       14.5 (rev 8295) threads: 6: 13.7 3: 13.4
 		14.16 (rev 8329) threads 3: 13.4
 
+MBPi7 10.7 (4 threads) rev bc4d761  3 11.11.3
+  35.6
+   
+
 MBA 17.3
 MBA 23.1 (1 thread)
 MBA 19.3 (2 threads)

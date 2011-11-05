@@ -295,7 +295,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
     {
       if( sample_count > 1 )
 	// draw the filled polygon in transparent blue
-	glDrawArrays( GL_POLYGON, 0, sample_count+1 );
+	glDrawArrays( GL_POLYGON, 0, sample_count );
     }
 	
   glDepthMask( GL_TRUE );

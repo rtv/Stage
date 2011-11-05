@@ -1846,7 +1846,6 @@ namespace Stg
 	callbacks are called.*/
     std::vector<std::set<cb_t> > callbacks;
 		
-
     /** Default color of the model's blocks.*/
     Color color;
 		
@@ -1888,13 +1887,12 @@ namespace Stg
     } gui;
 	 
     bool has_default_block;
-				
-  
+				  
     /** unique process-wide identifier for this model */
     uint32_t id;	
     usec_t interval; ///< time between updates in usec	 
     usec_t interval_energy; ///< time between updates of powerpack in usec
-    usec_t interval_pose; ///< time between updates of pose due to velocity in usec
+    //    usec_t interval_pose; ///< time between updates of pose due to velocity in usec
 
     usec_t last_update; ///< time of last update in us  
     bool log_state; ///< iff true, model state is logged
@@ -2054,7 +2052,7 @@ namespace Stg
 	 
     usec_t GetUpdateInterval() const { return interval; }
     usec_t GetEnergyInterval() const { return interval_energy; }
-    usec_t GetPoseInterval() const { return interval_pose; }
+    //    usec_t GetPoseInterval() const { return interval_pose; }
 	 
     /** Render the model's blocks as an occupancy grid into the
 	preallocated array of width by height pixels */

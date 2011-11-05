@@ -268,7 +268,7 @@ Model::Model( World* world,
   id(Model::count++),
   interval((usec_t)1e5), // 100msec
   interval_energy((usec_t)1e5), // 100msec
-  interval_pose((usec_t)1e5), // 100msec
+  //  interval_pose((usec_t)1e5), // 100msec
   last_update(0),
   log_state(false),
   map_resolution(0.1),
