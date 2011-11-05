@@ -325,7 +325,7 @@ void Canvas::unSelectAll()
 
 // convert from 2d window pixel to 3d world coordinates
 void Canvas::CanvasToWorld( int px, int py, 
-									 double *wx, double *wy, double* wz )
+			    double *wx, double *wy, double* wz )
 {
   if( px <= 0 )
     px = 1;
@@ -642,7 +642,7 @@ void Canvas::DrawGlobalGrid()
   PushColor( 0.2, 0.2, 0.2, 1.0 ); // pale gray
 
   for( double i=0; i < bounds.x.max; i+=skip)
-    {
+    {      
       snprintf( str, 16, "%d", (int)i );
       Gl::draw_string(  i, 0, 0, str );
     }

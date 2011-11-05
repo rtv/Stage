@@ -54,25 +54,24 @@ void Stg::Gl::draw_array( float x, float y, float w, float h,
   float largest = -1e16;
   
   for( size_t i=0; i<len; i++ )
-	 {
-		smallest = std::min( smallest, data[i] );
-		largest = std::max( largest, data[i] );
-	 }
+    {
+      smallest = std::min( smallest, data[i] );
+      largest = std::max( largest, data[i] );
+    }
 
   draw_array( x,y,w,h,data,len,offset,smallest,largest );
 }
 
 void Stg::Gl::draw_string( float x, float y, float z, const char *str ) 
 {  
-  glRasterPos3f( x, y, z );
-  //printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str ); 
-  gl_draw( str ); // fltk function
+  //  glRasterPos2f( x, y );
+  //  printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str ); 
+  gl_draw( str, x, y ); // fltk function
 }
 
 void Stg::Gl::draw_string_multiline( float x, float y, float w, float h,  const char *str, Fl_Align align ) 
 {  
-  //glRasterPos3f( x, y, z );
-	//printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str ); 
+  //printf( "[%.2f %.2f %.2f] string %u %s\n", x,y,z,(unsigned int)strlen(str), str ); 
   gl_draw(str, x, y, w, h, align ); // fltk function
 }
 
