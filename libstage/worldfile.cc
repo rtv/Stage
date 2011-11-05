@@ -222,19 +222,19 @@ bool Worldfile::Save(const std::string& filename )
 // Check for unused properties and print warnings
 bool Worldfile::WarnUnused()
 {
-	bool unused = false;
-
-	FOR_EACH( it, properties )
-		{
-			if( ! it->second->used )
-				{
-					PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
-									this->filename.c_str(), it->second->line, it->second->name.c_str());
-					unused = true;
-				}
-		}
-	
-	return unused;
+  bool unused = false;
+  
+  FOR_EACH( it, properties )
+    {
+      if( ! it->second->used )
+	{
+	  PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
+		      this->filename.c_str(), it->second->line, it->second->name.c_str());
+	  unused = true;
+	}
+    }
+  
+  return unused;
 }
 
 

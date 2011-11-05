@@ -166,8 +166,8 @@ static const char* AboutText =
 	"Toby Collett, Alex Couture-Beil, Jeremy Asher \n"
 	"and contributors\n" 
 	"\n"
-	"Distributed under the terms of the \n"
-	"GNU General Public License v2";
+  "Distributed under the terms of the \n"
+  "GNU General Public License v2";
 
 static const char* MoreHelpText = 
   "http://playerstage.org\n"
@@ -183,13 +183,13 @@ static const char* MoreHelpText =
   "is not built by default. To build the manual, run \"make\"\n"
   "in the directory \"docsrc\" to produce \"docsrc/stage/index.html\" .\n"
   "(requires Doxygen and supporting programs to be installed first).\n";
- 
+
 WorldGui::WorldGui(int W,int H,const char* L) : 
   Fl_Window(W,H,L ),
   canvas( new Canvas( this,0,30,W,H-30 ) ),
   drawOptions(),
   fileMan( new FileManager() ),
-	interval_log(),
+  interval_log(),
   speedup(1.0), // real time
   mbar( new Fl_Menu_Bar(0,0, W, 30)),
   oDlg( NULL ),

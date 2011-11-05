@@ -118,8 +118,9 @@ void Canvas::InitGl()
   glDisable( GL_LIGHTING );
   glEnable( GL_DEPTH_TEST );
   glDepthFunc( GL_LESS );
-  glCullFace( GL_BACK );
-  glEnable (GL_CULL_FACE);
+  // culling disables text drawing on OS X, so I've disabled it until I understand why
+  //glCullFace( GL_BACK );
+  //glEnable (GL_CULL_FACE);
   glEnable( GL_BLEND );
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
   glEnable( GL_LINE_SMOOTH );
@@ -594,54 +595,8 @@ void Canvas::RemoveModel( Model*  mod  )
 
 void Canvas::DrawGlobalGrid()
 {
-
   bounds3d_t bounds = world->GetExtent();
 
-  /*   printf( "bounds [%.2f %.2f] [%.2f %.2f] [%.2f %.2f]\n",
-       bounds.x.min, bounds.x.max,
-       bounds.y.min, bounds.y.max,
-       bounds.z.min, bounds.z.max );
-			 
-  */
-  
-  /* simple scaling of axis labels - could be better */
-  int skip = (int)( 50 / camera.scale());
-  if( skip < 1 ) skip = 1;
-  if( skip > 2 && skip % 2 ) skip += 1;
-
-  //printf( "scale %.4f\n", camera.scale() );
-
-  char str[64];	
-  PushColor( 0.2, 0.2, 0.2, 1.0 ); // pale gray
-
-  for( double i=0; i < bounds.x.max; i+=skip)
-    {
-      snprintf( str, 16, "%d", (int)i );
-      Gl::draw_string(  i, 0, 0.00, str );
-    }
-
-  for( double i=0; i >= bounds.x.min; i-=skip)
-    {
-      snprintf( str, 16, "%d", (int)i );
-      Gl::draw_string(  i, 0, 0.00, str );
-    }
-
-  
-  for( double i=0; i < bounds.y.max; i+=skip)
-    {
-      snprintf( str, 16, "%d", (int)i );
-      Gl::draw_string(  0, i, 0.00, str );
-    }
-
-  for( double i=0; i >= bounds.y.min; i-=skip)
-    {
-      snprintf( str, 16, "%d", (int)i );
-      Gl::draw_string(  0, i, 0.00, str );
-    }
-
-
-  PopColor();
-  
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
   glEnable(GL_POLYGON_OFFSET_FILL);
@@ -667,6 +622,53 @@ void Canvas::DrawGlobalGrid()
   glEnable(GL_BLEND);
   
   glDisable(GL_POLYGON_OFFSET_FILL );
+
+
+  /*   printf( "bounds [%.2f %.2f] [%.2f %.2f] [%.2f %.2f]\n",
+       bounds.x.min, bounds.x.max,
+       bounds.y.min, bounds.y.max,
+       bounds.z.min, bounds.z.max );
+			 
+  */
+  
+  /* simple scaling of axis labels - could be better */
+  int skip = (int)( 50 / camera.scale());
+  if( skip < 1 ) skip = 1;
+  if( skip > 2 && skip % 2 ) skip += 1;
+
+  //printf( "scale %.4f\n", camera.scale() );
+
+  char str[64];	
+  PushColor( 0.2, 0.2, 0.2, 1.0 ); // pale gray
+
+  for( double i=0; i < bounds.x.max; i+=skip)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      Gl::draw_string(  i, 0, 0, str );
+    }
+
+  for( double i=0; i >= bounds.x.min; i-=skip)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      Gl::draw_string(  i, 0, 0, str );
+    }
+
+  
+  for( double i=0; i < bounds.y.max; i+=skip)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      Gl::draw_string(  0, i, 0, str );
+    }
+
+  for( double i=0; i >= bounds.y.min; i-=skip)
+    {
+      snprintf( str, 16, "%d", (int)i );
+      Gl::draw_string(  0, i, 0, str );
+    }
+
+
+  PopColor();
+  
 }
 
 //draw the floor without any grid ( for robot's perspective camera model )

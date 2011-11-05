@@ -16,7 +16,7 @@ window
   center [-7.205 1.437] 
   scale 71.472 # pixels per meter
 
-  show_data 1
+  show_data 0
 )
 
 floorplan
