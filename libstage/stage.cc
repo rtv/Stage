@@ -83,7 +83,7 @@ static inline void pb_set_rect( Fl_Shared_Image* pb,
     {	
       // zeroing
       //uint8_t* pix = pb_get_pixel( pb, x, a );
-      uint8_t* pix = (uint8_t*)(pb->data()[0] + (y*width*depth) + x*depth);
+      uint8_t* pix = (uint8_t*)(pb->data()[0] + (a*width*depth) + x*depth);
       memset( pix, val, rwidth * depth * bytes_per_sample );
     }
 }  
