@@ -636,7 +636,7 @@ bool World::Update()
   pthread_cond_broadcast( &threads_start_cond );
   pthread_mutex_unlock( &sync_mutex );		 
   
-  // update the position of all models based on their velocity
+  // update the position of all position models based on their velocity
   FOR_EACH( it, active_velocity )
     (*it)->Move();
   

@@ -262,7 +262,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
   Color c( col );
   c.a = 0.15; // transparent version of sensor color
   rgr->PushColor( c );
-  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );			
+  glPolygonMode( GL_FRONT, GL_FILL );			
 	
   if( ranges.size()  ) // if we have some data
     {
@@ -282,7 +282,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	}	
       else
 	{
-	  for( size_t s(0); s<sample_count; s++ )
+	  for( size_t s(0); s<sample_count+1; s++ )
 	    {
 	      double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
 	      pts[2*s+2] = (float)(ranges[s] * cos(ray_angle) );

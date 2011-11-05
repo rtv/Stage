@@ -76,11 +76,11 @@ ModelActuator::ModelActuator( World* world,
   this->SetWatts( WATTS_BASE );
   
   // sensible position defaults
-  this->SetVelocity( Velocity(0,0,0,0) );
+  //this->SetVelocity( Velocity(0,0,0,0) );
   this->SetBlobReturn(true);  
 
   // Allow the models to move
-  VelocityEnable();
+  //VelocityEnable();
 }
 
 
@@ -282,7 +282,8 @@ void ModelActuator::Update( void  )
 				PRINT_ERR1( "unrecognized actuator type %d", actuator_type );
 		}
 
-		this->SetVelocity( outvel );
+		// TODO - deal with velocity
+		//this->SetVelocity( outvel );
 		//this->GPoseDirtyTree();
 		PRINT_DEBUG4( " Set Velocity: [ %.4f %.4f %.4f %.4f ]\n",
 				outvel.x, outvel.y, outvel.z, outvel.a );
@@ -305,7 +306,7 @@ void ModelActuator::Shutdown( void )
 	// safety features!
 	goal = 0;
 
-	velocity.Zero();
+	//	velocity.Zero();
 
 	Model::Shutdown();
 }

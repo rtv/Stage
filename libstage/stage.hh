@@ -806,6 +806,8 @@ namespace Stg
     CtrlArgs( std::string w, std::string c ) : worldfile(w), cmdline(c) {}
   };
 
+  class ModelPosition;
+
   /// %World class
   class World : public Ancestor
   {
@@ -912,6 +914,8 @@ namespace Stg
     void CallUpdateCallbacks(); ///< Call all calbacks in cb_list, removing any that return true;
 
   public:
+
+    uint64_t UpdateCount(){ return updates; }
 	 
     bool paused; ///< if true, the simulation is stopped
 
@@ -1076,9 +1080,7 @@ namespace Stg
     void DisableEnergy( Model* m ) { active_energy.erase( m ); };
     
     /** Set of models that require their positions to be recalculated at each World::Update(). */
-    std::set<Model*> active_velocity;
-    void EnableVelocity( Model* m ) { active_velocity.insert( m ); };
-    void DisableVelocity( Model* m ) { active_velocity.erase( m ); };
+    std::set<ModelPosition*> active_velocity;
     
     /** The amount of simulated time to run for each call to Update() */
     usec_t sim_interval;
@@ -1992,13 +1994,7 @@ namespace Stg
 	-1, to indicate that it is not on a list yet. */
     unsigned int event_queue_num; 
     bool used;   ///< TRUE iff this model has been returned by GetUnusedModelOfType()  
-    Velocity velocity;
 	
-    /** respond to velocity state by changing position. Initially
-	false, set to true by subclass, worldfile, or explcicit call
-	to Model::VelocityEnable(). */
-    bool velocity_enable;
-		
     watts_t watts;///< power consumed by this model
 	 
     /** If >0, this model can transfer energy to models that have
@@ -2144,11 +2140,9 @@ namespace Stg
     virtual void Startup();
     virtual void Shutdown();
     virtual void Update();
-    virtual void Move();
     virtual void UpdateCharge();
 		
     static int UpdateWrapper( Model* mod, void* arg ){ mod->Update(); return 0; }
-    static int MoveWrapper( Model* mod, void* arg ){ mod->Move(); return 0; }
 
     /** Calls CallCallback( CB_UPDATE ) */
     void CallUpdateCallbacks( void );
@@ -2217,7 +2211,7 @@ namespace Stg
     /** Alternate constructor that creates dummy models with only a pose */
 	 Model() 
 		: mapped(false), alwayson(false), blocks_dl(0),
-		  boundary(false), data_fresh(false), disabled(true), friction(0), has_default_block(false), log_state(false), map_resolution(0), mass(0), parent(NULL), rebuild_displaylist(false), stack_children(true), stall(false), subs(0), thread_safe(false),trail_index(0), event_queue_num(0), used(false), velocity_enable(false), watts(0), watts_give(0),watts_take(0),wf(NULL), wf_entity(0), world(NULL)
+		  boundary(false), data_fresh(false), disabled(true), friction(0), has_default_block(false), log_state(false), map_resolution(0), mass(0), parent(NULL), rebuild_displaylist(false), stack_children(true), stall(false), subs(0), thread_safe(false),trail_index(0), event_queue_num(0), used(false), watts(0), watts_give(0),watts_take(0),wf(NULL), wf_entity(0), world(NULL)
 	 {}
 		
     void Say( const std::string& str );
@@ -2329,14 +2323,11 @@ namespace Stg
     /** set the pose of model in global coordinates */
     void SetGlobalPose(  const Pose& gpose );
 	
-    /** set a model's velocity in its parent's coordinate system */
-    void SetVelocity(  const Velocity& vel );
-
     /** Enable update of model pose according to velocity state */
-    void VelocityEnable();
+    //    void VelocityEnable();
 
     /** Disable update of model pose according to velocity state */
-    void VelocityDisable();
+    //void VelocityDisable();
 
     /** set a model's pose in its parent's coordinate system */
     void SetPose(  const Pose& pose );
@@ -2383,9 +2374,6 @@ namespace Stg
 	system.  */
     Pose GetPose() const { return pose; }
 	
-    /** Get (a copy of) the model's velocity in its local reference
-	frame. */
-    Velocity GetVelocity() const { return velocity; }
 	
     // guess what these do?
     void SetColor( Color col );
@@ -2954,6 +2942,7 @@ namespace Stg
       } DriveMode;
 	 
   private:
+    Velocity velocity;
     Pose goal;///< the current velocity or pose to reach, depending on the value of control_mode
     ControlMode control_mode;
     DriveMode drive_mode;	 
@@ -2967,6 +2956,7 @@ namespace Stg
     /** Set the min and max velocity in all 4 DOF */
     Bounds velocity_bounds[4];
 
+
   public:
     // constructor
     ModelPosition( World* world,
@@ -2975,11 +2965,17 @@ namespace Stg
     // destructor
     ~ModelPosition();
 
+    virtual void Move();
     virtual void Startup();
     virtual void Shutdown();
     virtual void Update();
     virtual void Load();
-	 	
+
+    /** Get (a copy of) the model's velocity in its local reference
+	frame. */
+    Velocity GetVelocity() const { return velocity; }
+    void SetVelocity( const Velocity& val );
+
     /** Specify a point in space. Arrays of Waypoints can be attached to
 	Models and visualized. */
     class Waypoint

@@ -5,7 +5,7 @@
 /** @defgroup model
 
     The basic model simulates an object with basic properties; position,
-    size, velocity, color, visibility to various sensors, etc. The basic
+    size,  color, visibility to various sensors, etc. The basic
     model also has a body made up of a list of lines. Internally, the
     basic model is used as the base class for all other model types. You
     can use the basic model to simulate environmental objects.
@@ -22,7 +22,6 @@
     pose [ 0.0 0.0 0.0 0.0 ]
     size [ 0.1 0.1 0.1 ]
     origin [ 0.0 0.0 0.0 0.0 ]
-    velocity [ 0.0 0.0 0.0 0.0 ]
 
     update_interval 100
 
@@ -66,23 +65,10 @@
 
     - origin [ x:<float> y:<float> z:<float> heading:<float> ]\n
     specify the position of the object's center, relative to its pose
-
-    - velocity [ x:<float> y:<float> z:<float> heading:<float>
-    omega:<float> ]\n Specify the initial velocity of the model. Note
-    that if the model hits an obstacle, its velocity will be set to
-    zero.
  
     - update_interval int (defaults to 100) The amount of simulated
     time in milliseconds between calls to Model::Update(). Controls
     the frequency with which this model's data is generated.
-
-    - velocity_enable int (defaults to 0)\n Most models ignore their
-    velocity state. This saves on processing time since most models
-    never have their velocity set to anything but zero. Some
-    subclasses (e.g. ModelPosition) change this default as they are
-    expecting to move. Users can specify a non-zero value here to
-    enable velocity control of this model. This achieves the same as
-    calling Model::VelocityEnable()
 
     - color <string>\n specify the color of the object using a color
     name from the X11 database (rgb.txt)
@@ -143,13 +129,6 @@
     zero, the child coordinate system is not offset in z, making it
     easy to define objects in a single local coordinate system.
 */
-
-// todo
-//     - friction <float>\n Determines the proportion of velocity lost
-//     per second. For example, 0.1 would mean that the object would lose
-//     10% of its speed due to friction per second. A value of zero (the
-//     default) means this model can not be pushed around (infinite
-//     friction).
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -310,8 +289,6 @@ Model::Model( World* world,
   type(type),	
   event_queue_num(0),
   used(false),
-  velocity(),
-  velocity_enable(false),
   watts(0.0),
   watts_give(0.0),
   watts_take(0.0),	 
@@ -739,10 +716,7 @@ void Model::Startup( void )
   event_queue_num =  thread_safe ? world->GetEventQueue( this ) : 0;
   
   world->Enqueue( event_queue_num, interval, this, UpdateWrapper, NULL );
-  
-  if( velocity_enable )
-    world->EnableVelocity( this );
-  
+    
   if( FindPowerPack() )
     world->EnableEnergy( this );
   
@@ -755,8 +729,6 @@ void Model::Shutdown( void )
   CallCallbacks( CB_SHUTDOWN );
   
   world->DisableEnergy( this );
-  world->DisableVelocity( this );
-  velocity_enable = false;
 
   // allows data visualizations to be cleared.
   NeedRedraw();
@@ -892,60 +864,6 @@ void Model::UpdateCharge()
 	      pps_charging.push_front( hispp );
 	    }
 	}
-    }
-}
-
-
-void Model::Move( void )
-{  
-  if( velocity.IsZero() )
-    return;
-
-  if( disabled )
-    return;
-
-  // convert usec to sec
-  const double interval( (double)world->sim_interval / 1e6 );
-
-  // find the change in velcity due to our acceleration vector
-  // velocity.x *= 1.0 + acceleration.x * interval;
-  //velocity.y *= 1.0 + acceleration.y * interval;
-  //velocity.z *= 1.0 + acceleration.z * interval;
-  //velocity.a *= 1.0 + acceleration.a * interval;
-  
-  // find the change of pose due to our velocity vector
-  const Pose p( velocity.x * interval,
-		velocity.y * interval,
-		velocity.z * interval,
-		normalize( velocity.a * interval ));
-  
-  // the pose we're trying to achieve (unless something stops us)
-  const Pose newpose( pose + p );
-  
-  // stash the original pose so we can put things back if we hit
-  const Pose startpose( pose );
-  
-  pose = newpose; // do the move provisionally - we might undo it below
-  
-  const unsigned int layer( world->updates%2 );
-  
-  UnMapWithChildren( layer ); // remove from all blocks
-  MapWithChildren( layer ); // render into new blocks
-  
-  if( TestCollision() ) // crunch!
-    {
-      // put things back the way they were
-      // this is expensive, but it happens _very_ rarely for most people
-      pose = startpose;
-      UnMapWithChildren( layer );
-      MapWithChildren( layer );
-
-      SetStall(true);
-    }
-  else
-    {
-      world->dirty = true; // need redraw	
-      SetStall(false);
     }
 }
 

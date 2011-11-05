@@ -39,6 +39,9 @@ using namespace Stg;
     (
     # position properties
     drive "diff"
+
+    velocity [ 0.0 0.0 0.0 0.0 ]
+
     localization "gps"
     localization_origin [ <defaults to model's start pose> ]
 
@@ -55,8 +58,6 @@ using namespace Stg;
 
     # model properties
 
-    # update position according to the current velocity state
-    velocity_enable 1
     )
     @endverbatim
 
@@ -65,18 +66,22 @@ using namespace Stg;
 
     @par Details
  
-    - drive "diff", "omni" or "car"\n
+  - acceleration_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second squared, a in degrees per second squared  
+- drive "diff", "omni" or "car"\n
     select differential-steer model(like a Pioneer), omnidirectional mode or carlike (velocity and steering angle).
+    omega:<float> ]\n Specify the initial velocity of the model. Note
+    that if the model hits an obstacle, its velocity will be set to
+    zero.
     - localization "gps" or "odom"\n
     if "gps" the position model reports its position with perfect accuracy. If "odom", a simple odometry model is used and position data drifts from the ground truth over time. The odometry model is parameterized by the odom_error property.
     - localization_origin [x y z theta]
     - set the origin of the localization coordinate system. By default, this is copied from the model's initial pose, so the robot reports its position relative to the place it started out. Tip: If localization_origin is set to [0 0 0 0] and localization is "gps", the model will return its true global position. This is unrealistic, but useful if you want to abstract away the details of localization. Be prepared to justify the use of this mode in your research! 
     - odom_error [x y z theta]
     - parameters for the odometry error model used when specifying localization "odom". Each value is the maximum proportion of error in intergrating x, y, and theta velocities to compute odometric position estimate. For each axis, if the the value specified here is E, the actual proportion is chosen at startup at random in the range -E/2 to +E/2. Note that due to rounding errors, setting these values to zero does NOT give you perfect localization - for that you need to choose localization "gps".
-    - wheelbase <float,meters>\nThe wheelbase used for the car steering model. Only used if drive is set to "car". Defaults to 1.0m\n
-    - velocity_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second, a in degrees per second				- acceleration_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second squared, a in degrees per second squared  
-
-*/
+    - velocity [ x:<float> y:<float> z:<float> heading:<float>
+    - velocity_bounds [ xmin xmax ymin ymax zmin zmax amin amax ] x,y,z in meters per second, a in degrees per second
+    - wheelbase <float,meters>
+    The wheelbase used for the car steering model. Only used if drive is set to "car". Defaults to 1.0m\*/
 
 
 
@@ -95,6 +100,7 @@ ModelPosition::ModelPosition( World* world,
 			      const std::string& type ) : 
   Model( world, parent, type ),
   // private
+  velocity(),
   goal(0,0,0,0),
   control_mode( CONTROL_VELOCITY ),
   drive_mode( DRIVE_DIFFERENTIAL ),
@@ -116,9 +122,6 @@ ModelPosition::ModelPosition( World* world,
   
   // assert that Update() is reentrant for this derived model
   thread_safe = false;
-
-  // position devices respond to velocity settings by default
-  velocity_enable = true;
   
   // install sensible velocity and acceleration bounds
   for( int i=0; i<3; i++ )
@@ -149,9 +152,19 @@ ModelPosition::~ModelPosition( void )
   // nothing to do 
 }
 
+void ModelPosition::SetVelocity( const Velocity& val )
+{
+  velocity = val;  
+  CallCallbacks( CB_VELOCITY );
+}
+
+
 void ModelPosition::Load( void )
 {
   Model::Load();
+
+  if( wf->PropertyExists( wf_entity, "velocity" ))
+    SetVelocity( GetVelocity().Load( wf, wf_entity, "velocity" ));
 
   // load steering mode
   if( wf->PropertyExists( wf_entity, "drive" ) )
@@ -514,13 +527,63 @@ void ModelPosition::Update( void  )
     }
 
   PRINT_DEBUG3( " READING POSITION: [ %.4f %.4f %.4f ]\n",
-		est_pose.x, est_pose.y, est_pose.a );
+		est_pose.x, est_pose.y, est_pose.a );  
 
   Model::Update();
 }
 
+void ModelPosition::Move( void )
+{  
+  if( velocity.IsZero() )
+    return;
+
+  if( disabled )
+    return;
+
+  // convert usec to sec
+  const double interval( (double)world->sim_interval / 1e6 );
+
+  // find the change of pose due to our velocity vector
+  const Pose p( velocity.x * interval,
+		velocity.y * interval,
+		velocity.z * interval,
+		normalize( velocity.a * interval ));
+  
+  // the pose we're trying to achieve (unless something stops us)
+  const Pose newpose( pose + p );
+  
+  // stash the original pose so we can put things back if we hit
+  const Pose startpose( pose );
+  
+  pose = newpose; // do the move provisionally - we might undo it below
+  
+  const unsigned int layer( world->UpdateCount()%2 );
+  
+  UnMapWithChildren( layer ); // remove from all blocks
+  MapWithChildren( layer ); // render into new blocks
+  
+  if( TestCollision() ) // crunch!
+    {
+      // put things back the way they were
+      // this is expensive, but it happens _very_ rarely for most people
+      pose = startpose;
+      UnMapWithChildren( layer );
+      MapWithChildren( layer );
+
+      SetStall(true);
+    }
+  else
+    {
+      //      world->dirty = true; // need redraw	
+      SetStall(false);
+    }
+}
+
+
 void ModelPosition::Startup( void )
 {
+  world->active_velocity.insert( this );
+  
   Model::Startup();
   
   PRINT_DEBUG( "position startup" );
@@ -533,6 +596,8 @@ void ModelPosition::Shutdown( void )
   // safety features!
   goal.Zero();
   velocity.Zero();
+
+  world->active_velocity.erase( this );
 
   Model::Shutdown();
 }

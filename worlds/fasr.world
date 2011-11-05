@@ -11,8 +11,8 @@ speedup -1
 paused 0
 
 # time at which to pause (in GUI mode) or quit (in headless mode) the simulation
-#quit_time 3600 # 1 hour of simulated time
-quit_time 1800 # 30 mins of simulated time
+quit_time 3600 # 1 hour of simulated time
+#quit_time 1800 # 30 mins of simulated time
 
 resolution 0.02
 

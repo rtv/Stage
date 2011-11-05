@@ -137,31 +137,31 @@ int Model::SetParent( Model* newparent)
   return 0; //ok
 }
 
-// get the model's velocity in the global frame
-Velocity Model::GetGlobalVelocity() const
-{
-  const Pose gpose(GetGlobalPose());  
-  const double cosa(cos(gpose.a));
-  const double sina(sin(gpose.a));
+// // get the model's velocity in the global frame
+// Velocity Model::GetGlobalVelocity() const
+// {
+//   const Pose gpose(GetGlobalPose());  
+//   const double cosa(cos(gpose.a));
+//   const double sina(sin(gpose.a));
   
-  return Velocity( velocity.x * cosa - velocity.y * sina,
-		   velocity.x * sina + velocity.y * cosa,
-		   velocity.z,
-		   velocity.a );
-}
+//   return Velocity( velocity.x * cosa - velocity.y * sina,
+// 		   velocity.x * sina + velocity.y * cosa,
+// 		   velocity.z,
+// 		   velocity.a );
+// }
 
-// set the model's velocity in the global frame
-void Model::SetGlobalVelocity( const Velocity& gv )
-{
-  const Pose gpose = GetGlobalPose();  
-  const double cosa(cos(gpose.a));
-  const double sina(sin(gpose.a));
+// // set the model's velocity in the global frame
+// void Model::SetGlobalVelocity( const Velocity& gv )
+// {
+//   const Pose gpose = GetGlobalPose();  
+//   const double cosa(cos(gpose.a));
+//   const double sina(sin(gpose.a));
   
-  this->SetVelocity( Velocity( gv.x * cosa + gv.y * sina,
-			       -gv.x * sina + gv.y * cosa,
-			       gv.z,
-			       gv.a ));
-}
+//   this->SetVelocity( Velocity( gv.x * cosa + gv.y * sina,
+// 			       -gv.x * sina + gv.y * cosa,
+// 			       gv.z,
+// 			       gv.a ));
+// }
 
 // get the model's position in the global frame
 Pose Model::GetGlobalPose() const
@@ -179,23 +179,6 @@ Pose Model::GetGlobalPose() const
   return global_pose;
 }
 
-void Model::VelocityEnable()
-{
-  velocity_enable = true;
-  world->EnableVelocity(this);
-}
-
-void Model::VelocityDisable()
-{
-  velocity_enable = false;
-  world->DisableVelocity( this );
-}
-
-void Model::SetVelocity( const Velocity& val )
-{
-  velocity = val;  
-  CallCallbacks( CB_VELOCITY );
-}
 
 // set the model's pose in the local frame
 void Model::SetPose( const Pose& newpose )

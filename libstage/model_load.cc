@@ -98,8 +98,6 @@ void Model::Load()
   if( wf->PropertyExists( wf_entity, "pose" ))
     SetPose( GetPose().Load( wf, wf_entity, "pose" ) );
   
-  if( wf->PropertyExists( wf_entity, "velocity" ))
-    SetVelocity( GetVelocity().Load( wf, wf_entity, "velocity" ));
 
   if( wf->PropertyExists( wf_entity, "color" ))
     {      
@@ -178,8 +176,6 @@ void Model::Load()
   if( res != this->map_resolution )
     SetMapResolution( res );
   
-  velocity_enable = wf->ReadInt( wf_entity, "enable_velocity", velocity_enable );
-	
   if( wf->PropertyExists( wf_entity, "friction" ))
     {
       this->SetFriction( wf->ReadFloat(wf_entity, "friction", this->friction ));

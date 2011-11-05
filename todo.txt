@@ -1,4 +1,9 @@
 
+** BUGS **
+   
+ visualization of ranger data (see eg. hospital.world)
+
+
 ** Optimization **
 
 Timing benchmarks 3600 seconds of virtual time in real time seconds:
