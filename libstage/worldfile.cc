@@ -36,6 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+#include <stdarg.h>
 
 //#define DEBUG
 
