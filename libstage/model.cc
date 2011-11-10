@@ -172,26 +172,19 @@ Stg::Size& Stg::Size::Load( Worldfile* wf, const int section, const char* keywor
 
 void Stg::Size::Save( Worldfile* wf, int section, const char* keyword ) const
 {
-  double s = wf->unit_length;
-  wf->WriteTupleFloat( section, keyword, 0, x/s );
-  wf->WriteTupleFloat( section, keyword, 1, y/s) ;
-  wf->WriteTupleFloat( section, keyword, 2, z/s );
+  wf->WriteTuple( section, keyword, 0, 3, "lll", x, y, z );
 }
 
 Pose& Pose::Load( Worldfile* wf, const int section, const char* keyword )
 {
   wf->ReadTuple( section, keyword, 0, 4, "llla", &x, &y, &z, &a );
+  normalize( a );
   return *this;
 }
 
 void Pose::Save( Worldfile* wf, const int section, const char* keyword )
 {
-  double s = wf->unit_length;
-  double t = wf->unit_angle;
-  wf->WriteTupleFloat( section, keyword, 0, x/s );
-  wf->WriteTupleFloat( section, keyword, 1, y/s );
-  wf->WriteTupleFloat( section, keyword, 1, z/s );
-  wf->WriteTupleFloat( section, keyword, 3, a/t );
+  wf->WriteTuple( section, keyword, 0, 4, "llla", x, y, z, a );
 }
 
 Model::Visibility::Visibility() : 
@@ -268,7 +261,6 @@ Model::Model( World* world,
   id(Model::count++),
   interval((usec_t)1e5), // 100msec
   interval_energy((usec_t)1e5), // 100msec
-  //  interval_pose((usec_t)1e5), // 100msec
   last_update(0),
   log_state(false),
   map_resolution(0.1),

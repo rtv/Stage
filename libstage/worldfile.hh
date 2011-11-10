@@ -79,10 +79,9 @@ namespace Stg {
 	 // Load world from file
   public: bool Load(const std::string& filename );
 
-	 // Save world back into file
-	 // Set filename to NULL to save back into the original file
+    // Save world into named file
   public: bool Save(const std::string& filename);
-
+    
 	 // Check for unused properties and print warnings
   public: bool WarnUnused();
 	 
@@ -129,37 +128,15 @@ namespace Stg {
 	 // filename is entered as a relative path, we prepend the world
 	 // files path to it.
   public: const char *ReadFilename(int entity, const char *name, const char *value);
-  
-	 // Read a string from a tuple
-  public: const char *ReadTupleString(int entity, const char *name,
-                                      int index, const char *value);
-    
+      
     // Read a series of values from a tuplee
   public: int ReadTuple( const int entity, const char* name, 
 			 const unsigned int first, const unsigned int num, const char* format, ... );
     
-    // Read a series of values from a tuplee
-  public: void WriteTuple( int entity, const char* name, 
-			   int first, int num, const char format, ... );
-    
-    // Write a string to a tuple
-  public: void WriteTupleString(int entity, const char *name,
-                                int index, const char *value);
-    
-    void WriteTupleFloat(int entity, const char *name,
-				    int index, double value);
-
-    // Read a float from a tuple
-  public: double ReadTupleFloat(int entity, const char *name,
-                                int index, double value);
-
-    // Read a float from a tuple
-  public: double ReadTupleLength(int entity, const char *name,
-                                int index, double value)
-    {
-      return ( ReadTupleFloat( entity, name, index, value ) * unit_length );
-    }
-          
+    // Write a series of values to a tuple
+  public: void WriteTuple( const int entity, const char *name,
+			   const unsigned int first, const unsigned int count, const char* format, ... );
+              
 
 	 ////////////////////////////////////////////////////////////////////////////
 	 // Private methods used to load stuff from the world file

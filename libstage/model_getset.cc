@@ -67,7 +67,7 @@ void Model::SetBlobReturn( bool val )
   vis.blob_return = val;
 }
 
-void Model::SetRangerReturn( float val )
+void Model::SetRangerReturn( double val )
 {
   vis.ranger_return = val;
 }

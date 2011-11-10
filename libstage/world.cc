@@ -971,8 +971,7 @@ static int _save_cb( Model* mod, void* dummy )
 bool World::Save( const char *filename )
 {
   ForEachDescendant( _save_cb, NULL );
-
-  return this->wf->Save( filename );
+  return this->wf->Save( filename ? filename : wf->filename );
 }
 
 static int _reload_cb(  Model* mod, void* dummy )

@@ -47,7 +47,7 @@ void Stg::Gl::draw_array( float x, float y, float w, float h,
 }
 
 void Stg::Gl::draw_array( float x, float y, float w, float h, 
-								  float* data, size_t len, size_t offset )
+			  float* data, size_t len, size_t offset )
 {
   // wild initial bounds
   float smallest = 1e16;
@@ -64,14 +64,14 @@ void Stg::Gl::draw_array( float x, float y, float w, float h,
 
 void Stg::Gl::draw_string( float x, float y, float z, const char *str ) 
 {  
-   glRasterPos2f( x, y );
+  glRasterPos3f( x, y, z );
    
    GLboolean b;
    glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &b );  
 
    //printf( "[%.2f %.2f %.2f] %d string %u %s\n", x,y,z, (int)b, (unsigned int)strlen(str), str ); 
    
-   if( b ) gl_draw( str, x, y ); // fltk function
+   if( b ) gl_draw( str ); // fltk function
 }
 
 void Stg::Gl::draw_string_multiline( float x, float y, float w, float h,  const char *str, Fl_Align align ) 

@@ -146,33 +146,33 @@ void ModelBlobfinder::RemoveAllColors()
 
 void ModelBlobfinder::Load( void )
 {  
-	Model::Load();
+  Model::Load();
+  
+  Worldfile* wf = world->GetWorldFile();
+  
+  wf->ReadTuple( wf_entity, "image", 0, 2, "uu", &scan_width, &scan_height );
 
-	Worldfile* wf = world->GetWorldFile();
-
-	scan_width = (int)wf->ReadTupleFloat( wf_entity, "image", 0, scan_width );
-	scan_height= (int)wf->ReadTupleFloat( wf_entity, "image", 1, scan_height );
-	range = wf->ReadFloat( wf_entity, "range", range );
-	fov = wf->ReadAngle( wf_entity, "fov", fov );
-	pan = wf->ReadAngle( wf_entity, "pan", pan );
-
-	if( wf->PropertyExists( wf_entity, "colors" ) )
-	{
+  range = wf->ReadFloat( wf_entity, "range", range );
+  fov = wf->ReadAngle( wf_entity, "fov", fov );
+  pan = wf->ReadAngle( wf_entity, "pan", pan );
+  
+  if( wf->PropertyExists( wf_entity, "colors" ) )
+    {
 		RemoveAllColors(); // empty the color list to start from scratch
 
 		unsigned int count = wf->ReadInt( wf_entity, "colors_count", 0 );
 
 		for( unsigned int c=0; c<count; c++ )
-		{
-			const char* colorstr = 
-				wf->ReadTupleString( wf_entity, "colors", c, NULL );
-
-			if( ! colorstr )
-				break;
-			else
-			  AddColor( Color( colorstr ));
-		}
-	}    
+		  {
+		    char* colorstr = NULL;
+		    wf->ReadTuple( wf_entity, "colors", c, 1, "s", &colorstr );
+		    
+		    if( ! colorstr )
+		      break;
+		    else
+		      AddColor( Color( colorstr ));
+		  }
+    }    
 }
 
 

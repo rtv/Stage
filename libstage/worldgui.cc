@@ -275,25 +275,28 @@ void WorldGui::Load( const std::string& filename )
   const int window_section = wf->LookupEntity( "window" );
   
   if( window_section > 0 ) 
-	 {			
-		const int width =  (int)wf->ReadTupleFloat(window_section, "size", 0, w() );
-		const int height = (int)wf->ReadTupleFloat(window_section, "size", 1, h() );
-		size( width,height );
-		size_range( 100, 100 ); // set min size to 100/100, max size to screen size
-		
-		// configure the canvas
-		canvas->Load(  wf, window_section );
-		// warn about unused WF lines
-		wf->WarnUnused();
-  
-		std::string title = PROJECT;
-		if ( wf->filename.size() ) {
-		  // improve the title bar to say "Stage: <worldfile name>"
-		  title += ": ";		
-		  title += wf->filename;
-		}
-		label( title.c_str() );
-	 }
+    {	
+      unsigned int width = w();
+      unsigned int height = h();
+      wf->ReadTuple(window_section, "size", 0, 2, "uu", &width, &height );
+      
+      
+      size( width,height );
+      size_range( 100, 100 ); // set min size to 100/100, max size to screen size
+      
+      // configure the canvas
+      canvas->Load(  wf, window_section );
+      // warn about unused WF lines
+      wf->WarnUnused();
+      
+      std::string title = PROJECT;
+      if ( wf->filename.size() ) {
+	// improve the title bar to say "Stage: <worldfile name>"
+	title += ": ";		
+	title += wf->filename;
+      }
+      label( title.c_str() );
+    }
  
   const usec_t load_end_time = RealTimeNow();
 	
@@ -323,8 +326,9 @@ bool WorldGui::Save( const char* filename )
 	
   if( window_section > 0 ) // section defined
     {
-      wf->WriteTupleFloat( window_section, "size", 0, w() );
-      wf->WriteTupleFloat( window_section, "size", 1, h() );
+      unsigned int width = w();
+      unsigned int height = h();
+      wf->WriteTuple( window_section, "size", 0, 2, "uu", width, height );
 	    
       canvas->Save( wf, window_section );
 	    

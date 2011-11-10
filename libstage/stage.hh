@@ -1355,9 +1355,9 @@ namespace Stg
   class Camera 
   {
   protected:
-    float _pitch; //left-right (about y)
-    float _yaw; //up-down (about x)
-    float _x, _y, _z;
+    double _pitch; //left-right (about y)
+    double _yaw; //up-down (about x)
+    double _x, _y, _z;
 	
   public:
     Camera() : _pitch( 0 ), _yaw( 0 ), _x( 0 ), _y( 0 ), _z( 0 ) { }
@@ -1366,12 +1366,12 @@ namespace Stg
     virtual void Draw( void ) const = 0;
     virtual void SetProjection( void ) const = 0;
 
-    float yaw( void ) const { return _yaw; }
-    float pitch( void ) const { return _pitch; }
+    double yaw( void ) const { return _yaw; }
+    double pitch( void ) const { return _pitch; }
 	 
-    float x( void ) const { return _x; }
-    float y( void ) const { return _y; }
-    float z( void ) const { return _z; }
+    double x( void ) const { return _x; }
+    double y( void ) const { return _y; }
+    double z( void ) const { return _z; }
 	 
     virtual void reset() = 0;
     virtual void Load( Worldfile* wf, int sec ) = 0;
@@ -1383,43 +1383,43 @@ namespace Stg
   class PerspectiveCamera : public Camera
   {
   private:
-    float _z_near;
-    float _z_far;
-    float _vert_fov;
-    float _horiz_fov;
-    float _aspect;
+    double _z_near;
+    double _z_far;
+    double _vert_fov;
+    double _horiz_fov;
+    double _aspect;
 
   public:
     PerspectiveCamera( void );
 
     virtual void Draw( void ) const;
     virtual void SetProjection( void ) const;
-    //void SetProjection( float aspect ) const;
+    //void SetProjection( double aspect ) const;
     void update( void );
 
-    void strafe( float amount );
-    void forward( float amount );
+    void strafe( double amount );
+    void forward( double amount );
 	
-    void setPose( float x, float y, float z ) { _x = x; _y = y; _z = z; }
-    void addPose( float x, float y, float z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
-    void move( float x, float y, float z );
-    void setFov( float horiz_fov, float vert_fov ) { _horiz_fov = horiz_fov; _vert_fov = vert_fov; }
+    void setPose( double x, double y, double z ) { _x = x; _y = y; _z = z; }
+    void addPose( double x, double y, double z ) { _x += x; _y += y; _z += z; if( _z < 0.1 ) _z = 0.1; }
+    void move( double x, double y, double z );
+    void setFov( double horiz_fov, double vert_fov ) { _horiz_fov = horiz_fov; _vert_fov = vert_fov; }
     ///update vertical fov based on window aspect and current horizontal fov
-    void setAspect( float aspect ) { _aspect = aspect; }
-    void setYaw( float yaw ) { _yaw = yaw; }
-    float horizFov( void ) const { return _horiz_fov; }
-    float vertFov( void ) const { return _vert_fov; }
-    void addYaw( float yaw ) { _yaw += yaw; }
-    void setPitch( float pitch ) { _pitch = pitch; }
-    void addPitch( float pitch ) { _pitch += pitch; if( _pitch < 0 ) _pitch = 0; else if( _pitch > 180 ) _pitch = 180; }
+    void setAspect( double aspect ) { _aspect = aspect; }
+    void setYaw( double yaw ) { _yaw = yaw; }
+    double horizFov( void ) const { return _horiz_fov; }
+    double vertFov( void ) const { return _vert_fov; }
+    void addYaw( double yaw ) { _yaw += yaw; }
+    void setPitch( double pitch ) { _pitch = pitch; }
+    void addPitch( double pitch ) { _pitch += pitch; if( _pitch < 0 ) _pitch = 0; else if( _pitch > 180 ) _pitch = 180; }
 	
-    float realDistance( float z_buf_val ) const {
+    double realDistance( double z_buf_val ) const {
       return _z_near * _z_far / ( _z_far - z_buf_val * ( _z_far - _z_near ) );
     }
-    void scroll( float dy ) { _z += dy; }
-    float nearClip( void ) const { return _z_near; }
-    float farClip( void ) const { return _z_far; }
-    void setClip( float near, float far ) { _z_far = far; _z_near = near; }
+    void scroll( double dy ) { _z += dy; }
+    double nearClip( void ) const { return _z_near; }
+    double farClip( void ) const { return _z_far; }
+    void setClip( double near, double far ) { _z_far = far; _z_near = near; }
 	
     void reset() { setPitch( 70 ); setYaw( 0 ); }
 	
@@ -1430,11 +1430,11 @@ namespace Stg
   class OrthoCamera : public Camera
   {
   private:
-    float _scale;
-    float _pixels_width;
-    float _pixels_height;
-    float _y_min;
-    float _y_max;
+    double _scale;
+    double _pixels_width;
+    double _pixels_height;
+    double _y_min;
+    double _y_max;
   
   public:
     OrthoCamera( void ) : 
@@ -1447,22 +1447,22 @@ namespace Stg
 	 
     virtual void Draw() const;
 
-    virtual void SetProjection( float pixels_width, 
-										  float pixels_height, 
-										  float y_min,
-										  float y_max );
+    virtual void SetProjection( double pixels_width, 
+										  double pixels_height, 
+										  double y_min,
+										  double y_max );
 	 
     virtual void SetProjection( void ) const;
 	 
-    void move( float x, float y );
+    void move( double x, double y );
 
-    void setYaw( float yaw ) { _yaw = yaw;	}
+    void setYaw( double yaw ) { _yaw = yaw;	}
 
-    void setPitch( float pitch ) { _pitch = pitch; }
+    void setPitch( double pitch ) { _pitch = pitch; }
 
-    void addYaw( float yaw ) { _yaw += yaw;	}
+    void addYaw( double yaw ) { _yaw += yaw;	}
 
-    void addPitch( float pitch ) {
+    void addPitch( double pitch ) {
       _pitch += pitch;
       if( _pitch > 90 )
 	_pitch = 90;
@@ -1470,13 +1470,13 @@ namespace Stg
 	_pitch = 0;
     }
   
-    void setScale( float scale ) { _scale = scale; }
-    void setPose( float x, float y) { _x = x; _y = y; }
+    void setScale( double scale ) { _scale = scale; }
+    void setPose( double x, double y) { _x = x; _y = y; }
   
-    void scale( float scale, float shift_x = 0, float h = 0, float shift_y = 0, float w = 0 );	
+    void scale( double scale, double shift_x = 0, double h = 0, double shift_y = 0, double w = 0 );	
     void reset( void ) { _pitch = _yaw = 0; }
   
-    float scale() const { return _scale; }
+    double scale() const { return _scale; }
   
     void Load( Worldfile* wf, int sec );
     void Save( Worldfile* wf, int sec );
@@ -1502,7 +1502,7 @@ namespace Stg
 	 
     /** Stage attempts to run this many times faster than real
 	time. If -1, Stage runs as fast as possible. */
-    float speedup; 
+    double speedup; 
 
     Fl_Menu_Bar* mbar;
     OptionsDlg* oDlg;
@@ -2042,7 +2042,7 @@ namespace Stg
       int fiducial_return;
       bool gripper_return;
       bool obstacle_return;
-      float ranger_return; // 0 - 1
+      double ranger_return; // 0 - 1
 		
       Visibility();
 
@@ -2380,7 +2380,7 @@ namespace Stg
     void SetGravityReturn( bool val );
     void SetGripperReturn( bool val );
     void SetStickyReturn( bool val );
-    void SetRangerReturn( float val );
+    void SetRangerReturn( double val );
     void SetObstacleReturn( bool val );
     void SetBlobReturn( bool val );
     void SetRangerReturn( bool val );
@@ -2865,8 +2865,8 @@ namespace Stg
     static Option showCameraData;
 	
     PerspectiveCamera _camera;
-    float _yaw_offset; //position camera is mounted at
-    float _pitch_offset;
+    double _yaw_offset; //position camera is mounted at
+    double _pitch_offset;
 		
     ///Take a screenshot from the camera's perspective. return: true for sucess, and data is available via FrameDepth() / FrameColor()
     bool GetFrame();
@@ -2905,10 +2905,10 @@ namespace Stg
     const GLubyte* FrameColor() const { return _frame_color_data; }
 	
     ///change the pitch
-    void setPitch( float pitch ) { _pitch_offset = pitch; _valid_vertexbuf_cache = false; }
+    void setPitch( double pitch ) { _pitch_offset = pitch; _valid_vertexbuf_cache = false; }
 	
     ///change the yaw
-    void setYaw( float yaw ) { _yaw_offset = yaw; _valid_vertexbuf_cache = false; }
+    void setYaw( double yaw ) { _yaw_offset = yaw; _valid_vertexbuf_cache = false; }
   };
 
   // POSITION MODEL --------------------------------------------------------

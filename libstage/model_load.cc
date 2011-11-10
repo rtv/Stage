@@ -7,13 +7,14 @@
 #include <string.h>
 #include <ltdl.h> // for library module loading
 
+//#define DEBUG 1
+
 #include "stage.hh"
 #include "worldfile.hh"
 #include "file_manager.hh"
 #include "config.h"
 using namespace Stg;
 
-//#define DEBUG
 
 
 void Model::Load()
@@ -21,7 +22,7 @@ void Model::Load()
   assert( wf );
   assert( wf_entity );
   
-  PRINT_DEBUG1( "Model \"%s\" loading...", token );
+  PRINT_DEBUG1( "Model \"%s\" loading...", token.c_str() );
   
   // choose the thread to run in, if thread_safe > 0 
   event_queue_num = wf->ReadInt( wf_entity, "event_queue", event_queue_num );
@@ -237,10 +238,11 @@ void Model::Save( void )
 
   assert( wf_entity );
 	
-  PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
-		token,
+  PRINT_DEBUG5( "saving model %s pose [ %.2f, %.2f, %.2f, %.2f]",
+		token.c_str(),
 		pose.x,
 		pose.y,
+		pose.z,
 		pose.a );
 	
   // just in case
@@ -261,7 +263,7 @@ void Model::Save( void )
   // call any type-specific save callbacks
   CallCallbacks( CB_SAVE );
 
-  PRINT_DEBUG1( "Model \"%s\" saving complete.", token );
+  PRINT_DEBUG1( "Model \"%s\" saving complete.", token.c_str() );
 }
 
 

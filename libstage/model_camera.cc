@@ -144,20 +144,20 @@ void ModelCamera::Load( void )
 {
 	Model::Load();
 	
-	float horizFov =  wf->ReadTupleFloat( wf_entity, "fov", 0, DEFAULT_HFOV );
-	float vertFov = wf->ReadTupleFloat( wf_entity, "fov", 1, DEFAULT_VFOV );
+	double horizFov =  DEFAULT_HFOV;
+	double vertFov = DEFAULT_VFOV;
+	wf->ReadTuple( wf_entity, "fov", 0, 2, "ff", &horizFov, &vertFov );
 	_camera.setFov( horizFov, vertFov );
 	
-	float range_min = wf->ReadTupleLength( wf_entity, "range", 0, CAMERA_NEAR_CLIP );
-	float range_max = wf->ReadTupleLength( wf_entity, "range", 1, CAMERA_FAR_CLIP );
+	double range_min = CAMERA_NEAR_CLIP;
+	double range_max = CAMERA_FAR_CLIP;
+	wf->ReadTuple( wf_entity, "range", 0, 2, "ll", &range_min, &range_max );
 	_camera.setClip( range_min, range_max );
 
-	_yaw_offset = wf->ReadTupleFloat( wf_entity, "pantilt", 0, _yaw_offset );
-	_pitch_offset = wf->ReadTupleFloat( wf_entity, "pantilt", 1, _pitch_offset );
-	
-	_width = static_cast< int >( wf->ReadTupleFloat( wf_entity, "resolution", 0, _width ) );
-	_height = static_cast< int >( wf->ReadTupleFloat( wf_entity, "resolution", 1, _height ) );
-	
+	// note = these are in degrees internally
+	wf->ReadTuple( wf_entity, "pantilt", 0, 2, "ff", &_yaw_offset, &_pitch_offset );
+
+	wf->ReadTuple( wf_entity, "resolution", 0, 2, "ii", &_width, &_height );	
 }
 
 

@@ -1,6 +1,7 @@
 
 SET( PLUGINS
      fasr
+     fasr_lost
      sink
      source
      wander

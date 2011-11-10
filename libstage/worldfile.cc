@@ -1332,8 +1332,8 @@ bool Worldfile::PropertyExists( int section, const char* token )
 void Worldfile::SetPropertyValue( CProperty* property, int index, const char *value)
 {
   assert( property );
-  //  printf( "property %s index %d value_count %d \n",
-  //  property->key, index, property->value_count );
+  //printf( "property %s index %d values %d \n",
+  //	  property->name.c_str(), index, (int)property->values.size() );
 
   assert(index >= 0 && index < (int)property->values.size() );
   // Set the relevant value
@@ -1502,48 +1502,6 @@ const char *Worldfile::ReadFilename(int entity, const char *name, const char *va
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Read a string from a tuple
-const char *Worldfile::ReadTupleString(int entity, const char *name,
-				       int index, const char *value)
-{
-  CProperty* property = GetProperty(entity, name);
-  if (property == NULL)
-    return value;
-  return GetPropertyValue(property, index);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Write a string to a tuple
-void Worldfile::WriteTupleString(int entity, const char *name,
-				 int index, const char *value)
-{
-  CProperty* property = GetProperty(entity, name);
-
-  if( property == NULL )
-    {
-      /* TODO
-	 property = InsertProperty(entity, name);
-	 SetPropertyValue(property, index, value);
-      */
-    }
-  else
-    SetPropertyValue(property, index, value);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Read a float from a tuple
-double Worldfile::ReadTupleFloat(int entity, const char *name,
-				 int index, double value)
-{
-  CProperty* property = GetProperty(entity, name);
-  if (property == NULL )
-    return value;
-  return atof(GetPropertyValue(property, index));
-}
-
-///////////////////////////////////////////////////////////////////////////
 // Read a series of floats from a tuple (experimental)
 int Worldfile::ReadTuple( const int entity, const char *name,
 			 const unsigned int first, const unsigned int count, const char* format, ... )
@@ -1558,10 +1516,7 @@ int Worldfile::ReadTuple( const int entity, const char *name,
 		  name, first, first+count-1, (unsigned int)property->values.size() );
       exit(-1);
     }
-  
-  va_list args;
-  va_start( args, format );
-  
+    
   if( strlen(format) != count )
     {
       PRINT_ERR2( "format string length %u does not match argument count %u", 
@@ -1569,12 +1524,23 @@ int Worldfile::ReadTuple( const int entity, const char *name,
       exit(-1);
     }
   
+  va_list args;
+  va_start( args, format );
+
   for( unsigned int i=0; i<count; i++ )
     {
       const char* val = GetPropertyValue(property, first+i);
       
       switch( format[i] )
 	{
+	case 'i': // signed integer
+	  *va_arg( args, int* ) = atoi(val);
+	  break;
+
+	case 'u': // unsigned integer
+	  *va_arg( args, unsigned int* ) = (unsigned int)atoi(val);
+	  break;
+
 	case 'f': // float
 	  *va_arg( args, double* ) = atof(val);
 	  break;
@@ -1602,47 +1568,74 @@ int Worldfile::ReadTuple( const int entity, const char *name,
   return count;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
-// Write a float to a tuple
-void Worldfile::WriteTupleFloat(int entity, const char *name,
-				int index, double value)
+// Write a series of floats to a tuple (experimental)
+void Worldfile::WriteTuple( const int entity, const char *name,
+			 const unsigned int first, const unsigned int count, const char* format, ... )
 {
-  if( fabs(value) < 0.0001 ) // nearly 0
-    WriteTupleString(entity, name, index, "0" );
-  else
+  CProperty* property = GetProperty(entity, name);
+  if (property == NULL )
+    return;
+  
+  if( property->values.size() < first+count )
     {
-      char default_str[64];
-      snprintf(default_str, sizeof(default_str), "%.3f", value);
-      WriteTupleString(entity, name, index, default_str);
+      PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %d to %d - tuple has length %d\n",
+		  name, first, first+count-1, (int)property->values.size() );
+      exit(-1);
     }
+  
+  if( strlen(format) != count )
+    {
+      PRINT_ERR2( "format string length %u does not match argument count %u", 
+		  (unsigned int)strlen(format), count );
+      exit(-1);
+    }
+  
+  char buf[2048];
+  buf[0] = 0;
+  
+  va_list args;
+  va_start( args, format );
+  
+  for( unsigned int i=0; i<count; i++ )
+    {      
+      switch( format[i] )
+	{
+	case 'i': // integer
+	  snprintf( buf, sizeof(buf), "%d", va_arg( args, int ) );
+	  break;
+
+	case 'u': // unsigned integer
+	  snprintf( buf, sizeof(buf), "%u", va_arg( args, unsigned int ) );
+	  break;
+
+	case 'f': // float
+	  snprintf( buf, sizeof(buf), "%.3f", va_arg( args, double ) );
+	  break;
+	  
+	case 'l': //length
+	  snprintf( buf, sizeof(buf), "%.3f",  va_arg( args, double ) / unit_length );
+	  break;
+	  
+	case 'a': // angle
+	  snprintf( buf, sizeof(buf), "%.3f", va_arg( args, double ) / unit_angle );
+	  break;
+	  
+	case 's': // string
+	  strncpy( buf, va_arg( args, char* ), sizeof(buf) );
+	  buf[sizeof(buf)-1] = 0; // force zero terminator
+	  break;
+	  
+	default:
+	  PRINT_ERR3( "Unknown format character %c in string %s loading %s",
+		      format[i], format, name );
+	  exit(-1);
+	}
+      
+      printf( "writing %s %d %s\n", name, first+i, buf );
+      SetPropertyValue(property, first+i, buf );
+    }
+  
+  va_end( args );
 }
-
-// ///////////////////////////////////////////////////////////////////////////
-// // Read a series of floats from a tuple (experimental)
-// void Worldfile::WriteTupleFloats(int entity, const char *name,
-// 				 int first, int count, ... )
-// {
-//   CProperty* property = GetProperty(entity, name);
-//   if (property == NULL )
-//     return 0;
-
-//   if( property->values.size() < first+count )
-//     {
-//       PRINT_ERR4( "Worldfile: reading tuple \"%s\" index %d to %d - tuple has length %d\n",
-// 		  name, first, first+count-1, property->values.size() );
-//       return 0;
-//     }
-
-//   va_list args;
-//   va_start( args, count );
-
-//   for( int i=first; i<first+count; i++ )
-//     {
-//       double val = va_arg( args, double );      
-//       WriteTupleFloat( entity, name, i, val );
-//     }
-    
-//   va_end( args );
-// }
 

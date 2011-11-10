@@ -114,12 +114,21 @@ void ModelGripper::Load()
 {
   cfg.autosnatch = wf->ReadInt( wf_entity, "autosnatch", cfg.autosnatch );
     
-  cfg.paddle_size.x = wf->ReadTupleFloat( wf_entity, "paddle_size", 0, cfg.paddle_size.x );
-  cfg.paddle_size.y = wf->ReadTupleFloat( wf_entity, "paddle_size", 1, cfg.paddle_size.y );
-  cfg.paddle_size.z = wf->ReadTupleFloat( wf_entity, "paddle_size", 2, cfg.paddle_size.z );
+  // cfg.paddle_size.x = wf->ReadTupleFloat( wf_entity, "paddle_size", 0, cfg.paddle_size.x );
+  // cfg.paddle_size.y = wf->ReadTupleFloat( wf_entity, "paddle_size", 1, cfg.paddle_size.y );
+  // cfg.paddle_size.z = wf->ReadTupleFloat( wf_entity, "paddle_size", 2, cfg.paddle_size.z );
+
+  wf->ReadTuple( wf_entity, "paddle_size", 0, 3, "lll",
+		 &cfg.paddle_size.x, 
+		 &cfg.paddle_size.y, 
+		 &cfg.paddle_size.z );
   
-  const char* paddles =  wf->ReadTupleString( wf_entity, "paddle_state", 0, NULL );
-  const char* lift =     wf->ReadTupleString( wf_entity, "paddle_state", 1, NULL );
+  //const char* paddles =  wf->ReadTupleString( wf_entity, "paddle_state", 0, NULL );
+  //const char* lift =     wf->ReadTupleString( wf_entity, "paddle_state", 1, NULL );
+  
+  char* paddles = NULL;
+  char* lift = NULL;
+  wf->ReadTuple( wf_entity, "paddle_state", 0, 2, "ss", &paddles, &lift );
 
   if( paddles && strcmp( paddles, "closed" ) == 0 )
 	 {
@@ -155,12 +164,22 @@ void ModelGripper::Save()
 {
   Model::Save();
 
-  wf->WriteTupleFloat( wf_entity, "paddle_size", 0, cfg.paddle_size.x );
-  wf->WriteTupleFloat( wf_entity, "paddle_size", 1, cfg.paddle_size.y );
-  wf->WriteTupleFloat( wf_entity, "paddle_size", 2, cfg.paddle_size.z );    
+  // wf->WriteTupleFloat( wf_entity, "paddle_size", 0, cfg.paddle_size.x );
+  // wf->WriteTupleFloat( wf_entity, "paddle_size", 1, cfg.paddle_size.y );
+  // wf->WriteTupleFloat( wf_entity, "paddle_size", 2, cfg.paddle_size.z );    
 
-  wf->WriteTupleString( wf_entity, "paddle_state", 0, (cfg.paddles == PADDLE_CLOSED ) ? "closed" : "open" );
-  wf->WriteTupleString( wf_entity, "paddle_state", 1, (cfg.lift == LIFT_UP ) ? "up" : "down" );
+  wf->WriteTuple( wf_entity, "paddle_size", 0, 3, "lll", 
+		  cfg.paddle_size.x,
+		  cfg.paddle_size.y,
+		  cfg.paddle_size.z );    
+
+  // wf->WriteTupleString( wf_entity, "paddle_state", 0, (cfg.paddles == PADDLE_CLOSED ) ? "closed" : "open" );
+  // wf->WriteTupleString( wf_entity, "paddle_state", 1, (cfg.lift == LIFT_UP ) ? "up" : "down" );
+  
+  wf->WriteTuple( wf_entity, "paddle_state", 0, 2, "ss", 
+		  (cfg.paddles == PADDLE_CLOSED ) ? "closed" : "open",
+		  (cfg.lift == LIFT_UP ) ? "up" : "down" );
+  
 }
 
 void ModelGripper::FixBlocks()

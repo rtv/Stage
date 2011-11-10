@@ -45,77 +45,77 @@ void Model::DrawSelected()
   PopColor();
 
 
-	// testing
+  // testing
 
-	// highlight all fiducial robots within a certain range
+  // highlight all fiducial robots within a certain range
 
-//  	Gl::pose_inverse_shift( gp );
+  //  	Gl::pose_inverse_shift( gp );
 
-// 	double rng = 10.0;
+  // 	double rng = 10.0;
 
-// 	Model left( gp.x - rng, gp.y, world );
-// 	Model right( gp.x + rng, gp.y, world );	
-// 	Model down( gp.x, gp.y - rng, world );
-// 	Model up( gp.x, gp.y + rng, world );
+  // 	Model left( gp.x - rng, gp.y, world );
+  // 	Model right( gp.x + rng, gp.y, world );	
+  // 	Model down( gp.x, gp.y - rng, world );
+  // 	Model up( gp.x, gp.y + rng, world );
 	
-// 	std::set<Model*>::iterator xmin = world->models_with_fiducials_byx.lower_bound( &left );
-//  	std::set<Model*>::iterator xmax = world->models_with_fiducials_byx.upper_bound( &right );
+  // 	std::set<Model*>::iterator xmin = world->models_with_fiducials_byx.lower_bound( &left );
+  //  	std::set<Model*>::iterator xmax = world->models_with_fiducials_byx.upper_bound( &right );
 	
-//  	std::set<Model*>::iterator ymin = world->models_with_fiducials_byy.lower_bound( &down );
-// 	std::set<Model*>::iterator ymax = world->models_with_fiducials_byy.upper_bound( &up );
-
-	
-// 	PushColor( Color(1,0,0,0.5) );
+  //  	std::set<Model*>::iterator ymin = world->models_with_fiducials_byy.lower_bound( &down );
+  // 	std::set<Model*>::iterator ymax = world->models_with_fiducials_byy.upper_bound( &up );
 
 	
-// 	std::vector<Model*> candidates;
-// 	std::set<Model*> horiz, vert;
+  // 	PushColor( Color(1,0,0,0.5) );
+
+	
+  // 	std::vector<Model*> candidates;
+  // 	std::set<Model*> horiz, vert;
 		
-// 		while( xmin != xmax )
-// 			{
-// 				//candidates.insert( *xmin );
-// 				horiz.insert( *xmin);
+  // 		while( xmin != xmax )
+  // 			{
+  // 				//candidates.insert( *xmin );
+  // 				horiz.insert( *xmin);
 				
-// 				Pose op = (*xmin)->GetGlobalPose();		 		 
-// 				glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );
+  // 				Pose op = (*xmin)->GetGlobalPose();		 		 
+  // 				glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );
 				
-// 				xmin++;
-// 			}
+  // 				xmin++;
+  // 			}
 	
-// 	PopColor();
+  // 	PopColor();
 	
-// 	PushColor( Color(0,0,1,0.5) );
+  // 	PushColor( Color(0,0,1,0.5) );
 	
-// 	while( ymin != ymax )
-// 		{
-// 			vert.insert( *ymin );
+  // 	while( ymin != ymax )
+  // 		{
+  // 			vert.insert( *ymin );
 			
-// 			//			candidates.insert( *ymin );
+  // 			//			candidates.insert( *ymin );
 			
-// 			Pose op = (*ymin)->GetGlobalPose();
-// 			glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );			
-// 			ymin++;
-// 		}
+  // 			Pose op = (*ymin)->GetGlobalPose();
+  // 			glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );			
+  // 			ymin++;
+  // 		}
 	
-// 	PopColor();
+  // 	PopColor();
 			
-// 	PushColor( Color(0,1,0,0.5) );
+  // 	PushColor( Color(0,1,0,0.5) );
 	
-// 	std::set_intersection( horiz.begin(), horiz.end(),
-// 												 vert.begin(), vert.end(),
-// 												 std::inserter( candidates, candidates.end() ) ); 
+  // 	std::set_intersection( horiz.begin(), horiz.end(),
+  // 												 vert.begin(), vert.end(),
+  // 												 std::inserter( candidates, candidates.end() ) ); 
 	
-// 	//printf( "cand sz %lu\n", candidates.size() );
+  // 	//printf( "cand sz %lu\n", candidates.size() );
 
-// 	glTranslatef( 0,0,1.0 );
+  // 	glTranslatef( 0,0,1.0 );
 
-// 	FOR_EACH( it, candidates )
-// 		{
-// 			Pose op = (*it)->GetGlobalPose();
-// 			glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );			
-// 		}
+  // 	FOR_EACH( it, candidates )
+  // 		{
+  // 			Pose op = (*it)->GetGlobalPose();
+  // 			glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );			
+  // 		}
 	
-// 	PopColor();
+  // 	PopColor();
  
 
   glPopMatrix();
@@ -130,31 +130,31 @@ void Model::DrawTrailFootprint()
 	
   PushColor( 0,0,0,1 ); // dummy pushL just saving the color
 	
-	// this loop could be faster, but optimzing vis is not a priority
-	for( unsigned int i=0; i<trail_length; i++ )
-		{
-			// find correct offset inside ring buffer
-			TrailItem& checkpoint = 
-				trail[ (i + trail_index) % trail_length ];
+  // this loop could be faster, but optimzing vis is not a priority
+  for( unsigned int i=0; i<trail_length; i++ )
+    {
+      // find correct offset inside ring buffer
+      TrailItem& checkpoint = 
+	trail[ (i + trail_index) % trail_length ];
 			
-			// ignore invalid items
-			if( checkpoint.time == 0 )
-				continue;
+      // ignore invalid items
+      if( checkpoint.time == 0 )
+	continue;
 			
-			glPushMatrix();
-			Pose pz = checkpoint.pose;
+      glPushMatrix();
+      Pose pz = checkpoint.pose;
 			
-			Gl::pose_shift( pz );
-			Gl::pose_shift( geom.pose );
+      Gl::pose_shift( pz );
+      Gl::pose_shift( geom.pose );
 			
-			darkness += fade;
-			Color c = checkpoint.color;
-			c.a = darkness;
-			glColor4f( c.r, c.g, c.b, c.a );
+      darkness += fade;
+      Color c = checkpoint.color;
+      c.a = darkness;
+      glColor4f( c.r, c.g, c.b, c.a );
 			
-			blockgroup.DrawFootPrint( geom );
+      blockgroup.DrawFootPrint( geom );
 			
-			glPopMatrix();
+      glPopMatrix();
     }
 	
   PopColor();
@@ -165,19 +165,19 @@ void Model::DrawTrailBlocks()
   double timescale = 0.0000001;
 
   FOR_EACH( it, trail )
-	 {
-		TrailItem& checkpoint = *it;
+    {
+      TrailItem& checkpoint = *it;
 		 
-		glPushMatrix();
-		Pose pz = checkpoint.pose;
-		pz.z =  (world->sim_time - checkpoint.time) * timescale;
+      glPushMatrix();
+      Pose pz = checkpoint.pose;
+      pz.z =  (world->sim_time - checkpoint.time) * timescale;
 		 
-		Gl::pose_shift( pz );
-		Gl::pose_shift( geom.pose );
+      Gl::pose_shift( pz );
+      Gl::pose_shift( geom.pose );
 		 
-		DrawBlocks();
+      DrawBlocks();
 
-		glPopMatrix();
+      glPopMatrix();
     }
 }
 
@@ -190,28 +190,28 @@ void Model::DrawTrailArrows()
   PushColor( 0,0,0,1 ); // dummy push
 
   FOR_EACH( it, trail )
-	 {
-		TrailItem& checkpoint = *it;
+    {
+      TrailItem& checkpoint = *it;
 
-		glPushMatrix();
-		Pose pz = checkpoint.pose;
-		// set the height proportional to age
-		pz.z =  (world->sim_time - checkpoint.time) * timescale;
+      glPushMatrix();
+      Pose pz = checkpoint.pose;
+      // set the height proportional to age
+      pz.z =  (world->sim_time - checkpoint.time) * timescale;
 		
-		Gl::pose_shift( pz );
-		Gl::pose_shift( geom.pose );
+      Gl::pose_shift( pz );
+      Gl::pose_shift( geom.pose );
 		
-		Color& c = checkpoint.color;
-		glColor4f( c.r, c.g, c.b, c.a );
+      Color& c = checkpoint.color;
+      glColor4f( c.r, c.g, c.b, c.a );
 		
-		glBegin( GL_TRIANGLES );
-		glVertex3f( 0, -dy, 0);
-		glVertex3f( dx, 0, 0 );
-		glVertex3f( 0, +dy, 0 );
-		glEnd();
+      glBegin( GL_TRIANGLES );
+      glVertex3f( 0, -dy, 0);
+      glVertex3f( dx, 0, 0 );
+      glVertex3f( 0, +dy, 0 );
+      glEnd();
 		
-		glPopMatrix();
-	 }
+      glPopMatrix();
+    }
   
   PopColor();
 }
@@ -230,7 +230,7 @@ void Model::DrawBlocksTree( )
   PushLocalCoords();
 
   FOR_EACH( it, children )
-	 (*it)->DrawBlocksTree();
+    (*it)->DrawBlocksTree();
 
   DrawBlocks();  
   PopCoords();
@@ -258,7 +258,7 @@ void Model::DrawBoundingBoxTree()
   PushLocalCoords();
   
   FOR_EACH( it, children )
-	 (*it)->DrawBoundingBoxTree();
+    (*it)->DrawBoundingBoxTree();
 
   DrawBoundingBox();
   PopCoords();
@@ -322,11 +322,11 @@ void Model::PopCoords()
 void Model::AddVisualizer( Visualizer* cv, bool on_by_default )
 {
   if( !cv )
-	 return;
+    return;
   
   // If there's no GUI, ignore this request
   if( ! world_gui ) 
-	 return;
+    return;
 	
   //save visual instance
   cv_list.push_back( cv );
@@ -335,20 +335,20 @@ void Model::AddVisualizer( Visualizer* cv, bool on_by_default )
   Canvas* canvas = world_gui->GetCanvas();
   std::map< std::string, Option* >::iterator i = canvas->_custom_options.find( cv->GetMenuName() );
   if( i == canvas->_custom_options.end() ) {
-	 Option* op = new Option( cv->GetMenuName(), 
-									  cv->GetWorldfileName(), 
-									  "", 
-									  on_by_default, 
-									  world_gui );
-	 canvas->_custom_options[ cv->GetMenuName() ] = op;
-	 RegisterOption( op );
+    Option* op = new Option( cv->GetMenuName(), 
+			     cv->GetWorldfileName(), 
+			     "", 
+			     on_by_default, 
+			     world_gui );
+    canvas->_custom_options[ cv->GetMenuName() ] = op;
+    RegisterOption( op );
   }
 }
 
 void Model::RemoveVisualizer( Visualizer* cv )
 {
   if( cv )
-	 EraseAll( cv, cv_list );
+    EraseAll( cv, cv_list );
   
   //TODO unregister option - tricky because there might still be instances attached to different models which have the same name
 }
@@ -359,7 +359,7 @@ void Model::DrawStatusTree( Camera* cam )
   PushLocalCoords();
   DrawStatus( cam );
   FOR_EACH( it, children )
-	 (*it)->DrawStatusTree( cam );  
+    (*it)->DrawStatusTree( cam );  
   PopCoords();
 }
 
@@ -367,9 +367,8 @@ void Model::DrawStatus( Camera* cam )
 {
   if( power_pack || !say_string.empty() )	  
     {
-      float yaw, pitch;
-      pitch = - cam->pitch();
-      yaw = - cam->yaw();			
+      float pitch = - cam->pitch();
+      float yaw = - cam->yaw();			
       
       Pose gpz = GetGlobalPose();
       
@@ -383,71 +382,71 @@ void Model::DrawStatus( Camera* cam )
       glRotatef( robotAngle - yaw, 0,0,1 );
       glRotatef( -pitch, 1,0,0 );
       
-		//   if( power_pack )
-		//power_pack->Visualize( cam );
+      //      if( power_pack )
+      //power_pack->Visualize( cam );
       
       if( !say_string.empty() )
-		  {
-			 glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	{
+	  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 			 
-			 //get raster positition, add gl_width, then project back to world coords
-			 glRasterPos3f( 0, 0, 0 );
-			 GLfloat pos[ 4 ];
-			 glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
+	  //get raster positition, add gl_width, then project back to world coords
+	  glRasterPos3f( 0, 0, 0 );
+	  GLfloat pos[ 4 ];
+	  glGetFloatv(GL_CURRENT_RASTER_POSITION, pos);
 			 
-			 GLboolean valid;
-			 glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
+	  GLboolean valid;
+	  glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &valid );
 	  
-			 if( valid ) 
-				{				  
-				  //fl_font( FL_HELVETICA, 12 );
-				  float w = gl_width( this->say_string.c_str() ); // scaled text width
-				  float h = gl_height(); // scaled text height
+	  if( valid ) 
+	    {				  
+	      //fl_font( FL_HELVETICA, 12 );
+	      float w = gl_width( this->say_string.c_str() ); // scaled text width
+	      float h = gl_height(); // scaled text height
 				  
-				  GLdouble wx, wy, wz;
-				  GLint viewport[4];
-				  glGetIntegerv(GL_VIEWPORT, viewport);
+	      GLdouble wx, wy, wz;
+	      GLint viewport[4];
+	      glGetIntegerv(GL_VIEWPORT, viewport);
 				  
-				  GLdouble modelview[16];
-				  glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+	      GLdouble modelview[16];
+	      glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
 				  
-				  GLdouble projection[16];	
-				  glGetDoublev(GL_PROJECTION_MATRIX, projection);
+	      GLdouble projection[16];	
+	      glGetDoublev(GL_PROJECTION_MATRIX, projection);
 	      
-				  //get width and height in world coords
-				  gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-				  w = wx;
-				  gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
-				  h = wy;
+	      //get width and height in world coords
+	      gluUnProject( pos[0] + w, pos[1], pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+	      w = wx;
+	      gluUnProject( pos[0], pos[1] + h, pos[2], modelview, projection, viewport, &wx, &wy, &wz );
+	      h = wy;
 	      
-				  // calculate speech bubble margin
-				  const float m = h/10;
+	      // calculate speech bubble margin
+	      const float m = h/10;
 	      
-				  // draw inside of bubble
-				  PushColor( BUBBLE_FILL );
-				  glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
-				  glPolygonMode( GL_FRONT, GL_FILL );
-				  glEnable( GL_POLYGON_OFFSET_FILL );
-				  glPolygonOffset( 1.0, 1.0 );
-				  Gl::draw_octagon( w, h, m );
-				  glDisable( GL_POLYGON_OFFSET_FILL );
-				  PopColor();
+	      // draw inside of bubble
+	      PushColor( BUBBLE_FILL );
+	      glPushAttrib( GL_POLYGON_BIT | GL_LINE_BIT );
+	      glPolygonMode( GL_FRONT, GL_FILL );
+	      glEnable( GL_POLYGON_OFFSET_FILL );
+	      glPolygonOffset( 1.0, 1.0 );
+	      Gl::draw_octagon( w, h, m );
+	      glDisable( GL_POLYGON_OFFSET_FILL );
+	      PopColor();
 	      
-				  // draw outline of bubble
-				  PushColor( BUBBLE_BORDER );
-				  glLineWidth( 1 );
-				  glEnable( GL_LINE_SMOOTH );
-				  glPolygonMode( GL_FRONT, GL_LINE );
-				  Gl::draw_octagon( w, h, m );
-				  glPopAttrib();
-				  PopColor();
+	      // draw outline of bubble
+	      PushColor( BUBBLE_BORDER );
+	      glLineWidth( 1 );
+	      glEnable( GL_LINE_SMOOTH );
+	      glPolygonMode( GL_FRONT, GL_LINE );
+	      Gl::draw_octagon( w, h, m );
+	      glPopAttrib();
+	      PopColor();
 	      
-				  PushColor( BUBBLE_TEXT );
-				  // draw text inside the bubble
-				  Gl::draw_string( m, 2.5*m, 0, this->say_string.c_str() );
-				  PopColor();			
-				}
-		  }
+	      PushColor( BUBBLE_TEXT );
+	      // draw text inside the bubble
+	      Gl::draw_string( m, 2.5*m, 0, this->say_string.c_str() );
+	      PopColor();			
+	    }
+	}
       glPopMatrix();
     }
   
@@ -468,7 +467,7 @@ void Model::DrawStatus( Camera* cam )
 }
 
 void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha, 
-							  double width, double height )
+		       double width, double height )
 {
   (void)alpha; // avoid warning about unused var
 
@@ -533,15 +532,15 @@ void Model::DrawFlagList( void )
   glRotatef( 180 + rtod(-gpose.a),0,0,1 );
   
   for( std::list<Flag*>::reverse_iterator it( flag_list.rbegin()); 
-		 it != flag_list.rend(); 
-		 it++ )
+       it != flag_list.rend(); 
+       it++ )
     {		
       Flag* flag = *it;
 
-			double sz = flag->GetSize();
+      double sz = flag->GetSize();
 
-			glTranslatef( 0, 0, sz/2.0 );			
-			flag->Draw( quadric );			
+      glTranslatef( 0, 0, sz/2.0 );			
+      flag->Draw( quadric );			
       glTranslatef( 0, 0, sz/2.0 );
     }
   
@@ -596,7 +595,7 @@ void Model::DrawPicker( void )
 
   // recursively draw the tree below this model 
   FOR_EACH( it, children )
-	 (*it)->DrawPicker();
+    (*it)->DrawPicker();
 
   PopCoords();
 }
@@ -611,20 +610,20 @@ void Model::DataVisualizeTree( Camera* cam )
   PushLocalCoords();
 
   if( subs > 0 )
-	 {
-		DataVisualize( cam ); // virtual function overridden by some model types  
+    {
+      DataVisualize( cam ); // virtual function overridden by some model types  
 		
-		FOR_EACH( it, cv_list )
-		  {
-			 Visualizer* vis = *it;
-			 if( world_gui->GetCanvas()->_custom_options[ vis->GetMenuName() ]->isEnabled() )
-				vis->Visualize( this, cam );
-		  }
-	 }
+      FOR_EACH( it, cv_list )
+	{
+	  Visualizer* vis = *it;
+	  if( world_gui->GetCanvas()->_custom_options[ vis->GetMenuName() ]->isEnabled() )
+	    vis->Visualize( this, cam );
+	}
+    }
 
   // and draw the children
   FOR_EACH( it, children )
-	 (*it)->DataVisualizeTree( cam );
+    (*it)->DataVisualizeTree( cam );
 
   PopCoords();
 }
@@ -644,7 +643,7 @@ void Model::DrawGrid( void )
       vol.z.max = geom.size.z;
 		 
       PushColor( 0,0,1,0.4 );
-		Gl::draw_grid(vol);
+      Gl::draw_grid(vol);
       PopColor();		 
       PopCoords();
     }

@@ -113,24 +113,22 @@ void ModelActuator::Load( void )
 	{
 		// if we are a linear actuator find the axis we operate in
 		if( wf->PropertyExists( wf_entity, "axis" ) )
-		{
-			axis.x = wf->ReadTupleLength( wf_entity, "axis", 0, 0 );
-			axis.y = wf->ReadTupleLength( wf_entity, "axis", 1, 0 );
-			axis.z = wf->ReadTupleLength( wf_entity, "axis", 2, 0 );
-
-			// normalise the axis
-			double length = sqrt(axis.x*axis.x + axis.y*axis.y + axis.z*axis.z);
-			if (length == 0)
-			{
-				PRINT_ERR( "zero length vector specified for actuator axis, using (1,0,0) instead" );
-				axis.x = 1;
-			}
-			else
-			{
-				axis.x /= length;
-				axis.y /= length;
-				axis.z /= length;
-			}
+		  {
+		    wf->ReadTuple( wf_entity, "axis", 0, 3, "fff", &axis.x, &axis.y, &axis.z );
+		    
+		    // normalise the axis
+		    double length = sqrt(axis.x*axis.x + axis.y*axis.y + axis.z*axis.z);
+		    if (length == 0)
+		      {
+			PRINT_ERR( "zero length vector specified for actuator axis, using (1,0,0) instead" );
+			axis.x = 1;
+		      }
+		    else
+		      {
+			axis.x /= length;
+			axis.y /= length;
+			axis.z /= length;
+		      }
 		}
 	}
 

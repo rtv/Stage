@@ -23,7 +23,7 @@ PerspectiveCamera::PerspectiveCamera( void ) :
 	setPitch( 70.0 );
 }
 
-void PerspectiveCamera::move( float x, float y, float z )
+void PerspectiveCamera::move( double x, double y, double z )
 {
   (void)z; // avoid warning about unused var
 
@@ -58,10 +58,10 @@ void PerspectiveCamera::SetProjection( void ) const
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
 	
-	float top = tan( dtor( _vert_fov ) / 2.0 ) * _z_near;
-	float bottom = -top;
-	float right = tan( dtor( _horiz_fov ) / 2.0 ) * _z_near;
-	float left = -right;
+	double top = tan( dtor( _vert_fov ) / 2.0 ) * _z_near;
+	double bottom = -top;
+	double right = tan( dtor( _horiz_fov ) / 2.0 ) * _z_near;
+	double left = -right;
 	
 	right *= _aspect;
 	left *= _aspect;
@@ -77,33 +77,28 @@ void PerspectiveCamera::update( void )
 }
 
 
-void PerspectiveCamera::strafe( float amount )
+void PerspectiveCamera::strafe( double amount )
 {
 	_x += cos( dtor( _yaw ) ) * amount;
 	_y += sin( dtor( _yaw ) ) * amount;
 }
 
-void PerspectiveCamera::forward( float amount )
+void PerspectiveCamera::forward( double amount )
 {
 	_x += -sin( dtor( _yaw ) ) * amount;
 	_y += cos( dtor( _yaw ) ) * amount;
 }
 
-void PerspectiveCamera::Load( Worldfile* wf, int sec ) {
-	float x_pos = wf->ReadTupleLength(sec, "pcam_loc", 0, x() );
-	float y_pos = wf->ReadTupleLength(sec, "pcam_loc", 1, y() );
-	float z_pos = wf->ReadTupleLength(sec, "pcam_loc", 2, z() );
-	setPose( x_pos, y_pos, z_pos );
-	setPitch( wf->ReadTupleFloat( sec, "pcam_angle", 0, pitch() ) );
-	setYaw( wf->ReadTupleFloat( sec, "pcam_angle", 1, yaw() ) );
+void PerspectiveCamera::Load( Worldfile* wf, int sec )
+{
+  wf->ReadTuple( sec, "pcam_loc", 0, 3, "lll", &_x, &_y, &_z );  
+  wf->ReadTuple( sec, "pcam_angle", 0, 2, "aa", &_pitch, &_yaw );  
 }
 
-void PerspectiveCamera::Save( Worldfile* wf, int sec ) {
-	wf->WriteTupleFloat( sec, "pcam_loc", 0, x() );
-	wf->WriteTupleFloat( sec, "pcam_loc", 1, y() );
-	wf->WriteTupleFloat( sec, "pcam_loc", 2, z() );
-	wf->WriteTupleFloat( sec, "pcam_angle", 0, pitch()  );
-	wf->WriteTupleFloat( sec, "pcam_angle", 1, yaw()  );
+void PerspectiveCamera::Save( Worldfile* wf, int sec ) 
+{
+  wf->WriteTuple( sec, "pcam_loc", 0, 3, "lll", _x, _y, _z );  
+  wf->WriteTuple( sec, "pcam_angle", 0, 2, "aa", _pitch, _yaw );  
 }
 
 
@@ -137,7 +132,7 @@ void OrthoCamera::SetProjection( void ) const
 	glMatrixMode (GL_MODELVIEW);
 }
 
-void OrthoCamera::SetProjection( float pixels_width, float pixels_height, float y_min, float y_max )
+void OrthoCamera::SetProjection( double pixels_width, double pixels_height, double y_min, double y_max )
 {
 	_pixels_width = pixels_width;
 	_pixels_height = pixels_height;
@@ -146,7 +141,7 @@ void OrthoCamera::SetProjection( float pixels_width, float pixels_height, float 
 	SetProjection();
 }
 
-void OrthoCamera::move( float x, float y ) {
+void OrthoCamera::move( double x, double y ) {
 	//convert screen points into world points
 	x = x / ( _scale );
 	y = y / ( _scale );
@@ -161,7 +156,7 @@ void OrthoCamera::move( float x, float y ) {
 		y = -100;
 	
 	//adjust for yaw angle
-	float yaw = -dtor( _yaw );
+	double yaw = -dtor( _yaw );
 	_x += cos( yaw ) * x;
 	_y += -sin( yaw ) * x;
 	
@@ -170,13 +165,13 @@ void OrthoCamera::move( float x, float y ) {
 }
 
 //TODO re-evaluate the way the camera is shifted when the mouse zooms - it might be possible to simplify
-void OrthoCamera::scale( float scale, float shift_x, float w, float shift_y, float h )
+void OrthoCamera::scale( double scale, double shift_x, double w, double shift_y, double h )
 {
-	float to_scale = -scale;
-	const float old_scale = _scale;
+	double to_scale = -scale;
+	const double old_scale = _scale;
 
 	//TODO setting up the factor can use some work
-	float factor = 1.0 + fabs( to_scale ) / 25;
+	double factor = 1.0 + fabs( to_scale ) / 25;
 	if( factor < 1.1 )
 		factor = 1.1; //this must be greater than 1.
 	else if( factor > 2.5 )
@@ -208,20 +203,23 @@ void OrthoCamera::scale( float scale, float shift_x, float w, float shift_y, flo
 	}
 }
 
-void OrthoCamera::Load( Worldfile* wf, int sec ) {
-	float x_pos = wf->ReadTupleLength(sec, "center", 0, x() );
-	float y_pos = wf->ReadTupleLength(sec, "center", 1, y() );
-	setPose( x_pos, y_pos );
-	setPitch( wf->ReadTupleFloat( sec, "rotate", 0, pitch() ) );
-	setYaw( wf->ReadTupleFloat( sec, "rotate", 1, yaw() ) );
-	setScale( wf->ReadFloat(sec, "scale", scale() ) );
+void OrthoCamera::Load( Worldfile* wf, int sec ) 
+{
+  wf->ReadTuple( sec, "center", 0, 2, "ff", &_x, &_y );
+  wf->ReadTuple( sec, "rotate", 0, 2, "ff", &_pitch, &_yaw );  
+  setScale( wf->ReadFloat(sec, "scale", scale() ) );
 }
 
-void OrthoCamera::Save( Worldfile* wf, int sec ) {
-	wf->WriteTupleFloat( sec, "center", 0, x() );
-	wf->WriteTupleFloat( sec, "center", 1, y() );
-	wf->WriteTupleFloat( sec, "rotate", 0, pitch() );
-	wf->WriteTupleFloat( sec, "rotate", 1, yaw() );
-	wf->WriteFloat(sec, "scale", scale() );
+void OrthoCamera::Save( Worldfile* wf, int sec ) 
+{
+  wf->WriteTuple( sec, "center", 0, 2, "ff", _x, _y );
+  wf->WriteTuple( sec, "rotate", 0, 2, "ff", _pitch, _yaw );  
+
+  // wf->WriteTupleFloat( sec, "center", 0, x() );
+  // wf->WriteTupleFloat( sec, "center", 1, y() );
+  // wf->WriteTupleFloat( sec, "rotate", 0, pitch() );
+  // wf->WriteTupleFloat( sec, "rotate", 1, yaw() );
+  
+  wf->WriteFloat(sec, "scale", scale() );
 }
 

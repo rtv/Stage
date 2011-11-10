@@ -143,37 +143,38 @@ void SuperRegion::DrawOccupancy( unsigned int layer ) const
 			glRecti( xx, yy, xx+1, yy+1);
 		      }
 	      }
-	    /*				else if( r->cells ) // empty but used previously 
-					{
-					double left = x << RBITS;
-					double right = (x+1) << RBITS;
-					double bottom = y << RBITS;
-					double top = (y+1) << RBITS;
-					 
-					double d = 3.0;
-					 
-					// draw little corner markers for regions with memory
-					// allocated but no contents
-					glBegin( GL_LINES );
-					glVertex2f( left, bottom );
-					glVertex2f( left+d, bottom );
-					glVertex2f( left, bottom );
-					glVertex2f( left, bottom+d );
-					glVertex2f( left, top );
-					glVertex2f( left+d, top );
-					glVertex2f( left, top );
-					glVertex2f( left, top-d );
-					glVertex2f( right, top );
-					glVertex2f( right-d, top );
-					glVertex2f( right, top );
-					glVertex2f( right, top-d );
-					glVertex2f( right, bottom );
-					glVertex2f( right-d, bottom );
-					glVertex2f( right, bottom );
-					glVertex2f( right, bottom+d );
-					glEnd();
-					}
+	    /* else if( r->cells ) // empty but used previously 
+	       {
+	       double left = x << RBITS;
+	       double right = (x+1) << RBITS;
+	       double bottom = y << RBITS;
+	       double top = (y+1) << RBITS;
+	       
+	       double d = 3.0;
+	       
+	       // draw little corner markers for regions with memory
+	       // allocated but no contents
+	       glBegin( GL_LINES );
+	       glVertex2f( left, bottom );
+	       glVertex2f( left+d, bottom );
+	       glVertex2f( left, bottom );
+	       glVertex2f( left, bottom+d );
+	       glVertex2f( left, top );
+	       glVertex2f( left+d, top );
+	       glVertex2f( left, top );
+	       glVertex2f( left, top-d );
+	       glVertex2f( right, top );
+	       glVertex2f( right-d, top );
+	       glVertex2f( right, top );
+	       glVertex2f( right, top-d );
+	       glVertex2f( right, bottom );
+	       glVertex2f( right-d, bottom );
+	       glVertex2f( right, bottom );
+	       glVertex2f( right, bottom+d );
+	       glEnd();
+	       }
 	    */
+
 	    ++r; // next region quickly
 	  }			
     }
@@ -295,7 +296,7 @@ void Stg::Cell::RemoveBlock( Block* b, unsigned int layer )
   const size_t len( blks.size() );
   if( len )
     {
-#if 0	
+#if 1	
       // Use conventional STL style		
 		
       // this special-case test is faster for worlds with simple models,
