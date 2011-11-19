@@ -186,14 +186,17 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
 {
   ranges.resize( sample_count );
   intensities.resize( sample_count );
+  bearings.resize( sample_count );
 
   //printf( "update sensor, has ranges size %u\n", (unsigned int)ranges.size() );
   // make the first and last rays exactly at the extremes of the FOV
   double sample_incr( fov / std::max(sample_count-1, (unsigned int)1) );
   
   // find the global origin of our first emmitted ray
+  double start_angle = (sample_count > 1 ? -fov/2.0 : 0.0);
+
   Pose rayorg(pose);
-  rayorg.a += (sample_count > 1 ? -fov/2.0 : 0.0);
+  rayorg.a += start_angle;
   rayorg.z += size.z/2.0;
   rayorg = mod->LocalToGlobal(rayorg);
   
@@ -208,7 +211,8 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
       const RaytraceResult& r ( world->Raytrace( ray ) );
       ranges[t] = r.range;
       intensities[t] = r.mod ? r.mod->vis.ranger_return : 0.0;
-			
+      bearings[t] = start_angle + ((double)t) * sample_incr;
+		
       // point the ray to the next angle
       ray.origin.a += sample_incr;			
 

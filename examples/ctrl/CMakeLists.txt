@@ -1,5 +1,6 @@
 
 SET( PLUGINS
+     dw
      fasr
      fasr_lost
      sink

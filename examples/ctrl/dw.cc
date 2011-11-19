@@ -8,8 +8,8 @@ template<typename T> int sgn(T val)
 }
 
 // number of different velocities and turn rates to consider
-const double vres = 10.0;
-const double wres = 10.0;
+const double vres = 14.0;
+const double wres = 14.0;
 
 const double safety = 0.7;
 
@@ -42,9 +42,6 @@ public:
   Vec operator+(const Vec& v ) const
   { return Vec( first+v.first, second+v.second);}
   
-  //  static Vec Scale( double s, const Vec& v) 
-  //  { return Vec( s*v.first, s*v.second); }
-
   Vec operator/( const double s ) const
   { return Vec( first/s, second/s ); }
   
@@ -68,66 +65,33 @@ public:
     char buf[1024];
     snprintf( buf, sizeof(buf), "[%.2f,%.2f]", first, second );    
     return std::string( buf );
-  }
-  
-    
-    
+  }    
 };
 
 Vec operator*( double s, const Vec& v) 
 { return Vec( s*v.first, s*v.second); }
 
 
-bool IntersectCircle( const Vec& E, 
-		      const Vec& L, 
-		      const Vec& C, // center of circle
-		      const double r,
-		      Vec& hit1,
-		      Vec& hit2)
-{ 
-  const Vec d = L - E; // the obstacle line vector
-  const Vec f = E - C; // vector from circle center to ray start
+class Circle
+{
+public:
+  Vec c;
+  double r;
   
-  // solve quadratic equation
-  const double a = d.Dot(d);
-  const double b = 2.0 * f.Dot(d);
-  const double c = f.Dot(f) - r*r;
-  double discriminant = b*b - 4*a*c;
-  
-  if( discriminant < 0 )
-    return false;   //  no intersections  
-  // else
-  
-  discriminant = sqrt( discriminant );
-  const double t1 = (-b + discriminant)/(2.0*a);
-  const double t2 = (-b - discriminant)/(2.0*a);
-  
-  //  printf( "C %.2f %.2f r %.2f t1 %.2f t2 %.2f\n",
-  //	  C.first, C.second, r, t1, t2 )
-  
-  if( t1 >= 0 && t1 <= 1 )
-      {
-	// solution on is ON THE RAY.
-	hit1 = t1 * d + E;	
-      }
-  else
-    {
-      // solution "out of range" of ray
-    }
-  
-  if( t2 >= 0 && t2 <= 1 )
-    {
-      hit2 = t2 * d + E;	
-    }
-  else
-    {
-      // solution "out of range" of ray
-    }
-  
-  return true;
- }
+  Circle( const Vec& c, double r ) : c(c), r(r)
+  {}
 
-
+  Circle() : c(0,0), r(0) 
+  {}
+  
+  void Draw()
+  {
+    glBegin( GL_LINE_LOOP );    
+    for( double a=0; a<2.0*M_PI; a+=M_PI/32.0 )
+      glVertex2f( c.first + r*cos(a), c.second + r*sin(a) );
+    glEnd();    
+  }  
+};
 
 //  args:
 //
@@ -229,21 +193,19 @@ public:
   
   // all the points that this trajectory intersects with the obstacle cloud
   std::vector<Vec> cloud_hits;
-      
+  
   Vel( double v, double w ) 
     : v(v), 
-      w(w), 
+      w( fabs(w) == 0 ? 0.001 : w ), // disallow zero rotation 
       score(0), 
       admissible(true),
       obstacle_dist(1e12),
-      dx(0),
-      dy(0),
+      dx( interval * v * cos(interval*w) ),
+      dy( interval * v * sin(interval*w) ),
       ox(0), 
       oy(0),
       cloud_hits()
   {
-    dx = interval * v * cos( interval * w );
-    dy = interval * v * sin( interval * w );
   }
   
   void Print()
@@ -270,7 +232,7 @@ public:
   std::vector<Vel> vspace;
   Vel* best_vel;
   
-  std::vector<std::pair<Vec,Vec> > cloud;
+  std::vector<Circle> cloud;
   
   Robot( ModelPosition* pos, ModelRanger* laser ) : 
     pos(pos), 
@@ -299,73 +261,116 @@ public:
 
     for( double v=vmin; v<=vmax; v += vincr )
       for( double w=wmin; w<=wmax; w += wincr )
-	vspace.push_back( Vel( v, w ) );
+	if( v || w ) vspace.push_back( Vel( v, w ) );
   }
   
   
   // convert a ranger scan into a vector of line segments
   void ObstacleCloud( const ModelRanger::Sensor& sensor, 
 		      double safety_radius, 
-		      std::vector<std::pair<Vec,Vec> >& cloud )
+		      std::vector<Circle>& cloud )
   {
     //    std::vector<std::pair<Vec,Vec> > cloud;
-        
+    
     cloud.resize( sensor.sample_count );
     
     for( unsigned int i=0; i<sensor.sample_count; i++ )
       {
 	double r = sensor.ranges[i];
 	double a = sensor.bearings[i];
-	double cosa = cos(a);
-	double sina = sin(a);
-		
-	Vec hit( r * cosa, r * sina );			
 	
-	//const double len = 0.5 * M_PI/sensor.sample_count * r;		
-	// length of line segment (not too small)
-	double len = std::max( M_PI/sensor.sample_count * r, 0.2 );
-	
-
-
-	Vec offset( len * cos( M_PI/2.0 + a ),
-		    len * sin( M_PI/2.0 + a ));	
-		    
-
-	cloud[i].first  = Vec( hit + offset );
-	cloud[i].second = Vec( hit - offset );
+	cloud[i].c.first = r * cos(a);
+	cloud[i].c.second = r * sin(a);
+	cloud[i].r = std::max( safety_radius, 0.7 * M_PI/sensor.sample_count * r );	
       }
   }
 
   
+  int circle_circle_intersection(double x0, double y0, double r0,
+				 double x1, double y1, double r1,
+				 double *xi, double *yi,
+				 double *xi_prime, double *yi_prime)
+  {
+    //double a, dx, dy, d, h, rx, ry;
+    //double x2, y2;
+    
+    /* dx and dy are the vertical and horizontal distances between
+     * the circle centers.
+     */
+    const double dx = x1 - x0;
+    const double dy = y1 - y0;
+    
+    /* Determine the straight-line distance between the centers. */
+    const double d = hypot(dx,dy); 
+    
+    /* Check for solvability. */
+    if (d > (r0 + r1))
+      {
+	/* no solution. circles do not intersect. */
+	return 0;
+      }
+    if (d < fabs(r0 - r1))
+      {
+	/* no solution. one circle is contained in the other */
+	return 0;
+      }
+    
+    /* 'point 2' is the point where the line through the circle
+     * intersection points crosses the line between the circle
+     * centers.  
+     */
+    
+    /* Determine the distance from point 0 to point 2. */
+    const double a = ((r0*r0) - (r1*r1) + (d*d)) / (2.0 * d) ;
+    
+    /* Determine the coordinates of point 2. */
+    const double x2 = x0 + (dx * a/d);
+    const double y2 = y0 + (dy * a/d);
+    
+    /* Determine the distance from point 2 to either of the
+     * intersection points.
+     */
+    const double h = sqrt((r0*r0) - (a*a));
+    
+    /* Now determine the offsets of the intersection points from
+     * point 2.
+     */
+    const double rx = -dy * (h/d);
+    const double ry = dx * (h/d);
+    
+    /* Determine the absolute intersection points. */
+    *xi = x2 + rx;
+    *xi_prime = x2 - rx;
+    
+    *yi = y2 + ry;
+    *yi_prime = y2 - ry;
+    
+    return 1;
+  }
   
   void AddCloudHits( double v, double w, std::vector<Vec>& hits )
   {
-    // todo: get rid of this
-    if( w == 0 )
-      w = 0.01;	   	   	   
+    assert( w != 0.0 );
     
     double radius = v / w;       	       
-    Vec circle( 0, radius ); // center of circle    
+    Vec circle( 0, radius ); // center of circle        
     
     Vec hit1, hit2;	       
     FOR_EACH( it, cloud )
-      {	
-	IntersectCircle( it->first, it->second,  circle, radius, hit1, hit2 );
-		
-	if( (hit1.first!=0.0) || (hit1.second!=0.0) ) // non zero vector
-	  hits.push_back( hit1 );
-	
-	if( (hit2.first!=0.0) || (hit2.second!=0.0) ) // non zero vector
+      if( circle_circle_intersection( 0, radius, fabs(radius), 
+				      it->c.first, it->c.second, fabs(it->r), 
+				      &hit1.first, &hit1.second,
+				      &hit2.first, &hit2.second ))
+	{
+	  hits.push_back( hit1 );	
 	  hits.push_back( hit2 );
-      }
+	}    
   }
   
-
-
   void EvaluateVSpace()
   {
     // get a cloud of obstacle line segments from the ranger
-    ObstacleCloud( laser->GetSensors()[0], 0.5, cloud );
+    ObstacleCloud( laser->GetSensors()[0], 0.4, cloud );
     
     const double vmax = pos->velocity_bounds[0].max;
     const double wmax = pos->velocity_bounds[3].max;
@@ -391,69 +396,57 @@ public:
     // evaluate each candidate (v,w) pair
     FOR_EACH( it, vspace )
       {
-	//it->obstacle_dist = 0.0;//10.0;	
+	it->obstacle_dist = 3.0;//0.0;//10.0;	
 
-	it->admissible = 
-	  PointsInsideRangerScan( laser->GetSensors()[0], *it );	
+	//it->admissible = 
+	//PointsInsideRangerScan( laser->GetSensors()[0], *it );	
 	
-	//if( it->obstacle_dist < radius )
-	//it->admissible = false;
-
-	//it->admissible = true;
+	// compute where the trajectory collides with the obstacle cloud
+	it->cloud_hits.clear();	    	
+	AddCloudHits( it->v, it->w, it->cloud_hits );	    
+	    
+	//printf( "cloud hits %d\n", (int)it->cloud_hits.size() );
 	
-
-	// it's always ok to turn on the spot
-	//if( fabs( it->v ) < 0.0001 )
-	//it->admissible = true;
 	
-	if( it->admissible  )
-	  {
-	    // compute where the trajectory collides with the obstacle cloud
-	    it->cloud_hits.clear();	    
-	    AddCloudHits( it->v, it->w, it->cloud_hits );	    
-
-	    //printf( "cloud hits %d\n", (int)it->cloud_hits.size() );
+	if( it->cloud_hits.size() )
+	  {		
+	    // find the closest cloud hit
+	    Vec closest = *min_element( it->cloud_hits.begin(), it->cloud_hits.end() );	    
+	    
+	    it->ox = closest.first;
+	    it->oy = closest.second;	    
+	    
+	    // find the distance along the circle until we hit the obstacle
+	    double radius = it->v / it->w; 
+	    Vec a( 0, -radius );
+	    Vec b( closest.first, closest.second - radius );	    
+	    double g = acos( a.Dot(b) / (a.Length() * b.Length() ));	    
+	    
+	    it->obstacle_dist = fabs( g*radius );
 	    
 	    
-	    if( it->cloud_hits.size() )
-	      {		
-	    	// find the closest cloud hit
-	    	Vec closest = *min_element( it->cloud_hits.begin(), it->cloud_hits.end() );	    
-		
-	    	it->ox = closest.first;
-	    	it->oy = closest.second;	    
-
-		// find the distance along the circle until we hit the obstacle
-		double radius = it->v / it->w; 
-		Vec a( 0, -radius );
-		Vec b( closest.first, closest.second - radius );	    
-		double g = acos( a.Dot(b) / (a.Length() * b.Length() ));	    
-		
-		it->obstacle_dist = fabs( g*radius );
-
-		
-		// printf( "v %.2f w %.2f hit (%.2f,%.2f) hypot %.2f dist %.2f\n",
-		// 	it->v, it->w, closest.first, closest.second, 
-		// 	hypot(closest.first, fabs(closest.second)), it->obstacle_dist );
-		
-		
-	    	//printf( "(%.2f,%2.f) -> (%.8f,%.8f)\n",
-	    	//	it->v, it->w, it->ox, it->oy );	    
-	      }
-	    else
-	      {  // no hits - set to a sensible maximumum
-		it->obstacle_dist = 8.0;
-	      }
-	    				
-  
-	    it->score = ObjectiveFunc( it->v, vmax, 
-				       it->w, wmax,
-				       goal_dist, 
-				       goal_angle,
-				       it->obstacle_dist );
+	    // printf( "v %.2f w %.2f hit (%.2f,%.2f) hypot %.2f dist %.2f\n",
+	    // 	it->v, it->w, closest.first, closest.second, 
+	    // 	hypot(closest.first, fabs(closest.second)), it->obstacle_dist );
+	    
+	    
+	    //printf( "(%.2f,%2.f) -> (%.8f,%.8f)\n",
+	    //	it->v, it->w, it->ox, it->oy );	    
 	  }
-	else
-	  it->score = 0.0;	
+	// else
+	//   {  // no hits - set to a sensible maximumum
+	// 	it->obstacle_dist = 8.0;
+	//   }
+	
+	
+	it->score = ObjectiveFunc( it->v, vmax, 
+				   it->w, wmax,
+				   goal_dist, 
+				   goal_angle,
+				   it->obstacle_dist );
+	//}	  
+	//else
+	//it->score = 0.0;	
       }
   }
   
@@ -480,7 +473,10 @@ public:
     // calculate the vspace array
     EvaluateVSpace();          
     best_vel = &BestVel( vspace );
+
+    printf( "best vel %.2f %.2f\n", best_vel->v, best_vel->w );
     
+
     // and request those speeds
     pos->SetSpeed( best_vel->v, 0, best_vel->w );
     
@@ -543,7 +539,7 @@ class DWVis : public Visualizer
       //i %= rob.vspace.size();
       
 
-      glPointSize( 6.0 );
+      glPointSize( 8.0 );
  
       glPushMatrix();
       
@@ -604,32 +600,25 @@ class DWVis : public Visualizer
 
        assert( rob.cloud.size() );
 
-       glColor3f( 0, 0, 0 );
-
-       glBegin( GL_LINES );       
+       glColor3f( 1, 0, 0 );
        FOR_EACH( it, rob.cloud )
-	 {	   
-	   glVertex2f( it->first.first, it->first.second );
-	   glVertex2f( it->second.first, it->second.second );
-	 }
-       glEnd();
-	   
+	 it->Draw();       	   
                    
        // draw each trajectory as a faint circle
-       glColor4f( 0,0,0,0.2 );
-       double steps = 100;
-       FOR_EACH( it, rob.vspace )
-	 {	   	   	   
-	   glBegin( GL_LINE_LOOP );
-	   double radius = it->v / it->w;	   
-	   double a = (2.0 * M_PI) / steps;	       
-	   for( int i=0; i<steps; i++ )
-	     glVertex2f( fabs(radius) * cos( i*a ), radius + fabs(radius) * sin( i*a ) );	   
-	   glEnd();
-	 }
+       // glColor4f( 0,0,0,0.2 );
+       // double steps = 100;
+       // FOR_EACH( it, rob.vspace )
+       // 	 {	   	   	   
+       // 	   glBegin( GL_LINE_LOOP );
+       // 	   double radius = it->v / it->w;	   
+       // 	   double a = (2.0 * M_PI) / steps;	       
+       // 	   for( int i=0; i<steps; i++ )
+       // 	     glVertex2f( fabs(radius) * cos( i*a ), radius + fabs(radius) * sin( i*a ) );	   
+       // 	   glEnd();
+       // 	 }
        
        // draw the cloud hits
-       glColor3f( 0,1,0 );	   
+       glColor3f( 0,0,0 );	   
        glBegin( GL_POINTS );
        FOR_EACH( it, rob.vspace )
 	 {
@@ -641,40 +630,46 @@ class DWVis : public Visualizer
        glEnd();	 	   
        
 
-       glColor3f( 1,0,1 ); // magenta
        // show the computation of arc length
        
        // hit point to circle center
        FOR_EACH( it, rob.vspace )
-	 //FOR_EACH( it2, it->cloud_hits )
 	 {
-	   // find the distance along the circle until we hit the obstacle
-	    double radius = it->v / it->w; 
-	    double dist = it->obstacle_dist;
-	    
-	    //Vec a( 0, -radius );
-	    //Vec b( it->ox, it->oy - radius );	    
-	   // double g = acos( a.Dot(b) / (a.Length() * b.Length() ));	    
-	   // double dist = fabs( g*radius );
-
-	    if( dist < 10 )
-	      {		
-		// sanity check
-		glBegin( GL_LINE_STRIP );
-		for( double d=0.01; d<dist; d+=0.1 )
-		  {	       
-		    double w = M_PI -d / radius;	       
-		    double x = radius * sin(w);	       
-		    double y = radius + radius * cos(w);
-		    glVertex3f( x, y, 0.5 );
-		  }
-		glEnd();
-	      }
-	    
+	   if( rob.best_vel == &*it )	 
+	     {
+	       glColor3f( 1,0,0 ); // red
+	       glLineWidth(3);       
+	     }
+	   else
+	     {
+	       glColor4f( 0,0,0,0.15 ); // light gray	 
+	       glLineWidth(1);       
+	     }
+	   
+	   // show arcs until obstacles are hit
+	   
+	   double radius = it->v / it->w; 
+	   double dist = it->obstacle_dist;
+	   if( dist < 50 )
+	     {		
+	       // sanity check
+	       glBegin( GL_LINE_STRIP );
+	       for( double d=0; d<=dist; d+=dist/32.0 )
+		 {	       
+		   double w = M_PI - d/radius;	       
+		   double x = radius * sin(w);	       
+		   double y = radius + radius * cos(w);
+		   glVertex2f( x, y  );
+		 }
+	       glEnd();
+	     }
+	   else
+	     {
+	       printf( "LONG v %.2f w %.2f dist %.2f\n", it->v, it->w, dist );	       
+	     }
+	       
 	 }       
-
-
-       
+       glLineWidth( 1.0 );
        
 
        // indicate the closest cloud hit

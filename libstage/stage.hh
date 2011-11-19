@@ -2773,6 +2773,7 @@ namespace Stg
 			
       std::vector<meters_t> ranges;
       std::vector<double> intensities;
+      std::vector<double> bearings;
 			
       Sensor() : pose( 0,0,0,0 ), 
 		 size( 0.02, 0.02, 0.02 ), // teeny transducer
@@ -2781,7 +2782,8 @@ namespace Stg
 		 sample_count(1),
 		 col( 0,1,0,0.3 ),
 		 ranges(),
-		 intensities()
+		 intensities(),
+		 bearings()
       {}
 			
       void Update( ModelRanger* rgr );			
@@ -2948,12 +2950,12 @@ namespace Stg
     Velocity integration_error; ///< errors to apply in simple odometry model
     double wheelbase;
     
+  public:
     /** Set the min and max acceleration in all 4 DOF */
     Bounds acceleration_bounds[4];
-
+    
     /** Set the min and max velocity in all 4 DOF */
     Bounds velocity_bounds[4];
-
 
   public:
     // constructor
