@@ -8,11 +8,12 @@ template<typename T> int sgn(T val)
 }
 
 // number of different velocities and turn rates to consider
-const double vres = 14.0;
-const double wres = 14.0;
+const double vres = 16.0;
+const double wres = 16.0;
 
 const double safety = 0.7;
 
+const double obstacle_dist_max = 10.0; // a bit more than the max sensor range
 
 // time interval between updates
 double interval = 0.1;
@@ -93,199 +94,6 @@ public:
   }  
 };
 
-//  args:
-//
-//  int    polySides  =  how many corners the polygon has
-//  float  polyX[]    =  horizontal coordinates of corners
-//  float  polyY[]    =  vertical coordinates of corners
-//  float  x, y       =  point to be tested
-//
-//  (Globals are used in this example for purposes of speed.  Change as
-//  desired.)
-//
-//  The function will return YES if the point x,y is inside the polygon, or
-//  NO if it is not.  If the point is exactly on the edge of the polygon,
-//  then the function may return YES or NO.
-//
-//  Note that division by zero is avoided because the division is protected
-//  by the "if" clause which surrounds it.
-
-bool PointInPolygon( int polySides, float polyX[], float polyY[], float x, float y ) 
-{
-  int   i, j=polySides-1 ;
-  bool  oddNodes=false;
-  
-  for (i=0; i<polySides; i++) {
-    if ((polyY[i]< y && polyY[j]>=y
-	 ||   polyY[j]< y && polyY[i]>=y)
-	&&  (polyX[i]<=x || polyX[j]<=x)) {
-      oddNodes^=(polyX[i]+(y-polyY[i])/(polyY[j]-polyY[i])*(polyX[j]-polyX[i])<x); }
-    j=i; }
-  
-  return oddNodes; 
-}
-
-
-/*
-  The I-DWA cost function
-  args: 
-  v: current forward speed
-  vmax: maximum speed
-  w: current turn rate
-  wmax: maximum turn rate
-  roh: distance to goal point (distance error)
-  alpha: angle to goal point (heading error)
-  dist: distance to nearest obstacle after one timestep if we drive at this speed
-*/
-double ObjectiveFunc( double v, double vmax, 
-		      double w, double wmax,
-		      double roh, double alpha,
-		      double dist )
-{
-  // gains must be positive - values from the paper
-  double k_v = 1.0; // distance error weight
-  double k_alpha = 0.59; // angular error weight
-  double k_roh = 3.0; // slow on goal approach weight
-  
-  // I-DWA Equation 13
-  // ideal forward speed to arrive at the goal
-  double vi = k_v * vmax * cos(alpha) * tanh( roh / k_roh );
-  
-  // I-DWA Equation 14
-  // ideal turn speed to arrive at the goal
-  double wi = k_alpha * alpha + vi * sin(alpha) / roh;
-  
-  // I-DWA Equation 17 
-  // weighted comparison of current speeds with the
-  // ideal speeds taking into account the distance from the goal point
-  // and the distance to obstacles.
-
-  // gains must be positive and sum to 1.0 : values from the paper
-  double speed_gain = 3.0/13.0;
-  double turn_gain = 3.0/13.0;
-  double dist_gain = 7.0/13.0;
-  assert( fabs( (speed_gain + turn_gain + dist_gain ) - 1.0) < 0.001 );
-    
-  return ( speed_gain * ( 1.0 - fabs( v - vi ) / (2.0 * vmax )) +
-	   turn_gain  * ( 1.0 - fabs( w - wi ) / (2.0 * wmax )) +
-	   dist_gain  * dist );
-}
-
-class Vel;
-
-bool PointsInsideRangerScan( const ModelRanger::Sensor& sensor, Vel& v );
-
-class Vel
-{
-public:
-  double v, w;
-  double score;
-  bool admissible;
-  
-  // distance to nearest obstacle
-  double obstacle_dist;
-  
-  // offset of new pose after moving with velocity (v,w) for 1 timestep
-  double dx, dy;
-  
-  // loction of nearest obstacle
-  double ox, oy;
-  
-  // all the points that this trajectory intersects with the obstacle cloud
-  std::vector<Vec> cloud_hits;
-  
-  Vel( double v, double w ) 
-    : v(v), 
-      w( fabs(w) == 0 ? 0.001 : w ), // disallow zero rotation 
-      score(0), 
-      admissible(true),
-      obstacle_dist(1e12),
-      dx( interval * v * cos(interval*w) ),
-      dy( interval * v * sin(interval*w) ),
-      ox(0), 
-      oy(0),
-      cloud_hits()
-  {
-  }
-  
-  void Print()
-  {
-    printf( "[v %.3f w %.3f @(%.2f,%.2f) admit %s obstacle %.2f @(%.2f,%.3f) score %.3f]\n", 
-	    v, w, 
-	    dx, dy, 
-	    admissible ? "T" : "F",
-	    obstacle_dist,
-	    ox, oy,
-	    score );
-  }      
-};
-
-class Robot
-{
-public:
-  ModelPosition* pos;
-  ModelRanger* laser;
-  
-  Pose goal;
-  double radius;  
-  
-  std::vector<Vel> vspace;
-  Vel* best_vel;
-  
-  std::vector<Circle> cloud;
-  
-  Robot( ModelPosition* pos, ModelRanger* laser ) : 
-    pos(pos), 
-    laser(laser), 
-    goal( Pose( 7,3,0,0 )),
-    radius(0.4),
-    vspace(),
-    best_vel(NULL)
-  {
-    pos->AddCallback( Model::CB_UPDATE, (model_callback_t)PositionUpdateCB, this );  
-    pos->Subscribe(); // starts the position updates
-    
-    //laser->AddCallback( Model::CB_UPDATE, (model_callback_t)LaserUpdate, robot );
-    laser->Subscribe(); // starts the ranger updates
-
-    // initialize vspace
-    const double vmin = pos->velocity_bounds[0].min;
-    const double vmax = pos->velocity_bounds[0].max;
-    const double vrange = vmax - vmin;
-    const double vincr = vrange / vres;
-    
-    const double wmin = pos->velocity_bounds[3].min;
-    const double wmax = pos->velocity_bounds[3].max;
-    const double wrange = wmax - wmin;
-    const double wincr = wrange / wres;
-
-    for( double v=vmin; v<=vmax; v += vincr )
-      for( double w=wmin; w<=wmax; w += wincr )
-	if( v || w ) vspace.push_back( Vel( v, w ) );
-  }
-  
-  
-  // convert a ranger scan into a vector of line segments
-  void ObstacleCloud( const ModelRanger::Sensor& sensor, 
-		      double safety_radius, 
-		      std::vector<Circle>& cloud )
-  {
-    //    std::vector<std::pair<Vec,Vec> > cloud;
-    
-    cloud.resize( sensor.sample_count );
-    
-    for( unsigned int i=0; i<sensor.sample_count; i++ )
-      {
-	double r = sensor.ranges[i];
-	double a = sensor.bearings[i];
-	
-	cloud[i].c.first = r * cos(a);
-	cloud[i].c.second = r * sin(a);
-	cloud[i].r = std::max( safety_radius, 0.7 * M_PI/sensor.sample_count * r );	
-      }
-  }
-
-  
   int circle_circle_intersection(double x0, double y0, double r0,
 				 double x1, double y1, double r1,
 				 double *xi, double *yi,
@@ -347,12 +155,174 @@ public:
     
     return 1;
   }
+
+
+//  args:
+//
+//  int    polySides  =  how many corners the polygon has
+//  float  polyX[]    =  horizontal coordinates of corners
+//  float  polyY[]    =  vertical coordinates of corners
+//  float  x, y       =  point to be tested
+//
+//  (Globals are used in this example for purposes of speed.  Change as
+//  desired.)
+//
+//  The function will return YES if the point x,y is inside the polygon, or
+//  NO if it is not.  If the point is exactly on the edge of the polygon,
+//  then the function may return YES or NO.
+//
+//  Note that division by zero is avoided because the division is protected
+//  by the "if" clause which surrounds it.
+
+bool PointInPolygon( int polySides, float polyX[], float polyY[], float x, float y ) 
+{
+  int   i, j=polySides-1 ;
+  bool  oddNodes=false;
   
-  void AddCloudHits( double v, double w, std::vector<Vec>& hits )
-  {
-    assert( w != 0.0 );
+  for (i=0; i<polySides; i++) {
+    if ((polyY[i]< y && polyY[j]>=y
+	 ||   polyY[j]< y && polyY[i]>=y)
+	&&  (polyX[i]<=x || polyX[j]<=x)) {
+      oddNodes^=(polyX[i]+(y-polyY[i])/(polyY[j]-polyY[i])*(polyX[j]-polyX[i])<x); }
+    j=i; }
+  
+  return oddNodes; 
+}
+
+
+/*
+  The I-DWA scores for speed and turn rate
+  args: 
+  v: current forward speed
+  vmax: maximum speed
+  w: current turn rate
+  wmax: maximum turn rate
+  roh: distance to goal point (distance error)
+  alpha: angle to goal point (heading error)
+  dist: distance to nearest obstacle after one timestep if we drive at this speed
+*/
+std::pair<double,double> IDWAScores( double v, double vmax, 
+				     double w, double wmax,
+				     double roh, double alpha )
+{
+  // gains must be positive - values from the paper
+  const double k_v = 1.0; // distance error weight
+  const double k_alpha = 0.59; // angular error weight
+  const double k_roh = 3.0; // slow on goal approach weight
+  
+  // I-DWA Equation 13
+  // ideal forward speed to arrive at the goal
+  const double vi = k_v * vmax * cos(alpha) * tanh( roh / k_roh );
+  
+  // I-DWA Equation 14
+  // ideal turn speed to arrive at the goal
+  const double wi = k_alpha * alpha + vi * sin(alpha) / roh;
+  
+  // I-DWA Equation 17 
+  // weighted comparison of current speeds with the
+  // ideal speeds taking into account the distance from the goal point
+  // and the distance to obstacles.
+
+  const double vs = 1.0 - fabs(v-vi) / (2.0*vmax );					  
+  double ws = 1.0 - fabs(w-wi) / (2.0*wmax );
+  
+  printf( "w %.2f wi %.2f fabs(w-wi) %.2f wmax %.6f  ws %.2f\n", 
+	  w, wi, fabs(w-wi), wmax, ws );
+
+  // ws is going slighty below zero for some reason. Force it not to.
+  if( ws < 0.0 )
+    ws = 0.0;
+
+  assert( vs >= 0.0 );
+  assert( vs <= 1.0 );
+  assert( ws >= 0.0 );
+  assert( ws <= 1.0 );
     
-    double radius = v / w;       	       
+  return std::pair<double,double>( vs, ws );				  
+}
+
+
+// return weighted sum of scores, gains chosen to normalize [0..1]
+double ObjectiveFunc( double so, double go,
+		      double sv, double gv,
+		      double sw, double gw )  
+{
+  // scores must be normalized to the range [0..1]
+  assert( so >= 0.0 );
+  assert( so <= 1.0 );
+  assert( sv >= 0.0 );
+  assert( sv <= 1.0 );
+  assert( sw >= 0.0 );
+  assert( sw <= 1.0 );
+
+  // gains must be positive and sum to 1.0
+  assert( go >= 0.0 );
+  assert( go <= 1.0 );
+  assert( gv >= 0.0 );
+  assert( gv <= 1.0 );
+  assert( gw >= 0.0 );
+  assert( gw <= 1.0 );
+  assert( fabs( (gv + gw + go ) - 1.0) < 0.0001 );
+
+  //printf( "sv %.2f sw %.2f\n", sv, sw );  
+  return( gv * sv + gw * sw + go * so );
+}
+
+class Vel;
+
+bool PointsInsideRangerScan( const ModelRanger::Sensor& sensor, Vel& v );
+
+
+class Vel
+{
+public:
+  double v, w;
+  double score;
+
+  double score_speed;
+  double score_heading;
+  double score_obstacle;
+
+  bool admissible;
+  
+  // distance to nearest obstacle
+  double obstacle_dist;
+  
+  // offset of new pose after moving with velocity (v,w) for 1 timestep
+  double dx, dy;
+  
+  // loction of nearest obstacle
+  double ox, oy;
+  
+  // all the points that this trajectory intersects with the obstacle cloud
+  std::vector<Vec> cloud_hits;
+  
+  Vel( double v, double w ) 
+    : v(v), 
+      w( fabs(w) == 0 ? 0.01 : w ), // disallow zero rotation 
+      score(0), 
+      admissible(true),
+      obstacle_dist(1e12),
+      dx( interval * v * cos(interval*w) ),
+      dy( interval * v * sin(interval*w) ),
+      ox(0), 
+      oy(0),
+      cloud_hits()
+  {
+  }
+  
+  
+  void Evaluate( double goal_dist, 
+		 double goal_angle,
+		 double vmax, 
+		 double wmax, 
+		 const std::vector<Circle>& cloud )
+  {
+    double radius = v / w; 
+
+    // compute where the trajectory collides with the obstacle cloud
+    cloud_hits.clear();	    	
+    
     Vec circle( 0, radius ); // center of circle        
     
     Vec hit1, hit2;	       
@@ -362,92 +332,178 @@ public:
 				      &hit1.first, &hit1.second,
 				      &hit2.first, &hit2.second ))
 	{
-	  hits.push_back( hit1 );	
-	  hits.push_back( hit2 );
+	  cloud_hits.push_back( hit1 );	
+	  cloud_hits.push_back( hit2 );
 	}    
+    
+    // default value will be overridden if this trajectory hits an obstacle
+    obstacle_dist = obstacle_dist_max;
+    
+    if( fabs(w) >  0.01 ) 
+      {
+	
+	if( cloud_hits.size() )
+	  {		
+	    // find the closest cloud hit
+	    Vec closest = *min_element( cloud_hits.begin(), cloud_hits.end() );	    
+	    
+	    ox = closest.first;
+	    oy = closest.second;	    
+	    
+	    // find the distance along the circle until we hit the obstacle
+	    Vec a( 0, -radius );
+	    Vec b( closest.first, closest.second - radius );	    
+	    double g = acos( a.Dot(b) / (a.Length() * b.Length() ));	    
+	    
+	    //printf( "g %.2f r %.2f\n", g, radius );
+	    
+	    obstacle_dist = std::min( obstacle_dist, fabs( g * radius ) );
+	    //it->obstacle_dist = fabs( g*radius );
+	    
+	    assert( obstacle_dist > 0.0 );
+	    assert( obstacle_dist <= obstacle_dist_max );
+	    
+	    // printf( "v %.2f w %.2f hit (%.2f,%.2f) hypot %.2f dist %.2f\n",
+	    // 	it->v, it->w, closest.first, closest.second, 
+	    // 	hypot(closest.first, fabs(closest.second)), it->obstacle_dist );	    	    
+	  }
+      }
+    
+    // normalize the score
+    score_obstacle = obstacle_dist / obstacle_dist_max;
+    
+    printf( "(%.2f,%2.f) obstacle_dist %.2f max %.2f score %.2f\n",
+	    v, w, obstacle_dist, obstacle_dist_max, score_obstacle );    
+    
+    assert( score_obstacle >=0 );
+    assert( score_obstacle <= 1.0 );
+    
+    std::pair<double,double> scores = IDWAScores(  v, vmax, 
+						   w, wmax,
+						   goal_dist, 
+						   goal_angle );
+    
+    score_speed = scores.first;
+    score_heading = scores.second;
+    
+    // values from the I-DWA paper
+    double dist_gain = 7.0/13.0;
+    double speed_gain = 3.0/13.0;
+    double turn_gain = 3.0/13.0;
+    
+    
+    score = ObjectiveFunc( score_obstacle, dist_gain,
+			   score_speed, speed_gain,
+			   score_heading, turn_gain );
   }
   
+
+
+  void Print()
+  {
+    printf( "[v %.3f w %.3f @(%.2f,%.2f) admit %s obstacle %.2f @(%.2f,%.3f) score %.3f]\n", 
+	    v, w, 
+	    dx, dy, 
+	    admissible ? "T" : "F",
+	    obstacle_dist,
+	    ox, oy,
+	    score );
+  }      
+};
+
+// convert a ranger scan into a vector of line segments
+std::vector<Circle> ObstacleCloud( const ModelRanger::Sensor& sensor, 
+				   const double safety_radius )
+{      
+  std::vector<Circle> cloud( sensor.sample_count );
+  
+  for( unsigned int i=0; i<sensor.sample_count; i++ )
+    {
+      double r = sensor.ranges[i];
+      double a = sensor.bearings[i];
+      
+      cloud[i].c.first = r * cos(a);
+      cloud[i].c.second = r * sin(a);
+      cloud[i].r = std::max( safety_radius, 0.7 * M_PI/sensor.sample_count * r );	
+    }
+  
+  return cloud;
+}
+
+
+class Robot
+{
+public:
+  ModelPosition* pos;
+  ModelRanger* laser;
+  
+  Pose goal;
+
+  // describes circle that must not collide with obstacles. Must
+  // contain the robot's body at least.
+  double radius;  
+  
+  std::vector<Vel> vspace;
+  Vel* best_vel;
+  
+  std::vector<Circle> cloud;
+  
+  Robot( ModelPosition* pos, ModelRanger* laser ) : 
+    pos(pos), 
+    laser(laser), 
+    goal( Pose( 7,3,0,0 )),
+    radius(0.4),
+    vspace(),
+    best_vel(NULL)
+  {
+    pos->AddCallback( Model::CB_UPDATE, (model_callback_t)PositionUpdateCB, this );  
+    pos->Subscribe(); // starts the position updates
+    
+    //laser->AddCallback( Model::CB_UPDATE, (model_callback_t)LaserUpdate, robot );
+    laser->Subscribe(); // starts the ranger updates
+    
+    // initialize vspace
+    const double vmin = pos->velocity_bounds[0].min;
+    const double vmax = pos->velocity_bounds[0].max;
+    const double vrange = vmax - vmin;
+    const double vincr = vrange / vres;
+    
+    const double wmin = pos->velocity_bounds[3].min;
+    const double wmax = pos->velocity_bounds[3].max;
+    const double wrange = wmax - wmin;
+    const double wincr = wrange / wres;
+    
+    for( double v=vmin; v<vmax; v += vincr )
+      for( double w=wmin; w<wmax; w += wincr )
+	{
+	  if( w == 0 )
+	    w = 0.01;
+
+	    vspace.push_back( Vel( v, w ) );
+	}    
+  }
+    
+
   void EvaluateVSpace()
   {
     // get a cloud of obstacle line segments from the ranger
-    ObstacleCloud( laser->GetSensors()[0], 0.4, cloud );
+    cloud = ObstacleCloud( laser->GetSensors()[0], radius );
     
     const double vmax = pos->velocity_bounds[0].max;
     const double wmax = pos->velocity_bounds[3].max;
     
     // find the error in our current position wrt the goal
     const Pose& gpose = pos->GetGlobalPose();
-    const double dx = goal.x - gpose.x;
-    const double dy = goal.y - gpose.y;
-    const double goal_dist = hypot( dx, dy );
-    const double goal_angle = normalize( atan2( dy, dx ) - gpose.a );
+
+    gdx = goal.x - gpose.x;
+    gdy = goal.y - gpose.y;
+
+    const double goal_dist = hypot( gdx, gdy );
+    const double goal_angle = normalize( atan2( gdy, gdx ) - gpose.a );
     
-    gdx = dx;
-    gdy = dy;
-
-    //usec_t timenow = pos->GetWorld()->SimTimeNow();
-    //static usec_t lasttime = 0;
-    //double interval = lasttime == 0 ? 0 : (timenow - lasttime) * 1e-4;
-    //lasttime = timenow;
-    
-    //    printf( "%.4f\n", interval );
-
-
     // evaluate each candidate (v,w) pair
     FOR_EACH( it, vspace )
-      {
-	it->obstacle_dist = 3.0;//0.0;//10.0;	
-
-	//it->admissible = 
-	//PointsInsideRangerScan( laser->GetSensors()[0], *it );	
-	
-	// compute where the trajectory collides with the obstacle cloud
-	it->cloud_hits.clear();	    	
-	AddCloudHits( it->v, it->w, it->cloud_hits );	    
-	    
-	//printf( "cloud hits %d\n", (int)it->cloud_hits.size() );
-	
-	
-	if( it->cloud_hits.size() )
-	  {		
-	    // find the closest cloud hit
-	    Vec closest = *min_element( it->cloud_hits.begin(), it->cloud_hits.end() );	    
-	    
-	    it->ox = closest.first;
-	    it->oy = closest.second;	    
-	    
-	    // find the distance along the circle until we hit the obstacle
-	    double radius = it->v / it->w; 
-	    Vec a( 0, -radius );
-	    Vec b( closest.first, closest.second - radius );	    
-	    double g = acos( a.Dot(b) / (a.Length() * b.Length() ));	    
-	    
-	    it->obstacle_dist = fabs( g*radius );
-	    
-	    
-	    // printf( "v %.2f w %.2f hit (%.2f,%.2f) hypot %.2f dist %.2f\n",
-	    // 	it->v, it->w, closest.first, closest.second, 
-	    // 	hypot(closest.first, fabs(closest.second)), it->obstacle_dist );
-	    
-	    
-	    //printf( "(%.2f,%2.f) -> (%.8f,%.8f)\n",
-	    //	it->v, it->w, it->ox, it->oy );	    
-	  }
-	// else
-	//   {  // no hits - set to a sensible maximumum
-	// 	it->obstacle_dist = 8.0;
-	//   }
-	
-	
-	it->score = ObjectiveFunc( it->v, vmax, 
-				   it->w, wmax,
-				   goal_dist, 
-				   goal_angle,
-				   it->obstacle_dist );
-	//}	  
-	//else
-	//it->score = 0.0;	
-      }
+      it->Evaluate( goal_dist, goal_angle, vmax, wmax, cloud);
   }
   
   // return the index of the vel with the highest score
@@ -521,6 +577,116 @@ bool PointsInsideRangerScan( const ModelRanger::Sensor& sensor, Vel& v )
 
   return PointInPolygon( sensor.sample_count+1, &polyX[0], &polyY[0], v.dx, v.dy );
 }
+
+
+
+
+void Mesh( const std::vector<double>& arr, unsigned int w, unsigned int h, double sx, double sy, double sz )
+{
+  for( unsigned int x=0; x<w; x++ )
+    {
+      glBegin( GL_LINE_STRIP );  
+      for( unsigned int y=0; y<h; y++ )      
+	glVertex3f( sx*x, sy*y, sz*arr[y + x*w] );
+      
+      glEnd(); 
+    }
+
+  for( unsigned int y=0; y<h; y++ )
+    {
+      glBegin( GL_LINE_STRIP );  
+      for( unsigned int x=0; x<w; x++ )      
+	glVertex3f( sx*x, sy*y, sz*arr[y + x*w] );      
+      glEnd(); 
+    }  
+
+  // draw the bouding cube
+
+  double x = sx*w;
+  double y = sy*h;
+
+  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
+  glBegin( GL_QUADS );
+
+  glVertex3f( 0, 0,  0 );
+  glVertex3f( x, 0,  0 );
+  glVertex3f( x, y,  0 );
+  glVertex3f( 0, y,  0 );
+
+  glVertex3f( 0, 0,  1 );
+  glVertex3f( x, 0,  1 );
+  glVertex3f( x, y,  1 );
+  glVertex3f( 0, y,  1 );
+
+  glEnd();
+
+  glBegin( GL_LINES );
+
+  glVertex3f( 0, 0,  0 );
+  glVertex3f( 0, 0,  1 );
+
+  glVertex3f( x, 0,  0 );
+  glVertex3f( x, 0,  1 );
+
+  glVertex3f( x, y,  0 );
+  glVertex3f( x, y,  1 );
+
+  glVertex3f( 0, y,  0 );
+  glVertex3f( 0, y,  1 );
+
+  glEnd();
+
+
+}
+
+void DrawMesh( double x, double y, double z, const std::vector<Vel>& vels )
+{
+  glPushMatrix();  
+  glTranslatef( x,y,z );
+  
+  glPointSize( 2.0 );
+
+  double sx = 1.0 / vres;;
+  double sy = 1.0 / wres;
+  double sz = 0.03;
+  
+  int side = sqrt( vels.size() );  
+  
+
+   std::vector<double> obstacles;   
+   FOR_EACH( it, vels )
+     obstacles.push_back( it->obstacle_dist / obstacle_dist_max ); 
+   glColor3f( 1,0,0 );      
+   Mesh( obstacles, side, side, sx, sy, 1.0 );
+
+   glTranslatef( 0,1,0 );
+
+   std::vector<double> heading;   
+   FOR_EACH( it, vels )
+     heading.push_back( it->score_heading ); 
+   glColor3f( 0,0,1 );      
+   Mesh( heading, side, side, sx, sy, 1.0 );
+
+   glTranslatef( 0,1,0 );
+
+   std::vector<double> speed;   
+   FOR_EACH( it, vels )
+     speed.push_back( it->score_speed ); 
+   glColor3f( 0,1,0 );      
+   Mesh( speed, side, side, sx, sy, 1.0 );
+   glTranslatef( 0,1,0 );
+
+   std::vector<double> overall;   
+   FOR_EACH( it, vels )
+     overall.push_back( it->score ); 
+   glColor3f( 0.5,  0.5, 0.5 );      
+   Mesh( overall, side, side, sx, sy, 1.0 );
+
+   glPopMatrix();    
+}
+
+
 
 
 class DWVis : public Visualizer
@@ -618,14 +784,24 @@ class DWVis : public Visualizer
        // 	 }
        
        // draw the cloud hits
-       glColor3f( 0,0,0 );	   
-       glBegin( GL_POINTS );
+
+       double e=0.02;
+
+       glColor4f( 0,0,0, 0.5 );	   
+
+       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+       glBegin( GL_QUADS );
        FOR_EACH( it, rob.vspace )
 	 {
 	   //	   printf( "cloud huts len %d\n", (int)it->cloud_hits.size() );
 	   
 	   FOR_EACH( it2, it->cloud_hits )
-	     glVertex2f( it2->first, it2->second );
+	     {
+	       glVertex2f( it2->first-e, it2->second-e );
+	       glVertex2f( it2->first+e, it2->second-e );
+	       glVertex2f( it2->first+e, it2->second+e );
+	       glVertex2f( it2->first-e, it2->second+e );
+	     }
 	 }
        glEnd();	 	   
        
@@ -654,12 +830,14 @@ class DWVis : public Visualizer
 	     {		
 	       // sanity check
 	       glBegin( GL_LINE_STRIP );
-	       for( double d=0; d<=dist; d+=dist/32.0 )
+	       for( double d=0; d<fabs(dist); d+=0.05 )
 		 {	       
 		   double w = M_PI - d/radius;	       
 		   double x = radius * sin(w);	       
 		   double y = radius + radius * cos(w);
-		   glVertex2f( x, y  );
+
+		   if( fabs(x) < 100 && fabs(y)<100 )
+		     glVertex2f( x, y  );
 		 }
 	       glEnd();
 	     }
@@ -685,6 +863,9 @@ class DWVis : public Visualizer
        // 	 }
        // glEnd();            
        
+       glColor3f( 0,0,1 );	   
+       DrawMesh(  0,0,1, rob.vspace );       
+
        glPopMatrix();
        
        mod->PopColor();
