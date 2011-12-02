@@ -1100,7 +1100,7 @@ void Canvas::Screenshot()
   
   static uint32_t count = 0;		 
   char filename[64];
-  snprintf( filename, 63, "stage-%d.png", count++ );
+  snprintf( filename, 63, "stage-%06d.png", count++ );
   
   FILE *fp = fopen( filename, "wb" );
   if( fp == NULL ) 
