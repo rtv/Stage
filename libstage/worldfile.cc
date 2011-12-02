@@ -1632,7 +1632,7 @@ void Worldfile::WriteTuple( const int entity, const char *name,
 	  exit(-1);
 	}
       
-      printf( "writing %s %d %s\n", name, first+i, buf );
+      //printf( "writing %s %d %s\n", name, first+i, buf );
       SetPropertyValue(property, first+i, buf );
     }
   

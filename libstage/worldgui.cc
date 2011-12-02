@@ -286,8 +286,6 @@ void WorldGui::Load( const std::string& filename )
       
       // configure the canvas
       canvas->Load(  wf, window_section );
-      // warn about unused WF lines
-      wf->WarnUnused();
       
       std::string title = PROJECT;
       if ( wf->filename.size() ) {
@@ -296,6 +294,12 @@ void WorldGui::Load( const std::string& filename )
 	title += wf->filename;
       }
       label( title.c_str() );
+
+      FOR_EACH( it, option_table )
+	(*it)->Load( wf, window_section );
+
+      // warn about unused WF lines
+      wf->WarnUnused();
     }
  
   const usec_t load_end_time = RealTimeNow();
@@ -332,7 +336,8 @@ bool WorldGui::Save( const char* filename )
 	    
       canvas->Save( wf, window_section );
 	    
-      // TODO - per model visualizations save 
+    FOR_EACH( it, option_table )
+	(*it)->Save( wf, window_section );
     }
 	
 	World::Save( filename );
@@ -645,24 +650,24 @@ void WorldGui::viewOptionsCb( OptionsDlg* oDlg, WorldGui* wg )
   //std::sort();// wg->option_table.begin(), wg->option_table.end() );//, sort_option_pointer );
 
   if ( !wg->oDlg ) 
-	 {
-		int x = wg->w()+wg->x() + 10;
-		int y = wg->y();
-		OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
-		oDlg->callback( (Fl_Callback*)optionsDlgCb, wg );
-		
-		oDlg->setOptions( wg->option_table );
-		oDlg->showAllOpt( &wg->canvas->visualizeAll );
-		wg->oDlg = oDlg;
-		oDlg->show();
-	 }
+    {
+      int x = wg->w()+wg->x() + 10;
+      int y = wg->y();
+      OptionsDlg* oDlg = new OptionsDlg( x,y, 180,250 );
+      oDlg->callback( (Fl_Callback*)optionsDlgCb, wg );
+      
+      oDlg->setOptions( wg->option_table );
+      oDlg->showAllOpt( &wg->canvas->visualizeAll );
+      wg->oDlg = oDlg;
+      oDlg->show();
+    }
   else 
-	 {
-		wg->oDlg->hide();
-		delete wg->oDlg;
-		wg->oDlg = NULL;
-	 }
- 
+    {
+      wg->oDlg->hide();
+      delete wg->oDlg;
+      wg->oDlg = NULL;
+    }
+  
 }
 
 void WorldGui::optionsDlgCb( OptionsDlg* oDlg, WorldGui* wg ) 

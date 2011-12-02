@@ -1159,6 +1159,7 @@ void World::RemovePowerPack( PowerPack* pp )
 /// Register an Option for pickup by the GUI
 void World:: RegisterOption( Option* opt )
 {
+  assert(opt);
   option_table.insert( opt );
 }
 
