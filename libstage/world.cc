@@ -102,13 +102,15 @@ bool World::ltx::operator()(const Model* a, const Model* b) const
 {
   const meters_t ax( a->GetGlobalPose().x );
   const meters_t bx( b->GetGlobalPose().x );  
-  return ( ax == bx ? a < b : ax < bx );
+  // break ties using the pointer value to give a unique ordering
+  return ( ax == bx ? a < b : ax < bx ); 
 }
 bool World::lty::operator()(const Model* a, const Model* b) const
 {
   const meters_t ay( a->GetGlobalPose().y );
   const meters_t by( b->GetGlobalPose().y );  
-  return ( ay == by ? a < b : ay < by );
+  // break ties using the pointer value ro give a unique ordering
+  return ( ay == by ? a < b : ay < by ); 
 }
 
 // static data members

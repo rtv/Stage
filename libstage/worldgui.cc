@@ -434,12 +434,16 @@ void WorldGui::DrawOccupancy() const
 // 	printf( "done\n" );
 
 //  unsigned int layer( updates % 2 );
-
+  
   FOR_EACH( it, superregions )
-	 {
-		it->second->DrawOccupancy(0);
-		it->second->DrawOccupancy(1);
-	 }
+    it->second->DrawOccupancy();
+  
+  // 	 {
+
+  // it->second->DrawOccupancy(0);
+    //    it->second->DrawOccupancy(1);
+
+  //	 }
 }
 
 void WorldGui::DrawVoxels() const

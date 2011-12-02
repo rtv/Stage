@@ -81,7 +81,7 @@ void SuperRegion::RemoveBlock()
 }		
 
 
-void SuperRegion::DrawOccupancy( unsigned int layer ) const
+void SuperRegion::DrawOccupancy(void) const
 {
   //printf( "SR origin (%d,%d) this %p\n", origin.x, origin.y, this );
 
@@ -90,7 +90,8 @@ void SuperRegion::DrawOccupancy( unsigned int layer ) const
   glScalef( scale, scale, 1.0 ); // XX TODO - this seems slightly
   glTranslatef( origin.x<<SRBITS, origin.y<<SRBITS,0);
   
-  glEnable( GL_DEPTH_TEST );
+  // glDepthMask( GL_FALSE );
+  //  glEnable( GL_DEPTH_TEST );
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   
   // outline superregion
@@ -102,48 +103,49 @@ void SuperRegion::DrawOccupancy( unsigned int layer ) const
     {
       const Region* r = &regions[0];
       char buf[32];
-		
-      switch( layer )
-	{
-	case 0: // moveable 1
-	  glColor3f( 0,1,0 );    
-	  break;
-	case 1: // moveable 2
-	  glTranslatef( 0.05, 0.05, 0);
-	  glColor3f( 0,0,1 );    
-	  break;
-	  // 		  case 2: // fixed 
-	  // 			 glTranslatef( 0.1, 0.1, 0);
-	  // 			 glColor3f( 1,0,0 );    
-	  // 			 break;
-	default:
-	  PRINT_ERR1( "error: wrong layer %d", layer );			 
-	}
-		
+		      
+      //      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+      
+			  
       for( int y=0; y<SUPERREGIONWIDTH; ++y )
 	for( int x=0; x<SUPERREGIONWIDTH; ++x )
 	  {
 	    if( r->count ) // region contains some occupied cells
-	      {
+	      {					 
+      
 		// outline the region
+		glColor3f(0,1,0);
 		glRecti( x<<RBITS, y<<RBITS, 
 			 (x+1)<<RBITS, (y+1)<<RBITS );
-					 
+		
 		// show how many cells are occupied
-		snprintf( buf, 15, "%lu", r->count );
-		Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
-					 
+		//snprintf( buf, 15, "%lu", r->count );
+		//Gl::draw_string( x<<RBITS, y<<RBITS, 0, buf );
+		
 		// draw a rectangle around each occupied cell					 
 		for( int p=0; p<REGIONWIDTH; ++p )
 		  for( int q=0; q<REGIONWIDTH; ++q )
-		    if( r->cells[p+(q*REGIONWIDTH)].blocks[layer].size() )
-		      {					 
-			GLfloat xx = p+(x<<RBITS);
-			GLfloat yy = q+(y<<RBITS);						  
-			glRecti( xx, yy, xx+1, yy+1);
-		      }
-	      }
-	    /* else if( r->cells ) // empty but used previously 
+		    {
+		      const Cell& c = r->cells[p+(q*REGIONWIDTH)];
+
+		      if( c.blocks[0].size() )
+			{					 
+			  const GLfloat xx = p+(x<<RBITS);
+			  const GLfloat yy = q+(y<<RBITS);					
+			  glColor3f( 0,1,0);
+			  glRectf( xx, yy, xx+1, yy+1 );			
+			}
+		      
+		      if( c.blocks[1].size() )
+			{					 
+			  const GLfloat xx = p+(x<<RBITS);
+			  const GLfloat yy = q+(y<<RBITS);					
+			  glColor3f( 0,0,1);
+			  const double dx = 0.1;
+			  glRectf( xx+dx, yy+dx, xx+1-dx, yy+1-dx);			
+			}
+		    }
+	      }	    /* else if( r->cells ) // empty but used previously 
 	       {
 	       double left = x << RBITS;
 	       double right = (x+1) << RBITS;
@@ -174,9 +176,9 @@ void SuperRegion::DrawOccupancy( unsigned int layer ) const
 	       glEnd();
 	       }
 	    */
-
+		
 	    ++r; // next region quickly
-	  }			
+	  }  			
     }
   else
     {  // outline region-collected superregion
@@ -184,6 +186,9 @@ void SuperRegion::DrawOccupancy( unsigned int layer ) const
       glRecti( 0,0, (1<<SRBITS)-1, (1<<SRBITS)-1 );
       glColor3f( 0,0,1 );   
     }
+
+  glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
   
   char buf[32];
   snprintf( buf, 15, "%lu", count );
@@ -266,14 +271,14 @@ void SuperRegion::DrawVoxels(unsigned int layer) const
 			glEnable(GL_POLYGON_OFFSET_FILL);
 			// TODO - these numbers need tweaking for
 			// better-looking rendering
-			glPolygonOffset(0.01, 0.1);								
+			glPolygonOffset(0.01, 0.1);
+
 			DrawBlock( xx, yy, block->global_z.min, block->global_z.max );
 								
 			// draw again in outline
-			glDisable(GL_POLYGON_OFFSET_FILL);								
-			glColor4f( c.r/2.0, c.g/2.0, c.b/2.0, c.a );
-			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );								
-			DrawBlock( xx, yy, block->global_z.min, block->global_z.max );								
+			glDisable(GL_POLYGON_OFFSET_FILL);
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );		       
+			DrawBlock( xx, yy, block->global_z.min, block->global_z.max );	    
 		      }
 		  }
 	      }
@@ -296,7 +301,7 @@ void Stg::Cell::RemoveBlock( Block* b, unsigned int layer )
   const size_t len( blks.size() );
   if( len )
     {
-#if 1	
+#if 0	
       // Use conventional STL style		
 		
       // this special-case test is faster for worlds with simple models,

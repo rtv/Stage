@@ -126,7 +126,7 @@ namespace Stg
 	 void CanvasToWorld( int px, int py, 
 								double *wx, double *wy, double* wz );
 
-	 Model* getModel( int x, int y );
+     Model* getModel( int x, int y );
 	 bool selected( Model* mod );
 	 void select( Model* mod );
 	 void unSelect( Model* mod );

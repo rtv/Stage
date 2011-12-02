@@ -115,7 +115,7 @@ namespace Stg
       return( &regions[ x + y * SUPERREGIONWIDTH ]);
     }
 	 
-    void DrawOccupancy(unsigned int layer) const;
+    void DrawOccupancy(void) const;
     void DrawVoxels(unsigned int layer) const;
 	 	 
     inline void AddBlock();
