@@ -11,151 +11,178 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sstream>
+#include <iostream>
+#include <cmath>
+
 #include "stage.hh"
-using namespace Stg;
 
-#include "config.h"
-
-double speed = 0.400;
-double turnrate = M_PI/3.0;
-
-typedef struct
+class Robot
 {
-  ModelLaser* laser;
-  ModelPosition* position;
-  ModelRanger* ranger;
-  ModelFiducial* fiducial;
-  ModelBlobfinder* blobfinder;
-} robot_t;
+public:
+    Stg::ModelPosition* position;
+    Stg::ModelRanger* ranger;
+};
 
-#define VSPEED 0.4 // meters per second
-#define WGAIN 1.0 // turn speed gain
-#define SAFE_DIST 0.1 // meters
-#define SAFE_ANGLE 0.3 // radians
+class Logic
+{
+public:
+    static int Callback(Stg::World* world, void* userarg)
+    {
+        Logic* lg = reinterpret_cast<Logic*>(userarg);
+        
+        lg->Tick(world);
+        
+        // never remove this call-back
+        return 0;
+    }
+    
+    Logic(unsigned int popsize)
+    : 
+    population_size(popsize),
+    robots(new Robot[population_size])
+    {
+
+    }
+    
+    void connect(Stg::World* world)
+    {
+        // connect the first population_size robots to this controller
+        for(unsigned int idx = 0; idx < population_size; idx++)
+        {
+            // the robots' models are named r0 .. r1999
+            std::stringstream name;
+            name << "r" << idx;
+            
+            // get the robot's model and subscribe to it
+            Stg::ModelPosition* posmod = reinterpret_cast<Stg::ModelPosition*>(
+                world->GetModel(name.str())
+                );
+            assert(posmod != 0);
+            
+            robots[idx].position = posmod;
+            robots[idx].position->Subscribe();
+            
+            // get the robot's ranger model and subscribe to it
+            Stg::ModelRanger* rngmod = reinterpret_cast<Stg::ModelRanger*>(
+                robots[idx].position->GetChild( "ranger:0" )
+                );
+            assert(rngmod != 0);
+            
+            robots[idx].ranger = rngmod;
+            robots[idx].ranger->Subscribe();
+        }
+        
+        // register with the world
+        world->AddUpdateCallback(Logic::Callback, reinterpret_cast<void*>(this));    
+    }
+    
+    ~Logic()
+    {
+        delete[] robots;
+    }
+    
+
+    void Tick(Stg::World*)
+    {
+        // the controllers parameters
+        const double vspeed = 0.4; // meters per second
+        const double wgain  = 1.0; // turn speed gain
+        const double safe_dist = 0.1; // meters
+        const double safe_angle = 0.3; // radians
+    
+        // each robot has a group of ir sensors
+        // each sensor takes one sample
+        // the forward sensor is the middle sensor
+        for(unsigned int idx = 0; idx < population_size; idx++)
+        {
+            Stg::ModelRanger* rgr = robots[idx].ranger;
+
+            // compute the vector sum of the sonar ranges	      
+            double dx=0, dy=0;
+
+            // the range model has multiple sensors
+            typedef std::vector<Stg::ModelRanger::Sensor>::const_iterator sensor_iterator;
+            const std::vector<Stg::ModelRanger::Sensor> sensors = rgr->GetSensors();
+            
+            for(sensor_iterator sensor = sensors.begin(); sensor != sensors.end(); sensor++)
+            {
+                // each sensor takes a single sample (as specified in the .world)
+                const double srange = (*sensor).ranges[0];
+                const double angle  = (*sensor).pose.a;
+                
+                dx += srange * std::cos(angle);
+                dy += srange * std::sin(angle);
+            } 
+            
+            if(dx == 0)
+                continue;
+            
+            if(dy == 0)
+                continue;
+            
+            // calculate the angle towards the farthest obstacle
+            const double resultant_angle = std::atan2( dy, dx );
+
+            // check whether the front is clear
+            const unsigned int forward_idx = sensors.size() / 2u - 1u;
+            
+            const double forwardm_range = sensors[forward_idx - 1].ranges[0];
+            const double forward_range  = sensors[forward_idx + 0].ranges[0]; 
+            const double forwardp_range = sensors[forward_idx + 1].ranges[0]; 
+            
+            bool front_clear = (
+                    (forwardm_range > safe_dist / 5.0) &&
+                    (forward_range > safe_dist) &&
+                    (forwardp_range > safe_dist / 5.0) &&
+                    (std::abs(resultant_angle) < safe_angle)
+                );
+            
+            // turn the sensor input into movement commands
+
+            // move forwards if the front is clear
+            const double forward_speed = front_clear ? vspeed : 0.0;
+            // do not strafe
+            const double side_speed = 0.0;	   
+            
+            // turn towards the farthest obstacle
+            const double turn_speed = wgain * resultant_angle;
+            
+            // finally, relay the commands to the robot
+            robots[idx].position->SetSpeed( forward_speed, side_speed, turn_speed );
+        }
+    }
+    
+protected:
+    unsigned int population_size;   
+    Robot* robots;
+};
 
 int main( int argc, char* argv[] )
 { 
-  printf( "%s %s benchmarker\n", PACKAGE, VERSION );
-
-  if( argc < 3 )
+    // check and handle the argumets
+    if( argc < 3 )
     {
-      puts( "Usage: stest <worldfile> <number of robots>" );
-      exit(0);
+        puts( "Usage: stest <worldfile> <number of robots>" );
+        exit(0);
     }
+    
+    const int popsize = atoi(argv[2] );
+
+    // initialize libstage
+    Stg::Init( &argc, &argv );
   
-  const int POPSIZE = atoi(argv[2] );
-
-  // initialize libstage
-  Stg::Init( &argc, &argv );
-  //StgWorld world;
-  StgWorldGui world(800, 700, "Stage Benchmark Program");
-
-  world.Load( argv[1] );
+    // create the world
+    //Stg::World world;
+    Stg::WorldGui world(800, 700, "Stage Benchmark Program");
+    world.Load( argv[1] );
   
-  char namebuf[256];  
-  robot_t* robots = new robot_t[POPSIZE];
-
-  for( int i=0; i<POPSIZE; i++ )
-    {
-       char* base = "r";
-       sprintf( namebuf, "%s%d", base, i );
-       robots[i].position = (ModelPosition*)world.GetModel( namebuf );
-       assert(robots[i].position);
-       robots[i].position->Subscribe();
-       
-//         robots[i].laser = (ModelLaser*)
-//         robots[i].position->GetUnsubscribedModelOfType( "laser" );	 
-//         assert(robots[i].laser);
-//         robots[i].laser->Subscribe();
-
-//        robots[i].fiducial = (ModelFiducial*)
-// 	 robots[i].position->GetUnsubscribedModelOfType( "fiducial" );	 
-//        assert(robots[i].fiducial);
-//        robots[i].fiducial->Subscribe();
-       
-       robots[i].ranger = (ModelRanger*)
-	 robots[i].position->GetUnsubscribedModelOfType( "ranger" );
-       assert(robots[i].ranger);
-       robots[i].ranger->Subscribe();
-
-//        robots[i].blobfinder = (ModelBlobfinder*)
-// 	 robots[i].position->GetUnsubscribedModelOfType( "blobfinder" );
-//        assert(robots[i].blobfinder);
-//        robots[i].blobfinder->Subscribe();
-    }
-  
-  // start the clock
-  //world.Start();
-  //puts( "done" );
-  
-  while( ! world.TestQuit() )
-    if( world.RealTimeUpdate() )
-      //   if( world.Update() )
-      for( int i=0; i<POPSIZE; i++ )
-	{
-	  
-	  //continue;
-
-	  ModelRanger* rgr = robots[i].ranger;
- 	  
-	  if( rgr->samples == NULL )
-	    continue;
-	  
-	  // compute the vector sum of the sonar ranges	      
-	  double dx=0, dy=0;
-	  
-	  for( unsigned int s=0; s< rgr->sensor_count; s++ )
-	    {
-	      double srange = rgr->samples[s]; 
-	      
-	      dx += srange * cos( rgr->sensors[s].pose.a );
-	      dy += srange * sin( rgr->sensors[s].pose.a );
-	    }
-		 
-	 if( dy == 0 )
-	   continue;
-	       
-       if( dx == 0 )
-	 continue;
-	       
-       assert( dy != 0 );
-       assert( dx != 0 );
-	       
-	double resultant_angle = atan2( dy, dx );
-	double forward_speed = 0.0;
-	double side_speed = 0.0;	   
-	double turn_speed = WGAIN * resultant_angle;
-	
-	int forward = rgr->sensor_count/2 -1 ;
-	// if the front is clear, drive forwards
-	if( (rgr->samples[forward-1] > SAFE_DIST/5.0) &&
-	    (rgr->samples[forward  ] > SAFE_DIST) &&
-	    (rgr->samples[forward+1] > SAFE_DIST/5.0) && 
-	    (fabs( resultant_angle ) < SAFE_ANGLE) )
-	  {
-	    forward_speed = VSPEED;
-	  }
-	
-// 	// send a command to the robot
-// 	velocity_t vel;
-// 	bzero(&vel,sizeof(vel));
-//         vel.x = forward_speed;
-// 	vel.y = side_speed;
-// 	vel.z = 0;
-// 	vel.a = turn_speed;
-	
-	     //printf( "robot %s [%.2f %.2f %.2f %.2f]\n",
-	     //robots[i].position->Token(), vel.x, vel.y, vel.z, vel.a );
-	     
-	//  uint32_t bcount=0;     
-	//blobfinder_blob_t* blobs = robots[i].blobfinder->GetBlobs( &bcount );    
-
-     //printf( "robot %s sees %u blobs\n", robots[i].blobfinder->Token(), bcount );	       
-
-	robots[i].position->SetSpeed( forward_speed, side_speed, turn_speed );
-    }
-  
-
-  delete[] robots;  
-  exit( 0 );
+    // create the logic and connect it to the world
+    Logic logic(popsize);
+    logic.connect(&world);
+    
+    // and then run the simulation
+    world.Run();
+    
+    return 0;
 }
