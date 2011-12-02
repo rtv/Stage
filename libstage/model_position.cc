@@ -214,7 +214,7 @@ void ModelPosition::Load( void )
   est_pose.y = dy * cosa - dx * sina;
   
   // zero position error: assume we know exactly where we are on startup
-  memset( &est_pose_error, 0, sizeof(est_pose_error));
+    est_pose_error.Zero();// memset( &est_pose_error, 0, sizeof(est_pose_error));
 
   
   // odometry model parameters

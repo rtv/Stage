@@ -40,9 +40,7 @@ void Ancestor::RemoveChild( Model* mod )
 
 Pose Ancestor::GetGlobalPose() const
 {
-	Pose pose;
-	memset( &pose, 0, sizeof(pose));
-	return pose;
+	return Pose();
 }
 
 void Ancestor::ForEachDescendant( model_callback_t func, void* arg )
