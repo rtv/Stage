@@ -204,6 +204,30 @@ void World::DestroySuperRegion( SuperRegion* sr )
   delete sr;
 }
 
+void World::Run()
+{
+    // first check wheter there is a single gui world
+    bool found_gui = false;
+    FOR_EACH( world_it, world_set )
+    {
+        found_gui |= (*world_it)->IsGUI();
+    }
+    if(found_gui && (world_set.size() != 1))
+    {
+        PRINT_WARN( "When using the GUI only a single world can be simulated." );
+        exit(-1);      
+    }
+    
+    if(found_gui)
+    {
+        Fl::run();
+    }
+    else
+    {
+        while(!UpdateAll());
+    }
+}
+
 bool World::UpdateAll()
 {  
   bool quit( true );
