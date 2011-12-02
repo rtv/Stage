@@ -48,7 +48,8 @@ namespace Stg
     void RemoveBlock( Block* b, unsigned int index );
     void AddBlock( Block* b, unsigned int index );
     
-    inline const std::vector<Block*>& GetBlocks( unsigned int index ){ return blocks[index]; }
+    inline const std::vector<Block*>& GetBlocks( unsigned int index )
+    { return blocks[index]; }
 	 
     Region* region;  
   };  // class Cell
@@ -59,35 +60,25 @@ namespace Stg
     friend class World; // for raytracing
 	 
   private:
-    Cell* cells;
+    std::vector<Cell> cells;
     unsigned long count; // number of blocks rendered into this region
-	 
-    // vector of garbage collected cell arrays to reallocate before
-    // using new in GetCell()
-    static std::vector<Cell*> dead_pool;
 	 
   public:
     Region();
     ~Region();
 	 
-    inline Cell* GetCell( int32_t x, int32_t y )
+    inline Cell* GetCell( int32_t x, int32_t y ) 
     {	
-      if( cells == NULL )
+      if( cells.size() == 0 )
 	{
 	  assert(count == 0 );
-			 
-	  if( dead_pool.size() )
-	    {
-	      cells = dead_pool.back();
-	      dead_pool.pop_back();
-	      //printf( "reusing cells @ %p (pool %u)\n", cells, dead_pool.size() );
-	    }
-	  else
-	    cells = new Cell[REGIONSIZE];
-		  	 
+	  
+	  cells.resize( REGIONSIZE );
+	  
 	  for( int32_t c=0; c<REGIONSIZE;++c)
 	    cells[c].region = this;
 	} 
+      
       return( &cells[ x + y * REGIONWIDTH ] );
     }
 	 	 

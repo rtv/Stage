@@ -1276,8 +1276,8 @@ namespace Stg
     /** record the list entries for the cells where this block is rendered */
     std::vector< std::list<Block*>::iterator > list_entries;
 		
-    /** record the cells into which this block has been rendered to
-	UnMapping them very quickly. */  
+    /** record the cells into which this block has been rendered so we can 
+	remove them very quickly. */  
     std::vector<Cell*> rendered_cells[2];
 		
     /** find the position of a block's point in model coordinates
