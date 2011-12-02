@@ -7,19 +7,21 @@
  */
 
 #include <sstream>
-
 #include "texture_manager.hh"
 #include "file_manager.hh"
 using namespace Stg;
 
 GLuint TextureManager::loadTexture( const char *filename )
 {
+//    if( filename == NULL )
+  //      return 0;
+    
 	GLuint texName;
 	Fl_Shared_Image *img = Fl_Shared_Image::get( filename );
 
-	if( img == NULL ) {
+	if( img == NULL) {
 		fprintf( stderr, "unable to open image: %s\n", filename );
-		exit(-1);
+		//exit(-1);
 		return 0;
 	}
 	
