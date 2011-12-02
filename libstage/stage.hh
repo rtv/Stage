@@ -2434,10 +2434,9 @@ namespace Stg
     {  
       return( ( GetGlobalPose() + geom.pose ) + pose );
     }
-		
-    /** Fill an array of global pixels from an array of local points. */
-    void LocalToPixels( const std::vector<point_t>& local,
-			std::vector<point_int_t>& pixels) const;
+    
+    /** Return a vector of global pixels corresponding to a vector of local points. */
+    std::vector<point_int_t>  LocalToPixels( const std::vector<point_t>& local ) const;
 		
     /** Return the 2d point in world coordinates of a 2d point
 	specified in the model's local coordinate system */

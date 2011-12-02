@@ -738,6 +738,7 @@ void World::ClearRays()
   ray_list.clear();
 }
 
+// Perform multiple raytraces evenly spaced over an angular field of view
 void World::Raytrace( const Pose &gpose, // global pose
 		      const meters_t range,
 		      const radians_t fov,
@@ -830,6 +831,9 @@ RaytraceResult World::Raytrace( const Ray& r )
   // Stage spends up to 95% of its time in this loop! It would be
   // neater with more function calls encapsulating things, but even
   // inline calls have a noticeable (2-3%) effect on performance.
+
+  // several useful asserts are commented out so that Stage is not too
+  // slow in debug builds. Add them in if chasing a suspected raytrace bug
   while( n > 0  ) // while we are still not at the ray end
     { 
       SuperRegion* sr( GetSuperRegion(point_int_t(GETSREG(globx),GETSREG(globy))));
@@ -848,7 +852,9 @@ RaytraceResult World::Raytrace( const Ray& r )
 	  int32_t cy( GETCELL(globy) );
 
 	  Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
-	  assert(c); // should be good: we know the region contains objects
+
+	  // this assert makes Stage slow when compiled for debug
+	  //  assert(c); // should be good: we know the region contains objects
 
 	  // while within the bounds of this region and while some ray remains
 	  // we'll tweak the cell pointer directly to move around quickly
@@ -859,7 +865,7 @@ RaytraceResult World::Raytrace( const Ray& r )
 	      FOR_EACH( it, c->blocks[layer] )
 		{	      	      
 		  Block* block( *it );
-		  assert( block );
+		  // assert( block );
 
 		  // skip if not in the right z range
 		  if( r.ztest && 
@@ -1011,6 +1017,7 @@ void World::Reload( void )
   ForEachDescendant( _reload_cb, NULL );
 }
 
+// add a block to each cell described by a polygon in world coordinates
 void World::MapPoly( const std::vector<point_int_t>& pts, Block* block, unsigned int layer )
 {
   const size_t pt_count( pts.size() );
@@ -1043,9 +1050,7 @@ void World::MapPoly( const std::vector<point_int_t>& pts, Block* block, unsigned
 							 GETSREG(globy)))
 		       ->GetRegion( GETREG(globx), 
 				    GETREG(globy)));										
-	  assert(reg);
-					
-	  //printf( "REGION %p\n", reg );
+	  // assert(reg);
 					
 	  // add all the required cells in this region before looking up
 	  // another region			
@@ -1091,22 +1096,15 @@ SuperRegion* World::AddSuperRegion( const point_int_t& sup )
 {
   SuperRegion* sr( CreateSuperRegion( sup ) );
 
-  //printf( "Created super region [%d, %d] %p\n", sup.x, sup.y, sr );
-
-  // the bounds of the world have changed
-  //printf( "lower left (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
-	
   // set the lower left corner of the new superregion
   Extend( point3_t( (sup.x << SRBITS) / ppm,
 		    (sup.y << SRBITS) / ppm,
 		    0 ));
-	
+  
   // top right corner of the new superregion
   Extend( point3_t( ((sup.x+1) << SRBITS) / ppm,
 		    ((sup.y+1) << SRBITS) / ppm,
-		    0 ));
-  //printf( "top right (%.2f,%.2f,%.2f)\n", pt.x, pt.y, pt.z );
-  
+		    0 ));  
   return sr;
 }
 

@@ -209,8 +209,7 @@ void Block::Map( unsigned int layer )
     }
   
   // now calculate the global pixel coords of the block vertices
-  std::vector<point_int_t> gpts;
-  mod->LocalToPixels( mpts, gpts );
+  const std::vector<point_int_t> gpts = mod->LocalToPixels( mpts );
 	
   // and render this block's polygon into the world
   mod->world->MapPoly( gpts, this, layer );

@@ -136,10 +136,12 @@
 
 #include <map>
 #include <sstream> // for converting values to strings
+#include <ltdl.h> // for library module loading
 
-//#define DEBUG 0
+#include "config.h" // for build-time config
 #include "stage.hh"
 #include "worldfile.hh"
+#include "file_manager.hh"
 using namespace Stg;
 
 // static members
@@ -595,9 +597,10 @@ point_t Model::LocalToGlobal( const point_t& pt) const
 }
 
 
-void Model::LocalToPixels( const std::vector<point_t>& local,
-			   std::vector<point_int_t>& global) const
+std::vector<point_int_t> Model::LocalToPixels( const std::vector<point_t>& local ) const
 {
+  std::vector<point_int_t> global;
+  
   const Pose gpose( GetGlobalPose() + geom.pose );
   Pose ptpose;
   
@@ -607,6 +610,8 @@ void Model::LocalToPixels( const std::vector<point_t>& local,
       global.push_back( point_int_t( (int32_t)floor( ptpose.x * world->ppm) ,
 				     (int32_t)floor( ptpose.y * world->ppm) ));
     }
+
+  return global;
 }
 
 void Model::MapWithChildren( unsigned int layer )
@@ -1232,3 +1237,492 @@ void Model::Flag::Draw(  GLUquadric* quadric )
 
   glCallList( displaylist );
 }
+
+
+
+void Model::SetGeom( const Geom& val )
+{  
+  UnMapWithChildren(0);
+  UnMapWithChildren(1);
+  
+  geom = val;
+  
+  blockgroup.CalcSize();
+  
+  NeedRedraw();
+  
+  MapWithChildren(0);
+  MapWithChildren(1);
+    
+  CallCallbacks( CB_GEOM );
+}
+
+void Model::SetColor( Color val )
+{
+  color = val;
+  NeedRedraw();
+}
+
+void Model::SetMass( kg_t val )
+{
+  mass = val;
+}
+
+void Model::SetStall( bool val )
+{
+  stall = val;
+}
+
+void Model::SetGripperReturn( bool val )
+{
+  vis.gripper_return = val;
+}
+
+void Model::SetFiducialReturn(  int val )
+{
+  vis.fiducial_return = val;
+  
+  // non-zero values mean we need to be in the world's set of
+  // detectable models
+  if( val == 0 )
+    world->FiducialErase( this );
+  else
+    world->FiducialInsert( this );
+}
+
+void Model::SetFiducialKey( int val )
+{
+  vis.fiducial_key = val;
+}
+
+void Model::SetObstacleReturn( bool val )
+{
+  vis.obstacle_return = val;
+}
+
+void Model::SetBlobReturn( bool val )
+{
+  vis.blob_return = val;
+}
+
+void Model::SetRangerReturn( double val )
+{
+  vis.ranger_return = val;
+}
+
+void Model::SetBoundary( bool val )
+{
+  boundary = val;
+}
+
+void Model::SetGuiNose(  bool val )
+{
+  gui.nose = val;
+}
+
+void Model::SetGuiMove( bool val )
+{
+  gui.move = val;
+}
+
+void Model::SetGuiGrid(  bool val )
+{
+  gui.grid = val;
+}
+
+void Model::SetGuiOutline( bool val )
+{
+  gui.outline = val;
+}
+
+void Model::SetWatts( watts_t val )
+{
+  watts = val;
+}
+
+void Model::SetMapResolution(  meters_t val )
+{
+  map_resolution = val;
+}
+
+// set the pose of model in global coordinates 
+void Model::SetGlobalPose( const Pose& gpose )
+{
+  SetPose( parent ? parent->GlobalToLocal( gpose ) : gpose );
+}
+
+int Model::SetParent( Model* newparent)
+{  
+  Pose oldPose = GetGlobalPose();
+
+  // remove the model from its old parent (if it has one)
+  if( parent )
+    parent->RemoveChild( this );
+  else
+    world->RemoveChild( this );
+  // link from the model to its new parent
+  this->parent = newparent;
+  
+  if( newparent )
+    newparent->AddChild( this );
+  else
+    world->AddModel( this );
+
+  CallCallbacks( CB_PARENT );
+
+  SetGlobalPose( oldPose ); // Needs to recalculate position due to change in parent
+  
+  return 0; //ok
+}
+
+// get the model's position in the global frame
+Pose Model::GetGlobalPose() const
+{ 
+  // if I'm a top level model, my global pose is my local pose
+  if( parent == NULL )
+    return pose;
+  
+  // otherwise    
+  Pose global_pose = parent->GetGlobalPose() + pose;		
+  
+  if ( parent->stack_children ) // should we be on top of our parent?
+    global_pose.z += parent->geom.size.z;
+  
+  return global_pose;
+}
+
+
+// set the model's pose in the local frame
+void Model::SetPose( const Pose& newpose )
+{
+  // if the pose has changed, we need to do some work
+  if( memcmp( &pose, &newpose, sizeof(Pose) ) != 0 )
+    {
+      pose = newpose;
+      pose.a = normalize(pose.a);
+
+      //       if( isnan( pose.a ) )
+      // 		  printf( "SetPose bad angle %s [%.2f %.2f %.2f %.2f]\n",
+      // 					 token, pose.x, pose.y, pose.z, pose.a );
+			
+      NeedRedraw();
+
+      UnMapWithChildren(0);
+      UnMapWithChildren(1);
+
+      MapWithChildren(0);
+      MapWithChildren(1);
+
+      world->dirty = true;
+    }
+	
+  CallCallbacks( CB_POSE );
+}
+
+void Model::Load()
+{  
+  assert( wf );
+  assert( wf_entity );
+  
+  PRINT_DEBUG1( "Model \"%s\" loading...", token.c_str() );
+  
+  // choose the thread to run in, if thread_safe > 0 
+  event_queue_num = wf->ReadInt( wf_entity, "event_queue", event_queue_num );
+
+  if( wf->PropertyExists( wf_entity, "joules" ) )
+    {
+      if( !power_pack )
+	power_pack = new PowerPack( this );
+		
+      joules_t j = wf->ReadFloat( wf_entity, "joules", 
+				  power_pack->GetStored() ) ;	 
+		
+      /* assume that the store is full, so the capacity is the same as
+	 the charge */
+      power_pack->SetStored( j );
+      power_pack->SetCapacity( j );
+    }
+
+  if( wf->PropertyExists( wf_entity, "joules_capacity" ) )
+    {
+      if( !power_pack )
+	power_pack = new PowerPack( this );
+		
+      power_pack->SetCapacity( wf->ReadFloat( wf_entity, "joules_capacity",
+					      power_pack->GetCapacity() ) ); 		
+    }
+
+  if( wf->PropertyExists( wf_entity, "kjoules" ) )
+    {
+      if( !power_pack )
+	power_pack = new PowerPack( this );
+		
+      joules_t j = 1000.0 * wf->ReadFloat( wf_entity, "kjoules", 
+					   power_pack->GetStored() ) ;	 
+		
+      /* assume that the store is full, so the capacity is the same as
+	 the charge */
+      power_pack->SetStored( j );
+      power_pack->SetCapacity( j );
+    }
+  
+  if( wf->PropertyExists( wf_entity, "kjoules_capacity" ) )
+    {
+      if( !power_pack )
+	power_pack = new PowerPack( this );
+		
+      power_pack->SetCapacity( 1000.0 * wf->ReadFloat( wf_entity, "kjoules_capacity",
+						       power_pack->GetCapacity() ) ); 		
+    }
+
+    
+  watts = wf->ReadFloat( wf_entity, "watts", watts );    
+  watts_give = wf->ReadFloat( wf_entity, "give_watts", watts_give );    
+  watts_take = wf->ReadFloat( wf_entity, "take_watts", watts_take );
+  
+  debug = wf->ReadInt( wf_entity, "debug", debug );
+  
+  const std::string& name = wf->ReadString(wf_entity, "name", token );
+  if( name != token )
+    SetToken( name );
+  
+  //PRINT_WARN1( "%s::Load", token );
+  
+  Geom g( GetGeom() );
+  
+  if( wf->PropertyExists( wf_entity, "origin" ) )
+    g.pose.Load( wf, wf_entity, "origin" );
+  
+  if( wf->PropertyExists( wf_entity, "size" ) )
+    g.size.Load( wf, wf_entity, "size" );
+  
+  SetGeom( g );
+
+  if( wf->PropertyExists( wf_entity, "pose" ))
+    SetPose( GetPose().Load( wf, wf_entity, "pose" ) );
+  
+
+  if( wf->PropertyExists( wf_entity, "color" ))
+    {      
+      Color col( 1,0,0 ); // red;
+      const std::string& colorstr = wf->ReadString( wf_entity, "color", "" );
+      if( colorstr != "" )
+	{
+	  if( colorstr == "random" )
+	    col = Color( drand48(), drand48(), drand48() );
+	  else
+	    col = Color( colorstr );
+	}
+      this->SetColor( col );
+    }        
+  
+  this->SetColor( GetColor().Load( wf, wf_entity ) );
+  
+  if( wf->ReadInt( wf_entity, "noblocks", 0 ) )
+    {
+      if( has_default_block )
+	{
+	  blockgroup.Clear();
+	  has_default_block = false;
+	  blockgroup.CalcSize();
+	}		
+    }
+  
+  if( wf->PropertyExists( wf_entity, "bitmap" ) )
+    {
+      const std::string bitmapfile = wf->ReadString( wf_entity, "bitmap", "" );
+      if( bitmapfile == "" )
+	PRINT_WARN1( "model %s specified empty bitmap filename\n", Token() );
+		
+      if( has_default_block )
+	{
+	  blockgroup.Clear();
+	  has_default_block = false;
+	}
+		
+      blockgroup.LoadBitmap( this, bitmapfile, wf );
+    }
+  
+  if( wf->PropertyExists( wf_entity, "boundary" ))
+    {
+      this->SetBoundary( wf->ReadInt(wf_entity, "boundary", this->boundary  ));
+		
+      if( boundary )
+	{
+	  //PRINT_WARN1( "setting boundary for %s\n", token );
+			 
+	  blockgroup.CalcSize();
+			 
+	  double epsilon = 0.01;	      
+	  Size bgsize = blockgroup.GetSize();
+			 
+	  AddBlockRect(blockgroup.minx,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
+	  AddBlockRect(blockgroup.minx,blockgroup.miny, bgsize.x, epsilon, bgsize.z );	      
+	  AddBlockRect(blockgroup.minx,blockgroup.maxy-epsilon, bgsize.x, epsilon, bgsize.z );	      
+	  AddBlockRect(blockgroup.maxx-epsilon,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
+	}     
+    }	  
+  
+  this->stack_children =
+    wf->ReadInt( wf_entity, "stack_children", this->stack_children );
+  
+  kg_t m = wf->ReadFloat(wf_entity, "mass", this->mass );
+  if( m != this->mass ) 
+    SetMass( m );
+  	
+  vis.Load( wf, wf_entity );
+  SetFiducialReturn( vis.fiducial_return ); // may have some work to do
+  
+  gui.Load( wf, wf_entity );
+
+  double res = wf->ReadFloat(wf_entity, "map_resolution", this->map_resolution );
+  if( res != this->map_resolution )
+    SetMapResolution( res );
+  
+  if( wf->PropertyExists( wf_entity, "friction" ))
+    {
+      this->SetFriction( wf->ReadFloat(wf_entity, "friction", this->friction ));
+    }
+  
+  if( CProperty* ctrlp = wf->GetProperty( wf_entity, "ctrl" ) )
+    {
+      for( unsigned int index=0; index < ctrlp->values.size(); index++ )
+	{
+			 
+	  const char* lib = wf->GetPropertyValue( ctrlp, index );
+			 
+	  if( !lib )
+	    printf( "Error - NULL library name specified for model %s\n", Token() );
+	  else
+	    LoadControllerModule( lib );
+	}
+    }
+    
+  // internally interval is in usec, but we use msec in worldfiles
+  interval = 1000 * wf->ReadInt( wf_entity, "update_interval", interval/1000 );
+
+  Say( wf->ReadString(wf_entity, "say", "" ));
+  
+  trail_length = wf->ReadInt( wf_entity, "trail_length", trail_length );
+  trail.resize( trail_length );
+
+  trail_interval = wf->ReadInt( wf_entity, "trail_interval", trail_interval );
+
+  this->alwayson = wf->ReadInt( wf_entity, "alwayson",  alwayson );
+  if( alwayson )
+    Subscribe();
+	
+  // call any type-specific load callbacks
+  this->CallCallbacks( CB_LOAD );
+  
+  // we may well have changed blocks or geometry
+  blockgroup.CalcSize();
+  
+  UnMapWithChildren(0);
+  UnMapWithChildren(1);
+  MapWithChildren(0);
+  MapWithChildren(1);
+  
+  if( this->debug )
+    printf( "Model \"%s\" is in debug mode\n", Token() );
+
+  PRINT_DEBUG1( "Model \"%s\" loading complete", Token() );
+}
+
+
+void Model::Save( void )
+{  
+  //printf( "Model \"%s\" saving...\n", Token() );
+
+  // some models were not loaded, so have no worldfile. Just bail here.
+  if( wf == NULL )
+    return;
+
+  assert( wf_entity );
+	
+  PRINT_DEBUG5( "saving model %s pose [ %.2f, %.2f, %.2f, %.2f]",
+		token.c_str(),
+		pose.x,
+		pose.y,
+		pose.z,
+		pose.a );
+	
+  // just in case
+  pose.a = normalize( pose.a );
+  geom.pose.a = normalize( geom.pose.a );
+  
+  if( wf->PropertyExists( wf_entity, "pose" ) )
+    pose.Save( wf, wf_entity, "pose" );
+  
+  if( wf->PropertyExists( wf_entity, "size" ) )
+    geom.size.Save( wf, wf_entity, "size" );
+  
+  if( wf->PropertyExists( wf_entity, "origin" ) )
+    geom.pose.Save( wf, wf_entity, "origin" );
+
+  vis.Save( wf, wf_entity );
+
+  // call any type-specific save callbacks
+  CallCallbacks( CB_SAVE );
+
+  PRINT_DEBUG1( "Model \"%s\" saving complete.", token.c_str() );
+}
+
+
+void Model::LoadControllerModule( const char* lib )
+{
+  //printf( "[Ctrl \"%s\"", lib );
+  //fflush(stdout);
+
+  /* Initialise libltdl. */
+  int errors = lt_dlinit();
+  if (errors)
+    {
+      printf( "Libtool error: %s. Failed to init libtool. Quitting\n",
+	      lt_dlerror() ); // report the error from libtool
+      puts( "libtool error #1" );
+      fflush( stdout );
+      exit(-1);
+    }
+
+  lt_dlsetsearchpath( FileManager::stagePath().c_str() );
+
+  // PLUGIN_PATH now defined in config.h
+  lt_dladdsearchdir( PLUGIN_PATH );
+
+  lt_dlhandle handle = NULL;
+  
+  // the library name is the first word in the string
+  char libname[256];
+  sscanf( lib, "%s %*s", libname );
+  
+  if(( handle = lt_dlopenext( libname ) ))
+    {
+      //printf( "]" );
+		
+      model_callback_t initfunc = (model_callback_t)lt_dlsym( handle, "Init" );
+      if( initfunc  == NULL )
+	{
+	  printf( "Libtool error: %s. Something is wrong with your plugin. Quitting\n",
+		  lt_dlerror() ); // report the error from libtool
+	  puts( "libtool error #1" );
+	  fflush( stdout );
+	  exit(-1);
+	}
+		
+      AddCallback( CB_INIT, initfunc, new CtrlArgs(lib,World::ctrlargs) ); // pass complete string into initfunc
+    }
+  else
+    {
+      printf( "Libtool error: %s. Can't open your plugin controller. Quitting\n",
+	      lt_dlerror() ); // report the error from libtool
+		
+      PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", lib );
+      puts( "libtool error #2" );
+      fflush( stdout );
+      exit(-1);
+    }
+  
+  fflush(stdout);
+}
+
