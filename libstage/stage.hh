@@ -904,7 +904,6 @@ namespace Stg
     std::list<float*> ray_list;///< List of rays traced for debug visualization
     usec_t sim_time; ///< the current sim time in this world in microseconds
     std::map<point_int_t,SuperRegion*> superregions;
-    SuperRegion* sr_cached; ///< The last superregion looked up by this world
 	 
     std::vector< std::vector<Model*> > update_lists;  
 	 

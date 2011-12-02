@@ -152,7 +152,6 @@ World::World( const std::string& name,
   ray_list(),  
   sim_time( 0 ),
   superregions(),
-  sr_cached(NULL),
   updates( 0 ),
   wf( NULL ),
   paused( false ),
@@ -1007,6 +1006,7 @@ void World::MapPoly( const std::vector<point_int_t>& pts, Block* block, unsigned
       const int32_t ay(abs(dy));  
       const int32_t bx(2*ax);	
       const int32_t by(2*ay);	 
+
       int32_t exy(ay-ax); 
       int32_t n(ax+ay);
 			
@@ -1035,8 +1035,8 @@ void World::MapPoly( const std::vector<point_int_t>& pts, Block* block, unsigned
 					
 	  // while inside the region, manipulate the Cell pointer directly
 	  while( (cx>=0) && (cx<REGIONWIDTH) && 
-		 (cy>=0) && (cy<REGIONWIDTH) && 
-		 n > 0 )
+	  	 (cy>=0) && (cy<REGIONWIDTH) && 
+	  	 n > 0 )
 	    {					
 	      c->AddBlock(block, layer ); 
 							
@@ -1089,12 +1089,6 @@ SuperRegion* World::AddSuperRegion( const point_int_t& sup )
 
 inline SuperRegion* World::GetSuperRegion( const point_int_t& org )
 {
-  // around 99% of the time the SR is the same as last
-  // lookup - cache  gives a 4% overall speed up :)
-	
-  if( sr_cached && sr_cached->GetOrigin() == org )
-    return sr_cached;
-	
   SuperRegion* sr(NULL);
   
   // I despise some STL syntax sometimes...
@@ -1102,8 +1096,6 @@ inline SuperRegion* World::GetSuperRegion( const point_int_t& org )
   
   if( it != superregions.end() )
     sr = it->second;
-  
-  if( sr ) sr_cached = sr;
   
   return sr;
 }
@@ -1116,7 +1108,6 @@ inline SuperRegion* World::GetSuperRegionCreate( const point_int_t& org )
     {
       sr = AddSuperRegion( org );  
       assert( sr ); 
-      sr_cached = sr;
     }
   return sr;
 }
