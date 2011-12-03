@@ -1,5 +1,5 @@
 
-Copyright Richard Vaughan and contributors 1998-2010
+Copyright Richard Vaughan and contributors 1998-2011
 Part of the Player Project (http://playerstage.org)
 
 License

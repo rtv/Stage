@@ -1,5 +1,29 @@
+Version 4.1.0
+-------------
+- many bugfixes
+
+- visualization options can be loaded from and saved to worldfiles
+
+- API change: new World::Run() methed provides the same interface to
+  GUI and non-GUI worlds (by chmp@github)
+
+- saved screenshots are numbered with leading zeros for convenience
+  when using movie-making tools (by mani-monaj@github)
+
+- major performance enhancement: position updates now run in parallel
+  with sensor updates, using a double-buffer-style alternating pair of
+  occupancy grids
+
+- several minor performance enhancements
+
+- much faster debug visualization (occupancy grid and voxel views)
+
+
+Richard Vaughan (rtv) vaughan@sfu.ca - XX TODO
+
 Version 4.0.1
 -------------
+
 - Bugfixes
 - more sparing use of memory to support very large worlds (square kms!)
 
