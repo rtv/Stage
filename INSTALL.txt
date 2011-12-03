@@ -6,7 +6,7 @@ Tested 2011.8.5 on:
  - OS X 10.7 Lion
  - Ubuntu 11.04
 
-1) Install Stage's dependencies:
+1) Install Stage's dependencies (for Ubuntu and OS X specific instructions, see the next paragraph).
 
  FLTK >=1.1
  git
@@ -16,9 +16,17 @@ Tested 2011.8.5 on:
  jpeglib
  OpenGLU 
 
-On the Mac I use Homebrew, since MacPorts installs way more than Stage needs (http://mxcl.github.com/homebrew/)
+On Ubuntu 11.10 I install these packages:
+
+$ sudo apt-get install git cmake g++ fltk1.1-dev libjpeg8-dev libpng12-dev libglu1-mesa-dev libltdl-dev	
+
+On the Mac I use Homebrew, since MacPorts installs way more than Stage
+needs (http://mxcl.github.com/homebrew/). First, install Apple's XCode
+and enable the command-line build tools. Then brew the dependencies:
 
 $ brew install --HEAD fltk cmake git pkg-config
+
+(OS X has the graphics libs installed by default with XCode). 
 
 If you want to use Player/Stage, install and test Player now.
 
