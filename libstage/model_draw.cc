@@ -544,9 +544,6 @@ void Model::DrawFlagList( void )
       glVertex3f( gp.x+0, gp.y+d, gp.z+0 +z);      
       glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
 
-      glVertex3f( gp.x-d, gp.y+0, gp.z+0 +z);
-      glVertex3f( gp.x+0, gp.y-d, gp.z+0 +z);      
-      glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
 
       glVertex3f( gp.x-d, gp.y+0, gp.z+0 +z);
       glVertex3f( gp.x+0, gp.y-d, gp.z+0 +z);      
@@ -557,12 +554,21 @@ void Model::DrawFlagList( void )
       glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
 
       glVertex3f( gp.x+d, gp.y+0, gp.z+0 +z);
-      glVertex3f( gp.x+0, gp.y+d, gp.z+0 +z);      
-      glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
-
-      glVertex3f( gp.x+d, gp.y+0, gp.z+0 +z);
       glVertex3f( gp.x+0, gp.y-d, gp.z+0 +z);      
       glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
+
+
+      // for wire-frame we only need half of the 8 triangles
+      
+      //glVertex3f( gp.x+d, gp.y+0, gp.z+0 +z);
+      //glVertex3f( gp.x+0, gp.y+d, gp.z+0 +z);      
+      //glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
+      
+      //glVertex3f( gp.x-d, gp.y+0, gp.z+0 +z);
+      //glVertex3f( gp.x+0, gp.y-d, gp.z+0 +z);      
+      //glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
+
+      // and two more...
 
       z += sz;
     }
