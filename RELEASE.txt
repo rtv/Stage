@@ -2,6 +2,9 @@ Version 4.1.0
 -------------
 - many bugfixes
 
+- support for basic dynamics: position models simulate acceleration
+  and have a new acceleration control mode.
+
 - visualization options can be loaded from and saved to worldfiles
 
 - API change: new World::Run() methed provides the same interface to

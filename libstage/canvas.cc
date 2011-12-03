@@ -910,8 +910,15 @@ void Canvas::renderFrame()
     }
   
   if( showFlags ) 
-    FOR_EACH( it, models_sorted )
-      (*it)->DrawFlagList();
+    {
+      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+      glBegin( GL_TRIANGLES );
+
+      FOR_EACH( it, models_sorted )
+	(*it)->DrawFlagList();
+
+      glEnd();
+    }
 
   if( showTrailArrows )
     FOR_EACH( it, models_sorted )

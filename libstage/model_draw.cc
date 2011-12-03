@@ -517,37 +517,55 @@ void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha,
 }
 
 
+//static GLUquadric* quadric = NULL;
+
 void Model::DrawFlagList( void )
 {	
   if( flag_list.size() < 1 )
     return;
   
-  PushLocalCoords();
-  
-  glPolygonMode( GL_FRONT, GL_FILL );
-
-  GLUquadric* quadric = gluNewQuadric();
-  glTranslatef(0,0,1); // jump up
-  Pose gpose = GetGlobalPose();
-  glRotatef( 180 + rtod(-gpose.a),0,0,1 );
+  Pose gp = GetGlobalPose();
+  GLfloat z = 1.0;
   
   for( std::list<Flag*>::reverse_iterator it( flag_list.rbegin()); 
        it != flag_list.rend(); 
        it++ )
     {		
-      Flag* flag = *it;
+      double sz = (*it)->GetSize();      
+      double d = sz/2.0;
+      
+      (*it)->GetColor().GLSet();
+           
+      glVertex3f( gp.x+d, gp.y+0, gp.z+0 +z);
+      glVertex3f( gp.x+0, gp.y+d, gp.z+0 +z);      
+      glVertex3f( gp.x+0, gp.y+0, gp.z+d +z);
 
-      double sz = flag->GetSize();
+      glVertex3f( gp.x+d, gp.y+0, gp.z+0 +z);
+      glVertex3f( gp.x+0, gp.y+d, gp.z+0 +z);      
+      glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
 
-      glTranslatef( 0, 0, sz/2.0 );			
-      flag->Draw( quadric );			
-      glTranslatef( 0, 0, sz/2.0 );
+      glVertex3f( gp.x-d, gp.y+0, gp.z+0 +z);
+      glVertex3f( gp.x+0, gp.y-d, gp.z+0 +z);      
+      glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
+
+      glVertex3f( gp.x-d, gp.y+0, gp.z+0 +z);
+      glVertex3f( gp.x+0, gp.y-d, gp.z+0 +z);      
+      glVertex3f( gp.x+0, gp.y+0, gp.z+d +z);
+
+      glVertex3f( gp.x-d, gp.y+0, gp.z+0 +z);
+      glVertex3f( gp.x+0, gp.y+d, gp.z+0 +z);      
+      glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
+
+      glVertex3f( gp.x+d, gp.y+0, gp.z+0 +z);
+      glVertex3f( gp.x+0, gp.y+d, gp.z+0 +z);      
+      glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
+
+      glVertex3f( gp.x+d, gp.y+0, gp.z+0 +z);
+      glVertex3f( gp.x+0, gp.y-d, gp.z+0 +z);      
+      glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
+
+      z += sz;
     }
-  
-  
-  gluDeleteQuadric( quadric );
-  
-  PopCoords();
 }
 
 
