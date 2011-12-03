@@ -217,6 +217,8 @@ namespace Stg
     static const Color blue, red, green, yellow, magenta, cyan;
 
     const Color& Load( Worldfile* wf, int entity );
+
+    void GLSet( void ) { glColor4f( r,g,b,a ); }
   };
   
   /** specify a rectangular size */
