@@ -8,12 +8,12 @@ template<typename T> int sgn(T val)
 }
 
 // number of different velocities and turn rates to consider
-const double vres = 16.0;
-const double wres = 16.0;
+const double vres = 32.0;
+const double wres = 32.0;
 
 const double safety = 0.7;
 
-const double obstacle_dist_max = 10.0; // a bit more than the max sensor range
+const double obstacle_dist_max = 1.0; // a bit more than the max sensor range
 
 // time interval between updates
 double interval = 0.1;
@@ -180,8 +180,8 @@ bool PointInPolygon( int polySides, float polyX[], float polyY[], float x, float
   bool  oddNodes=false;
   
   for (i=0; i<polySides; i++) {
-    if ((polyY[i]< y && polyY[j]>=y
-	 ||   polyY[j]< y && polyY[i]>=y)
+    if (((polyY[i]< y && polyY[j]>=y)
+	 ||   (polyY[j]< y && polyY[i]>=y))
 	&&  (polyX[i]<=x || polyX[j]<=x)) {
       oddNodes^=(polyX[i]+(y-polyY[i])/(polyY[j]-polyY[i])*(polyX[j]-polyX[i])<x); }
     j=i; }
@@ -339,7 +339,7 @@ public:
     // default value will be overridden if this trajectory hits an obstacle
     obstacle_dist = obstacle_dist_max;
     
-    if( fabs(w) >  0.01 ) 
+    //    if( fabs(w) >  0.01 ) 
       {
 	
 	if( cloud_hits.size() )
@@ -473,12 +473,19 @@ public:
     const double wrange = wmax - wmin;
     const double wincr = wrange / wres;
     
+    int a=0;
+
     for( double v=vmin; v<vmax; v += vincr )
       for( double w=wmin; w<wmax; w += wincr )
 	{
-	  if( w == 0 )
-	    w = 0.01;
+	  if( fabs(w) < 0.001) 
+	    if( a > 0 ) 
+	      w = 0.001; 
+	    else
+	      w = -0.01;
 
+	  a = (a++ % 2 ); // a alternates between 0 and 1
+	    	    
 	    vspace.push_back( Vel( v, w ) );
 	}    
   }
@@ -497,7 +504,6 @@ public:
 
     gdx = goal.x - gpose.x;
     gdy = goal.y - gpose.y;
-
     const double goal_dist = hypot( gdx, gdy );
     const double goal_angle = normalize( atan2( gdy, gdx ) - gpose.a );
     
@@ -640,7 +646,7 @@ void Mesh( const std::vector<double>& arr, unsigned int w, unsigned int h, doubl
 
 }
 
-void DrawMesh( double x, double y, double z, const std::vector<Vel>& vels )
+void DrawMesh( double x, double y, double z, const std::vector<Vel>& vels, const Vel& best_vel )
 {
   glPushMatrix();  
   glTranslatef( x,y,z );
@@ -649,7 +655,7 @@ void DrawMesh( double x, double y, double z, const std::vector<Vel>& vels )
 
   double sx = 1.0 / vres;;
   double sy = 1.0 / wres;
-  double sz = 0.03;
+  //double sz = 0.03;
   
   int side = sqrt( vels.size() );  
   
@@ -864,7 +870,7 @@ class DWVis : public Visualizer
        // glEnd();            
        
        glColor3f( 0,0,1 );	   
-       DrawMesh(  0,0,1, rob.vspace );       
+       DrawMesh(  0,0,1, rob.vspace, *rob.best_vel );       
 
        glPopMatrix();
        
