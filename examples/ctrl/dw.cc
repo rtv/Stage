@@ -13,7 +13,7 @@ const double wres = 32.0;
 
 const double safety = 0.7;
 
-const double obstacle_dist_max = 1.0; // a bit more than the max sensor range
+const double obstacle_dist_max = 2.0; // a bit more than the max sensor range
 
 // time interval between updates
 double interval = 0.1;
