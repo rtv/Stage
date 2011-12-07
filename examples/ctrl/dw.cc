@@ -285,6 +285,8 @@ public:
 
   bool admissible;
   
+  bool inwindow;
+
   // distance to nearest obstacle
   double obstacle_dist;
   
@@ -302,7 +304,7 @@ public:
       w( fabs(w) == 0 ? 0.01 : w ), // disallow zero rotation 
       score(0), 
       admissible(true),
-      obstacle_dist(1e12),
+      obstacle_dist(0),
       dx( interval * v * cos(interval*w) ),
       dy( interval * v * sin(interval*w) ),
       ox(0), 
@@ -319,6 +321,7 @@ public:
 		 const std::vector<Circle>& cloud )
   {
     double radius = v / w; 
+
 
     // compute where the trajectory collides with the obstacle cloud
     cloud_hits.clear();	    	
@@ -372,8 +375,8 @@ public:
     // normalize the score
     score_obstacle = obstacle_dist / obstacle_dist_max;
     
-    printf( "(%.2f,%2.f) obstacle_dist %.2f max %.2f score %.2f\n",
-	    v, w, obstacle_dist, obstacle_dist_max, score_obstacle );    
+    //    printf( "(%.2f,%2.f) obstacle_dist %.2f max %.2f score %.2f\n",
+    //	    v, w, obstacle_dist, obstacle_dist_max, score_obstacle );    
     
     assert( score_obstacle >=0 );
     assert( score_obstacle <= 1.0 );
@@ -445,6 +448,8 @@ public:
   
   std::vector<Vel> vspace;
   Vel* best_vel;
+
+  double v, w;
   
   std::vector<Circle> cloud;
   
@@ -454,7 +459,10 @@ public:
     goal( Pose( 7,3,0,0 )),
     radius(0.4),
     vspace(),
-    best_vel(NULL)
+    best_vel(NULL),
+    v(0.5),
+    w(0),
+    cloud()
   {
     pos->AddCallback( Model::CB_UPDATE, (model_callback_t)PositionUpdateCB, this );  
     pos->Subscribe(); // starts the position updates
@@ -484,20 +492,28 @@ public:
 	    else
 	      w = -0.01;
 
-	  a = (a++ % 2 ); // a alternates between 0 and 1
-	    	    
-	    vspace.push_back( Vel( v, w ) );
+	  ++a;
+
+	  a = a % 2; // a alternates between 0 and 1
+	  
+	  vspace.push_back( Vel( v, w ) );
 	}    
   }
     
 
   void EvaluateVSpace()
-  {
-    // get a cloud of obstacle line segments from the ranger
-    cloud = ObstacleCloud( laser->GetSensors()[0], radius );
-    
+  {    
+    const double vmin = pos->velocity_bounds[0].min;
     const double vmax = pos->velocity_bounds[0].max;
+    
+    const double wmin = pos->velocity_bounds[3].min;
     const double wmax = pos->velocity_bounds[3].max;
+    
+    const double dvmin = pos->acceleration_bounds[0].min;
+    const double dvmax = pos->acceleration_bounds[0].max;
+
+    const double dwmin = pos->acceleration_bounds[3].min;
+    const double dwmax = pos->acceleration_bounds[3].max;
     
     // find the error in our current position wrt the goal
     const Pose& gpose = pos->GetGlobalPose();
@@ -507,9 +523,30 @@ public:
     const double goal_dist = hypot( gdx, gdy );
     const double goal_angle = normalize( atan2( gdy, gdx ) - gpose.a );
     
+    // range of achievable speeds at the nexttimestep
+    const double v1max = std::min( v +  dvmax * interval, vmax );
+    const double v1min = std::max( v +  dvmin * interval, vmin );
+    
+    const double w1max = std::min( w +  dwmax * interval, wmax );
+    const double w1min = std::max( w +  dwmin * interval, wmin );
+
+    printf( "Reachable bounds (%.3f to %.3f) (%.3f %.3f)\n",
+	    v1min, v1max, w1min, w1max );
+
     // evaluate each candidate (v,w) pair
     FOR_EACH( it, vspace )
-      it->Evaluate( goal_dist, goal_angle, vmax, wmax, cloud);
+      {
+	if( it->v <= v1max && 
+	    it->v >= v1min &&
+	    it->w <= w1max && 
+	    it->w >= w1min )	    
+	  {
+	    it->Evaluate( goal_dist, goal_angle, vmax, wmax, cloud);
+	    it->inwindow = true;
+	  }
+	else
+	  it->inwindow = false;
+      }
   }
   
   // return the index of the vel with the highest score
@@ -519,7 +556,7 @@ public:
     double best_score = 0.0;
     
     for( unsigned int i=0; i<vels.size(); ++i )
-      if( vels[i].score > best_score )
+      if( vels[i].inwindow && (vels[i].score > best_score) )
 	{
 	  best_score = vels[i].score;
 	  best_index = i;
@@ -530,17 +567,25 @@ public:
 
   int PositionUpdate( void )
   {          
-    // figure out the best way to get there
+    
+    // v = 0.5;
+    //w = 0.0;
+
+    // get a cloud of obstacle line segments from the ranger
+    cloud = ObstacleCloud( laser->GetSensors()[0], radius );
     
     // calculate the vspace array
     EvaluateVSpace();          
     best_vel = &BestVel( vspace );
-
-    printf( "best vel %.2f %.2f\n", best_vel->v, best_vel->w );
     
-
+    //printf( "best vel %.2f %.2f\n", best_vel->v, best_vel->w );
+    
+    v  = best_vel->v;
+    w =  best_vel->w;
+    
+  
     // and request those speeds
-    pos->SetSpeed( best_vel->v, 0, best_vel->w );
+    pos->SetSpeed(v,0,w);
     
     return 0;
   }
@@ -746,14 +791,13 @@ class DWVis : public Visualizer
       
       Color c[2] = { Color(1,0,0), Color(0,0,1,0.5) };
       
-      glBegin (GL_POINTS );
-      FOR_EACH( it, rob.vspace )
-	{	  
-       	  Color d = it->admissible ? c[0] : c[1]; 
-       	  glColor4f( d.r, d.g, d.b, d.a );
-	  glVertex2f( rob.best_vel->dx, rob.best_vel->dy );
-       	}
-       glEnd();
+      // draw a point for each Vel showing where we would end up if we
+      // drove at that speed for one timestep
+
+      // glBegin (GL_POINTS );
+      // FOR_EACH( it, rob.vspace ) { Color d = it->admissible ? c[0]
+      // : c[1]; glColor4f( d.r, d.g, d.b, d.a ); glVertex2f(
+      // rob.best_vel->dx, rob.best_vel->dy ); } glEnd();
       
        // draw a line from each candidate point to the closest obstacle
       // glBegin (GL_LINES );
@@ -800,7 +844,7 @@ class DWVis : public Visualizer
        FOR_EACH( it, rob.vspace )
 	 {
 	   //	   printf( "cloud huts len %d\n", (int)it->cloud_hits.size() );
-	   
+	   if( it->inwindow )
 	   FOR_EACH( it2, it->cloud_hits )
 	     {
 	       glVertex2f( it2->first-e, it2->second-e );
@@ -817,41 +861,43 @@ class DWVis : public Visualizer
        // hit point to circle center
        FOR_EACH( it, rob.vspace )
 	 {
-	   if( rob.best_vel == &*it )	 
+	   if( it->inwindow )
 	     {
-	       glColor3f( 1,0,0 ); // red
-	       glLineWidth(3);       
-	     }
-	   else
-	     {
-	       glColor4f( 0,0,0,0.15 ); // light gray	 
-	       glLineWidth(1);       
-	     }
-	   
-	   // show arcs until obstacles are hit
-	   
-	   double radius = it->v / it->w; 
-	   double dist = it->obstacle_dist;
-	   if( dist < 50 )
-	     {		
-	       // sanity check
-	       glBegin( GL_LINE_STRIP );
-	       for( double d=0; d<fabs(dist); d+=0.05 )
-		 {	       
-		   double w = M_PI - d/radius;	       
-		   double x = radius * sin(w);	       
-		   double y = radius + radius * cos(w);
-
-		   if( fabs(x) < 100 && fabs(y)<100 )
-		     glVertex2f( x, y  );
+	       if( rob.best_vel == &*it )	 
+		 {
+		   glColor3f( 1,0,0 ); // red
+		   glLineWidth(3);       
 		 }
-	       glEnd();
-	     }
-	   else
-	     {
-	       printf( "LONG v %.2f w %.2f dist %.2f\n", it->v, it->w, dist );	       
-	     }
+	       else
+		 {
+		   glColor4f( 0,0,0,0.15 ); // light gray	 
+		   glLineWidth(1);       
+		 }
 	       
+	       // show arcs until obstacles are hit
+	       
+	       double radius = it->v / it->w; 
+	       double dist = it->obstacle_dist;
+	       if( dist < 50 )
+		 {		
+		   // sanity check
+		   glBegin( GL_LINE_STRIP );
+		   for( double d=0; d<fabs(dist); d+=0.05 )
+		     {	       
+		       double w = M_PI - d/radius;	       
+		       double x = radius * sin(w);	       
+		       double y = radius + radius * cos(w);
+		       
+		       if( fabs(x) < 100 && fabs(y)<100 )
+			 glVertex2f( x, y  );
+		     }
+		   glEnd();
+		 }
+	       else
+		 {
+		   //printf( "LONG v %.2f w %.2f dist %.2f\n", it->v, it->w, dist );	       
+		 }
+	     }	       
 	 }       
        glLineWidth( 1.0 );
        
