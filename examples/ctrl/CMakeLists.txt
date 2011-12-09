@@ -1,6 +1,5 @@
 
 SET( PLUGINS
-     dw
      fasr
      fasr_lost
      sink
@@ -25,12 +24,13 @@ foreach( PLUGIN ${PLUGINS} )
   ADD_LIBRARY( ${PLUGIN} MODULE ${PLUGIN}.cc )
 endforeach( PLUGIN )
 				
+ADD_LIBRARY( dw MODULE dw.cc  )
 ADD_LIBRARY( fasr2 MODULE fasr2.cc astar/findpath.cpp )
 # ADD_LIBRARY( fasr3 MODULE fasr3.cc astar/findpath.cpp )
 #ADD_LIBRARY( energy MODULE energy.cc astar/findpath.cpp )
 
 # add extras to the list of plugins
-SET( PLUGINS ${PLUGINS} fasr2 )
+SET( PLUGINS ${PLUGINS} fasr2 dw )
 #SET( PLUGINS ${PLUGINS} energy)
 
 set_source_files_properties( ${PLUGINS} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
