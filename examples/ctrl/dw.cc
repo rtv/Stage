@@ -1,5 +1,5 @@
-#include "idw.h"
 #include "stage.hh"
+#include "idw.h"
 
 using namespace Stg;
 

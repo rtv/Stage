@@ -13,8 +13,11 @@
 #endif 
 
 // STL container iterator macros - __typeof is a gcc extension
+// WARNING: assumes container is not modified during iteration
+#ifndef FOR_EACH
 #define VAR(V,init) __typeof(init) V=(init)
 #define FOR_EACH(I,C) for(VAR(I,(C).begin());I!=(C).end();++I) 
+#endif
 
 const unsigned int VCOUNT = 32;
 const unsigned int WCOUNT = 32;
