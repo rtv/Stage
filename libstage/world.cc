@@ -863,10 +863,10 @@ RaytraceResult World::Raytrace( const Ray& r )
 		 n > 0 )
 	    {			 
 	      FOR_EACH( it, c->blocks[layer] )
-		{	      	      
+		{
 		  Block* block( *it );
-		  // assert( block );
-
+		  assert( block );
+		  
 		  // skip if not in the right z range
 		  if( r.ztest && 
 		      ( r.origin.z < block->global_z.min || 
