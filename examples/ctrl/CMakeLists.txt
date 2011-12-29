@@ -1,17 +1,14 @@
 
 SET( PLUGINS
-     fasr
-     fasr_lost
-     sink
-     source
-     wander
-#  wander_pioneer
-    pioneer_flocking
-    rasterize
-    lasernoise
-    dynamic
+  fasr
+  sink
+  source
+  wander
+  pioneer_flocking
+  rasterize
+  lasernoise
+  dynamic
 )
-
 
 # create a library module for each plugin and link libstage to each
 
@@ -24,7 +21,9 @@ ADD_LIBRARY( fasr2 MODULE fasr2.cc astar/findpath.cpp )
 # add extras to the list of plugins
 SET( PLUGINS ${PLUGINS} fasr2 )
 
-set_source_files_properties( ${PLUGINS} PROPERTIES COMPILE_FLAGS "${FLTK_CFLAGS}" )
+set_source_files_properties( ${PLUGINS} PROPERTIES 
+  COMPILE_FLAGS "${FLTK_CFLAGS}" 
+)
 
 foreach( PLUGIN ${PLUGINS} )
   TARGET_LINK_LIBRARIES( ${PLUGIN} stage ${OPENGL_LIBRARIES} )
