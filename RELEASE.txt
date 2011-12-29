@@ -1,28 +1,31 @@
+Stage RELEASE.txt
+==================
+
+These are the Stage release notes.
+
+For introduction and license see README.txt
+For installation notes see INSTALL.txt
+
+
 Version 4.1.0
 -------------
-- many bugfixes
-
-- support for basic dynamics: position models simulate acceleration
+* many bugfixes
+* support for basic dynamics: position models simulate acceleration
   and have a new acceleration control mode.
-
-- visualization options can be loaded from and saved to worldfiles
-
-- API change: new World::Run() methed provides the same interface to
+* visualization options can be loaded from and saved to worldfiles
+* API change: new World::Run() methed provides the same interface to
   GUI and non-GUI worlds (by chmp@github)
-
-- saved screenshots are numbered with leading zeros for convenience
+* saved screenshots are numbered with leading zeros for convenience
   when using movie-making tools (by mani-monaj@github)
-
-- major performance enhancement: position updates now run in parallel
+* major performance enhancement: position updates now run in parallel
   with sensor updates, using a double-buffer-style alternating pair of
   occupancy grids
+* several minor performance enhancements
+* much faster debug visualization (occupancy grid and voxel views)
+* build scripts are more portable
 
-- several minor performance enhancements
 
-- much faster debug visualization (occupancy grid and voxel views)
-
-
-Richard Vaughan (rtv) vaughan@sfu.ca - XX TODO
+Richard Vaughan (rtv) vaughan@sfu.ca - 2011.12.28
 
 Version 4.0.1
 -------------

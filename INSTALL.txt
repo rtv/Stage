@@ -1,3 +1,14 @@
+Stage INSTALL.txt
+=================
+
+These are the Stage installation instructions, both quick and longer
+versions. They are intended for experienced programmers. This is not a
+tutorial.
+
+For release notes see RELEASE.txt
+For introduction and license see README.txt
+
+
 Quick start: Build Stage from RTV's Github 
 ------------------------------------------
 
