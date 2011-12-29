@@ -1204,7 +1204,7 @@ void Canvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
   showTrails.createMenuItem( menu, path ); 
   showTrailRise.createMenuItem( menu, path );  // broken
   showBBoxes.createMenuItem( menu, path );
-  showVoxels.createMenuItem( menu, path );  
+  //showVoxels.createMenuItem( menu, path );  
   showScreenshots.createMenuItem( menu, path );  
 }
 
@@ -1234,7 +1234,7 @@ void Canvas::Load( Worldfile* wf, int sec )
   showTrailArrows.Load( wf, sec );
   showTrailRise.Load( wf, sec );
   showTrails.Load( wf, sec );
-  showVoxels.Load( wf, sec );
+  //showVoxels.Load( wf, sec );
   showScreenshots.Load( wf, sec );
   pCamOn.Load( wf, sec );
 
