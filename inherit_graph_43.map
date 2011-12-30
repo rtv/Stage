@@ -1,0 +1,10 @@
+<map id="G" name="G">
+<area shape="rect" id="node1" href="$classStg_1_1Visualizer.html" title="Stg::Visualizer" alt="" coords="6,161,112,189"/>
+<area shape="rect" id="node3" href="$classStg_1_1Model_1_1RasterVis.html" title="Stg::Model::RasterVis" alt="" coords="192,5,342,33"/>
+<area shape="rect" id="node5" href="$classStg_1_1ModelBlobfinder_1_1Vis.html" title="Stg::ModelBlobfinder::Vis" alt="" coords="181,57,352,85"/>
+<area shape="rect" id="node7" href="$classStg_1_1ModelPosition_1_1PoseVis.html" title="Stg::ModelPosition::PoseVis" alt="" coords="172,109,361,137"/>
+<area shape="rect" id="node9" href="$classStg_1_1ModelPosition_1_1WaypointVis.html" title="Stg::ModelPosition::WaypointVis" alt="" coords="160,161,373,189"/>
+<area shape="rect" id="node11" href="$classStg_1_1ModelRanger_1_1Vis.html" title="Stg::ModelRanger::Vis" alt="" coords="189,213,344,241"/>
+<area shape="rect" id="node13" href="$classStg_1_1PowerPack_1_1DissipationVis.html" title="Stg::PowerPack::DissipationVis" alt="" coords="163,265,370,293"/>
+<area shape="rect" id="node15" href="$classStg_1_1StripPlotVis.html" title="Stg::StripPlotVis" alt="" coords="208,317,325,345"/>
+</map>

@@ -1,17 +1,17 @@
 <map id="G" name="G">
-<area shape="rect" id="node3" href="$lsp__test__blobfinder_8hh.html" title="lsp_test_blobfinder.hh" alt="" coords="5,83,165,112"/>
-<area shape="rect" id="node7" href="$lsp__test__fiducial_8hh.html" title="lsp_test_fiducial.hh" alt="" coords="189,83,331,112"/>
-<area shape="rect" id="node11" href="$lsp__test__laser_8hh.html" title="lsp_test_laser.hh" alt="" coords="355,83,483,112"/>
-<area shape="rect" id="node15" href="$lsp__test__position2d_8hh.html" title="lsp_test_position2d.hh" alt="" coords="507,83,672,112"/>
-<area shape="rect" id="node19" href="$lsp__test__proxy_8cc.html" title="lsp_test_proxy.cc" alt="" coords="696,83,827,112"/>
-<area shape="rect" id="node21" href="$lsp__test__simulation_8hh.html" title="lsp_test_simulation.hh" alt="" coords="851,83,1016,112"/>
-<area shape="rect" id="node25" href="$lsp__test__sonar_8hh.html" title="lsp_test_sonar.hh" alt="" coords="1040,83,1173,112"/>
-<area shape="rect" id="node29" href="$lsp__test__speech_8hh.html" title="lsp_test_speech.hh" alt="" coords="1197,83,1341,112"/>
-<area shape="rect" id="node5" href="$lsp__test__blobfinder_8cc.html" title="lsp_test_blobfinder.cc" alt="" coords="7,160,164,189"/>
-<area shape="rect" id="node9" href="$lsp__test__fiducial_8cc.html" title="lsp_test_fiducial.cc" alt="" coords="189,160,331,189"/>
-<area shape="rect" id="node13" href="$lsp__test__laser_8cc.html" title="lsp_test_laser.cc" alt="" coords="356,160,481,189"/>
-<area shape="rect" id="node17" href="$lsp__test__position2d_8cc.html" title="lsp_test_position2d.cc" alt="" coords="508,160,671,189"/>
-<area shape="rect" id="node23" href="$lsp__test__simulation_8cc.html" title="lsp_test_simulation.cc" alt="" coords="852,160,1015,189"/>
-<area shape="rect" id="node27" href="$lsp__test__sonar_8cc.html" title="lsp_test_sonar.cc" alt="" coords="1041,160,1172,189"/>
-<area shape="rect" id="node31" href="$lsp__test__speech_8cc.html" title="lsp_test_speech.cc" alt="" coords="1199,160,1340,189"/>
+<area shape="rect" id="node3" href="$lsp__test__blobfinder_8hh.html" title="lsp_test_blobfinder.hh" alt="" coords="4,83,155,111"/>
+<area shape="rect" id="node7" href="$lsp__test__fiducial_8hh.html" title="lsp_test_fiducial.hh" alt="" coords="179,83,313,111"/>
+<area shape="rect" id="node11" href="$lsp__test__laser_8hh.html" title="lsp_test_laser.hh" alt="" coords="338,83,459,111"/>
+<area shape="rect" id="node15" href="$lsp__test__position2d_8hh.html" title="lsp_test_position2d.hh" alt="" coords="483,83,636,111"/>
+<area shape="rect" id="node19" href="$lsp__test__proxy_8cc.html" title="lsp_test_proxy.cc" alt="" coords="661,83,784,111"/>
+<area shape="rect" id="node21" href="$lsp__test__simulation_8hh.html" title="lsp_test_simulation.hh" alt="" coords="809,83,961,111"/>
+<area shape="rect" id="node25" href="$lsp__test__sonar_8hh.html" title="lsp_test_sonar.hh" alt="" coords="986,83,1112,111"/>
+<area shape="rect" id="node29" href="$lsp__test__speech_8hh.html" title="lsp_test_speech.hh" alt="" coords="1136,83,1272,111"/>
+<area shape="rect" id="node5" href="$lsp__test__blobfinder_8cc.html" title="lsp_test_blobfinder.cc" alt="" coords="5,161,155,189"/>
+<area shape="rect" id="node9" href="$lsp__test__fiducial_8cc.html" title="lsp_test_fiducial.cc" alt="" coords="180,161,312,189"/>
+<area shape="rect" id="node13" href="$lsp__test__laser_8cc.html" title="lsp_test_laser.cc" alt="" coords="339,161,457,189"/>
+<area shape="rect" id="node17" href="$lsp__test__position2d_8cc.html" title="lsp_test_position2d.cc" alt="" coords="484,161,636,189"/>
+<area shape="rect" id="node23" href="$lsp__test__simulation_8cc.html" title="lsp_test_simulation.cc" alt="" coords="809,161,960,189"/>
+<area shape="rect" id="node27" href="$lsp__test__sonar_8cc.html" title="lsp_test_sonar.cc" alt="" coords="987,161,1111,189"/>
+<area shape="rect" id="node31" href="$lsp__test__speech_8cc.html" title="lsp_test_speech.cc" alt="" coords="1137,161,1271,189"/>
 </map>

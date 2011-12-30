@@ -1,11 +1,11 @@
 <map id="structs" name="structs">
-<area shape="rect" id="node1" href="$group__model__gripper.html" title="Gripper model" alt="" coords="144,5,256,35"/>
-<area shape="rect" id="node2" href="$group__model__actuator.html" title="Actuator model" alt="" coords="140,59,260,88"/>
-<area shape="rect" id="node4" href="$group__model__wifi.html" title="Wifi model" alt="" coords="157,112,243,141"/>
-<area shape="rect" id="node5" href="$group__model__position.html" title="Position model" alt="" coords="143,165,257,195"/>
-<area shape="rect" id="node6" href="$group__model__ranger.html" title="Ranger model" alt="" coords="145,219,255,248"/>
-<area shape="rect" id="node7" href="$group__model__blinkenlight.html" title="Blinkenlight model" alt="" coords="131,272,269,301"/>
-<area shape="rect" id="node8" href="$group__model__camera.html" title="Camera model" alt="" coords="141,325,259,355"/>
-<area shape="rect" id="node9" href="$group__model__fiducial.html" title="Fiducial detector model" alt="" coords="115,379,285,408"/>
-<area shape="rect" id="node10" href="$group__model__blobfinder.html" title="Blobfinder model" alt="" coords="135,432,265,461"/>
+<area shape="rect" id="node1" href="$group__model__gripper.html" title="Gripper model" alt="" coords="139,5,245,33"/>
+<area shape="rect" id="node2" href="$group__model__actuator.html" title="Actuator model" alt="" coords="136,57,248,85"/>
+<area shape="rect" id="node4" href="$group__model__wifi.html" title="Wifi model" alt="" coords="150,109,234,137"/>
+<area shape="rect" id="node5" href="$group__model__position.html" title="Position model" alt="" coords="138,161,246,189"/>
+<area shape="rect" id="node6" href="$group__model__ranger.html" title="Ranger model" alt="" coords="139,213,245,241"/>
+<area shape="rect" id="node7" href="$group__model__blinkenlight.html" title="Blinkenlight model" alt="" coords="127,265,257,293"/>
+<area shape="rect" id="node8" href="$group__model__camera.html" title="Camera model" alt="" coords="138,317,246,345"/>
+<area shape="rect" id="node9" href="$group__model__fiducial.html" title="Fiducial detector model" alt="" coords="112,369,272,397"/>
+<area shape="rect" id="node10" href="$group__model__blobfinder.html" title="Blobfinder model" alt="" coords="131,421,253,449"/>
 </map>

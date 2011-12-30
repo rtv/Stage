@@ -1,7 +1,7 @@
 <map id="G" name="G">
-<area shape="rect" id="node15" href="$stage_8hh.html" title="stage.hh" alt="" coords="1119,160,1196,189"/>
-<area shape="rect" id="node65" href="$file__manager_8hh.html" title="file_manager.hh" alt="" coords="1423,83,1545,112"/>
-<area shape="rect" id="node70" href="$worldfile_8hh.html" title="worldfile.hh" alt="" coords="1229,160,1323,189"/>
-<area shape="rect" id="node74" href="$region_8hh.html" title="region.hh" alt="" coords="1105,83,1188,112"/>
-<area shape="rect" id="node77" href="$option_8hh.html" title="option.hh" alt="" coords="1316,83,1399,112"/>
+<area shape="rect" id="node15" href="$stage_8hh.html" title="stage.hh" alt="" coords="1074,161,1147,189"/>
+<area shape="rect" id="node65" href="$file__manager_8hh.html" title="file_manager.hh" alt="" coords="1366,83,1481,111"/>
+<area shape="rect" id="node70" href="$worldfile_8hh.html" title="worldfile.hh" alt="" coords="1181,161,1269,189"/>
+<area shape="rect" id="node74" href="$region_8hh.html" title="region.hh" alt="" coords="1060,83,1136,111"/>
+<area shape="rect" id="node77" href="$option_8hh.html" title="option.hh" alt="" coords="1266,83,1341,111"/>
 </map>

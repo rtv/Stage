@@ -1,0 +1,15 @@
+<map id="G" name="G">
+<area shape="rect" id="node1" href="$classStg_1_1Ancestor.html" title="Stg::Ancestor" alt="" coords="5,305,107,333"/>
+<area shape="rect" id="node3" href="$classStg_1_1Model.html" title="Model class" alt="" coords="155,239,240,267"/>
+<area shape="rect" id="node23" href="$classStg_1_1World.html" title="World class" alt="" coords="156,369,239,397"/>
+<area shape="rect" id="node5" href="$classStg_1_1ModelActuator.html" title="ModelActuator class" alt="" coords="303,5,438,33"/>
+<area shape="rect" id="node7" href="$classStg_1_1ModelBlinkenlight.html" title="Stg::ModelBlinkenlight" alt="" coords="294,57,447,85"/>
+<area shape="rect" id="node9" href="$classStg_1_1ModelBlobfinder.html" title="ModelBlobfinder class" alt="" coords="298,109,443,137"/>
+<area shape="rect" id="node11" href="$classStg_1_1ModelCamera.html" title="ModelCamera class" alt="" coords="304,161,437,189"/>
+<area shape="rect" id="node13" href="$classStg_1_1ModelFiducial.html" title="ModelFiducial class" alt="" coords="305,213,436,241"/>
+<area shape="rect" id="node15" href="$classStg_1_1ModelGripper.html" title="Stg::ModelGripper" alt="" coords="306,265,435,293"/>
+<area shape="rect" id="node17" href="$classStg_1_1ModelLightIndicator.html" title="Stg::ModelLightIndicator" alt="" coords="288,317,453,345"/>
+<area shape="rect" id="node19" href="$classStg_1_1ModelPosition.html" title="ModelPosition class" alt="" coords="304,369,437,397"/>
+<area shape="rect" id="node21" href="$classStg_1_1ModelRanger.html" title="ModelRanger class" alt="" coords="306,421,435,449"/>
+<area shape="rect" id="node25" href="$classStg_1_1WorldGui.html" title="Stg::WorldGui" alt="" coords="319,473,423,501"/>
+</map>

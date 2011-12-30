@@ -1,10 +1,10 @@
 <map id="G" name="G">
-<area shape="rect" id="node3" href="$canvas_8cc.html" title="canvas.cc" alt="" coords="5,83,91,112"/>
-<area shape="rect" id="node5" href="$color_8cc.html" title="color.cc" alt="" coords="115,83,184,112"/>
-<area shape="rect" id="node7" href="$file__manager_8cc.html" title="file_manager.cc" alt="" coords="208,83,331,112"/>
-<area shape="rect" id="node9" href="$model__load_8cc.html" title="model_load.cc" alt="" coords="355,83,469,112"/>
-<area shape="rect" id="node11" href="$stage_8cc.html" title="stage.cc" alt="" coords="493,83,568,112"/>
-<area shape="rect" id="node13" href="$texture__manager_8cc.html" title="texture_manager.cc" alt="" coords="592,83,741,112"/>
-<area shape="rect" id="node15" href="$world_8cc.html" title="world.cc" alt="" coords="765,83,837,112"/>
-<area shape="rect" id="node17" href="$worldgui_8cc.html" title="worldgui.cc" alt="" coords="861,83,952,112"/>
+<area shape="rect" id="node3" href="$canvas_8cc.html" title="canvas.cc" alt="" coords="5,83,85,111"/>
+<area shape="rect" id="node5" href="$color_8cc.html" title="color.cc" alt="" coords="109,83,175,111"/>
+<area shape="rect" id="node7" href="$file__manager_8cc.html" title="file_manager.cc" alt="" coords="200,83,315,111"/>
+<area shape="rect" id="node9" href="$model_8cc.html" title="model.cc" alt="" coords="339,83,413,111"/>
+<area shape="rect" id="node11" href="$stage_8cc.html" title="stage.cc" alt="" coords="438,83,508,111"/>
+<area shape="rect" id="node13" href="$texture__manager_8cc.html" title="texture_manager.cc" alt="" coords="533,83,671,111"/>
+<area shape="rect" id="node15" href="$world_8cc.html" title="world.cc" alt="" coords="696,83,765,111"/>
+<area shape="rect" id="node17" href="$worldgui_8cc.html" title="worldgui.cc" alt="" coords="789,83,877,111"/>
 </map>

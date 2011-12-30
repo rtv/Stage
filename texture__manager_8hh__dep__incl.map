@@ -1,6 +1,6 @@
 <map id="G" name="G">
-<area shape="rect" id="node3" href="$canvas_8cc.html" title="canvas.cc" alt="" coords="5,83,91,112"/>
-<area shape="rect" id="node5" href="$model__draw_8cc.html" title="model_draw.cc" alt="" coords="115,83,229,112"/>
-<area shape="rect" id="node7" href="$powerpack_8cc.html" title="powerpack.cc" alt="" coords="253,83,360,112"/>
-<area shape="rect" id="node9" href="$texture__manager_8cc.html" title="texture_manager.cc" alt="" coords="384,83,533,112"/>
+<area shape="rect" id="node3" href="$canvas_8cc.html" title="canvas.cc" alt="" coords="5,83,85,111"/>
+<area shape="rect" id="node5" href="$model__draw_8cc.html" title="model_draw.cc" alt="" coords="110,83,220,111"/>
+<area shape="rect" id="node7" href="$powerpack_8cc.html" title="powerpack.cc" alt="" coords="245,83,347,111"/>
+<area shape="rect" id="node9" href="$texture__manager_8cc.html" title="texture_manager.cc" alt="" coords="371,83,508,111"/>
 </map>

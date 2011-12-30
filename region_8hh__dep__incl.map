@@ -1,7 +1,7 @@
 <map id="G" name="G">
-<area shape="rect" id="node3" href="$block_8cc.html" title="block.cc" alt="" coords="5,83,77,112"/>
-<area shape="rect" id="node5" href="$canvas_8cc.html" title="canvas.cc" alt="" coords="101,83,187,112"/>
-<area shape="rect" id="node7" href="$region_8cc.html" title="region.cc" alt="" coords="211,83,291,112"/>
-<area shape="rect" id="node9" href="$world_8cc.html" title="world.cc" alt="" coords="315,83,387,112"/>
-<area shape="rect" id="node11" href="$worldgui_8cc.html" title="worldgui.cc" alt="" coords="411,83,501,112"/>
+<area shape="rect" id="node3" href="$block_8cc.html" title="block.cc" alt="" coords="5,83,75,111"/>
+<area shape="rect" id="node5" href="$canvas_8cc.html" title="canvas.cc" alt="" coords="98,83,179,111"/>
+<area shape="rect" id="node7" href="$region_8cc.html" title="region.cc" alt="" coords="204,83,279,111"/>
+<area shape="rect" id="node9" href="$world_8cc.html" title="world.cc" alt="" coords="304,83,373,111"/>
+<area shape="rect" id="node11" href="$worldgui_8cc.html" title="worldgui.cc" alt="" coords="397,83,485,111"/>
 </map>

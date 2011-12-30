@@ -1,9 +1,9 @@
 <map id="G" name="G">
-<area shape="rect" id="node9" href="$classStg_1_1Model_1_1RasterVis.html" title="Stg::Model::RasterVis" alt="" coords="203,85,360,115"/>
-<area shape="rect" id="node11" href="$classStg_1_1ModelBlobfinder_1_1Vis.html" title="Stg::ModelBlobfinder::Vis" alt="" coords="191,139,372,168"/>
-<area shape="rect" id="node13" href="$classStg_1_1ModelPosition_1_1PoseVis.html" title="Stg::ModelPosition::PoseVis" alt="" coords="183,192,380,221"/>
-<area shape="rect" id="node15" href="$classStg_1_1ModelPosition_1_1WaypointVis.html" title="Stg::ModelPosition::WaypointVis" alt="" coords="169,245,393,275"/>
-<area shape="rect" id="node17" href="$classStg_1_1ModelRanger_1_1Vis.html" title="Stg::ModelRanger::Vis" alt="" coords="200,299,363,328"/>
-<area shape="rect" id="node19" href="$classStg_1_1PowerPack_1_1DissipationVis.html" title="Stg::PowerPack::DissipationVis" alt="" coords="173,352,389,381"/>
-<area shape="rect" id="node21" href="$classStg_1_1StripPlotVis.html" title="Stg::StripPlotVis" alt="" coords="219,405,344,435"/>
+<area shape="rect" id="node9" href="$classStg_1_1Model_1_1RasterVis.html" title="Stg::Model::RasterVis" alt="" coords="192,82,342,110"/>
+<area shape="rect" id="node11" href="$classStg_1_1ModelBlobfinder_1_1Vis.html" title="Stg::ModelBlobfinder::Vis" alt="" coords="181,134,352,162"/>
+<area shape="rect" id="node13" href="$classStg_1_1ModelPosition_1_1PoseVis.html" title="Stg::ModelPosition::PoseVis" alt="" coords="172,186,361,214"/>
+<area shape="rect" id="node15" href="$classStg_1_1ModelPosition_1_1WaypointVis.html" title="Stg::ModelPosition::WaypointVis" alt="" coords="160,238,373,266"/>
+<area shape="rect" id="node17" href="$classStg_1_1ModelRanger_1_1Vis.html" title="Stg::ModelRanger::Vis" alt="" coords="189,290,344,318"/>
+<area shape="rect" id="node19" href="$classStg_1_1PowerPack_1_1DissipationVis.html" title="Stg::PowerPack::DissipationVis" alt="" coords="163,342,370,370"/>
+<area shape="rect" id="node21" href="$classStg_1_1StripPlotVis.html" title="Stg::StripPlotVis" alt="" coords="208,394,325,422"/>
 </map>

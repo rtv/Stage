@@ -1,10 +1,10 @@
 <map id="G" name="G">
-<area shape="rect" id="node3" href="$stage_8hh.html" title="stage.hh" alt="" coords="1405,160,1483,189"/>
-<area shape="rect" id="node57" href="$canvas_8hh.html" title="canvas.hh" alt="" coords="1477,83,1563,112"/>
-<area shape="rect" id="node64" href="$worldfile_8hh.html" title="worldfile.hh" alt="" coords="5,237,99,267"/>
-<area shape="rect" id="node75" href="$texture__manager_8hh.html" title="texture_manager.hh" alt="" coords="1587,83,1739,112"/>
-<area shape="rect" id="node91" href="$region_8hh.html" title="region.hh" alt="" coords="1371,83,1453,112"/>
-<area shape="rect" id="node94" href="$file__manager_8hh.html" title="file_manager.hh" alt="" coords="240,160,363,189"/>
-<area shape="rect" id="node98" href="$options__dlg_8hh.html" title="options_dlg.hh" alt="" coords="673,83,788,112"/>
-<area shape="rect" id="node60" href="$option_8hh.html" title="option.hh" alt="" coords="471,160,553,189"/>
+<area shape="rect" id="node3" href="$stage_8hh.html" title="stage.hh" alt="" coords="1368,161,1440,189"/>
+<area shape="rect" id="node57" href="$canvas_8hh.html" title="canvas.hh" alt="" coords="1436,83,1517,111"/>
+<area shape="rect" id="node64" href="$worldfile_8hh.html" title="worldfile.hh" alt="" coords="5,238,93,266"/>
+<area shape="rect" id="node75" href="$texture__manager_8hh.html" title="texture_manager.hh" alt="" coords="1542,83,1681,111"/>
+<area shape="rect" id="node91" href="$region_8hh.html" title="region.hh" alt="" coords="1335,83,1411,111"/>
+<area shape="rect" id="node94" href="$file__manager_8hh.html" title="file_manager.hh" alt="" coords="234,161,349,189"/>
+<area shape="rect" id="node98" href="$options__dlg_8hh.html" title="options_dlg.hh" alt="" coords="661,83,768,111"/>
+<area shape="rect" id="node60" href="$option_8hh.html" title="option.hh" alt="" coords="459,161,535,189"/>
 </map>
