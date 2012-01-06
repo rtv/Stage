@@ -70,8 +70,24 @@ void InterfaceRanger::Publish( void )
 	
 	if( sensors.size() == 1 ) // a laser scanner type, with one beam origin and many ranges					
 		{
-			prange.ranges = rgr->GetRangesArr( 0, &prange.ranges_count );
-			pintens.intensities = rgr->GetIntensitiesArr( 0, &pintens.intensities_count );
+      std::vector<meters_t> ranges = sensors[0].ranges;
+      std::vector<double> intensities = sensors[0].intensities;
+      prange.ranges_count = ranges.size();
+      if (ranges.size() > 0)
+        {
+          prange.ranges = new double[ranges.size()];
+          for (int i=0; i < ranges.size(); i++)
+            prange.ranges[i] = ranges[i];    
+        }
+      
+      if (intensities.size() > 0)
+      {
+        pintens.intensities_count = intensities.size();
+        pintens.intensities = new double[intensities.size()];
+        for (int i=0; i < intensities.size(); i++)
+          pintens.intensities[i] = intensities[i];
+      }
+
 		}
 	else
 		{  // a sonar/IR type with one range per beam origin 	
