@@ -71,11 +71,11 @@ void InterfaceRanger::Publish( void )
   
   if( sensors.size() == 1 ) // a laser scanner type, with one beam origin and many ranges					
     {
-      prange.ranges = &sensors[0].ranges[0];
       prange.ranges_count = sensors[0].ranges.size();
+      prange.ranges = prange.ranges_count ? &sensors[0].ranges[0] : NULL;
 
-      pintens.intensities = &sensors[0].intensities[0];
-      pintens.intensities_count = sensors[0].intensities.size();
+      pintens.intensities_count = sensors[0].intensities.size();      
+      pintens.intensities = pintens.intensities_count ? &sensors[0].intensities[0] : NULL;
     }
   else
     {  // a sonar/IR type with one range per beam origin 	
