@@ -7,6 +7,14 @@ For introduction and license see README.txt
 For installation notes see INSTALL.txt
 
 
+Version 4.1.1
+-------------
+* fixed bugs in libstageplugin/p_ranger.cc that prevented the plugin from building
+* updated some docs
+
+Richard Vaughan (rtv) vaughan@sfu.ca - 2012.1.11
+
+
 Version 4.1.0
 -------------
 * many bugfixes
