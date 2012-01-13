@@ -136,7 +136,7 @@ trickedoutpioneer
 define silly position ( 	
   size [1.000 1.000 0.500]
   fiducial_return 22
-  laser_return 2
+  ranger_return 2
   gui_outline 1
   gripper_return 1
 )

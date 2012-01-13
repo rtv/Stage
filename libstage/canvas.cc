@@ -49,13 +49,13 @@ void Canvas::TimerCallback( Canvas* c )
     }
   
   Fl::repeat_timeout( c->interval/1000.0,
-							 (Fl_Timeout_Handler)Canvas::TimerCallback, 
-							 c);
+		      (Fl_Timeout_Handler)Canvas::TimerCallback, 
+		      c);
 }
 
 Canvas::Canvas( WorldGui* world, 
-					 int x, int y, 
-					 int width, int height) :
+		int x, int y, 
+		int width, int height) :
   Fl_Gl_Window( x, y, width, height ),
   colorstack(),  
   models_sorted(),
@@ -193,11 +193,11 @@ void Canvas::InitTextures()
   for (i = 0; i < checkImageHeight; i++) 
     for (j = 0; j < checkImageWidth; j++) 
       {			
-		  int even = (i+j)%2;
-		  checkImage[i][j][0] = (GLubyte) 255 - 10*even;
-		  checkImage[i][j][1] = (GLubyte) 255 - 10*even;
-		  checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
-		  checkImage[i][j][3] = 255;
+	int even = (i+j)%2;
+	checkImage[i][j][0] = (GLubyte) 255 - 10*even;
+	checkImage[i][j][1] = (GLubyte) 255 - 10*even;
+	checkImage[i][j][2] = (GLubyte) 255;// - 5*even;
+	checkImage[i][j][3] = 255;
       }
   
   glGenTextures(1, &checkTex );		 
@@ -209,7 +209,7 @@ void Canvas::InitTextures()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, checkImageHeight, 
-					0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
+	       0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);
 
   texture_load_done = true;
 }
@@ -242,19 +242,19 @@ Model* Canvas::getModel( int x, int y )
       Model* mod = (*it);
 		
       if( mod->gui.move )
-		  {
-			 uint8_t rByte, gByte, bByte, aByte;
-			 uint32_t modelId = mod->id;
-			 rByte = modelId;
-			 gByte = modelId >> 8;
-			 bByte = modelId >> 16;
-			 aByte = modelId >> 24;
+	{
+	  uint8_t rByte, gByte, bByte, aByte;
+	  uint32_t modelId = mod->id;
+	  rByte = modelId;
+	  gByte = modelId >> 8;
+	  bByte = modelId >> 16;
+	  aByte = modelId >> 24;
 
-			 //printf("mod->Id(): 0x%X, rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", modelId, rByte, gByte, bByte, aByte);
+	  //printf("mod->Id(): 0x%X, rByte: 0x%X, gByte: 0x%X, bByte: 0x%X, aByte: 0x%X\n", modelId, rByte, gByte, bByte, aByte);
 			
-			 glColor4ub( rByte, gByte, bByte, aByte );
-			 mod->DrawPicker();
-		  }
+	  glColor4ub( rByte, gByte, bByte, aByte );
+	  mod->DrawPicker();
+	}
     }
 	
   glFlush(); // make sure the drawing is done
@@ -268,7 +268,7 @@ Model* Canvas::getModel( int x, int y )
   uint32_t modelId;
 	
   glReadPixels( x,viewport[3]-y,1,1,
-					 GL_RGBA,GL_UNSIGNED_BYTE,&rgbaByte[0] );
+		GL_RGBA,GL_UNSIGNED_BYTE,&rgbaByte[0] );
 	
   modelId = rgbaByte[0];
   modelId |= rgbaByte[1] << 8;
@@ -313,7 +313,7 @@ void Canvas::unSelect( Model* mod )
 {
   if( mod )
     {
-		EraseAll( mod, selected_models );
+      EraseAll( mod, selected_models );
       redraw();
     }
 }
@@ -369,10 +369,10 @@ int Canvas::handle(int event)
     {
     case FL_MOUSEWHEEL:
       if( pCamOn == true ) {
-		  perspective_camera.scroll( Fl::event_dy() / 10.0 );
+	perspective_camera.scroll( Fl::event_dy() / 10.0 );
       }
       else {
-		  camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
+	camera.scale( Fl::event_dy(),  Fl::event_x(), w(), Fl::event_y(), h() );
       }
       invalidate();
       redraw();
@@ -380,156 +380,178 @@ int Canvas::handle(int event)
 		
     case FL_MOVE: // moused moved while no button was pressed
       if( Fl::event_state( FL_META ) )
-		  {
-			 puts( "TODO: HANDLE HISTORY" );
-			 //world->paused = ! world->paused;
-			 return 1;
-		  }
+	{
+	  puts( "TODO: HANDLE HISTORY" );
+	  //world->paused = ! world->paused;
+	  return 1;
+	}
 		
       if ( startx >=0 ) 
-		  {
-			 // mouse pointing to valid value
+	{
+	  // mouse pointing to valid value
 			 
-			 if( Fl::event_state( FL_CTRL ) )
-				{
-				  int dx = Fl::event_x() - startx;
-				  int dy = Fl::event_y() - starty;
+	  if( Fl::event_state( FL_CTRL ) ) // rotate the camera view
+	    {
+	      int dx = Fl::event_x() - startx;
+	      int dy = Fl::event_y() - starty;
 				  
-				  if( pCamOn == true ) {
-					 perspective_camera.addYaw( -dx );
-					 perspective_camera.addPitch( -dy );
-				  } 
-				  else {
-					 camera.addPitch( - 0.5 * static_cast<double>( dy ) );
-					 camera.addYaw( - 0.5 * static_cast<double>( dx ) );
-				  }
-				  invalidate();
-				  redraw();
-				}
-			 else if( Fl::event_state( FL_ALT ) )
-				{   
-				  int dx = Fl::event_x() - startx;
-				  int dy = Fl::event_y() - starty;
+	      if( pCamOn == true ) {
+		perspective_camera.addYaw( -dx );
+		perspective_camera.addPitch( -dy );
+	      } 
+	      else {
+		camera.addPitch( - 0.5 * static_cast<double>( dy ) );
+		camera.addYaw( - 0.5 * static_cast<double>( dx ) );
+	      }
+	      invalidate();
+	      redraw();
+	    }
+	  else if( Fl::event_state( FL_ALT ) )
+	    {   
+	      int dx = Fl::event_x() - startx;
+	      int dy = Fl::event_y() - starty;
 				  
-				  if( pCamOn == true ) {
-					 perspective_camera.move( -dx, dy, 0.0 );
-				  } 
-				  else {
-					 camera.move( -dx, dy );
-				  }
-				  invalidate();
-				}
-		  }
+	      if( pCamOn == true ) {
+		perspective_camera.move( -dx, dy, 0.0 );
+	      } 
+	      else {
+		camera.move( -dx, dy );
+	      }
+	      invalidate();
+	    }
+	}
       startx = Fl::event_x();
       starty = Fl::event_y();
       return 1;
     case FL_PUSH: // button pressed
       {
-		  //else
-		  {
-			 Model* mod = getModel( startx, starty );
-			 startx = Fl::event_x();
-			 starty = Fl::event_y();
-			 selectedModel = false;
-			 switch( Fl::event_button() )
-				{
-				case 1:
-				  clicked_empty_space = ( mod == NULL );
-				  empty_space_startx = startx;
-				  empty_space_starty = starty;
-				  if( mod ) { 
-					 // clicked a model
-					 if ( Fl::event_state( FL_SHIFT ) ) {
-						// holding shift, toggle selection
-						if ( selected( mod ) ) 
-						  unSelect( mod );
-						else {
-						  select( mod );
-						  selectedModel = true; // selected a model
-						}
-					 }
-					 else {
-						if ( !selected( mod ) ) {
-						  // clicked on an unselected model while
-						  //  not holding shift, this is the new
-						  //  selection
-						  unSelectAll();
-						  select( mod );
-						}
-						selectedModel = true; // selected a model
-					 }
-				  }
-				  
-				  redraw(); // probably required					 
-				  return 1;
-				case 3:
-				  {
-					 // leave selections alone
-					 // rotating handled within FL_DRAG
-					 return 1;
-				  }
-				default:
-				  return 0;
-				}    
+	//else
+	{
+	  Model* mod = getModel( startx, starty );
+	  startx = Fl::event_x();
+	  starty = Fl::event_y();
+	  selectedModel = false;
+	  switch( Fl::event_button() )
+	    {
+	    case 1:
+	      clicked_empty_space = ( mod == NULL );
+	      empty_space_startx = startx;
+	      empty_space_starty = starty;
+	      if( mod ) { 
+		// clicked a model
+		if ( Fl::event_state( FL_SHIFT ) ) {
+		  // holding shift, toggle selection
+		  if ( selected( mod ) ) 
+		    unSelect( mod );
+		  else {
+		    select( mod );
+		    selectedModel = true; // selected a model
 		  }
+		}
+		else {
+		  if ( !selected( mod ) ) {
+		    // clicked on an unselected model while
+		    //  not holding shift, this is the new
+		    //  selection
+		    unSelectAll();
+		    select( mod );
+		  }
+		  selectedModel = true; // selected a model
+		}
+	      }
+				  
+	      redraw(); // probably required					 
+	      return 1;
+	    case 3:
+	      {
+		// leave selections alone
+		// rotating handled within FL_DRAG
+		return 1;
+	      }
+	    default:
+	      return 0;
+	    }    
+	}
       }
 	  
     case FL_DRAG: // mouse moved while button was pressed
       {
-		  int dx = Fl::event_x() - startx;
-		  int dy = Fl::event_y() - starty;
+	int dx = Fl::event_x() - startx;
+	int dy = Fl::event_y() - starty;
 
-		  if ( Fl::event_state( FL_BUTTON1 ) && Fl::event_state( FL_CTRL ) == false ) {
-			 // Left mouse button drag
-			 if ( selectedModel ) {
-				// started dragging on a selected model
+	if ( Fl::event_state( FL_BUTTON1 ) && Fl::event_state( FL_CTRL ) == false ) {
+	  // Left mouse button drag
+	  if ( selectedModel ) {
+	    // started dragging on a selected model
 				
-				double sx,sy,sz;
-				CanvasToWorld( startx, starty,
-									&sx, &sy, &sz );
-				double x,y,z;
-				CanvasToWorld( Fl::event_x(), Fl::event_y(),
-									&x, &y, &z );
-				// move all selected models to the mouse pointer
-				FOR_EACH( it, selected_models )
-				  {
-					 Model* mod = *it;
-					 mod->AddToPose( x-sx, y-sy, 0, 0 );
-				  }
-			 }
-			 else {
-				// started dragging on empty space or an
-				//  unselected model, move the canvas
-				if( pCamOn == true ) {
-				  perspective_camera.move( -dx, dy, 0.0 );
-				} 
-				else {
-				  camera.move( -dx, dy );
-				}
-				invalidate(); // so the projection gets updated
-			 }
-		  }
-		  else if ( Fl::event_state( FL_BUTTON3 ) || ( Fl::event_state( FL_BUTTON1 ) &&  Fl::event_state( FL_CTRL )  ) ) {
-			 // rotate all selected models
-			 FOR_EACH( it, selected_models )
-				{
-				  Model* mod = *it;
-				  mod->AddToPose( 0,0,0, 0.05*(dx+dy) );
-				}
-		  }
+	    double sx,sy,sz;
+	    CanvasToWorld( startx, starty,
+			   &sx, &sy, &sz );
+	    double x,y,z;
+	    CanvasToWorld( Fl::event_x(), Fl::event_y(),
+			   &x, &y, &z );
+	    // move all selected models to the mouse pointer
+	    FOR_EACH( it, selected_models )
+	      {
+		Model* mod = *it;
+		mod->AddToPose( x-sx, y-sy, 0, 0 );
+	      }
+	  }
+	  else {
+	    // started dragging on empty space or an
+	    //  unselected model, move the canvas
+	    if( pCamOn == true ) {
+	      perspective_camera.move( -dx, dy, 0.0 );
+	    } 
+	    else {
+	      camera.move( -dx, dy );
+	    }
+	    invalidate(); // so the projection gets updated
+	  }
+	}
+	else if ( Fl::event_state( FL_BUTTON3 ) || ( Fl::event_state( FL_BUTTON1 ) &&  Fl::event_state( FL_CTRL )  ) ) {
+	  // rotate all selected models
+
+	  if( selected_models.size() )
+	    {
+	      FOR_EACH( it, selected_models )
+		{
+		  Model* mod = *it;
+		  mod->AddToPose( 0,0,0, 0.05*(dx+dy) );
+		}
+	    }
+	    else
+	      {
+		//printf( "button 2\n" );
 		
-		  startx = Fl::event_x();
-		  starty = Fl::event_y();
-
-		  redraw();
-		  return 1;
-      } // end case FL_DRAG
-
+		int dx = Fl::event_x() - startx;
+		int dy = Fl::event_y() - starty;
+		
+		if( pCamOn == true ) {
+		  perspective_camera.addYaw( -dx );
+		  perspective_camera.addPitch( -dy );
+		} 
+		else {
+		  camera.addPitch( - 0.5 * static_cast<double>( dy ) );
+		  camera.addYaw( - 0.5 * static_cast<double>( dx ) );
+		}
+	      }
+	    invalidate();
+	    redraw();
+	    }	  	  
+	  
+	  startx = Fl::event_x();
+	  starty = Fl::event_y();
+	  
+	  redraw();
+	  return 1;
+	} // end case FL_DRAG
+	
     case FL_RELEASE:   // mouse button released
       if( empty_space_startx == Fl::event_x() && empty_space_starty == Fl::event_y() && clicked_empty_space == true ) {
-		  // clicked on empty space, unselect all
-		  unSelectAll();
-		  redraw();
+	// clicked on empty space, unselect all
+	unSelectAll();
+	redraw();
       }
       return 1;
 
@@ -540,23 +562,23 @@ int Canvas::handle(int event)
 
     case FL_KEYBOARD:
       switch( Fl::event_key() )
-		  {
-		  case FL_Left:
-			 if( pCamOn == false ) { camera.move( -10, 0 ); } 
-			 else { perspective_camera.strafe( -0.5 ); } break;
-		  case FL_Right: 
-			 if( pCamOn == false ) {camera.move( 10, 0 ); } 
-			 else { perspective_camera.strafe( 0.5 ); } break;
-		  case FL_Down:  
-			 if( pCamOn == false ) {camera.move( 0, -10 ); } 
-			 else { perspective_camera.forward( -0.5 ); } break;
-		  case FL_Up:  
-			 if( pCamOn == false ) {camera.move( 0, 10 ); } 
-			 else { perspective_camera.forward( 0.5 ); } break;
-		  default:
-			 redraw(); // we probably set a display config - so need this
-			 return 0; // keypress unhandled
-		  }
+	{
+	case FL_Left:
+	  if( pCamOn == false ) { camera.move( -10, 0 ); } 
+	  else { perspective_camera.strafe( -0.5 ); } break;
+	case FL_Right: 
+	  if( pCamOn == false ) {camera.move( 10, 0 ); } 
+	  else { perspective_camera.strafe( 0.5 ); } break;
+	case FL_Down:  
+	  if( pCamOn == false ) {camera.move( 0, -10 ); } 
+	  else { perspective_camera.forward( -0.5 ); } break;
+	case FL_Up:  
+	  if( pCamOn == false ) {camera.move( 0, 10 ); } 
+	  else { perspective_camera.forward( 0.5 ); } break;
+	default:
+	  redraw(); // we probably set a display config - so need this
+	  return 0; // keypress unhandled
+	}
 		
       invalidate(); // update projection
       return 1;
@@ -584,7 +606,7 @@ void Canvas::FixViewport(int W,int H)
 void Canvas::AddModel( Model*  mod  )
 {
   models_sorted.push_back( mod );
-	redraw();
+  redraw();
 }
 
 void Canvas::RemoveModel( Model*  mod  )
@@ -792,10 +814,10 @@ void Canvas::renderFrame()
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
   if( showOccupancy )
-	 ((WorldGui*)world)->DrawOccupancy();
+    ((WorldGui*)world)->DrawOccupancy();
   
   if( showVoxels )
-	 ((WorldGui*)world)->DrawVoxels();
+    ((WorldGui*)world)->DrawVoxels();
   
   
   if( ! world->rt_cells.empty() )
@@ -812,24 +834,24 @@ void Canvas::renderFrame()
       glBegin( GL_POINTS );
 			
       for( unsigned int i=0;
-			  i < world->rt_cells.size();
-			  i++ )
-		  {
-			 char str[128];
-			 snprintf( str, 128, "(%d,%d)", 
-						  world->rt_cells[i].x, 
-						  world->rt_cells[i].y );
+	   i < world->rt_cells.size();
+	   i++ )
+	{
+	  char str[128];
+	  snprintf( str, 128, "(%d,%d)", 
+		    world->rt_cells[i].x, 
+		    world->rt_cells[i].y );
 					
-			 Gl::draw_string(  world->rt_cells[i].x+1, 
-									 world->rt_cells[i].y+1, 0.1, str );
+	  Gl::draw_string(  world->rt_cells[i].x+1, 
+			    world->rt_cells[i].y+1, 0.1, str );
 					
-			 //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
-			 //glRectf( world->rt_cells[i].x+0.3, world->rt_cells[i].y+0.3,
-			 //	 world->rt_cells[i].x+0.7, world->rt_cells[i].y+0.7 );
+	  //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
+	  //glRectf( world->rt_cells[i].x+0.3, world->rt_cells[i].y+0.3,
+	  //	 world->rt_cells[i].x+0.7, world->rt_cells[i].y+0.7 );
 					
-			 glVertex2f( world->rt_cells[i].x, world->rt_cells[i].y );
+	  glVertex2f( world->rt_cells[i].x, world->rt_cells[i].y );
 					
-		  }
+	}
 			
       glEnd();
 			
@@ -837,11 +859,11 @@ void Canvas::renderFrame()
       world->PushColor( Color( 0,1,0,0.2) );
       glBegin( GL_LINE_STRIP );
       for( unsigned int i=0;
-			  i < world->rt_cells.size();
-			  i++ )
-		  {			 
-			 glVertex2f( world->rt_cells[i].x+0.5, world->rt_cells[i].y+0.5 );
-		  }
+	   i < world->rt_cells.size();
+	   i++ )
+	{			 
+	  glVertex2f( world->rt_cells[i].x+0.5, world->rt_cells[i].y+0.5 );
+	}
       glEnd();
       world->PopColor();
 #endif
@@ -861,30 +883,30 @@ void Canvas::renderFrame()
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 			
       for( unsigned int i=0;
-			  i < world->rt_candidate_cells.size();
-			  i++ )
-		  {
-			 // 			 char str[128];
-			 // 			 snprintf( str, 128, "(%d,%d)", 
-			 // 						  world->rt_candidate_cells[i].x, 
-			 // 						  world->rt_candidate_cells[i].y );
+	   i < world->rt_candidate_cells.size();
+	   i++ )
+	{
+	  // 			 char str[128];
+	  // 			 snprintf( str, 128, "(%d,%d)", 
+	  // 						  world->rt_candidate_cells[i].x, 
+	  // 						  world->rt_candidate_cells[i].y );
 					
-			 // 			 Gl::draw_string(  world->rt_candidate_cells[i].x+1, 
-			 // 									 world->rt_candidate_cells[i].y+1, 0.1, str );
+	  // 			 Gl::draw_string(  world->rt_candidate_cells[i].x+1, 
+	  // 									 world->rt_candidate_cells[i].y+1, 0.1, str );
 					
-			 //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
-			 glRectf( world->rt_candidate_cells[i].x, world->rt_candidate_cells[i].y,
-						 world->rt_candidate_cells[i].x+1, world->rt_candidate_cells[i].y+1 );
-		  }
+	  //printf( "x: %d y: %d\n", world->rt_regions[i].x, world->rt_regions[i].y );
+	  glRectf( world->rt_candidate_cells[i].x, world->rt_candidate_cells[i].y,
+		   world->rt_candidate_cells[i].x+1, world->rt_candidate_cells[i].y+1 );
+	}
 			
       world->PushColor( Color( 0,1,0,0.2) );
       glBegin( GL_LINE_STRIP );
       for( unsigned int i=0;
-			  i < world->rt_candidate_cells.size();
-			  i++ )
-		  {			 
-			 glVertex2f( world->rt_candidate_cells[i].x+0.5, world->rt_candidate_cells[i].y+0.5 );
-		  }
+	   i < world->rt_candidate_cells.size();
+	   i++ )
+	{			 
+	  glVertex2f( world->rt_candidate_cells[i].x+0.5, world->rt_candidate_cells[i].y+0.5 );
+	}
       glEnd();
       world->PopColor();
 			
@@ -904,7 +926,7 @@ void Canvas::renderFrame()
       glDisable( GL_DEPTH_TEST ); // using alpha blending		
 		
       FOR_EACH( it, models_sorted )
-		  (*it)->DrawTrailFootprint();
+	(*it)->DrawTrailFootprint();
 		
       glEnable( GL_DEPTH_TEST );
     }
@@ -946,21 +968,21 @@ void Canvas::renderFrame()
   
   // draw the model-specific visualizations
   if( world->sim_time > 0 )
-	 {
-		if( showData ) {
-		  if ( ! visualizeAll ) {
-			 FOR_EACH( it, world->World::children )
-				(*it)->DataVisualizeTree( current_camera );
-		  }
-		  else if ( selected_models.size() > 0 ) {
-			 FOR_EACH( it, selected_models )
-				(*it)->DataVisualizeTree( current_camera );
-		  }
-		  else if ( last_selection ) {
-			 last_selection->DataVisualizeTree( current_camera );
-		  }
-		}
-	 }
+    {
+      if( showData ) {
+	if ( ! visualizeAll ) {
+	  FOR_EACH( it, world->World::children )
+	    (*it)->DataVisualizeTree( current_camera );
+	}
+	else if ( selected_models.size() > 0 ) {
+	  FOR_EACH( it, selected_models )
+	    (*it)->DataVisualizeTree( current_camera );
+	}
+	else if ( last_selection ) {
+	  last_selection->DataVisualizeTree( current_camera );
+	}
+      }
+    }
 
   if( showGrid ) 
     FOR_EACH( it, models_sorted )
@@ -971,10 +993,10 @@ void Canvas::renderFrame()
       glPushMatrix();
       //ensure two icons can't be in the exact same plane
       if( camera.pitch() == 0 && !pCamOn )
-		  glTranslatef( 0, 0, 0.1 );
+	glTranslatef( 0, 0, 0.1 );
 		
       FOR_EACH( it, models_sorted )
-		  (*it)->DrawStatusTree( &camera );
+	(*it)->DrawStatusTree( &camera );
 		
       glPopMatrix();
     }
@@ -984,13 +1006,13 @@ void Canvas::renderFrame()
       glDisable( GL_DEPTH_TEST );
       PushColor( 0,0,0,0.5 );
       FOR_EACH( it, world->ray_list )
-		  {
-			 float* pts = *it;
-			 glBegin( GL_LINES );
-			 glVertex2f( pts[0], pts[1] );
-			 glVertex2f( pts[2], pts[3] );
-			 glEnd();
-		  }  
+	{
+	  float* pts = *it;
+	  glBegin( GL_LINES );
+	  glVertex2f( pts[0], pts[1] );
+	  glVertex2f( pts[2], pts[3] );
+	  glEnd();
+	}  
       PopColor();
       glEnable( GL_DEPTH_TEST );
 		 
@@ -1014,7 +1036,7 @@ void Canvas::renderFrame()
 
       std::string clockstr = world->ClockString();
       if( showFollow == true && last_selection )
-		  clockstr.append( " [FOLLOW MODE]" );
+	clockstr.append( " [FOLLOW MODE]" );
 		
       float txtWidth = gl_width( clockstr.c_str());
       if( txtWidth < 200 ) txtWidth = 200;
@@ -1035,16 +1057,16 @@ void Canvas::renderFrame()
 		
       // ENERGY BOX
       if( PowerPack::global_capacity > 0 )
-		  {
-			 colorstack.Push( 0.8,1.0,0.8,0.85 ); // pale green
-			 glRectf( 0, height, width, 90 );
-			 colorstack.Push( 0,0,0 ); // black
-			 Gl::draw_string_multiline( margin, height + margin, width, 50, 
-												 world->EnergyString().c_str(), 
-												 (Fl_Align)( FL_ALIGN_LEFT | FL_ALIGN_BOTTOM) );	 
-			 colorstack.Pop();
-			 colorstack.Pop();
-		  }
+	{
+	  colorstack.Push( 0.8,1.0,0.8,0.85 ); // pale green
+	  glRectf( 0, height, width, 90 );
+	  colorstack.Push( 0,0,0 ); // black
+	  Gl::draw_string_multiline( margin, height + margin, width, 50, 
+				     world->EnergyString().c_str(), 
+				     (Fl_Align)( FL_ALIGN_LEFT | FL_ALIGN_BOTTOM) );	 
+	  colorstack.Pop();
+	  colorstack.Pop();
+	}
 			 
       glEnable( GL_DEPTH_TEST );
       glPopMatrix();
@@ -1132,11 +1154,11 @@ void Canvas::Screenshot()
   png_set_rows( pp, info, rowpointers ); 
 
   png_set_IHDR( pp, info, 
-					 width, height, 8, 
-					 PNG_COLOR_TYPE_RGBA, 
-					 PNG_INTERLACE_NONE, 
-					 PNG_COMPRESSION_TYPE_DEFAULT, 
-					 PNG_FILTER_TYPE_DEFAULT);
+		width, height, 8, 
+		PNG_COLOR_TYPE_RGBA, 
+		PNG_INTERLACE_NONE, 
+		PNG_COMPRESSION_TYPE_DEFAULT, 
+		PNG_FILTER_TYPE_DEFAULT);
 
   png_write_png( pp, info, PNG_TRANSFORM_IDENTITY, NULL );
 
@@ -1182,7 +1204,7 @@ void Canvas::createMenuItems( Fl_Menu_Bar* menu, std::string path )
   showTrails.createMenuItem( menu, path ); 
   showTrailRise.createMenuItem( menu, path );  // broken
   showBBoxes.createMenuItem( menu, path );
-  showVoxels.createMenuItem( menu, path );  
+  //showVoxels.createMenuItem( menu, path );  
   showScreenshots.createMenuItem( menu, path );  
 }
 
@@ -1212,15 +1234,15 @@ void Canvas::Load( Worldfile* wf, int sec )
   showTrailArrows.Load( wf, sec );
   showTrailRise.Load( wf, sec );
   showTrails.Load( wf, sec );
-  showVoxels.Load( wf, sec );
+  //showVoxels.Load( wf, sec );
   showScreenshots.Load( wf, sec );
   pCamOn.Load( wf, sec );
 
   if( ! world->paused )
     // // start the timer that causes regular redraws
     Fl::add_timeout( ((double)interval/1000), 
-							(Fl_Timeout_Handler)Canvas::TimerCallback, 
-							this);
+		     (Fl_Timeout_Handler)Canvas::TimerCallback, 
+		     this);
 
   invalidate(); // we probably changed something
 }
@@ -1260,22 +1282,22 @@ void Canvas::draw()
   if (!valid() ) 
     { 
       if( ! init_done )
-		  InitGl();
+	InitGl();
       if( ! texture_load_done )
-          InitTextures();
+	InitTextures();
 		
       if( pCamOn == true ) 
-		  {
-			 perspective_camera.setAspect( static_cast< float >( w() ) / static_cast< float >( h() ) );
-			 perspective_camera.SetProjection();
-			 current_camera = &perspective_camera;
-		  } 
+	{
+	  perspective_camera.setAspect( static_cast< float >( w() ) / static_cast< float >( h() ) );
+	  perspective_camera.SetProjection();
+	  current_camera = &perspective_camera;
+	} 
       else 
-		  {
-			 bounds3d_t extent = world->GetExtent();
-			 camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
-			 current_camera = &camera;
-		  }
+	{
+	  bounds3d_t extent = world->GetExtent();
+	  camera.SetProjection( w(), h(), extent.y.min, extent.y.max );
+	  current_camera = &camera;
+	}
 		
       glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     }            
@@ -1285,14 +1307,14 @@ void Canvas::draw()
     {
       Pose gpose = last_selection->GetGlobalPose();
       if( pCamOn == true )
-		  {
-			 perspective_camera.setPose( gpose.x, gpose.y, 0.2 );
-			 perspective_camera.setYaw( rtod( gpose.a ) - 90.0 );
-		  } 
+	{
+	  perspective_camera.setPose( gpose.x, gpose.y, 0.2 );
+	  perspective_camera.setYaw( rtod( gpose.a ) - 90.0 );
+	} 
       else 
-		  {
-			 camera.setPose( gpose.x, gpose.y );
-		  }
+	{
+	  camera.setPose( gpose.x, gpose.y );
+	}
     }
   
   current_camera->Draw();	
@@ -1303,9 +1325,9 @@ void Canvas::resize(int X,int Y,int W,int H)
 {
   Fl_Gl_Window::resize(X,Y,W,H);
 
-	if( ! init_done ) // hack - should capture a create event to do this rather thann have it in multiple places
-		InitGl();
+  if( ! init_done ) // hack - should capture a create event to do this rather thann have it in multiple places
+    InitGl();
 	
-	FixViewport(W,H);
+  FixViewport(W,H);
   invalidate();
 }

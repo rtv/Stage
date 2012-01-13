@@ -28,4 +28,4 @@ clean:
 
 # copy the latest docs to the web server
 upload: 
-		ghp-import -p stage
+		./ghp-import -p stage

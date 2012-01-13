@@ -1,3 +1,11 @@
+Stage README.txt
+================
+
+This is the Stage README file, containing an introduction, license and
+citation information.
+
+For release notes see RELEASE.txt
+For installation notes see INSTALL.txt
 
 Copyright Richard Vaughan and contributors 1998-2011
 Part of the Player Project (http://playerstage.org)
