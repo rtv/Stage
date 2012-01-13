@@ -439,14 +439,14 @@ void Model::LoadBlock( Worldfile* wf, int entity )
 }
 
 
-Block* Model::AddBlockRect( meters_t x, 
-			    meters_t y, 
-			    meters_t dx, 
-			    meters_t dy,
-			    meters_t dz )
+void Model::AddBlockRect( meters_t x, 
+			  meters_t y, 
+			  meters_t dx, 
+			  meters_t dy,
+			  meters_t dz )
 {  
   UnMap();
-
+  
   std::vector<point_t> pts(4);
   pts[0].x = x;
   pts[0].y = y;
@@ -457,18 +457,12 @@ Block* Model::AddBlockRect( meters_t x,
   pts[3].x = x;
   pts[3].y = y + dy;
   
-  Block* newblock =  new Block( this,
-				pts,
-				0, dz, 
-				color,
-				true, 
-				false );
-  
-  blockgroup.AppendBlock( newblock );
-  
-  Map();
-  
-  return newblock;
+  blockgroup.AppendBlock( Block( this,
+				 pts,
+				 0, dz, 
+				 color,
+				 true ));
+  Map(); 
 }
 
 
@@ -669,14 +663,6 @@ void Model::Unsubscribe( void )
     this->Shutdown();
 }
 
-
-// void pose_invert( Pose* pose )
-// {
-//   pose->x = -pose->x;
-//   pose->y = -pose->y;
-//   // pose->a = pose->a;
-// }
-
 void Model::Print( char* prefix ) const
 {
   if( prefix )
@@ -735,8 +721,6 @@ void Model::Shutdown( void )
 void Model::Update( void )
 { 
   //printf( "Q%d model %p %s update\n", event_queue_num, this, Token() );
-
-  //	CallCallbacks( CB_UPDATE );
 	
   last_update = world->sim_time;  
 	
@@ -1553,13 +1537,17 @@ void Model::Load()
 			 
 	  blockgroup.CalcSize();
 			 
-	  double epsilon = 0.01;	      
-	  Size bgsize = blockgroup.GetSize();
-			 
-	  AddBlockRect(blockgroup.minx,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
-	  AddBlockRect(blockgroup.minx,blockgroup.miny, bgsize.x, epsilon, bgsize.z );	      
-	  AddBlockRect(blockgroup.minx,blockgroup.maxy-epsilon, bgsize.x, epsilon, bgsize.z );	      
-	  AddBlockRect(blockgroup.maxx-epsilon,blockgroup.miny, epsilon, bgsize.y, bgsize.z );	      
+	  const double epsilon = 0.01;	      
+	  const bounds3d_t b = blockgroup.BoundingBox();
+	  
+	  const Size size( b.x.max - b.x.min, 
+			   b.y.max - b.y.min, 
+			   b.z.max - b.z.min );
+	  
+	  AddBlockRect(b.x.min, b.y.min, epsilon, size.y, size.z );	      
+	  AddBlockRect(b.x.min, b.y.min, size.x, epsilon, size.z );	      
+	  AddBlockRect(b.x.min, b.y.max-epsilon, size.x, epsilon, size.z );	      
+	  AddBlockRect(b.x.max-epsilon, b.y.min, epsilon, size.y, size.z );	      
 	}     
     }	  
   

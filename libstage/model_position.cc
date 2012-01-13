@@ -490,13 +490,13 @@ void ModelPosition::Update( void  )
     case LOCALIZATION_GPS:
       {
 	// compute our localization pose based on the origin and true pose
-	Pose gpose = this->GetGlobalPose();
+	const Pose gpose = this->GetGlobalPose();
 
 	est_pose.a = normalize( gpose.a - est_origin.a );
-	double cosa = cos(est_origin.a);
-	double sina = sin(est_origin.a);
-	double dx = gpose.x - est_origin.x;
-	double dy = gpose.y - est_origin.y;
+	const double cosa = cos(est_origin.a);
+	const double sina = sin(est_origin.a);
+	const double dx = gpose.x - est_origin.x;
+	const double dy = gpose.y - est_origin.y;
 	est_pose.x = dx * cosa + dy * sina;
 	est_pose.y = dy * cosa - dx * sina;
 
@@ -506,14 +506,14 @@ void ModelPosition::Update( void  )
     case LOCALIZATION_ODOM:
       {
 	// integrate our velocities to get an 'odometry' position estimate.
-	double dt = world->sim_interval / 1e6; // update interval convert to seconds
+	const double dt = world->sim_interval / 1e6; // update interval convert to seconds
 		  
 	est_pose.a = normalize( est_pose.a + (vel.a * dt) * (1.0 +integration_error.a) );
 		  
-	double cosa = cos(est_pose.a);
-	double sina = sin(est_pose.a);
-	double dx = (vel.x * dt) * (1.0 + integration_error.x );
-	double dy = (vel.y * dt) * (1.0 + integration_error.y );
+	const double cosa = cos(est_pose.a);
+	const double sina = sin(est_pose.a);
+	const double dx = (vel.x * dt) * (1.0 + integration_error.x );
+	const double dy = (vel.y * dt) * (1.0 + integration_error.y );
 		  
 	est_pose.x += dx * cosa + dy * sina;
 	est_pose.y -= dy * cosa - dx * sina;
@@ -542,15 +542,15 @@ void ModelPosition::Move( void )
 
   // convert usec to sec
   const double interval( (double)world->sim_interval / 1e6 );
-
+  
   // find the change of pose due to our velocity vector
-  const Pose p( velocity.x * interval,
-		velocity.y * interval,
-		velocity.z * interval,
-		normalize( velocity.a * interval ));
+  const Pose dp( velocity.x * interval,
+		 velocity.y * interval,
+		 velocity.z * interval,
+		 normalize( velocity.a * interval ));
   
   // the pose we're trying to achieve (unless something stops us)
-  const Pose newpose( pose + p );
+  const Pose newpose( pose + dp );
   
   // stash the original pose so we can put things back if we hit
   const Pose startpose( pose );
@@ -574,7 +574,6 @@ void ModelPosition::Move( void )
     }
   else
     {
-      //      world->dirty = true; // need redraw	
       SetStall(false);
     }
 }

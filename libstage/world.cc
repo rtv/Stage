@@ -662,6 +662,7 @@ bool World::Update()
   pthread_mutex_unlock( &sync_mutex );		 
   
   // update the position of all position models based on their velocity
+  // while sensor models are running in other threads
   FOR_EACH( it, active_velocity )
     (*it)->Move();
   

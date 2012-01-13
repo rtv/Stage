@@ -190,12 +190,14 @@ void ModelGripper::FixBlocks()
   // add three blocks that make the gripper
   // base
   AddBlockRect( 0, 0, 1.0-cfg.paddle_size.x, 1.0, 1.0 );
+  AddBlockRect( 1.0-cfg.paddle_size.x, 0, cfg.paddle_size.x, cfg.paddle_size.y, cfg.paddle_size.z );
+  AddBlockRect( 1.0-cfg.paddle_size.x, 1.0-cfg.paddle_size.y, cfg.paddle_size.x, cfg.paddle_size.y, cfg.paddle_size.z );
 
   // left (top) paddle
-  paddle_left = AddBlockRect( 1.0-cfg.paddle_size.x, 0, cfg.paddle_size.x, cfg.paddle_size.y, cfg.paddle_size.z );
+  paddle_left = &blockgroup.GetBlock(1);
 
   // right (bottom) paddle
-  paddle_right = AddBlockRect( 1.0-cfg.paddle_size.x, 1.0-cfg.paddle_size.y, cfg.paddle_size.x, cfg.paddle_size.y, cfg.paddle_size.z );
+  paddle_right =  &blockgroup.GetBlock(2);
 
   PositionPaddles();
 }

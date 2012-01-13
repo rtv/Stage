@@ -907,8 +907,6 @@ namespace Stg
     usec_t sim_time; ///< the current sim time in this world in microseconds
     std::map<point_int_t,SuperRegion*> superregions;
 	 
-    std::vector< std::vector<Model*> > update_lists;  
-	 
     uint64_t updates; ///< the number of simulated time steps executed so far
     Worldfile* wf; ///< If set, points to the worldfile used to create this world
 
@@ -1212,20 +1210,19 @@ namespace Stg
 	   meters_t zmin,
 	   meters_t zmax,
 	   Color color,
-	   bool inherit_color,
-	   bool wheel );
-		
+	   bool inherit_color );
+    
     /** A from-file  constructor */
     Block(  Model* mod,  Worldfile* wf, int entity);
-		
+    
     ~Block();
-	 
+    
     /** render the block into the world's raytrace data structure */
     void Map( unsigned int layer ); 	 
-        
+    
     /** remove the block from the world's raytracing data structure */
     void UnMap( unsigned int layer );	 
-        
+    
     /** draw the block in OpenGL as a solid single color */    
     void DrawSolid(bool topview);
 
@@ -1259,44 +1256,34 @@ namespace Stg
     Model* TestCollision(); 
 
     void Load( Worldfile* wf, int entity );  
+
     Model* GetModel(){ return mod; };  
+
     const Color& GetColor();		
+
     void Rasterize( uint8_t* data, 
 		    unsigned int width, unsigned int height,		
 		    meters_t cellwidth, meters_t cellheight );
 		
   private:
-    Model* mod; ///< model to which this block belongs
-    std::vector<point_t> mpts; ///< cache of this->pts in model coordindates
-    size_t pt_count; ///< the number of points	 
-    std::vector<point_t> pts; ///< points defining a polygonx	 
-    Size size;	 
-    Bounds local_z; ///<  z extent in local coords
-    Color color;
-    bool inherit_color;
-    bool wheel;
+    Model* mod; ///< model to which this block belongs.
+    std::vector<point_t> pts; ///< points defining a polygon.
+    Size size; ///< Size of the polygon in meters.
+    Bounds local_z; ///<  z extent in local coords.
+    Color color; ///< Color of the polygon as seen in sensors and the GUI.
+    bool inherit_color; ///< Use parent's color instead of this->color.
+	 
+    Bounds global_z; ///< z extent in global coordinates.
+
+    bool mapped; ///< iff true, the block has been mapped in the bitmap (TODO: which layer?)
+		
+    /** record the cells into which this block has been rendered so we
+	can remove them very quickly. One vector for each of the two
+	bitmap layers.*/  
+    std::vector<Cell*> rendered_cells[2];
 
     void DrawTop();
     void DrawSides();
-	 
-    /** z extent in global coordinates */
-    Bounds global_z;	 
-    bool mapped;
-		
-    /** record the list entries for the cells where this block is rendered */
-    std::vector< std::list<Block*>::iterator > list_entries;
-		
-    /** record the cells into which this block has been rendered so we can 
-	remove them very quickly. */  
-    std::vector<Cell*> rendered_cells[2];
-		
-    /** find the position of a block's point in model coordinates
-	(m) */
-    point_t BlockPointToModelMeters( const point_t& bpt );
-	
-    /** invalidate the cache of points in model coordinates */
-    void InvalidateModelPointCache();
-		
   };
 
 	
@@ -1310,24 +1297,18 @@ namespace Stg
 		
     void BuildDisplayList( Model* mod );
 		
-    std::vector<Block*> blocks;
-    Size size;
-    point3_t offset;
-    meters_t minx, maxx, miny, maxy;
+    std::vector<Block> blocks;
 		
   public:
     BlockGroup();
     ~BlockGroup();
 		
-    uint32_t GetCount(){ return blocks.size(); };
-    const Size& GetSize(){ return size; };
-    const point3_t& GetOffset(){ return offset; };
-		
-    /** Establish the min and max of all the blocks, so we can scale this
-	group later. */
-    void CalcSize();
-	 
-    void AppendBlock( Block* block );
+    uint32_t GetCount() const { return blocks.size(); };
+    Block& GetBlock( unsigned int index ) { return blocks[index]; }; 
+    bounds3d_t BoundingBox();
+
+    void CalcSize();	 
+    void AppendBlock( const Block& block );
     void CallDisplayList( Model* mod );
     void Clear() ; /** deletes all blocks from the group */
 	 
@@ -1351,14 +1332,7 @@ namespace Stg
 	 
     void Rasterize( uint8_t* data, 
 		    unsigned int width, unsigned int height,
-		    meters_t cellwidth, meters_t cellheight );
-	 
-    void InvalidateModelPointCache()
-    {
-      FOR_EACH( it, blocks )
-	(*it)->InvalidateModelPointCache();
-    }
-
+		    meters_t cellwidth, meters_t cellheight );	 
   };
 
   class Camera 
@@ -2287,7 +2261,7 @@ namespace Stg
 
     /** Add a block to this model centered at [x,y] with extent [dx, dy,
 	dz] */
-    Block*	AddBlockRect( meters_t x, meters_t y, 
+    void	AddBlockRect( meters_t x, meters_t y, 
 			      meters_t dx, meters_t dy, 
 			      meters_t dz );
 		
@@ -2492,10 +2466,9 @@ namespace Stg
       meters_t range;
     };
 
+    /** Visualize blobinder data in the GUI. */
     class Vis : public Visualizer 
     {
-    private:
-      //static Option showArea;
     public:
       Vis( World* world );
       virtual ~Vis( void ){}
@@ -2503,18 +2476,24 @@ namespace Stg
     } vis;
 
   private:
+    /** Vector of blobs detected in the field of view. Use GetBlobs()
+	or GetBlobsMutable() to acess the vector. */
     std::vector<Blob> blobs;
+
+    /** The sensor detects model blocks of each of these colors. Use
+	AddColor() and RemoveColor()
+	to add and remove colors at run time.*/
     std::vector<Color> colors;
 
     // predicate for ray tracing
     static bool BlockMatcher( Block* testblock, Model* finder );
 
   public:
-    radians_t fov;
-    radians_t pan;
-    meters_t range;
-    unsigned int scan_height;
-    unsigned int scan_width;
+    radians_t fov; ///< Horizontal field of view in radians, in the range 0 to pi.
+    radians_t pan; ///< Horizontal pan angle in radians, in the range -pi to +pi.
+    meters_t range; ///< Maximum distance at which blobs are detected (a little artificial, but setting this small saves computation  time.
+    unsigned int scan_height; ///< Height of the input image in pixels.
+    unsigned int scan_width; ///< Width of the input image in pixels.
 	 
     // constructor
     ModelBlobfinder( World* world,
@@ -2528,13 +2507,15 @@ namespace Stg
     virtual void Update();
     virtual void Load();
 		
-    Blob* GetBlobs( unsigned int* count )
-    { 
-      if( count ) *count = blobs.size();
-      return &blobs[0];
-    }
+    /** Returns a non-mutable const reference to the detected blob
+	data. Use this if you don't need to modify the model's
+	internal data, e.g. if you want to copy it into a new
+	vector.*/
+    const std::vector<Blob>& GetBlobs() const { return blobs; }
 
-    std::vector<Blob> GetBlobs() const { return blobs; }
+    /** Returns a mutable reference to the model's internal detected
+	blob data. Use this with caution, if at all. */
+    std::vector<Blob>& GetBlobsMutable() { return blobs; }
 
     /** Start finding blobs with this color.*/
     void AddColor( Color col );

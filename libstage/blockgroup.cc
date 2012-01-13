@@ -12,11 +12,7 @@ using namespace std;
 
 BlockGroup::BlockGroup() 
   : displaylist(0),
-    blocks(), 
-    minx(0),
-    maxx(0),
-    miny(0),
-    maxy(0)
+    blocks() 
 { /* empty */ }
 
 BlockGroup::~BlockGroup()
@@ -24,15 +20,15 @@ BlockGroup::~BlockGroup()
   Clear();
 }
 
-void BlockGroup::AppendBlock( Block* block )
+void BlockGroup::AppendBlock( const Block& block )
 {
   blocks.push_back( block );
 }
 
 void BlockGroup::Clear()
 {
-  FOR_EACH( it, blocks )
-    delete *it;
+  //FOR_EACH( it, blocks )
+  // delete *it;
   
   blocks.clear();
 }
@@ -40,7 +36,7 @@ void BlockGroup::Clear()
 void BlockGroup::AppendTouchingModels( std::set<Model*>& v )
 {
   FOR_EACH( it, blocks )
-    (*it)->AppendTouchingModels( v );  
+    it->AppendTouchingModels( v );  
 }
 
 Model* BlockGroup::TestCollision()
@@ -48,99 +44,97 @@ Model* BlockGroup::TestCollision()
   Model* hitmod = NULL;
    
   FOR_EACH( it, blocks )
-    if( (hitmod = (*it)->TestCollision()))
+    if( (hitmod = it->TestCollision()))
       break; // bail on the earliest collision
 
   return hitmod; // NULL if no collision
 }
 
 
-// establish the min and max of all the blocks, so we can scale this
-// group later
-void BlockGroup::CalcSize()
-{  
+/** find the 3d bounding box of all the blocks in the group */
+bounds3d_t BlockGroup::BoundingBox()
+{
   // assuming the blocks currently fit in a square +/- one billion units
-  //double minx, miny, maxx, maxy, minz, maxz;
-  minx = miny =  billion;
-  maxx = maxy = -billion;
-  
-  size.z = 0.0; // grow to largest z we see
+  double minx, miny, maxx, maxy, minz, maxz;
+  minx = miny = minz = billion;
+  maxx = maxy = maxz = -billion;
   
   FOR_EACH( it, blocks )
     {
       // examine all the points in the polygon
-      Block* block = *it;
-      
-      FOR_EACH( it, block->pts )
+      FOR_EACH( pit, it->pts )
 	{
-	  if( it->x < minx ) minx = it->x;
-	  if( it->y < miny ) miny = it->y;
-	  if( it->x > maxx ) maxx = it->x;
-	  if( it->y > maxy ) maxy = it->y;
+	  if( pit->x < minx ) minx = pit->x;
+	  if( pit->y < miny ) miny = pit->y;
+	  if( pit->x > maxx ) maxx = pit->x;
+	  if( pit->y > maxy ) maxy = pit->y;
 	}
       
-      size.z = std::max( block->local_z.max, size.z );
-    }
-  
-  // store these bounds for normalization purposes
-  size.x = maxx-minx;
-  size.y = maxy-miny;
-  
-  offset.x = minx + size.x/2.0;
-  offset.y = miny + size.y/2.0;
-  offset.z = 0; // todo?
-
-  InvalidateModelPointCache();
+      if( it->local_z.min < minz ) minz = it->local_z.min;	  
+      if( it->local_z.max > maxz ) maxz = it->local_z.max;
+     }
+      
+   return bounds3d_t( Bounds( minx,maxx), Bounds(miny,maxy), Bounds(minz,maxz));
 }
 
+// scale all blocks to fit into the bounding box of this group's model
+void BlockGroup::CalcSize()
+{  
+  const bounds3d_t b = BoundingBox();
+  
+  const Size size( b.x.max - b.x.min, 
+		   b.y.max - b.y.min, 
+		   b.z.max - b.z.min );
+
+  const Size offset( b.x.min + size.x/2.0, b.y.min + size.y/2.0,  0 );
+  
+  // now scale the blocks to fit in the model's 3d bounding box, so
+  // that the original points are now in model coordinates
+  const Size modsize = blocks[0].mod->geom.size;
+  
+  FOR_EACH( it, blocks )
+    {
+      // polygon edges
+      FOR_EACH( pit, it->pts  )
+	{
+	  pit->x = (pit->x - offset.x) * (modsize.x/size.x);
+	  pit->y = (pit->y - offset.y) * (modsize.y/size.y);     
+	}
+
+      // vertical bounds
+      it->local_z.min = (it->local_z.min - offset.z) * (modsize.z/size.z);
+      it->local_z.max = (it->local_z.max - offset.z) * (modsize.z/size.z);
+    }
+}
 
 void BlockGroup::Map( unsigned int layer )
 {
   FOR_EACH( it, blocks )
-    (*it)->Map(layer);
+    it->Map(layer);
 }
-
-// defined in world.cc
-//void SwitchSuperRegionLock( SuperRegion* current, SuperRegion* next );
 
 void BlockGroup::UnMap( unsigned int layer )
 {
   FOR_EACH( it, blocks )
-    (*it)->UnMap(layer);
+    it->UnMap(layer);
 }
 
 void BlockGroup::DrawSolid( const Geom & geom )
 {
   glPushMatrix();
   
-  Gl::pose_shift( geom.pose );
-  
-  glScalef( geom.size.x / size.x,
-	    geom.size.y / size.y,				
-	    geom.size.z / size.z );
-  
-  glTranslatef( -offset.x, -offset.y, -offset.z );
+  Gl::pose_shift( geom.pose );    
   
   FOR_EACH( it, blocks )
-    (*it)->DrawSolid(false);
+    it->DrawSolid(false);
   
   glPopMatrix();
 }
 
 void BlockGroup::DrawFootPrint( const Geom & geom )
 {
-  glPushMatrix();
-  
-  glScalef( geom.size.x / size.x,
-	    geom.size.y / size.y,				
-	    geom.size.z / size.z );
-  
-  glTranslatef( -offset.x, -offset.y, -offset.z );
-  
   FOR_EACH( it, blocks )
-    (*it)->DrawFootPrint();
-  
-  glPopMatrix();
+    it->DrawFootPrint();
 }
 
 void BlockGroup::BuildDisplayList( Model* mod )
@@ -166,13 +160,7 @@ void BlockGroup::BuildDisplayList( Model* mod )
   Geom geom = mod->GetGeom();
   
   Gl::pose_shift( geom.pose );
-  
-  glScalef( geom.size.x / size.x,
-	    geom.size.y / size.y,				
-	    geom.size.z / size.z );
-  
-  glTranslatef( -offset.x, -offset.y, -offset.z );
-  
+    
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1.0, 1.0);
@@ -181,10 +169,8 @@ void BlockGroup::BuildDisplayList( Model* mod )
   
   //const bool topview =  dynamic_cast<WorldGui*>(mod->world)->IsTopView();
   
-  FOR_EACH( it, blocks )
+  FOR_EACH( blk, blocks )
     {
-      Block* blk = (*it);
-      
       if( (!blk->inherit_color) && (blk->color != mod->color) )
 	{
 	  mod->PushColor( blk->color );					 
@@ -210,10 +196,8 @@ void BlockGroup::BuildDisplayList( Model* mod )
   c.b /= 2.0;
   mod->PushColor( c );
   
-  FOR_EACH( it, blocks )
+  FOR_EACH( blk, blocks )
     {
-      Block* blk = *it;
-		
       if( (!blk->inherit_color) && (blk->color != mod->color) )
 	{
 	  Color c = blk->color;
@@ -249,8 +233,8 @@ void BlockGroup::CallDisplayList( Model* mod )
 
 void BlockGroup::LoadBlock( Model* mod, Worldfile* wf, int entity )
 {
-  AppendBlock( new Block( mod, wf, entity ));
-  CalcSize();
+  AppendBlock( Block( mod, wf, entity ));
+  //  CalcSize();
 }				
   
 void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile* wf )
@@ -303,12 +287,11 @@ void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfil
       pts[3].x = x;
       pts[3].y = y + h;							 
       
-      AppendBlock( new Block( mod,
-			      pts,
-			      0,1,
-			      col,
-			      true,
-			      false) );		 
+      AppendBlock( Block( mod,
+			  pts,
+			  0,1,
+			  col,
+			  true ) );		 
     }			 
   
   CalcSize();
@@ -322,5 +305,5 @@ void BlockGroup::Rasterize( uint8_t* data,
 			    meters_t cellheight )
 {  
   FOR_EACH( it, blocks )
-    (*it)->Rasterize( data, width, height, cellwidth, cellheight );
+    it->Rasterize( data, width, height, cellwidth, cellheight );
 }

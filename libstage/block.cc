@@ -15,15 +15,12 @@ Block::Block( Model* mod,
 	      meters_t zmin,
 	      meters_t zmax,
 	      Color color,
-	      bool inherit_color,
-	      bool wheel ) :
+	      bool inherit_color ) :
   mod( mod ),
-  mpts(),
   pts(pts),
   local_z( zmin, zmax ),
   color( color ),
   inherit_color( inherit_color ),
-  wheel(wheel),
   rendered_cells() 
 {
   assert( mod );
@@ -35,12 +32,10 @@ Block::Block(  Model* mod,
 	       Worldfile* wf,
 	       int entity)
   : mod( mod ),
-    mpts(),
     pts(),
     local_z(),
     color(),
     inherit_color(true),
-    wheel(),
     rendered_cells()
 {
   assert(mod);
@@ -71,8 +66,12 @@ void Block::Translate( double x, double y )
   mod->blockgroup.BuildDisplayList( mod );
 }
 
+/** Return the value half way between the min and max Y position of
+    the polygon points
+ */
 double Block::CenterY()
 {
+  // assume the polygon fits in a square a billion m a side
   double min = billion;
   double max = -billion;
   
@@ -86,8 +85,12 @@ double Block::CenterY()
   return( min + (max - min)/2.0 );
 }
 
+/** Return the value half way between the min and max X position of
+    the polygon points
+ */
 double Block::CenterX()
 {
+  // assume the polygon fits in a square a billion m a side
   double min = billion;
   double max = -billion;
   
@@ -101,24 +104,24 @@ double Block::CenterX()
   return( min + (max - min)/2.0 );
 }
 
+/** move the block by the distance required to bring its center to
+    the requested position */
 void Block::SetCenter( double x, double y )
 {
-  // move the block by the distance required to bring its center to
-  // the requested position
   Translate( x-CenterX(), y-CenterY() );
 }
 
+/**  move the block by the distance required to bring its center to
+     the requested position */
 void Block::SetCenterY( double y )
 {
-  // move the block by the distance required to bring its center to
-  // the requested position
   Translate( 0, y-CenterY() );
 }
 
+/** move the block by the distance required to bring its center to
+   the requested position */
 void Block::SetCenterX( double x )
 {
-  // move the block by the distance required to bring its center to
-  // the requested position
   Translate( x-CenterX(), 0 );
 }
 
@@ -196,31 +199,15 @@ Model* Block::TestCollision()
 
 void Block::Map( unsigned int layer )
 {
-  // calculate the local coords of the block vertices
-  const size_t pt_count(pts.size());
-	
-  if( mpts.size() == 0 )
-    {
-      // no valid cache of model coord points, so generate them
-      mpts.resize( pts.size() );
-			
-      for( size_t i=0; i<pt_count; ++i )
-	mpts[i] = BlockPointToModelMeters( pts[i] );
-    }
-  
-  // now calculate the global pixel coords of the block vertices
-  const std::vector<point_int_t> gpts = mod->LocalToPixels( mpts );
-	
+  // calculate the global pixel coords of the block vertices
   // and render this block's polygon into the world
-  mod->world->MapPoly( gpts, this, layer );
-	
+  mod->world->MapPoly( mod->LocalToPixels( pts ), this, layer );
+  
   // update the block's absolute z bounds at this rendering
   Pose gpose( mod->GetGlobalPose() );
   gpose.z += mod->geom.pose.z;
-  double scalez( mod->geom.size.z /  mod->blockgroup.GetSize().z );
-  meters_t z = gpose.z - mod->blockgroup.GetOffset().z;  
-  global_z.min = (scalez * local_z.min) + z;
-  global_z.max = (scalez * local_z.max) + z;
+  global_z.min = local_z.min + gpose.z;
+  global_z.max = local_z.max + gpose.z;
   
   mapped = true;	
 }
@@ -235,21 +222,6 @@ void Block::UnMap( unsigned int layer )
   
   rendered_cells[layer].clear();
   mapped = false;
-}
-
-inline point_t Block::BlockPointToModelMeters( const point_t& bpt )
-{
-  Size bgsize = mod->blockgroup.GetSize();
-  point3_t bgoffset = mod->blockgroup.GetOffset();
-
-  return point_t( (bpt.x - bgoffset.x) * (mod->geom.size.x/bgsize.x),
-		  (bpt.y - bgoffset.y) * (mod->geom.size.y/bgsize.y));
-}
-
-void Block::InvalidateModelPointCache()
-{
-  // this doesn't happen often, so this simple strategy isn't too wasteful
-  mpts.clear();
 }
 
 void swap( int& a, int& b )
@@ -272,8 +244,8 @@ void Block::Rasterize( uint8_t* data,
   for( size_t i=0; i<pt_count; ++i )
     {
       // convert points from local to model coords
-      point_t mpt1 = BlockPointToModelMeters( pts[i] );
-      point_t mpt2 = BlockPointToModelMeters( pts[(i+1)%pt_count] );
+      point_t mpt1 = pts[i];              //BlockPointToModelMeters( pts[i] );
+      point_t mpt2 = pts[(i+1)%pt_count]; // BlockPointToModelMeters( pts[(i+1)%pt_count] );
 	  
       // record for debug visualization
       mod->rastervis.AddPoint( mpt1.x, mpt1.y );
@@ -290,6 +262,8 @@ void Block::Rasterize( uint8_t* data,
       point_int_t b( floor( mpt2.x / cellwidth  ),
 		     floor( mpt2.y / cellheight ) );
 	  
+      // render a line in the output bitmap for this edge, from mpt1
+      // to mpt2
       bool steep = abs( b.y-a.y ) > abs( b.x-a.x );
       if( steep )
 	{
@@ -367,30 +341,10 @@ void Block::DrawFootPrint()
 
 void Block::DrawSolid( bool topview )
 {
-  // 	if( wheel )x
-  // 		{
-  // 			glPushMatrix();
-
-  // 			glRotatef( 90,0,1,0 );
-  // 			glRotatef( 90,1,0,0 );
-
-  // 			glTranslatef( -local_z.max /2.0, 0, 0 );
-
-
-  // 			GLUquadric* quadric = gluNewQuadric();		
-  // 			gluQuadricDrawStyle( quadric, GLU_FILL );
-  // 			gluCylinder( quadric, local_z.max, local_z.max, size.x, 16, 16 );
-  // 			gluDeleteQuadric( quadric );
-
-  // 			glPopMatrix();
-  // 		}
-  //   else
-  {
-    if( ! topview )
-      DrawSides();
-	 
-    DrawTop();
-  }
+  if( ! topview )
+    DrawSides();
+  
+  DrawTop();
 }
 
 void Block::Load( Worldfile* wf, int entity )
@@ -409,8 +363,6 @@ void Block::Load( Worldfile* wf, int entity )
   
 
   wf->ReadTuple( entity, "z", 0, 2, "ll", &local_z.min, &local_z.max );
-  //local_z.min = wf->ReadTupleLength( entity, "z", 0, 0.0 );
-  //local_z.max = wf->ReadTupleLength( entity, "z", 1, 1.0 );
   
   const std::string& colorstr = wf->ReadString( entity, "color", "" );  	
 
@@ -421,8 +373,6 @@ void Block::Load( Worldfile* wf, int entity )
     }
   else
     inherit_color = true;  
-
-  wheel = wf->ReadInt( entity, "wheel", wheel );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
