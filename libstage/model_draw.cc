@@ -250,7 +250,7 @@ void Model::DrawPose( Pose pose )
 
 void Model::DrawBlocks( )
 { 
-  blockgroup.CallDisplayList( this );
+  blockgroup.CallDisplayList();
 }
 
 void Model::DrawBoundingBoxTree()

@@ -10,9 +10,10 @@
 using namespace Stg;
 using namespace std;
 
-BlockGroup::BlockGroup() 
-  : displaylist(0),
-    blocks() 
+BlockGroup::BlockGroup( Model& mod ) 
+  : blocks(),
+    displaylist(0),
+    mod(mod)
 { /* empty */ }
 
 BlockGroup::~BlockGroup()
@@ -52,7 +53,7 @@ Model* BlockGroup::TestCollision()
 
 
 /** find the 3d bounding box of all the blocks in the group */
-bounds3d_t BlockGroup::BoundingBox()
+bounds3d_t BlockGroup::BoundingBox() const
 {
   // assuming the blocks currently fit in a square +/- one billion units
   double minx, miny, maxx, maxy, minz, maxz;
@@ -90,7 +91,7 @@ void BlockGroup::CalcSize()
   
   // now scale the blocks to fit in the model's 3d bounding box, so
   // that the original points are now in model coordinates
-  const Size modsize = blocks[0].mod->geom.size;
+  const Size modsize = mod.geom.size;
   
   FOR_EACH( it, blocks )
     {
@@ -137,11 +138,11 @@ void BlockGroup::DrawFootPrint( const Geom & geom )
     it->DrawFootPrint();
 }
 
-void BlockGroup::BuildDisplayList( Model* mod )
+void BlockGroup::BuildDisplayList()
 {
   //puts( "build" );
   
-  if( ! mod->world->IsGUI() )
+  if( ! mod.world->IsGUI() )
     return;
   
   //printf( "display list for model %s\n", mod->token );
@@ -157,7 +158,7 @@ void BlockGroup::BuildDisplayList( Model* mod )
   
   // render each block as a polygon extruded into Z
   
-  Geom geom = mod->GetGeom();
+  Geom geom = mod.GetGeom();
   
   Gl::pose_shift( geom.pose );
     
@@ -165,23 +166,23 @@ void BlockGroup::BuildDisplayList( Model* mod )
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1.0, 1.0);
   
-  mod->PushColor( mod->color );
+  mod.PushColor( mod.color );
   
   //const bool topview =  dynamic_cast<WorldGui*>(mod->world)->IsTopView();
   
   FOR_EACH( blk, blocks )
     {
-      if( (!blk->inherit_color) && (blk->color != mod->color) )
+      if( (!blk->inherit_color) && (blk->color != mod.color) )
 	{
-	  mod->PushColor( blk->color );					 
+	  mod.PushColor( blk->color );					 
 	  blk->DrawSolid(false);			
-	  mod->PopColor();
+	  mod.PopColor();
 	}
       else
 	blk->DrawSolid(false);
     }
   
-  mod->PopColor();
+  mod.PopColor();
   
   // outline each poly in a darker version of the same color
 
@@ -190,23 +191,23 @@ void BlockGroup::BuildDisplayList( Model* mod )
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   glDepthMask(GL_FALSE);
   
-  Color c = mod->color;
+  Color c = mod.color;
   c.r /= 2.0;
   c.g /= 2.0;
   c.b /= 2.0;
-  mod->PushColor( c );
+  mod.PushColor( c );
   
   FOR_EACH( blk, blocks )
     {
-      if( (!blk->inherit_color) && (blk->color != mod->color) )
+      if( (!blk->inherit_color) && (blk->color != mod.color) )
 	{
 	  Color c = blk->color;
 	  c.r /= 2.0;
 	  c.g /= 2.0;
 	  c.b /= 2.0;
-	  mod->PushColor( c );
+	  mod.PushColor( c );
 	  blk->DrawSolid(false);
-	  mod->PopColor();
+	  mod.PopColor();
 	}
       else
 	blk->DrawSolid(false);
@@ -215,29 +216,29 @@ void BlockGroup::BuildDisplayList( Model* mod )
   glDepthMask(GL_TRUE);
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   
-  mod->PopColor();
+  mod.PopColor();
 
   glEndList();
 }
 
-void BlockGroup::CallDisplayList( Model* mod )
+void BlockGroup::CallDisplayList()
 {
-  if( displaylist == 0 || mod->rebuild_displaylist )
+  if( displaylist == 0 || mod.rebuild_displaylist )
     {
-      BuildDisplayList( mod );
-      mod->rebuild_displaylist = 0;
+      BuildDisplayList();
+      mod.rebuild_displaylist = 0;
     }
   
   glCallList( displaylist );
 }
 
-void BlockGroup::LoadBlock( Model* mod, Worldfile* wf, int entity )
+void BlockGroup::LoadBlock( Worldfile* wf, int entity )
 {
-  AppendBlock( Block( mod, wf, entity ));
-  //  CalcSize();
+  AppendBlock( Block( this, wf, entity ));
+
 }				
   
-void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile* wf )
+void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
 {
   PRINT_DEBUG1( "attempting to load bitmap \"%s\n", bitmapfile );
 	
@@ -287,9 +288,9 @@ void BlockGroup::LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfil
       pts[3].x = x;
       pts[3].y = y + h;							 
       
-      AppendBlock( Block( mod,
+      AppendBlock( Block( this,
 			  pts,
-			  0,1,
+			  Bounds(0,1) ,
 			  col,
 			  true ) );		 
     }			 

@@ -194,10 +194,10 @@ void ModelGripper::FixBlocks()
   AddBlockRect( 1.0-cfg.paddle_size.x, 1.0-cfg.paddle_size.y, cfg.paddle_size.x, cfg.paddle_size.y, cfg.paddle_size.z );
 
   // left (top) paddle
-  paddle_left = &blockgroup.GetBlock(1);
+  paddle_left = &blockgroup.GetBlockMutable(1);
 
   // right (bottom) paddle
-  paddle_right =  &blockgroup.GetBlock(2);
+  paddle_right =  &blockgroup.GetBlockMutable(2);
 
   PositionPaddles();
 }
@@ -205,9 +205,9 @@ void ModelGripper::FixBlocks()
 // Update the blocks that are the gripper's body
 void ModelGripper::PositionPaddles()
 {
-	unsigned int layer = world->GetUpdateCount()%2;
+  unsigned int layer = world->GetUpdateCount()%2;
   UnMap(layer);
-
+  
   double paddle_center_pos = cfg.paddle_position * (0.5 - cfg.paddle_size.y );
   paddle_left->SetCenterY( paddle_center_pos + cfg.paddle_size.y/2.0 );
   paddle_right->SetCenterY( 1.0 - paddle_center_pos - cfg.paddle_size.y/2.0);

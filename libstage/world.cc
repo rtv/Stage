@@ -875,11 +875,11 @@ RaytraceResult World::Raytrace( const Ray& r )
 		    continue; 
 									
 		  // test the predicate we were passed
-		  if( (*r.func)( block->mod, (Model*)r.mod, r.arg )) 
+		  if( (*r.func)( &block->group->mod, (Model*)r.mod, r.arg )) 
 		    {
 		      // a hit!
 		      sample.color = block->GetColor();
-		      sample.mod = block->mod;
+		      sample.mod = &block->group->mod;
 											
 		      if( ax > ay ) // faster than the equivalent hypot() call
 			sample.range = fabs((globx-startx) / cosa) / ppm;

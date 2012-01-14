@@ -1192,6 +1192,7 @@ namespace Stg
 	
   };
   
+
   class Block
   {
     friend class BlockGroup;
@@ -1205,15 +1206,14 @@ namespace Stg
     /** Block Constructor. A model's body is a list of these
 	blocks. The point data is copied, so pts can safely be freed
 	after constructing the block.*/
-    Block( Model* mod,  
+    Block( BlockGroup* group,
 	   const std::vector<point_t>& pts,
-	   meters_t zmin,
-	   meters_t zmax,
-	   Color color,
+	   const Bounds& zrange,
+	   const Color& color,
 	   bool inherit_color );
     
     /** A from-file  constructor */
-    Block(  Model* mod,  Worldfile* wf, int entity);
+    Block( BlockGroup* group, Worldfile* wf, int entity);
     
     ~Block();
     
@@ -1256,8 +1256,9 @@ namespace Stg
     Model* TestCollision(); 
 
     void Load( Worldfile* wf, int entity );  
-
-    Model* GetModel(){ return mod; };  
+    
+    /** return a pointer to the Model that owns the BlockGroup that owns this Block.*/
+    Model* GetModel();
 
     const Color& GetColor();		
 
@@ -1266,7 +1267,10 @@ namespace Stg
 		    meters_t cellwidth, meters_t cellheight );
 		
   private:
-    Model* mod; ///< model to which this block belongs.
+    //Model* mod; ///< model to which this block belongs.
+
+    BlockGroup* group;
+
     std::vector<point_t> pts; ///< points defining a polygon.
     Size size; ///< Size of the polygon in meters.
     Bounds local_z; ///<  z extent in local coords.
@@ -1291,25 +1295,16 @@ namespace Stg
   {
     friend class Model;
     friend class Block;
-		
+    friend class World;
+
   private:
-    int displaylist;
-		
-    void BuildDisplayList( Model* mod );
-		
-    std::vector<Block> blocks;
-		
-  public:
-    BlockGroup();
-    ~BlockGroup();
-		
-    uint32_t GetCount() const { return blocks.size(); };
-    Block& GetBlock( unsigned int index ) { return blocks[index]; }; 
-    bounds3d_t BoundingBox();
+    std::vector<Block> blocks; ///< Contains the blocks in this group.
+    int displaylist; ///< OpenGL displaylist that renders this blockgroup.
+    Model& mod;
+
+    void AppendBlock( const Block& block );
 
     void CalcSize();	 
-    void AppendBlock( const Block& block );
-    void CallDisplayList( Model* mod );
     void Clear() ; /** deletes all blocks from the group */
 	 
     void AppendTouchingModels( std::set<Model*>& touchers );
@@ -1318,21 +1313,47 @@ namespace Stg
 	with a block in this group, or NULL, if none are detected. */
     Model* TestCollision();
  
+    /** Renders all blocks into the bitmap at the indicated layer.*/
     void Map( unsigned int layer );
+    /** Removes all blocks from the bitmap at the indicated layer.*/
     void UnMap( unsigned int layer );
 		
-    /** Draw the block in OpenGL as a solid single color. */
-    void DrawSolid( const Geom &geom); 
+    /** Interpret the bitmap file as a set of rectangles and add them
+	as blocks to this group.*/
+    void LoadBitmap( const std::string& bitmapfile, Worldfile *wf );
 
-    /** Draw the projection of the block onto the z=0 plane. */
-    void DrawFootPrint( const Geom &geom);
-
-    void LoadBitmap( Model* mod, const std::string& bitmapfile, Worldfile *wf );
-    void LoadBlock( Model* mod, Worldfile* wf, int entity );
-	 
+    /** Add a new block decribed by a worldfile entry. */
+    void LoadBlock( Worldfile* wf, int entity );
+    
+    /** Render the blockgroup as a bitmap image. */
     void Rasterize( uint8_t* data, 
 		    unsigned int width, unsigned int height,
 		    meters_t cellwidth, meters_t cellheight );	 
+
+    /** Draw the block in OpenGL as a solid single color. */
+    void DrawSolid( const Geom &geom); 
+
+    /** Re-create the display list for drawing this blockgroup. This
+	is required whenever a member block or the owning model
+	changes its appearance.*/
+    void BuildDisplayList();
+
+    /** Draw the blockgroup from the cached displaylist. */
+    void CallDisplayList();
+
+  public:
+    BlockGroup( Model& mod );
+    ~BlockGroup();
+    
+    uint32_t GetCount() const { return blocks.size(); };
+    const Block& GetBlock( unsigned int index ) const { return blocks[index]; }; 
+    Block& GetBlockMutable( unsigned int index ) { return blocks[index]; }; 
+
+    /** Return the extremal points of all member blocks in all three axes. */
+    bounds3d_t BoundingBox() const;
+
+    /** Draw the projection of the block group onto the z=0 plane. */
+    void DrawFootPrint( const Geom &geom);
   };
 
   class Camera 
@@ -1745,8 +1766,6 @@ namespace Stg
     bool alwayson;
 
     BlockGroup blockgroup;
-    /**  OpenGL display list identifier for the blockgroup */
-    int blocks_dl;
 
     /** Iff true, 4 thin blocks are automatically added to the model,
 	forming a solid boundary around the bounding box of the
@@ -2117,10 +2136,7 @@ namespace Stg
 		   RaytraceResult* samples,
 		   const uint32_t sample_count,
 		   const bool ztest = true );
-  
-    virtual void Startup();
-    virtual void Shutdown();
-    virtual void Update();
+
     virtual void UpdateCharge();
 		
     static int UpdateWrapper( Model* mod, void* arg ){ mod->Update(); return 0; }
@@ -2191,7 +2207,7 @@ namespace Stg
 		
     /** Alternate constructor that creates dummy models with only a pose */
 	 Model() 
-		: mapped(false), alwayson(false), blocks_dl(0),
+	   : mapped(false), alwayson(false), blockgroup(*this),
 		  boundary(false), data_fresh(false), disabled(true), friction(0), has_default_block(false), log_state(false), map_resolution(0), mass(0), parent(NULL), rebuild_displaylist(false), stack_children(true), stall(false), subs(0), thread_safe(false),trail_index(0), event_queue_num(0), used(false), watts(0), watts_give(0),watts_take(0),wf(NULL), wf_entity(0), world(NULL)
 	 {}
 		
@@ -2446,7 +2462,10 @@ namespace Stg
     // 			Neighbors() : left(NULL), right(NULL), up(NULL), down(NULL) {}
     // 		} nbors; // instance
 
-	 						
+  protected:
+    virtual void Startup();
+    virtual void Shutdown();
+    virtual void Update();	 						
   };
 
 
@@ -2908,6 +2927,7 @@ namespace Stg
   class ModelPosition : public Model
   {
     friend class Canvas;
+    friend class World;
 
   public:
     /** Define a position  control method */
@@ -2946,7 +2966,6 @@ namespace Stg
     /** Set the min and max velocity in all 4 DOF */
     Bounds velocity_bounds[4];
 
-  public:
     // constructor
     ModelPosition( World* world,
 		   Model* parent,
@@ -2954,11 +2973,6 @@ namespace Stg
     // destructor
     ~ModelPosition();
 
-    virtual void Move();
-    virtual void Startup();
-    virtual void Shutdown();
-    virtual void Update();
-    virtual void Load();
 
     /** Get (a copy of) the model's velocity in its local reference
 	frame. */
@@ -3025,6 +3039,13 @@ namespace Stg
     Pose est_pose; ///< position estimate in local coordinates
     Pose est_pose_error; ///< estimated error in position estimate
     Pose est_origin; ///< global origin of the local coordinate system
+
+  protected:
+    virtual void Move();
+    virtual void Startup();
+    virtual void Shutdown();
+    virtual void Update();
+    virtual void Load();
   };
 
 

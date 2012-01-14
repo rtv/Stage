@@ -248,8 +248,7 @@ Model::Model( World* world,
   mapped(false),
   drawOptions(),
   alwayson(false),
-  blockgroup(),
-  blocks_dl(0),
+  blockgroup(*this),
   boundary(false),
   callbacks(__CB_TYPE_COUNT), // one slot in the vector for each type
   color( 1,0,0 ), // red
@@ -435,7 +434,7 @@ void Model::LoadBlock( Worldfile* wf, int entity )
       has_default_block = false;
     }
   
-  blockgroup.LoadBlock( this, wf, entity );  
+  blockgroup.LoadBlock( wf, entity );  
 }
 
 
@@ -457,9 +456,9 @@ void Model::AddBlockRect( meters_t x,
   pts[3].x = x;
   pts[3].y = y + dy;
   
-  blockgroup.AppendBlock( Block( this,
+  blockgroup.AppendBlock( Block( &blockgroup,
 				 pts,
-				 0, dz, 
+				 Bounds(0,dz), 
 				 color,
 				 true ));
   Map(); 
@@ -593,16 +592,19 @@ point_t Model::LocalToGlobal( const point_t& pt) const
 
 std::vector<point_int_t> Model::LocalToPixels( const std::vector<point_t>& local ) const
 {
-  std::vector<point_int_t> global;
+  const size_t sz = local.size();
+  
+  std::vector<point_int_t> global( sz );
   
   const Pose gpose( GetGlobalPose() + geom.pose );
   Pose ptpose;
   
-  FOR_EACH( it, local )
+  for( size_t i=0; i<sz; i++ )
     {
-      ptpose = gpose + Pose( it->x, it->y, 0, 0 );
-      global.push_back( point_int_t( (int32_t)floor( ptpose.x * world->ppm) ,
-				     (int32_t)floor( ptpose.y * world->ppm) ));
+      ptpose = gpose + Pose( local[i].x, local[i].y, 0, 0 );
+      
+      global[i].x = (int32_t)floor( ptpose.x * world->ppm);
+      global[i].y = (int32_t)floor( ptpose.y * world->ppm);
     }
 
   return global;
@@ -1524,7 +1526,7 @@ void Model::Load()
 	  has_default_block = false;
 	}
 		
-      blockgroup.LoadBitmap( this, bitmapfile, wf );
+      blockgroup.LoadBitmap( bitmapfile, wf );
     }
   
   if( wf->PropertyExists( wf_entity, "boundary" ))

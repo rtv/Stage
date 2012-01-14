@@ -10,40 +10,37 @@ static void canonicalize_winding(vector<point_t>& pts);
 /** Create a new block. A model's body is a list of these
     blocks. The point data is copied, so pts can safely be freed
     after calling this.*/
-Block::Block( Model* mod,
-	      const std::vector<point_t>& pts,
-	      meters_t zmin,
-	      meters_t zmax,
-	      Color color,
-	      bool inherit_color ) :
-  mod( mod ),
+Block::Block(  BlockGroup* group,
+	       const std::vector<point_t>& pts,
+	       const Bounds& zrange,
+	       const Color& color,
+	       bool inherit_color ) :
+  group(group),
   pts(pts),
-  local_z( zmin, zmax ),
+  local_z( zrange ),
   color( color ),
   inherit_color( inherit_color ),
   rendered_cells() 
 {
-  assert( mod );
+  assert( group );
   canonicalize_winding(this->pts);
 }
 
 /** A from-file  constructor */
-Block::Block(  Model* mod,
-	       Worldfile* wf,
-	       int entity)
-  : mod( mod ),
+Block::Block( BlockGroup* group,  
+	      Worldfile* wf,
+	      int entity)
+  : group(group),
     pts(),
     local_z(),
     color(),
     inherit_color(true),
     rendered_cells()
 {
-  assert(mod);
   assert(wf);
   assert(entity);
   
   Load( wf, entity );
-  canonicalize_winding(this->pts);
 }
 
 Block::~Block()
@@ -55,6 +52,12 @@ Block::~Block()
     }
 }
 
+Model* Block::GetModel()
+{ 
+  return &group->mod; 
+};  
+
+
 void Block::Translate( double x, double y )
 {
   FOR_EACH( it, pts )
@@ -63,7 +66,7 @@ void Block::Translate( double x, double y )
       it->y += y;
     }
   
-  mod->blockgroup.BuildDisplayList( mod );
+  group->BuildDisplayList();
 }
 
 /** Return the value half way between the min and max Y position of
@@ -131,25 +134,25 @@ void Block::SetZ( double min, double max )
   local_z.max = max;
 
   // force redraw
-  mod->blockgroup.BuildDisplayList( mod );
+  group->BuildDisplayList();
 }
 
 const Color& Block::GetColor()
 {
-  return( inherit_color ? mod->color : color );
+  return( inherit_color ? group->mod.color : color );
 }
 
 void Block::AppendTouchingModels( std::set<Model*>& touchers )
 {
-  unsigned int layer = mod->world->updates % 2;
+  unsigned int layer = group->mod.world->updates % 2;
   
   // for every cell we are rendered into
   FOR_EACH( cell_it, rendered_cells[layer] )
     // for every block rendered into that cell
     FOR_EACH( block_it, (*cell_it)->GetBlocks(layer) )
     {
-      if( !mod->IsRelated( (*block_it)->mod ))
-	touchers.insert( (*block_it)->mod );
+      if( !group->mod.IsRelated( &(*block_it)->group->mod ))
+	touchers.insert( &(*block_it)->group->mod );
     }
 }
 
@@ -160,12 +163,12 @@ Model* Block::TestCollision()
   // find the set of cells we would render into given the current global pose
   //GenerateCandidateCells();
   
-  if( mod->vis.obstacle_return )
+  if( group->mod.vis.obstacle_return )
     {
       if ( global_z.min < 0 )
-	return mod->world->GetGround();
+	return group->mod.world->GetGround();
 	  
-      unsigned int layer = mod->world->updates % 2;
+      unsigned int layer = group->mod.world->updates % 2;
 
       // for every cell we may be rendered into
       FOR_EACH( cell_it, rendered_cells[layer] )
@@ -174,14 +177,14 @@ Model* Block::TestCollision()
 	  FOR_EACH( block_it, (*cell_it)->GetBlocks(layer) )
 	    {
 	      Block* testblock = *block_it;
-	      Model* testmod = testblock->mod;
+	      Model* testmod = &testblock->group->mod;
 				
 	      //printf( "   testing block %p of model %s\n", testblock, testmod->Token() );
 				
 	      // if the tested model is an obstacle and it's not attached to this model
-	      if( (testmod != this->mod) &&
+	      if( (testmod != &group->mod) &&
 		  testmod->vis.obstacle_return &&
-		  (!mod->IsRelated( testmod )) && 
+		  (!group->mod.IsRelated( testmod )) && 
 		  // also must intersect in the Z range
 		  testblock->global_z.min <= global_z.max && 
 		  testblock->global_z.max >= global_z.min )
@@ -198,22 +201,20 @@ Model* Block::TestCollision()
 }
 
 void Block::Map( unsigned int layer )
-{
+{  
   // calculate the global pixel coords of the block vertices
   // and render this block's polygon into the world
-  mod->world->MapPoly( mod->LocalToPixels( pts ), this, layer );
+  group->mod.world->MapPoly( group->mod.LocalToPixels( pts ), this, layer );
   
   // update the block's absolute z bounds at this rendering
-  Pose gpose( mod->GetGlobalPose() );
-  gpose.z += mod->geom.pose.z;
+  Pose gpose( group->mod.GetGlobalPose() );
+  gpose.z += group->mod.geom.pose.z;
   global_z.min = local_z.min + gpose.z;
   global_z.max = local_z.max + gpose.z;
   
   mapped = true;	
 }
 
-#include <algorithm>
-#include <functional>
 
 void Block::UnMap( unsigned int layer )
 {
@@ -248,13 +249,13 @@ void Block::Rasterize( uint8_t* data,
       point_t mpt2 = pts[(i+1)%pt_count]; // BlockPointToModelMeters( pts[(i+1)%pt_count] );
 	  
       // record for debug visualization
-      mod->rastervis.AddPoint( mpt1.x, mpt1.y );
+      group->mod.rastervis.AddPoint( mpt1.x, mpt1.y );
 	  
       // shift to the bottom left of the model
-      mpt1.x += mod->geom.size.x/2.0;
-      mpt1.y += mod->geom.size.y/2.0;
-      mpt2.x += mod->geom.size.x/2.0;
-      mpt2.y += mod->geom.size.y/2.0;
+      mpt1.x += group->mod.geom.size.x/2.0;
+      mpt1.y += group->mod.geom.size.y/2.0;
+      mpt2.x += group->mod.geom.size.x/2.0;
+      mpt2.y += group->mod.geom.size.y/2.0;
 	  
       // convert from meters to cells
       point_int_t a( floor( mpt1.x / cellwidth  ),
@@ -361,6 +362,7 @@ void Block::Load( Worldfile* wf, int entity )
       pts.push_back( pt );
     }
   
+  canonicalize_winding(pts);
 
   wf->ReadTuple( entity, "z", 0, 2, "ll", &local_z.min, &local_z.max );
   
