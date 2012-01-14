@@ -1,6 +1,6 @@
 /*
  *  Stage plugin driver for Player
- *  Copyright (C) 2004-2005 Richard Vaughan
+ *  Copyright (C) 2004-2012 Richard Vaughan
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ using namespace Stg;
 
 const char* copyright_notice =
 "\n * Part of the Player Project [http://playerstage.sourceforge.net]\n"
-" * Copyright 2000-2009 Richard Vaughan, Brian Gerkey and contributors.\n"
+" * Copyright 2000-2012 Richard Vaughan, Brian Gerkey and contributors.\n"
 " * Released under the GNU General Public License v2.\n";
 
 #define STG_DEFAULT_WORLDFILE "default.world"
