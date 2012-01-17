@@ -12,14 +12,11 @@ static void canonicalize_winding(vector<point_t>& pts);
     after calling this.*/
 Block::Block(  BlockGroup* group,
 	       const std::vector<point_t>& pts,
-	       const Bounds& zrange,
-	       const Color& color,
-	       bool inherit_color ) :
+	       const Bounds& zrange ) :
   group(group),
   pts(pts),
   local_z( zrange ),
-  color( color ),
-  inherit_color( inherit_color ),
+  global_z(),
   rendered_cells() 
 {
   assert( group );
@@ -33,29 +30,23 @@ Block::Block( BlockGroup* group,
   : group(group),
     pts(),
     local_z(),
-    color(),
-    inherit_color(true),
+    global_z(),
     rendered_cells()
 {
+  assert(group);
   assert(wf);
   assert(entity);
   
   Load( wf, entity );
+  canonicalize_winding(this->pts);
 }
 
 Block::~Block()
 {
-  if( mapped )
-    {
-      UnMap(0);
-      UnMap(1);
-    }
+  UnMap(0);
+  UnMap(1);
 }
 
-Model* Block::GetModel()
-{ 
-  return &group->mod; 
-};  
 
 
 void Block::Translate( double x, double y )
@@ -137,11 +128,6 @@ void Block::SetZ( double min, double max )
   group->BuildDisplayList();
 }
 
-const Color& Block::GetColor()
-{
-  return( inherit_color ? group->mod.color : color );
-}
-
 void Block::AppendTouchingModels( std::set<Model*>& touchers )
 {
   unsigned int layer = group->mod.world->updates % 2;
@@ -211,8 +197,6 @@ void Block::Map( unsigned int layer )
   gpose.z += group->mod.geom.pose.z;
   global_z.min = local_z.min + gpose.z;
   global_z.max = local_z.max + gpose.z;
-  
-  mapped = true;	
 }
 
 
@@ -222,7 +206,6 @@ void Block::UnMap( unsigned int layer )
     (*it)->RemoveBlock(this, layer );
   
   rendered_cells[layer].clear();
-  mapped = false;
 }
 
 void swap( int& a, int& b )
@@ -306,10 +289,13 @@ void Block::Rasterize( uint8_t* data,
     }
 }
 
+
+
 void Block::DrawTop()
 {
   // draw the top of the block - a polygon at the highest vertical
   // extent
+
   glBegin( GL_POLYGON);
   FOR_EACH( it, pts )
     glVertex3f( it->x, it->y, local_z.max );
@@ -342,9 +328,7 @@ void Block::DrawFootPrint()
 
 void Block::DrawSolid( bool topview )
 {
-  if( ! topview )
-    DrawSides();
-  
+  DrawSides();
   DrawTop();
 }
 
@@ -352,7 +336,7 @@ void Block::Load( Worldfile* wf, int entity )
 {
   const size_t pt_count = wf->ReadInt( entity, "points", 0);
 
-  char key[128];
+  char key[256];
   for( size_t p=0; p<pt_count; ++p )	      
     {
       snprintf(key, sizeof(key), "point[%d]", (int)p );
@@ -364,17 +348,7 @@ void Block::Load( Worldfile* wf, int entity )
   
   canonicalize_winding(pts);
 
-  wf->ReadTuple( entity, "z", 0, 2, "ll", &local_z.min, &local_z.max );
-  
-  const std::string& colorstr = wf->ReadString( entity, "color", "" );  	
-
-  if( colorstr != "" )
-    {
-      color = Color( colorstr );
-      inherit_color = false;
-    }
-  else
-    inherit_color = true;  
+  wf->ReadTuple( entity, "z", 0, 2, "ll", &local_z.min, &local_z.max );  
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -444,12 +418,7 @@ static
 /// Util
 bool is_canonical_winding(vector<point_t> const& ps)
 {
-  // reuse point_t as vector
-  vector<point_t> vs = find_vectors(ps);
-  radians_t sum = angles_sum(vs);
-  bool bCanon = 0 < sum;
-
-  return bCanon;
+  return( 0 < angles_sum( find_vectors(ps) ) );
 }
 
 static

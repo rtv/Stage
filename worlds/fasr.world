@@ -39,12 +39,12 @@ floorplan
   name "cave" 
   pose [0 0 0 0]
   size [16.000 16.000 0.600]
-  bitmap "bitmaps/cave.png"
+  bitmap "bitmaps/cave_filled.png"
 )
 
 zone
 (
-  size [ 2.000 2.000 0 ]
+  size [ 2.000 2.000 0.01 ]
   color "green"
   pose [ -7.000 -7.000 0 0 ]
   name "source"
@@ -53,7 +53,7 @@ zone
 
 zone
 (
-  size [ 2.000 2.000 0 ]
+  size [ 2.000 2.000 0.01 ]
   color "red"
   pose [ 7.000 7.000 0 0 ]
   name "sink"

@@ -138,9 +138,39 @@ void BlockGroup::DrawFootPrint( const Geom & geom )
     it->DrawFootPrint();
 }
 
+// tesselation callbacks used in BlockGroup::BuildDisplayListTess()------------
+
+static void errorCallback(GLenum errorCode)
+{
+   const GLubyte *estring;
+
+   estring = gluErrorString(errorCode);
+   fprintf (stderr, "Tessellation Error: %s\n", estring);
+   exit (0);
+}
+
+static void combineCallback(GLdouble coords[3], 
+                     GLdouble *vertex_data[4],
+                     GLfloat weight[4], GLdouble **dataOut )
+{
+  GLdouble *vertex;
+  
+  vertex = (GLdouble *) malloc(3 * sizeof(GLdouble));
+  vertex[0] = coords[0];
+  vertex[1] = coords[1];
+  vertex[2] = coords[2];
+  
+  // @todo: fix the leak of this vertex buffer. it's not a lot of
+  // data, and doesn't happen much, but it would be tidy.
+  
+  *dataOut = vertex;
+}
+
+// render each block as a polygon extruded into Z  
 void BlockGroup::BuildDisplayList()
 {
-  //puts( "build" );
+  static bool init = false;
+  static GLUtesselator *tobj = NULL;
   
   if( ! mod.world->IsGUI() )
     return;
@@ -148,76 +178,106 @@ void BlockGroup::BuildDisplayList()
   //printf( "display list for model %s\n", mod->token );
   if( displaylist == 0 )
     {
+      CalcSize(); // todo: is this redundant? count calls per model to figure this out.
+      
       displaylist = glGenLists(1);
-      CalcSize();
+      assert(displaylist !=0 );
+      
+      // Stage polygons need not be convex, so we have to tesselate them for rendering in OpenGL.
+      tobj = gluNewTess();
+      assert(tobj != NULL);
+      
+      // these use the standard GL calls
+      gluTessCallback(tobj, GLU_TESS_VERTEX,
+  		      (GLvoid (*) ()) &glVertex3dv);
+      gluTessCallback(tobj, GLU_TESS_EDGE_FLAG,
+		      (GLvoid (*) ()) &glEdgeFlag);      
+      gluTessCallback(tobj, GLU_TESS_BEGIN,
+  		      (GLvoid (*) ()) &glBegin);
+      gluTessCallback(tobj, GLU_TESS_END,
+  		      (GLvoid (*) ()) &glEnd);
+
+      // these are custom, defined above.
+      gluTessCallback(tobj, GLU_TESS_ERROR,
+  		      (GLvoid (*) ()) &errorCallback);
+      gluTessCallback(tobj, GLU_TESS_COMBINE,
+		      (GLvoid (*) ()) &combineCallback);      
     }
-  
-  
-  glNewList( displaylist, GL_COMPILE );	
-  
-  
-  // render each block as a polygon extruded into Z
   
   Geom geom = mod.GetGeom();
   
-  Gl::pose_shift( geom.pose );
-    
-  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-  glEnable(GL_POLYGON_OFFSET_FILL);
-  glPolygonOffset(1.0, 1.0);
-  
-  mod.PushColor( mod.color );
-  
-  //const bool topview =  dynamic_cast<WorldGui*>(mod->world)->IsTopView();
+  std::vector<std::vector<GLdouble> > contours;
   
   FOR_EACH( blk, blocks )
-    {
-      if( (!blk->inherit_color) && (blk->color != mod.color) )
+    {      
+      std::vector<GLdouble> verts;      
+      FOR_EACH( it, blk->pts )
 	{
-	  mod.PushColor( blk->color );					 
-	  blk->DrawSolid(false);			
-	  mod.PopColor();
-	}
-      else
-	blk->DrawSolid(false);
+	  verts.push_back( it->x ); 
+	  verts.push_back( it->y ); 
+	  verts.push_back( blk->local_z.max );
+	}       
+      contours.push_back( verts );
     }
+      
+  glNewList( displaylist, GL_COMPILE );	
+  Gl::pose_shift( geom.pose );
+
+  // draw filled polys
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(0.5, 0.5);
   
+  mod.PushColor( mod.color );
+
+  gluTessBeginPolygon(tobj, NULL);
+  
+  FOR_EACH( contour, contours )
+    {      
+      gluTessBeginContour(tobj);      
+      for( size_t v=0; v<contour->size(); v+=3 )
+	gluTessVertex(tobj, &(*contour)[v], &(*contour)[v]);      
+      gluTessEndContour(tobj);
+    }
+      
+  gluTessEndPolygon(tobj);
+
+  FOR_EACH( blk, blocks )
+    blk->DrawSides();
+
   mod.PopColor();
   
-  // outline each poly in a darker version of the same color
-
-  glDisable(GL_POLYGON_OFFSET_FILL);
-  
+  // now outline the polys
+  glDisable(GL_POLYGON_OFFSET_FILL);  
   glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
   glDepthMask(GL_FALSE);
-  
+
   Color c = mod.color;
   c.r /= 2.0;
   c.g /= 2.0;
   c.b /= 2.0;
   mod.PushColor( c );
   
-  FOR_EACH( blk, blocks )
-    {
-      if( (!blk->inherit_color) && (blk->color != mod.color) )
-	{
-	  Color c = blk->color;
-	  c.r /= 2.0;
-	  c.g /= 2.0;
-	  c.b /= 2.0;
-	  mod.PushColor( c );
-	  blk->DrawSolid(false);
-	  mod.PopColor();
-	}
-      else
-	blk->DrawSolid(false);
-    }
+  gluTessBeginPolygon(tobj, NULL);
   
+  FOR_EACH( contour, contours )
+    {      
+      gluTessBeginContour(tobj);      
+      for( size_t v=0; v<contour->size(); v+=3 )
+	gluTessVertex(tobj, &(*contour)[v], &(*contour)[v]);      
+      gluTessEndContour(tobj);
+    }
+      
+  gluTessEndPolygon(tobj);
+
+  FOR_EACH( blk, blocks )
+    blk->DrawSides();
+
   glDepthMask(GL_TRUE);
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-  
-  mod.PopColor();
 
+  mod.PopColor();
+  
   glEndList();
 }
 
@@ -252,50 +312,34 @@ void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
       full = std::string(dirname(workaround_const)) + "/" + bitmapfile;			
       free( workaround_const );
     }
+
+  char buf[512];
+  snprintf( buf, 512, "[Image \"%s\"", bitmapfile.c_str() ); 
+  fputs( buf, stdout );
+  fflush( stdout );
   
   PRINT_DEBUG1( "attempting to load image %s", full );
   
-  std::vector<rotrect_t> rects;
-  if( rotrects_from_image_file( full,
-				rects ) )
+  Color col( 1.0, 0.0, 1.0, 1.0 );
+
+  std::vector<std::vector<point_t> > polys;
+  
+  if( polys_from_image_file( full,
+			     polys ) )
     {
-      PRINT_ERR1( "failed to load rects from image file \"%s\"",
+      PRINT_ERR1( "failed to load polys from image file \"%s\"",
 		  full.c_str() );
       return;
     }
   
-  //printf( "found %d rects in \"%s\" at %p\n", 
-  //	  rect_count, full, rects );
-			 
-  // TODO fix this
-  Color col( 1.0, 0.0, 1.0, 1.0 );
-	
-  FOR_EACH( rect, rects )
-    {
-      std::vector<point_t> pts(4);
-			
-      const double x = rect->pose.x;
-      const double y = rect->pose.y;
-      const double w = rect->size.x;
-      const double h = rect->size.y;
-			
-      pts[0].x = x;
-      pts[0].y = y;
-      pts[1].x = x + w;
-      pts[1].y = y;
-      pts[2].x = x + w;
-      pts[2].y = y + h;
-      pts[3].x = x;
-      pts[3].y = y + h;							 
-      
-      AppendBlock( Block( this,
-			  pts,
-			  Bounds(0,1) ,
-			  col,
-			  true ) );		 
-    }			 
+  FOR_EACH( it, polys )
+    AppendBlock( Block( this,
+			*it,
+			Bounds(0,1) ));
   
   CalcSize();
+
+  fputs( "]", stdout ); 
 }
 
 

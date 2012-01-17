@@ -30,7 +30,6 @@ define walle position
     point[2] [ 0.9 0.75 ] 
     point[3] [ 0.1 0.75 ] 
     z [ 0.2 0.6 ]
-	 color "yellow"
   )
 
   # body top
@@ -53,7 +52,6 @@ define walle position
     point[2] [ 0.0 0.25 ] 
     point[3] [ 0 0.0 ] 
     z [ 0.0 0.4 ]
-    color "gray40"
   )
 
   # right wheel 
@@ -76,7 +74,6 @@ define walle position
 	 point[2] [0.6 0.49]
 	 point[3] [0.6 0.30]
 	 z [0.8 0.95]
-	 color "gray40"
   )
 
   # left eye front

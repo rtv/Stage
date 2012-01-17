@@ -476,6 +476,17 @@ namespace Stg
 	
     bool operator+=( const point_t& other ) 
     { return ((x += other.x) && (y += other.y) ); }  
+
+    /** required to put these in sorted containers like std::map */
+    bool operator<( const point_t& other ) const
+    {
+      if( x < other.x ) return true;
+      if( other.x < x ) return false;
+      return y < other.y;
+    }
+		
+    bool operator==( const point_t& other ) const
+    { return ((x == other.x) && (y == other.y) ); }
   };
   
   /** Define a point in 3d space */
@@ -597,6 +608,10 @@ namespace Stg
   int rotrects_from_image_file( const std::string& filename, 
 				std::vector<rotrect_t>& rects );
   
+  int polys_from_image_file( const std::string& filename, 
+			     std::vector<std::vector<point_t> >& polys );
+
+
   /** matching function should return true iff the candidate block is
       stops the ray, false if the block transmits the ray
   */
@@ -882,10 +897,10 @@ namespace Stg
 
     double ppm; ///< the resolution of the world model in pixels per meter   
     bool quit; ///< quit this world ASAP  
-	 
     bool show_clock; ///< iff true, print the sim time on stdout
     unsigned int show_clock_interval; ///< updates between clock outputs
 		
+    //--- thread sync ----
     pthread_mutex_t sync_mutex; ///< protect the worker thread management stuff
     unsigned int threads_working; ///< the number of worker threads not yet finished
     pthread_cond_t threads_start_cond; ///< signalled to unblock worker threads
@@ -956,15 +971,16 @@ namespace Stg
     virtual std::string ClockString( void ) const;
 		
     Model* CreateModel( Model* parent, const std::string& typestr );	 
-    void LoadModel( Worldfile* wf, int entity );
-    void LoadBlock( Worldfile* wf, int entity );
+
+    void LoadModel(      Worldfile* wf, int entity );
+    void LoadBlock(      Worldfile* wf, int entity );
     void LoadBlockGroup( Worldfile* wf, int entity );
-    
-    void LoadSensor( Worldfile* wf, int entity );
+    void LoadSensor(     Worldfile* wf, int entity );
 
     virtual Model* RecentlySelectedModel() const { return NULL; }
-		
-    /** call Cell::AddBlock(block) for each cell on the polygon */
+    
+    /** Add the block to every raytrace bitmap cell that intersects
+	the edges of the polygon.*/
     void MapPoly( const std::vector<point_int_t>& poly,
 		  Block* block,
 		  unsigned int layer );
@@ -972,13 +988,13 @@ namespace Stg
     SuperRegion* AddSuperRegion( const point_int_t& coord );
     SuperRegion* GetSuperRegion( const point_int_t& org );
     SuperRegion* GetSuperRegionCreate( const point_int_t& org );
-    //void ExpireSuperRegion( SuperRegion* sr );
 		
     /** convert a distance in meters to a distance in world occupancy
 	grid pixels */
     int32_t MetersToPixels( meters_t x ) const
     { return (int32_t)floor(x * ppm); };
-		
+    
+    /** Return the bitmap coordinates corresponding to the location in meters. */
     point_int_t MetersToPixels( const point_t& pt ) const
     { return point_int_t( MetersToPixels(pt.x), MetersToPixels(pt.y)); };
 		
@@ -1208,9 +1224,7 @@ namespace Stg
 	after constructing the block.*/
     Block( BlockGroup* group,
 	   const std::vector<point_t>& pts,
-	   const Bounds& zrange,
-	   const Color& color,
-	   bool inherit_color );
+	   const Bounds& zrange );
     
     /** A from-file  constructor */
     Block( BlockGroup* group, Worldfile* wf, int entity);
@@ -1257,29 +1271,15 @@ namespace Stg
 
     void Load( Worldfile* wf, int entity );  
     
-    /** return a pointer to the Model that owns the BlockGroup that owns this Block.*/
-    Model* GetModel();
-
-    const Color& GetColor();		
-
     void Rasterize( uint8_t* data, 
 		    unsigned int width, unsigned int height,		
 		    meters_t cellwidth, meters_t cellheight );
-		
+    
   private:
-    //Model* mod; ///< model to which this block belongs.
-
-    BlockGroup* group;
-
+    BlockGroup* group; ///< The BlockGroup to which this Block belongs.
     std::vector<point_t> pts; ///< points defining a polygon.
-    Size size; ///< Size of the polygon in meters.
     Bounds local_z; ///<  z extent in local coords.
-    Color color; ///< Color of the polygon as seen in sensors and the GUI.
-    bool inherit_color; ///< Use parent's color instead of this->color.
-	 
     Bounds global_z; ///< z extent in global coordinates.
-
-    bool mapped; ///< iff true, the block has been mapped in the bitmap (TODO: which layer?)
 		
     /** record the cells into which this block has been rendered so we
 	can remove them very quickly. One vector for each of the two
@@ -1296,6 +1296,7 @@ namespace Stg
     friend class Model;
     friend class Block;
     friend class World;
+    friend class SuperRegion;
 
   private:
     std::vector<Block> blocks; ///< Contains the blocks in this group.
@@ -1749,7 +1750,7 @@ namespace Stg
     friend class ModelFiducial;
 		
   private:
-    /** the number of models instatiated - used to assign unique IDs */
+    /** the number of models instatiated - used to assign unique sequential IDs */
     static uint32_t count;
     static std::map<id_t,Model*> modelsbyid;
 
@@ -1894,8 +1895,6 @@ namespace Stg
     uint32_t id;	
     usec_t interval; ///< time between updates in usec	 
     usec_t interval_energy; ///< time between updates of powerpack in usec
-    //    usec_t interval_pose; ///< time between updates of pose due to velocity in usec
-
     usec_t last_update; ///< time of last update in us  
     bool log_state; ///< iff true, model state is logged
     meters_t map_resolution;
@@ -2748,8 +2747,7 @@ namespace Stg
   {
   public:
   public:
-    ModelRanger( World* world, Model* parent,
-		 const std::string& type );
+    ModelRanger( World* world, Model* parent, const std::string& type );
     virtual ~ModelRanger();
 		
     virtual void Load();

@@ -230,7 +230,7 @@ void SuperRegion::DrawVoxels(unsigned int layer) const
 		    FOR_EACH( it, blocks )
 		      {
 			Block* block = *it;
-			Color c = block->GetColor();
+			Color c = block->group->mod.GetColor();
 			
 			const std::vector<GLfloat> v = DrawBlock(  xx, yy, block->global_z.min, block->global_z.max );
 			verts.insert( verts.end(), v.begin(), v.end() );

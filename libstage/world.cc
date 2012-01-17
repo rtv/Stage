@@ -878,9 +878,9 @@ RaytraceResult World::Raytrace( const Ray& r )
 		  if( (*r.func)( &block->group->mod, (Model*)r.mod, r.arg )) 
 		    {
 		      // a hit!
-		      sample.color = block->GetColor();
-		      sample.mod = &block->group->mod;
-											
+		      sample.mod = &block->group->mod;	
+		      sample.color = sample.mod->GetColor();
+										
 		      if( ax > ay ) // faster than the equivalent hypot() call
 			sample.range = fabs((globx-startx) / cosa) / ppm;
 		      else
@@ -1051,7 +1051,7 @@ void World::MapPoly( const std::vector<point_int_t>& pts, Block* block, unsigned
 							 GETSREG(globy)))
 		       ->GetRegion( GETREG(globx), 
 				    GETREG(globy)));										
-	  // assert(reg);
+	  assert(reg);
 					
 	  // add all the required cells in this region before looking up
 	  // another region			

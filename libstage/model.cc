@@ -458,9 +458,8 @@ void Model::AddBlockRect( meters_t x,
   
   blockgroup.AppendBlock( Block( &blockgroup,
 				 pts,
-				 Bounds(0,dz), 
-				 color,
-				 true ));
+				 Bounds(0,dz) ));
+
   Map(); 
 }
 
@@ -1235,6 +1234,8 @@ void Model::SetGeom( const Geom& val )
   
   blockgroup.CalcSize();
   
+  //printf( "model %s SetGeom size [%.3f %.3f %.3f]\n", Token(), geom.size.x, geom.size.y, geom.size.z ); 
+
   NeedRedraw();
   
   MapWithChildren(0);
