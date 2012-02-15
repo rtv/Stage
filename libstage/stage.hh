@@ -2304,12 +2304,6 @@ namespace Stg
     /** get the pose of a model in the global CS */
     Pose GetGlobalPose() const;
 	
-    /** get the velocity of a model in the global CS */
-    Velocity GetGlobalVelocity()  const;
-	
-    /* set the velocity of a model in the global coordinate system */
-    void SetGlobalVelocity( const Velocity& gvel );
-	
     /** subscribe to a model's data */
     void Subscribe();
 	
@@ -2976,6 +2970,10 @@ namespace Stg
 	frame. */
     Velocity GetVelocity() const { return velocity; }
     void SetVelocity( const Velocity& val );
+    /** get the velocity of a model in the global CS */
+    Velocity GetGlobalVelocity()  const;
+    /* set the velocity of a model in the global coordinate system */
+    void SetGlobalVelocity( const Velocity& gvel );
 
     /** Specify a point in space. Arrays of Waypoints can be attached to
 	Models and visualized. */
