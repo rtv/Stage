@@ -169,7 +169,7 @@ static void combineCallback(GLdouble coords[3],
 // render each block as a polygon extruded into Z  
 void BlockGroup::BuildDisplayList()
 {
-  static bool init = false;
+  //static bool init = false;
   static GLUtesselator *tobj = NULL;
   
   if( ! mod.world->IsGUI() )
