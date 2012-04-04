@@ -87,7 +87,7 @@ namespace Stg
   typedef Model* (*creator_t)( World*, Model*, const std::string& type );
   
   /** Initialize the Stage library. Stage will parse the argument
-      array looking for parameters in the conventnioal way. */
+      array looking for parameters in the conventional way. */
   void Init( int* argc, char** argv[] );
 
   /** returns true iff Stg::Init() has been called. */
@@ -197,7 +197,7 @@ namespace Stg
   class Color
   {
   public:
-    double r,g,b,a;
+    float r,g,b,a;
 	
     Color( double r, double g, double b, double a=1.0 );
 	
@@ -240,8 +240,7 @@ namespace Stg
     Size& Load( Worldfile* wf, int section, const char* keyword );
     void Save( Worldfile* wf, int section, const char* keyword ) const;
 	 
-    void Zero()
-    { x=y=z=0.0; }
+    void Zero() { x=y=z=0.0; }
   };
   
   /** Specify a 3 axis position, in x, y and heading. */
@@ -314,9 +313,11 @@ namespace Stg
     }	
 	 
     // a < b iff a is closer to the origin than b
-    bool operator<( const Pose& other ) const
+    bool operator<( const Pose& p ) const
     {
-      return( hypot( y, x ) < hypot( other.y, other.x ));
+	  //return( hypot( y, x ) < hypot( otHer.y, other.x ));
+	 // just compare the squared values to avoid the sqrt()
+      return( (y*y+x*x) < (p.y*p.y + p.x*p.x ));
     }
 	 
     bool operator==( const Pose& other ) const
@@ -333,13 +334,12 @@ namespace Stg
 	       y!=other.y || 
 	       z!=other.z || 
 	       a!=other.a );
-    }
-	 
-    meters_t Distance2D( const Pose& other ) const
-    {
-      return hypot( x-other.x, y-other.y );
-    }
+    }	 
 
+	meters_t Distance( const Pose& other ) const
+	{
+	  return hypot( x-other.x, y-other.y );
+	}
   };
   
   
@@ -363,18 +363,18 @@ namespace Stg
     Velocity()
     { /*empty*/ }		 
     
+    
+    Velocity& Load( Worldfile* wf, int section, const char* keyword )
+    {
+       Pose::Load( wf, section, keyword );
+       return *this;
+    }
+    
     /** Print velocity in human-readable format on stdout, with a
 	prefix string 
 	
 	@param prefix Character string to prepend to output, or NULL.
     */
-    
-    Velocity& Load( Worldfile* wf, int section, const char* keyword )
-    {
-      Pose::Load( wf, section, keyword );
-      return *this;
-    }
-    
     virtual void Print( const char* prefix ) const
     {
       if( prefix )
@@ -601,13 +601,8 @@ namespace Stg
     Size size;
   } rotrect_t; // rotated rectangle
   
-  /** load the image file [filename] and convert it to an array of
-      rectangles, filling in the number of rects, width and
-      height. The vector [rects] is populated with rectangles.
-  */
-  int rotrects_from_image_file( const std::string& filename, 
-				std::vector<rotrect_t>& rects );
-  
+  /** load the image file [filename] and convert it to a vector of polygons 
+   */
   int polys_from_image_file( const std::string& filename, 
 			     std::vector<std::vector<point_t> >& polys );
 
@@ -1218,7 +1213,7 @@ namespace Stg
     friend class Canvas;
     friend class Cell;
   public:
-		
+	
     /** Block Constructor. A model's body is a list of these
 	blocks. The point data is copied, so pts can safely be freed
 	after constructing the block.*/
@@ -1275,8 +1270,8 @@ namespace Stg
 		    unsigned int width, unsigned int height,		
 		    meters_t cellwidth, meters_t cellheight );
     
-  private:
     BlockGroup* group; ///< The BlockGroup to which this Block belongs.
+  private:
     std::vector<point_t> pts; ///< points defining a polygon.
     Bounds local_z; ///<  z extent in local coords.
     Bounds global_z; ///< z extent in global coordinates.
@@ -1301,8 +1296,10 @@ namespace Stg
   private:
     std::vector<Block> blocks; ///< Contains the blocks in this group.
     int displaylist; ///< OpenGL displaylist that renders this blockgroup.
-    Model& mod;
 
+  public:    Model& mod;
+
+  private:
     void AppendBlock( const Block& block );
 
     void CalcSize();	 
@@ -1499,7 +1496,7 @@ namespace Stg
     friend class Option;
 
   private:
-
+      
     Canvas* canvas;
     std::vector<Option*> drawOptions;
     FileManager* fileMan; ///< Used to load and save worldfiles
@@ -2319,12 +2316,6 @@ namespace Stg
     /** set the pose of model in global coordinates */
     void SetGlobalPose(  const Pose& gpose );
 	
-    /** Enable update of model pose according to velocity state */
-    //    void VelocityEnable();
-
-    /** Disable update of model pose according to velocity state */
-    //void VelocityDisable();
-
     /** set a model's pose in its parent's coordinate system */
     void SetPose(  const Pose& pose );
 	
@@ -2454,13 +2445,6 @@ namespace Stg
 
     static std::map< std::string, creator_t> name_map;	 
 
-    // 		class Neighbors
-    // 		{
-    // 			Model *left, *right, *up, *down;
-    // 		public:
-    // 			Neighbors() : left(NULL), right(NULL), up(NULL), down(NULL) {}
-    // 		} nbors; // instance
-
   protected:
     virtual void Startup();
     virtual void Shutdown();
@@ -2469,8 +2453,6 @@ namespace Stg
 
 
   // BLOBFINDER MODEL --------------------------------------------------------
-
-
   /// %ModelBlobfinder class
   class ModelBlobfinder : public Model
   {
@@ -2970,7 +2952,6 @@ namespace Stg
 		   const std::string& type );
     // destructor
     ~ModelPosition();
-
 
     /** Get (a copy of) the model's velocity in its local reference
 	frame. */

@@ -51,24 +51,6 @@ const Color Color::magenta( 1,0,1 );
 const Color Color::cyan( 0,1,1 );		
 
 
-// static inline uint8_t* pb_get_pixel( Fl_Shared_Image* img, 
-// 				     const unsigned int x, 
-// 				     const unsigned int y )
-// {
-//   uint8_t* pixels = (uint8_t*)(img->data()[0]);
-//   const unsigned int index = (y * img->w() * img->d()) + (x * img->d());
-//   return( pixels + index );
-// }
-
- // // returns true if the value in the first channel is above threshold
-// static inline bool pb_pixel_is_set( Fl_Shared_Image* img, 
-// 				    const unsigned int x, 
-// 				    const unsigned int y, 
-// 				    const unsigned int threshold )
-// {
-//   return( pb_get_pixel( img,x,y )[0] > threshold );
-// }
-
 // set all the pixels in a rectangle 
 static inline void pb_set_rect( Fl_Shared_Image* pb, 
 				const unsigned int x, const unsigned int y, 
@@ -99,88 +81,6 @@ static inline bool pixel_is_set( uint8_t* pixels,
   return( (pixels + (y*width*depth) + x*depth)[0] > threshold );
 }
 
-int Stg::rotrects_from_image_file( const std::string& filename, 
-				   std::vector<rotrect_t>& rects )
-{
-  // TODO: make this a parameter
-  const int threshold = 127;
-  
-  Fl_Shared_Image *img = Fl_Shared_Image::get(filename.c_str());
-  if( img == NULL ) 
-    {
-      std::cerr << "failed to open file: " << filename << std::endl;
-
-      assert( img ); // easy access to this point in debugger     
-      exit(-1); 
-    }
-
-  //printf( "loaded image %s w %d h %d d %d count %d ld %d\n", 
-  //  filename, img->w(), img->h(), img->d(), img->count(), img->ld() );
-
-  const unsigned int width = img->w();
-  const unsigned height = img->h();
-  const unsigned int depth = img->d();
-  uint8_t* pixels = (uint8_t*)img->data()[0];
-
-  for(unsigned int y = 0; y < height; y++)
-    {
-      for(unsigned int x = 0; x < width; x++)
-	{
-	  // skip blank (white) pixels
-	  if(  pixel_is_set( pixels, width, depth, x, y, threshold) )
-	    continue;
-
-	  // a rectangle starts from this point
-	  const unsigned int startx = x;
-	  const unsigned int starty = y;
-	  unsigned int rheight = height; // assume full height for starters
-
-	  // grow the width - scan along the line until we hit an empty (white) pixel
-	    for( ; x < width &&  ! pixel_is_set( pixels, width, depth, x, y, threshold); x++ )
-	    {
-	      // look down to see how large a rectangle below we can make
-	      unsigned int yy  = y;
-	      //while( ! pb_pixel_is_set(img,x,yy,threshold) && (yy < height-1) )
-	      while( !  pixel_is_set( pixels, width, depth, x, yy, threshold) && (yy < height-1) )
-		  yy++;
-
-	      // now yy is the depth of a line of non-zero pixels
-	      // downward we store the smallest depth - that'll be the
-	      // height of the rectangle
-	      if( yy-y < rheight ) rheight = yy-y; // shrink the height to fit
-	    } 
-
-	  // whiten the pixels we have used in this rect
-	  pb_set_rect( img, startx, starty, x-startx, rheight, 0xFF );
-
-	  //  y-invert all the rectangles because we're using conventional
-	  // rather than graphics coordinates. this is much faster than
-	  // inverting the original image.
-
-	  rotrect_t latest;
-	  latest.pose.x = startx;
-	  latest.pose.y = height-1 - (starty + rheight);
-	  latest.pose.a = 0.0;
-	  latest.size.x = x - startx;
-	  latest.size.y = rheight;
-
-	  assert( latest.pose.x >= 0 );
-	  assert( latest.pose.y >= 0 );
-	  assert( latest.pose.x <= width );
-	  assert( latest.pose.y <= height);
-
-	  rects.push_back( latest );
-
-	  //printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
-	  //  *rect_count, 
-	  //  latest->x, latest->y, latest->a, latest->w, latest->h );
-
-	}
-    }
-
-  if( img ) img->release(); // frees all resources for this image
-  return 0; // ok
-}
 
 double direction( double a )
 {
