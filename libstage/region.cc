@@ -264,8 +264,40 @@ void SuperRegion::DrawVoxels(unsigned int layer) const
   glPopMatrix();    
 }
 
+
 void Stg::Cell::AddBlock( Block* b, unsigned int layer )
 {			
+  assert( b );						
+  assert( layer < 2 );
+  
+ //  printf( "cell %p add block %p vec %u\n", this, b, (unsigned int)blocks[layer].size() );
+ //  printf( "  before " );
+ //  for( size_t i=0; i<CELLBLOCKRECORD_COUNT; i++ )
+ //    printf("(%p,%d)", 
+ // 	   cbrecords[layer][i].block,
+ // 	   //cbrecords[layer][i].block->group->mod.Token() : "NULL",
+ // 	   (int)cbrecords[layer][i].used );
+ //  puts("");
+
+ //  CellBlockRecord* cbr = &cbrecords[layer][0];  
+ //  while( cbr->used ) ++cbr;
+
+ //  // bounds check
+ //  assert( &cbrecords[layer][0] - cbr < CELLBLOCKRECORD_COUNT * sizeof(CellBlockRecord*));
+
+ //  // cbr now points to an unused record
+ //  cbr->block = b;
+ //  cbr->used = true;
+
+ // printf( "  after " );
+ //  for( size_t i=0; i<CELLBLOCKRECORD_COUNT; i++ )
+ //    printf("(%p,%d)", 
+ // 	   cbrecords[layer][i].block,// ? 
+ // 	   //	   cbrecords[layer][i].block->group->mod.Token() : "NULL",
+ // 	   (int)cbrecords[layer][i].used );
+ //  puts("");
+
+
   blocks[layer].push_back( b );   
   b->rendered_cells[layer].push_back(this);
   region->AddBlock();
@@ -273,6 +305,41 @@ void Stg::Cell::AddBlock( Block* b, unsigned int layer )
 
 void Stg::Cell::RemoveBlock( Block* b, unsigned int layer )
 {
+  assert( b );						
+  assert( layer < 2 );
+
+ //  printf( "cell %p remove block %p vec %u\n", this, b, (unsigned int)blocks[layer].size() );
+ //  printf( "  before " );
+ //  for( size_t i=0; i<CELLBLOCKRECORD_COUNT; i++ )
+ //    printf("(%p,%d)", 
+ // 	   cbrecords[layer][i].block,
+ // 	   //cbrecords[layer][i].block->group->mod.Token() : "NULL",
+ // 	   (int)cbrecords[layer][i].used );
+ //  puts("");
+
+ //  // zip along the cbrecords array until we find block b
+ //  CellBlockRecord* cbr = &cbrecords[layer][0];
+ //  while( cbr->block != b ) ++cbr;
+
+ //  // found check
+ //  assert( cbr->block == b );
+ //  // bounds check
+ //  assert( &cbrecords[layer][0] - cbr < CELLBLOCKRECORD_COUNT * sizeof(CellBlockRecord*));
+
+ //  // cbr now points to the record for block b: invalidate the record
+ //  assert( cbr->block == b );
+
+ //  // mark the cbr as available for reuse
+ //  cbr->used = false;
+
+ // printf( "  after " );
+ //  for( size_t i=0; i<CELLBLOCKRECORD_COUNT; i++ )
+ //    printf("(%p,%d)", 
+ // 	   cbrecords[layer][i].block,// ? 
+ // 	   //	   cbrecords[layer][i].block->group->mod.Token() : "NULL",
+ // 	   (int)cbrecords[layer][i].used );
+ //  puts("");
+
   std::vector<Block*>& blks( blocks[layer] );
   const size_t len( blks.size() );
   if( len )

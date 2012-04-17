@@ -44,80 +44,6 @@ void Model::DrawSelected()
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   PopColor();
 
-
-  // testing
-
-  // highlight all fiducial robots within a certain range
-
-  //  	Gl::pose_inverse_shift( gp );
-
-  // 	double rng = 10.0;
-
-  // 	Model left( gp.x - rng, gp.y, world );
-  // 	Model right( gp.x + rng, gp.y, world );	
-  // 	Model down( gp.x, gp.y - rng, world );
-  // 	Model up( gp.x, gp.y + rng, world );
-	
-  // 	std::set<Model*>::iterator xmin = world->models_with_fiducials_byx.lower_bound( &left );
-  //  	std::set<Model*>::iterator xmax = world->models_with_fiducials_byx.upper_bound( &right );
-	
-  //  	std::set<Model*>::iterator ymin = world->models_with_fiducials_byy.lower_bound( &down );
-  // 	std::set<Model*>::iterator ymax = world->models_with_fiducials_byy.upper_bound( &up );
-
-	
-  // 	PushColor( Color(1,0,0,0.5) );
-
-	
-  // 	std::vector<Model*> candidates;
-  // 	std::set<Model*> horiz, vert;
-		
-  // 		while( xmin != xmax )
-  // 			{
-  // 				//candidates.insert( *xmin );
-  // 				horiz.insert( *xmin);
-				
-  // 				Pose op = (*xmin)->GetGlobalPose();		 		 
-  // 				glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );
-				
-  // 				xmin++;
-  // 			}
-	
-  // 	PopColor();
-	
-  // 	PushColor( Color(0,0,1,0.5) );
-	
-  // 	while( ymin != ymax )
-  // 		{
-  // 			vert.insert( *ymin );
-			
-  // 			//			candidates.insert( *ymin );
-			
-  // 			Pose op = (*ymin)->GetGlobalPose();
-  // 			glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );			
-  // 			ymin++;
-  // 		}
-	
-  // 	PopColor();
-			
-  // 	PushColor( Color(0,1,0,0.5) );
-	
-  // 	std::set_intersection( horiz.begin(), horiz.end(),
-  // 												 vert.begin(), vert.end(),
-  // 												 std::inserter( candidates, candidates.end() ) ); 
-	
-  // 	//printf( "cand sz %lu\n", candidates.size() );
-
-  // 	glTranslatef( 0,0,1.0 );
-
-  // 	FOR_EACH( it, candidates )
-  // 		{
-  // 			Pose op = (*it)->GetGlobalPose();
-  // 			glRectf( op.x - 5, op.y - 5, op.x + 5, op.y + 5 );			
-  // 		}
-	
-  // 	PopColor();
- 
-
   glPopMatrix();
 
 }
@@ -321,14 +247,13 @@ void Model::PopCoords()
 
 void Model::AddVisualizer( Visualizer* cv, bool on_by_default )
 {
-  if( !cv )
-    return;
-  
+  assert(cv);
+
   // If there's no GUI, ignore this request
   if( ! world_gui ) 
     return;
 	
-  //save visual instance
+  //save visualizer instance
   cv_list.push_back( cv );
   
   //register option for all instances which share the same name
@@ -504,20 +429,9 @@ void Model::DrawImage( uint32_t texture_id, Camera* cam, float alpha,
   glBindTexture( GL_TEXTURE_2D, 0 );
   glDisable(GL_TEXTURE_2D);
 
-  //   glPolygonMode( GL_FRONT, GL_LINE );
-  //   glColor3f( 0,0,1 );
-  //   glBegin(GL_QUADS);
-  //   glVertex3f(-0.25f, 0, -0.25f );
-  //   glVertex3f( 0.25f, 0, -0.25f );
-  //   glVertex3f( 0.25f, 0,  0.25f );
-  //   glVertex3f(-0.25f, 0,  0.25f );
-  //   glEnd();
-
   glPopMatrix();
 }
 
-
-//static GLUquadric* quadric = NULL;
 
 void Model::DrawFlagList( void )
 {	
@@ -543,7 +457,6 @@ void Model::DrawFlagList( void )
       glVertex3f( gp.x+d, gp.y+0, gp.z+0 +z);
       glVertex3f( gp.x+0, gp.y+d, gp.z+0 +z);      
       glVertex3f( gp.x+0, gp.y+0, gp.z-d +z);
-
 
       glVertex3f( gp.x-d, gp.y+0, gp.z+0 +z);
       glVertex3f( gp.x+0, gp.y-d, gp.z+0 +z);      

@@ -184,17 +184,19 @@ void ModelRanger::Update( void )
 
 void ModelRanger::Sensor::Update( ModelRanger* mod )
 {
+  // these sizes change very rarely, so this is very cheap
   ranges.resize( sample_count );
   intensities.resize( sample_count );
   bearings.resize( sample_count );
 
   //printf( "update sensor, has ranges size %u\n", (unsigned int)ranges.size() );
   // make the first and last rays exactly at the extremes of the FOV
-  double sample_incr( fov / std::max(sample_count-1, (unsigned int)1) );
+  const double sample_incr( fov / std::max(sample_count-1, (unsigned int)1) );
   
   // find the global origin of our first emmitted ray
-  double start_angle = (sample_count > 1 ? -fov/2.0 : 0.0);
+  const double start_angle = (sample_count > 1 ? -fov/2.0 : 0.0);
 
+  // find the origin and heading of the first ray
   Pose rayorg(pose);
   rayorg.a += start_angle;
   rayorg.z += size.z/2.0;
@@ -202,27 +204,17 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
   
   // set up a ray to trace
   Ray ray( mod, rayorg, range.max, ranger_match, NULL, true );
-  
-  World* world = mod->GetWorld();
 
   // trace the ray, incrementing its heading for each sample
   for( size_t t(0); t<sample_count; t++ )
     {
-      const RaytraceResult& r ( world->Raytrace( ray ) );
-      ranges[t] = r.range;
-      intensities[t] = r.mod ? r.mod->vis.ranger_return : 0.0;
+      const RaytraceResult res = mod->world->Raytrace( ray); 
+      ranges[t] = res.range;
+      intensities[t] = res.mod ? res.mod->vis.ranger_return : 0.0;
       bearings[t] = start_angle + ((double)t) * sample_incr;
 		
       // point the ray to the next angle
       ray.origin.a += sample_incr;			
-
-      //printf( "ranger %s sensor %p pose %s sample %d range %.2f ref %.2f\n",
-      //			mod->Token(), 
-      //			this, 
-      //			pose.String().c_str(),
-      //			t, 
-      //			ranges[t].range, 
-      //			ranges[t].reflectance );
     }
 }
 

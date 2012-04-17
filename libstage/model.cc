@@ -464,54 +464,6 @@ void Model::AddBlockRect( meters_t x,
 }
 
 
-RaytraceResult Model::Raytrace( const Pose &pose,
-				const meters_t range, 
-				const ray_test_func_t func,
-				const void* arg,
-				const bool ztest )
-{
-  return world->Raytrace( LocalToGlobal(pose),
-			  range,
-			  func,
-			  this,
-			  arg,
-			  ztest );
-}
-
-RaytraceResult Model::Raytrace( const radians_t bearing,
-				const meters_t range, 
-				const ray_test_func_t func,
-				const void* arg,
-				const bool ztest )
-{
-  return world->Raytrace( LocalToGlobal(Pose(0,0,0,bearing)),
-			  range,
-			  func,
-			  this,
-			  arg,
-			  ztest );
-}
-
-
-void Model::Raytrace( const radians_t bearing,
-		      const meters_t range, 
-		      const radians_t fov,
-		      const ray_test_func_t func,
-		      const void* arg,
-		      RaytraceResult* samples,
-		      const uint32_t sample_count,
-		      const bool ztest )
-{
-  world->Raytrace( LocalToGlobal(Pose( 0,0,0,bearing)),
-		   range,		   
-		   fov,
-		   func,
-		   this,
-		   arg,
-		   samples,
-		   sample_count,
-		   ztest );
-}
 
 // convert a global pose into the model's local coordinate system
 Pose Model::GlobalToLocal( const Pose& pose ) const
@@ -611,7 +563,6 @@ std::vector<point_int_t> Model::LocalToPixels( const std::vector<point_t>& local
 
 void Model::MapWithChildren( unsigned int layer )
 {
-  UnMap(layer);
   Map(layer);
 
   // recursive call for all the model's children
@@ -1383,7 +1334,7 @@ Pose Model::GetGlobalPose() const
 void Model::SetPose( const Pose& newpose )
 {
   // if the pose has changed, we need to do some work
-  if( memcmp( &pose, &newpose, sizeof(Pose) ) != 0 )
+  if( pose != newpose )
     {
       pose = newpose;
       pose.a = normalize(pose.a);
@@ -1678,8 +1629,13 @@ void Model::LoadControllerModule( const char* lib )
 
   lt_dlsetsearchpath( FileManager::stagePath().c_str() );
 
+  //printf( "STAGEPATH: %s\n",  FileManager::stagePath().c_str());
+  //  printf( "ltdl search path: %s\n", lt_dlgetsearchpath() );
+        
   // PLUGIN_PATH now defined in config.h
   lt_dladdsearchdir( PLUGIN_PATH );
+
+  //printf( "ltdl search path: %s\n", lt_dlgetsearchpath() );
 
   lt_dlhandle handle = NULL;
   
@@ -1694,7 +1650,7 @@ void Model::LoadControllerModule( const char* lib )
       model_callback_t initfunc = (model_callback_t)lt_dlsym( handle, "Init" );
       if( initfunc  == NULL )
 	{
-	  printf( "Libtool error: %s. Something is wrong with your plugin. Quitting\n",
+	  printf( "(Libtool error: %s.) Something is wrong with your plugin.\n",
 		  lt_dlerror() ); // report the error from libtool
 	  puts( "libtool error #1" );
 	  fflush( stdout );
@@ -1705,10 +1661,13 @@ void Model::LoadControllerModule( const char* lib )
     }
   else
     {
-      printf( "Libtool error: %s. Can't open your plugin controller. Quitting\n",
+      printf( "(Libtool error: %s.) Can't open your plugin.\n",
 	      lt_dlerror() ); // report the error from libtool
 		
-      PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", lib );
+      PRINT_ERR1( "Failed to open \"%s\". Check that it can be found by searching the directories in your STAGEPATH environment variable, or the current directory if STAGEPATH is not set.]\n", libname );
+            
+        printf( "ctrl \"%s\" STAGEPATH \"%s\"\n", libname, PLUGIN_PATH ); 
+            
       puts( "libtool error #2" );
       fflush( stdout );
       exit(-1);

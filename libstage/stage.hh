@@ -336,10 +336,25 @@ namespace Stg
 	       a!=other.a );
     }	 
 
-	meters_t Distance( const Pose& other ) const
-	{
-	  return hypot( x-other.x, y-other.y );
-	}
+	   meters_t Distance( const Pose& other ) const
+	   {
+	     return hypot( x-other.x, y-other.y );
+	   }
+  };
+  
+
+  class RaytraceResult
+  {
+  public:
+    Pose pose;
+    Model* mod;
+    Color color;
+    meters_t range;
+
+    RaytraceResult() : pose(), mod(NULL), color(), range(0.0) {}
+    RaytraceResult( const Pose& pose, Model* mod, const Color& color, const meters_t range) 
+       : pose(pose), mod(mod), color(color), range(range) {}
+    
   };
   
   
@@ -745,23 +760,8 @@ namespace Stg
       return( it == props.end() ? NULL : it->second );
     }
   };
-
-  /** raytrace sample
-   */
-  class RaytraceResult
-  {
-  public:
-    Pose pose; ///< location and direction of the ray origin
-    meters_t range; ///< range to beam hit in meters
-    Model* mod; ///< the model struck by this beam
-    Color color; ///< the color struck by this beam
-	 
-    RaytraceResult() : pose(), range(0), mod(NULL), color() {}
-    RaytraceResult( const Pose& pose, 
-		    meters_t range ) 
-      : pose(pose), range(range), mod(NULL), color() {}	 
-  };
 	
+
   class Ray
   {
   public:
@@ -777,7 +777,7 @@ namespace Stg
     meters_t range;
     ray_test_func_t func;
     const void* arg;
-    bool ztest;		
+    bool ztest;		    
   };
 		
 
@@ -1006,24 +1006,22 @@ namespace Stg
 	 	
     /** trace a ray. */
     RaytraceResult Raytrace( const Ray& ray );
-
+    
     RaytraceResult Raytrace( const Pose& pose, 			 
 			     const meters_t range,
 			     const ray_test_func_t func,
 			     const Model* finder,
 			     const void* arg,
 			     const bool ztest );
-		
-    void Raytrace( const Pose &pose, 			 
+    
+    void Raytrace( const Pose &gpose, // global pose
 		   const meters_t range,
 		   const radians_t fov,
 		   const ray_test_func_t func,
-		   const Model* finder,
+		   const Model* model,			 
 		   const void* arg,
-		   RaytraceResult* samples,
-		   const uint32_t sample_count,
-		   const bool ztest );
-		
+		   const bool ztest,		      
+		   std::vector<RaytraceResult>& results );
 		
     /** Enlarge the bounding volume to include this point */
     inline void Extend( point3_t pt );
@@ -2105,34 +2103,36 @@ namespace Stg
 			     const meters_t range, 
 			     const ray_test_func_t func,
 			     const void* arg,
-			     const bool ztest = true );
-  
+			     const bool ztest )
+    {
+      return world->Raytrace( LocalToGlobal(pose),
+			      range,
+			      func,
+			      this,
+			      arg,
+			      ztest );
+    }
+    
     /** raytraces multiple rays around the point and heading identified
 	by pose, in local coords */
     void Raytrace( const Pose &pose,
-		   const meters_t range, 
-		   const radians_t fov, 
-		   const ray_test_func_t func,
-		   const void* arg,
-		   RaytraceResult* samples,
-		   const uint32_t sample_count,
-		   const bool ztest = true  );
-  
-    RaytraceResult Raytrace( const radians_t bearing, 			 
-			     const meters_t range,
-			     const ray_test_func_t func,
-			     const void* arg,
-			     const bool ztest = true );
-  
-    void Raytrace( const radians_t bearing, 			 
-		   const meters_t range,
-		   const radians_t fov,
-		   const ray_test_func_t func,
-		   const void* arg,
-		   RaytraceResult* samples,
-		   const uint32_t sample_count,
-		   const bool ztest = true );
-
+     		   const meters_t range, 
+     		   const radians_t fov, 
+     		   const ray_test_func_t func,
+     		   const void* arg,
+     		   const bool ztest,
+		       std::vector<RaytraceResult>& results )
+    {
+      return world->Raytrace( LocalToGlobal(pose),
+			      range,
+			      fov,
+			      func,
+			      this,
+			      arg,
+			      ztest,      
+			      results );
+    }
+      
     virtual void UpdateCharge();
 		
     static int UpdateWrapper( Model* mod, void* arg ){ mod->Update(); return 0; }

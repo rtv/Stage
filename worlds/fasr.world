@@ -11,12 +11,12 @@ speedup -1
 paused 0
 
 # time at which to pause (in GUI mode) or quit (in headless mode) the simulation
-quit_time 3600 # 1 hour of simulated time
-#quit_time 1800 # 30 mins of simulated time
+#quit_time 3600 # 1 hour of simulated time
+quit_time 1800 # 30 mins of simulated time
 
 resolution 0.02
 
-threads 4
+threads 2
 
 # configure the GUI window
 window
@@ -39,7 +39,7 @@ floorplan
   name "cave" 
   pose [0 0 0 0]
   size [16.000 16.000 0.600]
-  bitmap "bitmaps/cave_filled.png"
+  bitmap "bitmaps/cave.png"
 )
 
 zone

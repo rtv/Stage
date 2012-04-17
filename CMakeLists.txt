@@ -84,47 +84,37 @@ include_directories(
 
 MESSAGE( STATUS "Checking for required libraries..." )
 
-SET( INDENT "  * " )
-
 find_package( JPEG REQUIRED )
-IF( JPEG_FOUND )
-  #MESSAGE( STATUS ${INDENT} "JPEG_INCLUDE_DIR = ${JPEG_INCLUDE_DIR}" )
-  #MESSAGE( STATUS ${INDENT} "JPEG_LIBRARIES = ${JPEG_LIBRARIES}" ) 
-ELSE( JPEG_FOUND )
-   MESSAGE( ${INDENT} "JPEG library not detected" )
-ENDIF( JPEG_FOUND )
 
-find_package( PNG REQUIRED )
-IF( PNG_FOUND )
-#  MESSAGE( STATUS ${INDENT} "PNG_INCLUDE_DIR = ${PNG_INCLUDE_DIR}" )
-#  MESSAGE( STATUS ${INDENT} "PNG_LIBRARIES = ${PNG_LIBRARIES}" ) 
-ELSE( PNG_FOUND )
-   MESSAGE( ${INDENT} "PNG library not detected" )
-ENDIF( PNG_FOUND )
-   
+#find_package( PNG REQUIRED )
+# deal with missing OS X on Mountain Lion: do not commit
+SET( PNG_LIBRARIES /opt/X11/lib/libpng.dylib )
+SET( PNG_INCLUDE_DIR /opt/X11/include )
+
 find_package( FLTK REQUIRED )
-IF( FLTK_FOUND )
-#  MESSAGE( STATUS ${INDENT} "FLTK_LIBRARIES=${FLTK_LIBRARIES}" )
-#  MESSAGE( STATUS ${INDENT} "FLTK_INCLUDE_DIR=${FLTK_INCLUDE_DIR}" )
-ELSE( FLTK_FOUND )
-  MESSAGE( FATAL_ERROR "FLTK not found, aborting" )
-ENDIF( FLTK_FOUND )
-
 find_package( OpenGL REQUIRED )
+
 IF( NOT OPENGL_GLU_FOUND )
   MESSAGE( FATAL_ERROR "OpenGL GLU not found, aborting" )
 ENDIF( NOT OPENGL_GLU_FOUND )
-#MESSAGE( STATUS ${INDENT} "OpenGL GLU found at ${OPENGL_INCLUDE_DIR}" )
-#MESSAGE( STATUS "    OPENGL_INCLUDE_DIR = ${OPENGL_INCLUDE_DIR}")
-#MESSAGE( STATUS "    OPENGL_glu_LIBRARY = ${OPENGL_glu_LIBRARY}")
 
+SET( INDENT "  * " )
+# MESSAGE( STATUS ${INDENT} "JPEG_INCLUDE_DIR = ${JPEG_INCLUDE_DIR}" )
+# MESSAGE( STATUS ${INDENT} "JPEG_LIBRARIES = ${JPEG_LIBRARIES}" ) 
+# MESSAGE( STATUS ${INDENT} "PNG_INCLUDE_DIR = ${PNG_INCLUDE_DIR}" )
+# MESSAGE( STATUS ${INDENT} "PNG_LIBRARIES = ${PNG_LIBRARIES}" ) 
+# MESSAGE( STATUS ${INDENT} "FLTK_LIBRARIES=${FLTK_LIBRARIES}" )
+# MESSAGE( STATUS ${INDENT} "FLTK_INCLUDE_DIR=${FLTK_INCLUDE_DIR}" )
+# MESSAGE( STATUS ${INDENT} "OpenGL GLU found at ${OPENGL_INCLUDE_DIR}" )
+# MESSAGE( STATUS "    OPENGL_INCLUDE_DIR = ${OPENGL_INCLUDE_DIR}")
+# MESSAGE( STATUS "    OPENGL_glu_LIBRARY = ${OPENGL_glu_LIBRARY}")
 
 MESSAGE( STATUS "Checking for optional libraries..." )
 
 # Player does not have a CMake package, but does provide pkgconfig info
 
 include(FindPkgConfig)
-
+   
 pkg_search_module( PLAYER playercore>=2.1.0 ) 
 IF( PLAYER_FOUND )
   MESSAGE( STATUS ${INDENT} "Player version ${PLAYER_VERSION} detected at ${PLAYER_PREFIX}" )

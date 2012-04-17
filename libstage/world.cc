@@ -623,6 +623,8 @@ void World::ConsumeQueue( unsigned int queue_num )
 
 bool World::Update()
 {
+  //printf( "cells: %u blocks %u\n", Cell::count, Block::count );
+
   //puts( "World::Update()" );
 	
   // if we've run long enough, exit
@@ -739,36 +741,42 @@ void World::ClearRays()
   ray_list.clear();
 }
 
+
 // Perform multiple raytraces evenly spaced over an angular field of view
 void World::Raytrace( const Pose &gpose, // global pose
-		      const meters_t range,
-		      const radians_t fov,
-		      const ray_test_func_t func,
-		      const Model* model,			 
+ 		      const meters_t range,
+ 		      const radians_t fov,
+ 		      const ray_test_func_t func,
+ 		      const Model* mod,			 
 		      const void* arg,
-		      RaytraceResult* samples, // preallocated storage for samples
-		      const uint32_t sample_count, // number of samples
-		      const bool ztest ) 
+		      const bool ztest,		      
+		      std::vector<RaytraceResult>& results )
 {
   // find the direction of the first ray
   Pose raypose( gpose );
   const double starta( fov/2.0 - raypose.a );
   
-  for( uint32_t s(0); s < sample_count; ++s )
+  // set up a ray to trace
+  Ray ray( mod, gpose, range, func, arg, ztest );
+  
+  const size_t sample_count = results.size();
+  
+  for( size_t s(0); s < sample_count; ++s )
     {
-      raypose.a = (s * fov / (double)(sample_count-1)) - starta;
-      samples[s] = Raytrace( raypose, range, func, model, arg, ztest );
+      // aim the ray in the right direction before tracing
+      ray.origin.a = (s * fov / (double)(sample_count-1)) - starta;
+      results[s] = Raytrace( ray );
     }
 }
 
-// Stage spends 50-99% of its time in this method.
+
 RaytraceResult World::Raytrace( const Pose &gpose, 
 				const meters_t range,
 				const ray_test_func_t func,
 				const Model* mod,		
 				const void* arg,
-				const bool ztest ) 
-{
+				const bool ztest )
+{    
   return Raytrace( Ray( mod, gpose, range, func, arg, ztest ));
 }
 
@@ -777,10 +785,10 @@ RaytraceResult World::Raytrace( const Ray& r )
 {
   //rt_cells.clear();
   //rt_candidate_cells.clear();
-  
-  // initialize the sample
-  RaytraceResult sample( r.origin, r.range );
-  
+
+  // initialize result for return
+  RaytraceResult result( r.origin, NULL, Color(), r.range );
+
   // our global position in (floating point) cell coordinates
   double globx( r.origin.x * ppm );
   double globy( r.origin.y * ppm );
@@ -852,10 +860,8 @@ RaytraceResult World::Raytrace( const Ray& r )
 	  int32_t cx( GETCELL(globx) ); 
 	  int32_t cy( GETCELL(globy) );
 
+	  // since reg->count was non-zero, we expect this pointer to be good
 	  Cell* c( &reg->cells[ cx + cy * REGIONWIDTH ] );
-
-	  // this assert makes Stage slow when compiled for debug
-	  //  assert(c); // should be good: we know the region contains objects
 
 	  // while within the bounds of this region and while some ray remains
 	  // we'll tweak the cell pointer directly to move around quickly
@@ -878,15 +884,16 @@ RaytraceResult World::Raytrace( const Ray& r )
 		  if( (*r.func)( &block->group->mod, (Model*)r.mod, r.arg )) 
 		    {
 		      // a hit!
-		      sample.mod = &block->group->mod;	
-		      sample.color = sample.mod->GetColor();
-										
+		      result.pose = r.origin;
+		      result.mod = &block->group->mod;	
+		      result.color = result.mod->GetColor();
+
 		      if( ax > ay ) // faster than the equivalent hypot() call
-			sample.range = fabs((globx-startx) / cosa) / ppm;
+			result.range = fabs((globx-startx) / cosa) / ppm;
 		      else
-			sample.range = fabs((globy-starty) / sina) / ppm;
-											
-		      return sample;
+			result.range = fabs((globy-starty) / sina) / ppm;
+
+		      return result;
 		    }				  
 		}
 
@@ -976,7 +983,8 @@ RaytraceResult World::Raytrace( const Ray& r )
 	      globx = ycrossx;
 	      globy = ycrossy;
 							
-	      n -= distY; // decrement remaining manhattan distance 							
+	      n -= distY; // decrement remaining manhattan distance 			
+				
 	      // calculate the next region crossing
 	      ycrossx += yjumpx;
 	      ycrossy += yjumpy;
@@ -989,9 +997,8 @@ RaytraceResult World::Raytrace( const Ray& r )
 	}			  	
       //rt_cells.push_back( point_int_t( globx, globy ));
     } 
-  // hit nothing
-  sample.mod = NULL;
-  return sample;
+
+  return result;
 }
 
 static int _save_cb( Model* mod, void* dummy )
@@ -1068,7 +1075,10 @@ void World::MapPoly( const std::vector<point_int_t>& pts, Block* block, unsigned
 	  	 (cy>=0) && (cy<REGIONWIDTH) && 
 	  	 n > 0 )
 	    {					
-	      c->AddBlock(block, layer ); 
+            // if the block is not already rendered in the cell
+            //if( find (block->rendered_cells[layer].begin(), block->rendered_cells[layer].end(), c )
+              // == block->rendered_cells[layer].end() )                            
+                c->AddBlock(block, layer ); 
 							
 	      // cleverly skip to the next cell (now it's safe to
 	      // manipulate the cell pointer)

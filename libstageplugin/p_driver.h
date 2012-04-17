@@ -163,20 +163,6 @@ class InterfaceSpeech : public InterfaceModel
   virtual void Publish( void );
 };
 
-/* DEPRECATED */
-/* class InterfaceLaser : public InterfaceModel */
-/* { */
-/*   private: */
-/*     int scan_id; */
-/*  public: */
-/*   InterfaceLaser( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section ); */
-/*   virtual ~InterfaceLaser( void ){ /\* TODO: clean up*\/ }; */
-/*   virtual int ProcessMessage(QueuePointer & resp_queue, */
-/* 			      player_msghdr_t* hdr, */
-/* 			      void* data); */
-/*   virtual void Publish( void ); */
-/* }; */
-
 class InterfaceRanger : public InterfaceModel
 {
   private:
@@ -274,20 +260,6 @@ class InterfacePtz : public InterfaceModel
   virtual void Publish( void );
 };
 
-/* DEPRECATED */
-/* class InterfaceSonar : public InterfaceModel */
-/* { */
-/*  public: */
-/*   InterfaceSonar( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section ); */
-/*   virtual ~InterfaceSonar( void ){ /\* TODO: clean up*\/ }; */
-
-/*   virtual int ProcessMessage( QueuePointer & resp_queue, */
-/* 			      player_msghdr * hdr, */
-/* 			      void * data ); */
-/*   virtual void Publish( void ); */
-/* }; */
-
-
 class InterfaceBumper : public InterfaceModel
 {
  public:
@@ -344,8 +316,8 @@ class InterfaceGraphics2d : public InterfaceModel
   InterfaceGraphics2d( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceGraphics2d( void );
 
-  void Subscribe(QueuePointer &queue);
-  void Unsubscribe(QueuePointer &queue);
+  virtual void Subscribe(QueuePointer &queue);
+  virtual void Unsubscribe(QueuePointer &queue);
 
   virtual int ProcessMessage( QueuePointer & resp_queue,
 			      player_msghdr * hdr,
@@ -361,8 +333,8 @@ class InterfaceGraphics3d : public InterfaceModel
   InterfaceGraphics3d( player_devaddr_t addr, StgDriver* driver, ConfigFile* cf, int section );
   virtual ~InterfaceGraphics3d( void );
 
-  void Subscribe(QueuePointer &queue);
-  void Unsubscribe(QueuePointer &queue);
+  virtual void Subscribe(QueuePointer &queue);
+  virtual void Unsubscribe(QueuePointer &queue);
 
   virtual int ProcessMessage( QueuePointer & resp_queue,
 			      player_msghdr * hdr,

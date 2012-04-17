@@ -176,22 +176,22 @@ void ModelFiducial::AddModelIfVisible( Model* him )
 
 	//printf( "range %.2f\n", range );
 	
-	RaytraceResult ray( Raytrace( dtheta,
-																max_range_anon, // TODOscan only as far as the object
-																fiducial_raytrace_match,
-																NULL,
-																true ) );
+	RaytraceResult result = Raytrace( Pose(0,0,0,dtheta),
+					  max_range_anon, // TODOscan only as far as the object
+					  fiducial_raytrace_match,
+					  NULL,
+					  true );
 	
 	// TODO
-	if( ignore_zloc && ray.mod == NULL ) // i.e. we didn't hit anything *else*
-		ray.mod = him; // so he was just at the wrong height
+	if( ignore_zloc && result.mod == NULL ) // i.e. we didn't hit anything *else*
+		result.mod = him; // so he was just at the wrong height
 	
 	//printf( "ray hit %s and was seeking LOS to %s\n",
 	//			ray.mod ? ray.mod->Token() : "null",
 	//			him->Token() );
 	
 	// if it was him, we can see him
-	if( ray.mod != him )
+	if( result.mod != him )
 		return;
 	
 	assert( range >= 0 );

@@ -30,7 +30,7 @@ namespace Stg
 
   // this is slightly faster than the inline method above, but not as safe
   //#define GETREG(X) (( (static_cast<int32_t>(X)) & REGIONMASK ) >> RBITS)
-	
+	    
   class Cell 
   {
     friend class SuperRegion;
@@ -38,12 +38,17 @@ namespace Stg
 	 
   private:
     std::vector<Block*> blocks[2];		
-	 
+	     
   public:
     Cell() 
       : blocks(), 
 	region(NULL)
-    { /* nothing to do */ }  				
+    { 
+      // prevent frequent memory allocations
+      blocks[0].reserve(8); 
+      blocks[1].reserve(8);
+     /* nothing to do */ 
+    }  				
 	 
     void RemoveBlock( Block* b, unsigned int index );
     void AddBlock( Block* b, unsigned int index );

@@ -133,12 +133,11 @@ ModelPosition::ModelPosition( World* world,
       acceleration_bounds[i].max =  1.0;
     }
 
-      velocity_bounds[3].min = -M_PI/2.0;
-      velocity_bounds[3].max =  M_PI/2.0;
+  velocity_bounds[3].min = -M_PI/2.0;
+  velocity_bounds[3].max =  M_PI/2.0;
 
-      acceleration_bounds[3].min = -M_PI/2.0;
-      acceleration_bounds[3].max =  M_PI/2.0;
-
+  acceleration_bounds[3].min = -M_PI/2.0;
+  acceleration_bounds[3].max =  M_PI/2.0;
 
   this->SetBlobReturn( true );
   
@@ -558,7 +557,7 @@ void ModelPosition::Move( void )
   pose = newpose; // do the move provisionally - we might undo it below
   
   const unsigned int layer( world->UpdateCount()%2 );
-  
+    // @todo th
   UnMapWithChildren( layer ); // remove from all blocks
   MapWithChildren( layer ); // render into new blocks
   

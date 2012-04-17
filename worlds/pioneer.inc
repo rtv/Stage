@@ -171,7 +171,8 @@ define pioneer2dx pioneer2dx_base
     points 8
     point[0] [-0.2 0.12]
     point[1] [-0.2 -0.12]
-    point[2] [-0.12 -0.2555]
+    point[2] [-0.12 -0.2555 ]
+
     point[3] [0.12 -0.2555]
     point[4] [0.2 -0.12]
     point[5] [0.2 0.12]
@@ -265,7 +266,6 @@ define fancypioneer2dx pioneer2dx_base
     point[2] [ -0.083  0.140 ]
     point[3] [  0.083  0.140 ]
     z [0 0.165 ]
-    color "gray15"
   )
 
   # right wheel
@@ -277,7 +277,6 @@ define fancypioneer2dx pioneer2dx_base
     point[2] [ -0.083  -0.177 ]
     point[3] [  0.083  -0.177 ]
     z [ 0 0.165 ]
-    color "gray15"
   )
 
   # castor
@@ -289,7 +288,6 @@ define fancypioneer2dx pioneer2dx_base
     point[1] [ -0.1825 -0.012 ]
     point[0] [ -0.2475 -0.012 ]
     z [ 0 0.065 ]
-    color "gray15"
   )
  
   # lid
@@ -319,10 +317,6 @@ define fancypioneer2dx pioneer2dx_base
     point[1] [  0.145  0.107 ]
     point[0] [  0.166  0.056 ]
     z [ 0.234 0.24 ]
-
-    # a dark top looks more realistic, but isn't very useful 
-    # for a top-down view
-    #color "gray10"
   )
 )
 

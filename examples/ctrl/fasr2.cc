@@ -712,7 +712,7 @@ public:
 				// ways since last time we planned
 				if( graphp == NULL || 
 						(graphp->GoodDirection( pose, 5.0, a_goal ) == 0) || 
-						(goal->GetPose().Distance2D( cached_goal_pose ) > 0.5) )
+						(goal->GetPose().Distance( cached_goal_pose ) > 0.5) )
 					{
 						//printf( "%s replanning from (%.2f,%.2f) to %s at (%.2f,%.2f) in Work()\n", 
 						//	  pos->Token(),

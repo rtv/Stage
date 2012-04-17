@@ -20,7 +20,7 @@ Block::Block(  BlockGroup* group,
   rendered_cells() 
 {
   assert( group );
-  canonicalize_winding(this->pts);
+  //canonicalize_winding(this->pts);
 }
 
 /** A from-file  constructor */
@@ -38,7 +38,6 @@ Block::Block( BlockGroup* group,
   assert(entity);
   
   Load( wf, entity );
-  canonicalize_winding(this->pts);
 }
 
 Block::~Block()
