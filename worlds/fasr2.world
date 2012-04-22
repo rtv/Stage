@@ -222,7 +222,7 @@ define blinker model
 
 define autorob pioneer2dx		  
 (		 
- sickbase( sensor( samples 32 range [0 2] fov 180 color "blue" ) ranger_return 2 watts 30  )
+ sickbase( sensor( samples 32 range [0 2] fov 180 color_rgba [0 0 1 0.15] ) ranger_return 2 watts 30  )
 
 # ctrl "fasr2"
  kjoules 400 

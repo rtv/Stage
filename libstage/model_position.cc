@@ -157,6 +157,38 @@ void ModelPosition::SetVelocity( const Velocity& val )
   CallCallbacks( CB_VELOCITY );
 }
 
+// get the model's velocity in the global frame
+Velocity ModelPosition::GetGlobalVelocity() const
+{
+  Pose gpose = GetGlobalPose();
+
+  double cosa = cos( gpose.a );
+  double sina = sin( gpose.a );
+
+  Velocity gv;
+  gv.x = velocity.x * cosa - velocity.y * sina;
+  gv.y = velocity.x * sina + velocity.y * cosa;
+  gv.a = velocity.a;
+
+  return gv;
+} 
+
+// set the model's velocity in the global frame
+void ModelPosition::SetGlobalVelocity( const Velocity& gv
+                             )
+{
+  Pose gpose = GetGlobalPose();
+
+  double cosa = cos( gpose.a );
+  double sina = sin( gpose.a );
+
+  Velocity lv;
+  lv.x = gv.x * cosa + gv.y * sina;
+  lv.y = -gv.x * sina + gv.y * cosa;
+  lv.a = gv.a;
+
+  this->SetVelocity( lv );
+}
 
 void ModelPosition::Load( void )
 {
