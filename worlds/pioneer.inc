@@ -12,12 +12,10 @@ define p2dxsonar sensor
   size [0.01 0.05 0.01 ] 
   # define the range bounds [min max]
   range [0 5.0]
-	# define the angular field of view in degrees
-	fov 15
-	# define the number of samples spread over the fov
+  # define the angular field of view in degrees
+  fov 15
+  # define the number of samples spread over the fov
   samples 1
-	# define the color that ranges are drawn in the gui
-	color_rgba [ 0 1 0 0.2 ] 
 )
 
 define p2dx_sonar ranger

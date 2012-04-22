@@ -473,14 +473,16 @@ void World::Load( const std::string& worldfile_path )
   // call all controller init functions
   FOR_EACH( it, models )
     {
-      // all this is a hack and shouldn't be necessary
       (*it)->blockgroup.CalcSize();
-      (*it)->UnMap(updates%2);
-      (*it)->Map(updates%2);
+      (*it)->UnMap(); // clears both layers
+      (*it)->Map(); // maps both layers
+      
       // to here
-
-      (*it)->InitControllers();
     }
+  
+  // the world is all done - run any init code for user's controllers
+  FOR_EACH( it, models )
+    (*it)->InitControllers();
 
   putchar( '\n' );
 }

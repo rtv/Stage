@@ -1528,9 +1528,9 @@ int Worldfile::ReadTuple( const int entity, const char *name,
   va_start( args, format );
 
   for( unsigned int i=0; i<count; i++ )
-    {
+    {      
       const char* val = GetPropertyValue(property, first+i);
-      
+     
       switch( format[i] )
 	{
 	case 'i': // signed integer
@@ -1638,4 +1638,3 @@ void Worldfile::WriteTuple( const int entity, const char *name,
   
   va_end( args );
 }
-

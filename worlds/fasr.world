@@ -8,7 +8,8 @@ include "map.inc"
 include "sick.inc"
 
 speedup -1
-paused 0
+paused 1
+
 
 # time at which to pause (in GUI mode) or quit (in headless mode) the simulation
 #quit_time 3600 # 1 hour of simulated time
@@ -107,8 +108,14 @@ charge_station(  pose [ 6.427 -0.964 0 74.484 ] )
 
 define autorob pioneer2dx		  
 (		 
- sickbase( sensor( samples 32 range [0 3] fov 180 color_rgba [ 0 0 1 0.15 ] ) 
-  				 ranger_return 2.000 watts 30 )
+ sickbase( sensor( samples 32 
+                   range [0 3] 
+                   fov 180
+                   color_rgba [0 0 1 0.15] ) 
+#                   color "yellow" ) 
+
+     	    ranger_return 2.000 watts 30 
+)
 
  ctrl "fasr"
 # kjoules 400 

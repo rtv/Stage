@@ -197,7 +197,7 @@ namespace Stg
   class Color
   {
   public:
-    float r,g,b,a;
+    double r,g,b,a;
 	
     Color( double r, double g, double b, double a=1.0 );
 	
@@ -2732,7 +2732,6 @@ namespace Stg
     ModelRanger( World* world, Model* parent, const std::string& type );
     virtual ~ModelRanger();
 		
-    virtual void Load();
     virtual void Print( char* prefix ) const;
 		
     class Vis : public Visualizer 
@@ -2757,7 +2756,7 @@ namespace Stg
       Bounds range;
       radians_t fov;
       unsigned int sample_count;
-      Color col;
+      Color color;
 			
       std::vector<meters_t> ranges;
       std::vector<double> intensities;
@@ -2768,7 +2767,7 @@ namespace Stg
 		 range( 0.0, 5.0 ),
 		 fov( 0.1 ), 
 		 sample_count(1),
-		 col( 0,1,0,0.3 ),
+		 color( Color(0,0,1,0.15)),
 		 ranges(),
 		 intensities(),
 		 bearings()

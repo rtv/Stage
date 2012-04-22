@@ -128,35 +128,25 @@ void ModelRanger::Shutdown( void )
   Model::Shutdown();
 }
 
+
 void ModelRanger::LoadSensor( Worldfile* wf, int entity )
 {
-  //static int c=0;
-  // printf( "ranger %s loading sensor %d\n", token.c_str(), c++ );
   Sensor s;
   s.Load( wf, entity );
-  sensors.push_back(s);
+  sensors.push_back(s); 
 }
 
 
 void ModelRanger::Sensor::Load( Worldfile* wf, int entity )
 {
-  //static int c=0;
-  // printf( "ranger %s loading sensor %d\n", token.c_str(), c++ );
-	
   pose.Load( wf, entity, "pose" );
   size.Load( wf, entity, "size" );
   range.Load( wf, entity, "range" );
-  col.Load( wf, entity );		
   fov = wf->ReadAngle( entity, "fov", fov );
   sample_count = wf->ReadInt( entity, "samples", sample_count );	
-  //ranges.resize(sample_count);
-  //intensities.resize(sample_count);
+  color.Load( wf, entity );
 }
 
-void ModelRanger::Load( void )
-{
-  Model::Load();
-}
 
 static bool ranger_match( Model* hit, 
 			  Model* finder,
@@ -213,7 +203,7 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
       intensities[t] = res.mod ? res.mod->vis.ranger_return : 0.0;
       bearings[t] = start_angle + ((double)t) * sample_incr;
 		
-      // point the ray to the next angle
+      // point the ray to the next angle:
       ray.origin.a += sample_incr;			
     }
 }
@@ -221,8 +211,8 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
 std::string ModelRanger::Sensor::String() const
 {
   char buf[256];
-  snprintf( buf, 256, "[ samples %u, range [%.2f %.2f] ]", 
-	    sample_count, range.min, range.max );
+  snprintf( buf, 256, "[ samples %u, range [%.2f %.2f] fov %.2f color [%.2f %.2f %.2f %.2f]", 
+	    sample_count, range.min, range.max, fov, color.r, color.g, color.b, color.a );
   return( std::string( buf ) );
 }
 
@@ -238,7 +228,7 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	
   pts[0] = 0.0;
   pts[1] = 0.0;
-	
+  
   glDepthMask( GL_FALSE );
   glPointSize( 2 );
 	
@@ -248,16 +238,21 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 
   if( vis->showTransducers )
     {
-      // draw the sensor body as a rectangle
-      rgr->PushColor( col );
+      // draw the sensor body as a rectangle in a darker version of the body color
+      // Color col( rgr->color );
+      // col.r /= 3.0;
+      // col.g /= 3.0;
+      // col.b /= 3.0;
+      rgr->PushColor( color );
+
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );			
       glRectf( -size.x/2.0, -size.y/2.0, size.x/2.0, size.y/2.0 );
       rgr->PopColor();
     }
 
-  Color c( col );
-  c.a = 0.15; // transparent version of sensor color
-  rgr->PushColor( c );
+  //Color c( color );
+  //c.a = 0.15; // transparent version of sensor color
+  rgr->PushColor( color );
   glPolygonMode( GL_FRONT, GL_FILL );			
 	
   if( ranges.size()  ) // if we have some data
@@ -309,11 +304,12 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
       // 				}			 
 			
       // draw the beam strike points
-      c.a = 0.8;
-      rgr->PushColor( c );
+      //c.a = 0.8;
+      rgr->PushColor( Color::blue );
       glDrawArrays( GL_POINTS, 0, sample_count+1 );
       rgr->PopColor();
     }
+
 	
   if( vis->showFov )
     {
@@ -325,6 +321,8 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	}
 			
       glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
+      Color c = color;
       c.a = 0.5;
       rgr->PushColor( c );		
       glDrawArrays( GL_POLYGON, 0, sample_count+1 );
@@ -333,6 +331,8 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
 	
   if( vis->showBeams )
     {
+      Color c = color;
+
       // darker version of the same color
       c.r /= 2.0;
       c.g /= 2.0;

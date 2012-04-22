@@ -107,6 +107,7 @@ const Color& Color::Load( Worldfile* wf, const int section )
   if( wf->PropertyExists( section, "color" ))
     {      
       const std::string& colorstr = wf->ReadString( section, "color", "" );
+
       if( colorstr != "" )
 	{
 	  if( colorstr == "random" )
@@ -128,7 +129,7 @@ const Color& Color::Load( Worldfile* wf, const int section )
     }        
   else
     wf->ReadTuple( section, "color_rgba", 0, 4, "ffff", &r, &g, &b, &a );
-  
+
   return *this;
 }
 

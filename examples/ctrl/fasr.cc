@@ -59,6 +59,8 @@ private:
   nav_mode_t mode;
   bool at_dest;
 
+  unsigned int charger_detection_accum;
+
 public:
   Robot( ModelPosition* pos, 
 			Model* source,
@@ -80,7 +82,8 @@ public:
 		charger_range(0),
 		charger_heading(0),
 		mode(MODE_WORK),
-		at_dest( false )
+		at_dest( false ),
+		charger_detection_accum(0)
   {
 	 // need at least these models to get any work done
 	 // (pos must be good, as we used it in the initialization list)
@@ -418,7 +421,6 @@ public:
   
 	 return 0; // run again
   }
-
 
 
   static int FiducialUpdate( ModelFiducial* mod, Robot* robot )

@@ -419,8 +419,7 @@ Model::Flag* Model::PopFlag()
 
 void Model::ClearBlocks()
 {
-  blockgroup.UnMap(0);
-  blockgroup.UnMap(1);  
+  UnMap();
   blockgroup.Clear();
   //no need to Map() -  we have no blocks
   NeedRedraw();
@@ -885,23 +884,15 @@ kg_t Model::GetMassOfChildren() const
   return( GetTotalMass() - mass);
 }
 
+// render all blocks in the group at my global pose and size
 void Model::Map( unsigned int layer )
 {
-  if( ! mapped )
-    {
-      // render all blocks in the group at my global pose and size
-      blockgroup.Map( layer );
-      mapped = true;
-    }
+  blockgroup.Map( layer );
 } 
 
 void Model::UnMap( unsigned int layer )
 {
-  if( mapped )
-    {
-      blockgroup.UnMap(layer);
-      mapped = false;
-    }
+  blockgroup.UnMap(layer);
 }
 
 void Model::BecomeParentOf( Model* child )
@@ -1560,9 +1551,11 @@ void Model::Load()
   // we may well have changed blocks or geometry
   blockgroup.CalcSize();
   
+  // remove and re-add to both layers
   UnMapWithChildren(0);
-  UnMapWithChildren(1);
   MapWithChildren(0);
+
+  UnMapWithChildren(1);
   MapWithChildren(1);
   
   if( this->debug )

@@ -288,7 +288,7 @@ void BlockGroup::CallDisplayList()
 void BlockGroup::LoadBlock( Worldfile* wf, int entity )
 {
   AppendBlock( Block( this, wf, entity ));
-
+  //CalcSize(); // adjust the blocks so they fit in our bounding box
 }				
 
 void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
@@ -305,43 +305,43 @@ void BlockGroup::LoadBitmap( const std::string& bitmapfile, Worldfile* wf )
     full = std::string(dirname(workaround_const)) + "/" + bitmapfile;			
     free( workaround_const );
   }
-
+  
   char buf[512];
   snprintf( buf, 512, "[Image \"%s\"", bitmapfile.c_str() ); 
-    fputs( buf, stdout );
-    fflush( stdout );
+  fputs( buf, stdout );
+  fflush( stdout );
+  
+  PRINT_DEBUG1( "attempting to load image %s", full );
     
-    PRINT_DEBUG1( "attempting to load image %s", full );
-    
-    Color col( 1.0, 0.0, 1.0, 1.0 );
-
-    std::vector<std::vector<point_t> > polys;
-    
-    if( polys_from_image_file( full,
-      polys ) )
+  Color col( 1.0, 0.0, 1.0, 1.0 );
+  
+  std::vector<std::vector<point_t> > polys;
+  
+  if( polys_from_image_file( full,
+			     polys ) )
     {
       PRINT_ERR1( "failed to load polys from image file \"%s\"",
-        full.c_str() );
+		  full.c_str() );
       return;
     }
-    
-    FOR_EACH( it, polys )
+  
+  FOR_EACH( it, polys )
     AppendBlock( Block( this,
-     *it,
-     Bounds(0,1) ));
-    
-    CalcSize();
+			*it,
+			Bounds(0,1) ));
+  
+  CalcSize();
+  
+  fputs( "]", stdout ); 
+}
 
-    fputs( "]", stdout ); 
-  }
 
-
-  void BlockGroup::Rasterize( uint8_t* data, 
-   unsigned int width, 
-   unsigned int height,
-   meters_t cellwidth,
-   meters_t cellheight )
-  {  
-    FOR_EACH( it, blocks )
+void BlockGroup::Rasterize( uint8_t* data, 
+			    unsigned int width, 
+			    unsigned int height,
+			    meters_t cellwidth,
+			    meters_t cellheight )
+{  
+  FOR_EACH( it, blocks )
     it->Rasterize( data, width, height, cellwidth, cellheight );
-  }
+}
