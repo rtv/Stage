@@ -86,10 +86,12 @@ MESSAGE( STATUS "Checking for required libraries..." )
 
 find_package( JPEG REQUIRED )
 
-#find_package( PNG REQUIRED )
-# deal with missing OS X on Mountain Lion: do not commit
-SET( PNG_LIBRARIES /opt/X11/lib/libpng.dylib )
-SET( PNG_INCLUDE_DIR /opt/X11/include )
+find_package( PNG REQUIRED )
+
+# deal with new missing X11 on OS X 10.8 Mountain Lion
+# todo: fix this properly
+# SET( PNG_LIBRARIES /opt/X11/lib/libpng.dylib )
+# SET( PNG_INCLUDE_DIR /opt/X11/include )
 
 find_package( FLTK REQUIRED )
 find_package( OpenGL REQUIRED )
