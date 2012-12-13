@@ -248,6 +248,18 @@ class InterfaceBlobfinder : public InterfaceModel
   virtual void Publish( void );
 };
 
+class InterfaceCamera : public InterfaceModel
+{
+ public:
+  InterfaceCamera (player_devaddr_t addr, StgDriver *driver, ConfigFile *cf, int section );
+  virtual  ~InterfaceCamera( void ) { /* TODO: clean up*/ };
+
+  virtual int ProcessMessage (QueuePointer & resp_queue,
+			      player_msghdr *hdr,
+			      void * data );
+  virtual void Publish( void );
+};
+
 class InterfacePtz : public InterfaceModel
 {
  public:
