@@ -1,6 +1,6 @@
-# simple.world - basic world file example
-# Authors: Richard Vaughan
-# $Id$
+# Desc: Sample Stage world file with a simulated Roomba, based on simple.world
+# Author:  Rich Mattes
+# Date: 12 December 2012
 
 include "irobot.inc"
 include "map.inc"

@@ -478,10 +478,9 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 //  	  ifsrc = new InterfacePtz( player_addr,  this, cf, section );
 //  	  break;
 
-// 	case PLAYER_BUMPER_CODE:
-// 	  ifsrc = new InterfaceBumper( player_addr,  this, cf, section );
-// 	  break;
-
+ 	case PLAYER_BUMPER_CODE:
+ 	  ifsrc = new InterfaceBumper( player_addr,  this, cf, section );
+ 	  break;
 
 	default:
 	  PRINT_ERR1( "error: stage driver doesn't support interface type %d\n",
