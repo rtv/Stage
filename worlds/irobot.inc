@@ -25,11 +25,12 @@ define roomba position
   )
 
   # this bumper array VERY crudely approximates the Roomba's bumpers
-#  bumper( bcount 2  
-#	  blength 0.33
-#          bpose[0] [0.12  0.12  45]
-#          bpose[1] [0.12 -0.12 -45] 
-#        )
+  bumper( size [.01 .01 .01 0]
+          bcount 2  
+          blength .33
+          bpose[0] [0.12  0.12 .02  45]
+          bpose[1] [0.12 -0.12 .02 -45] 
+        )
 
   color "gray50"
 )
