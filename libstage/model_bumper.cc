@@ -173,11 +173,13 @@ void ModelBumper::Update( void )
 {
   Model::Update();
 
-  if( (bumpers == NULL) || (bumper_count < 1 ))
+  if( (bumpers == NULL) || (bumper_count < 1 )) {
     return;
+  }
 
-  if( samples ==  NULL )
+  if( samples ==  NULL ) {
     samples = new BumperSample[bumper_count];
+  }
   assert( samples );
 
   for( unsigned int t=0; t<bumper_count; t++ )
@@ -228,7 +230,7 @@ void ModelBumper::BumperVis::Visualize( Model* mod, Camera* cam )
 {
   ModelBumper* bump = dynamic_cast<ModelBumper*>(mod);
 
-  double thickness;
+
   if( ! (bump->samples && bump->bumpers && bump->bumper_count) ){
     return;
   }
@@ -236,21 +238,25 @@ void ModelBumper::BumperVis::Visualize( Model* mod, Camera* cam )
   if (! bump->showBumperData ) {
     return;
   }
-  
+  /*
+   * draw the sensitive area of the bumper, with a color indicating if it is hit.
+   */
   for( unsigned int t=0; t< bump->bumper_count; t++ )
     {
+      //This is how wide the active area rectangle will be.
+      float thickness=0.01;
       glPushMatrix();
+      //draw the active area with a different color if it is hit
       if (bump->samples[t].hit) {
-        thickness = 0.05;
         glColor3f(1.0f, 0.0f, 0.0f);
       } else {
-        thickness = 0.05;
         glColor3f(0.0f, 1.0f, 0.0f);
       }
-      glRotatef(bump->bumpers[t].pose.a, 0, 0, 1);
+      const float rad2deg=180.0/M_PI;
       glTranslatef(bump->bumpers[t].pose.x, bump->bumpers[t].pose.y,0);
-      glRectf(-bump->bumpers[t].length/2.0, -thickness/2.0, 
-             bump-> bumpers[t].length/2.0, thickness/2.0);
+      glRotatef(bump->bumpers[t].pose.a*rad2deg, 0, 0, 1);
+      glRectf(-thickness/2.0f, -bump->bumpers[t].length/2.0,
+               thickness/2.0f,  bump->bumpers[t].length/2.0 );
       glPopMatrix();
     }
 
