@@ -22,6 +22,7 @@ define roomba position
     point[13] [ 0.086 -0.208 ]
     point[14] [ 0.159 -0.159 ]
     point[15] [ 0.208 -0.086 ]
+    z [0 0.1]
   )
 
   # this bumper array VERY crudely approximates the Roomba's bumpers
