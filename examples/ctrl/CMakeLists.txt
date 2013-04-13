@@ -8,6 +8,7 @@ SET( PLUGINS
   rasterize
   lasernoise
   dynamic
+  map2
 )
 
 # create a library module for each plugin and link libstage to each

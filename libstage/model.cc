@@ -522,7 +522,7 @@ bool Model::IsRelated( const Model* that ) const
     {
       // shortcut out if we found it on the way up the tree
       if( candidate->parent == that )
-	return true;
+      	return true;
       
       candidate = candidate->parent;      
     }
@@ -609,9 +609,9 @@ void Model::Unsubscribe( void )
 
   //printf( "unsubscribe from %s %d\n", Token(), subs );
 
-  // if this is the last sub, call shutdown
+  // if this is the last remaining subscriber, shutdown
   if( subs == 0 )
-    this->Shutdown();
+    Shutdown();
 }
 
 void Model::Print( char* prefix ) const
@@ -705,18 +705,18 @@ meters_t Model::ModelHeight() const
 
 void Model::AddToPose( double dx, double dy, double dz, double da )
 {
-  Pose p( this->pose );
+  Pose p( pose );
   p.x += dx;
   p.y += dy;
   p.z += dz;
   p.a += da;
   
-  this->SetPose( p );
+  SetPose( p );
 }
 
 void Model::AddToPose( const Pose& pose )
 {
-  this->AddToPose( pose.x, pose.y, pose.z, pose.a );
+  AddToPose( pose.x, pose.y, pose.z, pose.a );
 }
 
 void Model::PlaceInFreeSpace( meters_t xmin, meters_t xmax, 
@@ -833,7 +833,7 @@ Model* Model::GetUnsubscribedModelOfType( const std::string& type ) const
 
 void Model::NeedRedraw( void )
 {
-  this->rebuild_displaylist = true;
+  rebuild_displaylist = true;
 
   if( parent )
     parent->NeedRedraw();
@@ -861,7 +861,7 @@ Model* Model::GetUnusedModelOfType( const std::string& type )
     {
       Model* found = (*it)->GetUnusedModelOfType( type );
       if( found )
-	return found;
+      	return found;
     }
   
   // nothing matching below this model
