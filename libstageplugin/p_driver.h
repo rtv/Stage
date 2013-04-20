@@ -43,15 +43,15 @@ class StgDriver : public Driver
 
   /// find the device record with this Player id
   Interface* LookupDevice( player_devaddr_t addr );
-
+  
   Stg::Model* LocateModel( char* basename,
-									player_devaddr_t* addr,
-									const std::string& type );
+			   player_devaddr_t* addr,
+			   const std::string& type );
   
  protected:
-
+  
   /// an array of pointers to Interface objects, defined below
-	std::vector<Interface*> devices;
+  std::vector<Interface*> devices;
 };
 
 
@@ -62,22 +62,21 @@ class Interface
             StgDriver* driver,
             ConfigFile* cf,
             int section );
-
+  
   virtual ~Interface( void ){ /* TODO: clean up*/ };
-
+  
   player_devaddr_t addr;
-  double last_publish_time;
-  double publish_interval_msec;
-
+  
   StgDriver* driver; // the driver instance that created this device
-
+  
   virtual int ProcessMessage(QueuePointer &resp_queue,
        			     player_msghdr_t* hdr,
 			     void* data) { return(-1); } // empty implementation
-
+  
   virtual void Publish( void ){}; // do nothing
-  virtual void Subscribe( void ){}; // do nothing
-  virtual void Unsubscribe( void ){}; // do nothing
+  virtual void StageSubscribe( void ){}; // do nothing
+  virtual void StageUnsubscribe( void ){}; // do nothing
+  
   virtual void Subscribe( QueuePointer &queue ){}; // do nothing
   virtual void Unsubscribe( QueuePointer &queue ){}; // do nothing};
 };
@@ -104,12 +103,10 @@ class InterfaceModel
 		  int section,
 		  const std::string& type );
 
-  virtual ~InterfaceModel( void ){ Unsubscribe(); };
+  virtual ~InterfaceModel( void ){ StageUnsubscribe(); };
 
-  virtual void Subscribe( void );
-  virtual void Unsubscribe( void );
-  //virtual void Subscribe( QueuePointer &queue );
-  //virtual void Unsubscribe( QueuePointer &queue );
+  virtual void StageSubscribe( void );
+  virtual void StageUnsubscribe( void );
 
  protected:
   Stg::Model* mod;
@@ -297,7 +294,6 @@ class InterfaceMap : public InterfaceModel
   virtual int ProcessMessage( QueuePointer & resp_queue,
 			      player_msghdr * hdr,
 			      void * data );
-  //virtual void Publish( void );
 
   // called by ProcessMessage to handle individual messages
 

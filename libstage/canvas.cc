@@ -630,14 +630,10 @@ void Canvas::DrawGlobalGrid()
   glColor3f( 1.0, 1.0, 1.0 );
 
   glBegin(GL_QUADS);
-  glTexCoord2f( bounds.x.min/2.0, bounds.y.min/2.0 ); 
-  glVertex2f( bounds.x.min, bounds.y.min );
-  glTexCoord2f( bounds.x.max/2.0, bounds.y.min/2.0); 
-  glVertex2f(  bounds.x.max, bounds.y.min );
-  glTexCoord2f( bounds.x.max/2.0, bounds.y.max/2.0 ); 
-  glVertex2f(  bounds.x.max, bounds.y.max );
-  glTexCoord2f( bounds.x.min/2.0, bounds.y.max/2.0 ); 
-  glVertex2f( bounds.x.min, bounds.y.max );
+  glTexCoord2f( bounds.x.min/2.0, bounds.y.min/2.0 );  glVertex2f( bounds.x.min, bounds.y.min );
+  glTexCoord2f( bounds.x.max/2.0, bounds.y.min/2.0);   glVertex2f( bounds.x.max, bounds.y.min );
+  glTexCoord2f( bounds.x.max/2.0, bounds.y.max/2.0 );  glVertex2f( bounds.x.max, bounds.y.max );
+  glTexCoord2f( bounds.x.min/2.0, bounds.y.max/2.0 );  glVertex2f( bounds.x.min, bounds.y.max );
   glEnd();
 
   glDisable(GL_TEXTURE_2D);

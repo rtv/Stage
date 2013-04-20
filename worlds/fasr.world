@@ -7,7 +7,8 @@ include "pioneer.inc"
 include "map.inc"
 include "sick.inc"
 
-speedup -1
+interval_sim 20
+speedup 1
 paused 1
 
 

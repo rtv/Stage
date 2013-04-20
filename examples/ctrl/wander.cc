@@ -41,7 +41,9 @@ extern "C" int Init( Model* mod, CtrlArgs* args )
     robot->pos->AddCallback( Model::CB_UPDATE, (model_callback_t)PositionUpdate, robot );
   
   robot->pos->Subscribe(); // starts the position updates
-  
+ 
+  robot->pos->GetChild( "ranger:0" )->Subscribe();
+ 
   robot->laser = (ModelRanger*)mod->GetChild( "ranger:1" );
   robot->laser->AddCallback( Model::CB_UPDATE, (model_callback_t)LaserUpdate, robot );
   robot->laser->Subscribe(); // starts the ranger updates

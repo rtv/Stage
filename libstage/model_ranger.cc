@@ -81,7 +81,7 @@ Option ModelRanger::Vis::showTransducers( "Ranger transducers", "show_ranger_tra
 Option ModelRanger::Vis::showArea( "Ranger area", "show_ranger_ranges", "", true, NULL );
 Option ModelRanger::Vis::showStrikes( "Ranger strikes", "show_ranger_strikes", "", false, NULL );
 Option ModelRanger::Vis::showFov( "Ranger FOV", "show_ranger_fov", "", false, NULL );
-Option ModelRanger::Vis::showBeams( "Ranger beams", "show_ranger_beams", "", false, NULL );
+//Option ModelRanger::Vis::showBeams( "Ranger beams", "show_ranger_beams", "", false, NULL );
 
 
 ModelRanger::ModelRanger( World* world, 
@@ -250,67 +250,6 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
       rgr->PopColor();
     }
 
-  //Color c( color );
-  //c.a = 0.15; // transparent version of sensor color
-  rgr->PushColor( color );
-  glPolygonMode( GL_FRONT, GL_FILL );			
-	
-  if( ranges.size()  ) // if we have some data
-    {
-      if( sample_count == 1 )
-	{
-	  // only one sample, so we fake up some beam width for beauty
-	  const double sidelen = ranges[0];
-	  const double da = fov/2.0;
-					
-	  sample_count = 3;
-					
-	  pts[2] = sidelen*cos(-da );
-	  pts[3] = sidelen*sin(-da );
-					
-	  pts[4] = sidelen*cos(+da );
-	  pts[5] = sidelen*sin(+da );
-	}	
-      else
-	{
-	  for( size_t s(0); s<sample_count+1; s++ )
-	    {
-	      double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
-	      pts[2*s+2] = (float)(ranges[s] * cos(ray_angle) );
-	      pts[2*s+3] = (float)(ranges[s] * sin(ray_angle) );
-	    }
-	}
-    }
-			
-  if( vis->showArea )
-    {
-      if( sample_count > 1 )
-	// draw the filled polygon in transparent blue
-	glDrawArrays( GL_POLYGON, 0, sample_count );
-    }
-	
-  glDepthMask( GL_TRUE );
-	
-  if( vis->showStrikes )
-    {
-      // TODO - paint the stike point in a color based on intensity
-      // 			// if the sample is unusually bright, draw a little blob
-      // 			if( intensities[s] > 0.0 )
-      // 				{
-      // 					// this happens rarely so we can do it in immediate mode
-      // 					glBegin( GL_POINTS );
-      // 					glVertex2f( pts[2*s+2], pts[2*s+3] );
-      // 					glEnd();
-      // 				}			 
-			
-      // draw the beam strike points
-      //c.a = 0.8;
-      rgr->PushColor( Color::blue );
-      glDrawArrays( GL_POINTS, 0, sample_count+1 );
-      rgr->PopColor();
-    }
-
-	
   if( vis->showFov )
     {
       for( size_t s(0); s<sample_count; s++ )
@@ -327,36 +266,94 @@ void ModelRanger::Sensor::Visualize( ModelRanger::Vis* vis, ModelRanger* rgr ) c
       rgr->PushColor( c );		
       glDrawArrays( GL_POLYGON, 0, sample_count+1 );
       rgr->PopColor();
-    }			 
-	
-  if( vis->showBeams )
+    }			 	
+
+  if( ranges.size()  ) // if we have some data
     {
-      Color c = color;
-
-      // darker version of the same color
-      c.r /= 2.0;
-      c.g /= 2.0;
-      c.b /= 2.0;
-      c.a = 1.0;
-
-      rgr->PushColor( c );		
-      glBegin( GL_LINES );
-			
-      for( size_t s(0); s<sample_count; s++ )
+      rgr->PushColor( color );
+      glPolygonMode( GL_FRONT, GL_FILL );			
+      
+      if( sample_count == 1 )
 	{
-					
-	  glVertex2f( 0,0 );
-	  double ray_angle( sample_count == 1 ? 0 : (s * (fov / (sample_count-1))) - fov/2.0 );
-	  glVertex2f( ranges[s] * cos(ray_angle), 
-		      ranges[s] * sin(ray_angle) );
-					
+	  // only one sample, so we fake up some beam width for beauty
+	  const double sidelen = ranges[0];
+	  const double da = fov/2.0;
+	  
+	  sample_count = 3;
+	  
+	  pts[2] = sidelen*cos(-da );
+	  pts[3] = sidelen*sin(-da );
+	  
+	  pts[4] = sidelen*cos(+da );
+	  pts[5] = sidelen*sin(+da );
+	}	
+      else
+	{
+	  for( size_t s(0); s<sample_count+1; s++ )
+	    {
+	      double ray_angle = (s * (fov / (sample_count-1))) - fov/2.0;
+	      pts[2*s+2] = (float)(ranges[s] * cos(ray_angle) );
+	      pts[2*s+3] = (float)(ranges[s] * sin(ray_angle) );
+	    }
 	}
-      glEnd();
-      rgr->PopColor();
-    }	
+      
+      if( vis->showArea )
+	{
+	  if( sample_count > 1 )
+	    // draw the filled polygon in transparent blue
+	    glDrawArrays( GL_POLYGON, 0, sample_count );
+	}
+      
+      glDepthMask( GL_TRUE );
+      
+      if( vis->showStrikes )
+	{
+	  // TODO - paint the stike point in a color based on intensity
+	  // 			// if the sample is unusually bright, draw a little blob
+	  // 			if( intensities[s] > 0.0 )
+	  // 				{
+	  // 					// this happens rarely so we can do it in immediate mode
+	  // 					glBegin( GL_POINTS );
+	  // 					glVertex2f( pts[2*s+2], pts[2*s+3] );
+	  // 					glEnd();
+	  // 				}			 
+	  
+	  // draw the beam strike points
+	  //c.a = 0.8;
+	  rgr->PushColor( Color::blue );
+	  glDrawArrays( GL_POINTS, 0, sample_count+1 );
+	  rgr->PopColor();
+	}
+      
+      // if( vis->showBeams )
+      // 	{
+      // 	  Color c = color;
+	  
+      // 	  // darker version of the same color
+      // 	  c.r /= 2.0;
+      // 	  c.g /= 2.0;
+      // 	  c.b /= 2.0;
+      // 	  c.a = 1.0;
+	  
+      // 	  rgr->PushColor( c );		
+      // 	  glBegin( GL_LINES );
+	  
+      // 	  for( size_t s(0); s<sample_count; s++ )
+      // 	    {    
+      // 	      glVertex2f( 0,0 );
+      // 	      double ray_angle( sample_count == 1 ? 0 : (s * (fov / (sample_count-1))) - fov/2.0 );
+      // 	      glVertex2f( ranges[s] * cos(ray_angle), 
+      // 			  ranges[s] * sin(ray_angle) );
+	      
+      // 	    }
+      // 	  glEnd();
 	
-  rgr->PopColor();
+      // 	  rgr->PopColor();
+      // 	}	
 
+      rgr->PopColor();
+    }
+  
   glPopMatrix();
 }
 	
@@ -396,7 +393,7 @@ ModelRanger::Vis::Vis( World* world )
   world->RegisterOption( &showArea );
   world->RegisterOption( &showStrikes );
   world->RegisterOption( &showFov );
-  world->RegisterOption( &showBeams );		  
+  //world->RegisterOption( &showBeams );		  
   world->RegisterOption( &showTransducers );
 }
 
