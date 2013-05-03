@@ -39,6 +39,7 @@ class StgDriver : public Driver
 
   /// all player devices share the same Stage world (for now)
   static Stg::World* world;
+  static StgDriver* master_driver;
   static bool usegui;
 
   /// find the device record with this Player id
@@ -51,7 +52,7 @@ class StgDriver : public Driver
  protected:
   
   /// an array of pointers to Interface objects, defined below
-  std::vector<Interface*> devices;
+  std::vector<Interface*> ifaces;
 };
 
 
@@ -76,7 +77,7 @@ class Interface
   virtual void Publish( void ){}; // do nothing
   virtual void StageSubscribe( void ){}; // do nothing
   virtual void StageUnsubscribe( void ){}; // do nothing
-  
+   
   virtual void Subscribe( QueuePointer &queue ){}; // do nothing
   virtual void Unsubscribe( QueuePointer &queue ){}; // do nothing};
 };

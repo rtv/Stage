@@ -167,6 +167,7 @@ extern bool player_quit;
 
 // init static vars
 World* StgDriver::world = NULL;
+StgDriver* StgDriver::master_driver = NULL;
 bool StgDriver::usegui = true;
 
 /* need the extern to avoid C++ name-mangling  */
@@ -289,8 +290,88 @@ void InterfaceModel::StageUnsubscribe()
 
 StgDriver::StgDriver(ConfigFile* cf, int section)
 	: Driver(cf, section, false, 4096 ),
-		devices()
+		ifaces()
 {
+  if( StgDriver::world == NULL )
+    {
+      Stg::Init( &player_argc, &player_argv );
+      
+      StgDriver::usegui = cf->ReadBool(section, "usegui", 1 );
+      
+      const char* worldfile_name = cf->ReadString(section, "worldfile", NULL );
+      
+      if( worldfile_name == NULL )
+	{
+	  PRINT_ERR1( "device \"%s\" uses the Stage driver but has "
+		      "no \"model\" value defined. You must specify a "
+		      "model name that matches one of the models in "
+		      "the worldfile.",
+		      worldfile_name );
+	  return; // error
+	}
+      
+      printf( "[Stage plugin] Loading world \"%s\"\n", worldfile_name ); 
+      
+      char fullname[MAXPATHLEN];
+      
+      if( worldfile_name[0] == '/' )
+	strcpy( fullname, worldfile_name );
+      else
+	{
+	  char *tmp = strdup(cf->filename);
+	  snprintf( fullname, MAXPATHLEN,
+		    "%s/%s", dirname(tmp), worldfile_name );
+	  free(tmp);
+	}
+      
+      // a little sanity testing
+      // XX TODO
+      //  if( !g_file_test( fullname, G_FILE_TEST_EXISTS ) )
+      //{
+      //  PRINT_ERR1( "worldfile \"%s\" does not exist", worldfile_name );
+      //  return;
+      //}
+      
+      // create a passel of Stage models in the local cache based on the
+      // worldfile
+      
+      // if the initial size is to large this crashes on some systems
+      StgDriver::world = ( StgDriver::usegui ? new WorldGui( 400, 300, worldfile_name ) : new World(worldfile_name));
+      assert(StgDriver::world);	
+      puts("");
+      
+      StgDriver::world->Load( fullname );
+      //printf( " done.\n" );
+      
+      // poke the P/S name into the window title bar
+      //   if( StgDriver::world )
+      //     {
+      //       char txt[128];
+      //       snprintf( txt, 128, "Player/Stage: %s", StgDriver::world->token );
+      //       StgDriverworld_set_title(StgDriver::world, txt );
+      //     }
+      
+      // steal the global clock - a bit aggressive, but a simple approach
+      
+      delete GlobalTime;
+      GlobalTime = new StTime( this );
+      assert(GlobalTime);
+      // start the simulation
+      // printf( "  Starting world clock... " ); fflush(stdout);
+      //world_resume( world );
+      
+      StgDriver::world->Start();
+      
+      // this causes Driver::Update() to be called even when the device is
+      // not subscribed
+      Driver::alwayson = TRUE;
+
+      // only this instance will update the world clock
+      StgDriver::master_driver = this; 
+            
+      puts( "" ); // end the Stage startup line
+    }
+
   // init the array of device ids
   int device_count = cf->GetTupleCount( section, "provides" );
   
@@ -416,7 +497,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	    }
 
 	  // store the Interaface in our device list
-	  devices.push_back( ifsrc );
+	  ifaces.push_back( ifsrc );
 	}
       else
 	{
@@ -430,16 +511,19 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	}
     }
   //puts( "  Stage driver loaded successfully." );
+  //puts( "[Stage plugin] Worldfile loaded." );
 }
 
 Model*  StgDriver::LocateModel( char* basename,
 				   player_devaddr_t* addr,
 				  const std::string& type )
 {
+  assert( world );
+
   //printf( "attempting to find a model under model \"%s\" of type [%d]\n",
   //	 basename, type );
 
-  Model* base_model = world->GetModel( basename );
+  Model* const  base_model = world->GetModel( basename );
 
   if( base_model == NULL )
     {
@@ -456,7 +540,7 @@ Model*  StgDriver::LocateModel( char* basename,
   // we find the first model in the tree that is the right
   // type (i.e. has the right initialization function) and has not
   // been used before
-  //return( model_match( base_model, addr, typestr, this->devices ) );
+  //return( model_match( base_model, addr, typestr, this->ifaces ) );
   return( base_model->GetUnusedModelOfType( type ) );
 }
 
@@ -473,7 +557,7 @@ int StgDriver::Setup()
 // todo - faster lookup with a better data structure
 Interface* StgDriver::LookupDevice( player_devaddr_t addr )
 {
-  FOR_EACH( it, this->devices )
+  FOR_EACH( it, this->ifaces )
     {
       Interface* candidate = *it;
       
@@ -535,7 +619,7 @@ StgDriver::~StgDriver()
 // Shutdown the device
 int StgDriver::Shutdown()
 {
-  FOR_EACH( it, this->devices )
+  FOR_EACH( it, this->ifaces )
     (*it)->StageUnsubscribe();
   
   puts("[Stage plugin] Stage driver has been shutdown");
@@ -556,31 +640,39 @@ StgDriver::ProcessMessage(QueuePointer &resp_queue,
   // find the right interface to handle this config
   Interface* in = this->LookupDevice( hdr->addr );
   if( in )
-  {
-    return(in->ProcessMessage( resp_queue, hdr, data));
-  }
+    {
+      return(in->ProcessMessage( resp_queue, hdr, data));
+    }
   else
-  {
-    PRINT_WARN3( "[Stage plugin] can't find interface for device %d.%d.%d",
-		 this->device_addr.robot,
-		 this->device_addr.interf,
-		 this->device_addr.index );
-    return(-1);
-  }
+    {
+      PRINT_WARN3( "[Stage plugin] can't find interface for device %d.%d.%d",
+		   this->device_addr.robot,
+		   this->device_addr.interf,
+		   this->device_addr.index );
+      return(-1);
+    }
 }
+
 
 void StgDriver::Update(void)
 {
-  Driver::ProcessMessages();
-
-  // each model publishes its data in an update callback so we just
-  // have to keep the world ticking along.  So we do either one round
-  // of FLTK's update loop, or one no-gui update
-  if (StgDriver::usegui)
-    Fl::wait();
-  else
-    StgDriver::world->Update();
-
+  assert( StgDriver::world );
+  assert( StgDriver::master_driver );
+  
+  if( StgDriver::master_driver == this )
+    {
+      //static int c=0;
+      //printf( "StgDriver::Update() driver %p world time %llu c %d\n",
+      //      this, world->SimTimeNow(), c++ );    
+      
+      // each model publishes its data in an update callback so we just
+      // have to keep the world ticking along.  So we do either one round
+      // of FLTK's update loop, or one no-gui update
+      if (StgDriver::usegui)
+	Fl::wait();
+      else
+	StgDriver::world->Update();
+    }
+  
+  Driver::Update(); // calls ProcessMessages()
 }
-
-
