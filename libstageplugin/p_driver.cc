@@ -209,6 +209,8 @@ int player_driver_init(DriverTable* table)
   return(0);
 }
 
+// -------------------------------------------------------------------------
+
 Interface::Interface(  player_devaddr_t addr,
 		       StgDriver* driver,
 		       ConfigFile* cf,
@@ -283,6 +285,8 @@ void InterfaceModel::StageUnsubscribe()
     }
 }
 
+// ------------------------------------------------------------------------------
+
 // Constructor.  Retrieve options from the configuration file and do any
 // pre-Setup() setup.
 
@@ -310,7 +314,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  return; // error
 	}
       
-      printf( "[Stage plugin] Loading world \"%s\"\n", worldfile_name ); 
+      printf( " [Stage plugin] Loading world \"%s\"\n", worldfile_name ); 
       
       char fullname[MAXPATHLEN];
       
@@ -364,7 +368,7 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
       
       // this causes Driver::Update() to be called even when the device is
       // not subscribed
-      Driver::alwayson = TRUE;
+      Driver::alwayson = true;
 
       // only this instance will update the world clock
       StgDriver::master_driver = this; 
@@ -510,13 +514,11 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	  return;
 	}
     }
-  //puts( "  Stage driver loaded successfully." );
-  //puts( "[Stage plugin] Worldfile loaded." );
 }
 
 Model*  StgDriver::LocateModel( char* basename,
-				   player_devaddr_t* addr,
-				  const std::string& type )
+				player_devaddr_t* addr,
+				const std::string& type )
 {
   assert( world );
 
@@ -555,7 +557,7 @@ int StgDriver::Setup()
 
 // find the device record with this Player id
 // todo - faster lookup with a better data structure
-Interface* StgDriver::LookupDevice( player_devaddr_t addr )
+Interface* StgDriver::LookupInterface( player_devaddr_t addr )
 {
   FOR_EACH( it, this->ifaces )
     {
@@ -576,7 +578,7 @@ int StgDriver::Subscribe(QueuePointer &queue,player_devaddr_t addr)
   if( addr.interf == PLAYER_SIMULATION_CODE )
     return 0; // ok
 
-  Interface* device = this->LookupDevice( addr );
+  Interface* device = this->LookupInterface( addr );
 
   if( device )
     {
@@ -596,7 +598,7 @@ int StgDriver::Unsubscribe(QueuePointer &queue,player_devaddr_t addr)
   if( addr.interf == PLAYER_SIMULATION_CODE )
     return 0; // ok
   
-  Interface* device = this->LookupDevice( addr );
+  Interface* device = this->LookupInterface( addr );
   
   if( device )
     {
@@ -638,7 +640,7 @@ StgDriver::ProcessMessage(QueuePointer &resp_queue,
 			  void * data)
 {
   // find the right interface to handle this config
-  Interface* in = this->LookupDevice( hdr->addr );
+  Interface* in = this->LookupInterface( hdr->addr );
   if( in )
     {
       return(in->ProcessMessage( resp_queue, hdr, data));
@@ -659,19 +661,22 @@ void StgDriver::Update(void)
   assert( StgDriver::world );
   assert( StgDriver::master_driver );
   
-  if( StgDriver::master_driver == this )
+  FOR_EACH( it, this->ifaces )
     {
-      //static int c=0;
-      //printf( "StgDriver::Update() driver %p world time %llu c %d\n",
-      //      this, world->SimTimeNow(), c++ );    
-      
-      // each model publishes its data in an update callback so we just
-      // have to keep the world ticking along.  So we do either one round
-      // of FLTK's update loop, or one no-gui update
-      if (StgDriver::usegui)
-	Fl::wait();
-      else
-	StgDriver::world->Update();
+      if( (*it)->addr.interf == PLAYER_SIMULATION_CODE )
+	{
+	  //static int c=0;
+	  //printf( "StgDriver::Update() driver %p world time %llu c %d\n",
+	  //      this, world->SimTimeNow(), c++ );    
+	  
+	  // each model publishes its data in an update callback so we just
+	  // have to keep the world ticking along.  So we do either one round
+	  // of FLTK's update loop, or one no-gui update
+	  if (StgDriver::usegui)
+	    Fl::wait();
+	  else
+	    StgDriver::world->Update();
+	}
     }
   
   Driver::Update(); // calls ProcessMessages()

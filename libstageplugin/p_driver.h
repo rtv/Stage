@@ -43,7 +43,7 @@ class StgDriver : public Driver
   static bool usegui;
 
   /// find the device record with this Player id
-  Interface* LookupDevice( player_devaddr_t addr );
+  Interface* LookupInterface( player_devaddr_t addr );
   
   Stg::Model* LocateModel( char* basename,
 			   player_devaddr_t* addr,

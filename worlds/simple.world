@@ -11,9 +11,12 @@ quit_time 3600 # 1 hour of simulated time
 
 paused 1
 
+# spatial resolution of the underlying occupancy grid. Default is 0.02m.
 resolution 0.02
 
-speedup 1
+# set the multiple of real time that Stage should try to achieve. Default is 1. 
+# set to 0 to go as fast as possible.
+speedup 1 
 
 # configure the GUI window
 window
