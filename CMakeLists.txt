@@ -142,6 +142,9 @@ CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage-config.cmake.in ${CMAKE_CURREN
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/stage-config-version.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/stage-config-version.cmake @ONLY)
 INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/stage-config.cmake ${CMAKE_CURRENT_BINARY_DIR}/stage-config-version.cmake DESTINATION ${PROJECT_LIB_DIR}/cmake/${PROJECT_NAME})
 
+# Install catkin package.xml
+install(FILES package.xml DESTINATION share/stage)
+
 MESSAGE( STATUS "Installation path CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}" )
 
 # all targets need these include directories
