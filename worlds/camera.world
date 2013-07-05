@@ -1,0 +1,62 @@
+
+# Desc: Example Stage world file providing a camera interface and blobfinder.
+#       Based on simple.world
+# Author:  Rich Mattes
+# Date: 12 December 2012
+
+include "pioneer.inc"
+include "map.inc"
+include "sick.inc"
+
+# time to pause (in GUI mode) or quit (in headless mode (-g)) the simulation
+quit_time 3600 # 1 hour of simulated time
+
+paused 1
+
+resolution 0.02
+
+# configure the GUI window
+window
+(
+  size [ 635.000 666.000 ] # in pixels
+  scale 36.995   # pixels per meter
+  center [ -0.040  -0.274 ]
+  rotate [ 0  0 ]
+  			
+  show_data 1              # 1=on 0=off
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "cave"
+  size [16.000 16.000 0.800]
+  pose [0 0 0 0]
+  bitmap "bitmaps/cave.png"
+)
+
+
+pioneer2dx
+(		  
+  # can refer to the robot by this name
+  name "r0"
+  pose [ -6.946 -6.947 0 45.000 ] 
+
+  # pioneer2dx's sonars	will be ranger:0 and the laser will be ranger:1
+  sicklaser( pose [ 0 0 0 0 ] ) 
+ 
+  # report error-free position in world coordinates
+  localization "gps"
+  localization_origin [ 0 0 0 0 ]
+
+  # add a camera to the robot
+  camera( 
+    pose [ 0 0 0.2 0 ]
+    range [ 0.2 8.0 ]
+    resolution [ 100 100 ]
+    fov [ 70 40 ]
+    pantilt [ 0 0 ]
+    alwayson 1
+  )
+
+)
