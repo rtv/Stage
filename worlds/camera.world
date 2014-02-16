@@ -1,6 +1,8 @@
-# simple.world - basic world file example
-# Authors: Richard Vaughan
-# $Id$
+
+# Desc: Example Stage world file providing a camera interface and blobfinder.
+#       Based on simple.world
+# Author:  Rich Mattes
+# Date: 12 December 2012
 
 include "pioneer.inc"
 include "map.inc"
@@ -11,12 +13,7 @@ quit_time 3600 # 1 hour of simulated time
 
 paused 1
 
-# spatial resolution of the underlying occupancy grid. Default is 0.02m.
 resolution 0.02
-
-# set the multiple of real time that Stage should try to achieve. Default is 1. 
-# set to 0 to go as fast as possible.
-speedup 1 
 
 # configure the GUI window
 window
@@ -48,11 +45,18 @@ pioneer2dx
   # pioneer2dx's sonars	will be ranger:0 and the laser will be ranger:1
   sicklaser( pose [ 0 0 0 0 ] ) 
  
-  # demonstrate a plugin controller, implemented in examples/ctrl/wander.cc
-  # you probably should comment this out when using simple.cfg with Player
-#  ctrl "wander"
-
   # report error-free position in world coordinates
   localization "gps"
   localization_origin [ 0 0 0 0 ]
+
+  # add a camera to the robot
+  camera( 
+    pose [ 0 0 0.2 0 ]
+    range [ 0.2 8.0 ]
+    resolution [ 100 100 ]
+    fov [ 70 40 ]
+    pantilt [ 0 0 ]
+    alwayson 1
+  )
+
 )

@@ -520,7 +520,13 @@ void ModelPosition::Update( void  )
     {
     case LOCALIZATION_GPS:
       {
-	// compute our localization pose based on the origin and true pose
+	est_pose = this->GetGlobalPose();
+
+	/*
+	// report our compute our localization pose based on the
+	// origin and true pose Issue #36 reports that this gives
+	// inaccurate poses. I can't see what's wrong so I'm disabling
+	// the local origin transform 
 	const Pose gpose = this->GetGlobalPose();
 
 	est_pose.a = normalize( gpose.a - est_origin.a );
@@ -530,7 +536,7 @@ void ModelPosition::Update( void  )
 	const double dy = gpose.y - est_origin.y;
 	est_pose.x = dx * cosa + dy * sina;
 	est_pose.y = dy * cosa - dx * sina;
-
+	*/
       }
       break;
 

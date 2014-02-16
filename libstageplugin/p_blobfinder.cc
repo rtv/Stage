@@ -55,23 +55,22 @@ void InterfaceBlobfinder::Publish( void )
 
   ModelBlobfinder* blobmod = (ModelBlobfinder*)this->mod;
   
-  uint32_t bcount = 0;
-  const ModelBlobfinder::Blob* blobs = &blobmod->GetBlobs()[0];
-  
-  if ( bcount > 0 )
+  const std::vector<Stg::ModelBlobfinder::Blob>& blobs = blobmod->GetBlobs();
+
+  if ( blobs.size() > 0 )
   {
 	  // and set the image width * height
 	  bfd.width = blobmod->scan_width;
 	  bfd.height = blobmod->scan_height;
-	  bfd.blobs_count = bcount;
+	  bfd.blobs_count = blobs.size();
 
-	  bfd.blobs = new player_blobfinder_blob_t[ bcount ];
+	  bfd.blobs = new player_blobfinder_blob_t[ blobs.size() ];
 
 	  // now run through the blobs, packing them into the player buffer
 	  // counting the number of blobs in each channel and making entries
 	  // in the acts header
 	  unsigned int b;
-	  for( b=0; b<bcount; b++ )
+	  for( b=0; b<blobs.size(); b++ )
 		{
 		  // useful debug - leave in
 		/*

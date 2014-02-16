@@ -39,10 +39,11 @@ class StgDriver : public Driver
 
   /// all player devices share the same Stage world (for now)
   static Stg::World* world;
+  static StgDriver* master_driver;
   static bool usegui;
 
   /// find the device record with this Player id
-  Interface* LookupDevice( player_devaddr_t addr );
+  Interface* LookupInterface( player_devaddr_t addr );
   
   Stg::Model* LocateModel( char* basename,
 			   player_devaddr_t* addr,
@@ -51,7 +52,7 @@ class StgDriver : public Driver
  protected:
   
   /// an array of pointers to Interface objects, defined below
-  std::vector<Interface*> devices;
+  std::vector<Interface*> ifaces;
 };
 
 
@@ -76,7 +77,7 @@ class Interface
   virtual void Publish( void ){}; // do nothing
   virtual void StageSubscribe( void ){}; // do nothing
   virtual void StageUnsubscribe( void ){}; // do nothing
-  
+   
   virtual void Subscribe( QueuePointer &queue ){}; // do nothing
   virtual void Unsubscribe( QueuePointer &queue ){}; // do nothing};
 };
@@ -241,6 +242,18 @@ class InterfaceBlobfinder : public InterfaceModel
 
   virtual int ProcessMessage( QueuePointer & resp_queue,
 			      player_msghdr * hdr,
+			      void * data );
+  virtual void Publish( void );
+};
+
+class InterfaceCamera : public InterfaceModel
+{
+ public:
+  InterfaceCamera (player_devaddr_t addr, StgDriver *driver, ConfigFile *cf, int section );
+  virtual  ~InterfaceCamera( void ) { /* TODO: clean up*/ };
+
+  virtual int ProcessMessage (QueuePointer & resp_queue,
+			      player_msghdr *hdr,
 			      void * data );
   virtual void Publish( void );
 };
