@@ -67,6 +67,7 @@
 #include "stage.hh"
 #include "worldfile.hh"
 #include "option.hh"
+
 using namespace Stg;
 
 static const watts_t RANGER_WATTSPERSENSOR = 0.2;
@@ -143,7 +144,10 @@ void ModelRanger::Sensor::Load( Worldfile* wf, int entity )
   size.Load( wf, entity, "size" );
   range.Load( wf, entity, "range" );
   fov = wf->ReadAngle( entity, "fov", fov );
-  sample_count = wf->ReadInt( entity, "samples", sample_count );	
+  sample_count = wf->ReadInt( entity, "samples", sample_count );
+  angleNoise = wf->ReadFloat( entity, "anoise", angleNoise);
+  rangeNoise = wf->ReadFloat( entity, "rnoise", rangeNoise);
+  rangeNoiseConst = wf->ReadFloat( entity, "rcnoise", rangeNoiseConst);
   color.Load( wf, entity );
 }
 
@@ -162,6 +166,37 @@ static bool ranger_match( Model* hit,
   
   return( (!hit->IsRelated( finder )) && (sgn(hit->vis.ranger_return) != -1 ) );
 }	
+
+// Returns random numbers in range [-1.0, 1.0)
+double simpleNoise()
+{
+	return 2*(rand()%1000 * 0.001 - 0.5);
+}
+
+#define TWO_PI (M_PI+M_PI)
+// Returns gaussian noise
+// taken from http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+template<class Scalar_t> Scalar_t generateGaussianNoise(Scalar_t variance)
+{
+	static bool haveSpare = false;
+	static Scalar_t rand1, rand2;
+
+	if(haveSpare)
+	{
+		haveSpare = false;
+		return sqrt(variance * rand1) * sin(rand2);
+	}
+
+	haveSpare = true;
+
+	rand1 = rand() / ((Scalar_t) RAND_MAX);
+	if(rand1 < 1e-100) rand1 = 1e-100;
+	rand1 = -2 * log(rand1);
+	rand2 = (rand() / ((Scalar_t) RAND_MAX)) * TWO_PI;
+
+	return sqrt(variance * rand1) * cos(rand2);
+}
+
 
 void ModelRanger::Update( void )
 {     
@@ -198,8 +233,14 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
   // trace the ray, incrementing its heading for each sample
   for( size_t t(0); t<sample_count; t++ )
     {
-      const RaytraceResult res = mod->world->Raytrace( ray); 
-      ranges[t] = res.range;
+	  float savedAngle = ray.origin.a;
+	  float distortedAngle = ray.origin.a + sample_incr*angleNoise*simpleNoise()*0.5;
+	  ray.origin.a = distortedAngle;
+      const RaytraceResult res = mod->world->Raytrace( ray);
+      ray.origin.a = savedAngle;
+
+      ranges[t] = res.range + res.range*rangeNoise*simpleNoise() + generateGaussianNoise(rangeNoiseConst);
+
       intensities[t] = res.mod ? res.mod->vis.ranger_return : 0.0;
       bearings[t] = start_angle + ((double)t) * sample_incr;
 		
