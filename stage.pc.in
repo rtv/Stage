@@ -10,5 +10,5 @@ Version: @VERSION@
 # add the incantations to the flags and libs lines below 
 Requires:
 
-Libs: -L${prefix}/@PROJECT_LIB_DIR@ -lstage @FLTK_LDFLAGS@
-Cflags: -I${prefix}/include/Stage-@APIVERSION@ @FLTK_CFLAGS@ 
+Libs: -L${prefix}/@PROJECT_LIB_DIR@ -lstage @PC_LINK_FLAGS@
+Cflags: -I${prefix}/include/Stage-@APIVERSION@ @PC_INCLUDE_FLAGS@
