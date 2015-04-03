@@ -1,0 +1,14 @@
+# - Config file for Stage
+# It defines the following variables:
+#    STAGE_INCLUDE_DIRS - Stage Include directories
+#    STAGE_LIBRARIES    - Stage link libraries
+
+set(STAGE_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include/@PROJECT_NAME@-@APIVERSION@" 
+  "@FLTK_INCLUDE_DIR@"
+  "@OPENGL_INCLUDE_DIR@")
+list(REMOVE_DUPLICATES STAGE_INCLUDE_DIRS)
+set(STAGE_LIBRARIES 
+  "@CMAKE_INSTALL_PREFIX@/@PROJECT_LIB_DIR@/libstage.so"
+  "@FLTK_LIBRARIES@"
+  "@OPENGL_gl_LIBRARIES@")
+  
