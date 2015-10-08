@@ -1,0 +1,51 @@
+# simple.world - basic world file example
+# Authors: Richard Vaughan
+# $Id: ctrl_demo.world,v 1.2 2008-03-04 02:21:49 rtv Exp $
+
+include "pioneer.inc"
+include "map.inc"
+include "sick.inc"
+
+window
+( 
+  size [ 500.000 500.000 ] 
+  center [-0.077 -0.231] 
+  rotate [ 0 0 ]
+  scale 26.000 
+  show_data 1 # make sure we can see the effect of the controller
+)
+
+floorplan
+( 
+  name "cave"
+  size [16.000 16.000 0.500]
+  bitmap "bitmaps/cave.png"
+)
+
+define SICK_noisy ranger
+(
+	color "blue"
+  	size [ 0.156 0.155 0.19 ] # dimensions from LMS200 data sheet
+  		
+	sensor
+	(				
+	  # factory settings for LMS200	
+	  range [ 0.0 8.0 ]
+	  pose [ 0 0 0.1 0 ]
+	  fov 180
+	  samples 180
+	  #samples 90 # still useful but much faster to compute
+	  color_rgba [0 0 1 0.15]
+	  noise [ 0.01 0.00 0.5 ]
+	)
+)
+
+pioneer2dx
+(
+  pose [ -7.000 -7.000 0 45.000 ]
+  SICK_noisy
+  ( 
+    alwayson 1 # don't wait for a subscriber
+  ) 
+)
+

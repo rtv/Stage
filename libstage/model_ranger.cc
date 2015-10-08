@@ -32,6 +32,7 @@
    size [  x y z ]
    fov a
    range [min max]
+   noise [range_const range_prop angular]
    )
 
    # generic model properties with non-default values
@@ -57,6 +58,8 @@
    - sview [float float float]
    - [range_min range_max fov] 
    - minimum range and maximum range in meters, field of view angle in degrees. Currently fov has no effect on the sensor model, other than being shown in the confgiuration graphic for the ranger device.
+   - noise [range_const range_prop angular]
+   - noise for range readings: constant noise in meters, proportional noise, angular noise in degrees
    - sview[\<transducer index\>] [float float float]
    - per-transducer version of the sview property. Overrides the common setting.
 
@@ -145,9 +148,8 @@ void ModelRanger::Sensor::Load( Worldfile* wf, int entity )
   range.Load( wf, entity, "range" );
   fov = wf->ReadAngle( entity, "fov", fov );
   sample_count = wf->ReadInt( entity, "samples", sample_count );
-  angleNoise = wf->ReadFloat( entity, "anoise", angleNoise);
-  rangeNoise = wf->ReadFloat( entity, "rnoise", rangeNoise);
-  rangeNoiseConst = wf->ReadFloat( entity, "rcnoise", rangeNoiseConst);
+
+  wf->ReadTuple( entity, "noise", 0, 3, "lfa", &range_noise_const, &range_noise, &angle_noise);
   color.Load( wf, entity );
 }
 
@@ -234,12 +236,16 @@ void ModelRanger::Sensor::Update( ModelRanger* mod )
   for( size_t t(0); t<sample_count; t++ )
     {
 	  float savedAngle = ray.origin.a;
-	  float distortedAngle = ray.origin.a + sample_incr*angleNoise*simpleNoise()*0.5;
+	  float distortedAngle = ray.origin.a + sample_incr*angle_noise*simpleNoise()*0.5;
 	  ray.origin.a = distortedAngle;
       const RaytraceResult res = mod->world->Raytrace( ray);
       ray.origin.a = savedAngle;
 
-      ranges[t] = res.range + res.range*rangeNoise*simpleNoise() + generateGaussianNoise(rangeNoiseConst);
+      /// Apply noise only if it is in valid range
+      if(res.range < this->range.max)
+    	  ranges[t] = res.range + res.range*range_noise*simpleNoise() + generateGaussianNoise(range_noise_const);
+      else
+    	  ranges[t] = res.range;
 
       intensities[t] = res.mod ? res.mod->vis.ranger_return : 0.0;
       bearings[t] = start_angle + ((double)t) * sample_incr;

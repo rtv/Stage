@@ -2749,9 +2749,9 @@ namespace Stg
       Size size;
       Bounds range;
       radians_t fov;
-      double angleNoise;			// specify variance for ranger angle
-      double rangeNoise;			// specify variance for range readings
-      double rangeNoiseConst;		// specify fariance for constant noise (not depending on range)
+      double angle_noise;			//< variance for ranger angle
+      double range_noise;			//< variance for range readings
+      double range_noise_const;		//< fariance for constant noise (not depending on range)
       unsigned int sample_count;
       Color color;
 			
@@ -2763,9 +2763,9 @@ namespace Stg
 		 size( 0.02, 0.02, 0.02 ), // teeny transducer
 		 range( 0.0, 5.0 ),
 		 fov( 0.1 ),
-		 angleNoise(0.0),
-		 rangeNoise(0.0),
-		 rangeNoiseConst(0.0),
+		 angle_noise(0.0),
+		 range_noise(0.0),
+		 range_noise_const(0.0),
 		 sample_count(1),
 		 color( Color(0,0,1,0.15)),
 		 ranges(),
