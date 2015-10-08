@@ -1138,8 +1138,10 @@ namespace Stg
 	object, read the file and configure the world from the
 	contents, creating models as necessary. The created object
 	persists, and can be retrieved later with
-	World::GetWorldFile(). */
-    virtual void Load( const std::string& worldfile_path );
+	World::GetWorldFile().
+	@returns true if load was successful, false otherwise
+	*/
+    virtual bool Load( const std::string& worldfile_path );
 
     virtual void UnLoad();
 
@@ -1567,7 +1569,7 @@ namespace Stg
 
     virtual std::string ClockString() const;
     virtual bool Update();	
-    virtual void Load( const std::string& filename );
+    virtual bool Load( const std::string& filename );
     virtual void UnLoad();
     virtual bool Save( const char* filename );	
     virtual bool IsGUI() const { return true; };	

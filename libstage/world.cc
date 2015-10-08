@@ -385,7 +385,7 @@ void World::LoadModel( Worldfile* wf, int entity )
   models_by_wfentity[entity] = mod;
 }
 
-void World::Load( const std::string& worldfile_path )
+bool World::Load( const std::string& worldfile_path )
 {
   // note: must call Unload() before calling Load() if a world already
   // exists TODO: unload doesn't clean up enough right now
@@ -394,7 +394,12 @@ void World::Load( const std::string& worldfile_path )
   fflush(stdout);
 
   this->wf = new Worldfile();
-  wf->Load( worldfile_path );
+  if(!wf->Load( worldfile_path ))
+  {
+	  PRINT_ERR1(" Failed to open file %s", worldfile_path.c_str());
+	  return false;
+  }
+
   PRINT_DEBUG1( "wf has %d entitys", wf->GetEntityCount() );
 
   // end the output line of worldfile components
@@ -485,6 +490,8 @@ void World::Load( const std::string& worldfile_path )
     (*it)->InitControllers();
 
   putchar( '\n' );
+
+  return true;
 }
 
 void World::UnLoad()
