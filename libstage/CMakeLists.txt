@@ -3,11 +3,12 @@ MESSAGE( STATUS "Configuring libstage" )
 # for config.h
 include_directories(${PROJECT_BINARY_DIR})
 
-set( stageSrcs    
+set( stageSrcs
 	block.cc
 	blockgroup.cc
 	camera.cc
 	color.cc
+	communication.cc
 	file_manager.cc
 	file_manager.hh
 	gl.cc
@@ -30,42 +31,44 @@ set( stageSrcs
 	stage.cc
 	stage.hh
 	texture_manager.cc
-	typetable.cc		
-	world.cc			
-	worldfile.cc		
-	canvas.cc 
+	typetable.cc
+	world.cc
+	worldfile.cc
+	canvas.cc
 	options_dlg.cc
 	options_dlg.hh
-	vis_strip.cc			
-	worldgui.cc 
+	vis_strip.cc
+	worldgui.cc
 	ancestor.cc
+	model_wifi.cc
 )
 
 #	model_getset.cc
 #	model_load.cc
 
 #set_source_files_properties( ${stageSrcs} PROPERTIES COMPILE_FLAGS" )
- 
+
 add_library(stage SHARED ${stageSrcs})
 
 # if fltk-config didn't bring along the OpenGL dependencies (eg. on
-# Debian/Ubuntu), add them explicity 
+# Debian/Ubuntu), add them explicity
 IF (NOT(${FLTK_LDFLAGS} MATCHES "-lGL"))
-  target_link_libraries( stage ${OPENGL_LIBRARIES}) 
+  target_link_libraries( stage ${OPENGL_LIBRARIES})
 ENDIF (NOT(${FLTK_LDFLAGS} MATCHES "-lGL"))
 
 
 # causes the shared library to have a version number
 set_target_properties( stage PROPERTIES
 		       VERSION ${VERSION}
-#           LINK_FLAGS "${FLTK_LDFLAGS}"  
+#           LINK_FLAGS "${FLTK_LDFLAGS}"
 )
 
-target_link_libraries( stage 
-                       ${LTDL_LIB} 
-                       ${JPEG_LIBRARIES} 
+target_link_libraries( stage
+                       ${LTDL_LIB}
+                       ${JPEG_LIBRARIES}
                        ${PNG_LIBRARIES}
                        ${FLTK_LIBRARIES}
+                       ${boostRandomLib}
 )
 
 set( stagebinarySrcs main.cc )
@@ -101,6 +104,6 @@ INSTALL(TARGETS stagebinary stage
 	LIBRARY DESTINATION ${PROJECT_LIB_DIR}
 )
 
-INSTALL(FILES stage.hh 
+INSTALL(FILES stage.hh
         DESTINATION include/${PROJECT_NAME}-${APIVERSION})
 

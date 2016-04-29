@@ -1,54 +1,125 @@
-
-# Desc: 1 pioneer robot with laser	
-# CVS: $Id: wifi.world,v 1.1 2006-03-02 23:19:09 gerkey Exp $
-
-# defines 'map' object used for floorplans
 include "map.inc"
+include "pioneer.inc"
+include "sick.inc"
 
-# size of the world in meters
-size [16 16]
+interval_sim 100  # simulation timestep in milliseconds
+interval_real 20  # real-time interval between simulation updates in milliseconds
 
-# set the resolution of the underlying raytrace model in meters
+quit_time 1800
+
+paused 0
+
 resolution 0.02
-
-# update the screen every 10ms (we need fast update for the stest demo)
-gui_interval 20
 
 # configure the GUI window
 window
-( 
-  size [ 591.000 638.000 ] 
-  center [-0.010 -0.040] 
-  scale 0.028 
+(
+  size [ 556.000 557.000 ] # in pixels
+  scale 29.162
+     # pixels per meter
+  center [ 0.095  -0.359 ]
+  rotate [ 0  0 ]
+
+  show_data 1              # 1=on 0=off
 )
 
 # load an environment bitmap
-map
-( 
+floorplan
+(
   bitmap "bitmaps/cave.png"
-  size [16 16]
-  name "cave"
+  size [16.000 16.000 0.800]
+  pose [0 0 0 0]
 )
 
-# define a wifi-equipped robot
-define commbot position
+pioneer2dx
 (
-  size [0.25 0.25]
-  wifi ()
-)
-
-# create a robot
-commbot
-(
-  name "robot1"
+  # can refer to the robot by this name
+  name "r0"
   color "red"
-  pose [-6.5 -6.5 45]
+
+  pose [-6.5 -6.5 0 0]
+  sicklaser()
+
+  ctrl "wander_wifi"
+
+  # report error-free position in world coordinates
+  localization "gps"
+  localization_origin [ 0 0 0 0 ]
+
+  wifi(
+    ip "192.168.0.2"
+    mac "08:00:20:ae:fd:7e"
+    netmask "255.255.255.0"
+    essid "test network"
+    #model "friis"
+    model "raytrace"
+    wall_factor 5
+    power 45
+    sensitivity -75
+    range_db -45
+    # link_success_rate 90
+    # random_seed 10
+  )
 )
 
 # create another robot
-commbot
+pioneer2dx
 (
-  name "robot2"
+  name "r1"
   color "blue"
-  pose [-3.5 -2.5 90]
+
+  pose [-3.5 -2.5 0 0]
+  sicklaser()
+
+  ctrl "wander_wifi"
+
+  # report error-free position in world coordinates
+  localization "gps"
+  localization_origin [ 0 0 0 0 ]
+
+  wifi(
+    ip "192.168.0.3"
+    netmask "255.255.255.0"
+    mac "08:00:20:ae:fe:7e"
+    essid "test network"
+    #model "friis"
+    model "raytrace"
+    wall_factor 5
+    power 45
+    sensitivity -75
+    range_db -45
+    # link_success_rate 90
+    # random_seed 10
+  )
+)
+
+pioneer2dx
+(
+ name "r2"
+  color "green"
+
+  pose [6.5 6.5 0 45]
+  sicklaser()
+
+  ctrl "wander_wifi"
+
+  # report error-free position in world coordinates
+  localization "gps"
+  localization_origin [ 0 0 0 0 ]
+
+  wifi(
+    ip "192.168.0.4"
+    netmask "255.255.255.0"
+    mac "08:00:20:ae:ff:7e"
+    essid "test network"
+    #model "friis"
+    model "raytrace"
+    wall_factor 5
+    power 45
+    sensitivity -75
+    range_db -45
+    # link_success_rate 90
+    # random_seed 10
+  )
+
 )
