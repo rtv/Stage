@@ -362,7 +362,7 @@ ModelWifi::ModelWifi( World* world, Model* parent, const std::string& type )
 
   // Wifi is invisible
   SetObstacleReturn( 0 );
-  //SetLaserReturn( LaserTransparent );
+  SetRangerReturn( 0.0 );
   SetBlobReturn( 0 );
   SetColor( Color() );
 
@@ -520,8 +520,8 @@ static bool wifi_raytrace_match( Model* hit, Model* finder,
         {
   // Ignore the model that's looking and things that are invisible to
   // lasers
-  return( (!hit->IsRelated( finder )) /*&&
-          ( hit->vis.laser_return > 0) */);
+  return( (!hit->IsRelated( finder )) &&
+          ( hit->vis.ranger_return > 0) );
 }//end wifi_raytrace_match
 meters_t calc_distance( Model* mod1,
                             Model* mod2,
