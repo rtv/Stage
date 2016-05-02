@@ -678,9 +678,9 @@ void ModelWifi::Update( )
   //For all models out there with WIFI, compare to this model.
   std::vector<Model*>* models_with_wifi = world->GetModelsWithWifi();
 
-  for (unsigned int ix=0; ix < models_with_wifi->size(); ix ++)
+  for (std::vector<Model*>::iterator ix=models_with_wifi->begin(); ix < models_with_wifi->end(); ix ++)
   {
-    CompareModels((*models_with_wifi)[ix], this);
+    CompareModels(*ix, this);
   }
   /*
   FOR_EACH( other_model, *(world->GetModelsWithWifi()) )
